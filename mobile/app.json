@@ -1,0 +1,41 @@
+﻿{
+    "expo":  {
+                 "name":  "MATRIX",
+                 "slug":  "matrix",
+                 "version":  "0.1.0",
+                 "orientation":  "default",
+                 "icon":  "./assets/icon.png",
+                 "userInterfaceStyle":  "dark",
+                 "splash":  {
+                                "image":  "./assets/splash-icon.png",
+                                "resizeMode":  "contain",
+                                "backgroundColor":  "#0B1220"
+                            },
+                 "ios":  {
+                             "supportsTablet":  true,
+                             "bundleIdentifier":  "com.matrix.charts"
+                         },
+                 "android":  {
+                                 "adaptiveIcon":  {
+                                                      "foregroundImage":  "./assets/adaptive-icon.png",
+                                                      "backgroundColor":  "#0B1220"
+                                                  },
+                                 "package":  "com.matrix.charts"
+                             },
+                 "web":  {
+                             "favicon":  "./assets/favicon.png"
+                         },
+                 "plugins":  [
+                                 [
+                                     "expo-notifications",
+                                     {
+                                         "color":  "#14B8A6"
+                                     }
+                                 ]
+                             ],
+                 "extra":  {
+                               "apiUrl":  "http://192.168.8.200:8110",
+                               "appName":  "MATRIX"
+                           }
+             }
+}

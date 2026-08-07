@@ -1,0 +1,15 @@
+MATRIX URLs
+===========
+Time: 2026-08-05 10:30:13
+IP: 192.168.8.200
+
+Laptop browser:
+http://192.168.8.200:8081
+
+iPhone Expo Go (Enter URL inside Expo Go - NOT Google):
+exp://192.168.8.200:8081
+
+API health:
+http://192.168.8.200:8110/health
+
+Keep MATRIX Dev window open for live updates.

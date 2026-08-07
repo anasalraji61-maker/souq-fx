@@ -1,0 +1,112 @@
+import type { Candle } from '../api';
+
+export type ChartKind =
+  | 'candles'
+  | 'hollow'
+  | 'heikin'
+  | 'bars'
+  | 'line'
+  | 'area'
+  | 'renko'
+  | 'kagi'
+  | 'pnf';
+
+export type IndicatorId =
+  | 'sma20'
+  | 'sma50'
+  | 'ema21'
+  | 'bb'
+  | 'rsi'
+  | 'macd'
+  | 'stoch'
+  | 'atr'
+  | 'volume'
+  | 'volumeProfile'
+  | 'tpo'
+  | 'cvd'
+  | 'footprint';
+
+export type DrawTool =
+  | 'none'
+  | 'select'
+  | 'trend'
+  | 'ray'
+  | 'hline'
+  | 'vline'
+  | 'rect'
+  | 'fib'
+  | 'zone'
+  | 'note'
+  | 'measure';
+
+export type ChartPoint = { index: number; price: number };
+
+export type Drawing = {
+  id: string;
+  tool: Exclude<DrawTool, 'none'>;
+  a: ChartPoint;
+  b?: ChartPoint;
+  text?: string;
+  color: string;
+};
+
+export type LensMode = 'clean' | 'structure' | 'momentum' | 'liquidity';
+
+export const CHART_KINDS: { id: ChartKind; label: string }[] = [
+  { id: 'candles', label: 'شموع' },
+  { id: 'hollow', label: 'مجوّفة' },
+  { id: 'heikin', label: 'هيكن' },
+  { id: 'bars', label: 'أعمدة' },
+  { id: 'line', label: 'خط' },
+  { id: 'area', label: 'منطقة' },
+  { id: 'renko', label: 'Renko' },
+  { id: 'kagi', label: 'Kagi' },
+  { id: 'pnf', label: 'P&F' },
+];
+
+export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = [
+  { id: 'sma20', label: 'SMA 20' },
+  { id: 'sma50', label: 'SMA 50' },
+  { id: 'ema21', label: 'EMA 21' },
+  { id: 'bb', label: 'بولنجر' },
+  { id: 'volume', label: 'فوليوم', pane: true },
+  { id: 'volumeProfile', label: 'VP', pane: false },
+  { id: 'tpo', label: 'TPO', pane: false },
+  { id: 'cvd', label: 'CVD', pane: true },
+  { id: 'footprint', label: 'Footprint', pane: false },
+  { id: 'rsi', label: 'RSI', pane: true },
+  { id: 'macd', label: 'MACD', pane: true },
+  { id: 'stoch', label: 'Stoch', pane: true },
+  { id: 'atr', label: 'ATR', pane: true },
+];
+
+export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [
+  { id: 'none', label: 'مؤشر' },
+  { id: 'select', label: 'تحديد' },
+  { id: 'trend', label: 'ترند' },
+  { id: 'ray', label: 'شعاع' },
+  { id: 'hline', label: 'أفقي' },
+  { id: 'vline', label: 'عمودي' },
+  { id: 'rect', label: 'مستطيل' },
+  { id: 'fib', label: 'فيبو' },
+  { id: 'zone', label: 'منطقة' },
+  { id: 'note', label: 'ملاحظة' },
+  { id: 'measure', label: 'قياس' },
+];
+
+export const LENSES: { id: LensMode; label: string; hint: string }[] = [
+  { id: 'clean', label: 'نظيف', hint: 'سعر فقط' },
+  { id: 'structure', label: 'هيكل', hint: 'MA + مناطق' },
+  { id: 'momentum', label: 'زخم', hint: 'RSI + MACD' },
+  { id: 'liquidity', label: 'سيولة', hint: 'فوليوم + CVD' },
+];
+
+export function withVolume(candles: Candle[]): (Candle & { volume: number })[] {
+  return candles.map((c, i) => ({
+    ...c,
+    volume:
+      (c as Candle & { volume?: number }).volume ??
+      Math.abs(c.close - c.open) * 1e6 * (0.6 + ((i * 17) % 40) / 40) +
+        1000,
+  }));
+}

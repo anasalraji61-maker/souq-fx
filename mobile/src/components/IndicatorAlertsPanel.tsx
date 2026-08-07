@@ -1,0 +1,185 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
+import { colors, radii, spacing } from '../theme';
+import { api } from '../api';
+import { pushPriceAlert } from '../notifications';
+
+type IndAlert = {
+  id: string;
+  symbol: string;
+  timeframe: string;
+  alert_type: string;
+  condition: string;
+  value?: number;
+  note: string;
+  triggered: boolean;
+};
+
+type Props = {
+  defaultSymbol?: string;
+};
+
+export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
+  const [alerts, setAlerts] = useState<IndAlert[]>([]);
+  const [symbol, setSymbol] = useState(defaultSymbol);
+  const [type, setType] = useState<'rsi' | 'ma_cross' | 'macd_cross'>('rsi');
+  const [condition, setCondition] = useState<'above' | 'below' | 'cross_up' | 'cross_down'>('below');
+  const [value, setValue] = useState('30');
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setSymbol(defaultSymbol);
+  }, [defaultSymbol]);
+
+  const refresh = useCallback(async () => {
+    try {
+      const res = await api.indicatorAlerts();
+      setAlerts(res.alerts);
+    } catch {
+      setAlerts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const id = setInterval(async () => {
+      try {
+        const res = await api.checkIndicatorAlerts();
+        setAlerts(res.alerts);
+        for (const t of res.triggered) {
+          await pushPriceAlert(
+            'MATRIX · تنبيه مؤشر',
+            `${t.symbol} ${t.alert_type} ${t.condition}`
+          );
+        }
+      } catch {
+        /* ignore */
+      }
+    }, 60_000);
+    return () => clearInterval(id);
+  }, [refresh]);
+
+  const add = async () => {
+    setBusy(true);
+    try {
+      const needsVal = type === 'rsi';
+      await api.createIndicatorAlert({
+        symbol: symbol.trim().toUpperCase(),
+        timeframe: '15m',
+        alert_type: type,
+        condition: type === 'rsi' ? condition : type.includes('cross') ? condition : 'cross_up',
+        value: needsVal ? parseFloat(value.replace(',', '.')) : undefined,
+      });
+      await refresh();
+    } catch {
+      /* ignore */
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <View style={styles.wrap}>
+      <Text style={styles.title}>تنبيهات المؤشرات</Text>
+      <Text style={styles.sub}>RSI · تقاطع MA · MACD</Text>
+      <TextInput style={styles.input} value={symbol} onChangeText={setSymbol} placeholder="EURUSD" placeholderTextColor={colors.textDim} />
+      <View style={styles.row}>
+        {(['rsi', 'ma_cross', 'macd_cross'] as const).map((t) => (
+          <Pressable key={t} style={[styles.chip, type === t && styles.chipOn]} onPress={() => setType(t)}>
+            <Text style={[styles.chipText, type === t && styles.chipTextOn]}>{t}</Text>
+          </Pressable>
+        ))}
+      </View>
+      {type === 'rsi' ? (
+        <>
+          <View style={styles.row}>
+            <Pressable style={[styles.chip, condition === 'below' && styles.chipOn]} onPress={() => setCondition('below')}>
+              <Text style={styles.chipText}>RSI تحت</Text>
+            </Pressable>
+            <Pressable style={[styles.chip, condition === 'above' && styles.chipOn]} onPress={() => setCondition('above')}>
+              <Text style={styles.chipText}>RSI فوق</Text>
+            </Pressable>
+          </View>
+          <TextInput style={styles.input} value={value} onChangeText={setValue} keyboardType="decimal-pad" placeholder="30" placeholderTextColor={colors.textDim} />
+        </>
+      ) : (
+        <View style={styles.row}>
+          <Pressable style={[styles.chip, condition === 'cross_up' && styles.chipOn]} onPress={() => setCondition('cross_up')}>
+            <Text style={styles.chipText}>Cross Up</Text>
+          </Pressable>
+          <Pressable style={[styles.chip, condition === 'cross_down' && styles.chipOn]} onPress={() => setCondition('cross_down')}>
+            <Text style={styles.chipText}>Cross Down</Text>
+          </Pressable>
+        </View>
+      )}
+      <Pressable style={styles.btn} onPress={add} disabled={busy}>
+        <Text style={styles.btnText}>{busy ? '...' : 'إضافة تنبيه'}</Text>
+      </Pressable>
+      {loading ? <ActivityIndicator color={colors.accent} /> : (
+        <ScrollView style={{ maxHeight: 180 }}>
+          {alerts.map((a) => (
+            <View key={a.id} style={styles.item}>
+              <Text style={styles.itemText}>
+                {a.symbol} · {a.alert_type} · {a.condition}
+                {a.value != null ? ` ${a.value}` : ''}
+                {a.triggered ? ' ✓' : ''}
+              </Text>
+              <Pressable onPress={() => api.deleteIndicatorAlert(a.id).then(refresh)}>
+                <Text style={styles.del}>حذف</Text>
+              </Pressable>
+            </View>
+          ))}
+        </ScrollView>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: {
+    backgroundColor: colors.bgElevated,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    gap: 8,
+  },
+  title: { color: colors.text, fontWeight: '800', textAlign: 'right' },
+  sub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
+  input: {
+    backgroundColor: colors.bgPanel,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    color: colors.text,
+    padding: 10,
+    textAlign: 'right',
+  },
+  row: { flexDirection: 'row-reverse', gap: 6, flexWrap: 'wrap' },
+  chip: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  chipText: { color: colors.textMuted, fontWeight: '700', fontSize: 11 },
+  chipTextOn: { color: colors.accent },
+  btn: { backgroundColor: colors.accent, borderRadius: radii.sm, paddingVertical: 12, alignItems: 'center' },
+  btnText: { color: '#042F2E', fontWeight: '800' },
+  item: { flexDirection: 'row-reverse', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSoft },
+  itemText: { color: colors.text, flex: 1, textAlign: 'right', fontSize: 12 },
+  del: { color: colors.bear, fontWeight: '700' },
+});

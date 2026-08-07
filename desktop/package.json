@@ -1,0 +1,32 @@
+{
+  "name": "matrix-desktop",
+  "version": "0.3.0",
+  "private": true,
+  "main": "main.js",
+  "description": "MATRIX Charts desktop shell",
+  "scripts": {
+    "start": "node_modules\\electron\\dist\\electron.exe .",
+    "dev": "set MATRIX_DESKTOP_DEV=1&& node_modules\\electron\\dist\\electron.exe .",
+    "dist": "electron-builder --win nsis",
+    "pack": "electron-builder --win dir"
+  },
+  "build": {
+    "appId": "com.matrix.charts",
+    "productName": "MATRIX Charts",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "preload.js", "package.json"],
+    "win": {
+      "target": ["nsis"],
+      "artifactName": "MATRIX-Charts-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "MATRIX Charts"
+    }
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8"
+  }
+}

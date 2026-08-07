@@ -1,0 +1,108 @@
+"""ElevenLabs TTS for MATRIX Academy (screen + voice, no avatar)."""
+from __future__ import annotations
+
+import hashlib
+import os
+from pathlib import Path
+
+import httpx
+
+CACHE_DIR = Path(__file__).resolve().parent / "audio_cache"
+CACHE_DIR.mkdir(exist_ok=True)
+
+ELEVEN_API = "https://api.elevenlabs.io/v1"
+_voice_cache: str | None = None
+
+
+def _api_key() -> str:
+    return (os.getenv("ELEVENLABS_API_KEY") or "").strip()
+
+
+def configured() -> bool:
+    return bool(_api_key())
+
+
+def _headers(accept: str = "application/json") -> dict[str, str]:
+    return {
+        "xi-api-key": _api_key(),
+        "Accept": accept,
+        "Content-Type": "application/json",
+    }
+
+
+def resolve_voice_id() -> str:
+    global _voice_cache
+    env_id = (os.getenv("ELEVENLABS_VOICE_ID") or "").strip()
+    if env_id:
+        return env_id
+    if _voice_cache:
+        return _voice_cache
+
+    with httpx.Client(timeout=30.0) as client:
+        r = client.get(f"{ELEVEN_API}/voices", headers=_headers())
+        r.raise_for_status()
+        voices = r.json().get("voices") or []
+        if not voices:
+            raise RuntimeError("No ElevenLabs voices on this account")
+        # Prefer multilingual / Arabic-labeled voices when present
+        preferred = None
+        for v in voices:
+            labels = v.get("labels") or {}
+            blob = " ".join(str(x).lower() for x in labels.values()) + " " + str(v.get("name", "")).lower()
+            if "arabic" in blob or "multilingual" in blob or "middle east" in blob:
+                preferred = v["voice_id"]
+                break
+        _voice_cache = preferred or voices[0]["voice_id"]
+        return _voice_cache
+
+
+def synthesize(text: str, voice_id: str | None = None) -> Path:
+    """Convert narration text to MP3; cache by hash."""
+    key = _api_key()
+    if not key:
+        raise RuntimeError("ELEVENLABS_API_KEY missing")
+
+    clean = (text or "").strip()
+    if not clean:
+        raise ValueError("empty text")
+
+    vid = (voice_id or resolve_voice_id()).strip()
+    model = os.getenv("ELEVENLABS_MODEL_ID", "eleven_multilingual_v2")
+    digest = hashlib.sha256(f"{vid}|{model}|{clean}".encode("utf-8")).hexdigest()[:32]
+    out = CACHE_DIR / f"{digest}.mp3"
+    if out.exists() and out.stat().st_size > 0:
+        return out
+
+    url = f"{ELEVEN_API}/text-to-speech/{vid}"
+    payload = {
+        "text": clean,
+        "model_id": model,
+    }
+    with httpx.Client(timeout=90.0) as client:
+        r = client.post(
+            url,
+            headers=_headers("audio/mpeg"),
+            json=payload,
+            params={"output_format": "mp3_44100_128"},
+        )
+        if r.status_code >= 400:
+            raise RuntimeError(f"ElevenLabs {r.status_code}: {r.text[:400]}")
+        out.write_bytes(r.content)
+    return out
+
+
+def status() -> dict:
+    voice = None
+    err = None
+    if configured():
+        try:
+            voice = resolve_voice_id()
+        except Exception as exc:  # noqa: BLE001
+            err = str(exc)
+    return {
+        "configured": configured(),
+        "voice_id": voice,
+        "error": err,
+        "model_id": os.getenv("ELEVENLABS_MODEL_ID", "eleven_multilingual_v2"),
+        "cache_files": len(list(CACHE_DIR.glob("*.mp3"))),
+    }

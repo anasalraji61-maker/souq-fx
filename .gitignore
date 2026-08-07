@@ -1,0 +1,12 @@
+node_modules/
+.expo/
+dist/
+venv/
+__pycache__/
+.env
+backend/audio_cache/
+backend/matrix.db
+backend/*.db
+mobile/_debug_photos/
+*.pyc
+.DS_Store
