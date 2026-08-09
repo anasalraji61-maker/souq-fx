@@ -45,6 +45,14 @@ function RootTabs() {
     void registerPushToken();
   }, []);
 
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    // منع ترجمة كروم التلقائية لرموز مثل EURUSD و 15m
+    document.documentElement.setAttribute('translate', 'no');
+    document.documentElement.classList.add('notranslate');
+    document.body?.classList.add('notranslate');
+  }, []);
+
   return (
     <Tab.Navigator
       screenOptions={{

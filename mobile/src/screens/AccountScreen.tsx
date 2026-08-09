@@ -14,6 +14,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { registerPushToken } from '../notifications';
 import { CommissionPlanPanel } from '../components/CommissionPlanPanel';
 import { NetworkTreePanel } from '../components/NetworkTreePanel';
+import { SubscriptionPlansPanel } from '../components/SubscriptionPlansPanel';
 import { api } from '../api';
 
 type RoleId = 'trader' | 'trainer' | 'broker' | 'agent' | 'company';
@@ -144,6 +145,7 @@ export function AccountScreen() {
         </View>
       </View>
 
+      <SubscriptionPlansPanel />
       <CommissionPlanPanel />
       <NetworkTreePanel
         enabled={!!user}

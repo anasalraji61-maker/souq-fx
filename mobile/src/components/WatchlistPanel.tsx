@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Platform } from 'react-native';
 import { colors, radii, spacing } from '../theme';
 import { WATCHLIST } from '../chart/watchlist';
 import { formatPrice } from '../chart/math';
@@ -47,14 +47,14 @@ export function WatchlistPanel({
               onPress={() => onPick(w.symbol)}
             >
               <View style={styles.left}>
-                <Text style={[styles.sym, on && styles.symOn, isDxy && styles.symDxy]}>
+                <Text
+                  style={[styles.sym, on && styles.symOn, isDxy && styles.symDxy]}
+                  {...(Platform.OS === 'web'
+                    ? ({ translate: 'no', className: 'notranslate' } as object)
+                    : {})}
+                >
                   {w.symbol}
                 </Text>
-                {!compact ? (
-                  <Text style={styles.label} numberOfLines={1}>
-                    {w.label}
-                  </Text>
-                ) : null}
               </View>
               <Text style={[styles.price, on && styles.priceOn]}>
                 {price != null ? formatPrice(price) : '—'}

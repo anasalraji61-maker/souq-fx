@@ -235,9 +235,9 @@ export const api = {
     }>(
       `/api/terminal?tf0=${encodeURIComponent(tf0)}&tf1=${encodeURIComponent(tf1)}&tf2=${encodeURIComponent(tf2)}&dxy_tf=${encodeURIComponent(dxyTf)}`
     ),
-  chart: (symbol: string, timeframe: string) =>
+  chart: (symbol: string, timeframe: string, outputsize = 180) =>
     getJson<ChartSeries>(
-      `/api/charts/${encodeURIComponent(symbol)}?timeframe=${encodeURIComponent(timeframe)}`
+      `/api/charts/${encodeURIComponent(symbol)}?timeframe=${encodeURIComponent(timeframe)}&outputsize=${Math.max(50, Math.min(5000, Math.round(outputsize)))}`
     ),
   groupChat: () => getJson<{ messages: ChatMsg[] }>('/api/chat/group'),
   postGroup: (text: string, user = 'أنت') =>

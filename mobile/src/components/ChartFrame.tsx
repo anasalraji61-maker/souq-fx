@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, Platform, LayoutChangeEvent } from 'react-native';
 import { colors, radii, spacing } from '../theme';
 import type { ChartSeries } from '../api';
 import { TimeframeBar } from './TimeframeBar';
@@ -8,6 +8,7 @@ import { MatrixChart } from '../chart/MatrixChart';
 import { formatPrice } from '../chart/math';
 
 import { FRAME_CHART_H, FRAME_CHART_H_PHONE } from './FrameSizedGrid';
+import type { PanSpeedPercent } from '../chart/panSpeed';
 
 type Size = 'hero' | 'large' | 'medium' | 'small';
 
@@ -21,6 +22,12 @@ type Props = {
   phone?: boolean;
   /** وضع أدوات كاملة داخل الإطار */
   interactive?: boolean;
+  /** تحريك الشموع والمحاور داخل الفريم */
+  panControls?: boolean;
+  /** يملأ ارتفاع الخلية (مستطيلات تملأ الشاشة) */
+  fill?: boolean;
+  /** نسبة سرعة السحب 1–100 */
+  panSpeed?: PanSpeedPercent;
   livePrice?: number | null;
   onFocus?: () => void;
 };
@@ -48,25 +55,39 @@ export function ChartFrame({
   onTimeframeChange,
   phone = false,
   interactive = false,
+  panControls = false,
+  fill = false,
+  panSpeed,
   livePrice = null,
   onFocus,
 }: Props) {
-  const chartH = (phone ? HEIGHT_PHONE : HEIGHT)[size] + (interactive ? 220 : 0);
+  const navigate = panControls || interactive;
+  const baseH = (phone ? HEIGHT_PHONE : HEIGHT)[size] + (interactive ? 220 : 0);
+  const [measuredH, setMeasuredH] = useState(baseH);
+  const chartH = fill ? measuredH : baseH;
   const up = series.change_pct >= 0;
 
   const subtitle = useMemo(() => {
     if (interactive) return 'محرك MATRIX · عدسات وأدوات';
+    if (navigate) return 'اسحب الوسط · السعر · التواريخ';
     return 'اضغط للتحليل الكامل';
-  }, [interactive]);
+  }, [interactive, navigate]);
+
+  const onChartPadLayout = (e: LayoutChangeEvent) => {
+    if (!fill) return;
+    const h = e.nativeEvent.layout.height;
+    const next = Math.max(120, Math.floor(h));
+    setMeasuredH((prev) => (Math.abs(prev - next) > 2 ? next : prev));
+  };
 
   return (
-    <View style={[styles.wrap, size === 'hero' && styles.heroWrap]}>
+    <View style={[styles.wrap, size === 'hero' && styles.heroWrap, fill && styles.wrapFill]}>
       {showTimeframes && onTimeframeChange ? (
         <View style={styles.tfTopLeft}>
           <TimeframeBar
             value={series.timeframe}
             onChange={onTimeframeChange}
-            compact={size === 'small'}
+            compact={size === 'small' || fill}
           />
         </View>
       ) : null}
@@ -74,8 +95,25 @@ export function ChartFrame({
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <View style={[styles.dot, { backgroundColor: accent }]} />
-          <Text style={styles.symbol}>{label || series.symbol}</Text>
-          {!showTimeframes ? <Text style={styles.tf}>{series.timeframe}</Text> : null}
+          <Text
+            style={styles.symbol}
+            numberOfLines={1}
+            {...(Platform.OS === 'web'
+              ? ({ translate: 'no', className: 'notranslate' } as object)
+              : {})}
+          >
+            {(label || series.symbol).toUpperCase()}
+          </Text>
+          {!showTimeframes ? (
+            <Text
+              style={styles.tf}
+              {...(Platform.OS === 'web'
+                ? ({ translate: 'no', className: 'notranslate' } as object)
+                : {})}
+            >
+              {series.timeframe}
+            </Text>
+          ) : null}
         </View>
         <View style={styles.priceRow}>
           <Text style={styles.price}>{formatPrice(livePrice ?? series.last)}</Text>
@@ -84,39 +122,30 @@ export function ChartFrame({
             {up ? '+' : ''}
             {series.change_pct.toFixed(2)}%
           </Text>
+          {onFocus ? (
+            <Pressable style={styles.focusBtn} onPress={onFocus}>
+              <Text style={styles.focusBtnText}>⛶</Text>
+            </Pressable>
+          ) : null}
         </View>
       </View>
 
-      {interactive ? (
-        <View style={styles.chartPad}>
-          <Text style={styles.hint}>{subtitle}</Text>
-          <MatrixChart
-            series={series}
-            height={chartH}
-            interactive
-            accent={accent}
-            livePrice={livePrice}
-            initialLens="clean"
-            initialIndicators={[]}
-          />
-        </View>
-      ) : (
-        <Pressable onPress={onFocus} disabled={!onFocus}>
-          <Text style={styles.hint}>{subtitle}</Text>
-          <View style={styles.chartPad} pointerEvents="none">
-            <MatrixChart
-              series={series}
-              height={chartH}
-              interactive={false}
-              persistDrawings={false}
-              accent={accent}
-              livePrice={livePrice}
-              initialLens="clean"
-              initialIndicators={[]}
-            />
-          </View>
-        </Pressable>
-      )}
+      <View style={styles.chartPad} onLayout={onChartPadLayout}>
+        {navigate && !fill ? <Text style={styles.hint}>{subtitle}</Text> : null}
+        <MatrixChart
+          series={series}
+          height={chartH}
+          interactive={interactive}
+          panControls={navigate}
+          persistDrawings={interactive}
+          accent={accent}
+          livePrice={livePrice}
+          dense={fill}
+          panSpeed={panSpeed}
+          initialLens="clean"
+          initialIndicators={[]}
+        />
+      </View>
     </View>
   );
 }
@@ -132,13 +161,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     minWidth: 140,
   },
+  wrapFill: {
+    minHeight: 0,
+  },
   heroWrap: {
     borderColor: '#1E3A5F',
     backgroundColor: '#0E1728',
   },
   tfTopLeft: {
     alignItems: 'flex-start',
-    paddingLeft: 40,
+    paddingLeft: spacing.sm,
     paddingRight: spacing.sm,
     paddingTop: spacing.sm,
     borderBottomWidth: 1,
@@ -152,26 +184,44 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
   },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1, minWidth: 0 },
   dot: { width: 7, height: 7, borderRadius: 4 },
   symbol: {
     color: colors.text,
     fontWeight: '700',
     fontSize: 13,
     letterSpacing: 0.4,
+    flexShrink: 1,
   },
   tf: { color: colors.textDim, fontSize: 11, marginLeft: 4 },
-  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 },
   price: { color: colors.text, fontWeight: '600', fontSize: 13 },
   liveTag: { color: colors.bull, fontSize: 9, fontWeight: '800' },
   chg: { fontSize: 12, fontWeight: '700' },
+  focusBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bgPanel,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  focusBtnText: { color: colors.accent, fontSize: 12, fontWeight: '800' },
   hint: {
     color: colors.textDim,
-    fontSize: 10,
+    fontSize: 9,
     textAlign: 'right',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
     marginBottom: 2,
   },
-  chartPad: { paddingHorizontal: spacing.sm, paddingBottom: spacing.sm },
+  chartPad: {
+    flex: 1,
+    paddingHorizontal: spacing.sm,
+    paddingBottom: spacing.sm,
+    minHeight: 0,
+  },
 });

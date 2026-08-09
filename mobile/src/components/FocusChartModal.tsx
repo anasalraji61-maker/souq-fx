@@ -82,6 +82,7 @@ export function FocusChartModal({
   const [series, setSeries] = useState<ChartSeries | null>(null);
   const [compareSeries, setCompareSeries] = useState<ChartSeries | null>(null);
   const [loading, setLoading] = useState(false);
+  const [phonePickerOpen, setPhonePickerOpen] = useState(false);
   const [watchlist, setWatchlist] = useState<{ symbol: string; label: string; group?: string }[]>([
     ...WATCHLIST,
   ]);
@@ -96,6 +97,7 @@ export function FocusChartModal({
     setSym(symbol);
     setTf(initialTf);
     setCompareSym(null);
+    setPhonePickerOpen(false);
   }, [visible, symbol, initialTf]);
 
   useEffect(() => {
@@ -153,22 +155,39 @@ export function FocusChartModal({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={styles.top}>
-          <Pressable onPress={onClose}>
-            <Text style={styles.close}>إغلاق</Text>
+        <View style={[styles.top, phone && styles.topPhone]}>
+          <Pressable style={styles.closeButton} onPress={onClose}>
+            <Text style={styles.close}>{phone ? '×' : 'إغلاق'}</Text>
           </Pressable>
-          <View style={{ flex: 1 }}>
+          <Pressable
+            style={styles.symbolHeading}
+            onPress={() => {
+              if (phone) setPhonePickerOpen((open) => !open);
+            }}
+          >
             <Text style={styles.title}>
               {sym}
               {compareSym ? ` vs ${compareSym}` : ''}
             </Text>
-            <Text style={styles.sub}>محطة التحليل · رسم · مقارنة · تنبيهات</Text>
-          </View>
-          {series ? (
-            <Text style={styles.price}>
-              {formatPrice(livePrice ?? series.last)}
-              {livePrice != null ? ' · حي' : ''}
+            <Text style={styles.sub}>
+              {phone
+                ? `${tf} · اضغط لتغيير الرمز`
+                : 'محطة التحليل · رسم · مقارنة · تنبيهات'}
             </Text>
+          </Pressable>
+          {series ? (
+            <View style={styles.quote}>
+              <Text style={styles.price}>{formatPrice(livePrice ?? series.last)}</Text>
+              <Text
+                style={[
+                  styles.change,
+                  { color: series.change_pct >= 0 ? colors.bull : colors.bear },
+                ]}
+              >
+                {series.change_pct >= 0 ? '+' : ''}
+                {series.change_pct.toFixed(2)}%{livePrice != null ? ' · حي' : ''}
+              </Text>
+            </View>
           ) : null}
         </View>
 
@@ -199,8 +218,14 @@ export function FocusChartModal({
             </ScrollView>
           ) : null}
 
-          <ScrollView style={styles.main} contentContainerStyle={{ padding: spacing.md, gap: 10 }}>
-            {phone ? (
+          <ScrollView
+            style={styles.main}
+            contentContainerStyle={{
+              padding: phone ? spacing.sm : spacing.md,
+              gap: phone ? 7 : 10,
+            }}
+          >
+            {phone && phonePickerOpen ? (
               <>
                 <SymbolSearchBar onPick={pick} />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -226,7 +251,7 @@ export function FocusChartModal({
             ) : null}
 
             <TimeframeBar value={tf} onChange={setTf} />
-            <SymbolSnapshot symbol={sym} timeframe={tf} />
+            {!phone ? <SymbolSnapshot symbol={sym} timeframe={tf} /> : null}
 
             {loading || !series ? (
               <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
@@ -234,9 +259,10 @@ export function FocusChartModal({
               <MatrixChart
                 series={series}
                 compareSeries={compareSeries}
-                height={Math.max(320, height * (phone ? 0.55 : 0.62))}
+                height={Math.max(360, height * (phone ? 0.64 : 0.62))}
                 interactive
                 persistDrawings
+                compactUi={phone}
                 accent={sym === 'DXY' ? colors.dxy : colors.accent}
                 livePrice={livePrice}
                 onCreateAlert={alertFromDrawing}
@@ -268,10 +294,24 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  topPhone: { paddingVertical: 7, gap: 8 },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bgPanel,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
   close: { color: colors.accent, fontWeight: '800' },
+  symbolHeading: { flex: 1 },
   title: { color: colors.text, fontSize: 18, fontWeight: '900', textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
   price: { color: colors.text, fontWeight: '700', fontSize: 14 },
+  quote: { alignItems: 'flex-start' },
+  change: { fontWeight: '800', fontSize: 10, marginTop: 2 },
   body: { flex: 1, flexDirection: 'row-reverse' },
   bodyPhone: { flexDirection: 'column' },
   watch: {

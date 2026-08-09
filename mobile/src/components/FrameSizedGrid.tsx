@@ -6,6 +6,8 @@ import {
   useWindowDimensions,
   type GestureResponderEvent,
   type PanResponderGestureState,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, radii, spacing } from '../theme';
@@ -13,18 +15,26 @@ import { colors, radii, spacing } from '../theme';
 /** نفس أبعاد فريمات الشارت (size=large) */
 export const FRAME_CHART_H = 280;
 export const FRAME_CHART_H_PHONE = 210;
-export const FRAME_BOX_H = FRAME_CHART_H + 72 + 28;
-export const FRAME_BOX_H_PHONE = FRAME_CHART_H_PHONE + 64 + 28;
+/** مساحة إضافية للهيدر + الأوقات + شريط التواريخ السفلي */
+export const FRAME_BOX_H = FRAME_CHART_H + 140;
+export const FRAME_BOX_H_PHONE = FRAME_CHART_H_PHONE + 130;
 
 export type GridItem = {
   id: string;
   node: React.ReactNode;
 };
 
+export type FrameLayoutCount = 1 | 2 | 3 | 4;
+/** مربعات · مستطيلات · فريم الظل (واحد بطيّات زمنية) */
+export type FrameLayoutShape = 'square' | 'rect' | 'shadow';
+
 type Props = {
   items: GridItem[];
   storageKey?: string;
   onOrderChange?: (ids: string[]) => void;
+  layoutCount?: FrameLayoutCount;
+  /** square = مقاس ثابت · rect = يملأ الشاشة (2/3/4) */
+  shape?: FrameLayoutShape;
 };
 
 type CellLayout = { x: number; y: number; w: number; h: number };
@@ -45,11 +55,18 @@ function applyOrder(items: GridItem[], order: string[] | null): GridItem[] {
 }
 
 /**
- * شبكة 2×2 بنفس مقاس الفريمات + مقبض سحب لتبديل أماكن المربعات
+ * شبكة فريمات قابلة للسحب — مربعات ثابتة أو مستطيلات تملأ الشاشة
  */
-export function FrameSizedGrid({ items, storageKey, onOrderChange }: Props) {
+export function FrameSizedGrid({
+  items,
+  storageKey,
+  onOrderChange,
+  layoutCount = 4,
+  shape = 'square',
+}: Props) {
   const { width } = useWindowDimensions();
   const phone = width < 700;
+  const fill = !phone && shape === 'rect' && layoutCount > 1;
   const boxH = phone ? FRAME_BOX_H_PHONE : FRAME_BOX_H;
   const [order, setOrder] = useState<string[] | null>(null);
   const [ready, setReady] = useState(!storageKey);
@@ -58,8 +75,12 @@ export function FrameSizedGrid({ items, storageKey, onOrderChange }: Props) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const ordered = useMemo(() => applyOrder(items, order), [items, order]);
-  const orderedRef = useRef(ordered);
-  orderedRef.current = ordered;
+  const displayed = useMemo(
+    () => (phone ? ordered : ordered.slice(0, layoutCount)),
+    [phone, ordered, layoutCount]
+  );
+  const orderedRef = useRef(displayed);
+  orderedRef.current = displayed;
 
   const cellLayouts = useRef<Record<string, CellLayout>>({});
   const cellRefs = useRef<Record<string, View | null>>({});
@@ -193,51 +214,69 @@ export function FrameSizedGrid({ items, storageKey, onOrderChange }: Props) {
 
   const responders = useMemo(() => {
     const map: Record<string, ReturnType<typeof PanResponder.create>> = {};
-    for (const it of ordered) map[it.id] = makeHandleResponder(it.id);
+    for (const it of displayed) map[it.id] = makeHandleResponder(it.id);
     return map;
-  }, [ordered, makeHandleResponder]);
+  }, [displayed, makeHandleResponder]);
 
   if (!ready) return null;
 
-  return (
-    <View style={[styles.grid, phone && styles.gridCol]}>
-      {ordered.map((item) => {
-        const dragging = draggingId === item.id;
-        const hovered = hoverId === item.id && draggingId !== item.id;
-        return (
-          <View
-            key={item.id}
-            ref={(node) => {
-              cellRefs.current[item.id] = node;
-            }}
-            onLayout={() => measureCell(item.id)}
-            style={[
-              styles.cell,
-              phone ? styles.cellPhone : styles.cellDesk,
-              { height: boxH },
-              hovered && styles.cellHover,
-              dragging && styles.cellDragging,
-              dragging && {
-                transform: [{ translateX: dragOffset.x }, { translateY: dragOffset.y }],
-                zIndex: 20,
-              },
-            ]}
-          >
-            {storageKey ? (
-              <View style={styles.handleBar} {...responders[item.id].panHandlers}>
-                <View style={styles.dotsGrid}>
-                  {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                    <View key={i} style={styles.dot} />
-                  ))}
-                </View>
-              </View>
-            ) : null}
-            <View style={styles.inner} pointerEvents={dragging ? 'none' : 'auto'}>
-              {item.node}
+  const renderCell = (item: GridItem, index: number, cellStyle?: StyleProp<ViewStyle>) => {
+    const dragging = draggingId === item.id;
+    const hovered = hoverId === item.id && draggingId !== item.id;
+    return (
+      <View
+        key={item.id}
+        ref={(node) => {
+          cellRefs.current[item.id] = node;
+        }}
+        onLayout={() => measureCell(item.id)}
+        style={[
+          styles.cell,
+          cellStyle,
+          hovered && styles.cellHover,
+          dragging && styles.cellDragging,
+          dragging && {
+            transform: [{ translateX: dragOffset.x }, { translateY: dragOffset.y }],
+            zIndex: 20,
+          },
+        ]}
+      >
+        {storageKey ? (
+          <View style={styles.handleBar} {...responders[item.id].panHandlers}>
+            <View style={styles.dotsGrid}>
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <View key={i} style={styles.dot} />
+              ))}
             </View>
           </View>
-        );
-      })}
+        ) : null}
+        <View style={styles.inner} pointerEvents={dragging ? 'none' : 'auto'}>
+          {item.node}
+        </View>
+      </View>
+    );
+  };
+
+  if (fill && layoutCount >= 2) {
+    return (
+      <View style={styles.gridFillRow}>
+        {displayed.map((item, index) => renderCell(item, index, styles.cellFillFlex))}
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.grid, phone && styles.gridCol]}>
+      {displayed.map((item, index) =>
+        renderCell(item, index, [
+          phone ? styles.cellPhone : styles.cellDesk,
+          !phone && layoutCount === 1 && styles.cellOne,
+          !phone && layoutCount === 2 && styles.cellTwo,
+          !phone && layoutCount === 3 && index === 0 && styles.cellThreeTop,
+          !phone && layoutCount === 3 && index > 0 && styles.cellThreeBottom,
+          { height: boxH },
+        ])
+      )}
     </View>
   );
 }
@@ -253,6 +292,21 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     flexWrap: 'nowrap',
   },
+  gridFillCol: {
+    flex: 1,
+    minHeight: 0,
+    minWidth: 0,
+    width: '100%',
+    gap: spacing.sm,
+  },
+  gridFillRow: {
+    flex: 1,
+    minHeight: 0,
+    minWidth: 0,
+    width: '100%',
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
   cell: {
     overflow: 'hidden',
     borderRadius: radii.md,
@@ -260,12 +314,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  cellFillFlex: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 0,
+    height: '100%',
+    maxWidth: '100%',
+  },
   cellDesk: {
     width: '48.5%',
     flexGrow: 1,
     minWidth: 240,
     maxWidth: '49%',
   },
+  cellOne: { width: '100%', maxWidth: '100%', minWidth: 0 },
+  cellTwo: { width: '48.5%', maxWidth: '49%', minWidth: 240 },
+  cellThreeTop: { width: '100%', maxWidth: '100%', minWidth: 0 },
+  cellThreeBottom: { width: '48.5%', maxWidth: '49%', minWidth: 240 },
   cellPhone: {
     width: '100%',
     minWidth: 0,
@@ -287,15 +352,15 @@ const styles = StyleSheet.create({
   },
   handleBar: {
     position: 'absolute',
-    top: 6,
-    left: 6,
-    zIndex: 5,
-    width: 28,
-    height: 28,
+    top: 8,
+    left: 8,
+    zIndex: 8,
+    width: 30,
+    height: 30,
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(17, 24, 39, 0.92)',
+    backgroundColor: 'rgba(17, 24, 39, 0.96)',
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
@@ -317,6 +382,8 @@ const styles = StyleSheet.create({
   inner: {
     flex: 1,
     width: '100%',
+    minHeight: 0,
     overflow: 'hidden',
+    paddingLeft: 38,
   },
 });

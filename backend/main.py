@@ -428,13 +428,14 @@ TF_SECONDS = {
 }
 
 
-def build_series(symbol: str, timeframe: str = "15m") -> ChartSeries:
+def build_series(symbol: str, timeframe: str = "15m", outputsize: int = 180) -> ChartSeries:
     sym = symbol.upper()
     tf = timeframe if timeframe in TF_SECONDS else "15m"
+    size = max(50, min(int(outputsize or 180), 5000))
 
     if market.configured():
         try:
-            raw = market.fetch_time_series(sym, tf, outputsize=180)
+            raw = market.fetch_time_series(sym, tf, outputsize=size)
             if raw:
                 candles = [Candle(**c) for c in raw]
                 first = candles[0].close
@@ -453,7 +454,7 @@ def build_series(symbol: str, timeframe: str = "15m") -> ChartSeries:
     step = TF_SECONDS[tf]
     base = SYMBOL_BASES.get(sym, 1.0)
     vol = 0.0008 if sym == "DXY" else 0.0015
-    candles = _seed_walk(sym, base, n=180, vol=vol, step_sec=step)
+    candles = _seed_walk(sym, base, n=size, vol=vol, step_sec=step)
     first = candles[0].close
     last = candles[-1].close
     change = ((last - first) / first) * 100
@@ -688,8 +689,8 @@ def watchlist():
 
 
 @app.get("/api/charts/{symbol}")
-def chart(symbol: str, timeframe: str = "15m"):
-    return build_series(symbol, timeframe)
+def chart(symbol: str, timeframe: str = "15m", outputsize: int = 180):
+    return build_series(symbol, timeframe, outputsize)
 
 
 @app.get("/api/alerts")

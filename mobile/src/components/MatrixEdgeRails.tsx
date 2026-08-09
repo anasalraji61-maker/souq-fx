@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { colors, radii } from '../theme';
 import { DRAW_TOOLS, LENSES, type DrawTool, type LensMode } from '../chart/types';
 import type { EdgePanelId } from './MatrixSidePanel';
+import type { FrameLayoutCount, FrameLayoutShape } from './FrameSizedGrid';
 
 export type MatrixLensId = LensMode;
 
@@ -17,6 +18,9 @@ type LeftProps = {
 type RightProps = {
   activePanel: EdgePanelId;
   onOpenPanel: (panel: EdgePanelId) => void;
+  layoutCount?: FrameLayoutCount;
+  layoutShape?: FrameLayoutShape;
+  onLayoutPick?: (count: FrameLayoutCount, shape: FrameLayoutShape) => void;
 };
 
 const RIGHT_ICONS: { id: Exclude<EdgePanelId, null>; mark: string; tip: string }[] = [
@@ -99,9 +103,109 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
   );
 }
 
-export function RightPanelRail({ activePanel, onOpenPanel }: RightProps) {
+export function RightPanelRail({
+  activePanel,
+  onOpenPanel,
+  layoutCount,
+  layoutShape = 'square',
+  onLayoutPick,
+}: RightProps) {
+  const squareOn = (count: FrameLayoutCount) =>
+    layoutCount === count && layoutShape === 'square';
+  const rectOn = (count: FrameLayoutCount) =>
+    layoutCount === count && layoutShape === 'rect';
+
   return (
     <View style={styles.rightRail}>
+      {layoutCount && onLayoutPick ? (
+        <>
+          <View style={styles.railTag}>
+            <Text style={styles.railTagTop}>فريم</Text>
+            <Text style={styles.railTagBottom}>مربع</Text>
+          </View>
+          <View style={styles.layoutGroup}>
+            {([1, 2, 3, 4] as FrameLayoutCount[]).map((count) => {
+              const on = squareOn(count);
+              return (
+                <Pressable
+                  key={`sq-${count}`}
+                  accessibilityLabel={`${count} فريم مربع`}
+                  style={[styles.layoutBtn, on && styles.layoutBtnOn]}
+                  onPress={() => onLayoutPick(count, 'square')}
+                >
+                  <Text style={[styles.layoutNum, on && styles.layoutNumOn]}>{count}</Text>
+                  <View style={styles.layoutMini}>
+                    {Array.from({ length: count }).map((_, index) => (
+                      <View
+                        key={index}
+                        style={[styles.layoutCell, on && styles.layoutCellOn]}
+                      />
+                    ))}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+          <View style={styles.railSep} />
+          <View style={styles.railTag}>
+            <Text style={styles.railTagTop}>فريم</Text>
+            <Text style={styles.railTagBottom}>مستطيل</Text>
+          </View>
+          <View style={styles.layoutGroup}>
+            {([2, 3, 4] as FrameLayoutCount[]).map((count) => {
+              const on = rectOn(count);
+              return (
+                <Pressable
+                  key={`rect-${count}`}
+                  accessibilityLabel={`${count} فريم مستطيل`}
+                  style={[styles.layoutBtn, on && styles.layoutBtnOn]}
+                  onPress={() => onLayoutPick(count, 'rect')}
+                >
+                  <Text style={[styles.layoutNum, on && styles.layoutNumOn]}>{count}</Text>
+                  <View
+                    style={[
+                      styles.layoutMini,
+                      count === 2 && styles.layoutMiniRow,
+                      count === 3 && styles.layoutMiniRow3,
+                      count === 4 && styles.layoutMiniRow4,
+                    ]}
+                  >
+                    {Array.from({ length: count }).map((_, index) => (
+                      <View
+                        key={index}
+                        style={[
+                          styles.layoutCellRect,
+                          count === 2 && styles.layoutCellRect2,
+                          count === 3 && styles.layoutCellRect3,
+                          count === 4 && styles.layoutCellRect4,
+                          on && styles.layoutCellOn,
+                        ]}
+                      />
+                    ))}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+          <View style={styles.railSep} />
+          <Pressable
+            style={[styles.railTag, layoutShape === 'shadow' && styles.layoutBtnOn]}
+            onPress={() => onLayoutPick(1, 'shadow')}
+            accessibilityLabel="فريم الظل"
+          >
+            <Text style={styles.railTagTop}>فريم</Text>
+            <Text
+              style={[
+                styles.railTagBottom,
+                layoutShape === 'shadow' && styles.layoutNumOn,
+              ]}
+            >
+              الظل
+            </Text>
+          </Pressable>
+          <View style={styles.railSep} />
+        </>
+      ) : null}
       <Text style={styles.railTitle}>لوحات</Text>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {RIGHT_ICONS.map((x) => {
@@ -159,6 +263,32 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 4,
   },
+  railTag: {
+    width: 40,
+    height: 28,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    backgroundColor: colors.bgPanel,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+    paddingHorizontal: 2,
+  },
+  railTagTop: {
+    color: colors.accent,
+    fontSize: 7,
+    fontWeight: '900',
+    lineHeight: 9,
+    textAlign: 'center',
+  },
+  railTagBottom: {
+    color: colors.textMuted,
+    fontSize: 7,
+    fontWeight: '800',
+    lineHeight: 9,
+    textAlign: 'center',
+  },
   railBtn: {
     width: 44,
     paddingVertical: 5,
@@ -175,6 +305,72 @@ const styles = StyleSheet.create({
   railMarkOn: { color: colors.accent },
   railTip: { color: colors.textDim, fontSize: 7, fontWeight: '700' },
   railTipOn: { color: colors.accent },
+  layoutGroup: { gap: 3, alignItems: 'center', marginBottom: 2 },
+  layoutBtn: {
+    width: 40,
+    height: 30,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    backgroundColor: colors.bgPanel,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+  },
+  layoutBtnOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  layoutNum: { color: colors.textDim, fontSize: 9, fontWeight: '900' },
+  layoutNumOn: { color: colors.accent },
+  layoutMini: {
+    width: 17,
+    height: 16,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 1,
+    alignContent: 'center',
+  },
+  layoutMiniRow: {
+    flexWrap: 'nowrap',
+    width: 18,
+    height: 10,
+  },
+  layoutMiniRow3: {
+    flexWrap: 'nowrap',
+    width: 20,
+    height: 10,
+  },
+  layoutMiniRow4: {
+    flexWrap: 'nowrap',
+    width: 22,
+    height: 10,
+  },
+  layoutCell: {
+    width: 7,
+    height: 6,
+    borderRadius: 1,
+    backgroundColor: colors.textDim,
+    opacity: 0.65,
+  },
+  layoutCellRect: {
+    width: 7,
+    height: 5,
+    borderRadius: 1,
+    backgroundColor: colors.textDim,
+    opacity: 0.65,
+  },
+  layoutCellRect2: {
+    width: 8,
+    height: 9,
+  },
+  layoutCellRect3: {
+    width: 5,
+    height: 9,
+  },
+  layoutCellRect4: {
+    width: 4,
+    height: 9,
+  },
+  layoutCellOn: { backgroundColor: colors.accent, opacity: 1 },
   railSep: {
     width: 28,
     height: 1,
