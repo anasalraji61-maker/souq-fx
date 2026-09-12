@@ -95,8 +95,10 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
           onSubmitEditing={ask}
         />
         <Pressable
+          disabled={loading}
           style={({ pressed }) => [
             styles.send,
+            loading && styles.sendDisabled,
             pressed && {
               opacity: buttons.pressedOpacity,
               transform: [{ scale: buttons.pressedScale }],
@@ -186,4 +188,5 @@ const styles = StyleSheet.create({
     elevation: buttons.elevation,
   },
   sendText: { color: '#0B1220', fontWeight: '800', fontSize: 12 },
+  sendDisabled: { opacity: 0.5 },
 });

@@ -1,10 +1,9 @@
 # HANDOFF — MATRIX (سجل تنفيذ Claude)
 
-آخر تحديث: 2026-09-12 (Claude — تسليم رسمي: Claude مخطّط ومنفّذ مباشر لكود MATRIX، بروتوكول
-"Cursor ينفّذ" متوقف. المهمة 27 (دفعة ثالثة، 11 ملف — تصحيح استنتاج خاطئ بمهام 25/26 اعتبر
-TerminalScreen/ToolsScreen "مكتمل/لا يوجد زر"، ثم لمسة ضغط لعناصر ثانوية إضافية بملفات لم تُفحص
-من قبل) هي آخر تنفيذ مباشر، ثالث تشغيل بوتيرة "عشرات الخطوات بكل تشغيل" بطلب أنس الصريح
-2026-09-12.)
+آخر تحديث: 2026-09-12 (Claude — المهمة 29: قائمة "كل Pressable" الميكانيكية مستنفدة بالكامل منذ
+مهمة 28، فتحوّل التشغيل بالكامل لبنود موثوقية/وضوح-حالة فعلية من الخريطة: ربط واجهة drawingStore،
+WS reconnect backoff بخطّافي الأسعار الحيّة، أول بنية pytest بالمشروع، وتحسينات وضوح حالة
+CalendarPanel/NewsPanel/AiPanel. Track A وTrack B مكتملان الآن بالكامل بجدول ROADMAP.)
 
 ## المسار الصحيح
 
@@ -55,6 +54,140 @@ Claude يقرر ويعدّل الكود مباشرة بنفس الجلسة (تف
 ## سجل التنفيذ (يكتبه Claude، تراكمي — أحدث إدخال أولاً)
 
 ```
+2026-09-12 — المهمة 29: قائمة "كل Pressable" الميكانيكية استُنفدت بالكامل بمهمة 28 (صفر ملفات
+متبقية) — أول تشغيل ينتقل بالكامل لبنود موثوقية/وضوح-حالة فعلية من ROADMAP Track A/B بدل نمط
+ضغط/ظل الأزرار. خمسة تغييرات مستقلة، 12 ملفاً (7 معدَّل + 5 جديد):
+
+(أ) ربط واجهة drawingStore.ts — الفجوة الوحيدة المتبقية من مهمة 28: MatrixChart.tsx يستورد الآن
+subscribeDrawingsSaveError من './drawingStore'، أُضيف state `drawingsSaveError` + useEffect
+اشتراك/إلغاء اشتراك مستقل (بلا شرط persistDrawings/interactive — الاشتراك نفسه رخيص)، وسطر
+`<Text style={styles.drawingsSaveError}>` جديد يظهر فوق صف readout الأساسي فقط عند error فعلي
+(عنصر شرطي مستقل — لم يُلمس تخطيط readout ذا الطفلين الوحيدين لتجنّب كسر flexDirection:
+row-reverse/justify-content:space-between الحالي). ستايل drawingsSaveError مطابق حرفياً لتوكن
+saveError الأحمر المستخدَم بـLayoutPanel.tsx (color: colors.bear, fontSize: 10, fontWeight: 700,
+textAlign: right).
+
+(ب) WS reconnect backoff — useLiveTicks.ts وuseMultiLiveTicks.ts كانا يفتحان WebSocket واحداً في
+useEffect بلا أي منطق إعادة اتصال؛ onerror صامت وonclose غير موجود إطلاقاً، فانقطاع الشبكة يعني
+سكوت تام للأسعار الحيّة حتى إعادة تركيب المكوّن (تغيير الرمز/التفعيل). أُعيد بناء كل خطّاف حول
+دالة connect() قابلة لإعادة الاستدعاء + متغيرات attempt/reconnectTimer داخل نطاق الـeffect
+نفسه (لا حاجة لـuseRef إضافي بما أن كل شيء محلي لدورة حياة الـeffect الواحدة): onclose وcatch
+عند فشل new WebSocket() يستدعيان scheduleReconnect (تأخير = min(1000 * 2^attempt, 30000)ms،
+attempt++، إعادة استدعاء connect عبر setTimeout)؛ onopen يصفّر attempt=0 عند نجاح الاتصال.
+cleanup الخاص بالـeffect يمسح المؤقّت المعلَّق (clearTimeout) قبل إغلاق أي WebSocket مفتوح فعلاً،
+بمنع أي محاولة اتصال بعد unmount. لم يتغيّر توقيع أي دالة مصدَّرة (useLiveTicks/useMultiLiveTicks
+بنفس النوع المُرجَع) ولا أي منطق معالجة رسائل الأسعار (onmessage نُقل حرفياً بلا أي تعديل داخلي).
+
+(ج) بنية pytest — أول اختبارات آلية بكامل المشروع (backend كان بلا أي ملف اختبار إطلاقاً).
+أُضيف backend/tests/ (conftest.py يُدرج مجلد backend/ بمقدّمة sys.path حتى يعمل `import
+indicators`/`import commissions` بنفس أسلوب الاستيراد المسطّح المستخدَم فعلياً بـmain.py، بلا
+حاجة لتحويل الوحدات لحزمة أو تغيير أي استيراد قائم؛ __init__.py فارغ لجعل tests حزمة صريحة)،
+test_indicators.py (11 اختبار: sma/ema بقيم محسوبة يدوياً بدقة لسلسلة خطية بسيطة k=0.5، rsi
+لسلسلة تصاعدية بحتة صفر-خسائر تؤكّد 100.0 بعد فترة الإحماء بالضبط، cross_up/cross_down بحالات
+None وسلاسل قصيرة، snapshot لقوائم فارغة/غير فارغة)، test_commissions.py (11 اختبار: levels_for_
+role للأدوار الخمسة، unlocked_balance_levels لحالات توازن/عدم توازن/حدّية، rate_summary بما فيها
+next_level، plan_document لبنية ونسب الجدول) — كل توقّع محسوب يدوياً من منطق الملفين نفسه (لا
+تشغيل فعلي متاح هذا التشغيل)، مع احتراز واحد متعمَّد: مقارنة effective_rate بـ`comm.DIRECT_RATE +
+comm.BALANCE_BONUS_RATE` بدل الحرفي 0.15 لتجنّب أي فرق تقريب عائم من جمع 0.10+0.05. backend/
+pytest.ini (testpaths=tests) وrequirements.txt (+pytest>=8.0.0) أُضيفا أيضاً.
+**لم تُشغَّل هذه الاختبارات فعلياً — القيد التقني الحالي (بلا وصول تشغيل أوامر) يمنع التحقق
+النهائي؛ يُنصح بتشغيل `pytest` من داخل backend/ كأول خطوة عند توفّر تشغيل أوامر لاحقاً.**
+
+(د) Track B — وضوح الحالة للمستخدم (بند بالخريطة منذ مهمة 17 لم يُلمس إطلاقاً حتى الآن):
+CalendarPanel.tsx كان يعرض "لا أحداث — تحقق من الاتصال" دائماً عند events.length === 0 بلا أي
+تمييز بين فشل الشبكة الفعلي وفراغ حقيقي بعد الفلترة — أُضيف state ثلاثي (loading/ok/error) يُضبط
+loading عند بدء كل طلب (تبعية useEffect: currency/impact) وok/error عند then/catch؛ ثلاث حالات
+عرض منفصلة الآن ("جاري تحميل التقويم…" / "تعذر تحميل التقويم — تحقق من الاتصال" / "لا أحداث
+بهذا الفلتر"). NewsPanel.tsx كان يهيّئ news بـmockNews ويستبدلها بالفعلي عند نجاح api.news()
+لكن يبتلع أي فشل بصمت تام (`.catch(() => undefined)`) فيستمر بعرض بيانات تجريبية للمستخدم بلا أي
+إشارة أنها ليست حية — أُضيف state `stale` (يبدأ false عمداً — لا ادّعاء فشل قبل حدوث أي محاولة
+فعلية) يتحوّل true فقط عند catch فعلي، مع سطر تحذيري تحت العنوان عند true. AiPanel.tsx: كان
+الحارس المنطقي `if (!question || loading) return` موجوداً فعلاً بدالة ask (يمنع فعلياً إرسال
+سؤال ثانٍ أثناء انتظار الرد) لكن بلا أي إشارة بصرية للمستخدم أن الزر معطَّل فعلياً أثناء التحميل
+— أُضيف `disabled={loading}` + ستايل `sendDisabled` (opacity: 0.5) على مصفوفة style الحالية
+لزر "اسأل" فقط؛ لم يتغيّر منطق ask أو حارسه بأي شكل.
+
+(هـ) تصحيح جدول التكافؤ الوظيفي: قراءة فعلية لـtypes.ts وMatrixChart.tsx أكّدت أن Area مُنفَّذ
+بالكامل ومُختار (ChartKind يتضمن 'area'، CHART_KINDS بتسمية "منطقة"، ورسم فعلي مشروط بـ
+`kind === 'area'` بمنطقة الرسم) — كان صف الجدول يصف Area كـ"ناقصة" رغم ذلك؛ عُدِّل ليعكس الواقع
+(Range/Baseline فقط لا تزالان ناقصتين، Area ✅).
+
+مراجعة يدوية: قراءة كل ملف كامل بعد التعديل — MatrixChart.tsx (منطقة الاستيراد + declarations
+الحالة + كل effect جديد/معدَّل + منطقة readout الجديدة بالكامل)، useLiveTicks.ts وuseMultiLiveTicks.ts
+كاملين، CalendarPanel.tsx وNewsPanel.tsx وAiPanel.tsx كاملة، وكل ملفات backend/tests/ الخمسة.
+grep تأكيدي على MatrixChart.tsx: ظهور واحد فقط لكل من drawingsSaveError/subscribeDrawingsSaveError
+(صفر تكرار). فحص يدوي متأنٍّ لتوازن الأقواس/الترنري المتداخل بـCalendarPanel.tsx (ternary متداخل
+جديد بدل ternary بسيط) بقراءة الملف كاملاً بعد التعديل.
+mtime-guard: device_list_dir لكل من mobile/src/chart، mobile/src/hooks، mobile/src/components،
+backend قبل staging وقبل commit — لا تغييرات خارجية على أي ملف من السبعة القائمة (المستهدفة
+بالتعديل)، 12/12 commit (7 معدَّل + 5 جديد بلا حاجة mtime) نجح بدفعة واحدة، صفر رفض. نفس
+الإجراء لـdocs/ROADMAP.md وHANDOFF.md نفسيهما. لم يُشغَّل pytest ولم يُشغَّل tsc ولم تُؤخذ لقطة
+شاشة (القيد التقني الموضّح أدناه، ساري منذ 2026-09-12).
+
+ROADMAP.md: Track A [x] مكتمل بالكامل (WS backoff + بنية pytest + واجهة drawingStore الثلاثة
+كانت الفجوات الوحيدة المتبقية). Track B [x] أول تطبيق فعلي على الثلاثة الملفات المذكورة بالخريطة.
+جدول التكافؤ: صف "أنواع الشارت" مُصحَّح (Area ✅). التالي بالأولوية بالكامل: Track C — Range/
+Baseline، مؤشرات إضافية، أدوات رسم Gann/Elliott/Harmonic (كل نوع مهمة مستقلة، تحتاج مراجعة
+رياضية دقيقة قبل الكود لأنها أعقد من نمط الضغط/الظل الميكانيكي السابق)، تنبيه من رسم غير الخط
+الأفقي، تخطيطات أكثر من 2×2، Heatmap، Correlation، Pine-lite أعمق، Ideas/منشورات مجتمعية.
+
+---
+2026-09-12 — المهمة 28: (أ) استكمال آخر ملف من قائمة مهمة 27 (MatrixChart.tsx، 99KB، أكبر ملف
+بالمشروع، لم يُفحص أي تشغيل سابق) بنفس منهجية "كل Pressable لا الزر الرئيسي فقط". (ب) أول تشغيل
+يعالج بند موثوقية فعلي من Track A بدل نمط ضغط/ظل الأزرار البحت: إضافة إشارة "رسائل فشل" لمخازن
+drawing/layout/template (كانت فارغة بالكامل من ROADMAP Track A).
+
+(أ) MatrixChart.tsx — grep أظهر 25 Pressable (50 ظهور للكلمة إجمالاً) بلا أي `buttons` import
+وبلا أي حالة ضغط على الإطلاق. أُضيف `buttons` لاستيراد '../theme' (لم يكن مستورَداً قط بالملف)،
+وطُبِّق نمط buttons.pressedOpacity/pressedScale (ضغط بلا ظل، لا CTA أساسي جديد) على 24 عنصراً:
+شرائح أدوات الرسم بالشريط المضغوط (loop) + زر مسح، شرائح نوع الشارت + بطاقات العدسة بالشريط
+العادي (loop لكل منهما)، أزرار التكبير/التصغير/التنقّل الأربعة بصف Zoom، مفتاح تشغيل Bar Replay
+وأزرار خطوة السابق/تشغيل-إيقاف/التالي الثلاثة داخله، مفتاحا Log وMagnet، زر "AUTO" لإعادة ضبط
+المحاور (axisCorner)، شريط مرسى الأدوات السفلي بالكامل: أدوات الرسم (loop) + مسح + المؤشرات
+(loop) + "بدون خط Pine" + مكتبة Pine (loop) + تصدير PNG + حفظ قالب + حذف الرسم المحدد + تنبيه من
+خط أفقي محدد. استُثني عمداً عنصر واحد فقط: الطبقة الشفافة الكاملة فوق الشارت
+(style={StyleSheet.absoluteFill}) الخاصة بالنقر للرسم — ليست زراً مرئياً، نفس منطق استثناء طبقات
+"dim"/الخلفية الشفافة بمهام سابقة.
+مراجعة يدوية: grep قبل/بعد أكّد 25 فتح Pressable (بلا تغيير بالعدد) و24 ظهوراً بالضبط لـ
+pressedOpacity (عنصر واحد لكل تعديل، صفر تكرار)، ثم قراءة كاملة لكل منطقة معدَّلة (الشريط المضغوط،
+الشريط العادي+اللينس، صف Zoom+Replay، زر AUTO، مرسى الأدوات السفلي كاملاً) للتأكد من توازن JSX
+وصحة import buttons وعدم لمس أي منطق/JSX غير متعلق بالعناصر المذكورة.
+
+(ب) رصدت أثناء المراجعة أن layoutStore.ts وchartTemplateStore.ts بلا أي try/catch إطلاقاً على
+عمليات AsyncStorage.setItem (خطر استثناء غير معالَج يصعد لمستدعي saveLayout/deleteLayout/
+saveTemplate/deleteTemplate)، وdrawingStore.ts يكتفي بـ`/* ignore */` صامت بلا أي إشارة للمستخدم —
+بينما watchlistStoreCore.ts يملك فعلاً نمط ناضج (subscribeWatchlistSaveError/
+getWatchlistSaveError، مستخدَم بالفعل بـWatchlistPanel.tsx). طُبِّق نفس النمط حرفياً على الثلاثة:
+saveError متغيّر وحدة + Set<listener> + notifyError/setSaveError + subscribeXSaveError/
+getXSaveError مُصدَّرة. لُفَّت saveLayout/deleteLayout (layoutStore.ts) وsaveTemplate/deleteTemplate
+(chartTemplateStore.ts) بـtry/catch لأول مرة (setSaveError(null) عند النجاح، رسالة عربية عند
+الفشل)، ورُقِّي catch الصامت بـsaveDrawings/clearDrawings (drawingStore.ts) لنفس الإشارة. لم يتغيّر
+أي توقيع دالة (تبقى Promise<void>) ولا أي استدعاء موجود — grep أكّد نقطة استدعاء واحدة فقط لكل من
+saveLayout/deleteLayout (بـLayoutPanel.tsx) وsaveTemplate (بـMatrixChart.tsx)، فالتغيير محصور
+ومفهوم بالكامل.
+ربط واجهة المستخدم: LayoutPanel.tsx يشترك الآن بـsubscribeLayoutsSaveError ويعرض الرسالة بنفس
+توكن ستايل `saveError` المستخدَم حرفياً بـWatchlistPanel.tsx (color: colors.bear, fontSize: 10,
+fontWeight: '700'، مع textAlign: 'right' هنا). MatrixChart.tsx: `persistTemplate` يتحقق الآن من
+getTemplatesSaveError() بعد saveTemplate() ويعرضها بنفس Alert.alert بدل الادّعاء الدائم بالنجاح
+(كان `.then(() => Alert.alert(..., 'تم حفظ قالب الشارت'))` بلا أي تحقق من نجاح فعلي). قناة
+drawingStore الجديدة بلا واجهة مستخدم بعد (لا يوجد مكان مالك واحد طبيعي مثل Layout/Template —
+الحفظ تلقائي بـdebounce داخل MatrixChart.tsx نفسه) — تُركت للتشغيل القادم بدل إقحامها بموضع متسرّع.
+مراجعة يدوية: قراءة كاملة لكل ملف من الثلاثة (stores) بعد التعديل + LayoutPanel.tsx كاملاً +
+منطقة persistTemplate بـMatrixChart.tsx، تأكدت من صحة كل import، عدم تغيير أي سلوك/توقيع موجود،
+وتنظيف الاشتراك (unsubscribe) بـuseEffect cleanup في LayoutPanel.tsx.
+mtime-guard: device_list_dir قبل كل staging وقبل كل commit (فحص مزدوج) — لا تغييرات خارجية، 6/6
+device_commit_files نجح بنفس الـmtime الأصلية عبر دفعتين (MatrixChart.tsx وحدها أولاً، ثم الأربعة
+الباقية + MatrixChart.tsx مجدداً بعد تعديل persistTemplate)، صفر رفض.
+لم يُشغَّل tsc ولم تُؤخذ لقطة شاشة (القيد التقني الموضّح أدناه، ساري منذ 2026-09-12).
+
+ROADMAP.md: مهمة 28 [x] — MatrixChart.tsx أنهى قائمة "كل Pressable" الميكانيكية بكل mobile/src.
+Track A: "drawing/layout/template stores رسائل فشل" [x] جزئياً (المخازن الثلاثة + واجهة Layout/
+Template؛ واجهة drawings لم تُربَط بعد). المتبقي الأبرز للتشغيل القادم: ربط واجهة drawingStore
+(مكان معقول: صف readout بأعلى MatrixChart.tsx)، ثم WS reconnect backoff وبنية pytest (باقي Track
+A)، ثم الانتقال لأولوية تكافؤ تالية (Range/Baseline chart kinds، مؤشرات إضافية، Gann/Elliott/
+Harmonic، إلخ) كما هو مذكور بمهمة 27.
+
+---
 2026-09-12 — المهمة 27: دفعة ثالثة (11 ملف) — تصحيح استنتاج خاطئ من مهمة 25 + فحص ملفات لم
 تُراجَع من قبل، ثم نفس نمط ضغط/ظل المعتمد.
 

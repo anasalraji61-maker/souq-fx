@@ -14,6 +14,38 @@ export type ChartTemplate = {
 
 const KEY = 'matrix.chartTemplates.v1';
 
+/** إشارة فشل حفظ/حذف القالب — نفس نمط subscribeWatchlistSaveError بـwatchlistStoreCore.ts */
+type ErrorListener = (message: string | null) => void;
+let saveError: string | null = null;
+const errorListeners = new Set<ErrorListener>();
+
+function notifyError() {
+  for (const cb of errorListeners) {
+    try {
+      cb(saveError);
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+function setSaveError(msg: string | null) {
+  saveError = msg;
+  notifyError();
+}
+
+export function subscribeTemplatesSaveError(cb: ErrorListener): () => void {
+  errorListeners.add(cb);
+  cb(saveError);
+  return () => {
+    errorListeners.delete(cb);
+  };
+}
+
+export function getTemplatesSaveError(): string | null {
+  return saveError;
+}
+
 export async function loadTemplates(): Promise<ChartTemplate[]> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
@@ -26,16 +58,26 @@ export async function loadTemplates(): Promise<ChartTemplate[]> {
 }
 
 export async function saveTemplate(t: ChartTemplate): Promise<void> {
-  const all = await loadTemplates();
-  const idx = all.findIndex((x) => x.id === t.id);
-  if (idx >= 0) all[idx] = t;
-  else all.unshift(t);
-  await AsyncStorage.setItem(KEY, JSON.stringify(all.slice(0, 20)));
+  try {
+    const all = await loadTemplates();
+    const idx = all.findIndex((x) => x.id === t.id);
+    if (idx >= 0) all[idx] = t;
+    else all.unshift(t);
+    await AsyncStorage.setItem(KEY, JSON.stringify(all.slice(0, 20)));
+    setSaveError(null);
+  } catch {
+    setSaveError('تعذر حفظ قالب الشارت');
+  }
 }
 
 export async function deleteTemplate(id: string): Promise<void> {
-  const all = (await loadTemplates()).filter((x) => x.id !== id);
-  await AsyncStorage.setItem(KEY, JSON.stringify(all));
+  try {
+    const all = (await loadTemplates()).filter((x) => x.id !== id);
+    await AsyncStorage.setItem(KEY, JSON.stringify(all));
+    setSaveError(null);
+  } catch {
+    setSaveError('تعذر حذف قالب الشارت');
+  }
 }
 
 export const DEFAULT_TEMPLATE: ChartTemplate = {

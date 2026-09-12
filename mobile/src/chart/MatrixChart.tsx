@@ -20,9 +20,14 @@ import {
 } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
-import { colors, radii, spacing } from '../theme';
+import { buttons, colors, radii, spacing } from '../theme';
 import type { ChartSeries } from '../api';
-import { loadDrawings, saveDrawings, clearDrawings } from './drawingStore';
+import {
+  loadDrawings,
+  saveDrawings,
+  clearDrawings,
+  subscribeDrawingsSaveError,
+} from './drawingStore';
 import { compareOverlayPrices } from './compare';
 import { withLivePrice } from './liveSeries';
 import { computeVolumeProfile, pocPrice, computeTpo } from './volumeProfile';
@@ -31,7 +36,7 @@ import { renko, measureStats, snapPrice } from './renko';
 import { kagi } from './kagi';
 import { pointFigure } from './pointFigure';
 import { computeCvd, computeFootprint } from './orderflow';
-import { loadTemplates, saveTemplate, DEFAULT_TEMPLATE } from './chartTemplateStore';
+import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import {
   CHART_KINDS,
   DRAW_TOOLS,
@@ -355,6 +360,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [logScale, setLogScale] = useState(false);
   const [magnet, setMagnet] = useState(true);
   const [measureReadout, setMeasureReadout] = useState<string | null>(null);
+  const [drawingsSaveError, setDrawingsSaveError] = useState<string | null>(null);
   const [chartW, setChartW] = useState(320);
   const panStartOffset = useRef(0);
   const offsetRef = useRef(0);
@@ -659,6 +665,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
   }, [drawings, series.symbol, series.timeframe, persistDrawings, interactive]);
+
+  useEffect(() => {
+    const unsub = subscribeDrawingsSaveError(setDrawingsSaveError);
+    return () => {
+      unsub();
+    };
+  }, []);
 
   const comparePrices = useMemo(() => {
     if (!compareSeries?.candles?.length) return null;
@@ -1448,7 +1461,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       pineFormula,
       logScale,
       magnet,
-    }).then(() => Alert.alert('MATRIX', 'تم حفظ قالب الشارت'));
+    }).then(() => {
+      const err = getTemplatesSaveError();
+      Alert.alert('MATRIX', err ?? 'تم حفظ قالب الشارت');
+    });
   };
 
   const crossCandle = cross ? source.plot[cross.index] : null;
@@ -1496,7 +1512,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {DRAW_TOOLS.map((t) => (
               <Pressable
                 key={t.id}
-                style={[styles.compactTool, tool === t.id && styles.compactToolOn]}
+                style={({ pressed }) => [
+                  styles.compactTool,
+                  tool === t.id && styles.compactToolOn,
+                  pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                ]}
                 onPress={() => {
                   setTool(t.id);
                   setPending(null);
@@ -1511,7 +1531,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               </Pressable>
             ))}
             <Pressable
-              style={styles.compactTool}
+              style={({ pressed }) => [
+                styles.compactTool,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
               onPress={() => {
                 setDrawings([]);
                 setPending(null);
@@ -1529,7 +1552,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {CHART_KINDS.map((k) => (
               <Pressable
                 key={k.id}
-                style={[styles.chip, kind === k.id && styles.chipOn]}
+                style={({ pressed }) => [
+                  styles.chip,
+                  kind === k.id && styles.chipOn,
+                  pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                ]}
                 onPress={() => setKind(k.id)}
               >
                 <Text style={[styles.chipText, kind === k.id && styles.chipTextOn]}>{k.label}</Text>
@@ -1540,7 +1567,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {LENSES.map((l) => (
               <Pressable
                 key={l.id}
-                style={[styles.lens, lens === l.id && { borderColor: accent }]}
+                style={({ pressed }) => [
+                  styles.lens,
+                  lens === l.id && { borderColor: accent },
+                  pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                ]}
                 onPress={() => setLens(l.id)}
               >
                 <Text style={styles.lensTitle}>{l.label}</Text>
@@ -1549,6 +1580,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ))}
           </ScrollView>
         </View>
+      ) : null}
+
+      {drawingsSaveError ? (
+        <Text style={styles.drawingsSaveError}>{drawingsSaveError}</Text>
       ) : null}
 
       {!dense ? (
@@ -1573,7 +1608,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {interactive && !compactUi ? (
           <View style={styles.zoomRow}>
             <Pressable
-              style={styles.zoomBtn}
+              style={({ pressed }) => [
+                styles.zoomBtn,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
               onPress={() =>
                 setWindowCount((n) => Math.min(1000, n + Math.max(1, Math.round(n * 0.25))))
               }
@@ -1581,7 +1619,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Text style={styles.zoomText}>−</Text>
             </Pressable>
             <Pressable
-              style={styles.zoomBtn}
+              style={({ pressed }) => [
+                styles.zoomBtn,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
               onPress={() =>
                 setWindowCount((n) => Math.max(2, n - Math.max(1, Math.round(n * 0.25))))
               }
@@ -1589,19 +1630,29 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Text style={styles.zoomText}>+</Text>
             </Pressable>
             <Pressable
-              style={styles.zoomBtn}
+              style={({ pressed }) => [
+                styles.zoomBtn,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
               onPress={() => setOffset((o) => Math.min(series.candles.length - 10, o + 15))}
             >
               <Text style={styles.zoomText}>‹</Text>
             </Pressable>
             <Pressable
-              style={styles.zoomBtn}
+              style={({ pressed }) => [
+                styles.zoomBtn,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
               onPress={() => setOffset((o) => Math.max(0, o - 15))}
             >
               <Text style={styles.zoomText}>›</Text>
             </Pressable>
             <Pressable
-              style={[styles.zoomBtn, replayOn && styles.replayOn]}
+              style={({ pressed }) => [
+                styles.zoomBtn,
+                replayOn && styles.replayOn,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
               onPress={() => {
                 setReplayOn((on) => {
                   const next = !on;
@@ -1620,13 +1671,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {replayOn ? (
               <>
                 <Pressable
-                  style={styles.zoomBtn}
+                  style={({ pressed }) => [
+                    styles.zoomBtn,
+                    pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                  ]}
                   onPress={() => setReplayStep((s) => Math.max(1, s - 1))}
                 >
                   <Text style={styles.zoomText}>-1</Text>
                 </Pressable>
                 <Pressable
-                  style={[styles.zoomBtn, replayPlaying && styles.replayOn]}
+                  style={({ pressed }) => [
+                    styles.zoomBtn,
+                    replayPlaying && styles.replayOn,
+                    pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                  ]}
                   onPress={() => setReplayPlaying((p) => !p)}
                 >
                   <Text style={[styles.zoomText, replayPlaying && styles.replayTextOn]}>
@@ -1634,7 +1692,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   </Text>
                 </Pressable>
                 <Pressable
-                  style={styles.zoomBtn}
+                  style={({ pressed }) => [
+                    styles.zoomBtn,
+                    pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                  ]}
                   onPress={() =>
                     setReplayStep((s) => Math.min(source.windowLen, s + 1))
                   }
@@ -1644,13 +1705,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               </>
             ) : null}
             <Pressable
-              style={[styles.zoomBtn, logScale && styles.replayOn]}
+              style={({ pressed }) => [
+                styles.zoomBtn,
+                logScale && styles.replayOn,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
               onPress={() => setLogScale((v) => !v)}
             >
               <Text style={[styles.zoomText, logScale && styles.replayTextOn]}>Log</Text>
             </Pressable>
             <Pressable
-              style={[styles.zoomBtn, magnet && styles.replayOn]}
+              style={({ pressed }) => [
+                styles.zoomBtn,
+                magnet && styles.replayOn,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
               onPress={() => setMagnet((v) => !v)}
             >
               <Text style={[styles.zoomText, magnet && styles.replayTextOn]}>🧲</Text>
@@ -2425,9 +2494,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
         {canPan && !hideTimeLabels ? (
           <Pressable
-            style={[
+            style={({ pressed }) => [
               styles.axisCorner,
               { width: PRICE_AXIS_WIDTH, height: timeAxisH },
+              pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
             ]}
             onPress={() => {
               setPriceScale(1);
@@ -2605,7 +2675,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {DRAW_TOOLS.map((t) => (
               <Pressable
                 key={t.id}
-                style={[styles.tool, tool === t.id && styles.toolOn]}
+                style={({ pressed }) => [
+                  styles.tool,
+                  tool === t.id && styles.toolOn,
+                  pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                ]}
                 onPress={() => {
                   setTool(t.id);
                   setPending(null);
@@ -2615,7 +2689,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               </Pressable>
             ))}
             <Pressable
-              style={styles.tool}
+              style={({ pressed }) => [
+                styles.tool,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
               onPress={() => {
                 setDrawings([]);
                 setPending(null);
@@ -2631,7 +2708,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               return (
                 <Pressable
                   key={ind.id}
-                  style={[styles.ind, on && styles.indOn]}
+                  style={({ pressed }) => [
+                    styles.ind,
+                    on && styles.indOn,
+                    pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                  ]}
                   onPress={() => toggleInd(ind.id)}
                 >
                   <Text style={[styles.indText, on && styles.indTextOn]}>{ind.label}</Text>
@@ -2641,7 +2722,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
             <Pressable
-              style={[styles.ind, !pineOn && styles.indOn]}
+              style={({ pressed }) => [
+                styles.ind,
+                !pineOn && styles.indOn,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
               onPress={() => setPineOn(false)}
             >
               <Text style={[styles.indText, !pineOn && styles.indTextOn]}>بدون خط Pine</Text>
@@ -2651,7 +2736,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               return (
                 <Pressable
                   key={p.id}
-                  style={[styles.ind, on && styles.indOn]}
+                  style={({ pressed }) => [
+                    styles.ind,
+                    on && styles.indOn,
+                    pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                  ]}
                   onPress={() => {
                     if (on) {
                       setPineOn(false);
@@ -2665,16 +2754,31 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 </Pressable>
               );
             })}
-            <Pressable style={styles.tool} onPress={() => void exportChart()}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.tool,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
+              onPress={() => void exportChart()}
+            >
               <Text style={styles.toolText}>تصدير PNG</Text>
             </Pressable>
-            <Pressable style={styles.tool} onPress={persistTemplate}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.tool,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
+              onPress={persistTemplate}
+            >
               <Text style={styles.toolText}>حفظ قالب</Text>
             </Pressable>
             {selectedId ? (
               <>
                 <Pressable
-                  style={styles.tool}
+                  style={({ pressed }) => [
+                    styles.tool,
+                    pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                  ]}
                   onPress={() => {
                     setDrawings((list) => list.filter((x) => x.id !== selectedId));
                     setSelectedId(null);
@@ -2686,7 +2790,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   const d = drawings.find((x) => x.id === selectedId);
                   if (d?.tool === 'hline' && onCreateAlert) {
                     return (
-                      <Pressable style={[styles.tool, styles.toolOn]} onPress={() => onCreateAlert(d.a.price)}>
+                      <Pressable
+                        style={({ pressed }) => [
+                          styles.tool,
+                          styles.toolOn,
+                          pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                        ]}
+                        onPress={() => onCreateAlert(d.a.price)}
+                      >
                         <Text style={styles.toolTextOn}>تنبيه خط</Text>
                       </Pressable>
                     );
@@ -2761,6 +2872,12 @@ const styles = StyleSheet.create({
   },
   readoutText: { color: colors.text, fontSize: 11, fontFamily: 'monospace', flex: 1, textAlign: 'right' },
   readoutMuted: { color: colors.textDim, fontSize: 11, flex: 1, textAlign: 'right' },
+  drawingsSaveError: {
+    color: colors.bear,
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'right',
+  },
   zoomRow: { flexDirection: 'row', gap: 4 },
   zoomBtn: {
     width: 28,

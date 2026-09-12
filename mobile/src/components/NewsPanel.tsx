@@ -6,12 +6,18 @@ import { mockNews } from '../mock';
 
 export function NewsPanel({ embedded }: { embedded?: boolean }) {
   const [news, setNews] = useState<NewsItem[]>(mockNews);
+  /** وضوح الحالة: يعلم المستخدم إذا فشل تحديث الأخبار وأن ما يراه بيانات محفوظة قديمة
+   * (لا تُفعَّل قبل أول محاولة فعلية — لا ادّعاء فشل قبل حدوثه). */
+  const [stale, setStale] = useState(false);
 
   useEffect(() => {
     api
       .news()
-      .then((r) => setNews(r.news))
-      .catch(() => undefined);
+      .then((r) => {
+        setNews(r.news);
+        setStale(false);
+      })
+      .catch(() => setStale(true));
   }, []);
 
   return (
@@ -26,6 +32,7 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
       ) : (
         <Text style={styles.title}>أخبار مؤثرة على الفوركس</Text>
       )}
+      {stale ? <Text style={styles.staleNote}>تعذر تحديث الأخبار — تُعرض بيانات محفوظة</Text> : null}
       <ScrollView contentContainerStyle={{ gap: 8 }}>
         {news.map((n) => (
           <View key={n.id} style={styles.card}>
@@ -81,6 +88,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   titleInHead: { marginBottom: 0 },
+  staleNote: {
+    color: colors.warn,
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'right',
+    marginBottom: spacing.xs,
+  },
   card: {
     backgroundColor: colors.bgElevated,
     borderRadius: radii.sm,

@@ -29,15 +29,24 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
   const [events, setEvents] = useState<Ev[]>([]);
   const [currency, setCurrency] = useState('ALL');
   const [impact, setImpact] = useState<'ALL' | 'high' | 'medium' | 'low'>('ALL');
+  /** وضوح الحالة: تمييز "جاري التحميل" و"فشل الاتصال" عن "لا أحداث فعلاً بهذا الفلتر" */
+  const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
 
   useEffect(() => {
+    setStatus('loading');
     api
       .calendar({
         currency: currency === 'ALL' ? undefined : currency,
         impact: impact === 'ALL' ? undefined : impact,
       })
-      .then((r) => setEvents(r.events))
-      .catch(() => setEvents([]));
+      .then((r) => {
+        setEvents(r.events);
+        setStatus('ok');
+      })
+      .catch(() => {
+        setEvents([]);
+        setStatus('error');
+      });
   }, [currency, impact]);
 
   return (
@@ -85,8 +94,14 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
         </View>
       </ScrollView>
       <ScrollView style={{ maxHeight: compact ? 140 : 280 }}>
-        {events.length === 0 ? (
-          <Text style={styles.empty}>لا أحداث — تحقق من الاتصال</Text>
+        {status === 'loading' ? (
+          <Text style={styles.empty}>جاري تحميل التقويم…</Text>
+        ) : events.length === 0 ? (
+          status === 'error' ? (
+            <Text style={styles.empty}>تعذر تحميل التقويم — تحقق من الاتصال</Text>
+          ) : (
+            <Text style={styles.empty}>لا أحداث بهذا الفلتر</Text>
+          )
         ) : (
           events.map((e) => (
             <View key={e.id} style={styles.row}>

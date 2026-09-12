@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, TextInput } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
-import { loadLayouts, saveLayout, deleteLayout, DEFAULT_LAYOUT, type TerminalLayout } from '../chart/layoutStore';
+import {
+  loadLayouts,
+  saveLayout,
+  deleteLayout,
+  subscribeLayoutsSaveError,
+  DEFAULT_LAYOUT,
+  type TerminalLayout,
+} from '../chart/layoutStore';
 import { api } from '../api';
 
 type Props = {
@@ -13,9 +20,14 @@ type Props = {
 export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
   const [layouts, setLayouts] = useState<TerminalLayout[]>([DEFAULT_LAYOUT]);
   const [name, setName] = useState('تخطيطي');
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     loadLayouts().then((l) => setLayouts(l.length ? [DEFAULT_LAYOUT, ...l] : [DEFAULT_LAYOUT]));
+    const unsubErr = subscribeLayoutsSaveError(setSaveError);
+    return () => {
+      unsubErr();
+    };
   }, []);
 
   const save = async () => {
@@ -39,6 +51,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
   return (
     <View style={styles.wrap}>
       <Text style={styles.title}>تخطيطات محفوظة</Text>
+      {saveError ? <Text style={styles.saveError}>{saveError}</Text> : null}
       <TextInput
         style={styles.input}
         value={name}
@@ -140,4 +153,10 @@ const styles = StyleSheet.create({
   rowName: { color: colors.text, fontWeight: '700', textAlign: 'right' },
   rowSub: { color: colors.textDim, fontSize: 10, textAlign: 'right' },
   del: { color: colors.bear, fontWeight: '700' },
+  saveError: {
+    color: colors.bear,
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'right',
+  },
 });
