@@ -10,18 +10,22 @@ export type ChartKind =
   | 'baseline'
   | 'renko'
   | 'kagi'
-  | 'pnf';
+  | 'pnf'
+  | 'range';
 
 export type IndicatorId =
   | 'sma20'
   | 'sma50'
   | 'ema21'
   | 'wma20'
+  | 'dema20'
+  | 'tema20'
   | 'bb'
   | 'rsi'
   | 'macd'
   | 'stoch'
   | 'atr'
+  | 'willr'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -65,6 +69,7 @@ export const CHART_KINDS: { id: ChartKind; label: string }[] = [
   { id: 'renko', label: 'Renko' },
   { id: 'kagi', label: 'Kagi' },
   { id: 'pnf', label: 'P&F' },
+  { id: 'range', label: 'نطاق' },
 ];
 
 export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = [
@@ -72,6 +77,8 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'sma50', label: 'SMA 50' },
   { id: 'ema21', label: 'EMA 21' },
   { id: 'wma20', label: 'WMA 20' },
+  { id: 'dema20', label: 'DEMA 20' },
+  { id: 'tema20', label: 'TEMA 20' },
   { id: 'bb', label: 'بولنجر' },
   { id: 'volume', label: 'فوليوم', pane: true },
   { id: 'volumeProfile', label: 'VP', pane: false },
@@ -82,6 +89,7 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'macd', label: 'MACD', pane: true },
   { id: 'stoch', label: 'Stoch', pane: true },
   { id: 'atr', label: 'ATR', pane: true },
+  { id: 'willr', label: 'Williams %R', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

@@ -78,11 +78,33 @@ function ema(values: number[], period: number): (number | null)[] {
   return out;
 }
 
+/** DEMA — نفس نمط إشارة MACD الموجود (ema لقيمة null مُعوَّضة بصفر ثم بوابة صلاحية بالقيمة الأصلية). */
+function dema(values: number[], period: number): (number | null)[] {
+  const e1 = ema(values, period);
+  const e1Filled = e1.map((v) => v ?? 0);
+  const e2 = ema(e1Filled, period);
+  return values.map((_, i) => (e1[i] != null && e2[i] != null ? 2 * e1[i]! - e2[i]! : null));
+}
+
+/** TEMA — نفس مبدأ dema() بتكرار إضافي (طبقة ema ثالثة) لتقليل التأخر أكثر. */
+function tema(values: number[], period: number): (number | null)[] {
+  const e1 = ema(values, period);
+  const e1Filled = e1.map((v) => v ?? 0);
+  const e2 = ema(e1Filled, period);
+  const e2Filled = e2.map((v) => v ?? 0);
+  const e3 = ema(e2Filled, period);
+  return values.map((_, i) =>
+    e1[i] != null && e2[i] != null && e3[i] != null ? 3 * e1[i]! - 3 * e2[i]! + e3[i]! : null
+  );
+}
+
 export function computeOverlays(closes: number[]) {
   const sma20 = sma(closes, 20);
   const sma50 = sma(closes, 50);
   const ema21 = ema(closes, 21);
   const wma20 = wma(closes, 20);
+  const dema20 = dema(closes, 20);
+  const tema20 = tema(closes, 20);
   const mid = sma(closes, 20);
   const upper: (number | null)[] = [];
   const lower: (number | null)[] = [];
@@ -99,7 +121,17 @@ export function computeOverlays(closes: number[]) {
     upper.push(mean + 2 * sd);
     lower.push(mean - 2 * sd);
   }
-  return { sma20, sma50, ema21, wma20, bbMid: mid, bbUpper: upper, bbLower: lower };
+  return {
+    sma20,
+    sma50,
+    ema21,
+    wma20,
+    dema20,
+    tema20,
+    bbMid: mid,
+    bbUpper: upper,
+    bbLower: lower,
+  };
 }
 
 export function computeRsi(closes: number[], period = 14): (number | null)[] {
@@ -156,6 +188,27 @@ export function computeStoch(candles: Candle[], kPeriod = 14, dPeriod = 3) {
     dPeriod
   );
   return { k, d };
+}
+
+/**
+ * Williams %R — نفس منطق حساب %K بـcomputeStoch() حرفياً (أعلى/أدنى بنافذة period) لكن مقلوب
+ * ومُعاد قياسه لمدى -100..0 بدل 0..100 (الصيغة القياسية: (أعلى_أعلى - إغلاق) / المدى × -100 —
+ * صفر = إغلاق عند قمة المدى (تشبّع شرائي)، -100 = إغلاق عند قاع المدى (تشبّع بيعي)).
+ */
+export function computeWilliamsR(candles: Candle[], period = 14): (number | null)[] {
+  const out: (number | null)[] = [];
+  for (let i = 0; i < candles.length; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    const slice = candles.slice(i - period + 1, i + 1);
+    const hh = Math.max(...slice.map((c) => c.high));
+    const ll = Math.min(...slice.map((c) => c.low));
+    const span = hh - ll || 1;
+    out.push(((hh - candles[i].close) / span) * -100);
+  }
+  return out;
 }
 
 export function computeAtr(candles: Candle[], period = 14): (number | null)[] {

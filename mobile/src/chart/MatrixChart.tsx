@@ -35,6 +35,7 @@ import { evalPineLite, INDICATOR_LIBRARY } from './pineLite';
 import { renko, measureStats, snapPrice } from './renko';
 import { kagi } from './kagi';
 import { pointFigure } from './pointFigure';
+import { rangeBars } from './range';
 import { computeCvd, computeFootprint } from './orderflow';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import {
@@ -57,6 +58,7 @@ import {
   computeOverlays,
   computeRsi,
   computeStoch,
+  computeWilliamsR,
   formatPrice,
   heikinAshi,
 } from './math';
@@ -434,7 +436,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ? kagi(all)
             : kind === 'pnf'
               ? pointFigure(all)
-              : all;
+              : kind === 'range'
+                ? rangeBars(all)
+                : all;
 
     // الظل التابع: اقطع مباشرة حسب نافذة زمن القائد
     if (syncFollow && syncWindow && syncWindow.end > syncWindow.start && plot.length >= 2) {
@@ -713,6 +717,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('atr') ? computeAtr(source.plot) : null),
     [source.plot, indicators]
   );
+  const willr = useMemo(
+    () => (indicators.includes('willr') ? computeWilliamsR(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -720,6 +728,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('macd') ? 1 : 0) +
     (indicators.includes('stoch') ? 1 : 0) +
     (indicators.includes('atr') ? 1 : 0) +
+    (indicators.includes('willr') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -742,6 +751,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('sma50')) overlays.sma50.forEach(push);
     if (indicators.includes('ema21')) overlays.ema21.forEach(push);
     if (indicators.includes('wma20')) overlays.wma20.forEach(push);
+    if (indicators.includes('dema20')) overlays.dema20.forEach(push);
+    if (indicators.includes('tema20')) overlays.tema20.forEach(push);
     if (indicators.includes('bb')) {
       overlays.bbUpper.forEach(push);
       overlays.bbLower.forEach(push);
@@ -1941,7 +1952,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           kind === 'bars' ||
           kind === 'renko' ||
           kind === 'kagi' ||
-          kind === 'pnf') &&
+          kind === 'pnf' ||
+          kind === 'range') &&
           source.plot.map((c, i) => {
             const bull = c.close >= c.open;
             const color = bull ? candleBull : candleBear;
@@ -2133,6 +2145,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <View
                 key={`w20${i}`}
                 style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#F472B6' }]}
+              />
+            )
+          )}
+        {indicators.includes('dema20') &&
+          overlays.dema20.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`d20${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#34D399' }]}
+              />
+            )
+          )}
+        {indicators.includes('tema20') &&
+          overlays.tema20.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`t20${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FB923C' }]}
               />
             )
           )}
@@ -2695,6 +2725,29 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 )
               );
             })()}
+          </View>
+        </View>
+      ) : null}
+
+      {willr ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>%R</Text>
+          <View style={styles.paneInner}>
+            {willr.map((v, i) =>
+              v == null ? (
+                <View key={i} style={{ flex: 1 }} />
+              ) : (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    marginTop: (-v / 100) * (paneH - 16),
+                    backgroundColor: '#60A5FA',
+                  }}
+                />
+              )
+            )}
           </View>
         </View>
       ) : null}
