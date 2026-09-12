@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons } from '../theme';
 import { api, type Vote } from '../api';
 import { mockVotes } from '../mock';
 
@@ -74,10 +74,30 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                 موافقة {pct}% · {v.agree} موافق / {v.disagree} رافض
               </Text>
               <View style={styles.actions}>
-                <Pressable style={[styles.btn, styles.yes]} onPress={() => cast(v.id, 'agree')}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.btn,
+                    styles.yes,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
+                  onPress={() => cast(v.id, 'agree')}
+                >
                   <Text style={styles.btnText}>موافق</Text>
                 </Pressable>
-                <Pressable style={[styles.btn, styles.no]} onPress={() => cast(v.id, 'disagree')}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.btn,
+                    styles.no,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
+                  onPress={() => cast(v.id, 'disagree')}
+                >
                   <Text style={styles.btnText}>رافض</Text>
                 </Pressable>
               </View>

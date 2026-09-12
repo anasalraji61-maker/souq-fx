@@ -1,7 +1,8 @@
 # HANDOFF — MATRIX (سجل تنفيذ Claude)
 
 آخر تحديث: 2026-09-12 (Claude — تسليم رسمي: Claude مخطّط ومنفّذ مباشر لكود MATRIX، بروتوكول
-"Cursor ينفّذ" متوقف. المهمة 24 (LayoutPanel.tsx) هي آخر تنفيذ مباشر بالنمط الجديد.)
+"Cursor ينفّذ" متوقف. المهمة 25 (دفعة 13 ملف — لمسة ضغط/ظل) هي آخر تنفيذ مباشر، أول تشغيل
+بوتيرة "عشرات الخطوات بكل تشغيل" بطلب أنس الصريح 2026-09-12.)
 
 ## المسار الصحيح
 
@@ -52,6 +53,55 @@ Claude يقرر ويعدّل الكود مباشرة بنفس الجلسة (تف
 ## سجل التنفيذ (يكتبه Claude، تراكمي — أحدث إدخال أولاً)
 
 ```
+2026-09-12 — المهمة 25: دفعة كبيرة (13 ملف) — لمسة ضغط/ظل على أزرار لم تُعالَج بعد، بعد استنفاد
+كل الملفات المفردة المتبقية من قائمة المهمة الأصلية (طلب أنس الصريح بوتيرة أعلى — عشرات الخطوات
+بكل تشغيل بدل خطوة واحدة).
+
+السياق: راجعت كل ملف من قائمة الملفات المتبقية (AiPanel, AnalystsPanel, CalendarPanel,
+ChartFrame, CommissionPlanPanel, DomLitePanel, FocusChartModal, GroupChatPanel,
+IndicatorForecastPanel, MatrixBottomDock, NetworkTreePanel, NewsPanel, PanSpeedSlider,
+QuadChartModal, ScreenerMini, SocialConsensusPanel, SubscriptionPlansPanel, SymbolSearchBar,
+VotePanel, WeeklyReportPanel, AccountScreen, CoursesScreen, MessagesScreen, TerminalScreen،
+وبقية ToolsScreen) لتحديد أي زر فعلي يطابق النمط. النتيجة: بعضها بلا أي زر أساسي (DomLitePanel،
+NewsPanel، PanSpeedSlider، QuadChartModal، SubscriptionPlansPanel، SymbolSearchBar،
+ChartFrame، FocusChartModal، MatrixBottomDock، WeeklyReportPanel، TerminalScreen) — تُركت
+كما هي (لا فجوة حقيقية لتطبيق النمط عليها بشكل ميكانيكي)، وToolsScreen مكتمل فعلاً من مهمة 18.
+13 ملفاً فيها فجوة فعلية طُبِّق عليها التالي:
+
+**أزرار رئيسية ممتلئة (ظل + ضغط — نفس نمط buttons.* المتحقَّق منه بالملفات السابقة):**
+- GroupChatPanel.tsx — زر "إرسال" (send، خلفية colors.accent)
+- AiPanel.tsx — زر "اسأل" (send، خلفية colors.dxy — نفس معاملة CTA الوحيد بالبطاقة)
+- NetworkTreePanel.tsx — زر "✓" تأكيد وضع اسم بخانة الشجرة (slotGo، خلفية colors.accent)
+- AccountScreen.tsx — styles.btn المشترك بين زر "تسجيل الخروج" وزر "دخول/إنشاء حساب" (كلاهما
+  Pressable مستقل طُبِّق عليه النمط بشكل منفصل، والـdisabled={busy} بزر الإرسال كما هو)
+- CoursesScreen.tsx — زر "رجوع" بمودال تفاصيل المدرسة (close، خلفية colors.accent)
+- MessagesScreen.tsx — زر "إرسال" برسائل الخاص (send، خلفية colors.accent)
+
+**أزرار/شرائح ثانوية (ضغط فقط بلا ظل — نفس معاملة أزرار WatchlistPanel الثانوية بمهمة 19):**
+- AnalystsPanel.tsx, IndicatorForecastPanel.tsx, SocialConsensusPanel.tsx,
+  CommissionPlanPanel.tsx, NetworkTreePanel.tsx (نفس الملف أعلاه) — زر "تحديث/توقّع/احسب"
+  (نص بحدود فقط بلا تعبئة، أو Pressable بلا style أصلاً بحالة CommissionPlanPanel/NetworkTreePanel
+  — أُضيف style={({pressed}) => ...} له مباشرة)
+- ScreenerMini.tsx — شرائح الفحص السريع الثلاث (MA↑/RSI↓/زخم+)
+- CalendarPanel.tsx — شرائح فلتر العملة وفلتر التأثير (نفس styles.chip المشترك، تطبيق واحد يغطي
+  كلا الاستخدامين)
+- VotePanel.tsx — زرا "موافق"/"رافض" (ألوان دلالية شبه شفافة وليست colors.accent الممتلئ، فاختير
+  ضغط بلا ظل احتراماً لتصميمها القائم بدل فرض ظل أسود على ألوان غير الأساسية)
+
+التنفيذ: import { buttons } من theme أُضيف لكل ملف من الـ13 (بجانب الاستيرادات القائمة)، بلا لمس
+أي شيء آخر بكل ملف — لا منطق، لا أنماط أخرى، لا ملفات خارج هذه القائمة.
+
+مراجعة يدوية: أعدت قراءة كل ملف من الـ13 كاملاً بعد التعديل (13 قراءة كاملة منفصلة) — تأكدت من:
+صحة الاستيراد بكل ملف، تطابق بنية pressed/opacity/scale مع النمط المتحقَّق منه بالملفات السابقة
+(AlertsPanel/IndicatorAlertsPanel/BacktestPanel/TradeJournalPanel/LayoutPanel/WatchlistPanel)،
+عدم تغيير أي منطق أو JSX غير متعلق بالزر المستهدف، وعدم لمس أي ملف خارج القائمة أعلاه.
+mtime-guard: device_list_dir قبل وبعد القراءة الأولية لكل مجلد (components/screens) — لا تغييرات
+خارجية، فاستُخدمت نفس mtime الأصلية بكل device_commit_files (13/13 نجح، صفر رفض).
+- **لم يُشغَّل tsc ولم تُؤخذ لقطة شاشة** (القيد التقني الموضّح أدناه، ساري منذ 2026-09-12).
+
+ROADMAP.md: مهمة 25 [x] — 13 ملفاً بدفعة واحدة.
+
+---
 2026-09-12 — المهمة 24: ظل + ضغط لزر "حفظ التخطيط الحالي" (زر رئيسي ممتلئ بـLayoutPanel.tsx)
 
 السياق: نفس نمط الأزرار الرئيسية الممتلئة المطبَّق فعلياً 5 مرات (ToolsScreen مهمة 18،

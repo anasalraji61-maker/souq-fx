@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import {
   mockAcademySchools,
@@ -152,7 +152,16 @@ export function CoursesScreen() {
                     </View>
                   ))}
                 </ScrollView>
-                <Pressable style={styles.close} onPress={() => setSchool(null)}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.close,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
+                  onPress={() => setSchool(null)}
+                >
                   <Text style={styles.closeText}>رجوع</Text>
                 </Pressable>
               </>
@@ -265,6 +274,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     paddingVertical: 14,
     alignItems: 'center',
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
   },
   closeText: { color: '#042F2E', fontWeight: '800', fontSize: 15 },
 });

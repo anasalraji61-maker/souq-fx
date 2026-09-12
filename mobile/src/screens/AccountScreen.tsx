@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/I18nContext';
 import { registerPushToken } from '../notifications';
@@ -179,7 +179,16 @@ export function AccountScreen() {
             </View>
           ) : null}
 
-          <Pressable style={styles.btn} onPress={() => logout()}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.btn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={() => logout()}
+          >
             <Text style={styles.btnText}>{t.logout}</Text>
           </Pressable>
         </View>
@@ -240,7 +249,17 @@ export function AccountScreen() {
               secureTextEntry
             />
             {err ? <Text style={[styles.err, { textAlign: align }]}>{err}</Text> : null}
-            <Pressable style={styles.btn} onPress={submit} disabled={busy}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.btn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={submit}
+              disabled={busy}
+            >
               <Text style={styles.btnText}>
                 {busy ? '...' : mode === 'login' ? t.enter : t.createAccount}
               </Text>
@@ -388,6 +407,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingVertical: 12,
     alignItems: 'center',
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
   },
   btnText: { color: '#042F2E', fontWeight: '800' },
   roleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },

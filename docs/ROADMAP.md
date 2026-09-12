@@ -93,10 +93,20 @@ MATRIX تماماً، بحكم الفصل المتعمّد أصلاً بين MAT
       TradeJournalPanel.tsx — مراجعة يدوية فقط (تطابق حرفي مع النمط المتحقَّق منه 4 مرات سابقاً).
 - [x] مهمة 24: نفس نمط الزر الرئيسي الممتلئ (ظل + ضغط) على زر "حفظ التخطيط الحالي" بـ
       LayoutPanel.tsx — مراجعة يدوية فقط (تطابق حرفي مع النمط المتحقَّق منه 5 مرات سابقاً).
+- [x] مهمة 25: دفعة واحدة كبيرة (13 ملف — أول تشغيل بوتيرة "عشرات الخطوات" بطلب أنس الصريح)
+      استنفدت قائمة الأزرار المفردة المتبقية: أزرار رئيسية ممتلئة (ظل+ضغط) بـ GroupChatPanel،
+      AiPanel، NetworkTreePanel (زر ✓)، AccountScreen (زر مشترك دخول/تسجيل خروج)، CoursesScreen،
+      MessagesScreen؛ وأزرار/شرائح ثانوية (ضغط بلا ظل) بـ AnalystsPanel، IndicatorForecastPanel،
+      SocialConsensusPanel، CommissionPlanPanel، NetworkTreePanel (زر تحديث)، ScreenerMini،
+      CalendarPanel، VotePanel. الملفات المتبقية من القائمة الأصلية (DomLitePanel/NewsPanel/
+      PanSpeedSlider/QuadChartModal/SubscriptionPlansPanel/SymbolSearchBar/ChartFrame/
+      FocusChartModal/MatrixBottomDock/WeeklyReportPanel/TerminalScreen) لا تحتوي زراً أساسياً
+      مطابقاً ميكانيكياً — تُركت دون تغيير قسراً. ToolsScreen مكتمل من مهمة 18 (تحقَّق بالمراجعة).
 
-بعدها، بالتناوب حسب جدول التكافؤ وتوسعة بقية الأزرار الرئيسية: مؤشرات إضافية (دفعات صغيرة، كل
-دفعة مؤشرات مترابطة)، أدوات رسم ناقصة (Gann/Elliott/Harmonic — كل نوع مهمة)، تنبيه من رسم غير
-الخط الأفقي، تخطيطات شارت أكثر من 2×2، Heatmap، Correlation، Pine-lite أعمق (تُجزَّأ)،
+هذه القائمة الميكانيكية (ظل/ضغط الأزرار) استُنفدت الآن عملياً — أي زيادة إضافية تحتاج مراجعة نمط
+أعمق (chips/tabs متعددة بكل شاشة) أو الانتقال لأولوية التكافؤ التالية: مؤشرات إضافية (دفعات
+صغيرة، كل دفعة مؤشرات مترابطة)، أدوات رسم ناقصة (Gann/Elliott/Harmonic — كل نوع مهمة)، تنبيه من
+رسم غير الخط الأفقي، تخطيطات شارت أكثر من 2×2، Heatmap، Correlation، Pine-lite أعمق (تُجزَّأ)،
 Ideas/منشورات مجتمعية (بدون بيانات مستخدمين حقيقيين مزيّفة — شكل حقيقي فارغ للمحتوى حالياً،
 وليس محاكاة كأنها بيانات حقيقية).
 
@@ -124,6 +134,7 @@ IDE فقط — بدون كتابة أوامر فيها (قيد أمان من م�
 هذا الهامش المؤقت. إذا توفّر لاحقاً وصول فعلي لتشغيل أوامر على جهازه، يُستأنف tsc/لقطات كتحقق
 إضافي فوق المراجعة اليدوية.
 
-آخر تحديث: 2026-09-12 (Claude — مهمة 21 [x]: IndicatorAlertsPanel.tsx + مهمة 22 [x]:
-BacktestPanel.tsx + مهمة 23 [x]: TradeJournalPanel.tsx + مهمة 24 [x]: LayoutPanel.tsx، ظل+ضغط
-على زر "حفظ التخطيط الحالي")
+آخر تحديث: 2026-09-12 (Claude — مهمة 25 [x]: دفعة 13 ملف (ظل+ضغط على أزرار رئيسية/ثانوية
+متبقية) — أول تشغيل بوتيرة "عشرات الخطوات بكل تشغيل" بطلب أنس الصريح؛ سبقتها مهمة 21
+IndicatorAlertsPanel.tsx + مهمة 22 BacktestPanel.tsx + مهمة 23 TradeJournalPanel.tsx + مهمة 24
+LayoutPanel.tsx)

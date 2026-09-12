@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 
 const QUICK = [
@@ -32,7 +32,18 @@ export function ScreenerMini() {
       <Text style={styles.title}>فحص سريع</Text>
       <View style={styles.row}>
         {QUICK.map((q) => (
-          <Pressable key={q.id} style={styles.chip} onPress={() => run(q.id)} disabled={loading}>
+          <Pressable
+            key={q.id}
+            style={({ pressed }) => [
+              styles.chip,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={() => run(q.id)}
+            disabled={loading}
+          >
             <Text style={styles.chipText}>{q.label}</Text>
           </Pressable>
         ))}

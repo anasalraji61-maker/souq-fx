@@ -8,7 +8,7 @@ import {
   Pressable,
   I18nManager,
 } from 'react-native';
-import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons } from '../theme';
 import { api, type ChatMsg } from '../api';
 import { mockChat } from '../mock';
 
@@ -77,7 +77,16 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
           placeholderTextColor={colors.textDim}
           onSubmitEditing={send}
         />
-        <Pressable style={styles.send} onPress={send}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.send,
+            pressed && {
+              opacity: buttons.pressedOpacity,
+              transform: [{ scale: buttons.pressedScale }],
+            },
+          ]}
+          onPress={send}
+        >
           <Text style={styles.sendText}>إرسال</Text>
         </Pressable>
       </View>
@@ -141,6 +150,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingHorizontal: 12,
     justifyContent: 'center',
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
   },
   sendText: { color: '#042F2E', fontWeight: '800', fontSize: 12 },
 });

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 
 type Plan = {
@@ -83,7 +83,16 @@ export function CommissionPlanPanel() {
           </Text>
         </View>
         {open ? (
-          <Pressable onPress={() => void load()} hitSlop={8}>
+          <Pressable
+            onPress={() => void load()}
+            hitSlop={8}
+            style={({ pressed }) =>
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              }
+            }
+          >
             <Text style={styles.refresh}>تحديث</Text>
           </Pressable>
         ) : null}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 
 type Ev = {
@@ -48,7 +48,14 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
           {CURRENCIES.map((c) => (
             <Pressable
               key={c}
-              style={[styles.chip, currency === c && styles.chipOn]}
+              style={({ pressed }) => [
+                styles.chip,
+                currency === c && styles.chipOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
               onPress={() => {
                 setCurrency(c);
                 if (c !== 'ALL') onPickCurrency?.(c);
@@ -60,7 +67,14 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
           {(['ALL', 'high', 'medium', 'low'] as const).map((imp) => (
             <Pressable
               key={imp}
-              style={[styles.chip, impact === imp && styles.chipOn]}
+              style={({ pressed }) => [
+                styles.chip,
+                impact === imp && styles.chipOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
               onPress={() => setImpact(imp)}
             >
               <Text style={[styles.chipText, impact === imp && styles.chipTextOn]}>

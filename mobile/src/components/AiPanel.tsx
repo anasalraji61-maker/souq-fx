@@ -8,7 +8,7 @@ import {
   Pressable,
   ActivityIndicator,
 } from 'react-native';
-import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons } from '../theme';
 import { api } from '../api';
 
 type Turn = { role: 'user' | 'ai'; text: string; win?: number };
@@ -94,7 +94,16 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
           placeholderTextColor={colors.textDim}
           onSubmitEditing={ask}
         />
-        <Pressable style={styles.send} onPress={ask}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.send,
+            pressed && {
+              opacity: buttons.pressedOpacity,
+              transform: [{ scale: buttons.pressedScale }],
+            },
+          ]}
+          onPress={ask}
+        >
           <Text style={styles.sendText}>اسأل</Text>
         </Pressable>
       </View>
@@ -170,6 +179,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingHorizontal: 12,
     justifyContent: 'center',
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
   },
   sendText: { color: '#0B1220', fontWeight: '800', fontSize: 12 },
 });

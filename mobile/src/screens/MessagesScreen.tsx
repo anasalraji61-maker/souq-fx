@@ -11,7 +11,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { api, type ChatMsg } from '../api';
 import { mockPeers } from '../mock';
 
@@ -104,7 +104,16 @@ export function MessagesScreen() {
               placeholderTextColor={colors.textDim}
               onSubmitEditing={send}
             />
-            <Pressable style={styles.send} onPress={send}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.send,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={send}
+            >
               <Text style={styles.sendText}>إرسال</Text>
             </Pressable>
           </View>
@@ -230,6 +239,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     paddingHorizontal: 16,
     justifyContent: 'center',
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
   },
   sendText: { color: '#042F2E', fontWeight: '800' },
 });

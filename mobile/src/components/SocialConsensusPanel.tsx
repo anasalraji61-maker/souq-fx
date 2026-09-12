@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api } from '../api';
 import { formatPrice } from '../chart/math';
 
@@ -123,7 +123,17 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
   return (
     <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
       <View style={[styles.head, embedded && frameEmbedHead]}>
-        <Pressable style={styles.refresh} onPress={() => void run()} disabled={loading}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.refresh,
+            pressed && {
+              opacity: buttons.pressedOpacity,
+              transform: [{ scale: buttons.pressedScale }],
+            },
+          ]}
+          onPress={() => void run()}
+          disabled={loading}
+        >
           <Text style={styles.refreshText}>احسب</Text>
         </Pressable>
         <View style={embedded ? frameEmbedTitleBlock : undefined}>

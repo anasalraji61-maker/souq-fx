@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
-import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api } from '../api';
 import { formatPrice } from '../chart/math';
 
@@ -63,7 +63,16 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
   return (
     <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
       <View style={[styles.head, embedded && frameEmbedHead]}>
-        <Pressable style={styles.refresh} onPress={() => void load()}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.refresh,
+            pressed && {
+              opacity: buttons.pressedOpacity,
+              transform: [{ scale: buttons.pressedScale }],
+            },
+          ]}
+          onPress={() => void load()}
+        >
           <Text style={styles.refreshText}>تحديث</Text>
         </Pressable>
         <View style={embedded ? frameEmbedTitleBlock : undefined}>

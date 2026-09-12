@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { TreeDiagramSketch } from './TreeDiagramSketch';
 
@@ -143,7 +143,14 @@ function SlotBox({
         onSubmitEditing={() => void submit()}
       />
       <Pressable
-        style={[styles.slotGo, (draft.trim().length < 3 || localBusy) && styles.slotGoOff]}
+        style={({ pressed }) => [
+          styles.slotGo,
+          (draft.trim().length < 3 || localBusy) && styles.slotGoOff,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
         onPress={() => void submit()}
         disabled={draft.trim().length < 3 || localBusy || busy}
       >
@@ -305,7 +312,16 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
           </Text>
         </View>
         {open && enabled ? (
-          <Pressable onPress={() => void load()} hitSlop={8}>
+          <Pressable
+            onPress={() => void load()}
+            hitSlop={8}
+            style={({ pressed }) =>
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              }
+            }
+          >
             <Text style={styles.refresh}>تحديث</Text>
           </Pressable>
         ) : null}
@@ -496,6 +512,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
   },
   slotGoOff: { opacity: 0.35 },
   slotGoText: { color: '#042F2E', fontWeight: '900', fontSize: 13 },
