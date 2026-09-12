@@ -60,7 +60,16 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
       </Pressable>
       {layouts.map((l) => (
         <View key={l.id} style={styles.row}>
-          <Pressable style={styles.apply} onPress={() => onApply(l)}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.apply,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={() => onApply(l)}
+          >
             <Text style={styles.rowName}>{l.name}</Text>
             <Text style={styles.rowSub}>
               {l.frameSymbols.join(' · ')}
@@ -72,6 +81,12 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
                 await deleteLayout(l.id);
                 setLayouts((prev) => prev.filter((x) => x.id !== l.id));
               }}
+              style={({ pressed }) =>
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                }
+              }
             >
               <Text style={styles.del}>حذف</Text>
             </Pressable>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import { colors, radii } from '../theme';
+import { colors, radii, buttons } from '../theme';
 import { DRAW_TOOLS, LENSES, type DrawTool, type LensMode } from '../chart/types';
 import type { EdgePanelId } from './MatrixSidePanel';
 import type { FrameLayoutCount, FrameLayoutShape } from './FrameSizedGrid';
@@ -94,7 +94,16 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
           );
         })}
         <View style={styles.railSep} />
-        <Pressable style={styles.railBtn} onPress={onQuad}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.railBtn,
+            pressed && {
+              opacity: buttons.pressedOpacity,
+              transform: [{ scale: buttons.pressedScale }],
+            },
+          ]}
+          onPress={onQuad}
+        >
           <Text style={styles.railMark}>▦</Text>
           <Text style={styles.railTip}>2×2</Text>
         </Pressable>

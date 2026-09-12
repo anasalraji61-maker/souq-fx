@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Platform, LayoutChangeEvent } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import type { ChartSeries, LiveTick } from '../api';
 import { TimeframeBar } from './TimeframeBar';
 import type { Timeframe } from '../timeframes';
@@ -161,7 +161,13 @@ export function ChartFrame({
         <View style={styles.titleRow}>
           <View style={[styles.dot, { backgroundColor: accent }]} />
           <Pressable
-            style={styles.symbolHit}
+            style={({ pressed }) => [
+              styles.symbolHit,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
             onPress={() => {
               if (onSymbolChange) setWheelOpen((v) => !v);
             }}
@@ -226,7 +232,16 @@ export function ChartFrame({
             {series.change_pct.toFixed(2)}%
           </Text>
           {onFocus ? (
-            <Pressable style={styles.focusBtn} onPress={onFocus}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.focusBtn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={onFocus}
+            >
               <Text style={styles.focusBtnText}>⛶</Text>
             </Pressable>
           ) : null}

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { API_URL, api, type ChartSeries } from '../api';
 import type { AcademyLecture, ScriptSegment } from '../academy';
 import { MatrixChart } from '../chart/MatrixChart';
@@ -234,7 +234,15 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   return (
     <View style={styles.wrap}>
       <View style={styles.top}>
-        <Pressable onPress={onClose}>
+        <Pressable
+          onPress={onClose}
+          style={({ pressed }) =>
+            pressed && {
+              opacity: buttons.pressedOpacity,
+              transform: [{ scale: buttons.pressedScale }],
+            }
+          }
+        >
           <Text style={styles.back}>إغلاق</Text>
         </Pressable>
         <Text style={styles.meta}>
@@ -255,7 +263,15 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
             <Text style={styles.chartLabel}>
               شارت تفاعلي · {chartMeta.symbol} · {chartMeta.tf}
             </Text>
-            <Pressable onPress={() => setShowChart(false)}>
+            <Pressable
+              onPress={() => setShowChart(false)}
+              style={({ pressed }) =>
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                }
+              }
+            >
               <Text style={styles.chartHide}>إخفاء</Text>
             </Pressable>
           </View>
@@ -268,7 +284,15 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           />
         </View>
       ) : !showChart ? (
-        <Pressable onPress={() => setShowChart(true)}>
+        <Pressable
+          onPress={() => setShowChart(true)}
+          style={({ pressed }) =>
+            pressed && {
+              opacity: buttons.pressedOpacity,
+              transform: [{ scale: buttons.pressedScale }],
+            }
+          }
+        >
           <Text style={styles.showChart}>إظهار الشارت التفاعلي</Text>
         </Pressable>
       ) : null}
@@ -296,18 +320,43 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         <View style={styles.clarifyBox}>
           <Text style={styles.clarifyTitle}>توضيح بعد إيقاف الشرح</Text>
           <Text style={styles.clarifyText}>{clarification}</Text>
-          <Pressable style={styles.resumeBtn} onPress={resume}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.resumeBtn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={resume}
+          >
             <Text style={styles.resumeText}>متابعة المحاضرة</Text>
           </Pressable>
         </View>
       ) : (
         <View style={styles.controls}>
           <View style={styles.navRow}>
-            <Pressable style={styles.navBtn} onPress={prev} disabled={segIndex === 0 || paused}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.navBtn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={prev}
+              disabled={segIndex === 0 || paused}
+            >
               <Text style={styles.navText}>السابق</Text>
             </Pressable>
             <Pressable
-              style={styles.navBtn}
+              style={({ pressed }) => [
+                styles.navBtn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
               onPress={next}
               disabled={paused || segIndex >= segments.length - 1}
             >
@@ -325,7 +374,17 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               placeholderTextColor={colors.textDim}
               editable={!asking}
             />
-            <Pressable style={styles.askBtn} onPress={interrupt} disabled={asking}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.askBtn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={interrupt}
+              disabled={asking}
+            >
               <Text style={styles.askText}>{asking ? '...' : 'اسأل'}</Text>
             </Pressable>
           </View>
@@ -469,6 +528,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingHorizontal: 14,
     justifyContent: 'center',
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
   },
   askText: { color: '#111', fontWeight: '800' },
   clarifyBox: {
@@ -493,6 +557,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingVertical: 12,
     alignItems: 'center',
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
   },
   resumeText: { color: '#042F2E', fontWeight: '800' },
 });

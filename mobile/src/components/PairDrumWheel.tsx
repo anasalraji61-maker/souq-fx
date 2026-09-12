@@ -7,7 +7,7 @@ import {
   Platform,
   PanResponder,
 } from 'react-native';
-import { colors, radii } from '../theme';
+import { colors, radii, buttons } from '../theme';
 import { WATCHLIST } from '../chart/watchlist';
 import { loadWatchlistItems } from '../chart/watchlistStore';
 import { playSoftClick, unlockSoftClick } from '../audio/playSoftClick';
@@ -118,19 +118,46 @@ export function PairDrumWheel({ value, onChange, onClose }: Props) {
           }
         : {})}
     >
-      <Pressable style={styles.side} onPress={() => pick(active - 1)}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.side,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
+        onPress={() => pick(active - 1)}
+      >
         <Text numberOfLines={1} style={styles.sideText}>
           {above}
         </Text>
       </Pressable>
 
-      <Pressable style={styles.mid} onPress={() => pick(active)}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.mid,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
+        onPress={() => pick(active)}
+      >
         <Text numberOfLines={1} style={styles.midText}>
           {current}
         </Text>
       </Pressable>
 
-      <Pressable style={styles.side} onPress={() => pick(active + 1)}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.side,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
+        onPress={() => pick(active + 1)}
+      >
         <Text numberOfLines={1} style={styles.sideText}>
           {below}
         </Text>

@@ -70,7 +70,15 @@ export function MessagesScreen() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <StatusBar barStyle="light-content" />
         <View style={styles.chatHeader}>
-          <Pressable onPress={() => setPeer(null)}>
+          <Pressable
+            onPress={() => setPeer(null)}
+            style={({ pressed }) =>
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              }
+            }
+          >
             <Text style={styles.back}>رجوع</Text>
           </Pressable>
           <Text style={styles.peerName}>{peer}</Text>
@@ -134,7 +142,16 @@ export function MessagesScreen() {
         keyExtractor={(p) => p.user}
         contentContainerStyle={{ padding: spacing.md, gap: 8 }}
         renderItem={({ item }) => (
-          <Pressable style={styles.peerCard} onPress={() => open(item.user)}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.peerCard,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={() => open(item.user)}
+          >
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{item.user.slice(0, 1)}</Text>
             </View>

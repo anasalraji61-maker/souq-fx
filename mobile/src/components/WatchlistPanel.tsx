@@ -121,7 +121,16 @@ export function WatchlistPanel({
           loadError ? (
             <View style={styles.emptyBox}>
               <Text style={styles.saveError}>تعذر تحميل قائمة المتابعة</Text>
-              <Pressable style={styles.toolBtn} onPress={() => void loadList()}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.toolBtn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => void loadList()}
+              >
                 <Text style={styles.toolBtnText}>إعادة المحاولة</Text>
               </Pressable>
             </View>
@@ -154,7 +163,16 @@ export function WatchlistPanel({
                 key={sym}
                 style={[styles.rowWrap, on && styles.rowWrapOn, isDxy && styles.rowDxy]}
               >
-                <Pressable style={styles.rowMain} onPress={() => onPick(sym)}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.rowMain,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
+                  onPress={() => onPick(sym)}
+                >
                   <View style={styles.left}>
                     <Text
                       style={[styles.sym, on && styles.symOn, isDxy && styles.symDxy]}
@@ -172,7 +190,14 @@ export function WatchlistPanel({
                 </Pressable>
                 <View style={styles.ops}>
                   <Pressable
-                    style={[styles.opBtn, index === 0 && styles.opDisabled]}
+                    style={({ pressed }) => [
+                      styles.opBtn,
+                      index === 0 && styles.opDisabled,
+                      pressed && {
+                        opacity: buttons.pressedOpacity,
+                        transform: [{ scale: buttons.pressedScale }],
+                      },
+                    ]}
                     disabled={index === 0}
                     onPress={() => void moveWatchSymbol(sym, -1)}
                     accessibilityLabel="تحريك لأعلى"
@@ -180,7 +205,14 @@ export function WatchlistPanel({
                     <Text style={styles.opText}>↑</Text>
                   </Pressable>
                   <Pressable
-                    style={[styles.opBtn, index >= list.length - 1 && styles.opDisabled]}
+                    style={({ pressed }) => [
+                      styles.opBtn,
+                      index >= list.length - 1 && styles.opDisabled,
+                      pressed && {
+                        opacity: buttons.pressedOpacity,
+                        transform: [{ scale: buttons.pressedScale }],
+                      },
+                    ]}
                     disabled={index >= list.length - 1}
                     onPress={() => void moveWatchSymbol(sym, 1)}
                     accessibilityLabel="تحريك لأسفل"
@@ -188,7 +220,13 @@ export function WatchlistPanel({
                     <Text style={styles.opText}>↓</Text>
                   </Pressable>
                   <Pressable
-                    style={styles.opBtn}
+                    style={({ pressed }) => [
+                      styles.opBtn,
+                      pressed && {
+                        opacity: buttons.pressedOpacity,
+                        transform: [{ scale: buttons.pressedScale }],
+                      },
+                    ]}
                     onPress={() => void removeWatchSymbol(sym)}
                     accessibilityLabel="إزالة من المتابعة"
                   >
@@ -210,14 +248,33 @@ export function WatchlistPanel({
                 <Text style={styles.empty}>كل رموز الكتالوج مضافة</Text>
               ) : (
                 addable.map((w) => (
-                  <Pressable key={w.symbol} style={styles.modalRow} onPress={() => void onAdd(w.symbol)}>
+                  <Pressable
+                    key={w.symbol}
+                    style={({ pressed }) => [
+                      styles.modalRow,
+                      pressed && {
+                        opacity: buttons.pressedOpacity,
+                        transform: [{ scale: buttons.pressedScale }],
+                      },
+                    ]}
+                    onPress={() => void onAdd(w.symbol)}
+                  >
                     <Text style={styles.modalSym}>{w.symbol}</Text>
                     <Text style={styles.modalGroup}>{w.group}</Text>
                   </Pressable>
                 ))
               )}
             </ScrollView>
-            <Pressable style={styles.modalClose} onPress={() => setAddOpen(false)}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.modalClose,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => setAddOpen(false)}
+            >
               <Text style={styles.modalCloseText}>إغلاق</Text>
             </Pressable>
           </View>

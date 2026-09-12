@@ -96,7 +96,18 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
       <TextInput style={styles.input} value={symbol} onChangeText={setSymbol} placeholder="EURUSD" placeholderTextColor={colors.textDim} />
       <View style={styles.row}>
         {(['rsi', 'ma_cross', 'macd_cross'] as const).map((t) => (
-          <Pressable key={t} style={[styles.chip, type === t && styles.chipOn]} onPress={() => setType(t)}>
+          <Pressable
+            key={t}
+            style={({ pressed }) => [
+              styles.chip,
+              type === t && styles.chipOn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={() => setType(t)}
+          >
             <Text style={[styles.chipText, type === t && styles.chipTextOn]}>{t}</Text>
           </Pressable>
         ))}
@@ -104,10 +115,30 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
       {type === 'rsi' ? (
         <>
           <View style={styles.row}>
-            <Pressable style={[styles.chip, condition === 'below' && styles.chipOn]} onPress={() => setCondition('below')}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.chip,
+                condition === 'below' && styles.chipOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => setCondition('below')}
+            >
               <Text style={styles.chipText}>RSI تحت</Text>
             </Pressable>
-            <Pressable style={[styles.chip, condition === 'above' && styles.chipOn]} onPress={() => setCondition('above')}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.chip,
+                condition === 'above' && styles.chipOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => setCondition('above')}
+            >
               <Text style={styles.chipText}>RSI فوق</Text>
             </Pressable>
           </View>
@@ -115,10 +146,30 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
         </>
       ) : (
         <View style={styles.row}>
-          <Pressable style={[styles.chip, condition === 'cross_up' && styles.chipOn]} onPress={() => setCondition('cross_up')}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.chip,
+              condition === 'cross_up' && styles.chipOn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={() => setCondition('cross_up')}
+          >
             <Text style={styles.chipText}>Cross Up</Text>
           </Pressable>
-          <Pressable style={[styles.chip, condition === 'cross_down' && styles.chipOn]} onPress={() => setCondition('cross_down')}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.chip,
+              condition === 'cross_down' && styles.chipOn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={() => setCondition('cross_down')}
+          >
             <Text style={styles.chipText}>Cross Down</Text>
           </Pressable>
         </View>

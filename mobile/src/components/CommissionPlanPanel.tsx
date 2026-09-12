@@ -74,7 +74,16 @@ export function CommissionPlanPanel() {
 
   return (
     <View style={[styles.wrap, !open && styles.wrapCollapsed]}>
-      <Pressable style={styles.head} onPress={() => setOpen((v) => !v)}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.head,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
+        onPress={() => setOpen((v) => !v)}
+      >
         <Text style={styles.chev}>{open ? '▾' : '▸'}</Text>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>تقرير العمولات</Text>

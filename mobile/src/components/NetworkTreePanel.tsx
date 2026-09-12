@@ -299,7 +299,16 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
 
   return (
     <View style={[styles.wrap, !open && styles.wrapCollapsed]}>
-      <Pressable style={styles.headBar} onPress={() => setOpen((v) => !v)}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.headBar,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
+        onPress={() => setOpen((v) => !v)}
+      >
         <Text style={styles.chev}>{open ? '▾' : '▸'}</Text>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>شجرة الشبكة</Text>

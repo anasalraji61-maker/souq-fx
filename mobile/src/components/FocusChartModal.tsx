@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { api, type ChartSeries } from '../api';
 import { MatrixChart } from '../chart/MatrixChart';
 import { TimeframeBar } from './TimeframeBar';
@@ -161,7 +161,16 @@ export function FocusChartModal({
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={[styles.top, phone && styles.topPhone]}>
-          <Pressable style={styles.closeButton} onPress={onClose}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.closeButton,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={onClose}
+          >
             <Text style={styles.close}>{phone ? '×' : 'إغلاق'}</Text>
           </Pressable>
           <Pressable

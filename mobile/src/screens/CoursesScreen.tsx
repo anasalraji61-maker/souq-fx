@@ -104,7 +104,17 @@ export function CoursesScreen() {
         </View>
 
         {schools.map((s) => (
-          <Pressable key={s.id} style={styles.card} onPress={() => openSchool(s.id)}>
+          <Pressable
+            key={s.id}
+            style={({ pressed }) => [
+              styles.card,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={() => openSchool(s.id)}
+          >
             <View style={styles.cardTop}>
               <Text style={styles.order}>#{s.order}</Text>
               <Text style={styles.school}>{s.name_ar}</Text>
@@ -138,7 +148,13 @@ export function CoursesScreen() {
                       {lv.lectures.map((lec) => (
                         <Pressable
                           key={lec.id}
-                          style={styles.lecRow}
+                          style={({ pressed }) => [
+                            styles.lecRow,
+                            pressed && {
+                              opacity: buttons.pressedOpacity,
+                              transform: [{ scale: buttons.pressedScale }],
+                            },
+                          ]}
                           onPress={() => {
                             const sid = school!.id;
                             setSchool(null);
