@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { api, type ChartSeries } from '../api';
 import { MatrixChart } from '../chart/MatrixChart';
 import { livePriceForChart } from '../chart/liveSeries';
@@ -69,7 +69,15 @@ export function QuadChartModal({
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={styles.safe}>
         <View style={styles.top}>
-          <Pressable onPress={onClose}>
+          <Pressable
+            onPress={onClose}
+            style={({ pressed }) => [
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+          >
             <Text style={styles.close}>إغلاق</Text>
           </Pressable>
           <Text style={styles.title}>محطة 2×2 · {timeframe}</Text>

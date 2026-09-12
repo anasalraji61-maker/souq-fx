@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, TextInput, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { addCustomSymbol } from '../chart/watchlistStore';
 
@@ -56,7 +56,13 @@ export function SymbolSearchBar({ onPick, placeholder = 'بحث رمز... EUR, X
       {results.slice(0, 8).map((r) => (
         <Pressable
           key={`${r.symbol}-${r.exchange}`}
-          style={styles.row}
+          style={({ pressed }) => [
+            styles.row,
+            pressed && {
+              opacity: buttons.pressedOpacity,
+              transform: [{ scale: buttons.pressedScale }],
+            },
+          ]}
           onPress={() => {
             void addCustomSymbol(r.symbol);
             onPick(r.symbol);

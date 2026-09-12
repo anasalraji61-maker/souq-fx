@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, Pressable, StyleSheet, ScrollView } from 'react-native';
-import { colors, radii } from '../theme';
+import { colors, radii, buttons } from '../theme';
 import { TIMEFRAMES, TIMEFRAME_LABELS, type Timeframe } from '../timeframes';
 
 type Props = {
@@ -26,7 +26,15 @@ export function TimeframeBar({ value, onChange, compact, arabic = false }: Props
           <Pressable
             key={tf}
             onPress={() => onChange(tf)}
-            style={[styles.chip, active && styles.chipActive, compact && styles.chipCompact]}
+            style={({ pressed }) => [
+              styles.chip,
+              active && styles.chipActive,
+              compact && styles.chipCompact,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
             hitSlop={4}
           >
             <Text style={[styles.text, active && styles.textActive, compact && styles.textCompact]}>

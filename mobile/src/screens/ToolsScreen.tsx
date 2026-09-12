@@ -147,7 +147,14 @@ export function ToolsScreen() {
           {TABS.map((t) => (
             <Pressable
               key={t.id}
-              style={[styles.tab, tab === t.id && styles.tabOn]}
+              style={({ pressed }) => [
+                styles.tab,
+                tab === t.id && styles.tabOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
               onPress={() => setTab(t.id)}
             >
               <Text style={[styles.tabText, tab === t.id && styles.tabTextOn]}>{t.label}</Text>
@@ -168,7 +175,14 @@ export function ToolsScreen() {
               {['EURUSD', 'GBPUSD', 'XAUUSD', 'DXY'].map((s) => (
                 <Pressable
                   key={s}
-                  style={[styles.chip, signalSym === s && styles.chipOn]}
+                  style={({ pressed }) => [
+                    styles.chip,
+                    signalSym === s && styles.chipOn,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
                   onPress={() => setSignalSym(s)}
                 >
                   <Text style={[styles.chipText, signalSym === s && styles.chipTextOn]}>{s}</Text>
@@ -229,7 +243,14 @@ export function ToolsScreen() {
             {FILTERS.map((f) => (
               <Pressable
                 key={f.id}
-                style={[styles.chip, selected.includes(f.id) && styles.chipOn]}
+                style={({ pressed }) => [
+                  styles.chip,
+                  selected.includes(f.id) && styles.chipOn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
                 onPress={() => toggleFilter(f.id)}
               >
                 <Text style={[styles.chipText, selected.includes(f.id) && styles.chipTextOn]}>

@@ -65,7 +65,14 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
         return (
           <Pressable
             key={l.id}
-            style={[styles.railBtn, on && styles.railBtnOn]}
+            style={({ pressed }) => [
+              styles.railBtn,
+              on && styles.railBtnOn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
             onPress={() => onLens(l.id)}
           >
             <Text style={[styles.railMark, on && styles.railMarkOn]}>{LENS_MARK[l.id]}</Text>
@@ -81,7 +88,14 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
           return (
             <Pressable
               key={t.id}
-              style={[styles.railBtn, on && styles.railBtnOn]}
+              style={({ pressed }) => [
+                styles.railBtn,
+                on && styles.railBtnOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
               onPress={() => onTool(t.id)}
             >
               <Text style={[styles.railMark, on && styles.railMarkOn]}>
@@ -139,7 +153,14 @@ export function RightPanelRail({
                 <Pressable
                   key={`sq-${count}`}
                   accessibilityLabel={`${count} فريم مربع`}
-                  style={[styles.layoutBtn, on && styles.layoutBtnOn]}
+                  style={({ pressed }) => [
+                    styles.layoutBtn,
+                    on && styles.layoutBtnOn,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
                   onPress={() => onLayoutPick(count, 'square')}
                 >
                   <Text style={[styles.layoutNum, on && styles.layoutNumOn]}>{count}</Text>
@@ -167,7 +188,14 @@ export function RightPanelRail({
                 <Pressable
                   key={`rect-${count}`}
                   accessibilityLabel={`${count} فريم مستطيل`}
-                  style={[styles.layoutBtn, on && styles.layoutBtnOn]}
+                  style={({ pressed }) => [
+                    styles.layoutBtn,
+                    on && styles.layoutBtnOn,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
                   onPress={() => onLayoutPick(count, 'rect')}
                 >
                   <Text style={[styles.layoutNum, on && styles.layoutNumOn]}>{count}</Text>
@@ -198,7 +226,14 @@ export function RightPanelRail({
           </View>
           <View style={styles.railSep} />
           <Pressable
-            style={[styles.railTag, layoutShape === 'shadow' && styles.layoutBtnOn]}
+            style={({ pressed }) => [
+              styles.railTag,
+              layoutShape === 'shadow' && styles.layoutBtnOn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
             onPress={() => onLayoutPick(1, 'shadow')}
             accessibilityLabel="فريم الظل"
           >
@@ -222,7 +257,14 @@ export function RightPanelRail({
           return (
             <Pressable
               key={x.id}
-              style={[styles.railBtn, on && styles.railBtnOn]}
+              style={({ pressed }) => [
+                styles.railBtn,
+                on && styles.railBtnOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
               onPress={() => onOpenPanel(activePanel === x.id ? null : x.id)}
             >
               <Text style={[styles.railMark, on && styles.railMarkOn]}>{x.mark}</Text>

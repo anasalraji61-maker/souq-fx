@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing, radii } from '../theme';
+import { colors, spacing, radii, buttons } from '../theme';
 import { api, type ChartSeries } from '../api';
 import { mockSeries } from '../mock';
 import { ChartFrame } from '../components/ChartFrame';
@@ -779,7 +779,14 @@ export function TerminalScreen() {
               return (
                 <Pressable
                   key={`sq-${count}`}
-                  style={[styles.layoutSwitchBtn, active && styles.layoutSwitchBtnOn]}
+                  style={({ pressed }) => [
+                    styles.layoutSwitchBtn,
+                    active && styles.layoutSwitchBtnOn,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
                   onPress={() => void changeLayout(count, 'square')}
                 >
                   <View style={styles.layoutSwitchMini}>
@@ -814,7 +821,14 @@ export function TerminalScreen() {
               return (
                 <Pressable
                   key={`rect-${count}`}
-                  style={[styles.layoutSwitchBtn, active && styles.layoutSwitchBtnOn]}
+                  style={({ pressed }) => [
+                    styles.layoutSwitchBtn,
+                    active && styles.layoutSwitchBtnOn,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
                   onPress={() => void changeLayout(count, 'rect')}
                 >
                   <View
@@ -851,9 +865,13 @@ export function TerminalScreen() {
             })}
             <View style={styles.layoutSwitchSep} />
             <Pressable
-              style={[
+              style={({ pressed }) => [
                 styles.layoutSwitcherTag,
                 layoutShape === 'shadow' && styles.layoutSwitchBtnOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
               ]}
               onPress={() => void changeLayout(1, 'shadow')}
             >
@@ -872,7 +890,14 @@ export function TerminalScreen() {
 
         {!phone && multiCharts ? (
           <Pressable
-            style={[styles.timeSyncBtn, timeSyncActive && styles.timeSyncBtnOn]}
+            style={({ pressed }) => [
+              styles.timeSyncBtn,
+              timeSyncActive && styles.timeSyncBtnOn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
             onPress={() => void toggleTimeSync()}
             accessibilityLabel="مزامنة الزمن"
           >
@@ -898,7 +923,17 @@ export function TerminalScreen() {
           style={styles.topDockScroll}
         >
           {topActions.map((a) => (
-            <Pressable key={a.id} style={styles.topBtn} onPress={a.run}>
+            <Pressable
+              key={a.id}
+              style={({ pressed }) => [
+                styles.topBtn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={a.run}
+            >
               {a.mark === 'cruise' ? (
                 <CruiseSpeedMark size={14} active />
               ) : (
@@ -919,7 +954,14 @@ export function TerminalScreen() {
           {CHART_KINDS.map((k) => (
             <Pressable
               key={k.id}
-              style={[styles.kindChip, kind === k.id && styles.kindChipOn]}
+              style={({ pressed }) => [
+                styles.kindChip,
+                kind === k.id && styles.kindChipOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
               onPress={() => {
                 setKind(k.id);
                 setShowKinds(false);
@@ -941,7 +983,14 @@ export function TerminalScreen() {
           {(phoneWatchSymbols ?? WATCHLIST.map((w) => w.symbol)).map((sym) => (
             <Pressable
               key={sym}
-              style={[styles.pill, symbol === sym && styles.pillOn]}
+              style={({ pressed }) => [
+                styles.pill,
+                symbol === sym && styles.pillOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
               onPress={() => pickSymbol(sym)}
             >
               <Text style={[styles.pillText, symbol === sym && styles.pillTextOn]}>
@@ -949,7 +998,16 @@ export function TerminalScreen() {
               </Text>
             </Pressable>
           ))}
-          <Pressable style={styles.pill} onPress={() => setPhoneWatchOpen(true)}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.pill,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={() => setPhoneWatchOpen(true)}
+          >
             <Text style={styles.pillText}>إدارة</Text>
           </Pressable>
         </ScrollView>
@@ -1010,7 +1068,14 @@ export function TerminalScreen() {
                 {TIMEFRAMES.map((range) => (
                   <Pressable
                     key={`p-${range}`}
-                    style={[styles.rangeBtn, tf === range && styles.rangeBtnOn]}
+                    style={({ pressed }) => [
+                      styles.rangeBtn,
+                      tf === range && styles.rangeBtnOn,
+                      pressed && {
+                        opacity: buttons.pressedOpacity,
+                        transform: [{ scale: buttons.pressedScale }],
+                      },
+                    ]}
                     onPress={() => setTf(range)}
                   >
                     <Text style={styles.rangeText}>{range}</Text>
@@ -1032,7 +1097,14 @@ export function TerminalScreen() {
                       accessibilityRole="switch"
                       accessibilityState={{ checked: enabled }}
                       accessibilityLabel={`${label} ${enabled ? 'مفعّل' : 'متوقف'}`}
-                      style={[styles.shadowToggle, enabled && styles.shadowToggleOn]}
+                      style={({ pressed }) => [
+                        styles.shadowToggle,
+                        enabled && styles.shadowToggleOn,
+                        pressed && {
+                          opacity: buttons.pressedOpacity,
+                          transform: [{ scale: buttons.pressedScale }],
+                        },
+                      ]}
                     >
                       <Text
                         style={[styles.shadowToggleText, enabled && styles.shadowToggleTextOn]}
@@ -1049,10 +1121,14 @@ export function TerminalScreen() {
                       return (
                         <Pressable
                           key={`${label}-${range}`}
-                          style={[
+                          style={({ pressed }) => [
                             styles.rangeBtn,
                             on && enabled && styles.shadowSecOn,
                             locked && styles.shadowSecLocked,
+                            pressed && {
+                              opacity: buttons.pressedOpacity,
+                              transform: [{ scale: buttons.pressedScale }],
+                            },
                           ]}
                           disabled={locked}
                           onPress={() => setShadowSlot(slot, range)}
@@ -1122,7 +1198,16 @@ export function TerminalScreen() {
                 ].join(' · ')}
               </Text>
               <View style={styles.rangeSpacer} />
-              <Pressable style={styles.fullscreenBtn} onPress={() => openFocus(symbol, tf)}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.fullscreenBtn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => openFocus(symbol, tf)}
+              >
                 <Text style={styles.fullscreenText}>ملء الشاشة ⛶</Text>
               </Pressable>
             </View>
@@ -1199,14 +1284,30 @@ export function TerminalScreen() {
               {TIMEFRAMES.map((range) => (
                 <Pressable
                   key={range}
-                  style={[styles.rangeBtn, tf === range && styles.rangeBtnOn]}
+                  style={({ pressed }) => [
+                    styles.rangeBtn,
+                    tf === range && styles.rangeBtnOn,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
                   onPress={() => setTf(range)}
                 >
                   <Text style={styles.rangeText}>{range}</Text>
                 </Pressable>
               ))}
               <View style={styles.rangeSpacer} />
-              <Pressable style={styles.fullscreenBtn} onPress={() => openFocus(symbol, tf)}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.fullscreenBtn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => openFocus(symbol, tf)}
+              >
                 <Text style={styles.fullscreenText}>ملء الشاشة ⛶</Text>
               </Pressable>
             </View>
@@ -1420,7 +1521,16 @@ export function TerminalScreen() {
       <Modal visible={phoneWatchOpen} animationType="slide" onRequestClose={() => setPhoneWatchOpen(false)}>
         <SafeAreaView style={styles.phoneWatchModal}>
           <View style={styles.phoneWatchModalBar}>
-            <Pressable style={styles.phoneWatchClose} onPress={() => setPhoneWatchOpen(false)}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.phoneWatchClose,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => setPhoneWatchOpen(false)}
+            >
               <Text style={styles.phoneWatchCloseText}>إغلاق</Text>
             </Pressable>
             <Text style={styles.phoneWatchModalTitle}>إدارة قائمة المتابعة</Text>

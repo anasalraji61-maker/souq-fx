@@ -8,7 +8,7 @@ import {
   type LayoutChangeEvent,
   type GestureResponderEvent,
 } from 'react-native';
-import { colors } from '../theme';
+import { colors, buttons } from '../theme';
 import { clampPanSpeed } from '../chart/panSpeed';
 
 type Props = {
@@ -131,7 +131,14 @@ export function PanSpeedSlider({ value, onChange }: Props) {
   if (!open) {
     return (
       <Pressable
-        style={[styles.square, pct >= 40 && styles.squareOn]}
+        style={({ pressed }) => [
+          styles.square,
+          pct >= 40 && styles.squareOn,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
         onPress={toggle}
         accessibilityRole="button"
         accessibilityLabel={`مثبت السرعة ${pct} — اضغط للتفاصيل`}
@@ -152,7 +159,13 @@ export function PanSpeedSlider({ value, onChange }: Props) {
         hitSlop={6}
         accessibilityRole="button"
         accessibilityLabel="إخفاء تفاصيل السرعة"
-        style={styles.markBtn}
+        style={({ pressed }) => [
+          styles.markBtn,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
       >
         <CruiseSpeedMark size={15} active />
       </Pressable>

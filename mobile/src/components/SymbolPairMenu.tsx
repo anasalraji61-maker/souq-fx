@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { WATCHLIST } from '../chart/watchlist';
 import { loadWatchlistItems } from '../chart/watchlistStore';
 import { playSoftClick, unlockSoftClick } from '../audio/playSoftClick';
@@ -45,7 +45,15 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
   return (
     <View style={styles.wrap}>
       <Pressable
-        style={[styles.trigger, large && styles.triggerLarge, open && styles.triggerOn]}
+        style={({ pressed }) => [
+          styles.trigger,
+          large && styles.triggerLarge,
+          open && styles.triggerOn,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
         onPress={toggle}
         onLongPress={onLongPress}
       >
@@ -68,7 +76,14 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
               return (
                 <Pressable
                   key={item.symbol}
-                  style={[styles.row, on && styles.rowOn]}
+                  style={({ pressed }) => [
+                    styles.row,
+                    on && styles.rowOn,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
                   onPress={() => pick(item.symbol)}
                 >
                   <Text style={[styles.sym, on && styles.symOn]}>{item.symbol}</Text>

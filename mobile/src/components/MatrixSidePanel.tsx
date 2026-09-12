@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Modal } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import {
   CHART_KINDS,
   DRAW_TOOLS,
@@ -86,7 +86,15 @@ export function MatrixSidePanel({
         <Pressable style={styles.dim} onPress={onClose} />
         <View style={styles.sheet}>
           <View style={styles.head}>
-            <Pressable onPress={onClose}>
+            <Pressable
+              onPress={onClose}
+              style={({ pressed }) => [
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+            >
               <Text style={styles.close}>إغلاق</Text>
             </Pressable>
             <Text style={styles.title}>{TITLES[panel]}</Text>
@@ -97,7 +105,13 @@ export function MatrixSidePanel({
                 {DRAW_TOOLS.filter((t) => t.id !== 'none').map((t) => (
                   <Pressable
                     key={t.id}
-                    style={styles.cell}
+                    style={({ pressed }) => [
+                      styles.cell,
+                      pressed && {
+                        opacity: buttons.pressedOpacity,
+                        transform: [{ scale: buttons.pressedScale }],
+                      },
+                    ]}
                     onPress={() => {
                       onPickDraw(t.id);
                       onClose();
@@ -116,7 +130,14 @@ export function MatrixSidePanel({
                   return (
                     <Pressable
                       key={ind.id}
-                      style={[styles.cell, on && styles.cellOn]}
+                      style={({ pressed }) => [
+                        styles.cell,
+                        on && styles.cellOn,
+                        pressed && {
+                          opacity: buttons.pressedOpacity,
+                          transform: [{ scale: buttons.pressedScale }],
+                        },
+                      ]}
                       onPress={() => onToggleIndicator(ind.id)}
                     >
                       <Text style={[styles.cellText, on && styles.cellTextOn]}>{ind.label}</Text>
@@ -131,7 +152,14 @@ export function MatrixSidePanel({
                 {CHART_KINDS.map((k) => (
                   <Pressable
                     key={k.id}
-                    style={[styles.cell, activeKind === k.id && styles.cellOn]}
+                    style={({ pressed }) => [
+                      styles.cell,
+                      activeKind === k.id && styles.cellOn,
+                      pressed && {
+                        opacity: buttons.pressedOpacity,
+                        transform: [{ scale: buttons.pressedScale }],
+                      },
+                    ]}
                     onPress={() => {
                       onPickKind(k.id);
                       onClose();

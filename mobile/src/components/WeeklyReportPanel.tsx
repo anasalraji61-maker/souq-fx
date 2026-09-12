@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { colors, radii, spacing, frameEmbed } from '../theme';
+import { colors, radii, spacing, frameEmbed, buttons } from '../theme';
 import { api } from '../api';
 import { FrameSizedGrid } from './FrameSizedGrid';
 
@@ -90,7 +90,14 @@ export function WeeklyReportPanel({ grid = false }: Props) {
     id: k.id,
     node: (
       <Pressable
-        style={[styles.tile, active === k.id && styles.tileOn]}
+        style={({ pressed }) => [
+          styles.tile,
+          active === k.id && styles.tileOn,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
         onPress={() => void run(k.id)}
         disabled={loading != null}
       >
@@ -127,7 +134,14 @@ export function WeeklyReportPanel({ grid = false }: Props) {
       {KINDS.map((k) => (
         <Pressable
           key={k.id}
-          style={[styles.card, active === k.id && styles.cardOn]}
+          style={({ pressed }) => [
+            styles.card,
+            active === k.id && styles.cardOn,
+            pressed && {
+              opacity: buttons.pressedOpacity,
+              transform: [{ scale: buttons.pressedScale }],
+            },
+          ]}
           onPress={() => void run(k.id)}
           disabled={loading != null}
         >

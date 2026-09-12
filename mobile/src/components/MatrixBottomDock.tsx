@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import type { EdgePanelId } from './MatrixSidePanel';
 import { AlertsPanel } from './AlertsPanel';
 import { IndicatorAlertsPanel } from './IndicatorAlertsPanel';
@@ -81,7 +81,15 @@ export function MatrixBottomDock({
       {tab ? (
         <View style={styles.sheet}>
           <View style={styles.sheetHead}>
-            <Pressable onPress={() => onTab(null)}>
+            <Pressable
+              onPress={() => onTab(null)}
+              style={({ pressed }) => [
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+            >
               <Text style={styles.close}>إخفاء</Text>
             </Pressable>
             <Text style={styles.sheetTitle}>
@@ -140,7 +148,14 @@ export function MatrixBottomDock({
           return (
             <Pressable
               key={t.id}
-              style={[styles.tab, on && styles.tabOn]}
+              style={({ pressed }) => [
+                styles.tab,
+                on && styles.tabOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
               onPress={() => toggle(t.id)}
             >
               <Text style={[styles.tabMark, on && styles.tabMarkOn]}>{t.mark}</Text>
