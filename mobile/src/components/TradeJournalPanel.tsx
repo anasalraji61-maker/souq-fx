@@ -8,7 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 
 type Trade = {
@@ -156,7 +156,17 @@ export function TradeJournalPanel() {
         placeholder="ملاحظة"
         placeholderTextColor={colors.textDim}
       />
-      <Pressable style={styles.btn} onPress={() => void add()} disabled={busy}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.btn,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
+        onPress={() => void add()}
+        disabled={busy}
+      >
         <Text style={styles.btnText}>{busy ? '...' : 'إضافة صفقة'}</Text>
       </Pressable>
 
@@ -224,6 +234,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingVertical: 12,
     alignItems: 'center',
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
   },
   btnText: { color: '#042F2E', fontWeight: '800' },
   trade: {

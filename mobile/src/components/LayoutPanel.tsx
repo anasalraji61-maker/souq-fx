@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, TextInput } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { loadLayouts, saveLayout, deleteLayout, DEFAULT_LAYOUT, type TerminalLayout } from '../chart/layoutStore';
 import { api } from '../api';
 
@@ -46,7 +46,16 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
         placeholder="اسم التخطيط"
         placeholderTextColor={colors.textDim}
       />
-      <Pressable style={styles.btn} onPress={save}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.btn,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
+        onPress={save}
+      >
         <Text style={styles.btnText}>حفظ التخطيط الحالي</Text>
       </Pressable>
       {layouts.map((l) => (
@@ -97,6 +106,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingVertical: 10,
     alignItems: 'center',
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
   },
   btnText: { color: '#042F2E', fontWeight: '800' },
   row: {
