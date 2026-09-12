@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { API_URL } from '../api';
+import { useEffect, useState } from 'react';
+import { API_URL, type LiveTick } from '../api';
+import { parseWsDataSource } from '../chart/dataSource';
 
-/** Live ticks for multiple symbols (terminal frames). */
+/** Per-symbol live ticks with honest provenance (never assume provider from WS alone). */
 export function useMultiLiveTicks(symbols: string[], enabled: boolean) {
-  const [ticks, setTicks] = useState<Record<string, number>>({});
+  const [ticks, setTicks] = useState<Record<string, LiveTick>>({});
   const syms = symbols.map((s) => s.toUpperCase()).join(',');
 
   useEffect(() => {
@@ -16,8 +17,23 @@ export function useMultiLiveTicks(symbols: string[], enabled: boolean) {
       ws.onmessage = (ev) => {
         if (!alive) return;
         try {
-          const data = JSON.parse(String(ev.data)) as { ticks?: Record<string, number> };
-          if (data.ticks) setTicks((prev) => ({ ...prev, ...data.ticks }));
+          const data = JSON.parse(String(ev.data)) as {
+            ticks?: Record<string, number>;
+            source?: string;
+            data_source?: { kind?: string; as_of?: number; channel?: string };
+            ts?: number;
+          };
+          if (!data.ticks) return;
+          const source = parseWsDataSource(data);
+          setTicks((prev) => {
+            const next = { ...prev };
+            for (const [sym, price] of Object.entries(data.ticks!)) {
+              if (typeof price === 'number') {
+                next[sym.toUpperCase()] = { price, source };
+              }
+            }
+            return next;
+          });
         } catch {
           /* ignore */
         }

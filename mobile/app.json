@@ -1,4 +1,4 @@
-﻿{
+{
     "expo":  {
                  "name":  "MATRIX",
                  "slug":  "matrix",
@@ -34,7 +34,7 @@
                                  ]
                              ],
                  "extra":  {
-                               "apiUrl":  "http://192.168.8.200:8110",
+                               "apiUrl":  "http://127.0.0.1:8110",
                                "appName":  "MATRIX"
                            }
              }

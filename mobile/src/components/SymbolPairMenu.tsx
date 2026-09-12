@@ -1,0 +1,171 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { colors, radii, spacing } from '../theme';
+import { WATCHLIST } from '../chart/watchlist';
+import { loadWatchlistItems } from '../chart/watchlistStore';
+import { playSoftClick, unlockSoftClick } from '../audio/playSoftClick';
+
+type Item = { symbol: string; label: string; group?: string };
+
+type Props = {
+  value: string;
+  onPick: (symbol: string) => void;
+  onLongPress?: () => void;
+  /** عنوان كبير بجانب الجارت */
+  large?: boolean;
+};
+
+export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Props) {
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<Item[]>([...WATCHLIST]);
+
+  useEffect(() => {
+    if (!open) return;
+    let alive = true;
+    void loadWatchlistItems().then((next) => {
+      if (alive && next.length) setItems(next);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [open]);
+
+  const toggle = () => {
+    unlockSoftClick();
+    playSoftClick();
+    setOpen((v) => !v);
+  };
+
+  const pick = (symbol: string) => {
+    playSoftClick();
+    onPick(symbol);
+    setOpen(false);
+  };
+
+  return (
+    <View style={styles.wrap}>
+      <Pressable
+        style={[styles.trigger, large && styles.triggerLarge, open && styles.triggerOn]}
+        onPress={toggle}
+        onLongPress={onLongPress}
+      >
+        <Text style={[styles.triggerText, large && styles.triggerTextLarge]}>{value}</Text>
+        <Text style={[styles.caret, large && styles.caretLarge]}>{open ? '▴' : '▾'}</Text>
+      </Pressable>
+
+      {open ? (
+        <View style={[styles.panel, large && styles.panelLarge]}>
+          <Text style={styles.panelTitle}>أزواجك</Text>
+          <ScrollView
+            style={styles.list}
+            contentContainerStyle={styles.listInner}
+            showsVerticalScrollIndicator={false}
+            nestedScrollEnabled
+            keyboardShouldPersistTaps="handled"
+          >
+            {items.map((item) => {
+              const on = item.symbol === value;
+              return (
+                <Pressable
+                  key={item.symbol}
+                  style={[styles.row, on && styles.rowOn]}
+                  onPress={() => pick(item.symbol)}
+                >
+                  <Text style={[styles.sym, on && styles.symOn]}>{item.symbol}</Text>
+                  {item.group ? (
+                    <Text style={[styles.group, on && styles.groupOn]}>{item.group}</Text>
+                  ) : null}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: {
+    position: 'relative',
+    zIndex: 80,
+  },
+  trigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    backgroundColor: colors.accentSoft,
+  },
+  triggerLarge: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+  },
+  triggerOn: {
+    backgroundColor: 'rgba(45, 212, 191, 0.22)',
+  },
+  triggerText: { color: colors.accent, fontWeight: '900', fontSize: 13 },
+  triggerTextLarge: { color: colors.text, fontSize: 14 },
+  caret: { color: colors.accent, fontWeight: '800', fontSize: 11, opacity: 0.85 },
+  caretLarge: { color: colors.textMuted },
+  panel: {
+    position: 'absolute',
+    top: 38,
+    left: 0,
+    width: 210,
+    maxHeight: 340,
+    zIndex: 90,
+    backgroundColor: '#121A2B',
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingTop: 8,
+    paddingBottom: 6,
+    overflow: 'hidden',
+  },
+  panelLarge: {
+    top: 28,
+  },
+  panelTitle: {
+    color: colors.textDim,
+    fontSize: 10,
+    fontWeight: '800',
+    paddingHorizontal: spacing.sm,
+    marginBottom: 4,
+  },
+  list: { maxHeight: 300 },
+  listInner: { paddingHorizontal: 6, paddingBottom: 4, gap: 2 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 36,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+  },
+  rowOn: {
+    backgroundColor: colors.accentSoft,
+  },
+  sym: {
+    color: colors.textMuted,
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  symOn: {
+    color: colors.text,
+  },
+  group: {
+    color: colors.textDim,
+    fontSize: 9,
+    fontWeight: '700',
+  },
+  groupOn: {
+    color: colors.accent,
+  },
+});

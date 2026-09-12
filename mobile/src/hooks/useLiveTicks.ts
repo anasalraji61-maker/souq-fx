@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { API_URL } from '../api';
+import { API_URL, type LiveTick } from '../api';
+import { parseWsDataSource } from '../chart/dataSource';
 
-/** Live tick stream from MATRIX backend (Twelve Data WS when connected). */
-export function useLiveTicks(symbol: string, enabled: boolean) {
-  const [last, setLast] = useState<number | null>(null);
+/** Live tick for one symbol with provenance. */
+export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null {
+  const [tick, setTick] = useState<LiveTick | null>(null);
   const sym = symbol.toUpperCase();
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -19,15 +20,22 @@ export function useLiveTicks(symbol: string, enabled: boolean) {
       ws.onmessage = (ev) => {
         if (!alive) return;
         try {
-          const data = JSON.parse(String(ev.data)) as { ticks?: Record<string, number> };
+          const data = JSON.parse(String(ev.data)) as {
+            ticks?: Record<string, number>;
+            source?: string;
+            data_source?: { kind?: string; as_of?: number; channel?: string };
+            ts?: number;
+          };
           const p = data.ticks?.[sym];
-          if (typeof p === 'number') setLast(p);
+          if (typeof p === 'number') {
+            setTick({ price: p, source: parseWsDataSource(data) });
+          }
         } catch {
           /* ignore */
         }
       };
       ws.onerror = () => {
-        /* fallback silent */
+        /* silent */
       };
     } catch {
       /* ignore */
@@ -40,5 +48,5 @@ export function useLiveTicks(symbol: string, enabled: boolean) {
     };
   }, [sym, enabled]);
 
-  return last;
+  return tick;
 }

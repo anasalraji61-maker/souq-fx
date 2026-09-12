@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { TimeframeBar } from '../components/TimeframeBar';
 import { type Timeframe } from '../timeframes';
@@ -71,12 +71,25 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'ai', label: 'AI' },
 ];
 
+const HUB_GRID_ORDER = [
+  'news',
+  'social',
+  'chat',
+  'votes',
+  'ai',
+  'analysts',
+  'forecast',
+  'alerts',
+] as const;
+
 export function ToolsScreen() {
   const [tab, setTab] = useState<TabId>('hub');
   const [tf, setTf] = useState<Timeframe>('15m');
   const [signalSym, setSignalSym] = useState('EURUSD');
   const [selected, setSelected] = useState<string[]>(['ma_cross_up']);
   const [results, setResults] = useState<Hit[]>([]);
+  const [providerConfigured, setProviderConfigured] = useState<boolean | null>(null);
+  const [scanDone, setScanDone] = useState(false);
   const [loading, setLoading] = useState(false);
   const [frameTfs, setFrameTfs] = useState<string[]>([...DEFAULT_LAYOUT.frameTfs]);
   const [frameSymbols, setFrameSymbols] = useState<[string, string, string]>(
@@ -111,8 +124,12 @@ export function ToolsScreen() {
     try {
       const res = await api.screenerRun({ timeframe: tf, filters: selected });
       setResults(res.results);
+      setProviderConfigured(res.provider_configured !== false);
+      setScanDone(true);
     } catch {
       setResults([]);
+      setProviderConfigured(null);
+      setScanDone(true);
     } finally {
       setLoading(false);
     }
@@ -122,7 +139,7 @@ export function ToolsScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.head}>
         <Text style={styles.title}>Tools · أدوات</Text>
-        <Text style={styles.sub}>إشارات ومجتمع معاً · 4 مربعات ثم انزل للأسفل</Text>
+        <Text style={styles.sub}>أخبار وتصويت أولاً · تنبيهات وتوقعات المؤشرات في الأسفل</Text>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll}>
@@ -160,30 +177,33 @@ export function ToolsScreen() {
             </View>
           </View>
           <Text style={styles.gridHint}>
-            نفس حجم الفريمات · امسك الشريط واسحب للتبديل · انزل ↓ للباقي
+            اسحب النقاط للتبديل · الصف الأول: أخبار وتصويت · الأسفل: تنبيهات ومؤشرات
           </Text>
           <FrameSizedGrid
-            storageKey="matrix.tools.hub.order.v1"
+            storageKey="matrix.tools.hub.order.v3"
+            showAll
+            defaultOrder={[...HUB_GRID_ORDER]}
             items={[
-              {
-                id: 'analysts',
-                node: <AnalystsPanel symbol={signalSym} timeframe={tf} />,
-              },
+              { id: 'news', node: <NewsPanel embedded /> },
               {
                 id: 'social',
-                node: <SocialConsensusPanel symbol={signalSym} timeframe={tf} />,
+                node: <SocialConsensusPanel embedded symbol={signalSym} timeframe={tf} />,
+              },
+              { id: 'chat', node: <GroupChatPanel embedded /> },
+              { id: 'votes', node: <VotePanel embedded /> },
+              { id: 'ai', node: <AiPanel embedded symbol={signalSym} /> },
+              {
+                id: 'analysts',
+                node: <AnalystsPanel embedded symbol={signalSym} timeframe={tf} />,
               },
               {
                 id: 'forecast',
-                node: <IndicatorForecastPanel symbol={signalSym} timeframe={tf} />,
+                node: <IndicatorForecastPanel embedded symbol={signalSym} timeframe={tf} />,
               },
               {
                 id: 'alerts',
-                node: <AlertsPanel defaultSymbol={signalSym} />,
+                node: <AlertsPanel embedded defaultSymbol={signalSym} />,
               },
-              { id: 'news', node: <NewsPanel /> },
-              { id: 'chat', node: <GroupChatPanel /> },
-              { id: 'votes', node: <VotePanel /> },
             ]}
           />
         </ScrollView>
@@ -218,12 +238,31 @@ export function ToolsScreen() {
               </Pressable>
             ))}
           </View>
-          <Pressable style={styles.runBtn} onPress={run} disabled={loading || !selected.length}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.runBtn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={run}
+            disabled={loading || !selected.length}
+          >
             <Text style={styles.runText}>{loading ? 'جاري الفحص...' : 'تشغيل Screener'}</Text>
           </Pressable>
           {loading ? <ActivityIndicator color={colors.accent} /> : null}
+          {!loading && scanDone && providerConfigured === false ? (
+            <Text style={styles.scanHint}>
+              الفحص يحتاج مفتاح Twelve Data مفعّلاً على الخادم
+            </Text>
+          ) : null}
+          {!loading && scanDone && providerConfigured === true && results.length === 0 ? (
+            <Text style={styles.scanHint}>لا نتائج مطابقة للفلاتر الحالية</Text>
+          ) : null}
           <FrameSizedGrid
             storageKey="matrix.tools.screener.order.v1"
+            showAll
             items={results.slice(0, 8).map((r) => ({
               id: r.symbol,
               node: (
@@ -344,8 +383,20 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingVertical: 12,
     alignItems: 'center',
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
   },
   runText: { color: '#042F2E', fontWeight: '800' },
+  scanHint: {
+    color: colors.warn,
+    fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'right',
+    paddingVertical: 8,
+  },
   sym: { color: colors.accent, fontWeight: '800', textAlign: 'right', fontSize: 15 },
   meta: { color: colors.text, textAlign: 'right', fontSize: 13 },
   match: { color: colors.textDim, textAlign: 'right', fontSize: 11 },

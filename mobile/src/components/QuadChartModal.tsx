@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing } from '../theme';
 import { api, type ChartSeries } from '../api';
 import { MatrixChart } from '../chart/MatrixChart';
+import { livePriceForChart } from '../chart/liveSeries';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
 import { mockSeries } from '../mock';
@@ -83,7 +84,11 @@ export function QuadChartModal({
                   height={cellH}
                   interactive={false}
                   persistDrawings={false}
-                  livePrice={ticks[sym] ?? null}
+                  livePrice={livePriceForChart(series[i]!, ticks[sym] ?? null, {
+                    tickAsOf: ticks[sym]?.source.as_of ?? null,
+                    timeframe: series[i]!.timeframe,
+                  })}
+                  liveTickSource={ticks[sym]?.source ?? null}
                   accent={sym === 'DXY' ? colors.dxy : colors.accent}
                   initialLens="clean"
                   initialIndicators={[]}

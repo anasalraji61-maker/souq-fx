@@ -8,12 +8,14 @@ import {
   Pressable,
   ActivityIndicator,
 } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle } from '../theme';
 import { api } from '../api';
 
 type Turn = { role: 'user' | 'ai'; text: string; win?: number };
 
-export function AiPanel() {
+type Props = { symbol?: string; embedded?: boolean };
+
+export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([
@@ -30,7 +32,7 @@ export function AiPanel() {
     setTurns((t) => [...t, { role: 'user', text: question }]);
     setLoading(true);
     try {
-      const res = await api.aiAsk(question, 'EURUSD');
+      const res = await api.aiAsk(question, symbol);
       setTurns((t) => [
         ...t,
         {
@@ -56,8 +58,17 @@ export function AiPanel() {
   };
 
   return (
-    <View style={styles.panel}>
-      <Text style={styles.title}>مساعد ذكاء اصطناعي</Text>
+    <View style={[styles.panel, embedded && styles.panelInFrame]}>
+      {embedded ? (
+        <View style={frameEmbedHead}>
+          <View style={frameEmbedHeadTail} />
+          <View style={frameEmbedTitleBlock}>
+            <Text style={[styles.title, styles.titleInHead, frameEmbedTitle]}>مساعد ذكاء اصطناعي</Text>
+          </View>
+        </View>
+      ) : (
+        <Text style={styles.title}>مساعد ذكاء اصطناعي</Text>
+      )}
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 8 }}>
         {turns.map((t, i) => (
           <View
@@ -79,7 +90,7 @@ export function AiPanel() {
           style={styles.input}
           value={q}
           onChangeText={setQ}
-          placeholder="مثال: تحليل EURUSD اليوم؟"
+          placeholder={`مثال: تحليل ${symbol} اليوم؟`}
           placeholderTextColor={colors.textDim}
           onSubmitEditing={ask}
         />
@@ -101,13 +112,22 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     minHeight: 220,
   },
+  panelInFrame: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    paddingTop: frameEmbed.padTop,
+    paddingLeft: frameEmbed.padLeft,
+    paddingRight: frameEmbed.padRight,
+    paddingBottom: frameEmbed.padBottom,
+    minHeight: 0,
+  },
   title: {
     color: colors.text,
     fontWeight: '700',
     fontSize: 13,
-    marginBottom: spacing.sm,
     textAlign: 'right',
   },
+  titleInHead: { marginBottom: 0 },
   bubble: { borderRadius: radii.sm, padding: spacing.sm, borderWidth: 1 },
   user: {
     backgroundColor: colors.accentSoft,

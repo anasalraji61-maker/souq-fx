@@ -1,42 +1,48 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { WATCHLIST } from './watchlist';
-import { api, authHeaders, API_URL } from '../api';
+import { authHeaders, API_URL } from '../api';
+import {
+  addWatchSymbol,
+  resetWatchlistMemory,
+  setWatchlistStorage,
+  type WatchlistStorage,
+} from './watchlistStoreCore';
 
-const KEY = 'matrix.watchlist.custom.v1';
+setWatchlistStorage(AsyncStorage);
 
-export async function loadCustomSymbols(): Promise<string[]> {
-  try {
-    const raw = await AsyncStorage.getItem(KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as string[];
-      if (Array.isArray(parsed) && parsed.length) return parsed;
-    }
-  } catch {
-    /* ignore */
-  }
-  try {
-    const res = await api.customWatchlist();
-    if (res.symbols.length) {
-      await AsyncStorage.setItem(KEY, JSON.stringify(res.symbols));
-      return res.symbols;
-    }
-  } catch {
-    /* offline */
-  }
-  return WATCHLIST.map((w) => w.symbol);
-}
+export {
+  WATCHLIST_KEY_V1,
+  WATCHLIST_KEY_V2,
+  DEFAULT_WATCH_SYMBOLS,
+  WATCHLIST_STORE_VERSION,
+  sanitizeWatchSymbols,
+  parseV1Payload,
+  parseV2Payload,
+  subscribeWatchlist,
+  subscribeWatchlistSaveError,
+  getWatchlistSnapshot,
+  getWatchlistSaveError,
+  ensureWatchlistLoaded,
+  loadCustomSymbols,
+  saveWatchlistSymbols,
+  addWatchSymbol,
+  removeWatchSymbol,
+  moveWatchSymbol,
+  resetWatchlistToDefault,
+  catalogEntriesNotIn,
+  loadWatchlistItems,
+  setWatchlistStorage,
+  resetWatchlistMemory,
+  type WatchlistStorage,
+} from './watchlistStoreCore';
 
+/** توافق SymbolSearchBar — يضيف من الكتالوج فقط */
 export async function addCustomSymbol(symbol: string): Promise<string[]> {
-  const sym = symbol.toUpperCase();
-  const cur = await loadCustomSymbols();
-  if (!cur.includes(sym)) cur.unshift(sym);
-  const next = cur.slice(0, 40);
-  await AsyncStorage.setItem(KEY, JSON.stringify(next));
+  const next = await addWatchSymbol(symbol);
   try {
     await fetch(`${API_URL}/api/watchlist/custom`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ symbol: sym }),
+      body: JSON.stringify({ symbol: symbol.toUpperCase() }),
     });
   } catch {
     /* local ok */
@@ -44,15 +50,11 @@ export async function addCustomSymbol(symbol: string): Promise<string[]> {
   return next;
 }
 
-const LABELS: Record<string, string> = Object.fromEntries(WATCHLIST.map((w) => [w.symbol, w.label]));
+/** اختبارات فقط */
+export function __setWatchlistStorageForTests(next: WatchlistStorage | null) {
+  setWatchlistStorage(next ?? AsyncStorage);
+}
 
-export async function loadWatchlistItems(): Promise<
-  { symbol: string; label: string; group?: string }[]
-> {
-  const syms = await loadCustomSymbols();
-  return syms.map((s) => ({
-    symbol: s,
-    label: LABELS[s] ?? s,
-    group: WATCHLIST.find((w) => w.symbol === s)?.group ?? 'custom',
-  }));
+export function __resetWatchlistMemoryForTests() {
+  resetWatchlistMemory();
 }

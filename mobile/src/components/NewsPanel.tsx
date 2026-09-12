@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle } from '../theme';
 import { api, type NewsItem } from '../api';
 import { mockNews } from '../mock';
 
-export function NewsPanel() {
+export function NewsPanel({ embedded }: { embedded?: boolean }) {
   const [news, setNews] = useState<NewsItem[]>(mockNews);
 
   useEffect(() => {
@@ -15,8 +15,17 @@ export function NewsPanel() {
   }, []);
 
   return (
-    <View style={styles.panel}>
-      <Text style={styles.title}>أخبار مؤثرة على الفوركس</Text>
+    <View style={[styles.panel, embedded && styles.panelInFrame]}>
+      {embedded ? (
+        <View style={frameEmbedHead}>
+          <View style={frameEmbedHeadTail} />
+          <View style={frameEmbedTitleBlock}>
+            <Text style={[styles.title, styles.titleInHead, frameEmbedTitle]}>أخبار مؤثرة على الفوركس</Text>
+          </View>
+        </View>
+      ) : (
+        <Text style={styles.title}>أخبار مؤثرة على الفوركس</Text>
+      )}
       <ScrollView contentContainerStyle={{ gap: 8 }}>
         {news.map((n) => (
           <View key={n.id} style={styles.card}>
@@ -56,13 +65,22 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     overflow: 'hidden',
   },
+  panelInFrame: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    paddingTop: frameEmbed.padTop,
+    paddingLeft: frameEmbed.padLeft,
+    paddingRight: frameEmbed.padRight,
+    paddingBottom: frameEmbed.padBottom,
+  },
   title: {
     color: colors.text,
     fontWeight: '700',
     fontSize: 13,
-    marginBottom: spacing.sm,
     textAlign: 'right',
+    marginBottom: spacing.sm,
   },
+  titleInHead: { marginBottom: 0 },
   card: {
     backgroundColor: colors.bgElevated,
     borderRadius: radii.sm,

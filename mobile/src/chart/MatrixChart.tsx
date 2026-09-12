@@ -1,4 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   View,
   Text,
@@ -60,6 +68,21 @@ export type SyncTimeWindow = {
   start: number;
   /** unix seconds */
   end: number;
+  /** إزاحة أفقية جزئية كنسبة من عرض الشارت */
+  xPanNorm?: number;
+  /** تكبير محور السعر */
+  priceScale?: number;
+  /** إزاحة محور السعر */
+  pricePan?: number;
+};
+
+/** تحكم خارجي بالسحب (لفريم الظل الموحد) */
+export type ChartPanHandle = {
+  beginDrag: () => void;
+  dragBy: (dx: number, dy: number) => void;
+  endDrag: () => void;
+  zoomAroundCenter: (factor: number) => void;
+  zoomPrice: (factor: number) => void;
 };
 
 type Props = {
@@ -67,6 +90,8 @@ type Props = {
   compareSeries?: ChartSeries | null;
   /** سلاسل ثانوية تظهر كشموع ظل باهتة (1–3) */
   shadowSeries?: ChartSeries[];
+  /** اختصارات الطبقات: s صغير · m وسط · b كبير — بنفس ترتيب shadowSeries */
+  shadowTags?: string[];
   height?: number;
   interactive?: boolean;
   /** تحريك الشموع والمحاور بدون أدوات الرسم الكاملة */
@@ -74,6 +99,8 @@ type Props = {
   accent?: string;
   persistDrawings?: boolean;
   livePrice?: number | null;
+  /** provenance of livePrice — required for honest merge into candles */
+  liveTickSource?: import('../api').DataProvenance | null;
   onCreateAlert?: (price: number) => void;
   initialTool?: DrawTool;
   initialLens?: LensMode;
@@ -99,6 +126,8 @@ type Props = {
   syncFollow?: boolean;
   /** نسبة سرعة السحب 1–100 */
   panSpeed?: PanSpeedPercent;
+  /** مزامنة زمن فقط (بدون priceScale/pricePan) عند النشر */
+  syncTimeOnly?: boolean;
 };
 
 type PointerEventLike = {
@@ -138,8 +167,8 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
   measure: '↔',
 };
 
-const PRICE_AXIS_WIDTH = 62;
-const TIME_AXIS_HEIGHT = 36;
+const PRICE_AXIS_WIDTH = 68;
+const TIME_AXIS_HEIGHT = 48;
 const AR_MONTHS = [
   'يناير',
   'فبراير',
@@ -160,12 +189,19 @@ function candleTimeSec(t: number): number {
 }
 
 function windowFromPlot(
-  plot: { time: number }[]
+  plot: { time: number }[],
+  extras?: Pick<SyncTimeWindow, 'xPanNorm' | 'priceScale' | 'pricePan'>
 ): SyncTimeWindow | null {
   if (plot.length < 1) return null;
   const a = candleTimeSec(plot[0]!.time);
   const b = candleTimeSec(plot[plot.length - 1]!.time);
-  return { start: Math.min(a, b), end: Math.max(a, b) };
+  return {
+    start: Math.min(a, b),
+    end: Math.max(a, b),
+    xPanNorm: extras?.xPanNorm ?? 0,
+    priceScale: extras?.priceScale ?? 1,
+    pricePan: extras?.pricePan ?? 0,
+  };
 }
 
 function applyTimeWindowToSeries(
@@ -203,13 +239,17 @@ function formatAxisTime(unixTime: number, spanSeconds: number): string {
   const milliseconds = unixTime > 1e12 ? unixTime : unixTime * 1000;
   const date = new Date(milliseconds);
   if (Number.isNaN(date.getTime())) return '';
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  const day = date.getDate();
+  const mon = AR_MONTHS[date.getMonth()];
   if (spanSeconds <= 2 * 86400) {
-    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')} · ${date.getDate()} ${AR_MONTHS[date.getMonth()]}`;
+    return `${hh}:${mm}\n${day} ${mon}`;
   }
   if (spanSeconds <= 120 * 86400) {
-    return `${date.getDate()} ${AR_MONTHS[date.getMonth()]}`;
+    return `${day} ${mon}`;
   }
-  return `${AR_MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+  return `${mon} ${date.getFullYear()}`;
 }
 
 function pointerXY(event: PointerEventLike): { x: number; y: number; pointerId: number } {
@@ -239,19 +279,22 @@ const webAxisLockStyle =
         touchAction: 'none',
         overscrollBehavior: 'contain',
         userSelect: 'none',
-      } as const)
+      } as const as object)
     : null;
 
-export function MatrixChart({
+export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChart(
+  {
   series,
   compareSeries = null,
   shadowSeries = [],
+  shadowTags = [],
   height = 280,
   interactive = true,
   panControls,
   accent = colors.accent,
   persistDrawings = true,
   livePrice = null,
+  liveTickSource = null,
   onCreateAlert,
   initialTool,
   initialLens,
@@ -268,14 +311,21 @@ export function MatrixChart({
   onSyncWindow,
   syncFollow = false,
   panSpeed: panSpeedProp,
-}: Props) {
+  syncTimeOnly = false,
+}: Props,
+  ref
+) {
   const canPan = syncFollow ? false : (panControls ?? interactive);
   const candleBull = mutedCandles ? 'rgba(34,197,94,0.34)' : colors.bull;
   const candleBear = mutedCandles ? 'rgba(244,63,94,0.34)' : colors.bear;
   const timeAxisH = hideTimeLabels ? 0 : TIME_AXIS_HEIGHT;
   const syncKeyRef = useRef('');
+  /** جلسة نشر نشطة: يُصفَّر المفتاح فقط عند الانتقال من غير ناشر → ناشر */
+  const publisherArmedRef = useRef(false);
   const onSyncWindowRef = useRef(onSyncWindow);
   onSyncWindowRef.current = onSyncWindow;
+  const syncTimeOnlyRef = useRef(syncTimeOnly);
+  syncTimeOnlyRef.current = syncTimeOnly;
   const plotRef = useRef<View>(null);
   const priceAxisRef = useRef<View>(null);
   const timeAxisRef = useRef<View>(null);
@@ -324,6 +374,8 @@ export function MatrixChart({
   const webTimePointer = useRef({ active: false, x: 0, pointerId: 0 });
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rangeRef = useRef({ min: 0, max: 1, span: 1 });
+  const chartPlotWRef = useRef(320);
+  const chartPlotHRef = useRef(200);
   const sourceRef = useRef({
     plot: [] as { close: number; open: number; high: number; low: number }[],
     start: 0,
@@ -337,8 +389,12 @@ export function MatrixChart({
   }, [lens, extraInd]);
 
   const liveSeries = useMemo(
-    () => withLivePrice(series, livePrice),
-    [series, livePrice]
+    () =>
+      withLivePrice(series, livePrice, liveTickSource, {
+        tickAsOf: liveTickSource?.as_of ?? null,
+        timeframe: series.timeframe,
+      }),
+    [series, livePrice, liveTickSource]
   );
 
   useEffect(() => {
@@ -412,47 +468,98 @@ export function MatrixChart({
     if (syncFollow) return;
     const emit = onSyncWindowRef.current;
     if (!emit) return;
-    const plot = sourceRef.current.plot;
-    if (!plot.length) return;
-    const win = windowFromPlot(plot);
+    const all = sourceRef.current.all as { time: number }[];
+    if (!all.length) return;
+    const winLen = Math.max(1, windowCountRef.current);
+    const off = offsetRef.current;
+    const end = all.length - off;
+    const startIdx = Math.max(0, end - winLen);
+    const slice = all.slice(startIdx, end);
+    if (!slice.length) return;
+    const plotW = Math.max(1, chartPlotWRef.current);
+    const timeOnly = syncTimeOnlyRef.current;
+    const win = windowFromPlot(
+      slice,
+      timeOnly
+        ? { xPanNorm: xPanRef.current / plotW }
+        : {
+            xPanNorm: xPanRef.current / plotW,
+            priceScale: priceScaleRef.current,
+            pricePan: pricePanRef.current,
+          }
+    );
     if (!win || !(win.end > win.start)) return;
-    const key = `${win.start}:${win.end}`;
+    if (timeOnly) {
+      delete win.priceScale;
+      delete win.pricePan;
+    }
+    const key = `${win.start}:${win.end}:${(win.xPanNorm ?? 0).toFixed(4)}:${
+      timeOnly ? 't' : `${(win.priceScale ?? 1).toFixed(4)}:${(win.pricePan ?? 0).toFixed(4)}`
+    }`;
     if (key === syncKeyRef.current) return;
     syncKeyRef.current = key;
     emit(win);
   }, [syncFollow]);
 
-  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const syncRafRef = useRef<number | null>(null);
   const schedulePublishSync = useCallback(
     (immediate = false) => {
       if (syncFollow) return;
-      if (syncTimerRef.current) {
-        clearTimeout(syncTimerRef.current);
-        syncTimerRef.current = null;
+      if (syncRafRef.current != null) {
+        if (!immediate) return;
+        cancelAnimationFrame(syncRafRef.current);
+        syncRafRef.current = null;
       }
       if (immediate) {
         publishSyncWindow();
         return;
       }
-      syncTimerRef.current = setTimeout(() => {
-        syncTimerRef.current = null;
+      syncRafRef.current = requestAnimationFrame(() => {
+        syncRafRef.current = null;
         publishSyncWindow();
-      }, 120);
+      });
     },
     [syncFollow, publishSyncWindow]
   );
 
-  // نشر أولي بعد تحميل السلسلة فقط
+  // نشر أولي عند بدء جلسة الناشر (OFF→ON أو انتقال قيادة) — لا تعتمد على هوية callback
+  const hasSyncPublisher = Boolean(onSyncWindow);
   useEffect(() => {
-    if (syncFollow || !onSyncWindow) return;
+    const canPublish = !syncFollow && hasSyncPublisher;
+    if (!canPublish) {
+      publisherArmedRef.current = false;
+      return;
+    }
     if (!source.plot.length) return;
+    const sessionStart = !publisherArmedRef.current;
+    publisherArmedRef.current = true;
+    if (sessionStart) {
+      syncKeyRef.current = '';
+    }
     const t = setTimeout(() => publishSyncWindow(), 0);
     return () => clearTimeout(t);
-  }, [syncFollow, onSyncWindow, series.symbol, series.timeframe, source.windowLen, publishSyncWindow]);
+  }, [
+    syncFollow,
+    hasSyncPublisher,
+    series.symbol,
+    series.timeframe,
+    source.windowLen,
+    publishSyncWindow,
+  ]);
+
+  // عند المتابعة: حاذِ الحالة المحلية مع النافذة الزمنية لإيقاف سلس بلا قفزة كبيرة
+  useEffect(() => {
+    if (!syncFollow || !syncWindow || !(syncWindow.end > syncWindow.start)) return;
+    const all = withVolume(liveSeries.candles);
+    if (all.length < 2) return;
+    const applied = applyTimeWindowToSeries(all, syncWindow);
+    setWindowCount(applied.count);
+    setOffset(applied.offset);
+  }, [syncFollow, syncWindow?.start, syncWindow?.end, liveSeries.candles]);
 
   useEffect(
     () => () => {
-      if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+      if (syncRafRef.current != null) cancelAnimationFrame(syncRafRef.current);
     },
     []
   );
@@ -560,16 +667,20 @@ export function MatrixChart({
 
   const shadowLayers = useMemo(() => {
     if (!shadowSeries.length || !source.plot.length) return [];
+    const defaultTags = ['s', 'm', 'b'];
     return shadowSeries
       .slice(0, 3)
-      .filter((sec) => (sec.candles?.length ?? 0) > 0)
       .map((sec, layer) => ({
         layer,
+        tag: (shadowTags[layer] || defaultTags[layer] || `${layer + 1}`).toLowerCase(),
         timeframe: sec.timeframe,
-        candles: mapShadowCandles(source.plot, sec.candles, layer),
+        candles:
+          (sec.candles?.length ?? 0) > 0
+            ? mapShadowCandles(source.plot, sec.candles, layer)
+            : [],
       }))
       .filter((x) => x.candles.length > 0);
-  }, [shadowSeries, source.plot]);
+  }, [shadowSeries, shadowTags, source.plot]);
 
   const closes = source.plot.map((c) => c.close);
   const overlays = useMemo(() => computeOverlays(closes), [closes]);
@@ -634,10 +745,14 @@ export function MatrixChart({
     if (tpo?.vah != null) push(tpo.vah);
     if (tpo?.val != null) push(tpo.val);
     pineLine.forEach(push);
+    const viewScale =
+      syncFollow && syncWindow?.priceScale != null ? syncWindow.priceScale : priceScale;
+    const viewPan =
+      syncFollow && syncWindow?.pricePan != null ? syncWindow.pricePan : pricePan;
     const span = max - min || 1;
     const paddedSpan = span * 1.12;
-    const center = (max + min) / 2 + pricePan * paddedSpan;
-    const scaledSpan = paddedSpan * priceScale;
+    const center = (max + min) / 2 + viewPan * paddedSpan;
+    const scaledSpan = paddedSpan * viewScale;
     return {
       min: center - scaledSpan / 2,
       max: center + scaledSpan / 2,
@@ -655,6 +770,9 @@ export function MatrixChart({
     tpo,
     priceScale,
     pricePan,
+    syncFollow,
+    syncWindow?.priceScale,
+    syncWindow?.pricePan,
   ]);
 
   rangeRef.current = range;
@@ -662,19 +780,106 @@ export function MatrixChart({
 
   const chartPlotW = Math.max(80, chartW - PRICE_AXIS_WIDTH);
   const chartPlotH = Math.max(100, mainH - timeAxisH);
+  chartPlotWRef.current = chartPlotW;
+  chartPlotHRef.current = chartPlotH;
+  const viewXPan =
+    syncFollow && syncWindow?.xPanNorm != null
+      ? syncWindow.xPanNorm * chartPlotW
+      : xPan;
   const toScale = (price: number) => (logScale ? Math.log(Math.max(price, 1e-12)) : price);
   const fromScale = (scaled: number) => (logScale ? Math.exp(scaled) : scaled);
 
   const yOf = (price: number) => ((range.max - toScale(price)) / range.span) * chartPlotH;
   const xOf = (i: number) =>
-    ((i + 0.5) / Math.max(1, source.plot.length)) * chartPlotW + xPan;
+    ((i + 0.5) / Math.max(1, source.plot.length)) * chartPlotW + viewXPan;
   const colW = Math.min(
     48,
     Math.max(2, chartPlotW / Math.max(1, source.plot.length) - 1)
   );
-  const hasShadows = shadowLayers.length > 0;
-  /** مع الظلال: الأساسي أوضح، والظل أصغر ومزاح جانبياً */
-  const primaryColW = hasShadows ? Math.max(2, colW * 0.72) : colW;
+
+  /** مسارات عمودية: أساسي فوق · ثم الظلال من الأكبر → الأصغر */
+  const shadowStack = useMemo(() => {
+    if (!shadowLayers.length) return null;
+    const rank = (tag: string) => {
+      const t = tag.toLowerCase();
+      if (t === 'b' || t.includes('كبير')) return 3;
+      if (t === 'm' || t.includes('وسط')) return 2;
+      if (t === 's' || t.includes('صغير')) return 1;
+      return 0;
+    };
+    const sorted = [...shadowLayers].sort((a, b) => {
+      const dr = rank(b.tag) - rank(a.tag);
+      if (dr !== 0) return dr;
+      return b.layer - a.layer;
+    });
+    const n = sorted.length;
+    const gap = 3;
+    const usable = Math.max(80, chartPlotH - gap * n);
+    const primaryH = Math.max(56, usable * (n >= 3 ? 0.4 : n === 2 ? 0.46 : 0.52));
+    const shadowTotalH = usable - primaryH;
+    const eachH = shadowTotalH / n;
+
+    const laneRange = (lows: number[], highs: number[]) => {
+      let lo = Infinity;
+      let hi = -Infinity;
+      for (let i = 0; i < lows.length; i++) {
+        const a = toScale(lows[i]!);
+        const b = toScale(highs[i]!);
+        lo = Math.min(lo, a, b);
+        hi = Math.max(hi, a, b);
+      }
+      if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi <= lo) {
+        return { min: range.min, max: range.max, span: range.span };
+      }
+      const pad = (hi - lo) * 0.1 || range.span * 0.02;
+      const min = lo - pad;
+      const max = hi + pad;
+      return { min, max, span: max - min || 1 };
+    };
+
+    const primaryLane = {
+      id: 'primary',
+      label: 'أساسي',
+      top: 0,
+      height: primaryH,
+      ...laneRange(
+        source.plot.map((c) => c.low),
+        source.plot.map((c) => c.high)
+      ),
+    };
+
+    let cursor = primaryH + gap;
+    const shadowLanes = sorted.map((layer) => {
+      const r = laneRange(
+        layer.candles.map((c) => c.low),
+        layer.candles.map((c) => c.high)
+      );
+      const lane = {
+        id: `sh-${layer.tag}-${layer.layer}`,
+        label: layer.tag,
+        top: cursor,
+        height: Math.max(36, eachH - gap),
+        layer,
+        ...r,
+      };
+      cursor += eachH;
+      return lane;
+    });
+
+    return { primaryLane, shadowLanes };
+  }, [shadowLayers, chartPlotH, source.plot, range.min, range.max, range.span, logScale]);
+
+  const hasShadows = !!shadowStack;
+  const primaryColW = colW;
+  const yPrimary = (price: number) => {
+    if (!shadowStack) return yOf(price);
+    const lane = shadowStack.primaryLane;
+    return lane.top + ((lane.max - toScale(price)) / lane.span) * lane.height;
+  };
+  const yShadowLane = (
+    price: number,
+    lane: { top: number; height: number; min: number; max: number; span: number }
+  ) => lane.top + ((lane.max - toScale(price)) / lane.span) * lane.height;
 
   const onLayout = (e: LayoutChangeEvent) => {
     setChartW(Math.max(120, e.nativeEvent.layout.width));
@@ -683,9 +888,12 @@ export function MatrixChart({
   const hitIndex = useCallback((x: number) => {
     const len = sourceRef.current.plot.length || 1;
     const w = chartPlotW || 1;
-    const i = Math.floor(((x - xPan) / w) * len);
+    const pan = syncFollow && syncWindow?.xPanNorm != null
+      ? syncWindow.xPanNorm * w
+      : xPanRef.current;
+    const i = Math.floor(((x - pan) / w) * len);
     return Math.max(0, Math.min(len - 1, i));
-  }, [chartPlotW, xPan]);
+  }, [chartPlotW, syncFollow, syncWindow?.xPanNorm]);
 
   const priceAtY = useCallback(
     (y: number) => {
@@ -901,15 +1109,75 @@ export function MatrixChart({
         Math.min(maxOffset, panStartOffset.current + requestedBars)
       );
       const appliedBars = nextOffset - panStartOffset.current;
-      setOffset(nextOffset);
-      setXPan(panStartX.current + sdx - appliedBars * barWidth);
-      setPricePan(
+      const nextXPan = panStartX.current + sdx - appliedBars * barWidth;
+      const nextPricePan =
         panStartPrice.current +
-          (sdy / Math.max(1, chartPlotH)) * priceScaleRef.current
-      );
+        (sdy / Math.max(1, chartPlotH)) * priceScaleRef.current;
+      offsetRef.current = nextOffset;
+      xPanRef.current = nextXPan;
+      pricePanRef.current = nextPricePan;
+      setOffset(nextOffset);
+      setXPan(nextXPan);
+      setPricePan(nextPricePan);
       schedulePublishSync(false);
     },
     [chartPlotH, chartPlotW, source.all.length, schedulePublishSync]
+  );
+
+  const beginDrag = useCallback(() => {
+    panStartOffset.current = offsetRef.current;
+    panStartX.current = xPanRef.current;
+    panStartPrice.current = pricePanRef.current;
+    panMoved.current = false;
+    setCross(null);
+  }, []);
+
+  const endDrag = useCallback(() => {
+    schedulePublishSync(true);
+  }, [schedulePublishSync]);
+
+  const zoomAroundCenter = useCallback(
+    (factor: number) => {
+      const current = windowCountRef.current;
+      const next = Math.max(2, Math.min(1000, Math.round(current * factor)));
+      if (next === current) return;
+      const allLen = sourceRef.current.all.length;
+      const off = offsetRef.current;
+      const oldEnd = allLen - off;
+      const oldStart = Math.max(0, oldEnd - current);
+      const center = (oldStart + oldEnd) / 2;
+      let newEnd = Math.round(center + next / 2);
+      newEnd = Math.min(allLen, Math.max(next, newEnd));
+      const nextOffset = Math.max(0, allLen - newEnd);
+      windowCountRef.current = next;
+      offsetRef.current = nextOffset;
+      setWindowCount(next);
+      setOffset(nextOffset);
+      schedulePublishSync(false);
+    },
+    [schedulePublishSync]
+  );
+
+  const zoomPrice = useCallback(
+    (factor: number) => {
+      const next = Math.max(0.01, Math.min(200, priceScaleRef.current * factor));
+      priceScaleRef.current = next;
+      setPriceScale(next);
+      schedulePublishSync(false);
+    },
+    [schedulePublishSync]
+  );
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      beginDrag,
+      dragBy: applyChartDrag,
+      endDrag,
+      zoomAroundCenter,
+      zoomPrice,
+    }),
+    [beginDrag, applyChartDrag, endDrag, zoomAroundCenter, zoomPrice]
   );
 
   const chartPan = useMemo(
@@ -941,16 +1209,8 @@ export function MatrixChart({
           evt.nativeEvent.locationX < chartPlotW &&
           evt.nativeEvent.locationY < chartPlotH &&
           (Math.abs(g.dx) > 4 || Math.abs(g.dy) > 4),
-        onPanResponderGrant: (evt) => {
-          panStartOffset.current = offsetRef.current;
-          panStartX.current = xPanRef.current;
-          panStartPrice.current = pricePanRef.current;
-          panStartPoint.current = {
-            x: evt.nativeEvent.locationX,
-            y: evt.nativeEvent.locationY,
-          };
-          panMoved.current = false;
-          setCross(null);
+        onPanResponderGrant: () => {
+          beginDrag();
         },
         onPanResponderMove: (_, g) => {
           if (Math.abs(g.dx) > 4 || Math.abs(g.dy) > 4) panMoved.current = true;
@@ -960,11 +1220,11 @@ export function MatrixChart({
           if (!panMoved.current) {
             chartPressRef.current(panStartPoint.current.x, panStartPoint.current.y);
           }
-          schedulePublishSync(true);
+          endDrag();
         },
         onPanResponderTerminate: () => {
           panMoved.current = false;
-          schedulePublishSync(true);
+          endDrag();
         },
       }),
     [
@@ -974,7 +1234,8 @@ export function MatrixChart({
       chartPlotW,
       chartPlotH,
       applyChartDrag,
-      schedulePublishSync,
+      beginDrag,
+      endDrag,
     ]
   );
 
@@ -985,17 +1246,17 @@ export function MatrixChart({
         onStartShouldSetPanResponderCapture: () => canPan,
         onMoveShouldSetPanResponder: () => canPan,
         onMoveShouldSetPanResponderCapture: () => canPan,
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
-          priceScaleStart.current = priceScaleRef.current;
+          beginDrag();
         },
         onPanResponderMove: (_, gesture) => {
-          const next =
-            priceScaleStart.current *
-            Math.exp(gesture.dy * 0.018 * panSpeedMulRef.current);
-          setPriceScale(Math.max(0.01, Math.min(200, next)));
+          applyChartDrag(0, gesture.dy);
         },
+        onPanResponderRelease: () => endDrag(),
+        onPanResponderTerminate: () => endDrag(),
       }),
-    [canPan]
+    [canPan, beginDrag, endDrag, applyChartDrag]
   );
 
   const timeAxisPan = useMemo(
@@ -1005,18 +1266,17 @@ export function MatrixChart({
         onStartShouldSetPanResponderCapture: () => canPan,
         onMoveShouldSetPanResponder: () => canPan,
         onMoveShouldSetPanResponderCapture: () => canPan,
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
-          timeWindowStart.current = windowCountRef.current;
+          beginDrag();
         },
         onPanResponderMove: (_, gesture) => {
-          const next = Math.round(
-            timeWindowStart.current *
-              Math.exp(gesture.dx * 0.018 * panSpeedMulRef.current)
-          );
-          setWindowCount(Math.max(2, Math.min(1000, next)));
+          applyChartDrag(gesture.dx, 0);
         },
+        onPanResponderRelease: () => endDrag(),
+        onPanResponderTerminate: () => endDrag(),
       }),
-    [canPan]
+    [canPan, beginDrag, endDrag, applyChartDrag]
   );
 
   // React Native Web forwards these browser pointer events to the host element.
@@ -1034,10 +1294,8 @@ export function MatrixChart({
               pointerId: point.pointerId,
             };
             event.currentTarget?.setPointerCapture?.(point.pointerId);
-            panStartOffset.current = offsetRef.current;
-            panStartX.current = xPanRef.current;
-            panStartPrice.current = pricePanRef.current;
-            setCross(null);
+            beginDrag();
+            panStartPoint.current = { x: point.x, y: point.y };
           },
           onPointerMove: (event: PointerEventLike) => {
             if (!webChartPointer.current.active) return;
@@ -1052,11 +1310,11 @@ export function MatrixChart({
             const point = pointerXY(event);
             webChartPointer.current.active = false;
             event.currentTarget?.releasePointerCapture?.(point.pointerId);
-            schedulePublishSync(true);
+            endDrag();
           },
           onPointerCancel: () => {
             webChartPointer.current.active = false;
-            schedulePublishSync(true);
+            endDrag();
           },
         } as const)
       : {};
@@ -1074,27 +1332,25 @@ export function MatrixChart({
               y: point.y,
               pointerId: point.pointerId,
             };
-            priceScaleStart.current = priceScaleRef.current;
+            beginDrag();
             event.currentTarget?.setPointerCapture?.(point.pointerId);
           },
           onPointerMove: (event: PointerEventLike) => {
             if (!webPricePointer.current.active) return;
             event.preventDefault?.();
+            event.stopPropagation?.();
             const point = pointerXY(event);
-            const next =
-              priceScaleStart.current *
-              Math.exp(
-                (point.y - webPricePointer.current.y) * 0.018 * panSpeedMulRef.current
-              );
-            setPriceScale(Math.max(0.01, Math.min(200, next)));
+            applyChartDrag(0, point.y - webPricePointer.current.y);
           },
           onPointerUp: (event: PointerEventLike) => {
             const point = pointerXY(event);
             webPricePointer.current.active = false;
             event.currentTarget?.releasePointerCapture?.(point.pointerId);
+            endDrag();
           },
           onPointerCancel: () => {
             webPricePointer.current.active = false;
+            endDrag();
           },
         } as const)
       : {};
@@ -1112,28 +1368,25 @@ export function MatrixChart({
               x: point.x,
               pointerId: point.pointerId,
             };
-            timeWindowStart.current = windowCountRef.current;
+            beginDrag();
             event.currentTarget?.setPointerCapture?.(point.pointerId);
           },
           onPointerMove: (event: PointerEventLike) => {
             if (!webTimePointer.current.active) return;
             event.preventDefault?.();
+            event.stopPropagation?.();
             const point = pointerXY(event);
-            const next = Math.round(
-              timeWindowStart.current *
-                Math.exp(
-                  (point.x - webTimePointer.current.x) * 0.018 * panSpeedMulRef.current
-                )
-            );
-            setWindowCount(Math.max(2, Math.min(1000, next)));
+            applyChartDrag(point.x - webTimePointer.current.x, 0);
           },
           onPointerUp: (event: PointerEventLike) => {
             const point = pointerXY(event);
             webTimePointer.current.active = false;
             event.currentTarget?.releasePointerCapture?.(point.pointerId);
+            endDrag();
           },
           onPointerCancel: () => {
             webTimePointer.current.active = false;
+            endDrag();
           },
         } as const)
       : {};
@@ -1143,21 +1396,6 @@ export function MatrixChart({
   useEffect(() => {
     if (Platform.OS !== 'web' || !canPan) return;
     if (typeof document === 'undefined') return;
-
-    const zoomAroundCenter = (factor: number) => {
-      const current = windowCountRef.current;
-      const next = Math.max(2, Math.min(1000, Math.round(current * factor)));
-      if (next === current) return;
-      const allLen = sourceRef.current.all.length;
-      const off = offsetRef.current;
-      const oldEnd = allLen - off;
-      const oldStart = Math.max(0, oldEnd - current);
-      const center = (oldStart + oldEnd) / 2;
-      let newEnd = Math.round(center + next / 2);
-      newEnd = Math.min(allLen, Math.max(next, newEnd));
-      setWindowCount(next);
-      setOffset(Math.max(0, allLen - newEnd));
-    };
 
     const onWheel = (event: WheelEvent) => {
       const target = event.target;
@@ -1177,9 +1415,7 @@ export function MatrixChart({
       const delta = event.deltaY * panSpeedMulRef.current;
       const factor = Math.exp(delta * 0.006);
       if (overPrice) {
-        setPriceScale((current) =>
-          Math.max(0.01, Math.min(200, current * factor))
-        );
+        zoomPrice(factor);
         return;
       }
       if (overTime) {
@@ -1189,16 +1425,14 @@ export function MatrixChart({
         schedulePublishSync(false);
         return;
       }
-      // منتصف الشارت: تكبير/تصغير مع تثبيت المركز
       zoomAroundCenter(factor);
-      schedulePublishSync(false);
     };
 
     document.addEventListener('wheel', onWheel, { passive: false, capture: true });
     return () => {
       document.removeEventListener('wheel', onWheel, true);
     };
-  }, [canPan, chartW, schedulePublishSync]);
+  }, [canPan, chartW, schedulePublishSync, zoomAroundCenter, zoomPrice]);
 
   const toggleInd = (id: IndicatorId) => {
     setExtraInd((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -1237,7 +1471,7 @@ export function MatrixChart({
   const firstVisibleTime = source.plot[0]?.time ?? 0;
   const lastVisibleTime = source.plot[source.plot.length - 1]?.time ?? firstVisibleTime;
   const visibleTimeSpan = Math.abs(lastVisibleTime - firstVisibleTime);
-  const timeLabelW = chartPlotW < 200 ? 48 : chartPlotW < 280 ? 64 : 96;
+  const timeLabelW = chartPlotW < 200 ? 56 : chartPlotW < 280 ? 72 : 88;
   const timeTickRatios =
     chartPlotW < 200 ? [0, 0.5, 1] : chartPlotW < 320 ? [0, 0.5, 1] : [0, 1 / 3, 2 / 3, 1];
   const timeTickIndexes = Array.from(
@@ -1485,76 +1719,129 @@ export function MatrixChart({
             );
           })}
 
-        {/* شموع الظل — أصغر ومزاحة قليلاً عن الأساسي */}
-        {shadowLayers.map((layer) => {
-          const opacities = [0.52, 0.42, 0.34];
-          const opac = opacities[layer.layer] ?? 0.38;
-          return layer.candles.map((c, i) => {
-            const bull = c.close >= c.open;
-            const color = bull ? candleBull : candleBear;
-            const colWShadow = Math.max(
-              2,
-              Math.min(primaryColW * 0.72, c.widthRatio * chartPlotW)
-            );
-            // إزاحة خفيفة يساراً لفصل الظل عن جسم الأساسي
-            const detachX = -(Math.max(3, primaryColW * 0.42) + layer.layer * 2);
-            const cx = c.xRatio * chartPlotW + xPan + detachX;
-            const left = cx - colWShadow / 2;
-            const wickTop = yOf(c.high);
-            const wickBot = yOf(c.low);
-            const midPrice = (c.open + c.close) / 2;
-            let bodyTop = yOf(Math.max(c.open, c.close));
-            let bodyBot = yOf(Math.min(c.open, c.close));
-            const minBody = Math.max(2, colWShadow * 0.22);
-            if (bodyBot - bodyTop < minBody) {
-              const midY = yOf(midPrice);
-              bodyTop = midY - minBody / 2;
-              bodyBot = midY + minBody / 2;
-            }
-            const wickH = Math.max(minBody + 2, wickBot - wickTop);
-            const wickY = Math.min(wickTop, bodyTop - 1);
-            const bodyH = Math.max(minBody, bodyBot - bodyTop);
-            return (
-              <View
-                key={`sh${layer.layer}-${c.time}-${i}`}
-                pointerEvents="none"
-                style={{
-                  position: 'absolute',
-                  left,
-                  top: 0,
-                  width: colWShadow,
-                  height: chartPlotH,
-                  opacity: opac,
-                  zIndex: 2,
-                }}
-              >
-                <View
-                  style={{
-                    position: 'absolute',
-                    left: colWShadow / 2 - 0.5,
-                    top: wickY,
-                    width: 1,
-                    height: wickH,
-                    backgroundColor: color,
-                  }}
-                />
-                <View
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    top: bodyTop,
-                    width: colWShadow,
-                    height: bodyH,
-                    backgroundColor: color,
-                    borderRadius: 1,
-                    borderWidth: StyleSheet.hairlineWidth,
-                    borderColor: 'rgba(255,255,255,0.22)',
-                  }}
-                />
-              </View>
-            );
-          });
-        })}
+        {/* مسارات عمودية: أساسي فوق · ظلال من الأكبر للأصغر */}
+        {shadowStack
+          ? shadowStack.shadowLanes.map((lane, laneIdx) => {
+              const layer = lane.layer;
+              const opac = [0.42, 0.34, 0.28][laneIdx] ?? 0.28;
+              const candleNodes = layer.candles.map((c, i) => {
+                const bull = c.close >= c.open;
+                const color = bull ? candleBull : candleBear;
+                const colWShadow = Math.max(
+                  1.5,
+                  Math.min(primaryColW * 0.72, c.widthRatio * chartPlotW)
+                );
+                const cx = c.xRatio * chartPlotW + viewXPan;
+                const left = cx - colWShadow / 2;
+                const wickTop = yShadowLane(c.high, lane);
+                const wickBot = yShadowLane(c.low, lane);
+                const midPrice = (c.open + c.close) / 2;
+                let bodyTop = yShadowLane(Math.max(c.open, c.close), lane);
+                let bodyBot = yShadowLane(Math.min(c.open, c.close), lane);
+                const minBody = Math.max(2, colWShadow * 0.2);
+                if (bodyBot - bodyTop < minBody) {
+                  const midY = yShadowLane(midPrice, lane);
+                  bodyTop = midY - minBody / 2;
+                  bodyBot = midY + minBody / 2;
+                }
+                const wickH = Math.max(minBody + 2, wickBot - wickTop);
+                const wickY = Math.min(wickTop, bodyTop - 1);
+                const bodyH = Math.max(minBody, bodyBot - bodyTop);
+                return (
+                  <View
+                    key={`sh${layer.layer}-${c.time}-${i}`}
+                    pointerEvents="none"
+                    style={{
+                      position: 'absolute',
+                      left,
+                      top: 0,
+                      width: colWShadow,
+                      height: chartPlotH,
+                      opacity: opac,
+                      zIndex: 2,
+                    }}
+                  >
+                    <View
+                      style={{
+                        position: 'absolute',
+                        left: colWShadow / 2 - 0.5,
+                        top: wickY,
+                        width: 1,
+                        height: wickH,
+                        backgroundColor: color,
+                      }}
+                    />
+                    <View
+                      style={{
+                        position: 'absolute',
+                        left: 0,
+                        top: bodyTop,
+                        width: colWShadow,
+                        height: bodyH,
+                        backgroundColor: color,
+                        borderRadius: 1,
+                        borderWidth: StyleSheet.hairlineWidth,
+                        borderColor: 'rgba(255,255,255,0.16)',
+                      }}
+                    />
+                  </View>
+                );
+              });
+
+              return (
+                <React.Fragment key={`shadow-lane-${lane.id}`}>
+                  <View
+                    pointerEvents="none"
+                    style={{
+                      position: 'absolute',
+                      right: PRICE_AXIS_WIDTH + 6,
+                      top: lane.top + 4,
+                      zIndex: 7,
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                      borderRadius: 4,
+                      backgroundColor: 'rgba(7,16,24,0.78)',
+                      borderWidth: StyleSheet.hairlineWidth,
+                      borderColor: 'rgba(148,163,184,0.4)',
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: 'rgba(226,232,240,0.92)',
+                        fontSize: 10,
+                        fontWeight: '800',
+                        fontFamily: 'monospace',
+                        textTransform: 'lowercase',
+                      }}
+                    >
+                      {lane.label}
+                    </Text>
+                  </View>
+                  {candleNodes}
+                </React.Fragment>
+              );
+            })
+          : null}
+
+        {shadowStack ? (
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              left: 6,
+              top: 4,
+              zIndex: 7,
+              paddingHorizontal: 6,
+              paddingVertical: 2,
+              borderRadius: 4,
+              backgroundColor: 'rgba(7,16,24,0.78)',
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: 'rgba(45,212,191,0.45)',
+            }}
+          >
+            <Text style={{ color: colors.accent, fontSize: 10, fontWeight: '800' }}>أساسي</Text>
+          </View>
+        ) : null}
 
         {/* candles / bars / hollow / heikin */}
         {(kind === 'candles' ||
@@ -1567,17 +1854,18 @@ export function MatrixChart({
           source.plot.map((c, i) => {
             const bull = c.close >= c.open;
             const color = bull ? candleBull : candleBear;
-            const top = yOf(c.high);
-            const bodyTop = yOf(Math.max(c.open, c.close));
-            const bodyBot = yOf(Math.min(c.open, c.close));
-            const wickH = Math.max(2, yOf(c.low) - yOf(c.high));
+            const yP = hasShadows ? yPrimary : yOf;
+            const top = yP(c.high);
+            const bodyTop = yP(Math.max(c.open, c.close));
+            const bodyBot = yP(Math.min(c.open, c.close));
+            const wickH = Math.max(2, yP(c.low) - yP(c.high));
             const bodyH = Math.max(2, bodyBot - bodyTop);
             const left = xOf(i) - primaryColW / 2;
             if (kind === 'kagi') {
               const x1 = i === 0 ? xOf(0) : xOf(i - 1);
-              const y1 = i === 0 ? yOf(c.open) : yOf(source.plot[i - 1].close);
+              const y1 = i === 0 ? yP(c.open) : yP(source.plot[i - 1].close);
               const x2 = xOf(i);
-              const y2 = yOf(c.close);
+              const y2 = yP(c.close);
               const len = Math.hypot(x2 - x1, y2 - y1);
               const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
               return (
@@ -1633,7 +1921,7 @@ export function MatrixChart({
                     style={{
                       position: 'absolute',
                       left: 0,
-                      top: yOf(c.open),
+                      top: yP(c.open),
                       width: primaryColW / 2,
                       height: 2,
                       backgroundColor: color,
@@ -1643,7 +1931,7 @@ export function MatrixChart({
                     style={{
                       position: 'absolute',
                       left: primaryColW / 2,
-                      top: yOf(c.close),
+                      top: yP(c.close),
                       width: primaryColW / 2,
                       height: 2,
                       backgroundColor: color,
@@ -2058,17 +2346,18 @@ export function MatrixChart({
             hidePriceLabels && styles.priceAxisBare,
             { width: PRICE_AXIS_WIDTH, bottom: timeAxisH },
             canPan ? webAxisLockStyle : null,
+            Platform.OS === 'web' && canPan
+              ? ({ cursor: 'ns-resize' } as never)
+              : null,
           ]}
-          {...(canPan
-            ? Platform.OS === 'web'
-              ? priceWheelHandlers
-              : priceAxisPan.panHandlers
-            : {})}
+          {...(canPan ? priceAxisPan.panHandlers : {})}
+          {...(canPan && Platform.OS === 'web' ? priceWheelHandlers : {})}
         >
         {priceTicks.map((tick) =>
           hidePriceLabels ? null : (
             <Text
               key={tick.ratio}
+              pointerEvents="none"
               style={[
                 styles.priceAxisLabel,
                 { top: Math.max(0, Math.min(chartPlotH - 16, tick.ratio * chartPlotH - 7)) },
@@ -2080,6 +2369,7 @@ export function MatrixChart({
         )}
           {!hidePriceLabels ? (
           <View
+            pointerEvents="none"
             style={[
               styles.currentPriceTag,
               {
@@ -2100,12 +2390,12 @@ export function MatrixChart({
               styles.timeAxis,
               { height: timeAxisH, right: PRICE_AXIS_WIDTH },
               canPan ? webAxisLockStyle : null,
+              Platform.OS === 'web' && canPan
+                ? ({ cursor: 'ew-resize' } as never)
+                : null,
             ]}
-            {...(canPan
-              ? Platform.OS === 'web'
-                ? timeWheelHandlers
-                : timeAxisPan.panHandlers
-              : {})}
+            {...(canPan ? timeAxisPan.panHandlers : {})}
+            {...(canPan && Platform.OS === 'web' ? timeWheelHandlers : {})}
           >
             {timeTickIndexes.map((index) => {
               const candle = source.plot[index];
@@ -2113,6 +2403,7 @@ export function MatrixChart({
               return (
                 <Text
                   key={`${candle.time}-${index}`}
+                  pointerEvents="none"
                   style={[
                     styles.timeAxisLabel,
                     chartPlotW < 280 && styles.timeAxisLabelCompact,
@@ -2409,7 +2700,7 @@ export function MatrixChart({
       ) : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   root: { gap: 6 },
@@ -2518,7 +2809,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#09131F',
     borderLeftWidth: 1,
     borderLeftColor: colors.borderSoft,
-    zIndex: 20,
+    zIndex: 55,
   },
   priceAxisBare: {
     backgroundColor: 'transparent',
@@ -2529,8 +2820,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 4,
     right: 3,
-    color: colors.textMuted,
-    fontSize: 9,
+    color: colors.text,
+    fontSize: 10,
     fontWeight: '700',
     fontFamily: 'monospace',
     textAlign: 'right',
@@ -2568,28 +2859,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#09131F',
     borderTopWidth: 1,
     borderTopColor: colors.borderSoft,
-    zIndex: 20,
+    zIndex: 55,
+    overflow: 'visible',
   },
   timeAxisLabel: {
     position: 'absolute',
-    top: 6,
-    width: 96,
-    color: colors.textMuted,
-    fontSize: 9,
-    lineHeight: 12,
+    top: 4,
+    width: 88,
+    color: colors.text,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: '800',
     textAlign: 'center',
   },
   timeAxisLabelCompact: {
-    fontSize: 8,
-    lineHeight: 11,
+    fontSize: 9,
+    lineHeight: 12,
     top: 5,
   },
   axisCorner: {
     position: 'absolute',
     right: 0,
     bottom: 0,
-    zIndex: 25,
+    zIndex: 60,
     backgroundColor: '#0D1928',
     borderTopWidth: 1,
     borderLeftWidth: 1,

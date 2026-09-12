@@ -8,7 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { pushPriceAlert } from '../notifications';
 
@@ -123,7 +123,17 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
           </Pressable>
         </View>
       )}
-      <Pressable style={styles.btn} onPress={add} disabled={busy}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.btn,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
+        onPress={add}
+        disabled={busy}
+      >
         <Text style={styles.btnText}>{busy ? '...' : 'إضافة تنبيه'}</Text>
       </Pressable>
       {loading ? <ActivityIndicator color={colors.accent} /> : (
@@ -177,7 +187,17 @@ const styles = StyleSheet.create({
   chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   chipText: { color: colors.textMuted, fontWeight: '700', fontSize: 11 },
   chipTextOn: { color: colors.accent },
-  btn: { backgroundColor: colors.accent, borderRadius: radii.sm, paddingVertical: 12, alignItems: 'center' },
+  btn: {
+    backgroundColor: colors.accent,
+    borderRadius: radii.sm,
+    paddingVertical: 12,
+    alignItems: 'center',
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
+  },
   btnText: { color: '#042F2E', fontWeight: '800' },
   item: { flexDirection: 'row-reverse', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSoft },
   itemText: { color: colors.text, flex: 1, textAlign: 'right', fontSize: 12 },

@@ -8,15 +8,16 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api, type PriceAlert } from '../api';
 import { ensureAlertNotifications, pushPriceAlert, registerPushToken } from '../notifications';
 
 type Props = {
   defaultSymbol?: string;
+  embedded?: boolean;
 };
 
-export function AlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
+export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
   const [symbol, setSymbol] = useState(defaultSymbol);
   const [price, setPrice] = useState('');
@@ -89,9 +90,21 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
   };
 
   return (
-    <View style={styles.wrap}>
-      <Text style={styles.title}>تنبيهات السعر</Text>
-      <Text style={styles.sub}>فوق / تحت · Twelve Data · إشعار عند التفعيل</Text>
+    <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
+      {embedded ? (
+        <View style={frameEmbedHead}>
+          <View style={frameEmbedHeadTail} />
+          <View style={frameEmbedTitleBlock}>
+            <Text style={[styles.title, frameEmbedTitle]}>تنبيهات السعر</Text>
+            <Text style={[styles.sub, frameEmbedSub]}>فوق / تحت · Twelve Data · إشعار عند التفعيل</Text>
+          </View>
+        </View>
+      ) : (
+        <>
+          <Text style={styles.title}>تنبيهات السعر</Text>
+          <Text style={styles.sub}>فوق / تحت · Twelve Data · إشعار عند التفعيل</Text>
+        </>
+      )}
       {flash ? <Text style={styles.flash}>🔔 {flash}</Text> : null}
 
       <View style={styles.form}>
@@ -123,7 +136,17 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
           >
             <Text style={[styles.condText, condition === 'below' && styles.condTextOn]}>تحت</Text>
           </Pressable>
-          <Pressable style={styles.addBtn} onPress={add} disabled={busy}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.addBtn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={add}
+            disabled={busy}
+          >
             <Text style={styles.addText}>{busy ? '...' : 'إضافة'}</Text>
           </Pressable>
         </View>
@@ -175,7 +198,15 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     overflow: 'hidden',
   },
-  title: { color: colors.text, fontWeight: '800', fontSize: 15, textAlign: 'right' },
+  wrapInFrame: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    paddingTop: frameEmbed.padTop,
+    paddingLeft: frameEmbed.padLeft,
+    paddingRight: frameEmbed.padRight,
+    paddingBottom: frameEmbed.padBottom,
+  },
+  title: { color: colors.text, fontWeight: '800', fontSize: 14, textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 11, textAlign: 'right', marginTop: 2 },
   flash: {
     color: colors.warn,
@@ -214,6 +245,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
   },
   addText: { color: '#042F2E', fontWeight: '800', fontSize: 12 },
   empty: { color: colors.textDim, textAlign: 'right', marginTop: 8, fontSize: 12 },

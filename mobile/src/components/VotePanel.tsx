@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle } from '../theme';
 import { api, type Vote } from '../api';
 import { mockVotes } from '../mock';
 
-export function VotePanel() {
+export function VotePanel({ embedded }: { embedded?: boolean }) {
   const [votes, setVotes] = useState<Vote[]>(mockVotes);
 
   const load = () => {
@@ -39,8 +39,17 @@ export function VotePanel() {
   };
 
   return (
-    <View style={styles.panel}>
-      <Text style={styles.title}>تصويت على صفقة</Text>
+    <View style={[styles.panel, embedded && styles.panelInFrame]}>
+      {embedded ? (
+        <View style={frameEmbedHead}>
+          <View style={frameEmbedHeadTail} />
+          <View style={frameEmbedTitleBlock}>
+            <Text style={[styles.title, styles.titleInHead, frameEmbedTitle]}>تصويت على صفقة</Text>
+          </View>
+        </View>
+      ) : (
+        <Text style={styles.title}>تصويت على صفقة</Text>
+      )}
       <ScrollView contentContainerStyle={{ gap: 10 }}>
         {votes.map((v) => {
           const total = v.agree + v.disagree || 1;
@@ -91,13 +100,21 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     overflow: 'hidden',
   },
+  panelInFrame: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    paddingTop: frameEmbed.padTop,
+    paddingLeft: frameEmbed.padLeft,
+    paddingRight: frameEmbed.padRight,
+    paddingBottom: frameEmbed.padBottom,
+  },
   title: {
     color: colors.text,
     fontWeight: '700',
     fontSize: 13,
-    marginBottom: spacing.sm,
     textAlign: 'right',
   },
+  titleInHead: { marginBottom: 0 },
   card: {
     backgroundColor: colors.bgElevated,
     borderRadius: radii.sm,

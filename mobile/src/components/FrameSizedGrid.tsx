@@ -35,9 +35,31 @@ type Props = {
   layoutCount?: FrameLayoutCount;
   /** square = مقاس ثابت · rect = يملأ الشاشة (2/3/4) */
   shape?: FrameLayoutShape;
+  /** إظهار كل البلاطات (أدوات) بدل قصّها إلى 4 */
+  showAll?: boolean;
+  /** ترتيب البداية للمتداول الجديد */
+  defaultOrder?: string[];
 };
 
 type CellLayout = { x: number; y: number; w: number; h: number };
+
+function resolveOrder(itemIds: string[], stored: string[] | null, defaultOrder?: string[]): string[] {
+  const fallback = defaultOrder?.length
+    ? [
+        ...defaultOrder.filter((id) => itemIds.includes(id)),
+        ...itemIds.filter((id) => !defaultOrder.includes(id)),
+      ]
+    : itemIds;
+  if (!stored?.length) return fallback;
+  const next: string[] = [];
+  for (const id of stored) {
+    if (itemIds.includes(id) && !next.includes(id)) next.push(id);
+  }
+  for (const id of fallback) {
+    if (!next.includes(id)) next.push(id);
+  }
+  return next;
+}
 
 function applyOrder(items: GridItem[], order: string[] | null): GridItem[] {
   if (!order?.length) return items;
@@ -63,10 +85,15 @@ export function FrameSizedGrid({
   onOrderChange,
   layoutCount = 4,
   shape = 'square',
+  showAll = false,
+  defaultOrder,
 }: Props) {
   const { width } = useWindowDimensions();
   const phone = width < 700;
-  const fill = !phone && shape === 'rect' && layoutCount > 1;
+  /** تعبئة الشاشة لشارتات المحطة فقط — ليست لشبكة الأدوات متعددة اللوحات (showAll) */
+  const fillRect = !phone && !showAll && shape === 'rect' && layoutCount > 1;
+  const fillSquare = !phone && !showAll && shape === 'square' && layoutCount > 1;
+  const fill = fillRect || fillSquare;
   const boxH = phone ? FRAME_BOX_H_PHONE : FRAME_BOX_H;
   const [order, setOrder] = useState<string[] | null>(null);
   const [ready, setReady] = useState(!storageKey);
@@ -75,9 +102,11 @@ export function FrameSizedGrid({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const ordered = useMemo(() => applyOrder(items, order), [items, order]);
+  const itemIdsKey = useMemo(() => items.map((it) => it.id).join('|'), [items]);
+  const defaultOrderKey = defaultOrder?.join('|') ?? '';
   const displayed = useMemo(
-    () => (phone ? ordered : ordered.slice(0, layoutCount)),
-    [phone, ordered, layoutCount]
+    () => (phone || showAll ? ordered : ordered.slice(0, layoutCount)),
+    [phone, showAll, ordered, layoutCount]
   );
   const orderedRef = useRef(displayed);
   orderedRef.current = displayed;
@@ -87,6 +116,9 @@ export function FrameSizedGrid({
   const dragFromId = useRef<string | null>(null);
   const hoverRef = useRef<string | null>(null);
 
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+
   useEffect(() => {
     if (!storageKey) {
       setOrder(null);
@@ -94,15 +126,23 @@ export function FrameSizedGrid({
       return;
     }
     let alive = true;
+    const ids = itemsRef.current.map((it) => it.id);
     (async () => {
       try {
         const raw = await AsyncStorage.getItem(storageKey);
-        if (raw && alive) {
-          const parsed = JSON.parse(raw) as string[];
-          if (Array.isArray(parsed)) setOrder(parsed);
+        const parsed = raw ? (JSON.parse(raw) as unknown) : null;
+        const stored = Array.isArray(parsed) ? (parsed as string[]) : null;
+        if (alive) {
+          const resolved = resolveOrder(ids, stored, defaultOrder);
+          setOrder(resolved);
+          onOrderChange?.(resolved);
         }
       } catch {
-        /* ignore */
+        if (alive) {
+          const resolved = resolveOrder(ids, null, defaultOrder);
+          setOrder(resolved);
+          onOrderChange?.(resolved);
+        }
       } finally {
         if (alive) setReady(true);
       }
@@ -110,7 +150,7 @@ export function FrameSizedGrid({
     return () => {
       alive = false;
     };
-  }, [storageKey]);
+  }, [storageKey, itemIdsKey, defaultOrderKey, defaultOrder]);
 
   const persist = useCallback(
     async (ids: string[]) => {
@@ -173,8 +213,11 @@ export function FrameSizedGrid({
     (id: string) =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => !!storageKey,
+        onStartShouldSetPanResponderCapture: () => !!storageKey,
         onMoveShouldSetPanResponder: (_, g) =>
-          !!storageKey && (Math.abs(g.dx) > 4 || Math.abs(g.dy) > 4),
+          !!storageKey && (Math.abs(g.dx) > 3 || Math.abs(g.dy) > 3),
+        onMoveShouldSetPanResponderCapture: (_, g) =>
+          !!storageKey && (Math.abs(g.dx) > 3 || Math.abs(g.dy) > 3),
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           remasureAll();
@@ -243,10 +286,12 @@ export function FrameSizedGrid({
       >
         {storageKey ? (
           <View style={styles.handleBar} {...responders[item.id].panHandlers}>
-            <View style={styles.dotsGrid}>
-              {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <View key={i} style={styles.dot} />
-              ))}
+            <View style={styles.handleInset}>
+              <View style={styles.dotsGrid}>
+                {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <View key={i} style={styles.dot} />
+                ))}
+              </View>
             </View>
           </View>
         ) : null}
@@ -257,10 +302,46 @@ export function FrameSizedGrid({
     );
   };
 
-  if (fill && layoutCount >= 2) {
+  if (fillRect) {
     return (
       <View style={styles.gridFillRow}>
         {displayed.map((item, index) => renderCell(item, index, styles.cellFillFlex))}
+      </View>
+    );
+  }
+
+  if (fillSquare) {
+    if (layoutCount === 2) {
+      return (
+        <View style={styles.gridFillRow}>
+          {displayed.map((item, index) => renderCell(item, index, styles.cellFillFlex))}
+        </View>
+      );
+    }
+    if (layoutCount === 3) {
+      return (
+        <View style={styles.gridFillCol}>
+          <View style={styles.gridFillRow}>
+            {displayed[0] ? renderCell(displayed[0], 0, styles.cellFillFlex) : null}
+          </View>
+          <View style={styles.gridFillRow}>
+            {displayed[1] ? renderCell(displayed[1], 1, styles.cellFillFlex) : null}
+            {displayed[2] ? renderCell(displayed[2], 2, styles.cellFillFlex) : null}
+          </View>
+        </View>
+      );
+    }
+    // 4 = شبكة 2×2 تملأ الارتفاع المتاح
+    return (
+      <View style={styles.gridFillCol}>
+        <View style={styles.gridFillRow}>
+          {displayed[0] ? renderCell(displayed[0], 0, styles.cellFillFlex) : null}
+          {displayed[1] ? renderCell(displayed[1], 1, styles.cellFillFlex) : null}
+        </View>
+        <View style={styles.gridFillRow}>
+          {displayed[2] ? renderCell(displayed[2], 2, styles.cellFillFlex) : null}
+          {displayed[3] ? renderCell(displayed[3], 3, styles.cellFillFlex) : null}
+        </View>
       </View>
     );
   }
@@ -308,6 +389,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   cell: {
+    position: 'relative',
     overflow: 'hidden',
     borderRadius: radii.md,
     backgroundColor: colors.bgElevated,
@@ -322,15 +404,16 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   cellDesk: {
-    width: '48.5%',
-    flexGrow: 1,
+    width: '49%',
+    flexGrow: 0,
+    flexShrink: 0,
     minWidth: 240,
     maxWidth: '49%',
   },
   cellOne: { width: '100%', maxWidth: '100%', minWidth: 0 },
-  cellTwo: { width: '48.5%', maxWidth: '49%', minWidth: 240 },
+  cellTwo: { width: '49%', maxWidth: '49%', minWidth: 240 },
   cellThreeTop: { width: '100%', maxWidth: '100%', minWidth: 0 },
-  cellThreeBottom: { width: '48.5%', maxWidth: '49%', minWidth: 240 },
+  cellThreeBottom: { width: '49%', maxWidth: '49%', minWidth: 240 },
   cellPhone: {
     width: '100%',
     minWidth: 0,
@@ -354,15 +437,25 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     left: 8,
-    zIndex: 8,
-    width: 30,
-    height: 30,
-    borderRadius: 6,
+    zIndex: 30,
+    width: 36,
+    height: 36,
+    borderRadius: 7,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(45, 212, 191, 0.45)',
+    backgroundColor: 'rgba(8, 17, 30, 0.55)',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    cursor: 'grab' as any,
+  },
+  handleInset: {
+    flex: 1,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(45, 212, 191, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(17, 24, 39, 0.96)',
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
+    backgroundColor: 'rgba(8, 17, 30, 0.22)',
   },
   dotsGrid: {
     width: 14,
@@ -380,10 +473,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
   },
   inner: {
+    position: 'relative',
     flex: 1,
     width: '100%',
     minHeight: 0,
     overflow: 'hidden',
-    paddingLeft: 38,
   },
 });

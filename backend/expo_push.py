@@ -7,10 +7,33 @@ import httpx
 
 EXPO_URL = "https://exp.host/--/api/v2/push/send"
 
+# أخطاء دائمة فقط — لا تحذف لـ MessageTooBig / MessageRateExceeded وغيرها
+_PERMANENT_TOKEN_ERRORS = frozenset({"DeviceNotRegistered"})
+
+
+def _invalid_tokens_from_response(tokens: list[str], payload: Any) -> list[str]:
+    if not isinstance(payload, dict):
+        return []
+    data = payload.get("data")
+    if not isinstance(data, list):
+        return []
+    bad: list[str] = []
+    for i, item in enumerate(data):
+        if i >= len(tokens) or not isinstance(item, dict):
+            continue
+        if item.get("status") != "error":
+            continue
+        details = item.get("details")
+        err = details.get("error") if isinstance(details, dict) else None
+        if err in _PERMANENT_TOKEN_ERRORS:
+            bad.append(tokens[i])
+    return bad
+
 
 def send_push(tokens: list[str], title: str, body: str, data: dict | None = None) -> dict:
     if not tokens:
-        return {"ok": False, "sent": 0}
+        return {"ok": False, "sent": 0, "invalid_tokens": []}
+    batch = tokens[:100]
     messages = [
         {
             "to": t,
@@ -20,10 +43,16 @@ def send_push(tokens: list[str], title: str, body: str, data: dict | None = None
             "priority": "high",
             "data": data or {},
         }
-        for t in tokens[:100]
+        for t in batch
     ]
     with httpx.Client(timeout=15.0) as client:
         r = client.post(EXPO_URL, json=messages, headers={"Accept": "application/json"})
         r.raise_for_status()
         payload = r.json()
-    return {"ok": True, "sent": len(messages), "response": payload}
+    invalid = _invalid_tokens_from_response(batch, payload)
+    return {
+        "ok": True,
+        "sent": len(messages),
+        "response": payload,
+        "invalid_tokens": invalid,
+    }

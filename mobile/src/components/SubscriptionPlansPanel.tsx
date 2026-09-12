@@ -7,134 +7,169 @@ import type { LangId } from '../i18n/locales';
 type Plan = {
   name: string;
   price: string;
+  addOn?: string;
   accent: string;
   badge: string;
   features: string[];
 };
 
 type Copy = {
-  reference: string;
   title: string;
   subtitle: string;
-  individual: string;
-  highest: string;
-  annualPrice: string;
-  premiumFeatures: string[];
-  ultimateFeatures: string[];
-  matrixNote: string;
+  perMonth: string;
+  coreBadge: string;
+  academyBadge: string;
+  fullBadge: string;
+  coreName: string;
+  academyName: string;
+  fullName: string;
+  academyAddOn: string;
+  fullAddOn: string;
+  coreFeatures: string[];
+  academyFeatures: string[];
+  fullFeatures: string[];
+  note: string;
 };
 
 const EN_COPY: Copy = {
-  reference: 'Market reference',
-  title: 'Top professional analysis plans',
-  subtitle: 'A reference comparison for designing upcoming MATRIX plans',
-  individual: 'Individual',
-  highest: 'Highest',
-  annualPrice: '/ month, billed annually',
-  premiumFeatures: [
-    '8 charts per tab',
-    '25 indicators per chart',
-    '20,000 historical bars',
-    '400 price alerts and 400 technical alerts',
-    'Second-based intervals and no ads',
+  title: 'MATRIX plans',
+  subtitle: 'Start with charts and community, then add academy and the rest when you need them',
+  perMonth: '/ month',
+  coreBadge: 'Start',
+  academyBadge: '+ Academy',
+  fullBadge: 'All features',
+  coreName: 'Core',
+  academyName: 'Academy',
+  fullName: 'Full',
+  academyAddOn: '+$5 for courses',
+  fullAddOn: '+$5 for remaining features',
+  coreFeatures: [
+    'All candles and chart types',
+    'All frames: square, rectangle, and shadow',
+    'Group chat and votes',
+    'News, watchlist, and drawing tools',
+    'Indicators and timeframes',
   ],
-  ultimateFeatures: [
-    '16 charts per tab',
-    '50 indicators per chart',
-    '40,000 historical bars',
-    '1,000 price alerts and 1,000 technical alerts',
-    'Up to 200 parallel chart connections',
+  academyFeatures: [
+    'Everything in Core',
+    'Full academy: schools, levels, and lectures',
+    'Interactive classroom with interrupt questions',
   ],
-  matrixNote:
-    'We will bring the best of these capabilities into MATRIX. Prices above are TradingView annual-billing reference prices, not MATRIX subscriptions, and may change at the source.',
+  fullFeatures: [
+    'Everything in Academy',
+    'Private messages',
+    'AI assistant, alerts, screener, and backtest',
+    'Forecasts, analysts, and remaining tools',
+  ],
+  note: 'Core $10 covers charts and community. Add $5 for academy, then $5 more for every remaining feature.',
 };
 
 const COPY: Record<LangId, Copy> = {
   ar: {
-    reference: 'مرجع سوقي',
-    title: 'أعلى باقات التحليل الاحترافية',
-    subtitle: 'مقارنة مرجعية تساعدنا في تصميم باقات MATRIX القادمة',
-    individual: 'للأفراد',
-    highest: 'الأعلى',
-    annualPrice: '/ شهر عند الدفع السنوي',
-    premiumFeatures: [
-      '8 رسوم بيانية في التبويب',
-      '25 مؤشراً لكل رسم',
-      '20,000 شمعة تاريخية',
-      '400 تنبيه للسعر و400 تنبيه فني',
-      'أطر زمنية بالثانية وبدون إعلانات',
+    title: 'باقات MATRIX',
+    subtitle: 'ابدأ بالشارتات والمجتمع، ثم أضف الأكاديمية وبقية الميزات عند الحاجة',
+    perMonth: '/ شهر',
+    coreBadge: 'البداية',
+    academyBadge: '+ الأكاديمية',
+    fullBadge: 'كل الميزات',
+    coreName: 'أساسي',
+    academyName: 'أكاديمية',
+    fullName: 'كامل',
+    academyAddOn: '+5$ للدورات',
+    fullAddOn: '+5$ لبقية الميزات',
+    coreFeatures: [
+      'جميع الشموع وأنواع الجارت',
+      'جميع الفريمات: مربع ومستطيل والظل',
+      'المراسلات الجماعية والتصويتات',
+      'الأخبار وقائمة المتابعة وأدوات الرسم',
+      'المؤشرات والأطر الزمنية',
     ],
-    ultimateFeatures: [
-      '16 رسماً بيانياً في التبويب',
-      '50 مؤشراً لكل رسم',
-      '40,000 شمعة تاريخية',
-      '1,000 تنبيه للسعر و1,000 تنبيه فني',
-      'حتى 200 اتصال رسم متوازٍ',
+    academyFeatures: [
+      'كل ما في الباقة الأساسية',
+      'الأكاديمية كاملة: مدارس ومستويات ومحاضرات',
+      'قاعة تفاعلية مع مقاطعة المدرس بسؤال',
     ],
-    matrixNote:
-      'سنأخذ أفضل هذه الإمكانات ونقدمها بهوية MATRIX. الأسعار أعلاه مرجعية لـ TradingView عند الدفع السنوي وليست أسعار اشتراك داخل التطبيق، وقد تتغير من المصدر.',
+    fullFeatures: [
+      'كل ما في باقة الأكاديمية',
+      'الرسائل الخاصة',
+      'مساعد AI والتنبيهات والفحص والـ Backtest',
+      'التوقعات والمحللون وبقية الأدوات',
+    ],
+    note: '10$ للشموع والفريمات والمجتمع. يُضاف 5$ لمن أراد الدورات، ثم 5$ أخرى لجميع بقية الميزات.',
   },
   'en-US': EN_COPY,
   'en-GB': EN_COPY,
   ku: {
-    reference: 'بەراوردی بازاڕ',
-    title: 'بەرزترین پلانی شیکاری پیشەیی',
-    subtitle: 'بەراوردێک بۆ داڕشتنی پلانی داهاتووی MATRIX',
-    individual: 'بۆ تاکەکان',
-    highest: 'بەرزترین',
-    annualPrice: '/ مانگانە بە پارەدانی ساڵانە',
-    premiumFeatures: [
-      '8 چارت لە هەر تابێک',
-      '25 نیشاندەر بۆ هەر چارتێک',
-      '20,000 باری مێژوویی',
-      '400 ئاگادارکردنەوەی نرخ و 400 تەکنیکی',
-      'کاتی چرکەیی و بێ ڕیکلام',
+    title: 'پلانی MATRIX',
+    subtitle: 'بە چارت و کۆمەڵگە دەست پێ بکە، پاشان ئەکادیمیا و باقی تایبەتمەندییەکان زیاد بکە',
+    perMonth: '/ مانگ',
+    coreBadge: 'دەستپێک',
+    academyBadge: '+ ئەکادیمیا',
+    fullBadge: 'هەموو تایبەتمەندییەکان',
+    coreName: 'بنەڕەت',
+    academyName: 'ئەکادیمیا',
+    fullName: 'تەواو',
+    academyAddOn: '+5$ بۆ خولەکان',
+    fullAddOn: '+5$ بۆ باقی تایبەتمەندییەکان',
+    coreFeatures: [
+      'هەموو مۆم و جۆرەکانی چارت',
+      'هەموو فریمەکان: چوارگۆشە، لاکێشە، و سێبەر',
+      'گفتوگۆی گروپ و دەنگدان',
+      'هەواڵ، لیستی چاودێری، و ئامرازی وێنەکێشان',
+      'نیشاندەر و کاتەکان',
     ],
-    ultimateFeatures: [
-      '16 چارت لە هەر تابێک',
-      '50 نیشاندەر بۆ هەر چارتێک',
-      '40,000 باری مێژوویی',
-      '1,000 ئاگادارکردنەوەی نرخ و 1,000 تەکنیکی',
-      'تا 200 پەیوەندی هاوکاتی چارت',
+    academyFeatures: [
+      'هەموو شتی بنەڕەت',
+      'ئەکادیمیای تەواو: قوتابخانە، ئاست، و وانە',
+      'پۆلی کارلێکەر بە پرسیاری ناوەڕاست',
     ],
-    matrixNote:
-      'باشترین ئەم تایبەتمەندییانە دەهێنینە ناو MATRIX. نرخەکان تەنها بەراوردی TradingView ـن بە پارەدانی ساڵانە، نرخی بەشداری MATRIX نین و لەوانەیە بگۆڕدرێن.',
+    fullFeatures: [
+      'هەموو شتی ئەکادیمیا',
+      'نامەی تایبەت',
+      'یاریدەدەری AI، ئاگاداری، سکریینەر، و باکتێست',
+      'پێشبینی، شیکەرەوە، و باقی ئامرازەکان',
+    ],
+    note: '10$ بۆ چارت و کۆمەڵگە. 5$ زیاد دەکرێت بۆ خولەکان، پاشان 5$ی تر بۆ هەموو باقی تایبەتمەندییەکان.',
   },
 };
 
 export function SubscriptionPlansPanel() {
   const { width } = useWindowDimensions();
   const { lang, rtl } = useI18n();
-  const stacked = width < 760;
+  const stacked = width < 980;
   const copy = COPY[lang];
   const align = rtl ? ('right' as const) : ('left' as const);
   const plans: Plan[] = [
     {
-      name: 'Premium',
-      price: '$59.95',
-      accent: '#60A5FA',
-      badge: copy.individual,
-      features: copy.premiumFeatures,
+      name: copy.coreName,
+      price: '$10',
+      accent: colors.accent,
+      badge: copy.coreBadge,
+      features: copy.coreFeatures,
     },
     {
-      name: 'Ultimate',
-      price: '$199.95',
+      name: copy.academyName,
+      price: '$15',
+      addOn: copy.academyAddOn,
+      accent: '#38BDF8',
+      badge: copy.academyBadge,
+      features: copy.academyFeatures,
+    },
+    {
+      name: copy.fullName,
+      price: '$20',
+      addOn: copy.fullAddOn,
       accent: '#A78BFA',
-      badge: copy.highest,
-      features: copy.ultimateFeatures,
+      badge: copy.fullBadge,
+      features: copy.fullFeatures,
     },
   ];
 
   return (
     <View style={styles.section}>
-      <View style={[styles.headingRow, rtl && styles.rowRtl]}>
-        <View style={styles.referenceBadge}>
-          <Text style={styles.referenceBadgeText}>{copy.reference}</Text>
-        </View>
-        <View style={styles.headingCopy}>
-          <Text style={[styles.title, { textAlign: align }]}>{copy.title}</Text>
-          <Text style={[styles.subtitle, { textAlign: align }]}>{copy.subtitle}</Text>
-        </View>
+      <View style={styles.headingCopy}>
+        <Text style={[styles.title, { textAlign: align }]}>{copy.title}</Text>
+        <Text style={[styles.subtitle, { textAlign: align }]}>{copy.subtitle}</Text>
       </View>
 
       <View style={[styles.cards, rtl && styles.rowRtl, stacked && styles.cardsStacked]}>
@@ -156,8 +191,13 @@ export function SubscriptionPlansPanel() {
 
             <View style={[styles.priceRow, rtl && styles.rowRtl]}>
               <Text style={[styles.price, { color: plan.accent }]}>{plan.price}</Text>
-              <Text style={styles.perMonth}>{copy.annualPrice}</Text>
+              <Text style={styles.perMonth}>{copy.perMonth}</Text>
             </View>
+            {plan.addOn ? (
+              <Text style={[styles.addOn, { textAlign: align, color: plan.accent }]}>
+                {plan.addOn}
+              </Text>
+            ) : null}
 
             <View style={styles.divider} />
             {plan.features.map((feature) => (
@@ -172,7 +212,7 @@ export function SubscriptionPlansPanel() {
 
       <View style={[styles.matrixNote, rtl && styles.rowRtl]}>
         <Text style={styles.matrixNoteTitle}>MATRIX</Text>
-        <Text style={[styles.matrixNoteText, { textAlign: align }]}>{copy.matrixNote}</Text>
+        <Text style={[styles.matrixNoteText, { textAlign: align }]}>{copy.note}</Text>
       </View>
     </View>
   );
@@ -187,29 +227,15 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.md,
   },
-  headingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
   rowRtl: { flexDirection: 'row-reverse' },
   headingCopy: { flex: 1 },
   title: { color: colors.text, fontSize: 17, fontWeight: '900', textAlign: 'right' },
   subtitle: { color: colors.textMuted, fontSize: 11, marginTop: 3, textAlign: 'right' },
-  referenceBadge: {
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-  },
-  referenceBadgeText: { color: colors.accent, fontSize: 9, fontWeight: '900' },
   cards: { flexDirection: 'row', gap: spacing.sm },
   cardsStacked: { flexDirection: 'column' },
   card: {
     flex: 1,
-    minWidth: 240,
+    minWidth: 200,
     borderRadius: radii.md,
     borderWidth: 1,
     backgroundColor: '#0D1627',
@@ -228,6 +254,7 @@ const styles = StyleSheet.create({
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 5 },
   price: { fontSize: 27, fontWeight: '900' },
   perMonth: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  addOn: { fontSize: 11, fontWeight: '800' },
   divider: { height: 1, backgroundColor: colors.borderSoft },
   featureRow: {
     flexDirection: 'row',

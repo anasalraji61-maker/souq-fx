@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, frameEmbed } from '../theme';
 import { api } from '../api';
 import { FrameSizedGrid } from './FrameSizedGrid';
 
@@ -107,7 +107,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
       <View style={styles.wrap}>
         <Text style={styles.title}>تقارير MATRIX</Text>
         <Text style={styles.sub}>نفس حجم الفريمات · قدّم/أخّر · اضغط للقراءة</Text>
-        <FrameSizedGrid storageKey="matrix.tools.reports.order.v1" items={tiles} />
+        <FrameSizedGrid storageKey="matrix.tools.reports.order.v1" showAll items={tiles} />
         {text ? (
           <ScrollView style={styles.out} contentContainerStyle={{ padding: 12, gap: 8 }}>
             <Text style={styles.outText}>{text}</Text>
@@ -155,11 +155,13 @@ const styles = StyleSheet.create({
   tile: {
     flex: 1,
     height: '100%',
-    backgroundColor: colors.bgElevated,
+    backgroundColor: 'transparent',
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
+    borderWidth: 0,
+    paddingTop: frameEmbed.padTop,
+    paddingLeft: frameEmbed.padLeft,
+    paddingRight: frameEmbed.padRight,
+    paddingBottom: frameEmbed.padBottom,
     gap: 6,
     justifyContent: 'center',
     overflow: 'hidden',

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Pressable,
   RefreshControl,
   Platform,
+  Modal,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -34,9 +35,13 @@ import { MatrixSidePanel, type EdgePanelId } from '../components/MatrixSidePanel
 import { TimeframeBar } from '../components/TimeframeBar';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { WATCHLIST } from '../chart/watchlist';
+import { ensureWatchlistLoaded, subscribeWatchlist } from '../chart/watchlistStore';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import { formatPrice } from '../chart/math';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
+import { livePriceForChart } from '../chart/liveSeries';
+import { provenanceLabel, tickStatusLabel, normalizeProvenance } from '../chart/dataSource';
+import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import {
   DEFAULT_PAN_SPEED,
   clampPanSpeed,
@@ -45,6 +50,7 @@ import {
   type PanSpeedPercent,
 } from '../chart/panSpeed';
 import { PanSpeedSlider, CruiseSpeedMark } from '../components/PanSpeedSlider';
+import { SymbolPairMenu } from '../components/SymbolPairMenu';
 import {
   CHART_KINDS,
   type ChartKind,
@@ -63,16 +69,13 @@ const PREFS_KEY = 'matrix.frameTimeframes.v1';
 const SYMBOLS_KEY = 'matrix.frameSymbols.v1';
 const LAYOUT_COUNT_KEY = 'matrix.home.layoutCount.v1';
 const LAYOUT_SHAPE_KEY = 'matrix.home.layoutShape.v1';
+const TIME_SYNC_KEY = 'matrix.home.timeSync.v1';
 const DXY_TF_KEY = 'matrix.home.dxyTf.v1';
+const DXY_SYMBOL_KEY = 'matrix.home.dxySymbol.v1';
 const SHADOW_SECONDARY_KEY = 'matrix.home.shadowSlots.v2';
 const SHADOW_ENABLED_KEY = 'matrix.home.shadowEnabled.v1';
-const SHADOW_SLOT_LABELS = ['فريم صغير', 'فريم وسط', 'فريم كبير'] as const;
-/** ترتيب العرض تحت الأساسي: كبير → وسط → صغير */
-const SHADOW_PANE_ORDER = [
-  { slot: 2 as const, title: 'فريم كبير' },
-  { slot: 1 as const, title: 'فريم وسط' },
-  { slot: 0 as const, title: 'فريم صغير' },
-];
+const SHADOW_SLOT_LABELS = ['صغير s', 'وسط m', 'كبير b'] as const;
+const SHADOW_SLOT_TAGS = ['s', 'm', 'b'] as const;
 type ShadowSlots = [Timeframe, Timeframe, Timeframe];
 type ShadowEnabled = [boolean, boolean, boolean];
 const DEFAULT_SHADOW_SLOTS: ShadowSlots = ['5m', '30m', '1H'];
@@ -123,6 +126,7 @@ export function TerminalScreen() {
   );
   const [frameTfs, setFrameTfs] = useState<Timeframe[]>([...DEFAULT_FRAME_TIMEFRAMES]);
   const [dxyTf, setDxyTf] = useState<Timeframe>('15m');
+  const [heroSymbol, setHeroSymbol] = useState('DXY');
   const [prefsReady, setPrefsReady] = useState(false);
 
   const [symbol, setSymbol] = useState('EURUSD');
@@ -139,27 +143,23 @@ export function TerminalScreen() {
   const [dockTab, setDockTab] = useState<DockTabId>(null);
   const [quadOpen, setQuadOpen] = useState(false);
   const [showKinds, setShowKinds] = useState(false);
+  const [phoneWatchOpen, setPhoneWatchOpen] = useState(false);
+  const [phoneWatchSymbols, setPhoneWatchSymbols] = useState<string[] | null>(null);
   const [layoutCount, setLayoutCount] = useState<FrameLayoutCount>(1);
   const [layoutShape, setLayoutShape] = useState<FrameLayoutShape>('square');
+  const [timeSyncEnabled, setTimeSyncEnabled] = useState(false);
+  const [syncLeaderId, setSyncLeaderId] = useState<string>('DXY');
+  const [syncWindow, setSyncWindow] = useState<SyncTimeWindow | null>(null);
+  const [frameOrder, setFrameOrder] = useState<string[]>(['DXY', 'pair-0', 'pair-1', 'pair-2']);
   const [panSpeed, setPanSpeed] = useState<PanSpeedPercent>(DEFAULT_PAN_SPEED);
   const [shadowSlots, setShadowSlots] = useState<ShadowSlots>([...DEFAULT_SHADOW_SLOTS]);
   const [shadowEnabled, setShadowEnabled] = useState<ShadowEnabled>([
     ...DEFAULT_SHADOW_ENABLED,
   ]);
   const [shadowSeries, setShadowSeries] = useState<ChartSeries[]>([]);
-  const [shadowSyncWindow, setShadowSyncWindow] = useState<SyncTimeWindow | null>(null);
-  const onShadowSyncWindow = useCallback((next: SyncTimeWindow) => {
-    setShadowSyncWindow((prev) => {
-      if (
-        prev &&
-        prev.start === next.start &&
-        prev.end === next.end
-      ) {
-        return prev;
-      }
-      return next;
-    });
-  }, []);
+  const shadowSeriesRef = useRef<ChartSeries[]>([]);
+  shadowSeriesRef.current = shadowSeries;
+  const shadowLoadGen = useRef(0);
   const [focus, setFocus] = useState<{
     symbol: string;
     tf: Timeframe;
@@ -167,6 +167,12 @@ export function TerminalScreen() {
     kind?: ChartKind;
     indicators?: IndicatorId[];
   } | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = subscribeWatchlist(setPhoneWatchSymbols);
+    void ensureWatchlistLoaded().catch(() => undefined);
+    return unsubscribe;
+  }, []);
 
   const watchSymbols = useMemo(
     () => ['DXY', ...frameSymbols, ...WATCHLIST.map((w) => w.symbol)],
@@ -217,9 +223,24 @@ export function TerminalScreen() {
           setLayoutShape(shapeRaw);
           if (shapeRaw === 'shadow') setLayoutCount(1);
         }
+        const syncRaw = await AsyncStorage.getItem(TIME_SYNC_KEY);
+        if (syncRaw === '1' || syncRaw === 'true') {
+          setTimeSyncEnabled(true);
+        }
+        const orderRaw = await AsyncStorage.getItem('matrix.home.frames.order.v1');
+        if (orderRaw) {
+          const parsed = JSON.parse(orderRaw) as unknown;
+          if (Array.isArray(parsed) && parsed.every((x) => typeof x === 'string')) {
+            setFrameOrder(parsed as string[]);
+          }
+        }
         const dxyTfRaw = await AsyncStorage.getItem(DXY_TF_KEY);
         if (dxyTfRaw && isTimeframe(dxyTfRaw)) {
           setDxyTf(dxyTfRaw);
+        }
+        const heroRaw = await AsyncStorage.getItem(DXY_SYMBOL_KEY);
+        if (heroRaw && typeof heroRaw === 'string') {
+          setHeroSymbol(heroRaw.toUpperCase());
         }
         const shadowRaw = await AsyncStorage.getItem(SHADOW_SECONDARY_KEY);
         if (shadowRaw) {
@@ -267,6 +288,61 @@ export function TerminalScreen() {
     }
   }, []);
 
+  const persistFrameSymbols = useCallback(async (next: [string, string, string]) => {
+    setFrameSymbols(next);
+    try {
+      await AsyncStorage.setItem(SYMBOLS_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const changeFrameSymbol = useCallback(
+    async (index: number, nextSym: string) => {
+      if (frameSymbols[index] === nextSym) return;
+      const next: [string, string, string] = [...frameSymbols];
+      next[index] = nextSym;
+      await persistFrameSymbols(next);
+      pickSymbol(nextSym, frameTfs[index]);
+      try {
+        const s = await api.chart(nextSym, frameTfs[index]);
+        setFrames((prev) => {
+          const copy = [...prev];
+          copy[index] = s;
+          return copy;
+        });
+        setOnline(true);
+      } catch {
+        setFrames((prev) => {
+          const copy = [...prev];
+          copy[index] = offlineFrame(nextSym, frameTfs[index]);
+          return copy;
+        });
+      }
+    },
+    [frameSymbols, frameTfs, persistFrameSymbols]
+  );
+
+  const changeHeroSymbol = useCallback(
+    async (nextSym: string) => {
+      setHeroSymbol(nextSym);
+      pickSymbol(nextSym, dxyTf);
+      try {
+        await AsyncStorage.setItem(DXY_SYMBOL_KEY, nextSym);
+      } catch {
+        /* ignore */
+      }
+      try {
+        const s = await api.chart(nextSym, dxyTf);
+        setDxy(s);
+        setOnline(true);
+      } catch {
+        setDxy(offlineFrame(nextSym, dxyTf));
+      }
+    },
+    [dxyTf]
+  );
+
   const changeLayout = useCallback(
     async (next: FrameLayoutCount, shape: FrameLayoutShape) => {
       const count: FrameLayoutCount = shape === 'shadow' ? 1 : next;
@@ -274,14 +350,120 @@ export function TerminalScreen() {
         shape === 'shadow' ? 'shadow' : count === 1 ? 'square' : shape;
       setLayoutCount(count);
       setLayoutShape(nextShape);
+      if (nextShape === 'shadow' || count <= 1) {
+        setTimeSyncEnabled(false);
+        setSyncWindow(null);
+      }
       try {
         await AsyncStorage.setItem(LAYOUT_COUNT_KEY, String(count));
         await AsyncStorage.setItem(LAYOUT_SHAPE_KEY, nextShape);
+        if (nextShape === 'shadow' || count <= 1) {
+          await AsyncStorage.setItem(TIME_SYNC_KEY, '0');
+        }
       } catch {
         /* keep in-memory choice */
       }
     },
     []
+  );
+
+  const multiCharts =
+    !phone && layoutShape !== 'shadow' && layoutCount > 1;
+  const timeSyncActive = timeSyncEnabled && multiCharts;
+
+  const visibleFrameIds = useMemo(() => {
+    const known = new Set(['DXY', 'pair-0', 'pair-1', 'pair-2']);
+    const ordered = frameOrder.filter((id) => known.has(id));
+    for (const id of ['DXY', 'pair-0', 'pair-1', 'pair-2']) {
+      if (!ordered.includes(id)) ordered.push(id);
+    }
+    return ordered.slice(0, Math.max(1, layoutCount));
+  }, [frameOrder, layoutCount]);
+
+  useEffect(() => {
+    if (!timeSyncActive) return;
+    if (!visibleFrameIds.includes(syncLeaderId)) {
+      setSyncLeaderId(visibleFrameIds[0] ?? 'DXY');
+    }
+  }, [timeSyncActive, visibleFrameIds, syncLeaderId]);
+
+  const toggleTimeSync = useCallback(async () => {
+    if (!multiCharts) return;
+    setTimeSyncEnabled((prev) => {
+      const next = !prev;
+      if (!next) {
+        setSyncWindow(null);
+      } else {
+        const leader = visibleFrameIds[0] ?? 'DXY';
+        setSyncLeaderId(leader);
+        setSyncWindow(null);
+      }
+      void AsyncStorage.setItem(TIME_SYNC_KEY, next ? '1' : '0');
+      return next;
+    });
+  }, [multiCharts, visibleFrameIds]);
+
+  const stripSyncPrice = useCallback((win: SyncTimeWindow): SyncTimeWindow => {
+    const next: SyncTimeWindow = {
+      start: win.start,
+      end: win.end,
+      xPanNorm: win.xPanNorm ?? 0,
+    };
+    return next;
+  }, []);
+
+  const timeSyncActiveRef = useRef(timeSyncActive);
+  timeSyncActiveRef.current = timeSyncActive;
+
+  const handleSyncFromFrame = useCallback(
+    (frameId: string, win: SyncTimeWindow) => {
+      if (!timeSyncActiveRef.current) return;
+      setSyncLeaderId(frameId);
+      setSyncWindow(stripSyncPrice(win));
+    },
+    [stripSyncPrice]
+  );
+
+  /** callbacks ثابتة الهوية — تجنّب حلقة: نشر → render → دالة جديدة → تصفير مفتاح → إعادة نشر */
+  const syncPublishByFrame = useMemo(() => {
+    const ids = ['DXY', 'pair-0', 'pair-1', 'pair-2'] as const;
+    const map: Record<string, (win: SyncTimeWindow) => void> = {};
+    for (const id of ids) {
+      map[id] = (win) => handleSyncFromFrame(id, win);
+    }
+    return map;
+  }, [handleSyncFromFrame]);
+
+  const syncActivateByFrame = useMemo(() => {
+    const ids = ['DXY', 'pair-0', 'pair-1', 'pair-2'] as const;
+    const map: Record<string, () => void> = {};
+    for (const id of ids) {
+      map[id] = () => setSyncLeaderId(id);
+    }
+    return map;
+  }, []);
+
+  const syncPropsFor = useCallback(
+    (frameId: string) => {
+      if (!timeSyncActive) {
+        return {
+          syncWindow: null as SyncTimeWindow | null,
+          onSyncWindow: undefined as ((w: SyncTimeWindow) => void) | undefined,
+          syncFollow: false,
+          onSyncActivate: undefined as (() => void) | undefined,
+          syncBadge: null as 'leader' | 'follow' | 'partial' | null,
+        };
+      }
+      const isLeader = syncLeaderId === frameId;
+      return {
+        syncWindow,
+        onSyncWindow: isLeader ? syncPublishByFrame[frameId] : undefined,
+        syncFollow: !isLeader,
+        onSyncActivate: syncActivateByFrame[frameId],
+        syncBadge: (isLeader ? 'leader' : 'follow') as 'leader' | 'follow',
+      };
+    },
+    [timeSyncActive, syncLeaderId, syncWindow, syncPublishByFrame, syncActivateByFrame]
   );
 
   const changePanSpeed = useCallback(async (next: PanSpeedPercent) => {
@@ -330,17 +512,22 @@ export function TerminalScreen() {
   const loadTerminal = useCallback(
     async (tfs: Timeframe[], dxyTimeframe: Timeframe = '15m') => {
       try {
-        const bundle = await api.terminal(tfs[0], tfs[1], tfs[2], dxyTimeframe);
-        setDxy(bundle.dxy);
-        setFrames(bundle.frames);
+        const [heroSeries, a, b, c] = await Promise.all([
+          api.chart(heroSymbol, dxyTimeframe),
+          api.chart(frameSymbols[0], tfs[0]),
+          api.chart(frameSymbols[1], tfs[1]),
+          api.chart(frameSymbols[2], tfs[2]),
+        ]);
+        setDxy(heroSeries);
+        setFrames([a, b, c]);
         setOnline(true);
       } catch {
-        setDxy(mockSeries('DXY', 104.25, dxyTimeframe, 120));
+        setDxy(offlineFrame(heroSymbol, dxyTimeframe));
         setFrames(frameSymbols.map((s, i) => offlineFrame(s, tfs[i])));
         setOnline(false);
       }
     },
-    [frameSymbols]
+    [frameSymbols, heroSymbol]
   );
 
   const loadChart = useCallback(async (sym: string, timeframe: Timeframe) => {
@@ -368,57 +555,71 @@ export function TerminalScreen() {
   }, [symbol, tf, loadChart]);
 
   useEffect(() => {
-    setShadowSyncWindow(null);
-  }, [symbol, tf]);
-
-  useEffect(() => {
     if (!prefsReady || layoutShape !== 'shadow') {
-      setShadowSeries([]);
       return;
     }
-    let alive = true;
+    const gen = ++shadowLoadGen.current;
+    const emptySlot = (secTf: Timeframe): ChartSeries => ({
+      ...mockSeries(symbol, BASES[symbol] ?? 1, secTf, 2),
+      candles: [],
+      timeframe: secTf,
+    });
+
     const loadShadows = async () => {
       const primaryBars = Math.max(80, series?.candles?.length ?? 180);
-      const activeSlots = shadowSlots.filter((_, i) => shadowEnabled[i] && shadowSlots[i] !== tf);
-      if (!activeSlots.length) {
-        if (alive) {
-          setShadowSeries(
-            shadowSlots.map((secTf) => ({
-              ...mockSeries(symbol, BASES[symbol] ?? 1, secTf, 2),
-              candles: [],
-              timeframe: secTf,
-            }))
-          );
-        }
-        return;
-      }
+      const prev = shadowSeriesRef.current;
       const results = await Promise.all(
         shadowSlots.map(async (secTf, i) => {
-          if (!shadowEnabled[i] || secTf === tf) {
-            return {
-              ...mockSeries(symbol, BASES[symbol] ?? 1, secTf, 2),
-              candles: [],
-              timeframe: secTf,
-            };
+          if (secTf === tf) return emptySlot(secTf);
+          const cached = prev[i];
+          const cacheHit =
+            cached &&
+            cached.timeframe === secTf &&
+            cached.symbol === symbol &&
+            (cached.candles?.length ?? 0) > 0
+              ? cached
+              : null;
+
+          // متوقف: لا نمسح الكاش — حتى يعود فوراً عند التشغيل
+          if (!shadowEnabled[i]) {
+            return cacheHit ?? emptySlot(secTf);
           }
+
           const need = shadowBarsNeeded(tf, secTf, primaryBars);
           try {
-            return await api.chart(symbol, secTf, need);
+            const loaded = await api.chart(symbol, secTf, need);
+            if ((loaded.candles?.length ?? 0) > 0) return loaded;
+            return cacheHit ?? mockSeries(symbol, BASES[symbol] ?? 1, secTf, need);
           } catch {
-            return mockSeries(symbol, BASES[symbol] ?? 1, secTf, need);
+            return cacheHit ?? mockSeries(symbol, BASES[symbol] ?? 1, secTf, need);
           }
         })
       );
-      // أبقِ الترتيب: صغير · وسط · كبير — المخفي يبقى فارغاً
-      if (alive) setShadowSeries(results);
+      if (gen !== shadowLoadGen.current) return;
+      setShadowSeries(results);
     };
+
     void loadShadows();
     const id = setInterval(() => void loadShadows(), 90_000);
     return () => {
-      alive = false;
       clearInterval(id);
     };
-  }, [prefsReady, layoutShape, symbol, tf, shadowSlots, shadowEnabled, series?.candles?.length]);
+  }, [
+    prefsReady,
+    layoutShape,
+    symbol,
+    tf,
+    shadowSlots,
+    shadowEnabled,
+    series?.candles?.length,
+  ]);
+
+  // عند مغادرة وضع الظل فقط نفرّغ الذاكرة
+  useEffect(() => {
+    if (layoutShape === 'shadow') return;
+    shadowLoadGen.current += 1;
+    setShadowSeries([]);
+  }, [layoutShape]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -459,11 +660,11 @@ export function TerminalScreen() {
     await persistDxyTf(nextTf);
     setDxy((prev) => ({ ...prev, timeframe: nextTf }));
     try {
-      const s = await api.chart('DXY', nextTf);
+      const s = await api.chart(heroSymbol, nextTf);
       setDxy(s);
       setOnline(true);
     } catch {
-      setDxy(mockSeries('DXY', 104.25, nextTf, 120));
+      setDxy(offlineFrame(heroSymbol, nextTf));
       setOnline(false);
     }
   };
@@ -473,9 +674,26 @@ export function TerminalScreen() {
     if (timeframe) setTf(timeframe);
   };
 
-  const price = liveTicks[symbol] ?? series?.last ?? 0;
-  const dxyPrice = liveTicks.DXY ?? dxy.last;
-  const dxyUp = dxy.change_pct >= 0;
+  const price = liveTicks[symbol]?.price ?? series?.last ?? 0;
+  const dxyPrice = liveTicks.DXY?.price ?? dxy.last;
+  const tickPrices = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const [sym, tick] of Object.entries(liveTicks)) {
+      out[sym] = tick.price;
+    }
+    return out;
+  }, [liveTicks]);
+  const heroSeries = series ?? offlineFrame(symbol, tf);
+  const heroTick = liveTicks[symbol] ?? null;
+  const heroNowMs = useTickFreshnessClock(heroTick?.source.as_of ?? null);
+  const heroNowSec = heroNowMs / 1000;
+  const heroStatusBits = [
+    online ? 'خادم متصل' : 'خادم غير متصل',
+    provenanceLabel(normalizeProvenance(heroSeries.data_source)),
+    heroTick
+      ? tickStatusLabel(heroTick.source, heroTick.source.as_of, heroNowSec) ?? 'آخر سعر'
+      : null,
+  ].filter(Boolean);
 
   const topActions = [
     {
@@ -538,9 +756,11 @@ export function TerminalScreen() {
       <StatusBar barStyle="light-content" />
 
       <View style={[styles.topBar, phone && styles.topBarPhone]}>
-        <Pressable style={styles.symbolBtn} onPress={() => openFocus(symbol, tf)}>
-          <Text style={styles.symbolText}>{symbol}</Text>
-        </Pressable>
+        <SymbolPairMenu
+          value={symbol}
+          onPick={pickSymbol}
+          onLongPress={() => openFocus(symbol, tf)}
+        />
 
         {!phone && layoutCount === 1 && layoutShape !== 'shadow' ? (
           <View style={styles.tfScroll}>
@@ -650,6 +870,21 @@ export function TerminalScreen() {
           </View>
         ) : null}
 
+        {!phone && multiCharts ? (
+          <Pressable
+            style={[styles.timeSyncBtn, timeSyncActive && styles.timeSyncBtnOn]}
+            onPress={() => void toggleTimeSync()}
+            accessibilityLabel="مزامنة الزمن"
+          >
+            <Text style={[styles.timeSyncText, timeSyncActive && styles.timeSyncTextOn]}>
+              مزامنة الزمن
+            </Text>
+          </Pressable>
+        ) : null}
+        {!phone && layoutShape === 'shadow' ? (
+          <Text style={styles.timeSyncHint}>المزامنة غير متاحة في فريم الظل</Text>
+        ) : null}
+
         {!phone ? (
           <View style={styles.panSpeedSlot}>
             <PanSpeedSlider value={panSpeed} onChange={(v) => void changePanSpeed(v)} />
@@ -703,17 +938,20 @@ export function TerminalScreen() {
           contentContainerStyle={styles.phoneWatchRow}
           style={styles.phoneWatch}
         >
-          {WATCHLIST.map((w) => (
+          {(phoneWatchSymbols ?? WATCHLIST.map((w) => w.symbol)).map((sym) => (
             <Pressable
-              key={w.symbol}
-              style={[styles.pill, symbol === w.symbol && styles.pillOn]}
-              onPress={() => pickSymbol(w.symbol)}
+              key={sym}
+              style={[styles.pill, symbol === sym && styles.pillOn]}
+              onPress={() => pickSymbol(sym)}
             >
-              <Text style={[styles.pillText, symbol === w.symbol && styles.pillTextOn]}>
-                {w.symbol}
+              <Text style={[styles.pillText, symbol === sym && styles.pillTextOn]}>
+                {sym}
               </Text>
             </Pressable>
           ))}
+          <Pressable style={styles.pill} onPress={() => setPhoneWatchOpen(true)}>
+            <Text style={styles.pillText}>إدارة</Text>
+          </Pressable>
         </ScrollView>
       ) : null}
 
@@ -741,18 +979,23 @@ export function TerminalScreen() {
                   ]}
                 />
                 <View>
-                  <Text style={styles.desktopSymbol}>{symbol}</Text>
+                  <SymbolPairMenu
+                    large
+                    value={symbol}
+                    onPick={pickSymbol}
+                    onLongPress={() => openFocus(symbol, tf)}
+                  />
                   <Text style={styles.desktopMarket}>فريم الظل · أساسي {tf}</Text>
                 </View>
               </View>
               <View style={styles.shadowHintBox}>
                 <Text style={styles.shadowHintText}>
-                  حركة من الأساسي — اسحب الجارت العلوي أو استخدم عجلة الماوس
+                  أساسي فوق · الظلال تحته من الأكبر إلى الأصغر
                 </Text>
               </View>
               <View style={styles.desktopStatus}>
                 <View style={[styles.statusDot, online && styles.statusDotOnline]} />
-                <Text style={styles.statusText}>{online ? 'بيانات متصلة' : 'وضع تجريبي'}</Text>
+                <Text style={styles.statusText}>{heroStatusBits.join(' · ')}</Text>
               </View>
             </View>
 
@@ -831,95 +1074,50 @@ export function TerminalScreen() {
               })}
             </ScrollView>
 
-            <View style={styles.shadowStackScroll}>
-              {(() => {
-                const activePanes = SHADOW_PANE_ORDER.filter((p) => shadowEnabled[p.slot]);
-                const stackH = Math.max(420, desktopChartHeight + 60);
-                const primaryH = Math.max(
-                  160,
-                  Math.floor(stackH * (activePanes.length ? 0.4 : 0.95))
-                );
-                const shadowH = activePanes.length
-                  ? Math.max(100, Math.floor((stackH - primaryH) / activePanes.length))
-                  : 0;
-                const accent = symbol === 'DXY' ? colors.dxy : colors.accent;
-                const lastPaneIndex = activePanes.length - 1;
-                return (
-                  <View style={[styles.shadowStackFlat, { minHeight: stackH }]}>
-                    <View style={[styles.shadowPaneFlat, { height: primaryH }]}>
-                      <MatrixChart
-                        key={`shadow-primary-${symbol}-${tf}-${kind}`}
-                        series={series ?? offlineFrame(symbol, tf)}
-                        height={Math.max(140, primaryH - 4)}
-                        interactive
-                        compactUi
-                        dense
-                        hideGrid
-                        hidePriceLabels
-                        hideTimeLabels={false}
-                        persistDrawings
-                        panSpeed={panSpeed}
-                        accent={accent}
-                        livePrice={liveTicks[symbol] ?? null}
-                        initialTool="none"
-                        initialLens={lens}
-                        initialKind={kind}
-                        initialIndicators={indicators}
-                        onSyncWindow={onShadowSyncWindow}
-                      />
-                      <Text style={styles.shadowLabelRight} pointerEvents="none">
-                        أساسي {tf}
-                      </Text>
-                    </View>
-                    {activePanes.map((pane, idx) => {
-                      const secTf = shadowSlots[pane.slot];
-                      const loaded = shadowSeries[pane.slot];
-                      const secSeries =
-                        loaded && (loaded.candles?.length ?? 0) > 0
-                          ? loaded
-                          : offlineFrame(symbol, secTf);
-                      const isBottom = idx === lastPaneIndex;
-                      return (
-                        <View
-                          key={pane.title}
-                          style={[styles.shadowPaneFlat, { height: shadowH }]}
-                        >
-                          <MatrixChart
-                            key={`shadow-pane-${pane.slot}-${symbol}-${secTf}`}
-                            series={secSeries}
-                            height={Math.max(88, shadowH - 4)}
-                            interactive={false}
-                            panControls={false}
-                            dense
-                            mutedCandles
-                            hideGrid
-                            hidePriceLabels
-                            hideTimeLabels={!isBottom}
-                            syncFollow
-                            syncWindow={shadowSyncWindow}
-                            persistDrawings={false}
-                            panSpeed={panSpeed}
-                            accent={accent}
-                            livePrice={liveTicks[symbol] ?? null}
-                            initialKind={kind}
-                          />
-                          <Text style={styles.shadowLabelRight} pointerEvents="none">
-                            {pane.title.replace('فريم ', '')} {secTf}
-                          </Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                );
-              })()}
+            <View style={styles.desktopChart}>
+              <MatrixChart
+                key={`shadow-overlay-${symbol}-${tf}-${kind}`}
+                series={series ?? offlineFrame(symbol, tf)}
+                shadowSeries={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
+                  if (!shadowEnabled[i] || shadowSlots[i] === tf) return [];
+                  const sec = shadowSeries[i];
+                  if (!sec || (sec.candles?.length ?? 0) < 1) return [];
+                  return [sec];
+                })}
+                shadowTags={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
+                  if (!shadowEnabled[i] || shadowSlots[i] === tf) return [];
+                  const sec = shadowSeries[i];
+                  if (!sec || (sec.candles?.length ?? 0) < 1) return [];
+                  return [tag];
+                })}
+                height={desktopChartHeight}
+                interactive
+                compactUi
+                persistDrawings
+                panSpeed={panSpeed}
+                accent={symbol === 'DXY' ? colors.dxy : colors.accent}
+                livePrice={livePriceForChart(
+                  series ?? offlineFrame(symbol, tf),
+                  liveTicks[symbol] ?? null,
+                  {
+                    tickAsOf: liveTicks[symbol]?.source.as_of ?? null,
+                    timeframe: (series ?? offlineFrame(symbol, tf)).timeframe,
+                  }
+                )}
+                liveTickSource={liveTicks[symbol]?.source ?? null}
+                initialTool={tool}
+                initialLens={lens}
+                initialKind={kind}
+                initialIndicators={indicators}
+              />
             </View>
 
             <View style={styles.rangeBar}>
               <Text style={styles.shadowFooterNote}>
                 {[
                   `أساسي ${tf}`,
-                  ...SHADOW_PANE_ORDER.filter((p) => shadowEnabled[p.slot]).map(
-                    (p) => `${p.title.replace('فريم ', '')} ${shadowSlots[p.slot]}`
+                  ...SHADOW_SLOT_TAGS.flatMap((tag, i) =>
+                    shadowEnabled[i] ? [`${tag} ${shadowSlots[i]}`] : []
                   ),
                 ].join(' · ')}
               </Text>
@@ -940,7 +1138,12 @@ export function TerminalScreen() {
                   ]}
                 />
                 <View>
-                  <Text style={styles.desktopSymbol}>{symbol}</Text>
+                  <SymbolPairMenu
+                    large
+                    value={symbol}
+                    onPick={pickSymbol}
+                    onLongPress={() => openFocus(symbol, tf)}
+                  />
                   <Text style={styles.desktopMarket}>سوق العملات · {tf}</Text>
                 </View>
               </View>
@@ -962,7 +1165,7 @@ export function TerminalScreen() {
               </View>
               <View style={styles.desktopStatus}>
                 <View style={[styles.statusDot, online && styles.statusDotOnline]} />
-                <Text style={styles.statusText}>{online ? 'بيانات متصلة' : 'وضع تجريبي'}</Text>
+                <Text style={styles.statusText}>{heroStatusBits.join(' · ')}</Text>
               </View>
             </View>
 
@@ -976,7 +1179,15 @@ export function TerminalScreen() {
                 persistDrawings
                 panSpeed={panSpeed}
                 accent={symbol === 'DXY' ? colors.dxy : colors.accent}
-                livePrice={liveTicks[symbol] ?? null}
+                livePrice={livePriceForChart(
+                  series ?? offlineFrame(symbol, tf),
+                  liveTicks[symbol] ?? null,
+                  {
+                    tickAsOf: liveTicks[symbol]?.source.as_of ?? null,
+                    timeframe: (series ?? offlineFrame(symbol, tf)).timeframe,
+                  }
+                )}
+                liveTickSource={liveTicks[symbol]?.source ?? null}
                 initialTool={tool}
                 initialLens={lens}
                 initialKind={kind}
@@ -1000,12 +1211,13 @@ export function TerminalScreen() {
               </Pressable>
             </View>
           </View>
-        ) : !phone && layoutShape === 'rect' ? (
+        ) : !phone && (layoutShape === 'rect' || (layoutShape === 'square' && layoutCount > 1)) ? (
           <View style={styles.rectWorkspace}>
             <FrameSizedGrid
               storageKey="matrix.home.frames.order.v1"
               layoutCount={layoutCount}
-              shape="rect"
+              shape={layoutShape === 'rect' ? 'rect' : 'square'}
+              onOrderChange={setFrameOrder}
               items={[
                 {
                   id: 'DXY',
@@ -1014,15 +1226,17 @@ export function TerminalScreen() {
                       <ChartFrame
                         series={dxy}
                         size="large"
-                        accent={colors.dxy}
-                        label={`DXY${dxyUp ? ' ↑' : ' ↓'}`}
+                        accent={dxy.symbol === 'DXY' ? colors.dxy : colors.accent}
+                        label={dxy.symbol}
                         showTimeframes
                         onTimeframeChange={(t) => void changeDxyTf(t)}
+                        onSymbolChange={(s) => void changeHeroSymbol(s)}
                         panControls
                         fill
                         panSpeed={panSpeed}
-                        livePrice={liveTicks.DXY ?? null}
-                        onFocus={() => openFocus('DXY', dxyTf)}
+                        liveTick={liveTicks[dxy.symbol] ?? null}
+                        onFocus={() => openFocus(dxy.symbol, dxyTf)}
+                        {...syncPropsFor('DXY')}
                       />
                     </View>
                   ),
@@ -1039,12 +1253,14 @@ export function TerminalScreen() {
                       panControls
                       fill
                       panSpeed={panSpeed}
-                      livePrice={liveTicks[f.symbol] ?? null}
+                      liveTick={liveTicks[f.symbol] ?? null}
                       onTimeframeChange={(t) => void changeFrameTf(i, t)}
+                      onSymbolChange={(s) => void changeFrameSymbol(i, s)}
                       onFocus={() => {
                         pickSymbol(f.symbol, frameTfs[i]);
                         openFocus(f.symbol, frameTfs[i]);
                       }}
+                      {...syncPropsFor(`pair-${i}`)}
                     />
                   ),
                 })),
@@ -1084,15 +1300,16 @@ export function TerminalScreen() {
                       <ChartFrame
                         series={dxy}
                         size="large"
-                        accent={colors.dxy}
-                        label={`DXY${dxyUp ? ' ↑' : ' ↓'}`}
+                        accent={dxy.symbol === 'DXY' ? colors.dxy : colors.accent}
+                        label={dxy.symbol}
                         showTimeframes
                         onTimeframeChange={(t) => void changeDxyTf(t)}
+                        onSymbolChange={(s) => void changeHeroSymbol(s)}
                         phone={phone}
                         panControls
                         panSpeed={panSpeed}
-                        livePrice={liveTicks.DXY ?? null}
-                        onFocus={() => openFocus('DXY', dxyTf)}
+                        liveTick={liveTicks[dxy.symbol] ?? null}
+                        onFocus={() => openFocus(dxy.symbol, dxyTf)}
                       />
                     </View>
                   ),
@@ -1109,8 +1326,9 @@ export function TerminalScreen() {
                       phone={phone}
                       panControls
                       panSpeed={panSpeed}
-                      livePrice={liveTicks[f.symbol] ?? null}
+                      liveTick={liveTicks[f.symbol] ?? null}
                       onTimeframeChange={(t) => void changeFrameTf(i, t)}
+                      onSymbolChange={(s) => void changeFrameSymbol(i, s)}
                       onFocus={() => {
                         pickSymbol(f.symbol, frameTfs[i]);
                         openFocus(f.symbol, frameTfs[i]);
@@ -1131,7 +1349,7 @@ export function TerminalScreen() {
           <>
             <WatchlistPanel
               activeSymbol={symbol}
-              ticks={liveTicks}
+              ticks={tickPrices}
               bases={BASES}
               onPick={(s) => pickSymbol(s)}
               compact={narrowWatch}
@@ -1198,6 +1416,27 @@ export function TerminalScreen() {
         symbols={[frameSymbols[0], frameSymbols[1], frameSymbols[2], 'DXY']}
         timeframe={frameTfs[0]}
       />
+
+      <Modal visible={phoneWatchOpen} animationType="slide" onRequestClose={() => setPhoneWatchOpen(false)}>
+        <SafeAreaView style={styles.phoneWatchModal}>
+          <View style={styles.phoneWatchModalBar}>
+            <Pressable style={styles.phoneWatchClose} onPress={() => setPhoneWatchOpen(false)}>
+              <Text style={styles.phoneWatchCloseText}>إغلاق</Text>
+            </Pressable>
+            <Text style={styles.phoneWatchModalTitle}>إدارة قائمة المتابعة</Text>
+          </View>
+          <WatchlistPanel
+            activeSymbol={symbol}
+            ticks={tickPrices}
+            bases={BASES}
+            onPick={(next) => {
+              pickSymbol(next);
+              setPhoneWatchOpen(false);
+            }}
+            fullWidth
+          />
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1213,10 +1452,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
     backgroundColor: colors.bgElevated,
-    zIndex: 5,
+    zIndex: 80,
+    overflow: 'visible',
   },
   topBarPhone: { flexWrap: 'wrap', paddingVertical: 4 },
   symbolBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radii.sm,
@@ -1225,42 +1468,69 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
   },
   symbolText: { color: colors.accent, fontWeight: '900', fontSize: 13 },
+  symbolCaret: { color: colors.accent, fontWeight: '800', fontSize: 11, opacity: 0.8 },
   tfScroll: { flexGrow: 0, flexShrink: 1, maxWidth: 520, minWidth: 200 },
   layoutSwitcher: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 5,
-    paddingVertical: 3,
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: '#0A1524',
   },
   layoutSwitcherTag: {
-    width: 40,
-    height: 28,
-    borderRadius: 6,
+    width: 46,
+    height: 34,
+    borderRadius: 7,
     borderWidth: 1,
     borderColor: colors.borderSoft,
     backgroundColor: colors.bgPanel,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 2,
+    paddingHorizontal: 3,
   },
   layoutSwitcherTagTop: {
     color: colors.accent,
-    fontSize: 7,
+    fontSize: 8,
     fontWeight: '900',
-    lineHeight: 9,
+    lineHeight: 10,
     textAlign: 'center',
   },
   layoutSwitcherTagBottom: {
     color: colors.textMuted,
-    fontSize: 7,
+    fontSize: 8,
     fontWeight: '800',
-    lineHeight: 9,
+    lineHeight: 10,
     textAlign: 'center',
+  },
+  timeSyncBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bgPanel,
+  },
+  timeSyncBtnOn: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accentSoft,
+  },
+  timeSyncText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  timeSyncTextOn: {
+    color: colors.accent,
+  },
+  timeSyncHint: {
+    color: colors.textDim,
+    fontSize: 10,
+    fontWeight: '700',
+    maxWidth: 140,
   },
   shadowTagBtn: {
     marginLeft: 1,
@@ -1270,9 +1540,9 @@ const styles = StyleSheet.create({
     height: 8,
   },
   layoutSwitchBtn: {
-    width: 34,
-    height: 30,
-    borderRadius: 6,
+    width: 38,
+    height: 34,
+    borderRadius: 7,
     borderWidth: 1,
     borderColor: colors.borderSoft,
     backgroundColor: colors.bgPanel,
@@ -1333,7 +1603,7 @@ const styles = StyleSheet.create({
     height: 8,
   },
   layoutSwitchCellOn: { backgroundColor: colors.accent },
-  layoutSwitchNum: { color: colors.textDim, fontSize: 8, fontWeight: '900' },
+  layoutSwitchNum: { color: colors.textMuted, fontSize: 9, fontWeight: '900' },
   layoutSwitchNumOn: { color: colors.accent },
   layoutSwitchSep: {
     width: 1,
@@ -1388,8 +1658,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
     backgroundColor: colors.bgElevated,
+    zIndex: 70,
+    overflow: 'visible',
   },
-  desktopQuoteIdentity: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  desktopQuoteIdentity: { flexDirection: 'row', alignItems: 'center', gap: 8, zIndex: 70 },
   desktopAssetDot: { width: 9, height: 9, borderRadius: 5 },
   desktopSymbol: { color: colors.text, fontWeight: '900', fontSize: 14 },
   desktopMarket: { color: colors.textDim, fontSize: 9, marginTop: 1 },
@@ -1493,11 +1765,17 @@ const styles = StyleSheet.create({
   shadowStackFlat: {
     flex: 1,
     minHeight: 0,
+    position: 'relative',
   },
   shadowPaneFlat: {
     position: 'relative',
     overflow: 'hidden',
     backgroundColor: '#071018',
+  },
+  shadowGestureOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 80,
+    backgroundColor: 'rgba(0,0,0,0.001)',
   },
   shadowLabelRight: {
     position: 'absolute',
@@ -1670,14 +1948,14 @@ const styles = StyleSheet.create({
   scrollFill: { flexGrow: 1 },
   section: {
     color: colors.textMuted,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '800',
     textAlign: 'right',
     marginTop: 2,
   },
   hintMove: {
-    color: colors.textDim,
-    fontSize: 10,
+    color: colors.textMuted,
+    fontSize: 11,
     textAlign: 'center',
     marginTop: 4,
   },
@@ -1691,6 +1969,11 @@ const styles = StyleSheet.create({
   },
   phoneWatch: { maxHeight: 44, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
   phoneWatchRow: { gap: 6, paddingHorizontal: 8, paddingVertical: 6 },
+  phoneWatchModal: { flex: 1, backgroundColor: colors.bg },
+  phoneWatchModalBar: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
+  phoneWatchModalTitle: { color: colors.text, fontWeight: '800' },
+  phoneWatchClose: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: radii.sm, backgroundColor: colors.accentSoft },
+  phoneWatchCloseText: { color: colors.accent, fontWeight: '800', fontSize: 12 },
   pill: {
     paddingHorizontal: 10,
     paddingVertical: 6,

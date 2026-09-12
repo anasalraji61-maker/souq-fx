@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub } from '../theme';
 import { api } from '../api';
 import { formatPrice } from '../chart/math';
 
-type Props = { symbol: string; timeframe?: string };
+type Props = { symbol: string; timeframe?: string; embedded?: boolean };
 
 const INDICATOR_OPTS = [
   { id: 'rsi', label: 'RSI' },
@@ -35,7 +35,7 @@ function dirLabel(d: string) {
   return 'محايد';
 }
 
-export function IndicatorForecastPanel({ symbol, timeframe = '15m' }: Props) {
+export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: Props) {
   const [enabled, setEnabled] = useState(INDICATOR_OPTS.map((x) => x.id));
   const [loading, setLoading] = useState(false);
   const [direction, setDirection] = useState('neutral');
@@ -84,14 +84,14 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m' }: Props) {
   }, [run]);
 
   return (
-    <View style={styles.wrap}>
-      <View style={styles.head}>
+    <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
+      <View style={[styles.head, embedded && frameEmbedHead]}>
         <Pressable style={styles.refresh} onPress={() => void run()} disabled={loading}>
           <Text style={styles.refreshText}>توقّع</Text>
         </Pressable>
-        <View>
-          <Text style={styles.title}>توقعات المؤشرات</Text>
-          <Text style={styles.sub}>
+        <View style={embedded ? frameEmbedTitleBlock : undefined}>
+          <Text style={[styles.title, embedded && frameEmbedTitle]}>توقعات المؤشرات</Text>
+          <Text style={[styles.sub, embedded && frameEmbedSub]}>
             {symbol} · {timeframe}
             {rsi != null ? ` · RSI ${rsi.toFixed(1)}` : ''}
           </Text>
@@ -161,10 +161,19 @@ const styles = StyleSheet.create({
     gap: 8,
     overflow: 'hidden',
   },
+  wrapInFrame: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    paddingTop: frameEmbed.padTop,
+    paddingLeft: frameEmbed.padLeft,
+    paddingRight: frameEmbed.padRight,
+    paddingBottom: frameEmbed.padBottom,
+  },
   head: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-start' },
   title: { color: colors.text, fontWeight: '900', fontSize: 14, textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 11, textAlign: 'right', marginTop: 2 },
   refresh: {
+    flexShrink: 0,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radii.sm,

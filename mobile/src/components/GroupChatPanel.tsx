@@ -8,14 +8,14 @@ import {
   Pressable,
   I18nManager,
 } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle } from '../theme';
 import { api, type ChatMsg } from '../api';
 import { mockChat } from '../mock';
 
 // واجهة عربية — لا نفرض RTL على النظام بالكامل هنا
 void I18nManager;
 
-export function GroupChatPanel() {
+export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
   const [messages, setMessages] = useState<ChatMsg[]>(mockChat);
   const [text, setText] = useState('');
 
@@ -45,8 +45,17 @@ export function GroupChatPanel() {
   };
 
   return (
-    <View style={styles.panel}>
-      <Text style={styles.title}>دردشة جماعية</Text>
+    <View style={[styles.panel, embedded && styles.panelInFrame]}>
+      {embedded ? (
+        <View style={frameEmbedHead}>
+          <View style={frameEmbedHeadTail} />
+          <View style={frameEmbedTitleBlock}>
+            <Text style={[styles.title, styles.titleInHead, frameEmbedTitle]}>دردشة جماعية</Text>
+          </View>
+        </View>
+      ) : (
+        <Text style={styles.title}>دردشة جماعية</Text>
+      )}
       <ScrollView style={styles.scroll} contentContainerStyle={{ gap: 8 }}>
         {messages.map((m) => (
           <View
@@ -87,13 +96,21 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     overflow: 'hidden',
   },
+  panelInFrame: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    paddingTop: frameEmbed.padTop,
+    paddingLeft: frameEmbed.padLeft,
+    paddingRight: frameEmbed.padRight,
+    paddingBottom: frameEmbed.padBottom,
+  },
   title: {
     color: colors.text,
     fontWeight: '700',
     fontSize: 13,
-    marginBottom: spacing.sm,
     textAlign: 'right',
   },
+  titleInHead: { marginBottom: 0 },
   scroll: { flex: 1 },
   bubble: {
     backgroundColor: colors.bgElevated,

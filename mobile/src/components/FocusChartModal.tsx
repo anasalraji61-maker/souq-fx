@@ -18,6 +18,9 @@ import { type Timeframe } from '../timeframes';
 import { WATCHLIST } from '../chart/watchlist';
 import { loadWatchlistItems } from '../chart/watchlistStore';
 import { formatPrice } from '../chart/math';
+import { livePriceForChart } from '../chart/liveSeries';
+import { provenanceLabel, tickStatusLabel, normalizeProvenance } from '../chart/dataSource';
+import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import { mockSeries } from '../mock';
 import { SymbolSearchBar } from './SymbolSearchBar';
 import { AlertsPanel } from './AlertsPanel';
@@ -86,7 +89,9 @@ export function FocusChartModal({
   const [watchlist, setWatchlist] = useState<{ symbol: string; label: string; group?: string }[]>([
     ...WATCHLIST,
   ]);
-  const livePrice = useLiveTicks(sym, visible);
+  const liveTick = useLiveTicks(sym, visible);
+  const nowMs = useTickFreshnessClock(liveTick?.source.as_of ?? null);
+  const nowSec = nowMs / 1000;
 
   useEffect(() => {
     if (visible) void loadWatchlistItems().then(setWatchlist);
@@ -143,7 +148,7 @@ export function FocusChartModal({
     try {
       await api.createAlert({
         symbol: sym,
-        condition: price >= (livePrice ?? series?.last ?? price) ? 'above' : 'below',
+        condition: price >= (liveTick?.price ?? series?.last ?? price) ? 'above' : 'below',
         price,
         note: 'من خط رسم',
       });
@@ -177,7 +182,9 @@ export function FocusChartModal({
           </Pressable>
           {series ? (
             <View style={styles.quote}>
-              <Text style={styles.price}>{formatPrice(livePrice ?? series.last)}</Text>
+              <Text style={styles.price}>
+                {formatPrice(liveTick?.price ?? series.last)}
+              </Text>
               <Text
                 style={[
                   styles.change,
@@ -185,7 +192,11 @@ export function FocusChartModal({
                 ]}
               >
                 {series.change_pct >= 0 ? '+' : ''}
-                {series.change_pct.toFixed(2)}%{livePrice != null ? ' · حي' : ''}
+                {series.change_pct.toFixed(2)}%
+                {liveTick
+                  ? ` · ${tickStatusLabel(liveTick.source, liveTick.source.as_of, nowSec) ?? 'آخر سعر'}`
+                  : ''}
+                {` · ${provenanceLabel(normalizeProvenance(series.data_source))}`}
               </Text>
             </View>
           ) : null}
@@ -264,7 +275,12 @@ export function FocusChartModal({
                 persistDrawings
                 compactUi={phone}
                 accent={sym === 'DXY' ? colors.dxy : colors.accent}
-                livePrice={livePrice}
+                livePrice={livePriceForChart(series, liveTick, {
+                  tickAsOf: liveTick?.source.as_of ?? null,
+                  timeframe: series.timeframe,
+                  nowSec,
+                })}
+                liveTickSource={liveTick?.source ?? null}
                 onCreateAlert={alertFromDrawing}
                 initialTool={initialTool}
                 initialLens={initialLens}

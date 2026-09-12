@@ -81,12 +81,21 @@ class Candle(BaseModel):
     volume: float = 0
 
 
+class DataProvenance(BaseModel):
+    """Honest candle/tick origin — never imply live market from HTTP/WS alone."""
+
+    kind: Literal["provider", "demo", "cache", "unknown"] = "unknown"
+    as_of: float | None = None
+    channel: str | None = None
+
+
 class ChartSeries(BaseModel):
     symbol: str
     timeframe: str
     candles: list[Candle]
     change_pct: float
     last: float
+    data_source: DataProvenance = Field(default_factory=DataProvenance)
 
 
 class ChatMessage(BaseModel):
@@ -435,18 +444,24 @@ def build_series(symbol: str, timeframe: str = "15m", outputsize: int = 180) -> 
 
     if market.configured():
         try:
-            raw = market.fetch_time_series(sym, tf, outputsize=size)
+            raw, meta = market.fetch_time_series_with_meta(sym, tf, outputsize=size)
             if raw:
                 candles = [Candle(**c) for c in raw]
                 first = candles[0].close
                 last = candles[-1].close
                 change = ((last - first) / first) * 100 if first else 0
+                kind = meta.get("kind") if meta.get("kind") in ("provider", "cache") else "unknown"
                 return ChartSeries(
                     symbol=sym,
                     timeframe=tf,
                     candles=candles,
                     change_pct=round(change, 2),
                     last=last,
+                    data_source=DataProvenance(
+                        kind=kind,  # type: ignore[arg-type]
+                        as_of=meta.get("as_of"),
+                        channel=meta.get("channel") or "twelvedata",
+                    ),
                 )
         except Exception:
             pass  # fallback to demo seed below
@@ -464,6 +479,7 @@ def build_series(symbol: str, timeframe: str = "15m", outputsize: int = 180) -> 
         candles=candles,
         change_pct=round(change, 2),
         last=last,
+        data_source=DataProvenance(kind="demo", as_of=time.time(), channel="seed"),
     )
 
 
@@ -826,7 +842,11 @@ def screener_run(body: ScreenerRun):
         fast=body.fast,
         slow=body.slow,
     )
-    return {"results": hits, "count": len(hits)}
+    return {
+        "results": hits,
+        "count": len(hits),
+        "provider_configured": market.configured(),
+    }
 
 
 @app.get("/api/screener/filters")
@@ -1270,11 +1290,17 @@ async def ticks(ws: WebSocket):
         while True:
             live = td_ws.snapshot()
             if live:
-                payload = {"ts": time.time(), "ticks": live, "source": "twelvedata_ws"}
+                payload = {
+                    "ts": time.time(),
+                    "ticks": live,
+                    "source": "twelvedata_ws",
+                    "data_source": {"kind": "provider", "as_of": time.time(), "channel": "twelvedata_ws"},
+                }
             else:
                 payload = {
                     "ts": time.time(),
                     "source": "fallback",
+                    "data_source": {"kind": "demo", "as_of": time.time(), "channel": "ws_seed"},
                     "ticks": {
                         sym: round(
                             base * (1 + random.uniform(-0.0004, 0.0004)),

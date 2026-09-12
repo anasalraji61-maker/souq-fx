@@ -63,6 +63,7 @@ export function mockSeries(
     candles,
     change_pct: +(((last - first) / first) * 100).toFixed(2),
     last: +last.toFixed(symbol === 'DXY' || symbol === 'XAUUSD' ? 2 : 5),
+    data_source: { kind: 'demo', as_of: Date.now() / 1000, channel: 'mock' },
   };
 }
 

@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub } from '../theme';
 import { api } from '../api';
 import { formatPrice } from '../chart/math';
 
-type Props = { symbol: string; timeframe?: string };
+type Props = { symbol: string; timeframe?: string; embedded?: boolean };
 
 type Source = { id: string; name: string; platform: string; weight: number };
 type Vote = {
@@ -41,7 +41,7 @@ function dirLabel(d: string) {
   return 'محايد';
 }
 
-export function SocialConsensusPanel({ symbol, timeframe = '15m' }: Props) {
+export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Props) {
   const [sources, setSources] = useState<Source[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -121,14 +121,14 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m' }: Props) {
   }, [ready, run, selected, symbol]);
 
   return (
-    <View style={styles.wrap}>
-      <View style={styles.head}>
+    <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
+      <View style={[styles.head, embedded && frameEmbedHead]}>
         <Pressable style={styles.refresh} onPress={() => void run()} disabled={loading}>
           <Text style={styles.refreshText}>احسب</Text>
         </Pressable>
-        <View>
-          <Text style={styles.title}>إجماع القنوات والمنصات</Text>
-          <Text style={styles.sub}>تيليجرام · فيسبوك · إنستغرام · X · تطبيقات</Text>
+        <View style={embedded ? frameEmbedTitleBlock : undefined}>
+          <Text style={[styles.title, embedded && frameEmbedTitle]}>المعدل التقريبي للتوصيات والصفقات</Text>
+          <Text style={[styles.sub, embedded && frameEmbedSub]}>تيليجرام · فيسبوك · إنستغرام · X · تطبيقات</Text>
         </View>
       </View>
 
@@ -203,11 +203,20 @@ const styles = StyleSheet.create({
     gap: 8,
     overflow: 'hidden',
   },
+  wrapInFrame: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    paddingTop: frameEmbed.padTop,
+    paddingLeft: frameEmbed.padLeft,
+    paddingRight: frameEmbed.padRight,
+    paddingBottom: frameEmbed.padBottom,
+  },
   head: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-start' },
   title: { color: colors.text, fontWeight: '900', fontSize: 14, textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 10, textAlign: 'right', marginTop: 2 },
   pickHint: { color: colors.textMuted, fontSize: 10, textAlign: 'right' },
   refresh: {
+    flexShrink: 0,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radii.sm,

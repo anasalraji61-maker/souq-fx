@@ -1,0 +1,39 @@
+{
+  "capturedAt": "2026-09-05",
+  "note": "الدليل الرقمي من DOM أقوى من معاينة لقطة Cursor التي غالباً تقصّ عرض الصفحة بصرياً. ملفات PNG أدناه من browser_take_screenshot مع Emulation.setDeviceMetricsOverride.",
+  "screenshotToolCaveat": "معاينة الشات قد تظهر عموداً واحداً فقط رغم أن الملف/الـ viewport مضبوطان على العرض الكامل.",
+  "viewports": {
+    "1920x1080": {
+      "innerWidth": 1920,
+      "innerHeight": 1080,
+      "layout": "4 square fill 2x2",
+      "AUTO_labels": [
+        { "x": 803, "y": 482, "bottom": 492 },
+        { "x": 1610, "y": 482, "bottom": 493 },
+        { "x": 804, "y": 939, "bottom": 950 },
+        { "x": 1610, "y": 939, "bottom": 950 }
+      ],
+      "dockTopApproxFullWidth": 978,
+      "clearancePxBottomRowToDock": 28,
+      "png": "docs/handoff-shots/1920x1080-4square-v3.png"
+    },
+    "1366x768": {
+      "innerWidth": 1366,
+      "innerHeight": 768,
+      "layout": "4 square fill 2x2",
+      "AUTO_labels": [
+        { "x": 526, "y": 326, "bottom": 336 },
+        { "x": 1056, "y": 326, "bottom": 337 },
+        { "x": 527, "y": 627, "bottom": 638 },
+        { "x": 1056, "y": 627, "bottom": 638 }
+      ],
+      "dockTopApproxFullWidth": 666,
+      "clearancePxBottomRowToDock": 28,
+      "png": "docs/handoff-shots/1366x768-4square-v3.png"
+    }
+  },
+  "toolsHubShowAll": {
+    "result": "بعد الإصلاح: لوحات الأدوات تظهر >4 عبر التمرير (عناوين حتى y≈1518 على 1080)",
+    "fix": "fillSquare/fillRect معطّلان عند showAll=true"
+  }
+}

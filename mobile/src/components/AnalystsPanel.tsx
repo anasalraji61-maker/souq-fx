@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub } from '../theme';
 import { api } from '../api';
 import { formatPrice } from '../chart/math';
 
-type Props = { symbol: string; timeframe?: string };
+type Props = { symbol: string; timeframe?: string; embedded?: boolean };
 
 type AnalystRow = {
   id: string;
@@ -29,7 +29,7 @@ function dirLabel(d: string) {
   return 'محايد';
 }
 
-export function AnalystsPanel({ symbol, timeframe = '15m' }: Props) {
+export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
   const [loading, setLoading] = useState(false);
   const [direction, setDirection] = useState('neutral');
   const [confidence, setConfidence] = useState(0);
@@ -61,14 +61,14 @@ export function AnalystsPanel({ symbol, timeframe = '15m' }: Props) {
   }, [load]);
 
   return (
-    <View style={styles.wrap}>
-      <View style={styles.head}>
+    <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
+      <View style={[styles.head, embedded && frameEmbedHead]}>
         <Pressable style={styles.refresh} onPress={() => void load()}>
           <Text style={styles.refreshText}>تحديث</Text>
         </Pressable>
-        <View>
-          <Text style={styles.title}>توقعات المحللين</Text>
-          <Text style={styles.sub}>{symbol} · إجماع بيوت بحث</Text>
+        <View style={embedded ? frameEmbedTitleBlock : undefined}>
+          <Text style={[styles.title, embedded && frameEmbedTitle]}>توقعات المحللين</Text>
+          <Text style={[styles.sub, embedded && frameEmbedSub]}>{symbol} · إجماع بيوت بحث</Text>
         </View>
       </View>
 
@@ -122,10 +122,19 @@ const styles = StyleSheet.create({
     gap: 8,
     overflow: 'hidden',
   },
+  wrapInFrame: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    paddingTop: frameEmbed.padTop,
+    paddingLeft: frameEmbed.padLeft,
+    paddingRight: frameEmbed.padRight,
+    paddingBottom: frameEmbed.padBottom,
+  },
   head: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-start' },
   title: { color: colors.text, fontWeight: '900', fontSize: 14, textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 11, textAlign: 'right', marginTop: 2 },
   refresh: {
+    flexShrink: 0,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radii.sm,

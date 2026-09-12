@@ -148,10 +148,10 @@ export function mapShadowCandles(
 
     inBar = downsample(inBar, maxPerBar);
     const slot = 1 / n;
-    // اترك يسار العمود للظل ويمين/وسط للأساسي
-    const band = slot * 0.42;
+    // اترك يسار العمود للظل بفجوة، ويمين العمود للأساسي
+    const band = slot * 0.34;
     const each = band / inBar.length;
-    const start = i / n + slot * 0.04;
+    const start = i / n + slot * 0.02;
 
     for (let k = 0; k < inBar.length; k++) {
       const c = inBar[k]!.c;
@@ -176,6 +176,35 @@ export function mapShadowCandles(
   if (out.length > 1200) {
     const step = Math.ceil(out.length / 1200);
     return out.filter((_, idx) => idx % step === 0);
+  }
+  if (out.length > 0) return out;
+
+  // احتياط: إن لم يتقاطع الزمن، صفّ نهاية السلاسل معاً حتى يبقى الظل مرئياً
+  const pLast = toSeconds(primary[n - 1]!.time);
+  const sLast = secs[secs.length - 1]!.t;
+  const drift = pLast - sLast;
+  const maxDraw = Math.min(n, 120);
+  for (let k = 0; k < maxDraw; k++) {
+    const pi = n - maxDraw + k;
+    const target = toSeconds(primary[pi]!.time) - drift;
+    const hit = pickNearest(secs, target, { i: 0 });
+    if (!hit) continue;
+    const widthRatio = Math.max(0.006, (1 / n) * 0.45);
+    const xRatio = Math.max(
+      widthRatio / 2,
+      Math.min(1 - widthRatio / 2, (pi + 0.5) / n + layerNudge)
+    );
+    const c = hit.c;
+    out.push({
+      time: c.time,
+      open: c.open,
+      high: c.high,
+      low: c.low,
+      close: c.close,
+      xRatio,
+      widthRatio,
+      layer,
+    });
   }
   return out;
 }

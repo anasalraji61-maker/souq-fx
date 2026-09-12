@@ -105,19 +105,21 @@ def _parse_ts(dt_str: str) -> int:
     return int(time.time())
 
 
-def _serve_stale(cache_key: str, now: float) -> list[dict] | None:
+def _serve_stale(cache_key: str, now: float) -> tuple[list[dict], float] | None:
     hit = _cache.get(cache_key)
     if not hit:
         return None
     age = now - hit[0]
     if age <= STALE_MAX_SEC:
         _stats["stale_served"] = int(_stats["stale_served"] or 0) + 1
-        return hit[1]
+        return hit[1], hit[0]
     return None
 
 
-def fetch_time_series(matrix_symbol: str, timeframe: str, outputsize: int = 120) -> list[dict]:
-    """Return candles oldest-first: {time, open, high, low, close, volume}."""
+def fetch_time_series_with_meta(
+    matrix_symbol: str, timeframe: str, outputsize: int = 120
+) -> tuple[list[dict], dict]:
+    """Candles + provenance: kind provider|cache, as_of unix, channel twelvedata."""
     key = _api_key()
     if not key:
         raise RuntimeError("TWELVE_DATA_API_KEY missing")
@@ -130,7 +132,7 @@ def fetch_time_series(matrix_symbol: str, timeframe: str, outputsize: int = 120)
     hit = _cache.get(cache_key)
     if hit and now - hit[0] < ttl:
         _stats["cache_hits"] = int(_stats["cache_hits"] or 0) + 1
-        return hit[1]
+        return hit[1], {"kind": "cache", "as_of": hit[0], "channel": "twelvedata"}
 
     td_sym = td_symbol(sym)
     interval = TF_MAP[tf]
@@ -150,14 +152,16 @@ def fetch_time_series(matrix_symbol: str, timeframe: str, outputsize: int = 120)
                 _stats["last_rate_limit_at"] = now
                 stale = _serve_stale(cache_key, now)
                 if stale:
-                    return stale
+                    candles, as_of = stale
+                    return candles, {"kind": "cache", "as_of": as_of, "channel": "twelvedata"}
                 raise RuntimeError("Twelve Data rate limit — robot may be using quota")
             r.raise_for_status()
             data = r.json()
     except httpx.HTTPError as exc:
         stale = _serve_stale(cache_key, now)
         if stale:
-            return stale
+            candles, as_of = stale
+            return candles, {"kind": "cache", "as_of": as_of, "channel": "twelvedata"}
         raise RuntimeError(str(exc)) from exc
 
     _stats["api_calls"] = int(_stats["api_calls"] or 0) + 1
@@ -166,7 +170,8 @@ def fetch_time_series(matrix_symbol: str, timeframe: str, outputsize: int = 120)
         msg = data.get("message") or data.get("code") or str(data)[:200]
         stale = _serve_stale(cache_key, now)
         if stale:
-            return stale
+            candles, as_of = stale
+            return candles, {"kind": "cache", "as_of": as_of, "channel": "twelvedata"}
         raise RuntimeError(f"Twelve Data: {msg}")
 
     candles: list[dict] = []
@@ -184,6 +189,12 @@ def fetch_time_series(matrix_symbol: str, timeframe: str, outputsize: int = 120)
 
     candles.sort(key=lambda c: c["time"])
     _cache[cache_key] = (now, candles)
+    return candles, {"kind": "provider", "as_of": now, "channel": "twelvedata"}
+
+
+def fetch_time_series(matrix_symbol: str, timeframe: str, outputsize: int = 120) -> list[dict]:
+    """Return candles oldest-first: {time, open, high, low, close, volume}."""
+    candles, _meta = fetch_time_series_with_meta(matrix_symbol, timeframe, outputsize)
     return candles
 
 

@@ -985,6 +985,11 @@ def all_push_tokens() -> list[str]:
     return [r["token"] for r in rows]
 
 
+def delete_push_token(token: str) -> None:
+    with _conn() as c:
+        c.execute("DELETE FROM push_tokens WHERE token = ?", (token,))
+
+
 def save_layout(layout_id: str, name: str, payload: dict, user_id: int | None = None) -> dict:
     with _conn() as c:
         c.execute(

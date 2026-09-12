@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { TimeframeBar } from './TimeframeBar';
 import { type Timeframe } from '../timeframes';
@@ -99,7 +99,17 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
           </Pressable>
         ))}
       </View>
-      <Pressable style={styles.btn} onPress={run} disabled={loading}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.btn,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
+        onPress={run}
+        disabled={loading}
+      >
         <Text style={styles.btnText}>{loading ? '...' : 'تشغيل Backtest'}</Text>
       </Pressable>
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
@@ -193,6 +203,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingVertical: 12,
     alignItems: 'center',
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
   },
   btnText: { color: '#042F2E', fontWeight: '800' },
   stats: { gap: 4, marginTop: 8 },

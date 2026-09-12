@@ -2,7 +2,19 @@ import Constants from 'expo-constants';
 
 const extra = (Constants.expoConfig?.extra ?? {}) as { apiUrl?: string };
 
-export const API_URL = extra.apiUrl || 'http://127.0.0.1:8110';
+/** على المتصفح المحلي نفضّل 127.0.0.1 حتى لا نعلق بـ IP شبكة قديم في app.json */
+function resolveApiUrl(): string {
+  const configured = extra.apiUrl || 'http://127.0.0.1:8110';
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://127.0.0.1:8110';
+    }
+  }
+  return configured;
+}
+
+export const API_URL = resolveApiUrl();
 
 let authToken: string | null = null;
 
@@ -23,12 +35,29 @@ export type Candle = {
   volume?: number;
 };
 
+/** مزود | تجريبي | مخزن | غير معروف — لا تفترض مزوداً عند غياب الحقل */
+export type DataOriginKind = 'provider' | 'demo' | 'cache' | 'unknown';
+
+export type DataProvenance = {
+  kind: DataOriginKind;
+  /** unix seconds when this payload was produced / cached */
+  as_of?: number | null;
+  /** e.g. twelvedata | seed | mock | twelvedata_ws — never secrets */
+  channel?: string | null;
+};
+
 export type ChartSeries = {
   symbol: string;
   timeframe: string;
   candles: Candle[];
   change_pct: number;
   last: number;
+  data_source?: DataProvenance;
+};
+
+export type LiveTick = {
+  price: number;
+  source: DataProvenance;
 };
 
 export type Vote = {
@@ -297,6 +326,7 @@ export const api = {
         filters_matched: string[];
       }[];
       count: number;
+      provider_configured: boolean;
     }>('/api/screener/run', body),
   backtest: (body: {
     symbol: string;
