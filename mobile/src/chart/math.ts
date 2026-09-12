@@ -41,6 +41,23 @@ function sma(values: number[], period: number): (number | null)[] {
   return out;
 }
 
+function wma(values: number[], period: number): (number | null)[] {
+  const out: (number | null)[] = [];
+  const denom = (period * (period + 1)) / 2;
+  for (let i = 0; i < values.length; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    let sum = 0;
+    for (let w = 0; w < period; w++) {
+      sum += values[i - period + 1 + w] * (w + 1);
+    }
+    out.push(sum / denom);
+  }
+  return out;
+}
+
 function ema(values: number[], period: number): (number | null)[] {
   const out: (number | null)[] = [];
   const k = 2 / (period + 1);
@@ -65,6 +82,7 @@ export function computeOverlays(closes: number[]) {
   const sma20 = sma(closes, 20);
   const sma50 = sma(closes, 50);
   const ema21 = ema(closes, 21);
+  const wma20 = wma(closes, 20);
   const mid = sma(closes, 20);
   const upper: (number | null)[] = [];
   const lower: (number | null)[] = [];
@@ -81,7 +99,7 @@ export function computeOverlays(closes: number[]) {
     upper.push(mean + 2 * sd);
     lower.push(mean - 2 * sd);
   }
-  return { sma20, sma50, ema21, bbMid: mid, bbUpper: upper, bbLower: lower };
+  return { sma20, sma50, ema21, wma20, bbMid: mid, bbUpper: upper, bbLower: lower };
 }
 
 export function computeRsi(closes: number[], period = 14): (number | null)[] {

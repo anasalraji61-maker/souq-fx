@@ -7,6 +7,7 @@ export type ChartKind =
   | 'bars'
   | 'line'
   | 'area'
+  | 'baseline'
   | 'renko'
   | 'kagi'
   | 'pnf';
@@ -15,6 +16,7 @@ export type IndicatorId =
   | 'sma20'
   | 'sma50'
   | 'ema21'
+  | 'wma20'
   | 'bb'
   | 'rsi'
   | 'macd'
@@ -59,6 +61,7 @@ export const CHART_KINDS: { id: ChartKind; label: string }[] = [
   { id: 'bars', label: 'أعمدة' },
   { id: 'line', label: 'خط' },
   { id: 'area', label: 'منطقة' },
+  { id: 'baseline', label: 'خط أساس' },
   { id: 'renko', label: 'Renko' },
   { id: 'kagi', label: 'Kagi' },
   { id: 'pnf', label: 'P&F' },
@@ -68,6 +71,7 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'sma20', label: 'SMA 20' },
   { id: 'sma50', label: 'SMA 50' },
   { id: 'ema21', label: 'EMA 21' },
+  { id: 'wma20', label: 'WMA 20' },
   { id: 'bb', label: 'بولنجر' },
   { id: 'volume', label: 'فوليوم', pane: true },
   { id: 'volumeProfile', label: 'VP', pane: false },

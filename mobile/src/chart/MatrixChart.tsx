@@ -741,6 +741,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('sma20')) overlays.sma20.forEach(push);
     if (indicators.includes('sma50')) overlays.sma50.forEach(push);
     if (indicators.includes('ema21')) overlays.ema21.forEach(push);
+    if (indicators.includes('wma20')) overlays.wma20.forEach(push);
     if (indicators.includes('bb')) {
       overlays.bbUpper.forEach(push);
       overlays.bbLower.forEach(push);
@@ -1760,8 +1761,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ))
           : null}
 
-        {/* area / line */}
-        {(kind === 'line' || kind === 'area') &&
+        {/* area / line / baseline */}
+        {(kind === 'line' || kind === 'area' || kind === 'baseline') &&
           source.plot.map((c, i) => {
             if (i === 0) return null;
             const x1 = xOf(i - 1);
@@ -1770,6 +1771,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const y2 = yOf(c.close);
             const len = Math.hypot(x2 - x1, y2 - y1);
             const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+            const segColor =
+              kind === 'baseline'
+                ? c.close >= source.plot[0].close
+                  ? candleBull
+                  : candleBear
+                : accent;
             return (
               <View
                 key={`ln${i}`}
@@ -1778,8 +1785,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   left: x1,
                   top: y1,
                   width: len,
-                  height: kind === 'area' ? 2.5 : 1.6,
-                  backgroundColor: accent,
+                  height: kind === 'area' || kind === 'baseline' ? 2.5 : 1.6,
+                  backgroundColor: segColor,
                   opacity: 0.9,
                   transform: [{ rotate: `${angle}deg` }],
                   transformOrigin: 'left center',
@@ -1787,6 +1794,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             );
           })}
+
+        {/* خط أساس (Baseline): مرجع أفقي عند إغلاق أول شمعة ظاهرة بالنافذة */}
+        {kind === 'baseline' && source.plot.length > 0 ? (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.gridLine,
+              {
+                top: yOf(source.plot[0].close),
+                right: PRICE_AXIS_WIDTH,
+                borderTopColor: 'rgba(255,255,255,0.18)',
+              },
+            ]}
+          />
+        ) : null}
 
         {/* مسارات عمودية: أساسي فوق · ظلال من الأكبر للأصغر */}
         {shadowStack
@@ -2102,6 +2124,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <View
                 key={`e21${i}`}
                 style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: accent }]}
+              />
+            )
+          )}
+        {indicators.includes('wma20') &&
+          overlays.wma20.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`w20${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#F472B6' }]}
               />
             )
           )}
