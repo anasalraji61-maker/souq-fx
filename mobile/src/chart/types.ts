@@ -37,6 +37,8 @@ export type IndicatorId =
   | 'stddev'
   | 'aroon'
   | 'cmf'
+  | 'supertrend'
+  | 'keltner'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -112,6 +114,8 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'stddev', label: 'STDEV', pane: true },
   { id: 'aroon', label: 'Aroon', pane: true },
   { id: 'cmf', label: 'CMF', pane: true },
+  { id: 'supertrend', label: 'SuperTrend' },
+  { id: 'keltner', label: 'Keltner' },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

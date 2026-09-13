@@ -58,6 +58,7 @@ import {
   computeAtr,
   computeCci,
   computeCmf,
+  computeKeltner,
   computeMacd,
   computeMfi,
   computeObv,
@@ -67,6 +68,7 @@ import {
   computeRsi,
   computeStdDev,
   computeStoch,
+  computeSuperTrend,
   computeVwap,
   computeWilliamsR,
   formatPrice,
@@ -771,6 +773,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('cmf') ? computeCmf(source.plot) : null),
     [source.plot, indicators]
   );
+  const supertrend = useMemo(
+    () => (indicators.includes('supertrend') ? computeSuperTrend(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const keltner = useMemo(
+    () => (indicators.includes('keltner') ? computeKeltner(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -814,9 +824,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('hma20')) overlays.hma20.forEach(push);
     if (indicators.includes('vwap') && vwap) vwap.forEach(push);
     if (indicators.includes('psar') && psar) psar.forEach(push);
+    if (indicators.includes('supertrend') && supertrend) supertrend.value.forEach(push);
     if (indicators.includes('bb')) {
       overlays.bbUpper.forEach(push);
       overlays.bbLower.forEach(push);
+    }
+    if (indicators.includes('keltner') && keltner) {
+      keltner.upper.forEach(push);
+      keltner.lower.forEach(push);
     }
     if (comparePrices) comparePrices.forEach(push);
     // أبقِ الظلال ضمن المدى حتى لا تُقصّ عند التقريب (overflow hidden)
@@ -856,6 +871,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     tpo,
     vwap,
     psar,
+    supertrend,
+    keltner,
     priceScale,
     pricePan,
     syncFollow,
@@ -2258,6 +2275,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             )
           )}
+        {indicators.includes('supertrend') &&
+          supertrend &&
+          supertrend.value.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`st${i}`}
+                style={[
+                  styles.dot,
+                  {
+                    left: xOf(i) - 1.5,
+                    top: yOf(v) - 1.5,
+                    backgroundColor: supertrend.up[i] ? colors.bull : colors.bear,
+                  },
+                ]}
+              />
+            )
+          )}
         {indicators.includes('bb') &&
           overlays.bbUpper.map((v, i) => {
             const lo = overlays.bbLower[i];
@@ -2272,6 +2306,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   width: 2,
                   height: Math.max(2, yOf(lo) - yOf(v)),
                   backgroundColor: 'rgba(56,189,248,0.18)',
+                }}
+              />
+            );
+          })}
+        {indicators.includes('keltner') &&
+          keltner &&
+          keltner.upper.map((v, i) => {
+            const lo = keltner.lower[i];
+            if (v == null || lo == null) return null;
+            return (
+              <View
+                key={`kc${i}`}
+                style={{
+                  position: 'absolute',
+                  left: xOf(i) - 1,
+                  top: yOf(v),
+                  width: 2,
+                  height: Math.max(2, yOf(lo) - yOf(v)),
+                  backgroundColor: 'rgba(167,139,250,0.18)',
                 }}
               />
             );

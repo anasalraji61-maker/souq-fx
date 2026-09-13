@@ -580,4 +580,90 @@ export function computeAtr(candles: Candle[], period = 14): (number | null)[] {
   return sma(tr, period);
 }
 
+/**
+ * قنوات كلتنر (Keltner Channels) — نطاق حول EMA للإغلاق (emaPeriod=20 افتراضياً) بعرض
+ * multiplier×ATR (atrPeriod=10 افتراضياً، multiplier=2 افتراضياً — نفس القيم الشائعة بمعظم
+ * المنصات). بعكس بولنجر الذي يستخدم الانحراف المعياري للسعر نفسه لضبط عرض النطاق، كلتنر يستخدم
+ * ATR (متوسط المدى الحقيقي، مبني من High/Low/Close الشمعة كاملة) فتتفاعل حدوده مع التقلب الفعلي
+ * بالشموع لا فقط تشتت الإغلاق — نطاق أهدأ وأقل تذبذباً من بولنجر عادة. mid = ema(closes,
+ * emaPeriod)، upper/lower = mid ± multiplier×computeAtr(candles, atrPeriod).
+ */
+export function computeKeltner(
+  candles: Candle[],
+  emaPeriod = 20,
+  atrPeriod = 10,
+  multiplier = 2
+): { mid: (number | null)[]; upper: (number | null)[]; lower: (number | null)[] } {
+  const closes = candles.map((c) => c.close);
+  const mid = ema(closes, emaPeriod);
+  const atr = computeAtr(candles, atrPeriod);
+  const upper: (number | null)[] = [];
+  const lower: (number | null)[] = [];
+  for (let i = 0; i < candles.length; i++) {
+    if (mid[i] == null || atr[i] == null) {
+      upper.push(null);
+      lower.push(null);
+      continue;
+    }
+    upper.push(mid[i]! + multiplier * atr[i]!);
+    lower.push(mid[i]! - multiplier * atr[i]!);
+  }
+  return { mid, upper, lower };
+}
+
+/**
+ * SuperTrend (period=10 وmultiplier=3 القيمتان القياسيتان الشائعتان) — خط تتبّع اتجاه بنفس روح
+ * Parabolic SAR أعلاه (نقطة توقف/انعكاس واحدة تتبع السعر) لكن مبني على ATR بدل تسارع AF تراكمي.
+ * لكل شمعة: basicUpper = (أعلى+أدنى)/2 + multiplier×ATR، basicLower = (أعلى+أدنى)/2 −
+ * multiplier×ATR. الحد النهائي "ينزلق" باتجاه السعر فقط ولا يتراجع أبداً ضد الاتجاه الحالي
+ * (finalUpper يقل فقط ما لم يخترق الإغلاق السابق الحد العلوي السابق، والعكس لـfinalLower) — هذا
+ * ما يمنحه طابع "خط دعم/مقاومة متحرك لا يتراجع" المميّز لـSuperTrend. الاتجاه ينعكس فقط عند
+ * اختراق الإغلاق للحد النهائي المقابل. **تبسيط تنفيذي موثَّق**: بدل تتبّع "هل SuperTrend[i-1] يساوي
+ * FinalUpperBand[i-1] أو FinalLowerBand[i-1]" حرفياً (الصياغة المرجعية الشائعة)، تُستخدَم علامة
+ * اتجاه منطقية `trendUp` (صعودي = يتتبّع الحد السفلي) — مكافئة رياضياً تماماً للصياغة المرجعية
+ * (تحقّقت بالتتبّع اليدوي: كل شرط انعكاس بالصياغتين يؤدي لنفس القرار بالضبط)، وهي الأسلوب الشائع
+ * بمكتبات مفتوحة المصدر معروفة لنفس المؤشر. يعيد أيضاً `up: boolean` لكل نقطة لتلوين النقاط
+ * bull/bear بنفس فكرة تلوين پينات CCI/ROC/Aroon/CMF أعلاه.
+ */
+export function computeSuperTrend(
+  candles: Candle[],
+  period = 10,
+  multiplier = 3
+): { value: (number | null)[]; up: (boolean | null)[] } {
+  const n = candles.length;
+  const atr = computeAtr(candles, period);
+  const value: (number | null)[] = new Array(n).fill(null);
+  const up: (boolean | null)[] = new Array(n).fill(null);
+  let finalUpper = 0;
+  let finalLower = 0;
+  let trendUp = true;
+  let started = false;
+  for (let i = 0; i < n; i++) {
+    if (atr[i] == null) continue;
+    const mid = (candles[i].high + candles[i].low) / 2;
+    const basicUpper = mid + multiplier * atr[i]!;
+    const basicLower = mid - multiplier * atr[i]!;
+    if (!started) {
+      finalUpper = basicUpper;
+      finalLower = basicLower;
+      trendUp = candles[i].close >= mid;
+      value[i] = trendUp ? finalLower : finalUpper;
+      up[i] = trendUp;
+      started = true;
+      continue;
+    }
+    const prevClose = candles[i - 1].close;
+    finalUpper = basicUpper < finalUpper || prevClose > finalUpper ? basicUpper : finalUpper;
+    finalLower = basicLower > finalLower || prevClose < finalLower ? basicLower : finalLower;
+    if (trendUp && candles[i].close < finalLower) {
+      trendUp = false;
+    } else if (!trendUp && candles[i].close > finalUpper) {
+      trendUp = true;
+    }
+    value[i] = trendUp ? finalLower : finalUpper;
+    up[i] = trendUp;
+  }
+  return { value, up };
+}
+
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
