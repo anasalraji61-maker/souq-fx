@@ -55,6 +55,7 @@ export function SymbolSearchBar({ onPick, placeholder = 'بحث رمز... EUR, X
       {loading ? <ActivityIndicator color={colors.accent} style={{ marginTop: 6 }} /> : null}
       {results.slice(0, 8).map((r) => (
         <Pressable
+          accessibilityRole="button"
           key={`${r.symbol}-${r.exchange}`}
           style={({ pressed }) => [
             styles.row,

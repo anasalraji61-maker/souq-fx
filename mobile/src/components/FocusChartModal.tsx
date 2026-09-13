@@ -162,6 +162,7 @@ export function FocusChartModal({
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={[styles.top, phone && styles.topPhone]}>
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.closeButton,
               pressed && {
@@ -170,10 +171,12 @@ export function FocusChartModal({
               },
             ]}
             onPress={onClose}
+            accessibilityLabel="إغلاق"
           >
             <Text style={styles.close}>{phone ? '×' : 'إغلاق'}</Text>
           </Pressable>
           <Pressable
+            accessibilityRole="button"
             style={styles.symbolHeading}
             onPress={() => {
               if (phone) setPhonePickerOpen((open) => !open);
@@ -219,6 +222,7 @@ export function FocusChartModal({
               <Text style={styles.watchHint}>اضغط مرتين للمقارنة</Text>
               {watchlist.map((w) => (
                 <Pressable
+                  accessibilityRole="button"
                   key={w.symbol}
                   style={[
                     styles.watchItem,
@@ -252,6 +256,7 @@ export function FocusChartModal({
                   <View style={{ flexDirection: 'row-reverse', gap: 6 }}>
                     {watchlist.map((w) => (
                       <Pressable
+                        accessibilityRole="button"
                         key={w.symbol}
                         style={[styles.pill, sym === w.symbol && styles.pillOn]}
                         onPress={() => pick(w.symbol)}

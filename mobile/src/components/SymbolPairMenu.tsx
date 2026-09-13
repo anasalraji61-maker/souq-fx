@@ -45,6 +45,7 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
   return (
     <View style={styles.wrap}>
       <Pressable
+        accessibilityRole="button"
         style={({ pressed }) => [
           styles.trigger,
           large && styles.triggerLarge,
@@ -56,6 +57,7 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
         ]}
         onPress={toggle}
         onLongPress={onLongPress}
+        accessibilityLabel={open ? 'إغلاق قائمة الأزواج' : 'فتح قائمة الأزواج'}
       >
         <Text style={[styles.triggerText, large && styles.triggerTextLarge]}>{value}</Text>
         <Text style={[styles.caret, large && styles.caretLarge]}>{open ? '▴' : '▾'}</Text>
@@ -75,6 +77,7 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
               const on = item.symbol === value;
               return (
                 <Pressable
+                  accessibilityRole="button"
                   key={item.symbol}
                   style={({ pressed }) => [
                     styles.row,

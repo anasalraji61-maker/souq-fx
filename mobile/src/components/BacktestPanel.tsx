@@ -91,6 +91,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
       <View style={styles.row}>
         {STRATEGIES.map((s) => (
           <Pressable
+            accessibilityRole="button"
             key={s.id}
             style={[styles.chip, strategy === s.id && styles.chipOn]}
             onPress={() => setStrategy(s.id)}
@@ -100,6 +101,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         ))}
       </View>
       <Pressable
+        accessibilityRole="button"
         style={({ pressed }) => [
           styles.btn,
           pressed && {

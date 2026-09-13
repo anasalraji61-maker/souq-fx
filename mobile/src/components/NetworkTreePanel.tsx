@@ -143,6 +143,7 @@ function SlotBox({
         onSubmitEditing={() => void submit()}
       />
       <Pressable
+        accessibilityRole="button"
         style={({ pressed }) => [
           styles.slotGo,
           (draft.trim().length < 3 || localBusy) && styles.slotGoOff,
@@ -153,6 +154,7 @@ function SlotBox({
         ]}
         onPress={() => void submit()}
         disabled={draft.trim().length < 3 || localBusy || busy}
+        accessibilityLabel="تأكيد وضع العضو بالمربع"
       >
         <Text style={styles.slotGoText}>{localBusy ? '…' : '✓'}</Text>
       </Pressable>
@@ -300,6 +302,7 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
   return (
     <View style={[styles.wrap, !open && styles.wrapCollapsed]}>
       <Pressable
+        accessibilityRole="button"
         style={({ pressed }) => [
           styles.headBar,
           pressed && {
@@ -308,6 +311,7 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
           },
         ]}
         onPress={() => setOpen((v) => !v)}
+        accessibilityLabel={open ? 'طي شجرة الشبكة' : 'فتح شجرة الشبكة'}
       >
         <Text style={styles.chev}>{open ? '▾' : '▸'}</Text>
         <View style={{ flex: 1 }}>
@@ -322,6 +326,7 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
         </View>
         {open && enabled ? (
           <Pressable
+            accessibilityRole="button"
             onPress={() => void load()}
             hitSlop={8}
             style={({ pressed }) =>

@@ -105,6 +105,7 @@ export function CoursesScreen() {
 
         {schools.map((s) => (
           <Pressable
+            accessibilityRole="button"
             key={s.id}
             style={({ pressed }) => [
               styles.card,
@@ -147,6 +148,7 @@ export function CoursesScreen() {
                       </Text>
                       {lv.lectures.map((lec) => (
                         <Pressable
+                          accessibilityRole="button"
                           key={lec.id}
                           style={({ pressed }) => [
                             styles.lecRow,
@@ -169,6 +171,7 @@ export function CoursesScreen() {
                   ))}
                 </ScrollView>
                 <Pressable
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.close,
                     pressed && {

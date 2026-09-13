@@ -33,6 +33,7 @@ export function ScreenerMini() {
       <View style={styles.row}>
         {QUICK.map((q) => (
           <Pressable
+            accessibilityRole="button"
             key={q.id}
             style={({ pressed }) => [
               styles.chip,

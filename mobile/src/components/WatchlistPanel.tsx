@@ -88,6 +88,7 @@ export function WatchlistPanel({
       {saveError ? <Text style={styles.saveError}>{saveError}</Text> : null}
       <View style={styles.toolbar}>
         <Pressable
+          accessibilityRole="button"
           style={({ pressed }) => [
             styles.toolBtn,
             addable.length === 0 && styles.toolBtnDisabled,
@@ -102,6 +103,7 @@ export function WatchlistPanel({
           <Text style={styles.toolBtnText}>إضافة</Text>
         </Pressable>
         <Pressable
+          accessibilityRole="button"
           disabled={!ready}
           style={({ pressed }) => [
             styles.toolBtn,
@@ -122,6 +124,7 @@ export function WatchlistPanel({
             <View style={styles.emptyBox}>
               <Text style={styles.saveError}>تعذر تحميل قائمة المتابعة</Text>
               <Pressable
+                accessibilityRole="button"
                 style={({ pressed }) => [
                   styles.toolBtn,
                   pressed && {
@@ -139,6 +142,7 @@ export function WatchlistPanel({
           <View style={styles.emptyBox}>
             <Text style={styles.empty}>لا رموز في المتابعة</Text>
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.addEmptyBtn,
                 pressed && {
@@ -164,6 +168,7 @@ export function WatchlistPanel({
                 style={[styles.rowWrap, on && styles.rowWrapOn, isDxy && styles.rowDxy]}
               >
                 <Pressable
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.rowMain,
                     pressed && {
@@ -190,6 +195,7 @@ export function WatchlistPanel({
                 </Pressable>
                 <View style={styles.ops}>
                   <Pressable
+                    accessibilityRole="button"
                     style={({ pressed }) => [
                       styles.opBtn,
                       index === 0 && styles.opDisabled,
@@ -205,6 +211,7 @@ export function WatchlistPanel({
                     <Text style={styles.opText}>↑</Text>
                   </Pressable>
                   <Pressable
+                    accessibilityRole="button"
                     style={({ pressed }) => [
                       styles.opBtn,
                       index >= list.length - 1 && styles.opDisabled,
@@ -220,6 +227,7 @@ export function WatchlistPanel({
                     <Text style={styles.opText}>↓</Text>
                   </Pressable>
                   <Pressable
+                    accessibilityRole="button"
                     style={({ pressed }) => [
                       styles.opBtn,
                       pressed && {
@@ -249,6 +257,7 @@ export function WatchlistPanel({
               ) : (
                 addable.map((w) => (
                   <Pressable
+                    accessibilityRole="button"
                     key={w.symbol}
                     style={({ pressed }) => [
                       styles.modalRow,
@@ -266,6 +275,7 @@ export function WatchlistPanel({
               )}
             </ScrollView>
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.modalClose,
                 pressed && {

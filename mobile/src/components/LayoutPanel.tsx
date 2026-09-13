@@ -60,6 +60,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
         placeholderTextColor={colors.textDim}
       />
       <Pressable
+        accessibilityRole="button"
         style={({ pressed }) => [
           styles.btn,
           pressed && {
@@ -74,6 +75,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
       {layouts.map((l) => (
         <View key={l.id} style={styles.row}>
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.apply,
               pressed && {
@@ -90,6 +92,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
           </Pressable>
           {l.id !== 'default' ? (
             <Pressable
+              accessibilityRole="button"
               onPress={async () => {
                 await deleteLayout(l.id);
                 setLayouts((prev) => prev.filter((x) => x.id !== l.id));

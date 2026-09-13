@@ -82,6 +82,7 @@ export function MatrixBottomDock({
         <View style={styles.sheet}>
           <View style={styles.sheetHead}>
             <Pressable
+              accessibilityRole="button"
               onPress={() => onTab(null)}
               style={({ pressed }) => [
                 pressed && {
@@ -147,6 +148,7 @@ export function MatrixBottomDock({
           const on = tab === t.id;
           return (
             <Pressable
+              accessibilityRole="button"
               key={t.id}
               style={({ pressed }) => [
                 styles.tab,

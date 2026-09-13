@@ -125,18 +125,21 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
         />
         <View style={styles.row}>
           <Pressable
+            accessibilityRole="button"
             style={[styles.cond, condition === 'above' && styles.condOn]}
             onPress={() => setCondition('above')}
           >
             <Text style={[styles.condText, condition === 'above' && styles.condTextOn]}>فوق</Text>
           </Pressable>
           <Pressable
+            accessibilityRole="button"
             style={[styles.cond, condition === 'below' && styles.condOn]}
             onPress={() => setCondition('below')}
           >
             <Text style={[styles.condText, condition === 'below' && styles.condTextOn]}>تحت</Text>
           </Pressable>
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.addBtn,
               pressed && {
@@ -175,7 +178,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
                   </Text>
                   {a.note ? <Text style={styles.itemNote}>{a.note}</Text> : null}
                 </View>
-                <Pressable onPress={() => remove(a.id)}>
+                <Pressable accessibilityRole="button" onPress={() => remove(a.id)}>
                   <Text style={styles.del}>حذف</Text>
                 </Pressable>
               </View>

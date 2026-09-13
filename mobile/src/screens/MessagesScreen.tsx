@@ -71,6 +71,7 @@ export function MessagesScreen() {
         <StatusBar barStyle="light-content" />
         <View style={styles.chatHeader}>
           <Pressable
+            accessibilityRole="button"
             onPress={() => setPeer(null)}
             style={({ pressed }) =>
               pressed && {
@@ -113,6 +114,7 @@ export function MessagesScreen() {
               onSubmitEditing={send}
             />
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.send,
                 pressed && {
@@ -143,6 +145,7 @@ export function MessagesScreen() {
         contentContainerStyle={{ padding: spacing.md, gap: 8 }}
         renderItem={({ item }) => (
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.peerCard,
               pressed && {

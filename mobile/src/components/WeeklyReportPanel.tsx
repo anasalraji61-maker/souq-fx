@@ -90,9 +90,11 @@ export function WeeklyReportPanel({ grid = false }: Props) {
     id: k.id,
     node: (
       <Pressable
+        accessibilityRole="button"
         style={({ pressed }) => [
           styles.tile,
           active === k.id && styles.tileOn,
+          loading != null && loading !== k.id && styles.tileDisabled,
           pressed && {
             opacity: buttons.pressedOpacity,
             transform: [{ scale: buttons.pressedScale }],
@@ -100,6 +102,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
         ]}
         onPress={() => void run(k.id)}
         disabled={loading != null}
+        accessibilityLabel={k.title}
       >
         <Text style={styles.tileTitle}>{k.title}</Text>
         <Text style={styles.tileHint}>{k.hint}</Text>
@@ -133,10 +136,12 @@ export function WeeklyReportPanel({ grid = false }: Props) {
       <Text style={styles.sub}>أسبوعي · أداء · رأي المنصة ونصائح</Text>
       {KINDS.map((k) => (
         <Pressable
+          accessibilityRole="button"
           key={k.id}
           style={({ pressed }) => [
             styles.card,
             active === k.id && styles.cardOn,
+            loading != null && loading !== k.id && styles.cardDisabled,
             pressed && {
               opacity: buttons.pressedOpacity,
               transform: [{ scale: buttons.pressedScale }],
@@ -144,6 +149,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
           ]}
           onPress={() => void run(k.id)}
           disabled={loading != null}
+          accessibilityLabel={k.title}
         >
           <Text style={styles.cardTitle}>{k.title}</Text>
           <Text style={styles.cardHint}>{k.hint}</Text>
@@ -181,6 +187,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   tileOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  tileDisabled: { opacity: 0.4 },
   tileTitle: { color: colors.text, fontWeight: '900', textAlign: 'right', fontSize: 15 },
   tileHint: { color: colors.textDim, textAlign: 'right', fontSize: 12 },
   tileOpen: { color: colors.accent, fontWeight: '800', textAlign: 'right', fontSize: 11 },
@@ -192,6 +199,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: 4,
   },
+  cardDisabled: { opacity: 0.4 },
   cardOn: { borderColor: colors.accent },
   cardTitle: { color: colors.text, fontWeight: '800', textAlign: 'right', fontSize: 14 },
   cardHint: { color: colors.textDim, textAlign: 'right', fontSize: 11 },

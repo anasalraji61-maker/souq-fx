@@ -78,6 +78,7 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
           onSubmitEditing={send}
         />
         <Pressable
+          accessibilityRole="button"
           style={({ pressed }) => [
             styles.send,
             pressed && {

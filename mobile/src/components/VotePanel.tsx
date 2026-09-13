@@ -75,6 +75,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               </Text>
               <View style={styles.actions}>
                 <Pressable
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.btn,
                     styles.yes,
@@ -88,6 +89,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                   <Text style={styles.btnText}>موافق</Text>
                 </Pressable>
                 <Pressable
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.btn,
                     styles.no,

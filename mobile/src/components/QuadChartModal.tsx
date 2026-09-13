@@ -70,6 +70,7 @@ export function QuadChartModal({
       <SafeAreaView style={styles.safe}>
         <View style={styles.top}>
           <Pressable
+            accessibilityRole="button"
             onPress={onClose}
             style={({ pressed }) => [
               pressed && {

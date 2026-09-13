@@ -56,6 +56,7 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
         <View style={styles.filters}>
           {CURRENCIES.map((c) => (
             <Pressable
+              accessibilityRole="button"
               key={c}
               style={({ pressed }) => [
                 styles.chip,
@@ -75,6 +76,7 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
           ))}
           {(['ALL', 'high', 'medium', 'low'] as const).map((imp) => (
             <Pressable
+              accessibilityRole="button"
               key={imp}
               style={({ pressed }) => [
                 styles.chip,

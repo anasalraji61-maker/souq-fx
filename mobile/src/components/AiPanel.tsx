@@ -95,6 +95,7 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
           onSubmitEditing={ask}
         />
         <Pressable
+          accessibilityRole="button"
           disabled={loading}
           style={({ pressed }) => [
             styles.send,

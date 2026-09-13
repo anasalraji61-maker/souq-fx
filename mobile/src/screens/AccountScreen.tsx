@@ -135,6 +135,7 @@ export function AccountScreen() {
         <View style={[styles.langRow, rtl && styles.langRowRtl]}>
           {langs.map((l) => (
             <Pressable
+              accessibilityRole="button"
               key={l.id}
               style={[styles.langChip, lang === l.id && styles.langChipOn]}
               onPress={() => void setLang(l.id)}
@@ -180,6 +181,7 @@ export function AccountScreen() {
           ) : null}
 
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.btn,
               pressed && {
@@ -198,12 +200,14 @@ export function AccountScreen() {
         <View style={styles.card}>
           <View style={[styles.tabs, rtl && styles.tabsRtl]}>
             <Pressable
+              accessibilityRole="button"
               style={[styles.tab, mode === 'login' && styles.tabOn]}
               onPress={() => setMode('login')}
             >
               <Text style={[styles.tabText, mode === 'login' && styles.tabTextOn]}>{t.login}</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
               style={[styles.tab, mode === 'register' && styles.tabOn]}
               onPress={() => setMode('register')}
             >
@@ -250,6 +254,7 @@ export function AccountScreen() {
             />
             {err ? <Text style={[styles.err, { textAlign: align }]}>{err}</Text> : null}
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.btn,
                 pressed && {
@@ -272,6 +277,7 @@ export function AccountScreen() {
               <View style={[styles.roleRow, rtl && styles.roleRowRtl]}>
                 {roles.map((r) => (
                   <Pressable
+                    accessibilityRole="button"
                     key={r.id}
                     style={[styles.roleChip, role === r.id && styles.roleChipOn]}
                     onPress={() => setRole(r.id)}
@@ -295,6 +301,7 @@ export function AccountScreen() {
                   <Text style={[styles.label, { textAlign: align }]}>{t.underSponsor}</Text>
                   <View style={[styles.tabs, rtl && styles.tabsRtl]}>
                     <Pressable
+                      accessibilityRole="button"
                       style={[styles.tab, side === 'left' && styles.tabOn]}
                       onPress={() => setSide('left')}
                     >
@@ -303,6 +310,7 @@ export function AccountScreen() {
                       </Text>
                     </Pressable>
                     <Pressable
+                      accessibilityRole="button"
                       style={[styles.tab, side === 'right' && styles.tabOn]}
                       onPress={() => setSide('right')}
                     >

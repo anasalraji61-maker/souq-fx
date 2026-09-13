@@ -119,6 +119,7 @@ export function PairDrumWheel({ value, onChange, onClose }: Props) {
         : {})}
     >
       <Pressable
+        accessibilityRole="button"
         style={({ pressed }) => [
           styles.side,
           pressed && {
@@ -134,6 +135,7 @@ export function PairDrumWheel({ value, onChange, onClose }: Props) {
       </Pressable>
 
       <Pressable
+        accessibilityRole="button"
         style={({ pressed }) => [
           styles.mid,
           pressed && {
@@ -149,6 +151,7 @@ export function PairDrumWheel({ value, onChange, onClose }: Props) {
       </Pressable>
 
       <Pressable
+        accessibilityRole="button"
         style={({ pressed }) => [
           styles.side,
           pressed && {

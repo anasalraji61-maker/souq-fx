@@ -97,6 +97,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
       <View style={styles.row}>
         {(['rsi', 'ma_cross', 'macd_cross'] as const).map((t) => (
           <Pressable
+            accessibilityRole="button"
             key={t}
             style={({ pressed }) => [
               styles.chip,
@@ -116,6 +117,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
         <>
           <View style={styles.row}>
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.chip,
                 condition === 'below' && styles.chipOn,
@@ -129,6 +131,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
               <Text style={styles.chipText}>RSI تحت</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.chip,
                 condition === 'above' && styles.chipOn,
@@ -147,6 +150,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
       ) : (
         <View style={styles.row}>
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.chip,
               condition === 'cross_up' && styles.chipOn,
@@ -160,6 +164,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
             <Text style={styles.chipText}>Cross Up</Text>
           </Pressable>
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.chip,
               condition === 'cross_down' && styles.chipOn,
@@ -175,6 +180,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
         </View>
       )}
       <Pressable
+        accessibilityRole="button"
         style={({ pressed }) => [
           styles.btn,
           pressed && {
@@ -196,7 +202,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
                 {a.value != null ? ` ${a.value}` : ''}
                 {a.triggered ? ' ✓' : ''}
               </Text>
-              <Pressable onPress={() => api.deleteIndicatorAlert(a.id).then(refresh)}>
+              <Pressable accessibilityRole="button" onPress={() => api.deleteIndicatorAlert(a.id).then(refresh)}>
                 <Text style={styles.del}>حذف</Text>
               </Pressable>
             </View>

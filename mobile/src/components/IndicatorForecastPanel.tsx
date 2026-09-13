@@ -87,8 +87,10 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
     <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
       <View style={[styles.head, embedded && frameEmbedHead]}>
         <Pressable
+          accessibilityRole="button"
           style={({ pressed }) => [
             styles.refresh,
+            loading && styles.refreshDisabled,
             pressed && {
               opacity: buttons.pressedOpacity,
               transform: [{ scale: buttons.pressedScale }],
@@ -96,8 +98,9 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           ]}
           onPress={() => void run()}
           disabled={loading}
+          accessibilityLabel="توقّع المؤشرات"
         >
-          <Text style={styles.refreshText}>توقّع</Text>
+          <Text style={styles.refreshText}>{loading ? '...' : 'توقّع'}</Text>
         </Pressable>
         <View style={embedded ? frameEmbedTitleBlock : undefined}>
           <Text style={[styles.title, embedded && frameEmbedTitle]}>توقعات المؤشرات</Text>
@@ -113,6 +116,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           const on = enabled.includes(opt.id);
           return (
             <Pressable
+              accessibilityRole="button"
               key={opt.id}
               style={[styles.chip, on && styles.chipOn]}
               onPress={() => toggle(opt.id)}
@@ -190,6 +194,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.accent,
   },
+  refreshDisabled: { opacity: 0.5 },
   refreshText: { color: colors.accent, fontWeight: '700', fontSize: 11 },
   chips: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6 },
   chip: {

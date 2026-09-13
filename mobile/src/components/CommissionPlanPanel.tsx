@@ -75,6 +75,7 @@ export function CommissionPlanPanel() {
   return (
     <View style={[styles.wrap, !open && styles.wrapCollapsed]}>
       <Pressable
+        accessibilityRole="button"
         style={({ pressed }) => [
           styles.head,
           pressed && {
@@ -83,6 +84,7 @@ export function CommissionPlanPanel() {
           },
         ]}
         onPress={() => setOpen((v) => !v)}
+        accessibilityLabel={open ? 'طي تقرير العمولات' : 'فتح تقرير العمولات'}
       >
         <Text style={styles.chev}>{open ? '▾' : '▸'}</Text>
         <View style={{ flex: 1 }}>
@@ -93,6 +95,7 @@ export function CommissionPlanPanel() {
         </View>
         {open ? (
           <Pressable
+            accessibilityRole="button"
             onPress={() => void load()}
             hitSlop={8}
             style={({ pressed }) =>

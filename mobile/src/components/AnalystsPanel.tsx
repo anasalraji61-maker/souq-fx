@@ -64,6 +64,7 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
     <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
       <View style={[styles.head, embedded && frameEmbedHead]}>
         <Pressable
+          accessibilityRole="button"
           style={({ pressed }) => [
             styles.refresh,
             pressed && {

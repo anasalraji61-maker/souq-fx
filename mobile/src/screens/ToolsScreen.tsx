@@ -146,6 +146,7 @@ export function ToolsScreen() {
         <View style={styles.tabs}>
           {TABS.map((t) => (
             <Pressable
+              accessibilityRole="button"
               key={t.id}
               style={({ pressed }) => [
                 styles.tab,
@@ -174,6 +175,7 @@ export function ToolsScreen() {
             <View style={styles.filters}>
               {['EURUSD', 'GBPUSD', 'XAUUSD', 'DXY'].map((s) => (
                 <Pressable
+                  accessibilityRole="button"
                   key={s}
                   style={({ pressed }) => [
                     styles.chip,
@@ -242,6 +244,7 @@ export function ToolsScreen() {
           <View style={styles.filters}>
             {FILTERS.map((f) => (
               <Pressable
+                accessibilityRole="button"
                 key={f.id}
                 style={({ pressed }) => [
                   styles.chip,
@@ -260,8 +263,10 @@ export function ToolsScreen() {
             ))}
           </View>
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.runBtn,
+              !loading && !selected.length && styles.runBtnDisabled,
               pressed && {
                 opacity: buttons.pressedOpacity,
                 transform: [{ scale: buttons.pressedScale }],
@@ -269,6 +274,7 @@ export function ToolsScreen() {
             ]}
             onPress={run}
             disabled={loading || !selected.length}
+            accessibilityLabel={!selected.length ? 'تشغيل Screener، اختر فلتراً أولاً' : 'تشغيل Screener'}
           >
             <Text style={styles.runText}>{loading ? 'جاري الفحص...' : 'تشغيل Screener'}</Text>
           </Pressable>
@@ -410,6 +416,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
+  runBtnDisabled: { opacity: 0.45 },
   runText: { color: '#042F2E', fontWeight: '800' },
   scanHint: {
     color: colors.warn,

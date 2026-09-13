@@ -235,6 +235,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
     <View style={styles.wrap}>
       <View style={styles.top}>
         <Pressable
+          accessibilityRole="button"
           onPress={onClose}
           style={({ pressed }) =>
             pressed && {
@@ -264,6 +265,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               شارت تفاعلي · {chartMeta.symbol} · {chartMeta.tf}
             </Text>
             <Pressable
+              accessibilityRole="button"
               onPress={() => setShowChart(false)}
               style={({ pressed }) =>
                 pressed && {
@@ -285,6 +287,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         </View>
       ) : !showChart ? (
         <Pressable
+          accessibilityRole="button"
           onPress={() => setShowChart(true)}
           style={({ pressed }) =>
             pressed && {
@@ -321,6 +324,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           <Text style={styles.clarifyTitle}>توضيح بعد إيقاف الشرح</Text>
           <Text style={styles.clarifyText}>{clarification}</Text>
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.resumeBtn,
               pressed && {
@@ -337,8 +341,10 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         <View style={styles.controls}>
           <View style={styles.navRow}>
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.navBtn,
+                (segIndex === 0 || paused) && styles.navBtnDisabled,
                 pressed && {
                   opacity: buttons.pressedOpacity,
                   transform: [{ scale: buttons.pressedScale }],
@@ -346,12 +352,15 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               ]}
               onPress={prev}
               disabled={segIndex === 0 || paused}
+              accessibilityLabel="الفقرة السابقة"
             >
               <Text style={styles.navText}>السابق</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.navBtn,
+                (paused || segIndex >= segments.length - 1) && styles.navBtnDisabled,
                 pressed && {
                   opacity: buttons.pressedOpacity,
                   transform: [{ scale: buttons.pressedScale }],
@@ -359,6 +368,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               ]}
               onPress={next}
               disabled={paused || segIndex >= segments.length - 1}
+              accessibilityLabel="الفقرة التالية"
             >
               <Text style={styles.navText}>التالي</Text>
             </Pressable>
@@ -375,6 +385,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               editable={!asking}
             />
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.askBtn,
                 pressed && {
@@ -503,6 +514,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     alignItems: 'center',
   },
+  navBtnDisabled: { opacity: 0.4 },
   navText: { color: colors.text, fontWeight: '700' },
   interruptLabel: {
     color: colors.warn,

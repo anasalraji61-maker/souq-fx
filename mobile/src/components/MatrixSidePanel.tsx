@@ -87,6 +87,7 @@ export function MatrixSidePanel({
         <View style={styles.sheet}>
           <View style={styles.head}>
             <Pressable
+              accessibilityRole="button"
               onPress={onClose}
               style={({ pressed }) => [
                 pressed && {
@@ -104,6 +105,7 @@ export function MatrixSidePanel({
               <View style={styles.grid}>
                 {DRAW_TOOLS.filter((t) => t.id !== 'none').map((t) => (
                   <Pressable
+                    accessibilityRole="button"
                     key={t.id}
                     style={({ pressed }) => [
                       styles.cell,
@@ -129,6 +131,7 @@ export function MatrixSidePanel({
                   const on = activeIndicators.includes(ind.id);
                   return (
                     <Pressable
+                      accessibilityRole="button"
                       key={ind.id}
                       style={({ pressed }) => [
                         styles.cell,
@@ -151,6 +154,7 @@ export function MatrixSidePanel({
               <View style={styles.grid}>
                 {CHART_KINDS.map((k) => (
                   <Pressable
+                    accessibilityRole="button"
                     key={k.id}
                     style={({ pressed }) => [
                       styles.cell,

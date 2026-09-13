@@ -124,6 +124,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
     <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
       <View style={[styles.head, embedded && frameEmbedHead]}>
         <Pressable
+          accessibilityRole="button"
           style={({ pressed }) => [
             styles.refresh,
             pressed && {
@@ -149,6 +150,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
             const on = selected.includes(s.id);
             return (
               <Pressable
+                accessibilityRole="button"
                 key={s.id}
                 style={[styles.chip, on && styles.chipOn]}
                 onPress={() => toggle(s.id)}

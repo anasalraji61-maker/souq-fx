@@ -24,6 +24,7 @@ export function TimeframeBar({ value, onChange, compact, arabic = false }: Props
         const label = arabic ? TIMEFRAME_LABELS[tf] : tf;
         return (
           <Pressable
+            accessibilityRole="button"
             key={tf}
             onPress={() => onChange(tf)}
             style={({ pressed }) => [

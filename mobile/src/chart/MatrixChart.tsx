@@ -75,9 +75,11 @@ import {
   computeDpo,
   computeEnvelopes,
   computeEom,
+  computeFisherTransform,
   computeForceIndex,
   computeHistoricalVolatility,
   computeKeltner,
+  computeKst,
   computeLinRegR2,
   computeLinRegSlope,
   computeMacd,
@@ -996,6 +998,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('ulcer') ? computeUlcerIndex(closes) : null),
     [closes, indicators]
   );
+  const fisher = useMemo(
+    () => (indicators.includes('fisher') ? computeFisherTransform(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const kst = useMemo(
+    () => (indicators.includes('kst') ? computeKst(closes) : null),
+    [closes, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1049,6 +1059,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('pvi') ? 1 : 0) +
     (indicators.includes('ravi') ? 1 : 0) +
     (indicators.includes('ulcer') ? 1 : 0) +
+    (indicators.includes('fisher') ? 1 : 0) +
+    (indicators.includes('kst') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -4237,6 +4249,62 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   />
                 )
               );
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {fisher ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Fisher Transform</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = fisher.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxF = Math.max(...vals, 1e-9);
+              return fisher.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxF) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {kst ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>KST</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = kst.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxK = Math.max(...vals, 1e-9);
+              return kst.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxK) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
             })()}
           </View>
         </View>

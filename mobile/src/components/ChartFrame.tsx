@@ -143,6 +143,7 @@ export function ChartFrame({
 
   return (
     <Pressable
+      accessibilityRole="button"
       style={[styles.wrap, size === 'hero' && styles.heroWrap, fill && styles.wrapFill]}
       onPress={onSyncActivate}
       disabled={!onSyncActivate}
@@ -161,6 +162,7 @@ export function ChartFrame({
         <View style={styles.titleRow}>
           <View style={[styles.dot, { backgroundColor: accent }]} />
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.symbolHit,
               pressed && {
@@ -171,6 +173,7 @@ export function ChartFrame({
             onPress={() => {
               if (onSymbolChange) setWheelOpen((v) => !v);
             }}
+            accessibilityLabel={onSymbolChange ? 'تغيير الرمز' : undefined}
           >
             <Text
               style={styles.symbol}
@@ -233,6 +236,7 @@ export function ChartFrame({
           </Text>
           {onFocus ? (
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.focusBtn,
                 pressed && {
@@ -241,6 +245,7 @@ export function ChartFrame({
                 },
               ]}
               onPress={onFocus}
+              accessibilityLabel="فتح الشارت بملء الشاشة"
             >
               <Text style={styles.focusBtnText}>⛶</Text>
             </Pressable>

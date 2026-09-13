@@ -114,12 +114,14 @@ export function TradeJournalPanel() {
 
       <View style={styles.row}>
         <Pressable
+          accessibilityRole="button"
           style={[styles.chip, side === 'buy' && styles.chipOn]}
           onPress={() => setSide('buy')}
         >
           <Text style={[styles.chipText, side === 'buy' && styles.chipTextOn]}>Buy</Text>
         </Pressable>
         <Pressable
+          accessibilityRole="button"
           style={[styles.chip, side === 'sell' && styles.chipOn]}
           onPress={() => setSide('sell')}
         >
@@ -157,6 +159,7 @@ export function TradeJournalPanel() {
         placeholderTextColor={colors.textDim}
       />
       <Pressable
+        accessibilityRole="button"
         style={({ pressed }) => [
           styles.btn,
           pressed && {
@@ -184,7 +187,7 @@ export function TradeJournalPanel() {
               {t.note ? ` · ${t.note}` : ''}
             </Text>
             {t.status === 'open' ? (
-              <Pressable onPress={() => void closeOpen(t.id)}>
+              <Pressable accessibilityRole="button" onPress={() => void closeOpen(t.id)}>
                 <Text style={styles.closeLink}>إغلاق بسعر خانة الخروج</Text>
               </Pressable>
             ) : null}

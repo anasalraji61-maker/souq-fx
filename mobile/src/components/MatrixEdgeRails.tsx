@@ -64,6 +64,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
         const on = activeLens === l.id;
         return (
           <Pressable
+            accessibilityRole="button"
             key={l.id}
             style={({ pressed }) => [
               styles.railBtn,
@@ -74,6 +75,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
               },
             ]}
             onPress={() => onLens(l.id)}
+            accessibilityLabel={`عدسة: ${l.label}`}
           >
             <Text style={[styles.railMark, on && styles.railMarkOn]}>{LENS_MARK[l.id]}</Text>
             <Text style={[styles.railTip, on && styles.railTipOn]}>{l.label}</Text>
@@ -87,6 +89,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
           const on = activeTool === t.id;
           return (
             <Pressable
+              accessibilityRole="button"
               key={t.id}
               style={({ pressed }) => [
                 styles.railBtn,
@@ -97,6 +100,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
                 },
               ]}
               onPress={() => onTool(t.id)}
+              accessibilityLabel={`أداة رسم: ${t.label}`}
             >
               <Text style={[styles.railMark, on && styles.railMarkOn]}>
                 {DRAW_MARK[t.id] ?? '·'}
@@ -109,6 +113,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
         })}
         <View style={styles.railSep} />
         <Pressable
+          accessibilityRole="button"
           style={({ pressed }) => [
             styles.railBtn,
             pressed && {
@@ -117,6 +122,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
             },
           ]}
           onPress={onQuad}
+          accessibilityLabel="فتح تخطيط 2×2"
         >
           <Text style={styles.railMark}>▦</Text>
           <Text style={styles.railTip}>2×2</Text>
@@ -151,6 +157,7 @@ export function RightPanelRail({
               const on = squareOn(count);
               return (
                 <Pressable
+                  accessibilityRole="button"
                   key={`sq-${count}`}
                   accessibilityLabel={`${count} فريم مربع`}
                   style={({ pressed }) => [
@@ -186,6 +193,7 @@ export function RightPanelRail({
               const on = rectOn(count);
               return (
                 <Pressable
+                  accessibilityRole="button"
                   key={`rect-${count}`}
                   accessibilityLabel={`${count} فريم مستطيل`}
                   style={({ pressed }) => [
@@ -226,6 +234,7 @@ export function RightPanelRail({
           </View>
           <View style={styles.railSep} />
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.railTag,
               layoutShape === 'shadow' && styles.layoutBtnOn,
@@ -256,6 +265,7 @@ export function RightPanelRail({
           const on = activePanel === x.id;
           return (
             <Pressable
+              accessibilityRole="button"
               key={x.id}
               style={({ pressed }) => [
                 styles.railBtn,
@@ -266,6 +276,7 @@ export function RightPanelRail({
                 },
               ]}
               onPress={() => onOpenPanel(activePanel === x.id ? null : x.id)}
+              accessibilityLabel={`لوحة: ${x.tip}`}
             >
               <Text style={[styles.railMark, on && styles.railMarkOn]}>{x.mark}</Text>
               <Text style={[styles.railTip, on && styles.railTipOn]}>{x.tip}</Text>

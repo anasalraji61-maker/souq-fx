@@ -82,6 +82,8 @@ export type IndicatorId =
   | 'pvi'
   | 'ravi'
   | 'ulcer'
+  | 'fisher'
+  | 'kst'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -202,6 +204,8 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'pvi', label: 'PVI', pane: true },
   { id: 'ravi', label: 'RAVI', pane: true },
   { id: 'ulcer', label: 'Ulcer Index', pane: true },
+  { id: 'fisher', label: 'Fisher Transform', pane: true },
+  { id: 'kst', label: 'KST', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

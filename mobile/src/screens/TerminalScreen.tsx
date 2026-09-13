@@ -778,6 +778,7 @@ export function TerminalScreen() {
               const active = layoutCount === count && layoutShape === 'square';
               return (
                 <Pressable
+                  accessibilityRole="button"
                   key={`sq-${count}`}
                   style={({ pressed }) => [
                     styles.layoutSwitchBtn,
@@ -820,6 +821,7 @@ export function TerminalScreen() {
               const active = layoutCount === count && layoutShape === 'rect';
               return (
                 <Pressable
+                  accessibilityRole="button"
                   key={`rect-${count}`}
                   style={({ pressed }) => [
                     styles.layoutSwitchBtn,
@@ -865,6 +867,7 @@ export function TerminalScreen() {
             })}
             <View style={styles.layoutSwitchSep} />
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.layoutSwitcherTag,
                 layoutShape === 'shadow' && styles.layoutSwitchBtnOn,
@@ -890,6 +893,7 @@ export function TerminalScreen() {
 
         {!phone && multiCharts ? (
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.timeSyncBtn,
               timeSyncActive && styles.timeSyncBtnOn,
@@ -924,6 +928,7 @@ export function TerminalScreen() {
         >
           {topActions.map((a) => (
             <Pressable
+              accessibilityRole="button"
               key={a.id}
               style={({ pressed }) => [
                 styles.topBtn,
@@ -953,6 +958,7 @@ export function TerminalScreen() {
         >
           {CHART_KINDS.map((k) => (
             <Pressable
+              accessibilityRole="button"
               key={k.id}
               style={({ pressed }) => [
                 styles.kindChip,
@@ -982,6 +988,7 @@ export function TerminalScreen() {
         >
           {(phoneWatchSymbols ?? WATCHLIST.map((w) => w.symbol)).map((sym) => (
             <Pressable
+              accessibilityRole="button"
               key={sym}
               style={({ pressed }) => [
                 styles.pill,
@@ -999,6 +1006,7 @@ export function TerminalScreen() {
             </Pressable>
           ))}
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.pill,
               pressed && {
@@ -1067,6 +1075,7 @@ export function TerminalScreen() {
                 <Text style={styles.shadowTfLabel}>أساسي</Text>
                 {TIMEFRAMES.map((range) => (
                   <Pressable
+                    accessibilityRole="button"
                     key={`p-${range}`}
                     style={({ pressed }) => [
                       styles.rangeBtn,
@@ -1120,6 +1129,7 @@ export function TerminalScreen() {
                       const locked = range === tf || !enabled;
                       return (
                         <Pressable
+                          accessibilityRole="button"
                           key={`${label}-${range}`}
                           style={({ pressed }) => [
                             styles.rangeBtn,
@@ -1199,6 +1209,7 @@ export function TerminalScreen() {
               </Text>
               <View style={styles.rangeSpacer} />
               <Pressable
+                accessibilityRole="button"
                 style={({ pressed }) => [
                   styles.fullscreenBtn,
                   pressed && {
@@ -1207,6 +1218,7 @@ export function TerminalScreen() {
                   },
                 ]}
                 onPress={() => openFocus(symbol, tf)}
+                accessibilityLabel="فتح الشارت بملء الشاشة"
               >
                 <Text style={styles.fullscreenText}>ملء الشاشة ⛶</Text>
               </Pressable>
@@ -1283,6 +1295,7 @@ export function TerminalScreen() {
             <View style={styles.rangeBar}>
               {TIMEFRAMES.map((range) => (
                 <Pressable
+                  accessibilityRole="button"
                   key={range}
                   style={({ pressed }) => [
                     styles.rangeBtn,
@@ -1299,6 +1312,7 @@ export function TerminalScreen() {
               ))}
               <View style={styles.rangeSpacer} />
               <Pressable
+                accessibilityRole="button"
                 style={({ pressed }) => [
                   styles.fullscreenBtn,
                   pressed && {
@@ -1307,6 +1321,7 @@ export function TerminalScreen() {
                   },
                 ]}
                 onPress={() => openFocus(symbol, tf)}
+                accessibilityLabel="فتح الشارت بملء الشاشة"
               >
                 <Text style={styles.fullscreenText}>ملء الشاشة ⛶</Text>
               </Pressable>
@@ -1522,6 +1537,7 @@ export function TerminalScreen() {
         <SafeAreaView style={styles.phoneWatchModal}>
           <View style={styles.phoneWatchModalBar}>
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.phoneWatchClose,
                 pressed && {
