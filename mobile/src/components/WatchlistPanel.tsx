@@ -98,6 +98,7 @@ export function WatchlistPanel({
             },
           ]}
           disabled={!ready || addable.length === 0}
+          accessibilityState={{ disabled: !ready || addable.length === 0 }}
           onPress={() => setAddOpen(true)}
         >
           <Text style={styles.toolBtnText}>إضافة</Text>
@@ -105,6 +106,7 @@ export function WatchlistPanel({
         <Pressable
           accessibilityRole="button"
           disabled={!ready}
+          accessibilityState={{ disabled: !ready }}
           style={({ pressed }) => [
             styles.toolBtn,
             pressed && {
@@ -205,6 +207,7 @@ export function WatchlistPanel({
                       },
                     ]}
                     disabled={index === 0}
+                    accessibilityState={{ disabled: index === 0 }}
                     onPress={() => void moveWatchSymbol(sym, -1)}
                     accessibilityLabel="تحريك لأعلى"
                   >
@@ -221,6 +224,7 @@ export function WatchlistPanel({
                       },
                     ]}
                     disabled={index >= list.length - 1}
+                    accessibilityState={{ disabled: index >= list.length - 1 }}
                     onPress={() => void moveWatchSymbol(sym, 1)}
                     accessibilityLabel="تحريك لأسفل"
                   >

@@ -102,6 +102,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
         ]}
         onPress={() => void run(k.id)}
         disabled={loading != null}
+        accessibilityState={{ disabled: loading != null }}
         accessibilityLabel={k.title}
       >
         <Text style={styles.tileTitle}>{k.title}</Text>
@@ -149,6 +150,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
           ]}
           onPress={() => void run(k.id)}
           disabled={loading != null}
+          accessibilityState={{ disabled: loading != null }}
           accessibilityLabel={k.title}
         >
           <Text style={styles.cardTitle}>{k.title}</Text>

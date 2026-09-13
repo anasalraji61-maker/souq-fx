@@ -112,6 +112,7 @@ export function MessagesScreen() {
               placeholder="رسالة خاصة..."
               placeholderTextColor={colors.textDim}
               onSubmitEditing={send}
+              accessibilityLabel="رسالة خاصة"
             />
             <Pressable
               accessibilityRole="button"

@@ -147,6 +147,7 @@ export function ChartFrame({
       style={[styles.wrap, size === 'hero' && styles.heroWrap, fill && styles.wrapFill]}
       onPress={onSyncActivate}
       disabled={!onSyncActivate}
+      accessibilityState={{ disabled: !onSyncActivate }}
     >
       {showTimeframes && onTimeframeChange ? (
         <View style={styles.tfTopLeft}>

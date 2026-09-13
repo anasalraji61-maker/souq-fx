@@ -1141,6 +1141,7 @@ export function TerminalScreen() {
                             },
                           ]}
                           disabled={locked}
+                          accessibilityState={{ disabled: locked }}
                           onPress={() => setShadowSlot(slot, range)}
                         >
                           <Text

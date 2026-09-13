@@ -58,6 +58,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
         onChangeText={setName}
         placeholder="اسم التخطيط"
         placeholderTextColor={colors.textDim}
+        accessibilityLabel="اسم التخطيط"
       />
       <Pressable
         accessibilityRole="button"

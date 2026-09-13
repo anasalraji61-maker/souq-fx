@@ -93,10 +93,12 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
           placeholder={`مثال: تحليل ${symbol} اليوم؟`}
           placeholderTextColor={colors.textDim}
           onSubmitEditing={ask}
+          accessibilityLabel="سؤال لمساعد الذكاء الاصطناعي"
         />
         <Pressable
           accessibilityRole="button"
           disabled={loading}
+          accessibilityState={{ disabled: loading }}
           style={({ pressed }) => [
             styles.send,
             loading && styles.sendDisabled,

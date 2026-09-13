@@ -134,6 +134,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
           ]}
           onPress={() => void run()}
           disabled={loading}
+          accessibilityState={{ disabled: loading }}
         >
           <Text style={styles.refreshText}>احسب</Text>
         </Pressable>

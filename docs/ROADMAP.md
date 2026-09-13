@@ -439,6 +439,63 @@ HANDOFF.md لتفاصيل حادثة تعارض كتابة خامسة طالت m
       (DomLitePanel/FrameSizedGrid/NewsPanel/SubscriptionPlansPanel/SymbolSnapshot/
       TreeDiagramSketch) بقيت بلا تغيير كما وثَّقت مهمة 25/27 سابقاً. تفاصيل كاملة بـHANDOFF.md.
 
+- [x] **تشغيل مجدول (2026-09-13)**: **باكلوج ميكانيكي رابع** — بعد استنفاد باكلوجات الأزرار
+      (ظل/ضغط، accessibilityLabel، accessibilityRole) وباكلوج "تعطيل بلا إشارة بصرية"، فحصت هذه
+      المرة عنصر `TextInput` (لم يُفحص أي تشغيل سابق — كل الفحوصات السابقة اقتصرت على `Pressable`).
+      **الاكتشاف**: `grep <TextInput` بكل `mobile/src/{components,screens}` أظهر **21 حقل إدخال
+      عبر 12 ملفاً، صفر منها يحمل `accessibilityLabel`** (قارئ الشاشة يعتمد فقط على `placeholder`
+      الذي يختفي بمجرد الكتابة). أُضيف `accessibilityLabel` يصف غرض كل حقل (أعيد استخدام نصوص `t.*`
+      المترجمة الموجودة فعلاً بجانب حقول AccountScreen.tsx [الاسم/البريد/كلمة المرور/كود الإحالة]
+      بدل نص عربي ثابت جديد؛ نص عربي مباشر لباقي الحقول بنفس أسلوب تسميات Pressable المُنجَزة
+      سابقاً). **باكلوج خامس مكتشَف بنفس الفحص**: حقول رمز الأداة (symbol، قيمتها الافتراضية دوماً
+      "EURUSD") بـ AlertsPanel.tsx وBacktestPanel.tsx وIndicatorAlertsPanel.tsx وTradeJournalPanel.tsx
+      كانت بلا `autoCapitalize="characters"` رغم أن SymbolSearchBar.tsx (وحقل كود الإحالة بـ
+      AccountScreen.tsx) يستخدمانه فعلاً لنفس الغرض — تحقّقت أولاً أن المنطق يطبّع الرمز لحروف
+      كبيرة عبر `.trim().toUpperCase()` قبل الإرسال بكل الملفات الأربعة (فلا خطر وظيفي)، فالإصلاح
+      تجانس تجربة الكتابة فقط مطابقةً للنمط القائم فعلياً. حقل اسم العضو بـNetworkTreePanel.tsx
+      (`autoCapitalize="none"` الصحيح لحقل اسم لا رمز) لم يُمَس — أُضيف له `accessibilityLabel` فقط.
+      تحقّق: `Grep` عددي (21 `<TextInput` = 21 `accessibilityLabel` جديد بالضبط بلا نقص أو تكرار)،
+      قراءة كل ملف من الـ12 كاملاً قبل التعديل وبعده (توازن الأقواس، عدم لمس أي `value`/`onChangeText`/
+      `keyboardType`/`placeholder`/`editable` موجود). **mtime-guard**: `device_list_dir` قبل الـstaging
+      وقبل الـcommit — تطابق تام مع القراءة الأولى لكل الـ12 ملفاً، commit دفعة واحدة نجح بلا أي رفض.
+      **تحقّق ما بعد الكتابة**: `device_list_dir` + `device_stage_files` فوريان بعد الـcommit ثم `cmp`
+      بايت-لبايت (لا فقط مطابقة الحجم) بين النسخة المُعادة من القرص والنسخة المكتوبة محلياً — **تطابق
+      تام للـ12 ملفاً، صفر بايت مختلف، لا حادثة تعارض كتابة هذا التشغيل**.
+
+- [x] **تشغيل مجدول (ساعي، بروتوكول التسريع، 2026-09-13)**: **باكلوج ميكانيكي سادس** — بعد استنفاد
+      باكلوجات الأزرار (ظل/ضغط، accessibilityLabel، accessibilityRole) وباكلوجَي TextInput
+      (accessibilityLabel/autoCapitalize)، فحصت `accessibilityState` مقابل `disabled=` على كل
+      `Pressable` بـ`mobile/src/{components,screens}` (النمط القائم فعلياً بـTerminalScreen.tsx
+      لمفتاح شمعة الظل: `accessibilityState={{ checked: enabled }}` — لكن لم يُطبَّق إطلاقاً على أي
+      `disabled=`). **الاكتشاف**: 22 موضع `disabled={...}` عبر 16 ملفاً بلا أي `accessibilityState`
+      مرافق — قارئ الشاشة (VoiceOver/TalkBack) لا يُعلن أن الزر معطَّل حالياً رغم أن `disabled` يمنع
+      اللمس فعلياً (فجوة منفصلة عن `accessibilityLabel`/`accessibilityRole` المُنجَزتين سابقاً — لا
+      علاقة لأي منهما بحالة التفعيل/التعطيل). **التنفيذ**: `accessibilityState={{ disabled: <نفس_تعبير_
+      disabled> }}` أُضيف كسطر جديد مباشرة بعد سطر `disabled={...}` (جمعي بحت، صفر حذف) في: AiPanel،
+      AlertsPanel، BacktestPanel، ChartFrame، IndicatorAlertsPanel، IndicatorForecastPanel (1 لكل)؛
+      LectureClassroom (3: سابق/تالي/اسأل)؛ NetworkTreePanel، ScreenerMini، SocialConsensusPanel،
+      TradeJournalPanel (1 لكل)؛ WatchlistPanel (4: إضافة/افتراضي/تحريك أعلى/تحريك أسفل)؛
+      WeeklyReportPanel (2: بلاطة الشبكة وبطاقة القائمة)؛ AccountScreen، TerminalScreen، ToolsScreen
+      (1 لكل). **تحقّق**: سكربت مطابقة `disabled=\{...\}$` عبر كل الملفات لضبط التعبير بالضبط قبل
+      الإدراج، ثم `grep -c disabled=` مقابل `grep -c accessibilityState` للـ16 ملفاً بعد التعديل —
+      22=22 بالضبط؛ توازن الأقواس المعقوفة `{}` صفر لكل ملف؛ قراءة سياق كل موضع (قبل/بعد) للتأكد من
+      مطابقة التعبير حرفياً بلا تحريف؛ قراءة كاملة لملفين إضافيين كتحقّق عميق (WatchlistPanel.tsx —
+      أكبر عدد إدراجات بملف واحد، وWeeklyReportPanel.tsx — مساري عرض منفصلان). **mtime-guard**:
+      `device_list_dir` لمجلدي components/screens قبل الـstaging وقبل الـcommit — تطابق تام مع
+      القراءة الأولى للـ16 ملفاً (صفر تغيّر خارجي)، commit دفعة واحدة نجح بلا أي رفض، وأحجام الملفات
+      بعد الكتابة (`device_list_dir` فوري) طابقت الحساب المحلي المستقل بالضبط للـ16 ملفاً. **ملاحظة
+      صادقة جديدة ومهمة**: محاولة `cmp` بايت-لبايت المعتادة بعد الـcommit (إعادة `device_stage_files`
+      لكل الـ16 ملفاً) رُفضت هذه المرة بخطأ جديد لم يظهر بأي تشغيل سابق: **"file is hardlinked
+      (nlink > 1) — refused to avoid reading through a link alias"** على كل الملفات الـ16 بلا
+      استثناء — أداة الجلسة السحابية نفسها أضافت مؤخراً حماية ترفض قراءة ملف بعدد ارتباطات صلبة >1
+      تفادياً لقراءة نسخة عبر اسم مستعار. **هذا قد يفسّر أخيراً** فئة أعطال الحجم/mtime غير المفسَّرة
+      الموثَّقة بتشغيلات سابقة عديدة (PairDrumWheel.tsx/SymbolPairMenu.tsx وغيرهما) — على الأرجح أداة
+      مزامنة/نسخ احتياطي أو Git نفسه على جهاز أنس تُنشئ ارتباطات صلبة لملفات هذا المستودع. لم أحاول
+      "كسر الرابط" (نسخ الملف لفصله) لتجنّب أي أثر جانبي غير مقصود على أداة خارجية تعتمد على الرابط؛
+      الاعتماد بدلاً من ذلك على تطابق الحجم المحسوب محلياً مقابل حجم الجهاز بعد الكتابة (تطابق تام
+      ومستقل لكل الـ16 ملفاً) + القراءة اليدوية الكاملة أعلاه كتحقّق كافٍ لهذا التشغيل. لم يُشغَّل tsc
+      ولم تُؤخَذ لقطة شاشة (لا device_bash/Metro متاحان). تحديث ROADMAP.md: بند سادس مكتمل بـTrack C.
+
 التالي بالأولوية: مزيد من المؤشرات (70 مؤشراً إضافياً حتى الآن فوق الثمانية الأصلية — لا يزال العدد
 أقل بكثير من TradingView؛ المرشّحون البسيطون المتبقّون [بلا نمط رسم جديد] أصبحوا نادرين جداً الآن،
 أغلب ما تبقّى فعلياً [Ichimoku/Vortex/Klinger] يحتاج تصميم نمط رسم جديد كما وثَّقت الخريطة سابقاً).

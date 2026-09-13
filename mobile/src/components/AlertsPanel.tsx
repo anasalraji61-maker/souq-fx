@@ -114,6 +114,8 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
           onChangeText={setSymbol}
           placeholder="EURUSD"
           placeholderTextColor={colors.textDim}
+          autoCapitalize="characters"
+          accessibilityLabel="رمز الأداة للتنبيه"
         />
         <TextInput
           style={styles.input}
@@ -122,6 +124,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
           placeholder="السعر"
           placeholderTextColor={colors.textDim}
           keyboardType="decimal-pad"
+          accessibilityLabel="سعر التنبيه"
         />
         <View style={styles.row}>
           <Pressable
@@ -149,6 +152,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
             ]}
             onPress={add}
             disabled={busy}
+            accessibilityState={{ disabled: busy }}
           >
             <Text style={styles.addText}>{busy ? '...' : 'إضافة'}</Text>
           </Pressable>
@@ -159,6 +163,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
           onChangeText={setNote}
           placeholder="ملاحظة (اختياري)"
           placeholderTextColor={colors.textDim}
+          accessibilityLabel="ملاحظة التنبيه (اختياري)"
         />
       </View>
 

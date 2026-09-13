@@ -93,7 +93,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
     <View style={styles.wrap}>
       <Text style={styles.title}>تنبيهات المؤشرات</Text>
       <Text style={styles.sub}>RSI · تقاطع MA · MACD</Text>
-      <TextInput style={styles.input} value={symbol} onChangeText={setSymbol} placeholder="EURUSD" placeholderTextColor={colors.textDim} />
+      <TextInput style={styles.input} value={symbol} onChangeText={setSymbol} placeholder="EURUSD" placeholderTextColor={colors.textDim} autoCapitalize="characters" accessibilityLabel="رمز الأداة" />
       <View style={styles.row}>
         {(['rsi', 'ma_cross', 'macd_cross'] as const).map((t) => (
           <Pressable
@@ -145,7 +145,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
               <Text style={styles.chipText}>RSI فوق</Text>
             </Pressable>
           </View>
-          <TextInput style={styles.input} value={value} onChangeText={setValue} keyboardType="decimal-pad" placeholder="30" placeholderTextColor={colors.textDim} />
+          <TextInput style={styles.input} value={value} onChangeText={setValue} keyboardType="decimal-pad" placeholder="30" placeholderTextColor={colors.textDim} accessibilityLabel="قيمة عتبة المؤشر" />
         </>
       ) : (
         <View style={styles.row}>
@@ -190,6 +190,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
         ]}
         onPress={add}
         disabled={busy}
+        accessibilityState={{ disabled: busy }}
       >
         <Text style={styles.btnText}>{busy ? '...' : 'إضافة تنبيه'}</Text>
       </Pressable>

@@ -98,6 +98,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           ]}
           onPress={() => void run()}
           disabled={loading}
+          accessibilityState={{ disabled: loading }}
           accessibilityLabel="توقّع المؤشرات"
         >
           <Text style={styles.refreshText}>{loading ? '...' : 'توقّع'}</Text>

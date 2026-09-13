@@ -141,6 +141,7 @@ function SlotBox({
         autoCapitalize="none"
         editable={!busy && !localBusy}
         onSubmitEditing={() => void submit()}
+        accessibilityLabel="اسم العضو الجديد بالمربع"
       />
       <Pressable
         accessibilityRole="button"
@@ -154,6 +155,7 @@ function SlotBox({
         ]}
         onPress={() => void submit()}
         disabled={draft.trim().length < 3 || localBusy || busy}
+        accessibilityState={{ disabled: draft.trim().length < 3 || localBusy || busy }}
         accessibilityLabel="تأكيد وضع العضو بالمربع"
       >
         <Text style={styles.slotGoText}>{localBusy ? '…' : '✓'}</Text>

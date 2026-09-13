@@ -44,6 +44,7 @@ export function ScreenerMini() {
             ]}
             onPress={() => run(q.id)}
             disabled={loading}
+            accessibilityState={{ disabled: loading }}
           >
             <Text style={styles.chipText}>{q.label}</Text>
           </Pressable>

@@ -134,6 +134,8 @@ export function TradeJournalPanel() {
         onChangeText={setSymbol}
         placeholder="الرمز"
         placeholderTextColor={colors.textDim}
+        autoCapitalize="characters"
+        accessibilityLabel="رمز الصفقة"
       />
       <TextInput
         style={styles.input}
@@ -142,6 +144,7 @@ export function TradeJournalPanel() {
         placeholder="دخول"
         keyboardType="decimal-pad"
         placeholderTextColor={colors.textDim}
+        accessibilityLabel="سعر الدخول"
       />
       <TextInput
         style={styles.input}
@@ -150,6 +153,7 @@ export function TradeJournalPanel() {
         placeholder="خروج (اختياري)"
         keyboardType="decimal-pad"
         placeholderTextColor={colors.textDim}
+        accessibilityLabel="سعر الخروج (اختياري)"
       />
       <TextInput
         style={styles.input}
@@ -157,6 +161,7 @@ export function TradeJournalPanel() {
         onChangeText={setNote}
         placeholder="ملاحظة"
         placeholderTextColor={colors.textDim}
+        accessibilityLabel="ملاحظة الصفقة (اختياري)"
       />
       <Pressable
         accessibilityRole="button"
@@ -169,6 +174,7 @@ export function TradeJournalPanel() {
         ]}
         onPress={() => void add()}
         disabled={busy}
+        accessibilityState={{ disabled: busy }}
       >
         <Text style={styles.btnText}>{busy ? '...' : 'إضافة صفقة'}</Text>
       </Pressable>

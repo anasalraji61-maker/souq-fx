@@ -226,6 +226,7 @@ export function AccountScreen() {
               placeholder={t.namePlaceholder}
               placeholderTextColor={colors.textDim}
               autoCapitalize="none"
+              accessibilityLabel={t.name}
             />
           </View>
 
@@ -239,6 +240,7 @@ export function AccountScreen() {
               placeholderTextColor={colors.textDim}
               autoCapitalize="none"
               keyboardType="email-address"
+              accessibilityLabel={t.email}
             />
           </View>
 
@@ -251,6 +253,7 @@ export function AccountScreen() {
               placeholder={t.passwordPlaceholder}
               placeholderTextColor={colors.textDim}
               secureTextEntry
+              accessibilityLabel={t.password}
             />
             {err ? <Text style={[styles.err, { textAlign: align }]}>{err}</Text> : null}
             <Pressable
@@ -264,6 +267,7 @@ export function AccountScreen() {
               ]}
               onPress={submit}
               disabled={busy}
+              accessibilityState={{ disabled: busy }}
             >
               <Text style={styles.btnText}>
                 {busy ? '...' : mode === 'login' ? t.enter : t.createAccount}
@@ -295,6 +299,7 @@ export function AccountScreen() {
                 placeholder={t.sponsorCode}
                 placeholderTextColor={colors.textDim}
                 autoCapitalize="characters"
+                accessibilityLabel={t.sponsorCode}
               />
               {sponsorCode.trim() ? (
                 <>

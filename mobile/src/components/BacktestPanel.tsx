@@ -86,6 +86,8 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         onChangeText={setSymbol}
         placeholder="EURUSD"
         placeholderTextColor={colors.textDim}
+        autoCapitalize="characters"
+        accessibilityLabel="رمز الأداة للاختبار الخلفي"
       />
       <TimeframeBar value={tf} onChange={setTf} />
       <View style={styles.row}>
@@ -111,6 +113,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         ]}
         onPress={run}
         disabled={loading}
+        accessibilityState={{ disabled: loading }}
       >
         <Text style={styles.btnText}>{loading ? '...' : 'تشغيل Backtest'}</Text>
       </Pressable>

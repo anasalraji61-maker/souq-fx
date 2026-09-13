@@ -352,6 +352,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               ]}
               onPress={prev}
               disabled={segIndex === 0 || paused}
+              accessibilityState={{ disabled: segIndex === 0 || paused }}
               accessibilityLabel="الفقرة السابقة"
             >
               <Text style={styles.navText}>السابق</Text>
@@ -368,6 +369,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               ]}
               onPress={next}
               disabled={paused || segIndex >= segments.length - 1}
+              accessibilityState={{ disabled: paused || segIndex >= segments.length - 1 }}
               accessibilityLabel="الفقرة التالية"
             >
               <Text style={styles.navText}>التالي</Text>
@@ -383,6 +385,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               placeholder="مثال: لم أفهم CHOCH..."
               placeholderTextColor={colors.textDim}
               editable={!asking}
+              accessibilityLabel="سؤال أثناء إيقاف الشرح"
             />
             <Pressable
               accessibilityRole="button"
@@ -395,6 +398,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               ]}
               onPress={interrupt}
               disabled={asking}
+              accessibilityState={{ disabled: asking }}
             >
               <Text style={styles.askText}>{asking ? '...' : 'اسأل'}</Text>
             </Pressable>

@@ -76,6 +76,7 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
           placeholder="اكتب رسالة..."
           placeholderTextColor={colors.textDim}
           onSubmitEditing={send}
+          accessibilityLabel="رسالة الدردشة الجماعية"
         />
         <Pressable
           accessibilityRole="button"
