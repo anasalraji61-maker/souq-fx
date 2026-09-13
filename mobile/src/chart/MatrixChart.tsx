@@ -54,14 +54,18 @@ import {
 import {
   FIB_LEVELS,
   computeAdx,
+  computeAroonOsc,
   computeAtr,
   computeCci,
+  computeCmf,
   computeMacd,
   computeMfi,
   computeObv,
   computeOverlays,
+  computePsar,
   computeRoc,
   computeRsi,
+  computeStdDev,
   computeStoch,
   computeVwap,
   computeWilliamsR,
@@ -751,6 +755,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('adx') ? computeAdx(source.plot) : null),
     [source.plot, indicators]
   );
+  const psar = useMemo(
+    () => (indicators.includes('psar') ? computePsar(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const stddev = useMemo(
+    () => (indicators.includes('stddev') ? computeStdDev(closes) : null),
+    [closes, indicators]
+  );
+  const aroon = useMemo(
+    () => (indicators.includes('aroon') ? computeAroonOsc(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const cmf = useMemo(
+    () => (indicators.includes('cmf') ? computeCmf(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -764,6 +784,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('obv') ? 1 : 0) +
     (indicators.includes('mfi') ? 1 : 0) +
     (indicators.includes('adx') ? 1 : 0) +
+    (indicators.includes('stddev') ? 1 : 0) +
+    (indicators.includes('aroon') ? 1 : 0) +
+    (indicators.includes('cmf') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -790,6 +813,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('tema20')) overlays.tema20.forEach(push);
     if (indicators.includes('hma20')) overlays.hma20.forEach(push);
     if (indicators.includes('vwap') && vwap) vwap.forEach(push);
+    if (indicators.includes('psar') && psar) psar.forEach(push);
     if (indicators.includes('bb')) {
       overlays.bbUpper.forEach(push);
       overlays.bbLower.forEach(push);
@@ -831,6 +855,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     logScale,
     tpo,
     vwap,
+    psar,
     priceScale,
     pricePan,
     syncFollow,
@@ -2223,6 +2248,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             )
           )}
+        {indicators.includes('psar') &&
+          psar &&
+          psar.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`ps${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#A3E635' }]}
+              />
+            )
+          )}
         {indicators.includes('bb') &&
           overlays.bbUpper.map((v, i) => {
             const lo = overlays.bbLower[i];
@@ -2924,6 +2959,90 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               return roc.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = Math.min(paneH - 16, (Math.abs(v) / maxR) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {stddev ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>STDEV</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = stddev.filter((x): x is number => x != null);
+              const maxS = Math.max(...vals, 1e-9);
+              return stddev.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxS) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxS) * (paneH - 16),
+                      backgroundColor: colors.infoAccent,
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {aroon ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>AROON</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = aroon.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxA = Math.max(...vals, 1e-9);
+              return aroon.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxA) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {cmf ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>CMF</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = cmf.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxC = Math.max(...vals, 1e-9);
+              return cmf.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxC) * (paneH / 2 - 8));
                 return (
                   <View
                     key={i}

@@ -417,6 +417,150 @@ export function computeAdx(candles: Candle[], period = 14): (number | null)[] {
   return out;
 }
 
+/**
+ * Parabolic SAR (Stop And Reverse) — خوارزمية Wilder القياسية: نقطة تتبع السعر من الأسفل خلال
+ * اتجاه صاعد ومن الأعلى خلال اتجاه هابط، بتسارع تدريجي (AF يبدأ من step ويزيد بمقدار step عند كل
+ * قمة/قاع جديد حتى سقف maxStep). عند اختراق السعر لنقطة SAR الحالية ينعكس الاتجاه: تصبح SAR
+ * الجديدة = آخر EP (نقطة أقصى) مسجَّلة، وEP الجديدة = السعر المُخترِق، وAF يُعاد لـstep. الاتجاه
+ * الابتدائي يُحدَّد من إغلاق أول شمعتين (صاعد إن كان الإغلاق الثاني ≥ الأول). step=0.02/maxStep=0.2
+ * هما القيمتان القياسيتان الشائعتان بكل المنصات.
+ */
+export function computePsar(candles: Candle[], step = 0.02, maxStep = 0.2): (number | null)[] {
+  const n = candles.length;
+  const out: (number | null)[] = new Array(n).fill(null);
+  if (n < 2) return out;
+  let uptrend = candles[1].close >= candles[0].close;
+  let sar = uptrend ? candles[0].low : candles[0].high;
+  let ep = uptrend ? candles[0].high : candles[0].low;
+  let af = step;
+  out[0] = sar;
+  for (let i = 1; i < n; i++) {
+    let next = sar + af * (ep - sar);
+    if (uptrend) {
+      next = Math.min(next, candles[i - 1].low, i >= 2 ? candles[i - 2].low : candles[i - 1].low);
+      if (candles[i].low < next) {
+        uptrend = false;
+        next = ep;
+        ep = candles[i].low;
+        af = step;
+      } else if (candles[i].high > ep) {
+        ep = candles[i].high;
+        af = Math.min(maxStep, af + step);
+      }
+    } else {
+      next = Math.max(next, candles[i - 1].high, i >= 2 ? candles[i - 2].high : candles[i - 1].high);
+      if (candles[i].high > next) {
+        uptrend = true;
+        next = ep;
+        ep = candles[i].high;
+        af = step;
+      } else if (candles[i].low < ep) {
+        ep = candles[i].low;
+        af = Math.min(maxStep, af + step);
+      }
+    }
+    sar = next;
+    out[i] = sar;
+  }
+  return out;
+}
+
+/**
+ * الانحراف المعياري (Standard Deviation) — نفس صيغة الانحراف المستخدَمة داخل حساب بولنجر تماماً
+ * (تباين المجتمع الكامل على نافذة period، لا عيّنة) لكن مُصدَّرة كمؤشر مستقل بپين خاص بدل حصرها
+ * داخل حساب بولنجر الداخلي — يقيس تشتّت/تقلّب السعر بمعزل عن اتجاهه، بعكس بولنجر الذي يستخدمها
+ * فقط لرسم نطاق حول متوسط متحرك.
+ */
+export function computeStdDev(closes: number[], period = 20): (number | null)[] {
+  const mid = sma(closes, period);
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (mid[i] == null || i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    const slice = closes.slice(i - period + 1, i + 1);
+    const mean = mid[i]!;
+    const variance = slice.reduce((a, v) => a + (v - mean) ** 2, 0) / period;
+    out.push(Math.sqrt(variance));
+  }
+  return out;
+}
+
+/**
+ * Aroon Oscillator (AroonUp − AroonDown) — يقيس عمر آخر أعلى/أدنى داخل نافذة period+1 شمعة
+ * (period للخلف + الشمعة الحالية). لكل نقطة: AroonUp = (بُعد أعلى قمة عن بداية النافذة / period)×100
+ * (100 لو القمة هي الشمعة الحالية نفسها، 0 لو القمة أقدم شمعة بالنافذة)، وAroonDown بنفس المنطق
+ * للقاع. الأوسيليتر = AroonUp − AroonDown (مدى -100..100: قرب 100 = اتجاه صاعد قوي وحديث، قرب
+ * -100 = هابط قوي وحديث). عند تعادل عدة شموع بنفس القمة/القاع تُختار الأحدث (الأكثر شيوعاً بالتطبيقات
+ * المرجعية) — خيار موثَّق صراحة هنا.
+ */
+export function computeAroonOsc(candles: Candle[], period = 14): (number | null)[] {
+  const n = candles.length;
+  const out: (number | null)[] = [];
+  for (let i = 0; i < n; i++) {
+    if (i < period) {
+      out.push(null);
+      continue;
+    }
+    let hiIdx = 0;
+    let hiVal = -Infinity;
+    let loIdx = 0;
+    let loVal = Infinity;
+    for (let w = 0; w <= period; w++) {
+      const c = candles[i - period + w];
+      if (c.high >= hiVal) {
+        hiVal = c.high;
+        hiIdx = w;
+      }
+      if (c.low <= loVal) {
+        loVal = c.low;
+        loIdx = w;
+      }
+    }
+    const up = (hiIdx / period) * 100;
+    const down = (loIdx / period) * 100;
+    out.push(up - down);
+  }
+  return out;
+}
+
+/**
+ * Chaikin Money Flow (CMF، period=20 افتراضياً) — Money Flow Multiplier لكل شمعة =
+ * ((إغلاق−أدنى)−(أعلى−إغلاق))/(أعلى−أدنى) (صفر عند مدى صفري)، Money Flow Volume = المضاعف×فوليوم،
+ * CMF لكل نافذة = مجموع(MFV)/مجموع(فوليوم) (صفر عند فوليوم كلي صفري). مدى نظري تقريبي -1..1 (بعكس
+ * MFI الذي يعيد قياسه لـ0..100) — تُرسم بنفس نمط پين CCI/ROC ثنائي التلوين بسقف ديناميكي فلا يهم
+ * نطاقها المطلق. فوليوم مفقود يُعوَّض بنفس صيغة orderflow.ts للاتساق مع OBV/MFI أعلاه.
+ */
+export function computeCmf(candles: (Candle & { volume?: number })[], period = 20): (number | null)[] {
+  const n = candles.length;
+  const mfv: number[] = new Array(n).fill(0);
+  const vol: number[] = new Array(n).fill(0);
+  for (let i = 0; i < n; i++) {
+    const c = candles[i];
+    const span = c.high - c.low;
+    const v = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
+    const mfm = span === 0 ? 0 : (c.close - c.low - (c.high - c.close)) / span;
+    mfv[i] = mfm * v;
+    vol[i] = v;
+  }
+  const out: (number | null)[] = [];
+  for (let i = 0; i < n; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    let sumMfv = 0;
+    let sumVol = 0;
+    for (let w = i - period + 1; w <= i; w++) {
+      sumMfv += mfv[w];
+      sumVol += vol[w];
+    }
+    out.push(sumVol === 0 ? 0 : sumMfv / sumVol);
+  }
+  return out;
+}
+
 export function computeAtr(candles: Candle[], period = 14): (number | null)[] {
   const tr: number[] = [];
   for (let i = 0; i < candles.length; i++) {

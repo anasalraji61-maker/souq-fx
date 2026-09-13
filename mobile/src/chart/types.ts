@@ -33,6 +33,10 @@ export type IndicatorId =
   | 'obv'
   | 'mfi'
   | 'adx'
+  | 'psar'
+  | 'stddev'
+  | 'aroon'
+  | 'cmf'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -104,6 +108,10 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'obv', label: 'OBV', pane: true },
   { id: 'mfi', label: 'MFI', pane: true },
   { id: 'adx', label: 'ADX', pane: true },
+  { id: 'psar', label: 'PSAR' },
+  { id: 'stddev', label: 'STDEV', pane: true },
+  { id: 'aroon', label: 'Aroon', pane: true },
+  { id: 'cmf', label: 'CMF', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [
