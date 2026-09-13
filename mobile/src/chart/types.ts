@@ -20,12 +20,15 @@ export type IndicatorId =
   | 'wma20'
   | 'dema20'
   | 'tema20'
+  | 'hma20'
   | 'bb'
   | 'rsi'
   | 'macd'
   | 'stoch'
   | 'atr'
   | 'willr'
+  | 'cci'
+  | 'roc'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -79,6 +82,7 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'wma20', label: 'WMA 20' },
   { id: 'dema20', label: 'DEMA 20' },
   { id: 'tema20', label: 'TEMA 20' },
+  { id: 'hma20', label: 'HMA 20' },
   { id: 'bb', label: 'بولنجر' },
   { id: 'volume', label: 'فوليوم', pane: true },
   { id: 'volumeProfile', label: 'VP', pane: false },
@@ -90,6 +94,8 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'stoch', label: 'Stoch', pane: true },
   { id: 'atr', label: 'ATR', pane: true },
   { id: 'willr', label: 'Williams %R', pane: true },
+  { id: 'cci', label: 'CCI', pane: true },
+  { id: 'roc', label: 'ROC', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

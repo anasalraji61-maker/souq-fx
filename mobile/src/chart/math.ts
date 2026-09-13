@@ -98,6 +98,24 @@ function tema(values: number[], period: number): (number | null)[] {
   );
 }
 
+/**
+ * HMA (Hull Moving Average) — wma(2×wma(القيم، period/2) − wma(القيم، period)، sqrt(period))؛
+ * نفس فكرة dema/tema (تعويض null بصفر لحساب الطبقة التالية ثم بوابة صلاحية بالقيمة الأصلية) لكن
+ * مبنية فوق wma() المحلية بدل ema() — تصميم Hull القياسي لتقليل تأخر WMA العادي أكثر من DEMA/TEMA.
+ */
+function hma(values: number[], period: number): (number | null)[] {
+  const halfPeriod = Math.round(period / 2);
+  const sqrtPeriod = Math.max(1, Math.round(Math.sqrt(period)));
+  const wmaHalf = wma(values, halfPeriod);
+  const wmaFull = wma(values, period);
+  const raw = values.map((_, i) =>
+    wmaHalf[i] != null && wmaFull[i] != null ? 2 * wmaHalf[i]! - wmaFull[i]! : null
+  );
+  const rawFilled = raw.map((v) => v ?? 0);
+  const hmaRaw = wma(rawFilled, sqrtPeriod);
+  return raw.map((_, i) => (raw[i] != null && hmaRaw[i] != null ? hmaRaw[i] : null));
+}
+
 export function computeOverlays(closes: number[]) {
   const sma20 = sma(closes, 20);
   const sma50 = sma(closes, 50);
@@ -105,6 +123,7 @@ export function computeOverlays(closes: number[]) {
   const wma20 = wma(closes, 20);
   const dema20 = dema(closes, 20);
   const tema20 = tema(closes, 20);
+  const hma20 = hma(closes, 20);
   const mid = sma(closes, 20);
   const upper: (number | null)[] = [];
   const lower: (number | null)[] = [];
@@ -128,6 +147,7 @@ export function computeOverlays(closes: number[]) {
     wma20,
     dema20,
     tema20,
+    hma20,
     bbMid: mid,
     bbUpper: upper,
     bbLower: lower,
@@ -207,6 +227,46 @@ export function computeWilliamsR(candles: Candle[], period = 14): (number | null
     const ll = Math.min(...slice.map((c) => c.low));
     const span = hh - ll || 1;
     out.push(((hh - candles[i].close) / span) * -100);
+  }
+  return out;
+}
+
+/**
+ * CCI (Commodity Channel Index) — الصيغة القياسية: (TP − SMA(TP)) / (0.015 × الانحراف المتوسط
+ * المطلق لـTP عن SMA(TP)). TP (السعر النموذجي) = (أعلى+أدنى+إغلاق)/3. عند انحراف صفري (تسطّح
+ * تام) تُرجع 0 بدل قسمة على صفر.
+ */
+export function computeCci(candles: Candle[], period = 20): (number | null)[] {
+  const tp = candles.map((c) => (c.high + c.low + c.close) / 3);
+  const smaTp = sma(tp, period);
+  const out: (number | null)[] = [];
+  for (let i = 0; i < candles.length; i++) {
+    if (smaTp[i] == null) {
+      out.push(null);
+      continue;
+    }
+    const mean = smaTp[i]!;
+    const slice = tp.slice(i - period + 1, i + 1);
+    const meanDev = slice.reduce((a, v) => a + Math.abs(v - mean), 0) / period;
+    out.push(meanDev === 0 ? 0 : (tp[i] - mean) / (0.015 * meanDev));
+  }
+  return out;
+}
+
+/**
+ * ROC (Rate of Change / الزخم) — نسبة التغيّر المئوية بين الإغلاق الحالي والإغلاق قبل period
+ * شمعة: ((close − close[period قبل]) / close[period قبل]) × 100. صفر عند قاعدة سعرية صفرية
+ * (حالة نظرية) بدل قسمة على صفر.
+ */
+export function computeRoc(closes: number[], period = 10): (number | null)[] {
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period) {
+      out.push(null);
+      continue;
+    }
+    const prev = closes[i - period];
+    out.push(prev === 0 ? 0 : ((closes[i] - prev) / prev) * 100);
   }
   return out;
 }

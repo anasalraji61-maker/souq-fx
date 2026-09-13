@@ -54,10 +54,14 @@ import {
 import {
   FIB_LEVELS,
   computeAtr,
+  computeCci,
   computeMacd,
+  computeObv,
   computeOverlays,
+  computeRoc,
   computeRsi,
   computeStoch,
+  computeVwap,
   computeWilliamsR,
   formatPrice,
   heikinAshi,
@@ -721,6 +725,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('willr') ? computeWilliamsR(source.plot) : null),
     [source.plot, indicators]
   );
+  const cci = useMemo(
+    () => (indicators.includes('cci') ? computeCci(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const roc = useMemo(
+    () => (indicators.includes('roc') ? computeRoc(closes) : null),
+    [closes, indicators]
+  );
+  const vwap = useMemo(
+    () => (indicators.includes('vwap') ? computeVwap(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const obv = useMemo(
+    () => (indicators.includes('obv') ? computeObv(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -729,6 +749,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('stoch') ? 1 : 0) +
     (indicators.includes('atr') ? 1 : 0) +
     (indicators.includes('willr') ? 1 : 0) +
+    (indicators.includes('cci') ? 1 : 0) +
+    (indicators.includes('roc') ? 1 : 0) +
+    (indicators.includes('obv') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -753,6 +776,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('wma20')) overlays.wma20.forEach(push);
     if (indicators.includes('dema20')) overlays.dema20.forEach(push);
     if (indicators.includes('tema20')) overlays.tema20.forEach(push);
+    if (indicators.includes('hma20')) overlays.hma20.forEach(push);
+    if (indicators.includes('vwap') && vwap) vwap.forEach(push);
     if (indicators.includes('bb')) {
       overlays.bbUpper.forEach(push);
       overlays.bbLower.forEach(push);
@@ -793,6 +818,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     pineLine,
     logScale,
     tpo,
+    vwap,
     priceScale,
     pricePan,
     syncFollow,
@@ -2166,6 +2192,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             )
           )}
+        {indicators.includes('hma20') &&
+          overlays.hma20.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`h20${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#818CF8' }]}
+              />
+            )
+          )}
+        {indicators.includes('vwap') &&
+          vwap &&
+          vwap.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`vw${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: colors.white }]}
+              />
+            )
+          )}
         {indicators.includes('bb') &&
           overlays.bbUpper.map((v, i) => {
             const lo = overlays.bbLower[i];
@@ -2630,6 +2675,35 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         </View>
       ) : null}
 
+      {obv ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>OBV</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const minO = Math.min(...obv);
+              const maxO = Math.max(...obv);
+              const span = maxO - minO || 1;
+              return obv.map((v, i) => {
+                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
+                const yNorm = (v - minO) / span;
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: 3,
+                      marginTop: (1 - yNorm) * (paneH - 16),
+                      backgroundColor: v >= obv[i - 1] ? colors.bull : colors.bear,
+                      opacity: 0.8,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
       {rsi ? (
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>RSI</Text>
@@ -2748,6 +2822,62 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 />
               )
             )}
+          </View>
+        </View>
+      ) : null}
+
+      {cci ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>CCI</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = cci.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxC = Math.max(...vals, 1e-9);
+              return cci.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxC) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {roc ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>ROC</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = roc.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxR = Math.max(...vals, 1e-9);
+              return roc.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxR) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
           </View>
         </View>
       ) : null}
@@ -2883,6 +3013,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                         onPress={() => onCreateAlert(d.a.price)}
                       >
                         <Text style={styles.toolTextOn}>تنبيه خط</Text>
+                      </Pressable>
+                    );
+                  }
+                  if (d?.tool === 'zone' && d.b && onCreateAlert) {
+                    const aPrice = d.a.price;
+                    const bPrice = d.b.price;
+                    return (
+                      <Pressable
+                        style={({ pressed }) => [
+                          styles.tool,
+                          styles.toolOn,
+                          pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                        ]}
+                        onPress={() => {
+                          onCreateAlert(Math.max(aPrice, bPrice));
+                          onCreateAlert(Math.min(aPrice, bPrice));
+                        }}
+                      >
+                        <Text style={styles.toolTextOn}>تنبيه منطقة</Text>
                       </Pressable>
                     );
                   }
