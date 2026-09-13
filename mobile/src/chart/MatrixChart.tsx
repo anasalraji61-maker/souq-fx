@@ -82,15 +82,20 @@ import {
   computeLinRegSlope,
   computeMacd,
   computeMassIndex,
+  computeMcGinleyDynamic,
+  computeMedianPrice,
   computeMfi,
+  computeMomentum,
   computeNvi,
   computeObv,
   computeOverlays,
   computePercentB,
   computePpo,
   computePsar,
+  computePvi,
   computePvo,
   computeQstick,
+  computeRavi,
   computeRoc,
   computeRsi,
   computeRvi,
@@ -100,10 +105,14 @@ import {
   computeSuperTrend,
   computeTrix,
   computeTsi,
+  computeTypicalPrice,
+  computeUlcerIndex,
   computeUltimateOsc,
+  computeVhf,
   computeVolumeOscillator,
   computeVpt,
   computeVwap,
+  computeWeightedClose,
   computeWilliamsR,
   formatPrice,
   heikinAshi,
@@ -951,6 +960,42 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('bbw') ? computeBollingerBandwidth(closes) : null),
     [closes, indicators]
   );
+  const medianPrice = useMemo(
+    () => (indicators.includes('medianPrice') ? computeMedianPrice(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const typicalPrice = useMemo(
+    () => (indicators.includes('typicalPrice') ? computeTypicalPrice(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const weightedClose = useMemo(
+    () => (indicators.includes('weightedClose') ? computeWeightedClose(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const mcginley = useMemo(
+    () => (indicators.includes('mcginley') ? computeMcGinleyDynamic(closes) : null),
+    [closes, indicators]
+  );
+  const momentum = useMemo(
+    () => (indicators.includes('momentum') ? computeMomentum(closes) : null),
+    [closes, indicators]
+  );
+  const vhf = useMemo(
+    () => (indicators.includes('vhf') ? computeVhf(closes) : null),
+    [closes, indicators]
+  );
+  const pvi = useMemo(
+    () => (indicators.includes('pvi') ? computePvi(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const ravi = useMemo(
+    () => (indicators.includes('ravi') ? computeRavi(closes) : null),
+    [closes, indicators]
+  );
+  const ulcer = useMemo(
+    () => (indicators.includes('ulcer') ? computeUlcerIndex(closes) : null),
+    [closes, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -999,6 +1044,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('linRegR2') ? 1 : 0) +
     (indicators.includes('percentB') ? 1 : 0) +
     (indicators.includes('bbw') ? 1 : 0) +
+    (indicators.includes('momentum') ? 1 : 0) +
+    (indicators.includes('vhf') ? 1 : 0) +
+    (indicators.includes('pvi') ? 1 : 0) +
+    (indicators.includes('ravi') ? 1 : 0) +
+    (indicators.includes('ulcer') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -1026,6 +1076,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('hma20')) overlays.hma20.forEach(push);
     if (indicators.includes('vwap') && vwap) vwap.forEach(push);
     if (indicators.includes('psar') && psar) psar.forEach(push);
+    if (indicators.includes('medianPrice') && medianPrice) medianPrice.forEach(push);
+    if (indicators.includes('typicalPrice') && typicalPrice) typicalPrice.forEach(push);
+    if (indicators.includes('weightedClose') && weightedClose) weightedClose.forEach(push);
+    if (indicators.includes('mcginley') && mcginley) mcginley.forEach(push);
     if (indicators.includes('supertrend') && supertrend) supertrend.value.forEach(push);
     if (indicators.includes('bb')) {
       overlays.bbUpper.forEach(push);
@@ -1081,6 +1135,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     tpo,
     vwap,
     psar,
+    medianPrice,
+    typicalPrice,
+    weightedClose,
+    mcginley,
     supertrend,
     keltner,
     envelopes,
@@ -2484,6 +2542,40 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <View
                 key={`ps${i}`}
                 style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#A3E635' }]}
+              />
+            )
+          )}
+        {indicators.includes('medianPrice') &&
+          medianPrice &&
+          medianPrice.map((v, i) => (
+            <View
+              key={`mp${i}`}
+              style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#94A3B8' }]}
+            />
+          ))}
+        {indicators.includes('typicalPrice') &&
+          typicalPrice &&
+          typicalPrice.map((v, i) => (
+            <View
+              key={`tp${i}`}
+              style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FDE68A' }]}
+            />
+          ))}
+        {indicators.includes('weightedClose') &&
+          weightedClose &&
+          weightedClose.map((v, i) => (
+            <View
+              key={`wc${i}`}
+              style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FCA5A5' }]}
+            />
+          ))}
+        {indicators.includes('mcginley') &&
+          mcginley &&
+          mcginley.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`mg${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#5EEAD4' }]}
               />
             )
           )}
@@ -4003,6 +4095,143 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       height: Math.max(2, (v / maxBw) * (paneH - 16)),
                       marginTop: paneH - 16 - (v / maxBw) * (paneH - 16),
                       backgroundColor: colors.accent,
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {momentum ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Momentum</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = momentum.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxM = Math.max(...vals, 1e-9);
+              return momentum.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxM) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {vhf ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>VHF</Text>
+          <View style={styles.paneInner}>
+            {vhf.map((v, i) => {
+              if (v == null) return <View key={i} style={{ flex: 1 }} />;
+              const pct = Math.max(0, Math.min(100, v * 100));
+              return (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    marginTop: ((100 - pct) / 100) * (paneH - 16),
+                    backgroundColor: pct > 61.8 ? colors.bull : pct < 38.2 ? colors.textDim : accent,
+                    borderRadius: 2,
+                  }}
+                />
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
+
+      {pvi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>PVI</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const minP = Math.min(...pvi);
+              const maxP = Math.max(...pvi);
+              const span = maxP - minP || 1;
+              return pvi.map((v, i) => {
+                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
+                const yNorm = (v - minP) / span;
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: 3,
+                      marginTop: (1 - yNorm) * (paneH - 16),
+                      backgroundColor: v >= pvi[i - 1] ? colors.bull : colors.bear,
+                      opacity: 0.8,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {ravi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>RAVI</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = ravi.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxR = Math.max(...vals, 1e-9);
+              return ravi.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxR) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {ulcer ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Ulcer Index</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = ulcer.filter((x): x is number => x != null);
+              const maxU = Math.max(...vals, 1e-9);
+              return ulcer.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxU) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxU) * (paneH - 16),
+                      backgroundColor: '#F87171',
                       opacity: 0.7,
                     }}
                   />

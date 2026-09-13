@@ -1671,4 +1671,195 @@ export function computeBollingerBandwidth(
   return out;
 }
 
+/**
+ * Median Price (سعر الوسيط) — منتصف مدى الشمعة (أعلى+أدنى)/2، بديل مبسّط للإغلاق كمصدر عرض مستقل
+ * يُرسم كخط نقاط مباشر على اللوحة الرئيسية بنفس نمط VWAP/PSAR أعلاه. **تحقّق يدوي**: شمعة ثابتة
+ * أعلى=10 أدنى=8 لكل الشموع → الناتج=9 لكل نقطة بالضبط (بلا حاجة لأي فترة تسخين، معرَّف من أول شمعة).
+ */
+export function computeMedianPrice(candles: Candle[]): number[] {
+  return candles.map((c) => (c.high + c.low) / 2);
+}
+
+/**
+ * Typical Price (السعر النموذجي) — متوسط (أعلى+أدنى+إغلاق)/3، يمنح وزناً ضمنياً للإغلاق قياساً
+ * بـMedian Price أعلاه. **تحقّق يدوي**: شمعة ثابتة أعلى=12 أدنى=8 إغلاق=10 لكل الشموع →
+ * (12+8+10)/3 = 10 بالضبط لكل نقطة.
+ */
+export function computeTypicalPrice(candles: Candle[]): number[] {
+  return candles.map((c) => (c.high + c.low + c.close) / 3);
+}
+
+/**
+ * Weighted Close (الإغلاق المُرجَّح) — (أعلى+أدنى+2×إغلاق)/4، يعطي الإغلاق وزناً مضاعَفاً (ضِعف
+ * Typical Price بالتحديد) فيكون أقرب تتبّعاً للإغلاق من median/typical أعلاه. **تحقّق يدوي**: شمعة
+ * أعلى=14 أدنى=6 إغلاق=12 → (14+6+24)/4 = 11؛ يتحقّق الترتيب المتوقَّع median=(14+6)/2=10 <
+ * typical=(14+6+12)/3=10.67 < weightedClose=11 ≤ إغلاق=12 (الأقرب تتبّعاً للإغلاق دائماً حين يبتعد
+ * الإغلاق عن منتصف المدى).
+ */
+export function computeWeightedClose(candles: Candle[]): number[] {
+  return candles.map((c) => (c.high + c.low + 2 * c.close) / 4);
+}
+
+/**
+ * McGinley Dynamic (period=14 الافتراضي القياسي) — متوسط متكيّف يُسرِّع تلقائياً مع تسارع السعر
+ * ويتباطأ مع تذبذبه بلا اتجاه، بعكس EMA/SMA ذات المعامل الثابت. الصيغة القياسية المنشورة:
+ * MD[i] = MD[i-1] + (إغلاق[i]−MD[i-1]) / (period × (إغلاق[i]/MD[i-1])⁴). البذرة (seed) = SMA لأول
+ * `period` إغلاق (نفس أسلوب تسخين ema() أعلاه)، ثم تكرار الصيغة اعتباراً من الفترة التالية.
+ * **تحقّق يدوي**: سعر ثابت تماماً بكل الشموع (بما فيها فترة التسخين) → البذرة = السعر الثابت نفسه
+ * (SMA لقيم متطابقة) → بكل تكرار لاحق: النسبة=1، المقام=period×1⁴=period، والبسط (إغلاق[i]−MD[i-1])
+ * =0 → MD[i]=MD[i-1]+0=نفس السعر الثابت — يطابق "لا تكيّف مطلوب حين السعر ثابت" بالتعريف. حارس
+ * دفاعي: لو المقام صفر (نادر جداً، يتطلب MD السابقة=0) يُستخدَم period مباشرة بدل القسمة على صفر.
+ */
+export function computeMcGinleyDynamic(closes: number[], period = 14): (number | null)[] {
+  const out: (number | null)[] = [];
+  const seed = sma(closes, period);
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    if (i === period - 1) {
+      out.push(seed[i]);
+      continue;
+    }
+    const prevMd = out[i - 1]!;
+    const ratio = prevMd === 0 ? 0 : closes[i] / prevMd;
+    const denom = period * ratio ** 4 || period;
+    out.push(prevMd + (closes[i] - prevMd) / denom);
+  }
+  return out;
+}
+
+/**
+ * Momentum (MOM، period=10 الافتراضي القياسي) — أبسط أوسيليتر زخم مطلق: فرق إغلاق مباشر بلا أي
+ * تسوية % كـROC أعلاه (MOM[i] = إغلاق[i] − إغلاق[i-period])، غير محدود المدى، يتذبذب حول الصفر بنفس
+ * نمط پين TRIX/DPO/LR Slope أعلاه (عمود ملوَّن أعلى/أسفل خط الصفر). **تحقّق يدوي**: سعر ثابت تماماً
+ * بكل الشموع → MOM=0 لكل نقطة صالحة؛ سعر يزيد بمقدار ثابت d كل شمعة → MOM=period×d بالضبط لكل نقطة
+ * صالحة (فرق إغلاقين يفصل بينهما period خطوة، كل خطوة زيادتها d).
+ */
+export function computeMomentum(closes: number[], period = 10): (number | null)[] {
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period) {
+      out.push(null);
+      continue;
+    }
+    out.push(closes[i] - closes[i - period]);
+  }
+  return out;
+}
+
+/**
+ * Vertical Horizontal Filter (VHF، period=28 الافتراضي القياسي لصيغة Adam White الأصلية) — يقيس
+ * "اتجاهية" السوق بمقارنة أقصى تحرّك صافٍ (HCP−LCP: أعلى/أدنى إغلاق بالنافذة) بأقصى مسار قطعته
+ * الأسعار (مجموع القيم المطلقة لفروقات الإغلاق المتتالية بنفس النافذة) — النسبة محصورة رياضياً بين
+ * 0 و1 دائماً (متباينة المثلث: التحرّك الصافي لا يتجاوز أبداً مجموع الخطوات المطلقة)، فتُرسم بنمط
+ * پين محصور 0..100 بعد ضرب×100 (نفس نمط Choppiness Index أعلاه لكن بدلالة معكوسة — VHF مرتفع يعني
+ * اتجاهاً قوياً، بعكس Choppiness المرتفع الذي يعني تذبذباً بلا اتجاه). **تحقّق يدوي**: سعر ثابت
+ * تماماً بكل الشموع (بما فيها فترة التسخين) → HCP=LCP والمقام=0 أيضاً (كل الفروقات صفر) → حالة 0/0
+ * مُعرَّفة صراحةً بالكود = صفر (لا اتجاه ولا تقلّب أصلاً)؛ سعر يزيد بمقدار ثابت d>0 كل شمعة بالنافذة
+ * → HCP−LCP=(period−1)×d ومقام=period×d (كل فرق=d بالضبط) → VHF=(period−1)/period (أقرب لـ1 كلما
+ * زاد period، يعكس اتجاهاً خطياً صافياً بالكامل بلا أي تراجع — أقصى قيمة ممكنة عملياً لهذا النمط).
+ */
+export function computeVhf(closes: number[], period = 28): (number | null)[] {
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period) {
+      out.push(null);
+      continue;
+    }
+    const windowSlice = closes.slice(i - period + 1, i + 1);
+    const hcp = Math.max(...windowSlice);
+    const lcp = Math.min(...windowSlice);
+    let denom = 0;
+    for (let j = i - period + 1; j <= i; j++) {
+      denom += Math.abs(closes[j] - closes[j - 1]);
+    }
+    out.push(denom === 0 ? 0 : (hcp - lcp) / denom);
+  }
+  return out;
+}
+
+/**
+ * PVI (Positive Volume Index، Paul Dysart/Norman Fosback) — مرآة NVI أعلاه تماماً بشرط معكوس: يفترض
+ * أن حركة "الجمهور" (غير الأموال الذكية) تتركّز بأيام الفوليوم *المرتفع* (الصاخبة) لا المنخفض. نفس
+ * قيمة الأساس 1000 القياسية، ونفس صيغة تحديث النسبة المئوية للإغلاق (PVI[i] = PVI[i-1] ×
+ * (1 + (إغلاق[i]−إغلاق[i-1])/إغلاق[i-1])) لكن الشرط معكوس بالضبط: تُحدَّث القيمة فقط بأيام فوليومها
+ * *أعلى* من الشمعة السابقة؛ أيام الفوليوم الأقل أو المساوي تبقى القيمة ثابتة بلا تغيير (نفس اصطلاح
+ * "لا تحديث" لا "طرح" المستخدَم بـcomputeNvi أعلاه). فوليوم مفقود يُعوَّض بنفس صيغة orderflow.ts
+ * للاتساق. يُرسم بنفس نمط پين NVI (تطبيع أدنى/أعلى، تلوين حسب الاتجاه لحظة-بلحظة). **تحقّق يدوي**:
+ * لو الإغلاق ثابت تماماً بكل الشموع بصرف النظر عن الفوليوم، فرق الإغلاق صفر دائماً حتى بأيام
+ * الفوليوم المرتفع → PVI تبقى عند 1000 طوال السلسلة، نفس منطق تحقّق NVI أعلاه تماماً بشرط معكوس.
+ */
+export function computePvi(candles: (Candle & { volume?: number })[]): number[] {
+  const n = candles.length;
+  const out: number[] = new Array(n).fill(1000);
+  for (let i = 1; i < n; i++) {
+    const prevVol =
+      candles[i - 1].volume ?? Math.abs(candles[i - 1].close - candles[i - 1].open) * 1e6 + 1000;
+    const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
+    const prevClose = candles[i - 1].close;
+    if (vol > prevVol) {
+      out[i] = out[i - 1] * (1 + (prevClose === 0 ? 0 : (candles[i].close - prevClose) / prevClose));
+    } else {
+      out[i] = out[i - 1];
+    }
+  }
+  return out;
+}
+
+/**
+ * RAVI (Range Action Verification Index، Tushar Chande — فترتان قياسيتان شائعتان short=7/long=65)
+ * — نسخة SMA من فكرة APO/PPO أعلاه (بدل طبقتي EMA): RAVI[i] = (SMA(short)[i] − SMA(long)[i]) /
+ * SMA(long)[i] × 100 (صفر عند SMA(long) صفرية بدل قسمة على صفر). يقيس قوة الاتجاه الحالي نسبةً
+ * لمتوسط أطول مدى — قيمة مطلقة كبيرة (عادة >3 كعتبة شائعة) تدل على اتجاه واضح، قرب الصفر يدل على
+ * سوق عرضي (range-bound). **تحقّق يدوي**: سعر ثابت تماماً بكل الشموع (بما فيها فترة التسخين) →
+ * SMA(short) وSMA(long) تستقران كلتاهما على نفس القيمة الثابتة بالضبط بعد كل فترة تسخين على حدة →
+ * RAVI=(c−c)/c×100=0 بالضبط بمجرد توفّر كلا المتوسطين، يطابق "لا تباعد اتجاهي بسعر ساكن" بالتعريف.
+ */
+export function computeRavi(closes: number[], shortPeriod = 7, longPeriod = 65): (number | null)[] {
+  const smaShort = sma(closes, shortPeriod);
+  const smaLong = sma(closes, longPeriod);
+  return closes.map((_, i) =>
+    smaShort[i] != null && smaLong[i] != null
+      ? smaLong[i] === 0
+        ? 0
+        : ((smaShort[i]! - smaLong[i]!) / smaLong[i]!) * 100
+      : null
+  );
+}
+
+/**
+ * Ulcer Index (Peter Martin، period=14 شائع) — يقيس "ألم" الانخفاض عن القمة المتحرّكة بدل التقلّب
+ * ثنائي الاتجاه العادي (بعكس STDEV/ATR أعلاه اللذين لا يميّزان صعوداً عن هبوط): لكل شمعة j ضمن نافذة
+ * period المنتهية عند i، أعلى إغلاق ضمن نافذة period المنتهية عند j نفسها (maxClose[j]، نافذة
+ * متدحرجة وليست منذ البداية) يُحسَب أولاً، ثم نسبة الانخفاض المئوية pctDrawdown[j] = (إغلاق[j] −
+ * maxClose[j]) / maxClose[j] × 100 (≤ 0 دائماً بالتعريف، صفر عند maxClose صفري نظرياً). Ulcer
+ * Index[i] = الجذر التربيعي لمتوسط مربعات pctDrawdown لكل j بنافذة period المنتهية عند i (RMS) —
+ * القيمة ≥ 0 دائماً بالتعريف (متوسط مربعات). ارتفاع القيمة = انخفاضات أعمق و/أو أطول أمداً عن القمم
+ * الأخيرة، صفر = السعر عند قمة جديدة باستمرار بلا أي تراجع بالنافذة. **تحقّق يدوي**: سعر تصاعدي
+ * بشكل صارم بكل شمعة (كل إغلاق أعلى من سابقه) → كل إغلاق هو أعلى إغلاق بأي نافذة تنتهي عنده بالتعريف
+ * (تصاعد صارم) → maxClose[j]=إغلاق[j] لكل j → pctDrawdown=0 لكل نقطة → Ulcer Index=RMS(0s)=0 بالضبط،
+ * يطابق "لا ألم انخفاض بصعود صارم متواصل" بالتعريف تماماً.
+ */
+export function computeUlcerIndex(closes: number[], period = 14): (number | null)[] {
+  const n = closes.length;
+  const out: (number | null)[] = [];
+  for (let i = 0; i < n; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    let sumSq = 0;
+    for (let j = i - period + 1; j <= i; j++) {
+      const windowStart = Math.max(0, j - period + 1);
+      const maxClose = Math.max(...closes.slice(windowStart, j + 1));
+      const pctDrawdown = maxClose === 0 ? 0 : ((closes[j] - maxClose) / maxClose) * 100;
+      sumSq += pctDrawdown * pctDrawdown;
+    }
+    out.push(Math.sqrt(sumSq / period));
+  }
+  return out;
+}
+
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];

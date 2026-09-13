@@ -73,6 +73,15 @@ export type IndicatorId =
   | 'linRegR2'
   | 'percentB'
   | 'bbw'
+  | 'medianPrice'
+  | 'typicalPrice'
+  | 'weightedClose'
+  | 'mcginley'
+  | 'momentum'
+  | 'vhf'
+  | 'pvi'
+  | 'ravi'
+  | 'ulcer'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -184,6 +193,15 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'linRegR2', label: 'LR R²', pane: true },
   { id: 'percentB', label: '%B', pane: true },
   { id: 'bbw', label: 'BBW', pane: true },
+  { id: 'medianPrice', label: 'Median Price' },
+  { id: 'typicalPrice', label: 'Typical Price' },
+  { id: 'weightedClose', label: 'Weighted Close' },
+  { id: 'mcginley', label: 'McGinley' },
+  { id: 'momentum', label: 'Momentum', pane: true },
+  { id: 'vhf', label: 'VHF', pane: true },
+  { id: 'pvi', label: 'PVI', pane: true },
+  { id: 'ravi', label: 'RAVI', pane: true },
+  { id: 'ulcer', label: 'Ulcer Index', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [
