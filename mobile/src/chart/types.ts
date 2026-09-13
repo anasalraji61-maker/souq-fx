@@ -29,6 +29,10 @@ export type IndicatorId =
   | 'willr'
   | 'cci'
   | 'roc'
+  | 'vwap'
+  | 'obv'
+  | 'mfi'
+  | 'adx'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -96,6 +100,10 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'willr', label: 'Williams %R', pane: true },
   { id: 'cci', label: 'CCI', pane: true },
   { id: 'roc', label: 'ROC', pane: true },
+  { id: 'vwap', label: 'VWAP' },
+  { id: 'obv', label: 'OBV', pane: true },
+  { id: 'mfi', label: 'MFI', pane: true },
+  { id: 'adx', label: 'ADX', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

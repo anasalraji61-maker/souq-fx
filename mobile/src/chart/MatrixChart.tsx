@@ -53,9 +53,11 @@ import {
 } from './types';
 import {
   FIB_LEVELS,
+  computeAdx,
   computeAtr,
   computeCci,
   computeMacd,
+  computeMfi,
   computeObv,
   computeOverlays,
   computeRoc,
@@ -741,6 +743,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('obv') ? computeObv(source.plot) : null),
     [source.plot, indicators]
   );
+  const mfi = useMemo(
+    () => (indicators.includes('mfi') ? computeMfi(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const adx = useMemo(
+    () => (indicators.includes('adx') ? computeAdx(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -752,6 +762,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('cci') ? 1 : 0) +
     (indicators.includes('roc') ? 1 : 0) +
     (indicators.includes('obv') ? 1 : 0) +
+    (indicators.includes('mfi') ? 1 : 0) +
+    (indicators.includes('adx') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -2719,6 +2731,54 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     height: 3,
                     marginTop: ((100 - v) / 100) * (paneH - 16),
                     backgroundColor: v > 70 ? colors.bear : v < 30 ? colors.bull : accent,
+                    borderRadius: 2,
+                  }}
+                />
+              )
+            )}
+          </View>
+        </View>
+      ) : null}
+
+      {mfi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>MFI</Text>
+          <View style={styles.paneInner}>
+            {mfi.map((v, i) =>
+              v == null ? (
+                <View key={i} style={{ flex: 1 }} />
+              ) : (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    marginTop: ((100 - v) / 100) * (paneH - 16),
+                    backgroundColor: v > 80 ? colors.bear : v < 20 ? colors.bull : accent,
+                    borderRadius: 2,
+                  }}
+                />
+              )
+            )}
+          </View>
+        </View>
+      ) : null}
+
+      {adx ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>ADX</Text>
+          <View style={styles.paneInner}>
+            {adx.map((v, i) =>
+              v == null ? (
+                <View key={i} style={{ flex: 1 }} />
+              ) : (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    marginTop: ((100 - v) / 100) * (paneH - 16),
+                    backgroundColor: v >= 25 ? colors.warn : colors.textDim,
                     borderRadius: 2,
                   }}
                 />
