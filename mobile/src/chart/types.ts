@@ -39,6 +39,40 @@ export type IndicatorId =
   | 'cmf'
   | 'supertrend'
   | 'keltner'
+  | 'envelopes'
+  | 'donchian'
+  | 'ultimateOsc'
+  | 'cmo'
+  | 'trix'
+  | 'force'
+  | 'chaikinOsc'
+  | 'dpo'
+  | 'ao'
+  | 'ac'
+  | 'bop'
+  | 'bullPower'
+  | 'bearPower'
+  | 'tsi'
+  | 'coppock'
+  | 'eom'
+  | 'nvi'
+  | 'ppo'
+  | 'chaikinVol'
+  | 'massIndex'
+  | 'qstick'
+  | 'chop'
+  | 'bwmfi'
+  | 'pvo'
+  | 'apo'
+  | 'vo'
+  | 'vpt'
+  | 'hv'
+  | 'stochRsi'
+  | 'rvi'
+  | 'linRegSlope'
+  | 'linRegR2'
+  | 'percentB'
+  | 'bbw'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -116,6 +150,40 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'cmf', label: 'CMF', pane: true },
   { id: 'supertrend', label: 'SuperTrend' },
   { id: 'keltner', label: 'Keltner' },
+  { id: 'envelopes', label: 'Envelopes' },
+  { id: 'donchian', label: 'Donchian' },
+  { id: 'ultimateOsc', label: 'Ultimate Osc', pane: true },
+  { id: 'cmo', label: 'CMO', pane: true },
+  { id: 'trix', label: 'TRIX', pane: true },
+  { id: 'force', label: 'Force Index', pane: true },
+  { id: 'chaikinOsc', label: 'Chaikin Osc', pane: true },
+  { id: 'dpo', label: 'DPO', pane: true },
+  { id: 'ao', label: 'Awesome Osc', pane: true },
+  { id: 'ac', label: 'Accelerator Osc', pane: true },
+  { id: 'bop', label: 'Balance of Power', pane: true },
+  { id: 'bullPower', label: 'Bull Power', pane: true },
+  { id: 'bearPower', label: 'Bear Power', pane: true },
+  { id: 'tsi', label: 'TSI', pane: true },
+  { id: 'coppock', label: 'Coppock', pane: true },
+  { id: 'eom', label: 'EOM', pane: true },
+  { id: 'nvi', label: 'NVI', pane: true },
+  { id: 'ppo', label: 'PPO', pane: true },
+  { id: 'chaikinVol', label: 'Chaikin Vol', pane: true },
+  { id: 'massIndex', label: 'Mass Index', pane: true },
+  { id: 'qstick', label: 'Qstick', pane: true },
+  { id: 'chop', label: 'Choppiness', pane: true },
+  { id: 'bwmfi', label: 'BW MFI', pane: true },
+  { id: 'pvo', label: 'PVO', pane: true },
+  { id: 'apo', label: 'APO', pane: true },
+  { id: 'vo', label: 'Volume Osc', pane: true },
+  { id: 'vpt', label: 'VPT', pane: true },
+  { id: 'hv', label: 'HV', pane: true },
+  { id: 'stochRsi', label: 'StochRSI', pane: true },
+  { id: 'rvi', label: 'RVI', pane: true },
+  { id: 'linRegSlope', label: 'LR Slope', pane: true },
+  { id: 'linRegR2', label: 'LR R²', pane: true },
+  { id: 'percentB', label: '%B', pane: true },
+  { id: 'bbw', label: 'BBW', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

@@ -666,4 +666,1009 @@ export function computeSuperTrend(
   return { value, up };
 }
 
+/**
+ * Ultimate Oscillator (Larry Williams، period1=7/period2=14/period3=28 القيم القياسية) — يجمع ثلاثة
+ * أطر زمنية بوزن مختلف لتقليل إشارات الانعكاس الكاذبة الشائعة بمؤشر زخم واحد. لكل شمعة:
+ * BP (Buying Pressure) = إغلاق − min(أدنى، إغلاق الشمعة السابقة)، TR (بنفس منطق computeAtr لكن
+ * بحدَّين فقط) = max(أعلى، إغلاق سابق) − min(أدنى، إغلاق سابق). لكل فترة: avg = مجموع(BP)/مجموع(TR)
+ * على نافذتها (صفر عند مجموع TR صفري بدل قسمة على صفر). UO = 100×(4×avg1 + 2×avg2 + avg3)/7 (مدى
+ * 0..100، ≥70 تشبّع شرائي، ≤30 تشبّع بيعي — نفس عتبات RSI القياسية). **تحقّق يدوي بحالات حدّية
+ * (بدل التقاط قيم من صف عشوائي كما بمؤشرات سابقة، لأن التحقّق العددي المباشر أوضح هنا)**: (أ) لو
+ * BP=TR/2 بكل شمعة (ضغط شراء نصف المدى تماماً) فكل avg=0.5 → UO=100×(2+1+0.5)/7=50 — يطابق "50 =
+ * محايد" المعروف عن هذا المؤشر بالضبط. (ب) لو BP=TR بكل شمعة (إغلاق=أعلى، وأدنى=إغلاق سابق فتصبح
+ * trueLow=trueHigh السابقة صفراً للفارق) فكل avg=1 → UO=100×(4+2+1)/7=100 — الحد الأقصى النظري،
+ * يطابق "ضغط شرائي كامل" تماماً. (ج) لو BP=0 بكل شمعة (إغلاق=أدنى دائماً) فكل avg=0 → UO=0 — الحد
+ * الأدنى النظري. الحالات الثلاث تطابق تعريف المؤشر القياسي حرفياً. يعيد null حتى تتوفر maxPeriod-1
+ * شمعة سابقة على الأقل (period3=28 افتراضياً هو الأطول، فأول قيمة فعلية عند المؤشر 27).
+ */
+export function computeUltimateOsc(
+  candles: Candle[],
+  period1 = 7,
+  period2 = 14,
+  period3 = 28
+): (number | null)[] {
+  const n = candles.length;
+  const bp: number[] = new Array(n).fill(0);
+  const tr: number[] = new Array(n).fill(0);
+  for (let i = 0; i < n; i++) {
+    const prevClose = i > 0 ? candles[i - 1].close : candles[i].close;
+    const trueLow = Math.min(candles[i].low, prevClose);
+    const trueHigh = Math.max(candles[i].high, prevClose);
+    bp[i] = candles[i].close - trueLow;
+    tr[i] = trueHigh - trueLow;
+  }
+  const sumWindow = (arr: number[], end: number, period: number) => {
+    let s = 0;
+    for (let w = Math.max(0, end - period + 1); w <= end; w++) s += arr[w];
+    return s;
+  };
+  const maxPeriod = Math.max(period1, period2, period3);
+  const out: (number | null)[] = [];
+  for (let i = 0; i < n; i++) {
+    if (i < maxPeriod - 1) {
+      out.push(null);
+      continue;
+    }
+    const trSum1 = sumWindow(tr, i, period1);
+    const trSum2 = sumWindow(tr, i, period2);
+    const trSum3 = sumWindow(tr, i, period3);
+    const avg1 = trSum1 === 0 ? 0 : sumWindow(bp, i, period1) / trSum1;
+    const avg2 = trSum2 === 0 ? 0 : sumWindow(bp, i, period2) / trSum2;
+    const avg3 = trSum3 === 0 ? 0 : sumWindow(bp, i, period3) / trSum3;
+    out.push((100 * (4 * avg1 + 2 * avg2 + avg3)) / 7);
+  }
+  return out;
+}
+
+/**
+ * CMO (Chande Momentum Oscillator، period=14 — نفس افتراضي RSI/ADX/MFI/Aroon بهذا الملف) — يشبه
+ * RSI هيكلياً (نفس تصنيف حركة كل شمعة لـup/down) لكن بدون تمهيد Wilder الأسي: مجموع مباشر لحركات
+ * الصعود والهبوط داخل نافذة period فقط، ثم CMO = 100×(sumUp−sumDown)/(sumUp+sumDown) (صفر عند
+ * مجموع كلي صفري بدل قسمة على صفر). المدى -100..100 (بعكس RSI 0..100)، +50/-50 عتبتا تشبّع
+ * شرائي/بيعي شائعتان. **تحقّق يدوي بثلاث حالات حدّية**: صعود ثابت كل شمعة (كل الحركات موجبة) →
+ * sumDown=0 → CMO=100×sumUp/sumUp=100 (الحد الأقصى، يطابق "زخم صاعد كامل")؛ هبوط ثابت كل شمعة →
+ * sumUp=0 → CMO=100×(0−sumDown)/sumDown=-100 (الحد الأدنى)؛ تعادل تام بين مجموع الصعود والهبوط
+ * بالنافذة → sumUp=sumDown → CMO=0 (محايد). الحالات الثلاث تطابق تعريف المؤشر القياسي حرفياً.
+ */
+export function computeCmo(closes: number[], period = 14): (number | null)[] {
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period) {
+      out.push(null);
+      continue;
+    }
+    let sumUp = 0;
+    let sumDown = 0;
+    for (let w = i - period + 1; w <= i; w++) {
+      const d = closes[w] - closes[w - 1];
+      if (d > 0) sumUp += d;
+      else if (d < 0) sumDown += -d;
+    }
+    out.push(sumUp + sumDown === 0 ? 0 : (100 * (sumUp - sumDown)) / (sumUp + sumDown));
+  }
+  return out;
+}
+
+/**
+ * TRIX (period=15 القيمة القياسية الشائعة) — معدّل التغيّر المئوي (rate of change) لمتوسط EMA
+ * مُطبَّق ثلاث مرات متتالية على الإغلاق (**تبني بالضبط على نفس طبقات ema() المستخدَمة بـdema()/
+ * tema() أعلاه بهذا الملف، بما فيها أسلوب تعويض null بصفر لحساب الطبقة التالية ثم بوابة صلاحية
+ * بالقيمة الأصلية — تحمل نفس تحفّظ الإحماء الأولي الموثَّق مسبقاً لتلك الدوال، وليس افتراضاً
+ * جديداً**)، لكن الناتج هنا نسبة *تغيّر* الطبقة الثالثة من شمعة لأخرى، لا دمجاً خطياً للطبقات
+ * كـTEMA: TRIX[i] = ((tripleEma[i] − tripleEma[i-1]) / tripleEma[i-1]) × 100 (صفر عند طبقة سابقة
+ * صفرية بدل قسمة على صفر). صفر = ثبات زخم الاتجاه طويل المدى، موجب/سالب = تسارع/تباطؤ الاتجاه —
+ * أكثر "تصفية" من MACD العادي (ثلاث طبقات EMA بدل طبقتين). **تحقّق منطقي**: لو الإغلاق ثابت تماماً
+ * بعد انتهاء الإحماء، tripleEma تستقر على نفس القيمة الثابتة فيصبح الفرق صفراً → TRIX=0 (يطابق
+ * "لا تغيّر بالزخم" لسعر ثابت تماماً).
+ */
+export function computeTrix(closes: number[], period = 15): (number | null)[] {
+  const e1 = ema(closes, period);
+  const e1Filled = e1.map((v) => v ?? 0);
+  const e2 = ema(e1Filled, period);
+  const e2Filled = e2.map((v) => v ?? 0);
+  const e3 = ema(e2Filled, period);
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i === 0 || e3[i] == null || e3[i - 1] == null) {
+      out.push(null);
+      continue;
+    }
+    const prev = e3[i - 1]!;
+    out.push(prev === 0 ? 0 : ((e3[i]! - prev) / prev) * 100);
+  }
+  return out;
+}
+
+/**
+ * Force Index (Alexander Elder، period=13 EMA — القيمة الأكثر شيوعاً) — يجمع اتجاه السعر وحجم
+ * الحركة (فوليوم) بضربة واحدة: rawForce[i] = (إغلاق[i] − إغلاق[i-1]) × فوليوم[i] (صفر عند i=0
+ * لغياب شمعة سابقة). القيمة الخام شديدة التقلّب فتُمرَّر عبر ema(period) لتنعيمها (نفس أسلوب تنعيم
+ * إشارة MACD أعلاه). موجب = ضغط شرائي مدعوم بحجم تداول حقيقي، سالب = ضغط بيعي، قرب الصفر = تحرك
+ * بلا زخم حجمي خلفه. فوليوم مفقود يُعوَّض بنفس صيغة orderflow.ts المستخدَمة لـOBV/MFI/CMF أعلاه
+ * للاتساق. **تحقّق يدوي**: لو الإغلاق ثابت بكل الشموع (بلا أي تغيّر سعري) فـ rawForce=0 لكل شمعة
+ * بصرف النظر عن الفوليوم (المضاعِف صفر دائماً) → ema لسلسلة أصفار بالكامل = صفر لكل نقطة صالحة —
+ * يطابق "لا قوة/زخم فعلي بلا تغيّر سعري" بالتعريف تماماً، مهما كان حجم التداول.
+ */
+export function computeForceIndex(
+  candles: (Candle & { volume?: number })[],
+  period = 13
+): (number | null)[] {
+  const n = candles.length;
+  const raw: number[] = new Array(n).fill(0);
+  for (let i = 1; i < n; i++) {
+    const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
+    raw[i] = (candles[i].close - candles[i - 1].close) * vol;
+  }
+  return ema(raw, period);
+}
+
+/**
+ * Chaikin Oscillator (فترتان قياسيتان 3/10) — "MACD" مُطبَّق على خط التراكم/التوزيع (ADL) بدل
+ * السعر مباشرة. ADL تراكمي بلا نافذة زمنية بنفس Money Flow Multiplier المستخدَم بـcomputeCmf
+ * أعلاه حرفياً (((إغلاق−أدنى)−(أعلى−إغلاق))/(أعلى−أدنى)، صفر عند مدى صفري)، Money Flow Volume =
+ * المضاعِف×فوليوم، ADL[i] = ADL[i-1] + MFV[i] (يبدأ من MFV[0]). Chaikin Osc = ema(ADL, 3) −
+ * ema(ADL, 10) — نفس بنية computeMacd() أعلاه تماماً (فرق EMA قصير وطويل) لكن على ADL بدل الإغلاق.
+ * موجب = تسارع تراكم شرائي حديث عن المدى الأطول (زخم تراكم صاعد)، سالب = تسارع توزيع بيعي. **تحقّق
+ * منطقي**: مضاعِف وفوليوم ثابتان (زيادة تراكمية ثابتة كل شمعة) → ADL منحدر خطي صاعد؛ EMA القصيرة
+ * (3) تلتصق بمنحدر خطي صاعد أقرب من EMA الطويلة (10) بحكم خاصية EMA المعروفة (التأخر يتناسب طردياً
+ * مع الفترة)، فيكون emaShort > emaLong دائماً على منحدر صاعد ثابت → الناتج موجب باستمرار، يطابق
+ * "تسارع تراكم مستمر" بالتعريف. فوليوم مفقود يُعوَّض بنفس صيغة orderflow.ts للاتساق مع
+ * OBV/MFI/CMF/Force Index أعلاه.
+ */
+export function computeChaikinOsc(
+  candles: (Candle & { volume?: number })[],
+  shortPeriod = 3,
+  longPeriod = 10
+): (number | null)[] {
+  const n = candles.length;
+  const adl: number[] = new Array(n).fill(0);
+  let cum = 0;
+  for (let i = 0; i < n; i++) {
+    const c = candles[i];
+    const span = c.high - c.low;
+    const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
+    const mfm = span === 0 ? 0 : (c.close - c.low - (c.high - c.close)) / span;
+    cum += mfm * vol;
+    adl[i] = cum;
+  }
+  const emaShort = ema(adl, shortPeriod);
+  const emaLong = ema(adl, longPeriod);
+  return adl.map((_, i) =>
+    emaShort[i] != null && emaLong[i] != null ? emaShort[i]! - emaLong[i]! : null
+  );
+}
+
+/**
+ * DPO (Detrended Price Oscillator، period=20 وإزاحة قياسية ⌊period/2⌋+1 نحو الخلف) — يزيل تأثير
+ * الاتجاه طويل المدى من السعر لإبراز الدورات القصيرة: DPO[i] = إغلاق[i-shift] − SMA(period)[i]
+ * (shift=11 لـperiod=20، القيمة القياسية الشائعة). **ليس** مؤشر زخم متأخر عادي — الإزاحة للخلف
+ * تُصحّح انزياح SMA الطبيعي فتجعل DPO يقارن السعر بمتوسط "مُتمركز" حول نفس نقطته الزمنية تقريباً،
+ * فيبرز القمم/القيعان الدورية القصيرة بدل الاتجاه العام. صفر = السعر عند مستوى اتجاهه العام،
+ * موجب/سالب = أعلى/أدنى من الاتجاه العام عند تلك النقطة تحديداً. **تحقّق يدوي**: لو الإغلاق ثابت
+ * تماماً بكل الشموع، SMA(period) تستقر على نفس القيمة الثابتة وإغلاق[i-shift] يساويها أيضاً →
+ * DPO=0 لكل نقطة صالحة — يطابق "لا انحراف دوري عن اتجاه ثابت مسطّح" بالتعريف تماماً.
+ */
+export function computeDpo(closes: number[], period = 20): (number | null)[] {
+  const mid = sma(closes, period);
+  const shift = Math.floor(period / 2) + 1;
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    const srcIdx = i - shift;
+    if (mid[i] == null || srcIdx < 0) {
+      out.push(null);
+      continue;
+    }
+    out.push(closes[srcIdx] - mid[i]!);
+  }
+  return out;
+}
+
+/**
+ * Awesome Oscillator (AO، Bill Williams، الفترتان القياسيتان 5/34) — الفرق بين متوسطين بسيطين
+ * لسعر الوسط (median price = (أعلى+أدنى)/2، لا الإغلاق) بفترتين مختلفتين: AO = SMA(medianPrice, 5)
+ * − SMA(medianPrice, 34). موجب = زخم السوق الحالي (نافذة قصيرة) أعلى من زخمه الأبعد (نافذة طويلة)
+ * = تسارع صاعد، والعكس. **تبسيط تلوين موثَّق**: التلوين المرجعي القياسي لـAO يقارن كل عمود بالعمود
+ * السابق (أخضر/أحمر حسب اتجاه العمود لا إشارته)؛ هنا يُستخدَم إشارة القيمة نفسها (موجب/سالب) تماشياً
+ * مع كل پينات ثنائية القطبية الأخرى بهذا الملف (TRIX/Force/Chaikin/DPO) للاتساق البصري — القيمة
+ * الحسابية نفسها معيارية 100%، فقط قاعدة التلوين مبسَّطة عمداً. **تحقّق يدوي**: سوق مسطّح تماماً
+ * (أعلى=أدنى=قيمة ثابتة بكل شمعة) → السعر الوسط ثابت → fast=slow بعد الإحماء → AO=0، يطابق "لا
+ * تباعد زخم" بالتعريف.
+ */
+export function computeAwesomeOsc(candles: Candle[]): (number | null)[] {
+  const median = candles.map((c) => (c.high + c.low) / 2);
+  const fast = sma(median, 5);
+  const slow = sma(median, 34);
+  return median.map((_, i) => (fast[i] != null && slow[i] != null ? fast[i]! - slow[i]! : null));
+}
+
+/**
+ * Accelerator Oscillator (AC، Bill Williams) — يقيس تسارع/تباطؤ AO نفسه (زخم الزخم): AC = AO −
+ * SMA(AO, 5). موجب = الزخم الحالي يتسارع فوق متوسطه القريب، سالب = يتباطأ. يُبنى مباشرة فوق
+ * computeAwesomeOsc أعلاه (نفس فكرة computeChaikinOsc المبني فوق ADL الداخلي — طبقة ثانية فوق
+ * مؤشر أول بنفس الملف). قيم null بـAO تُعوَّض بصفر مؤقتاً لحساب SMA(5) (نفس أسلوب dema/tema/hma
+ * بهذا الملف) ثم بوابة صلاحية بقيمة AO الأصلية. **تحقّق يدوي**: لو AO ثابت عند صفر بعد الإحماء
+ * (سوق مسطّح كما أعلاه)، SMA(AO,5)=0 أيضاً → AC=0−0=0، يطابق "لا تسارع بلا زخم أصلاً" منطقياً.
+ */
+export function computeAcceleratorOsc(candles: Candle[]): (number | null)[] {
+  const ao = computeAwesomeOsc(candles);
+  const aoFilled = ao.map((v) => v ?? 0);
+  const aoSma = sma(aoFilled, 5);
+  return ao.map((v, i) => (v != null && aoSma[i] != null ? v - aoSma[i]! : null));
+}
+
+/**
+ * Balance of Power (BOP) — يقيس ضغط المشترين مقابل البائعين ضمن مدى الشمعة نفسها فقط (بلا تراكم أو
+ * تمهيد): BOP = (إغلاق−فتح)/(أعلى−أدنى) لكل شمعة (صفر عند مدى صفري بدل قسمة على صفر). مدى نظري
+ * -1..1: قرب 1 = إغلاق قرب القمة بعد فتح قرب القاع (سيطرة شرائية كاملة داخل الشمعة)، قرب -1 = العكس.
+ * بعكس كل المؤشرات الأخرى بالملف، BOP لا يحتاج فترة تمهيد إطلاقاً (قيمة فورية لكل شمعة من بياناتها
+ * ذاتها) فلا قيم null إلا عند مدى صفري (مُعالَج بصفر بدل null هنا تحديداً لاتساقه الفوري). **تحقّق
+ * يدوي بثلاث حالات حدّية**: شمعة صاعدة كاملة (فتح=أدنى، إغلاق=أعلى) → BOP=(أعلى−أدنى)/(أعلى−أدنى)=1؛
+ * شمعة هابطة كاملة (فتح=أعلى، إغلاق=أدنى) → BOP=-1؛ دوجي (فتح=إغلاق) → BOP=0. الحالات الثلاث تطابق
+ * تعريف المؤشر القياسي حرفياً.
+ */
+export function computeBop(candles: Candle[]): (number | null)[] {
+  return candles.map((c) => {
+    const span = c.high - c.low;
+    return span === 0 ? 0 : (c.close - c.open) / span;
+  });
+}
+
+/**
+ * Elder Ray — Bull Power / Bear Power (Alexander Elder، period=13 EMA على الإغلاق، القيمة القياسية
+ * الشائعة) — يقيسان قدرة المشترين/البائعين على دفع السعر أبعد من "القيمة العادلة" الحالية (ema13):
+ * bullPower = أعلى − ema13، bearPower = أدنى − ema13. موجب bullPower يعني قمة الشمعة فوق الاتجاه
+ * الحالي (ضغط شرائي)، وbearPower سالب طبيعي أثناء اتجاه صاعد سليم (قاع الشمعة عادة تحت المتوسط)
+ * ويزداد سلبية مع ضعف الاتجاه. يُرسمان كمؤشرين منفصلين (بدل خطين بپين واحد) للاتساق مع نمط "قيمة
+ * واحدة لكل پين" المتَّبع بكل مؤشرات هذا الملف حتى الآن. **تحقّق يدوي**: سوق مسطّح تماماً (إغلاق=
+ * أعلى=أدنى=قيمة ثابتة بكل شمعة) → ema13 تستقر على نفس القيمة الثابتة بعد الإحماء → bullPower=0
+ * وbearPower=0 معاً، يطابق "لا قوة شرائية/بيعية فوق/تحت القيمة العادلة بسوق ساكن تماماً" بالتعريف.
+ */
+export function computeBullPower(candles: Candle[], period = 13): (number | null)[] {
+  const emaClose = ema(candles.map((c) => c.close), period);
+  return candles.map((c, i) => (emaClose[i] != null ? c.high - emaClose[i]! : null));
+}
+
+export function computeBearPower(candles: Candle[], period = 13): (number | null)[] {
+  const emaClose = ema(candles.map((c) => c.close), period);
+  return candles.map((c, i) => (emaClose[i] != null ? c.low - emaClose[i]! : null));
+}
+
+/**
+ * TSI (True Strength Index، فترتا القيمة القياسية r=25 (طويلة) وs=13 (قصيرة)) — زخم مزدوج التنعيم:
+ * momentum[i] = إغلاق[i] − إغلاق[i-1] (صفر عند i=0 لغياب شمعة سابقة). يُمرَّر momentum عبر طبقتي
+ * ema متتاليتين (r ثم s — **نفس تقنية طبقات ema المتتالية المستخدَمة بـdema/tema/trix أعلاه بهذا
+ * الملف حرفياً، بما فيها تعويض null بصفر بين الطبقات ثم بوابة صلاحية بالقيمة الأصلية**)، وبالتوازي
+ * |momentum| عبر نفس الطبقتين. TSI = 100×(الزخم المزدوج التنعيم)/(القيمة المطلقة المزدوجة التنعيم)
+ * (صفر عند مقام صفري بدل قسمة على صفر — يغطي حالة سعر ثابت تماماً حيث momentum=0 بكل نقطة). مدى
+ * نظري -100..100 (عملياً يبقى ضمن مدى أضيق غالباً)، +25/-25 عتبتا تشبّع شائعتان. **تحقّق يدوي**:
+ * سعر ثابت تماماً بكل الشموع → momentum=0 لكل نقطة → كلا البسط والمقام يستقران على صفر بعد الإحماء
+ * → TSI=0 (الحالة المُعالَجة صراحة أعلاه)، يطابق "لا زخم بسعر ساكن" بالتعريف تماماً.
+ */
+export function computeTsi(closes: number[], r = 25, s = 13): (number | null)[] {
+  const n = closes.length;
+  const momentum: number[] = new Array(n).fill(0);
+  const absMomentum: number[] = new Array(n).fill(0);
+  for (let i = 1; i < n; i++) {
+    momentum[i] = closes[i] - closes[i - 1];
+    absMomentum[i] = Math.abs(momentum[i]);
+  }
+  const ema1 = ema(momentum, r);
+  const ema1Filled = ema1.map((v) => v ?? 0);
+  const ema2 = ema(ema1Filled, s);
+  const absEma1 = ema(absMomentum, r);
+  const absEma1Filled = absEma1.map((v) => v ?? 0);
+  const absEma2 = ema(absEma1Filled, s);
+  return closes.map((_, i) =>
+    ema2[i] != null && absEma2[i] != null ? (absEma2[i] === 0 ? 0 : (100 * ema2[i]!) / absEma2[i]!) : null
+  );
+}
+
+/**
+ * Coppock Curve (فترات قياسية شائعة: ROC 14 + ROC 11، مُنعَّمة بـWMA period=10) — مؤشر زخم طويل
+ * المدى (صُمِّم أصلاً لرصد قيعان السوق الكبرى) يجمع معدّلي تغيّر بفترتين مختلفتين (**يبني مباشرة
+ * فوق computeRoc المُصدَّرة أعلاه بهذا الملف — لا إعادة تطبيق لنفس المنطق**) ثم ينعّم مجموعهما
+ * بمتوسط مرجَّح (wma() المحلية، نفس دالة hma20/wma20 أعلاه). Coppock[i] = wma(ROC(closes,14)[i] +
+ * ROC(closes,11)[i]، period=10). عبور الخط من سالب لموجب تقليدياً إشارة اشتراء طويلة المدى. **تحقّق
+ * يدوي**: سعر ثابت تماماً بكل الشموع → كلا ROC(14) وROC(11) يستقران على صفر بعد الإحماء (لا تغيّر
+ * نسبي بسعر ثابت) → مجموعهما صفر بكل نقطة → wma لسلسلة أصفار = صفر، يطابق "لا زخم دوري بسعر ساكن
+ * تماماً" بالتعريف.
+ */
+export function computeCoppock(closes: number[], roc1 = 14, roc2 = 11, wmaPeriod = 10): (number | null)[] {
+  const rocA = computeRoc(closes, roc1);
+  const rocB = computeRoc(closes, roc2);
+  const sum: number[] = closes.map((_, i) =>
+    rocA[i] != null && rocB[i] != null ? rocA[i]! + rocB[i]! : NaN
+  );
+  const sumFilled = sum.map((v) => (Number.isNaN(v) ? 0 : v));
+  const smoothed = wma(sumFilled, wmaPeriod);
+  return closes.map((_, i) => (Number.isNaN(sum[i]) ? null : smoothed[i]));
+}
+
+/**
+ * Ease of Movement (EOM، period=14 القيمة القياسية الشائعة) — يقيس السهولة التي يتحرك بها السعر
+ * لكل فوليوم مُتداوَل (كم عزّز فوليوم منخفض حركة سعرية كبيرة، أو العكس): لكل شمعة، المسافة
+ * distance = نقطة_الوسط الحالية − نقطة_الوسط السابقة (نقطة الوسط = (أعلى+أدنى)/2)، نسبة الصندوق
+ * boxRatio = (فوليوم/100,000,000) / (أعلى−أدنى) (صفر عند مدى صفري بدل قسمة على صفر — يجعل rawEMV
+ * صفراً أيضاً بنفس الشمعة). rawEMV = distance/boxRatio (صفر عند boxRatio صفري). EOM = SMA(rawEMV,
+ * period). موجب = السعر يتحرك صعوداً بسهولة (فوليوم منخفض نسبياً لحجم الحركة)، سالب = هبوط سهل،
+ * قرب الصفر = حركة صعبة (فوليوم كبير لحركة سعرية صغيرة، أو لا حركة). ثابت التحجيم 100,000,000 قياسي
+ * شائع لا يغيّر إشارة المؤشر (فقط مقياسه المطلق قبل التطبيع البصري بالپين). فوليوم مفقود يُعوَّض
+ * بنفس صيغة orderflow.ts للاتساق مع مؤشرات الفوليوم الأخرى أعلاه. **تحقّق يدوي**: سوق مسطّح تماماً
+ * (أعلى/أدنى ثابتان بكل شمعة) → نقطة الوسط ثابتة → distance=0 لكل شمعة → rawEMV=0 بصرف النظر عن
+ * الفوليوم → EOM=SMA(0s)=0، يطابق "لا سهولة حركة بسعر ساكن تماماً" بالتعريف.
+ */
+export function computeEom(candles: (Candle & { volume?: number })[], period = 14): (number | null)[] {
+  const n = candles.length;
+  const raw: number[] = new Array(n).fill(0);
+  for (let i = 1; i < n; i++) {
+    const mid = (candles[i].high + candles[i].low) / 2;
+    const prevMid = (candles[i - 1].high + candles[i - 1].low) / 2;
+    const distance = mid - prevMid;
+    const span = candles[i].high - candles[i].low;
+    const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
+    const boxRatio = span === 0 ? 0 : vol / 1e8 / span;
+    raw[i] = boxRatio === 0 ? 0 : distance / boxRatio;
+  }
+  return sma(raw, period);
+}
+
+/**
+ * NVI (Negative Volume Index، Paul Dysart/Norman Fosback) — مؤشر تراكمي يفترض أن "الأموال الذكية"
+ * تتحرك أكثر بأيام الفوليوم المنخفض (الهادئة) لا المرتفع (الصاخبة/الجماهيرية): يبدأ من قيمة أساس
+ * 1000 (القيمة القياسية الشائعة)، وفي كل شمعة فوليومها أقل من الشمعة السابقة تُحدَّث القيمة بنسبة
+ * تغيّر الإغلاق المئوية (NVI[i] = NVI[i-1] × (1 + (إغلاق[i]−إغلاق[i-1])/إغلاق[i-1])، صفر عند إغلاق
+ * سابق صفري نظرياً)؛ أما أيام الفوليوم الأعلى أو المساوي فتبقى القيمة ثابتة بلا تغيير (نفس اصطلاح
+ * OBV/MFI/CMF بهذا الملف: "لا تحديث" وليس "طرح"). فوليوم مفقود يُعوَّض بنفس صيغة orderflow.ts
+ * المستخدَمة بكل مؤشرات الفوليوم أعلاه للاتساق. يُرسم بنفس نمط پين OBV (تطبيع أدنى/أعلى، تلوين حسب
+ * الاتجاه لحظة-بلحظة) لأنه مؤشر تراكمي غير محدود المدى بقيمة أساس، لا أوسيليتر ثنائي القطبية حول
+ * الصفر. **تحقّق يدوي**: لو الإغلاق ثابت تماماً بكل الشموع بصرف النظر عن الفوليوم، فرق الإغلاق صفر
+ * دائماً حتى بأيام الفوليوم المنخفض → NVI تبقى عند 1000 طوال السلسلة، يطابق "لا تغيّر بقيمة ذكية
+ * بسعر ساكن تماماً" منطقياً.
+ */
+export function computeNvi(candles: (Candle & { volume?: number })[]): number[] {
+  const n = candles.length;
+  const out: number[] = new Array(n).fill(1000);
+  for (let i = 1; i < n; i++) {
+    const prevVol =
+      candles[i - 1].volume ?? Math.abs(candles[i - 1].close - candles[i - 1].open) * 1e6 + 1000;
+    const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
+    const prevClose = candles[i - 1].close;
+    if (vol < prevVol) {
+      out[i] = out[i - 1] * (1 + (prevClose === 0 ? 0 : (candles[i].close - prevClose) / prevClose));
+    } else {
+      out[i] = out[i - 1];
+    }
+  }
+  return out;
+}
+
+/**
+ * PPO (Percentage Price Oscillator، فترتا EMA القياسيتان 12/26 — نفس فترتي computeMacd() أعلاه
+ * تماماً) — نسخة نسبية (%) من MACD بدل الفرق المطلق: PPO[i] = (ema12[i]−ema26[i])/ema26[i] × 100
+ * (صفر عند ema26 صفرية بدل قسمة على صفر). ميزته عن MACD المطلق: قابل للمقارنة عبر رموز/أسعار
+ * مختلفة المقياس (فرق MACD المطلق يتأثر بحجم السعر نفسه، PPO النسبي لا يتأثر). **تحقّق يدوي**: سعر
+ * ثابت تماماً بكل الشموع → ema12 وema26 (طبقة ema أحادية مباشرة على الإغلاق، لا طبقات متعددة) تستقران
+ * كلتاهما على نفس القيمة الثابتة بالضبط بدءاً من أول نقطة صالحة لكل منهما (بعكس مؤشرات الطبقات
+ * المزدوجة كـdema/tema/trix أعلاه) → PPO=(c−c)/c×100=0 بالضبط، يطابق "لا تباعد زخم بسعر ساكن"
+ * بالتعريف تماماً (نفس منطق تحقّق MACD الأصلي بالضبط).
+ */
+export function computePpo(closes: number[], fast = 12, slow = 26): (number | null)[] {
+  const emaFast = ema(closes, fast);
+  const emaSlow = ema(closes, slow);
+  return closes.map((_, i) =>
+    emaFast[i] != null && emaSlow[i] != null
+      ? emaSlow[i] === 0
+        ? 0
+        : ((emaFast[i]! - emaSlow[i]!) / emaSlow[i]!) * 100
+      : null
+  );
+}
+
+/**
+ * Chaikin Volatility (period=10 لتنعيم EMA على مدى الشمعة، وrocPeriod=10 لنافذة معدّل التغيّر بينهما
+ * — نفس الفترة للاثنين هي التطبيق الشائع الأكثر انتشاراً) — يقيس تسارع/تباطؤ *اتساع* مدى الشمعة
+ * (High−Low) بلا اعتبار لاتجاه السعر إطلاقاً: أولاً emaRange = EMA(أعلى−أدنى، period) لتنعيم التذبذب
+ * اللحظي (طبقة ema أحادية مباشرة على المدى الخام، لا طبقات متعددة)، ثم نسبة تغيّرها المئوية عبر
+ * rocPeriod شمعة (نفس صيغة computeRoc أعلاه حرفياً لكن مطبَّقة على emaRange بدل الإغلاق مباشرة):
+ * ChaikinVol[i] = (emaRange[i] − emaRange[i-rocPeriod]) / emaRange[i-rocPeriod] × 100 (صفر عند قيمة
+ * سابقة صفرية بدل قسمة على صفر). موجب = اتساع مدى الشموع يتسارع (تقلّب متزايد، غالباً قرب انعكاسات
+ * أو بدايات اتجاه)، سالب = مدى الشموع يضيق (تقلّب متراجع، غالباً استقرار/تجميع). **تحقّق يدوي**: مدى
+ * الشمعة (أعلى−أدنى) ثابت تماماً بكل شمعة → emaRange تستقر على نفس القيمة الثابتة بالضبط بدءاً من
+ * أول نقطة صالحة (طبقة ema أحادية، نفس منطق PPO أعلاه بالضبط) → emaRange[i] يساوي emaRange[i-rocPeriod]
+ * تماماً لأي i،i-rocPeriod كلاهما ضمن نطاق الاستقرار → ChaikinVol=0 بالضبط، يطابق "لا تغيّر بتقلّب
+ * ثابت تماماً" بالتعريف.
+ */
+export function computeChaikinVolatility(
+  candles: Candle[],
+  period = 10,
+  rocPeriod = 10
+): (number | null)[] {
+  const range = candles.map((c) => c.high - c.low);
+  const emaRange = ema(range, period);
+  const out: (number | null)[] = [];
+  for (let i = 0; i < candles.length; i++) {
+    const prevIdx = i - rocPeriod;
+    if (emaRange[i] == null || prevIdx < 0 || emaRange[prevIdx] == null) {
+      out.push(null);
+      continue;
+    }
+    const prev = emaRange[prevIdx]!;
+    out.push(prev === 0 ? 0 : ((emaRange[i]! - prev) / prev) * 100);
+  }
+  return out;
+}
+
+/**
+ * Mass Index (Donald Dorsey، period=25 نافذة تراكمية وemaPeriod=9 لطبقتي التنعيم — القيم القياسية
+ * الشائعة) — يقيس *اتساع* مدى الشمعة (High−Low) بلا اعتبار لاتجاه السعر إطلاقاً (بعكس كل مؤشرات
+ * الزخم أعلاه)، يبحث عن "انتفاخ" (bulge) ينذر بانعكاس محتمل بصرف النظر عن اتجاهه: لكل شمعة range =
+ * أعلى−أدنى، singleEma = EMA(range, emaPeriod)، doubleEma = EMA(singleEma, emaPeriod) (**نفس تقنية
+ * تعويض null بصفر بين الطبقتين ثم بوابة صلاحية بالقيمة الأصلية المستخدَمة بـdema/tema/trix/tsi/
+ * coppock أعلاه بهذا الملف حرفياً — وتحمل نفس تحفّظ الإحماء التقريبي الموثَّق لتلك الدوال: doubleEma
+ * *يقترب* من نفس قيمة singleEma الثابتة تدريجياً كلما ابتعدنا عن نقطة الإحماء الأولى، لا يساويها
+ * مساواة تامة عند أول نقطة صالحة تحديداً، بسبب بذرة المتوسط الأولي المخلوطة بالأصفار المعوَّضة**)،
+ * ratio = singleEma/doubleEma (1 عند doubleEma صفرية بدل قسمة على صفر). Mass Index = مجموع ratio
+ * على نافذة period شمعة. **ملاحظة صادقة**: هذه القيمة الخام فقط (بلا اكتشاف تلقائي لعبور 27 ثم
+ * الهبوط تحت 26.5 — إشارة "الانتفاخ" المرجعية القياسية) — تبسيط متعمَّد يترك القراءة البصرية
+ * للمتداول، قابل لإضافة اكتشاف تلقائي لاحقاً. يُرسم بنمط پين OBV/NVI (تطبيع أدنى/أعلى ضمن النافذة
+ * الظاهرة، تلوين حسب اتجاه لحظي) لأنه دائماً موجب وغير محدود المدى نظرياً، لا أوسيليتر ثنائي القطبية
+ * حول الصفر. **تحقّق يدوي**: مدى الشمعة ثابت تماماً بكل شمعة → singleEma تستقر بالضبط على نفس القيمة
+ * الثابتة بدءاً من أول نقطة صالحة لها (طبقة أحادية مباشرة على مدى ثابت) → ratio *يقترب* تدريجياً من 1
+ * (لا يساويه بالضبط عند أول نقطة بسبب بذرة doubleEma الموضَّحة أعلاه) → Mass Index *يقترب* من period
+ * (25) كلما ابتعدت نافذة الجمع عن نقطة الإحماء الأولى — يطابق "لا انتفاخ تذبذب حقيقي بتقلّب ثابت
+ * تماماً" بالتعريف تقريبياً (نفس درجة الدقة المقبولة لمؤشرات الطبقة المزدوجة الأخرى أعلاه).
+ */
+export function computeMassIndex(
+  candles: Candle[],
+  period = 25,
+  emaPeriod = 9
+): (number | null)[] {
+  const n = candles.length;
+  const range = candles.map((c) => c.high - c.low);
+  const singleEma = ema(range, emaPeriod);
+  const singleFilled = singleEma.map((v) => v ?? 0);
+  const doubleEma = ema(singleFilled, emaPeriod);
+  const ratio: (number | null)[] = candles.map((_, i) =>
+    singleEma[i] != null && doubleEma[i] != null
+      ? doubleEma[i] === 0
+        ? 1
+        : singleEma[i]! / doubleEma[i]!
+      : null
+  );
+  const out: (number | null)[] = [];
+  for (let i = 0; i < n; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    let sum = 0;
+    let valid = true;
+    for (let w = i - period + 1; w <= i; w++) {
+      if (ratio[w] == null) {
+        valid = false;
+        break;
+      }
+      sum += ratio[w]!;
+    }
+    out.push(valid ? sum : null);
+  }
+  return out;
+}
+
+/**
+ * Qstick (Tushar Chande، period=10 القيمة القياسية الشائعة) — أبسط مؤشر بهذا الملف حسابياً: يقيس
+ * غلبة شموع الصعود (إغلاق > فتح) أو الهبوط (إغلاق < فتح) على مدى نافذة زمنية بدل الاعتماد على شمعة
+ * واحدة: Qstick[i] = SMA(إغلاق−فتح, period) — متوسط بسيط مباشر لفارق إغلاق/فتح كل شمعة (**يبني على
+ * sma() المحلية المستخدَمة بكل الملف — لا إعادة تطبيق**). موجب مستمر = أغلب الشموع الأخيرة صاعدة
+ * (جسم أخضر غالب)، سالب مستمر = أغلب الشموع هابطة، تذبذب حول الصفر = تنافس متكافئ بلا غلبة واضحة.
+ * بعكس BOP أعلاه (قيمة فورية لكل شمعة بلا تمهيد)، Qstick مُنعَّم بنافذة period فيبرز الاتجاه المتوسط
+ * لا الشمعة اللحظية. **تحقّق يدوي**: لو فتح=إغلاق بكل شمعة (سوق دوجي مستمر) → الفارق صفر لكل شمعة
+ * بصرف النظر عن أي شيء آخر (أعلى/أدنى/فوليوم) → SMA لسلسلة أصفار = صفر لكل نقطة صالحة، يطابق "لا
+ * غلبة صعود/هبوط بسوق دون أي جسم شمعة فعلي" بالتعريف تماماً.
+ */
+export function computeQstick(candles: Candle[], period = 10): (number | null)[] {
+  const diff = candles.map((c) => c.close - c.open);
+  return sma(diff, period);
+}
+
+/**
+ * Envelopes (نطاق نسبي حول متوسط متحرك بسيط، period=20 وpct=2.5% القيمتان الشائعتان) — أبسط بديل
+ * لبولنجر/كلتنر: بدل استخدام انحراف معياري (بولنجر) أو ATR (كلتنر) لضبط عرض النطاق، يستخدم Envelopes
+ * نسبة مئوية ثابتة من قيمة المتوسط نفسه: mid = SMA(closes, period)، upper = mid×(1+pct)، lower =
+ * mid×(1-pct). عرض النطاق يتناسب طردياً مع مستوى السعر نفسه (بعكس بولنجر/كلتنر اللذين يتفاعلان مع
+ * التقلّب الفعلي) — أبسط حسابياً وأكثر ثباتاً بصرياً عبر فترات التقلّب المختلفة، على حساب عدم التكيّف
+ * مع تغيّر التقلّب الفعلي. **تحقّق يدوي**: سعر ثابت تماماً بكل الشموع → mid يستقر على نفس القيمة
+ * الثابتة (SMA لقيم متطابقة = نفس القيمة) → upper/lower ثابتان أيضاً بنفس النسبة المطلوبة من تلك
+ * القيمة — يطابق "نطاق ثابت حول سعر ثابت" بالتعريف تماماً.
+ */
+export function computeEnvelopes(
+  closes: number[],
+  period = 20,
+  pct = 0.025
+): { mid: (number | null)[]; upper: (number | null)[]; lower: (number | null)[] } {
+  const mid = sma(closes, period);
+  const upper = mid.map((v) => (v == null ? null : v * (1 + pct)));
+  const lower = mid.map((v) => (v == null ? null : v * (1 - pct)));
+  return { mid, upper, lower };
+}
+
+/**
+ * Donchian Channels (period=20 القيمة الشائعة، أبسط قناة اتجاه بلا أي تنعيم إحصائي إطلاقاً) —
+ * upper = أعلى قمة (High) خلال آخر period شمعة (تشمل الشمعة الحالية)، lower = أدنى قاع (Low) بنفس
+ * النافذة، mid = (upper+lower)/2 (خط الوسط، لا SMA — تعريف Donchian القياسي). بعكس بولنجر/كلتنر/
+ * Envelopes التي تُبنى فوق متوسط متحرك للإغلاق، Donchian يعتمد فقط على أعلى/أدنى فعليين بالسوق —
+ * يعكس مباشرة "أعلى قمة/أدنى قاع فعلي شهدته السوق مؤخراً" بلا أي تنعيم أو افتراض إحصائي. **تحقّق
+ * يدوي**: أعلى/أدنى ثابتان بنفس القيمة بكل شمعة (سوق مسطّح تماماً) → أعلى قمة = أدنى قاع = تلك القيمة
+ * الثابتة لأي نافذة → upper=lower=القيمة الثابتة وmid=نفس القيمة أيضاً، عرض القناة صفر — يطابق "لا
+ * تذبذب فعلي بسعر ساكن تماماً" بالتعريف.
+ */
+export function computeDonchian(
+  candles: Candle[],
+  period = 20
+): { upper: (number | null)[]; lower: (number | null)[]; mid: (number | null)[] } {
+  const n = candles.length;
+  const upper: (number | null)[] = [];
+  const lower: (number | null)[] = [];
+  const mid: (number | null)[] = [];
+  for (let i = 0; i < n; i++) {
+    if (i < period - 1) {
+      upper.push(null);
+      lower.push(null);
+      mid.push(null);
+      continue;
+    }
+    let hh = -Infinity;
+    let ll = Infinity;
+    for (let w = i - period + 1; w <= i; w++) {
+      hh = Math.max(hh, candles[w].high);
+      ll = Math.min(ll, candles[w].low);
+    }
+    upper.push(hh);
+    lower.push(ll);
+    mid.push((hh + ll) / 2);
+  }
+  return { upper, lower, mid };
+}
+
+/**
+ * Choppiness Index (CHOP، period=14 القيمة الشائعة) — يقيس "تذبذب بلا اتجاه" مقابل "اتجاه واضح" بمدى
+ * ثابت 0..100 (بعكس أغلب مؤشرات هذا الملف غير المحدودة أو ثنائية القطبية): CHOP = 100×log10(مجموع
+ * True Range على النافذة / (أعلى قمة−أدنى قاع بنفس النافذة)) ÷ log10(period). TR بنفس صيغة computeAtr/
+ * computeAdx أعلاه حرفياً (High−Low، |High−إغلاق سابق|، |Low−إغلاق سابق|، الأكبر من الثلاثة). قرب 100
+ * = تذبذب عالٍ بلا اتساع فعلي بالمدى الكلي (سوق "متعرّج" بلا اتجاه)، قرب 0 = اتجاه قوي وواضح (المدى
+ * الكلي يتسع بسرعة نسبةً لمجموع التذبذب اليومي). صفر عند مدى كلي صفري بدل قسمة على صفر (حالة نظرية:
+ * سعر ساكن تماماً بكل الشموع). **تحقّق يدوي**: لو كل شمعة تكرر نفس المدى الثابت R (أعلى=H وأدنى=L
+ * ثابتان بكل شمعة، R=H−L) بلا أي اتساع أو تقدّم بالمدى الكلي عبر النافذة (كل الشموع متطابقة) — بما أن
+ * الإغلاق السابق يقع دوماً ضمن [L,H] فإن TR لكل شمعة = R بالضبط (نفس منطق قناة كلتنر أعلاه)، فمجموع
+ * TR على النافذة = period×R، وأعلى قمة−أدنى قاع بالنافذة كلها = R أيضاً (كل الشموع متطابقة) → النسبة =
+ * period×R/R = period → CHOP = 100×log10(period)/log10(period) = 100 بالضبط — يطابق "أقصى تذبذب بلا
+ * اتجاه فعلي" بتعريف المؤشر تماماً (100 = سوق متعرّج تماماً بلا أي اتساع صافٍ بالمدى).
+ */
+export function computeChoppiness(candles: Candle[], period = 14): (number | null)[] {
+  const n = candles.length;
+  const tr: number[] = new Array(n).fill(0);
+  for (let i = 0; i < n; i++) {
+    if (i === 0) {
+      tr[i] = candles[i].high - candles[i].low;
+      continue;
+    }
+    const prevClose = candles[i - 1].close;
+    tr[i] = Math.max(
+      candles[i].high - candles[i].low,
+      Math.abs(candles[i].high - prevClose),
+      Math.abs(candles[i].low - prevClose)
+    );
+  }
+  const logPeriod = Math.log10(period);
+  const out: (number | null)[] = [];
+  for (let i = 0; i < n; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    let sumTr = 0;
+    let hh = -Infinity;
+    let ll = Infinity;
+    for (let w = i - period + 1; w <= i; w++) {
+      sumTr += tr[w];
+      hh = Math.max(hh, candles[w].high);
+      ll = Math.min(ll, candles[w].low);
+    }
+    const span = hh - ll;
+    out.push(span === 0 || logPeriod === 0 ? 0 : (100 * Math.log10(sumTr / span)) / logPeriod);
+  }
+  return out;
+}
+
+/**
+ * Market Facilitation Index (BW MFI، Bill Williams — **مختلف تماماً عن Money Flow Index 'mfi' الموجود
+ * أعلاه بهذا الملف رغم تشابه الاسم المختصر**، لذلك مُعرَّف بمعرِّف 'bwmfi' مميَّز لتفادي أي لبس) —
+ * أبسط مؤشر يجمع سعر وفوليوم بهذا الملف: MFI[i] = (أعلى−أدنى)/فوليوم لكل شمعة مباشرة، بلا أي تمهيد
+ * أو تراكم (نفس روح BOP أعلاه: قيمة فورية لكل شمعة من بياناتها ذاتها فقط). صفر عند فوليوم صفري (حالة
+ * نظرية) بدل قسمة على صفر. يقيس "كفاءة" حركة السعر لكل وحدة فوليوم: قيمة عالية = مدى واسع بفوليوم قليل
+ * (حركة سعرية "سهلة")، قيمة منخفضة = مدى ضيق رغم فوليوم كبير (حركة "صعبة" أو تجميع/توزيع بلا اتجاه).
+ * فوليوم مفقود يُعوَّض بنفس صيغة orderflow.ts المستخدَمة بكل مؤشرات الفوليوم أعلاه للاتساق. **تحقّق
+ * يدوي**: لو المدى (أعلى−أدنى) والفوليوم كلاهما ثابتان بنفس القيمة بكل شمعة (R وV على التوالي) →
+ * MFI=R/V ثابتة لكل شمعة بالضبط — يطابق "كفاءة حركة ثابتة مع مدى وفوليوم ثابتين" بالتعريف المباشر
+ * تماماً (لا حاجة لحالة حدّية أعقد لأن المؤشر بلا تمهيد إطلاقاً).
+ */
+export function computeBwMfi(candles: (Candle & { volume?: number })[]): (number | null)[] {
+  return candles.map((c) => {
+    const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
+    return vol === 0 ? 0 : (c.high - c.low) / vol;
+  });
+}
+
+/**
+ * PVO (Percentage Volume Oscillator، فترتا EMA القياسيتان 12/26 — نفس فترتي computePpo/computeMacd
+ * أعلاه بهذا الملف تماماً) — نفس تصميم PPO حرفياً لكن مُطبَّق على سلسلة الفوليوم بدل الإغلاق:
+ * PVO[i] = (ema12(فوليوم)[i]−ema26(فوليوم)[i])/ema26(فوليوم)[i] × 100 (صفر عند ema26 صفرية بدل قسمة
+ * على صفر). يقيس تسارع/تباطؤ نشاط الفوليوم نفسه (بمعزل عن اتجاه السعر) بمقياس نسبي قابل للمقارنة عبر
+ * رموز مختلفة الحجم، تماماً كميزة PPO عن MACD المطلق. فوليوم مفقود يُعوَّض بنفس صيغة orderflow.ts
+ * للاتساق مع بقية مؤشرات الفوليوم أعلاه. **تحقّق يدوي**: فوليوم ثابت تماماً بكل الشموع (سواء فوليوم
+ * حقيقي أو معوَّض بنفس الصيغة الثابتة) → ema12 وema26 (طبقة ema أحادية مباشرة على الفوليوم، لا طبقات
+ * متعددة — **نفس منطق تحقّق PPO أعلاه بالضبط**) تستقران كلتاهما على نفس القيمة الثابتة بالضبط بدءاً
+ * من أول نقطة صالحة لكل منهما → PVO=(V−V)/V×100=0 بالضبط، يطابق "لا تباعد بنشاط الفوليوم بفوليوم ثابت"
+ * بالتعريف تماماً.
+ */
+export function computePvo(
+  candles: (Candle & { volume?: number })[],
+  fast = 12,
+  slow = 26
+): (number | null)[] {
+  const vol = candles.map((c) => c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000);
+  const emaFast = ema(vol, fast);
+  const emaSlow = ema(vol, slow);
+  return vol.map((_, i) =>
+    emaFast[i] != null && emaSlow[i] != null
+      ? emaSlow[i] === 0
+        ? 0
+        : ((emaFast[i]! - emaSlow[i]!) / emaSlow[i]!) * 100
+      : null
+  );
+}
+
+/**
+ * APO (Absolute Price Oscillator، فترتا EMA القياسيتان 12/26 — نفس فترتي computeMacd/computePpo
+ * أعلاه بهذا الملف تماماً) — أبسط نسخة من عائلة MACD/PPO: الفرق المطلق (لا النسبي) بين طبقتي EMA
+ * للإغلاق مباشرة بلا خط إشارة أو هيستوجرام: APO[i] = ema12(إغلاق)[i] − ema26(إغلاق)[i] (**نفس بسط
+ * MACD [macdLine] حرفياً — فقط بلا خط إشارة**). بعكس PPO الذي يُعيد قياس نفس الفارق كنسبة مئوية من
+ * ema26 (قابل للمقارنة عبر رموز مختلفة السعر)، APO يبقى بوحدة السعر المطلقة نفسها (أقرب لMACD، أبعد
+ * عن PPO رغم الاسم المشابه لهما معاً). **تحقّق يدوي**: سعر ثابت تماماً بكل الشموع → ema12 وema26 (طبقة
+ * ema أحادية مباشرة على الإغلاق) تستقران كلتاهما على نفس القيمة الثابتة بدءاً من أول نقطة صالحة لكل
+ * منهما → APO=ثابت−ثابت=0 بالضبط، يطابق "لا تباعد زخم بسعر ساكن تماماً" بالتعريف تماماً.
+ */
+export function computeApo(closes: number[], fast = 12, slow = 26): (number | null)[] {
+  const emaFast = ema(closes, fast);
+  const emaSlow = ema(closes, slow);
+  return closes.map((_, i) =>
+    emaFast[i] != null && emaSlow[i] != null ? emaFast[i]! - emaSlow[i]! : null
+  );
+}
+
+/**
+ * Volume Oscillator (VO، فترتان قصيرة/طويلة شائعتان short=5/long=10 — أبسط من PVO أعلاه [12/26 EMA]
+ * لأنه يستخدم SMA بدل EMA وفترتين أقصر، وهو التعريف الأكثر شيوعاً لـ"Volume Oscillator" تحديداً بعكس
+ * PVO الذي يحاكي PPO حرفياً) — VO[i] = (SMA_short(فوليوم)[i] − SMA_long(فوليوم)[i]) /
+ * SMA_long(فوليوم)[i] × 100 (صفر عند SMA_long صفرية بدل قسمة على صفر). فوليوم مفقود يُعوَّض بنفس صيغة
+ * orderflow.ts للاتساق مع بقية مؤشرات الفوليوم أعلاه. **تحقّق يدوي**: فوليوم ثابت تماماً بكل الشموع →
+ * SMA_short وSMA_long (متوسط بسيط مباشر لقيم متطابقة) تستقران كلتاهما على نفس القيمة الثابتة بدءاً من
+ * أول نقطة صالحة لكل منهما → VO=(V−V)/V×100=0 بالضبط، يطابق "لا تباعد بنشاط الفوليوم بفوليوم ثابت"
+ * بالتعريف تماماً (نفس منطق تحقّق PVO أعلاه).
+ */
+export function computeVolumeOscillator(
+  candles: (Candle & { volume?: number })[],
+  shortPeriod = 5,
+  longPeriod = 10
+): (number | null)[] {
+  const vol = candles.map((c) => c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000);
+  const smaShort = sma(vol, shortPeriod);
+  const smaLong = sma(vol, longPeriod);
+  return vol.map((_, i) =>
+    smaShort[i] != null && smaLong[i] != null
+      ? smaLong[i] === 0
+        ? 0
+        : ((smaShort[i]! - smaLong[i]!) / smaLong[i]!) * 100
+      : null
+  );
+}
+
+/**
+ * VPT (Volume Price Trend) — تراكمي كـOBV/NVI أعلاه، لكن بدل إضافة/طرح الفوليوم كاملاً حسب اتجاه
+ * الإغلاق فقط (OBV) يُضاف فوليوم *مُرجَّح* بنسبة تغيّر السعر نفسها: VPT[i] = VPT[i-1] + فوليوم[i] ×
+ * (إغلاق[i]−إغلاق[i-1])/إغلاق[i-1] (صفر لأي تغيّر عند إغلاق سابق صفري نظرياً بدل قسمة على صفر، ويبدأ
+ * VPT[0]=0 لعدم وجود شمعة سابقة — نفس اصطلاح بداية OBV). بعكس OBV الذي يعامل كل الفوليوم بنفس الوزن
+ * الكامل بصرف النظر عن حجم حركة السعر، VPT يُدخل *مقدار* التغيّر النسبي بالوزن، فحركة سعرية كبيرة
+ * بفوليوم معيّن تُسهم أكثر من حركة صغيرة بنفس الفوليوم. فوليوم مفقود يُعوَّض بنفس صيغة orderflow.ts
+ * للاتساق. **تحقّق يدوي**: إغلاق ثابت تماماً بصرف النظر عن الفوليوم → نسبة التغيّر=0 لكل شمعة بعد
+ * الأولى → VPT تبقى 0 طوال السلسلة (نفس منطق تحقّق NVI أعلاه بالضبط: "لا تحديث" لا "طرح" عند غياب أي
+ * تغيّر بالمحرّك الأساسي للمؤشر).
+ */
+export function computeVpt(candles: (Candle & { volume?: number })[]): number[] {
+  const out: number[] = [];
+  let cum = 0;
+  for (let i = 0; i < candles.length; i++) {
+    const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
+    if (i > 0) {
+      const prevClose = candles[i - 1].close;
+      const pctChange = prevClose === 0 ? 0 : (candles[i].close - prevClose) / prevClose;
+      cum += vol * pctChange;
+    }
+    out.push(cum);
+  }
+  return out;
+}
+
+/**
+ * Historical Volatility (HV، period=10 نافذة قياسية شائعة، annualization=252 يوم تداول سنوي قياسي) —
+ * الانحراف المعياري لعوائد لوغاريتمية يومية (لا الأسعار الخام كـcomputeStdDev أعلاه) مُعاد قياسه سنوياً
+ * ومئوياً: عائد لوغاريتمي[i] = ln(إغلاق[i]/إغلاق[i-1]) (صفر عند إغلاق سابق ≤ صفر نظرياً بدل ln غير
+ * معرَّف)، ثم HV[i] = الانحراف المعياري لعوائد النافذة الأخيرة × √annualization × 100. **الفرق عن
+ * computeStdDev أعلاه**: ذاك يقيس تشتّت الأسعار المطلقة (وحدة سعر)، بينما HV يقيس تشتّت *العوائد
+ * النسبية* (نسبة مئوية سنوية قابلة للمقارنة عبر رموز مختلفة السعر تماماً — المقياس المعياري لتقلّب
+ * الأصول بالأسواق المالية). **تحقّق يدوي**: سعر ثابت تماماً بكل الشموع → كل عائد لوغاريتمي=ln(1)=0 →
+ * الانحراف المعياري لسلسلة أصفار=0 → HV=0×√252×100=0 بالضبط، يطابق "لا تقلّب فعلي بسعر ساكن تماماً"
+ * بالتعريف تماماً.
+ */
+export function computeHistoricalVolatility(
+  closes: number[],
+  period = 10,
+  annualization = 252
+): (number | null)[] {
+  const n = closes.length;
+  const logReturns: number[] = new Array(n).fill(0);
+  for (let i = 1; i < n; i++) {
+    const prev = closes[i - 1];
+    logReturns[i] = prev <= 0 ? 0 : Math.log(closes[i] / prev);
+  }
+  const out: (number | null)[] = [];
+  const annFactor = Math.sqrt(annualization) * 100;
+  for (let i = 0; i < n; i++) {
+    if (i < period) {
+      out.push(null);
+      continue;
+    }
+    const slice = logReturns.slice(i - period + 1, i + 1);
+    const mean = slice.reduce((a, v) => a + v, 0) / period;
+    const variance = slice.reduce((a, v) => a + (v - mean) ** 2, 0) / period;
+    out.push(Math.sqrt(variance) * annFactor);
+  }
+  return out;
+}
+
+/**
+ * Stochastic RSI (rsiPeriod=14 وstochPeriod=14 القيمتان القياسيتان — يطبّق صيغة %K القياسية
+ * [بنفس منطق computeStoch أعلاه حرفياً] لكن على *قيم RSI نفسها* بدل السعر الخام) — يبني مباشرة فوق
+ * computeRsi المُصدَّرة مسبقاً بهذا الملف (لا إعادة تطبيق): لكل نقطة، StochRSI[i] = (RSI[i] −
+ * أدنى RSI بنافذة stochPeriod) / (أعلى RSI بنفس النافذة − أدنى RSI) × 100 (صفر عند تساوي أعلى/أدنى
+ * RSI بالنافذة بدل قسمة على صفر — حالة "RSI ثابت تماماً بالنافذة"، ليست بالضرورة RSI=0 أو 100).
+ * **الفرق عن RSI الخام**: RSI نفسه أوسيليتر مُطبَّق على السعر، بينما StochRSI أوسيليتر *مُطبَّق على
+ * أوسيليتر آخر* — أكثر حساسية وتذبذباً من RSI الخام (يعبر 80/20 أكثر تكراراً)، يُستخدم لرصد تحوّلات
+ * زخم أدق. الفترة الفعّالة الكلية = rsiPeriod (لحساب RSI أولاً) + stochPeriod−1 (لنافذة %K فوق RSI) —
+ * أطول إحماءً من RSI أو Stochastic الخام كلٍّ على حدة (النافذة تبدأ من أول نقطة RSI صالحة، لا الشمعة
+ * الأولى مطلقاً). **تحقّق يدوي**: سعر ثابت تماماً بكل الشموع → RSI (بلا خسارة أو مكسب فعلي، avgLoss=0)
+ * يستقر عند 100 بدءاً من أول نقطة صالحة له (نفس تحفّظ computeRsi الموثَّق بتعريفه أعلاه) → RSI
+ * ثابت=100 طوال نافذة stochPeriod → أعلى=أدنى=100 → StochRSI=0 بالضبط (حالة "تساوي أعلى/أدنى"
+ * المُعالَجة صراحة أعلاه، لا 100 كما قد يُظَن للوهلة الأولى).
+ */
+export function computeStochRsi(
+  closes: number[],
+  rsiPeriod = 14,
+  stochPeriod = 14
+): (number | null)[] {
+  const rsi = computeRsi(closes, rsiPeriod);
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i < rsiPeriod + stochPeriod - 1) {
+      out.push(null);
+      continue;
+    }
+    let hi = -Infinity;
+    let lo = Infinity;
+    for (let w = i - stochPeriod + 1; w <= i; w++) {
+      hi = Math.max(hi, rsi[w]!);
+      lo = Math.min(lo, rsi[w]!);
+    }
+    const span = hi - lo;
+    out.push(span === 0 ? 0 : ((rsi[i]! - lo) / span) * 100);
+  }
+  return out;
+}
+
+/**
+ * RVI (Relative Vigor Index، period=10 القيمة الشائعة لتنعيم SMA النهائي) — يقيس "قوة الاتجاه
+ * الحقيقية" بمقارنة موقع الإغلاق من الفتح (اتجاه الزخم الفعلي) بمدى التداول الكلي (أعلى−أدنى)،
+ * باستخدام تنعيم Simpson المتماثل [1,2,2,1]/6 على 4 شموع متتالية (نفس التقنية المرجعية القياسية
+ * لـRVI) بدل قيمة شمعة واحدة فورية: لكل شمعة i (تحتاج 3 شموع سابقة على الأقل)، num[i] =
+ * ((إغلاق[i]−فتح[i]) + 2×(إغلاق[i-1]−فتح[i-1]) + 2×(إغلاق[i-2]−فتح[i-2]) + (إغلاق[i-3]−فتح[i-3])) / 6،
+ * denom[i] بنفس الصيغة على (أعلى−أدنى) بدل (إغلاق−فتح). ثم RVI = SMA(num, period) / SMA(denom, period)
+ * (صفر عند SMA(denom) صفرية بدل قسمة على صفر؛ **نفس تقنية تعويض null بصفر قبل SMA ثم بوابة صلاحية
+ * صريحة بفهرس `3 + period − 1` المستخدَمة بـdema/tema/massIndex أعلاه**، لتفادي تلويث النافذة الأولى
+ * بقيم صفرية وهمية). **الفرق عن BOP أعلاه**: BOP فوري بلا أي تمهيد (شمعة واحدة فقط)، بينما RVI
+ * يُنعِّم على 4 شموع أولاً (Simpson) ثم على period شمعة إضافية (SMA) — أكثر استقراراً وأقل ضوضاءً
+ * بكثير من BOP، على حساب تأخّر أكبر. **تحقّق يدوي**: فتح=إغلاق بكل شمعة (سوق دوجي مستمر) → num[i]=0
+ * لكل شمعة بصرف النظر عن denom → SMA(num,period)=0 → RVI=0/denom=0 بالضبط (بصرف النظر عن قيمة
+ * أعلى/أدنى)، يطابق "لا زخم اتجاهي فعلي بلا أجسام شموع" بالتعريف تماماً.
+ */
+export function computeRvi(candles: Candle[], period = 10): (number | null)[] {
+  const n = candles.length;
+  const num: (number | null)[] = new Array(n).fill(null);
+  const denom: (number | null)[] = new Array(n).fill(null);
+  for (let i = 3; i < n; i++) {
+    const a = candles[i].close - candles[i].open;
+    const b = candles[i - 1].close - candles[i - 1].open;
+    const c = candles[i - 2].close - candles[i - 2].open;
+    const d = candles[i - 3].close - candles[i - 3].open;
+    num[i] = (a + 2 * b + 2 * c + d) / 6;
+    const A = candles[i].high - candles[i].low;
+    const B = candles[i - 1].high - candles[i - 1].low;
+    const C = candles[i - 2].high - candles[i - 2].low;
+    const D = candles[i - 3].high - candles[i - 3].low;
+    denom[i] = (A + 2 * B + 2 * C + D) / 6;
+  }
+  const numFilled = num.map((v) => v ?? 0);
+  const denomFilled = denom.map((v) => v ?? 0);
+  const numSma = sma(numFilled, period);
+  const denomSma = sma(denomFilled, period);
+  const out: (number | null)[] = [];
+  for (let i = 0; i < n; i++) {
+    if (i < 3 + period - 1 || numSma[i] == null || denomSma[i] == null) {
+      out.push(null);
+      continue;
+    }
+    out.push(denomSma[i] === 0 ? 0 : numSma[i]! / denomSma[i]!);
+  }
+  return out;
+}
+
+/**
+ * Linear Regression Slope (LRS، period=14 نافذة شائعة) — انحدار خطي بسيط (Least Squares) لآخر period
+ * سعر إغلاق، يُرجع *الميل* (Slope) فقط بلا نقطة تقاطع أو خط توقّع: يعامل كل نافذة كمحاور x=0..period-1
+ * (0 لأقدم شمعة بالنافذة، period-1 للشمعة الحالية) وy=الإغلاق المقابل، ثم الميل القياسي = (n×Σxy −
+ * Σx×Σy) / (n×Σx² − (Σx)²) حيث n=period وΣx/Σx² ثابتتان حسابياً لكل نافذة بنفس الحجم (لا تعتمدان على
+ * قيم y إطلاقاً). ميل موجب = اتجاه صاعد بالنافذة الأخيرة (بمعدل سعر/شمعة)، سالب = هابط، قرب الصفر =
+ * تسطّح. بعكس SMA/EMA (متوسطات تصف *المستوى*)، LRS يصف *معدل التغيّر الخطي* مباشرة — أقرب لصيغة ROC
+ * لكن مبني على أفضل خط ملائم للنافذة كاملة بدل نقطتين طرفيتين فقط. **تحقّق يدوي**: سعر ثابت تماماً بكل
+ * شموع النافذة (Σy=n×C لقيمة ثابتة C) → Σxy=C×Σx بالضبط (كل حد بالمجموع = x×C) → البسط = n×C×Σx −
+ * Σx×n×C = 0 بالضبط بصرف النظر عن قيمة C → LRS=0، يطابق "لا اتجاه خطي فعلي بسعر ساكن تماماً" بالتعريف
+ * تماماً.
+ */
+export function computeLinRegSlope(closes: number[], period = 14): (number | null)[] {
+  const n = period;
+  const sumX = (n * (n - 1)) / 2;
+  const sumX2 = ((n - 1) * n * (2 * n - 1)) / 6;
+  const denom = n * sumX2 - sumX * sumX;
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    let sumY = 0;
+    let sumXY = 0;
+    for (let x = 0; x < n; x++) {
+      const y = closes[i - n + 1 + x];
+      sumY += y;
+      sumXY += x * y;
+    }
+    out.push(denom === 0 ? 0 : (n * sumXY - sumX * sumY) / denom);
+  }
+  return out;
+}
+
+/**
+ * Linear Regression R² (معامل التحديد، period=14 نفس نافذة LRS أعلاه) — يقيس *جودة* ملاءمة نفس خط
+ * الانحدار الخطي لـLRS أعلاه لآخر period سعر إغلاق، بمدى 0..1 (1 = كل نقاط النافذة تقع تماماً على خط
+ * مستقيم واحد، 0 = لا علاقة خطية إطلاقاً): يُحسَب الميل والتقاطع كما بـLRS تماماً (نفس محاور x=0..
+ * period-1)، ثم SStot = Σ(y−ȳ)² (مجموع مربعات الانحراف عن المتوسط) وSSres = Σ(y−ŷ)² (مجموع مربعات
+ * الخطأ عن خط الانحدار المتوقَّع ŷ=ميل×x+تقاطع)، وR² = 1 − SSres/SStot. **حالة حدّية موثَّقة صراحة**:
+ * عند SStot=0 (كل قيم y بالنافذة متطابقة تماماً — سعر ساكن) تُرجَع 1 بدل 0/0 غير المعرَّفة، لأن خطاً
+ * أفقياً ثابتاً يُفسِّر تلك النقاط المتطابقة *تماماً* بلا أي خطأ متبقٍّ (SSres=0 أيضاً بهذه الحالة) —
+ * قرار توثيقي صريح يماثل أسلوب هذا الملف بمعالجة قسمة 0/0 بقيمة "الحالة المثالية" حيثما كان ذلك
+ * التفسير الأدق (نفس روح إرجاع 100 لـRSI عند avgLoss=0 أعلاه). **تحقّق يدوي**: سعر ثابت تماماً بكل
+ * شموع النافذة → ȳ=C، كل y=C → SStot=Σ(C−C)²=0 → (باستخدام نفس نتيجة LRS: ميل=0 وبالتالي ŷ=تقاطع=C
+ * لكل x) → SSres=Σ(C−C)²=0 أيضاً → الحالة الحدّية أعلاه تُطبَّق: R²=1 بالضبط، يطابق "ملاءمة تامة لخط
+ * أفقي مسطّح" بالتعريف تماماً.
+ */
+export function computeLinRegR2(closes: number[], period = 14): (number | null)[] {
+  const n = period;
+  const sumX = (n * (n - 1)) / 2;
+  const sumX2 = ((n - 1) * n * (2 * n - 1)) / 6;
+  const denom = n * sumX2 - sumX * sumX;
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    let sumY = 0;
+    let sumXY = 0;
+    for (let x = 0; x < n; x++) {
+      const y = closes[i - n + 1 + x];
+      sumY += y;
+      sumXY += x * y;
+    }
+    const slope = denom === 0 ? 0 : (n * sumXY - sumX * sumY) / denom;
+    const meanY = sumY / n;
+    const meanX = sumX / n;
+    const intercept = meanY - slope * meanX;
+    let ssTot = 0;
+    let ssRes = 0;
+    for (let x = 0; x < n; x++) {
+      const y = closes[i - n + 1 + x];
+      const yHat = slope * x + intercept;
+      ssTot += (y - meanY) ** 2;
+      ssRes += (y - yHat) ** 2;
+    }
+    out.push(ssTot === 0 ? 1 : 1 - ssRes / ssTot);
+  }
+  return out;
+}
+
+/**
+ * Percent B (%B، period=20 وmult=2 القيمتان القياسيتان لبولنجر — نفس قيم computeOverlays.bb أعلاه
+ * تماماً) — يقيس موقع الإغلاق *نسبةً* لعرض نطاق بولنجر بدل قراءة الإغلاق مقابل النطاقين مباشرة على
+ * الشارت: %B[i] = (إغلاق[i] − lower[i]) / (upper[i] − lower[i])، حيث mid=SMA(period)،
+ * upper=mid+mult×الانحراف المعياري، lower=mid−mult×الانحراف المعياري (**نفس صيغة بولنجر المستخدَمة
+ * بـcomputeOverlays أعلاه حرفياً، مُعاد حسابها هنا مستقلة لأن computeOverlays لا يُصدِّر %B نفسه**).
+ * 0 = الإغلاق عند الحد الأدنى بالضبط، 1 = عند الحد الأعلى بالضبط، 0.5 = عند الوسط بالضبط، وقيمة خارج
+ * 0..1 تعني كسر أحد النطاقين فعلياً. 0.5 عند عرض نطاق صفري (تقلّب صفري) بدل قسمة على صفر — قيمة الوسط
+ * الحيادية بدل الانحياز لأي طرف تعسّفاً. **تحقّق يدوي**: سعر ثابت تماماً بكل شموع النافذة → الانحراف
+ * المعياري=0 → upper=lower=mid=السعر الثابت نفسه → عرض النطاق صفري → %B=0.5 بالضبط (الحالة الحدّية
+ * المُعالَجة صراحة أعلاه)، يطابق "لا معنى لموقع نسبي داخل نطاق منعدم العرض" بأكثر تفسير حيادي ممكن.
+ */
+export function computePercentB(closes: number[], period = 20, mult = 2): (number | null)[] {
+  const mid = sma(closes, period);
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (mid[i] == null || i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    const slice = closes.slice(i - period + 1, i + 1);
+    const mean = mid[i]!;
+    const variance = slice.reduce((a, v) => a + (v - mean) ** 2, 0) / period;
+    const sd = Math.sqrt(variance);
+    const upper = mean + mult * sd;
+    const lower = mean - mult * sd;
+    const span = upper - lower;
+    out.push(span === 0 ? 0.5 : (closes[i] - lower) / span);
+  }
+  return out;
+}
+
+/**
+ * Bollinger Bandwidth (BBW، period=20 وmult=2 نفس قيم %B/computeOverlays.bb أعلاه) — يقيس *اتساع*
+ * نطاق بولنجر نسبةً لمستوى السعر نفسه بدل موقع الإغلاق داخله (كـ%B أعلاه): BBW[i] = (upper[i] −
+ * lower[i]) / mid[i] × 100 (صفر عند mid صفرية نظرياً بدل قسمة على صفر). قيمة منخفضة = انضغاط تقلّب
+ * ("Bollinger Squeeze" — غالباً ينذر بحركة قوية قادمة)، قيمة مرتفعة = تمدد تقلّب حاد. **الفرق عن STDEV
+ * أعلاه**: STDEV يُرجع الانحراف المعياري بوحدة السعر المطلقة، بينما BBW يُعيد قياسه كنسبة مئوية من
+ * مستوى السعر (مثل Envelopes مقابل بولنجر أعلاه — نفس فكرة التطبيع بمستوى السعر) فيصبح قابلاً للمقارنة
+ * المباشرة عبر رموز مختلفة السعر أو عبر فترات زمنية متباعدة لنفس الرمز. **تحقّق يدوي**: سعر ثابت تماماً
+ * بكل شموع النافذة → الانحراف المعياري=0 → upper=lower=mid → BBW=(mid−mid)/mid×100=0 بالضبط، يطابق
+ * "لا اتساع نطاق فعلي بتقلّب صفري" بالتعريف تماماً.
+ */
+export function computeBollingerBandwidth(
+  closes: number[],
+  period = 20,
+  mult = 2
+): (number | null)[] {
+  const mid = sma(closes, period);
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (mid[i] == null || i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    const slice = closes.slice(i - period + 1, i + 1);
+    const mean = mid[i]!;
+    const variance = slice.reduce((a, v) => a + (v - mean) ** 2, 0) / period;
+    const sd = Math.sqrt(variance);
+    const upper = mean + mult * sd;
+    const lower = mean - mult * sd;
+    out.push(mean === 0 ? 0 : ((upper - lower) / mean) * 100);
+  }
+  return out;
+}
+
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];

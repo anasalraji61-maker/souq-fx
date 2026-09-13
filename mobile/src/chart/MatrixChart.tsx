@@ -53,22 +53,56 @@ import {
 } from './types';
 import {
   FIB_LEVELS,
+  computeAcceleratorOsc,
   computeAdx,
+  computeApo,
   computeAroonOsc,
   computeAtr,
+  computeAwesomeOsc,
+  computeBearPower,
+  computeBollingerBandwidth,
+  computeBop,
+  computeBullPower,
+  computeBwMfi,
   computeCci,
+  computeChaikinOsc,
+  computeChaikinVolatility,
+  computeChoppiness,
   computeCmf,
+  computeCmo,
+  computeCoppock,
+  computeDonchian,
+  computeDpo,
+  computeEnvelopes,
+  computeEom,
+  computeForceIndex,
+  computeHistoricalVolatility,
   computeKeltner,
+  computeLinRegR2,
+  computeLinRegSlope,
   computeMacd,
+  computeMassIndex,
   computeMfi,
+  computeNvi,
   computeObv,
   computeOverlays,
+  computePercentB,
+  computePpo,
   computePsar,
+  computePvo,
+  computeQstick,
   computeRoc,
   computeRsi,
+  computeRvi,
   computeStdDev,
   computeStoch,
+  computeStochRsi,
   computeSuperTrend,
+  computeTrix,
+  computeTsi,
+  computeUltimateOsc,
+  computeVolumeOscillator,
+  computeVpt,
   computeVwap,
   computeWilliamsR,
   formatPrice,
@@ -781,6 +815,142 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('keltner') ? computeKeltner(source.plot) : null),
     [source.plot, indicators]
   );
+  const envelopes = useMemo(
+    () => (indicators.includes('envelopes') ? computeEnvelopes(closes) : null),
+    [closes, indicators]
+  );
+  const donchian = useMemo(
+    () => (indicators.includes('donchian') ? computeDonchian(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const ultimateOsc = useMemo(
+    () => (indicators.includes('ultimateOsc') ? computeUltimateOsc(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const cmo = useMemo(
+    () => (indicators.includes('cmo') ? computeCmo(closes) : null),
+    [closes, indicators]
+  );
+  const trix = useMemo(
+    () => (indicators.includes('trix') ? computeTrix(closes) : null),
+    [closes, indicators]
+  );
+  const force = useMemo(
+    () => (indicators.includes('force') ? computeForceIndex(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const chaikinOsc = useMemo(
+    () => (indicators.includes('chaikinOsc') ? computeChaikinOsc(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const dpo = useMemo(
+    () => (indicators.includes('dpo') ? computeDpo(closes) : null),
+    [closes, indicators]
+  );
+  const ao = useMemo(
+    () => (indicators.includes('ao') ? computeAwesomeOsc(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const ac = useMemo(
+    () => (indicators.includes('ac') ? computeAcceleratorOsc(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const bop = useMemo(
+    () => (indicators.includes('bop') ? computeBop(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const bullPower = useMemo(
+    () => (indicators.includes('bullPower') ? computeBullPower(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const bearPower = useMemo(
+    () => (indicators.includes('bearPower') ? computeBearPower(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const tsi = useMemo(
+    () => (indicators.includes('tsi') ? computeTsi(closes) : null),
+    [closes, indicators]
+  );
+  const coppock = useMemo(
+    () => (indicators.includes('coppock') ? computeCoppock(closes) : null),
+    [closes, indicators]
+  );
+  const eom = useMemo(
+    () => (indicators.includes('eom') ? computeEom(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const nvi = useMemo(
+    () => (indicators.includes('nvi') ? computeNvi(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const massIndex = useMemo(
+    () => (indicators.includes('massIndex') ? computeMassIndex(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const ppo = useMemo(
+    () => (indicators.includes('ppo') ? computePpo(closes) : null),
+    [closes, indicators]
+  );
+  const chaikinVol = useMemo(
+    () => (indicators.includes('chaikinVol') ? computeChaikinVolatility(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const qstick = useMemo(
+    () => (indicators.includes('qstick') ? computeQstick(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const chop = useMemo(
+    () => (indicators.includes('chop') ? computeChoppiness(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const bwmfi = useMemo(
+    () => (indicators.includes('bwmfi') ? computeBwMfi(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const pvo = useMemo(
+    () => (indicators.includes('pvo') ? computePvo(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const apo = useMemo(
+    () => (indicators.includes('apo') ? computeApo(closes) : null),
+    [closes, indicators]
+  );
+  const vo = useMemo(
+    () => (indicators.includes('vo') ? computeVolumeOscillator(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const vpt = useMemo(
+    () => (indicators.includes('vpt') ? computeVpt(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const hv = useMemo(
+    () => (indicators.includes('hv') ? computeHistoricalVolatility(closes) : null),
+    [closes, indicators]
+  );
+  const stochRsi = useMemo(
+    () => (indicators.includes('stochRsi') ? computeStochRsi(closes) : null),
+    [closes, indicators]
+  );
+  const rvi = useMemo(
+    () => (indicators.includes('rvi') ? computeRvi(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const linRegSlope = useMemo(
+    () => (indicators.includes('linRegSlope') ? computeLinRegSlope(closes) : null),
+    [closes, indicators]
+  );
+  const linRegR2 = useMemo(
+    () => (indicators.includes('linRegR2') ? computeLinRegR2(closes) : null),
+    [closes, indicators]
+  );
+  const percentB = useMemo(
+    () => (indicators.includes('percentB') ? computePercentB(closes) : null),
+    [closes, indicators]
+  );
+  const bbw = useMemo(
+    () => (indicators.includes('bbw') ? computeBollingerBandwidth(closes) : null),
+    [closes, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -797,6 +967,38 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('stddev') ? 1 : 0) +
     (indicators.includes('aroon') ? 1 : 0) +
     (indicators.includes('cmf') ? 1 : 0) +
+    (indicators.includes('ultimateOsc') ? 1 : 0) +
+    (indicators.includes('cmo') ? 1 : 0) +
+    (indicators.includes('trix') ? 1 : 0) +
+    (indicators.includes('force') ? 1 : 0) +
+    (indicators.includes('chaikinOsc') ? 1 : 0) +
+    (indicators.includes('dpo') ? 1 : 0) +
+    (indicators.includes('ao') ? 1 : 0) +
+    (indicators.includes('ac') ? 1 : 0) +
+    (indicators.includes('bop') ? 1 : 0) +
+    (indicators.includes('bullPower') ? 1 : 0) +
+    (indicators.includes('bearPower') ? 1 : 0) +
+    (indicators.includes('tsi') ? 1 : 0) +
+    (indicators.includes('coppock') ? 1 : 0) +
+    (indicators.includes('eom') ? 1 : 0) +
+    (indicators.includes('nvi') ? 1 : 0) +
+    (indicators.includes('massIndex') ? 1 : 0) +
+    (indicators.includes('ppo') ? 1 : 0) +
+    (indicators.includes('chaikinVol') ? 1 : 0) +
+    (indicators.includes('qstick') ? 1 : 0) +
+    (indicators.includes('chop') ? 1 : 0) +
+    (indicators.includes('bwmfi') ? 1 : 0) +
+    (indicators.includes('pvo') ? 1 : 0) +
+    (indicators.includes('apo') ? 1 : 0) +
+    (indicators.includes('vo') ? 1 : 0) +
+    (indicators.includes('vpt') ? 1 : 0) +
+    (indicators.includes('hv') ? 1 : 0) +
+    (indicators.includes('stochRsi') ? 1 : 0) +
+    (indicators.includes('rvi') ? 1 : 0) +
+    (indicators.includes('linRegSlope') ? 1 : 0) +
+    (indicators.includes('linRegR2') ? 1 : 0) +
+    (indicators.includes('percentB') ? 1 : 0) +
+    (indicators.includes('bbw') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -832,6 +1034,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('keltner') && keltner) {
       keltner.upper.forEach(push);
       keltner.lower.forEach(push);
+    }
+    if (indicators.includes('envelopes') && envelopes) {
+      envelopes.upper.forEach(push);
+      envelopes.lower.forEach(push);
+    }
+    if (indicators.includes('donchian') && donchian) {
+      donchian.upper.forEach(push);
+      donchian.lower.forEach(push);
     }
     if (comparePrices) comparePrices.forEach(push);
     // أبقِ الظلال ضمن المدى حتى لا تُقصّ عند التقريب (overflow hidden)
@@ -873,6 +1083,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     psar,
     supertrend,
     keltner,
+    envelopes,
+    donchian,
     priceScale,
     pricePan,
     syncFollow,
@@ -2329,6 +2541,44 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             );
           })}
+        {indicators.includes('envelopes') &&
+          envelopes &&
+          envelopes.upper.map((v, i) => {
+            const lo = envelopes.lower[i];
+            if (v == null || lo == null) return null;
+            return (
+              <View
+                key={`env${i}`}
+                style={{
+                  position: 'absolute',
+                  left: xOf(i) - 1,
+                  top: yOf(v),
+                  width: 2,
+                  height: Math.max(2, yOf(lo) - yOf(v)),
+                  backgroundColor: 'rgba(245,158,11,0.14)',
+                }}
+              />
+            );
+          })}
+        {indicators.includes('donchian') &&
+          donchian &&
+          donchian.upper.map((v, i) => {
+            const lo = donchian.lower[i];
+            if (v == null || lo == null) return null;
+            return (
+              <View
+                key={`dc${i}`}
+                style={{
+                  position: 'absolute',
+                  left: xOf(i) - 1,
+                  top: yOf(v),
+                  width: 2,
+                  height: Math.max(2, yOf(lo) - yOf(v)),
+                  backgroundColor: 'rgba(163,180,208,0.14)',
+                }}
+              />
+            );
+          })}
 
         {/* Pine-lite overlay */}
         {pineLine.map((v, i) => {
@@ -2804,6 +3054,66 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         </View>
       ) : null}
 
+      {nvi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>NVI</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const minN = Math.min(...nvi);
+              const maxN = Math.max(...nvi);
+              const span = maxN - minN || 1;
+              return nvi.map((v, i) => {
+                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
+                const yNorm = (v - minN) / span;
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: 3,
+                      marginTop: (1 - yNorm) * (paneH - 16),
+                      backgroundColor: v >= nvi[i - 1] ? colors.bull : colors.bear,
+                      opacity: 0.8,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {massIndex ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Mass Index</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = massIndex.filter((x): x is number => x != null);
+              const minM = Math.min(...vals, 0);
+              const maxM = Math.max(...vals, 1e-9);
+              const span = maxM - minM || 1;
+              return massIndex.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const prev = i > 0 ? massIndex[i - 1] : null;
+                const yNorm = (v - minM) / span;
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: 3,
+                      marginTop: (1 - yNorm) * (paneH - 16),
+                      backgroundColor: prev == null || v >= prev ? colors.bull : colors.bear,
+                      opacity: 0.8,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
       {rsi ? (
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>RSI</Text>
@@ -2872,6 +3182,833 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 />
               )
             )}
+          </View>
+        </View>
+      ) : null}
+
+      {ultimateOsc ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>UO</Text>
+          <View style={styles.paneInner}>
+            {ultimateOsc.map((v, i) =>
+              v == null ? (
+                <View key={i} style={{ flex: 1 }} />
+              ) : (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    marginTop: ((100 - v) / 100) * (paneH - 16),
+                    backgroundColor: v > 70 ? colors.bear : v < 30 ? colors.bull : accent,
+                    borderRadius: 2,
+                  }}
+                />
+              )
+            )}
+          </View>
+        </View>
+      ) : null}
+
+      {cmo ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>CMO</Text>
+          <View style={styles.paneInner}>
+            {cmo.map((v, i) =>
+              v == null ? (
+                <View key={i} style={{ flex: 1 }} />
+              ) : (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    marginTop: ((100 - v) / 200) * (paneH - 16),
+                    backgroundColor: v > 50 ? colors.bear : v < -50 ? colors.bull : accent,
+                    borderRadius: 2,
+                  }}
+                />
+              )
+            )}
+          </View>
+        </View>
+      ) : null}
+
+      {trix ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>TRIX</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = trix.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxT = Math.max(...vals, 1e-9);
+              return trix.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxT) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {force ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Force</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = force.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxF = Math.max(...vals, 1e-9);
+              return force.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxF) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {chaikinOsc ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Chaikin</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = chaikinOsc.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxC = Math.max(...vals, 1e-9);
+              return chaikinOsc.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxC) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {dpo ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>DPO</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = dpo.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxD = Math.max(...vals, 1e-9);
+              return dpo.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxD) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {ao ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>AO</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = ao.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxA = Math.max(...vals, 1e-9);
+              return ao.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxA) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {ac ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>AC</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = ac.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxAc = Math.max(...vals, 1e-9);
+              return ac.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxAc) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {bop ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>BOP</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = bop.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxB = Math.max(...vals, 1e-9);
+              return bop.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxB) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {bullPower ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Bull Power</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = bullPower.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxBp = Math.max(...vals, 1e-9);
+              return bullPower.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxBp) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {bearPower ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Bear Power</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = bearPower.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxBe = Math.max(...vals, 1e-9);
+              return bearPower.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxBe) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {tsi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>TSI</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = tsi.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxTsi = Math.max(...vals, 1e-9);
+              return tsi.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxTsi) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {coppock ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Coppock</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = coppock.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxCop = Math.max(...vals, 1e-9);
+              return coppock.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxCop) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {eom ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>EOM</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = eom.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxEom = Math.max(...vals, 1e-9);
+              return eom.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxEom) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {ppo ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>PPO</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = ppo.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxP = Math.max(...vals, 1e-9);
+              return ppo.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxP) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {chaikinVol ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Chaikin Vol</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = chaikinVol.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxCv = Math.max(...vals, 1e-9);
+              return chaikinVol.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxCv) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {qstick ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Qstick</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = qstick.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxQ = Math.max(...vals, 1e-9);
+              return qstick.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxQ) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {chop ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Choppiness</Text>
+          <View style={styles.paneInner}>
+            {chop.map((v, i) =>
+              v == null ? (
+                <View key={i} style={{ flex: 1 }} />
+              ) : (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    marginTop: ((100 - v) / 100) * (paneH - 16),
+                    backgroundColor: v > 61.8 ? colors.textDim : v < 38.2 ? colors.bull : accent,
+                    borderRadius: 2,
+                  }}
+                />
+              )
+            )}
+          </View>
+        </View>
+      ) : null}
+
+      {bwmfi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>BW MFI</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = bwmfi.filter((x): x is number => x != null);
+              const maxB = Math.max(...vals, 1e-9);
+              return bwmfi.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxB) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxB) * (paneH - 16),
+                      backgroundColor: colors.infoAccent,
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {pvo ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>PVO</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = pvo.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxPv = Math.max(...vals, 1e-9);
+              return pvo.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxPv) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {apo ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>APO</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = apo.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxA = Math.max(...vals, 1e-9);
+              return apo.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxA) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {vo ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Volume Osc</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = vo.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxVo = Math.max(...vals, 1e-9);
+              return vo.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxVo) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {vpt ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>VPT</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const minV = Math.min(...vpt);
+              const maxV = Math.max(...vpt);
+              const span = maxV - minV || 1;
+              return vpt.map((v, i) => {
+                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
+                const yNorm = (v - minV) / span;
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: 3,
+                      marginTop: (1 - yNorm) * (paneH - 16),
+                      backgroundColor: v >= vpt[i - 1] ? colors.bull : colors.bear,
+                      opacity: 0.8,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {hv ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>HV</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = hv.filter((x): x is number => x != null);
+              const maxH = Math.max(...vals, 1e-9);
+              return hv.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxH) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxH) * (paneH - 16),
+                      backgroundColor: colors.warn,
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {stochRsi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>StochRSI</Text>
+          <View style={styles.paneInner}>
+            {stochRsi.map((v, i) =>
+              v == null ? (
+                <View key={i} style={{ flex: 1 }} />
+              ) : (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    marginTop: ((100 - v) / 100) * (paneH - 16),
+                    backgroundColor: v > 80 ? colors.bear : v < 20 ? colors.bull : accent,
+                    borderRadius: 2,
+                  }}
+                />
+              )
+            )}
+          </View>
+        </View>
+      ) : null}
+
+      {rvi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>RVI</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = rvi.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxR = Math.max(...vals, 1e-9);
+              return rvi.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxR) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {linRegSlope ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>LR Slope</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = linRegSlope
+                .filter((x): x is number => x != null)
+                .map((v) => Math.abs(v));
+              const maxL = Math.max(...vals, 1e-9);
+              return linRegSlope.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxL) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {linRegR2 ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>LR R²</Text>
+          <View style={styles.paneInner}>
+            {linRegR2.map((v, i) =>
+              v == null ? (
+                <View key={i} style={{ flex: 1 }} />
+              ) : (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: Math.max(2, v * (paneH - 16)),
+                    marginTop: paneH - 16 - v * (paneH - 16),
+                    backgroundColor: colors.accent,
+                    opacity: 0.7,
+                  }}
+                />
+              )
+            )}
+          </View>
+        </View>
+      ) : null}
+
+      {percentB ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>%B</Text>
+          <View style={styles.paneInner}>
+            {percentB.map((v, i) => {
+              if (v == null) return <View key={i} style={{ flex: 1 }} />;
+              const pct = v * 100;
+              const geomPct = Math.max(0, Math.min(100, pct));
+              return (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    marginTop: ((100 - geomPct) / 100) * (paneH - 16),
+                    backgroundColor:
+                      pct > 100 || pct < 0
+                        ? colors.warn
+                        : pct > 80
+                        ? colors.bear
+                        : pct < 20
+                        ? colors.bull
+                        : accent,
+                    borderRadius: 2,
+                  }}
+                />
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
+
+      {bbw ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>BBW</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = bbw.filter((x): x is number => x != null);
+              const maxBw = Math.max(...vals, 1e-9);
+              return bbw.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxBw) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxBw) * (paneH - 16),
+                      backgroundColor: colors.accent,
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
+            })()}
           </View>
         </View>
       ) : null}
