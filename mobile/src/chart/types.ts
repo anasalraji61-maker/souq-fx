@@ -71,6 +71,7 @@ export type IndicatorId =
   | 'rvi'
   | 'linRegSlope'
   | 'linRegR2'
+  | 'lsma'
   | 'percentB'
   | 'bbw'
   | 'medianPrice'
@@ -89,6 +90,15 @@ export type IndicatorId =
   | 'ichimoku'
   | 'alligator'
   | 'gator'
+  | 'vwma'
+  | 'alma'
+  | 'chandeKroll'
+  | 'smi'
+  | 'dmi'
+  | 'chandelierExit'
+  | 'gmma'
+  | 'rwi'
+  | 'aroonUpDown'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -198,6 +208,7 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'rvi', label: 'RVI', pane: true },
   { id: 'linRegSlope', label: 'LR Slope', pane: true },
   { id: 'linRegR2', label: 'LR R²', pane: true },
+  { id: 'lsma', label: 'LSMA' },
   { id: 'percentB', label: '%B', pane: true },
   { id: 'bbw', label: 'BBW', pane: true },
   { id: 'medianPrice', label: 'Median Price' },
@@ -216,6 +227,15 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'ichimoku', label: 'Ichimoku' },
   { id: 'alligator', label: 'Alligator' },
   { id: 'gator', label: 'Gator Oscillator', pane: true },
+  { id: 'vwma', label: 'VWMA' },
+  { id: 'alma', label: 'ALMA' },
+  { id: 'chandeKroll', label: 'Chande Kroll Stop' },
+  { id: 'smi', label: 'SMI', pane: true },
+  { id: 'dmi', label: 'DMI', pane: true },
+  { id: 'chandelierExit', label: 'Chandelier Exit' },
+  { id: 'gmma', label: 'GMMA' },
+  { id: 'rwi', label: 'RWI', pane: true },
+  { id: 'aroonUpDown', label: 'Aroon Up/Down', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

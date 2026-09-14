@@ -158,7 +158,14 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
               <Pressable
                 accessibilityRole="button"
                 key={s.id}
-                style={[styles.chip, on && styles.chipOn]}
+                style={({ pressed }) => [
+                  styles.chip,
+                  on && styles.chipOn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
                 onPress={() => toggle(s.id)}
               >
                 <Text style={[styles.chipText, on && styles.chipTextOn]} numberOfLines={1}>

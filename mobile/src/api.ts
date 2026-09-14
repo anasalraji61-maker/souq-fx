@@ -5,7 +5,10 @@ const extra = (Constants.expoConfig?.extra ?? {}) as { apiUrl?: string };
 /** على المتصفح المحلي نفضّل 127.0.0.1 حتى لا نعلق بـ IP شبكة قديم في app.json */
 function resolveApiUrl(): string {
   const configured = extra.apiUrl || 'http://127.0.0.1:8110';
-  if (typeof window !== 'undefined') {
+  // على React Native (Expo Go / Hermes) قد يكون window معرّفاً كـ polyfill
+  // لكن window.location غير موجود إطلاقاً — لهذا نتحقق من location أيضاً
+  // قبل قراءة hostname، وإلا يرمي التطبيق: "Cannot read property 'hostname' of undefined".
+  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
     const host = window.location.hostname;
     if (host === 'localhost' || host === '127.0.0.1') {
       return 'http://127.0.0.1:8110';

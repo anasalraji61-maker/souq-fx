@@ -56,8 +56,10 @@ import {
   computeAcceleratorOsc,
   computeAdx,
   computeAlligator,
+  computeAlma,
   computeApo,
   computeAroonOsc,
+  computeAroonUpDown,
   computeAtr,
   computeAwesomeOsc,
   computeBearPower,
@@ -68,10 +70,13 @@ import {
   computeCci,
   computeChaikinOsc,
   computeChaikinVolatility,
+  computeChandeKrollStop,
+  computeChandelierExit,
   computeChoppiness,
   computeCmf,
   computeCmo,
   computeCoppock,
+  computeDmi,
   computeDonchian,
   computeDpo,
   computeEnvelopes,
@@ -79,6 +84,7 @@ import {
   computeFisherTransform,
   computeForceIndex,
   computeGator,
+  computeGmma,
   computeHistoricalVolatility,
   computeIchimoku,
   computeKeltner,
@@ -86,6 +92,7 @@ import {
   computeKst,
   computeLinRegR2,
   computeLinRegSlope,
+  computeLsma,
   computeMacd,
   computeMassIndex,
   computeMcGinleyDynamic,
@@ -105,6 +112,8 @@ import {
   computeRoc,
   computeRsi,
   computeRvi,
+  computeRwi,
+  computeSmi,
   computeStdDev,
   computeStoch,
   computeStochRsi,
@@ -119,6 +128,7 @@ import {
   computeVortex,
   computeVpt,
   computeVwap,
+  computeVwma,
   computeWeightedClose,
   computeWilliamsR,
   formatPrice,
@@ -983,6 +993,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('mcginley') ? computeMcGinleyDynamic(closes) : null),
     [closes, indicators]
   );
+  const lsma = useMemo(
+    () => (indicators.includes('lsma') ? computeLsma(closes) : null),
+    [closes, indicators]
+  );
   const momentum = useMemo(
     () => (indicators.includes('momentum') ? computeMomentum(closes) : null),
     [closes, indicators]
@@ -1032,6 +1046,42 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const alli = alligator ?? computeAlligator(source.plot);
     return computeGator(alli.jaw, alli.teeth, alli.lips);
   }, [source.plot, indicators, alligator]);
+  const vwma = useMemo(
+    () => (indicators.includes('vwma') ? computeVwma(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const alma = useMemo(
+    () => (indicators.includes('alma') ? computeAlma(closes) : null),
+    [closes, indicators]
+  );
+  const chandeKroll = useMemo(
+    () => (indicators.includes('chandeKroll') ? computeChandeKrollStop(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const smi = useMemo(
+    () => (indicators.includes('smi') ? computeSmi(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const dmi = useMemo(
+    () => (indicators.includes('dmi') ? computeDmi(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const chandelierExit = useMemo(
+    () => (indicators.includes('chandelierExit') ? computeChandelierExit(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const gmma = useMemo(
+    () => (indicators.includes('gmma') ? computeGmma(closes) : null),
+    [closes, indicators]
+  );
+  const rwi = useMemo(
+    () => (indicators.includes('rwi') ? computeRwi(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const aroonUpDown = useMemo(
+    () => (indicators.includes('aroonUpDown') ? computeAroonUpDown(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1090,6 +1140,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('vortex') ? 1 : 0) +
     (indicators.includes('klinger') ? 1 : 0) +
     (indicators.includes('gator') ? 1 : 0) +
+    (indicators.includes('smi') ? 1 : 0) +
+    (indicators.includes('dmi') ? 1 : 0) +
+    (indicators.includes('rwi') ? 1 : 0) +
+    (indicators.includes('aroonUpDown') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -1121,6 +1175,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('typicalPrice') && typicalPrice) typicalPrice.forEach(push);
     if (indicators.includes('weightedClose') && weightedClose) weightedClose.forEach(push);
     if (indicators.includes('mcginley') && mcginley) mcginley.forEach(push);
+    if (indicators.includes('lsma') && lsma) lsma.forEach(push);
+    if (indicators.includes('vwma') && vwma) vwma.forEach(push);
+    if (indicators.includes('alma') && alma) alma.forEach(push);
     if (indicators.includes('supertrend') && supertrend) supertrend.value.forEach(push);
     if (indicators.includes('bb')) {
       overlays.bbUpper.forEach(push);
@@ -1149,6 +1206,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       alligator.jaw.forEach(push);
       alligator.teeth.forEach(push);
       alligator.lips.forEach(push);
+    }
+    if (indicators.includes('chandeKroll') && chandeKroll) {
+      chandeKroll.shortStop.forEach(push);
+      chandeKroll.longStop.forEach(push);
+    }
+    if (indicators.includes('chandelierExit') && chandelierExit) {
+      chandelierExit.shortStop.forEach(push);
+      chandelierExit.longStop.forEach(push);
+    }
+    if (indicators.includes('gmma') && gmma) {
+      gmma.shortLines.forEach((line) => line.forEach(push));
+      gmma.longLines.forEach((line) => line.forEach(push));
     }
     if (comparePrices) comparePrices.forEach(push);
     // أبقِ الظلال ضمن المدى حتى لا تُقصّ عند التقريب (overflow hidden)
@@ -1192,12 +1261,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     typicalPrice,
     weightedClose,
     mcginley,
+    lsma,
+    vwma,
+    alma,
     supertrend,
     keltner,
     envelopes,
     donchian,
     ichimoku,
     alligator,
+    chandeKroll,
+    chandelierExit,
+    gmma,
     priceScale,
     pricePan,
     syncFollow,
@@ -2666,6 +2741,60 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             )
           )}
+        {indicators.includes('lsma') &&
+          lsma &&
+          lsma.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`lsma${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#22D3EE' }]}
+              />
+            )
+          )}
+        {indicators.includes('vwma') &&
+          vwma &&
+          vwma.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`vwma${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FACC15' }]}
+              />
+            )
+          )}
+        {indicators.includes('alma') &&
+          alma &&
+          alma.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`alma${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#E879F9' }]}
+              />
+            )
+          )}
+        {indicators.includes('gmma') &&
+          gmma &&
+          gmma.shortLines.map((line, li) =>
+            line.map((v, i) =>
+              v == null ? null : (
+                <View
+                  key={`gmmaS${li}_${i}`}
+                  style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#6EE7B7' }]}
+                />
+              )
+            )
+          )}
+        {indicators.includes('gmma') &&
+          gmma &&
+          gmma.longLines.map((line, li) =>
+            line.map((v, i) =>
+              v == null ? null : (
+                <View
+                  key={`gmmaL${li}_${i}`}
+                  style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#93C5FD' }]}
+                />
+              )
+            )
+          )}
         {indicators.includes('supertrend') &&
           supertrend &&
           supertrend.value.map((v, i) =>
@@ -2754,6 +2883,46 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   width: 2,
                   height: Math.max(2, yOf(lo) - yOf(v)),
                   backgroundColor: 'rgba(163,180,208,0.14)',
+                }}
+              />
+            );
+          })}
+        {indicators.includes('chandeKroll') &&
+          chandeKroll &&
+          chandeKroll.shortStop.map((v, i) => {
+            const lo = chandeKroll.longStop[i];
+            if (v == null || lo == null) return null;
+            return (
+              <View
+                key={`ck${i}`}
+                style={{
+                  position: 'absolute',
+                  left: xOf(i) - 1,
+                  top: yOf(v),
+                  width: 2,
+                  height: Math.max(2, yOf(lo) - yOf(v)),
+                  backgroundColor: 'rgba(45,212,191,0.16)',
+                }}
+              />
+            );
+          })}
+        {indicators.includes('chandelierExit') &&
+          chandelierExit &&
+          chandelierExit.longStop.map((lv, i) => {
+            const sv = chandelierExit.shortStop[i];
+            if (lv == null || sv == null) return null;
+            const top = sv >= lv ? sv : lv;
+            const bottom = sv >= lv ? lv : sv;
+            return (
+              <View
+                key={`ce${i}`}
+                style={{
+                  position: 'absolute',
+                  left: xOf(i) - 1,
+                  top: yOf(top),
+                  width: 2,
+                  height: Math.max(2, yOf(bottom) - yOf(top)),
+                  backgroundColor: 'rgba(253,186,116,0.16)',
                 }}
               />
             );
@@ -4518,6 +4687,156 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         </View>
       ) : null}
 
+      {dmi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>DMI</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const plusVals = dmi.plusDI.filter((x): x is number => x != null);
+              const minusVals = dmi.minusDI.filter((x): x is number => x != null);
+              const allVals = [...plusVals, ...minusVals, 0];
+              const minV = Math.min(...allVals);
+              const maxV = Math.max(...allVals);
+              const span = maxV - minV || 1;
+              const innerH = paneH - 16;
+              return dmi.plusDI.map((pv, i) => {
+                const mv = dmi.minusDI[i];
+                return (
+                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
+                    {pv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          top: ((maxV - pv) / span) * innerH,
+                          backgroundColor: colors.bull,
+                          opacity: 0.85,
+                        }}
+                      />
+                    ) : null}
+                    {mv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          top: ((maxV - mv) / span) * innerH,
+                          backgroundColor: colors.bear,
+                          opacity: 0.85,
+                        }}
+                      />
+                    ) : null}
+                  </View>
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {rwi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>RWI</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const highVals = rwi.rwiHigh.filter((x): x is number => x != null);
+              const lowVals = rwi.rwiLow.filter((x): x is number => x != null);
+              const allVals = [...highVals, ...lowVals, 0];
+              const minV = Math.min(...allVals);
+              const maxV = Math.max(...allVals);
+              const span = maxV - minV || 1;
+              const innerH = paneH - 16;
+              return rwi.rwiHigh.map((hv, i) => {
+                const lv = rwi.rwiLow[i];
+                return (
+                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
+                    {hv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          top: ((maxV - hv) / span) * innerH,
+                          backgroundColor: colors.bull,
+                          opacity: 0.85,
+                        }}
+                      />
+                    ) : null}
+                    {lv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          top: ((maxV - lv) / span) * innerH,
+                          backgroundColor: colors.bear,
+                          opacity: 0.85,
+                        }}
+                      />
+                    ) : null}
+                  </View>
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {aroonUpDown ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Aroon Up/Down</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const upVals = aroonUpDown.up.filter((x): x is number => x != null);
+              const downVals = aroonUpDown.down.filter((x): x is number => x != null);
+              const allVals = [...upVals, ...downVals, 0, 100];
+              const minV = Math.min(...allVals);
+              const maxV = Math.max(...allVals);
+              const span = maxV - minV || 1;
+              const innerH = paneH - 16;
+              return aroonUpDown.up.map((uv, i) => {
+                const dv = aroonUpDown.down[i];
+                return (
+                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
+                    {uv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          top: ((maxV - uv) / span) * innerH,
+                          backgroundColor: colors.bull,
+                          opacity: 0.85,
+                        }}
+                      />
+                    ) : null}
+                    {dv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          top: ((maxV - dv) / span) * innerH,
+                          backgroundColor: colors.bear,
+                          opacity: 0.85,
+                        }}
+                      />
+                    ) : null}
+                  </View>
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
       {klinger ? (
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Klinger</Text>
@@ -4555,6 +4874,56 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           right: 0,
                           height: 3,
                           top: ((maxV - sv) / span) * innerH,
+                          backgroundColor: colors.infoAccent,
+                          opacity: 0.85,
+                        }}
+                      />
+                    ) : null}
+                  </View>
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {smi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>SMI</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const smiVals = smi.smi.filter((x): x is number => x != null);
+              const sigVals = smi.signal.filter((x): x is number => x != null);
+              const allVals = [...smiVals, ...sigVals, 0];
+              const minV = Math.min(...allVals);
+              const maxV = Math.max(...allVals);
+              const span = maxV - minV || 1;
+              const innerH = paneH - 16;
+              return smi.smi.map((sv, i) => {
+                const gv = smi.signal[i];
+                return (
+                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
+                    {sv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          top: ((maxV - sv) / span) * innerH,
+                          backgroundColor: colors.accent,
+                          opacity: 0.85,
+                        }}
+                      />
+                    ) : null}
+                    {gv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          top: ((maxV - gv) / span) * innerH,
                           backgroundColor: colors.infoAccent,
                           opacity: 0.85,
                         }}

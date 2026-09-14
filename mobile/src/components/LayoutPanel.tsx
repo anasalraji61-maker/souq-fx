@@ -10,6 +10,7 @@ import {
   type TerminalLayout,
 } from '../chart/layoutStore';
 import { api } from '../api';
+import { playSoftClick } from '../audio/playSoftClick';
 
 type Props = {
   frameTfs: [string, string, string] | string[];
@@ -45,6 +46,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
     } catch {
       /* local ok */
     }
+    playSoftClick();
     setLayouts((prev) => [DEFAULT_LAYOUT, layout, ...prev.filter((x) => x.id !== layout.id)]);
   };
 

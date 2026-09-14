@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { colors, radii, spacing, frameEmbed, buttons } from '../theme';
 import { api } from '../api';
+import { playSoftClick } from '../audio/playSoftClick';
 import { FrameSizedGrid } from './FrameSizedGrid';
 
 type ReportKind = 'weekly_pnl' | 'performance' | 'matrix_advice' | 'risk_brief';
@@ -71,6 +72,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
       const res = await api.aiAsk(item.prompt + journalLine, 'EURUSD');
       setText(res.answer.replace(/\*\*/g, ''));
       setWin(res.setup?.win_probability ?? null);
+      playSoftClick();
     } catch {
       setText(
         kind === 'weekly_pnl'

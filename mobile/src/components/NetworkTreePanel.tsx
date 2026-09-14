@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
+import { playSoftClick } from '../audio/playSoftClick';
 import { TreeDiagramSketch } from './TreeDiagramSketch';
 
 export type TreeNode = {
@@ -299,6 +300,7 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
         under_user_id: slot.parentId,
       });
       setTree(res.tree as TreeNode | null);
+      playSoftClick();
       onChanged?.();
     } catch {
       setErr('تعذر الوضع — الاسم مستخدم أو المربع مشغول أو بيانات ناقصة');

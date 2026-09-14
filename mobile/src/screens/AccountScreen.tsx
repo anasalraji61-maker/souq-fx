@@ -137,7 +137,14 @@ export function AccountScreen() {
             <Pressable
               accessibilityRole="button"
               key={l.id}
-              style={[styles.langChip, lang === l.id && styles.langChipOn]}
+              style={({ pressed }) => [
+                styles.langChip,
+                lang === l.id && styles.langChipOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
               onPress={() => void setLang(l.id)}
             >
               <Text style={[styles.langText, lang === l.id && styles.langTextOn]}>{l.label}</Text>
@@ -201,14 +208,28 @@ export function AccountScreen() {
           <View style={[styles.tabs, rtl && styles.tabsRtl]}>
             <Pressable
               accessibilityRole="button"
-              style={[styles.tab, mode === 'login' && styles.tabOn]}
+              style={({ pressed }) => [
+                styles.tab,
+                mode === 'login' && styles.tabOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
               onPress={() => setMode('login')}
             >
               <Text style={[styles.tabText, mode === 'login' && styles.tabTextOn]}>{t.login}</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              style={[styles.tab, mode === 'register' && styles.tabOn]}
+              style={({ pressed }) => [
+                styles.tab,
+                mode === 'register' && styles.tabOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
               onPress={() => setMode('register')}
             >
               <Text style={[styles.tabText, mode === 'register' && styles.tabTextOn]}>
@@ -303,7 +324,14 @@ export function AccountScreen() {
                   <Pressable
                     accessibilityRole="button"
                     key={r.id}
-                    style={[styles.roleChip, role === r.id && styles.roleChipOn]}
+                    style={({ pressed }) => [
+                      styles.roleChip,
+                      role === r.id && styles.roleChipOn,
+                      pressed && {
+                        opacity: buttons.pressedOpacity,
+                        transform: [{ scale: buttons.pressedScale }],
+                      },
+                    ]}
                     onPress={() => setRole(r.id)}
                   >
                     <Text style={[styles.roleText, role === r.id && styles.roleTextOn]}>
@@ -333,7 +361,14 @@ export function AccountScreen() {
                   <View style={[styles.tabs, rtl && styles.tabsRtl]}>
                     <Pressable
                       accessibilityRole="button"
-                      style={[styles.tab, side === 'left' && styles.tabOn]}
+                      style={({ pressed }) => [
+                        styles.tab,
+                        side === 'left' && styles.tabOn,
+                        pressed && {
+                          opacity: buttons.pressedOpacity,
+                          transform: [{ scale: buttons.pressedScale }],
+                        },
+                      ]}
                       onPress={() => setSide('left')}
                     >
                       <Text style={[styles.tabText, side === 'left' && styles.tabTextOn]}>
@@ -342,7 +377,14 @@ export function AccountScreen() {
                     </Pressable>
                     <Pressable
                       accessibilityRole="button"
-                      style={[styles.tab, side === 'right' && styles.tabOn]}
+                      style={({ pressed }) => [
+                        styles.tab,
+                        side === 'right' && styles.tabOn,
+                        pressed && {
+                          opacity: buttons.pressedOpacity,
+                          transform: [{ scale: buttons.pressedScale }],
+                        },
+                      ]}
                       onPress={() => setSide('right')}
                     >
                       <Text style={[styles.tabText, side === 'right' && styles.tabTextOn]}>

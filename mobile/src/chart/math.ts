@@ -1632,6 +1632,46 @@ export function computeLinRegR2(closes: number[], period = 14): (number | null)[
 }
 
 /**
+ * LSMA (Least Squares Moving Average، period=25 نافذة قياسية) — overlay فوق اللوحة الرئيسية، يعيد
+ * استخدام *نفس* صيغة الانحدار الخطي (sumX/sumX2/denom بالمحاور x=0..period-1 الثابتة حسابياً، وSumY/
+ * sumXY لكل نافذة) المستخدَمة حرفياً بـcomputeLinRegSlope/computeLinRegR2 أعلاه، لكن بدل إرجاع الميل
+ * أو R² فقط، LSMA يحسب أيضاً نقطة التقاطع (intercept = meanY − slope×meanX) ثم يُرجع القيمة *المتوقَّعة
+ * عند نهاية النافذة* (ŷ عند x=period-1 = slope×(period-1) + intercept) — أي نقطة خط الانحدار المقابلة
+ * لآخر شمعة بالنافذة تحديداً، لا الميل نفسه. بعكس SMA (متوسط بسيط لكل النافذة بلا وزن اتجاهي)، LSMA
+ * "يتنبأ" بموقع آخر نقطة وفق أفضل خط مستقيم ملائم للنافذة كاملة، فيتبع الاتجاه بتأخر أقل من SMA بنفس
+ * الفترة مع بقائه أنعم من الإغلاق الخام. **تحقّق يدوي**: سعر ثابت تماماً بكل شموع النافذة (C) → Σy=n×C،
+ * سعر ثابت ⇒ Σxy=C×Σx (كما بـLinRegSlope) ⇒ slope=0 بالضبط ⇒ meanY=C، meanX=Σx/n ⇒ intercept=C−0×meanX=C
+ * ⇒ ŷ=0×(period-1)+C=C بالضبط — يطابق SMA تماماً بهذه الحالة الخاصة فقط (سعر ساكن)، وهو السلوك الصحيح
+ * المتوقَّع نظرياً (بلا اتجاه خطي، أفضل تنبؤ هو القيمة الثابتة نفسها).
+ */
+export function computeLsma(closes: number[], period = 25): (number | null)[] {
+  const n = period;
+  const sumX = (n * (n - 1)) / 2;
+  const sumX2 = ((n - 1) * n * (2 * n - 1)) / 6;
+  const denom = n * sumX2 - sumX * sumX;
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    let sumY = 0;
+    let sumXY = 0;
+    for (let x = 0; x < n; x++) {
+      const y = closes[i - n + 1 + x];
+      sumY += y;
+      sumXY += x * y;
+    }
+    const slope = denom === 0 ? 0 : (n * sumXY - sumX * sumY) / denom;
+    const meanY = sumY / n;
+    const meanX = sumX / n;
+    const intercept = meanY - slope * meanX;
+    out.push(slope * (n - 1) + intercept);
+  }
+  return out;
+}
+
+/**
  * Percent B (%B، period=20 وmult=2 القيمتان القياسيتان لبولنجر — نفس قيم computeOverlays.bb أعلاه
  * تماماً) — يقيس موقع الإغلاق *نسبةً* لعرض نطاق بولنجر بدل قراءة الإغلاق مقابل النطاقين مباشرة على
  * الشارت: %B[i] = (إغلاق[i] − lower[i]) / (upper[i] − lower[i])، حيث mid=SMA(period)،
@@ -2203,6 +2243,385 @@ export function computeGator(
     return Math.abs(v) > Math.abs(lower[i - 1]!);
   });
   return { upper, lower, upperGrowing, lowerGrowing };
+}
+
+/**
+ * VWMA (Volume Weighted Moving Average، period=20 افتراضياً) — نفس فكرة SMA العادية لكن كل إغلاق
+ * ضمن النافذة يُرجَّح بحجمه الخاص بدل وزن متساوٍ للجميع: VWMA[i] = Σ(إغلاق×فوليوم)/Σ(فوليوم) على
+ * آخر period شمعة. فوليوم مفقود يُعوَّض بنفس صيغة computeVpt/computeKlinger أعلاه للاتساق. يُرسَم
+ * فوق اللوحة الرئيسية بنمط نقاط weightedClose/mcginley/lsma (overlay سعر بديل بلا pane خاص).
+ * **تحقّق يدوي**: سعر ثابت تماماً P بكل الشموع (أي حجم) → Σ(P×فوليوم)=P×Σ(فوليوم) → VWMA=P بالضبط
+ * لكل نقطة صالحة، بغضّ النظر عن توزيع الفوليوم — يطابق "متوسط مرجَّح لسعر ثابت هو نفسه" رياضياً.
+ */
+export function computeVwma(
+  candles: (Candle & { volume?: number })[],
+  period = 20
+): (number | null)[] {
+  const n = candles.length;
+  const vol = candles.map((c) => c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000);
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = period - 1; i < n; i++) {
+    let sumPv = 0;
+    let sumV = 0;
+    for (let w = i - period + 1; w <= i; w++) {
+      sumPv += candles[w].close * vol[w];
+      sumV += vol[w];
+    }
+    out[i] = sumV === 0 ? candles[i].close : sumPv / sumV;
+  }
+  return out;
+}
+
+/**
+ * ALMA (Arnaud Legoux Moving Average، period=9/sigma=6/offset=0.85 القيم القياسية الشائعة بمعظم
+ * المنصات) — متوسط متحرك مرجَّح بأوزان جرسية (Gaussian) بدل الأوزان الخطية لـwma() المحلية أعلاه:
+ * لكل نافذة period، m=offset×(period−1) (موضع ذروة الجرس ضمن النافذة، قريب من النهاية الحديثة
+ * بـoffset=0.85 لتقليل التأخر)، s=period/sigma (اتساع الجرس)، وزن[j]=exp(−(j−m)²/(2s²)) لكل موضع
+ * j=0..period−1 ضمن النافذة، القيمة النهائية = Σ(وزن[j]×سعر[i−period+1+j])/Σ(وزن[j]). يجمع فعلياً
+ * بين نعومة SMA واستجابة EMA بفضل توزيع الوزن الجرسي بدل الخطي أو الأسّي. يُرسَم بنمط نقاط overlay
+ * كباقي المتوسطات أعلاه (sma20/ema21/wma20...). **تحقّق يدوي**: سعر ثابت تماماً P بكل الشموع → كل
+ * حد بالمجموع = وزن[j]×P → المجموع = P×Σ(وزن[j]) → ALMA = P×Σ(وزن[j])/Σ(وزن[j]) = P بالضبط لكل
+ * نقطة صالحة، بغضّ النظر عن توزيع الأوزان الجرسي — يطابق "متوسط مرجَّح لسعر ثابت هو نفسه" رياضياً،
+ * نفس منطق VWMA أعلاه تماماً.
+ */
+export function computeAlma(
+  closes: number[],
+  period = 9,
+  sigma = 6,
+  offset = 0.85
+): (number | null)[] {
+  const n = closes.length;
+  const out: (number | null)[] = new Array(n).fill(null);
+  const m = offset * (period - 1);
+  const s = period / sigma;
+  const weights: number[] = new Array(period);
+  let wSum = 0;
+  for (let j = 0; j < period; j++) {
+    const w = Math.exp(-((j - m) ** 2) / (2 * s * s));
+    weights[j] = w;
+    wSum += w;
+  }
+  for (let i = period - 1; i < n; i++) {
+    let sum = 0;
+    for (let j = 0; j < period; j++) {
+      sum += weights[j] * closes[i - period + 1 + j];
+    }
+    out[i] = wSum === 0 ? closes[i] : sum / wSum;
+  }
+  return out;
+}
+
+/**
+ * Chande Kroll Stop (period=10/atrMult=1/qPeriod=9 القيم القياسية) — نطاق وقف حماية ديناميكي
+ * (بعكس Keltner/Donchian المصمَّمين كقنوات تداول لا مستويات وقف) يُبنى على مرحلتين: (1) أول حد
+ * علوي=أعلى قمة خلال period شمعة + atrMult×computeAtr(candles, period) [إعادة استخدام مباشرة
+ * لـcomputeAtr المُصدَّرة أعلاه]، أول حد سفلي=أدنى قاع خلال نفس النافذة − نفس المضاعف×ATR. (2) الحد
+ * النهائي العلوي (shortStop، مقاومة لصفقات البيع)=أعلى قيمة لأول حد علوي خلال آخر qPeriod شمعة،
+ * والحد النهائي السفلي (longStop، دعم لصفقات الشراء)=أدنى قيمة لأول حد سفلي خلال نفس qPeriod —
+ * نفس منطق أعلى/أدنى قمة/قاع متدحرج المستخدَم بـcomputeDonchian أعلاه، مطبَّق هنا على سلسلة
+ * "الحد الأول" بدل السعر الخام مباشرة. يُرسَم بنمط الشريط العمودي شبه الشفاف الموجود مسبقاً
+ * لـkeltner/envelopes/donchian حرفياً (لون تيل الهوية `rgba(45,212,191,0.16)` لتمييزه كمستوى وقف).
+ * **تحقّق يدوي**: سعر ثابت تماماً P بكل الشموع (أعلى=أدنى=إغلاق=P) → computeAtr يُرجع 0 بعد التسخين
+ * (TR=0 لكل شمعة بسعر ساكن، نفس منطق التحقّق اليدوي لـcomputeKeltner/computeChoppiness أعلاه) → أول
+ * حد علوي=P+1×0=P، أول حد سفلي=P−0=P لكل نقطة صالحة → أعلى/أدنى قيمة متدحرجة لسلسلة ثابتة P=P →
+ * shortStop=longStop=P بالضبط، يطابق "لا اتساع لمستوى الوقف بلا أي تقلّب فعلي" بالتعريف.
+ */
+export function computeChandeKrollStop(
+  candles: Candle[],
+  period = 10,
+  atrMult = 1,
+  qPeriod = 9
+): { longStop: (number | null)[]; shortStop: (number | null)[] } {
+  const n = candles.length;
+  const atr = computeAtr(candles, period);
+  const firstHigh: (number | null)[] = new Array(n).fill(null);
+  const firstLow: (number | null)[] = new Array(n).fill(null);
+  for (let i = period - 1; i < n; i++) {
+    if (atr[i] == null) continue;
+    let hh = -Infinity;
+    let ll = Infinity;
+    for (let w = i - period + 1; w <= i; w++) {
+      hh = Math.max(hh, candles[w].high);
+      ll = Math.min(ll, candles[w].low);
+    }
+    firstHigh[i] = hh + atrMult * atr[i]!;
+    firstLow[i] = ll - atrMult * atr[i]!;
+  }
+  const longStop: (number | null)[] = new Array(n).fill(null);
+  const shortStop: (number | null)[] = new Array(n).fill(null);
+  for (let i = period - 1 + qPeriod - 1; i < n; i++) {
+    let hh = -Infinity;
+    let ll = Infinity;
+    let valid = true;
+    for (let w = i - qPeriod + 1; w <= i; w++) {
+      if (firstHigh[w] == null || firstLow[w] == null) {
+        valid = false;
+        break;
+      }
+      hh = Math.max(hh, firstHigh[w]!);
+      ll = Math.min(ll, firstLow[w]!);
+    }
+    if (!valid) continue;
+    shortStop[i] = hh;
+    longStop[i] = ll;
+  }
+  return { longStop, shortStop };
+}
+
+/**
+ * SMI (Stochastic Momentum Index، وليام بلاو — kPeriod=10/smoothPeriod1=3/smoothPeriod2=3/
+ * signalPeriod=3 القيم القياسية الشائعة) — نسخة مُحسَّنة من Stochastic العادي (computeStoch
+ * أعلاه) تقيس موضع الإغلاق نسبةً لمنتصف نطاق أعلى/أدنى قمة/قاع (لا الحد الأدنى وحده كـStochastic
+ * التقليدي) ثم تُنعِّم الفرق والمدى كليهما بطبقتي EMA متتاليتين (نفس مبدأ التنعيم المزدوج
+ * لـcomputeTsi أعلاه حرفياً، هنا على diff/range بدل momentum/absMomentum). لكل نقطة: منتصف=
+ * (أعلى قمة+أدنى قاع)/2 خلال kPeriod، diff=إغلاق−منتصف، مدى=أعلى قمة−أدنى قاع؛ avgDiff=
+ * ema(ema(diff، smoothPeriod1)، smoothPeriod2)، avgRange بنفس الطريقة تماماً؛ SMI=100×avgDiff/
+ * (avgRange/2) (حارس صفر صراحةً عند avgRange=0)، خط الإشارة=ema(SMI، signalPeriod) — نفس بنية
+ * kvo/signal لـcomputeKlinger أعلاه حرفياً (خط رئيسي + إشارة مُنعَّمة)، يُرسَم بنفس نمط الپين
+ * ثنائي الخط. **تحقّق يدوي**: سعر ثابت تماماً P بكل الشموع → أعلى قمة=أدنى قاع=P لأي نافذة →
+ * منتصف=P → diff=P−P=0 ومدى=P−P=0 لكل نقطة صالحة → التنعيم المزدوج لسلسلة أصفار=0 لكليهما →
+ * avgRange=0 محروس صراحةً → SMI=0 بالضبط، والإشارة=ema(0،signalPeriod)=0 أيضاً، يطابق "لا زخم/لا
+ * مدى بسعر ساكن تماماً" بالتعريف.
+ */
+export function computeSmi(
+  candles: Candle[],
+  kPeriod = 10,
+  smoothPeriod1 = 3,
+  smoothPeriod2 = 3,
+  signalPeriod = 3
+): { smi: (number | null)[]; signal: (number | null)[] } {
+  const n = candles.length;
+  const diff: number[] = new Array(n).fill(0);
+  const range: number[] = new Array(n).fill(0);
+  const valid: boolean[] = new Array(n).fill(false);
+  for (let i = kPeriod - 1; i < n; i++) {
+    let hh = -Infinity;
+    let ll = Infinity;
+    for (let w = i - kPeriod + 1; w <= i; w++) {
+      hh = Math.max(hh, candles[w].high);
+      ll = Math.min(ll, candles[w].low);
+    }
+    const center = (hh + ll) / 2;
+    diff[i] = candles[i].close - center;
+    range[i] = hh - ll;
+    valid[i] = true;
+  }
+  const avgDiff = ema(ema(diff, smoothPeriod1).map((v) => v ?? 0), smoothPeriod2);
+  const avgRange = ema(ema(range, smoothPeriod1).map((v) => v ?? 0), smoothPeriod2);
+  const smi: (number | null)[] = candles.map((_, i) => {
+    if (!valid[i] || avgDiff[i] == null || avgRange[i] == null) return null;
+    const halfRange = avgRange[i]! / 2;
+    return halfRange === 0 ? 0 : (100 * avgDiff[i]!) / halfRange;
+  });
+  const smiFilled = smi.map((v) => v ?? 0);
+  const emaSignal = ema(smiFilled, signalPeriod);
+  const signal: (number | null)[] = smi.map((v, i) => (v != null ? emaSignal[i] : null));
+  return { smi, signal };
+}
+
+/**
+ * DMI (Directional Movement Index، +DI/−DI منفصلَين — period=14 القيمة القياسية) — computeAdx
+ * أعلاه يحسب plusDI/minusDI داخلياً لكل شمعة (بتمهيد Wilder القياسي لـTR/+DM/−DM) لكن لا يُرجعهما،
+ * فقط ADX النهائي (تمهيد إضافي لـDX=فرق DI المطلق/مجموعهما). هذه الدالة **مستقلة عمداً** تعيد نفس
+ * حساب +DI/−DI بنفس صيغة computeAdx حرفياً (لا استدعاء له ولا تعديل عليه — نفس نمط ازدواجية منطق
+ * TR/Wilder المقبول أصلاً بهذا الملف بين computeAtr/computeAdx/computePsar قبل استخراج smma()
+ * كدالة مشتركة) لكن تكشف +DI/−DI الخام كخطّين مستقلّين — القراءة القياسية بمعظم المنصات لاتجاه
+ * القوة الصاعدة/الهابطة قبل تلخيصها بخط ADX الواحد. يُرسَم بنفس **نمط الپين ثنائي الخط** المستخدَم
+ * لـcomputeVortex أعلاه حرفياً (+DI بلون الصعود، −DI بلون الهبوط — نفس الدلالة الاتجاهية تماماً).
+ * **تحقّق يدوي**: سعر ثابت تماماً بكل الشموع (أعلى=أدنى=إغلاق ثابت) → upMove=أعلى[i]−أعلى[i-1]=0
+ * وdownMove=أدنى[i-1]−أدنى[i]=0 لكل i → plusDM=minusDM=0 دائماً (الشرط `>0` يرفض الصفر) وTR=0 أيضاً
+ * (نفس منطق التحقّق اليدوي لـcomputeAtr/computeChoppiness أعلاه) → sPlus=sMinus=sTr=0 بعد التسخين →
+ * diOf محروسة صراحةً عند sTr=0 فتُرجع 0 → plusDI=minusDI=0 بالضبط، يطابق "لا حركة اتجاهية بسعر
+ * ساكن تماماً" بالتعريف.
+ */
+export function computeDmi(
+  candles: Candle[],
+  period = 14
+): { plusDI: (number | null)[]; minusDI: (number | null)[] } {
+  const n = candles.length;
+  const plusDI: (number | null)[] = new Array(n).fill(null);
+  const minusDI: (number | null)[] = new Array(n).fill(null);
+  if (n <= period) return { plusDI, minusDI };
+
+  const plusDM: number[] = new Array(n).fill(0);
+  const minusDM: number[] = new Array(n).fill(0);
+  const tr: number[] = new Array(n).fill(0);
+  for (let i = 1; i < n; i++) {
+    const upMove = candles[i].high - candles[i - 1].high;
+    const downMove = candles[i - 1].low - candles[i].low;
+    plusDM[i] = upMove > downMove && upMove > 0 ? upMove : 0;
+    minusDM[i] = downMove > upMove && downMove > 0 ? downMove : 0;
+    const prevClose = candles[i - 1].close;
+    tr[i] = Math.max(
+      candles[i].high - candles[i].low,
+      Math.abs(candles[i].high - prevClose),
+      Math.abs(candles[i].low - prevClose)
+    );
+  }
+
+  let sTr = 0;
+  let sPlus = 0;
+  let sMinus = 0;
+  for (let i = 1; i <= period; i++) {
+    sTr += tr[i];
+    sPlus += plusDM[i];
+    sMinus += minusDM[i];
+  }
+  const diOf = (s: number, sT: number) => (sT === 0 ? 0 : (s / sT) * 100);
+  plusDI[period] = diOf(sPlus, sTr);
+  minusDI[period] = diOf(sMinus, sTr);
+
+  for (let i = period + 1; i < n; i++) {
+    sTr = sTr - sTr / period + tr[i];
+    sPlus = sPlus - sPlus / period + plusDM[i];
+    sMinus = sMinus - sMinus / period + minusDM[i];
+    plusDI[i] = diOf(sPlus, sTr);
+    minusDI[i] = diOf(sMinus, sTr);
+  }
+  return { plusDI, minusDI };
+}
+
+/**
+ * Chandelier Exit (تشاندلير إكزيت، period=22/atrMult=3 القيم القياسية الشائعة بمعظم المنصات) —
+ * نطاق وقف تتبّعي مبني مباشرة فوق computeAtr المُصدَّرة أعلاه (إعادة استخدام مباشرة، بلا مرحلتين
+ * كـcomputeChandeKrollStop أعلاه — صيغة مباشرة أحادية المرحلة): longStop=أعلى قمة خلال period شمعة
+ * −atrMult×computeAtr(candles, period)، shortStop=أدنى قاع خلال نفس النافذة +atrMult×نفس الـATR.
+ * يُرسَم بنفس نمط الشريط العمودي شبه الشفاف المستخدَم لـkeltner/envelopes/donchian/chandeKroll أعلاه
+ * (لون برتقالي فاتح غير مستخدَم سابقاً `rgba(253,186,116,0.16)` لتمييزه عن تيل Chande Kroll، ونفس
+ * حراسة الترتيب top/bottom المستخدَمة أصلاً لـichimoku spanA/spanB أدناه بالملف الآخر لأن shortStop
+ * وlongStop غير مضمونَين بالترتيب رياضياً هنا خلافاً لـChande Kroll ذي المرحلتين).
+ * **تحقّق يدوي**: سعر ثابت تماماً P بكل الشموع → computeAtr=0 بعد التسخين (نفس منطق التحقّق اليدوي
+ * لـcomputeChandeKrollStop/computeKeltner أعلاه) → أعلى قمة=أدنى قاع=P لأي نافذة → longStop=
+ * P−atrMult×0=P، shortStop=P+0=P بالضبط لكل نقطة صالحة، يطابق "لا اتساع لوقف تتبّعي بلا أي تقلّب
+ * فعلي" بالتعريف — تحقَّق بتشغيل Node.js فعلي (سعر ثابت + 300 شمعة عشوائية، صفر NaN/Infinity).
+ */
+export function computeChandelierExit(
+  candles: Candle[],
+  period = 22,
+  atrMult = 3
+): { longStop: (number | null)[]; shortStop: (number | null)[] } {
+  const n = candles.length;
+  const atr = computeAtr(candles, period);
+  const longStop: (number | null)[] = new Array(n).fill(null);
+  const shortStop: (number | null)[] = new Array(n).fill(null);
+  for (let i = period - 1; i < n; i++) {
+    if (atr[i] == null) continue;
+    let hh = -Infinity;
+    let ll = Infinity;
+    for (let w = i - period + 1; w <= i; w++) {
+      hh = Math.max(hh, candles[w].high);
+      ll = Math.min(ll, candles[w].low);
+    }
+    longStop[i] = hh - atrMult * atr[i]!;
+    shortStop[i] = ll + atrMult * atr[i]!;
+  }
+  return { longStop, shortStop };
+}
+
+/**
+ * GMMA (Guppy Multiple Moving Average، دارِل غابي — مجموعتان قياسيتان: قصيرة [3,5,8,10,12,15]
+ * تعكس نشاط المتداولين قصيري الأمد، طويلة [30,35,40,45,50,60] تعكس المستثمرين طويلي الأمد) — أول
+ * overlay بالمشروع يعيد استخدام ema() المحلية 12 مرة دفعة واحدة بدل خط/زوج خطوط واحد (نفس الدالة
+ * المستخدَمة أصلاً بـema21 والتنعيم المزدوج لـcomputeTsi/computeSmi أعلاه، بلا أي منطق جديد). تقارب/
+ * تباعد المجموعتين (لا كل خط منفرد) هو ما يُقرَأ عادة: تشابك المجموعتين=تردّد/تجميع، تباعد واضح مع
+ * ترتيب متّسق=اتجاه قوي. يُرسَم كل خط بنمط نقاط overlay كباقي المتوسطات (لون واحد موحَّد لكل
+ * المجموعة القصيرة `#6EE7B7`، ولون آخر موحَّد لكل المجموعة الطويلة `#93C5FD` — لونان جديدان غير
+ * مستخدَمين سابقاً، فرّقا بصرياً حتى مع 12 خطاً معاً). **تحقّق يدوي**: سعر ثابت تماماً P بكل الشموع
+ * → ema لأي period تُرجع P بالضبط لكل نقطة صالحة (خاصية ema الأساسية، نفس التحقّق اليدوي المستخدَم
+ * لكل مؤشر يعتمد عليها بالملف) → كل الاثني عشر خطاً=P بالضبط — تحقَّق بتشغيل Node.js فعلي (سعر ثابت
+ * + 300 شمعة عشوائية، صفر NaN/Infinity، وقيمة EMA(3) القصيرة تختلف فعلياً عن EMA(60) الطويلة ببيانات
+ * متغيّرة — سلوك غير متدهور).
+ */
+const GMMA_SHORT_PERIODS = [3, 5, 8, 10, 12, 15];
+const GMMA_LONG_PERIODS = [30, 35, 40, 45, 50, 60];
+export function computeGmma(
+  closes: number[]
+): { shortLines: (number | null)[][]; longLines: (number | null)[][] } {
+  return {
+    shortLines: GMMA_SHORT_PERIODS.map((p) => ema(closes, p)),
+    longLines: GMMA_LONG_PERIODS.map((p) => ema(closes, p)),
+  };
+}
+
+/**
+ * RWI (Random Walk Index، مايكل بول — period=14 القيمة القياسية لكلا الطرفين High/Low) — يقيس هل
+ * حركة السعر أقوى من "مسار عشوائي" بمقياس ATR (يعيد استخدام computeAtr المُصدَّرة أعلاه مباشرة، وهي
+ * فعلياً sma() بسيطة للمدى الحقيقي بهذا الملف لا تمهيد Wilder — التوزيع الصحيح تماماً لصيغة RWI
+ * القياسية). لكل نقطة i (تحتاج i−period موجودة ضمن المصفوفة): rwiHigh=(أعلى[i]−أدنى[i−period])/
+ * (ATR(period)[i]×√period)، rwiLow=(أعلى[i−period]−أدنى[i])/(نفس المقام) — حارس صفر صراحةً عند
+ * ATR=0 (نفس نمط الحراسة المستخدَم بـcomputeDmi/computeSmi أعلاه). يُرسَم بنفس **نمط الپين ثنائي
+ * الخط** المستخدَم لـcomputeVortex/computeDmi أعلاه حرفياً (rwiHigh بلون الصعود، rwiLow بلون الهبوط).
+ * **تحقّق يدوي**: سعر ثابت تماماً P بكل الشموع → ATR=0 بعد التسخين وأعلى[i]=أدنى[i−period]=P لكل i
+ * صالح → المقام محروس صراحةً عند صفر فيُرجع rwiHigh=rwiLow=0 بالضبط، يطابق "لا انحراف عن السعر
+ * الثابت السابق" بالتعريف — تحقَّق بتشغيل Node.js فعلي (سعر ثابت + 300 شمعة عشوائية، صفر
+ * NaN/Infinity).
+ */
+export function computeRwi(
+  candles: Candle[],
+  period = 14
+): { rwiHigh: (number | null)[]; rwiLow: (number | null)[] } {
+  const n = candles.length;
+  const atr = computeAtr(candles, period);
+  const sq = Math.sqrt(period);
+  const rwiHigh: (number | null)[] = new Array(n).fill(null);
+  const rwiLow: (number | null)[] = new Array(n).fill(null);
+  for (let i = period; i < n; i++) {
+    if (atr[i] == null) continue;
+    const denom = atr[i]! * sq;
+    if (denom === 0) {
+      rwiHigh[i] = 0;
+      rwiLow[i] = 0;
+      continue;
+    }
+    rwiHigh[i] = (candles[i].high - candles[i - period].low) / denom;
+    rwiLow[i] = (candles[i - period].high - candles[i].low) / denom;
+  }
+  return { rwiHigh, rwiLow };
+}
+
+/**
+ * Aroon Up/Down (منفصلَين عن Aroon Oscillator — computeAroonOsc أعلاه بالملف، period=14 نفس القيمة
+ * القياسية) — computeAroonOsc تحسب up/down داخلياً لكل شمعة (موضع آخر قمة/قاع ضمن النافذة كنسبة
+ * مئوية 0..100) لكن ترجع الفرق up−down فقط كخط أوسيليتور واحد. هذه الدالة **مستقلة عمداً** (نفس حلقة
+ * hiIdx/loIdx حرفياً، لا استدعاء لـcomputeAroonOsc ولا تعديل عليها — نفس نمط ازدواجية +DI/−DI
+ * المستخدَم أعلاه بـcomputeDmi مقابل computeAdx حرفياً) تكشف up/down الخام كخطّين مستقلّين — القراءة
+ * الأصلية لمؤشر Aroon قبل تلخيصه بخط أوسيليتور واحد. يُرسَم بنفس نمط الپين ثنائي الخط المستخدَم
+ * لـcomputeVortex/computeDmi أعلاه حرفياً (Up بلون الصعود، Down بلون الهبوط).
+ * **تحقّق يدوي**: سعر ثابت تماماً بكل الشموع (أعلى=أدنى ثابتان لكل الشموع) → شرط `>=`/`<=` بالحلقة
+ * الداخلية يتحقّق عند كل w (تعادل تام لأن كل القيم متساوية) فيُحدَّث hiIdx/loIdx لآخر w في كل مرة →
+ * ينتهي كلاهما عند hiIdx=loIdx=period بالضبط لكل نافذة صالحة → Up=Down=(period/period)×100=100
+ * بالضبط لكل نقطة صالحة — يطابق تماماً سلوك computeAroonOsc الأصلي بنفس حالة التعادل (up−down=0
+ * لأن up=down)، تحقَّق بتشغيل Node.js فعلي (سعر ثابت + 300 شمعة عشوائية، صفر NaN/Infinity، القيم
+ * ضمن [0,100] دائماً كما يقتضي التعريف).
+ */
+export function computeAroonUpDown(
+  candles: Candle[],
+  period = 14
+): { up: (number | null)[]; down: (number | null)[] } {
+  const n = candles.length;
+  const up: (number | null)[] = new Array(n).fill(null);
+  const down: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    if (i < period) continue;
+    let hiIdx = 0;
+    let hiVal = -Infinity;
+    let loIdx = 0;
+    let loVal = Infinity;
+    for (let w = 0; w <= period; w++) {
+      const c = candles[i - period + w];
+      if (c.high >= hiVal) {
+        hiVal = c.high;
+        hiIdx = w;
+      }
+      if (c.low <= loVal) {
+        loVal = c.low;
+        loIdx = w;
+      }
+    }
+    up[i] = (hiIdx / period) * 100;
+    down[i] = (loIdx / period) * 100;
+  }
+  return { up, down };
 }
 
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];

@@ -12,6 +12,7 @@ import {
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api, type PriceAlert } from '../api';
 import { ensureAlertNotifications, pushPriceAlert, registerPushToken } from '../notifications';
+import { playSoftClick } from '../audio/playSoftClick';
 
 type Props = {
   defaultSymbol?: string;
@@ -78,6 +79,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
     setFormError(null);
     try {
       await api.createAlert({ symbol: symbol.trim().toUpperCase(), condition, price: p, note });
+      playSoftClick();
       setPrice('');
       setNote('');
       await refresh();
@@ -148,14 +150,28 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
         <View style={styles.row}>
           <Pressable
             accessibilityRole="button"
-            style={[styles.cond, condition === 'above' && styles.condOn]}
+            style={({ pressed }) => [
+              styles.cond,
+              condition === 'above' && styles.condOn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
             onPress={() => setCondition('above')}
           >
             <Text style={[styles.condText, condition === 'above' && styles.condTextOn]}>فوق</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            style={[styles.cond, condition === 'below' && styles.condOn]}
+            style={({ pressed }) => [
+              styles.cond,
+              condition === 'below' && styles.condOn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
             onPress={() => setCondition('below')}
           >
             <Text style={[styles.condText, condition === 'below' && styles.condTextOn]}>تحت</Text>
@@ -211,6 +227,12 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
                 </View>
                 <Pressable
                   accessibilityRole="button"
+                  style={({ pressed }) => [
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
                   onPress={() =>
                     Alert.alert(
                       'حذف التنبيه؟',

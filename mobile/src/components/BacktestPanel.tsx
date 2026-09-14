@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
+import { playSoftClick } from '../audio/playSoftClick';
 import { TimeframeBar } from './TimeframeBar';
 import { type Timeframe } from '../timeframes';
 
@@ -64,6 +65,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
       setStats(res.stats as Stats);
       setTrades(res.trades ?? []);
       setEquity(res.equity_curve ?? []);
+      playSoftClick();
     } catch {
       setStats(null);
       setTrades([]);
@@ -101,7 +103,14 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
           <Pressable
             accessibilityRole="button"
             key={s.id}
-            style={[styles.chip, strategy === s.id && styles.chipOn]}
+            style={({ pressed }) => [
+              styles.chip,
+              strategy === s.id && styles.chipOn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
             onPress={() => setStrategy(s.id)}
           >
             <Text style={[styles.chipText, strategy === s.id && styles.chipTextOn]}>{s.label}</Text>

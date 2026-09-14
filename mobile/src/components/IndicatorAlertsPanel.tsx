@@ -12,6 +12,7 @@ import {
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { pushPriceAlert } from '../notifications';
+import { playSoftClick } from '../audio/playSoftClick';
 
 type IndAlert = {
   id: string;
@@ -89,6 +90,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
         condition: type === 'rsi' ? condition : type.includes('cross') ? condition : 'cross_up',
         value: needsVal ? parseFloat(value.replace(',', '.')) : undefined,
       });
+      playSoftClick();
       await refresh();
     } catch {
       setFormError('تعذر إضافة تنبيه المؤشر — تحقق من الاتصال وحاول مرة أخرى');
@@ -216,6 +218,12 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
               </Text>
               <Pressable
                 accessibilityRole="button"
+                style={({ pressed }) => [
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
                 onPress={() =>
                   Alert.alert(
                     'حذف تنبيه المؤشر؟',

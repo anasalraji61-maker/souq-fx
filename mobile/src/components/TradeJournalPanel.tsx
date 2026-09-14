@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
+import { playSoftClick } from '../audio/playSoftClick';
 
 type Trade = {
   id: string;
@@ -75,6 +76,7 @@ export function TradeJournalPanel() {
         exit: x != null && !Number.isNaN(x) ? x : undefined,
         note,
       });
+      playSoftClick();
       setEntry('');
       setExit('');
       setNote('');
@@ -90,6 +92,7 @@ export function TradeJournalPanel() {
     setBusy(true);
     try {
       await api.closeTrade(id, x);
+      playSoftClick();
       await refresh();
     } finally {
       setBusy(false);
@@ -115,14 +118,28 @@ export function TradeJournalPanel() {
       <View style={styles.row}>
         <Pressable
           accessibilityRole="button"
-          style={[styles.chip, side === 'buy' && styles.chipOn]}
+          style={({ pressed }) => [
+            styles.chip,
+            side === 'buy' && styles.chipOn,
+            pressed && {
+              opacity: buttons.pressedOpacity,
+              transform: [{ scale: buttons.pressedScale }],
+            },
+          ]}
           onPress={() => setSide('buy')}
         >
           <Text style={[styles.chipText, side === 'buy' && styles.chipTextOn]}>Buy</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          style={[styles.chip, side === 'sell' && styles.chipOn]}
+          style={({ pressed }) => [
+            styles.chip,
+            side === 'sell' && styles.chipOn,
+            pressed && {
+              opacity: buttons.pressedOpacity,
+              transform: [{ scale: buttons.pressedScale }],
+            },
+          ]}
           onPress={() => setSide('sell')}
         >
           <Text style={[styles.chipText, side === 'sell' && styles.chipTextOn]}>Sell</Text>
@@ -214,7 +231,18 @@ export function TradeJournalPanel() {
               {t.note ? ` · ${t.note}` : ''}
             </Text>
             {t.status === 'open' ? (
-              <Pressable accessibilityRole="button" onPress={() => void closeOpen(t.id)}>
+              <Pressable
+                accessibilityRole="button"
+                style={({ pressed }) => [
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => void closeOpen(t.id)}
+                disabled={busy}
+                accessibilityState={{ disabled: busy }}
+              >
                 <Text style={styles.closeLink}>إغلاق بسعر خانة الخروج</Text>
               </Pressable>
             ) : null}

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { formatPrice } from '../chart/math';
+import { playSoftClick } from '../audio/playSoftClick';
 import { SymbolSearchBar } from './SymbolSearchBar';
 import {
   addWatchSymbol,
@@ -80,6 +81,7 @@ export function WatchlistPanel({
 
   const onAdd = useCallback(async (sym: string) => {
     await addWatchSymbol(sym);
+    playSoftClick();
     setAddOpen(false);
   }, []);
 

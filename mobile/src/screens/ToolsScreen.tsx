@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
+import { playSoftClick } from '../audio/playSoftClick';
 import { TimeframeBar } from '../components/TimeframeBar';
 import { type Timeframe } from '../timeframes';
 import { BacktestPanel } from '../components/BacktestPanel';
@@ -126,6 +127,7 @@ export function ToolsScreen() {
       setResults(res.results);
       setProviderConfigured(res.provider_configured !== false);
       setScanDone(true);
+      playSoftClick();
     } catch {
       setResults([]);
       setProviderConfigured(null);

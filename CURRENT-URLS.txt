@@ -1,21 +1,15 @@
 MATRIX URLs
 ===========
-Time: 2026-09-05 (verified by Cursor — no Windows IP change)
-IP: 127.0.0.1
+Time: 2026-09-13 09:55:24
+IP: 192.168.8.104
 
 Laptop browser:
-http://127.0.0.1:8081
+http://192.168.8.104:8081
 
 iPhone Expo Go (Enter URL inside Expo Go - NOT Google):
-exp://127.0.0.1:8081
-(For phone on LAN use your Wi-Fi IP + same ports; do not change Windows IP from this handoff.)
+exp://192.168.8.104:8081
 
 API health:
-http://127.0.0.1:8110/health
+http://192.168.8.104:8110/health
 
-Verified listening:
-- Backend: 8110 (ok)
-- Expo web: 8081 (ok)
-- Not using: 8100 (default in main.py only if MATRIX_PORT unset; launcher/run_api.py uses 8110)
-
-Keep MATRIX Dev / Expo window open for live updates.
+Keep MATRIX Dev window open for live updates.

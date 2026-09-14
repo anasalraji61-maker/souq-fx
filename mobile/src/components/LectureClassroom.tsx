@@ -9,8 +9,14 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Audio } from 'expo-av';
+// ملاحظة: لا نستورد expo-av بشكل ثابت (static import) — على Expo Go
+// مع SDK الحالي الوحدة الأصلية 'ExponentAV' غير مشمولة، ومجرد استيراد
+// الحزمة في أعلى الملف يُعطّل التطبيق بالكامل عند الإقلاع (حتى قبل فتح
+// هذه الشاشة). لذلك نحمّلها ديناميكياً فقط عند الاستخدام الفعلي، داخل
+// try/catch، حتى يستمر التطبيق بدون صوت إن لم تكن الوحدة متاحة.
+import type { Audio as ExpoAudioNS } from 'expo-av';
 import { colors, radii, spacing, buttons } from '../theme';
+import { playSoftClick } from '../audio/playSoftClick';
 import { API_URL, api, type ChartSeries } from '../api';
 import type { AcademyLecture, ScriptSegment } from '../academy';
 import { MatrixChart } from '../chart/MatrixChart';
@@ -37,7 +43,15 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [chartSeries, setChartSeries] = useState<ChartSeries | null>(null);
   const [showChart, setShowChart] = useState(true);
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const [showComplete, setShowComplete] = useState(false);
+  const soundRef = useRef<ExpoAudioNS.Sound | null>(null);
+  const completeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (completeTimerRef.current) clearTimeout(completeTimerRef.current);
+    };
+  }, []);
 
   const chartMeta = academyChartFor(schoolId);
 
@@ -60,7 +74,12 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
     let alive = true;
     (async () => {
       try {
-        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+        try {
+          const { Audio } = await import('expo-av');
+          await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+        } catch {
+          // الصوت غير متاح في Expo Go لهذا الإصدار — نكمل بدون تهيئة الصوت
+        }
         const lec = await api.academyLecture(schoolId, lectureId);
         if (alive) setLecture(lec);
       } catch {
@@ -150,6 +169,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         const uri = data.audio_url.startsWith('http')
           ? data.audio_url
           : `${API_URL}${data.audio_url}`;
+        const { Audio } = await import('expo-av');
         const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true });
         if (cancelled) {
           await sound.unloadAsync();
@@ -215,7 +235,19 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
 
   const next = async () => {
     await stopVoice();
-    if (segIndex < segments.length - 1) setSegIndex((i) => i + 1);
+    if (segIndex < segments.length - 1) {
+      const newIndex = segIndex + 1;
+      setSegIndex(newIndex);
+      /** احتفال بصري/لمسي خفيف عند إكمال آخر مقطع بالمحاضرة (matrix-tactile-feel.mdc) —
+       * warmAccent مخصَّص أصلاً بالثيم لـ"إنجاز/تشجيع (تعلّم، إكمال درس)" ولم يكن مستخدَماً بأي
+       * مكان بالتطبيق قبل هذا التعديل. شارة نصية مؤقتة تختفي تلقائياً بعد 2.6 ثانية. */
+      if (newIndex === segments.length - 1) {
+        playSoftClick();
+        setShowComplete(true);
+        if (completeTimerRef.current) clearTimeout(completeTimerRef.current);
+        completeTimerRef.current = setTimeout(() => setShowComplete(false), 2600);
+      }
+    }
   };
 
   const prev = async () => {
@@ -320,6 +352,11 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         <Text style={styles.progressText}>
           مقطع {segIndex + 1}/{segments.length || 1} · {progress}%
         </Text>
+        {showComplete ? (
+          <View style={styles.completeBadge}>
+            <Text style={styles.completeBadgeText}>🎉 أنهيت هذه المحاضرة</Text>
+          </View>
+        ) : null}
       </View>
 
       {clarification ? (
@@ -515,6 +552,17 @@ const styles = StyleSheet.create({
   },
   progressFill: { height: 5, backgroundColor: colors.accent },
   progressText: { color: colors.textDim, fontSize: 11, marginTop: 4, textAlign: 'right' },
+  completeBadge: {
+    marginTop: 8,
+    alignSelf: 'flex-end',
+    backgroundColor: 'rgba(232,184,109,0.14)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(232,184,109,0.4)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  completeBadgeText: { color: colors.warmAccent, fontSize: 11, fontWeight: '800' },
   controls: { marginTop: spacing.md, gap: spacing.sm },
   navRow: { flexDirection: 'row-reverse', gap: 8 },
   navBtn: {

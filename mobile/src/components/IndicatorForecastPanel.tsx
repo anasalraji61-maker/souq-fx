@@ -119,7 +119,14 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
             <Pressable
               accessibilityRole="button"
               key={opt.id}
-              style={[styles.chip, on && styles.chipOn]}
+              style={({ pressed }) => [
+                styles.chip,
+                on && styles.chipOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
               onPress={() => toggle(opt.id)}
             >
               <Text style={[styles.chipText, on && styles.chipTextOn]}>{opt.label}</Text>

@@ -179,7 +179,13 @@ export function FocusChartModal({
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            style={styles.symbolHeading}
+            style={({ pressed }) => [
+              styles.symbolHeading,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
             onPress={() => {
               if (phone) setPhonePickerOpen((open) => !open);
             }}
@@ -230,10 +236,14 @@ export function FocusChartModal({
                 <Pressable
                   accessibilityRole="button"
                   key={w.symbol}
-                  style={[
+                  style={({ pressed }) => [
                     styles.watchItem,
                     sym === w.symbol && styles.watchOn,
                     compareSym === w.symbol && styles.watchCompare,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
                   ]}
                   onPress={() => pick(w.symbol)}
                   onLongPress={() => toggleCompare(w.symbol)}
@@ -265,7 +275,14 @@ export function FocusChartModal({
                       <Pressable
                         accessibilityRole="button"
                         key={w.symbol}
-                        style={[styles.pill, sym === w.symbol && styles.pillOn]}
+                        style={({ pressed }) => [
+                          styles.pill,
+                          sym === w.symbol && styles.pillOn,
+                          pressed && {
+                            opacity: buttons.pressedOpacity,
+                            transform: [{ scale: buttons.pressedScale }],
+                          },
+                        ]}
                         onPress={() => pick(w.symbol)}
                         onLongPress={() => toggleCompare(w.symbol)}
                       >

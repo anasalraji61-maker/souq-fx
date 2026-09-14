@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
+  Text,
+  Pressable,
   StyleSheet,
   PanResponder,
   useWindowDimensions,
@@ -10,7 +12,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 
 /** نفس أبعاد فريمات الشارت (size=large) */
 export const FRAME_CHART_H = 280;
@@ -18,6 +20,12 @@ export const FRAME_CHART_H_PHONE = 210;
 /** مساحة إضافية للهيدر + الأوقات + شريط التواريخ السفلي */
 export const FRAME_BOX_H = FRAME_CHART_H + 140;
 export const FRAME_BOX_H_PHONE = FRAME_CHART_H_PHONE + 130;
+/** ارتفاع أقصر عند عرض فريمين بكل صف على الهاتف (وضع الشبكة) */
+export const FRAME_CHART_H_PHONE_GRID = 150;
+export const FRAME_BOX_H_PHONE_GRID = FRAME_CHART_H_PHONE_GRID + 110;
+
+/** تفضيل المتداول: شبكة (فريمات مربعة جنباً إلى جنب) أو قائمة رأسية — يُحفظ محلياً */
+type PhoneMode = 'grid' | 'stack';
 
 export type GridItem = {
   id: string;
@@ -164,6 +172,38 @@ export function FrameSizedGrid({
       }
     },
     [storageKey, onOrderChange]
+  );
+
+  /** وضع عرض الهاتف: شبكة (اثنان بكل صف) أو قائمة (واحد بكل صف) — بحسب اختيار المتداول */
+  const phoneModeKey = storageKey ? `${storageKey}.phoneMode` : null;
+  const [phoneMode, setPhoneMode] = useState<PhoneMode>('grid');
+
+  useEffect(() => {
+    if (!phoneModeKey) return;
+    let alive = true;
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(phoneModeKey);
+        if (alive && (raw === 'grid' || raw === 'stack')) setPhoneMode(raw);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [phoneModeKey]);
+
+  const choosePhoneMode = useCallback(
+    (mode: PhoneMode) => {
+      setPhoneMode(mode);
+      if (phoneModeKey) {
+        AsyncStorage.setItem(phoneModeKey, mode).catch(() => {
+          /* ignore */
+        });
+      }
+    },
+    [phoneModeKey]
   );
 
   const measureCell = useCallback((id: string) => {
@@ -346,18 +386,72 @@ export function FrameSizedGrid({
     );
   }
 
+  const phoneModeToggle = phone && !showAll && (
+    <View style={styles.phoneModeRow}>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => choosePhoneMode('grid')}
+        style={({ pressed }) => [
+          styles.phoneModeBtn,
+          phoneMode === 'grid' && styles.phoneModeBtnActive,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
+      >
+        <Text style={[styles.phoneModeText, phoneMode === 'grid' && styles.phoneModeTextActive]}>
+          ▦ شبكة
+        </Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => choosePhoneMode('stack')}
+        style={({ pressed }) => [
+          styles.phoneModeBtn,
+          phoneMode === 'stack' && styles.phoneModeBtnActive,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
+      >
+        <Text style={[styles.phoneModeText, phoneMode === 'stack' && styles.phoneModeTextActive]}>
+          ☰ قائمة
+        </Text>
+      </Pressable>
+    </View>
+  );
+
+  // الهاتف + وضع الشبكة: فريمان بكل صف (نفس فكرة الفريمات المربعة على اللابتوب)
+  if (phone && !showAll && phoneMode === 'grid') {
+    return (
+      <View>
+        {phoneModeToggle}
+        <View style={styles.gridPhoneGrid}>
+          {displayed.map((item, index) =>
+            renderCell(item, index, [styles.cellPhoneGrid, { height: FRAME_BOX_H_PHONE_GRID }])
+          )}
+        </View>
+      </View>
+    );
+  }
+
   return (
-    <View style={[styles.grid, phone && styles.gridCol]}>
-      {displayed.map((item, index) =>
-        renderCell(item, index, [
-          phone ? styles.cellPhone : styles.cellDesk,
-          !phone && layoutCount === 1 && styles.cellOne,
-          !phone && layoutCount === 2 && styles.cellTwo,
-          !phone && layoutCount === 3 && index === 0 && styles.cellThreeTop,
-          !phone && layoutCount === 3 && index > 0 && styles.cellThreeBottom,
-          { height: boxH },
-        ])
-      )}
+    <View>
+      {phoneModeToggle}
+      <View style={[styles.grid, phone && styles.gridCol]}>
+        {displayed.map((item, index) =>
+          renderCell(item, index, [
+            phone ? styles.cellPhone : styles.cellDesk,
+            !phone && layoutCount === 1 && styles.cellOne,
+            !phone && layoutCount === 2 && styles.cellTwo,
+            !phone && layoutCount === 3 && index === 0 && styles.cellThreeTop,
+            !phone && layoutCount === 3 && index > 0 && styles.cellThreeBottom,
+            { height: boxH },
+          ])
+        )}
+      </View>
     </View>
   );
 }
@@ -418,6 +512,45 @@ const styles = StyleSheet.create({
     width: '100%',
     minWidth: 0,
     maxWidth: '100%',
+  },
+  gridPhoneGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    width: '100%',
+  },
+  cellPhoneGrid: {
+    width: '48%',
+    minWidth: 0,
+    maxWidth: '48%',
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  phoneModeRow: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+    alignSelf: 'flex-end',
+  },
+  phoneModeBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bgElevated,
+  },
+  phoneModeBtnActive: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accentSoft,
+  },
+  phoneModeText: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  phoneModeTextActive: {
+    color: colors.accent,
+    fontWeight: '600',
   },
   cellHover: {
     borderColor: colors.accent,
