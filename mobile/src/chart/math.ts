@@ -116,6 +116,32 @@ function hma(values: number[], period: number): (number | null)[] {
   return raw.map((_, i) => (raw[i] != null && hmaRaw[i] != null ? hmaRaw[i] : null));
 }
 
+/**
+ * SMMA (Smoothed Moving Average، تمهيد Wilder القياسي — نفس فكرة EMA أعلاه لكن بعامل تنعيم أبطأ
+ * 1/period بدل 2/(period+1)) — القيمة الأولى = SMA لأول period قيمة (بذرة)، ثم لكل نقطة لاحقة:
+ * smma[i] = (smma[i-1]×(period−1) + values[i]) / period. تُستخدَم بـcomputeAlligator أدناه (خطوط
+ * Jaw/Teeth/Lips) — لم تكن مستخرَجة كدالة محلية مشتركة سابقاً رغم استخدام نفس منطق Wilder ضمنياً
+ * بدوال ADX/PSAR/ATR أعلاه، كل واحدة بتكرارها الخاص المدمَج داخلها.
+ */
+function smma(values: number[], period: number): (number | null)[] {
+  const out: (number | null)[] = [];
+  let prev: number | null = null;
+  for (let i = 0; i < values.length; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    if (prev == null) {
+      const slice = values.slice(i - period + 1, i + 1);
+      prev = slice.reduce((a, b) => a + b, 0) / period;
+    } else {
+      prev = (prev * (period - 1) + values[i]) / period;
+    }
+    out.push(prev);
+  }
+  return out;
+}
+
 export function computeOverlays(closes: number[]) {
   const sma20 = sma(closes, 20);
   const sma50 = sma(closes, 50);
@@ -2027,6 +2053,119 @@ export function computeKlinger(
   const emaSignal = ema(kvo.map((v) => v ?? 0), 13);
   const signal: (number | null)[] = kvo.map((v, i) => (v != null ? emaSignal[i] : null));
   return { kvo, signal };
+}
+
+/**
+ * Ichimoku Kinko Hyo (سحابة إيشيموكو) — نظام ياباني متكامل (خمسة خطوط) يجمع دعم/مقاومة ديناميكي
+ * واتجاه وزخم بنظرة واحدة، الفترات القياسية 9/26/52/إزاحة 26. Tenkan-sen (خط التحويل، الأسرع) =
+ * (أعلى قمة+أدنى قاع)/2 خلال 9 شموع (نفس منطق midpoint قناة Donchian أعلاه حرفياً، بفترة أقصر).
+ * Kijun-sen (خط الأساس) = نفس الصيغة بفترة 26. Senkou Span A (الحد المتحرك الأسرع للسحابة) =
+ * (Tenkan+Kijun)/2. Senkou Span B (الحد الأبطأ) = midpoint بفترة 52. **قرار تصميم واعٍ بخصوص
+ * الإزاحة الزمنية** (موثَّق صراحة هنا لا نقصاً تقنياً — راجع ROADMAP.md صف "التالي المرجَّح بعد
+ * Klinger"): إيشيموكو الأصلي يرسم Senkou A/B **متقدّمَين displacement شمعة إلى الأمام** (إسقاط
+ * مستقبلي فوق مساحة فارغة بعد آخر شمعة) — محرك هذا المخطط لا يحجز تلك المساحة المستقبلية فعلياً،
+ * فالتصميم المعتمَد هنا يحافظ بدلاً من ذلك على **محاذاة السحابة الصحيحة فوق السعر التاريخي**: عند
+ * كل نقطة i، تُحسَب Span A/B الخام من نافذة منتهية عند i−displacement (لا i نفسها) ثم تُرسَم عند i
+ * — نفس الأثر البصري الذي يراه المتداول للسحابة الحالية فوق السعر الحالي فعلياً، فقط بلا امتداد
+ * لمساحة مستقبلية غير موجودة أصلاً بهذا المخطط. Chikou Span (الخط المتأخر) = الإغلاق نفسه *مُزاح
+ * displacement شمعة للخلف* (Chikou[i]=إغلاق[i+displacement]، يبقى ضمن حدود المصفوفة الحالية بعكس
+ * Span A/B، بلا حاجة لأي قرار تصميم خاص — غير معرَّف فقط لآخر displacement شمعة كما بالتعريف
+ * الأصلي تماماً، لعدم وجود إغلاق مستقبلي بعد لتلك النقاط). **تحقّق يدوي**: سعر ثابت تماماً
+ * (أعلى=أدنى=إغلاق=P لكل شمعة) → أعلى قمة=أدنى قاع=P لأي نافذة → Tenkan=Kijun=P دائماً بعد
+ * التسخين → Span A الخام=(P+P)/2=P وSpan B الخام=P أيضاً → بعد الإزاحة كلاهما يبقى P (قيمة ثابتة
+ * من أي نقطة سابقة صالحة) → ارتفاع السحابة=Span A−Span B=0 بالضبط، يطابق "لا اتجاه/لا سحابة فعلية
+ * بسعر ساكن" بالتعريف؛ Chikou[i]=إغلاق[i+displacement]=P أيضاً لنفس السبب.
+ */
+export function computeIchimoku(
+  candles: Candle[],
+  conversionPeriod = 9,
+  basePeriod = 26,
+  spanBPeriod = 52,
+  displacement = 26
+): {
+  tenkan: (number | null)[];
+  kijun: (number | null)[];
+  spanA: (number | null)[];
+  spanB: (number | null)[];
+  chikou: (number | null)[];
+} {
+  const n = candles.length;
+  const midpoint = (period: number): (number | null)[] => {
+    const out: (number | null)[] = new Array(n).fill(null);
+    for (let i = period - 1; i < n; i++) {
+      let hh = -Infinity;
+      let ll = Infinity;
+      for (let w = i - period + 1; w <= i; w++) {
+        hh = Math.max(hh, candles[w].high);
+        ll = Math.min(ll, candles[w].low);
+      }
+      out[i] = (hh + ll) / 2;
+    }
+    return out;
+  };
+  const tenkan = midpoint(conversionPeriod);
+  const kijun = midpoint(basePeriod);
+  const spanBRaw = midpoint(spanBPeriod);
+  const spanARaw: (number | null)[] = candles.map((_, i) =>
+    tenkan[i] != null && kijun[i] != null ? (tenkan[i]! + kijun[i]!) / 2 : null
+  );
+
+  const spanA: (number | null)[] = new Array(n).fill(null);
+  const spanB: (number | null)[] = new Array(n).fill(null);
+  const chikou: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    if (i >= displacement) {
+      spanA[i] = spanARaw[i - displacement];
+      spanB[i] = spanBRaw[i - displacement];
+    }
+    if (i + displacement < n) {
+      chikou[i] = candles[i + displacement].close;
+    }
+  }
+  return { tenkan, kijun, spanA, spanB, chikou };
+}
+
+/**
+ * Alligator (بيل ويليامز) — ثلاثة خطوط SMMA فوق السعر الوسيط (أعلى+أدنى)/2، بفترات وإزاحات قياسية
+ * تُحاكي "فك/أسنان/شفاه" تمساح: Jaw (الفك، الأبطأ) = SMMA(13) مُزاح 8 للأمام، Teeth (الأسنان) =
+ * SMMA(8) مُزاحة 5 للأمام، Lips (الشفاه، الأسرع) = SMMA(5) مُزاحة 3 للأمام. **نفس قرار التصميم
+ * الموثَّق لـcomputeIchimoku أعلاه بالضبط** (إزاحة بمحاذاة تاريخية بدل إسقاط مستقبلي فارغ — محرك
+ * الرسم لا يحجز مساحة بعد آخر شمعة): كل خط يُحسَب خاماً من السعر الوسيط بكامل التاريخ ثم يُزاح
+ * بعرض القيمة الخام عند i−displacement عند النقطة i، بلا أي امتداد للمصفوفة. تباعد الخطوط الثلاثة
+ * (لا تقاطع) يُقرأ تقليدياً كـ"تمساح مستيقظ" (اتجاه قوي)، وتشابكها كـ"تمساح نائم" (تذبذب بلا اتجاه)
+ * — إعادة استخدام كاملة لنمط overlay متعدد الخطوط الموجود مسبقاً (sma20/ema21/wma20/إلخ أعلاه) بلا
+ * أي كود رسم جديد فعلياً. **تحقّق يدوي**: سعر ثابت تماماً (أعلى=أدنى=P لكل شمعة) → السعر الوسيط=P
+ * لكل نقطة → SMMA لأي فترة على سلسلة ثابتة P تبقى P بالضبط (بذرة SMA=P، وكل خطوة لاحقة
+ * (P×(period−1)+P)/period=P أيضاً) → الخطوط الثلاثة الخام=P دائماً بعد التسخين، وبعد الإزاحة تبقى P
+ * أيضاً (قيمة ثابتة من أي نقطة سابقة صالحة) — تشابك تام (لا تباعد) يطابق "لا اتجاه بسعر ساكن"
+ * بالتعريف تماماً.
+ */
+export function computeAlligator(
+  candles: Candle[],
+  jawPeriod = 13,
+  teethPeriod = 8,
+  lipsPeriod = 5,
+  jawShift = 8,
+  teethShift = 5,
+  lipsShift = 3
+): { jaw: (number | null)[]; teeth: (number | null)[]; lips: (number | null)[] } {
+  const n = candles.length;
+  const median = candles.map((c) => (c.high + c.low) / 2);
+  const jawRaw = smma(median, jawPeriod);
+  const teethRaw = smma(median, teethPeriod);
+  const lipsRaw = smma(median, lipsPeriod);
+  const shiftSeries = (raw: (number | null)[], shift: number): (number | null)[] => {
+    const out: (number | null)[] = new Array(n).fill(null);
+    for (let i = shift; i < n; i++) {
+      out[i] = raw[i - shift];
+    }
+    return out;
+  };
+  return {
+    jaw: shiftSeries(jawRaw, jawShift),
+    teeth: shiftSeries(teethRaw, teethShift),
+    lips: shiftSeries(lipsRaw, lipsShift),
+  };
 }
 
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];

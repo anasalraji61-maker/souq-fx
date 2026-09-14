@@ -55,6 +55,7 @@ import {
   FIB_LEVELS,
   computeAcceleratorOsc,
   computeAdx,
+  computeAlligator,
   computeApo,
   computeAroonOsc,
   computeAtr,
@@ -78,6 +79,7 @@ import {
   computeFisherTransform,
   computeForceIndex,
   computeHistoricalVolatility,
+  computeIchimoku,
   computeKeltner,
   computeKlinger,
   computeKst,
@@ -1016,6 +1018,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('klinger') ? computeKlinger(source.plot) : null),
     [source.plot, indicators]
   );
+  const ichimoku = useMemo(
+    () => (indicators.includes('ichimoku') ? computeIchimoku(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const alligator = useMemo(
+    () => (indicators.includes('alligator') ? computeAlligator(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1121,6 +1131,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       donchian.upper.forEach(push);
       donchian.lower.forEach(push);
     }
+    if (indicators.includes('ichimoku') && ichimoku) {
+      ichimoku.tenkan.forEach(push);
+      ichimoku.kijun.forEach(push);
+      ichimoku.spanA.forEach(push);
+      ichimoku.spanB.forEach(push);
+      ichimoku.chikou.forEach(push);
+    }
+    if (indicators.includes('alligator') && alligator) {
+      alligator.jaw.forEach(push);
+      alligator.teeth.forEach(push);
+      alligator.lips.forEach(push);
+    }
     if (comparePrices) comparePrices.forEach(push);
     // أبقِ الظلال ضمن المدى حتى لا تُقصّ عند التقريب (overflow hidden)
     for (const layer of shadowLayers) {
@@ -1167,6 +1189,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     keltner,
     envelopes,
     donchian,
+    ichimoku,
+    alligator,
     priceScale,
     pricePan,
     syncFollow,
@@ -2727,6 +2751,87 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             );
           })}
+        {indicators.includes('ichimoku') &&
+          ichimoku &&
+          ichimoku.spanA.map((a, i) => {
+            const b = ichimoku.spanB[i];
+            if (a == null || b == null) return null;
+            const top = a >= b ? a : b;
+            const bottom = a >= b ? b : a;
+            return (
+              <View
+                key={`ichc${i}`}
+                style={{
+                  position: 'absolute',
+                  left: xOf(i) - 1,
+                  top: yOf(top),
+                  width: 2,
+                  height: Math.max(2, yOf(bottom) - yOf(top)),
+                  backgroundColor: a >= b ? 'rgba(34,197,94,0.14)' : 'rgba(244,63,94,0.14)',
+                }}
+              />
+            );
+          })}
+        {indicators.includes('ichimoku') &&
+          ichimoku &&
+          ichimoku.tenkan.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`icht${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#38BDF8' }]}
+              />
+            )
+          )}
+        {indicators.includes('ichimoku') &&
+          ichimoku &&
+          ichimoku.kijun.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`ichk${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FB7185' }]}
+              />
+            )
+          )}
+        {indicators.includes('ichimoku') &&
+          ichimoku &&
+          ichimoku.chikou.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`ichc2-${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#C084FC' }]}
+              />
+            )
+          )}
+        {indicators.includes('alligator') &&
+          alligator &&
+          alligator.jaw.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`agj${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#3B82F6' }]}
+              />
+            )
+          )}
+        {indicators.includes('alligator') &&
+          alligator &&
+          alligator.teeth.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`agt${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#EF4444' }]}
+              />
+            )
+          )}
+        {indicators.includes('alligator') &&
+          alligator &&
+          alligator.lips.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`agl${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#84CC16' }]}
+              />
+            )
+          )}
 
         {/* Pine-lite overlay */}
         {pineLine.map((v, i) => {

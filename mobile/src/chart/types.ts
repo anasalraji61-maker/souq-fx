@@ -86,6 +86,8 @@ export type IndicatorId =
   | 'kst'
   | 'vortex'
   | 'klinger'
+  | 'ichimoku'
+  | 'alligator'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -210,6 +212,8 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'kst', label: 'KST', pane: true },
   { id: 'vortex', label: 'Vortex', pane: true },
   { id: 'klinger', label: 'Klinger', pane: true },
+  { id: 'ichimoku', label: 'Ichimoku' },
+  { id: 'alligator', label: 'Alligator' },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [
