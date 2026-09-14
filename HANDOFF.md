@@ -57,7 +57,20 @@ Alligator jaw/teeth/lips بنفس نمط dot [ألوان #3B82F6/#EF4444/#84CC16
 الكتابة والدرس الجديد). لم يُشغَّل tsc ولم تُؤخَذ لقطة شاشة (لا device_bash/Metro متاحان هذا
 التشغيل).
 
-**GIT — راجع أسفل لنتيجة محاولة هذا التشغيل.**)
+**GIT — نجح كاملاً هذه المرة بلا أي عائق** (رغم لوحظة لوحة جانبية "MATRIX HANDOFF overnight watch"
+نشطة فعلياً بنفس اللحظة أول محاولتي لالتقاط لقطة شاشة بعد فتح GitHub Desktop — تختفي تلقائياً
+باللقطة التالية بلا أي تدخّل، ودليل إضافي مباشر على جلسة أخرى نشطة بالتوازي بنفس الجهاز، يتّسق مع
+حادثة تغيّر حجم HANDOFF.md الموثَّقة أعلاه): `computer_resolve_access`+`computer_request_access`
+نجحا للمُطلِق ("GitHub Desktop") وللعامل المُقنَّع تلقائياً (`app-3.6.5\githubdesktop.exe`، ظهر
+كنافذة مُقنَّعة أولاً بلقطة الشاشة الأولى، طُلِب صراحة وظهر بعدها). تبويب Changes أظهر 9 ملفات
+معدَّلة، **5 منها محدَّدة تلقائياً مسبقاً من GitHub Desktop نفسه** وتطابق بالضبط الملفات الخمسة
+المعدَّلة فعلياً بهذا التشغيل (docs\ROADMAP.md، HANDOFF.md، mobile\src\chart\{math.ts,MatrixChart.tsx,
+types.ts}) — بينما الأربعة غير المحدَّدة (CURRENT-URLS.txt، mobile\{app.json,package.json,
+package-lock.json}) **تُركت كما هي بلا تدخّل** بنفس منطق الحذر التاريخي (provenance غير مفحوصة
+بهذا التشغيل، على الأرجح من الجلسة الأخرى النشطة بالتوازي). كتبت رسالة commit ("MATRIX: Ichimoku
+Cloud + Alligator indicators")، "Commit 5 files to main" نجح فوراً ("Committed just now")، ثم
+"Push origin" نجح فوراً أيضاً (الزر تحوَّل لـ"Fetch origin — Last fetched just now" بلا أي شارة دفع
+معلَّق). حرَّرت قفل الجهاز فوراً بعدها.)
 
 آخر تحديث سابق: 2026-09-14 (Claude — تشغيل مجدول (ثامن اليوم)، بروتوكول التسريع، جلسة جديدة بلا ذاكرة:
 **قراءة أولية** (أول ~270 سطراً من HANDOFF.md + قسم "جدول التكافؤ الوظيفي"/"التالي المرجَّح" من
