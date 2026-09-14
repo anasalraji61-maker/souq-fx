@@ -53,12 +53,15 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
   const [votes, setVotes] = useState<Vote[]>([]);
   const [note, setNote] = useState('');
   const [ready, setReady] = useState(false);
+  /** وضوح الحالة: يميّز فشل تحميل كتالوج المصادر عن عدم توفّر مصادر فعلاً */
+  const [sourcesError, setSourcesError] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
         const catalog = await api.socialSources();
         setSources(catalog.sources);
+        setSourcesError(false);
         const raw = await AsyncStorage.getItem(PREFS_KEY);
         if (raw) {
           const ids = JSON.parse(raw) as string[];
@@ -71,6 +74,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
         setSelected(catalog.sources.slice(0, 5).map((s) => s.id));
       } catch {
         setSources([]);
+        setSourcesError(true);
       } finally {
         setReady(true);
       }
@@ -145,6 +149,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
       </View>
 
       <Text style={styles.pickHint}>اختر المصادر التي تتابعها — ثم يُحسب المعدل العام</Text>
+      {sourcesError ? <Text style={styles.sourcesError}>تعذر تحميل قائمة المصادر — تحقق من الاتصال</Text> : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 44 }}>
         <View style={styles.chips}>
           {sources.map((s) => {
@@ -228,6 +233,7 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontWeight: '900', fontSize: 14, textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 10, textAlign: 'right', marginTop: 2 },
   pickHint: { color: colors.textMuted, fontSize: 10, textAlign: 'right' },
+  sourcesError: { color: colors.bear, fontSize: 10, fontWeight: '700', textAlign: 'right' },
   refresh: {
     flexShrink: 0,
     paddingHorizontal: 10,

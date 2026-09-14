@@ -135,6 +135,12 @@ export function TradeJournalPanel() {
         placeholder="الرمز"
         placeholderTextColor={colors.textDim}
         autoCapitalize="characters"
+        autoCorrect={false}
+        returnKeyType="done"
+        underlineColorAndroid="transparent"
+        clearButtonMode="while-editing"
+        keyboardAppearance="dark"
+        selectionColor={colors.accent}
         accessibilityLabel="رمز الصفقة"
       />
       <TextInput
@@ -144,6 +150,11 @@ export function TradeJournalPanel() {
         placeholder="دخول"
         keyboardType="decimal-pad"
         placeholderTextColor={colors.textDim}
+        returnKeyType="done"
+        underlineColorAndroid="transparent"
+        clearButtonMode="while-editing"
+        keyboardAppearance="dark"
+        selectionColor={colors.accent}
         accessibilityLabel="سعر الدخول"
       />
       <TextInput
@@ -153,6 +164,11 @@ export function TradeJournalPanel() {
         placeholder="خروج (اختياري)"
         keyboardType="decimal-pad"
         placeholderTextColor={colors.textDim}
+        returnKeyType="done"
+        underlineColorAndroid="transparent"
+        clearButtonMode="while-editing"
+        keyboardAppearance="dark"
+        selectionColor={colors.accent}
         accessibilityLabel="سعر الخروج (اختياري)"
       />
       <TextInput
@@ -161,6 +177,11 @@ export function TradeJournalPanel() {
         onChangeText={setNote}
         placeholder="ملاحظة"
         placeholderTextColor={colors.textDim}
+        returnKeyType="done"
+        underlineColorAndroid="transparent"
+        clearButtonMode="while-editing"
+        keyboardAppearance="dark"
+        selectionColor={colors.accent}
         accessibilityLabel="ملاحظة الصفقة (اختياري)"
       />
       <Pressable

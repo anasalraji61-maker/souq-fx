@@ -18,12 +18,18 @@ void I18nManager;
 export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
   const [messages, setMessages] = useState<ChatMsg[]>(mockChat);
   const [text, setText] = useState('');
+  /** وضوح الحالة: يعلم المستخدم إذا فشل تحميل/إرسال رسائل الدردشة بدل صمت كامل
+   * (لا تُفعَّل قبل أول محاولة فعلية — لا ادّعاء فشل قبل حدوثه). */
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     api
       .groupChat()
-      .then((r) => setMessages(r.messages))
-      .catch(() => undefined);
+      .then((r) => {
+        setMessages(r.messages);
+        setNotice(null);
+      })
+      .catch(() => setNotice('تعذر تحميل الرسائل — تُعرض رسائل محفوظة'));
   }, []);
 
   const send = async () => {
@@ -39,8 +45,9 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
     setMessages((m) => [...m, local]);
     try {
       await api.postGroup(t);
+      setNotice(null);
     } catch {
-      /* offline ok */
+      setNotice('تعذر إرسال رسالتك للمجموعة — قد لا تصل، حاول لاحقاً');
     }
   };
 
@@ -56,6 +63,7 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
       ) : (
         <Text style={styles.title}>دردشة جماعية</Text>
       )}
+      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
       <ScrollView style={styles.scroll} contentContainerStyle={{ gap: 8 }}>
         {messages.map((m) => (
           <View
@@ -76,6 +84,11 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
           placeholder="اكتب رسالة..."
           placeholderTextColor={colors.textDim}
           onSubmitEditing={send}
+          returnKeyType="send"
+          underlineColorAndroid="transparent"
+          clearButtonMode="while-editing"
+          keyboardAppearance="dark"
+          selectionColor={colors.accent}
           accessibilityLabel="رسالة الدردشة الجماعية"
         />
         <Pressable
@@ -122,6 +135,13 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   titleInHead: { marginBottom: 0 },
+  notice: {
+    color: colors.warn,
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'right',
+    marginTop: 4,
+  },
   scroll: { flex: 1 },
   bubble: {
     backgroundColor: colors.bgElevated,

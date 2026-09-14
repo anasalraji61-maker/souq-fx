@@ -126,7 +126,7 @@ export function AccountScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.wrap}>
+    <ScrollView contentContainerStyle={styles.wrap} keyboardShouldPersistTaps="handled">
       <Text style={[styles.title, { textAlign: align }]}>{t.accountTitle}</Text>
       <Text style={[styles.sub, { textAlign: align }]}>{t.accountSub}</Text>
 
@@ -226,6 +226,13 @@ export function AccountScreen() {
               placeholder={t.namePlaceholder}
               placeholderTextColor={colors.textDim}
               autoCapitalize="none"
+              returnKeyType="done"
+              underlineColorAndroid="transparent"
+              clearButtonMode="while-editing"
+              keyboardAppearance="dark"
+              textContentType="name"
+              autoComplete="name"
+              selectionColor={colors.accent}
               accessibilityLabel={t.name}
             />
           </View>
@@ -240,6 +247,13 @@ export function AccountScreen() {
               placeholderTextColor={colors.textDim}
               autoCapitalize="none"
               keyboardType="email-address"
+              returnKeyType="done"
+              underlineColorAndroid="transparent"
+              clearButtonMode="while-editing"
+              keyboardAppearance="dark"
+              textContentType="emailAddress"
+              autoComplete="email"
+              selectionColor={colors.accent}
               accessibilityLabel={t.email}
             />
           </View>
@@ -253,6 +267,12 @@ export function AccountScreen() {
               placeholder={t.passwordPlaceholder}
               placeholderTextColor={colors.textDim}
               secureTextEntry
+              returnKeyType="done"
+              underlineColorAndroid="transparent"
+              keyboardAppearance="dark"
+              textContentType="password"
+              autoComplete="password"
+              selectionColor={colors.accent}
               accessibilityLabel={t.password}
             />
             {err ? <Text style={[styles.err, { textAlign: align }]}>{err}</Text> : null}
@@ -299,6 +319,12 @@ export function AccountScreen() {
                 placeholder={t.sponsorCode}
                 placeholderTextColor={colors.textDim}
                 autoCapitalize="characters"
+                autoCorrect={false}
+                returnKeyType="done"
+                underlineColorAndroid="transparent"
+                clearButtonMode="while-editing"
+                keyboardAppearance="dark"
+                selectionColor={colors.accent}
                 accessibilityLabel={t.sponsorCode}
               />
               {sponsorCode.trim() ? (

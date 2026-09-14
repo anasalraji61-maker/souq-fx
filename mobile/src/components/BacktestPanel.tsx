@@ -87,6 +87,12 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         placeholder="EURUSD"
         placeholderTextColor={colors.textDim}
         autoCapitalize="characters"
+        autoCorrect={false}
+        returnKeyType="done"
+        underlineColorAndroid="transparent"
+        clearButtonMode="while-editing"
+        keyboardAppearance="dark"
+        selectionColor={colors.accent}
         accessibilityLabel="رمز الأداة للاختبار الخلفي"
       />
       <TimeframeBar value={tf} onChange={setTf} />

@@ -131,7 +131,7 @@ export function CoursesScreen() {
         ))}
       </ScrollView>
 
-      <Modal visible={!!school} animationType="slide" transparent>
+      <Modal visible={!!school} animationType="slide" transparent onRequestClose={() => setSchool(null)}>
         <View style={styles.modalBg}>
           <View style={styles.modal}>
             {loadingSchool ? (
@@ -180,6 +180,7 @@ export function CoursesScreen() {
                     },
                   ]}
                   onPress={() => setSchool(null)}
+                  hitSlop={8}
                 >
                   <Text style={styles.closeText}>رجوع</Text>
                 </Pressable>

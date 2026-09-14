@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, TextInput } from 'react-native';
+import { View, Text, Pressable, StyleSheet, TextInput, Alert } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import {
   loadLayouts,
@@ -58,6 +58,11 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
         onChangeText={setName}
         placeholder="اسم التخطيط"
         placeholderTextColor={colors.textDim}
+        returnKeyType="done"
+        underlineColorAndroid="transparent"
+        clearButtonMode="while-editing"
+        keyboardAppearance="dark"
+        selectionColor={colors.accent}
         accessibilityLabel="اسم التخطيط"
       />
       <Pressable
@@ -94,10 +99,19 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
           {l.id !== 'default' ? (
             <Pressable
               accessibilityRole="button"
-              onPress={async () => {
-                await deleteLayout(l.id);
-                setLayouts((prev) => prev.filter((x) => x.id !== l.id));
-              }}
+              onPress={() =>
+                Alert.alert('حذف التخطيط؟', l.name, [
+                  { text: 'إلغاء', style: 'cancel' },
+                  {
+                    text: 'حذف',
+                    style: 'destructive',
+                    onPress: async () => {
+                      await deleteLayout(l.id);
+                      setLayouts((prev) => prev.filter((x) => x.id !== l.id));
+                    },
+                  },
+                ])
+              }
               style={({ pressed }) =>
                 pressed && {
                   opacity: buttons.pressedOpacity,

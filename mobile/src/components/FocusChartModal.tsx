@@ -8,6 +8,7 @@ import {
   ScrollView,
   useWindowDimensions,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons } from '../theme';
@@ -153,7 +154,7 @@ export function FocusChartModal({
         note: 'من خط رسم',
       });
     } catch {
-      /* ignore */
+      Alert.alert('تعذر إنشاء التنبيه', 'حدث خطأ أثناء إنشاء تنبيه من خط الرسم، حاول مرة أخرى.');
     }
   };
 
@@ -172,6 +173,7 @@ export function FocusChartModal({
             ]}
             onPress={onClose}
             accessibilityLabel="إغلاق"
+            hitSlop={4}
           >
             <Text style={styles.close}>{phone ? '×' : 'إغلاق'}</Text>
           </Pressable>
@@ -216,7 +218,11 @@ export function FocusChartModal({
 
         <View style={[styles.body, phone && styles.bodyPhone]}>
           {!phone ? (
-            <ScrollView style={styles.watch} contentContainerStyle={{ gap: 6, padding: 8 }}>
+            <ScrollView
+              style={styles.watch}
+              contentContainerStyle={{ gap: 6, padding: 8 }}
+              keyboardShouldPersistTaps="handled"
+            >
               <Text style={styles.watchTitle}>قائمة المراقبة</Text>
               <SymbolSearchBar onPick={pick} />
               <Text style={styles.watchHint}>اضغط مرتين للمقارنة</Text>
@@ -248,6 +254,7 @@ export function FocusChartModal({
               padding: phone ? spacing.sm : spacing.md,
               gap: phone ? 7 : 10,
             }}
+            keyboardShouldPersistTaps="handled"
           >
             {phone && phonePickerOpen ? (
               <>

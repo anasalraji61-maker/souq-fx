@@ -1547,6 +1547,7 @@ export function TerminalScreen() {
                 },
               ]}
               onPress={() => setPhoneWatchOpen(false)}
+              hitSlop={8}
             >
               <Text style={styles.phoneWatchCloseText}>إغلاق</Text>
             </Pressable>

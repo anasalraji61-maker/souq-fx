@@ -7,6 +7,7 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
@@ -35,6 +36,10 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
   const [value, setValue] = useState('30');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  /** وضوح الحالة: يميّز فشل تحميل القائمة عن عدم وجود تنبيهات فعلاً */
+  const [listError, setListError] = useState(false);
+  /** وضوح الحالة: يعلم المستخدم إذا فشلت إضافة تنبيه مؤشر بدل صمت كامل */
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     setSymbol(defaultSymbol);
@@ -44,8 +49,10 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
     try {
       const res = await api.indicatorAlerts();
       setAlerts(res.alerts);
+      setListError(false);
     } catch {
       setAlerts([]);
+      setListError(true);
     } finally {
       setLoading(false);
     }
@@ -72,6 +79,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
 
   const add = async () => {
     setBusy(true);
+    setFormError(null);
     try {
       const needsVal = type === 'rsi';
       await api.createIndicatorAlert({
@@ -83,7 +91,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
       });
       await refresh();
     } catch {
-      /* ignore */
+      setFormError('تعذر إضافة تنبيه المؤشر — تحقق من الاتصال وحاول مرة أخرى');
     } finally {
       setBusy(false);
     }
@@ -93,7 +101,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
     <View style={styles.wrap}>
       <Text style={styles.title}>تنبيهات المؤشرات</Text>
       <Text style={styles.sub}>RSI · تقاطع MA · MACD</Text>
-      <TextInput style={styles.input} value={symbol} onChangeText={setSymbol} placeholder="EURUSD" placeholderTextColor={colors.textDim} autoCapitalize="characters" accessibilityLabel="رمز الأداة" />
+      <TextInput style={styles.input} value={symbol} onChangeText={setSymbol} placeholder="EURUSD" placeholderTextColor={colors.textDim} autoCapitalize="characters" autoCorrect={false} returnKeyType="done" underlineColorAndroid="transparent" clearButtonMode="while-editing" keyboardAppearance="dark" selectionColor={colors.accent} accessibilityLabel="رمز الأداة" />
       <View style={styles.row}>
         {(['rsi', 'ma_cross', 'macd_cross'] as const).map((t) => (
           <Pressable
@@ -145,7 +153,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
               <Text style={styles.chipText}>RSI فوق</Text>
             </Pressable>
           </View>
-          <TextInput style={styles.input} value={value} onChangeText={setValue} keyboardType="decimal-pad" placeholder="30" placeholderTextColor={colors.textDim} accessibilityLabel="قيمة عتبة المؤشر" />
+          <TextInput style={styles.input} value={value} onChangeText={setValue} keyboardType="decimal-pad" placeholder="30" placeholderTextColor={colors.textDim} returnKeyType="done" underlineColorAndroid="transparent" clearButtonMode="while-editing" keyboardAppearance="dark" selectionColor={colors.accent} accessibilityLabel="قيمة عتبة المؤشر" />
         </>
       ) : (
         <View style={styles.row}>
@@ -194,7 +202,10 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
       >
         <Text style={styles.btnText}>{busy ? '...' : 'إضافة تنبيه'}</Text>
       </Pressable>
-      {loading ? <ActivityIndicator color={colors.accent} /> : (
+      {formError ? <Text style={styles.formError}>{formError}</Text> : null}
+      {loading ? <ActivityIndicator color={colors.accent} /> : listError ? (
+        <Text style={styles.formError}>تعذر تحميل تنبيهات المؤشرات</Text>
+      ) : (
         <ScrollView style={{ maxHeight: 180 }}>
           {alerts.map((a) => (
             <View key={a.id} style={styles.item}>
@@ -203,7 +214,29 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
                 {a.value != null ? ` ${a.value}` : ''}
                 {a.triggered ? ' ✓' : ''}
               </Text>
-              <Pressable accessibilityRole="button" onPress={() => api.deleteIndicatorAlert(a.id).then(refresh)}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() =>
+                  Alert.alert(
+                    'حذف تنبيه المؤشر؟',
+                    `${a.symbol} · ${a.alert_type} · ${a.condition}`,
+                    [
+                      { text: 'إلغاء', style: 'cancel' },
+                      {
+                        text: 'حذف',
+                        style: 'destructive',
+                        onPress: () =>
+                          api
+                            .deleteIndicatorAlert(a.id)
+                            .then(refresh)
+                            .catch(() =>
+                              Alert.alert('تعذر الحذف', 'حدث خطأ أثناء حذف تنبيه المؤشر، حاول مرة أخرى.')
+                            ),
+                      },
+                    ]
+                  )
+                }
+              >
                 <Text style={styles.del}>حذف</Text>
               </Pressable>
             </View>
@@ -225,6 +258,7 @@ const styles = StyleSheet.create({
   },
   title: { color: colors.text, fontWeight: '800', textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
+  formError: { color: colors.bear, fontSize: 10, fontWeight: '700', textAlign: 'right' },
   input: {
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,

@@ -169,6 +169,7 @@ export function ToolsScreen() {
           style={styles.pageScroll}
           contentContainerStyle={styles.body}
           showsVerticalScrollIndicator
+          keyboardShouldPersistTaps="handled"
         >
           <View style={styles.toolbar}>
             <TimeframeBar value={tf} onChange={setTf} compact />
@@ -232,7 +233,7 @@ export function ToolsScreen() {
       ) : null}
 
       {tab === 'journal' ? (
-        <ScrollView contentContainerStyle={styles.body}>
+        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <TradeJournalPanel />
         </ScrollView>
       ) : null}
@@ -309,13 +310,13 @@ export function ToolsScreen() {
       ) : null}
 
       {tab === 'backtest' ? (
-        <ScrollView contentContainerStyle={styles.body}>
+        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <BacktestPanel />
         </ScrollView>
       ) : null}
 
       {tab === 'indAlerts' ? (
-        <ScrollView contentContainerStyle={styles.body}>
+        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <IndicatorAlertsPanel />
         </ScrollView>
       ) : null}
@@ -327,7 +328,7 @@ export function ToolsScreen() {
       ) : null}
 
       {tab === 'layouts' ? (
-        <ScrollView contentContainerStyle={styles.body}>
+        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <LayoutPanel
             frameTfs={frameTfs}
             frameSymbols={frameSymbols}

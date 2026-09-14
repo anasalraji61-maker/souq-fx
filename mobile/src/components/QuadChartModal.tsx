@@ -78,6 +78,7 @@ export function QuadChartModal({
                 transform: [{ scale: buttons.pressedScale }],
               },
             ]}
+            hitSlop={8}
           >
             <Text style={styles.close}>إغلاق</Text>
           </Pressable>

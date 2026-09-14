@@ -6,12 +6,18 @@ import { mockVotes } from '../mock';
 
 export function VotePanel({ embedded }: { embedded?: boolean }) {
   const [votes, setVotes] = useState<Vote[]>(mockVotes);
+  /** وضوح الحالة: يعلم المستخدم إذا فشل تحديث/إرسال التصويت بدل صمت كامل
+   * (لا تُفعَّل قبل أول محاولة فعلية — لا ادّعاء فشل قبل حدوثه). */
+  const [notice, setNotice] = useState<string | null>(null);
 
   const load = () => {
     api
       .votes()
-      .then((r) => setVotes(r.votes))
-      .catch(() => undefined);
+      .then((r) => {
+        setVotes(r.votes);
+        setNotice(null);
+      })
+      .catch(() => setNotice('تعذر تحديث التصويتات — تُعرض بيانات محفوظة'));
   };
 
   useEffect(() => {
@@ -34,7 +40,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
       await api.ballot(id, choice);
       load();
     } catch {
-      /* offline */
+      setNotice('تعذر إرسال صوتك للخادم — قد لا يُحتسب، حاول لاحقاً');
     }
   };
 
@@ -50,6 +56,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
       ) : (
         <Text style={styles.title}>تصويت على صفقة</Text>
       )}
+      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
       <ScrollView contentContainerStyle={{ gap: 10 }}>
         {votes.map((v) => {
           const total = v.agree + v.disagree || 1;
@@ -137,6 +144,13 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   titleInHead: { marginBottom: 0 },
+  notice: {
+    color: colors.warn,
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'right',
+    marginTop: 4,
+  },
   card: {
     backgroundColor: colors.bgElevated,
     borderRadius: radii.sm,

@@ -112,6 +112,7 @@ import {
   computeUltimateOsc,
   computeVhf,
   computeVolumeOscillator,
+  computeVortex,
   computeVpt,
   computeVwap,
   computeWeightedClose,
@@ -1006,6 +1007,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('kst') ? computeKst(closes) : null),
     [closes, indicators]
   );
+  const vortex = useMemo(
+    () => (indicators.includes('vortex') ? computeVortex(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1061,6 +1066,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('ulcer') ? 1 : 0) +
     (indicators.includes('fisher') ? 1 : 0) +
     (indicators.includes('kst') ? 1 : 0) +
+    (indicators.includes('vortex') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -1885,6 +1891,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           >
             {DRAW_TOOLS.map((t) => (
               <Pressable
+                accessibilityRole="button"
                 key={t.id}
                 style={({ pressed }) => [
                   styles.compactTool,
@@ -1905,14 +1912,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               </Pressable>
             ))}
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.compactTool,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => {
-                setDrawings([]);
-                setPending(null);
-                void clearDrawings(series.symbol, series.timeframe);
+                Alert.alert('مسح كل الرسومات؟', 'سيتم حذف كل عناصر الرسم بهذا الرمز/الإطار الزمني', [
+                  { text: 'إلغاء', style: 'cancel' },
+                  {
+                    text: 'مسح',
+                    style: 'destructive',
+                    onPress: () => {
+                      setDrawings([]);
+                      setPending(null);
+                      void clearDrawings(series.symbol, series.timeframe);
+                    },
+                  },
+                ]);
               }}
             >
               <Text style={styles.compactToolIcon}>⌫</Text>
@@ -1925,6 +1942,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
             {CHART_KINDS.map((k) => (
               <Pressable
+                accessibilityRole="button"
                 key={k.id}
                 style={({ pressed }) => [
                   styles.chip,
@@ -1940,6 +1958,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
             {LENSES.map((l) => (
               <Pressable
+                accessibilityRole="button"
                 key={l.id}
                 style={({ pressed }) => [
                   styles.lens,
@@ -1982,6 +2001,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {interactive && !compactUi ? (
           <View style={styles.zoomRow}>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="تصغير"
               style={({ pressed }) => [
                 styles.zoomBtn,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -1993,6 +2014,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Text style={styles.zoomText}>−</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="تكبير"
               style={({ pressed }) => [
                 styles.zoomBtn,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -2004,6 +2027,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Text style={styles.zoomText}>+</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="تحريك للخلف"
               style={({ pressed }) => [
                 styles.zoomBtn,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -2013,6 +2038,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Text style={styles.zoomText}>‹</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="تحريك للأمام"
               style={({ pressed }) => [
                 styles.zoomBtn,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -2022,6 +2049,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Text style={styles.zoomText}>›</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="وضع الإعادة"
               style={({ pressed }) => [
                 styles.zoomBtn,
                 replayOn && styles.replayOn,
@@ -2045,6 +2074,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {replayOn ? (
               <>
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="خطوة إعادة للخلف"
                   style={({ pressed }) => [
                     styles.zoomBtn,
                     pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -2054,6 +2085,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   <Text style={styles.zoomText}>-1</Text>
                 </Pressable>
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={replayPlaying ? 'إيقاف الإعادة' : 'تشغيل الإعادة'}
                   style={({ pressed }) => [
                     styles.zoomBtn,
                     replayPlaying && styles.replayOn,
@@ -2066,6 +2099,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   </Text>
                 </Pressable>
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="خطوة إعادة للأمام"
                   style={({ pressed }) => [
                     styles.zoomBtn,
                     pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -2079,6 +2114,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               </>
             ) : null}
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.zoomBtn,
                 logScale && styles.replayOn,
@@ -2089,6 +2125,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Text style={[styles.zoomText, logScale && styles.replayTextOn]}>Log</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="الالتصاق بالشبكة"
               style={({ pressed }) => [
                 styles.zoomBtn,
                 magnet && styles.replayOn,
@@ -3054,6 +3092,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
         {canPan && !hideTimeLabels ? (
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.axisCorner,
               { width: PRICE_AXIS_WIDTH, height: timeAxisH },
@@ -3066,6 +3105,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               setXPan(0);
               setOffset(0);
             }}
+            hitSlop={8}
           >
             <Text style={styles.axisCornerText}>AUTO</Text>
           </Pressable>
@@ -4310,6 +4350,56 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         </View>
       ) : null}
 
+      {vortex ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Vortex</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const plusVals = vortex.plus.filter((x): x is number => x != null);
+              const minusVals = vortex.minus.filter((x): x is number => x != null);
+              const allVals = [...plusVals, ...minusVals, 0.5, 1.5];
+              const minV = Math.min(...allVals);
+              const maxV = Math.max(...allVals);
+              const span = maxV - minV || 1;
+              const innerH = paneH - 16;
+              return vortex.plus.map((pv, i) => {
+                const mv = vortex.minus[i];
+                return (
+                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
+                    {pv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          top: ((maxV - pv) / span) * innerH,
+                          backgroundColor: colors.bull,
+                          opacity: 0.85,
+                        }}
+                      />
+                    ) : null}
+                    {mv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          top: ((maxV - mv) / span) * innerH,
+                          backgroundColor: colors.bear,
+                          opacity: 0.85,
+                        }}
+                      />
+                    ) : null}
+                  </View>
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
       {macd ? (
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>MACD</Text>
@@ -4554,6 +4644,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
             {DRAW_TOOLS.map((t) => (
               <Pressable
+                accessibilityRole="button"
                 key={t.id}
                 style={({ pressed }) => [
                   styles.tool,
@@ -4569,14 +4660,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               </Pressable>
             ))}
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.tool,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => {
-                setDrawings([]);
-                setPending(null);
-                void clearDrawings(series.symbol, series.timeframe);
+                Alert.alert('مسح كل الرسومات؟', 'سيتم حذف كل عناصر الرسم بهذا الرمز/الإطار الزمني', [
+                  { text: 'إلغاء', style: 'cancel' },
+                  {
+                    text: 'مسح',
+                    style: 'destructive',
+                    onPress: () => {
+                      setDrawings([]);
+                      setPending(null);
+                      void clearDrawings(series.symbol, series.timeframe);
+                    },
+                  },
+                ]);
               }}
             >
               <Text style={styles.toolText}>مسح</Text>
@@ -4587,6 +4688,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const on = indicators.includes(ind.id);
               return (
                 <Pressable
+                  accessibilityRole="button"
                   key={ind.id}
                   style={({ pressed }) => [
                     styles.ind,
@@ -4602,6 +4704,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.ind,
                 !pineOn && styles.indOn,
@@ -4615,6 +4718,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const on = pineOn && pineFormula === p.formula;
               return (
                 <Pressable
+                  accessibilityRole="button"
                   key={p.id}
                   style={({ pressed }) => [
                     styles.ind,
@@ -4635,6 +4739,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               );
             })}
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.tool,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -4644,6 +4749,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Text style={styles.toolText}>تصدير PNG</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.tool,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -4655,13 +4761,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {selectedId ? (
               <>
                 <Pressable
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.tool,
                     pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                   ]}
                   onPress={() => {
-                    setDrawings((list) => list.filter((x) => x.id !== selectedId));
-                    setSelectedId(null);
+                    Alert.alert('حذف الرسم؟', 'سيُحذف عنصر الرسم المحدَّد من الشارت', [
+                      { text: 'إلغاء', style: 'cancel' },
+                      {
+                        text: 'حذف',
+                        style: 'destructive',
+                        onPress: () => {
+                          setDrawings((list) => list.filter((x) => x.id !== selectedId));
+                          setSelectedId(null);
+                        },
+                      },
+                    ]);
                   }}
                 >
                   <Text style={styles.toolText}>حذف</Text>
@@ -4671,6 +4787,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   if (d?.tool === 'hline' && onCreateAlert) {
                     return (
                       <Pressable
+                        accessibilityRole="button"
                         style={({ pressed }) => [
                           styles.tool,
                           styles.toolOn,
@@ -4687,6 +4804,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     const bPrice = d.b.price;
                     return (
                       <Pressable
+                        accessibilityRole="button"
                         style={({ pressed }) => [
                           styles.tool,
                           styles.toolOn,
@@ -4714,6 +4832,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     const currentPrice = d.a.price + slope * (lastGlobalIndex - d.a.index);
                     return (
                       <Pressable
+                        accessibilityRole="button"
                         style={({ pressed }) => [
                           styles.tool,
                           styles.toolOn,

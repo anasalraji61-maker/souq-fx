@@ -93,6 +93,11 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
           placeholder={`مثال: تحليل ${symbol} اليوم؟`}
           placeholderTextColor={colors.textDim}
           onSubmitEditing={ask}
+          returnKeyType="send"
+          underlineColorAndroid="transparent"
+          clearButtonMode="while-editing"
+          keyboardAppearance="dark"
+          selectionColor={colors.accent}
           accessibilityLabel="سؤال لمساعد الذكاء الاصطناعي"
         />
         <Pressable

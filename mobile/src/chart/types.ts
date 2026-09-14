@@ -84,6 +84,7 @@ export type IndicatorId =
   | 'ulcer'
   | 'fisher'
   | 'kst'
+  | 'vortex'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -206,6 +207,7 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'ulcer', label: 'Ulcer Index', pane: true },
   { id: 'fisher', label: 'Fisher Transform', pane: true },
   { id: 'kst', label: 'KST', pane: true },
+  { id: 'vortex', label: 'Vortex', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

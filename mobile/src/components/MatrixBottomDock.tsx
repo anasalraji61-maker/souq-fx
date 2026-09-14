@@ -90,6 +90,7 @@ export function MatrixBottomDock({
                   transform: [{ scale: buttons.pressedScale }],
                 },
               ]}
+              hitSlop={8}
             >
               <Text style={styles.close}>إخفاء</Text>
             </Pressable>

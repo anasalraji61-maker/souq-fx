@@ -1930,4 +1930,56 @@ export function computeKst(closes: number[]): (number | null)[] {
   );
 }
 
+/**
+ * Vortex Indicator (+VI/−VI، period=14 القياسي) — يقيس اتجاه الحركة عبر مقارنة حركة الأعلى/الأدنى
+ * الحالية بحركة السعر بالشمعة السابقة، منسوبة لمجموع المدى الحقيقي (TR) بنفس فترة التنعيم. لكل نقطة
+ * (i≥1): +VM[i]=|أعلى[i]−أدنى[i-1]| (حركة صعودية محتملة)، −VM[i]=|أدنى[i]−أعلى[i-1]| (حركة هبوطية
+ * محتملة)، TR[i] بنفس صيغة Wilder القياسية (نفس المستخدَمة بـcomputeAdx أعلاه حرفياً). كل خط =
+ * مجموع متدحرج (نافذة period) لـVM المقابل / مجموع متدحرج لـTR بنفس النافذة — مدى نظري بلا سقف صارم
+ * لكن يتمركز عملياً حول 1 (فوق 1 = زخم اتجاهي بذلك الجانب أقوى من التقلّب العام، تحت 1 = أضعف).
+ * تقاطع +VI فوق −VI يُقرأ عادة كإشارة صعودية والعكس هبوطية. **أول مؤشر بالمشروع يحتاج نمط رسم پين
+ * بخطّين مستقلّين متراكبَين فعلياً بنفس اللوحة** (لا خط واحد ولا هستوغرام) — كان مؤجَّلاً سابقاً لهذا
+ * السبب بالذات (راجع ROADMAP.md، صف "التالي المرجَّح" بعدة تشغيلات). **تحقّق يدوي**: سعر ثابت تماماً
+ * (أعلى=أدنى=إغلاق ثابت لكل شمعة) → +VM=−VM=0 لكل i (أعلى[i]−أدنى[i-1]=ثابت−ثابت=0) وTR=0 أيضاً
+ * (كل الفروق صفرية) → القسمة على مجموع TR الصفري محروسة بصفر صراحةً (بدل NaN) لكلا الخطين، يطابق
+ * "لا اتجاه بسعر ساكن" بالتعريف تماماً.
+ */
+export function computeVortex(
+  candles: Candle[],
+  period = 14
+): { plus: (number | null)[]; minus: (number | null)[] } {
+  const n = candles.length;
+  const plusOut: (number | null)[] = new Array(n).fill(null);
+  const minusOut: (number | null)[] = new Array(n).fill(null);
+  if (n <= period) return { plus: plusOut, minus: minusOut };
+
+  const plusVm: number[] = new Array(n).fill(0);
+  const minusVm: number[] = new Array(n).fill(0);
+  const tr: number[] = new Array(n).fill(0);
+  for (let i = 1; i < n; i++) {
+    plusVm[i] = Math.abs(candles[i].high - candles[i - 1].low);
+    minusVm[i] = Math.abs(candles[i].low - candles[i - 1].high);
+    const prevClose = candles[i - 1].close;
+    tr[i] = Math.max(
+      candles[i].high - candles[i].low,
+      Math.abs(candles[i].high - prevClose),
+      Math.abs(candles[i].low - prevClose)
+    );
+  }
+
+  for (let i = period; i < n; i++) {
+    let sPlus = 0;
+    let sMinus = 0;
+    let sTr = 0;
+    for (let w = i - period + 1; w <= i; w++) {
+      sPlus += plusVm[w];
+      sMinus += minusVm[w];
+      sTr += tr[w];
+    }
+    plusOut[i] = sTr === 0 ? 0 : sPlus / sTr;
+    minusOut[i] = sTr === 0 ? 0 : sMinus / sTr;
+  }
+  return { plus: plusOut, minus: minusOut };
+}
+
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];

@@ -243,6 +243,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               transform: [{ scale: buttons.pressedScale }],
             }
           }
+          hitSlop={8}
         >
           <Text style={styles.back}>إغلاق</Text>
         </Pressable>
@@ -273,6 +274,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
                   transform: [{ scale: buttons.pressedScale }],
                 }
               }
+              hitSlop={8}
             >
               <Text style={styles.chartHide}>إخفاء</Text>
             </Pressable>
@@ -295,6 +297,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               transform: [{ scale: buttons.pressedScale }],
             }
           }
+          hitSlop={8}
         >
           <Text style={styles.showChart}>إظهار الشارت التفاعلي</Text>
         </Pressable>
@@ -385,6 +388,11 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               placeholder="مثال: لم أفهم CHOCH..."
               placeholderTextColor={colors.textDim}
               editable={!asking}
+              returnKeyType="done"
+              underlineColorAndroid="transparent"
+              clearButtonMode="while-editing"
+              keyboardAppearance="dark"
+              selectionColor={colors.accent}
               accessibilityLabel="سؤال أثناء إيقاف الشرح"
             />
             <Pressable

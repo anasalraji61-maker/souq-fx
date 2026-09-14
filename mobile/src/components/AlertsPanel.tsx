@@ -7,6 +7,7 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api, type PriceAlert } from '../api';
@@ -26,13 +27,19 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
+  /** وضوح الحالة: يميّز "لا تنبيهات بعد" الفعلية عن فشل تحميل القائمة */
+  const [listError, setListError] = useState(false);
+  /** وضوح الحالة: يعلم المستخدم إذا فشلت إضافة تنبيه بدل صمت كامل */
+  const [formError, setFormError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
       const res = await api.alerts();
       setAlerts(res.alerts);
+      setListError(false);
     } catch {
       setAlerts([]);
+      setListError(true);
     } finally {
       setLoading(false);
     }
@@ -68,13 +75,14 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
     const p = parseFloat(price.replace(',', '.'));
     if (!symbol.trim() || Number.isNaN(p)) return;
     setBusy(true);
+    setFormError(null);
     try {
       await api.createAlert({ symbol: symbol.trim().toUpperCase(), condition, price: p, note });
       setPrice('');
       setNote('');
       await refresh();
     } catch {
-      /* ignore */
+      setFormError('تعذر إضافة التنبيه — تحقق من الاتصال وحاول مرة أخرى');
     } finally {
       setBusy(false);
     }
@@ -85,7 +93,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
       await api.deleteAlert(id);
       await refresh();
     } catch {
-      /* ignore */
+      Alert.alert('تعذر الحذف', 'حدث خطأ أثناء حذف التنبيه، حاول مرة أخرى.');
     }
   };
 
@@ -115,6 +123,12 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
           placeholder="EURUSD"
           placeholderTextColor={colors.textDim}
           autoCapitalize="characters"
+          autoCorrect={false}
+          returnKeyType="done"
+          underlineColorAndroid="transparent"
+          clearButtonMode="while-editing"
+          keyboardAppearance="dark"
+          selectionColor={colors.accent}
           accessibilityLabel="رمز الأداة للتنبيه"
         />
         <TextInput
@@ -124,6 +138,11 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
           placeholder="السعر"
           placeholderTextColor={colors.textDim}
           keyboardType="decimal-pad"
+          returnKeyType="done"
+          underlineColorAndroid="transparent"
+          clearButtonMode="while-editing"
+          keyboardAppearance="dark"
+          selectionColor={colors.accent}
           accessibilityLabel="سعر التنبيه"
         />
         <View style={styles.row}>
@@ -163,16 +182,23 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
           onChangeText={setNote}
           placeholder="ملاحظة (اختياري)"
           placeholderTextColor={colors.textDim}
+          returnKeyType="done"
+          underlineColorAndroid="transparent"
+          clearButtonMode="while-editing"
+          keyboardAppearance="dark"
+          selectionColor={colors.accent}
           accessibilityLabel="ملاحظة التنبيه (اختياري)"
         />
       </View>
+
+      {formError ? <Text style={styles.formError}>{formError}</Text> : null}
 
       {loading ? (
         <ActivityIndicator color={colors.accent} style={{ marginTop: 12 }} />
       ) : (
         <ScrollView style={{ maxHeight: 160 }}>
           {alerts.length === 0 ? (
-            <Text style={styles.empty}>لا تنبيهات بعد</Text>
+            <Text style={styles.empty}>{listError ? 'تعذر تحميل التنبيهات' : 'لا تنبيهات بعد'}</Text>
           ) : (
             alerts.map((a) => (
               <View key={a.id} style={styles.item}>
@@ -183,7 +209,19 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
                   </Text>
                   {a.note ? <Text style={styles.itemNote}>{a.note}</Text> : null}
                 </View>
-                <Pressable accessibilityRole="button" onPress={() => remove(a.id)}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() =>
+                    Alert.alert(
+                      'حذف التنبيه؟',
+                      `${a.symbol} ${a.condition === 'above' ? '≥' : '≤'} ${a.price}`,
+                      [
+                        { text: 'إلغاء', style: 'cancel' },
+                        { text: 'حذف', style: 'destructive', onPress: () => remove(a.id) },
+                      ]
+                    )
+                  }
+                >
                   <Text style={styles.del}>حذف</Text>
                 </Pressable>
               </View>
@@ -222,6 +260,13 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     marginTop: 6,
     fontWeight: '700',
+  },
+  formError: {
+    color: colors.bear,
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'right',
+    marginTop: 4,
   },
   form: { marginTop: spacing.sm, gap: 6 },
   input: {

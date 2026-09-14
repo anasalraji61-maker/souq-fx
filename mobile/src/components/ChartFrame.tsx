@@ -247,6 +247,7 @@ export function ChartFrame({
               ]}
               onPress={onFocus}
               accessibilityLabel="فتح الشارت بملء الشاشة"
+              hitSlop={8}
             >
               <Text style={styles.focusBtnText}>⛶</Text>
             </Pressable>

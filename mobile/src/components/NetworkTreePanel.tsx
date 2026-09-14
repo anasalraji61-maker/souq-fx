@@ -141,6 +141,11 @@ function SlotBox({
         autoCapitalize="none"
         editable={!busy && !localBusy}
         onSubmitEditing={() => void submit()}
+        returnKeyType="done"
+        underlineColorAndroid="transparent"
+        clearButtonMode="while-editing"
+        keyboardAppearance="dark"
+        selectionColor={colors.accent}
         accessibilityLabel="اسم العضو الجديد بالمربع"
       />
       <Pressable
@@ -157,6 +162,7 @@ function SlotBox({
         disabled={draft.trim().length < 3 || localBusy || busy}
         accessibilityState={{ disabled: draft.trim().length < 3 || localBusy || busy }}
         accessibilityLabel="تأكيد وضع العضو بالمربع"
+        hitSlop={{ top: 4, bottom: 8, left: 8, right: 8 }}
       >
         <Text style={styles.slotGoText}>{localBusy ? '…' : '✓'}</Text>
       </Pressable>
@@ -364,6 +370,7 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
                   horizontal
                   showsHorizontalScrollIndicator
                   contentContainerStyle={styles.scrollPad}
+                  keyboardShouldPersistTaps="handled"
                 >
                   <View style={styles.treeCanvas}>
                     <LevelRow gen={4} slots={byGen[4]} busy={placing} onPlace={placeInSlot} />

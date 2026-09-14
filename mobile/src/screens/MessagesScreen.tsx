@@ -22,12 +22,18 @@ export function MessagesScreen() {
   const [peer, setPeer] = useState<string | null>(null);
   const [thread, setThread] = useState<ChatMsg[]>([]);
   const [text, setText] = useState('');
+  /** وضوح الحالة: يعلم المستخدم إذا فشل تحميل/إرسال المحادثات الخاصة بدل صمت كامل
+   * (لا تُفعَّل قبل أول محاولة فعلية — لا ادّعاء فشل قبل حدوثه). */
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     api
       .dmList()
-      .then((r) => setPeers(r.peers))
-      .catch(() => undefined);
+      .then((r) => {
+        setPeers(r.peers);
+        setNotice(null);
+      })
+      .catch(() => setNotice('تعذر تحميل المحادثات — تُعرض بيانات محفوظة'));
   }, []);
 
   const open = async (name: string) => {
@@ -35,6 +41,7 @@ export function MessagesScreen() {
     try {
       const r = await api.dmThread(name);
       setThread(r.messages);
+      setNotice(null);
     } catch {
       setThread([
         {
@@ -44,6 +51,7 @@ export function MessagesScreen() {
           ts: '20:00',
         },
       ]);
+      setNotice('تعذر تحميل الرسائل — يُعرض آخر معروف فقط');
     }
   };
 
@@ -61,7 +69,7 @@ export function MessagesScreen() {
     try {
       await api.sendDm(peer, body);
     } catch {
-      /* offline */
+      setNotice('تعذر إرسال رسالتك — قد لا تصل، حاول لاحقاً');
     }
   };
 
@@ -79,11 +87,13 @@ export function MessagesScreen() {
                 transform: [{ scale: buttons.pressedScale }],
               }
             }
+            hitSlop={8}
           >
             <Text style={styles.back}>رجوع</Text>
           </Pressable>
           <Text style={styles.peerName}>{peer}</Text>
         </View>
+        {notice ? <Text style={styles.notice}>{notice}</Text> : null}
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -112,6 +122,11 @@ export function MessagesScreen() {
               placeholder="رسالة خاصة..."
               placeholderTextColor={colors.textDim}
               onSubmitEditing={send}
+              returnKeyType="send"
+              underlineColorAndroid="transparent"
+              clearButtonMode="while-editing"
+              keyboardAppearance="dark"
+              selectionColor={colors.accent}
               accessibilityLabel="رسالة خاصة"
             />
             <Pressable
@@ -140,6 +155,7 @@ export function MessagesScreen() {
         <Text style={styles.brand}>الرسائل الخاصة</Text>
         <Text style={styles.sub}>محادثات فردية مثل الماسنجر</Text>
       </View>
+      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
       <FlatList
         data={peers}
         keyExtractor={(p) => p.user}
@@ -183,6 +199,14 @@ const styles = StyleSheet.create({
   },
   brand: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: 'right' },
   sub: { color: colors.textMuted, fontSize: 12, marginTop: 4, textAlign: 'right' },
+  notice: {
+    color: colors.warn,
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'right',
+    paddingHorizontal: spacing.lg,
+    paddingTop: 6,
+  },
   peerCard: {
     flexDirection: 'row-reverse',
     alignItems: 'center',

@@ -51,6 +51,12 @@ export function SymbolSearchBar({ onPick, placeholder = 'بحث رمز... EUR, X
         placeholder={placeholder}
         placeholderTextColor={colors.textDim}
         autoCapitalize="characters"
+        autoCorrect={false}
+        returnKeyType="search"
+        underlineColorAndroid="transparent"
+        clearButtonMode="while-editing"
+        keyboardAppearance="dark"
+        selectionColor={colors.accent}
         accessibilityLabel={placeholder}
       />
       {loading ? <ActivityIndicator color={colors.accent} style={{ marginTop: 6 }} /> : null}

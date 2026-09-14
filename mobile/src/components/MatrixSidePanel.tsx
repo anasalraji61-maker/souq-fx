@@ -95,6 +95,7 @@ export function MatrixSidePanel({
                   transform: [{ scale: buttons.pressedScale }],
                 },
               ]}
+              hitSlop={8}
             >
               <Text style={styles.close}>إغلاق</Text>
             </Pressable>

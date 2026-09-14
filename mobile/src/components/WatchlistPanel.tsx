@@ -7,6 +7,7 @@ import {
   ScrollView,
   Platform,
   Modal,
+  Alert,
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { formatPrice } from '../chart/math';
@@ -114,7 +115,20 @@ export function WatchlistPanel({
               transform: [{ scale: buttons.pressedScale }],
             },
           ]}
-          onPress={() => void resetWatchlistToDefault()}
+          onPress={() =>
+            Alert.alert(
+              'إعادة قائمة المتابعة للافتراضي؟',
+              'سيتم استبدال كل الرموز المضافة يدوياً بالقائمة الافتراضية.',
+              [
+                { text: 'إلغاء', style: 'cancel' },
+                {
+                  text: 'إعادة للافتراضي',
+                  style: 'destructive',
+                  onPress: () => void resetWatchlistToDefault(),
+                },
+              ]
+            )
+          }
         >
           <Text style={styles.toolBtnText}>افتراضي</Text>
         </Pressable>
@@ -239,7 +253,16 @@ export function WatchlistPanel({
                         transform: [{ scale: buttons.pressedScale }],
                       },
                     ]}
-                    onPress={() => void removeWatchSymbol(sym)}
+                    onPress={() =>
+                      Alert.alert('إزالة من المتابعة؟', sym, [
+                        { text: 'إلغاء', style: 'cancel' },
+                        {
+                          text: 'إزالة',
+                          style: 'destructive',
+                          onPress: () => void removeWatchSymbol(sym),
+                        },
+                      ])
+                    }
                     accessibilityLabel="إزالة من المتابعة"
                   >
                     <Text style={[styles.opText, styles.opRemove]}>حذف</Text>
@@ -288,6 +311,7 @@ export function WatchlistPanel({
                 },
               ]}
               onPress={() => setAddOpen(false)}
+              hitSlop={8}
             >
               <Text style={styles.modalCloseText}>إغلاق</Text>
             </Pressable>
