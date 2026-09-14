@@ -99,6 +99,8 @@ export type IndicatorId =
   | 'gmma'
   | 'rwi'
   | 'aroonUpDown'
+  | 'pivots'
+  | 'zigzag'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -236,6 +238,8 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'gmma', label: 'GMMA' },
   { id: 'rwi', label: 'RWI', pane: true },
   { id: 'aroonUpDown', label: 'Aroon Up/Down', pane: true },
+  { id: 'pivots', label: 'Pivot Points' },
+  { id: 'zigzag', label: 'ZigZag' },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

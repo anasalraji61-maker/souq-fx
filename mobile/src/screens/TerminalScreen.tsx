@@ -1424,6 +1424,7 @@ export function TerminalScreen() {
                         onSymbolChange={(s) => void changeHeroSymbol(s)}
                         phone={phone}
                         panControls
+                        fill={phone}
                         panSpeed={panSpeed}
                         liveTick={liveTicks[dxy.symbol] ?? null}
                         onFocus={() => openFocus(dxy.symbol, dxyTf)}
@@ -1442,6 +1443,7 @@ export function TerminalScreen() {
                       showTimeframes
                       phone={phone}
                       panControls
+                      fill={phone}
                       panSpeed={panSpeed}
                       liveTick={liveTicks[f.symbol] ?? null}
                       onTimeframeChange={(t) => void changeFrameTf(i, t)}

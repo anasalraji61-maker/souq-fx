@@ -12,7 +12,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing } from '../theme';
 
 /** نفس أبعاد فريمات الشارت (size=large) */
 export const FRAME_CHART_H = 280;
@@ -389,32 +389,16 @@ export function FrameSizedGrid({
   const phoneModeToggle = phone && !showAll && (
     <View style={styles.phoneModeRow}>
       <Pressable
-        accessibilityRole="button"
         onPress={() => choosePhoneMode('grid')}
-        style={({ pressed }) => [
-          styles.phoneModeBtn,
-          phoneMode === 'grid' && styles.phoneModeBtnActive,
-          pressed && {
-            opacity: buttons.pressedOpacity,
-            transform: [{ scale: buttons.pressedScale }],
-          },
-        ]}
+        style={[styles.phoneModeBtn, phoneMode === 'grid' && styles.phoneModeBtnActive]}
       >
         <Text style={[styles.phoneModeText, phoneMode === 'grid' && styles.phoneModeTextActive]}>
           ▦ شبكة
         </Text>
       </Pressable>
       <Pressable
-        accessibilityRole="button"
         onPress={() => choosePhoneMode('stack')}
-        style={({ pressed }) => [
-          styles.phoneModeBtn,
-          phoneMode === 'stack' && styles.phoneModeBtnActive,
-          pressed && {
-            opacity: buttons.pressedOpacity,
-            transform: [{ scale: buttons.pressedScale }],
-          },
-        ]}
+        style={[styles.phoneModeBtn, phoneMode === 'stack' && styles.phoneModeBtnActive]}
       >
         <Text style={[styles.phoneModeText, phoneMode === 'stack' && styles.phoneModeTextActive]}>
           ☰ قائمة

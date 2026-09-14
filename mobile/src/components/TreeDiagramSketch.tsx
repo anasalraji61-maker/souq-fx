@@ -76,9 +76,9 @@ export function TreeDiagramSketch({ youLabel = 'أنت' }: Props) {
       <Text style={styles.caption}>كيف تنمو الشجرة · يسار ويمين منفصلان</Text>
 
       <SplitLevel label="مستوى 4 · كل جهة 1–8" tint="#F472B6" perSide={8} boxSize={36} />
-      <SplitLevel label="مستوى 3 · كل جهة 1–4" tint="#A78BFA" perSide={4} boxSize={44} />
-      <SplitLevel label="مستوى 2 · كل جهة 1–2" tint="#2DD4BF" perSide={2} boxSize={56} />
-      <SplitLevel label="مستوى 1 · كل جهة مربع 1" tint="#38BDF8" perSide={1} boxSize={72} />
+      <SplitLevel label="مستوى 3 · كل جهة 1–4" tint={colors.infoAccent} perSide={4} boxSize={44} />
+      <SplitLevel label="مستوى 2 · كل جهة 1–2" tint={colors.accent} perSide={2} boxSize={56} />
+      <SplitLevel label="مستوى 1 · كل جهة مربع 1" tint={colors.dxy} perSide={1} boxSize={72} />
 
       <View style={styles.mainFork}>
         <View style={styles.forkArm} />
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   sidePane: { flex: 1, alignItems: 'center', gap: 3 },
-  leftLbl: { color: '#38BDF8', fontSize: 9, fontWeight: '900' },
+  leftLbl: { color: colors.dxy, fontSize: 9, fontWeight: '900' },
   rightLbl: { color: '#FBBF24', fontSize: 9, fontWeight: '900' },
   midLine: { width: 2, alignSelf: 'stretch', minHeight: 36, opacity: 0.55 },
   railThin: { width: '85%', height: 2, opacity: 0.5, marginTop: 4 },

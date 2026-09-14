@@ -103,6 +103,7 @@ import {
   computeObv,
   computeOverlays,
   computePercentB,
+  computePivotPoints,
   computePpo,
   computePsar,
   computePvi,
@@ -131,6 +132,7 @@ import {
   computeVwma,
   computeWeightedClose,
   computeWilliamsR,
+  computeZigZag,
   formatPrice,
   heikinAshi,
 } from './math';
@@ -651,6 +653,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [source.plot, indicators]
   );
   const poc = useMemo(() => (volProfile ? pocPrice(volProfile) : null), [volProfile]);
+  const pivots = useMemo(
+    () => (indicators.includes('pivots') ? computePivotPoints(source.plot, 20) : null),
+    [source.plot, indicators]
+  );
   const tpo = useMemo(
     () => (indicators.includes('tpo') ? computeTpo(source.plot, 18) : null),
     [source.plot, indicators]
@@ -1081,6 +1087,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const aroonUpDown = useMemo(
     () => (indicators.includes('aroonUpDown') ? computeAroonUpDown(source.plot) : null),
     [source.plot, indicators]
+  );
+  const zigzag = useMemo(
+    () => (indicators.includes('zigzag') ? computeZigZag(closes) : null),
+    [closes, indicators]
   );
 
   const paneCount =
@@ -2614,7 +2624,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   top: y1,
                   width: len,
                   height: 2,
-                  backgroundColor: '#A78BFA',
+                  backgroundColor: colors.infoAccent,
                   opacity: 0.85,
                   transform: [{ rotate: `${angle}deg` }],
                   transformOrigin: 'left center',
@@ -2638,7 +2648,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             v == null ? null : (
               <View
                 key={`s50${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#A78BFA' }]}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: colors.infoAccent }]}
               />
             )
           )}
@@ -2795,6 +2805,39 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               )
             )
           )}
+        {indicators.includes('zigzag') && zigzag
+          ? (() => {
+              const pts: { i: number; v: number }[] = [];
+              zigzag.forEach((v, i) => {
+                if (v != null) pts.push({ i, v });
+              });
+              return pts.slice(1).map((p, idx) => {
+                const prev = pts[idx];
+                const x1 = xOf(prev.i);
+                const y1 = yOf(prev.v);
+                const x2 = xOf(p.i);
+                const y2 = yOf(p.v);
+                const len = Math.hypot(x2 - x1, y2 - y1);
+                const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+                return (
+                  <View
+                    key={`zz${idx}`}
+                    style={{
+                      position: 'absolute',
+                      left: x1,
+                      top: y1,
+                      width: len,
+                      height: 1.5,
+                      backgroundColor: colors.infoAccent,
+                      opacity: 0.9,
+                      transform: [{ rotate: `${angle}deg` }],
+                      transformOrigin: 'left center',
+                    }}
+                  />
+                );
+              });
+            })()
+          : null}
         {indicators.includes('supertrend') &&
           supertrend &&
           supertrend.value.map((v, i) =>
@@ -2954,7 +2997,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             v == null ? null : (
               <View
                 key={`icht${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#38BDF8' }]}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: colors.dxy }]}
               />
             )
           )}
@@ -2964,7 +3007,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             v == null ? null : (
               <View
                 key={`ichk${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FB7185' }]}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: colors.highImpact }]}
               />
             )
           )}
@@ -3027,7 +3070,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 top: y1,
                 width: len,
                 height: 1.5,
-                backgroundColor: '#38BDF8',
+                backgroundColor: colors.dxy,
                 opacity: 0.9,
                 transform: [{ rotate: `${angle}deg` }],
                 transformOrigin: 'left center',
@@ -3037,10 +3080,31 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         })}
 
         {poc != null ? (
-          <View style={[styles.hLine, { top: yOf(poc), borderColor: '#F59E0B', opacity: 0.75 }]}>
+          <View style={[styles.hLine, { top: yOf(poc), borderColor: colors.warn, opacity: 0.75 }]}>
             <Text style={styles.fibLabel}>POC</Text>
           </View>
         ) : null}
+
+        {pivots
+          ? (
+              [
+                ['R3', pivots.r3, colors.bear],
+                ['R2', pivots.r2, colors.bear],
+                ['R1', pivots.r1, colors.bear],
+                ['PP', pivots.pp, colors.accent],
+                ['S1', pivots.s1, colors.bull],
+                ['S2', pivots.s2, colors.bull],
+                ['S3', pivots.s3, colors.bull],
+              ] as const
+            ).map(([label, price, color]) => (
+              <View
+                key={`pv${label}`}
+                style={[styles.hLine, { top: yOf(price), borderColor: color, opacity: 0.75 }]}
+              >
+                <Text style={styles.fibLabel}>{label}</Text>
+              </View>
+            ))
+          : null}
 
         {volProfile
           ? (() => {
@@ -3082,7 +3146,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     ) : null
                   )}
                   {tpo.poc != null ? (
-                    <View style={[styles.hLine, { top: yOf(tpo.poc), borderColor: '#A78BFA' }]}>
+                    <View style={[styles.hLine, { top: yOf(tpo.poc), borderColor: colors.infoAccent }]}>
                       <Text style={styles.fibLabel}>TPO</Text>
                     </View>
                   ) : null}

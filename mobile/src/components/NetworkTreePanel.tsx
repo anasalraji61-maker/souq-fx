@@ -26,7 +26,7 @@ export type TreeNode = {
 };
 
 const LEVEL_SIZE = [2, 4, 8, 16] as const;
-const LEVEL_TINT = ['#38BDF8', '#2DD4BF', '#A78BFA', '#F472B6'] as const;
+const LEVEL_TINT = [colors.dxy, colors.accent, colors.infoAccent, '#F472B6'] as const;
 
 type Props = {
   enabled: boolean;
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
   sideLeft: {},
   sideRight: {},
   sideTag: { fontSize: 10, fontWeight: '900' },
-  leftTag: { color: '#38BDF8' },
+  leftTag: { color: colors.dxy },
   rightTag: { color: '#FBBF24' },
   sideCount: { color: colors.textDim, fontSize: 9 },
   sideGap: {

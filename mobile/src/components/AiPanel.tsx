@@ -195,6 +195,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  sendText: { color: '#0B1220', fontWeight: '800', fontSize: 12 },
+  sendText: { color: colors.bg, fontWeight: '800', fontSize: 12 },
   sendDisabled: { opacity: 0.5 },
 });

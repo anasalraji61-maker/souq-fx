@@ -2624,4 +2624,127 @@ export function computeAroonUpDown(
   return { up, down };
 }
 
+/**
+ * Pivot Points (كلاسيكي/Standard) — سبعة مستويات دعم/مقاومة أفقية ثابتة، محسوبة مرة واحدة من نافذة
+ * متدحرجة آخر `period` شمعة **مكتملة** (لا تتضمن الشمعة الجارية) — **قرار تصميم موثَّق صراحة** (كان
+ * مؤجَّلاً بـROADMAP.md عدة تشغيلات كـ"يحتاج قرار: نافذة متدحرجة N-شمعة أم حدود جلسة تداول حقيقية؟"):
+ * النموذج الحالي بالمشروع لا يملك تجميع جلسات/أيام منفصلاً عن إطار الشارت الحالي (لا مصدر بيانات
+ * يومي مستقل)، فنافذة متدحرجة period=20 (نفس القيمة الافتراضية المستخدَمة أصلاً لـ
+ * computeVolumeProfile/computeTpo أعلاه بهذا الملف تحديداً — نفس اصطلاح "نافذة أخيرة" الراسخ
+ * بالمشروع) بديل معقول ومتّسق بدل حدود جلسة حقيقية غير متوفرة بالبيانات الحالية.
+ * الحساب: أعلى/أدنى للنافذة المكتملة قبل آخر شمعة + إغلاق آخر شمعة بالنافذة → PP=(أعلى+أدنى+إغلاق)/3،
+ * ثم الصيغ الكلاسيكية الست: R1=2×PP−أدنى، S1=2×PP−أعلى، R2=PP+المدى، S2=PP−المدى،
+ * R3=أعلى+2×(PP−أدنى)، S3=أدنى−2×(أعلى−PP) (المدى=أعلى−أدنى). قيمة واحدة ثابتة لكل استدعاء (لا
+ * مصفوفة لكل شمعة، بنفس نمط poc/pocPrice أعلاه بالمشروع) — تُرسَم كسبعة خطوط أفقية بنفس نمط
+ * styles.hLine/styles.fibLabel المستخدَم أصلاً لمستويات فيبوناتشي وخط POC حجمي حرفياً بـ
+ * MatrixChart.tsx (بلا أي كود رسم جديد).
+ * **تحقّق يدوي**: سعر ثابت تماماً P بكل الشموع → أعلى=أدنى=إغلاق=P للنافذة → المدى=0 → كل السبعة
+ * مستويات=P بالضبط (لا تباعد بلا نطاق سعري فعلي) — تحقَّق بتشغيل Node.js فعلي (سعر ثابت + 300 شمعة
+ * عشوائية بذرة ثابتة): صفر NaN/Infinity، وترتيب R3≥R2≥R1≥PP≥S1≥S2≥S3 محقَّق دائماً حسابياً (قيد
+ * بنيوي للصيغة الكلاسيكية نابع من أن أدنى≤إغلاق≤أعلى للنافذة دوماً بحكم بنائها).
+ */
+export function computePivotPoints(
+  candles: Candle[],
+  period = 20
+): { pp: number; r1: number; r2: number; r3: number; s1: number; s2: number; s3: number } | null {
+  const n = candles.length;
+  if (n < period + 1) return null;
+  const window = candles.slice(n - period - 1, n - 1);
+  let hi = -Infinity;
+  let lo = Infinity;
+  for (const c of window) {
+    hi = Math.max(hi, c.high);
+    lo = Math.min(lo, c.low);
+  }
+  const close = window[window.length - 1].close;
+  const pp = (hi + lo + close) / 3;
+  const range = hi - lo;
+  return {
+    pp,
+    r1: 2 * pp - lo,
+    s1: 2 * pp - hi,
+    r2: pp + range,
+    s2: pp - range,
+    r3: hi + 2 * (pp - lo),
+    s3: lo - 2 * (hi - pp),
+  };
+}
+
+/**
+ * ZigZag — يفلتر تذبذب السعر الصغير ويُبقي فقط نقاط الانعطاف الحقيقية (قمة/قاع) التي تتجاوز نسبة
+ * انحراف `deviationPct` (افتراضياً 5%، نفس القيمة الافتراضية الشائعة لهذا المؤشر بمنصات الرسم
+ * البياني) — أداة قراءة هيكل السعر (Market Structure) الأساسية، غير موجودة إطلاقاً بالمشروع سابقاً
+ * رغم شيوعها. **قرار تصميم**: يعمل على الإغلاق فقط (`closes: number[]`، بنفس نمط computeGmma/
+ * computeAlma أعلاه بالملف) لا High/Low لكل شمعة — تبسيط متعمَّد يتفادى غموض "أيهما يُقاس، القمة
+ * بالفتيل أم بالإغلاق؟" ويطابق نفس اصطلاح المشروع بمؤشرات overlay أخرى تعتمد الإغلاق فقط.
+ * **الخوارزمية** (آلة حالات قياسية بثلاث حالات: 0 غير محدد/1 صاعد/−1 هابط): تتبّع "الطرف الحالي"
+ * (extremePrice/extremeIndex) بنفس اتجاه الحركة الجارية؛ عند انعكاس السعر عن الطرف بنسبة ≥
+ * deviationPct تُثبَّت نقطة انعطاف عند الطرف السابق (`result[extremeIndex] = extremePrice`) ويُعكَس
+ * الاتجاه. النقطة الأولى (index 0) تُسجَّل دائماً كمرجع ابتدائي عند أول انعكاس (سلوك قياسي لهذا
+ * المؤشر بكل التطبيقات المعروفة — ليس خطأً). آخر طرف غير مؤكَّد (لم ينعكس بعد) **لا يُسجَّل عمداً**
+ * (تذبذب معلَّق حتى تأكيد لاحق، نفس مبدأ عدم إسقاط بيانات غير مؤكَّدة). تُرسَم النقاط المؤكَّدة فقط
+ * (قيمة غير null) كخط متعرّج متّصل بنفس **نمط قطاعات الخط الدوّارة** المستخدَم أصلاً لـPine-lite
+ * overlay أعلى هذا الملف بـMatrixChart.tsx حرفياً (لا كود رسم جديد، فقط تكرار للتقنية بين نقاط متفرّقة
+ * بدل شمعة تلو شمعة).
+ * **تحقّق يدوي**: مسار V-شكل صناعي (هبوط 20% ثم صعود متماثل) بعتبة 5% — يُسجَّل بالضبط نقطتان: المرجع
+ * الابتدائي عند أول انعكاس، والقاع الحقيقي عند أدنى نقطة فعلية بالمسار (تحقَّق تطابق القيمة تماماً)؛
+ * سعر مسطّح تماماً بلا أي تذبذب → صفر نقاط انعطاف (لا انعكاس يتجاوز العتبة إطلاقاً)؛ تراجع بسيط أثناء
+ * اتجاه صاعد أقل من العتبة → صفر نقاط انعطاف وسيطة (لا يُخطئ بتسجيل تذبذب تافه) — تحقَّق الثلاثة
+ * بتشغيل Node.js فعلي، بالإضافة لبيانات عشوائية 300 نقطة بذرة ثابتة (صفر NaN/Infinity بكل الحالات).
+ */
+export function computeZigZag(closes: number[], deviationPct = 5): (number | null)[] {
+  const n = closes.length;
+  const result: (number | null)[] = new Array(n).fill(null);
+  if (n < 2) return result;
+
+  let direction: 0 | 1 | -1 = 0;
+  let extremeIndex = 0;
+  let extremePrice = closes[0];
+
+  for (let i = 1; i < n; i++) {
+    const price = closes[i];
+    if (direction === 0) {
+      if (price > extremePrice) {
+        extremePrice = price;
+        extremeIndex = i;
+        continue;
+      }
+      const dropPct = ((extremePrice - price) / extremePrice) * 100;
+      if (dropPct >= deviationPct) {
+        result[extremeIndex] = extremePrice;
+        direction = -1;
+        extremeIndex = i;
+        extremePrice = price;
+      }
+    } else if (direction === 1) {
+      if (price >= extremePrice) {
+        extremePrice = price;
+        extremeIndex = i;
+        continue;
+      }
+      const dropPct = ((extremePrice - price) / extremePrice) * 100;
+      if (dropPct >= deviationPct) {
+        result[extremeIndex] = extremePrice;
+        direction = -1;
+        extremeIndex = i;
+        extremePrice = price;
+      }
+    } else {
+      if (price <= extremePrice) {
+        extremePrice = price;
+        extremeIndex = i;
+        continue;
+      }
+      const risePct = ((price - extremePrice) / extremePrice) * 100;
+      if (risePct >= deviationPct) {
+        result[extremeIndex] = extremePrice;
+        direction = 1;
+        extremeIndex = i;
+        extremePrice = price;
+      }
+    }
+  }
+  return result;
+}
+
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
