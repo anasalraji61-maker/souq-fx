@@ -54,6 +54,7 @@ import {
 import {
   FIB_LEVELS,
   computeAcceleratorOsc,
+  computeAccumDist,
   computeAdx,
   computeAlligator,
   computeAlma,
@@ -83,6 +84,7 @@ import {
   computeEom,
   computeFisherTransform,
   computeForceIndex,
+  computeFractals,
   computeGator,
   computeGmma,
   computeHistoricalVolatility,
@@ -1092,6 +1094,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('zigzag') ? computeZigZag(closes) : null),
     [closes, indicators]
   );
+  const adl = useMemo(
+    () => (indicators.includes('adl') ? computeAccumDist(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const fractals = useMemo(
+    () => (indicators.includes('fractals') ? computeFractals(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1154,6 +1164,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('dmi') ? 1 : 0) +
     (indicators.includes('rwi') ? 1 : 0) +
     (indicators.includes('aroonUpDown') ? 1 : 0) +
+    (indicators.includes('adl') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -2717,6 +2728,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             )
           )}
+        {indicators.includes('fractals') &&
+          fractals &&
+          fractals.top.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`frt${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 9, backgroundColor: colors.bear }]}
+              />
+            )
+          )}
+        {indicators.includes('fractals') &&
+          fractals &&
+          fractals.bottom.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`frb${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) + 6, backgroundColor: colors.bull }]}
+              />
+            )
+          )}
         {indicators.includes('medianPrice') &&
           medianPrice &&
           medianPrice.map((v, i) => (
@@ -3568,6 +3599,35 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       height: 3,
                       marginTop: (1 - yNorm) * (paneH - 16),
                       backgroundColor: v >= nvi[i - 1] ? colors.bull : colors.bear,
+                      opacity: 0.8,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {adl ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>A/D</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const minA = Math.min(...adl);
+              const maxA = Math.max(...adl);
+              const span = maxA - minA || 1;
+              return adl.map((v, i) => {
+                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
+                const yNorm = (v - minA) / span;
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: 3,
+                      marginTop: (1 - yNorm) * (paneH - 16),
+                      backgroundColor: v >= adl[i - 1] ? colors.bull : colors.bear,
                       opacity: 0.8,
                     }}
                   />

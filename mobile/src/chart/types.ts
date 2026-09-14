@@ -101,6 +101,8 @@ export type IndicatorId =
   | 'aroonUpDown'
   | 'pivots'
   | 'zigzag'
+  | 'adl'
+  | 'fractals'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -240,6 +242,8 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'aroonUpDown', label: 'Aroon Up/Down', pane: true },
   { id: 'pivots', label: 'Pivot Points' },
   { id: 'zigzag', label: 'ZigZag' },
+  { id: 'adl', label: 'A/D Line', pane: true },
+  { id: 'fractals', label: 'Fractals' },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

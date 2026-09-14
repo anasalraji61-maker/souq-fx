@@ -829,6 +829,33 @@ export function computeForceIndex(
 }
 
 /**
+ * Accumulation/Distribution Line (ADL) — خط تراكم/توزيع تراكمي بلا نافذة زمنية، **نفس الصيغة
+ * الداخلية تماماً المستخدَمة أصلاً بـcomputeChaikinOsc أدناه** لكن كخط مستقل خاماً بدل تمريره فوراً
+ * عبر فرق EMA قصير/طويل. Money Flow Multiplier = ((إغلاق−أدنى)−(أعلى−إغلاق))/(أعلى−أدنى) (صفر عند
+ * مدى صفري، نفس صيغة computeCmf حرفياً)، Money Flow Volume = المضاعِف×فوليوم، ADL[i] = ADL[i-1] +
+ * MFV[i] (يبدأ من MFV[0]). صاعد = تراكم شرائي صافٍ (الإغلاق يميل لأعلى مدى الشمعة)، هابط = توزيع
+ * بيعي صافٍ — يُقرأ عادة بالتباعد (divergence) عن اتجاه السعر، لا بالقيمة المطلقة. **تحقّق منطقي**:
+ * مدى صفري بكل شمعة (أعلى=أدنى) → المضاعِف صفر دائماً بصرف النظر عن الفوليوم → ADL يبقى ثابتاً على
+ * صفر لكل نقطة؛ إغلاق ملاصق للأعلى بكل شمعة (أقصى ضغط شرائي) → مضاعِف=1 دائماً → ADL يتزايد بشكل
+ * صارم كل شمعة (فوليوم دائماً موجب)؛ إغلاق ملاصق للأدنى → مضاعِف=−1 → ADL يتناقص بشكل صارم — تحقَّق
+ * الثلاثة حسابياً بسكربت Node.js فعلي (فوليوم عشوائي 300 شمعة بذرة ثابتة أيضاً: صفر NaN/Infinity،
+ * إعادة حساب مستقلة تطابق الناتج تماماً).
+ */
+export function computeAccumDist(candles: (Candle & { volume?: number })[]): number[] {
+  const out: number[] = [];
+  let cum = 0;
+  for (let i = 0; i < candles.length; i++) {
+    const c = candles[i];
+    const span = c.high - c.low;
+    const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
+    const mfm = span === 0 ? 0 : (c.close - c.low - (c.high - c.close)) / span;
+    cum += mfm * vol;
+    out.push(cum);
+  }
+  return out;
+}
+
+/**
  * Chaikin Oscillator (فترتان قياسيتان 3/10) — "MACD" مُطبَّق على خط التراكم/التوزيع (ADL) بدل
  * السعر مباشرة. ADL تراكمي بلا نافذة زمنية بنفس Money Flow Multiplier المستخدَم بـcomputeCmf
  * أعلاه حرفياً (((إغلاق−أدنى)−(أعلى−إغلاق))/(أعلى−أدنى)، صفر عند مدى صفري)، Money Flow Volume =
@@ -2206,6 +2233,50 @@ export function computeAlligator(
     teeth: shiftSeries(teethRaw, teethShift),
     lips: shiftSeries(lipsRaw, lipsShift),
   };
+}
+
+/**
+ * Williams Fractals (بيل ويليامز) — نافذة خمس شموع مركزية: الشمعة الوسطى[i] تُصبح **قمة كسورية**
+ * (top fractal) إن كانت قمتها (high) أعلى صراحةً من قمم الشمعتين على كل جانب (i−2،i−1،i+1،i+2)،
+ * و**قاع كسورياً** (bottom fractal) إن كان قاعها (low) أدنى صراحةً من قيعان نفس الأربع شموع
+ * المجاورة — تعريف قياسي شائع لتحديد نقاط تحوّل هيكلية محلية (swing highs/lows)، يُستخدَم عادة كمرجع
+ * لرسم مستويات دعم/مقاومة أو لبناء مؤشرات لاحقة (مثل Alligator نفسه تاريخياً). القيمة المُعادة عند
+ * نقطة الكسر هي السعر الفعلي (high أو low) لا مجرد علامة boolean، بنفس اصطلاح مصفوفات النقاط
+ * الأخرى بالملف (psar/medianPrice ونحوها) — تسهيلاً لرسمها مباشرة كعلامة فوق/تحت الشمعة. أول/آخر
+ * شمعتين دائماً null (لا نافذة كاملة كافية حولهما). **تحقّق يدوي**: قمة واحدة وسط تسلسل صاعد-هابط
+ * متماثل (V مقلوبة) → قمة كسورية واحدة بالضبط عند نقطة الذروة، صفر قيعان؛ تسلسل صاعد بحت بالكامل
+ * (كل شمعة أعلى من سابقتها) → صفر قمم/قيعان كسورية (لا شمعة أعلى فعلياً من الشمعتين اللاحقتين لها)؛
+ * سلسلة مسطّحة تماماً → صفر (المقارنة صارمة `>`/`<` لا `>=`/`<=`، فالتعادل لا يُحتسَب كسوراً) — تحقَّق
+ * الأربعة حسابياً بسكربت Node.js فعلي (300 شمعة عشوائية بذرة ثابتة أيضاً: صفر NaN/Infinity، كل قيمة
+ * غير null تطابق high/low الفعلي لنفس الشمعة تماماً).
+ */
+export function computeFractals(
+  candles: Pick<Candle, 'high' | 'low'>[]
+): { top: (number | null)[]; bottom: (number | null)[] } {
+  const n = candles.length;
+  const top: (number | null)[] = new Array(n).fill(null);
+  const bottom: (number | null)[] = new Array(n).fill(null);
+  for (let i = 2; i < n - 2; i++) {
+    const h = candles[i].high;
+    if (
+      h > candles[i - 2].high &&
+      h > candles[i - 1].high &&
+      h > candles[i + 1].high &&
+      h > candles[i + 2].high
+    ) {
+      top[i] = h;
+    }
+    const l = candles[i].low;
+    if (
+      l < candles[i - 2].low &&
+      l < candles[i - 1].low &&
+      l < candles[i + 1].low &&
+      l < candles[i + 2].low
+    ) {
+      bottom[i] = l;
+    }
+  }
+  return { top, bottom };
 }
 
 /**
