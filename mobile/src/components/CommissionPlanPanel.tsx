@@ -43,6 +43,8 @@ export function CommissionPlanPanel() {
   const [report, setReport] = useState<Report | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  /** وضوح الحالة: يعلم المستخدم أن الجداول المعروضة تقريبية (FALLBACK_COMMISSION) لا حيّة، بدل صمت كامل */
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,9 +55,11 @@ export function CommissionPlanPanel() {
       ]);
       setPlan(p);
       setReport(r);
+      setError(false);
     } catch {
       setPlan(null);
       setReport(null);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -113,6 +117,11 @@ export function CommissionPlanPanel() {
       {open ? (
         <View style={styles.body}>
           {loading ? <ActivityIndicator color={colors.accent} /> : null}
+          {!loading && error ? (
+            <Text style={styles.errorNote}>
+              تعذر تحميل بيانات العمولات الحيّة — القيم المعروضة تقريبية
+            </Text>
+          ) : null}
 
           <Text style={styles.section}>جدول العمولات</Text>
           <View style={styles.table}>
@@ -273,4 +282,10 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   note: { color: colors.textDim, fontSize: 9, textAlign: 'right' },
+  errorNote: {
+    color: colors.warn,
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'right',
+  },
 });

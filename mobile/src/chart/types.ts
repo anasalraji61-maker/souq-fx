@@ -105,6 +105,8 @@ export type IndicatorId =
   | 'fractals'
   | 't3'
   | 'rvix'
+  | 'smma20'
+  | 'kama'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -248,6 +250,8 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'fractals', label: 'Fractals' },
   { id: 't3', label: 'T3' },
   { id: 'rvix', label: 'RVI (Vol)', pane: true },
+  { id: 'smma20', label: 'SMMA 20' },
+  { id: 'kama', label: 'KAMA' },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

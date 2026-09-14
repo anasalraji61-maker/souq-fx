@@ -291,6 +291,9 @@ export function ToolsScreen() {
           {!loading && scanDone && providerConfigured === true && results.length === 0 ? (
             <Text style={styles.scanHint}>لا نتائج مطابقة للفلاتر الحالية</Text>
           ) : null}
+          {!loading && scanDone && providerConfigured === null ? (
+            <Text style={styles.scanHint}>تعذر تشغيل الفحص — تحقق من الاتصال وحاول مرة أخرى</Text>
+          ) : null}
           <FrameSizedGrid
             storageKey="matrix.tools.screener.order.v1"
             showAll

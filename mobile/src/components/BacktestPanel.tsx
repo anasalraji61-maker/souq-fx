@@ -48,6 +48,8 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
     { side: string; entry: number; exit: number; pnl_pct: number }[]
   >([]);
   const [equity, setEquity] = useState<{ i: number; equity: number }[]>([]);
+  /** وضوح الحالة: يعلم المستخدم إذا فشل تشغيل الاختبار الخلفي بدل صمت كامل (نتائج فارغة كأنه لا صفقات) */
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setSymbol(defaultSymbol);
@@ -56,6 +58,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
 
   const run = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.backtest({
         symbol: symbol.trim().toUpperCase(),
@@ -70,6 +73,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
       setStats(null);
       setTrades([]);
       setEquity([]);
+      setError('تعذر تشغيل الاختبار الخلفي — تحقق من الاتصال وحاول مرة أخرى');
     } finally {
       setLoading(false);
     }
@@ -133,6 +137,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         <Text style={styles.btnText}>{loading ? '...' : 'تشغيل Backtest'}</Text>
       </Pressable>
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
       {stats ? (
         <View style={styles.stats}>
           <Text style={styles.statLine}>صفقات: {stats.trade_count}</Text>
@@ -230,6 +235,13 @@ const styles = StyleSheet.create({
     elevation: buttons.elevation,
   },
   btnText: { color: '#042F2E', fontWeight: '800' },
+  error: {
+    color: colors.bear,
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'right',
+    marginTop: 4,
+  },
   stats: { gap: 4, marginTop: 8 },
   statLine: { color: colors.text, textAlign: 'right', fontWeight: '600' },
   curve: { marginTop: 6, gap: 4 },

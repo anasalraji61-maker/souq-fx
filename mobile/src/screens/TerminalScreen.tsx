@@ -318,6 +318,7 @@ export function TerminalScreen() {
           copy[index] = offlineFrame(nextSym, frameTfs[index]);
           return copy;
         });
+        setOnline(false);
       }
     },
     [frameSymbols, frameTfs, persistFrameSymbols]
@@ -338,6 +339,7 @@ export function TerminalScreen() {
         setOnline(true);
       } catch {
         setDxy(offlineFrame(nextSym, dxyTf));
+        setOnline(false);
       }
     },
     [dxyTf]
@@ -652,6 +654,7 @@ export function TerminalScreen() {
         copy[index] = offlineFrame(sym, nextTf);
         return copy;
       });
+      setOnline(false);
     }
   };
 

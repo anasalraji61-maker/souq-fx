@@ -21,11 +21,14 @@ export function SymbolSearchBar({ onPick, placeholder = 'بحث رمز... EUR, X
   const [q, setQ] = useState('');
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(false);
+  /** وضوح الحالة: يميّز فشل البحث فعلياً عن "لا نتائج مطابقة" حتى لا يظن المستخدم أن الرمز غير موجود */
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const query = q.trim();
     if (query.length < 2) {
       setResults([]);
+      setError(false);
       return;
     }
     const t = setTimeout(async () => {
@@ -33,8 +36,10 @@ export function SymbolSearchBar({ onPick, placeholder = 'بحث رمز... EUR, X
       try {
         const res = await api.symbolSearch(query);
         setResults(res.results);
+        setError(false);
       } catch {
         setResults([]);
+        setError(true);
       } finally {
         setLoading(false);
       }
@@ -60,6 +65,7 @@ export function SymbolSearchBar({ onPick, placeholder = 'بحث رمز... EUR, X
         accessibilityLabel={placeholder}
       />
       {loading ? <ActivityIndicator color={colors.accent} style={{ marginTop: 6 }} /> : null}
+      {!loading && error ? <Text style={styles.error}>تعذر البحث — تحقق من الاتصال وحاول مرة أخرى</Text> : null}
       {results.slice(0, 8).map((r) => (
         <Pressable
           accessibilityRole="button"
@@ -109,4 +115,11 @@ const styles = StyleSheet.create({
   },
   sym: { color: colors.accent, fontWeight: '800', textAlign: 'right' },
   name: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
+  error: {
+    color: colors.bear,
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'right',
+    marginTop: 4,
+  },
 });

@@ -89,6 +89,7 @@ import {
   computeGmma,
   computeHistoricalVolatility,
   computeIchimoku,
+  computeKama,
   computeKeltner,
   computeKlinger,
   computeKst,
@@ -118,6 +119,7 @@ import {
   computeRvi,
   computeRwi,
   computeSmi,
+  computeSmma,
   computeStdDev,
   computeStoch,
   computeStochRsi,
@@ -1112,6 +1114,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('rvix') ? computeRelativeVolatilityIndex(closes) : null),
     [closes, indicators]
   );
+  const smma20 = useMemo(
+    () => (indicators.includes('smma20') ? computeSmma(closes) : null),
+    [closes, indicators]
+  );
+  const kama = useMemo(
+    () => (indicators.includes('kama') ? computeKama(closes) : null),
+    [closes, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1211,6 +1221,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('vwma') && vwma) vwma.forEach(push);
     if (indicators.includes('alma') && alma) alma.forEach(push);
     if (indicators.includes('t3') && t3) t3.forEach(push);
+    if (indicators.includes('smma20') && smma20) smma20.forEach(push);
+    if (indicators.includes('kama') && kama) kama.forEach(push);
     if (indicators.includes('supertrend') && supertrend) supertrend.value.forEach(push);
     if (indicators.includes('bb')) {
       overlays.bbUpper.forEach(push);
@@ -1298,6 +1310,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     vwma,
     alma,
     t3,
+    kama,
     supertrend,
     keltner,
     envelopes,
@@ -2832,6 +2845,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <View
                 key={`t3${i}`}
                 style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#0EA5E9' }]}
+              />
+            )
+          )}
+        {indicators.includes('smma20') &&
+          smma20 &&
+          smma20.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`smma20_${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#F97316' }]}
+              />
+            )
+          )}
+        {indicators.includes('kama') &&
+          kama &&
+          kama.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`kama${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#A78BFA' }]}
               />
             )
           )}

@@ -2901,4 +2901,74 @@ export function computeRelativeVolatilityIndex(
   return out;
 }
 
+/**
+ * SMMA (Smoothed Moving Average، تمهيد Wilder القياسي) كمؤشر overlay مستقل — **استخراج دالة داخلية
+ * موجودة ومُختبَرة فعلياً** (`smma()` أعلاه، مُستخدَمة منذ إضافة computeAlligator لخطوط Jaw/Teeth/Lips)
+ * بنفس روح استخراج computeAccumDist من صيغة Chaikin Osc الداخلية سابقاً — صفر خطر رياضي إضافي، مجرد
+ * غلاف export يعيد استخدام الصيغة المُتحقَّق منها بالفعل. كانت غائبة كخط MA مستقل رغم وجود الصيغة
+ * ضمنياً (وبينما SMA/EMA/WMA/DEMA/TEMA/HMA كلها overlays مستقلة أعلاه، SMMA وحدها لم تكن مُصدَّرة).
+ * period=20 افتراضي (نفس افتراضي SMA20/HMA20 وغيرهما بهذا الملف لتناسق القيم الافتراضية).
+ * **تحقّق حسابي فعلي (Node.js) قبل الكتابة**: سعر ثابت 1.2345 عبر 80 شمعة period=20 → يتقارب *فوراً*
+ * للقيمة الثابتة من أول نقطة صالحة (بعكس EMA المتتالية كـT3 التي تتأخر — لأن بذرة SMMA هنا SMA حقيقية
+ * لأول period قيمة، وكلها متساوية بسعر ثابت)؛ مسار صاعد ثابت الخطوة 60 نقطة → قيم SMMA متصاعدة بثبات
+ * بعد نافذة الإحماء؛ 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity + أول 19 نقطة بالضبط null (period−1)؛
+ * إعادة حساب مستقلة يدوية (تكرار منفصل عن الدالة) لأول 41 نقطة طابقت مكتبة smma() تماماً.
+ */
+export function computeSmma(closes: number[], period = 20): (number | null)[] {
+  return smma(closes, period);
+}
+
+/**
+ * KAMA (Kaufman Adaptive Moving Average، period=10 لنافذة كفاءة الاتجاه + fastPeriod=2/slowPeriod=30
+ * لعاملَي التمهيد — القيم الافتراضية القياسية لبيرل كوفمان) — **أول متوسط متحرك متكيّف السرعة بالملف**
+ * (يُسرّع تلقائياً باتجاه واضح ويُبطئ بتذبذب عشوائي، بعكس SMA/EMA/WMA/DEMA/TEMA/HMA/SMMA/T3/ALMA/VWMA/
+ * LSMA/McGinley الثابتة السرعة أعلاه جميعها). نسبة الكفاءة (Efficiency Ratio) ER[i] = |إغلاق[i] −
+ * إغلاق[i−period]| ÷ مجموع |إغلاق[j] − إغلاق[j−1]| لكل j بنافذة period (البسط = التقدّم الصافي
+ * بالاتجاه، المقام = مجموع كل التذبذب الخام بصرف النظر عن الاتجاه — 1 = اتجاه خالص بلا أي تراجع
+ * إطلاقاً، قرب صفر = تذبذب عشوائي بحت بلا تقدّم صافٍ، صفر عند مقام صفري [سعر ساكن تماماً] بدل قسمة
+ * على صفر). عامل التمهيد SC[i] = (ER[i]×(fastSC−slowSC)+slowSC)²، حيث fastSC=2/(fastPeriod+1)≈0.667
+ * وslowSC=2/(slowPeriod+1)≈0.0645 (نفس صيغة عامل ema() أعلاه لكن بحدّين متغيّرين بـER بدل ثابت واحد
+ * لكل نقطة). التربيع يُقرِّب SC من slowSC² لأي ER متوسط أو منخفض (تحيّز افتراضي للاستقرار، تسريع فعلي
+ * فقط عند اتجاه واضح جداً قرب ER=1). kama[i] = kama[i−1] + SC[i]×(إغلاق[i]−kama[i−1])، بذرة
+ * kama[period] = SMA لأول period إغلاق (نفس أسلوب بذرة ema()/smma() أعلاه حرفياً — متوسط بسيط قبل
+ * بدء التكرار المتكيّف). **تحقّق حسابي فعلي (Node.js) قبل الكتابة**: سعر ثابت 1.2345 عبر 50 شمعة
+ * period=10 → يتقارب فوراً للقيمة الثابتة نفسها من أول نقطة صالحة (بذرة SMA لسعر ثابت = نفس القيمة
+ * بالضبط، ثم فرق إغلاق[i]−kama[i−1]=0 يبقيها ثابتة)؛ مسار صاعد خطي بحت (خطوة 0.5 ثابتة) عبر 80 نقطة
+ * → ER=1 بالضبط عند كل نقطة صالحة (تحقَّق بإعادة حساب مستقلة) → SC=fastSC²≈0.444 (أسرع من slowSC²≈
+ * 0.0042 بأكثر من مئة ضعف) بلا أي null بعد الإحماء؛ 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity،
+ * 290 نقطة صالحة بالضبط (300−period)؛ حالة سعر ساكن تماماً (مقام صفري) → ER=0 صراحة بالحارس المذكور
+ * أعلاه بدل NaN من قسمة 0/0.
+ */
+export function computeKama(
+  closes: number[],
+  period = 10,
+  fastPeriod = 2,
+  slowPeriod = 30
+): (number | null)[] {
+  const out: (number | null)[] = [];
+  const fastSc = 2 / (fastPeriod + 1);
+  const slowSc = 2 / (slowPeriod + 1);
+  let prevKama: number | null = null;
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period) {
+      out.push(null);
+      continue;
+    }
+    if (prevKama == null) {
+      const slice = closes.slice(i - period, i);
+      prevKama = slice.reduce((a, b) => a + b, 0) / period;
+    }
+    const change = Math.abs(closes[i] - closes[i - period]);
+    let volatility = 0;
+    for (let j = i - period + 1; j <= i; j++) {
+      volatility += Math.abs(closes[j] - closes[j - 1]);
+    }
+    const er = volatility === 0 ? 0 : change / volatility;
+    const sc = (er * (fastSc - slowSc) + slowSc) ** 2;
+    prevKama = prevKama + sc * (closes[i] - prevKama);
+    out.push(prevKama);
+  }
+  return out;
+}
+
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];

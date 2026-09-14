@@ -7,6 +7,7 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
@@ -45,15 +46,21 @@ export function TradeJournalPanel() {
   const [exit, setExit] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  /** وضوح الحالة: يميّز "لا صفقات بعد" فعلياً عن فشل تحميل السجل */
+  const [listError, setListError] = useState(false);
+  /** وضوح الحالة: يعلم المستخدم إذا فشلت إضافة صفقة بدل صمت كامل (لم يكن هناك حتى catch) */
+  const [formError, setFormError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
       const res = await api.trades();
       setTrades(res.trades as Trade[]);
       setStats(res.stats as Stats);
+      setListError(false);
     } catch {
       setTrades([]);
       setStats(null);
+      setListError(true);
     } finally {
       setLoading(false);
     }
@@ -67,6 +74,7 @@ export function TradeJournalPanel() {
     const e = parseFloat(entry);
     if (!symbol.trim() || Number.isNaN(e)) return;
     setBusy(true);
+    setFormError(null);
     try {
       const x = exit.trim() ? parseFloat(exit) : undefined;
       await api.createTrade({
@@ -81,6 +89,8 @@ export function TradeJournalPanel() {
       setExit('');
       setNote('');
       await refresh();
+    } catch {
+      setFormError('تعذر إضافة الصفقة — تحقق من الاتصال وحاول مرة أخرى');
     } finally {
       setBusy(false);
     }
@@ -94,6 +104,8 @@ export function TradeJournalPanel() {
       await api.closeTrade(id, x);
       playSoftClick();
       await refresh();
+    } catch {
+      Alert.alert('تعذر الإغلاق', 'حدث خطأ أثناء إغلاق الصفقة، حاول مرة أخرى.');
     } finally {
       setBusy(false);
     }
@@ -216,8 +228,12 @@ export function TradeJournalPanel() {
       >
         <Text style={styles.btnText}>{busy ? '...' : 'إضافة صفقة'}</Text>
       </Pressable>
+      {formError ? <Text style={styles.formError}>{formError}</Text> : null}
 
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
+      {!loading && trades.length === 0 ? (
+        <Text style={styles.empty}>{listError ? 'تعذر تحميل السجل' : 'لا صفقات مسجّلة بعد'}</Text>
+      ) : null}
       <ScrollView style={{ maxHeight: 220 }}>
         {trades.map((t) => (
           <View key={t.id} style={styles.trade}>
@@ -299,6 +315,14 @@ const styles = StyleSheet.create({
     elevation: buttons.elevation,
   },
   btnText: { color: '#042F2E', fontWeight: '800' },
+  formError: {
+    color: colors.bear,
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'right',
+    marginTop: 4,
+  },
+  empty: { color: colors.textDim, textAlign: 'right', marginTop: 8, fontSize: 12 },
   trade: {
     paddingVertical: 8,
     borderBottomWidth: 1,
