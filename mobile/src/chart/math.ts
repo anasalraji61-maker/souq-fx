@@ -2168,4 +2168,41 @@ export function computeAlligator(
   };
 }
 
+/**
+ * Gator Oscillator (بيل ويليامز) — مبني فوق خطوط Alligator (jaw/teeth/lips بعد إزاحتها الزمنية
+ * القياسية، تُمرَّر جاهزة بدل إعادة حسابها). الهستوغرام العلوي = |Jaw−Teeth| (فوق الصفر دائماً)،
+ * السفلي = −|Teeth−Lips| (تحت الصفر دائماً). اللون عند الرسم يعتمد على upperGrowing/lowerGrowing:
+ * أخضر إن كانت القيمة المطلقة أكبر من الشمعة السابقة (الفارق يتّسع)، أحمر إن كانت أصغر أو مساوية
+ * (الفارق ينكمش أو ثابت) — نفس منطق TradingView القياسي لـGator.
+ * تحقّق يدوي: سعر ثابت تماماً → jaw=teeth=lips متطابقة (SMMA لسلسلة ثابتة = نفس الثابت) → upper=0
+ * وlower=0 لكل نقطة صالحة، وgrowing=false دائماً (0 > 0 خطأ) — لا اتساع افتراضي بلا حركة سعر.
+ */
+export function computeGator(
+  jaw: (number | null)[],
+  teeth: (number | null)[],
+  lips: (number | null)[]
+): {
+  upper: (number | null)[];
+  lower: (number | null)[];
+  upperGrowing: (boolean | null)[];
+  lowerGrowing: (boolean | null)[];
+} {
+  const n = jaw.length;
+  const upper: (number | null)[] = new Array(n).fill(null);
+  const lower: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    upper[i] = jaw[i] != null && teeth[i] != null ? Math.abs(jaw[i]! - teeth[i]!) : null;
+    lower[i] = teeth[i] != null && lips[i] != null ? -Math.abs(teeth[i]! - lips[i]!) : null;
+  }
+  const upperGrowing: (boolean | null)[] = upper.map((v, i) => {
+    if (v == null || i === 0 || upper[i - 1] == null) return null;
+    return v > upper[i - 1]!;
+  });
+  const lowerGrowing: (boolean | null)[] = lower.map((v, i) => {
+    if (v == null || i === 0 || lower[i - 1] == null) return null;
+    return Math.abs(v) > Math.abs(lower[i - 1]!);
+  });
+  return { upper, lower, upperGrowing, lowerGrowing };
+}
+
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];

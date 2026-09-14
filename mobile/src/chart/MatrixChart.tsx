@@ -78,6 +78,7 @@ import {
   computeEom,
   computeFisherTransform,
   computeForceIndex,
+  computeGator,
   computeHistoricalVolatility,
   computeIchimoku,
   computeKeltner,
@@ -1026,6 +1027,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('alligator') ? computeAlligator(source.plot) : null),
     [source.plot, indicators]
   );
+  const gator = useMemo(() => {
+    if (!indicators.includes('gator')) return null;
+    const alli = alligator ?? computeAlligator(source.plot);
+    return computeGator(alli.jaw, alli.teeth, alli.lips);
+  }, [source.plot, indicators, alligator]);
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1083,6 +1089,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('kst') ? 1 : 0) +
     (indicators.includes('vortex') ? 1 : 0) +
     (indicators.includes('klinger') ? 1 : 0) +
+    (indicators.includes('gator') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -4550,6 +4557,64 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           top: ((maxV - sv) / span) * innerH,
                           backgroundColor: colors.infoAccent,
                           opacity: 0.85,
+                        }}
+                      />
+                    ) : null}
+                  </View>
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {gator ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Gator</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = [...gator.upper, ...gator.lower].filter(
+                (x): x is number => x != null
+              );
+              const maxG = Math.max(0.00001, ...vals.map((v) => Math.abs(v)));
+              return gator.upper.map((uv, i) => {
+                const lv = gator.lower[i];
+                if (uv == null && lv == null) return <View key={i} style={{ flex: 1 }} />;
+                const uh =
+                  uv != null
+                    ? Math.min(paneH / 2 - 8, (Math.abs(uv) / maxG) * (paneH / 2 - 8))
+                    : 0;
+                const lh =
+                  lv != null
+                    ? Math.min(paneH / 2 - 8, (Math.abs(lv) / maxG) * (paneH / 2 - 8))
+                    : 0;
+                const upGrow = gator.upperGrowing[i];
+                const lowGrow = gator.lowerGrowing[i];
+                return (
+                  <View key={i} style={{ flex: 1, position: 'relative', height: paneH }}>
+                    {uv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 1,
+                          right: 1,
+                          top: paneH / 2 - uh,
+                          height: Math.max(2, uh),
+                          backgroundColor: upGrow ? colors.bull : colors.bear,
+                          opacity: 0.7,
+                        }}
+                      />
+                    ) : null}
+                    {lv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 1,
+                          right: 1,
+                          top: paneH / 2,
+                          height: Math.max(2, lh),
+                          backgroundColor: lowGrow ? colors.bull : colors.bear,
+                          opacity: 0.7,
                         }}
                       />
                     ) : null}

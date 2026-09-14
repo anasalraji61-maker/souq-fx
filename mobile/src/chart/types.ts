@@ -88,6 +88,7 @@ export type IndicatorId =
   | 'klinger'
   | 'ichimoku'
   | 'alligator'
+  | 'gator'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -214,6 +215,7 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'klinger', label: 'Klinger', pane: true },
   { id: 'ichimoku', label: 'Ichimoku' },
   { id: 'alligator', label: 'Alligator' },
+  { id: 'gator', label: 'Gator Oscillator', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [
