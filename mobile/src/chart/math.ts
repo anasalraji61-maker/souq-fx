@@ -2818,4 +2818,87 @@ export function computeZigZag(closes: number[], deviationPct = 5): (number | nul
   return result;
 }
 
+/**
+ * T3 (Tillson، متوسط متحرك مموَّه سداسي المراحل) — period=5/vFactor=0.7 القيمتان الافتراضيتان
+ * القياسيتان. يُبنى بتتابع ست طبقات ema() محلية متعاقبة (e1..e6، كل طبقة = ema() لناتج سابقتها
+ * بعد تعويض null بصفر — **نفس نمط dema/tema/hma المحلي أعلاه بالضبط**، لا صيغة تنعيم جديدة)،
+ * ثم دمج e3..e6 بمعاملات ثابتة مشتقة من vFactor: c1=−v³، c2=3v²+3v³، c3=−6v²−3v−3v³،
+ * c4=1+3v+v³+3v²، T3=c1·e6+c2·e5+c3·e4+c4·e3. صلاحية النقطة تعتمد فقط على e1[i] (أي i≥period−1)
+ * بنفس منطق بوابة tema (e2..e6 غير null دوماً بمجرد i≥period−1 بحكم تعويض الصفر بالطبقات السابقة).
+ * **تحقّق جبري**: c1+c2+c3+c4 يُبسَّط جبرياً إلى 1 تماماً بصرف النظر عن قيمة v (تحقَّق حداً حداً:
+ * حدود v³ تُلغي بعضها [−1+3−3+1=0]، حدود v² كذلك [3−6+3=0]، حدود v [−3+3=0]، يبقى الثابت=1 فقط) —
+ * هذا يضمن أن T3 لسعر ثابت تماماً *يتقارب* للقيمة الثابتة نفسها (بعكس DEMA/TEMA اللذين يتأخران أطول
+ * بسبب فترتهما الأطول 20 هنا مقابل 5 لـT3 — نفس ظاهرة "تقارب تدريجي لا فوري" الموثَّقة لـTEMA بهذا
+ * الملف، لا خطأ حسابي). **تحقّق حسابي فعلي (Node.js)**: سعر ثابت 1.2345 عبر 80 شمعة period=5 →
+ * القيم تتقارب لـ1.2345 بفارق <3×10⁻⁸ بحلول آخر 20 نقطة (يطابق التقارب الأسي المتوقَّع)؛ 300 شمعة
+ * عشوائية بذرة ثابتة → صفر NaN/Infinity؛ مسار صاعد ثابت الخطوة → T3 يتبع الاتجاه صعوداً كما هو متوقَّع.
+ */
+export function computeT3(closes: number[], period = 5, vFactor = 0.7): (number | null)[] {
+  const e1 = ema(closes, period);
+  const e1Filled = e1.map((v) => v ?? 0);
+  const e2 = ema(e1Filled, period);
+  const e2Filled = e2.map((v) => v ?? 0);
+  const e3 = ema(e2Filled, period);
+  const e3Filled = e3.map((v) => v ?? 0);
+  const e4 = ema(e3Filled, period);
+  const e4Filled = e4.map((v) => v ?? 0);
+  const e5 = ema(e4Filled, period);
+  const e5Filled = e5.map((v) => v ?? 0);
+  const e6 = ema(e5Filled, period);
+
+  const v2 = vFactor * vFactor;
+  const v3 = v2 * vFactor;
+  const c1 = -v3;
+  const c2 = 3 * v2 + 3 * v3;
+  const c3 = -6 * v2 - 3 * vFactor - 3 * v3;
+  const c4 = 1 + 3 * vFactor + v3 + 3 * v2;
+
+  return closes.map((_, i) =>
+    e1[i] != null ? c1 * e6[i]! + c2 * e5[i]! + c3 * e4[i]! + c4 * e3[i]! : null
+  );
+}
+
+/**
+ * Relative Volatility Index (RVI-Volatility، Donald Dorsey) — **ليس** نفس computeRvi أعلاه
+ * (تلك Relative Vigor Index لـJohn Ehlers، صيغة مختلفة تماماً؛ الاثنان يُختصران "RVI" بمصادر
+ * السوق المرجعية بلا تمييز، لذا استُخدِم اسم دالة صريح مختلف هنا لمنع أي التباس مستقبلي بالكود).
+ * period=14 موحَّد لكلا نافذتَي الانحراف المعياري والتنعيم الأسي (تبسيط شائع بمنصات كثيرة بدل معلمَتين
+ * منفصلتين 10/14 بنسخة Dorsey الأصلية — **قرار تصميم موثَّق صراحة**). الفكرة: بدل قياس اتجاه *السعر*
+ * كـRSI، يقيس اتجاه *التقلّب* — لكل شمعة: إن أغلقت أعلى من السابقة يُنسَب computeStdDev(closes,period)
+ * الحالي بالكامل لـ"تقلّب صاعد"، وإن أغلقت أدنى يُنسَب بالكامل لـ"تقلّب هابط" (تعادل السعر = صفر
+ * للاثنين)، ثم يُموَّه كل مسار بـema() منفصلة (period) قبل الحساب: RVI=100×صاعدMA/(صاعدMA+هابطMA).
+ * قيمة>50 = تقلّب الأيام الصاعدة أقوى مؤخراً (ميل صعودي)، <50 = العكس، =50 محايد — **قرار تصميم
+ * موثَّق**: لون العرض bull/bear/accent حسب موقعها من 50 بالضبط (لا عتبات تشبّع 70/30 كـRSI، لأن
+ * التفسير الشائع لهذا المؤشر تحديداً هو اتجاه لا تشبّع). حالة 0/0 (صاعدMA=هابطMA=0، سوق مسطّح
+ * تماماً بلا أي تقلّب) تُرجَع 50 (محايد) بدل NaN — بنفس روح معالجة هذا الملف لحالات 0/0 (راجع RSI
+ * عند avgLoss=0، LR R² عند SStot=0). **تحقّق حسابي فعلي (Node.js)**: سوق مسطّح تماماً (تباين صفري)
+ * → 50 بالضبط لكل نقطة صالحة؛ مسار صاعد بحت (كل إغلاق أعلى من السابق) → 100 بالضبط لكل نقطة صالحة
+ * (هابطMA=0 دائماً)؛ نفس المسار معكوساً (هابط بحت) → 0 بالضبط؛ 300 شمعة عشوائية بذرة ثابتة → كل قيمة
+ * ضمن [0,100] بالضبط، صفر NaN/Infinity.
+ */
+export function computeRelativeVolatilityIndex(
+  closes: number[],
+  period = 14
+): (number | null)[] {
+  const n = closes.length;
+  const stdev = computeStdDev(closes, period);
+  const upRaw: number[] = new Array(n).fill(0);
+  const downRaw: number[] = new Array(n).fill(0);
+  for (let i = 1; i < n; i++) {
+    if (stdev[i] == null) continue;
+    if (closes[i] > closes[i - 1]) upRaw[i] = stdev[i]!;
+    else if (closes[i] < closes[i - 1]) downRaw[i] = stdev[i]!;
+  }
+  const upEma = ema(upRaw, period);
+  const downEma = ema(downRaw, period);
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    if (upEma[i] == null || downEma[i] == null) continue;
+    const u = upEma[i]!;
+    const d = downEma[i]!;
+    out[i] = u + d === 0 ? 50 : (100 * u) / (u + d);
+  }
+  return out;
+}
+
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];

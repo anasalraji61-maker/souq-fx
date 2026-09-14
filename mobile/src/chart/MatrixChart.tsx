@@ -112,6 +112,7 @@ import {
   computePvo,
   computeQstick,
   computeRavi,
+  computeRelativeVolatilityIndex,
   computeRoc,
   computeRsi,
   computeRvi,
@@ -121,6 +122,7 @@ import {
   computeStoch,
   computeStochRsi,
   computeSuperTrend,
+  computeT3,
   computeTrix,
   computeTsi,
   computeTypicalPrice,
@@ -1102,6 +1104,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('fractals') ? computeFractals(source.plot) : null),
     [source.plot, indicators]
   );
+  const t3 = useMemo(
+    () => (indicators.includes('t3') ? computeT3(closes) : null),
+    [closes, indicators]
+  );
+  const rvix = useMemo(
+    () => (indicators.includes('rvix') ? computeRelativeVolatilityIndex(closes) : null),
+    [closes, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1165,6 +1175,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('rwi') ? 1 : 0) +
     (indicators.includes('aroonUpDown') ? 1 : 0) +
     (indicators.includes('adl') ? 1 : 0) +
+    (indicators.includes('rvix') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -1199,6 +1210,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('lsma') && lsma) lsma.forEach(push);
     if (indicators.includes('vwma') && vwma) vwma.forEach(push);
     if (indicators.includes('alma') && alma) alma.forEach(push);
+    if (indicators.includes('t3') && t3) t3.forEach(push);
     if (indicators.includes('supertrend') && supertrend) supertrend.value.forEach(push);
     if (indicators.includes('bb')) {
       overlays.bbUpper.forEach(push);
@@ -1285,6 +1297,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     lsma,
     vwma,
     alma,
+    t3,
     supertrend,
     keltner,
     envelopes,
@@ -2812,6 +2825,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             )
           )}
+        {indicators.includes('t3') &&
+          t3 &&
+          t3.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`t3${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#0EA5E9' }]}
+              />
+            )
+          )}
         {indicators.includes('gmma') &&
           gmma &&
           gmma.shortLines.map((line, li) =>
@@ -3634,6 +3657,30 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 );
               });
             })()}
+          </View>
+        </View>
+      ) : null}
+
+      {rvix ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>RVI (Vol)</Text>
+          <View style={styles.paneInner}>
+            {rvix.map((v, i) =>
+              v == null ? (
+                <View key={i} style={{ flex: 1 }} />
+              ) : (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    marginTop: ((100 - v) / 100) * (paneH - 16),
+                    backgroundColor: v > 50 ? colors.bull : v < 50 ? colors.bear : accent,
+                    borderRadius: 2,
+                  }}
+                />
+              )
+            )}
           </View>
         </View>
       ) : null}

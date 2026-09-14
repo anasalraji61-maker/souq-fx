@@ -103,6 +103,8 @@ export type IndicatorId =
   | 'zigzag'
   | 'adl'
   | 'fractals'
+  | 't3'
+  | 'rvix'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -244,6 +246,8 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'zigzag', label: 'ZigZag' },
   { id: 'adl', label: 'A/D Line', pane: true },
   { id: 'fractals', label: 'Fractals' },
+  { id: 't3', label: 'T3' },
+  { id: 'rvix', label: 'RVI (Vol)', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [
