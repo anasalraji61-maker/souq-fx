@@ -79,6 +79,7 @@ import {
   computeForceIndex,
   computeHistoricalVolatility,
   computeKeltner,
+  computeKlinger,
   computeKst,
   computeLinRegR2,
   computeLinRegSlope,
@@ -1011,6 +1012,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('vortex') ? computeVortex(source.plot) : null),
     [source.plot, indicators]
   );
+  const klinger = useMemo(
+    () => (indicators.includes('klinger') ? computeKlinger(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1067,6 +1072,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('fisher') ? 1 : 0) +
     (indicators.includes('kst') ? 1 : 0) +
     (indicators.includes('vortex') ? 1 : 0) +
+    (indicators.includes('klinger') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -4388,6 +4394,56 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           height: 3,
                           top: ((maxV - mv) / span) * innerH,
                           backgroundColor: colors.bear,
+                          opacity: 0.85,
+                        }}
+                      />
+                    ) : null}
+                  </View>
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {klinger ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Klinger</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const kvoVals = klinger.kvo.filter((x): x is number => x != null);
+              const sigVals = klinger.signal.filter((x): x is number => x != null);
+              const allVals = [...kvoVals, ...sigVals, 0];
+              const minV = Math.min(...allVals);
+              const maxV = Math.max(...allVals);
+              const span = maxV - minV || 1;
+              const innerH = paneH - 16;
+              return klinger.kvo.map((kv, i) => {
+                const sv = klinger.signal[i];
+                return (
+                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
+                    {kv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          top: ((maxV - kv) / span) * innerH,
+                          backgroundColor: colors.accent,
+                          opacity: 0.85,
+                        }}
+                      />
+                    ) : null}
+                    {sv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          top: ((maxV - sv) / span) * innerH,
+                          backgroundColor: colors.infoAccent,
                           opacity: 0.85,
                         }}
                       />
