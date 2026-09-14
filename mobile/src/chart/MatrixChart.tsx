@@ -120,6 +120,7 @@ import {
   computeRwi,
   computeSmi,
   computeSmma,
+  computeStc,
   computeStdDev,
   computeStoch,
   computeStochRsi,
@@ -1122,6 +1123,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('kama') ? computeKama(closes) : null),
     [closes, indicators]
   );
+  const stc = useMemo(
+    () => (indicators.includes('stc') ? computeStc(closes) : null),
+    [closes, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1186,6 +1191,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('aroonUpDown') ? 1 : 0) +
     (indicators.includes('adl') ? 1 : 0) +
     (indicators.includes('rvix') ? 1 : 0) +
+    (indicators.includes('stc') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -3709,6 +3715,30 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     height: 3,
                     marginTop: ((100 - v) / 100) * (paneH - 16),
                     backgroundColor: v > 50 ? colors.bull : v < 50 ? colors.bear : accent,
+                    borderRadius: 2,
+                  }}
+                />
+              )
+            )}
+          </View>
+        </View>
+      ) : null}
+
+      {stc ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>STC</Text>
+          <View style={styles.paneInner}>
+            {stc.map((v, i) =>
+              v == null ? (
+                <View key={i} style={{ flex: 1 }} />
+              ) : (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    marginTop: ((100 - v) / 100) * (paneH - 16),
+                    backgroundColor: v > 75 ? colors.bear : v < 25 ? colors.bull : accent,
                     borderRadius: 2,
                   }}
                 />

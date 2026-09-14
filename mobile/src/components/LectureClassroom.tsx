@@ -39,6 +39,9 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const [asking, setAsking] = useState(false);
   const [clarification, setClarification] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  /** وضوح الحالة: يعلم المستخدم إذا فشل تحميل المحاضرة الفعلية وأن ما يراه محتوى تجريبي عام
+   * بدلاً منها (لا ادّعاء فشل قبل حدوثه). */
+  const [lectureFallback, setLectureFallback] = useState(false);
   const [voiceBusy, setVoiceBusy] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [chartSeries, setChartSeries] = useState<ChartSeries | null>(null);
@@ -81,9 +84,13 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           // الصوت غير متاح في Expo Go لهذا الإصدار — نكمل بدون تهيئة الصوت
         }
         const lec = await api.academyLecture(schoolId, lectureId);
-        if (alive) setLecture(lec);
+        if (alive) {
+          setLecture(lec);
+          setLectureFallback(false);
+        }
       } catch {
         if (alive) {
+          setLectureFallback(true);
           setLecture({
             id: lectureId,
             title: 'محاضرة تجريبية',
@@ -285,6 +292,9 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
       </View>
 
       <Text style={styles.title}>{lecture?.title}</Text>
+      {lectureFallback ? (
+        <Text style={styles.voiceErr}>تعذر تحميل هذه المحاضرة — يُعرض محتوى تجريبي عام بدلاً منها</Text>
+      ) : null}
       <Text style={styles.voiceHint}>
         شاشة كاملة · صوت ElevenLabs ·{' '}
         {paused ? 'متوقف للسؤال' : voiceBusy ? 'يجهّز الصوت...' : 'يشرح الآن'}

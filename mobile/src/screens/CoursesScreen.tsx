@@ -24,6 +24,7 @@ export function CoursesScreen() {
   const [schools, setSchools] = useState<AcademySchoolSummary[]>(mockAcademySchools);
   const [school, setSchool] = useState<AcademySchool | null>(null);
   const [loadingSchool, setLoadingSchool] = useState(false);
+  const [schoolFallback, setSchoolFallback] = useState(false);
   const [activeLecture, setActiveLecture] = useState<{
     schoolId: string;
     lectureId: string;
@@ -38,12 +39,14 @@ export function CoursesScreen() {
 
   const openSchool = async (id: string) => {
     setLoadingSchool(true);
+    setSchoolFallback(false);
     try {
       const detail = await api.academySchool(id);
       setSchool(detail);
     } catch {
       const summary = schools.find((s) => s.id === id);
       if (summary) {
+        setSchoolFallback(true);
         setSchool({
           ...summary,
           levels: [
@@ -140,6 +143,11 @@ export function CoursesScreen() {
               <>
                 <Text style={styles.modalSchool}>{school?.name_ar}</Text>
                 <Text style={styles.modalDesc}>{school?.summary}</Text>
+                {schoolFallback ? (
+                  <Text style={styles.fallbackNote}>
+                    تعذر تحميل المنهج الكامل — تُعرض محاضرة افتتاحية مؤقتة فقط
+                  </Text>
+                ) : null}
                 <ScrollView style={{ maxHeight: 420 }} contentContainerStyle={{ gap: 12 }}>
                   {school?.levels.map((lv) => (
                     <View key={lv.level} style={styles.levelBox}>
@@ -269,6 +277,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: 'right',
     lineHeight: 20,
+  },
+  fallbackNote: {
+    color: colors.warn,
+    fontSize: 12,
+    textAlign: 'right',
+    marginTop: -6,
+    marginBottom: 12,
   },
   levelBox: {
     backgroundColor: colors.bgPanel,

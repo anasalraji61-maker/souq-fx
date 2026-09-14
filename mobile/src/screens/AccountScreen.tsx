@@ -32,6 +32,7 @@ export function AccountScreen() {
   const [side, setSide] = useState<SideId>('left');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [netError, setNetError] = useState(false);
   const [net, setNet] = useState<{
     referral_code: string;
     role: string;
@@ -64,6 +65,7 @@ export function AccountScreen() {
   const loadNetwork = useCallback(async () => {
     if (!user) {
       setNet(null);
+      setNetError(false);
       return;
     }
     try {
@@ -82,8 +84,10 @@ export function AccountScreen() {
         },
         directs: res.network.directs,
       });
+      setNetError(false);
     } catch {
       setNet(null);
+      setNetError(true);
     }
   }, [user]);
 
@@ -185,6 +189,10 @@ export function AccountScreen() {
                 </View>
               </View>
             </View>
+          ) : netError ? (
+            <Text style={[styles.err, { textAlign: align }]}>
+              تعذر تحميل بيانات الشبكة/الإحالة — حاول لاحقاً
+            </Text>
           ) : null}
 
           <Pressable

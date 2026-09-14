@@ -2971,4 +2971,93 @@ export function computeKama(
   return out;
 }
 
+/**
+ * Schaff Trend Cycle (STC، Doug Schaff — cyclePeriod=10/fastLength=23/slowLength=50 القيم القياسية
+ * لنسخة TradingView المرجعية) — مذبذب 0..100 **مزدوج التمهيد العشوائي (stochastic) فوق MACD**، لا
+ * تمهيد EMA بسيط: أولاً macd=ema(إغلاق,fastLength)−ema(إغلاق,slowLength) (نفس صيغة computeMacd
+ * أعلاه حرفياً بفترتين مختلفتين)، ثم %K عشوائي أول (stochastic) لـmacd بنافذة cyclePeriod متدحرجة
+ * (نفس صيغة %K بـcomputeStoch أعلاه لكن على قيمة macd بدل الإغلاق الخام)، يُمهَّد بعامل تمهيد ثابت
+ * 0.5 (لا EMA قياسية — `d[i]=d[i-1]+0.5×(k[i]−d[i-1])`، نفس صيغة عامل التمهيد المستخدَم لإشارة SMI
+ * أعلاه بالضبط)، ثم **يُعاد كل ذلك مرة ثانية على ناتج المرحلة الأولى بدل الإغلاق/macd**
+ * (stochastic-of-stochastic-of-macd) — هذا التكرار المزدوج هو ما يميّز STC عن أي مذبذب آخر بالملف،
+ * ويقلّل تأخره كثيراً مقارنة بـMACD الخام عبر دورتَي stochastic بدل تمهيد EMA فقط. **قرار موثَّق**:
+ * عند مدى صفري بأي نافذة (سعر مسطّح تماماً) تُحمَل القيمة السابقة بدل صفر/NaN (`nz(f1[1])` بالمرجع
+ * الأصلي Pine Script) بدل قيمة ثابتة، مطابقةً للمرجع الرسمي حرفياً؛ الناتج النهائي محصور صراحةً
+ * [0,100] (`Math.max(0, Math.min(100, ...))`) لأن التمهيد المتكرر يمكن نظرياً أن يتجاوز الحدين
+ * بكسور عائمة ضئيلة قبل التقريب. يُرسَم بإعادة استخدام كاملة لنمط لوحة RSI 0-100 حرفياً (عتبتا
+ * تشبّع 75/25 بدل 70/30 — القيمتان القياسيتان لـSTC تحديداً بمعظم المصادر المرجعية، أوسع من RSI لأن
+ * STC أصلاً أسرع استجابة فيحتاج عتبات أبعد لتقليل الإشارات الكاذبة).
+ * **تحقّق حسابي فعلي (Node.js قبل الكتابة)**: سعر ثابت تماماً 150 شمعة → macd=0 ثابت بكل نافذة
+ * (مدى صفري) → القيمة السابقة المحمولة تبقى 0 بذرتها الأولية بلا أي NaN عبر 83 نقطة صالحة؛ 300 شمعة
+ * عشوائية بذرة ثابتة → صفر NaN/Infinity عبر 233 نقطة صالحة بالضبط (يطابق حساب warm-up يدوياً: أول
+ * macd صالح عند الفهرس 49 [slowLength−1]، أول pf صالح عند 58 [49+cyclePeriod−1]، أول STC صالح عند
+ * 67 [58+cyclePeriod−1] → 300−67=233 تماماً)، وكل قيمة صالحة ضمن [0,100] بالضبط بلا استثناء.
+ */
+export function computeStc(
+  closes: number[],
+  cyclePeriod = 10,
+  fastLength = 23,
+  slowLength = 50
+): (number | null)[] {
+  const n = closes.length;
+  const out: (number | null)[] = new Array(n).fill(null);
+  const emaFast = ema(closes, fastLength);
+  const emaSlow = ema(closes, slowLength);
+  const macd: (number | null)[] = closes.map((_, i) =>
+    emaFast[i] != null && emaSlow[i] != null ? emaFast[i]! - emaSlow[i]! : null
+  );
+
+  const pf: (number | null)[] = new Array(n).fill(null);
+  let f1Prev = 0;
+  let pfPrev = 0;
+  let havePf = false;
+  for (let i = 0; i < n; i++) {
+    if (i < cyclePeriod - 1) continue;
+    let lo = Infinity;
+    let hi = -Infinity;
+    let windowOk = true;
+    for (let w = i - cyclePeriod + 1; w <= i; w++) {
+      if (macd[w] == null) {
+        windowOk = false;
+        break;
+      }
+      lo = Math.min(lo, macd[w]!);
+      hi = Math.max(hi, macd[w]!);
+    }
+    if (!windowOk) continue;
+    const range = hi - lo;
+    const f1 = range > 0 ? ((macd[i]! - lo) / range) * 100 : f1Prev;
+    f1Prev = f1;
+    const p = havePf ? pfPrev + 0.5 * (f1 - pfPrev) : f1;
+    pfPrev = p;
+    havePf = true;
+    pf[i] = p;
+  }
+
+  let f2Prev = 0;
+  let pffPrev = 0;
+  let havePff = false;
+  for (let i = 0; i < n; i++) {
+    if (pf[i] == null) continue;
+    let lo = Infinity;
+    let hi = -Infinity;
+    let count = 0;
+    for (let w = i; w >= 0 && count < cyclePeriod; w--) {
+      if (pf[w] == null) break;
+      lo = Math.min(lo, pf[w]!);
+      hi = Math.max(hi, pf[w]!);
+      count++;
+    }
+    if (count < cyclePeriod) continue;
+    const range = hi - lo;
+    const f2 = range > 0 ? ((pf[i]! - lo) / range) * 100 : f2Prev;
+    f2Prev = f2;
+    const p2 = havePff ? pffPrev + 0.5 * (f2 - pffPrev) : f2;
+    pffPrev = p2;
+    havePff = true;
+    out[i] = Math.max(0, Math.min(100, p2));
+  }
+  return out;
+}
+
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];

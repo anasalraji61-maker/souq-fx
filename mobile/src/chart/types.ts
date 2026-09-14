@@ -107,6 +107,7 @@ export type IndicatorId =
   | 'rvix'
   | 'smma20'
   | 'kama'
+  | 'stc'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -252,6 +253,7 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'rvix', label: 'RVI (Vol)', pane: true },
   { id: 'smma20', label: 'SMMA 20' },
   { id: 'kama', label: 'KAMA' },
+  { id: 'stc', label: 'STC', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

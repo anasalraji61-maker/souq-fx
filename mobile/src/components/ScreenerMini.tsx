@@ -14,14 +14,18 @@ export function ScreenerMini() {
     { symbol: string; rsi: number; change_pct: number; filters_matched: string[] }[]
   >([]);
   const [loading, setLoading] = useState(false);
+  /** وضوح الحالة: يميّز "لا نتائج مطابقة للفلتر" عن "فشل الاتصال بالفحص" بدل صمت كامل. */
+  const [error, setError] = useState(false);
 
   const run = useCallback(async (filter: string) => {
     setLoading(true);
+    setError(false);
     try {
       const res = await api.screenerRun({ timeframe: '15m', filters: [filter] });
       setHits(res.results.slice(0, 5));
     } catch {
       setHits([]);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -51,6 +55,7 @@ export function ScreenerMini() {
         ))}
       </View>
       {loading ? <ActivityIndicator color={colors.accent} size="small" /> : null}
+      {!loading && error ? <Text style={styles.errorNote}>تعذر تشغيل الفحص — حاول لاحقاً</Text> : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={{ flexDirection: 'row-reverse', gap: 8 }}>
           {hits.map((h) => (
@@ -78,6 +83,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: { color: colors.textMuted, fontWeight: '800', textAlign: 'right', fontSize: 12 },
+  errorNote: { color: colors.warn, textAlign: 'right', fontSize: 11 },
   row: { flexDirection: 'row-reverse', gap: 6 },
   chip: {
     paddingHorizontal: 12,

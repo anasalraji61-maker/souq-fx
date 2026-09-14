@@ -52,6 +52,9 @@ export function WeeklyReportPanel({ grid = false }: Props) {
   const [active, setActive] = useState<ReportKind | null>(null);
   const [text, setText] = useState('');
   const [win, setWin] = useState<number | null>(null);
+  /** وضوح الحالة: يعلم المستخدم إذا فشل استدعاء الذكاء الاصطناعي وأن التقرير المعروض قالب عام
+   * ثابت بدل تحليل فعلي مخصَّص (لا ادّعاء فشل قبل حدوثه). */
+  const [aiFallback, setAiFallback] = useState(false);
 
   const run = async (kind: ReportKind) => {
     const item = KINDS.find((k) => k.id === kind);
@@ -60,6 +63,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
     setActive(kind);
     setText('');
     setWin(null);
+    setAiFallback(false);
     let journalLine = '';
     try {
       const t = await api.trades();
@@ -83,6 +87,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
               ? `موجز مخاطر${journalLine}\n1) مخاطرة ≤1%.\n2) وقف واضح.\n3) تجنّب الأخبار الثقيلة.`
               : `نصائح MATRIX${journalLine}\n1) راجع صفقاتك المفتوحة.\n2) اربط الدخول بـ DXY.\n3) مخاطرة ≤1%.\n4) تجنّب الأخبار عالية التأثير.\n5) ركّز على 2–3 أزواج.`
       );
+      setAiFallback(true);
     } finally {
       setLoading(null);
     }
@@ -123,6 +128,11 @@ export function WeeklyReportPanel({ grid = false }: Props) {
         <FrameSizedGrid storageKey="matrix.tools.reports.order.v1" showAll items={tiles} />
         {text ? (
           <ScrollView style={styles.out} contentContainerStyle={{ padding: 12, gap: 8 }}>
+            {aiFallback ? (
+              <Text style={styles.aiFallbackNote}>
+                تعذر الاتصال بالذكاء الاصطناعي — هذا قالب عام بدل تحليل مخصَّص
+              </Text>
+            ) : null}
             <Text style={styles.outText}>{text}</Text>
             {win != null ? (
               <Text style={styles.win}>ثقة تقديرية للسيناريو: {win}%</Text>
@@ -162,6 +172,11 @@ export function WeeklyReportPanel({ grid = false }: Props) {
       ))}
       {text ? (
         <ScrollView style={styles.out} contentContainerStyle={{ padding: 12, gap: 8 }}>
+          {aiFallback ? (
+            <Text style={styles.aiFallbackNote}>
+              تعذر الاتصال بالذكاء الاصطناعي — هذا قالب عام بدل تحليل مخصَّص
+            </Text>
+          ) : null}
           <Text style={styles.outText}>{text}</Text>
           {win != null ? (
             <Text style={styles.win}>ثقة تقديرية للسيناريو: {win}%</Text>
@@ -216,4 +231,5 @@ const styles = StyleSheet.create({
   },
   outText: { color: colors.text, textAlign: 'right', lineHeight: 22, fontSize: 13 },
   win: { color: colors.accent, fontWeight: '700', textAlign: 'right', fontSize: 12 },
+  aiFallbackNote: { color: colors.warn, fontWeight: '700', textAlign: 'right', fontSize: 12 },
 });
