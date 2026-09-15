@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#071018',
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: '#1E3A5F',
+    borderColor: colors.heroBorder,
     padding: spacing.md,
     minHeight: 280,
   },
@@ -645,5 +645,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  resumeText: { color: '#042F2E', fontWeight: '800' },
+  resumeText: { color: colors.onAccent, fontWeight: '800' },
 });

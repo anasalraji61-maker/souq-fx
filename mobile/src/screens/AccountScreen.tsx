@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  btnText: { color: '#042F2E', fontWeight: '800' },
+  btnText: { color: colors.onAccent, fontWeight: '800' },
   roleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   roleRowRtl: { flexDirection: 'row-reverse' },
   roleChip: {

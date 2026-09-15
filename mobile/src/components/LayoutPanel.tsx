@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  btnText: { color: '#042F2E', fontWeight: '800' },
+  btnText: { color: colors.onAccent, fontWeight: '800' },
   row: {
     flexDirection: 'row-reverse',
     alignItems: 'center',

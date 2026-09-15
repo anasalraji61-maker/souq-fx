@@ -307,8 +307,8 @@ const styles = StyleSheet.create({
     minHeight: 0,
   },
   heroWrap: {
-    borderColor: '#1E3A5F',
-    backgroundColor: '#0E1728',
+    borderColor: colors.heroBorder,
+    backgroundColor: colors.heroBg,
   },
   tfTopLeft: {
     alignItems: 'flex-start',
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(45,212,191,0.45)',
   },
   syncBadgeLeader: {
-    color: '#4ADE80',
+    color: colors.leaderGreen,
     borderColor: 'rgba(74,222,128,0.5)',
     backgroundColor: 'rgba(74,222,128,0.12)',
   },

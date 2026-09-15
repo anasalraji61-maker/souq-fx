@@ -396,8 +396,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
   },
   rowDxy: {
-    borderColor: '#1E3A5F',
-    backgroundColor: '#0E1728',
+    borderColor: colors.heroBorder,
+    backgroundColor: colors.heroBg,
   },
   rowMain: {
     flexDirection: 'row-reverse',

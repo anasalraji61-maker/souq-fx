@@ -1612,7 +1612,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: '#0A1524',
+    backgroundColor: colors.controlBg,
   },
   layoutSwitcherTag: {
     width: 46,
@@ -1818,7 +1818,7 @@ const styles = StyleSheet.create({
     maxHeight: 42,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
-    backgroundColor: '#0A1524',
+    backgroundColor: colors.controlBg,
   },
   shadowTfBar: {
     flexDirection: 'row',
@@ -1990,7 +1990,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   shadowPaneBadgePrimary: {
-    color: '#4ADE80',
+    color: colors.leaderGreen,
   },
   shadowPaneTf: {
     color: colors.text,

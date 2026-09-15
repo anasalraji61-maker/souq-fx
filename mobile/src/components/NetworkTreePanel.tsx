@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     elevation: buttons.elevation,
   },
   slotGoOff: { opacity: 0.35 },
-  slotGoText: { color: '#042F2E', fontWeight: '900', fontSize: 13 },
+  slotGoText: { color: colors.onAccent, fontWeight: '900', fontSize: 13 },
   trunk: { alignItems: 'center', height: 42, width: '100%', justifyContent: 'flex-start' },
   trunkH: { width: '70%', height: 2, backgroundColor: '#64748B' },
   trunkV: { width: 2, height: 18, backgroundColor: '#64748B' },

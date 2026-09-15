@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     elevation: buttons.elevation,
   },
   runBtnDisabled: { opacity: 0.45 },
-  runText: { color: '#042F2E', fontWeight: '800' },
+  runText: { color: colors.onAccent, fontWeight: '800' },
   scanHint: {
     color: colors.warn,
     fontSize: 12,

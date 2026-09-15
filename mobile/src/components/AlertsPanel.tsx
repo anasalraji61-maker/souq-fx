@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  addText: { color: '#042F2E', fontWeight: '800', fontSize: 12 },
+  addText: { color: colors.onAccent, fontWeight: '800', fontSize: 12 },
   empty: { color: colors.textDim, textAlign: 'right', marginTop: 8, fontSize: 12 },
   item: {
     flexDirection: 'row-reverse',

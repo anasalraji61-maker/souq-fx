@@ -315,5 +315,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  closeText: { color: '#042F2E', fontWeight: '800', fontSize: 15 },
+  closeText: { color: colors.onAccent, fontWeight: '800', fontSize: 15 },
 });

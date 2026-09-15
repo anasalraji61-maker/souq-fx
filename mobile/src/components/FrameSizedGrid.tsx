@@ -3,7 +3,6 @@ import {
   View,
   Text,
   Pressable,
-  ScrollView,
   StyleSheet,
   PanResponder,
   useWindowDimensions,
@@ -26,10 +25,9 @@ export const FRAME_CHART_H_PHONE_GRID = 150;
 export const FRAME_BOX_H_PHONE_GRID = FRAME_CHART_H_PHONE_GRID + 110;
 
 /**
- * تفضيل المتداول على الهاتف: مربعات (فريمان جنباً إلى جنب، صغيرة)
- * أو مستطيلات (فريم واحد بكل صف، بعرض الشاشة وأطول) — نفس تسمية
- * مفتاح "مربع/مستطيل" الموجود في شريط تبديل التخطيط على اللابتوب.
- * يُحفظ محلياً.
+ * تفضيل المتداول على الهاتف — خانة "الفريمات": مربعات (فريمان جنباً إلى
+ * جنب، صغيرة) أو مستطيلات (فريم واحد عمودي بكل صف، بعرض الشاشة وأطول).
+ * كلا الوضعين عمودي التمرير (لا تمرير أفقي)، ويُحفظ الاختيار محلياً.
  */
 type PhoneMode = 'grid' | 'stack';
 
@@ -393,7 +391,10 @@ export function FrameSizedGrid({
   }
 
   const phoneModeToggle = phone && !showAll && (
-    <View style={styles.phoneModeRow}>
+    <View style={styles.phoneModeSwitcher}>
+      <View style={styles.phoneModeTag}>
+        <Text style={styles.phoneModeTagText}>الفريمات</Text>
+      </View>
       <Pressable
         accessibilityRole="button"
         onPress={() => choosePhoneMode('grid')}
@@ -404,7 +405,7 @@ export function FrameSizedGrid({
         ]}
       >
         <Text style={[styles.phoneModeText, phoneMode === 'grid' && styles.phoneModeTextActive]}>
-          ▦ مربعات
+          المربعات
         </Text>
       </Pressable>
       <Pressable
@@ -417,7 +418,7 @@ export function FrameSizedGrid({
         ]}
       >
         <Text style={[styles.phoneModeText, phoneMode === 'stack' && styles.phoneModeTextActive]}>
-          ▭ مستطيلات
+          المستطيلات
         </Text>
       </Pressable>
     </View>
@@ -437,29 +438,17 @@ export function FrameSizedGrid({
     );
   }
 
-  // الهاتف + وضع المستطيلات: فريمات مستطيلة طويلة جنباً إلى جنب أفقياً — نفس فكرة صف
-  // gridFillRow على اللابتوب (fillRect)، بعد تكييفها لعرض الهاتف بتمرير أفقي بدل ضغط
-  // كل الفريمات بصف واحد ضيق. كل فريم عريض تقريباً كعرض الشاشة مع لمحة من التالي.
+  // الهاتف + وضع المستطيلات: فريم واحد عمودي بكل صف، بعرض الشاشة وأطول
+  // (نفس التمرير العمودي الطبيعي للصفحة — بلا تمرير أفقي).
   if (phone && !showAll && phoneMode === 'stack') {
-    const rectCardWidth = Math.round(width * 0.84);
     return (
       <View>
         {phoneModeToggle}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          decelerationRate="fast"
-          snapToInterval={rectCardWidth + spacing.sm}
-          snapToAlignment="start"
-          contentContainerStyle={styles.rectPhoneRow}
-        >
+        <View style={[styles.grid, styles.gridCol]}>
           {displayed.map((item, index) =>
-            renderCell(item, index, [
-              styles.cellPhoneRect,
-              { width: rectCardWidth, height: FRAME_BOX_H_PHONE },
-            ])
+            renderCell(item, index, [styles.cellPhone, { height: FRAME_BOX_H_PHONE }])
           )}
-        </ScrollView>
+        </View>
       </View>
     );
   }
@@ -553,40 +542,55 @@ const styles = StyleSheet.create({
     flexGrow: 0,
     flexShrink: 0,
   },
-  rectPhoneRow: {
+  phoneModeSwitcher: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    paddingRight: spacing.lg,
-  },
-  cellPhoneRect: {
-    flexGrow: 0,
-    flexShrink: 0,
-  },
-  phoneModeRow: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    marginBottom: spacing.sm,
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.controlBg,
     alignSelf: 'flex-end',
+    marginBottom: spacing.sm,
+  },
+  phoneModeTag: {
+    height: 32,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    backgroundColor: colors.bgPanel,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  phoneModeTagText: {
+    color: colors.accent,
+    fontSize: 10,
+    fontWeight: '900',
   },
   phoneModeBtn: {
-    paddingVertical: 6,
+    height: 32,
+    justifyContent: 'center',
     paddingHorizontal: 10,
     borderRadius: radii.sm,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bgElevated,
+    borderColor: colors.borderSoft,
+    backgroundColor: colors.bgPanel,
   },
   phoneModeBtnActive: {
     borderColor: colors.accent,
     backgroundColor: colors.accentSoft,
   },
   phoneModeText: {
-    fontSize: 12,
+    fontSize: 11,
+    fontWeight: '700',
     color: colors.textMuted,
   },
   phoneModeTextActive: {
     color: colors.accent,
-    fontWeight: '600',
+    fontWeight: '900',
   },
   cellHover: {
     borderColor: colors.accent,

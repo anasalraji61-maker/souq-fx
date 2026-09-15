@@ -1,6 +1,83 @@
 # HANDOFF — MATRIX (سجل تنفيذ Claude)
 
-آخر تحديث: 2026-09-15 (Claude — تشغيل مجدول لاحق ثامن عشر (نفس اليوم)، بروتوكول التسريع، جلسة جديدة
+آخر تحديث: 2026-09-15 (Claude — تشغيل مجدول جديد (نفس اليوم)، بروتوكول التسريع، جلسة جديدة بلا ذاكرة):
+**تحقّق أولي**: `get_device_info` أكَّد اتصال مجلد `souq-fx`. `device_list_dir` لجذر المستودع/docs/
+mobile/src(components/screens) طابق تماماً آخر ما وثَّقه التشغيل السابق (HANDOFF.md 703704،
+ROADMAP.md 248963؛ theme.ts 2643؛ FrameSizedGrid.tsx 19869 — يطابق إصلاح الجلسة السابقة) — سلامة
+قرص مؤكَّدة، صفر تعارض خارجي.
+
+**تحقّق مستقل موسَّع (جديد) لباكلوجَين قائمين**: بدل إعادة فحص جزئي فقط، `grep -c` عددي مباشر
+لـ`<Pressable` مقابل `accessibilityRole="button"` عبر **كامل** mobile/src/components+screens (34+5
+ملفاً) أكَّد باكلوج "ظل+ضغط" مستنفَداً بالكامل (يطابق 18+ تحقّقاً مستقلاً سابقاً). **باكلوج جديد لم
+يُفحَص سابقاً بهذا الشكل الشامل أُضيف هذا التشغيل**: مقارنة عددية Pressable مقابل
+accessibilityRole="button" وأيضاً مقابل accessibilityLabel، بحثاً عن أزرار أيقونة-فقط (رمز/إيموجي
+بلا نص وصفي) بلا اسم accessible إطلاقاً. ثلاث فروقات ظاهرية (ChartFrame.tsx 4/3، MatrixSidePanel.tsx
+5/4، TerminalScreen.tsx 15/14) فُحصت بقراءة كاملة لكل سياق — **كلها شرعية لا فجوة فعلية**: طبقة
+`Pressable style={StyleSheet.absoluteFill}`/`style={styles.dim}` شفافة لإغلاق قرص رموز/sheet (لا
+معنى لـaccessibilityRole على طبقة خلفية غير مرئية — نفس المنطق الموثَّق سابقاً لأزرار الظل)، و
+accessibilityRole="switch" شرعي (لا "button") بـTerminalScreen.tsx سطر 1106. فحص إضافي لأزرار
+أيقونة-فقط (Text قصير ≤3 أحرف بلا كلمة وصفية) عبر سكربت Python مخصَّص وجد 5 مرشَّحين ظاهريين
+(MatrixEdgeRails.tsx "▦2×2"، WatchlistPanel.tsx "↑"/"↓"، ChartFrame.tsx "▾"/"⛶") — **كلهم false
+positive** بسبب علة بالسكربت (رمز `>` داخل دالة سهمية `style={({pressed}) => [...]}` يقطع استخراج
+الوسم مبكراً)، تحقَّق يدوياً بقراءة السياق الكامل لكل واحد: **جميعها تملك `accessibilityLabel` فعلياً**
+("فتح تخطيط 2×2"، "تحريك لأعلى"، "تحريك لأسفل"، "تغيير الرمز"، "فتح الشارت بملء الشاشة"). **صفر فجوة
+accessibility فعلية بمستوى المشروع كله** — تحقّق إيجابي جديد يوثَّق لأول مرة (لم يُفحَص بهذا الشمول من
+قبل)، لا مجرد "لا عمل جديد" متكرر.
+
+**فئة عمل جديدة فعلية أُنجزَت هذا التشغيل (أول مرة، خارج باكلوجي "ظل+ضغط"/Track C المعتادين)**: توحيد
+ألوان hex سداسية عشرية ثابتة مكرَّرة حرفياً بملفات متعددة إلى رموز واحدة بـ`theme.ts` — **صفر تغيير
+بصري** (نفس القيم الحرفية بالضبط، إعادة تسمية/توحيد بحتة لسهولة الصيانة/الاتساق المستقبلي)، بنفس روح
+تفويض الذوق لكن بمقياس "دين تصميمي" لا مكوّن جديد. اكتُشفت بمسح `grep -oE "#[0-9A-Fa-f]{6}\b"` منهجي
+عبر كل ملفات components/screens (35+ ملفاً) وتصنيف كل قيمة مكرَّرة حسب السياق الدلالي (قراءة السطر
+المحيط لكل تكرار للتأكّد أنه نفس الاستخدام لا تطابق صدفة):
+
+1. **`colors.onAccent`** = `'#042F2E'` — لون نص فوق خلفية `colors.accent` الممتلئة (تباين داكن آمن)،
+   كان مكرَّراً **حرفياً 12 مرة** بـ12 ملفاً منفصلاً (نفس الاستخدام بالضبط: `btnText`/`addText`/
+   `sendText`/`closeText`/`resumeText`/`slotGoText` — نص زر "رئيسي" ملاصق مباشرة لنمط
+   `buttons.shadowColor/shadowOpacity/...` المعروف بكل الحالات الاثنتي عشرة): NetworkTreePanel.tsx،
+   BacktestPanel.tsx، AlertsPanel.tsx، GroupChatPanel.tsx، TradeJournalPanel.tsx، LayoutPanel.tsx،
+   IndicatorAlertsPanel.tsx، LectureClassroom.tsx، MessagesScreen.tsx، CoursesScreen.tsx،
+   AccountScreen.tsx، ToolsScreen.tsx.
+2. **`colors.controlBg`** = `'#0A1524'` — خلفية غائرة لعناصر تحكم مدمجة (شريحة/مقبض/مربع صغير)، أغمق
+   من `colors.bgPanel`، مكرَّرة **6 مرات** بـ4 ملفات بنفس نمط `borderWidth:1 + borderColor:
+   colors.border/colors.accent` المرافق: PairDrumWheel.tsx (drum)، PanSpeedSlider.tsx (square+wrap،
+   مرتان)، FrameSizedGrid.tsx (phoneModeToggle — نفس الزر المُصلَح بالتشغيل السابق مباشرة لباكلوج
+   "ظل+ضغط"، تأكيد إضافي أن الملف قُرئ بعناية)، TerminalScreen.tsx (layoutSwitcher +
+   shadowTfBarScroll، مرتان).
+3. **`colors.heroBorder`** = `'#1E3A5F'` + **`colors.heroBg`** = `'#0E1728'` — زوج حدّ/خلفية بطاقة
+   "بارزة" (DXY/hero/شاشة أكاديمية مركزية)، الزوج معاً مكرَّر حرفياً بـWatchlistPanel.tsx (`rowDxy`) و
+   ChartFrame.tsx (`heroWrap` — نفس الاسم الدلالي "hero" مستخدَم بالفعل بالكود قبل هذا التشغيل، تأكيد
+   إضافي لصحة التسمية)؛ `heroBorder` وحدها (خلفية مختلفة `#071018`) بـLectureClassroom.tsx
+   (`bigScreen`، شاشة العرض الرئيسية بالمحاضرة) — نفس دلالة حدّ التمييز الداكن المزرَق.
+4. **`colors.leaderGreen`** = `'#4ADE80'` — أخضر "شارة قائد التزامن" (أسطع عمداً من `colors.bull`
+   لتمييزه عن إشارات ربح/خسارة عادية)، مكرَّر حرفياً بـChartFrame.tsx (`syncBadgeLeader`) و
+   TerminalScreen.tsx (`shadowPaneBadgePrimary`) — نفس المفهوم الدلالي بالضبط (لوحة الشارت المتزامن
+   "القائد").
+
+**19 ملفاً مُعدَّلاً إجمالاً** (theme.ts + 18 ملف استهلاك: NetworkTreePanel، BacktestPanel،
+AlertsPanel، GroupChatPanel، TradeJournalPanel، LayoutPanel، IndicatorAlertsPanel، LectureClassroom،
+MessagesScreen، CoursesScreen، AccountScreen، ToolsScreen، PairDrumWheel، PanSpeedSlider،
+FrameSizedGrid، TerminalScreen، WatchlistPanel، ChartFrame).
+
+**تحقّق**: (أ) `grep` تأكَّد **صفر بقايا** للقيم الحرفية الست (`042F2E`/`0A1524`/`1E3A5F`/`0E1728`/
+`4ADE80`) بأي ملف استهلاك بعد كل دفعة، وأن كل استبدال يشير فعلياً لرمز `theme.ts` الصحيح (`grep`
+لأسماء الرموز الجديدة طابق العدد المتوقَّع بالضبط بكل موضع). (ب) توازن أقواس `{}/()/[]` بـPython صفري
+لكل الملفات الـ19 بعد كل تعديل. (ج) قراءة كاملة مباشرة للسياق قبل كل استبدال (لا استبدال أعمى) —
+تأكَّد أن كل تطابق hex هو نفس الاستخدام الدلالي فعلاً لا تصادف رقمي، وأن `colors` مستورَد فعلاً بكل
+ملف قبل الاستخدام (فُحص صراحة بـ`grep "^import.*theme'"` للـ19 ملفاً كاملة قبل أي تعديل). (د) الحساب
+اليدوي لفرق الحجم بالبايت (UTF-8) لكل استبدال طابق `device_list_dir` postwrite بالضبط بالدفعات
+الثلاث كلها (مثال: `'#042F2E'`[9]→`colors.onAccent`[15]=+6 بايت/تكرار × 12 ملف؛ نمط مماثل للباقي) —
+**صفر حادثة كتابة بأي من الدفعات الثلاث** (`written` ناجح بلا `rejected` في الثلاث، وحجم postwrite
+طابق الحساب المحلي تماماً في كل مرة من أول محاولة).
+
+**mtime-guard**: `device_list_dir` لمجلدَي components/وscreens/ وجذر mobile/src قبل كل دفعة (ثلاث
+مرات) — تطابق تام مع آخر قراءة/كتابة في كل مرة، صفر تعارض خارجي طوال التشغيل. لم يُشغَّل tsc ولم
+تُؤخَذ لقطة شاشة (لا device_bash/Metro متاحان هذا التشغيل) — التحقّق اعتمد بالكامل على القراءة اليدوية
++ توازن الأقواس + مطابقة حجم postwrite الدقيقة، بنفس البروتوكول التاريخي لهذا المشروع.
+
+**GIT**: يُحاوَل أدناه بخطوة منفصلة عبر GitHub Desktop — راجع الملاحظة/التحديث اللاحق إن وُجد.
+
+آخر تحديث سابق: 2026-09-15 (Claude — تشغيل مجدول لاحق ثامن عشر (نفس اليوم)، بروتوكول التسريع، جلسة جديدة
 بلا ذاكرة):
 **تحقّق أولي**: `get_device_info` أكَّد اتصال مجلد `souq-fx`. `device_list_dir` لجذر المستودع/docs/
 mobile/src طابق تماماً آخر ما وثَّقه التشغيل السابع عشر (math.ts 344844، types.ts 11358،

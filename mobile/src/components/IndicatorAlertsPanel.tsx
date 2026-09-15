@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  btnText: { color: '#042F2E', fontWeight: '800' },
+  btnText: { color: colors.onAccent, fontWeight: '800' },
   item: { flexDirection: 'row-reverse', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSoft },
   itemText: { color: colors.text, flex: 1, textAlign: 'right', fontSize: 12 },
   del: { color: colors.bear, fontWeight: '700' },
