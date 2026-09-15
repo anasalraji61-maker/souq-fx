@@ -71,7 +71,18 @@ types.ts 10348، MatrixChart.tsx 245851). `device_commit_files` (دفعة واح
 Correlation/Gann-Elliott-Harmonic تبقى مؤجَّلة لنفس السبب الموثَّق بتشغيلات سابقة عديدة (تحتاج مكوّنات
 UI جديدة كاملة لا مجرد دالة رياضية).
 
-**GIT**: يُحاوَل أدناه بخطوة منفصلة عبر GitHub Desktop — راجع الملاحظة/التحديث اللاحق إن وُجد.
+**GIT — نجح فعلياً هذا التشغيل بلا أي حاجز**: `computer_resolve_access`+`computer_request_access` لـ
+GitHub Desktop (بنسختيه: المُشغِّل والعامل المُوَّرَّق `app-3.6.5`) نجحا من أول محاولة. انقطاع اتصال
+MCP مؤقّت واحد حدث أثناء المحاولة الأولى (نفس النمط التاريخي الموثَّق سابقاً — أعاد الاتصال تلقائياً
+خلال دقيقة، أُعيدت خطوات resolve/request/open بعده لأن الحالة تصفّرت، بلا تكرار زائد عن ذلك). حاجز
+تركيز مؤقّت واحد من Textinputhost.exe ظهر (نفس النمط التاريخي) عُولج مباشرة بمنح وصول له. `device_list_dir`
+قبل فتح GitHub Desktop طابق آخر قراءة بالضبط للخمسة (math.ts/types.ts/MatrixChart.tsx/HANDOFF.md/
+ROADMAP.md). قائمة الملفات المتغيّرة فعلياً بـGitHub Desktop بعد الفتح: **5 بالضبط** — تطابق تام مع
+نطاق هذا التشغيل (`docs/ROADMAP.md`، `HANDOFF.md`، `mobile/src/chart/math.ts`،
+`mobile/src/chart/MatrixChart.tsx`، `mobile/src/chart/types.ts`) — لا `.env`، لا ملف واحد خارج
+`mobile/`/`docs/`/الجذر. `Commit 5 files to main` نجح ("Committed just now")، ثم `Push origin` نجح —
+تأكيد بصري مباشر بعد الدفع: "No local changes" بلا أي شارة "1 local commit waiting to be pushed"
+المعروضة قبل الدفع مباشرة، و"Fetch origin / Last fetched just now" بلا أي مؤشر تعارض.
 
 آخر تحديث سابق: 2026-09-15 (Claude — تشغيل مجدول لاحق ثاني عشر (نفس اليوم)، بروتوكول التسريع، جلسة جديدة بلا
 ذاكرة):
