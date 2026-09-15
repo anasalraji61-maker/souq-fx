@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   sub: { color: colors.textMuted, fontSize: 12, marginTop: 4, textAlign: 'right' },
   list: { padding: spacing.md, gap: spacing.md, paddingBottom: 40 },
   noteBox: {
-    backgroundColor: 'rgba(245,158,11,0.12)',
+    backgroundColor: colors.warnSoft,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.warn,

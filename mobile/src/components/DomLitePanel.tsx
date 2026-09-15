@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 2,
   },
-  rowMid: { backgroundColor: 'rgba(45,212,191,0.08)', borderRadius: 4 },
+  rowMid: { backgroundColor: colors.accentFaint, borderRadius: 4 },
   side: { flex: 1, flexDirection: 'row-reverse', alignItems: 'center', gap: 4 },
   bar: { height: 8, borderRadius: 2, minWidth: 8 },
   bidBar: { backgroundColor: 'rgba(34,197,94,0.45)' },

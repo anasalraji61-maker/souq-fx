@@ -1776,7 +1776,7 @@ const styles = StyleSheet.create({
   desktopMain: {
     flex: 1,
     minWidth: 0,
-    backgroundColor: '#08111E',
+    backgroundColor: colors.chartWorkspaceBg,
     borderLeftWidth: 1,
     borderRightWidth: 1,
     borderColor: colors.borderSoft,
@@ -1893,7 +1893,7 @@ const styles = StyleSheet.create({
   shadowStackScroll: {
     flex: 1,
     minHeight: 0,
-    backgroundColor: '#071018',
+    backgroundColor: colors.stageBg,
   },
   shadowStackFlat: {
     flex: 1,
@@ -1903,7 +1903,7 @@ const styles = StyleSheet.create({
   shadowPaneFlat: {
     position: 'relative',
     overflow: 'hidden',
-    backgroundColor: '#071018',
+    backgroundColor: colors.stageBg,
   },
   shadowGestureOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -2018,7 +2018,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSoft,
     borderRadius: radii.md,
-    backgroundColor: '#08111E',
+    backgroundColor: colors.chartWorkspaceBg,
     overflow: 'hidden',
     paddingHorizontal: 4,
     paddingBottom: 4,
@@ -2072,7 +2072,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
     minHeight: 0,
     padding: spacing.sm,
-    backgroundColor: '#08111E',
+    backgroundColor: colors.chartWorkspaceBg,
     borderLeftWidth: 1,
     borderRightWidth: 1,
     borderColor: colors.borderSoft,

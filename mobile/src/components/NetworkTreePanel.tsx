@@ -26,7 +26,7 @@ export type TreeNode = {
 };
 
 const LEVEL_SIZE = [2, 4, 8, 16] as const;
-const LEVEL_TINT = [colors.dxy, colors.accent, colors.infoAccent, '#F472B6'] as const;
+const LEVEL_TINT = [colors.dxy, colors.accent, colors.infoAccent, colors.treeLevel4Tint] as const;
 
 type Props = {
   enabled: boolean;
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: '#0A1220',
+    backgroundColor: colors.treeCanvasBg,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.borderSoft,
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
   sideRight: {},
   sideTag: { fontSize: 10, fontWeight: '900' },
   leftTag: { color: colors.dxy },
-  rightTag: { color: '#FBBF24' },
+  rightTag: { color: colors.treeRightTint },
   sideCount: { color: colors.textDim, fontSize: 9 },
   sideGap: {
     width: 16,
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.bgPanel,
   },
-  slotFilled: { backgroundColor: 'rgba(45,212,191,0.08)' },
+  slotFilled: { backgroundColor: colors.accentFaint },
   slotEmpty: { borderStyle: 'dashed' },
   slotLocked: {
     borderColor: '#334155',
@@ -546,8 +546,8 @@ const styles = StyleSheet.create({
   slotGoOff: { opacity: 0.35 },
   slotGoText: { color: colors.onAccent, fontWeight: '900', fontSize: 13 },
   trunk: { alignItems: 'center', height: 42, width: '100%', justifyContent: 'flex-start' },
-  trunkH: { width: '70%', height: 2, backgroundColor: '#64748B' },
-  trunkV: { width: 2, height: 18, backgroundColor: '#64748B' },
+  trunkH: { width: '70%', height: 2, backgroundColor: colors.networkTrunkLine },
+  trunkV: { width: 2, height: 18, backgroundColor: colors.networkTrunkLine },
   trunkHint: { color: colors.textDim, fontSize: 9, marginTop: 2 },
   youBox: {
     minWidth: 160,

@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   syncBadgePartial: {
     color: colors.warn,
     borderColor: 'rgba(245,158,11,0.45)',
-    backgroundColor: 'rgba(245,158,11,0.12)',
+    backgroundColor: colors.warnSoft,
   },
   chartPad: {
     flex: 1,

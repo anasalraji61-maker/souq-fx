@@ -1,6 +1,84 @@
 # HANDOFF — MATRIX (سجل تنفيذ Claude)
 
-آخر تحديث: 2026-09-15 (Claude — تشغيل مجدول جديد (نفس اليوم)، بروتوكول التسريع، جلسة جديدة بلا ذاكرة):
+آخر تحديث: 2026-09-15 (Claude — تشغيل مجدول جديد (نفس اليوم)، بروتوكول التسريع، جلسة جديدة بلا ذاكرة،
+بعد توحيد ألوان hex الدفعة الأولى):
+**تحقّق أولي**: `get_device_info` أكَّد اتصال مجلد `souq-fx`. `device_list_dir` لجذر المستودع/docs/
+mobile/src(components/screens) طابق تماماً آخر ما وثَّقه التشغيل السابق (HANDOFF.md 712895،
+ROADMAP.md 250834؛ theme.ts 4371) — سلامة قرص مؤكَّدة، صفر تعارض خارجي.
+
+**تحقّق مستقل لباكلوج "ظل+ضغط" (الوارد بتعليمات التشغيل كـ"باكلوج جاهز")**: `grep -c` مباشر لـ
+`<Pressable` مقابل `buttons.pressedOpacity` عبر كل الخمسة والعشرين ملفاً المذكورة صراحة بتعليمات
+التشغيل (AiPanel/AnalystsPanel/CalendarPanel/CommissionPlanPanel/DomLitePanel/FocusChartModal/
+IndicatorForecastPanel/MatrixBottomDock/NewsPanel/QuadChartModal/SocialConsensusPanel/
+SubscriptionPlansPanel/SymbolSearchBar/VotePanel/WeeklyReportPanel/ScreenerMini/PanSpeedSlider/
+GroupChatPanel/ChartFrame/NetworkTreePanel/AccountScreen/CoursesScreen/MessagesScreen/
+TerminalScreen/ToolsScreen) — **كلها مطابقة بالفعل** (عدد Pressable = عدد buttons.pressedOpacity
+بالضبط بكل ملف؛ DomLitePanel/NewsPanel/SubscriptionPlansPanel بلا Pressable إطلاقاً فلا ينطبق عليها
+الباكلوج؛ ChartFrame.tsx الفارق 4≠2 معروف ومشروع من تحقّقات سابقة موثَّقة — طبقة إغلاق شفافة). **تعليمات
+التشغيل نفسها باتت قديمة، لا تعكس حالة القرص الفعلية** (مطابق لما وثَّقته التشغيلات 16-18 السابقة
+تماماً) — صفر عمل جديد بهذا البند، لا تكرار.
+
+**عمل فعلي جديد هذا التشغيل — استمرار/توسيع باكلوج توحيد ألوان hex/rgba من التشغيل السابق مباشرة
+(كان أنتج 4 مجموعات/5 رموز)**: بدل الاكتفاء بالسجل التاريخي، مسح شامل جديد كامل (`grep -ohE` لنمطي
+`#[0-9A-Fa-f]{6}\b` و`rgba\([0-9,. ]+\)` مع `sort | uniq -c`) عبر **كامل** mobile/src/components
+(34 ملفاً) + mobile/src/screens (5 ملفات) — وليس عيّنة — بحثاً عن أي قيمة لون متكرّرة مرتين فأكثر لم
+تُوحَّد بعد. النتيجة: **9 قيم إضافية** لم تُكتشَف بالتشغيل السابق (الذي وحَّد 6 قيم فقط: onAccent/
+controlBg/heroBorder/heroBg/leaderGreen). كل قيمة قُرئت بسياقها الكامل (لا استبدال أعمى) للتأكّد من
+تطابق الاستخدام الدلالي عبر الملفات قبل التوحيد:
+
+1. **`colors.treeCanvasBg`** = `'#0A1220'` — خلفية حاوية "مخطط الشجرة الشبكية"، مكرَّرة حرفياً
+   بملفين بنفس الاستخدام بالضبط (حاوية بحدّ `colors.borderSoft`): `NetworkTreePanel.tsx` (`treeCanvas`)
+   و`TreeDiagramSketch.tsx` (`wrap`).
+2. **`colors.treeRightTint`** = `'#FBBF24'` — تمييز "الجهة اليمنى" بمخططات الشجرة (يقابله
+   `colors.dxy` لليسار)، مكرَّرة بملفين بنفس المعنى: `NetworkTreePanel.tsx` (`rightTag`) و
+   `TreeDiagramSketch.tsx` (`rightLbl`).
+3. **`colors.treeLevel4Tint`** = `'#F472B6'` — تمييز "المستوى الرابع" بمخططات الشجرة، مكرَّرة بملفين:
+   `NetworkTreePanel.tsx` (رابع عنصر بمصفوفة `LEVEL_TINT`) و`TreeDiagramSketch.tsx` (`tint` prop
+   لأعلى `SplitLevel`).
+4. **`colors.chartWorkspaceBg`** = `'#08111E'` — خلفية منطقة عمل الشارت الرئيسية، مكرَّرة **ثلاث
+   مرات بنفس الملف** `TerminalScreen.tsx` (`desktopMain`، `shadowDualPane`، `rectWorkspace` — الثلاثة
+   حاويات عرض شارت بنفس الدور بالضبط).
+5. **`colors.stageBg`** = `'#071018'` — خلفية "مسرح" داكنة لعرض شارت/شاشة مركزية بارزة، مكرَّرة
+   بملفين: `TerminalScreen.tsx` (`shadowStackScroll`، `shadowPaneFlat`) و`LectureClassroom.tsx`
+   (`bigScreen` — شاشة العرض الرئيسية بالمحاضرة، مع نفس `colors.heroBorder` كحدّ).
+6. **`colors.networkTrunkLine`** = `'#64748B'` — لون خط "الجذع" (أفقي+عمودي) بمخطط الشجرة الشبكية،
+   مكرَّر مرتين بنفس الملف `NetworkTreePanel.tsx` (`trunkH`/`trunkV`) — توحيد تسمية فقط.
+7. **`colors.treeForkLine`** = `'#475569'` — لون خط "التفرّع" بمخطط الشجرة التوضيحي الأبسط، مكرَّر
+   مرتين بنفس الملف `TreeDiagramSketch.tsx` (`forkArm`/`forkStem`) — **قيمة مختلفة عمداً** عن
+   `networkTrunkLine` (مكوّن مختلف، لا يجوز دمجهما بقيمة واحدة لأن ذلك سيغيّر المظهر البصري الفعلي).
+8. **`colors.accentFaint`** = `'rgba(45,212,191,0.08)'` — خلفية تيل خفيفة جداً (8%، أخفت من
+   `accentSoft` 14%) لتمييز صف/مربع "ممتلئ"، مكرَّرة بملفين بنفس الاستخدام: `DomLitePanel.tsx`
+   (`rowMid`) و`NetworkTreePanel.tsx` (`slotFilled`).
+9. **`colors.warnSoft`** = `'rgba(245,158,11,0.12)'` — خلفية تحذير خفيفة (12%) ترافق `colors.warn`،
+   مكرَّرة بملفين: `ChartFrame.tsx` (`syncBadgePartial`) و`CoursesScreen.tsx` (`noteBox`).
+
+**8 ملفات مُعدَّلة إجمالاً** (theme.ts + 7 ملفات استهلاك: NetworkTreePanel، TreeDiagramSketch،
+TerminalScreen، LectureClassroom، DomLitePanel، ChartFrame، CoursesScreen).
+
+**تحقّق**: (أ) `grep` تأكَّد **صفر بقايا** للقيم الحرفية التسع بأي ملف استهلاك بعد كل دفعة (الدفعة
+الأولى: 5 ملفات لـ7 رموز؛ الثانية: 4 ملفات لرمزين، NetworkTreePanel وtheme.ts مشتركان بالدفعتين).
+(ب) توازن أقواس `{}/()/[]` بـPython صفري لكل الملفات الثمانية بعد كل دفعة. (ج) قراءة كاملة مباشرة
+للسياق قبل كل استبدال — تأكَّد أن كل تطابق hex/rgba هو نفس الاستخدام الدلالي فعلاً (مثال: `networkTrunkLine`
+وَ`treeForkLine` قيمتان مختلفتان تُركتا منفصلتين عمداً رغم تشابه الدور، تجنّباً لأي تغيير بصري). (د)
+الحساب اليدوي لفرق الحجم بالبايت (UTF-8) لكل استبدال طابق `device_list_dir` postwrite بالضبط
+بالدفعتين كلتيهما (مثال: `'#0A1220'`[9]→`colors.treeCanvasBg`[19]=+10 بايت/تكرار؛ `'#08111E'`[9]→
+`colors.chartWorkspaceBg`[23]=+14×3=+42 بايت لملف TerminalScreen.tsx بالدفعة الأولى وحدها؛ نمط مماثل
+للباقي) — **صفر حادثة كتابة بأي من الدفعتين** (`written` ناجح بلا `rejected` في الاثنتين، وحجم
+postwrite طابق الحساب المحلي تماماً من أول محاولة كل مرة).
+
+**mtime-guard**: `device_list_dir` لمجلدَي components/وscreens/ وجذر mobile/src وdocs/ قبل كل دفعة
+(أربع مرات إجمالاً) — تطابق تام مع آخر قراءة/كتابة في كل مرة، صفر تعارض خارجي طوال التشغيل. لم يُشغَّل
+tsc ولم تُؤخَذ لقطة شاشة (لا device_bash/Metro متاحان هذا التشغيل) — التحقّق اعتمد بالكامل على القراءة
+اليدوية + توازن الأقواس + مطابقة حجم postwrite الدقيقة، بنفس البروتوكول التاريخي لهذا المشروع.
+
+**باكلوج توحيد الألوان المكرَّرة الآن مؤكَّد مستنفَد بالكامل** عبر مسح شامل حقيقي (لا عيّنة) لكل
+components+screens — أي قيمة hex/rgba متبقية غير موحَّدة الآن هي إما فريدة (تكرار واحد فقط) أو داخل
+ملفات chart/*.ts (منطق رسم/حساب، لا StyleSheet، سياق مختلف تماماً فلا ينطبق عليها نفس النمط). راجع
+`docs/ROADMAP.md` (قسم Track C + سجل الأتمتة أسفله) للتفاصيل الكاملة المطابقة.
+
+**GIT**: يُحاوَل أدناه بخطوة منفصلة عبر GitHub Desktop — راجع الملاحظة/التحديث اللاحق إن وُجد.
+
+آخر تحديث سابق: 2026-09-15 (Claude — تشغيل مجدول جديد (نفس اليوم)، بروتوكول التسريع، جلسة جديدة بلا ذاكرة):
 **تحقّق أولي**: `get_device_info` أكَّد اتصال مجلد `souq-fx`. `device_list_dir` لجذر المستودع/docs/
 mobile/src(components/screens) طابق تماماً آخر ما وثَّقه التشغيل السابق (HANDOFF.md 703704،
 ROADMAP.md 248963؛ theme.ts 2643؛ FrameSizedGrid.tsx 19869 — يطابق إصلاح الجلسة السابقة) — سلامة

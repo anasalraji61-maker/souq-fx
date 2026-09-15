@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
   },
   bigScreen: {
     flex: 1,
-    backgroundColor: '#071018',
+    backgroundColor: colors.stageBg,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.heroBorder,
