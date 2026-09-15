@@ -1631,3 +1631,38 @@ Track C**: أدوات رسم Gann/Elliott/Harmonic (مراجعة رياضية د
       جديد، نجحت المحاولة الثانية بتطابق حجم تام (336855). types.ts تحقَّق بـ`diff` محتوى كامل بعد
       إعادة القراءة — تطابق حرفي. **134 دالة `compute*` مُصدَّرة إجمالاً بـmath.ts الآن (130 قبل هذا
       التشغيل)**. راجع HANDOFF.md لتفاصيل كاملة وحالة GIT.
+
+- [x] تشغيل مجدول [2026-09-15، بروتوكول التسريع، جلسة جديدة بلا ذاكرة، ثامن عشر]: بدل الاكتفاء
+      بالاعتماد على السجل التاريخي (16+ تحقّقاً مستقلاً سابقاً)، أُعيد فحص باكلوج "ظل+ضغط" فعلياً على
+      عيّنة جديدة من الملفات (GroupChatPanel/PanSpeedSlider/ScreenerMini/MessagesScreen/CoursesScreen/
+      ToolsScreen كاملاً) — كلها مطبَّقة بالفعل، صفر عمل جديد. **الجديد فعلياً هذا التشغيل**: امتد
+      الفحص لأول مرة لملفات مكوّنات لم تكن مذكورة إطلاقاً بقائمة الباكلوج الأصلية (24 ملفاً + ToolsScreen)
+      — FrameSizedGrid/LectureClassroom/MatrixEdgeRails/MatrixSidePanel/PairDrumWheel/SymbolPairMenu/
+      TimeframeBar/SymbolSnapshot/TreeDiagramSketch بمجلد components، وأيضاً MatrixChart.tsx نفسه
+      (الملف الرئيسي لمحرك الشارت، 27 عنصر Pressable) وAccountScreen/TerminalScreen بمجلد screens.
+      **اكتُشفت فجوة حقيقية واحدة**: `FrameSizedGrid.tsx` — زرّا تبديل وضع الهاتف "▦ مربعات"/
+      "▭ مستطيلات" (`phoneModeToggle`) كانا بلا أي رد فعل لمسي إطلاقاً (لا `pressed &&`، لا استيراد
+      `buttons`) رغم استخدام Pressable — لم يكونا مذكورين بقائمة الملفات الأصلية أبداً فوُجدا بالفحص
+      الموسَّع فقط. أُصلحا بنفس نمط "الثانوي" المعتمد (لمسة ضغط opacity+scale بلا ظل، مطابق تماماً
+      لنمط chip الموجود بـToolsScreen/TimeframeBar) — إضافة `buttons` لاستيراد theme.ts + تحويل
+      `style` لدالة `({ pressed }) => [...]` على كلا الزرّين + `accessibilityRole="button"` مضافة
+      (لم تكن موجودة). تحقّق: قراءة كاملة للملف بعد التعديل (651 سطراً) تؤكّد تطابق النمط مع الأزرار
+      الثانوية المجاورة بالمشروع، صفر تغيير خارج نطاق الزرّين. **كل بقية الملفات المفحوصة هذا التشغيل
+      (بما فيها MatrixChart.tsx وAccountScreen/TerminalScreen) كانت مطابقة بالفعل (عدد Pressable =
+      عدد buttons.pressedOpacity بالضبط)**. **باكلوج "ظل+ضغط" الآن مؤكَّد مستنفَد فعلياً عبر كامل
+      mobile/src/components + mobile/src/screens + mobile/src/chart/MatrixChart.tsx، لا فقط القائمة
+      الأصلية المذكورة بتعليمات التشغيل**.
+
+      **قرار واعٍ بعدم توسيع Track C (مؤشرات) هذا التشغيل**: رُوجعت قائمة `IndicatorId` الكاملة
+      (165 معرّفاً بـtypes.ts الآن) مقابل مكتبة المؤشرات الفنية القياسية المعروفة — التغطية باتت شبه
+      كاملة فعلياً لكل مؤشرات التحليل الفني المتداولة (SMA→WMA→HMA، كل عائلات Bollinger/Keltner/
+      Donchian/STARC/Envelope/VWAP Bands، كل مذبذبات الزخم القياسية RSI/Stoch/CCI/MACD/TSI/KST/STC/
+      Fisher/Ultimate/Awesome، كل مؤشرات الحجم OBV/MFI/CMF/ADL/VPT/NVI/PVI/EOM/Force/Klinger/VZO/
+      Twiggs، 5 مقدِّرات تقلّب Parkinson/GK/RS/YZ/EWMA، 5 عائلات Pivot Points، Ichimoku/Alligator/
+      GMMA/Vortex/DMI بالكامل). لم يُعثَر على مرشّح إضافي واثق منه دون مخاطرة تكرار مقنَّع أو صيغة
+      غير قياسية مؤلَّفة — نفس الاستنتاج الذي وثَّقته التشغيلات 16 و17 السابقة مباشرة. **بدل تكرار نفس
+      البحث المستنفَد**، تحوَّل هذا التشغيل لفحص موسَّع لباكلوج الأزرار كما هو موثَّق أعلاه، فأنتج عملاً
+      حقيقياً جديداً (فجوة فعلية لم تُكتشَف بـ17 تشغيلاً سابقاً) بدل تكرار "صفر عمل جديد" على Track C.
+      **التوصية الاستراتيجية تبقى كما وثَّقتها تشغيلات سابقة عديدة**: القيمة الحقيقية المتبقية (Gann/
+      Elliott/Harmonic، Correlation Matrix، Heatmap قطاعي) تحتاج مكوّنات UI جديدة كاملة + تصميم مسبق،
+      لا مجرد دالة رياضية. راجع HANDOFF.md لتفاصيل كاملة وحالة GIT.

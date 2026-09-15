@@ -13,7 +13,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 
 /** نفس أبعاد فريمات الشارت (size=large) */
 export const FRAME_CHART_H = 280;
@@ -395,16 +395,26 @@ export function FrameSizedGrid({
   const phoneModeToggle = phone && !showAll && (
     <View style={styles.phoneModeRow}>
       <Pressable
+        accessibilityRole="button"
         onPress={() => choosePhoneMode('grid')}
-        style={[styles.phoneModeBtn, phoneMode === 'grid' && styles.phoneModeBtnActive]}
+        style={({ pressed }) => [
+          styles.phoneModeBtn,
+          phoneMode === 'grid' && styles.phoneModeBtnActive,
+          pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+        ]}
       >
         <Text style={[styles.phoneModeText, phoneMode === 'grid' && styles.phoneModeTextActive]}>
           ▦ مربعات
         </Text>
       </Pressable>
       <Pressable
+        accessibilityRole="button"
         onPress={() => choosePhoneMode('stack')}
-        style={[styles.phoneModeBtn, phoneMode === 'stack' && styles.phoneModeBtnActive]}
+        style={({ pressed }) => [
+          styles.phoneModeBtn,
+          phoneMode === 'stack' && styles.phoneModeBtnActive,
+          pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+        ]}
       >
         <Text style={[styles.phoneModeText, phoneMode === 'stack' && styles.phoneModeTextActive]}>
           ▭ مستطيلات
