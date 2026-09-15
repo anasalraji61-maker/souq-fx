@@ -78,10 +78,12 @@ import {
   computeCmf,
   computeCmo,
   computeCog,
+  computeConnorsRsi,
   computeCoppock,
   computeDemarkPivots,
   computeDmi,
   computeDonchian,
+  computeDonchianWidth,
   computeDpo,
   computeEnvelopes,
   computeEom,
@@ -95,6 +97,7 @@ import {
   computeIchimoku,
   computeKama,
   computeKeltner,
+  computeKeltnerWidth,
   computeKlinger,
   computeKst,
   computeLinRegChannel,
@@ -107,11 +110,13 @@ import {
   computeMedianPrice,
   computeMfi,
   computeMomentum,
+  computeNetVolume,
   computeNvi,
   computeObv,
   computeOverlays,
   computePercentB,
   computePivotPoints,
+  computePivotsHighLow,
   computePpo,
   computePsar,
   computePvi,
@@ -128,11 +133,13 @@ import {
   computeSqueeze,
   computeStc,
   computeStdDev,
+  computeStdErrorBands,
   computeStoch,
   computeStochRsi,
   computeSuperTrend,
   computeT3,
   computeTrix,
+  computeTsf,
   computeTsi,
   computeTwap,
   computeTypicalPrice,
@@ -146,6 +153,7 @@ import {
   computeVwma,
   computeWeightedClose,
   computeWilliamsR,
+  computeWoodieCci,
   computeWoodiePivots,
   computeZigZag,
   computeZlema,
@@ -1039,6 +1047,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('lsma') ? computeLsma(closes) : null),
     [closes, indicators]
   );
+  const tsf = useMemo(
+    () => (indicators.includes('tsf') ? computeTsf(closes) : null),
+    [closes, indicators]
+  );
   const linRegChannel = useMemo(
     () => (indicators.includes('linRegChannel') ? computeLinRegChannel(closes) : null),
     [closes, indicators]
@@ -1172,6 +1184,34 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('squeeze') ? computeSqueeze(source.plot) : null),
     [source.plot, indicators]
   );
+  const netVolume = useMemo(
+    () => (indicators.includes('netVolume') ? computeNetVolume(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const pivotsHL = useMemo(
+    () => (indicators.includes('pivotsHL') ? computePivotsHighLow(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const woodieCci = useMemo(
+    () => (indicators.includes('woodieCci') ? computeWoodieCci(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const stdErrorBands = useMemo(
+    () => (indicators.includes('stdErrorBands') ? computeStdErrorBands(closes) : null),
+    [closes, indicators]
+  );
+  const donchianWidth = useMemo(
+    () => (indicators.includes('donchianWidth') ? computeDonchianWidth(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const connorsRsi = useMemo(
+    () => (indicators.includes('connorsRsi') ? computeConnorsRsi(closes) : null),
+    [closes, indicators]
+  );
+  const keltnerWidth = useMemo(
+    () => (indicators.includes('keltnerWidth') ? computeKeltnerWidth(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1239,6 +1279,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('stc') ? 1 : 0) +
     (indicators.includes('cog') ? 1 : 0) +
     (indicators.includes('squeeze') ? 1 : 0) +
+    (indicators.includes('netVolume') ? 1 : 0) +
+    (indicators.includes('woodieCci') ? 1 : 0) +
+    (indicators.includes('donchianWidth') ? 1 : 0) +
+    (indicators.includes('connorsRsi') ? 1 : 0) +
+    (indicators.includes('keltnerWidth') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -1272,6 +1317,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('weightedClose') && weightedClose) weightedClose.forEach(push);
     if (indicators.includes('mcginley') && mcginley) mcginley.forEach(push);
     if (indicators.includes('lsma') && lsma) lsma.forEach(push);
+    if (indicators.includes('tsf') && tsf) tsf.forEach(push);
     if (indicators.includes('vwma') && vwma) vwma.forEach(push);
     if (indicators.includes('alma') && alma) alma.forEach(push);
     if (indicators.includes('t3') && t3) t3.forEach(push);
@@ -1290,6 +1336,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('linRegChannel') && linRegChannel) {
       linRegChannel.upper.forEach(push);
       linRegChannel.lower.forEach(push);
+    }
+    if (indicators.includes('stdErrorBands') && stdErrorBands) {
+      stdErrorBands.upper.forEach(push);
+      stdErrorBands.lower.forEach(push);
     }
     if (indicators.includes('envelopes') && envelopes) {
       envelopes.upper.forEach(push);
@@ -2846,6 +2896,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             )
           )}
+        {indicators.includes('pivotsHL') &&
+          pivotsHL &&
+          pivotsHL.top.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`phlt${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 9, backgroundColor: '#FB7185' }]}
+              />
+            )
+          )}
+        {indicators.includes('pivotsHL') &&
+          pivotsHL &&
+          pivotsHL.bottom.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`phlb${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) + 6, backgroundColor: '#4ADE80' }]}
+              />
+            )
+          )}
         {indicators.includes('medianPrice') &&
           medianPrice &&
           medianPrice.map((v, i) => (
@@ -2887,6 +2957,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <View
                 key={`lsma${i}`}
                 style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#22D3EE' }]}
+              />
+            )
+          )}
+        {indicators.includes('tsf') &&
+          tsf &&
+          tsf.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`tsf${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#38BDF8' }]}
               />
             )
           )}
@@ -3076,6 +3156,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   width: 2,
                   height: Math.max(2, yOf(lo) - yOf(v)),
                   backgroundColor: 'rgba(125,211,252,0.14)',
+                }}
+              />
+            );
+          })}
+        {indicators.includes('stdErrorBands') &&
+          stdErrorBands &&
+          stdErrorBands.upper.map((v, i) => {
+            const lo = stdErrorBands.lower[i];
+            if (v == null || lo == null) return null;
+            return (
+              <View
+                key={`seb${i}`}
+                style={{
+                  position: 'absolute',
+                  left: xOf(i) - 1,
+                  top: yOf(v),
+                  width: 2,
+                  height: Math.max(2, yOf(lo) - yOf(v)),
+                  backgroundColor: 'rgba(190,242,100,0.14)',
                 }}
               />
             );
@@ -3985,6 +4084,147 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   />
                 );
               });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {woodieCci ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Woodie CCI</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = woodieCci.cci.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxWc = Math.max(...vals, 1e-9);
+              return woodieCci.cci.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxWc) * (paneH / 2 - 8));
+                const turbo = woodieCci.turbo[i];
+                const turboAbove = turbo != null && turbo > v;
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                      borderWidth: turbo == null ? 0 : 1,
+                      borderColor: turbo == null ? undefined : turboAbove ? colors.bull : colors.bear,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {netVolume ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Net Vol</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const minNv = Math.min(...netVolume);
+              const maxNv = Math.max(...netVolume);
+              const span = maxNv - minNv || 1;
+              return netVolume.map((v, i) => {
+                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
+                const yNorm = (v - minNv) / span;
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: 3,
+                      marginTop: (1 - yNorm) * (paneH - 16),
+                      backgroundColor: v >= netVolume[i - 1] ? colors.bull : colors.bear,
+                      opacity: 0.8,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {donchianWidth ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>DC Width</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = donchianWidth.filter((x): x is number => x != null);
+              const maxDw = Math.max(...vals, 1e-9);
+              return donchianWidth.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxDw) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxDw) * (paneH - 16),
+                      backgroundColor: colors.accent,
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {connorsRsi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Connors RSI</Text>
+          <View style={styles.paneInner}>
+            {connorsRsi.map((v, i) =>
+              v == null ? (
+                <View key={i} style={{ flex: 1 }} />
+              ) : (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    marginTop: ((100 - v) / 100) * (paneH - 16),
+                    backgroundColor: v > 90 ? colors.bear : v < 10 ? colors.bull : accent,
+                    borderRadius: 2,
+                  }}
+                />
+              )
+            )}
+          </View>
+        </View>
+      ) : null}
+
+      {keltnerWidth ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>KC Width</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = keltnerWidth.filter((x): x is number => x != null);
+              const maxKw = Math.max(...vals, 1e-9);
+              return keltnerWidth.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxKw) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxKw) * (paneH - 16),
+                      backgroundColor: colors.accent,
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
             })()}
           </View>
         </View>

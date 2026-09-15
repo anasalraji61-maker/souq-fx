@@ -117,11 +117,19 @@ export type IndicatorId =
   | 'demarkPivots'
   | 'squeeze'
   | 'cog'
+  | 'netVolume'
+  | 'pivotsHL'
+  | 'tsf'
+  | 'woodieCci'
+  | 'stdErrorBands'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
   | 'cvd'
-  | 'footprint';
+  | 'footprint'
+  | 'donchianWidth'
+  | 'connorsRsi'
+  | 'keltnerWidth';
 
 export type DrawTool =
   | 'none'
@@ -272,6 +280,14 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'demarkPivots', label: 'DeMark Pivots' },
   { id: 'squeeze', label: 'Squeeze', pane: true },
   { id: 'cog', label: 'COG', pane: true },
+  { id: 'netVolume', label: 'Net Volume', pane: true },
+  { id: 'pivotsHL', label: 'Pivot High/Low' },
+  { id: 'tsf', label: 'TSF' },
+  { id: 'woodieCci', label: 'Woodie CCI', pane: true },
+  { id: 'stdErrorBands', label: 'Std Error Bands' },
+  { id: 'donchianWidth', label: 'Donchian Width', pane: true },
+  { id: 'connorsRsi', label: 'Connors RSI', pane: true },
+  { id: 'keltnerWidth', label: 'Keltner Width', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

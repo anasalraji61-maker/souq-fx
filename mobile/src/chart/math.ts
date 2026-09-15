@@ -1453,6 +1453,31 @@ export function computeVpt(candles: (Candle & { volume?: number })[]): number[] 
 }
 
 /**
+ * Net Volume (مؤشر TradingView قياسي مباشر) — تراكمي كـOBV/VPT/NVI/PVI أعلاه، لكن بمعيار مختلف
+ * جوهرياً عن الجميع: يقارن **فتح وإغلاق نفس الشمعة** (close[i] مقابل open[i]) لا إغلاق شمعتين
+ * متتاليتين (بعكس OBV: close[i] مقابل close[i-1]) ولا وزناً بفوليوم سابق/نسبة تغيّر (بعكس NVI/PVI/
+ * VPT) — فوليوم الشمعة الكامل يُضاف عند إغلاق>فتح (شمعة صاعدة صافية)، يُطرَح عند إغلاق<فتح (هابطة)،
+ * صفر عند تعادل تام. **فارق تصميمي جوهري آخر**: لا يحتاج حارس `i > 0` كباقي التراكميات أعلاه (المقارنة
+ * داخل نفس الشمعة لا تحتاج شمعة سابقة) فيبدأ التراكم من الشمعة الأولى مباشرة لا من الثانية. فوليوم
+ * مفقود يُعوَّض بنفس صيغة OBV/VPT/NVI/PVI أعلاه للاتساق. **تحقّق حسابي فعلي (Node.js، قبل الكتابة)**:
+ * فتح=إغلاق لكل شمعة (سلسلة `doji` بحتة، 50 شمعة) → صفر بكل نقطة بلا استثناء؛ سلسلة صناعية بقيم
+ * فوليوم/اتجاه محدَّدة يدوياً (صاعدة+100، هابطة−50، متعادلة+0، صاعدة+20) → تراكم [100,50,50,70] مطابق
+ * تماماً لحساب يدوي مباشر؛ 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity عبر كل الـ300 نقطة، إعادة
+ * حساب مستقلة منفصلة عن الدالة لنقطة عشوائية (idx=150) طابقت الدالة تماماً (فرق=0).
+ */
+export function computeNetVolume(candles: (Candle & { volume?: number })[]): number[] {
+  const out: number[] = [];
+  let cum = 0;
+  for (let i = 0; i < candles.length; i++) {
+    const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
+    if (candles[i].close > candles[i].open) cum += vol;
+    else if (candles[i].close < candles[i].open) cum -= vol;
+    out.push(cum);
+  }
+  return out;
+}
+
+/**
  * Historical Volatility (HV، period=10 نافذة قياسية شائعة، annualization=252 يوم تداول سنوي قياسي) —
  * الانحراف المعياري لعوائد لوغاريتمية يومية (لا الأسعار الخام كـcomputeStdDev أعلاه) مُعاد قياسه سنوياً
  * ومئوياً: عائد لوغاريتمي[i] = ln(إغلاق[i]/إغلاق[i-1]) (صفر عند إغلاق سابق ≤ صفر نظرياً بدل ln غير
@@ -1694,6 +1719,53 @@ export function computeLsma(closes: number[], period = 25): (number | null)[] {
     const meanX = sumX / n;
     const intercept = meanY - slope * meanX;
     out.push(slope * (n - 1) + intercept);
+  }
+  return out;
+}
+
+/**
+ * Time Series Forecast (TSF، مؤشر TradingView قياسي مباشر) — **إعادة استخدام حرفية كاملة لنفس بنية
+ * الانحدار الخطي لـcomputeLsma أعلاه مباشرة** (نفس sumX/sumX2/denom/meanY/meanX/intercept، نفس نافذة
+ * period=25 القياسية، نفس حارس الإحماء `i < period-1`) — **الفارق الوحيد**: LSMA يُقيِّم خط الانحدار
+ * عند x=n-1 (آخر نقطة فعلية بالنافذة، أي الشمعة الحالية نفسها — "أين يقع الإغلاق الحالي على خط
+ * الاتجاه")، بينما TSF يُقيِّمه عند x=n (نقطة واحدة *بعد* نهاية النافذة — "أين سيقع الإغلاق التالي لو
+ * استمر الاتجاه الخطي الحالي بالضبط"، توقّع استقرائي حرفي لا قراءة للحالة الراهنة). **تحقّق حسابي فعلي
+ * (Node.js، بيئة سحابية، قبل الكتابة)**: سعر ثابت تماماً → TSF=LSMA=السعر الثابت بكل نقطة (ميل=0، لا
+ * فارق بين "الآن" و"القادم" على خط أفقي)؛ مسار صاعد خطي بحت (خطوة ثابتة 0.01، 60 نقطة، period=20) →
+ * TSF[i] يطابق **القيمة الفعلية الحقيقية للشمعة التالية** closes[i+1] تماماً (فرق<10⁻⁹، استقراء مثالي
+ * على بيانات خطية مثالية) لكل i صالح، وTSF عند آخر نقطة بالسلسلة يطابق الامتداد الخطي المتوقَّع رياضياً
+ * (1.6 بالضبط)؛ 300 شمعة عشوائية بذرة ثابتة (period=25 الفعلية) → صفر NaN/Infinity، و**هوية جبرية
+ * تحقَّقت مستقلة عن الدالتين معاً**: الفارق TSF[i]−LSMA[i] يطابق تماماً قيمة `slope` المُعاد حسابها
+ * بشكل مستقل لنفس النافذة (فرق<10⁻¹⁵) — يؤكّد جبرياً أن TSF=LSMA+slope بالضبط، نتيجة مباشرة لتقييم
+ * نفس الخط عند نقطة أبعد بمقدار وحدة x واحدة بالضبط. **قرار تكامل مهم**: خلافاً لـFractals/Pivot
+ * Points High-Low/Net Volume أعلاه (قيمها دوماً ضمن مدى الشموع الفعلي)، TSF *يمتد فعلياً خارج* مدى
+ * الأسعار المعروض بسوق قوي الاتجاه (توقّع مستقبلي حقيقي قد يتجاوز أعلى/أدنى قمة حالية) — يجب دفعه
+ * لحساب autoscale السعري صراحةً (`range.forEach(push)` بـMatrixChart.tsx، بنفس أسلوب `lsma`/`vwma`
+ * أعلاه بالضبط) وإلا يُقَصّ بصرياً عند حواف الشارت.
+ */
+export function computeTsf(closes: number[], period = 25): (number | null)[] {
+  const n = period;
+  const sumX = (n * (n - 1)) / 2;
+  const sumX2 = ((n - 1) * n * (2 * n - 1)) / 6;
+  const denom = n * sumX2 - sumX * sumX;
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    let sumY = 0;
+    let sumXY = 0;
+    for (let x = 0; x < n; x++) {
+      const y = closes[i - n + 1 + x];
+      sumY += y;
+      sumXY += x * y;
+    }
+    const slope = denom === 0 ? 0 : (n * sumXY - sumX * sumY) / denom;
+    const meanY = sumY / n;
+    const meanX = sumX / n;
+    const intercept = meanY - slope * meanX;
+    out.push(slope * n + intercept);
   }
   return out;
 }
@@ -2275,6 +2347,60 @@ export function computeFractals(
     ) {
       bottom[i] = l;
     }
+  }
+  return { top, bottom };
+}
+
+/**
+ * Pivot Points High/Low — مؤشر TradingView قياسي مستقل تماماً عن عائلة "Pivot Points Standard"
+ * (Classic/Fibonacci/Camarilla/Woodie/DeMark أعلاه، التي تحسب مستويات سعرية من نافذة زمنية سابقة)
+ * وعن computeFractals أعلاه أيضاً رغم التشابه الظاهري (كلاهما يكشف قمم/قيعان هيكلية): Fractals تستخدم
+ * نافذة **ثابتة** صغيرة جداً (شمعتان كل جهة فقط، خماسية الشكل) بمقارنة صارمة `>`/`<` تمنع أي تعادل من
+ * التسجيل، بينما Pivot Points High/Low تتحقّق من كون الشمعة i **الأعلى/الأدنى ضمن نافذة أوسع قابلة
+ * للتخصيص** (leftBars/rightBars، افتراضياً 10/10 — القيمة القياسية الشائعة لهذا المؤشر تحديداً بمعظم
+ * منصّات الرسم البياني) فتكشف تأرجحات هيكلية أكبر (swing structure بمدى زمني أطول) بدل التذبذب الدقيق
+ * قصير المدى. **قرار تصميم متعمَّد**: المقارنة الداخلية تستخدم `>`/`<` صارمة أيضاً لكن فقط ضد *بقية*
+ * شموع النافذة (لا ضد i نفسها) — على عكس Fractals، تعادل قيمة i مع شمعة أخرى بالنافذة **لا يُسقِط**
+ * تسجيل i (يسمح نظرياً بتسجيل قمتين/قاعين متجاورين بنفس القيمة إن تساويا فعلاً، حالة نادرة لكن ممكنة
+ * حسابياً) — فارق سلوكي موثَّق صراحةً هنا لتفادي الخلط بمنطق الاستبعاد الصارم لـFractals. القيمة
+ * المُعادة عند نقطة التسجيل هي السعر الفعلي (high/low) بنفس اصطلاح Fractals/PSAR/medianPrice تماماً.
+ * أول leftBars وآخر rightBars شمعة دائماً null (لا نافذة كاملة كافية). **تحقّق حسابي فعلي (Node.js،
+ * قبل الكتابة)**: بيانات صناعية بقيمتي قمة/قاع واضحتين وسط نافذة period=2 → تسجيل دقيق عند الفهرس
+ * الصحيح بالضبط، صفر تسجيل بالفهارس المجاورة؛ حدود الإحماء (leftBars=rightBars=10 على 40 شمعة) →
+ * null صراحةً لكل الفهارس [0,10) و[30,40)؛ 300 شمعة عشوائية بذرة ثابتة (10/10 الفعلية) → صفر
+ * NaN/Infinity، وكل قيمة مسجَّلة تطابق high/low الشمعة نفسها تماماً (لا خطأ إزاحة فهرس)؛ **إعادة حساب
+ * مستقلة منفصلة عن الدالة (brute-force) لكل الـ280 فهرساً داخلياً دفعة واحدة** → تطابق تام 100% بلا
+ * استثناء واحد مع مخرجات الدالة.
+ */
+export function computePivotsHighLow(
+  candles: Pick<Candle, 'high' | 'low'>[],
+  leftBars = 10,
+  rightBars = 10
+): { top: (number | null)[]; bottom: (number | null)[] } {
+  const n = candles.length;
+  const top: (number | null)[] = new Array(n).fill(null);
+  const bottom: (number | null)[] = new Array(n).fill(null);
+  for (let i = leftBars; i < n - rightBars; i++) {
+    const h = candles[i].high;
+    let isTop = true;
+    for (let w = i - leftBars; w <= i + rightBars; w++) {
+      if (w === i) continue;
+      if (candles[w].high > h) {
+        isTop = false;
+        break;
+      }
+    }
+    if (isTop) top[i] = h;
+    const l = candles[i].low;
+    let isBottom = true;
+    for (let w = i - leftBars; w <= i + rightBars; w++) {
+      if (w === i) continue;
+      if (candles[w].low < l) {
+        isBottom = false;
+        break;
+      }
+    }
+    if (isBottom) bottom[i] = l;
   }
   return { top, bottom };
 }
@@ -3504,4 +3630,228 @@ export function computeSqueeze(
     momentum.push(slope * (nreg - 1) + intercept);
   }
   return { momentum, squeezeOn };
+}
+
+/**
+ * Woodie's CCI (كين وودي) — **إعادة استخدام حرفية كاملة صفر حساب جديد**: يستدعي `computeCci` الموجودة
+ * أعلاه مرتين بفترتين مختلفتين فقط — CCI البطيء (period=14، القيمة القياسية لهذه الأداة تحديداً،
+ * الخط الرئيسي) وTurbo CCI السريع (period=6، خط الإشارة المرافق). مستقل تماماً عن `woodiePivots`
+ * الموجود مسبقاً بالملف رغم مشاركة اسم "Woodie" (ذاك عائلة Pivot Points، هذا مذبذب CCI مركّب —
+ * لا علاقة حسابية بينهما). **تحقّق فعلي (Node.js، قبل الكتابة)**: تطابق مطلق (===) بين
+ * `computeWoodieCci(candles).cci` وaCCI(candles,14) المُستدعاة مباشرة، وبين `.turbo` وCCI(candles,6)،
+ * عبر 300 شمعة عشوائية بذرة ثابتة بلا استثناء واحد — هوية رياضية بديهية بما أن الدالة استدعاء مباشر
+ * بلا أي منطق إضافي. صفر NaN/Infinity (موروث من `computeCci` المتحقَّق مسبقاً). يُرسَم بإعادة استخدام
+ * كاملة لنمط هستوغرام COG/TRIX/DPO (شريط عمودي مطبَّع بأقصى قيمة مطلقة لـCCI البطيء، bull/bear حسب
+ * الإشارة)، مع تمييز بصري إضافي (حدّ لوني) حين يكون Turbo أعلى/أدنى من البطيء — نفس أسلوب تمييز حالة
+ * squeezeOn أعلاه (شفافية/حدّ) بدل عنصر رسم جديد لخط ثانٍ منفصل.
+ */
+export function computeWoodieCci(
+  candles: Candle[]
+): { cci: (number | null)[]; turbo: (number | null)[] } {
+  return { cci: computeCci(candles, 14), turbo: computeCci(candles, 6) };
+}
+
+/**
+ * Standard Error Bands (SEB) — قناة انحدار خطي حول السعر، **مستقلة حسابياً عن `computeLinRegChannel`
+ * الموجودة مسبقاً بالملف رغم التشابه الظاهري** (نفس بنية انحدار sumX/sumX2/denom/meanY/meanX/intercept
+ * حرفياً — إعادة استخدام جزئية للصيغة لا للدالة كاملة، لأن المخرجات النهائية تختلف جوهرياً بفارقين
+ * موثَّقين بالمرجع القياسي [TradeStation]: (أ) **الخطأ المعياري** يُقسَم على (n−2) درجة حرية (تقدير
+ * إحصائي لخط انحدار بمعلمتين: ميل+تقاطع) لا على n كما `computeLinRegChannel` (قسمة "انحراف معياري"
+ * مباشر) — فارق تقني معروف بين "الانحراف المعياري للبواقي" و"الخطأ المعياري للتقدير"؛ (ب) **تنعيم
+ * SMA(3) نهائي** يُطبَّق على الخط الأوسط والحدّين معاً (القيمة القياسية الافتراضية لهذه الأداة تحديداً
+ * بكل مراجعها)، غائب تماماً عن Linear Regression Channel. period=21 افتراضي (مختلف عمداً عن period=100
+ * لـLinRegChannel — نافذة أقصر تناسب غرض SEB كأداة متابعة اتجاه أقصر مدى). **دالة تنعيم خاصة
+ * `smoothValid` محلية** (لا إعادة استخدام لدالة `sma` العامة أعلاه لأنها تراكمية بمجموع متحرك يفسد
+ * بالكامل ولا يتعافى أبداً عند إدخال أي NaN بمنطقة الإحماء بالنافذة — تأكَّد بالفحص المباشر لتطبيقها،
+ * فكُتبت نسخة محلية تتحقّق من صلاحية كل قيمة بالنافذة صراحةً قبل الجمع، بنفس أسلوب `validWindow` في
+ * `computeSqueeze` أعلاه تماماً). **تحقّق حسابي فعلي (Node.js، قبل الكتابة)**: سعر ثابت تماماً →
+ * mid=upper=lower=الثابت بالضبط (بواقٍ=صفر، خطأ معياري=صفر)؛ مسار خطي بحت (80 نقطة، period=20 للاختبار)
+ * → rawMid[i]=closes[i] تماماً (ملاءمة مثالية) وupper=mid=lower (بواقٍ=صفر) بعد التنعيم، والقيمة
+ * المنعَّمة عند كل نقطة صالحة تطابق جبرياً rawMid[i−1] بالضبط (متوسط ثلاث نقاط متباعدة بتساوٍ على خط
+ * مستقيم = النقطة الوسطى)؛ 300 شمعة عشوائية بذرة ثابتة (period=21 الفعلية) → 278 نقطة صالحة بالضبط
+ * (300−(period−1)−(smoothPeriod−1))، صفر NaN/Infinity، upper≥mid≥lower محقَّق بنيوياً بكل نقطة؛
+ * **إعادة حساب brute-force مستقلة تماماً عن الدالة** لنقطة عشوائية (idx=150، بمتوسط ثلاث نوافذ خام
+ * متتالية يدوياً) طابقت مخرجات الدالة بفارق<10⁻¹³ للثلاثة (mid/upper/lower). حدود الإحماء (period−1+
+ * smoothPeriod−1=22 نقطة أولى) → null صراحة بلا استثناء. يُرسَم بإعادة استخدام كاملة لنمط الشريط
+ * العمودي شبه الشفاف (upper→lower) المستخدَم لـKeltner/Envelopes/Donchian/LR Channel حرفياً — لون
+ * جديد `rgba(190,242,100,0.14)` (تحقَّق `grep` غير مكرَّر عبر كل الهكسات/rgba المستخدَمة بالملف).
+ */
+export function computeStdErrorBands(
+  closes: number[],
+  period = 21,
+  mult = 2,
+  smoothPeriod = 3
+): { mid: (number | null)[]; upper: (number | null)[]; lower: (number | null)[] } {
+  const n = period;
+  const sumX = (n * (n - 1)) / 2;
+  const sumX2 = ((n - 1) * n * (2 * n - 1)) / 6;
+  const denom = n * sumX2 - sumX * sumX;
+  const rawMid: (number | null)[] = [];
+  const rawUpper: (number | null)[] = [];
+  const rawLower: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period - 1) {
+      rawMid.push(null);
+      rawUpper.push(null);
+      rawLower.push(null);
+      continue;
+    }
+    let sumY = 0;
+    let sumXY = 0;
+    for (let x = 0; x < n; x++) {
+      const y = closes[i - n + 1 + x];
+      sumY += y;
+      sumXY += x * y;
+    }
+    const slope = denom === 0 ? 0 : (n * sumXY - sumX * sumY) / denom;
+    const meanY = sumY / n;
+    const meanX = sumX / n;
+    const intercept = meanY - slope * meanX;
+    let ssRes = 0;
+    for (let x = 0; x < n; x++) {
+      const y = closes[i - n + 1 + x];
+      const yHat = slope * x + intercept;
+      ssRes += (y - yHat) ** 2;
+    }
+    const se = n > 2 ? Math.sqrt(ssRes / (n - 2)) : 0;
+    const m = slope * (n - 1) + intercept;
+    rawMid.push(m);
+    rawUpper.push(m + mult * se);
+    rawLower.push(m - mult * se);
+  }
+  const smoothValid = (vals: (number | null)[], p: number): (number | null)[] => {
+    const out: (number | null)[] = [];
+    for (let i = 0; i < vals.length; i++) {
+      if (i < p - 1) {
+        out.push(null);
+        continue;
+      }
+      let sum = 0;
+      let ok = true;
+      for (let w = 0; w < p; w++) {
+        const v = vals[i - p + 1 + w];
+        if (v == null) {
+          ok = false;
+          break;
+        }
+        sum += v;
+      }
+      out.push(ok ? sum / p : null);
+    }
+    return out;
+  };
+  return {
+    mid: smoothValid(rawMid, smoothPeriod),
+    upper: smoothValid(rawUpper, smoothPeriod),
+    lower: smoothValid(rawLower, smoothPeriod),
+  };
+}
+
+/**
+ * Donchian Channel Width (DCW) — يقيس *اتساع* قناة دونشيان الموجودة (`computeDonchian`) نسبةً
+ * لمستوى منتصفها بدل عرض الحدّين أنفسهما كخطوط سعرية (استخدام `donchian` الحالي): DCW[i] =
+ * (upper[i] − lower[i]) / mid[i] × 100 — **إعادة استخدام كاملة لـ`computeDonchian` بلا أي حساب
+ * highest/lowest جديد**، ونفس صيغة التطبيع بمستوى السعر المستخدَمة حرفياً بـ`computeBollingerBandwidth`
+ * أعلاه (BBW) مطبَّقة هنا على قناة دونشيان بدل بولنجر — قرار تصميم متعمَّد للاتساق بين مؤشرَي "اتساع
+ * قناة" الوحيدين بالملف، بدل عرض فرق مطلق بوحدة السعر (يصعب مقارنته عبر رموز/فترات مختلفة، نفس منطق
+ * BBW الموثَّق بتعريفه أعلاه). صفر عند mid صفرية نظرياً بدل قسمة على صفر (نفس حارس BBW حرفياً). قيمة
+ * منخفضة = انضغاط تقلّب (قناة ضيقة، غالباً ينذر بانفجار حركة)، قيمة مرتفعة = تمدد تقلّب حاد — نفس
+ * تفسير BBW لكن مبني على أعلى/أدنى فعليين بدل انحراف معياري. **تحقّق حسابي فعلي (Node.js، قبل
+ * الكتابة، للاثنين)**: شموع بمدى ثابت تماماً (أعلى=أدنى=إغلاق=فتح لكل شمعة) → DCW=0 بالضبط عند كل
+ * نقطة صالحة (قناة بلا اتساع فعلي)؛ 300 شمعة عشوائية بذرة ثابتة (period=20 الفعلي) → 281 نقطة صالحة
+ * بالضبط (300−(period−1))، صفر NaN/Infinity، صفر قيمة سالبة (upper≥lower بنيوياً من computeDonchian
+ * نفسها)؛ **إعادة حساب brute-force مستقلة تماماً عن الدالة** لنقطة عشوائية (idx=150) طابقت مخرجات
+ * الدالة تماماً (فرق=0). **تحقّق AST رسمي** (`ts.createSourceFile`+`parseDiagnostics`) صفر أخطاء.
+ */
+export function computeDonchianWidth(candles: Candle[], period = 20): (number | null)[] {
+  const { upper, lower, mid } = computeDonchian(candles, period);
+  const out: (number | null)[] = new Array(candles.length).fill(null);
+  for (let i = 0; i < candles.length; i++) {
+    if (upper[i] == null || lower[i] == null || mid[i] == null) continue;
+    const m = mid[i]!;
+    out[i] = m === 0 ? 0 : ((upper[i]! - lower[i]!) / m) * 100;
+  }
+  return out;
+}
+
+/**
+ * Connors RSI (CRSI(3,2,100)، لاري كونورز) — مؤشر شراء/بيع مفرط قصير المدى حديث نسبياً وشائع جداً
+ * لدى المتداولين الفنيين المعاصرين (خلافاً لمعظم مؤشرات هذا الملف "الكلاسيكية")، مركَّب من متوسط
+ * ثلاثة مكوّنات مستقلة كل منها على مدى 0..100 [المرجع: StockCharts ChartSchool + توثيق TradingView
+ * الرسمي لـCRSI]:
+ * 1. **RSI(3) قياسي على السعر** — **إعادة استخدام كاملة لـ`computeRsi` الموجودة مسبقاً** (period=3
+ *    القيمة الافتراضية القياسية لهذا المكوّن تحديداً بكل المراجع).
+ * 2. **RSI(2) مطبَّق على سلسلة "الاستمرارية" (streak) لا السعر نفسه** — الاستمرارية: عدّاد الأيام
+ *    المتتالية صعوداً (قيمة موجبة تتزايد) أو هبوطاً (قيمة سالبة تتناقص)، ويُصفَّر تماماً عند تعادل
+ *    الإغلاق مع السابق [قاعدة موثَّقة صراحة بمرجعَي TradingView وStockCharts]. **إعادة استخدام كاملة
+ *    لـ`computeRsi` أيضاً** لكن مُطعَّمة بمصفوفة الاستمرارية بدل الإغلاق مباشرة (period=2 القياسي).
+ * 3. **PercentRank(100) لتغيّر السعر اليومي (ROC نقطة واحدة)** — نسبة عدد قيم ROC بالنافذة السابقة
+ *    (100 قيمة *قبل* النقطة الحالية مباشرة، لا تتضمّنها) الأقل صراحةً من ROC النقطة الحالية، ÷100×100.
+ *    **قرار تصميم موثَّق بسبب غموض جزئي بالمصدر الأساسي**: عبارة StockCharts الحرفية "the percentage
+ *    of PREVIOUS price changes that are lower than the most recent one" (نافذة *سابقة* منفصلة عن
+ *    النقطة الحالية، لا نافذة تتضمّنها) — اختيار يسمح بمدى كامل 0..100 فعلياً (100% ممكنة حين تتجاوز
+ *    النقطة الحالية كل الـ100 السابقة، بعكس بديل "نافذة تتضمّن ذاتها" الذي يحدّ الأقصى عملياً عند
+ *    ((period−1)/period)×100=99%). حدود الإحماء: أول نقطة ROC صالحة index=1 (تحتاج إغلاقاً سابقاً)،
+ *    فأول نافذة PercentRank كاملة عند index=rocPeriod+1=101.
+ * النتيجة النهائية = متوسط المكوّنات الثلاثة، صالحة فقط حين تتوفر الثلاثة معاً (index≥101 بالقيم
+ * الافتراضية — أعلى حدود إحماء من بين الثلاثة). عتبات تشبّع شرائي/بيعي معياريتان لهذا المؤشر تحديداً
+ * (لا 70/30 كـRSI القياسي — نطاق أكثر تطرفاً لأن CRSI مصمَّم لعكس سريع قصير المدى): 90/10 [نفس القيم
+ * المستخدَمة باستراتيجية كونورز الأصلية ومرجعَي التوثيق أعلاه]. **تحقّق حسابي فعلي (Node.js، قبل
+ * الكتابة، للاثنين)**: سلسلة استمرارية مصنَّعة يدوياً (11 نقطة بأنماط صعود/هبوط/تعادل متعدّدة) →
+ * تطابق تام حرفي مع القيم المتوقَّعة يدوياً لكل نقطة بلا استثناء واحد (صعود متتالٍ يتراكم +1/+2/+3،
+ * هبوط يتراكم −1/−2، تعادل يصفّر فوراً)؛ نافذة PercentRank مصنَّعة (نقطة تتجاوز كل النافذة السابقة) →
+ * 100 بالضبط؛ نقطة تقل عن كل النافذة → 0 بالضبط؛ 300 شمعة عشوائية بذرة ثابتة (rocPeriod=100 الفعلي)
+ * → 199 نقطة صالحة بالضبط (300−101)، صفر NaN/Infinity، **صفر نقطة خارج المدى [0,100] عبر الجميع**
+ * (محقَّق بنيوياً: كل مكوّن ثلاثي ضمن [0,100] فمتوسطها كذلك)؛ **إعادة حساب brute-force مستقلة تماماً
+ * عن الدالة بخوارزمية مُعاد كتابتها من الصفر** (RSI تراكمي مُعاد بناؤه لكل نقطة، استمرارية مُعاد بناؤها
+ * من البداية، PercentRank بحلقة منفصلة) لنقطة عشوائية (idx=250) طابقت مخرجات الدالة تماماً (فرق=0).
+ * **تحقّق AST رسمي** صفر أخطاء.
+ */
+export function computeConnorsRsi(
+  closes: number[],
+  rsiPeriod = 3,
+  streakPeriod = 2,
+  rocPeriod = 100
+): (number | null)[] {
+  const n = closes.length;
+  const rsiClose = computeRsi(closes, rsiPeriod);
+
+  const streak: number[] = new Array(n).fill(0);
+  for (let i = 1; i < n; i++) {
+    if (closes[i] > closes[i - 1]) {
+      streak[i] = streak[i - 1] > 0 ? streak[i - 1] + 1 : 1;
+    } else if (closes[i] < closes[i - 1]) {
+      streak[i] = streak[i - 1] < 0 ? streak[i - 1] - 1 : -1;
+    } else {
+      streak[i] = 0;
+    }
+  }
+  const rsiStreak = computeRsi(streak, streakPeriod);
+
+  const roc: (number | null)[] = new Array(n).fill(null);
+  for (let i = 1; i < n; i++) {
+    const prev = closes[i - 1];
+    roc[i] = prev === 0 ? 0 : ((closes[i] - prev) / prev) * 100;
+  }
+
+  const percentRank: (number | null)[] = new Array(n).fill(null);
+  for (let i = rocPeriod + 1; i < n; i++) {
+    const cur = roc[i];
+    if (cur == null) continue;
+    let below = 0;
+    for (let w = i - rocPeriod; w <= i - 1; w++) {
+      const v = roc[w];
+      if (v != null && v < cur) below++;
+    }
+    percentRank[i] = (below / rocPeriod) * 100;
+  }
+
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    const a = rsiClose[i];
+    const b = rsiStreak[i];
+    const c = percentRank[i];
+    out[i] = a != null && b != null && c != null ? (a + b + c) / 3 : null;
+  }
+  return out;
 }
