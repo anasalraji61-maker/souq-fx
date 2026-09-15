@@ -65,7 +65,13 @@ Index) — صفر نمط رسم جديد فعلياً، صفر تعديل خار
 النسخة المحدَّثة من المحادثة المباشرة (183504→188658 بايت، `written` بلا `rejected`، حجم postwrite
 طابق الحساب المحلي بالضبط).
 
-**GIT**: يُحاوَل أدناه بخطوة منفصلة عبر GitHub Desktop — راجع الملاحظة/التحديث اللاحق إن وُجد.
+**GIT**: نجح فعلياً عبر GitHub Desktop — قائمة الملفات المتغيّرة (6) طابقت بالضبط النطاق المتوقَّع
+(docs/ROADMAP.md، HANDOFF.md، mobile/src/chart/math.ts، mobile/src/chart/MatrixChart.tsx،
+mobile/src/chart/types.ts، بالإضافة لـmobile/src/components/FrameSizedGrid.tsx من المزامنة المباشرة
+المذكورة أعلاه — صفر ملف خارج النطاق، صفر .env). Commit برسالة "MATRIX: TTM Squeeze + Center of
+Gravity indicators, docs sync" نجح (لقطة شاشة أكَّدت "Committed just now" و"0 changed files")، ثم
+Push origin نجح (لقطة شاشة تالية أكَّدت زوال شارة "1 local commit waiting to be pushed" وعدم وجود أي
+مؤشر push معلّق، "Last fetched just now" بلا تغيير).
 
 آخر تحديث سابق: 2026-09-15 (Claude — تشغيل مجدول لاحق (نفس اليوم)، بروتوكول التسريع، جلسة جديدة بلا ذاكرة):
 **قراءة أولية**: `device_list_dir` لجذر المستودع/docs/mobile/src/chart طابق تماماً ما وثَّقه التشغيل
