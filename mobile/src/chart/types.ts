@@ -146,7 +146,12 @@ export type IndicatorId =
   | 'iftRsi'
   | 'waveTrend'
   | 'accelBands'
-  | 'cutlerRsi';
+  | 'cutlerRsi'
+  | 'vwapBands'
+  | 'frama'
+  | 'parkinsonVol'
+  | 'garmanKlassVol'
+  | 'rogersSatchellVol';
 
 export type DrawTool =
   | 'none'
@@ -322,6 +327,11 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'waveTrend', label: 'WaveTrend', pane: true },
   { id: 'accelBands', label: 'Accel Bands' },
   { id: 'cutlerRsi', label: "Cutler's RSI", pane: true },
+  { id: 'vwapBands', label: 'VWAP Bands' },
+  { id: 'frama', label: 'FRAMA' },
+  { id: 'parkinsonVol', label: 'Parkinson Vol', pane: true },
+  { id: 'garmanKlassVol', label: 'G-K Vol', pane: true },
+  { id: 'rogersSatchellVol', label: 'R-S Vol', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

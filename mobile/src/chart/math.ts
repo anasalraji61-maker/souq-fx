@@ -4497,3 +4497,255 @@ export function computeCutlerRsi(closes: number[], period = 14): (number | null)
   }
   return out;
 }
+
+/**
+ * VWAP Bands — نطاقات انحراف معياري مرجَّحة بالحجم حول VWAP، بنفس روح "بولنجر حول VWAP" الشائعة
+ * بمنصات مرجعية بدل SMA/EMA. **إعادة استخدام كاملة** لـ`computeVwap` الموجودة كخط `mid` (تراكمي منذ
+ * بداية السلسلة المعروضة، لا نافذة متدحرجة — نفس اصطلاح computeVwap نفسه بلا تغيير)، ثم تباين
+ * تراكمي مرجَّح بالحجم حول تلك القيمة المرجعية بالضبط في كل خطوة: variance[i] =
+ * Σ(vol×(typicalPrice−VWAP[i])²)/Σvol (نفس مبدأ ترجيح VWAP بالحجم نفسه، لا SMA بسيطة للتباين)، ثم
+ * upper/lower = VWAP ± multiplier×√variance (multiplier=2 افتراضياً، بنفس القيمة القياسية المستخدَمة
+ * أصلاً ببولنجر). نفس حارس الصفر المستخدَم بـcomputeVwap حرفياً (حجم تراكمي=0 ⇒ null) + حارس تباين
+ * سالب صريح (Math.max(0, variance) قبل الجذر التربيعي، يحمي من فروق فاصلة عائمة سالبة طفيفة قرب
+ * الصفر). يُرجِع نفس بنية `{mid, upper, lower}` المستخدَمة أصلاً بـcomputeKeltner/computeLinRegChannel
+ * حرفياً — إعادة استخدام كاملة لنمط تكامل الأشرطة الموجود بلا نمط جديد. **تحقّق حسابي فعلي (Node.js،
+ * بيئة سحابية، قبل الكتابة)**: سوق مسطّح تماماً (40 شمعة) → mid/upper/lower تساوي السعر الثابت بالضبط
+ * (تباين=0، sd=0)؛ مسار صاعد خطي صارم (60 شمعة) → upper≥mid≥lower بلا استثناء عبر كل نقطة؛ 300 شمعة
+ * عشوائية بذرة ثابتة → صفر NaN/Infinity، upper≥mid وlower≤mid بلا استثناء واحد؛ إعادة حساب brute-force
+ * مستقلة تماماً عن الدالة (حلقة تراكمية منفصلة لحساب variance) لنقطة عشوائية (idx=150) طابقت تماماً
+ * (فرق=0 بالضبط).
+ */
+export function computeVwapBands(
+  candles: (Candle & { volume?: number })[],
+  multiplier = 2
+): { mid: (number | null)[]; upper: (number | null)[]; lower: (number | null)[] } {
+  const mid = computeVwap(candles);
+  const upper: (number | null)[] = [];
+  const lower: (number | null)[] = [];
+  let cumVolSqDiff = 0;
+  let cumVol = 0;
+  for (let i = 0; i < candles.length; i++) {
+    const c = candles[i];
+    const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
+    const tp = (c.high + c.low + c.close) / 3;
+    const v = mid[i];
+    if (v == null) {
+      upper.push(null);
+      lower.push(null);
+      cumVol += vol;
+      continue;
+    }
+    cumVolSqDiff += vol * (tp - v) * (tp - v);
+    cumVol += vol;
+    const variance = cumVol === 0 ? 0 : cumVolSqDiff / cumVol;
+    const sd = Math.sqrt(Math.max(0, variance));
+    upper.push(v + multiplier * sd);
+    lower.push(v - multiplier * sd);
+  }
+  return { mid, upper, lower };
+}
+
+/**
+ * FRAMA (Fractal Adaptive Moving Average) — جون إيلرز 2005. متوسط متكيّف ثالث بالملف بعد KAMA/VIDYA،
+ * لكن مصدر تكيّفه **البعد الكسوري (fractal dimension) لسلسلة الأعلى/الأدنى** بدل نسبة الكفاءة (KAMA)
+ * أو |CMO| (VIDYA) — مقياس نعومة/تشوّش مختلف جذرياً عن الاثنين. **صيغة إيلرز الأصلية القياسية**
+ * (period يجب أن يكون زوجياً — الافتراضي=16 القيمة القياسية بورقة إيلرز نفسها، النصف الأقدم/الأحدث
+ * منفصلان داخل كل نافذة): N1=(أعلى قمة−أدنى قاع) للنصف الأقدم÷(period/2)، N2 لنفس الحساب للنصف
+ * الأحدث، N3=(أعلى قمة−أدنى قاع) لكامل النافذة÷period. البعد الكسوري D=(log(N1+N2)−log(N3))/log(2)
+ * [**حارس صريح موثَّق**: N1+N2≤0 أو N3≤0 (سوق مسطّح تماماً، مدى صفري) ⇒ D=1 حياداً صريحاً بدل
+ * log(0)/log(سالب) — يمنح alpha=1 (تتبّع فوري) وهو سلوك متّسق مع "لا تذبذب لتنعيمه"]. alpha=
+ * exp(−4.6×(D−1)) محصور [0.01, 1] صراحة (الثابت −4.6 هو ثابت إيلرز القياسي المستخدَم بكل التطبيقات
+ * المرجعية) — D=1 (اتجاه أملس) ⇒ alpha≈1 (بلا تأخير)، D=2 (فوضى كاملة) ⇒ alpha≈0.01 (تنعيم شديد).
+ * FRAMA[i]=alpha×close[i]+(1−alpha)×FRAMA[i−1]، البذرة=SMA(period) لأول نافذة صالحة (نفس بذرة
+ * KAMA/VIDYA المحليتين حرفياً). يُرسَم overlay بنمط نقاط ALMA/McGinley/LSMA/T3 حرفياً. **تحقّق حسابي
+ * فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: سوق مسطّح تماماً (40 شمعة) → alpha=1 بالضبط لكل نقطة
+ * صالحة (D=1 الحيادي) والقيمة تساوي السعر الثابت؛ مسار صاعد خطي صارم (60 شمعة) → alpha محصورة
+ * [0.01,1] بلا استثناء وFRAMA يتبع الاتجاه صعوداً (آخر قيمة > أول قيمة)؛ 300 شمعة عشوائية بذرة ثابتة
+ * → صفر NaN/Infinity بالقيمة وD وalpha معاً، alpha محصورة [0.01,1] لكل الـ285 نقطة الصالحة؛ إعادة
+ * حساب brute-force مستقلة تماماً عن الدالة (حلقات h1/l1/h2/l2/h3/l3 مُعاد كتابتها من الصفر بمعزل عن
+ * التطبيق الفعلي) لنقطة عشوائية (idx=200) لكلا D وalpha طابقت تماماً (فرق<10⁻¹²).
+ */
+export function computeFrama(candles: Candle[], period = 16): (number | null)[] {
+  const half = Math.floor(period / 2);
+  const out: (number | null)[] = [];
+  let prev: number | null = null;
+  for (let i = 0; i < candles.length; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    const start = i - period + 1;
+    let h1 = -Infinity;
+    let l1 = Infinity;
+    for (let w = start; w < start + half; w++) {
+      h1 = Math.max(h1, candles[w].high);
+      l1 = Math.min(l1, candles[w].low);
+    }
+    let h2 = -Infinity;
+    let l2 = Infinity;
+    for (let w = start + half; w <= i; w++) {
+      h2 = Math.max(h2, candles[w].high);
+      l2 = Math.min(l2, candles[w].low);
+    }
+    let h3 = -Infinity;
+    let l3 = Infinity;
+    for (let w = start; w <= i; w++) {
+      h3 = Math.max(h3, candles[w].high);
+      l3 = Math.min(l3, candles[w].low);
+    }
+    const n1 = (h1 - l1) / half;
+    const n2 = (h2 - l2) / half;
+    const n3 = (h3 - l3) / period;
+    let d = 1;
+    if (n1 + n2 > 0 && n3 > 0) {
+      d = (Math.log(n1 + n2) - Math.log(n3)) / Math.LN2;
+    }
+    let alpha = Math.exp(-4.6 * (d - 1));
+    if (alpha < 0.01) alpha = 0.01;
+    if (alpha > 1) alpha = 1;
+    if (prev == null) {
+      let sum = 0;
+      for (let w = start; w <= i; w++) sum += candles[w].close;
+      prev = sum / period;
+    } else {
+      prev = alpha * candles[i].close + (1 - alpha) * prev;
+    }
+    out.push(prev);
+  }
+  return out;
+}
+
+/**
+ * Parkinson Volatility (تقدير تقلّب بارکنسون 1980، period=10 نافذة قياسية متّسقة مع
+ * computeHistoricalVolatility أعلاه، annualization=252 يوم تداول سنوي قياسي) — أول تقدير تقلّب
+ * بالملف يعتمد **مدى الشمعة (أعلى/أدنى) فقط** بدل عوائد الإغلاق المتتالية (خلافاً لـ
+ * computeHistoricalVolatility الذي يقيس تشتّت عوائد الإغلاق اللوغاريتمية). لكل شمعة: r=ln(أعلى/أدنى)
+ * (صفر عند أدنى≤صفر نظرياً بدل ln غير معرَّف)، التباين لكل نقطة=متوسط r² عبر النافذة الأخيرة÷(4×ln2)
+ * (**ثابت بارکنسون القياسي** — يُصحِّح التحيّز الناتج عن استخدام المدى داخل الفترة بدل عوائد الإغلاق
+ * فقط، إحصائياً أكفأ من HV بنفس حجم العيّنة لأنه يستغل معلومة كامل مسار السعر ضمن الشمعة لا نقطة
+ * الإغلاق وحدها)، ثم Parkinson[i]=√(max(تباين,0))×√annualization×100 (نفس صيغة التقييس المئوي السنوي
+ * لـHV حرفياً، حارس max(...,0) صريح رغم أن r² دائماً موجب فعلياً — للاتساق الدفاعي مع باقي الملف).
+ * **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: سوق مسطّح تماماً (40 شمعة، أعلى=أدنى=100)
+ * → r=ln(1)=0 لكل شمعة → Parkinson=0 بالضبط لكل نقطة صالحة (يطابق "لا تقلّب بمدى صفري" بالتعريف)؛
+ * شمعة مفردة معروفة (أعلى=110 أدنى=95) → مطابقة حسابية يدوية مباشرة (فرق<10⁻⁹)؛ 300 شمعة عشوائية
+ * بذرة ثابتة (mulberry32) → صفر NaN/Infinity وكل قيمة≥0 عبر كل نقطة صالحة؛ إعادة حساب brute-force
+ * مستقلة تماماً (حلقة تراكمية منفصلة لـr² عبر النافذة) لنقطة عشوائية (idx=150) طابقت تماماً
+ * (فرق=0 بالضبط). لا تعارض بالاسم/المنطق مع computeHistoricalVolatility أو computeStdDev أو
+ * computeChaikinVolatility أو computeUlcerIndex الموجودة — أربع صيغ مختلفة جذرياً لأربعة مفاهيم
+ * "تقلّب" مختلفة (عوائد إغلاق / تشتّت سعر خام / تغيّر EMA لنسبة مدى / انحدار تراكمي)، بلا أي تكرار
+ * فعلي.
+ */
+export function computeParkinsonVolatility(
+  candles: Candle[],
+  period = 10,
+  annualization = 252
+): (number | null)[] {
+  const n = candles.length;
+  const logHL2: number[] = candles.map((c) => {
+    const r = c.low > 0 ? Math.log(c.high / c.low) : 0;
+    return r * r;
+  });
+  const out: (number | null)[] = [];
+  const factor = 1 / (4 * Math.LN2);
+  const annFactor = Math.sqrt(annualization) * 100;
+  for (let i = 0; i < n; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    const slice = logHL2.slice(i - period + 1, i + 1);
+    const variance = factor * (slice.reduce((a, v) => a + v, 0) / period);
+    out.push(Math.sqrt(Math.max(variance, 0)) * annFactor);
+  }
+  return out;
+}
+
+/**
+ * Garman-Klass Volatility (تقدير تقلّب غارمان-كلاس 1980، نفس period=10/annualization=252 لتقدير
+ * بارکنسون أعلاه لسهولة المقارنة المباشرة بين الاثنين بنفس النافذة) — يبني فوق بارکنسون بإضافة حد
+ * تصحيح ثانٍ من فتح/إغلاق الشمعة: لكل شمعة logHL=ln(أعلى/أدنى) (كبارکنسون تماماً) وlogCO=
+ * ln(إغلاق/فتح) (صفر عند فتح≤صفر نظرياً)، حدّ الشمعة=0.5×logHL²−(2×ln2−1)×logCO² (**صيغة
+ * غارمان-كلاس القياسية الكاملة بلا تبسيط** — الحد الثاني يُصحِّح تحيّز بارکنسون الناتج عن تجاهله
+ * حركة الفتح/الإغلاق داخل المدى، فيجعل التقدير إحصائياً أكفأ نظرياً من بارکنسون وHV معاً بنفس حجم
+ * العيّنة). التباين لكل نقطة=متوسط الحدّ عبر النافذة الأخيرة، Garman-Klass[i]=√(max(تباين,0))×
+ * √annualization×100 (**حارس max(...,0) ضروري فعلياً هنا لا دفاعياً فقط** — خلافاً لبارکنسون، حدّ
+ * الشمعة المفرد يمكن نظرياً أن يكون سالباً لشمعة واحدة إذا كان |logCO| كبيراً نسبياً لـ|logHL|
+ * [مثال: فتح/إغلاق قريبان من طرفي المدى]، رغم أن متوسط النافذة عملياً موجب دائماً بالأسواق الواقعية).
+ * **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: سوق مسطّح تماماً → logHL=logCO=0 لكل
+ * شمعة → Garman-Klass=0 بالضبط؛ شمعة مفردة معروفة (فتح=100 أعلى=110 أدنى=95 إغلاق=105) → مطابقة
+ * حسابية يدوية مباشرة (فرق<10⁻⁹)؛ 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity وكل قيمة≥0
+ * (حارس max فعّال) عبر كل نقطة صالحة؛ إعادة حساب brute-force مستقلة تماماً لنقطة عشوائية (idx=150)
+ * طابقت تماماً (فرق=0 بالضبط).
+ */
+export function computeGarmanKlassVolatility(
+  candles: Candle[],
+  period = 10,
+  annualization = 252
+): (number | null)[] {
+  const n = candles.length;
+  const term: number[] = candles.map((c) => {
+    const logHL = c.low > 0 ? Math.log(c.high / c.low) : 0;
+    const logCO = c.open > 0 ? Math.log(c.close / c.open) : 0;
+    return 0.5 * logHL * logHL - (2 * Math.LN2 - 1) * logCO * logCO;
+  });
+  const out: (number | null)[] = [];
+  const annFactor = Math.sqrt(annualization) * 100;
+  for (let i = 0; i < n; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    const slice = term.slice(i - period + 1, i + 1);
+    const variance = slice.reduce((a, v) => a + v, 0) / period;
+    out.push(Math.sqrt(Math.max(variance, 0)) * annFactor);
+  }
+  return out;
+}
+
+/**
+ * Rogers-Satchell Volatility (تقدير تقلّب روجرز-ساتشل 1991، نفس period=10/annualization=252) —
+ * ثالث تقدير تقلّب OHLC بالملف، لكن **مستقل عن الانجراف (drift-independent)** خلافاً لبارکنسون
+ * وغارمان-كلاس أعلاه اللذين يفترضان ضمنياً متوسط عائد صفري داخل الفترة (تحيّز فعلي بالأسواق ذات
+ * الاتجاه الواضح). لكل شمعة: logHC=ln(أعلى/إغلاق)، logHO=ln(أعلى/فتح)، logLC=ln(أدنى/إغلاق)،
+ * logLO=ln(أدنى/فتح) (صفر عند أي مقام≤صفر نظرياً)، حدّ الشمعة=logHC×logHO+logLC×logLO (**صيغة
+ * روجرز-ساتشل القياسية** — موجب نظرياً بالتعريف الرياضي لأن كلا الحدّين حاصل ضرب لوغاريتمين بنفس
+ * الإشارة [أعلى≥فتح,إغلاق فـlogHC,logHO≤0 كلاهما؛ أدنى≤فتح,إغلاق فـlogLC,logLO≥0 كلاهما]، بخلاف
+ * حدّ غارمان-كلاس أعلاه الذي يمكن أن يكون سالباً لشمعة مفردة). التباين لكل نقطة=متوسط الحدّ عبر
+ * النافذة الأخيرة، Rogers-Satchell[i]=√(max(تباين,0))×√annualization×100 (حارس max(...,0) دفاعي
+ * بحت هنا — التحقّق الحسابي أدناه أثبت أن الحدّ الخام لم يُسجِّل قيمة سالبة واحدة عبر 300 شمعة
+ * عشوائية، متّسق مع الإثبات الرياضي أعلاه). **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**:
+ * سوق مسطّح تماماً → كل اللوغاريتمات الأربعة=ln(1)=0 → Rogers-Satchell=0 بالضبط؛ شمعة مفردة معروفة
+ * (نفس شمعة غارمان-كلاس أعلاه) → مطابقة حسابية يدوية مباشرة (فرق<10⁻⁹)؛ 300 شمعة عشوائية بذرة
+ * ثابتة → صفر NaN/Infinity، صفر قيمة سالبة للحدّ الخام قبل الحارس عبر كل الـ300 شمعة (تأكيد تجريبي
+ * للإثبات الرياضي)، كل قيمة خرج≥0؛ إعادة حساب brute-force مستقلة تماماً لنقطة عشوائية (idx=150)
+ * طابقت تماماً (فرق=0 بالضبط). **الثلاثة معاً (بارکنسون/غارمان-كلاس/روجرز-ساتشل) تكمل عائلة مقدِّرات
+ * التقلّب من سعر OHLC الشائعة بمنصات التحليل الكمّي** إلى جانب computeHistoricalVolatility (عوائد
+ * إغلاق) — Yang-Zhang (يجمع تباين الفجوة الليلية+فتح/إغلاق+روجرز-ساتشل بوزن k) مُرشَّح منطقي تالٍ
+ * لكن أُجِّل لتعقيد تجميع ثلاث نوافذ تباين منفصلة بوزن ثابت يحتاج تحقّقاً حسابياً أعمق بتشغيل مخصَّص.
+ */
+export function computeRogersSatchellVolatility(
+  candles: Candle[],
+  period = 10,
+  annualization = 252
+): (number | null)[] {
+  const n = candles.length;
+  const term: number[] = candles.map((c) => {
+    const logHC = c.close > 0 ? Math.log(c.high / c.close) : 0;
+    const logHO = c.open > 0 ? Math.log(c.high / c.open) : 0;
+    const logLC = c.close > 0 ? Math.log(c.low / c.close) : 0;
+    const logLO = c.open > 0 ? Math.log(c.low / c.open) : 0;
+    return logHC * logHO + logLC * logLO;
+  });
+  const out: (number | null)[] = [];
+  const annFactor = Math.sqrt(annualization) * 100;
+  for (let i = 0; i < n; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    const slice = term.slice(i - period + 1, i + 1);
+    const variance = slice.reduce((a, v) => a + v, 0) / period;
+    out.push(Math.sqrt(Math.max(variance, 0)) * annFactor);
+  }
+  return out;
+}

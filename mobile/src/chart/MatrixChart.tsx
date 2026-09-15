@@ -98,6 +98,8 @@ import {
   computeFisherTransform,
   computeForceIndex,
   computeFractals,
+  computeFrama,
+  computeGarmanKlassVolatility,
   computeGator,
   computeGmma,
   computeGmmaOscillator,
@@ -123,6 +125,7 @@ import {
   computeNvi,
   computeObv,
   computeOverlays,
+  computeParkinsonVolatility,
   computePercentB,
   computePgo,
   computePivotPoints,
@@ -136,6 +139,7 @@ import {
   computeRelativeVolatilityIndex,
   computeRmi,
   computeRoc,
+  computeRogersSatchellVolatility,
   computeRsi,
   computeRvi,
   computeRwi,
@@ -165,6 +169,7 @@ import {
   computeVpt,
   computeVwMacd,
   computeVwap,
+  computeVwapBands,
   computeVwma,
   computeVzo,
   computeWaveTrend,
@@ -868,6 +873,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('vwap') ? computeVwap(source.plot) : null),
     [source.plot, indicators]
   );
+  const vwapBands = useMemo(
+    () => (indicators.includes('vwapBands') ? computeVwapBands(source.plot) : null),
+    [source.plot, indicators]
+  );
   const twap = useMemo(
     () => (indicators.includes('twap') ? computeTwap(source.plot) : null),
     [source.plot, indicators]
@@ -1185,6 +1194,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('kama') ? computeKama(closes) : null),
     [closes, indicators]
   );
+  const frama = useMemo(
+    () => (indicators.includes('frama') ? computeFrama(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const parkinsonVol = useMemo(
+    () => (indicators.includes('parkinsonVol') ? computeParkinsonVolatility(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const garmanKlassVol = useMemo(
+    () => (indicators.includes('garmanKlassVol') ? computeGarmanKlassVolatility(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const rogersSatchellVol = useMemo(
+    () =>
+      indicators.includes('rogersSatchellVol') ? computeRogersSatchellVolatility(source.plot) : null,
+    [source.plot, indicators]
+  );
   const stc = useMemo(
     () => (indicators.includes('stc') ? computeStc(closes) : null),
     [closes, indicators]
@@ -1384,7 +1410,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('iftRsi') ? 1 : 0) +
     (indicators.includes('waveTrend') ? 1 : 0) +
     (indicators.includes('cutlerRsi') ? 1 : 0) +
-    (indicators.includes('cvd') ? 1 : 0);
+    (indicators.includes('cvd') ? 1 : 0) +
+    (indicators.includes('parkinsonVol') ? 1 : 0) +
+    (indicators.includes('garmanKlassVol') ? 1 : 0) +
+    (indicators.includes('rogersSatchellVol') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
   const paneH = 48;
@@ -1423,6 +1452,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('t3') && t3) t3.forEach(push);
     if (indicators.includes('smma20') && smma20) smma20.forEach(push);
     if (indicators.includes('kama') && kama) kama.forEach(push);
+    if (indicators.includes('frama') && frama) frama.forEach(push);
     if (indicators.includes('zlema') && zlema) zlema.forEach(push);
     if (indicators.includes('avgPrice') && avgPrice) avgPrice.forEach(push);
     if (indicators.includes('vidya') && vidya) vidya.forEach(push);
@@ -1434,6 +1464,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('keltner') && keltner) {
       keltner.upper.forEach(push);
       keltner.lower.forEach(push);
+    }
+    if (indicators.includes('vwapBands') && vwapBands) {
+      vwapBands.upper.forEach(push);
+      vwapBands.lower.forEach(push);
     }
     if (indicators.includes('linRegChannel') && linRegChannel) {
       linRegChannel.upper.forEach(push);
@@ -1516,6 +1550,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     logScale,
     tpo,
     vwap,
+    vwapBands,
     twap,
     psar,
     medianPrice,
@@ -1528,6 +1563,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     alma,
     t3,
     kama,
+    frama,
     zlema,
     avgPrice,
     vidya,
@@ -2965,6 +3001,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             )
           )}
+        {indicators.includes('vwapBands') &&
+          vwapBands &&
+          vwapBands.upper.map((v, i) => {
+            const lo = vwapBands.lower[i];
+            if (v == null || lo == null) return null;
+            return (
+              <View
+                key={`vwb${i}`}
+                style={{
+                  position: 'absolute',
+                  left: xOf(i) - 1,
+                  top: yOf(v),
+                  width: 2,
+                  height: Math.max(2, yOf(lo) - yOf(v)),
+                  backgroundColor: 'rgba(250,204,21,0.14)',
+                }}
+              />
+            );
+          })}
         {indicators.includes('twap') &&
           twap &&
           twap.map((v, i) =>
@@ -3144,6 +3199,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <View
                 key={`kama${i}`}
                 style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#A78BFA' }]}
+              />
+            )
+          )}
+        {indicators.includes('frama') &&
+          frama &&
+          frama.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`frama${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#7DD3FC' }]}
               />
             )
           )}
@@ -5516,6 +5581,90 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       height: Math.max(2, (v / maxA) * (paneH - 16)),
                       marginTop: paneH - 16 - (v / maxA) * (paneH - 16),
                       backgroundColor: colors.infoAccent,
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {parkinsonVol ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Parkinson Vol</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = parkinsonVol.filter((x): x is number => x != null);
+              const maxV = Math.max(...vals, 1e-9);
+              return parkinsonVol.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxV) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxV) * (paneH - 16),
+                      backgroundColor: '#F0ABFC',
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {garmanKlassVol ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>G-K Vol</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = garmanKlassVol.filter((x): x is number => x != null);
+              const maxV = Math.max(...vals, 1e-9);
+              return garmanKlassVol.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxV) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxV) * (paneH - 16),
+                      backgroundColor: '#67E8F9',
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {rogersSatchellVol ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>R-S Vol</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = rogersSatchellVol.filter((x): x is number => x != null);
+              const maxV = Math.max(...vals, 1e-9);
+              return rogersSatchellVol.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxV) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxV) * (paneH - 16),
+                      backgroundColor: '#FDBA8C',
                       opacity: 0.7,
                     }}
                   />
