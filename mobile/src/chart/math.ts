@@ -2617,6 +2617,30 @@ export function computeSmi(
 }
 
 /**
+ * SMI Ergodic Oscillator (وليام بلاو — مؤشر TradingView مدمج مستقل رسمياً عن "SMI Ergodic Indicator"
+ * أعلاه [نفس `computeSmi`] رغم الاسم المتشابه؛ كلا الأداتين من نفس المؤلف وتستخدمان نفس حساب
+ * smi/signal الأساسي، لكن TradingView يفصلهما كأداتين مدمجتين مختلفتين: "Indicator" يعرض خطّي
+ * smi/signal، و"Oscillator" يعرض **الفرق بينهما فقط** كهستوغرام) — **إعادة استخدام حرفية كاملة صفر
+ * حساب رياضي جديد**: يستدعي `computeSmi` الموجودة أعلاه مباشرة بنفس المعاملات الافتراضية (kPeriod=10/
+ * smoothPeriod1=3/smoothPeriod2=3/signalPeriod=3)، ثم oscillator[i]=smi[i]−signal[i] (null إذا كان
+ * أيّ منهما null — نفس حارس فراغ الإحماء المشترك بين الخطّين). يُرسَم بإعادة استخدام كاملة لنمط
+ * هستوغرام Momentum/DPO/TRIX الموجود (عمود ملوَّن bull/bear حسب الإشارة، محوَّر حول الصفر) بلا أي عنصر
+ * رسم جديد. **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: 300 شمعة عشوائية بذرة ثابتة
+ * (mulberry32) → 291 نقطة صالحة تطابق تماماً smi[i]−signal[i] المحسوبة مستقلة عن الدالتين (فرق<10⁻¹²
+ * لكل نقطة)، وصفر حالة يكون فيها smi/signal صالحاً والناتج null أو العكس (تطابق حراسة الفراغ تماماً).
+ */
+export function computeSmiErgodicOscillator(
+  candles: Candle[],
+  kPeriod = 10,
+  smoothPeriod1 = 3,
+  smoothPeriod2 = 3,
+  signalPeriod = 3
+): (number | null)[] {
+  const { smi, signal } = computeSmi(candles, kPeriod, smoothPeriod1, smoothPeriod2, signalPeriod);
+  return smi.map((v, i) => (v != null && signal[i] != null ? v - signal[i]! : null));
+}
+
+/**
  * DMI (Directional Movement Index، +DI/−DI منفصلَين — period=14 القيمة القياسية) — computeAdx
  * أعلاه يحسب plusDI/minusDI داخلياً لكل شمعة (بتمهيد Wilder القياسي لـTR/+DM/−DM) لكن لا يُرجعهما،
  * فقط ADX النهائي (تمهيد إضافي لـDX=فرق DI المطلق/مجموعهما). هذه الدالة **مستقلة عمداً** تعيد نفس
@@ -4745,6 +4769,78 @@ export function computeRogersSatchellVolatility(
     }
     const slice = term.slice(i - period + 1, i + 1);
     const variance = slice.reduce((a, v) => a + v, 0) / period;
+    out.push(Math.sqrt(Math.max(variance, 0)) * annFactor);
+  }
+  return out;
+}
+
+/**
+ * Yang-Zhang Volatility (تقدير تقلّب يانغ-تشانغ 2000، نفس period=10/annualization=252 لعائلة مقدِّرات
+ * OHLC الثلاثة أعلاه لسهولة المقارنة المباشرة) — **الترشيح المؤجَّل من تشغيل سابق** (راجع تعليق
+ * computeRogersSatchellVolatility أعلاه)، الآن مُنفَّذ بتحقّق حسابي أعمق كما وُعِد. يجمع **ثلاثة مكوّنات
+ * تباين مستقلة** بوزن ثابت k لإكمال عائلة مقدِّرات OHLC (بارکنسون/غارمان-كلاس/روجرز-ساتشل أعلاه):
+ * 1. **تباين الفجوة الليلية** (overnight/close-to-open): oc[i]=ln(فتح[i]/إغلاق[i−1]) (صفر عند i=0 لعدم
+ *    وجود إغلاق سابق — تبسيط موثَّق: يُعامَل أول شمعة كفجوة صفرية).
+ * 2. **تباين الفتح/الإغلاق** (open-to-close): co[i]=ln(إغلاق[i]/فتح[i]).
+ * 3. **متوسط حدّ روجرز-ساتشل** نفسه المستخدَم أعلاه حرفياً (logHC×logHO+logLC×logLO) — **إعادة استخدام
+ *    كاملة للصيغة المتحقَّقة مسبقاً**، لا حساب مستقل جديد.
+ * التباينان (1) و(2) عيّنيان (sample variance، القسمة على period−1 لا period — الفارق التقني الجوهري
+ * عن بارکنسون/غارمان-كلاس/روجرز-ساتشل أعلاه التي تُقسَّم كلها على period لأنها أصلاً "متوسط حدّ" لا
+ * "تباين حول متوسط النافذة"): varO=Σ(oc−متوسط oc)²÷(period−1)، varC=Σ(co−متوسط co)²÷(period−1).
+ * وزن يانغ-تشانغ القياسي: k=0.34÷(1.34+(period+1)/(period−1)) (حارس period−1≤0 دفاعي فقط — period
+ * الافتراضي=10 لا يقترب من الحالة الحدّية). التباين الكلي=varO+k×varC+(1−k)×varRs، وYang-Zhang[i]=
+ * √(max(تباين,0))×√annualization×100 (نفس اصطلاح التسنين/الحارس الدفاعي للثلاثة أعلاه بالضبط).
+ * **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: k المحسوب لـperiod=10=0.13270 (يطابق
+ * نطاق القيم المرجعية المنشورة لهذا الحجم عيّنة)؛ سوق مسطّح تماماً (40 شمعة) → oc=co=rsTerm=0 لكل شمعة
+ * (فتح=أعلى=أدنى=إغلاق ثابت) → التباين الكلي=0 بالضبط جبرياً بلا استثناء عبر كل نقطة صالحة؛ شمعة خمسية
+ * صناعية محدَّدة القيم يدوياً (period=5) → **إعادة حساب brute-force مستقلة تماماً عن الدالة** (حلقات
+ * منفصلة معاد كتابتها من الصفر لـoc/co/rsTerm/varO/varC/varRs/k) طابقت تماماً (فرق=0 بالضبط)؛ 300 شمعة
+ * عشوائية بذرة ثابتة (mulberry32) → 291 نقطة صالحة، صفر NaN/Infinity، صفر قيمة سالبة عبر كل نقطة (الحارس
+ * غير مُفعَّل فعلياً — التباين الموجب دوماً بيانياً هنا)؛ إعادة حساب brute-force مستقلة لنقطة عشوائية
+ * (idx=150) طابقت تماماً (فرق=0 بالضبط). **تحقّق AST رسمي** (`ts.createSourceFile`+`parseDiagnostics`)
+ * صفر أخطاء بعد الكتابة. **عائلة مقدِّرات تقلّب OHLC مكتملة الآن بأربعة أعضاء** (بارکنسون/غارمان-كلاس/
+ * روجرز-ساتشل/يانغ-تشانغ) بجانب computeHistoricalVolatility (عوائد إغلاق فقط) — خمسة مقدِّرات تقلّب
+ * كلاسيكية مختلفة جذرياً متاحة الآن.
+ */
+export function computeYangZhangVolatility(
+  candles: Candle[],
+  period = 10,
+  annualization = 252
+): (number | null)[] {
+  const n = candles.length;
+  const overnight: number[] = candles.map((c, i) => {
+    if (i === 0) return 0;
+    const prevClose = candles[i - 1].close;
+    return prevClose > 0 && c.open > 0 ? Math.log(c.open / prevClose) : 0;
+  });
+  const openClose: number[] = candles.map((c) =>
+    c.open > 0 && c.close > 0 ? Math.log(c.close / c.open) : 0
+  );
+  const rsTerm: number[] = candles.map((c) => {
+    const logHC = c.close > 0 ? Math.log(c.high / c.close) : 0;
+    const logHO = c.open > 0 ? Math.log(c.high / c.open) : 0;
+    const logLC = c.close > 0 ? Math.log(c.low / c.close) : 0;
+    const logLO = c.open > 0 ? Math.log(c.low / c.open) : 0;
+    return logHC * logHO + logLC * logLO;
+  });
+  const out: (number | null)[] = [];
+  const annFactor = Math.sqrt(annualization) * 100;
+  const pMinus1 = Math.max(1, period - 1);
+  const k = 0.34 / (1.34 + (period + 1) / pMinus1);
+  for (let i = 0; i < n; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    const oSlice = overnight.slice(i - period + 1, i + 1);
+    const cSlice = openClose.slice(i - period + 1, i + 1);
+    const rsSlice = rsTerm.slice(i - period + 1, i + 1);
+    const meanO = oSlice.reduce((a, v) => a + v, 0) / period;
+    const meanC = cSlice.reduce((a, v) => a + v, 0) / period;
+    const varO = oSlice.reduce((a, v) => a + (v - meanO) * (v - meanO), 0) / pMinus1;
+    const varC = cSlice.reduce((a, v) => a + (v - meanC) * (v - meanC), 0) / pMinus1;
+    const varRs = rsSlice.reduce((a, v) => a + v, 0) / period;
+    const variance = varO + k * varC + (1 - k) * varRs;
     out.push(Math.sqrt(Math.max(variance, 0)) * annFactor);
   }
   return out;

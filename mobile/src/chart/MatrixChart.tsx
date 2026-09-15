@@ -144,6 +144,7 @@ import {
   computeRvi,
   computeRwi,
   computeSmi,
+  computeSmiErgodicOscillator,
   computeSmma,
   computeSqueeze,
   computeStc,
@@ -177,6 +178,7 @@ import {
   computeWilliamsR,
   computeWoodieCci,
   computeWoodiePivots,
+  computeYangZhangVolatility,
   computeZigZag,
   computeZlema,
   formatPrice,
@@ -1146,6 +1148,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('smi') ? computeSmi(source.plot) : null),
     [source.plot, indicators]
   );
+  const smiErgodic = useMemo(
+    () =>
+      indicators.includes('smiErgodic') ? computeSmiErgodicOscillator(source.plot) : null,
+    [source.plot, indicators]
+  );
   const dmi = useMemo(
     () => (indicators.includes('dmi') ? computeDmi(source.plot) : null),
     [source.plot, indicators]
@@ -1209,6 +1216,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const rogersSatchellVol = useMemo(
     () =>
       indicators.includes('rogersSatchellVol') ? computeRogersSatchellVolatility(source.plot) : null,
+    [source.plot, indicators]
+  );
+  const yangZhangVol = useMemo(
+    () =>
+      indicators.includes('yangZhangVol') ? computeYangZhangVolatility(source.plot) : null,
     [source.plot, indicators]
   );
   const stc = useMemo(
@@ -1413,7 +1425,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('cvd') ? 1 : 0) +
     (indicators.includes('parkinsonVol') ? 1 : 0) +
     (indicators.includes('garmanKlassVol') ? 1 : 0) +
-    (indicators.includes('rogersSatchellVol') ? 1 : 0);
+    (indicators.includes('rogersSatchellVol') ? 1 : 0) +
+    (indicators.includes('yangZhangVol') ? 1 : 0) +
+    (indicators.includes('smiErgodic') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
   const paneH = 48;
@@ -5675,6 +5689,34 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         </View>
       ) : null}
 
+      {yangZhangVol ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Y-Z Vol</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = yangZhangVol.filter((x): x is number => x != null);
+              const maxV = Math.max(...vals, 1e-9);
+              return yangZhangVol.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxV) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxV) * (paneH - 16),
+                      backgroundColor: '#FDE047',
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
+            })()}
+          </View>
+        </View>
+      ) : null}
+
       {stochRsi ? (
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>StochRSI</Text>
@@ -6327,6 +6369,34 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       />
                     ) : null}
                   </View>
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {smiErgodic ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>SMI Ergodic Osc</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = smiErgodic.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxM = Math.max(...vals, 1e-9);
+              return smiErgodic.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxM) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
                 );
               });
             })()}

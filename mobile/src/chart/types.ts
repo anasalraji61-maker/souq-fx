@@ -151,7 +151,9 @@ export type IndicatorId =
   | 'frama'
   | 'parkinsonVol'
   | 'garmanKlassVol'
-  | 'rogersSatchellVol';
+  | 'rogersSatchellVol'
+  | 'yangZhangVol'
+  | 'smiErgodic';
 
 export type DrawTool =
   | 'none'
@@ -332,6 +334,8 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'parkinsonVol', label: 'Parkinson Vol', pane: true },
   { id: 'garmanKlassVol', label: 'G-K Vol', pane: true },
   { id: 'rogersSatchellVol', label: 'R-S Vol', pane: true },
+  { id: 'yangZhangVol', label: 'Y-Z Vol', pane: true },
+  { id: 'smiErgodic', label: 'SMI Ergodic Osc', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [
