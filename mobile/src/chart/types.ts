@@ -153,7 +153,9 @@ export type IndicatorId =
   | 'garmanKlassVol'
   | 'rogersSatchellVol'
   | 'yangZhangVol'
-  | 'smiErgodic';
+  | 'smiErgodic'
+  | 'starcBands'
+  | 'pmo';
 
 export type DrawTool =
   | 'none'
@@ -336,6 +338,8 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'rogersSatchellVol', label: 'R-S Vol', pane: true },
   { id: 'yangZhangVol', label: 'Y-Z Vol', pane: true },
   { id: 'smiErgodic', label: 'SMI Ergodic Osc', pane: true },
+  { id: 'starcBands', label: 'STARC Bands' },
+  { id: 'pmo', label: 'PMO', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

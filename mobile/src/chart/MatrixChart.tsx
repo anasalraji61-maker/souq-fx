@@ -130,6 +130,7 @@ import {
   computePgo,
   computePivotPoints,
   computePivotsHighLow,
+  computePmo,
   computePpo,
   computePsar,
   computePvi,
@@ -147,6 +148,7 @@ import {
   computeSmiErgodicOscillator,
   computeSmma,
   computeSqueeze,
+  computeStarcBands,
   computeStc,
   computeStdDev,
   computeStdErrorBands,
@@ -1336,6 +1338,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('cutlerRsi') ? computeCutlerRsi(closes) : null),
     [closes, indicators]
   );
+  const starcBands = useMemo(
+    () => (indicators.includes('starcBands') ? computeStarcBands(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const pmo = useMemo(
+    () => (indicators.includes('pmo') ? computePmo(closes) : null),
+    [closes, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1427,7 +1437,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('garmanKlassVol') ? 1 : 0) +
     (indicators.includes('rogersSatchellVol') ? 1 : 0) +
     (indicators.includes('yangZhangVol') ? 1 : 0) +
-    (indicators.includes('smiErgodic') ? 1 : 0);
+    (indicators.includes('smiErgodic') ? 1 : 0) +
+    (indicators.includes('pmo') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
   const paneH = 48;
@@ -1478,6 +1489,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('keltner') && keltner) {
       keltner.upper.forEach(push);
       keltner.lower.forEach(push);
+    }
+    if (indicators.includes('starcBands') && starcBands) {
+      starcBands.upper.forEach(push);
+      starcBands.lower.forEach(push);
     }
     if (indicators.includes('vwapBands') && vwapBands) {
       vwapBands.upper.forEach(push);
@@ -1583,6 +1598,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     vidya,
     supertrend,
     keltner,
+    starcBands,
+    stdErrorBands,
     envelopes,
     accelBands,
     donchian,
@@ -3343,6 +3360,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   width: 2,
                   height: Math.max(2, yOf(lo) - yOf(v)),
                   backgroundColor: 'rgba(167,139,250,0.18)',
+                }}
+              />
+            );
+          })}
+        {indicators.includes('starcBands') &&
+          starcBands &&
+          starcBands.upper.map((v, i) => {
+            const lo = starcBands.lower[i];
+            if (v == null || lo == null) return null;
+            return (
+              <View
+                key={`starc${i}`}
+                style={{
+                  position: 'absolute',
+                  left: xOf(i) - 1,
+                  top: yOf(v),
+                  width: 2,
+                  height: Math.max(2, yOf(lo) - yOf(v)),
+                  backgroundColor: 'rgba(249,168,212,0.14)',
                 }}
               />
             );
@@ -6386,6 +6422,34 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               return smiErgodic.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = Math.min(paneH - 16, (Math.abs(v) / maxM) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {pmo ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>PMO</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = pmo.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxP = Math.max(...vals, 1e-9);
+              return pmo.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxP) * (paneH / 2 - 8));
                 return (
                   <View
                     key={i}

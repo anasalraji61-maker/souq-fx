@@ -638,6 +638,41 @@ export function computeKeltner(
 }
 
 /**
+ * STARC Bands (Stoller Average Range Channels، مانينغ ستولر) — نطاق بنفس بنية computeKeltner
+ * أعلاه حرفياً (خط وسط ± multiplier×ATR) لكن بخط وسط SMA بدل EMA — الفارق التصميمي الجوهري
+ * تاريخياً بين الاثنين (كلتنر بُني أصلاً حول EMA، ستولر حول SMA). mid = sma(closes، smaPeriod)،
+ * upper/lower = mid ± multiplier×computeAtr(candles، atrPeriod) (**إعادة استخدام كاملة** لـ
+ * computeAtr الموجودة، صفر حساب ATR جديد). القيم الافتراضية القياسية smaPeriod=5/atrPeriod=15/
+ * multiplier=2 (اصطلاح ستولر الأصلي الشائع بمعظم المنصات المرجعية) — مختلفة عمداً عن
+ * keltner(20/10/2) الافتراضية لإبقاء الاثنين متمايزَين زمنياً/بصرياً لا نسخة مكرَّرة بنفس الفترات.
+ * **تحقّق يدوي**: سوق مسطّح تماماً (كل high=low=close ثابتة) → TR=0 لكل شمعة (بالتعريف: أعلى−أدنى
+ * =0، |أعلى−إغلاق سابق|=0، |أدنى−إغلاق سابق|=0) ⇒ ATR=0 بالضبط ⇒ upper=mid=lower بالضبط بلا فارق
+ * تقريب.
+ */
+export function computeStarcBands(
+  candles: Candle[],
+  smaPeriod = 5,
+  atrPeriod = 15,
+  multiplier = 2
+): { mid: (number | null)[]; upper: (number | null)[]; lower: (number | null)[] } {
+  const closes = candles.map((c) => c.close);
+  const mid = sma(closes, smaPeriod);
+  const atr = computeAtr(candles, atrPeriod);
+  const upper: (number | null)[] = [];
+  const lower: (number | null)[] = [];
+  for (let i = 0; i < candles.length; i++) {
+    if (mid[i] == null || atr[i] == null) {
+      upper.push(null);
+      lower.push(null);
+      continue;
+    }
+    upper.push(mid[i]! + multiplier * atr[i]!);
+    lower.push(mid[i]! - multiplier * atr[i]!);
+  }
+  return { mid, upper, lower };
+}
+
+/**
  * SuperTrend (period=10 وmultiplier=3 القيمتان القياسيتان الشائعتان) — خط تتبّع اتجاه بنفس روح
  * Parabolic SAR أعلاه (نقطة توقف/انعكاس واحدة تتبع السعر) لكن مبني على ATR بدل تسارع AF تراكمي.
  * لكل شمعة: basicUpper = (أعلى+أدنى)/2 + multiplier×ATR، basicLower = (أعلى+أدنى)/2 −
@@ -1014,6 +1049,33 @@ export function computeTsi(closes: number[], r = 25, s = 13): (number | null)[] 
   return closes.map((_, i) =>
     ema2[i] != null && absEma2[i] != null ? (absEma2[i] === 0 ? 0 : (100 * ema2[i]!) / absEma2[i]!) : null
   );
+}
+
+/**
+ * PMO (Price Momentum Oscillator، ديسيجن بوينت/كارل سوينلين) — معدّل تغيّر مُضاعَف التنعيم: خطوة
+ * أولى ROC لشمعة واحدة (لا فترة أطول) ×10 يدوياً (roc10[i]=((إغلاق[i]−إغلاق[i-1])/إغلاق[i-1])×1000
+ * — الضرب ×100 لتحويل النسبة لنقاط مئوية ثم ×10 إضافية باتفاقية PMO القياسية تُدمَجان بثابت واحد
+ * ×1000)، ثم طبقتا EMA متتاليتان (35 ثم 20) — **نفس أسلوب تعويض null بصفر بين الطبقات المستخدَم
+ * بـdema()/tema() أعلاه وبـcomputeTsi مباشرة فوق هذه الدالة** (لا خط إشارة منفصل، بنفس تبسيط
+ * KST/Coppock/TSI المجاورة بالملف: خط واحد فقط، pane هستوغرام bull/bear حول الصفر). **تحقّق
+ * يدوي**: سعر ثابت تماماً بكل الشموع → roc10=0 لكل نقطة (بعد أول شمعة، القسمة على إغلاق سابق ثابت
+ * وغير صفري) ⇒ كلا طبقتَي EMA=0 ⇒ PMO=0 بالضبط أينما كانت صالحة.
+ */
+export function computePmo(
+  closes: number[],
+  rocSmooth = 35,
+  pmoSmooth = 20
+): (number | null)[] {
+  const n = closes.length;
+  const roc10: number[] = new Array(n).fill(0);
+  for (let i = 1; i < n; i++) {
+    const prev = closes[i - 1];
+    roc10[i] = prev !== 0 ? ((closes[i] - prev) / prev) * 1000 : 0;
+  }
+  const smoothed1 = ema(roc10, rocSmooth);
+  const smoothed1Filled = smoothed1.map((v) => v ?? 0);
+  const pmo = ema(smoothed1Filled, pmoSmooth);
+  return closes.map((_, i) => (pmo[i] != null ? pmo[i] : null));
 }
 
 /**
