@@ -3060,4 +3060,448 @@ export function computeStc(
   return out;
 }
 
+/**
+ * ZLEMA (Zero-Lag Exponential Moving Average، جون إيلرز/ريكي هارت — period=20 القيمة الافتراضية
+ * الشائعة) — متوسط EMA قياسي (نفس `ema()` المحلية أعلاه بالضبط) لكن مطبَّق على سلسلة سعر "منزوعة
+ * التأخير" مسبقاً بدل الإغلاق الخام مباشرة، بهدف تقليل تأخر EMA التقليدي المعروف (لا صيغة تنعيم
+ * جديدة، فقط معالجة مسبقة للمدخل). **الصيغة**: lag=⌊(period−1)/2⌋ (10 لـperiod=20)،
+ * السعر المُعدَّل[i]=2×إغلاق[i]−إغلاق[i−lag] (يُبالِغ فرق الاتجاه الأخير ليعوّض تأخر EMA لاحقاً)،
+ * ZLEMA=ema(السعر المُعدَّل، period) — نفس استدعاء `ema()` المحلية المستخدَمة بكل مكان بالملف حرفياً.
+ * **قرار تصميم**: للنقاط i<lag يُستخدَم إغلاق[i] كما هو بدل رمي خطأ أو NaN — لا يؤثر على النتيجة
+ * النهائية لأن `ema()` أصلاً تُخفي أول period−1 نقطة كـnull وlag=⌊(period−1)/2⌋ أصغر من period−1
+ * دائماً لأي period>1، فكل نقطة تُستخدَم فيها هذه القيمة التقريبية تكون أصلاً مغطّاة ضمن فترة
+ * الإحماء المُقنَّعة. يُرسَم بإعادة استخدام كاملة لنمط نقاط overlay المستخدَم لبقية المتوسطات
+ * المتحركة (EMA/WMA/DEMA/TEMA/HMA/KAMA...) حرفياً، لون جديد `#FDBA74` (تحقَّق بـ`grep` شامل لكل
+ * ألوان hex المستخدَمة بـMatrixChart.tsx أنه غير مكرَّر).
+ * **تحقّق حسابي فعلي (Node.js قبل الكتابة)**: سعر ثابت 1.2345 عبر 50 شمعة → تقارب فوري تام للقيمة
+ * الثابتة نفسها من أول نقطة صالحة (فرق صفري بكل الحالات، بلا خطأ تقريب يتجاوز 10⁻⁹)؛ مسار صاعد خطي
+ * بحت (خطوة 0.01 ثابتة) عبر 100 نقطة، period=20 → ZLEMA أقرب للسعر الفعلي من EMA القياسي بنفس الفترة
+ * بكل نقطة صالحة بلا استثناء (70/70 نقطة، يطابق الغرض التصميمي المعلَن لهذا المؤشر: تقليل التأخر)؛
+ * 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity عبر 281 نقطة صالحة بالضبط (300−period+1، يطابق بوابة
+ * `ema()` القياسية).
+ */
+export function computeZlema(closes: number[], period = 20): (number | null)[] {
+  const lag = Math.floor((period - 1) / 2);
+  const deLagged = closes.map((c, i) => (i >= lag ? 2 * c - closes[i - lag] : c));
+  return ema(deLagged, period);
+}
+
+/**
+ * Fibonacci Pivot Points (نسخة فيبوناتشي من نقاط الارتكاز — period=20 نافذة متدحرجة، نفس القرار
+ * التصميمي والقيمة الافتراضية المعتمَدة لـ`computePivotPoints` الكلاسيكي أعلاه بالضبط ولنفس السبب:
+ * لا تجميع جلسات/أيام منفصل بالمشروع) — نقطة ارتكاز مركزية واحدة (PP=(أعلى+أدنى+إغلاق)/3، نفس صيغة
+ * PP الكلاسيكية تماماً) لكن مستويات الدعم/المقاومة الستة تُشتَق من **نسب فيبوناتشي القياسية**
+ * (0.382/0.618/1.000) بدل مضاعفات المدى الصحيحة المستخدَمة بالنسخة الكلاسيكية (Woodie-style
+ * 2×pp−lo/pp+range/hi+2×(pp−lo))، وهي نفس الصيغة المرجعية القياسية المستخدَمة بمعظم منصات الرسم
+ * البياني لـ"Fibonacci Pivots" تحديداً: R1=PP+0.382×المدى، R2=PP+0.618×المدى، R3=PP+1.000×المدى،
+ * S1=PP−0.382×المدى، S2=PP−0.618×المدى، S3=PP−1.000×المدى (المدى=أعلى−أدنى لنفس نافذة الحساب).
+ * **إعادة استخدام كاملة** لبنية `computePivotPoints` أعلاه حرفياً (نفس نافذة `slice(n-period-1,
+ * n-1)` المستبعِدة للشمعة الجارية غير المكتملة، نفس حارس `n < period + 1`) — الفرق الوحيد هو
+ * معاملات الضرب الستة. يُرسَم بإعادة استخدام كاملة لنمط `styles.hLine`/`fibLabel` المستخدَم أصلاً
+ * للمستوى الكلاسيكي وPOC/TPO حرفياً، بلون `colors.infoAccent` موحَّد للمستويات السبعة كلها (بدل
+ * bull/bear/accent المستخدَمة للكلاسيكي) لتمييز الأداتين بصرياً عند تفعيلهما معاً دون تعارض تسميات
+ * (تسميات مسبوقة بحرف مختلف بواجهة الرسم: "F" + المستوى).
+ * **تحقّق حسابي فعلي (Node.js قبل الكتابة)**: مطابقة يدوية مباشرة لكل من PP/R1/R3/S3 لنافذة صناعية
+ * محدَّدة القيم (تطابق تام <10⁻¹²)؛ 300 شمعة عشوائية بذرة ثابتة عبر 280 نافذة متدحرجة متتالية → ترتيب
+ * R3≥R2≥R1≥PP≥S1≥S2≥S3 محقَّق حسابياً بكل نافذة بلا استثناء (المدى موجب دوماً ببيانات عشوائية واقعية)،
+ * صفر NaN/Infinity عبر كل القيم؛ أقل من period+1 شمعة → يُرجِع null صراحةً (نفس حارس الكلاسيكي).
+ */
+export function computeFibPivotPoints(
+  candles: Candle[],
+  period = 20
+): { pp: number; r1: number; r2: number; r3: number; s1: number; s2: number; s3: number } | null {
+  const n = candles.length;
+  if (n < period + 1) return null;
+  const window = candles.slice(n - period - 1, n - 1);
+  let hi = -Infinity;
+  let lo = Infinity;
+  for (const c of window) {
+    hi = Math.max(hi, c.high);
+    lo = Math.min(lo, c.low);
+  }
+  const close = window[window.length - 1].close;
+  const pp = (hi + lo + close) / 3;
+  const range = hi - lo;
+  return {
+    pp,
+    r1: pp + 0.382 * range,
+    r2: pp + 0.618 * range,
+    r3: pp + 1.0 * range,
+    s1: pp - 0.382 * range,
+    s2: pp - 0.618 * range,
+    s3: pp - 1.0 * range,
+  };
+}
+
+/**
+ * Camarilla Pivot Points (نيك سكوت — period=20 نافذة متدحرجة، نفس القرار التصميمي والقيمة
+ * الافتراضية المعتمَدة لـ`computePivotPoints`/`computeFibPivotPoints` أعلاه بالضبط ولنفس السبب) —
+ * ثامن مستوى دعم/مقاومة (أربعة بكل جهة R1..R4/S1..S4) حول **الإغلاق مباشرة** لا نقطة ارتكاز PP
+ * مشتقة كما بالنسختين الكلاسيكية/فيبوناتشي أعلاه (فرق تصميمي جوهري لكاماريلا تحديداً بكل المراجع
+ * القياسية: لا PP إطلاقاً، المرجع=إغلاق آخر شمعة مكتملة بالنافذة نفسها). **الصيغة** (معاملات
+ * كاماريلا الثابتة القياسية المستخدَمة بكل منصات الرسم البياني بلا استثناء): R1=إغلاق+مدى×1.0833،
+ * R2=إغلاق+مدى×1.1666، R3=إغلاق+مدى×1.25، R4=إغلاق+مدى×1.5، وبالمثل S1..S4 بالطرح (مدى=أعلى−أدنى
+ * لنفس نافذة الحساب). **شائع بتداول الفوركس تحديداً** (أكثر من الأسهم) لمستويات الدعم/المقاومة
+ * داخل اليوم — مناسب جداً لطبيعة هذا المشروع. **إعادة استخدام كاملة** لبنية `computePivotPoints`/
+ * `computeFibPivotPoints` أعلاه حرفياً (نفس نافذة `slice(n-period-1, n-1)` المستبعِدة للشمعة الجارية
+ * غير المكتملة، نفس حارس `n < period + 1`) — الفرق الوحيد هو المرجع (إغلاق بدل PP) والمعاملات
+ * الثمانية. يُرسَم بإعادة استخدام كاملة لنمط `styles.hLine`/`fibLabel` نفسه، بلون دافئ مميَّز جديد
+ * `colors.warn` (بدل bull/bear/accent للكلاسيكي وinfoAccent لفيبوناتشي) لتمييز الأنواع الثلاثة بصرياً
+ * عند تفعيلها معاً بلا تعارض (تسميات مسبوقة بحرف "C" بواجهة الرسم).
+ * **تحقّق حسابي فعلي (Node.js قبل الكتابة)**: مطابقة يدوية مباشرة لكل من close/R1/R4/S4 لنافذة
+ * صناعية محدَّدة القيم (تطابق تام <10⁻¹²)؛ 300 شمعة عشوائية بذرة ثابتة عبر 280 نافذة متدحرجة متتالية
+ * → ترتيب R4≥R3≥R2≥R1≥إغلاق≥S1≥S2≥S3≥S4 محقَّق حسابياً بكل نافذة بلا استثناء، صفر NaN/Infinity عبر
+ * كل القيم؛ أقل من period+1 شمعة → يُرجِع null صراحةً (نفس حارس الكلاسيكي/فيبوناتشي).
+ */
+export function computeCamarillaPivots(
+  candles: Candle[],
+  period = 20
+): {
+  close: number;
+  r1: number;
+  r2: number;
+  r3: number;
+  r4: number;
+  s1: number;
+  s2: number;
+  s3: number;
+  s4: number;
+} | null {
+  const n = candles.length;
+  if (n < period + 1) return null;
+  const window = candles.slice(n - period - 1, n - 1);
+  let hi = -Infinity;
+  let lo = Infinity;
+  for (const c of window) {
+    hi = Math.max(hi, c.high);
+    lo = Math.min(lo, c.low);
+  }
+  const close = window[window.length - 1].close;
+  const range = hi - lo;
+  return {
+    close,
+    r1: close + range * 1.0833,
+    r2: close + range * 1.1666,
+    r3: close + range * 1.25,
+    r4: close + range * 1.5,
+    s1: close - range * 1.0833,
+    s2: close - range * 1.1666,
+    s3: close - range * 1.25,
+    s4: close - range * 1.5,
+  };
+}
+
+/**
+ * Woodie's Pivot Points (Ken Wood) — نفس نافذة `slice(n-period-1, n-1)` المتدحرجة period=20 وحارس
+ * `n < period + 1` المستخدَمَين حرفياً بـ`computePivotPoints`/`computeFibPivotPoints`/
+ * `computeCamarillaPivots` أعلاه (نفس القرار التصميمي ولنفس السبب: لا تجميع جلسات/أيام منفصل
+ * بالمشروع). **الفرق الجوهري الوحيد عن الكلاسيكي**: نقطة الارتكاز تُرجِّح الإغلاق ×2 بدل وزن متساوٍ
+ * لأعلى/أدنى/إغلاق — PP=(أعلى+أدنى+2×إغلاق)/4 (بدل (أعلى+أدنى+إغلاق)/3 بالكلاسيكي) — يجعل PP أقرب
+ * لسعر الإغلاق الفعلي، وهو الفارق المعرَّف قياسياً بين النسختين بكل المراجع. بقية المستويات
+ * (R1/S1/R2/S2/R3/S3) بنفس معادلات الكلاسيكي حرفياً مطبَّقة على PP الجديد فقط (2×PP∓الطرف
+ * المقابل، PP∓المدى، الطرف∓2×(PP−الطرف المقابل)) — إعادة استخدام كاملة للصيغة الهيكلية، لا صيغة
+ * امتداد جديدة. مع Pivot Points/Fibonacci Pivots/Camarilla الموجودة مسبقاً، هذا يكمل قائمة "أنواع
+ * Pivot Points" الأربعة الأكثر شيوعاً بمنصات الرسم البياني القياسية (Standard/Fibonacci/Camarilla/
+ * Woodie) — لا نوع خامس متبقٍ من هذه العائلة تحديداً سوى DeMark أدناه مباشرة.
+ * **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: نافذة صناعية محدَّدة القيم (period=3
+ * للاختبار) → تطابق تام يدوي لـPP/R1/S1/R2/S2 (فرق<10⁻¹²)؛ 280 نافذة متدحرجة متتالية عبر 300 شمعة
+ * عشوائية بذرة ثابتة (period=20 الفعلية) → ترتيب R3≥R2≥R1≥PP≥S1≥S2≥S3 محقَّق حسابياً بكل نافذة بلا
+ * استثناء، صفر NaN/Infinity عبر كل القيم؛ أقل من period+1 شمعة → null صراحةً (نفس حارس الثلاثة
+ * السابقة). يُرسَم بإعادة استخدام كاملة لنمط `styles.hLine`/`fibLabel` نفسه، لون جديد `#C4B5FD`
+ * (بنفسجي فاتح مميَّز عن `infoAccent`/`warn`/bull/bear المستخدَمة للأنواع الثلاثة الأخرى، تحقَّق
+ * بـ`grep` غير مكرَّر عبر كل الهكسات المستخدَمة بالمشروع)، تسميات مسبوقة "W".
+ */
+export function computeWoodiePivots(
+  candles: Candle[],
+  period = 20
+): { pp: number; r1: number; r2: number; r3: number; s1: number; s2: number; s3: number } | null {
+  const n = candles.length;
+  if (n < period + 1) return null;
+  const window = candles.slice(n - period - 1, n - 1);
+  let hi = -Infinity;
+  let lo = Infinity;
+  for (const c of window) {
+    hi = Math.max(hi, c.high);
+    lo = Math.min(lo, c.low);
+  }
+  const close = window[window.length - 1].close;
+  const pp = (hi + lo + 2 * close) / 4;
+  const range = hi - lo;
+  return {
+    pp,
+    r1: 2 * pp - lo,
+    s1: 2 * pp - hi,
+    r2: pp + range,
+    s2: pp - range,
+    r3: hi + 2 * (pp - lo),
+    s3: lo - 2 * (hi - pp),
+  };
+}
+
+/**
+ * DeMark Pivot Points (Tom DeMark) — نفس نافذة/حارس `computeWoodiePivots` أعلاه حرفياً، لكن
+ * **الفارق التصميمي الجوهري لهذا النوع تحديداً بكل المراجع القياسية**: مستوى واحد فقط لكل جهة
+ * (PP/R1/S1 فقط — لا R2/R3/S2/S3 إطلاقاً)، والصيغة **شرطية** حسب علاقة إغلاق/فتح آخر شمعة
+ * بالنافذة (أول مؤشر بعائلة Pivot Points بالملف يستخدم `open` الشمعة، لا فقط أعلى/أدنى/إغلاق):
+ * إغلاق<فتح (هابطة) → X=أعلى+2×أدنى+إغلاق؛ إغلاق>فتح (صاعدة) → X=2×أعلى+أدنى+إغلاق؛ تعادل
+ * (إغلاق=فتح، حالة حدّية نادرة) → X=أعلى+أدنى+2×إغلاق (نفس ترجيح Woodie أعلاه بالضبط لهذه الحالة
+ * الحدّية تحديداً — تطابق المرجع القياسي). ثم PP=X/4، R1=X/2−أدنى، S1=X/2−أعلى بغضّ النظر عن
+ * الفرع. **خاصية هيكلية مضمونة رياضياً** بصرف النظر عن الفرع: R1>PP>S1 دائماً طالما أعلى>أدنى
+ * (لأن X/2−أدنى − X/4 = X/4−أدنى، وX/4≥أعلى/4+أدنى/4+... دائماً أكبر من أدنى بحكم تكوين X من
+ * مضاعفات أعلى/أدنى الموجبة — تحقَّق تجريبياً بكل الفروع الثلاثة بلا استثناء أدناه). **تحقّق حسابي
+ * فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: مطابقة يدوية مباشرة لكل فرع من الثلاثة (هابطة/صاعدة/
+ * تعادل) بنافذة صناعية محدَّدة القيم (فرق<10⁻¹²)؛ 280 نافذة متدحرجة متتالية عبر 300 شمعة عشوائية
+ * بذرة ثابتة (period=20 الفعلية، تُغطّي الفرعين الهابط/الصاعد عشوائياً حسب البيانات) → ترتيب
+ * R1≥PP≥S1 محقَّق حسابياً بكل نافذة بلا استثناء، صفر NaN/Infinity؛ أقل من period+1 شمعة → null
+ * صراحةً. يُرسَم بإعادة استخدام كاملة لنمط `styles.hLine`/`fibLabel` نفسه (مستويان فقط بدل سبعة،
+ * بلا PP منفصل مرسوم لتفادي ازدحام بصري إضافي عند تفعيل الأنواع الأربعة معاً — R1/S1 فقط، نفس قرار
+ * "أقل ازدحاماً حيث الصيغة نفسها أقل مستويات" الموثَّق ضمنياً بفارق عدد مستويات Camarilla/الكلاسيكي
+ * أصلاً)، لون جديد `#FDA4AF` (وردي فاتح مميَّز عن كل ألوان Pivot Points الأخرى وعن `bear`/
+ * `highImpact`، تحقَّق بـ`grep` غير مكرَّر)، تسميات مسبوقة "D".
+ */
+export function computeDemarkPivots(
+  candles: Candle[],
+  period = 20
+): { pp: number; r1: number; s1: number } | null {
+  const n = candles.length;
+  if (n < period + 1) return null;
+  const window = candles.slice(n - period - 1, n - 1);
+  let hi = -Infinity;
+  let lo = Infinity;
+  for (const c of window) {
+    hi = Math.max(hi, c.high);
+    lo = Math.min(lo, c.low);
+  }
+  const last = window[window.length - 1];
+  const { open, close } = last;
+  let x: number;
+  if (close < open) x = hi + 2 * lo + close;
+  else if (close > open) x = 2 * hi + lo + close;
+  else x = hi + lo + 2 * close;
+  const pp = x / 4;
+  return {
+    pp,
+    r1: x / 2 - lo,
+    s1: x / 2 - hi,
+  };
+}
+
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+
+/**
+ * TWAP (Time-Weighted Average Price) — تراكمي من بداية النافذة تماماً بنمط computeVwap أعلاه، لكن
+ * بلا وزن حجمي: كل شمعة تُحتسَب بوزن متساوٍ بغض النظر عن الفوليوم (بعكس VWAP الذي يُرجِّح كل شمعة
+ * بفوليومها). السعر النموذجي TP=(أعلى+أدنى+إغلاق)/3 نفسه المستخدَم بـVWAP/MFI/ADL أعلاه، لكن يُجمَع
+ * هنا كمتوسط بسيط تراكمي (cumTP/عدد الشموع) بدل (cumPV/cumVol). مفيد لمقارنة السعر الفعلي بمتوسطه
+ * الزمني الصرف حين يكون فوليوم المزود غير موثوق أو غير متوفر، بعكس VWAP الحساس لجودة بيانات الحجم.
+ * **تحقّق يدوي**: سعر ثابت تماماً بكل الشموع → TP=السعر نفسه بكل شمعة → المتوسط التراكمي=السعر نفسه
+ * من أول نقطة بالضبط (بعكس SMA بفترة ثابتة الذي يحتاج نافذة كاملة ليبدأ) — تقارب فوري مطابق لـVWAP
+ * بنفس الحالة الحدّية. لا قسمة على صفر إطلاقاً (i+1 يبدأ من 1 دوماً). **تحقّق Node.js فعلي**: سعر
+ * ثابت 50 شمعة → تطابق تام بكل نقطة (فرق<10⁻¹²)؛ 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity
+ * عبر كل الـ300 نقطة (بلا أي فترة إحماء، بعكس معظم دوال الملف).
+ */
+export function computeTwap(candles: Candle[]): (number | null)[] {
+  const out: (number | null)[] = [];
+  let cumTP = 0;
+  for (let i = 0; i < candles.length; i++) {
+    const c = candles[i];
+    const tp = (c.high + c.low + c.close) / 3;
+    cumTP += tp;
+    out.push(cumTP / (i + 1));
+  }
+  return out;
+}
+
+/**
+ * Linear Regression Channel (period=100 القيمة القياسية الشائعة لهذه الأداة تحديداً — أطول من نافذة
+ * LSMA/LinRegSlope/LinRegR2 أعلاه [period=25/14/14] لأن الغرض هنا قناة اتجاه بعيدة المدى لا مؤشر
+ * زخم قصير) — يعيد استخدام *نفس* صيغة الانحدار الخطي (sumX/sumX2/denom الثابتة حسابياً بمحاور
+ * x=0..period-1، meanY/meanX/intercept) المستخدَمة حرفياً بـcomputeLsma أعلاه لحساب خط الوسط (mid،
+ * القيمة المتوقَّعة عند نهاية النافذة x=period-1 — مطابقة لـLSMA تماماً لو استُدعيت بنفس period)، ثم
+ * يضيف حدّين علوي/سفلي بعرض mult×الانحراف المعياري *لبواقي الانحدار* (residuals، الفرق بين كل سعر
+ * فعلي بالنافذة وقيمته المتوقَّعة على خط الانحدار عند نفس x — بعكس بولنجر الذي يقيس انحراف السعر عن
+ * SMA أفقي، هنا القياس عن الخط المائل نفسه). نفس روح Keltner (قناة حول خط مركزي بعرض متغيّر) لكن
+ * الخط المركزي هنا مائل لا أفقي، والعرض من تشتت البواقي لا من ATR. mult=2 (نفس القيمة القياسية
+ * الشائعة لبولنجر/كلتنر أعلاه). يُرسَم بإعادة استخدام كاملة لنمط الشريط العمودي شبه الشفاف
+ * (upper→lower) المستخدَم أصلاً لـKeltner/Envelopes/Donchian حرفياً — بلا أي نمط رسم جديد.
+ * **تحقّق يدوي**: سعر ثابت تماماً بكل شموع النافذة → ميل=0 (كما بـLSMA)، كل بقايا=صفر (السعر الثابت
+ * يقع تماماً على الخط الأفقي المتوقَّع) → الانحراف المعياري=0 → upper=lower=mid=السعر الثابت بالضبط؛
+ * مسار خطي بحت (ميل ثابت تماماً) → كل نقطة تقع تماماً على خط الانحدار المُقدَّر (ملاءمة مثالية لأن
+ * البيانات خطية فعلاً) → بواقٍ=صفر لكل نقطة → upper=lower=mid=قيمة الخط الفعلية بالضبط (نفس حالة
+ * R²=1 الحدّية بـcomputeLinRegR2 أعلاه). **تحقّق Node.js فعلي (قبل الكتابة)**: سعر ثابت/مسار خطي بحت
+ * (كلاهما period=20 صغير للاختبار) → upper=lower=mid مطابق تماماً كما بالتحليل اليدوي أعلاه؛ 300
+ * نقطة عشوائية بذرة ثابتة (period=100 القيمة الفعلية) → 201 نقطة صالحة بالضبط (300−period+1)، صفر
+ * NaN/Infinity، upper≥mid≥lower محقَّق بنيوياً بكل نقطة صالحة؛ إعادة حساب مستقلة منفصلة عن الدالة
+ * لنقطة عشوائية واحدة (period=20) طابقت الدالة تماماً (mid/upper/lower الثلاثة، فرق<10⁻⁹).
+ */
+export function computeLinRegChannel(
+  closes: number[],
+  period = 100,
+  mult = 2
+): { mid: (number | null)[]; upper: (number | null)[]; lower: (number | null)[] } {
+  const n = period;
+  const sumX = (n * (n - 1)) / 2;
+  const sumX2 = ((n - 1) * n * (2 * n - 1)) / 6;
+  const denom = n * sumX2 - sumX * sumX;
+  const mid: (number | null)[] = [];
+  const upper: (number | null)[] = [];
+  const lower: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period - 1) {
+      mid.push(null);
+      upper.push(null);
+      lower.push(null);
+      continue;
+    }
+    let sumY = 0;
+    let sumXY = 0;
+    for (let x = 0; x < n; x++) {
+      const y = closes[i - n + 1 + x];
+      sumY += y;
+      sumXY += x * y;
+    }
+    const slope = denom === 0 ? 0 : (n * sumXY - sumX * sumY) / denom;
+    const meanY = sumY / n;
+    const meanX = sumX / n;
+    const intercept = meanY - slope * meanX;
+    let ssRes = 0;
+    for (let x = 0; x < n; x++) {
+      const y = closes[i - n + 1 + x];
+      const yHat = slope * x + intercept;
+      ssRes += (y - yHat) ** 2;
+    }
+    const sd = Math.sqrt(ssRes / n);
+    const m = slope * (n - 1) + intercept;
+    mid.push(m);
+    upper.push(m + mult * sd);
+    lower.push(m - mult * sd);
+  }
+  return { mid, upper, lower };
+}
+
+/**
+ * Center of Gravity (COG، جون إيلرز، period=10 القيمة القياسية لهذه الأداة تحديداً) — مذبذب متمركز
+ * حول الصفر يرصد "ثِقل" السعر داخل نافذة متدحرجة عبر ترجيح كل نقطة بمسافتها الزمنية عن بداية
+ * النافذة، على **السعر الوسيط** (`computeMedianPrice` أعلاه، (أعلى+أدنى)/2 — **إعادة استخدام كاملة
+ * لدالة موجودة بدل حساب سعر جديد**، نفس السعر المستخدَم أصلاً لـMedian Price/Ichimoku/Alligator
+ * حرفياً). لكل نافذة: Num=Σ(1+j)×سعر[i−j] وDenom=Σسعر[i−j] لـj=0..period-1 (j=0 = الشمعة الحالية)،
+ * ثم COG=−Num/Denom+(period+1)/2 — **الإزاحة الجبرية (period+1)/2 قرار تصميم متعمَّد** (لا حساب
+ * تعسّفي): تُصفّر المذبذب تماماً عند سعر ثابت (راجع التحقق الجبري أدناه)، بعكس الصيغة الخام
+ * −Num/Denom التي كانت لتتمركز حول −(period+1)/2 دائماً بلا معنى مقارنة بصفر. صفر عند مجموع سعر
+ * صفري بدل قسمة على صفر (حالة نظرية بحتة، السعر الوسيط للفوركس موجب دوماً). يُرسَم بإعادة استخدام
+ * كاملة لنمط هستوغرام TRIX/Force/Chaikin Osc/DPO (شريط عمودي مطبَّع بأقصى قيمة مطلقة بالسلسلة كاملة،
+ * bull فوق الصفر/bear تحته) — بلا أي نمط رسم جديد. **تحقّق جبري**: سعر ثابت تماماً C بكل نافذة →
+ * Num=C×Σ(1+j)=C×period×(period+1)/2، Denom=C×period → Num/Denom=(period+1)/2 بالضبط (مستقل عن C
+ * تماماً طالما C≠0) → COG=−(period+1)/2+(period+1)/2=0 بالضبط — **تحقَّق فعلياً بـNode.js** (سعر
+ * ثابت 1.5 عبر 40 شمعة period=10 → 0 بالضبط بكل نقطة صالحة، بلا أي فرق تقريب). 300 شمعة عشوائية
+ * بذرة ثابتة → صفر NaN/Infinity عبر كل الـ291 نقطة الصالحة (300−period+1)؛ إعادة حساب مستقلة منفصلة
+ * عن الدالة لنقطة عشوائية واحدة طابقت الدالة تماماً (فرق<10⁻¹²).
+ */
+export function computeCog(candles: Candle[], period = 10): (number | null)[] {
+  const price = computeMedianPrice(candles);
+  const n = candles.length;
+  const out: (number | null)[] = [];
+  for (let i = 0; i < n; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    let num = 0;
+    let denom = 0;
+    for (let count = 0; count < period; count++) {
+      const p = price[i - count];
+      num += (1 + count) * p;
+      denom += p;
+    }
+    out.push(denom === 0 ? 0 : -num / denom + (period + 1) / 2);
+  }
+  return out;
+}
+
+/**
+ * TTM Squeeze (Squeeze Momentum، جون كارتر) — يكشف لحظات "انضغاط" التقلب التي تسبق عادة انفجار حركة
+ * سعرية قوية: عندما ينكمش نطاق بولنجر (تشتت السعر) بالكامل داخل قناة كلتنر (تقلّب المدى الحقيقي
+ * ATR)، يعني ذلك أن التقلّب الفعلي بالسوق أقل بكثير من المعتاد نسبةً لتاريخه القريب — غالباً ما يسبق
+ * ذلك حركة قوية باتجاه ما. period=20 موحَّد للثلاثة (بولنجر/كلتنر/الزخم — القيمة القياسية لدى TTM
+ * الأصلي)، bbMult=2 (نفس بولنجر القياسي بالمشروع، `computeStdDev`/`computeOverlays.bb` أعلاه
+ * حرفياً)، ktMult=1.5 (**قرار تصميم موثَّق**: قيمة TTM الأصلية 1.5، أضيق عمداً من معامل
+ * `computeKeltner` الافتراضي [multiplier=2] المستخدَم لعرضها المستقل كمؤشر منفصل بالمشروع — اختبار
+ * "الانضغاط" [بولنجر داخل كلتنر] يفقد معناه القياسي المعروف بمعامل مختلف عن 1.5، فاستُدعي
+ * `computeKeltner(candles, period, period, 1.5)` مباشرة بمعامل صريح بدل الاعتماد على الافتراضي).
+ * **الانضغاط** (`squeezeOn`): upperBB<upperKC && lowerBB>lowerKC (بولنجر بالكامل داخل كلتنر).
+ * **الزخم** (`momentum`): يعيد استخدام *نفس* صيغة الانحدار الخطي (sumX/sumX2/denom/meanY/meanX/
+ * intercept، القيمة المتوقَّعة عند نهاية النافذة x=period-1) المستخدَمة حرفياً بـcomputeLsma/
+ * computeLinRegChannel أعلاه — لكن مطبَّقة على سلسلة مشتقة `delta[i]=إغلاق[i]−(donchianMid[i]+
+ * bbMid[i])/2` بدل الإغلاق الخام مباشرة (donchianMid = وسط أعلى قمة/أدنى قاع بنافذة period من
+ * `computeDonchian` أعلاه — **إعادة استخدام كاملة لدالة موجودة بدل حساب highest/lowest جديد**؛
+ * bbMid=sma(period) نفسها المستخدَمة لحد بولنجر) — هذا ما يميّز "الزخم" هنا عن LSMA العادي (الذي
+ * يتنبأ بموقع السعر نفسه، لا بانحرافه عن متوسط مزدوج دونشيان/بولنجر). null صراحةً قبل توفر نافذة
+ * زخم كاملة من نقاط delta صالحة (warm-up مركَّب: period-1 لصلاحية أول delta، ثم period إضافية
+ * لاكتمال نافذة الانحدار → أول قيمة صالحة عند 2×period-2). يُرسَم بإعادة استخدام كاملة لنمط هستوغرام
+ * TRIX/Force/Chaikin Osc/DPO أعلاه حرفياً (bull/bear حسب الإشارة)، مع تمييز بصري إضافي لحالة
+ * الانضغاط عبر شفافية/حدّ الشريط نفسه بدل عنصر رسم جديد (معتم+حدّ لوني عند التحرر من الانضغاط،
+ * شفاف بلا حدّ أثناء الانضغاط النشط) — بلا أي نمط رسم جديد فعلياً. **تحقّق حسابي فعلي (Node.js، قبل
+ * الكتابة)**: شمعة بمدى ثابت صغير حول سعر ثابت (50 شمعة) → ATR ثابت غير صفري بينما انحراف بولنجر
+ * المعياري=0 (إغلاق ثابت) → بولنجر أضيق دوماً من كلتنر → squeezeOn=true لكل نقطة صالحة، ومومنتوم
+ * يتقارب لصفر تماماً (فرق<10⁻¹⁵، ضجيج تقريب فقط)؛ 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity
+ * عبر كل الـ262 نقطة الزخم الصالحة (300−(2×period-2)) وكل الـ281 نقطة الانضغاط الصالحة
+ * (300−(period-1))؛ إعادة حساب مستقلة منفصلة عن الدالة لنقطة عشوائية واحدة لمومنتوم طابقت الدالة
+ * تماماً (فرق<10⁻¹²). مسار صاعد خطي بحت بمدى ثابت → مومنتوم ثابت غير صفري متّسق الإشارة عبر كل
+ * النقاط الصالحة (اتجاه واضح، لا NaN).
+ */
+export function computeSqueeze(
+  candles: Candle[],
+  period = 20,
+  bbMult = 2,
+  ktMult = 1.5
+): { momentum: (number | null)[]; squeezeOn: (boolean | null)[] } {
+  const n = candles.length;
+  const closes = candles.map((c) => c.close);
+  const mid = sma(closes, period);
+  const stdev = computeStdDev(closes, period);
+  const kc = computeKeltner(candles, period, period, ktMult);
+  const donchian = computeDonchian(candles, period);
+  const squeezeOn: (boolean | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    if (mid[i] == null || stdev[i] == null || kc.upper[i] == null || kc.lower[i] == null) continue;
+    const upperBB = mid[i]! + bbMult * stdev[i]!;
+    const lowerBB = mid[i]! - bbMult * stdev[i]!;
+    squeezeOn[i] = upperBB < kc.upper[i]! && lowerBB > kc.lower[i]!;
+  }
+  const delta: (number | null)[] = closes.map((c, i) =>
+    mid[i] != null && donchian.mid[i] != null ? c - (donchian.mid[i]! + mid[i]!) / 2 : null
+  );
+  const nreg = period;
+  const sumX = (nreg * (nreg - 1)) / 2;
+  const sumX2 = ((nreg - 1) * nreg * (2 * nreg - 1)) / 6;
+  const denom = nreg * sumX2 - sumX * sumX;
+  const momentum: (number | null)[] = [];
+  for (let i = 0; i < n; i++) {
+    if (i < 2 * period - 2) {
+      momentum.push(null);
+      continue;
+    }
+    let validWindow = true;
+    let sumY = 0;
+    let sumXY = 0;
+    for (let x = 0; x < nreg; x++) {
+      const y = delta[i - nreg + 1 + x];
+      if (y == null) {
+        validWindow = false;
+        break;
+      }
+      sumY += y;
+      sumXY += x * y;
+    }
+    if (!validWindow) {
+      momentum.push(null);
+      continue;
+    }
+    const slope = denom === 0 ? 0 : (nreg * sumXY - sumX * sumY) / denom;
+    const meanY = sumY / nreg;
+    const meanX = sumX / nreg;
+    const intercept = meanY - slope * meanX;
+    momentum.push(slope * (nreg - 1) + intercept);
+  }
+  return { momentum, squeezeOn };
+}

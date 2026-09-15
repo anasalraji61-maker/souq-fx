@@ -30,6 +30,7 @@ export type IndicatorId =
   | 'cci'
   | 'roc'
   | 'vwap'
+  | 'twap'
   | 'obv'
   | 'mfi'
   | 'adx'
@@ -72,6 +73,7 @@ export type IndicatorId =
   | 'linRegSlope'
   | 'linRegR2'
   | 'lsma'
+  | 'linRegChannel'
   | 'percentB'
   | 'bbw'
   | 'medianPrice'
@@ -108,6 +110,13 @@ export type IndicatorId =
   | 'smma20'
   | 'kama'
   | 'stc'
+  | 'zlema'
+  | 'fibPivots'
+  | 'camarilla'
+  | 'woodiePivots'
+  | 'demarkPivots'
+  | 'squeeze'
+  | 'cog'
   | 'volume'
   | 'volumeProfile'
   | 'tpo'
@@ -176,6 +185,7 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'cci', label: 'CCI', pane: true },
   { id: 'roc', label: 'ROC', pane: true },
   { id: 'vwap', label: 'VWAP' },
+  { id: 'twap', label: 'TWAP' },
   { id: 'obv', label: 'OBV', pane: true },
   { id: 'mfi', label: 'MFI', pane: true },
   { id: 'adx', label: 'ADX', pane: true },
@@ -218,6 +228,7 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'linRegSlope', label: 'LR Slope', pane: true },
   { id: 'linRegR2', label: 'LR R²', pane: true },
   { id: 'lsma', label: 'LSMA' },
+  { id: 'linRegChannel', label: 'LR Channel' },
   { id: 'percentB', label: '%B', pane: true },
   { id: 'bbw', label: 'BBW', pane: true },
   { id: 'medianPrice', label: 'Median Price' },
@@ -254,6 +265,13 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'smma20', label: 'SMMA 20' },
   { id: 'kama', label: 'KAMA' },
   { id: 'stc', label: 'STC', pane: true },
+  { id: 'zlema', label: 'ZLEMA' },
+  { id: 'fibPivots', label: 'Fib Pivots' },
+  { id: 'camarilla', label: 'Camarilla' },
+  { id: 'woodiePivots', label: 'Woodie Pivots' },
+  { id: 'demarkPivots', label: 'DeMark Pivots' },
+  { id: 'squeeze', label: 'Squeeze', pane: true },
+  { id: 'cog', label: 'COG', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

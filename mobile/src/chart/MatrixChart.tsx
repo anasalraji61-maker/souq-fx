@@ -68,6 +68,7 @@ import {
   computeBop,
   computeBullPower,
   computeBwMfi,
+  computeCamarillaPivots,
   computeCci,
   computeChaikinOsc,
   computeChaikinVolatility,
@@ -76,12 +77,15 @@ import {
   computeChoppiness,
   computeCmf,
   computeCmo,
+  computeCog,
   computeCoppock,
+  computeDemarkPivots,
   computeDmi,
   computeDonchian,
   computeDpo,
   computeEnvelopes,
   computeEom,
+  computeFibPivotPoints,
   computeFisherTransform,
   computeForceIndex,
   computeFractals,
@@ -93,6 +97,7 @@ import {
   computeKeltner,
   computeKlinger,
   computeKst,
+  computeLinRegChannel,
   computeLinRegR2,
   computeLinRegSlope,
   computeLsma,
@@ -120,6 +125,7 @@ import {
   computeRwi,
   computeSmi,
   computeSmma,
+  computeSqueeze,
   computeStc,
   computeStdDev,
   computeStoch,
@@ -128,6 +134,7 @@ import {
   computeT3,
   computeTrix,
   computeTsi,
+  computeTwap,
   computeTypicalPrice,
   computeUlcerIndex,
   computeUltimateOsc,
@@ -139,7 +146,9 @@ import {
   computeVwma,
   computeWeightedClose,
   computeWilliamsR,
+  computeWoodiePivots,
   computeZigZag,
+  computeZlema,
   formatPrice,
   heikinAshi,
 } from './math';
@@ -664,6 +673,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('pivots') ? computePivotPoints(source.plot, 20) : null),
     [source.plot, indicators]
   );
+  const fibPivots = useMemo(
+    () => (indicators.includes('fibPivots') ? computeFibPivotPoints(source.plot, 20) : null),
+    [source.plot, indicators]
+  );
+  const camarilla = useMemo(
+    () => (indicators.includes('camarilla') ? computeCamarillaPivots(source.plot, 20) : null),
+    [source.plot, indicators]
+  );
+  const woodiePivots = useMemo(
+    () => (indicators.includes('woodiePivots') ? computeWoodiePivots(source.plot, 20) : null),
+    [source.plot, indicators]
+  );
+  const demarkPivots = useMemo(
+    () => (indicators.includes('demarkPivots') ? computeDemarkPivots(source.plot, 20) : null),
+    [source.plot, indicators]
+  );
   const tpo = useMemo(
     () => (indicators.includes('tpo') ? computeTpo(source.plot, 18) : null),
     [source.plot, indicators]
@@ -816,6 +841,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   );
   const vwap = useMemo(
     () => (indicators.includes('vwap') ? computeVwap(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const twap = useMemo(
+    () => (indicators.includes('twap') ? computeTwap(source.plot) : null),
     [source.plot, indicators]
   );
   const obv = useMemo(
@@ -1010,6 +1039,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('lsma') ? computeLsma(closes) : null),
     [closes, indicators]
   );
+  const linRegChannel = useMemo(
+    () => (indicators.includes('linRegChannel') ? computeLinRegChannel(closes) : null),
+    [closes, indicators]
+  );
   const momentum = useMemo(
     () => (indicators.includes('momentum') ? computeMomentum(closes) : null),
     [closes, indicators]
@@ -1127,6 +1160,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('stc') ? computeStc(closes) : null),
     [closes, indicators]
   );
+  const zlema = useMemo(
+    () => (indicators.includes('zlema') ? computeZlema(closes) : null),
+    [closes, indicators]
+  );
+  const cog = useMemo(
+    () => (indicators.includes('cog') ? computeCog(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const squeeze = useMemo(
+    () => (indicators.includes('squeeze') ? computeSqueeze(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1192,6 +1237,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('adl') ? 1 : 0) +
     (indicators.includes('rvix') ? 1 : 0) +
     (indicators.includes('stc') ? 1 : 0) +
+    (indicators.includes('cog') ? 1 : 0) +
+    (indicators.includes('squeeze') ? 1 : 0) +
     (indicators.includes('cvd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
@@ -1218,6 +1265,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('tema20')) overlays.tema20.forEach(push);
     if (indicators.includes('hma20')) overlays.hma20.forEach(push);
     if (indicators.includes('vwap') && vwap) vwap.forEach(push);
+    if (indicators.includes('twap') && twap) twap.forEach(push);
     if (indicators.includes('psar') && psar) psar.forEach(push);
     if (indicators.includes('medianPrice') && medianPrice) medianPrice.forEach(push);
     if (indicators.includes('typicalPrice') && typicalPrice) typicalPrice.forEach(push);
@@ -1229,6 +1277,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('t3') && t3) t3.forEach(push);
     if (indicators.includes('smma20') && smma20) smma20.forEach(push);
     if (indicators.includes('kama') && kama) kama.forEach(push);
+    if (indicators.includes('zlema') && zlema) zlema.forEach(push);
     if (indicators.includes('supertrend') && supertrend) supertrend.value.forEach(push);
     if (indicators.includes('bb')) {
       overlays.bbUpper.forEach(push);
@@ -1237,6 +1286,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('keltner') && keltner) {
       keltner.upper.forEach(push);
       keltner.lower.forEach(push);
+    }
+    if (indicators.includes('linRegChannel') && linRegChannel) {
+      linRegChannel.upper.forEach(push);
+      linRegChannel.lower.forEach(push);
     }
     if (indicators.includes('envelopes') && envelopes) {
       envelopes.upper.forEach(push);
@@ -1307,16 +1360,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     logScale,
     tpo,
     vwap,
+    twap,
     psar,
     medianPrice,
     typicalPrice,
     weightedClose,
     mcginley,
     lsma,
+    linRegChannel,
     vwma,
     alma,
     t3,
     kama,
+    zlema,
     supertrend,
     keltner,
     envelopes,
@@ -2750,6 +2806,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             )
           )}
+        {indicators.includes('twap') &&
+          twap &&
+          twap.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`tw${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#BAE6FD' }]}
+              />
+            )
+          )}
         {indicators.includes('psar') &&
           psar &&
           psar.map((v, i) =>
@@ -2874,6 +2940,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             )
           )}
+        {indicators.includes('zlema') &&
+          zlema &&
+          zlema.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`zl${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FDBA74' }]}
+              />
+            )
+          )}
         {indicators.includes('gmma') &&
           gmma &&
           gmma.shortLines.map((line, li) =>
@@ -2981,6 +3057,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   width: 2,
                   height: Math.max(2, yOf(lo) - yOf(v)),
                   backgroundColor: 'rgba(167,139,250,0.18)',
+                }}
+              />
+            );
+          })}
+        {indicators.includes('linRegChannel') &&
+          linRegChannel &&
+          linRegChannel.upper.map((v, i) => {
+            const lo = linRegChannel.lower[i];
+            if (v == null || lo == null) return null;
+            return (
+              <View
+                key={`lrc${i}`}
+                style={{
+                  position: 'absolute',
+                  left: xOf(i) - 1,
+                  top: yOf(v),
+                  width: 2,
+                  height: Math.max(2, yOf(lo) - yOf(v)),
+                  backgroundColor: 'rgba(125,211,252,0.14)',
                 }}
               />
             );
@@ -3193,6 +3288,92 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <View
                 key={`pv${label}`}
                 style={[styles.hLine, { top: yOf(price), borderColor: color, opacity: 0.75 }]}
+              >
+                <Text style={styles.fibLabel}>{label}</Text>
+              </View>
+            ))
+          : null}
+
+        {fibPivots
+          ? (
+              [
+                ['FR3', fibPivots.r3],
+                ['FR2', fibPivots.r2],
+                ['FR1', fibPivots.r1],
+                ['FPP', fibPivots.pp],
+                ['FS1', fibPivots.s1],
+                ['FS2', fibPivots.s2],
+                ['FS3', fibPivots.s3],
+              ] as const
+            ).map(([label, price]) => (
+              <View
+                key={`fpv${label}`}
+                style={[
+                  styles.hLine,
+                  { top: yOf(price), borderColor: colors.infoAccent, opacity: 0.6 },
+                ]}
+              >
+                <Text style={styles.fibLabel}>{label}</Text>
+              </View>
+            ))
+          : null}
+
+        {camarilla
+          ? (
+              [
+                ['CR4', camarilla.r4],
+                ['CR3', camarilla.r3],
+                ['CR2', camarilla.r2],
+                ['CR1', camarilla.r1],
+                ['CS1', camarilla.s1],
+                ['CS2', camarilla.s2],
+                ['CS3', camarilla.s3],
+                ['CS4', camarilla.s4],
+              ] as const
+            ).map(([label, price]) => (
+              <View
+                key={`cam${label}`}
+                style={[
+                  styles.hLine,
+                  { top: yOf(price), borderColor: colors.warn, opacity: 0.55 },
+                ]}
+              >
+                <Text style={styles.fibLabel}>{label}</Text>
+              </View>
+            ))
+          : null}
+
+        {woodiePivots
+          ? (
+              [
+                ['WR3', woodiePivots.r3],
+                ['WR2', woodiePivots.r2],
+                ['WR1', woodiePivots.r1],
+                ['WPP', woodiePivots.pp],
+                ['WS1', woodiePivots.s1],
+                ['WS2', woodiePivots.s2],
+                ['WS3', woodiePivots.s3],
+              ] as const
+            ).map(([label, price]) => (
+              <View
+                key={`wpv${label}`}
+                style={[styles.hLine, { top: yOf(price), borderColor: '#C4B5FD', opacity: 0.6 }]}
+              >
+                <Text style={styles.fibLabel}>{label}</Text>
+              </View>
+            ))
+          : null}
+
+        {demarkPivots
+          ? (
+              [
+                ['DR1', demarkPivots.r1],
+                ['DS1', demarkPivots.s1],
+              ] as const
+            ).map(([label, price]) => (
+              <View
+                key={`dpv${label}`}
+                style={[styles.hLine, { top: yOf(price), borderColor: '#FDA4AF', opacity: 0.6 }]}
               >
                 <Text style={styles.fibLabel}>{label}</Text>
               </View>
@@ -3744,6 +3925,67 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 />
               )
             )}
+          </View>
+        </View>
+      ) : null}
+
+      {cog ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>COG</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = cog.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxCog = Math.max(...vals, 1e-9);
+              return cog.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxCog) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {squeeze ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Squeeze</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = squeeze.momentum
+                .filter((x): x is number => x != null)
+                .map((v) => Math.abs(v));
+              const maxSq = Math.max(...vals, 1e-9);
+              return squeeze.momentum.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxSq) * (paneH / 2 - 8));
+                const on = squeeze.squeezeOn[i];
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: on ? 0.35 : 0.85,
+                      borderWidth: on ? 0 : 1,
+                      borderColor: on ? undefined : colors.warn,
+                    }}
+                  />
+                );
+              });
+            })()}
           </View>
         </View>
       ) : null}

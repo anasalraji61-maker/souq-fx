@@ -3,6 +3,7 @@ import {
   View,
   Text,
   Pressable,
+  ScrollView,
   StyleSheet,
   PanResponder,
   useWindowDimensions,
@@ -24,7 +25,12 @@ export const FRAME_BOX_H_PHONE = FRAME_CHART_H_PHONE + 130;
 export const FRAME_CHART_H_PHONE_GRID = 150;
 export const FRAME_BOX_H_PHONE_GRID = FRAME_CHART_H_PHONE_GRID + 110;
 
-/** تفضيل المتداول: شبكة (فريمات مربعة جنباً إلى جنب) أو قائمة رأسية — يُحفظ محلياً */
+/**
+ * تفضيل المتداول على الهاتف: مربعات (فريمان جنباً إلى جنب، صغيرة)
+ * أو مستطيلات (فريم واحد بكل صف، بعرض الشاشة وأطول) — نفس تسمية
+ * مفتاح "مربع/مستطيل" الموجود في شريط تبديل التخطيط على اللابتوب.
+ * يُحفظ محلياً.
+ */
 type PhoneMode = 'grid' | 'stack';
 
 export type GridItem = {
@@ -393,7 +399,7 @@ export function FrameSizedGrid({
         style={[styles.phoneModeBtn, phoneMode === 'grid' && styles.phoneModeBtnActive]}
       >
         <Text style={[styles.phoneModeText, phoneMode === 'grid' && styles.phoneModeTextActive]}>
-          ▦ شبكة
+          ▦ مربعات
         </Text>
       </Pressable>
       <Pressable
@@ -401,13 +407,13 @@ export function FrameSizedGrid({
         style={[styles.phoneModeBtn, phoneMode === 'stack' && styles.phoneModeBtnActive]}
       >
         <Text style={[styles.phoneModeText, phoneMode === 'stack' && styles.phoneModeTextActive]}>
-          ☰ قائمة
+          ▭ مستطيلات
         </Text>
       </Pressable>
     </View>
   );
 
-  // الهاتف + وضع الشبكة: فريمان بكل صف (نفس فكرة الفريمات المربعة على اللابتوب)
+  // الهاتف + وضع المربعات: فريمان بكل صف (نفس فكرة الفريمات المربعة على اللابتوب)
   if (phone && !showAll && phoneMode === 'grid') {
     return (
       <View>
@@ -417,6 +423,33 @@ export function FrameSizedGrid({
             renderCell(item, index, [styles.cellPhoneGrid, { height: FRAME_BOX_H_PHONE_GRID }])
           )}
         </View>
+      </View>
+    );
+  }
+
+  // الهاتف + وضع المستطيلات: فريمات مستطيلة طويلة جنباً إلى جنب أفقياً — نفس فكرة صف
+  // gridFillRow على اللابتوب (fillRect)، بعد تكييفها لعرض الهاتف بتمرير أفقي بدل ضغط
+  // كل الفريمات بصف واحد ضيق. كل فريم عريض تقريباً كعرض الشاشة مع لمحة من التالي.
+  if (phone && !showAll && phoneMode === 'stack') {
+    const rectCardWidth = Math.round(width * 0.84);
+    return (
+      <View>
+        {phoneModeToggle}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          decelerationRate="fast"
+          snapToInterval={rectCardWidth + spacing.sm}
+          snapToAlignment="start"
+          contentContainerStyle={styles.rectPhoneRow}
+        >
+          {displayed.map((item, index) =>
+            renderCell(item, index, [
+              styles.cellPhoneRect,
+              { width: rectCardWidth, height: FRAME_BOX_H_PHONE },
+            ])
+          )}
+        </ScrollView>
       </View>
     );
   }
@@ -507,6 +540,15 @@ const styles = StyleSheet.create({
     width: '48%',
     minWidth: 0,
     maxWidth: '48%',
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  rectPhoneRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingRight: spacing.lg,
+  },
+  cellPhoneRect: {
     flexGrow: 0,
     flexShrink: 0,
   },
