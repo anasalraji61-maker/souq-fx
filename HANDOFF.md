@@ -54,7 +54,11 @@ MatrixChart.tsx 249583→252140 (+2557). `device_stage_files` جديد لـmath.
 التشغيل (بروتوكول التزامن القياسي، `device_list_dir` قبل الكتابة طابق آخر قراءة، `written` بلا
 `rejected`).
 
-**GIT**: يُحاوَل أدناه بخطوة منفصلة عبر GitHub Desktop — راجع الملاحظة/التحديث اللاحق إن وُجد.
+**GIT**: نجح بالكامل عبر GitHub Desktop — قائمة الملفات المتغيّرة قبل الـcommit طابقت تماماً الخمسة
+الملفات المعدَّلة هذا التشغيل (docs/ROADMAP.md، HANDOFF.md، mobile/src/chart/math.ts، MatrixChart.tsx،
+types.ts — صفر ملف خارج النطاق، لا `.env`)، commit بعنوان "MATRIX Yang-Zhang Volatility and SMI Ergodic
+Oscillator indicators, 5 files"، ثم `Push origin` نجح — الحالة النهائية "No local changes"/"Fetch
+origin" بلا أي badge انتظار push متبقٍ.
 
 آخر تحديث سابق: 2026-09-15 (Claude — تشغيل مجدول لاحق ثالث عشر (نفس اليوم)، بروتوكول التسريع، جلسة جديدة بلا
 ذاكرة):
