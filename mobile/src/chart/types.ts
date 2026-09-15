@@ -155,7 +155,14 @@ export type IndicatorId =
   | 'yangZhangVol'
   | 'smiErgodic'
   | 'starcBands'
-  | 'pmo';
+  | 'pmo'
+  | 'trueRange'
+  | 'stdError'
+  | 'ewmaVol'
+  | 'volRoc'
+  | 'adxr'
+  | 'volatilityRatio'
+  | 'williamsAd';
 
 export type DrawTool =
   | 'none'
@@ -340,6 +347,13 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'smiErgodic', label: 'SMI Ergodic Osc', pane: true },
   { id: 'starcBands', label: 'STARC Bands' },
   { id: 'pmo', label: 'PMO', pane: true },
+  { id: 'trueRange', label: 'True Range', pane: true },
+  { id: 'stdError', label: 'Std Error', pane: true },
+  { id: 'ewmaVol', label: 'EWMA Vol', pane: true },
+  { id: 'volRoc', label: 'Volume ROC', pane: true },
+  { id: 'adxr', label: 'ADXR', pane: true },
+  { id: 'volatilityRatio', label: 'Volatility Ratio', pane: true },
+  { id: 'williamsAd', label: 'Williams A/D', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

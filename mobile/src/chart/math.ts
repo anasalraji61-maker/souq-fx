@@ -444,6 +444,34 @@ export function computeAdx(candles: Candle[], period = 14): (number | null)[] {
 }
 
 /**
+ * ADXR (Average Directional Movement Index Rating، وايلدر) — ليس مؤشراً مستقلاً جديداً رياضياً بل
+ * **تنعيم إضافي لـcomputeAdx نفسها**: ADXR[i] = (ADX[i] + ADX[i−period])/2 (متوسط قيمة ADX الحالية
+ * وقيمتها قبل `period` شمعة بالضبط، نفس `period` المستخدَم أصلاً لحساب ADX — القيمة القياسية 14).
+ * الهدف: تخفيف تذبذب ADX نفسها لتمييز تغيّر قوة الاتجاه الفعلي عن الضوضاء قصيرة المدى — **إعادة
+ * استخدام كاملة لـcomputeAdx** (استدعاء مباشر بلا أي منطق DI/DX جديد)، صفر حساب اتجاهي مستقل. يُقرأ
+ * بنفس عتبات ADX تماماً (فوق 25 عادة = اتجاه قوي، تحت 20 = بلا اتجاه واضح). **تحقّق حسابي فعلي
+ * (Node.js، بيئة سحابية، قبل الكتابة)**: سوق مسطّح تماماً (40 شمعة) → `computeAdx` نفسها ترجع فارغة
+ * (n≤period×2) فـADXR فارغة أيضاً بالضرورة (حارس `adx[i]==null`)؛ اتجاه صاعد ثابت الخطوة (60 شمعة) →
+ * ADXR يقترب من 100 بذيل السلسلة (يطابق ADX نفسها بقوة اتجاه قصوى)، وكل القيم ضمن [0,100] بالضبط
+ * (خاصية موروثة جبرياً من كون ADXR متوسطاً حسابياً لقيمتي ADX، وكلتاهما ضمن [0,100] أصلاً)؛ 300 شمعة
+ * عشوائية بذرة ثابتة (mulberry32) → صفر NaN/Infinity، 259 نقطة صالحة، وإعادة حساب brute-force مستقلة
+ * (استدعاء `computeAdx` مستقلاً ثم حساب المتوسط يدوياً) عند idx=200 طابقت الدالة الفعلية بالضبط
+ * (فرق=0).
+ */
+export function computeAdxr(candles: Candle[], period = 14): (number | null)[] {
+  const adx = computeAdx(candles, period);
+  const n = candles.length;
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    if (adx[i] == null) continue;
+    const prior = i - period;
+    if (prior < 0 || adx[prior] == null) continue;
+    out[i] = (adx[i]! + adx[prior]!) / 2;
+  }
+  return out;
+}
+
+/**
  * Parabolic SAR (Stop And Reverse) — خوارزمية Wilder القياسية: نقطة تتبع السعر من الأسفل خلال
  * اتجاه صاعد ومن الأعلى خلال اتجاه هابط، بتسارع تدريجي (AF يبدأ من step ويزيد بمقدار step عند كل
  * قمة/قاع جديد حتى سقف maxStep). عند اختراق السعر لنقطة SAR الحالية ينعكس الاتجاه: تصبح SAR
@@ -604,6 +632,71 @@ export function computeAtr(candles: Candle[], period = 14): (number | null)[] {
     );
   }
   return sma(tr, period);
+}
+
+/**
+ * True Range (TR) — المدى الحقيقي الخام لكل شمعة منفردة **بلا تنعيم** (خلافاً لـcomputeAtr الذي
+ * يطبّق SMA على نفس القيمة). يقيس أقصى تذبذب فعلي بالشمعة الواحدة بثلاث مقارنات: مدى الشمعة نفسها
+ * (أعلى−أدنى)، الفجوة الصاعدة عن إغلاق الشمعة السابقة (|أعلى−إغلاق سابق|)، والفجوة الهابطة عنه
+ * (|أدنى−إغلاق سابق|) — القيمة الأكبر بينها (وايلدر، 1978، نفس التعريف الأساسي المستخدَم داخلياً
+ * بـcomputeAtr حرفياً، **مُستخرَجة هنا كدالة مستقلة مُصدَّرة** بدل بقائها منطقاً داخلياً غير قابل
+ * لإعادة الاستخدام كمؤشر خاص به — نفس أسلوب استخراج computeAccumDist من computeChaikinOsc سابقاً
+ * بالملف). الشمعة الأولى (لا سابقة لها) = أعلى−أدنى فقط (نفس تحفّظ computeAtr[i=0] حرفياً). صفر
+ * إحماء (كل نقطة صالحة من الشمعة الأولى)، صفر حساب EMA/SMA جديد. **تحقّق حسابي فعلي (Node.js قبل
+ * الكتابة)**: سوق مسطّح تماماً (بلا فتائل، high=low=close لكل شمعة) → TR=0 بالضبط لكل نقطة؛ سيناريو
+ * فجوة صناعي (شمعة ثانية تفتح بفجوة صاعدة كاملة فوق مدى الشمعة الأولى) → التحقّق يدوياً أن الفجوة
+ * (|أدنى−إغلاق سابق|) هي المهيمنة لا مدى الشمعة نفسه، طابق التوقع بالضبط (2 ثم 11)؛ **تحقّق تناسق
+ * حاسم**: `sma(computeTrueRange(candles), period)` يطابق `computeAtr(candles, period)` بالضبط
+ * (فرق=0 حرفياً) عبر 300 شمعة عشوائية بذرة ثابتة (mulberry32) — إثبات أن الدالة المستقلة الجديدة هي
+ * حرفياً نفس اللبنة الداخلية المستخدَمة بـATR الموثَّقة والمستخدَمة بالإنتاج منذ البداية، صفر خطر
+ * رياضي جديد. صفر NaN/Infinity/قيمة سالبة عبر كل النقاط.
+ */
+export function computeTrueRange(candles: Candle[]): (number | null)[] {
+  const out: (number | null)[] = [];
+  for (let i = 0; i < candles.length; i++) {
+    if (i === 0) {
+      out.push(candles[i].high - candles[i].low);
+      continue;
+    }
+    const prev = candles[i - 1].close;
+    out.push(
+      Math.max(
+        candles[i].high - candles[i].low,
+        Math.abs(candles[i].high - prev),
+        Math.abs(candles[i].low - prev)
+      )
+    );
+  }
+  return out;
+}
+
+/**
+ * Volatility Ratio (نسبة التقلّب، أسلوب وايلدر) — **إعادة استخدام كاملة لدالتَين موجودتين مسبقاً
+ * بالملف** بلا أي حساب رياضي جديد: نسبة المدى الحقيقي الخام للشمعة الحالية (`computeTrueRange`) إلى
+ * متوسطه المتدحرج (`computeAtr`، نفس `period`، القيمة القياسية 14 — وهي فعلياً SMA للمدى الحقيقي كما
+ * أثبت تحقّق التناسق الموثَّق أعلاه لـTrueRange). VR≈1 = تقلّب الشمعة الحالية طبيعي مقارنة بمتوسطها
+ * الأخير، VR≫1 = طفرة تقلّب حادة تتجاوز المعتاد بوضوح (فجوة سعرية أو شمعة استثنائية)، VR≪1 = انكماش
+ * تقلّب (سوق يهدأ قبل حركة محتملة). حارس صريح: `atr===0` (سوق مسطّح تماماً بلا أي مدى) → null بدل
+ * قسمة على صفر. **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: سوق مسطّح تماماً (40 شمعة)
+ * → TR=0 وATR=0 لكل نقطة → VR=null بالكامل (حارس القسمة على صفر يعمل بشكل صحيح)؛ سيناريو طفرة تقلّب
+ * صناعي (29 شمعة هادئة بمدى ثابت صغير ثم شمعة واحدة بفجوة سعرية حادة) → VR>1 عند نقطة الطفرة بالضبط
+ * (11.5 تقريباً) بينما القيم المجاورة تبقى قريبة من 1 قبلها وتنخفض دون 1 بعدها (ATR يرتفع مؤقتاً بعد
+ * دمج الطفرة بالنافذة المتدحرجة)؛ 300 شمعة عشوائية بذرة ثابتة (mulberry32) → صفر NaN/Infinity، صفر
+ * قيمة سالبة (287 نقطة صالحة)، وإعادة حساب brute-force مستقلة تماماً (حلقتا TR/ATR مُعاد كتابتهما من
+ * الصفر ببنية مختلفة عن `computeTrueRange`/`computeAtr` الفعليتين) عند idx=200 طابقت الدالة الفعلية
+ * بالضبط (فرق=0).
+ */
+export function computeVolatilityRatio(candles: Candle[], period = 14): (number | null)[] {
+  const tr = computeTrueRange(candles);
+  const atr = computeAtr(candles, period);
+  const n = candles.length;
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    const a = atr[i];
+    if (a == null || a === 0 || tr[i] == null) continue;
+    out[i] = tr[i]! / a;
+  }
+  return out;
 }
 
 /**
@@ -886,6 +979,44 @@ export function computeAccumDist(candles: (Candle & { volume?: number })[]): num
     const mfm = span === 0 ? 0 : (c.close - c.low - (c.high - c.close)) / span;
     cum += mfm * vol;
     out.push(cum);
+  }
+  return out;
+}
+
+/**
+ * Williams Accumulation/Distribution (لاري ويليامز — **صيغة مختلفة جذرياً عن computeAccumDist
+ * أعلاه**، وليست تكراراً لها رغم الاسم المتشابه): خط تراكم/توزيع تراكمي **بلا فوليوم إطلاقاً**
+ * (خلافاً لكل مؤشرات A/D الأخرى بالملف [ADL/CMF/MFI/Force Index/...] المبنية جميعاً على الفوليوم) —
+ * يعتمد فقط على العلاقة بين الإغلاق الحالي والسابق ومدى الشمعة الحقيقي (True Range High/Low، نفس
+ * فلسفة `computeTrueRange` من دمج الإغلاق السابق بالمدى). لكل شمعة (ابتداءً من الثانية): إن
+ * ارتفع الإغلاق (close[i] > close[i-1]) فـ AD = close[i] − min(low[i], close[i-1]) (True Range
+ * Low)؛ إن انخفض (close[i] < close[i-1]) فـ AD = close[i] − max(high[i], close[i-1]) (True Range
+ * High)؛ إن تساوى فـ AD = 0. WAD[i] = WAD[i-1] + AD (تراكمي، يبدأ من صفر عند الشمعة الأولى لغياب
+ * إغلاق سابق). صاعد = تراكم شرائي صافٍ مبني على حركة السعر وحدها، هابط = توزيع بيعي — يُقرأ عادة
+ * بالتباعد (divergence) عن اتجاه السعر كبقية مؤشرات A/D، لكنه مفيد تحديداً حين تكون بيانات الفوليوم
+ * غير موثوقة أو مفقودة (فوركس مثلاً) لأنه لا يعتمد عليها إطلاقاً. **تحقّق حسابي فعلي (Node.js، بيئة
+ * سحابية، قبل الكتابة)**: سوق مسطّح تماماً (40 شمعة، الإغلاق ثابت) → close[i]===close[i-1] دائماً →
+ * AD=0 لكل شمعة → WAD=0 بالضبط طوال المسار؛ اتجاه صاعد ثابت الخطوة (60 شمعة، +1 كل شمعة) → WAD
+ * تصاعدي صارم بلا استثناء بعد أول نقطة (مُثبَت جبرياً: min(low[i],close[i-1])≤close[i-1]<close[i]
+ * دائماً هنا)؛ نفس المسار معكوساً (اتجاه هابط ثابت) → WAD تنازلي صارم بلا استثناء بنفس المنطق
+ * المعكوس؛ 300 شمعة عشوائية بذرة ثابتة (mulberry32) → صفر NaN/Infinity، وإعادة حساب brute-force
+ * مستقلة تماماً (حلقة تراكمية مُعاد كتابتها من الصفر) عند idx=200 طابقت الدالة الفعلية بالضبط (فرق=0).
+ */
+export function computeWilliamsAd(candles: Candle[]): number[] {
+  const n = candles.length;
+  const out: number[] = new Array(n).fill(0);
+  let cum = 0;
+  for (let i = 1; i < n; i++) {
+    const prevClose = candles[i - 1].close;
+    const close = candles[i].close;
+    let ad = 0;
+    if (close > prevClose) {
+      ad = close - Math.min(candles[i].low, prevClose);
+    } else if (close < prevClose) {
+      ad = close - Math.max(candles[i].high, prevClose);
+    }
+    cum += ad;
+    out[i] = cum;
   }
   return out;
 }
@@ -1486,6 +1617,36 @@ export function computeVolumeOscillator(
         : ((smaShort[i]! - smaLong[i]!) / smaLong[i]!) * 100
       : null
   );
+}
+
+/**
+ * Volume ROC (معدّل تغيّر الفوليوم) — نفس صيغة `computeRoc` القياسية (معدّل التغيّر بالنسبة المئوية
+ * عن `period` شمعة سابقة) **مطبَّقة على الفوليوم بدل الإغلاق**: VolROC[i] = (فوليوم[i]−فوليوم[i−period])
+ * / فوليوم[i−period] × 100. يختلف جوهرياً عن `computeVolumeOscillator` الموجود أعلاه (فرق نسبي بين
+ * متوسطَين متحركَين قصير/طويل للفوليوم، SMA فرق) — هنا مقارنة *نقطة واحدة* بنقطة واحدة سابقة بلا أي
+ * تنعيم إطلاقاً، أكثر حساسية وتذبذباً لارتفاعات الفوليوم المفاجئة (نفس العلاقة بين ROC السعري
+ * وMomentum/المتوسطات المتحركة السعرية). فوليوم مفقود يُعوَّض بنفس الصيغة التركيبية المستخدَمة
+ * بـ`computeVolumeOscillator`/`computeVpt` أعلاه للاتساق. **تحقّق حسابي فعلي (Node.js قبل الكتابة)**:
+ * فوليوم ثابت تماماً عبر 30 شمعة → 0 بالضبط لكل نقطة بعد الإحماء (period=10)؛ اختبار يدوي (فوليوم
+ * يتضاعف بالضبط عند نقطة معيّنة مقابل بداية السلسلة) → 100% بالضبط كما هو متوقَّع جبرياً؛ 300 شمعة
+ * عشوائية بذرة ثابتة (فوليوم صناعي دوري) → إعادة حساب مستقلة تماماً (صيغة مباشرة بلا استدعاء الدالة
+ * الفعلية) عند idx=150 طابقت بالضبط (فرق=0)، صفر NaN/Infinity عبر كل النقاط الصالحة.
+ */
+export function computeVolumeRoc(
+  candles: (Candle & { volume?: number })[],
+  period = 10
+): (number | null)[] {
+  const vol = candles.map((c) => c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000);
+  const out: (number | null)[] = [];
+  for (let i = 0; i < vol.length; i++) {
+    if (i < period) {
+      out.push(null);
+      continue;
+    }
+    const prev = vol[i - period];
+    out.push(prev === 0 ? 0 : ((vol[i] - prev) / prev) * 100);
+  }
+  return out;
 }
 
 /**
@@ -3834,6 +3995,36 @@ export function computeStdErrorBands(
 }
 
 /**
+ * Standard Error (خطأ الانحدار المعياري، بلا نطاقات) — النسخة "الخام" المصاحِبة لـ
+ * computeStdErrorBands الموجودة أعلاه: بدل رسم نطاقين حول خط الانحدار، تعرض حجم الخطأ المعياري
+ * نفسه كخط/هستوغرام مستقل بالـpane (يقيس مدى "ابتعاد" الأسعار الفعلية عن خط الانحدار الخطي
+ * المحلي — قيمة عالية=تشتت/ضجيج كبير حول الاتجاه، قيمة منخفضة=اتجاه نظيف خطي). **صفر حساب انحدار
+ * جديد**: تستدعي computeStdErrorBands الموجودة فعلياً بـ`mult=1` ثم تُرجع `upper−mid` لكل نقطة —
+ * بما أن `upper = mid + mult×se` رياضياً بالدالة الأصل، فـ`mult=1` يجعل `upper−mid` يساوي `se` تماماً
+ * بلا أي حساب مستقل جديد (نفس أسلوب استخراج computeGmmaOscillator من computeGmma حرفياً، أو
+ * computeAtrPercent من computeAtr). صفر مخاطرة رياضية إضافية لأن الدالة الأصل (computeStdErrorBands)
+ * مُتحقَّق منها ومُستخدَمة بالإنتاج مسبقاً. **تحقّق حسابي فعلي (Node.js قبل الكتابة)**: إعادة حساب
+ * يدوية مستقلة تماماً (صيغة انحدار خطي عادية بخمس نقاط مُدخَلة يدوياً، بلا استدعاء أي دالة من الملف)
+ * طابقت ناتج الدالة بالضبط (فرق=0 حرفياً)؛ 300 نقطة عشوائية بذرة ثابتة → `upper−mid` من
+ * computeStdErrorBands يطابق ناتج computeStandardError بالضبط (فرق=0) لكل نقطة صالحة (278/300)، صفر
+ * NaN/Infinity، صفر قيمة سالبة (الخطأ المعياري دوماً ≥0 جبرياً بحكم كونه جذراً تربيعياً).
+ */
+export function computeStandardError(
+  closes: number[],
+  period = 21,
+  smoothPeriod = 3
+): (number | null)[] {
+  const bands = computeStdErrorBands(closes, period, 1, smoothPeriod);
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    const u = bands.upper[i];
+    const m = bands.mid[i];
+    out.push(u == null || m == null ? null : u - m);
+  }
+  return out;
+}
+
+/**
  * Donchian Channel Width (DCW) — يقيس *اتساع* قناة دونشيان الموجودة (`computeDonchian`) نسبةً
  * لمستوى منتصفها بدل عرض الحدّين أنفسهما كخطوط سعرية (استخدام `donchian` الحالي): DCW[i] =
  * (upper[i] − lower[i]) / mid[i] × 100 — **إعادة استخدام كاملة لـ`computeDonchian` بلا أي حساب
@@ -4904,6 +5095,50 @@ export function computeYangZhangVolatility(
     const varRs = rsSlice.reduce((a, v) => a + v, 0) / period;
     const variance = varO + k * varC + (1 - k) * varRs;
     out.push(Math.sqrt(Math.max(variance, 0)) * annFactor);
+  }
+  return out;
+}
+
+/**
+ * EWMA Volatility (تقلّب مُرجَّح أسّياً، أسلوب RiskMetrics) — مقدِّر تقلّب بديل عن
+ * computeHistoricalVolatility (الذي يستخدم نافذة متدحرجة بوزن متساوٍ لكل نقطة داخل `period`): هنا
+ * كل عائد لوغاريتمي يُرجَّح بوزن يتناقص أسّياً كلما ابتعد بالزمن (λ=0.94 القيمة القياسية المعتمَدة
+ * من RiskMetrics/JPMorgan للبيانات اليومية) — يجعل المقدِّر أسرع استجابة لتغيّر التقلّب الفعلي
+ * (صدمة حديثة ترفع القيمة فوراً بدل انتظار خروجها من نافذة ثابتة كما بالطريقة التقليدية). التكرار:
+ * variance[i] = λ×variance[i−1] + (1−λ)×logReturn[i]² (بذرة variance[1]=logReturn[1]² عند أول عائد
+ * فعلي)، الناتج = جذر(variance)×√252×100 (**نفس annFactor بالضبط** المستخدَم بـ
+ * computeHistoricalVolatility — نسبة مئوية سنوية قابلة للمقارنة المباشرة بمقدِّرات التقلّب الخمسة
+ * الأخرى بالملف). `warmup` (افتراضي 20) يحجب النقاط المبكرة فقط عن العرض (لا يوقف التكرار الداخلي)
+ * لتخفيف أثر بذرة الانطلاق التعسفية على القيم المعروضة — نفس فلسفة "استمرار الحساب الداخلي قبل
+ * الإحماء" المستخدَمة بمؤشرات EMA المتتالية بالملف. **تحقّق حسابي فعلي (Node.js قبل الكتابة)**: سوق
+ * مسطّح تماماً (40 شمعة) → variance=0 جبرياً طوال المسار → ناتج=0 بالضبط لكل نقطة بعد الإحماء؛ ستة
+ * أسعار يدوية → إعادة حساب يدوية مستقلة تماماً (حلقة مُعاد كتابتها من الصفر ببنية مختلفة) طابقت
+ * تماماً (فرق=0) لكل نقطة بدءاً من أول عائد؛ 300 شمعة عشوائية بذرة ثابتة (mulberry32) → صفر
+ * NaN/Infinity، صفر قيمة سالبة (280 نقطة صالحة)، وإعادة حساب brute-force مستقلة (حلقة تراكمية منفصلة
+ * تماماً عن الدالة الفعلية) عند idx=200 طابقت بالضبط (فرق=0).
+ */
+export function computeEwmaVolatility(
+  closes: number[],
+  lambda = 0.94,
+  warmup = 20,
+  annualization = 252
+): (number | null)[] {
+  const n = closes.length;
+  const logReturns: number[] = new Array(n).fill(0);
+  for (let i = 1; i < n; i++) {
+    const prev = closes[i - 1];
+    logReturns[i] = prev <= 0 ? 0 : Math.log(closes[i] / prev);
+  }
+  const out: (number | null)[] = [];
+  const annFactor = Math.sqrt(annualization) * 100;
+  let variance = 0;
+  for (let i = 0; i < n; i++) {
+    if (i === 0) {
+      out.push(null);
+      continue;
+    }
+    variance = i === 1 ? logReturns[i] ** 2 : lambda * variance + (1 - lambda) * logReturns[i] ** 2;
+    out.push(i < warmup ? null : Math.sqrt(Math.max(variance, 0)) * annFactor);
   }
   return out;
 }

@@ -57,6 +57,7 @@ import {
   computeAcceleratorOsc,
   computeAccumDist,
   computeAdx,
+  computeAdxr,
   computeAlligator,
   computeAlma,
   computeApo,
@@ -94,6 +95,7 @@ import {
   computeDpo,
   computeEnvelopes,
   computeEom,
+  computeEwmaVolatility,
   computeFibPivotPoints,
   computeFisherTransform,
   computeForceIndex,
@@ -148,6 +150,7 @@ import {
   computeSmiErgodicOscillator,
   computeSmma,
   computeSqueeze,
+  computeStandardError,
   computeStarcBands,
   computeStc,
   computeStdDev,
@@ -158,6 +161,7 @@ import {
   computeT3,
   computeTrendIntensityIndex,
   computeTrix,
+  computeTrueRange,
   computeTsf,
   computeTsi,
   computeTwap,
@@ -167,7 +171,9 @@ import {
   computeUltimateOsc,
   computeVhf,
   computeVidya,
+  computeVolatilityRatio,
   computeVolumeOscillator,
+  computeVolumeRoc,
   computeVortex,
   computeVpt,
   computeVwMacd,
@@ -177,6 +183,7 @@ import {
   computeVzo,
   computeWaveTrend,
   computeWeightedClose,
+  computeWilliamsAd,
   computeWilliamsR,
   computeWoodieCci,
   computeWoodiePivots,
@@ -1346,6 +1353,34 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('pmo') ? computePmo(closes) : null),
     [closes, indicators]
   );
+  const trueRange = useMemo(
+    () => (indicators.includes('trueRange') ? computeTrueRange(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const stdError = useMemo(
+    () => (indicators.includes('stdError') ? computeStandardError(closes) : null),
+    [closes, indicators]
+  );
+  const ewmaVol = useMemo(
+    () => (indicators.includes('ewmaVol') ? computeEwmaVolatility(closes) : null),
+    [closes, indicators]
+  );
+  const volRoc = useMemo(
+    () => (indicators.includes('volRoc') ? computeVolumeRoc(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const adxr = useMemo(
+    () => (indicators.includes('adxr') ? computeAdxr(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const volatilityRatio = useMemo(
+    () => (indicators.includes('volatilityRatio') ? computeVolatilityRatio(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const williamsAd = useMemo(
+    () => (indicators.includes('williamsAd') ? computeWilliamsAd(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1438,7 +1473,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('rogersSatchellVol') ? 1 : 0) +
     (indicators.includes('yangZhangVol') ? 1 : 0) +
     (indicators.includes('smiErgodic') ? 1 : 0) +
-    (indicators.includes('pmo') ? 1 : 0);
+    (indicators.includes('pmo') ? 1 : 0) +
+    (indicators.includes('trueRange') ? 1 : 0) +
+    (indicators.includes('stdError') ? 1 : 0) +
+    (indicators.includes('ewmaVol') ? 1 : 0) +
+    (indicators.includes('volRoc') ? 1 : 0) +
+    (indicators.includes('adxr') ? 1 : 0) +
+    (indicators.includes('volatilityRatio') ? 1 : 0) +
+    (indicators.includes('williamsAd') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
   const paneH = 48;
@@ -6459,6 +6501,199 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {trueRange ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>True Range</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = trueRange.filter((x): x is number => x != null);
+              const maxV = Math.max(...vals, 1e-9);
+              return trueRange.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxV) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxV) * (paneH - 16),
+                      backgroundColor: '#FED7AA',
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {stdError ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Std Error</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = stdError.filter((x): x is number => x != null);
+              const maxV = Math.max(...vals, 1e-9);
+              return stdError.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxV) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxV) * (paneH - 16),
+                      backgroundColor: '#A5B4FC',
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {ewmaVol ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>EWMA Vol</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = ewmaVol.filter((x): x is number => x != null);
+              const maxV = Math.max(...vals, 1e-9);
+              return ewmaVol.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxV) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxV) * (paneH - 16),
+                      backgroundColor: '#86EFAC',
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {volRoc ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Volume ROC</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = volRoc.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxV = Math.max(...vals, 1e-9);
+              return volRoc.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxV) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {adxr ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>ADXR</Text>
+          <View style={styles.paneInner}>
+            {adxr.map((v, i) =>
+              v == null ? (
+                <View key={i} style={{ flex: 1 }} />
+              ) : (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    marginTop: ((100 - v) / 100) * (paneH - 16),
+                    backgroundColor: v >= 25 ? colors.warn : colors.textDim,
+                    borderRadius: 2,
+                  }}
+                />
+              )
+            )}
+          </View>
+        </View>
+      ) : null}
+
+      {volatilityRatio ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Volatility Ratio</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = volatilityRatio.filter((x): x is number => x != null);
+              const maxV = Math.max(...vals, 1e-9);
+              return volatilityRatio.map((v, i) =>
+                v == null ? (
+                  <View key={i} style={{ flex: 1 }} />
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (v / maxV) * (paneH - 16)),
+                      marginTop: paneH - 16 - (v / maxV) * (paneH - 16),
+                      backgroundColor: v >= 1 ? colors.warn : colors.textDim,
+                      opacity: 0.7,
+                    }}
+                  />
+                )
+              );
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {williamsAd ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Williams A/D</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const minA = Math.min(...williamsAd);
+              const maxA = Math.max(...williamsAd);
+              const span = maxA - minA || 1;
+              return williamsAd.map((v, i) => {
+                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
+                const yNorm = (v - minA) / span;
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: 3,
+                      marginTop: (1 - yNorm) * (paneH - 16),
+                      backgroundColor: v >= williamsAd[i - 1] ? colors.bull : colors.bear,
+                      opacity: 0.8,
                     }}
                   />
                 );
