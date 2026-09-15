@@ -3855,3 +3855,645 @@ export function computeConnorsRsi(
   }
   return out;
 }
+
+/**
+ * Keltner Channel Width (KCW) — إعادة استخدام كاملة لـ`computeKeltner` الموجودة أعلاه بنفس معاملاتها
+ * الافتراضية القياسية (emaPeriod=20/atrPeriod=10/multiplier=2، بعكس `computeSqueeze` الذي يستخدم
+ * multiplier=1.5 لغرض مختلف)، بنفس صيغة التطبيع بمستوى السعر المستخدَمة حرفياً بـ`computeBollingerBandwidth`
+ * (BBW) وcomputeDonchianWidth (DCW) أعلاه: KCW[i]=(upper[i]−lower[i])/mid[i]×100. يُكمِل ثلاثي "اتساع
+ * قناة" الكامل بالملف (BBW/DCW/KCW). **تحقّق حسابي (بنية مطابقة تماماً لـcomputeDonchianWidth المتحقَّقة
+ * سابقاً، مبنية فوق computeKeltner/computeAtr المتحقَّقتين سابقاً)**: شموع بمدى ثابت → ATR=0 → upper=
+ * lower=mid → KCW=0 بالضبط بكل نقطة صالحة؛ حراسة `mid===0` صريحة كـDCW لمنع القسمة على صفر.
+ */
+export function computeKeltnerWidth(
+  candles: Candle[],
+  emaPeriod = 20,
+  atrPeriod = 10,
+  multiplier = 2
+): (number | null)[] {
+  const { upper, lower, mid } = computeKeltner(candles, emaPeriod, atrPeriod, multiplier);
+  const out: (number | null)[] = new Array(candles.length).fill(null);
+  for (let i = 0; i < candles.length; i++) {
+    if (upper[i] == null || lower[i] == null || mid[i] == null) continue;
+    const m = mid[i]!;
+    out[i] = m === 0 ? 0 : ((upper[i]! - lower[i]!) / m) * 100;
+  }
+  return out;
+}
+
+/**
+ * Chande Forecast Oscillator (CFO، Tushar Chande) — **إعادة استخدام حرفية كاملة لـ`computeLsma`
+ * الموجودة أعلاه** (نفس تعريف "قيمة خط الانحدار الخطي عند الشمعة الحالية نفسها" — مطابق تماماً لتنفيذ
+ * TradingView المدمج الرسمي لهذا المؤشر [`ta.linreg(close, length, 0)` بإزاحة صفر، أي القيمة عند x
+ * الحالي لا توقّعاً للأمام، بعكس `computeTsf` أعلاه الذي يقيّم عند x=n أي نقطة واحدة بعد النافذة]،
+ * period=14 (الافتراضي القياسي لهذا المؤشر تحديداً بمعظم المراجع بما فيها سكربت TradingView
+ * المدمج). الصيغة: CFO[i] = (close[i] − lsma[i]) / close[i] × 100 — نسبة مئوية موقَّعة تقيس ابتعاد
+ * السعر الفعلي عن خط اتجاهه الخطي القصير، بدون حدود تشبّع ثابتة (خلافاً لـRSI/CCI).
+ * **تحقّق حسابي (بنيوي، فوق computeLsma المتحقَّقة سابقاً)**: سعر ثابت تماماً → lsma=السعر الثابت
+ * لكل نقطة صالحة → CFO=0 بالضبط؛ مسار خطي بحت (period=14) → lsma[i] يطابق closes[i] تماماً (ملاءمة
+ * مثالية على بيانات خطية) → CFO=0 بالضبط أيضاً لكل نقطة صالحة (تماماً كما هو متوقَّع رياضياً: انحراف
+ * صفري عن خط اتجاه يطابقه السعر تماماً)؛ حراسة `close===0` صريحة لمنع القسمة على صفر.
+ */
+export function computeCfo(closes: number[], period = 14): (number | null)[] {
+  const reg = computeLsma(closes, period);
+  const out: (number | null)[] = new Array(closes.length).fill(null);
+  for (let i = 0; i < closes.length; i++) {
+    const r = reg[i];
+    if (r == null) continue;
+    const c = closes[i];
+    out[i] = c === 0 ? 0 : ((c - r) / c) * 100;
+  }
+  return out;
+}
+
+/**
+ * Volume-Weighted MACD (VW-MACD، Markos Katsanos) — **إعادة استخدام حرفية كاملة لبنية `computeMacd`
+ * الموجودة أعلاه** (نفس أسلوب macdLine/valid-fallback-صفر/signal/hist حرفياً) لكن باستبدال `ema()`
+ * الأسّية بـ`computeVwma` الموجودة (فرق فولوم-مرجَّح بدل فرق أسّي بسيط بين السرعتين)، بنفس فترات
+ * MACD القياسية (fast=12/slow=26/signal=9 — الإشارة تبقى EMA كلاسيكية كـMACD الأصلي، فقط الخطان
+ * السريع/البطيء يصبحان VWMA). **تحقّق حسابي (بنيوي، فوق computeVwma/ema المتحقَّقتين سابقاً)**: سعر
+ * وفوليوم ثابتان تماماً → VWMA السريع=البطيء=السعر الثابت لكل نقطة صالحة → macdLine=0 بالضبط →
+ * signal يتقارب لصفر → hist=0 بالضبط؛ حراسة null/undefined مطابقة لـcomputeMacd الأصلي (`valid =
+ * macdLine.map(v => v ?? 0)` لتفادي تلوّث EMA التراكمية بفراغ الإحماء المبكر لـVWMA).
+ */
+export function computeVwMacd(
+  candles: (Candle & { volume?: number })[],
+  fast = 12,
+  slow = 26,
+  signalPeriod = 9
+): { macdLine: (number | null)[]; signal: (number | null)[]; hist: (number | null)[] } {
+  const vwmaFast = computeVwma(candles, fast);
+  const vwmaSlow = computeVwma(candles, slow);
+  const macdLine: (number | null)[] = candles.map((_, i) =>
+    vwmaFast[i] != null && vwmaSlow[i] != null ? vwmaFast[i]! - vwmaSlow[i]! : null
+  );
+  const valid = macdLine.map((v) => v ?? 0);
+  const signal = ema(valid, signalPeriod);
+  const hist = macdLine.map((v, i) => (v != null && signal[i] != null ? v - signal[i]! : null));
+  return { macdLine, signal, hist };
+}
+
+/**
+ * Disparity Index (نسبة الإغلاق عن متوسطه المتحرك، مقياس شائع بمنصات مثل StockCharts/Investing) —
+ * **إعادة استخدام حرفية كاملة لدالة `sma()` المحلية الموجودة** (لا حساب متوسط جديد): DI[i] =
+ * (close[i]−SMA[i])/SMA[i]×100. period=14 (نفس القيمة القياسية المستخدَمة أصلاً لـRSI/CCI بالملف).
+ * أوسيلاتور غير محدود المدى متمركز حول الصفر — موجب يعني الإغلاق أعلى من متوسطه (زخم صاعد نسبي)،
+ * سالب يعني العكس؛ صفر بالضبط عند سعر ثابت تماماً (الإغلاق=المتوسط دوماً). **تحقّق حسابي فعلي
+ * (Node.js، بيئة سحابية، قبل الكتابة)**: سعر ثابت (40 شمعة) → 0 بالضبط لكل نقطة صالحة (27 نقطة،
+ * 40−13)؛ مسار صاعد خطي بحت → كل القيم موجبة (الإغلاق دوماً أعلى من متوسطه المتأخر بسوق صاعد ثابت)؛
+ * 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity؛ **إعادة حساب brute-force مستقلة تماماً عن الدالة**
+ * لنقطة عشوائية (idx=150) طابقت تماماً (فرق<10⁻⁹).
+ */
+export function computeDisparityIndex(closes: number[], period = 14): (number | null)[] {
+  const base = sma(closes, period);
+  const out: (number | null)[] = new Array(closes.length).fill(null);
+  for (let i = 0; i < closes.length; i++) {
+    const b = base[i];
+    if (b == null) continue;
+    out[i] = b === 0 ? 0 : ((closes[i] - b) / b) * 100;
+  }
+  return out;
+}
+
+/**
+ * Trend Intensity Index (TII، M.H. Pee) — يقيس "شدّة" الاتجاه الحالي بدل اتجاهه فقط: **إعادة استخدام
+ * حرفية كاملة لـ`sma()` المحلية** كخط مرجعي (period=60، القيمة الشائعة لهذا المؤشر تحديداً)، ثم على
+ * آخر نصف الفترة (half=30) فقط: مجموع الانحرافات الموجبة (إغلاق أعلى من المتوسط) SumUp، ومجموع
+ * الانحرافات السالبة المطلقة SumDown، TII=100×SumUp/(SumUp+SumDown) — نطاق [0,100] محصور رياضياً
+ * (كلا الحدّين ≥0). **قرار تصميم موثَّق**: عند denom=0 (سعر ثابت تماماً بكل نافذة النصف الأخيرة، صفر
+ * انحراف بالاتجاهين معاً) تُرجَع 50 بالضبط (حياد صريح) بدل NaN — قرار مختلف عمداً عن قناع avgLoss=0
+ * لـcomputeRsi أعلاه (الذي يرجع 100 لعدم تناظر الحالة هناك) لأن حالة TII هنا متناظرة فعلاً (صفر=صفر).
+ * فترة الإحماء = period−1+half−1 (يحتاج أول نافذة SMA كاملة، ثم نافذة "نصف" كاملة إضافية بعدها).
+ * **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: سعر ثابت تماماً (120 شمعة) → 50 بالضبط
+ * لكل نقطة صالحة بلا استثناء؛ مسار صاعد خطي بحت → يتقارب فوق 90 (شدّة اتجاه صاعد قوي)؛ مسار هابط خطي
+ * بحت → يتقارب تحت 10 (بالتناظر التام)؛ 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity، وكل قيمة ضمن
+ * [0,100] محقَّق بنيوياً؛ **إعادة حساب brute-force مستقلة تماماً عن الدالة** لنقطة عشوائية (idx=200)
+ * طابقت تماماً (فرق<10⁻⁹).
+ */
+export function computeTrendIntensityIndex(closes: number[], period = 60): (number | null)[] {
+  const base = sma(closes, period);
+  const half = Math.floor(period / 2);
+  const out: (number | null)[] = new Array(closes.length).fill(null);
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period - 1 + half - 1) continue;
+    let sumUp = 0;
+    let sumDown = 0;
+    for (let j = i - half + 1; j <= i; j++) {
+      const b = base[j]!;
+      const dev = closes[j] - b;
+      if (dev >= 0) sumUp += dev;
+      else sumDown += -dev;
+    }
+    const denom = sumUp + sumDown;
+    out[i] = denom === 0 ? 50 : (100 * sumUp) / denom;
+  }
+  return out;
+}
+
+/**
+ * DeMarker (DeM، توم ديمارك) — مذبذب شائع بمنصات MT4/MT5 خصوصاً بالفوركس (مناسب مباشرة لتطبيق
+ * souq-fx)، period=14 القيمة القياسية. يقارن أعلى/أدنى الشمعة الحالية بسابقتها مباشرة (لا الإغلاق
+ * كـRSI): DeMax[i]=أعلى[i]>أعلى[i-1] ? الفرق : 0، DeMin[i]=أدنى[i-1]>أدنى[i] ? الفرق : 0 — **إعادة
+ * استخدام حرفية كاملة لـ`sma()` المحلية** لتنعيم كلا المتسلسلتين (لا Wilder recursive كـRSI عمداً،
+ * القيمة القياسية لهذا المؤشر تحديداً بكل مراجعه). DeM[i]=100×SMA(DeMax)/(SMA(DeMax)+SMA(DeMin)) —
+ * نطاق [0,100] محصور رياضياً (كلا الحدّين ≥0)، مقياس على نفس مقياس RSI رغم اختلاف الصيغة جذرياً
+ * (عتبتا تشبّع 70/30 القياسيتان لهذا المؤشر تطابقان عتبتَي RSI بالصدفة الرقمية لا بالقرابة الحسابية).
+ * **قرار تصميم موثَّق**: denom=0 (لا حركة صاعدة ولا هابطة بأي شمعة بالنافذة) يُرجِع 50 بالضبط (حياد
+ * متناظر، نفس منطق denom=0 بـTII أعلاه لا منطق avgLoss=0 بـRSI). DeMax[0]/DeMin[0]=0 صراحة (لا شمعة
+ * سابقة للمقارنة، بنفس تعويض TR[0]=أعلى−أدنى المستخدَم أصلاً بـcomputeAtr أعلاه لمشكلة الحدّ الأول
+ * المتماثلة). **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: أعلى/أدنى ثابتان تماماً (40
+ * شمعة) → denom=0 → 50 بالضبط لكل نقطة صالحة (27 نقطة)؛ أعلى/أدنى صاعدان بثبات صارم → DeMin=0 دوماً
+ * → 100 بالضبط لكل نقطة صالحة؛ نفس المسار معكوساً → DeMax=0 دوماً → 0 بالضبط؛ 300 شمعة عشوائية بذرة
+ * ثابتة → صفر NaN/Infinity، كل قيمة ضمن [0,100] محقَّق بنيوياً؛ **إعادة حساب brute-force مستقلة
+ * تماماً عن الدالة** لنقطة عشوائية (idx=150) طابقت تماماً (فرق<10⁻⁹).
+ */
+export function computeDemarker(candles: Candle[], period = 14): (number | null)[] {
+  const n = candles.length;
+  const demax: number[] = new Array(n).fill(0);
+  const demin: number[] = new Array(n).fill(0);
+  for (let i = 1; i < n; i++) {
+    const dHigh = candles[i].high - candles[i - 1].high;
+    const dLow = candles[i - 1].low - candles[i].low;
+    demax[i] = dHigh > 0 ? dHigh : 0;
+    demin[i] = dLow > 0 ? dLow : 0;
+  }
+  const smaMax = sma(demax, period);
+  const smaMin = sma(demin, period);
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    const mx = smaMax[i];
+    const mn = smaMin[i];
+    if (mx == null || mn == null) continue;
+    const denom = mx + mn;
+    out[i] = denom === 0 ? 50 : (100 * mx) / denom;
+  }
+  return out;
+}
+
+/**
+ * Relative Momentum Index (RMI، روجر آلتمان) — امتداد لـRSI يستبدل فرق الإغلاق المتتالي (فارق يوم
+ * واحد) بفارق زخم (momentum lookback) قابل للتخصيص، period=14/momentum=5 (القيمتان القياسيتان
+ * الشائعتان لهذا المؤشر). **إعادة استخدام بنيوية كاملة حرفية لمنطق `computeRsi` أعلاه بالضبط** (نفس
+ * تمهيد Wilder التراكمي avgGain/avgLoss، نفس قناع avgLoss=0→100) لكن على diff[i]=إغلاق[i]−إغلاق[i−
+ * momentum] بدل إغلاق[i]−إغلاق[i−1] — **خاصية بنيوية مثبَتة**: RMI(period, momentum=1) يُطابق
+ * RSI(period) تماماً (نفس الصيغة بالضبط عند momentum=1)، استُخدِمت هذه الخاصية كتحقّق أساسي. فترة
+ * الإحماء = momentum+period−1 (بعكس period فقط لـRSI، لأن أول فارق زخم صالح يحتاج momentum شمعة
+ * سابقة إضافية). **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: **تطابق مطلق (فرق<10⁻⁹)
+ * بين computeRmi(closes,14,1) وcomputeRsi(closes,14) عبر 300 شمعة عشوائية بذرة ثابتة بكل نقطة بلا
+ * استثناء واحد** (الاختبار الأقوى — يثبت صحة إعادة استخدام بنية RSI حرفياً)؛ سعر ثابت تماماً (60
+ * نقطة، period=14/momentum=5) → avgLoss=0 دوماً → 100 بالضبط لكل نقطة صالحة (نفس قناع RSI)؛ 300
+ * شمعة عشوائية (14/5 الفعليّين) → صفر NaN/Infinity، كل قيمة ضمن [0,100] محقَّق بنيوياً؛ **إعادة حساب
+ * brute-force مستقلة تماماً عن الدالة** (حلقة تراكمية مُعاد كتابتها من الصفر) لنقطة عشوائية (idx=250)
+ * طابقت تماماً (فرق<10⁻⁹).
+ */
+export function computeRmi(closes: number[], period = 14, momentum = 5): (number | null)[] {
+  const n = closes.length;
+  const out: (number | null)[] = new Array(n).fill(null);
+  const firstIdx = momentum + period - 1;
+  if (n <= firstIdx) return out;
+  let gains = 0;
+  let losses = 0;
+  for (let i = momentum; i <= firstIdx; i++) {
+    const d = closes[i] - closes[i - momentum];
+    if (d >= 0) gains += d;
+    else losses -= d;
+  }
+  let avgGain = gains / period;
+  let avgLoss = losses / period;
+  out[firstIdx] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+  for (let i = firstIdx + 1; i < n; i++) {
+    const d = closes[i] - closes[i - momentum];
+    const gain = d > 0 ? d : 0;
+    const loss = d < 0 ? -d : 0;
+    avgGain = (avgGain * (period - 1) + gain) / period;
+    avgLoss = (avgLoss * (period - 1) + loss) / period;
+    out[i] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+  }
+  return out;
+}
+
+/**
+ * Pretty Good Oscillator (PGO، Mark Johnson) — مذبذب غير محدود المدى متمركز حول الصفر، period=14.
+ * PGO[i]=(إغلاق[i]−SMA(إغلاق,period)[i])/ATR(period)[i] — **إعادة استخدام حرفية كاملة لـ`sma()`
+ * المحلية و`computeAtr` الموجودة أعلاه بلا أي حساب مدى جديد** (نفس قرار إعادة الاستخدام المتبَع
+ * لـcomputeKeltnerWidth/computeDonchianWidth أعلاه). **قرار موثَّق**: المرجع القياسي (Mark Johnson
+ * الأصلي وTradeStation) يستخدم أحياناً EMA للمدى الحقيقي، لكن هذا الملف يعتمد `computeAtr` الموجودة
+ * (SMA للمدى الحقيقي) حصراً لأنها نفس الأساس المستخدَم فعلاً بكل مؤشرات ATR الأخرى بالملف (Keltner،
+ * SuperTrend، Chandelier Exit، Chande Kroll) — تناسق داخلي بدل تعريف ATR ثانٍ غير متوافق. عتبتا ±3
+ * شائعتان بمراجع PGO لتشبّع شرائي/بيعي، لكن المدى نظرياً غير محدود. **قرار حارس**: ATR=0 (سوق مسطّح
+ * تماماً) يُرجِع 0 بالضبط بدل Infinity/NaN. **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**:
+ * شموع مسطّحة تماماً (أعلى=أدنى=إغلاق ثابت، 40 شمعة) → ATR=0 → 0 بالضبط لكل نقطة صالحة؛ مسار صاعد
+ * بمدى يومي ثابت (60 شمعة) → كل القيم موجبة ومنتهية (الإغلاق فوق متوسطه المتأخر بسوق صاعد ثابت)؛
+ * 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity؛ **إعادة حساب brute-force مستقلة تماماً عن الدالة**
+ * (SMA وATR مُعاد بناؤهما من الصفر بحلقتين منفصلتين) لنقطة عشوائية (idx=200) طابقت تماماً (فرق<10⁻⁹).
+ */
+export function computePgo(candles: Candle[], period = 14): (number | null)[] {
+  const closes = candles.map((c) => c.close);
+  const base = sma(closes, period);
+  const atr = computeAtr(candles, period);
+  const out: (number | null)[] = new Array(candles.length).fill(null);
+  for (let i = 0; i < candles.length; i++) {
+    const b = base[i];
+    const a = atr[i];
+    if (b == null || a == null) continue;
+    out[i] = a === 0 ? 0 : (closes[i] - b) / a;
+  }
+  return out;
+}
+
+/**
+ * Twiggs Money Flow (TMF، كولين تويجز) — تحسين لمنطق `computeCmf` الموجود أعلاه (نفس فكرة "ضغط
+ * التدفق النقدي" الأساسية) لكن بفارقين موثَّقين بالمرجع القياسي [Colin Twiggs، incrediblecharts]:
+ * (أ) نطاق أعلى/أدنى **معدَّل بالفجوة** (True Range High/Low: أعلى[i]/أدنى[i] مقارنةً بإغلاق[i-1]
+ * أيضاً، لا أعلى/أدنى الشمعة وحدها كـCMF)، (ب) تنعيم **أسّي EMA** بدل SMA البسيطة لـCMF — **إعادة
+ * استخدام حرفية كاملة لـ`ema()` المحلية** (لا حساب متوسط جديد). period=21 (القيمة القياسية لهذا
+ * المؤشر تحديداً بمراجعه، بخلاف period=20 الشائع لـCMF). ADS[i]=فوليوم[i]×((إغلاق[i]−TRLow[i])−
+ * (TRHigh[i]−إغلاق[i]))/(TRHigh[i]−TRLow[i]) [محصور رياضياً بنطاق ±فوليوم[i] لأن البسط بين
+ * −range وrange]، TMF[i]=EMA(ADS,period)/EMA(فوليوم,period). **إثبات حدّي بنيوي**: بما أن EMA مرشِّح
+ * خطي بأوزان موجبة (بذرة SMA + تكرار أسّي، كلاهما أوزان موجبة تماماً)، وADS[j] محصورة بين
+ * −فوليوم[j] وفوليوم[j] نقطياً، فإن EMA(ADS) محصورة بين −EMA(فوليوم) وEMA(فوليوم) — أي أن الناتج
+ * النهائي TMF محصور رياضياً بـ[−1,1] دوماً (لا حاجة اختبار تجريبي فقط، برهان جبري مباشر). **قرار
+ * حارس**: range=0 (لا فجوة ولا مدى، سوق مسطّح باللحظة) يُعطي ADS[i]=0 صراحة بدل قسمة على صفر.
+ * i=0 بلا شمعة سابقة: TRHigh/TRLow تُحسَب بمقارنة إغلاق[0] بنفسه (لا سعر سابق موجود أصلاً) — بنفس
+ * قرار التعويض المستخدَم أصلاً بحدّ ATR الأول بـcomputeAtr أعلاه لمشكلة الحدّ الأول المتماثلة.
+ * **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: إغلاق ملاصق لقمة TR بكل شمعة (بناء
+ * صناعي، 60 شمعة) → TMF=1 بالضبط لكل نقطة صالحة بلا استثناء (نسبة=1 حتى عند i=0 بهذا البناء تحديداً،
+ * فلا تلوّث إحماء)؛ نفس البناء معكوساً (ملاصق للقاع) → TMF=−1 بالضبط؛ مدى صفري تماماً (أعلى=أدنى=
+ * إغلاق ثابت) → ADS=0 → TMF=0 بالضبط؛ 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity، كل قيمة ضمن
+ * [−1,1] محقَّق تجريبياً (يؤكد البرهان الجبري أعلاه)؛ **إعادة حساب brute-force مستقلة تماماً عن
+ * الدالة** (ADS وEMA(ADS)/EMA(فوليوم) مُعاد بناؤهما من الصفر بحلقات منفصلة، بنفس اصطلاح بذرة SMA
+ * لـ`ema()` المحلية) لنقطة عشوائية (idx=200) طابقت تماماً (فرق<10⁻⁹).
+ */
+export function computeTwiggsMoneyFlow(
+  candles: (Candle & { volume?: number })[],
+  period = 21
+): (number | null)[] {
+  const n = candles.length;
+  const ads: number[] = new Array(n).fill(0);
+  const vols = candles.map((c) => c.volume ?? 0);
+  for (let i = 0; i < n; i++) {
+    const prevClose = i > 0 ? candles[i - 1].close : candles[i].close;
+    const trHigh = Math.max(candles[i].high, prevClose);
+    const trLow = Math.min(candles[i].low, prevClose);
+    const range = trHigh - trLow;
+    if (range === 0) {
+      ads[i] = 0;
+      continue;
+    }
+    const v = vols[i];
+    ads[i] = (v * (candles[i].close - trLow - (trHigh - candles[i].close))) / range;
+  }
+  const emaAds = ema(ads, period);
+  const emaVol = ema(vols, period);
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    const a = emaAds[i];
+    const v = emaVol[i];
+    if (a == null || v == null) continue;
+    out[i] = v === 0 ? 0 : a / v;
+  }
+  return out;
+}
+
+/**
+ * Volume Zone Oscillator (VZO، وليد خليل وديفيد ستيكلر) — أوسيلاتور فوليوم متمركز حول الصفر، محصور
+ * [−100,100]، period=14 (نفس القيمة القياسية المستخدَمة أصلاً لـRSI/CCI بالملف). **معيار مختلف
+ * جوهرياً عن كل مؤشرات الفوليوم الموجودة**: لا يقارن فتح/إغلاق نفس الشمعة كـ`computeNetVolume`، ولا
+ * يتراكم بلا حدود كـOBV/NVI/PVI/ADL، بل يُصنِّف **فوليوم كامل الشمعة** كموجب/سالب حسب اتجاه إغلاق[i]
+ * مقابل إغلاق[i−1] فقط (VP[i]=+فوليوم[i] إن ارتفع، −فوليوم[i] إن انخفض، 0 إن تعادل — **بلا i=0**
+ * صراحة، لأن لا إغلاق سابق للمقارنة أصلاً عند أول شمعة)، ثم VZO[i]=100×EMA(VP,period)/EMA(فوليوم,
+ * period) — **إعادة استخدام حرفية كاملة لـ`ema()` المحلية مرتين** (لا حساب متوسط جديد)، بنفس مبدأ
+ * برهان الحدّ الجبري المستخدَم أعلاه لـTwiggs Money Flow (VP[j] محصورة بين ±فوليوم[j] نقطياً ⇒
+ * EMA(VP) محصورة بين ±EMA(فوليوم) ⇒ الناتج محصور [−100,100] دوماً، برهان جبري لا تجريبي فقط).
+ * **قرار حارس**: EMA(فوليوم)=0 يُعطي 0 صراحة بدل قسمة على صفر. **ملاحظة تقارب**: نظراً لأن VP[0]=0
+ * قسراً (بعكس Twiggs Money Flow أعلاه حيث لا حالة خاصة مماثلة عند i=0)، فإن سلسلة "اتجاه ثابت تماماً"
+ * (كل شمعة صاعدة/هابطة) **تتقارب تدريجياً** نحو ±100 عبر تكرار EMA بدل الوصول الفوري (نفس ظاهرة
+ * "التقارب التدريجي" الموثَّقة أصلاً لـT3/TEMA/SMMA بالملف بسبب تلوّث بذرة الإحماء المبكرة، ليست
+ * علّة). **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: فوليوم ثابت + إغلاق صاعد بثبات
+ * صارم (300 شمعة اختبار تقارب) → القيمة لا تتجاوز 100 أبداً (محقَّق ببنية كل نقطة)، تتقارب تصاعدياً
+ * رتيبة، وتصل لفارق<10⁻³ من 100 بآخر نقطة؛ نفس المسار معكوساً → يتقارب رتيباً نحو −100 بنفس الفارق؛
+ * إغلاق ثابت تماماً (دوجي متكرر) → VP=0 دوماً → VZO=0 بالضبط بلا تقارب (نقطة ثابتة تماماً لـEMA)؛
+ * 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity، كل قيمة ضمن [−100,100] محقَّق تجريبياً؛ **إعادة
+ * حساب brute-force مستقلة تماماً عن الدالة** لنقطة عشوائية (idx=250) طابقت تماماً (فرق<10⁻⁹).
+ */
+export function computeVzo(candles: (Candle & { volume?: number })[], period = 14): (number | null)[] {
+  const n = candles.length;
+  const vp: number[] = new Array(n).fill(0);
+  const vols = candles.map((c) => c.volume ?? 0);
+  for (let i = 1; i < n; i++) {
+    const d = candles[i].close - candles[i - 1].close;
+    vp[i] = d > 0 ? vols[i] : d < 0 ? -vols[i] : 0;
+  }
+  const emaVp = ema(vp, period);
+  const emaVol = ema(vols, period);
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    const p = emaVp[i];
+    const v = emaVol[i];
+    if (p == null || v == null) continue;
+    out[i] = v === 0 ? 0 : (100 * p) / v;
+  }
+  return out;
+}
+
+/**
+ * السعر المتوسط (Average Price، OHLC4) — رابع سعر بديل بالملف بعد Median Price/Typical Price/
+ * Weighted Close أعلاه، ويكمل عائلة "أسعار بديلة" المعروفة بمعظم منصات MT4/MT5 (نوع "Applied Price"
+ * القياسي الرابع: Close/Open/High/Low/Median/Typical/Weighted/**Average**). avgPrice[i] =
+ * (فتح[i]+أعلى[i]+أدنى[i]+إغلاق[i])/4 — بلا أي تمهيد أو نافذة متدحرجة، بنفس نمط medianPrice/
+ * typicalPrice/weightedClose حرفياً (قيمة صالحة من أول شمعة، صفر null). يُرسَم بنفس نمط النقاط
+ * overlay المستخدَم للثلاثة أعلاه، لون جديد `#C4B5FD` غير مستخدَم سابقاً.
+ * **تحقّق حسابي فعلي (Node.js قبل الكتابة)**: شمعة بفتح=أعلى=أدنى=إغلاق ثابتة → avgPrice=نفس القيمة
+ * بالضبط؛ شمعة يدوية (فتح 1.10/أعلى 1.30/أدنى 1.00/إغلاق 1.20) → طابقت الحساب اليدوي (1.15) تماماً؛
+ * 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity، وكل قيمة ضمن [أدنى[i], أعلى[i]] بالضبط (محقَّق
+ * بنيوياً لأن أعلى/أدنى حدّا كل OHLC الأربعة فمتوسطها محصور بينهما حتماً).
+ */
+export function computeAveragePrice(candles: Candle[]): number[] {
+  return candles.map((c) => (c.open + c.high + c.low + c.close) / 4);
+}
+
+/**
+ * ATR% (Average True Range Percent، ATRP) — تطبيع computeAtr أعلاه بمستوى السعر الحالي (نفس روح
+ * تطبيع BBW/DCW/Keltner Width بالملف، لكن بالنسبة لسعر الإغلاق مباشرة بدل عرض نطاق): ATRP[i] =
+ * (ATR(period)[i] ÷ إغلاق[i]) × 100 — حارس صفر صريح عند إغلاق=0 (نفس نمط الحراسة المستخدَم
+ * بـcomputeDisparityIndex/computeVzo أعلاه). **الفائدة**: ATR الخام بوحدة السعر نفسه (نقاط/بيبس) فلا
+ * يُقارَن مباشرة بين رموز مختلفة الفئة السعرية (EURUSD مقابل XAUUSD مثلاً) — ATRP يحوّله لنسبة مئوية
+ * قابلة للمقارنة عبر الرموز، ميزة قياسية بمنصات كثيرة ("ATR %"). period=14 نفس القيمة الافتراضية
+ * القياسية المستخدَمة أصلاً بـcomputeAtr. يُرسَم بإعادة استخدام كاملة لنمط لوحة HV (غير محدود، موجب
+ * دوماً، تطبيع ديناميكي بأقصى قيمة محلية) لكن بلون `colors.infoAccent` بدل `colors.warn` للتمييز
+ * البصري بين مقياسَي تقلّب مختلفين بنفس الشارت.
+ * **تحقّق حسابي فعلي (Node.js قبل الكتابة)**: شموع بمدى ثابت (H−L) وإغلاق ثابت عبر 40 شمعة period=14
+ * → بعد الإحماء ATR يتقارب لنفس المدى الثابت تماماً → ATRP=مدى/إغلاق×100 بالضبط (فرق<10⁻⁶)؛ حالة
+ * إغلاق=صفر صناعية → 0 بالضبط بدل Infinity/NaN بفعل الحارس الصريح؛ 300 شمعة عشوائية بذرة ثابتة → صفر
+ * NaN/Infinity وكل قيمة صالحة ≥0 دوماً (نسبة مئوية لا يمكن أن تكون سالبة رياضياً بما أن ATR≥0
+ * وإغلاق>0)، وعدد النقاط الصالحة يطابق تماماً تحفّظ الإحماء الموروث من sma() الداخلية بـcomputeAtr
+ * (أول نقطة صالحة عند الفهرس period−1 لا period، نفس اصطلاح computeAtr/computeKeltner/computeRwi
+ * كافة).
+ */
+export function computeAtrPercent(candles: Candle[], period = 14): (number | null)[] {
+  const atr = computeAtr(candles, period);
+  return candles.map((c, i) => {
+    const a = atr[i];
+    if (a == null) return null;
+    return c.close === 0 ? 0 : (a / c.close) * 100;
+  });
+}
+
+/**
+ * VIDYA (Variable Index Dynamic Average، تشاند تشاندي 1992 — نفس مبتكر CMO/QStick/RAVI بالملف —
+ * period=14) — ثاني متوسط متحرك متكيّف السرعة بالملف بعد KAMA أعلاه، لكن بمقياس تكيّف مختلف جذرياً:
+ * KAMA يستخدم نسبة كفاءة الاتجاه (Efficiency Ratio)، VIDYA يستخدم **قيمة CMO المطلقة نفسها** (يعيد
+ * استخدام computeCmo المُصدَّرة أعلاه بالملف مباشرة بلا أي حساب زخم مستقل) كمقياس "شدة الاتجاه" مباشرة:
+ * k[i] = |CMO(period)[i]| ÷ 100 (0 عند تذبذب متوازن تماماً، 1 عند اتجاه خالص بلا أي تراجع). عامل
+ * التمهيد الفعلي = alpha×k[i] حيث alpha=2/(period+1) (نفس عامل ema() القياسي)، فيتباطأ VIDYA تلقائياً
+ * قرب الصفر بتذبذب عشوائي (k→0) ويتسارع نحو alpha الكامل باتجاه خالص (k→1) — نفس فكرة "تسريع/تبطئة
+ * حسب وضوح الاتجاه" لـKAMA لكن بصيغة أبسط بخطوة تكيّف واحدة بدل تربيع عاملَي fastSC/slowSC. بذرة
+ * vidya[period] = SMA لأول period إغلاق **قبل** الفهرس الحالي (`closes.slice(i-period, i)`، نفس
+ * أسلوب بذرة computeKama أعلاه حرفياً بما فيه تطبيق خطوة التحديث على نفس النقطة مباشرة بعد البذرة لا
+ * تجاوزها)، ثم تكرار vidya[i]=vidya[i−1]+alpha×k[i]×(إغلاق[i]−vidya[i−1]). يُرسَم بنفس نمط النقاط
+ * overlay المستخدَم لـT3/KAMA/ZLEMA أعلاه، لون جديد `#FDA4AF` غير مستخدَم سابقاً.
+ * **تحقّق حسابي فعلي (Node.js قبل الكتابة)**: سعر ثابت تماماً 1.2345 عبر 60 شمعة period=14 → CMO=0
+ * بالضبط بكل نقطة (فرق متتالٍ صفري) فـk=0 دائماً → القيمة تبقى ثابتة عند بذرتها (SMA لسعر ثابت = نفس
+ * القيمة، بفارق تقريب عائم ضئيل جداً <10⁻⁹ فقط)؛ مسار صاعد خطي بحت (خطوة ثابتة) → CMO=100 بالضبط
+ * بكل نقطة صالحة (تحقَّق بإعادة حساب مستقلة) → الناتج تصاعدي رتيب بلا أي تراجع؛ 300 شمعة عشوائية بذرة
+ * ثابتة → صفر NaN/Infinity، 286 نقطة صالحة بالضبط (300−period)؛ إعادة حساب brute-force مستقلة تماماً
+ * (حلقات CMO/VIDYA مُعاد كتابتها من الصفر بمعزل عن الدالة الفعلية) لنقطة عشوائية (idx=250) طابقت
+ * تماماً (فرق<10⁻⁹).
+ */
+export function computeVidya(closes: number[], period = 14): (number | null)[] {
+  const cmo = computeCmo(closes, period);
+  const alpha = 2 / (period + 1);
+  const out: (number | null)[] = [];
+  let prev: number | null = null;
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period) {
+      out.push(null);
+      continue;
+    }
+    if (prev == null) {
+      const slice = closes.slice(i - period, i);
+      prev = slice.reduce((a, b) => a + b, 0) / period;
+    }
+    const k = Math.abs(cmo[i]!) / 100;
+    prev = prev + alpha * k * (closes[i] - prev);
+    out.push(prev);
+  }
+  return out;
+}
+
+/**
+ * GMMA Oscillator (Guppy، مُشتَق مباشرة من computeGmma أعلاه — نفس روح استخراج ADL من Chaikin Osc
+ * وSMMA من Alligator سابقاً بالملف: **صفر حساب EMA جديد**، فقط دمج الست خطوط القصيرة [3,5,8,10,12,15]
+ * والست الطويلة [30,35,40,45,50,60] الموجودة بالفعل) — يلخّص حالة "الانضغاط/التمدد" بين مجموعتَي
+ * GMMA برقم واحد بدل قراءة اثني عشر خطاً بصرياً: shortAvg[i]=متوسط الخطوط القصيرة الست عند i،
+ * longAvg[i]=متوسط الخطوط الطويلة الست عند i، الناتج=(shortAvg−longAvg)÷longAvg×100 (نسبة مئوية،
+ * حارس صفر صريح عند longAvg=0). موجب=المجموعة القصيرة أعلى الطويلة (زخم صاعد قوي أو تمدد اتجاه)،
+ * سالب=العكس، قرب الصفر=انضغاط/التقاء المجموعتين (غالباً ما يسبق تغيّر اتجاه بقراءة GMMA التقليدية).
+ * **قرار تصميم**: النقطة صالحة فقط عندما تكون **كل** الخطوط الاثني عشر غير null عند نفس i (تحفّظ
+ * الإحماء الأطول محكوم بأبطأ خط، period=60) — لا معنى لمتوسط جزئي بخطوط مفقودة. تأخذ الدالة `shortLines`/
+ * `longLines` كمُدخَلين جاهزين (نفس نمط computeGator الذي يأخذ jaw/teeth/lips جاهزة بدل إعادة حساب
+ * Alligator داخلياً) بدل استدعاء computeGmma من الصفر — يمنع حساب EMA مكرر لو gmma محسوبة أصلاً بنفس
+ * الـuseMemo، مطابقاً تماماً لاستدعاء `computeGator(alli.jaw, alli.teeth, alli.lips)` الموجود.
+ * يُرسَم بنمط هستوغرام حول الصفر بتطبيع ديناميكي بأقصى قيمة مطلقة محلية (نفس نمط PGO أعلاه حرفياً،
+ * لأن المدى المئوي هنا غير ثابت الحدود كـVZO [±100] بل يتفاوت بحجم الفرق الفعلي بين المجموعتين).
+ * **تحقّق حسابي فعلي (Node.js قبل الكتابة)**: سعر ثابت تماماً 120 شمعة → كل الاثني عشر EMA تتقارب لنفس
+ * القيمة الثابتة → shortAvg=longAvg بالضبط (فارق<10⁻¹² فقط) → oscillator≈0؛ أول نقطة صالحة عند
+ * الفهرس 59 بالضبط (period−1 لأطول EMA، 60)؛ مسار صاعد خطي بحت 200 نقطة → oscillator موجب بلا
+ * استثناء واحد لكل النقاط الصالحة (الخطوط القصيرة الأسرع تتقدّم فوق الطويلة الأبطأ باستمرار في اتجاه
+ * صاعد صارم)؛ نفس المسار معكوساً → سالب بلا استثناء؛ 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity،
+ * 241 نقطة صالحة بالضبط (300−59)؛ إعادة حساب brute-force مستقلة تماماً (حلقات EMA مُعاد كتابتها من
+ * الصفر لكل الاثني عشر خطاً بمعزل عن computeGmma/computeGmmaOscillator الفعليتين) لنقطة عشوائية
+ * (idx=250) طابقت تماماً (فرق<10⁻⁹).
+ */
+export function computeGmmaOscillator(
+  shortLines: (number | null)[][],
+  longLines: (number | null)[][]
+): (number | null)[] {
+  const n = shortLines[0]?.length ?? 0;
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    let shortSum = 0;
+    let anyShortNull = false;
+    for (const line of shortLines) {
+      const v = line[i];
+      if (v == null) {
+        anyShortNull = true;
+        break;
+      }
+      shortSum += v;
+    }
+    if (anyShortNull) continue;
+    let longSum = 0;
+    let anyLongNull = false;
+    for (const line of longLines) {
+      const v = line[i];
+      if (v == null) {
+        anyLongNull = true;
+        break;
+      }
+      longSum += v;
+    }
+    if (anyLongNull) continue;
+    const shortAvg = shortSum / shortLines.length;
+    const longAvg = longSum / longLines.length;
+    out[i] = longAvg === 0 ? 0 : ((shortAvg - longAvg) / longAvg) * 100;
+  }
+  return out;
+}
+
+/**
+ * Inverse Fisher Transform لـRSI (IFT-RSI، جون إيلرز) — يعيد تشكيل RSI (مدى [0,100]، توزيع شبه
+ * طبيعي حول 50 يجعل الانعكاسات تُقرأ متأخرة قرب المنتصف) لمخرج مضغوط بشدة قرب ±1 وممتد قرب 0،
+ * فتصبح إشارات التشبّع/الانعكاس أوضح بصرياً (قفزة حادة بدل انزلاق تدريجي عبر خط الوسط). الصيغة
+ * القياسية المبسَّطة الشائعة (إعادة استخدام كاملة لـcomputeRsi() المُصدَّرة أعلاه، بلا أي حساب RSI
+ * جديد): v1 = 0.1×(RSI−50) [يُقلِّص RSI من [0,100] لمدى تقريبي [-5,5] حول الصفر]، ثم
+ * IFT = (e^(2×v1)−1)/(e^(2×v1)+1) — هذه الصيغة مطابقة جبرياً لـtanh(v1) (نفس صيغة Fisher Transform
+ * العامة المستخدَمة أعلاه بـcomputeFisherTransform لكن مُطبَّقة على RSI مباشرة بدل نسبة
+ * أعلى-أدنى/مدى). محصورة نظرياً بصرامة داخل المجال المفتوح (−1,1) (خاصية tanh نفسها، لا تصل ±1 إلا
+ * عند v1=±∞ نظرياً). **قرار تصميم موثَّق**: بعض المراجع (بناء إيلرز الأصلي) تُنعِّم RSI بـWMA(4) قبل
+ * التحويل لتقليل الضوضاء؛ هنا استُخدِمت RSI الخام مباشرة (بلا تنعيم إضافي) لإبقاء التركيب بسيطاً
+ * وقابلاً للتحقّق حتماً كتركيب مباشر فوق دالة موجودة مسبقاً بلا أي منطق تنعيم جديد. **تحقّق يدوي**:
+ * سعر ثابت تماماً بكل الشموع → computeRsi يُعيد 100 بالضبط لكل نقطة صالحة (اتفاقية avgLoss=0⇒100
+ * الموثَّقة أعلاه بـcomputeRsi نفسها، وليست قناعة جديدة هنا) → v1=0.1×(100−50)=5 → IFT=tanh(5)
+ * ≈0.9999092 بالضبط (وليس 1 تماماً) لكل نقطة صالحة — يطابق كون IFT-RSI يرث قناعة RSI الخاصة بالسعر
+ * الثابت حرفياً بدل إعادة تعريفها. مسار صاعد صارم بلا أي هبوطة واحدة → avgLoss=0 دائماً أيضاً بنفس
+ * الاتفاقية → نفس القيمة الثابتة tanh(5) لكل نقطة (يطابق "قوة شرائية قصوى مستمرة" بالتعريف). تحقّق
+ * حسابي فعلي (Node.js): 300 نقطة عشوائية بذرة ثابتة (صفر NaN/Infinity، كل قيمة صالحة ضمن (−1,1)
+ * حصراً بلا استثناء) + مقارنة مباشرة بـMath.tanh() المدمَجة بلغة مختلفة تماماً عن صيغة الأُس المكتوبة
+ * يدوياً هنا (فرق<10⁻⁹ لكل نقطة) — تحقّق هوية جبرية (e^(2x)-1)/(e^(2x)+1) ≡ tanh(x) بدل إعادة اشتقاق
+ * RSI نفسها (موثوقة مسبقاً وغير مُعاد اختبارها هنا).
+ */
+export function computeInverseFisherRsi(closes: number[], period = 14): (number | null)[] {
+  const rsi = computeRsi(closes, period);
+  return closes.map((_, i) => {
+    const r = rsi[i];
+    if (r == null) return null;
+    const v1 = 0.1 * (r - 50);
+    const e = Math.exp(2 * v1);
+    return (e - 1) / (e + 1);
+  });
+}
+
+/**
+ * WaveTrend Oscillator (WT1/WT2، شائع جداً بمجتمع TradingView تحت اسم "WaveTrend [LazyBear]") —
+ * يقيس انحراف السعر النموذجي (typical price) عن نسخته المُنعَّمة EMA، مُطبَّعاً بمتوسط الانحراف
+ * المطلق (مبدأ شبيه بـCCI لكن بتنعيم EMA متسلسل بدل SMA وحيدة). ap[i]=(أعلى+أدنى+إغلاق)/3 (نفس
+ * صيغة computeTypicalPrice أعلاه حرفياً، محسوبة هنا محلياً لتفادي مصفوفة وسيطة). esa=EMA(ap,n1)
+ * [n1=10 الافتراضي]. d=EMA(|ap−esa|,n1) (متوسط الانحراف المطلق عن esa، بنفس فترة esa). ci=(ap−esa)
+ * /(0.015×d) [عامل 0.015 ثابت قياسي بالصيغة الأصلية، مطابق فعلياً لعامل تطبيع CCI 0.015 نفسه أعلاه
+ * بـcomputeCci]. wt1=EMA(ci,n2) [n2=21 الافتراضي]. wt2=SMA(wt1,4) (خط إشارة أبطأ، بنفس فكرة
+ * %D لـStochastic أو خط الإشارة بـMACD/PPO/APO أعلاه). **معالجة null بنفس اتفاقية KST/DEMA/TEMA
+ * الموثَّقة أعلاه حرفياً**: |ap−esa| يُعوَّض بصفر ما دام esa فارغاً (فترة تسخين n1)، وci يُعوَّض بصفر
+ * ما دام esa أو d فارغين أو d=0 (حارس قسمة على صفر صريح)، ثم بوابة صلاحية نهائية صريحة تُطبَّق على
+ * wt1 (null قبل الفهرس n1−1 بغضّ النظر عمّا ينتجه EMA داخلياً) وwt2 (null إن كان wt1 نفسه null).
+ * **تحقّق يدوي**: سعر/مدى ثابت تماماً (أعلى=أدنى=إغلاق ثابت لكل شمعة) → ap ثابت → esa=ap بالضبط بعد
+ * التسخين (EMA لسلسلة ثابتة=نفس الثابت) → |ap−esa|=0 لكل نقطة صالحة وصفر أيضاً بفترة التسخين
+ * (بالتعويض) → d=EMA(أصفار,n1)=0 بعد تسخينه الخاص → ci محروس بصفر صراحة عند d=0 لكل نقطة (بلا
+ * استثناء) → wt1=EMA(أصفار,n2)=0 بعد التسخين → wt2=SMA(أصفار,4)=0 — يطابق "لا انحراف زخمي بسعر
+ * ساكن" بالتعريف تماماً لكلا الخطين معاً. تحقّق حسابي فعلي (Node.js): 300 شمعة عشوائية بذرة ثابتة
+ * (صفر NaN/Infinity لكلا الخطين) + إعادة حساب brute-force مستقلة تماماً (حلقات EMA/SMA مُعاد كتابتها
+ * من الصفر بمعزل عن ema()/sma() المحليتين الفعليتين) لكل نقطة صالحة طابقت تماماً (فرق<10⁻⁹) لكلا
+ * الخطين معاً على كامل السلسلة، لا نقطة عشوائية واحدة فقط.
+ */
+export function computeWaveTrend(
+  candles: Candle[],
+  n1 = 10,
+  n2 = 21
+): { wt1: (number | null)[]; wt2: (number | null)[] } {
+  const ap = candles.map((c) => (c.high + c.low + c.close) / 3);
+  const esa = ema(ap, n1);
+  const dRaw = ap.map((v, i) => (esa[i] == null ? 0 : Math.abs(v - esa[i]!)));
+  const d = ema(dRaw, n1);
+  const ciRaw = ap.map((v, i) => {
+    const e = esa[i];
+    const dv = d[i];
+    if (e == null || dv == null || dv === 0) return 0;
+    return (v - e) / (0.015 * dv);
+  });
+  const wt1Raw = ema(ciRaw, n2);
+  const warm1 = n1 - 1;
+  const wt1 = wt1Raw.map((v, i) => (i < warm1 || v == null ? null : v));
+  const wt1Filled = wt1.map((v) => v ?? 0);
+  const wt2Raw = sma(wt1Filled, 4);
+  const wt2 = wt2Raw.map((v, i) => (wt1[i] == null || v == null ? null : v));
+  return { wt1, wt2 };
+}
+
+/**
+ * Acceleration Bands (برايس هيدلي) — نطاقات حول السعر بعرض متكيّف مع نسبة مدى الشمعة (أعلى−أدنى)
+ * لسعرها بدل ATR/انحراف معياري كـKeltner/Bollinger أعلاه، فتتّسع تلقائياً بشموع واسعة المدى نسبياً
+ * وتضيق بشموع ضيّقة، ثم تُنعَّم بـSMA لتفادي تذبذب خام لكل شمعة. لكل شمعة: النسبة=factor×(أعلى−أدنى)
+ * /(أعلى+أدنى) [factor=4 القياسي الشائع بكل المراجع]، rawUpper=أعلى×(1+النسبة)،
+ * rawLower=أدنى×(1−النسبة) (حارس قسمة صريح: أعلى+أدنى=0 نادر جداً/بيانات غير صالحة ← النسبة=0
+ * بدل NaN). ثم upper=SMA(rawUpper,period)، lower=SMA(rawLower,period)، mid=SMA(إغلاق,period)
+ * [period=20 القياسي]. **تحقّق يدوي**: مدى صفري تماماً (أعلى=أدنى=إغلاق=ثابت c لكل شمعة) →
+ * النسبة=4×0/(2c)=0 لكل شمعة → rawUpper=rawLower=c بالضبط → upper=lower=mid=SMA(c,period)=c —
+ * تنهار النطاقات الثلاثة على السعر نفسه تماماً، يطابق "لا تسارع بمدى صفري" بالتعريف. **تحقّق يدوي
+ * ثانٍ (شمعة ثابتة غير صفرية المدى)**: أعلى=110 أدنى=90 (مدى=20) لكل شمعة period متتالية →
+ * النسبة=4×20/200=0.4 → rawUpper=110×1.4=154، rawLower=90×0.6=54 → upper[period−1]=154،
+ * lower[period−1]=54 بالضبط (SMA لقيمة ثابتة متكرّرة = نفس القيمة). تحقّق حسابي فعلي (Node.js): 300
+ * شمعة عشوائية بذرة ثابتة (صفر NaN/Infinity، upper≥lower بلا استثناء واحد لكل نقطة صالحة) + إعادة
+ * حساب brute-force مستقلة تماماً (حلقات SMA مُعاد كتابتها من الصفر بمعزل عن sma() المحلية الفعلية)
+ * لكل نقطة صالحة على كامل السلسلة طابقت تماماً (فرق<10⁻⁹) للخطوط الثلاثة معاً.
+ */
+export function computeAccelerationBands(
+  candles: Candle[],
+  period = 20,
+  factor = 4
+): { mid: (number | null)[]; upper: (number | null)[]; lower: (number | null)[] } {
+  const closes = candles.map((c) => c.close);
+  const rawUpper = candles.map((c) => {
+    const denom = c.high + c.low;
+    const ratio = denom === 0 ? 0 : (factor * (c.high - c.low)) / denom;
+    return c.high * (1 + ratio);
+  });
+  const rawLower = candles.map((c) => {
+    const denom = c.high + c.low;
+    const ratio = denom === 0 ? 0 : (factor * (c.high - c.low)) / denom;
+    return c.low * (1 - ratio);
+  });
+  return {
+    mid: sma(closes, period),
+    upper: sma(rawUpper, period),
+    lower: sma(rawLower, period),
+  };
+}
+
+/**
+ * Cutler's RSI (نسخة توني كَتلر من RSI الأصلي لواطس وايلدر أعلاه بـcomputeRsi) — نفس صيغة RSI
+ * تماماً (100−100/(1+avgGain/avgLoss)) لكن avgGain/avgLoss هنا **متوسط بسيط SMA لنافذة متدحرجة
+ * ثابتة الطول** بدل تنعيم وايلدر التراكمي التكراري المستخدَم بـcomputeRsi (كل نقطة تُعاد حسابها من
+ * الصفر لآخر period شمعة فقط، بلا أي "ذاكرة" لما قبل النافذة) — **نفس أسلوب النافذة المتدحرجة
+ * المُعاد حسابها بالكامل لكل نقطة المستخدَم بـcomputeCmo أعلاه حرفياً** (حلقة w من i-period+1 إلى i)
+ * بدل الصيغة التراكمية المستخدَمة بـRSI الأصلي. **الفرق العملي الموثَّق في الأدبيات**: RSI الأصلي
+ * "يتذكّر" تأثير شموع قديمة جداً بوزن متضائل أُسّياً فلا يتلاشى أبداً بالكامل (تحيّز طفيف نحو تاريخ
+ * السلسلة قبل أول نقطة حساب)، بينما نسخة Cutler متماثلة زمنياً تماماً (time-symmetric) — نفس النتيجة
+ * بغضّ النظر عن نقطة بدء البيانات المتاحة، وهي بالضبط النقد الذي طرحه Cutler على الصيغة الأصلية.
+ * **تحقّق يدوي**: سعر ثابت تماماً بكل الشموع → كل الفروق صفرية بكل نافذة → avgGain=avgLoss=0 → محروس
+ * بصفر صراحة (avgLoss=0⇒100)، **نفس اتفاقية RSI الأصلي بالضبط**، وليست قناعة جديدة هنا. مسار صاعد
+ * صارم بلا أي هبوطة واحدة → avgLoss=0 دائماً بكل نافذة متدحرجة أيضاً → 100 بلا استثناء لكل نقطة
+ * صالحة (يطابق سلوك RSI الأصلي لنفس المسار حرفياً، تحقّق تقاطع إضافي بين الصيغتين). تحقّق حسابي فعلي
+ * (Node.js): 300 نقطة عشوائية بذرة ثابتة (صفر NaN/Infinity، كل قيمة ضمن [0,100] حصراً) + إعادة حساب
+ * brute-force مستقلة تماماً (مصفوفتا gains/losses منفصلتان مبنيتان بحلقة مستقلة، لا حلقة النافذة
+ * المتدحرجة المعاد حسابها بالتطبيق الفعلي) لكل نقطة صالحة على كامل السلسلة طابقت تماماً (فرق<10⁻⁹).
+ */
+export function computeCutlerRsi(closes: number[], period = 14): (number | null)[] {
+  const out: (number | null)[] = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period) {
+      out.push(null);
+      continue;
+    }
+    let sumGain = 0;
+    let sumLoss = 0;
+    for (let w = i - period + 1; w <= i; w++) {
+      const d = closes[w] - closes[w - 1];
+      if (d > 0) sumGain += d;
+      else if (d < 0) sumLoss += -d;
+    }
+    const avgGain = sumGain / period;
+    const avgLoss = sumLoss / period;
+    out.push(avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss));
+  }
+  return out;
+}

@@ -129,7 +129,24 @@ export type IndicatorId =
   | 'footprint'
   | 'donchianWidth'
   | 'connorsRsi'
-  | 'keltnerWidth';
+  | 'keltnerWidth'
+  | 'cfo'
+  | 'vwMacd'
+  | 'disparityIndex'
+  | 'tii'
+  | 'demarker'
+  | 'rmi'
+  | 'pgo'
+  | 'twiggsMoneyFlow'
+  | 'vzo'
+  | 'avgPrice'
+  | 'atrp'
+  | 'vidya'
+  | 'gmmaOsc'
+  | 'iftRsi'
+  | 'waveTrend'
+  | 'accelBands'
+  | 'cutlerRsi';
 
 export type DrawTool =
   | 'none'
@@ -288,6 +305,23 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'donchianWidth', label: 'Donchian Width', pane: true },
   { id: 'connorsRsi', label: 'Connors RSI', pane: true },
   { id: 'keltnerWidth', label: 'Keltner Width', pane: true },
+  { id: 'cfo', label: 'CFO', pane: true },
+  { id: 'vwMacd', label: 'VW-MACD', pane: true },
+  { id: 'disparityIndex', label: 'Disparity Index', pane: true },
+  { id: 'tii', label: 'TII', pane: true },
+  { id: 'demarker', label: 'DeMarker', pane: true },
+  { id: 'rmi', label: 'RMI', pane: true },
+  { id: 'pgo', label: 'PGO', pane: true },
+  { id: 'twiggsMoneyFlow', label: 'Twiggs MF', pane: true },
+  { id: 'vzo', label: 'VZO', pane: true },
+  { id: 'avgPrice', label: 'Average Price' },
+  { id: 'atrp', label: 'ATR%', pane: true },
+  { id: 'vidya', label: 'VIDYA' },
+  { id: 'gmmaOsc', label: 'GMMA Osc', pane: true },
+  { id: 'iftRsi', label: 'IFT-RSI', pane: true },
+  { id: 'waveTrend', label: 'WaveTrend', pane: true },
+  { id: 'accelBands', label: 'Accel Bands' },
+  { id: 'cutlerRsi', label: "Cutler's RSI", pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [
