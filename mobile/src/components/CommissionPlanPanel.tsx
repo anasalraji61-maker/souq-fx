@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: 34,
   },
-  trHead: { backgroundColor: '#0F172A' },
+  trHead: { backgroundColor: colors.tableHeadBg },
   th: {
     color: colors.textMuted,
     fontSize: 10,

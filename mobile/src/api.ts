@@ -292,6 +292,8 @@ export const api = {
       room: 'group',
     }),
   votes: () => getJson<{ votes: Vote[] }>('/api/votes'),
+  createVote: (v: { symbol: string; direction: 'buy' | 'sell'; entry: number; sl: number; tp: number; note?: string }) =>
+    postJson<{ ok: boolean; vote: Vote }>('/api/votes', v),
   ballot: (vote_id: string, choice: 'agree' | 'disagree') =>
     postJson('/api/votes/ballot', { vote_id, choice }),
   news: () => getJson<{ news: NewsItem[] }>('/api/news'),

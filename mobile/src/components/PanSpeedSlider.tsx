@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   thumb: {
     position: 'absolute',
     top: -2.5,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.sliderThumb,
     borderWidth: 1.5,
     borderColor: colors.accent,
   },

@@ -79,6 +79,7 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
             {typeof t.win === 'number' && (
               <View style={styles.winBox}>
                 <Text style={styles.win}>توقع نجاح تقديري: {t.win}%</Text>
+                <Text style={styles.winDisclaimer}>تقدير إحصائي وليس ضماناً — أدر مخاطرك دوماً</Text>
               </View>
             )}
           </View>
@@ -171,6 +172,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   win: { color: colors.bull, fontWeight: '800', fontSize: 11 },
+  winDisclaimer: { color: colors.textDim, fontSize: 9, marginTop: 3, textAlign: 'right' },
   row: { flexDirection: 'row-reverse', gap: 6, marginTop: spacing.sm },
   input: {
     flex: 1,

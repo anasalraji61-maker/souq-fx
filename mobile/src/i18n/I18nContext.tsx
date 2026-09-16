@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { I18nManager } from 'react-native';
+import { Alert, I18nManager, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DICTS, Dict, LangId, LANGS, isRtl } from './locales';
 
@@ -35,12 +35,23 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     setLangState(id);
     await AsyncStorage.setItem(KEY, id);
     const wantRtl = isRtl(id);
-    if (I18nManager.isRTL !== wantRtl) {
+    const rtlChanged = I18nManager.isRTL !== wantRtl;
+    if (rtlChanged) {
       try {
         I18nManager.allowRTL(wantRtl);
         I18nManager.forceRTL(wantRtl);
       } catch {
         /* web may ignore */
+      }
+      // forceRTL only takes effect on native (iOS/Android) after the app is fully
+      // relaunched — there is no in-app reload API available here (no expo-updates
+      // dependency), so tell the trader explicitly instead of leaving a half-mirrored
+      // layout with no explanation.
+      if (Platform.OS !== 'web') {
+        const nextDict = DICTS[id];
+        Alert.alert(nextDict.restartRequiredTitle, nextDict.restartRequiredBody, [
+          { text: nextDict.restartRequiredBtn },
+        ]);
       }
     }
   }, []);

@@ -49,6 +49,23 @@ export type AcademySchool = AcademySchoolSummary & {
 /** Offline fallback mirrors backend academy (BOS/CHOCH inside ICT/SMC OB+FVG). */
 export const mockAcademySchools: AcademySchoolSummary[] = [
   {
+    id: 'basics',
+    order: 0,
+    name_ar: 'أساسيات التداول للمبتدئين',
+    name_en: 'Trading Basics',
+    density: 'low',
+    max_level: 1,
+    summary: 'النقطة (Pip)، اللوت، الرافعة والهامش، وإدارة المخاطر قبل أول صفقة.',
+    levels_count: 1,
+    lectures_count: 5,
+    classroom: {
+      teacher: 'شرح صوتي',
+      screen_theme: 'basics_intro',
+      video_pipeline: 'ElevenLabs TTS + screen',
+    },
+    progress: 0,
+  },
+  {
     id: 'classic',
     order: 1,
     name_ar: 'المدرسة الكلاسيكية',

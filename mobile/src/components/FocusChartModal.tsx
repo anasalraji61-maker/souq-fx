@@ -136,6 +136,24 @@ export function FocusChartModal({
     };
   }, [visible, sym, tf, compareSym]);
 
+  const [quote, setQuote] = useState<{ bid?: number | null; ask?: number | null } | null>(null);
+  useEffect(() => {
+    if (!visible) return;
+    let alive = true;
+    api
+      .marketQuote(sym)
+      .then((q) => {
+        if (alive) setQuote(q);
+      })
+      .catch(() => {
+        if (alive) setQuote(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [visible, sym, series?.last]);
+  const hasSpread = quote?.bid != null && quote?.ask != null && quote.ask > quote.bid;
+
   const pick = (next: string) => {
     setSym(next);
     onSymbolChange?.(next);
@@ -219,6 +237,7 @@ export function FocusChartModal({
                   : ''}
                 {` · ${provenanceLabel(normalizeProvenance(series.data_source))}`}
                 {` · ${marketStatusLabel(sym)}`}
+                {hasSpread ? ` · B ${formatPrice(quote!.bid!)}/A ${formatPrice(quote!.ask!)}` : ''}
               </Text>
             </View>
           ) : null}

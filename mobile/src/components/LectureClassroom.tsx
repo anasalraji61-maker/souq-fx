@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   voiceErr: {
-    color: '#F87171',
+    color: colors.bear,
     textAlign: 'right',
     fontSize: 11,
     marginBottom: spacing.sm,

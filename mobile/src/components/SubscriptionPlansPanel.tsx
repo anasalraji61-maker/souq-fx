@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     minWidth: 200,
     borderRadius: radii.md,
     borderWidth: 1,
-    backgroundColor: '#0D1627',
+    backgroundColor: colors.planCardBg,
     padding: spacing.md,
     gap: 10,
   },

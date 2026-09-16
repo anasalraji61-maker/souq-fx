@@ -49,6 +49,20 @@ export type Dict = {
   notifStatusUnsupported: string;
   notifEnableBtn: string;
   notifOpenSettingsBtn: string;
+  restartRequiredTitle: string;
+  restartRequiredBody: string;
+  restartRequiredBtn: string;
+  onboardStep1Title: string;
+  onboardStep1Body: string;
+  onboardStep2Title: string;
+  onboardStep2Body: string;
+  onboardStep3Title: string;
+  onboardStep3Body: string;
+  onboardStep4Title: string;
+  onboardStep4Body: string;
+  onboardSkip: string;
+  onboardNext: string;
+  onboardStart: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -108,6 +122,25 @@ const ar: Dict = {
   notifStatusUnsupported: 'غير مدعومة على الويب',
   notifEnableBtn: 'تفعيل الإشعارات',
   notifOpenSettingsBtn: 'فتح إعدادات الجهاز',
+  restartRequiredTitle: 'يلزم إعادة تشغيل التطبيق',
+  restartRequiredBody:
+    'تم تغيير اللغة. أغلق التطبيق وأعد فتحه لتطبيق اتجاه الواجهة (يمين/يسار) بالكامل على كل الشاشات.',
+  restartRequiredBtn: 'حسناً',
+  onboardStep1Title: 'فريمات متعددة',
+  onboardStep1Body:
+    'افتح حتى أربع شارتات معاً وقارن بين الأزواج والأطر الزمنية بلمسة واحدة، مع تخطيط 2×2 وفريم بملء الشاشة.',
+  onboardStep2Title: 'أدوات الرسم',
+  onboardStep2Body:
+    'تبويب «رسم» بالشريط السفلي يفتح لك خطوط الترند وفيبوناتشي والمستطيلات وباقي أدوات التحليل الفني مباشرة على الشارت.',
+  onboardStep3Title: 'المؤشرات والعدسات',
+  onboardStep3Body:
+    'اختر من عشرات المؤشرات الجاهزة (RSI, MACD, بولنجر وغيرها)، أو فعّل عدسة جاهزة تلخّص حالة السوق بنظرة واحدة.',
+  onboardStep4Title: 'التنبيهات',
+  onboardStep4Body:
+    'أنشئ تنبيه سعر أو مؤشر وسيصلك إشعار فوري على جهازك أينما كنت — لا حاجة لمراقبة الشارت طوال الوقت.',
+  onboardSkip: 'تخطي',
+  onboardNext: 'التالي',
+  onboardStart: 'ابدأ',
 };
 
 const enUS: Dict = {
@@ -160,6 +193,25 @@ const enUS: Dict = {
   notifStatusUnsupported: 'Not supported on web',
   notifEnableBtn: 'Enable notifications',
   notifOpenSettingsBtn: 'Open device settings',
+  restartRequiredTitle: 'Restart required',
+  restartRequiredBody:
+    'Language changed. Close and reopen the app to fully apply the new layout direction across all screens.',
+  restartRequiredBtn: 'OK',
+  onboardStep1Title: 'Multiple frames',
+  onboardStep1Body:
+    'Open up to four charts at once and compare pairs and timeframes in one tap, with a 2x2 layout and a full-screen frame.',
+  onboardStep2Title: 'Drawing tools',
+  onboardStep2Body:
+    'The Draw tab in the bottom bar opens trend lines, Fibonacci, rectangles, and more analysis tools right on the chart.',
+  onboardStep3Title: 'Indicators & lenses',
+  onboardStep3Body:
+    'Choose from dozens of ready indicators (RSI, MACD, Bollinger, and more), or turn on a lens that summarizes market state at a glance.',
+  onboardStep4Title: 'Alerts',
+  onboardStep4Body:
+    'Create a price or indicator alert and get an instant notification on your device — no need to watch the chart all day.',
+  onboardSkip: 'Skip',
+  onboardNext: 'Next',
+  onboardStart: 'Start',
 };
 
 const enGB: Dict = {
@@ -230,6 +282,25 @@ const ku: Dict = {
   notifStatusUnsupported: 'پشتگیری ناکرێت لەسەر وێب',
   notifEnableBtn: 'چالاککردنی ئاگادارکردنەوەکان',
   notifOpenSettingsBtn: 'کردنەوەی ڕێکخستنی ئامێر',
+  restartRequiredTitle: 'پێویستە ئەپەکە دووبارە بکرێتەوە',
+  restartRequiredBody:
+    'زمان گۆڕدرا. ئەپەکە دابخە و دووبارە بیکەرەوە بۆ ئەوەی ئاراستەی ڕووکار (ڕاست/چەپ) بە تەواوی لەسەر هەموو پەیجەکان جێبەجێ بێت.',
+  restartRequiredBtn: 'باشە',
+  onboardStep1Title: 'چەند چوارچێوەیەک بەیەکەوە',
+  onboardStep1Body:
+    'هەتا چوار شێوەنیگار بەیەکەوە بکەرەوە و جووت و کاتەکان بە یەک دەستدان بەراورد بکە، لەگەڵ نەخشەی 2×2 و چوارچێوەی پڕ شاشە.',
+  onboardStep2Title: 'ئامرازەکانی وێنەکێشان',
+  onboardStep2Body:
+    'تابی «وێنەکێشان» لە شریتی خوارەوە هێڵی ترێند و فیبۆناتچی و لاکێشەکان و ئامرازەکانی تری شیکردنەوەی تەکنیکی دەکاتەوە ڕاستەوخۆ لەسەر شێوەنیگار.',
+  onboardStep3Title: 'پێوەرەکان و لینزەکان',
+  onboardStep3Body:
+    'لە دەیان پێوەری ئامادە هەڵبژێرە (RSI، MACD، بۆلینگەر و زیاتر)، یان لینزێک چالاک بکە کە بارودۆخی بازاڕ بە یەک تەماشاکردن کورت دەکاتەوە.',
+  onboardStep4Title: 'ئاگادارکردنەوەکان',
+  onboardStep4Body:
+    'ئاگادارکردنەوەیەکی نرخ یان پێوەر دروست بکە و ئاگاداری خێرا لەسەر ئامێرەکەت وەربگرە — پێویست ناکات بە درێژایی ڕۆژ چاودێری شێوەنیگار بکەیت.',
+  onboardSkip: 'تێپەڕاندن',
+  onboardNext: 'دواتر',
+  onboardStart: 'دەستپێبکە',
 };
 
 export const DICTS: Record<LangId, Dict> = {

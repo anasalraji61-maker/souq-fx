@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Platform, LayoutChangeEvent } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
-import type { ChartSeries, LiveTick } from '../api';
+import { api, type ChartSeries, type LiveTick } from '../api';
 import { TimeframeBar } from './TimeframeBar';
 import type { Timeframe } from '../timeframes';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
@@ -130,6 +130,23 @@ export function ChartFrame({
   const candleTag = provenanceLabel(candleSrc);
   const marketClosed = !isForexMarketOpen(series.symbol);
 
+  const [quote, setQuote] = useState<{ bid?: number | null; ask?: number | null } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    api
+      .marketQuote(series.symbol)
+      .then((q) => {
+        if (alive) setQuote(q);
+      })
+      .catch(() => {
+        if (alive) setQuote(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [series.symbol, series.last]);
+  const hasSpread = quote?.bid != null && quote?.ask != null && quote.ask > quote.bid;
+
   const subtitle = useMemo(() => {
     if (interactive) return 'محرك MATRIX · عدسات وأدوات';
     if (navigate) return 'اسحب الوسط · السعر · التواريخ';
@@ -236,6 +253,11 @@ export function ChartFrame({
               ]}
             >
               {tickTag}
+            </Text>
+          ) : null}
+          {hasSpread ? (
+            <Text style={styles.spreadTag} accessibilityLabel="سبريد البيع والشراء">
+              {`B ${formatPrice(quote!.bid!)} · A ${formatPrice(quote!.ask!)}`}
             </Text>
           ) : null}
           <Text style={[styles.chg, { color: up ? colors.bull : colors.bear }]}>
@@ -364,6 +386,7 @@ const styles = StyleSheet.create({
   price: { color: colors.text, fontWeight: '600', fontSize: 13 },
   liveTag: { color: colors.bull, fontSize: 9, fontWeight: '800' },
   liveTagMuted: { color: colors.textMuted, fontWeight: '700' },
+  spreadTag: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
   sourceTag: {
     color: colors.accent,
     fontSize: 9,

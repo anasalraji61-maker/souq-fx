@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
   slotFilled: { backgroundColor: colors.accentFaint },
   slotEmpty: { borderStyle: 'dashed' },
   slotLocked: {
-    borderColor: '#334155',
+    borderColor: colors.lockedBorder,
     opacity: 0.45,
     borderStyle: 'dashed',
   },

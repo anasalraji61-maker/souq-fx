@@ -31,14 +31,16 @@ import { FrameSizedGrid } from '../components/FrameSizedGrid';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const FILTERS = [
-  { id: 'ma_cross_up', label: 'MA صعودي' },
-  { id: 'ma_cross_down', label: 'MA هبوطي' },
-  { id: 'rsi_oversold', label: 'RSI oversold' },
-  { id: 'rsi_overbought', label: 'RSI overbought' },
-  { id: 'macd_cross_up', label: 'MACD up' },
-  { id: 'bullish', label: 'زخم +' },
-  { id: 'bearish', label: 'زخم -' },
+/** كل فلتر يحمل تلميحاً عربياً مختصراً (hint) — فجوة موثَّقة بتدقيق أنس المباشر: مصطلحات
+ * "RSI oversold/overbought"/"MACD up" بلا أي شرح بالعربية لمتداول لا يعرف هذه المؤشرات أصلاً. */
+const FILTERS: { id: string; label: string; hint: string }[] = [
+  { id: 'ma_cross_up', label: 'MA صعودي', hint: 'السعر تجاوز متوسطه المتحرك للأعلى' },
+  { id: 'ma_cross_down', label: 'MA هبوطي', hint: 'السعر تجاوز متوسطه المتحرك للأسفل' },
+  { id: 'rsi_oversold', label: 'RSI oversold', hint: 'تشبّع بيعي — قد يرتد صعوداً' },
+  { id: 'rsi_overbought', label: 'RSI overbought', hint: 'تشبّع شرائي — قد يرتد هبوطاً' },
+  { id: 'macd_cross_up', label: 'MACD up', hint: 'تقاطع MACD صاعد — زخم إيجابي جديد' },
+  { id: 'bullish', label: 'زخم +', hint: 'زخم سعري إيجابي عام' },
+  { id: 'bearish', label: 'زخم -', hint: 'زخم سعري سلبي عام' },
 ];
 
 type Hit = {
@@ -268,6 +270,15 @@ export function ToolsScreen() {
               </Pressable>
             ))}
           </View>
+          {selected.length ? (
+            <View style={styles.filterHints}>
+              {FILTERS.filter((f) => selected.includes(f.id)).map((f) => (
+                <Text key={f.id} style={styles.filterHintText}>
+                  {f.label}: {f.hint}
+                </Text>
+              ))}
+            </View>
+          ) : null}
           <Pressable
             accessibilityRole="button"
             style={({ pressed }) => [
@@ -416,6 +427,8 @@ const styles = StyleSheet.create({
   chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   chipTextOn: { color: colors.accent },
+  filterHints: { gap: 3, marginTop: 2 },
+  filterHintText: { color: colors.textDim, fontSize: 10, textAlign: 'right' },
   hitCard: {
     flex: 1,
     height: '100%',

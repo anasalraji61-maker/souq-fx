@@ -40,7 +40,9 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
       id: `local-${Date.now()}`,
       user: 'أنت',
       text: t,
-      ts: new Date().toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }),
+      // 'ar-u-nu-latn': تنسيق عربي بأرقام غربية صراحة — 'ar' وحدها قد تُنتج أرقاماً هندية شرقية
+      // (١٢:٣٠) بدل غربية على بعض أجهزة ICU، غير متوقَّع لتاجر يقرأ طابع وقت رسالة بسرعة.
+      ts: new Date().toLocaleTimeString('ar-u-nu-latn', { hour: '2-digit', minute: '2-digit' }),
     };
     setMessages((m) => [...m, local]);
     try {

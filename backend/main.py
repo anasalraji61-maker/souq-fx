@@ -17,7 +17,7 @@ from typing import Literal
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Header
+from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -27,6 +27,7 @@ import elevenlabs_tts as tts
 import twelve_data as market
 import twelve_data_ws as td_ws
 import db
+from core.auth import _auth_user
 import news_feed
 import openrouter_ai
 import alert_worker
@@ -351,13 +352,6 @@ NEWS: list[dict] = [
 ]
 
 COURSES: list[dict] = []  # replaced by /api/academy/*
-
-
-def _auth_user(authorization: str | None = Header(default=None)) -> dict | None:
-    if not authorization:
-        return None
-    token = authorization.replace("Bearer ", "").strip()
-    return db.user_from_token(token)
 
 
 def _alert_price(symbol: str) -> float | None:

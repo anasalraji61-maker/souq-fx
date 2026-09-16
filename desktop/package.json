@@ -8,13 +8,14 @@
     "start": "node_modules\\electron\\dist\\electron.exe .",
     "dev": "set MATRIX_DESKTOP_DEV=1&& node_modules\\electron\\dist\\electron.exe .",
     "dist": "electron-builder --win nsis",
+    "dist:mac": "electron-builder --mac dmg",
     "pack": "electron-builder --win dir"
   },
   "build": {
     "appId": "com.matrix.charts",
     "productName": "MATRIX Charts",
     "directories": { "output": "dist" },
-    "files": ["main.js", "preload.js", "package.json"],
+    "files": ["main.js", "preload.js", "package.json", "web-build/**/*"],
     "win": {
       "target": ["nsis"],
       "artifactName": "MATRIX-Charts-Setup-${version}.${ext}"
@@ -23,6 +24,14 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "shortcutName": "MATRIX Charts"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "category": "public.app-category.finance",
+      "artifactName": "MATRIX-Charts-${version}.${ext}"
+    },
+    "dmg": {
+      "title": "MATRIX Charts"
     }
   },
   "devDependencies": {
