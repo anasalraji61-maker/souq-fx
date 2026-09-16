@@ -68,7 +68,17 @@ RAVI حرفياً [تطبيع بالقيمة المطلقة القصوى الم�
 **3 ملفات مُعدَّلة** (math.ts، types.ts، MatrixChart.tsx) + docs/ROADMAP.md + HANDOFF.md. **161 معرِّف
 IndicatorId إجمالاً الآن (كان 159)**.
 
-**GIT**: يُحاوَل أدناه بخطوة منفصلة عبر GitHub Desktop — راجع الملاحظة/التحديث اللاحق إن وُجد.
+**GIT — نجح بالكامل عبر GitHub Desktop، بلا أي حاجز**: `computer_resolve_access`+
+`computer_request_access` لكلا bundleId (المُشغِّل + عملية `app-3.6.5` المُصدَّرة) معاً بطلب واحد —
+منح فوري (موافقة مسبقة تلقائية للتشغيلات غير المراقَبة). `computer_open_application` فتح النافذة على
+أول محاولة. قائمة الملفات المتغيّرة أظهرت **6 ملفات** لا 5 — الفارق ملف سادس
+`mobile\src\context\AuthContext.tsx` من تراكم محلي غير مدفوع من تشغيل سابق (إصلاح موثوقية صغير: لفّ
+`AsyncStorage.setItem/removeItem` بـtry/catch مع تعليق عربي يشرح أن فشل التخزين لا يجب أن يُسقط
+تدفّق الدخول/الخروج) — رُوجعت diff كاملاً قبل المتابعة: ضمن `mobile/` المسموح، صفر أسرار، صفر لمسة
+لـMatrixRobot/souq-ai/.env، فأُدرج بنفس الـcommit بدل تجاهله. `Commit 6 files to main` نجح فوراً
+("Committed just now")، `Push origin` نجح فوراً (زر التحكم تحوَّل لـ"Fetch origin" وواجهة "No local
+changes" بلا أي badge تعليق) — **push تام لأول محاولة هذا التشغيل، بلا أي تعثّر تركيز/نقر أو حاجز
+صلاحيات**.
 
 آخر تحديث سابق: 2026-09-16 (Claude — تشغيل مجدول جديد خامس (نفس اليوم)، بروتوكول التسريع، جلسة جديدة
 بلا ذاكرة):
