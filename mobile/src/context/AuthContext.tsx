@@ -46,8 +46,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const persist = useCallback(async (u: User | null) => {
     setUser(u);
     setAuthToken(u?.token ?? null);
-    if (u) await AsyncStorage.setItem(KEY, JSON.stringify(u));
-    else await AsyncStorage.removeItem(KEY);
+    // فشل التخزين المحلي (مساحة ممتلئة/صلاحيات) لا يجب أن يُسقط دخول/تسجيل/خروج ناجحاً فعلياً
+    // بذاكرة الجلسة الحالية — نفس فلسفة try/catch الصامت المستخدَمة أصلاً بقراءة الجلسة أعلاه
+    // (سطر 31-40 بهذا الملف). أثر التسريب الوحيد: الجلسة لن تنجو من إعادة تشغيل التطبيق إن فشل
+    // التخزين، لا فشل login()/register()/logout() نفسها بواجهة المستخدم.
+    try {
+      if (u) await AsyncStorage.setItem(KEY, JSON.stringify(u));
+      else await AsyncStorage.removeItem(KEY);
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const login = useCallback(

@@ -89,18 +89,25 @@ import {
   computeDemarker,
   computeDemarkPivots,
   computeDisparityIndex,
+  computeDma,
   computeDmi,
   computeDonchian,
   computeDonchianWidth,
   computeDpo,
+  computeEfficiencyRatio,
+  computeElderImpulse,
   computeEnvelopes,
   computeEom,
   computeEwmaVolatility,
   computeFibPivotPoints,
   computeFisherTransform,
   computeForceIndex,
+  computeFractalChaosBands,
+  computeFractalChaosOsc,
   computeFractals,
   computeFrama,
+  computeGannHiLo,
+  computeGapo,
   computeGarmanKlassVolatility,
   computeGator,
   computeGmma,
@@ -129,6 +136,7 @@ import {
   computeOverlays,
   computeParkinsonVolatility,
   computePercentB,
+  computePfe,
   computePgo,
   computePivotPoints,
   computePivotsHighLow,
@@ -138,6 +146,7 @@ import {
   computePvi,
   computePvo,
   computeQstick,
+  computeRainbowOscillator,
   computeRavi,
   computeRelativeVolatilityIndex,
   computeRmi,
@@ -160,10 +169,12 @@ import {
   computeSuperTrend,
   computeT3,
   computeTrendIntensityIndex,
+  computeTrima,
   computeTrix,
   computeTrueRange,
   computeTsf,
   computeTsi,
+  computeTtf,
   computeTwap,
   computeTwiggsMoneyFlow,
   computeTypicalPrice,
@@ -175,6 +186,7 @@ import {
   computeVolumeOscillator,
   computeVolumeRoc,
   computeVortex,
+  computeVpci,
   computeVpt,
   computeVwMacd,
   computeVwap,
@@ -908,6 +920,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('psar') ? computePsar(source.plot) : null),
     [source.plot, indicators]
   );
+  const gannHiLo = useMemo(
+    () => (indicators.includes('gannHiLo') ? computeGannHiLo(source.plot) : null),
+    [source.plot, indicators]
+  );
   const stddev = useMemo(
     () => (indicators.includes('stddev') ? computeStdDev(closes) : null),
     [closes, indicators]
@@ -1194,6 +1210,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('fractals') ? computeFractals(source.plot) : null),
     [source.plot, indicators]
   );
+  const fractalChaosOsc = useMemo(
+    () => (indicators.includes('fractalChaosOsc') ? computeFractalChaosOsc(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const fractalChaosBands = useMemo(
+    () => (indicators.includes('fractalChaosBands') ? computeFractalChaosBands(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const elderImpulse = useMemo(
+    () => (indicators.includes('elderImpulse') ? computeElderImpulse(source.plot) : null),
+    [source.plot, indicators]
+  );
   const t3 = useMemo(
     () => (indicators.includes('t3') ? computeT3(closes) : null),
     [closes, indicators]
@@ -1381,6 +1409,38 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('williamsAd') ? computeWilliamsAd(source.plot) : null),
     [source.plot, indicators]
   );
+  const gapo = useMemo(
+    () => (indicators.includes('gapo') ? computeGapo(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const pfe = useMemo(
+    () => (indicators.includes('pfe') ? computePfe(closes) : null),
+    [closes, indicators]
+  );
+  const dma = useMemo(
+    () => (indicators.includes('dma') ? computeDma(closes) : null),
+    [closes, indicators]
+  );
+  const rainbowOsc = useMemo(
+    () => (indicators.includes('rainbowOsc') ? computeRainbowOscillator(closes) : null),
+    [closes, indicators]
+  );
+  const trima = useMemo(
+    () => (indicators.includes('trima') ? computeTrima(closes) : null),
+    [closes, indicators]
+  );
+  const efficiencyRatio = useMemo(
+    () => (indicators.includes('efficiencyRatio') ? computeEfficiencyRatio(closes) : null),
+    [closes, indicators]
+  );
+  const vpci = useMemo(
+    () => (indicators.includes('vpci') ? computeVpci(source.plot) : null),
+    [source.plot, indicators]
+  );
+  const ttf = useMemo(
+    () => (indicators.includes('ttf') ? computeTtf(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1480,7 +1540,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('volRoc') ? 1 : 0) +
     (indicators.includes('adxr') ? 1 : 0) +
     (indicators.includes('volatilityRatio') ? 1 : 0) +
-    (indicators.includes('williamsAd') ? 1 : 0);
+    (indicators.includes('williamsAd') ? 1 : 0) +
+    (indicators.includes('fractalChaosOsc') ? 1 : 0) +
+    (indicators.includes('gapo') ? 1 : 0) +
+    (indicators.includes('pfe') ? 1 : 0) +
+    (indicators.includes('rainbowOsc') ? 1 : 0) +
+    (indicators.includes('efficiencyRatio') ? 1 : 0) +
+    (indicators.includes('vpci') ? 1 : 0) +
+    (indicators.includes('ttf') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
   const paneH = 48;
@@ -1508,6 +1575,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('vwap') && vwap) vwap.forEach(push);
     if (indicators.includes('twap') && twap) twap.forEach(push);
     if (indicators.includes('psar') && psar) psar.forEach(push);
+    if (indicators.includes('gannHiLo') && gannHiLo) gannHiLo.forEach(push);
     if (indicators.includes('medianPrice') && medianPrice) medianPrice.forEach(push);
     if (indicators.includes('typicalPrice') && typicalPrice) typicalPrice.forEach(push);
     if (indicators.includes('weightedClose') && weightedClose) weightedClose.forEach(push);
@@ -1522,6 +1590,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (indicators.includes('frama') && frama) frama.forEach(push);
     if (indicators.includes('zlema') && zlema) zlema.forEach(push);
     if (indicators.includes('avgPrice') && avgPrice) avgPrice.forEach(push);
+    if (indicators.includes('dma') && dma) dma.forEach(push);
+    if (indicators.includes('trima') && trima) trima.forEach(push);
     if (indicators.includes('vidya') && vidya) vidya.forEach(push);
     if (indicators.includes('supertrend') && supertrend) supertrend.value.forEach(push);
     if (indicators.includes('bb')) {
@@ -1580,6 +1650,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       chandelierExit.shortStop.forEach(push);
       chandelierExit.longStop.forEach(push);
     }
+    if (indicators.includes('fractalChaosBands') && fractalChaosBands) {
+      fractalChaosBands.upper.forEach(push);
+      fractalChaosBands.lower.forEach(push);
+    }
     if (indicators.includes('gmma') && gmma) {
       gmma.shortLines.forEach((line) => line.forEach(push));
       gmma.longLines.forEach((line) => line.forEach(push));
@@ -1637,6 +1711,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     frama,
     zlema,
     avgPrice,
+    dma,
+    trima,
     vidya,
     supertrend,
     keltner,
@@ -1649,6 +1725,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     alligator,
     chandeKroll,
     chandelierExit,
+    fractalChaosBands,
+    gannHiLo,
     gmma,
     priceScale,
     pricePan,
@@ -3113,6 +3191,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             )
           )}
+        {indicators.includes('gannHiLo') &&
+          gannHiLo &&
+          gannHiLo.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`ghl${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FCD34D' }]}
+              />
+            )
+          )}
         {indicators.includes('fractals') &&
           fractals &&
           fractals.top.map((v, i) =>
@@ -3130,6 +3218,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <View
                 key={`frb${i}`}
                 style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) + 6, backgroundColor: colors.bull }]}
+              />
+            )
+          )}
+        {indicators.includes('elderImpulse') &&
+          elderImpulse &&
+          elderImpulse.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`eim${i}`}
+                style={[
+                  styles.dot,
+                  {
+                    left: xOf(i) - 1.5,
+                    top: yOf(source.plot[i].low) + 6,
+                    backgroundColor: v === 'green' ? colors.bull : v === 'red' ? colors.bear : colors.dxy,
+                  },
+                ]}
               />
             )
           )}
@@ -3185,6 +3290,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#C4B5FD' }]}
             />
           ))}
+        {indicators.includes('dma') &&
+          dma &&
+          dma.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`dma${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#C7D2FE' }]}
+              />
+            )
+          )}
+        {indicators.includes('trima') &&
+          trima &&
+          trima.map((v, i) =>
+            v == null ? null : (
+              <View
+                key={`trima${i}`}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#D9F99D' }]}
+              />
+            )
+          )}
         {indicators.includes('mcginley') &&
           mcginley &&
           mcginley.map((v, i) =>
@@ -3516,6 +3641,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   width: 2,
                   height: Math.max(2, yOf(lo) - yOf(v)),
                   backgroundColor: 'rgba(163,180,208,0.14)',
+                }}
+              />
+            );
+          })}
+        {indicators.includes('fractalChaosBands') &&
+          fractalChaosBands &&
+          fractalChaosBands.upper.map((v, i) => {
+            const lo = fractalChaosBands.lower[i];
+            if (v == null || lo == null) return null;
+            return (
+              <View
+                key={`fcb${i}`}
+                style={{
+                  position: 'absolute',
+                  left: xOf(i) - 1,
+                  top: yOf(v),
+                  width: 2,
+                  height: Math.max(2, yOf(lo) - yOf(v)),
+                  backgroundColor: 'rgba(167,139,250,0.14)',
                 }}
               />
             );
@@ -4737,6 +4881,142 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         </View>
       ) : null}
 
+      {pfe ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>PFE</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = pfe.filter((x): x is number => x != null).map((x) => Math.abs(x));
+              const maxP = Math.max(...vals, 1e-9);
+              return pfe.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxP) * (paneH / 2 - 4));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {rainbowOsc ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Rainbow Osc</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = rainbowOsc.filter((x): x is number => x != null);
+              const maxR = Math.max(...vals, 1e-9);
+              return rainbowOsc.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (v / maxR) * (paneH - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: paneH - 8 - h,
+                      backgroundColor: colors.accent,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {efficiencyRatio ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Efficiency Ratio</Text>
+          <View style={styles.paneInner}>
+            {efficiencyRatio.map((v, i) => {
+              if (v == null) return <View key={i} style={{ flex: 1 }} />;
+              const h = Math.min(paneH - 16, v * (paneH - 8));
+              return (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: Math.max(2, h),
+                    marginTop: paneH - 8 - h,
+                    backgroundColor: colors.accent,
+                    opacity: 0.7,
+                  }}
+                />
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
+
+      {vpci ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>VPCI</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = vpci.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxV = Math.max(...vals, 1e-9);
+              return vpci.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxV) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {ttf ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>TTF</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = ttf.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxT = Math.max(...vals, 1e-9);
+              return ttf.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxT) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
       {twiggsMoneyFlow ? (
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Twiggs MF</Text>
@@ -5200,6 +5480,36 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       height: Math.max(2, h),
                       marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {fractalChaosOsc ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Fractal Chaos Osc</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = fractalChaosOsc
+                .filter((x): x is number => x != null)
+                .map((v) => Math.abs(v));
+              const maxF = Math.max(...vals, 1e-9);
+              return fractalChaosOsc.map((v, i) => {
+                if (v == null || v === 0) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxF) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bear : colors.bull,
                       opacity: 0.7,
                     }}
                   />
@@ -6033,6 +6343,39 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       marginTop: (1 - yNorm) * (paneH - 16),
                       backgroundColor: v >= pvi[i - 1] ? colors.bull : colors.bear,
                       opacity: 0.8,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {gapo ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>GAPO</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = gapo.filter((v): v is number => v != null);
+              const minP = Math.min(...vals, 0);
+              const maxP = Math.max(...vals, 1e-9);
+              const span = maxP - minP || 1;
+              return gapo.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const prev = i > 0 ? gapo[i - 1] : null;
+                const yNorm = (v - minP) / span;
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: 3,
+                      marginTop: (1 - yNorm) * (paneH - 16),
+                      backgroundColor:
+                        prev == null ? accent : v >= prev ? colors.bull : colors.bear,
+                      opacity: 0.8,
+                      borderRadius: 2,
                     }}
                   />
                 );

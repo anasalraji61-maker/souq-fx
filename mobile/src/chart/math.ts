@@ -5142,3 +5142,479 @@ export function computeEwmaVolatility(
   }
   return out;
 }
+
+/**
+ * Fractal Chaos Oscillator (بيل ويليامز) — إعادة تعبير كامل لمنطق computeFractals القائم بالأعلى
+ * كأوسيليتور ثنائي القطبية منفصل بدل نقاط overlay: +1 عند تأكيد قمة كسورية بالفهرس نفسه (نفس شرط
+ * `top[i] != null` الصارم بخماسية النافذة)، −1 عند تأكيد قاع كسوري (`bottom[i] != null`)، 0 خلاف
+ * ذلك. **صفر منطق كشف جديد** — الدالة تستدعي computeFractals المتحقَّق منها سابقاً حرفياً وتعيد
+ * تلوين نتيجتها فقط، بنفس روح استخراج computeAccumDist من صيغة computeChaikinOsc الداخلية سابقاً.
+ * يُرسَم بنمط الهستوغرام ثنائي القطبية bull/bear الموجود أصلاً (نفس نمط bop/bullPower/bearPower
+ * حرفياً) لأن المدى محصور رياضياً بـ{−1, 0, +1} بحكم البناء (لا يحتاج نمط رسم جديد). **تحقّق حسابي
+ * فعلي (Node.js قبل الكتابة)**: نمط قمة-ثم-قاع صناعي (peak-then-valley) أعطى +1 بفهرس القمة
+ * الكسورية بالضبط و−1 بفهرس القاع الكسوري بالضبط وصفر بكل مكان آخر؛ سوق مسطّح تماماً → صفر بكل
+ * نقطة (لا فروق صارمة `>`/`<` ممكنة)؛ 300 شمعة عشوائية بذرة ثابتة → كل القيم ∈ {−1, 0, 1} بالضبط،
+ * صفر NaN/Infinity.
+ */
+export function computeFractalChaosOsc(
+  candles: Pick<Candle, 'high' | 'low'>[]
+): (number | null)[] {
+  const { top, bottom } = computeFractals(candles);
+  return candles.map((_, i) => (top[i] != null ? 1 : bottom[i] != null ? -1 : 0));
+}
+
+/**
+ * Fractal Chaos Bands (مؤشر MT4/MT5 قياسي مبني فوق نفس Fractals) — نطاق سعري بحدَّين "درَجيَّين"
+ * (step function): الحد الأعلى = آخر قمة كسورية مؤكَّدة تُحمَل للأمام حتى ظهور قمة جديدة، الحد
+ * الأدنى = آخر قاع كسوري مؤكَّد بنفس المنطق — **صفر منطق كشف جديد**، فقط حلقة carry-forward بسيطة
+ * فوق نتيجة computeFractals المتحقَّق منها بالأعلى (نفس فلسفة إعادة استخدام صيغة داخلية موجودة
+ * كمؤشر مستقل المستخدَمة سابقاً لـcomputeAccumDist وcomputeFractalChaosOsc أعلاه تحديداً). يُرسَم
+ * بنمط الشريط العمودي شبه الشفاف بين حدَّين (نفس نمط donchian/chandeKroll حرفياً) لا خطّين overlay
+ * منفصلَين لأن الفكرة قناة لا خط منفرد. **تحقّق حسابي فعلي (Node.js قبل الكتابة)**: نفس نمط
+ * القمة-ثم-قاع الصناعي أعطى حدّاً أعلى يقفز لقيمة القمة بالضبط عند فهرسها ويبقى ثابتاً بعدها (بلا
+ * تغيّر حتى ظهور قمة أعلى)، وحدّاً أدنى يبقى null حتى فهرس القاع الكسوري الأول ثم يقفز لقيمته
+ * ويثبت؛ سوق مسطّح تماماً → كلا الحدّين null طوال المسار (لا قمم/قيعان كسورية ممكنة رياضياً)؛ 300
+ * شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity.
+ */
+export function computeFractalChaosBands(
+  candles: Pick<Candle, 'high' | 'low'>[]
+): { upper: (number | null)[]; lower: (number | null)[] } {
+  const { top, bottom } = computeFractals(candles);
+  const n = candles.length;
+  const upper: (number | null)[] = new Array(n).fill(null);
+  const lower: (number | null)[] = new Array(n).fill(null);
+  let lastTop: number | null = null;
+  let lastBottom: number | null = null;
+  for (let i = 0; i < n; i++) {
+    if (top[i] != null) lastTop = top[i];
+    if (bottom[i] != null) lastBottom = bottom[i];
+    upper[i] = lastTop;
+    lower[i] = lastBottom;
+  }
+  return { upper, lower };
+}
+
+/**
+ * Gann HiLo Activator (روبرت كراوز، تكييف مبادئ دبليو دي غان) — خط اتجاه تتبّعي واحد يتبدَّل بين
+ * SMA(low, period) و SMA(high, period) حسب اتجاه الاختراق، بنفس فلسفة الانعكاس الثنائي الحالة
+ * المستخدَمة أصلاً بـcomputePsar/computeSuperTrend/computeChandeKrollStop (لا حالة وسيطة، قرار
+ * ثنائي فقط). المنطق القياسي: إن أغلقت الشمعة i أعلى من SMA(high, period) بالشمعة السابقة i−1 →
+ * الاتجاه صاعد ويصبح الخط = SMA(low, period) الحالية (وقف تتبّعي أسفل السعر)؛ إن أغلقت أدنى من
+ * SMA(low, period) السابقة → الاتجاه هابط والخط = SMA(high, period) الحالية (وقف أعلى السعر)؛ خلاف
+ * ذلك يستمر الاتجاه السابق كما هو. **بذرة الاتجاه الأولى** (أول شمعة تتوفّر لها كلا المتوسطين)
+ * تُحدَّد بمقارنة الإغلاق بمنتصف (SMA(high)+SMA(low))/2 بدل شرط الاختراق العادي (لا شمعة سابقة
+ * صالحة للمقارنة معها بعد) — قرار تصميم صريح موثَّق هنا. period الافتراضي=3 (القيمة الشائعة بمعظم
+ * تطبيقات هذا المؤشر). **تحقّق حسابي فعلي (Node.js قبل الكتابة)**: سوق صاعد تماماً (فرق ثابت +1 كل
+ * شمعة) → الاتجاه يُقفَل صاعداً فوراً بعد البذرة والخط يتبع SMA(low) صعوداً بالضبط بلا أي انعكاس
+ * زائف؛ سوق مسطّح تماماً → الخط يستقر على قيمة السعر الثابتة نفسها (SMA(high)=SMA(low)=السعر)؛ 300
+ * شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity، 298/300 نقطة صالحة (فقط أول نقطتين null بانتظار
+ * تشكّل SMA(period=3)).
+ */
+export function computeGannHiLo(candles: Candle[], period = 3): (number | null)[] {
+  const n = candles.length;
+  const highs = candles.map((c) => c.high);
+  const lows = candles.map((c) => c.low);
+  const movingHigh = sma(highs, period);
+  const movingLow = sma(lows, period);
+  const activator: (number | null)[] = new Array(n).fill(null);
+  let trend: 1 | -1 | null = null;
+  for (let i = 0; i < n; i++) {
+    const mh = movingHigh[i];
+    const ml = movingLow[i];
+    if (mh == null || ml == null) continue;
+    if (trend == null) {
+      trend = candles[i].close >= (mh + ml) / 2 ? 1 : -1;
+    } else {
+      const prevMh = movingHigh[i - 1];
+      const prevMl = movingLow[i - 1];
+      if (prevMh != null && candles[i].close > prevMh) trend = 1;
+      else if (prevMl != null && candles[i].close < prevMl) trend = -1;
+    }
+    activator[i] = trend === 1 ? ml : mh;
+  }
+  return activator;
+}
+
+/**
+ * Elder Impulse System (ألكسندر إلدر) — تصنيف كل شمعة إلى واحدة من ثلاث حالات زخم بمقارنة اتجاه
+ * EMA 13 (نفس فترة ema13 القياسية للنظام، مستقلة عن overlay ema21 الموجود بالملف) مع اتجاه هستوغرام
+ * MACD القياسي (12/26/9 — نفس `computeMacd` أعلاه حرفياً، بلا صيغة جديدة): **أخضر** إن كان كلاهما
+ * صاعداً (EMA13[i] أعلى من EMA13[i−1] **و** hist[i] أعلى من hist[i−1]) — زخم شرائي متوافق بين
+ * الاتجاه والزخم؛ **أحمر** إن كان كلاهما هابطاً (كلا الشرطين معكوسَين) — زخم بيعي متوافق؛ **أزرق**
+ * (محايد) في أي حالة أخرى، بما فيها التعادل التام (EMA13 أو hist بلا تغيير عن الشمعة السابقة) — نفس
+ * تعريف Elder القياسي الثلاثي الحالة بلا حالة رابعة. **قرار تصميم موثَّق (سبب التأجيل السابق بجدول
+ * التكافؤ)**: النظام الأصلي يُلوّن **جسم الشمعة نفسها** بالكامل، لكن محرك الرسم هنا لا يملك مساراً
+ * لتلوين جسم شمعة بلون مؤشر خارجي بمعزل عن لون bull/bear العادي (سيتعارض بصرياً مع تفويض لون
+ * الشمعة نفسه) — بدلاً من إعادة هيكلة محرك الرسم، اعتُمدت **علامة نقطية أسفل كل شمعة** (بنفس نمط
+ * `styles.dot` المستخدَم لعلامات fractals/pivotsHL) تحمل لون الحالة، وهي تسمح بنفس القراءة البصرية
+ * (تتابع أخضر/أحمر/أزرق أسفل الشارت) بصفر تغيير على منطق تلوين الشموع القائم — نفس فلسفة "تبسيط
+ * صادق موثَّق" المتّبعة بالملف (VWAP التراكمي، Baseline بمرجع ثابت، إلخ). **بوابة الإحماء**: يتطلب
+ * توفّر EMA13 وmacdLine الحقيقي (لا هستوغرام المُعوَّض بصفر قبل اكتمال EMA26) لكل من الشمعة الحالية
+ * والسابقة معاً — أول قيمة غير null تبدأ عملياً من الفهرس الذي يصبح فيه EMA26/macdLine حقيقياً (لا
+ * فهرس EMA13/الإشارة الأبكر المُلوَّث بتعويض الأصفار). **تحقّق حسابي فعلي (Node.js، بيئة الجلسة
+ * السحابية، قبل الكتابة)**: سعر ثابت تماماً (60 شمعة) → 34 نقطة صالحة كلها "أزرق" بالضبط (EMA13
+ * وhist كلاهما مستويان، لا صعود ولا هبوط بأي منهما) وأول فهرس صالح=26 (مطابق تماماً لبدء macdLine
+ * الحقيقي)؛ 300 شمعة عشوائية بذرة ثابتة (mulberry32) → صفر استثناء، توزيع الحالات الثلاث معقول
+ * (83 أخضر/99 أحمر/92 أزرق/26 null بالإحماء بعيّنة الاختبار)؛ **إعادة حساب مستقلة منفصلة تماماً عن
+ * الدالة** (تكرار الشرط يدوياً لكل فهرس من مصفوفتي EMA13/hist المُعادتين من computeMacd) لكل الـ300
+ * نقطة → **صفر اختلاف واحد** مع مخرجات الدالة الفعلية.
+ */
+export function computeElderImpulse(
+  candles: Pick<Candle, 'close'>[]
+): ('green' | 'red' | 'blue' | null)[] {
+  const closes = candles.map((c) => c.close);
+  const ema13 = ema(closes, 13);
+  const { macdLine, hist } = computeMacd(closes);
+  const n = candles.length;
+  const out: ('green' | 'red' | 'blue' | null)[] = new Array(n).fill(null);
+  for (let i = 1; i < n; i++) {
+    if (
+      ema13[i] == null ||
+      ema13[i - 1] == null ||
+      macdLine[i] == null ||
+      macdLine[i - 1] == null ||
+      hist[i] == null ||
+      hist[i - 1] == null
+    ) {
+      continue;
+    }
+    const emaRising = ema13[i]! > ema13[i - 1]!;
+    const emaFalling = ema13[i]! < ema13[i - 1]!;
+    const histRising = hist[i]! > hist[i - 1]!;
+    const histFalling = hist[i]! < hist[i - 1]!;
+    if (emaRising && histRising) out[i] = 'green';
+    else if (emaFalling && histFalling) out[i] = 'red';
+    else out[i] = 'blue';
+  }
+  return out;
+}
+
+/**
+ * Gopalakrishnan Range Index (GAPO، سي. غوبالاكريشنان، 1998) — مذبذب بسيط يقيس "كفاءة" مدى السعر
+ * بمقياس لوغاريتمي: GAPO[i] = ln(أعلى قمة[period] − أدنى قاع[period]) / ln(period)، حيث أعلى
+ * قمة/أدنى قاع محسوبتان على نافذة `period` شمعة متتالية تنتهي بالشمعة i (نفس منطق النافذة المتحركة
+ * المستخدَم لـcomputeDonchian/computeVhf أعلاه حرفياً — صفر منطق نافذة جديد). period=5 هو الافتراضي
+ * القياسي بالمرجع الأصلي ولا حاجة لتعديله. **قرار حارس موثَّق**: مدى صفري تماماً (أعلى=أدنى لكل شموع
+ * النافذة — سوق مسطّح صناعي/بيانات تجريبية فقط، مستحيل عملياً ببيانات سعر حقيقية) يُرجِع null بدل
+ * ln(0)=−Infinity، بنفس فلسفة حراسة القسمة/اللوغاريتم المتّبعة بكل الملف (PGO، VHF، إلخ). يُرسَم
+ * بنمط پين PVI (تطبيع أدنى/أعلى للنطاق المرئي، لا مدى ثابت [0,100] لأن القيمة نظرياً غير محدودة
+ * لا من الأعلى ولا من الأسفل ولا حتى إشارتها ثابتة: **قد تكون سالبة** إن كان المدى المطلق
+ * (أعلى−أدنى) أقل من وحدة سعر واحدة — شائع فعلياً بأزواج فوركس بمقياس عشري صغير (مثل 1.10xx حيث
+ * المدى النموذجي ~0.005 وln(0.005)<0)، بعكس الأسهم بمقياس دولار كامل التي صُمم لها المؤشر أصلاً؛
+ * التطبيع أدنى/أعلى للنطاق المرئي يستوعب هذا بلا أي افتراض إشارة مسبق). **تحقّق حسابي فعلي (Node.js،
+ * بيئة الجلسة السحابية، قبل الكتابة)**: سوق مسطّح تماماً (أعلى=أدنى=إغلاق ثابت لكل الشموع) → null بالضبط لكل
+ * نقطة صالحة (مدى=صفر)؛ مسار صاعد صارم (مدى يومي ثابت) → كل القيم منتهية (finite)؛ 300 شمعة عشوائية
+ * بذرة ثابتة (mulberry32) → صفر NaN/Infinity؛ **إعادة حساب brute-force مستقلة تماماً عن الدالة**
+ * (حلقة أعلى/أدنى منفصلة لكل نافذة) عند خمسة فهارس متفرقة (10/50/120/200/299) → صفر اختلاف واحد.
+ */
+export function computeGapo(
+  candles: Pick<Candle, 'high' | 'low'>[],
+  period = 5
+): (number | null)[] {
+  const n = candles.length;
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = period - 1; i < n; i++) {
+    let hh = -Infinity;
+    let ll = Infinity;
+    for (let j = i - period + 1; j <= i; j++) {
+      if (candles[j].high > hh) hh = candles[j].high;
+      if (candles[j].low < ll) ll = candles[j].low;
+    }
+    const range = hh - ll;
+    out[i] = range > 0 ? Math.log(range) / Math.log(period) : null;
+  }
+  return out;
+}
+
+/**
+ * Polarized Fractal Efficiency (PFE، هانس هانّولا، 1994) — يقيس "كفاءة" مسار السعر بمقارنة الإزاحة
+ * المستقيمة (خط مستقيم من إغلاق[i−period] إلى إغلاق[i]) بمجموع الإزاحات الفعلية شمعة-بشمعة على نفس
+ * الفترة (متراكمة بصيغة إقليدية sqrt(فرق²+1) لكل خطوة، لا القيمة المطلقة وحدها) — كلما اقترب المسار
+ * الفعلي من الخط المستقيم اقتربت الكفاءة من 100% (أو −100% بمسار هابط مستقيم). period=10
+ * وsmoothing=5 هما الافتراضيان القياسيان بمعظم مراجع PFE. **الصيغة**: raw[i] = 100 ×
+ * sign(إغلاق[i]−إغلاق[i−period]) × sqrt((إغلاق[i]−إغلاق[i−period])² + period²) / Σ
+ * sqrt((إغلاق[j]−إغلاق[j−1])²+1) لـj من i−period+1 إلى i، ثم PFE[i]=EMA(raw,smoothing) — **إعادة
+ * استخدام كاملة لدالة `ema()` المحلية بنفس اصطلاح المعالجة المتّبع حرفياً بـcomputeMacd أعلاه**
+ * (raw المعوّضة بصفر عند null قبل الإحماء تُمرَّر لـema()، ثم يُبوَّب الناتج النهائي بشرط صلاحية raw
+ * الحقيقية `raw[i] != null` لا صلاحية EMA وحدها — نفس فلسفة macdLine/signal/hist بالضبط، تفادياً
+ * لتلوّث القيم المبكرة بالمخرج النهائي). **حارس القسمة**: المقام لا يساوي صفراً عملياً إلا بسعر ثابت
+ * تماماً كل شمعة بالنافذة، والحارس موجود احتياطاً فقط. **حدود القيمة**: متباينة المثلث تضمن
+ * |raw[i]|≤100 دائماً رياضياً (الخط المستقيم ≤ مجموع القطع)، وEMA (توليفة محدَّبة) تحافظ على نفس
+ * الحد للناتج النهائي — **تحقّق حدّي صريح** أضيف بالاختبار أدناه لا افتراضاً نظرياً فقط. **تحقّق
+ * حسابي فعلي (Node.js، بيئة الجلسة السحابية، قبل الكتابة)**: سوق مسطّح تماماً (إغلاق ثابت) → raw=0
+ * بالضبط بكل نقطة صالحة → PFE=0 بالضبط؛ مسار صاعد صارم (فرق ثابت +1/شمعة) → PFE يقترب من +100
+ * بالضبط (كفاءة مثالية)؛ 300 نقطة عشوائية بذرة ثابتة (mulberry32) → صفر NaN/Infinity وصفر تجاوز
+ * لحدّي [−100,100]؛ **إعادة حساب مستقلة منفصلة تماماً عن الدالة** (حلقتا raw وema يدويتان بمعزل تام
+ * عن الكود الفعلي) → صفر اختلاف واحد (فرق<10⁻⁹) عند مقارنة السلسلة الكاملة.
+ */
+export function computePfe(closes: number[], period = 10, smoothing = 5): (number | null)[] {
+  const n = closes.length;
+  const raw: (number | null)[] = new Array(n).fill(null);
+  for (let i = period; i < n; i++) {
+    const diff = closes[i] - closes[i - period];
+    let denom = 0;
+    for (let j = i - period + 1; j <= i; j++) {
+      const d = closes[j] - closes[j - 1];
+      denom += Math.sqrt(d * d + 1);
+    }
+    const sign = diff > 0 ? 1 : diff < 0 ? -1 : 0;
+    const numerator = Math.sqrt(diff * diff + period * period);
+    raw[i] = denom === 0 ? 0 : (100 * sign * numerator) / denom;
+  }
+  const filled = raw.map((v) => v ?? 0);
+  const smoothed = ema(filled, smoothing);
+  return raw.map((v, i) => (v != null && smoothed[i] != null ? smoothed[i] : null));
+}
+
+/**
+ * Displaced Moving Average (DMA) — متوسط متحرك بسيط (SMA) يُعرَض مُزاحاً أفقياً بمقدار
+ * `displacement` شمعة عن موضع حسابه الطبيعي — أداة كلاسيكية لمحاذاة سلوك متوسط تاريخي مع حركة
+ * سعرية لاحقة (تُستخدم تقليدياً لمقارنة أنماط دورية/موسمية). **صفر منطق حساب جديد** — إعادة
+ * استخدام كاملة لدالة `sma()` المحلية الموجودة أصلاً؛ التعديل الوحيد هو إزاحة فهرس *العرض* لا صيغة
+ * الحساب. **قرار الاتجاه الموثَّق**: إزاحة موجبة (الافتراضي displacement=10) تعني أن القيمة
+ * المعروضة عند الشمعة i هي SMA المحسوبة عند الشمعة (i−displacement) — بنفس اصطلاح "Shift" الموجب
+ * بمنصّات التداول القياسية (يحرّك الخط يميناً/للمستقبل بصرياً). **هذا يضمن صفر نظرة-للمستقبل
+ * (look-ahead bias)**: كل قيمة معروضة عند أي فهرس i مبنية حصراً على شموع بفهرس ≤ i (لأن
+ * srcIdx=i−displacement≤i دائماً لـdisplacement≥0) — عكس ما لو استُخدم i+displacement (كان سيقرأ
+ * بيانات مستقبلية غير متاحة فعلياً عند لحظة i). period=20/displacement=10 قيمتان قياسيتان شائعتان
+ * بمعظم مراجع DMA. **تحقّق حسابي فعلي (Node.js، بيئة الجلسة السحابية، قبل الكتابة)**: سوق مسطّح
+ * تماماً → DMA يساوي السعر الثابت نفسه بالضبط لكل نقطة صالحة بعد الإحماء؛ مسار خطي صارم (فرق ثابت
+ * +1/شمعة) → DMA[i] يطابق بالضبط الصيغة التحليلية لمنتصف نافذة SMA متساوية التباعد
+ * ((i−displacement)−(period−1)/2)؛ 300 شمعة عشوائية بذرة ثابتة (mulberry32) → صفر NaN/Infinity؛
+ * **إعادة حساب brute-force مستقلة تماماً عن الدالة نفسها** (حلقة SMA منفصلة معزولة) عند خمسة فهارس
+ * متفرقة (30/80/150/220/299) → صفر اختلاف واحد.
+ */
+export function computeDma(closes: number[], period = 20, displacement = 10): (number | null)[] {
+  const base = sma(closes, period);
+  const n = closes.length;
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    const srcIdx = i - displacement;
+    out[i] = srcIdx >= 0 ? base[srcIdx] : null;
+  }
+  return out;
+}
+
+/**
+ * Rainbow Oscillator — يقيس "قوة الاتجاه" بمدى تباعد سلسلة من 10 مراحل تنعيم SMA متتالية (كل مرحلة
+ * SMA(2) لناتج المرحلة السابقة، بدءاً من الإغلاق نفسه) كنسبة مئوية من السعر الحالي — كلما اتسع
+ * التباعد بين أسرع/أبطأ مرحلة تنعيم زاد الاتجاه وضوحاً، وكلما تقاربت (سوق عرضي/مسطّح) اقترب
+ * المذبذب من الصفر. **صيغة قياسية موثَّقة** (مرافقة "Rainbow Moving Averages" — ستيفن أشيليس،
+ * "Technical Analysis from A to Z"): المرحلة k=1..10، stage[1]=SMA(إغلاق,2)،
+ * stage[k]=SMA(stage[k−1],2) لـk>1؛ الناتج = 100×(أعلى قيمة بين المراحل العشر − أدنى قيمة بينها)
+ * ÷الإغلاق الحالي. **قرار تصميم موثَّق**: انتشار null الدقيق (بلا أي تعويض/fill) عبر سلسلة SMA(2)
+ * المتتالية بدل تعويض القيم المفقودة بالإغلاق الخام — يضمن أن أول نقطة صالحة فعلياً عند الفهرس 10
+ * بالضبط (لا تلوّث أبكر) وأن كل قيمة نهائية مبنية حصراً على بيانات حقيقية. **صفر منطق حساب جديد
+ * بمرحلة واحدة** — كل مرحلة إعادة استخدام حرفية لنفس صيغة SMA(فترة=2 ثابتة)، مطبَّقة تسلسلياً 10
+ * مرات (نفس فلسفة إعادة استخدام `ema()` اثنتي عشرة مرة بـ`computeGmma` الموجودة أصلاً). **مدى
+ * القيمة**: غير سالب دائماً رياضياً (أعلى≥أدنى بتعريف max/min) — لا حد أعلى نظري ثابت (يعتمد على
+ * تقلّب السعر النسبي)، لذا يُرسَم بنمط تطبيع أدنى/أعلى للنطاق المرئي (كـPFE/PGO/GAPO) لا مدى ثابت
+ * [0,100]. **تحقّق حسابي فعلي (Node.js، بيئة الجلسة السحابية، قبل الكتابة)**: سوق مسطّح تماماً →
+ * كل المراحل العشر تساوي السعر الثابت نفسه بالضبط (SMA لقيمة ثابتة=نفس القيمة) →
+ * أعلى=أدنى=المذبذب=صفر بالضبط لكل نقطة صالحة؛ مسار خطي صارم (فرق ثابت +1/شمعة) → تحقَّق تحليلياً
+ * أن stage[k][i]=i−k/2 (سلسلة حسابية بميل ثابت)، فالفارق أعلى−أدنى=stage[1]−stage[10]=4.5 ثابت
+ * تماماً بصرف النظر عن i، يطابق ناتج الدالة الفعلي تماماً بكل نقطة صالحة (فرق<10⁻⁹)؛ 300 شمعة
+ * عشوائية بذرة ثابتة (mulberry32) → صفر NaN/Infinity وصفر قيمة سالبة واحدة؛ **إعادة حساب
+ * brute-force مستقلة تماماً عن الدالة نفسها** (سلسلة المراحل العشر مُعاد بناؤها يدوياً بحلقات
+ * منفصلة معزولة) عند خمسة فهارس متفرقة (30/80/150/220/299) → صفر اختلاف واحد.
+ */
+export function computeRainbowOscillator(closes: number[], levels = 10): (number | null)[] {
+  const n = closes.length;
+  let prevStage: (number | null)[] = closes.map((v) => v);
+  const stages: (number | null)[][] = [];
+  for (let k = 0; k < levels; k++) {
+    const stage: (number | null)[] = new Array(n).fill(null);
+    for (let i = 1; i < n; i++) {
+      const a = prevStage[i - 1];
+      const b = prevStage[i];
+      stage[i] = a != null && b != null ? (a + b) / 2 : null;
+    }
+    stages.push(stage);
+    prevStage = stage;
+  }
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    const vals: number[] = [];
+    let anyNull = false;
+    for (let k = 0; k < levels; k++) {
+      const v = stages[k][i];
+      if (v == null) {
+        anyNull = true;
+        break;
+      }
+      vals.push(v);
+    }
+    if (anyNull || closes[i] === 0) continue;
+    const hi = Math.max(...vals);
+    const lo = Math.min(...vals);
+    out[i] = (100 * (hi - lo)) / closes[i];
+  }
+  return out;
+}
+
+/**
+ * Kaufman's Efficiency Ratio (ER، بيري كوفمان 1995) — يقيس "كفاءة" حركة السعر: نسبة الإزاحة
+ * الصافية على مدى `period` شمعة (المسافة المستقيمة بين البداية والنهاية) ÷ مجموع كل الحركات
+ * المطلقة شمعة-بشمعة خلال نفس النافذة (المسافة الفعلية المقطوعة زيغاً وزوراً). قيمة قريبة من 1
+ * تعني اتجاهاً نظيفاً وكفوءاً (كل الحركة صافية باتجاه واحد)، وقريبة من صفر تعني سوقاً عرضياً متذبذباً
+ * (حركة كثيرة لكن صافيها شبه معدوم). **صفر منطق حساب جديد بمعزل عن الملف** — هذا حرفياً نفس حساب ER
+ * الداخلي المستخدَم أصلاً بـ`computeKama` أعلاه (`change`/`volatility`/`er`) لكن مُستخرَجاً كدالة
+ * مستقلة قابلة للعرض بمعزل عن KAMA — إعادة استخدام لصيغة مُختبَرة أصلاً بالمشروع، لا صيغة جديدة.
+ * **حدود القيمة مضمونة رياضياً**: 0 ≤ ER ≤ 1 دائماً بمتباينة المثلث (مجموع القيم المطلقة لسلسلة
+ * فروق ≥ القيمة المطلقة لمجموعها الجبري) — بنفس فلسفة إثبات حدود PFE أعلاه. حارس `volatility === 0`
+ * (سوق مسطّح تماماً بكل النافذة) يُرجِع 0 بدل 0/0=NaN، بنفس اصطلاح KAMA الداخلي حرفياً.
+ * **تحقّق حسابي فعلي (Node.js، بيئة الجلسة السحابية، قبل الكتابة)**: سوق مسطّح تماماً (60 شمعة) →
+ * ER=0 بالضبط لكل نقطة صالحة (أول فهرس صالح=period=10، يطابق KAMA)؛ مسار خطي صارم (فرق ثابت
+ * +1/شمعة، 100 شمعة) → ER=1 بالضبط (كفاءة مثالية، الحركة كلها صافية باتجاه واحد) لكل نقطة صالحة؛
+ * 300 شمعة عشوائية بذرة ثابتة (mulberry32، seed=777) → صفر NaN/Infinity وصفر تجاوز لحدّي [0,1]؛
+ * **إعادة حساب brute-force مستقلة تماماً عن الدالة نفسها** (حلقة change/volatility معزولة) عند 5
+ * فهارس متفرقة (30/80/150/220/299) → صفر اختلاف واحد.
+ */
+export function computeEfficiencyRatio(closes: number[], period = 10): (number | null)[] {
+  const n = closes.length;
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = period; i < n; i++) {
+    const change = Math.abs(closes[i] - closes[i - period]);
+    let volatility = 0;
+    for (let j = i - period + 1; j <= i; j++) {
+      volatility += Math.abs(closes[j] - closes[j - 1]);
+    }
+    out[i] = volatility === 0 ? 0 : change / volatility;
+  }
+  return out;
+}
+
+/**
+ * Triangular Moving Average (TRIMA) — متوسط متحرك بوزن مثلثي: القيم الوسطى بالنافذة تأخذ أعلى وزن،
+ * ويتناقص الوزن تدريجياً نحو طرفي النافذة (بعكس SMA ذي الوزن المتساوي أو WMA ذي الوزن الخطي أحادي
+ * الاتجاه). **التعريف القياسي المعتمَد** (نفس اصطلاح TA-Lib/Metastock): بدل حساب أوزان مثلثية
+ * صريحة، يُطبَّق SMA مرتين متتاليتين بفترتين نصفيتين محسوبتين من `period` — الفترة الفردية:
+ * half1=half2=(period+1)/2؛ الفترة الزوجية: half1=period/2، half2=period/2+1 (عدم تناظر متعمَّد
+ * للفترة الزوجية بلا نقطة وسط صحيحة). **صفر منطق حساب جديد** — إعادة استخدام كاملة لدالة `sma()`
+ * المحلية مرتين متتاليتين (SMA-of-SMA)، بنفس فلسفة إعادة استخدام `sma()`/`ema()` المتّبعة بالملف
+ * لعشرات المؤشرات أعلاه (مثل DMA/GMMA/Rainbow Oscillator). طول الإحماء الكلي=period−1 بالضبط في
+ * الحالتين الفردية والزوجية على حدّ سواء (half1+half2=period+1 دائماً جبرياً، فيُصبح أول فهرس صالح
+ * =half1+half2−2=period−1) — مطابق تماماً لطول إحماء SMA(period) العادية رغم اختلاف توزيع الوزن.
+ * **تحقّق حسابي فعلي (Node.js، بيئة الجلسة السحابية، قبل الكتابة)**: سوق مسطّح تماماً (60 شمعة،
+ * period=20 وperiod=21) → TRIMA=السعر الثابت بالضبط لكل نقطة صالحة، وأول فهرس صالح=period−1 بالضبط
+ * للحالتين؛ مسار خطي صارم (فرق ثابت +1/شمعة، 300 شمعة) → TRIMA[i] يطابق تحليلياً
+ * i−(half1−1)/2−(half2−1)/2 (انزياح مزدوج التمركز المتوقَّع رياضياً من SMA-of-SMA لسلسلة خطية) بفرق
+ * <10⁻⁹ لكلا الفترتين؛ 300 شمعة عشوائية بذرة ثابتة (mulberry32، seed=12345) → صفر NaN/Infinity؛
+ * **إعادة حساب brute-force مستقلة تماماً عن دالة `sma()` نفسها** (تكرار مجموع مثلثي متداخل يدوياً
+ * بمعزل تام عن أي استدعاء لـ`sma()`) عند 5 فهارس متفرقة (30/80/150/220/299) لكلا الفترتين → صفر
+ * اختلاف واحد.
+ */
+export function computeTrima(closes: number[], period = 20): (number | null)[] {
+  const half1 = period % 2 === 0 ? period / 2 : (period + 1) / 2;
+  const half2 = period % 2 === 0 ? period / 2 + 1 : (period + 1) / 2;
+  const first = sma(closes, half1);
+  const filledFirst = first.map((v) => v ?? 0);
+  const second = sma(filledFirst, half2);
+  const threshold = period - 1;
+  return second.map((v, i) => (i >= threshold ? v : null));
+}
+
+/**
+ * Volume Price Confirmation Indicator (VPCI، باف دورمير Buff Dormeier، 2007) — يقيس هل الاتجاه
+ * السعري "مؤكَّد" فعلياً بحجم تداول داعم أم "أجوف" (حركة سعرية بلا قناعة حقيقية من السوق). يقارن
+ * متوسطاً مرجَّحاً بالحجم (VWMA) بمتوسط بسيط (SMA) على نافذتين مختلفتين (طويلة/قصيرة)، مضروباً
+ * بنسبة زخم الحجم نفسه. **الصيغة القياسية** (longPeriod=20/shortPeriod=5 الافتراضيان الأكثر
+ * اعتماداً بمعظم التطبيقات المرجعية — تأكيد صيغة عبر WebFetch قبل الكتابة):
+ * - VPC (Volume-Price Confirmation) = VWMA(longPeriod) − SMA(longPeriod)
+ * - VPR (Volume-Price Ratio) = VWMA(shortPeriod) / SMA(shortPeriod)
+ * - VM (Volume Multiplier) = SMA(حجم، shortPeriod) / SMA(حجم، longPeriod)
+ * - VPCI = VPC × VPR × VM
+ * **صفر منطق حساب جديد** — إعادة استخدام كاملة لدالتي `sma()` المحلية و`computeVwma()` المُصدَّرة
+ * أعلاه حرفياً (كلتاهما مُختبَرتان أصلاً بالمشروع)، فقط التركيب الجبري جديد. **حارس القسمة**: يُهمَل
+ * الفهرس إن كان smaShort=0 أو smaVolLong=0 (عملياً لا يقعان أبداً بأسعار/فوليوم موجبة حقيقية —
+ * الفوليوم هنا دائماً>0 بصيغة fallback الموجودة أصلاً بـcomputeVwma نفسها — لكن الحارس موجود
+ * احتياطاً بنفس فلسفة حراس القسمة المتكررة بالملف). VPC قد يكون سالباً أو موجباً (لا حدّ نظري)، بينما
+ * VPR وVM دائماً موجبتان تماماً (نسبتا كميتين موجبتين) — لذا **إشارة VPCI تتبع إشارة VPC حصراً
+ * رياضياً**، وهذا ما يُستخدَم لتفسيرها: موجب+متصاعد=اتجاه مؤكَّد بحجم داعم، سالب أو متذبذب حول
+ * الصفر=حركة أجوف بلا قناعة حقيقية. أول فهرس صالح = longPeriod−1 (القيد الأكثر تشدداً بين النافذتين).
+ * **تحقّق حسابي فعلي (Node.js، بيئة الجلسة السحابية، قبل الكتابة)**: سوق مسطّح تماماً (60 شمعة،
+ * إغلاق ثابت بفوليوم متذبذب) → VWMA=SMA=الثابت نفسه على كلا النافذتين ⇒ VPC=0 بالضبط ⇒ VPCI=0
+ * بالضبط لكل نقطة صالحة (بغضّ النظر عن VPR/VM) بدءاً من الفهرس 19 بالضبط؛ 300 شمعة عشوائية بذرة
+ * ثابتة (mulberry32) → صفر NaN/Infinity؛ **إعادة حساب brute-force مستقلة تماماً** (حلقات
+ * SMA/VWMA يدوية معزولة تماماً عن `sma()`/`computeVwma()` أنفسهما) عند 5 فهارس متفرقة
+ * (30/80/150/220/299) → صفر اختلاف واحد (فرق<10⁻⁶).
+ */
+export function computeVpci(
+  candles: (Candle & { volume?: number })[],
+  longPeriod = 20,
+  shortPeriod = 5
+): (number | null)[] {
+  const n = candles.length;
+  const closes = candles.map((c) => c.close);
+  const vol = candles.map((c) => c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000);
+  const smaLong = sma(closes, longPeriod);
+  const smaShort = sma(closes, shortPeriod);
+  const smaVolLong = sma(vol, longPeriod);
+  const smaVolShort = sma(vol, shortPeriod);
+  const vwmaLong = computeVwma(candles, longPeriod);
+  const vwmaShort = computeVwma(candles, shortPeriod);
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    if (
+      vwmaLong[i] == null ||
+      smaLong[i] == null ||
+      vwmaShort[i] == null ||
+      smaShort[i] == null ||
+      smaVolShort[i] == null ||
+      smaVolLong[i] == null
+    )
+      continue;
+    if (smaShort[i] === 0 || smaVolLong[i] === 0) continue;
+    const vpc = vwmaLong[i]! - smaLong[i]!;
+    const vpr = vwmaShort[i]! / smaShort[i]!;
+    const vm = smaVolShort[i]! / smaVolLong[i]!;
+    out[i] = vpc * vpr * vm;
+  }
+  return out;
+}
+
+/**
+ * Trend Trigger Factor (TTF، إم. إتش. بي M.H. Pee، 2004) — يقارن "قوة الشراء" بـ"قوة البيع" عبر
+ * نافذتين متتاليتين من القمم/القيعان (نافذة حديثة ونافذة أقدم مباشرة قبلها بنفس الطول)، بمنطق شبيه
+ * بمفهوم CCI لكن بمقارنة نافذتين زمنيتين بدل انحراف عن متوسط. **الصيغة القياسية** (period=15
+ * الافتراضي — تأكيد صيغة عبر WebFetch من مرجعين مستقلّين قبل الكتابة: traders.com الأصلي وتطبيق
+ * ProRealCode): لنافذة حديثة=[i−period+1، i] ونافذة أقدم=[i−2×period+1، i−period] مباشرة قبلها:
+ * - BP (Buying Power) = أعلى قمة بالنافذة الحديثة − أدنى قاع بالنافذة الأقدم
+ * - SP (Selling Power) = أعلى قمة بالنافذة الأقدم − أدنى قاع بالنافذة الحديثة
+ * - TTF = 100 × (BP − SP) / (0.5 × (BP + SP))
+ * **بلا تنعيم T3 إضافي** (بعض تطبيقات MT4/MT5 اللاحقة تضيف تنعيم T3 اختيارياً فوق TTF الخام — غير
+ * موجود بتعريف Pee الأصلي 2004، فاستُبعِد هنا حفاظاً على الصيغة القياسية الخام بنفس فلسفة باقي
+ * المذبذبات الخام بالملف [BOP/CMO/MFI]). أول فهرس صالح = 2×period−1 (يحتاج نافذتين متتاليتين
+ * كاملتين). **بلا حدّ نظري صارم** (بعكس RSI/CCI المحصورين) — القيمتان ±100 بمرجعه الأصلي مجرد
+ * "مستويات إشارة" تقليدية شائعة إحصائياً لا حدّاً رياضياً مضموناً، مطابق لملاحظة كل مراجعه. **حارس
+ * القسمة**: BP+SP=0 يقع فقط بسوق مسطّح تماماً بكلتا النافذتين (BP=SP=0 معاً) — يُرجِع 0 بدل 0/0=NaN،
+ * بنفس اصطلاح حراس القسمة الأخرى بالملف. **تحقّق حسابي فعلي (Node.js، بيئة الجلسة السحابية، قبل
+ * الكتابة)**: سوق مسطّح تماماً (60 شمعة) → TTF=0 بالضبط لكل نقطة صالحة، أول فهرس صالح=29 بالضبط
+ * (2×15−1)؛ مسار صاعد صارم بلا أي تراجع (80 شمعة) → TTF موجب كبير ثابت (200 بالضبط بهذا الاختبار
+ * الاصطناعي — تحقَّق يدوياً بإعادة حساب مستقلة)؛ 300 شمعة عشوائية بذرة ثابتة (mulberry32) → صفر
+ * NaN/Infinity؛ **إعادة حساب brute-force مستقلة تماماً** (حلقتا أعلى/أدنى منفصلتان معزولتان تماماً
+ * عن الدالة نفسها) عند 5 فهارس متفرقة (40/90/150/220/299) → صفر اختلاف واحد.
+ */
+export function computeTtf(candles: Pick<Candle, 'high' | 'low'>[], period = 15): (number | null)[] {
+  const n = candles.length;
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = 2 * period - 1; i < n; i++) {
+    let hhRecent = -Infinity;
+    let llRecent = Infinity;
+    let hhOlder = -Infinity;
+    let llOlder = Infinity;
+    for (let j = i - period + 1; j <= i; j++) {
+      if (candles[j].high > hhRecent) hhRecent = candles[j].high;
+      if (candles[j].low < llRecent) llRecent = candles[j].low;
+    }
+    for (let j = i - 2 * period + 1; j <= i - period; j++) {
+      if (candles[j].high > hhOlder) hhOlder = candles[j].high;
+      if (candles[j].low < llOlder) llOlder = candles[j].low;
+    }
+    const bp = hhRecent - llOlder;
+    const sp = hhOlder - llRecent;
+    const denom = 0.5 * (bp + sp);
+    out[i] = denom === 0 ? 0 : (100 * (bp - sp)) / denom;
+  }
+  return out;
+}

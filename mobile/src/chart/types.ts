@@ -162,7 +162,19 @@ export type IndicatorId =
   | 'volRoc'
   | 'adxr'
   | 'volatilityRatio'
-  | 'williamsAd';
+  | 'williamsAd'
+  | 'fractalChaosOsc'
+  | 'fractalChaosBands'
+  | 'gannHiLo'
+  | 'elderImpulse'
+  | 'gapo'
+  | 'pfe'
+  | 'dma'
+  | 'rainbowOsc'
+  | 'trima'
+  | 'efficiencyRatio'
+  | 'vpci'
+  | 'ttf';
 
 export type DrawTool =
   | 'none'
@@ -354,6 +366,18 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'adxr', label: 'ADXR', pane: true },
   { id: 'volatilityRatio', label: 'Volatility Ratio', pane: true },
   { id: 'williamsAd', label: 'Williams A/D', pane: true },
+  { id: 'fractalChaosOsc', label: 'Fractal Chaos Osc', pane: true },
+  { id: 'fractalChaosBands', label: 'Fractal Chaos Bands' },
+  { id: 'gannHiLo', label: 'Gann HiLo' },
+  { id: 'elderImpulse', label: 'Elder Impulse' },
+  { id: 'gapo', label: 'GAPO', pane: true },
+  { id: 'pfe', label: 'PFE', pane: true },
+  { id: 'dma', label: 'DMA' },
+  { id: 'rainbowOsc', label: 'Rainbow Osc', pane: true },
+  { id: 'trima', label: 'TRIMA' },
+  { id: 'efficiencyRatio', label: 'Efficiency Ratio', pane: true },
+  { id: 'vpci', label: 'VPCI', pane: true },
+  { id: 'ttf', label: 'TTF', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [
