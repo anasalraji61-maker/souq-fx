@@ -132,6 +132,15 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function deleteJson<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: 'DELETE',
+    headers: { ...authHeaders() },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
 export const api = {
   baseUrl: API_URL,
   login: (usernameOrEmail: string, password: string, email?: string) =>
@@ -168,6 +177,8 @@ export const api = {
       sponsor_code: opts?.sponsor_code,
       side: opts?.side,
     }),
+  /** حذف الحساب — شرط إلزامي لأبل (App Store Review Guideline 5.1.1(v)) */
+  deleteAccount: () => deleteJson<{ ok: boolean }>('/api/auth/account'),
   commissionPlan: () =>
     getJson<{
       title: string;

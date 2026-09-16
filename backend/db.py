@@ -788,6 +788,32 @@ def user_from_token(token: str | None) -> dict[str, Any] | None:
     }
 
 
+def delete_user_account(user_id: int) -> None:
+    """حذف حساب — شرط إلزامي لأبل (App Store Review Guideline 5.1.1(v): يجب أن يقدر
+    المستخدم يحذف حسابه وبياناته الشخصية من داخل التطبيق).
+
+    لا يُحذف صف users فعلياً: هذا المستخدم قد يكون sponsor_id لمستخدمين آخرين بشجرة
+    الإحالة (network_members) وله سجل عمولات (commissions) — حذف الصف فعلياً يكسر
+    سلامة شجرة/سجل مالي يخصّ أطرافاً أخرى. بدلاً من ذلك: تُمحى كل بيانات الهوية
+    الشخصية القابلة للتعريف (username → معرّف مجهول ثابت غير قابل لتسجيل دخول،
+    email → NULL، password_hash → قيمة عشوائية غير صالحة أبداً لأي كلمة مرور حقيقية)،
+    وتُلغى كل الجلسات النشطة فوراً، ويُحذف المحتوى الشخصي البحت غير المرجعي من طرف
+    آخر (تنبيهات الأسعار، تخطيطات الشارت المحفوظة، رمز إشعارات Push). هذا يحقق
+    الشرط الفعلي لأبل (إزالة البيانات الشخصية القابلة للتعريف) دون كسر شجرة العمولات.
+    """
+    placeholder = f"deleted_user_{user_id}"
+    dead_hash = f"{secrets.token_hex(8)}${secrets.token_hex(32)}"
+    with _conn() as c:
+        c.execute(
+            "UPDATE users SET username=?, email=NULL, password_hash=? WHERE id=?",
+            (placeholder, dead_hash, user_id),
+        )
+        c.execute("DELETE FROM sessions WHERE user_id=?", (user_id,))
+        c.execute("DELETE FROM alerts WHERE user_id=?", (user_id,))
+        c.execute("DELETE FROM push_tokens WHERE user_id=?", (user_id,))
+        c.execute("DELETE FROM layouts WHERE user_id=?", (user_id,))
+
+
 # ─── Alerts ───────────────────────────────────────────────────────────────────
 
 def list_alerts(user_id: int | None = None) -> list[dict]:

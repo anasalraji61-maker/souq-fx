@@ -545,6 +545,16 @@ def auth_me(user: dict | None = Depends(_auth_user)):
     return {**user, "network": net, "commissions": rates}
 
 
+@app.delete("/api/auth/account")
+def auth_delete_account(user: dict | None = Depends(_auth_user)):
+    """حذف الحساب من داخل التطبيق — شرط إلزامي لأبل (App Store Review Guideline
+    5.1.1(v)). راجع db.delete_user_account للتفصيل الكامل لآلية المحو."""
+    if not user:
+        raise HTTPException(status_code=401, detail="not authenticated")
+    db.delete_user_account(user["user_id"])
+    return {"ok": True}
+
+
 @app.get("/api/commissions/plan")
 def commissions_plan():
     return commissions_mod.plan_document()

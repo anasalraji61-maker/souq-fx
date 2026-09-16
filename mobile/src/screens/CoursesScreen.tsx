@@ -29,12 +29,20 @@ export function CoursesScreen() {
     schoolId: string;
     lectureId: string;
   } | null>(null);
+  /** وضوح الحالة: يعلم المستخدم إذا فشل تحميل قائمة المدارس بدل صمت كامل (كانت الأخطاء تُبتلَع
+   * بلا أي إشعار — نفس نمط "تعذر تحميل... تُعرض بيانات محفوظة" المستخدَم بباقي اللوحات المشابهة
+   * [NewsPanel/GroupChatPanel/VotePanel/MessagesScreen] التي تُبذَر ببيانات mock ثم تحاول التحميل
+   * الحي؛ لا تُفعَّل قبل أول محاولة فعلية — لا ادّعاء فشل قبل حدوثه). */
+  const [schoolsStale, setSchoolsStale] = useState(false);
 
   useEffect(() => {
     api
       .academySchools()
-      .then((r) => setSchools(r.schools))
-      .catch(() => undefined);
+      .then((r) => {
+        setSchools(r.schools);
+        setSchoolsStale(false);
+      })
+      .catch(() => setSchoolsStale(true));
   }, []);
 
   const openSchool = async (id: string) => {
@@ -95,6 +103,9 @@ export function CoursesScreen() {
         <Text style={styles.sub}>
           شاشة كاملة · شرح صوتي · أوقف واسأل عن أي جزء
         </Text>
+        {schoolsStale ? (
+          <Text style={styles.staleNote}>تعذر تحديث قائمة المدارس — تُعرض بيانات محفوظة</Text>
+        ) : null}
       </View>
 
       <ScrollView contentContainerStyle={styles.list}>
@@ -211,6 +222,13 @@ const styles = StyleSheet.create({
   },
   brand: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: 'right' },
   sub: { color: colors.textMuted, fontSize: 12, marginTop: 4, textAlign: 'right' },
+  staleNote: {
+    color: colors.warn,
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'right',
+    marginTop: 6,
+  },
   list: { padding: spacing.md, gap: spacing.md, paddingBottom: 40 },
   noteBox: {
     backgroundColor: colors.warnSoft,

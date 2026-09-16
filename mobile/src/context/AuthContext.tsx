@@ -17,6 +17,8 @@ type AuthCtx = {
   login: (usernameOrEmail: string, password: string) => Promise<void>;
   register: (username: string, password: string, opts: RegisterOpts) => Promise<void>;
   logout: () => Promise<void>;
+  /** حذف الحساب — شرط إلزامي لأبل (App Store Review Guideline 5.1.1(v)) */
+  deleteAccount: () => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
@@ -88,9 +90,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await persist(null);
   }, [persist]);
 
+  const deleteAccount = useCallback(async () => {
+    // الخادم يمحو الهوية الشخصية ويُلغي كل الجلسات فوراً (db.delete_user_account) —
+    // بعدها لا فائدة من إبقاء الجلسة المحلية، حتى لو فشل الاتصال بعد نجاح المحو خادمياً.
+    await api.deleteAccount();
+    await persist(null);
+  }, [persist]);
+
   const value = useMemo(
-    () => ({ user, loading, login, register, logout }),
-    [user, loading, login, register, logout]
+    () => ({ user, loading, login, register, logout, deleteAccount }),
+    [user, loading, login, register, logout, deleteAccount]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -36,6 +36,12 @@ export type Dict = {
   language: string;
   commissionsReport: string;
   networkTree: string;
+  deleteAccount: string;
+  deleteAccountConfirmTitle: string;
+  deleteAccountConfirmBody: string;
+  deleteAccountConfirmBtn: string;
+  deleteAccountError: string;
+  cancel: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -81,6 +87,13 @@ const ar: Dict = {
   language: 'اللغة',
   commissionsReport: 'تقرير العمولات',
   networkTree: 'شجرة الشبكة',
+  deleteAccount: 'حذف الحساب',
+  deleteAccountConfirmTitle: 'حذف الحساب نهائياً؟',
+  deleteAccountConfirmBody:
+    'سيُحذف اسم المستخدم والإيميل وكلمة المرور نهائياً ولن تقدر تسجّل الدخول بهذا الحساب مرة أخرى. هذا الإجراء لا يمكن التراجع عنه.',
+  deleteAccountConfirmBtn: 'حذف نهائياً',
+  deleteAccountError: 'تعذر حذف الحساب — حاول لاحقاً',
+  cancel: 'إلغاء',
 };
 
 const enUS: Dict = {
@@ -119,6 +132,13 @@ const enUS: Dict = {
   language: 'Language',
   commissionsReport: 'Commissions report',
   networkTree: 'Network tree',
+  deleteAccount: 'Delete account',
+  deleteAccountConfirmTitle: 'Delete account permanently?',
+  deleteAccountConfirmBody:
+    'Your username, email, and password will be permanently erased and you will not be able to sign back into this account. This cannot be undone.',
+  deleteAccountConfirmBtn: 'Delete permanently',
+  deleteAccountError: 'Could not delete account — try again later',
+  cancel: 'Cancel',
 };
 
 const enGB: Dict = {
@@ -175,6 +195,13 @@ const ku: Dict = {
   language: 'زمان',
   commissionsReport: 'ڕاپۆرتی کۆمیسیۆن',
   networkTree: 'دارەکەی تۆڕ',
+  deleteAccount: 'سڕینەوەی هەژمار',
+  deleteAccountConfirmTitle: 'هەژمار بە تەواوی بسڕدرێتەوە؟',
+  deleteAccountConfirmBody:
+    'ناوی بەکارهێنەر و ئیمەیڵ و پاسوۆرد بە تەواوی دەسڕدرێنەوە و ئیتر ناتوانیت بچیتەژوورەوەی ئەم هەژمارە. ئەم کردارە ناگەڕێتەوە.',
+  deleteAccountConfirmBtn: 'بە تەواوی بسڕەوە',
+  deleteAccountError: 'سڕینەوەی هەژمار سەرکەوتوو نەبوو — دواتر هەوڵبدەرەوە',
+  cancel: 'پاشگەزبوونەوە',
 };
 
 export const DICTS: Record<LangId, Dict> = {

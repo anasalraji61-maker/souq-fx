@@ -176,7 +176,9 @@ export type IndicatorId =
   | 'vpci'
   | 'ttf'
   | 'tdi'
-  | 'vfi';
+  | 'vfi'
+  | 'cpr'
+  | 'laguerreRsi';
 
 export type DrawTool =
   | 'none'
@@ -382,6 +384,8 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'ttf', label: 'TTF', pane: true },
   { id: 'tdi', label: 'TDI', pane: true },
   { id: 'vfi', label: 'VFI', pane: true },
+  { id: 'cpr', label: 'CPR' },
+  { id: 'laguerreRsi', label: 'Laguerre RSI', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

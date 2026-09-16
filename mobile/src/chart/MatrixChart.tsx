@@ -85,6 +85,7 @@ import {
   computeCog,
   computeConnorsRsi,
   computeCoppock,
+  computeCpr,
   computeCutlerRsi,
   computeDemarker,
   computeDemarkPivots,
@@ -120,6 +121,7 @@ import {
   computeKeltnerWidth,
   computeKlinger,
   computeKst,
+  computeLaguerreRsi,
   computeLinRegChannel,
   computeLinRegR2,
   computeLinRegSlope,
@@ -742,6 +744,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   );
   const demarkPivots = useMemo(
     () => (indicators.includes('demarkPivots') ? computeDemarkPivots(source.plot, 20) : null),
+    [source.plot, indicators]
+  );
+  const cpr = useMemo(
+    () => (indicators.includes('cpr') ? computeCpr(source.plot, 20) : null),
     [source.plot, indicators]
   );
   const tpo = useMemo(
@@ -1451,6 +1457,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('vfi') ? computeVfi(source.plot) : null),
     [source.plot, indicators]
   );
+  const laguerreRsi = useMemo(
+    () => (indicators.includes('laguerreRsi') ? computeLaguerreRsi(closes) : null),
+    [closes, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1559,7 +1569,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('vpci') ? 1 : 0) +
     (indicators.includes('ttf') ? 1 : 0) +
     (indicators.includes('tdi') ? 1 : 0) +
-    (indicators.includes('vfi') ? 1 : 0);
+    (indicators.includes('vfi') ? 1 : 0) +
+    (indicators.includes('laguerreRsi') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
   const paneH = 48;
@@ -3938,6 +3949,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ))
           : null}
 
+        {cpr
+          ? (
+              [
+                ['CPR-T', cpr.top],
+                ['CPR-P', cpr.pp],
+                ['CPR-B', cpr.bottom],
+              ] as const
+            ).map(([label, price]) => (
+              <View
+                key={`cpr${label}`}
+                style={[styles.hLine, { top: yOf(price), borderColor: '#FEF08A', opacity: 0.55 }]}
+              >
+                <Text style={styles.fibLabel}>{label}</Text>
+              </View>
+            ))
+          : null}
+
         {volProfile
           ? (() => {
               const maxV = Math.max(...volProfile.map((r) => r.volume), 1);
@@ -5103,6 +5131,30 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 );
               });
             })()}
+          </View>
+        </View>
+      ) : null}
+
+      {laguerreRsi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>Laguerre RSI</Text>
+          <View style={styles.paneInner}>
+            {laguerreRsi.map((v, i) =>
+              v == null ? (
+                <View key={i} style={{ flex: 1 }} />
+              ) : (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    marginTop: (1 - v) * (paneH - 16),
+                    backgroundColor: v > 0.85 ? colors.bear : v < 0.15 ? colors.bull : accent,
+                    borderRadius: 2,
+                  }}
+                />
+              )
+            )}
           </View>
         </View>
       ) : null}

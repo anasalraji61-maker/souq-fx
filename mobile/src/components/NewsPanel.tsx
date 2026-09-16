@@ -33,6 +33,9 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
         <Text style={styles.title}>أخبار مؤثرة على الفوركس</Text>
       )}
       {stale ? <Text style={styles.staleNote}>تعذر تحديث الأخبار — تُعرض بيانات محفوظة</Text> : null}
+      {!stale && news.length === 0 ? (
+        <Text style={styles.empty}>لا توجد أخبار حالياً</Text>
+      ) : null}
       <ScrollView contentContainerStyle={{ gap: 8 }}>
         {news.map((n) => (
           <View key={n.id} style={styles.card}>
@@ -94,6 +97,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'right',
     marginBottom: spacing.xs,
+  },
+  empty: {
+    color: colors.textDim,
+    fontSize: 11,
+    textAlign: 'center',
+    paddingVertical: 16,
   },
   card: {
     backgroundColor: colors.bgElevated,

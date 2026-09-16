@@ -159,7 +159,10 @@ export function MessagesScreen() {
       <FlatList
         data={peers}
         keyExtractor={(p) => p.user}
-        contentContainerStyle={{ padding: spacing.md, gap: 8 }}
+        contentContainerStyle={{ padding: spacing.md, gap: 8, flexGrow: 1 }}
+        ListEmptyComponent={
+          !notice ? <Text style={styles.empty}>لا توجد محادثات بعد</Text> : null
+        }
         renderItem={({ item }) => (
           <Pressable
             accessibilityRole="button"
@@ -206,6 +209,13 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     paddingHorizontal: spacing.lg,
     paddingTop: 6,
+  },
+  empty: {
+    color: colors.textDim,
+    fontSize: 12,
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginTop: 40,
   },
   peerCard: {
     flexDirection: 'row-reverse',

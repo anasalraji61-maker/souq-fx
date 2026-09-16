@@ -57,6 +57,9 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
         <Text style={styles.title}>تصويت على صفقة</Text>
       )}
       {notice ? <Text style={styles.notice}>{notice}</Text> : null}
+      {!notice && votes.length === 0 ? (
+        <Text style={styles.empty}>لا توجد تصويتات نشطة حالياً</Text>
+      ) : null}
       <ScrollView contentContainerStyle={{ gap: 10 }}>
         {votes.map((v) => {
           const total = v.agree + v.disagree || 1;
@@ -150,6 +153,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'right',
     marginTop: 4,
+  },
+  empty: {
+    color: colors.textDim,
+    fontSize: 11,
+    textAlign: 'center',
+    paddingVertical: 16,
   },
   card: {
     backgroundColor: colors.bgElevated,

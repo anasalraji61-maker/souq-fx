@@ -64,6 +64,9 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
         <Text style={styles.title}>دردشة جماعية</Text>
       )}
       {notice ? <Text style={styles.notice}>{notice}</Text> : null}
+      {!notice && messages.length === 0 ? (
+        <Text style={styles.empty}>لا توجد رسائل بعد — كن أول من يكتب</Text>
+      ) : null}
       <ScrollView style={styles.scroll} contentContainerStyle={{ gap: 8 }}>
         {messages.map((m) => (
           <View
@@ -141,6 +144,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'right',
     marginTop: 4,
+  },
+  empty: {
+    color: colors.textDim,
+    fontSize: 11,
+    textAlign: 'center',
+    paddingVertical: 16,
   },
   scroll: { flex: 1 },
   bubble: {

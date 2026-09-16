@@ -7,6 +7,7 @@ import {
   Pressable,
   ActivityIndicator,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { useAuth } from '../context/AuthContext';
@@ -21,7 +22,7 @@ type RoleId = 'trader' | 'trainer' | 'broker' | 'agent' | 'company';
 type SideId = 'left' | 'right';
 
 export function AccountScreen() {
-  const { user, loading, login, register, logout } = useAuth();
+  const { user, loading, login, register, logout, deleteAccount } = useAuth();
   const { t, lang, setLang, langs, rtl } = useI18n();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [username, setUsername] = useState('');
@@ -33,6 +34,7 @@ export function AccountScreen() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [netError, setNetError] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [net, setNet] = useState<{
     referral_code: string;
     role: string;
@@ -121,6 +123,23 @@ export function AccountScreen() {
     }
   };
 
+  const confirmDeleteAccount = useCallback(() => {
+    Alert.alert(t.deleteAccountConfirmTitle, t.deleteAccountConfirmBody, [
+      { text: t.cancel, style: 'cancel' },
+      {
+        text: t.deleteAccountConfirmBtn,
+        style: 'destructive',
+        onPress: () => {
+          setDeleteBusy(true);
+          setErr(null);
+          deleteAccount()
+            .catch(() => setErr(t.deleteAccountError))
+            .finally(() => setDeleteBusy(false));
+        },
+      },
+    ]);
+  }, [t, deleteAccount]);
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -207,6 +226,23 @@ export function AccountScreen() {
             onPress={() => logout()}
           >
             <Text style={styles.btnText}>{t.logout}</Text>
+          </Pressable>
+
+          {err ? <Text style={[styles.err, { textAlign: align }]}>{err}</Text> : null}
+          <Pressable
+            accessibilityRole="button"
+            style={({ pressed }) => [
+              styles.dangerBtn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={confirmDeleteAccount}
+            disabled={deleteBusy}
+            accessibilityState={{ disabled: deleteBusy }}
+          >
+            <Text style={styles.dangerBtnText}>{deleteBusy ? '...' : t.deleteAccount}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -503,6 +539,15 @@ const styles = StyleSheet.create({
     elevation: buttons.elevation,
   },
   btnText: { color: colors.onAccent, fontWeight: '800' },
+  dangerBtn: {
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.bear,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  dangerBtnText: { color: colors.bear, fontWeight: '800' },
   roleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   roleRowRtl: { flexDirection: 'row-reverse' },
   roleChip: {
