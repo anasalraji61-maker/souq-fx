@@ -77,6 +77,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
           },
         ]}
         onPress={save}
+        accessibilityLabel="حفظ التخطيط الحالي"
       >
         <Text style={styles.btnText}>حفظ التخطيط الحالي</Text>
       </Pressable>
@@ -92,6 +93,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
               },
             ]}
             onPress={() => onApply(l)}
+            accessibilityLabel={`تطبيق تخطيط: ${l.name}`}
           >
             <Text style={styles.rowName}>{l.name}</Text>
             <Text style={styles.rowSub}>
@@ -120,6 +122,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
                   transform: [{ scale: buttons.pressedScale }],
                 }
               }
+              accessibilityLabel={`حذف تخطيط: ${l.name}`}
             >
               <Text style={styles.del}>حذف</Text>
             </Pressable>

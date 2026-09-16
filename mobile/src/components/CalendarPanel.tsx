@@ -70,6 +70,7 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
                 setCurrency(c);
                 if (c !== 'ALL') onPickCurrency?.(c);
               }}
+              accessibilityLabel={`تصفية حسب العملة: ${c === 'ALL' ? 'الكل' : c}`}
             >
               <Text style={[styles.chipText, currency === c && styles.chipTextOn]}>{c}</Text>
             </Pressable>
@@ -87,6 +88,7 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
                 },
               ]}
               onPress={() => setImpact(imp)}
+              accessibilityLabel={`تصفية حسب الأهمية: ${imp === 'ALL' ? 'الكل' : imp}`}
             >
               <Text style={[styles.chipText, impact === imp && styles.chipTextOn]}>
                 {imp === 'ALL' ? 'كل' : imp}

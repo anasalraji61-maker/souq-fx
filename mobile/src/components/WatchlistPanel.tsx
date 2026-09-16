@@ -103,6 +103,7 @@ export function WatchlistPanel({
           disabled={!ready || addable.length === 0}
           accessibilityState={{ disabled: !ready || addable.length === 0 }}
           onPress={() => setAddOpen(true)}
+          accessibilityLabel="إضافة رمز للمتابعة"
         >
           <Text style={styles.toolBtnText}>إضافة</Text>
         </Pressable>
@@ -131,6 +132,7 @@ export function WatchlistPanel({
               ]
             )
           }
+          accessibilityLabel="إعادة قائمة المتابعة للافتراضي"
         >
           <Text style={styles.toolBtnText}>افتراضي</Text>
         </Pressable>
@@ -151,6 +153,7 @@ export function WatchlistPanel({
                   },
                 ]}
                 onPress={() => void loadList()}
+                accessibilityLabel="إعادة محاولة تحميل قائمة المتابعة"
               >
                 <Text style={styles.toolBtnText}>إعادة المحاولة</Text>
               </Pressable>
@@ -169,6 +172,7 @@ export function WatchlistPanel({
                 },
               ]}
               onPress={() => setAddOpen(true)}
+              accessibilityLabel="إضافة رمز للمتابعة"
             >
               <Text style={styles.addEmptyText}>إضافة رمز</Text>
             </Pressable>
@@ -195,6 +199,7 @@ export function WatchlistPanel({
                     },
                   ]}
                   onPress={() => onPick(sym)}
+                  accessibilityLabel={`${sym}${isDemoPrice ? ' · سعر افتراضي' : ''}`}
                 >
                   <View style={styles.left}>
                     <Text
@@ -296,6 +301,7 @@ export function WatchlistPanel({
                       },
                     ]}
                     onPress={() => void onAdd(w.symbol)}
+                    accessibilityLabel={`إضافة ${w.symbol} · ${w.group}`}
                   >
                     <Text style={styles.modalSym}>{w.symbol}</Text>
                     <Text style={styles.modalGroup}>{w.group}</Text>
@@ -314,6 +320,7 @@ export function WatchlistPanel({
               ]}
               onPress={() => setAddOpen(false)}
               hitSlop={8}
+              accessibilityLabel="إغلاق نافذة الإضافة"
             >
               <Text style={styles.modalCloseText}>إغلاق</Text>
             </Pressable>

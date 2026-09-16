@@ -88,6 +88,7 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
                     },
                   ]}
                   onPress={() => pick(item.symbol)}
+                  accessibilityLabel={`اختيار الرمز: ${item.symbol}${item.group ? ' · ' + item.group : ''}`}
                 >
                   <Text style={[styles.sym, on && styles.symOn]}>{item.symbol}</Text>
                   {item.group ? (

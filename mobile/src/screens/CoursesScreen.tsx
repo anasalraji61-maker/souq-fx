@@ -129,6 +129,7 @@ export function CoursesScreen() {
               },
             ]}
             onPress={() => openSchool(s.id)}
+            accessibilityLabel={`مدرسة: ${s.name_ar}`}
           >
             <View style={styles.cardTop}>
               <Text style={styles.order}>#{s.order}</Text>
@@ -181,6 +182,7 @@ export function CoursesScreen() {
                             setSchool(null);
                             setActiveLecture({ schoolId: sid, lectureId: lec.id });
                           }}
+                          accessibilityLabel={`محاضرة: ${lec.title} · ${lec.duration_min} دقيقة`}
                         >
                           <Text style={styles.lecTitle}>{lec.title}</Text>
                           <Text style={styles.lecMeta}>{lec.duration_min} د · محاضرة كاملة</Text>
@@ -200,6 +202,7 @@ export function CoursesScreen() {
                   ]}
                   onPress={() => setSchool(null)}
                   hitSlop={8}
+                  accessibilityLabel="رجوع لقائمة المدارس"
                 >
                   <Text style={styles.closeText}>رجوع</Text>
                 </Pressable>

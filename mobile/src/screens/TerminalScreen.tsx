@@ -816,6 +816,7 @@ export function TerminalScreen() {
                     },
                   ]}
                   onPress={() => void changeLayout(count, 'square')}
+                  accessibilityLabel={`تخطيط مربع ${count}`}
                 >
                   <View style={styles.layoutSwitchMini}>
                     {Array.from({ length: count }).map((_, index) => (
@@ -859,6 +860,7 @@ export function TerminalScreen() {
                     },
                   ]}
                   onPress={() => void changeLayout(count, 'rect')}
+                  accessibilityLabel={`تخطيط مستطيل ${count}`}
                 >
                   <View
                     style={[
@@ -904,6 +906,7 @@ export function TerminalScreen() {
                 },
               ]}
               onPress={() => void changeLayout(1, 'shadow')}
+              accessibilityLabel="فريم الظل"
             >
               <Text style={styles.layoutSwitcherTagTop}>فريم</Text>
               <Text
@@ -965,6 +968,7 @@ export function TerminalScreen() {
                 },
               ]}
               onPress={a.run}
+              accessibilityLabel={`أداة: ${a.tip}`}
             >
               {a.mark === 'cruise' ? (
                 <CruiseSpeedMark size={14} active />
@@ -999,6 +1003,7 @@ export function TerminalScreen() {
                 setKind(k.id);
                 setShowKinds(false);
               }}
+              accessibilityLabel={`نوع الشارت: ${k.label}`}
             >
               <Text style={[styles.kindText, kind === k.id && styles.kindTextOn]}>{k.label}</Text>
             </Pressable>
@@ -1026,6 +1031,7 @@ export function TerminalScreen() {
                 },
               ]}
               onPress={() => pickSymbol(sym)}
+              accessibilityLabel={`رمز: ${sym}`}
             >
               <Text style={[styles.pillText, symbol === sym && styles.pillTextOn]}>
                 {sym}
@@ -1042,6 +1048,7 @@ export function TerminalScreen() {
               },
             ]}
             onPress={() => setPhoneWatchOpen(true)}
+            accessibilityLabel="إدارة قائمة المتابعة"
           >
             <Text style={styles.pillText}>إدارة</Text>
           </Pressable>
@@ -1113,6 +1120,7 @@ export function TerminalScreen() {
                       },
                     ]}
                     onPress={() => setTf(range)}
+                    accessibilityLabel={`الإطار الزمني الأساسي: ${range}`}
                   >
                     <Text style={styles.rangeText}>{range}</Text>
                   </Pressable>
@@ -1169,6 +1177,7 @@ export function TerminalScreen() {
                           ]}
                           disabled={locked}
                           accessibilityState={{ disabled: locked }}
+                          accessibilityLabel={`${label} إطار زمني ${range}`}
                           onPress={() => setShadowSlot(slot, range)}
                         >
                           <Text
@@ -1340,6 +1349,7 @@ export function TerminalScreen() {
                     },
                   ]}
                   onPress={() => setTf(range)}
+                  accessibilityLabel={`الإطار الزمني: ${range}`}
                 >
                   <Text style={styles.rangeText}>{range}</Text>
                 </Pressable>
@@ -1594,6 +1604,7 @@ export function TerminalScreen() {
               ]}
               onPress={() => setPhoneWatchOpen(false)}
               hitSlop={8}
+              accessibilityLabel="إغلاق قائمة المتابعة"
             >
               <Text style={styles.phoneWatchCloseText}>إغلاق</Text>
             </Pressable>

@@ -208,6 +208,7 @@ export function FocusChartModal({
             onPress={() => {
               if (phone) setPhonePickerOpen((open) => !open);
             }}
+            accessibilityLabel={`الرمز: ${sym}${compareSym ? ' مقابل ' + compareSym : ''}`}
           >
             <Text style={styles.title}>
               {sym}
@@ -268,6 +269,7 @@ export function FocusChartModal({
                   ]}
                   onPress={() => pick(w.symbol)}
                   onLongPress={() => toggleCompare(w.symbol)}
+                  accessibilityLabel={`${w.symbol} · ${w.label}${compareSym === w.symbol ? ' · قيد المقارنة' : ''}`}
                 >
                   <Text style={styles.watchSym}>{w.symbol}</Text>
                   <Text style={styles.watchLabel}>{w.label}</Text>
@@ -306,6 +308,7 @@ export function FocusChartModal({
                         ]}
                         onPress={() => pick(w.symbol)}
                         onLongPress={() => toggleCompare(w.symbol)}
+                        accessibilityLabel={`اختيار الرمز: ${w.symbol}`}
                       >
                         <Text style={[styles.pillText, sym === w.symbol && styles.pillTextOn]}>
                           {w.symbol}
@@ -420,7 +423,7 @@ const styles = StyleSheet.create({
   pill: {
     paddingHorizontal: 10,
     paddingVertical: 7,
-    borderRadius: 999,
+    borderRadius: radii.pill,
     backgroundColor: colors.bgPanel,
     borderWidth: 1,
     borderColor: colors.border,

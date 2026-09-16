@@ -116,6 +116,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
               },
             ]}
             onPress={() => setStrategy(s.id)}
+            accessibilityLabel={`استراتيجية: ${s.label}`}
           >
             <Text style={[styles.chipText, strategy === s.id && styles.chipTextOn]}>{s.label}</Text>
           </Pressable>
@@ -133,6 +134,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         onPress={run}
         disabled={loading}
         accessibilityState={{ disabled: loading }}
+        accessibilityLabel="تشغيل الاختبار الخلفي"
       >
         <Text style={styles.btnText}>{loading ? '...' : 'تشغيل Backtest'}</Text>
       </Pressable>

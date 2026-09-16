@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   planName: { color: colors.text, fontSize: 20, fontWeight: '900' },
-  planBadge: { borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5 },
+  planBadge: { borderRadius: radii.pill, paddingHorizontal: 9, paddingVertical: 5 },
   planBadgeText: { fontSize: 10, fontWeight: '900' },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 5 },
   price: { fontSize: 27, fontWeight: '900' },

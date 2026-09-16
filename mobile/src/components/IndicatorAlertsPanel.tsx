@@ -118,6 +118,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
               },
             ]}
             onPress={() => setType(t)}
+            accessibilityLabel={`نوع تنبيه المؤشر: ${t === 'rsi' ? 'RSI' : t === 'ma_cross' ? 'تقاطع المتوسط المتحرك' : 'تقاطع MACD'}`}
           >
             <Text style={[styles.chipText, type === t && styles.chipTextOn]}>{t}</Text>
           </Pressable>
@@ -137,6 +138,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
                 },
               ]}
               onPress={() => setCondition('below')}
+              accessibilityLabel="شرط: RSI تحت العتبة"
             >
               <Text style={styles.chipText}>RSI تحت</Text>
             </Pressable>
@@ -151,6 +153,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
                 },
               ]}
               onPress={() => setCondition('above')}
+              accessibilityLabel="شرط: RSI فوق العتبة"
             >
               <Text style={styles.chipText}>RSI فوق</Text>
             </Pressable>
@@ -170,6 +173,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
               },
             ]}
             onPress={() => setCondition('cross_up')}
+            accessibilityLabel="شرط: تقاطع صاعد"
           >
             <Text style={styles.chipText}>Cross Up</Text>
           </Pressable>
@@ -184,6 +188,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
               },
             ]}
             onPress={() => setCondition('cross_down')}
+            accessibilityLabel="شرط: تقاطع هابط"
           >
             <Text style={styles.chipText}>Cross Down</Text>
           </Pressable>
@@ -201,6 +206,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
         onPress={add}
         disabled={busy}
         accessibilityState={{ disabled: busy }}
+        accessibilityLabel="إضافة تنبيه مؤشر"
       >
         <Text style={styles.btnText}>{busy ? '...' : 'إضافة تنبيه'}</Text>
       </Pressable>
@@ -244,6 +250,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
                     ]
                   )
                 }
+                accessibilityLabel={`حذف تنبيه مؤشر: ${a.symbol} · ${a.alert_type} · ${a.condition}`}
               >
                 <Text style={styles.del}>حذف</Text>
               </Pressable>

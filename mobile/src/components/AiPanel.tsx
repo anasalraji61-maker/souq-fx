@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   winBox: {
     marginTop: 8,
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(34,197,94,0.15)',
+    backgroundColor: colors.bullSoft,
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 4,

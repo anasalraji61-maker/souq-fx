@@ -283,6 +283,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
             }
           }
           hitSlop={8}
+          accessibilityLabel="إغلاق المحاضرة"
         >
           <Text style={styles.back}>إغلاق</Text>
         </Pressable>
@@ -317,6 +318,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
                 }
               }
               hitSlop={8}
+              accessibilityLabel="إخفاء الشارت التفاعلي"
             >
               <Text style={styles.chartHide}>إخفاء</Text>
             </Pressable>
@@ -340,6 +342,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
             }
           }
           hitSlop={8}
+          accessibilityLabel="إظهار الشارت التفاعلي"
         >
           <Text style={styles.showChart}>إظهار الشارت التفاعلي</Text>
         </Pressable>
@@ -383,6 +386,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               },
             ]}
             onPress={resume}
+            accessibilityLabel="متابعة المحاضرة"
           >
             <Text style={styles.resumeText}>متابعة المحاضرة</Text>
           </Pressable>
@@ -454,6 +458,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               onPress={interrupt}
               disabled={asking}
               accessibilityState={{ disabled: asking }}
+              accessibilityLabel="إرسال السؤال"
             >
               <Text style={styles.askText}>{asking ? '...' : 'اسأل'}</Text>
             </Pressable>
@@ -616,7 +621,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  askText: { color: '#111', fontWeight: '800' },
+  askText: { color: colors.onWarnFill, fontWeight: '800' },
   clarifyBox: {
     marginTop: spacing.md,
     backgroundColor: colors.accentSoft,

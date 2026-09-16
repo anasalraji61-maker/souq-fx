@@ -9,6 +9,14 @@ const QUICK = [
   { id: 'bullish', label: 'زخم+' },
 ];
 
+/** وصف مسموع كامل لكل فلتر سريع — النص المرئي مختصر (رموز/اختصارات إنجليزية) بلا معنى واضح
+ * لقارئ الشاشة، فيُستخدَم هذا بدلاً منه فقط لـaccessibilityLabel. */
+const QUICK_A11Y: Record<string, string> = {
+  ma_cross_up: 'تقاطع المتوسط المتحرك صعوداً',
+  rsi_oversold: 'تشبّع بيعي بمؤشر RSI',
+  bullish: 'زخم صعودي',
+};
+
 export function ScreenerMini() {
   const [hits, setHits] = useState<
     { symbol: string; rsi: number; change_pct: number; filters_matched: string[] }[]
@@ -49,6 +57,7 @@ export function ScreenerMini() {
             onPress={() => run(q.id)}
             disabled={loading}
             accessibilityState={{ disabled: loading }}
+            accessibilityLabel={QUICK_A11Y[q.id] ?? q.label}
           >
             <Text style={styles.chipText}>{q.label}</Text>
           </Pressable>

@@ -76,19 +76,24 @@ const TABS: { id: TabId; label: string; mark: string }[] = [
   { id: 'ai', label: 'AI', mark: '✧' },
 ];
 
-const HUB_GRID_ORDER = [
-  'news',
-  'social',
-  'chat',
-  'votes',
-  'ai',
-  'analysts',
-  'forecast',
-  'alerts',
-] as const;
+/** قسما لوحة "إشارات ومجتمع" — تقسيم القسم الواحد (8 لوحات بشبكة سحب واحدة) إلى
+ * قسمين قابلَين للتبديل بدل الاعتماد على "الصف الأول/الأسفل" (لا معنى لهما فعلياً
+ * لأن ترتيب اللوحات متغيّر بيد المتداول نفسه بالسحب) — يطابق التقسيم الذي كان موصوفاً
+ * أصلاً بنص العنوان الفرعي وتلميح الشبكة (مجتمع/أخبار مقابل تحليل/تنبيهات)، فقرار
+ * تصميمي مستقر لا تخمين جديد. راجع docs/ROADMAP.md بند (ب.5). */
+type HubSection = 'community' | 'analysis';
+
+const HUB_SECTIONS: { id: HubSection; label: string; mark: string }[] = [
+  { id: 'community', label: 'مجتمع وأخبار', mark: '◆' },
+  { id: 'analysis', label: 'تحليل وتنبيهات', mark: '◈' },
+];
+
+const HUB_COMMUNITY_ORDER = ['news', 'social', 'chat', 'votes'] as const;
+const HUB_ANALYSIS_ORDER = ['ai', 'analysts', 'forecast', 'alerts'] as const;
 
 export function ToolsScreen() {
   const [tab, setTab] = useState<TabId>('hub');
+  const [hubSection, setHubSection] = useState<HubSection>('community');
   const [tf, setTf] = useState<Timeframe>('15m');
   const [signalSym, setSignalSym] = useState('EURUSD');
   const [selected, setSelected] = useState<string[]>(['ma_cross_up']);
@@ -145,7 +150,7 @@ export function ToolsScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.head}>
         <Text style={styles.title}>أدوات MATRIX</Text>
-        <Text style={styles.sub}>أخبار وتصويت أولاً · تنبيهات وتوقعات المؤشرات في الأسفل</Text>
+        <Text style={styles.sub}>مجتمع وأخبار · تحليل وتنبيهات — قسمان قابلان للتبديل</Text>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll}>
@@ -163,6 +168,7 @@ export function ToolsScreen() {
                 },
               ]}
               onPress={() => setTab(t.id)}
+              accessibilityLabel={`تبويب: ${t.label}`}
             >
               <Text style={[styles.tabMark, tab === t.id && styles.tabMarkOn]}>{t.mark}</Text>
               <Text style={[styles.tabText, tab === t.id && styles.tabTextOn]}>{t.label}</Text>
@@ -194,42 +200,78 @@ export function ToolsScreen() {
                     },
                   ]}
                   onPress={() => setSignalSym(s)}
+                  accessibilityLabel={`رمز الإشارة: ${s}`}
                 >
                   <Text style={[styles.chipText, signalSym === s && styles.chipTextOn]}>{s}</Text>
                 </Pressable>
               ))}
             </View>
           </View>
-          <Text style={styles.gridHint}>
-            اسحب النقاط للتبديل · الصف الأول: أخبار وتصويت · الأسفل: تنبيهات ومؤشرات
-          </Text>
-          <FrameSizedGrid
-            storageKey="matrix.tools.hub.order.v3"
-            showAll
-            defaultOrder={[...HUB_GRID_ORDER]}
-            items={[
-              { id: 'news', node: <NewsPanel embedded /> },
-              {
-                id: 'social',
-                node: <SocialConsensusPanel embedded symbol={signalSym} timeframe={tf} />,
-              },
-              { id: 'chat', node: <GroupChatPanel embedded /> },
-              { id: 'votes', node: <VotePanel embedded /> },
-              { id: 'ai', node: <AiPanel embedded symbol={signalSym} /> },
-              {
-                id: 'analysts',
-                node: <AnalystsPanel embedded symbol={signalSym} timeframe={tf} />,
-              },
-              {
-                id: 'forecast',
-                node: <IndicatorForecastPanel embedded symbol={signalSym} timeframe={tf} />,
-              },
-              {
-                id: 'alerts',
-                node: <AlertsPanel embedded defaultSymbol={signalSym} />,
-              },
-            ]}
-          />
+          <View style={styles.hubSectionTabs}>
+            {HUB_SECTIONS.map((s) => (
+              <Pressable
+                accessibilityRole="button"
+                key={s.id}
+                style={({ pressed }) => [
+                  styles.hubSectionTab,
+                  hubSection === s.id && styles.hubSectionTabOn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => setHubSection(s.id)}
+                accessibilityLabel={`قسم لوحات: ${s.label}`}
+              >
+                <Text style={[styles.hubSectionMark, hubSection === s.id && styles.hubSectionMarkOn]}>
+                  {s.mark}
+                </Text>
+                <Text style={[styles.hubSectionText, hubSection === s.id && styles.hubSectionTextOn]}>
+                  {s.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text style={styles.gridHint}>اسحب النقاط لإعادة ترتيب لوحات هذا القسم</Text>
+          {hubSection === 'community' ? (
+            <FrameSizedGrid
+              key="hub-community"
+              storageKey="matrix.tools.hub.community.order.v1"
+              showAll
+              defaultOrder={[...HUB_COMMUNITY_ORDER]}
+              items={[
+                { id: 'news', node: <NewsPanel embedded /> },
+                {
+                  id: 'social',
+                  node: <SocialConsensusPanel embedded symbol={signalSym} timeframe={tf} />,
+                },
+                { id: 'chat', node: <GroupChatPanel embedded /> },
+                { id: 'votes', node: <VotePanel embedded /> },
+              ]}
+            />
+          ) : (
+            <FrameSizedGrid
+              key="hub-analysis"
+              storageKey="matrix.tools.hub.analysis.order.v1"
+              showAll
+              defaultOrder={[...HUB_ANALYSIS_ORDER]}
+              items={[
+                { id: 'ai', node: <AiPanel embedded symbol={signalSym} /> },
+                {
+                  id: 'analysts',
+                  node: <AnalystsPanel embedded symbol={signalSym} timeframe={tf} />,
+                },
+                {
+                  id: 'forecast',
+                  node: <IndicatorForecastPanel embedded symbol={signalSym} timeframe={tf} />,
+                },
+                {
+                  id: 'alerts',
+                  node: <AlertsPanel embedded defaultSymbol={signalSym} />,
+                },
+              ]}
+            />
+          )}
         </ScrollView>
       ) : null}
 
@@ -263,6 +305,7 @@ export function ToolsScreen() {
                   },
                 ]}
                 onPress={() => toggleFilter(f.id)}
+                accessibilityLabel={`فلتر: ${f.label} — ${f.hint}`}
               >
                 <Text style={[styles.chipText, selected.includes(f.id) && styles.chipTextOn]}>
                   {f.label}
@@ -409,6 +452,23 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: spacing.md, paddingTop: spacing.sm, gap: 8, paddingBottom: 48 },
   pageScroll: { flex: 1 },
   toolbar: { gap: 6 },
+  hubSectionTabs: { flexDirection: 'row-reverse', gap: 8 },
+  hubSectionTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  hubSectionTabOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  hubSectionMark: { color: colors.textDim, fontWeight: '800', fontSize: 13 },
+  hubSectionMarkOn: { color: colors.accent },
+  hubSectionText: { color: colors.textMuted, fontWeight: '700', fontSize: 12 },
+  hubSectionTextOn: { color: colors.accent, fontWeight: '900' },
   gridHint: {
     color: colors.textDim,
     fontSize: 11,
@@ -420,7 +480,7 @@ const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: 10,
     paddingVertical: 7,
-    borderRadius: 999,
+    borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: colors.border,
   },

@@ -115,6 +115,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
           },
         ]}
         onPress={() => setShowPublish((s) => !s)}
+        accessibilityLabel={showPublish ? 'إغلاق نموذج نشر الفكرة' : 'نشر فكرة تداول جديدة'}
       >
         <Text style={styles.publishToggleText}>{showPublish ? '✕ إغلاق' : '+ انشر فكرتك'}</Text>
       </Pressable>
@@ -148,6 +149,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                 },
               ]}
               onPress={() => setPDirection('buy')}
+              accessibilityLabel="اتجاه الفكرة: شراء"
             >
               <Text style={[styles.dirText, pDirection === 'buy' && styles.dirTextOn]}>شراء</Text>
             </Pressable>
@@ -162,6 +164,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                 },
               ]}
               onPress={() => setPDirection('sell')}
+              accessibilityLabel="اتجاه الفكرة: بيع"
             >
               <Text style={[styles.dirText, pDirection === 'sell' && styles.dirTextOn]}>بيع</Text>
             </Pressable>
@@ -236,6 +239,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
             onPress={publish}
             disabled={pBusy}
             accessibilityState={{ disabled: pBusy }}
+            accessibilityLabel="نشر الفكرة"
           >
             <Text style={styles.publishBtnText}>{pBusy ? '...' : 'نشر الفكرة'}</Text>
           </Pressable>
@@ -282,6 +286,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                     },
                   ]}
                   onPress={() => cast(v.id, 'agree')}
+                  accessibilityLabel={`موافقة على فكرة ${v.symbol}`}
                 >
                   <Text style={styles.btnText}>موافق</Text>
                 </Pressable>
@@ -296,6 +301,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                     },
                   ]}
                   onPress={() => cast(v.id, 'disagree')}
+                  accessibilityLabel={`رفض فكرة ${v.symbol}`}
                 >
                   <Text style={styles.btnText}>رافض</Text>
                 </Pressable>
@@ -361,7 +367,7 @@ const styles = StyleSheet.create({
   },
   symbol: { color: colors.text, fontWeight: '800', fontSize: 14 },
   badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
-  badgeText: { color: '#fff', fontWeight: '800', fontSize: 11 },
+  badgeText: { color: colors.white, fontWeight: '800', fontSize: 11 },
   meta: { color: colors.textMuted, fontSize: 11, marginTop: 6, textAlign: 'right' },
   note: { color: colors.text, fontSize: 12, marginTop: 4, textAlign: 'right', lineHeight: 18 },
   barBg: {
@@ -381,7 +387,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   yes: { backgroundColor: 'rgba(34,197,94,0.2)', borderWidth: 1, borderColor: colors.bull },
-  no: { backgroundColor: 'rgba(244,63,94,0.15)', borderWidth: 1, borderColor: colors.bear },
+  no: { backgroundColor: colors.bearSoft, borderWidth: 1, borderColor: colors.bear },
   btnText: { color: colors.text, fontWeight: '700', fontSize: 12 },
   author: { color: colors.dxy, fontSize: 10, fontWeight: '700', textAlign: 'right', marginTop: 2 },
   publishToggle: {
@@ -425,8 +431,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dirBuyOn: { borderColor: colors.bull, backgroundColor: 'rgba(34,197,94,0.15)' },
-  dirSellOn: { borderColor: colors.bear, backgroundColor: 'rgba(244,63,94,0.15)' },
+  dirBuyOn: { borderColor: colors.bull, backgroundColor: colors.bullSoft },
+  dirSellOn: { borderColor: colors.bear, backgroundColor: colors.bearSoft },
   dirText: { color: colors.textMuted, fontWeight: '700', fontSize: 12 },
   dirTextOn: { color: colors.text },
   formError: {

@@ -96,6 +96,7 @@ export function MatrixSidePanel({
                 },
               ]}
               hitSlop={8}
+              accessibilityLabel={`إغلاق ${TITLES[panel]}`}
             >
               <Text style={styles.close}>إغلاق</Text>
             </Pressable>
@@ -119,6 +120,7 @@ export function MatrixSidePanel({
                       onPickDraw(t.id);
                       onClose();
                     }}
+                    accessibilityLabel={`أداة رسم: ${t.label}`}
                   >
                     <Text style={styles.cellText}>{t.label}</Text>
                   </Pressable>
@@ -143,6 +145,7 @@ export function MatrixSidePanel({
                         },
                       ]}
                       onPress={() => onToggleIndicator(ind.id)}
+                      accessibilityLabel={`مؤشر: ${ind.label}${on ? ' · مفعّل' : ''}`}
                     >
                       <Text style={[styles.cellText, on && styles.cellTextOn]}>{ind.label}</Text>
                     </Pressable>
@@ -169,6 +172,7 @@ export function MatrixSidePanel({
                       onPickKind(k.id);
                       onClose();
                     }}
+                    accessibilityLabel={`نوع الشارت: ${k.label}`}
                   >
                     <Text style={[styles.cellText, activeKind === k.id && styles.cellTextOn]}>
                       {k.label}

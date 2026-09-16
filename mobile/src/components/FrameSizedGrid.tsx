@@ -403,6 +403,7 @@ export function FrameSizedGrid({
           phoneMode === 'grid' && styles.phoneModeBtnActive,
           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
         ]}
+        accessibilityLabel="عرض الفريمات كمربعات"
       >
         <Text style={[styles.phoneModeText, phoneMode === 'grid' && styles.phoneModeTextActive]}>
           المربعات
@@ -416,6 +417,7 @@ export function FrameSizedGrid({
           phoneMode === 'stack' && styles.phoneModeBtnActive,
           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
         ]}
+        accessibilityLabel="عرض الفريمات كمستطيلات"
       >
         <Text style={[styles.phoneModeText, phoneMode === 'stack' && styles.phoneModeTextActive]}>
           المستطيلات
@@ -600,7 +602,7 @@ const styles = StyleSheet.create({
   cellDragging: {
     opacity: 0.92,
     borderColor: colors.accent,
-    shadowColor: '#000',
+    shadowColor: buttons.shadowColor,
     shadowOpacity: 0.35,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
@@ -616,7 +618,7 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     padding: 4,
     borderWidth: 1,
-    borderColor: 'rgba(45, 212, 191, 0.45)',
+    borderColor: colors.accentBorderGlow,
     backgroundColor: 'rgba(8, 17, 30, 0.55)',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cursor: 'grab' as any,

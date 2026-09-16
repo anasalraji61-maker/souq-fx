@@ -21,6 +21,13 @@ function createMenu() {
   Menu.setApplicationMenu(null);
 }
 
+// أيقونة النافذة أثناء التطوير (`npm run dev`/`start` غير المُحزَّم) — نسخة exe/dmg
+// الموزَّعة تستخدم الأيقونة المضمَّنة بملف التنفيذ نفسه أصلاً (`build.win.icon`/
+// `build.mac.icon` بـpackage.json)، فهذا فقط لتطابق شكل نافذة التطوير مع الشكل
+// النهائي الموزَّع. `.ico` صالح على ويندوز؛ macOS يتجاهل خيار BrowserWindow.icon
+// (تستخدم الأيقونة المضمَّنة بالحزمة بدلاً منه) — بلا أي تعارض.
+const WINDOW_ICON = path.join(__dirname, 'build', 'icon.ico');
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1440,
@@ -29,6 +36,7 @@ function createWindow() {
     minHeight: 640,
     backgroundColor: '#0B1220',
     title: 'MATRIX Charts',
+    icon: fs.existsSync(WINDOW_ICON) ? WINDOW_ICON : undefined,
     show: false,
     webPreferences: {
       nodeIntegration: false,

@@ -128,6 +128,7 @@ export function PairDrumWheel({ value, onChange, onClose }: Props) {
           },
         ]}
         onPress={() => pick(active - 1)}
+        accessibilityLabel={`الزوج السابق: ${above}`}
       >
         <Text numberOfLines={1} style={styles.sideText}>
           {above}
@@ -144,6 +145,7 @@ export function PairDrumWheel({ value, onChange, onClose }: Props) {
           },
         ]}
         onPress={() => pick(active)}
+        accessibilityLabel={`اختيار الزوج الحالي: ${current}`}
       >
         <Text numberOfLines={1} style={styles.midText}>
           {current}
@@ -160,6 +162,7 @@ export function PairDrumWheel({ value, onChange, onClose }: Props) {
           },
         ]}
         onPress={() => pick(active + 1)}
+        accessibilityLabel={`الزوج التالي: ${below}`}
       >
         <Text numberOfLines={1} style={styles.sideText}>
           {below}

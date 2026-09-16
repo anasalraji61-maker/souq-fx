@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   impact: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
-  impactText: { color: '#111', fontWeight: '800', fontSize: 10 },
+  impactText: { color: colors.onWarnFill, fontWeight: '800', fontSize: 10 },
   when: { color: colors.textDim, fontSize: 11 },
   headline: {
     color: colors.text,

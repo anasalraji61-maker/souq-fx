@@ -79,6 +79,7 @@ export function QuadChartModal({
               },
             ]}
             hitSlop={8}
+            accessibilityLabel="إغلاق عرض 2×2"
           >
             <Text style={styles.close}>إغلاق</Text>
           </Pressable>

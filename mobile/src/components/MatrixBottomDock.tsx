@@ -104,6 +104,7 @@ export function MatrixBottomDock({
                 },
               ]}
               hitSlop={8}
+              accessibilityLabel={`إخفاء ${TABS.find((t) => t.id === tab)?.label ?? 'اللوحة'}`}
             >
               <Text style={styles.close}>إخفاء</Text>
             </Pressable>
@@ -235,6 +236,7 @@ export function MatrixBottomDock({
                 },
               ]}
               onPress={() => toggle(t.id)}
+              accessibilityLabel={`تبويب: ${t.label}`}
             >
               <Text style={[styles.tabMark, on && styles.tabMarkOn]}>{t.mark}</Text>
               <Text style={[styles.tabLabel, on && styles.tabLabelOn]}>{t.label}</Text>

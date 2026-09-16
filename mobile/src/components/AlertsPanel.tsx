@@ -159,6 +159,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
               },
             ]}
             onPress={() => setCondition('above')}
+            accessibilityLabel="شرط التنبيه: فوق السعر"
           >
             <Text style={[styles.condText, condition === 'above' && styles.condTextOn]}>فوق</Text>
           </Pressable>
@@ -173,6 +174,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
               },
             ]}
             onPress={() => setCondition('below')}
+            accessibilityLabel="شرط التنبيه: تحت السعر"
           >
             <Text style={[styles.condText, condition === 'below' && styles.condTextOn]}>تحت</Text>
           </Pressable>
@@ -188,6 +190,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
             onPress={add}
             disabled={busy}
             accessibilityState={{ disabled: busy }}
+            accessibilityLabel="إضافة تنبيه سعر"
           >
             <Text style={styles.addText}>{busy ? '...' : 'إضافة'}</Text>
           </Pressable>
@@ -243,6 +246,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
                       ]
                     )
                   }
+                  accessibilityLabel={`حذف تنبيه: ${a.symbol} ${a.condition === 'above' ? '≥' : '≤'} ${a.price}`}
                 >
                   <Text style={styles.del}>حذف</Text>
                 </Pressable>

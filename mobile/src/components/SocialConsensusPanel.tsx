@@ -139,6 +139,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
           onPress={() => void run()}
           disabled={loading}
           accessibilityState={{ disabled: loading }}
+          accessibilityLabel="احسب إجماع المصادر المختارة"
         >
           <Text style={styles.refreshText}>احسب</Text>
         </Pressable>
@@ -167,6 +168,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
                   },
                 ]}
                 onPress={() => toggle(s.id)}
+                accessibilityLabel={`مصدر: ${PLATFORM_AR[s.platform] ?? s.platform} · ${s.name}${on ? ' · مفعّل' : ''}`}
               >
                 <Text style={[styles.chipText, on && styles.chipTextOn]} numberOfLines={1}>
                   {PLATFORM_AR[s.platform] ?? s.platform} · {s.name}

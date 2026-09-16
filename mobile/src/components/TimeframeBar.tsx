@@ -27,6 +27,7 @@ export function TimeframeBar({ value, onChange, compact, arabic = false }: Props
             accessibilityRole="button"
             key={tf}
             onPress={() => onChange(tf)}
+            accessibilityLabel={`الإطار الزمني ${label}`}
             style={({ pressed }) => [
               styles.chip,
               active && styles.chipActive,

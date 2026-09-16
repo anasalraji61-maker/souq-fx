@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     backgroundColor: colors.accentSoft,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(45,212,191,0.45)',
+    borderColor: colors.accentBorderGlow,
   },
   syncBadgeLeader: {
     color: colors.leaderGreen,
