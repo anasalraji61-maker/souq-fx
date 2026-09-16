@@ -168,6 +168,7 @@ import {
   computeStochRsi,
   computeSuperTrend,
   computeT3,
+  computeTdi,
   computeTrendIntensityIndex,
   computeTrima,
   computeTrix,
@@ -180,6 +181,7 @@ import {
   computeTypicalPrice,
   computeUlcerIndex,
   computeUltimateOsc,
+  computeVfi,
   computeVhf,
   computeVidya,
   computeVolatilityRatio,
@@ -1441,6 +1443,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('ttf') ? computeTtf(source.plot) : null),
     [source.plot, indicators]
   );
+  const tdi = useMemo(
+    () => (indicators.includes('tdi') ? computeTdi(closes) : null),
+    [closes, indicators]
+  );
+  const vfi = useMemo(
+    () => (indicators.includes('vfi') ? computeVfi(source.plot) : null),
+    [source.plot, indicators]
+  );
 
   const paneCount =
     (indicators.includes('volume') ? 1 : 0) +
@@ -1547,7 +1557,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('rainbowOsc') ? 1 : 0) +
     (indicators.includes('efficiencyRatio') ? 1 : 0) +
     (indicators.includes('vpci') ? 1 : 0) +
-    (indicators.includes('ttf') ? 1 : 0);
+    (indicators.includes('ttf') ? 1 : 0) +
+    (indicators.includes('tdi') ? 1 : 0) +
+    (indicators.includes('vfi') ? 1 : 0);
 
   const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
   const paneH = 48;
@@ -4999,6 +5011,84 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               return ttf.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = Math.min(paneH - 16, (Math.abs(v) / maxT) * (paneH / 2 - 8));
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, h),
+                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      opacity: 0.7,
+                    }}
+                  />
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {tdi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>TDI</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const tdiVals = tdi.tdi.filter((x): x is number => x != null);
+              const diVals = tdi.di.filter((x): x is number => x != null);
+              const allVals = [...tdiVals, ...diVals, 0];
+              const minV = Math.min(...allVals);
+              const maxV = Math.max(...allVals);
+              const span = maxV - minV || 1;
+              const innerH = paneH - 16;
+              return tdi.tdi.map((tv, i) => {
+                const dv = tdi.di[i];
+                return (
+                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
+                    {tv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          top: ((maxV - tv) / span) * innerH,
+                          backgroundColor: tv >= 0 ? colors.bull : colors.bear,
+                          opacity: 0.85,
+                        }}
+                      />
+                    ) : null}
+                    {dv != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          top: ((maxV - dv) / span) * innerH,
+                          backgroundColor: colors.accent,
+                          opacity: 0.55,
+                        }}
+                      />
+                    ) : null}
+                  </View>
+                );
+              });
+            })()}
+          </View>
+        </View>
+      ) : null}
+
+      {vfi ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <Text style={styles.paneLabel}>VFI</Text>
+          <View style={styles.paneInner}>
+            {(() => {
+              const vals = vfi.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const maxV = Math.max(...vals, 1e-9);
+              return vfi.map((v, i) => {
+                if (v == null) return <View key={i} style={{ flex: 1 }} />;
+                const h = Math.min(paneH - 16, (Math.abs(v) / maxV) * (paneH / 2 - 8));
                 return (
                   <View
                     key={i}

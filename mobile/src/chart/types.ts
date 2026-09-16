@@ -174,7 +174,9 @@ export type IndicatorId =
   | 'trima'
   | 'efficiencyRatio'
   | 'vpci'
-  | 'ttf';
+  | 'ttf'
+  | 'tdi'
+  | 'vfi';
 
 export type DrawTool =
   | 'none'
@@ -378,6 +380,8 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'efficiencyRatio', label: 'Efficiency Ratio', pane: true },
   { id: 'vpci', label: 'VPCI', pane: true },
   { id: 'ttf', label: 'TTF', pane: true },
+  { id: 'tdi', label: 'TDI', pane: true },
+  { id: 'vfi', label: 'VFI', pane: true },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

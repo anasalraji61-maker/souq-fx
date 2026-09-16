@@ -5618,3 +5618,168 @@ export function computeTtf(candles: Pick<Candle, 'high' | 'low'>[], period = 15)
   }
   return out;
 }
+
+/**
+ * Trend Detection Index (TDI، إم. إتش. بي M.H. Pee، 1999) — يقيس هل السوق "يتّجه" حالياً أم "يتماوج"
+ * (consolidation) عبر مقارنة مجموع الزخم الموجَّه (n-day sum of n-day momentum) بالفرق بين مجموعَي
+ * الزخم المطلق على نافذتين متتاليتين (n و2n). **الصيغة القياسية** (period=20، multiple=2 الافتراضيان
+ * — تأكيد صيغة عبر WebFetch من مرجعين مستقلّين قبل الكتابة: linnsoft.com [توثيق رسمي لـLinn Software]
+ * ورزمة R الإحصائية TTR [`TDI()`، تطبيق برمجي مرجعي مفتوح المصدر]، كلاهما يطابق الصيغة حرفياً):
+ * - mom[i] = إغلاق[i] − إغلاق[i−period] (زخم بفترة period، بلا تنعيم)
+ * - momSum[i] = مجموع mom على آخر period نقطة (نافذة حديثة) — هذا هو خطّ **DI** (Direction Indicator)
+ *   مباشرة (اتجاه موجَّه: موجب=صعود صافٍ، سالب=هبوط صافٍ خلال النافذة)
+ * - momAbsSumShort[i] = مجموع |mom| على نفس النافذة الحديثة (period نقطة)
+ * - momAbsSumLong[i] = مجموع |mom| على نافذة أطول (multiple×period نقطة، تشمل النافذة الحديثة ذاتها
+ *   لا نافذة سابقة منفصلة — فرق جوهري عن TTF أعلاه الذي يقارن نافذتين متتاليتين غير متداخلتين)
+ * - **TDI[i] = |momSum[i]| − (momAbsSumLong[i] − momAbsSumShort[i])**
+ * أول فهرس صالح = multiple×period + period − 1 (يحتاج mom صالحاً لآخر multiple×period نقطة، وmom
+ * نفسه يحتاج period نقطة سابقة) = 3×period−1 = 59 بالإعدادات الافتراضية. **بلا حدّ نظري صارم** (مثل
+ * TTF أعلاه) — القراءة تقليدية: TDI موجب=اتّجاه فعلي، TDI سالب=تماوج/تذبذب عرضي (بحسب توثيق Pee
+ * الأصلي المُقتبَس بكلا المرجعين). **بلا قسمة إطلاقاً بالصيغة** فلا حاجة لحارس صفر.
+ * **تحقّق حسابي فعلي (Node.js، بيئة الجلسة السحابية، قبل الكتابة)**: سوق مسطّح تماماً (80 شمعة) →
+ * mom=0 لكل نقطة ⇒ TDI=0 وDI=0 بالضبط لكل نقطة صالحة، أول فهرس صالح=59 بالضبط؛ **اتجاه خطي صارم
+ * الانحدار** (100 نقطة، إغلاق[i]=i) → mom ثابت=period=20 لكل نقطة ⇒ momSum=momAbsSumShort=400،
+ * momAbsSumLong=800 ⇒ TDI=400−(800−400)=0 بالضبط (حالة حدّية متوقَّعة رياضياً: زخم *ثابت* غير متغيّر
+ * لا "يتسارع"، فيقع تماماً على حدّ الصفر بين الاتجاه والتماوج — يطابق التعريف النظري بدقة)؛ **اتجاه
+ * متسارع** (150 نقطة، إغلاق[i]=0.01×i²) → TDI موجب ثابت تقريباً (~160) عند i=100/120/140 (زخم متزايد
+ * فعلياً ⇒ اتجاه حقيقي مؤكَّد، بعكس الحالة الخطية أعلاه)؛ 300 شمعة عشوائية بذرة ثابتة (mulberry32) →
+ * صفر NaN/Infinity لكلا الخطّين؛ **إعادة حساب brute-force مستقلة تماماً** (دالة معزولة تحسب mom عند
+ * الطلب بلا مصفوفة وسيطة مشتركة) عند 5 فهارس متفرقة (70/100/150/220/299) → صفر اختلاف واحد لكلا
+ * الخطّين (فرق<10⁻⁹).
+ */
+export function computeTdi(
+  closes: number[],
+  period = 20,
+  multiple = 2
+): { tdi: (number | null)[]; di: (number | null)[] } {
+  const n = closes.length;
+  const tdiOut: (number | null)[] = new Array(n).fill(null);
+  const diOut: (number | null)[] = new Array(n).fill(null);
+  const mom: (number | null)[] = new Array(n).fill(null);
+  for (let i = period; i < n; i++) {
+    mom[i] = closes[i] - closes[i - period];
+  }
+  const longPeriod = multiple * period;
+  const start = longPeriod + period - 1;
+  for (let i = start; i < n; i++) {
+    let momSum = 0;
+    let momAbsShort = 0;
+    for (let j = i - period + 1; j <= i; j++) {
+      momSum += mom[j]!;
+      momAbsShort += Math.abs(mom[j]!);
+    }
+    let momAbsLong = 0;
+    for (let j = i - longPeriod + 1; j <= i; j++) {
+      momAbsLong += Math.abs(mom[j]!);
+    }
+    diOut[i] = momSum;
+    tdiOut[i] = Math.abs(momSum) - (momAbsLong - momAbsShort);
+  }
+  return { tdi: tdiOut, di: diOut };
+}
+
+/**
+ * Volume Flow Indicator (VFI، ماركوس كاتسانوس Markos Katsanos، مجلة Stocks & Commodities، 2004) —
+ * نسخة "مُنقّاة" من مفهوم OBV/VPT: تراكم حجم موجَّه بإشارة (+/−/صفر) حسب تغيّر السعر النموذجي، مع
+ * **حارسين** يقلّلان تأثير الضجيج/الشذوذ اللذين يعانيهما OBV الخام: (أ) عتبة سعرية دنيا (cutoff)
+ * تعتمد على تقلّب السوق نفسه فلا تُحسَب حركة سعرية تافهة كإشارة، (ب) سقف أعلى للحجم المستخدَم
+ * (VMax) فلا تهيمن شمعة حجم شاذّة واحدة على المؤشر كله. **الصيغة القياسية** (المعاملات الافتراضية
+ * للأطر الطويلة كما نشرها كاتسانوس أصلاً: period=130، coef=0.2، vcoef=2.5 — تأكيد صيغة عبر WebFetch
+ * من مرجعين مستقلّين قبل الكتابة: mkatsanos.com [الموقع الرسمي للمؤلّف] وProRealCode [تطبيق برمجي
+ * مستقل مطابق حرفياً]، كلاهما يوافق على كل خطوة أدناه):
+ * 1. TP (السعر النموذجي) = (أعلى+أدنى+إغلاق)/3
+ * 2. Inter = ln(TP) − ln(TP سابق) (تغيّر لوغاريتمي بالسعر النموذجي)
+ * 3. VInter = الانحراف المعياري لـInter على نافذة 30 نقطة (تباين المجتمع الكامل، بنفس صيغة
+ *    computeStdDev أعلاه حرفياً — لا صيغة انحراف جديدة)
+ * 4. Cutoff = coef × VInter × إغلاق الحالي
+ * 5. VAve = SMA(الحجم، period) **مُزاح نقطة للخلف** (يُستخدَم متوسط الحجم للشمعة *السابقة*، لا الحالية
+ *    — موثَّق صراحةً بكلا المرجعين لتفادي "نظرة مسبقة" على حجم الشمعة الحالية نفسها عند تحديد سقفها)
+ * 6. VMax = VAve × vcoef، وVC (الحجم المحدود) = min(الحجم الحالي، VMax)
+ * 7. MF (تغيّر السعر النموذجي) = TP − TP سابق
+ * 8. الحجم الموجَّه = +VC إن MF > Cutoff، أو −VC إن MF < −Cutoff، وإلا صفر (حركة أضعف من التقلّب
+ *    الطبيعي للسوق فلا تُحتسَب أي إشارة)
+ * 9. VFI الخام = مجموع الحجم الموجَّه على آخر period نقطة، مقسوماً على VAve (نفس المُزاح خطوة 5،
+ *    قرار تنفيذ موثَّق هنا: كلا المرجعين لا يفصّلان أي VAve مختلف لهذه الخطوة فاستُخدم نفس المتغيّر
+ *    بلا ازدواج منطق)
+ * 10. **VFI النهائي = EMA(VFI الخام، 3)** (تنعيم أخير قصير — نفس بنية smoothing قصيرة مستخدَمة
+ *     بـcomputeKlinger أعلاه [إشارة EMA(13)] بفلسفة مطابقة: تنعيم أخير خفيف لا يُخفي الإشارة)
+ * أول فهرس صالح = 2×period−1 = 259 بالإعدادات الافتراضية (VAve المُزاح يحتاج period نقطة حجم سابقة
+ * فيصبح صالحاً من i=period، والمجموع المتدحرج على period نقطة من الحجم الموجَّه يحتاج period نقطة
+ * إضافية فوق ذلك). **حارس القسمة**: VAve=0 (لا يقع فعلياً إلا بحجم صفري تماماً بكل النافذة) يُرجِع
+ * null بدل 0/0=NaN. **حجم مفقود يُعوَّض بصفر** هنا (بعكس بقية مؤشرات الحجم بالملف [VPT/Klinger/VPCI]
+ * التي تُعوِّض بصيغة `|إغلاق−فتح|×1e6+1000`) — قرار متعمَّد: VFI مصمَّم أصلاً ليحدّ من تأثير الحجم
+ * الشاذّ عبر VMax، فتعويض بصيغة تخلق حجماً مصطنعاً كبيراً يخالف فلسفة "تنقية الحجم" التي يقوم عليها
+ * المؤشر بالتعريف؛ صفر أكثر اتساقاً مع الغياب الحقيقي للبيانة هنا تحديداً.
+ * **تحقّق حسابي فعلي (Node.js، بيئة الجلسة السحابية، قبل الكتابة)**: سوق مسطّح تماماً (300 شمعة،
+ * أعلى=أدنى=إغلاق=100 ثابت، حجم=5000 ثابت) → Inter=0⇒VInter=0⇒Cutoff=0، وMF=0 لكل نقطة (0 ليست
+ * أكبر أو أصغر من 0 حصراً) ⇒ الحجم الموجَّه=0 دائماً ⇒ VFI=0 بالضبط لكل نقطة صالحة، أول فهرس صالح=259
+ * بالضبط؛ 400 شمعة عشوائية بذرة ثابتة (mulberry32) → صفر NaN/Infinity؛ **اتجاه صاعد مستدام مع حجم
+ * متصاعد** (300 شمعة، إغلاق يرتفع 0.3 كل شمعة، حجم يزداد خطياً) → VFI موجب واضح (~130 عند i=299)،
+ * يطابق تعريف "تراكم حجمي صاعد حقيقي" تماماً.
+ */
+export function computeVfi(
+  candles: (Candle & { volume?: number })[],
+  period = 130,
+  coef = 0.2,
+  vcoef = 2.5
+): (number | null)[] {
+  const n = candles.length;
+  const tp = candles.map((c) => (c.high + c.low + c.close) / 3);
+  const inter: (number | null)[] = new Array(n).fill(null);
+  for (let i = 1; i < n; i++) {
+    if (tp[i] > 0 && tp[i - 1] > 0) inter[i] = Math.log(tp[i]) - Math.log(tp[i - 1]);
+  }
+  const stdPeriod = 30;
+  const vinter: (number | null)[] = new Array(n).fill(null);
+  for (let i = stdPeriod; i < n; i++) {
+    let ok = true;
+    let sum = 0;
+    for (let j = i - stdPeriod + 1; j <= i; j++) {
+      if (inter[j] == null) {
+        ok = false;
+        break;
+      }
+      sum += inter[j]!;
+    }
+    if (!ok) continue;
+    const mean = sum / stdPeriod;
+    let varSum = 0;
+    for (let j = i - stdPeriod + 1; j <= i; j++) varSum += (inter[j]! - mean) ** 2;
+    vinter[i] = Math.sqrt(varSum / stdPeriod);
+  }
+  const vol = candles.map((c) => c.volume ?? 0);
+  const volAvg = sma(vol, period);
+  const dirVol: (number | null)[] = new Array(n).fill(null);
+  for (let i = 1; i < n; i++) {
+    if (vinter[i] == null) continue;
+    const vaPrev = volAvg[i - 1];
+    if (vaPrev == null) continue;
+    const cutoff = coef * vinter[i]! * candles[i].close;
+    const vmax = vaPrev * vcoef;
+    const vc = Math.min(vol[i], vmax);
+    const mf = tp[i] - tp[i - 1];
+    dirVol[i] = mf > cutoff ? vc : mf < -cutoff ? -vc : 0;
+  }
+  const rawVfi: (number | null)[] = new Array(n).fill(null);
+  for (let i = period - 1; i < n; i++) {
+    let sum = 0;
+    let ok = true;
+    for (let j = i - period + 1; j <= i; j++) {
+      if (dirVol[j] == null) {
+        ok = false;
+        break;
+      }
+      sum += dirVol[j]!;
+    }
+    if (!ok) continue;
+    const va = volAvg[i - 1];
+    if (va == null || va === 0) continue;
+    rawVfi[i] = sum / va;
+  }
+  const smoothed = ema(rawVfi.map((v) => v ?? 0), 3);
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    out[i] = rawVfi[i] == null ? null : smoothed[i];
+  }
+  return out;
+}
