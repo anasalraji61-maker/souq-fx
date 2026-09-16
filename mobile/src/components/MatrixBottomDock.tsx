@@ -18,8 +18,11 @@ import { SocialConsensusPanel } from './SocialConsensusPanel';
 import { IndicatorForecastPanel } from './IndicatorForecastPanel';
 import type { Candle } from '../api';
 import type { Timeframe } from '../timeframes';
+import { DRAW_TOOLS, LENSES, type DrawTool } from '../chart/types';
+import { DRAW_MARK, LENS_MARK, type MatrixLensId } from './MatrixEdgeRails';
 
 export type DockTabId =
+  | 'draw'
   | 'screener'
   | 'backtest'
   | 'alerts'
@@ -38,6 +41,7 @@ export type DockTabId =
 type Tab = { id: Exclude<DockTabId, null>; label: string; mark: string };
 
 const TABS: Tab[] = [
+  { id: 'draw', label: 'رسم', mark: '✏' },
   { id: 'signals', label: 'توقعات', mark: '✦' },
   { id: 'analysts', label: 'محللون', mark: '◎' },
   { id: 'social', label: 'قنوات', mark: '☰' },
@@ -62,6 +66,11 @@ type Props = {
   candles?: Candle[];
   /** فتح لوحة جانبية إضافية إن لزم */
   onOpenEdge?: (panel: EdgePanelId) => void;
+  /** أداة الرسم النشطة (تبويب "رسم") */
+  activeTool?: DrawTool;
+  onTool?: (tool: DrawTool) => void;
+  activeLens?: MatrixLensId;
+  onLens?: (lens: MatrixLensId) => void;
 };
 
 export function MatrixBottomDock({
@@ -71,6 +80,10 @@ export function MatrixBottomDock({
   timeframe,
   lastPrice,
   candles = [],
+  activeTool = 'none',
+  onTool,
+  activeLens = 'clean',
+  onLens,
 }: Props) {
   const toggle = (id: Exclude<DockTabId, null>) => {
     onTab(tab === id ? null : id);
@@ -103,6 +116,68 @@ export function MatrixBottomDock({
             contentContainerStyle={styles.sheetContent}
             showsVerticalScrollIndicator={false}
           >
+            {tab === 'draw' ? (
+              <View style={styles.drawWrap}>
+                <Text style={styles.drawSectionTitle}>عدسة</Text>
+                <View style={styles.drawGrid}>
+                  {LENSES.map((l) => {
+                    const on = activeLens === l.id;
+                    return (
+                      <Pressable
+                        accessibilityRole="button"
+                        key={l.id}
+                        style={({ pressed }) => [
+                          styles.drawChip,
+                          on && styles.drawChipOn,
+                          pressed && {
+                            opacity: buttons.pressedOpacity,
+                            transform: [{ scale: buttons.pressedScale }],
+                          },
+                        ]}
+                        onPress={() => onLens?.(l.id)}
+                        accessibilityLabel={`عدسة: ${l.label}`}
+                      >
+                        <Text style={[styles.drawChipMark, on && styles.drawChipMarkOn]}>
+                          {LENS_MARK[l.id]}
+                        </Text>
+                        <Text style={[styles.drawChipLabel, on && styles.drawChipLabelOn]}>
+                          {l.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                <Text style={styles.drawSectionTitle}>أداة الرسم</Text>
+                <View style={styles.drawGrid}>
+                  {DRAW_TOOLS.map((t) => {
+                    const on = activeTool === t.id;
+                    return (
+                      <Pressable
+                        accessibilityRole="button"
+                        key={t.id}
+                        style={({ pressed }) => [
+                          styles.drawChip,
+                          on && styles.drawChipOn,
+                          pressed && {
+                            opacity: buttons.pressedOpacity,
+                            transform: [{ scale: buttons.pressedScale }],
+                          },
+                        ]}
+                        onPress={() => onTool?.(t.id)}
+                        accessibilityLabel={`أداة رسم: ${t.label}`}
+                      >
+                        <Text style={[styles.drawChipMark, on && styles.drawChipMarkOn]}>
+                          {DRAW_MARK[t.id] ?? '·'}
+                        </Text>
+                        <Text style={[styles.drawChipLabel, on && styles.drawChipLabelOn]}>
+                          {t.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            ) : null}
             {tab === 'screener' ? <ScreenerMini /> : null}
             {tab === 'signals' || tab === 'analysts' ? (
               <AnalystsPanel symbol={symbol} timeframe={timeframe} />
@@ -195,6 +270,39 @@ const styles = StyleSheet.create({
   sheetBody: { maxHeight: 280 },
   sheetContent: { paddingHorizontal: spacing.sm, paddingBottom: 10, gap: 8 },
   community: { gap: 8 },
+  drawWrap: { gap: 6 },
+  drawSectionTitle: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.3,
+    marginTop: 4,
+  },
+  drawGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  drawChip: {
+    width: 66,
+    minHeight: 52,
+    paddingVertical: 8,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bgPanel,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+  },
+  drawChipOn: {
+    backgroundColor: colors.accentSoft,
+    borderColor: colors.accent,
+  },
+  drawChipMark: { color: colors.textMuted, fontSize: 16, fontWeight: '800' },
+  drawChipMarkOn: { color: colors.accent },
+  drawChipLabel: { color: colors.textDim, fontSize: 10, fontWeight: '700' },
+  drawChipLabelOn: { color: colors.accent },
   tabBar: { maxHeight: 44 },
   tabs: {
     flexDirection: 'row',

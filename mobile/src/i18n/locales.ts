@@ -42,6 +42,13 @@ export type Dict = {
   deleteAccountConfirmBtn: string;
   deleteAccountError: string;
   cancel: string;
+  notifications: string;
+  notifStatusGranted: string;
+  notifStatusDenied: string;
+  notifStatusUndetermined: string;
+  notifStatusUnsupported: string;
+  notifEnableBtn: string;
+  notifOpenSettingsBtn: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -94,6 +101,13 @@ const ar: Dict = {
   deleteAccountConfirmBtn: 'حذف نهائياً',
   deleteAccountError: 'تعذر حذف الحساب — حاول لاحقاً',
   cancel: 'إلغاء',
+  notifications: 'الإشعارات',
+  notifStatusGranted: 'مفعّلة',
+  notifStatusDenied: 'مرفوضة من إعدادات الجهاز',
+  notifStatusUndetermined: 'تحتاج إذن',
+  notifStatusUnsupported: 'غير مدعومة على الويب',
+  notifEnableBtn: 'تفعيل الإشعارات',
+  notifOpenSettingsBtn: 'فتح إعدادات الجهاز',
 };
 
 const enUS: Dict = {
@@ -139,6 +153,13 @@ const enUS: Dict = {
   deleteAccountConfirmBtn: 'Delete permanently',
   deleteAccountError: 'Could not delete account — try again later',
   cancel: 'Cancel',
+  notifications: 'Notifications',
+  notifStatusGranted: 'Enabled',
+  notifStatusDenied: 'Blocked in device settings',
+  notifStatusUndetermined: 'Needs permission',
+  notifStatusUnsupported: 'Not supported on web',
+  notifEnableBtn: 'Enable notifications',
+  notifOpenSettingsBtn: 'Open device settings',
 };
 
 const enGB: Dict = {
@@ -202,6 +223,13 @@ const ku: Dict = {
   deleteAccountConfirmBtn: 'بە تەواوی بسڕەوە',
   deleteAccountError: 'سڕینەوەی هەژمار سەرکەوتوو نەبوو — دواتر هەوڵبدەرەوە',
   cancel: 'پاشگەزبوونەوە',
+  notifications: 'ئاگادارکردنەوەکان',
+  notifStatusGranted: 'چالاکە',
+  notifStatusDenied: 'ڕەتکراوەتەوە لە ڕێکخستنی ئامێر',
+  notifStatusUndetermined: 'پێویستی بە مۆڵەتە',
+  notifStatusUnsupported: 'پشتگیری ناکرێت لەسەر وێب',
+  notifEnableBtn: 'چالاککردنی ئاگادارکردنەوەکان',
+  notifOpenSettingsBtn: 'کردنەوەی ڕێکخستنی ئامێر',
 };
 
 export const DICTS: Record<LangId, Dict> = {

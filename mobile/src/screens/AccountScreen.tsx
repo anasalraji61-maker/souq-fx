@@ -8,11 +8,17 @@ import {
   ActivityIndicator,
   ScrollView,
   Alert,
+  Linking,
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/I18nContext';
-import { registerPushToken } from '../notifications';
+import {
+  registerPushToken,
+  ensureAlertNotifications,
+  getNotificationPermissionState,
+  type NotificationPermissionState,
+} from '../notifications';
 import { CommissionPlanPanel } from '../components/CommissionPlanPanel';
 import { NetworkTreePanel } from '../components/NetworkTreePanel';
 import { SubscriptionPlansPanel } from '../components/SubscriptionPlansPanel';
@@ -35,6 +41,8 @@ export function AccountScreen() {
   const [err, setErr] = useState<string | null>(null);
   const [netError, setNetError] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [notifState, setNotifState] = useState<NotificationPermissionState>('undetermined');
+  const [notifBusy, setNotifBusy] = useState(false);
   const [net, setNet] = useState<{
     referral_code: string;
     role: string;
@@ -96,6 +104,33 @@ export function AccountScreen() {
   useEffect(() => {
     void loadNetwork();
   }, [loadNetwork]);
+
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    void getNotificationPermissionState().then((s) => {
+      if (alive) setNotifState(s);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [user]);
+
+  const enableNotifications = useCallback(async () => {
+    setNotifBusy(true);
+    try {
+      if (notifState === 'denied') {
+        await Linking.openSettings();
+      } else {
+        const ok = await ensureAlertNotifications();
+        if (ok) await registerPushToken();
+      }
+    } finally {
+      const s = await getNotificationPermissionState();
+      setNotifState(s);
+      setNotifBusy(false);
+    }
+  }, [notifState]);
 
   const submit = async () => {
     setBusy(true);
@@ -213,6 +248,42 @@ export function AccountScreen() {
               تعذر تحميل بيانات الشبكة/الإحالة — حاول لاحقاً
             </Text>
           ) : null}
+
+          <View style={styles.netBox}>
+            <Text style={[styles.netLine, { textAlign: align }]}>
+              {t.notifications}:{' '}
+              {notifState === 'granted'
+                ? t.notifStatusGranted
+                : notifState === 'denied'
+                  ? t.notifStatusDenied
+                  : notifState === 'unsupported'
+                    ? t.notifStatusUnsupported
+                    : t.notifStatusUndetermined}
+            </Text>
+            {notifState !== 'granted' && notifState !== 'unsupported' ? (
+              <Pressable
+                accessibilityRole="button"
+                style={({ pressed }) => [
+                  styles.notifBtn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => void enableNotifications()}
+                disabled={notifBusy}
+                accessibilityState={{ disabled: notifBusy }}
+              >
+                <Text style={styles.notifBtnText}>
+                  {notifBusy
+                    ? '...'
+                    : notifState === 'denied'
+                      ? t.notifOpenSettingsBtn
+                      : t.notifEnableBtn}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
 
           <Pressable
             accessibilityRole="button"
@@ -570,6 +641,16 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
   },
   netLine: { color: colors.textMuted, fontSize: 12 },
+  notifBtn: {
+    alignSelf: 'flex-start',
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: 'transparent',
+  },
+  notifBtnText: { color: colors.accent, fontWeight: '800', fontSize: 12 },
   legs: { flexDirection: 'row', gap: 8 },
   legsRtl: { flexDirection: 'row-reverse' },
   leg: {

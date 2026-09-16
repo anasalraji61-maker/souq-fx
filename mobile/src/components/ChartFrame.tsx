@@ -13,6 +13,7 @@ import {
 } from '../chart/dataSource';
 import { livePriceForChart } from '../chart/liveSeries';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
+import { isForexMarketOpen } from '../chart/marketHours';
 
 import { FRAME_CHART_H, FRAME_CHART_H_PHONE } from './FrameSizedGrid';
 import type { PanSpeedPercent } from '../chart/panSpeed';
@@ -127,6 +128,7 @@ export function ChartFrame({
     ? tickStatusLabel(resolvedTick.source, resolvedTick.source.as_of, nowSec)
     : null;
   const candleTag = provenanceLabel(candleSrc);
+  const marketClosed = !isForexMarketOpen(series.symbol);
 
   const subtitle = useMemo(() => {
     if (interactive) return 'محرك MATRIX · عدسات وأدوات';
@@ -217,6 +219,11 @@ export function ChartFrame({
           >
             {candleTag}
           </Text>
+          {marketClosed ? (
+            <Text style={styles.marketClosedTag} accessibilityLabel="السوق مغلق حالياً">
+              مغلق
+            </Text>
+          ) : null}
         </View>
         <View style={styles.priceRow}>
           <Text style={styles.price}>{formatPrice(headerPrice)}</Text>
@@ -366,6 +373,13 @@ const styles = StyleSheet.create({
   },
   sourceTagDemo: { color: colors.warn },
   sourceTagUnknown: { color: colors.textMuted },
+  marketClosedTag: {
+    color: colors.warn,
+    fontSize: 9,
+    fontWeight: '700',
+    marginInlineStart: 4,
+    opacity: 0.9,
+  },
   chg: { fontSize: 12, fontWeight: '700' },
   focusBtn: {
     width: 28,

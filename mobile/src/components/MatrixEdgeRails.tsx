@@ -35,7 +35,7 @@ const RIGHT_ICONS: { id: Exclude<EdgePanelId, null>; mark: string; tip: string }
   { id: 'backtest', mark: '↺', tip: 'اختبار' },
 ];
 
-const DRAW_MARK: Partial<Record<DrawTool, string>> = {
+export const DRAW_MARK: Partial<Record<DrawTool, string>> = {
   none: '✚',
   select: '⬚',
   trend: '╱',
@@ -49,7 +49,7 @@ const DRAW_MARK: Partial<Record<DrawTool, string>> = {
   measure: '⌖',
 };
 
-const LENS_MARK: Record<LensMode, string> = {
+export const LENS_MARK: Record<LensMode, string> = {
   clean: '◇',
   structure: '⬡',
   momentum: '△',

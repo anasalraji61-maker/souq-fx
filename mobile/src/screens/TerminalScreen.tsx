@@ -41,6 +41,7 @@ import { formatPrice } from '../chart/math';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { livePriceForChart } from '../chart/liveSeries';
 import { provenanceLabel, tickStatusLabel, normalizeProvenance } from '../chart/dataSource';
+import { marketStatusLabel } from '../chart/marketHours';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import {
   DEFAULT_PAN_SPEED,
@@ -134,6 +135,7 @@ export function TerminalScreen() {
   const [series, setSeries] = useState<ChartSeries | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [online, setOnline] = useState(false);
+  const [quote, setQuote] = useState<{ bid: number | null; ask: number | null } | null>(null);
 
   const [lens, setLens] = useState<MatrixLensId>('clean');
   const [tool, setTool] = useState<DrawTool>('none');
@@ -556,6 +558,27 @@ export function TerminalScreen() {
     return () => clearInterval(id);
   }, [symbol, tf, loadChart]);
 
+  // سبريد Bid/Ask للرمز الحالي — بند 2 من قائمة الإطلاق (أولوية طارئة، docs/ROADMAP.md)
+  useEffect(() => {
+    let alive = true;
+    const loadQuote = () => {
+      api
+        .marketQuote(symbol)
+        .then((q) => {
+          if (alive) setQuote({ bid: q.bid ?? null, ask: q.ask ?? null });
+        })
+        .catch(() => {
+          if (alive) setQuote(null);
+        });
+    };
+    void loadQuote();
+    const id = setInterval(loadQuote, 90_000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [symbol]);
+
   useEffect(() => {
     if (!prefsReady || layoutShape !== 'shadow') {
       return;
@@ -696,6 +719,7 @@ export function TerminalScreen() {
     heroTick
       ? tickStatusLabel(heroTick.source, heroTick.source.as_of, heroNowSec) ?? 'آخر سعر'
       : null,
+    marketStatusLabel(symbol),
   ].filter(Boolean);
 
   const topActions = [
@@ -1263,6 +1287,12 @@ export function TerminalScreen() {
                   {(series?.change_pct ?? 0) >= 0 ? '+' : ''}
                   {(series?.change_pct ?? 0).toFixed(2)}%
                 </Text>
+                {quote && quote.bid != null && quote.ask != null ? (
+                  <Text style={styles.desktopSpread}>
+                    سبريد {formatPrice(quote.ask - quote.bid)} · Bid {formatPrice(quote.bid)} ·
+                    Ask {formatPrice(quote.ask)}
+                  </Text>
+                ) : null}
               </View>
               <View style={styles.desktopStatus}>
                 <View style={[styles.statusDot, online && styles.statusDotOnline]} />
@@ -1494,6 +1524,17 @@ export function TerminalScreen() {
         timeframe={tf}
         lastPrice={price}
         candles={series?.candles}
+        activeTool={tool}
+        onTool={(t) => {
+          setTool(t);
+          if (phone) {
+            // لا توجد لوحة رسم جانبية على الهاتف؛ افتح الشارت بملء الشاشة جاهزاً لهذه الأداة
+            setDockTab(null);
+            openFocus(symbol, tf, { tool: t });
+          }
+        }}
+        activeLens={lens}
+        onLens={setLens}
       />
 
       <MatrixSidePanel
@@ -1802,6 +1843,7 @@ const styles = StyleSheet.create({
   desktopOhlcLabel: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
   desktopOhlcValue: { color: colors.text, fontSize: 13, fontWeight: '800' },
   desktopChange: { fontSize: 11, fontWeight: '900' },
+  desktopSpread: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
   desktopStatus: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 5 },
   statusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.warn },
   statusDotOnline: { backgroundColor: colors.bull },

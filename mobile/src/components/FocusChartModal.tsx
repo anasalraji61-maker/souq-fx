@@ -21,6 +21,7 @@ import { loadWatchlistItems } from '../chart/watchlistStore';
 import { formatPrice } from '../chart/math';
 import { livePriceForChart } from '../chart/liveSeries';
 import { provenanceLabel, tickStatusLabel, normalizeProvenance } from '../chart/dataSource';
+import { marketStatusLabel } from '../chart/marketHours';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import { mockSeries } from '../mock';
 import { SymbolSearchBar } from './SymbolSearchBar';
@@ -217,6 +218,7 @@ export function FocusChartModal({
                   ? ` · ${tickStatusLabel(liveTick.source, liveTick.source.as_of, nowSec) ?? 'آخر سعر'}`
                   : ''}
                 {` · ${provenanceLabel(normalizeProvenance(series.data_source))}`}
+                {` · ${marketStatusLabel(sym)}`}
               </Text>
             </View>
           ) : null}

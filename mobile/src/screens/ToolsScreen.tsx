@@ -60,16 +60,18 @@ type TabId =
   | 'layouts'
   | 'ai';
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'hub', label: 'إشارات ومجتمع' },
-  { id: 'reports', label: 'تقارير' },
-  { id: 'journal', label: 'PnL' },
-  { id: 'screener', label: 'فحص' },
-  { id: 'backtest', label: 'Backtest' },
-  { id: 'indAlerts', label: 'تنبيهات+' },
-  { id: 'calendar', label: 'تقويم' },
-  { id: 'layouts', label: 'تخطيط' },
-  { id: 'ai', label: 'AI' },
+/** نفس رموز التبويبات المعتمدة أصلاً بـMatrixBottomDock.tsx (نسخة اللابتوب) —
+ * توحيد بصري بين نسخة الهاتف ونسخة اللابتوب بدل تبويبات نصّ فقط بلا أيقونة. */
+const TABS: { id: TabId; label: string; mark: string }[] = [
+  { id: 'hub', label: 'إشارات ومجتمع', mark: '✦' },
+  { id: 'reports', label: 'تقارير', mark: '≡' },
+  { id: 'journal', label: 'PnL', mark: '₴' },
+  { id: 'screener', label: 'فحص', mark: '⌕' },
+  { id: 'backtest', label: 'Backtest', mark: '↺' },
+  { id: 'indAlerts', label: 'تنبيهات+', mark: '⚡' },
+  { id: 'calendar', label: 'تقويم', mark: '◷' },
+  { id: 'layouts', label: 'تخطيط', mark: '▦' },
+  { id: 'ai', label: 'AI', mark: '✧' },
 ];
 
 const HUB_GRID_ORDER = [
@@ -140,7 +142,7 @@ export function ToolsScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.head}>
-        <Text style={styles.title}>Tools · أدوات</Text>
+        <Text style={styles.title}>أدوات MATRIX</Text>
         <Text style={styles.sub}>أخبار وتصويت أولاً · تنبيهات وتوقعات المؤشرات في الأسفل</Text>
       </View>
 
@@ -160,6 +162,7 @@ export function ToolsScreen() {
               ]}
               onPress={() => setTab(t.id)}
             >
+              <Text style={[styles.tabMark, tab === t.id && styles.tabMarkOn]}>{t.mark}</Text>
               <Text style={[styles.tabText, tab === t.id && styles.tabTextOn]}>{t.label}</Text>
             </Pressable>
           ))}
@@ -303,8 +306,16 @@ export function ToolsScreen() {
                 <View style={styles.hitCard}>
                   <Text style={styles.sym}>{r.symbol}</Text>
                   <Text style={styles.meta}>
-                    {r.last} · RSI {r.rsi} · {r.change_pct >= 0 ? '+' : ''}
-                    {r.change_pct}%
+                    {r.last} · RSI {r.rsi} ·{' '}
+                    <Text
+                      style={{
+                        color: r.change_pct >= 0 ? colors.bull : colors.bear,
+                        fontWeight: '800',
+                      }}
+                    >
+                      {r.change_pct >= 0 ? '+' : ''}
+                      {r.change_pct}%
+                    </Text>
                   </Text>
                   <Text style={styles.match}>{r.filters_matched.join(' · ')}</Text>
                 </View>
@@ -370,14 +381,18 @@ const styles = StyleSheet.create({
   tabsScroll: { maxHeight: 52, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
   tabs: { flexDirection: 'row-reverse', padding: spacing.sm, gap: 8 },
   tab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: radii.sm,
     borderWidth: 1,
     borderColor: colors.border,
-    alignItems: 'center',
   },
   tabOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  tabMark: { color: colors.textDim, fontWeight: '800', fontSize: 13 },
+  tabMarkOn: { color: colors.accent },
   tabText: { color: colors.textMuted, fontWeight: '700', fontSize: 12 },
   tabTextOn: { color: colors.accent },
   body: { paddingHorizontal: spacing.md, paddingTop: spacing.sm, gap: 8, paddingBottom: 48 },

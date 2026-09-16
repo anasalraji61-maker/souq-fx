@@ -21,6 +21,18 @@ export async function ensureAlertNotifications(): Promise<boolean> {
   return status === 'granted';
 }
 
+export type NotificationPermissionState = 'granted' | 'denied' | 'undetermined' | 'unsupported';
+
+/** حالة إذن الإشعارات الحالية — لعرض زر تفعيل/تعطيل واضح بالإعدادات بدل الاعتماد
+ * على نافذة نظام التشغيل الافتراضية فقط (بند 9 من قائمة الإطلاق، docs/ROADMAP.md). */
+export async function getNotificationPermissionState(): Promise<NotificationPermissionState> {
+  if (Platform.OS === 'web') return 'unsupported';
+  const { status } = await Notifications.getPermissionsAsync();
+  if (status === 'granted') return 'granted';
+  if (status === 'denied') return 'denied';
+  return 'undetermined';
+}
+
 export async function registerPushToken(): Promise<void> {
   if (Platform.OS === 'web') return;
   const ok = await ensureAlertNotifications();

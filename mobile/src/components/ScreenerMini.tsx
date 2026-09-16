@@ -62,8 +62,16 @@ export function ScreenerMini() {
             <View key={h.symbol} style={styles.hit}>
               <Text style={styles.sym}>{h.symbol}</Text>
               <Text style={styles.meta}>
-                RSI {h.rsi} · {h.change_pct >= 0 ? '+' : ''}
-                {h.change_pct}%
+                RSI {h.rsi} ·{' '}
+                <Text
+                  style={{
+                    color: h.change_pct >= 0 ? colors.bull : colors.bear,
+                    fontWeight: '800',
+                  }}
+                >
+                  {h.change_pct >= 0 ? '+' : ''}
+                  {h.change_pct}%
+                </Text>
               </Text>
             </View>
           ))}
