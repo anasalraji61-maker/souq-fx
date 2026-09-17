@@ -13,6 +13,7 @@ import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { TimeframeBar } from './TimeframeBar';
 import { type Timeframe } from '../timeframes';
+import { useI18n } from '../i18n/I18nContext';
 
 type Stats = {
   trade_count: number;
@@ -39,6 +40,8 @@ const STRATEGIES: { id: Strategy; label: string }[] = [
 ];
 
 export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15m' }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const [symbol, setSymbol] = useState(defaultSymbol);
   const [tf, setTf] = useState<Timeframe>(defaultTimeframe);
   const [strategy, setStrategy] = useState<Strategy>('ma_cross');
@@ -73,7 +76,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
       setStats(null);
       setTrades([]);
       setEquity([]);
-      setError('تعذر تشغيل الاختبار الخلفي — تحقق من الاتصال وحاول مرة أخرى');
+      setError(t.backtestRunError);
     } finally {
       setLoading(false);
     }
@@ -84,10 +87,10 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>Strategy Backtest</Text>
-      <Text style={styles.sub}>MA · RSI · MACD · BB · منحنى Equity</Text>
+      <Text style={[styles.title, { textAlign: align }]}>Strategy Backtest</Text>
+      <Text style={[styles.sub, { textAlign: align }]}>{t.backtestSub}</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { textAlign: align }]}
         value={symbol}
         onChangeText={setSymbol}
         placeholder="EURUSD"
@@ -99,10 +102,10 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         clearButtonMode="while-editing"
         keyboardAppearance="dark"
         selectionColor={colors.accent}
-        accessibilityLabel="رمز الأداة للاختبار الخلفي"
+        accessibilityLabel={t.backtestSymbolA11y}
       />
       <TimeframeBar value={tf} onChange={setTf} />
-      <View style={styles.row}>
+      <View style={[styles.row, rtl && styles.rowRtl]}>
         {STRATEGIES.map((s) => (
           <Pressable
             accessibilityRole="button"
@@ -116,7 +119,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
               },
             ]}
             onPress={() => setStrategy(s.id)}
-            accessibilityLabel={`استراتيجية: ${s.label}`}
+            accessibilityLabel={`${t.backtestStrategyA11yPrefix}: ${s.label}`}
           >
             <Text style={[styles.chipText, strategy === s.id && styles.chipTextOn]}>{s.label}</Text>
           </Pressable>
@@ -135,32 +138,44 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         onPress={run}
         disabled={loading}
         accessibilityState={{ disabled: loading }}
-        accessibilityLabel="تشغيل الاختبار الخلفي"
+        accessibilityLabel={t.backtestRunA11y}
         hitSlop={8}
       >
-        <Text style={styles.btnText}>{loading ? '...' : 'تشغيل Backtest'}</Text>
+        <Text style={styles.btnText}>{loading ? '...' : t.backtestRunBtn}</Text>
       </Pressable>
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Text style={[styles.error, { textAlign: align }]}>{error}</Text> : null}
       {stats ? (
         <View style={styles.stats}>
-          <Text style={styles.statLine}>صفقات: {stats.trade_count}</Text>
-          <Text style={styles.statLine}>نسبة نجاح: {stats.win_rate}%</Text>
-          <Text style={styles.statLine}>عائد إجمالي: {stats.total_return_pct}%</Text>
-          <Text style={styles.statLine}>Equity نهائي: {stats.final_equity}</Text>
+          <Text style={[styles.statLine, { textAlign: align }]}>
+            {t.backtestStatTrades.replace('{n}', String(stats.trade_count))}
+          </Text>
+          <Text style={[styles.statLine, { textAlign: align }]}>
+            {t.backtestStatWinRate.replace('{pct}', String(stats.win_rate))}
+          </Text>
+          <Text style={[styles.statLine, { textAlign: align }]}>
+            {t.backtestStatReturn.replace('{pct}', String(stats.total_return_pct))}
+          </Text>
+          <Text style={[styles.statLine, { textAlign: align }]}>
+            {t.backtestStatEquity.replace('{v}', String(stats.final_equity))}
+          </Text>
           {stats.max_drawdown_pct != null ? (
-            <Text style={styles.statLine}>أقصى هبوط: {stats.max_drawdown_pct}%</Text>
+            <Text style={[styles.statLine, { textAlign: align }]}>
+              {t.backtestStatDrawdown.replace('{pct}', String(stats.max_drawdown_pct))}
+            </Text>
           ) : null}
           {stats.avg_win_pct != null ? (
-            <Text style={styles.statLine}>
-              متوسط ربح/خسارة: {stats.avg_win_pct}% / {stats.avg_loss_pct}%
+            <Text style={[styles.statLine, { textAlign: align }]}>
+              {t.backtestStatAvgWinLoss
+                .replace('{win}', String(stats.avg_win_pct))
+                .replace('{loss}', String(stats.avg_loss_pct))}
             </Text>
           ) : null}
         </View>
       ) : null}
       {equity.length > 1 ? (
         <View style={styles.curve}>
-          <Text style={styles.curveTitle}>Equity Curve</Text>
+          <Text style={[styles.curveTitle, { textAlign: align }]}>Equity Curve</Text>
           <View style={styles.curveRow}>
             {equity.map((e) => {
               const span = maxEq - minEq || 1;
@@ -184,10 +199,10 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         </View>
       ) : null}
       <ScrollView style={{ maxHeight: 180 }}>
-        {trades.map((t, i) => (
-          <Text key={i} style={styles.trade}>
-            {t.side} {t.entry} → {t.exit} · {t.pnl_pct >= 0 ? '+' : ''}
-            {t.pnl_pct}%
+        {trades.map((tr, i) => (
+          <Text key={i} style={[styles.trade, { textAlign: align }]}>
+            {tr.side} {tr.entry} → {tr.exit} · {tr.pnl_pct >= 0 ? '+' : ''}
+            {tr.pnl_pct}%
           </Text>
         ))}
       </ScrollView>
@@ -215,7 +230,8 @@ const styles = StyleSheet.create({
     padding: 10,
     textAlign: 'right',
   },
-  row: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6 },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  rowRtl: { flexDirection: 'row-reverse' },
   chip: {
     paddingHorizontal: 10,
     paddingVertical: spacing.sm,

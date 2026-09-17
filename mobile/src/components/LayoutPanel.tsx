@@ -11,6 +11,7 @@ import {
 } from '../chart/layoutStore';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
+import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
   frameTfs: [string, string, string] | string[];
@@ -19,8 +20,10 @@ type Props = {
 };
 
 export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const [layouts, setLayouts] = useState<TerminalLayout[]>([DEFAULT_LAYOUT]);
-  const [name, setName] = useState('تخطيطي');
+  const [name, setName] = useState(t.layoutDefaultName);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,7 +37,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
   const save = async () => {
     const layout: TerminalLayout = {
       id: `l${Date.now()}`,
-      name: name.trim() || 'تخطيط',
+      name: name.trim() || t.layoutFallbackName,
       dxyTf: '15m',
       frameSymbols,
       frameTfs: [frameTfs[0], frameTfs[1], frameTfs[2]],
@@ -52,20 +55,20 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>تخطيطات محفوظة</Text>
-      {saveError ? <Text style={styles.saveError}>{saveError}</Text> : null}
+      <Text style={[styles.title, { textAlign: align }]}>{t.layoutsTitle}</Text>
+      {saveError ? <Text style={[styles.saveError, { textAlign: align }]}>{saveError}</Text> : null}
       <TextInput
-        style={styles.input}
+        style={[styles.input, { textAlign: align }]}
         value={name}
         onChangeText={setName}
-        placeholder="اسم التخطيط"
+        placeholder={t.layoutNamePlaceholder}
         placeholderTextColor={colors.textDim}
         returnKeyType="done"
         underlineColorAndroid="transparent"
         clearButtonMode="while-editing"
         keyboardAppearance="dark"
         selectionColor={colors.accent}
-        accessibilityLabel="اسم التخطيط"
+        accessibilityLabel={t.layoutNameA11y}
       />
       <Pressable
         accessibilityRole="button"
@@ -77,13 +80,13 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
           },
         ]}
         onPress={save}
-        accessibilityLabel="حفظ التخطيط الحالي"
+        accessibilityLabel={t.layoutSaveA11y}
         hitSlop={8}
       >
-        <Text style={styles.btnText}>حفظ التخطيط الحالي</Text>
+        <Text style={styles.btnText}>{t.layoutSaveBtn}</Text>
       </Pressable>
       {layouts.map((l) => (
-        <View key={l.id} style={styles.row}>
+        <View key={l.id} style={[styles.row, rtl && styles.rowRtl]}>
           <Pressable
             accessibilityRole="button"
             style={({ pressed }) => [
@@ -94,10 +97,10 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
               },
             ]}
             onPress={() => onApply(l)}
-            accessibilityLabel={`تطبيق تخطيط: ${l.name}`}
+            accessibilityLabel={`${t.layoutApplyA11yPrefix}: ${l.name}`}
           >
-            <Text style={styles.rowName}>{l.name}</Text>
-            <Text style={styles.rowSub}>
+            <Text style={[styles.rowName, { textAlign: align }]}>{l.name}</Text>
+            <Text style={[styles.rowSub, { textAlign: align }]}>
               {l.frameSymbols.join(' · ')}
             </Text>
           </Pressable>
@@ -105,10 +108,10 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
             <Pressable
               accessibilityRole="button"
               onPress={() =>
-                Alert.alert('حذف التخطيط؟', l.name, [
-                  { text: 'إلغاء', style: 'cancel' },
+                Alert.alert(t.layoutDeleteConfirmTitle, l.name, [
+                  { text: t.cancel, style: 'cancel' },
                   {
-                    text: 'حذف',
+                    text: t.deleteWord,
                     style: 'destructive',
                     onPress: async () => {
                       await deleteLayout(l.id);
@@ -123,9 +126,9 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
                   transform: [{ scale: buttons.pressedScale }],
                 }
               }
-              accessibilityLabel={`حذف تخطيط: ${l.name}`}
+              accessibilityLabel={`${t.layoutDeleteA11yPrefix}: ${l.name}`}
             >
-              <Text style={styles.del}>حذف</Text>
+              <Text style={styles.del}>{t.deleteWord}</Text>
             </Pressable>
           ) : null}
         </View>
@@ -166,13 +169,14 @@ const styles = StyleSheet.create({
   },
   btnText: { color: colors.onAccent, fontWeight: '800' },
   row: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.borderSoft,
     paddingTop: spacing.sm,
   },
+  rowRtl: { flexDirection: 'row-reverse' },
   apply: { flex: 1 },
   rowName: { color: colors.text, fontWeight: '700', textAlign: 'right' },
   rowSub: { color: colors.textDim, fontSize: 10, textAlign: 'right' },

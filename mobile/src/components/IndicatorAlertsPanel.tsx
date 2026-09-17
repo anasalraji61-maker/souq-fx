@@ -13,6 +13,7 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { pushPriceAlert } from '../notifications';
 import { playSoftClick } from '../audio/playSoftClick';
+import { useI18n } from '../i18n/I18nContext';
 
 type IndAlert = {
   id: string;
@@ -30,6 +31,8 @@ type Props = {
 };
 
 export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const [alerts, setAlerts] = useState<IndAlert[]>([]);
   const [symbol, setSymbol] = useState(defaultSymbol);
   const [type, setType] = useState<'rsi' | 'ma_cross' | 'macd_cross'>('rsi');
@@ -65,18 +68,15 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
       try {
         const res = await api.checkIndicatorAlerts();
         setAlerts(res.alerts);
-        for (const t of res.triggered) {
-          await pushPriceAlert(
-            'MATRIX · تنبيه مؤشر',
-            `${t.symbol} ${t.alert_type} ${t.condition}`
-          );
+        for (const trig of res.triggered) {
+          await pushPriceAlert(t.indAlertsPushTitle, `${trig.symbol} ${trig.alert_type} ${trig.condition}`);
         }
       } catch {
         /* ignore */
       }
     }, 60_000);
     return () => clearInterval(id);
-  }, [refresh]);
+  }, [refresh, t.indAlertsPushTitle]);
 
   const add = async () => {
     setBusy(true);
@@ -93,40 +93,46 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
       playSoftClick();
       await refresh();
     } catch {
-      setFormError('تعذر إضافة تنبيه المؤشر — تحقق من الاتصال وحاول مرة أخرى');
+      setFormError(t.indAlertsAddError);
     } finally {
       setBusy(false);
     }
   };
 
+  const TYPE_LABEL: Record<'rsi' | 'ma_cross' | 'macd_cross', string> = {
+    rsi: t.indAlertsTypeRsi,
+    ma_cross: t.indAlertsTypeMaCross,
+    macd_cross: t.indAlertsTypeMacdCross,
+  };
+
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>تنبيهات المؤشرات</Text>
-      <Text style={styles.sub}>RSI · تقاطع MA · MACD</Text>
-      <TextInput style={styles.input} value={symbol} onChangeText={setSymbol} placeholder="EURUSD" placeholderTextColor={colors.textDim} autoCapitalize="characters" autoCorrect={false} returnKeyType="done" underlineColorAndroid="transparent" clearButtonMode="while-editing" keyboardAppearance="dark" selectionColor={colors.accent} accessibilityLabel="رمز الأداة" />
-      <View style={styles.row}>
-        {(['rsi', 'ma_cross', 'macd_cross'] as const).map((t) => (
+      <Text style={[styles.title, { textAlign: align }]}>{t.indAlertsTitle}</Text>
+      <Text style={[styles.sub, { textAlign: align }]}>{t.indAlertsSub}</Text>
+      <TextInput style={[styles.input, { textAlign: align }]} value={symbol} onChangeText={setSymbol} placeholder="EURUSD" placeholderTextColor={colors.textDim} autoCapitalize="characters" autoCorrect={false} returnKeyType="done" underlineColorAndroid="transparent" clearButtonMode="while-editing" keyboardAppearance="dark" selectionColor={colors.accent} accessibilityLabel={t.indAlertsSymbolA11y} />
+      <View style={[styles.row, rtl && styles.rowRtl]}>
+        {(['rsi', 'ma_cross', 'macd_cross'] as const).map((ty) => (
           <Pressable
             accessibilityRole="button"
-            key={t}
+            key={ty}
             style={({ pressed }) => [
               styles.chip,
-              type === t && styles.chipOn,
+              type === ty && styles.chipOn,
               pressed && {
                 opacity: buttons.pressedOpacity,
                 transform: [{ scale: buttons.pressedScale }],
               },
             ]}
-            onPress={() => setType(t)}
-            accessibilityLabel={`نوع تنبيه المؤشر: ${t === 'rsi' ? 'RSI' : t === 'ma_cross' ? 'تقاطع المتوسط المتحرك' : 'تقاطع MACD'}`}
+            onPress={() => setType(ty)}
+            accessibilityLabel={`${t.indAlertsTypeA11yPrefix}: ${TYPE_LABEL[ty]}`}
           >
-            <Text style={[styles.chipText, type === t && styles.chipTextOn]}>{t}</Text>
+            <Text style={[styles.chipText, type === ty && styles.chipTextOn]}>{ty}</Text>
           </Pressable>
         ))}
       </View>
       {type === 'rsi' ? (
         <>
-          <View style={styles.row}>
+          <View style={[styles.row, rtl && styles.rowRtl]}>
             <Pressable
               accessibilityRole="button"
               style={({ pressed }) => [
@@ -138,9 +144,9 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
                 },
               ]}
               onPress={() => setCondition('below')}
-              accessibilityLabel="شرط: RSI تحت العتبة"
+              accessibilityLabel={t.indAlertsBelowA11y}
             >
-              <Text style={styles.chipText}>RSI تحت</Text>
+              <Text style={styles.chipText}>{t.indAlertsBelowChip}</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -153,15 +159,15 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
                 },
               ]}
               onPress={() => setCondition('above')}
-              accessibilityLabel="شرط: RSI فوق العتبة"
+              accessibilityLabel={t.indAlertsAboveA11y}
             >
-              <Text style={styles.chipText}>RSI فوق</Text>
+              <Text style={styles.chipText}>{t.indAlertsAboveChip}</Text>
             </Pressable>
           </View>
-          <TextInput style={styles.input} value={value} onChangeText={setValue} keyboardType="decimal-pad" maxLength={12} placeholder="30" placeholderTextColor={colors.textDim} returnKeyType="done" underlineColorAndroid="transparent" clearButtonMode="while-editing" keyboardAppearance="dark" selectionColor={colors.accent} accessibilityLabel="قيمة عتبة المؤشر" />
+          <TextInput style={[styles.input, { textAlign: align }]} value={value} onChangeText={setValue} keyboardType="decimal-pad" maxLength={12} placeholder="30" placeholderTextColor={colors.textDim} returnKeyType="done" underlineColorAndroid="transparent" clearButtonMode="while-editing" keyboardAppearance="dark" selectionColor={colors.accent} accessibilityLabel={t.indAlertsThresholdA11y} />
         </>
       ) : (
-        <View style={styles.row}>
+        <View style={[styles.row, rtl && styles.rowRtl]}>
           <Pressable
             accessibilityRole="button"
             style={({ pressed }) => [
@@ -173,7 +179,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
               },
             ]}
             onPress={() => setCondition('cross_up')}
-            accessibilityLabel="شرط: تقاطع صاعد"
+            accessibilityLabel={t.indAlertsCrossUpA11y}
           >
             <Text style={styles.chipText}>Cross Up</Text>
           </Pressable>
@@ -188,7 +194,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
               },
             ]}
             onPress={() => setCondition('cross_down')}
-            accessibilityLabel="شرط: تقاطع هابط"
+            accessibilityLabel={t.indAlertsCrossDownA11y}
           >
             <Text style={styles.chipText}>Cross Down</Text>
           </Pressable>
@@ -207,22 +213,24 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
         onPress={add}
         disabled={busy}
         accessibilityState={{ disabled: busy }}
-        accessibilityLabel="إضافة تنبيه مؤشر"
+        accessibilityLabel={t.indAlertsAddA11y}
         hitSlop={8}
       >
-        <Text style={styles.btnText}>{busy ? '...' : 'إضافة تنبيه'}</Text>
+        <Text style={styles.btnText}>{busy ? '...' : t.indAlertsAddBtn}</Text>
       </Pressable>
-      {formError ? <Text style={styles.formError}>{formError}</Text> : null}
+      {formError ? <Text style={[styles.formError, { textAlign: align }]}>{formError}</Text> : null}
       {loading ? (
         <ActivityIndicator color={colors.accent} />
       ) : (
         <ScrollView style={{ maxHeight: 180 }} keyboardShouldPersistTaps="handled">
           {alerts.length === 0 ? (
-            <Text style={styles.empty}>{listError ? 'تعذر تحميل تنبيهات المؤشرات' : 'لا تنبيهات مؤشرات بعد'}</Text>
+            <Text style={[styles.empty, { textAlign: align }]}>
+              {listError ? t.indAlertsLoadError : t.indAlertsEmpty}
+            </Text>
           ) : (
             alerts.map((a) => (
-              <View key={a.id} style={styles.item}>
-                <Text style={styles.itemText}>
+              <View key={a.id} style={[styles.item, rtl && styles.itemRtl]}>
+                <Text style={[styles.itemText, { textAlign: align }]}>
                   {a.symbol} · {a.alert_type} · {a.condition}
                   {a.value != null ? ` ${a.value}` : ''}
                   {a.triggered ? ' ✓' : ''}
@@ -237,28 +245,28 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
                   ]}
                   onPress={() =>
                     Alert.alert(
-                      'حذف تنبيه المؤشر؟',
+                      t.indAlertsDeleteConfirmTitle,
                       `${a.symbol} · ${a.alert_type} · ${a.condition}`,
                       [
-                        { text: 'إلغاء', style: 'cancel' },
+                        { text: t.cancel, style: 'cancel' },
                         {
-                          text: 'حذف',
+                          text: t.deleteWord,
                           style: 'destructive',
                           onPress: () =>
                             api
                               .deleteIndicatorAlert(a.id)
                               .then(refresh)
                               .catch(() =>
-                                Alert.alert('تعذر الحذف', 'حدث خطأ أثناء حذف تنبيه المؤشر، حاول مرة أخرى.')
+                                Alert.alert(t.indAlertsDeleteFailedTitle, t.indAlertsDeleteFailedBody)
                               ),
                         },
                       ]
                     )
                   }
-                  accessibilityLabel={`حذف تنبيه مؤشر: ${a.symbol} · ${a.alert_type} · ${a.condition}`}
+                  accessibilityLabel={`${t.indAlertsDeleteA11yPrefix}: ${a.symbol} · ${a.alert_type} · ${a.condition}`}
                   hitSlop={8}
                 >
-                  <Text style={styles.del}>حذف</Text>
+                  <Text style={styles.del}>{t.deleteWord}</Text>
                 </Pressable>
               </View>
             ))
@@ -290,7 +298,8 @@ const styles = StyleSheet.create({
     padding: 10,
     textAlign: 'right',
   },
-  row: { flexDirection: 'row-reverse', gap: 6, flexWrap: 'wrap' },
+  row: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
+  rowRtl: { flexDirection: 'row-reverse' },
   chip: {
     paddingHorizontal: 10,
     paddingVertical: spacing.sm,
@@ -315,7 +324,8 @@ const styles = StyleSheet.create({
   btnText: { color: colors.onAccent, fontWeight: '800' },
   btnDisabled: { opacity: 0.4 },
   empty: { color: colors.textDim, textAlign: 'right', marginTop: spacing.sm, fontSize: 12 },
-  item: { flexDirection: 'row-reverse', justifyContent: 'space-between', paddingVertical: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSoft },
+  item: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSoft },
+  itemRtl: { flexDirection: 'row-reverse' },
   itemText: { color: colors.text, flex: 1, textAlign: 'right', fontSize: 12 },
   del: { color: colors.bear, fontWeight: '700' },
 });

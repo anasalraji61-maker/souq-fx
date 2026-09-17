@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
+import { useI18n } from '../i18n/I18nContext';
 
 type Ev = {
   id: string;
@@ -26,6 +27,8 @@ type Props = {
 };
 
 export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const [events, setEvents] = useState<Ev[]>([]);
   const [currency, setCurrency] = useState('ALL');
   const [impact, setImpact] = useState<'ALL' | 'high' | 'medium' | 'low'>('ALL');
@@ -49,11 +52,17 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
       });
   }, [currency, impact]);
 
+  const IMPACT_LABEL: Record<'high' | 'medium' | 'low', string> = {
+    high: t.impactHigh,
+    medium: t.impactMedium,
+    low: t.impactLow,
+  };
+
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>تقويم اقتصادي · حي</Text>
+      <Text style={[styles.title, { textAlign: align }]}>{t.calendarTitle}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={styles.filters}>
+        <View style={[styles.filters, rtl && styles.filtersRtl]}>
           {CURRENCIES.map((c) => (
             <Pressable
               accessibilityRole="button"
@@ -70,7 +79,7 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
                 setCurrency(c);
                 if (c !== 'ALL') onPickCurrency?.(c);
               }}
-              accessibilityLabel={`تصفية حسب العملة: ${c === 'ALL' ? 'الكل' : c}`}
+              accessibilityLabel={`${t.calendarCurrencyA11yPrefix}: ${c === 'ALL' ? t.calendarAllWord : c}`}
             >
               <Text style={[styles.chipText, currency === c && styles.chipTextOn]}>{c}</Text>
             </Pressable>
@@ -88,10 +97,10 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
                 },
               ]}
               onPress={() => setImpact(imp)}
-              accessibilityLabel={`تصفية حسب الأهمية: ${imp === 'ALL' ? 'الكل' : imp}`}
+              accessibilityLabel={`${t.calendarImpactA11yPrefix}: ${imp === 'ALL' ? t.calendarAllWord : IMPACT_LABEL[imp]}`}
             >
               <Text style={[styles.chipText, impact === imp && styles.chipTextOn]}>
-                {imp === 'ALL' ? 'كل' : imp}
+                {imp === 'ALL' ? t.calendarAllShort : IMPACT_LABEL[imp]}
               </Text>
             </Pressable>
           ))}
@@ -99,22 +108,22 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
       </ScrollView>
       <ScrollView style={{ maxHeight: compact ? 140 : 280 }}>
         {status === 'loading' ? (
-          <Text style={styles.empty}>جاري تحميل التقويم…</Text>
+          <Text style={[styles.empty, { textAlign: align }]}>{t.calendarLoading}</Text>
         ) : events.length === 0 ? (
           status === 'error' ? (
-            <Text style={styles.empty}>تعذر تحميل التقويم — تحقق من الاتصال</Text>
+            <Text style={[styles.empty, { textAlign: align }]}>{t.calendarLoadError}</Text>
           ) : (
-            <Text style={styles.empty}>لا أحداث بهذا الفلتر</Text>
+            <Text style={[styles.empty, { textAlign: align }]}>{t.calendarEmpty}</Text>
           )
         ) : (
           events.map((e) => (
-            <View key={e.id} style={styles.row}>
+            <View key={e.id} style={[styles.row, rtl && styles.rowRtl]}>
               <View
                 style={[styles.dot, { backgroundColor: IMPACT_COLOR[e.impact] ?? colors.textDim }]}
               />
               <View style={{ flex: 1 }}>
-                <Text style={styles.evTitle}>{e.title}</Text>
-                <Text style={styles.meta}>
+                <Text style={[styles.evTitle, { textAlign: align }]}>{e.title}</Text>
+                <Text style={[styles.meta, { textAlign: align }]}>
                   {e.currency} · {e.when} · {e.forecast}
                 </Text>
               </View>
@@ -136,7 +145,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   title: { color: colors.text, fontWeight: '800', textAlign: 'right', fontSize: 14 },
-  filters: { flexDirection: 'row-reverse', gap: 6, paddingVertical: spacing.xs },
+  filters: { flexDirection: 'row', gap: 6, paddingVertical: spacing.xs },
+  filtersRtl: { flexDirection: 'row-reverse' },
   chip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -149,7 +159,8 @@ const styles = StyleSheet.create({
   chipText: { color: colors.textMuted, fontSize: 10, fontWeight: '700' },
   chipTextOn: { color: colors.accent },
   empty: { color: colors.textDim, textAlign: 'right', fontSize: 11, paddingVertical: spacing.sm },
-  row: { flexDirection: 'row-reverse', alignItems: 'flex-start', gap: spacing.sm, paddingVertical: 6 },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, paddingVertical: 6 },
+  rowRtl: { flexDirection: 'row-reverse' },
   dot: { width: 8, height: 8, borderRadius: 4, marginTop: spacing.xs },
   evTitle: { color: colors.text, textAlign: 'right', fontSize: 12, fontWeight: '600' },
   meta: { color: colors.textDim, textAlign: 'right', fontSize: 10, marginTop: 2 },

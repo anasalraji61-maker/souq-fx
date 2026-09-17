@@ -12,6 +12,7 @@ import {
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
+import { useI18n } from '../i18n/I18nContext';
 
 type Trade = {
   id: string;
@@ -37,6 +38,8 @@ type Stats = {
 };
 
 export function TradeJournalPanel() {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -90,7 +93,7 @@ export function TradeJournalPanel() {
       setNote('');
       await refresh();
     } catch {
-      setFormError('تعذر إضافة الصفقة — تحقق من الاتصال وحاول مرة أخرى');
+      setFormError(t.journalAddError);
     } finally {
       setBusy(false);
     }
@@ -105,7 +108,7 @@ export function TradeJournalPanel() {
       playSoftClick();
       await refresh();
     } catch {
-      Alert.alert('تعذر الإغلاق', 'حدث خطأ أثناء إغلاق الصفقة، حاول مرة أخرى.');
+      Alert.alert(t.journalCloseFailedTitle, t.journalCloseFailedBody);
     } finally {
       setBusy(false);
     }
@@ -113,21 +116,29 @@ export function TradeJournalPanel() {
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>دفتر الصفقات · PnL حقيقي</Text>
-      <Text style={styles.sub}>سجّل صفقاتك — التقارير تُبنى من يوميتك</Text>
+      <Text style={[styles.title, { textAlign: align }]}>{t.journalTitle}</Text>
+      <Text style={[styles.sub, { textAlign: align }]}>{t.journalSub}</Text>
 
       {stats ? (
         <View style={styles.stats}>
-          <Text style={styles.stat}>صفقات مغلقة: {stats.trade_count}</Text>
-          <Text style={styles.stat}>نسبة نجاح: {stats.win_rate}%</Text>
-          <Text style={styles.stat}>إجمالي PnL: {stats.total_pnl_pct}%</Text>
-          <Text style={styles.stat}>
-            أفضل/أسوأ: {stats.best}% / {stats.worst}%
+          <Text style={[styles.stat, { textAlign: align }]}>
+            {t.journalStatClosed.replace('{n}', String(stats.trade_count))}
+          </Text>
+          <Text style={[styles.stat, { textAlign: align }]}>
+            {t.journalStatWinRate.replace('{pct}', String(stats.win_rate))}
+          </Text>
+          <Text style={[styles.stat, { textAlign: align }]}>
+            {t.journalStatTotalPnl.replace('{pct}', String(stats.total_pnl_pct))}
+          </Text>
+          <Text style={[styles.stat, { textAlign: align }]}>
+            {t.journalStatBestWorst
+              .replace('{best}', String(stats.best))
+              .replace('{worst}', String(stats.worst))}
           </Text>
         </View>
       ) : null}
 
-      <View style={styles.row}>
+      <View style={[styles.row, rtl && styles.rowRtl]}>
         <Pressable
           accessibilityRole="button"
           style={({ pressed }) => [
@@ -139,9 +150,9 @@ export function TradeJournalPanel() {
             },
           ]}
           onPress={() => setSide('buy')}
-          accessibilityLabel="اتجاه الصفقة: شراء"
+          accessibilityLabel={`${t.journalSideA11yPrefix}: ${t.dirBuy}`}
         >
-          <Text style={[styles.chipText, side === 'buy' && styles.chipTextOn]}>Buy</Text>
+          <Text style={[styles.chipText, side === 'buy' && styles.chipTextOn]}>{t.dirBuy}</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -154,16 +165,16 @@ export function TradeJournalPanel() {
             },
           ]}
           onPress={() => setSide('sell')}
-          accessibilityLabel="اتجاه الصفقة: بيع"
+          accessibilityLabel={`${t.journalSideA11yPrefix}: ${t.dirSell}`}
         >
-          <Text style={[styles.chipText, side === 'sell' && styles.chipTextOn]}>Sell</Text>
+          <Text style={[styles.chipText, side === 'sell' && styles.chipTextOn]}>{t.dirSell}</Text>
         </Pressable>
       </View>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { textAlign: align }]}
         value={symbol}
         onChangeText={setSymbol}
-        placeholder="الرمز"
+        placeholder={t.journalSymbolPlaceholder}
         placeholderTextColor={colors.textDim}
         autoCapitalize="characters"
         autoCorrect={false}
@@ -172,13 +183,13 @@ export function TradeJournalPanel() {
         clearButtonMode="while-editing"
         keyboardAppearance="dark"
         selectionColor={colors.accent}
-        accessibilityLabel="رمز الصفقة"
+        accessibilityLabel={t.journalSymbolA11y}
       />
       <TextInput
-        style={styles.input}
+        style={[styles.input, { textAlign: align }]}
         value={entry}
         onChangeText={setEntry}
-        placeholder="دخول"
+        placeholder={t.journalEntryPlaceholder}
         keyboardType="decimal-pad"
         maxLength={12}
         placeholderTextColor={colors.textDim}
@@ -187,13 +198,13 @@ export function TradeJournalPanel() {
         clearButtonMode="while-editing"
         keyboardAppearance="dark"
         selectionColor={colors.accent}
-        accessibilityLabel="سعر الدخول"
+        accessibilityLabel={t.journalEntryA11y}
       />
       <TextInput
-        style={styles.input}
+        style={[styles.input, { textAlign: align }]}
         value={exit}
         onChangeText={setExit}
-        placeholder="خروج (اختياري)"
+        placeholder={t.journalExitPlaceholder}
         keyboardType="decimal-pad"
         maxLength={12}
         placeholderTextColor={colors.textDim}
@@ -202,20 +213,20 @@ export function TradeJournalPanel() {
         clearButtonMode="while-editing"
         keyboardAppearance="dark"
         selectionColor={colors.accent}
-        accessibilityLabel="سعر الخروج (اختياري)"
+        accessibilityLabel={t.journalExitA11y}
       />
       <TextInput
-        style={styles.input}
+        style={[styles.input, { textAlign: align }]}
         value={note}
         onChangeText={setNote}
-        placeholder="ملاحظة"
+        placeholder={t.journalNotePlaceholder}
         placeholderTextColor={colors.textDim}
         returnKeyType="done"
         underlineColorAndroid="transparent"
         clearButtonMode="while-editing"
         keyboardAppearance="dark"
         selectionColor={colors.accent}
-        accessibilityLabel="ملاحظة الصفقة (اختياري)"
+        accessibilityLabel={t.journalNoteA11y}
       />
       <Pressable
         accessibilityRole="button"
@@ -230,30 +241,32 @@ export function TradeJournalPanel() {
         onPress={() => void add()}
         disabled={busy}
         accessibilityState={{ disabled: busy }}
-        accessibilityLabel="إضافة صفقة جديدة"
+        accessibilityLabel={t.journalAddA11y}
         hitSlop={8}
       >
-        <Text style={styles.btnText}>{busy ? '...' : 'إضافة صفقة'}</Text>
+        <Text style={styles.btnText}>{busy ? '...' : t.journalAddBtn}</Text>
       </Pressable>
-      {formError ? <Text style={styles.formError}>{formError}</Text> : null}
+      {formError ? <Text style={[styles.formError, { textAlign: align }]}>{formError}</Text> : null}
 
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
       {!loading && trades.length === 0 ? (
-        <Text style={styles.empty}>{listError ? 'تعذر تحميل السجل' : 'لا صفقات مسجّلة بعد'}</Text>
+        <Text style={[styles.empty, { textAlign: align }]}>
+          {listError ? t.journalLoadError : t.journalEmpty}
+        </Text>
       ) : null}
       <ScrollView style={{ maxHeight: 220 }} keyboardShouldPersistTaps="handled">
-        {trades.map((t) => (
-          <View key={t.id} style={styles.trade}>
-            <Text style={styles.tradeMain}>
-              {t.side.toUpperCase()} {t.symbol} · {t.entry}
-              {t.exit != null ? ` → ${t.exit}` : ' (مفتوحة)'}
+        {trades.map((tr) => (
+          <View key={tr.id} style={styles.trade}>
+            <Text style={[styles.tradeMain, { textAlign: align }]}>
+              {tr.side.toUpperCase()} {tr.symbol} · {tr.entry}
+              {tr.exit != null ? ` → ${tr.exit}` : ` ${t.journalOpenSuffix}`}
             </Text>
-            <Text style={styles.tradeMeta}>
-              {t.status}
-              {t.pnl != null ? ` · PnL ${t.pnl >= 0 ? '+' : ''}${Number(t.pnl).toFixed(2)}%` : ''}
-              {t.note ? ` · ${t.note}` : ''}
+            <Text style={[styles.tradeMeta, { textAlign: align }]}>
+              {tr.status}
+              {tr.pnl != null ? ` · PnL ${tr.pnl >= 0 ? '+' : ''}${Number(tr.pnl).toFixed(2)}%` : ''}
+              {tr.note ? ` · ${tr.note}` : ''}
             </Text>
-            {t.status === 'open' ? (
+            {tr.status === 'open' ? (
               <Pressable
                 accessibilityRole="button"
                 style={({ pressed }) => [
@@ -263,13 +276,13 @@ export function TradeJournalPanel() {
                     transform: [{ scale: buttons.pressedScale }],
                   },
                 ]}
-                onPress={() => void closeOpen(t.id)}
+                onPress={() => void closeOpen(tr.id)}
                 disabled={busy}
                 accessibilityState={{ disabled: busy }}
-                accessibilityLabel={`إغلاق صفقة ${t.symbol} بسعر خانة الخروج`}
+                accessibilityLabel={t.journalCloseLinkA11y.replace('{symbol}', tr.symbol)}
                 hitSlop={8}
               >
-                <Text style={styles.closeLink}>إغلاق بسعر خانة الخروج</Text>
+                <Text style={[styles.closeLink, { textAlign: align }]}>{t.journalCloseLinkBtn}</Text>
               </Pressable>
             ) : null}
           </View>
@@ -292,7 +305,8 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   stat: { color: colors.text, textAlign: 'right', fontWeight: '600', fontSize: 12 },
-  row: { flexDirection: 'row-reverse', gap: spacing.sm },
+  row: { flexDirection: 'row', gap: spacing.sm },
+  rowRtl: { flexDirection: 'row-reverse' },
   chip: {
     flex: 1,
     paddingVertical: spacing.sm,

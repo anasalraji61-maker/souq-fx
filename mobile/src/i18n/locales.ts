@@ -216,6 +216,106 @@ export type Dict = {
   alertsDeleteFailedTitle: string;
   alertsDeleteFailedBody: string;
   alertsDeleteA11yPrefix: string;
+  // WeeklyReportPanel/TradeJournalPanel/BacktestPanel/IndicatorAlertsPanel/CalendarPanel/LayoutPanel — 2026-09-17
+  reportsTitle: string;
+  reportsSubGrid: string;
+  reportsSub: string;
+  reportWeeklyTitle: string;
+  reportWeeklyHint: string;
+  reportPerformanceTitle: string;
+  reportPerformanceHint: string;
+  reportAdviceTitle: string;
+  reportAdviceHint: string;
+  reportRiskTitle: string;
+  reportRiskHint: string;
+  reportOpenWord: string;
+  reportAiFallbackNote: string;
+  reportWinLabel: string;
+  reportJournalDataLine: string;
+  reportJournalEmptyLine: string;
+  reportFallbackWeekly: string;
+  reportFallbackPerformance: string;
+  reportFallbackRisk: string;
+  reportFallbackAdvice: string;
+  journalTitle: string;
+  journalSub: string;
+  journalStatClosed: string;
+  journalStatWinRate: string;
+  journalStatTotalPnl: string;
+  journalStatBestWorst: string;
+  journalSideA11yPrefix: string;
+  journalSymbolPlaceholder: string;
+  journalSymbolA11y: string;
+  journalEntryPlaceholder: string;
+  journalEntryA11y: string;
+  journalExitPlaceholder: string;
+  journalExitA11y: string;
+  journalNotePlaceholder: string;
+  journalNoteA11y: string;
+  journalAddA11y: string;
+  journalAddBtn: string;
+  journalAddError: string;
+  journalCloseFailedTitle: string;
+  journalCloseFailedBody: string;
+  journalLoadError: string;
+  journalEmpty: string;
+  journalOpenSuffix: string;
+  journalCloseLinkA11y: string;
+  journalCloseLinkBtn: string;
+  backtestSub: string;
+  backtestSymbolA11y: string;
+  backtestStrategyA11yPrefix: string;
+  backtestRunA11y: string;
+  backtestRunBtn: string;
+  backtestRunError: string;
+  backtestStatTrades: string;
+  backtestStatWinRate: string;
+  backtestStatReturn: string;
+  backtestStatEquity: string;
+  backtestStatDrawdown: string;
+  backtestStatAvgWinLoss: string;
+  indAlertsTitle: string;
+  indAlertsSub: string;
+  indAlertsSymbolA11y: string;
+  indAlertsTypeA11yPrefix: string;
+  indAlertsTypeRsi: string;
+  indAlertsTypeMaCross: string;
+  indAlertsTypeMacdCross: string;
+  indAlertsBelowA11y: string;
+  indAlertsAboveA11y: string;
+  indAlertsBelowChip: string;
+  indAlertsAboveChip: string;
+  indAlertsThresholdA11y: string;
+  indAlertsCrossUpA11y: string;
+  indAlertsCrossDownA11y: string;
+  indAlertsAddA11y: string;
+  indAlertsAddBtn: string;
+  indAlertsAddError: string;
+  indAlertsLoadError: string;
+  indAlertsEmpty: string;
+  indAlertsDeleteConfirmTitle: string;
+  indAlertsDeleteFailedTitle: string;
+  indAlertsDeleteFailedBody: string;
+  indAlertsDeleteA11yPrefix: string;
+  indAlertsPushTitle: string;
+  calendarTitle: string;
+  calendarCurrencyA11yPrefix: string;
+  calendarAllWord: string;
+  calendarImpactA11yPrefix: string;
+  calendarAllShort: string;
+  calendarLoading: string;
+  calendarLoadError: string;
+  calendarEmpty: string;
+  layoutDefaultName: string;
+  layoutFallbackName: string;
+  layoutsTitle: string;
+  layoutNamePlaceholder: string;
+  layoutNameA11y: string;
+  layoutSaveA11y: string;
+  layoutSaveBtn: string;
+  layoutApplyA11yPrefix: string;
+  layoutDeleteConfirmTitle: string;
+  layoutDeleteA11yPrefix: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -447,6 +547,107 @@ const ar: Dict = {
   alertsDeleteFailedTitle: 'تعذر الحذف',
   alertsDeleteFailedBody: 'حدث خطأ أثناء حذف التنبيه، حاول مرة أخرى.',
   alertsDeleteA11yPrefix: 'حذف تنبيه',
+  reportsTitle: 'تقارير MATRIX',
+  reportsSubGrid: 'نفس حجم الفريمات · قدّم/أخّر · اضغط للقراءة',
+  reportsSub: 'أسبوعي · أداء · رأي المنصة ونصائح',
+  reportWeeklyTitle: 'تقرير أسبوعي',
+  reportWeeklyHint: 'أرباح وخسائر',
+  reportPerformanceTitle: 'تقرير أداء',
+  reportPerformanceHint: 'انضباط وتنفيذ',
+  reportAdviceTitle: 'رأي MATRIX',
+  reportAdviceHint: 'نصائح الأسبوع',
+  reportRiskTitle: 'موجز مخاطر',
+  reportRiskHint: 'إدارة رأس المال',
+  reportOpenWord: 'مفتوح ↓',
+  reportAiFallbackNote: 'تعذر الاتصال بالذكاء الاصطناعي — هذا قالب عام بدل تحليل مخصَّص',
+  reportWinLabel: 'ثقة تقديرية للسيناريو: {pct}%',
+  reportJournalDataLine:
+    'بيانات دفتر الصفقات الفعلية: صفقات={trades} نجاح={winRate}% PnL={pnl}% أفضل={best}% أسوأ={worst}%. اعتمد عليها في التقرير.',
+  reportJournalEmptyLine: '(لا توجد صفقات مسجّلة بعد في الدفتر).',
+  reportFallbackWeekly: 'تقرير من دفتر الصفقات{journalLine}\nسجّل صفقاتك في تبويب PnL لبناء تقرير أدق.',
+  reportFallbackPerformance: 'تقييم مبني على الدفتر{journalLine}',
+  reportFallbackRisk: 'موجز مخاطر{journalLine}\n1) مخاطرة ≤1%.\n2) وقف واضح.\n3) تجنّب الأخبار الثقيلة.',
+  reportFallbackAdvice:
+    'نصائح MATRIX{journalLine}\n1) راجع صفقاتك المفتوحة.\n2) اربط الدخول بـ DXY.\n3) مخاطرة ≤1%.\n4) تجنّب الأخبار عالية التأثير.\n5) ركّز على 2–3 أزواج.',
+  journalTitle: 'دفتر الصفقات · PnL حقيقي',
+  journalSub: 'سجّل صفقاتك — التقارير تُبنى من يوميتك',
+  journalStatClosed: 'صفقات مغلقة: {n}',
+  journalStatWinRate: 'نسبة نجاح: {pct}%',
+  journalStatTotalPnl: 'إجمالي PnL: {pct}%',
+  journalStatBestWorst: 'أفضل/أسوأ: {best}% / {worst}%',
+  journalSideA11yPrefix: 'اتجاه الصفقة',
+  journalSymbolPlaceholder: 'الرمز',
+  journalSymbolA11y: 'رمز الصفقة',
+  journalEntryPlaceholder: 'دخول',
+  journalEntryA11y: 'سعر الدخول',
+  journalExitPlaceholder: 'خروج (اختياري)',
+  journalExitA11y: 'سعر الخروج (اختياري)',
+  journalNotePlaceholder: 'ملاحظة',
+  journalNoteA11y: 'ملاحظة الصفقة (اختياري)',
+  journalAddA11y: 'إضافة صفقة جديدة',
+  journalAddBtn: 'إضافة صفقة',
+  journalAddError: 'تعذر إضافة الصفقة — تحقق من الاتصال وحاول مرة أخرى',
+  journalCloseFailedTitle: 'تعذر الإغلاق',
+  journalCloseFailedBody: 'حدث خطأ أثناء إغلاق الصفقة، حاول مرة أخرى.',
+  journalLoadError: 'تعذر تحميل السجل',
+  journalEmpty: 'لا صفقات مسجّلة بعد',
+  journalOpenSuffix: '(مفتوحة)',
+  journalCloseLinkA11y: 'إغلاق صفقة {symbol} بسعر خانة الخروج',
+  journalCloseLinkBtn: 'إغلاق بسعر خانة الخروج',
+  backtestSub: 'MA · RSI · MACD · BB · منحنى Equity',
+  backtestSymbolA11y: 'رمز الأداة للاختبار الخلفي',
+  backtestStrategyA11yPrefix: 'استراتيجية',
+  backtestRunA11y: 'تشغيل الاختبار الخلفي',
+  backtestRunBtn: 'تشغيل Backtest',
+  backtestRunError: 'تعذر تشغيل الاختبار الخلفي — تحقق من الاتصال وحاول مرة أخرى',
+  backtestStatTrades: 'صفقات: {n}',
+  backtestStatWinRate: 'نسبة نجاح: {pct}%',
+  backtestStatReturn: 'عائد إجمالي: {pct}%',
+  backtestStatEquity: 'Equity نهائي: {v}',
+  backtestStatDrawdown: 'أقصى هبوط: {pct}%',
+  backtestStatAvgWinLoss: 'متوسط ربح/خسارة: {win}% / {loss}%',
+  indAlertsTitle: 'تنبيهات المؤشرات',
+  indAlertsSub: 'RSI · تقاطع MA · MACD',
+  indAlertsSymbolA11y: 'رمز الأداة',
+  indAlertsTypeA11yPrefix: 'نوع تنبيه المؤشر',
+  indAlertsTypeRsi: 'RSI',
+  indAlertsTypeMaCross: 'تقاطع المتوسط المتحرك',
+  indAlertsTypeMacdCross: 'تقاطع MACD',
+  indAlertsBelowA11y: 'شرط: RSI تحت العتبة',
+  indAlertsAboveA11y: 'شرط: RSI فوق العتبة',
+  indAlertsBelowChip: 'RSI تحت',
+  indAlertsAboveChip: 'RSI فوق',
+  indAlertsThresholdA11y: 'قيمة عتبة المؤشر',
+  indAlertsCrossUpA11y: 'شرط: تقاطع صاعد',
+  indAlertsCrossDownA11y: 'شرط: تقاطع هابط',
+  indAlertsAddA11y: 'إضافة تنبيه مؤشر',
+  indAlertsAddBtn: 'إضافة تنبيه',
+  indAlertsAddError: 'تعذر إضافة تنبيه المؤشر — تحقق من الاتصال وحاول مرة أخرى',
+  indAlertsLoadError: 'تعذر تحميل تنبيهات المؤشرات',
+  indAlertsEmpty: 'لا تنبيهات مؤشرات بعد',
+  indAlertsDeleteConfirmTitle: 'حذف تنبيه المؤشر؟',
+  indAlertsDeleteFailedTitle: 'تعذر الحذف',
+  indAlertsDeleteFailedBody: 'حدث خطأ أثناء حذف تنبيه المؤشر، حاول مرة أخرى.',
+  indAlertsDeleteA11yPrefix: 'حذف تنبيه مؤشر',
+  indAlertsPushTitle: 'MATRIX · تنبيه مؤشر',
+  calendarTitle: 'تقويم اقتصادي · حي',
+  calendarCurrencyA11yPrefix: 'تصفية حسب العملة',
+  calendarAllWord: 'الكل',
+  calendarImpactA11yPrefix: 'تصفية حسب الأهمية',
+  calendarAllShort: 'كل',
+  calendarLoading: 'جاري تحميل التقويم…',
+  calendarLoadError: 'تعذر تحميل التقويم — تحقق من الاتصال',
+  calendarEmpty: 'لا أحداث بهذا الفلتر',
+  layoutDefaultName: 'تخطيطي',
+  layoutFallbackName: 'تخطيط',
+  layoutsTitle: 'تخطيطات محفوظة',
+  layoutNamePlaceholder: 'اسم التخطيط',
+  layoutNameA11y: 'اسم التخطيط',
+  layoutSaveA11y: 'حفظ التخطيط الحالي',
+  layoutSaveBtn: 'حفظ التخطيط الحالي',
+  layoutApplyA11yPrefix: 'تطبيق تخطيط',
+  layoutDeleteConfirmTitle: 'حذف التخطيط؟',
+  layoutDeleteA11yPrefix: 'حذف تخطيط',
 };
 
 const enUS: Dict = {
@@ -672,6 +873,108 @@ const enUS: Dict = {
   alertsDeleteFailedTitle: 'Could not delete',
   alertsDeleteFailedBody: 'An error occurred while deleting the alert, try again.',
   alertsDeleteA11yPrefix: 'Delete alert',
+  reportsTitle: 'MATRIX Reports',
+  reportsSubGrid: 'Same frame size · prev/next · tap to read',
+  reportsSub: 'Weekly · Performance · Platform view & tips',
+  reportWeeklyTitle: 'Weekly report',
+  reportWeeklyHint: 'Profit & loss',
+  reportPerformanceTitle: 'Performance report',
+  reportPerformanceHint: 'Discipline & execution',
+  reportAdviceTitle: 'MATRIX view',
+  reportAdviceHint: "This week's tips",
+  reportRiskTitle: 'Risk brief',
+  reportRiskHint: 'Capital management',
+  reportOpenWord: 'Open ↓',
+  reportAiFallbackNote: 'Could not reach the AI — this is a general template, not a custom analysis',
+  reportWinLabel: 'Estimated scenario confidence: {pct}%',
+  reportJournalDataLine:
+    'Actual trade journal data: trades={trades} win rate={winRate}% PnL={pnl}% best={best}% worst={worst}%. Base the report on it.',
+  reportJournalEmptyLine: '(No trades logged in the journal yet).',
+  reportFallbackWeekly:
+    'Report from the trade journal{journalLine}\nLog your trades in the PnL tab for a more accurate report.',
+  reportFallbackPerformance: 'Assessment based on the journal{journalLine}',
+  reportFallbackRisk: 'Risk brief{journalLine}\n1) Risk ≤1%.\n2) Use a clear stop.\n3) Avoid heavy news.',
+  reportFallbackAdvice:
+    'MATRIX tips{journalLine}\n1) Review your open trades.\n2) Tie entries to DXY.\n3) Risk ≤1%.\n4) Avoid high-impact news.\n5) Focus on 2–3 pairs.',
+  journalTitle: 'Trade journal · Real PnL',
+  journalSub: 'Log your trades — reports are built from your journal',
+  journalStatClosed: 'Closed trades: {n}',
+  journalStatWinRate: 'Win rate: {pct}%',
+  journalStatTotalPnl: 'Total PnL: {pct}%',
+  journalStatBestWorst: 'Best/Worst: {best}% / {worst}%',
+  journalSideA11yPrefix: 'Trade direction',
+  journalSymbolPlaceholder: 'Symbol',
+  journalSymbolA11y: 'Trade symbol',
+  journalEntryPlaceholder: 'Entry',
+  journalEntryA11y: 'Entry price',
+  journalExitPlaceholder: 'Exit (optional)',
+  journalExitA11y: 'Exit price (optional)',
+  journalNotePlaceholder: 'Note',
+  journalNoteA11y: 'Trade note (optional)',
+  journalAddA11y: 'Add a new trade',
+  journalAddBtn: 'Add trade',
+  journalAddError: 'Could not add the trade — check your connection and try again',
+  journalCloseFailedTitle: 'Could not close',
+  journalCloseFailedBody: 'An error occurred while closing the trade, try again.',
+  journalLoadError: 'Could not load the journal',
+  journalEmpty: 'No trades logged yet',
+  journalOpenSuffix: '(open)',
+  journalCloseLinkA11y: 'Close {symbol} trade at the exit field price',
+  journalCloseLinkBtn: 'Close at exit field price',
+  backtestSub: 'MA · RSI · MACD · BB · Equity curve',
+  backtestSymbolA11y: 'Instrument symbol for the backtest',
+  backtestStrategyA11yPrefix: 'Strategy',
+  backtestRunA11y: 'Run the backtest',
+  backtestRunBtn: 'Run Backtest',
+  backtestRunError: 'Could not run the backtest — check your connection and try again',
+  backtestStatTrades: 'Trades: {n}',
+  backtestStatWinRate: 'Win rate: {pct}%',
+  backtestStatReturn: 'Total return: {pct}%',
+  backtestStatEquity: 'Final equity: {v}',
+  backtestStatDrawdown: 'Max drawdown: {pct}%',
+  backtestStatAvgWinLoss: 'Avg win/loss: {win}% / {loss}%',
+  indAlertsTitle: 'Indicator alerts',
+  indAlertsSub: 'RSI · MA cross · MACD',
+  indAlertsSymbolA11y: 'Instrument symbol',
+  indAlertsTypeA11yPrefix: 'Indicator alert type',
+  indAlertsTypeRsi: 'RSI',
+  indAlertsTypeMaCross: 'Moving average cross',
+  indAlertsTypeMacdCross: 'MACD cross',
+  indAlertsBelowA11y: 'Condition: RSI below threshold',
+  indAlertsAboveA11y: 'Condition: RSI above threshold',
+  indAlertsBelowChip: 'RSI below',
+  indAlertsAboveChip: 'RSI above',
+  indAlertsThresholdA11y: 'Indicator threshold value',
+  indAlertsCrossUpA11y: 'Condition: cross up',
+  indAlertsCrossDownA11y: 'Condition: cross down',
+  indAlertsAddA11y: 'Add indicator alert',
+  indAlertsAddBtn: 'Add alert',
+  indAlertsAddError: 'Could not add the indicator alert — check your connection and try again',
+  indAlertsLoadError: 'Could not load indicator alerts',
+  indAlertsEmpty: 'No indicator alerts yet',
+  indAlertsDeleteConfirmTitle: 'Delete the indicator alert?',
+  indAlertsDeleteFailedTitle: 'Could not delete',
+  indAlertsDeleteFailedBody: 'An error occurred while deleting the indicator alert, try again.',
+  indAlertsDeleteA11yPrefix: 'Delete indicator alert',
+  indAlertsPushTitle: 'MATRIX · Indicator alert',
+  calendarTitle: 'Economic calendar · Live',
+  calendarCurrencyA11yPrefix: 'Filter by currency',
+  calendarAllWord: 'All',
+  calendarImpactA11yPrefix: 'Filter by impact',
+  calendarAllShort: 'All',
+  calendarLoading: 'Loading the calendar…',
+  calendarLoadError: 'Could not load the calendar — check your connection',
+  calendarEmpty: 'No events match this filter',
+  layoutDefaultName: 'My layout',
+  layoutFallbackName: 'Layout',
+  layoutsTitle: 'Saved layouts',
+  layoutNamePlaceholder: 'Layout name',
+  layoutNameA11y: 'Layout name',
+  layoutSaveA11y: 'Save the current layout',
+  layoutSaveBtn: 'Save current layout',
+  layoutApplyA11yPrefix: 'Apply layout',
+  layoutDeleteConfirmTitle: 'Delete the layout?',
+  layoutDeleteA11yPrefix: 'Delete layout',
 };
 
 const enGB: Dict = {
@@ -915,6 +1218,111 @@ const ku: Dict = {
   alertsDeleteFailedTitle: 'سڕینەوە سەرکەوتوو نەبوو',
   alertsDeleteFailedBody: 'هەڵەیەک ڕوویدا لە کاتی سڕینەوەی ئاگادارکردنەوەکە، دووبارە هەوڵبدەرەوە.',
   alertsDeleteA11yPrefix: 'سڕینەوەی ئاگادارکردنەوە',
+  reportsTitle: 'ڕاپۆرتەکانی MATRIX',
+  reportsSubGrid: 'هەمان قەبارەی چوارچێوە · پێشوو/دواتر · دەستلێدان بۆ خوێندنەوە',
+  reportsSub: 'هەفتانە · کارایی · بۆچوونی پلاتفۆرم و ئامۆژگاری',
+  reportWeeklyTitle: 'ڕاپۆرتی هەفتانە',
+  reportWeeklyHint: 'قازانج و زیان',
+  reportPerformanceTitle: 'ڕاپۆرتی کارایی',
+  reportPerformanceHint: 'ئینزیباتی و جێبەجێکردن',
+  reportAdviceTitle: 'بۆچوونی MATRIX',
+  reportAdviceHint: 'ئامۆژگاری ئەم هەفتەیە',
+  reportRiskTitle: 'کورتەی مەترسی',
+  reportRiskHint: 'بەڕێوەبردنی سەرمایە',
+  reportOpenWord: 'کراوەیە ↓',
+  reportAiFallbackNote:
+    'نەکرا پەیوەندی بە زیرەکی دەستکردەوە بکرێت — ئەمە داڵدەیەکی گشتییە نەک شیکارییەکی تایبەت',
+  reportWinLabel: 'دڵنیایی خەمڵێنراوی دیمەن: {pct}%',
+  reportJournalDataLine:
+    'زانیاری ڕاستەقینەی دەفتەری مامەڵە: مامەڵە={trades} ڕێژەی سەرکەوتن={winRate}% PnL={pnl}% باشترین={best}% خراپترین={worst}%. پشت بەمە ببەستە لە ڕاپۆرتەکە.',
+  reportJournalEmptyLine: '(هێشتا هیچ مامەڵەیەک لە دەفتەرەکەدا تۆمار نەکراوە).',
+  reportFallbackWeekly:
+    'ڕاپۆرت لە دەفتەری مامەڵە{journalLine}\nمامەڵەکانت لە تابی PnL تۆماربکە بۆ ڕاپۆرتێکی وردتر.',
+  reportFallbackPerformance: 'هەڵسەنگاندن لەسەر بنەمای دەفتەرەکە{journalLine}',
+  reportFallbackRisk:
+    'کورتەی مەترسی{journalLine}\n1) مەترسی ≤1%.\n2) وەستانێکی ڕوون بەکاربهێنە.\n3) دوور بە لە هەواڵی قورس.',
+  reportFallbackAdvice:
+    'ئامۆژگاری MATRIX{journalLine}\n1) مامەڵە کراوەکانت پێداچوونەوەیان بۆ بکە.\n2) چوونەژوورەوەکان بە DXY ببەستەوە.\n3) مەترسی ≤1%.\n4) دوور بە لە هەواڵی کاریگەری بەرز.\n5) سەرنج بدە بە 2-3 جووت.',
+  journalTitle: 'دەفتەری مامەڵە · PnL ڕاستەقینە',
+  journalSub: 'مامەڵەکانت تۆماربکە — ڕاپۆرتەکان لە ڕۆژنووسەکەت دروستدەبن',
+  journalStatClosed: 'مامەڵە داخراوەکان: {n}',
+  journalStatWinRate: 'ڕێژەی سەرکەوتن: {pct}%',
+  journalStatTotalPnl: 'کۆی PnL: {pct}%',
+  journalStatBestWorst: 'باشترین/خراپترین: {best}% / {worst}%',
+  journalSideA11yPrefix: 'ئاراستەی مامەڵە',
+  journalSymbolPlaceholder: 'هێما',
+  journalSymbolA11y: 'هێمای مامەڵە',
+  journalEntryPlaceholder: 'چوونەژوورەوە',
+  journalEntryA11y: 'نرخی چوونەژوورەوە',
+  journalExitPlaceholder: 'دەرچوون (ئیختیاری)',
+  journalExitA11y: 'نرخی دەرچوون (ئیختیاری)',
+  journalNotePlaceholder: 'تێبینی',
+  journalNoteA11y: 'تێبینی مامەڵە (ئیختیاری)',
+  journalAddA11y: 'زیادکردنی مامەڵەیەکی نوێ',
+  journalAddBtn: 'زیادکردنی مامەڵە',
+  journalAddError: 'نەکرا مامەڵە زیادبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
+  journalCloseFailedTitle: 'داخستن سەرکەوتوو نەبوو',
+  journalCloseFailedBody: 'هەڵەیەک ڕوویدا لە کاتی داخستنی مامەڵەکە، دووبارە هەوڵبدەرەوە.',
+  journalLoadError: 'نەکرا تۆمارەکە باربکرێت',
+  journalEmpty: 'هێشتا هیچ مامەڵەیەک تۆمار نەکراوە',
+  journalOpenSuffix: '(کراوەیە)',
+  journalCloseLinkA11y: 'داخستنی مامەڵەی {symbol} بە نرخی خانەی دەرچوون',
+  journalCloseLinkBtn: 'داخستن بە نرخی خانەی دەرچوون',
+  backtestSub: 'MA · RSI · MACD · BB · کەوانەی Equity',
+  backtestSymbolA11y: 'هێمای ئامراز بۆ تاقیکردنەوەی دواوە',
+  backtestStrategyA11yPrefix: 'ستراتیژی',
+  backtestRunA11y: 'کارپێکردنی تاقیکردنەوەی دواوە',
+  backtestRunBtn: 'کارپێکردنی Backtest',
+  backtestRunError: 'نەکرا تاقیکردنەوەی دواوە کارپێبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
+  backtestStatTrades: 'مامەڵەکان: {n}',
+  backtestStatWinRate: 'ڕێژەی سەرکەوتن: {pct}%',
+  backtestStatReturn: 'کۆی گەڕانەوە: {pct}%',
+  backtestStatEquity: 'Equity کۆتایی: {v}',
+  backtestStatDrawdown: 'زۆرترین دابەزین: {pct}%',
+  backtestStatAvgWinLoss: 'ناوەندی قازانج/زیان: {win}% / {loss}%',
+  indAlertsTitle: 'ئاگادارکردنەوەی پێوەرەکان',
+  indAlertsSub: 'RSI · بڕینەوەی MA · MACD',
+  indAlertsSymbolA11y: 'هێمای ئامراز',
+  indAlertsTypeA11yPrefix: 'جۆری ئاگادارکردنەوەی پێوەر',
+  indAlertsTypeRsi: 'RSI',
+  indAlertsTypeMaCross: 'بڕینەوەی ناوەندی جوڵاو',
+  indAlertsTypeMacdCross: 'بڕینەوەی MACD',
+  indAlertsBelowA11y: 'مەرج: RSI لەژێر ئاستی سنوور',
+  indAlertsAboveA11y: 'مەرج: RSI لەسەر ئاستی سنوور',
+  indAlertsBelowChip: 'RSI خوارەوە',
+  indAlertsAboveChip: 'RSI سەرەوە',
+  indAlertsThresholdA11y: 'نرخی ئاستی سنووری پێوەر',
+  indAlertsCrossUpA11y: 'مەرج: بڕینەوەی بەرزبوونەوە',
+  indAlertsCrossDownA11y: 'مەرج: بڕینەوەی دابەزین',
+  indAlertsAddA11y: 'زیادکردنی ئاگادارکردنەوەی پێوەر',
+  indAlertsAddBtn: 'زیادکردنی ئاگادارکردنەوە',
+  indAlertsAddError:
+    'نەکرا ئاگادارکردنەوەی پێوەر زیادبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
+  indAlertsLoadError: 'نەکرا ئاگادارکردنەوەکانی پێوەر باربکرێن',
+  indAlertsEmpty: 'هێشتا هیچ ئاگادارکردنەوەیەکی پێوەر نییە',
+  indAlertsDeleteConfirmTitle: 'ئاگادارکردنەوەی پێوەرەکە بسڕدرێتەوە؟',
+  indAlertsDeleteFailedTitle: 'سڕینەوە سەرکەوتوو نەبوو',
+  indAlertsDeleteFailedBody: 'هەڵەیەک ڕوویدا لە کاتی سڕینەوەی ئاگادارکردنەوەی پێوەرەکە، دووبارە هەوڵبدەرەوە.',
+  indAlertsDeleteA11yPrefix: 'سڕینەوەی ئاگادارکردنەوەی پێوەر',
+  indAlertsPushTitle: 'MATRIX · ئاگادارکردنەوەی پێوەر',
+  calendarTitle: 'ڕۆژژمێری ئابووری · ڕاستەوخۆ',
+  calendarCurrencyA11yPrefix: 'پاڵاوتن بەپێی دراو',
+  calendarAllWord: 'هەمووی',
+  calendarImpactA11yPrefix: 'پاڵاوتن بەپێی کاریگەری',
+  calendarAllShort: 'هەموو',
+  calendarLoading: 'ڕۆژژمێرەکە بار دەکرێت…',
+  calendarLoadError: 'نەکرا ڕۆژژمێرەکە باربکرێت — پەیوەندییەکەت بپشکنە',
+  calendarEmpty: 'هیچ ڕووداوێک لەگەڵ ئەم فلتەرە نییە',
+  layoutDefaultName: 'نەخشەسازیم',
+  layoutFallbackName: 'نەخشەسازی',
+  layoutsTitle: 'نەخشەسازییە پاشەکەوتکراوەکان',
+  layoutNamePlaceholder: 'ناوی نەخشەسازی',
+  layoutNameA11y: 'ناوی نەخشەسازی',
+  layoutSaveA11y: 'پاشەکەوتکردنی نەخشەسازی ئێستا',
+  layoutSaveBtn: 'پاشەکەوتکردنی نەخشەسازی ئێستا',
+  layoutApplyA11yPrefix: 'جێبەجێکردنی نەخشەسازی',
+  layoutDeleteConfirmTitle: 'نەخشەسازییەکە بسڕدرێتەوە؟',
+  layoutDeleteA11yPrefix: 'سڕینەوەی نەخشەسازی',
 };
 
 export const DICTS: Record<LangId, Dict> = {

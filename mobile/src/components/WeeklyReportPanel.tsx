@@ -11,43 +11,56 @@ import { colors, radii, spacing, frameEmbed, buttons } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { FrameSizedGrid } from './FrameSizedGrid';
+import { useI18n } from '../i18n/I18nContext';
+import type { Dict } from '../i18n/locales';
 
 type ReportKind = 'weekly_pnl' | 'performance' | 'matrix_advice' | 'risk_brief';
 
-const KINDS: { id: ReportKind; title: string; hint: string; prompt: string }[] = [
-  {
-    id: 'weekly_pnl',
-    title: 'تقرير أسبوعي',
-    hint: 'أرباح وخسائر',
-    prompt:
-      'أعطني تقريراً أسبوعياً تعليمياً عن الأرباح والخسائر لمتداول فوركس يراقب EURUSD وGBPUSD وXAUUSD وDXY. اقترح هيكل: ملخص الأسبوع، أفضل/أسوأ يوم، نسبة المخاطرة، ونقاط تحسين. بالعربية باختصار.',
-  },
-  {
-    id: 'performance',
-    title: 'تقرير أداء',
-    hint: 'انضباط وتنفيذ',
-    prompt:
-      'قيّم أداء متداول MATRIX لهذا الأسبوع من ناحية الانضباط، اختيار التوقيت، إدارة المخاطر، وعلاقة القرارات بـ DXY. أعطِ درجة من 10 ونقاط قوة وضعف. بالعربية.',
-  },
-  {
-    id: 'matrix_advice',
-    title: 'رأي MATRIX',
-    hint: 'نصائح الأسبوع',
-    prompt:
-      'أنت منصة MATRIX للتحليل الفني. ما رأيك في أداء المتداول هذا الأسبوع؟ أعطِ 5 نصائح عملية للأسبوع القادم مرتبطة بالدولار والذهب والأزواج الرئيسية. بالعربية وواضح.',
-  },
-  {
-    id: 'risk_brief',
-    title: 'موجز مخاطر',
-    hint: 'إدارة رأس المال',
-    prompt:
-      'أعطني موجزاً قصيراً عن إدارة المخاطر لمتداول فوركس هذا الأسبوع: حجم الصفقة، وقف الخسارة، تجنب الأخبار، وعلاقة DXY بالذهب. بالعربية ونقاط واضحة.',
-  },
-];
+/** حقلا title/hint يُترجمان عبر Dict (معروضان للمستخدم) — حقل prompt يبقى تعليمة عربية ثابتة
+ * موجَّهة للذكاء الاصطناعي (يطلب صراحة "بالعربية") بصرف النظر عن لغة الواجهة المختارة: قرار نطاق
+ * متعمَّد (يماثل استبعاد ترجمة محتوى الخادم/الذكاء الاصطناعي المعتمد بباقي لوحات hub) — تغيير لغة
+ * استجابة الذكاء الاصطناعي فعلياً قرار منتج أعمق يحتاج تسلسلاً مخصَّصاً، لا يُنفَّذ هنا. راجع HANDOFF.md. */
+function buildKinds(
+  t: Dict
+): { id: ReportKind; title: string; hint: string; prompt: string }[] {
+  return [
+    {
+      id: 'weekly_pnl',
+      title: t.reportWeeklyTitle,
+      hint: t.reportWeeklyHint,
+      prompt:
+        'أعطني تقريراً أسبوعياً تعليمياً عن الأرباح والخسائر لمتداول فوركس يراقب EURUSD وGBPUSD وXAUUSD وDXY. اقترح هيكل: ملخص الأسبوع، أفضل/أسوأ يوم، نسبة المخاطرة، ونقاط تحسين. بالعربية باختصار.',
+    },
+    {
+      id: 'performance',
+      title: t.reportPerformanceTitle,
+      hint: t.reportPerformanceHint,
+      prompt:
+        'قيّم أداء متداول MATRIX لهذا الأسبوع من ناحية الانضباط، اختيار التوقيت، إدارة المخاطر، وعلاقة القرارات بـ DXY. أعطِ درجة من 10 ونقاط قوة وضعف. بالعربية.',
+    },
+    {
+      id: 'matrix_advice',
+      title: t.reportAdviceTitle,
+      hint: t.reportAdviceHint,
+      prompt:
+        'أنت منصة MATRIX للتحليل الفني. ما رأيك في أداء المتداول هذا الأسبوع؟ أعطِ 5 نصائح عملية للأسبوع القادم مرتبطة بالدولار والذهب والأزواج الرئيسية. بالعربية وواضح.',
+    },
+    {
+      id: 'risk_brief',
+      title: t.reportRiskTitle,
+      hint: t.reportRiskHint,
+      prompt:
+        'أعطني موجزاً قصيراً عن إدارة المخاطر لمتداول فوركس هذا الأسبوع: حجم الصفقة، وقف الخسارة، تجنب الأخبار، وعلاقة DXY بالذهب. بالعربية ونقاط واضحة.',
+    },
+  ];
+}
 
 type Props = { grid?: boolean };
 
 export function WeeklyReportPanel({ grid = false }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
+  const KINDS = buildKinds(t);
   const [loading, setLoading] = useState<ReportKind | null>(null);
   const [active, setActive] = useState<ReportKind | null>(null);
   const [text, setText] = useState('');
@@ -66,11 +79,16 @@ export function WeeklyReportPanel({ grid = false }: Props) {
     setAiFallback(false);
     let journalLine = '';
     try {
-      const t = await api.trades();
-      const s = t.stats as Record<string, number>;
-      journalLine = `\nبيانات دفتر الصفقات الفعلية: صفقات=${s.trade_count} نجاح=${s.win_rate}% PnL=${s.total_pnl_pct}% أفضل=${s.best}% أسوأ=${s.worst}%. اعتمد عليها في التقرير.`;
+      const tr = await api.trades();
+      const s = tr.stats as Record<string, number>;
+      journalLine = `\n${t.reportJournalDataLine
+        .replace('{trades}', String(s.trade_count))
+        .replace('{winRate}', String(s.win_rate))
+        .replace('{pnl}', String(s.total_pnl_pct))
+        .replace('{best}', String(s.best))
+        .replace('{worst}', String(s.worst))}`;
     } catch {
-      journalLine = '\n(لا توجد صفقات مسجّلة بعد في الدفتر).';
+      journalLine = `\n${t.reportJournalEmptyLine}`;
     }
     try {
       const res = await api.aiAsk(item.prompt + journalLine, 'EURUSD');
@@ -80,12 +98,12 @@ export function WeeklyReportPanel({ grid = false }: Props) {
     } catch {
       setText(
         kind === 'weekly_pnl'
-          ? `تقرير من دفتر الصفقات${journalLine}\nسجّل صفقاتك في تبويب PnL لبناء تقرير أدق.`
+          ? t.reportFallbackWeekly.replace('{journalLine}', journalLine)
           : kind === 'performance'
-            ? `تقييم مبني على الدفتر${journalLine}`
+            ? t.reportFallbackPerformance.replace('{journalLine}', journalLine)
             : kind === 'risk_brief'
-              ? `موجز مخاطر${journalLine}\n1) مخاطرة ≤1%.\n2) وقف واضح.\n3) تجنّب الأخبار الثقيلة.`
-              : `نصائح MATRIX${journalLine}\n1) راجع صفقاتك المفتوحة.\n2) اربط الدخول بـ DXY.\n3) مخاطرة ≤1%.\n4) تجنّب الأخبار عالية التأثير.\n5) ركّز على 2–3 أزواج.`
+              ? t.reportFallbackRisk.replace('{journalLine}', journalLine)
+              : t.reportFallbackAdvice.replace('{journalLine}', journalLine)
       );
       setAiFallback(true);
     } finally {
@@ -112,10 +130,12 @@ export function WeeklyReportPanel({ grid = false }: Props) {
         accessibilityState={{ disabled: loading != null }}
         accessibilityLabel={k.title}
       >
-        <Text style={styles.tileTitle}>{k.title}</Text>
-        <Text style={styles.tileHint}>{k.hint}</Text>
+        <Text style={[styles.tileTitle, { textAlign: align }]}>{k.title}</Text>
+        <Text style={[styles.tileHint, { textAlign: align }]}>{k.hint}</Text>
         {loading === k.id ? <ActivityIndicator color={colors.accent} /> : null}
-        {active === k.id && !loading ? <Text style={styles.tileOpen}>مفتوح ↓</Text> : null}
+        {active === k.id && !loading ? (
+          <Text style={[styles.tileOpen, { textAlign: align }]}>{t.reportOpenWord}</Text>
+        ) : null}
       </Pressable>
     ),
   }));
@@ -123,19 +143,19 @@ export function WeeklyReportPanel({ grid = false }: Props) {
   if (grid) {
     return (
       <View style={styles.wrap}>
-        <Text style={styles.title}>تقارير MATRIX</Text>
-        <Text style={styles.sub}>نفس حجم الفريمات · قدّم/أخّر · اضغط للقراءة</Text>
+        <Text style={[styles.title, { textAlign: align }]}>{t.reportsTitle}</Text>
+        <Text style={[styles.sub, { textAlign: align }]}>{t.reportsSubGrid}</Text>
         <FrameSizedGrid storageKey="matrix.tools.reports.order.v1" showAll items={tiles} />
         {text ? (
           <ScrollView style={styles.out} contentContainerStyle={{ padding: spacing.md, gap: spacing.sm }}>
             {aiFallback ? (
-              <Text style={styles.aiFallbackNote}>
-                تعذر الاتصال بالذكاء الاصطناعي — هذا قالب عام بدل تحليل مخصَّص
-              </Text>
+              <Text style={[styles.aiFallbackNote, { textAlign: align }]}>{t.reportAiFallbackNote}</Text>
             ) : null}
-            <Text style={styles.outText}>{text}</Text>
+            <Text style={[styles.outText, { textAlign: align }]}>{text}</Text>
             {win != null ? (
-              <Text style={styles.win}>ثقة تقديرية للسيناريو: {win}%</Text>
+              <Text style={[styles.win, { textAlign: align }]}>
+                {t.reportWinLabel.replace('{pct}', String(win))}
+              </Text>
             ) : null}
           </ScrollView>
         ) : null}
@@ -145,8 +165,8 @@ export function WeeklyReportPanel({ grid = false }: Props) {
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>تقارير MATRIX</Text>
-      <Text style={styles.sub}>أسبوعي · أداء · رأي المنصة ونصائح</Text>
+      <Text style={[styles.title, { textAlign: align }]}>{t.reportsTitle}</Text>
+      <Text style={[styles.sub, { textAlign: align }]}>{t.reportsSub}</Text>
       {KINDS.map((k) => (
         <Pressable
           accessibilityRole="button"
@@ -165,21 +185,21 @@ export function WeeklyReportPanel({ grid = false }: Props) {
           accessibilityState={{ disabled: loading != null }}
           accessibilityLabel={k.title}
         >
-          <Text style={styles.cardTitle}>{k.title}</Text>
-          <Text style={styles.cardHint}>{k.hint}</Text>
+          <Text style={[styles.cardTitle, { textAlign: align }]}>{k.title}</Text>
+          <Text style={[styles.cardHint, { textAlign: align }]}>{k.hint}</Text>
           {loading === k.id ? <ActivityIndicator color={colors.accent} /> : null}
         </Pressable>
       ))}
       {text ? (
         <ScrollView style={styles.out} contentContainerStyle={{ padding: spacing.md, gap: spacing.sm }}>
           {aiFallback ? (
-            <Text style={styles.aiFallbackNote}>
-              تعذر الاتصال بالذكاء الاصطناعي — هذا قالب عام بدل تحليل مخصَّص
-            </Text>
+            <Text style={[styles.aiFallbackNote, { textAlign: align }]}>{t.reportAiFallbackNote}</Text>
           ) : null}
-          <Text style={styles.outText}>{text}</Text>
+          <Text style={[styles.outText, { textAlign: align }]}>{text}</Text>
           {win != null ? (
-            <Text style={styles.win}>ثقة تقديرية للسيناريو: {win}%</Text>
+            <Text style={[styles.win, { textAlign: align }]}>
+              {t.reportWinLabel.replace('{pct}', String(win))}
+            </Text>
           ) : null}
         </ScrollView>
       ) : null}
