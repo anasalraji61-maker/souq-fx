@@ -4,7 +4,6 @@ from __future__ import annotations
 import re
 import time
 import xml.etree.ElementTree as ET
-from typing import Any
 
 import httpx
 

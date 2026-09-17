@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, buttons } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 
@@ -139,6 +139,7 @@ export function TradeJournalPanel() {
             },
           ]}
           onPress={() => setSide('buy')}
+          accessibilityLabel="اتجاه الصفقة: شراء"
         >
           <Text style={[styles.chipText, side === 'buy' && styles.chipTextOn]}>Buy</Text>
         </Pressable>
@@ -153,6 +154,7 @@ export function TradeJournalPanel() {
             },
           ]}
           onPress={() => setSide('sell')}
+          accessibilityLabel="اتجاه الصفقة: بيع"
         >
           <Text style={[styles.chipText, side === 'sell' && styles.chipTextOn]}>Sell</Text>
         </Pressable>
@@ -217,6 +219,7 @@ export function TradeJournalPanel() {
         accessibilityRole="button"
         style={({ pressed }) => [
           styles.btn,
+          busy && styles.btnDisabled,
           pressed && {
             opacity: buttons.pressedOpacity,
             transform: [{ scale: buttons.pressedScale }],
@@ -225,6 +228,7 @@ export function TradeJournalPanel() {
         onPress={() => void add()}
         disabled={busy}
         accessibilityState={{ disabled: busy }}
+        accessibilityLabel="إضافة صفقة جديدة"
       >
         <Text style={styles.btnText}>{busy ? '...' : 'إضافة صفقة'}</Text>
       </Pressable>
@@ -234,7 +238,7 @@ export function TradeJournalPanel() {
       {!loading && trades.length === 0 ? (
         <Text style={styles.empty}>{listError ? 'تعذر تحميل السجل' : 'لا صفقات مسجّلة بعد'}</Text>
       ) : null}
-      <ScrollView style={{ maxHeight: 220 }}>
+      <ScrollView style={{ maxHeight: 220 }} keyboardShouldPersistTaps="handled">
         {trades.map((t) => (
           <View key={t.id} style={styles.trade}>
             <Text style={styles.tradeMain}>
@@ -250,6 +254,7 @@ export function TradeJournalPanel() {
               <Pressable
                 accessibilityRole="button"
                 style={({ pressed }) => [
+                  busy && styles.closeLinkDisabled,
                   pressed && {
                     opacity: buttons.pressedOpacity,
                     transform: [{ scale: buttons.pressedScale }],
@@ -258,6 +263,7 @@ export function TradeJournalPanel() {
                 onPress={() => void closeOpen(t.id)}
                 disabled={busy}
                 accessibilityState={{ disabled: busy }}
+                accessibilityLabel={`إغلاق صفقة ${t.symbol} بسعر خانة الخروج`}
               >
                 <Text style={styles.closeLink}>إغلاق بسعر خانة الخروج</Text>
               </Pressable>
@@ -315,6 +321,7 @@ const styles = StyleSheet.create({
     elevation: buttons.elevation,
   },
   btnText: { color: colors.onAccent, fontWeight: '800' },
+  btnDisabled: { opacity: 0.4 },
   formError: {
     color: colors.bear,
     fontSize: 10,
@@ -332,4 +339,5 @@ const styles = StyleSheet.create({
   tradeMain: { color: colors.text, textAlign: 'right', fontWeight: '700', fontSize: 12 },
   tradeMeta: { color: colors.textDim, textAlign: 'right', fontSize: 11 },
   closeLink: { color: colors.accent, textAlign: 'right', fontSize: 11, fontWeight: '700' },
+  closeLinkDisabled: { opacity: 0.4 },
 });

@@ -126,6 +126,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         accessibilityRole="button"
         style={({ pressed }) => [
           styles.btn,
+          loading && styles.btnDisabled,
           pressed && {
             opacity: buttons.pressedOpacity,
             transform: [{ scale: buttons.pressedScale }],
@@ -237,6 +238,7 @@ const styles = StyleSheet.create({
     elevation: buttons.elevation,
   },
   btnText: { color: colors.onAccent, fontWeight: '800' },
+  btnDisabled: { opacity: 0.4 },
   error: {
     color: colors.bear,
     fontSize: 10,

@@ -131,6 +131,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.refresh,
+            loading && styles.refreshDisabled,
             pressed && {
               opacity: buttons.pressedOpacity,
               transform: [{ scale: buttons.pressedScale }],
@@ -252,6 +253,7 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
   },
   refreshText: { color: colors.accent, fontWeight: '700', fontSize: 11 },
+  refreshDisabled: { opacity: 0.4 },
   chips: { flexDirection: 'row-reverse', gap: 6, paddingVertical: 2 },
   chip: {
     paddingHorizontal: 10,

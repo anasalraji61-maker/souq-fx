@@ -6,6 +6,7 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons } from '../theme';
@@ -148,6 +149,8 @@ export function ToolsScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" />
+
       <View style={styles.head}>
         <Text style={styles.title}>أدوات MATRIX</Text>
         <Text style={styles.sub}>مجتمع وأخبار · تحليل وتنبيهات — قسمان قابلان للتبديل</Text>
@@ -511,7 +514,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  runBtnDisabled: { opacity: 0.45 },
+  runBtnDisabled: { opacity: 0.4 },
   runText: { color: colors.onAccent, fontWeight: '800' },
   scanHint: {
     color: colors.warn,

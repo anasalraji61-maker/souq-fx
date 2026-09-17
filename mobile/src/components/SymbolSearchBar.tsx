@@ -81,6 +81,7 @@ export function SymbolSearchBar({ onPick, placeholder = 'بحث رمز... EUR, X
             void addCustomSymbol(r.symbol);
             onPick(r.symbol);
           }}
+          accessibilityLabel={`اختيار الرمز: ${r.symbol} · ${r.name}`}
         >
           <Text style={styles.sym}>{r.symbol}</Text>
           <Text style={styles.name} numberOfLines={1}>

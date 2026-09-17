@@ -94,7 +94,7 @@ export function WatchlistPanel({
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.toolBtn,
-            addable.length === 0 && styles.toolBtnDisabled,
+            (!ready || addable.length === 0) && styles.toolBtnDisabled,
             pressed && {
               opacity: buttons.pressedOpacity,
               transform: [{ scale: buttons.pressedScale }],
@@ -113,6 +113,7 @@ export function WatchlistPanel({
           accessibilityState={{ disabled: !ready }}
           style={({ pressed }) => [
             styles.toolBtn,
+            !ready && styles.toolBtnDisabled,
             pressed && {
               opacity: buttons.pressedOpacity,
               transform: [{ scale: buttons.pressedScale }],

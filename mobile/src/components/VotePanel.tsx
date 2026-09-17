@@ -231,6 +231,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
             accessibilityRole="button"
             style={({ pressed }) => [
               styles.publishBtn,
+              pBusy && styles.publishBtnDisabled,
               pressed && {
                 opacity: buttons.pressedOpacity,
                 transform: [{ scale: buttons.pressedScale }],
@@ -250,7 +251,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
       {!notice && votes.length === 0 ? (
         <Text style={styles.empty}>لا توجد تصويتات نشطة حالياً</Text>
       ) : null}
-      <ScrollView contentContainerStyle={{ gap: 10 }}>
+      <ScrollView contentContainerStyle={{ gap: 10 }} keyboardShouldPersistTaps="handled">
         {votes.map((v) => {
           const total = v.agree + v.disagree || 1;
           const pct = Math.round((v.agree / total) * 100);
@@ -454,4 +455,5 @@ const styles = StyleSheet.create({
     elevation: buttons.elevation,
   },
   publishBtnText: { color: colors.onAccent, fontWeight: '800', fontSize: 12 },
+  publishBtnDisabled: { opacity: 0.4 },
 });

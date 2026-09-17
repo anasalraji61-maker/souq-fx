@@ -167,6 +167,7 @@ export function ChartFrame({
       onPress={onSyncActivate}
       disabled={!onSyncActivate}
       accessibilityState={{ disabled: !onSyncActivate }}
+      accessibilityLabel={onSyncActivate ? `تفعيل مزامنة شارت ${(label || series.symbol).toUpperCase()}` : undefined}
     >
       {showTimeframes && onTimeframeChange ? (
         <View style={styles.tfTopLeft}>

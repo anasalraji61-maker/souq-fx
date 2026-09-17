@@ -106,6 +106,7 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
             },
           ]}
           onPress={send}
+          accessibilityLabel="إرسال رسالة الدردشة الجماعية"
         >
           <Text style={styles.sendText}>إرسال</Text>
         </Pressable>

@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.accent,
   },
-  refreshDisabled: { opacity: 0.5 },
+  refreshDisabled: { opacity: 0.4 },
   refreshText: { color: colors.accent, fontWeight: '700', fontSize: 11 },
   chips: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6 },
   chip: {

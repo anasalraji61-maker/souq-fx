@@ -114,6 +114,7 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
             },
           ]}
           onPress={ask}
+          accessibilityLabel="إرسال سؤال لمساعد الذكاء الاصطناعي"
         >
           <Text style={styles.sendText}>اسأل</Text>
         </Pressable>
@@ -198,5 +199,5 @@ const styles = StyleSheet.create({
     elevation: buttons.elevation,
   },
   sendText: { color: colors.bg, fontWeight: '800', fontSize: 12 },
-  sendDisabled: { opacity: 0.5 },
+  sendDisabled: { opacity: 0.4 },
 });

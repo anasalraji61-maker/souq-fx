@@ -198,6 +198,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
         accessibilityRole="button"
         style={({ pressed }) => [
           styles.btn,
+          busy && styles.btnDisabled,
           pressed && {
             opacity: buttons.pressedOpacity,
             transform: [{ scale: buttons.pressedScale }],
@@ -211,51 +212,55 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
         <Text style={styles.btnText}>{busy ? '...' : 'إضافة تنبيه'}</Text>
       </Pressable>
       {formError ? <Text style={styles.formError}>{formError}</Text> : null}
-      {loading ? <ActivityIndicator color={colors.accent} /> : listError ? (
-        <Text style={styles.formError}>تعذر تحميل تنبيهات المؤشرات</Text>
+      {loading ? (
+        <ActivityIndicator color={colors.accent} />
       ) : (
-        <ScrollView style={{ maxHeight: 180 }}>
-          {alerts.map((a) => (
-            <View key={a.id} style={styles.item}>
-              <Text style={styles.itemText}>
-                {a.symbol} · {a.alert_type} · {a.condition}
-                {a.value != null ? ` ${a.value}` : ''}
-                {a.triggered ? ' ✓' : ''}
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                style={({ pressed }) => [
-                  pressed && {
-                    opacity: buttons.pressedOpacity,
-                    transform: [{ scale: buttons.pressedScale }],
-                  },
-                ]}
-                onPress={() =>
-                  Alert.alert(
-                    'حذف تنبيه المؤشر؟',
-                    `${a.symbol} · ${a.alert_type} · ${a.condition}`,
-                    [
-                      { text: 'إلغاء', style: 'cancel' },
-                      {
-                        text: 'حذف',
-                        style: 'destructive',
-                        onPress: () =>
-                          api
-                            .deleteIndicatorAlert(a.id)
-                            .then(refresh)
-                            .catch(() =>
-                              Alert.alert('تعذر الحذف', 'حدث خطأ أثناء حذف تنبيه المؤشر، حاول مرة أخرى.')
-                            ),
-                      },
-                    ]
-                  )
-                }
-                accessibilityLabel={`حذف تنبيه مؤشر: ${a.symbol} · ${a.alert_type} · ${a.condition}`}
-              >
-                <Text style={styles.del}>حذف</Text>
-              </Pressable>
-            </View>
-          ))}
+        <ScrollView style={{ maxHeight: 180 }} keyboardShouldPersistTaps="handled">
+          {alerts.length === 0 ? (
+            <Text style={styles.empty}>{listError ? 'تعذر تحميل تنبيهات المؤشرات' : 'لا تنبيهات مؤشرات بعد'}</Text>
+          ) : (
+            alerts.map((a) => (
+              <View key={a.id} style={styles.item}>
+                <Text style={styles.itemText}>
+                  {a.symbol} · {a.alert_type} · {a.condition}
+                  {a.value != null ? ` ${a.value}` : ''}
+                  {a.triggered ? ' ✓' : ''}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
+                  onPress={() =>
+                    Alert.alert(
+                      'حذف تنبيه المؤشر؟',
+                      `${a.symbol} · ${a.alert_type} · ${a.condition}`,
+                      [
+                        { text: 'إلغاء', style: 'cancel' },
+                        {
+                          text: 'حذف',
+                          style: 'destructive',
+                          onPress: () =>
+                            api
+                              .deleteIndicatorAlert(a.id)
+                              .then(refresh)
+                              .catch(() =>
+                                Alert.alert('تعذر الحذف', 'حدث خطأ أثناء حذف تنبيه المؤشر، حاول مرة أخرى.')
+                              ),
+                        },
+                      ]
+                    )
+                  }
+                  accessibilityLabel={`حذف تنبيه مؤشر: ${a.symbol} · ${a.alert_type} · ${a.condition}`}
+                >
+                  <Text style={styles.del}>حذف</Text>
+                </Pressable>
+              </View>
+            ))
+          )}
         </ScrollView>
       )}
     </View>
@@ -306,6 +311,8 @@ const styles = StyleSheet.create({
     elevation: buttons.elevation,
   },
   btnText: { color: colors.onAccent, fontWeight: '800' },
+  btnDisabled: { opacity: 0.4 },
+  empty: { color: colors.textDim, textAlign: 'right', marginTop: 8, fontSize: 12 },
   item: { flexDirection: 'row-reverse', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSoft },
   itemText: { color: colors.text, flex: 1, textAlign: 'right', fontSize: 12 },
   del: { color: colors.bear, fontWeight: '700' },

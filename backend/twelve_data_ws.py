@@ -8,7 +8,7 @@ from typing import Any
 
 import websockets
 
-from twelve_data import SYMBOL_MAP, td_symbol
+from twelve_data import SYMBOL_MAP
 
 WS_URL = "wss://ws.twelvedata.com/v1/quotes/price"
 

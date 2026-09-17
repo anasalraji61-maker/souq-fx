@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii } from '../theme';
 import { api } from '../api';
 
 type Props = {

@@ -1155,26 +1155,6 @@ def delete_indicator_alert(alert_id: str) -> bool:
     return cur.rowcount > 0
 
 
-def _migrate_indicator_alerts(c: sqlite3.Connection) -> None:
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS indicator_alerts (
-            id TEXT PRIMARY KEY,
-            user_id INTEGER,
-            symbol TEXT NOT NULL,
-            timeframe TEXT NOT NULL DEFAULT '15m',
-            alert_type TEXT NOT NULL,
-            condition TEXT NOT NULL,
-            value REAL,
-            fast_period INTEGER DEFAULT 9,
-            slow_period INTEGER DEFAULT 21,
-            note TEXT,
-            active INTEGER DEFAULT 1,
-            triggered INTEGER DEFAULT 0,
-            ts TEXT NOT NULL
-        )"""
-    )
-
-
 def _migrate_trades(c: sqlite3.Connection) -> None:
     c.execute(
         """CREATE TABLE IF NOT EXISTS trades (

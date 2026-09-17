@@ -182,6 +182,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
             accessibilityRole="button"
             style={({ pressed }) => [
               styles.addBtn,
+              busy && styles.addBtnDisabled,
               pressed && {
                 opacity: buttons.pressedOpacity,
                 transform: [{ scale: buttons.pressedScale }],
@@ -215,7 +216,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
       {loading ? (
         <ActivityIndicator color={colors.accent} style={{ marginTop: 12 }} />
       ) : (
-        <ScrollView style={{ maxHeight: 160 }}>
+        <ScrollView style={{ maxHeight: 160 }} keyboardShouldPersistTaps="handled">
           {alerts.length === 0 ? (
             <Text style={styles.empty}>{listError ? 'تعذر تحميل التنبيهات' : 'لا تنبيهات بعد'}</Text>
           ) : (
@@ -331,6 +332,7 @@ const styles = StyleSheet.create({
     elevation: buttons.elevation,
   },
   addText: { color: colors.onAccent, fontWeight: '800', fontSize: 12 },
+  addBtnDisabled: { opacity: 0.4 },
   empty: { color: colors.textDim, textAlign: 'right', marginTop: 8, fontSize: 12 },
   item: {
     flexDirection: 'row-reverse',

@@ -3,7 +3,6 @@ const path = require('path');
 const fs = require('fs');
 
 const WEB_URL = process.env.MATRIX_WEB_URL || 'http://127.0.0.1:8081';
-const API_URL = process.env.MATRIX_API_URL || 'http://127.0.0.1:8110';
 const isDev = process.env.MATRIX_DESKTOP_DEV === '1';
 // حزمة ويب مُصدَّرة (`npx expo export --platform web` من مشروع mobile/، تُنسَخ إلى هذا
 // المجلد باسم web-build/) — إن وُجدت (بعد بناء فعلي؛ غائبة افتراضياً بالمستودع) يُحمَّل

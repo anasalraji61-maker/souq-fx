@@ -49,6 +49,7 @@ export function ScreenerMini() {
             key={q.id}
             style={({ pressed }) => [
               styles.chip,
+              loading && styles.chipDisabled,
               pressed && {
                 opacity: buttons.pressedOpacity,
                 transform: [{ scale: buttons.pressedScale }],
@@ -111,6 +112,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   chipText: { color: colors.accent, fontWeight: '700', fontSize: 11 },
+  chipDisabled: { opacity: 0.4 },
   hit: {
     paddingHorizontal: 10,
     paddingVertical: 6,

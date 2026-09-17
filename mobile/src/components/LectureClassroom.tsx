@@ -450,6 +450,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               accessibilityRole="button"
               style={({ pressed }) => [
                 styles.askBtn,
+                asking && styles.askBtnDisabled,
                 pressed && {
                   opacity: buttons.pressedOpacity,
                   transform: [{ scale: buttons.pressedScale }],
@@ -622,6 +623,7 @@ const styles = StyleSheet.create({
     elevation: buttons.elevation,
   },
   askText: { color: colors.onWarnFill, fontWeight: '800' },
+  askBtnDisabled: { opacity: 0.4 },
   clarifyBox: {
     marginTop: spacing.md,
     backgroundColor: colors.accentSoft,
