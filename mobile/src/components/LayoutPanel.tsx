@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
-    gap: 8,
+    gap: spacing.sm,
   },
   title: { color: colors.text, fontWeight: '800', textAlign: 'right' },
   input: {
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     color: colors.text,
-    padding: 8,
+    padding: spacing.sm,
     textAlign: 'right',
   },
   btn: {
@@ -167,10 +167,10 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.borderSoft,
-    paddingTop: 8,
+    paddingTop: spacing.sm,
   },
   apply: { flex: 1 },
   rowName: { color: colors.text, fontWeight: '700', textAlign: 'right' },

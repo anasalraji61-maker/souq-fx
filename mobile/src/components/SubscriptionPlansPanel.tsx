@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'flex-end',
-    gap: 8,
+    gap: spacing.sm,
   },
   feature: { flex: 1, color: colors.textMuted, fontSize: 12, lineHeight: 19, textAlign: 'right' },
   check: { fontSize: 13, fontWeight: '900' },

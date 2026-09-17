@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.accent,
     borderRadius: radii.md,
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
     alignItems: 'center',
     shadowColor: buttons.shadowColor,
     shadowOpacity: buttons.shadowOpacity,

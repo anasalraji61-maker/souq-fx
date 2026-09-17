@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   title: { color: colors.text, fontWeight: '800', textAlign: 'right', fontSize: 14 },
-  filters: { flexDirection: 'row-reverse', gap: 6, paddingVertical: 4 },
+  filters: { flexDirection: 'row-reverse', gap: 6, paddingVertical: spacing.xs },
   chip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -148,9 +148,9 @@ const styles = StyleSheet.create({
   chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   chipText: { color: colors.textMuted, fontSize: 10, fontWeight: '700' },
   chipTextOn: { color: colors.accent },
-  empty: { color: colors.textDim, textAlign: 'right', fontSize: 11, paddingVertical: 8 },
-  row: { flexDirection: 'row-reverse', alignItems: 'flex-start', gap: 8, paddingVertical: 6 },
-  dot: { width: 8, height: 8, borderRadius: 4, marginTop: 4 },
+  empty: { color: colors.textDim, textAlign: 'right', fontSize: 11, paddingVertical: spacing.sm },
+  row: { flexDirection: 'row-reverse', alignItems: 'flex-start', gap: spacing.sm, paddingVertical: 6 },
+  dot: { width: 8, height: 8, borderRadius: 4, marginTop: spacing.xs },
   evTitle: { color: colors.text, textAlign: 'right', fontSize: 12, fontWeight: '600' },
   meta: { color: colors.textDim, textAlign: 'right', fontSize: 10, marginTop: 2 },
 });

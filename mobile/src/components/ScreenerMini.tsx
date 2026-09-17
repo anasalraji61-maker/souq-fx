@@ -67,7 +67,7 @@ export function ScreenerMini() {
       {loading ? <ActivityIndicator color={colors.accent} size="small" /> : null}
       {!loading && error ? <Text style={styles.errorNote}>تعذر تشغيل الفحص — حاول لاحقاً</Text> : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={{ flexDirection: 'row-reverse', gap: 8 }}>
+        <View style={{ flexDirection: 'row-reverse', gap: spacing.sm }}>
           {hits.map((h) => (
             <View key={h.symbol} style={styles.hit}>
               <Text style={styles.sym}>{h.symbol}</Text>
@@ -98,14 +98,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
-    gap: 8,
+    gap: spacing.sm,
   },
   title: { color: colors.textMuted, fontWeight: '800', textAlign: 'right', fontSize: 12 },
   errorNote: { color: colors.warn, textAlign: 'right', fontSize: 11 },
   row: { flexDirection: 'row-reverse', gap: 6 },
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderRadius: radii.sm,
     backgroundColor: colors.bgPanel,
     borderWidth: 1,

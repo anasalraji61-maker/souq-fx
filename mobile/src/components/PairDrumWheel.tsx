@@ -7,7 +7,7 @@ import {
   Platform,
   PanResponder,
 } from 'react-native';
-import { colors, radii, buttons } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { WATCHLIST } from '../chart/watchlist';
 import { loadWatchlistItems } from '../chart/watchlistStore';
 import { playSoftClick, unlockSoftClick } from '../audio/playSoftClick';
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.controlBg,
     overflow: 'hidden',
-    paddingVertical: 4,
+    paddingVertical: spacing.xs,
     paddingHorizontal: 5,
     gap: 2,
   },
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: spacing.sm,
   },
   midText: {
     color: colors.accent,

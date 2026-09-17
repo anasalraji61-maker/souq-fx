@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { colors, radii, buttons } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 
@@ -276,7 +276,7 @@ export function TradeJournalPanel() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 8 },
+  wrap: { gap: spacing.sm },
   title: { color: colors.text, fontWeight: '900', fontSize: 16, textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
   stats: {
@@ -288,10 +288,10 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   stat: { color: colors.text, textAlign: 'right', fontWeight: '600', fontSize: 12 },
-  row: { flexDirection: 'row-reverse', gap: 8 },
+  row: { flexDirection: 'row-reverse', gap: spacing.sm },
   chip: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
     borderRadius: radii.sm,
     borderWidth: 1,
     borderColor: colors.border,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   btn: {
     backgroundColor: colors.accent,
     borderRadius: radii.sm,
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
     alignItems: 'center',
     shadowColor: buttons.shadowColor,
     shadowOpacity: buttons.shadowOpacity,
@@ -327,11 +327,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     textAlign: 'right',
-    marginTop: 4,
+    marginTop: spacing.xs,
   },
-  empty: { color: colors.textDim, textAlign: 'right', marginTop: 8, fontSize: 12 },
+  empty: { color: colors.textDim, textAlign: 'right', marginTop: spacing.sm, fontSize: 12 },
   trade: {
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
     gap: 2,

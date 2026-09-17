@@ -363,7 +363,7 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
           ) : (
             <>
               {loading ? (
-                <ActivityIndicator color={colors.accent} style={{ marginVertical: 12 }} />
+                <ActivityIndicator color={colors.accent} style={{ marginVertical: spacing.md }} />
               ) : null}
               {err ? <Text style={styles.err}>{err}</Text> : null}
 
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
   headBar: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     minHeight: 52,
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontWeight: '900', fontSize: 13, textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 9, textAlign: 'right', marginTop: 1 },
   refresh: { color: colors.accent, fontWeight: '800', fontSize: 11 },
-  body: { paddingHorizontal: spacing.md, paddingBottom: spacing.md, gap: 8 },
+  body: { paddingHorizontal: spacing.md, paddingBottom: spacing.md, gap: spacing.sm },
   guestHint: { color: colors.textMuted, fontSize: 11, textAlign: 'right' },
   err: { color: colors.bear, fontSize: 11, textAlign: 'right' },
   scrollPad: { paddingVertical: 6 },
@@ -433,12 +433,12 @@ const styles = StyleSheet.create({
     minWidth: 780,
     alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.md,
     backgroundColor: colors.treeCanvasBg,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.borderSoft,
-    gap: 12,
+    gap: spacing.md,
   },
   levelBlock: { width: '100%', alignItems: 'center', gap: 6 },
   levelTitle: { fontSize: 11, fontWeight: '900', textAlign: 'center' },
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: spacing.sm,
   },
   sideCol: {
     flex: 1,
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 8,
+    gap: spacing.sm,
     maxWidth: 340,
   },
   levelConnect: {
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
     minHeight: 64,
     borderRadius: 8,
     borderWidth: 1.5,
-    paddingHorizontal: 8,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     alignItems: 'center',
     justifyContent: 'center',
@@ -525,18 +525,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
     paddingVertical: 6,
-    paddingHorizontal: 4,
+    paddingHorizontal: spacing.xs,
     minHeight: 28,
   },
   slotGo: {
-    marginTop: 4,
+    marginTop: spacing.xs,
     minWidth: 36,
     height: 24,
     borderRadius: 6,
     backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: spacing.sm,
     shadowColor: buttons.shadowColor,
     shadowOpacity: buttons.shadowOpacity,
     shadowRadius: buttons.shadowRadius,
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
   trunkHint: { color: colors.textDim, fontSize: 9, marginTop: 2 },
   youBox: {
     minWidth: 160,
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
     paddingHorizontal: 18,
     borderRadius: radii.sm,
     borderWidth: 2,

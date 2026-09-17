@@ -36,7 +36,7 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
       {!stale && news.length === 0 ? (
         <Text style={styles.empty}>لا توجد أخبار حالياً</Text>
       ) : null}
-      <ScrollView contentContainerStyle={{ gap: 8 }}>
+      <ScrollView contentContainerStyle={{ gap: spacing.sm }}>
         {news.map((n) => (
           <View key={n.id} style={styles.card}>
             <View style={styles.row}>
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     fontSize: 11,
     textAlign: 'center',
-    paddingVertical: 16,
+    paddingVertical: spacing.lg,
   },
   card: {
     backgroundColor: colors.bgElevated,
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  impact: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
+  impact: { borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 2 },
   impactText: { color: colors.onWarnFill, fontWeight: '800', fontSize: 10 },
   when: { color: colors.textDim, fontSize: 11 },
   headline: {
@@ -127,5 +127,5 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     lineHeight: 20,
   },
-  pairs: { color: colors.dxy, fontSize: 11, marginTop: 4, textAlign: 'right' },
+  pairs: { color: colors.dxy, fontSize: 11, marginTop: spacing.xs, textAlign: 'right' },
 });

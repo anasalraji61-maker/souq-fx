@@ -69,7 +69,7 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
       ) : (
         <Text style={styles.title}>مساعد ذكاء اصطناعي</Text>
       )}
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 8 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: spacing.sm }}>
         {turns.map((t, i) => (
           <View
             key={i}
@@ -165,12 +165,12 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   winBox: {
-    marginTop: 8,
+    marginTop: spacing.sm,
     alignSelf: 'flex-start',
     backgroundColor: colors.bullSoft,
     borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   win: { color: colors.bull, fontWeight: '800', fontSize: 11 },
   winDisclaimer: { color: colors.textDim, fontSize: 9, marginTop: 3, textAlign: 'right' },
@@ -183,14 +183,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     color: colors.text,
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
     fontSize: 13,
     textAlign: 'right',
   },
   send: {
     backgroundColor: colors.dxy,
     borderRadius: radii.sm,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.md,
     justifyContent: 'center',
     shadowColor: buttons.shadowColor,
     shadowOpacity: buttons.shadowOpacity,

@@ -161,7 +161,7 @@ export function MessagesScreen() {
       <FlatList
         data={peers}
         keyExtractor={(p) => p.user}
-        contentContainerStyle={{ padding: spacing.md, gap: 8, flexGrow: 1 }}
+        contentContainerStyle={{ padding: spacing.md, gap: spacing.sm, flexGrow: 1 }}
         ListEmptyComponent={
           !notice ? <Text style={styles.empty}>لا توجد محادثات بعد</Text> : null
         }
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.borderSoft,
   },
   brand: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: 'right' },
-  sub: { color: colors.textMuted, fontSize: 12, marginTop: 4, textAlign: 'right' },
+  sub: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs, textAlign: 'right' },
   notice: {
     color: colors.warn,
     fontSize: 10,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   peerCard: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.md,
     backgroundColor: colors.bgElevated,
     borderRadius: radii.md,
     borderWidth: 1,
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
   },
   back: { color: colors.accent, fontWeight: '700' },
   peerName: { color: colors.text, fontWeight: '800', fontSize: 18 },
-  thread: { padding: spacing.md, gap: 8 },
+  thread: { padding: spacing.md, gap: spacing.sm },
   bubble: {
     maxWidth: '80%',
     borderRadius: radii.md,
@@ -272,10 +272,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   msg: { color: colors.text, fontSize: 14, textAlign: 'right', lineHeight: 20 },
-  ts: { color: colors.textDim, fontSize: 10, marginTop: 4 },
+  ts: { color: colors.textDim, fontSize: 10, marginTop: spacing.xs },
   composer: {
     flexDirection: 'row-reverse',
-    gap: 8,
+    gap: spacing.sm,
     padding: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.borderSoft,
@@ -287,14 +287,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     color: colors.text,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.md,
     paddingVertical: 10,
     textAlign: 'right',
   },
   send: {
     backgroundColor: colors.accent,
     borderRadius: radii.md,
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.lg,
     justifyContent: 'center',
     shadowColor: buttons.shadowColor,
     shadowOpacity: buttons.shadowOpacity,

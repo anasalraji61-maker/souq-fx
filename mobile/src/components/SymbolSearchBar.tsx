@@ -94,7 +94,7 @@ export function SymbolSearchBar({ onPick, placeholder = 'بحث رمز... EUR, X
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 4, marginBottom: spacing.sm },
+  wrap: { gap: spacing.xs, marginBottom: spacing.sm },
   input: {
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
@@ -102,13 +102,13 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     color: colors.text,
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
     textAlign: 'right',
     fontSize: 13,
   },
   row: {
-    paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
     borderRadius: radii.sm,
     backgroundColor: colors.bgElevated,
     borderWidth: 1,
@@ -121,6 +121,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     textAlign: 'right',
-    marginTop: 4,
+    marginTop: spacing.xs,
   },
 });

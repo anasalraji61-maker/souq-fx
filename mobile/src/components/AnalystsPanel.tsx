@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
-    gap: 8,
+    gap: spacing.sm,
     overflow: 'hidden',
   },
   wrapInFrame: {
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 1,
     borderColor: colors.borderSoft,
-    gap: 4,
+    gap: spacing.xs,
   },
   dir: { fontWeight: '900', fontSize: 18, textAlign: 'right' },
   meta: { color: colors.textMuted, fontSize: 11, textAlign: 'right' },
@@ -167,8 +167,8 @@ const styles = StyleSheet.create({
   list: { maxHeight: 120, flexGrow: 0 },
   row: {
     flexDirection: 'row-reverse',
-    gap: 8,
-    paddingVertical: 8,
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.borderSoft,
   },
@@ -178,5 +178,5 @@ const styles = StyleSheet.create({
   badge: { fontWeight: '900', fontSize: 12 },
   target: { color: colors.textMuted, fontSize: 10 },
   horizon: { color: colors.textDim, fontSize: 9 },
-  note: { color: colors.textDim, fontSize: 9, textAlign: 'right', marginTop: 4 },
+  note: { color: colors.textDim, fontSize: 9, textAlign: 'right', marginTop: spacing.xs },
 });

@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   top: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.md,
     padding: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -146,5 +146,5 @@ const styles = StyleSheet.create({
     minHeight: 200,
   },
   cellPhone: { width: '100%' },
-  sym: { color: colors.accent, fontWeight: '800', textAlign: 'right', marginBottom: 4 },
+  sym: { color: colors.accent, fontWeight: '800', textAlign: 'right', marginBottom: spacing.xs },
 });

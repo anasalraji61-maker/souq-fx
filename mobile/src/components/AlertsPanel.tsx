@@ -214,7 +214,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
       {formError ? <Text style={styles.formError}>{formError}</Text> : null}
 
       {loading ? (
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 12 }} />
+        <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.md }} />
       ) : (
         <ScrollView style={{ maxHeight: 160 }} keyboardShouldPersistTaps="handled">
           {alerts.length === 0 ? (
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     textAlign: 'right',
-    marginTop: 4,
+    marginTop: spacing.xs,
   },
   form: { marginTop: spacing.sm, gap: 6 },
   input: {
@@ -303,14 +303,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     color: colors.text,
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
     textAlign: 'right',
     fontSize: 13,
   },
   row: { flexDirection: 'row-reverse', gap: 6 },
   cond: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
     borderRadius: radii.sm,
     borderWidth: 1,
     borderColor: colors.border,
@@ -333,12 +333,12 @@ const styles = StyleSheet.create({
   },
   addText: { color: colors.onAccent, fontWeight: '800', fontSize: 12 },
   addBtnDisabled: { opacity: 0.4 },
-  empty: { color: colors.textDim, textAlign: 'right', marginTop: 8, fontSize: 12 },
+  empty: { color: colors.textDim, textAlign: 'right', marginTop: spacing.sm, fontSize: 12 },
   item: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 8,
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.borderSoft,
   },

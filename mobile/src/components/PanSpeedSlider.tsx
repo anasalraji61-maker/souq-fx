@@ -8,7 +8,7 @@ import {
   type LayoutChangeEvent,
   type GestureResponderEvent,
 } from 'react-native';
-import { colors, buttons } from '../theme';
+import { colors, spacing, buttons } from '../theme';
 import { clampPanSpeed } from '../chart/panSpeed';
 
 type Props = {
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   wrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: spacing.xs,
     paddingHorizontal: 5,
     paddingVertical: 3,
     borderRadius: 8,

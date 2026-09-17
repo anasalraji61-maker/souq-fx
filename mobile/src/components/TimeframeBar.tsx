@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, Pressable, StyleSheet, ScrollView } from 'react-native';
-import { colors, radii, buttons } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { TIMEFRAMES, TIMEFRAME_LABELS, type Timeframe } from '../timeframes';
 
 type Props = {
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: spacing.xs,
     paddingVertical: 2,
   },
   chip: {
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   },
   chipCompact: {
     paddingHorizontal: 6,
-    paddingVertical: 4,
+    paddingVertical: spacing.xs,
     minWidth: 30,
   },
   chipActive: {

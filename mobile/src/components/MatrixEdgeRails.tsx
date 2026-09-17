@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import { colors, radii, buttons } from '../theme';
+import { colors, radii, spacing, buttons } from '../theme';
 import { DRAW_TOOLS, LENSES, type DrawTool, type LensMode } from '../chart/types';
 import type { EdgePanelId } from './MatrixSidePanel';
 import type { FrameLayoutCount, FrameLayoutShape } from './FrameSizedGrid';
@@ -316,14 +316,14 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     alignItems: 'center',
   },
-  scroll: { alignItems: 'center', gap: 2, paddingBottom: 12 },
+  scroll: { alignItems: 'center', gap: 2, paddingBottom: spacing.md },
   railTitle: {
     color: colors.textMuted,
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.3,
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: spacing.xs,
   },
   railTag: {
     width: 44,
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   railMarkOn: { color: colors.accent },
   railTip: { color: colors.textDim, fontSize: 8, fontWeight: '700' },
   railTipOn: { color: colors.accent },
-  layoutGroup: { gap: 4, alignItems: 'center', marginBottom: 2 },
+  layoutGroup: { gap: spacing.xs, alignItems: 'center', marginBottom: 2 },
   layoutBtn: {
     width: 42,
     height: 34,

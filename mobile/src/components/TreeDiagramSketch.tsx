@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, radii } from '../theme';
+import { colors, radii, spacing } from '../theme';
 
 type Props = {
   youLabel?: string;
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.borderSoft,
-    padding: 12,
+    padding: spacing.md,
     alignItems: 'center',
     gap: 6,
   },
@@ -113,9 +113,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     alignSelf: 'stretch',
     textAlign: 'right',
-    marginBottom: 4,
+    marginBottom: spacing.xs,
   },
-  levelBand: { width: '100%', alignItems: 'center', gap: 4, marginVertical: 2 },
+  levelBand: { width: '100%', alignItems: 'center', gap: spacing.xs, marginVertical: 2 },
   levelTag: { fontSize: 10, fontWeight: '800', textAlign: 'center' },
   splitRow: {
     flexDirection: 'row',
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   leftLbl: { color: colors.dxy, fontSize: 9, fontWeight: '900' },
   rightLbl: { color: colors.treeRightTint, fontSize: 9, fontWeight: '900' },
   midLine: { width: 2, alignSelf: 'stretch', minHeight: 36, opacity: 0.55 },
-  railThin: { width: '85%', height: 2, opacity: 0.5, marginTop: 4 },
+  railThin: { width: '85%', height: 2, opacity: 0.5, marginTop: spacing.xs },
   numRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     fontSize: 10,
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: spacing.xs,
     lineHeight: 15,
   },
 });

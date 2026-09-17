@@ -160,7 +160,7 @@ export function CoursesScreen() {
                     تعذر تحميل المنهج الكامل — تُعرض محاضرة افتتاحية مؤقتة فقط
                   </Text>
                 ) : null}
-                <ScrollView style={{ maxHeight: 420 }} contentContainerStyle={{ gap: 12 }}>
+                <ScrollView style={{ maxHeight: 420 }} contentContainerStyle={{ gap: spacing.md }}>
                   {school?.levels.map((lv) => (
                     <View key={lv.level} style={styles.levelBox}>
                       <Text style={styles.levelTitle}>
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.borderSoft,
   },
   brand: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: 'right' },
-  sub: { color: colors.textMuted, fontSize: 12, marginTop: 4, textAlign: 'right' },
+  sub: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs, textAlign: 'right' },
   staleNote: {
     color: colors.warn,
     fontSize: 10,
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   desc: {
     color: colors.textMuted,
     fontSize: 13,
-    marginTop: 8,
+    marginTop: spacing.sm,
     textAlign: 'right',
     lineHeight: 20,
   },
@@ -276,11 +276,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 11,
     backgroundColor: 'rgba(56,189,248,0.12)',
-    paddingHorizontal: 8,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 3,
     borderRadius: 6,
   },
-  pipeline: { color: colors.textDim, fontSize: 11, marginTop: 8, textAlign: 'right' },
+  pipeline: { color: colors.textDim, fontSize: 11, marginTop: spacing.sm, textAlign: 'right' },
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'flex-end' },
   modal: {
     backgroundColor: colors.bgElevated,
@@ -294,8 +294,8 @@ const styles = StyleSheet.create({
   modalSchool: { color: colors.accent, fontWeight: '800', fontSize: 18, textAlign: 'right' },
   modalDesc: {
     color: colors.textMuted,
-    marginTop: 8,
-    marginBottom: 12,
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
     textAlign: 'right',
     lineHeight: 20,
   },
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'right',
     marginTop: -6,
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   levelBox: {
     backgroundColor: colors.bgPanel,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSoft,
     padding: spacing.md,
-    gap: 8,
+    gap: spacing.sm,
   },
   levelTitle: { color: colors.text, fontWeight: '800', textAlign: 'right' },
   lecRow: {
@@ -323,9 +323,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   lecTitle: { color: colors.text, fontWeight: '700', textAlign: 'right' },
-  lecMeta: { color: colors.textDim, fontSize: 11, marginTop: 4, textAlign: 'right' },
+  lecMeta: { color: colors.textDim, fontSize: 11, marginTop: spacing.xs, textAlign: 'right' },
   close: {
-    marginTop: 16,
+    marginTop: spacing.lg,
     backgroundColor: colors.accent,
     borderRadius: radii.md,
     paddingVertical: 14,

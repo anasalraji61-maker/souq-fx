@@ -248,7 +248,7 @@ export function FocusChartModal({
           {!phone ? (
             <ScrollView
               style={styles.watch}
-              contentContainerStyle={{ gap: 6, padding: 8 }}
+              contentContainerStyle={{ gap: 6, padding: spacing.sm }}
               keyboardShouldPersistTaps="handled"
             >
               <Text style={styles.watchTitle}>قائمة المراقبة</Text>
@@ -366,13 +366,13 @@ const styles = StyleSheet.create({
   top: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  topPhone: { paddingVertical: 7, gap: 8 },
+  topPhone: { paddingVertical: 7, gap: spacing.sm },
   closeButton: {
     width: 32,
     height: 32,
@@ -403,11 +403,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 11,
     textAlign: 'right',
-    marginBottom: 4,
+    marginBottom: spacing.xs,
   },
   watchHint: { color: colors.textDim, fontSize: 9, textAlign: 'right', marginBottom: 6 },
   watchItem: {
-    padding: 8,
+    padding: spacing.sm,
     borderRadius: radii.sm,
     borderWidth: 1,
     borderColor: colors.borderSoft,

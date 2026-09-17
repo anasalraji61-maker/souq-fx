@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
-    gap: 8,
+    gap: spacing.sm,
   },
   title: { color: colors.text, fontWeight: '800', textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row-reverse', gap: 6, flexWrap: 'wrap' },
   chip: {
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
     borderRadius: radii.sm,
     borderWidth: 1,
     borderColor: colors.border,
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   btn: {
     backgroundColor: colors.accent,
     borderRadius: radii.sm,
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
     alignItems: 'center',
     shadowColor: buttons.shadowColor,
     shadowOpacity: buttons.shadowOpacity,
@@ -312,8 +312,8 @@ const styles = StyleSheet.create({
   },
   btnText: { color: colors.onAccent, fontWeight: '800' },
   btnDisabled: { opacity: 0.4 },
-  empty: { color: colors.textDim, textAlign: 'right', marginTop: 8, fontSize: 12 },
-  item: { flexDirection: 'row-reverse', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSoft },
+  empty: { color: colors.textDim, textAlign: 'right', marginTop: spacing.sm, fontSize: 12 },
+  item: { flexDirection: 'row-reverse', justifyContent: 'space-between', paddingVertical: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSoft },
   itemText: { color: colors.text, flex: 1, textAlign: 'right', fontSize: 12 },
   del: { color: colors.bear, fontWeight: '700' },
 });

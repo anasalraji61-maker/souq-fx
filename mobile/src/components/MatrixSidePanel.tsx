@@ -229,9 +229,9 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontWeight: '900', fontSize: 14, textAlign: 'right', flex: 1 },
   close: { color: colors.accent, fontWeight: '800', fontSize: 13 },
   body: { padding: spacing.md, gap: 10, paddingBottom: 40 },
-  grid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 8 },
+  grid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: spacing.sm },
   cell: {
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.md,
     paddingVertical: 10,
     borderRadius: radii.sm,
     borderWidth: 1,

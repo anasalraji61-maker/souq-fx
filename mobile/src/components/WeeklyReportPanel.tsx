@@ -127,7 +127,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
         <Text style={styles.sub}>نفس حجم الفريمات · قدّم/أخّر · اضغط للقراءة</Text>
         <FrameSizedGrid storageKey="matrix.tools.reports.order.v1" showAll items={tiles} />
         {text ? (
-          <ScrollView style={styles.out} contentContainerStyle={{ padding: 12, gap: 8 }}>
+          <ScrollView style={styles.out} contentContainerStyle={{ padding: spacing.md, gap: spacing.sm }}>
             {aiFallback ? (
               <Text style={styles.aiFallbackNote}>
                 تعذر الاتصال بالذكاء الاصطناعي — هذا قالب عام بدل تحليل مخصَّص
@@ -171,7 +171,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
         </Pressable>
       ))}
       {text ? (
-        <ScrollView style={styles.out} contentContainerStyle={{ padding: 12, gap: 8 }}>
+        <ScrollView style={styles.out} contentContainerStyle={{ padding: spacing.md, gap: spacing.sm }}>
           {aiFallback ? (
             <Text style={styles.aiFallbackNote}>
               تعذر الاتصال بالذكاء الاصطناعي — هذا قالب عام بدل تحليل مخصَّص
@@ -190,7 +190,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
 const styles = StyleSheet.create({
   wrap: { gap: 10 },
   title: { color: colors.text, fontWeight: '900', fontSize: 18, textAlign: 'right' },
-  sub: { color: colors.textDim, textAlign: 'right', fontSize: 12, marginBottom: 4 },
+  sub: { color: colors.textDim, textAlign: 'right', fontSize: 12, marginBottom: spacing.xs },
   tile: {
     flex: 1,
     height: '100%',
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
-    gap: 4,
+    gap: spacing.xs,
   },
   cardDisabled: { opacity: 0.4 },
   cardOn: { borderColor: colors.accent },

@@ -69,7 +69,7 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
       {!notice && messages.length === 0 ? (
         <Text style={styles.empty}>لا توجد رسائل بعد — كن أول من يكتب</Text>
       ) : null}
-      <ScrollView style={styles.scroll} contentContainerStyle={{ gap: 8 }}>
+      <ScrollView style={styles.scroll} contentContainerStyle={{ gap: spacing.sm }}>
         {messages.map((m) => (
           <View
             key={m.id}
@@ -146,13 +146,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     textAlign: 'right',
-    marginTop: 4,
+    marginTop: spacing.xs,
   },
   empty: {
     color: colors.textDim,
     fontSize: 11,
     textAlign: 'center',
-    paddingVertical: 16,
+    paddingVertical: spacing.lg,
   },
   scroll: { flex: 1 },
   bubble: {
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   mine: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   user: { color: colors.accent, fontSize: 11, fontWeight: '700', textAlign: 'right' },
   msg: { color: colors.text, fontSize: 12, marginTop: 2, textAlign: 'right', lineHeight: 18 },
-  ts: { color: colors.textDim, fontSize: 10, marginTop: 4, textAlign: 'left' },
+  ts: { color: colors.textDim, fontSize: 10, marginTop: spacing.xs, textAlign: 'left' },
   row: { flexDirection: 'row-reverse', gap: 6, marginTop: spacing.sm },
   input: {
     flex: 1,
@@ -175,14 +175,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     color: colors.text,
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
     fontSize: 13,
     textAlign: 'right',
   },
   send: {
     backgroundColor: colors.accent,
     borderRadius: radii.sm,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.md,
     justifyContent: 'center',
     shadowColor: buttons.shadowColor,
     shadowOpacity: buttons.shadowOpacity,

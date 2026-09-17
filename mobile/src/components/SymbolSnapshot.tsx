@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, radii } from '../theme';
+import { colors, radii, spacing } from '../theme';
 import { api } from '../api';
 
 type Props = {
@@ -50,8 +50,8 @@ export function SymbolSnapshot({ symbol, timeframe = '15m' }: Props) {
 const styles = StyleSheet.create({
   wrap: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6 },
   chip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     borderRadius: radii.sm,
     backgroundColor: colors.bgPanel,
     borderWidth: 1,
