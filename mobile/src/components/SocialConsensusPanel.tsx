@@ -4,6 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api } from '../api';
 import { formatPrice } from '../chart/math';
+import { useI18n } from '../i18n/I18nContext';
+import type { Dict } from '../i18n/locales';
 
 type Props = { symbol: string; timeframe?: string; embedded?: boolean };
 
@@ -19,15 +21,18 @@ type Vote = {
 
 const PREFS_KEY = 'matrix.socialSources.v1';
 
-const PLATFORM_AR: Record<string, string> = {
-  telegram: 'تيليجرام',
-  facebook: 'فيسبوك',
-  instagram: 'إنستغرام',
-  x: 'X',
-  youtube: 'يوتيوب',
-  discord: 'ديسكورد',
-  app: 'تطبيق',
-};
+function platformLabel(platform: string, t: Dict): string {
+  const map: Record<string, string> = {
+    telegram: t.socialPlatformTelegram,
+    facebook: t.socialPlatformFacebook,
+    instagram: t.socialPlatformInstagram,
+    x: t.socialPlatformX,
+    youtube: t.socialPlatformYoutube,
+    discord: t.socialPlatformDiscord,
+    app: t.socialPlatformApp,
+  };
+  return map[platform] ?? platform;
+}
 
 function dirColor(d: string) {
   if (d === 'buy') return colors.bull;
@@ -35,13 +40,15 @@ function dirColor(d: string) {
   return colors.textMuted;
 }
 
-function dirLabel(d: string) {
-  if (d === 'buy') return 'شراء';
-  if (d === 'sell') return 'بيع';
-  return 'محايد';
+function dirLabel(d: string, t: Dict) {
+  if (d === 'buy') return t.dirBuy;
+  if (d === 'sell') return t.dirSell;
+  return t.dirNeutral;
 }
 
 export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const [sources, setSources] = useState<Source[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -113,11 +120,11 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
       setNote(res.disclaimer);
     } catch {
       setVotes([]);
-      setNote('تعذر حساب إجماع القنوات');
+      setNote(t.socialComputeError);
     } finally {
       setLoading(false);
     }
-  }, [symbol, timeframe, selected]);
+  }, [symbol, timeframe, selected, t.socialComputeError]);
 
   useEffect(() => {
     if (!ready || !selected.length) return;
@@ -126,7 +133,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
 
   return (
     <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
-      <View style={[styles.head, embedded && frameEmbedHead]}>
+      <View style={[styles.head, rtl && styles.headRtl, embedded && frameEmbedHead]}>
         <Pressable
           accessibilityRole="button"
           style={({ pressed }) => [
@@ -140,21 +147,25 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
           onPress={() => void run()}
           disabled={loading}
           accessibilityState={{ disabled: loading }}
-          accessibilityLabel="احسب إجماع المصادر المختارة"
+          accessibilityLabel={t.socialComputeA11y}
           hitSlop={8}
         >
-          <Text style={styles.refreshText}>احسب</Text>
+          <Text style={styles.refreshText}>{t.socialComputeBtn}</Text>
         </Pressable>
         <View style={embedded ? frameEmbedTitleBlock : undefined}>
-          <Text style={[styles.title, embedded && frameEmbedTitle]}>المعدل التقريبي للتوصيات والصفقات</Text>
-          <Text style={[styles.sub, embedded && frameEmbedSub]}>تيليجرام · فيسبوك · إنستغرام · X · تطبيقات</Text>
+          <Text style={[styles.title, embedded && frameEmbedTitle, { textAlign: align }]}>
+            {t.socialTitle}
+          </Text>
+          <Text style={[styles.sub, embedded && frameEmbedSub, { textAlign: align }]}>{t.socialSub}</Text>
         </View>
       </View>
 
-      <Text style={styles.pickHint}>اختر المصادر التي تتابعها — ثم يُحسب المعدل العام</Text>
-      {sourcesError ? <Text style={styles.sourcesError}>تعذر تحميل قائمة المصادر — تحقق من الاتصال</Text> : null}
+      <Text style={[styles.pickHint, { textAlign: align }]}>{t.socialPickHint}</Text>
+      {sourcesError ? (
+        <Text style={[styles.sourcesError, { textAlign: align }]}>{t.socialSourcesError}</Text>
+      ) : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 44 }}>
-        <View style={styles.chips}>
+        <View style={[styles.chips, rtl && styles.chipsRtl]}>
           {sources.map((s) => {
             const on = selected.includes(s.id);
             return (
@@ -170,10 +181,10 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
                   },
                 ]}
                 onPress={() => toggle(s.id)}
-                accessibilityLabel={`مصدر: ${PLATFORM_AR[s.platform] ?? s.platform} · ${s.name}${on ? ' · مفعّل' : ''}`}
+                accessibilityLabel={`${t.a11ySourcePrefix}: ${platformLabel(s.platform, t)} · ${s.name}${on ? ' · ' + t.enabledWord : ''}`}
               >
                 <Text style={[styles.chipText, on && styles.chipTextOn]} numberOfLines={1}>
-                  {PLATFORM_AR[s.platform] ?? s.platform} · {s.name}
+                  {platformLabel(s.platform, t)} · {s.name}
                 </Text>
               </Pressable>
             );
@@ -184,38 +195,40 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
 
       <View style={styles.consensus}>
-        <Text style={[styles.dir, { color: dirColor(direction) }]}>{dirLabel(direction)}</Text>
-        <Text style={styles.meta}>
-          ثقة {(confidence * 100).toFixed(0)}% · معدل {avg >= 0 ? '+' : ''}
-          {avg.toFixed(2)} · مصادر {selected.length}
+        <Text style={[styles.dir, { color: dirColor(direction), textAlign: align }]}>
+          {dirLabel(direction, t)}
         </Text>
-        <Text style={styles.meta}>
-          شراء {split.buy} · بيع {split.sell} · محايد {split.neutral}
+        <Text style={[styles.meta, { textAlign: align }]}>
+          {t.confidenceLabel} {(confidence * 100).toFixed(0)}% · {t.avgLabel} {avg >= 0 ? '+' : ''}
+          {avg.toFixed(2)} · {t.sourcesCountLabel} {selected.length}
+        </Text>
+        <Text style={[styles.meta, { textAlign: align }]}>
+          {t.dirBuy} {split.buy} · {t.dirSell} {split.sell} · {t.dirNeutral} {split.neutral}
         </Text>
         {levels && direction !== 'neutral' ? (
-          <Text style={styles.levels}>
-            صفقة مقترحة: دخول {formatPrice(levels.entry)} · وقف {formatPrice(levels.sl)} · هدف{' '}
-            {formatPrice(levels.tp)}
+          <Text style={[styles.levels, { textAlign: align }]}>
+            {t.suggestedTradeLabel}: {t.entryLabel} {formatPrice(levels.entry)} · {t.slLabel}{' '}
+            {formatPrice(levels.sl)} · {t.tpLabel} {formatPrice(levels.tp)}
           </Text>
         ) : (
-          <Text style={styles.levels}>لا صفقة واضحة — الآراء متضاربة أو محايدة</Text>
+          <Text style={[styles.levels, { textAlign: align }]}>{t.socialNoClearTrade}</Text>
         )}
       </View>
 
       <ScrollView style={styles.list} nestedScrollEnabled>
         {votes.map((v) => (
-          <View key={v.id} style={styles.row}>
+          <View key={v.id} style={[styles.row, rtl && styles.rowRtl]}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.name}>{v.name}</Text>
-              <Text style={styles.summary}>{v.note}</Text>
+              <Text style={[styles.name, { textAlign: align }]}>{v.name}</Text>
+              <Text style={[styles.summary, { textAlign: align }]}>{v.note}</Text>
             </View>
             <Text style={[styles.badge, { color: dirColor(v.direction) }]}>
-              {dirLabel(v.direction)}
+              {dirLabel(v.direction, t)}
             </Text>
           </View>
         ))}
       </ScrollView>
-      {note ? <Text style={styles.note}>{note}</Text> : null}
+      {note ? <Text style={[styles.note, { textAlign: align }]}>{note}</Text> : null}
     </View>
   );
 }
@@ -240,11 +253,12 @@ const styles = StyleSheet.create({
     paddingRight: frameEmbed.padRight,
     paddingBottom: frameEmbed.padBottom,
   },
-  head: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { color: colors.text, fontWeight: '900', fontSize: 14, textAlign: 'right' },
-  sub: { color: colors.textDim, fontSize: 10, textAlign: 'right', marginTop: 2 },
-  pickHint: { color: colors.textMuted, fontSize: 10, textAlign: 'right' },
-  sourcesError: { color: colors.bear, fontSize: 10, fontWeight: '700', textAlign: 'right' },
+  head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  headRtl: { flexDirection: 'row-reverse' },
+  title: { color: colors.text, fontWeight: '900', fontSize: 14 },
+  sub: { color: colors.textDim, fontSize: 10, marginTop: 2 },
+  pickHint: { color: colors.textMuted, fontSize: 10 },
+  sourcesError: { color: colors.bear, fontSize: 10, fontWeight: '700' },
   refresh: {
     flexShrink: 0,
     paddingHorizontal: 10,
@@ -255,7 +269,8 @@ const styles = StyleSheet.create({
   },
   refreshText: { color: colors.accent, fontWeight: '700', fontSize: 11 },
   refreshDisabled: { opacity: 0.4 },
-  chips: { flexDirection: 'row-reverse', gap: 6, paddingVertical: 2 },
+  chips: { flexDirection: 'row', gap: 6, paddingVertical: 2 },
+  chipsRtl: { flexDirection: 'row-reverse' },
   chip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -276,12 +291,12 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
     gap: 3,
   },
-  dir: { fontWeight: '900', fontSize: 18, textAlign: 'right' },
-  meta: { color: colors.textMuted, fontSize: 11, textAlign: 'right' },
-  levels: { color: colors.text, fontSize: 11, textAlign: 'right', fontWeight: '700', marginTop: 2 },
+  dir: { fontWeight: '900', fontSize: 18 },
+  meta: { color: colors.textMuted, fontSize: 11 },
+  levels: { color: colors.text, fontSize: 11, fontWeight: '700', marginTop: 2 },
   list: { maxHeight: 110 },
   row: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: spacing.sm,
@@ -289,8 +304,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.borderSoft,
   },
-  name: { color: colors.text, fontWeight: '800', fontSize: 12, textAlign: 'right' },
-  summary: { color: colors.textDim, fontSize: 10, textAlign: 'right', marginTop: 1 },
+  rowRtl: { flexDirection: 'row-reverse' },
+  name: { color: colors.text, fontWeight: '800', fontSize: 12 },
+  summary: { color: colors.textDim, fontSize: 10, marginTop: 1 },
   badge: { fontWeight: '900', fontSize: 12 },
-  note: { color: colors.textDim, fontSize: 9, textAlign: 'right' },
+  note: { color: colors.textDim, fontSize: 9 },
 });

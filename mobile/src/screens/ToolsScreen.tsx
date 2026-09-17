@@ -31,18 +31,22 @@ import { VotePanel } from '../components/VotePanel';
 import { FrameSizedGrid } from '../components/FrameSizedGrid';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useI18n } from '../i18n/I18nContext';
+import type { Dict } from '../i18n/locales';
 
 /** كل فلتر يحمل تلميحاً عربياً مختصراً (hint) — فجوة موثَّقة بتدقيق أنس المباشر: مصطلحات
  * "RSI oversold/overbought"/"MACD up" بلا أي شرح بالعربية لمتداول لا يعرف هذه المؤشرات أصلاً. */
-const FILTERS: { id: string; label: string; hint: string }[] = [
-  { id: 'ma_cross_up', label: 'MA صعودي', hint: 'السعر تجاوز متوسطه المتحرك للأعلى' },
-  { id: 'ma_cross_down', label: 'MA هبوطي', hint: 'السعر تجاوز متوسطه المتحرك للأسفل' },
-  { id: 'rsi_oversold', label: 'RSI oversold', hint: 'تشبّع بيعي — قد يرتد صعوداً' },
-  { id: 'rsi_overbought', label: 'RSI overbought', hint: 'تشبّع شرائي — قد يرتد هبوطاً' },
-  { id: 'macd_cross_up', label: 'MACD up', hint: 'تقاطع MACD صاعد — زخم إيجابي جديد' },
-  { id: 'bullish', label: 'زخم +', hint: 'زخم سعري إيجابي عام' },
-  { id: 'bearish', label: 'زخم -', hint: 'زخم سعري سلبي عام' },
-];
+function buildFilters(t: Dict): { id: string; label: string; hint: string }[] {
+  return [
+    { id: 'ma_cross_up', label: t.filterMaUpLabel, hint: t.filterMaUpHint },
+    { id: 'ma_cross_down', label: t.filterMaDownLabel, hint: t.filterMaDownHint },
+    { id: 'rsi_oversold', label: t.filterRsiOversoldLabel, hint: t.filterRsiOversoldHint },
+    { id: 'rsi_overbought', label: t.filterRsiOverboughtLabel, hint: t.filterRsiOverboughtHint },
+    { id: 'macd_cross_up', label: t.filterMacdUpLabel, hint: t.filterMacdUpHint },
+    { id: 'bullish', label: t.filterBullishLabel, hint: t.filterBullishHint },
+    { id: 'bearish', label: t.filterBearishLabel, hint: t.filterBearishHint },
+  ];
+}
 
 type Hit = {
   symbol: string;
@@ -65,17 +69,19 @@ type TabId =
 
 /** نفس رموز التبويبات المعتمدة أصلاً بـMatrixBottomDock.tsx (نسخة اللابتوب) —
  * توحيد بصري بين نسخة الهاتف ونسخة اللابتوب بدل تبويبات نصّ فقط بلا أيقونة. */
-const TABS: { id: TabId; label: string; mark: string }[] = [
-  { id: 'hub', label: 'إشارات ومجتمع', mark: '✦' },
-  { id: 'reports', label: 'تقارير', mark: '≡' },
-  { id: 'journal', label: 'PnL', mark: '₴' },
-  { id: 'screener', label: 'فحص', mark: '⌕' },
-  { id: 'backtest', label: 'Backtest', mark: '↺' },
-  { id: 'indAlerts', label: 'تنبيهات+', mark: '⚡' },
-  { id: 'calendar', label: 'تقويم', mark: '◷' },
-  { id: 'layouts', label: 'تخطيط', mark: '▦' },
-  { id: 'ai', label: 'AI', mark: '✧' },
-];
+function buildTabs(t: Dict): { id: TabId; label: string; mark: string }[] {
+  return [
+    { id: 'hub', label: t.toolsTabHub, mark: '✦' },
+    { id: 'reports', label: t.toolsTabReports, mark: '≡' },
+    { id: 'journal', label: t.toolsTabJournal, mark: '₴' },
+    { id: 'screener', label: t.toolsTabScreener, mark: '⌕' },
+    { id: 'backtest', label: t.toolsTabBacktest, mark: '↺' },
+    { id: 'indAlerts', label: t.toolsTabIndAlerts, mark: '⚡' },
+    { id: 'calendar', label: t.toolsTabCalendar, mark: '◷' },
+    { id: 'layouts', label: t.toolsTabLayouts, mark: '▦' },
+    { id: 'ai', label: t.toolsTabAi, mark: '✧' },
+  ];
+}
 
 /** قسما لوحة "إشارات ومجتمع" — تقسيم القسم الواحد (8 لوحات بشبكة سحب واحدة) إلى
  * قسمين قابلَين للتبديل بدل الاعتماد على "الصف الأول/الأسفل" (لا معنى لهما فعلياً
@@ -84,15 +90,22 @@ const TABS: { id: TabId; label: string; mark: string }[] = [
  * تصميمي مستقر لا تخمين جديد. راجع docs/ROADMAP.md بند (ب.5). */
 type HubSection = 'community' | 'analysis';
 
-const HUB_SECTIONS: { id: HubSection; label: string; mark: string }[] = [
-  { id: 'community', label: 'مجتمع وأخبار', mark: '◆' },
-  { id: 'analysis', label: 'تحليل وتنبيهات', mark: '◈' },
-];
+function buildHubSections(t: Dict): { id: HubSection; label: string; mark: string }[] {
+  return [
+    { id: 'community', label: t.toolsHubCommunity, mark: '◆' },
+    { id: 'analysis', label: t.toolsHubAnalysis, mark: '◈' },
+  ];
+}
 
 const HUB_COMMUNITY_ORDER = ['news', 'social', 'chat', 'votes'] as const;
 const HUB_ANALYSIS_ORDER = ['ai', 'analysts', 'forecast', 'alerts'] as const;
 
 export function ToolsScreen() {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
+  const FILTERS = buildFilters(t);
+  const TABS = buildTabs(t);
+  const HUB_SECTIONS = buildHubSections(t);
   const [tab, setTab] = useState<TabId>('hub');
   const [hubSection, setHubSection] = useState<HubSection>('community');
   const [tf, setTf] = useState<Timeframe>('15m');
@@ -152,29 +165,29 @@ export function ToolsScreen() {
       <StatusBar barStyle="light-content" />
 
       <View style={styles.head}>
-        <Text style={styles.title}>أدوات MATRIX</Text>
-        <Text style={styles.sub}>مجتمع وأخبار · تحليل وتنبيهات — قسمان قابلان للتبديل</Text>
+        <Text style={[styles.title, { textAlign: align }]}>{t.toolsTitle}</Text>
+        <Text style={[styles.sub, { textAlign: align }]}>{t.toolsSub}</Text>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll}>
-        <View style={styles.tabs}>
-          {TABS.map((t) => (
+        <View style={[styles.tabs, rtl && styles.tabsRtl]}>
+          {TABS.map((tItem) => (
             <Pressable
               accessibilityRole="button"
-              key={t.id}
+              key={tItem.id}
               style={({ pressed }) => [
                 styles.tab,
-                tab === t.id && styles.tabOn,
+                tab === tItem.id && styles.tabOn,
                 pressed && {
                   opacity: buttons.pressedOpacity,
                   transform: [{ scale: buttons.pressedScale }],
                 },
               ]}
-              onPress={() => setTab(t.id)}
-              accessibilityLabel={`تبويب: ${t.label}`}
+              onPress={() => setTab(tItem.id)}
+              accessibilityLabel={`${t.a11yTabPrefix}: ${tItem.label}`}
             >
-              <Text style={[styles.tabMark, tab === t.id && styles.tabMarkOn]}>{t.mark}</Text>
-              <Text style={[styles.tabText, tab === t.id && styles.tabTextOn]}>{t.label}</Text>
+              <Text style={[styles.tabMark, tab === tItem.id && styles.tabMarkOn]}>{tItem.mark}</Text>
+              <Text style={[styles.tabText, tab === tItem.id && styles.tabTextOn]}>{tItem.label}</Text>
             </Pressable>
           ))}
         </View>
@@ -189,7 +202,7 @@ export function ToolsScreen() {
         >
           <View style={styles.toolbar}>
             <TimeframeBar value={tf} onChange={setTf} compact />
-            <View style={styles.filters}>
+            <View style={[styles.filters, rtl && styles.filtersRtl]}>
               {['EURUSD', 'GBPUSD', 'XAUUSD', 'DXY'].map((s) => (
                 <Pressable
                   accessibilityRole="button"
@@ -203,14 +216,14 @@ export function ToolsScreen() {
                     },
                   ]}
                   onPress={() => setSignalSym(s)}
-                  accessibilityLabel={`رمز الإشارة: ${s}`}
+                  accessibilityLabel={`${t.a11ySignalSymbolPrefix}: ${s}`}
                 >
                   <Text style={[styles.chipText, signalSym === s && styles.chipTextOn]}>{s}</Text>
                 </Pressable>
               ))}
             </View>
           </View>
-          <View style={styles.hubSectionTabs}>
+          <View style={[styles.hubSectionTabs, rtl && styles.hubSectionTabsRtl]}>
             {HUB_SECTIONS.map((s) => (
               <Pressable
                 accessibilityRole="button"
@@ -224,7 +237,7 @@ export function ToolsScreen() {
                   },
                 ]}
                 onPress={() => setHubSection(s.id)}
-                accessibilityLabel={`قسم لوحات: ${s.label}`}
+                accessibilityLabel={`${t.a11yHubSectionPrefix}: ${s.label}`}
               >
                 <Text style={[styles.hubSectionMark, hubSection === s.id && styles.hubSectionMarkOn]}>
                   {s.mark}
@@ -235,7 +248,7 @@ export function ToolsScreen() {
               </Pressable>
             ))}
           </View>
-          <Text style={styles.gridHint}>اسحب النقاط لإعادة ترتيب لوحات هذا القسم</Text>
+          <Text style={styles.gridHint}>{t.toolsGridHint}</Text>
           {hubSection === 'community' ? (
             <FrameSizedGrid
               key="hub-community"
@@ -293,8 +306,8 @@ export function ToolsScreen() {
       {tab === 'screener' ? (
         <ScrollView contentContainerStyle={styles.body}>
           <TimeframeBar value={tf} onChange={setTf} />
-          <Text style={styles.label}>الفلاتر</Text>
-          <View style={styles.filters}>
+          <Text style={[styles.label, { textAlign: align }]}>{t.toolsFiltersLabel}</Text>
+          <View style={[styles.filters, rtl && styles.filtersRtl]}>
             {FILTERS.map((f) => (
               <Pressable
                 accessibilityRole="button"
@@ -308,7 +321,7 @@ export function ToolsScreen() {
                   },
                 ]}
                 onPress={() => toggleFilter(f.id)}
-                accessibilityLabel={`فلتر: ${f.label} — ${f.hint}`}
+                accessibilityLabel={`${t.a11yFilterPrefix}: ${f.label} — ${f.hint}`}
               >
                 <Text style={[styles.chipText, selected.includes(f.id) && styles.chipTextOn]}>
                   {f.label}
@@ -319,7 +332,7 @@ export function ToolsScreen() {
           {selected.length ? (
             <View style={styles.filterHints}>
               {FILTERS.filter((f) => selected.includes(f.id)).map((f) => (
-                <Text key={f.id} style={styles.filterHintText}>
+                <Text key={f.id} style={[styles.filterHintText, { textAlign: align }]}>
                   {f.label}: {f.hint}
                 </Text>
               ))}
@@ -338,22 +351,20 @@ export function ToolsScreen() {
             onPress={run}
             disabled={loading || !selected.length}
             accessibilityState={{ disabled: loading || !selected.length }}
-            accessibilityLabel={!selected.length ? 'تشغيل Screener، اختر فلتراً أولاً' : 'تشغيل Screener'}
+            accessibilityLabel={!selected.length ? t.screenerRunNeedFilter : t.screenerRunBtn}
             hitSlop={8}
           >
-            <Text style={styles.runText}>{loading ? 'جاري الفحص...' : 'تشغيل Screener'}</Text>
+            <Text style={styles.runText}>{loading ? t.screenerRunning : t.screenerRunBtn}</Text>
           </Pressable>
           {loading ? <ActivityIndicator color={colors.accent} /> : null}
           {!loading && scanDone && providerConfigured === false ? (
-            <Text style={styles.scanHint}>
-              الفحص يحتاج مفتاح Twelve Data مفعّلاً على الخادم
-            </Text>
+            <Text style={[styles.scanHint, { textAlign: align }]}>{t.screenerNeedApiKey}</Text>
           ) : null}
           {!loading && scanDone && providerConfigured === true && results.length === 0 ? (
-            <Text style={styles.scanHint}>لا نتائج مطابقة للفلاتر الحالية</Text>
+            <Text style={[styles.scanHint, { textAlign: align }]}>{t.screenerNoResults}</Text>
           ) : null}
           {!loading && scanDone && providerConfigured === null ? (
-            <Text style={styles.scanHint}>تعذر تشغيل الفحص — تحقق من الاتصال وحاول مرة أخرى</Text>
+            <Text style={[styles.scanHint, { textAlign: align }]}>{t.screenerFailed}</Text>
           ) : null}
           <FrameSizedGrid
             storageKey="matrix.tools.screener.order.v1"
@@ -362,8 +373,8 @@ export function ToolsScreen() {
               id: r.symbol,
               node: (
                 <View style={styles.hitCard}>
-                  <Text style={styles.sym}>{r.symbol}</Text>
-                  <Text style={styles.meta}>
+                  <Text style={[styles.sym, { textAlign: align }]}>{r.symbol}</Text>
+                  <Text style={[styles.meta, { textAlign: align }]}>
                     {r.last} · RSI {r.rsi} ·{' '}
                     <Text
                       style={{
@@ -375,7 +386,7 @@ export function ToolsScreen() {
                       {r.change_pct}%
                     </Text>
                   </Text>
-                  <Text style={styles.match}>{r.filters_matched.join(' · ')}</Text>
+                  <Text style={[styles.match, { textAlign: align }]}>{r.filters_matched.join(' · ')}</Text>
                 </View>
               ),
             }))}
@@ -434,10 +445,11 @@ export function ToolsScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   head: { padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
-  title: { color: colors.text, fontSize: 22, fontWeight: '900', textAlign: 'right' },
-  sub: { color: colors.textDim, fontSize: 12, textAlign: 'right' },
+  title: { color: colors.text, fontSize: 22, fontWeight: '900' },
+  sub: { color: colors.textDim, fontSize: 12 },
   tabsScroll: { maxHeight: 52, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
-  tabs: { flexDirection: 'row-reverse', padding: spacing.sm, gap: spacing.sm },
+  tabs: { flexDirection: 'row', padding: spacing.sm, gap: spacing.sm },
+  tabsRtl: { flexDirection: 'row-reverse' },
   tab: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -456,7 +468,8 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: spacing.md, paddingTop: spacing.sm, gap: spacing.sm, paddingBottom: 48 },
   pageScroll: { flex: 1 },
   toolbar: { gap: 6 },
-  hubSectionTabs: { flexDirection: 'row-reverse', gap: spacing.sm },
+  hubSectionTabs: { flexDirection: 'row', gap: spacing.sm },
+  hubSectionTabsRtl: { flexDirection: 'row-reverse' },
   hubSectionTab: {
     flex: 1,
     flexDirection: 'row',
@@ -479,8 +492,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
-  label: { color: colors.textMuted, fontWeight: '700', textAlign: 'right' },
-  filters: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6 },
+  label: { color: colors.textMuted, fontWeight: '700' },
+  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  filtersRtl: { flexDirection: 'row-reverse' },
   chip: {
     paddingHorizontal: 10,
     paddingVertical: 7,
@@ -492,7 +506,7 @@ const styles = StyleSheet.create({
   chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   chipTextOn: { color: colors.accent },
   filterHints: { gap: 3, marginTop: 2 },
-  filterHintText: { color: colors.textDim, fontSize: 10, textAlign: 'right' },
+  filterHintText: { color: colors.textDim, fontSize: 10 },
   hitCard: {
     flex: 1,
     height: '100%',
@@ -521,10 +535,9 @@ const styles = StyleSheet.create({
     color: colors.warn,
     fontSize: 12,
     fontWeight: '700',
-    textAlign: 'right',
     paddingVertical: spacing.sm,
   },
-  sym: { color: colors.accent, fontWeight: '800', textAlign: 'right', fontSize: 15 },
-  meta: { color: colors.text, textAlign: 'right', fontSize: 13 },
-  match: { color: colors.textDim, textAlign: 'right', fontSize: 11 },
+  sym: { color: colors.accent, fontWeight: '800', fontSize: 15 },
+  meta: { color: colors.text, fontSize: 13 },
+  match: { color: colors.textDim, fontSize: 11 },
 });

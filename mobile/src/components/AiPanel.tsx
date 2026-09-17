@@ -10,18 +10,21 @@ import {
 } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons } from '../theme';
 import { api } from '../api';
+import { useI18n } from '../i18n/I18nContext';
 
 type Turn = { role: 'user' | 'ai'; text: string; win?: number };
 
 type Props = { symbol?: string; embedded?: boolean };
 
 export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([
     {
       role: 'ai',
-      text: 'أنا خبير تداول MATRIX. اسأل عن تحليل، سيناريو صفقة، إدارة مخاطر، أو علاقة الزوج بـ DXY.',
+      text: t.aiGreeting,
     },
   ]);
 
@@ -29,12 +32,12 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
     const question = q.trim();
     if (!question || loading) return;
     setQ('');
-    setTurns((t) => [...t, { role: 'user', text: question }]);
+    setTurns((prev) => [...prev, { role: 'user', text: question }]);
     setLoading(true);
     try {
       const res = await api.aiAsk(question, symbol);
-      setTurns((t) => [
-        ...t,
+      setTurns((prev) => [
+        ...prev,
         {
           role: 'ai',
           text: res.answer.replace(/\*\*/g, ''),
@@ -42,13 +45,11 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
         },
       ]);
     } catch {
-      setTurns((t) => [
-        ...t,
+      setTurns((prev) => [
+        ...prev,
         {
           role: 'ai',
-          text:
-            'تعذر الاتصال بالخادم. تأكد أن Backend يعمل على المنفذ 8100.\n\n' +
-            'تحليل محلي سريع: راقب DXY قبل أي دخول على أزواج الدولار، واستخدم وقف واضح بنسبة مخاطرة ≤ 1%.',
+          text: t.aiOfflineFallback,
           win: 62,
         },
       ]);
@@ -63,35 +64,37 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
         <View style={frameEmbedHead}>
           <View style={frameEmbedHeadTail} />
           <View style={frameEmbedTitleBlock}>
-            <Text style={[styles.title, styles.titleInHead, frameEmbedTitle]}>مساعد ذكاء اصطناعي</Text>
+            <Text style={[styles.title, styles.titleInHead, frameEmbedTitle, { textAlign: align }]}>
+              {t.aiPanelTitle}
+            </Text>
           </View>
         </View>
       ) : (
-        <Text style={styles.title}>مساعد ذكاء اصطناعي</Text>
+        <Text style={[styles.title, { textAlign: align }]}>{t.aiPanelTitle}</Text>
       )}
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: spacing.sm }}>
-        {turns.map((t, i) => (
+        {turns.map((turn, i) => (
           <View
             key={i}
-            style={[styles.bubble, t.role === 'user' ? styles.user : styles.ai]}
+            style={[styles.bubble, turn.role === 'user' ? styles.user : styles.ai]}
           >
-            <Text style={styles.text}>{t.text}</Text>
-            {typeof t.win === 'number' && (
+            <Text style={[styles.text, { textAlign: align }]}>{turn.text}</Text>
+            {typeof turn.win === 'number' && (
               <View style={styles.winBox}>
-                <Text style={styles.win}>توقع نجاح تقديري: {t.win}%</Text>
-                <Text style={styles.winDisclaimer}>تقدير إحصائي وليس ضماناً — أدر مخاطرك دوماً</Text>
+                <Text style={styles.win}>{t.aiWinEstimate.replace('{pct}', String(turn.win))}</Text>
+                <Text style={[styles.winDisclaimer, { textAlign: align }]}>{t.aiWinDisclaimer}</Text>
               </View>
             )}
           </View>
         ))}
         {loading && <ActivityIndicator color={colors.accent} />}
       </ScrollView>
-      <View style={styles.row}>
+      <View style={[styles.row, rtl && styles.rowRtl]}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { textAlign: align }]}
           value={q}
           onChangeText={setQ}
-          placeholder={`مثال: تحليل ${symbol} اليوم؟`}
+          placeholder={t.aiInputPlaceholder.replace('{symbol}', symbol)}
           placeholderTextColor={colors.textDim}
           onSubmitEditing={ask}
           returnKeyType="send"
@@ -99,7 +102,7 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
           clearButtonMode="while-editing"
           keyboardAppearance="dark"
           selectionColor={colors.accent}
-          accessibilityLabel="سؤال لمساعد الذكاء الاصطناعي"
+          accessibilityLabel={t.aiInputA11y}
         />
         <Pressable
           accessibilityRole="button"
@@ -114,10 +117,10 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
             },
           ]}
           onPress={ask}
-          accessibilityLabel="إرسال سؤال لمساعد الذكاء الاصطناعي"
+          accessibilityLabel={t.aiSendA11y}
           hitSlop={8}
         >
-          <Text style={styles.sendText}>اسأل</Text>
+          <Text style={styles.sendText}>{t.aiAskBtn}</Text>
         </Pressable>
       </View>
     </View>
@@ -147,7 +150,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: '700',
     fontSize: 13,
-    textAlign: 'right',
   },
   titleInHead: { marginBottom: 0 },
   bubble: { borderRadius: radii.sm, padding: spacing.sm, borderWidth: 1 },
@@ -163,7 +165,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 12,
     lineHeight: 19,
-    textAlign: 'right',
   },
   winBox: {
     marginTop: spacing.sm,
@@ -174,8 +175,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   win: { color: colors.bull, fontWeight: '800', fontSize: 11 },
-  winDisclaimer: { color: colors.textDim, fontSize: 9, marginTop: 3, textAlign: 'right' },
-  row: { flexDirection: 'row-reverse', gap: 6, marginTop: spacing.sm },
+  winDisclaimer: { color: colors.textDim, fontSize: 9, marginTop: 3 },
+  row: { flexDirection: 'row', gap: 6, marginTop: spacing.sm },
+  rowRtl: { flexDirection: 'row-reverse' },
   input: {
     flex: 1,
     backgroundColor: colors.bg,
@@ -186,7 +188,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: spacing.sm,
     fontSize: 13,
-    textAlign: 'right',
   },
   send: {
     backgroundColor: colors.dxy,

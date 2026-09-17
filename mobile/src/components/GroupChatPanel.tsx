@@ -11,11 +11,14 @@ import {
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons } from '../theme';
 import { api, type ChatMsg } from '../api';
 import { mockChat } from '../mock';
+import { useI18n } from '../i18n/I18nContext';
 
-// واجهة عربية — لا نفرض RTL على النظام بالكامل هنا
+// اتجاه الواجهة يتبع لغة المستخدم المختارة عبر useI18n().rtl — لا نفرض RTL على النظام بالكامل هنا
 void I18nManager;
 
 export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const [messages, setMessages] = useState<ChatMsg[]>(mockChat);
   const [text, setText] = useState('');
   /** وضوح الحالة: يعلم المستخدم إذا فشل تحميل/إرسال رسائل الدردشة بدل صمت كامل
@@ -29,27 +32,27 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
         setMessages(r.messages);
         setNotice(null);
       })
-      .catch(() => setNotice('تعذر تحميل الرسائل — تُعرض رسائل محفوظة'));
-  }, []);
+      .catch(() => setNotice(t.chatLoadError));
+  }, [t.chatLoadError]);
 
   const send = async () => {
-    const t = text.trim();
-    if (!t) return;
+    const msg = text.trim();
+    if (!msg) return;
     setText('');
     const local: ChatMsg = {
       id: `local-${Date.now()}`,
-      user: 'أنت',
-      text: t,
+      user: t.chatYou,
+      text: msg,
       // 'ar-u-nu-latn': تنسيق عربي بأرقام غربية صراحة — 'ar' وحدها قد تُنتج أرقاماً هندية شرقية
       // (١٢:٣٠) بدل غربية على بعض أجهزة ICU، غير متوقَّع لتاجر يقرأ طابع وقت رسالة بسرعة.
       ts: new Date().toLocaleTimeString('ar-u-nu-latn', { hour: '2-digit', minute: '2-digit' }),
     };
     setMessages((m) => [...m, local]);
     try {
-      await api.postGroup(t);
+      await api.postGroup(msg);
       setNotice(null);
     } catch {
-      setNotice('تعذر إرسال رسالتك للمجموعة — قد لا تصل، حاول لاحقاً');
+      setNotice(t.chatSendError);
     }
   };
 
@@ -59,34 +62,36 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
         <View style={frameEmbedHead}>
           <View style={frameEmbedHeadTail} />
           <View style={frameEmbedTitleBlock}>
-            <Text style={[styles.title, styles.titleInHead, frameEmbedTitle]}>دردشة جماعية</Text>
+            <Text style={[styles.title, styles.titleInHead, frameEmbedTitle, { textAlign: align }]}>
+              {t.chatTitle}
+            </Text>
           </View>
         </View>
       ) : (
-        <Text style={styles.title}>دردشة جماعية</Text>
+        <Text style={[styles.title, { textAlign: align }]}>{t.chatTitle}</Text>
       )}
-      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
+      {notice ? <Text style={[styles.notice, { textAlign: align }]}>{notice}</Text> : null}
       {!notice && messages.length === 0 ? (
-        <Text style={styles.empty}>لا توجد رسائل بعد — كن أول من يكتب</Text>
+        <Text style={styles.empty}>{t.chatEmpty}</Text>
       ) : null}
       <ScrollView style={styles.scroll} contentContainerStyle={{ gap: spacing.sm }}>
         {messages.map((m) => (
           <View
             key={m.id}
-            style={[styles.bubble, m.user === 'أنت' && styles.mine]}
+            style={[styles.bubble, m.user === t.chatYou && styles.mine]}
           >
-            <Text style={styles.user}>{m.user}</Text>
-            <Text style={styles.msg}>{m.text}</Text>
+            <Text style={[styles.user, { textAlign: align }]}>{m.user}</Text>
+            <Text style={[styles.msg, { textAlign: align }]}>{m.text}</Text>
             <Text style={styles.ts}>{m.ts}</Text>
           </View>
         ))}
       </ScrollView>
-      <View style={styles.row}>
+      <View style={[styles.row, rtl && styles.rowRtl]}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { textAlign: align }]}
           value={text}
           onChangeText={setText}
-          placeholder="اكتب رسالة..."
+          placeholder={t.chatInputPlaceholder}
           placeholderTextColor={colors.textDim}
           onSubmitEditing={send}
           returnKeyType="send"
@@ -94,7 +99,7 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
           clearButtonMode="while-editing"
           keyboardAppearance="dark"
           selectionColor={colors.accent}
-          accessibilityLabel="رسالة الدردشة الجماعية"
+          accessibilityLabel={t.chatInputA11y}
         />
         <Pressable
           accessibilityRole="button"
@@ -106,10 +111,10 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
             },
           ]}
           onPress={send}
-          accessibilityLabel="إرسال رسالة الدردشة الجماعية"
+          accessibilityLabel={t.chatSendA11y}
           hitSlop={8}
         >
-          <Text style={styles.sendText}>إرسال</Text>
+          <Text style={styles.sendText}>{t.sendBtn}</Text>
         </Pressable>
       </View>
     </View>
@@ -139,14 +144,12 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: '700',
     fontSize: 13,
-    textAlign: 'right',
   },
   titleInHead: { marginBottom: 0 },
   notice: {
     color: colors.warn,
     fontSize: 10,
     fontWeight: '700',
-    textAlign: 'right',
     marginTop: spacing.xs,
   },
   empty: {
@@ -164,10 +167,11 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
   },
   mine: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  user: { color: colors.accent, fontSize: 11, fontWeight: '700', textAlign: 'right' },
-  msg: { color: colors.text, fontSize: 12, marginTop: 2, textAlign: 'right', lineHeight: 18 },
+  user: { color: colors.accent, fontSize: 11, fontWeight: '700' },
+  msg: { color: colors.text, fontSize: 12, marginTop: 2, lineHeight: 18 },
   ts: { color: colors.textDim, fontSize: 10, marginTop: spacing.xs, textAlign: 'left' },
-  row: { flexDirection: 'row-reverse', gap: 6, marginTop: spacing.sm },
+  row: { flexDirection: 'row', gap: 6, marginTop: spacing.sm },
+  rowRtl: { flexDirection: 'row-reverse' },
   input: {
     flex: 1,
     backgroundColor: colors.bg,
@@ -178,7 +182,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: spacing.sm,
     fontSize: 13,
-    textAlign: 'right',
   },
   send: {
     backgroundColor: colors.accent,

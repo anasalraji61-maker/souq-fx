@@ -3,17 +3,21 @@ import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api } from '../api';
 import { formatPrice } from '../chart/math';
+import { useI18n } from '../i18n/I18nContext';
+import type { Dict } from '../i18n/locales';
 
 type Props = { symbol: string; timeframe?: string; embedded?: boolean };
 
-const INDICATOR_OPTS = [
-  { id: 'rsi', label: 'RSI' },
-  { id: 'ma', label: 'MA' },
-  { id: 'macd', label: 'MACD' },
-  { id: 'bb', label: 'بولنجر' },
-  { id: 'stoch', label: 'Stoch' },
-  { id: 'trend', label: 'ميل' },
-];
+function indicatorOpts(t: Dict) {
+  return [
+    { id: 'rsi', label: 'RSI' },
+    { id: 'ma', label: 'MA' },
+    { id: 'macd', label: 'MACD' },
+    { id: 'bb', label: t.indicatorBollinger },
+    { id: 'stoch', label: 'Stoch' },
+    { id: 'trend', label: t.indicatorTrend },
+  ];
+}
 
 type Vote = {
   id: string;
@@ -29,14 +33,17 @@ function dirColor(d: string) {
   return colors.textMuted;
 }
 
-function dirLabel(d: string) {
-  if (d === 'buy') return 'شراء';
-  if (d === 'sell') return 'بيع';
-  return 'محايد';
+function dirLabel(d: string, t: Dict) {
+  if (d === 'buy') return t.dirBuy;
+  if (d === 'sell') return t.dirSell;
+  return t.dirNeutral;
 }
 
 export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: Props) {
-  const [enabled, setEnabled] = useState(INDICATOR_OPTS.map((x) => x.id));
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
+  const opts = indicatorOpts(t);
+  const [enabled, setEnabled] = useState(opts.map((x) => x.id));
   const [loading, setLoading] = useState(false);
   const [direction, setDirection] = useState('neutral');
   const [confidence, setConfidence] = useState(0);
@@ -73,11 +80,11 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
       setNote(res.disclaimer);
     } catch {
       setVotes([]);
-      setNote('تعذر حساب توقعات المؤشرات');
+      setNote(t.forecastError);
     } finally {
       setLoading(false);
     }
-  }, [symbol, timeframe, enabled]);
+  }, [symbol, timeframe, enabled, t.forecastError]);
 
   useEffect(() => {
     void run();
@@ -85,7 +92,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
 
   return (
     <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
-      <View style={[styles.head, embedded && frameEmbedHead]}>
+      <View style={[styles.head, rtl && styles.headRtl, embedded && frameEmbedHead]}>
         <Pressable
           accessibilityRole="button"
           style={({ pressed }) => [
@@ -99,22 +106,24 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           onPress={() => void run()}
           disabled={loading}
           accessibilityState={{ disabled: loading }}
-          accessibilityLabel="توقّع المؤشرات"
+          accessibilityLabel={t.forecastRunA11y}
           hitSlop={8}
         >
-          <Text style={styles.refreshText}>{loading ? '...' : 'توقّع'}</Text>
+          <Text style={styles.refreshText}>{loading ? '...' : t.forecastRunBtn}</Text>
         </Pressable>
         <View style={embedded ? frameEmbedTitleBlock : undefined}>
-          <Text style={[styles.title, embedded && frameEmbedTitle]}>توقعات المؤشرات</Text>
-          <Text style={[styles.sub, embedded && frameEmbedSub]}>
+          <Text style={[styles.title, embedded && frameEmbedTitle, { textAlign: align }]}>
+            {t.forecastTitle}
+          </Text>
+          <Text style={[styles.sub, embedded && frameEmbedSub, { textAlign: align }]}>
             {symbol} · {timeframe}
             {rsi != null ? ` · RSI ${rsi.toFixed(1)}` : ''}
           </Text>
         </View>
       </View>
 
-      <View style={styles.chips}>
-        {INDICATOR_OPTS.map((opt) => {
+      <View style={[styles.chips, rtl && styles.chipsRtl]}>
+        {opts.map((opt) => {
           const on = enabled.includes(opt.id);
           return (
             <Pressable
@@ -129,7 +138,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
                 },
               ]}
               onPress={() => toggle(opt.id)}
-              accessibilityLabel={`${opt.label}${on ? ' · مفعّل' : ' · معطّل'}`}
+              accessibilityLabel={`${opt.label} · ${on ? t.enabledWord : t.disabledWord}`}
             >
               <Text style={[styles.chipText, on && styles.chipTextOn]}>{opt.label}</Text>
             </Pressable>
@@ -140,35 +149,37 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
 
       <View style={styles.consensus}>
-        <Text style={[styles.dir, { color: dirColor(direction) }]}>{dirLabel(direction)}</Text>
-        <Text style={styles.meta}>
-          ثقة {(confidence * 100).toFixed(0)}% · معدل مؤشرات {avg >= 0 ? '+' : ''}
+        <Text style={[styles.dir, { color: dirColor(direction), textAlign: align }]}>
+          {dirLabel(direction, t)}
+        </Text>
+        <Text style={[styles.meta, { textAlign: align }]}>
+          {t.confidenceLabel} {(confidence * 100).toFixed(0)}% · {t.forecastAvgLabel} {avg >= 0 ? '+' : ''}
           {avg.toFixed(2)}
         </Text>
         {levels && direction !== 'neutral' ? (
-          <Text style={styles.levels}>
-            صفقة: دخول {formatPrice(levels.entry)} · وقف {formatPrice(levels.sl)} · هدف{' '}
-            {formatPrice(levels.tp)}
+          <Text style={[styles.levels, { textAlign: align }]}>
+            {t.forecastTradeLabel}: {t.entryLabel} {formatPrice(levels.entry)} · {t.slLabel}{' '}
+            {formatPrice(levels.sl)} · {t.tpLabel} {formatPrice(levels.tp)}
           </Text>
         ) : (
-          <Text style={styles.levels}>لا إشارة قوية — انتظر تأكيد المؤشرات</Text>
+          <Text style={[styles.levels, { textAlign: align }]}>{t.forecastNoSignal}</Text>
         )}
       </View>
 
       <ScrollView style={styles.list} nestedScrollEnabled>
         {votes.map((v) => (
-          <View key={v.id} style={styles.row}>
+          <View key={v.id} style={[styles.row, rtl && styles.rowRtl]}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.name}>{v.name}</Text>
-              <Text style={styles.summary}>{v.detail}</Text>
+              <Text style={[styles.name, { textAlign: align }]}>{v.name}</Text>
+              <Text style={[styles.summary, { textAlign: align }]}>{v.detail}</Text>
             </View>
             <Text style={[styles.badge, { color: dirColor(v.direction) }]}>
-              {dirLabel(v.direction)}
+              {dirLabel(v.direction, t)}
             </Text>
           </View>
         ))}
       </ScrollView>
-      {note ? <Text style={styles.note}>{note}</Text> : null}
+      {note ? <Text style={[styles.note, { textAlign: align }]}>{note}</Text> : null}
     </View>
   );
 }
@@ -193,9 +204,10 @@ const styles = StyleSheet.create({
     paddingRight: frameEmbed.padRight,
     paddingBottom: frameEmbed.padBottom,
   },
-  head: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { color: colors.text, fontWeight: '900', fontSize: 14, textAlign: 'right' },
-  sub: { color: colors.textDim, fontSize: 11, textAlign: 'right', marginTop: 2 },
+  head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  headRtl: { flexDirection: 'row-reverse' },
+  title: { color: colors.text, fontWeight: '900', fontSize: 14 },
+  sub: { color: colors.textDim, fontSize: 11, marginTop: 2 },
   refresh: {
     flexShrink: 0,
     paddingHorizontal: 10,
@@ -206,7 +218,8 @@ const styles = StyleSheet.create({
   },
   refreshDisabled: { opacity: 0.4 },
   refreshText: { color: colors.accent, fontWeight: '700', fontSize: 11 },
-  chips: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  chipsRtl: { flexDirection: 'row-reverse' },
   chip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -226,12 +239,12 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
     gap: 3,
   },
-  dir: { fontWeight: '900', fontSize: 18, textAlign: 'right' },
-  meta: { color: colors.textMuted, fontSize: 11, textAlign: 'right' },
-  levels: { color: colors.text, fontSize: 11, textAlign: 'right', fontWeight: '700', marginTop: 2 },
+  dir: { fontWeight: '900', fontSize: 18 },
+  meta: { color: colors.textMuted, fontSize: 11 },
+  levels: { color: colors.text, fontSize: 11, fontWeight: '700', marginTop: 2 },
   list: { maxHeight: 120 },
   row: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: spacing.sm,
@@ -239,8 +252,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.borderSoft,
   },
-  name: { color: colors.text, fontWeight: '800', fontSize: 12, textAlign: 'right' },
-  summary: { color: colors.textDim, fontSize: 10, textAlign: 'right', marginTop: 1 },
+  rowRtl: { flexDirection: 'row-reverse' },
+  name: { color: colors.text, fontWeight: '800', fontSize: 12 },
+  summary: { color: colors.textDim, fontSize: 10, marginTop: 1 },
   badge: { fontWeight: '900', fontSize: 12 },
-  note: { color: colors.textDim, fontSize: 9, textAlign: 'right' },
+  note: { color: colors.textDim, fontSize: 9 },
 });

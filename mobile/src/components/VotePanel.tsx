@@ -4,8 +4,11 @@ import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail,
 import { api, type Vote } from '../api';
 import { mockVotes } from '../mock';
 import { playSoftClick } from '../audio/playSoftClick';
+import { useI18n } from '../i18n/I18nContext';
 
 export function VotePanel({ embedded }: { embedded?: boolean }) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const [votes, setVotes] = useState<Vote[]>(mockVotes);
   /** وضوح الحالة: يعلم المستخدم إذا فشل تحديث/إرسال التصويت بدل صمت كامل
    * (لا تُفعَّل قبل أول محاولة فعلية — لا ادّعاء فشل قبل حدوثه). */
@@ -31,7 +34,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
         setVotes(r.votes);
         setNotice(null);
       })
-      .catch(() => setNotice('تعذر تحديث التصويتات — تُعرض بيانات محفوظة'));
+      .catch(() => setNotice(t.voteLoadError));
   };
 
   useEffect(() => {
@@ -43,7 +46,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
     const sl = parseFloat(pSl.replace(',', '.'));
     const tp = parseFloat(pTp.replace(',', '.'));
     if (!pSymbol.trim() || Number.isNaN(entry) || Number.isNaN(sl) || Number.isNaN(tp)) {
-      setPError('أدخل الرمز والدخول والوقف والهدف بشكل صحيح');
+      setPError(t.voteFormError);
       return;
     }
     setPBusy(true);
@@ -66,7 +69,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
       setShowPublish(false);
       load();
     } catch {
-      setPError('تعذر نشر الفكرة — تحقق من الاتصال وحاول مرة أخرى');
+      setPError(t.votePublishError);
     } finally {
       setPBusy(false);
     }
@@ -88,7 +91,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
       await api.ballot(id, choice);
       load();
     } catch {
-      setNotice('تعذر إرسال صوتك للخادم — قد لا يُحتسب، حاول لاحقاً');
+      setNotice(t.voteCastError);
     }
   };
 
@@ -98,11 +101,13 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
         <View style={frameEmbedHead}>
           <View style={frameEmbedHeadTail} />
           <View style={frameEmbedTitleBlock}>
-            <Text style={[styles.title, styles.titleInHead, frameEmbedTitle]}>تصويت على صفقة</Text>
+            <Text style={[styles.title, styles.titleInHead, frameEmbedTitle, { textAlign: align }]}>
+              {t.voteTitle}
+            </Text>
           </View>
         </View>
       ) : (
-        <Text style={styles.title}>تصويت على صفقة</Text>
+        <Text style={[styles.title, { textAlign: align }]}>{t.voteTitle}</Text>
       )}
 
       <Pressable
@@ -115,19 +120,21 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
           },
         ]}
         onPress={() => setShowPublish((s) => !s)}
-        accessibilityLabel={showPublish ? 'إغلاق نموذج نشر الفكرة' : 'نشر فكرة تداول جديدة'}
+        accessibilityLabel={showPublish ? t.voteCloseFormA11y : t.votePublishNewA11y}
       >
-        <Text style={styles.publishToggleText}>{showPublish ? '✕ إغلاق' : '+ انشر فكرتك'}</Text>
+        <Text style={styles.publishToggleText}>
+          {showPublish ? `✕ ${t.closeWord}` : `+ ${t.votePublishToggleBtn}`}
+        </Text>
       </Pressable>
 
       {showPublish ? (
         <View style={styles.form}>
-          <View style={styles.row}>
+          <View style={[styles.row, rtl && styles.rowRtl]}>
             <TextInput
-              style={[styles.input, { flex: 1 }]}
+              style={[styles.input, { flex: 1, textAlign: align }]}
               value={pSymbol}
               onChangeText={setPSymbol}
-              placeholder="الرمز (مثال EURUSD)"
+              placeholder={t.voteSymbolPlaceholder}
               placeholderTextColor={colors.textDim}
               autoCapitalize="characters"
               autoCorrect={false}
@@ -136,7 +143,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               clearButtonMode="while-editing"
               keyboardAppearance="dark"
               selectionColor={colors.accent}
-              accessibilityLabel="رمز الأداة لفكرتك"
+              accessibilityLabel={t.voteSymbolA11y}
             />
             <Pressable
               accessibilityRole="button"
@@ -149,9 +156,9 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                 },
               ]}
               onPress={() => setPDirection('buy')}
-              accessibilityLabel="اتجاه الفكرة: شراء"
+              accessibilityLabel={`${t.voteDirA11yPrefix}: ${t.dirBuy}`}
             >
-              <Text style={[styles.dirText, pDirection === 'buy' && styles.dirTextOn]}>شراء</Text>
+              <Text style={[styles.dirText, pDirection === 'buy' && styles.dirTextOn]}>{t.dirBuy}</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -164,17 +171,17 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                 },
               ]}
               onPress={() => setPDirection('sell')}
-              accessibilityLabel="اتجاه الفكرة: بيع"
+              accessibilityLabel={`${t.voteDirA11yPrefix}: ${t.dirSell}`}
             >
-              <Text style={[styles.dirText, pDirection === 'sell' && styles.dirTextOn]}>بيع</Text>
+              <Text style={[styles.dirText, pDirection === 'sell' && styles.dirTextOn]}>{t.dirSell}</Text>
             </Pressable>
           </View>
-          <View style={styles.row}>
+          <View style={[styles.row, rtl && styles.rowRtl]}>
             <TextInput
-              style={[styles.input, { flex: 1 }]}
+              style={[styles.input, { flex: 1, textAlign: align }]}
               value={pEntry}
               onChangeText={setPEntry}
-              placeholder="دخول"
+              placeholder={t.entryLabel}
               placeholderTextColor={colors.textDim}
               keyboardType="decimal-pad"
               maxLength={12}
@@ -183,13 +190,13 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               clearButtonMode="while-editing"
               keyboardAppearance="dark"
               selectionColor={colors.accent}
-              accessibilityLabel="سعر الدخول"
+              accessibilityLabel={t.voteEntryPriceA11y}
             />
             <TextInput
-              style={[styles.input, { flex: 1 }]}
+              style={[styles.input, { flex: 1, textAlign: align }]}
               value={pSl}
               onChangeText={setPSl}
-              placeholder="وقف"
+              placeholder={t.slLabel}
               placeholderTextColor={colors.textDim}
               keyboardType="decimal-pad"
               maxLength={12}
@@ -198,13 +205,13 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               clearButtonMode="while-editing"
               keyboardAppearance="dark"
               selectionColor={colors.accent}
-              accessibilityLabel="سعر وقف الخسارة"
+              accessibilityLabel={t.voteSlPriceA11y}
             />
             <TextInput
-              style={[styles.input, { flex: 1 }]}
+              style={[styles.input, { flex: 1, textAlign: align }]}
               value={pTp}
               onChangeText={setPTp}
-              placeholder="هدف"
+              placeholder={t.tpLabel}
               placeholderTextColor={colors.textDim}
               keyboardType="decimal-pad"
               maxLength={12}
@@ -213,23 +220,23 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               clearButtonMode="while-editing"
               keyboardAppearance="dark"
               selectionColor={colors.accent}
-              accessibilityLabel="سعر الهدف"
+              accessibilityLabel={t.voteTpPriceA11y}
             />
           </View>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { textAlign: align }]}
             value={pNote}
             onChangeText={setPNote}
-            placeholder="ملاحظة (اختياري) — لماذا هذه الفكرة؟"
+            placeholder={t.voteNotePlaceholder}
             placeholderTextColor={colors.textDim}
             returnKeyType="done"
             underlineColorAndroid="transparent"
             clearButtonMode="while-editing"
             keyboardAppearance="dark"
             selectionColor={colors.accent}
-            accessibilityLabel="ملاحظة الفكرة (اختياري)"
+            accessibilityLabel={t.voteNoteA11y}
           />
-          {pError ? <Text style={styles.formError}>{pError}</Text> : null}
+          {pError ? <Text style={[styles.formError, { textAlign: align }]}>{pError}</Text> : null}
           <Pressable
             accessibilityRole="button"
             style={({ pressed }) => [
@@ -243,16 +250,16 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
             onPress={publish}
             disabled={pBusy}
             accessibilityState={{ disabled: pBusy }}
-            accessibilityLabel="نشر الفكرة"
+            accessibilityLabel={t.votePublishBtn}
           >
-            <Text style={styles.publishBtnText}>{pBusy ? '...' : 'نشر الفكرة'}</Text>
+            <Text style={styles.publishBtnText}>{pBusy ? '...' : t.votePublishBtn}</Text>
           </Pressable>
         </View>
       ) : null}
 
-      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
+      {notice ? <Text style={[styles.notice, { textAlign: align }]}>{notice}</Text> : null}
       {!notice && votes.length === 0 ? (
-        <Text style={styles.empty}>لا توجد تصويتات نشطة حالياً</Text>
+        <Text style={styles.empty}>{t.voteEmpty}</Text>
       ) : null}
       <ScrollView contentContainerStyle={{ gap: 10 }} keyboardShouldPersistTaps="handled">
         {votes.map((v) => {
@@ -261,24 +268,28 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
           const buy = v.direction === 'buy';
           return (
             <View key={v.id} style={styles.card}>
-              <View style={styles.head}>
+              <View style={[styles.head, rtl && styles.headRtl]}>
                 <Text style={styles.symbol}>{v.symbol}</Text>
                 <View style={[styles.badge, { backgroundColor: buy ? colors.bull : colors.bear }]}>
-                  <Text style={styles.badgeText}>{buy ? 'شراء' : 'بيع'}</Text>
+                  <Text style={styles.badgeText}>{buy ? t.dirBuy : t.dirSell}</Text>
                 </View>
               </View>
-              {v.author ? <Text style={styles.author}>بواسطة {v.author}</Text> : null}
-              <Text style={styles.meta}>
-                دخول {v.entry} · وقف {v.sl} · هدف {v.tp}
+              {v.author ? (
+                <Text style={[styles.author, { textAlign: align }]}>
+                  {t.voteByAuthor.replace('{author}', v.author)}
+                </Text>
+              ) : null}
+              <Text style={[styles.meta, { textAlign: align }]}>
+                {t.entryLabel} {v.entry} · {t.slLabel} {v.sl} · {t.tpLabel} {v.tp}
               </Text>
-              <Text style={styles.note}>{v.note}</Text>
+              <Text style={[styles.note, { textAlign: align }]}>{v.note}</Text>
               <View style={styles.barBg}>
                 <View style={[styles.barFill, { width: `${pct}%` }]} />
               </View>
-              <Text style={styles.pct}>
-                موافقة {pct}% · {v.agree} موافق / {v.disagree} رافض
+              <Text style={[styles.pct, { textAlign: align }]}>
+                {t.voteApprovalLabel} {pct}% · {v.agree} {t.voteAgreeWord} / {v.disagree} {t.voteDisagreeWord}
               </Text>
-              <View style={styles.actions}>
+              <View style={[styles.actions, rtl && styles.actionsRtl]}>
                 <Pressable
                   accessibilityRole="button"
                   style={({ pressed }) => [
@@ -290,9 +301,9 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                     },
                   ]}
                   onPress={() => cast(v.id, 'agree')}
-                  accessibilityLabel={`موافقة على فكرة ${v.symbol}`}
+                  accessibilityLabel={`${t.voteAgreeA11yPrefix} ${v.symbol}`}
                 >
-                  <Text style={styles.btnText}>موافق</Text>
+                  <Text style={styles.btnText}>{t.voteAgreeWord}</Text>
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
@@ -305,9 +316,9 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                     },
                   ]}
                   onPress={() => cast(v.id, 'disagree')}
-                  accessibilityLabel={`رفض فكرة ${v.symbol}`}
+                  accessibilityLabel={`${t.voteDisagreeA11yPrefix} ${v.symbol}`}
                 >
-                  <Text style={styles.btnText}>رافض</Text>
+                  <Text style={styles.btnText}>{t.voteDisagreeWord}</Text>
                 </Pressable>
               </View>
             </View>
@@ -341,14 +352,12 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: '700',
     fontSize: 13,
-    textAlign: 'right',
   },
   titleInHead: { marginBottom: 0 },
   notice: {
     color: colors.warn,
     fontSize: 10,
     fontWeight: '700',
-    textAlign: 'right',
     marginTop: spacing.xs,
   },
   empty: {
@@ -365,15 +374,16 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
   },
   head: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  headRtl: { flexDirection: 'row-reverse' },
   symbol: { color: colors.text, fontWeight: '800', fontSize: 14 },
   badge: { borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 2 },
   badgeText: { color: colors.white, fontWeight: '800', fontSize: 11 },
-  meta: { color: colors.textMuted, fontSize: 11, marginTop: 6, textAlign: 'right' },
-  note: { color: colors.text, fontSize: 12, marginTop: spacing.xs, textAlign: 'right', lineHeight: 18 },
+  meta: { color: colors.textMuted, fontSize: 11, marginTop: 6 },
+  note: { color: colors.text, fontSize: 12, marginTop: spacing.xs, lineHeight: 18 },
   barBg: {
     height: 6,
     backgroundColor: colors.border,
@@ -382,8 +392,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   barFill: { height: 6, backgroundColor: colors.accent },
-  pct: { color: colors.textDim, fontSize: 11, marginTop: spacing.xs, textAlign: 'right' },
-  actions: { flexDirection: 'row-reverse', gap: spacing.sm, marginTop: spacing.sm },
+  pct: { color: colors.textDim, fontSize: 11, marginTop: spacing.xs },
+  actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+  actionsRtl: { flexDirection: 'row-reverse' },
   btn: {
     flex: 1,
     borderRadius: radii.sm,
@@ -393,7 +404,7 @@ const styles = StyleSheet.create({
   yes: { backgroundColor: 'rgba(34,197,94,0.2)', borderWidth: 1, borderColor: colors.bull },
   no: { backgroundColor: colors.bearSoft, borderWidth: 1, borderColor: colors.bear },
   btnText: { color: colors.text, fontWeight: '700', fontSize: 12 },
-  author: { color: colors.dxy, fontSize: 10, fontWeight: '700', textAlign: 'right', marginTop: 2 },
+  author: { color: colors.dxy, fontSize: 10, fontWeight: '700', marginTop: 2 },
   publishToggle: {
     alignSelf: 'flex-end',
     marginTop: 6,
@@ -422,10 +433,10 @@ const styles = StyleSheet.create({
     color: colors.text,
     paddingHorizontal: 10,
     paddingVertical: spacing.sm,
-    textAlign: 'right',
     fontSize: 13,
   },
-  row: { flexDirection: 'row-reverse', gap: 6 },
+  row: { flexDirection: 'row', gap: 6 },
+  rowRtl: { flexDirection: 'row-reverse' },
   dirBtn: {
     flex: 1,
     paddingVertical: spacing.sm,
@@ -443,7 +454,6 @@ const styles = StyleSheet.create({
     color: colors.bear,
     fontSize: 10,
     fontWeight: '700',
-    textAlign: 'right',
   },
   publishBtn: {
     backgroundColor: colors.accent,

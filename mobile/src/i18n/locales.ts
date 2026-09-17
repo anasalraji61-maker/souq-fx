@@ -63,6 +63,159 @@ export type Dict = {
   onboardSkip: string;
   onboardNext: string;
   onboardStart: string;
+  // ToolsScreen + الثمانية لوحات hub (أخبار/اجتماعي/دردشة/تصويت/AI/محللون/توقعات/تنبيهات) — 2026-09-17
+  dirBuy: string;
+  dirSell: string;
+  dirNeutral: string;
+  confidenceLabel: string;
+  avgLabel: string;
+  entryLabel: string;
+  slLabel: string;
+  tpLabel: string;
+  enabledWord: string;
+  disabledWord: string;
+  sendBtn: string;
+  refreshBtn: string;
+  aboveWord: string;
+  belowWord: string;
+  addBtn: string;
+  deleteWord: string;
+  priceWord: string;
+  impactHigh: string;
+  impactMedium: string;
+  impactLow: string;
+  toolsTitle: string;
+  toolsSub: string;
+  toolsTabHub: string;
+  toolsTabReports: string;
+  toolsTabJournal: string;
+  toolsTabScreener: string;
+  toolsTabBacktest: string;
+  toolsTabIndAlerts: string;
+  toolsTabCalendar: string;
+  toolsTabLayouts: string;
+  toolsTabAi: string;
+  a11yTabPrefix: string;
+  a11ySignalSymbolPrefix: string;
+  toolsHubCommunity: string;
+  toolsHubAnalysis: string;
+  a11yHubSectionPrefix: string;
+  toolsGridHint: string;
+  toolsFiltersLabel: string;
+  filterMaUpLabel: string;
+  filterMaUpHint: string;
+  filterMaDownLabel: string;
+  filterMaDownHint: string;
+  filterRsiOversoldLabel: string;
+  filterRsiOversoldHint: string;
+  filterRsiOverboughtLabel: string;
+  filterRsiOverboughtHint: string;
+  filterMacdUpLabel: string;
+  filterMacdUpHint: string;
+  filterBullishLabel: string;
+  filterBullishHint: string;
+  filterBearishLabel: string;
+  filterBearishHint: string;
+  a11yFilterPrefix: string;
+  screenerRunning: string;
+  screenerRunBtn: string;
+  screenerRunNeedFilter: string;
+  screenerNeedApiKey: string;
+  screenerNoResults: string;
+  screenerFailed: string;
+  newsTitle: string;
+  newsStale: string;
+  newsEmpty: string;
+  aiPanelTitle: string;
+  aiGreeting: string;
+  aiOfflineFallback: string;
+  aiWinEstimate: string;
+  aiWinDisclaimer: string;
+  aiInputPlaceholder: string;
+  aiInputA11y: string;
+  aiSendA11y: string;
+  aiAskBtn: string;
+  analystsTitle: string;
+  analystsSubSuffix: string;
+  analystsRefreshA11y: string;
+  analystsLoadError: string;
+  socialPlatformTelegram: string;
+  socialPlatformFacebook: string;
+  socialPlatformInstagram: string;
+  socialPlatformX: string;
+  socialPlatformYoutube: string;
+  socialPlatformDiscord: string;
+  socialPlatformApp: string;
+  socialComputeA11y: string;
+  socialComputeBtn: string;
+  socialTitle: string;
+  socialSub: string;
+  socialPickHint: string;
+  socialSourcesError: string;
+  a11ySourcePrefix: string;
+  sourcesCountLabel: string;
+  suggestedTradeLabel: string;
+  socialNoClearTrade: string;
+  socialComputeError: string;
+  chatTitle: string;
+  chatLoadError: string;
+  chatEmpty: string;
+  chatSendError: string;
+  chatYou: string;
+  chatInputPlaceholder: string;
+  chatInputA11y: string;
+  chatSendA11y: string;
+  voteTitle: string;
+  voteCloseFormA11y: string;
+  votePublishNewA11y: string;
+  closeWord: string;
+  votePublishToggleBtn: string;
+  voteSymbolPlaceholder: string;
+  voteSymbolA11y: string;
+  voteDirA11yPrefix: string;
+  voteEntryPriceA11y: string;
+  voteSlPriceA11y: string;
+  voteTpPriceA11y: string;
+  voteNotePlaceholder: string;
+  voteNoteA11y: string;
+  voteFormError: string;
+  votePublishError: string;
+  votePublishBtn: string;
+  voteLoadError: string;
+  voteEmpty: string;
+  voteByAuthor: string;
+  voteApprovalLabel: string;
+  voteAgreeWord: string;
+  voteDisagreeWord: string;
+  voteCastError: string;
+  voteAgreeA11yPrefix: string;
+  voteDisagreeA11yPrefix: string;
+  indicatorBollinger: string;
+  indicatorTrend: string;
+  forecastRunA11y: string;
+  forecastRunBtn: string;
+  forecastTitle: string;
+  forecastAvgLabel: string;
+  forecastTradeLabel: string;
+  forecastNoSignal: string;
+  forecastError: string;
+  alertsTitle: string;
+  alertsSub: string;
+  alertsPushTitle: string;
+  alertsSymbolA11y: string;
+  alertsPriceA11y: string;
+  alertsAboveConditionA11y: string;
+  alertsBelowConditionA11y: string;
+  alertsAddA11y: string;
+  alertsNotePlaceholder: string;
+  alertsNoteA11y: string;
+  alertsAddError: string;
+  alertsLoadError: string;
+  alertsEmpty: string;
+  alertsDeleteConfirmTitle: string;
+  alertsDeleteFailedTitle: string;
+  alertsDeleteFailedBody: string;
+  alertsDeleteA11yPrefix: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -141,6 +294,159 @@ const ar: Dict = {
   onboardSkip: 'تخطي',
   onboardNext: 'التالي',
   onboardStart: 'ابدأ',
+  dirBuy: 'شراء',
+  dirSell: 'بيع',
+  dirNeutral: 'محايد',
+  confidenceLabel: 'ثقة',
+  avgLabel: 'معدل',
+  entryLabel: 'دخول',
+  slLabel: 'وقف',
+  tpLabel: 'هدف',
+  enabledWord: 'مفعّل',
+  disabledWord: 'معطّل',
+  sendBtn: 'إرسال',
+  refreshBtn: 'تحديث',
+  aboveWord: 'فوق',
+  belowWord: 'تحت',
+  addBtn: 'إضافة',
+  deleteWord: 'حذف',
+  priceWord: 'السعر',
+  impactHigh: 'عالي',
+  impactMedium: 'متوسط',
+  impactLow: 'منخفض',
+  toolsTitle: 'أدوات MATRIX',
+  toolsSub: 'مجتمع وأخبار · تحليل وتنبيهات — قسمان قابلان للتبديل',
+  toolsTabHub: 'إشارات ومجتمع',
+  toolsTabReports: 'تقارير',
+  toolsTabJournal: 'PnL',
+  toolsTabScreener: 'فحص',
+  toolsTabBacktest: 'Backtest',
+  toolsTabIndAlerts: 'تنبيهات+',
+  toolsTabCalendar: 'تقويم',
+  toolsTabLayouts: 'تخطيط',
+  toolsTabAi: 'AI',
+  a11yTabPrefix: 'تبويب',
+  a11ySignalSymbolPrefix: 'رمز الإشارة',
+  toolsHubCommunity: 'مجتمع وأخبار',
+  toolsHubAnalysis: 'تحليل وتنبيهات',
+  a11yHubSectionPrefix: 'قسم لوحات',
+  toolsGridHint: 'اسحب النقاط لإعادة ترتيب لوحات هذا القسم',
+  toolsFiltersLabel: 'الفلاتر',
+  filterMaUpLabel: 'MA صعودي',
+  filterMaUpHint: 'السعر تجاوز متوسطه المتحرك للأعلى',
+  filterMaDownLabel: 'MA هبوطي',
+  filterMaDownHint: 'السعر تجاوز متوسطه المتحرك للأسفل',
+  filterRsiOversoldLabel: 'RSI oversold',
+  filterRsiOversoldHint: 'تشبّع بيعي — قد يرتد صعوداً',
+  filterRsiOverboughtLabel: 'RSI overbought',
+  filterRsiOverboughtHint: 'تشبّع شرائي — قد يرتد هبوطاً',
+  filterMacdUpLabel: 'MACD up',
+  filterMacdUpHint: 'تقاطع MACD صاعد — زخم إيجابي جديد',
+  filterBullishLabel: 'زخم +',
+  filterBullishHint: 'زخم سعري إيجابي عام',
+  filterBearishLabel: 'زخم -',
+  filterBearishHint: 'زخم سعري سلبي عام',
+  a11yFilterPrefix: 'فلتر',
+  screenerRunning: 'جاري الفحص...',
+  screenerRunBtn: 'تشغيل Screener',
+  screenerRunNeedFilter: 'تشغيل Screener، اختر فلتراً أولاً',
+  screenerNeedApiKey: 'الفحص يحتاج مفتاح Twelve Data مفعّلاً على الخادم',
+  screenerNoResults: 'لا نتائج مطابقة للفلاتر الحالية',
+  screenerFailed: 'تعذر تشغيل الفحص — تحقق من الاتصال وحاول مرة أخرى',
+  newsTitle: 'أخبار مؤثرة على الفوركس',
+  newsStale: 'تعذر تحديث الأخبار — تُعرض بيانات محفوظة',
+  newsEmpty: 'لا توجد أخبار حالياً',
+  aiPanelTitle: 'مساعد ذكاء اصطناعي',
+  aiGreeting: 'أنا خبير تداول MATRIX. اسأل عن تحليل، سيناريو صفقة، إدارة مخاطر، أو علاقة الزوج بـ DXY.',
+  aiOfflineFallback:
+    'تعذر الاتصال بالخادم. تأكد أن Backend يعمل على المنفذ 8100.\n\nتحليل محلي سريع: راقب DXY قبل أي دخول على أزواج الدولار، واستخدم وقف واضح بنسبة مخاطرة ≤ 1%.',
+  aiWinEstimate: 'توقع نجاح تقديري: {pct}%',
+  aiWinDisclaimer: 'تقدير إحصائي وليس ضماناً — أدر مخاطرك دوماً',
+  aiInputPlaceholder: 'مثال: تحليل {symbol} اليوم؟',
+  aiInputA11y: 'سؤال لمساعد الذكاء الاصطناعي',
+  aiSendA11y: 'إرسال سؤال لمساعد الذكاء الاصطناعي',
+  aiAskBtn: 'اسأل',
+  analystsTitle: 'توقعات المحللين',
+  analystsSubSuffix: 'إجماع بيوت بحث',
+  analystsRefreshA11y: 'تحديث توقعات المحللين',
+  analystsLoadError: 'تعذر تحميل توقعات المحللين',
+  socialPlatformTelegram: 'تيليجرام',
+  socialPlatformFacebook: 'فيسبوك',
+  socialPlatformInstagram: 'إنستغرام',
+  socialPlatformX: 'X',
+  socialPlatformYoutube: 'يوتيوب',
+  socialPlatformDiscord: 'ديسكورد',
+  socialPlatformApp: 'تطبيق',
+  socialComputeA11y: 'احسب إجماع المصادر المختارة',
+  socialComputeBtn: 'احسب',
+  socialTitle: 'المعدل التقريبي للتوصيات والصفقات',
+  socialSub: 'تيليجرام · فيسبوك · إنستغرام · X · تطبيقات',
+  socialPickHint: 'اختر المصادر التي تتابعها — ثم يُحسب المعدل العام',
+  socialSourcesError: 'تعذر تحميل قائمة المصادر — تحقق من الاتصال',
+  a11ySourcePrefix: 'مصدر',
+  sourcesCountLabel: 'مصادر',
+  suggestedTradeLabel: 'صفقة مقترحة',
+  socialNoClearTrade: 'لا صفقة واضحة — الآراء متضاربة أو محايدة',
+  socialComputeError: 'تعذر حساب إجماع القنوات',
+  chatTitle: 'دردشة جماعية',
+  chatLoadError: 'تعذر تحميل الرسائل — تُعرض رسائل محفوظة',
+  chatEmpty: 'لا توجد رسائل بعد — كن أول من يكتب',
+  chatSendError: 'تعذر إرسال رسالتك للمجموعة — قد لا تصل، حاول لاحقاً',
+  chatYou: 'أنت',
+  chatInputPlaceholder: 'اكتب رسالة...',
+  chatInputA11y: 'رسالة الدردشة الجماعية',
+  chatSendA11y: 'إرسال رسالة الدردشة الجماعية',
+  voteTitle: 'تصويت على صفقة',
+  voteCloseFormA11y: 'إغلاق نموذج نشر الفكرة',
+  votePublishNewA11y: 'نشر فكرة تداول جديدة',
+  closeWord: 'إغلاق',
+  votePublishToggleBtn: 'انشر فكرتك',
+  voteSymbolPlaceholder: 'الرمز (مثال EURUSD)',
+  voteSymbolA11y: 'رمز الأداة لفكرتك',
+  voteDirA11yPrefix: 'اتجاه الفكرة',
+  voteEntryPriceA11y: 'سعر الدخول',
+  voteSlPriceA11y: 'سعر وقف الخسارة',
+  voteTpPriceA11y: 'سعر الهدف',
+  voteNotePlaceholder: 'ملاحظة (اختياري) — لماذا هذه الفكرة؟',
+  voteNoteA11y: 'ملاحظة الفكرة (اختياري)',
+  voteFormError: 'أدخل الرمز والدخول والوقف والهدف بشكل صحيح',
+  votePublishError: 'تعذر نشر الفكرة — تحقق من الاتصال وحاول مرة أخرى',
+  votePublishBtn: 'نشر الفكرة',
+  voteLoadError: 'تعذر تحديث التصويتات — تُعرض بيانات محفوظة',
+  voteEmpty: 'لا توجد تصويتات نشطة حالياً',
+  voteByAuthor: 'بواسطة {author}',
+  voteApprovalLabel: 'موافقة',
+  voteAgreeWord: 'موافق',
+  voteDisagreeWord: 'رافض',
+  voteCastError: 'تعذر إرسال صوتك للخادم — قد لا يُحتسب، حاول لاحقاً',
+  voteAgreeA11yPrefix: 'موافقة على فكرة',
+  voteDisagreeA11yPrefix: 'رفض فكرة',
+  indicatorBollinger: 'بولنجر',
+  indicatorTrend: 'ميل',
+  forecastRunA11y: 'توقّع المؤشرات',
+  forecastRunBtn: 'توقّع',
+  forecastTitle: 'توقعات المؤشرات',
+  forecastAvgLabel: 'معدل مؤشرات',
+  forecastTradeLabel: 'صفقة',
+  forecastNoSignal: 'لا إشارة قوية — انتظر تأكيد المؤشرات',
+  forecastError: 'تعذر حساب توقعات المؤشرات',
+  alertsTitle: 'تنبيهات السعر',
+  alertsSub: 'فوق / تحت · Twelve Data · إشعار عند التفعيل',
+  alertsPushTitle: 'MATRIX · تنبيه سعر',
+  alertsSymbolA11y: 'رمز الأداة للتنبيه',
+  alertsPriceA11y: 'سعر التنبيه',
+  alertsAboveConditionA11y: 'شرط التنبيه: فوق السعر',
+  alertsBelowConditionA11y: 'شرط التنبيه: تحت السعر',
+  alertsAddA11y: 'إضافة تنبيه سعر',
+  alertsNotePlaceholder: 'ملاحظة (اختياري)',
+  alertsNoteA11y: 'ملاحظة التنبيه (اختياري)',
+  alertsAddError: 'تعذر إضافة التنبيه — تحقق من الاتصال وحاول مرة أخرى',
+  alertsLoadError: 'تعذر تحميل التنبيهات',
+  alertsEmpty: 'لا تنبيهات بعد',
+  alertsDeleteConfirmTitle: 'حذف التنبيه؟',
+  alertsDeleteFailedTitle: 'تعذر الحذف',
+  alertsDeleteFailedBody: 'حدث خطأ أثناء حذف التنبيه، حاول مرة أخرى.',
+  alertsDeleteA11yPrefix: 'حذف تنبيه',
 };
 
 const enUS: Dict = {
@@ -212,6 +518,160 @@ const enUS: Dict = {
   onboardSkip: 'Skip',
   onboardNext: 'Next',
   onboardStart: 'Start',
+  dirBuy: 'Buy',
+  dirSell: 'Sell',
+  dirNeutral: 'Neutral',
+  confidenceLabel: 'Confidence',
+  avgLabel: 'Avg',
+  entryLabel: 'Entry',
+  slLabel: 'Stop',
+  tpLabel: 'Target',
+  enabledWord: 'On',
+  disabledWord: 'Off',
+  sendBtn: 'Send',
+  refreshBtn: 'Refresh',
+  aboveWord: 'Above',
+  belowWord: 'Below',
+  addBtn: 'Add',
+  deleteWord: 'Delete',
+  priceWord: 'Price',
+  impactHigh: 'High',
+  impactMedium: 'Medium',
+  impactLow: 'Low',
+  toolsTitle: 'MATRIX Tools',
+  toolsSub: 'Community & news · Analysis & alerts — two switchable sections',
+  toolsTabHub: 'Signals & community',
+  toolsTabReports: 'Reports',
+  toolsTabJournal: 'PnL',
+  toolsTabScreener: 'Screener',
+  toolsTabBacktest: 'Backtest',
+  toolsTabIndAlerts: 'Alerts+',
+  toolsTabCalendar: 'Calendar',
+  toolsTabLayouts: 'Layout',
+  toolsTabAi: 'AI',
+  a11yTabPrefix: 'Tab',
+  a11ySignalSymbolPrefix: 'Signal symbol',
+  toolsHubCommunity: 'Community & news',
+  toolsHubAnalysis: 'Analysis & alerts',
+  a11yHubSectionPrefix: 'Panel section',
+  toolsGridHint: "Drag the dots to reorder this section's panels",
+  toolsFiltersLabel: 'Filters',
+  filterMaUpLabel: 'MA up',
+  filterMaUpHint: 'Price crossed above its moving average',
+  filterMaDownLabel: 'MA down',
+  filterMaDownHint: 'Price crossed below its moving average',
+  filterRsiOversoldLabel: 'RSI oversold',
+  filterRsiOversoldHint: 'Oversold — may bounce upward',
+  filterRsiOverboughtLabel: 'RSI overbought',
+  filterRsiOverboughtHint: 'Overbought — may pull back downward',
+  filterMacdUpLabel: 'MACD up',
+  filterMacdUpHint: 'Bullish MACD cross — fresh positive momentum',
+  filterBullishLabel: 'Momentum +',
+  filterBullishHint: 'General positive price momentum',
+  filterBearishLabel: 'Momentum -',
+  filterBearishHint: 'General negative price momentum',
+  a11yFilterPrefix: 'Filter',
+  screenerRunning: 'Scanning...',
+  screenerRunBtn: 'Run screener',
+  screenerRunNeedFilter: 'Run screener — pick a filter first',
+  screenerNeedApiKey: 'The screener needs an active Twelve Data key on the server',
+  screenerNoResults: 'No results match the current filters',
+  screenerFailed: 'Could not run the scan — check your connection and try again',
+  newsTitle: 'News affecting forex',
+  newsStale: 'Could not refresh news — showing saved data',
+  newsEmpty: 'No news right now',
+  aiPanelTitle: 'AI assistant',
+  aiGreeting:
+    "I'm the MATRIX trading expert. Ask about analysis, a trade scenario, risk management, or the pair's relation to DXY.",
+  aiOfflineFallback:
+    'Could not reach the server. Make sure the backend is running on port 8100.\n\nQuick local take: watch DXY before entering any dollar pair, and use a clear stop with risk ≤ 1%.',
+  aiWinEstimate: 'Estimated success chance: {pct}%',
+  aiWinDisclaimer: 'A statistical estimate, not a guarantee — always manage your risk',
+  aiInputPlaceholder: 'e.g. analysis of {symbol} today?',
+  aiInputA11y: 'Question for the AI assistant',
+  aiSendA11y: 'Send question to the AI assistant',
+  aiAskBtn: 'Ask',
+  analystsTitle: 'Analyst forecasts',
+  analystsSubSuffix: 'Research house consensus',
+  analystsRefreshA11y: 'Refresh analyst forecasts',
+  analystsLoadError: 'Could not load analyst forecasts',
+  socialPlatformTelegram: 'Telegram',
+  socialPlatformFacebook: 'Facebook',
+  socialPlatformInstagram: 'Instagram',
+  socialPlatformX: 'X',
+  socialPlatformYoutube: 'YouTube',
+  socialPlatformDiscord: 'Discord',
+  socialPlatformApp: 'App',
+  socialComputeA11y: 'Compute consensus of selected sources',
+  socialComputeBtn: 'Compute',
+  socialTitle: 'Approximate average of tips & trades',
+  socialSub: 'Telegram · Facebook · Instagram · X · Apps',
+  socialPickHint: 'Pick the sources you follow — the overall average is then computed',
+  socialSourcesError: 'Could not load the source list — check your connection',
+  a11ySourcePrefix: 'Source',
+  sourcesCountLabel: 'Sources',
+  suggestedTradeLabel: 'Suggested trade',
+  socialNoClearTrade: 'No clear trade — opinions are mixed or neutral',
+  socialComputeError: 'Could not compute channel consensus',
+  chatTitle: 'Group chat',
+  chatLoadError: 'Could not load messages — showing saved messages',
+  chatEmpty: 'No messages yet — be the first to write',
+  chatSendError: 'Could not send your message to the group — it may not arrive, try later',
+  chatYou: 'You',
+  chatInputPlaceholder: 'Type a message...',
+  chatInputA11y: 'Group chat message',
+  chatSendA11y: 'Send group chat message',
+  voteTitle: 'Vote on a trade',
+  voteCloseFormA11y: 'Close the idea form',
+  votePublishNewA11y: 'Publish a new trade idea',
+  closeWord: 'Close',
+  votePublishToggleBtn: 'Publish your idea',
+  voteSymbolPlaceholder: 'Symbol (e.g. EURUSD)',
+  voteSymbolA11y: 'Instrument symbol for your idea',
+  voteDirA11yPrefix: 'Idea direction',
+  voteEntryPriceA11y: 'Entry price',
+  voteSlPriceA11y: 'Stop-loss price',
+  voteTpPriceA11y: 'Target price',
+  voteNotePlaceholder: 'Note (optional) — why this idea?',
+  voteNoteA11y: 'Idea note (optional)',
+  voteFormError: 'Enter the symbol, entry, stop, and target correctly',
+  votePublishError: 'Could not publish the idea — check your connection and try again',
+  votePublishBtn: 'Publish idea',
+  voteLoadError: 'Could not refresh votes — showing saved data',
+  voteEmpty: 'No active votes right now',
+  voteByAuthor: 'By {author}',
+  voteApprovalLabel: 'Approval',
+  voteAgreeWord: 'Agree',
+  voteDisagreeWord: 'Disagree',
+  voteCastError: 'Could not send your vote to the server — it may not count, try later',
+  voteAgreeA11yPrefix: 'Agree with idea',
+  voteDisagreeA11yPrefix: 'Disagree with idea',
+  indicatorBollinger: 'Bollinger',
+  indicatorTrend: 'Trend',
+  forecastRunA11y: 'Forecast indicators',
+  forecastRunBtn: 'Forecast',
+  forecastTitle: 'Indicator forecasts',
+  forecastAvgLabel: 'Indicator avg',
+  forecastTradeLabel: 'Trade',
+  forecastNoSignal: 'No strong signal — wait for indicator confirmation',
+  forecastError: 'Could not compute indicator forecasts',
+  alertsTitle: 'Price alerts',
+  alertsSub: 'Above / Below · Twelve Data · Notification when triggered',
+  alertsPushTitle: 'MATRIX · Price alert',
+  alertsSymbolA11y: 'Instrument symbol for the alert',
+  alertsPriceA11y: 'Alert price',
+  alertsAboveConditionA11y: 'Alert condition: above price',
+  alertsBelowConditionA11y: 'Alert condition: below price',
+  alertsAddA11y: 'Add price alert',
+  alertsNotePlaceholder: 'Note (optional)',
+  alertsNoteA11y: 'Alert note (optional)',
+  alertsAddError: 'Could not add the alert — check your connection and try again',
+  alertsLoadError: 'Could not load alerts',
+  alertsEmpty: 'No alerts yet',
+  alertsDeleteConfirmTitle: 'Delete the alert?',
+  alertsDeleteFailedTitle: 'Could not delete',
+  alertsDeleteFailedBody: 'An error occurred while deleting the alert, try again.',
+  alertsDeleteA11yPrefix: 'Delete alert',
 };
 
 const enGB: Dict = {
@@ -301,6 +761,160 @@ const ku: Dict = {
   onboardSkip: 'تێپەڕاندن',
   onboardNext: 'دواتر',
   onboardStart: 'دەستپێبکە',
+  dirBuy: 'کڕین',
+  dirSell: 'فرۆشتن',
+  dirNeutral: 'بێلایەن',
+  confidenceLabel: 'دڵنیایی',
+  avgLabel: 'ناوەند',
+  entryLabel: 'چوونەژوورەوە',
+  slLabel: 'وەستان',
+  tpLabel: 'ئامانج',
+  enabledWord: 'چالاک',
+  disabledWord: 'ناچالاک',
+  sendBtn: 'ناردن',
+  refreshBtn: 'نوێکردنەوە',
+  aboveWord: 'سەرەوە',
+  belowWord: 'خوارەوە',
+  addBtn: 'زیادکردن',
+  deleteWord: 'سڕینەوە',
+  priceWord: 'نرخ',
+  impactHigh: 'بەرز',
+  impactMedium: 'مامناوەند',
+  impactLow: 'نزم',
+  toolsTitle: 'ئامرازەکانی MATRIX',
+  toolsSub: 'کۆمەڵگا و هەواڵ · شیکاری و ئاگادارکردنەوە — دوو بەشی گۆڕاو',
+  toolsTabHub: 'نیشانەکان و کۆمەڵگا',
+  toolsTabReports: 'ڕاپۆرتەکان',
+  toolsTabJournal: 'PnL',
+  toolsTabScreener: 'پشکنین',
+  toolsTabBacktest: 'Backtest',
+  toolsTabIndAlerts: 'ئاگادارکردنەوە+',
+  toolsTabCalendar: 'ڕۆژژمێر',
+  toolsTabLayouts: 'نەخشەسازی',
+  toolsTabAi: 'AI',
+  a11yTabPrefix: 'تاب',
+  a11ySignalSymbolPrefix: 'هێمای نیشانە',
+  toolsHubCommunity: 'کۆمەڵگا و هەواڵ',
+  toolsHubAnalysis: 'شیکاری و ئاگادارکردنەوە',
+  a11yHubSectionPrefix: 'بەشی پانێڵ',
+  toolsGridHint: 'خاڵەکان ڕاکێشە بۆ ڕیزبەندی دووبارەی پانێڵەکانی ئەم بەشە',
+  toolsFiltersLabel: 'فلتەرەکان',
+  filterMaUpLabel: 'MA بەرزبوونەوە',
+  filterMaUpHint: 'نرخ لە ناوەندی جوڵاوی خۆی بەرزتر بووەتەوە',
+  filterMaDownLabel: 'MA دابەزین',
+  filterMaDownHint: 'نرخ لە ناوەندی جوڵاوی خۆی نزمتر بووەتەوە',
+  filterRsiOversoldLabel: 'RSI oversold',
+  filterRsiOversoldHint: 'زۆر فرۆشراوە — لەوانەیە بگەڕێتەوە سەرەوە',
+  filterRsiOverboughtLabel: 'RSI overbought',
+  filterRsiOverboughtHint: 'زۆر کڕدراوە — لەوانەیە بگەڕێتەوە خوارەوە',
+  filterMacdUpLabel: 'MACD up',
+  filterMacdUpHint: 'بڕینەوەی MACD بەرزبوونەوە — بەهێزی ئەرێنی نوێ',
+  filterBullishLabel: 'خۆشوڕی +',
+  filterBullishHint: 'خۆشوڕی گشتی ئەرێنی نرخ',
+  filterBearishLabel: 'خۆشوڕی -',
+  filterBearishHint: 'خۆشوڕی گشتی نەرێنی نرخ',
+  a11yFilterPrefix: 'فلتەر',
+  screenerRunning: 'پشکنین بەردەوامە...',
+  screenerRunBtn: 'کارپێکردنی پشکنەر',
+  screenerRunNeedFilter: 'کارپێکردنی پشکنەر — سەرەتا فلتەرێک هەڵبژێرە',
+  screenerNeedApiKey: 'پشکنین پێویستی بە کلیلی چالاکی Twelve Data لەسەر ڕاژە هەیە',
+  screenerNoResults: 'هیچ ئەنجامێک لەگەڵ فلتەرە ئێستاکان ناگونجێت',
+  screenerFailed: 'نەکرا پشکنین کارپێبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
+  newsTitle: 'هەواڵی کاریگەر لەسەر فۆرێکس',
+  newsStale: 'نەکرا هەواڵ نوێبکرێتەوە — زانیاری پاشەکەوتکراو پیشان دەدرێت',
+  newsEmpty: 'هیچ هەواڵێک لە ئێستادا نییە',
+  aiPanelTitle: 'یاریدەدەری زیرەکی دەستکرد',
+  aiGreeting:
+    'من پسپۆڕی مامەڵەکردنی MATRIX ـم. پرسیار بکە دەربارەی شیکاری، دیمەنی مامەڵە، بەڕێوەبردنی مەترسی، یان پەیوەندی جووتەکە بە DXY.',
+  aiOfflineFallback:
+    'نەکرا پەیوەندی بە ڕاژەوە بکرێت. دڵنیابەرەوە کە Backend لەسەر پۆرتی 8100 کاردەکات.\n\nشیکاری خێرای ناوخۆیی: چاودێری DXY بکە پێش هەر چوونەژوورەوەیەک بۆ جووتەکانی دۆلار، و وەستانێکی ڕوون بەکاربهێنە بە مەترسی ≤ 1%.',
+  aiWinEstimate: 'ڕێژەی سەرکەوتنی خەمڵێنراو: {pct}%',
+  aiWinDisclaimer: 'خەمڵاندنێکی ئاماریە نەک دڵنیایی — هەمیشە مەترسیت بەڕێوە ببە',
+  aiInputPlaceholder: 'نموونە: شیکاری {symbol} ئەمڕۆ؟',
+  aiInputA11y: 'پرسیار بۆ یاریدەدەری زیرەکی دەستکرد',
+  aiSendA11y: 'ناردنی پرسیار بۆ یاریدەدەری زیرەکی دەستکرد',
+  aiAskBtn: 'بپرسە',
+  analystsTitle: 'پێشبینیەکانی شیکارکاران',
+  analystsSubSuffix: 'ڕێکەوتنی ماڵی توێژینەوە',
+  analystsRefreshA11y: 'نوێکردنەوەی پێشبینیەکانی شیکارکاران',
+  analystsLoadError: 'نەکرا پێشبینیەکانی شیکارکاران باربکرێت',
+  socialPlatformTelegram: 'تێلێگرام',
+  socialPlatformFacebook: 'فەیسبووک',
+  socialPlatformInstagram: 'ئینستاگرام',
+  socialPlatformX: 'X',
+  socialPlatformYoutube: 'یوتیوب',
+  socialPlatformDiscord: 'دیسکۆرد',
+  socialPlatformApp: 'ئەپ',
+  socialComputeA11y: 'ڕێکەوتنی سەرچاوە هەڵبژێردراوەکان بژمێرە',
+  socialComputeBtn: 'بژمێرە',
+  socialTitle: 'ناوەندی نزیکەی ڕاسپاردە و مامەڵەکان',
+  socialSub: 'تێلێگرام · فەیسبووک · ئینستاگرام · X · ئەپەکان',
+  socialPickHint: 'سەرچاوەکانی شوێنکەوتووت هەڵبژێرە — ئینجا ناوەندی گشتی دەژمێردرێت',
+  socialSourcesError: 'نەکرا لیستی سەرچاوەکان باربکرێت — پەیوەندییەکەت بپشکنە',
+  a11ySourcePrefix: 'سەرچاوە',
+  sourcesCountLabel: 'سەرچاوەکان',
+  suggestedTradeLabel: 'مامەڵەی پێشنیارکراو',
+  socialNoClearTrade: 'هیچ مامەڵەیەکی ڕوون نییە — بۆچوونەکان تێکەڵ یان بێلایەنن',
+  socialComputeError: 'نەکرا ڕێکەوتنی کەناڵەکان بژمێردرێت',
+  chatTitle: 'گفتوگۆی گروپی',
+  chatLoadError: 'نەکرا نامەکان باربکرێت — نامە پاشەکەوتکراوەکان پیشان دەدرێن',
+  chatEmpty: 'هێشتا هیچ نامەیەک نییە — یەکەم کەس بە بۆ نووسین',
+  chatSendError: 'نەکرا نامەکەت بۆ گروپ بنێردرێت — لەوانەیە نەگات، دواتر هەوڵبدەرەوە',
+  chatYou: 'تۆ',
+  chatInputPlaceholder: 'نامەیەک بنووسە...',
+  chatInputA11y: 'نامەی گفتوگۆی گروپی',
+  chatSendA11y: 'ناردنی نامەی گفتوگۆی گروپی',
+  voteTitle: 'دەنگدان لەسەر مامەڵەیەک',
+  voteCloseFormA11y: 'داخستنی فۆرمی بیرۆکە',
+  votePublishNewA11y: 'بڵاوکردنەوەی بیرۆکەیەکی نوێی مامەڵە',
+  closeWord: 'داخستن',
+  votePublishToggleBtn: 'بیرۆکەکەت بڵاوبکەرەوە',
+  voteSymbolPlaceholder: 'هێما (نموونە EURUSD)',
+  voteSymbolA11y: 'هێمای ئامرازی بیرۆکەکەت',
+  voteDirA11yPrefix: 'ئاراستەی بیرۆکە',
+  voteEntryPriceA11y: 'نرخی چوونەژوورەوە',
+  voteSlPriceA11y: 'نرخی وەستاندنی زیان',
+  voteTpPriceA11y: 'نرخی ئامانج',
+  voteNotePlaceholder: 'تێبینی (ئیختیاری) — بۆچی ئەم بیرۆکەیە؟',
+  voteNoteA11y: 'تێبینی بیرۆکە (ئیختیاری)',
+  voteFormError: 'هێما و چوونەژوورەوە و وەستان و ئامانج بە دروستی بنووسە',
+  votePublishError: 'نەکرا بیرۆکە بڵاوبکرێتەوە — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
+  votePublishBtn: 'بیرۆکە بڵاوبکەرەوە',
+  voteLoadError: 'نەکرا دەنگەکان نوێبکرێتەوە — زانیاری پاشەکەوتکراو پیشان دەدرێت',
+  voteEmpty: 'هیچ دەنگدانێکی چالاک لە ئێستادا نییە',
+  voteByAuthor: 'لەلایەن {author}',
+  voteApprovalLabel: 'ڕەزامەندی',
+  voteAgreeWord: 'ڕازیم',
+  voteDisagreeWord: 'ڕازی نیم',
+  voteCastError: 'نەکرا دەنگت بۆ ڕاژە بنێردرێت — لەوانەیە نەژمێردرێت، دواتر هەوڵبدەرەوە',
+  voteAgreeA11yPrefix: 'ڕازیبوون لەگەڵ بیرۆکەی',
+  voteDisagreeA11yPrefix: 'ڕەتکردنەوەی بیرۆکەی',
+  indicatorBollinger: 'بۆلینگەر',
+  indicatorTrend: 'ترێند',
+  forecastRunA11y: 'پێشبینیکردنی پێوەرەکان',
+  forecastRunBtn: 'پێشبینیکردن',
+  forecastTitle: 'پێشبینیەکانی پێوەرەکان',
+  forecastAvgLabel: 'ناوەندی پێوەرەکان',
+  forecastTradeLabel: 'مامەڵە',
+  forecastNoSignal: 'هیچ نیشانەیەکی بەهێز نییە — چاوەڕێی دڵنیاکردنەوەی پێوەرەکان بکە',
+  forecastError: 'نەکرا پێشبینیەکانی پێوەرەکان بژمێردرێت',
+  alertsTitle: 'ئاگادارکردنەوەی نرخ',
+  alertsSub: 'سەرەوە / خوارەوە · Twelve Data · ئاگادارکردنەوە کاتێک چالاک دەبێت',
+  alertsPushTitle: 'MATRIX · ئاگادارکردنەوەی نرخ',
+  alertsSymbolA11y: 'هێمای ئامراز بۆ ئاگادارکردنەوە',
+  alertsPriceA11y: 'نرخی ئاگادارکردنەوە',
+  alertsAboveConditionA11y: 'مەرجی ئاگادارکردنەوە: سەرەوەی نرخ',
+  alertsBelowConditionA11y: 'مەرجی ئاگادارکردنەوە: خوارەوەی نرخ',
+  alertsAddA11y: 'زیادکردنی ئاگادارکردنەوەی نرخ',
+  alertsNotePlaceholder: 'تێبینی (ئیختیاری)',
+  alertsNoteA11y: 'تێبینی ئاگادارکردنەوە (ئیختیاری)',
+  alertsAddError: 'نەکرا ئاگادارکردنەوە زیادبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
+  alertsLoadError: 'نەکرا ئاگادارکردنەوەکان باربکرێن',
+  alertsEmpty: 'هێشتا هیچ ئاگادارکردنەوەیەک نییە',
+  alertsDeleteConfirmTitle: 'ئاگادارکردنەوەکە بسڕدرێتەوە؟',
+  alertsDeleteFailedTitle: 'سڕینەوە سەرکەوتوو نەبوو',
+  alertsDeleteFailedBody: 'هەڵەیەک ڕوویدا لە کاتی سڕینەوەی ئاگادارکردنەوەکە، دووبارە هەوڵبدەرەوە.',
+  alertsDeleteA11yPrefix: 'سڕینەوەی ئاگادارکردنەوە',
 };
 
 export const DICTS: Record<LangId, Dict> = {

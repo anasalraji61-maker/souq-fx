@@ -13,6 +13,7 @@ import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail,
 import { api, type PriceAlert } from '../api';
 import { ensureAlertNotifications, pushPriceAlert, registerPushToken } from '../notifications';
 import { playSoftClick } from '../audio/playSoftClick';
+import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
   defaultSymbol?: string;
@@ -20,6 +21,8 @@ type Props = {
 };
 
 export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
   const [symbol, setSymbol] = useState(defaultSymbol);
   const [price, setPrice] = useState('');
@@ -51,19 +54,19 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
       const res = await api.checkAlerts();
       setAlerts(res.alerts);
       if (res.triggered.length) {
-        const msg = res.triggered.map((t) => `${t.symbol} ${t.condition} ${t.price}`).join(' · ');
+        const msg = res.triggered.map((trig) => `${trig.symbol} ${trig.condition} ${trig.price}`).join(' · ');
         setFlash(msg);
-        for (const t of res.triggered) {
+        for (const trig of res.triggered) {
           await pushPriceAlert(
-            'MATRIX · تنبيه سعر',
-            `${t.symbol} ${t.condition === 'above' ? 'فوق' : 'تحت'} ${t.price}`
+            t.alertsPushTitle,
+            `${trig.symbol} ${trig.condition === 'above' ? t.aboveWord : t.belowWord} ${trig.price}`
           );
         }
       }
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [t.alertsPushTitle, t.aboveWord, t.belowWord]);
 
   useEffect(() => {
     void ensureAlertNotifications().then(() => registerPushToken());
@@ -84,7 +87,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
       setNote('');
       await refresh();
     } catch {
-      setFormError('تعذر إضافة التنبيه — تحقق من الاتصال وحاول مرة أخرى');
+      setFormError(t.alertsAddError);
     } finally {
       setBusy(false);
     }
@@ -95,7 +98,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
       await api.deleteAlert(id);
       await refresh();
     } catch {
-      Alert.alert('تعذر الحذف', 'حدث خطأ أثناء حذف التنبيه، حاول مرة أخرى.');
+      Alert.alert(t.alertsDeleteFailedTitle, t.alertsDeleteFailedBody);
     }
   };
 
@@ -105,21 +108,21 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
         <View style={frameEmbedHead}>
           <View style={frameEmbedHeadTail} />
           <View style={frameEmbedTitleBlock}>
-            <Text style={[styles.title, frameEmbedTitle]}>تنبيهات السعر</Text>
-            <Text style={[styles.sub, frameEmbedSub]}>فوق / تحت · Twelve Data · إشعار عند التفعيل</Text>
+            <Text style={[styles.title, frameEmbedTitle, { textAlign: align }]}>{t.alertsTitle}</Text>
+            <Text style={[styles.sub, frameEmbedSub, { textAlign: align }]}>{t.alertsSub}</Text>
           </View>
         </View>
       ) : (
         <>
-          <Text style={styles.title}>تنبيهات السعر</Text>
-          <Text style={styles.sub}>فوق / تحت · Twelve Data · إشعار عند التفعيل</Text>
+          <Text style={[styles.title, { textAlign: align }]}>{t.alertsTitle}</Text>
+          <Text style={[styles.sub, { textAlign: align }]}>{t.alertsSub}</Text>
         </>
       )}
-      {flash ? <Text style={styles.flash}>🔔 {flash}</Text> : null}
+      {flash ? <Text style={[styles.flash, { textAlign: align }]}>🔔 {flash}</Text> : null}
 
       <View style={styles.form}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { textAlign: align }]}
           value={symbol}
           onChangeText={setSymbol}
           placeholder="EURUSD"
@@ -131,13 +134,13 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
           clearButtonMode="while-editing"
           keyboardAppearance="dark"
           selectionColor={colors.accent}
-          accessibilityLabel="رمز الأداة للتنبيه"
+          accessibilityLabel={t.alertsSymbolA11y}
         />
         <TextInput
-          style={styles.input}
+          style={[styles.input, { textAlign: align }]}
           value={price}
           onChangeText={setPrice}
-          placeholder="السعر"
+          placeholder={t.priceWord}
           placeholderTextColor={colors.textDim}
           keyboardType="decimal-pad"
           maxLength={12}
@@ -146,9 +149,9 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
           clearButtonMode="while-editing"
           keyboardAppearance="dark"
           selectionColor={colors.accent}
-          accessibilityLabel="سعر التنبيه"
+          accessibilityLabel={t.alertsPriceA11y}
         />
-        <View style={styles.row}>
+        <View style={[styles.row, rtl && styles.rowRtl]}>
           <Pressable
             accessibilityRole="button"
             style={({ pressed }) => [
@@ -160,9 +163,9 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
               },
             ]}
             onPress={() => setCondition('above')}
-            accessibilityLabel="شرط التنبيه: فوق السعر"
+            accessibilityLabel={t.alertsAboveConditionA11y}
           >
-            <Text style={[styles.condText, condition === 'above' && styles.condTextOn]}>فوق</Text>
+            <Text style={[styles.condText, condition === 'above' && styles.condTextOn]}>{t.aboveWord}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -175,9 +178,9 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
               },
             ]}
             onPress={() => setCondition('below')}
-            accessibilityLabel="شرط التنبيه: تحت السعر"
+            accessibilityLabel={t.alertsBelowConditionA11y}
           >
-            <Text style={[styles.condText, condition === 'below' && styles.condTextOn]}>تحت</Text>
+            <Text style={[styles.condText, condition === 'below' && styles.condTextOn]}>{t.belowWord}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -192,43 +195,45 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
             onPress={add}
             disabled={busy}
             accessibilityState={{ disabled: busy }}
-            accessibilityLabel="إضافة تنبيه سعر"
+            accessibilityLabel={t.alertsAddA11y}
           >
-            <Text style={styles.addText}>{busy ? '...' : 'إضافة'}</Text>
+            <Text style={styles.addText}>{busy ? '...' : t.addBtn}</Text>
           </Pressable>
         </View>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { textAlign: align }]}
           value={note}
           onChangeText={setNote}
-          placeholder="ملاحظة (اختياري)"
+          placeholder={t.alertsNotePlaceholder}
           placeholderTextColor={colors.textDim}
           returnKeyType="done"
           underlineColorAndroid="transparent"
           clearButtonMode="while-editing"
           keyboardAppearance="dark"
           selectionColor={colors.accent}
-          accessibilityLabel="ملاحظة التنبيه (اختياري)"
+          accessibilityLabel={t.alertsNoteA11y}
         />
       </View>
 
-      {formError ? <Text style={styles.formError}>{formError}</Text> : null}
+      {formError ? <Text style={[styles.formError, { textAlign: align }]}>{formError}</Text> : null}
 
       {loading ? (
         <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.md }} />
       ) : (
         <ScrollView style={{ maxHeight: 160 }} keyboardShouldPersistTaps="handled">
           {alerts.length === 0 ? (
-            <Text style={styles.empty}>{listError ? 'تعذر تحميل التنبيهات' : 'لا تنبيهات بعد'}</Text>
+            <Text style={[styles.empty, { textAlign: align }]}>
+              {listError ? t.alertsLoadError : t.alertsEmpty}
+            </Text>
           ) : (
             alerts.map((a) => (
-              <View key={a.id} style={styles.item}>
+              <View key={a.id} style={[styles.item, rtl && styles.itemRtl]}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.itemSym}>
+                  <Text style={[styles.itemSym, { textAlign: align }]}>
                     {a.symbol} {a.condition === 'above' ? '≥' : '≤'} {a.price}
                     {a.triggered ? ' ✓' : ''}
                   </Text>
-                  {a.note ? <Text style={styles.itemNote}>{a.note}</Text> : null}
+                  {a.note ? <Text style={[styles.itemNote, { textAlign: align }]}>{a.note}</Text> : null}
                 </View>
                 <Pressable
                   accessibilityRole="button"
@@ -240,18 +245,18 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
                   ]}
                   onPress={() =>
                     Alert.alert(
-                      'حذف التنبيه؟',
+                      t.alertsDeleteConfirmTitle,
                       `${a.symbol} ${a.condition === 'above' ? '≥' : '≤'} ${a.price}`,
                       [
-                        { text: 'إلغاء', style: 'cancel' },
-                        { text: 'حذف', style: 'destructive', onPress: () => remove(a.id) },
+                        { text: t.cancel, style: 'cancel' },
+                        { text: t.deleteWord, style: 'destructive', onPress: () => remove(a.id) },
                       ]
                     )
                   }
-                  accessibilityLabel={`حذف تنبيه: ${a.symbol} ${a.condition === 'above' ? '≥' : '≤'} ${a.price}`}
+                  accessibilityLabel={`${t.alertsDeleteA11yPrefix}: ${a.symbol} ${a.condition === 'above' ? '≥' : '≤'} ${a.price}`}
                   hitSlop={8}
                 >
-                  <Text style={styles.del}>حذف</Text>
+                  <Text style={styles.del}>{t.deleteWord}</Text>
                 </Pressable>
               </View>
             ))
@@ -281,12 +286,11 @@ const styles = StyleSheet.create({
     paddingRight: frameEmbed.padRight,
     paddingBottom: frameEmbed.padBottom,
   },
-  title: { color: colors.text, fontWeight: '800', fontSize: 14, textAlign: 'right' },
-  sub: { color: colors.textDim, fontSize: 11, textAlign: 'right', marginTop: 2 },
+  title: { color: colors.text, fontWeight: '800', fontSize: 14 },
+  sub: { color: colors.textDim, fontSize: 11, marginTop: 2 },
   flash: {
     color: colors.warn,
     fontSize: 11,
-    textAlign: 'right',
     marginTop: 6,
     fontWeight: '700',
   },
@@ -294,7 +298,6 @@ const styles = StyleSheet.create({
     color: colors.bear,
     fontSize: 10,
     fontWeight: '700',
-    textAlign: 'right',
     marginTop: spacing.xs,
   },
   form: { marginTop: spacing.sm, gap: 6 },
@@ -306,10 +309,10 @@ const styles = StyleSheet.create({
     color: colors.text,
     paddingHorizontal: 10,
     paddingVertical: spacing.sm,
-    textAlign: 'right',
     fontSize: 13,
   },
-  row: { flexDirection: 'row-reverse', gap: 6 },
+  row: { flexDirection: 'row', gap: 6 },
+  rowRtl: { flexDirection: 'row-reverse' },
   cond: {
     flex: 1,
     paddingVertical: spacing.sm,
@@ -335,16 +338,17 @@ const styles = StyleSheet.create({
   },
   addText: { color: colors.onAccent, fontWeight: '800', fontSize: 12 },
   addBtnDisabled: { opacity: 0.4 },
-  empty: { color: colors.textDim, textAlign: 'right', marginTop: spacing.sm, fontSize: 12 },
+  empty: { color: colors.textDim, marginTop: spacing.sm, fontSize: 12 },
   item: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.borderSoft,
   },
-  itemSym: { color: colors.text, fontWeight: '700', textAlign: 'right', fontSize: 13 },
-  itemNote: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
+  itemRtl: { flexDirection: 'row-reverse' },
+  itemSym: { color: colors.text, fontWeight: '700', fontSize: 13 },
+  itemNote: { color: colors.textDim, fontSize: 11 },
   del: { color: colors.bear, fontWeight: '700', fontSize: 12 },
 });
