@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   mid: {
     height: 28,
-    borderRadius: 14,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.accent,
     backgroundColor: colors.accentSoft,

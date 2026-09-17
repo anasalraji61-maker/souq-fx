@@ -284,8 +284,8 @@ const styles = StyleSheet.create({
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'flex-end' },
   modal: {
     backgroundColor: colors.bgElevated,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: radii.lg,
+    borderTopRightRadius: radii.lg,
     padding: spacing.xl,
     borderTopWidth: 1,
     borderColor: colors.border,
