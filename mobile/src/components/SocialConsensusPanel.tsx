@@ -141,6 +141,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
           disabled={loading}
           accessibilityState={{ disabled: loading }}
           accessibilityLabel="احسب إجماع المصادر المختارة"
+          hitSlop={8}
         >
           <Text style={styles.refreshText}>احسب</Text>
         </Pressable>

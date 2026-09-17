@@ -155,6 +155,7 @@ export function WatchlistPanel({
                 ]}
                 onPress={() => void loadList()}
                 accessibilityLabel="إعادة محاولة تحميل قائمة المتابعة"
+                hitSlop={8}
               >
                 <Text style={styles.toolBtnText}>إعادة المحاولة</Text>
               </Pressable>
@@ -174,6 +175,7 @@ export function WatchlistPanel({
               ]}
               onPress={() => setAddOpen(true)}
               accessibilityLabel="إضافة رمز للمتابعة"
+              hitSlop={8}
             >
               <Text style={styles.addEmptyText}>إضافة رمز</Text>
             </Pressable>

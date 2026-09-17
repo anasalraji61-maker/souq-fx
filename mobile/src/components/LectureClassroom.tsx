@@ -387,6 +387,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
             ]}
             onPress={resume}
             accessibilityLabel="متابعة المحاضرة"
+            hitSlop={8}
           >
             <Text style={styles.resumeText}>متابعة المحاضرة</Text>
           </Pressable>
@@ -460,6 +461,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               disabled={asking}
               accessibilityState={{ disabled: asking }}
               accessibilityLabel="إرسال السؤال"
+              hitSlop={8}
             >
               <Text style={styles.askText}>{asking ? '...' : 'اسأل'}</Text>
             </Pressable>

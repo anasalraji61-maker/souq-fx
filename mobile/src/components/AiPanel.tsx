@@ -115,6 +115,7 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
           ]}
           onPress={ask}
           accessibilityLabel="إرسال سؤال لمساعد الذكاء الاصطناعي"
+          hitSlop={8}
         >
           <Text style={styles.sendText}>اسأل</Text>
         </Pressable>

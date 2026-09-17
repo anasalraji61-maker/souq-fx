@@ -136,6 +136,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         disabled={loading}
         accessibilityState={{ disabled: loading }}
         accessibilityLabel="تشغيل الاختبار الخلفي"
+        hitSlop={8}
       >
         <Text style={styles.btnText}>{loading ? '...' : 'تشغيل Backtest'}</Text>
       </Pressable>

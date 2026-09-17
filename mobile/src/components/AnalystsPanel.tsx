@@ -74,6 +74,7 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
           ]}
           onPress={() => void load()}
           accessibilityLabel="تحديث توقعات المحللين"
+          hitSlop={8}
         >
           <Text style={styles.refreshText}>تحديث</Text>
         </Pressable>

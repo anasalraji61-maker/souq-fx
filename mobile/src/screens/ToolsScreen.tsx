@@ -339,6 +339,7 @@ export function ToolsScreen() {
             disabled={loading || !selected.length}
             accessibilityState={{ disabled: loading || !selected.length }}
             accessibilityLabel={!selected.length ? 'تشغيل Screener، اختر فلتراً أولاً' : 'تشغيل Screener'}
+            hitSlop={8}
           >
             <Text style={styles.runText}>{loading ? 'جاري الفحص...' : 'تشغيل Screener'}</Text>
           </Pressable>

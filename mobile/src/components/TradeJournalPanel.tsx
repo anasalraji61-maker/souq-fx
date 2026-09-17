@@ -231,6 +231,7 @@ export function TradeJournalPanel() {
         disabled={busy}
         accessibilityState={{ disabled: busy }}
         accessibilityLabel="إضافة صفقة جديدة"
+        hitSlop={8}
       >
         <Text style={styles.btnText}>{busy ? '...' : 'إضافة صفقة'}</Text>
       </Pressable>
@@ -266,6 +267,7 @@ export function TradeJournalPanel() {
                 disabled={busy}
                 accessibilityState={{ disabled: busy }}
                 accessibilityLabel={`إغلاق صفقة ${t.symbol} بسعر خانة الخروج`}
+                hitSlop={8}
               >
                 <Text style={styles.closeLink}>إغلاق بسعر خانة الخروج</Text>
               </Pressable>

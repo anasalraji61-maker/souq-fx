@@ -208,6 +208,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
         disabled={busy}
         accessibilityState={{ disabled: busy }}
         accessibilityLabel="إضافة تنبيه مؤشر"
+        hitSlop={8}
       >
         <Text style={styles.btnText}>{busy ? '...' : 'إضافة تنبيه'}</Text>
       </Pressable>
@@ -255,6 +256,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
                     )
                   }
                   accessibilityLabel={`حذف تنبيه مؤشر: ${a.symbol} · ${a.alert_type} · ${a.condition}`}
+                  hitSlop={8}
                 >
                   <Text style={styles.del}>حذف</Text>
                 </Pressable>

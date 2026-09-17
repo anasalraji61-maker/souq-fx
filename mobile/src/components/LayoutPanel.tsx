@@ -78,6 +78,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
         ]}
         onPress={save}
         accessibilityLabel="حفظ التخطيط الحالي"
+        hitSlop={8}
       >
         <Text style={styles.btnText}>حفظ التخطيط الحالي</Text>
       </Pressable>

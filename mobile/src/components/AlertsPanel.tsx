@@ -249,6 +249,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
                     )
                   }
                   accessibilityLabel={`حذف تنبيه: ${a.symbol} ${a.condition === 'above' ? '≥' : '≤'} ${a.price}`}
+                  hitSlop={8}
                 >
                   <Text style={styles.del}>حذف</Text>
                 </Pressable>

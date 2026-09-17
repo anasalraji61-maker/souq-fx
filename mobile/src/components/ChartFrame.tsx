@@ -195,6 +195,7 @@ export function ChartFrame({
               if (onSymbolChange) setWheelOpen((v) => !v);
             }}
             accessibilityLabel={onSymbolChange ? 'تغيير الرمز' : undefined}
+            hitSlop={8}
           >
             <Text
               style={styles.symbol}

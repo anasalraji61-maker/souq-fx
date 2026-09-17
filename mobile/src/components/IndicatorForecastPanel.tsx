@@ -100,6 +100,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           disabled={loading}
           accessibilityState={{ disabled: loading }}
           accessibilityLabel="توقّع المؤشرات"
+          hitSlop={8}
         >
           <Text style={styles.refreshText}>{loading ? '...' : 'توقّع'}</Text>
         </Pressable>

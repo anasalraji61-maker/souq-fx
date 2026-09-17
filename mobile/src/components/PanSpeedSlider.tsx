@@ -142,6 +142,7 @@ export function PanSpeedSlider({ value, onChange }: Props) {
         onPress={toggle}
         accessibilityRole="button"
         accessibilityLabel={`مثبت السرعة ${pct} — اضغط للتفاصيل`}
+        hitSlop={6}
       >
         <CruiseSpeedMark size={15} active={pct >= 40} />
       </Pressable>

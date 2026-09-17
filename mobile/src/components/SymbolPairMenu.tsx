@@ -58,6 +58,7 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
         onPress={toggle}
         onLongPress={onLongPress}
         accessibilityLabel={open ? 'إغلاق قائمة الأزواج' : 'فتح قائمة الأزواج'}
+        hitSlop={8}
       >
         <Text style={[styles.triggerText, large && styles.triggerTextLarge]}>{value}</Text>
         <Text style={[styles.caret, large && styles.caretLarge]}>{open ? '▴' : '▾'}</Text>
