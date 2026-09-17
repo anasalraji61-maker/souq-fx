@@ -140,6 +140,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
           placeholder="السعر"
           placeholderTextColor={colors.textDim}
           keyboardType="decimal-pad"
+          maxLength={12}
           returnKeyType="done"
           underlineColorAndroid="transparent"
           clearButtonMode="while-editing"

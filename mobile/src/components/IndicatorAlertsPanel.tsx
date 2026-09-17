@@ -158,7 +158,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
               <Text style={styles.chipText}>RSI فوق</Text>
             </Pressable>
           </View>
-          <TextInput style={styles.input} value={value} onChangeText={setValue} keyboardType="decimal-pad" placeholder="30" placeholderTextColor={colors.textDim} returnKeyType="done" underlineColorAndroid="transparent" clearButtonMode="while-editing" keyboardAppearance="dark" selectionColor={colors.accent} accessibilityLabel="قيمة عتبة المؤشر" />
+          <TextInput style={styles.input} value={value} onChangeText={setValue} keyboardType="decimal-pad" maxLength={12} placeholder="30" placeholderTextColor={colors.textDim} returnKeyType="done" underlineColorAndroid="transparent" clearButtonMode="while-editing" keyboardAppearance="dark" selectionColor={colors.accent} accessibilityLabel="قيمة عتبة المؤشر" />
         </>
       ) : (
         <View style={styles.row}>

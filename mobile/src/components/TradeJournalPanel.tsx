@@ -180,6 +180,7 @@ export function TradeJournalPanel() {
         onChangeText={setEntry}
         placeholder="دخول"
         keyboardType="decimal-pad"
+        maxLength={12}
         placeholderTextColor={colors.textDim}
         returnKeyType="done"
         underlineColorAndroid="transparent"
@@ -194,6 +195,7 @@ export function TradeJournalPanel() {
         onChangeText={setExit}
         placeholder="خروج (اختياري)"
         keyboardType="decimal-pad"
+        maxLength={12}
         placeholderTextColor={colors.textDim}
         returnKeyType="done"
         underlineColorAndroid="transparent"

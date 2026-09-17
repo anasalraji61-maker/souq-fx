@@ -177,6 +177,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               placeholder="دخول"
               placeholderTextColor={colors.textDim}
               keyboardType="decimal-pad"
+              maxLength={12}
               returnKeyType="done"
               underlineColorAndroid="transparent"
               clearButtonMode="while-editing"
@@ -191,6 +192,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               placeholder="وقف"
               placeholderTextColor={colors.textDim}
               keyboardType="decimal-pad"
+              maxLength={12}
               returnKeyType="done"
               underlineColorAndroid="transparent"
               clearButtonMode="while-editing"
@@ -205,6 +207,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               placeholder="هدف"
               placeholderTextColor={colors.textDim}
               keyboardType="decimal-pad"
+              maxLength={12}
               returnKeyType="done"
               underlineColorAndroid="transparent"
               clearButtonMode="while-editing"
