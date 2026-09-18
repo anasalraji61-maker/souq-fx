@@ -18,6 +18,7 @@ import { isForexMarketOpen } from '../chart/marketHours';
 import { FRAME_CHART_H, FRAME_CHART_H_PHONE } from './FrameSizedGrid';
 import type { PanSpeedPercent } from '../chart/panSpeed';
 import { PairDrumWheel } from './PairDrumWheel';
+import { useI18n } from '../i18n/I18nContext';
 
 type Size = 'hero' | 'large' | 'medium' | 'small';
 
@@ -94,6 +95,7 @@ export function ChartFrame({
   onSyncActivate,
   syncBadge = null,
 }: Props) {
+  const { t } = useI18n();
   const [wheelOpen, setWheelOpen] = useState(false);
   const navigate = panControls || interactive;
   const baseH = (phone ? HEIGHT_PHONE : HEIGHT)[size] + (interactive ? 220 : 0);
@@ -103,11 +105,11 @@ export function ChartFrame({
   const partial = syncFollow && isPartialTimeCover(series, syncWindow);
   const badge =
     syncBadge === 'leader'
-      ? 'قائد الزمن'
+      ? t.cfSyncLeaderBadge
       : syncBadge === 'partial' || partial
-        ? 'متزامن · جزئي'
+        ? t.cfSyncPartialBadge
         : syncBadge === 'follow'
-          ? 'متزامن'
+          ? t.cfSyncFollowBadge
           : null;
   const candleSrc = normalizeProvenance(series.data_source);
   const resolvedTick: LiveTick | null =
@@ -148,10 +150,10 @@ export function ChartFrame({
   const hasSpread = quote?.bid != null && quote?.ask != null && quote.ask > quote.bid;
 
   const subtitle = useMemo(() => {
-    if (interactive) return 'محرك MATRIX · عدسات وأدوات';
-    if (navigate) return 'اسحب الوسط · السعر · التواريخ';
-    return 'اضغط للتحليل الكامل';
-  }, [interactive, navigate]);
+    if (interactive) return t.cfSubtitleInteractive;
+    if (navigate) return t.cfSubtitleNavigate;
+    return t.cfSubtitleDefault;
+  }, [interactive, navigate, t]);
 
   const onChartPadLayout = (e: LayoutChangeEvent) => {
     if (!fill) return;
@@ -167,7 +169,7 @@ export function ChartFrame({
       onPress={onSyncActivate}
       disabled={!onSyncActivate}
       accessibilityState={{ disabled: !onSyncActivate }}
-      accessibilityLabel={onSyncActivate ? `تفعيل مزامنة شارت ${(label || series.symbol).toUpperCase()}` : undefined}
+      accessibilityLabel={onSyncActivate ? `${t.cfSyncActivateA11yPrefix}${(label || series.symbol).toUpperCase()}` : undefined}
     >
       {showTimeframes && onTimeframeChange ? (
         <View style={styles.tfTopLeft}>
@@ -194,7 +196,7 @@ export function ChartFrame({
             onPress={() => {
               if (onSymbolChange) setWheelOpen((v) => !v);
             }}
-            accessibilityLabel={onSymbolChange ? 'تغيير الرمز' : undefined}
+            accessibilityLabel={onSymbolChange ? t.cfChangeSymbolA11y : undefined}
             hitSlop={8}
           >
             <Text
@@ -239,8 +241,8 @@ export function ChartFrame({
             {candleTag}
           </Text>
           {marketClosed ? (
-            <Text style={styles.marketClosedTag} accessibilityLabel="السوق مغلق حالياً">
-              مغلق
+            <Text style={styles.marketClosedTag} accessibilityLabel={t.cfMarketClosedA11y}>
+              {t.cfMarketClosedTag}
             </Text>
           ) : null}
         </View>
@@ -258,7 +260,7 @@ export function ChartFrame({
             </Text>
           ) : null}
           {hasSpread ? (
-            <Text style={styles.spreadTag} accessibilityLabel="سبريد البيع والشراء">
+            <Text style={styles.spreadTag} accessibilityLabel={t.cfSpreadA11y}>
               {`B ${formatPrice(quote!.bid!)} · A ${formatPrice(quote!.ask!)}`}
             </Text>
           ) : null}
@@ -277,7 +279,7 @@ export function ChartFrame({
                 },
               ]}
               onPress={onFocus}
-              accessibilityLabel="فتح الشارت بملء الشاشة"
+              accessibilityLabel={t.termOpenFullscreenA11y}
               hitSlop={8}
             >
               <Text style={styles.focusBtnText}>⛶</Text>

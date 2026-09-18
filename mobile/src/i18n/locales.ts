@@ -461,6 +461,64 @@ export type Dict = {
   panTapDetailsSuffix: string;
   panHideDetailsA11y: string;
   panChartSpeedPrefix: string;
+  lensA11yPrefix: string;
+  drawToolA11yPrefix: string;
+  lensSectionTitle: string;
+  backtestWord: string;
+  depthWord: string;
+  mspDrawTitle: string;
+  mspIndicatorsTitle: string;
+  mspKindsTitle: string;
+  mspAlertsTitle: string;
+  mspIndAlertsTitle: string;
+  mspCalendarTitle: string;
+  mspScreenerTitle: string;
+  mspReportsTitle: string;
+  mspBacktestTitle: string;
+  mspNewsTitle: string;
+  mspDomTitle: string;
+  mspJournalTitle: string;
+  mspIndicatorA11yPrefix: string;
+  mspIndicatorEnabledSuffix: string;
+  mspKindA11yPrefix: string;
+  dockDrawTab: string;
+  dockSignalsTab: string;
+  dockAnalystsTab: string;
+  dockSocialTab: string;
+  dockIndForecastTab: string;
+  dockScreenerTab: string;
+  dockAlertsTab: string;
+  dockNewsTab: string;
+  dockCommunityTab: string;
+  dockHideBtn: string;
+  dockHideA11yPrefix: string;
+  dockPanelFallback: string;
+  dockLibraryFallback: string;
+  dockDrawToolSectionTitle: string;
+  dockTabA11yPrefix: string;
+  railDrawSectionTitle: string;
+  railPanelsSectionTitle: string;
+  railPanelA11yPrefix: string;
+  railTipAlert: string;
+  railTipIndicator: string;
+  railTipReport: string;
+  railTipNewsItem: string;
+  railOpenQuadA11y: string;
+  railFrameWord: string;
+  railSquareWord: string;
+  railRectangleWord: string;
+  railShadowWord: string;
+  cfSyncLeaderBadge: string;
+  cfSyncPartialBadge: string;
+  cfSyncFollowBadge: string;
+  cfSubtitleInteractive: string;
+  cfSubtitleNavigate: string;
+  cfSubtitleDefault: string;
+  cfSyncActivateA11yPrefix: string;
+  cfChangeSymbolA11y: string;
+  cfMarketClosedA11y: string;
+  cfMarketClosedTag: string;
+  cfSpreadA11y: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -940,6 +998,64 @@ const ar: Dict = {
   panTapDetailsSuffix: '— اضغط للتفاصيل',
   panHideDetailsA11y: 'إخفاء تفاصيل السرعة',
   panChartSpeedPrefix: 'مثبت سرعة الشارت',
+  lensA11yPrefix: 'عدسة: ',
+  drawToolA11yPrefix: 'أداة رسم: ',
+  lensSectionTitle: 'عدسة',
+  backtestWord: 'اختبار',
+  depthWord: 'عمق',
+  mspDrawTitle: 'أدوات الرسم · MATRIX',
+  mspIndicatorsTitle: 'المؤشرات · MATRIX',
+  mspKindsTitle: 'أنواع الشارت',
+  mspAlertsTitle: 'تنبيهات السعر',
+  mspIndAlertsTitle: 'تنبيهات المؤشرات',
+  mspCalendarTitle: 'التقويم الاقتصادي',
+  mspScreenerTitle: 'فحص السوق',
+  mspReportsTitle: 'تقارير MATRIX',
+  mspBacktestTitle: 'Strategy Backtest',
+  mspNewsTitle: 'الأخبار',
+  mspDomTitle: 'DOM',
+  mspJournalTitle: 'دفتر الصفقات',
+  mspIndicatorA11yPrefix: 'مؤشر: ',
+  mspIndicatorEnabledSuffix: ' · مفعّل',
+  mspKindA11yPrefix: 'نوع الشارت: ',
+  dockDrawTab: 'رسم',
+  dockSignalsTab: 'توقعات',
+  dockAnalystsTab: 'محللون',
+  dockSocialTab: 'قنوات',
+  dockIndForecastTab: 'مؤشرات+',
+  dockScreenerTab: 'ماسح',
+  dockAlertsTab: 'تنبيهات',
+  dockNewsTab: 'أخبار',
+  dockCommunityTab: 'مجتمع',
+  dockHideBtn: 'إخفاء',
+  dockHideA11yPrefix: 'إخفاء ',
+  dockPanelFallback: 'اللوحة',
+  dockLibraryFallback: 'مكتبة',
+  dockDrawToolSectionTitle: 'أداة الرسم',
+  dockTabA11yPrefix: 'تبويب: ',
+  railDrawSectionTitle: 'رسم',
+  railPanelsSectionTitle: 'لوحات',
+  railPanelA11yPrefix: 'لوحة: ',
+  railTipAlert: 'تنبيه',
+  railTipIndicator: 'مؤشّر',
+  railTipReport: 'تقرير',
+  railTipNewsItem: 'خبر',
+  railOpenQuadA11y: 'فتح تخطيط 2×2',
+  railFrameWord: 'فريم',
+  railSquareWord: 'مربع',
+  railRectangleWord: 'مستطيل',
+  railShadowWord: 'الظل',
+  cfSyncLeaderBadge: 'قائد الزمن',
+  cfSyncPartialBadge: 'متزامن · جزئي',
+  cfSyncFollowBadge: 'متزامن',
+  cfSubtitleInteractive: 'محرك MATRIX · عدسات وأدوات',
+  cfSubtitleNavigate: 'اسحب الوسط · السعر · التواريخ',
+  cfSubtitleDefault: 'اضغط للتحليل الكامل',
+  cfSyncActivateA11yPrefix: 'تفعيل مزامنة شارت ',
+  cfChangeSymbolA11y: 'تغيير الرمز',
+  cfMarketClosedA11y: 'السوق مغلق حالياً',
+  cfMarketClosedTag: 'مغلق',
+  cfSpreadA11y: 'سبريد البيع والشراء',
 };
 
 const enUS: Dict = {
@@ -1414,6 +1530,64 @@ const enUS: Dict = {
   panTapDetailsSuffix: '— tap for details',
   panHideDetailsA11y: 'Hide speed details',
   panChartSpeedPrefix: 'Chart pan speed',
+  lensA11yPrefix: 'Lens: ',
+  drawToolA11yPrefix: 'Draw tool: ',
+  lensSectionTitle: 'Lens',
+  backtestWord: 'Backtest',
+  depthWord: 'Depth',
+  mspDrawTitle: 'Draw tools · MATRIX',
+  mspIndicatorsTitle: 'Indicators · MATRIX',
+  mspKindsTitle: 'Chart types',
+  mspAlertsTitle: 'Price alerts',
+  mspIndAlertsTitle: 'Indicator alerts',
+  mspCalendarTitle: 'Economic calendar',
+  mspScreenerTitle: 'Market screener',
+  mspReportsTitle: 'MATRIX reports',
+  mspBacktestTitle: 'Strategy Backtest',
+  mspNewsTitle: 'News',
+  mspDomTitle: 'DOM',
+  mspJournalTitle: 'Trade journal',
+  mspIndicatorA11yPrefix: 'Indicator: ',
+  mspIndicatorEnabledSuffix: ' · on',
+  mspKindA11yPrefix: 'Chart type: ',
+  dockDrawTab: 'Draw',
+  dockSignalsTab: 'Signals',
+  dockAnalystsTab: 'Analysts',
+  dockSocialTab: 'Channels',
+  dockIndForecastTab: 'Indicators+',
+  dockScreenerTab: 'Scanner',
+  dockAlertsTab: 'Alerts',
+  dockNewsTab: 'News',
+  dockCommunityTab: 'Community',
+  dockHideBtn: 'Hide',
+  dockHideA11yPrefix: 'Hide ',
+  dockPanelFallback: 'Panel',
+  dockLibraryFallback: 'Library',
+  dockDrawToolSectionTitle: 'Draw tool',
+  dockTabA11yPrefix: 'Tab: ',
+  railDrawSectionTitle: 'Draw',
+  railPanelsSectionTitle: 'Panels',
+  railPanelA11yPrefix: 'Panel: ',
+  railTipAlert: 'Alert',
+  railTipIndicator: 'Indicator',
+  railTipReport: 'Report',
+  railTipNewsItem: 'News',
+  railOpenQuadA11y: 'Open 2×2 layout',
+  railFrameWord: 'Frame',
+  railSquareWord: 'Square',
+  railRectangleWord: 'Rectangle',
+  railShadowWord: 'Shadow',
+  cfSyncLeaderBadge: 'Time leader',
+  cfSyncPartialBadge: 'Synced · partial',
+  cfSyncFollowBadge: 'Synced',
+  cfSubtitleInteractive: 'MATRIX engine · lenses & tools',
+  cfSubtitleNavigate: 'Drag middle · price · dates',
+  cfSubtitleDefault: 'Tap for full analysis',
+  cfSyncActivateA11yPrefix: 'Activate sync for chart ',
+  cfChangeSymbolA11y: 'Change symbol',
+  cfMarketClosedA11y: 'Market currently closed',
+  cfMarketClosedTag: 'Closed',
+  cfSpreadA11y: 'Bid/ask spread',
 };
 
 const enGB: Dict = {
@@ -1909,6 +2083,64 @@ const ku: Dict = {
   panTapDetailsSuffix: '— دابگرە بۆ وردەکاری',
   panHideDetailsA11y: 'شاردنەوەی وردەکاری خێرایی',
   panChartSpeedPrefix: 'خێرایی جوڵەی چارت',
+  lensA11yPrefix: 'لینز: ',
+  drawToolA11yPrefix: 'ئامرازی وێنەکێشان: ',
+  lensSectionTitle: 'لینز',
+  backtestWord: 'تاقیکردنەوە',
+  depthWord: 'قووڵی',
+  mspDrawTitle: 'ئامرازەکانی وێنەکێشان · MATRIX',
+  mspIndicatorsTitle: 'نیشانەکان · MATRIX',
+  mspKindsTitle: 'جۆرەکانی چارت',
+  mspAlertsTitle: 'ئاگادارکردنەوەی نرخ',
+  mspIndAlertsTitle: 'ئاگادارکردنەوەی نیشانەکان',
+  mspCalendarTitle: 'ڕۆژژمێری ئابووری',
+  mspScreenerTitle: 'پشکنینی بازاڕ',
+  mspReportsTitle: 'ڕاپۆرتەکانی MATRIX',
+  mspBacktestTitle: 'Strategy Backtest',
+  mspNewsTitle: 'هەواڵەکان',
+  mspDomTitle: 'DOM',
+  mspJournalTitle: 'دەفتەری مامەڵەکان',
+  mspIndicatorA11yPrefix: 'نیشانە: ',
+  mspIndicatorEnabledSuffix: ' · چالاک',
+  mspKindA11yPrefix: 'جۆری چارت: ',
+  dockDrawTab: 'وێنەکێشان',
+  dockSignalsTab: 'پێشبینیەکان',
+  dockAnalystsTab: 'شیکارکاران',
+  dockSocialTab: 'کەناڵەکان',
+  dockIndForecastTab: 'نیشانەکان+',
+  dockScreenerTab: 'سکانەر',
+  dockAlertsTab: 'ئاگادارکردنەوەکان',
+  dockNewsTab: 'هەواڵ',
+  dockCommunityTab: 'کۆمەڵگا',
+  dockHideBtn: 'شاردنەوە',
+  dockHideA11yPrefix: 'شاردنەوەی ',
+  dockPanelFallback: 'پانێڵ',
+  dockLibraryFallback: 'کتێبخانە',
+  dockDrawToolSectionTitle: 'ئامرازی وێنەکێشان',
+  dockTabA11yPrefix: 'تابی: ',
+  railDrawSectionTitle: 'وێنەکێشان',
+  railPanelsSectionTitle: 'پانێڵەکان',
+  railPanelA11yPrefix: 'پانێڵ: ',
+  railTipAlert: 'ئاگادارکردنەوە',
+  railTipIndicator: 'نیشانە',
+  railTipReport: 'ڕاپۆرت',
+  railTipNewsItem: 'هەواڵ',
+  railOpenQuadA11y: 'کردنەوەی نەخشەی 2×2',
+  railFrameWord: 'چوارچێوە',
+  railSquareWord: 'چوارگۆشە',
+  railRectangleWord: 'لاکێشراو',
+  railShadowWord: 'سێبەر',
+  cfSyncLeaderBadge: 'سەرکردەی کات',
+  cfSyncPartialBadge: 'هاوکات · بەشی',
+  cfSyncFollowBadge: 'هاوکات',
+  cfSubtitleInteractive: 'ئەنجینی MATRIX · لینز و ئامرازەکان',
+  cfSubtitleNavigate: 'ناوەڕاست ڕایبکێشە · نرخ · بەروار',
+  cfSubtitleDefault: 'دەستبدە بۆ شیکاری تەواو',
+  cfSyncActivateA11yPrefix: 'چالاککردنی هاوکاتکردنی چارتی ',
+  cfChangeSymbolA11y: 'گۆڕینی هێما',
+  cfMarketClosedA11y: 'بازاڕ ئێستا داخراوە',
+  cfMarketClosedTag: 'داخراو',
+  cfSpreadA11y: 'جیاوازی نرخی کڕین و فرۆشتن',
 };
 
 export const DICTS: Record<LangId, Dict> = {

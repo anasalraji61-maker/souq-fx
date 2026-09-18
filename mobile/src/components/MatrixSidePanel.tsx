@@ -20,6 +20,7 @@ import { DomLitePanel } from './DomLitePanel';
 import { TradeJournalPanel } from './TradeJournalPanel';
 import type { Candle } from '../api';
 import type { Timeframe } from '../timeframes';
+import { useI18n } from '../i18n/I18nContext';
 
 export type EdgePanelId =
   | 'draw'
@@ -50,21 +51,6 @@ type Props = {
   activeKind?: ChartKind;
 };
 
-const TITLES: Record<Exclude<EdgePanelId, null>, string> = {
-  draw: 'أدوات الرسم · MATRIX',
-  indicators: 'المؤشرات · MATRIX',
-  kinds: 'أنواع الشارت',
-  alerts: 'تنبيهات السعر',
-  indAlerts: 'تنبيهات المؤشرات',
-  calendar: 'التقويم الاقتصادي',
-  screener: 'فحص السوق',
-  reports: 'تقارير MATRIX',
-  backtest: 'Strategy Backtest',
-  news: 'الأخبار',
-  dom: 'DOM',
-  journal: 'دفتر الصفقات',
-};
-
 export function MatrixSidePanel({
   panel,
   onClose,
@@ -78,6 +64,23 @@ export function MatrixSidePanel({
   activeIndicators = [],
   activeKind = 'candles',
 }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
+  const TITLES: Record<Exclude<EdgePanelId, null>, string> = {
+    draw: t.mspDrawTitle,
+    indicators: t.mspIndicatorsTitle,
+    kinds: t.mspKindsTitle,
+    alerts: t.mspAlertsTitle,
+    indAlerts: t.mspIndAlertsTitle,
+    calendar: t.mspCalendarTitle,
+    screener: t.mspScreenerTitle,
+    reports: t.mspReportsTitle,
+    backtest: t.mspBacktestTitle,
+    news: t.mspNewsTitle,
+    dom: t.mspDomTitle,
+    journal: t.mspJournalTitle,
+  };
+
   if (!panel) return null;
 
   return (
@@ -85,7 +88,7 @@ export function MatrixSidePanel({
       <View style={styles.backdrop}>
         <Pressable style={styles.dim} onPress={onClose} />
         <View style={styles.sheet}>
-          <View style={styles.head}>
+          <View style={[styles.head, rtl && styles.headRtl]}>
             <Pressable
               accessibilityRole="button"
               onPress={onClose}
@@ -96,19 +99,19 @@ export function MatrixSidePanel({
                 },
               ]}
               hitSlop={8}
-              accessibilityLabel={`إغلاق ${TITLES[panel]}`}
+              accessibilityLabel={`${t.closeWord} ${TITLES[panel]}`}
             >
-              <Text style={styles.close}>إغلاق</Text>
+              <Text style={styles.close}>{t.closeWord}</Text>
             </Pressable>
-            <Text style={styles.title}>{TITLES[panel]}</Text>
+            <Text style={[styles.title, { textAlign: align }]}>{TITLES[panel]}</Text>
           </View>
           <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
             {panel === 'draw' ? (
-              <View style={styles.grid}>
-                {DRAW_TOOLS.filter((t) => t.id !== 'none').map((t) => (
+              <View style={[styles.grid, rtl && styles.gridRtl]}>
+                {DRAW_TOOLS.filter((tool) => tool.id !== 'none').map((tool) => (
                   <Pressable
                     accessibilityRole="button"
-                    key={t.id}
+                    key={tool.id}
                     style={({ pressed }) => [
                       styles.cell,
                       pressed && {
@@ -117,19 +120,19 @@ export function MatrixSidePanel({
                       },
                     ]}
                     onPress={() => {
-                      onPickDraw(t.id);
+                      onPickDraw(tool.id);
                       onClose();
                     }}
-                    accessibilityLabel={`أداة رسم: ${t.label}`}
+                    accessibilityLabel={`${t.drawToolA11yPrefix}${tool.label}`}
                   >
-                    <Text style={styles.cellText}>{t.label}</Text>
+                    <Text style={styles.cellText}>{tool.label}</Text>
                   </Pressable>
                 ))}
               </View>
             ) : null}
 
             {panel === 'indicators' ? (
-              <View style={styles.grid}>
+              <View style={[styles.grid, rtl && styles.gridRtl]}>
                 {INDICATORS.map((ind) => {
                   const on = activeIndicators.includes(ind.id);
                   return (
@@ -145,7 +148,7 @@ export function MatrixSidePanel({
                         },
                       ]}
                       onPress={() => onToggleIndicator(ind.id)}
-                      accessibilityLabel={`مؤشر: ${ind.label}${on ? ' · مفعّل' : ''}`}
+                      accessibilityLabel={`${t.mspIndicatorA11yPrefix}${ind.label}${on ? t.mspIndicatorEnabledSuffix : ''}`}
                     >
                       <Text style={[styles.cellText, on && styles.cellTextOn]}>{ind.label}</Text>
                     </Pressable>
@@ -155,7 +158,7 @@ export function MatrixSidePanel({
             ) : null}
 
             {panel === 'kinds' ? (
-              <View style={styles.grid}>
+              <View style={[styles.grid, rtl && styles.gridRtl]}>
                 {CHART_KINDS.map((k) => (
                   <Pressable
                     accessibilityRole="button"
@@ -172,7 +175,7 @@ export function MatrixSidePanel({
                       onPickKind(k.id);
                       onClose();
                     }}
-                    accessibilityLabel={`نوع الشارت: ${k.label}`}
+                    accessibilityLabel={`${t.mspKindA11yPrefix}${k.label}`}
                   >
                     <Text style={[styles.cellText, activeKind === k.id && styles.cellTextOn]}>
                       {k.label}
@@ -219,17 +222,19 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   head: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  title: { color: colors.text, fontWeight: '900', fontSize: 14, textAlign: 'right', flex: 1 },
+  headRtl: { flexDirection: 'row-reverse' },
+  title: { color: colors.text, fontWeight: '900', fontSize: 14, flex: 1 },
   close: { color: colors.accent, fontWeight: '800', fontSize: 13 },
   body: { padding: spacing.md, gap: 10, paddingBottom: 40 },
-  grid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: spacing.sm },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  gridRtl: { flexDirection: 'row-reverse' },
   cell: {
     paddingHorizontal: spacing.md,
     paddingVertical: 10,

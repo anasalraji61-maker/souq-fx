@@ -20,6 +20,7 @@ import type { Candle } from '../api';
 import type { Timeframe } from '../timeframes';
 import { DRAW_TOOLS, LENSES, type DrawTool } from '../chart/types';
 import { DRAW_MARK, LENS_MARK, type MatrixLensId } from './MatrixEdgeRails';
+import { useI18n } from '../i18n/I18nContext';
 
 export type DockTabId =
   | 'draw'
@@ -39,23 +40,6 @@ export type DockTabId =
   | null;
 
 type Tab = { id: Exclude<DockTabId, null>; label: string; mark: string };
-
-const TABS: Tab[] = [
-  { id: 'draw', label: 'رسم', mark: '✏' },
-  { id: 'signals', label: 'توقعات', mark: '✦' },
-  { id: 'analysts', label: 'محللون', mark: '◎' },
-  { id: 'social', label: 'قنوات', mark: '☰' },
-  { id: 'indForecast', label: 'مؤشرات+', mark: '∑' },
-  { id: 'screener', label: 'ماسح', mark: '⌕' },
-  { id: 'backtest', label: 'اختبار', mark: '↺' },
-  { id: 'alerts', label: 'تنبيهات', mark: '⚡' },
-  { id: 'news', label: 'أخبار', mark: '📰' },
-  { id: 'calendar', label: 'تقويم', mark: '◷' },
-  { id: 'journal', label: 'PnL', mark: '₴' },
-  { id: 'community', label: 'مجتمع', mark: '◈' },
-  { id: 'dom', label: 'عمق', mark: '▥' },
-  { id: 'reports', label: 'تقارير', mark: '≡' },
-];
 
 type Props = {
   tab: DockTabId;
@@ -85,6 +69,24 @@ export function MatrixBottomDock({
   activeLens = 'clean',
   onLens,
 }: Props) {
+  const { t, rtl } = useI18n();
+  const TABS: Tab[] = [
+    { id: 'draw', label: t.dockDrawTab, mark: '✏' },
+    { id: 'signals', label: t.dockSignalsTab, mark: '✦' },
+    { id: 'analysts', label: t.dockAnalystsTab, mark: '◎' },
+    { id: 'social', label: t.dockSocialTab, mark: '☰' },
+    { id: 'indForecast', label: t.dockIndForecastTab, mark: '∑' },
+    { id: 'screener', label: t.dockScreenerTab, mark: '⌕' },
+    { id: 'backtest', label: t.backtestWord, mark: '↺' },
+    { id: 'alerts', label: t.dockAlertsTab, mark: '⚡' },
+    { id: 'news', label: t.dockNewsTab, mark: '📰' },
+    { id: 'calendar', label: t.toolsTabCalendar, mark: '◷' },
+    { id: 'journal', label: t.toolsTabJournal, mark: '₴' },
+    { id: 'community', label: t.dockCommunityTab, mark: '◈' },
+    { id: 'dom', label: t.depthWord, mark: '▥' },
+    { id: 'reports', label: t.toolsTabReports, mark: '≡' },
+  ];
+
   const toggle = (id: Exclude<DockTabId, null>) => {
     onTab(tab === id ? null : id);
   };
@@ -93,7 +95,7 @@ export function MatrixBottomDock({
     <View style={styles.wrap}>
       {tab ? (
         <View style={styles.sheet}>
-          <View style={styles.sheetHead}>
+          <View style={[styles.sheetHead, rtl && styles.sheetHeadRtl]}>
             <Pressable
               accessibilityRole="button"
               onPress={() => onTab(null)}
@@ -104,12 +106,12 @@ export function MatrixBottomDock({
                 },
               ]}
               hitSlop={8}
-              accessibilityLabel={`إخفاء ${TABS.find((t) => t.id === tab)?.label ?? 'اللوحة'}`}
+              accessibilityLabel={`${t.dockHideA11yPrefix}${TABS.find((tb) => tb.id === tab)?.label ?? t.dockPanelFallback}`}
             >
-              <Text style={styles.close}>إخفاء</Text>
+              <Text style={styles.close}>{t.dockHideBtn}</Text>
             </Pressable>
             <Text style={styles.sheetTitle}>
-              {TABS.find((t) => t.id === tab)?.label ?? 'مكتبة'}
+              {TABS.find((tb) => tb.id === tab)?.label ?? t.dockLibraryFallback}
             </Text>
           </View>
           <ScrollView
@@ -119,7 +121,7 @@ export function MatrixBottomDock({
           >
             {tab === 'draw' ? (
               <View style={styles.drawWrap}>
-                <Text style={styles.drawSectionTitle}>عدسة</Text>
+                <Text style={styles.drawSectionTitle}>{t.lensSectionTitle}</Text>
                 <View style={styles.drawGrid}>
                   {LENSES.map((l) => {
                     const on = activeLens === l.id;
@@ -136,7 +138,7 @@ export function MatrixBottomDock({
                           },
                         ]}
                         onPress={() => onLens?.(l.id)}
-                        accessibilityLabel={`عدسة: ${l.label}`}
+                        accessibilityLabel={`${t.lensA11yPrefix}${l.label}`}
                       >
                         <Text style={[styles.drawChipMark, on && styles.drawChipMarkOn]}>
                           {LENS_MARK[l.id]}
@@ -148,14 +150,14 @@ export function MatrixBottomDock({
                     );
                   })}
                 </View>
-                <Text style={styles.drawSectionTitle}>أداة الرسم</Text>
+                <Text style={styles.drawSectionTitle}>{t.dockDrawToolSectionTitle}</Text>
                 <View style={styles.drawGrid}>
-                  {DRAW_TOOLS.map((t) => {
-                    const on = activeTool === t.id;
+                  {DRAW_TOOLS.map((tool) => {
+                    const on = activeTool === tool.id;
                     return (
                       <Pressable
                         accessibilityRole="button"
-                        key={t.id}
+                        key={tool.id}
                         style={({ pressed }) => [
                           styles.drawChip,
                           on && styles.drawChipOn,
@@ -164,14 +166,14 @@ export function MatrixBottomDock({
                             transform: [{ scale: buttons.pressedScale }],
                           },
                         ]}
-                        onPress={() => onTool?.(t.id)}
-                        accessibilityLabel={`أداة رسم: ${t.label}`}
+                        onPress={() => onTool?.(tool.id)}
+                        accessibilityLabel={`${t.drawToolA11yPrefix}${tool.label}`}
                       >
                         <Text style={[styles.drawChipMark, on && styles.drawChipMarkOn]}>
-                          {DRAW_MARK[t.id] ?? '·'}
+                          {DRAW_MARK[tool.id] ?? '·'}
                         </Text>
                         <Text style={[styles.drawChipLabel, on && styles.drawChipLabelOn]}>
-                          {t.label}
+                          {tool.label}
                         </Text>
                       </Pressable>
                     );
@@ -221,12 +223,12 @@ export function MatrixBottomDock({
         contentContainerStyle={styles.tabs}
         style={styles.tabBar}
       >
-        {TABS.map((t) => {
-          const on = tab === t.id;
+        {TABS.map((tb) => {
+          const on = tab === tb.id;
           return (
             <Pressable
               accessibilityRole="button"
-              key={t.id}
+              key={tb.id}
               style={({ pressed }) => [
                 styles.tab,
                 on && styles.tabOn,
@@ -235,11 +237,11 @@ export function MatrixBottomDock({
                   transform: [{ scale: buttons.pressedScale }],
                 },
               ]}
-              onPress={() => toggle(t.id)}
-              accessibilityLabel={`تبويب: ${t.label}`}
+              onPress={() => toggle(tb.id)}
+              accessibilityLabel={`${t.dockTabA11yPrefix}${tb.label}`}
             >
-              <Text style={[styles.tabMark, on && styles.tabMarkOn]}>{t.mark}</Text>
-              <Text style={[styles.tabLabel, on && styles.tabLabelOn]}>{t.label}</Text>
+              <Text style={[styles.tabMark, on && styles.tabMarkOn]}>{tb.mark}</Text>
+              <Text style={[styles.tabLabel, on && styles.tabLabelOn]}>{tb.label}</Text>
             </Pressable>
           );
         })}
@@ -261,12 +263,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   sheetHead: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
   },
+  sheetHeadRtl: { flexDirection: 'row-reverse' },
   sheetTitle: { color: colors.text, fontWeight: '800', fontSize: 12 },
   close: { color: colors.accent, fontWeight: '700', fontSize: 11 },
   sheetBody: { maxHeight: 280 },

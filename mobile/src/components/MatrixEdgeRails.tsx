@@ -4,6 +4,7 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { DRAW_TOOLS, LENSES, type DrawTool, type LensMode } from '../chart/types';
 import type { EdgePanelId } from './MatrixSidePanel';
 import type { FrameLayoutCount, FrameLayoutShape } from './FrameSizedGrid';
+import { useI18n } from '../i18n/I18nContext';
 
 export type MatrixLensId = LensMode;
 
@@ -22,18 +23,6 @@ type RightProps = {
   layoutShape?: FrameLayoutShape;
   onLayoutPick?: (count: FrameLayoutCount, shape: FrameLayoutShape) => void;
 };
-
-const RIGHT_ICONS: { id: Exclude<EdgePanelId, null>; mark: string; tip: string }[] = [
-  { id: 'alerts', mark: '⚡', tip: 'تنبيه' },
-  { id: 'indAlerts', mark: '☢', tip: 'مؤشّر' },
-  { id: 'calendar', mark: '◷', tip: 'تقويم' },
-  { id: 'screener', mark: '⌕', tip: 'فحص' },
-  { id: 'reports', mark: '≡', tip: 'تقرير' },
-  { id: 'news', mark: '☰', tip: 'خبر' },
-  { id: 'dom', mark: '▥', tip: 'عمق' },
-  { id: 'journal', mark: '₴', tip: 'PnL' },
-  { id: 'backtest', mark: '↺', tip: 'اختبار' },
-];
 
 export const DRAW_MARK: Partial<Record<DrawTool, string>> = {
   none: '✚',
@@ -57,9 +46,10 @@ export const LENS_MARK: Record<LensMode, string> = {
 };
 
 export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }: LeftProps) {
+  const { t } = useI18n();
   return (
     <View style={styles.leftRail}>
-      <Text style={styles.railTitle}>عدسة</Text>
+      <Text style={styles.railTitle}>{t.lensSectionTitle}</Text>
       {LENSES.map((l) => {
         const on = activeLens === l.id;
         return (
@@ -75,7 +65,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
               },
             ]}
             onPress={() => onLens(l.id)}
-            accessibilityLabel={`عدسة: ${l.label}`}
+            accessibilityLabel={`${t.lensA11yPrefix}${l.label}`}
           >
             <Text style={[styles.railMark, on && styles.railMarkOn]}>{LENS_MARK[l.id]}</Text>
             <Text style={[styles.railTip, on && styles.railTipOn]}>{l.label}</Text>
@@ -83,14 +73,14 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
         );
       })}
       <View style={styles.railSep} />
-      <Text style={styles.railTitle}>رسم</Text>
+      <Text style={styles.railTitle}>{t.railDrawSectionTitle}</Text>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {DRAW_TOOLS.map((t) => {
-          const on = activeTool === t.id;
+        {DRAW_TOOLS.map((tool) => {
+          const on = activeTool === tool.id;
           return (
             <Pressable
               accessibilityRole="button"
-              key={t.id}
+              key={tool.id}
               style={({ pressed }) => [
                 styles.railBtn,
                 on && styles.railBtnOn,
@@ -99,14 +89,14 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
                   transform: [{ scale: buttons.pressedScale }],
                 },
               ]}
-              onPress={() => onTool(t.id)}
-              accessibilityLabel={`أداة رسم: ${t.label}`}
+              onPress={() => onTool(tool.id)}
+              accessibilityLabel={`${t.drawToolA11yPrefix}${tool.label}`}
             >
               <Text style={[styles.railMark, on && styles.railMarkOn]}>
-                {DRAW_MARK[t.id] ?? '·'}
+                {DRAW_MARK[tool.id] ?? '·'}
               </Text>
               <Text style={[styles.railTip, on && styles.railTipOn]} numberOfLines={1}>
-                {t.label}
+                {tool.label}
               </Text>
             </Pressable>
           );
@@ -122,7 +112,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
             },
           ]}
           onPress={onQuad}
-          accessibilityLabel="فتح تخطيط 2×2"
+          accessibilityLabel={t.railOpenQuadA11y}
         >
           <Text style={styles.railMark}>▦</Text>
           <Text style={styles.railTip}>2×2</Text>
@@ -139,6 +129,18 @@ export function RightPanelRail({
   layoutShape = 'square',
   onLayoutPick,
 }: RightProps) {
+  const { t } = useI18n();
+  const RIGHT_ICONS: { id: Exclude<EdgePanelId, null>; mark: string; tip: string }[] = [
+    { id: 'alerts', mark: '⚡', tip: t.railTipAlert },
+    { id: 'indAlerts', mark: '☢', tip: t.railTipIndicator },
+    { id: 'calendar', mark: '◷', tip: t.toolsTabCalendar },
+    { id: 'screener', mark: '⌕', tip: t.toolsTabScreener },
+    { id: 'reports', mark: '≡', tip: t.railTipReport },
+    { id: 'news', mark: '☰', tip: t.railTipNewsItem },
+    { id: 'dom', mark: '▥', tip: t.depthWord },
+    { id: 'journal', mark: '₴', tip: t.toolsTabJournal },
+    { id: 'backtest', mark: '↺', tip: t.backtestWord },
+  ];
   const squareOn = (count: FrameLayoutCount) =>
     layoutCount === count && layoutShape === 'square';
   const rectOn = (count: FrameLayoutCount) =>
@@ -149,8 +151,8 @@ export function RightPanelRail({
       {layoutCount && onLayoutPick ? (
         <>
           <View style={styles.railTag}>
-            <Text style={styles.railTagTop}>فريم</Text>
-            <Text style={styles.railTagBottom}>مربع</Text>
+            <Text style={styles.railTagTop}>{t.railFrameWord}</Text>
+            <Text style={styles.railTagBottom}>{t.railSquareWord}</Text>
           </View>
           <View style={styles.layoutGroup}>
             {([1, 2, 3, 4] as FrameLayoutCount[]).map((count) => {
@@ -159,7 +161,7 @@ export function RightPanelRail({
                 <Pressable
                   accessibilityRole="button"
                   key={`sq-${count}`}
-                  accessibilityLabel={`${count} فريم مربع`}
+                  accessibilityLabel={`${count} ${t.railFrameWord} ${t.railSquareWord}`}
                   style={({ pressed }) => [
                     styles.layoutBtn,
                     on && styles.layoutBtnOn,
@@ -185,8 +187,8 @@ export function RightPanelRail({
           </View>
           <View style={styles.railSep} />
           <View style={styles.railTag}>
-            <Text style={styles.railTagTop}>فريم</Text>
-            <Text style={styles.railTagBottom}>مستطيل</Text>
+            <Text style={styles.railTagTop}>{t.railFrameWord}</Text>
+            <Text style={styles.railTagBottom}>{t.railRectangleWord}</Text>
           </View>
           <View style={styles.layoutGroup}>
             {([2, 3, 4] as FrameLayoutCount[]).map((count) => {
@@ -195,7 +197,7 @@ export function RightPanelRail({
                 <Pressable
                   accessibilityRole="button"
                   key={`rect-${count}`}
-                  accessibilityLabel={`${count} فريم مستطيل`}
+                  accessibilityLabel={`${count} ${t.railFrameWord} ${t.railRectangleWord}`}
                   style={({ pressed }) => [
                     styles.layoutBtn,
                     on && styles.layoutBtnOn,
@@ -244,22 +246,22 @@ export function RightPanelRail({
               },
             ]}
             onPress={() => onLayoutPick(1, 'shadow')}
-            accessibilityLabel="فريم الظل"
+            accessibilityLabel={`${t.railFrameWord} ${t.railShadowWord}`}
           >
-            <Text style={styles.railTagTop}>فريم</Text>
+            <Text style={styles.railTagTop}>{t.railFrameWord}</Text>
             <Text
               style={[
                 styles.railTagBottom,
                 layoutShape === 'shadow' && styles.layoutNumOn,
               ]}
             >
-              الظل
+              {t.railShadowWord}
             </Text>
           </Pressable>
           <View style={styles.railSep} />
         </>
       ) : null}
-      <Text style={styles.railTitle}>لوحات</Text>
+      <Text style={styles.railTitle}>{t.railPanelsSectionTitle}</Text>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {RIGHT_ICONS.map((x) => {
           const on = activePanel === x.id;
@@ -276,7 +278,7 @@ export function RightPanelRail({
                 },
               ]}
               onPress={() => onOpenPanel(activePanel === x.id ? null : x.id)}
-              accessibilityLabel={`لوحة: ${x.tip}`}
+              accessibilityLabel={`${t.railPanelA11yPrefix}${x.tip}`}
             >
               <Text style={[styles.railMark, on && styles.railMarkOn]}>{x.mark}</Text>
               <Text style={[styles.railTip, on && styles.railTipOn]}>{x.tip}</Text>
