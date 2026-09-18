@@ -6,6 +6,7 @@ export type AcademySchoolSummary = {
   density: string;
   max_level: number;
   summary: string;
+  summary_en: string;
   levels_count: number;
   lectures_count: number;
   classroom: { teacher: string; screen_theme: string; video_pipeline: string };
@@ -56,6 +57,7 @@ export const mockAcademySchools: AcademySchoolSummary[] = [
     density: 'low',
     max_level: 1,
     summary: 'النقطة (Pip)، اللوت، الرافعة والهامش، وإدارة المخاطر قبل أول صفقة.',
+    summary_en: 'Pips, lot sizes, leverage and margin, and risk management before your first trade.',
     levels_count: 1,
     lectures_count: 5,
     classroom: {
@@ -73,6 +75,7 @@ export const mockAcademySchools: AcademySchoolSummary[] = [
     density: 'medium',
     max_level: 3,
     summary: 'الاتجاه، الدعم والمقاومة، الشموع، والمؤشرات الكلاسيكية.',
+    summary_en: 'Trend, support and resistance, candlesticks, and classic indicators.',
     levels_count: 3,
     lectures_count: 8,
     classroom: {
@@ -90,6 +93,7 @@ export const mockAcademySchools: AcademySchoolSummary[] = [
     density: 'high',
     max_level: 4,
     summary: 'التجميع والتوزيع وقراءة نية المؤسسات.',
+    summary_en: 'Accumulation, distribution, and reading institutional intent.',
     levels_count: 4,
     lectures_count: 6,
     classroom: {
@@ -108,6 +112,8 @@ export const mockAcademySchools: AcademySchoolSummary[] = [
     max_level: 5,
     summary:
       'Order Blocks و FVG وبضمنها BOS و CHOCH كهيكل سوق — ليست مدرسة منفصلة عن الـ OB/FVG.',
+    summary_en:
+      'Order Blocks and FVGs, including BOS and CHOCH as market structure — not a separate school from OB/FVG.',
     levels_count: 5,
     lectures_count: 9,
     classroom: {
@@ -125,6 +131,7 @@ export const mockAcademySchools: AcademySchoolSummary[] = [
     density: 'high',
     max_level: 4,
     summary: 'الزوايا الزمنية والسعرية ومربع 9.',
+    summary_en: 'Time and price angles, and the Square of 9.',
     levels_count: 4,
     lectures_count: 5,
     classroom: {
@@ -142,6 +149,7 @@ export const mockAcademySchools: AcademySchoolSummary[] = [
     density: 'very_high',
     max_level: 5,
     summary: 'العدّ الموجي والفيبوناتشي والتوافق مع السيولة.',
+    summary_en: 'Wave counting, Fibonacci, and alignment with liquidity.',
     levels_count: 5,
     lectures_count: 6,
     classroom: {
@@ -159,6 +167,7 @@ export const mockAcademySchools: AcademySchoolSummary[] = [
     density: 'high',
     max_level: 4,
     summary: 'مناطق العرض والطلب وإدارة الصفقة بأسلوب SK.',
+    summary_en: 'Supply and demand zones, and SK-style trade management.',
     levels_count: 4,
     lectures_count: 5,
     classroom: {

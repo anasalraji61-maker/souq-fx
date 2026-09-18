@@ -13,6 +13,7 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
+import { formatPrice } from '../chart/math';
 
 type Trade = {
   id: string;
@@ -270,8 +271,8 @@ export function TradeJournalPanel() {
         {trades.map((tr) => (
           <View key={tr.id} style={styles.trade}>
             <Text style={[styles.tradeMain, { textAlign: align }]}>
-              {tr.side.toUpperCase()} {tr.symbol} · {tr.entry}
-              {tr.exit != null ? ` → ${tr.exit}` : ` ${t.journalOpenSuffix}`}
+              {tr.side.toUpperCase()} {tr.symbol} · {formatPrice(tr.entry)}
+              {tr.exit != null ? ` → ${formatPrice(tr.exit)}` : ` ${t.journalOpenSuffix}`}
             </Text>
             <Text style={[styles.tradeMeta, { textAlign: align }]}>
               {tr.status}

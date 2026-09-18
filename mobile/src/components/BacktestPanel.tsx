@@ -14,6 +14,7 @@ import { playSoftClick } from '../audio/playSoftClick';
 import { TimeframeBar } from './TimeframeBar';
 import { type Timeframe } from '../timeframes';
 import { useI18n } from '../i18n/I18nContext';
+import { formatPrice } from '../chart/math';
 
 type Stats = {
   trade_count: number;
@@ -201,7 +202,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
       <ScrollView style={{ maxHeight: 180 }}>
         {trades.map((tr, i) => (
           <Text key={i} style={[styles.trade, { textAlign: align }]}>
-            {tr.side} {tr.entry} → {tr.exit} · {tr.pnl_pct >= 0 ? '+' : ''}
+            {tr.side} {formatPrice(tr.entry)} → {formatPrice(tr.exit)} · {tr.pnl_pct >= 0 ? '+' : ''}
             {tr.pnl_pct}%
           </Text>
         ))}

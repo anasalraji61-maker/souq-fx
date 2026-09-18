@@ -335,6 +335,9 @@ export type Dict = {
   coursesFullLectureWord: string;
   coursesBackToSchoolsA11y: string;
   coursesBack: string;
+  coursesFallbackLevelTitle: string;
+  coursesFallbackLectureTitle: string;
+  coursesFallbackOutlineIntro: string;
   lectureClose: string;
   lectureCloseA11y: string;
   lectureLevelWord: string;
@@ -367,6 +370,14 @@ export type Dict = {
   lectureQuestionA11y: string;
   lectureAskBtn: string;
   lectureAskA11y: string;
+  lectureFallbackTitle: string;
+  lectureFallbackOutlineDefinition: string;
+  lectureFallbackOutlineApplication: string;
+  lectureFallbackTeacher: string;
+  lectureFallbackSeg1Title: string;
+  lectureFallbackSeg1Narration: string;
+  lectureFallbackSeg2Title: string;
+  lectureFallbackSeg2Narration: string;
   // TerminalScreen.tsx (شاشة الشارت، أولوية MVP الأولى) — 2026-09-18
   termShadowSizeSmall: string;
   termShadowSizeMedium: string;
@@ -881,6 +892,9 @@ const ar: Dict = {
   coursesFullLectureWord: 'محاضرة كاملة',
   coursesBackToSchoolsA11y: 'رجوع لقائمة المدارس',
   coursesBack: 'رجوع',
+  coursesFallbackLevelTitle: 'التأسيس',
+  coursesFallbackLectureTitle: 'محاضرة افتتاحية',
+  coursesFallbackOutlineIntro: 'مقدمة',
   lectureClose: 'إغلاق',
   lectureCloseA11y: 'إغلاق المحاضرة',
   lectureLevelWord: 'مستوى',
@@ -914,6 +928,16 @@ const ar: Dict = {
   lectureQuestionA11y: 'سؤال أثناء إيقاف الشرح',
   lectureAskBtn: 'اسأل',
   lectureAskA11y: 'إرسال السؤال',
+  lectureFallbackTitle: 'محاضرة تجريبية',
+  lectureFallbackOutlineDefinition: 'تعريف',
+  lectureFallbackOutlineApplication: 'تطبيق',
+  lectureFallbackTeacher: 'الشرح الصوتي',
+  lectureFallbackSeg1Title: 'افتتاح',
+  lectureFallbackSeg1Narration:
+    'أهلاً بك. الشاشة فقط مع شرح صوتي. يمكنك إيقاف الشرح في أي لحظة لتسأل.',
+  lectureFallbackSeg2Title: 'الفكرة الأساسية',
+  lectureFallbackSeg2Narration:
+    'BOS و CHOCH جزء من هيكل السوق داخل Order Blocks و Fair Value Gaps في ICT/SMC.',
   termShadowSizeSmall: 'صغير',
   termShadowSizeMedium: 'وسط',
   termShadowSizeBig: 'كبير',
@@ -1422,6 +1446,9 @@ const enUS: Dict = {
   coursesFullLectureWord: 'full lecture',
   coursesBackToSchoolsA11y: 'Back to the school list',
   coursesBack: 'Back',
+  coursesFallbackLevelTitle: 'Foundation',
+  coursesFallbackLectureTitle: 'Opening Lecture',
+  coursesFallbackOutlineIntro: 'Introduction',
   lectureClose: 'Close',
   lectureCloseA11y: 'Close the lecture',
   lectureLevelWord: 'level',
@@ -1455,6 +1482,16 @@ const enUS: Dict = {
   lectureQuestionA11y: 'Question while the narration is paused',
   lectureAskBtn: 'Ask',
   lectureAskA11y: 'Send the question',
+  lectureFallbackTitle: 'Demo Lecture',
+  lectureFallbackOutlineDefinition: 'Definition',
+  lectureFallbackOutlineApplication: 'Application',
+  lectureFallbackTeacher: 'Voice narration',
+  lectureFallbackSeg1Title: 'Opening',
+  lectureFallbackSeg1Narration:
+    'Welcome. This is screen-only content with voice narration. You can pause the narration at any time to ask a question.',
+  lectureFallbackSeg2Title: 'Core idea',
+  lectureFallbackSeg2Narration:
+    'BOS and CHOCH are part of market structure within Order Blocks and Fair Value Gaps in ICT/SMC.',
   termShadowSizeSmall: 'Small',
   termShadowSizeMedium: 'Medium',
   termShadowSizeBig: 'Large',
@@ -1984,6 +2021,9 @@ const ku: Dict = {
   coursesFullLectureWord: 'وانەی تەواو',
   coursesBackToSchoolsA11y: 'گەڕانەوە بۆ لیستی قوتابخانەکان',
   coursesBack: 'گەڕانەوە',
+  coursesFallbackLevelTitle: 'بناغە',
+  coursesFallbackLectureTitle: 'وانەی کردنەوە',
+  coursesFallbackOutlineIntro: 'پێشەکی',
   lectureClose: 'داخستن',
   lectureCloseA11y: 'داخستنی وانەکە',
   lectureLevelWord: 'ئاست',
@@ -2017,6 +2057,16 @@ const ku: Dict = {
   lectureQuestionA11y: 'پرسیار لە کاتی ڕاگرتنی ڕوونکردنەوەکە',
   lectureAskBtn: 'بپرسە',
   lectureAskA11y: 'ناردنی پرسیارەکە',
+  lectureFallbackTitle: 'وانەی نموونەیی',
+  lectureFallbackOutlineDefinition: 'پێناسە',
+  lectureFallbackOutlineApplication: 'بەکارهێنان',
+  lectureFallbackTeacher: 'ڕوونکردنەوەی دەنگی',
+  lectureFallbackSeg1Title: 'کردنەوە',
+  lectureFallbackSeg1Narration:
+    'بەخێربێیت. ئەمە تەنها ناوەڕۆکی شاشەیە لەگەڵ ڕوونکردنەوەی دەنگی. دەتوانیت لە هەر کاتێکدا ڕوونکردنەوەکە ڕابگریت بۆ پرسیارکردن.',
+  lectureFallbackSeg2Title: 'بیرۆکەی سەرەکی',
+  lectureFallbackSeg2Narration:
+    'BOS و CHOCH بەشێکن لە پێکهاتەی بازاڕ لەناو Order Blocks و Fair Value Gaps لە ICT/SMC.',
   termShadowSizeSmall: 'بچووک',
   termShadowSizeMedium: 'ناوەند',
   termShadowSizeBig: 'گەورە',

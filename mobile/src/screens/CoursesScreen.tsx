@@ -21,8 +21,21 @@ import {
 import { LectureClassroom } from '../components/LectureClassroom';
 import { useI18n } from '../i18n/I18nContext';
 
+/** name_ar/name_en (و summary/summary_en) حقلان ثنائيا اللغة على بيانات المدرسة نفسها (كتالوج
+ * محتوى، لا نص واجهة ثابت عبر Dict) — كانا موجودين بالنوع من البداية لكن `name_en`/`summary_en`
+ * لم يُستخدَما إطلاقاً بالعرض (`name_ar`/`summary` فقط، بصرف النظر عن اللغة المختارة). لا حقل
+ * `_ku` منفصل (نفس نمط الملف الأصلي: ar/en فقط)، فتُستخدَم النسخة الإنجليزية لأي لغة غير عربية
+ * (بضمنها الكردية) — نفس قرار "الإنجليزية محور اللغات غير العربية" المتَّبع بأماكن أخرى للمحتوى
+ * (لا نصوص الواجهة الثابتة التي تغطّي الأربع لغات عبر Dict). راجع HANDOFF.md. */
+function schoolName(s: { name_ar: string; name_en: string }, lang: string): string {
+  return lang === 'ar' ? s.name_ar : s.name_en;
+}
+function schoolSummary(s: { summary: string; summary_en?: string }, lang: string): string {
+  return lang === 'ar' ? s.summary : s.summary_en ?? s.summary;
+}
+
 export function CoursesScreen() {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [schools, setSchools] = useState<AcademySchoolSummary[]>(mockAcademySchools);
   const [school, setSchool] = useState<AcademySchool | null>(null);
@@ -73,16 +86,16 @@ export function CoursesScreen() {
           levels: [
             {
               level: 1,
-              title: 'التأسيس',
+              title: t.coursesFallbackLevelTitle,
               lectures_count: 1,
               lectures: [
                 {
                   id: `${id}-demo`,
-                  title: 'محاضرة افتتاحية',
+                  title: t.coursesFallbackLectureTitle,
                   duration_min: 20,
                   format: 'classroom',
                   video_status: 'script_ready',
-                  outline: ['مقدمة'],
+                  outline: [t.coursesFallbackOutlineIntro],
                   script_segments: [],
                 } as AcademyLecture,
               ],
@@ -137,13 +150,13 @@ export function CoursesScreen() {
               },
             ]}
             onPress={() => openSchool(s.id)}
-            accessibilityLabel={`${t.coursesSchoolA11yPrefix}: ${s.name_ar}`}
+            accessibilityLabel={`${t.coursesSchoolA11yPrefix}: ${schoolName(s, lang)}`}
           >
             <View style={[styles.cardTop, rtl && styles.cardTopRtl]}>
               <Text style={styles.order}>#{s.order}</Text>
-              <Text style={styles.school}>{s.name_ar}</Text>
+              <Text style={styles.school}>{schoolName(s, lang)}</Text>
             </View>
-            <Text style={[styles.desc, { textAlign: align }]}>{s.summary}</Text>
+            <Text style={[styles.desc, { textAlign: align }]}>{schoolSummary(s, lang)}</Text>
             <View style={[styles.meta, rtl && styles.metaRtl]}>
               <Text style={styles.metaText}>
                 {s.levels_count} {t.coursesLevelsWord}
@@ -167,8 +180,12 @@ export function CoursesScreen() {
               <ActivityIndicator color={colors.accent} />
             ) : (
               <>
-                <Text style={[styles.modalSchool, { textAlign: align }]}>{school?.name_ar}</Text>
-                <Text style={[styles.modalDesc, { textAlign: align }]}>{school?.summary}</Text>
+                <Text style={[styles.modalSchool, { textAlign: align }]}>
+                  {school ? schoolName(school, lang) : ''}
+                </Text>
+                <Text style={[styles.modalDesc, { textAlign: align }]}>
+                  {school ? schoolSummary(school, lang) : ''}
+                </Text>
                 {schoolFallback ? (
                   <Text style={[styles.fallbackNote, { textAlign: align }]}>
                     {t.coursesFallbackNote}

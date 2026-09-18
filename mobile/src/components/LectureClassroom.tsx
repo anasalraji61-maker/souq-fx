@@ -96,25 +96,23 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           setLectureFallback(true);
           setLecture({
             id: lectureId,
-            title: 'محاضرة تجريبية',
+            title: t.lectureFallbackTitle,
             duration_min: 20,
             format: 'screen_voice',
             video_status: 'script_ready',
-            outline: ['تعريف', 'تطبيق'],
-            teacher: 'الشرح الصوتي',
+            outline: [t.lectureFallbackOutlineDefinition, t.lectureFallbackOutlineApplication],
+            teacher: t.lectureFallbackTeacher,
             school_name: 'MATRIX Academy',
             script_segments: [
               {
                 id: 's1',
-                title: 'افتتاح',
-                narration:
-                  'أهلاً بك. الشاشة فقط مع شرح صوتي. يمكنك إيقاف الشرح في أي لحظة لتسأل.',
+                title: t.lectureFallbackSeg1Title,
+                narration: t.lectureFallbackSeg1Narration,
               },
               {
                 id: 's2',
-                title: 'الفكرة الأساسية',
-                narration:
-                  'BOS و CHOCH جزء من هيكل السوق داخل Order Blocks و Fair Value Gaps في ICT/SMC.',
+                title: t.lectureFallbackSeg2Title,
+                narration: t.lectureFallbackSeg2Narration,
               },
             ],
           });
