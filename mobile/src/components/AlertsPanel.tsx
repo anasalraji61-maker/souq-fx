@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail,
 import { api, type PriceAlert } from '../api';
 import { ensureAlertNotifications, pushPriceAlert, registerPushToken } from '../notifications';
 import { playSoftClick } from '../audio/playSoftClick';
+import { hasCelebratedFirstAlert, markFirstAlertCelebrated } from '../achievements';
 import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
@@ -35,6 +36,15 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
   const [listError, setListError] = useState(false);
   /** وضوح الحالة: يعلم المستخدم إذا فشلت إضافة تنبيه بدل صمت كامل */
   const [formError, setFormError] = useState<string | null>(null);
+  /** احتفال بصري خفيف لمرة واحدة فقط عند أول تنبيه سعر (matrix-tactile-feel.mdc) */
+  const [showFirstBadge, setShowFirstBadge] = useState(false);
+  const firstBadgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (firstBadgeTimerRef.current) clearTimeout(firstBadgeTimerRef.current);
+    };
+  }, []);
 
   const refresh = useCallback(async () => {
     try {
@@ -86,6 +96,15 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
       setPrice('');
       setNote('');
       await refresh();
+      /** لحظة إنجاز/تشجيع محدَّدة (matrix-tactile-feel.mdc: "ضبط أول تنبيه") — تُحتفَل بها مرة
+       * واحدة فقط عبر عمر التطبيق على الجهاز عبر `achievements.ts`، لا في كل مرة تُضاف تنبيهاً،
+       * حتى لو حُذفت كل التنبيهات لاحقاً وأُضيف تنبيه جديد. */
+      if (!(await hasCelebratedFirstAlert())) {
+        await markFirstAlertCelebrated();
+        setShowFirstBadge(true);
+        if (firstBadgeTimerRef.current) clearTimeout(firstBadgeTimerRef.current);
+        firstBadgeTimerRef.current = setTimeout(() => setShowFirstBadge(false), 2600);
+      }
     } catch {
       setFormError(t.alertsAddError);
     } finally {
@@ -216,6 +235,11 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
       </View>
 
       {formError ? <Text style={[styles.formError, { textAlign: align }]}>{formError}</Text> : null}
+      {showFirstBadge ? (
+        <View style={styles.firstAlertBadge}>
+          <Text style={styles.firstAlertBadgeText}>{t.alertsFirstBadge}</Text>
+        </View>
+      ) : null}
 
       {loading ? (
         <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.md }} />
@@ -300,6 +324,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: spacing.xs,
   },
+  firstAlertBadge: {
+    marginTop: spacing.xs,
+    alignSelf: 'flex-end',
+    backgroundColor: 'rgba(232,184,109,0.14)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(232,184,109,0.4)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: spacing.xs,
+  },
+  firstAlertBadgeText: { color: colors.warmAccent, fontSize: 11, fontWeight: '800' },
   form: { marginTop: spacing.sm, gap: 6 },
   input: {
     backgroundColor: colors.bgPanel,

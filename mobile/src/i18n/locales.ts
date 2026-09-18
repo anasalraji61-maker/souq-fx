@@ -210,6 +210,7 @@ export type Dict = {
   alertsNotePlaceholder: string;
   alertsNoteA11y: string;
   alertsAddError: string;
+  alertsFirstBadge: string;
   alertsLoadError: string;
   alertsEmpty: string;
   alertsDeleteConfirmTitle: string;
@@ -629,6 +630,7 @@ const ar: Dict = {
   alertsNotePlaceholder: 'ملاحظة (اختياري)',
   alertsNoteA11y: 'ملاحظة التنبيه (اختياري)',
   alertsAddError: 'تعذر إضافة التنبيه — تحقق من الاتصال وحاول مرة أخرى',
+  alertsFirstBadge: '🎉 أول تنبيه مضبوط — سنُعلمك فور وصول السعر',
   alertsLoadError: 'تعذر تحميل التنبيهات',
   alertsEmpty: 'لا تنبيهات بعد',
   alertsDeleteConfirmTitle: 'حذف التنبيه؟',
@@ -1045,6 +1047,7 @@ const enUS: Dict = {
   alertsNotePlaceholder: 'Note (optional)',
   alertsNoteA11y: 'Alert note (optional)',
   alertsAddError: 'Could not add the alert — check your connection and try again',
+  alertsFirstBadge: "🎉 First alert set — we'll notify you when the price hits",
   alertsLoadError: 'Could not load alerts',
   alertsEmpty: 'No alerts yet',
   alertsDeleteConfirmTitle: 'Delete the alert?',
@@ -1480,6 +1483,7 @@ const ku: Dict = {
   alertsNotePlaceholder: 'تێبینی (ئیختیاری)',
   alertsNoteA11y: 'تێبینی ئاگادارکردنەوە (ئیختیاری)',
   alertsAddError: 'نەکرا ئاگادارکردنەوە زیادبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
+  alertsFirstBadge: '🎉 یەکەم ئاگادارکردنەوەت دانرا — کاتێک نرخ بگاتە ئاستەکە ئاگادارت دەکەینەوە',
   alertsLoadError: 'نەکرا ئاگادارکردنەوەکان باربکرێن',
   alertsEmpty: 'هێشتا هیچ ئاگادارکردنەوەیەک نییە',
   alertsDeleteConfirmTitle: 'ئاگادارکردنەوەکە بسڕدرێتەوە؟',
