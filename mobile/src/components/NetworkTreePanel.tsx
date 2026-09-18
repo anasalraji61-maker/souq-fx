@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -260,6 +260,15 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
   const [err, setErr] = useState<string | null>(null);
   const [open, setOpen] = useState(true);
 
+  // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (طي/فتح لوحة الشبكة
+  // قبل اكتمال الطلب) — نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const load = useCallback(async () => {
     if (!enabled) {
       setTree(null);
@@ -269,12 +278,14 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
     setErr(null);
     try {
       const res = await api.commissionTree(5);
-      setTree(res.tree as TreeNode | null);
+      if (mountedRef.current) setTree(res.tree as TreeNode | null);
     } catch {
-      setTree(null);
-      setErr('تعذر تحميل الشجرة');
+      if (mountedRef.current) {
+        setTree(null);
+        setErr('تعذر تحميل الشجرة');
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, [enabled]);
 

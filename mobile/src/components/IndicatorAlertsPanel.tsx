@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -49,16 +49,30 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
     setSymbol(defaultSymbol);
   }, [defaultSymbol]);
 
+  // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة — يشمل نتيجة الاستطلاع
+  // الدوري (setInterval) التي قد تصل بعد إلغاء التركيب رغم إيقاف المؤقت نفسه — نفس مبدأ
+  // ChartFrame/SymbolSnapshot المؤسَّس بالكود.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const refresh = useCallback(async () => {
     try {
       const res = await api.indicatorAlerts();
-      setAlerts(res.alerts);
-      setListError(false);
+      if (mountedRef.current) {
+        setAlerts(res.alerts);
+        setListError(false);
+      }
     } catch {
-      setAlerts([]);
-      setListError(true);
+      if (mountedRef.current) {
+        setAlerts([]);
+        setListError(true);
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, []);
 
@@ -67,7 +81,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
     const id = setInterval(async () => {
       try {
         const res = await api.checkIndicatorAlerts();
-        setAlerts(res.alerts);
+        if (mountedRef.current) setAlerts(res.alerts);
         for (const trig of res.triggered) {
           await pushPriceAlert(t.indAlertsPushTitle, `${trig.symbol} ${trig.alert_type} ${trig.condition}`);
         }

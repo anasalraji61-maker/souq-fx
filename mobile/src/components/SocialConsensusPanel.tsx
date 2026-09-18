@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
@@ -63,13 +63,25 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
   /** وضوح الحالة: يميّز فشل تحميل كتالوج المصادر عن عدم توفّر مصادر فعلاً */
   const [sourcesError, setSourcesError] = useState(false);
 
+  // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (تبديل قسم hub قبل
+  // اكتمال الطلب) — نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود، بصيغة ref هنا لأنه
+  // يُستخدَم بأكثر من مؤثّر بهذا الملف (تحميل المصادر + `run`).
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
         const catalog = await api.socialSources();
+        if (!mountedRef.current) return;
         setSources(catalog.sources);
         setSourcesError(false);
         const raw = await AsyncStorage.getItem(PREFS_KEY);
+        if (!mountedRef.current) return;
         if (raw) {
           const ids = JSON.parse(raw) as string[];
           if (Array.isArray(ids) && ids.length) {
@@ -80,10 +92,12 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
         }
         setSelected(catalog.sources.slice(0, 5).map((s) => s.id));
       } catch {
-        setSources([]);
-        setSourcesError(true);
+        if (mountedRef.current) {
+          setSources([]);
+          setSourcesError(true);
+        }
       } finally {
-        setReady(true);
+        if (mountedRef.current) setReady(true);
       }
     })();
   }, []);
@@ -111,6 +125,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
         timeframe,
         source_ids: selected,
       });
+      if (!mountedRef.current) return;
       setDirection(res.direction);
       setConfidence(res.confidence);
       setAvg(res.avg_score);
@@ -119,10 +134,12 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
       setVotes(res.votes);
       setNote(res.disclaimer);
     } catch {
-      setVotes([]);
-      setNote(t.socialComputeError);
+      if (mountedRef.current) {
+        setVotes([]);
+        setNote(t.socialComputeError);
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, [symbol, timeframe, selected, t.socialComputeError]);
 

@@ -36,6 +36,9 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
 
   useEffect(() => {
+    // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب اللوحة أو تغيّر الفلتر قبل اكتمال الطلب
+    // السابق — نفس نمط ChartFrame/SymbolSnapshot/FocusChartModal المؤسَّس بالكود.
+    let alive = true;
     setStatus('loading');
     api
       .calendar({
@@ -43,13 +46,20 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
         impact: impact === 'ALL' ? undefined : impact,
       })
       .then((r) => {
-        setEvents(r.events);
-        setStatus('ok');
+        if (alive) {
+          setEvents(r.events);
+          setStatus('ok');
+        }
       })
       .catch(() => {
-        setEvents([]);
-        setStatus('error');
+        if (alive) {
+          setEvents([]);
+          setStatus('error');
+        }
       });
+    return () => {
+      alive = false;
+    };
   }, [currency, impact]);
 
   const IMPACT_LABEL: Record<'high' | 'medium' | 'low', string> = {

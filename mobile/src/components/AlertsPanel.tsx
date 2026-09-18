@@ -39,33 +39,42 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
   /** احتفال بصري خفيف لمرة واحدة فقط عند أول تنبيه سعر (matrix-tactile-feel.mdc) */
   const [showFirstBadge, setShowFirstBadge] = useState(false);
   const firstBadgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // حارس "alive" منفصل عن مؤقت الشارة أعلاه — يمنع تحديث الحالة بعد إلغاء تركيب اللوحة، يشمل
+  // نتيجة الاستطلاع الدوري (setInterval) التي قد تصل بعد إلغاء التركيب رغم إيقاف المؤقت نفسه —
+  // نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود.
+  const mountedRef = useRef(true);
 
   useEffect(() => {
     return () => {
       if (firstBadgeTimerRef.current) clearTimeout(firstBadgeTimerRef.current);
+      mountedRef.current = false;
     };
   }, []);
 
   const refresh = useCallback(async () => {
     try {
       const res = await api.alerts();
-      setAlerts(res.alerts);
-      setListError(false);
+      if (mountedRef.current) {
+        setAlerts(res.alerts);
+        setListError(false);
+      }
     } catch {
-      setAlerts([]);
-      setListError(true);
+      if (mountedRef.current) {
+        setAlerts([]);
+        setListError(true);
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, []);
 
   const check = useCallback(async () => {
     try {
       const res = await api.checkAlerts();
-      setAlerts(res.alerts);
+      if (mountedRef.current) setAlerts(res.alerts);
       if (res.triggered.length) {
         const msg = res.triggered.map((trig) => `${trig.symbol} ${trig.condition} ${trig.price}`).join(' · ');
-        setFlash(msg);
+        if (mountedRef.current) setFlash(msg);
         for (const trig of res.triggered) {
           await pushPriceAlert(
             t.alertsPushTitle,

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api } from '../api';
@@ -42,10 +42,21 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
   const [rows, setRows] = useState<AnalystRow[]>([]);
   const [note, setNote] = useState('');
 
+  // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (تبديل قسم hub قبل
+  // اكتمال الطلب) — نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود، بصيغة ref هنا لأن
+  // `load` يُعاد استدعاؤها عند تغيّر symbol/timeframe لا التركيب الأول فقط.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.analystsForecast(symbol, timeframe);
+      if (!mountedRef.current) return;
       setDirection(res.direction);
       setConfidence(res.confidence);
       setAvg(res.avg_score);
@@ -53,10 +64,12 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
       setRows(res.analysts);
       setNote(res.disclaimer);
     } catch {
-      setRows([]);
-      setNote(t.analystsLoadError);
+      if (mountedRef.current) {
+        setRows([]);
+        setNote(t.analystsLoadError);
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, [symbol, timeframe, t.analystsLoadError]);
 

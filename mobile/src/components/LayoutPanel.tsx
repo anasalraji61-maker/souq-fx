@@ -27,9 +27,15 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadLayouts().then((l) => setLayouts(l.length ? [DEFAULT_LAYOUT, ...l] : [DEFAULT_LAYOUT]));
+    // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب اللوحة قبل اكتمال الطلب — نفس نمط
+    // ChartFrame/SymbolSnapshot/FocusChartModal المؤسَّس بالكود.
+    let alive = true;
+    loadLayouts().then((l) => {
+      if (alive) setLayouts(l.length ? [DEFAULT_LAYOUT, ...l] : [DEFAULT_LAYOUT]);
+    });
     const unsubErr = subscribeLayoutsSaveError(setSaveError);
     return () => {
+      alive = false;
       unsubErr();
     };
   }, []);

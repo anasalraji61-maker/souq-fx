@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons } from '../theme';
 import { api, type Vote } from '../api';
@@ -27,14 +27,29 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
   const [pBusy, setPBusy] = useState(false);
   const [pError, setPError] = useState<string | null>(null);
 
+  // حارس "alive" مبني على ref (لا `let` محلي بالـeffect) لأن `load` تُستدعى أيضاً من `publish`/
+  // `cast` بعد نجاح إجراء المستخدم، لا من مؤثّر التركيب فقط — يمنع تحديث الحالة بعد إلغاء تركيب
+  // اللوحة (مثلاً تبديل قسم hub) بغض النظر عن أي نداء تسبَّب بالطلب، نفس مبدأ ChartFrame/
+  // SymbolSnapshot المؤسَّس بالكود لكن بصيغة ref لأنها مُشترَكة بين أكثر من مستدعٍ.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const load = () => {
     api
       .votes()
       .then((r) => {
-        setVotes(r.votes);
-        setNotice(null);
+        if (mountedRef.current) {
+          setVotes(r.votes);
+          setNotice(null);
+        }
       })
-      .catch(() => setNotice(t.voteLoadError));
+      .catch(() => {
+        if (mountedRef.current) setNotice(t.voteLoadError);
+      });
   };
 
   useEffect(() => {

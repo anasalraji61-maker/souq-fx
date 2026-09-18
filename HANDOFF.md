@@ -1,5 +1,118 @@
 # HANDOFF — MATRIX (سجل تنفيذ Claude)
 
+آخر تحديث: 2026-09-18 (Claude — تشغيل مجدول جديد، جلسة جديدة بلا ذاكرة، ثالث تشغيل بهذا اليوم —
+**باكلوج جديد فُتح وأُغلِق بالكامل: حارس "alive"/mountedRef لمنع تحديث حالة بعد إلغاء تركيب اللوحة
+بـ17 ملفاً + توثيق اكتشاف مهم مؤجَّل (تغطية `KeyboardAvoidingView` على iOS) يحتاج معاينة جهاز/محاكي**):
+
+**قراءة أولية + GIT أولاً**: قراءة أعلى `HANDOFF.md` (التشغيل الثاني بهذا اليوم: فحصا زاوية جديدة
+[تسريب دورة حياة `useEffect`، تغطية `accessibilityRole`] صفر فجوة بكليهما + شارة احتفال أول تنبيه)
++ قسم "🚨 أولوية طارئة"/نطاق MVP بـ`docs/ROADMAP.md`. فتح GitHub Desktop
+(`computer_resolve_access`+`computer_request_access` على المُطلِق + عملية `app-3.6.5` +
+`textinputhost.exe` معاً، بلا رفض) — لقطة شاشة أكَّدت **"No local changes" / "0 changed files"**،
+الفرع `main`، `Fetch origin` منذ ساعة تقريباً — عمل التشغيل الثاني مُثبَّت ومدفوع فعلاً
+لـ`origin/main`، لا حاجة لأي إصلاح Git بداية هذا التشغيل.
+
+**البحث عن زاوية جديدة**: التشغيل الثاني أغلق فحصَي تسريب `useEffect` (مؤقتات/مستمعات/WebSocket)
+و`accessibilityRole` بصفر فجوة. جُرِّبت زاوية مجاورة لم تُفحَص صراحة من قبل: **تحديث حالة React بعد
+إلغاء تركيب المكوّن (setState after unmount)** — أي `useEffect`/دالة `useCallback` تُطلِق طلب
+API (عبر `.then()` أو `async/await`) وتُحدِّث حالة مباشرة عند النجاح/الفشل بلا أي حارس يتحقّق أن
+المكوّن ما زال مُركَّباً. هذا **سيناريو حقيقي ومتكرر بهذا التطبيق تحديداً**، لا نظري فقط: تبويبات
+`ToolsScreen.tsx` (hub/تقارير/PnL/Backtest/تنبيهات+/تقويم/تخطيط) تُعيد تركيب لوحاتها عند التبديل
+(`{tab === 'x' ? <Panel/> : null}`)، وقسما hub (مجتمع/تحليل) كذلك (`hubSection === 'community' ?
+<FrameSizedGrid key="hub-community".../> : <FrameSizedGrid key="hub-analysis".../>` — مفتاح `key`
+مختلف يعني إلغاء تركيب كامل لا مجرد إخفاء) — فتبديل تبويب/قسم أثناء طلب API قيد التنفيذ (شائع
+لمستخدم يتصفّح بسرعة) يُطلِق تحذير React ("Can't perform a state update on an unmounted
+component") وقد يعرض بيانات لطلب لم يعد ذا صلة للحظة قبل إلغاء التركيب الفعلي.
+
+**النمط المؤسَّس أصلاً بالكود (مرجع لا اختراع)**: عدة ملفات كانت تستخدم بالفعل حارس `alive` محلي
+(`let alive = true` + `if (alive) setX(...)` + `return () => { alive = false }`) — `ChartFrame.tsx`/
+`SymbolSnapshot.tsx`/`FocusChartModal.tsx`/`TerminalScreen.tsx`/`AccountScreen.tsx`/
+`PairDrumWheel.tsx`/`SymbolPairMenu.tsx`/`DomLitePanel.tsx`/`LectureClassroom.tsx`/
+`QuadChartModal.tsx` (10 ملفات مطابقة سلفاً، لا لمس). **الفجوة**: نفس النمط لم يُطبَّق على باقي
+الملفات التي تجلب بيانات عند التركيب — إغفال ميكانيكي حقيقي (نفس فئة إغفالات hex/rgba/spacing
+التاريخية)، لا قرار تصميم.
+
+**الإصلاح — 17 ملفاً**، بصيغتين حسب الحاجة الفعلية للنمط:
+1. **`let alive` محلي بمؤثّر واحد بسيط** (لا يُستدعى إلا من مؤثّر التركيب/إعادة الجلب نفسه):
+   `NewsPanel.tsx`، `CoursesScreen.tsx`، `MessagesScreen.tsx`، `LayoutPanel.tsx`،
+   `CalendarPanel.tsx` (مؤثّر بمعاملات `[currency, impact]`، حارس مستقل بكل تشغيل)،
+   `GroupChatPanel.tsx`، `SymbolSearchBar.tsx` (حالة خاصة: المؤقّت `setTimeout` نفسه يُنظَّف بـ
+   `clearTimeout`، لكن إن **أُطلِق** المؤقّت فعلياً قبل الإلغاء فـ`clearTimeout` لا يوقف طلب API
+   الجاري — أُضيف حارس `alive` داخل رد نداء المؤقّت نفسه، منفصل عن تنظيف المؤقّت).
+2. **`mountedRef` مبني على `useRef` (لا `let` محلي)** لأن دالة الجلب (`load`/`run`/`refresh`/`check`)
+   تُستدعى من أكثر من موضع (مؤثّر التركيب + زر "تحديث" + بعد نجاح إجراء مستخدم + أحياناً
+   `setInterval` دوري) لا مؤثّر واحد فقط، فحارس محلي بمؤثّر واحد لن يغطي بقية الاستدعاءات:
+   `VotePanel.tsx`، `AnalystsPanel.tsx`، `IndicatorForecastPanel.tsx`، `SocialConsensusPanel.tsx`
+   (مؤثّران: تحميل المصادر IIFE + `run`، حارس واحد مشترك)، `TradeJournalPanel.tsx`،
+   `NetworkTreePanel.tsx`، `CommissionPlanPanel.tsx`، `IndicatorAlertsPanel.tsx` (يشمل أيضاً رد
+   نداء `setInterval` الاستطلاعي كل 60 ثانية — `clearInterval` يوقف الجولات القادمة فقط، لا جولة
+   قيد التنفيذ فعلياً لحظة الإلغاء)، `AlertsPanel.tsx` (نفس حالة `IndicatorAlertsPanel`، حارس
+   `mountedRef` جديد منفصل عن `firstBadgeTimerRef` الموجود مسبقاً لغرض آخر)، `WatchlistPanel.tsx`
+   (`loadList` يُستدعى من مؤثّر التركيب وزر "إعادة المحاولة" معاً).
+
+**نطاق متعمَّد خارج هذا الإصلاح (موثَّق لتفادي إعادة الفحص)**: دوال معالجة أفعال المستخدم المباشرة
+(`publish`/`cast`/`add`/`save`/`placeInSlot`/`sendDm`/إلخ — إنشاء تصويت/صفقة/تنبيه/رسالة) **لم
+تُلمَس** — هذه استجابات فورية لضغطة زر، تكتمل عادة خلال ثوانٍ قليلة والمستخدم غالباً ينتظرها على
+نفس الشاشة (بخلاف طلب جلب عند التركيب الذي قد يمتد أثناء تنقّل سريع بين التبويبات)، ونفس المبدأ
+يطابق ملفات مرجعية قائمة مسبقاً كـ`AccountScreen.tsx` التي لا تحرس معالجات أفعالها الأخرى
+(`enableNotifications` مثلاً) رغم حراستها لمؤثّر الجلب. `BacktestPanel.tsx`/`ScreenerMini.tsx`/
+`SubscriptionPlansPanel.tsx` **لا تحتاج** الإصلاح إطلاقاً — طلب الشبكة الوحيد بكل منها يُطلَق فقط
+من ضغطة زر مباشرة لا من `useEffect` عند التركيب (`BacktestPanel.run`/`ScreenerMini` مشابه)،
+والأخيران بلا أي `useEffect` إطلاقاً. مكوّنات محرك الشارت (`MatrixSidePanel`/`MatrixBottomDock`/
+`MatrixEdgeRails`/`OnboardingOverlay`) فُحصت أيضاً — **بلا أي `useEffect`**، لا خطر بها.
+
+**تحقّق (بلا `tsc`/طرفية على جهاز أنس — فحص AST + سكربتات برمجية بالبيئة السحابية)**:
+1. **AST parse-check رسمي** (`ts.createSourceFile` + `ts.transpileModule` كفحص مزدوج،
+   `typescript@6.0.3`) للسبعة عشر ملفاً كاملة: **صفر خطأ نحوي بجميعها بكلا الفحصين**، توازن
+   `{}/()/[]` صفري للسبعة عشر.
+2. **مطابقة حجم postwrite بالضبط**: حساب بايت محلي لكل ملف بعد التعديل قورن ببايت فعلي عبر
+   `device_list_dir` بعد كل دفعة `device_commit_files` — **تطابق تام 17/17** (`NewsPanel` 4771،
+   `CoursesScreen` 12534، `MessagesScreen` 10266، `LayoutPanel` 6502، `CalendarPanel` 6532،
+   `GroupChatPanel` 6980، `VotePanel` 17796، `AnalystsPanel` 7460، `IndicatorForecastPanel` 9562،
+   `SocialConsensusPanel` 11894، `TradeJournalPanel` 12506، `NetworkTreePanel` 18199،
+   `CommissionPlanPanel` 10810، `IndicatorAlertsPanel` 13067، `AlertsPanel` 14741،
+   `WatchlistPanel` 17050، `SymbolSearchBar` 4337). `device_commit_files` عبر ثلاث دفعات (7+8+1+1
+   ملفاً بالترتيب) نجحت `written` بلا أي `rejected` بأي دفعة.
+3. **mtime-guard مزدوج بكل دفعة**: `device_list_dir` لمجلدَي `components`/`screens` قبل كل قراءة
+   وقبل كل `device_commit_files` — طابق تماماً، صفر تعارض خارجي طوال التشغيل رغم تعدّد الدفعات.
+4. **مراجعة يدوية كاملة**: قراءة كل قسم مُعدَّل بعد الكتابة (لا الملف كاملاً حيث كانت الإضافة
+   موضعية) — تأكيد ترتيب تعريف `mountedRef`/`alive` قبل أول استخدام له بكل ملف (لا استخدام قبل
+   تعريف)، وأن الحارس الجديد لا يتعارض مع أي `ref`/متغيّر قائم مسبقاً بنفس الاسم (`AlertsPanel.tsx`
+   لديه `firstBadgeTimerRef` قائم مسبقاً لغرض مختلف — أُضيف `mountedRef` منفصل بجانبه بلا تعارض)،
+   وأن كل نداء `setX(...)` تابع لنتيجة `await`/`.then()` أصبح محروساً بينما بقيت النداءات
+   المتزامنة (قبل أول `await`، كـ`setLoading(true)` بداية الدالة) بلا حارس عمداً (المكوّن مضمون
+   التركيب لحظة تنفيذها).
+
+**اكتشاف مهم إضافي — مؤجَّل لتشغيل مخصَّص لاحق (لا تنفيذ أعمى هذا التشغيل)**: أثناء البحث عن
+الزاوية أعلاه، فحص شامل لاستخدام `KeyboardAvoidingView`/`TextInput` عبر `mobile/src` كشف: **13
+ملفاً تحوي `<TextInput`، لكن `MessagesScreen.tsx` وحدها تستخدم `KeyboardAvoidingView`** (خارج
+نطاق الـMVP أصلاً). لا `TerminalScreen.tsx` ولا `ToolsScreen.tsx` (الشاشتان الأُولى/الثانية
+بأولوية MVP) تحويان أي `KeyboardAvoidingView` — يعني أن لوحات الدردشة/الإدخال ذات حقل نص مثبَّت
+أسفل اللوحة (`GroupChatPanel.tsx`/`AiPanel.tsx`، نمط "رسائل + صندوق إرسال أسفل") **قد** تتعرّض
+لتغطية لوحة مفاتيح iOS لحقل الإدخال بلا أي تعويض تلقائي (خلافاً لأندرويد الذي يُعيد تحجيم الشاشة
+افتراضياً عبر `windowSoftInputMode`). **لماذا لم يُنفَّذ رغم كونه إصلاحاً "شائعاً"**: فحص موضع
+عرض `GroupChatPanel`/`AiPanel` الفعلي بـ`ToolsScreen.tsx` كشف أنهما بطاقتان مضمَّنتان
+(`embedded`) داخل `FrameSizedGrid` الذي بدوره داخل `ScrollView` خارجي لقسم hub (سطر ~197-291
+بـ`ToolsScreen.tsx`) — أي تداخل شبكة+تمرير خارجي متعدّد المستويات. لفّ لوحة فردية مُضمَّنة بـ
+`KeyboardAvoidingView` وهي متداخلة بشبكة قابلة للتمرير مستقلة **قد لا يعمل بشكل صحيح إطلاقاً**
+(حساب `KeyboardAvoidingView` لموضعه بالنسبة للشاشة يعتمد على `onLayout` لموضعه المطلق، وقد يفسد
+مع تمرير الحاوية الأم) — هذا بالضبط نفس فئة "يحتاج معاينة جهاز/محاكي فعلية للتحقّق" الموثَّقة
+تاريخياً بهذا السجل لبندَي `hitSlop`(116 عنصراً) وعكس اتجاه RTL لتخطيط `TerminalScreen.tsx`
+الكبير — قيد التحقّق (بلا `tsc`/طرفية/معاينة على جهاز أنس بهذا التشغيل) لا يمكنه التأكد أن أي
+تعديل هنا يُحسِّن الوضع بدل إفساده، خصوصاً بضغط موعد الإطلاق خلال أسبوعين تقريباً على iOS/App
+Store. **يُسجَّل هنا صراحة كاكتشاف جديد ذو أولوية حقيقية** (بخلاف hitSlop الذي هو تحسين لمسي،
+هذا قد يمنع المستخدم فعلياً من رؤية ما يكتبه بلوحات الدردشة/الذكاء الاصطناعي على iOS) — يحتاج إما
+تشغيلاً بمعاينة محاكي iOS فعلية، أو مراجعة يدوية من أنس على جهاز حقيقي، قبل أي تعديل. أُضيف بند
+مقابل بـ`docs/ROADMAP.md` (قائمة (أ)) ليُؤخَذ بالحسبان عند التخطيط القادم.
+
+**خلاصة**: باكلوج جديد (حارس `alive`/`mountedRef` لمنع setState بعد إلغاء التركيب) فُتح وأُغلِق
+بالكامل — **17 ملفاً معدَّلاً**، صفر تغيير مرئي (حارس دفاعي بحت، لا تغيير بالسلوك أثناء التركيب
+الطبيعي)، متحقَّق منه بالكامل (AST + مطابقة حجم + مراجعة يدوية). اكتشاف مهم ثانٍ (تغطية
+`KeyboardAvoidingView` على iOS لشاشتَي الأولوية) وُثِّق بالتفصيل ومؤجَّل عمداً لمعاينة جهاز/محاكي
+حقيقية (نفس منطق حيطة `hitSlop`/RTL التاريخي)، لا يُعتبر نقصاً بهذا التشغيل. Git تم التحقّق منه
+أولاً (نظيف) — يُحاوَل أدناه لتثبيت ودفع عمل هذا التشغيل.
+
+---
 آخر تحديث: 2026-09-18 (Claude — تشغيل مجدول جديد، جلسة جديدة بلا ذاكرة، ثاني تشغيل بهذا اليوم —
 **فحص زاوية جديدة (تسريب مؤقتات/مستمعات/WebSocket) صفر فجوة + ميزة ذوقية صغيرة جديدة: شارة احتفال
 بصري عند أول تنبيه سعر بـ`AlertsPanel.tsx`، تطبيقاً مباشراً لمثال منصوص بـ`matrix-tactile-feel.mdc`**):

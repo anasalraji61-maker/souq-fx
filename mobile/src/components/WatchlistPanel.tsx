@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -56,12 +56,21 @@ export function WatchlistPanel({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (مغادرة شاشة الشارت
+  // قبل اكتمال تحميل قائمة المتابعة) — نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const loadList = useCallback(async () => {
     setLoadError(false);
     try {
       await ensureWatchlistLoaded();
     } catch {
-      setLoadError(true);
+      if (mountedRef.current) setLoadError(true);
     }
   }, []);
 

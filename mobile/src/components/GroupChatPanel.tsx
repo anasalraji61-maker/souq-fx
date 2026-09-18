@@ -26,13 +26,23 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
+    // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (مثلاً تبديل قسم hub قبل اكتمال
+    // الطلب) — نفس نمط ChartFrame/SymbolSnapshot/FocusChartModal المؤسَّس بالكود.
+    let alive = true;
     api
       .groupChat()
       .then((r) => {
-        setMessages(r.messages);
-        setNotice(null);
+        if (alive) {
+          setMessages(r.messages);
+          setNotice(null);
+        }
       })
-      .catch(() => setNotice(t.chatLoadError));
+      .catch(() => {
+        if (alive) setNotice(t.chatLoadError);
+      });
+    return () => {
+      alive = false;
+    };
   }, [t.chatLoadError]);
 
   const send = async () => {

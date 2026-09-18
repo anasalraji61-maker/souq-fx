@@ -39,13 +39,23 @@ export function CoursesScreen() {
   const [schoolsStale, setSchoolsStale] = useState(false);
 
   useEffect(() => {
+    // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب الشاشة قبل اكتمال الطلب — نفس نمط
+    // ChartFrame/SymbolSnapshot/FocusChartModal المؤسَّس بالكود.
+    let alive = true;
     api
       .academySchools()
       .then((r) => {
-        setSchools(r.schools);
-        setSchoolsStale(false);
+        if (alive) {
+          setSchools(r.schools);
+          setSchoolsStale(false);
+        }
       })
-      .catch(() => setSchoolsStale(true));
+      .catch(() => {
+        if (alive) setSchoolsStale(true);
+      });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const openSchool = async (id: string) => {

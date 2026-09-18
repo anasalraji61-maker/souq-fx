@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -54,18 +54,30 @@ export function TradeJournalPanel() {
   /** وضوح الحالة: يعلم المستخدم إذا فشلت إضافة صفقة بدل صمت كامل (لم يكن هناك حتى catch) */
   const [formError, setFormError] = useState<string | null>(null);
 
+  // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (تبديل تبويب
+  // ToolsScreen قبل اكتمال الطلب) — نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const refresh = useCallback(async () => {
     try {
       const res = await api.trades();
+      if (!mountedRef.current) return;
       setTrades(res.trades as Trade[]);
       setStats(res.stats as Stats);
       setListError(false);
     } catch {
-      setTrades([]);
-      setStats(null);
-      setListError(true);
+      if (mountedRef.current) {
+        setTrades([]);
+        setStats(null);
+        setListError(true);
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, []);
 

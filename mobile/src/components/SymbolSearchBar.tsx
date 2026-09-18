@@ -31,20 +31,31 @@ export function SymbolSearchBar({ onPick, placeholder = 'بحث رمز... EUR, X
       setError(false);
       return;
     }
-    const t = setTimeout(async () => {
+    // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب الشريط أو تغيّر نص البحث لاحقاً — يشمل
+    // حالة إطلاق المؤقت قبل الإلغاء (clearTimeout لا يوقف طلباً بدأ فعلياً) — نفس مبدأ
+    // ChartFrame/SymbolSnapshot المؤسَّس بالكود.
+    let alive = true;
+    const timer = setTimeout(async () => {
       setLoading(true);
       try {
         const res = await api.symbolSearch(query);
-        setResults(res.results);
-        setError(false);
+        if (alive) {
+          setResults(res.results);
+          setError(false);
+        }
       } catch {
-        setResults([]);
-        setError(true);
+        if (alive) {
+          setResults([]);
+          setError(true);
+        }
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     }, 350);
-    return () => clearTimeout(t);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
   }, [q]);
 
   return (

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api } from '../api';
@@ -63,6 +63,16 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
     });
   };
 
+  // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (تبديل قسم hub قبل
+  // اكتمال الطلب) — نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود، بصيغة ref هنا لأن
+  // `run` يُعاد استدعاؤها عند تغيّر المؤشرات/الرمز/الفريم لا التركيب الأول فقط.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const run = useCallback(async () => {
     setLoading(true);
     try {
@@ -71,6 +81,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
         timeframe,
         indicators: enabled,
       });
+      if (!mountedRef.current) return;
       setDirection(res.direction);
       setConfidence(res.confidence);
       setAvg(res.avg_score);
@@ -79,10 +90,12 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
       setRsi(typeof res.snapshot?.rsi === 'number' ? res.snapshot.rsi : null);
       setNote(res.disclaimer);
     } catch {
-      setVotes([]);
-      setNote(t.forecastError);
+      if (mountedRef.current) {
+        setVotes([]);
+        setNote(t.forecastError);
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, [symbol, timeframe, enabled, t.forecastError]);
 

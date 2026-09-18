@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
@@ -46,6 +46,15 @@ export function CommissionPlanPanel() {
   /** وضوح الحالة: يعلم المستخدم أن الجداول المعروضة تقريبية (FALLBACK_COMMISSION) لا حيّة، بدل صمت كامل */
   const [error, setError] = useState(false);
 
+  // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (طي/فتح قبل اكتمال
+  // الطلب) — نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -53,15 +62,18 @@ export function CommissionPlanPanel() {
         api.commissionPlan(),
         api.commissionReport().catch(() => null),
       ]);
+      if (!mountedRef.current) return;
       setPlan(p);
       setReport(r);
       setError(false);
     } catch {
-      setPlan(null);
-      setReport(null);
-      setError(true);
+      if (mountedRef.current) {
+        setPlan(null);
+        setReport(null);
+        setError(true);
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, []);
 

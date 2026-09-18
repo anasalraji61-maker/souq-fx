@@ -52,6 +52,40 @@ Fly.io). الخطوة المتبقية قرار/حساب أنس (بند ب.6 أ�
 عمل عليها قبل أن تُغطّى الثلاث شاشات أعلاه بالكامل. **رتِّب عمل قائمة (أ) أدناه ليخدم هذا الترتيب
 أولاً** (أي بند يخص الشارت/الأدوات/الأكاديمية له أولوية على ما سواه).
 
+**✅ باكلوج جديد فُتح وأُغلِق بالكامل: حارس "alive"/mountedRef ضد setState بعد إلغاء التركيب —
+17 ملفاً (2026-09-18، تشغيل مجدول ثالث بنفس اليوم)**: بعد إغلاق فحصَي تسريب `useEffect`
+(مؤقتات/مستمعات/WebSocket) و`accessibilityRole` بالتشغيل السابق بصفر فجوة، فُحصت زاوية مجاورة:
+تحديث حالة React بعد إلغاء تركيب مكوّن (setState after unmount) — سيناريو حقيقي ومتكرر بهذا
+التطبيق تحديداً لأن تبويبات `ToolsScreen.tsx` وقسمَي hub (مجتمع/تحليل) تُعيد تركيب لوحاتها فعلياً
+عند التبديل (`key` مختلف/شرط عرض)، فتبديل سريع أثناء طلب API قيد التنفيذ يُطلِق تحذير React ويُحدِّث
+حالة مكوّن غير مرئي. النمط المؤسَّس أصلاً (حارس `alive`/`mountedRef`) كان مطبَّقاً بـ10 ملفات فقط
+(`ChartFrame`/`SymbolSnapshot`/`FocusChartModal`/`TerminalScreen`/`AccountScreen`/`PairDrumWheel`/
+`SymbolPairMenu`/`DomLitePanel`/`LectureClassroom`/`QuadChartModal`) — **17 ملفاً إضافياً** كانت
+تفتقده وأُصلِحت: `NewsPanel`/`CoursesScreen`/`MessagesScreen`/`LayoutPanel`/`CalendarPanel`/
+`GroupChatPanel`/`SymbolSearchBar` (حارس `let alive` محلي)، و`VotePanel`/`AnalystsPanel`/
+`IndicatorForecastPanel`/`SocialConsensusPanel`/`TradeJournalPanel`/`NetworkTreePanel`/
+`CommissionPlanPanel`/`IndicatorAlertsPanel`/`AlertsPanel`/`WatchlistPanel` (حارس `mountedRef`
+مبني على `useRef` لأن دالة الجلب تُستدعى من أكثر من موضع). صفر تغيير مرئي (حارس دفاعي بحت).
+**مستبعَد عمداً**: معالجات أفعال المستخدم المباشرة (نشر/حفظ/إرسال) ومكوّنات بلا `useEffect` إطلاقاً
+(`BacktestPanel`/`ScreenerMini`/`SubscriptionPlansPanel`/مكوّنات محرك الشارت الجانبية). راجع
+HANDOFF.md للتحقّق الكامل (AST مزدوج للسبعة عشر ملفاً، مطابقة حجم postwrite بالضبط 17/17).
+
+**⚠️ اكتشاف جديد يحتاج تشغيلاً بمعاينة جهاز/محاكي — تغطية `KeyboardAvoidingView` على iOS
+(2026-09-18، نفس التشغيل)**: فحص شامل لـ`<TextInput`/`KeyboardAvoidingView` عبر `mobile/src` كشف
+أن 13 ملفاً تحوي حقول إدخال نص لكن `MessagesScreen.tsx` وحدها (خارج نطاق الـMVP) تستخدم
+`KeyboardAvoidingView`. لا `TerminalScreen.tsx` ولا `ToolsScreen.tsx` (أولويتا الـMVP الأولى
+والثانية) تحويان أياً منها — يعني أن لوحات الدردشة/الذكاء الاصطناعي ذات صندوق إدخال مثبَّت أسفل
+اللوحة (`GroupChatPanel`/`AiPanel`) **قد** تتعرّض لتغطية لوحة مفاتيح iOS لحقل الإدخال بلا تعويض
+تلقائي (خلافاً لأندرويد). **لم يُنفَّذ أعمى هذا التشغيل**: كلا اللوحتين مُضمَّنتان
+(`embedded`) داخل `FrameSizedGrid` داخل `ScrollView` خارجي لقسم hub بـ`ToolsScreen.tsx` — تداخل
+شبكة+تمرير متعدّد المستويات يجعل سلوك `KeyboardAvoidingView` (المعتمد على قياس موضعه المطلق
+بالشاشة عبر `onLayout`) غير مضمون النجاح بلا معاينة فعلية، وقد يُفسِد التخطيط بدل تحسينه — بنفس
+منطق حيطة `hitSlop`(116 عنصراً)/عكس RTL لتخطيط `TerminalScreen.tsx` الموثَّق تاريخياً هنا. **أعلى
+أولوية من hitSlop** لأنه قد يمنع المستخدم من رؤية ما يكتب فعلياً على iOS، لا مجرد تحسين لمسي —
+يستحق اهتماماً مبكراً نظراً لضغط موعد إطلاق App Store خلال أسبوعين تقريباً. يحتاج إما تشغيلاً
+بمعاينة محاكي iOS فعلية، أو مراجعة أنس على جهاز حقيقي، قبل أي تعديل. راجع HANDOFF.md للتفاصيل
+الكاملة.
+
 **✅ فحصا زاوية جديدة (صفر فجوة) + شارة احتفال عند أول تنبيه سعر (2026-09-18، تشغيل مجدول ثانٍ
 بنفس اليوم)**: بعد اكتمال باكلوج i18n الأصلي (تشغيل اليوم الأول أدناه)، فُحصت زاويتان تقنيتان
 جديدتان لم يُفحصا صراحة بهذا السجل من قبل: (أ) تسريبات دورة حياة `useEffect` (مؤقتات/مستمعات/

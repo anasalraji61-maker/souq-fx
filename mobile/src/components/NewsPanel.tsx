@@ -14,13 +14,23 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
   const [stale, setStale] = useState(false);
 
   useEffect(() => {
+    // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (مثلاً تبديل قسم hub قبل اكتمال
+    // الطلب) — نفس نمط ChartFrame/SymbolSnapshot/FocusChartModal المؤسَّس بالكود.
+    let alive = true;
     api
       .news()
       .then((r) => {
-        setNews(r.news);
-        setStale(false);
+        if (alive) {
+          setNews(r.news);
+          setStale(false);
+        }
       })
-      .catch(() => setStale(true));
+      .catch(() => {
+        if (alive) setStale(true);
+      });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   return (

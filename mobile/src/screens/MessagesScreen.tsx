@@ -27,13 +27,23 @@ export function MessagesScreen() {
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
+    // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب الشاشة قبل اكتمال الطلب — نفس نمط
+    // ChartFrame/SymbolSnapshot/FocusChartModal المؤسَّس بالكود.
+    let alive = true;
     api
       .dmList()
       .then((r) => {
-        setPeers(r.peers);
-        setNotice(null);
+        if (alive) {
+          setPeers(r.peers);
+          setNotice(null);
+        }
       })
-      .catch(() => setNotice('تعذر تحميل المحادثات — تُعرض بيانات محفوظة'));
+      .catch(() => {
+        if (alive) setNotice('تعذر تحميل المحادثات — تُعرض بيانات محفوظة');
+      });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const open = async (name: string) => {
