@@ -90,7 +90,21 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
     }
   };
 
+  /** حارس ضد ضغط مزدوج/متكرّر سريع على "موافق"/"غير موافق": `db.ballot` بالباك-إند يزيد العدّاد
+   * مباشرة (`UPDATE votes SET agree=agree+1 ...`) بلا أي فحص "صوّت من قبل؟" — فبلا حارس هنا،
+   * ضغطتان سريعتان (قصديتان أو بالخطأ) على نفس الزر تُسجِّلان صوتين فعليين بدل واحد بلا أي رسالة
+   * تنبّه المستخدم. مجموعة `castingIds` (لا حارس `busy` عام واحد، لأن القائمة تعرض عدة تصويتات
+   * معاً) تمنع إعادة استدعاء `cast` لنفس التصويت أثناء طلب قائم فعلاً له، بنفس مبدأ `busy`/
+   * `disabled` المؤسَّس بـ`AlertsPanel.add`/`TradeJournalPanel.add`. */
+  const [castingIds, setCastingIds] = useState<Set<string>>(new Set());
+
   const cast = async (id: string, choice: 'agree' | 'disagree') => {
+    if (castingIds.has(id)) return;
+    setCastingIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
     setVotes((prev) =>
       prev.map((v) =>
         v.id === id
@@ -106,7 +120,15 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
       await api.ballot(id, choice);
       load();
     } catch {
-      setNotice(t.voteCastError);
+      if (mountedRef.current) setNotice(t.voteCastError);
+    } finally {
+      if (mountedRef.current) {
+        setCastingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }
     }
   };
 
@@ -310,12 +332,15 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                   style={({ pressed }) => [
                     styles.btn,
                     styles.yes,
+                    castingIds.has(v.id) && styles.btnDisabled,
                     pressed && {
                       opacity: buttons.pressedOpacity,
                       transform: [{ scale: buttons.pressedScale }],
                     },
                   ]}
                   onPress={() => cast(v.id, 'agree')}
+                  disabled={castingIds.has(v.id)}
+                  accessibilityState={{ disabled: castingIds.has(v.id) }}
                   accessibilityLabel={`${t.voteAgreeA11yPrefix} ${v.symbol}`}
                 >
                   <Text style={styles.btnText}>{t.voteAgreeWord}</Text>
@@ -325,12 +350,15 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                   style={({ pressed }) => [
                     styles.btn,
                     styles.no,
+                    castingIds.has(v.id) && styles.btnDisabled,
                     pressed && {
                       opacity: buttons.pressedOpacity,
                       transform: [{ scale: buttons.pressedScale }],
                     },
                   ]}
                   onPress={() => cast(v.id, 'disagree')}
+                  disabled={castingIds.has(v.id)}
+                  accessibilityState={{ disabled: castingIds.has(v.id) }}
                   accessibilityLabel={`${t.voteDisagreeA11yPrefix} ${v.symbol}`}
                 >
                   <Text style={styles.btnText}>{t.voteDisagreeWord}</Text>
@@ -418,6 +446,7 @@ const styles = StyleSheet.create({
   },
   yes: { backgroundColor: 'rgba(34,197,94,0.2)', borderWidth: 1, borderColor: colors.bull },
   no: { backgroundColor: colors.bearSoft, borderWidth: 1, borderColor: colors.bear },
+  btnDisabled: { opacity: 0.4 },
   btnText: { color: colors.text, fontWeight: '700', fontSize: 12 },
   author: { color: colors.dxy, fontSize: 10, fontWeight: '700', marginTop: 2 },
   publishToggle: {
