@@ -366,6 +366,44 @@ export type Dict = {
   lectureQuestionA11y: string;
   lectureAskBtn: string;
   lectureAskA11y: string;
+  // TerminalScreen.tsx (شاشة الشارت، أولوية MVP الأولى) — 2026-09-18
+  termShadowSizeSmall: string;
+  termShadowSizeMedium: string;
+  termShadowSizeBig: string;
+  termServerOnline: string;
+  termServerOffline: string;
+  termLastPriceWord: string;
+  termIndicatorsWord: string;
+  termAlertWord: string;
+  termKindWord: string;
+  termFrameWord: string;
+  termSquareWord: string;
+  termRectWord: string;
+  termLayoutSquareA11yPrefix: string;
+  termLayoutRectA11yPrefix: string;
+  termShadowFrameA11y: string;
+  termShadowWord: string;
+  termTimeSyncLabel: string;
+  termTimeSyncUnavailable: string;
+  termToolA11yPrefix: string;
+  termChartKindA11yPrefix: string;
+  termSymbolA11yPrefix: string;
+  termManageWatchlistLabel: string;
+  termManageWord: string;
+  termPrimaryWord: string;
+  termShadowHintText: string;
+  termPrimaryTimeframeA11yPrefix: string;
+  termOnWord: string;
+  termOffWord: string;
+  termTimeframeWord: string;
+  termTimeframeA11yPrefix: string;
+  termOpenFullscreenA11y: string;
+  termFullscreenLabel: string;
+  termFxMarketWord: string;
+  termSpreadWord: string;
+  termSquareFramesHintSuffix: string;
+  termHintMoveText: string;
+  termCloseWatchlistA11y: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -750,6 +788,44 @@ const ar: Dict = {
   lectureQuestionA11y: 'سؤال أثناء إيقاف الشرح',
   lectureAskBtn: 'اسأل',
   lectureAskA11y: 'إرسال السؤال',
+  termShadowSizeSmall: 'صغير',
+  termShadowSizeMedium: 'وسط',
+  termShadowSizeBig: 'كبير',
+  termServerOnline: 'خادم متصل',
+  termServerOffline: 'خادم غير متصل',
+  termLastPriceWord: 'آخر سعر',
+  termIndicatorsWord: 'مؤشرات',
+  termAlertWord: 'تنبيه',
+  termKindWord: 'نوع',
+  termFrameWord: 'فريم',
+  termSquareWord: 'مربع',
+  termRectWord: 'مستطيل',
+  termLayoutSquareA11yPrefix: 'تخطيط مربع',
+  termLayoutRectA11yPrefix: 'تخطيط مستطيل',
+  termShadowFrameA11y: 'فريم الظل',
+  termShadowWord: 'الظل',
+  termTimeSyncLabel: 'مزامنة الزمن',
+  termTimeSyncUnavailable: 'المزامنة غير متاحة في فريم الظل',
+  termToolA11yPrefix: 'أداة',
+  termChartKindA11yPrefix: 'نوع الشارت',
+  termSymbolA11yPrefix: 'رمز',
+  termManageWatchlistLabel: 'إدارة قائمة المتابعة',
+  termManageWord: 'إدارة',
+  termPrimaryWord: 'أساسي',
+  termShadowHintText: 'أساسي فوق · الظلال تحته من الأكبر إلى الأصغر',
+  termPrimaryTimeframeA11yPrefix: 'الإطار الزمني الأساسي',
+  termOnWord: 'تشغيل',
+  termOffWord: 'إيقاف',
+  termTimeframeWord: 'إطار زمني',
+  termTimeframeA11yPrefix: 'الإطار الزمني',
+  termOpenFullscreenA11y: 'فتح الشارت بملء الشاشة',
+  termFullscreenLabel: 'ملء الشاشة ⛶',
+  termFxMarketWord: 'سوق العملات',
+  termSpreadWord: 'سبريد',
+  termSquareFramesHintSuffix: 'فريمات مربعة · امسك كل مربع لتبديل مكانه · المؤشرات اختيارية',
+  termHintMoveText:
+    'التوقعات · التنبيهات · الأخبار · المجتمع → أدوات · امسك الشريط واسحب لتبديل أماكن الفريمات',
+  termCloseWatchlistA11y: 'إغلاق قائمة المتابعة',
 };
 
 const enUS: Dict = {
@@ -1129,6 +1205,44 @@ const enUS: Dict = {
   lectureQuestionA11y: 'Question while the narration is paused',
   lectureAskBtn: 'Ask',
   lectureAskA11y: 'Send the question',
+  termShadowSizeSmall: 'Small',
+  termShadowSizeMedium: 'Medium',
+  termShadowSizeBig: 'Large',
+  termServerOnline: 'Server connected',
+  termServerOffline: 'Server disconnected',
+  termLastPriceWord: 'Last price',
+  termIndicatorsWord: 'Indicators',
+  termAlertWord: 'Alert',
+  termKindWord: 'Type',
+  termFrameWord: 'Frame',
+  termSquareWord: 'Square',
+  termRectWord: 'Rectangle',
+  termLayoutSquareA11yPrefix: 'Square layout',
+  termLayoutRectA11yPrefix: 'Rectangle layout',
+  termShadowFrameA11y: 'Shadow frame',
+  termShadowWord: 'Shadow',
+  termTimeSyncLabel: 'Time sync',
+  termTimeSyncUnavailable: 'Sync is not available in shadow frame',
+  termToolA11yPrefix: 'Tool',
+  termChartKindA11yPrefix: 'Chart type',
+  termSymbolA11yPrefix: 'Symbol',
+  termManageWatchlistLabel: 'Manage watchlist',
+  termManageWord: 'Manage',
+  termPrimaryWord: 'Primary',
+  termShadowHintText: 'Primary above · shadows below, largest to smallest',
+  termPrimaryTimeframeA11yPrefix: 'Primary timeframe',
+  termOnWord: 'On',
+  termOffWord: 'Off',
+  termTimeframeWord: 'timeframe',
+  termTimeframeA11yPrefix: 'Timeframe',
+  termOpenFullscreenA11y: 'Open chart in fullscreen',
+  termFullscreenLabel: 'Fullscreen ⛶',
+  termFxMarketWord: 'FX market',
+  termSpreadWord: 'Spread',
+  termSquareFramesHintSuffix: 'square frames · long-press any box to reorder it · indicators optional',
+  termHintMoveText:
+    'Forecasts · Alerts · News · Community → Tools · long-press the bar and drag to reorder frames',
+  termCloseWatchlistA11y: 'Close watchlist',
 };
 
 const enGB: Dict = {
@@ -1529,6 +1643,44 @@ const ku: Dict = {
   lectureQuestionA11y: 'پرسیار لە کاتی ڕاگرتنی ڕوونکردنەوەکە',
   lectureAskBtn: 'بپرسە',
   lectureAskA11y: 'ناردنی پرسیارەکە',
+  termShadowSizeSmall: 'بچووک',
+  termShadowSizeMedium: 'ناوەند',
+  termShadowSizeBig: 'گەورە',
+  termServerOnline: 'ڕاژە بەستراوە',
+  termServerOffline: 'ڕاژە پەیوەندی نیە',
+  termLastPriceWord: 'دوایین نرخ',
+  termIndicatorsWord: 'ئاماژەکان',
+  termAlertWord: 'ئاگاداری',
+  termKindWord: 'جۆر',
+  termFrameWord: 'چوارچێوە',
+  termSquareWord: 'چوارگۆشە',
+  termRectWord: 'لاکێشراو',
+  termLayoutSquareA11yPrefix: 'نەخشەی چوارگۆشە',
+  termLayoutRectA11yPrefix: 'نەخشەی لاکێشراو',
+  termShadowFrameA11y: 'چوارچێوەی سێبەر',
+  termShadowWord: 'سێبەر',
+  termTimeSyncLabel: 'هاوکاتکردنی کات',
+  termTimeSyncUnavailable: 'هاوکاتکردن بەردەست نیە لە چوارچێوەی سێبەردا',
+  termToolA11yPrefix: 'ئامراز',
+  termChartKindA11yPrefix: 'جۆری چارت',
+  termSymbolA11yPrefix: 'هێما',
+  termManageWatchlistLabel: 'بەڕێوەبردنی لیستی چاودێری',
+  termManageWord: 'بەڕێوەبردن',
+  termPrimaryWord: 'سەرەکی',
+  termShadowHintText: 'سەرەکی سەرەوە · سێبەرەکان خوارەوەن، لە گەورەوە بۆ بچووک',
+  termPrimaryTimeframeA11yPrefix: 'کاتی چوارچێوەی سەرەکی',
+  termOnWord: 'کارپێکردن',
+  termOffWord: 'ڕاگرتن',
+  termTimeframeWord: 'کاتی چوارچێوە',
+  termTimeframeA11yPrefix: 'کاتی چوارچێوەکە',
+  termOpenFullscreenA11y: 'کردنەوەی چارت بە شاشەی پڕ',
+  termFullscreenLabel: 'شاشەی پڕ ⛶',
+  termFxMarketWord: 'بازاڕی دراو',
+  termSpreadWord: 'سپرێد',
+  termSquareFramesHintSuffix: 'چوارچێوەی چوارگۆشە · پەنجە بگرە لەسەر هەر بۆکسێک بۆ گۆڕینی شوێنی · ئاماژەکان ئارەزوومەندانەن',
+  termHintMoveText:
+    'پێشبینیەکان · ئاگاداریەکان · هەواڵەکان · کۆمەڵگا → ئامرازەکان · پەنجە بگرە لەسەر شریتەکە و ڕایکێشە بۆ گۆڕینی شوێنی چوارچێوەکان',
+  termCloseWatchlistA11y: 'داخستنی لیستی چاودێری',
 };
 
 export const DICTS: Record<LangId, Dict> = {

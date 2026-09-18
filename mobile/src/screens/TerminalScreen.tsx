@@ -65,6 +65,7 @@ import {
   shadowBarsNeeded,
   type Timeframe,
 } from '../timeframes';
+import { useI18n } from '../i18n/I18nContext';
 
 const PREFS_KEY = 'matrix.frameTimeframes.v1';
 const SYMBOLS_KEY = 'matrix.frameSymbols.v1';
@@ -75,7 +76,6 @@ const DXY_TF_KEY = 'matrix.home.dxyTf.v1';
 const DXY_SYMBOL_KEY = 'matrix.home.dxySymbol.v1';
 const SHADOW_SECONDARY_KEY = 'matrix.home.shadowSlots.v2';
 const SHADOW_ENABLED_KEY = 'matrix.home.shadowEnabled.v1';
-const SHADOW_SLOT_LABELS = ['صغير s', 'وسط m', 'كبير b'] as const;
 const SHADOW_SLOT_TAGS = ['s', 'm', 'b'] as const;
 type ShadowSlots = [Timeframe, Timeframe, Timeframe];
 type ShadowEnabled = [boolean, boolean, boolean];
@@ -111,6 +111,15 @@ function offlineFrame(symbol: string, tf: Timeframe): ChartSeries {
 }
 
 export function TerminalScreen() {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
+  const SHADOW_SLOT_LABELS = useMemo(
+    () =>
+      [t.termShadowSizeSmall, t.termShadowSizeMedium, t.termShadowSizeBig].map(
+        (w, i) => `${w} ${SHADOW_SLOT_TAGS[i]}`
+      ) as [string, string, string],
+    [t]
+  );
   const { width, height } = useWindowDimensions();
   const phone = width < 700;
   const narrowWatch = width < 1100;
@@ -714,10 +723,10 @@ export function TerminalScreen() {
   const heroNowMs = useTickFreshnessClock(heroTick?.source.as_of ?? null);
   const heroNowSec = heroNowMs / 1000;
   const heroStatusBits = [
-    online ? 'خادم متصل' : 'خادم غير متصل',
+    online ? t.termServerOnline : t.termServerOffline,
     provenanceLabel(normalizeProvenance(heroSeries.data_source)),
     heroTick
-      ? tickStatusLabel(heroTick.source, heroTick.source.as_of, heroNowSec) ?? 'آخر سعر'
+      ? tickStatusLabel(heroTick.source, heroTick.source.as_of, heroNowSec) ?? t.termLastPriceWord
       : null,
     marketStatusLabel(symbol),
   ].filter(Boolean);
@@ -726,16 +735,16 @@ export function TerminalScreen() {
     {
       id: 'ind',
       mark: '∑',
-      tip: 'مؤشرات',
+      tip: t.termIndicatorsWord,
       run: () => setEdgePanel(edgePanel === 'indicators' ? null : 'indicators'),
     },
     {
       id: 'al',
       mark: '⚡',
-      tip: 'تنبيه',
+      tip: t.termAlertWord,
       run: () => setEdgePanel(edgePanel === 'alerts' ? null : 'alerts'),
     },
-    { id: 'rp', mark: '↺', tip: 'تحديث', run: () => void onRefresh() },
+    { id: 'rp', mark: '↺', tip: t.refreshBtn, run: () => void onRefresh() },
     ...(phone
       ? [
           {
@@ -775,7 +784,7 @@ export function TerminalScreen() {
         }
       },
     },
-    { id: 'set', mark: '⚙', tip: 'نوع', run: () => setShowKinds((v) => !v) },
+    { id: 'set', mark: '⚙', tip: t.termKindWord, run: () => setShowKinds((v) => !v) },
   ];
 
   return (
@@ -791,15 +800,15 @@ export function TerminalScreen() {
 
         {!phone && layoutCount === 1 && layoutShape !== 'shadow' ? (
           <View style={styles.tfScroll}>
-            <TimeframeBar value={tf} onChange={setTf} arabic />
+            <TimeframeBar value={tf} onChange={setTf} arabic={rtl} />
           </View>
         ) : null}
 
         {!phone ? (
           <View style={styles.layoutSwitcher}>
             <View style={styles.layoutSwitcherTag}>
-              <Text style={styles.layoutSwitcherTagTop}>فريم</Text>
-              <Text style={styles.layoutSwitcherTagBottom}>مربع</Text>
+              <Text style={styles.layoutSwitcherTagTop}>{t.termFrameWord}</Text>
+              <Text style={styles.layoutSwitcherTagBottom}>{t.termSquareWord}</Text>
             </View>
             {([1, 2, 3, 4] as FrameLayoutCount[]).map((count) => {
               const active = layoutCount === count && layoutShape === 'square';
@@ -816,7 +825,7 @@ export function TerminalScreen() {
                     },
                   ]}
                   onPress={() => void changeLayout(count, 'square')}
-                  accessibilityLabel={`تخطيط مربع ${count}`}
+                  accessibilityLabel={`${t.termLayoutSquareA11yPrefix} ${count}`}
                 >
                   <View style={styles.layoutSwitchMini}>
                     {Array.from({ length: count }).map((_, index) => (
@@ -842,8 +851,8 @@ export function TerminalScreen() {
             })}
             <View style={styles.layoutSwitchSep} />
             <View style={styles.layoutSwitcherTag}>
-              <Text style={styles.layoutSwitcherTagTop}>فريم</Text>
-              <Text style={styles.layoutSwitcherTagBottom}>مستطيل</Text>
+              <Text style={styles.layoutSwitcherTagTop}>{t.termFrameWord}</Text>
+              <Text style={styles.layoutSwitcherTagBottom}>{t.termRectWord}</Text>
             </View>
             {([2, 3, 4] as FrameLayoutCount[]).map((count) => {
               const active = layoutCount === count && layoutShape === 'rect';
@@ -860,7 +869,7 @@ export function TerminalScreen() {
                     },
                   ]}
                   onPress={() => void changeLayout(count, 'rect')}
-                  accessibilityLabel={`تخطيط مستطيل ${count}`}
+                  accessibilityLabel={`${t.termLayoutRectA11yPrefix} ${count}`}
                 >
                   <View
                     style={[
@@ -906,16 +915,16 @@ export function TerminalScreen() {
                 },
               ]}
               onPress={() => void changeLayout(1, 'shadow')}
-              accessibilityLabel="فريم الظل"
+              accessibilityLabel={t.termShadowFrameA11y}
             >
-              <Text style={styles.layoutSwitcherTagTop}>فريم</Text>
+              <Text style={styles.layoutSwitcherTagTop}>{t.termFrameWord}</Text>
               <Text
                 style={[
                   styles.layoutSwitcherTagBottom,
                   layoutShape === 'shadow' && styles.layoutSwitchNumOn,
                 ]}
               >
-                الظل
+                {t.termShadowWord}
               </Text>
             </Pressable>
           </View>
@@ -933,15 +942,15 @@ export function TerminalScreen() {
               },
             ]}
             onPress={() => void toggleTimeSync()}
-            accessibilityLabel="مزامنة الزمن"
+            accessibilityLabel={t.termTimeSyncLabel}
           >
             <Text style={[styles.timeSyncText, timeSyncActive && styles.timeSyncTextOn]}>
-              مزامنة الزمن
+              {t.termTimeSyncLabel}
             </Text>
           </Pressable>
         ) : null}
         {!phone && layoutShape === 'shadow' ? (
-          <Text style={styles.timeSyncHint}>المزامنة غير متاحة في فريم الظل</Text>
+          <Text style={styles.timeSyncHint}>{t.termTimeSyncUnavailable}</Text>
         ) : null}
 
         {!phone ? (
@@ -968,7 +977,7 @@ export function TerminalScreen() {
                 },
               ]}
               onPress={a.run}
-              accessibilityLabel={`أداة: ${a.tip}`}
+              accessibilityLabel={`${t.termToolA11yPrefix}: ${a.tip}`}
             >
               {a.mark === 'cruise' ? (
                 <CruiseSpeedMark size={14} active />
@@ -1003,7 +1012,7 @@ export function TerminalScreen() {
                 setKind(k.id);
                 setShowKinds(false);
               }}
-              accessibilityLabel={`نوع الشارت: ${k.label}`}
+              accessibilityLabel={`${t.termChartKindA11yPrefix}: ${k.label}`}
             >
               <Text style={[styles.kindText, kind === k.id && styles.kindTextOn]}>{k.label}</Text>
             </Pressable>
@@ -1031,7 +1040,7 @@ export function TerminalScreen() {
                 },
               ]}
               onPress={() => pickSymbol(sym)}
-              accessibilityLabel={`رمز: ${sym}`}
+              accessibilityLabel={`${t.termSymbolA11yPrefix}: ${sym}`}
             >
               <Text style={[styles.pillText, symbol === sym && styles.pillTextOn]}>
                 {sym}
@@ -1048,9 +1057,9 @@ export function TerminalScreen() {
               },
             ]}
             onPress={() => setPhoneWatchOpen(true)}
-            accessibilityLabel="إدارة قائمة المتابعة"
+            accessibilityLabel={t.termManageWatchlistLabel}
           >
-            <Text style={styles.pillText}>إدارة</Text>
+            <Text style={styles.pillText}>{t.termManageWord}</Text>
           </Pressable>
         </ScrollView>
       ) : null}
@@ -1085,12 +1094,14 @@ export function TerminalScreen() {
                     onPick={pickSymbol}
                     onLongPress={() => openFocus(symbol, tf)}
                   />
-                  <Text style={styles.desktopMarket}>فريم الظل · أساسي {tf}</Text>
+                  <Text style={styles.desktopMarket}>
+                    {t.termShadowFrameA11y} · {t.termPrimaryWord} {tf}
+                  </Text>
                 </View>
               </View>
               <View style={styles.shadowHintBox}>
-                <Text style={styles.shadowHintText}>
-                  أساسي فوق · الظلال تحته من الأكبر إلى الأصغر
+                <Text style={[styles.shadowHintText, { textAlign: align }]}>
+                  {t.termShadowHintText}
                 </Text>
               </View>
               <View style={styles.desktopStatus}>
@@ -1106,7 +1117,7 @@ export function TerminalScreen() {
               style={styles.shadowTfBarScroll}
             >
               <View style={styles.shadowTfGroup}>
-                <Text style={styles.shadowTfLabel}>أساسي</Text>
+                <Text style={styles.shadowTfLabel}>{t.termPrimaryWord}</Text>
                 {TIMEFRAMES.map((range) => (
                   <Pressable
                     accessibilityRole="button"
@@ -1120,7 +1131,7 @@ export function TerminalScreen() {
                       },
                     ]}
                     onPress={() => setTf(range)}
-                    accessibilityLabel={`الإطار الزمني الأساسي: ${range}`}
+                    accessibilityLabel={`${t.termPrimaryTimeframeA11yPrefix}: ${range}`}
                   >
                     <Text style={styles.rangeText}>{range}</Text>
                   </Pressable>
@@ -1140,7 +1151,7 @@ export function TerminalScreen() {
                       hitSlop={8}
                       accessibilityRole="switch"
                       accessibilityState={{ checked: enabled }}
-                      accessibilityLabel={`${label} ${enabled ? 'مفعّل' : 'متوقف'}`}
+                      accessibilityLabel={`${label} ${enabled ? t.enabledWord : t.disabledWord}`}
                       style={({ pressed }) => [
                         styles.shadowToggle,
                         enabled && styles.shadowToggleOn,
@@ -1153,7 +1164,7 @@ export function TerminalScreen() {
                       <Text
                         style={[styles.shadowToggleText, enabled && styles.shadowToggleTextOn]}
                       >
-                        {enabled ? 'تشغيل' : 'إيقاف'}
+                        {enabled ? t.termOnWord : t.termOffWord}
                       </Text>
                     </Pressable>
                     <Text style={[styles.shadowTfLabel, !enabled && styles.shadowTfLabelOff]}>
@@ -1177,7 +1188,7 @@ export function TerminalScreen() {
                           ]}
                           disabled={locked}
                           accessibilityState={{ disabled: locked }}
-                          accessibilityLabel={`${label} إطار زمني ${range}`}
+                          accessibilityLabel={`${label} ${t.termTimeframeWord} ${range}`}
                           onPress={() => setShadowSlot(slot, range)}
                         >
                           <Text
@@ -1238,7 +1249,7 @@ export function TerminalScreen() {
             <View style={styles.rangeBar}>
               <Text style={styles.shadowFooterNote}>
                 {[
-                  `أساسي ${tf}`,
+                  `${t.termPrimaryWord} ${tf}`,
                   ...SHADOW_SLOT_TAGS.flatMap((tag, i) =>
                     shadowEnabled[i] ? [`${tag} ${shadowSlots[i]}`] : []
                   ),
@@ -1255,9 +1266,9 @@ export function TerminalScreen() {
                   },
                 ]}
                 onPress={() => openFocus(symbol, tf)}
-                accessibilityLabel="فتح الشارت بملء الشاشة"
+                accessibilityLabel={t.termOpenFullscreenA11y}
               >
-                <Text style={styles.fullscreenText}>ملء الشاشة ⛶</Text>
+                <Text style={styles.fullscreenText}>{t.termFullscreenLabel}</Text>
               </Pressable>
             </View>
           </View>
@@ -1278,11 +1289,13 @@ export function TerminalScreen() {
                     onPick={pickSymbol}
                     onLongPress={() => openFocus(symbol, tf)}
                   />
-                  <Text style={styles.desktopMarket}>سوق العملات · {tf}</Text>
+                  <Text style={styles.desktopMarket}>
+                    {t.termFxMarketWord} · {tf}
+                  </Text>
                 </View>
               </View>
               <View style={styles.desktopOhlc}>
-                <Text style={styles.desktopOhlcLabel}>السعر</Text>
+                <Text style={styles.desktopOhlcLabel}>{t.priceWord}</Text>
                 <Text style={styles.desktopOhlcValue}>{formatPrice(price)}</Text>
                 <Text
                   style={[
@@ -1298,8 +1311,8 @@ export function TerminalScreen() {
                 </Text>
                 {quote && quote.bid != null && quote.ask != null ? (
                   <Text style={styles.desktopSpread}>
-                    سبريد {formatPrice(quote.ask - quote.bid)} · Bid {formatPrice(quote.bid)} ·
-                    Ask {formatPrice(quote.ask)}
+                    {t.termSpreadWord} {formatPrice(quote.ask - quote.bid)} · Bid{' '}
+                    {formatPrice(quote.bid)} · Ask {formatPrice(quote.ask)}
                   </Text>
                 ) : null}
               </View>
@@ -1349,7 +1362,7 @@ export function TerminalScreen() {
                     },
                   ]}
                   onPress={() => setTf(range)}
-                  accessibilityLabel={`الإطار الزمني: ${range}`}
+                  accessibilityLabel={`${t.termTimeframeA11yPrefix}: ${range}`}
                 >
                   <Text style={styles.rangeText}>{range}</Text>
                 </Pressable>
@@ -1365,9 +1378,9 @@ export function TerminalScreen() {
                   },
                 ]}
                 onPress={() => openFocus(symbol, tf)}
-                accessibilityLabel="فتح الشارت بملء الشاشة"
+                accessibilityLabel={t.termOpenFullscreenA11y}
               >
-                <Text style={styles.fullscreenText}>ملء الشاشة ⛶</Text>
+                <Text style={styles.fullscreenText}>{t.termFullscreenLabel}</Text>
               </Pressable>
             </View>
           </View>
@@ -1444,9 +1457,8 @@ export function TerminalScreen() {
               />
             }
           >
-            <Text style={styles.section}>
-              {phone ? 4 : layoutCount} فريمات مربعة · امسك كل مربع لتبديل مكانه · المؤشرات
-              اختيارية
+            <Text style={[styles.section, { textAlign: align }]}>
+              {phone ? 4 : layoutCount} {t.termSquareFramesHintSuffix}
             </Text>
             <FrameSizedGrid
               storageKey="matrix.home.frames.order.v1"
@@ -1500,10 +1512,7 @@ export function TerminalScreen() {
                 })),
               ]}
             />
-            <Text style={styles.hintMove}>
-              التوقعات · التنبيهات · الأخبار · المجتمع → Tools · امسك الشريط واسحب لتبديل
-              أماكن الفريمات
-            </Text>
+            <Text style={styles.hintMove}>{t.termHintMoveText}</Text>
           </ScrollView>
         )}
 
@@ -1592,7 +1601,7 @@ export function TerminalScreen() {
 
       <Modal visible={phoneWatchOpen} animationType="slide" onRequestClose={() => setPhoneWatchOpen(false)}>
         <SafeAreaView style={styles.phoneWatchModal}>
-          <View style={styles.phoneWatchModalBar}>
+          <View style={[styles.phoneWatchModalBar, !rtl && styles.phoneWatchModalBarLtr]}>
             <Pressable
               accessibilityRole="button"
               style={({ pressed }) => [
@@ -1604,11 +1613,11 @@ export function TerminalScreen() {
               ]}
               onPress={() => setPhoneWatchOpen(false)}
               hitSlop={8}
-              accessibilityLabel="إغلاق قائمة المتابعة"
+              accessibilityLabel={t.termCloseWatchlistA11y}
             >
-              <Text style={styles.phoneWatchCloseText}>إغلاق</Text>
+              <Text style={styles.phoneWatchCloseText}>{t.closeWord}</Text>
             </Pressable>
-            <Text style={styles.phoneWatchModalTitle}>إدارة قائمة المتابعة</Text>
+            <Text style={styles.phoneWatchModalTitle}>{t.termManageWatchlistLabel}</Text>
           </View>
           <WatchlistPanel
             activeSymbol={symbol}
@@ -1983,6 +1992,7 @@ const styles = StyleSheet.create({
   phoneWatchRow: { gap: 6, paddingHorizontal: spacing.sm, paddingVertical: 6 },
   phoneWatchModal: { flex: 1, backgroundColor: colors.bg },
   phoneWatchModalBar: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
+  phoneWatchModalBarLtr: { flexDirection: 'row' },
   phoneWatchModalTitle: { color: colors.text, fontWeight: '800' },
   phoneWatchClose: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: radii.sm, backgroundColor: colors.accentSoft },
   phoneWatchCloseText: { color: colors.accent, fontWeight: '800', fontSize: 12 },

@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { TIMEFRAMES, TIMEFRAME_LABELS, type Timeframe } from '../timeframes';
+import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
   value: string;
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function TimeframeBar({ value, onChange, compact, arabic = false }: Props) {
+  const { t } = useI18n();
   return (
     <ScrollView
       horizontal
@@ -27,7 +29,7 @@ export function TimeframeBar({ value, onChange, compact, arabic = false }: Props
             accessibilityRole="button"
             key={tf}
             onPress={() => onChange(tf)}
-            accessibilityLabel={`الإطار الزمني ${label}`}
+            accessibilityLabel={`${t.termTimeframeA11yPrefix} ${label}`}
             style={({ pressed }) => [
               styles.chip,
               active && styles.chipActive,
