@@ -31,6 +31,7 @@ import { BacktestPanel } from './BacktestPanel';
 import { IndicatorAlertsPanel } from './IndicatorAlertsPanel';
 import { useLiveTicks } from '../hooks/useLiveTicks';
 import { useI18n } from '../i18n/I18nContext';
+import { playSoftClick } from '../audio/playSoftClick';
 import type { ChartKind, DrawTool, IndicatorId, LensMode } from '../chart/types';
 
 type Props = {
@@ -175,6 +176,7 @@ export function FocusChartModal({
         price,
         note: t.focusAlertFromDrawingNote,
       });
+      playSoftClick();
     } catch {
       Alert.alert(t.focusAlertCreateFailedTitle, t.focusAlertCreateFailedBody);
     }
