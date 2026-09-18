@@ -4,6 +4,7 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { WATCHLIST } from '../chart/watchlist';
 import { loadWatchlistItems } from '../chart/watchlistStore';
 import { playSoftClick, unlockSoftClick } from '../audio/playSoftClick';
+import { useI18n } from '../i18n/I18nContext';
 
 type Item = { symbol: string; label: string; group?: string };
 
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Props) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Item[]>([...WATCHLIST]);
 
@@ -57,7 +59,7 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
         ]}
         onPress={toggle}
         onLongPress={onLongPress}
-        accessibilityLabel={open ? 'إغلاق قائمة الأزواج' : 'فتح قائمة الأزواج'}
+        accessibilityLabel={open ? t.spmCloseA11y : t.spmOpenA11y}
         hitSlop={8}
       >
         <Text style={[styles.triggerText, large && styles.triggerTextLarge]}>{value}</Text>
@@ -66,7 +68,7 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
 
       {open ? (
         <View style={[styles.panel, large && styles.panelLarge]}>
-          <Text style={styles.panelTitle}>أزواجك</Text>
+          <Text style={styles.panelTitle}>{t.spmPanelTitle}</Text>
           <ScrollView
             style={styles.list}
             contentContainerStyle={styles.listInner}
@@ -89,7 +91,7 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
                     },
                   ]}
                   onPress={() => pick(item.symbol)}
-                  accessibilityLabel={`اختيار الرمز: ${item.symbol}${item.group ? ' · ' + item.group : ''}`}
+                  accessibilityLabel={`${t.focusPickSymbolA11yPrefix}: ${item.symbol}${item.group ? ' · ' + item.group : ''}`}
                 >
                   <Text style={[styles.sym, on && styles.symOn]}>{item.symbol}</Text>
                   {item.group ? (

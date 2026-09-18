@@ -16,6 +16,7 @@ import { livePriceForChart } from '../chart/liveSeries';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
 import { mockSeries } from '../mock';
+import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
   visible: boolean;
@@ -40,6 +41,8 @@ export function QuadChartModal({
   symbols = DEFAULT,
   timeframe = '15m',
 }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const { width, height } = useWindowDimensions();
   const phone = width < 700;
   const cellH = phone ? height * 0.28 : height * 0.32;
@@ -68,7 +71,7 @@ export function QuadChartModal({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={styles.safe}>
-        <View style={styles.top}>
+        <View style={[styles.top, rtl && styles.topRtl]}>
           <Pressable
             accessibilityRole="button"
             onPress={onClose}
@@ -79,16 +82,18 @@ export function QuadChartModal({
               },
             ]}
             hitSlop={8}
-            accessibilityLabel="إغلاق عرض 2×2"
+            accessibilityLabel={t.quadCloseA11y}
           >
-            <Text style={styles.close}>إغلاق</Text>
+            <Text style={styles.close}>{t.closeWord}</Text>
           </Pressable>
-          <Text style={styles.title}>محطة 2×2 · {timeframe}</Text>
+          <Text style={[styles.title, { textAlign: align }]}>
+            {t.quadTitlePrefix} · {timeframe}
+          </Text>
         </View>
-        <View style={[styles.grid, phone && styles.gridPhone]}>
+        <View style={[styles.grid, rtl && styles.gridRtl, phone && styles.gridPhone]}>
           {symbols.map((sym, i) => (
             <View key={sym} style={[styles.cell, phone && styles.cellPhone]}>
-              <Text style={styles.sym}>{sym}</Text>
+              <Text style={[styles.sym, { textAlign: align }]}>{sym}</Text>
               {series[i] ? (
                 <MatrixChart
                   series={series[i]!}
@@ -118,22 +123,24 @@ export function QuadChartModal({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   top: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
     padding: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  topRtl: { flexDirection: 'row-reverse' },
   close: { color: colors.accent, fontWeight: '800' },
-  title: { flex: 1, color: colors.text, fontWeight: '800', textAlign: 'right', fontSize: 16 },
+  title: { flex: 1, color: colors.text, fontWeight: '800', fontSize: 16 },
   grid: {
     flex: 1,
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     flexWrap: 'wrap',
     padding: spacing.sm,
     gap: spacing.sm,
   },
+  gridRtl: { flexDirection: 'row-reverse' },
   gridPhone: { flexDirection: 'column', flexWrap: 'nowrap' },
   cell: {
     width: '49%',
@@ -146,5 +153,5 @@ const styles = StyleSheet.create({
     minHeight: 200,
   },
   cellPhone: { width: '100%' },
-  sym: { color: colors.accent, fontWeight: '800', textAlign: 'right', marginBottom: spacing.xs },
+  sym: { color: colors.accent, fontWeight: '800', marginBottom: spacing.xs },
 });

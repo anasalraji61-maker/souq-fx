@@ -452,6 +452,15 @@ export type Dict = {
   gridSquaresA11y: string;
   gridRectanglesWord: string;
   gridRectanglesA11y: string;
+  quadCloseA11y: string;
+  quadTitlePrefix: string;
+  spmCloseA11y: string;
+  spmOpenA11y: string;
+  spmPanelTitle: string;
+  panSpeedMarkA11y: string;
+  panTapDetailsSuffix: string;
+  panHideDetailsA11y: string;
+  panChartSpeedPrefix: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -922,6 +931,15 @@ const ar: Dict = {
   gridSquaresA11y: 'عرض الفريمات كمربعات',
   gridRectanglesWord: 'المستطيلات',
   gridRectanglesA11y: 'عرض الفريمات كمستطيلات',
+  quadCloseA11y: 'إغلاق عرض 2×2',
+  quadTitlePrefix: 'محطة 2×2',
+  spmCloseA11y: 'إغلاق قائمة الأزواج',
+  spmOpenA11y: 'فتح قائمة الأزواج',
+  spmPanelTitle: 'أزواجك',
+  panSpeedMarkA11y: 'مثبت السرعة',
+  panTapDetailsSuffix: '— اضغط للتفاصيل',
+  panHideDetailsA11y: 'إخفاء تفاصيل السرعة',
+  panChartSpeedPrefix: 'مثبت سرعة الشارت',
 };
 
 const enUS: Dict = {
@@ -1387,6 +1405,15 @@ const enUS: Dict = {
   gridSquaresA11y: 'View frames as squares',
   gridRectanglesWord: 'Rectangles',
   gridRectanglesA11y: 'View frames as rectangles',
+  quadCloseA11y: 'Close 2×2 view',
+  quadTitlePrefix: '2×2 Station',
+  spmCloseA11y: 'Close pairs menu',
+  spmOpenA11y: 'Open pairs menu',
+  spmPanelTitle: 'Your pairs',
+  panSpeedMarkA11y: 'Speed mark',
+  panTapDetailsSuffix: '— tap for details',
+  panHideDetailsA11y: 'Hide speed details',
+  panChartSpeedPrefix: 'Chart pan speed',
 };
 
 const enGB: Dict = {
@@ -1873,6 +1900,15 @@ const ku: Dict = {
   gridSquaresA11y: 'پیشاندانی چوارچێوەکان وەک چوارگۆشە',
   gridRectanglesWord: 'لاکێشراوەکان',
   gridRectanglesA11y: 'پیشاندانی چوارچێوەکان وەک لاکێشراو',
+  quadCloseA11y: 'داخستنی دیمەنی 2×2',
+  quadTitlePrefix: 'وێستگەی 2×2',
+  spmCloseA11y: 'داخستنی لیستی جووتەکان',
+  spmOpenA11y: 'کردنەوەی لیستی جووتەکان',
+  spmPanelTitle: 'جووتەکانت',
+  panSpeedMarkA11y: 'نیشانەی خێرایی',
+  panTapDetailsSuffix: '— دابگرە بۆ وردەکاری',
+  panHideDetailsA11y: 'شاردنەوەی وردەکاری خێرایی',
+  panChartSpeedPrefix: 'خێرایی جوڵەی چارت',
 };
 
 export const DICTS: Record<LangId, Dict> = {

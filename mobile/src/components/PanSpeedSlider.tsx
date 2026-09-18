@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { colors, spacing, buttons } from '../theme';
 import { clampPanSpeed } from '../chart/panSpeed';
+import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
   value: number;
@@ -24,13 +25,14 @@ export function CruiseSpeedMark({
   size?: number;
   active?: boolean;
 }) {
+  const { t } = useI18n();
   const stroke = active ? colors.accent : colors.textMuted;
   const rim = size;
   const needleW = Math.max(1.5, size * 0.1);
   const needleH = size * 0.38;
 
   return (
-    <View style={[styles.markBox, { width: rim, height: rim }]} accessibilityLabel="مثبت السرعة">
+    <View style={[styles.markBox, { width: rim, height: rim }]} accessibilityLabel={t.panSpeedMarkA11y}>
       <View
         style={[
           styles.markRim,
@@ -85,6 +87,8 @@ export function CruiseSpeedMark({
  * مربع صغير بعلامة الكروز — بالضغط يظهر الشريط والنسبة، وبالضغط ثانية يختصر
  */
 export function PanSpeedSlider({ value, onChange }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const [open, setOpen] = useState(false);
   const trackW = useRef(72);
   const [width, setWidth] = useState(72);
@@ -141,7 +145,7 @@ export function PanSpeedSlider({ value, onChange }: Props) {
         ]}
         onPress={toggle}
         accessibilityRole="button"
-        accessibilityLabel={`مثبت السرعة ${pct} — اضغط للتفاصيل`}
+        accessibilityLabel={`${t.panSpeedMarkA11y} ${pct} ${t.panTapDetailsSuffix}`}
         hitSlop={6}
       >
         <CruiseSpeedMark size={15} active={pct >= 40} />
@@ -153,13 +157,13 @@ export function PanSpeedSlider({ value, onChange }: Props) {
     <View
       style={styles.wrap}
       accessibilityRole="adjustable"
-      accessibilityLabel={`مثبت سرعة الشارت ${pct}`}
+      accessibilityLabel={`${t.panChartSpeedPrefix} ${pct}`}
     >
       <Pressable
         onPress={toggle}
         hitSlop={6}
         accessibilityRole="button"
-        accessibilityLabel="إخفاء تفاصيل السرعة"
+        accessibilityLabel={t.panHideDetailsA11y}
         style={({ pressed }) => [
           styles.markBtn,
           pressed && {
@@ -186,7 +190,7 @@ export function PanSpeedSlider({ value, onChange }: Props) {
           />
         </View>
       </View>
-      <Text style={styles.percent}>{pct}</Text>
+      <Text style={[styles.percent, { textAlign: align }]}>{pct}</Text>
     </View>
   );
 }
@@ -259,7 +263,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '900',
     minWidth: 16,
-    textAlign: 'right',
   },
   markBox: {
     alignItems: 'center',
