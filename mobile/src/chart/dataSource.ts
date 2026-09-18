@@ -1,11 +1,24 @@
 import type { DataProvenance, DataOriginKind } from '../api';
 import { TF_SECONDS, type Timeframe, isTimeframe } from '../timeframes';
 
+/** تسميات افتراضية بالعربية — تُستخدَم إن لم يُمرَّر كائن ترجمة من واجهة i18n (توافق خلفي مع dataSource.selftest.ts). */
 const KIND_LABEL_AR: Record<DataOriginKind, string> = {
   provider: 'مزود',
   demo: 'تجريبي',
   cache: 'مخزن',
   unknown: 'مصدر غير محدد',
+};
+
+export type TickStatusLabels = {
+  live: string;
+  demoTick: string;
+  lastPrice: string;
+};
+
+const TICK_STATUS_LABELS_AR: TickStatusLabels = {
+  live: 'حي',
+  demoTick: 'تيك تجريبي',
+  lastPrice: 'آخر سعر',
 };
 
 /** حداثة شارة «حي» (ثوانٍ) */
@@ -29,8 +42,11 @@ export function normalizeProvenance(
   return { kind: 'unknown', as_of: null, channel: null };
 }
 
-export function provenanceLabel(src: DataProvenance | null | undefined): string {
-  return KIND_LABEL_AR[normalizeProvenance(src).kind];
+export function provenanceLabel(
+  src: DataProvenance | null | undefined,
+  kindLabels: Record<DataOriginKind, string> = KIND_LABEL_AR
+): string {
+  return kindLabels[normalizeProvenance(src).kind];
 }
 
 /** عائلة القناة المعروفة — قنوات غير معروفة لا تندمج افتراضياً */
@@ -92,18 +108,36 @@ export function isFreshTick(
   return age >= -CLOCK_SKEW_SEC && age < FRESH_TICK_SEC;
 }
 
+export type TickStatusKind = 'live' | 'demo' | 'lastPrice';
+
+/**
+ * نوع حالة التيك بلا نص — لقرارات العرض (لون/نمط) بمعزل عن النص المترجَم المعروض،
+ * لتفادي مقارنة الواجهة نصاً حرفياً (كانت مقارنة `tickTag === 'حي'` تفشل بصمت بأي لغة غير العربية).
+ */
+export function tickStatusKind(
+  tickSrc: DataProvenance | null | undefined,
+  asOf: number | null | undefined,
+  nowSec = Date.now() / 1000
+): TickStatusKind | null {
+  if (!tickSrc) return null;
+  const kind = normalizeProvenance(tickSrc).kind;
+  if (kind === 'provider' && isFreshTick(asOf, nowSec)) return 'live';
+  if (kind === 'demo') return 'demo';
+  return 'lastPrice';
+}
+
 /** «حي» فقط لتيك مزود حديث وصحيح التوقيت؛ وإلا وصف محايد. */
 export function tickStatusLabel(
   tickSrc: DataProvenance | null | undefined,
   asOf: number | null | undefined,
-  nowSec = Date.now() / 1000
+  nowSec = Date.now() / 1000,
+  labels: TickStatusLabels = TICK_STATUS_LABELS_AR
 ): string | null {
-  if (!tickSrc) return null;
-  const kind = normalizeProvenance(tickSrc).kind;
-  if (kind === 'provider' && isFreshTick(asOf, nowSec)) return 'حي';
-  if (kind === 'demo') return 'تيك تجريبي';
-  if (kind === 'cache') return 'آخر سعر';
-  return 'آخر سعر';
+  const kind = tickStatusKind(tickSrc, asOf, nowSec);
+  if (!kind) return null;
+  if (kind === 'live') return labels.live;
+  if (kind === 'demo') return labels.demoTick;
+  return labels.lastPrice;
 }
 
 export function candleTimeSec(t: number): number {

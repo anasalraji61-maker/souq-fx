@@ -8,7 +8,7 @@ import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { formatPrice } from '../chart/math';
 import {
   provenanceLabel,
-  tickStatusLabel,
+  tickStatusKind,
   normalizeProvenance,
 } from '../chart/dataSource';
 import { livePriceForChart } from '../chart/liveSeries';
@@ -126,10 +126,23 @@ export function ChartFrame({
   };
   const mergePrice = livePriceForChart(series, resolvedTick, mergeOpts);
   const headerPrice = resolvedTick?.price ?? series.last;
-  const tickTag = resolvedTick
-    ? tickStatusLabel(resolvedTick.source, resolvedTick.source.as_of, nowSec)
+  const tickKind = resolvedTick
+    ? tickStatusKind(resolvedTick.source, resolvedTick.source.as_of, nowSec)
     : null;
-  const candleTag = provenanceLabel(candleSrc);
+  const tickTag =
+    tickKind === 'live'
+      ? t.dsTickLive
+      : tickKind === 'demo'
+        ? t.dsTickDemo
+        : tickKind === 'lastPrice'
+          ? t.dsLastPriceWord
+          : null;
+  const candleTag = provenanceLabel(candleSrc, {
+    provider: t.dsKindProvider,
+    demo: t.dsKindDemo,
+    cache: t.dsKindCache,
+    unknown: t.dsKindUnknown,
+  });
   const marketClosed = !isForexMarketOpen(series.symbol);
 
   const [quote, setQuote] = useState<{ bid?: number | null; ask?: number | null } | null>(null);
@@ -252,8 +265,8 @@ export function ChartFrame({
             <Text
               style={[
                 styles.liveTag,
-                tickTag !== 'حي' && styles.liveTagMuted,
-                tickTag === 'تيك تجريبي' && styles.sourceTagDemo,
+                tickKind !== 'live' && styles.liveTagMuted,
+                tickKind === 'demo' && styles.sourceTagDemo,
               ]}
             >
               {tickTag}

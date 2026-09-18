@@ -722,13 +722,21 @@ export function TerminalScreen() {
   const heroTick = liveTicks[symbol] ?? null;
   const heroNowMs = useTickFreshnessClock(heroTick?.source.as_of ?? null);
   const heroNowSec = heroNowMs / 1000;
+  const dsKindLabels = {
+    provider: t.dsKindProvider,
+    demo: t.dsKindDemo,
+    cache: t.dsKindCache,
+    unknown: t.dsKindUnknown,
+  };
+  const dsTickLabels = { live: t.dsTickLive, demoTick: t.dsTickDemo, lastPrice: t.dsLastPriceWord };
   const heroStatusBits = [
     online ? t.termServerOnline : t.termServerOffline,
-    provenanceLabel(normalizeProvenance(heroSeries.data_source)),
+    provenanceLabel(normalizeProvenance(heroSeries.data_source), dsKindLabels),
     heroTick
-      ? tickStatusLabel(heroTick.source, heroTick.source.as_of, heroNowSec) ?? t.termLastPriceWord
+      ? tickStatusLabel(heroTick.source, heroTick.source.as_of, heroNowSec, dsTickLabels) ??
+        t.termLastPriceWord
       : null,
-    marketStatusLabel(symbol),
+    marketStatusLabel(symbol, { open: t.dsMarketOpen, closed: t.dsMarketClosed }),
   ].filter(Boolean);
 
   const topActions = [

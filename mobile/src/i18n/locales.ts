@@ -519,6 +519,16 @@ export type Dict = {
   cfMarketClosedA11y: string;
   cfMarketClosedTag: string;
   cfSpreadA11y: string;
+  // Shared chart/dataSource.ts + chart/marketHours.ts labels (ChartFrame/TerminalScreen/FocusChartModal) — 2026-09-18
+  dsKindProvider: string;
+  dsKindDemo: string;
+  dsKindCache: string;
+  dsKindUnknown: string;
+  dsTickLive: string;
+  dsTickDemo: string;
+  dsLastPriceWord: string;
+  dsMarketOpen: string;
+  dsMarketClosed: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -1056,6 +1066,15 @@ const ar: Dict = {
   cfMarketClosedA11y: 'السوق مغلق حالياً',
   cfMarketClosedTag: 'مغلق',
   cfSpreadA11y: 'سبريد البيع والشراء',
+  dsKindProvider: 'مزود',
+  dsKindDemo: 'تجريبي',
+  dsKindCache: 'مخزن',
+  dsKindUnknown: 'مصدر غير محدد',
+  dsTickLive: 'حي',
+  dsTickDemo: 'تيك تجريبي',
+  dsLastPriceWord: 'آخر سعر',
+  dsMarketOpen: 'السوق مفتوح',
+  dsMarketClosed: 'السوق مغلق',
 };
 
 const enUS: Dict = {
@@ -1588,6 +1607,15 @@ const enUS: Dict = {
   cfMarketClosedA11y: 'Market currently closed',
   cfMarketClosedTag: 'Closed',
   cfSpreadA11y: 'Bid/ask spread',
+  dsKindProvider: 'Provider',
+  dsKindDemo: 'Demo',
+  dsKindCache: 'Cached',
+  dsKindUnknown: 'Unknown source',
+  dsTickLive: 'Live',
+  dsTickDemo: 'Demo tick',
+  dsLastPriceWord: 'Last price',
+  dsMarketOpen: 'Market open',
+  dsMarketClosed: 'Market closed',
 };
 
 const enGB: Dict = {
@@ -2141,6 +2169,15 @@ const ku: Dict = {
   cfMarketClosedA11y: 'بازاڕ ئێستا داخراوە',
   cfMarketClosedTag: 'داخراو',
   cfSpreadA11y: 'جیاوازی نرخی کڕین و فرۆشتن',
+  dsKindProvider: 'دابینکەر',
+  dsKindDemo: 'نموونەیی',
+  dsKindCache: 'خەزنکراو',
+  dsKindUnknown: 'سەرچاوەی نادیار',
+  dsTickLive: 'زیندوو',
+  dsTickDemo: 'تیکی نموونەیی',
+  dsLastPriceWord: 'دوایین نرخ',
+  dsMarketOpen: 'بازاڕ کراوەیە',
+  dsMarketClosed: 'بازاڕ داخراوە',
 };
 
 export const DICTS: Record<LangId, Dict> = {

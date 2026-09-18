@@ -20,6 +20,18 @@ export function isForexMarketOpen(symbol: string, now: Date = new Date()): boole
   return true;
 }
 
-export function marketStatusLabel(symbol: string, now: Date = new Date()): string {
-  return isForexMarketOpen(symbol, now) ? 'السوق مفتوح' : 'السوق مغلق';
+export type MarketStatusLabels = { open: string; closed: string };
+
+/** تسميات افتراضية بالعربية — توافق خلفي لأي استدعاء بلا كائن ترجمة. */
+const MARKET_STATUS_LABELS_AR: MarketStatusLabels = {
+  open: 'السوق مفتوح',
+  closed: 'السوق مغلق',
+};
+
+export function marketStatusLabel(
+  symbol: string,
+  labels: MarketStatusLabels = MARKET_STATUS_LABELS_AR,
+  now: Date = new Date()
+): string {
+  return isForexMarketOpen(symbol, now) ? labels.open : labels.closed;
 }

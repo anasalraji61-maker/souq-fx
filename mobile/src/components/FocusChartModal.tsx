@@ -237,10 +237,21 @@ export function FocusChartModal({
                 {series.change_pct >= 0 ? '+' : ''}
                 {series.change_pct.toFixed(2)}%
                 {liveTick
-                  ? ` · ${tickStatusLabel(liveTick.source, liveTick.source.as_of, nowSec) ?? t.focusLastPriceWord}`
+                  ? ` · ${
+                      tickStatusLabel(liveTick.source, liveTick.source.as_of, nowSec, {
+                        live: t.dsTickLive,
+                        demoTick: t.dsTickDemo,
+                        lastPrice: t.dsLastPriceWord,
+                      }) ?? t.focusLastPriceWord
+                    }`
                   : ''}
-                {` · ${provenanceLabel(normalizeProvenance(series.data_source))}`}
-                {` · ${marketStatusLabel(sym)}`}
+                {` · ${provenanceLabel(normalizeProvenance(series.data_source), {
+                  provider: t.dsKindProvider,
+                  demo: t.dsKindDemo,
+                  cache: t.dsKindCache,
+                  unknown: t.dsKindUnknown,
+                })}`}
+                {` · ${marketStatusLabel(sym, { open: t.dsMarketOpen, closed: t.dsMarketClosed })}`}
                 {hasSpread ? ` · B ${formatPrice(quote!.bid!)}/A ${formatPrice(quote!.ask!)}` : ''}
               </Text>
             </View>
