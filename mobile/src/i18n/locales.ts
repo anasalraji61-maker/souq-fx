@@ -402,9 +402,56 @@ export type Dict = {
   termFullscreenLabel: string;
   termFxMarketWord: string;
   termSpreadWord: string;
+  termBidLabel: string;
+  termAskLabel: string;
   termSquareFramesHintSuffix: string;
   termHintMoveText: string;
   termCloseWatchlistA11y: string;
+  wlTitle: string;
+  wlAddBtn: string;
+  wlAddA11y: string;
+  wlResetBtn: string;
+  wlResetA11y: string;
+  wlResetConfirmTitle: string;
+  wlResetConfirmBody: string;
+  wlResetConfirmBtn: string;
+  wlSearchPlaceholder: string;
+  wlLoadError: string;
+  wlRetryA11y: string;
+  wlRetryBtn: string;
+  wlLoadingWord: string;
+  wlEmpty: string;
+  wlAddEmptyBtn: string;
+  wlDemoPriceA11ySuffix: string;
+  wlDemoTag: string;
+  wlMoveUpA11y: string;
+  wlMoveDownA11y: string;
+  wlRemoveA11y: string;
+  wlRemoveConfirmTitle: string;
+  wlRemoveConfirmBtn: string;
+  wlCatalogTitle: string;
+  wlCatalogAllAdded: string;
+  wlCatalogCloseA11y: string;
+  focusSymbolA11yPrefix: string;
+  focusVsWord: string;
+  focusPhoneSubHint: string;
+  focusDesktopSub: string;
+  focusLastPriceWord: string;
+  focusWatchlistTitle: string;
+  focusCompareHint: string;
+  focusCompareTag: string;
+  focusPickSymbolA11yPrefix: string;
+  focusCompareNotePrefix: string;
+  focusCompareNoteSuffix: string;
+  focusInComparisonSuffix: string;
+  focusAlertCreateFailedTitle: string;
+  focusAlertCreateFailedBody: string;
+  focusAlertFromDrawingNote: string;
+  gridFramesWord: string;
+  gridSquaresWord: string;
+  gridSquaresA11y: string;
+  gridRectanglesWord: string;
+  gridRectanglesA11y: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -824,10 +871,57 @@ const ar: Dict = {
   termFullscreenLabel: 'ملء الشاشة ⛶',
   termFxMarketWord: 'سوق العملات',
   termSpreadWord: 'سبريد',
+  termBidLabel: 'البيع',
+  termAskLabel: 'الشراء',
   termSquareFramesHintSuffix: 'فريمات مربعة · امسك كل مربع لتبديل مكانه · المؤشرات اختيارية',
   termHintMoveText:
     'التوقعات · التنبيهات · الأخبار · المجتمع → أدوات · امسك الشريط واسحب لتبديل أماكن الفريمات',
   termCloseWatchlistA11y: 'إغلاق قائمة المتابعة',
+  wlTitle: 'قائمة متابعة',
+  wlAddBtn: 'إضافة',
+  wlAddA11y: 'إضافة رمز للمتابعة',
+  wlResetBtn: 'افتراضي',
+  wlResetA11y: 'إعادة قائمة المتابعة للافتراضي',
+  wlResetConfirmTitle: 'إعادة قائمة المتابعة للافتراضي؟',
+  wlResetConfirmBody: 'سيتم استبدال كل الرموز المضافة يدوياً بالقائمة الافتراضية.',
+  wlResetConfirmBtn: 'إعادة للافتراضي',
+  wlSearchPlaceholder: 'بحث رمز…',
+  wlLoadError: 'تعذر تحميل قائمة المتابعة',
+  wlRetryA11y: 'إعادة محاولة تحميل قائمة المتابعة',
+  wlRetryBtn: 'إعادة المحاولة',
+  wlLoadingWord: 'جاري التحميل…',
+  wlEmpty: 'لا رموز في المتابعة',
+  wlAddEmptyBtn: 'إضافة رمز',
+  wlDemoPriceA11ySuffix: ' · سعر افتراضي',
+  wlDemoTag: 'افتراضي',
+  wlMoveUpA11y: 'تحريك لأعلى',
+  wlMoveDownA11y: 'تحريك لأسفل',
+  wlRemoveA11y: 'إزالة من المتابعة',
+  wlRemoveConfirmTitle: 'إزالة من المتابعة؟',
+  wlRemoveConfirmBtn: 'إزالة',
+  wlCatalogTitle: 'إضافة من الكتالوج',
+  wlCatalogAllAdded: 'كل رموز الكتالوج مضافة',
+  wlCatalogCloseA11y: 'إغلاق نافذة الإضافة',
+  focusSymbolA11yPrefix: 'الرمز',
+  focusVsWord: 'مقابل',
+  focusPhoneSubHint: 'اضغط لتغيير الرمز',
+  focusDesktopSub: 'محطة التحليل · رسم · مقارنة · تنبيهات',
+  focusLastPriceWord: 'آخر سعر',
+  focusWatchlistTitle: 'قائمة المراقبة',
+  focusCompareHint: 'اضغط مطولاً للمقارنة',
+  focusCompareTag: 'مقارنة',
+  focusPickSymbolA11yPrefix: 'اختيار الرمز',
+  focusCompareNotePrefix: 'مقارنة مع',
+  focusCompareNoteSuffix: '(بنفسجي)',
+  focusInComparisonSuffix: ' · قيد المقارنة',
+  focusAlertCreateFailedTitle: 'تعذر إنشاء التنبيه',
+  focusAlertCreateFailedBody: 'حدث خطأ أثناء إنشاء تنبيه من خط الرسم، حاول مرة أخرى.',
+  focusAlertFromDrawingNote: 'من خط رسم',
+  gridFramesWord: 'الفريمات',
+  gridSquaresWord: 'المربعات',
+  gridSquaresA11y: 'عرض الفريمات كمربعات',
+  gridRectanglesWord: 'المستطيلات',
+  gridRectanglesA11y: 'عرض الفريمات كمستطيلات',
 };
 
 const enUS: Dict = {
@@ -1242,10 +1336,57 @@ const enUS: Dict = {
   termFullscreenLabel: 'Fullscreen ⛶',
   termFxMarketWord: 'FX market',
   termSpreadWord: 'Spread',
+  termBidLabel: 'Bid',
+  termAskLabel: 'Ask',
   termSquareFramesHintSuffix: 'square frames · long-press any box to reorder it · indicators optional',
   termHintMoveText:
     'Forecasts · Alerts · News · Community → Tools · long-press the bar and drag to reorder frames',
   termCloseWatchlistA11y: 'Close watchlist',
+  wlTitle: 'Watchlist',
+  wlAddBtn: 'Add',
+  wlAddA11y: 'Add symbol to watchlist',
+  wlResetBtn: 'Default',
+  wlResetA11y: 'Reset watchlist to default',
+  wlResetConfirmTitle: 'Reset watchlist to default?',
+  wlResetConfirmBody: 'All manually added symbols will be replaced with the default list.',
+  wlResetConfirmBtn: 'Reset to default',
+  wlSearchPlaceholder: 'Search symbol…',
+  wlLoadError: "Couldn't load watchlist",
+  wlRetryA11y: 'Retry loading watchlist',
+  wlRetryBtn: 'Retry',
+  wlLoadingWord: 'Loading…',
+  wlEmpty: 'No symbols in watchlist',
+  wlAddEmptyBtn: 'Add symbol',
+  wlDemoPriceA11ySuffix: ' · demo price',
+  wlDemoTag: 'Demo',
+  wlMoveUpA11y: 'Move up',
+  wlMoveDownA11y: 'Move down',
+  wlRemoveA11y: 'Remove from watchlist',
+  wlRemoveConfirmTitle: 'Remove from watchlist?',
+  wlRemoveConfirmBtn: 'Remove',
+  wlCatalogTitle: 'Add from catalog',
+  wlCatalogAllAdded: 'All catalog symbols added',
+  wlCatalogCloseA11y: 'Close add dialog',
+  focusSymbolA11yPrefix: 'Symbol',
+  focusVsWord: 'vs',
+  focusPhoneSubHint: 'Tap to change symbol',
+  focusDesktopSub: 'Analysis station · draw · compare · alerts',
+  focusLastPriceWord: 'Last price',
+  focusWatchlistTitle: 'Watchlist',
+  focusCompareHint: 'Long-press to compare',
+  focusCompareTag: 'Compare',
+  focusPickSymbolA11yPrefix: 'Select symbol',
+  focusCompareNotePrefix: 'Comparing with',
+  focusCompareNoteSuffix: '(purple)',
+  focusInComparisonSuffix: ' · in comparison',
+  focusAlertCreateFailedTitle: "Couldn't create alert",
+  focusAlertCreateFailedBody: 'An error occurred creating an alert from the drawing line, try again.',
+  focusAlertFromDrawingNote: 'From drawing line',
+  gridFramesWord: 'Frames',
+  gridSquaresWord: 'Squares',
+  gridSquaresA11y: 'View frames as squares',
+  gridRectanglesWord: 'Rectangles',
+  gridRectanglesA11y: 'View frames as rectangles',
 };
 
 const enGB: Dict = {
@@ -1681,10 +1822,57 @@ const ku: Dict = {
   termFullscreenLabel: 'شاشەی پڕ ⛶',
   termFxMarketWord: 'بازاڕی دراو',
   termSpreadWord: 'سپرێد',
+  termBidLabel: 'فرۆشتن',
+  termAskLabel: 'کڕین',
   termSquareFramesHintSuffix: 'چوارچێوەی چوارگۆشە · پەنجە بگرە لەسەر هەر بۆکسێک بۆ گۆڕینی شوێنی · ئاماژەکان ئارەزوومەندانەن',
   termHintMoveText:
     'پێشبینیەکان · ئاگاداریەکان · هەواڵەکان · کۆمەڵگا → ئامرازەکان · پەنجە بگرە لەسەر شریتەکە و ڕایکێشە بۆ گۆڕینی شوێنی چوارچێوەکان',
   termCloseWatchlistA11y: 'داخستنی لیستی چاودێری',
+  wlTitle: 'لیستی چاودێری',
+  wlAddBtn: 'زیادکردن',
+  wlAddA11y: 'زیادکردنی هێما بۆ چاودێری',
+  wlResetBtn: 'بنەڕەت',
+  wlResetA11y: 'گەڕاندنەوەی لیستی چاودێری بۆ بنەڕەت',
+  wlResetConfirmTitle: 'لیستی چاودێری بگەڕێتەوە بۆ بنەڕەت؟',
+  wlResetConfirmBody: 'هەموو هێماکانی زیادکراو بە دەستی دەگۆڕدرێن بۆ لیستی بنەڕەت.',
+  wlResetConfirmBtn: 'گەڕاندنەوە بۆ بنەڕەت',
+  wlSearchPlaceholder: 'گەڕان بۆ هێما...',
+  wlLoadError: 'نەتوانرا لیستی چاودێری بار بکرێت',
+  wlRetryA11y: 'دووبارە هەوڵدانەوەی بارکردنی لیستی چاودێری',
+  wlRetryBtn: 'دووبارە هەوڵدان',
+  wlLoadingWord: 'بارکردن...',
+  wlEmpty: 'هیچ هێمایەک لە چاودێریدا نییە',
+  wlAddEmptyBtn: 'زیادکردنی هێما',
+  wlDemoPriceA11ySuffix: ' · نرخی نموونەیی',
+  wlDemoTag: 'نموونەیی',
+  wlMoveUpA11y: 'بۆ سەرەوە بگوازەرەوە',
+  wlMoveDownA11y: 'بۆ خوارەوە بگوازەرەوە',
+  wlRemoveA11y: 'لابردن لە چاودێری',
+  wlRemoveConfirmTitle: 'لابردن لە چاودێری؟',
+  wlRemoveConfirmBtn: 'لابردن',
+  wlCatalogTitle: 'زیادکردن لە کاتالۆگەوە',
+  wlCatalogAllAdded: 'هەموو هێماکانی کاتالۆگ زیادکراون',
+  wlCatalogCloseA11y: 'داخستنی پەنجەرەی زیادکردن',
+  focusSymbolA11yPrefix: 'هێما',
+  focusVsWord: 'بەرامبەر',
+  focusPhoneSubHint: 'دەست بنێ بۆ گۆڕینی هێما',
+  focusDesktopSub: 'وێستگەی شیکاری · وێنەکێشان · بەراورد · ئاگادارکردنەوە',
+  focusLastPriceWord: 'کۆتا نرخ',
+  focusWatchlistTitle: 'لیستی چاودێری',
+  focusCompareHint: 'درێژ دابگرە بۆ بەراورد',
+  focusCompareTag: 'بەراورد',
+  focusPickSymbolA11yPrefix: 'هەڵبژاردنی هێما',
+  focusCompareNotePrefix: 'بەراوردکردن لەگەڵ',
+  focusCompareNoteSuffix: '(مۆر)',
+  focusInComparisonSuffix: ' · لە بەراوردکردندایە',
+  focusAlertCreateFailedTitle: 'نەتوانرا ئاگادارکردنەوە دروست بکرێت',
+  focusAlertCreateFailedBody: 'هەڵەیەک ڕوویدا لە دروستکردنی ئاگادارکردنەوە لە هێڵی وێنەکێشان، دووبارە هەوڵبدەرەوە.',
+  focusAlertFromDrawingNote: 'لە هێڵی وێنەکێشانەوە',
+  gridFramesWord: 'چوارچێوەکان',
+  gridSquaresWord: 'چوارگۆشەکان',
+  gridSquaresA11y: 'پیشاندانی چوارچێوەکان وەک چوارگۆشە',
+  gridRectanglesWord: 'لاکێشراوەکان',
+  gridRectanglesA11y: 'پیشاندانی چوارچێوەکان وەک لاکێشراو',
 };
 
 export const DICTS: Record<LangId, Dict> = {

@@ -30,6 +30,7 @@ import { SymbolSnapshot } from './SymbolSnapshot';
 import { BacktestPanel } from './BacktestPanel';
 import { IndicatorAlertsPanel } from './IndicatorAlertsPanel';
 import { useLiveTicks } from '../hooks/useLiveTicks';
+import { useI18n } from '../i18n/I18nContext';
 import type { ChartKind, DrawTool, IndicatorId, LensMode } from '../chart/types';
 
 type Props = {
@@ -79,6 +80,8 @@ export function FocusChartModal({
   initialKind,
   initialIndicators,
 }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const { width, height } = useWindowDimensions();
   const phone = width < 700;
   const [sym, setSym] = useState(symbol);
@@ -170,17 +173,17 @@ export function FocusChartModal({
         symbol: sym,
         condition: price >= (liveTick?.price ?? series?.last ?? price) ? 'above' : 'below',
         price,
-        note: 'من خط رسم',
+        note: t.focusAlertFromDrawingNote,
       });
     } catch {
-      Alert.alert('تعذر إنشاء التنبيه', 'حدث خطأ أثناء إنشاء تنبيه من خط الرسم، حاول مرة أخرى.');
+      Alert.alert(t.focusAlertCreateFailedTitle, t.focusAlertCreateFailedBody);
     }
   };
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={[styles.top, phone && styles.topPhone]}>
+        <View style={[styles.top, rtl && styles.topRtl, phone && styles.topPhone]}>
           <Pressable
             accessibilityRole="button"
             style={({ pressed }) => [
@@ -191,10 +194,10 @@ export function FocusChartModal({
               },
             ]}
             onPress={onClose}
-            accessibilityLabel="إغلاق"
+            accessibilityLabel={t.closeWord}
             hitSlop={4}
           >
-            <Text style={styles.close}>{phone ? '×' : 'إغلاق'}</Text>
+            <Text style={styles.close}>{phone ? '×' : t.closeWord}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -208,16 +211,16 @@ export function FocusChartModal({
             onPress={() => {
               if (phone) setPhonePickerOpen((open) => !open);
             }}
-            accessibilityLabel={`الرمز: ${sym}${compareSym ? ' مقابل ' + compareSym : ''}`}
+            accessibilityLabel={`${t.focusSymbolA11yPrefix}: ${sym}${compareSym ? ` ${t.focusVsWord} ` + compareSym : ''}`}
           >
-            <Text style={styles.title}>
+            <Text style={[styles.title, { textAlign: align }]}>
               {sym}
-              {compareSym ? ` vs ${compareSym}` : ''}
+              {compareSym ? ` ${t.focusVsWord} ${compareSym}` : ''}
             </Text>
-            <Text style={styles.sub}>
+            <Text style={[styles.sub, { textAlign: align }]}>
               {phone
-                ? `${tf} · اضغط لتغيير الرمز`
-                : 'محطة التحليل · رسم · مقارنة · تنبيهات'}
+                ? `${tf} · ${t.focusPhoneSubHint}`
+                : t.focusDesktopSub}
             </Text>
           </Pressable>
           {series ? (
@@ -234,7 +237,7 @@ export function FocusChartModal({
                 {series.change_pct >= 0 ? '+' : ''}
                 {series.change_pct.toFixed(2)}%
                 {liveTick
-                  ? ` · ${tickStatusLabel(liveTick.source, liveTick.source.as_of, nowSec) ?? 'آخر سعر'}`
+                  ? ` · ${tickStatusLabel(liveTick.source, liveTick.source.as_of, nowSec) ?? t.focusLastPriceWord}`
                   : ''}
                 {` · ${provenanceLabel(normalizeProvenance(series.data_source))}`}
                 {` · ${marketStatusLabel(sym)}`}
@@ -244,16 +247,16 @@ export function FocusChartModal({
           ) : null}
         </View>
 
-        <View style={[styles.body, phone && styles.bodyPhone]}>
+        <View style={[styles.body, rtl && styles.bodyRtl, phone && styles.bodyPhone]}>
           {!phone ? (
             <ScrollView
               style={styles.watch}
               contentContainerStyle={{ gap: 6, padding: spacing.sm }}
               keyboardShouldPersistTaps="handled"
             >
-              <Text style={styles.watchTitle}>قائمة المراقبة</Text>
+              <Text style={[styles.watchTitle, { textAlign: align }]}>{t.focusWatchlistTitle}</Text>
               <SymbolSearchBar onPick={pick} />
-              <Text style={styles.watchHint}>اضغط مرتين للمقارنة</Text>
+              <Text style={[styles.watchHint, { textAlign: align }]}>{t.focusCompareHint}</Text>
               {watchlist.map((w) => (
                 <Pressable
                   accessibilityRole="button"
@@ -269,12 +272,12 @@ export function FocusChartModal({
                   ]}
                   onPress={() => pick(w.symbol)}
                   onLongPress={() => toggleCompare(w.symbol)}
-                  accessibilityLabel={`${w.symbol} · ${w.label}${compareSym === w.symbol ? ' · قيد المقارنة' : ''}`}
+                  accessibilityLabel={`${w.symbol} · ${w.label}${compareSym === w.symbol ? t.focusInComparisonSuffix : ''}`}
                 >
-                  <Text style={styles.watchSym}>{w.symbol}</Text>
-                  <Text style={styles.watchLabel}>{w.label}</Text>
+                  <Text style={[styles.watchSym, { textAlign: align }]}>{w.symbol}</Text>
+                  <Text style={[styles.watchLabel, { textAlign: align }]}>{w.label}</Text>
                   {compareSym === w.symbol ? (
-                    <Text style={styles.compareTag}>مقارنة</Text>
+                    <Text style={[styles.compareTag, { textAlign: align }]}>{t.focusCompareTag}</Text>
                   ) : null}
                 </Pressable>
               ))}
@@ -293,7 +296,7 @@ export function FocusChartModal({
               <>
                 <SymbolSearchBar onPick={pick} />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={{ flexDirection: 'row-reverse', gap: 6 }}>
+                  <View style={{ flexDirection: rtl ? 'row-reverse' : 'row', gap: 6 }}>
                     {watchlist.map((w) => (
                       <Pressable
                         accessibilityRole="button"
@@ -308,7 +311,7 @@ export function FocusChartModal({
                         ]}
                         onPress={() => pick(w.symbol)}
                         onLongPress={() => toggleCompare(w.symbol)}
-                        accessibilityLabel={`اختيار الرمز: ${w.symbol}`}
+                        accessibilityLabel={`${t.focusPickSymbolA11yPrefix}: ${w.symbol}`}
                       >
                         <Text style={[styles.pillText, sym === w.symbol && styles.pillTextOn]}>
                           {w.symbol}
@@ -318,7 +321,9 @@ export function FocusChartModal({
                   </View>
                 </ScrollView>
                 {compareSym ? (
-                  <Text style={styles.compareNote}>مقارنة مع {compareSym} (بنفسجي)</Text>
+                  <Text style={[styles.compareNote, { textAlign: align }]}>
+                    {t.focusCompareNotePrefix} {compareSym} {t.focusCompareNoteSuffix}
+                  </Text>
                 ) : null}
               </>
             ) : null}
@@ -364,7 +369,7 @@ export function FocusChartModal({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   top: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
     paddingHorizontal: spacing.md,
@@ -372,6 +377,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  topRtl: { flexDirection: 'row-reverse' },
   topPhone: { paddingVertical: 7, gap: spacing.sm },
   closeButton: {
     width: 32,
@@ -385,12 +391,13 @@ const styles = StyleSheet.create({
   },
   close: { color: colors.accent, fontWeight: '800' },
   symbolHeading: { flex: 1 },
-  title: { color: colors.text, fontSize: 18, fontWeight: '900', textAlign: 'right' },
-  sub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
+  title: { color: colors.text, fontSize: 18, fontWeight: '900' },
+  sub: { color: colors.textDim, fontSize: 11 },
   price: { color: colors.text, fontWeight: '700', fontSize: 14 },
   quote: { alignItems: 'flex-start' },
   change: { fontWeight: '800', fontSize: 10, marginTop: 2 },
-  body: { flex: 1, flexDirection: 'row-reverse' },
+  body: { flex: 1, flexDirection: 'row' },
+  bodyRtl: { flexDirection: 'row-reverse' },
   bodyPhone: { flexDirection: 'column' },
   watch: {
     width: 200,
@@ -402,10 +409,9 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontWeight: '800',
     fontSize: 11,
-    textAlign: 'right',
     marginBottom: spacing.xs,
   },
-  watchHint: { color: colors.textDim, fontSize: 9, textAlign: 'right', marginBottom: 6 },
+  watchHint: { color: colors.textDim, fontSize: 9, marginBottom: 6 },
   watchItem: {
     padding: spacing.sm,
     borderRadius: radii.sm,
@@ -415,10 +421,10 @@ const styles = StyleSheet.create({
   },
   watchOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   watchCompare: { borderColor: colors.infoAccent },
-  watchSym: { color: colors.text, fontWeight: '800', textAlign: 'right' },
-  watchLabel: { color: colors.textMuted, fontSize: 11, textAlign: 'right' },
-  compareTag: { color: colors.infoAccent, fontSize: 9, textAlign: 'right', marginTop: 2 },
-  compareNote: { color: colors.infoAccent, fontSize: 11, textAlign: 'right' },
+  watchSym: { color: colors.text, fontWeight: '800' },
+  watchLabel: { color: colors.textMuted, fontSize: 11 },
+  compareTag: { color: colors.infoAccent, fontSize: 9, marginTop: 2 },
+  compareNote: { color: colors.infoAccent, fontSize: 11 },
   main: { flex: 1 },
   pill: {
     paddingHorizontal: 10,

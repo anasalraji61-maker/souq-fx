@@ -17,7 +17,7 @@ import { useI18n } from '../i18n/I18nContext';
 void I18nManager;
 
 export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [messages, setMessages] = useState<ChatMsg[]>(mockChat);
   const [text, setText] = useState('');
@@ -53,9 +53,12 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
       id: `local-${Date.now()}`,
       user: t.chatYou,
       text: msg,
-      // 'ar-u-nu-latn': تنسيق عربي بأرقام غربية صراحة — 'ar' وحدها قد تُنتج أرقاماً هندية شرقية
-      // (١٢:٣٠) بدل غربية على بعض أجهزة ICU، غير متوقَّع لتاجر يقرأ طابع وقت رسالة بسرعة.
-      ts: new Date().toLocaleTimeString('ar-u-nu-latn', { hour: '2-digit', minute: '2-digit' }),
+      // `${lang}-u-nu-latn`: طابع الوقت يتبع لغة الواجهة المختارة فعلياً (ar/en-US/en-GB/ku) بدل
+      // 'ar' ثابتة كما كان سابقاً — امتداد Unicode 'nu-latn' يفرض أرقاماً غربية بكل اللغات صراحة
+      // ('ar'/'ku' وحدهما قد تُنتجان أرقاماً هندية شرقية [١٢:٣٠] بدل غربية على بعض أجهزة ICU)، غير
+      // متوقَّع لتاجر يقرأ طابع وقت رسالة بسرعة. مُتحقَّق: كل قيم lang الأربع تُنتج تنسيقاً سليماً
+      // (12/24 ساعة حسب عرف كل لغة، أرقام لاتينية دوماً).
+      ts: new Date().toLocaleTimeString(`${lang}-u-nu-latn`, { hour: '2-digit', minute: '2-digit' }),
     };
     setMessages((m) => [...m, local]);
     try {

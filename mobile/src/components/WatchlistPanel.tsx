@@ -13,6 +13,7 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { formatPrice } from '../chart/math';
 import { playSoftClick } from '../audio/playSoftClick';
 import { SymbolSearchBar } from './SymbolSearchBar';
+import { useI18n } from '../i18n/I18nContext';
 import {
   addWatchSymbol,
   catalogEntriesNotIn,
@@ -52,6 +53,8 @@ export function WatchlistPanel({
   compact = false,
   fullWidth = false,
 }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const [symbols, setSymbols] = useState<string[] | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -96,9 +99,9 @@ export function WatchlistPanel({
 
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact, fullWidth && styles.wrapFull]}>
-      <Text style={styles.title}>قائمة متابعة</Text>
-      {saveError ? <Text style={styles.saveError}>{saveError}</Text> : null}
-      <View style={styles.toolbar}>
+      <Text style={[styles.title, { textAlign: align }]}>{t.wlTitle}</Text>
+      {saveError ? <Text style={[styles.saveError, { textAlign: align }]}>{saveError}</Text> : null}
+      <View style={[styles.toolbar, rtl && styles.toolbarRtl]}>
         <Pressable
           accessibilityRole="button"
           style={({ pressed }) => [
@@ -112,9 +115,9 @@ export function WatchlistPanel({
           disabled={!ready || addable.length === 0}
           accessibilityState={{ disabled: !ready || addable.length === 0 }}
           onPress={() => setAddOpen(true)}
-          accessibilityLabel="إضافة رمز للمتابعة"
+          accessibilityLabel={t.wlAddA11y}
         >
-          <Text style={styles.toolBtnText}>إضافة</Text>
+          <Text style={styles.toolBtnText}>{t.wlAddBtn}</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -130,29 +133,29 @@ export function WatchlistPanel({
           ]}
           onPress={() =>
             Alert.alert(
-              'إعادة قائمة المتابعة للافتراضي؟',
-              'سيتم استبدال كل الرموز المضافة يدوياً بالقائمة الافتراضية.',
+              t.wlResetConfirmTitle,
+              t.wlResetConfirmBody,
               [
-                { text: 'إلغاء', style: 'cancel' },
+                { text: t.cancel, style: 'cancel' },
                 {
-                  text: 'إعادة للافتراضي',
+                  text: t.wlResetConfirmBtn,
                   style: 'destructive',
                   onPress: () => void resetWatchlistToDefault(),
                 },
               ]
             )
           }
-          accessibilityLabel="إعادة قائمة المتابعة للافتراضي"
+          accessibilityLabel={t.wlResetA11y}
         >
-          <Text style={styles.toolBtnText}>افتراضي</Text>
+          <Text style={styles.toolBtnText}>{t.wlResetBtn}</Text>
         </Pressable>
       </View>
-      {!compact && ready ? <SymbolSearchBar onPick={onPick} placeholder="بحث رمز…" /> : null}
+      {!compact && ready ? <SymbolSearchBar onPick={onPick} placeholder={t.wlSearchPlaceholder} /> : null}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
         {!ready ? (
           loadError ? (
             <View style={styles.emptyBox}>
-              <Text style={styles.saveError}>تعذر تحميل قائمة المتابعة</Text>
+              <Text style={[styles.saveError, { textAlign: align }]}>{t.wlLoadError}</Text>
               <Pressable
                 accessibilityRole="button"
                 style={({ pressed }) => [
@@ -163,16 +166,16 @@ export function WatchlistPanel({
                   },
                 ]}
                 onPress={() => void loadList()}
-                accessibilityLabel="إعادة محاولة تحميل قائمة المتابعة"
+                accessibilityLabel={t.wlRetryA11y}
                 hitSlop={8}
               >
-                <Text style={styles.toolBtnText}>إعادة المحاولة</Text>
+                <Text style={styles.toolBtnText}>{t.wlRetryBtn}</Text>
               </Pressable>
             </View>
-          ) : <Text style={styles.empty}>جاري التحميل…</Text>
+          ) : <Text style={styles.empty}>{t.wlLoadingWord}</Text>
         ) : list.length === 0 ? (
           <View style={styles.emptyBox}>
-            <Text style={styles.empty}>لا رموز في المتابعة</Text>
+            <Text style={styles.empty}>{t.wlEmpty}</Text>
             <Pressable
               accessibilityRole="button"
               style={({ pressed }) => [
@@ -183,10 +186,10 @@ export function WatchlistPanel({
                 },
               ]}
               onPress={() => setAddOpen(true)}
-              accessibilityLabel="إضافة رمز للمتابعة"
+              accessibilityLabel={t.wlAddA11y}
               hitSlop={8}
             >
-              <Text style={styles.addEmptyText}>إضافة رمز</Text>
+              <Text style={styles.addEmptyText}>{t.wlAddEmptyBtn}</Text>
             </Pressable>
           </View>
         ) : (
@@ -205,15 +208,16 @@ export function WatchlistPanel({
                   accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.rowMain,
+                    rtl && styles.rowMainRtl,
                     pressed && {
                       opacity: buttons.pressedOpacity,
                       transform: [{ scale: buttons.pressedScale }],
                     },
                   ]}
                   onPress={() => onPick(sym)}
-                  accessibilityLabel={`${sym}${isDemoPrice ? ' · سعر افتراضي' : ''}`}
+                  accessibilityLabel={`${sym}${isDemoPrice ? t.wlDemoPriceA11ySuffix : ''}`}
                 >
-                  <View style={styles.left}>
+                  <View style={[styles.left, rtl && styles.leftRtl]}>
                     <Text
                       style={[styles.sym, on && styles.symOn, isDxy && styles.symDxy]}
                       {...(Platform.OS === 'web'
@@ -222,13 +226,13 @@ export function WatchlistPanel({
                     >
                       {sym}
                     </Text>
-                    {isDemoPrice ? <Text style={styles.demoTag}>افتراضي</Text> : null}
+                    {isDemoPrice ? <Text style={styles.demoTag}>{t.wlDemoTag}</Text> : null}
                   </View>
                   <Text style={[styles.price, on && styles.priceOn, isDemoPrice && styles.priceDemo]}>
                     {price != null ? formatPrice(price) : '—'}
                   </Text>
                 </Pressable>
-                <View style={styles.ops}>
+                <View style={[styles.ops, rtl && styles.opsRtl]}>
                   <Pressable
                     accessibilityRole="button"
                     style={({ pressed }) => [
@@ -242,7 +246,7 @@ export function WatchlistPanel({
                     disabled={index === 0}
                     accessibilityState={{ disabled: index === 0 }}
                     onPress={() => void moveWatchSymbol(sym, -1)}
-                    accessibilityLabel="تحريك لأعلى"
+                    accessibilityLabel={t.wlMoveUpA11y}
                   >
                     <Text style={styles.opText}>↑</Text>
                   </Pressable>
@@ -259,7 +263,7 @@ export function WatchlistPanel({
                     disabled={index >= list.length - 1}
                     accessibilityState={{ disabled: index >= list.length - 1 }}
                     onPress={() => void moveWatchSymbol(sym, 1)}
-                    accessibilityLabel="تحريك لأسفل"
+                    accessibilityLabel={t.wlMoveDownA11y}
                   >
                     <Text style={styles.opText}>↓</Text>
                   </Pressable>
@@ -273,18 +277,18 @@ export function WatchlistPanel({
                       },
                     ]}
                     onPress={() =>
-                      Alert.alert('إزالة من المتابعة؟', sym, [
-                        { text: 'إلغاء', style: 'cancel' },
+                      Alert.alert(t.wlRemoveConfirmTitle, sym, [
+                        { text: t.cancel, style: 'cancel' },
                         {
-                          text: 'إزالة',
+                          text: t.wlRemoveConfirmBtn,
                           style: 'destructive',
                           onPress: () => void removeWatchSymbol(sym),
                         },
                       ])
                     }
-                    accessibilityLabel="إزالة من المتابعة"
+                    accessibilityLabel={t.wlRemoveA11y}
                   >
-                    <Text style={[styles.opText, styles.opRemove]}>حذف</Text>
+                    <Text style={[styles.opText, styles.opRemove]}>{t.deleteWord}</Text>
                   </Pressable>
                 </View>
               </View>
@@ -296,10 +300,10 @@ export function WatchlistPanel({
       <Modal visible={addOpen} transparent animationType="fade" onRequestClose={() => setAddOpen(false)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>إضافة من الكتالوج</Text>
+            <Text style={[styles.modalTitle, { textAlign: align }]}>{t.wlCatalogTitle}</Text>
             <ScrollView style={styles.modalList}>
               {addable.length === 0 ? (
-                <Text style={styles.empty}>كل رموز الكتالوج مضافة</Text>
+                <Text style={styles.empty}>{t.wlCatalogAllAdded}</Text>
               ) : (
                 addable.map((w) => (
                   <Pressable
@@ -307,13 +311,14 @@ export function WatchlistPanel({
                     key={w.symbol}
                     style={({ pressed }) => [
                       styles.modalRow,
+                      rtl && styles.modalRowRtl,
                       pressed && {
                         opacity: buttons.pressedOpacity,
                         transform: [{ scale: buttons.pressedScale }],
                       },
                     ]}
                     onPress={() => void onAdd(w.symbol)}
-                    accessibilityLabel={`إضافة ${w.symbol} · ${w.group}`}
+                    accessibilityLabel={`${t.wlAddBtn} ${w.symbol} · ${w.group}`}
                   >
                     <Text style={styles.modalSym}>{w.symbol}</Text>
                     <Text style={styles.modalGroup}>{w.group}</Text>
@@ -332,9 +337,9 @@ export function WatchlistPanel({
               ]}
               onPress={() => setAddOpen(false)}
               hitSlop={8}
-              accessibilityLabel="إغلاق نافذة الإضافة"
+              accessibilityLabel={t.wlCatalogCloseA11y}
             >
-              <Text style={styles.modalCloseText}>إغلاق</Text>
+              <Text style={styles.modalCloseText}>{t.closeWord}</Text>
             </Pressable>
           </View>
         </View>
@@ -358,7 +363,6 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     fontSize: 10,
     fontWeight: '900',
-    textAlign: 'right',
     marginBottom: spacing.xs,
     paddingHorizontal: spacing.xs,
   },
@@ -366,16 +370,16 @@ const styles = StyleSheet.create({
     color: colors.bear,
     fontSize: 10,
     fontWeight: '700',
-    textAlign: 'right',
     marginBottom: spacing.xs,
     paddingHorizontal: spacing.xs,
   },
   toolbar: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     gap: spacing.xs,
     marginBottom: 6,
     paddingHorizontal: 2,
   },
+  toolbarRtl: { flexDirection: 'row-reverse' },
   toolBtn: {
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
@@ -419,13 +423,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.heroBg,
   },
   rowMain: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 6,
     paddingHorizontal: spacing.sm,
   },
-  left: { flex: 1, alignItems: 'flex-end', minWidth: 0 },
+  rowMainRtl: { flexDirection: 'row-reverse' },
+  left: { flex: 1, alignItems: 'flex-start', minWidth: 0 },
+  leftRtl: { alignItems: 'flex-end' },
   sym: { color: colors.textMuted, fontWeight: '800', fontSize: 11 },
   symOn: { color: colors.accent },
   symDxy: { color: colors.dxy },
@@ -434,7 +440,7 @@ const styles = StyleSheet.create({
   priceOn: { color: colors.text },
   priceDemo: { color: colors.textDim, fontWeight: '600' },
   ops: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     borderTopWidth: 1,
     borderTopColor: colors.borderSoft,
     paddingVertical: 2,
@@ -442,6 +448,7 @@ const styles = StyleSheet.create({
     gap: 2,
     justifyContent: 'flex-start',
   },
+  opsRtl: { flexDirection: 'row-reverse' },
   opBtn: {
     paddingVertical: 2,
     paddingHorizontal: 6,
@@ -471,17 +478,17 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: '800',
     fontSize: 14,
-    textAlign: 'right',
     marginBottom: spacing.sm,
   },
   modalList: { maxHeight: 320 },
   modalRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
   },
+  modalRowRtl: { flexDirection: 'row-reverse' },
   modalSym: { color: colors.text, fontWeight: '800', fontSize: 13 },
   modalGroup: { color: colors.textDim, fontSize: 11 },
   modalClose: {

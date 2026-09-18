@@ -1070,8 +1070,8 @@ export function TerminalScreen() {
             activeLens={lens}
             activeTool={tool}
             onLens={setLens}
-            onTool={(t) => {
-              setTool(t);
+            onTool={(nextTool) => {
+              setTool(nextTool);
             }}
             onQuad={() => setQuadOpen(true)}
           />
@@ -1311,8 +1311,8 @@ export function TerminalScreen() {
                 </Text>
                 {quote && quote.bid != null && quote.ask != null ? (
                   <Text style={styles.desktopSpread}>
-                    {t.termSpreadWord} {formatPrice(quote.ask - quote.bid)} · Bid{' '}
-                    {formatPrice(quote.bid)} · Ask {formatPrice(quote.ask)}
+                    {t.termSpreadWord} {formatPrice(quote.ask - quote.bid)} · {t.termBidLabel}{' '}
+                    {formatPrice(quote.bid)} · {t.termAskLabel} {formatPrice(quote.ask)}
                   </Text>
                 ) : null}
               </View>
@@ -1402,7 +1402,7 @@ export function TerminalScreen() {
                         accent={dxy.symbol === 'DXY' ? colors.dxy : colors.accent}
                         label={dxy.symbol}
                         showTimeframes
-                        onTimeframeChange={(t) => void changeDxyTf(t)}
+                        onTimeframeChange={(nextTf) => void changeDxyTf(nextTf)}
                         onSymbolChange={(s) => void changeHeroSymbol(s)}
                         panControls
                         fill
@@ -1427,7 +1427,7 @@ export function TerminalScreen() {
                       fill
                       panSpeed={panSpeed}
                       liveTick={liveTicks[f.symbol] ?? null}
-                      onTimeframeChange={(t) => void changeFrameTf(i, t)}
+                      onTimeframeChange={(nextTf) => void changeFrameTf(i, nextTf)}
                       onSymbolChange={(s) => void changeFrameSymbol(i, s)}
                       onFocus={() => {
                         pickSymbol(f.symbol, frameTfs[i]);
@@ -1475,7 +1475,7 @@ export function TerminalScreen() {
                         accent={dxy.symbol === 'DXY' ? colors.dxy : colors.accent}
                         label={dxy.symbol}
                         showTimeframes
-                        onTimeframeChange={(t) => void changeDxyTf(t)}
+                        onTimeframeChange={(nextTf) => void changeDxyTf(nextTf)}
                         onSymbolChange={(s) => void changeHeroSymbol(s)}
                         phone={phone}
                         panControls
@@ -1501,7 +1501,7 @@ export function TerminalScreen() {
                       fill={phone}
                       panSpeed={panSpeed}
                       liveTick={liveTicks[f.symbol] ?? null}
-                      onTimeframeChange={(t) => void changeFrameTf(i, t)}
+                      onTimeframeChange={(nextTf) => void changeFrameTf(i, nextTf)}
                       onSymbolChange={(s) => void changeFrameSymbol(i, s)}
                       onFocus={() => {
                         pickSymbol(f.symbol, frameTfs[i]);
@@ -1544,12 +1544,12 @@ export function TerminalScreen() {
         lastPrice={price}
         candles={series?.candles}
         activeTool={tool}
-        onTool={(t) => {
-          setTool(t);
+        onTool={(nextTool) => {
+          setTool(nextTool);
           if (phone) {
             // لا توجد لوحة رسم جانبية على الهاتف؛ افتح الشارت بملء الشاشة جاهزاً لهذه الأداة
             setDockTab(null);
-            openFocus(symbol, tf, { tool: t });
+            openFocus(symbol, tf, { tool: nextTool });
           }
         }}
         activeLens={lens}
@@ -1565,8 +1565,8 @@ export function TerminalScreen() {
         candles={series?.candles}
         activeIndicators={indicators}
         activeKind={kind}
-        onPickDraw={(t) => {
-          setTool(t);
+        onPickDraw={(nextTool) => {
+          setTool(nextTool);
           setEdgePanel(null);
         }}
         onToggleIndicator={(id) => {
