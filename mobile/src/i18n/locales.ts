@@ -316,6 +316,56 @@ export type Dict = {
   layoutApplyA11yPrefix: string;
   layoutDeleteConfirmTitle: string;
   layoutDeleteA11yPrefix: string;
+  coursesTitle: string;
+  coursesSub: string;
+  coursesStaleNote: string;
+  coursesNoteTitle: string;
+  coursesNoteText: string;
+  coursesSchoolA11yPrefix: string;
+  coursesLevelsWord: string;
+  coursesLecturesUnitWord: string;
+  coursesVoiceWord: string;
+  coursesAudioLabel: string;
+  coursesFallbackNote: string;
+  coursesLevelWord: string;
+  coursesLectureA11yPrefix: string;
+  coursesMinuteWord: string;
+  coursesMinuteAbbrev: string;
+  coursesFullLectureWord: string;
+  coursesBackToSchoolsA11y: string;
+  coursesBack: string;
+  lectureClose: string;
+  lectureCloseA11y: string;
+  lectureLevelWord: string;
+  lectureLoadFailedNote: string;
+  lectureFullScreenTag: string;
+  lectureVoicePausedForQ: string;
+  lecturePreparingVoice: string;
+  lectureExplainingNow: string;
+  lectureVoicePlayError: string;
+  lectureChartLabel: string;
+  lectureHideChart: string;
+  lectureHideChartA11y: string;
+  lectureShowChart: string;
+  lectureVoiceStopped: string;
+  lectureGenerating: string;
+  lectureVoiceActive: string;
+  lectureSegmentWord: string;
+  lectureCompleteBadge: string;
+  lectureClarifyTitle: string;
+  lectureClarifyPausedLine: string;
+  lectureClarifyQuestionLabel: string;
+  lectureClarifyFocusLine: string;
+  lectureResume: string;
+  lecturePrev: string;
+  lecturePrevA11y: string;
+  lectureNext: string;
+  lectureNextA11y: string;
+  lectureInterruptLabel: string;
+  lectureQuestionPlaceholder: string;
+  lectureQuestionA11y: string;
+  lectureAskBtn: string;
+  lectureAskA11y: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -648,6 +698,58 @@ const ar: Dict = {
   layoutApplyA11yPrefix: 'تطبيق تخطيط',
   layoutDeleteConfirmTitle: 'حذف التخطيط؟',
   layoutDeleteA11yPrefix: 'حذف تخطيط',
+  coursesTitle: 'الأكاديمية',
+  coursesSub: 'شاشة كاملة · شرح صوتي · أوقف واسأل عن أي جزء',
+  coursesStaleNote: 'تعذر تحديث قائمة المدارس — تُعرض بيانات محفوظة',
+  coursesNoteTitle: 'تصنيف مهم',
+  coursesNoteText:
+    'BOS و CHOCH ضمن جماعة Order Block و Fair Value Gap داخل مدرسة ICT/SMC — وليست مدرسة منفصلة.',
+  coursesSchoolA11yPrefix: 'مدرسة',
+  coursesLevelsWord: 'مستويات',
+  coursesLecturesUnitWord: 'محاضرة',
+  coursesVoiceWord: 'صوت',
+  coursesAudioLabel: 'الصوت',
+  coursesFallbackNote: 'تعذر تحميل المنهج الكامل — تُعرض محاضرة افتتاحية مؤقتة فقط',
+  coursesLevelWord: 'المستوى',
+  coursesLectureA11yPrefix: 'محاضرة',
+  coursesMinuteWord: 'دقيقة',
+  coursesMinuteAbbrev: 'د',
+  coursesFullLectureWord: 'محاضرة كاملة',
+  coursesBackToSchoolsA11y: 'رجوع لقائمة المدارس',
+  coursesBack: 'رجوع',
+  lectureClose: 'إغلاق',
+  lectureCloseA11y: 'إغلاق المحاضرة',
+  lectureLevelWord: 'مستوى',
+  lectureLoadFailedNote: 'تعذر تحميل هذه المحاضرة — يُعرض محتوى تجريبي عام بدلاً منها',
+  lectureFullScreenTag: 'شاشة كاملة',
+  lectureVoicePausedForQ: 'متوقف للسؤال',
+  lecturePreparingVoice: 'يجهّز الصوت...',
+  lectureExplainingNow: 'يشرح الآن',
+  lectureVoicePlayError: 'تعذر تشغيل الصوت',
+  lectureChartLabel: 'شارت تفاعلي',
+  lectureHideChart: 'إخفاء',
+  lectureHideChartA11y: 'إخفاء الشارت التفاعلي',
+  lectureShowChart: 'إظهار الشارت التفاعلي',
+  lectureVoiceStopped: 'الصوت متوقف',
+  lectureGenerating: 'جاري التوليد',
+  lectureVoiceActive: 'شرح صوتي نشط',
+  lectureSegmentWord: 'مقطع',
+  lectureCompleteBadge: '🎉 أنهيت هذه المحاضرة',
+  lectureClarifyTitle: 'توضيح بعد إيقاف الشرح',
+  lectureClarifyPausedLine: 'توقف الشرح مؤقتاً.',
+  lectureClarifyQuestionLabel: 'سؤالك:',
+  lectureClarifyFocusLine:
+    'ركّز على الفكرة العملية على الشاشة، ثم نتابع من نفس المقطع.',
+  lectureResume: 'متابعة المحاضرة',
+  lecturePrev: 'السابق',
+  lecturePrevA11y: 'الفقرة السابقة',
+  lectureNext: 'التالي',
+  lectureNextA11y: 'الفقرة التالية',
+  lectureInterruptLabel: 'أوقف الشرح واسأل عن جزء غير واضح',
+  lectureQuestionPlaceholder: 'مثال: لم أفهم CHOCH...',
+  lectureQuestionA11y: 'سؤال أثناء إيقاف الشرح',
+  lectureAskBtn: 'اسأل',
+  lectureAskA11y: 'إرسال السؤال',
 };
 
 const enUS: Dict = {
@@ -975,6 +1077,58 @@ const enUS: Dict = {
   layoutApplyA11yPrefix: 'Apply layout',
   layoutDeleteConfirmTitle: 'Delete the layout?',
   layoutDeleteA11yPrefix: 'Delete layout',
+  coursesTitle: 'Academy',
+  coursesSub: 'Full screen · voice narration · pause and ask about any part',
+  coursesStaleNote: "Couldn't refresh the school list — showing saved data",
+  coursesNoteTitle: 'Important classification',
+  coursesNoteText:
+    'BOS and CHOCH belong to the Order Block and Fair Value Gap group inside the ICT/SMC school — they are not a separate school.',
+  coursesSchoolA11yPrefix: 'School',
+  coursesLevelsWord: 'levels',
+  coursesLecturesUnitWord: 'lectures',
+  coursesVoiceWord: 'Voice',
+  coursesAudioLabel: 'Audio',
+  coursesFallbackNote: "Couldn't load the full curriculum — showing only a temporary introductory lecture",
+  coursesLevelWord: 'Level',
+  coursesLectureA11yPrefix: 'Lecture',
+  coursesMinuteWord: 'minute',
+  coursesMinuteAbbrev: 'min',
+  coursesFullLectureWord: 'full lecture',
+  coursesBackToSchoolsA11y: 'Back to the school list',
+  coursesBack: 'Back',
+  lectureClose: 'Close',
+  lectureCloseA11y: 'Close the lecture',
+  lectureLevelWord: 'level',
+  lectureLoadFailedNote: "Couldn't load this lecture — showing generic sample content instead",
+  lectureFullScreenTag: 'Full screen',
+  lectureVoicePausedForQ: 'Paused for a question',
+  lecturePreparingVoice: 'Preparing the audio...',
+  lectureExplainingNow: 'Explaining now',
+  lectureVoicePlayError: "Couldn't play the audio",
+  lectureChartLabel: 'Interactive chart',
+  lectureHideChart: 'Hide',
+  lectureHideChartA11y: 'Hide the interactive chart',
+  lectureShowChart: 'Show the interactive chart',
+  lectureVoiceStopped: 'Audio stopped',
+  lectureGenerating: 'Generating...',
+  lectureVoiceActive: 'Voice narration active',
+  lectureSegmentWord: 'Segment',
+  lectureCompleteBadge: '🎉 You finished this lecture',
+  lectureClarifyTitle: 'Clarification after pausing',
+  lectureClarifyPausedLine: 'The narration has been paused for a moment.',
+  lectureClarifyQuestionLabel: 'Your question:',
+  lectureClarifyFocusLine:
+    "Focus on the practical idea on the screen, then we'll continue from the same segment.",
+  lectureResume: 'Resume the lecture',
+  lecturePrev: 'Previous',
+  lecturePrevA11y: 'Previous segment',
+  lectureNext: 'Next',
+  lectureNextA11y: 'Next segment',
+  lectureInterruptLabel: 'Pause the narration and ask about an unclear part',
+  lectureQuestionPlaceholder: "Example: I didn't understand CHOCH...",
+  lectureQuestionA11y: 'Question while the narration is paused',
+  lectureAskBtn: 'Ask',
+  lectureAskA11y: 'Send the question',
 };
 
 const enGB: Dict = {
@@ -1323,6 +1477,58 @@ const ku: Dict = {
   layoutApplyA11yPrefix: 'جێبەجێکردنی نەخشەسازی',
   layoutDeleteConfirmTitle: 'نەخشەسازییەکە بسڕدرێتەوە؟',
   layoutDeleteA11yPrefix: 'سڕینەوەی نەخشەسازی',
+  coursesTitle: 'ئەکادیمی',
+  coursesSub: 'شاشەی تەواو · ڕوونکردنەوەی دەنگی · ڕاوەستە و پرسیار بکە دەربارەی هەر بەشێک',
+  coursesStaleNote: 'نەکرا لیستی قوتابخانەکان نوێبکرێتەوە — زانیاری پاشەکەوتکراو پیشان دەدرێت',
+  coursesNoteTitle: 'پۆلێنبەندییەکی گرنگ',
+  coursesNoteText:
+    'BOS و CHOCH پەیوەستن بە کۆمەڵەی Order Block و Fair Value Gap ناو قوتابخانەی ICT/SMC — قوتابخانەیەکی جیاواز نین.',
+  coursesSchoolA11yPrefix: 'قوتابخانە',
+  coursesLevelsWord: 'ئاست',
+  coursesLecturesUnitWord: 'وانە',
+  coursesVoiceWord: 'دەنگی',
+  coursesAudioLabel: 'دەنگ',
+  coursesFallbackNote: 'نەکرا کوریکولەی تەواو باربکرێت — تەنها وانەیەکی سەرەتایی کاتی پیشان دەدرێت',
+  coursesLevelWord: 'ئاست',
+  coursesLectureA11yPrefix: 'وانە',
+  coursesMinuteWord: 'خولەک',
+  coursesMinuteAbbrev: 'خولەک',
+  coursesFullLectureWord: 'وانەی تەواو',
+  coursesBackToSchoolsA11y: 'گەڕانەوە بۆ لیستی قوتابخانەکان',
+  coursesBack: 'گەڕانەوە',
+  lectureClose: 'داخستن',
+  lectureCloseA11y: 'داخستنی وانەکە',
+  lectureLevelWord: 'ئاست',
+  lectureLoadFailedNote: 'نەکرا ئەم وانەیە باربکرێت — لە جیاتی ئەوە ناوەڕۆکی نموونەیی گشتی پیشان دەدرێت',
+  lectureFullScreenTag: 'شاشەی تەواو',
+  lectureVoicePausedForQ: 'ڕاوەستاوە بۆ پرسیارێک',
+  lecturePreparingVoice: 'دەنگ ئامادە دەکرێت...',
+  lectureExplainingNow: 'ئێستا ڕوون دەکاتەوە',
+  lectureVoicePlayError: 'نەکرا دەنگ لێبدرێت',
+  lectureChartLabel: 'چارتی کارلێککەرەوە',
+  lectureHideChart: 'شاردنەوە',
+  lectureHideChartA11y: 'شاردنەوەی چارتی کارلێککەرەوە',
+  lectureShowChart: 'پیشاندانی چارتی کارلێککەرەوە',
+  lectureVoiceStopped: 'دەنگ ڕاوەستا',
+  lectureGenerating: 'دروستکردن لە جێبەجێکردندایە...',
+  lectureVoiceActive: 'ڕوونکردنەوەی دەنگی چالاکە',
+  lectureSegmentWord: 'بەش',
+  lectureCompleteBadge: '🎉 ئەم وانەیەت تەواو کرد',
+  lectureClarifyTitle: 'ڕوونکردنەوە دوای ڕاگرتنی ڕوونکردنەوەکە',
+  lectureClarifyPausedLine: 'ڕوونکردنەوەکە بۆ ماوەیەک ڕاگیرا.',
+  lectureClarifyQuestionLabel: 'پرسیارەکەت:',
+  lectureClarifyFocusLine:
+    'سەرنج بدە بیرۆکە کارەکییەکە لەسەر شاشەکە، پاشان لە هەمان بەشەوە بەردەوام دەبین.',
+  lectureResume: 'بەردەوامبوون لە وانەکە',
+  lecturePrev: 'پێشوو',
+  lecturePrevA11y: 'بەشی پێشوو',
+  lectureNext: 'دواتر',
+  lectureNextA11y: 'بەشی دواتر',
+  lectureInterruptLabel: 'ڕوونکردنەوەکە ڕابگرە و پرسیار بکە دەربارەی بەشێکی ناڕوون',
+  lectureQuestionPlaceholder: 'نموونە: تێنەگەیشتم لە CHOCH...',
+  lectureQuestionA11y: 'پرسیار لە کاتی ڕاگرتنی ڕوونکردنەوەکە',
+  lectureAskBtn: 'بپرسە',
+  lectureAskA11y: 'ناردنی پرسیارەکە',
 };
 
 export const DICTS: Record<LangId, Dict> = {

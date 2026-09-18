@@ -23,6 +23,7 @@ import { MatrixChart } from '../chart/MatrixChart';
 import { academyChartFor } from '../chart/academyChart';
 import { mockSeries } from '../mock';
 import { useAuth } from '../context/AuthContext';
+import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
   schoolId: string;
@@ -31,6 +32,8 @@ type Props = {
 };
 
 export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const { user } = useAuth();
   const [lecture, setLecture] = useState<AcademyLecture | null>(null);
   const [segIndex, setSegIndex] = useState(0);
@@ -185,7 +188,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         soundRef.current = sound;
       } catch (e) {
         if (!cancelled) {
-          setVoiceError(e instanceof Error ? e.message : 'تعذر تشغيل الصوت');
+          setVoiceError(e instanceof Error ? e.message : t.lectureVoicePlayError);
         }
       } finally {
         if (!cancelled) setVoiceBusy(false);
@@ -196,7 +199,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [current?.id, current?.narration, paused, clarification]);
+  }, [current?.id, current?.narration, paused, clarification, t.lectureVoicePlayError]);
 
   const stopVoice = async () => {
     try {
@@ -227,7 +230,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
       setQuestion('');
     } catch {
       setClarification(
-        `توقف الشرح مؤقتاً.\n\nسؤالك: ${q}\n\nركّز على الفكرة العملية على الشاشة، ثم نتابع من نفس المقطع.`
+        `${t.lectureClarifyPausedLine}\n\n${t.lectureClarifyQuestionLabel} ${q}\n\n${t.lectureClarifyFocusLine}`
       );
       setQuestion('');
     } finally {
@@ -272,7 +275,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.top}>
+      <View style={[styles.top, rtl && styles.topRtl]}>
         <Pressable
           accessibilityRole="button"
           onPress={onClose}
@@ -283,30 +286,30 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
             }
           }
           hitSlop={8}
-          accessibilityLabel="إغلاق المحاضرة"
+          accessibilityLabel={t.lectureCloseA11y}
         >
-          <Text style={styles.back}>إغلاق</Text>
+          <Text style={styles.back}>{t.lectureClose}</Text>
         </Pressable>
         <Text style={styles.meta}>
-          {lecture?.school_name} · مستوى {lecture?.level ?? '-'}
+          {lecture?.school_name} · {t.lectureLevelWord} {lecture?.level ?? '-'}
         </Text>
       </View>
 
-      <Text style={styles.title}>{lecture?.title}</Text>
+      <Text style={[styles.title, { textAlign: align }]}>{lecture?.title}</Text>
       {lectureFallback ? (
-        <Text style={styles.voiceErr}>تعذر تحميل هذه المحاضرة — يُعرض محتوى تجريبي عام بدلاً منها</Text>
+        <Text style={[styles.voiceErr, { textAlign: align }]}>{t.lectureLoadFailedNote}</Text>
       ) : null}
-      <Text style={styles.voiceHint}>
-        شاشة كاملة · صوت ElevenLabs ·{' '}
-        {paused ? 'متوقف للسؤال' : voiceBusy ? 'يجهّز الصوت...' : 'يشرح الآن'}
+      <Text style={[styles.voiceHint, { textAlign: align }]}>
+        {t.lectureFullScreenTag} · {t.coursesVoiceWord} ElevenLabs ·{' '}
+        {paused ? t.lectureVoicePausedForQ : voiceBusy ? t.lecturePreparingVoice : t.lectureExplainingNow}
       </Text>
-      {voiceError ? <Text style={styles.voiceErr}>{voiceError}</Text> : null}
+      {voiceError ? <Text style={[styles.voiceErr, { textAlign: align }]}>{voiceError}</Text> : null}
 
       {showChart && chartSeries ? (
         <View style={styles.chartBox}>
-          <View style={styles.chartHead}>
+          <View style={[styles.chartHead, rtl && styles.chartHeadRtl]}>
             <Text style={styles.chartLabel}>
-              شارت تفاعلي · {chartMeta.symbol} · {chartMeta.tf}
+              {t.lectureChartLabel} · {chartMeta.symbol} · {chartMeta.tf}
             </Text>
             <Pressable
               accessibilityRole="button"
@@ -318,9 +321,9 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
                 }
               }
               hitSlop={8}
-              accessibilityLabel="إخفاء الشارت التفاعلي"
+              accessibilityLabel={t.lectureHideChartA11y}
             >
-              <Text style={styles.chartHide}>إخفاء</Text>
+              <Text style={styles.chartHide}>{t.lectureHideChart}</Text>
             </Pressable>
           </View>
           <MatrixChart
@@ -342,40 +345,40 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
             }
           }
           hitSlop={8}
-          accessibilityLabel="إظهار الشارت التفاعلي"
+          accessibilityLabel={t.lectureShowChart}
         >
-          <Text style={styles.showChart}>إظهار الشارت التفاعلي</Text>
+          <Text style={[styles.showChart, { textAlign: align }]}>{t.lectureShowChart}</Text>
         </Pressable>
       ) : null}
 
       <View style={styles.bigScreen}>
-        <View style={styles.voiceBar}>
+        <View style={[styles.voiceBar, rtl && styles.voiceBarRtl]}>
           <View style={[styles.voiceDot, (paused || voiceError) && styles.voiceDotPaused]} />
           <Text style={styles.voiceBarText}>
-            {paused ? 'الصوت متوقف' : voiceBusy ? 'جاري التوليد' : 'شرح صوتي نشط'}
+            {paused ? t.lectureVoiceStopped : voiceBusy ? t.lectureGenerating : t.lectureVoiceActive}
           </Text>
         </View>
-        <Text style={styles.screenTitle}>{current?.title || '—'}</Text>
+        <Text style={[styles.screenTitle, { textAlign: align }]}>{current?.title || '—'}</Text>
         <ScrollView style={{ flexGrow: 0, maxHeight: 220 }}>
-          <Text style={styles.screenBody}>{current?.narration}</Text>
+          <Text style={[styles.screenBody, { textAlign: align }]}>{current?.narration}</Text>
         </ScrollView>
         <View style={styles.progressBg}>
           <View style={[styles.progressFill, { width: `${progress}%` }]} />
         </View>
-        <Text style={styles.progressText}>
-          مقطع {segIndex + 1}/{segments.length || 1} · {progress}%
+        <Text style={[styles.progressText, { textAlign: align }]}>
+          {t.lectureSegmentWord} {segIndex + 1}/{segments.length || 1} · {progress}%
         </Text>
         {showComplete ? (
           <View style={styles.completeBadge}>
-            <Text style={styles.completeBadgeText}>🎉 أنهيت هذه المحاضرة</Text>
+            <Text style={styles.completeBadgeText}>{t.lectureCompleteBadge}</Text>
           </View>
         ) : null}
       </View>
 
       {clarification ? (
         <View style={styles.clarifyBox}>
-          <Text style={styles.clarifyTitle}>توضيح بعد إيقاف الشرح</Text>
-          <Text style={styles.clarifyText}>{clarification}</Text>
+          <Text style={[styles.clarifyTitle, { textAlign: align }]}>{t.lectureClarifyTitle}</Text>
+          <Text style={[styles.clarifyText, { textAlign: align }]}>{clarification}</Text>
           <Pressable
             accessibilityRole="button"
             style={({ pressed }) => [
@@ -386,15 +389,15 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               },
             ]}
             onPress={resume}
-            accessibilityLabel="متابعة المحاضرة"
+            accessibilityLabel={t.lectureResume}
             hitSlop={8}
           >
-            <Text style={styles.resumeText}>متابعة المحاضرة</Text>
+            <Text style={styles.resumeText}>{t.lectureResume}</Text>
           </Pressable>
         </View>
       ) : (
         <View style={styles.controls}>
-          <View style={styles.navRow}>
+          <View style={[styles.navRow, rtl && styles.navRowRtl]}>
             <Pressable
               accessibilityRole="button"
               style={({ pressed }) => [
@@ -408,9 +411,9 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               onPress={prev}
               disabled={segIndex === 0 || paused}
               accessibilityState={{ disabled: segIndex === 0 || paused }}
-              accessibilityLabel="الفقرة السابقة"
+              accessibilityLabel={t.lecturePrevA11y}
             >
-              <Text style={styles.navText}>السابق</Text>
+              <Text style={styles.navText}>{t.lecturePrev}</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -425,19 +428,19 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               onPress={next}
               disabled={paused || segIndex >= segments.length - 1}
               accessibilityState={{ disabled: paused || segIndex >= segments.length - 1 }}
-              accessibilityLabel="الفقرة التالية"
+              accessibilityLabel={t.lectureNextA11y}
             >
-              <Text style={styles.navText}>التالي</Text>
+              <Text style={styles.navText}>{t.lectureNext}</Text>
             </Pressable>
           </View>
 
-          <Text style={styles.interruptLabel}>أوقف الشرح واسأل عن جزء غير واضح</Text>
-          <View style={styles.askRow}>
+          <Text style={[styles.interruptLabel, { textAlign: align }]}>{t.lectureInterruptLabel}</Text>
+          <View style={[styles.askRow, rtl && styles.askRowRtl]}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { textAlign: align }]}
               value={question}
               onChangeText={setQuestion}
-              placeholder="مثال: لم أفهم CHOCH..."
+              placeholder={t.lectureQuestionPlaceholder}
               placeholderTextColor={colors.textDim}
               editable={!asking}
               returnKeyType="done"
@@ -445,7 +448,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               clearButtonMode="while-editing"
               keyboardAppearance="dark"
               selectionColor={colors.accent}
-              accessibilityLabel="سؤال أثناء إيقاف الشرح"
+              accessibilityLabel={t.lectureQuestionA11y}
             />
             <Pressable
               accessibilityRole="button"
@@ -460,10 +463,10 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               onPress={interrupt}
               disabled={asking}
               accessibilityState={{ disabled: asking }}
-              accessibilityLabel="إرسال السؤال"
+              accessibilityLabel={t.lectureAskA11y}
               hitSlop={8}
             >
-              <Text style={styles.askText}>{asking ? '...' : 'اسأل'}</Text>
+              <Text style={styles.askText}>{asking ? '...' : t.lectureAskBtn}</Text>
             </Pressable>
           </View>
         </View>
@@ -476,29 +479,27 @@ const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.bg, padding: spacing.md },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   top: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  topRtl: { flexDirection: 'row-reverse' },
   back: { color: colors.accent, fontWeight: '700' },
   meta: { color: colors.textDim, fontSize: 12 },
   title: {
     color: colors.text,
     fontSize: 20,
     fontWeight: '800',
-    textAlign: 'right',
     marginTop: spacing.md,
   },
   voiceHint: {
     color: colors.textMuted,
-    textAlign: 'right',
     marginTop: spacing.xs,
     marginBottom: spacing.xs,
     fontSize: 12,
   },
   voiceErr: {
     color: colors.bear,
-    textAlign: 'right',
     fontSize: 11,
     marginBottom: spacing.sm,
   },
@@ -511,16 +512,16 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
   },
   chartHead: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.xs,
   },
+  chartHeadRtl: { flexDirection: 'row-reverse' },
   chartLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   chartHide: { color: colors.accent, fontSize: 11, fontWeight: '700' },
   showChart: {
     color: colors.accent,
-    textAlign: 'right',
     marginBottom: spacing.sm,
     fontWeight: '700',
     fontSize: 12,
@@ -535,11 +536,12 @@ const styles = StyleSheet.create({
     minHeight: 280,
   },
   voiceBar: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     marginBottom: 10,
   },
+  voiceBarRtl: { flexDirection: 'row-reverse' },
   voiceDot: {
     width: 8,
     height: 8,
@@ -552,13 +554,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 18,
     fontWeight: '800',
-    textAlign: 'right',
   },
   screenBody: {
     color: colors.text,
     fontSize: 15,
     lineHeight: 24,
-    textAlign: 'right',
     marginTop: 10,
   },
   progressBg: {
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   progressFill: { height: 5, backgroundColor: colors.accent },
-  progressText: { color: colors.textDim, fontSize: 11, marginTop: spacing.xs, textAlign: 'right' },
+  progressText: { color: colors.textDim, fontSize: 11, marginTop: spacing.xs },
   completeBadge: {
     marginTop: spacing.sm,
     alignSelf: 'flex-end',
@@ -582,7 +582,8 @@ const styles = StyleSheet.create({
   },
   completeBadgeText: { color: colors.warmAccent, fontSize: 11, fontWeight: '800' },
   controls: { marginTop: spacing.md, gap: spacing.sm },
-  navRow: { flexDirection: 'row-reverse', gap: spacing.sm },
+  navRow: { flexDirection: 'row', gap: spacing.sm },
+  navRowRtl: { flexDirection: 'row-reverse' },
   navBtn: {
     flex: 1,
     backgroundColor: colors.bgPanel,
@@ -598,10 +599,10 @@ const styles = StyleSheet.create({
     color: colors.warn,
     fontWeight: '700',
     fontSize: 12,
-    textAlign: 'right',
     marginTop: 6,
   },
-  askRow: { flexDirection: 'row-reverse', gap: spacing.sm },
+  askRow: { flexDirection: 'row', gap: spacing.sm },
+  askRowRtl: { flexDirection: 'row-reverse' },
   input: {
     flex: 1,
     backgroundColor: colors.bgElevated,
@@ -611,7 +612,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     paddingHorizontal: 10,
     paddingVertical: 10,
-    textAlign: 'right',
   },
   askBtn: {
     backgroundColor: colors.warn,
@@ -634,11 +634,10 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
     padding: spacing.md,
   },
-  clarifyTitle: { color: colors.accent, fontWeight: '800', textAlign: 'right' },
+  clarifyTitle: { color: colors.accent, fontWeight: '800' },
   clarifyText: {
     color: colors.text,
     marginTop: spacing.sm,
-    textAlign: 'right',
     lineHeight: 21,
     fontSize: 13,
   },

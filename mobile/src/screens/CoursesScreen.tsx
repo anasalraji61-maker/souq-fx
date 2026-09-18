@@ -19,8 +19,11 @@ import {
   type AcademyLecture,
 } from '../academy';
 import { LectureClassroom } from '../components/LectureClassroom';
+import { useI18n } from '../i18n/I18nContext';
 
 export function CoursesScreen() {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const [schools, setSchools] = useState<AcademySchoolSummary[]>(mockAcademySchools);
   const [school, setSchool] = useState<AcademySchool | null>(null);
   const [loadingSchool, setLoadingSchool] = useState(false);
@@ -99,22 +102,17 @@ export function CoursesScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <StatusBar barStyle="light-content" />
       <View style={styles.header}>
-        <Text style={styles.brand}>الأكاديمية</Text>
-        <Text style={styles.sub}>
-          شاشة كاملة · شرح صوتي · أوقف واسأل عن أي جزء
-        </Text>
+        <Text style={[styles.brand, { textAlign: align }]}>{t.coursesTitle}</Text>
+        <Text style={[styles.sub, { textAlign: align }]}>{t.coursesSub}</Text>
         {schoolsStale ? (
-          <Text style={styles.staleNote}>تعذر تحديث قائمة المدارس — تُعرض بيانات محفوظة</Text>
+          <Text style={[styles.staleNote, { textAlign: align }]}>{t.coursesStaleNote}</Text>
         ) : null}
       </View>
 
       <ScrollView contentContainerStyle={styles.list}>
         <View style={styles.noteBox}>
-          <Text style={styles.noteTitle}>تصنيف مهم</Text>
-          <Text style={styles.noteText}>
-            BOS و CHOCH ضمن جماعة Order Block و Fair Value Gap داخل مدرسة ICT/SMC — وليست مدرسة
-            منفصلة.
-          </Text>
+          <Text style={[styles.noteTitle, { textAlign: align }]}>{t.coursesNoteTitle}</Text>
+          <Text style={[styles.noteText, { textAlign: align }]}>{t.coursesNoteText}</Text>
         </View>
 
         {schools.map((s) => (
@@ -129,19 +127,25 @@ export function CoursesScreen() {
               },
             ]}
             onPress={() => openSchool(s.id)}
-            accessibilityLabel={`مدرسة: ${s.name_ar}`}
+            accessibilityLabel={`${t.coursesSchoolA11yPrefix}: ${s.name_ar}`}
           >
-            <View style={styles.cardTop}>
+            <View style={[styles.cardTop, rtl && styles.cardTopRtl]}>
               <Text style={styles.order}>#{s.order}</Text>
               <Text style={styles.school}>{s.name_ar}</Text>
             </View>
-            <Text style={styles.desc}>{s.summary}</Text>
-            <View style={styles.meta}>
-              <Text style={styles.metaText}>{s.levels_count} مستويات</Text>
-              <Text style={styles.metaText}>{s.lectures_count} محاضرة</Text>
-              <Text style={styles.aiTag}>صوت ElevenLabs</Text>
+            <Text style={[styles.desc, { textAlign: align }]}>{s.summary}</Text>
+            <View style={[styles.meta, rtl && styles.metaRtl]}>
+              <Text style={styles.metaText}>
+                {s.levels_count} {t.coursesLevelsWord}
+              </Text>
+              <Text style={styles.metaText}>
+                {s.lectures_count} {t.coursesLecturesUnitWord}
+              </Text>
+              <Text style={styles.aiTag}>{t.coursesVoiceWord} ElevenLabs</Text>
             </View>
-            <Text style={styles.pipeline}>الصوت: {s.classroom.video_pipeline}</Text>
+            <Text style={[styles.pipeline, { textAlign: align }]}>
+              {t.coursesAudioLabel}: {s.classroom.video_pipeline}
+            </Text>
           </Pressable>
         ))}
       </ScrollView>
@@ -153,18 +157,18 @@ export function CoursesScreen() {
               <ActivityIndicator color={colors.accent} />
             ) : (
               <>
-                <Text style={styles.modalSchool}>{school?.name_ar}</Text>
-                <Text style={styles.modalDesc}>{school?.summary}</Text>
+                <Text style={[styles.modalSchool, { textAlign: align }]}>{school?.name_ar}</Text>
+                <Text style={[styles.modalDesc, { textAlign: align }]}>{school?.summary}</Text>
                 {schoolFallback ? (
-                  <Text style={styles.fallbackNote}>
-                    تعذر تحميل المنهج الكامل — تُعرض محاضرة افتتاحية مؤقتة فقط
+                  <Text style={[styles.fallbackNote, { textAlign: align }]}>
+                    {t.coursesFallbackNote}
                   </Text>
                 ) : null}
                 <ScrollView style={{ maxHeight: 420 }} contentContainerStyle={{ gap: spacing.md }}>
                   {school?.levels.map((lv) => (
                     <View key={lv.level} style={styles.levelBox}>
-                      <Text style={styles.levelTitle}>
-                        المستوى {lv.level}: {lv.title}
+                      <Text style={[styles.levelTitle, { textAlign: align }]}>
+                        {t.coursesLevelWord} {lv.level}: {lv.title}
                       </Text>
                       {lv.lectures.map((lec) => (
                         <Pressable
@@ -182,10 +186,12 @@ export function CoursesScreen() {
                             setSchool(null);
                             setActiveLecture({ schoolId: sid, lectureId: lec.id });
                           }}
-                          accessibilityLabel={`محاضرة: ${lec.title} · ${lec.duration_min} دقيقة`}
+                          accessibilityLabel={`${t.coursesLectureA11yPrefix}: ${lec.title} · ${lec.duration_min} ${t.coursesMinuteWord}`}
                         >
-                          <Text style={styles.lecTitle}>{lec.title}</Text>
-                          <Text style={styles.lecMeta}>{lec.duration_min} د · محاضرة كاملة</Text>
+                          <Text style={[styles.lecTitle, { textAlign: align }]}>{lec.title}</Text>
+                          <Text style={[styles.lecMeta, { textAlign: align }]}>
+                            {lec.duration_min} {t.coursesMinuteAbbrev} · {t.coursesFullLectureWord}
+                          </Text>
                         </Pressable>
                       ))}
                     </View>
@@ -202,9 +208,9 @@ export function CoursesScreen() {
                   ]}
                   onPress={() => setSchool(null)}
                   hitSlop={8}
-                  accessibilityLabel="رجوع لقائمة المدارس"
+                  accessibilityLabel={t.coursesBackToSchoolsA11y}
                 >
-                  <Text style={styles.closeText}>رجوع</Text>
+                  <Text style={styles.closeText}>{t.coursesBack}</Text>
                 </Pressable>
               </>
             )}
@@ -223,13 +229,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
   },
-  brand: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: 'right' },
-  sub: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs, textAlign: 'right' },
+  brand: { color: colors.text, fontSize: 24, fontWeight: '800' },
+  sub: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs },
   staleNote: {
     color: colors.warn,
     fontSize: 10,
     fontWeight: '700',
-    textAlign: 'right',
     marginTop: 6,
   },
   list: { padding: spacing.md, gap: spacing.md, paddingBottom: 40 },
@@ -240,8 +245,8 @@ const styles = StyleSheet.create({
     borderColor: colors.warn,
     padding: spacing.md,
   },
-  noteTitle: { color: colors.warn, fontWeight: '800', textAlign: 'right' },
-  noteText: { color: colors.text, marginTop: 6, textAlign: 'right', lineHeight: 20, fontSize: 13 },
+  noteTitle: { color: colors.warn, fontWeight: '800' },
+  noteText: { color: colors.text, marginTop: 6, lineHeight: 20, fontSize: 13 },
   card: {
     backgroundColor: colors.bgElevated,
     borderRadius: radii.md,
@@ -250,26 +255,27 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   cardTop: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  cardTopRtl: { flexDirection: 'row-reverse' },
   order: { color: colors.textDim, fontWeight: '700' },
   school: { color: colors.accent, fontWeight: '800', fontSize: 16 },
   desc: {
     color: colors.textMuted,
     fontSize: 13,
     marginTop: spacing.sm,
-    textAlign: 'right',
     lineHeight: 20,
   },
   meta: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     gap: 10,
     marginTop: 10,
     alignItems: 'center',
     flexWrap: 'wrap',
   },
+  metaRtl: { flexDirection: 'row-reverse' },
   metaText: { color: colors.textDim, fontSize: 12 },
   aiTag: {
     color: colors.dxy,
@@ -280,7 +286,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 6,
   },
-  pipeline: { color: colors.textDim, fontSize: 11, marginTop: spacing.sm, textAlign: 'right' },
+  pipeline: { color: colors.textDim, fontSize: 11, marginTop: spacing.sm },
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'flex-end' },
   modal: {
     backgroundColor: colors.bgElevated,
@@ -291,18 +297,16 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     maxHeight: '88%',
   },
-  modalSchool: { color: colors.accent, fontWeight: '800', fontSize: 18, textAlign: 'right' },
+  modalSchool: { color: colors.accent, fontWeight: '800', fontSize: 18 },
   modalDesc: {
     color: colors.textMuted,
     marginTop: spacing.sm,
     marginBottom: spacing.md,
-    textAlign: 'right',
     lineHeight: 20,
   },
   fallbackNote: {
     color: colors.warn,
     fontSize: 12,
-    textAlign: 'right',
     marginTop: -6,
     marginBottom: spacing.md,
   },
@@ -314,7 +318,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
   },
-  levelTitle: { color: colors.text, fontWeight: '800', textAlign: 'right' },
+  levelTitle: { color: colors.text, fontWeight: '800' },
   lecRow: {
     backgroundColor: colors.bgElevated,
     borderRadius: radii.sm,
@@ -322,8 +326,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  lecTitle: { color: colors.text, fontWeight: '700', textAlign: 'right' },
-  lecMeta: { color: colors.textDim, fontSize: 11, marginTop: spacing.xs, textAlign: 'right' },
+  lecTitle: { color: colors.text, fontWeight: '700' },
+  lecMeta: { color: colors.textDim, fontSize: 11, marginTop: spacing.xs },
   close: {
     marginTop: spacing.lg,
     backgroundColor: colors.accent,
