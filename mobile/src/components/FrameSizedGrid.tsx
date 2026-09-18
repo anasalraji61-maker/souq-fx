@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, radii, spacing, buttons } from '../theme';
+import { useI18n } from '../i18n/I18nContext';
 
 /** نفس أبعاد فريمات الشارت (size=large) */
 export const FRAME_CHART_H = 280;
@@ -100,6 +101,7 @@ export function FrameSizedGrid({
   showAll = false,
   defaultOrder,
 }: Props) {
+  const { t } = useI18n();
   const { width } = useWindowDimensions();
   const phone = width < 700;
   /** تعبئة الشاشة لشارتات المحطة فقط — ليست لشبكة الأدوات متعددة اللوحات (showAll) */
@@ -393,7 +395,7 @@ export function FrameSizedGrid({
   const phoneModeToggle = phone && !showAll && (
     <View style={styles.phoneModeSwitcher}>
       <View style={styles.phoneModeTag}>
-        <Text style={styles.phoneModeTagText}>الفريمات</Text>
+        <Text style={styles.phoneModeTagText}>{t.gridFramesWord}</Text>
       </View>
       <Pressable
         accessibilityRole="button"
@@ -403,10 +405,10 @@ export function FrameSizedGrid({
           phoneMode === 'grid' && styles.phoneModeBtnActive,
           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
         ]}
-        accessibilityLabel="عرض الفريمات كمربعات"
+        accessibilityLabel={t.gridSquaresA11y}
       >
         <Text style={[styles.phoneModeText, phoneMode === 'grid' && styles.phoneModeTextActive]}>
-          المربعات
+          {t.gridSquaresWord}
         </Text>
       </Pressable>
       <Pressable
@@ -417,10 +419,10 @@ export function FrameSizedGrid({
           phoneMode === 'stack' && styles.phoneModeBtnActive,
           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
         ]}
-        accessibilityLabel="عرض الفريمات كمستطيلات"
+        accessibilityLabel={t.gridRectanglesA11y}
       >
         <Text style={[styles.phoneModeText, phoneMode === 'stack' && styles.phoneModeTextActive]}>
-          المستطيلات
+          {t.gridRectanglesWord}
         </Text>
       </Pressable>
     </View>
