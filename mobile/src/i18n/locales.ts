@@ -540,6 +540,39 @@ export type Dict = {
   dsLastPriceWord: string;
   dsMarketOpen: string;
   dsMarketClosed: string;
+  // chart/MatrixChart.tsx — نصوص الشارت والمرسى (i18n الشارت، 2026-09-20)
+  mcMonths: string[];
+  mcPrimaryLane: string;
+  mcMeasureBarsWord: string;
+  mcNoteDefault: string;
+  mcSnapshotSaved: string;
+  mcSnapshotFailed: string;
+  mcTemplateDefaultName: string;
+  mcTemplateSaved: string;
+  mcClearAllTitle: string;
+  mcClearAllBody: string;
+  mcClearWord: string;
+  mcHintDraw: string;
+  mcHintNavigate: string;
+  mcZoomOutA11y: string;
+  mcZoomInA11y: string;
+  mcPanBackA11y: string;
+  mcPanForwardA11y: string;
+  mcReplayModeA11y: string;
+  mcReplayStepBackA11y: string;
+  mcReplayPauseA11y: string;
+  mcReplayPlayA11y: string;
+  mcReplayStepFwdA11y: string;
+  mcMagnetA11y: string;
+  mcDockTitle: string;
+  mcNoPineLine: string;
+  mcExportPng: string;
+  mcSaveTemplate: string;
+  mcDeleteDrawingTitle: string;
+  mcDeleteDrawingBody: string;
+  mcAlertLine: string;
+  mcAlertZone: string;
+  mcAlertAtLineLevel: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -1099,6 +1132,52 @@ const ar: Dict = {
   dsLastPriceWord: 'آخر سعر',
   dsMarketOpen: 'السوق مفتوح',
   dsMarketClosed: 'السوق مغلق',
+  // chart/MatrixChart.tsx (i18n الشارت, 2026-09-20)
+  mcMonths: [
+    'يناير',
+    'فبراير',
+    'مارس',
+    'أبريل',
+    'مايو',
+    'يونيو',
+    'يوليو',
+    'أغسطس',
+    'سبتمبر',
+    'أكتوبر',
+    'نوفمبر',
+    'ديسمبر',
+  ],
+  mcPrimaryLane: 'أساسي',
+  mcMeasureBarsWord: 'شموع',
+  mcNoteDefault: 'ملاحظة',
+  mcSnapshotSaved: 'تم حفظ لقطة الشارت',
+  mcSnapshotFailed: 'تعذر تصدير الشارت',
+  mcTemplateDefaultName: 'افتراضي',
+  mcTemplateSaved: 'تم حفظ قالب الشارت',
+  mcClearAllTitle: 'مسح كل الرسومات؟',
+  mcClearAllBody: 'سيتم حذف كل عناصر الرسم بهذا الرمز/الإطار الزمني',
+  mcClearWord: 'مسح',
+  mcHintDraw: 'اسحب لرسم · يُحفظ تلقائياً',
+  mcHintNavigate: 'اسحب الشموع للتنقل · واسحب محوري السعر والزمن للتكبير',
+  mcZoomOutA11y: 'تصغير',
+  mcZoomInA11y: 'تكبير',
+  mcPanBackA11y: 'تحريك للخلف',
+  mcPanForwardA11y: 'تحريك للأمام',
+  mcReplayModeA11y: 'وضع الإعادة',
+  mcReplayStepBackA11y: 'خطوة إعادة للخلف',
+  mcReplayPauseA11y: 'إيقاف الإعادة',
+  mcReplayPlayA11y: 'تشغيل الإعادة',
+  mcReplayStepFwdA11y: 'خطوة إعادة للأمام',
+  mcMagnetA11y: 'الالتصاق بالشبكة',
+  mcDockTitle: 'مرسى الأدوات · MATRIX',
+  mcNoPineLine: 'بدون خط Pine',
+  mcExportPng: 'تصدير PNG',
+  mcSaveTemplate: 'حفظ قالب',
+  mcDeleteDrawingTitle: 'حذف الرسم؟',
+  mcDeleteDrawingBody: 'سيُحذف عنصر الرسم المحدَّد من الشارت',
+  mcAlertLine: 'تنبيه خط',
+  mcAlertZone: 'تنبيه منطقة',
+  mcAlertAtLineLevel: 'تنبيه عند مستوى الخط الحالي',
 };
 
 const enUS: Dict = {
@@ -1653,6 +1732,52 @@ const enUS: Dict = {
   dsLastPriceWord: 'Last price',
   dsMarketOpen: 'Market open',
   dsMarketClosed: 'Market closed',
+  // chart/MatrixChart.tsx (i18n الشارت, 2026-09-20)
+  mcMonths: [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ],
+  mcPrimaryLane: 'Primary',
+  mcMeasureBarsWord: 'bars',
+  mcNoteDefault: 'Note',
+  mcSnapshotSaved: 'Chart snapshot saved',
+  mcSnapshotFailed: 'Could not export the chart',
+  mcTemplateDefaultName: 'Default',
+  mcTemplateSaved: 'Chart template saved',
+  mcClearAllTitle: 'Clear all drawings?',
+  mcClearAllBody: 'Every drawing object on this symbol/timeframe will be deleted',
+  mcClearWord: 'Clear',
+  mcHintDraw: 'Drag to draw · saved automatically',
+  mcHintNavigate: 'Drag the candles to pan · drag the price and time axes to zoom',
+  mcZoomOutA11y: 'Zoom out',
+  mcZoomInA11y: 'Zoom in',
+  mcPanBackA11y: 'Pan back',
+  mcPanForwardA11y: 'Pan forward',
+  mcReplayModeA11y: 'Replay mode',
+  mcReplayStepBackA11y: 'Replay step back',
+  mcReplayPauseA11y: 'Pause replay',
+  mcReplayPlayA11y: 'Play replay',
+  mcReplayStepFwdA11y: 'Replay step forward',
+  mcMagnetA11y: 'Snap to grid',
+  mcDockTitle: 'Tool dock · MATRIX',
+  mcNoPineLine: 'No Pine line',
+  mcExportPng: 'Export PNG',
+  mcSaveTemplate: 'Save template',
+  mcDeleteDrawingTitle: 'Delete drawing?',
+  mcDeleteDrawingBody: 'The selected drawing object will be removed from the chart',
+  mcAlertLine: 'Line alert',
+  mcAlertZone: 'Zone alert',
+  mcAlertAtLineLevel: 'Alert at the current line level',
 };
 
 const enGB: Dict = {
@@ -2228,6 +2353,52 @@ const ku: Dict = {
   dsLastPriceWord: 'دوایین نرخ',
   dsMarketOpen: 'بازاڕ کراوەیە',
   dsMarketClosed: 'بازاڕ داخراوە',
+  // chart/MatrixChart.tsx (i18n الشارت, 2026-09-20)
+  mcMonths: [
+    'ژانویە',
+    'شوبات',
+    'ئازار',
+    'نیسان',
+    'ئایار',
+    'حوزەیران',
+    'تەمووز',
+    'ئاب',
+    'ئەیلوول',
+    'تشرینی یەکەم',
+    'تشرینی دووەم',
+    'کانوونی یەکەم',
+  ],
+  mcPrimaryLane: 'سەرەکی',
+  mcMeasureBarsWord: 'مۆم',
+  mcNoteDefault: 'تێبینی',
+  mcSnapshotSaved: 'وێنەی چارت پاشەکەوت کرا',
+  mcSnapshotFailed: 'نەتوانرا چارت هەناردە بکرێت',
+  mcTemplateDefaultName: 'بنەڕەت',
+  mcTemplateSaved: 'ڕووکاری چارت پاشەکەوت کرا',
+  mcClearAllTitle: 'سڕینەوەی هەموو کێشانەکان؟',
+  mcClearAllBody: 'هەموو توخمەکانی کێشان بۆ ئەم هێما/ماوە کاتییە دەسڕێنەوە',
+  mcClearWord: 'سڕینەوە',
+  mcHintDraw: 'ڕایبکێشە بۆ کێشان · خۆکار پاشەکەوت دەبێت',
+  mcHintNavigate: 'مۆمەکان ڕایبکێشە بۆ جوڵان · تەوەرەی نرخ و کات ڕایبکێشە بۆ زووم',
+  mcZoomOutA11y: 'بچووککردنەوە',
+  mcZoomInA11y: 'گەورەکردن',
+  mcPanBackA11y: 'جوڵان بۆ دواوە',
+  mcPanForwardA11y: 'جوڵان بۆ پێشەوە',
+  mcReplayModeA11y: 'دۆخی دووبارەکردنەوە',
+  mcReplayStepBackA11y: 'هەنگاوی دووبارەکردنەوە بۆ دواوە',
+  mcReplayPauseA11y: 'وەستاندنی دووبارەکردنەوە',
+  mcReplayPlayA11y: 'پێکردنی دووبارەکردنەوە',
+  mcReplayStepFwdA11y: 'هەنگاوی دووبارەکردنەوە بۆ پێشەوە',
+  mcMagnetA11y: 'لکاندن بە تۆڕ',
+  mcDockTitle: 'لەنگەری ئامرازەکان · MATRIX',
+  mcNoPineLine: 'بێ هێڵی Pine',
+  mcExportPng: 'هەناردەی PNG',
+  mcSaveTemplate: 'پاشەکەوتی ڕووکار',
+  mcDeleteDrawingTitle: 'سڕینەوەی کێشان؟',
+  mcDeleteDrawingBody: 'توخمی کێشانی دیاریکراو لە چارتەکە لادەبرێت',
+  mcAlertLine: 'ئاگاداری هێڵ',
+  mcAlertZone: 'ئاگاداری ناوچە',
+  mcAlertAtLineLevel: 'ئاگاداری لە ئاستی هێڵی ئێستا',
 };
 
 export const DICTS: Record<LangId, Dict> = {
