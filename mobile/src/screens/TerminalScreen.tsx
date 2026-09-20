@@ -543,16 +543,21 @@ export function TerminalScreen() {
     [frameSymbols, heroSymbol]
   );
 
-  const loadChart = useCallback(async (sym: string, timeframe: Timeframe) => {
-    try {
-      const s = await api.chart(sym, timeframe);
-      setSeries(s);
-      setOnline(true);
-    } catch {
-      setSeries(mockSeries(sym, BASES[sym] ?? 1, timeframe, 180));
-      setOnline(false);
-    }
-  }, []);
+  const loadChart = useCallback(
+    async (sym: string, timeframe: Timeframe, isStale?: () => boolean) => {
+      try {
+        const s = await api.chart(sym, timeframe);
+        if (isStale?.()) return;
+        setSeries(s);
+        setOnline(true);
+      } catch {
+        if (isStale?.()) return;
+        setSeries(mockSeries(sym, BASES[sym] ?? 1, timeframe, 180));
+        setOnline(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (!prefsReady || focus) return;
@@ -561,10 +566,17 @@ export function TerminalScreen() {
     return () => clearInterval(id);
   }, [prefsReady, frameTfs, dxyTf, loadTerminal, focus]);
 
+  // حارس سباق شبكة: تجاهل ردّ متأخر لرمز/فريم زمني سابق (نفس نمط `alive` المستخدَم بلوحة الاقتباس
+  // أدناه وبـ`FocusChartModal`/`QuadChartModal`) — تبديل سريع بين رموز المراقبة كان يترك آخر رد وصل
+  // (لا آخر رمز مختار فعلياً) هو ما يُعرَض، بصرف النظر عن ترتيب وصول الشبكة الفعلي.
   useEffect(() => {
-    void loadChart(symbol, tf);
-    const id = setInterval(() => void loadChart(symbol, tf), 90_000);
-    return () => clearInterval(id);
+    let alive = true;
+    void loadChart(symbol, tf, () => !alive);
+    const id = setInterval(() => void loadChart(symbol, tf, () => !alive), 90_000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
   }, [symbol, tf, loadChart]);
 
   // سبريد Bid/Ask للرمز الحالي — بند 2 من قائمة الإطلاق (أولوية طارئة، docs/ROADMAP.md)
