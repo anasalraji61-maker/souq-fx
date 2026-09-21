@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   symbolHit: { flexDirection: 'row', alignItems: 'center', gap: 3, flexShrink: 0 },
   symbolCaret: { color: colors.textDim, fontSize: 10, fontWeight: '800' },
   wheelLayer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill, // RN 0.86 أزال absoluteFillObject وقت التشغيل (كان يُنشر undefined فتفقد الطبقة position:absolute)
     zIndex: 50,
     alignItems: 'center',
     justifyContent: 'center',
