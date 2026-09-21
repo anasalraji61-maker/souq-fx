@@ -8,6 +8,7 @@ import {
   subscribeLayoutsSaveError,
   DEFAULT_LAYOUT,
   type TerminalLayout,
+  type LayoutsSaveErrorCode,
 } from '../chart/layoutStore';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
@@ -24,7 +25,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
   const align = rtl ? ('right' as const) : ('left' as const);
   const [layouts, setLayouts] = useState<TerminalLayout[]>([DEFAULT_LAYOUT]);
   const [name, setName] = useState(t.layoutDefaultName);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<LayoutsSaveErrorCode | null>(null);
 
   useEffect(() => {
     // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب اللوحة قبل اكتمال الطلب — نفس نمط
@@ -62,7 +63,9 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
   return (
     <View style={styles.wrap}>
       <Text style={[styles.title, { textAlign: align }]}>{t.layoutsTitle}</Text>
-      {saveError ? <Text style={[styles.saveError, { textAlign: align }]}>{saveError}</Text> : null}
+      {saveError ? (
+        <Text style={[styles.saveError, { textAlign: align }]}>{t[saveError]}</Text>
+      ) : null}
       <TextInput
         style={[styles.input, { textAlign: align }]}
         value={name}

@@ -25,12 +25,17 @@ export type WatchlistStorage = {
 
 type StoredV2 = { v: number; symbols: string[] };
 type Listener = (symbols: string[]) => void;
-type ErrorListener = (message: string | null) => void;
+/** رمز حالة ثابت لا نص معروض — الترجمة بطبقة العرض عبر `t[code]` (نفس المبدأ الموثَّق
+ *  بـchart/dataSource.ts: لا تقارن الواجهة نصاً حرفياً). أسماء الرموز مطابقة لمفاتيح
+ *  Dict بـi18n/locales.ts. */
+export type WatchlistSaveErrorCode = 'wlSaveFailed';
+
+type ErrorListener = (code: WatchlistSaveErrorCode | null) => void;
 
 let storage: WatchlistStorage | null = null;
 let memory: string[] | null = null;
 let lastPersisted: string[] | null = null;
-let saveError: string | null = null;
+let saveError: WatchlistSaveErrorCode | null = null;
 let loadPromise: Promise<string[]> | null = null;
 let opChain: Promise<unknown> = Promise.resolve();
 const listeners = new Set<Listener>();
@@ -62,8 +67,8 @@ function notifyError() {
   }
 }
 
-function setSaveError(msg: string | null) {
-  saveError = msg;
+function setSaveError(code: WatchlistSaveErrorCode | null) {
+  saveError = code;
   notifyError();
 }
 
@@ -100,7 +105,7 @@ export function getWatchlistSnapshot(): string[] | null {
   return memory;
 }
 
-export function getWatchlistSaveError(): string | null {
+export function getWatchlistSaveError(): WatchlistSaveErrorCode | null {
   return saveError;
 }
 
@@ -181,7 +186,7 @@ async function commitUnlocked(next: string[]): Promise<string[]> {
       memory = previous;
       notify();
     }
-    setSaveError('تعذر حفظ قائمة المتابعة');
+    setSaveError('wlSaveFailed');
     return memory ?? previous ?? defaultsWatchlist();
   }
 }

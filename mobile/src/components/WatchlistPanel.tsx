@@ -23,6 +23,7 @@ import {
   resetWatchlistToDefault,
   subscribeWatchlist,
   subscribeWatchlistSaveError,
+  type WatchlistSaveErrorCode,
 } from '../chart/watchlistStore';
 
 type Props = {
@@ -56,7 +57,7 @@ export function WatchlistPanel({
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [symbols, setSymbols] = useState<string[] | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<WatchlistSaveErrorCode | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [loadError, setLoadError] = useState(false);
   // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (مغادرة شاشة الشارت
@@ -100,7 +101,9 @@ export function WatchlistPanel({
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact, fullWidth && styles.wrapFull]}>
       <Text style={[styles.title, { textAlign: align }]}>{t.wlTitle}</Text>
-      {saveError ? <Text style={[styles.saveError, { textAlign: align }]}>{saveError}</Text> : null}
+      {saveError ? (
+        <Text style={[styles.saveError, { textAlign: align }]}>{t[saveError]}</Text>
+      ) : null}
       <View style={[styles.toolbar, rtl && styles.toolbarRtl]}>
         <Pressable
           accessibilityRole="button"

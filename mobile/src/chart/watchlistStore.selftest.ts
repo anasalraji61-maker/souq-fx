@@ -169,7 +169,7 @@ async function testPersistFailure() {
 
   const after = await removeWatchSymbol('EURUSD');
   assert.deepEqual(after, ['EURUSD', 'GBPUSD']);
-  assert.equal(getWatchlistSaveError(), 'تعذر حفظ قائمة المتابعة');
+  assert.equal(getWatchlistSaveError(), 'wlSaveFailed');
   assert.deepEqual(getWatchlistSnapshot(), ['EURUSD', 'GBPUSD']);
   assert.deepEqual(JSON.parse(mem.get(WATCHLIST_KEY_V2)!).symbols, ['EURUSD', 'GBPUSD']);
   console.log('persist-failure: ok');

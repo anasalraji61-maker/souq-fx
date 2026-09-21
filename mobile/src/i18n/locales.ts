@@ -428,6 +428,16 @@ export type Dict = {
   wlResetConfirmBtn: string;
   wlSearchPlaceholder: string;
   wlLoadError: string;
+  /** رسائل فشل مخازن الشارت غير الـReact — أسماء هذه المفاتيح هي نفسها رموز الحالة
+   *  التي تُصدِرها layoutStore/chartTemplateStore/drawingStore/watchlistStoreCore،
+   *  فطبقة العرض تترجم بـ`t[code]` مباشرة. أي تغيير باسم مفتاح هنا يلزمه تغيير الرمز هناك. */
+  layoutSaveFailed: string;
+  layoutDeleteFailed: string;
+  chartTemplateSaveFailed: string;
+  chartTemplateDeleteFailed: string;
+  drawingsSaveFailed: string;
+  drawingsDeleteFailed: string;
+  wlSaveFailed: string;
   wlRetryA11y: string;
   wlRetryBtn: string;
   wlLoadingWord: string;
@@ -1037,6 +1047,13 @@ const ar: Dict = {
   wlResetConfirmBtn: 'إعادة للافتراضي',
   wlSearchPlaceholder: 'بحث رمز…',
   wlLoadError: 'تعذر تحميل قائمة المتابعة',
+  layoutSaveFailed: 'تعذر حفظ التخطيط',
+  layoutDeleteFailed: 'تعذر حذف التخطيط',
+  chartTemplateSaveFailed: 'تعذر حفظ قالب الشارت',
+  chartTemplateDeleteFailed: 'تعذر حذف قالب الشارت',
+  drawingsSaveFailed: 'تعذر حفظ الرسومات',
+  drawingsDeleteFailed: 'تعذر حذف الرسومات',
+  wlSaveFailed: 'تعذر حفظ قائمة المتابعة',
   wlRetryA11y: 'إعادة محاولة تحميل قائمة المتابعة',
   wlRetryBtn: 'إعادة المحاولة',
   wlLoadingWord: 'جاري التحميل…',
@@ -1652,6 +1669,13 @@ const enUS: Dict = {
   wlResetConfirmBtn: 'Reset to default',
   wlSearchPlaceholder: 'Search symbol…',
   wlLoadError: "Couldn't load watchlist",
+  layoutSaveFailed: "Couldn't save the layout",
+  layoutDeleteFailed: "Couldn't delete the layout",
+  chartTemplateSaveFailed: "Couldn't save the chart template",
+  chartTemplateDeleteFailed: "Couldn't delete the chart template",
+  drawingsSaveFailed: "Couldn't save the drawings",
+  drawingsDeleteFailed: "Couldn't delete the drawings",
+  wlSaveFailed: "Couldn't save watchlist",
   wlRetryA11y: 'Retry loading watchlist',
   wlRetryBtn: 'Retry',
   wlLoadingWord: 'Loading…',
@@ -2288,6 +2312,13 @@ const ku: Dict = {
   wlResetConfirmBtn: 'گەڕاندنەوە بۆ بنەڕەت',
   wlSearchPlaceholder: 'گەڕان بۆ هێما...',
   wlLoadError: 'نەتوانرا لیستی چاودێری بار بکرێت',
+  layoutSaveFailed: 'نەتوانرا نەخشەسازی پاشەکەوت بکرێت',
+  layoutDeleteFailed: 'نەتوانرا نەخشەسازی بسڕدرێتەوە',
+  chartTemplateSaveFailed: 'نەتوانرا داڕێژەی چارت پاشەکەوت بکرێت',
+  chartTemplateDeleteFailed: 'نەتوانرا داڕێژەی چارت بسڕدرێتەوە',
+  drawingsSaveFailed: 'نەتوانرا وێنەکێشانەکان پاشەکەوت بکرێن',
+  drawingsDeleteFailed: 'نەتوانرا وێنەکێشانەکان بسڕدرێنەوە',
+  wlSaveFailed: 'نەتوانرا لیستی چاودێری پاشەکەوت بکرێت',
   wlRetryA11y: 'دووبارە هەوڵدانەوەی بارکردنی لیستی چاودێری',
   wlRetryBtn: 'دووبارە هەوڵدان',
   wlLoadingWord: 'بارکردن...',

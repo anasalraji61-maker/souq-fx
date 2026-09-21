@@ -27,6 +27,7 @@ import {
   saveDrawings,
   clearDrawings,
   subscribeDrawingsSaveError,
+  type DrawingsSaveErrorCode,
 } from './drawingStore';
 import { compareOverlayPrices } from './compare';
 import { withLivePrice } from './liveSeries';
@@ -497,7 +498,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [logScale, setLogScale] = useState(false);
   const [magnet, setMagnet] = useState(true);
   const [measureReadout, setMeasureReadout] = useState<string | null>(null);
-  const [drawingsSaveError, setDrawingsSaveError] = useState<string | null>(null);
+  const [drawingsSaveError, setDrawingsSaveError] = useState<DrawingsSaveErrorCode | null>(null);
   const [chartW, setChartW] = useState(320);
   const panStartOffset = useRef(0);
   const offsetRef = useRef(0);
@@ -2421,7 +2422,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       magnet,
     }).then(() => {
       const err = getTemplatesSaveError();
-      Alert.alert('MATRIX', err ?? tr.mcTemplateSaved);
+      Alert.alert('MATRIX', err ? tr[err] : tr.mcTemplateSaved);
     });
   };
 
@@ -2554,7 +2555,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       ) : null}
 
       {drawingsSaveError ? (
-        <Text style={styles.drawingsSaveError}>{drawingsSaveError}</Text>
+        <Text style={styles.drawingsSaveError}>{tr[drawingsSaveError]}</Text>
       ) : null}
 
       {!dense ? (

@@ -14,9 +14,14 @@ export type ChartTemplate = {
 
 const KEY = 'matrix.chartTemplates.v1';
 
+/** رمز حالة ثابت لا نص معروض — الترجمة بطبقة العرض عبر `t[code]` (نفس المبدأ الموثَّق
+ *  بـchart/dataSource.ts: لا تقارن الواجهة نصاً حرفياً). أسماء الرموز مطابقة لمفاتيح
+ *  Dict بـi18n/locales.ts. */
+export type TemplatesSaveErrorCode = 'chartTemplateSaveFailed' | 'chartTemplateDeleteFailed';
+
 /** إشارة فشل حفظ/حذف القالب — نفس نمط subscribeWatchlistSaveError بـwatchlistStoreCore.ts */
-type ErrorListener = (message: string | null) => void;
-let saveError: string | null = null;
+type ErrorListener = (code: TemplatesSaveErrorCode | null) => void;
+let saveError: TemplatesSaveErrorCode | null = null;
 const errorListeners = new Set<ErrorListener>();
 
 function notifyError() {
@@ -29,8 +34,8 @@ function notifyError() {
   }
 }
 
-function setSaveError(msg: string | null) {
-  saveError = msg;
+function setSaveError(code: TemplatesSaveErrorCode | null) {
+  saveError = code;
   notifyError();
 }
 
@@ -42,7 +47,7 @@ export function subscribeTemplatesSaveError(cb: ErrorListener): () => void {
   };
 }
 
-export function getTemplatesSaveError(): string | null {
+export function getTemplatesSaveError(): TemplatesSaveErrorCode | null {
   return saveError;
 }
 
@@ -66,7 +71,7 @@ export async function saveTemplate(t: ChartTemplate): Promise<void> {
     await AsyncStorage.setItem(KEY, JSON.stringify(all.slice(0, 20)));
     setSaveError(null);
   } catch {
-    setSaveError('تعذر حفظ قالب الشارت');
+    setSaveError('chartTemplateSaveFailed');
   }
 }
 
@@ -76,7 +81,7 @@ export async function deleteTemplate(id: string): Promise<void> {
     await AsyncStorage.setItem(KEY, JSON.stringify(all));
     setSaveError(null);
   } catch {
-    setSaveError('تعذر حذف قالب الشارت');
+    setSaveError('chartTemplateDeleteFailed');
   }
 }
 
