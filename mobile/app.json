@@ -19,7 +19,8 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0B1220"
+        "backgroundColor": "#0B1220",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.matrix.charts",
       "versionCode": 1
