@@ -233,6 +233,25 @@ export type Dict = {
   alertsEditA11yPrefix: string;
   alertsStatusArmed: string;
   alertsStatusTriggered: string;
+  riskCalcTitle: string;
+  riskCalcSub: string;
+  riskCalcSymbol: string;
+  riskCalcBadSymbol: string;
+  riskCalcAccountCcy: string;
+  riskCalcBalance: string;
+  riskCalcRiskPct: string;
+  riskCalcHighRisk: string;
+  riskCalcSlPips: string;
+  riskCalcConvFailed: string;
+  riskCalcConvManual: string;
+  riskCalcLots: string;
+  riskCalcRiskAmount: string;
+  riskCalcUnits: string;
+  riskCalcBelowMin: string;
+  riskCalcFillHint: string;
+  riskCalcPipValue: string;
+  riskCalcDisclaimer: string;
+  toolsTabRisk: string;
   // WeeklyReportPanel/TradeJournalPanel/BacktestPanel/IndicatorAlertsPanel/CalendarPanel/LayoutPanel — 2026-09-17
   reportsTitle: string;
   reportsSubGrid: string;
@@ -892,6 +911,25 @@ const ar: Dict = {
   alertsEditA11yPrefix: 'تعديل التنبيه',
   alertsStatusArmed: '● مُفعَّل — بانتظار السعر',
   alertsStatusTriggered: 'انطلق ✓',
+  riskCalcTitle: 'حاسبة حجم المركز',
+  riskCalcSub: 'كم لوت تفتح حتى لا تخسر أكثر من نسبة محددة من رصيدك',
+  riskCalcSymbol: 'الأداة',
+  riskCalcBadSymbol: 'رمز غير مدعوم — استخدم زوجاً من 6 أحرف مثل EURUSD أو XAUUSD',
+  riskCalcAccountCcy: 'عملة الحساب',
+  riskCalcBalance: 'رصيد الحساب',
+  riskCalcRiskPct: 'نسبة المخاطرة %',
+  riskCalcHighRisk: '⚠ أكثر من 2% للصفقة الواحدة مخاطرة عالية',
+  riskCalcSlPips: 'وقف الخسارة (بالنقاط pip)',
+  riskCalcConvFailed: 'تعذّر جلب سعر التحويل',
+  riskCalcConvManual: 'أدخل سعر',
+  riskCalcLots: 'حجم الصفقة (لوت)',
+  riskCalcRiskAmount: 'المخاطرة الفعلية',
+  riskCalcUnits: 'الوحدات',
+  riskCalcBelowMin: 'المخاطرة أقل من أصغر لوت (0.01) — وسّع الرصيد أو قلّل الوقف',
+  riskCalcFillHint: 'أدخل الرصيد ونسبة المخاطرة ووقف الخسارة',
+  riskCalcPipValue: 'قيمة النقطة للوت',
+  riskCalcDisclaimer: 'تقدير تعليمي: مواصفات العقود (خصوصاً الذهب) قد تختلف لدى وسيطك — تحقّق قبل التداول.',
+  toolsTabRisk: 'المخاطرة',
   reportsTitle: 'تقارير MATRIX',
   reportsSubGrid: 'نفس حجم الفريمات · قدّم/أخّر · اضغط للقراءة',
   reportsSub: 'أسبوعي · أداء · رأي المنصة ونصائح',
@@ -1558,6 +1596,25 @@ const enUS: Dict = {
   alertsEditA11yPrefix: 'Edit alert',
   alertsStatusArmed: '● Armed — waiting for price',
   alertsStatusTriggered: 'Triggered ✓',
+  riskCalcTitle: 'Position size calculator',
+  riskCalcSub: 'How many lots to open so you never lose more than a set % of your balance',
+  riskCalcSymbol: 'Instrument',
+  riskCalcBadSymbol: 'Unsupported symbol — use a 6-letter pair like EURUSD or XAUUSD',
+  riskCalcAccountCcy: 'Account currency',
+  riskCalcBalance: 'Account balance',
+  riskCalcRiskPct: 'Risk %',
+  riskCalcHighRisk: '⚠ More than 2% per trade is high risk',
+  riskCalcSlPips: 'Stop loss (pips)',
+  riskCalcConvFailed: 'Could not fetch conversion rate',
+  riskCalcConvManual: 'Enter price of',
+  riskCalcLots: 'Position size (lots)',
+  riskCalcRiskAmount: 'Actual risk',
+  riskCalcUnits: 'Units',
+  riskCalcBelowMin: 'Risk is below the smallest lot (0.01) — increase balance or tighten the stop',
+  riskCalcFillHint: 'Enter balance, risk % and stop loss',
+  riskCalcPipValue: 'Pip value per lot',
+  riskCalcDisclaimer: 'Educational estimate: contract specs (especially gold) can differ at your broker — check before trading.',
+  toolsTabRisk: 'Risk',
   reportsTitle: 'MATRIX Reports',
   reportsSubGrid: 'Same frame size · prev/next · tap to read',
   reportsSub: 'Weekly · Performance · Platform view & tips',
@@ -2243,6 +2300,25 @@ const ku: Dict = {
   alertsEditA11yPrefix: 'گۆڕینی ئاگادارکردنەوە',
   alertsStatusArmed: '● چالاکە — چاوەڕێی نرخ',
   alertsStatusTriggered: 'دەرچوو ✓',
+  riskCalcTitle: 'ژمێرەری قەبارەی پۆزیشن',
+  riskCalcSub: 'چەند لۆت بکەیتەوە بۆ ئەوەی زیاتر لە ڕێژەیەکی دیاریکراوی باڵانسەکەت لەدەست نەدەیت',
+  riskCalcSymbol: 'ئامراز',
+  riskCalcBadSymbol: 'هێمای پشتگیری نەکراو — جووتێکی 6 پیتی وەک EURUSD یان XAUUSD بەکاربهێنە',
+  riskCalcAccountCcy: 'دراوی هەژمار',
+  riskCalcBalance: 'باڵانسی هەژمار',
+  riskCalcRiskPct: 'ڕێژەی مەترسی %',
+  riskCalcHighRisk: '⚠ زیاتر لە 2% بۆ هەر مامەڵەیەک مەترسی زۆرە',
+  riskCalcSlPips: 'وەستانی زیان (pip)',
+  riskCalcConvFailed: 'نرخی گۆڕینەوە وەرنەگیرا',
+  riskCalcConvManual: 'نرخی ئەمە بنووسە',
+  riskCalcLots: 'قەبارەی مامەڵە (لۆت)',
+  riskCalcRiskAmount: 'مەترسی ڕاستەقینە',
+  riskCalcUnits: 'یەکەکان',
+  riskCalcBelowMin: 'مەترسی لە بچووکترین لۆت (0.01) کەمترە — باڵانس زیاد بکە یان وەستان نزیک بکەرەوە',
+  riskCalcFillHint: 'باڵانس، ڕێژەی مەترسی و وەستانی زیان بنووسە',
+  riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
+  riskCalcDisclaimer: 'خەمڵاندنی فێرکاری: تایبەتمەندی گرێبەستەکان (بەتایبەتی زێڕ) لای بڕۆکەرەکەت جیاواز دەبێت — پێش مامەڵە پشتڕاستی بکەرەوە.',
+  toolsTabRisk: 'مەترسی',
   reportsTitle: 'ڕاپۆرتەکانی MATRIX',
   reportsSubGrid: 'هەمان قەبارەی چوارچێوە · پێشوو/دواتر · دەستلێدان بۆ خوێندنەوە',
   reportsSub: 'هەفتانە · کارایی · بۆچوونی پلاتفۆرم و ئامۆژگاری',

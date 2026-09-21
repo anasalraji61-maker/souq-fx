@@ -25,6 +25,7 @@ import { AnalystsPanel } from '../components/AnalystsPanel';
 import { SocialConsensusPanel } from '../components/SocialConsensusPanel';
 import { IndicatorForecastPanel } from '../components/IndicatorForecastPanel';
 import { AlertsPanel } from '../components/AlertsPanel';
+import { PositionSizePanel } from '../components/PositionSizePanel';
 import { NewsPanel } from '../components/NewsPanel';
 import { GroupChatPanel } from '../components/GroupChatPanel';
 import { VotePanel } from '../components/VotePanel';
@@ -60,6 +61,7 @@ type TabId =
   | 'hub'
   | 'reports'
   | 'journal'
+  | 'risk'
   | 'screener'
   | 'backtest'
   | 'indAlerts'
@@ -74,6 +76,7 @@ function buildTabs(t: Dict): { id: TabId; label: string; mark: string }[] {
     { id: 'hub', label: t.toolsTabHub, mark: '✦' },
     { id: 'reports', label: t.toolsTabReports, mark: '≡' },
     { id: 'journal', label: t.toolsTabJournal, mark: '₴' },
+    { id: 'risk', label: t.toolsTabRisk, mark: '%' },
     { id: 'screener', label: t.toolsTabScreener, mark: '⌕' },
     { id: 'backtest', label: t.toolsTabBacktest, mark: '↺' },
     { id: 'indAlerts', label: t.toolsTabIndAlerts, mark: '⚡' },
@@ -300,6 +303,12 @@ export function ToolsScreen() {
       {tab === 'journal' ? (
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <TradeJournalPanel />
+        </ScrollView>
+      ) : null}
+
+      {tab === 'risk' ? (
+        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+          <PositionSizePanel defaultSymbol={signalSym} />
         </ScrollView>
       ) : null}
 
