@@ -36,6 +36,8 @@ import { TimeframeBar } from '../components/TimeframeBar';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { WATCHLIST } from '../chart/watchlist';
 import { ensureWatchlistLoaded, subscribeWatchlist } from '../chart/watchlistStore';
+import { useDailyRefs } from '../chart/dailyRefStore';
+import { dailyChange, formatPct } from '../chart/dailyChange';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import { formatPrice } from '../chart/math';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
@@ -749,6 +751,19 @@ export function TerminalScreen() {
     }
     return out;
   }, [liveTicks]);
+  // رموز تيكها من البثّ التجريبي (fallback عشوائي) — لا تلوين اتجاه ولا نسبة تغيّر لها.
+  const demoTickSymbols = useMemo(
+    () =>
+      Object.entries(liveTicks)
+        .filter(([, tick]) => tick.source.kind === 'demo')
+        .map(([sym]) => sym),
+    [liveTicks]
+  );
+  const phoneStripSymbols = useMemo(
+    () => phoneWatchSymbols ?? WATCHLIST.map((w) => w.symbol),
+    [phoneWatchSymbols]
+  );
+  const stripDailyRefs = useDailyRefs(phone ? phoneStripSymbols : []);
   const heroSeries = series ?? offlineFrame(symbol, tf);
   const heroTick = liveTicks[symbol] ?? null;
   const heroNowMs = useTickFreshnessClock(heroTick?.source.as_of ?? null);
@@ -1066,26 +1081,47 @@ export function TerminalScreen() {
           contentContainerStyle={styles.phoneWatchRow}
           style={styles.phoneWatch}
         >
-          {(phoneWatchSymbols ?? WATCHLIST.map((w) => w.symbol)).map((sym) => (
-            <Pressable
-              accessibilityRole="button"
-              key={sym}
-              style={({ pressed }) => [
-                styles.pill,
-                symbol === sym && styles.pillOn,
-                pressed && {
-                  opacity: buttons.pressedOpacity,
-                  transform: [{ scale: buttons.pressedScale }],
-                },
-              ]}
-              onPress={() => pickSymbol(sym)}
-              accessibilityLabel={`${t.termSymbolA11yPrefix}: ${sym}`}
-            >
-              <Text style={[styles.pillText, symbol === sym && styles.pillTextOn]}>
-                {sym}
-              </Text>
-            </Pressable>
-          ))}
+          {phoneStripSymbols.map((sym) => {
+            // تغيّر اليوم بنظرة: فقط مع تيك حيّ حقيقي (لا من البثّ التجريبي) ومرجع إغلاق أمس.
+            const tick = liveTicks[sym];
+            const chg =
+              tick && tick.source.kind !== 'demo' ? dailyChange(tick.price, stripDailyRefs[sym]) : null;
+            const pctText = chg ? formatPct(chg.pct) : null;
+            return (
+              <Pressable
+                accessibilityRole="button"
+                key={sym}
+                style={({ pressed }) => [
+                  styles.pill,
+                  styles.pillRow,
+                  symbol === sym && styles.pillOn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => pickSymbol(sym)}
+                accessibilityLabel={`${t.termSymbolA11yPrefix}: ${sym}${pctText ? ` ${pctText}` : ''}`}
+                accessibilityState={{ selected: symbol === sym }}
+              >
+                <Text style={[styles.pillText, symbol === sym && styles.pillTextOn]}>
+                  {sym}
+                </Text>
+                {chg && pctText ? (
+                  <Text
+                    style={[
+                      styles.pillChg,
+                      chg.dir === 'up' && styles.pillChgUp,
+                      chg.dir === 'down' && styles.pillChgDown,
+                    ]}
+                  >
+                    {chg.dir === 'up' ? '▲' : chg.dir === 'down' ? '▼' : ''}
+                    {pctText}
+                  </Text>
+                ) : null}
+              </Pressable>
+            );
+          })}
           <Pressable
             accessibilityRole="button"
             style={({ pressed }) => [
@@ -1561,6 +1597,7 @@ export function TerminalScreen() {
               activeSymbol={symbol}
               ticks={tickPrices}
               bases={BASES}
+              demoTicks={demoTickSymbols}
               onPick={(s) => pickSymbol(s)}
               compact={narrowWatch}
             />
@@ -1662,6 +1699,7 @@ export function TerminalScreen() {
             activeSymbol={symbol}
             ticks={tickPrices}
             bases={BASES}
+            demoTicks={demoTickSymbols}
             onPick={(next) => {
               pickSymbol(next);
               setPhoneWatchOpen(false);
@@ -2046,4 +2084,8 @@ const styles = StyleSheet.create({
   pillOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   pillText: { color: colors.textMuted, fontWeight: '700', fontSize: 11 },
   pillTextOn: { color: colors.accent },
+  pillRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  pillChg: { color: colors.textDim, fontWeight: '800', fontSize: 10 },
+  pillChgUp: { color: colors.bull },
+  pillChgDown: { color: colors.bear },
 });

@@ -32,6 +32,8 @@ type Props = {
   activeSymbol: string;
   ticks: Record<string, number>;
   bases?: Record<string, number>;
+  /** رموز تيكها الحالي من بثّ تجريبي (fallback عشوائي) — تُعامَل كسعر افتراضي: بلا تلوين اتجاه ولا نسبة. */
+  demoTicks?: readonly string[];
   onPick: (symbol: string) => void;
   compact?: boolean;
   fullWidth?: boolean;
@@ -52,6 +54,7 @@ export function WatchlistPanel({
   activeSymbol,
   ticks,
   bases = FALLBACK,
+  demoTicks,
   onPick,
   compact = false,
   fullWidth = false,
@@ -95,6 +98,7 @@ export function WatchlistPanel({
   const addable = useMemo(() => catalogEntriesNotIn(list), [list]);
   // مرجع "إغلاق الأمس" لنسبة تغيّر اليوم (مخزن مشترك، 10 دقائق، يتجاهل البيانات التجريبية).
   const dailyRefs = useDailyRefs(list);
+  const demoSet = useMemo(() => new Set(demoTicks ?? []), [demoTicks]);
   // اتجاه آخر تيك لكل رمز (يلوّن السعر أخضر/أحمر كما يعتاد المتداول) — يُحدَّث فقط عند تغيّر السعر فعلاً.
   const prevTicksRef = useRef<Record<string, number>>({});
   const [tickDirs, setTickDirs] = useState<Record<string, Direction>>({});
@@ -226,11 +230,12 @@ export function WatchlistPanel({
             const on = activeSymbol === sym;
             const live = ticks[sym];
             const price = live ?? bases[sym];
-            const isDemoPrice = live == null && price != null;
+            const tickIsDemo = live != null && demoSet.has(sym);
+            const isDemoPrice = price != null && (live == null || tickIsDemo);
             const isDxy = sym === 'DXY';
             // تغيّر اليوم فقط مع سعر حيّ + مرجع حقيقي — لا نسبة من سعر افتراضي.
-            const chg = live != null ? dailyChange(live, dailyRefs[sym]) : null;
-            const tickDir = live != null ? tickDirs[sym] : undefined;
+            const chg = live != null && !tickIsDemo ? dailyChange(live, dailyRefs[sym]) : null;
+            const tickDir = live != null && !tickIsDemo ? tickDirs[sym] : undefined;
             const pctText = chg ? formatPct(chg.pct) : null;
             return (
               <View
