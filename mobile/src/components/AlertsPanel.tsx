@@ -193,15 +193,31 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
     setBusy(true);
     setFormError(null);
     const replacing = editingId;
+    const body = { symbol: sym, condition, price: p, note };
     try {
-      await api.createAlert({ symbol: sym, condition, price: p, note });
+      /** تعديل ذرّي أولاً (PATCH — نفس المعرّف، يُعاد تفعيله، لا نافذة يوجد فيها تنبيهان). باك-إند
+       * أقدم (405) أو تنبيه لم يعد موجوداً/لا نملكه (404) → الطريق القديم: إنشاء جديد ثم حذف القديم
+       * (لا يُفقد القديم إن فشل الإنشاء). أي خطأ آخر (شبكة/500) يظهر كخطأ عادي دون إنشاء مكرر. */
+      let fallbackDelete: string | null = null;
+      if (replacing) {
+        try {
+          await api.updateAlert(replacing, body);
+        } catch (e) {
+          const status = (e as { status?: number }).status;
+          if (status !== 404 && status !== 405) throw e;
+          await api.createAlert(body);
+          fallbackDelete = replacing;
+        }
+      } else {
+        await api.createAlert(body);
+      }
       playSoftClick();
       setPrice('');
       setNote('');
       setEditingId(null);
-      if (replacing) {
+      if (fallbackDelete) {
         try {
-          await api.deleteAlert(replacing);
+          await api.deleteAlert(fallbackDelete);
         } catch {
           setFormError(t.alertsEditOldRemains);
         }

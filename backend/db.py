@@ -852,6 +852,34 @@ def create_alert(data: dict, user_id: int | None = None) -> dict:
     return data
 
 
+def update_alert(alert_id: str, data: dict, user_id: int | None = None) -> dict | None:
+    """Atomic edit of a price alert (symbol/condition/price/note) — re-arms it (triggered=0).
+
+    Ownership: a signed-in user may edit their own alerts or legacy/anonymous ones
+    (user_id IS NULL); an anonymous client only anonymous ones. Returns the updated row,
+    or None when no row matched (missing or not owned) → the API answers 404.
+    """
+    with _conn() as c:
+        if user_id:
+            cur = c.execute(
+                """UPDATE alerts SET symbol=?, condition=?, price=?, note=?, active=1, triggered=0, ts=?
+                   WHERE id=? AND (user_id IS NULL OR user_id=?)""",
+                (data["symbol"], data["condition"], data["price"], data.get("note", ""),
+                 data["ts"], alert_id, user_id),
+            )
+        else:
+            cur = c.execute(
+                """UPDATE alerts SET symbol=?, condition=?, price=?, note=?, active=1, triggered=0, ts=?
+                   WHERE id=? AND user_id IS NULL""",
+                (data["symbol"], data["condition"], data["price"], data.get("note", ""),
+                 data["ts"], alert_id),
+            )
+        if cur.rowcount == 0:
+            return None
+        row = c.execute("SELECT * FROM alerts WHERE id=?", (alert_id,)).fetchone()
+    return _alert_row(row) if row else None
+
+
 def delete_alert(alert_id: str) -> bool:
     with _conn() as c:
         cur = c.execute("DELETE FROM alerts WHERE id=?", (alert_id,))

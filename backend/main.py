@@ -742,6 +742,23 @@ def create_alert(body: AlertCreate, user: dict | None = Depends(_auth_user)):
     return {"ok": True, "alert": alert}
 
 
+@app.patch("/api/alerts/{alert_id}")
+def update_alert(alert_id: str, body: AlertCreate, user: dict | None = Depends(_auth_user)):
+    """تعديل ذرّي للتنبيه (بدل إنشاء جديد ثم حذف القديم) — يُعيد تفعيله. 404 إن لم يوجد أو لا يملكه."""
+    data = {
+        "symbol": body.symbol.upper(),
+        "condition": body.condition,
+        "price": round(body.price, 5),
+        "note": body.note.strip(),
+        "ts": datetime.now(timezone.utc).isoformat(),
+    }
+    uid = user["user_id"] if user else None
+    alert = db.update_alert(alert_id, data, uid)
+    if alert is None:
+        raise HTTPException(status_code=404, detail="alert not found")
+    return {"ok": True, "alert": alert}
+
+
 @app.delete("/api/alerts/{alert_id}")
 def delete_alert(alert_id: str):
     return {"ok": db.delete_alert(alert_id)}

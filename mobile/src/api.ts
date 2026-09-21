@@ -158,6 +158,21 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/** PATCH with the HTTP status on the thrown error (`err.status`) so callers can fall back on 404/405. */
+async function patchJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = new Error(`HTTP ${res.status}`) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
+  }
+  return res.json() as Promise<T>;
+}
+
 async function deleteJson<T>(path: string): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: 'DELETE',
@@ -338,6 +353,12 @@ export const api = {
     price: number;
     note?: string;
   }) => postJson<{ ok: boolean; alert: PriceAlert }>('/api/alerts', body),
+  /** Atomic edit + re-arm (`PATCH /api/alerts/{id}`). Older backends answer 405, a missing/foreign
+   * alert 404 — AlertsPanel then falls back to create-then-delete. */
+  updateAlert: (
+    id: string,
+    body: { symbol: string; condition: 'above' | 'below'; price: number; note?: string }
+  ) => patchJson<{ ok: boolean; alert: PriceAlert }>(`/api/alerts/${encodeURIComponent(id)}`, body),
   deleteAlert: (id: string) =>
     fetch(`${API_URL}/api/alerts/${encodeURIComponent(id)}`, { method: 'DELETE' }).then((r) => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
