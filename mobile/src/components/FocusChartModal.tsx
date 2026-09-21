@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Modal,
   View,
@@ -168,15 +168,36 @@ export function FocusChartModal({
     setCompareSym((prev) => (prev === next ? null : next));
   };
 
-  const alertFromDrawing = async (price: number) => {
+  /** تأكيد «مُفعَّل» مرئي بعد إنشاء تنبيه من الشارت (خط رسم أو 🔔 الـcrosshair) — كان النقر يُصدر صوتاً
+   * فقط، ولوحة التنبيهات تحت الشارت لا تُحدَّث إلا بعد دقيقة. الآن سطر تأكيد 4 ثوانٍ + تحديث فوري للقائمة. */
+  const [armedMsg, setArmedMsg] = useState<string | null>(null);
+  const armedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [alertsRefreshKey, setAlertsRefreshKey] = useState(0);
+  useEffect(
+    () => () => {
+      if (armedTimerRef.current) clearTimeout(armedTimerRef.current);
+    },
+    []
+  );
+  useEffect(() => {
+    if (!visible) setArmedMsg(null);
+  }, [visible]);
+
+  const alertFromDrawing = async (price: number, origin?: 'drawing' | 'crosshair') => {
+    const condition: 'above' | 'below' =
+      price >= (liveTick?.price ?? series?.last ?? price) ? 'above' : 'below';
     try {
       await api.createAlert({
         symbol: sym,
-        condition: price >= (liveTick?.price ?? series?.last ?? price) ? 'above' : 'below',
+        condition,
         price,
-        note: t.focusAlertFromDrawingNote,
+        note: origin === 'crosshair' ? t.focusAlertFromChartNote : t.focusAlertFromDrawingNote,
       });
       playSoftClick();
+      setArmedMsg(`${t.alertsArmedPrefix}: ${sym} ${condition === 'above' ? '≥' : '≤'} ${formatPrice(price)}`);
+      if (armedTimerRef.current) clearTimeout(armedTimerRef.current);
+      armedTimerRef.current = setTimeout(() => setArmedMsg(null), 4000);
+      setAlertsRefreshKey((k) => k + 1);
     } catch {
       Alert.alert(t.focusAlertCreateFailedTitle, t.focusAlertCreateFailedBody);
     }
@@ -369,7 +390,12 @@ export function FocusChartModal({
               />
             )}
 
-            <AlertsPanel defaultSymbol={sym} />
+            {armedMsg ? (
+              <Text style={[styles.armed, { textAlign: align }]} accessibilityLiveRegion="polite">
+                ✓ {armedMsg}
+              </Text>
+            ) : null}
+            <AlertsPanel defaultSymbol={sym} refreshKey={alertsRefreshKey} />
             <IndicatorAlertsPanel defaultSymbol={sym} />
             <BacktestPanel defaultSymbol={sym} defaultTimeframe={tf} />
           </ScrollView>
@@ -438,6 +464,7 @@ const styles = StyleSheet.create({
   watchLabel: { color: colors.textMuted, fontSize: 11 },
   compareTag: { color: colors.infoAccent, fontSize: 9, marginTop: 2 },
   compareNote: { color: colors.infoAccent, fontSize: 11 },
+  armed: { color: colors.bull, fontSize: 12, fontWeight: '800' },
   main: { flex: 1 },
   pill: {
     paddingHorizontal: 10,

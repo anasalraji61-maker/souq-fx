@@ -526,6 +526,7 @@ export type Dict = {
   focusAlertCreateFailedTitle: string;
   focusAlertCreateFailedBody: string;
   focusAlertFromDrawingNote: string;
+  focusAlertFromChartNote: string;
   gridFramesWord: string;
   gridSquaresWord: string;
   gridSquaresA11y: string;
@@ -670,6 +671,7 @@ export type Dict = {
   mcAlertLine: string;
   mcAlertZone: string;
   mcAlertAtLineLevel: string;
+  mcAlertAtCrossA11y: string;
   // components/SymbolSearchBar.tsx + ScreenerMini.tsx + DomLitePanel.tsx + PairDrumWheel.tsx
   // (i18n طبقة أدوات شاشة الشارت، 2026-09-21)
   ssbPlaceholder: string;
@@ -1233,6 +1235,7 @@ const ar: Dict = {
   focusAlertCreateFailedTitle: 'تعذر إنشاء التنبيه',
   focusAlertCreateFailedBody: 'حدث خطأ أثناء إنشاء تنبيه من خط الرسم، حاول مرة أخرى.',
   focusAlertFromDrawingNote: 'من خط رسم',
+  focusAlertFromChartNote: 'من الشارت',
   gridFramesWord: 'الفريمات',
   gridSquaresWord: 'المربعات',
   gridSquaresA11y: 'عرض الفريمات كمربعات',
@@ -1389,6 +1392,7 @@ const ar: Dict = {
   mcAlertLine: 'تنبيه خط',
   mcAlertZone: 'تنبيه منطقة',
   mcAlertAtLineLevel: 'تنبيه عند مستوى الخط الحالي',
+  mcAlertAtCrossA11y: 'إنشاء تنبيه سعر عند',
   // أدوات شاشة الشارت (i18n، 2026-09-21)
   ssbPlaceholder: 'بحث رمز... EUR, XAU, BTC',
   ssbError: 'تعذر البحث — تحقق من الاتصال وحاول مرة أخرى',
@@ -1946,6 +1950,7 @@ const enUS: Dict = {
   focusAlertCreateFailedTitle: "Couldn't create alert",
   focusAlertCreateFailedBody: 'An error occurred creating an alert from the drawing line, try again.',
   focusAlertFromDrawingNote: 'From drawing line',
+  focusAlertFromChartNote: 'From chart',
   gridFramesWord: 'Frames',
   gridSquaresWord: 'Squares',
   gridSquaresA11y: 'View frames as squares',
@@ -2102,6 +2107,7 @@ const enUS: Dict = {
   mcAlertLine: 'Line alert',
   mcAlertZone: 'Zone alert',
   mcAlertAtLineLevel: 'Alert at the current line level',
+  mcAlertAtCrossA11y: 'Create a price alert at',
   // Chart-screen widget layer (i18n, 2026-09-21)
   ssbPlaceholder: 'Search symbol… EUR, XAU, BTC',
   ssbError: 'Search failed — check your connection and try again',
@@ -2680,6 +2686,7 @@ const ku: Dict = {
   focusAlertCreateFailedTitle: 'نەتوانرا ئاگادارکردنەوە دروست بکرێت',
   focusAlertCreateFailedBody: 'هەڵەیەک ڕوویدا لە دروستکردنی ئاگادارکردنەوە لە هێڵی وێنەکێشان، دووبارە هەوڵبدەرەوە.',
   focusAlertFromDrawingNote: 'لە هێڵی وێنەکێشانەوە',
+  focusAlertFromChartNote: 'لە چارتەوە',
   gridFramesWord: 'چوارچێوەکان',
   gridSquaresWord: 'چوارگۆشەکان',
   gridSquaresA11y: 'پیشاندانی چوارچێوەکان وەک چوارگۆشە',
@@ -2836,6 +2843,7 @@ const ku: Dict = {
   mcAlertLine: 'ئاگاداری هێڵ',
   mcAlertZone: 'ئاگاداری ناوچە',
   mcAlertAtLineLevel: 'ئاگاداری لە ئاستی هێڵی ئێستا',
+  mcAlertAtCrossA11y: 'دروستکردنی ئاگاداری نرخ لە',
   // ئامرازەکانی شاشەی چارت (i18n، 2026-09-21)
   ssbPlaceholder: 'گەڕان بۆ هێما... EUR, XAU, BTC',
   ssbError: 'گەڕان سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',

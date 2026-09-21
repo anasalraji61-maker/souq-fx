@@ -19,9 +19,11 @@ import { useI18n } from '../i18n/I18nContext';
 type Props = {
   defaultSymbol?: string;
   embedded?: boolean;
+  /** يزيده الأب بعد إنشاء تنبيه من خارج اللوحة (من الشارت) لتحديث القائمة فوراً بدل انتظار الاستطلاع. */
+  refreshKey?: number;
 };
 
-export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
+export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
@@ -176,6 +178,10 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
     const id = setInterval(check, 60_000);
     return () => clearInterval(id);
   }, [refresh, check]);
+
+  useEffect(() => {
+    if (refreshKey) void refresh();
+  }, [refreshKey, refresh]);
 
   const add = async () => {
     const p = parseFloat(price.replace(',', '.'));

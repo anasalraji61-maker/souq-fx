@@ -259,7 +259,8 @@ type Props = {
   livePrice?: number | null;
   /** provenance of livePrice — required for honest merge into candles */
   liveTickSource?: import('../api').DataProvenance | null;
-  onCreateAlert?: (price: number) => void;
+  /** origin: 'crosshair' = زر 🔔 بسطر القراءة عند سعر الشمعة المحددة؛ غير ذلك = من أداة رسم. */
+  onCreateAlert?: (price: number, origin?: 'drawing' | 'crosshair') => void;
   initialTool?: DrawTool;
   initialLens?: LensMode;
   initialKind?: ChartKind;
@@ -2649,6 +2650,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 : tr.mcHintNavigate}
           </Text>
         )}
+        {onCreateAlert && crossCandle && !measureReadout && !replayOn ? (
+          // تنبيه بلمستين من الشارت: المس شمعة (يظهر الـcrosshair بسعر إغلاقها) ثم 🔔 — بلا كتابة رقم.
+          // الاتجاه (فوق/تحت) يحدّده المستدعي من السعر الحالي، والتأكيد «مُفعَّل» يظهر عنده.
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${tr.mcAlertAtCrossA11y} ${formatPrice(crossCandle.close)}`}
+            hitSlop={6}
+            style={({ pressed }) => [
+              styles.crossAlertBtn,
+              { borderColor: accent },
+              pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+            ]}
+            onPress={() => onCreateAlert(crossCandle.close, 'crosshair')}
+          >
+            <Text style={[styles.crossAlertText, { color: accent }]}>🔔 {formatPrice(crossCandle.close)}</Text>
+          </Pressable>
+        ) : null}
         {interactive && !compactUi ? (
           <View style={styles.zoomRow}>
             <Pressable
@@ -7862,6 +7880,14 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   zoomRow: { flexDirection: 'row', gap: 4 },
+  crossAlertBtn: {
+    borderWidth: 1,
+    borderRadius: radii.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: colors.controlBg,
+  },
+  crossAlertText: { fontWeight: '800', fontSize: 11, fontFamily: 'monospace' },
   zoomBtn: {
     width: 28,
     height: 28,
