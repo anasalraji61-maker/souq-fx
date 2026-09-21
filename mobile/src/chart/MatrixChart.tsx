@@ -381,7 +381,17 @@ function applyTimeWindowToSeries(
   return { start: i0, count, offset };
 }
 
-function formatAxisTime(unixTime: number, spanSeconds: number, months: string[]): string {
+/**
+ * Axis tick label. `compact` (narrow plot, ~56–72px per label) swaps long month names
+ * (Arabic «سبتمبر», Kurdish «کانوونی یەکەم») for a numeric day/month so a label never
+ * wraps to a third line or spills into its neighbour (long spans: «9/2026»).
+ */
+function formatAxisTime(
+  unixTime: number,
+  spanSeconds: number,
+  months: string[],
+  compact = false
+): string {
   const milliseconds = unixTime > 1e12 ? unixTime : unixTime * 1000;
   const date = new Date(milliseconds);
   if (Number.isNaN(date.getTime())) return '';
@@ -389,13 +399,16 @@ function formatAxisTime(unixTime: number, spanSeconds: number, months: string[])
   const mm = String(date.getMinutes()).padStart(2, '0');
   const day = date.getDate();
   const mon = months[date.getMonth()] ?? '';
+  const dayMonth = compact ? `${day}/${date.getMonth() + 1}` : `${day} ${mon}`;
   if (spanSeconds <= 2 * 86400) {
-    return `${hh}:${mm}\n${day} ${mon}`;
+    return `${hh}:${mm}\n${dayMonth}`;
   }
   if (spanSeconds <= 120 * 86400) {
-    return `${day} ${mon}`;
+    return dayMonth;
   }
-  return `${mon} ${date.getFullYear()}`;
+  return compact
+    ? `${date.getMonth() + 1}/${date.getFullYear()}`
+    : `${mon} ${date.getFullYear()}`;
 }
 
 /** Full date + time for the crosshair time tag (always explicit, unlike axis ticks). */
@@ -4373,6 +4386,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text
                   key={`${candle.time}-${index}`}
                   pointerEvents="none"
+                  numberOfLines={2}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.8}
                   style={[
                     styles.timeAxisLabel,
                     chartPlotW < 280 && styles.timeAxisLabelCompact,
@@ -4385,7 +4401,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     },
                   ]}
                 >
-                  {formatAxisTime(candle.time, visibleTimeSpan, tr.mcMonths)}
+                  {formatAxisTime(candle.time, visibleTimeSpan, tr.mcMonths, chartPlotW < 280)}
                 </Text>
               );
             })}
