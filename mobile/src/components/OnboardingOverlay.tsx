@@ -9,8 +9,8 @@ type Props = {
   onDone: () => void;
 };
 
-/** جولة ترحيبية قصيرة (4 خطوات) تُعرض مرة واحدة فقط لأول متداول يفتح التطبيق —
- * توضّح مكان الفريمات المتعددة/أدوات الرسم/المؤشرات/التنبيهات قبل أن يستكشف بنفسه. */
+/** جولة ترحيبية قصيرة (5 خطوات) تُعرض مرة واحدة فقط لأول متداول يفتح التطبيق —
+ * تبديل الزوج/أدوات الرسم/المؤشرات/التنبيهات/حاسبة المخاطرة، ثم تنبيه مخاطرة صريح بالخطوة الأخيرة. */
 export function OnboardingOverlay({ visible, onDone }: Props) {
   const { t, rtl } = useI18n();
   const [step, setStep] = useState(0);
@@ -20,6 +20,7 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
     { title: t.onboardStep2Title, body: t.onboardStep2Body },
     { title: t.onboardStep3Title, body: t.onboardStep3Body },
     { title: t.onboardStep4Title, body: t.onboardStep4Body },
+    { title: t.onboardStep5Title, body: t.onboardStep5Body },
   ];
   const last = step === steps.length - 1;
   const align = rtl ? 'right' : 'left';
@@ -36,11 +37,14 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
           <View style={styles.card}>
             <View style={styles.dots}>
               {steps.map((_, i) => (
-                <View key={i} style={[styles.dot, i === step && styles.dotOn]} />
+                <View key={i} style={[styles.dot, i <= step && styles.dotOn, i < step && styles.dotDone]} />
               ))}
             </View>
             <Text style={[styles.title, { textAlign: align }]}>{steps[step]!.title}</Text>
             <Text style={[styles.body, { textAlign: align }]}>{steps[step]!.body}</Text>
+            {last ? (
+              <Text style={[styles.riskNote, { textAlign: align }]}>{t.onboardRiskNote}</Text>
+            ) : null}
             <View style={[styles.actions, rtl && styles.actionsRtl]}>
               <Pressable
                 accessibilityRole="button"
@@ -102,8 +106,17 @@ const styles = StyleSheet.create({
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: spacing.xs },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.border },
   dotOn: { backgroundColor: colors.accent, width: 18 },
+  dotDone: { width: 6, opacity: 0.55 },
   title: { color: colors.text, fontWeight: '900', fontSize: 17 },
   body: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
+  riskNote: {
+    color: colors.textDim,
+    fontSize: 11,
+    lineHeight: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSoft,
+    paddingTop: spacing.sm,
+  },
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',

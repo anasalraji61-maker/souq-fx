@@ -60,6 +60,9 @@ export type Dict = {
   onboardStep3Body: string;
   onboardStep4Title: string;
   onboardStep4Body: string;
+  onboardStep5Title: string;
+  onboardStep5Body: string;
+  onboardRiskNote: string;
   onboardSkip: string;
   onboardNext: string;
   onboardStart: string;
@@ -743,9 +746,9 @@ const ar: Dict = {
   restartRequiredBody:
     'تم تغيير اللغة. أغلق التطبيق وأعد فتحه لتطبيق اتجاه الواجهة (يمين/يسار) بالكامل على كل الشاشات.',
   restartRequiredBtn: 'حسناً',
-  onboardStep1Title: 'فريمات متعددة',
+  onboardStep1Title: 'بدّل الزوج بلمسة',
   onboardStep1Body:
-    'افتح حتى أربع شارتات معاً وقارن بين الأزواج والأطر الزمنية بلمسة واحدة، مع تخطيط 2×2 وفريم بملء الشاشة.',
+    'اضغط على أي زوج بالشريط العلوي (EURUSD، GBPUSD، الذهب XAUUSD…) لينتقل الشارت إليه فوراً، مع تغيّر اليوم ▲▼ بجانبه. ولاحقاً افتح حتى أربع شارتات معاً للمقارنة.',
   onboardStep2Title: 'أدوات الرسم',
   onboardStep2Body:
     'تبويب «رسم» بالشريط السفلي يفتح لك خطوط الترند وفيبوناتشي والمستطيلات وباقي أدوات التحليل الفني مباشرة على الشارت.',
@@ -755,6 +758,11 @@ const ar: Dict = {
   onboardStep4Title: 'التنبيهات',
   onboardStep4Body:
     'أنشئ تنبيه سعر أو مؤشر وسيصلك إشعار فوري على جهازك أينما كنت — لا حاجة لمراقبة الشارت طوال الوقت.',
+  onboardStep5Title: 'المخاطرة أولاً',
+  onboardStep5Body:
+    'قبل أي صفقة افتح «أدوات ← حاسبة حجم المركز»: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة بالـpip لتعرف حجم اللوت المناسب. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
+  onboardRiskNote:
+    'MATRIX أداة تحليل وتعليم، لا تنفّذ صفقات ولا تقدّم نصيحة مالية. التداول بالرافعة ينطوي على مخاطرة عالية بخسارة المال.',
   onboardSkip: 'تخطي',
   onboardNext: 'التالي',
   onboardStart: 'ابدأ',
@@ -1444,9 +1452,9 @@ const enUS: Dict = {
   restartRequiredBody:
     'Language changed. Close and reopen the app to fully apply the new layout direction across all screens.',
   restartRequiredBtn: 'OK',
-  onboardStep1Title: 'Multiple frames',
+  onboardStep1Title: 'Switch pairs in one tap',
   onboardStep1Body:
-    'Open up to four charts at once and compare pairs and timeframes in one tap, with a 2x2 layout and a full-screen frame.',
+    'Tap any pair in the top strip (EURUSD, GBPUSD, gold XAUUSD…) and the chart jumps to it, with today\'s change ▲▼ beside it. Later, open up to four charts side by side to compare.',
   onboardStep2Title: 'Drawing tools',
   onboardStep2Body:
     'The Draw tab in the bottom bar opens trend lines, Fibonacci, rectangles, and more analysis tools right on the chart.',
@@ -1456,6 +1464,11 @@ const enUS: Dict = {
   onboardStep4Title: 'Alerts',
   onboardStep4Body:
     'Create a price or indicator alert and get an instant notification on your device — no need to watch the chart all day.',
+  onboardStep5Title: 'Risk first',
+  onboardStep5Body:
+    'Before any trade, open Tools → Position size calculator: enter your balance, risk % and stop loss in pips to get the right lot size. Many traders risk no more than 1–2% per trade.',
+  onboardRiskNote:
+    'MATRIX is an analysis and learning tool. It does not place trades or give financial advice. Leveraged trading carries a high risk of losing money.',
   onboardSkip: 'Skip',
   onboardNext: 'Next',
   onboardStart: 'Start',
@@ -2165,9 +2178,9 @@ const ku: Dict = {
   restartRequiredBody:
     'زمان گۆڕدرا. ئەپەکە دابخە و دووبارە بیکەرەوە بۆ ئەوەی ئاراستەی ڕووکار (ڕاست/چەپ) بە تەواوی لەسەر هەموو پەیجەکان جێبەجێ بێت.',
   restartRequiredBtn: 'باشە',
-  onboardStep1Title: 'چەند چوارچێوەیەک بەیەکەوە',
+  onboardStep1Title: 'گۆڕینی جووت بە یەک دەستدان',
   onboardStep1Body:
-    'هەتا چوار شێوەنیگار بەیەکەوە بکەرەوە و جووت و کاتەکان بە یەک دەستدان بەراورد بکە، لەگەڵ نەخشەی 2×2 و چوارچێوەی پڕ شاشە.',
+    'دەست لە هەر جووتێک بدە لە شریتی سەرەوە (EURUSD، GBPUSD، زێڕ XAUUSD…) و شێوەنیگارەکە یەکسەر دەچێتە سەری، لەگەڵ گۆڕانی ئەمڕۆ ▲▼ لە تەنیشتیەوە. دواتر هەتا چوار شێوەنیگار بەیەکەوە بکەرەوە بۆ بەراورد.',
   onboardStep2Title: 'ئامرازەکانی وێنەکێشان',
   onboardStep2Body:
     'تابی «وێنەکێشان» لە شریتی خوارەوە هێڵی ترێند و فیبۆناتچی و لاکێشەکان و ئامرازەکانی تری شیکردنەوەی تەکنیکی دەکاتەوە ڕاستەوخۆ لەسەر شێوەنیگار.',
@@ -2177,6 +2190,11 @@ const ku: Dict = {
   onboardStep4Title: 'ئاگادارکردنەوەکان',
   onboardStep4Body:
     'ئاگادارکردنەوەیەکی نرخ یان پێوەر دروست بکە و ئاگاداری خێرا لەسەر ئامێرەکەت وەربگرە — پێویست ناکات بە درێژایی ڕۆژ چاودێری شێوەنیگار بکەیت.',
+  onboardStep5Title: 'سەرەتا مەترسی',
+  onboardStep5Body:
+    'پێش هەر مامەڵەیەک «ئامرازەکان ← ژمێرەری قەبارەی پۆزیشن» بکەرەوە: باڵانس و ڕێژەی مەترسی و ستۆپ لۆس بە pip بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
+  onboardRiskNote:
+    'MATRIX ئامرازێکی شیکردنەوە و فێربوونە، مامەڵە ناکات و ئامۆژگاری دارایی نادات. بازرگانی بە لیڤەرێج مەترسیی بەرزی لەدەستدانی پارەی تێدایە.',
   onboardSkip: 'تێپەڕاندن',
   onboardNext: 'دواتر',
   onboardStart: 'دەستپێبکە',
