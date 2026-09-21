@@ -14,6 +14,7 @@ import { I18nProvider, useI18n } from './src/i18n/I18nContext';
 import { colors } from './src/theme';
 import { registerPushToken } from './src/notifications';
 import { OnboardingOverlay } from './src/components/OnboardingOverlay';
+import { AppErrorBoundary } from './src/components/AppErrorBoundary';
 import { hasSeenOnboarding, markOnboardingSeen } from './src/onboarding';
 
 const Tab = createBottomTabNavigator();
@@ -139,12 +140,14 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <I18nProvider>
-        <AuthProvider>
-          <StatusBar style="light" />
-          <NavigationContainer theme={navTheme}>
-            <RootTabs />
-          </NavigationContainer>
-        </AuthProvider>
+        <StatusBar style="light" />
+        <AppErrorBoundary>
+          <AuthProvider>
+            <NavigationContainer theme={navTheme}>
+              <RootTabs />
+            </NavigationContainer>
+          </AuthProvider>
+        </AppErrorBoundary>
       </I18nProvider>
     </SafeAreaProvider>
   );

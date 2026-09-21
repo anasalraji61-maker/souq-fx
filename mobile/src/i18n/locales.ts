@@ -240,6 +240,9 @@ export type Dict = {
   riskCalcSub: string;
   riskCalcSymbol: string;
   riskCalcBadSymbol: string;
+  appCrashTitle: string;
+  appCrashBody: string;
+  appCrashRetry: string;
   planSlWrongBuy: string;
   planSlWrongSell: string;
   planTpWrongBuy: string;
@@ -941,6 +944,9 @@ const ar: Dict = {
   riskCalcSub: 'كم لوت تفتح حتى لا تخسر أكثر من نسبة محددة من رصيدك',
   riskCalcSymbol: 'الأداة',
   riskCalcBadSymbol: 'رمز غير مدعوم — استخدم زوجاً من 6 أحرف مثل EURUSD أو XAUUSD',
+  appCrashTitle: 'حدث خطأ غير متوقع',
+  appCrashBody: 'تعذّر عرض هذه الشاشة. بياناتك ورسوماتك محفوظة — اضغط «إعادة المحاولة» للمتابعة.',
+  appCrashRetry: 'إعادة المحاولة',
   planSlWrongBuy: 'الوقف يجب أن يكون تحت سعر الدخول في صفقة الشراء',
   planSlWrongSell: 'الوقف يجب أن يكون فوق سعر الدخول في صفقة البيع',
   planTpWrongBuy: 'الهدف يجب أن يكون فوق سعر الدخول في صفقة الشراء',
@@ -1650,6 +1656,9 @@ const enUS: Dict = {
   riskCalcSub: 'How many lots to open so you never lose more than a set % of your balance',
   riskCalcSymbol: 'Instrument',
   riskCalcBadSymbol: 'Unsupported symbol — use a 6-letter pair like EURUSD or XAUUSD',
+  appCrashTitle: 'Something went wrong',
+  appCrashBody: 'This screen could not be displayed. Your data and drawings are safe — tap “Try again” to continue.',
+  appCrashRetry: 'Try again',
   planSlWrongBuy: 'For a buy, the stop must be below the entry',
   planSlWrongSell: 'For a sell, the stop must be above the entry',
   planTpWrongBuy: 'For a buy, the target must be above the entry',
@@ -2378,6 +2387,9 @@ const ku: Dict = {
   riskCalcSub: 'چەند لۆت بکەیتەوە بۆ ئەوەی زیاتر لە ڕێژەیەکی دیاریکراوی باڵانسەکەت لەدەست نەدەیت',
   riskCalcSymbol: 'ئامراز',
   riskCalcBadSymbol: 'هێمای پشتگیری نەکراو — جووتێکی 6 پیتی وەک EURUSD یان XAUUSD بەکاربهێنە',
+  appCrashTitle: 'هەڵەیەکی چاوەڕواننەکراو ڕوویدا',
+  appCrashBody: 'ئەم شاشەیە نیشان نەدرا. زانیاری و کێشانەکانت پارێزراون — «دووبارە هەوڵبدەرەوە» دابگرە.',
+  appCrashRetry: 'دووبارە هەوڵبدەرەوە',
   planSlWrongBuy: 'بۆ کڕین، وەستان دەبێت لە خوار نرخی چوونەژوورەوە بێت',
   planSlWrongSell: 'بۆ فرۆشتن، وەستان دەبێت لە سەرووی نرخی چوونەژوورەوە بێت',
   planTpWrongBuy: 'بۆ کڕین، ئامانج دەبێت لە سەرووی نرخی چوونەژوورەوە بێت',
