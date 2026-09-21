@@ -22,6 +22,11 @@ assert.equal(instrumentSpec('XAUUSD')!.pipSize, 0.1);
 assert.equal(instrumentSpec('XAUUSD')!.contractSize, 100);
 assert.equal(instrumentSpec('DXY'), null);
 assert.equal(instrumentSpec('USDXAU'), null);
+// عملات رقمية/رموز غير ورقية ليست فوركس (لا pip 0.0001)
+assert.equal(instrumentSpec('BTCUSD'), null);
+assert.equal(instrumentSpec('ETHUSD'), null);
+assert.equal(instrumentSpec('USDSAR')!.pipSize, 0.0001);
+assert.equal(instrumentSpec('EURTRY')!.pipSize, 0.0001);
 
 // أزواج التحويل
 assert.equal(conversionPair('USD', 'USD'), null);

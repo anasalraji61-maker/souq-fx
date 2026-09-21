@@ -29,6 +29,17 @@ const METALS: Record<string, { pipSize: number; contractSize: number }> = {
 /** ترتيب التسعير المتعارف عليه بسوق الفوركس (العملة الأعلى أولوية تأتي أساساً بالزوج). */
 const CCY_PRIORITY = ['EUR', 'GBP', 'AUD', 'NZD', 'USD', 'CAD', 'CHF', 'JPY'];
 
+/**
+ * عملات ورقية معروفة (رموز ISO) — أي زوج من 6 أحرف خارجها (BTCUSD/ETHUSD…) ليس فوركس ولا يُحسب له
+ * pip بـ0.0001؛ كان يُقبل خطأً سابقاً فتخرج حاسبة المخاطرة بحجم لوت لا معنى له للعملات الرقمية.
+ */
+const FIAT = new Set([
+  ...CCY_PRIORITY,
+  // عملات pip المعيارية لها 0.0001 لدى أغلب الوسطاء فقط؛ عملات بتسعير مختلف (HUF/CZK/KRW…) تُترك
+  // مرفوضة عمداً بدل حساب pip خاطئ.
+  'SEK', 'NOK', 'DKK', 'PLN', 'TRY', 'ZAR', 'MXN', 'SGD', 'HKD', 'CNH', 'ILS', 'SAR', 'AED',
+]);
+
 export function normalizeSymbol(raw: string): string {
   return raw.trim().toUpperCase().replace(/[^A-Z]/g, '');
 }
@@ -42,6 +53,7 @@ export function instrumentSpec(raw: string): InstrumentSpec | null {
   const metal = METALS[base];
   if (metal) return { symbol, base, quote, ...metal };
   if (METALS[quote]) return null;
+  if (!FIAT.has(base) || !FIAT.has(quote)) return null;
   return { symbol, base, quote, pipSize: quote === 'JPY' ? 0.01 : 0.0001, contractSize: 100_000 };
 }
 
