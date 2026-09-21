@@ -1577,8 +1577,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (indicators.includes('vfi') ? 1 : 0) +
     (indicators.includes('laguerreRsi') ? 1 : 0);
 
-  const mainH = Math.max(140, height - paneCount * 52 - (interactive ? 8 : 0));
-  const paneH = 48;
+  // Indicator panes shrink (48 → 34px) before they are allowed to crush the price
+  // area: price keeps at least ~55% of the chart height, so 4-5 oscillators on a
+  // phone no longer squeeze candles into a ~100px strip.
+  const PANE_GAP = 4;
+  const availableH = height - (interactive ? 8 : 0);
+  const minMainH = Math.max(140, Math.round(availableH * 0.55));
+  const paneH = paneCount
+    ? Math.max(34, Math.min(48, Math.floor((availableH - minMainH) / paneCount) - PANE_GAP))
+    : 48;
+  const mainH = Math.max(minMainH, availableH - paneCount * (paneH + PANE_GAP));
 
   const range = useMemo(() => {
     let min = Infinity;
