@@ -11,6 +11,7 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { WATCHLIST } from '../chart/watchlist';
 import { loadWatchlistItems } from '../chart/watchlistStore';
 import { playSoftClick, unlockSoftClick } from '../audio/playSoftClick';
+import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
   value: string;
@@ -27,6 +28,7 @@ const wrap = (i: number, n: number) => {
 };
 
 export function PairDrumWheel({ value, onChange, onClose }: Props) {
+  const { t } = useI18n();
   const [pairs, setPairs] = useState<string[]>(() => WATCHLIST.map((w) => w.symbol));
   const [active, setActive] = useState(0);
   const activeRef = useRef(0);
@@ -128,7 +130,7 @@ export function PairDrumWheel({ value, onChange, onClose }: Props) {
           },
         ]}
         onPress={() => pick(active - 1)}
-        accessibilityLabel={`الزوج السابق: ${above}`}
+        accessibilityLabel={`${t.pdwPrevA11yPrefix}${above}`}
       >
         <Text numberOfLines={1} style={styles.sideText}>
           {above}
@@ -145,7 +147,7 @@ export function PairDrumWheel({ value, onChange, onClose }: Props) {
           },
         ]}
         onPress={() => pick(active)}
-        accessibilityLabel={`اختيار الزوج الحالي: ${current}`}
+        accessibilityLabel={`${t.pdwCurrentA11yPrefix}${current}`}
       >
         <Text numberOfLines={1} style={styles.midText}>
           {current}
@@ -162,7 +164,7 @@ export function PairDrumWheel({ value, onChange, onClose }: Props) {
           },
         ]}
         onPress={() => pick(active + 1)}
-        accessibilityLabel={`الزوج التالي: ${below}`}
+        accessibilityLabel={`${t.pdwNextA11yPrefix}${below}`}
       >
         <Text numberOfLines={1} style={styles.sideText}>
           {below}

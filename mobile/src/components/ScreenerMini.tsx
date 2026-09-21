@@ -1,23 +1,21 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
-
-const QUICK = [
-  { id: 'ma_cross_up', label: 'MA ↑' },
-  { id: 'rsi_oversold', label: 'RSI↓' },
-  { id: 'bullish', label: 'زخم+' },
-];
-
-/** وصف مسموع كامل لكل فلتر سريع — النص المرئي مختصر (رموز/اختصارات إنجليزية) بلا معنى واضح
- * لقارئ الشاشة، فيُستخدَم هذا بدلاً منه فقط لـaccessibilityLabel. */
-const QUICK_A11Y: Record<string, string> = {
-  ma_cross_up: 'تقاطع المتوسط المتحرك صعوداً',
-  rsi_oversold: 'تشبّع بيعي بمؤشر RSI',
-  bullish: 'زخم صعودي',
-};
+import { useI18n } from '../i18n/I18nContext';
 
 export function ScreenerMini() {
+  const { t } = useI18n();
+  /** النص المرئي مختصر (رموز/اختصارات) بلا معنى واضح لقارئ الشاشة،
+   * فيُستخدَم الوصف الكامل `a11y` بدلاً منه فقط لـaccessibilityLabel. */
+  const quick = useMemo(
+    () => [
+      { id: 'ma_cross_up', label: 'MA ↑', a11y: t.smnA11yMaCross },
+      { id: 'rsi_oversold', label: 'RSI↓', a11y: t.smnA11yRsiOversold },
+      { id: 'bullish', label: t.smnFilterMomentum, a11y: t.smnA11yBullish },
+    ],
+    [t]
+  );
   const [hits, setHits] = useState<
     { symbol: string; rsi: number; change_pct: number; filters_matched: string[] }[]
   >([]);
@@ -41,9 +39,9 @@ export function ScreenerMini() {
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>فحص سريع</Text>
+      <Text style={styles.title}>{t.smnTitle}</Text>
       <View style={styles.row}>
-        {QUICK.map((q) => (
+        {quick.map((q) => (
           <Pressable
             accessibilityRole="button"
             key={q.id}
@@ -58,14 +56,14 @@ export function ScreenerMini() {
             onPress={() => run(q.id)}
             disabled={loading}
             accessibilityState={{ disabled: loading }}
-            accessibilityLabel={QUICK_A11Y[q.id] ?? q.label}
+            accessibilityLabel={q.a11y}
           >
             <Text style={styles.chipText}>{q.label}</Text>
           </Pressable>
         ))}
       </View>
       {loading ? <ActivityIndicator color={colors.accent} size="small" /> : null}
-      {!loading && error ? <Text style={styles.errorNote}>تعذر تشغيل الفحص — حاول لاحقاً</Text> : null}
+      {!loading && error ? <Text style={styles.errorNote}>{t.screenerFailed}</Text> : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={{ flexDirection: 'row-reverse', gap: spacing.sm }}>
           {hits.map((h) => (

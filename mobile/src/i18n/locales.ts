@@ -573,6 +573,22 @@ export type Dict = {
   mcAlertLine: string;
   mcAlertZone: string;
   mcAlertAtLineLevel: string;
+  // components/SymbolSearchBar.tsx + ScreenerMini.tsx + DomLitePanel.tsx + PairDrumWheel.tsx
+  // (i18n طبقة أدوات شاشة الشارت، 2026-09-21)
+  ssbPlaceholder: string;
+  ssbError: string;
+  ssbPickA11yPrefix: string;
+  smnTitle: string;
+  smnFilterMomentum: string;
+  smnA11yMaCross: string;
+  smnA11yRsiOversold: string;
+  smnA11yBullish: string;
+  domTitle: string;
+  domSourceQuote: string;
+  domEstimated: string;
+  pdwPrevA11yPrefix: string;
+  pdwCurrentA11yPrefix: string;
+  pdwNextA11yPrefix: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -1178,6 +1194,21 @@ const ar: Dict = {
   mcAlertLine: 'تنبيه خط',
   mcAlertZone: 'تنبيه منطقة',
   mcAlertAtLineLevel: 'تنبيه عند مستوى الخط الحالي',
+  // أدوات شاشة الشارت (i18n، 2026-09-21)
+  ssbPlaceholder: 'بحث رمز... EUR, XAU, BTC',
+  ssbError: 'تعذر البحث — تحقق من الاتصال وحاول مرة أخرى',
+  ssbPickA11yPrefix: 'اختيار الرمز: ',
+  smnTitle: 'فحص سريع',
+  smnFilterMomentum: 'زخم+',
+  smnA11yMaCross: 'تقاطع المتوسط المتحرك صعوداً',
+  smnA11yRsiOversold: 'تشبّع بيعي بمؤشر RSI',
+  smnA11yBullish: 'زخم صعودي',
+  domTitle: 'DOM · عمق السوق',
+  domSourceQuote: 'من Quote',
+  domEstimated: 'عمق تقديري (عند غياب L2 من المزود)',
+  pdwPrevA11yPrefix: 'الزوج السابق: ',
+  pdwCurrentA11yPrefix: 'اختيار الزوج الحالي: ',
+  pdwNextA11yPrefix: 'الزوج التالي: ',
 };
 
 const enUS: Dict = {
@@ -1778,6 +1809,21 @@ const enUS: Dict = {
   mcAlertLine: 'Line alert',
   mcAlertZone: 'Zone alert',
   mcAlertAtLineLevel: 'Alert at the current line level',
+  // Chart-screen widget layer (i18n, 2026-09-21)
+  ssbPlaceholder: 'Search symbol… EUR, XAU, BTC',
+  ssbError: 'Search failed — check your connection and try again',
+  ssbPickA11yPrefix: 'Select symbol: ',
+  smnTitle: 'Quick scan',
+  smnFilterMomentum: 'Mom+',
+  smnA11yMaCross: 'Moving average cross up',
+  smnA11yRsiOversold: 'RSI oversold',
+  smnA11yBullish: 'Bullish momentum',
+  domTitle: 'DOM · Market depth',
+  domSourceQuote: 'from quote',
+  domEstimated: 'Estimated depth (no L2 feed from the provider)',
+  pdwPrevA11yPrefix: 'Previous pair: ',
+  pdwCurrentA11yPrefix: 'Select current pair: ',
+  pdwNextA11yPrefix: 'Next pair: ',
 };
 
 const enGB: Dict = {
@@ -2399,6 +2445,21 @@ const ku: Dict = {
   mcAlertLine: 'ئاگاداری هێڵ',
   mcAlertZone: 'ئاگاداری ناوچە',
   mcAlertAtLineLevel: 'ئاگاداری لە ئاستی هێڵی ئێستا',
+  // ئامرازەکانی شاشەی چارت (i18n، 2026-09-21)
+  ssbPlaceholder: 'گەڕان بۆ هێما... EUR, XAU, BTC',
+  ssbError: 'گەڕان سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
+  ssbPickA11yPrefix: 'دیاریکردنی هێما: ',
+  smnTitle: 'پشکنینی خێرا',
+  smnFilterMomentum: 'پاڵنە+',
+  smnA11yMaCross: 'یەکتربڕینی مامناوەندی جوڵاو بەرەو سەرەوە',
+  smnA11yRsiOversold: 'تێری فرۆشتن لە RSI',
+  smnA11yBullish: 'پاڵنەی بەرزبوونەوە',
+  domTitle: 'DOM · قووڵایی بازاڕ',
+  domSourceQuote: 'لە Quote',
+  domEstimated: 'قووڵایی خەمڵێنراو (کاتێک L2 لە دابینکەرەوە نییە)',
+  pdwPrevA11yPrefix: 'جووتی پێشوو: ',
+  pdwCurrentA11yPrefix: 'دیاریکردنی جووتی ئێستا: ',
+  pdwNextA11yPrefix: 'جووتی داهاتوو: ',
 };
 
 export const DICTS: Record<LangId, Dict> = {

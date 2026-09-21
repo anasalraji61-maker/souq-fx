@@ -4,6 +4,7 @@ import { colors, radii, spacing } from '../theme';
 import { computeDomLite, computeFootprint } from '../chart/orderflow';
 import { formatPrice } from '../chart/math';
 import { api, type Candle } from '../api';
+import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
   last: number;
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function DomLitePanel({ last, candles = [], symbol = 'EURUSD' }: Props) {
+  const { t } = useI18n();
   const [book, setBook] = useState<{ bid?: number | null; ask?: number | null; price?: number } | null>(
     null
   );
@@ -44,11 +46,11 @@ export function DomLitePanel({ last, candles = [], symbol = 'EURUSD' }: Props) {
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>DOM · عمق السوق</Text>
+      <Text style={styles.title}>{t.domTitle}</Text>
       <Text style={styles.sub}>
         {liveBook
-          ? `Bid ${formatPrice(book!.bid!)} · Ask ${formatPrice(book!.ask!)} · من Quote`
-          : 'عمق تقديري (عند غياب L2 من المزود)'}
+          ? `Bid ${formatPrice(book!.bid!)} · Ask ${formatPrice(book!.ask!)} · ${t.domSourceQuote}`
+          : t.domEstimated}
       </Text>
       {rows.map((r) => {
         const atMid = Math.abs(r.price - mid) < mid * 0.00025;
