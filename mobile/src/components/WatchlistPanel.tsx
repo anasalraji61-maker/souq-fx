@@ -25,6 +25,8 @@ import {
   subscribeWatchlistSaveError,
   type WatchlistSaveErrorCode,
 } from '../chart/watchlistStore';
+import { useDailyRefs } from '../chart/dailyRefStore';
+import { dailyChange, formatPct, tickDirection, type Direction } from '../chart/dailyChange';
 
 type Props = {
   activeSymbol: string;
@@ -91,6 +93,30 @@ export function WatchlistPanel({
   const ready = symbols != null;
   const list = symbols ?? [];
   const addable = useMemo(() => catalogEntriesNotIn(list), [list]);
+  // مرجع "إغلاق الأمس" لنسبة تغيّر اليوم (مخزن مشترك، 10 دقائق، يتجاهل البيانات التجريبية).
+  const dailyRefs = useDailyRefs(list);
+  // اتجاه آخر تيك لكل رمز (يلوّن السعر أخضر/أحمر كما يعتاد المتداول) — يُحدَّث فقط عند تغيّر السعر فعلاً.
+  const prevTicksRef = useRef<Record<string, number>>({});
+  const [tickDirs, setTickDirs] = useState<Record<string, Direction>>({});
+  useEffect(() => {
+    const prev = prevTicksRef.current;
+    let changed: Record<string, Direction> | null = null;
+    for (const [sym, price] of Object.entries(ticks)) {
+      const before = prev[sym];
+      if (before != null && before !== price) {
+        const d = tickDirection(before, price);
+        if (d !== 'flat') {
+          changed = changed ?? {};
+          changed[sym] = d;
+        }
+      }
+      prev[sym] = price;
+    }
+    if (changed && mountedRef.current) {
+      const upd = changed;
+      setTickDirs((cur) => ({ ...cur, ...upd }));
+    }
+  }, [ticks]);
 
   const onAdd = useCallback(async (sym: string) => {
     await addWatchSymbol(sym);
@@ -202,6 +228,10 @@ export function WatchlistPanel({
             const price = live ?? bases[sym];
             const isDemoPrice = live == null && price != null;
             const isDxy = sym === 'DXY';
+            // تغيّر اليوم فقط مع سعر حيّ + مرجع حقيقي — لا نسبة من سعر افتراضي.
+            const chg = live != null ? dailyChange(live, dailyRefs[sym]) : null;
+            const tickDir = live != null ? tickDirs[sym] : undefined;
+            const pctText = chg ? formatPct(chg.pct) : null;
             return (
               <View
                 key={sym}
@@ -218,7 +248,8 @@ export function WatchlistPanel({
                     },
                   ]}
                   onPress={() => onPick(sym)}
-                  accessibilityLabel={`${sym}${isDemoPrice ? t.wlDemoPriceA11ySuffix : ''}`}
+                  accessibilityLabel={`${sym}${price != null ? ` ${formatPrice(price)}` : ''}${pctText ? ` ${pctText}` : ''}${isDemoPrice ? t.wlDemoPriceA11ySuffix : ''}`}
+                  accessibilityState={{ selected: on }}
                 >
                   <View style={[styles.left, rtl && styles.leftRtl]}>
                     <Text
@@ -231,9 +262,31 @@ export function WatchlistPanel({
                     </Text>
                     {isDemoPrice ? <Text style={styles.demoTag}>{t.wlDemoTag}</Text> : null}
                   </View>
-                  <Text style={[styles.price, on && styles.priceOn, isDemoPrice && styles.priceDemo]}>
-                    {price != null ? formatPrice(price) : '—'}
-                  </Text>
+                  <View style={[styles.right, rtl && styles.rightRtl]}>
+                    <Text
+                      style={[
+                        styles.price,
+                        on && styles.priceOn,
+                        isDemoPrice && styles.priceDemo,
+                        tickDir === 'up' && styles.priceUp,
+                        tickDir === 'down' && styles.priceDown,
+                      ]}
+                    >
+                      {price != null ? formatPrice(price) : '—'}
+                    </Text>
+                    {chg && pctText ? (
+                      <Text
+                        style={[
+                          styles.chg,
+                          chg.dir === 'up' && styles.chgUp,
+                          chg.dir === 'down' && styles.chgDown,
+                        ]}
+                      >
+                        {chg.dir === 'up' ? '▲ ' : chg.dir === 'down' ? '▼ ' : ''}
+                        {pctText}
+                      </Text>
+                    ) : null}
+                  </View>
                 </Pressable>
                 <View style={[styles.ops, rtl && styles.opsRtl]}>
                   <Pressable
@@ -442,6 +495,13 @@ const styles = StyleSheet.create({
   price: { color: colors.textMuted, fontSize: 10, fontWeight: '700', marginLeft: 6 },
   priceOn: { color: colors.text },
   priceDemo: { color: colors.textDim, fontWeight: '600' },
+  priceUp: { color: colors.bull },
+  priceDown: { color: colors.bear },
+  right: { alignItems: 'flex-end' },
+  rightRtl: { alignItems: 'flex-start' },
+  chg: { color: colors.textDim, fontSize: 9, fontWeight: '800', marginTop: 1 },
+  chgUp: { color: colors.bull },
+  chgDown: { color: colors.bear },
   ops: {
     flexDirection: 'row',
     borderTopWidth: 1,
