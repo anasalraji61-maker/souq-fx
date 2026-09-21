@@ -764,6 +764,15 @@ export function TerminalScreen() {
     [phoneWatchSymbols]
   );
   const stripDailyRefs = useDailyRefs(phone ? phoneStripSymbols : []);
+  // إبقاء الزوج النشط ظاهراً بشريط الهاتف حين يتبدّل من مكان آخر (عجلة الأزواج/البحث/التنبيه).
+  const phoneStripRef = useRef<ScrollView | null>(null);
+  const phoneStripX = useRef<Record<string, number>>({});
+  useEffect(() => {
+    if (!phone) return;
+    const x = phoneStripX.current[symbol];
+    if (x == null) return;
+    phoneStripRef.current?.scrollTo({ x: Math.max(0, x - 48), animated: true });
+  }, [phone, symbol]);
   const heroSeries = series ?? offlineFrame(symbol, tf);
   const heroTick = liveTicks[symbol] ?? null;
   const heroNowMs = useTickFreshnessClock(heroTick?.source.as_of ?? null);
@@ -1076,6 +1085,7 @@ export function TerminalScreen() {
 
       {phone ? (
         <ScrollView
+          ref={phoneStripRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.phoneWatchRow}
@@ -1101,6 +1111,9 @@ export function TerminalScreen() {
                   },
                 ]}
                 onPress={() => pickSymbol(sym)}
+                onLayout={(e) => {
+                  phoneStripX.current[sym] = e.nativeEvent.layout.x;
+                }}
                 accessibilityLabel={`${t.termSymbolA11yPrefix}: ${sym}${pctText ? ` ${pctText}` : ''}`}
                 accessibilityState={{ selected: symbol === sym }}
               >
