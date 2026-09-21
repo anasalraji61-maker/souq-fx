@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
@@ -38,7 +39,11 @@ const IMPACT_COLOR: Record<string, string> = {
   low: colors.textDim,
 };
 
-const CURRENCIES = ['ALL', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD'];
+const CURRENCIES = ['ALL', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'NZD', 'CHF'];
+const IMPACTS = ['ALL', 'high', 'medium', 'low'] as const;
+type ImpactFilter = (typeof IMPACTS)[number];
+/** يتذكّر فلتر العملة/التأثير بين الجلسات — المتداول يتابع عملاته نفسها كل يوم. */
+const FILTER_KEY = 'matrix.calendar.filters.v1';
 
 type Props = {
   compact?: boolean;
@@ -50,7 +55,9 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
   const align = rtl ? ('right' as const) : ('left' as const);
   const [events, setEvents] = useState<Ev[]>([]);
   const [currency, setCurrency] = useState('ALL');
-  const [impact, setImpact] = useState<'ALL' | 'high' | 'medium' | 'low'>('ALL');
+  const [impact, setImpact] = useState<ImpactFilter>('ALL');
+  /** لا نجلب قبل قراءة الفلتر المحفوظ — وإلا طلبان متتاليان (الكل ثم المحفوظ) ووميض قائمة خاطئة. */
+  const [filtersReady, setFiltersReady] = useState(false);
   /** وضوح الحالة: تمييز "جاري التحميل" و"فشل الاتصال" عن "لا أحداث فعلاً بهذا الفلتر" */
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
   /** ساعة داخلية للعدّ التنازلي ("بعد 2س 15د") — تُحدَّث كل دقيقة */
@@ -62,6 +69,36 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
   }, []);
 
   useEffect(() => {
+    let alive = true;
+    AsyncStorage.getItem(FILTER_KEY)
+      .then((raw) => {
+        if (!alive || !raw) return;
+        const v = JSON.parse(raw) as { currency?: unknown; impact?: unknown };
+        if (typeof v.currency === 'string' && CURRENCIES.includes(v.currency)) setCurrency(v.currency);
+        if (typeof v.impact === 'string' && (IMPACTS as readonly string[]).includes(v.impact)) {
+          setImpact(v.impact as ImpactFilter);
+        }
+      })
+      .catch(() => {
+        /* تخزين تالف/غير متاح — نبدأ بـ«الكل» كما كان */
+      })
+      .finally(() => {
+        if (alive) setFiltersReady(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!filtersReady) return;
+    AsyncStorage.setItem(FILTER_KEY, JSON.stringify({ currency, impact })).catch(() => {
+      /* فشل الحفظ لا يمنع استخدام الفلتر */
+    });
+  }, [filtersReady, currency, impact]);
+
+  useEffect(() => {
+    if (!filtersReady) return;
     // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب اللوحة أو تغيّر الفلتر قبل اكتمال الطلب
     // السابق — نفس نمط ChartFrame/SymbolSnapshot/FocusChartModal المؤسَّس بالكود.
     let alive = true;
@@ -86,7 +123,7 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
     return () => {
       alive = false;
     };
-  }, [currency, impact]);
+  }, [filtersReady, currency, impact]);
 
   const IMPACT_LABEL: Record<'high' | 'medium' | 'low', string> = {
     high: t.impactHigh,
@@ -151,11 +188,12 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
                 if (c !== 'ALL') onPickCurrency?.(c);
               }}
               accessibilityLabel={`${t.calendarCurrencyA11yPrefix}: ${c === 'ALL' ? t.calendarAllWord : c}`}
+              accessibilityState={{ selected: currency === c }}
             >
               <Text style={[styles.chipText, currency === c && styles.chipTextOn]}>{c}</Text>
             </Pressable>
           ))}
-          {(['ALL', 'high', 'medium', 'low'] as const).map((imp) => (
+          {IMPACTS.map((imp) => (
             <Pressable
               accessibilityRole="button"
               key={imp}
@@ -169,6 +207,7 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
               ]}
               onPress={() => setImpact(imp)}
               accessibilityLabel={`${t.calendarImpactA11yPrefix}: ${imp === 'ALL' ? t.calendarAllWord : IMPACT_LABEL[imp]}`}
+              accessibilityState={{ selected: impact === imp }}
             >
               <Text style={[styles.chipText, impact === imp && styles.chipTextOn]}>
                 {imp === 'ALL' ? t.calendarAllShort : IMPACT_LABEL[imp]}
