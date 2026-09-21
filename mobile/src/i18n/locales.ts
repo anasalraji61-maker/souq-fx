@@ -237,6 +237,13 @@ export type Dict = {
   riskCalcSub: string;
   riskCalcSymbol: string;
   riskCalcBadSymbol: string;
+  planSlWrongBuy: string;
+  planSlWrongSell: string;
+  planTpWrongBuy: string;
+  planTpWrongSell: string;
+  planRiskWord: string;
+  planRewardWord: string;
+  planLowRR: string;
   riskCalcAccountCcy: string;
   riskCalcBalance: string;
   riskCalcRiskPct: string;
@@ -925,6 +932,13 @@ const ar: Dict = {
   riskCalcSub: 'كم لوت تفتح حتى لا تخسر أكثر من نسبة محددة من رصيدك',
   riskCalcSymbol: 'الأداة',
   riskCalcBadSymbol: 'رمز غير مدعوم — استخدم زوجاً من 6 أحرف مثل EURUSD أو XAUUSD',
+  planSlWrongBuy: 'الوقف يجب أن يكون تحت سعر الدخول في صفقة الشراء',
+  planSlWrongSell: 'الوقف يجب أن يكون فوق سعر الدخول في صفقة البيع',
+  planTpWrongBuy: 'الهدف يجب أن يكون فوق سعر الدخول في صفقة الشراء',
+  planTpWrongSell: 'الهدف يجب أن يكون تحت سعر الدخول في صفقة البيع',
+  planRiskWord: 'المخاطرة',
+  planRewardWord: 'الربح المحتمل',
+  planLowRR: '⚠ الربح المحتمل أقل من المخاطرة',
   riskCalcAccountCcy: 'عملة الحساب',
   riskCalcBalance: 'رصيد الحساب',
   riskCalcRiskPct: 'نسبة المخاطرة %',
@@ -1620,6 +1634,13 @@ const enUS: Dict = {
   riskCalcSub: 'How many lots to open so you never lose more than a set % of your balance',
   riskCalcSymbol: 'Instrument',
   riskCalcBadSymbol: 'Unsupported symbol — use a 6-letter pair like EURUSD or XAUUSD',
+  planSlWrongBuy: 'For a buy, the stop must be below the entry',
+  planSlWrongSell: 'For a sell, the stop must be above the entry',
+  planTpWrongBuy: 'For a buy, the target must be above the entry',
+  planTpWrongSell: 'For a sell, the target must be below the entry',
+  planRiskWord: 'Risk',
+  planRewardWord: 'Reward',
+  planLowRR: '⚠ Potential reward is smaller than the risk',
   riskCalcAccountCcy: 'Account currency',
   riskCalcBalance: 'Account balance',
   riskCalcRiskPct: 'Risk %',
@@ -2334,6 +2355,13 @@ const ku: Dict = {
   riskCalcSub: 'چەند لۆت بکەیتەوە بۆ ئەوەی زیاتر لە ڕێژەیەکی دیاریکراوی باڵانسەکەت لەدەست نەدەیت',
   riskCalcSymbol: 'ئامراز',
   riskCalcBadSymbol: 'هێمای پشتگیری نەکراو — جووتێکی 6 پیتی وەک EURUSD یان XAUUSD بەکاربهێنە',
+  planSlWrongBuy: 'بۆ کڕین، وەستان دەبێت لە خوار نرخی چوونەژوورەوە بێت',
+  planSlWrongSell: 'بۆ فرۆشتن، وەستان دەبێت لە سەرووی نرخی چوونەژوورەوە بێت',
+  planTpWrongBuy: 'بۆ کڕین، ئامانج دەبێت لە سەرووی نرخی چوونەژوورەوە بێت',
+  planTpWrongSell: 'بۆ فرۆشتن، ئامانج دەبێت لە خوار نرخی چوونەژوورەوە بێت',
+  planRiskWord: 'مەترسی',
+  planRewardWord: 'قازانجی ئەگەری',
+  planLowRR: '⚠ قازانجی ئەگەری لە مەترسی کەمترە',
   riskCalcAccountCcy: 'دراوی هەژمار',
   riskCalcBalance: 'باڵانسی هەژمار',
   riskCalcRiskPct: 'ڕێژەی مەترسی %',

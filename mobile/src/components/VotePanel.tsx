@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons } from '../theme';
 import { api, type Vote } from '../api';
 import { mockVotes } from '../mock';
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
+import { analyzePlan, formatPips, formatRR, type PlanIssue, type TradePlan } from '../tradePlan';
 
 export function VotePanel({ embedded }: { embedded?: boolean }) {
   const { t, rtl } = useI18n();
@@ -56,12 +57,42 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
     load();
   }, []);
 
+  /** رسالة واضحة لخطة معكوسة (وقف/هدف بالجهة الخطأ من الدخول) — أشيع خطأ لدى المبتدئ. */
+  const planIssueText = (issue: PlanIssue | null, side: 'buy' | 'sell'): string | null => {
+    if (issue === 'slWrongSide') return side === 'buy' ? t.planSlWrongBuy : t.planSlWrongSell;
+    if (issue === 'tpWrongSide') return side === 'buy' ? t.planTpWrongBuy : t.planTpWrongSell;
+    return null;
+  };
+
+  /** "المخاطرة 25 pip · الربح المحتمل 50 pip · R:R 1:2.0" — بفرق السعر حين لا يُعرف الـpip. */
+  const planSummary = (plan: TradePlan): string => {
+    const dist = (pips: number | null, d: number) => {
+      const p = formatPips(pips);
+      return p != null ? `${p} pip` : String(Math.round(d * 1e5) / 1e5);
+    };
+    return `${t.planRiskWord} ${dist(plan.riskPips, plan.riskDist)} · ${t.planRewardWord} ${dist(plan.rewardPips, plan.rewardDist)} · R:R ${formatRR(plan.rr)}`;
+  };
+
+  // معاينة حيّة للخطة أثناء الكتابة (لا تُعرض قبل اكتمال الأرقام الثلاثة).
+  const draftPlan = useMemo(() => {
+    const entry = parseFloat(pEntry.replace(',', '.'));
+    const sl = parseFloat(pSl.replace(',', '.'));
+    const tp = parseFloat(pTp.replace(',', '.'));
+    if (Number.isNaN(entry) || Number.isNaN(sl) || Number.isNaN(tp)) return null;
+    return analyzePlan({ symbol: pSymbol, side: pDirection, entry, sl, tp });
+  }, [pSymbol, pDirection, pEntry, pSl, pTp]);
+
   const publish = async () => {
     const entry = parseFloat(pEntry.replace(',', '.'));
     const sl = parseFloat(pSl.replace(',', '.'));
     const tp = parseFloat(pTp.replace(',', '.'));
     if (!pSymbol.trim() || Number.isNaN(entry) || Number.isNaN(sl) || Number.isNaN(tp)) {
       setPError(t.voteFormError);
+      return;
+    }
+    const plan = analyzePlan({ symbol: pSymbol, side: pDirection, entry, sl, tp });
+    if (!plan.ok) {
+      setPError(planIssueText(plan.issue, pDirection) ?? t.voteFormError);
       return;
     }
     setPBusy(true);
@@ -273,6 +304,18 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
             selectionColor={colors.accent}
             accessibilityLabel={t.voteNoteA11y}
           />
+          {draftPlan && draftPlan.ok ? (
+            <View style={styles.planBox}>
+              <Text style={[styles.planText, { textAlign: align }]}>{planSummary(draftPlan)}</Text>
+              {draftPlan.rr != null && draftPlan.rr < 1 ? (
+                <Text style={[styles.planWarn, { textAlign: align }]}>{t.planLowRR}</Text>
+              ) : null}
+            </View>
+          ) : draftPlan && draftPlan.issue !== 'invalid' ? (
+            <Text style={[styles.formError, { textAlign: align }]}>
+              {planIssueText(draftPlan.issue, pDirection)}
+            </Text>
+          ) : null}
           {pError ? <Text style={[styles.formError, { textAlign: align }]}>{pError}</Text> : null}
           <Pressable
             accessibilityRole="button"
@@ -303,6 +346,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
           const total = v.agree + v.disagree || 1;
           const pct = Math.round((v.agree / total) * 100);
           const buy = v.direction === 'buy';
+          const plan = analyzePlan({ symbol: v.symbol, side: v.direction, entry: v.entry, sl: v.sl, tp: v.tp });
           return (
             <View key={v.id} style={styles.card}>
               <View style={[styles.head, rtl && styles.headRtl]}>
@@ -316,9 +360,27 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                   {t.voteByAuthor.replace('{author}', v.author)}
                 </Text>
               ) : null}
-              <Text style={[styles.meta, { textAlign: align }]}>
-                {t.entryLabel} {v.entry} · {t.slLabel} {v.sl} · {t.tpLabel} {v.tp}
-              </Text>
+              <View style={[styles.levels, rtl && styles.levelsRtl]}>
+                <View style={styles.level}>
+                  <Text style={styles.levelLabel}>{t.entryLabel}</Text>
+                  <Text style={styles.levelVal}>{v.entry}</Text>
+                </View>
+                <View style={styles.level}>
+                  <Text style={styles.levelLabel}>{t.slLabel}</Text>
+                  <Text style={[styles.levelVal, styles.levelSl]}>{v.sl}</Text>
+                </View>
+                <View style={styles.level}>
+                  <Text style={styles.levelLabel}>{t.tpLabel}</Text>
+                  <Text style={[styles.levelVal, styles.levelTp]}>{v.tp}</Text>
+                </View>
+              </View>
+              {plan.ok ? (
+                <Text style={[styles.meta, { textAlign: align }]}>{planSummary(plan)}</Text>
+              ) : planIssueText(plan.issue, v.direction) ? (
+                <Text style={[styles.planWarn, { textAlign: align }]}>
+                  ⚠ {planIssueText(plan.issue, v.direction)}
+                </Text>
+              ) : null}
               <Text style={[styles.note, { textAlign: align }]}>{v.note}</Text>
               <View style={styles.barBg}>
                 <View style={[styles.barFill, { width: `${pct}%` }]} />
@@ -426,6 +488,29 @@ const styles = StyleSheet.create({
   badge: { borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 2 },
   badgeText: { color: colors.white, fontWeight: '800', fontSize: 11 },
   meta: { color: colors.textMuted, fontSize: 11, marginTop: 6 },
+  levels: { flexDirection: 'row', gap: spacing.sm, marginTop: 6 },
+  levelsRtl: { flexDirection: 'row-reverse' },
+  level: {
+    flex: 1,
+    backgroundColor: colors.controlBg,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    paddingVertical: spacing.xs,
+    alignItems: 'center',
+  },
+  levelLabel: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
+  levelVal: { color: colors.text, fontSize: 12, fontWeight: '800', marginTop: 1 },
+  levelSl: { color: colors.bear },
+  levelTp: { color: colors.bull },
+  planBox: {
+    backgroundColor: colors.accentSoft,
+    borderRadius: radii.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
+  planText: { color: colors.accent, fontSize: 11, fontWeight: '800' },
+  planWarn: { color: colors.warn, fontSize: 10, fontWeight: '700', marginTop: 2 },
   note: { color: colors.text, fontSize: 12, marginTop: spacing.xs, lineHeight: 18 },
   barBg: {
     height: 6,
