@@ -29,6 +29,8 @@ export type AcademyLecture = {
   script_segments: ScriptSegment[];
   school_id?: string;
   school_name?: string;
+  /** الاسم الإنجليزي للمدرسة — يُعرَض لأي لغة واجهة غير عربية (نفس قاعدة `schoolName` بـCoursesScreen). */
+  school_name_en?: string;
   level?: number;
   level_title?: string;
   teacher?: string;

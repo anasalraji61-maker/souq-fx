@@ -290,7 +290,8 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           <Text style={styles.back}>{t.lectureClose}</Text>
         </Pressable>
         <Text style={styles.meta}>
-          {lecture?.school_name} · {t.lectureLevelWord} {lecture?.level ?? '-'}
+          {(lang === 'ar' ? lecture?.school_name : lecture?.school_name_en ?? lecture?.school_name)} ·{' '}
+          {t.lectureLevelWord} {lecture?.level ?? '-'}
         </Text>
       </View>
 
