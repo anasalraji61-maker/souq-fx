@@ -237,6 +237,8 @@ class TradeCreate(BaseModel):
     size: float = 1.0
     note: str = ""
     opened_at: str | None = None
+    sl: float | None = None
+    tp: float | None = None
 
 
 class TradeClose(BaseModel):

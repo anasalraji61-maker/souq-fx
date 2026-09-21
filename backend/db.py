@@ -1172,6 +1172,21 @@ def _migrate_trades(c: sqlite3.Connection) -> None:
             status TEXT NOT NULL DEFAULT 'open'
         )"""
     )
+    # وقف/هدف اختياريان لخطة الصفقة (R:R والنتيجة بالـR بالواجهة) — عمودان يُضافان لقواعد قائمة.
+    cols = {r[1] for r in c.execute("PRAGMA table_info(trades)").fetchall()}
+    if "sl" not in cols:
+        c.execute("ALTER TABLE trades ADD COLUMN sl REAL")
+    if "tp" not in cols:
+        c.execute("ALTER TABLE trades ADD COLUMN tp REAL")
+
+
+def _opt_level(v) -> float | None:
+    """سعر وقف/هدف اختياري: رقم موجب منتهٍ وإلا None."""
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return None
+    return f if f > 0 and f != float("inf") else None
 
 
 def list_trades(user_id: int | None = None, days: int = 30) -> list[dict]:
@@ -1198,6 +1213,8 @@ def add_trade(data: dict, user_id: int | None = None) -> dict:
         "size": float(data.get("size") or 1),
         "pnl": float(data["pnl"]) if data.get("pnl") is not None else None,
         "note": data.get("note") or "",
+        "sl": _opt_level(data.get("sl")),
+        "tp": _opt_level(data.get("tp")),
         "opened_at": data.get("opened_at") or time.strftime("%Y-%m-%d %H:%M"),
         "closed_at": data.get("closed_at"),
         "status": data.get("status") or ("closed" if data.get("exit") is not None else "open"),
@@ -1212,8 +1229,8 @@ def add_trade(data: dict, user_id: int | None = None) -> dict:
     with _conn() as c:
         c.execute(
             """INSERT INTO trades
-               (id,user_id,symbol,side,entry,exit,size,pnl,note,opened_at,closed_at,status)
-               VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
+               (id,user_id,symbol,side,entry,exit,size,pnl,note,sl,tp,opened_at,closed_at,status)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 row["id"],
                 row["user_id"],
@@ -1224,6 +1241,8 @@ def add_trade(data: dict, user_id: int | None = None) -> dict:
                 row["size"],
                 row["pnl"],
                 row["note"],
+                row["sl"],
+                row["tp"],
                 row["opened_at"],
                 row["closed_at"],
                 row["status"],

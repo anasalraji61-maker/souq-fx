@@ -71,3 +71,47 @@ export function formatPips(p: number | null): string | null {
   if (p == null || !Number.isFinite(p)) return null;
   return Number.isInteger(p) ? String(p) : p.toFixed(1);
 }
+
+/**
+ * فحص جهة الوقف/الهدف حين يُعطى أحدهما فقط (دفتر الصفقات: كلاهما اختياري).
+ * null = لا مشكلة (أو لا شيء لفحصه). الأولوية لخطأ الوقف لأنه الأخطر.
+ */
+export function levelSideIssue(input: {
+  side: TradeSide;
+  entry: number;
+  sl?: number | null;
+  tp?: number | null;
+}): PlanIssue | null {
+  const { side, entry, sl, tp } = input;
+  if (!finitePos(entry)) return null;
+  const buy = side === 'buy';
+  if (finitePos(sl) && (buy ? sl >= entry : sl <= entry)) return 'slWrongSide';
+  if (finitePos(tp) && (buy ? tp <= entry : tp >= entry)) return 'tpWrongSide';
+  return null;
+}
+
+/**
+ * النتيجة بوحدات المخاطرة (R): +2 = ربحت ضعف ما خاطرت به، −1 = ضُرب الوقف كاملاً.
+ * يحتاج وقفاً صالحاً بالجهة الصحيحة؛ وإلا null. تقريب لمنزلة عشرية واحدة.
+ */
+export function realizedR(input: {
+  side: TradeSide;
+  entry: number;
+  sl?: number | null;
+  exit?: number | null;
+}): number | null {
+  const { side, entry, sl, exit } = input;
+  if (!finitePos(entry) || !finitePos(sl) || !finitePos(exit)) return null;
+  const buy = side === 'buy';
+  const risk = buy ? entry - sl : sl - entry;
+  if (risk <= 0) return null;
+  const move = buy ? exit - entry : entry - exit;
+  return Math.round((move / risk) * 10) / 10;
+}
+
+/** +1.8R / −1R / 0R */
+export function formatR(r: number | null): string | null {
+  if (r == null || !Number.isFinite(r)) return null;
+  const abs = Number.isInteger(r) ? String(Math.abs(r)) : Math.abs(r).toFixed(1);
+  return `${r > 0 ? '+' : r < 0 ? '−' : ''}${abs}R`;
+}

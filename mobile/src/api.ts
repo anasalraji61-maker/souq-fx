@@ -548,6 +548,9 @@ export const api = {
     exit?: number;
     size?: number;
     note?: string;
+    /** وقف/هدف اختياريان — باك-إند قديم يتجاهلهما (Pydantic يسقط الحقول غير المعروفة). */
+    sl?: number;
+    tp?: number;
   }) => postJson<{ ok: boolean; trade: Record<string, unknown>; stats: Record<string, number> }>(
     '/api/trades',
     body

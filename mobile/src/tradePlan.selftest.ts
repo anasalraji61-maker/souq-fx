@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/tradePlan.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { analyzePlan, formatPips, formatRR } from './tradePlan';
+import { analyzePlan, formatPips, formatR, formatRR, levelSideIssue, realizedR } from './tradePlan';
 
 // شراء EURUSD صحيح: وقف 25 pip، هدف 50 pip ⇒ 1:2
 const a = analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, tp: 1.09 });
@@ -60,5 +60,29 @@ assert.equal(formatPips(12.5), '12.5');
 assert.equal(formatPips(null), null);
 // حساب عائم: 1.0850-1.0825 لا يعطي 24.999999
 assert.equal(analyzePlan({ symbol: 'GBPUSD', side: 'buy', entry: 1.2732, sl: 1.2717, tp: 1.2777 }).riskPips, 15);
+
+// دفتر الصفقات: وقف/هدف اختياريان
+assert.equal(levelSideIssue({ side: 'buy', entry: 1.085 }), null);
+assert.equal(levelSideIssue({ side: 'buy', entry: 1.085, sl: 1.08 }), null);
+assert.equal(levelSideIssue({ side: 'buy', entry: 1.085, sl: 1.09 }), 'slWrongSide');
+assert.equal(levelSideIssue({ side: 'buy', entry: 1.085, sl: 1.085 }), 'slWrongSide');
+assert.equal(levelSideIssue({ side: 'sell', entry: 1.085, tp: 1.09 }), 'tpWrongSide');
+assert.equal(levelSideIssue({ side: 'sell', entry: 1.085, sl: 1.08, tp: 1.09 }), 'slWrongSide');
+assert.equal(levelSideIssue({ side: 'sell', entry: 1.085, sl: 1.09, tp: 1.08 }), null);
+assert.equal(levelSideIssue({ side: 'buy', entry: 1.085, sl: null, tp: NaN }), null);
+
+// النتيجة بالـR
+assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.0825, exit: 1.09 }), 2);
+assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.0825, exit: 1.0825 }), -1);
+assert.equal(realizedR({ side: 'sell', entry: 150, sl: 150.3, exit: 149.55 }), 1.5);
+assert.equal(realizedR({ side: 'sell', entry: 150, sl: 150.3, exit: 150.15 }), -0.5);
+assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.09, exit: 1.1 }), null);
+assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: null, exit: 1.1 }), null);
+assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.08, exit: null }), null);
+assert.equal(formatR(2), '+2R');
+assert.equal(formatR(-1), '−1R');
+assert.equal(formatR(1.5), '+1.5R');
+assert.equal(formatR(0), '0R');
+assert.equal(formatR(null), null);
 
 console.log('tradePlan selftest OK');

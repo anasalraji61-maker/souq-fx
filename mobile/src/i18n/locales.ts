@@ -310,6 +310,10 @@ export type Dict = {
   journalExitPlaceholder: string;
   journalExitA11y: string;
   journalNotePlaceholder: string;
+  journalSlPlaceholder: string;
+  journalTpPlaceholder: string;
+  journalInvalidEntry: string;
+  journalResultR: string;
   journalNoteA11y: string;
   journalAddA11y: string;
   journalAddBtn: string;
@@ -1017,6 +1021,10 @@ const ar: Dict = {
   journalExitPlaceholder: 'خروج (اختياري)',
   journalExitA11y: 'سعر الخروج (اختياري)',
   journalNotePlaceholder: 'ملاحظة',
+  journalSlPlaceholder: 'وقف الخسارة (اختياري)',
+  journalTpPlaceholder: 'الهدف (اختياري)',
+  journalInvalidEntry: 'اكتب الرمز وسعر دخول صحيحاً',
+  journalResultR: 'النتيجة {r}',
   journalNoteA11y: 'ملاحظة الصفقة (اختياري)',
   journalAddA11y: 'إضافة صفقة جديدة',
   journalAddBtn: 'إضافة صفقة',
@@ -1732,6 +1740,10 @@ const enUS: Dict = {
   journalExitPlaceholder: 'Exit (optional)',
   journalExitA11y: 'Exit price (optional)',
   journalNotePlaceholder: 'Note',
+  journalSlPlaceholder: 'Stop loss (optional)',
+  journalTpPlaceholder: 'Take profit (optional)',
+  journalInvalidEntry: 'Enter a symbol and a valid entry price',
+  journalResultR: 'Result {r}',
   journalNoteA11y: 'Trade note (optional)',
   journalAddA11y: 'Add a new trade',
   journalAddBtn: 'Add trade',
@@ -2467,6 +2479,10 @@ const ku: Dict = {
   journalExitPlaceholder: 'دەرچوون (ئیختیاری)',
   journalExitA11y: 'نرخی دەرچوون (ئیختیاری)',
   journalNotePlaceholder: 'تێبینی',
+  journalSlPlaceholder: 'وەستانی زیان (ئیختیاری)',
+  journalTpPlaceholder: 'ئامانج (ئیختیاری)',
+  journalInvalidEntry: 'هێما و نرخێکی دروستی چوونەژوورەوە بنووسە',
+  journalResultR: 'ئەنجام {r}',
   journalNoteA11y: 'تێبینی مامەڵە (ئیختیاری)',
   journalAddA11y: 'زیادکردنی مامەڵەیەکی نوێ',
   journalAddBtn: 'زیادکردنی مامەڵە',

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,16 @@ import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
 import { formatPrice } from '../chart/math';
+import {
+  analyzePlan,
+  formatPips,
+  formatR,
+  formatRR,
+  levelSideIssue,
+  realizedR,
+  type PlanIssue,
+  type TradePlan,
+} from '../tradePlan';
 
 type Trade = {
   id: string;
@@ -23,6 +33,9 @@ type Trade = {
   exit?: number | null;
   size: number;
   pnl?: number | null;
+  /** وقف/هدف اختياريان (غائبان بسجلات قديمة أو باك-إند قديم). */
+  sl?: number | null;
+  tp?: number | null;
   note: string;
   status: string;
   opened_at: string;
@@ -48,6 +61,8 @@ export function TradeJournalPanel() {
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [entry, setEntry] = useState('');
   const [exit, setExit] = useState('');
+  const [sl, setSl] = useState('');
+  const [tp, setTp] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   /** وضوح الحالة: يميّز "لا صفقات بعد" فعلياً عن فشل تحميل السجل */
@@ -86,23 +101,72 @@ export function TradeJournalPanel() {
     void refresh();
   }, [refresh]);
 
+  /** "1,0850" بلوحة مفاتيح أوروبية/عربية → 1.085؛ خانة فارغة أو غير رقمية → null. */
+  const num = (v: string): number | null => {
+    const n = parseFloat(v.replace(',', '.'));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
+
+  /** رسالة واضحة لوقف/هدف بالجهة الخطأ — نفس نصوص خطة الصفقة بلوحة الأفكار. */
+  const planIssueText = (issue: PlanIssue | null): string | null => {
+    if (issue === 'slWrongSide') return side === 'buy' ? t.planSlWrongBuy : t.planSlWrongSell;
+    if (issue === 'tpWrongSide') return side === 'buy' ? t.planTpWrongBuy : t.planTpWrongSell;
+    return null;
+  };
+
+  /** "المخاطرة 25 pip · الربح المحتمل 50 pip · R:R 1:2.0" */
+  const planSummary = (plan: TradePlan): string => {
+    const dist = (pips: number | null, d: number) => {
+      const p = formatPips(pips);
+      return p != null ? `${p} pip` : String(Math.round(d * 1e5) / 1e5);
+    };
+    return `${t.planRiskWord} ${dist(plan.riskPips, plan.riskDist)} · ${t.planRewardWord} ${dist(plan.rewardPips, plan.rewardDist)} · R:R ${formatRR(plan.rr)}`;
+  };
+
+  // معاينة حيّة أثناء الكتابة: خطأ جهة فوراً (حتى بوقف وحده)، والملخّص حين تكتمل الأرقام الثلاثة.
+  const draft = useMemo(() => {
+    const e = num(entry);
+    if (e == null) return null;
+    const s = num(sl);
+    const p = num(tp);
+    const issue = levelSideIssue({ side, entry: e, sl: s, tp: p });
+    if (issue) return { issue, plan: null as TradePlan | null };
+    if (s == null || p == null) return null;
+    return { issue: null, plan: analyzePlan({ symbol: symbol.trim(), side, entry: e, sl: s, tp: p }) };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol, side, entry, sl, tp]);
+
   const add = async () => {
-    const e = parseFloat(entry);
-    if (!symbol.trim() || Number.isNaN(e)) return;
+    const e = num(entry);
+    if (!symbol.trim() || e == null) {
+      setFormError(t.journalInvalidEntry);
+      return;
+    }
+    const s = num(sl);
+    const p = num(tp);
+    const issue = levelSideIssue({ side, entry: e, sl: s, tp: p });
+    if (issue) {
+      setFormError(planIssueText(issue));
+      return;
+    }
     setBusy(true);
     setFormError(null);
     try {
-      const x = exit.trim() ? parseFloat(exit) : undefined;
+      const x = num(exit);
       await api.createTrade({
         symbol: symbol.trim().toUpperCase(),
         side,
         entry: e,
-        exit: x != null && !Number.isNaN(x) ? x : undefined,
+        exit: x ?? undefined,
+        sl: s ?? undefined,
+        tp: p ?? undefined,
         note,
       });
       playSoftClick();
       setEntry('');
       setExit('');
+      setSl('');
+      setTp('');
       setNote('');
       await refresh();
     } catch {
@@ -113,8 +177,8 @@ export function TradeJournalPanel() {
   };
 
   const closeOpen = async (id: string) => {
-    const x = exit.trim() ? parseFloat(exit) : NaN;
-    if (Number.isNaN(x)) return;
+    const x = num(exit);
+    if (x == null) return;
     setBusy(true);
     try {
       await api.closeTrade(id, x);
@@ -228,6 +292,52 @@ export function TradeJournalPanel() {
         selectionColor={colors.accent}
         accessibilityLabel={t.journalExitA11y}
       />
+      <View style={[styles.row, rtl && styles.rowRtl]}>
+        <TextInput
+          style={[styles.input, styles.inputHalf, { textAlign: align }]}
+          value={sl}
+          onChangeText={(v) => {
+            setSl(v);
+            setFormError(null);
+          }}
+          placeholder={t.journalSlPlaceholder}
+          keyboardType="decimal-pad"
+          maxLength={12}
+          placeholderTextColor={colors.textDim}
+          returnKeyType="done"
+          underlineColorAndroid="transparent"
+          keyboardAppearance="dark"
+          selectionColor={colors.bear}
+          accessibilityLabel={t.journalSlPlaceholder}
+        />
+        <TextInput
+          style={[styles.input, styles.inputHalf, { textAlign: align }]}
+          value={tp}
+          onChangeText={(v) => {
+            setTp(v);
+            setFormError(null);
+          }}
+          placeholder={t.journalTpPlaceholder}
+          keyboardType="decimal-pad"
+          maxLength={12}
+          placeholderTextColor={colors.textDim}
+          returnKeyType="done"
+          underlineColorAndroid="transparent"
+          keyboardAppearance="dark"
+          selectionColor={colors.bull}
+          accessibilityLabel={t.journalTpPlaceholder}
+        />
+      </View>
+      {draft?.issue ? (
+        <Text style={[styles.formError, { textAlign: align }]}>{planIssueText(draft.issue)}</Text>
+      ) : draft?.plan?.ok ? (
+        <>
+          <Text style={[styles.planLine, { textAlign: align }]}>{planSummary(draft.plan)}</Text>
+          {draft.plan.rr != null && draft.plan.rr < 1 ? (
+            <Text style={[styles.planWarn, { textAlign: align }]}>{t.planLowRR}</Text>
+          ) : null}
+        </>
+      ) : null}
       <TextInput
         style={[styles.input, { textAlign: align }]}
         value={note}
@@ -271,9 +381,37 @@ export function TradeJournalPanel() {
         {trades.map((tr) => (
           <View key={tr.id} style={styles.trade}>
             <Text style={[styles.tradeMain, { textAlign: align }]}>
-              {tr.side.toUpperCase()} {tr.symbol} · {formatPrice(tr.entry)}
+              {/* الاتجاه بلا لبس: سهم ولون وكلمة مترجمة بدل "BUY"/"SELL" اللاتينية */}
+              <Text style={{ color: tr.side === 'sell' ? colors.bear : colors.bull }}>
+                {tr.side === 'sell' ? `▼ ${t.dirSell}` : `▲ ${t.dirBuy}`}
+              </Text>{' '}
+              {tr.symbol} · {formatPrice(tr.entry)}
               {tr.exit != null ? ` → ${formatPrice(tr.exit)}` : ` ${t.journalOpenSuffix}`}
             </Text>
+            {tr.sl != null || tr.tp != null ? (
+              <Text style={[styles.tradeMeta, { textAlign: align }]}>
+                {tr.sl != null ? <Text style={{ color: colors.bear }}>SL {formatPrice(tr.sl)}</Text> : null}
+                {tr.sl != null && tr.tp != null ? ' · ' : ''}
+                {tr.tp != null ? <Text style={{ color: colors.bull }}>TP {formatPrice(tr.tp)}</Text> : null}
+                {(() => {
+                  if (tr.sl == null || tr.tp == null) return '';
+                  const plan = analyzePlan({
+                    symbol: tr.symbol,
+                    side: tr.side === 'sell' ? 'sell' : 'buy',
+                    entry: tr.entry,
+                    sl: tr.sl,
+                    tp: tr.tp,
+                  });
+                  return plan.ok ? ` · R:R ${formatRR(plan.rr)}` : '';
+                })()}
+                {(() => {
+                  const r = formatR(
+                    realizedR({ side: tr.side === 'sell' ? 'sell' : 'buy', entry: tr.entry, sl: tr.sl, exit: tr.exit })
+                  );
+                  return r ? ` · ${t.journalResultR.replace('{r}', r)}` : '';
+                })()}
+              </Text>
+            ) : null}
             <Text style={[styles.tradeMeta, { textAlign: align }]}>
               {tr.status}
               {tr.pnl != null ? ` · PnL ${tr.pnl >= 0 ? '+' : ''}${Number(tr.pnl).toFixed(2)}%` : ''}
@@ -369,6 +507,9 @@ const styles = StyleSheet.create({
   },
   tradeMain: { color: colors.text, textAlign: 'right', fontWeight: '700', fontSize: 12 },
   tradeMeta: { color: colors.textDim, textAlign: 'right', fontSize: 11 },
+  inputHalf: { flex: 1 },
+  planLine: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  planWarn: { color: colors.warn, fontSize: 11, fontWeight: '700' },
   closeLink: { color: colors.accent, textAlign: 'right', fontSize: 11, fontWeight: '700' },
   closeLinkDisabled: { opacity: 0.4 },
 });
