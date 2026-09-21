@@ -1,6 +1,42 @@
 # HANDOFF — MATRIX (سجل تنفيذ Claude)
 
 آخر تحديث: 2026-09-21 (Claude — تشغيل مجدول جديد، جلسة جديدة بلا ذاكرة، **تشغيل تم فعلياً على سيرفر
+الـVPS (`windows-utah-8gb`, linux, مستخدم `dev`)** — حارس الجهاز مرّ. **زاوية جديدة (جاهزية المتاجر، المقترَحة
+بالإدخال السابق): إزالة إذن ميكروفون وهمي كان سيُعلَن للمتاجر + أرقام بناء صريحة بـ`mobile/app.json`**):
+
+**GIT أولاً**: `git status` نظيف، `git pull --rebase` → *Already up to date* (`390e0a1`). قفل `index.lock` متروك
+نُقل إلى `.git/stale-locks/` بالالتفاف المعتاد (يتكرر بعد كل أمر git لأن الحذف غير مسموح بالمجلد).
+
+**الاكتشاف**: `expo-av` ضمن قائمة `legacyExpoPlugins` التي يطبّقها `@expo/prebuild-config` تلقائياً لأي حزمة مثبَّتة
+حتى لو لم تُذكَر بـ`plugins` (تحقّقتُ من مصدر `@expo/prebuild-config@57.0.16` و`expo-av@16.0.8/plugin/build/withAV.js`
+بالبيئة السحابية). الـplugin الافتراضي يضيف **`android.permission.RECORD_AUDIO`** للمانيفست و**`NSMicrophoneUsageDescription`**
+(«Allow MATRIX to access your microphone») لـInfo.plist. بينما التطبيق **لا يسجّل صوتاً إطلاقاً** — `expo-av` يُستعمل
+فقط لتشغيل سرد الأكاديمية (`LectureClassroom`)، و`grep` لـ`Recording`/`allowsRecordingIOS`/أذونات بـ`src` لا يجد إلا
+أذونات الإشعارات. النتيجة لولا الإصلاح: صفحة Google Play تُظهر «Microphone» كإذن مطلوب لتطبيق شارتات (ينفّر
+المتداول الفردي ويستدعي أسئلة مراجعة/سياسة بيانات)، ومراجعة Apple قد تسأل عن سبب مفتاح ميكروفون غير مستخدم.
+
+**العمل المنفَّذ (ملف واحد: `mobile/app.json`)**:
+1. `["expo-av", { "microphonePermission": false }]` بقائمة `plugins` — بالمصدر: `false` يحذف مفتاح iOS (`applyPermissions`
+   → `delete infoPlist[...]`) ويُسقط `RECORD_AUDIO` من قائمة Android (يبقى `MODIFY_AUDIO_SETTINGS` الطبيعي للتشغيل).
+   الـplugin مغلَّف بـ`createRunOncePlugin` فلا يُطبَّق التلقائي مرة ثانية.
+2. `ios.buildNumber: "1"` و`android.versionCode: 1` صريحان — أول رفع لكل متجر يحتاجهما (بدل الاعتماد على الافتراضي الضمني).
+
+**تحقّق**: التعديل بسكربت python (`json.load`/`dump` مع تأكيد أن الإرجاع مطابق للتنسيق الأصلي قبل التعديل)؛ `json.load`
+بعده سليم؛ قراءة الملف كاملاً و`git diff` → 3 إضافات فقط، صفر تغيير خارج النطاق (`apiUrl` المحلي لم يُلمَس — بانتظار
+نشر الباك-إند، بند ب.6). لا build/prebuild على الـVPS (لا `node_modules` هنا أصلاً، وحدود الذاكرة).
+
+**لم يُنفَّذ عمداً (قرار امتثال → لأنس)**: `ios.infoPlist.ITSAppUsesNonExemptEncryption: false` يوفّر سؤال «Export
+Compliance» عند كل رفع لـApp Store، لكنه تصريح قانوني لتصدير التشفير (الأمريكي) باسم أنس — يبقى له.
+
+### ملاحظة لـ أنس
+عند أول رفع لـApp Store ستسألك Apple عن التشفير (Export Compliance). التطبيق يستخدم HTTPS العادي فقط، والإجابة
+المعتادة لذلك «لا تشفير غير معفى». إن أكّدت، أضيف `ITSAppUsesNonExemptEncryption: false` لـ`app.json` فلا يتكرر السؤال.
+
+**خلاصة**: ملف كود واحد (`mobile/app.json`) + وثيقتان. تشغيل على الـVPS، تثبيت ودفع أدناه.
+
+---
+
+آخر تحديث: 2026-09-21 (Claude — تشغيل مجدول جديد، جلسة جديدة بلا ذاكرة، **تشغيل تم فعلياً على سيرفر
 الـVPS (`windows-utah-8gb`, linux, مستخدم `dev`)** — حارس الجهاز مرّ. **عمل حقيقي على الشاشة رقم 1 بالـMVP:
 تسميات أنواع الشارت وأدوات الرسم والعدسات صارت بلغة الواجهة**):
 
