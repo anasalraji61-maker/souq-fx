@@ -53,7 +53,6 @@ import {
 import { PanSpeedSlider, CruiseSpeedMark } from '../components/PanSpeedSlider';
 import { SymbolPairMenu } from '../components/SymbolPairMenu';
 import {
-  CHART_KINDS,
   type ChartKind,
   type DrawTool,
   type IndicatorId,
@@ -66,6 +65,7 @@ import {
   type Timeframe,
 } from '../timeframes';
 import { useI18n } from '../i18n/I18nContext';
+import { localizedChartKinds } from '../chart/typeLabels';
 
 const PREFS_KEY = 'matrix.frameTimeframes.v1';
 const SYMBOLS_KEY = 'matrix.frameSymbols.v1';
@@ -1016,7 +1016,7 @@ export function TerminalScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.kindRow}
         >
-          {CHART_KINDS.map((k) => (
+          {localizedChartKinds(t).map((k) => (
             <Pressable
               accessibilityRole="button"
               key={k.id}

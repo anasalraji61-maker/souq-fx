@@ -41,10 +41,12 @@ import { computeCvd, computeFootprint } from './orderflow';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
 import {
-  CHART_KINDS,
-  DRAW_TOOLS,
-  INDICATORS,
-  LENSES,
+  localizedChartKinds,
+  localizedDrawTools,
+  localizedIndicators,
+  localizedLenses,
+} from './typeLabels';
+import {
   type ChartKind,
   type ChartPoint,
   type DrawTool,
@@ -2468,7 +2470,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.compactToolsRow}
           >
-            {DRAW_TOOLS.map((t) => (
+            {localizedDrawTools(tr).map((t) => (
               <Pressable
                 accessibilityRole="button"
                 key={t.id}
@@ -2519,7 +2521,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       ) : interactive ? (
         <View style={styles.toolbar}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-            {CHART_KINDS.map((k) => (
+            {localizedChartKinds(tr).map((k) => (
               <Pressable
                 accessibilityRole="button"
                 key={k.id}
@@ -2535,7 +2537,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ))}
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-            {LENSES.map((l) => (
+            {localizedLenses(tr).map((l) => (
               <Pressable
                 accessibilityRole="button"
                 key={l.id}
@@ -7477,7 +7479,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={styles.dock}>
           <Text style={styles.dockTitle}>{tr.mcDockTitle}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-            {DRAW_TOOLS.map((t) => (
+            {localizedDrawTools(tr).map((t) => (
               <Pressable
                 accessibilityRole="button"
                 key={t.id}
@@ -7519,7 +7521,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             </Pressable>
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-            {INDICATORS.map((ind) => {
+            {localizedIndicators(tr).map((ind) => {
               const on = indicators.includes(ind.id);
               return (
                 <Pressable

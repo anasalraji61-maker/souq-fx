@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
-import { DRAW_TOOLS, LENSES, type DrawTool, type LensMode } from '../chart/types';
+import { type DrawTool, type LensMode } from '../chart/types';
+import { localizedDrawTools, localizedLenses } from '../chart/typeLabels';
 import type { EdgePanelId } from './MatrixSidePanel';
 import type { FrameLayoutCount, FrameLayoutShape } from './FrameSizedGrid';
 import { useI18n } from '../i18n/I18nContext';
@@ -50,7 +51,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
   return (
     <View style={styles.leftRail}>
       <Text style={styles.railTitle}>{t.lensSectionTitle}</Text>
-      {LENSES.map((l) => {
+      {localizedLenses(t).map((l) => {
         const on = activeLens === l.id;
         return (
           <Pressable
@@ -75,7 +76,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
       <View style={styles.railSep} />
       <Text style={styles.railTitle}>{t.railDrawSectionTitle}</Text>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {DRAW_TOOLS.map((tool) => {
+        {localizedDrawTools(t).map((tool) => {
           const on = activeTool === tool.id;
           return (
             <Pressable

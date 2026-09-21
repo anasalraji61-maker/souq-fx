@@ -485,6 +485,35 @@ export type Dict = {
   lensA11yPrefix: string;
   drawToolA11yPrefix: string;
   lensSectionTitle: string;
+  ctlKindCandles: string;
+  ctlKindHollow: string;
+  ctlKindHeikin: string;
+  ctlKindBars: string;
+  ctlKindLine: string;
+  ctlKindArea: string;
+  ctlKindBaseline: string;
+  ctlKindRange: string;
+  ctlToolNone: string;
+  ctlToolSelect: string;
+  ctlToolTrend: string;
+  ctlToolRay: string;
+  ctlToolHline: string;
+  ctlToolVline: string;
+  ctlToolRect: string;
+  ctlToolFib: string;
+  ctlToolZone: string;
+  ctlToolNote: string;
+  ctlToolMeasure: string;
+  ctlLensClean: string;
+  ctlLensCleanHint: string;
+  ctlLensStructure: string;
+  ctlLensStructureHint: string;
+  ctlLensMomentum: string;
+  ctlLensMomentumHint: string;
+  ctlLensLiquidity: string;
+  ctlLensLiquidityHint: string;
+  ctlIndBollinger: string;
+  ctlIndVolume: string;
   backtestWord: string;
   depthWord: string;
   mspDrawTitle: string;
@@ -1101,6 +1130,35 @@ const ar: Dict = {
   lensA11yPrefix: 'عدسة: ',
   drawToolA11yPrefix: 'أداة رسم: ',
   lensSectionTitle: 'عدسة',
+  ctlKindCandles: 'شموع',
+  ctlKindHollow: 'مجوّفة',
+  ctlKindHeikin: 'هيكن',
+  ctlKindBars: 'أعمدة',
+  ctlKindLine: 'خط',
+  ctlKindArea: 'منطقة',
+  ctlKindBaseline: 'خط أساس',
+  ctlKindRange: 'نطاق',
+  ctlToolNone: 'مؤشر',
+  ctlToolSelect: 'تحديد',
+  ctlToolTrend: 'ترند',
+  ctlToolRay: 'شعاع',
+  ctlToolHline: 'أفقي',
+  ctlToolVline: 'عمودي',
+  ctlToolRect: 'مستطيل',
+  ctlToolFib: 'فيبو',
+  ctlToolZone: 'منطقة',
+  ctlToolNote: 'ملاحظة',
+  ctlToolMeasure: 'قياس',
+  ctlLensClean: 'نظيف',
+  ctlLensCleanHint: 'سعر فقط',
+  ctlLensStructure: 'هيكل',
+  ctlLensStructureHint: 'MA + مناطق',
+  ctlLensMomentum: 'زخم',
+  ctlLensMomentumHint: 'RSI + MACD',
+  ctlLensLiquidity: 'سيولة',
+  ctlLensLiquidityHint: 'فوليوم + CVD',
+  ctlIndBollinger: 'بولنجر',
+  ctlIndVolume: 'فوليوم',
   backtestWord: 'اختبار',
   depthWord: 'عمق',
   mspDrawTitle: 'أدوات الرسم · MATRIX',
@@ -1723,6 +1781,35 @@ const enUS: Dict = {
   lensA11yPrefix: 'Lens: ',
   drawToolA11yPrefix: 'Draw tool: ',
   lensSectionTitle: 'Lens',
+  ctlKindCandles: 'Candles',
+  ctlKindHollow: 'Hollow',
+  ctlKindHeikin: 'Heikin Ashi',
+  ctlKindBars: 'Bars',
+  ctlKindLine: 'Line',
+  ctlKindArea: 'Area',
+  ctlKindBaseline: 'Baseline',
+  ctlKindRange: 'Range',
+  ctlToolNone: 'Cursor',
+  ctlToolSelect: 'Select',
+  ctlToolTrend: 'Trend',
+  ctlToolRay: 'Ray',
+  ctlToolHline: 'H-line',
+  ctlToolVline: 'V-line',
+  ctlToolRect: 'Box',
+  ctlToolFib: 'Fib',
+  ctlToolZone: 'Zone',
+  ctlToolNote: 'Note',
+  ctlToolMeasure: 'Measure',
+  ctlLensClean: 'Clean',
+  ctlLensCleanHint: 'Price only',
+  ctlLensStructure: 'Structure',
+  ctlLensStructureHint: 'MA + zones',
+  ctlLensMomentum: 'Momentum',
+  ctlLensMomentumHint: 'RSI + MACD',
+  ctlLensLiquidity: 'Liquidity',
+  ctlLensLiquidityHint: 'Volume + CVD',
+  ctlIndBollinger: 'Bollinger',
+  ctlIndVolume: 'Volume',
   backtestWord: 'Backtest',
   depthWord: 'Depth',
   mspDrawTitle: 'Draw tools · MATRIX',
@@ -2366,6 +2453,35 @@ const ku: Dict = {
   lensA11yPrefix: 'لینز: ',
   drawToolA11yPrefix: 'ئامرازی وێنەکێشان: ',
   lensSectionTitle: 'لینز',
+  ctlKindCandles: 'مۆم',
+  ctlKindHollow: 'بەتاڵ',
+  ctlKindHeikin: 'هایکن',
+  ctlKindBars: 'ستوون',
+  ctlKindLine: 'هێڵ',
+  ctlKindArea: 'ڕووبەر',
+  ctlKindBaseline: 'هێڵی بنەڕەت',
+  ctlKindRange: 'مەودا',
+  ctlToolNone: 'نیشانکەر',
+  ctlToolSelect: 'هەڵبژاردن',
+  ctlToolTrend: 'ترێند',
+  ctlToolRay: 'تیشک',
+  ctlToolHline: 'ئاسۆیی',
+  ctlToolVline: 'ستوونی',
+  ctlToolRect: 'لاکێشە',
+  ctlToolFib: 'فیبۆ',
+  ctlToolZone: 'ناوچە',
+  ctlToolNote: 'تێبینی',
+  ctlToolMeasure: 'پێوان',
+  ctlLensClean: 'پاک',
+  ctlLensCleanHint: 'تەنها نرخ',
+  ctlLensStructure: 'پێکهاتە',
+  ctlLensStructureHint: 'MA + ناوچەکان',
+  ctlLensMomentum: 'پاڵنە',
+  ctlLensMomentumHint: 'RSI + MACD',
+  ctlLensLiquidity: 'شلەیی',
+  ctlLensLiquidityHint: 'قەبارە + CVD',
+  ctlIndBollinger: 'بۆلینجەر',
+  ctlIndVolume: 'قەبارە',
   backtestWord: 'تاقیکردنەوە',
   depthWord: 'قووڵی',
   mspDrawTitle: 'ئامرازەکانی وێنەکێشان · MATRIX',
