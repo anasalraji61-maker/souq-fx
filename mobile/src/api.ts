@@ -116,8 +116,34 @@ export type ChatMsg = {
   peer?: string;
 };
 
+/**
+ * مهلة لطلبات القراءة: بلا مهلة، خادم غير قابل للوصول (عنوان LAN قديم، شبكة ضعيفة) يترك الشاشة
+ * بمؤشر تحميل دقيقة كاملة أو أكثر (OkHttp على أندرويد بلا مهلة قراءة افتراضياً). بعد المهلة يُرمى
+ * خطأ عادي فتعرض كل لوحة حالة الخطأ/إعادة المحاولة الموجودة لديها أصلاً. طلبات POST (ذكاء
+ * اصطناعي، باكتست، ماسح) قد تطول شرعياً فتبقى بلا مهلة.
+ */
+const GET_TIMEOUT_MS = 25000;
+
+async function fetchWithTimeout(url: string, init: RequestInit, ms: number): Promise<Response> {
+  if (typeof AbortController === 'undefined') return fetch(url, init);
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } catch (e) {
+    if (ctrl.signal.aborted) throw new Error('timeout');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, { headers: { ...authHeaders() } });
+  const res = await fetchWithTimeout(
+    `${API_URL}${path}`,
+    { headers: { ...authHeaders() } },
+    GET_TIMEOUT_MS
+  );
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
