@@ -26,6 +26,7 @@ import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import { mockSeries } from '../mock';
 import { SymbolSearchBar } from './SymbolSearchBar';
 import { AlertsPanel } from './AlertsPanel';
+import { NewsRiskBanner } from './NewsRiskBanner';
 import { SymbolSnapshot } from './SymbolSnapshot';
 import { BacktestPanel } from './BacktestPanel';
 import { IndicatorAlertsPanel } from './IndicatorAlertsPanel';
@@ -363,6 +364,7 @@ export function FocusChartModal({
             ) : null}
 
             <TimeframeBar value={tf} onChange={setTf} />
+            <NewsRiskBanner symbol={sym} />
             {!phone ? <SymbolSnapshot symbol={sym} timeframe={tf} /> : null}
 
             {loading || !series ? (

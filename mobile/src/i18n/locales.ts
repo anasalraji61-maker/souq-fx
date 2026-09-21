@@ -272,6 +272,8 @@ export type Dict = {
   calInPrefix: string;
   calHourShort: string;
   calMinShort: string;
+  newsRiskHigh: string;
+  newsRiskHint: string;
   calToday: string;
   calTomorrow: string;
   calSampleBanner: string;
@@ -982,6 +984,8 @@ const ar: Dict = {
   calInPrefix: 'بعد',
   calHourShort: 'س',
   calMinShort: 'د',
+  newsRiskHigh: 'خبر قوي',
+  newsRiskHint: 'تقلّب حاد وانزلاق محتمل — راجع وقف الخسارة وحجم الصفقة',
   calToday: 'اليوم',
   calTomorrow: 'غداً',
   calSampleBanner: '⚠ أمثلة توضيحية — تعذّر جلب التقويم الحي الآن',
@@ -1700,6 +1704,8 @@ const enUS: Dict = {
   calInPrefix: 'in',
   calHourShort: 'h',
   calMinShort: 'm',
+  newsRiskHigh: 'High-impact news',
+  newsRiskHint: 'Expect sharp moves and slippage — check your stop and position size',
   calToday: 'Today',
   calTomorrow: 'Tomorrow',
   calSampleBanner: '⚠ Sample events — live calendar unavailable right now',
@@ -2437,6 +2443,8 @@ const ku: Dict = {
   calInPrefix: 'دوای',
   calHourShort: 'ک',
   calMinShort: 'خ',
+  newsRiskHigh: 'هەواڵی بەهێز',
+  newsRiskHint: 'جووڵەی توند و خلیسکان چاوەڕوانکراوە — وەستان و قەبارەی مامەڵە بپشکنە',
   calToday: 'ئەمڕۆ',
   calTomorrow: 'سبەینێ',
   calSampleBanner: '⚠ نموونەی ڕوونکردنەوە — ڕۆژژمێری ڕاستەوخۆ ئێستا بەردەست نییە',

@@ -68,6 +68,7 @@ import {
 } from '../timeframes';
 import { useI18n } from '../i18n/I18nContext';
 import { localizedChartKinds } from '../chart/typeLabels';
+import { NewsRiskBanner } from '../components/NewsRiskBanner';
 
 const PREFS_KEY = 'matrix.frameTimeframes.v1';
 const SYMBOLS_KEY = 'matrix.frameSymbols.v1';
@@ -1151,6 +1152,8 @@ export function TerminalScreen() {
           </Pressable>
         </ScrollView>
       ) : null}
+
+      <NewsRiskBanner symbol={symbol} />
 
       <View style={styles.workspace}>
         {!phone ? (

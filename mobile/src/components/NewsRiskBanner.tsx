@@ -1,0 +1,110 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { colors, radii, spacing } from '../theme';
+import { api } from '../api';
+import { useI18n } from '../i18n/I18nContext';
+import { nextHighImpact, symbolCurrencies, NEWS_GRACE_MS, type NewsEvent } from '../chart/newsRisk';
+
+/**
+ * سطر تحذير «خبر قوي قريب» فوق الشارت: أقرب حدث عالي التأثير لعملتي الزوج خلال 3 ساعات
+ * (أو جارٍ الآن). لا يظهر شيء إن لم يوجد حدث، أو فشل التقويم، أو كانت البيانات أمثلة احتياطية.
+ *
+ * مخزن ذاكرة مشترك: طلب `/api/calendar?impact=high` واحد كل 10 دقائق مهما تعدّدت الشاشات
+ * (دقيقتان بعد فشل) — التقويم أسبوعي ولا يتغيّر كل دقيقة.
+ */
+const TTL_MS = 10 * 60 * 1000;
+const FAIL_TTL_MS = 2 * 60 * 1000;
+let cache: { events: NewsEvent[]; at: number; ok: boolean } | null = null;
+let inflight: Promise<void> | null = null;
+const listeners = new Set<() => void>();
+
+function ensureFresh(now: number) {
+  if (cache && now - cache.at < (cache.ok ? TTL_MS : FAIL_TTL_MS)) return;
+  if (inflight) return;
+  inflight = api
+    .calendar({ impact: 'high' })
+    .then((r) => {
+      cache = { events: Array.isArray(r.events) ? r.events : [], at: Date.now(), ok: true };
+    })
+    .catch(() => {
+      cache = { events: [], at: Date.now(), ok: false };
+    })
+    .finally(() => {
+      inflight = null;
+      for (const l of listeners) l();
+    });
+}
+
+type Props = { symbol: string };
+
+export function NewsRiskBanner({ symbol }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
+  const [now, setNow] = useState(() => Date.now());
+  const [, setVersion] = useState(0);
+
+  useEffect(() => {
+    let alive = true;
+    const onUpdate = () => {
+      if (alive) setVersion((v) => v + 1);
+    };
+    listeners.add(onUpdate);
+    ensureFresh(Date.now());
+    // ساعة دقيقة: تحدّث العدّ التنازلي وتعيد الجلب عند انتهاء صلاحية المخزن.
+    const id = setInterval(() => {
+      const n = Date.now();
+      if (alive) setNow(n);
+      ensureFresh(n);
+    }, 60_000);
+    return () => {
+      alive = false;
+      listeners.delete(onUpdate);
+      clearInterval(id);
+    };
+  }, []);
+
+  const hit = cache ? nextHighImpact(cache.events, symbolCurrencies(symbol), now) : null;
+  if (!hit) return null;
+
+  const { event, deltaMs } = hit;
+  let when: string;
+  if (Math.abs(deltaMs) <= NEWS_GRACE_MS && deltaMs <= 60_000) {
+    when = t.calNow;
+  } else {
+    const mins = Math.max(1, Math.round(deltaMs / 60_000));
+    const h = Math.floor(mins / 60);
+    when = `${t.calInPrefix} ${h ? `${h}${t.calHourShort} ` : ''}${mins % 60}${t.calMinShort}`;
+  }
+  const text = `⚠ ${t.newsRiskHigh} · ${event.currency} · ${event.title} · ${when}`;
+
+  return (
+    <View
+      style={styles.wrap}
+      accessible
+      accessibilityRole="alert"
+      accessibilityLabel={`${text}. ${t.newsRiskHint}`}
+    >
+      <Text style={[styles.main, { textAlign: align }]} numberOfLines={1}>
+        {text}
+      </Text>
+      <Text style={[styles.hint, { textAlign: align }]} numberOfLines={1}>
+        {t.newsRiskHint}
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: {
+    marginHorizontal: spacing.sm,
+    marginVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.bear,
+    backgroundColor: colors.bearSoft,
+  },
+  main: { color: colors.text, fontSize: 12, fontWeight: '800' },
+  hint: { color: colors.textMuted, fontSize: 10, marginTop: 1 },
+});
