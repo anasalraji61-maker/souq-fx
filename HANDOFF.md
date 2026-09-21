@@ -1,5 +1,41 @@
 # HANDOFF — MATRIX (سجل تنفيذ Claude)
 
+آخر تحديث: 2026-09-21 ~23:41–00:00 UTC (Claude — تشغيل مجدول، جلسة جديدة بلا ذاكرة، **تشغيل على سيرفر الـVPS
+(`windows-utah-8gb`, linux, مستخدم `dev`)** — حارس الجهاز مرّ؛ `pull --rebase` نظيف ("Already up to date"). قفلان
+(`index.lock`، `objects/maintenance.lock`) نُقلا إلى `.git/_to_delete/`؛ غلاف `$HOME/g.sh` أُعيد إنشاؤه (يعطّل أيضاً
+`gc.auto`/`maintenance.auto`). **أربعة بنود مكتملة (5 و1 و2 و8)**):
+
+**التحقّق**: `tsc --noEmit` كامل بالسحابة (tar لـ`mobile/src`+lock → `npm ci --ignore-scripts`) قبل العمل وبعد كل بند:
+**صفر خطأ** سوى الـ7 المعروفة (`node:assert` بملفات selftest). `positionSize.selftest.ts` بـ`npx tsx` ✓ (+14 تأكيداً).
+الباك-إند: `py_compile` + تجربة `db.update_alert` على قاعدة مؤقتة (6 حالات ملكية/غياب). **طريقة نقل جديدة أبسط**: الملف
+المعدَّل بالسحابة يُكتب للـVPS بـ`device_commit_files` بعد مطابقة md5 الأصل على الجهازين (لا انجراف، لا إعادة كتابة يدوية).
+
+1. **محور الزمن بالشاشات الضيقة** (`MatrixChart.tsx`): `formatAxisTime(…, compact)` — عند عرض رسم <280px يصير اليوم/الشهر
+   رقمياً «21/9» (و«14:30\n21/9» للفريمات الصغيرة، «9/2026» للمدى الطويل) بدل «21 سبتمبر»/«کانوونی یەکەم 2026» التي كانت
+   تلتف لسطر ثالث بعرض 56px. كل التسميات `numberOfLines={2}` + `adjustsFontSizeToFit` (أصلي فقط؛ الويب يتجاهله). وسم
+   الـcrosshair بقي بالأسماء الكاملة.
+2. **تعديل ذرّي للتنبيه** (`backend/main.py`، `backend/db.py`، `api.ts`، `AlertsPanel.tsx`): `PATCH /api/alerts/{id}` بنفس
+   `AlertCreate` — يحدّث بنفس المعرّف ويعيد التفعيل (`triggered=0`، `ts` جديد). ملكية: مستخدم مسجّل لتنبيهاته أو القديمة
+   المجهولة (`user_id IS NULL`)، والمجهول للمجهولة فقط؛ غير ذلك 404. العميل يجرّب PATCH أولاً، وعند 404/405 (باك-إند أقدم
+   أو تنبيه غير موجود) يعود للطريق القديم (إنشاء ثم حذف)؛ أي خطأ آخر يظهر كخطأ عادي بلا تكرار. **ملاحظة أمان (لم تُغيَّر)**:
+   `DELETE /api/alerts/{id}` بلا فحص ملكية والعميل لا يرسل التوكن معه — تشديده يكسر العملاء القدامى؛ يُعالج مع نشر الباك-إند.
+3. **حاسبة المركز — الوقف من السعر** (`positionSize.ts`، `positionSize.selftest.ts`، `PositionSizePanel.tsx`، `locales.ts`):
+   خانتا «سعر الدخول / سعر الوقف» (اختياريتان) تملآن خانة النقاط تلقائياً «= 25.2 pip» (`slPipsFromPrices`، عُشر pip،
+   الاتجاه لا يهم، يُعاد الحساب عند تبديل الأداة لأن pip الين/الذهب مختلف). عملات حساب جديدة: AUD/CAD/CHF/JPY (زوج
+   التحويل عام أصلاً — مُختبر: USDCHF، USDJPY للذهب، AUDJPY مقلوباً، USDCAD). 3 مفاتيح ×3 لغات.
+4. **جاهزية الإطلاق — `mobile/eas.json`**: ملفا `preview` (APK داخلي للتجربة) و`production` (AAB + `autoIncrement` لـ
+   `buildNumber`/`versionCode` من `app.json`، `appVersionSource: local`). بلا `channel` (لا `expo-updates`) وبلا dev-client.
+   إنشاؤه لا يحتاج حساباً؛ `eas login` + `eas init` (يضيف `projectId`) يبقيان خطوة أنس. + حُسم سؤال قديم: `expo-sharing`
+   **مستخدَمة** فعلاً (`chart/MatrixChart.tsx`) — لا تُحذف.
+
+**أين يبدأ التشغيل التالي**: البند 8 بقي منه `extra.apiUrl` (ينتظر نشر الباك-إند — ب.6). اختياري: فحص ملكية لـDELETE
+التنبيهات مع إرسال التوكن من العميل (بعد النشر)، `@types/node` كـdevDependency. ثم المؤجَّل (i18n لـToolsScreen بتشغيل
+مخصّص). **لم يُختبر على جهاز**: محور الزمن المضغوط بـRTL على هاتف <360px، وتعديل التنبيه مقابل باك-إند حيّ.
+
+**خلاصة**: 4 بنود، 9 ملفات (1 جديد: `mobile/eas.json`)، تشغيل على الـVPS.
+
+---
+
 آخر تحديث: 2026-09-21 ~22:41–23:00 UTC (Claude — تشغيل مجدول، جلسة جديدة بلا ذاكرة، **تشغيل على سيرفر الـVPS
 (`windows-utah-8gb`, linux, مستخدم `dev`)** — حارس الجهاز مرّ؛ `pull --rebase` نظيف ("Already up to date"). قفلان
 قديمان (`index.lock`، `objects/maintenance.lock`) نُقلا إلى `.git/_to_delete/`؛ غلاف `$HOME/g.sh` أُعيد إنشاؤه
