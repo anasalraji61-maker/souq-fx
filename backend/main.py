@@ -125,6 +125,8 @@ class VoteBallot(BaseModel):
 class AiAsk(BaseModel):
     question: str = Field(min_length=2, max_length=2000)
     symbol: str | None = None
+    # لغة واجهة المتداول ('ar' | 'en-US' | 'en-GB' | 'ku'). اختياري: غيابه = عربي (عملاء أقدم).
+    lang: str | None = Field(default=None, max_length=10)
 
 
 class TeacherInterrupt(BaseModel):
@@ -1235,6 +1237,7 @@ def course_detail(course_id: str):
 def ai_ask(body: AiAsk):
     q = body.question.strip()
     sym = (body.symbol or "EURUSD").upper()
+    lang = openrouter_ai.normalize_lang(body.lang)
     series = build_series(sym)
     bias = "صاعد" if series.change_pct >= 0 else "هابط"
     win = 55 + abs(hash(q + sym) % 28)
@@ -1249,7 +1252,7 @@ def ai_ask(body: AiAsk):
     )
     if openrouter_ai.configured():
         try:
-            answer = openrouter_ai.trading_answer(q, sym, context)
+            answer = openrouter_ai.trading_answer(q, sym, context, lang)
             setup = openrouter_ai.parse_setup_hint(answer)
             setup["entry"] = entry
             setup["sl"] = sl
@@ -1258,22 +1261,43 @@ def ai_ask(body: AiAsk):
         except Exception:
             pass
 
-    answer = (
-        f"**تحليل سريع لـ {sym}**\n\n"
-        f"الاتجاه اللحظي على الإطار الحالي يبدو **{bias}** "
-        f"(تغيّر تقريبي {series.change_pct:+.2f}%).\n\n"
-        f"بالنسبة لسؤالك: «{q}»\n"
-        f"- راقب علاقة الزوج مع **DXY** قبل الدخول.\n"
-        f"- انتظر تأكيد كسر/رفض عند أقرب منطقة سيولة.\n"
-        f"- إدارة المخاطر: لا تتجاوز 1% من رأس المال للصفقة.\n\n"
-        f"**سيناريو مقترح (تعليمي وليس نصيحة مالية):**\n"
-        f"- الاتجاه: {direction}\n"
-        f"- دخول: {entry}\n"
-        f"- وقف: {sl}\n"
-        f"- هدف: {tp}\n"
-        f"- احتمال نجاح تقديري: **{win}%**\n\n"
-        f"_هذا النموذج MVP محلي — اربطه بـ OpenRouter لاحقاً لتحليل أعمق._"
-    )
+    if lang == "en":
+        # نفس القالب التعليمي بالإنجليزية لمستخدمي en-US/en-GB (بلا اقتباس السؤال: بعض الأسئلة
+        # قوالب داخلية عربية). الكردية تبقى على القالب العربي (نفس الأبجدية) لغياب مراجعة لغوية.
+        bias_en = "bullish" if series.change_pct >= 0 else "bearish"
+        dir_en = "Buy" if direction == "شراء" else "Sell"
+        answer = (
+            f"**Quick read on {sym}**\n\n"
+            f"The short-term trend on the current timeframe looks **{bias_en}** "
+            f"(approx. change {series.change_pct:+.2f}%).\n\n"
+            f"- Check the pair against **DXY** before entering.\n"
+            f"- Wait for a confirmed break or rejection at the nearest liquidity zone.\n"
+            f"- Risk management: never risk more than 1% of your capital per trade.\n\n"
+            f"**Suggested scenario (educational, not financial advice):**\n"
+            f"- Direction: {dir_en}\n"
+            f"- Entry: {entry}\n"
+            f"- Stop: {sl}\n"
+            f"- Target: {tp}\n"
+            f"- Estimated success probability: **{win}%**\n\n"
+            f"_Local MVP model — connect OpenRouter for deeper analysis._"
+        )
+    else:
+        answer = (
+            f"**تحليل سريع لـ {sym}**\n\n"
+            f"الاتجاه اللحظي على الإطار الحالي يبدو **{bias}** "
+            f"(تغيّر تقريبي {series.change_pct:+.2f}%).\n\n"
+            f"بالنسبة لسؤالك: «{q}»\n"
+            f"- راقب علاقة الزوج مع **DXY** قبل الدخول.\n"
+            f"- انتظر تأكيد كسر/رفض عند أقرب منطقة سيولة.\n"
+            f"- إدارة المخاطر: لا تتجاوز 1% من رأس المال للصفقة.\n\n"
+            f"**سيناريو مقترح (تعليمي وليس نصيحة مالية):**\n"
+            f"- الاتجاه: {direction}\n"
+            f"- دخول: {entry}\n"
+            f"- وقف: {sl}\n"
+            f"- هدف: {tp}\n"
+            f"- احتمال نجاح تقديري: **{win}%**\n\n"
+            f"_هذا النموذج MVP محلي — اربطه بـ OpenRouter لاحقاً لتحليل أعمق._"
+        )
     return {
         "answer": answer,
         "symbol": sym,

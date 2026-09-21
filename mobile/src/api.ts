@@ -571,7 +571,8 @@ export const api = {
     postJson<{ ok: boolean; audio_url: string; voice_id: string }>('/api/academy/tts', {
       text,
     }),
-  aiAsk: (question: string, symbol?: string) =>
+  /** `lang` = لغة واجهة المتداول (LangId) — الخادم يردّ بها بدل العربية الثابتة؛ غيابه = عربي. */
+  aiAsk: (question: string, symbol?: string, lang?: string) =>
     postJson<{
       answer: string;
       symbol: string;
@@ -582,7 +583,7 @@ export const api = {
         tp: number;
         win_probability: number;
       };
-    }>('/api/ai/ask', { question, symbol }),
+    }>('/api/ai/ask', { question, symbol, lang }),
   dmList: () =>
     getJson<{ peers: { user: string; last: string; ts: string }[] }>('/api/dm'),
   dmThread: (peer: string) =>
