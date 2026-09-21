@@ -32,7 +32,7 @@ type Props = {
 };
 
 export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const { user } = useAuth();
   const [lecture, setLecture] = useState<AcademyLecture | null>(null);
@@ -223,6 +223,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         lecture_id: lectureId,
         segment_id: current?.id,
         question: q,
+        lang,
       });
       setClarification(res.clarification);
       setQuestion('');

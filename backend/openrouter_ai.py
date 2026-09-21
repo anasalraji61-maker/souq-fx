@@ -77,10 +77,15 @@ def trading_answer(question: str, symbol: str, context: str, lang: str = "ar") -
     return chat(system, user)
 
 
-def interrupt_answer(question: str, segment_title: str, segment_text: str) -> str:
+def interrupt_answer(
+    question: str, segment_title: str, segment_text: str, lang: str = "ar"
+) -> str:
+    # نص المقطع قد يكون عربياً بينما واجهة المتعلّم إنجليزية/كردية — الرد يتبع لغة الواجهة
+    # (نفس قاعدة trading_answer)، فيشرح المدرّس المقطع بلغة المتعلّم.
     system = (
         "أنت مدرّس أكاديمية MATRIX. المتعلّم أوقف الشرح الصوتي ليسأل. "
-        "أجب بالعربية بشكل مختصر وعملي ثم اذكر أن الشرح سيكمل."
+        "أجب بشكل مختصر وعملي ثم اذكر أن الشرح سيكمل.\n"
+        + _REPLY_LANGUAGE.get(lang, _REPLY_LANGUAGE["ar"])
     )
     user = (
         f"المقطع: {segment_title}\n"

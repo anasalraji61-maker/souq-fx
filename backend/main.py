@@ -134,6 +134,8 @@ class TeacherInterrupt(BaseModel):
     lecture_id: str
     segment_id: str | None = None
     question: str = Field(min_length=2, max_length=2000)
+    # لغة واجهة المتعلّم (نفس قاعدة AiAsk). اختياري: غيابه = عربي (عملاء أقدم).
+    lang: str | None = Field(default=None, max_length=10)
 
 
 class DmSend(BaseModel):
@@ -1153,9 +1155,10 @@ def academy_interrupt(body: TeacherInterrupt):
                 break
 
     q = body.question.strip()
+    lang = openrouter_ai.normalize_lang(body.lang)
     if openrouter_ai.configured():
         try:
-            clarification = openrouter_ai.interrupt_answer(q, seg_title, seg_text)
+            clarification = openrouter_ai.interrupt_answer(q, seg_title, seg_text, lang)
             return {
                 "ok": True,
                 "paused": True,
@@ -1165,6 +1168,24 @@ def academy_interrupt(body: TeacherInterrupt):
             }
         except Exception:
             pass
+
+    if lang == "en":
+        # بلا اقتباس عنوان/نص المقطع لأن محتوى الدروس عربي — القالب يبقى إنجليزياً بالكامل.
+        clarification = (
+            "The narration is paused for a moment.\n\n"
+            "About your question:\n"
+            "- Try the idea on the screen in its simplest form first.\n"
+            "- Apply it to a single chart before combining it with anything else.\n"
+            "- If you need an example on a specific pair, ask for it.\n\n"
+            "Now let's continue the lecture from the same segment."
+        )
+        return {
+            "ok": True,
+            "paused": True,
+            "teacher": "شرح صوتي",
+            "clarification": clarification,
+            "resume_segment_index": resume_from,
+        }
 
     clarification = (
         f"توقف الشرح مؤقتاً. كنت أشرح «{seg_title}».\n\n"

@@ -553,6 +553,7 @@ export const api = {
     lecture_id: string;
     segment_id?: string;
     question: string;
+    lang?: string;
   }) =>
     postJson<{
       ok: boolean;
