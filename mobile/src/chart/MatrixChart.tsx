@@ -2033,30 +2033,52 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   pricePanRef.current = pricePan;
   xPanRef.current = xPan;
 
+  // Drawing gesture: a drag draws the line in one stroke; a short tap only drops the first anchor
+  // (a second tap completes it) instead of committing a zero-length line. The gesture refuses
+  // termination so a parent vertical ScrollView cannot steal a diagonal stroke mid-draw.
+  const drawGestureHadPending = useRef(false);
+  const drawAnchorRef = useRef<ChartPoint | null>(null);
   const panResponder = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => interactive && tool !== 'none' && tool !== 'select',
         onMoveShouldSetPanResponder: () => interactive && tool !== 'none' && tool !== 'select',
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: (evt) => {
           const { locationX, locationY } = evt.nativeEvent;
           const p = pointFromXY(locationX, locationY);
           if (tool === 'hline' || tool === 'vline' || tool === 'note') return;
-          setPending(p);
+          drawGestureHadPending.current = !!pending;
+          drawAnchorRef.current = pending ?? p;
+          if (!pending) setPending(p);
           setDragEnd(p);
         },
         onPanResponderMove: (evt) => {
           const { locationX, locationY } = evt.nativeEvent;
           setDragEnd(pointFromXY(locationX, locationY));
         },
-        onPanResponderRelease: (evt) => {
+        onPanResponderRelease: (evt, g) => {
           const { locationX, locationY } = evt.nativeEvent;
           const end = pointFromXY(locationX, locationY);
           if (tool === 'hline' || tool === 'vline' || tool === 'note') {
             onChartPress(locationX, locationY);
             return;
           }
-          if (pending) finalizeDrawing(pending, end);
+          // Read the anchor from a ref: the handler may still close over the pre-grant `pending`.
+          const anchor = drawAnchorRef.current;
+          const moved = Math.hypot(g.dx, g.dy) >= 8;
+          if (!anchor) return;
+          if (moved || drawGestureHadPending.current) {
+            drawAnchorRef.current = null;
+            finalizeDrawing(anchor, end);
+          }
+        },
+        onPanResponderTerminate: () => {
+          if (!drawGestureHadPending.current) {
+            drawAnchorRef.current = null;
+            setPending(null);
+            setDragEnd(null);
+          }
         },
       }),
     [interactive, tool, pending, pointFromXY, finalizeDrawing]
@@ -2067,6 +2089,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     return PanResponder.create({
       onStartShouldSetPanResponder: () => interactive && tool === 'select' && !!selectedId,
       onMoveShouldSetPanResponder: () => interactive && tool === 'select' && !!selectedId,
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (evt) => {
         if (!selectedId) return;
         const { locationX, locationY } = evt.nativeEvent;
@@ -2084,6 +2107,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         moveDrawing(selectedId, p, dragging);
       },
       onPanResponderRelease: () => {
+        dragging = null;
+      },
+      onPanResponderTerminate: () => {
         dragging = null;
       },
     });
