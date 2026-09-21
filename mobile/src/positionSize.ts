@@ -10,8 +10,9 @@
  * تنبيه: مواصفات العقود تختلف بين الوسطاء (خصوصاً المعادن) — النتيجة تقدير تعليمي.
  */
 
-export type AccountCcy = 'USD' | 'EUR' | 'GBP';
-export const ACCOUNT_CCYS: AccountCcy[] = ['USD', 'EUR', 'GBP'];
+/** عملات الحساب الشائعة لدى وسطاء التجزئة (دولار/يورو/إسترليني + أسترالي/كندي/فرنك/ين). */
+export type AccountCcy = 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD' | 'CHF' | 'JPY';
+export const ACCOUNT_CCYS: AccountCcy[] = ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'CHF', 'JPY'];
 
 export type InstrumentSpec = {
   symbol: string;
@@ -83,6 +84,16 @@ export function quoteToAccountRate(conv: { invert: boolean } | null, pairPrice: 
 /** قيمة الـpip للوت قياسي واحد، بعملة الحساب. */
 export function pipValuePerLot(spec: InstrumentSpec, quoteToAccount: number): number {
   return spec.contractSize * spec.pipSize * quoteToAccount;
+}
+
+/**
+ * مسافة وقف الخسارة بالنقاط من سعرَي الدخول والوقف (المتداول يفكّر غالباً بالسعر على الشارت لا بالـpip).
+ * مقرَّبة لعُشر pip (النقاط الكسرية pipette). null إن كان أحدهما غير صالح أو تساويا.
+ */
+export function slPipsFromPrices(spec: InstrumentSpec, entry: number, stop: number): number | null {
+  if (![entry, stop].every((v) => Number.isFinite(v) && v > 0)) return null;
+  const pips = Math.round((Math.abs(entry - stop) / spec.pipSize) * 10) / 10;
+  return pips > 0 ? pips : null;
 }
 
 export const LOT_STEP = 0.01;

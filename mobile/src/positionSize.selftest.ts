@@ -9,6 +9,7 @@ import {
   quoteToAccountRate,
   pipValuePerLot,
   positionSize,
+  slPipsFromPrices,
 } from './positionSize';
 
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps;
@@ -74,5 +75,27 @@ assert.equal(r4.belowMinLot, true);
 assert.equal(positionSize({ balance: 0, riskPct: 1, slPips: 20, pipValuePerLot: 10, contractSize: 1 }), null);
 assert.equal(positionSize({ balance: 1000, riskPct: 150, slPips: 20, pipValuePerLot: 10, contractSize: 1 }), null);
 assert.equal(positionSize({ balance: 1000, riskPct: 1, slPips: NaN, pipValuePerLot: 10, contractSize: 1 }), null);
+
+// الوقف من السعر: EURUSD 1.08500 → 1.08250 = 25 pip؛ USDJPY 150.00 → 149.62 = 38 pip؛ الذهب 2400 → 2385 = 150 pip
+assert.equal(slPipsFromPrices(eu, 1.085, 1.0825), 25);
+assert.equal(slPipsFromPrices(eu, 1.0825, 1.085), 25); // الاتجاه لا يهم (بيع/شراء)
+assert.equal(slPipsFromPrices(instrumentSpec('USDJPY')!, 150, 149.62), 38);
+assert.equal(slPipsFromPrices(instrumentSpec('XAUUSD')!, 2400, 2385), 150);
+assert.equal(slPipsFromPrices(eu, 1.08503, 1.08251), 25.2); // pipette
+assert.equal(slPipsFromPrices(eu, 1.085, 1.085), null);
+assert.equal(slPipsFromPrices(eu, NaN, 1.08), null);
+assert.equal(slPipsFromPrices(eu, 0, 1.08), null);
+
+// عملات حساب إضافية: EURUSD بحساب فرنك عند USDCHF=0.88 → 10$ × 0.88 = 8.8 CHF؛ XAUUSD بحساب ين عند USDJPY=150 → 1500¥
+assert.deepEqual(conversionPair('USD', 'CHF'), { symbol: 'USDCHF', invert: false });
+assert.ok(near(pipValuePerLot(eu, quoteToAccountRate(conversionPair('USD', 'CHF'), 0.88)!), 8.8));
+assert.deepEqual(conversionPair('USD', 'JPY'), { symbol: 'USDJPY', invert: false });
+assert.ok(near(pipValuePerLot(instrumentSpec('XAUUSD')!, quoteToAccountRate(conversionPair('USD', 'JPY'), 150)!), 1500));
+// GBPJPY بحساب أسترالي: AUDJPY=100 → 1000¥ / 100 = 10 AUD
+assert.deepEqual(conversionPair('JPY', 'AUD'), { symbol: 'AUDJPY', invert: true });
+assert.ok(near(pipValuePerLot(instrumentSpec('GBPJPY')!, quoteToAccountRate(conversionPair('JPY', 'AUD'), 100)!), 10));
+// EURUSD بحساب كندي: USDCAD=1.36 → 13.6 CAD
+assert.deepEqual(conversionPair('USD', 'CAD'), { symbol: 'USDCAD', invert: false });
+assert.ok(near(pipValuePerLot(eu, quoteToAccountRate(conversionPair('USD', 'CAD'), 1.36)!), 13.6));
 
 console.log('positionSize selftest: OK');

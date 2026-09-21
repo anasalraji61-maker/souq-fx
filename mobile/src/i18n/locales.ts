@@ -255,6 +255,9 @@ export type Dict = {
   riskCalcRiskPct: string;
   riskCalcHighRisk: string;
   riskCalcSlPips: string;
+  riskCalcFromPrice: string;
+  riskCalcEntry: string;
+  riskCalcStop: string;
   riskCalcConvFailed: string;
   riskCalcConvManual: string;
   riskCalcLots: string;
@@ -967,6 +970,9 @@ const ar: Dict = {
   riskCalcRiskPct: 'نسبة المخاطرة %',
   riskCalcHighRisk: '⚠ أكثر من 2% للصفقة الواحدة مخاطرة عالية',
   riskCalcSlPips: 'وقف الخسارة (بالنقاط pip)',
+  riskCalcFromPrice: 'أو احسبه من السعر: الدخول والوقف كما تراهما على الشارت',
+  riskCalcEntry: 'سعر الدخول',
+  riskCalcStop: 'سعر الوقف',
   riskCalcConvFailed: 'تعذّر جلب سعر التحويل',
   riskCalcConvManual: 'أدخل سعر',
   riskCalcLots: 'حجم الصفقة (لوت)',
@@ -1687,6 +1693,9 @@ const enUS: Dict = {
   riskCalcRiskPct: 'Risk %',
   riskCalcHighRisk: '⚠ More than 2% per trade is high risk',
   riskCalcSlPips: 'Stop loss (pips)',
+  riskCalcFromPrice: 'Or from price: entry and stop as you see them on the chart',
+  riskCalcEntry: 'Entry price',
+  riskCalcStop: 'Stop price',
   riskCalcConvFailed: 'Could not fetch conversion rate',
   riskCalcConvManual: 'Enter price of',
   riskCalcLots: 'Position size (lots)',
@@ -2426,6 +2435,9 @@ const ku: Dict = {
   riskCalcRiskPct: 'ڕێژەی مەترسی %',
   riskCalcHighRisk: '⚠ زیاتر لە 2% بۆ هەر مامەڵەیەک مەترسی زۆرە',
   riskCalcSlPips: 'وەستانی زیان (pip)',
+  riskCalcFromPrice: 'یان لە نرخەوە: چوونەژوورەوە و وەستان وەک لە چارتەکەدا دەیانبینیت',
+  riskCalcEntry: 'نرخی چوونەژوورەوە',
+  riskCalcStop: 'نرخی وەستان',
   riskCalcConvFailed: 'نرخی گۆڕینەوە وەرنەگیرا',
   riskCalcConvManual: 'نرخی ئەمە بنووسە',
   riskCalcLots: 'قەبارەی مامەڵە (لۆت)',

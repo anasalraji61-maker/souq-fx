@@ -12,6 +12,7 @@ import {
   quoteToAccountRate,
   pipValuePerLot,
   positionSize,
+  slPipsFromPrices,
 } from '../positionSize';
 
 type Props = {
@@ -33,6 +34,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const [balance, setBalance] = useState('');
   const [riskPct, setRiskPct] = useState('1');
   const [slPips, setSlPips] = useState('');
+  /** بديل اختياري: سعرا الدخول والوقف كما يراهما المتداول على الشارت → تُملأ خانة النقاط تلقائياً */
+  const [entryPx, setEntryPx] = useState('');
+  const [stopPx, setStopPx] = useState('');
   /** سعر زوج التحويل (عملة التسعير → عملة الحساب)؛ null أثناء التحميل أو عند الفشل */
   const [convPrice, setConvPrice] = useState<number | null>(null);
   const [convLoading, setConvLoading] = useState(false);
@@ -109,6 +113,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   }, [convSymbol]);
 
   const num = (s: string) => parseFloat(s.replace(',', '.'));
+  const derivedSl = spec ? slPipsFromPrices(spec, num(entryPx), num(stopPx)) : null;
+
+  // الوقف من السعر يكتب قيمته بخانة النقاط (مصدر واحد للحساب)؛ تعديل النقاط يدوياً يبقى ممكناً بعده.
+  // تغيير الأداة يعيد الحساب بحجم pip الجديد (الين/الذهب).
+  useEffect(() => {
+    if (derivedSl != null) setSlPips(String(derivedSl));
+  }, [derivedSl]);
   const manual = num(manualConv);
   const pairPrice = convPrice ?? (Number.isFinite(manual) && manual > 0 ? manual : null);
   const rate = quoteToAccountRate(conv, pairPrice);
@@ -212,6 +223,20 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         {spec ? ` · 1 pip = ${pipLabel}` : ''}
       </Text>
       {input(slPips, setSlPips, '20', t.riskCalcSlPips)}
+      <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcFromPrice}</Text>
+      <View style={[styles.pxRow, rtl && styles.pxRowRtl]}>
+        <View style={styles.pxCell}>
+          {input(entryPx, setEntryPx, t.riskCalcEntry, t.riskCalcEntry)}
+        </View>
+        <View style={styles.pxCell}>
+          {input(stopPx, setStopPx, t.riskCalcStop, t.riskCalcStop)}
+        </View>
+      </View>
+      {derivedSl != null ? (
+        <Text style={[styles.hint, styles.hintOn, { textAlign: align }]} accessibilityLiveRegion="polite">
+          = {derivedSl} pip
+        </Text>
+      ) : null}
 
       {conv && convLoading ? <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.sm }} /> : null}
       {conv && convFailed ? (
@@ -288,6 +313,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   warn: { color: colors.warn, fontSize: 11, fontWeight: '700' },
+  hint: { color: colors.textDim, fontSize: 10, marginTop: 2 },
+  hintOn: { color: colors.accent, fontWeight: '700' },
+  pxRow: { flexDirection: 'row', gap: 6 },
+  pxRowRtl: { flexDirection: 'row-reverse' },
+  pxCell: { flex: 1 },
   resultBox: {
     marginTop: spacing.sm,
     padding: spacing.md,
