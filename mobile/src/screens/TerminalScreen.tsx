@@ -171,6 +171,13 @@ export function TerminalScreen() {
   const shadowSeriesRef = useRef<ChartSeries[]>([]);
   shadowSeriesRef.current = shadowSeries;
   const shadowLoadGen = useRef(0);
+  // حارس سباق شبكة إضافي (نفس فئة `loadChart::isStale` أدناه): ضغطتان متتاليتان سريعتان على نفس
+  // عنصر تحكم إطار/رمز رئيسي أثناء رحلة شبكة واحدة قد تُطبِّقان النتيجتين بترتيب معكوس — عدّاد
+  // توليد لكل هدف كتابة (نفس نمط `shadowLoadGen` أعلاه) يضمن تطبيق الرد الأحدث فقط. **لا يغطّي**
+  // تعارضاً مع تحديث `loadTerminal` الدوري الكامل (نطاق أوسع، فئة خطر مختلفة، خارج هذا الإصلاح عمداً
+  // — راجع HANDOFF.md).
+  const frameLoadGen = useRef<[number, number, number]>([0, 0, 0]);
+  const dxyLoadGen = useRef(0);
   const [focus, setFocus] = useState<{
     symbol: string;
     tf: Timeframe;
@@ -315,8 +322,10 @@ export function TerminalScreen() {
       next[index] = nextSym;
       await persistFrameSymbols(next);
       pickSymbol(nextSym, frameTfs[index]);
+      const gen = ++frameLoadGen.current[index];
       try {
         const s = await api.chart(nextSym, frameTfs[index]);
+        if (gen !== frameLoadGen.current[index]) return;
         setFrames((prev) => {
           const copy = [...prev];
           copy[index] = s;
@@ -324,6 +333,7 @@ export function TerminalScreen() {
         });
         setOnline(true);
       } catch {
+        if (gen !== frameLoadGen.current[index]) return;
         setFrames((prev) => {
           const copy = [...prev];
           copy[index] = offlineFrame(nextSym, frameTfs[index]);
@@ -344,11 +354,14 @@ export function TerminalScreen() {
       } catch {
         /* ignore */
       }
+      const gen = ++dxyLoadGen.current;
       try {
         const s = await api.chart(nextSym, dxyTf);
+        if (gen !== dxyLoadGen.current) return;
         setDxy(s);
         setOnline(true);
       } catch {
+        if (gen !== dxyLoadGen.current) return;
         setDxy(offlineFrame(nextSym, dxyTf));
         setOnline(false);
       }
@@ -684,8 +697,10 @@ export function TerminalScreen() {
       copy[index] = { ...copy[index], timeframe: nextTf };
       return copy;
     });
+    const gen = ++frameLoadGen.current[index];
     try {
       const s = await api.chart(sym, nextTf);
+      if (gen !== frameLoadGen.current[index]) return;
       setFrames((prev) => {
         const copy = [...prev];
         copy[index] = s;
@@ -693,6 +708,7 @@ export function TerminalScreen() {
       });
       setOnline(true);
     } catch {
+      if (gen !== frameLoadGen.current[index]) return;
       setFrames((prev) => {
         const copy = [...prev];
         copy[index] = offlineFrame(sym, nextTf);
@@ -706,11 +722,14 @@ export function TerminalScreen() {
     if (dxyTf === nextTf) return;
     await persistDxyTf(nextTf);
     setDxy((prev) => ({ ...prev, timeframe: nextTf }));
+    const gen = ++dxyLoadGen.current;
     try {
       const s = await api.chart(heroSymbol, nextTf);
+      if (gen !== dxyLoadGen.current) return;
       setDxy(s);
       setOnline(true);
     } catch {
+      if (gen !== dxyLoadGen.current) return;
       setDxy(offlineFrame(heroSymbol, nextTf));
       setOnline(false);
     }
