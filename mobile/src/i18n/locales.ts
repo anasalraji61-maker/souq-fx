@@ -915,7 +915,8 @@ const ar: Dict = {
   alertsAddError: 'تعذر إضافة التنبيه — تحقق من الاتصال وحاول مرة أخرى',
   alertsFirstBadge: '🎉 أول تنبيه مضبوط — سنُعلمك فور وصول السعر',
   alertsLoadError: 'تعذر تحميل التنبيهات',
-  alertsEmpty: 'لا تنبيهات بعد',
+  alertsEmpty:
+    'لا تنبيهات بعد — اكتب سعراً بالأعلى (أو اضغط «استخدمه» للسعر الحالي) واختر فوق/تحت، وسيصلك إشعار حين يصل السعر إليه.',
   alertsDeleteConfirmTitle: 'حذف التنبيه؟',
   alertsDeleteFailedTitle: 'تعذر الحذف',
   alertsDeleteFailedBody: 'حدث خطأ أثناء حذف التنبيه، حاول مرة أخرى.',
@@ -1015,7 +1016,8 @@ const ar: Dict = {
   journalCloseFailedTitle: 'تعذر الإغلاق',
   journalCloseFailedBody: 'حدث خطأ أثناء إغلاق الصفقة، حاول مرة أخرى.',
   journalLoadError: 'تعذر تحميل السجل',
-  journalEmpty: 'لا صفقات مسجّلة بعد',
+  journalEmpty:
+    'لا صفقات مسجّلة بعد — سجّل كل صفقة (حتى على حساب تجريبي) لتعرف مع الوقت ما ينجح معك وما لا ينجح.',
   journalOpenSuffix: '(مفتوحة)',
   journalCloseLinkA11y: 'إغلاق صفقة {symbol} بسعر خانة الخروج',
   journalCloseLinkBtn: 'إغلاق بسعر خانة الخروج',
@@ -1622,7 +1624,8 @@ const enUS: Dict = {
   alertsAddError: 'Could not add the alert — check your connection and try again',
   alertsFirstBadge: "🎉 First alert set — we'll notify you when the price hits",
   alertsLoadError: 'Could not load alerts',
-  alertsEmpty: 'No alerts yet',
+  alertsEmpty:
+    'No alerts yet — enter a price above (or tap “Use it” for the current price), pick above/below, and you\'ll be notified when price gets there.',
   alertsDeleteConfirmTitle: 'Delete the alert?',
   alertsDeleteFailedTitle: 'Could not delete',
   alertsDeleteFailedBody: 'An error occurred while deleting the alert, try again.',
@@ -1723,7 +1726,8 @@ const enUS: Dict = {
   journalCloseFailedTitle: 'Could not close',
   journalCloseFailedBody: 'An error occurred while closing the trade, try again.',
   journalLoadError: 'Could not load the journal',
-  journalEmpty: 'No trades logged yet',
+  journalEmpty:
+    'No trades logged yet — log every trade (even on a demo account) to learn over time what works for you and what doesn\'t.',
   journalOpenSuffix: '(open)',
   journalCloseLinkA11y: 'Close {symbol} trade at the exit field price',
   journalCloseLinkBtn: 'Close at exit field price',
@@ -2348,7 +2352,8 @@ const ku: Dict = {
   alertsAddError: 'نەکرا ئاگادارکردنەوە زیادبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
   alertsFirstBadge: '🎉 یەکەم ئاگادارکردنەوەت دانرا — کاتێک نرخ بگاتە ئاستەکە ئاگادارت دەکەینەوە',
   alertsLoadError: 'نەکرا ئاگادارکردنەوەکان باربکرێن',
-  alertsEmpty: 'هێشتا هیچ ئاگادارکردنەوەیەک نییە',
+  alertsEmpty:
+    'هێشتا هیچ ئاگادارکردنەوەیەک نییە — نرخێک لە سەرەوە بنووسە و سەرەوە/خوارەوە هەڵبژێرە، کاتێک نرخ گەیشتە ئەوێ ئاگادار دەکرێیتەوە.',
   alertsDeleteConfirmTitle: 'ئاگادارکردنەوەکە بسڕدرێتەوە؟',
   alertsDeleteFailedTitle: 'سڕینەوە سەرکەوتوو نەبوو',
   alertsDeleteFailedBody: 'هەڵەیەک ڕوویدا لە کاتی سڕینەوەی ئاگادارکردنەوەکە، دووبارە هەوڵبدەرەوە.',
@@ -2451,7 +2456,8 @@ const ku: Dict = {
   journalCloseFailedTitle: 'داخستن سەرکەوتوو نەبوو',
   journalCloseFailedBody: 'هەڵەیەک ڕوویدا لە کاتی داخستنی مامەڵەکە، دووبارە هەوڵبدەرەوە.',
   journalLoadError: 'نەکرا تۆمارەکە باربکرێت',
-  journalEmpty: 'هێشتا هیچ مامەڵەیەک تۆمار نەکراوە',
+  journalEmpty:
+    'هێشتا هیچ مامەڵەیەک تۆمار نەکراوە — هەموو مامەڵەیەک تۆمار بکە (تەنانەت لەسەر هەژماری تاقیکردنەوە) بۆ ئەوەی بزانیت چی بۆت سەرکەوتووە.',
   journalOpenSuffix: '(کراوەیە)',
   journalCloseLinkA11y: 'داخستنی مامەڵەی {symbol} بە نرخی خانەی دەرچوون',
   journalCloseLinkBtn: 'داخستن بە نرخی خانەی دەرچوون',
