@@ -498,6 +498,7 @@ def get_lecture(school_id: str, lecture_id: str) -> dict | None:
                     **lec,
                     "school_id": school_id,
                     "school_name": school["name_ar"],
+                    "school_name_en": school["name_en"],
                     "level": lv["level"],
                     "level_title": lv["title"],
                     "teacher": school["classroom"]["teacher"],

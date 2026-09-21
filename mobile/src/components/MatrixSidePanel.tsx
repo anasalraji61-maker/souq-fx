@@ -1,14 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Modal } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
-import {
-  CHART_KINDS,
-  DRAW_TOOLS,
-  INDICATORS,
-  type ChartKind,
-  type DrawTool,
-  type IndicatorId,
-} from '../chart/types';
+import { type ChartKind, type DrawTool, type IndicatorId } from '../chart/types';
+import { localizedChartKinds, localizedDrawTools, localizedIndicators } from '../chart/typeLabels';
 import { AlertsPanel } from './AlertsPanel';
 import { CalendarPanel } from './CalendarPanel';
 import { ScreenerMini } from './ScreenerMini';
@@ -108,7 +102,7 @@ export function MatrixSidePanel({
           <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
             {panel === 'draw' ? (
               <View style={[styles.grid, rtl && styles.gridRtl]}>
-                {DRAW_TOOLS.filter((tool) => tool.id !== 'none').map((tool) => (
+                {localizedDrawTools(t).filter((tool) => tool.id !== 'none').map((tool) => (
                   <Pressable
                     accessibilityRole="button"
                     key={tool.id}
@@ -133,7 +127,7 @@ export function MatrixSidePanel({
 
             {panel === 'indicators' ? (
               <View style={[styles.grid, rtl && styles.gridRtl]}>
-                {INDICATORS.map((ind) => {
+                {localizedIndicators(t).map((ind) => {
                   const on = activeIndicators.includes(ind.id);
                   return (
                     <Pressable
@@ -159,7 +153,7 @@ export function MatrixSidePanel({
 
             {panel === 'kinds' ? (
               <View style={[styles.grid, rtl && styles.gridRtl]}>
-                {CHART_KINDS.map((k) => (
+                {localizedChartKinds(t).map((k) => (
                   <Pressable
                     accessibilityRole="button"
                     key={k.id}

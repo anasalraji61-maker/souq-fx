@@ -27,6 +27,7 @@ import {
   saveDrawings,
   clearDrawings,
   subscribeDrawingsSaveError,
+  type DrawingsSaveErrorCode,
 } from './drawingStore';
 import { compareOverlayPrices } from './compare';
 import { withLivePrice } from './liveSeries';
@@ -38,11 +39,14 @@ import { pointFigure } from './pointFigure';
 import { rangeBars } from './range';
 import { computeCvd, computeFootprint } from './orderflow';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
+import { useI18n } from '../i18n/I18nContext';
 import {
-  CHART_KINDS,
-  DRAW_TOOLS,
-  INDICATORS,
-  LENSES,
+  localizedChartKinds,
+  localizedDrawTools,
+  localizedIndicators,
+  localizedLenses,
+} from './typeLabels';
+import {
   type ChartKind,
   type ChartPoint,
   type DrawTool,
@@ -323,20 +327,6 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
 
 const PRICE_AXIS_WIDTH = 68;
 const TIME_AXIS_HEIGHT = 48;
-const AR_MONTHS = [
-  'يناير',
-  'فبراير',
-  'مارس',
-  'أبريل',
-  'مايو',
-  'يونيو',
-  'يوليو',
-  'أغسطس',
-  'سبتمبر',
-  'أكتوبر',
-  'نوفمبر',
-  'ديسمبر',
-];
 
 function candleTimeSec(t: number): number {
   return t > 1e12 ? t / 1000 : t;
@@ -389,14 +379,14 @@ function applyTimeWindowToSeries(
   return { start: i0, count, offset };
 }
 
-function formatAxisTime(unixTime: number, spanSeconds: number): string {
+function formatAxisTime(unixTime: number, spanSeconds: number, months: string[]): string {
   const milliseconds = unixTime > 1e12 ? unixTime : unixTime * 1000;
   const date = new Date(milliseconds);
   if (Number.isNaN(date.getTime())) return '';
   const hh = String(date.getHours()).padStart(2, '0');
   const mm = String(date.getMinutes()).padStart(2, '0');
   const day = date.getDate();
-  const mon = AR_MONTHS[date.getMonth()];
+  const mon = months[date.getMonth()] ?? '';
   if (spanSeconds <= 2 * 86400) {
     return `${hh}:${mm}\n${day} ${mon}`;
   }
@@ -469,6 +459,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 }: Props,
   ref
 ) {
+  const { t: tr } = useI18n();
   const canPan = syncFollow ? false : (panControls ?? interactive);
   const candleBull = mutedCandles ? 'rgba(34,197,94,0.34)' : colors.bull;
   const candleBear = mutedCandles ? 'rgba(244,63,94,0.34)' : colors.bear;
@@ -509,7 +500,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [logScale, setLogScale] = useState(false);
   const [magnet, setMagnet] = useState(true);
   const [measureReadout, setMeasureReadout] = useState<string | null>(null);
-  const [drawingsSaveError, setDrawingsSaveError] = useState<string | null>(null);
+  const [drawingsSaveError, setDrawingsSaveError] = useState<DrawingsSaveErrorCode | null>(null);
   const [chartW, setChartW] = useState(320);
   const panStartOffset = useRef(0);
   const offsetRef = useRef(0);
@@ -1822,7 +1813,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
     const primaryLane = {
       id: 'primary',
-      label: 'أساسي',
+      label: tr.mcPrimaryLane,
       top: 0,
       height: primaryH,
       ...laneRange(
@@ -1850,7 +1841,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     });
 
     return { primaryLane, shadowLanes };
-  }, [shadowLayers, chartPlotH, source.plot, range.min, range.max, range.span, logScale]);
+  }, [shadowLayers, chartPlotH, source.plot, range.min, range.max, range.span, logScale, tr]);
 
   const hasShadows = !!shadowStack;
   const primaryColW = colW;
@@ -1905,7 +1896,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (t === 'measure' && b) {
         const stats = measureStats(a, b);
         setMeasureReadout(
-          `${stats.bars} شموع · ${stats.diff >= 0 ? '+' : ''}${formatPrice(stats.diff)} (${stats.pct.toFixed(2)}%)`
+          `${stats.bars} ${tr.mcMeasureBarsWord} · ${stats.diff >= 0 ? '+' : ''}${formatPrice(stats.diff)} (${stats.pct.toFixed(2)}%)`
         );
         setPending(null);
         setDragEnd(null);
@@ -1919,7 +1910,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             id: `d${Date.now()}`,
             tool: t,
             a,
-            text: t === 'note' ? 'ملاحظة' : undefined,
+            text: t === 'note' ? tr.mcNoteDefault : undefined,
             color: accent,
           },
         ]);
@@ -1933,7 +1924,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       setDragEnd(null);
       setTool('none');
     },
-    [tool, accent]
+    [tool, accent, tr]
   );
 
   const moveDrawing = useCallback((id: string, point: ChartPoint, end: 'a' | 'b') => {
@@ -1975,14 +1966,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     try {
       const uri = await captureRef(plotRef, { format: 'png', quality: 0.95 });
       if (Platform.OS === 'web') {
-        Alert.alert('MATRIX', 'تم حفظ لقطة الشارت');
+        Alert.alert('MATRIX', tr.mcSnapshotSaved);
         return;
       }
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'MATRIX Chart' });
       }
     } catch {
-      Alert.alert('MATRIX', 'تعذر تصدير الشارت');
+      Alert.alert('MATRIX', tr.mcSnapshotFailed);
     }
   };
 
@@ -2424,7 +2415,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const persistTemplate = () => {
     void saveTemplate({
       id: 'default',
-      name: 'افتراضي',
+      name: tr.mcTemplateDefaultName,
       kind,
       lens,
       indicators: extraInd,
@@ -2433,7 +2424,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       magnet,
     }).then(() => {
       const err = getTemplatesSaveError();
-      Alert.alert('MATRIX', err ?? 'تم حفظ قالب الشارت');
+      Alert.alert('MATRIX', err ? tr[err] : tr.mcTemplateSaved);
     });
   };
 
@@ -2479,7 +2470,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.compactToolsRow}
           >
-            {DRAW_TOOLS.map((t) => (
+            {localizedDrawTools(tr).map((t) => (
               <Pressable
                 accessibilityRole="button"
                 key={t.id}
@@ -2508,10 +2499,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => {
-                Alert.alert('مسح كل الرسومات؟', 'سيتم حذف كل عناصر الرسم بهذا الرمز/الإطار الزمني', [
-                  { text: 'إلغاء', style: 'cancel' },
+                Alert.alert(tr.mcClearAllTitle, tr.mcClearAllBody, [
+                  { text: tr.cancel, style: 'cancel' },
                   {
-                    text: 'مسح',
+                    text: tr.mcClearWord,
                     style: 'destructive',
                     onPress: () => {
                       setDrawings([]);
@@ -2523,14 +2514,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               }}
             >
               <Text style={styles.compactToolIcon}>⌫</Text>
-              <Text style={styles.compactToolLabel}>مسح</Text>
+              <Text style={styles.compactToolLabel}>{tr.mcClearWord}</Text>
             </Pressable>
           </ScrollView>
         </View>
       ) : interactive ? (
         <View style={styles.toolbar}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-            {CHART_KINDS.map((k) => (
+            {localizedChartKinds(tr).map((k) => (
               <Pressable
                 accessibilityRole="button"
                 key={k.id}
@@ -2546,7 +2537,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ))}
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-            {LENSES.map((l) => (
+            {localizedLenses(tr).map((l) => (
               <Pressable
                 accessibilityRole="button"
                 key={l.id}
@@ -2566,7 +2557,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       ) : null}
 
       {drawingsSaveError ? (
-        <Text style={styles.drawingsSaveError}>{drawingsSaveError}</Text>
+        <Text style={styles.drawingsSaveError}>{tr[drawingsSaveError]}</Text>
       ) : null}
 
       {!dense ? (
@@ -2584,15 +2575,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {replayOn
               ? `Bar Replay · ${source.plot.length}/${source.windowLen}`
               : tool !== 'none'
-                ? 'اسحب لرسم · يُحفظ تلقائياً'
-                : 'اسحب الشموع للتنقل · واسحب محوري السعر والزمن للتكبير'}
+                ? tr.mcHintDraw
+                : tr.mcHintNavigate}
           </Text>
         )}
         {interactive && !compactUi ? (
           <View style={styles.zoomRow}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="تصغير"
+              accessibilityLabel={tr.mcZoomOutA11y}
               style={({ pressed }) => [
                 styles.zoomBtn,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -2605,7 +2596,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="تكبير"
+              accessibilityLabel={tr.mcZoomInA11y}
               style={({ pressed }) => [
                 styles.zoomBtn,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -2618,7 +2609,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="تحريك للخلف"
+              accessibilityLabel={tr.mcPanBackA11y}
               style={({ pressed }) => [
                 styles.zoomBtn,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -2629,7 +2620,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="تحريك للأمام"
+              accessibilityLabel={tr.mcPanForwardA11y}
               style={({ pressed }) => [
                 styles.zoomBtn,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -2640,7 +2631,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="وضع الإعادة"
+              accessibilityLabel={tr.mcReplayModeA11y}
               style={({ pressed }) => [
                 styles.zoomBtn,
                 replayOn && styles.replayOn,
@@ -2665,7 +2656,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="خطوة إعادة للخلف"
+                  accessibilityLabel={tr.mcReplayStepBackA11y}
                   style={({ pressed }) => [
                     styles.zoomBtn,
                     pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -2676,7 +2667,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={replayPlaying ? 'إيقاف الإعادة' : 'تشغيل الإعادة'}
+                  accessibilityLabel={replayPlaying ? tr.mcReplayPauseA11y : tr.mcReplayPlayA11y}
                   style={({ pressed }) => [
                     styles.zoomBtn,
                     replayPlaying && styles.replayOn,
@@ -2690,7 +2681,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="خطوة إعادة للأمام"
+                  accessibilityLabel={tr.mcReplayStepFwdA11y}
                   style={({ pressed }) => [
                     styles.zoomBtn,
                     pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -2716,7 +2707,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="الالتصاق بالشبكة"
+              accessibilityLabel={tr.mcMagnetA11y}
               style={({ pressed }) => [
                 styles.zoomBtn,
                 magnet && styles.replayOn,
@@ -2931,7 +2922,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               borderColor: 'rgba(45,212,191,0.45)',
             }}
           >
-            <Text style={{ color: colors.accent, fontSize: 10, fontWeight: '800' }}>أساسي</Text>
+            <Text style={{ color: colors.accent, fontSize: 10, fontWeight: '800' }}>{tr.mcPrimaryLane}</Text>
           </View>
         ) : null}
 
@@ -4294,7 +4285,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     },
                   ]}
                 >
-                  {formatAxisTime(candle.time, visibleTimeSpan)}
+                  {formatAxisTime(candle.time, visibleTimeSpan, tr.mcMonths)}
                 </Text>
               );
             })}
@@ -7486,9 +7477,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {interactive && !compactUi ? (
         <View style={styles.dock}>
-          <Text style={styles.dockTitle}>مرسى الأدوات · MATRIX</Text>
+          <Text style={styles.dockTitle}>{tr.mcDockTitle}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-            {DRAW_TOOLS.map((t) => (
+            {localizedDrawTools(tr).map((t) => (
               <Pressable
                 accessibilityRole="button"
                 key={t.id}
@@ -7512,10 +7503,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => {
-                Alert.alert('مسح كل الرسومات؟', 'سيتم حذف كل عناصر الرسم بهذا الرمز/الإطار الزمني', [
-                  { text: 'إلغاء', style: 'cancel' },
+                Alert.alert(tr.mcClearAllTitle, tr.mcClearAllBody, [
+                  { text: tr.cancel, style: 'cancel' },
                   {
-                    text: 'مسح',
+                    text: tr.mcClearWord,
                     style: 'destructive',
                     onPress: () => {
                       setDrawings([]);
@@ -7526,11 +7517,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 ]);
               }}
             >
-              <Text style={styles.toolText}>مسح</Text>
+              <Text style={styles.toolText}>{tr.mcClearWord}</Text>
             </Pressable>
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-            {INDICATORS.map((ind) => {
+            {localizedIndicators(tr).map((ind) => {
               const on = indicators.includes(ind.id);
               return (
                 <Pressable
@@ -7558,7 +7549,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               ]}
               onPress={() => setPineOn(false)}
             >
-              <Text style={[styles.indText, !pineOn && styles.indTextOn]}>بدون خط Pine</Text>
+              <Text style={[styles.indText, !pineOn && styles.indTextOn]}>{tr.mcNoPineLine}</Text>
             </Pressable>
             {INDICATOR_LIBRARY.map((p) => {
               const on = pineOn && pineFormula === p.formula;
@@ -7592,7 +7583,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               ]}
               onPress={() => void exportChart()}
             >
-              <Text style={styles.toolText}>تصدير PNG</Text>
+              <Text style={styles.toolText}>{tr.mcExportPng}</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -7602,7 +7593,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               ]}
               onPress={persistTemplate}
             >
-              <Text style={styles.toolText}>حفظ قالب</Text>
+              <Text style={styles.toolText}>{tr.mcSaveTemplate}</Text>
             </Pressable>
             {selectedId ? (
               <>
@@ -7613,10 +7604,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                   ]}
                   onPress={() => {
-                    Alert.alert('حذف الرسم؟', 'سيُحذف عنصر الرسم المحدَّد من الشارت', [
-                      { text: 'إلغاء', style: 'cancel' },
+                    Alert.alert(tr.mcDeleteDrawingTitle, tr.mcDeleteDrawingBody, [
+                      { text: tr.cancel, style: 'cancel' },
                       {
-                        text: 'حذف',
+                        text: tr.deleteWord,
                         style: 'destructive',
                         onPress: () => {
                           setDrawings((list) => list.filter((x) => x.id !== selectedId));
@@ -7626,7 +7617,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     ]);
                   }}
                 >
-                  <Text style={styles.toolText}>حذف</Text>
+                  <Text style={styles.toolText}>{tr.deleteWord}</Text>
                 </Pressable>
                 {(() => {
                   const d = drawings.find((x) => x.id === selectedId);
@@ -7641,7 +7632,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                         ]}
                         onPress={() => onCreateAlert(d.a.price)}
                       >
-                        <Text style={styles.toolTextOn}>تنبيه خط</Text>
+                        <Text style={styles.toolTextOn}>{tr.mcAlertLine}</Text>
                       </Pressable>
                     );
                   }
@@ -7661,7 +7652,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           onCreateAlert(Math.min(aPrice, bPrice));
                         }}
                       >
-                        <Text style={styles.toolTextOn}>تنبيه منطقة</Text>
+                        <Text style={styles.toolTextOn}>{tr.mcAlertZone}</Text>
                       </Pressable>
                     );
                   }
@@ -7686,7 +7677,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                         ]}
                         onPress={() => onCreateAlert(currentPrice)}
                       >
-                        <Text style={styles.toolTextOn}>تنبيه عند مستوى الخط الحالي</Text>
+                        <Text style={styles.toolTextOn}>{tr.mcAlertAtLineLevel}</Text>
                       </Pressable>
                     );
                   }

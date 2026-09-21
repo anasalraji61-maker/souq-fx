@@ -27,6 +27,29 @@ function createMenu() {
 // (تستخدم الأيقونة المضمَّنة بالحزمة بدلاً منه) — بلا أي تعارض.
 const WINDOW_ICON = path.join(__dirname, 'build', 'icon.ico');
 
+// `shell.openExternal` يمرّر الرابط لنظام التشغيل كما هو — نسمح فقط بالبروتوكولات الآمنة
+// المعروفة (ويب + بريد) كي لا يُشغِّل رابط `file:`/بروتوكول مخصص برنامجاً محلياً (توصية أمان Electron).
+const EXTERNAL_PROTOCOLS = new Set(['https:', 'http:', 'mailto:']);
+
+function openExternalSafe(url) {
+  try {
+    if (EXTERNAL_PROTOCOLS.has(new URL(url).protocol)) shell.openExternal(url);
+  } catch {
+    // رابط غير صالح — يُتجاهَل بصمت
+  }
+}
+
+/** هل الرابط جزء من واجهة التطبيق نفسها (الحزمة المضمَّنة أو خادم الويب المحلي)؟ */
+function isAppUrl(url, bundled) {
+  try {
+    const target = new URL(url);
+    if (bundled) return target.protocol === 'file:';
+    return target.origin === new URL(WEB_URL).origin;
+  } catch {
+    return false;
+  }
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1440,
@@ -62,8 +85,16 @@ function createWindow() {
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    openExternalSafe(url);
     return { action: 'deny' };
+  });
+
+  // حارس تنقّل: أي رابط خارجي يُفتح بالمتصفح الافتراضي بدل أن يستبدل واجهة MATRIX داخل
+  // النافذة نفسها (بلا زر رجوع ولا قائمة، كان المستخدم سيعلق بموقع غريب حتى يغلق التطبيق).
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (isAppUrl(url, hasBundledBuild)) return;
+    event.preventDefault();
+    openExternalSafe(url);
   });
 
   mainWindow.on('closed', () => {
@@ -71,7 +102,21 @@ function createWindow() {
   });
 }
 
+// نسخة واحدة فقط: فتح الاختصار مرة ثانية يُظهر النافذة القائمة بدل تشغيل تطبيق ثانٍ بجانبها.
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+if (!hasSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (!mainWindow) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  });
+}
+
 app.whenReady().then(() => {
+  if (!hasSingleInstanceLock) return;
   createMenu();
   createWindow();
   app.on('activate', () => {

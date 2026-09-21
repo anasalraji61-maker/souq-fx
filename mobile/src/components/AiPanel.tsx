@@ -17,7 +17,7 @@ type Turn = { role: 'user' | 'ai'; text: string; win?: number };
 type Props = { symbol?: string; embedded?: boolean };
 
 export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,7 +35,7 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
     setTurns((prev) => [...prev, { role: 'user', text: question }]);
     setLoading(true);
     try {
-      const res = await api.aiAsk(question, symbol);
+      const res = await api.aiAsk(question, symbol, lang);
       setTurns((prev) => [
         ...prev,
         {

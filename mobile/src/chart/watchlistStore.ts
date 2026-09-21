@@ -33,6 +33,7 @@ export {
   setWatchlistStorage,
   resetWatchlistMemory,
   type WatchlistStorage,
+  type WatchlistSaveErrorCode,
 } from './watchlistStoreCore';
 
 /** توافق SymbolSearchBar — يضيف من الكتالوج فقط */

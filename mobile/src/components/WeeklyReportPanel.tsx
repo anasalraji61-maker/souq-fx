@@ -16,10 +16,10 @@ import type { Dict } from '../i18n/locales';
 
 type ReportKind = 'weekly_pnl' | 'performance' | 'matrix_advice' | 'risk_brief';
 
-/** حقلا title/hint يُترجمان عبر Dict (معروضان للمستخدم) — حقل prompt يبقى تعليمة عربية ثابتة
- * موجَّهة للذكاء الاصطناعي (يطلب صراحة "بالعربية") بصرف النظر عن لغة الواجهة المختارة: قرار نطاق
- * متعمَّد (يماثل استبعاد ترجمة محتوى الخادم/الذكاء الاصطناعي المعتمد بباقي لوحات hub) — تغيير لغة
- * استجابة الذكاء الاصطناعي فعلياً قرار منتج أعمق يحتاج تسلسلاً مخصَّصاً، لا يُنفَّذ هنا. راجع HANDOFF.md. */
+/** حقلا title/hint يُترجمان عبر Dict (معروضان للمستخدم). حقل prompt تعليمة داخلية للذكاء الاصطناعي
+ * لا يراها المتداول، فتبقى عربية ثابتة — لكنها **محايدة لغوياً** (لا تطلب "بالعربية"): لغة الرد
+ * يحدّدها الخادم من حقل `lang` المُرسَل مع الطلب (لغة الواجهة)، فيحصل مستخدم en-US/en-GB على تقرير
+ * إنجليزي. لا تُعِد عبارة "بالعربية" هنا — ستتعارض مع تعليمة لغة الرد بالخادم. راجع HANDOFF.md. */
 function buildKinds(
   t: Dict
 ): { id: ReportKind; title: string; hint: string; prompt: string }[] {
@@ -29,28 +29,28 @@ function buildKinds(
       title: t.reportWeeklyTitle,
       hint: t.reportWeeklyHint,
       prompt:
-        'أعطني تقريراً أسبوعياً تعليمياً عن الأرباح والخسائر لمتداول فوركس يراقب EURUSD وGBPUSD وXAUUSD وDXY. اقترح هيكل: ملخص الأسبوع، أفضل/أسوأ يوم، نسبة المخاطرة، ونقاط تحسين. بالعربية باختصار.',
+        'أعطني تقريراً أسبوعياً تعليمياً عن الأرباح والخسائر لمتداول فوركس يراقب EURUSD وGBPUSD وXAUUSD وDXY. اقترح هيكل: ملخص الأسبوع، أفضل/أسوأ يوم، نسبة المخاطرة، ونقاط تحسين. باختصار.',
     },
     {
       id: 'performance',
       title: t.reportPerformanceTitle,
       hint: t.reportPerformanceHint,
       prompt:
-        'قيّم أداء متداول MATRIX لهذا الأسبوع من ناحية الانضباط، اختيار التوقيت، إدارة المخاطر، وعلاقة القرارات بـ DXY. أعطِ درجة من 10 ونقاط قوة وضعف. بالعربية.',
+        'قيّم أداء متداول MATRIX لهذا الأسبوع من ناحية الانضباط، اختيار التوقيت، إدارة المخاطر، وعلاقة القرارات بـ DXY. أعطِ درجة من 10 ونقاط قوة وضعف.',
     },
     {
       id: 'matrix_advice',
       title: t.reportAdviceTitle,
       hint: t.reportAdviceHint,
       prompt:
-        'أنت منصة MATRIX للتحليل الفني. ما رأيك في أداء المتداول هذا الأسبوع؟ أعطِ 5 نصائح عملية للأسبوع القادم مرتبطة بالدولار والذهب والأزواج الرئيسية. بالعربية وواضح.',
+        'أنت منصة MATRIX للتحليل الفني. ما رأيك في أداء المتداول هذا الأسبوع؟ أعطِ 5 نصائح عملية للأسبوع القادم مرتبطة بالدولار والذهب والأزواج الرئيسية. بوضوح.',
     },
     {
       id: 'risk_brief',
       title: t.reportRiskTitle,
       hint: t.reportRiskHint,
       prompt:
-        'أعطني موجزاً قصيراً عن إدارة المخاطر لمتداول فوركس هذا الأسبوع: حجم الصفقة، وقف الخسارة، تجنب الأخبار، وعلاقة DXY بالذهب. بالعربية ونقاط واضحة.',
+        'أعطني موجزاً قصيراً عن إدارة المخاطر لمتداول فوركس هذا الأسبوع: حجم الصفقة، وقف الخسارة، تجنب الأخبار، وعلاقة DXY بالذهب. بنقاط واضحة.',
     },
   ];
 }
@@ -58,7 +58,7 @@ function buildKinds(
 type Props = { grid?: boolean };
 
 export function WeeklyReportPanel({ grid = false }: Props) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const KINDS = buildKinds(t);
   const [loading, setLoading] = useState<ReportKind | null>(null);
@@ -91,7 +91,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
       journalLine = `\n${t.reportJournalEmptyLine}`;
     }
     try {
-      const res = await api.aiAsk(item.prompt + journalLine, 'EURUSD');
+      const res = await api.aiAsk(item.prompt + journalLine, 'EURUSD', lang);
       setText(res.answer.replace(/\*\*/g, ''));
       setWin(res.setup?.win_probability ?? null);
       playSoftClick();

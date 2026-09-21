@@ -11,9 +11,14 @@ export type TerminalLayout = {
 
 const KEY = 'matrix.layouts.v1';
 
+/** رمز حالة ثابت لا نص معروض — الترجمة بطبقة العرض عبر `t[code]` (نفس المبدأ الموثَّق
+ *  بـchart/dataSource.ts: لا تقارن الواجهة نصاً حرفياً). أسماء الرموز مطابقة لمفاتيح
+ *  Dict بـi18n/locales.ts. */
+export type LayoutsSaveErrorCode = 'layoutSaveFailed' | 'layoutDeleteFailed';
+
 /** إشارة فشل حفظ/حذف التخطيط — نفس نمط subscribeWatchlistSaveError بـwatchlistStoreCore.ts */
-type ErrorListener = (message: string | null) => void;
-let saveError: string | null = null;
+type ErrorListener = (code: LayoutsSaveErrorCode | null) => void;
+let saveError: LayoutsSaveErrorCode | null = null;
 const errorListeners = new Set<ErrorListener>();
 
 function notifyError() {
@@ -26,8 +31,8 @@ function notifyError() {
   }
 }
 
-function setSaveError(msg: string | null) {
-  saveError = msg;
+function setSaveError(code: LayoutsSaveErrorCode | null) {
+  saveError = code;
   notifyError();
 }
 
@@ -39,7 +44,7 @@ export function subscribeLayoutsSaveError(cb: ErrorListener): () => void {
   };
 }
 
-export function getLayoutsSaveError(): string | null {
+export function getLayoutsSaveError(): LayoutsSaveErrorCode | null {
   return saveError;
 }
 
@@ -63,7 +68,7 @@ export async function saveLayout(layout: TerminalLayout): Promise<void> {
     await AsyncStorage.setItem(KEY, JSON.stringify(all.slice(0, 12)));
     setSaveError(null);
   } catch {
-    setSaveError('تعذر حفظ التخطيط');
+    setSaveError('layoutSaveFailed');
   }
 }
 
@@ -73,7 +78,7 @@ export async function deleteLayout(id: string): Promise<void> {
     await AsyncStorage.setItem(KEY, JSON.stringify(all));
     setSaveError(null);
   } catch {
-    setSaveError('تعذر حذف التخطيط');
+    setSaveError('layoutDeleteFailed');
   }
 }
 

@@ -47,20 +47,45 @@ def chat(system: str, user: str, max_tokens: int = 900) -> str:
     return str(data["choices"][0]["message"]["content"]).strip()
 
 
-def trading_answer(question: str, symbol: str, context: str) -> str:
+# لغة ردّ المساعد تتبع لغة واجهة المتداول (يرسلها التطبيق بحقل `lang`)، لا لغة نص السؤال —
+# فبعض الأسئلة (مثل قوالب التقرير الأسبوعي) مكتوبة بالعربية داخلياً حتى لمستخدم إنجليزي.
+_REPLY_LANGUAGE = {
+    "ar": "أجب بالعربية دائماً.",
+    "en": "Always reply in English, whatever language the question is written in.",
+    "ku": "Always reply in Kurdish (Sorani, Arabic script), whatever language the question is written in.",
+}
+
+
+def normalize_lang(value: str | None) -> str:
+    """'en-US'/'en-GB' → 'en'، 'ku' → 'ku'، وأي قيمة أخرى أو غياب الحقل → 'ar' (توافق خلفي)."""
+    v = (value or "").strip().lower()
+    if v.startswith("en"):
+        return "en"
+    if v.startswith("ku"):
+        return "ku"
+    return "ar"
+
+
+def trading_answer(question: str, symbol: str, context: str, lang: str = "ar") -> str:
     system = (
-        "أنت خبير تداول فوركس في منصة MATRIX. أجب بالعربية باختصار وعملية. "
+        "أنت خبير تداول فوركس في منصة MATRIX. أجب باختصار وعملية. "
         "اذكر اتجاهاً محتملاً، دخولاً تقريبياً، وقفاً، هدفاً، ونسبة نجاح تقديرية. "
-        "لا تعد بأرباح مضمونة."
+        "لا تعد بأرباح مضمونة.\n"
+        + _REPLY_LANGUAGE.get(lang, _REPLY_LANGUAGE["ar"])
     )
     user = f"الرمز: {symbol}\nسياق السوق:\n{context}\n\nسؤال المتداول:\n{question}"
     return chat(system, user)
 
 
-def interrupt_answer(question: str, segment_title: str, segment_text: str) -> str:
+def interrupt_answer(
+    question: str, segment_title: str, segment_text: str, lang: str = "ar"
+) -> str:
+    # نص المقطع قد يكون عربياً بينما واجهة المتعلّم إنجليزية/كردية — الرد يتبع لغة الواجهة
+    # (نفس قاعدة trading_answer)، فيشرح المدرّس المقطع بلغة المتعلّم.
     system = (
         "أنت مدرّس أكاديمية MATRIX. المتعلّم أوقف الشرح الصوتي ليسأل. "
-        "أجب بالعربية بشكل مختصر وعملي ثم اذكر أن الشرح سيكمل."
+        "أجب بشكل مختصر وعملي ثم اذكر أن الشرح سيكمل.\n"
+        + _REPLY_LANGUAGE.get(lang, _REPLY_LANGUAGE["ar"])
     )
     user = (
         f"المقطع: {segment_title}\n"

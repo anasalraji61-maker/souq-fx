@@ -18,7 +18,8 @@ import { SocialConsensusPanel } from './SocialConsensusPanel';
 import { IndicatorForecastPanel } from './IndicatorForecastPanel';
 import type { Candle } from '../api';
 import type { Timeframe } from '../timeframes';
-import { DRAW_TOOLS, LENSES, type DrawTool } from '../chart/types';
+import { type DrawTool } from '../chart/types';
+import { localizedDrawTools, localizedLenses } from '../chart/typeLabels';
 import { DRAW_MARK, LENS_MARK, type MatrixLensId } from './MatrixEdgeRails';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -123,7 +124,7 @@ export function MatrixBottomDock({
               <View style={styles.drawWrap}>
                 <Text style={styles.drawSectionTitle}>{t.lensSectionTitle}</Text>
                 <View style={styles.drawGrid}>
-                  {LENSES.map((l) => {
+                  {localizedLenses(t).map((l) => {
                     const on = activeLens === l.id;
                     return (
                       <Pressable
@@ -152,7 +153,7 @@ export function MatrixBottomDock({
                 </View>
                 <Text style={styles.drawSectionTitle}>{t.dockDrawToolSectionTitle}</Text>
                 <View style={styles.drawGrid}>
-                  {DRAW_TOOLS.map((tool) => {
+                  {localizedDrawTools(t).map((tool) => {
                     const on = activeTool === tool.id;
                     return (
                       <Pressable

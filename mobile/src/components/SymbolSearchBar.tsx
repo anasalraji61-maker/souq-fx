@@ -3,6 +3,7 @@ import { View, TextInput, Text, StyleSheet, Pressable, ActivityIndicator } from 
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { addCustomSymbol } from '../chart/watchlistStore';
+import { useI18n } from '../i18n/I18nContext';
 
 type Result = {
   symbol: string;
@@ -17,7 +18,9 @@ type Props = {
   placeholder?: string;
 };
 
-export function SymbolSearchBar({ onPick, placeholder = 'بحث رمز... EUR, XAU, BTC' }: Props) {
+export function SymbolSearchBar({ onPick, placeholder }: Props) {
+  const { t } = useI18n();
+  const ph = placeholder ?? t.ssbPlaceholder;
   const [q, setQ] = useState('');
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(false);
@@ -64,7 +67,7 @@ export function SymbolSearchBar({ onPick, placeholder = 'بحث رمز... EUR, X
         style={styles.input}
         value={q}
         onChangeText={setQ}
-        placeholder={placeholder}
+        placeholder={ph}
         placeholderTextColor={colors.textDim}
         autoCapitalize="characters"
         autoCorrect={false}
@@ -73,10 +76,10 @@ export function SymbolSearchBar({ onPick, placeholder = 'بحث رمز... EUR, X
         clearButtonMode="while-editing"
         keyboardAppearance="dark"
         selectionColor={colors.accent}
-        accessibilityLabel={placeholder}
+        accessibilityLabel={ph}
       />
       {loading ? <ActivityIndicator color={colors.accent} style={{ marginTop: 6 }} /> : null}
-      {!loading && error ? <Text style={styles.error}>تعذر البحث — تحقق من الاتصال وحاول مرة أخرى</Text> : null}
+      {!loading && error ? <Text style={styles.error}>{t.ssbError}</Text> : null}
       {results.slice(0, 8).map((r) => (
         <Pressable
           accessibilityRole="button"
@@ -92,7 +95,7 @@ export function SymbolSearchBar({ onPick, placeholder = 'بحث رمز... EUR, X
             void addCustomSymbol(r.symbol);
             onPick(r.symbol);
           }}
-          accessibilityLabel={`اختيار الرمز: ${r.symbol} · ${r.name}`}
+          accessibilityLabel={`${t.ssbPickA11yPrefix}${r.symbol} · ${r.name}`}
         >
           <Text style={styles.sym}>{r.symbol}</Text>
           <Text style={styles.name} numberOfLines={1}>
