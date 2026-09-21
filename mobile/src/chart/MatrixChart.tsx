@@ -327,6 +327,7 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
 
 const PRICE_AXIS_WIDTH = 68;
 const TIME_AXIS_HEIGHT = 48;
+const CROSS_TIME_TAG_W = 104;
 
 function candleTimeSec(t: number): number {
   return t > 1e12 ? t / 1000 : t;
@@ -394,6 +395,19 @@ function formatAxisTime(unixTime: number, spanSeconds: number, months: string[])
     return `${day} ${mon}`;
   }
   return `${mon} ${date.getFullYear()}`;
+}
+
+/** Full date + time for the crosshair time tag (always explicit, unlike axis ticks). */
+function formatCrossTime(unixTime: number, spanSeconds: number, months: string[]): string {
+  const milliseconds = unixTime > 1e12 ? unixTime : unixTime * 1000;
+  const date = new Date(milliseconds);
+  if (Number.isNaN(date.getTime())) return '';
+  const day = date.getDate();
+  const mon = months[date.getMonth()] ?? '';
+  if (spanSeconds > 120 * 86400) return `${day} ${mon} ${date.getFullYear()}`;
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  return `${day} ${mon} ${hh}:${mm}`;
 }
 
 function pointerXY(event: PointerEventLike): { x: number; y: number; pointerId: number } {
@@ -2429,6 +2443,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   };
 
   const crossCandle = cross ? source.plot[cross.index] : null;
+  // Recomputed every render so the crosshair and its axis tags stay glued to the
+  // candle after zoom buttons / live ticks (the stored pixel x/y can go stale).
+  const crossX = cross && crossCandle ? xOf(cross.index) : 0;
+  const crossY = cross && crossCandle ? yOf(crossCandle.close) : 0;
 
   const visibleDrawings = drawings
     .map((d) => {
@@ -2568,6 +2586,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <Text style={styles.readoutText}>
             O {formatPrice(crossCandle.open)} H {formatPrice(crossCandle.high)} L{' '}
             {formatPrice(crossCandle.low)} C {formatPrice(crossCandle.close)}
+            {crossCandle.open > 0 ? (
+              <Text
+                style={{
+                  color:
+                    crossCandle.close > crossCandle.open
+                      ? colors.bull
+                      : crossCandle.close < crossCandle.open
+                        ? colors.bear
+                        : colors.textDim,
+                  fontWeight: '800',
+                }}
+              >
+                {` ${crossCandle.close >= crossCandle.open ? '+' : '−'}${(
+                  (Math.abs(crossCandle.close - crossCandle.open) / crossCandle.open) *
+                  100
+                ).toFixed(2)}%`}
+              </Text>
+            ) : null}
             {compareSeries ? ` · ${compareSeries.symbol} ${formatPrice(compareSeries.last)}` : ''}
           </Text>
         ) : (
@@ -4170,11 +4206,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           />
         ) : null}
 
-        {cross ? (
+        {cross && crossCandle ? (
           <>
-            <View style={[styles.crossV, { left: cross.x, bottom: timeAxisH }]} />
+            <View pointerEvents="none" style={[styles.crossV, { left: crossX, bottom: timeAxisH }]} />
             <View
-              style={[styles.crossH, { top: cross.y, right: PRICE_AXIS_WIDTH }]}
+              pointerEvents="none"
+              style={[styles.crossH, { top: crossY, right: PRICE_AXIS_WIDTH }]}
             />
           </>
         ) : null}
@@ -4250,6 +4287,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             <Text style={styles.currentPriceText}>{formatPrice(currentPrice)}</Text>
           </View>
           ) : null}
+          {!hidePriceLabels && crossCandle ? (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.crossPriceTag,
+              { top: Math.max(0, Math.min(chartPlotH - 20, crossY - 9)) },
+            ]}
+          >
+            <Text style={styles.crossTagText}>{formatPrice(crossCandle.close)}</Text>
+          </View>
+          ) : null}
         </View>
 
         {!hideTimeLabels ? (
@@ -4289,6 +4337,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 </Text>
               );
             })}
+            {crossCandle ? (
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.crossTimeTag,
+                  {
+                    width: CROSS_TIME_TAG_W,
+                    left: Math.max(
+                      0,
+                      Math.min(chartPlotW - CROSS_TIME_TAG_W, crossX - CROSS_TIME_TAG_W / 2)
+                    ),
+                  },
+                ]}
+              >
+                <Text style={styles.crossTagText} numberOfLines={1}>
+                  {formatCrossTime(crossCandle.time, visibleTimeSpan, tr.mcMonths)}
+                </Text>
+              </View>
+            ) : null}
           </View>
         ) : null}
 
@@ -4319,9 +4386,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>VOL</Text>
           <View style={styles.paneInner}>
-            {source.plot.map((c, i) => {
-              const vols = source.plot.map((x) => x.volume ?? 0);
-              const maxV = Math.max(...vols, 1);
+            {(() => {
+              // Max computed once per render (was recomputed per bar → O(n²) at 1000 bars).
+              let maxV = 1;
+              for (const x of source.plot) maxV = Math.max(maxV, x.volume ?? 0);
+              return source.plot.map((c, i) => {
               const vol = c.volume ?? 0;
               const h = (vol / maxV) * (paneH - 14);
               return (
@@ -4337,7 +4406,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   }}
                 />
               );
-            })}
+              });
+            })()}
           </View>
         </View>
       ) : null}
@@ -7933,6 +8003,36 @@ const styles = StyleSheet.create({
     right: 0,
     height: 1,
     backgroundColor: 'rgba(232,238,249,0.35)',
+  },
+  crossPriceTag: {
+    position: 'absolute',
+    left: 2,
+    right: 2,
+    minHeight: 18,
+    borderRadius: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+    backgroundColor: colors.text,
+    zIndex: 2,
+  },
+  crossTimeTag: {
+    position: 'absolute',
+    top: 3,
+    minHeight: 18,
+    borderRadius: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    backgroundColor: colors.text,
+    zIndex: 2,
+  },
+  crossTagText: {
+    color: '#041514',
+    fontSize: 9,
+    lineHeight: 14,
+    fontWeight: '900',
+    fontFamily: 'monospace',
   },
   pane: {
     backgroundColor: '#070F18',
