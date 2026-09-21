@@ -43,13 +43,96 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
   // نتيجة الاستطلاع الدوري (setInterval) التي قد تصل بعد إلغاء التركيب رغم إيقاف المؤقت نفسه —
   // نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود.
   const mountedRef = useRef(true);
+  /** السعر الحالي للرمز المكتوب — يُعرض بجانب النموذج ويُستخدم لاختيار الاتجاه تلقائياً (فوق/تحت)
+   * وللتحذير من تنبيه سيُطلق فوراً. null = غير معروف (لا اتصال/مزوّد غير مهيأ) فيعمل النموذج كما كان. */
+  const [current, setCurrent] = useState<number | null>(null);
+  const quoteGen = useRef(0);
+  /** تأكيد صريح بعد كل حفظ ناجح ("مُفعَّل: EURUSD ≥ 1.0850") — كان التأكيد الوحيد شارة أول تنبيه. */
+  const [armed, setArmed] = useState<string | null>(null);
+  const armedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** تعديل تنبيه قائم: الضغط على سطره يحمّل قيمه بالنموذج؛ الحفظ = إنشاء الجديد ثم حذف القديم
+   * (لا يوجد مسار تحديث بالباك-إند، وهذا الترتيب لا يُفقد التنبيه القديم إن فشل الإنشاء). */
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     return () => {
       if (firstBadgeTimerRef.current) clearTimeout(firstBadgeTimerRef.current);
+      if (armedTimerRef.current) clearTimeout(armedTimerRef.current);
       mountedRef.current = false;
     };
   }, []);
+
+  /** فتح اللوحة من شارت آخر (FocusChartModal/الشريط الجانبي) يغيّر defaultSymbol — نزامن الرمز
+   * ما لم يكن المستخدم في منتصف تعديل تنبيه. */
+  useEffect(() => {
+    if (!editingId) setSymbol(defaultSymbol);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultSymbol]);
+
+  useEffect(() => {
+    const sym = symbol.trim().toUpperCase();
+    const gen = ++quoteGen.current;
+    setCurrent(null);
+    if (sym.length < 3) return;
+    const id = setTimeout(() => {
+      api
+        .marketQuote(sym)
+        .then((q) => {
+          if (!mountedRef.current || gen !== quoteGen.current) return;
+          setCurrent(typeof q.price === 'number' && Number.isFinite(q.price) && q.price > 0 ? q.price : null);
+        })
+        .catch(() => {
+          /* السعر الحالي تحسين اختياري — فشله لا يمنع إضافة التنبيه */
+        });
+    }, 600);
+    return () => clearTimeout(id);
+  }, [symbol]);
+
+  const fmtPrice = (v: number) => String(Number(v.toFixed(v >= 1000 ? 2 : v >= 20 ? 3 : 5)));
+  const condMark = (c: 'above' | 'below') => (c === 'above' ? '≥' : '≤');
+
+  /** الاتجاه يُستنتج من موقع السعر المدخل بالنسبة للسعر الحالي — المستخدم يكتب الرقم فقط،
+   * ويبقى قادراً على قلب الاتجاه يدوياً بعدها (مع تحذير إن صار التنبيه سيُطلق فوراً). */
+  const onPriceChange = (txt: string) => {
+    setPrice(txt);
+    setFormError(null);
+    const p = parseFloat(txt.replace(',', '.'));
+    if (current != null && Number.isFinite(p) && p > 0 && p !== current) {
+      setCondition(p > current ? 'above' : 'below');
+    }
+  };
+
+  const parsedPrice = parseFloat(price.replace(',', '.'));
+  const firesNow =
+    current != null &&
+    Number.isFinite(parsedPrice) &&
+    parsedPrice > 0 &&
+    ((condition === 'above' && current >= parsedPrice) || (condition === 'below' && current <= parsedPrice));
+
+  const showArmed = (msg: string) => {
+    setArmed(msg);
+    if (armedTimerRef.current) clearTimeout(armedTimerRef.current);
+    armedTimerRef.current = setTimeout(() => {
+      if (mountedRef.current) setArmed(null);
+    }, 4000);
+  };
+
+  const startEdit = (a: PriceAlert) => {
+    setEditingId(a.id);
+    setSymbol(a.symbol);
+    setPrice(String(a.price));
+    setCondition(a.condition);
+    setNote(a.note || '');
+    setFormError(null);
+    setArmed(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setPrice('');
+    setNote('');
+    setFormError(null);
+  };
 
   const refresh = useCallback(async () => {
     try {
@@ -96,14 +179,28 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
 
   const add = async () => {
     const p = parseFloat(price.replace(',', '.'));
-    if (!symbol.trim() || Number.isNaN(p)) return;
+    const sym = symbol.trim().toUpperCase();
+    if (!sym || !Number.isFinite(p) || p <= 0) {
+      setFormError(t.alertsInvalidInput);
+      return;
+    }
     setBusy(true);
     setFormError(null);
+    const replacing = editingId;
     try {
-      await api.createAlert({ symbol: symbol.trim().toUpperCase(), condition, price: p, note });
+      await api.createAlert({ symbol: sym, condition, price: p, note });
       playSoftClick();
       setPrice('');
       setNote('');
+      setEditingId(null);
+      if (replacing) {
+        try {
+          await api.deleteAlert(replacing);
+        } catch {
+          setFormError(t.alertsEditOldRemains);
+        }
+      }
+      showArmed(`${replacing ? t.alertsUpdatedPrefix : t.alertsArmedPrefix}: ${sym} ${condMark(condition)} ${p}`);
       await refresh();
       /** لحظة إنجاز/تشجيع محدَّدة (matrix-tactile-feel.mdc: "ضبط أول تنبيه") — تُحتفَل بها مرة
        * واحدة فقط عبر عمر التطبيق على الجهاز عبر `achievements.ts`، لا في كل مرة تُضاف تنبيهاً،
@@ -124,6 +221,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
   const remove = async (id: string) => {
     try {
       await api.deleteAlert(id);
+      if (editingId === id) cancelEdit();
       await refresh();
     } catch {
       Alert.alert(t.alertsDeleteFailedTitle, t.alertsDeleteFailedBody);
@@ -167,7 +265,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
         <TextInput
           style={[styles.input, { textAlign: align }]}
           value={price}
-          onChangeText={setPrice}
+          onChangeText={onPriceChange}
           placeholder={t.priceWord}
           placeholderTextColor={colors.textDim}
           keyboardType="decimal-pad"
@@ -179,6 +277,28 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
           selectionColor={colors.accent}
           accessibilityLabel={t.alertsPriceA11y}
         />
+        {current != null ? (
+          <View style={[styles.currentRow, rtl && styles.rowRtl]}>
+            <Text style={[styles.currentText, { textAlign: align }]}>
+              {t.alertsCurrentPrefix}: <Text style={styles.currentVal}>{fmtPrice(current)}</Text>
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.useCurrent,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => onPriceChange(fmtPrice(current))}
+              accessibilityLabel={`${t.alertsUseCurrentA11y}: ${fmtPrice(current)}`}
+              hitSlop={6}
+            >
+              <Text style={styles.useCurrentText}>{t.alertsUseCurrent}</Text>
+            </Pressable>
+          </View>
+        ) : null}
         <View style={[styles.row, rtl && styles.rowRtl]}>
           <Pressable
             accessibilityRole="button"
@@ -223,9 +343,9 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
             onPress={add}
             disabled={busy}
             accessibilityState={{ disabled: busy }}
-            accessibilityLabel={t.alertsAddA11y}
+            accessibilityLabel={editingId ? t.alertsSaveEdit : t.alertsAddA11y}
           >
-            <Text style={styles.addText}>{busy ? '...' : t.addBtn}</Text>
+            <Text style={styles.addText}>{busy ? '...' : editingId ? t.alertsSaveEdit : t.addBtn}</Text>
           </Pressable>
         </View>
         <TextInput
@@ -243,7 +363,32 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
         />
       </View>
 
+      {editingId ? (
+        <View style={[styles.currentRow, rtl && styles.rowRtl]}>
+          <Text style={[styles.editingText, { textAlign: align }]}>{t.alertsEditingHint}</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={cancelEdit}
+            accessibilityLabel={t.alertsCancelEdit}
+            hitSlop={6}
+            style={({ pressed }) => [
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+          >
+            <Text style={styles.cancelEditText}>{t.alertsCancelEdit}</Text>
+          </Pressable>
+        </View>
+      ) : null}
+      {firesNow ? <Text style={[styles.firesNow, { textAlign: align }]}>{t.alertsFiresNowWarn}</Text> : null}
       {formError ? <Text style={[styles.formError, { textAlign: align }]}>{formError}</Text> : null}
+      {armed ? (
+        <Text style={[styles.armed, { textAlign: align }]} accessibilityLiveRegion="polite">
+          ✓ {armed}
+        </Text>
+      ) : null}
       {showFirstBadge ? (
         <View style={styles.firstAlertBadge}>
           <Text style={styles.firstAlertBadgeText}>{t.alertsFirstBadge}</Text>
@@ -254,20 +399,39 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
         <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.md }} />
       ) : (
         <ScrollView style={{ maxHeight: 160 }} keyboardShouldPersistTaps="handled">
+          {alerts.length > 0 ? (
+            <Text style={[styles.listHead, { textAlign: align }]}>
+              {t.alertsActiveCount}: {alerts.filter((a) => a.active && !a.triggered).length} · {t.alertsTapToEdit}
+            </Text>
+          ) : null}
           {alerts.length === 0 ? (
             <Text style={[styles.empty, { textAlign: align }]}>
               {listError ? t.alertsLoadError : t.alertsEmpty}
             </Text>
           ) : (
-            alerts.map((a) => (
-              <View key={a.id} style={[styles.item, rtl && styles.itemRtl]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.itemSym, { textAlign: align }]}>
-                    {a.symbol} {a.condition === 'above' ? '≥' : '≤'} {a.price}
-                    {a.triggered ? ' ✓' : ''}
+            [...alerts]
+              .sort((x, y) => Number(x.triggered) - Number(y.triggered))
+              .map((a) => (
+              <View
+                key={a.id}
+                style={[styles.item, rtl && styles.itemRtl, editingId === a.id && styles.itemEditing]}
+              >
+                <Pressable
+                  style={({ pressed }) => [{ flex: 1 }, pressed && { opacity: buttons.pressedOpacity }]}
+                  onPress={() => startEdit(a)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t.alertsEditA11yPrefix}: ${a.symbol} ${condMark(a.condition)} ${a.price}`}
+                >
+                  <Text style={[styles.itemSym, a.triggered && styles.itemSymDone, { textAlign: align }]}>
+                    {a.symbol} {condMark(a.condition)} {a.price}
                   </Text>
-                  {a.note ? <Text style={[styles.itemNote, { textAlign: align }]}>{a.note}</Text> : null}
-                </View>
+                  <Text
+                    style={[styles.itemStatus, a.triggered ? styles.itemStatusDone : styles.itemStatusLive, { textAlign: align }]}
+                  >
+                    {a.triggered ? t.alertsStatusTriggered : t.alertsStatusArmed}
+                    {a.note ? ` · ${a.note}` : ''}
+                  </Text>
+                </Pressable>
                 <Pressable
                   accessibilityRole="button"
                   style={({ pressed }) => [
@@ -279,14 +443,14 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded }: Props) {
                   onPress={() =>
                     Alert.alert(
                       t.alertsDeleteConfirmTitle,
-                      `${a.symbol} ${a.condition === 'above' ? '≥' : '≤'} ${a.price}`,
+                      `${a.symbol} ${condMark(a.condition)} ${a.price}`,
                       [
                         { text: t.cancel, style: 'cancel' },
                         { text: t.deleteWord, style: 'destructive', onPress: () => remove(a.id) },
                       ]
                     )
                   }
-                  accessibilityLabel={`${t.alertsDeleteA11yPrefix}: ${a.symbol} ${a.condition === 'above' ? '≥' : '≤'} ${a.price}`}
+                  accessibilityLabel={`${t.alertsDeleteA11yPrefix}: ${a.symbol} ${condMark(a.condition)} ${a.price}`}
                   hitSlop={8}
                 >
                   <Text style={styles.del}>{t.deleteWord}</Text>
@@ -393,6 +557,26 @@ const styles = StyleSheet.create({
   },
   itemRtl: { flexDirection: 'row-reverse' },
   itemSym: { color: colors.text, fontWeight: '700', fontSize: 13 },
-  itemNote: { color: colors.textDim, fontSize: 11 },
+  itemSymDone: { color: colors.textMuted },
+  itemStatus: { fontSize: 11, marginTop: 1 },
+  itemStatusLive: { color: colors.accent, fontWeight: '700' },
+  itemStatusDone: { color: colors.textDim },
+  itemEditing: { backgroundColor: colors.accentSoft, borderRadius: radii.sm },
+  listHead: { color: colors.textDim, fontSize: 10, marginTop: spacing.sm, fontWeight: '700' },
+  currentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
+  currentText: { color: colors.textDim, fontSize: 11, flex: 1 },
+  currentVal: { color: colors.text, fontWeight: '800' },
+  useCurrent: {
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+  },
+  useCurrentText: { color: colors.accent, fontSize: 11, fontWeight: '800' },
+  editingText: { color: colors.accent, fontSize: 11, fontWeight: '700', flex: 1, marginTop: spacing.xs },
+  cancelEditText: { color: colors.textMuted, fontSize: 11, fontWeight: '700', marginTop: spacing.xs },
+  firesNow: { color: colors.warn, fontSize: 10, fontWeight: '700', marginTop: spacing.xs },
+  armed: { color: colors.bull, fontSize: 11, fontWeight: '800', marginTop: spacing.xs },
   del: { color: colors.bear, fontWeight: '700', fontSize: 12 },
 });

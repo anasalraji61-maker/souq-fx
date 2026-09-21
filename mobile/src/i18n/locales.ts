@@ -217,6 +217,22 @@ export type Dict = {
   alertsDeleteFailedTitle: string;
   alertsDeleteFailedBody: string;
   alertsDeleteA11yPrefix: string;
+  alertsInvalidInput: string;
+  alertsEditOldRemains: string;
+  alertsArmedPrefix: string;
+  alertsUpdatedPrefix: string;
+  alertsCurrentPrefix: string;
+  alertsUseCurrent: string;
+  alertsUseCurrentA11y: string;
+  alertsSaveEdit: string;
+  alertsEditingHint: string;
+  alertsCancelEdit: string;
+  alertsFiresNowWarn: string;
+  alertsActiveCount: string;
+  alertsTapToEdit: string;
+  alertsEditA11yPrefix: string;
+  alertsStatusArmed: string;
+  alertsStatusTriggered: string;
   // WeeklyReportPanel/TradeJournalPanel/BacktestPanel/IndicatorAlertsPanel/CalendarPanel/LayoutPanel — 2026-09-17
   reportsTitle: string;
   reportsSubGrid: string;
@@ -860,6 +876,22 @@ const ar: Dict = {
   alertsDeleteFailedTitle: 'تعذر الحذف',
   alertsDeleteFailedBody: 'حدث خطأ أثناء حذف التنبيه، حاول مرة أخرى.',
   alertsDeleteA11yPrefix: 'حذف تنبيه',
+  alertsInvalidInput: 'أدخل رمزاً وسعراً صحيحاً أكبر من صفر',
+  alertsEditOldRemains: 'حُفظ التنبيه الجديد لكن تعذّر حذف القديم — احذفه يدوياً من القائمة',
+  alertsArmedPrefix: 'مُفعَّل',
+  alertsUpdatedPrefix: 'حُدِّث',
+  alertsCurrentPrefix: 'السعر الآن',
+  alertsUseCurrent: 'استخدمه',
+  alertsUseCurrentA11y: 'استخدام السعر الحالي',
+  alertsSaveEdit: 'حفظ التعديل',
+  alertsEditingHint: 'تعدّل تنبيهاً قائماً',
+  alertsCancelEdit: 'إلغاء التعديل',
+  alertsFiresNowWarn: '⚠ الشرط متحقق الآن — سيُطلق التنبيه فوراً',
+  alertsActiveCount: 'نشطة',
+  alertsTapToEdit: 'اضغط تنبيهاً لتعديله',
+  alertsEditA11yPrefix: 'تعديل التنبيه',
+  alertsStatusArmed: '● مُفعَّل — بانتظار السعر',
+  alertsStatusTriggered: 'انطلق ✓',
   reportsTitle: 'تقارير MATRIX',
   reportsSubGrid: 'نفس حجم الفريمات · قدّم/أخّر · اضغط للقراءة',
   reportsSub: 'أسبوعي · أداء · رأي المنصة ونصائح',
@@ -1510,6 +1542,22 @@ const enUS: Dict = {
   alertsDeleteFailedTitle: 'Could not delete',
   alertsDeleteFailedBody: 'An error occurred while deleting the alert, try again.',
   alertsDeleteA11yPrefix: 'Delete alert',
+  alertsInvalidInput: 'Enter a symbol and a valid price above zero',
+  alertsEditOldRemains: 'New alert saved, but the old one could not be removed — delete it from the list',
+  alertsArmedPrefix: 'Armed',
+  alertsUpdatedPrefix: 'Updated',
+  alertsCurrentPrefix: 'Now',
+  alertsUseCurrent: 'Use it',
+  alertsUseCurrentA11y: 'Use current price',
+  alertsSaveEdit: 'Save changes',
+  alertsEditingHint: 'Editing an existing alert',
+  alertsCancelEdit: 'Cancel edit',
+  alertsFiresNowWarn: '⚠ Condition already met — this alert will fire immediately',
+  alertsActiveCount: 'Active',
+  alertsTapToEdit: 'Tap an alert to edit it',
+  alertsEditA11yPrefix: 'Edit alert',
+  alertsStatusArmed: '● Armed — waiting for price',
+  alertsStatusTriggered: 'Triggered ✓',
   reportsTitle: 'MATRIX Reports',
   reportsSubGrid: 'Same frame size · prev/next · tap to read',
   reportsSub: 'Weekly · Performance · Platform view & tips',
@@ -2179,6 +2227,22 @@ const ku: Dict = {
   alertsDeleteFailedTitle: 'سڕینەوە سەرکەوتوو نەبوو',
   alertsDeleteFailedBody: 'هەڵەیەک ڕوویدا لە کاتی سڕینەوەی ئاگادارکردنەوەکە، دووبارە هەوڵبدەرەوە.',
   alertsDeleteA11yPrefix: 'سڕینەوەی ئاگادارکردنەوە',
+  alertsInvalidInput: 'هێمایەک و نرخێکی دروست لە سەرووی سفر بنووسە',
+  alertsEditOldRemains: 'ئاگادارکردنەوەی نوێ پاشەکەوت کرا بەڵام کۆنەکە نەسڕایەوە — لە لیستەکە بیسڕەوە',
+  alertsArmedPrefix: 'چالاککرا',
+  alertsUpdatedPrefix: 'نوێکرایەوە',
+  alertsCurrentPrefix: 'نرخی ئێستا',
+  alertsUseCurrent: 'بەکاری بهێنە',
+  alertsUseCurrentA11y: 'بەکارهێنانی نرخی ئێستا',
+  alertsSaveEdit: 'پاشەکەوتی گۆڕانکاری',
+  alertsEditingHint: 'ئاگادارکردنەوەیەکی هەبوو دەگۆڕیت',
+  alertsCancelEdit: 'هەڵوەشاندنەوەی گۆڕانکاری',
+  alertsFiresNowWarn: '⚠ مەرجەکە ئێستا هاتۆتە دی — ئاگادارکردنەوەکە یەکسەر دەردەچێت',
+  alertsActiveCount: 'چالاک',
+  alertsTapToEdit: 'بۆ گۆڕین کلیک لە ئاگادارکردنەوەیەک بکە',
+  alertsEditA11yPrefix: 'گۆڕینی ئاگادارکردنەوە',
+  alertsStatusArmed: '● چالاکە — چاوەڕێی نرخ',
+  alertsStatusTriggered: 'دەرچوو ✓',
   reportsTitle: 'ڕاپۆرتەکانی MATRIX',
   reportsSubGrid: 'هەمان قەبارەی چوارچێوە · پێشوو/دواتر · دەستلێدان بۆ خوێندنەوە',
   reportsSub: 'هەفتانە · کارایی · بۆچوونی پلاتفۆرم و ئامۆژگاری',
