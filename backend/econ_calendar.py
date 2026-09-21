@@ -1,9 +1,11 @@
 """Economic calendar — ForexFactory XML + static fallback."""
 from __future__ import annotations
 
+import json
 import re
 import time
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
 from typing import Any
 
 import httpx
@@ -13,6 +15,9 @@ _CACHE_TS = 0.0
 TTL = 1800
 
 FF_URL = "https://www.forexfactory.com/ffcal_week_this.xml"
+# نسخة JSON من نفس مصدر ForexFactory — تواريخها ISO مع إزاحة زمنية صريحة، فتُحوَّل لـUTC بلا تخمين
+# منطقة زمنية (XML أعلاه يعطي تاريخاً ووقتاً بلا منطقة، فيبقى احتياطياً بلا `ts`).
+FF_JSON_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
 
 FALLBACK = [
     {
@@ -131,6 +136,49 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
     return out
 
 
+def _parse_ff_json(text: str) -> list[dict[str, Any]]:
+    """كل حدث يحمل `ts` (ثوانٍ UTC) ليعرضه التطبيق بتوقيت المستخدم ويحسب "بعد كم ساعة"."""
+    out: list[dict[str, Any]] = []
+    try:
+        data = json.loads(text)
+    except (ValueError, TypeError):
+        return out
+    if not isinstance(data, list):
+        return out
+    for ev in data:
+        if not isinstance(ev, dict):
+            continue
+        title = re.sub(r"\s+", " ", str(ev.get("title") or "").strip())
+        if not title:
+            continue
+        ts: int | None = None
+        when = "هذا الأسبوع"
+        raw_date = str(ev.get("date") or "").strip()
+        if raw_date:
+            try:
+                dt = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
+                if dt.tzinfo is not None:
+                    ts = int(dt.timestamp())
+                    when = dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+            except ValueError:
+                pass
+        country = str(ev.get("country") or "USD").strip()
+        forecast = str(ev.get("forecast") or "").strip() or str(ev.get("previous") or "").strip() or "—"
+        out.append(
+            {
+                "id": f"ff-{hash(title + raw_date) % 10_000_000}",
+                "title": title[:160],
+                "currency": country[:3].upper() if country else "USD",
+                "impact": _impact(str(ev.get("impact") or "")),
+                "when": when[:32],
+                "forecast": forecast[:40],
+                "ts": ts,
+            }
+        )
+    out.sort(key=lambda e: (e["ts"] is None, e["ts"] or 0))
+    return out[:120]
+
+
 def fetch_calendar(
     currency: str | None = None,
     impact: str | None = None,
@@ -140,12 +188,17 @@ def fetch_calendar(
         merged: list[dict] = []
         try:
             with httpx.Client(timeout=14.0, follow_redirects=True) as client:
-                r = client.get(FF_URL, headers={"User-Agent": "MATRIX/1.0"})
+                r = client.get(FF_JSON_URL, headers={"User-Agent": "MATRIX/1.0"})
                 if r.status_code == 200 and r.text.strip():
-                    merged = _parse_ff(r.text)
+                    merged = _parse_ff_json(r.text)
+                if not merged:
+                    r = client.get(FF_URL, headers={"User-Agent": "MATRIX/1.0"})
+                    if r.status_code == 200 and r.text.strip():
+                        merged = _parse_ff(r.text)
         except Exception:
             merged = []
-        _CACHE = merged if merged else list(FALLBACK)
+        # الاحتياطي الثابت أمثلة توضيحية لا أحداث حقيقية — يُعلَّم `sample` ليعرض التطبيق ذلك صراحة
+        _CACHE = merged if merged else [{**e, "ts": None, "sample": True} for e in FALLBACK]
         _CACHE_TS = time.time()
 
     events = list(_CACHE)

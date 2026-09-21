@@ -252,6 +252,16 @@ export type Dict = {
   riskCalcPipValue: string;
   riskCalcDisclaimer: string;
   toolsTabRisk: string;
+  calTimesLocal: string;
+  calUpcomingHead: string;
+  calNow: string;
+  calPast: string;
+  calInPrefix: string;
+  calHourShort: string;
+  calMinShort: string;
+  calToday: string;
+  calTomorrow: string;
+  calSampleBanner: string;
   // WeeklyReportPanel/TradeJournalPanel/BacktestPanel/IndicatorAlertsPanel/CalendarPanel/LayoutPanel — 2026-09-17
   reportsTitle: string;
   reportsSubGrid: string;
@@ -930,6 +940,16 @@ const ar: Dict = {
   riskCalcPipValue: 'قيمة النقطة للوت',
   riskCalcDisclaimer: 'تقدير تعليمي: مواصفات العقود (خصوصاً الذهب) قد تختلف لدى وسيطك — تحقّق قبل التداول.',
   toolsTabRisk: 'المخاطرة',
+  calTimesLocal: 'الأوقات بتوقيتك',
+  calUpcomingHead: 'خلال 24 ساعة',
+  calNow: 'الآن',
+  calPast: 'انتهى',
+  calInPrefix: 'بعد',
+  calHourShort: 'س',
+  calMinShort: 'د',
+  calToday: 'اليوم',
+  calTomorrow: 'غداً',
+  calSampleBanner: '⚠ أمثلة توضيحية — تعذّر جلب التقويم الحي الآن',
   reportsTitle: 'تقارير MATRIX',
   reportsSubGrid: 'نفس حجم الفريمات · قدّم/أخّر · اضغط للقراءة',
   reportsSub: 'أسبوعي · أداء · رأي المنصة ونصائح',
@@ -1615,6 +1635,16 @@ const enUS: Dict = {
   riskCalcPipValue: 'Pip value per lot',
   riskCalcDisclaimer: 'Educational estimate: contract specs (especially gold) can differ at your broker — check before trading.',
   toolsTabRisk: 'Risk',
+  calTimesLocal: 'Times in your timezone',
+  calUpcomingHead: 'Next 24h',
+  calNow: 'Now',
+  calPast: 'Done',
+  calInPrefix: 'in',
+  calHourShort: 'h',
+  calMinShort: 'm',
+  calToday: 'Today',
+  calTomorrow: 'Tomorrow',
+  calSampleBanner: '⚠ Sample events — live calendar unavailable right now',
   reportsTitle: 'MATRIX Reports',
   reportsSubGrid: 'Same frame size · prev/next · tap to read',
   reportsSub: 'Weekly · Performance · Platform view & tips',
@@ -2319,6 +2349,16 @@ const ku: Dict = {
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
   riskCalcDisclaimer: 'خەمڵاندنی فێرکاری: تایبەتمەندی گرێبەستەکان (بەتایبەتی زێڕ) لای بڕۆکەرەکەت جیاواز دەبێت — پێش مامەڵە پشتڕاستی بکەرەوە.',
   toolsTabRisk: 'مەترسی',
+  calTimesLocal: 'کاتەکان بە کاتی خۆت',
+  calUpcomingHead: '24 کاتژمێری داهاتوو',
+  calNow: 'ئێستا',
+  calPast: 'تەواو بوو',
+  calInPrefix: 'دوای',
+  calHourShort: 'ک',
+  calMinShort: 'خ',
+  calToday: 'ئەمڕۆ',
+  calTomorrow: 'سبەینێ',
+  calSampleBanner: '⚠ نموونەی ڕوونکردنەوە — ڕۆژژمێری ڕاستەوخۆ ئێستا بەردەست نییە',
   reportsTitle: 'ڕاپۆرتەکانی MATRIX',
   reportsSubGrid: 'هەمان قەبارەی چوارچێوە · پێشوو/دواتر · دەستلێدان بۆ خوێندنەوە',
   reportsSub: 'هەفتانە · کارایی · بۆچوونی پلاتفۆرم و ئامۆژگاری',

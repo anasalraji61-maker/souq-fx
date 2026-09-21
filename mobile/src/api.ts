@@ -497,6 +497,8 @@ export const api = {
         impact: string;
         when: string;
         forecast: string;
+        ts?: number | null;
+        sample?: boolean;
       }[];
     }>(`/api/calendar${qs ? `?${qs}` : ''}`);
   },
