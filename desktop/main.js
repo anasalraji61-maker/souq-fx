@@ -50,6 +50,24 @@ function isAppUrl(url, bundled) {
   }
 }
 
+/** يبني صفحة خطأ ودّية بهوية MATRIX. المحتوى يُرمَّز بالكامل: بلا ترميز كان `#` بقيم الألوان
+ * (`#0B1220`) يُقرأ كبداية fragment فيُقطع الـdata: URL وتظهر نافذة فارغة بدل الرسالة. */
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+
+function showFallbackPage(message, hint) {
+  if (!mainWindow) return;
+  const html =
+    '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>MATRIX Charts</title></head>' +
+    '<body style="background:#0B1220;color:#94A3B8;font-family:system-ui,sans-serif;padding:40px;text-align:center">' +
+    '<h1 style="color:#2DD4BF;letter-spacing:4px">MATRIX</h1>' +
+    `<p style="color:#E8EEF9;font-size:17px">${escapeHtml(message)}</p>` +
+    `<p>${escapeHtml(hint)}</p></body></html>`;
+  mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`).catch(() => {});
+  if (!mainWindow.isVisible()) mainWindow.show();
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1440,
@@ -74,14 +92,30 @@ function createWindow() {
     ? mainWindow.loadFile(BUNDLED_WEB_INDEX)
     : mainWindow.loadURL(WEB_URL);
 
+  // شبكة أمان: إن علق التحميل (خادم لا يردّ) لا يبقى التطبيق مخفياً بلا نافذة إطلاقاً.
+  const showTimer = setTimeout(() => {
+    if (mainWindow && !mainWindow.isVisible()) mainWindow.show();
+  }, 5000);
+  mainWindow.once('show', () => clearTimeout(showTimer));
+
   loadApp.catch(() => {
     const fallbackHint = hasBundledBuild
       ? 'أعد تصدير حزمة الويب (expo export --platform web) ثم أعد التثبيت'
       : 'شغّل start-mobile.bat ثم أعد فتح سطح المكتب';
     const fallbackTarget = hasBundledBuild ? 'الحزمة المضمَّنة' : WEB_URL;
-    mainWindow?.loadURL(
-      `data:text/html,<body style="background:#0B1220;color:#94A3B8;font-family:sans-serif;padding:40px;text-align:center"><h1 style="color:#2DD4BF">MATRIX</h1><p>تعذر الاتصال بـ ${fallbackTarget}</p><p>${fallbackHint}</p></body>`
-    );
+    showFallbackPage(`تعذر الاتصال بـ ${fallbackTarget}`, fallbackHint);
+  });
+
+  // انهيار عملية العرض (نفاد ذاكرة/خطأ GPU…) كان يترك نافذة فارغة سوداء بلا أي تفسير.
+  let rendererCrashes = 0;
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    if (!mainWindow || details.reason === 'clean-exit') return;
+    rendererCrashes += 1;
+    if (rendererCrashes <= 1) {
+      mainWindow.webContents.reload();
+      return;
+    }
+    showFallbackPage('توقّفت واجهة MATRIX بشكل غير متوقع', 'أغلق التطبيق وأعد فتحه — رسوماتك وإعداداتك محفوظة');
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
