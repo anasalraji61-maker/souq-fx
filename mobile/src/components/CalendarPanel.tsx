@@ -69,12 +69,17 @@ const FILTER_KEY = 'matrix.calendar.filters.v1';
 
 type Props = {
   compact?: boolean;
+  /**
+   * اللوحة تملك الصفحة وحدها (تبويب «التقويم» بشاشة الأدوات): الصفوف تُسرَد متدفّقةً بلا نافذة
+   * تمرير داخلية، فالصفحة هي التي تُمرَّر. بغيره تبقى نافذةً محدودة كما هي بمواضع المشاركة.
+   */
+  flow?: boolean;
   /** زوج الشارت/الإشارة المفتوح — يضيف رقاقة بعملتَي الزوج معاً (أخبار ما يتداوله الآن فعلاً). */
   symbol?: string;
   onPickCurrency?: (currency: string) => void;
 };
 
-export function CalendarPanel({ compact = false, symbol, onPickCurrency }: Props) {
+export function CalendarPanel({ compact = false, flow = false, symbol, onPickCurrency }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [events, setEvents] = useState<Ev[]>([]);
@@ -242,6 +247,57 @@ export function CalendarPanel({ compact = false, symbol, onPickCurrency }: Props
     return `${t.calInPrefix} ${h ? `${h}${t.calHourShort} ` : ''}${mins % 60}${t.calMinShort}`;
   };
 
+  /**
+   * صفوف التقويم — تُركَّب مرة وتُعرض بصندوقين مختلفين بحسب من يستضيف اللوحة (انظر `flow` أدناه).
+   */
+  const rows = (
+    <>
+      {status === 'loading' ? (
+        <Text style={[styles.empty, { textAlign: align }]}>{t.calendarLoading}</Text>
+      ) : visible.length === 0 ? (
+        status === 'error' ? (
+          <Text style={[styles.empty, { textAlign: align }]}>{t.calendarLoadError}</Text>
+        ) : (
+          <Text style={[styles.empty, { textAlign: align }]}>{t.calendarEmpty}</Text>
+        )
+      ) : (
+        ordered.map((e) => {
+          const ts = hasTs(e) ? e.ts : null;
+          const soon = ts != null && ts * 1000 >= now - NOW_WINDOW_MS && ts * 1000 <= now + ROW_SOON_MS;
+          const done = ts != null && ts * 1000 < now - NOW_WINDOW_MS;
+          const figures = figuresLine(e);
+          return (
+            <View key={e.id} style={[styles.row, rtl && styles.rowRtl, soon && styles.rowSoon, done && styles.rowDone]}>
+              <View
+                style={[styles.dot, { backgroundColor: IMPACT_COLOR[e.impact] ?? colors.textDim }]}
+              />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.evTitle, { textAlign: align }]}>{e.title}</Text>
+                {/* الأهمية كلمة ملوّنة لا نقطة لون فقط — نقطة حمراء/برتقالية وحدها لا تُقرأ لمن لديه عمى
+                    ألوان ولا لقارئ الشاشة */}
+                <Text style={[styles.meta, { textAlign: align }]}>
+                  {e.currency}
+                  {impactWord(e.impact) ? (
+                    <Text style={{ color: IMPACT_COLOR[e.impact] ?? colors.textDim, fontWeight: '700' }}>
+                      {` · ${impactWord(e.impact)}`}
+                    </Text>
+                  ) : null}
+                  {` · ${ts != null ? fmtLocal(ts) : e.when}`}
+                </Text>
+                {figures ? (
+                  <Text style={[styles.figures, { textAlign: align }]}>{figures}</Text>
+                ) : null}
+              </View>
+              {ts != null && !done ? (
+                <Text style={[styles.rel, soon && styles.relSoon]}>{relLabel(ts)}</Text>
+              ) : null}
+            </View>
+          );
+        })
+      )}
+    </>
+  );
+
   return (
     <View style={styles.wrap}>
       <Text style={[styles.title, { textAlign: align }]}>{t.calendarTitle}</Text>
@@ -325,51 +381,13 @@ export function CalendarPanel({ compact = false, symbol, onPickCurrency }: Props
           ))}
         </View>
       </ScrollView>
-      <ScrollView style={{ maxHeight: compact ? 140 : 280 }}>
-        {status === 'loading' ? (
-          <Text style={[styles.empty, { textAlign: align }]}>{t.calendarLoading}</Text>
-        ) : visible.length === 0 ? (
-          status === 'error' ? (
-            <Text style={[styles.empty, { textAlign: align }]}>{t.calendarLoadError}</Text>
-          ) : (
-            <Text style={[styles.empty, { textAlign: align }]}>{t.calendarEmpty}</Text>
-          )
-        ) : (
-          ordered.map((e) => {
-            const ts = hasTs(e) ? e.ts : null;
-            const soon = ts != null && ts * 1000 >= now - NOW_WINDOW_MS && ts * 1000 <= now + ROW_SOON_MS;
-            const done = ts != null && ts * 1000 < now - NOW_WINDOW_MS;
-            const figures = figuresLine(e);
-            return (
-              <View key={e.id} style={[styles.row, rtl && styles.rowRtl, soon && styles.rowSoon, done && styles.rowDone]}>
-                <View
-                  style={[styles.dot, { backgroundColor: IMPACT_COLOR[e.impact] ?? colors.textDim }]}
-                />
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.evTitle, { textAlign: align }]}>{e.title}</Text>
-                  {/* الأهمية كلمة ملوّنة لا نقطة لون فقط — نقطة حمراء/برتقالية وحدها لا تُقرأ لمن لديه عمى
-                      ألوان ولا لقارئ الشاشة */}
-                  <Text style={[styles.meta, { textAlign: align }]}>
-                    {e.currency}
-                    {impactWord(e.impact) ? (
-                      <Text style={{ color: IMPACT_COLOR[e.impact] ?? colors.textDim, fontWeight: '700' }}>
-                        {` · ${impactWord(e.impact)}`}
-                      </Text>
-                    ) : null}
-                    {` · ${ts != null ? fmtLocal(ts) : e.when}`}
-                  </Text>
-                  {figures ? (
-                    <Text style={[styles.figures, { textAlign: align }]}>{figures}</Text>
-                  ) : null}
-                </View>
-                {ts != null && !done ? (
-                  <Text style={[styles.rel, soon && styles.relSoon]}>{relLabel(ts)}</Text>
-                ) : null}
-              </View>
-            );
-          })
-        )}
-      </ScrollView>
+      {/**
+        * صندوق الصفوف: نافذة تُمرَّر داخلياً بالمواضع التي تشارك فيها اللوحةُ صفحةً مع غيرها (اللوح
+        * الجانبي/الرصيف)، وسردٌ متدفّق حين تملك اللوحة الصفحةَ وحدها (`flow`) — فالصفحة نفسها هي
+        * التي تُمرَّر. تعشيش تمرير داخل تمرير بصفحة لا شيء فيها غير التقويم كان يحبس القائمة بنافذة
+        * خمسة صفوف والشاشةُ فارغة تحتها، ويشتّت إيماءة السحب بين صندوقين متداخلين.
+        */}
+      {flow ? <View>{rows}</View> : <ScrollView style={{ maxHeight: compact ? 140 : 280 }}>{rows}</ScrollView>}
     </View>
   );
 }

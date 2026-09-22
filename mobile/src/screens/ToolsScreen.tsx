@@ -592,9 +592,11 @@ export function ToolsScreen() {
         </ScrollView>
       ) : null}
 
+      {/* تبويب التقويم: اللوحة تملك الصفحة وحدها، فالصفوف تُسرَد متدفّقة وتُمرَّر الصفحةُ نفسها —
+          بدل نافذة 280px معشَّشة داخل تمرير الصفحة والشاشة فارغة تحتها. */}
       {tab === 'calendar' ? (
         <ScrollView contentContainerStyle={styles.body}>
-          <CalendarPanel symbol={signalSym} />
+          <CalendarPanel flow symbol={signalSym} />
         </ScrollView>
       ) : null}
 
