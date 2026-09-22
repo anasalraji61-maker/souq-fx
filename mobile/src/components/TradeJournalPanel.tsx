@@ -21,6 +21,7 @@ import {
   formatR,
   formatRR,
   levelSideIssue,
+  realizedMove,
   realizedR,
   type PlanIssue,
   type TradePlan,
@@ -427,11 +428,37 @@ export function TradeJournalPanel() {
                 })()}
               </Text>
             ) : null}
-            <Text style={[styles.tradeMeta, { textAlign: align }]}>
-              {tr.status}
-              {tr.pnl != null ? ` · PnL ${tr.pnl >= 0 ? '+' : ''}${Number(tr.pnl).toFixed(2)}%` : ''}
-              {tr.note ? ` · ${tr.note}` : ''}
-            </Text>
+            {/* الحالة كانت كلمة إنجليزية خام («closed»/«open») والنتيجة «PnL x%» بلا لون — وكانت «% × الحجم»
+                من الباك-إند. الآن: «مغلقة · +25 pip · +0.23%» بلون الربح/الخسارة من الدخول/الخروج مباشرة؛
+                المفتوحة لا تكرّر الحالة (السطر الأول يقول «(مفتوحة)»). */}
+            {(() => {
+              const mv =
+                tr.status === 'closed'
+                  ? realizedMove({
+                      symbol: tr.symbol,
+                      side: tr.side === 'sell' ? 'sell' : 'buy',
+                      entry: tr.entry,
+                      exit: tr.exit,
+                    })
+                  : null;
+              const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
+              const pips = mv ? formatPips(mv.pips == null ? null : Math.abs(mv.pips)) : null;
+              const result = mv
+                ? `${pips != null ? `${sign(mv.pips ?? 0)}${pips} pip · ` : ''}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%`
+                : '';
+              if (tr.status !== 'closed' && !tr.note) return null;
+              return (
+                <Text style={[styles.tradeMeta, { textAlign: align }]}>
+                  {tr.status === 'closed' ? t.journalClosedWord : ''}
+                  {result ? (
+                    <Text style={{ color: mv && mv.pct < 0 ? colors.bear : mv && mv.pct > 0 ? colors.bull : colors.textDim, fontWeight: '700' }}>
+                      {` · ${result}`}
+                    </Text>
+                  ) : null}
+                  {tr.note ? `${tr.status === 'closed' ? ' · ' : ''}${tr.note}` : ''}
+                </Text>
+              );
+            })()}
             {tr.status === 'open' ? (
               <Pressable
                 accessibilityRole="button"

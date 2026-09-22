@@ -357,6 +357,7 @@ export type Dict = {
   journalLoadError: string;
   journalEmpty: string;
   journalOpenSuffix: string;
+  journalClosedWord: string;
   journalCloseLinkA11y: string;
   journalCloseLinkBtn: string;
   backtestSub: string;
@@ -1115,6 +1116,7 @@ const ar: Dict = {
   journalEmpty:
     'لا صفقات مسجّلة بعد — سجّل كل صفقة (حتى على حساب تجريبي) لتعرف مع الوقت ما ينجح معك وما لا ينجح.',
   journalOpenSuffix: '(مفتوحة)',
+  journalClosedWord: 'مغلقة',
   journalCloseLinkA11y: 'إغلاق صفقة {symbol} بسعر خانة الخروج',
   journalCloseLinkBtn: 'إغلاق بسعر خانة الخروج',
   backtestSub: 'MA · RSI · MACD · BB · منحنى Equity',
@@ -1880,6 +1882,7 @@ const enUS: Dict = {
   journalEmpty:
     'No trades logged yet — log every trade (even on a demo account) to learn over time what works for you and what doesn\'t.',
   journalOpenSuffix: '(open)',
+  journalClosedWord: 'Closed',
   journalCloseLinkA11y: 'Close {symbol} trade at the exit field price',
   journalCloseLinkBtn: 'Close at exit field price',
   backtestSub: 'MA · RSI · MACD · BB · Equity curve',
@@ -2665,6 +2668,7 @@ const ku: Dict = {
   journalEmpty:
     'هێشتا هیچ مامەڵەیەک تۆمار نەکراوە — هەموو مامەڵەیەک تۆمار بکە (تەنانەت لەسەر هەژماری تاقیکردنەوە) بۆ ئەوەی بزانیت چی بۆت سەرکەوتووە.',
   journalOpenSuffix: '(کراوەیە)',
+  journalClosedWord: 'داخراو',
   journalCloseLinkA11y: 'داخستنی مامەڵەی {symbol} بە نرخی خانەی دەرچوون',
   journalCloseLinkBtn: 'داخستن بە نرخی خانەی دەرچوون',
   backtestSub: 'MA · RSI · MACD · BB · کەوانەی Equity',

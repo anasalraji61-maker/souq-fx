@@ -112,6 +112,27 @@ export function realizedR(input: {
   return Math.round((move / risk) * 10) / 10;
 }
 
+/**
+ * نتيجة صفقة مغلقة بالـpip (الوحدة التي يفكّر بها متداول الفوركس) وبنسبة حركة السعر — من الدخول والخروج
+ * مباشرة، لا من `pnl` المخزَّن (كان «% × الحجم» بالباك-إند القديم فيُعرض بوحدة مضلِّلة لحجم ≠ 1).
+ * `pips` null حين لا يُعرف حجم الـpip للرمز.
+ */
+export function realizedMove(input: {
+  symbol: string;
+  side: TradeSide;
+  entry: number;
+  exit?: number | null;
+}): { pips: number | null; pct: number } | null {
+  const { side, entry, exit } = input;
+  if (!finitePos(entry) || !finitePos(exit)) return null;
+  const move = side === 'buy' ? exit - entry : entry - exit;
+  const pip = instrumentSpec(input.symbol)?.pipSize ?? null;
+  return {
+    pips: pip ? Math.round((move / pip) * 10) / 10 : null,
+    pct: Math.round((move / entry) * 100 * 100) / 100,
+  };
+}
+
 /** +1.8R / −1R / 0R */
 export function formatR(r: number | null): string | null {
   if (r == null || !Number.isFinite(r)) return null;

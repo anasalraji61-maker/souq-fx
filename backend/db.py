@@ -1558,10 +1558,11 @@ def add_trade(data: dict, user_id: int | None = None, owner_key: str | None = No
         "status": data.get("status") or ("closed" if data.get("exit") is not None else "open"),
     }
     if row["exit"] is not None and row["pnl"] is None:
+        # نسبة حركة السعر فقط (الوحدة المعروضة «%»): «% × الحجم» كان رقماً بلا وحدة مفهومة لحجم ≠ 1.
         if row["side"] == "buy":
-            row["pnl"] = (row["exit"] - row["entry"]) / row["entry"] * 100 * row["size"]
+            row["pnl"] = (row["exit"] - row["entry"]) / row["entry"] * 100
         else:
-            row["pnl"] = (row["entry"] - row["exit"]) / row["entry"] * 100 * row["size"]
+            row["pnl"] = (row["entry"] - row["exit"]) / row["entry"] * 100
         row["status"] = "closed"
         row["closed_at"] = row["closed_at"] or time.strftime("%Y-%m-%d %H:%M")
     with _conn() as c:
@@ -1603,11 +1604,11 @@ def close_trade(
         row = dict(r)
         row.pop("owner_key", None)
         entry = float(row["entry"])
-        size = float(row["size"] or 1)
+        # نسبة حركة السعر فقط — راجع add_trade
         if row["side"] == "buy":
-            pnl = (exit_price - entry) / entry * 100 * size
+            pnl = (exit_price - entry) / entry * 100
         else:
-            pnl = (entry - exit_price) / entry * 100 * size
+            pnl = (entry - exit_price) / entry * 100
         closed_at = time.strftime("%Y-%m-%d %H:%M")
         c.execute(
             "UPDATE trades SET exit=?, pnl=?, closed_at=?, status='closed' WHERE id=?",

@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/tradePlan.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { analyzePlan, formatPips, formatR, formatRR, levelSideIssue, realizedR } from './tradePlan';
+import { analyzePlan, formatPips, formatR, formatRR, levelSideIssue, realizedMove, realizedR } from './tradePlan';
 
 // شراء EURUSD صحيح: وقف 25 pip، هدف 50 pip ⇒ 1:2
 const a = analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, tp: 1.09 });
@@ -105,3 +105,10 @@ assert.equal(analyzePlan({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 5999
 
 console.log('tradePlan slTooClose selftest OK');
 
+
+// نتيجة الصفقة بالـpip ونسبة الحركة (دفتر الصفقات)
+assert.deepEqual(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.0875 }), { pips: 25, pct: 0.23 });
+assert.deepEqual(realizedMove({ symbol: 'USDJPY', side: 'sell', entry: 150, exit: 150.3 }), { pips: -30, pct: -0.2 });
+assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2350, exit: 2355.5 }), { pips: 55, pct: 0.23 });
+assert.equal(realizedMove({ symbol: 'BTCUSD', side: 'buy', entry: 60000, exit: 60600 })?.pips, null);
+assert.equal(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: null }), null);
