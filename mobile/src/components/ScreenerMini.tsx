@@ -5,7 +5,16 @@ import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 
 export function ScreenerMini() {
-  const { t } = useI18n();
+  /**
+   * كانت هذه اللوحة **مثبَّتة على العربية بالتخطيط**: `rtl` لم تكن تُقرأ أصلاً من `useI18n`،
+   * فـ`row-reverse` على رقاقات الفلاتر وعلى صفّ النتائج، و`textAlign: 'right'` على العنوان
+   * وسطر الخطأ — كلها بلا شرط. فالمتداول الإنجليزي يرى الرقاقات مقلوبة، **وأفضل نتيجة بالترتيب
+   * تظهر في أقصى اليمين** أي الترتيب معكوس لمن يقرأ من اليسار، والعنوان ملتصق بالحافة المقابلة.
+   * أمريكا وأوروبا سوقان مستهدفان صراحةً بـROADMAP، والماسح تبويب بشاشة الأدوات (ثانية بنطاق
+   * الـMVP). سلوك العربية يبقى كما هو بالضبط — الشرط يضيف حالة LTR فقط.
+   */
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   /** النص المرئي مختصر (رموز/اختصارات) بلا معنى واضح لقارئ الشاشة،
    * فيُستخدَم الوصف الكامل `a11y` بدلاً منه فقط لـaccessibilityLabel. */
   const quick = useMemo(
@@ -53,8 +62,8 @@ export function ScreenerMini() {
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>{t.smnTitle}</Text>
-      <View style={styles.row}>
+      <Text style={[styles.title, { textAlign: align }]}>{t.smnTitle}</Text>
+      <View style={[styles.row, rtl && styles.rowRtl]}>
         {quick.map((q) => (
           <Pressable
             accessibilityRole="button"
@@ -77,10 +86,14 @@ export function ScreenerMini() {
         ))}
       </View>
       {loading ? <ActivityIndicator color={colors.accent} size="small" /> : null}
-      {!loading && error ? <Text style={styles.errorNote}>{t.screenerFailed}</Text> : null}
-      {!loading && !error && emptyNote ? <Text style={styles.errorNote}>{emptyNote}</Text> : null}
+      {!loading && error ? (
+        <Text style={[styles.errorNote, { textAlign: align }]}>{t.screenerFailed}</Text>
+      ) : null}
+      {!loading && !error && emptyNote ? (
+        <Text style={[styles.errorNote, { textAlign: align }]}>{emptyNote}</Text>
+      ) : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={{ flexDirection: 'row-reverse', gap: spacing.sm }}>
+        <View style={[styles.hits, rtl && styles.hitsRtl]}>
           {hits.map((h) => (
             <View key={h.symbol} style={styles.hit}>
               <Text style={styles.sym}>{h.symbol}</Text>
@@ -114,9 +127,12 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
   },
-  title: { color: colors.textMuted, fontWeight: '800', textAlign: 'right', fontSize: 12 },
-  errorNote: { color: colors.warn, textAlign: 'right', fontSize: 11 },
-  row: { flexDirection: 'row-reverse', gap: 6 },
+  title: { color: colors.textMuted, fontWeight: '800', fontSize: 12 },
+  errorNote: { color: colors.warn, fontSize: 11 },
+  row: { flexDirection: 'row', gap: 6 },
+  rowRtl: { flexDirection: 'row-reverse' },
+  hits: { flexDirection: 'row', gap: spacing.sm },
+  hitsRtl: { flexDirection: 'row-reverse' },
   chip: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
