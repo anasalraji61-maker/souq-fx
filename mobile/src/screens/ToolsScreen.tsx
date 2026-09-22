@@ -436,9 +436,11 @@ export function ToolsScreen() {
         </ScrollView>
       ) : null}
 
+      {/* تبويب الدفتر: اللوحة تملك الصفحة وحدها، فالصفقات تُسرَد متدفّقة وتُمرَّر الصفحةُ نفسها —
+          بدل نافذة 220px معشَّشة داخل تمرير الصفحة. */}
       {tab === 'journal' ? (
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <TradeJournalPanel defaultSymbol={signalSym} />
+          <TradeJournalPanel flow defaultSymbol={signalSym} />
         </ScrollView>
       ) : null}
 

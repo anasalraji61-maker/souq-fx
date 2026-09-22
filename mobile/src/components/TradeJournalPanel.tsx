@@ -66,9 +66,14 @@ type Stats = {
 type Props = {
   /** رمز الشارت/الإشارة المفتوح — التسجيل يبدأ به بدل EURUSD ثابت (كالحاسبة والباك-تست). */
   defaultSymbol?: string;
+  /**
+   * اللوحة تملك الصفحة وحدها (تبويب «الدفتر» بشاشة الأدوات): الصفقات تُسرَد متدفّقة بلا نافذة تمرير
+   * داخلية، فالصفحة هي التي تُمرَّر. بغيره تبقى النافذة المحدودة كما هي بمواضع المشاركة.
+   */
+  flow?: boolean;
 };
 
-export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
+export function TradeJournalPanel({ defaultSymbol, flow = false }: Props = {}) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -454,6 +459,162 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
       ]
     );
 
+  /** صفوف الصفقات — تُركَّب مرة وتُعرض بصندوقين بحسب من يستضيف اللوحة (انظر `flow`). */
+  const rows = (
+    <>
+      {[...trades]
+        .sort((x, y) => Number(x.status === 'closed') - Number(y.status === 'closed'))
+        .map((tr) => (
+        <View key={tr.id} style={styles.trade}>
+          <Text style={[styles.tradeMain, { textAlign: align }]}>
+            {/* الاتجاه بلا لبس: سهم ولون وكلمة مترجمة بدل "BUY"/"SELL" اللاتينية */}
+            <Text style={{ color: tr.side === 'sell' ? colors.bear : colors.bull }}>
+              {tr.side === 'sell' ? `▼ ${t.dirSell}` : `▲ ${t.dirBuy}`}
+            </Text>{' '}
+            {tr.symbol}
+            {/* 1 هو افتراض الباك-إند لصفقة بلا حجم مسجَّل — لا يُميَّز عن حجم كتبه المتداول، فلا يُعرض
+                كأنه رقمه. ما عداه حجم سجّله فعلاً (يدوياً أو عبر «سجّل الخطة» من الحاسبة). */}
+            {typeof tr.size === 'number' && Number.isFinite(tr.size) && tr.size > 0 && tr.size !== 1
+              ? ` · ${Number(tr.size.toFixed(2))} lot`
+              : ''}{' '}
+            · {formatPrice(tr.entry, tr.symbol)}
+            {tr.exit != null ? ` → ${formatPrice(tr.exit, tr.symbol)}` : ` ${t.journalOpenSuffix}`}
+          </Text>
+          {tr.sl != null || tr.tp != null ? (
+            <Text style={[styles.tradeMeta, { textAlign: align }]}>
+              {tr.sl != null ? <Text style={{ color: colors.bear }}>SL {formatPrice(tr.sl, tr.symbol)}</Text> : null}
+              {tr.sl != null && tr.tp != null ? ' · ' : ''}
+              {tr.tp != null ? <Text style={{ color: colors.bull }}>TP {formatPrice(tr.tp, tr.symbol)}</Text> : null}
+              {(() => {
+                if (tr.sl == null || tr.tp == null) return '';
+                const plan = analyzePlan({
+                  symbol: tr.symbol,
+                  side: tr.side === 'sell' ? 'sell' : 'buy',
+                  entry: tr.entry,
+                  sl: tr.sl,
+                  tp: tr.tp,
+                });
+                return plan.ok ? ` · R:R ${formatRR(plan.rr)}` : '';
+              })()}
+              {(() => {
+                const r = formatR(
+                  realizedR({ side: tr.side === 'sell' ? 'sell' : 'buy', entry: tr.entry, sl: tr.sl, exit: tr.exit })
+                );
+                return r ? ` · ${t.journalResultR.replace('{r}', r)}` : '';
+              })()}
+            </Text>
+          ) : null}
+          {/* الحالة كانت كلمة إنجليزية خام («closed»/«open») والنتيجة «PnL x%» بلا لون — وكانت «% × الحجم»
+              من الباك-إند. الآن: «مغلقة · +25 pip · +0.23%» بلون الربح/الخسارة من الدخول/الخروج مباشرة؛
+              المفتوحة لا تكرّر الحالة (السطر الأول يقول «(مفتوحة)»). */}
+          {(() => {
+            const mv =
+              tr.status === 'closed'
+                ? realizedMove({
+                    symbol: tr.symbol,
+                    side: tr.side === 'sell' ? 'sell' : 'buy',
+                    entry: tr.entry,
+                    exit: tr.exit,
+                  })
+                : null;
+            const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
+            const pips = mv ? formatPips(mv.pips == null ? null : Math.abs(mv.pips)) : null;
+            const result = mv
+              ? `${pips != null ? `${sign(mv.pips ?? 0)}${pips} pip · ` : ''}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%`
+              : '';
+            if (tr.status !== 'closed' && !tr.note) return null;
+            return (
+              <Text style={[styles.tradeMeta, { textAlign: align }]}>
+                {tr.status === 'closed' ? t.journalClosedWord : ''}
+                {result ? (
+                  <Text style={{ color: mv && mv.pct < 0 ? colors.bear : mv && mv.pct > 0 ? colors.bull : colors.textDim, fontWeight: '700' }}>
+                    {` · ${result}`}
+                  </Text>
+                ) : null}
+                {tr.note ? `${tr.status === 'closed' ? ' · ' : ''}${tr.note}` : ''}
+              </Text>
+            );
+          })()}
+          <View style={[styles.tradeActions, rtl && styles.rowRtl]}>
+            {tr.status === 'open' ? (
+              <Pressable
+                accessibilityRole="button"
+                style={({ pressed }) => [
+                  busy && styles.closeLinkDisabled,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => void closeAtMarket(tr)}
+                disabled={busy}
+                accessibilityState={{ disabled: busy }}
+                accessibilityLabel={t.journalCloseMarketA11y.replace('{symbol}', tr.symbol)}
+                hitSlop={8}
+              >
+                <Text style={[styles.closeLink, { textAlign: align }]}>{t.journalCloseMarketBtn}</Text>
+              </Pressable>
+            ) : null}
+            {tr.status === 'open' ? (
+              <Pressable
+                accessibilityRole="button"
+                style={({ pressed }) => [
+                  (busy || editing != null) && styles.closeLinkDisabled,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => void closeOpen(tr.id)}
+                // أثناء التعديل خانة الخروج تخصّ الصفقة المعدَّلة — الإغلاق منها كان سيغلق صفقة أخرى بسعرها
+                disabled={busy || editing != null}
+                accessibilityState={{ disabled: busy || editing != null }}
+                accessibilityLabel={t.journalCloseLinkA11y.replace('{symbol}', tr.symbol)}
+                hitSlop={8}
+              >
+                <Text style={[styles.closeLink, { textAlign: align }]}>{t.journalCloseLinkBtn}</Text>
+              </Pressable>
+            ) : null}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled: busy, selected: editing?.id === tr.id }}
+              style={({ pressed }) => [
+                busy && styles.closeLinkDisabled,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => startEdit(tr)}
+              disabled={busy}
+              accessibilityLabel={t.journalEditA11y.replace('{symbol}', tr.symbol)}
+              hitSlop={8}
+            >
+              <Text style={styles.closeLink}>{t.journalEditBtn}</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                busy && styles.closeLinkDisabled,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => confirmRemove(tr)}
+              disabled={busy}
+              accessibilityState={{ disabled: busy }}
+              accessibilityLabel={t.journalDeleteA11y.replace('{symbol}', tr.symbol)}
+              hitSlop={8}
+            >
+              <Text style={styles.delLink}>{t.deleteWord}</Text>
+            </Pressable>
+          </View>
+        </View>
+      ))}
+    </>
+  );
+
   return (
     <View style={styles.wrap}>
       <Text style={[styles.title, { textAlign: align }]}>{t.journalTitle}</Text>
@@ -758,158 +919,17 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
         * **مستقرّ** بمواصفة ES2019 فترتيب الأحدث-فالأقدم محفوظ داخل كل مجموعة، ولا يمسّ الإحصاءات
         * (تُحسب من `trades` نفسها لا من هذا العرض).
         */}
-      <ScrollView style={{ maxHeight: 220 }} keyboardShouldPersistTaps="handled">
-        {[...trades]
-          .sort((x, y) => Number(x.status === 'closed') - Number(y.status === 'closed'))
-          .map((tr) => (
-          <View key={tr.id} style={styles.trade}>
-            <Text style={[styles.tradeMain, { textAlign: align }]}>
-              {/* الاتجاه بلا لبس: سهم ولون وكلمة مترجمة بدل "BUY"/"SELL" اللاتينية */}
-              <Text style={{ color: tr.side === 'sell' ? colors.bear : colors.bull }}>
-                {tr.side === 'sell' ? `▼ ${t.dirSell}` : `▲ ${t.dirBuy}`}
-              </Text>{' '}
-              {tr.symbol}
-              {/* 1 هو افتراض الباك-إند لصفقة بلا حجم مسجَّل — لا يُميَّز عن حجم كتبه المتداول، فلا يُعرض
-                  كأنه رقمه. ما عداه حجم سجّله فعلاً (يدوياً أو عبر «سجّل الخطة» من الحاسبة). */}
-              {typeof tr.size === 'number' && Number.isFinite(tr.size) && tr.size > 0 && tr.size !== 1
-                ? ` · ${Number(tr.size.toFixed(2))} lot`
-                : ''}{' '}
-              · {formatPrice(tr.entry, tr.symbol)}
-              {tr.exit != null ? ` → ${formatPrice(tr.exit, tr.symbol)}` : ` ${t.journalOpenSuffix}`}
-            </Text>
-            {tr.sl != null || tr.tp != null ? (
-              <Text style={[styles.tradeMeta, { textAlign: align }]}>
-                {tr.sl != null ? <Text style={{ color: colors.bear }}>SL {formatPrice(tr.sl, tr.symbol)}</Text> : null}
-                {tr.sl != null && tr.tp != null ? ' · ' : ''}
-                {tr.tp != null ? <Text style={{ color: colors.bull }}>TP {formatPrice(tr.tp, tr.symbol)}</Text> : null}
-                {(() => {
-                  if (tr.sl == null || tr.tp == null) return '';
-                  const plan = analyzePlan({
-                    symbol: tr.symbol,
-                    side: tr.side === 'sell' ? 'sell' : 'buy',
-                    entry: tr.entry,
-                    sl: tr.sl,
-                    tp: tr.tp,
-                  });
-                  return plan.ok ? ` · R:R ${formatRR(plan.rr)}` : '';
-                })()}
-                {(() => {
-                  const r = formatR(
-                    realizedR({ side: tr.side === 'sell' ? 'sell' : 'buy', entry: tr.entry, sl: tr.sl, exit: tr.exit })
-                  );
-                  return r ? ` · ${t.journalResultR.replace('{r}', r)}` : '';
-                })()}
-              </Text>
-            ) : null}
-            {/* الحالة كانت كلمة إنجليزية خام («closed»/«open») والنتيجة «PnL x%» بلا لون — وكانت «% × الحجم»
-                من الباك-إند. الآن: «مغلقة · +25 pip · +0.23%» بلون الربح/الخسارة من الدخول/الخروج مباشرة؛
-                المفتوحة لا تكرّر الحالة (السطر الأول يقول «(مفتوحة)»). */}
-            {(() => {
-              const mv =
-                tr.status === 'closed'
-                  ? realizedMove({
-                      symbol: tr.symbol,
-                      side: tr.side === 'sell' ? 'sell' : 'buy',
-                      entry: tr.entry,
-                      exit: tr.exit,
-                    })
-                  : null;
-              const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
-              const pips = mv ? formatPips(mv.pips == null ? null : Math.abs(mv.pips)) : null;
-              const result = mv
-                ? `${pips != null ? `${sign(mv.pips ?? 0)}${pips} pip · ` : ''}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%`
-                : '';
-              if (tr.status !== 'closed' && !tr.note) return null;
-              return (
-                <Text style={[styles.tradeMeta, { textAlign: align }]}>
-                  {tr.status === 'closed' ? t.journalClosedWord : ''}
-                  {result ? (
-                    <Text style={{ color: mv && mv.pct < 0 ? colors.bear : mv && mv.pct > 0 ? colors.bull : colors.textDim, fontWeight: '700' }}>
-                      {` · ${result}`}
-                    </Text>
-                  ) : null}
-                  {tr.note ? `${tr.status === 'closed' ? ' · ' : ''}${tr.note}` : ''}
-                </Text>
-              );
-            })()}
-            <View style={[styles.tradeActions, rtl && styles.rowRtl]}>
-              {tr.status === 'open' ? (
-                <Pressable
-                  accessibilityRole="button"
-                  style={({ pressed }) => [
-                    busy && styles.closeLinkDisabled,
-                    pressed && {
-                      opacity: buttons.pressedOpacity,
-                      transform: [{ scale: buttons.pressedScale }],
-                    },
-                  ]}
-                  onPress={() => void closeAtMarket(tr)}
-                  disabled={busy}
-                  accessibilityState={{ disabled: busy }}
-                  accessibilityLabel={t.journalCloseMarketA11y.replace('{symbol}', tr.symbol)}
-                  hitSlop={8}
-                >
-                  <Text style={[styles.closeLink, { textAlign: align }]}>{t.journalCloseMarketBtn}</Text>
-                </Pressable>
-              ) : null}
-              {tr.status === 'open' ? (
-                <Pressable
-                  accessibilityRole="button"
-                  style={({ pressed }) => [
-                    (busy || editing != null) && styles.closeLinkDisabled,
-                    pressed && {
-                      opacity: buttons.pressedOpacity,
-                      transform: [{ scale: buttons.pressedScale }],
-                    },
-                  ]}
-                  onPress={() => void closeOpen(tr.id)}
-                  // أثناء التعديل خانة الخروج تخصّ الصفقة المعدَّلة — الإغلاق منها كان سيغلق صفقة أخرى بسعرها
-                  disabled={busy || editing != null}
-                  accessibilityState={{ disabled: busy || editing != null }}
-                  accessibilityLabel={t.journalCloseLinkA11y.replace('{symbol}', tr.symbol)}
-                  hitSlop={8}
-                >
-                  <Text style={[styles.closeLink, { textAlign: align }]}>{t.journalCloseLinkBtn}</Text>
-                </Pressable>
-              ) : null}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ disabled: busy, selected: editing?.id === tr.id }}
-                style={({ pressed }) => [
-                  busy && styles.closeLinkDisabled,
-                  pressed && {
-                    opacity: buttons.pressedOpacity,
-                    transform: [{ scale: buttons.pressedScale }],
-                  },
-                ]}
-                onPress={() => startEdit(tr)}
-                disabled={busy}
-                accessibilityLabel={t.journalEditA11y.replace('{symbol}', tr.symbol)}
-                hitSlop={8}
-              >
-                <Text style={styles.closeLink}>{t.journalEditBtn}</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                style={({ pressed }) => [
-                  busy && styles.closeLinkDisabled,
-                  pressed && {
-                    opacity: buttons.pressedOpacity,
-                    transform: [{ scale: buttons.pressedScale }],
-                  },
-                ]}
-                onPress={() => confirmRemove(tr)}
-                disabled={busy}
-                accessibilityState={{ disabled: busy }}
-                accessibilityLabel={t.journalDeleteA11y.replace('{symbol}', tr.symbol)}
-                hitSlop={8}
-              >
-                <Text style={styles.delLink}>{t.deleteWord}</Text>
-              </Pressable>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
+      {/**
+        * صندوق الصفوف: نافذة تُمرَّر داخلياً حيث تشارك اللوحةُ صفحةً مع غيرها (اللوح الجانبي/الرصيف)،
+        * وسردٌ متدفّق حين تملك اللوحة الصفحة وحدها (`flow`) — فالصفحة نفسها هي التي تُمرَّر.
+        */}
+      {flow ? (
+        <View>{rows}</View>
+      ) : (
+        <ScrollView style={{ maxHeight: 220 }} keyboardShouldPersistTaps="handled">
+          {rows}
+        </ScrollView>
+      )}
     </View>
   );
 }
