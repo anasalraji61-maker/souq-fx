@@ -15,6 +15,7 @@ import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
+import { isRealQuote } from '../chart/dataSource';
 import {
   analyzePlan,
   formatPips,
@@ -62,13 +63,18 @@ type Stats = {
   worst: number;
 };
 
-export function TradeJournalPanel() {
+type Props = {
+  /** رمز الشارت/الإشارة المفتوح — التسجيل يبدأ به بدل EURUSD ثابت (كالحاسبة والباك-تست). */
+  defaultSymbol?: string;
+};
+
+export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [symbol, setSymbol] = useState('EURUSD');
+  const [symbol, setSymbol] = useState(defaultSymbol || 'EURUSD');
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [entry, setEntry] = useState('');
   const [exit, setExit] = useState('');
@@ -76,6 +82,8 @@ export function TradeJournalPanel() {
   const [tp, setTp] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  /** جلب «السعر الحالي» لخانة الدخول جارٍ */
+  const [quoteBusy, setQuoteBusy] = useState(false);
   /** وضوح الحالة: يميّز "لا صفقات بعد" فعلياً عن فشل تحميل السجل */
   const [listError, setListError] = useState(false);
   /** وضوح الحالة: يعلم المستخدم إذا فشلت إضافة صفقة بدل صمت كامل (لم يكن هناك حتى catch) */
@@ -111,6 +119,39 @@ export function TradeJournalPanel() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  // تبديل زوج الشارت يُبدّل رمز التسجيل — لكن ليس وسط تسجيل صفقة مكتوبة (سعر دخول مكتوب لرمز آخر
+  // كان سيُسجَّل تحت الرمز الجديد).
+  const entryRef = useRef(entry);
+  entryRef.current = entry;
+  useEffect(() => {
+    if (defaultSymbol && entryRef.current.trim() === '') setSymbol(defaultSymbol);
+  }, [defaultSymbol]);
+
+  /** سعر الدخول بنقرة: المتداول يسجّل الصفقة لحظة فتحها غالباً. Ask للشراء وBid للبيع إن توفّرا (ما ينفَّذ
+   * عليه فعلاً)، وإلا السعر. اقتباس بذري تجريبي لا يُستخدم أبداً (isRealQuote) — لا دخول مختلَق. */
+  const fillLivePrice = async () => {
+    const sym = symbol.trim().toUpperCase();
+    if (sym.length < 3 || quoteBusy) return;
+    setQuoteBusy(true);
+    setFormError(null);
+    try {
+      const q = await api.marketQuote(sym);
+      if (!mountedRef.current) return;
+      if (!isRealQuote(q)) {
+        setFormError(t.journalNoLiveQuote);
+        return;
+      }
+      const sidePx = side === 'buy' ? q.ask : q.bid;
+      const px = typeof sidePx === 'number' && Number.isFinite(sidePx) && sidePx > 0 ? sidePx : q.price;
+      setEntry(formatPrice(px, sym));
+      playSoftClick();
+    } catch {
+      if (mountedRef.current) setFormError(t.journalNoLiveQuote);
+    } finally {
+      if (mountedRef.current) setQuoteBusy(false);
+    }
+  };
 
   /** "1,0850" / «١٫٠٨٥٠» / «2,350.50» → رقم (راجع parseDecimal.ts)؛ خانة فارغة أو غير رقمية → null. */
   const num = (v: string): number | null => {
@@ -395,6 +436,25 @@ export function TradeJournalPanel() {
         selectionColor={colors.accent}
         accessibilityLabel={t.journalEntryA11y}
       />
+      <View style={[styles.qChips, rtl && styles.rowRtl]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: quoteBusy, busy: quoteBusy }}
+          disabled={quoteBusy}
+          style={({ pressed }) => [
+            styles.qChip,
+            quoteBusy && { opacity: 0.5 },
+            pressed && {
+              opacity: buttons.pressedOpacity,
+              transform: [{ scale: buttons.pressedScale }],
+            },
+          ]}
+          onPress={() => void fillLivePrice()}
+          accessibilityLabel={t.journalUseLivePriceA11y}
+        >
+          <Text style={styles.qChipText}>{quoteBusy ? '...' : t.journalUseLivePrice}</Text>
+        </Pressable>
+      </View>
       <TextInput
         style={[styles.input, { textAlign: align }]}
         value={exit}

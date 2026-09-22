@@ -346,7 +346,7 @@ export function ToolsScreen() {
 
       {tab === 'journal' ? (
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <TradeJournalPanel />
+          <TradeJournalPanel defaultSymbol={signalSym} />
         </ScrollView>
       ) : null}
 

@@ -203,7 +203,7 @@ export function MatrixBottomDock({
             ) : null}
             {tab === 'news' ? <NewsPanel /> : null}
             {tab === 'calendar' ? <CalendarPanel /> : null}
-            {tab === 'journal' ? <TradeJournalPanel /> : null}
+            {tab === 'journal' ? <TradeJournalPanel defaultSymbol={symbol} /> : null}
             {tab === 'community' ? (
               <View style={styles.community}>
                 <GroupChatPanel />

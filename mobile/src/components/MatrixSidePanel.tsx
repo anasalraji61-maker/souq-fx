@@ -191,7 +191,7 @@ export function MatrixSidePanel({
             {panel === 'dom' ? (
               <DomLitePanel last={lastPrice} candles={candles} symbol={symbol} />
             ) : null}
-            {panel === 'journal' ? <TradeJournalPanel /> : null}
+            {panel === 'journal' ? <TradeJournalPanel defaultSymbol={symbol} /> : null}
           </ScrollView>
         </View>
       </View>

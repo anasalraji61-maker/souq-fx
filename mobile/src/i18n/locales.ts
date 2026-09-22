@@ -349,6 +349,9 @@ export type Dict = {
   journalSymbolPlaceholder: string;
   journalSymbolA11y: string;
   journalEntryPlaceholder: string;
+  journalUseLivePrice: string;
+  journalUseLivePriceA11y: string;
+  journalNoLiveQuote: string;
   journalEntryA11y: string;
   journalExitPlaceholder: string;
   journalExitA11y: string;
@@ -1133,6 +1136,9 @@ const ar: Dict = {
   journalSymbolPlaceholder: 'الرمز',
   journalSymbolA11y: 'رمز الصفقة',
   journalEntryPlaceholder: 'دخول',
+  journalUseLivePrice: '↓ السعر الحالي',
+  journalUseLivePriceA11y: 'تعبئة سعر الدخول بالسعر الحالي (Ask للشراء، Bid للبيع)',
+  journalNoLiveQuote: 'لا سعر حي لهذا الرمز الآن — اكتب سعر الدخول يدوياً',
   journalEntryA11y: 'سعر الدخول',
   journalExitPlaceholder: 'خروج (اختياري)',
   journalExitA11y: 'سعر الخروج (اختياري)',
@@ -1925,6 +1931,9 @@ const enUS: Dict = {
   journalSymbolPlaceholder: 'Symbol',
   journalSymbolA11y: 'Trade symbol',
   journalEntryPlaceholder: 'Entry',
+  journalUseLivePrice: '↓ Current price',
+  journalUseLivePriceA11y: 'Fill the entry with the current price (Ask for buy, Bid for sell)',
+  journalNoLiveQuote: 'No live price for this symbol right now — type the entry manually',
   journalEntryA11y: 'Entry price',
   journalExitPlaceholder: 'Exit (optional)',
   journalExitA11y: 'Exit price (optional)',
@@ -2737,6 +2746,9 @@ const ku: Dict = {
   journalSymbolPlaceholder: 'هێما',
   journalSymbolA11y: 'هێمای مامەڵە',
   journalEntryPlaceholder: 'چوونەژوورەوە',
+  journalUseLivePrice: '↓ نرخی ئێستا',
+  journalUseLivePriceA11y: 'پڕکردنەوەی نرخی چوونەژوورەوە بە نرخی ئێستا (Ask بۆ کڕین، Bid بۆ فرۆشتن)',
+  journalNoLiveQuote: 'ئێستا نرخی ڕاستەوخۆ بۆ ئەم هێمایە نییە — نرخی چوونەژوورەوە بە دەست بنووسە',
   journalEntryA11y: 'نرخی چوونەژوورەوە',
   journalExitPlaceholder: 'دەرچوون (ئیختیاری)',
   journalExitA11y: 'نرخی دەرچوون (ئیختیاری)',
