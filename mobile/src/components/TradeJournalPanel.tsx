@@ -30,6 +30,12 @@ import {
 /** نفس أزواج الاختيار السريع بحاسبة المخاطرة — تسجيل صفقة بنقرة بدل كتابة الرمز بلوحة مفاتيح بيد واحدة. */
 const QUICK_SYMBOLS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'GBPJPY', 'EURGBP'];
 
+/** +80 / −12.5 pip — نفس علامة الناقص المطبعية لـformatR. */
+const formatSignedPips = (p: number): string => {
+  const abs = formatPips(Math.abs(p)) ?? '0';
+  return `${p > 0 ? '+' : p < 0 ? '−' : ''}${abs}`;
+};
+
 type Trade = {
   id: string;
   symbol: string;
@@ -143,6 +149,36 @@ export function TradeJournalPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry, sl, tp]);
 
+  /**
+   * ما يقيس به متداول التجزئة أداءه فعلاً: صافي النقاط (pip) ومتوسط النتيجة بالـR (التوقّع لكل صفقة) —
+   * من الصفقات المغلقة المعروضة، لا من `pnl` المخزَّن. الـR فقط للصفقات التي سُجِّل لها وقف.
+   */
+  const extraStats = useMemo(() => {
+    let pips = 0;
+    let pipN = 0;
+    let rSum = 0;
+    let rN = 0;
+    for (const tr of trades) {
+      if (tr.status !== 'closed') continue;
+      const side = tr.side === 'sell' ? 'sell' : 'buy';
+      const mv = realizedMove({ symbol: tr.symbol, side, entry: tr.entry, exit: tr.exit });
+      if (mv?.pips != null) {
+        pips += mv.pips;
+        pipN += 1;
+      }
+      const r = realizedR({ side, entry: tr.entry, sl: tr.sl, exit: tr.exit });
+      if (r != null) {
+        rSum += r;
+        rN += 1;
+      }
+    }
+    return {
+      pips: pipN ? formatSignedPips(Math.round(pips * 10) / 10) : null,
+      avgR: rN ? formatR(Math.round((rSum / rN) * 10) / 10) : null,
+      rN,
+    };
+  }, [trades]);
+
   const add = async () => {
     const e = num(entry);
     if (!symbol.trim() || e == null) {
@@ -252,6 +288,16 @@ export function TradeJournalPanel() {
           <Text style={[styles.stat, { textAlign: align }]}>
             {t.journalStatTotalPnl.replace('{pct}', String(stats.total_pnl_pct))}
           </Text>
+          {extraStats.pips != null ? (
+            <Text style={[styles.stat, { textAlign: align }]}>
+              {t.journalStatNetPips.replace('{pips}', extraStats.pips)}
+            </Text>
+          ) : null}
+          {extraStats.avgR != null ? (
+            <Text style={[styles.stat, { textAlign: align }]}>
+              {t.journalStatAvgR.replace('{r}', extraStats.avgR).replace('{n}', String(extraStats.rN))}
+            </Text>
+          ) : null}
           <Text style={[styles.stat, { textAlign: align }]}>
             {t.journalStatBestWorst
               .replace('{best}', String(stats.best))

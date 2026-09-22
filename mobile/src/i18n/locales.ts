@@ -336,6 +336,8 @@ export type Dict = {
   journalStatTotalPnl: string;
   journalStatBestWorst: string;
   journalStatsPending: string;
+  journalStatNetPips: string;
+  journalStatAvgR: string;
   journalSideA11yPrefix: string;
   journalSymbolPlaceholder: string;
   journalSymbolA11y: string;
@@ -1098,6 +1100,8 @@ const ar: Dict = {
   journalStatTotalPnl: 'إجمالي PnL: {pct}%',
   journalStatBestWorst: 'أفضل/أسوأ: {best}% / {worst}%',
   journalStatsPending: 'لا صفقات مغلقة بعد — نسبة النجاح والـPnL تظهر بعد إغلاق أول صفقة.',
+  journalStatNetPips: 'صافي النقاط: {pips} pip',
+  journalStatAvgR: 'متوسط النتيجة: {r} لكل صفقة ({n} بوقف مسجَّل)',
   journalSideA11yPrefix: 'اتجاه الصفقة',
   journalSymbolPlaceholder: 'الرمز',
   journalSymbolA11y: 'رمز الصفقة',
@@ -1868,6 +1872,8 @@ const enUS: Dict = {
   journalStatTotalPnl: 'Total PnL: {pct}%',
   journalStatBestWorst: 'Best/Worst: {best}% / {worst}%',
   journalStatsPending: 'No closed trades yet — win rate and PnL appear once you close your first trade.',
+  journalStatNetPips: 'Net pips: {pips} pip',
+  journalStatAvgR: 'Average result: {r} per trade ({n} with a stop)',
   journalSideA11yPrefix: 'Trade direction',
   journalSymbolPlaceholder: 'Symbol',
   journalSymbolA11y: 'Trade symbol',
@@ -2658,6 +2664,8 @@ const ku: Dict = {
   journalStatTotalPnl: 'کۆی PnL: {pct}%',
   journalStatBestWorst: 'باشترین/خراپترین: {best}% / {worst}%',
   journalStatsPending: 'هێشتا هیچ مامەڵەیەکی داخراو نییە — ڕێژەی سەرکەوتن و PnL دوای داخستنی یەکەم مامەڵە دەردەکەون.',
+  journalStatNetPips: 'کۆی خاڵەکان: {pips} pip',
+  journalStatAvgR: 'ناوەندی ئەنجام: {r} بۆ هەر مامەڵەیەک ({n} بە وەستان)',
   journalSideA11yPrefix: 'ئاراستەی مامەڵە',
   journalSymbolPlaceholder: 'هێما',
   journalSymbolA11y: 'هێمای مامەڵە',
