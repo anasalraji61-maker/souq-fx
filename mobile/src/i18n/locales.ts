@@ -374,6 +374,12 @@ export type Dict = {
   journalDeleteConfirmTitle: string;
   journalDeleteFailedBody: string;
   journalDeleteA11y: string;
+  journalEditBtn: string;
+  journalEditA11y: string;
+  journalEditingBanner: string;
+  journalSaveEditBtn: string;
+  journalCancelEdit: string;
+  journalEditError: string;
   journalCloseLinkA11y: string;
   journalCloseLinkBtn: string;
   backtestSub: string;
@@ -1162,6 +1168,12 @@ const ar: Dict = {
   journalDeleteConfirmTitle: 'حذف هذه الصفقة من الدفتر؟',
   journalDeleteFailedBody: 'حدث خطأ أثناء حذف الصفقة، حاول مرة أخرى.',
   journalDeleteA11y: 'حذف صفقة {symbol} من الدفتر',
+  journalEditBtn: 'تعديل',
+  journalEditA11y: 'تعديل صفقة {symbol}',
+  journalEditingBanner: 'تعديل صفقة {symbol} — غيّر الحقول ثم «حفظ التعديل». امسح خانة الخروج لإعادتها مفتوحة.',
+  journalSaveEditBtn: 'حفظ التعديل',
+  journalCancelEdit: 'إلغاء التعديل',
+  journalEditError: 'تعذّر حفظ التعديل — تحقّق من الاتصال وحاول مرة أخرى',
   journalCloseLinkA11y: 'إغلاق صفقة {symbol} بسعر خانة الخروج',
   journalCloseLinkBtn: 'إغلاق بسعر خانة الخروج',
   backtestSub: 'MA · RSI · MACD · BB · منحنى Equity',
@@ -1957,6 +1969,12 @@ const enUS: Dict = {
   journalDeleteConfirmTitle: 'Delete this trade from the journal?',
   journalDeleteFailedBody: 'An error occurred while deleting the trade, try again.',
   journalDeleteA11y: 'Delete {symbol} trade from the journal',
+  journalEditBtn: 'Edit',
+  journalEditA11y: 'Edit {symbol} trade',
+  journalEditingBanner: 'Editing {symbol} trade — change the fields, then “Save changes”. Clear the exit field to reopen it.',
+  journalSaveEditBtn: 'Save changes',
+  journalCancelEdit: 'Cancel edit',
+  journalEditError: 'Couldn’t save the changes — check your connection and try again',
   journalCloseLinkA11y: 'Close {symbol} trade at the exit field price',
   journalCloseLinkBtn: 'Close at exit field price',
   backtestSub: 'MA · RSI · MACD · BB · Equity curve',
@@ -2772,6 +2790,12 @@ const ku: Dict = {
   journalDeleteConfirmTitle: 'ئەم مامەڵەیە لە دەفتەرەکە بسڕدرێتەوە؟',
   journalDeleteFailedBody: 'هەڵەیەک ڕوویدا لە کاتی سڕینەوەی مامەڵەکە، دووبارە هەوڵ بدەرەوە.',
   journalDeleteA11y: 'سڕینەوەی مامەڵەی {symbol} لە دەفتەرەکە',
+  journalEditBtn: 'دەستکاری',
+  journalEditA11y: 'دەستکاریکردنی مامەڵەی {symbol}',
+  journalEditingBanner: 'دەستکاریکردنی مامەڵەی {symbol} — خانەکان بگۆڕە پاشان «پاشەکەوتکردنی گۆڕانکاری». خانەی دەرچوون بسڕەوە بۆ کردنەوەی دووبارە.',
+  journalSaveEditBtn: 'پاشەکەوتکردنی گۆڕانکاری',
+  journalCancelEdit: 'هەڵوەشاندنەوەی دەستکاری',
+  journalEditError: 'نەکرا گۆڕانکارییەکان پاشەکەوت بکرێن — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
   journalCloseLinkA11y: 'داخستنی مامەڵەی {symbol} بە نرخی خانەی دەرچوون',
   journalCloseLinkBtn: 'داخستن بە نرخی خانەی دەرچوون',
   backtestSub: 'MA · RSI · MACD · BB · کەوانەی Equity',

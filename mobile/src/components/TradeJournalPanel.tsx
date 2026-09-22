@@ -88,6 +88,9 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
   const [listError, setListError] = useState(false);
   /** وضوح الحالة: يعلم المستخدم إذا فشلت إضافة صفقة بدل صمت كامل (لم يكن هناك حتى catch) */
   const [formError, setFormError] = useState<string | null>(null);
+  /** صفقة قيد التعديل — النموذج نفسه يُملأ بها و«إضافة» يصبح «حفظ التعديل» (خطأ كتابة بالدخول كان يُفسد
+   * الإحصاءات، والحلّ الوحيد كان الحذف وإعادة الكتابة). */
+  const [editing, setEditing] = useState<Trade | null>(null);
 
   // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (تبديل تبويب
   // ToolsScreen قبل اكتمال الطلب) — نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود.
@@ -220,6 +223,34 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
     };
   }, [trades]);
 
+  const resetForm = () => {
+    setEntry('');
+    setExit('');
+    setSl('');
+    setTp('');
+    setNote('');
+  };
+
+  const startEdit = (tr: Trade) => {
+    setEditing(tr);
+    setSymbol(tr.symbol);
+    setSide(tr.side === 'sell' ? 'sell' : 'buy');
+    // String لا formatPrice: لا تقريب يغيّر السعر المسجَّل بمجرد فتح التعديل
+    setEntry(String(tr.entry));
+    setExit(tr.exit != null ? String(tr.exit) : '');
+    setSl(tr.sl != null ? String(tr.sl) : '');
+    setTp(tr.tp != null ? String(tr.tp) : '');
+    setNote(tr.note || '');
+    setFormError(null);
+    playSoftClick();
+  };
+
+  const cancelEdit = () => {
+    setEditing(null);
+    resetForm();
+    setFormError(null);
+  };
+
   const add = async () => {
     const e = num(entry);
     if (!symbol.trim() || e == null) {
@@ -239,6 +270,30 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
     }
     setBusy(true);
     setFormError(null);
+    if (editing) {
+      try {
+        // تعديل: خانة فارغة = مسح (وقف/هدف بلا قيمة، وخروج فارغ يعيد الصفقة مفتوحة) — لا «بلا تغيير» صامت
+        await api.updateTrade(editing.id, {
+          symbol: symbol.trim().toUpperCase(),
+          side,
+          entry: e,
+          exit: num(exit),
+          sl: s,
+          tp: p,
+          note,
+        });
+        if (!mountedRef.current) return;
+        playSoftClick();
+        setEditing(null);
+        resetForm();
+        await refresh();
+      } catch {
+        if (mountedRef.current) setFormError(t.journalEditError);
+      } finally {
+        if (mountedRef.current) setBusy(false);
+      }
+      return;
+    }
     try {
       const x = num(exit);
       await api.createTrade({
@@ -251,11 +306,7 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
         note,
       });
       playSoftClick();
-      setEntry('');
-      setExit('');
-      setSl('');
-      setTp('');
-      setNote('');
+      resetForm();
       await refresh();
     } catch {
       setFormError(t.journalAddError);
@@ -290,6 +341,7 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
     try {
       await api.deleteTrade(id);
       playSoftClick();
+      if (editing?.id === id) cancelEdit();
       await refresh();
     } catch {
       Alert.alert(t.alertsDeleteFailedTitle, t.journalDeleteFailedBody);
@@ -347,6 +399,27 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
         </View>
       ) : null}
 
+      {editing ? (
+        <View style={styles.editBanner}>
+          <Text style={[styles.editBannerText, { textAlign: align }]}>
+            {t.journalEditingBanner.replace('{symbol}', editing.symbol)}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            style={({ pressed }) => [
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={cancelEdit}
+            accessibilityLabel={t.journalCancelEdit}
+            hitSlop={8}
+          >
+            <Text style={[styles.closeLink, { textAlign: align }]}>{t.journalCancelEdit}</Text>
+          </Pressable>
+        </View>
+      ) : null}
       <View style={[styles.row, rtl && styles.rowRtl]}>
         <Pressable
           accessibilityRole="button"
@@ -545,10 +618,10 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
         onPress={() => void add()}
         disabled={busy}
         accessibilityState={{ disabled: busy }}
-        accessibilityLabel={t.journalAddA11y}
+        accessibilityLabel={editing ? t.journalSaveEditBtn : t.journalAddA11y}
         hitSlop={8}
       >
-        <Text style={styles.btnText}>{busy ? '...' : t.journalAddBtn}</Text>
+        <Text style={styles.btnText}>{busy ? '...' : editing ? t.journalSaveEditBtn : t.journalAddBtn}</Text>
       </Pressable>
       {formError ? <Text style={[styles.formError, { textAlign: align }]}>{formError}</Text> : null}
 
@@ -629,21 +702,39 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
                 <Pressable
                   accessibilityRole="button"
                   style={({ pressed }) => [
-                    busy && styles.closeLinkDisabled,
+                    (busy || editing != null) && styles.closeLinkDisabled,
                     pressed && {
                       opacity: buttons.pressedOpacity,
                       transform: [{ scale: buttons.pressedScale }],
                     },
                   ]}
                   onPress={() => void closeOpen(tr.id)}
-                  disabled={busy}
-                  accessibilityState={{ disabled: busy }}
+                  // أثناء التعديل خانة الخروج تخصّ الصفقة المعدَّلة — الإغلاق منها كان سيغلق صفقة أخرى بسعرها
+                  disabled={busy || editing != null}
+                  accessibilityState={{ disabled: busy || editing != null }}
                   accessibilityLabel={t.journalCloseLinkA11y.replace('{symbol}', tr.symbol)}
                   hitSlop={8}
                 >
                   <Text style={[styles.closeLink, { textAlign: align }]}>{t.journalCloseLinkBtn}</Text>
                 </Pressable>
               ) : null}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: busy, selected: editing?.id === tr.id }}
+                style={({ pressed }) => [
+                  busy && styles.closeLinkDisabled,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => startEdit(tr)}
+                disabled={busy}
+                accessibilityLabel={t.journalEditA11y.replace('{symbol}', tr.symbol)}
+                hitSlop={8}
+              >
+                <Text style={styles.closeLink}>{t.journalEditBtn}</Text>
+              </Pressable>
               <Pressable
                 accessibilityRole="button"
                 style={({ pressed }) => [
@@ -749,4 +840,13 @@ const styles = StyleSheet.create({
   closeLinkDisabled: { opacity: 0.4 },
   tradeActions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md },
   delLink: { color: colors.bear, fontSize: 11, fontWeight: '700' },
+  editBanner: {
+    backgroundColor: colors.accentSoft,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    padding: 8,
+    gap: 4,
+  },
+  editBannerText: { color: colors.text, fontSize: 11, fontWeight: '700' },
 });

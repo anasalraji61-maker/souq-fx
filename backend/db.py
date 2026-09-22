@@ -1618,6 +1618,73 @@ def close_trade(
         return row
 
 
+def _pnl_pct(side: str, entry: float, exit_price: float) -> float:
+    """نسبة حركة السعر فقط — نفس حساب add_trade/close_trade."""
+    if side == "buy":
+        return (exit_price - entry) / entry * 100
+    return (entry - exit_price) / entry * 100
+
+
+def update_trade(
+    trade_id: str, fields: dict, user_id: int | None = None, owner_key: str | None = None
+) -> dict | None:
+    """تعديل صفقة يملكها المستدعي. `fields` يحوي ما أُرسل فقط؛ exit/sl/tp = None تعني مسحاً.
+    النتيجة (`pnl`) والحالة تُعاد حسابهما من الدخول/الخروج/الاتجاه بعد التعديل: خطأ كتابة بسعر الدخول
+    كان يُفسد نسبة النجاح وصافي النقاط للأبد (الحلّ الوحيد كان الحذف وإعادة الكتابة)."""
+    owner_sql, owner_args = _trade_owner_clause(user_id, owner_key)
+    with _conn() as c:
+        r = c.execute(
+            f"SELECT * FROM trades WHERE id=? AND {owner_sql}", (trade_id, *owner_args)
+        ).fetchone()
+        if not r:
+            return None
+        row = dict(r)
+        row.pop("owner_key", None)
+        if "symbol" in fields:
+            row["symbol"] = str(fields["symbol"]).strip().upper()
+        if "side" in fields and fields["side"] in ("buy", "sell"):
+            row["side"] = fields["side"]
+        if "entry" in fields:
+            row["entry"] = float(fields["entry"])
+        if "size" in fields:
+            row["size"] = float(fields["size"])
+        if "note" in fields:
+            row["note"] = fields["note"] or ""
+        for k in ("sl", "tp"):
+            if k in fields:
+                row[k] = _opt_level(fields[k])
+        if "exit" in fields:
+            ex = _opt_level(fields["exit"])
+            row["exit"] = ex
+            if ex is None:
+                row.update({"pnl": None, "closed_at": None, "status": "open"})
+            else:
+                row["status"] = "closed"
+                row["closed_at"] = row.get("closed_at") or time.strftime("%Y-%m-%d %H:%M")
+        if row.get("exit") is not None:
+            row["pnl"] = _pnl_pct(row["side"], float(row["entry"]), float(row["exit"]))
+        c.execute(
+            f"""UPDATE trades SET symbol=?, side=?, entry=?, exit=?, size=?, pnl=?, note=?, sl=?, tp=?,
+                closed_at=?, status=? WHERE id=? AND {owner_sql}""",
+            (
+                row["symbol"],
+                row["side"],
+                row["entry"],
+                row["exit"],
+                row["size"],
+                row["pnl"],
+                row["note"],
+                row["sl"],
+                row["tp"],
+                row["closed_at"],
+                row["status"],
+                trade_id,
+                *owner_args,
+            ),
+        )
+        return row
+
+
 def delete_trade(trade_id: str, user_id: int | None = None, owner_key: str | None = None) -> bool:
     owner_sql, owner_args = _trade_owner_clause(user_id, owner_key)
     with _conn() as c:

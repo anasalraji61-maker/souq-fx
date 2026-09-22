@@ -283,6 +283,20 @@ class TradeClose(BaseModel):
     exit: float
 
 
+class TradeUpdate(BaseModel):
+    """تعديل صفقة بالدفتر (خطأ كتابة بالدخول/الوقف، ملاحظة لاحقة). الحقول الغائبة لا تتغيّر؛ `exit`/`sl`/`tp`
+    بقيمة null صريحة تُمسح (مسح `exit` يعيد الصفقة مفتوحة)."""
+
+    symbol: str | None = Field(default=None, min_length=3, max_length=12)
+    side: Literal["buy", "sell"] | None = None
+    entry: float | None = Field(default=None, gt=0)
+    exit: float | None = Field(default=None, gt=0)
+    size: float | None = Field(default=None, gt=0)
+    note: str | None = Field(default=None, max_length=500)
+    sl: float | None = None
+    tp: float | None = None
+
+
 def _new_id(prefix: str) -> str:
     """معرّف فريد فعلاً لصفّ جديد (تنبيه/تنبيه مؤشر/فكرة صفقة).
 
@@ -1120,6 +1134,25 @@ def trades_close(
 ):
     uid = user["user_id"] if user else None
     row = db.close_trade(trade_id, body.exit, uid, owner_key=key)
+    if not row:
+        raise HTTPException(404, "trade not found")
+    return {"ok": True, "trade": row, "stats": db.trade_stats(uid, owner_key=key)}
+
+
+@app.patch("/api/trades/{trade_id}")
+def trades_update(
+    trade_id: str,
+    body: TradeUpdate,
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+):
+    uid = user["user_id"] if user else None
+    # model_fields_set يميّز «لم يُرسَل» (لا تغيير) عن null صريح (مسح الوقف/الهدف/الخروج)
+    fields = {k: getattr(body, k) for k in body.model_fields_set}
+    for k in ("symbol", "side", "entry", "size", "note"):
+        if k in fields and fields[k] is None:
+            fields.pop(k)  # حقول إلزامية بالجدول — null لها يُتجاهل بدل كسر الصف
+    row = db.update_trade(trade_id, fields, uid, owner_key=key)
     if not row:
         raise HTTPException(404, "trade not found")
     return {"ok": True, "trade": row, "stats": db.trade_stats(uid, owner_key=key)}

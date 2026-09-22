@@ -663,6 +663,24 @@ export const api = {
       `/api/trades/${encodeURIComponent(id)}/close`,
       { exit }
     ),
+  /** تعديل صفقة بالدفتر — الحقول الغائبة لا تتغيّر، و`null` لـexit/sl/tp يمسحها (مسح الخروج يعيدها مفتوحة).
+   * باك-إند قديم بلا المسار → خطأ بـ`status` 405. */
+  updateTrade: (
+    id: string,
+    body: {
+      symbol?: string;
+      side?: 'buy' | 'sell';
+      entry?: number;
+      exit?: number | null;
+      sl?: number | null;
+      tp?: number | null;
+      note?: string;
+    }
+  ) =>
+    patchJson<{ ok: boolean; trade: Record<string, unknown>; stats: Record<string, number> }>(
+      `/api/trades/${encodeURIComponent(id)}`,
+      body
+    ),
   deleteTrade: (id: string) =>
     installIdReady
       .then(() =>
