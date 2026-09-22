@@ -989,6 +989,48 @@ def report_content(kind: str, target_id: str, reporter_id: int, reason: str) -> 
         return cur.rowcount > 0
 
 
+def list_reports(limit: int = 200) -> list[dict]:
+    """قائمة المراجعة للمشرف: كل عنصر مُبلَّغ عنه مع عدد البلاغات والأسباب ونصّه (إن بقي)."""
+    with _conn() as c:
+        rows = c.execute(
+            """SELECT kind, target_id, COUNT(*) AS n, GROUP_CONCAT(DISTINCT reason) AS reasons,
+                      MAX(created_at) AS last_at
+               FROM content_reports GROUP BY kind, target_id ORDER BY last_at DESC LIMIT ?""",
+            (limit,),
+        ).fetchall()
+        out = []
+        for r in rows:
+            if r["kind"] == "group_message":
+                t = c.execute("SELECT user_name AS author, text FROM group_messages WHERE id=?", (r["target_id"],)).fetchone()
+            else:
+                t = c.execute("SELECT author, symbol || ' ' || direction || ' — ' || COALESCE(note,'') AS text FROM votes WHERE id=?", (r["target_id"],)).fetchone()
+            out.append({
+                "kind": r["kind"],
+                "target_id": r["target_id"],
+                "reports": r["n"],
+                "reasons": (r["reasons"] or "").split(","),
+                "hidden_for_all": r["n"] >= REPORT_HIDE_THRESHOLD,
+                "author": t["author"] if t else None,
+                "text": t["text"] if t else None,
+                "exists": t is not None,
+            })
+    return out
+
+
+def moderate(kind: str, target_id: str, action: str) -> bool:
+    """remove: حذف العنصر نهائياً (وأصوات الفكرة) + بلاغاته. dismiss: إسقاط البلاغات فيعود ظاهراً."""
+    table = {"group_message": "group_messages", "vote": "votes"}.get(kind)
+    if table is None:
+        return False
+    with _conn() as c:
+        if action == "remove":
+            c.execute(f"DELETE FROM {table} WHERE id=?", (target_id,))
+            if kind == "vote":
+                c.execute("DELETE FROM vote_ballots WHERE vote_id=?", (target_id,))
+        cur = c.execute("DELETE FROM content_reports WHERE kind=? AND target_id=?", (kind, target_id))
+        return cur.rowcount > 0 or action == "remove"
+
+
 def _hidden_ids(c: sqlite3.Connection, kind: str, viewer_id: int | None) -> set[str]:
     """عناصر تُخفى عن هذا المشاهد: بلغت عتبة البلاغات، أو أبلغ هو عنها بنفسه (تختفي عنده فوراً)."""
     rows = c.execute(

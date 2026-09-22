@@ -19,7 +19,7 @@ from typing import Literal
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -1160,6 +1160,34 @@ def report_content(body: ContentReport, user: dict | None = Depends(_auth_user))
     if r is None:
         return {"ok": False, "error": "not_found"}
     return {"ok": True, "new": r}
+
+
+class ModerationAction(BaseModel):
+    kind: Literal["group_message", "vote"]
+    target_id: str = Field(min_length=1, max_length=64)
+    action: Literal["remove", "dismiss"]
+
+
+def _require_moderator(x_moderation_token: str | None) -> None:
+    # أبل تشترط أن يتصرّف المطوّر على البلاغات خلال 24 ساعة. مسار مراجعة بسيط بتوكن من متغيّر
+    # بيئة MATRIX_MODERATION_TOKEN (بلا توكن مضبوط = المسار غير موجود أصلاً → 404، لا باب مفتوح).
+    expected = os.getenv("MATRIX_MODERATION_TOKEN", "")
+    if not expected:
+        raise HTTPException(404, "not found")
+    if not x_moderation_token or not secrets.compare_digest(x_moderation_token, expected):
+        raise HTTPException(403, "forbidden")
+
+
+@app.get("/api/moderation/reports")
+def moderation_reports(x_moderation_token: str | None = Header(default=None)):
+    _require_moderator(x_moderation_token)
+    return {"reports": db.list_reports(), "hide_threshold": db.REPORT_HIDE_THRESHOLD}
+
+
+@app.post("/api/moderation/action")
+def moderation_action(body: ModerationAction, x_moderation_token: str | None = Header(default=None)):
+    _require_moderator(x_moderation_token)
+    return {"ok": db.moderate(body.kind, body.target_id, body.action)}
 
 
 @app.get("/api/news")
