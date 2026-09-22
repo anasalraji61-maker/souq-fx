@@ -20,7 +20,13 @@ import { WATCHLIST } from '../chart/watchlist';
 import { loadWatchlistItems } from '../chart/watchlistStore';
 import { formatPrice } from '../chart/math';
 import { livePriceForChart } from '../chart/liveSeries';
-import { provenanceLabel, tickStatusLabel, normalizeProvenance, isRealQuote } from '../chart/dataSource';
+import { provenanceLabel, tickStatusLabel, normalizeProvenance } from '../chart/dataSource';
+import {
+  armedText,
+  createChartAlert,
+  seriesRefPrice,
+  type ChartAlertOrigin,
+} from '../chart/alertFromChart';
 import { marketStatusLabel } from '../chart/marketHours';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import { mockSeries } from '../mock';
@@ -203,36 +209,19 @@ export function FocusChartModal({
     if (!visible) setArmedMsg(null);
   }, [visible]);
 
-  const alertFromDrawing = async (price: number, origin?: 'drawing' | 'crosshair') => {
-    // خط اتجاه منحدر يُمدَّد للحاضر قد يعطي سعراً ≤0 — الخادم يرفضه (422) برسالة عامة
-    if (!Number.isFinite(price) || price <= 0) {
-      Alert.alert(t.focusAlertCreateFailedTitle, t.focusAlertCreateFailedBody);
-      return;
-    }
+  const alertFromDrawing = async (price: number, origin?: ChartAlertOrigin) => {
     try {
-      // السعر المرجعي للاتجاه من الرمز الحالي فقط: الشموع المحمّلة قد تكون للرمز السابق لحظة التبديل،
-      // وبلا سعر معروف كان `price >= price` يجعل كل تنبيه «فوق» حتى لو كان المستوى تحت السعر.
-      // (الشموع التجريبية `demo` عند انقطاع الخادم ليست سعراً حقيقياً فلا تُستخدم مرجعاً)
-      const seriesLast =
-        series && series.symbol.toUpperCase() === sym.toUpperCase() && series.data_source?.kind !== 'demo'
-          ? series.last
-          : null;
-      let ref: number | null = liveTick?.price ?? seriesLast;
-      if (ref == null) {
-        const q = await api.marketQuote(sym);
-        // نفس القاعدة للاقتباس: البذري التجريبي (المزوّد متعذّر) لا يحدّد اتجاه التنبيه
-        ref = isRealQuote(q) ? q.price : null;
-      }
-      if (ref == null) throw new Error('no reference price');
-      const condition: 'above' | 'below' = price >= ref ? 'above' : 'below';
-      await api.createAlert({
+      // السعر المرجعي للاتجاه من الرمز الحالي فقط: الشموع المحمّلة قد تكون للرمز السابق لحظة التبديل
+      // (والشموع التجريبية ليست سعراً حقيقياً)، والسعر غير الصالح يُرفض قبل الطلب — راجع
+      // chart/alertFromChart.ts (المنطق نفسه يخدم شارت الشاشة الرئيسية أيضاً).
+      const res = await createChartAlert({
         symbol: sym,
-        condition,
         price,
+        refPrice: liveTick?.price ?? seriesRefPrice(series, sym),
         note: origin === 'crosshair' ? t.focusAlertFromChartNote : t.focusAlertFromDrawingNote,
       });
       playSoftClick();
-      setArmedMsg(`${t.alertsArmedPrefix}: ${sym} ${condition === 'above' ? '≥' : '≤'} ${formatPrice(price, sym)}`);
+      setArmedMsg(`${t.alertsArmedPrefix}: ${armedText(sym, res.condition, formatPrice(price, sym))}`);
       if (armedTimerRef.current) clearTimeout(armedTimerRef.current);
       armedTimerRef.current = setTimeout(() => setArmedMsg(null), 4000);
       setAlertsRefreshKey((k) => k + 1);
