@@ -937,16 +937,20 @@ def check_indicator_alerts(
 
 @app.post("/api/screener/run")
 def screener_run(body: ScreenerRun):
-    hits = screener_engine.run_scan(
+    scan = screener_engine.run_scan_detailed(
         timeframe=body.timeframe,
         filters=body.filters,
         symbols=body.symbols,
         fast=body.fast,
         slow=body.slow,
     )
+    hits = scan["results"]
     return {
         "results": hits,
         "count": len(hits),
+        "scanned": scan["scanned"],
+        "failed": scan["failed"],
+        "total": scan["total"],
         "provider_configured": market.configured(),
     }
 

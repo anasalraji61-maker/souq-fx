@@ -117,6 +117,11 @@ export function ToolsScreen() {
   const [results, setResults] = useState<Hit[]>([]);
   const [providerConfigured, setProviderConfigured] = useState<boolean | null>(null);
   const [scanDone, setScanDone] = useState(false);
+  /** كم رمزاً قُرئ فعلاً وأيّها تعذّر — بدونها «لا نتائج» بعد حدّ طلبات المزوّد تُقرأ «لا تطابق». */
+  const [scanInfo, setScanInfo] = useState<{ scanned?: number; failed: string[]; total?: number; tf: string }>({
+    failed: [],
+    tf: '15m',
+  });
   const [loading, setLoading] = useState(false);
   const [frameTfs, setFrameTfs] = useState<string[]>([...DEFAULT_LAYOUT.frameTfs]);
   const [frameSymbols, setFrameSymbols] = useState<[string, string, string]>(
@@ -142,6 +147,9 @@ export function ToolsScreen() {
     })();
   }, []);
 
+  /** لا رمز قُرئ أصلاً (كل الطلبات فشلت) — «لا تطابق» هنا كاذبة. */
+  const scanNone = scanInfo.scanned === 0 && scanInfo.failed.length > 0;
+
   const toggleFilter = (id: string) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
@@ -151,11 +159,13 @@ export function ToolsScreen() {
     try {
       const res = await api.screenerRun({ timeframe: tf, filters: selected });
       setResults(res.results);
+      setScanInfo({ scanned: res.scanned, failed: res.failed ?? [], total: res.total, tf });
       setProviderConfigured(res.provider_configured !== false);
       setScanDone(true);
       playSoftClick();
     } catch {
       setResults([]);
+      setScanInfo({ failed: [], tf });
       setProviderConfigured(null);
       setScanDone(true);
     } finally {
@@ -369,8 +379,25 @@ export function ToolsScreen() {
           {!loading && scanDone && providerConfigured === false ? (
             <Text style={[styles.scanHint, { textAlign: align }]}>{t.screenerNeedApiKey}</Text>
           ) : null}
-          {!loading && scanDone && providerConfigured === true && results.length === 0 ? (
-            <Text style={[styles.scanHint, { textAlign: align }]}>{t.screenerNoResults}</Text>
+          {!loading && scanDone && providerConfigured === true && scanNone ? (
+            <Text style={[styles.scanHint, { textAlign: align }]}>{t.screenerScanNone}</Text>
+          ) : null}
+          {!loading && scanDone && providerConfigured === true && !scanNone && scanInfo.failed.length > 0 ? (
+            <Text style={[styles.scanHint, { textAlign: align }]}>
+              {t.screenerScanPartial
+                .replace('{k}', String(scanInfo.scanned ?? 0))
+                .replace('{total}', String(scanInfo.total ?? scanInfo.failed.length))
+                .replace('{list}', scanInfo.failed.join(rtl ? '، ' : ', '))}
+            </Text>
+          ) : null}
+          {!loading && scanDone && providerConfigured === true && !scanNone && results.length === 0 ? (
+            <Text style={[styles.scanHint, { textAlign: align }]}>
+              {scanInfo.scanned != null
+                ? t.screenerNoMatchOf
+                    .replace('{k}', String(scanInfo.scanned))
+                    .replace('{tf}', scanInfo.tf)
+                : t.screenerNoResults}
+            </Text>
           ) : null}
           {!loading && scanDone && providerConfigured === null ? (
             <Text style={[styles.scanHint, { textAlign: align }]}>{t.screenerFailed}</Text>

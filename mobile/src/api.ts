@@ -452,6 +452,10 @@ export const api = {
         filters_matched: string[];
       }[];
       count: number;
+      /** عدد الرموز التي قُرئت شموعها فعلاً / التي تعذّرت (حدّ المزوّد غالباً) — خادم أقدم لا يرسلها. */
+      scanned?: number;
+      failed?: string[];
+      total?: number;
       provider_configured: boolean;
     }>('/api/screener/run', body),
   backtest: (body: {

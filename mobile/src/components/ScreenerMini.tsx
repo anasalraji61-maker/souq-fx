@@ -22,20 +22,34 @@ export function ScreenerMini() {
   const [loading, setLoading] = useState(false);
   /** وضوح الحالة: يميّز "لا نتائج مطابقة للفلتر" عن "فشل الاتصال بالفحص" بدل صمت كامل. */
   const [error, setError] = useState(false);
+  /** بعد فحص ناجح بلا نتائج: «لا تطابق» أو «لم يُقرأ أي رمز» (حدّ المزوّد) — كان لا يظهر شيء إطلاقاً. */
+  const [emptyNote, setEmptyNote] = useState<string | null>(null);
 
   const run = useCallback(async (filter: string) => {
     setLoading(true);
     setError(false);
+    setEmptyNote(null);
     try {
       const res = await api.screenerRun({ timeframe: '15m', filters: [filter] });
       setHits(res.results.slice(0, 5));
+      if (res.provider_configured === false) {
+        setEmptyNote(t.screenerNeedApiKey);
+      } else if (res.scanned === 0 && (res.failed?.length ?? 0) > 0) {
+        setEmptyNote(t.screenerScanNone);
+      } else if (!res.results.length) {
+        setEmptyNote(
+          res.scanned != null
+            ? t.screenerNoMatchOf.replace('{k}', String(res.scanned)).replace('{tf}', '15m')
+            : t.screenerNoResults
+        );
+      }
     } catch {
       setHits([]);
       setError(true);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   return (
     <View style={styles.wrap}>
@@ -64,6 +78,7 @@ export function ScreenerMini() {
       </View>
       {loading ? <ActivityIndicator color={colors.accent} size="small" /> : null}
       {!loading && error ? <Text style={styles.errorNote}>{t.screenerFailed}</Text> : null}
+      {!loading && !error && emptyNote ? <Text style={styles.errorNote}>{emptyNote}</Text> : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={{ flexDirection: 'row-reverse', gap: spacing.sm }}>
           {hits.map((h) => (

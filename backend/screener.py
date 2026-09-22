@@ -28,20 +28,45 @@ def run_scan(
     fast: int = 9,
     slow: int = 21,
 ) -> list[dict[str, Any]]:
+    return run_scan_detailed(
+        timeframe, filters, symbols, rsi_low, rsi_high, fast, slow
+    )["results"]
+
+
+def run_scan_detailed(
+    timeframe: str = "15m",
+    filters: list[str] | None = None,
+    symbols: list[str] | None = None,
+    rsi_low: float = 30,
+    rsi_high: float = 70,
+    fast: int = 9,
+    slow: int = 21,
+) -> dict[str, Any]:
+    """نتائج الفحص + عدد الرموز المفحوصة فعلاً والتي تعذّرت قراءتها.
+
+    الرمز الذي يفشل جلبه (حدّ طلبات المزوّد غالباً — الخطة المجانية ~8 طلبات/دقيقة و12 رمزاً
+    بالفحص) كان يُتخطّى بصمت، فـ«لا نتائج» تُقرأ «لا تطابق» وهي «لم يُفحص». العميل يميّز الآن.
+    """
     flt = filters or ["ma_cross_up"]
     syms = symbols or DEFAULT_SYMBOLS[:12]
     hits: list[dict[str, Any]] = []
+    scanned = 0
+    failed: list[str] = []
 
     for sym in syms:
         try:
             raw = market.fetch_time_series(sym, timeframe, outputsize=80)
         except Exception:
+            failed.append(sym.upper())
             continue
         if not raw:
+            failed.append(sym.upper())
             continue
         snap = ind.snapshot(raw, fast=fast, slow=slow)
         if snap.get("rsi") is None:
+            failed.append(sym.upper())
             continue
+        scanned += 1
 
         matched: list[str] = []
         rsi_v = float(snap["rsi"])
@@ -76,4 +101,9 @@ def run_scan(
             )
 
     hits.sort(key=lambda x: abs(x["change_pct"]), reverse=True)
-    return hits
+    return {
+        "results": hits,
+        "scanned": scanned,
+        "failed": failed,
+        "total": len(syms),
+    }

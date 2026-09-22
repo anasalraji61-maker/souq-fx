@@ -126,6 +126,9 @@ export type Dict = {
   screenerNeedApiKey: string;
   screenerNoResults: string;
   screenerFailed: string;
+  screenerScanNone: string;
+  screenerScanPartial: string;
+  screenerNoMatchOf: string;
   newsTitle: string;
   newsStale: string;
   newsEmpty: string;
@@ -887,6 +890,9 @@ const ar: Dict = {
   screenerNeedApiKey: 'الفحص يحتاج مفتاح Twelve Data مفعّلاً على الخادم',
   screenerNoResults: 'لا نتائج مطابقة للفلاتر الحالية',
   screenerFailed: 'تعذر تشغيل الفحص — تحقق من الاتصال وحاول مرة أخرى',
+  screenerScanNone: 'تعذّر جلب أسعار أي رمز — غالباً حدّ طلبات مزوّد الأسعار؛ انتظر دقيقة وأعد الفحص',
+  screenerScanPartial: 'فُحص {k} من {total} رمزاً فقط — تعذّرت قراءة: {list} (حدّ طلبات المزوّد غالباً). النتائج من المفحوصة فقط.',
+  screenerNoMatchOf: 'لا تطابق بين {k} رمزاً مفحوصاً على فريم {tf}',
   newsTitle: 'أخبار مؤثرة على الفوركس',
   newsStale: 'تعذر تحديث الأخبار — تُعرض بيانات محفوظة',
   newsEmpty: 'لا توجد أخبار حالياً',
@@ -1657,6 +1663,9 @@ const enUS: Dict = {
   screenerNeedApiKey: 'The screener needs an active Twelve Data key on the server',
   screenerNoResults: 'No results match the current filters',
   screenerFailed: 'Could not run the scan — check your connection and try again',
+  screenerScanNone: 'Could not load prices for any symbol — likely the data provider rate limit; wait a minute and scan again',
+  screenerScanPartial: 'Only {k} of {total} symbols scanned — could not read: {list} (likely provider rate limit). Results cover scanned symbols only.',
+  screenerNoMatchOf: 'No match among {k} scanned symbols on {tf}',
   newsTitle: 'News affecting forex',
   newsStale: 'Could not refresh news — showing saved data',
   newsEmpty: 'No news right now',
@@ -2447,6 +2456,9 @@ const ku: Dict = {
   screenerNeedApiKey: 'پشکنین پێویستی بە کلیلی چالاکی Twelve Data لەسەر ڕاژە هەیە',
   screenerNoResults: 'هیچ ئەنجامێک لەگەڵ فلتەرە ئێستاکان ناگونجێت',
   screenerFailed: 'نەکرا پشکنین کارپێبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
+  screenerScanNone: 'نرخی هیچ هێمایەک نەهێنرا — لەوانەیە سنووری داواکاری دابینکەری داتا بێت؛ خولەکێک چاوەڕێ بکە و دووبارە بپشکنە',
+  screenerScanPartial: 'تەنها {k} لە {total} هێما پشکنران — نەخوێنرانەوە: {list} (لەوانەیە سنووری داواکاری دابینکەر). ئەنجامەکان تەنها بۆ پشکنراوەکانن.',
+  screenerNoMatchOf: 'هیچ گونجانێک نییە لە نێوان {k} هێمای پشکنراو لە {tf}',
   newsTitle: 'هەواڵی کاریگەر لەسەر فۆرێکس',
   newsStale: 'نەکرا هەواڵ نوێبکرێتەوە — زانیاری پاشەکەوتکراو پیشان دەدرێت',
   newsEmpty: 'هیچ هەواڵێک لە ئێستادا نییە',
