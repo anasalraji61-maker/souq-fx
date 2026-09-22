@@ -705,13 +705,17 @@ export const api = {
     postJson<{
       answer: string;
       symbol: string;
+      /** null عند سلسلة demo (المزوّد متعذّر): لا اتجاه ولا مستويات مشتقة من شموع مختلَقة. */
       setup: {
-        direction: string;
-        entry: number;
-        sl: number;
-        tp: number;
-        win_probability: number;
+        direction: string | null;
+        entry: number | null;
+        sl: number | null;
+        tp: number | null;
+        /** دائماً null الآن — كان رقماً مختلَقاً؛ يبقى الحقل توافقاً فقط ولا يُعرض. */
+        win_probability: number | null;
       };
+      /** false = لا سعر حي (المزوّد متعذّر)؛ غيابه = خادم أقدم. */
+      live_price?: boolean;
     }>('/api/ai/ask', { question, symbol, lang }),
   dmList: () =>
     getJson<{ peers: { user: string; last: string; ts: string }[] }>('/api/dm'),

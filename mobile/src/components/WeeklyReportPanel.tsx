@@ -64,7 +64,6 @@ export function WeeklyReportPanel({ grid = false }: Props) {
   const [loading, setLoading] = useState<ReportKind | null>(null);
   const [active, setActive] = useState<ReportKind | null>(null);
   const [text, setText] = useState('');
-  const [win, setWin] = useState<number | null>(null);
   /** وضوح الحالة: يعلم المستخدم إذا فشل استدعاء الذكاء الاصطناعي وأن التقرير المعروض قالب عام
    * ثابت بدل تحليل فعلي مخصَّص (لا ادّعاء فشل قبل حدوثه). */
   const [aiFallback, setAiFallback] = useState(false);
@@ -75,7 +74,6 @@ export function WeeklyReportPanel({ grid = false }: Props) {
     setLoading(kind);
     setActive(kind);
     setText('');
-    setWin(null);
     setAiFallback(false);
     let journalLine = '';
     try {
@@ -93,7 +91,6 @@ export function WeeklyReportPanel({ grid = false }: Props) {
     try {
       const res = await api.aiAsk(item.prompt + journalLine, 'EURUSD', lang);
       setText(res.answer.replace(/\*\*/g, ''));
-      setWin(res.setup?.win_probability ?? null);
       playSoftClick();
     } catch {
       setText(
@@ -152,11 +149,6 @@ export function WeeklyReportPanel({ grid = false }: Props) {
               <Text style={[styles.aiFallbackNote, { textAlign: align }]}>{t.reportAiFallbackNote}</Text>
             ) : null}
             <Text style={[styles.outText, { textAlign: align }]}>{text}</Text>
-            {win != null ? (
-              <Text style={[styles.win, { textAlign: align }]}>
-                {t.reportWinLabel.replace('{pct}', String(win))}
-              </Text>
-            ) : null}
           </ScrollView>
         ) : null}
       </View>
@@ -196,11 +188,6 @@ export function WeeklyReportPanel({ grid = false }: Props) {
             <Text style={[styles.aiFallbackNote, { textAlign: align }]}>{t.reportAiFallbackNote}</Text>
           ) : null}
           <Text style={[styles.outText, { textAlign: align }]}>{text}</Text>
-          {win != null ? (
-            <Text style={[styles.win, { textAlign: align }]}>
-              {t.reportWinLabel.replace('{pct}', String(win))}
-            </Text>
-          ) : null}
         </ScrollView>
       ) : null}
     </View>
@@ -250,6 +237,5 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
   },
   outText: { color: colors.text, textAlign: 'right', lineHeight: 22, fontSize: 13 },
-  win: { color: colors.accent, fontWeight: '700', textAlign: 'right', fontSize: 12 },
   aiFallbackNote: { color: colors.warn, fontWeight: '700', textAlign: 'right', fontSize: 12 },
 });

@@ -69,8 +69,9 @@ def normalize_lang(value: str | None) -> str:
 def trading_answer(question: str, symbol: str, context: str, lang: str = "ar") -> str:
     system = (
         "أنت خبير تداول فوركس في منصة MATRIX. أجب باختصار وعملية. "
-        "اذكر اتجاهاً محتملاً، دخولاً تقريبياً، وقفاً، هدفاً، ونسبة نجاح تقديرية. "
-        "لا تعد بأرباح مضمونة.\n"
+        "اذكر اتجاهاً محتملاً، دخولاً تقريبياً، وقفاً، هدفاً، ونسبة العائد إلى المخاطرة. "
+        "لا تذكر نسبة نجاح أو احتمال ربح (لا بيانات تسندها). لا تعد بأرباح مضمونة. "
+        "إن قال السياق إن السعر الحي غير متاح فلا تذكر أي مستويات سعرية.\n"
         + _REPLY_LANGUAGE.get(lang, _REPLY_LANGUAGE["ar"])
     )
     user = f"الرمز: {symbol}\nسياق السوق:\n{context}\n\nسؤال المتداول:\n{question}"
@@ -103,5 +104,6 @@ def parse_setup_hint(text: str) -> dict[str, Any]:
         "entry": 0.0,
         "sl": 0.0,
         "tp": 0.0,
-        "win_probability": 58,
+        # كان 58 ثابتاً — نسبة نجاح مختلَقة؛ لا مصدر لها.
+        "win_probability": None,
     }

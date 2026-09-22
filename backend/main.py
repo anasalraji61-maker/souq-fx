@@ -1429,21 +1429,32 @@ def course_detail(course_id: str):
 
 @app.post("/api/ai/ask")
 def ai_ask(body: AiAsk):
+    """سؤال المساعد. لا «احتمال نجاح» بأي مسار: كان `55 + hash(السؤال) % 28` (رقم عشوائي بمظهر
+    إحصائي) ومسار OpenRouter يعيد 58 ثابتاً — نسبة نجاح مختلَقة يعرضها التطبيق لمتداول فردي كتقدير.
+    `win_probability` يبقى بالشكل (null) توافقاً مع العملاء القدامى. وعند سلسلة demo البذرية (المزوّد
+    متعذّر) لا دخول/وقف/هدف ولا اتجاه: كانت تُشتق من شموع مختلَقة وتُعرض كسيناريو على سعر حقيقي."""
     q = body.question.strip()
     sym = (body.symbol or "EURUSD").upper()
     lang = openrouter_ai.normalize_lang(body.lang)
     series = build_series(sym)
+    live = series.data_source.kind != "demo"
     bias = "صاعد" if series.change_pct >= 0 else "هابط"
-    win = 55 + abs(hash(q + sym) % 28)
     direction = "شراء" if series.change_pct >= 0 else "بيع"
-    entry = series.last
-    sl = round(entry * (0.996 if direction == "شراء" else 1.004), 5 if entry < 50 else 2)
-    tp = round(entry * (1.008 if direction == "شراء" else 0.992), 5 if entry < 50 else 2)
+    entry: float | None = None
+    sl: float | None = None
+    tp: float | None = None
+    if live:
+        entry = series.last
+        sl = round(entry * (0.996 if direction == "شراء" else 1.004), 5 if entry < 50 else 2)
+        tp = round(entry * (1.008 if direction == "شراء" else 0.992), 5 if entry < 50 else 2)
 
-    context = (
-        f"last={series.last}, change_pct={series.change_pct:+.2f}%, "
-        f"tf={series.timeframe}, bias={bias}"
-    )
+    if live:
+        context = (
+            f"last={series.last}, change_pct={series.change_pct:+.2f}%, "
+            f"tf={series.timeframe}, bias={bias}"
+        )
+    else:
+        context = "no live price available (data provider unreachable) — do not quote price levels"
     if openrouter_ai.configured():
         try:
             answer = openrouter_ai.trading_answer(q, sym, context, lang)
@@ -1451,57 +1462,81 @@ def ai_ask(body: AiAsk):
             setup["entry"] = entry
             setup["sl"] = sl
             setup["tp"] = tp
-            return {"answer": answer, "symbol": sym, "setup": setup}
+            setup["win_probability"] = None
+            if not live:
+                setup["direction"] = None
+            return {"answer": answer, "symbol": sym, "setup": setup, "live_price": live}
         except Exception:
             pass
 
     if lang == "en":
         # نفس القالب التعليمي بالإنجليزية لمستخدمي en-US/en-GB (بلا اقتباس السؤال: بعض الأسئلة
         # قوالب داخلية عربية). الكردية تبقى على القالب العربي (نفس الأبجدية) لغياب مراجعة لغوية.
-        bias_en = "bullish" if series.change_pct >= 0 else "bearish"
-        dir_en = "Buy" if direction == "شراء" else "Sell"
+        if live:
+            bias_en = "bullish" if series.change_pct >= 0 else "bearish"
+            dir_en = "Buy" if direction == "شراء" else "Sell"
+            read = (
+                f"The short-term trend on the current timeframe looks **{bias_en}** "
+                f"(approx. change {series.change_pct:+.2f}%).\n\n"
+            )
+            scenario = (
+                f"**Suggested scenario (educational, not financial advice):**\n"
+                f"- Direction: {dir_en}\n"
+                f"- Entry: {entry}\n"
+                f"- Stop: {sl}\n"
+                f"- Target: {tp}\n"
+                f"- Risk/reward: 1:2\n\n"
+            )
+        else:
+            read = "No live price is available right now, so no trend read or price levels.\n\n"
+            scenario = ""
         answer = (
             f"**Quick read on {sym}**\n\n"
-            f"The short-term trend on the current timeframe looks **{bias_en}** "
-            f"(approx. change {series.change_pct:+.2f}%).\n\n"
+            f"{read}"
             f"- Check the pair against **DXY** before entering.\n"
             f"- Wait for a confirmed break or rejection at the nearest liquidity zone.\n"
             f"- Risk management: never risk more than 1% of your capital per trade.\n\n"
-            f"**Suggested scenario (educational, not financial advice):**\n"
-            f"- Direction: {dir_en}\n"
-            f"- Entry: {entry}\n"
-            f"- Stop: {sl}\n"
-            f"- Target: {tp}\n"
-            f"- Estimated success probability: **{win}%**\n\n"
+            f"{scenario}"
             f"_Local MVP model — connect OpenRouter for deeper analysis._"
         )
     else:
+        if live:
+            read = (
+                f"الاتجاه اللحظي على الإطار الحالي يبدو **{bias}** "
+                f"(تغيّر تقريبي {series.change_pct:+.2f}%).\n\n"
+            )
+            scenario = (
+                f"**سيناريو مقترح (تعليمي وليس نصيحة مالية):**\n"
+                f"- الاتجاه: {direction}\n"
+                f"- دخول: {entry}\n"
+                f"- وقف: {sl}\n"
+                f"- هدف: {tp}\n"
+                f"- العائد/المخاطرة: 1:2\n\n"
+            )
+        else:
+            read = "لا يتوفر سعر حي الآن، لذلك لا قراءة اتجاه ولا مستويات سعرية.\n\n"
+            scenario = ""
         answer = (
             f"**تحليل سريع لـ {sym}**\n\n"
-            f"الاتجاه اللحظي على الإطار الحالي يبدو **{bias}** "
-            f"(تغيّر تقريبي {series.change_pct:+.2f}%).\n\n"
+            f"{read}"
             f"بالنسبة لسؤالك: «{q}»\n"
             f"- راقب علاقة الزوج مع **DXY** قبل الدخول.\n"
             f"- انتظر تأكيد كسر/رفض عند أقرب منطقة سيولة.\n"
             f"- إدارة المخاطر: لا تتجاوز 1% من رأس المال للصفقة.\n\n"
-            f"**سيناريو مقترح (تعليمي وليس نصيحة مالية):**\n"
-            f"- الاتجاه: {direction}\n"
-            f"- دخول: {entry}\n"
-            f"- وقف: {sl}\n"
-            f"- هدف: {tp}\n"
-            f"- احتمال نجاح تقديري: **{win}%**\n\n"
+            f"{scenario}"
             f"_هذا النموذج MVP محلي — اربطه بـ OpenRouter لاحقاً لتحليل أعمق._"
         )
     return {
         "answer": answer,
         "symbol": sym,
         "setup": {
-            "direction": "buy" if direction == "شراء" else "sell",
+            "direction": ("buy" if direction == "شراء" else "sell") if live else None,
             "entry": entry,
             "sl": sl,
             "tp": tp,
-            "win_probability": win,
+            "win_probability": None,
         },
+        "live_price": live,
     }
 
 

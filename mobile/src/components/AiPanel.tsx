@@ -12,7 +12,8 @@ import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail,
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 
-type Turn = { role: 'user' | 'ai'; text: string; win?: number };
+/** لا «احتمال نجاح» بالفقاعة: كان رقماً مختلَقاً (hash بالخادم، 62 ثابت عند الانقطاع) يُعرض كتقدير. */
+type Turn = { role: 'user' | 'ai'; text: string };
 
 type Props = { symbol?: string; embedded?: boolean };
 
@@ -41,7 +42,6 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
         {
           role: 'ai',
           text: res.answer.replace(/\*\*/g, ''),
-          win: res.setup.win_probability,
         },
       ]);
     } catch {
@@ -50,7 +50,6 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
         {
           role: 'ai',
           text: t.aiOfflineFallback,
-          win: 62,
         },
       ]);
     } finally {
@@ -79,12 +78,6 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
             style={[styles.bubble, turn.role === 'user' ? styles.user : styles.ai]}
           >
             <Text style={[styles.text, { textAlign: align }]}>{turn.text}</Text>
-            {typeof turn.win === 'number' && (
-              <View style={styles.winBox}>
-                <Text style={styles.win}>{t.aiWinEstimate.replace('{pct}', String(turn.win))}</Text>
-                <Text style={[styles.winDisclaimer, { textAlign: align }]}>{t.aiWinDisclaimer}</Text>
-              </View>
-            )}
           </View>
         ))}
         {loading && <ActivityIndicator color={colors.accent} />}
@@ -166,16 +159,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 19,
   },
-  winBox: {
-    marginTop: spacing.sm,
-    alignSelf: 'flex-start',
-    backgroundColor: colors.bullSoft,
-    borderRadius: 6,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  win: { color: colors.bull, fontWeight: '800', fontSize: 11 },
-  winDisclaimer: { color: colors.textDim, fontSize: 9, marginTop: 3 },
   row: { flexDirection: 'row', gap: 6, marginTop: spacing.sm },
   rowRtl: { flexDirection: 'row-reverse' },
   input: {
