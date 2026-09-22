@@ -5,6 +5,7 @@ import {
   loadLayouts,
   saveLayout,
   deleteLayout,
+  mergeServerLayouts,
   subscribeLayoutsSaveError,
   DEFAULT_LAYOUT,
   type TerminalLayout,
@@ -46,6 +47,16 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
     loadLayouts().then((l) => {
       if (alive) setLayouts(l.length ? [DEFAULT_LAYOUT, ...l] : [DEFAULT_LAYOUT]);
     });
+    // تخطيطات الحساب من الخادم (جهاز آخر/إعادة تثبيت) — كانت تُرسَل للخادم ولا تُقرأ منه أبداً.
+    api
+      .layouts()
+      .then((res) => mergeServerLayouts((res.layouts ?? []).map((x) => x.payload)))
+      .then((l) => {
+        if (alive) setLayouts(l.length ? [DEFAULT_LAYOUT, ...l] : [DEFAULT_LAYOUT]);
+      })
+      .catch(() => {
+        /* بلا خادم: القائمة المحلية كافية */
+      });
     const unsubErr = subscribeLayoutsSaveError(setSaveError);
     return () => {
       alive = false;
@@ -67,7 +78,8 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
     };
     await saveLayout(layout);
     try {
-      await api.saveLayout({ name: layout.name, payload: layout });
+      // نفس المعرّف المحلي = نفس صف الخادم (كان كل حفظ يُنشئ صفاً جديداً بلا id)
+      await api.saveLayout({ id: layout.id, name: layout.name, payload: layout });
     } catch {
       /* local ok */
     }
@@ -159,6 +171,10 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
                     onPress: async () => {
                       await deleteLayout(l.id);
                       setLayouts((prev) => prev.filter((x) => x.id !== l.id));
+                      // وإلا عاد التخطيط المحذوف من الخادم عند فتح اللوحة التالي
+                      api.deleteLayout(l.id).catch(() => {
+                        /* بلا خادم: الحذف المحلي تمّ */
+                      });
                     },
                   },
                 ])

@@ -82,6 +82,59 @@ export async function deleteLayout(id: string): Promise<void> {
   }
 }
 
+const SIZES = ['small', 'medium', 'large'] as const;
+
+/** حمولة تخطيط من الخادم → TerminalLayout صالح أو null (صف تالف/قديم لا يكسر الشاشة الرئيسية). */
+export function parseServerLayout(payload: unknown): TerminalLayout | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const p = payload as Record<string, unknown>;
+  const str3 = (v: unknown): v is [string, string, string] =>
+    Array.isArray(v) && v.length === 3 && v.every((x) => typeof x === 'string' && x.length > 0);
+  if (typeof p.id !== 'string' || !p.id || p.id === 'default') return null;
+  if (typeof p.name !== 'string' || !p.name.trim()) return null;
+  if (!str3(p.frameSymbols) || !str3(p.frameTfs)) return null;
+  const sizes =
+    Array.isArray(p.frameSizes) &&
+    p.frameSizes.length === 3 &&
+    p.frameSizes.every((x) => (SIZES as readonly unknown[]).includes(x))
+      ? (p.frameSizes as TerminalLayout['frameSizes'])
+      : (['small', 'medium', 'large'] as TerminalLayout['frameSizes']);
+  return {
+    id: p.id,
+    name: p.name,
+    dxyTf: typeof p.dxyTf === 'string' ? p.dxyTf : '15m',
+    frameSymbols: p.frameSymbols,
+    frameTfs: p.frameTfs,
+    frameSizes: sizes,
+  };
+}
+
+/**
+ * يضيف للقائمة المحلية تخطيطات الحساب المحفوظة بالخادم وغير الموجودة محلياً (تسجيل الدخول على جهاز آخر،
+ * إعادة تثبيت التطبيق) — بمعرّفها المحلي أو باسمها، فلا نسخ مكرّرة. يعيد القائمة المدمجة (≤ 12).
+ */
+export async function mergeServerLayouts(payloads: unknown[]): Promise<TerminalLayout[]> {
+  const local = await loadLayouts();
+  const ids = new Set(local.map((l) => l.id));
+  const names = new Set(local.map((l) => l.name));
+  const added: TerminalLayout[] = [];
+  for (const raw of payloads) {
+    const l = parseServerLayout(raw);
+    if (!l || ids.has(l.id) || names.has(l.name)) continue;
+    ids.add(l.id);
+    names.add(l.name);
+    added.push(l);
+  }
+  if (!added.length) return local;
+  const merged = [...local, ...added].slice(0, 12);
+  try {
+    await AsyncStorage.setItem(KEY, JSON.stringify(merged));
+  } catch {
+    /* العرض يكفي — الحفظ المحلي يُعاد عند أول حفظ تالٍ */
+  }
+  return merged;
+}
+
 export const DEFAULT_LAYOUT: TerminalLayout = {
   id: 'default',
   name: 'افتراضي',

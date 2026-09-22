@@ -194,7 +194,8 @@ class PushRegister(BaseModel):
 
 
 class LayoutSave(BaseModel):
-    id: str | None = None
+    # العميل يرسل معرّفه المحلي فيبقى تخطيط واحد لكل تخطيط محلي (كان كل حفظ يُنشئ صفاً جديداً)
+    id: str | None = Field(default=None, max_length=64)
     name: str = Field(min_length=1, max_length=64)
     payload: dict
 
@@ -693,6 +694,15 @@ def layouts_save(
     # db.save_layout يتولّى توليد معرّف فريد عند غيابه ويمنع الكتابة فوق تخطيط مالك آخر (مجهول أو مسجّل)
     saved = db.save_layout(body.id, body.name, body.payload, uid, owner_key=key)
     return {"ok": True, "layout": saved}
+
+
+@app.delete("/api/layouts/{layout_id}")
+def layouts_delete(
+    layout_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+):
+    uid = user["user_id"] if user else None
+    # حذف بلا صف مطابق ليس خطأً للعميل (تخطيط محلي لم يصل للخادم قط) — يُعاد عدد المحذوف فقط
+    return {"ok": True, "deleted": db.delete_layout(layout_id, uid, owner_key=key)}
 
 
 @app.get("/api/watchlist/custom")

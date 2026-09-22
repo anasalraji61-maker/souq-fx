@@ -1324,6 +1324,18 @@ def save_layout(
     return {"id": layout_id, "name": name, "payload": payload}
 
 
+def delete_layout(layout_id: str, user_id: int | None = None, owner_key: str | None = None) -> int:
+    """يحذف تخطيط المستدعي بمعرّفه — أو بمعرّفه المحلي داخل الحمولة (`payload.id`): الحفظ القديم كان يُنشئ
+    صفاً بمعرّف خادم جديد بكل حفظ لنفس التخطيط المحلي، فالحذف بالمعرّف المحلي يزيل كل تلك النسخ."""
+    sql, args = _owner_clause(user_id, owner_key)
+    with _conn() as c:
+        cur = c.execute(
+            f"DELETE FROM layouts WHERE (id=? OR json_extract(payload, '$.id')=?) AND {sql}",
+            (layout_id, layout_id, *args),
+        )
+    return cur.rowcount
+
+
 def list_layouts(user_id: int | None = None, owner_key: str | None = None) -> list[dict]:
     """تخطيطات المستدعي فقط (`_owner_clause`). كانت تُعيد كل تخطيطات المجهولين لأي مستدعٍ."""
     sql, args = _owner_clause(user_id, owner_key)

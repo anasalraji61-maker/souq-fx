@@ -347,6 +347,19 @@ export const api = {
   layouts: () => getJson<{ layouts: { id: string; name: string; payload: unknown }[] }>('/api/layouts'),
   saveLayout: (body: { id?: string; name: string; payload: unknown }) =>
     postJson<{ ok: boolean; layout: unknown }>('/api/layouts', body),
+  /** يحذف التخطيط بمعرّفه المحلي (والنسخ القديمة المكرّرة بنفس `payload.id`). باك-إند قديم → خطأ 405. */
+  deleteLayout: (id: string) =>
+    installIdReady
+      .then(() =>
+        fetch(`${API_URL}/api/layouts/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: authHeaders(),
+        })
+      )
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json() as Promise<{ ok: boolean; deleted: number }>;
+      }),
   customWatchlist: () => getJson<{ symbols: string[] }>('/api/watchlist/custom'),
   addWatchlist: (symbol: string) =>
     postJson<{ ok: boolean; symbols: string[] }>('/api/watchlist/custom', { symbol }),
