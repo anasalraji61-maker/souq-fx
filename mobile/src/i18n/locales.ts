@@ -275,6 +275,7 @@ export type Dict = {
   calInPrefix: string;
   calHourShort: string;
   calMinShort: string;
+  calDayShort: string;
   newsRiskHigh: string;
   newsRiskHint: string;
   calToday: string;
@@ -995,6 +996,7 @@ const ar: Dict = {
   calInPrefix: 'بعد',
   calHourShort: 'س',
   calMinShort: 'د',
+  calDayShort: 'ي',
   newsRiskHigh: 'خبر قوي',
   newsRiskHint: 'تقلّب حاد وانزلاق محتمل — راجع وقف الخسارة وحجم الصفقة',
   calToday: 'اليوم',
@@ -1723,6 +1725,7 @@ const enUS: Dict = {
   calInPrefix: 'in',
   calHourShort: 'h',
   calMinShort: 'm',
+  calDayShort: 'd',
   newsRiskHigh: 'High-impact news',
   newsRiskHint: 'Expect sharp moves and slippage — check your stop and position size',
   calToday: 'Today',
@@ -2470,6 +2473,7 @@ const ku: Dict = {
   calInPrefix: 'دوای',
   calHourShort: 'ک',
   calMinShort: 'خ',
+  calDayShort: 'ڕ',
   newsRiskHigh: 'هەواڵی بەهێز',
   newsRiskHint: 'جووڵەی توند و خلیسکان چاوەڕوانکراوە — وەستان و قەبارەی مامەڵە بپشکنە',
   calToday: 'ئەمڕۆ',

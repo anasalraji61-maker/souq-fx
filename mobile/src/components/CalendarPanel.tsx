@@ -173,6 +173,12 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
     if (Math.abs(diff) <= NOW_WINDOW_MS) return t.calNow;
     if (diff < 0) return t.calPast;
     const mins = Math.round(diff / 60_000);
+    // التقويم أسبوعي (حدث الجمعة يبعد ~96س يوم الاثنين): «بعد 4ي 2س» أوضح من «بعد 96س 15د»
+    if (mins >= 1440) {
+      const days = Math.floor(mins / 1440);
+      const h = Math.floor((mins % 1440) / 60);
+      return `${t.calInPrefix} ${days}${t.calDayShort}${h ? ` ${h}${t.calHourShort}` : ''}`;
+    }
     const h = Math.floor(mins / 60);
     return `${t.calInPrefix} ${h ? `${h}${t.calHourShort} ` : ''}${mins % 60}${t.calMinShort}`;
   };
