@@ -24,6 +24,13 @@ import { instrumentSpec, priceAtPipOffset } from '../positionSize';
 const QUOTE_REFRESH_MS = 60_000;
 
 /**
+ * ارتفاع نافذة قائمة التنبيهات حين تكون اللوحة داخل صفحة تُمرَّر (اللوح الجانبي/الرصيف/شارت التركيز):
+ * هناك ارتفاع اللوحة يتبع محتواها، فلا «مساحة متبقية» تُملأ — والسقف يمنع قائمةً طويلة من دفع ما بعدها
+ * خارج الشاشة. وهو نفسه **الحدّ الأدنى** بالوضع المضمَّن أدناه، فلا تصير القائمة أصغر مما كانت بأي حال.
+ */
+const LIST_WINDOW_H = 160;
+
+/**
  * مسافات جاهزة بالنقاط حول السعر الحالي. المتداول يضع تنبيهه عند «عشرين نقطة فوق السوق» لا عند رقم
  * يحفظه — وكتابة «1.08703» بخمس منازل على لوحة مفاتيح هاتف بيد واحدة أكثر خطوة يخطئ فيها بهذه اللوحة
  * (رقم ناقص = تنبيه عند مستوى آخر تماماً). المسافة تُحوَّل لسعر بحجم pip **الأداة** (الين 0.01،
@@ -671,7 +678,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
       {loading ? (
         <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.md }} />
       ) : (
-        <ScrollView style={{ maxHeight: 160 }} keyboardShouldPersistTaps="handled">
+        <ScrollView style={embedded ? styles.listFill : styles.listCapped} keyboardShouldPersistTaps="handled">
           {alerts.length > 0 ? (
             <Text style={[styles.listHead, { textAlign: align }]}>
               {t.alertsActiveCount}: {alerts.filter((a) => a.active && !a.triggered).length} · {t.alertsTapToEdit}
@@ -797,6 +804,23 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
 }
 
 const styles = StyleSheet.create({
+  /**
+   * القائمة كانت محبوسة على `maxHeight: 160` بكل مواضع الاستعمال — ومنها خليةُ شبكة شاشة الأدوات،
+   * وهي **محدَّدة الارتفاع** (`FrameSizedGrid` يعطي كل خلية ارتفاعاً ثابتاً: 420 سطح مكتب / 340 هاتف /
+   * 260 بوضع شبكة الهاتف) واللوحة تملؤها (`wrap` بـ`flex: 1`). فمن له ثمانية تنبيهات كان يتصفّحها
+   * بنافذة أربعة صفوف بينما بقية الخلية فارغة تحتها — و«قائمة واضحة بالتنبيهات النشطة» أول ما يُطلب
+   * من لوح تنبيهات. الآن تأخذ ما تبقّى من الخلية.
+   *
+   * الثلاثة معاً مقصودة، وكلٌّ منها يمنع عطباً ثبت بمحاكاة Yoga (محرّك تخطيط RN نفسه):
+   * - `flexBasis: 0` + `flexGrow: 1`: القائمة **نافذة** بحجم ما تبقّى من الخلية، لا صندوقٌ يكبر بمحتواه.
+   *   بـ`flexShrink: 0` وأساسٍ تلقائي كانت تكبر إلى ارتفاع كل التنبيهات فتتجاوز الخلية، والزائد يُقصّ
+   *   بـ`overflow: hidden` **بلا تمرير يصله** (الـScrollView يظن أن المساحة تكفيه): صفوف تختفي نهائياً.
+   * - `minHeight`: بالخلية القصيرة (260) قد يشغل ما فوق القائمة الخليةَ كلها فتصير المساحة المتبقية
+   *   صفراً — والنافذة المرنة وحدها كانت ستُخفي القائمة تماماً. بالحدّ الأدنى تبقى 160 كما هي اليوم.
+   * فالنتيجة: لا أصغر من الحالي بأي مقاس، ولا أكبر من المساحة المتاحة، وقابلة للتمرير دائماً.
+   */
+  listFill: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: LIST_WINDOW_H },
+  listCapped: { maxHeight: LIST_WINDOW_H },
   wrap: {
     flex: 1,
     height: '100%',
