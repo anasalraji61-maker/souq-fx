@@ -905,16 +905,25 @@ def delete_indicator_alert(
 def check_indicator_alerts(
     user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
 ):
-    """تنبيهات المستدعي فقط (نفس قاعدة الرؤية في /api/indicator-alerts)."""
+    """تنبيهات المستدعي فقط (نفس قاعدة الرؤية في /api/indicator-alerts).
+
+    سلسلة واحدة لكل (رمز، فريم) بالطلب — كانت تُبنى لكل تنبيه (3 تنبيهات EURUSD 1h = 3 طلبات للمزوّد
+    من كل جهاز مفتوح). الفشل يُخزَّن أيضاً فلا يُعاد لنفس المفتاح."""
     uid = user["user_id"] if user else None
     triggered: list[dict] = []
+    cache: dict[tuple[str, str], list[dict] | None] = {}
     for a in db.list_indicator_alerts(uid, owner_key=key):
         if not a.get("active") or a.get("triggered"):
             continue
-        try:
-            series = build_series(a["symbol"], a["timeframe"])
-            candles = [c.model_dump() for c in series.candles]
-        except Exception:
+        ck = (str(a["symbol"]).upper(), str(a["timeframe"]))
+        if ck not in cache:
+            try:
+                series = build_series(a["symbol"], a["timeframe"])
+                cache[ck] = [c.model_dump() for c in series.candles]
+            except Exception:
+                cache[ck] = None
+        candles = cache[ck]
+        if candles is None:
             continue
         if _check_indicator_alert(a, candles) and db.mark_indicator_alert_triggered(a["id"]):
             triggered.append(a)
