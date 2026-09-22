@@ -360,6 +360,7 @@ export type Dict = {
   journalStatBestWorst: string;
   journalStatsPending: string;
   journalStatNetPips: string;
+  journalStatNetPipsBySymbol: string;
   journalStatAvgR: string;
   journalSideA11yPrefix: string;
   journalSymbolPlaceholder: string;
@@ -1186,6 +1187,7 @@ const ar: Dict = {
   journalStatBestWorst: 'أفضل/أسوأ: {best}% / {worst}%',
   journalStatsPending: 'لا صفقات مغلقة بعد — نسبة النجاح والـPnL تظهر بعد إغلاق أول صفقة.',
   journalStatNetPips: 'صافي النقاط: {pips} pip',
+  journalStatNetPipsBySymbol: 'صافي النقاط لكل أداة: {parts}',
   journalStatAvgR: 'متوسط النتيجة: {r} لكل صفقة ({n} بوقف مسجَّل)',
   journalSideA11yPrefix: 'اتجاه الصفقة',
   journalSymbolPlaceholder: 'الرمز',
@@ -2023,6 +2025,7 @@ const enUS: Dict = {
   journalStatBestWorst: 'Best/Worst: {best}% / {worst}%',
   journalStatsPending: 'No closed trades yet — win rate and PnL appear once you close your first trade.',
   journalStatNetPips: 'Net pips: {pips} pip',
+  journalStatNetPipsBySymbol: 'Net pips per instrument: {parts}',
   journalStatAvgR: 'Average result: {r} per trade ({n} with a stop)',
   journalSideA11yPrefix: 'Trade direction',
   journalSymbolPlaceholder: 'Symbol',
@@ -2881,6 +2884,7 @@ const ku: Dict = {
   journalStatBestWorst: 'باشترین/خراپترین: {best}% / {worst}%',
   journalStatsPending: 'هێشتا هیچ مامەڵەیەکی داخراو نییە — ڕێژەی سەرکەوتن و PnL دوای داخستنی یەکەم مامەڵە دەردەکەون.',
   journalStatNetPips: 'کۆی خاڵەکان: {pips} pip',
+  journalStatNetPipsBySymbol: 'کۆی خاڵەکان بۆ هەر ئامرازێک: {parts}',
   journalStatAvgR: 'ناوەندی ئەنجام: {r} بۆ هەر مامەڵەیەک ({n} بە وەستان)',
   journalSideA11yPrefix: 'ئاراستەی مامەڵە',
   journalSymbolPlaceholder: 'هێما',

@@ -198,8 +198,14 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
    * من الصفقات المغلقة المعروضة، لا من `pnl` المخزَّن. الـR فقط للصفقات التي سُجِّل لها وقف.
    */
   const extraStats = useMemo(() => {
-    let pips = 0;
-    let pipN = 0;
+    /**
+     * النقاط تُجمع **لكل أداة على حدة**: الـpip وحدةُ قياسٍ تخصّ الأداة لا رقماً عاماً —
+     * pip الذهب 0.1 من الدولار، وpip EURUSD 0.0001، وpip الين 0.01 (`instrumentSpec`). فجمعها
+     * بمجموع واحد كان يطرح نقاط الذهب من نقاط اليورو كأنها الشيء نفسه: صفقة ذهب +50 وصفقة
+     * EURUSD −50 كانتا تُقرآن «صفر» بينما هما بالمال شيئان مختلفان تماماً — وهذا سطرٌ يقيس به
+     * متداول التجزئة أداءه. متوسط الـR بجانبه سليم كما هو: نسبة بلا وحدة تقارن الأدوات بحق.
+     */
+    const byPips = new Map<string, { pips: number; n: number }>();
     let rSum = 0;
     let rN = 0;
     for (const tr of trades) {
@@ -207,8 +213,11 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
       const side = tr.side === 'sell' ? 'sell' : 'buy';
       const mv = realizedMove({ symbol: tr.symbol, side, entry: tr.entry, exit: tr.exit });
       if (mv?.pips != null) {
-        pips += mv.pips;
-        pipN += 1;
+        const key = (tr.symbol || '').trim().toUpperCase() || '—';
+        const cur = byPips.get(key) ?? { pips: 0, n: 0 };
+        cur.pips += mv.pips;
+        cur.n += 1;
+        byPips.set(key, cur);
       }
       const r = realizedR({ side, entry: tr.entry, sl: tr.sl, exit: tr.exit });
       if (r != null) {
@@ -216,8 +225,17 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
         rN += 1;
       }
     }
+    /** الأكثر تداولاً أولاً — ثلاث أدوات بالسطر وما بعدها «+N» كي لا يطول سطر الإحصاءات. */
+    const ranked = [...byPips.entries()].sort((a, b) => b[1].n - a[1].n || a[0].localeCompare(b[0]));
+    const shown = ranked.slice(0, 3);
+    const rest = ranked.length - shown.length;
+    const parts = shown.map(
+      ([sym, v]) => `${sym} ${formatSignedPips(Math.round(v.pips * 10) / 10)}`
+    );
     return {
-      pips: pipN ? formatSignedPips(Math.round(pips * 10) / 10) : null,
+      /** أداة واحدة → السطر كما كان بالضبط؛ أكثر من أداة → مفصَّل لكل أداة. */
+      pips: ranked.length === 1 ? formatSignedPips(Math.round(ranked[0]![1].pips * 10) / 10) : null,
+      pipsBySymbol: ranked.length > 1 ? parts.join(' · ') + (rest > 0 ? ` +${rest}` : '') : null,
       avgR: rN ? formatR(Math.round((rSum / rN) * 10) / 10) : null,
       rN,
     };
@@ -450,6 +468,11 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
           {extraStats.pips != null ? (
             <Text style={[styles.stat, { textAlign: align }]}>
               {t.journalStatNetPips.replace('{pips}', extraStats.pips)}
+            </Text>
+          ) : null}
+          {extraStats.pipsBySymbol != null ? (
+            <Text style={[styles.stat, { textAlign: align }]}>
+              {t.journalStatNetPipsBySymbol.replace('{parts}', extraStats.pipsBySymbol)}
             </Text>
           ) : null}
           {extraStats.avgR != null ? (
