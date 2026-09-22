@@ -300,7 +300,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         <Text style={[styles.voiceErr, { textAlign: align }]}>{t.lectureLoadFailedNote}</Text>
       ) : null}
       <Text style={[styles.voiceHint, { textAlign: align }]}>
-        {t.lectureFullScreenTag} · {t.coursesVoiceWord} ElevenLabs ·{' '}
+        {t.lectureFullScreenTag} ·{' '}
         {paused ? t.lectureVoicePausedForQ : voiceBusy ? t.lecturePreparingVoice : t.lectureExplainingNow}
       </Text>
       {voiceError ? <Text style={[styles.voiceErr, { textAlign: align }]}>{voiceError}</Text> : null}

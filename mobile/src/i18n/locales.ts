@@ -495,8 +495,7 @@ export type Dict = {
   coursesSchoolA11yPrefix: string;
   coursesLevelsWord: string;
   coursesLecturesUnitWord: string;
-  coursesVoiceWord: string;
-  coursesAudioLabel: string;
+  coursesNarratedBadge: string;
   coursesFallbackNote: string;
   coursesLevelWord: string;
   coursesLectureA11yPrefix: string;
@@ -1324,8 +1323,7 @@ const ar: Dict = {
   coursesSchoolA11yPrefix: 'مدرسة',
   coursesLevelsWord: 'مستويات',
   coursesLecturesUnitWord: 'محاضرة',
-  coursesVoiceWord: 'صوت',
-  coursesAudioLabel: 'الصوت',
+  coursesNarratedBadge: '🔊 شرح صوتي كامل',
   coursesFallbackNote: 'تعذر تحميل المنهج الكامل — تُعرض محاضرة افتتاحية مؤقتة فقط',
   coursesLevelWord: 'المستوى',
   coursesLectureA11yPrefix: 'محاضرة',
@@ -2160,8 +2158,7 @@ const enUS: Dict = {
   coursesSchoolA11yPrefix: 'School',
   coursesLevelsWord: 'levels',
   coursesLecturesUnitWord: 'lectures',
-  coursesVoiceWord: 'Voice',
-  coursesAudioLabel: 'Audio',
+  coursesNarratedBadge: '🔊 Full audio narration',
   coursesFallbackNote: "Couldn't load the full curriculum — showing only a temporary introductory lecture",
   coursesLevelWord: 'Level',
   coursesLectureA11yPrefix: 'Lecture',
@@ -3017,8 +3014,7 @@ const ku: Dict = {
   coursesSchoolA11yPrefix: 'قوتابخانە',
   coursesLevelsWord: 'ئاست',
   coursesLecturesUnitWord: 'وانە',
-  coursesVoiceWord: 'دەنگی',
-  coursesAudioLabel: 'دەنگ',
+  coursesNarratedBadge: '🔊 ڕوونکردنەوەی دەنگیی تەواو',
   coursesFallbackNote: 'نەکرا کوریکولەی تەواو باربکرێت — تەنها وانەیەکی سەرەتایی کاتی پیشان دەدرێت',
   coursesLevelWord: 'ئاست',
   coursesLectureA11yPrefix: 'وانە',

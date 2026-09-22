@@ -164,11 +164,10 @@ export function CoursesScreen() {
               <Text style={styles.metaText}>
                 {s.lectures_count} {t.coursesLecturesUnitWord}
               </Text>
-              <Text style={styles.aiTag}>{t.coursesVoiceWord} ElevenLabs</Text>
+              {/* ما يهمّ المتداول: أن الدرس مشروح صوتياً. اسم مزوّد الـTTS وسلسلة `video_pipeline`
+                  (نصّ داخلي إنجليزي من الباك-إند) لا تعنيان له شيئاً ولا تُترجَمان. */}
+              <Text style={styles.aiTag}>{t.coursesNarratedBadge}</Text>
             </View>
-            <Text style={[styles.pipeline, { textAlign: align }]}>
-              {t.coursesAudioLabel}: {s.classroom.video_pipeline}
-            </Text>
           </Pressable>
         ))}
       </ScrollView>
@@ -313,7 +312,6 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 6,
   },
-  pipeline: { color: colors.textDim, fontSize: 11, marginTop: spacing.sm },
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'flex-end' },
   modal: {
     backgroundColor: colors.bgElevated,
