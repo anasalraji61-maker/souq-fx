@@ -994,21 +994,21 @@ def market_quote(symbol: str):
 
 @app.get("/api/trades")
 def trades_list(user: dict | None = Depends(_auth_user)):
-    uid = user["id"] if user else None
+    uid = user["user_id"] if user else None
     return {"trades": db.list_trades(uid), "stats": db.trade_stats(uid)}
 
 
 @app.post("/api/trades")
 def trades_create(body: TradeCreate, user: dict | None = Depends(_auth_user)):
-    uid = user["id"] if user else None
+    uid = user["user_id"] if user else None
     row = db.add_trade(body.model_dump(), uid)
     return {"ok": True, "trade": row, "stats": db.trade_stats(uid)}
 
 
 @app.post("/api/trades/{trade_id}/close")
 def trades_close(trade_id: str, body: TradeClose, user: dict | None = Depends(_auth_user)):
-    uid = user["id"] if user else None
-    row = db.close_trade(trade_id, body.exit)
+    uid = user["user_id"] if user else None
+    row = db.close_trade(trade_id, body.exit, uid)
     if not row:
         raise HTTPException(404, "trade not found")
     return {"ok": True, "trade": row, "stats": db.trade_stats(uid)}
@@ -1016,10 +1016,10 @@ def trades_close(trade_id: str, body: TradeClose, user: dict | None = Depends(_a
 
 @app.delete("/api/trades/{trade_id}")
 def trades_delete(trade_id: str, user: dict | None = Depends(_auth_user)):
-    ok = db.delete_trade(trade_id)
+    uid = user["user_id"] if user else None
+    ok = db.delete_trade(trade_id, uid)
     if not ok:
         raise HTTPException(404, "trade not found")
-    uid = user["id"] if user else None
     return {"ok": True, "stats": db.trade_stats(uid)}
 
 

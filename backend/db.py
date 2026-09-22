@@ -791,7 +791,7 @@ def delete_user_account(user_id: int) -> None:
     الشخصية القابلة للتعريف (username → معرّف مجهول ثابت غير قابل لتسجيل دخول،
     email → NULL، password_hash → قيمة عشوائية غير صالحة أبداً لأي كلمة مرور حقيقية)،
     وتُلغى كل الجلسات النشطة فوراً، ويُحذف المحتوى الشخصي البحت غير المرجعي من طرف
-    آخر (تنبيهات الأسعار، تخطيطات الشارت المحفوظة، رمز إشعارات Push). هذا يحقق
+    آخر (تنبيهات الأسعار والمؤشرات، دفتر الصفقات، تخطيطات الشارت المحفوظة، رمز إشعارات Push). هذا يحقق
     الشرط الفعلي لأبل (إزالة البيانات الشخصية القابلة للتعريف) دون كسر شجرة العمولات.
     """
     placeholder = f"deleted_user_{user_id}"
@@ -804,6 +804,7 @@ def delete_user_account(user_id: int) -> None:
         c.execute("DELETE FROM sessions WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM alerts WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM indicator_alerts WHERE user_id=?", (user_id,))
+        c.execute("DELETE FROM trades WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM push_tokens WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM layouts WHERE user_id=?", (user_id,))
 
@@ -1081,7 +1082,7 @@ def list_layouts(user_id: int | None = None) -> list[dict]:
                 (user_id,),
             ).fetchall()
         else:
-            rows = c.execute("SELECT id,name,payload FROM layouts").fetchall()
+            rows = c.execute("SELECT id,name,payload FROM layouts WHERE user_id IS NULL").fetchall()
     out = []
     for r in rows:
         out.append({"id": r["id"], "name": r["name"], "payload": json.loads(r["payload"])})
@@ -1257,6 +1258,8 @@ def _opt_level(v) -> float | None:
 
 
 def list_trades(user_id: int | None = None, days: int = 30) -> list[dict]:
+    """Journal visible to the caller: own + legacy anonymous trades for a signed-in user,
+    anonymous ones only otherwise (an anonymous caller used to get every user's journal)."""
     with _conn() as c:
         if user_id is not None:
             rows = c.execute(
@@ -1264,8 +1267,17 @@ def list_trades(user_id: int | None = None, days: int = 30) -> list[dict]:
                 (user_id,),
             ).fetchall()
         else:
-            rows = c.execute("SELECT * FROM trades ORDER BY opened_at DESC LIMIT 200").fetchall()
+            rows = c.execute(
+                "SELECT * FROM trades WHERE user_id IS NULL ORDER BY opened_at DESC LIMIT 200"
+            ).fetchall()
     return [dict(r) for r in rows]
+
+
+def _trade_owner_clause(user_id: int | None) -> tuple[str, tuple]:
+    """Same ownership rule as alerts: own or legacy-anonymous, or anonymous-only when signed out."""
+    if user_id is not None:
+        return "(user_id IS NULL OR user_id=?)", (user_id,)
+    return "user_id IS NULL", ()
 
 
 def add_trade(data: dict, user_id: int | None = None) -> dict:
@@ -1318,9 +1330,12 @@ def add_trade(data: dict, user_id: int | None = None) -> dict:
     return row
 
 
-def close_trade(trade_id: str, exit_price: float) -> dict | None:
+def close_trade(trade_id: str, exit_price: float, user_id: int | None = None) -> dict | None:
+    owner_sql, owner_args = _trade_owner_clause(user_id)
     with _conn() as c:
-        r = c.execute("SELECT * FROM trades WHERE id=?", (trade_id,)).fetchone()
+        r = c.execute(
+            f"SELECT * FROM trades WHERE id=? AND {owner_sql}", (trade_id, *owner_args)
+        ).fetchone()
         if not r:
             return None
         row = dict(r)
@@ -1339,9 +1354,10 @@ def close_trade(trade_id: str, exit_price: float) -> dict | None:
         return row
 
 
-def delete_trade(trade_id: str) -> bool:
+def delete_trade(trade_id: str, user_id: int | None = None) -> bool:
+    owner_sql, owner_args = _trade_owner_clause(user_id)
     with _conn() as c:
-        cur = c.execute("DELETE FROM trades WHERE id=?", (trade_id,))
+        cur = c.execute(f"DELETE FROM trades WHERE id=? AND {owner_sql}", (trade_id, *owner_args))
     return cur.rowcount > 0
 
 
