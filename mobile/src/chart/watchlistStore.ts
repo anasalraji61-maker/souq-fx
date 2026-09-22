@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { authHeaders, API_URL } from '../api';
+import { api } from '../api';
 import {
   addWatchSymbol,
   resetWatchlistMemory,
@@ -36,15 +36,18 @@ export {
   type WatchlistSaveErrorCode,
 } from './watchlistStoreCore';
 
-/** توافق SymbolSearchBar — يضيف من الكتالوج فقط */
+/**
+ * توافق SymbolSearchBar — يضيف من الكتالوج فقط.
+ * الحفظ المحلي أولاً (هو مصدر الحقيقة بالواجهة)، ثم مزامنة الخادم عبر `api.addWatchlist`:
+ * طلب كتابة قصير محروس بمهلة `WRITE_TIMEOUT_MS`، بخلاف نداء `fetch` الخام السابق الذي كان
+ * يتجاوز `api.ts` كلياً فيبقى معلَّقاً بلا سقف على خادم غير قابل للوصول (حال كل مستخدم حتى
+ * يُنشَر الباك-إند)، ولا ينتظر `installIdReady` فيذهب أحياناً بلا معرّف التثبيت.
+ * الفشل يُبتلع عمداً: النداء `void` من `SymbolSearchBar` والرمز أصلاً محفوظ محلياً.
+ */
 export async function addCustomSymbol(symbol: string): Promise<string[]> {
   const next = await addWatchSymbol(symbol);
   try {
-    await fetch(`${API_URL}/api/watchlist/custom`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ symbol: symbol.toUpperCase() }),
-    });
+    await api.addWatchlist(symbol.toUpperCase());
   } catch {
     /* local ok */
   }
