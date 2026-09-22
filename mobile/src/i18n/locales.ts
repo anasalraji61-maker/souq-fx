@@ -301,6 +301,9 @@ export type Dict = {
   riskCalcTarget: string;
   riskCalcTargetPlaceholder: string;
   riskCalcPotentialProfit: string;
+  riskCalcLogToJournal: string;
+  riskCalcLoggedToJournal: string;
+  riskCalcLogFailed: string;
   riskCalcDisclaimer: string;
   toolsTabRisk: string;
   calTimesLocal: string;
@@ -1110,6 +1113,9 @@ const ar: Dict = {
   riskCalcTarget: 'الهدف (اختياري) — لحساب R:R والربح المحتمل',
   riskCalcTargetPlaceholder: 'سعر الهدف',
   riskCalcPotentialProfit: 'الربح المحتمل',
+  riskCalcLogToJournal: 'سجّل هذه الخطة بالدفتر',
+  riskCalcLoggedToJournal: '✓ سُجِّلت صفقة مفتوحة بالدفتر — أغلقها من «الدفتر» عند الخروج',
+  riskCalcLogFailed: 'تعذّر التسجيل بالدفتر — تحقّق من الاتصال وحاول مرة أخرى',
   riskCalcDisclaimer: 'تقدير تعليمي: مواصفات العقود (خصوصاً الذهب) قد تختلف لدى وسيطك — تحقّق قبل التداول.',
   toolsTabRisk: 'المخاطرة',
   calTimesLocal: 'الأوقات بتوقيتك',
@@ -1927,6 +1933,9 @@ const enUS: Dict = {
   riskCalcTarget: 'Target (optional) — for R:R and potential profit',
   riskCalcTargetPlaceholder: 'Target price',
   riskCalcPotentialProfit: 'Potential profit',
+  riskCalcLogToJournal: 'Log this plan to the journal',
+  riskCalcLoggedToJournal: '✓ Logged as an open trade — close it from «Journal» when you exit',
+  riskCalcLogFailed: 'Could not log to the journal — check your connection and try again',
   riskCalcDisclaimer: 'Educational estimate: contract specs (especially gold) can differ at your broker — check before trading.',
   toolsTabRisk: 'Risk',
   calTimesLocal: 'Times in your timezone',
@@ -2763,6 +2772,9 @@ const ku: Dict = {
   riskCalcTarget: 'ئامانج (ئارەزوومەندانە) — بۆ R:R و قازانجی چاوەڕوانکراو',
   riskCalcTargetPlaceholder: 'نرخی ئامانج',
   riskCalcPotentialProfit: 'قازانجی چاوەڕوانکراو',
+  riskCalcLogToJournal: 'ئەم پلانە لە دەفتەر تۆمار بکە',
+  riskCalcLoggedToJournal: '✓ وەک مامەڵەیەکی کراوە تۆمارکرا — لە «دەفتەر» بیخە کاتی دەرچوون',
+  riskCalcLogFailed: 'تۆمارکردن لە دەفتەر سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەوە',
   riskCalcDisclaimer: 'خەمڵاندنی فێرکاری: تایبەتمەندی گرێبەستەکان (بەتایبەتی زێڕ) لای بڕۆکەرەکەت جیاواز دەبێت — پێش مامەڵە پشتڕاستی بکەرەوە.',
   toolsTabRisk: 'مەترسی',
   calTimesLocal: 'کاتەکان بە کاتی خۆت',

@@ -194,9 +194,48 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** الهدف بالجهة الخطأ (فوق الدخول ببيع/تحته بشراء) — خطأ كتابة شائع، يُقال صراحةً بدل تجاهل الهدف */
   const targetWrongSide = plan?.issue === 'tpWrongSide';
   const lots = result && !result.belowMinLot ? result.lots : null;
+  /** تسجيل الخطة بالدفتر جارٍ / نتيجته — نقرة واحدة بدل إعادة كتابة الأرقام الأربعة بلوحة الدفتر */
+  const [logBusy, setLogBusy] = useState(false);
+  const [logMsg, setLogMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // تغيّر أي رقم بالخطة يمسح رسالة التسجيل ويتيح الزر من جديد — وبقاؤها يمنع نقرة ثانية تُنشئ صفقة مكرّرة
+  useEffect(() => {
+    setLogMsg(null);
+  }, [symbol, account, balance, riskPct, slPips, entryPx, stopPx, targetPx]);
   /** الربح المحتمل ≈ نقاط الهدف × قيمة النقطة للوت × اللوت (تقدير كالمخاطرة تماماً) */
   const potentialProfit =
     plan?.ok && plan.rewardPips != null && pv != null && lots != null ? plan.rewardPips * pv * lots : null;
+
+  /**
+   * «سجّل الخطة بالدفتر»: الأرقام هنا (رمز/دخول/وقف/هدف) هي نفسها التي يطلبها الدفتر — إعادة كتابتها
+   * يدوياً كانت أكثر خطوة مملّة ومَظنّة خطأ. تُسجَّل صفقة **مفتوحة** (بلا خروج) بحجم اللوت المحسوب
+   * وملاحظة مختصرة، والاتجاه من موضع الوقف. لا يظهر الزر إلا بخطة صالحة وحجم لوت محسوب.
+   */
+  const logPlanToJournal = async () => {
+    const e = num(entryPx);
+    const sPx = num(stopPx);
+    const tPx = num(targetPx);
+    if (!spec || !plan?.ok || lots == null || logBusy || logMsg?.ok) return;
+    setLogBusy(true);
+    setLogMsg(null);
+    try {
+      await api.createTrade({
+        symbol: spec.symbol,
+        side: sPx < e ? 'buy' : 'sell',
+        entry: e,
+        sl: sPx,
+        tp: tPx,
+        size: lots,
+        // ملاحظة محايدة اللغة: الأرقام هي المقصودة، وتظهر كما هي بسطر الصفقة بالدفتر
+        note: `${lots.toFixed(2)} lot · risk ${result ? result.actualRisk.toFixed(2) : ''} ${account} · R:R ${formatRR(plan.rr)}`,
+      });
+      if (!mountedRef.current) return;
+      setLogMsg({ ok: true, text: t.riskCalcLoggedToJournal });
+    } catch {
+      if (mountedRef.current) setLogMsg({ ok: false, text: t.riskCalcLogFailed });
+    } finally {
+      if (mountedRef.current) setLogBusy(false);
+    }
+  };
 
   const money = (v: number) =>
     `${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${account}`;
@@ -356,6 +395,37 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           </Text>
         ) : null}
       </View>
+      {plan?.ok && lots != null ? (
+        <>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: logBusy || logMsg?.ok === true, busy: logBusy }}
+            // بعد نجاح التسجيل يبقى معطَّلاً حتى يتغيّر رقم بالخطة — نقرة ثانية كانت تُنشئ صفقة مكرّرة
+            disabled={logBusy || logMsg?.ok === true}
+            style={({ pressed }) => [
+              styles.logBtn,
+              (logBusy || logMsg?.ok === true) && { opacity: 0.5 },
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={() => void logPlanToJournal()}
+            accessibilityLabel={t.riskCalcLogToJournal}
+            hitSlop={8}
+          >
+            <Text style={styles.logBtnText}>{logBusy ? '...' : t.riskCalcLogToJournal}</Text>
+          </Pressable>
+          {logMsg ? (
+            <Text
+              style={[logMsg.ok ? styles.logOk : styles.warn, { textAlign: align }]}
+              accessibilityLiveRegion="polite"
+            >
+              {logMsg.text}
+            </Text>
+          ) : null}
+        </>
+      ) : null}
       <Text style={[styles.disclaimer, { textAlign: align }]}>{t.riskCalcDisclaimer}</Text>
     </View>
   );
@@ -414,4 +484,15 @@ const styles = StyleSheet.create({
   resultLots: { color: colors.accent, fontSize: 28, fontWeight: '800' },
   resultMeta: { color: colors.textDim, fontSize: 11 },
   disclaimer: { color: colors.textDim, fontSize: 10, marginTop: spacing.xs },
+  logBtn: {
+    marginTop: spacing.sm,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    backgroundColor: colors.accentSoft,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  logBtnText: { color: colors.accent, fontWeight: '800', fontSize: 12 },
+  logOk: { color: colors.bull, fontSize: 11, fontWeight: '700' },
 });
