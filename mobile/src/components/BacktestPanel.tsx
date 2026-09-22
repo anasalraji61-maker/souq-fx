@@ -54,11 +54,23 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
   const [equity, setEquity] = useState<{ i: number; equity: number }[]>([]);
   /** وضوح الحالة: يعلم المستخدم إذا فشل تشغيل الاختبار الخلفي بدل صمت كامل (نتائج فارغة كأنه لا صفقات) */
   const [error, setError] = useState<string | null>(null);
+  /** لأي رمز·فريم·استراتيجية حُسبت النتيجة الظاهرة — تُعرض فوقها كي لا تُقرأ لاختيار آخر. */
+  const [ranFor, setRanFor] = useState<string | null>(null);
 
   useEffect(() => {
     setSymbol(defaultSymbol);
     setTf(defaultTimeframe);
   }, [defaultSymbol, defaultTimeframe]);
+
+  // تغيير الرمز/الفريم/الاستراتيجية: نتيجة التشغيل السابق لم تعد تصف الاختيار الظاهر — كانت نسبة نجاح
+  // MA Cross على EURUSD تبقى تحت «RSI» و«XAUUSD» كأنها نتيجتهما.
+  useEffect(() => {
+    setStats(null);
+    setTrades([]);
+    setEquity([]);
+    setError(null);
+    setRanFor(null);
+  }, [symbol, tf, strategy]);
 
   const run = async () => {
     setLoading(true);
@@ -77,6 +89,8 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         setError(t.noLiveDataResult);
         return;
       }
+      const label = STRATEGIES.find((s) => s.id === strategy)?.label ?? strategy;
+      setRanFor(`${symbol.trim().toUpperCase()} · ${tf} · ${label}`);
       setStats(res.stats as Stats);
       setTrades(res.trades ?? []);
       setEquity(res.equity_curve ?? []);
@@ -156,29 +170,42 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
       {error ? <Text style={[styles.error, { textAlign: align }]}>{error}</Text> : null}
       {stats ? (
         <View style={styles.stats}>
+          {ranFor ? <Text style={[styles.ranFor, { textAlign: align }]}>{ranFor}</Text> : null}
           <Text style={[styles.statLine, { textAlign: align }]}>
             {t.backtestStatTrades.replace('{n}', String(stats.trade_count))}
           </Text>
-          <Text style={[styles.statLine, { textAlign: align }]}>
-            {t.backtestStatWinRate.replace('{pct}', String(stats.win_rate))}
-          </Text>
-          <Text style={[styles.statLine, { textAlign: align }]}>
-            {t.backtestStatReturn.replace('{pct}', String(stats.total_return_pct))}
-          </Text>
-          <Text style={[styles.statLine, { textAlign: align }]}>
-            {t.backtestStatEquity.replace('{v}', String(stats.final_equity))}
-          </Text>
-          {stats.max_drawdown_pct != null ? (
-            <Text style={[styles.statLine, { textAlign: align }]}>
-              {t.backtestStatDrawdown.replace('{pct}', String(stats.max_drawdown_pct))}
+          {stats.trade_count === 0 ? (
+            <Text style={[styles.sampleWarn, { textAlign: align }]}>{t.backtestNoTrades}</Text>
+          ) : null}
+          {stats.trade_count > 0 && stats.trade_count < 30 ? (
+            <Text style={[styles.sampleWarn, { textAlign: align }]}>
+              {t.backtestSmallSample.replace('{n}', String(stats.trade_count))}
             </Text>
           ) : null}
-          {stats.avg_win_pct != null ? (
-            <Text style={[styles.statLine, { textAlign: align }]}>
-              {t.backtestStatAvgWinLoss
-                .replace('{win}', String(stats.avg_win_pct))
-                .replace('{loss}', String(stats.avg_loss_pct))}
-            </Text>
+          {stats.trade_count > 0 ? (
+            <>
+              <Text style={[styles.statLine, { textAlign: align }]}>
+                {t.backtestStatWinRate.replace('{pct}', String(stats.win_rate))}
+              </Text>
+              <Text style={[styles.statLine, { textAlign: align }]}>
+                {t.backtestStatReturn.replace('{pct}', String(stats.total_return_pct))}
+              </Text>
+              <Text style={[styles.statLine, { textAlign: align }]}>
+                {t.backtestStatEquity.replace('{v}', String(stats.final_equity))}
+              </Text>
+              {stats.max_drawdown_pct != null ? (
+                <Text style={[styles.statLine, { textAlign: align }]}>
+                  {t.backtestStatDrawdown.replace('{pct}', String(stats.max_drawdown_pct))}
+                </Text>
+              ) : null}
+              {stats.avg_win_pct != null ? (
+                <Text style={[styles.statLine, { textAlign: align }]}>
+                  {t.backtestStatAvgWinLoss
+                    .replace('{win}', String(stats.avg_win_pct))
+                    .replace('{loss}', String(stats.avg_loss_pct))}
+                </Text>
+              ) : null}
+            </>
           ) : null}
         </View>
       ) : null}
@@ -274,6 +301,8 @@ const styles = StyleSheet.create({
   },
   stats: { gap: spacing.xs, marginTop: spacing.sm },
   statLine: { color: colors.text, textAlign: 'right', fontWeight: '600' },
+  ranFor: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  sampleWarn: { color: colors.warn, fontSize: 11, fontWeight: '700' },
   curve: { marginTop: 6, gap: spacing.xs },
   curveTitle: { color: colors.textMuted, fontSize: 11, fontWeight: '700', textAlign: 'right' },
   curveRow: { flexDirection: 'row', height: 48, alignItems: 'flex-end' },
