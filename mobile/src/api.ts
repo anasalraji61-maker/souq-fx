@@ -287,8 +287,8 @@ export const api = {
       network: unknown;
       temp_password?: string | null;
     }>('/api/commissions/place', body),
-  registerPush: (token: string, platform: string) =>
-    postJson<{ ok: boolean }>('/api/push/register', { token, platform }),
+  registerPush: (token: string, platform: string, lang?: string) =>
+    postJson<{ ok: boolean }>('/api/push/register', { token, platform, lang }),
   layouts: () => getJson<{ layouts: { id: string; name: string; payload: unknown }[] }>('/api/layouts'),
   saveLayout: (body: { id?: string; name: string; payload: unknown }) =>
     postJson<{ ok: boolean; layout: unknown }>('/api/layouts', body),

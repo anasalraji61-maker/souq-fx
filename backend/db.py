@@ -139,6 +139,14 @@ def init_db() -> None:
         _migrate_network(c)
         _migrate_commission_ledger(c)
         _migrate_user_email(c)
+        _migrate_push_lang(c)
+
+
+def _migrate_push_lang(c: sqlite3.Connection) -> None:
+    """لغة واجهة الجهاز مع توكن الـPush — نص الإشعار بلغة المتداول (كان إنجليزياً خاماً للجميع)."""
+    cols = {r[1] for r in c.execute("PRAGMA table_info(push_tokens)").fetchall()}
+    if "lang" not in cols:
+        c.execute("ALTER TABLE push_tokens ADD COLUMN lang TEXT")
 
 
 def _migrate_user_email(c: sqlite3.Connection) -> None:
@@ -1033,12 +1041,14 @@ def ballot(vote_id: str, choice: str) -> dict | None:
 
 # ─── Push / layouts / watchlist / progress ────────────────────────────────────
 
-def save_push_token(token: str, platform: str, user_id: int | None = None) -> None:
+def save_push_token(
+    token: str, platform: str, user_id: int | None = None, lang: str | None = None
+) -> None:
     with _conn() as c:
         c.execute(
-            """INSERT OR REPLACE INTO push_tokens(token,user_id,platform,updated_at)
-               VALUES(?,?,?,?)""",
-            (token, user_id, platform, time.time()),
+            """INSERT OR REPLACE INTO push_tokens(token,user_id,platform,updated_at,lang)
+               VALUES(?,?,?,?,?)""",
+            (token, user_id, platform, time.time(), lang),
         )
 
 
@@ -1057,6 +1067,20 @@ def push_tokens_for(user_id: int | None) -> list[str]:
         else:
             rows = c.execute("SELECT token FROM push_tokens WHERE user_id IS NULL").fetchall()
     return [r["token"] for r in rows]
+
+
+def push_targets_for(user_id: int | None) -> list[tuple[str, str | None]]:
+    """مثل `push_tokens_for` لكن مع لغة واجهة كل جهاز: [(token, lang)]."""
+    with _conn() as c:
+        if user_id:
+            rows = c.execute(
+                "SELECT token, lang FROM push_tokens WHERE user_id=?", (user_id,)
+            ).fetchall()
+        else:
+            rows = c.execute(
+                "SELECT token, lang FROM push_tokens WHERE user_id IS NULL"
+            ).fetchall()
+    return [(r["token"], r["lang"]) for r in rows]
 
 
 def delete_push_token(token: str) -> None:

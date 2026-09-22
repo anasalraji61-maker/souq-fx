@@ -170,6 +170,8 @@ class AuthLogin(BaseModel):
 class PushRegister(BaseModel):
     token: str = Field(min_length=10)
     platform: str = "unknown"
+    # لغة واجهة الجهاز (ar/en-US/en-GB/ku) — اختيارية؛ العملاء الأقدم لا يرسلونها
+    lang: str | None = Field(default=None, max_length=10)
 
 
 class LayoutSave(BaseModel):
@@ -630,7 +632,7 @@ def commissions_report(user: dict | None = Depends(_auth_user)):
 @app.post("/api/push/register")
 def push_register(body: PushRegister, user: dict | None = Depends(_auth_user)):
     uid = user["user_id"] if user else None
-    db.save_push_token(body.token, body.platform, uid)
+    db.save_push_token(body.token, body.platform, uid, body.lang)
     return {"ok": True}
 
 

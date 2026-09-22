@@ -67,10 +67,51 @@ def _check_indicator(a: dict) -> bool:
     return False
 
 
+def _push_lang(lang: str | None) -> str:
+    """لغة نص الإشعار: الإنجليزية لـen-US/en-GB، والعربية لغيرها (ar، ku بنفس الخط، أو توكن قديم بلا لغة
+    — العربية لغة الواجهة الافتراضية)."""
+    return "en" if (lang or "").lower().startswith("en") else "ar"
+
+
+def _fmt_price(v) -> str:
+    try:
+        return f"{float(v):.10g}"
+    except (TypeError, ValueError):
+        return str(v)
+
+
+_IND_NAMES = {
+    "ar": {"rsi": "RSI", "ma_cross": "تقاطع المتوسطات", "macd_cross": "تقاطع MACD"},
+    "en": {"rsi": "RSI", "ma_cross": "MA cross", "macd_cross": "MACD cross"},
+}
+_COND_WORDS = {
+    "ar": {"above": "فوق", "below": "تحت", "cross_up": "صاعد ▲", "cross_down": "هابط ▼"},
+    "en": {"above": "above", "below": "below", "cross_up": "up ▲", "cross_down": "down ▼"},
+}
+
+
+def _compose(ev: dict, lang: str) -> tuple[str, str]:
+    """(عنوان، نص) الإشعار بلغة الجهاز. كان النص خاماً إنجليزياً للجميع («EURUSD price above 1.1»)
+    تحت عنوان عربي — نص مختلط لا يقرؤه نصف الجمهور."""
+    sym = ev["symbol"]
+    if ev["kind"] == "price":
+        up = ev["condition"] == "above"
+        p = _fmt_price(ev["price"])
+        if lang == "en":
+            return "MATRIX · Price alert", f"{sym} {'▲ rose above' if up else '▼ fell below'} {p}"
+        return "MATRIX · تنبيه سعر", f"{sym} {'▲ تجاوز' if up else '▼ نزل تحت'} {p}"
+    name = _IND_NAMES[lang].get(ev["alert_type"], str(ev["alert_type"]).upper())
+    cond = _COND_WORDS[lang].get(ev["condition"], ev["condition"])
+    val = f" {_fmt_price(ev['value'])}" if ev.get("value") is not None and ev["alert_type"] == "rsi" else ""
+    tf = f" · {ev['timeframe']}" if ev.get("timeframe") else ""
+    title = "MATRIX · Indicator alert" if lang == "en" else "MATRIX · تنبيه مؤشر"
+    return title, f"{sym} · {name} {cond}{val}{tf}"
+
+
 def _check_once() -> None:
-    # (owner user_id, message) — each push goes only to the alert owner's devices (it used to
+    # (owner user_id, event) — each push goes only to the alert owner's devices (it used to
     # go to every registered device, leaking one trader's alerts to all the others).
-    triggered_msgs: list[tuple[int | None, str]] = []
+    triggered_msgs: list[tuple[int | None, dict]] = []
 
     for a in db.list_alerts(all_users=True):
         try:
@@ -85,7 +126,10 @@ def _check_once() -> None:
             )
             if hit:
                 db.mark_alert_triggered(a["id"])
-                triggered_msgs.append((a.get("user_id"), f"{a['symbol']} price {a['condition']} {a['price']}"))
+                triggered_msgs.append((
+                    a.get("user_id"),
+                    {"kind": "price", "symbol": a["symbol"], "condition": a["condition"], "price": a["price"]},
+                ))
         except Exception:
             log.exception(
                 "price alert processing failed id=%s symbol=%s",
@@ -99,9 +143,17 @@ def _check_once() -> None:
                 continue
             if _check_indicator(a):
                 db.mark_indicator_alert_triggered(a["id"])
-                triggered_msgs.append(
-                    (a.get("user_id"), f"{a['symbol']} {a['alert_type']} {a['condition']}")
-                )
+                triggered_msgs.append((
+                    a.get("user_id"),
+                    {
+                        "kind": "indicator",
+                        "symbol": a["symbol"],
+                        "alert_type": a["alert_type"],
+                        "condition": a["condition"],
+                        "value": a.get("value"),
+                        "timeframe": a.get("timeframe"),
+                    },
+                ))
         except Exception:
             log.exception(
                 "indicator alert processing failed id=%s symbol=%s",
@@ -111,14 +163,19 @@ def _check_once() -> None:
 
     if not triggered_msgs:
         return
-    for owner, msg in triggered_msgs:
-        tokens = db.push_tokens_for(owner)
-        if not tokens:
+    for owner, ev in triggered_msgs:
+        targets = db.push_targets_for(owner)
+        if not targets:
             continue
-        try:
-            result = expo_push.send_push(tokens, "MATRIX · تنبيه", msg, {})
-            for tok in result.get("invalid_tokens") or []:
-                db.delete_push_token(tok)
-                log.info("removed invalid push token (%s…)", tok[:24])
-        except Exception:
-            log.exception("push send failed for message: %s", msg)
+        by_lang: dict[str, list[str]] = {}
+        for tok, lang in targets:
+            by_lang.setdefault(_push_lang(lang), []).append(tok)
+        for lang, tokens in by_lang.items():
+            title, body = _compose(ev, lang)
+            try:
+                result = expo_push.send_push(tokens, title, body, {})
+                for tok in result.get("invalid_tokens") or []:
+                    db.delete_push_token(tok)
+                    log.info("removed invalid push token (%s…)", tok[:24])
+            except Exception:
+                log.exception("push send failed for message: %s", body)

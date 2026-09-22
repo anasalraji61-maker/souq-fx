@@ -1,7 +1,20 @@
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
+
+/** مفتاح لغة الواجهة المحفوظ (نفس `KEY` بـ`i18n/I18nContext.tsx`) — يُرسل مع توكن الـPush ليصل
+ * إشعار التنبيه من الخادم بلغة المتداول لا بنص إنجليزي خام. */
+const LANG_KEY = 'matrix.lang.v1';
+
+async function savedLang(): Promise<string | undefined> {
+  try {
+    return (await AsyncStorage.getItem(LANG_KEY)) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -44,7 +57,7 @@ export async function registerPushToken(): Promise<void> {
     const tokenData = await Notifications.getExpoPushTokenAsync(
       projectId ? { projectId } : undefined
     );
-    await api.registerPush(tokenData.data, Platform.OS);
+    await api.registerPush(tokenData.data, Platform.OS, await savedLang());
   } catch {
     /* Expo Go may lack projectId — local alerts still work */
   }
