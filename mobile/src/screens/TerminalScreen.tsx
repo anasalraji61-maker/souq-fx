@@ -540,6 +540,15 @@ export function TerminalScreen() {
 
   const loadTerminal = useCallback(
     async (tfs: Timeframe[], dxyTimeframe: Timeframe = '15m') => {
+      // نفس عدّادات الأجيال التي يستخدمها تبديل رمز فريم/الشارت الرئيسي: التحديث الدوري (كل 90 ثانية) كان
+      // بلا حارس، فإن بدأ قبل تبديل EURUSD → USDJPY ووصل بعده أعاد شموع EURUSD للفريم تحت اسم USDJPY.
+      // كل نتيجة تُكتب فقط إن لم يبدأ بعدها تحميل أحدث لنفس الخانة.
+      const heroGen = ++dxyLoadGen.current;
+      const frameGens = frameLoadGen.current.map((_, i) => ++frameLoadGen.current[i]);
+      const apply = (hero: ChartSeries, frs: ChartSeries[]) => {
+        if (heroGen === dxyLoadGen.current) setDxy(hero);
+        setFrames((prev) => prev.map((old, i) => (frameGens[i] === frameLoadGen.current[i] ? frs[i] : old)));
+      };
       try {
         const [heroSeries, a, b, c] = await Promise.all([
           api.chart(heroSymbol, dxyTimeframe),
@@ -547,12 +556,13 @@ export function TerminalScreen() {
           api.chart(frameSymbols[1], tfs[1]),
           api.chart(frameSymbols[2], tfs[2]),
         ]);
-        setDxy(heroSeries);
-        setFrames([a, b, c]);
+        apply(heroSeries, [a, b, c]);
         setOnline(true);
       } catch {
-        setDxy(offlineFrame(heroSymbol, dxyTimeframe));
-        setFrames(frameSymbols.map((s, i) => offlineFrame(s, tfs[i])));
+        apply(
+          offlineFrame(heroSymbol, dxyTimeframe),
+          frameSymbols.map((s, i) => offlineFrame(s, tfs[i]))
+        );
         setOnline(false);
       }
     },
@@ -598,6 +608,8 @@ export function TerminalScreen() {
   // سبريد Bid/Ask للرمز الحالي — بند 2 من قائمة الإطلاق (أولوية طارئة، docs/ROADMAP.md)
   useEffect(() => {
     let alive = true;
+    // لا نُبقي Bid/Ask الرمز السابق تحت اسم الرمز الجديد حتى يصل الرد
+    setQuote(null);
     const loadQuote = () => {
       api
         .marketQuote(symbol)
