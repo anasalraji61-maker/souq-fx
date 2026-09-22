@@ -2,7 +2,9 @@
   "expo": {
     "name": "MATRIX",
     "slug": "matrix",
-    "version": "0.1.0",
+    "description": "MATRIX Charts — شارتات وتحليل فني للمتداول الفردي: مؤشرات معروفة، أدوات رسم، تنبيهات أسعار، تقويم اقتصادي وأكاديمية صوتية. تطبيق تحليل وتعليم فقط؛ لا ينفّذ صفقات ولا يقدّم نصيحة استثمارية.",
+    "primaryColor": "#2DD4BF",
+    "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
