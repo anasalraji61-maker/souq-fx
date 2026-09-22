@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -32,6 +32,7 @@ import { GroupChatPanel } from '../components/GroupChatPanel';
 import { VotePanel } from '../components/VotePanel';
 import { FrameSizedGrid } from '../components/FrameSizedGrid';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
+import { ensureWatchlistLoaded, subscribeWatchlist } from '../chart/watchlistStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useI18n } from '../i18n/I18nContext';
 import type { Dict } from '../i18n/locales';
@@ -101,6 +102,15 @@ function buildHubSections(t: Dict): { id: HubSection; label: string; mark: strin
   ];
 }
 
+/** التبويبات التي يقود فيها الرمز المحتوى فعلاً — شريط الرموز يظهر فوقها وحدها (لا بالتخطيطات/
+ * التقارير/الماسح، فالرمز لا يعني شيئاً هناك). */
+const SYMBOL_TABS: readonly TabId[] = ['hub', 'journal', 'risk', 'backtest', 'indAlerts', 'calendar'];
+/** احتياط حين تتعذّر قراءة قائمة المتابعة (تخزين معطَّل/أول تشغيل) — أشهر ما يتابعه متداول فردي */
+const FALLBACK_SYMBOLS = ['EURUSD', 'GBPUSD', 'XAUUSD', 'DXY'];
+/** آخر رمز اختاره المتداول بشاشة الأدوات — يبقى بين الجلسات كبقية تفضيلات الشاشة */
+const TOOLS_SYMBOL_KEY = 'matrix.tools.symbol.v1';
+const MAX_SYMBOL_CHIPS = 8;
+
 const HUB_COMMUNITY_ORDER = ['news', 'social', 'chat', 'votes'] as const;
 const HUB_ANALYSIS_ORDER = ['ai', 'analysts', 'forecast', 'alerts'] as const;
 
@@ -115,6 +125,11 @@ export function ToolsScreen() {
   const [hubSection, setHubSection] = useState<HubSection>('community');
   const [tf, setTf] = useState<Timeframe>('15m');
   const [signalSym, setSignalSym] = useState('EURUSD');
+  /** قائمة متابعة المتداول نفسها — الشرائح كانت أربعة رموز ثابتة، فمتابع XAGUSD/USDJPY لم يكن
+   * يجد زوجه بشاشة الأدوات إطلاقاً. null = لم تُقرأ بعد. */
+  const [watchSymbols, setWatchSymbols] = useState<string[] | null>(null);
+  /** استُعيد الرمز المحفوظ؟ قبلها لا نكتب فوقه (الكتابة الأولى كانت ستحفظ EURUSD الافتراضي) */
+  const [symbolRestored, setSymbolRestored] = useState(false);
   const [selected, setSelected] = useState<string[]>(['ma_cross_up']);
   const [results, setResults] = useState<Hit[]>([]);
   const [providerConfigured, setProviderConfigured] = useState<boolean | null>(null);
@@ -129,6 +144,52 @@ export function ToolsScreen() {
   const [frameSymbols, setFrameSymbols] = useState<[string, string, string]>(
     DEFAULT_LAYOUT.frameSymbols
   );
+
+  useEffect(() => {
+    let alive = true;
+    const unsub = subscribeWatchlist((symbols) => {
+      if (alive) setWatchSymbols(symbols);
+    });
+    ensureWatchlistLoaded().catch(() => {
+      /* تعذّر التخزين — تبقى قائمة الاحتياط */
+    });
+    return () => {
+      alive = false;
+      unsub();
+    };
+  }, []);
+
+  // الرمز المختار يبقى بين الجلسات: فتح «الأدوات» كان يعود لـEURUSD مهما كان زوج المتداول
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(TOOLS_SYMBOL_KEY);
+        if (alive && raw && /^[A-Z0-9._-]{3,15}$/.test(raw)) setSignalSym(raw);
+      } catch {
+        /* ignore */
+      } finally {
+        if (alive) setSymbolRestored(true);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+  useEffect(() => {
+    if (!symbolRestored) return;
+    AsyncStorage.setItem(TOOLS_SYMBOL_KEY, signalSym).catch(() => {
+      /* ignore */
+    });
+  }, [signalSym, symbolRestored]);
+
+  /** الرموز المعروضة: قائمة المتابعة (أول 8) ومعها الرمز المختار دوماً — وإلا اختفت الشريحة
+   * المفعَّلة حين يُحذف الزوج من المتابعة وبقي المحتوى تحته بلا ما يدلّ عليه. */
+  const symbolChoices = useMemo(() => {
+    const base = watchSymbols && watchSymbols.length > 0 ? watchSymbols : FALLBACK_SYMBOLS;
+    const list = base.slice(0, MAX_SYMBOL_CHIPS);
+    return list.includes(signalSym) ? list : [signalSym, ...list].slice(0, MAX_SYMBOL_CHIPS);
+  }, [watchSymbols, signalSym]);
 
   // يُعاد القراءة عند كل عودة للتبويب: كانت تُقرأ مرة عند التركيب فقط، فتغيير أزواج/فريمات الشارت بالشاشة
   // الرئيسية ثم «حفظ التخطيط الحالي» هنا يحفظ إعداداً قديماً، و«الحالي» يُعلَّم على تخطيط غير المطبَّق.
@@ -240,6 +301,35 @@ export function ToolsScreen() {
         </View>
       </ScrollView>
 
+      {SYMBOL_TABS.includes(tab) ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.symBarScroll}
+          contentContainerStyle={[styles.symBar, rtl && styles.symBarRtl]}
+        >
+          {symbolChoices.map((s) => (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected: signalSym === s }}
+              key={s}
+              style={({ pressed }) => [
+                styles.chip,
+                signalSym === s && styles.chipOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => setSignalSym(s)}
+              accessibilityLabel={`${t.a11ySignalSymbolPrefix}: ${s}`}
+            >
+              <Text style={[styles.chipText, signalSym === s && styles.chipTextOn]}>{s}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      ) : null}
+
       {tab === 'hub' ? (
         <ScrollView
           style={styles.pageScroll}
@@ -249,26 +339,6 @@ export function ToolsScreen() {
         >
           <View style={styles.toolbar}>
             <TimeframeBar value={tf} onChange={setTf} compact />
-            <View style={[styles.filters, rtl && styles.filtersRtl]}>
-              {['EURUSD', 'GBPUSD', 'XAUUSD', 'DXY'].map((s) => (
-                <Pressable
-                  accessibilityRole="button"
-                  key={s}
-                  style={({ pressed }) => [
-                    styles.chip,
-                    signalSym === s && styles.chipOn,
-                    pressed && {
-                      opacity: buttons.pressedOpacity,
-                      transform: [{ scale: buttons.pressedScale }],
-                    },
-                  ]}
-                  onPress={() => setSignalSym(s)}
-                  accessibilityLabel={`${t.a11ySignalSymbolPrefix}: ${s}`}
-                >
-                  <Text style={[styles.chipText, signalSym === s && styles.chipTextOn]}>{s}</Text>
-                </Pressable>
-              ))}
-            </View>
           </View>
           <View style={[styles.hubSectionTabs, rtl && styles.hubSectionTabsRtl]}>
             {HUB_SECTIONS.map((s) => (
@@ -552,6 +622,9 @@ const styles = StyleSheet.create({
   tabsScroll: { maxHeight: 52, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
   tabs: { flexDirection: 'row', padding: spacing.sm, gap: spacing.sm },
   tabsRtl: { flexDirection: 'row-reverse' },
+  symBarScroll: { maxHeight: 46, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
+  symBar: { flexDirection: 'row', paddingHorizontal: spacing.sm, paddingVertical: spacing.sm, gap: 6 },
+  symBarRtl: { flexDirection: 'row-reverse' },
   tab: {
     flexDirection: 'row',
     alignItems: 'center',
