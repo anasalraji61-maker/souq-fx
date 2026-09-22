@@ -46,10 +46,27 @@ export async function getNotificationPermissionState(): Promise<NotificationPerm
   return 'undetermined';
 }
 
+/**
+ * تسجيل توكن الدفع بالخادم — **بلا استدراج نافذة الإذن**. كانت الدالة تنادي
+ * `ensureAlertNotifications()` بنفسها، وهي تنادي `requestPermissionsAsync`؛ ومناداتها من
+ * `App.tsx` عند الإقلاع كانت تعني أن **أول ما يراه المتداول بأول فتح للتطبيق نافذةُ نظامٍ تطلب
+ * إذن الإشعارات** — فوق الجولة الترحيبية التي تُركَّب باللحظة نفسها، وقبل أن يعرف أن بالتطبيق
+ * تنبيهات أسعار أصلاً. وiOS يسأل **مرة واحدة بالعمر**: رفضٌ هنا يعني أن كل تنبيه سعر يضعه
+ * المتداول لاحقاً لن يصله إشعار، ولا سبيل لإعادة السؤال إلا بإرساله لإعدادات النظام.
+ * السؤال يقع الآن حيث يعني شيئاً وحسب: لوح التنبيهات عند فتحه، وزرّ «تفعيل الإشعارات» بالحساب —
+ * وكلاهما ينادي `ensureAlertNotifications()` صراحةً قبل التسجيل. وما عداهما (الإقلاع، وتسجيل
+ * الدخول/إنشاء الحساب) يسجّل التوكن إن كان الإذن ممنوحاً من قبل، وإلا لا يفعل شيئاً.
+ */
 export async function registerPushToken(): Promise<void> {
   if (Platform.OS === 'web') return;
-  const ok = await ensureAlertNotifications();
-  if (!ok) return;
+  // `getPermissionsAsync` قد يرفض بحالات أندرويد/Expo Go — لا إذن معروف = لا تسجيل، بلا استثناء طائر
+  let granted = false;
+  try {
+    granted = (await Notifications.getPermissionsAsync()).status === 'granted';
+  } catch {
+    return;
+  }
+  if (!granted) return;
   try {
     const projectId =
       Constants.expoConfig?.extra?.eas?.projectId ??

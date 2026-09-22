@@ -54,6 +54,9 @@ function RootTabs() {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
+    // تسجيل توكن الدفع عند الإقلاع **لمن سبق أن منح الإذن فقط**: `registerPushToken` لم تعد
+    // تفتح نافذة إذن (راجع `src/notifications.ts`) — فأول فتح للتطبيق لم يعد يبدأ بنافذة نظام
+    // فوق الجولة الترحيبية، والسؤال يقع بلوح التنبيهات أو بزرّ الحساب حيث يعرف المتداول لماذا.
     void registerPushToken();
   }, []);
 
