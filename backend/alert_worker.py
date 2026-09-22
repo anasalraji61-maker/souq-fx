@@ -94,17 +94,34 @@ def _price_hit(a: dict, q: float, candles: list[dict]) -> bool:
     return False
 
 
-def _check_indicator(a: dict) -> bool:
+def _indicator_series(a: dict, cache: dict | None = None) -> list[dict] | None:
+    """سلسلة 80 شمعة لرمز/فريم التنبيه — **طلب واحد لكل (رمز، فريم) بالدورة** عبر `cache`.
+    كانت كل تنبيهات المؤشر تجلب سلسلتها منفردة (5 تنبيهات RSI/تقاطع على EURUSD 1h = 5 طلبات للمزوّد
+    كل دقيقة — تستنزف حد Twelve Data كما كانت تنبيهات السعر). الفشل يُخزَّن أيضاً (None) فلا يُعاد
+    الطلب لنفس المفتاح بنفس الدورة بعد 429."""
+    key = (str(a["symbol"]).upper(), str(a["timeframe"]))
+    if cache is not None and key in cache:
+        return cache[key]
+    raw: list[dict] | None
     try:
         raw = market.fetch_time_series(a["symbol"], a["timeframe"], outputsize=80)
     except Exception:
         log.warning(
             "indicator series fetch failed for %s (%s)",
             a.get("symbol"),
-            a.get("alert_type"),
+            a.get("timeframe"),
             exc_info=True,
         )
-        return False
+        raw = None
+    if cache is not None:
+        cache[key] = raw
+    return raw
+
+
+def _check_indicator(a: dict, cache: dict | None = None) -> bool:
+    raw = _indicator_series(a, cache)
+    if raw is None:
+        return False  # فشل الجلب سُجّل مرة واحدة بـ_indicator_series
     if not raw:
         log.warning(
             "indicator series empty for %s (%s)",
@@ -199,11 +216,12 @@ def _check_once() -> None:
                 a.get("symbol"),
             )
 
+    series: dict[tuple[str, str], list[dict] | None] = {}  # (رمز، فريم) → سلسلة، مرة واحدة بالدورة
     for a in db.list_indicator_alerts(all_users=True):
         try:
             if not a.get("active") or a.get("triggered"):
                 continue
-            if _check_indicator(a) and db.mark_indicator_alert_triggered(a["id"]):
+            if _check_indicator(a, series) and db.mark_indicator_alert_triggered(a["id"]):
                 triggered_msgs.append((
                     a.get("user_id"),
                     a.get("owner_key"),
