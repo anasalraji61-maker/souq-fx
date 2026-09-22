@@ -62,12 +62,27 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
     };
     setMessages((m) => [...m, local]);
     try {
-      await api.postGroup(msg);
+      const r = await api.postGroup(msg);
+      if (r && r.ok === false && r.error === 'login_required') {
+        // غير مسجّل: الرسالة لم تُنشر — أزلها وأعد النص للحقل واشرح السبب (لا اختفاء صامت)
+        setMessages((m) => m.filter((x) => x.id !== local.id));
+        setText(msg);
+        setNotice(t.chatLoginRequired);
+        return;
+      }
+      if (r && r.message) {
+        const saved: ChatMsg = { ...r.message, mine: true };
+        setMessages((m) => m.map((x) => (x.id === local.id ? saved : x)));
+      }
       setNotice(null);
     } catch {
       setNotice(t.chatSendError);
     }
   };
+
+  /** رسالتي: من الخادم (`mine`) أو المحلية قبل وصول الرد. لا مقارنة بالاسم «أنت» — كان كل
+   * الرسائل القديمة محفوظة بـ«أنت» فتظهر كلها كأنها رسائلك. */
+  const isMine = (m: ChatMsg) => m.mine === true || m.id.startsWith('local-');
 
   return (
     <View style={[styles.panel, embedded && styles.panelInFrame]}>
@@ -91,9 +106,11 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
         {messages.map((m) => (
           <View
             key={m.id}
-            style={[styles.bubble, m.user === t.chatYou && styles.mine]}
+            style={[styles.bubble, isMine(m) && styles.mine]}
           >
-            <Text style={[styles.user, { textAlign: align }]}>{m.user}</Text>
+            <Text style={[styles.user, { textAlign: align }]}>
+              {isMine(m) ? t.chatYou : (m.user ?? t.chatAnonTrader)}
+            </Text>
             <Text style={[styles.msg, { textAlign: align }]}>{m.text}</Text>
             <Text style={styles.ts}>{m.ts}</Text>
           </View>

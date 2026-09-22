@@ -165,6 +165,8 @@ export type Dict = {
   chatEmpty: string;
   chatSendError: string;
   chatYou: string;
+  chatAnonTrader: string;
+  chatLoginRequired: string;
   chatInputPlaceholder: string;
   chatInputA11y: string;
   chatSendA11y: string;
@@ -886,6 +888,8 @@ const ar: Dict = {
   chatEmpty: 'لا توجد رسائل بعد — كن أول من يكتب',
   chatSendError: 'تعذر إرسال رسالتك للمجموعة — قد لا تصل، حاول لاحقاً',
   chatYou: 'أنت',
+  chatAnonTrader: 'متداول',
+  chatLoginRequired: 'سجّل الدخول للمشاركة بمحادثة المجموعة — رسائلك تظهر باسم حسابك',
   chatInputPlaceholder: 'اكتب رسالة...',
   chatInputA11y: 'رسالة الدردشة الجماعية',
   chatSendA11y: 'إرسال رسالة الدردشة الجماعية',
@@ -1616,6 +1620,8 @@ const enUS: Dict = {
   chatEmpty: 'No messages yet — be the first to write',
   chatSendError: 'Could not send your message to the group — it may not arrive, try later',
   chatYou: 'You',
+  chatAnonTrader: 'Trader',
+  chatLoginRequired: 'Sign in to post in the group chat — your messages show under your account name',
   chatInputPlaceholder: 'Type a message...',
   chatInputA11y: 'Group chat message',
   chatSendA11y: 'Send group chat message',
@@ -2365,6 +2371,8 @@ const ku: Dict = {
   chatEmpty: 'هێشتا هیچ نامەیەک نییە — یەکەم کەس بە بۆ نووسین',
   chatSendError: 'نەکرا نامەکەت بۆ گروپ بنێردرێت — لەوانەیە نەگات، دواتر هەوڵبدەرەوە',
   chatYou: 'تۆ',
+  chatAnonTrader: 'بازرگان',
+  chatLoginRequired: 'بۆ نووسین لە گفتوگۆی گروپ بچۆ ژوورەوە — نامەکانت بە ناوی هەژمارەکەت دەردەکەون',
   chatInputPlaceholder: 'نامەیەک بنووسە...',
   chatInputA11y: 'نامەی گفتوگۆی گروپی',
   chatSendA11y: 'ناردنی نامەی گفتوگۆی گروپی',

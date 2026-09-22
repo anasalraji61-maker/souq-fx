@@ -101,12 +101,9 @@ class ChartSeries(BaseModel):
 
 
 class ChatMessage(BaseModel):
-    id: str
-    user: str
-    text: str
-    ts: str
-    room: Literal["group", "dm"] = "group"
-    peer: str | None = None
+    # الحقول الأخرى التي ترسلها نسخ أقدم (id/user/ts/room/peer) تُتجاهَل: الخادم يحدد المعرّف
+    # والوقت واسم المرسل من التوكن — الاسم لم يعد نصاً حرّاً يتيح انتحال أي متداول.
+    text: str = Field(min_length=1, max_length=1000)
 
 
 class VoteCreate(BaseModel):
@@ -1037,17 +1034,28 @@ def trades_delete(trade_id: str, user: dict | None = Depends(_auth_user)):
 
 
 @app.get("/api/chat/group")
-def group_chat():
-    return {"messages": db.group_messages()}
+def group_chat(user: dict | None = Depends(_auth_user)):
+    return {"messages": db.group_messages(user["user_id"] if user else None)}
 
 
 @app.post("/api/chat/group")
-def post_group(msg: ChatMessage):
-    item = msg.model_dump()
-    if not item.get("ts"):
-        item["ts"] = datetime.now().strftime("%H:%M")
-    db.add_group_message(item)
-    return {"ok": True, "message": item}
+def post_group(msg: ChatMessage, user: dict | None = Depends(_auth_user)):
+    # كانت بلا مصادقة واسم المرسل نص حرّ من العميل («أنت» دائماً) → الجميع «أنت» وانتحال سهل.
+    # الآن المشاركة للمسجّل فقط وباسم حسابه؛ القراءة تبقى متاحة للجميع.
+    if not user:
+        return {"ok": False, "error": "login_required"}
+    text = msg.text.strip()
+    if not text:
+        return {"ok": False, "error": "empty"}
+    item = {
+        "id": _new_id("g"),
+        "user": user["username"],
+        "text": text,
+        "ts": datetime.now().strftime("%H:%M"),
+        "room": "group",
+    }
+    db.add_group_message(item, user["user_id"])
+    return {"ok": True, "message": {**item, "mine": True}}
 
 
 # --- الرسائل الخاصة معطّلة للإطلاق العام ---

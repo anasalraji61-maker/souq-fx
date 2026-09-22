@@ -146,6 +146,14 @@ def init_db() -> None:
         _migrate_commission_ledger(c)
         _migrate_user_email(c)
         _migrate_push_lang(c)
+        _migrate_group_user(c)
+
+
+def _migrate_group_user(c: sqlite3.Connection) -> None:
+    """مالك رسالة المجموعة — لتمييز «رسائلي» ولمحوها عند حذف الحساب (كان الاسم نصاً حرّاً فقط)."""
+    cols = {r[1] for r in c.execute("PRAGMA table_info(group_messages)").fetchall()}
+    if "user_id" not in cols:
+        c.execute("ALTER TABLE group_messages ADD COLUMN user_id INTEGER")
 
 
 def _migrate_push_lang(c: sqlite3.Connection) -> None:
@@ -805,7 +813,7 @@ def delete_user_account(user_id: int) -> None:
     الشخصية القابلة للتعريف (username → معرّف مجهول ثابت غير قابل لتسجيل دخول،
     email → NULL، password_hash → قيمة عشوائية غير صالحة أبداً لأي كلمة مرور حقيقية)،
     وتُلغى كل الجلسات النشطة فوراً، ويُحذف المحتوى الشخصي البحت غير المرجعي من طرف
-    آخر (تنبيهات الأسعار والمؤشرات، دفتر الصفقات، تخطيطات الشارت المحفوظة، رمز إشعارات Push، سجل أصواته على أفكار الصفقات — العدّادات تبقى، قائمة المتابعة المخصّصة، تقدّم الأكاديمية، واسمه كناشر لأفكار الصفقات). هذا يحقق
+    آخر (تنبيهات الأسعار والمؤشرات، دفتر الصفقات، تخطيطات الشارت المحفوظة، رمز إشعارات Push، سجل أصواته على أفكار الصفقات — العدّادات تبقى، قائمة المتابعة المخصّصة، تقدّم الأكاديمية، رسائله بمحادثة المجموعة، واسمه كناشر لأفكار الصفقات). هذا يحقق
     الشرط الفعلي لأبل (إزالة البيانات الشخصية القابلة للتعريف) دون كسر شجرة العمولات.
     """
     placeholder = f"deleted_user_{user_id}"
@@ -830,6 +838,7 @@ def delete_user_account(user_id: int) -> None:
         # قائمة المتابعة المخصّصة وتقدّم الأكاديمية بيانات شخصية أيضاً وكانت تبقى بعد الحذف
         c.execute("DELETE FROM watchlist WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM academy_progress WHERE user_id=?", (user_id,))
+        c.execute("DELETE FROM group_messages WHERE user_id=?", (user_id,))
 
 
 # ─── Alerts ───────────────────────────────────────────────────────────────────
@@ -932,22 +941,36 @@ def mark_alert_triggered(alert_id: str) -> None:
 
 # ─── Chat / votes ─────────────────────────────────────────────────────────────
 
-def group_messages() -> list[dict]:
+# كل رسالة مجموعة كانت تُحفظ باسم «أنت» (العميل يرسله ثابتاً) → كل متداول يرى رسائل الجميع «أنت»
+# ومُعلَّمة كأنها رسائله. تلك الصفوف القديمة تُعرض الآن بلا اسم (الواجهة تكتب «متداول»).
+_LEGACY_CHAT_USER = "أنت"
+
+
+def group_messages(viewer_id: int | None = None, limit: int = 200) -> list[dict]:
     with _conn() as c:
         rows = c.execute(
-            "SELECT id,user_name,text,ts FROM group_messages ORDER BY rowid"
+            "SELECT id,user_name,text,ts,user_id FROM group_messages ORDER BY rowid DESC LIMIT ?",
+            (limit,),
         ).fetchall()
+    rows = list(reversed(rows))
     return [
-        {"id": r["id"], "user": r["user_name"], "text": r["text"], "ts": r["ts"], "room": "group"}
+        {
+            "id": r["id"],
+            "user": None if r["user_name"] in ("", _LEGACY_CHAT_USER) else r["user_name"],
+            "text": r["text"],
+            "ts": r["ts"],
+            "room": "group",
+            "mine": viewer_id is not None and r["user_id"] == viewer_id,
+        }
         for r in rows
     ]
 
 
-def add_group_message(item: dict) -> dict:
+def add_group_message(item: dict, user_id: int | None = None) -> dict:
     with _conn() as c:
         c.execute(
-            "INSERT INTO group_messages(id,user_name,text,ts) VALUES(?,?,?,?)",
-            (item["id"], item["user"], item["text"], item["ts"]),
+            "INSERT INTO group_messages(id,user_name,text,ts,user_id) VALUES(?,?,?,?,?)",
+            (item["id"], item["user"], item["text"], item["ts"], user_id),
         )
     return item
 

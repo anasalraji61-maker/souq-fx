@@ -112,11 +112,14 @@ export type PriceAlert = {
 
 export type ChatMsg = {
   id: string;
-  user: string;
+  /** اسم حساب المرسل؛ null لرسالة قديمة بلا مرسل معروف (الواجهة تكتب «متداول») */
+  user: string | null;
   text: string;
   ts: string;
   room?: string;
   peer?: string;
+  /** رسالة المستخدم الحالي (يحددها الخادم من التوكن؛ باك-إند أقدم لا يرسله) */
+  mine?: boolean;
 };
 
 /**
@@ -327,14 +330,9 @@ export const api = {
       `/api/charts/${encodeURIComponent(symbol)}?timeframe=${encodeURIComponent(timeframe)}&outputsize=${Math.max(50, Math.min(5000, Math.round(outputsize)))}`
     ),
   groupChat: () => getJson<{ messages: ChatMsg[] }>('/api/chat/group'),
-  postGroup: (text: string, user = 'أنت') =>
-    postJson('/api/chat/group', {
-      id: `g${Date.now()}`,
-      user,
-      text,
-      ts: '',
-      room: 'group',
-    }),
+  /** الخادم يحدد المرسل من التوكن (المشاركة للمسجّل فقط → `login_required` للمجهول) */
+  postGroup: (text: string) =>
+    postJson<{ ok: boolean; message?: ChatMsg; error?: string }>('/api/chat/group', { text }),
   votes: () => getJson<{ votes: Vote[] }>('/api/votes'),
   createVote: (v: { symbol: string; direction: 'buy' | 'sell'; entry: number; sl: number; tp: number; note?: string }) =>
     postJson<{ ok: boolean; vote: Vote }>('/api/votes', v),
