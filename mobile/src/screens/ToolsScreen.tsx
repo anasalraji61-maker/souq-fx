@@ -32,6 +32,7 @@ import { GroupChatPanel } from '../components/GroupChatPanel';
 import { VotePanel } from '../components/VotePanel';
 import { FrameSizedGrid } from '../components/FrameSizedGrid';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
+import { formatPrice } from '../chart/math';
 import { ensureWatchlistLoaded, subscribeWatchlist } from '../chart/watchlistStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useI18n } from '../i18n/I18nContext';
@@ -555,7 +556,9 @@ export function ToolsScreen() {
                 >
                   <Text style={[styles.sym, { textAlign: align }]}>{r.symbol}</Text>
                   <Text style={[styles.meta, { textAlign: align }]}>
-                    {r.last} · RSI {r.rsi} ·{' '}
+                    {/* منازل السعر حسب الأداة لا حجم الرقم: كان هذا آخر موضع بالتطبيق يطبع سعراً خاماً
+                        من الباك-إند — «157.4» للين و«1.085» لليورو بالسطر الذي يفتح عليه المتداول الشارت. */}
+                    {formatPrice(r.last, r.symbol)} · RSI {r.rsi} ·{' '}
                     <Text
                       style={{
                         color: r.change_pct >= 0 ? colors.bull : colors.bear,
