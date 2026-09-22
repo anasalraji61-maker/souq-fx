@@ -129,6 +129,7 @@ export type Dict = {
   newsTitle: string;
   newsStale: string;
   newsEmpty: string;
+  newsLoadError: string;
   aiPanelTitle: string;
   aiGreeting: string;
   aiOfflineFallback: string;
@@ -874,6 +875,7 @@ const ar: Dict = {
   newsTitle: 'أخبار مؤثرة على الفوركس',
   newsStale: 'تعذر تحديث الأخبار — تُعرض بيانات محفوظة',
   newsEmpty: 'لا توجد أخبار حالياً',
+  newsLoadError: 'تعذّر تحميل الأخبار — تحقق من الاتصال وافتح اللوحة لاحقاً',
   aiPanelTitle: 'مساعد ذكاء اصطناعي',
   aiGreeting: 'أنا خبير تداول MATRIX. اسأل عن تحليل، سيناريو صفقة، إدارة مخاطر، أو علاقة الزوج بـ DXY.',
   aiOfflineFallback:
@@ -1628,6 +1630,7 @@ const enUS: Dict = {
   newsTitle: 'News affecting forex',
   newsStale: 'Could not refresh news — showing saved data',
   newsEmpty: 'No news right now',
+  newsLoadError: 'Couldn’t load news — check your connection and reopen the panel later',
   aiPanelTitle: 'AI assistant',
   aiGreeting:
     "I'm the MATRIX trading expert. Ask about analysis, a trade scenario, risk management, or the pair's relation to DXY.",
@@ -2402,6 +2405,7 @@ const ku: Dict = {
   newsTitle: 'هەواڵی کاریگەر لەسەر فۆرێکس',
   newsStale: 'نەکرا هەواڵ نوێبکرێتەوە — زانیاری پاشەکەوتکراو پیشان دەدرێت',
   newsEmpty: 'هیچ هەواڵێک لە ئێستادا نییە',
+  newsLoadError: 'نەکرا هەواڵەکان باربکرێن — پەیوەندییەکەت بپشکنە و دواتر پانێڵەکە بکەرەوە',
   aiPanelTitle: 'یاریدەدەری زیرەکی دەستکرد',
   aiGreeting:
     'من پسپۆڕی مامەڵەکردنی MATRIX ـم. پرسیار بکە دەربارەی شیکاری، دیمەنی مامەڵە، بەڕێوەبردنی مەترسی، یان پەیوەندی جووتەکە بە DXY.',

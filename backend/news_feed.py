@@ -1,6 +1,7 @@
-"""Forex news — RSS with static fallback."""
+"""Forex news — RSS only (no fabricated fallback headlines)."""
 from __future__ import annotations
 
+import hashlib
 import re
 import time
 import xml.etree.ElementTree as ET
@@ -10,30 +11,23 @@ import httpx
 _CACHE: list[dict] = []
 _CACHE_TS = 0.0
 TTL = 900
+# تعذّر كل المصادر: لا نخزّن «لا أخبار» 15 دقيقة — نعيد المحاولة بعد دقيقتين (كالتقويم).
+EMPTY_TTL = 120
 
 FEEDS = [
     "https://www.forexfactory.com/ffcal_week_this.xml",
     "https://feeds.feedburner.com/dailyfx/news",
 ]
 
-FALLBACK = [
-    {
-        "id": "n1",
-        "impact": "high",
-        "title": "قرار الفائدة الفيدرالي — توقع تثبيت",
-        "pair_effect": "DXY / EURUSD / XAUUSD",
-        "when": "اليوم",
-        "source": "matrix",
-    },
-    {
-        "id": "n2",
-        "impact": "high",
-        "title": "CPI الأمريكي — تذبذب متوقع على USD",
-        "pair_effect": "USD pairs",
-        "when": "هذا الأسبوع",
-        "source": "matrix",
-    },
-]
+# لا أخبار احتياطية: كانت «قرار الفائدة الفيدرالي — اليوم» و«CPI هذا الأسبوع» تُعرض كخبر حقيقي كلما
+# تعذّرت المصادر — متداول قد يتجنّب/يدخل صفقة على حدث مختلَق. قائمة فارغة → «لا توجد أخبار حالياً».
+FALLBACK: list[dict] = []
+
+
+def _stable_id(title: str) -> str:
+    """`hash()` لنصوص بايثون عشوائي لكل عملية (PYTHONHASHSEED) — معرّف ثابت بين إعادات التشغيل؛ من
+    العنوان وحده كي يُدمج الخبر نفسه من مصدرين."""
+    return "rss-" + hashlib.sha1(title.encode("utf-8")).hexdigest()[:12]
 
 
 def _impact_from_title(title: str) -> str:
@@ -60,7 +54,7 @@ def _parse_rss(xml_text: str, source: str) -> list[dict]:
         when = pub.text[:16] if pub is not None and pub.text else "اليوم"
         out.append(
             {
-                "id": f"rss-{hash(title) % 10_000_000}",
+                "id": _stable_id(title),
                 "impact": _impact_from_title(title),
                 "title": title,
                 "pair_effect": "Forex",
@@ -75,7 +69,7 @@ def _parse_rss(xml_text: str, source: str) -> list[dict]:
 
 def fetch_news() -> list[dict]:
     global _CACHE, _CACHE_TS
-    if _CACHE and time.time() - _CACHE_TS < TTL:
+    if time.time() - _CACHE_TS < (TTL if _CACHE else EMPTY_TTL) and _CACHE_TS:
         return _CACHE
 
     merged: list[dict] = []
@@ -90,6 +84,9 @@ def fetch_news() -> list[dict]:
 
     if not merged:
         merged = list(FALLBACK)
+    # نفس الخبر من مصدرين (أو مكرراً بالخلاصة) مرة واحدة — كان يُنتج مفتاح React مكرراً.
+    seen: set[str] = set()
+    merged = [n for n in merged if not (n["id"] in seen or seen.add(n["id"]))]
     _CACHE = merged[:20]
     _CACHE_TS = time.time()
     return _CACHE
