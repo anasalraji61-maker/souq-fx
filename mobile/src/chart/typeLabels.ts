@@ -82,3 +82,40 @@ export function localizedIndicators(t: Dict): typeof INDICATORS {
     return key ? { ...ind, label: t[key] } : ind;
   });
 }
+
+/**
+ * نصوص خاصة بالشارت ليست بعدُ في `i18n/locales.ts`.
+ *
+ * `locales.ts` ملك وكيل آخر بهذا المستودع ولا يُعدَّل من هنا، فحتى تُنقَل هذه المفاتيح
+ * إليه رسمياً تعيش هنا بثلاث لغات الواجهة نفسها (راجع «طلب تنسيق» بـdocs/LOG-CHART.md).
+ * لا تُضَف هنا نصوص جديدة إلا لهذا السبب بالضبط.
+ */
+export type ChartExtraLabels = {
+  undo: string;
+  undoA11y: string;
+  nothingToUndo: string;
+};
+
+const CHART_EXTRA: Record<'ar' | 'en' | 'ku', ChartExtraLabels> = {
+  ar: {
+    undo: 'تراجع',
+    undoA11y: 'تراجع عن آخر تغيير بالرسم',
+    nothingToUndo: 'لا يوجد ما يُتراجَع عنه',
+  },
+  en: {
+    undo: 'Undo',
+    undoA11y: 'Undo the last drawing change',
+    nothingToUndo: 'Nothing to undo',
+  },
+  ku: {
+    undo: 'گەڕاندنەوە',
+    undoA11y: 'گەڕاندنەوەی دوایین گۆڕانکاری لە کێشان',
+    nothingToUndo: 'هیچ شتێک نییە بگەڕێندرێتەوە',
+  },
+};
+
+export function chartExtraLabels(lang: string): ChartExtraLabels {
+  if (lang === 'ar') return CHART_EXTRA.ar;
+  if (lang === 'ku') return CHART_EXTRA.ku;
+  return CHART_EXTRA.en;
+}

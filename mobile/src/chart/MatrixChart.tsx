@@ -41,6 +41,7 @@ import { computeCvd, computeFootprint } from './orderflow';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
 import {
+  chartExtraLabels,
   localizedChartKinds,
   localizedDrawTools,
   localizedIndicators,
@@ -339,6 +340,16 @@ type DrawingHit = { id: string; dist: number } | null;
 /** نصف قطر مقبض الطرف بالبكسل — التقاطاً للتحديد وسحباً للتحريك (قيمة واحدة للاثنين). */
 const DRAW_HANDLE_R = 18;
 
+/** سقف لقطات التراجع — يكفي جلسة رسم كاملة ولا يكبر بلا حدّ بذاكرة الهاتف. */
+const DRAW_HISTORY_MAX = 25;
+
+let drawingSeq = 0;
+/** `d${Date.now()}` كان يتصادم عند رسمَين بنفس المللي ثانية (نقرتان سريعتان بخط أفقي). */
+function nextDrawingId(): string {
+  drawingSeq += 1;
+  return `d${Date.now()}_${drawingSeq}`;
+}
+
 /** أقرب مسافة بالبكسل بين نقطة وقطعة مستقيمة؛ `tMax > 1` يمدّها شعاعاً بعد الطرف الثاني. */
 function segmentDistance(
   px: number,
@@ -517,7 +528,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 }: Props,
   ref
 ) {
-  const { t: tr } = useI18n();
+  const { t: tr, lang } = useI18n();
+  const trx = useMemo(() => chartExtraLabels(lang), [lang]);
   const canPan = syncFollow ? false : (panControls ?? interactive);
   const candleBull = mutedCandles ? 'rgba(34,197,94,0.34)' : colors.bull;
   const candleBear = mutedCandles ? 'rgba(244,63,94,0.34)' : colors.bear;
@@ -544,6 +556,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [extraInd, setExtraInd] = useState<IndicatorId[]>(initialIndicators ?? []);
   const [tool, setTool] = useState<DrawTool>(initialTool ?? 'none');
   const [drawings, setDrawings] = useState<Drawing[]>([]);
+  // تراجع الرسم: لم يكن هناك أي تراجع إطلاقاً — خط ترند في غير موضعه كان يُصلَّح إما
+  // بتبديل الأداة لـ«تحديد» واصطياد طرفه ثم تأكيد حذف، أو بمسح كل الرسومات. لقطات
+  // محدودة العدد (لا حالة مشتقّة) لأن `drawings` بأكملها صغيرة ويحفظها التأثير الموجود.
+  const drawingsRef = useRef<Drawing[]>([]);
+  const drawHistory = useRef<Drawing[][]>([]);
+  const [canUndo, setCanUndo] = useState(false);
   const [pending, setPending] = useState<ChartPoint | null>(null);
   const [dragEnd, setDragEnd] = useState<ChartPoint | null>(null);
   const [cross, setCross] = useState<{ index: number; x: number; y: number } | null>(null);
@@ -889,6 +907,35 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
   }, [drawings, series.symbol, series.timeframe, persistDrawings, interactive]);
+
+  useEffect(() => {
+    drawingsRef.current = drawings;
+  }, [drawings]);
+
+  /** لقطة لما قبل التغيير — تُستدعى مرة واحدة قبل كل تعديل (ومرة واحدة عند بدء السحب). */
+  const pushDrawHistory = useCallback(() => {
+    const next = [...drawHistory.current, drawingsRef.current];
+    drawHistory.current = next.length > DRAW_HISTORY_MAX ? next.slice(-DRAW_HISTORY_MAX) : next;
+    setCanUndo(true);
+  }, []);
+
+  const undoDrawing = useCallback(() => {
+    const hist = drawHistory.current;
+    if (!hist.length) return;
+    const prev = hist[hist.length - 1]!;
+    drawHistory.current = hist.slice(0, -1);
+    setCanUndo(drawHistory.current.length > 0);
+    setDrawings(prev);
+    setSelectedId(null);
+    setPending(null);
+    setDragEnd(null);
+  }, []);
+
+  // تبديل الرمز/الفريم يحمّل رسومات أخرى، فتاريخ الرسم السابق لم يعد يخصّها.
+  useEffect(() => {
+    drawHistory.current = [];
+    setCanUndo(false);
+  }, [series.symbol, series.timeframe]);
 
   useEffect(() => {
     const unsub = subscribeDrawingsSaveError(setDrawingsSaveError);
@@ -1970,10 +2017,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         return;
       }
       if (t === 'hline' || t === 'vline' || t === 'note') {
+        pushDrawHistory();
         setDrawings((d) => [
           ...d,
           {
-            id: `d${Date.now()}`,
+            id: nextDrawingId(),
             tool: t,
             a,
             text: t === 'note' ? tr.mcNoteDefault : undefined,
@@ -1981,16 +2029,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           },
         ]);
       } else if (b) {
+        pushDrawHistory();
         setDrawings((d) => [
           ...d,
-          { id: `d${Date.now()}`, tool: t, a, b, color: accent },
+          { id: nextDrawingId(), tool: t, a, b, color: accent },
         ]);
       }
       setPending(null);
       setDragEnd(null);
       setTool('none');
     },
-    [tool, accent, tr]
+    [tool, accent, tr, pushDrawHistory]
   );
 
   const moveDrawing = useCallback((id: string, point: ChartPoint, end: 'a' | 'b') => {
@@ -2203,6 +2252,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           }
           dragging = db < da ? 'b' : 'a';
         }
+        // لقطة واحدة عند بدء السحب — لا لقطة لكل إطار حركة.
+        pushDrawHistory();
       },
       onPanResponderMove: (evt) => {
         if (!selectedId || !dragging) return;
@@ -2216,7 +2267,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         dragging = null;
       },
     });
-  }, [interactive, tool, selectedId, drawings, moveDrawing, pointFromXY, source.start, xOf, yOf]);
+  }, [
+    interactive,
+    tool,
+    selectedId,
+    drawings,
+    moveDrawing,
+    pointFromXY,
+    pushDrawHistory,
+    source.start,
+    xOf,
+    yOf,
+  ]);
 
   const applyChartDrag = useCallback(
     (dx: number, dy: number) => {
@@ -2647,6 +2709,41 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 </Text>
               </Pressable>
             ))}
+            {/* حذف العنصر المحدَّد كان بالرصيف الكامل وحده، فبالواجهة المدمجة (الهاتف)
+                لا سبيل لحذف رسم واحد إلا بمسح الكل. يظهر عند وجود تحديد فقط. */}
+            {selectedId ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={tr.deleteWord}
+                style={({ pressed }) => [
+                  styles.compactTool,
+                  pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                ]}
+                onPress={() => {
+                  pushDrawHistory();
+                  setDrawings((list) => list.filter((x) => x.id !== selectedId));
+                  setSelectedId(null);
+                }}
+              >
+                <Text style={[styles.compactToolIcon, { color: colors.bear }]}>✕</Text>
+                <Text style={styles.compactToolLabel}>{tr.deleteWord}</Text>
+              </Pressable>
+            ) : null}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={canUndo ? trx.undoA11y : trx.nothingToUndo}
+              accessibilityState={{ disabled: !canUndo }}
+              disabled={!canUndo}
+              style={({ pressed }) => [
+                styles.compactTool,
+                !canUndo && styles.toolDisabled,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
+              onPress={undoDrawing}
+            >
+              <Text style={styles.compactToolIcon}>↶</Text>
+              <Text style={styles.compactToolLabel}>{trx.undo}</Text>
+            </Pressable>
             <Pressable
               accessibilityRole="button"
               style={({ pressed }) => [
@@ -2660,8 +2757,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     text: tr.mcClearWord,
                     style: 'destructive',
                     onPress: () => {
+                      pushDrawHistory();
                       setDrawings([]);
                       setPending(null);
+                      setSelectedId(null);
                       void clearDrawings(series.symbol, series.timeframe);
                     },
                   },
@@ -7762,6 +7861,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ))}
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel={canUndo ? trx.undoA11y : trx.nothingToUndo}
+              accessibilityState={{ disabled: !canUndo }}
+              disabled={!canUndo}
+              style={({ pressed }) => [
+                styles.tool,
+                !canUndo && styles.toolDisabled,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
+              onPress={undoDrawing}
+            >
+              <Text style={styles.toolText}>↶ {trx.undo}</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.tool,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -7773,8 +7886,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     text: tr.mcClearWord,
                     style: 'destructive',
                     onPress: () => {
+                      pushDrawHistory();
                       setDrawings([]);
                       setPending(null);
+                      setSelectedId(null);
                       void clearDrawings(series.symbol, series.timeframe);
                     },
                   },
@@ -7868,17 +7983,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                   ]}
                   onPress={() => {
-                    Alert.alert(tr.mcDeleteDrawingTitle, tr.mcDeleteDrawingBody, [
-                      { text: tr.cancel, style: 'cancel' },
-                      {
-                        text: tr.deleteWord,
-                        style: 'destructive',
-                        onPress: () => {
-                          setDrawings((list) => list.filter((x) => x.id !== selectedId));
-                          setSelectedId(null);
-                        },
-                      },
-                    ]);
+                    // بلا نافذة تأكيد: حذف عنصر واحد صار قابلاً للتراجع بزرّ «تراجع»
+                    // المجاور، والتأكيد على كل حذف يجعل تنظيف الشارت عملاً شاقاً بالهاتف.
+                    pushDrawHistory();
+                    setDrawings((list) => list.filter((x) => x.id !== selectedId));
+                    setSelectedId(null);
                   }}
                 >
                   <Text style={styles.toolText}>{tr.deleteWord}</Text>
@@ -8296,6 +8405,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   toolOn: { backgroundColor: colors.warn, borderColor: colors.warn },
+  /** زرّ معطَّل (لا شيء للتراجع عنه) — باهت لا مخفيّ، فلا يقفز مكان الأزرار بالشريط. */
+  toolDisabled: { opacity: 0.35 },
   toolText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   toolTextOn: { color: '#111' },
   ind: {
