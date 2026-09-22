@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -50,6 +50,17 @@ export function CoursesScreen() {
    * [NewsPanel/GroupChatPanel/VotePanel/MessagesScreen] التي تُبذَر ببيانات mock ثم تحاول التحميل
    * الحي؛ لا تُفعَّل قبل أول محاولة فعلية — لا ادّعاء فشل قبل حدوثه). */
   const [schoolsStale, setSchoolsStale] = useState(false);
+  /** جيل طلب فتح المدرسة: يُزاد عند كل فتح وعند الإلغاء، فيُهمَل ردّ أي طلب لم يعد مطلوباً
+   * (إلغاء المتداول، أو إلغاء تركيب الشاشة بتبديل التبويب أثناء الجلب). */
+  const openGen = useRef(0);
+  const mounted = useRef(true);
+
+  useEffect(
+    () => () => {
+      mounted.current = false;
+    },
+    []
+  );
 
   useEffect(() => {
     // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب الشاشة قبل اكتمال الطلب — نفس نمط
@@ -71,13 +82,27 @@ export function CoursesScreen() {
     };
   }, []);
 
+  /** إلغاء الفتح: يغلق الورقة ويُبطل ردّ الطلب الجاري بزيادة الجيل. */
+  const cancelOpen = () => {
+    openGen.current += 1;
+    setLoadingSchool(false);
+    setSchool(null);
+  };
+
   const openSchool = async (id: string) => {
+    // نقرة ثانية على بطاقة أخرى أثناء الجلب كانت تُطلق طلباً ثانياً ويفوز أبطؤهما بالعرض.
+    if (loadingSchool) return;
+    const gen = openGen.current + 1;
+    openGen.current = gen;
+    const fresh = () => mounted.current && openGen.current === gen;
     setLoadingSchool(true);
     setSchoolFallback(false);
     try {
       const detail = await api.academySchool(id);
+      if (!fresh()) return;
       setSchool(detail);
     } catch {
+      if (!fresh()) return;
       const summary = schools.find((s) => s.id === id);
       if (summary) {
         setSchoolFallback(true);
@@ -104,7 +129,7 @@ export function CoursesScreen() {
         });
       }
     } finally {
-      setLoadingSchool(false);
+      if (mounted.current && openGen.current === gen) setLoadingSchool(false);
     }
   };
 
@@ -172,11 +197,38 @@ export function CoursesScreen() {
         ))}
       </ScrollView>
 
-      <Modal visible={!!school} animationType="slide" transparent onRequestClose={() => setSchool(null)}>
+      {/* الورقة تُفتح **بمجرّد النقر** لا بعد وصول الردّ: كانت `visible={!!school}` وحدها، و`school`
+          دائماً `null` لحظة النقر (تُمسح عند الإغلاق)، فكان مؤشّر التحميل بداخلها شيفرةً ميتة —
+          يضغط المتداول بطاقة المدرسة فلا يحدث **شيء مرئي** حتى يردّ الخادم. */}
+      <Modal
+        visible={!!school || loadingSchool}
+        animationType="slide"
+        transparent
+        onRequestClose={cancelOpen}
+      >
         <View style={styles.modalBg}>
           <View style={styles.modal}>
             {loadingSchool ? (
-              <ActivityIndicator color={colors.accent} />
+              <>
+                <ActivityIndicator color={colors.accent} />
+                {/* مخرج أثناء الجلب: بلا هذا الزر يبقى مستخدم iOS محبوساً بورقة مؤشّر
+                    (زر الرجوع بأندرويد وحده كان يغلقها). */}
+                <Pressable
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.close,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
+                  onPress={cancelOpen}
+                  hitSlop={8}
+                  accessibilityLabel={t.coursesBackToSchoolsA11y}
+                >
+                  <Text style={styles.closeText}>{t.coursesBack}</Text>
+                </Pressable>
+              </>
             ) : (
               <>
                 <Text style={[styles.modalSchool, { textAlign: align }]}>
@@ -232,7 +284,7 @@ export function CoursesScreen() {
                       transform: [{ scale: buttons.pressedScale }],
                     },
                   ]}
-                  onPress={() => setSchool(null)}
+                  onPress={cancelOpen}
                   hitSlop={8}
                   accessibilityLabel={t.coursesBackToSchoolsA11y}
                 >
