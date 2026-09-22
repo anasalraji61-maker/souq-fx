@@ -19,7 +19,14 @@ type Props = {
 };
 
 export function SymbolSearchBar({ onPick, placeholder }: Props) {
-  const { t } = useI18n();
+  /**
+   * `rtl` لم تكن تُقرأ بهذا الملف أصلاً: خانة البحث ونتائجها ورسالة الخطأ كلها `textAlign: 'right'`
+   * ثابتة بالأنماط. فمتداول الإنجليزية يكتب «XAU» بخانة محاذاة نصّها لليمين، ويقرأ رمز كل نتيجة
+   * واسمها ملتصقَين بالحافة المقابلة لقراءته — وهذا أول ما يفعله ليبدّل الزوج. نفس صنف علّة
+   * `SymbolSnapshot` (069fd0d) و`ScreenerMini` (46d45e4)؛ سلوك العربية لا يتغيّر بحرف.
+   */
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const ph = placeholder ?? t.ssbPlaceholder;
   const [q, setQ] = useState('');
   const [results, setResults] = useState<Result[]>([]);
@@ -64,7 +71,7 @@ export function SymbolSearchBar({ onPick, placeholder }: Props) {
   return (
     <View style={styles.wrap}>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { textAlign: align }]}
         value={q}
         onChangeText={setQ}
         placeholder={ph}
@@ -79,7 +86,7 @@ export function SymbolSearchBar({ onPick, placeholder }: Props) {
         accessibilityLabel={ph}
       />
       {loading ? <ActivityIndicator color={colors.accent} style={{ marginTop: 6 }} /> : null}
-      {!loading && error ? <Text style={styles.error}>{t.ssbError}</Text> : null}
+      {!loading && error ? <Text style={[styles.error, { textAlign: align }]}>{t.ssbError}</Text> : null}
       {results.slice(0, 8).map((r) => (
         <Pressable
           accessibilityRole="button"
@@ -97,8 +104,8 @@ export function SymbolSearchBar({ onPick, placeholder }: Props) {
           }}
           accessibilityLabel={`${t.ssbPickA11yPrefix}${r.symbol} · ${r.name}`}
         >
-          <Text style={styles.sym}>{r.symbol}</Text>
-          <Text style={styles.name} numberOfLines={1}>
+          <Text style={[styles.sym, { textAlign: align }]}>{r.symbol}</Text>
+          <Text style={[styles.name, { textAlign: align }]} numberOfLines={1}>
             {r.name} · {r.exchange}
           </Text>
         </Pressable>
@@ -117,7 +124,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     paddingHorizontal: 10,
     paddingVertical: spacing.sm,
-    textAlign: 'right',
     fontSize: 13,
   },
   row: {
@@ -128,13 +134,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  sym: { color: colors.accent, fontWeight: '800', textAlign: 'right' },
-  name: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
+  sym: { color: colors.accent, fontWeight: '800' },
+  name: { color: colors.textDim, fontSize: 11 },
   error: {
     color: colors.bear,
     fontSize: 10,
     fontWeight: '700',
-    textAlign: 'right',
     marginTop: spacing.xs,
   },
 });
