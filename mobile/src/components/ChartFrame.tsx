@@ -96,7 +96,7 @@ export function ChartFrame({
   onSyncActivate,
   syncBadge = null,
 }: Props) {
-  const { t, lang } = useI18n();
+  const { t, lang, rtl } = useI18n();
   const trx = useMemo(() => chartExtraLabels(lang), [lang]);
   const [wheelOpen, setWheelOpen] = useState(false);
 
@@ -355,7 +355,13 @@ export function ChartFrame({
       ) : null}
 
       <View style={[styles.chartPad, switching && styles.stale]} onLayout={onChartPadLayout}>
-        {navigate && !fill ? <Text style={styles.hint}>{subtitle}</Text> : null}
+        {/* سطر التلميح نصّ واجهة مترجَم («اسحب للتنقّل…») وكان `textAlign: 'right'` ثابتاً بالنمط —
+            `rtl` لم تكن تُقرأ بهذا الملف أصلاً. فمتداول الإنجليزية يقرأ التلميح ملتصقاً بالحافة
+            المقابلة لقراءته فوق كل إطار شارت بالشاشة الرئيسية. بقية رأس الإطار أرقام ورموز لاتينية
+            (EURUSD · 1.08540) فتبقى بترتيبها كما هي عمداً — سوقان من الثلاثة يقرآن من اليسار. */}
+        {navigate && !fill ? (
+          <Text style={[styles.hint, !rtl && styles.hintLtr]}>{subtitle}</Text>
+        ) : null}
         <MatrixChart
           series={series}
           height={chartH}
@@ -494,6 +500,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     marginBottom: 2,
   },
+  hintLtr: { textAlign: 'left' },
   syncBadge: {
     marginLeft: 6,
     paddingHorizontal: 6,
