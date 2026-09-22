@@ -5,8 +5,8 @@
   "main": "main.js",
   "description": "MATRIX Charts desktop shell",
   "scripts": {
-    "start": "node_modules\\electron\\dist\\electron.exe .",
-    "dev": "set MATRIX_DESKTOP_DEV=1&& node_modules\\electron\\dist\\electron.exe .",
+    "start": "electron .",
+    "dev": "electron . --dev",
     "dist": "electron-builder --win nsis",
     "dist:mac": "electron-builder --mac dmg",
     "pack": "electron-builder --win dir"

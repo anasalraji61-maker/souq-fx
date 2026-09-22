@@ -3,7 +3,11 @@ const path = require('path');
 const fs = require('fs');
 
 const WEB_URL = process.env.MATRIX_WEB_URL || 'http://127.0.0.1:8081';
-const isDev = process.env.MATRIX_DESKTOP_DEV === '1';
+// وضع التطوير: متغيّر البيئة كما كان، **أو** الراية `--dev` بسطر الأوامر. المتغيّر وحده كان يعني أن
+// `npm run dev` مكتوب بـ`set ...&&` (صيغة cmd الويندوزي وحده) فلا يعمل على ماك ولا لينكس — وحزمة
+// الـdmg يجب أن تُبنى على جهاز Mac فعلي (docs/DEPLOYMENT.md، خطوة البناء)، أي أن المنصّة التي تحتاج تجربة
+// التطبيق قبل بنائه هي بالضبط المنصّة التي لا تعمل عليها الأوامر. الراية تعمل على الثلاث بلا أي تبعية.
+const isDev = process.env.MATRIX_DESKTOP_DEV === '1' || process.argv.includes('--dev');
 // حزمة ويب مُصدَّرة (`npx expo export --platform web` من مشروع mobile/، تُنسَخ إلى هذا
 // المجلد باسم web-build/) — إن وُجدت (بعد بناء فعلي؛ غائبة افتراضياً بالمستودع) يُحمَّل
 // exe/dmg الموزَّع منها مباشرة عبر file:// بلا أي اعتماد على خادم Metro حي (WEB_URL)، وهو
