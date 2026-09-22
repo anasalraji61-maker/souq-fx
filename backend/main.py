@@ -811,8 +811,7 @@ def check_alerts(user: dict | None = Depends(_auth_user)):
         hit = (a["condition"] == "above" and q >= a["price"]) or (
             a["condition"] == "below" and q <= a["price"]
         )
-        if hit:
-            db.mark_alert_triggered(a["id"])
+        if hit and db.mark_alert_triggered(a["id"]):
             triggered.append({**a, "current": q})
     return {"triggered": triggered, "alerts": db.list_alerts(uid)}
 
@@ -892,8 +891,7 @@ def check_indicator_alerts(user: dict | None = Depends(_auth_user)):
             candles = [c.model_dump() for c in series.candles]
         except Exception:
             continue
-        if _check_indicator_alert(a, candles):
-            db.mark_indicator_alert_triggered(a["id"])
+        if _check_indicator_alert(a, candles) and db.mark_indicator_alert_triggered(a["id"]):
             triggered.append(a)
     return {"triggered": triggered, "alerts": db.list_indicator_alerts(uid)}
 

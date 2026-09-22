@@ -56,6 +56,10 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
   /** تعديل تنبيه قائم: الضغط على سطره يحمّل قيمه بالنموذج؛ الحفظ = إنشاء الجديد ثم حذف القديم
    * (لا يوجد مسار تحديث بالباك-إند، وهذا الترتيب لا يُفقد التنبيه القديم إن فشل الإنشاء). */
   const [editingId, setEditingId] = useState<string | null>(null);
+  /** نص السعر المكتوب + هل اختار المتداول الاتجاه بنفسه — ليُستنتج الاتجاه أيضاً حين يصل السعر الحالي
+   * **بعد** كتابة الرقم (تأخير 600ms + الشبكة): كان يبقى «فوق» الافتراضي فيُطلق تنبيه «1.0800» فوراً. */
+  const priceTextRef = useRef('');
+  const condManualRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -82,7 +86,12 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
         .marketQuote(sym)
         .then((q) => {
           if (!mountedRef.current || gen !== quoteGen.current) return;
-          setCurrent(typeof q.price === 'number' && Number.isFinite(q.price) && q.price > 0 ? q.price : null);
+          const cur = typeof q.price === 'number' && Number.isFinite(q.price) && q.price > 0 ? q.price : null;
+          setCurrent(cur);
+          const typed = parseDecimal(priceTextRef.current);
+          if (cur != null && !condManualRef.current && typed != null && typed > 0 && typed !== cur) {
+            setCondition(typed > cur ? 'above' : 'below');
+          }
         })
         .catch(() => {
           /* السعر الحالي تحسين اختياري — فشله لا يمنع إضافة التنبيه */
@@ -98,6 +107,8 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
    * ويبقى قادراً على قلب الاتجاه يدوياً بعدها (مع تحذير إن صار التنبيه سيُطلق فوراً). */
   const onPriceChange = (txt: string) => {
     setPrice(txt);
+    priceTextRef.current = txt;
+    condManualRef.current = false;
     setFormError(null);
     const p = parseDecimal(txt) ?? NaN;
     if (current != null && Number.isFinite(p) && p > 0 && p !== current) {
@@ -124,7 +135,9 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
     setEditingId(a.id);
     setSymbol(a.symbol);
     setPrice(String(a.price));
+    priceTextRef.current = String(a.price);
     setCondition(a.condition);
+    condManualRef.current = true;
     setNote(a.note || '');
     setFormError(null);
     setArmed(null);
@@ -133,6 +146,8 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
   const cancelEdit = () => {
     setEditingId(null);
     setPrice('');
+    priceTextRef.current = '';
+    condManualRef.current = false;
     setNote('');
     setFormError(null);
   };
@@ -221,6 +236,8 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
       }
       playSoftClick();
       setPrice('');
+      priceTextRef.current = '';
+      condManualRef.current = false;
       setNote('');
       setEditingId(null);
       if (fallbackDelete) {
@@ -340,7 +357,10 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
                 transform: [{ scale: buttons.pressedScale }],
               },
             ]}
-            onPress={() => setCondition('above')}
+            onPress={() => {
+              condManualRef.current = true;
+              setCondition('above');
+            }}
             accessibilityLabel={t.alertsAboveConditionA11y}
           >
             <Text style={[styles.condText, condition === 'above' && styles.condTextOn]}>{t.aboveWord}</Text>
@@ -355,7 +375,10 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
                 transform: [{ scale: buttons.pressedScale }],
               },
             ]}
-            onPress={() => setCondition('below')}
+            onPress={() => {
+              condManualRef.current = true;
+              setCondition('below');
+            }}
             accessibilityLabel={t.alertsBelowConditionA11y}
           >
             <Text style={[styles.condText, condition === 'below' && styles.condTextOn]}>{t.belowWord}</Text>

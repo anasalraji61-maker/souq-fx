@@ -16,7 +16,9 @@ log = logging.getLogger("matrix.alerts")
 async def run_alert_loop(interval: float = 60.0) -> None:
     while True:
         try:
-            _check_once()
+            # الفحص يستدعي مزوّد الأسعار وExpo Push عبر HTTP متزامن (مهلة حتى 15 ثانية لكل طلب) — تشغيله على
+            # حلقة الأحداث مباشرة كان يجمّد كل طلبات الـAPI والـWebSocket طوال الدورة. خيط منفصل بدلاً من ذلك.
+            await asyncio.to_thread(_check_once)
         except Exception:
             log.exception("unexpected error in alert check cycle")
         await asyncio.sleep(interval)
@@ -112,20 +114,24 @@ def _check_once() -> None:
     # (owner user_id, event) — each push goes only to the alert owner's devices (it used to
     # go to every registered device, leaking one trader's alerts to all the others).
     triggered_msgs: list[tuple[int | None, dict]] = []
+    # سعر واحد لكل رمز بالدورة: 30 تنبيهاً على EURUSD كانت 30 طلباً للمزوّد (تستنزف حد Twelve Data).
+    prices: dict[str, float | None] = {}
 
     for a in db.list_alerts(all_users=True):
         try:
             if not a.get("active") or a.get("triggered"):
                 continue
-            q = _price(a["symbol"])
+            key = str(a["symbol"]).upper()
+            if key not in prices:
+                prices[key] = _price(a["symbol"])
+            q = prices[key]
             if q is None:
                 log.warning("no price available for alert id=%s symbol=%s", a.get("id"), a.get("symbol"))
                 continue
             hit = (a["condition"] == "above" and q >= a["price"]) or (
                 a["condition"] == "below" and q <= a["price"]
             )
-            if hit:
-                db.mark_alert_triggered(a["id"])
+            if hit and db.mark_alert_triggered(a["id"]):
                 triggered_msgs.append((
                     a.get("user_id"),
                     {"kind": "price", "symbol": a["symbol"], "condition": a["condition"], "price": a["price"]},
@@ -141,8 +147,7 @@ def _check_once() -> None:
         try:
             if not a.get("active") or a.get("triggered"):
                 continue
-            if _check_indicator(a):
-                db.mark_indicator_alert_triggered(a["id"])
+            if _check_indicator(a) and db.mark_indicator_alert_triggered(a["id"]):
                 triggered_msgs.append((
                     a.get("user_id"),
                     {

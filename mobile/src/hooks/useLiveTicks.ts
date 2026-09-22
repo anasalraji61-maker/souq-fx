@@ -6,10 +6,13 @@ import { parseWsDataSource } from '../chart/dataSource';
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 30000;
 
-/** Live tick for one symbol with provenance. */
+/** Live tick for one symbol with provenance.
+ * التيك يُخزَّن مع رمزه ولا يُعاد إلا إن طابق الرمز الحالي: بعد التبديل XAUUSD → EURUSD كان يُعيد 2650 حتى
+ * يصل أول تيك لليورو — فتنبيه من الشارت على 1.09 يُقارن بـ2650 ويصير «تحت» ويُطلق فوراً. */
 export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null {
-  const [tick, setTick] = useState<LiveTick | null>(null);
   const sym = symbol.toUpperCase();
+  const [state, setState] = useState<{ sym: string; tick: LiveTick } | null>(null);
+  const tick = state && state.sym === sym ? state.tick : null;
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -46,7 +49,7 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
             };
             const p = data.ticks?.[sym];
             if (typeof p === 'number') {
-              setTick({ price: p, source: parseWsDataSource(data) });
+              setState({ sym, tick: { price: p, source: parseWsDataSource(data) } });
             }
           } catch {
             /* ignore */

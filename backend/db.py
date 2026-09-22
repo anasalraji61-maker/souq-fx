@@ -952,9 +952,12 @@ def delete_alert(alert_id: str, user_id: int | None = None) -> bool:
     return cur.rowcount > 0
 
 
-def mark_alert_triggered(alert_id: str) -> None:
+def mark_alert_triggered(alert_id: str) -> bool:
+    """True فقط لمن نقله فعلاً من مُسلَّح إلى مُطلَق — الـworker ولوحة التنبيهات (فحص كل دقيقة من كل جهاز
+    مفتوح) يقرآن triggered=0 بنفس اللحظة، فكان كلٌّ منهما يُرسل إشعاره (إشعارات مكرّرة لنفس التنبيه)."""
     with _conn() as c:
-        c.execute("UPDATE alerts SET triggered=1 WHERE id=?", (alert_id,))
+        cur = c.execute("UPDATE alerts SET triggered=1 WHERE id=? AND triggered=0", (alert_id,))
+    return cur.rowcount == 1
 
 
 # ─── Chat / votes ─────────────────────────────────────────────────────────────
@@ -1605,6 +1608,8 @@ def trade_stats(user_id: int | None = None) -> dict:
     }
 
 
-def mark_indicator_alert_triggered(alert_id: str) -> None:
+def mark_indicator_alert_triggered(alert_id: str) -> bool:
+    """مثل mark_alert_triggered: True لأول من يُطلقه فقط (لا إشعار مكرّر)."""
     with _conn() as c:
-        c.execute("UPDATE indicator_alerts SET triggered=1 WHERE id=?", (alert_id,))
+        cur = c.execute("UPDATE indicator_alerts SET triggered=1 WHERE id=? AND triggered=0", (alert_id,))
+    return cur.rowcount == 1

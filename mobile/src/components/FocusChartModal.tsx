@@ -185,9 +185,26 @@ export function FocusChartModal({
   }, [visible]);
 
   const alertFromDrawing = async (price: number, origin?: 'drawing' | 'crosshair') => {
-    const condition: 'above' | 'below' =
-      price >= (liveTick?.price ?? series?.last ?? price) ? 'above' : 'below';
+    // خط اتجاه منحدر يُمدَّد للحاضر قد يعطي سعراً ≤0 — الخادم يرفضه (422) برسالة عامة
+    if (!Number.isFinite(price) || price <= 0) {
+      Alert.alert(t.focusAlertCreateFailedTitle, t.focusAlertCreateFailedBody);
+      return;
+    }
     try {
+      // السعر المرجعي للاتجاه من الرمز الحالي فقط: الشموع المحمّلة قد تكون للرمز السابق لحظة التبديل،
+      // وبلا سعر معروف كان `price >= price` يجعل كل تنبيه «فوق» حتى لو كان المستوى تحت السعر.
+      // (الشموع التجريبية `demo` عند انقطاع الخادم ليست سعراً حقيقياً فلا تُستخدم مرجعاً)
+      const seriesLast =
+        series && series.symbol.toUpperCase() === sym.toUpperCase() && series.data_source?.kind !== 'demo'
+          ? series.last
+          : null;
+      let ref: number | null = liveTick?.price ?? seriesLast;
+      if (ref == null) {
+        const q = await api.marketQuote(sym);
+        ref = typeof q.price === 'number' && Number.isFinite(q.price) && q.price > 0 ? q.price : null;
+      }
+      if (ref == null) throw new Error('no reference price');
+      const condition: 'above' | 'below' = price >= ref ? 'above' : 'below';
       await api.createAlert({
         symbol: sym,
         condition,
