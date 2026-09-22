@@ -750,8 +750,18 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
           {listError ? t.journalLoadError : t.journalEmpty}
         </Text>
       ) : null}
+      {/**
+        * الصفقات المفتوحة أولاً. الباك-إند يُرجع الأحدث فالأقدم (`db.list_trades`: ORDER BY opened_at
+        * DESC) والنافذة هنا ~220px — أربعة صفوف — فصفقة مفتوحة من أمس تنزل تحت كل ما سُجِّل اليوم
+        * وتختفي عن الشاشة تماماً. والمفتوحة وحدها هي التي تحتاج فعلاً (إغلاق بالسوق / تسجيل الخروج)،
+        * بينما المغلقة سجلّ للمراجعة. نفس تجميع لوح التنبيهات بالضبط (المُطلَقة للأسفل). الفرز
+        * **مستقرّ** بمواصفة ES2019 فترتيب الأحدث-فالأقدم محفوظ داخل كل مجموعة، ولا يمسّ الإحصاءات
+        * (تُحسب من `trades` نفسها لا من هذا العرض).
+        */}
       <ScrollView style={{ maxHeight: 220 }} keyboardShouldPersistTaps="handled">
-        {trades.map((tr) => (
+        {[...trades]
+          .sort((x, y) => Number(x.status === 'closed') - Number(y.status === 'closed'))
+          .map((tr) => (
           <View key={tr.id} style={styles.trade}>
             <Text style={[styles.tradeMain, { textAlign: align }]}>
               {/* الاتجاه بلا لبس: سهم ولون وكلمة مترجمة بدل "BUY"/"SELL" اللاتينية */}
