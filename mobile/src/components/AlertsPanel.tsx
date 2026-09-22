@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -18,9 +18,18 @@ import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
+import { instrumentSpec } from '../positionSize';
 
 /** إيقاع تحديث «السعر الآن» بالنموذج — نفس إيقاع فحص التنبيهات بهذه اللوحة (60 ثانية). */
 const QUOTE_REFRESH_MS = 60_000;
+
+/**
+ * مسافات جاهزة بالنقاط حول السعر الحالي. المتداول يضع تنبيهه عند «عشرين نقطة فوق السوق» لا عند رقم
+ * يحفظه — وكتابة «1.08703» بخمس منازل على لوحة مفاتيح هاتف بيد واحدة أكثر خطوة يخطئ فيها بهذه اللوحة
+ * (رقم ناقص = تنبيه عند مستوى آخر تماماً). المسافة تُحوَّل لسعر بحجم pip **الأداة** (الين 0.01،
+ * الذهب 0.1، الفضة 0.01) فالرقم صحيح لكل رمز، والاتجاه يُستنتج من إشارتها كما يُستنتج من أي سعر يُكتب.
+ */
+const PIP_OFFSETS = [-50, -25, -10, 10, 25, 50] as const;
 
 type Props = {
   defaultSymbol?: string;
@@ -34,6 +43,9 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
   const align = rtl ? ('right' as const) : ('left' as const);
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
   const [symbol, setSymbol] = useState(defaultSymbol);
+  /** مواصفات الأداة المكتوبة — لحجم الـpip بشرائح المسافات. null لرمز ناقص أو غير قابل للحساب (DXY،
+   * العملات الرقمية) فلا تُعرض الشرائح هناك: مسافة بالنقاط بلا حجم pip معروف رقمٌ مختلَق. */
+  const spec = useMemo(() => instrumentSpec(symbol), [symbol]);
   const [price, setPrice] = useState('');
   const [condition, setCondition] = useState<'above' | 'below'>('above');
   const [note, setNote] = useState('');
@@ -468,6 +480,37 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
             </Pressable>
           </View>
         ) : null}
+        {/* مسافات جاهزة بالنقاط حول السعر الحالي — «عشرون نقطة فوق السوق» بنقرة بدل كتابة خمس منازل
+            على لوحة مفاتيح هاتف. تظهر فقط بسعر حقيقي معروف وأداة معلومة حجم الـpip. */}
+        {current != null && spec ? (
+          <View style={[styles.offsets, rtl && styles.rowRtl]}>
+            <Text style={styles.offsetUnit}>pip</Text>
+            {PIP_OFFSETS.map((off) => {
+              const px = current + off * spec.pipSize;
+              // مسافة تتجاوز السعر نفسه (أداة سعرها أصغر من المسافة) لا تُعرض بدل سعر ≤ 0
+              if (!(px > 0)) return null;
+              const text = fmtPrice(px, spec.symbol);
+              return (
+                <Pressable
+                  key={off}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.offsetChip,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
+                  onPress={() => onPriceChange(text)}
+                  accessibilityLabel={`${t.alertsPriceA11y}: ${text}`}
+                  hitSlop={6}
+                >
+                  <Text style={styles.offsetChipText}>{off > 0 ? `+${off}` : `−${-off}`}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
         <View style={[styles.row, rtl && styles.rowRtl]}>
           <Pressable
             accessibilityRole="button"
@@ -798,6 +841,17 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   useCurrentText: { color: colors.accent, fontSize: 11, fontWeight: '800' },
+  offsets: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4 },
+  offsetUnit: { color: colors.textDim, fontSize: 9, fontWeight: '800' },
+  offsetChip: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    backgroundColor: colors.bgPanel,
+  },
+  offsetChipText: { color: colors.textMuted, fontSize: 11, fontWeight: '800' },
   editingText: { color: colors.accent, fontSize: 11, fontWeight: '700', flex: 1, marginTop: spacing.xs },
   cancelEditText: { color: colors.textMuted, fontSize: 11, fontWeight: '700', marginTop: spacing.xs },
   firesNow: { color: colors.warn, fontSize: 10, fontWeight: '700', marginTop: spacing.xs },
