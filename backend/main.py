@@ -1075,8 +1075,8 @@ def send_dm(body: DmSend):
 
 
 @app.get("/api/votes")
-def list_votes():
-    return {"votes": db.list_votes()}
+def list_votes(user: dict | None = Depends(_auth_user)):
+    return {"votes": db.list_votes(user["user_id"] if user else None)}
 
 
 @app.post("/api/votes")
@@ -1101,8 +1101,11 @@ def create_vote(body: VoteCreate, user: dict | None = Depends(_auth_user)):
 
 
 @app.post("/api/votes/ballot")
-def ballot(body: VoteBallot):
-    v = db.ballot(body.vote_id, body.choice)
+def ballot(body: VoteBallot, user: dict | None = Depends(_auth_user)):
+    # صوت واحد لكل حساب — المجهول لا يُعرَّف فلا يُحتسب صوته (كان يقدر يضخّم العدّاد بلا حد)
+    if not user:
+        return {"ok": False, "error": "login_required"}
+    v = db.ballot(body.vote_id, body.choice, user["user_id"])
     if not v:
         return {"ok": False, "error": "vote not found"}
     return {"ok": True, "vote": v}

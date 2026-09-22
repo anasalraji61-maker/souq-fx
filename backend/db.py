@@ -62,6 +62,12 @@ def init_db() -> None:
                 author TEXT,
                 ts TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS vote_ballots (
+                vote_id TEXT NOT NULL,
+                user_id INTEGER NOT NULL,
+                choice TEXT NOT NULL,
+                PRIMARY KEY(vote_id, user_id)
+            );
             CREATE TABLE IF NOT EXISTS push_tokens (
                 token TEXT PRIMARY KEY,
                 user_id INTEGER,
@@ -799,7 +805,7 @@ def delete_user_account(user_id: int) -> None:
     الشخصية القابلة للتعريف (username → معرّف مجهول ثابت غير قابل لتسجيل دخول،
     email → NULL، password_hash → قيمة عشوائية غير صالحة أبداً لأي كلمة مرور حقيقية)،
     وتُلغى كل الجلسات النشطة فوراً، ويُحذف المحتوى الشخصي البحت غير المرجعي من طرف
-    آخر (تنبيهات الأسعار والمؤشرات، دفتر الصفقات، تخطيطات الشارت المحفوظة، رمز إشعارات Push). هذا يحقق
+    آخر (تنبيهات الأسعار والمؤشرات، دفتر الصفقات، تخطيطات الشارت المحفوظة، رمز إشعارات Push، سجل أصواته على أفكار الصفقات — العدّادات تبقى). هذا يحقق
     الشرط الفعلي لأبل (إزالة البيانات الشخصية القابلة للتعريف) دون كسر شجرة العمولات.
     """
     placeholder = f"deleted_user_{user_id}"
@@ -815,6 +821,7 @@ def delete_user_account(user_id: int) -> None:
         c.execute("DELETE FROM trades WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM push_tokens WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM layouts WHERE user_id=?", (user_id,))
+        c.execute("DELETE FROM vote_ballots WHERE user_id=?", (user_id,))
 
 
 # ─── Alerts ───────────────────────────────────────────────────────────────────
@@ -982,25 +989,36 @@ def _vote_author(a: str | None) -> str | None:
     return None if not a or a == _LEGACY_VOTE_AUTHOR else a
 
 
-def list_votes() -> list[dict]:
+def _vote_row(r, my_choice: str | None = None) -> dict:
+    return {
+        "id": r["id"],
+        "symbol": r["symbol"],
+        "direction": r["direction"],
+        "entry": r["entry"],
+        "sl": r["sl"],
+        "tp": r["tp"],
+        "note": r["note"] or "",
+        "agree": r["agree"],
+        "disagree": r["disagree"],
+        "author": _vote_author(r["author"]),
+        "ts": r["ts"],
+        # صوت المستدعي على هذه الفكرة ('agree' | 'disagree') أو None (لم يصوّت / مجهول)
+        "my_choice": my_choice,
+    }
+
+
+def list_votes(user_id: int | None = None) -> list[dict]:
     with _conn() as c:
         rows = c.execute("SELECT * FROM votes ORDER BY rowid DESC").fetchall()
-    return [
-        {
-            "id": r["id"],
-            "symbol": r["symbol"],
-            "direction": r["direction"],
-            "entry": r["entry"],
-            "sl": r["sl"],
-            "tp": r["tp"],
-            "note": r["note"] or "",
-            "agree": r["agree"],
-            "disagree": r["disagree"],
-            "author": _vote_author(r["author"]),
-            "ts": r["ts"],
-        }
-        for r in rows
-    ]
+        mine: dict[str, str] = {}
+        if user_id is not None:
+            mine = {
+                b["vote_id"]: b["choice"]
+                for b in c.execute(
+                    "SELECT vote_id, choice FROM vote_ballots WHERE user_id=?", (user_id,)
+                ).fetchall()
+            }
+    return [_vote_row(r, mine.get(r["id"])) for r in rows]
 
 
 def create_vote(item: dict) -> dict:
@@ -1025,26 +1043,36 @@ def create_vote(item: dict) -> dict:
     return item
 
 
-def ballot(vote_id: str, choice: str) -> dict | None:
-    col = "agree" if choice == "agree" else "disagree"
+def ballot(vote_id: str, choice: str, user_id: int) -> dict | None:
+    """صوت واحد لكل مستخدم على كل فكرة صفقة. كان كل طلب يزيد العدّاد بلا فحص «صوّت من قبل؟»
+    فيقدر أي أحد يضخّم «نسبة الموافقة» بضغطات متكررة — مؤشر إجماع مضلِّل للمتداولين.
+    الآن: أول صوت يُحتسب، نفس الخيار مجدداً لا يغيّر شيئاً، وتغيير الرأي ينقل الصوت (−1 من القديم،
+    +1 للجديد) ضمن معاملة واحدة."""
+    new_col = "agree" if choice == "agree" else "disagree"
     with _conn() as c:
-        c.execute(f"UPDATE votes SET {col}={col}+1 WHERE id=?", (vote_id,))
+        if not c.execute("SELECT 1 FROM votes WHERE id=?", (vote_id,)).fetchone():
+            return None
+        prev = c.execute(
+            "SELECT choice FROM vote_ballots WHERE vote_id=? AND user_id=?", (vote_id, user_id)
+        ).fetchone()
+        if prev is None:
+            c.execute(
+                "INSERT INTO vote_ballots(vote_id,user_id,choice) VALUES(?,?,?)",
+                (vote_id, user_id, new_col),
+            )
+            c.execute(f"UPDATE votes SET {new_col}={new_col}+1 WHERE id=?", (vote_id,))
+        elif prev["choice"] != new_col:
+            old_col = "agree" if prev["choice"] == "agree" else "disagree"
+            c.execute(
+                "UPDATE vote_ballots SET choice=? WHERE vote_id=? AND user_id=?",
+                (new_col, vote_id, user_id),
+            )
+            c.execute(
+                f"UPDATE votes SET {old_col}=MAX({old_col}-1,0), {new_col}={new_col}+1 WHERE id=?",
+                (vote_id,),
+            )
         row = c.execute("SELECT * FROM votes WHERE id=?", (vote_id,)).fetchone()
-    if not row:
-        return None
-    return {
-        "id": row["id"],
-        "symbol": row["symbol"],
-        "direction": row["direction"],
-        "entry": row["entry"],
-        "sl": row["sl"],
-        "tp": row["tp"],
-        "note": row["note"] or "",
-        "agree": row["agree"],
-        "disagree": row["disagree"],
-        "author": _vote_author(row["author"]),
-        "ts": row["ts"],
-    }
+    return _vote_row(row, new_col)
 
 
 # ─── Push / layouts / watchlist / progress ────────────────────────────────────

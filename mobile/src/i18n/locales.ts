@@ -191,6 +191,7 @@ export type Dict = {
   voteAgreeWord: string;
   voteDisagreeWord: string;
   voteCastError: string;
+  voteLoginRequired: string;
   voteAgreeA11yPrefix: string;
   voteDisagreeA11yPrefix: string;
   indicatorBollinger: string;
@@ -911,6 +912,7 @@ const ar: Dict = {
   voteAgreeWord: 'موافق',
   voteDisagreeWord: 'رافض',
   voteCastError: 'تعذر إرسال صوتك للخادم — قد لا يُحتسب، حاول لاحقاً',
+  voteLoginRequired: 'سجّل الدخول للتصويت — صوت واحد لكل حساب حتى تبقى نسبة الموافقة صادقة',
   voteAgreeA11yPrefix: 'موافقة على فكرة',
   voteDisagreeA11yPrefix: 'رفض فكرة',
   indicatorBollinger: 'بولنجر',
@@ -1640,6 +1642,7 @@ const enUS: Dict = {
   voteAgreeWord: 'Agree',
   voteDisagreeWord: 'Disagree',
   voteCastError: 'Could not send your vote to the server — it may not count, try later',
+  voteLoginRequired: 'Sign in to vote — one vote per account keeps the approval rate honest',
   voteAgreeA11yPrefix: 'Agree with idea',
   voteDisagreeA11yPrefix: 'Disagree with idea',
   indicatorBollinger: 'Bollinger',
@@ -2388,6 +2391,7 @@ const ku: Dict = {
   voteAgreeWord: 'ڕازیم',
   voteDisagreeWord: 'ڕازی نیم',
   voteCastError: 'نەکرا دەنگت بۆ ڕاژە بنێردرێت — لەوانەیە نەژمێردرێت، دواتر هەوڵبدەرەوە',
+  voteLoginRequired: 'بۆ دەنگدان بچۆ ژوورەوە — یەک دەنگ بۆ هەر هەژمارێک',
   voteAgreeA11yPrefix: 'ڕازیبوون لەگەڵ بیرۆکەی',
   voteDisagreeA11yPrefix: 'ڕەتکردنەوەی بیرۆکەی',
   indicatorBollinger: 'بۆلینگەر',

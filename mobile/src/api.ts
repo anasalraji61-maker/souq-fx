@@ -76,6 +76,8 @@ export type Vote = {
   /** اسم ناشر الفكرة؛ null لفكرة مجهولة (السطر يُخفى بالواجهة) */
   author: string | null;
   ts: string;
+  /** صوت المستخدم الحالي على الفكرة (null/غائب = لم يصوّت أو غير مسجّل؛ باك-إند أقدم لا يرسله) */
+  my_choice?: 'agree' | 'disagree' | null;
 };
 
 export type NewsItem = {
@@ -337,7 +339,7 @@ export const api = {
   createVote: (v: { symbol: string; direction: 'buy' | 'sell'; entry: number; sl: number; tp: number; note?: string }) =>
     postJson<{ ok: boolean; vote: Vote }>('/api/votes', v),
   ballot: (vote_id: string, choice: 'agree' | 'disagree') =>
-    postJson('/api/votes/ballot', { vote_id, choice }),
+    postJson<{ ok: boolean; vote?: Vote; error?: string }>('/api/votes/ballot', { vote_id, choice }),
   news: () => getJson<{ news: NewsItem[] }>('/api/news'),
   marketStatus: () =>
     getJson<{

@@ -121,35 +121,44 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
     }
   };
 
-  /** حارس ضد ضغط مزدوج/متكرّر سريع على "موافق"/"غير موافق": `db.ballot` بالباك-إند يزيد العدّاد
-   * مباشرة (`UPDATE votes SET agree=agree+1 ...`) بلا أي فحص "صوّت من قبل؟" — فبلا حارس هنا،
-   * ضغطتان سريعتان (قصديتان أو بالخطأ) على نفس الزر تُسجِّلان صوتين فعليين بدل واحد بلا أي رسالة
-   * تنبّه المستخدم. مجموعة `castingIds` (لا حارس `busy` عام واحد، لأن القائمة تعرض عدة تصويتات
-   * معاً) تمنع إعادة استدعاء `cast` لنفس التصويت أثناء طلب قائم فعلاً له، بنفس مبدأ `busy`/
-   * `disabled` المؤسَّس بـ`AlertsPanel.add`/`TradeJournalPanel.add`. */
+  /** حارس ضد ضغط مزدوج/متكرّر سريع على "موافق"/"غير موافق" أثناء طلب قائم لنفس الفكرة (مجموعة
+   * `castingIds` لا `busy` عام، لأن القائمة تعرض عدة أفكار معاً). الباك-إند صار يحتسب صوتاً واحداً
+   * لكل حساب (`vote_ballots`): نفس الخيار مجدداً لا يُحتسب، وتغيير الرأي ينقل الصوت، والمجهول
+   * يُرفض بـ`login_required` — فالتحديث المتفائل هنا يطابق تلك القاعدة، ويُرجَع عند الرفض. */
   const [castingIds, setCastingIds] = useState<Set<string>>(new Set());
+
+  const applyChoice = (v: Vote, choice: 'agree' | 'disagree'): Vote => {
+    const prev = v.my_choice ?? null;
+    if (prev === choice) return v;
+    return {
+      ...v,
+      agree: v.agree + (choice === 'agree' ? 1 : 0) - (prev === 'agree' ? 1 : 0),
+      disagree: v.disagree + (choice === 'disagree' ? 1 : 0) - (prev === 'disagree' ? 1 : 0),
+      my_choice: choice,
+    };
+  };
 
   const cast = async (id: string, choice: 'agree' | 'disagree') => {
     if (castingIds.has(id)) return;
+    const before = votes.find((v) => v.id === id);
+    // صوتك محتسب أصلاً بهذا الخيار — لا طلب ولا تغيير عدّاد
+    if (before && before.my_choice === choice) return;
     setCastingIds((prev) => {
       const next = new Set(prev);
       next.add(id);
       return next;
     });
-    setVotes((prev) =>
-      prev.map((v) =>
-        v.id === id
-          ? {
-              ...v,
-              agree: choice === 'agree' ? v.agree + 1 : v.agree,
-              disagree: choice === 'disagree' ? v.disagree + 1 : v.disagree,
-            }
-          : v
-      )
-    );
+    setVotes((prev) => prev.map((v) => (v.id === id ? applyChoice(v, choice) : v)));
     try {
-      await api.ballot(id, choice);
-      load();
+      const r = await api.ballot(id, choice);
+      if (!mountedRef.current) return;
+      if (r && r.ok === false && r.error === 'login_required') {
+        // غير مسجّل: أرجع العدّاد كما كان واشرح السبب (لا `load()` هنا لأنه يمسح الرسالة)
+        if (before) setVotes((prev) => prev.map((v) => (v.id === id ? before : v)));
+        setNotice(t.voteLoginRequired);
+      } else {
+        load();
+      }
     } catch {
       if (mountedRef.current) setNotice(t.voteCastError);
     } finally {
@@ -402,10 +411,13 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                   ]}
                   onPress={() => cast(v.id, 'agree')}
                   disabled={castingIds.has(v.id)}
-                  accessibilityState={{ disabled: castingIds.has(v.id) }}
+                  accessibilityState={{ disabled: castingIds.has(v.id), selected: v.my_choice === 'agree' }}
                   accessibilityLabel={`${t.voteAgreeA11yPrefix} ${v.symbol}`}
                 >
-                  <Text style={styles.btnText}>{t.voteAgreeWord}</Text>
+                  <Text style={styles.btnText}>
+                    {v.my_choice === 'agree' ? '✓ ' : ''}
+                    {t.voteAgreeWord}
+                  </Text>
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
@@ -420,10 +432,13 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                   ]}
                   onPress={() => cast(v.id, 'disagree')}
                   disabled={castingIds.has(v.id)}
-                  accessibilityState={{ disabled: castingIds.has(v.id) }}
+                  accessibilityState={{ disabled: castingIds.has(v.id), selected: v.my_choice === 'disagree' }}
                   accessibilityLabel={`${t.voteDisagreeA11yPrefix} ${v.symbol}`}
                 >
-                  <Text style={styles.btnText}>{t.voteDisagreeWord}</Text>
+                  <Text style={styles.btnText}>
+                    {v.my_choice === 'disagree' ? '✓ ' : ''}
+                    {t.voteDisagreeWord}
+                  </Text>
                 </Pressable>
               </View>
             </View>
