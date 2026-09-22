@@ -304,6 +304,10 @@ export type Dict = {
   riskCalcLogToJournal: string;
   riskCalcLoggedToJournal: string;
   riskCalcLogFailed: string;
+  riskCalcUseLivePrice: string;
+  riskCalcUseLivePriceA11y: string;
+  riskCalcLiveFilled: string;
+  riskCalcNoLiveQuote: string;
   riskCalcDisclaimer: string;
   toolsTabRisk: string;
   calTimesLocal: string;
@@ -1116,6 +1120,10 @@ const ar: Dict = {
   riskCalcLogToJournal: 'سجّل هذه الخطة بالدفتر',
   riskCalcLoggedToJournal: '✓ سُجِّلت صفقة مفتوحة بالدفتر — أغلقها من «الدفتر» عند الخروج',
   riskCalcLogFailed: 'تعذّر التسجيل بالدفتر — تحقّق من الاتصال وحاول مرة أخرى',
+  riskCalcUseLivePrice: '↓ الدخول = السعر الحالي',
+  riskCalcUseLivePriceA11y: 'تعبئة خانة الدخول بسعر السوق الحالي (Ask للشراء وBid للبيع حسب موضع الوقف)',
+  riskCalcLiveFilled: '✓ الدخول من السعر الحالي:',
+  riskCalcNoLiveQuote: 'لا سعر حي لهذا الرمز الآن — اكتب سعر الدخول يدوياً',
   riskCalcDisclaimer: 'تقدير تعليمي: مواصفات العقود (خصوصاً الذهب) قد تختلف لدى وسيطك — تحقّق قبل التداول.',
   toolsTabRisk: 'المخاطرة',
   calTimesLocal: 'الأوقات بتوقيتك',
@@ -1936,6 +1944,10 @@ const enUS: Dict = {
   riskCalcLogToJournal: 'Log this plan to the journal',
   riskCalcLoggedToJournal: '✓ Logged as an open trade — close it from «Journal» when you exit',
   riskCalcLogFailed: 'Could not log to the journal — check your connection and try again',
+  riskCalcUseLivePrice: '↓ Entry = current price',
+  riskCalcUseLivePriceA11y: 'Fill the entry with the current market price (Ask for buy, Bid for sell, from where the stop sits)',
+  riskCalcLiveFilled: '✓ Entry from the current price:',
+  riskCalcNoLiveQuote: 'No live price for this symbol right now — type the entry manually',
   riskCalcDisclaimer: 'Educational estimate: contract specs (especially gold) can differ at your broker — check before trading.',
   toolsTabRisk: 'Risk',
   calTimesLocal: 'Times in your timezone',
@@ -2775,6 +2787,10 @@ const ku: Dict = {
   riskCalcLogToJournal: 'ئەم پلانە لە دەفتەر تۆمار بکە',
   riskCalcLoggedToJournal: '✓ وەک مامەڵەیەکی کراوە تۆمارکرا — لە «دەفتەر» بیخە کاتی دەرچوون',
   riskCalcLogFailed: 'تۆمارکردن لە دەفتەر سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەوە',
+  riskCalcUseLivePrice: '↓ چوونەژوورەوە = نرخی ئێستا',
+  riskCalcUseLivePriceA11y: 'پڕکردنەوەی خانەی چوونەژوورەوە بە نرخی بازاڕی ئێستا (Ask بۆ کڕین و Bid بۆ فرۆشتن بەپێی شوێنی وەستان)',
+  riskCalcLiveFilled: '✓ چوونەژوورەوە لە نرخی ئێستاوە:',
+  riskCalcNoLiveQuote: 'ئێستا نرخی ڕاستەوخۆ بۆ ئەم هێمایە نییە — نرخی چوونەژوورەوە بە دەست بنووسە',
   riskCalcDisclaimer: 'خەمڵاندنی فێرکاری: تایبەتمەندی گرێبەستەکان (بەتایبەتی زێڕ) لای بڕۆکەرەکەت جیاواز دەبێت — پێش مامەڵە پشتڕاستی بکەرەوە.',
   toolsTabRisk: 'مەترسی',
   calTimesLocal: 'کاتەکان بە کاتی خۆت',

@@ -17,6 +17,7 @@ import {
 } from '../positionSize';
 import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
+import { formatPrice } from '../chart/math';
 import { analyzePlan, formatPips, formatRR } from '../tradePlan';
 
 type Props = {
@@ -43,6 +44,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const [stopPx, setStopPx] = useState('');
   /** هدف اختياري: يحوّل «كم لوت» إلى خطة كاملة (مخاطرة/عائد بالمال) — المتداول يقرّر بالـR:R لا باللوت وحده */
   const [targetPx, setTargetPx] = useState('');
+  /** جلب سعر الدخول بنقرة: المتداول يخطّط غالباً حول السعر الذي يراه الآن، وكتابته يدوياً مَظنّة خطأ */
+  const [livePxBusy, setLivePxBusy] = useState(false);
+  const [livePxMsg, setLivePxMsg] = useState<{ ok: boolean; text: string } | null>(null);
   /** سعر زوج التحويل (عملة التسعير → عملة الحساب)؛ null أثناء التحميل أو عند الفشل. يُخزَّن مع رمزه
    * فلا يُقرن سعر الزوج السابق بالزوج الجديد لإطار عرض واحد بعد تبديل الأداة/عملة الحساب.
    * `key` = زوج التحويل المتوقَّع (مفتاح الطلب)، و`invert` لما جُلب فعلاً — قد يكون الزوج المعكوس. */
@@ -201,6 +205,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   useEffect(() => {
     setLogMsg(null);
   }, [symbol, account, balance, riskPct, slPips, entryPx, stopPx, targetPx]);
+  // السعر المجلوب يخصّ رمزاً واحداً ولحظة واحدة: تبديل الأداة يُسقط الرسالة (وإلا بقي «الدخول = ‎1.0850»
+  // معروضاً تحت زوج آخر)
+  useEffect(() => {
+    setLivePxMsg(null);
+  }, [symbol]);
   /** الربح المحتمل ≈ نقاط الهدف × قيمة النقطة للوت × اللوت (تقدير كالمخاطرة تماماً) */
   const potentialProfit =
     plan?.ok && plan.rewardPips != null && pv != null && lots != null ? plan.rewardPips * pv * lots : null;
@@ -234,6 +243,38 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       if (mountedRef.current) setLogMsg({ ok: false, text: t.riskCalcLogFailed });
     } finally {
       if (mountedRef.current) setLogBusy(false);
+    }
+  };
+
+  /**
+   * «الدخول = السعر الحالي»: المتداول يخطّط حول السعر الذي أمامه على الشارت، وكتابته يدوياً من الشارت
+   * إلى الحاسبة أكثر خطوة يخطئ فيها (رقم ناقص = حجم لوت خاطئ). الجهة تُستنتج من موضع الوقف إن كُتب
+   * (وقف تحت السعر = شراء → Ask، وهو ما يُنفَّذ عليه فعلاً)، وبلا وقف يُستخدم السعر الوسطي.
+   * اقتباس بذري تجريبي لا يُستخدم أبداً (`isRealQuote`) — حجم مركز من سعر مختلَق أخطر من لا شيء.
+   */
+  const fillEntryFromLive = async () => {
+    if (!spec || livePxBusy) return;
+    const sym = spec.symbol;
+    setLivePxBusy(true);
+    setLivePxMsg(null);
+    try {
+      const q = await api.marketQuote(sym);
+      if (!mountedRef.current) return;
+      if (!isRealQuote(q)) {
+        setLivePxMsg({ ok: false, text: t.riskCalcNoLiveQuote });
+        return;
+      }
+      const stop = num(stopPx);
+      const side = Number.isFinite(stop) && stop > 0 ? (stop < q.price ? 'buy' : 'sell') : null;
+      const sidePx = side === 'buy' ? q.ask : side === 'sell' ? q.bid : null;
+      const px = typeof sidePx === 'number' && Number.isFinite(sidePx) && sidePx > 0 ? sidePx : q.price;
+      const text = formatPrice(px, sym);
+      setEntryPx(text);
+      setLivePxMsg({ ok: true, text: `${t.riskCalcLiveFilled} ${text}` });
+    } catch {
+      if (mountedRef.current) setLivePxMsg({ ok: false, text: t.riskCalcNoLiveQuote });
+    } finally {
+      if (mountedRef.current) setLivePxBusy(false);
     }
   };
 
@@ -334,6 +375,35 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           {input(stopPx, setStopPx, t.riskCalcStop, t.riskCalcStop)}
         </View>
       </View>
+      {spec ? (
+        <View style={[styles.chips, rtl && styles.chipsRtl]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: livePxBusy, busy: livePxBusy }}
+            disabled={livePxBusy}
+            style={({ pressed }) => [
+              styles.chip,
+              livePxBusy && { opacity: 0.5 },
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+            onPress={() => void fillEntryFromLive()}
+            accessibilityLabel={t.riskCalcUseLivePriceA11y}
+          >
+            <Text style={styles.chipText}>{livePxBusy ? '...' : t.riskCalcUseLivePrice}</Text>
+          </Pressable>
+        </View>
+      ) : null}
+      {livePxMsg ? (
+        <Text
+          style={[livePxMsg.ok ? styles.hintOn : styles.warn, { textAlign: align }]}
+          accessibilityLiveRegion="polite"
+        >
+          {livePxMsg.text}
+        </Text>
+      ) : null}
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcTarget}</Text>
       {input(targetPx, setTargetPx, t.riskCalcTargetPlaceholder, t.riskCalcTarget)}
       {targetWrongSide ? (
