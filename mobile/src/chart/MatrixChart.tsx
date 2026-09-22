@@ -334,6 +334,36 @@ function candleTimeSec(t: number): number {
   return t > 1e12 ? t / 1000 : t;
 }
 
+type DrawingHit = { id: string; dist: number } | null;
+
+/** نصف قطر مقبض الطرف بالبكسل — التقاطاً للتحديد وسحباً للتحريك (قيمة واحدة للاثنين). */
+const DRAW_HANDLE_R = 18;
+
+/** أقرب مسافة بالبكسل بين نقطة وقطعة مستقيمة؛ `tMax > 1` يمدّها شعاعاً بعد الطرف الثاني. */
+function segmentDistance(
+  px: number,
+  py: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  tMax: number
+): number {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len2 = dx * dx + dy * dy;
+  if (len2 <= 1e-6) return Math.hypot(px - x1, py - y1);
+  const t = Math.max(0, Math.min(tMax, ((px - x1) * dx + (py - y1) * dy) / len2));
+  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
+
+/** يُرجع المرشَّح الأقرب — دالة خالصة بدل الإسناد داخل مغلِّف (يربك تضييق أنواع TS). */
+function considerHit(id: string, dist: number, max: number, cur: DrawingHit): DrawingHit {
+  if (dist > max) return cur;
+  if (cur && cur.dist <= dist) return cur;
+  return { id, dist };
+}
+
 function windowFromPlot(
   plot: { time: number }[],
   extras?: Pick<SyncTimeWindow, 'xPanNorm' | 'priceScale' | 'pricePan'>
@@ -1973,28 +2003,81 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     );
   }, []);
 
+  /**
+   * أي رسم تحت الإصبع.
+   *
+   * كانت المسافات بثلاث وحدات مختلفة تُقارن ببعضها: الخط الأفقي بوحدة السعر، الرأسي بعدد
+   * الشموع، والبقية بالبكسل — فخطٌّ أفقي على بُعد 0.0004 كان «أقرب» من خط ترند تحت الإصبع
+   * تماماً. صارت كلها بالبكسل. وكان الالتقاط عند طرفَي الرسم فقط، فلمس منتصف خط الترند
+   * (وهو ما يفعله المتداول) لا يحدّد شيئاً؛ صار جسم الخط/حدّ المستطيل/مستويات فيبو قابلة
+   * للّمس. والملاحظة `note` لم تكن قابلة للتحديد إطلاقاً — لا سبيل لحذفها إلا بمسح الكل.
+   */
   const hitDrawing = useCallback(
     (x: number, y: number) => {
-      const price = priceAtY(y);
-      const idx = hitIndex(x) + source.start;
-      let best: { id: string; dist: number } | null = null;
+      const HANDLE_R = DRAW_HANDLE_R; // مقبض الطرف: هدف سحب، مدى ألطف
+      const BODY_R = 14; // جسم الخط/الحدّ
+      const lastLocal = Math.max(0, source.plot.length - 1);
+      const clampLocal = (i: number) => Math.max(0, Math.min(lastLocal, i));
+      let best: DrawingHit = null;
       for (const d of drawings) {
+        const aLocal = d.a.index - source.start;
+        const ax = xOf(aLocal);
+        const ay = yOf(d.a.price);
         if (d.tool === 'hline') {
-          const dist = Math.abs(d.a.price - price);
-          if (dist < range.span * 0.012 && (!best || dist < best.dist)) best = { id: d.id, dist };
-        } else if (d.tool === 'vline') {
-          const dist = Math.abs(d.a.index - idx);
-          if (dist <= 1 && (!best || dist < best.dist)) best = { id: d.id, dist: dist };
-        } else if (d.b) {
-          const d1 = Math.hypot(x - xOf(d.a.index - source.start), y - yOf(d.a.price));
-          const d2 = Math.hypot(x - xOf(d.b.index - source.start), y - yOf(d.b.price));
-          const dist = Math.min(d1, d2);
-          if (dist < 18 && (!best || dist < best.dist)) best = { id: d.id, dist };
+          best = considerHit(d.id, Math.abs(y - ay), BODY_R, best);
+          continue;
         }
+        if (d.tool === 'vline') {
+          best = considerHit(d.id, Math.abs(x - ax), BODY_R, best);
+          continue;
+        }
+        if (d.tool === 'note') {
+          best = considerHit(d.id, Math.hypot(x - ax, y - ay), HANDLE_R, best);
+          continue;
+        }
+        if (!d.b) continue;
+        const bLocal = d.b.index - source.start;
+        const bx = xOf(bLocal);
+        const by = yOf(d.b.price);
+        const endDist = Math.min(Math.hypot(x - ax, y - ay), Math.hypot(x - bx, y - by));
+        let bodyDist = Infinity;
+        if (d.tool === 'trend' || d.tool === 'ray') {
+          // نفس ما يُرسَم: الطرفان مقصوصان على النافذة، والشعاع يمتدّ 1.6 من طول القطعة.
+          bodyDist = segmentDistance(
+            x,
+            y,
+            xOf(clampLocal(aLocal)),
+            ay,
+            xOf(clampLocal(bLocal)),
+            by,
+            d.tool === 'ray' ? 1.6 : 1
+          );
+        } else if (d.tool === 'rect' || d.tool === 'zone') {
+          const l = Math.min(ax, bx);
+          const r = Math.max(ax, bx);
+          const t = Math.min(ay, by);
+          const b = Math.max(ay, by);
+          bodyDist = Math.min(
+            segmentDistance(x, y, l, t, r, t, 1),
+            segmentDistance(x, y, l, b, r, b, 1),
+            segmentDistance(x, y, l, t, l, b, 1),
+            segmentDistance(x, y, r, t, r, b, 1)
+          );
+        } else if (d.tool === 'fib') {
+          // مستويات فيبو خطوط أفقية بعرض الشارت — المسافة الرأسية لأقرب مستوى.
+          const hi = Math.max(d.a.price, d.b.price);
+          const lo = Math.min(d.a.price, d.b.price);
+          const span = hi - lo || 1;
+          for (const lv of FIB_LEVELS) {
+            bodyDist = Math.min(bodyDist, Math.abs(y - yOf(hi - span * lv)));
+          }
+        }
+        const dist = Math.min(endDist, bodyDist);
+        best = considerHit(d.id, dist, endDist <= HANDLE_R ? HANDLE_R : BODY_R, best);
       }
       return best?.id ?? null;
     },
-    [drawings, hitIndex, priceAtY, source.start, range.span, xOf, yOf]
+    [drawings, source.start, source.plot.length, xOf, yOf]
   );
 
   const exportChart = async () => {
@@ -2112,6 +2195,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         if (d?.b) {
           const da = Math.hypot(locationX - xOf(d.a.index - source.start), locationY - yOf(d.a.price));
           const db = Math.hypot(locationX - xOf(d.b.index - source.start), locationY - yOf(d.b.price));
+          // صار يمكن تحديد الخط من أي نقطة على جسمه، فالسحب من المنتصف كان سيجرّ أقرب
+          // طرف ويشوّه خطاً لمسه المتداول ليحدّده فقط: لا سحب إلا من مقبض طرفي ظاهر.
+          if (Math.min(da, db) > DRAW_HANDLE_R) {
+            dragging = null;
+            return;
+          }
           dragging = db < da ? 'b' : 'a';
         }
       },
