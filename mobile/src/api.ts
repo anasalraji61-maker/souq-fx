@@ -73,7 +73,8 @@ export type Vote = {
   note: string;
   agree: number;
   disagree: number;
-  author: string;
+  /** اسم ناشر الفكرة؛ null لفكرة مجهولة (السطر يُخفى بالواجهة) */
+  author: string | null;
   ts: string;
 };
 

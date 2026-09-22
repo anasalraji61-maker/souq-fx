@@ -974,6 +974,14 @@ def add_dm(item: dict) -> dict:
     return item
 
 
+# مؤلّف قديم ثابت كُتب لكل فكرة قبل ربطها بالحساب — يُعرض كمجهول لا «بواسطة أنت» للجميع
+_LEGACY_VOTE_AUTHOR = "أنت"
+
+
+def _vote_author(a: str | None) -> str | None:
+    return None if not a or a == _LEGACY_VOTE_AUTHOR else a
+
+
 def list_votes() -> list[dict]:
     with _conn() as c:
         rows = c.execute("SELECT * FROM votes ORDER BY rowid DESC").fetchall()
@@ -988,7 +996,7 @@ def list_votes() -> list[dict]:
             "note": r["note"] or "",
             "agree": r["agree"],
             "disagree": r["disagree"],
-            "author": r["author"],
+            "author": _vote_author(r["author"]),
             "ts": r["ts"],
         }
         for r in rows
@@ -1034,7 +1042,7 @@ def ballot(vote_id: str, choice: str) -> dict | None:
         "note": row["note"] or "",
         "agree": row["agree"],
         "disagree": row["disagree"],
-        "author": row["author"],
+        "author": _vote_author(row["author"]),
         "ts": row["ts"],
     }
 

@@ -1080,7 +1080,7 @@ def list_votes():
 
 
 @app.post("/api/votes")
-def create_vote(body: VoteCreate):
+def create_vote(body: VoteCreate, user: dict | None = Depends(_auth_user)):
     item = {
         "id": _new_id("v"),
         "symbol": body.symbol.upper(),
@@ -1091,7 +1091,9 @@ def create_vote(body: VoteCreate):
         "note": body.note,
         "agree": 0,
         "disagree": 0,
-        "author": "أنت",
+        # كان "أنت" ثابتاً لكل فكرة → كل متداول يرى أفكار غيره «بواسطة أنت» (وبالعربية حتى بواجهة
+        # إنجليزية). الآن اسم المستخدم للمسجّل، ولا مؤلّف للمجهول (الواجهة تُخفي السطر).
+        "author": user["username"] if user else None,
         "ts": datetime.now().strftime("%H:%M"),
     }
     db.create_vote(item)
