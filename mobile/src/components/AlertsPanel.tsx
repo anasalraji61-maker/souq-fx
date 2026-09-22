@@ -213,7 +213,17 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
 
   useEffect(() => {
     void ensureAlertNotifications().then(() => registerPushToken());
-    refresh();
+    /**
+     * فحص فوري عند فتح اللوحة، لا بعد دقيقة. `setInterval` وحده كان يعني أن أول فحص داخل
+     * التطبيق يقع بعد 60 ثانية من الفتح — ومن يفتح اللوحة بالذات يفتحها ليرى إن كان مستواه قد
+     * تحقّق، ومن يفتحها ويغلقها خلال الدقيقة لا يقع له فحص إطلاقاً. `checkAlerts` يعيد أيضاً
+     * القائمة المحدَّثة، فالحالة المعروضة («مُسلَّح»/«أُطلق») تصير الأدقّ فوراً بدل قائمة
+     * `/api/alerts` وحدها. لا إشعار مكرَّر: الخادم يُرجع التنبيه بـ`triggered` لمن يقلبه أولاً
+     * فقط (`db.mark_alert_triggered` ذرّي)، والـworker الخلفي يخضع للقاعدة نفسها.
+     * الفحص **بعد** `refresh` لا بالتوازي معه: كلاهما يكتب `setAlerts`، ولو سبق ردّ الفحص ردَّ
+     * القائمة لَدهَس الأقدمُ الأحدثَ فتبقى اللوحة على حالة ما قبل الفحص دقيقة كاملة.
+     */
+    void refresh().then(check);
     const id = setInterval(check, 60_000);
     return () => clearInterval(id);
   }, [refresh, check]);
