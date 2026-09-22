@@ -27,6 +27,9 @@ import {
   type TradePlan,
 } from '../tradePlan';
 
+/** نفس أزواج الاختيار السريع بحاسبة المخاطرة — تسجيل صفقة بنقرة بدل كتابة الرمز بلوحة مفاتيح بيد واحدة. */
+const QUICK_SYMBOLS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'GBPJPY', 'EURGBP'];
+
 type Trade = {
   id: string;
   symbol: string;
@@ -288,6 +291,33 @@ export function TradeJournalPanel() {
         >
           <Text style={[styles.chipText, side === 'sell' && styles.chipTextOn]}>{t.dirSell}</Text>
         </Pressable>
+      </View>
+      <View style={[styles.qChips, rtl && styles.rowRtl]}>
+        {QUICK_SYMBOLS.map((q) => {
+          const on = symbol.trim().toUpperCase() === q;
+          return (
+            <Pressable
+              key={q}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+              style={({ pressed }) => [
+                styles.qChip,
+                on && styles.chipOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => {
+                setSymbol(q);
+                setFormError(null);
+              }}
+              accessibilityLabel={`${t.journalSymbolA11y}: ${q}`}
+            >
+              <Text style={[styles.qChipText, on && styles.chipTextOn]}>{q}</Text>
+            </Pressable>
+          );
+        })}
       </View>
       <TextInput
         style={[styles.input, { textAlign: align }]}
@@ -559,6 +589,15 @@ const styles = StyleSheet.create({
   chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   chipText: { color: colors.textMuted, fontWeight: '700' },
   chipTextOn: { color: colors.accent },
+  qChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  qChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  qChipText: { color: colors.textMuted, fontWeight: '700', fontSize: 12 },
   input: {
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
