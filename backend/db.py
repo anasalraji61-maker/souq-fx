@@ -805,12 +805,17 @@ def delete_user_account(user_id: int) -> None:
     الشخصية القابلة للتعريف (username → معرّف مجهول ثابت غير قابل لتسجيل دخول،
     email → NULL، password_hash → قيمة عشوائية غير صالحة أبداً لأي كلمة مرور حقيقية)،
     وتُلغى كل الجلسات النشطة فوراً، ويُحذف المحتوى الشخصي البحت غير المرجعي من طرف
-    آخر (تنبيهات الأسعار والمؤشرات، دفتر الصفقات، تخطيطات الشارت المحفوظة، رمز إشعارات Push، سجل أصواته على أفكار الصفقات — العدّادات تبقى). هذا يحقق
+    آخر (تنبيهات الأسعار والمؤشرات، دفتر الصفقات، تخطيطات الشارت المحفوظة، رمز إشعارات Push، سجل أصواته على أفكار الصفقات — العدّادات تبقى، قائمة المتابعة المخصّصة، تقدّم الأكاديمية، واسمه كناشر لأفكار الصفقات). هذا يحقق
     الشرط الفعلي لأبل (إزالة البيانات الشخصية القابلة للتعريف) دون كسر شجرة العمولات.
     """
     placeholder = f"deleted_user_{user_id}"
     dead_hash = f"{secrets.token_hex(8)}${secrets.token_hex(32)}"
     with _conn() as c:
+        old = c.execute("SELECT username FROM users WHERE id=?", (user_id,)).fetchone()
+        if old and old["username"]:
+            # أفكار الصفقات تحفظ اسم الناشر نصاً (votes.author) — بلا هذا يبقى اسم الحساب المحذوف
+            # ظاهراً للجميع على أفكاره. الأفكار نفسها تبقى (عليها أصوات آخرين) لكن كمجهولة.
+            c.execute("UPDATE votes SET author=NULL WHERE author=?", (old["username"],))
         c.execute(
             "UPDATE users SET username=?, email=NULL, password_hash=? WHERE id=?",
             (placeholder, dead_hash, user_id),
@@ -822,6 +827,9 @@ def delete_user_account(user_id: int) -> None:
         c.execute("DELETE FROM push_tokens WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM layouts WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM vote_ballots WHERE user_id=?", (user_id,))
+        # قائمة المتابعة المخصّصة وتقدّم الأكاديمية بيانات شخصية أيضاً وكانت تبقى بعد الحذف
+        c.execute("DELETE FROM watchlist WHERE user_id=?", (user_id,))
+        c.execute("DELETE FROM academy_progress WHERE user_id=?", (user_id,))
 
 
 # ─── Alerts ───────────────────────────────────────────────────────────────────
