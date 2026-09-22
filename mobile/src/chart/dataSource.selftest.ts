@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import {
   canMergeLiveIntoCandles,
   isFreshTick,
+  isRealQuote,
   isValidAsOf,
   sourceFamily,
   tickBelongsToCandle,
@@ -122,6 +123,15 @@ const merged = withLivePrice(
   { tickAsOf: now, timeframe: '15m', nowSec: now }
 );
 check('forming candle merged', merged.candles[0]!.close === 1.12);
+
+// اقتباس حقيقي مقابل بذري تجريبي
+check('quote provider', isRealQuote({ price: 8.2, source: 'twelvedata', data_kind: 'provider' }));
+check('quote cache fallback', isRealQuote({ price: 1.17, source: 'ohlc_fallback', data_kind: 'cache' }));
+check('quote unknown channel', isRealQuote({ price: 1.17, source: 'ohlc_fallback', data_kind: 'unknown' }));
+check('quote demo rejected', !isRealQuote({ price: 0.999, source: 'ohlc_fallback', data_kind: 'demo' }));
+check('legacy fallback rejected', !isRealQuote({ price: 0.999, source: 'ohlc_fallback' }));
+check('legacy twelvedata ok', isRealQuote({ price: 150.2, source: 'twelvedata' }));
+check('bad price rejected', !isRealQuote({ price: 0, data_kind: 'provider' }) && !isRealQuote({ price: NaN, data_kind: 'provider' }));
 
 assert.equal(fails, 0);
 console.log(JSON.stringify({ ok: true, fails }));

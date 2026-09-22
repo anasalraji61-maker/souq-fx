@@ -16,6 +16,7 @@ import {
   slPipsFromPrices,
 } from '../positionSize';
 import { parseDecimal } from '../parseDecimal';
+import { isRealQuote } from '../chart/dataSource';
 
 type Props = {
   defaultSymbol?: string;
@@ -108,15 +109,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       reversedConversion({ symbol: convSymbol, invert: convInvert }),
     ];
     // سعر تجريبي بذري (المزوّد غير متاح أو لا يعرف الزوج — كان يُعيد ~1.0 لزوج مجهول) يُعامَل كفشل:
-    // حساب لوت من سعر تحويل مختلَق أخطر من طلب السعر يدوياً. `ohlc_fallback` بلا `data_kind` (باك-إند
-    // أقدم) لا يمكن تمييزه فيُرفض أيضاً؛ اقتباس المزوّد المباشر (`twelvedata`) يُقبل. provider/cache/unknown
-    // كلها شموع المزوّد الحقيقية (unknown = قناة غير مصنّفة لا سعر مختلَق) — `demo` وحده البذري.
-    const realQuote = (q: { source?: string; data_kind?: string }) =>
-      q.data_kind != null ? q.data_kind !== 'demo' : q.source === 'twelvedata';
+    // حساب لوت من سعر تحويل مختلَق أخطر من طلب السعر يدوياً (راجع `isRealQuote`).
     const fetchPrice = (sym: string) =>
       api.marketQuote(sym).then(
-        (q) =>
-          typeof q.price === 'number' && Number.isFinite(q.price) && q.price > 0 && realQuote(q) ? q.price : null,
+        (q) => (isRealQuote(q) ? q.price : null),
         () => null
       );
     const id = setTimeout(() => {

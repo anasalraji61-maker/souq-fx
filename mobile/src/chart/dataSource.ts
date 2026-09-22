@@ -49,6 +49,17 @@ export function provenanceLabel(
   return kindLabels[normalizeProvenance(src).kind];
 }
 
+/**
+ * اقتباس `/api/market/quote` سعر سوق حقيقي؟ عند تعذّر المزوّد (أو رمز لا يعرفه) يعيد الباك-إند سلسلة
+ * بذرية تجريبية (`data_kind: 'demo'`، ~1.0 لزوج مجهول) — مقبولة للعرض بشارت عليه شارة «تجريبي»، لكن
+ * لا تصلح رقماً يُبنى عليه قرار: سعر تحويل بحاسبة المخاطرة، أو اتجاه تنبيه «فوق/تحت». `ohlc_fallback`
+ * بلا `data_kind` (باك-إند أقدم) لا يمكن تمييزه فيُرفض؛ provider/cache/unknown كلها شموع المزوّد.
+ */
+export function isRealQuote(q: { price?: unknown; source?: string | null; data_kind?: string | null }): boolean {
+  if (typeof q.price !== 'number' || !Number.isFinite(q.price) || q.price <= 0) return false;
+  return q.data_kind != null ? q.data_kind !== 'demo' : q.source === 'twelvedata';
+}
+
 /** عائلة القناة المعروفة — قنوات غير معروفة لا تندمج افتراضياً */
 export function sourceFamily(channel: string | null | undefined): SourceFamily {
   const c = (channel || '').trim().toLowerCase();

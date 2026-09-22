@@ -16,6 +16,7 @@ import { playSoftClick } from '../audio/playSoftClick';
 import { hasCelebratedFirstAlert, markFirstAlertCelebrated } from '../achievements';
 import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
+import { isRealQuote } from '../chart/dataSource';
 
 type Props = {
   defaultSymbol?: string;
@@ -86,7 +87,9 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
         .marketQuote(sym)
         .then((q) => {
           if (!mountedRef.current || gen !== quoteGen.current) return;
-          const cur = typeof q.price === 'number' && Number.isFinite(q.price) && q.price > 0 ? q.price : null;
+          // سعر بذري تجريبي (المزوّد متعذّر/رمز مجهول) ليس «السعر الحالي»: كان يحدّد اتجاه فوق/تحت ويحذّر
+          // «سيُطلق فوراً» بناءً على رقم مختلَق — الباك-إند يفحص التنبيه بأسعار المزوّد الحقيقية فقط.
+          const cur = isRealQuote(q) ? q.price : null;
           setCurrent(cur);
           const typed = parseDecimal(priceTextRef.current);
           if (cur != null && !condManualRef.current && typed != null && typed > 0 && typed !== cur) {
