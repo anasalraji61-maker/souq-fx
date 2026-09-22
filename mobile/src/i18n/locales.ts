@@ -335,6 +335,7 @@ export type Dict = {
   journalStatWinRate: string;
   journalStatTotalPnl: string;
   journalStatBestWorst: string;
+  journalStatsPending: string;
   journalSideA11yPrefix: string;
   journalSymbolPlaceholder: string;
   journalSymbolA11y: string;
@@ -1091,6 +1092,7 @@ const ar: Dict = {
   journalStatWinRate: 'نسبة نجاح: {pct}%',
   journalStatTotalPnl: 'إجمالي PnL: {pct}%',
   journalStatBestWorst: 'أفضل/أسوأ: {best}% / {worst}%',
+  journalStatsPending: 'لا صفقات مغلقة بعد — نسبة النجاح والـPnL تظهر بعد إغلاق أول صفقة.',
   journalSideA11yPrefix: 'اتجاه الصفقة',
   journalSymbolPlaceholder: 'الرمز',
   journalSymbolA11y: 'رمز الصفقة',
@@ -1855,6 +1857,7 @@ const enUS: Dict = {
   journalStatWinRate: 'Win rate: {pct}%',
   journalStatTotalPnl: 'Total PnL: {pct}%',
   journalStatBestWorst: 'Best/Worst: {best}% / {worst}%',
+  journalStatsPending: 'No closed trades yet — win rate and PnL appear once you close your first trade.',
   journalSideA11yPrefix: 'Trade direction',
   journalSymbolPlaceholder: 'Symbol',
   journalSymbolA11y: 'Trade symbol',
@@ -2639,6 +2642,7 @@ const ku: Dict = {
   journalStatWinRate: 'ڕێژەی سەرکەوتن: {pct}%',
   journalStatTotalPnl: 'کۆی PnL: {pct}%',
   journalStatBestWorst: 'باشترین/خراپترین: {best}% / {worst}%',
+  journalStatsPending: 'هێشتا هیچ مامەڵەیەکی داخراو نییە — ڕێژەی سەرکەوتن و PnL دوای داخستنی یەکەم مامەڵە دەردەکەون.',
   journalSideA11yPrefix: 'ئاراستەی مامەڵە',
   journalSymbolPlaceholder: 'هێما',
   journalSymbolA11y: 'هێمای مامەڵە',

@@ -203,7 +203,12 @@ export function TradeJournalPanel() {
       <Text style={[styles.title, { textAlign: align }]}>{t.journalTitle}</Text>
       <Text style={[styles.sub, { textAlign: align }]}>{t.journalSub}</Text>
 
-      {stats ? (
+      {/* صفر صفقات مغلقة: «نسبة نجاح 0% · PnL 0% · أفضل/أسوأ 0%/0%» تُقرأ لمبتدئ كأداء سيئ وهي غياب
+          بيانات — تُعرض الإحصاءات من أول صفقة مغلقة، وقبلها سطر يشرح متى تظهر. */}
+      {stats && stats.trade_count === 0 && trades.length > 0 ? (
+        <Text style={[styles.sub, { textAlign: align }]}>{t.journalStatsPending}</Text>
+      ) : null}
+      {stats && stats.trade_count > 0 ? (
         <View style={styles.stats}>
           <Text style={[styles.stat, { textAlign: align }]}>
             {t.journalStatClosed.replace('{n}', String(stats.trade_count))}
