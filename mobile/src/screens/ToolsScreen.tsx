@@ -440,7 +440,8 @@ export function ToolsScreen() {
                     >
                       {r.change_pct >= 0 ? '+' : ''}
                       {r.change_pct}%
-                    </Text>
+                    </Text>{' '}
+                    <Text style={styles.match}>{t.screenerChangeSpan}</Text>
                   </Text>
                   <Text style={[styles.match, { textAlign: align }]}>{r.filters_matched.map(filterLabel).join(' · ')}</Text>
                 </View>

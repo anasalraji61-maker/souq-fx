@@ -94,7 +94,8 @@ export function ScreenerMini() {
                 >
                   {h.change_pct >= 0 ? '+' : ''}
                   {h.change_pct}%
-                </Text>
+                </Text>{' '}
+                {t.screenerChangeSpan}
               </Text>
             </View>
           ))}
