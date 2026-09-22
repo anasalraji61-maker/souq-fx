@@ -9,6 +9,7 @@ import {
   type AccountCcy,
   instrumentSpec,
   conversionPair,
+  reversedConversion,
   quoteToAccountRate,
   pipValuePerLot,
   positionSize,
@@ -39,8 +40,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const [entryPx, setEntryPx] = useState('');
   const [stopPx, setStopPx] = useState('');
   /** سعر زوج التحويل (عملة التسعير → عملة الحساب)؛ null أثناء التحميل أو عند الفشل. يُخزَّن مع رمزه
-   * فلا يُقرن سعر الزوج السابق بالزوج الجديد لإطار عرض واحد بعد تبديل الأداة/عملة الحساب. */
-  const [convQuote, setConvQuote] = useState<{ symbol: string; price: number } | null>(null);
+   * فلا يُقرن سعر الزوج السابق بالزوج الجديد لإطار عرض واحد بعد تبديل الأداة/عملة الحساب.
+   * `key` = زوج التحويل المتوقَّع (مفتاح الطلب)، و`invert` لما جُلب فعلاً — قد يكون الزوج المعكوس. */
+  const [convQuote, setConvQuote] = useState<{ key: string; symbol: string; invert: boolean; price: number } | null>(
+    null
+  );
   const [convLoading, setConvLoading] = useState(false);
   const [convFailed, setConvFailed] = useState(false);
   /** إدخال يدوي لسعر التحويل عند تعذّر جلبه — لا تتوقف الحاسبة بسبب انقطاع مزوّد الأسعار */
@@ -86,6 +90,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const spec = useMemo(() => instrumentSpec(symbol), [symbol]);
   const conv = useMemo(() => (spec ? conversionPair(spec.quote, account) : null), [spec, account]);
   const convSymbol = conv?.symbol ?? null;
+  const convInvert = conv?.invert ?? false;
 
   useEffect(() => {
     const g = ++gen.current;
@@ -97,24 +102,40 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       return;
     }
     setConvLoading(true);
+    // الزوج المتوقَّع أولاً، ثم المعكوس تلقائياً (CHFZAR ↔ ZARCHF…) قبل اللجوء للإدخال اليدوي
+    const tries = [
+      { symbol: convSymbol, invert: convInvert },
+      reversedConversion({ symbol: convSymbol, invert: convInvert }),
+    ];
+    // سعر تجريبي بذري (المزوّد غير متاح أو لا يعرف الزوج — كان يُعيد ~1.0 لزوج مجهول) يُعامَل كفشل:
+    // حساب لوت من سعر تحويل مختلَق أخطر من طلب السعر يدوياً. `ohlc_fallback` بلا `data_kind` (باك-إند
+    // أقدم) لا يمكن تمييزه فيُرفض أيضاً؛ اقتباس المزوّد المباشر (`twelvedata`) يُقبل. provider/cache/unknown
+    // كلها شموع المزوّد الحقيقية (unknown = قناة غير مصنّفة لا سعر مختلَق) — `demo` وحده البذري.
+    const realQuote = (q: { source?: string; data_kind?: string }) =>
+      q.data_kind != null ? q.data_kind !== 'demo' : q.source === 'twelvedata';
+    const fetchPrice = (sym: string) =>
+      api.marketQuote(sym).then(
+        (q) =>
+          typeof q.price === 'number' && Number.isFinite(q.price) && q.price > 0 && realQuote(q) ? q.price : null,
+        () => null
+      );
     const id = setTimeout(() => {
-      api
-        .marketQuote(convSymbol)
-        .then((q) => {
+      (async () => {
+        for (const c of tries) {
+          const price = await fetchPrice(c.symbol);
           if (!mountedRef.current || g !== gen.current) return;
-          const ok = typeof q.price === 'number' && Number.isFinite(q.price) && q.price > 0;
-          setConvQuote(ok ? { symbol: convSymbol, price: q.price } : null);
-          setConvFailed(!ok);
-        })
-        .catch(() => {
-          if (mountedRef.current && g === gen.current) setConvFailed(true);
-        })
-        .finally(() => {
-          if (mountedRef.current && g === gen.current) setConvLoading(false);
-        });
+          if (price != null) {
+            setConvQuote({ key: convSymbol, symbol: c.symbol, invert: c.invert, price });
+            setConvLoading(false);
+            return;
+          }
+        }
+        setConvFailed(true);
+        setConvLoading(false);
+      })();
     }, 400);
     return () => clearTimeout(id);
-  }, [convSymbol]);
+  }, [convSymbol, convInvert]);
 
   /** أرقام عربية/فاصل آلاف/فاصلة عشرية — راجع parseDecimal.ts. NaN = فارغ أو غير صالح. */
   const num = (s: string) => parseDecimal(s) ?? NaN;
@@ -140,10 +161,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     slFromPrices.current = false;
     setSlPips(v);
   };
-  const convPrice = convQuote && convQuote.symbol === convSymbol ? convQuote.price : null;
+  const fetchedConv = convQuote && convQuote.key === convSymbol ? convQuote : null;
   const manual = num(manualConv);
-  const pairPrice = convPrice ?? (Number.isFinite(manual) && manual > 0 ? manual : null);
-  const rate = quoteToAccountRate(conv, pairPrice);
+  // السعر المجلوب بترتيب زوجه الفعلي (قد يكون معكوساً)، وإلا الإدخال اليدوي بترتيب الزوج المعروض
+  const rate = fetchedConv
+    ? quoteToAccountRate({ invert: fetchedConv.invert }, fetchedConv.price)
+    : quoteToAccountRate(conv, Number.isFinite(manual) && manual > 0 ? manual : null);
   const pv = spec && rate != null ? pipValuePerLot(spec, rate) : null;
   const result =
     spec && pv != null

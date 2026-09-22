@@ -626,6 +626,8 @@ export const api = {
       bid?: number | null;
       ask?: number | null;
       source?: string;
+      /** provider/cache = سعر حقيقي؛ demo = سلسلة بذرية تجريبية (لا تصلح لحساب رقمي). */
+      data_kind?: DataOriginKind;
     }>(`/api/market/quote/${encodeURIComponent(symbol)}`),
   trades: () =>
     getJson<{

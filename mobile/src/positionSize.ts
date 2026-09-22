@@ -67,11 +67,21 @@ export function conversionPair(quote: string, account: string): { symbol: string
   if (quote === account) return null;
   const qi = CCY_PRIORITY.indexOf(quote);
   const ai = CCY_PRIORITY.indexOf(account);
-  // عملة غير مدرجة بالترتيب: نفترض عملة الحساب أساساً (USDXXX، EURXXX…) وهو الشائع للعملات الناشئة.
-  const quoteFirst = qi !== -1 && (ai === -1 || qi < ai);
+  // عملة غير مدرجة بالترتيب: نفترض عملة الحساب أساساً (USDXXX، EURXXX…) وهو الشائع للعملات الناشئة —
+  // عدا الين: يبقى عملة تسعير دائماً بالسوق (ZARJPY/TRYJPY/MXNJPY/NOKJPY…)، فحساب بالين مع عملة
+  // ناشئة كان يطلب زوجاً غير متداول «JPYZAR» فتتوقف الحاسبة عند «تعذّر سعر التحويل».
+  const quoteFirst = qi !== -1 ? ai === -1 || qi < ai : account === 'JPY';
   return quoteFirst
     ? { symbol: `${quote}${account}`, invert: false }
     : { symbol: `${account}${quote}`, invert: true };
+}
+
+/**
+ * الزوج المعكوس لزوج التحويل (ZARCHF ↔ CHFZAR) — محاولة ثانية تلقائية إن لم يجد المزوّد سعر الترتيب
+ * المتوقَّع (ترتيب التسعير للعملات الناشئة يختلف بين المزوّدين)، قبل طلب إدخال السعر يدوياً.
+ */
+export function reversedConversion(conv: { symbol: string; invert: boolean }): { symbol: string; invert: boolean } {
+  return { symbol: `${conv.symbol.slice(3, 6)}${conv.symbol.slice(0, 3)}`, invert: !conv.invert };
 }
 
 /** كم وحدة من عملة الحساب تساوي وحدة واحدة من عملة التسعير، من سعر زوج التحويل. */

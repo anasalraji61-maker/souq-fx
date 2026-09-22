@@ -1051,8 +1051,12 @@ def market_quote(symbol: str):
             "bid": last - spread / 2,
             "ask": last + spread / 2,
             "source": "ohlc_fallback",
+            # provider/cache = آخر إغلاق حقيقي؛ demo = سلسلة بذرية (المزوّد غير مهيّأ أو لا يعرف الرمز) —
+            # سعر غير حقيقي لا يصلح لحساب رقمي (حاسبة حجم المركز تتجاهله وتطلب السعر يدوياً).
+            "data_kind": series.data_source.kind,
         }
     book["source"] = "twelvedata"
+    book["data_kind"] = "provider"
     return book
 
 

@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import {
   instrumentSpec,
   conversionPair,
+  reversedConversion,
   quoteToAccountRate,
   pipValuePerLot,
   positionSize,
@@ -97,5 +98,21 @@ assert.ok(near(pipValuePerLot(instrumentSpec('GBPJPY')!, quoteToAccountRate(conv
 // EURUSD بحساب كندي: USDCAD=1.36 → 13.6 CAD
 assert.deepEqual(conversionPair('USD', 'CAD'), { symbol: 'USDCAD', invert: false });
 assert.ok(near(pipValuePerLot(eu, quoteToAccountRate(conversionPair('USD', 'CAD'), 1.36)!), 13.6));
+
+// عملة تسعير ناشئة بحساب ين: الين يبقى عملة تسعير (ZARJPY لا «JPYZAR» غير المتداول)
+assert.deepEqual(conversionPair('ZAR', 'JPY'), { symbol: 'ZARJPY', invert: false });
+assert.deepEqual(conversionPair('TRY', 'JPY'), { symbol: 'TRYJPY', invert: false });
+// USDZAR بحساب ين عند ZARJPY=8.2: 100000×0.0001 ZAR × 8.2 = 82¥ للوت
+assert.ok(near(pipValuePerLot(instrumentSpec('USDZAR')!, quoteToAccountRate(conversionPair('ZAR', 'JPY'), 8.2)!), 82));
+// بقية عملات الحساب مع عملة ناشئة: الحساب أساساً كما كان (USDZAR، EURTRY…)
+assert.deepEqual(conversionPair('ZAR', 'USD'), { symbol: 'USDZAR', invert: true });
+assert.deepEqual(conversionPair('TRY', 'EUR'), { symbol: 'EURTRY', invert: true });
+// الزوج المعكوس (محاولة ثانية) يعطي نفس المعدّل بالسعر المقلوب
+const cz = conversionPair('ZAR', 'CHF')!;
+assert.deepEqual(cz, { symbol: 'CHFZAR', invert: true });
+const zc = reversedConversion(cz);
+assert.deepEqual(zc, { symbol: 'ZARCHF', invert: false });
+assert.ok(near(quoteToAccountRate(cz, 20)!, quoteToAccountRate(zc, 1 / 20)!));
+assert.deepEqual(reversedConversion(zc), cz);
 
 console.log('positionSize selftest: OK');
