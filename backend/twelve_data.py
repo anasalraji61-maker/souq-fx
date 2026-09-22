@@ -73,6 +73,12 @@ CACHE_TTL = _CACHE_FRESH if _CACHE_MODE == "fresh" else _CACHE_SHARED
 STALE_MAX_SEC = int(os.getenv("TWELVE_DATA_STALE_MAX", "900"))
 
 _cache: dict[str, tuple[float, list[dict]]] = {}
+
+# طول السلسلة الموحَّد للشارت (build_series) والماسح وتنبيهات المؤشر بالـworker. مفتاح الكاش يشمل الطول،
+# فكان الماسح (80) والـworker (80) والشارت/فحص التنبيهات من التطبيق (180) يجلبون نفس (رمز، فريم) كلٌّ
+# بطلب منفصل — والمزوّد يحسب طلباً لكل رمز مهما كان الطول. طول واحد = طلب واحد يخدم الجميع ضمن الـTTL،
+# ونفس الشموع للمؤشر بالخادم والعميل (RSI/MACD على 80 شمعة ≠ على 180).
+CHART_BARS = 180
 _stats: dict[str, int | float | None] = {
     "api_calls": 0,
     "cache_hits": 0,

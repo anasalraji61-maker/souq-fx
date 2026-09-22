@@ -97,7 +97,7 @@ def _price_hit(a: dict, q: float, candles: list[dict]) -> bool:
 
 
 def _indicator_series(a: dict, cache: dict | None = None) -> list[dict] | None:
-    """سلسلة 80 شمعة لرمز/فريم التنبيه — **طلب واحد لكل (رمز، فريم) بالدورة** عبر `cache`.
+    """سلسلة `CHART_BARS` شمعة (نفس طول الشارت و/api/indicator-alerts/check — نفس الكاش ونفس القيم) لرمز/فريم التنبيه — **طلب واحد لكل (رمز، فريم) بالدورة** عبر `cache`.
     كانت كل تنبيهات المؤشر تجلب سلسلتها منفردة (5 تنبيهات RSI/تقاطع على EURUSD 1h = 5 طلبات للمزوّد
     كل دقيقة — تستنزف حد Twelve Data كما كانت تنبيهات السعر). الفشل يُخزَّن أيضاً (None) فلا يُعاد
     الطلب لنفس المفتاح بنفس الدورة بعد 429."""
@@ -106,7 +106,7 @@ def _indicator_series(a: dict, cache: dict | None = None) -> list[dict] | None:
         return cache[key]
     raw: list[dict] | None
     try:
-        raw = market.fetch_time_series(a["symbol"], a["timeframe"], outputsize=80)
+        raw = market.fetch_time_series(a["symbol"], a["timeframe"], outputsize=market.CHART_BARS)
     except Exception:
         log.warning(
             "indicator series fetch failed for %s (%s)",

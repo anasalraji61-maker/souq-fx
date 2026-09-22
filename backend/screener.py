@@ -17,6 +17,9 @@ FilterId = Literal[
 ]
 
 DEFAULT_SYMBOLS = list(market.SYMBOL_MAP.keys())
+# نسبة التغيّر بالنتيجة تبقى «آخر 80 شمعة» كما تعرضها الواجهة (`screenerChangeSpan`)، بينما المؤشرات
+# تُحسب على السلسلة الموحَّدة كاملة (تقارب EMA/RSI أفضل، ونفس قيم تنبيهات المؤشر والشارت).
+CHANGE_WINDOW = 80
 
 
 def run_scan(
@@ -55,7 +58,9 @@ def run_scan_detailed(
 
     for sym in syms:
         try:
-            raw = market.fetch_time_series(sym, timeframe, outputsize=80)
+            # نفس طول الشارت/التنبيهات → نفس مفتاح الكاش: رمز شوهد شارته أو يراقبه تنبيه لا يستهلك طلباً،
+            # وإعادة الفحص بعد حدّ المزوّد تجلب الفاشلة فقط.
+            raw = market.fetch_time_series(sym, timeframe, outputsize=market.CHART_BARS)
         except Exception:
             failed.append(sym.upper())
             continue
@@ -70,7 +75,9 @@ def run_scan_detailed(
 
         matched: list[str] = []
         rsi_v = float(snap["rsi"])
-        chg = float(snap.get("change_pct") or 0)
+        window = raw[-CHANGE_WINDOW:]
+        first_close = float(window[0]["close"]) if window else 0.0
+        chg = ((float(snap["last"]) - first_close) / first_close * 100) if first_close else 0.0
 
         for f in flt:
             if f == "rsi_oversold" and rsi_v <= rsi_low:
