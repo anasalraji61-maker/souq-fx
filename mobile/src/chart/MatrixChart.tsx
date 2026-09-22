@@ -38,6 +38,7 @@ import { kagi } from './kagi';
 import { pointFigure } from './pointFigure';
 import { rangeBars } from './range';
 import { computeCvd, computeFootprint } from './orderflow';
+import { collapsedBarText, planPanes } from './panes';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
 import {
@@ -605,10 +606,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     all: [] as unknown[],
   });
 
-  const indicators = useMemo(() => {
+  // `selectedInd` = ما اختاره المتداول فعلاً (تُبنى عليه أزرار المؤشرات).
+  // `indicators` = ما يُرسم بالفعل: نفسها ناقصَ اللوحات المطويّة لضيق الارتفاع، فيكفي
+  // طيُّها هنا ليسقط حسابها (useMemo) ورسمها معاً بلا لمس 108 شرط عرض.
+  const selectedInd = useMemo(() => {
     const set = new Set([...LENS_PRESETS[lens], ...extraInd]);
     return [...set];
   }, [lens, extraInd]);
+
+  const availableH = Math.max(0, height - (interactive ? 8 : 0));
+  const panePlan = useMemo(
+    () => planPanes({ active: selectedInd, availableH, dense }),
+    [selectedInd, availableH, dense]
+  );
+  const { paneH, mainH, collapsed: collapsedPanes, barH: collapsedBarH } = panePlan;
+  const indicators = useMemo(() => {
+    if (!collapsedPanes.length) return selectedInd;
+    const off = new Set(collapsedPanes);
+    return selectedInd.filter((id) => !off.has(id));
+  }, [selectedInd, collapsedPanes]);
 
   const liveSeries = useMemo(
     () =>
@@ -1558,134 +1574,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [closes, indicators]
   );
 
-  const paneCount =
-    (indicators.includes('volume') ? 1 : 0) +
-    (indicators.includes('rsi') ? 1 : 0) +
-    (indicators.includes('macd') ? 1 : 0) +
-    (indicators.includes('stoch') ? 1 : 0) +
-    (indicators.includes('atr') ? 1 : 0) +
-    (indicators.includes('willr') ? 1 : 0) +
-    (indicators.includes('cci') ? 1 : 0) +
-    (indicators.includes('roc') ? 1 : 0) +
-    (indicators.includes('obv') ? 1 : 0) +
-    (indicators.includes('mfi') ? 1 : 0) +
-    (indicators.includes('adx') ? 1 : 0) +
-    (indicators.includes('stddev') ? 1 : 0) +
-    (indicators.includes('aroon') ? 1 : 0) +
-    (indicators.includes('cmf') ? 1 : 0) +
-    (indicators.includes('ultimateOsc') ? 1 : 0) +
-    (indicators.includes('cmo') ? 1 : 0) +
-    (indicators.includes('trix') ? 1 : 0) +
-    (indicators.includes('force') ? 1 : 0) +
-    (indicators.includes('chaikinOsc') ? 1 : 0) +
-    (indicators.includes('dpo') ? 1 : 0) +
-    (indicators.includes('ao') ? 1 : 0) +
-    (indicators.includes('ac') ? 1 : 0) +
-    (indicators.includes('bop') ? 1 : 0) +
-    (indicators.includes('bullPower') ? 1 : 0) +
-    (indicators.includes('bearPower') ? 1 : 0) +
-    (indicators.includes('tsi') ? 1 : 0) +
-    (indicators.includes('coppock') ? 1 : 0) +
-    (indicators.includes('eom') ? 1 : 0) +
-    (indicators.includes('nvi') ? 1 : 0) +
-    (indicators.includes('massIndex') ? 1 : 0) +
-    (indicators.includes('ppo') ? 1 : 0) +
-    (indicators.includes('chaikinVol') ? 1 : 0) +
-    (indicators.includes('qstick') ? 1 : 0) +
-    (indicators.includes('chop') ? 1 : 0) +
-    (indicators.includes('bwmfi') ? 1 : 0) +
-    (indicators.includes('pvo') ? 1 : 0) +
-    (indicators.includes('apo') ? 1 : 0) +
-    (indicators.includes('vo') ? 1 : 0) +
-    (indicators.includes('vpt') ? 1 : 0) +
-    (indicators.includes('hv') ? 1 : 0) +
-    (indicators.includes('stochRsi') ? 1 : 0) +
-    (indicators.includes('rvi') ? 1 : 0) +
-    (indicators.includes('linRegSlope') ? 1 : 0) +
-    (indicators.includes('linRegR2') ? 1 : 0) +
-    (indicators.includes('percentB') ? 1 : 0) +
-    (indicators.includes('bbw') ? 1 : 0) +
-    (indicators.includes('momentum') ? 1 : 0) +
-    (indicators.includes('vhf') ? 1 : 0) +
-    (indicators.includes('pvi') ? 1 : 0) +
-    (indicators.includes('ravi') ? 1 : 0) +
-    (indicators.includes('ulcer') ? 1 : 0) +
-    (indicators.includes('fisher') ? 1 : 0) +
-    (indicators.includes('kst') ? 1 : 0) +
-    (indicators.includes('vortex') ? 1 : 0) +
-    (indicators.includes('klinger') ? 1 : 0) +
-    (indicators.includes('gator') ? 1 : 0) +
-    (indicators.includes('smi') ? 1 : 0) +
-    (indicators.includes('dmi') ? 1 : 0) +
-    (indicators.includes('rwi') ? 1 : 0) +
-    (indicators.includes('aroonUpDown') ? 1 : 0) +
-    (indicators.includes('adl') ? 1 : 0) +
-    (indicators.includes('rvix') ? 1 : 0) +
-    (indicators.includes('stc') ? 1 : 0) +
-    (indicators.includes('cog') ? 1 : 0) +
-    (indicators.includes('squeeze') ? 1 : 0) +
-    (indicators.includes('netVolume') ? 1 : 0) +
-    (indicators.includes('woodieCci') ? 1 : 0) +
-    (indicators.includes('donchianWidth') ? 1 : 0) +
-    (indicators.includes('connorsRsi') ? 1 : 0) +
-    (indicators.includes('keltnerWidth') ? 1 : 0) +
-    (indicators.includes('cfo') ? 1 : 0) +
-    (indicators.includes('vwMacd') ? 1 : 0) +
-    (indicators.includes('disparityIndex') ? 1 : 0) +
-    (indicators.includes('tii') ? 1 : 0) +
-    (indicators.includes('demarker') ? 1 : 0) +
-    (indicators.includes('rmi') ? 1 : 0) +
-    (indicators.includes('pgo') ? 1 : 0) +
-    (indicators.includes('twiggsMoneyFlow') ? 1 : 0) +
-    (indicators.includes('vzo') ? 1 : 0) +
-    (indicators.includes('atrp') ? 1 : 0) +
-    (indicators.includes('gmmaOsc') ? 1 : 0) +
-    (indicators.includes('iftRsi') ? 1 : 0) +
-    (indicators.includes('waveTrend') ? 1 : 0) +
-    (indicators.includes('cutlerRsi') ? 1 : 0) +
-    (indicators.includes('cvd') ? 1 : 0) +
-    (indicators.includes('parkinsonVol') ? 1 : 0) +
-    (indicators.includes('garmanKlassVol') ? 1 : 0) +
-    (indicators.includes('rogersSatchellVol') ? 1 : 0) +
-    (indicators.includes('yangZhangVol') ? 1 : 0) +
-    (indicators.includes('smiErgodic') ? 1 : 0) +
-    (indicators.includes('pmo') ? 1 : 0) +
-    (indicators.includes('trueRange') ? 1 : 0) +
-    (indicators.includes('stdError') ? 1 : 0) +
-    (indicators.includes('ewmaVol') ? 1 : 0) +
-    (indicators.includes('volRoc') ? 1 : 0) +
-    (indicators.includes('adxr') ? 1 : 0) +
-    (indicators.includes('volatilityRatio') ? 1 : 0) +
-    (indicators.includes('williamsAd') ? 1 : 0) +
-    (indicators.includes('fractalChaosOsc') ? 1 : 0) +
-    (indicators.includes('gapo') ? 1 : 0) +
-    (indicators.includes('pfe') ? 1 : 0) +
-    (indicators.includes('rainbowOsc') ? 1 : 0) +
-    (indicators.includes('efficiencyRatio') ? 1 : 0) +
-    (indicators.includes('vpci') ? 1 : 0) +
-    (indicators.includes('ttf') ? 1 : 0) +
-    (indicators.includes('tdi') ? 1 : 0) +
-    (indicators.includes('vfi') ? 1 : 0) +
-    (indicators.includes('laguerreRsi') ? 1 : 0);
-
-  // Indicator panes shrink (48 → 34px) before they are allowed to crush the price
-  // area: price keeps at least ~55% of the chart height, so 4-5 oscillators on a
-  // phone no longer squeeze candles into a ~100px strip.
-  //
-  // فجوة اللوحة تساوي فجوة الجذر الفعلية: `styles.root` بـ`gap: 6` و`rootDense` بـ`gap: 0`،
-  // لكن الحساب كان مثبَّتاً على 4 — فبالوضع العادي كل لوحة تأكل 2px أكثر ممّا حُسب لها
-  // (تفيض خارج صندوق الشارت مع تراكم اللوحات)، وبالوضع المدمج يُحجَز 4px لكل لوحة بلا
-  // مقابل فيُقضَم من لوحة السعر بلا سبب. أي تعديل على `root.gap` يجب أن يتبعه هنا.
-  const PANE_GAP = dense ? 0 : 6;
-  const availableH = Math.max(0, height - (interactive ? 8 : 0));
-  // أرضية السعر لا تتجاوز الارتفاع المتاح أصلاً: بإطار قصير (خلية الرباعي/شارت مدمج)
-  // كانت 140 أكبر من المتاح فتصير ميزانية اللوحات سالبة ويصبح الحساب بلا معنى.
-  const minMainH = Math.min(availableH, Math.max(140, Math.round(availableH * 0.55)));
-  const paneBudget = Math.max(0, availableH - minMainH);
-  const paneH = paneCount
-    ? Math.max(34, Math.min(48, Math.floor(paneBudget / paneCount) - PANE_GAP))
-    : 48;
-  const mainH = Math.max(minMainH, availableH - paneCount * (paneH + PANE_GAP));
+  // تعداد اللوحات وارتفاعاتها وأيّها يُطوى: كلّه بـ`planPanes` (./panes) أعلى الملف —
+  // كان هنا تعدادٌ يدويّ من 108 سطر يقسم الارتفاع بلا فرضٍ للحدّ الأدنى، فتفيض اللوحات
+  // خارج صندوق الشارت بصمت عند 5 لوحات فأكثر أو داخل خلية التخطيط الرباعي.
 
   const range = useMemo(() => {
     let min = Infinity;
@@ -7846,6 +7737,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         </View>
       ) : null}
 
+      {/* شريط اللوحات المطويّة: بديل الفيض الصامت خارج صندوق الشارت */}
+      {collapsedPanes.length ? (
+        <View
+          accessibilityRole="text"
+          accessibilityLabel={trx.panesCollapsedA11y}
+          style={[styles.collapsedBar, { height: collapsedBarH }]}
+        >
+          <Text numberOfLines={1} style={styles.collapsedCount}>
+            {`${trx.panesCollapsed} ${collapsedPanes.length}`}
+          </Text>
+          <Text numberOfLines={1} style={styles.collapsedNames}>
+            {collapsedBarText(collapsedPanes)}
+          </Text>
+        </View>
+      ) : null}
+
       {interactive && !compactUi ? (
         <View style={styles.dock}>
           <Text style={styles.dockTitle}>{tr.mcDockTitle}</Text>
@@ -7909,7 +7816,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
             {localizedIndicators(tr).map((ind) => {
-              const on = indicators.includes(ind.id);
+              const on = selectedInd.includes(ind.id);
               return (
                 <Pressable
                   accessibilityRole="button"
@@ -8388,6 +8295,30 @@ const styles = StyleSheet.create({
     paddingTop: 6,
   },
   paneInner: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 2 },
+  // شريط اللوحات المطويّة: بارتفاع لوحة مصغَّرة (16px) — يذكر العدد والأسماء بدل
+  // إخفاء اللوحات بصمت عند ضيق ارتفاع الشارت.
+  collapsedBar: {
+    backgroundColor: '#070F18',
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    gap: 6,
+    overflow: 'hidden',
+  },
+  collapsedCount: {
+    color: colors.accent,
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  collapsedNames: {
+    flex: 1,
+    color: colors.textDim,
+    fontSize: 9,
+    fontWeight: '600',
+  },
   dock: {
     marginTop: 4,
     backgroundColor: colors.bgElevated,

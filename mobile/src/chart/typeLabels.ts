@@ -94,6 +94,8 @@ export type ChartExtraLabels = {
   undo: string;
   undoA11y: string;
   nothingToUndo: string;
+  panesCollapsed: string;
+  panesCollapsedA11y: string;
 };
 
 const CHART_EXTRA: Record<'ar' | 'en' | 'ku', ChartExtraLabels> = {
@@ -101,16 +103,22 @@ const CHART_EXTRA: Record<'ar' | 'en' | 'ku', ChartExtraLabels> = {
     undo: 'تراجع',
     undoA11y: 'تراجع عن آخر تغيير بالرسم',
     nothingToUndo: 'لا يوجد ما يُتراجَع عنه',
+    panesCollapsed: 'لا تتّسع',
+    panesCollapsedA11y: 'لوحات مؤشرات مطويّة: ارتفاع الشارت لا يتّسع لها',
   },
   en: {
     undo: 'Undo',
     undoA11y: 'Undo the last drawing change',
     nothingToUndo: 'Nothing to undo',
+    panesCollapsed: 'No room',
+    panesCollapsedA11y: 'Indicator panes collapsed: the chart is not tall enough',
   },
   ku: {
     undo: 'گەڕاندنەوە',
     undoA11y: 'گەڕاندنەوەی دوایین گۆڕانکاری لە کێشان',
     nothingToUndo: 'هیچ شتێک نییە بگەڕێندرێتەوە',
+    panesCollapsed: 'جێگا نییە',
+    panesCollapsedA11y: 'پانێلی ئاماژەکان نوقاون: بەرزی چارتەکە بەشیان ناکات',
   },
 };
 
