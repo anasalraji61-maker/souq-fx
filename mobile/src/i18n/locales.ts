@@ -957,7 +957,7 @@ const ar: Dict = {
   aiPanelTitle: 'مساعد ذكاء اصطناعي',
   aiGreeting: 'أنا خبير تداول MATRIX. اسأل عن تحليل، سيناريو صفقة، إدارة مخاطر، أو علاقة الزوج بـ DXY.',
   aiOfflineFallback:
-    'تعذر الاتصال بالخادم. تأكد أن Backend يعمل على المنفذ 8100.\n\nتحليل محلي سريع: راقب DXY قبل أي دخول على أزواج الدولار، واستخدم وقف واضح بنسبة مخاطرة ≤ 1%.',
+    'تعذّر الاتصال بالخادم — تحقّق من اتصالك بالإنترنت وحاول بعد قليل.\n\nتحليل محلي سريع: راقب DXY قبل أي دخول على أزواج الدولار، واستخدم وقف واضح بنسبة مخاطرة ≤ 1%.',
   aiWinEstimate: 'توقع نجاح تقديري: {pct}%',
   aiWinDisclaimer: 'تقدير إحصائي وليس ضماناً — أدر مخاطرك دوماً',
   aiInputPlaceholder: 'مثال: تحليل {symbol} اليوم؟',
@@ -1786,7 +1786,7 @@ const enUS: Dict = {
   aiGreeting:
     "I'm the MATRIX trading expert. Ask about analysis, a trade scenario, risk management, or the pair's relation to DXY.",
   aiOfflineFallback:
-    'Could not reach the server. Make sure the backend is running on port 8100.\n\nQuick local take: watch DXY before entering any dollar pair, and use a clear stop with risk ≤ 1%.',
+    'Could not reach the server — check your internet connection and try again shortly.\n\nQuick local take: watch DXY before entering any dollar pair, and use a clear stop with risk ≤ 1%.',
   aiWinEstimate: 'Estimated success chance: {pct}%',
   aiWinDisclaimer: 'A statistical estimate, not a guarantee — always manage your risk',
   aiInputPlaceholder: 'e.g. analysis of {symbol} today?',
@@ -2634,7 +2634,7 @@ const ku: Dict = {
   aiGreeting:
     'من پسپۆڕی مامەڵەکردنی MATRIX ـم. پرسیار بکە دەربارەی شیکاری، دیمەنی مامەڵە، بەڕێوەبردنی مەترسی، یان پەیوەندی جووتەکە بە DXY.',
   aiOfflineFallback:
-    'نەکرا پەیوەندی بە ڕاژەوە بکرێت. دڵنیابەرەوە کە Backend لەسەر پۆرتی 8100 کاردەکات.\n\nشیکاری خێرای ناوخۆیی: چاودێری DXY بکە پێش هەر چوونەژوورەوەیەک بۆ جووتەکانی دۆلار، و وەستانێکی ڕوون بەکاربهێنە بە مەترسی ≤ 1%.',
+    'نەکرا پەیوەندی بە ڕاژەوە بکرێت — لە پەیوەندییەکەت بە ئینتەرنێت دڵنیابە و دوای کەمێک دووبارە هەوڵ بدەرەوە.\n\nشیکاری خێرای ناوخۆیی: چاودێری DXY بکە پێش هەر چوونەژوورەوەیەک بۆ جووتەکانی دۆلار، و وەستانێکی ڕوون بەکاربهێنە بە مەترسی ≤ 1%.',
   aiWinEstimate: 'ڕێژەی سەرکەوتنی خەمڵێنراو: {pct}%',
   aiWinDisclaimer: 'خەمڵاندنێکی ئاماریە نەک دڵنیایی — هەمیشە مەترسیت بەڕێوە ببە',
   aiInputPlaceholder: 'نموونە: شیکاری {symbol} ئەمڕۆ؟',

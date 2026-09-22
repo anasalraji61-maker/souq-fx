@@ -12,8 +12,10 @@ import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail,
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 
-/** لا «احتمال نجاح» بالفقاعة: كان رقماً مختلَقاً (hash بالخادم، 62 ثابت عند الانقطاع) يُعرض كتقدير. */
-type Turn = { role: 'user' | 'ai'; text: string };
+/** لا «احتمال نجاح» بالفقاعة: كان رقماً مختلَقاً (hash بالخادم، 62 ثابت عند الانقطاع) يُعرض كتقدير.
+ * وبالمبدأ نفسه: `offline` تميّز نصّ الانقطاع العام عن جواب فعليّ للمساعد — كان يُعرض بفقاعة المساعد
+ * ذاتها فيبدو كتحليل لسؤال المتداول (نفس ما يفعله `reportAiFallbackNote` بالتقرير الأسبوعي). */
+type Turn = { role: 'user' | 'ai'; text: string; offline?: boolean };
 
 type Props = { symbol?: string; embedded?: boolean };
 
@@ -50,6 +52,7 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
         {
           role: 'ai',
           text: t.aiOfflineFallback,
+          offline: true,
         },
       ]);
     } finally {
@@ -75,9 +78,15 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
         {turns.map((turn, i) => (
           <View
             key={i}
-            style={[styles.bubble, turn.role === 'user' ? styles.user : styles.ai]}
+            style={[
+              styles.bubble,
+              turn.role === 'user' ? styles.user : styles.ai,
+              turn.offline && styles.aiOffline,
+            ]}
           >
-            <Text style={[styles.text, { textAlign: align }]}>{turn.text}</Text>
+            <Text style={[styles.text, turn.offline && styles.textOffline, { textAlign: align }]}>
+              {turn.text}
+            </Text>
           </View>
         ))}
         {loading && <ActivityIndicator color={colors.accent} />}
@@ -154,6 +163,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgElevated,
     borderColor: colors.borderSoft,
   },
+  /** فقاعة انقطاع، لا جواب مساعد: حدّ وخلفية تحذير كما بقيّة حالات التعذّر بالتطبيق */
+  aiOffline: {
+    backgroundColor: colors.warnSoft,
+    borderColor: colors.warn,
+  },
+  textOffline: { color: colors.textMuted },
   text: {
     color: colors.text,
     fontSize: 12,
