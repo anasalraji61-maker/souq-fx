@@ -100,6 +100,8 @@ export type Dict = {
   toolsTabAi: string;
   a11yTabPrefix: string;
   a11ySignalSymbolPrefix: string;
+  /** وسم الشريحة: هذا الزوج مفتوح الآن على شارت المتداول */
+  toolsSymOnChart: string;
   toolsHubCommunity: string;
   toolsHubAnalysis: string;
   a11yHubSectionPrefix: string;
@@ -914,6 +916,7 @@ const ar: Dict = {
   toolsTabAi: 'AI',
   a11yTabPrefix: 'تبويب',
   a11ySignalSymbolPrefix: 'رمز الإشارة',
+  toolsSymOnChart: 'على شارتك',
   toolsHubCommunity: 'مجتمع وأخبار',
   toolsHubAnalysis: 'تحليل وتنبيهات',
   a11yHubSectionPrefix: 'قسم لوحات',
@@ -1741,6 +1744,7 @@ const enUS: Dict = {
   toolsTabAi: 'AI',
   a11yTabPrefix: 'Tab',
   a11ySignalSymbolPrefix: 'Signal symbol',
+  toolsSymOnChart: 'on your chart',
   toolsHubCommunity: 'Community & news',
   toolsHubAnalysis: 'Analysis & alerts',
   a11yHubSectionPrefix: 'Panel section',
@@ -2588,6 +2592,7 @@ const ku: Dict = {
   toolsTabAi: 'AI',
   a11yTabPrefix: 'تاب',
   a11ySignalSymbolPrefix: 'هێمای نیشانە',
+  toolsSymOnChart: 'لەسەر چارتەکەت',
   toolsHubCommunity: 'کۆمەڵگا و هەواڵ',
   toolsHubAnalysis: 'شیکاری و ئاگادارکردنەوە',
   a11yHubSectionPrefix: 'بەشی پانێڵ',

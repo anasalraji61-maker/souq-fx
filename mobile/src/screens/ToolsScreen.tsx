@@ -183,13 +183,26 @@ export function ToolsScreen() {
     });
   }, [signalSym, symbolRestored]);
 
-  /** الرموز المعروضة: قائمة المتابعة (أول 8) ومعها الرمز المختار دوماً — وإلا اختفت الشريحة
-   * المفعَّلة حين يُحذف الزوج من المتابعة وبقي المحتوى تحته بلا ما يدلّ عليه. */
+  /** أزواج الشارت المفتوح (الإطارات الثلاثة، بلا تكرار) — المتداول قادم لتوّه من زوج يراه أمامه،
+   * فغيابه عن الشريط يعني فتح المتابعة وإضافته لمجرّد حساب لوت أو قراءة خبر. تُضاف الأزواج فقط ولا
+   * تغلب اختياره المحفوظ: الرمز المفعَّل يبقى كما تركه. */
+  const chartSymbols = useMemo(
+    () =>
+      Array.from(new Set(frameSymbols)).filter((s) => /^[A-Z0-9._-]{3,15}$/.test(s)),
+    [frameSymbols]
+  );
+
+  /** الرموز المعروضة: قائمة المتابعة (أول 8) ومعها الرمز المختار وأزواج الشارت دوماً — وإلا اختفت
+   * الشريحة المفعَّلة حين يُحذف الزوج من المتابعة وبقي المحتوى تحته بلا ما يدلّ عليه. الإضافات
+   * تتصدّر كي لا يقتصّها الحدّ، وترتيب المتابعة يبقى كما هو (شريحة لا تقفز مكانها عند كل نقرة). */
   const symbolChoices = useMemo(() => {
     const base = watchSymbols && watchSymbols.length > 0 ? watchSymbols : FALLBACK_SYMBOLS;
     const list = base.slice(0, MAX_SYMBOL_CHIPS);
-    return list.includes(signalSym) ? list : [signalSym, ...list].slice(0, MAX_SYMBOL_CHIPS);
-  }, [watchSymbols, signalSym]);
+    const extras = [signalSym, ...chartSymbols].filter(
+      (s, i, arr) => !list.includes(s) && arr.indexOf(s) === i
+    );
+    return extras.length > 0 ? [...extras, ...list].slice(0, MAX_SYMBOL_CHIPS) : list;
+  }, [watchSymbols, signalSym, chartSymbols]);
 
   // يُعاد القراءة عند كل عودة للتبويب: كانت تُقرأ مرة عند التركيب فقط، فتغيير أزواج/فريمات الشارت بالشاشة
   // الرئيسية ثم «حفظ التخطيط الحالي» هنا يحفظ إعداداً قديماً، و«الحالي» يُعلَّم على تخطيط غير المطبَّق.
@@ -308,25 +321,33 @@ export function ToolsScreen() {
           style={styles.symBarScroll}
           contentContainerStyle={[styles.symBar, rtl && styles.symBarRtl]}
         >
-          {symbolChoices.map((s) => (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected: signalSym === s }}
-              key={s}
-              style={({ pressed }) => [
-                styles.chip,
-                signalSym === s && styles.chipOn,
-                pressed && {
-                  opacity: buttons.pressedOpacity,
-                  transform: [{ scale: buttons.pressedScale }],
-                },
-              ]}
-              onPress={() => setSignalSym(s)}
-              accessibilityLabel={`${t.a11ySignalSymbolPrefix}: ${s}`}
-            >
-              <Text style={[styles.chipText, signalSym === s && styles.chipTextOn]}>{s}</Text>
-            </Pressable>
-          ))}
+          {symbolChoices.map((s) => {
+            const onChart = chartSymbols.includes(s);
+            return (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: signalSym === s }}
+                key={s}
+                style={({ pressed }) => [
+                  styles.chip,
+                  signalSym === s && styles.chipOn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => setSignalSym(s)}
+                accessibilityLabel={`${t.a11ySignalSymbolPrefix}: ${s}${
+                  onChart ? ` — ${t.toolsSymOnChart}` : ''
+                }`}
+              >
+                <Text style={[styles.chipText, signalSym === s && styles.chipTextOn]}>
+                  {s}
+                  {onChart ? <Text style={styles.chipOnChartMark}> •</Text> : null}
+                </Text>
+              </Pressable>
+            );
+          })}
         </ScrollView>
       ) : null}
 
@@ -680,6 +701,8 @@ const styles = StyleSheet.create({
   chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   chipTextOn: { color: colors.accent },
+  /** نقطة صغيرة تقول «هذا الزوج مفتوح على شارتك» — الشريحة وحدها لا تفسّر ظهور زوج خارج المتابعة */
+  chipOnChartMark: { color: colors.accent, fontSize: 11, fontWeight: '700' },
   filterHints: { gap: 3, marginTop: 2 },
   filterHintText: { color: colors.textDim, fontSize: 10 },
   hitCard: {
