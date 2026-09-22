@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, radii, spacing, buttons } from '../theme';
@@ -27,6 +27,9 @@ type Ev = {
 
 const SOON_MS = 24 * 60 * 60 * 1000;
 const NOW_WINDOW_MS = 15 * 60 * 1000;
+/** إعادة جلب صامتة للتقويم وهو مفتوح — الخادم يخزّن النتيجة 30 دقيقة (`econ_calendar.TTL`)
+ * فالطلب لا يمسّ حدّ المزوّد، لكنه يلتقط «الفعلي» بعد صدور الرقم. */
+const RELOAD_MS = 5 * 60 * 1000;
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
 function tzLabel(): string {
@@ -111,34 +114,49 @@ export function CalendarPanel({ compact = false, symbol, onPickCurrency }: Props
     });
   }, [filtersReady, currency, impact]);
 
-  useEffect(() => {
-    if (!filtersReady) return;
-    // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب اللوحة أو تغيّر الفلتر قبل اكتمال الطلب
-    // السابق — نفس نمط ChartFrame/SymbolSnapshot/FocusChartModal المؤسَّس بالكود.
-    let alive = true;
-    setStatus('loading');
-    api
-      .calendar({
-        // فلترا «الزوج» و«متوسط+» محليان: نجلب الكل ثم نصفّي
-        currency: currency === 'ALL' || currency === PAIR ? undefined : currency,
-        impact: impact === 'ALL' || impact === 'medplus' ? undefined : impact,
-      })
-      .then((r) => {
-        if (alive) {
+  /**
+   * جلب التقويم. **كانت اللوحة تجلب مرة واحدة فقط ثم لا تُعيد أبداً وهي مفتوحة**: العدّ التنازلي
+   * وحده كان يتحرّك (ساعة داخلية)، فيصل حدث «الرواتب غير الزراعية» إلى «الآن» ثم لا يظهر الرقم
+   * **الفعلي** إطلاقاً حتى يبدّل المتداول التبويب ويعود — والرقم الفعلي هو كل الغرض لحظة الصدور.
+   * الآن تُعاد كل `RELOAD_MS` صامتةً: `silent` لا يُظهر «جاري التحميل» ولا يمسح القائمة عند فشل
+   * الشبكة (اللوحة تبقى على آخر أحداث معروفة بدل أن تُفرَّغ تحت المتداول بسبب انقطاع لحظي).
+   */
+  const load = useCallback(
+    (silent: boolean, alive: { on: boolean }) => {
+      if (!silent) setStatus('loading');
+      api
+        .calendar({
+          // فلترا «الزوج» و«متوسط+» محليان: نجلب الكل ثم نصفّي
+          currency: currency === 'ALL' || currency === PAIR ? undefined : currency,
+          impact: impact === 'ALL' || impact === 'medplus' ? undefined : impact,
+        })
+        .then((r) => {
+          if (!alive.on) return;
           setEvents(r.events);
           setStatus('ok');
-        }
-      })
-      .catch(() => {
-        if (alive) {
+        })
+        .catch(() => {
+          if (!alive.on || silent) return;
           setEvents([]);
           setStatus('error');
-        }
-      });
+        });
+    },
+    [currency, impact]
+  );
+
+  useEffect(() => {
+    if (!filtersReady) return;
+    // حارس "alive" واحد يغطّي الطلب الأول **وكل إعادة جلب دورية** — يمنع تحديث الحالة بعد إلغاء
+    // تركيب اللوحة أو تغيّر الفلتر قبل وصول طلب سابق (نفس نمط ChartFrame/SymbolSnapshot/
+    // FocusChartModal المؤسَّس بالكود).
+    const alive = { on: true };
+    load(false, alive);
+    const id = setInterval(() => load(true, alive), RELOAD_MS);
     return () => {
-      alive = false;
+      alive.on = false;
+      clearInterval(id);
     };
-  }, [filtersReady, currency, impact]);
+  }, [filtersReady, load]);
 
   const IMPACT_LABEL: Record<'high' | 'medium' | 'low', string> = {
     high: t.impactHigh,
