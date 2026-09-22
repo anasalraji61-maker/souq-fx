@@ -1037,28 +1037,28 @@ def post_group(msg: ChatMessage):
     return {"ok": True, "message": item}
 
 
+# --- الرسائل الخاصة معطّلة للإطلاق العام ---
+# كانت مسارات /api/dm بلا أي مصادقة أو عزل لكل مستخدم: أي أحد يقرأ أي محادثة عبر
+# GET /api/dm/{peer} ويرسل باسم أي أحد (from_user نص حرّ) — أي «رسائل خاصة» ليست خاصة.
+# تبويب الرسائل مخفيّ في العميل ضمن الـMVP، و410 هنا تُغلق السطح على مستوى الـAPI أيضاً.
+# لإعادة التفعيل: أعد البناء بمصادقة توكن (user_id للمرسل والمستقبل، والمحادثة معزولة
+# للمستدعي). دوال db.dm_* تبقى سليمة لذلك البناء.
+_DM_DISABLED_DETAIL = "الرسائل الخاصة غير متاحة حالياً"
+
+
 @app.get("/api/dm")
 def list_dm():
-    return {"peers": db.dm_peers()}
+    raise HTTPException(status_code=410, detail=_DM_DISABLED_DETAIL)
 
 
 @app.get("/api/dm/{peer}")
 def get_dm(peer: str):
-    return {"peer": peer, "messages": db.dm_thread(peer)}
+    raise HTTPException(status_code=410, detail=_DM_DISABLED_DETAIL)
 
 
 @app.post("/api/dm")
 def send_dm(body: DmSend):
-    item = {
-        "id": f"d{int(time.time()*1000)}",
-        "user": body.from_user,
-        "text": body.text,
-        "ts": datetime.now().strftime("%H:%M"),
-        "room": "dm",
-        "peer": body.to_user,
-    }
-    db.add_dm(item)
-    return {"ok": True, "message": item}
+    raise HTTPException(status_code=410, detail=_DM_DISABLED_DETAIL)
 
 
 @app.get("/api/votes")

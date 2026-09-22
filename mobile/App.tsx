@@ -6,7 +6,6 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TerminalScreen } from './src/screens/TerminalScreen';
 import { CoursesScreen } from './src/screens/CoursesScreen';
-import { MessagesScreen } from './src/screens/MessagesScreen';
 import { AccountScreen } from './src/screens/AccountScreen';
 import { ToolsScreen } from './src/screens/ToolsScreen';
 import { AuthProvider } from './src/context/AuthContext';
@@ -104,15 +103,6 @@ function RootTabs() {
             title: t.tabAcademy,
             tabBarLabel: t.tabAcademy,
             tabBarIcon: ({ focused }) => <TabIcon label="AI" focused={focused} />,
-          }}
-        />
-        <Tab.Screen
-          name="Messages"
-          component={MessagesScreen}
-          options={{
-            title: t.tabMessages,
-            tabBarLabel: t.tabMessages,
-            tabBarIcon: ({ focused }) => <TabIcon label="DM" focused={focused} />,
           }}
         />
         <Tab.Screen
