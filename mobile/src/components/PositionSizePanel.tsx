@@ -178,6 +178,20 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     slFromPrices.current = false;
     setSlPips(v);
   };
+  /**
+   * تناقض صامت كان يمرّ بصندوق واحد: يكتب المتداول الدخول والوقف فتُملأ خانة النقاط تلقائياً، ثم يعدّل
+   * **خانة النقاط يدوياً** — فيصير حجم اللوت و«المخاطرة الفعلية» محسوبَين من النقاط المعدَّلة، بينما R:R
+   * و«الربح المحتمل» محسوبان من السعرين (`analyzePlan` لا يقرأ النقاط أصلاً). أي **وقفان مختلفان
+   * بنتيجة واحدة**، بلا أي إشارة. الحارس `slFromPrices` لا يمنع ذلك: `derivedSl` لم يتغيّر فلا يُعاد
+   * تشغيل الـeffect الذي يُرجع الخانة. التحذير لا يمنع الحساب — قد يقصد المتداول وقفاً أوسع عمداً —
+   * لكنه يقول أيّ رقم يحكم أيّ سطر. والشرط على الراية نفسها (`!slFromPrices.current`) يمنع ومضة
+   * إطارٍ واحد أثناء كتابة سعر الوقف: `derivedSl` يتغيّر بالإطار الذي لم يكتب فيه الـeffect الخانة بعد.
+   */
+  const slTyped = num(slPips);
+  const slMismatch =
+    !slFromPrices.current && derivedSl != null && Number.isFinite(slTyped) && Math.abs(slTyped - derivedSl) > 0.05
+      ? { typed: slPips.trim(), derived: derivedSl }
+      : null;
   const fetchedConv = convQuote && convQuote.key === convSymbol ? convQuote : null;
   const manual = num(manualConv);
   // السعر المجلوب بترتيب زوجه الفعلي (قد يكون معكوساً)، وإلا الإدخال اليدوي بترتيب الزوج المعروض
@@ -447,6 +461,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       {derivedSl != null ? (
         <Text style={[styles.hint, styles.hintOn, { textAlign: align }]} accessibilityLiveRegion="polite">
           = {derivedSl} pip
+        </Text>
+      ) : null}
+      {slMismatch ? (
+        <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
+          {t.riskCalcSlMismatch.replace('{pips}', slMismatch.typed).replace('{derived}', String(slMismatch.derived))}
         </Text>
       ) : null}
 
