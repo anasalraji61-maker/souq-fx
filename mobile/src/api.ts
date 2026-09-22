@@ -471,6 +471,8 @@ export const api = {
       stats: Record<string, number>;
       equity_curve: { i: number; equity: number }[];
       error?: string;
+      /** 'demo' = مسار بذري مختلَق (المزوّد متعذّر) — لا تُعرض النتيجة؛ غيابه = خادم أقدم. */
+      data_kind?: string;
     }>('/api/backtest', body),
   indicatorAlerts: () =>
     getJson<{
@@ -539,6 +541,8 @@ export const api = {
       macd_cross_up?: boolean;
       macd_cross_down?: boolean;
       last?: number;
+      /** 'demo' = مؤشرات على شموع مختلَقة — لا تُعرض. */
+      data_kind?: string;
     }>(`/api/indicators/snapshot/${encodeURIComponent(symbol)}?timeframe=${encodeURIComponent(timeframe)}`),
   socialSources: () =>
     getJson<{
@@ -597,6 +601,8 @@ export const api = {
       votes: { id: string; name: string; direction: string; score: number; detail: string }[];
       snapshot?: { rsi?: number; change_pct?: number; last?: number };
       disclaimer: string;
+      /** 'demo' = اتجاه ومستويات من شموع مختلَقة — لا تُعرض. */
+      data_kind?: string;
     }>('/api/signals/indicators/forecast', body),
   calendar: (opts?: { currency?: string; impact?: string }) => {
     const q = new URLSearchParams();

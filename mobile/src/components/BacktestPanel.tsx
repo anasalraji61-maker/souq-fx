@@ -69,6 +69,14 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         timeframe: tf,
         strategy,
       });
+      // مسار بذري مختلَق (المزوّد متعذّر): نسبة الربح والعائد عليه ليست أداء الاستراتيجية.
+      if (res.data_kind === 'demo') {
+        setStats(null);
+        setTrades([]);
+        setEquity([]);
+        setError(t.noLiveDataResult);
+        return;
+      }
       setStats(res.stats as Stats);
       setTrades(res.trades ?? []);
       setEquity(res.equity_curve ?? []);

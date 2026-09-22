@@ -73,6 +73,15 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
     };
   }, []);
 
+  const clearResult = () => {
+    setDirection('neutral');
+    setConfidence(0);
+    setAvg(0);
+    setLevels(null);
+    setVotes([]);
+    setRsi(null);
+  };
+
   const run = useCallback(async () => {
     setLoading(true);
     try {
@@ -82,6 +91,12 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
         indicators: enabled,
       });
       if (!mountedRef.current) return;
+      // demo = اتجاه ومستويات دخول/وقف/هدف من شموع مختلَقة (المزوّد متعذّر) — لا تُعرض كإشارة.
+      if (res.data_kind === 'demo') {
+        clearResult();
+        setNote(t.noLiveDataResult);
+        return;
+      }
       setDirection(res.direction);
       setConfidence(res.confidence);
       setAvg(res.avg_score);
@@ -91,13 +106,14 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
       setNote(res.disclaimer);
     } catch {
       if (mountedRef.current) {
-        setVotes([]);
+        // كان يُبقي اتجاه/مستويات الطلب السابق (رمز آخر أحياناً) ظاهرة تحت رسالة الخطأ.
+        clearResult();
         setNote(t.forecastError);
       }
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [symbol, timeframe, enabled, t.forecastError]);
+  }, [symbol, timeframe, enabled, t.forecastError, t.noLiveDataResult]);
 
   useEffect(() => {
     void run();

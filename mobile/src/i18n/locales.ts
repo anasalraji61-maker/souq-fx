@@ -361,6 +361,7 @@ export type Dict = {
   backtestRunA11y: string;
   backtestRunBtn: string;
   backtestRunError: string;
+  noLiveDataResult: string;
   backtestStatTrades: string;
   backtestStatWinRate: string;
   backtestStatReturn: string;
@@ -1105,6 +1106,7 @@ const ar: Dict = {
   backtestRunA11y: 'تشغيل الاختبار الخلفي',
   backtestRunBtn: 'تشغيل Backtest',
   backtestRunError: 'تعذر تشغيل الاختبار الخلفي — تحقق من الاتصال وحاول مرة أخرى',
+  noLiveDataResult: 'لا تتوفر بيانات سوق حقيقية لهذا الرمز الآن — لا نحسب النتيجة على أسعار تجريبية. حاول لاحقاً.',
   backtestStatTrades: 'صفقات: {n}',
   backtestStatWinRate: 'نسبة نجاح: {pct}%',
   backtestStatReturn: 'عائد إجمالي: {pct}%',
@@ -1856,6 +1858,7 @@ const enUS: Dict = {
   backtestRunA11y: 'Run the backtest',
   backtestRunBtn: 'Run Backtest',
   backtestRunError: 'Could not run the backtest — check your connection and try again',
+  noLiveDataResult: 'No real market data for this symbol right now — we don’t compute results on demo prices. Try again later.',
   backtestStatTrades: 'Trades: {n}',
   backtestStatWinRate: 'Win rate: {pct}%',
   backtestStatReturn: 'Total return: {pct}%',
@@ -2627,6 +2630,7 @@ const ku: Dict = {
   backtestRunA11y: 'کارپێکردنی تاقیکردنەوەی دواوە',
   backtestRunBtn: 'کارپێکردنی Backtest',
   backtestRunError: 'نەکرا تاقیکردنەوەی دواوە کارپێبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
+  noLiveDataResult: 'ئێستا داتای ڕاستەقینەی بازاڕ بۆ ئەم هێمایە بەردەست نییە — ئەنجام لەسەر نرخی تاقیکاری ناژمێرین. دواتر هەوڵبدەرەوە.',
   backtestStatTrades: 'مامەڵەکان: {n}',
   backtestStatWinRate: 'ڕێژەی سەرکەوتن: {pct}%',
   backtestStatReturn: 'کۆی گەڕانەوە: {pct}%',

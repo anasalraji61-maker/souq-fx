@@ -22,7 +22,8 @@ export function SymbolSnapshot({ symbol, timeframe = '15m' }: Props) {
     api
       .indicatorSnapshot(symbol, timeframe)
       .then((s) => {
-        if (alive) setSnap(s);
+        // demo = RSI/تقاطعات على شموع مختلَقة (المزوّد متعذّر) — لا شارات بدل أرقام مضلِّلة.
+        if (alive) setSnap(s.data_kind === 'demo' ? null : s);
       })
       .catch(() => {
         if (alive) setSnap(null);

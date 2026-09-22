@@ -980,6 +980,8 @@ def backtest_run(body: BacktestRun):
     )
     result["symbol"] = body.symbol.upper()
     result["timeframe"] = body.timeframe
+    # demo = مسار عشوائي بذري (المزوّد متعذّر): نسبة ربح/عائد عليه ليست أداء استراتيجية — العميل يرفضها.
+    result["data_kind"] = series.data_source.kind
     return result
 
 
@@ -1007,6 +1009,7 @@ def indicator_snapshot(symbol: str, timeframe: str = "15m"):
     series = build_series(symbol.upper(), timeframe)
     candles = [c.model_dump() for c in series.candles]
     snap = ind_engine.snapshot(candles)
+    snap["data_kind"] = series.data_source.kind  # demo = RSI/تقاطعات على شموع مختلَقة
     return snap
 
 
@@ -1035,7 +1038,9 @@ def analysts_forecast(symbol: str, timeframe: str = "15m"):
 def indicators_forecast(body: IndicatorForecastBody):
     series = build_series(body.symbol.upper(), body.timeframe)
     candles = [c.model_dump() for c in series.candles]
-    return signal_hub.indicator_forecast(body.symbol, candles, enabled=body.indicators)
+    out = signal_hub.indicator_forecast(body.symbol, candles, enabled=body.indicators)
+    out["data_kind"] = series.data_source.kind  # demo = اتجاه ومستويات من شموع مختلَقة
+    return out
 
 
 @app.get("/api/calendar")
