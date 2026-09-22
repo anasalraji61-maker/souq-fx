@@ -91,6 +91,8 @@ export function FocusChartModal({
   const [tf, setTf] = useState<Timeframe>(initialTf);
   const [series, setSeries] = useState<ChartSeries | null>(null);
   const [compareSeries, setCompareSeries] = useState<ChartSeries | null>(null);
+  /** تعذّر تحميل رمز المقارنة (أو جاء تجريبياً فوق شارت حقيقي): لا خط بنفسجي مختلَق — ملاحظة صريحة. */
+  const [compareFailed, setCompareFailed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [phonePickerOpen, setPhonePickerOpen] = useState(false);
   const [watchlist, setWatchlist] = useState<{ symbol: string; label: string; group?: string }[]>([
@@ -121,17 +123,34 @@ export function FocusChartModal({
         const s = await api.chart(sym, tf);
         if (alive) setSeries(s);
         if (compareSym && alive) {
+          // كان الفشل يرسم `mockSeries` كخط مقارنة بنفسجي فوق الشارت الحقيقي — علاقة/تباعد مختلَق بين
+          // زوجين يُبنى عليه قرار. الآن: لا خط + ملاحظة. وسلسلة demo من الخادم فوق شارت حقيقي = نفس الشيء.
           try {
             const c = await api.chart(compareSym, tf);
-            if (alive) setCompareSeries(c);
+            const fake =
+              normalizeProvenance(c.data_source).kind === 'demo' &&
+              normalizeProvenance(s.data_source).kind !== 'demo';
+            if (alive) {
+              setCompareSeries(fake ? null : c);
+              setCompareFailed(fake);
+            }
           } catch {
-            if (alive) setCompareSeries(mockSeries(compareSym, BASES[compareSym] ?? 1, tf));
+            if (alive) {
+              setCompareSeries(null);
+              setCompareFailed(true);
+            }
           }
         } else if (alive) {
           setCompareSeries(null);
+          setCompareFailed(false);
         }
       } catch {
-        if (alive) setSeries(mockSeries(sym, BASES[sym] ?? 1, tf));
+        if (alive) {
+          setSeries(mockSeries(sym, BASES[sym] ?? 1, tf));
+          // لا تُبقِ خط مقارنة الرمز السابق فوق الشارت البديل
+          setCompareSeries(null);
+          setCompareFailed(compareSym != null);
+        }
       } finally {
         if (alive) setLoading(false);
       }
@@ -373,7 +392,11 @@ export function FocusChartModal({
                     ))}
                   </View>
                 </ScrollView>
-                {compareSym ? (
+                {compareSym && compareFailed && !loading ? (
+                  <Text style={[styles.compareNote, styles.compareNoteWarn, { textAlign: align }]}>
+                    {t.focusCompareUnavailable.replace('{sym}', compareSym)}
+                  </Text>
+                ) : compareSym ? (
                   <Text style={[styles.compareNote, { textAlign: align }]}>
                     {t.focusCompareNotePrefix} {compareSym} {t.focusCompareNoteSuffix}
                   </Text>
@@ -484,6 +507,7 @@ const styles = StyleSheet.create({
   watchLabel: { color: colors.textMuted, fontSize: 11 },
   compareTag: { color: colors.infoAccent, fontSize: 9, marginTop: 2 },
   compareNote: { color: colors.infoAccent, fontSize: 11 },
+  compareNoteWarn: { color: colors.warn, fontWeight: '700' },
   armed: { color: colors.bull, fontSize: 12, fontWeight: '800' },
   main: { flex: 1 },
   pill: {

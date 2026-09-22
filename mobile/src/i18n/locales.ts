@@ -565,6 +565,7 @@ export type Dict = {
   focusPickSymbolA11yPrefix: string;
   focusCompareNotePrefix: string;
   focusCompareNoteSuffix: string;
+  focusCompareUnavailable: string;
   focusInComparisonSuffix: string;
   focusAlertCreateFailedTitle: string;
   focusAlertCreateFailedBody: string;
@@ -1317,6 +1318,7 @@ const ar: Dict = {
   focusPickSymbolA11yPrefix: 'اختيار الرمز',
   focusCompareNotePrefix: 'مقارنة مع',
   focusCompareNoteSuffix: '(بنفسجي)',
+  focusCompareUnavailable: 'تعذّر تحميل بيانات {sym} الحقيقية — لا خط مقارنة',
   focusInComparisonSuffix: ' · قيد المقارنة',
   focusAlertCreateFailedTitle: 'تعذر إنشاء التنبيه',
   focusAlertCreateFailedBody: 'حدث خطأ أثناء إنشاء تنبيه من خط الرسم، حاول مرة أخرى.',
@@ -2075,6 +2077,7 @@ const enUS: Dict = {
   focusPickSymbolA11yPrefix: 'Select symbol',
   focusCompareNotePrefix: 'Comparing with',
   focusCompareNoteSuffix: '(purple)',
+  focusCompareUnavailable: 'Couldn’t load real {sym} data — no comparison line',
   focusInComparisonSuffix: ' · in comparison',
   focusAlertCreateFailedTitle: "Couldn't create alert",
   focusAlertCreateFailedBody: 'An error occurred creating an alert from the drawing line, try again.',
@@ -2854,6 +2857,7 @@ const ku: Dict = {
   focusPickSymbolA11yPrefix: 'هەڵبژاردنی هێما',
   focusCompareNotePrefix: 'بەراوردکردن لەگەڵ',
   focusCompareNoteSuffix: '(مۆر)',
+  focusCompareUnavailable: 'نەکرا زانیاری ڕاستەقینەی {sym} باربکرێت — هێڵی بەراوردکردن نییە',
   focusInComparisonSuffix: ' · لە بەراوردکردندایە',
   focusAlertCreateFailedTitle: 'نەتوانرا ئاگادارکردنەوە دروست بکرێت',
   focusAlertCreateFailedBody: 'هەڵەیەک ڕوویدا لە دروستکردنی ئاگادارکردنەوە لە هێڵی وێنەکێشان، دووبارە هەوڵبدەرەوە.',

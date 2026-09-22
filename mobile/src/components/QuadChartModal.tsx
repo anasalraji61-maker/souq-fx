@@ -16,6 +16,7 @@ import { livePriceForChart } from '../chart/liveSeries';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
 import { mockSeries } from '../mock';
+import { normalizeProvenance } from '../chart/dataSource';
 import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
@@ -93,7 +94,14 @@ export function QuadChartModal({
         <View style={[styles.grid, rtl && styles.gridRtl, phone && styles.gridPhone]}>
           {symbols.map((sym, i) => (
             <View key={sym} style={[styles.cell, phone && styles.cellPhone]}>
-              <Text style={[styles.sym, { textAlign: align }]}>{sym}</Text>
+              {/* شموع تجريبية (فشل الطلب → mockSeries، أو سلسلة demo من الخادم) كانت تُرسم هنا بلا أي
+                  وسم فتُقرأ كسوق حقيقي — بعكس ChartFrame/الشارت الرئيسي اللذين يوسمانها «تجريبي». */}
+              <View style={[styles.cellHead, rtl && styles.cellHeadRtl]}>
+                <Text style={[styles.sym, { textAlign: align }]}>{sym}</Text>
+                {series[i] && normalizeProvenance(series[i]!.data_source).kind === 'demo' ? (
+                  <Text style={styles.demoTag}>{t.dsKindDemo}</Text>
+                ) : null}
+              </View>
               {series[i] ? (
                 <MatrixChart
                   series={series[i]!}
@@ -153,5 +161,8 @@ const styles = StyleSheet.create({
     minHeight: 200,
   },
   cellPhone: { width: '100%' },
-  sym: { color: colors.accent, fontWeight: '800', marginBottom: spacing.xs },
+  cellHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
+  cellHeadRtl: { flexDirection: 'row-reverse' },
+  sym: { color: colors.accent, fontWeight: '800' },
+  demoTag: { color: colors.warn, fontSize: 10, fontWeight: '800' },
 });
