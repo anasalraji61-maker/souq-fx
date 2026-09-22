@@ -133,21 +133,32 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD', defaultTimefram
     }
   }, []);
 
-  useEffect(() => {
-    refresh();
-    const id = setInterval(async () => {
-      try {
-        const res = await api.checkIndicatorAlerts();
-        if (mountedRef.current) setAlerts(res.alerts);
-        for (const trig of res.triggered) {
-          await pushPriceAlert(t.indAlertsPushTitle, describeIndAlert(trig, t));
-        }
-      } catch {
-        /* ignore */
+  const check = useCallback(async () => {
+    try {
+      const res = await api.checkIndicatorAlerts();
+      if (mountedRef.current) setAlerts(res.alerts);
+      for (const trig of res.triggered) {
+        await pushPriceAlert(t.indAlertsPushTitle, describeIndAlert(trig, t));
       }
-    }, 60_000);
+    } catch {
+      /* ignore */
+    }
+  }, [t]);
+
+  useEffect(() => {
+    /**
+     * فحص فوري عند فتح اللوحة، لا بعد دقيقة — نفس ما عولج بـ`AlertsPanel`: `setInterval` وحده كان
+     * يعني أن أول فحص داخل التطبيق يقع بعد 60 ثانية من الفتح، ومن يفتح اللوحة ويغلقها خلال الدقيقة
+     * لا يقع له فحص إطلاقاً. وفتح هذه اللوحة سؤال واحد: هل تقاطع المتوسط/بلغ الـRSI حدّي؟
+     * الفحص **بعد** `refresh` لا بالتوازي: كلاهما يكتب `setAlerts`، ولو سبق ردّ الفحص ردَّ القائمة
+     * لَدهَس الأقدمُ الأحدثَ فتبقى اللوحة على حالة ما قبل الفحص دقيقة كاملة.
+     * لا إشعار مكرَّر ولو أُعيد الفحص (تبديل اللغة يعيد بناء `check`): `db.mark_indicator_alert_triggered`
+     * ذرّي فلا يُرجَع التنبيه إلا لمن قلبه أولاً، والسلسلة البذرية (demo) لا تُطلق شيئاً أصلاً.
+     */
+    void refresh().then(check);
+    const id = setInterval(check, 60_000);
     return () => clearInterval(id);
-  }, [refresh, t]);
+  }, [refresh, check]);
 
   /** تغيير النوع يضبط شرطاً صالحاً له: كان الشرط «تحت» يبقى عند التحويل لتقاطع MA/MACD فلا زر مختار،
    * ويُرسَل ma_cross + below للخادم → تنبيه لا يُطلق أبداً (لا فرع له بـ_check_indicator_alert). */
