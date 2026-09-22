@@ -292,8 +292,16 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     }
   };
 
-  const money = (v: number) =>
-    `${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${account}`;
+  /**
+   * `toLocaleString(undefined, …)` كان يتبع لغة **الجهاز** لا لغة الواجهة — وهو الموضع الوحيد
+   * بالتطبيق كلّه الذي يفعل ذلك (بقيته `toFixed`/`formatPrice`، أرقام لاتينية وفاصل «.»). فعلى
+   * جهاز بلغة عربية يخرج صندوق النتيجة بنظامَي أرقام معاً: «0.35» لوت (toFixed) فوق «١٬٠٠٠٫٠٠ USD»
+   * مخاطرة، وعلى جهاز ألماني «1.000,00» بجانب «0.35» — فاصلان عشريان متناقضان بصندوق واحد يقرأ
+   * منه المتداول كم سيخسر. والأسوأ أنه يتبدّل بتبديل لغة الجهاز لا لغة التطبيق.
+   * التجميع بفاصلة والكسر بنقطة، ثابتاً: هذا ما كان يراه مستخدم الإنجليزية أصلاً، فلا تغيير له.
+   */
+  const group = (s: string) => s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const money = (v: number) => `${group(v.toFixed(2))} ${account}`;
   const pipLabel = spec ? String(spec.pipSize) : '';
   const riskNum = num(riskPct);
   const riskHigh = Number.isFinite(riskNum) && riskNum > 2 && riskNum <= 100;
@@ -450,7 +458,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             </Text>
             <Text style={[styles.resultMeta, { textAlign: align }]}>
               {t.riskCalcRiskAmount}: {money(result.actualRisk)} · {t.riskCalcUnits}:{' '}
-              {result.units.toLocaleString()}
+              {group(String(result.units))}
             </Text>
           </>
         ) : result && result.belowMinLot ? (
