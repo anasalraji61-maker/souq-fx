@@ -6,6 +6,8 @@ import { mockVotes } from '../mock';
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
 import { analyzePlan, formatPips, formatRR, type PlanIssue, type TradePlan } from '../tradePlan';
+import { useBlockedUsers } from '../moderation';
+import { ModerationActions, ModerationToggle } from './ModerationActions';
 
 export function VotePanel({ embedded }: { embedded?: boolean }) {
   const { t, rtl } = useI18n();
@@ -14,6 +16,10 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
   /** وضوح الحالة: يعلم المستخدم إذا فشل تحديث/إرسال التصويت بدل صمت كامل
    * (لا تُفعَّل قبل أول محاولة فعلية — لا ادّعاء فشل قبل حدوثه). */
   const [notice, setNotice] = useState<string | null>(null);
+  /** شرط أبل 1.2: صف «إبلاغ/حظر» مفتوح لفكرة واحدة (زر ⋯)، وأفكار المحظورين محلياً تُخفى */
+  const [actionFor, setActionFor] = useState<string | null>(null);
+  const { blocked, isBlocked, unblockAll } = useBlockedUsers();
+  const visible = votes.filter((v) => !isBlocked(v.author));
 
   /** نشر فكرة جديدة: نموذج قابل للطي — يستخدم POST /api/votes الموجود أصلاً بالباك-إند
    * (VoteCreate/db.create_vote) لكنه لم يكن مستخدَماً من أي واجهة — أكبر فجوة نمو موثَّقة
@@ -98,7 +104,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
     setPBusy(true);
     setPError(null);
     try {
-      await api.createVote({
+      const r = await api.createVote({
         symbol: pSymbol.trim().toUpperCase(),
         direction: pDirection,
         entry,
@@ -106,6 +112,17 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
         tp,
         note: pNote,
       });
+      // النشر للمسجّل فقط والروابط مرفوضة — النموذج يبقى مفتوحاً بقيمه مع الشرح (لا مسح صامت)
+      if (r && r.ok === false) {
+        setPError(
+          r.error === 'login_required'
+            ? t.votePublishLoginRequired
+            : r.error === 'links_not_allowed'
+              ? t.voteLinksNotAllowed
+              : t.votePublishError
+        );
+        return;
+      }
       playSoftClick();
       setPSymbol('');
       setPEntry('');
@@ -306,6 +323,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
             onChangeText={setPNote}
             placeholder={t.voteNotePlaceholder}
             placeholderTextColor={colors.textDim}
+            maxLength={500}
             returnKeyType="done"
             underlineColorAndroid="transparent"
             clearButtonMode="while-editing"
@@ -347,11 +365,11 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
       ) : null}
 
       {notice ? <Text style={[styles.notice, { textAlign: align }]}>{notice}</Text> : null}
-      {!notice && votes.length === 0 ? (
+      {!notice && visible.length === 0 ? (
         <Text style={styles.empty}>{t.voteEmpty}</Text>
       ) : null}
       <ScrollView contentContainerStyle={{ gap: 10 }} keyboardShouldPersistTaps="handled">
-        {votes.map((v) => {
+        {visible.map((v) => {
           const total = v.agree + v.disagree || 1;
           const pct = Math.round((v.agree / total) * 100);
           const buy = v.direction === 'buy';
@@ -360,10 +378,30 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
             <View key={v.id} style={styles.card}>
               <View style={[styles.head, rtl && styles.headRtl]}>
                 <Text style={styles.symbol}>{v.symbol}</Text>
-                <View style={[styles.badge, { backgroundColor: buy ? colors.bull : colors.bear }]}>
-                  <Text style={styles.badgeText}>{buy ? t.dirBuy : t.dirSell}</Text>
+                <View style={[styles.headEnd, rtl && styles.headRtl]}>
+                  <View style={[styles.badge, { backgroundColor: buy ? colors.bull : colors.bear }]}>
+                    <Text style={styles.badgeText}>{buy ? t.dirBuy : t.dirSell}</Text>
+                  </View>
+                  <ModerationToggle
+                    open={actionFor === v.id}
+                    onPress={() => setActionFor((cur) => (cur === v.id ? null : v.id))}
+                    label={t.modIdeaOptionsA11y}
+                  />
                 </View>
               </View>
+              {actionFor === v.id ? (
+                <ModerationActions
+                  kind="vote"
+                  targetId={v.id}
+                  author={v.author}
+                  onClose={() => setActionFor(null)}
+                  onResult={(n, hide) => {
+                    setActionFor(null);
+                    setNotice(n);
+                    if (hide) setVotes((list) => list.filter((x) => x.id !== v.id));
+                  }}
+                />
+              ) : null}
               {v.author ? (
                 <Text style={[styles.author, { textAlign: align }]}>
                   {t.voteByAuthor.replace('{author}', v.author)}
@@ -445,6 +483,18 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
           );
         })}
       </ScrollView>
+      {blocked.length > 0 ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t.modUnblockA11y}
+          onPress={unblockAll}
+          hitSlop={6}
+        >
+          <Text style={[styles.blockedLine, { textAlign: align }]}>
+            {t.modBlockedCount.replace('{n}', String(blocked.length))}
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -499,6 +549,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headRtl: { flexDirection: 'row-reverse' },
+  headEnd: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  blockedLine: { color: colors.textDim, fontSize: 10, fontWeight: '700', marginTop: spacing.xs },
   symbol: { color: colors.text, fontWeight: '800', fontSize: 14 },
   badge: { borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 2 },
   badgeText: { color: colors.white, fontWeight: '800', fontSize: 11 },
