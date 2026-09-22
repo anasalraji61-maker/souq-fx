@@ -129,6 +129,7 @@ export type Dict = {
   screenerScanNone: string;
   screenerScanPartial: string;
   screenerNoMatchOf: string;
+  screenerShowingOf: string;
   newsTitle: string;
   newsStale: string;
   newsEmpty: string;
@@ -893,6 +894,7 @@ const ar: Dict = {
   screenerScanNone: 'تعذّر جلب أسعار أي رمز — غالباً حدّ طلبات مزوّد الأسعار؛ انتظر دقيقة وأعد الفحص',
   screenerScanPartial: 'فُحص {k} من {total} رمزاً فقط — تعذّرت قراءة: {list} (حدّ طلبات المزوّد غالباً). النتائج من المفحوصة فقط.',
   screenerNoMatchOf: 'لا تطابق بين {k} رمزاً مفحوصاً على فريم {tf}',
+  screenerShowingOf: 'عرض أقوى {n} من {total} نتيجة (الأكبر حركةً أولاً)',
   newsTitle: 'أخبار مؤثرة على الفوركس',
   newsStale: 'تعذر تحديث الأخبار — تُعرض بيانات محفوظة',
   newsEmpty: 'لا توجد أخبار حالياً',
@@ -1666,6 +1668,7 @@ const enUS: Dict = {
   screenerScanNone: 'Could not load prices for any symbol — likely the data provider rate limit; wait a minute and scan again',
   screenerScanPartial: 'Only {k} of {total} symbols scanned — could not read: {list} (likely provider rate limit). Results cover scanned symbols only.',
   screenerNoMatchOf: 'No match among {k} scanned symbols on {tf}',
+  screenerShowingOf: 'Showing the top {n} of {total} results (biggest movers first)',
   newsTitle: 'News affecting forex',
   newsStale: 'Could not refresh news — showing saved data',
   newsEmpty: 'No news right now',
@@ -2459,6 +2462,7 @@ const ku: Dict = {
   screenerScanNone: 'نرخی هیچ هێمایەک نەهێنرا — لەوانەیە سنووری داواکاری دابینکەری داتا بێت؛ خولەکێک چاوەڕێ بکە و دووبارە بپشکنە',
   screenerScanPartial: 'تەنها {k} لە {total} هێما پشکنران — نەخوێنرانەوە: {list} (لەوانەیە سنووری داواکاری دابینکەر). ئەنجامەکان تەنها بۆ پشکنراوەکانن.',
   screenerNoMatchOf: 'هیچ گونجانێک نییە لە نێوان {k} هێمای پشکنراو لە {tf}',
+  screenerShowingOf: 'پیشاندانی بەهێزترین {n} لە {total} ئەنجام (زۆرترین جووڵە سەرەتا)',
   newsTitle: 'هەواڵی کاریگەر لەسەر فۆرێکس',
   newsStale: 'نەکرا هەواڵ نوێبکرێتەوە — زانیاری پاشەکەوتکراو پیشان دەدرێت',
   newsEmpty: 'هیچ هەواڵێک لە ئێستادا نییە',

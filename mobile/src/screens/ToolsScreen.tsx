@@ -150,6 +150,19 @@ export function ToolsScreen() {
   /** لا رمز قُرئ أصلاً (كل الطلبات فشلت) — «لا تطابق» هنا كاذبة. */
   const scanNone = scanInfo.scanned === 0 && scanInfo.failed.length > 0;
 
+  /** نتائج فحص سابق لا تُعرض تحت فلاتر/فريم تغيّرت — كانت تبقى فتُقرأ كأنها نتيجة الاختيار الجديد. */
+  const scanKey = `${tf}|${selected.join(',')}`;
+  const lastScanKey = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (lastScanKey.current !== null && lastScanKey.current !== scanKey) {
+      lastScanKey.current = null;
+      setResults([]);
+      setScanDone(false);
+      setScanInfo({ failed: [], tf });
+    }
+  }, [scanKey, tf]);
+  const filterLabel = (id: string) => FILTERS.find((f) => f.id === id)?.label ?? id;
+
   const toggleFilter = (id: string) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
@@ -160,12 +173,14 @@ export function ToolsScreen() {
       const res = await api.screenerRun({ timeframe: tf, filters: selected });
       setResults(res.results);
       setScanInfo({ scanned: res.scanned, failed: res.failed ?? [], total: res.total, tf });
+      lastScanKey.current = `${tf}|${selected.join(',')}`;
       setProviderConfigured(res.provider_configured !== false);
       setScanDone(true);
       playSoftClick();
     } catch {
       setResults([]);
       setScanInfo({ failed: [], tf });
+      lastScanKey.current = `${tf}|${selected.join(',')}`;
       setProviderConfigured(null);
       setScanDone(true);
     } finally {
@@ -402,6 +417,11 @@ export function ToolsScreen() {
           {!loading && scanDone && providerConfigured === null ? (
             <Text style={[styles.scanHint, { textAlign: align }]}>{t.screenerFailed}</Text>
           ) : null}
+          {!loading && results.length > 8 ? (
+            <Text style={[styles.filterHintText, { textAlign: align }]}>
+              {t.screenerShowingOf.replace('{n}', '8').replace('{total}', String(results.length))}
+            </Text>
+          ) : null}
           <FrameSizedGrid
             storageKey="matrix.tools.screener.order.v1"
             showAll
@@ -422,7 +442,7 @@ export function ToolsScreen() {
                       {r.change_pct}%
                     </Text>
                   </Text>
-                  <Text style={[styles.match, { textAlign: align }]}>{r.filters_matched.join(' · ')}</Text>
+                  <Text style={[styles.match, { textAlign: align }]}>{r.filters_matched.map(filterLabel).join(' · ')}</Text>
                 </View>
               ),
             }))}
