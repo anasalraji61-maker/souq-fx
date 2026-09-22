@@ -148,9 +148,12 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
 
   const fmtLocal = (ts: number) => {
     const d = new Date(ts * 1000);
+    // «غداً» بالتقويم المحلي لا «بعد 24 ساعة»: يوم تغيير التوقيت الصيفي 25 ساعة فكان now+24h يقع باليوم نفسه
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     const day = sameDay(d, new Date(now))
       ? t.calToday
-      : sameDay(d, new Date(now + 86_400_000))
+      : sameDay(d, tomorrow)
         ? t.calTomorrow
         : `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}`;
     return `${day} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;

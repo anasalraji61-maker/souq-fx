@@ -1,6 +1,7 @@
 """Economic calendar — ForexFactory XML + static fallback."""
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import time
@@ -13,6 +14,8 @@ import httpx
 _CACHE: list[dict] = []
 _CACHE_TS = 0.0
 TTL = 1800
+# حدّ الأحداث المُعادة **بعد** فلترة العملة/التأثير (أسبوع ForexFactory نادراً ما يتجاوز ~200 حدث)
+MAX_EVENTS = 250
 
 FF_URL = "https://www.forexfactory.com/ffcal_week_this.xml"
 # نسخة JSON من نفس مصدر ForexFactory — تواريخها ISO مع إزاحة زمنية صريحة، فتُحوَّل لـUTC بلا تخمين
@@ -100,7 +103,7 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
                 cur = m.group(1)
             out.append(
                 {
-                    "id": f"ff-{hash(title) % 10_000_000}",
+                    "id": _stable_id(title, desc or ""),
                     "title": title[:160],
                     "currency": cur,
                     "impact": _impact(_text(item.find("category"))),
@@ -108,7 +111,7 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
                     "forecast": "—",
                 }
             )
-            if len(out) >= 40:
+            if len(out) >= MAX_EVENTS:
                 break
         return out
 
@@ -125,7 +128,7 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
         forecast = fc_raw or prev_raw or "—"
         out.append(
             {
-                "id": f"ff-{hash(title + when) % 10_000_000}",
+                "id": _stable_id(country, title, when),
                 "title": title[:160],
                 "currency": country[:3].upper() if country else "USD",
                 "impact": _impact(_text(ev.find("impact"))),
@@ -134,8 +137,26 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
                 **_figures(fc_raw, prev_raw, _text(ev.find("actual"))),
             }
         )
-        if len(out) >= 40:
+        if len(out) >= MAX_EVENTS:
             break
+    return out
+
+
+def _stable_id(*parts: str) -> str:
+    """معرّف ثابت بين إعادات تشغيل الخادم (`hash()` لنصوص بايثون عشوائي لكل عملية) ويشمل العملة: «Bank Holiday»
+    لـCNY وJPY بنفس اليوم كان يأخذ المعرّف نفسه — وهو مفتاح React بقائمة التقويم فيختفي أحد الصفّين."""
+    return "ff-" + hashlib.md5("|".join(parts).encode("utf-8")).hexdigest()[:12]
+
+
+def _unique_ids(events: list[dict]) -> list[dict]:
+    """حدثان متطابقان تماماً من المصدر (نادر) → لاحقة رقمية بدل معرّف مكرّر."""
+    seen: dict[str, int] = {}
+    out: list[dict] = []
+    for e in events:
+        eid = str(e.get("id", ""))
+        n = seen.get(eid, 0)
+        seen[eid] = n + 1
+        out.append({**e, "id": f"{eid}-{n}"} if n else e)
     return out
 
 
@@ -181,7 +202,7 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
         forecast = fc_raw or prev_raw or "—"
         out.append(
             {
-                "id": f"ff-{hash(title + raw_date) % 10_000_000}",
+                "id": _stable_id(country, title, raw_date),
                 "title": title[:160],
                 "currency": country[:3].upper() if country else "USD",
                 "impact": _impact(str(ev.get("impact") or "")),
@@ -192,7 +213,9 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
             }
         )
     out.sort(key=lambda e: (e["ts"] is None, e["ts"] or 0))
-    return out[:120]
+    # لا قصّ هنا: كان `[:120]` قبل فلاتر العملة/التأثير يُسقط أحداث آخر الأسبوع (NFP يوم الجمعة) بالأسابيع
+    # المزدحمة — حتى من طلب `impact=high` الذي يعتمد عليه شريط «خبر قوي قريب». القصّ بعد الفلترة بـfetch_calendar.
+    return out
 
 
 def fetch_calendar(
@@ -224,4 +247,4 @@ def fetch_calendar(
     if impact:
         imp = impact.lower()
         events = [e for e in events if str(e.get("impact", "")).lower() == imp]
-    return events
+    return _unique_ids(events[:MAX_EVENTS])
