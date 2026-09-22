@@ -727,8 +727,13 @@ export type Dict = {
   smnA11yRsiOversold: string;
   smnA11yBullish: string;
   domTitle: string;
-  domSourceQuote: string;
-  domEstimated: string;
+  domBidLabel: string;
+  domAskLabel: string;
+  domSpreadLabel: string;
+  domBidAskHint: string;
+  domNoBidAsk: string;
+  domNoLiveQuote: string;
+  domOtcNote: string;
   pdwPrevA11yPrefix: string;
   pdwCurrentA11yPrefix: string;
   pdwNextA11yPrefix: string;
@@ -1371,7 +1376,7 @@ const ar: Dict = {
   ctlIndBollinger: 'بولنجر',
   ctlIndVolume: 'فوليوم',
   backtestWord: 'اختبار',
-  depthWord: 'عمق',
+  depthWord: 'السبريد',
   mspDrawTitle: 'أدوات الرسم · MATRIX',
   mspIndicatorsTitle: 'المؤشرات · MATRIX',
   mspKindsTitle: 'أنواع الشارت',
@@ -1382,7 +1387,7 @@ const ar: Dict = {
   mspReportsTitle: 'تقارير MATRIX',
   mspBacktestTitle: 'Strategy Backtest',
   mspNewsTitle: 'الأخبار',
-  mspDomTitle: 'DOM',
+  mspDomTitle: 'Bid / Ask',
   mspJournalTitle: 'دفتر الصفقات',
   mspIndicatorA11yPrefix: 'مؤشر: ',
   mspIndicatorEnabledSuffix: ' · مفعّل',
@@ -1490,9 +1495,14 @@ const ar: Dict = {
   smnA11yMaCross: 'تقاطع المتوسط المتحرك صعوداً',
   smnA11yRsiOversold: 'تشبّع بيعي بمؤشر RSI',
   smnA11yBullish: 'زخم صعودي',
-  domTitle: 'DOM · عمق السوق',
-  domSourceQuote: 'من Quote',
-  domEstimated: 'عمق تقديري (عند غياب L2 من المزود)',
+  domTitle: 'Bid / Ask · السبريد',
+  domBidLabel: 'Bid (بيع)',
+  domAskLabel: 'Ask (شراء)',
+  domSpreadLabel: 'السبريد',
+  domBidAskHint: 'تبيع على Bid وتشتري على Ask — السبريد تكلفة كل صفقة.',
+  domNoBidAsk: 'المزوّد لا يوفّر Bid/Ask لهذا الرمز — السعر الأخير فقط.',
+  domNoLiveQuote: 'لا سعر حي الآن — لا أرقام لعرضها.',
+  domOtcNote: 'الفوركس سوق لا مركزي: لا يوجد عمق سوق موحّد، والسبريد الفعلي يختلف حسب وسيطك.',
   pdwPrevA11yPrefix: 'الزوج السابق: ',
   pdwCurrentA11yPrefix: 'اختيار الزوج الحالي: ',
   pdwNextA11yPrefix: 'الزوج التالي: ',
@@ -2130,7 +2140,7 @@ const enUS: Dict = {
   ctlIndBollinger: 'Bollinger',
   ctlIndVolume: 'Volume',
   backtestWord: 'Backtest',
-  depthWord: 'Depth',
+  depthWord: 'Spread',
   mspDrawTitle: 'Draw tools · MATRIX',
   mspIndicatorsTitle: 'Indicators · MATRIX',
   mspKindsTitle: 'Chart types',
@@ -2141,7 +2151,7 @@ const enUS: Dict = {
   mspReportsTitle: 'MATRIX reports',
   mspBacktestTitle: 'Strategy Backtest',
   mspNewsTitle: 'News',
-  mspDomTitle: 'DOM',
+  mspDomTitle: 'Bid / Ask',
   mspJournalTitle: 'Trade journal',
   mspIndicatorA11yPrefix: 'Indicator: ',
   mspIndicatorEnabledSuffix: ' · on',
@@ -2249,9 +2259,14 @@ const enUS: Dict = {
   smnA11yMaCross: 'Moving average cross up',
   smnA11yRsiOversold: 'RSI oversold',
   smnA11yBullish: 'Bullish momentum',
-  domTitle: 'DOM · Market depth',
-  domSourceQuote: 'from quote',
-  domEstimated: 'Estimated depth (no L2 feed from the provider)',
+  domTitle: 'Bid / Ask · Spread',
+  domBidLabel: 'Bid (sell)',
+  domAskLabel: 'Ask (buy)',
+  domSpreadLabel: 'Spread',
+  domBidAskHint: 'You sell at the Bid and buy at the Ask — the spread is a cost on every trade.',
+  domNoBidAsk: 'The provider has no Bid/Ask for this symbol — last price only.',
+  domNoLiveQuote: 'No live price right now — nothing to show.',
+  domOtcNote: 'Forex is decentralised: there is no single market depth, and your real spread depends on your broker.',
   pdwPrevA11yPrefix: 'Previous pair: ',
   pdwCurrentA11yPrefix: 'Select current pair: ',
   pdwNextA11yPrefix: 'Next pair: ',
@@ -2910,7 +2925,7 @@ const ku: Dict = {
   ctlIndBollinger: 'بۆلینجەر',
   ctlIndVolume: 'قەبارە',
   backtestWord: 'تاقیکردنەوە',
-  depthWord: 'قووڵی',
+  depthWord: 'سپرێد',
   mspDrawTitle: 'ئامرازەکانی وێنەکێشان · MATRIX',
   mspIndicatorsTitle: 'نیشانەکان · MATRIX',
   mspKindsTitle: 'جۆرەکانی چارت',
@@ -2921,7 +2936,7 @@ const ku: Dict = {
   mspReportsTitle: 'ڕاپۆرتەکانی MATRIX',
   mspBacktestTitle: 'Strategy Backtest',
   mspNewsTitle: 'هەواڵەکان',
-  mspDomTitle: 'DOM',
+  mspDomTitle: 'Bid / Ask',
   mspJournalTitle: 'دەفتەری مامەڵەکان',
   mspIndicatorA11yPrefix: 'نیشانە: ',
   mspIndicatorEnabledSuffix: ' · چالاک',
@@ -3029,9 +3044,14 @@ const ku: Dict = {
   smnA11yMaCross: 'یەکتربڕینی مامناوەندی جوڵاو بەرەو سەرەوە',
   smnA11yRsiOversold: 'تێری فرۆشتن لە RSI',
   smnA11yBullish: 'پاڵنەی بەرزبوونەوە',
-  domTitle: 'DOM · قووڵایی بازاڕ',
-  domSourceQuote: 'لە Quote',
-  domEstimated: 'قووڵایی خەمڵێنراو (کاتێک L2 لە دابینکەرەوە نییە)',
+  domTitle: 'Bid / Ask · سپرێد',
+  domBidLabel: 'Bid (فرۆشتن)',
+  domAskLabel: 'Ask (کڕین)',
+  domSpreadLabel: 'سپرێد',
+  domBidAskHint: 'لەسەر Bid دەفرۆشیت و لەسەر Ask دەکڕیت — سپرێد تێچووی هەر مامەڵەیەکە.',
+  domNoBidAsk: 'دابینکەر Bid/Ask بۆ ئەم هێمایە نییە — تەنها دوایین نرخ.',
+  domNoLiveQuote: 'ئێستا نرخی زیندوو نییە — هیچ ژمارەیەک نییە بۆ پیشاندان.',
+  domOtcNote: 'فۆرێکس بازاڕێکی ناناوەندییە: قووڵایی یەکگرتوو نییە، و سپرێدی ڕاستەقینە بەپێی بڕۆکەرەکەت دەگۆڕێت.',
   pdwPrevA11yPrefix: 'جووتی پێشوو: ',
   pdwCurrentA11yPrefix: 'دیاریکردنی جووتی ئێستا: ',
   pdwNextA11yPrefix: 'جووتی داهاتوو: ',

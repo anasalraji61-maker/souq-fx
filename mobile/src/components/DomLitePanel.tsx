@@ -1,85 +1,114 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors, radii, spacing } from '../theme';
-import { computeDomLite, computeFootprint } from '../chart/orderflow';
 import { formatPrice } from '../chart/math';
+import { isRealQuote } from '../chart/dataSource';
+import { instrumentSpec } from '../positionSize';
 import { api, type Candle } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
   last: number;
+  /** لم يعد مستخدَماً (كان يغذّي «عمق» مختلَق من بصمة الشموع) — يبقى توافقاً مع المستدعين. */
   candles?: Candle[];
   symbol?: string;
 };
 
-export function DomLitePanel({ last, candles = [], symbol = 'EURUSD' }: Props) {
-  const { t } = useI18n();
-  const [book, setBook] = useState<{ bid?: number | null; ask?: number | null; price?: number } | null>(
-    null
-  );
+type Quote = { price: number; bid: number | null; ask: number | null };
+
+/** تحديث الاقتباس — كان يُطلب مع كل تيك (`last`)؛ 15ث كافية لسبريد يتغيّر ببطء. */
+const REFRESH_MS = 15_000;
+
+/**
+ * Bid/Ask والسبريد الحقيقيان للرمز. كانت هذه اللوحة «DOM · عمق السوق» تعرض 12 مستوى بأحجام مولَّدة
+ * بمعادلة (`1800/المسافة × نمط شبه عشوائي`) — حتى تحت وسم «من Quote» — فيقرؤها المتداول كأوامر
+ * حقيقية. الفوركس سوق لا مركزي (OTC): لا عمق موحَّد يمكن عرضه، والمفيد فعلاً للمتداول الفردي هو
+ * السعر الحي والسبريد بالـpip. لا أرقام إن لم يكن الاقتباس حقيقياً (`isRealQuote`).
+ */
+export function DomLitePanel({ last, symbol = 'EURUSD' }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [state, setState] = useState<'loading' | 'ok' | 'none'>('loading');
 
   useEffect(() => {
     let alive = true;
-    api
-      .marketQuote(symbol)
-      .then((q) => {
-        if (alive) setBook(q);
-      })
-      .catch(() => {
-        if (alive) setBook(null);
-      });
+    setQuote(null);
+    setState('loading');
+    const load = () => {
+      api
+        .marketQuote(symbol)
+        .then((q) => {
+          if (!alive) return;
+          if (isRealQuote(q)) {
+            setQuote({ price: q.price, bid: q.bid ?? null, ask: q.ask ?? null });
+            setState('ok');
+          } else {
+            setQuote(null);
+            setState('none');
+          }
+        })
+        .catch(() => {
+          if (!alive) return;
+          setQuote(null);
+          setState('none');
+        });
+    };
+    load();
+    const id = setInterval(load, REFRESH_MS);
     return () => {
       alive = false;
+      clearInterval(id);
     };
-  }, [symbol, last]);
+  }, [symbol]);
 
-  const mid = book?.price ?? last;
-  const rows = useMemo(() => {
-    const fp = candles.length ? computeFootprint(candles) : [];
-    const lastFp = fp.length ? fp[fp.length - 1] : null;
-    return computeDomLite(mid, lastFp, 12, book?.bid, book?.ask);
-  }, [mid, candles, book?.bid, book?.ask]);
-
-  if (!mid || !rows.length) return null;
-  const maxDepth = Math.max(...rows.flatMap((r) => [r.bid, r.ask]), 1);
-  const liveBook = book?.bid != null && book?.ask != null;
+  const hasBook =
+    quote != null && quote.bid != null && quote.ask != null && quote.ask >= quote.bid && quote.bid > 0;
+  const spec = instrumentSpec(symbol);
+  let spreadText: string | null = null;
+  if (hasBook) {
+    const diff = quote!.ask! - quote!.bid!;
+    spreadText = spec
+      ? `${(Math.round((diff / spec.pipSize) * 10) / 10).toFixed(1)} pip`
+      : formatPrice(diff, symbol);
+  }
+  void last;
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>{t.domTitle}</Text>
-      <Text style={styles.sub}>
-        {liveBook
-          ? `Bid ${formatPrice(book!.bid!, symbol)} · Ask ${formatPrice(book!.ask!, symbol)} · ${t.domSourceQuote}`
-          : t.domEstimated}
-      </Text>
-      {rows.map((r) => {
-        const atMid = Math.abs(r.price - mid) < mid * 0.00025;
-        return (
-          <View key={r.price} style={[styles.row, atMid && styles.rowMid]}>
-            <View style={styles.side}>
-              <View
-                style={[
-                  styles.bar,
-                  styles.bidBar,
-                  { flexGrow: Math.max(0.15, r.bid / maxDepth), flexBasis: 0 },
-                ]}
-              />
-              <Text style={styles.bid}>{r.bid}</Text>
+      <Text style={[styles.title, { textAlign: align }]}>{t.domTitle}</Text>
+      {state === 'loading' ? <ActivityIndicator color={colors.accent} style={{ paddingVertical: spacing.md }} /> : null}
+      {state === 'none' ? (
+        <Text style={[styles.warn, { textAlign: align }]}>{t.domNoLiveQuote}</Text>
+      ) : null}
+      {state === 'ok' && hasBook ? (
+        <>
+          <View style={[styles.row, rtl && styles.rowRtl]}>
+            <View style={styles.cell}>
+              <Text style={styles.label}>{t.domBidLabel}</Text>
+              <Text style={[styles.value, styles.bid]}>{formatPrice(quote!.bid!, symbol)}</Text>
             </View>
-            <Text style={[styles.price, atMid && styles.priceMid]}>{formatPrice(r.price, symbol)}</Text>
-            <View style={styles.side}>
-              <Text style={styles.ask}>{r.ask}</Text>
-              <View
-                style={[
-                  styles.bar,
-                  styles.askBar,
-                  { flexGrow: Math.max(0.15, r.ask / maxDepth), flexBasis: 0 },
-                ]}
-              />
+            <View style={styles.cell}>
+              <Text style={styles.label}>{t.domSpreadLabel}</Text>
+              <Text style={[styles.value, styles.spread]}>{spreadText}</Text>
+            </View>
+            <View style={styles.cell}>
+              <Text style={styles.label}>{t.domAskLabel}</Text>
+              <Text style={[styles.value, styles.ask]}>{formatPrice(quote!.ask!, symbol)}</Text>
             </View>
           </View>
-        );
-      })}
+          <Text style={[styles.sub, { textAlign: align }]}>{t.domBidAskHint}</Text>
+        </>
+      ) : null}
+      {state === 'ok' && !hasBook ? (
+        <>
+          <Text style={[styles.value, styles.spread, { textAlign: align }]}>
+            {formatPrice(quote!.price, symbol)}
+          </Text>
+          <Text style={[styles.sub, { textAlign: align }]}>{t.domNoBidAsk}</Text>
+        </>
+      ) : null}
+      <Text style={[styles.sub, { textAlign: align }]}>{t.domOtcNote}</Text>
     </View>
   );
 }
@@ -93,21 +122,15 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.xs,
   },
-  title: { color: colors.text, fontWeight: '800', textAlign: 'right', fontSize: 14 },
-  sub: { color: colors.textDim, textAlign: 'right', fontSize: 10, marginBottom: spacing.xs },
-  row: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 2,
-  },
-  rowMid: { backgroundColor: colors.accentFaint, borderRadius: 4 },
-  side: { flex: 1, flexDirection: 'row-reverse', alignItems: 'center', gap: spacing.xs },
-  bar: { height: 8, borderRadius: 2, minWidth: 8 },
-  bidBar: { backgroundColor: 'rgba(34,197,94,0.45)' },
-  askBar: { backgroundColor: 'rgba(239,68,68,0.45)' },
-  bid: { color: colors.bull, fontSize: 10, fontWeight: '700', width: 36, textAlign: 'left' },
-  ask: { color: colors.bear, fontSize: 10, fontWeight: '700', width: 36, textAlign: 'right' },
-  price: { color: colors.textMuted, fontSize: 11, fontWeight: '700', width: 72, textAlign: 'center' },
-  priceMid: { color: colors.accent },
+  title: { color: colors.text, fontWeight: '800', fontSize: 14 },
+  sub: { color: colors.textDim, fontSize: 10 },
+  warn: { color: colors.warn, fontSize: 12, fontWeight: '700', paddingVertical: spacing.sm },
+  row: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.xs },
+  rowRtl: { flexDirection: 'row-reverse' },
+  cell: { flex: 1, alignItems: 'center', gap: 2 },
+  label: { color: colors.textMuted, fontSize: 10, fontWeight: '700' },
+  value: { fontSize: 16, fontWeight: '900' },
+  bid: { color: colors.bear },
+  ask: { color: colors.bull },
+  spread: { color: colors.text },
 });
