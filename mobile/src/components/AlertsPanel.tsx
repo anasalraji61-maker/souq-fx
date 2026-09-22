@@ -52,6 +52,17 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
    * وللتحذير من تنبيه سيُطلق فوراً. null = غير معروف (لا اتصال/مزوّد غير مهيأ) فيعمل النموذج كما كان. */
   const [current, setCurrent] = useState<number | null>(null);
   const quoteGen = useRef(0);
+  /**
+   * تحذير «مزوّد الأسعار لا يعرف هذا الرمز»: تنبيه على خطأ كتابة («EURSUD») يجلس بالقائمة
+   * مُسلَّحاً ولن يُطلق أبداً، والمتداول ينتظره. لكن `data_kind: 'demo'` وحده **لا يكفي دليلاً**:
+   * الباك-إند يُرجعه للرمز المجهول **وللمزوّد غير المهيّأ معاً** (تعليق `main.py:1126` صراحةً) —
+   * وهو حال كل مستخدم حتى يُنشَر الخادم، فالتحذير على مجرّد `demo` كان سيتّهم كل رمز صحيح.
+   * لذلك لا نتّهم الرمز إلا بدليل موجب: `providerRealRef` يصير true متى عاد **أي** اقتباس حقيقي
+   * بهذه اللوحة — أي ثبت أن المزوّد يعمل — وعندها فقط يعني رجوع `demo` أن الرمز نفسه مجهول.
+   * بلا هذا الدليل لا يُعرض شيء، كما كان.
+   */
+  const providerRealRef = useRef(false);
+  const [unknownSymbol, setUnknownSymbol] = useState(false);
   /** تأكيد صريح بعد كل حفظ ناجح ("مُفعَّل: EURUSD ≥ 1.0850") — كان التأكيد الوحيد شارة أول تنبيه. */
   const [armed, setArmed] = useState<string | null>(null);
   const armedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -82,6 +93,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
     const sym = symbol.trim().toUpperCase();
     const gen = ++quoteGen.current;
     setCurrent(null);
+    setUnknownSymbol(false);
     if (sym.length < 3) return;
     const id = setTimeout(() => {
       api
@@ -90,8 +102,11 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
           if (!mountedRef.current || gen !== quoteGen.current) return;
           // سعر بذري تجريبي (المزوّد متعذّر/رمز مجهول) ليس «السعر الحالي»: كان يحدّد اتجاه فوق/تحت ويحذّر
           // «سيُطلق فوراً» بناءً على رقم مختلَق — الباك-إند يفحص التنبيه بأسعار المزوّد الحقيقية فقط.
-          const cur = isRealQuote(q) ? q.price : null;
+          const real = isRealQuote(q);
+          const cur = real ? q.price : null;
           setCurrent(cur);
+          if (real) providerRealRef.current = true;
+          setUnknownSymbol(!real && providerRealRef.current);
           const typed = parseDecimal(priceTextRef.current);
           if (cur != null && !condManualRef.current && typed != null && typed > 0 && typed !== cur) {
             setCondition(typed > cur ? 'above' : 'below');
@@ -487,6 +502,11 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
             <Text style={styles.cancelEditText}>{t.alertsCancelEdit}</Text>
           </Pressable>
         </View>
+      ) : null}
+      {unknownSymbol ? (
+        <Text style={[styles.firesNow, { textAlign: align }]} accessibilityLiveRegion="polite">
+          {t.alertsUnknownSymbolWarn}
+        </Text>
       ) : null}
       {firesNow ? <Text style={[styles.firesNow, { textAlign: align }]}>{t.alertsFiresNowWarn}</Text> : null}
       {formError ? <Text style={[styles.formError, { textAlign: align }]}>{formError}</Text> : null}

@@ -252,6 +252,7 @@ export type Dict = {
   alertsDeleteFailedBody: string;
   alertsDeleteA11yPrefix: string;
   alertsInvalidInput: string;
+  alertsUnknownSymbolWarn: string;
   alertsEditOldRemains: string;
   alertsArmedPrefix: string;
   alertsUpdatedPrefix: string;
@@ -1076,6 +1077,7 @@ const ar: Dict = {
   alertsDeleteFailedBody: 'حدث خطأ أثناء حذف التنبيه، حاول مرة أخرى.',
   alertsDeleteA11yPrefix: 'حذف تنبيه',
   alertsInvalidInput: 'أدخل رمزاً وسعراً صحيحاً أكبر من صفر',
+  alertsUnknownSymbolWarn: 'مزوّد الأسعار لا يعرف هذا الرمز — راجع كتابته، وإلا لن يُطلق التنبيه',
   alertsEditOldRemains: 'حُفظ التنبيه الجديد لكن تعذّر حذف القديم — احذفه يدوياً من القائمة',
   alertsArmedPrefix: 'مُفعَّل',
   alertsUpdatedPrefix: 'حُدِّث',
@@ -1911,6 +1913,7 @@ const enUS: Dict = {
   alertsDeleteFailedBody: 'An error occurred while deleting the alert, try again.',
   alertsDeleteA11yPrefix: 'Delete alert',
   alertsInvalidInput: 'Enter a symbol and a valid price above zero',
+  alertsUnknownSymbolWarn: 'The price provider does not know this symbol — check the spelling, or this alert will never fire',
   alertsEditOldRemains: 'New alert saved, but the old one could not be removed — delete it from the list',
   alertsArmedPrefix: 'Armed',
   alertsUpdatedPrefix: 'Updated',
@@ -2766,6 +2769,7 @@ const ku: Dict = {
   alertsDeleteFailedBody: 'هەڵەیەک ڕوویدا لە کاتی سڕینەوەی ئاگادارکردنەوەکە، دووبارە هەوڵبدەرەوە.',
   alertsDeleteA11yPrefix: 'سڕینەوەی ئاگادارکردنەوە',
   alertsInvalidInput: 'هێمایەک و نرخێکی دروست لە سەرووی سفر بنووسە',
+  alertsUnknownSymbolWarn: 'دابینکەری نرخ ئەم هێمایە ناناسێت — ڕێنووسەکەی بپشکنە، ئەگەرنا ئەم ئاگادارکردنەوەیە هەرگیز ناچالاک نابێت',
   alertsEditOldRemains: 'ئاگادارکردنەوەی نوێ پاشەکەوت کرا بەڵام کۆنەکە نەسڕایەوە — لە لیستەکە بیسڕەوە',
   alertsArmedPrefix: 'چالاککرا',
   alertsUpdatedPrefix: 'نوێکرایەوە',
