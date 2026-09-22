@@ -227,7 +227,13 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
   }, [t.alertsPushTitle, t.aboveWord, t.belowWord]);
 
   useEffect(() => {
-    void ensureAlertNotifications().then(() => registerPushToken());
+    // رفض `getPermissionsAsync` (حالات أندرويد/Expo Go) كان يخرج كـunhandled rejection:
+    // `registerPushToken` يحمي داخله فقط، والانتظار هنا كان بلا catch.
+    void ensureAlertNotifications()
+      .then(() => registerPushToken())
+      .catch(() => {
+        /* الإشعارات تحسين اختياري — فشل الإذن لا يمنع التنبيهات داخل التطبيق */
+      });
     /**
      * فحص فوري عند فتح اللوحة، لا بعد دقيقة. `setInterval` وحده كان يعني أن أول فحص داخل
      * التطبيق يقع بعد 60 ثانية من الفتح — ومن يفتح اللوحة بالذات يفتحها ليرى إن كان مستواه قد
@@ -323,6 +329,18 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
 
   /** التنبيهات المُطلقة تتراكم أسفل القائمة (لمرة واحدة) وكان حذفها واحداً واحداً بتأكيد لكلٍّ منها. */
   const firedCount = alerts.filter((a) => a.triggered).length;
+
+  /**
+   * سطر «🔔 أُطلق …» **لم يكن يزول أبداً**: يُكتب مرة عند الإطلاق ولا مؤقّت له ولا زرّ إخفاء
+   * (خلافاً لـ`armed` وشارة أول تنبيه، ولكلٍّ منهما مؤقّت). واللوحة مركَّبة طوال الجلسة داخل شبكة
+   * شاشة الأدوات، فيبقى السطر معلّقاً فوق النموذج ساعاتٍ يعلن سعراً تجاوزه السوق من زمن — بل يبقى
+   * بعد أن يمسح المتداول التنبيهات المُطلَقة نفسها، فيعلن إطلاقاً لم يعد له أثر بالقائمة. السجلّ
+   * الدائم للإطلاق هو صفّ التنبيه بحالته «أُطلق»، وهذا السطر إشعار لحظي: يزول بزوال ما يصفه، أو
+   * بنقرة من المتداول.
+   */
+  useEffect(() => {
+    if (firedCount === 0) setFlash(null);
+  }, [firedCount]);
   const clearFired = async () => {
     const fired = alerts.filter((a) => a.triggered);
     setBusy(true);
@@ -359,7 +377,20 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
           <Text style={[styles.sub, { textAlign: align }]}>{t.alertsSub}</Text>
         </>
       )}
-      {flash ? <Text style={[styles.flash, { textAlign: align }]}>🔔 {flash}</Text> : null}
+      {flash ? (
+        <View style={[styles.flashRow, rtl && styles.rowRtl]}>
+          <Text style={[styles.flash, styles.flashText, { textAlign: align }]}>🔔 {flash}</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setFlash(null)}
+            accessibilityLabel={t.closeWord}
+            hitSlop={8}
+            style={({ pressed }) => [pressed && { opacity: buttons.pressedOpacity }]}
+          >
+            <Text style={styles.flashClose}>✕</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       <View style={styles.form}>
         <TextInput
@@ -655,6 +686,9 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontWeight: '700',
   },
+  flashRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  flashText: { flex: 1 },
+  flashClose: { color: colors.textDim, fontSize: 13, fontWeight: '800', marginTop: 6 },
   formError: {
     color: colors.bear,
     fontSize: 10,
