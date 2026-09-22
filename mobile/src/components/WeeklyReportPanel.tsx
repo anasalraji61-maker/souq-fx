@@ -55,6 +55,11 @@ function buildKinds(
   ];
 }
 
+/** تعليمة داخلية للذكاء الاصطناعي (لا يراها المتداول، محايدة لغوياً كـ`prompt`) عند غياب بيانات الدفتر:
+ * بدونها يختلق النموذج «أفضل يوم»/«درجة 7/10»/نسبة نجاح لأسبوع لم يُسجَّل فيه شيء. */
+const NO_JOURNAL_AI_NOTE =
+  '\nلا توجد بيانات صفقات لهذا المتداول: لا تختلق أرقام أداء أو أياماً أو درجات أو نسب نجاح، وقدّم إطاراً عاماً وقائمة ما يجب تسجيله فقط.';
+
 type Props = { grid?: boolean };
 
 export function WeeklyReportPanel({ grid = false }: Props) {
@@ -76,20 +81,33 @@ export function WeeklyReportPanel({ grid = false }: Props) {
     setText('');
     setAiFallback(false);
     let journalLine = '';
+    let hasJournalData = false;
     try {
       const tr = await api.trades();
-      const s = tr.stats as Record<string, number>;
-      journalLine = `\n${t.reportJournalDataLine
-        .replace('{trades}', String(s.trade_count))
-        .replace('{winRate}', String(s.win_rate))
-        .replace('{pnl}', String(s.total_pnl_pct))
-        .replace('{best}', String(s.best))
-        .replace('{worst}', String(s.worst))}`;
+      const s = (tr.stats ?? {}) as Record<string, number>;
+      const count = Number(s.trade_count);
+      if (Number.isFinite(count) && count > 0) {
+        hasJournalData = true;
+        journalLine = `\n${t.reportJournalDataLine
+          .replace('{trades}', String(count))
+          .replace('{winRate}', String(s.win_rate))
+          .replace('{pnl}', String(s.total_pnl_pct))
+          .replace('{best}', String(s.best))
+          .replace('{worst}', String(s.worst))}`;
+      } else {
+        // صفر صفقات مغلقة: «صفقات=0 نجاح=0% PnL=0%» ليست بيانات — تُقرأ كأسبوع خاسر/جامد.
+        journalLine = `\n${t.reportJournalEmptyLine}`;
+      }
     } catch {
-      journalLine = `\n${t.reportJournalEmptyLine}`;
+      // فشل القراءة ≠ دفتر فارغ: لا نقول «لا صفقات» وربما لديه صفقات.
+      journalLine = `\n${t.reportJournalUnavailableLine}`;
     }
     try {
-      const res = await api.aiAsk(item.prompt + journalLine, 'EURUSD', lang);
+      const res = await api.aiAsk(
+        item.prompt + journalLine + (hasJournalData ? '' : NO_JOURNAL_AI_NOTE),
+        'EURUSD',
+        lang
+      );
       setText(res.answer.replace(/\*\*/g, ''));
       playSoftClick();
     } catch {

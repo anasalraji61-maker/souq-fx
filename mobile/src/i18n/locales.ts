@@ -324,6 +324,7 @@ export type Dict = {
   reportWinLabel: string;
   reportJournalDataLine: string;
   reportJournalEmptyLine: string;
+  reportJournalUnavailableLine: string;
   reportFallbackWeekly: string;
   reportFallbackPerformance: string;
   reportFallbackRisk: string;
@@ -1070,8 +1071,9 @@ const ar: Dict = {
   reportAiFallbackNote: 'تعذر الاتصال بالذكاء الاصطناعي — هذا قالب عام بدل تحليل مخصَّص',
   reportWinLabel: 'ثقة تقديرية للسيناريو: {pct}%',
   reportJournalDataLine:
-    'بيانات دفتر الصفقات الفعلية: صفقات={trades} نجاح={winRate}% PnL={pnl}% أفضل={best}% أسوأ={worst}%. اعتمد عليها في التقرير.',
-  reportJournalEmptyLine: '(لا توجد صفقات مسجّلة بعد في الدفتر).',
+    'بيانات دفتر الصفقات الفعلية (كل الصفقات المغلقة، لا هذا الأسبوع وحده): صفقات={trades} نجاح={winRate}% PnL={pnl}% أفضل={best}% أسوأ={worst}%. اعتمد عليها في التقرير.',
+  reportJournalEmptyLine: '(لا توجد صفقات مغلقة في الدفتر بعد — لا أرقام أداء لعرضها).',
+  reportJournalUnavailableLine: '(تعذّرت قراءة دفتر الصفقات الآن — التقرير بلا أرقامك).',
   reportFallbackWeekly: 'تقرير من دفتر الصفقات{journalLine}\nسجّل صفقاتك في تبويب PnL لبناء تقرير أدق.',
   reportFallbackPerformance: 'تقييم مبني على الدفتر{journalLine}',
   reportFallbackRisk: 'موجز مخاطر{journalLine}\n1) مخاطرة ≤1%.\n2) وقف واضح.\n3) تجنّب الأخبار الثقيلة.',
@@ -1826,8 +1828,9 @@ const enUS: Dict = {
   reportAiFallbackNote: 'Could not reach the AI — this is a general template, not a custom analysis',
   reportWinLabel: 'Estimated scenario confidence: {pct}%',
   reportJournalDataLine:
-    'Actual trade journal data: trades={trades} win rate={winRate}% PnL={pnl}% best={best}% worst={worst}%. Base the report on it.',
-  reportJournalEmptyLine: '(No trades logged in the journal yet).',
+    'Actual trade journal data (all closed trades, not just this week): trades={trades} win rate={winRate}% PnL={pnl}% best={best}% worst={worst}%. Base the report on it.',
+  reportJournalEmptyLine: '(No closed trades in the journal yet — no performance numbers to show).',
+  reportJournalUnavailableLine: '(Could not read the trade journal right now — this report has none of your numbers).',
   reportFallbackWeekly:
     'Report from the trade journal{journalLine}\nLog your trades in the PnL tab for a more accurate report.',
   reportFallbackPerformance: 'Assessment based on the journal{journalLine}',
@@ -2602,8 +2605,9 @@ const ku: Dict = {
     'نەکرا پەیوەندی بە زیرەکی دەستکردەوە بکرێت — ئەمە داڵدەیەکی گشتییە نەک شیکارییەکی تایبەت',
   reportWinLabel: 'دڵنیایی خەمڵێنراوی دیمەن: {pct}%',
   reportJournalDataLine:
-    'زانیاری ڕاستەقینەی دەفتەری مامەڵە: مامەڵە={trades} ڕێژەی سەرکەوتن={winRate}% PnL={pnl}% باشترین={best}% خراپترین={worst}%. پشت بەمە ببەستە لە ڕاپۆرتەکە.',
-  reportJournalEmptyLine: '(هێشتا هیچ مامەڵەیەک لە دەفتەرەکەدا تۆمار نەکراوە).',
+    'زانیاری ڕاستەقینەی دەفتەری مامەڵە (هەموو مامەڵە داخراوەکان، نەک تەنها ئەم هەفتەیە): مامەڵە={trades} ڕێژەی سەرکەوتن={winRate}% PnL={pnl}% باشترین={best}% خراپترین={worst}%. پشت بەمە ببەستە لە ڕاپۆرتەکە.',
+  reportJournalEmptyLine: '(هێشتا هیچ مامەڵەیەکی داخراو لە دەفتەرەکەدا نییە — ژمارەی ئەدا نییە بۆ پیشاندان).',
+  reportJournalUnavailableLine: '(ئێستا دەفتەری مامەڵە نەخوێندرایەوە — ئەم ڕاپۆرتە ژمارەکانی تۆی تێدا نییە).',
   reportFallbackWeekly:
     'ڕاپۆرت لە دەفتەری مامەڵە{journalLine}\nمامەڵەکانت لە تابی PnL تۆماربکە بۆ ڕاپۆرتێکی وردتر.',
   reportFallbackPerformance: 'هەڵسەنگاندن لەسەر بنەمای دەفتەرەکە{journalLine}',
