@@ -372,6 +372,8 @@ export type Dict = {
   journalNoLiveQuote: string;
   journalEntryA11y: string;
   journalExitPlaceholder: string;
+  journalSizePlaceholder: string;
+  journalSizeA11y: string;
   journalExitA11y: string;
   journalNotePlaceholder: string;
   journalSlPlaceholder: string;
@@ -1201,6 +1203,8 @@ const ar: Dict = {
   journalNoLiveQuote: 'لا سعر حي لهذا الرمز الآن — اكتب سعر الدخول يدوياً',
   journalEntryA11y: 'سعر الدخول',
   journalExitPlaceholder: 'خروج (اختياري)',
+  journalSizePlaceholder: 'الحجم لوت (اختياري)',
+  journalSizeA11y: 'حجم الصفقة باللوت (اختياري)',
   journalExitA11y: 'سعر الخروج (اختياري)',
   journalNotePlaceholder: 'ملاحظة',
   journalSlPlaceholder: 'وقف الخسارة (اختياري)',
@@ -2041,6 +2045,8 @@ const enUS: Dict = {
   journalNoLiveQuote: 'No live price for this symbol right now — type the entry manually',
   journalEntryA11y: 'Entry price',
   journalExitPlaceholder: 'Exit (optional)',
+  journalSizePlaceholder: 'Size in lots (optional)',
+  journalSizeA11y: 'Trade size in lots (optional)',
   journalExitA11y: 'Exit price (optional)',
   journalNotePlaceholder: 'Note',
   journalSlPlaceholder: 'Stop loss (optional)',
@@ -2902,6 +2908,8 @@ const ku: Dict = {
   journalNoLiveQuote: 'ئێستا نرخی ڕاستەوخۆ بۆ ئەم هێمایە نییە — نرخی چوونەژوورەوە بە دەست بنووسە',
   journalEntryA11y: 'نرخی چوونەژوورەوە',
   journalExitPlaceholder: 'دەرچوون (ئیختیاری)',
+  journalSizePlaceholder: 'قەبارە بە لۆت (ئیختیاری)',
+  journalSizeA11y: 'قەبارەی مامەڵە بە لۆت (ئیختیاری)',
   journalExitA11y: 'نرخی دەرچوون (ئیختیاری)',
   journalNotePlaceholder: 'تێبینی',
   journalSlPlaceholder: 'وەستانی زیان (ئیختیاری)',

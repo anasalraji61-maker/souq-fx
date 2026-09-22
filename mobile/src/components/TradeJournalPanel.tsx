@@ -78,6 +78,10 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [entry, setEntry] = useState('');
   const [exit, setExit] = useState('');
+  /** حجم الصفقة باللوت — «سجّل الخطة بالدفتر» بالحاسبة يرسل اللوت المحسوب، بينما التسجيل اليدوي كان
+   * لا يرسل `size` إطلاقاً فيضع الباك-إند 1 (`db.py:1578`): صفقتان متطابقتان بحجمين مختلفين حسب طريق
+   * التسجيل. اختياري — الفارغ يبقى كما كان بالضبط (لا يُرسل الحقل). */
+  const [size, setSize] = useState('');
   const [sl, setSl] = useState('');
   const [tp, setTp] = useState('');
   const [note, setNote] = useState('');
@@ -244,6 +248,7 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
   const resetForm = () => {
     setEntry('');
     setExit('');
+    setSize('');
     setSl('');
     setTp('');
     setNote('');
@@ -256,6 +261,8 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
     // String لا formatPrice: لا تقريب يغيّر السعر المسجَّل بمجرد فتح التعديل
     setEntry(String(tr.entry));
     setExit(tr.exit != null ? String(tr.exit) : '');
+    // 1 هو افتراضُ الباك-إند لصفقة سُجِّلت بلا حجم — لا يُملأ بالخانة كأنه رقم كتبه المتداول
+    setSize(tr.size != null && Number.isFinite(tr.size) && tr.size > 0 && tr.size !== 1 ? String(tr.size) : '');
     setSl(tr.sl != null ? String(tr.sl) : '');
     setTp(tr.tp != null ? String(tr.tp) : '');
     setNote(tr.note || '');
@@ -275,7 +282,7 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
       setFormError(t.journalInvalidEntry);
       return;
     }
-    if ([sl, tp, exit].some(unreadable)) {
+    if ([sl, tp, exit, size].some(unreadable)) {
       setFormError(t.invalidNumberHint);
       return;
     }
@@ -298,6 +305,8 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
           exit: num(exit),
           sl: s,
           tp: p,
+          // خانة الحجم الفارغة = «لا تغيير» لا مسحاً: الحقل إلزامي بالجدول (`main.py:1174` يُسقط null له)
+          size: num(size) ?? undefined,
           note,
         });
         if (!mountedRef.current) return;
@@ -321,6 +330,7 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
         exit: x ?? undefined,
         sl: s ?? undefined,
         tp: p ?? undefined,
+        size: num(size) ?? undefined,
         note,
       });
       playSoftClick();
@@ -617,21 +627,41 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
           <Text style={styles.qChipText}>{quoteBusy ? '...' : t.journalUseLivePrice}</Text>
         </Pressable>
       </View>
-      <TextInput
-        style={[styles.input, { textAlign: align }]}
-        value={exit}
-        onChangeText={setExit}
-        placeholder={t.journalExitPlaceholder}
-        keyboardType="decimal-pad"
-        maxLength={12}
-        placeholderTextColor={colors.textDim}
-        returnKeyType="done"
-        underlineColorAndroid="transparent"
-        clearButtonMode="while-editing"
-        keyboardAppearance="dark"
-        selectionColor={colors.accent}
-        accessibilityLabel={t.journalExitA11y}
-      />
+      <View style={[styles.row, rtl && styles.rowRtl]}>
+        <TextInput
+          style={[styles.input, styles.inputHalf, { textAlign: align }]}
+          value={exit}
+          onChangeText={setExit}
+          placeholder={t.journalExitPlaceholder}
+          keyboardType="decimal-pad"
+          maxLength={12}
+          placeholderTextColor={colors.textDim}
+          returnKeyType="done"
+          underlineColorAndroid="transparent"
+          clearButtonMode="while-editing"
+          keyboardAppearance="dark"
+          selectionColor={colors.accent}
+          accessibilityLabel={t.journalExitA11y}
+        />
+        <TextInput
+          style={[styles.input, styles.inputHalf, { textAlign: align }]}
+          value={size}
+          onChangeText={(v) => {
+            setSize(v);
+            setFormError(null);
+          }}
+          placeholder={t.journalSizePlaceholder}
+          keyboardType="decimal-pad"
+          maxLength={8}
+          placeholderTextColor={colors.textDim}
+          returnKeyType="done"
+          underlineColorAndroid="transparent"
+          clearButtonMode="while-editing"
+          keyboardAppearance="dark"
+          selectionColor={colors.accent}
+          accessibilityLabel={t.journalSizeA11y}
+        />
+      </View>
       <View style={[styles.row, rtl && styles.rowRtl]}>
         <TextInput
           style={[styles.input, styles.inputHalf, { textAlign: align }]}
@@ -728,7 +758,13 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
               <Text style={{ color: tr.side === 'sell' ? colors.bear : colors.bull }}>
                 {tr.side === 'sell' ? `▼ ${t.dirSell}` : `▲ ${t.dirBuy}`}
               </Text>{' '}
-              {tr.symbol} · {formatPrice(tr.entry, tr.symbol)}
+              {tr.symbol}
+              {/* 1 هو افتراض الباك-إند لصفقة بلا حجم مسجَّل — لا يُميَّز عن حجم كتبه المتداول، فلا يُعرض
+                  كأنه رقمه. ما عداه حجم سجّله فعلاً (يدوياً أو عبر «سجّل الخطة» من الحاسبة). */}
+              {typeof tr.size === 'number' && Number.isFinite(tr.size) && tr.size > 0 && tr.size !== 1
+                ? ` · ${Number(tr.size.toFixed(2))} lot`
+                : ''}{' '}
+              · {formatPrice(tr.entry, tr.symbol)}
               {tr.exit != null ? ` → ${formatPrice(tr.exit, tr.symbol)}` : ` ${t.journalOpenSuffix}`}
             </Text>
             {tr.sl != null || tr.tp != null ? (

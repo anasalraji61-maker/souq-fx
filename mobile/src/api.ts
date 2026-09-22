@@ -729,6 +729,8 @@ export const api = {
       side?: 'buy' | 'sell';
       entry?: number;
       exit?: number | null;
+      /** حجم اللوت — الحقل إلزامي بالجدول، وnull له يُسقَط بالباك-إند (`main.py:1174`) فلا يُرسَل إلا برقم. */
+      size?: number;
       sl?: number | null;
       tp?: number | null;
       note?: string;
