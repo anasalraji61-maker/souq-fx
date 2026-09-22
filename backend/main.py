@@ -970,6 +970,8 @@ def screener_filters():
 def backtest_run(body: BacktestRun):
     series = build_series(body.symbol.upper(), body.timeframe)
     candles = [c.model_dump() for c in series.candles]
+    # بلا تكلفة كانت استراتيجية تنقلب كل بضع شموع تبدو رابحة وهي خاسرة بعد السبريد عند وسيط حقيقي.
+    spread = backtest_engine.typical_spread(body.symbol)
     result = backtest_engine.run_backtest(
         candles,
         strategy=body.strategy,
@@ -977,7 +979,10 @@ def backtest_run(body: BacktestRun):
         slow=body.slow,
         rsi_low=body.rsi_low,
         rsi_high=body.rsi_high,
+        spread=spread[0] * spread[1] if spread else 0.0,
     )
+    if isinstance(result.get("stats"), dict) and result["stats"]:
+        result["stats"]["spread_pips"] = spread[0] if spread else None
     result["symbol"] = body.symbol.upper()
     result["timeframe"] = body.timeframe
     # demo = مسار عشوائي بذري (المزوّد متعذّر): نسبة ربح/عائد عليه ليست أداء استراتيجية — العميل يرفضها.

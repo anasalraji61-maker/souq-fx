@@ -7,6 +7,38 @@ import indicators as ind
 
 StrategyId = Literal["ma_cross", "rsi_reversal", "macd_cross", "bb_bounce"]
 
+_MAJORS = {"EUR", "GBP", "AUD", "NZD", "USD", "CAD", "CHF", "JPY"}
+_TIGHTEST = {"EURUSD", "USDJPY"}
+_MAJOR_USD = {"GBPUSD", "AUDUSD", "NZDUSD", "USDCAD", "USDCHF"}
+
+
+def typical_spread(symbol: str) -> tuple[float, float] | None:
+    """سبريد تقديري لحساب تجزئة عادي: (عدد الـpip، حجم الـpip). None = ليس زوج فوركس/معدن (DXY مؤشر لا يُتداول).
+
+    تقدير محافظ لا سعر وسيط بعينه — الغرض ألا يُعرض عائد استراتيجية تنقلب كل بضع شموع بلا أي تكلفة،
+    فتبدو رابحة على 15m وهي خاسرة فعلياً بعد السبريد.
+    """
+    s = "".join(ch for ch in symbol.upper() if ch.isalpha())
+    if len(s) != 6:
+        return None
+    base, quote = s[:3], s[3:]
+    if base == "XAU":
+        return (3.0, 0.1)
+    if base == "XAG":
+        return (3.0, 0.01)
+    if not (base.isalpha() and quote.isalpha()) or base == quote:
+        return None
+    pip = 0.01 if quote == "JPY" else 0.0001
+    if s in _TIGHTEST:
+        return (1.0, pip)
+    if s in _MAJOR_USD:
+        return (1.5, pip)
+    if base in _MAJORS and quote in _MAJORS:
+        return (2.5, pip)
+    if base in {"BTC", "ETH", "XRP", "SOL", "LTC"} or quote in {"BTC", "ETH"}:
+        return None
+    return (15.0, pip)  # عملة ناشئة (TRY/ZAR/MXN…): سبريد واسع
+
 
 def run_backtest(
     candles: list[dict[str, Any]],
@@ -15,7 +47,9 @@ def run_backtest(
     slow: int = 21,
     rsi_low: float = 30,
     rsi_high: float = 70,
+    spread: float = 0.0,
 ) -> dict[str, Any]:
+    """`spread`: تكلفة السبريد بوحدات السعر، تُخصم مرة لكل صفقة (دخول+خروج بسعري bid/ask)."""
     if len(candles) < max(slow, 30) + 5:
         return {"error": "not enough candles", "trades": [], "stats": {}}
 
@@ -138,6 +172,10 @@ def run_backtest(
                 "open": True,
             }
         )
+
+    if spread > 0:
+        for t in trades:
+            t["pnl_pct"] = round(t["pnl_pct"] - spread / t["entry"] * 100, 3)
 
     wins = [t for t in trades if t["pnl_pct"] > 0]
     total_pnl = sum(t["pnl_pct"] for t in trades)

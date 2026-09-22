@@ -24,6 +24,8 @@ type Stats = {
   avg_win_pct?: number;
   avg_loss_pct?: number;
   max_drawdown_pct?: number;
+  /** سبريد تقديري مخصوم من كل صفقة (باك-إند أحدث)؛ null = ليس زوجاً قابلاً للتداول (DXY). */
+  spread_pips?: number | null;
 };
 
 type Strategy = 'ma_cross' | 'rsi_reversal' | 'macd_cross' | 'bb_bounce';
@@ -203,6 +205,11 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
                   {t.backtestStatAvgWinLoss
                     .replace('{win}', String(stats.avg_win_pct))
                     .replace('{loss}', String(stats.avg_loss_pct))}
+                </Text>
+              ) : null}
+              {typeof stats.spread_pips === 'number' && stats.spread_pips > 0 ? (
+                <Text style={[styles.ranFor, { textAlign: align }]}>
+                  {t.backtestSpreadNote.replace('{pips}', String(stats.spread_pips))}
                 </Text>
               ) : null}
             </>
