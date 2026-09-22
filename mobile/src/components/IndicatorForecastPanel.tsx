@@ -46,6 +46,8 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   const opts = indicatorOpts(t);
   const [enabled, setEnabled] = useState(opts.map((x) => x.id));
   const [loading, setLoading] = useState(false);
+  // لا نتيجة بعد (تحميل أول/خطأ/demo): لا يُعرض «محايد — لا إشارة قوية» كأنه حُسب من السوق.
+  const [hasResult, setHasResult] = useState(false);
   const [direction, setDirection] = useState('neutral');
   const [avg, setAvg] = useState(0);
   const [levels, setLevels] = useState<{ entry: number; sl: number; tp: number } | null>(null);
@@ -74,6 +76,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   }, []);
 
   const clearResult = () => {
+    setHasResult(false);
     setDirection('neutral');
     setAvg(0);
     setLevels(null);
@@ -81,7 +84,11 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
     setRsi(null);
   };
 
+  // رقم الطلب: ردّ طلب أقدم (رمز سابق/مؤشرات سابقة) يصل بعد الأحدث لا يكتب فوقه.
+  const reqRef = useRef(0);
+
   const run = useCallback(async () => {
+    const req = ++reqRef.current;
     setLoading(true);
     try {
       const res = await api.indicatorForecast({
@@ -89,13 +96,14 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
         timeframe,
         indicators: enabled,
       });
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || req !== reqRef.current) return;
       // demo = اتجاه ومستويات دخول/وقف/هدف من شموع مختلَقة (المزوّد متعذّر) — لا تُعرض كإشارة.
       if (res.data_kind === 'demo') {
         clearResult();
         setNote(t.noLiveDataResult);
         return;
       }
+      setHasResult(true);
       setDirection(res.direction);
       setAvg(res.avg_score);
       setLevels(res.levels);
@@ -103,15 +111,23 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
       setRsi(typeof res.snapshot?.rsi === 'number' ? res.snapshot.rsi : null);
       setNote(res.disclaimer);
     } catch {
-      if (mountedRef.current) {
+      if (mountedRef.current && req === reqRef.current) {
         // كان يُبقي اتجاه/مستويات الطلب السابق (رمز آخر أحياناً) ظاهرة تحت رسالة الخطأ.
         clearResult();
         setNote(t.forecastError);
       }
     } finally {
-      if (mountedRef.current) setLoading(false);
+      if (mountedRef.current && req === reqRef.current) setLoading(false);
     }
   }, [symbol, timeframe, enabled, t.forecastError, t.noLiveDataResult]);
+
+  // تبديل الرمز/الفريم: اتجاه ومستويات الرمز السابق لا تبقى ظاهرة أثناء تحميل الجديد
+  // (قد يُقرأ دخول/وقف EURUSD على الذهب). يسبق تأثير `run` بالترتيب.
+  useEffect(() => {
+    clearResult();
+    setNote('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol, timeframe]);
 
   useEffect(() => {
     void run();
@@ -183,25 +199,27 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
 
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
 
-      <View style={styles.consensus}>
-        <Text style={[styles.dir, { color: dirColor(direction), textAlign: align }]}>
-          {dirLabel(direction, t)}
-        </Text>
-        <Text style={[styles.meta, { textAlign: align }]}>
-          {votes.length ? `${t.forecastAgreeLabel} ${agreeing}/${votes.length} · ` : ''}
-          {t.forecastAvgLabel} {avg >= 0 ? '+' : ''}
-          {avg.toFixed(2)}
-        </Text>
-        {levels && direction !== 'neutral' ? (
-          <Text style={[styles.levels, { textAlign: align }]}>
-            {t.forecastTradeLabel}: {t.entryLabel} {formatPrice(levels.entry)} · {t.slLabel}{' '}
-            {formatPrice(levels.sl)} · {t.tpLabel} {formatPrice(levels.tp)}
-            {rr != null ? ` · R:R ${formatRR(rr)}` : ''}
+      {hasResult ? (
+        <View style={styles.consensus}>
+          <Text style={[styles.dir, { color: dirColor(direction), textAlign: align }]}>
+            {dirLabel(direction, t)}
           </Text>
-        ) : (
-          <Text style={[styles.levels, { textAlign: align }]}>{t.forecastNoSignal}</Text>
-        )}
-      </View>
+          <Text style={[styles.meta, { textAlign: align }]}>
+            {votes.length ? `${t.forecastAgreeLabel} ${agreeing}/${votes.length} · ` : ''}
+            {t.forecastAvgLabel} {avg >= 0 ? '+' : ''}
+            {avg.toFixed(2)}
+          </Text>
+          {levels && direction !== 'neutral' ? (
+            <Text style={[styles.levels, { textAlign: align }]}>
+              {t.forecastTradeLabel}: {t.entryLabel} {formatPrice(levels.entry)} · {t.slLabel}{' '}
+              {formatPrice(levels.sl)} · {t.tpLabel} {formatPrice(levels.tp)}
+              {rr != null ? ` · R:R ${formatRR(rr)}` : ''}
+            </Text>
+          ) : (
+            <Text style={[styles.levels, { textAlign: align }]}>{t.forecastNoSignal}</Text>
+          )}
+        </View>
+      ) : null}
 
       <ScrollView style={styles.list} nestedScrollEnabled>
         {votes.map((v) => (
