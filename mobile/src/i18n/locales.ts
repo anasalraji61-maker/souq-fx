@@ -450,6 +450,8 @@ export type Dict = {
   calendarAllWord: string;
   calendarImpactA11yPrefix: string;
   calendarAllShort: string;
+  calImpactMedPlus: string;
+  calImpactMedPlusA11y: string;
   calendarLoading: string;
   calendarLoadError: string;
   calendarEmpty: string;
@@ -1256,6 +1258,8 @@ const ar: Dict = {
   calendarAllWord: 'الكل',
   calendarImpactA11yPrefix: 'تصفية حسب الأهمية',
   calendarAllShort: 'كل',
+  calImpactMedPlus: 'متوسط+',
+  calImpactMedPlusA11y: 'عالي ومتوسط',
   calendarLoading: 'جاري تحميل التقويم…',
   calendarLoadError: 'تعذر تحميل التقويم — تحقق من الاتصال',
   calendarEmpty: 'لا أحداث بهذا الفلتر',
@@ -2069,6 +2073,8 @@ const enUS: Dict = {
   calendarAllWord: 'All',
   calendarImpactA11yPrefix: 'Filter by impact',
   calendarAllShort: 'All',
+  calImpactMedPlus: 'Medium+',
+  calImpactMedPlusA11y: 'High and medium',
   calendarLoading: 'Loading the calendar…',
   calendarLoadError: 'Could not load the calendar — check your connection',
   calendarEmpty: 'No events match this filter',
@@ -2903,6 +2909,8 @@ const ku: Dict = {
   calendarAllWord: 'هەمووی',
   calendarImpactA11yPrefix: 'پاڵاوتن بەپێی کاریگەری',
   calendarAllShort: 'هەموو',
+  calImpactMedPlus: 'مامناوەند+',
+  calImpactMedPlusA11y: 'بەرز و مامناوەند',
   calendarLoading: 'ڕۆژژمێرەکە بار دەکرێت…',
   calendarLoadError: 'نەکرا ڕۆژژمێرەکە باربکرێت — پەیوەندییەکەت بپشکنە',
   calendarEmpty: 'هیچ ڕووداوێک لەگەڵ ئەم فلتەرە نییە',

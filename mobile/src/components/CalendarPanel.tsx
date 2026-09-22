@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
+import { instrumentSpec } from '../positionSize';
 
 type Ev = {
   id: string;
@@ -45,17 +46,23 @@ const IMPACT_COLOR: Record<string, string> = {
 };
 
 const CURRENCIES = ['ALL', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'NZD', 'CHF'];
-const IMPACTS = ['ALL', 'high', 'medium', 'low'] as const;
+/** «متوسط+» (عالي ومتوسط معاً) هو الفلتر الأكثر استخداماً لدى متداول التجزئة: المنخفض ضجيج، والعالي وحده
+ * يُخفي بيانات متوسطة تحرّك الزوج فعلاً. يُصفّى محلياً (الخادم يقبل أهمية واحدة). */
+const IMPACTS = ['ALL', 'medplus', 'high', 'medium', 'low'] as const;
 type ImpactFilter = (typeof IMPACTS)[number];
+/** قيمة فلتر العملة لـ«عملتا زوج الشارت» (EURUSD → EUR + USD) — تُصفّى محلياً. */
+const PAIR = 'PAIR';
 /** يتذكّر فلتر العملة/التأثير بين الجلسات — المتداول يتابع عملاته نفسها كل يوم. */
 const FILTER_KEY = 'matrix.calendar.filters.v1';
 
 type Props = {
   compact?: boolean;
+  /** زوج الشارت/الإشارة المفتوح — يضيف رقاقة بعملتَي الزوج معاً (أخبار ما يتداوله الآن فعلاً). */
+  symbol?: string;
   onPickCurrency?: (currency: string) => void;
 };
 
-export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
+export function CalendarPanel({ compact = false, symbol, onPickCurrency }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [events, setEvents] = useState<Ev[]>([]);
@@ -79,7 +86,9 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
       .then((raw) => {
         if (!alive || !raw) return;
         const v = JSON.parse(raw) as { currency?: unknown; impact?: unknown };
-        if (typeof v.currency === 'string' && CURRENCIES.includes(v.currency)) setCurrency(v.currency);
+        if (typeof v.currency === 'string' && (CURRENCIES.includes(v.currency) || v.currency === PAIR)) {
+          setCurrency(v.currency);
+        }
         if (typeof v.impact === 'string' && (IMPACTS as readonly string[]).includes(v.impact)) {
           setImpact(v.impact as ImpactFilter);
         }
@@ -110,8 +119,9 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
     setStatus('loading');
     api
       .calendar({
-        currency: currency === 'ALL' ? undefined : currency,
-        impact: impact === 'ALL' ? undefined : impact,
+        // فلترا «الزوج» و«متوسط+» محليان: نجلب الكل ثم نصفّي
+        currency: currency === 'ALL' || currency === PAIR ? undefined : currency,
+        impact: impact === 'ALL' || impact === 'medplus' ? undefined : impact,
       })
       .then((r) => {
         if (alive) {
@@ -136,11 +146,30 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
     low: t.impactLow,
   };
 
+  /** عملتا زوج الشارت المعروفتان بالتقويم (XAUUSD → USD فقط)؛ فارغة لرمز ليس فوركس/معدن → لا رقاقة. */
+  const pairCcys = useMemo(() => {
+    const spec = symbol ? instrumentSpec(symbol) : null;
+    if (!spec) return [] as string[];
+    return [spec.base, spec.quote].filter((c) => CURRENCIES.includes(c));
+  }, [symbol]);
+  const pairLabel = symbol && pairCcys.length > 0 ? instrumentSpec(symbol)?.symbol ?? null : null;
+  /** فلتر «الزوج» محفوظ لكن الرمز الحالي ليس زوجاً معروفاً → يُعامل كـ«الكل» بدل قائمة فارغة غامضة */
+  const pairActive = currency === PAIR && pairCcys.length > 0;
+
+  const visible = events.filter(
+    (e) =>
+      (!pairActive || pairCcys.includes(e.currency)) &&
+      (impact !== 'medplus' || e.impact === 'high' || e.impact === 'medium')
+  );
+
+  const impactWord = (imp: string): string | null =>
+    imp === 'high' || imp === 'medium' || imp === 'low' ? IMPACT_LABEL[imp] : null;
+
   const hasTs = (e: Ev): e is Ev & { ts: number } => typeof e.ts === 'number' && Number.isFinite(e.ts);
-  const timed = events.filter(hasTs);
+  const timed = visible.filter(hasTs);
   const upcoming = timed.filter((e) => e.ts * 1000 >= now - NOW_WINDOW_MS).sort((a, b) => a.ts - b.ts);
   const past = timed.filter((e) => e.ts * 1000 < now - NOW_WINDOW_MS).sort((a, b) => b.ts - a.ts);
-  const untimed = events.filter((e) => !hasTs(e));
+  const untimed = visible.filter((e) => !hasTs(e));
   /** الأحداث القادمة أولاً (الأقرب فالأبعد)، ثم ما بلا وقت دقيق، ثم المنتهية (باهتة) */
   const ordered: Ev[] = [...upcoming, ...untimed, ...past];
   const soonCount = upcoming.filter((e) => e.ts * 1000 <= now + SOON_MS).length;
@@ -197,13 +226,31 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
       {isSample ? <Text style={[styles.sampleNote, { textAlign: align }]}>{t.calSampleBanner}</Text> : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={[styles.filters, rtl && styles.filtersRtl]}>
+          {pairLabel ? (
+            <Pressable
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.chip,
+                pairActive && styles.chipOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => setCurrency(PAIR)}
+              accessibilityLabel={`${t.calendarCurrencyA11yPrefix}: ${pairCcys.join(' + ')}`}
+              accessibilityState={{ selected: pairActive }}
+            >
+              <Text style={[styles.chipText, pairActive && styles.chipTextOn]}>{pairLabel}</Text>
+            </Pressable>
+          ) : null}
           {CURRENCIES.map((c) => (
             <Pressable
               accessibilityRole="button"
               key={c}
               style={({ pressed }) => [
                 styles.chip,
-                currency === c && styles.chipOn,
+                (currency === c || (c === 'ALL' && currency === PAIR && !pairActive)) && styles.chipOn,
                 pressed && {
                   opacity: buttons.pressedOpacity,
                   transform: [{ scale: buttons.pressedScale }],
@@ -214,9 +261,16 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
                 if (c !== 'ALL') onPickCurrency?.(c);
               }}
               accessibilityLabel={`${t.calendarCurrencyA11yPrefix}: ${c === 'ALL' ? t.calendarAllWord : c}`}
-              accessibilityState={{ selected: currency === c }}
+              accessibilityState={{ selected: currency === c || (c === 'ALL' && currency === PAIR && !pairActive) }}
             >
-              <Text style={[styles.chipText, currency === c && styles.chipTextOn]}>{c}</Text>
+              <Text
+                style={[
+                  styles.chipText,
+                  (currency === c || (c === 'ALL' && currency === PAIR && !pairActive)) && styles.chipTextOn,
+                ]}
+              >
+                {c}
+              </Text>
             </Pressable>
           ))}
           {IMPACTS.map((imp) => (
@@ -232,11 +286,13 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
                 },
               ]}
               onPress={() => setImpact(imp)}
-              accessibilityLabel={`${t.calendarImpactA11yPrefix}: ${imp === 'ALL' ? t.calendarAllWord : IMPACT_LABEL[imp]}`}
+              accessibilityLabel={`${t.calendarImpactA11yPrefix}: ${
+                imp === 'ALL' ? t.calendarAllWord : imp === 'medplus' ? t.calImpactMedPlusA11y : IMPACT_LABEL[imp]
+              }`}
               accessibilityState={{ selected: impact === imp }}
             >
               <Text style={[styles.chipText, impact === imp && styles.chipTextOn]}>
-                {imp === 'ALL' ? t.calendarAllShort : IMPACT_LABEL[imp]}
+                {imp === 'ALL' ? t.calendarAllShort : imp === 'medplus' ? t.calImpactMedPlus : IMPACT_LABEL[imp]}
               </Text>
             </Pressable>
           ))}
@@ -245,7 +301,7 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
       <ScrollView style={{ maxHeight: compact ? 140 : 280 }}>
         {status === 'loading' ? (
           <Text style={[styles.empty, { textAlign: align }]}>{t.calendarLoading}</Text>
-        ) : events.length === 0 ? (
+        ) : visible.length === 0 ? (
           status === 'error' ? (
             <Text style={[styles.empty, { textAlign: align }]}>{t.calendarLoadError}</Text>
           ) : (
@@ -264,8 +320,16 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
                 />
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.evTitle, { textAlign: align }]}>{e.title}</Text>
+                  {/* الأهمية كلمة ملوّنة لا نقطة لون فقط — نقطة حمراء/برتقالية وحدها لا تُقرأ لمن لديه عمى
+                      ألوان ولا لقارئ الشاشة */}
                   <Text style={[styles.meta, { textAlign: align }]}>
-                    {e.currency} · {ts != null ? fmtLocal(ts) : e.when}
+                    {e.currency}
+                    {impactWord(e.impact) ? (
+                      <Text style={{ color: IMPACT_COLOR[e.impact] ?? colors.textDim, fontWeight: '700' }}>
+                        {` · ${impactWord(e.impact)}`}
+                      </Text>
+                    ) : null}
+                    {` · ${ts != null ? fmtLocal(ts) : e.when}`}
                   </Text>
                   {figures ? (
                     <Text style={[styles.figures, { textAlign: align }]}>{figures}</Text>

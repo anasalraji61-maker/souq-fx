@@ -500,7 +500,7 @@ export function ToolsScreen() {
 
       {tab === 'calendar' ? (
         <ScrollView contentContainerStyle={styles.body}>
-          <CalendarPanel />
+          <CalendarPanel symbol={signalSym} />
         </ScrollView>
       ) : null}
 
