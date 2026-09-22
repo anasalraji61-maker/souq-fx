@@ -14,6 +14,7 @@ import {
 import { livePriceForChart } from '../chart/liveSeries';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import { isForexMarketOpen } from '../chart/marketHours';
+import { chartExtraLabels } from '../chart/typeLabels';
 
 import { FRAME_CHART_H, FRAME_CHART_H_PHONE } from './FrameSizedGrid';
 import type { PanSpeedPercent } from '../chart/panSpeed';
@@ -95,8 +96,29 @@ export function ChartFrame({
   onSyncActivate,
   syncBadge = null,
 }: Props) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const trx = useMemo(() => chartExtraLabels(lang), [lang]);
   const [wheelOpen, setWheelOpen] = useState(false);
+
+  // تبديل الفريم/الرمز يمرّ بجولة شبكة عند الشاشة المالكة: حتى تصل السلسلة الجديدة
+  // كان الإطار يعرض **شموع الفريم السابق وسعره** بلا أي أثر، وشريط الفريمات يرتدّ
+  // للقيمة القديمة وكأن الضغطة ضاعت. الآن: الزرّ المضغوط يضيء فوراً، والأرقام والشموع
+  // القديمة تبهت حتى وصول الجديدة (وسقف زمني يمنع بقاء الإطار باهتاً لو فشل الجلب).
+  const [pendingSwitch, setPendingSwitch] = useState<{ tf?: Timeframe; symbol?: string } | null>(
+    null
+  );
+  useEffect(() => {
+    if (!pendingSwitch) return;
+    const tfDone = !pendingSwitch.tf || pendingSwitch.tf === series.timeframe;
+    const symDone = !pendingSwitch.symbol || pendingSwitch.symbol === series.symbol;
+    if (tfDone && symDone) {
+      setPendingSwitch(null);
+      return;
+    }
+    const id = setTimeout(() => setPendingSwitch(null), 8000);
+    return () => clearTimeout(id);
+  }, [pendingSwitch, series.timeframe, series.symbol]);
+  const switching = pendingSwitch != null;
   const navigate = panControls || interactive;
   const baseH = (phone ? HEIGHT_PHONE : HEIGHT)[size] + (interactive ? 220 : 0);
   const [measuredH, setMeasuredH] = useState(baseH);
@@ -145,13 +167,20 @@ export function ChartFrame({
   });
   const marketClosed = !isForexMarketOpen(series.symbol);
 
-  const [quote, setQuote] = useState<{ bid?: number | null; ask?: number | null } | null>(null);
+  // السبريد مربوط بالرمز الذي جُلب له: كان `quote` يبقى على قيم الرمز السابق حتى
+  // يصل جلب الرمز الجديد، فيقرأ المتداول سبريد زوج بجانب سعر زوج آخر.
+  const [quote, setQuote] = useState<{
+    forSymbol: string;
+    bid?: number | null;
+    ask?: number | null;
+  } | null>(null);
   useEffect(() => {
     let alive = true;
+    const forSymbol = series.symbol;
     api
-      .marketQuote(series.symbol)
+      .marketQuote(forSymbol)
       .then((q) => {
-        if (alive) setQuote(q);
+        if (alive) setQuote({ forSymbol, bid: q?.bid ?? null, ask: q?.ask ?? null });
       })
       .catch(() => {
         if (alive) setQuote(null);
@@ -160,7 +189,9 @@ export function ChartFrame({
       alive = false;
     };
   }, [series.symbol, series.last]);
-  const hasSpread = quote?.bid != null && quote?.ask != null && quote.ask > quote.bid;
+  const liveQuote = quote && quote.forSymbol === series.symbol ? quote : null;
+  const hasSpread =
+    liveQuote?.bid != null && liveQuote?.ask != null && liveQuote.ask > liveQuote.bid;
 
   const subtitle = useMemo(() => {
     if (interactive) return t.cfSubtitleInteractive;
@@ -187,8 +218,11 @@ export function ChartFrame({
       {showTimeframes && onTimeframeChange ? (
         <View style={styles.tfTopLeft}>
           <TimeframeBar
-            value={series.timeframe}
-            onChange={onTimeframeChange}
+            value={pendingSwitch?.tf ?? series.timeframe}
+            onChange={(next) => {
+              if (next !== series.timeframe) setPendingSwitch({ tf: next });
+              onTimeframeChange?.(next);
+            }}
             compact={size === 'small' || fill}
           />
         </View>
@@ -219,7 +253,7 @@ export function ChartFrame({
                 ? ({ translate: 'no', className: 'notranslate' } as object)
                 : {})}
             >
-              {(label || series.symbol).toUpperCase()}
+              {(pendingSwitch?.symbol || label || series.symbol).toUpperCase()}
             </Text>
             {onSymbolChange ? <Text style={styles.symbolCaret}>▾</Text> : null}
           </Pressable>
@@ -231,6 +265,11 @@ export function ChartFrame({
                 : {})}
             >
               {series.timeframe}
+            </Text>
+          ) : null}
+          {switching ? (
+            <Text style={styles.switchTag} accessibilityLabel={trx.switchingA11y}>
+              {trx.switching}
             </Text>
           ) : null}
           {badge ? (
@@ -259,7 +298,7 @@ export function ChartFrame({
             </Text>
           ) : null}
         </View>
-        <View style={styles.priceRow}>
+        <View style={[styles.priceRow, switching && styles.stale]}>
           <Text style={styles.price}>{formatPrice(headerPrice, series.symbol)}</Text>
           {tickTag ? (
             <Text
@@ -274,7 +313,7 @@ export function ChartFrame({
           ) : null}
           {hasSpread ? (
             <Text style={styles.spreadTag} accessibilityLabel={t.cfSpreadA11y}>
-              {`B ${formatPrice(quote!.bid!, series.symbol)} · A ${formatPrice(quote!.ask!, series.symbol)}`}
+              {`B ${formatPrice(liveQuote!.bid!, series.symbol)} · A ${formatPrice(liveQuote!.ask!, series.symbol)}`}
             </Text>
           ) : null}
           <Text style={[styles.chg, { color: up ? colors.bull : colors.bear }]}>
@@ -306,13 +345,16 @@ export function ChartFrame({
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setWheelOpen(false)} />
           <PairDrumWheel
             value={series.symbol}
-            onChange={(next) => onSymbolChange(next)}
+            onChange={(next) => {
+              if (next !== series.symbol) setPendingSwitch({ symbol: next });
+              onSymbolChange?.(next);
+            }}
             onClose={() => setWheelOpen(false)}
           />
         </View>
       ) : null}
 
-      <View style={styles.chartPad} onLayout={onChartPadLayout}>
+      <View style={[styles.chartPad, switching && styles.stale]} onLayout={onChartPadLayout}>
         {navigate && !fill ? <Text style={styles.hint}>{subtitle}</Text> : null}
         <MatrixChart
           series={series}
@@ -382,6 +424,19 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   symbolHit: { flexDirection: 'row', alignItems: 'center', gap: 3, flexShrink: 0 },
+  // بيانات الفريم/الرمز السابق أثناء انتظار الجديد: باهتة لا مخفيّة — الإطار لا يقفز،
+  // والمتداول يرى أنها ليست أرقام ما ضغط عليه بعد.
+  stale: { opacity: 0.38 },
+  switchTag: {
+    color: colors.accent,
+    fontSize: 9,
+    fontWeight: '800',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: radii.sm,
+    backgroundColor: colors.accentSoft,
+    flexShrink: 0,
+  },
   symbolCaret: { color: colors.textDim, fontSize: 10, fontWeight: '800' },
   wheelLayer: {
     ...StyleSheet.absoluteFill, // RN 0.86 أزال absoluteFillObject وقت التشغيل (كان يُنشر undefined فتفقد الطبقة position:absolute)

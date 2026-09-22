@@ -96,6 +96,8 @@ export type ChartExtraLabels = {
   nothingToUndo: string;
   panesCollapsed: string;
   panesCollapsedA11y: string;
+  switching: string;
+  switchingA11y: string;
 };
 
 const CHART_EXTRA: Record<'ar' | 'en' | 'ku', ChartExtraLabels> = {
@@ -105,6 +107,8 @@ const CHART_EXTRA: Record<'ar' | 'en' | 'ku', ChartExtraLabels> = {
     nothingToUndo: 'لا يوجد ما يُتراجَع عنه',
     panesCollapsed: 'لا تتّسع',
     panesCollapsedA11y: 'لوحات مؤشرات مطويّة: ارتفاع الشارت لا يتّسع لها',
+    switching: 'جارٍ…',
+    switchingA11y: 'جارٍ تحميل الفريم الجديد — المعروض بيانات سابقة',
   },
   en: {
     undo: 'Undo',
@@ -112,6 +116,8 @@ const CHART_EXTRA: Record<'ar' | 'en' | 'ku', ChartExtraLabels> = {
     nothingToUndo: 'Nothing to undo',
     panesCollapsed: 'No room',
     panesCollapsedA11y: 'Indicator panes collapsed: the chart is not tall enough',
+    switching: 'Loading…',
+    switchingA11y: 'Loading the new timeframe — what is shown is the previous data',
   },
   ku: {
     undo: 'گەڕاندنەوە',
@@ -119,6 +125,8 @@ const CHART_EXTRA: Record<'ar' | 'en' | 'ku', ChartExtraLabels> = {
     nothingToUndo: 'هیچ شتێک نییە بگەڕێندرێتەوە',
     panesCollapsed: 'جێگا نییە',
     panesCollapsedA11y: 'پانێلی ئاماژەکان نوقاون: بەرزی چارتەکە بەشیان ناکات',
+    switching: 'بارکردن…',
+    switchingA11y: 'بارکردنی ماوەی نوێ — ئەوەی پیشان دەدرێت داتای پێشووە',
   },
 };
 
