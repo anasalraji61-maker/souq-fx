@@ -95,6 +95,20 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     });
   }, [balance, riskPct, account]);
 
+  /**
+   * تبديل الزوج من شريط رموز شاشة الأدوات يصل هنا بـ`defaultSymbol` — وكان يُهمَل بعد أول تركيب،
+   * فتبقى الحاسبة على زوج قديم بينما بقية التبويبات تحوّلت (نفس المزامنة القائمة بالدفتر/التنبيهات/
+   * الباكتست). **الحارس**: لا نبدّل وسط خطة مكتوبة — تغيير الأداة يغيّر حجم النقطة، فأرقام دخول/وقف/
+   * هدف لزوج آخر كانت ستُحسب بقيمة نقطة لا تخصّها. رمز غير قابل للحساب (DXY) يُترك كما هو.
+   */
+  const planTypedRef = useRef(false);
+  planTypedRef.current = [entryPx, stopPx, targetPx].some((v) => v.trim() !== '');
+  useEffect(() => {
+    if (!defaultSymbol || planTypedRef.current) return;
+    if (!instrumentSpec(defaultSymbol)) return;
+    setSymbol(defaultSymbol);
+  }, [defaultSymbol]);
+
   const spec = useMemo(() => instrumentSpec(symbol), [symbol]);
   const conv = useMemo(() => (spec ? conversionPair(spec.quote, account) : null), [spec, account]);
   const convSymbol = conv?.symbol ?? null;
