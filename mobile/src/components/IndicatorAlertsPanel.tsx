@@ -175,6 +175,24 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD', defaultTimefram
     if (c === 'below' && (cur === '70' || cur === '')) setValue('30');
   };
 
+  /** التنبيه لمرة واحدة: بعد «أُطلق» كان الحلّ الوحيد حذفه وإعادة كتابته بكل حقوله. */
+  const rearm = async (a: IndAlert) => {
+    setBusy(true);
+    setFormError(null);
+    setArmed(null);
+    try {
+      await api.rearmIndicatorAlert(a.id);
+      if (!mountedRef.current) return;
+      playSoftClick();
+      setArmed(t.indAlertsRearmedMsg.replace('{desc}', describeIndAlert(a, t)));
+      await refresh();
+    } catch {
+      if (mountedRef.current) setFormError(t.indAlertsRearmFailed);
+    } finally {
+      if (mountedRef.current) setBusy(false);
+    }
+  };
+
   const add = async () => {
     setFormError(null);
     setArmed(null);
@@ -358,39 +376,60 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD', defaultTimefram
                     {` · ${a.triggered ? t.indAlertsFiredTag : t.indAlertsWatchingTag}`}
                   </Text>
                 </Text>
-                <Pressable
-                  accessibilityRole="button"
-                  style={({ pressed }) => [
-                    pressed && {
-                      opacity: buttons.pressedOpacity,
-                      transform: [{ scale: buttons.pressedScale }],
-                    },
-                  ]}
-                  onPress={() =>
-                    Alert.alert(
-                      t.indAlertsDeleteConfirmTitle,
-                      describeIndAlert(a, t),
-                      [
-                        { text: t.cancel, style: 'cancel' },
-                        {
-                          text: t.deleteWord,
-                          style: 'destructive',
-                          onPress: () =>
-                            api
-                              .deleteIndicatorAlert(a.id)
-                              .then(refresh)
-                              .catch(() =>
-                                Alert.alert(t.indAlertsDeleteFailedTitle, t.indAlertsDeleteFailedBody)
-                              ),
+                <View style={[styles.itemActions, rtl && styles.itemRtl]}>
+                  {a.triggered ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: busy }}
+                      disabled={busy}
+                      style={({ pressed }) => [
+                        busy && { opacity: 0.4 },
+                        pressed && {
+                          opacity: buttons.pressedOpacity,
+                          transform: [{ scale: buttons.pressedScale }],
                         },
-                      ]
-                    )
-                  }
-                  accessibilityLabel={`${t.indAlertsDeleteA11yPrefix}: ${describeIndAlert(a, t)}`}
-                  hitSlop={8}
-                >
-                  <Text style={styles.del}>{t.deleteWord}</Text>
-                </Pressable>
+                      ]}
+                      onPress={() => void rearm(a)}
+                      accessibilityLabel={`${t.indAlertsRearmA11yPrefix}: ${describeIndAlert(a, t)}`}
+                      hitSlop={8}
+                    >
+                      <Text style={styles.rearm}>{t.indAlertsRearmBtn}</Text>
+                    </Pressable>
+                  ) : null}
+                  <Pressable
+                    accessibilityRole="button"
+                    style={({ pressed }) => [
+                      pressed && {
+                        opacity: buttons.pressedOpacity,
+                        transform: [{ scale: buttons.pressedScale }],
+                      },
+                    ]}
+                    onPress={() =>
+                      Alert.alert(
+                        t.indAlertsDeleteConfirmTitle,
+                        describeIndAlert(a, t),
+                        [
+                          { text: t.cancel, style: 'cancel' },
+                          {
+                            text: t.deleteWord,
+                            style: 'destructive',
+                            onPress: () =>
+                              api
+                                .deleteIndicatorAlert(a.id)
+                                .then(refresh)
+                                .catch(() =>
+                                  Alert.alert(t.indAlertsDeleteFailedTitle, t.indAlertsDeleteFailedBody)
+                                ),
+                          },
+                        ]
+                      )
+                    }
+                    accessibilityLabel={`${t.indAlertsDeleteA11yPrefix}: ${describeIndAlert(a, t)}`}
+                    hitSlop={8}
+                  >
+                    <Text style={styles.del}>{t.deleteWord}</Text>
+                  </Pressable>
+                </View>
               </View>
             ))
           )}
@@ -457,4 +496,6 @@ const styles = StyleSheet.create({
   itemRtl: { flexDirection: 'row-reverse' },
   itemText: { color: colors.text, flex: 1, textAlign: 'right', fontSize: 12 },
   del: { color: colors.bear, fontWeight: '700' },
+  itemActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  rearm: { color: colors.accent, fontWeight: '700' },
 });

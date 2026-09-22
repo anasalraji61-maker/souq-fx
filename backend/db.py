@@ -1485,6 +1485,21 @@ def create_indicator_alert(
     return data
 
 
+def rearm_indicator_alert(
+    alert_id: str, user_id: int | None = None, owner_key: str | None = None
+) -> dict | None:
+    """يعيد تنبيه مؤشر أُطلق إلى «يراقب» (triggered=0, active=1) — لمالكه فقط (`_owner_clause`)."""
+    sql, args = _owner_clause(user_id, owner_key)
+    with _conn() as c:
+        cur = c.execute(
+            f"UPDATE indicator_alerts SET triggered=0, active=1 WHERE id=? AND {sql}", (alert_id, *args)
+        )
+        if cur.rowcount == 0:
+            return None
+        r = c.execute("SELECT * FROM indicator_alerts WHERE id=?", (alert_id,)).fetchone()
+    return _ind_alert_row(r) if r else None
+
+
 def delete_indicator_alert(
     alert_id: str, user_id: int | None = None, owner_key: str | None = None
 ) -> bool:

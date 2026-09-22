@@ -941,6 +941,18 @@ def delete_indicator_alert(
     return {"ok": db.delete_indicator_alert(alert_id, uid, owner_key=key)}
 
 
+@app.post("/api/indicator-alerts/{alert_id}/rearm")
+def rearm_indicator_alert(
+    alert_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+):
+    """إعادة تفعيل تنبيه مؤشر أُطلق (التنبيه لمرة واحدة) — كان الحلّ الوحيد حذفه وإعادة إنشائه بكل حقوله."""
+    uid = user["user_id"] if user else None
+    row = db.rearm_indicator_alert(alert_id, uid, owner_key=key)
+    if row is None:
+        raise HTTPException(status_code=404, detail="alert not found")
+    return {"ok": True, "alert": row}
+
+
 @app.post("/api/indicator-alerts/check")
 def check_indicator_alerts(
     user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)

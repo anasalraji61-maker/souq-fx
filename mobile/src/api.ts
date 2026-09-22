@@ -526,6 +526,9 @@ export const api = {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       }),
+  /** تنبيه مؤشر أُطلق → «يراقب» من جديد. باك-إند قديم بلا المسار → خطأ. */
+  rearmIndicatorAlert: (id: string) =>
+    postJson<{ ok: boolean }>(`/api/indicator-alerts/${encodeURIComponent(id)}/rearm`, {}),
   checkIndicatorAlerts: () =>
     postJson<{
       triggered: {

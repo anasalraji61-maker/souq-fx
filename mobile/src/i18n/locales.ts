@@ -432,6 +432,10 @@ export type Dict = {
   indAlertsSymbolInvalid: string;
   indAlertsArmed: string;
   indAlertsFiredTag: string;
+  indAlertsRearmBtn: string;
+  indAlertsRearmA11yPrefix: string;
+  indAlertsRearmedMsg: string;
+  indAlertsRearmFailed: string;
   indAlertsWatchingTag: string;
   calendarTitle: string;
   calendarCurrencyA11yPrefix: string;
@@ -1226,6 +1230,10 @@ const ar: Dict = {
   indAlertsSymbolInvalid: 'اكتب رمزاً صحيحاً مثل EURUSD',
   indAlertsArmed: '✓ التنبيه مفعَّل:',
   indAlertsFiredTag: 'أُطلق',
+  indAlertsRearmBtn: 'إعادة التفعيل',
+  indAlertsRearmA11yPrefix: 'إعادة تفعيل التنبيه',
+  indAlertsRearmedMsg: '✓ يراقب من جديد: {desc} — إن كان الشرط ما زال متحققاً يُطلق بالفحص التالي',
+  indAlertsRearmFailed: 'تعذّرت إعادة التفعيل — تحقّق من الاتصال وحاول مرة أخرى',
   indAlertsWatchingTag: 'يراقب',
   calendarTitle: 'تقويم اقتصادي · حي',
   calendarCurrencyA11yPrefix: 'تصفية حسب العملة',
@@ -2027,6 +2035,10 @@ const enUS: Dict = {
   indAlertsSymbolInvalid: 'Enter a valid symbol such as EURUSD',
   indAlertsArmed: '✓ Alert armed:',
   indAlertsFiredTag: 'fired',
+  indAlertsRearmBtn: 'Re-arm',
+  indAlertsRearmA11yPrefix: 'Re-arm alert',
+  indAlertsRearmedMsg: '✓ Watching again: {desc} — if the condition still holds it fires on the next check',
+  indAlertsRearmFailed: 'Couldn’t re-arm the alert — check your connection and try again',
   indAlertsWatchingTag: 'watching',
   calendarTitle: 'Economic calendar · Live',
   calendarCurrencyA11yPrefix: 'Filter by currency',
@@ -2849,6 +2861,10 @@ const ku: Dict = {
   indAlertsSymbolInvalid: 'هێمایەکی دروست بنووسە وەک EURUSD',
   indAlertsArmed: '✓ ئاگادارکردنەوە چالاکە:',
   indAlertsFiredTag: 'کارا بوو',
+  indAlertsRearmBtn: 'دووبارە چالاککردنەوە',
+  indAlertsRearmA11yPrefix: 'دووبارە چالاککردنەوەی ئاگادارکردنەوە',
+  indAlertsRearmedMsg: '✓ دووبارە چاودێری دەکات: {desc} — ئەگەر مەرجەکە هێشتا هەبێت لە پشکنینی داهاتوودا کارا دەبێت',
+  indAlertsRearmFailed: 'نەکرا دووبارە چالاک بکرێتەوە — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
   indAlertsWatchingTag: 'چاودێری دەکات',
   calendarTitle: 'ڕۆژژمێری ئابووری · ڕاستەوخۆ',
   calendarCurrencyA11yPrefix: 'پاڵاوتن بەپێی دراو',
