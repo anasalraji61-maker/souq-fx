@@ -4157,7 +4157,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             return (
               <View
                 key={d.id}
-                style={[styles.vLine, { left: xOf(aLocal), borderColor: d.color }]}
+                style={[
+                  styles.vLine,
+                  { left: xOf(aLocal), borderColor: d.color, borderLeftWidth: sel ? 2.5 : 1 },
+                ]}
               />
             );
           }
@@ -4165,7 +4168,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             return (
               <Text
                 key={d.id}
-                style={[styles.note, { left: xOf(aLocal), top: yOf(d.a.price), color: d.color }]}
+                style={[
+                  styles.note,
+                  { left: xOf(aLocal), top: yOf(d.a.price), color: d.color },
+                  sel ? [styles.noteSel, { borderColor: d.color }] : null,
+                ]}
               >
                 {d.text || '•'}
               </Text>
@@ -4179,19 +4186,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const len = Math.hypot(x2 - x1, y2 - y1) * (d.tool === 'ray' ? 1.6 : 1);
             const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
             return (
-              <View
-                key={d.id}
-                style={{
-                  position: 'absolute',
-                  left: x1,
-                  top: y1,
-                  width: len,
-                  height: 2,
-                  backgroundColor: d.color,
-                  transform: [{ rotate: `${angle}deg` }],
-                  transformOrigin: 'left center',
-                }}
-              />
+              <React.Fragment key={d.id}>
+                <View
+                  style={{
+                    position: 'absolute',
+                    left: x1,
+                    top: y1,
+                    width: len,
+                    height: sel ? 3.5 : 2,
+                    backgroundColor: d.color,
+                    transform: [{ rotate: `${angle}deg` }],
+                    transformOrigin: 'left center',
+                  }}
+                />
+                {sel ? (
+                  <>
+                    <View style={[styles.grabHandle, { left: x1, top: y1, borderColor: d.color }]} />
+                    <View style={[styles.grabHandle, { left: x2, top: y2, borderColor: d.color }]} />
+                  </>
+                ) : null}
+              </React.Fragment>
             );
           }
           if ((d.tool === 'rect' || d.tool === 'zone') && d.b) {
@@ -4200,20 +4214,37 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const top = yOf(Math.max(d.a.price, d.b.price));
             const bot = yOf(Math.min(d.a.price, d.b.price));
             return (
-              <View
-                key={d.id}
-                style={{
-                  position: 'absolute',
-                  left,
-                  top,
-                  width: Math.max(4, right - left),
-                  height: Math.max(4, bot - top),
-                  backgroundColor:
-                    d.tool === 'zone' ? 'rgba(45,212,191,0.12)' : 'rgba(251,191,36,0.1)',
-                  borderWidth: 1,
-                  borderColor: d.color,
-                }}
-              />
+              <React.Fragment key={d.id}>
+                <View
+                  style={{
+                    position: 'absolute',
+                    left,
+                    top,
+                    width: Math.max(4, right - left),
+                    height: Math.max(4, bot - top),
+                    backgroundColor:
+                      d.tool === 'zone' ? 'rgba(45,212,191,0.12)' : 'rgba(251,191,36,0.1)',
+                    borderWidth: sel ? 2.5 : 1,
+                    borderColor: d.color,
+                  }}
+                />
+                {sel ? (
+                  <>
+                    <View
+                      style={[
+                        styles.grabHandle,
+                        { left: xOf(aLocal), top: yOf(d.a.price), borderColor: d.color },
+                      ]}
+                    />
+                    <View
+                      style={[
+                        styles.grabHandle,
+                        { left: xOf(bLocal), top: yOf(d.b.price), borderColor: d.color },
+                      ]}
+                    />
+                  </>
+                ) : null}
+              </React.Fragment>
             );
           }
           if (d.tool === 'fib' && d.b) {
@@ -4225,7 +4256,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 {FIB_LEVELS.map((lv) => {
                   const price = hi - span * lv;
                   return (
-                    <View key={lv} style={[styles.hLine, { top: yOf(price), borderColor: d.color }]}>
+                    <View
+                      key={lv}
+                      style={[
+                        styles.hLine,
+                        { top: yOf(price), borderColor: d.color, borderTopWidth: sel ? 2.5 : 1 },
+                      ]}
+                    >
                       <Text style={styles.fibLabel}>{lv.toFixed(3)}</Text>
                     </View>
                   );
@@ -8055,6 +8092,24 @@ const styles = StyleSheet.create({
     fontSize: 9,
   },
   note: { position: 'absolute', fontSize: 10, fontWeight: '800' },
+  // حالة التحديد كانت مطبَّقة على الخط الأفقي وحده، فالمتداول يختار خط ترند أو مستطيلاً
+  // ثم يضغط «حذف» بلا أي دليل بصري على العنصر الذي سيُحذف.
+  noteSel: {
+    borderWidth: 1,
+    borderRadius: radii.sm,
+    paddingHorizontal: 3,
+    backgroundColor: 'rgba(45,212,191,0.16)',
+  },
+  grabHandle: {
+    position: 'absolute',
+    width: 12,
+    height: 12,
+    marginLeft: -6,
+    marginTop: -6,
+    borderRadius: 6,
+    borderWidth: 2,
+    backgroundColor: '#0B1220',
+  },
   pending: {
     position: 'absolute',
     width: 10,
