@@ -1343,7 +1343,7 @@ const ar: Dict = {
   lectureVoicePausedForQ: 'متوقف للسؤال',
   lecturePreparingVoice: 'يجهّز الصوت...',
   lectureExplainingNow: 'يشرح الآن',
-  lectureVoicePlayError: 'تعذر تشغيل الصوت',
+  lectureVoicePlayError: 'تعذّر تشغيل الصوت — تحقّق من اتصالك. نصّ الدرس كامل أمامك ويمكنك متابعته قراءةً.',
   lectureChartLabel: 'شارت تفاعلي',
   lectureHideChart: 'إخفاء',
   lectureHideChartA11y: 'إخفاء الشارت التفاعلي',
@@ -2178,7 +2178,8 @@ const enUS: Dict = {
   lectureVoicePausedForQ: 'Paused for a question',
   lecturePreparingVoice: 'Preparing the audio...',
   lectureExplainingNow: 'Explaining now',
-  lectureVoicePlayError: "Couldn't play the audio",
+  lectureVoicePlayError:
+    "Couldn't play the audio — check your connection. The full lesson text is on screen, so you can keep reading.",
   lectureChartLabel: 'Interactive chart',
   lectureHideChart: 'Hide',
   lectureHideChartA11y: 'Hide the interactive chart',
@@ -3034,7 +3035,8 @@ const ku: Dict = {
   lectureVoicePausedForQ: 'ڕاوەستاوە بۆ پرسیارێک',
   lecturePreparingVoice: 'دەنگ ئامادە دەکرێت...',
   lectureExplainingNow: 'ئێستا ڕوون دەکاتەوە',
-  lectureVoicePlayError: 'نەکرا دەنگ لێبدرێت',
+  lectureVoicePlayError:
+    'نەکرا دەنگ لێبدرێت — پەیوەندییەکەت بپشکنە. دەقی تەواوی وانەکە لەبەردەمتە و دەتوانیت بە خوێندنەوە بەردەوام بیت.',
   lectureChartLabel: 'چارتی کارلێککەرەوە',
   lectureHideChart: 'شاردنەوە',
   lectureHideChartA11y: 'شاردنەوەی چارتی کارلێککەرەوە',

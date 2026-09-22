@@ -184,9 +184,12 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           return;
         }
         soundRef.current = sound;
-      } catch (e) {
+      } catch {
+        // لا يُعرض نصّ الاستثناء أبداً: `err.slice(0,180)` أعلاه هو **جسم ردّ الخادم كما هو** (تفصيل
+        // FastAPI أو خطأ مزوّد الـTTS)، وخطأ الشبكة رسالتُه إنجليزية ثابتة — كلاهما نصّ مطوّر يراه
+        // متداول تجزئة بالمتجر وقد يسرّب داخليات المزوّد. رسالة واحدة مترجَمة تصف الحالة وتكفي.
         if (!cancelled) {
-          setVoiceError(e instanceof Error ? e.message : t.lectureVoicePlayError);
+          setVoiceError(t.lectureVoicePlayError);
         }
       } finally {
         if (!cancelled) setVoiceBusy(false);
@@ -499,7 +502,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   voiceErr: {
-    color: colors.bear,
+    // عنبري لا أحمر: الأحمر بالتطبيق لون البيع/الخسارة، وتعذّر الصوت حالة متدهورة والدرس مقروء
+    // أمام المتداول — نفس معالجة فقاعة انقطاع المساعد.
+    color: colors.warn,
     fontSize: 11,
     marginBottom: spacing.sm,
   },
