@@ -19,6 +19,9 @@ import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
 
+/** إيقاع تحديث «السعر الآن» بالنموذج — نفس إيقاع فحص التنبيهات بهذه اللوحة (60 ثانية). */
+const QUOTE_REFRESH_MS = 60_000;
+
 type Props = {
   defaultSymbol?: string;
   embedded?: boolean;
@@ -89,13 +92,27 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultSymbol]);
 
+  /**
+   * «السعر الآن» كان يُجلب **مرة واحدة لكل رمز ثم يتجمّد ما بقيت اللوحة مركَّبة** — واللوحة مركَّبة
+   * طوال الجلسة داخل شبكة شاشة الأدوات. فبعد ساعة يقرأ المتداول رقماً من ساعة مضت، وثلاثة أشياء
+   * تُبنى عليه كلها: الاتجاه المستنتج (فوق/تحت)، وتحذير «سيُطلق فوراً»، وزرّ «استخدمه» الذي يكتب ذلك
+   * السعر القديم بخانة التنبيه. النتيجة تنبيه يُطلق لحظةَ تسليحه أو لا يُطلق أبداً، والرقم المعروض
+   * أمامه يقول إنه صحيح. يُحدَّث الآن كل `QUOTE_REFRESH_MS` — نفس إيقاع فحص التنبيهات بهذه اللوحة.
+   *
+   * **الاتجاه لا يُستنتج إلا من أول اقتباس ناجح للرمز**: استنتاجه من كل تحديث كان سيقلب اختيار
+   * المتداول تحت يده كل دقيقة بينما يكتب (سعر يعبره السوق بين تحديثين = «فوق» تصير «تحت» بلا لمسة
+   * منه). التحديثات اللاحقة تحرّك الرقم المعروض وحده. وفشل تحديث لاحق لا يمسح آخر سعر معروف
+   * (لا catch يكتب الحالة)، بينما اقتباس بذري تجريبي يمسحه عمداً — لا سعر مختلَق بصندوق قرار.
+   */
   useEffect(() => {
     const sym = symbol.trim().toUpperCase();
     const gen = ++quoteGen.current;
     setCurrent(null);
     setUnknownSymbol(false);
     if (sym.length < 3) return;
-    const id = setTimeout(() => {
+    // أول اقتباس **ناجح** لهذا الرمز (الفشل لا يستهلكها) هو وحده الذي يستنتج الاتجاه
+    let firstQuote = true;
+    const fetchQuote = () => {
       api
         .marketQuote(sym)
         .then((q) => {
@@ -108,15 +125,21 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
           if (real) providerRealRef.current = true;
           setUnknownSymbol(!real && providerRealRef.current);
           const typed = parseDecimal(priceTextRef.current);
-          if (cur != null && !condManualRef.current && typed != null && typed > 0 && typed !== cur) {
+          if (firstQuote && cur != null && !condManualRef.current && typed != null && typed > 0 && typed !== cur) {
             setCondition(typed > cur ? 'above' : 'below');
           }
+          if (cur != null) firstQuote = false;
         })
         .catch(() => {
-          /* السعر الحالي تحسين اختياري — فشله لا يمنع إضافة التنبيه */
+          /* السعر الحالي تحسين اختياري — فشله لا يمنع إضافة التنبيه ولا يمسح آخر سعر معروف */
         });
-    }, 600);
-    return () => clearTimeout(id);
+    };
+    const id = setTimeout(fetchQuote, 600);
+    const poll = setInterval(fetchQuote, QUOTE_REFRESH_MS);
+    return () => {
+      clearTimeout(id);
+      clearInterval(poll);
+    };
   }, [symbol]);
 
   /**
