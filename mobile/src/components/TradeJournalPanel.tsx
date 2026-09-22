@@ -344,6 +344,9 @@ export function TradeJournalPanel() {
             <Text style={[styles.planWarn, { textAlign: align }]}>{t.planLowRR}</Text>
           ) : null}
         </>
+      ) : draft?.plan?.issue === 'slTooClose' ? (
+        // تحذير لا يمنع الحفظ: اليومية تسجّل ما حدث فعلاً
+        <Text style={[styles.planWarn, { textAlign: align }]}>⚠ {t.planSlTooClose}</Text>
       ) : null}
       <TextInput
         style={[styles.input, { textAlign: align }]}

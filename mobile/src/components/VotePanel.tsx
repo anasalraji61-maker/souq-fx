@@ -68,6 +68,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
   const planIssueText = (issue: PlanIssue | null, side: 'buy' | 'sell'): string | null => {
     if (issue === 'slWrongSide') return side === 'buy' ? t.planSlWrongBuy : t.planSlWrongSell;
     if (issue === 'tpWrongSide') return side === 'buy' ? t.planTpWrongBuy : t.planTpWrongSell;
+    if (issue === 'slTooClose') return t.planSlTooClose;
     return null;
   };
 

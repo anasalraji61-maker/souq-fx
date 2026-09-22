@@ -5,12 +5,13 @@
  *   خطة معكوسة (وقف فوق الدخول بصفقة شراء) خطأ شائع لدى المبتدئ ويجب أن يُمنع قبل النشر.
  * - مسافات بالـpip حين يُعرف حجم الـpip (فوركس/ذهب/فضة عبر instrumentSpec)، وإلا بفرق السعر فقط.
  * - R:R = المكسب المحتمل ÷ المخاطرة.
+ * - وقف أقرب من 1 pip للدخول (أضيق من أي سبريد تجزئة) خطأ كتابة شبه مؤكد: كان يُعرض «0 pip · R:R 1:5000».
  */
 import { instrumentSpec } from './positionSize';
 
 export type TradeSide = 'buy' | 'sell';
 
-export type PlanIssue = 'invalid' | 'slWrongSide' | 'tpWrongSide';
+export type PlanIssue = 'invalid' | 'slWrongSide' | 'tpWrongSide' | 'slTooClose';
 
 export type TradePlan = {
   ok: boolean;
@@ -57,6 +58,8 @@ export function analyzePlan(input: {
   };
   if (riskDist <= 0) return { ...base, ok: false, issue: 'slWrongSide', rr: null };
   if (rewardDist <= 0) return { ...base, ok: false, issue: 'tpWrongSide', rr: null };
+  // هامش نسبي صغير: 1.0851 − 1.0850 بالفاصلة العائمة = 0.0000999… ويجب أن يُعدّ 1 pip كاملاً
+  if (pip && riskDist < pip * (1 - 1e-6)) return { ...base, ok: false, issue: 'slTooClose', rr: null };
   return { ...base, ok: true, issue: null, rr: rewardDist / riskDist };
 }
 

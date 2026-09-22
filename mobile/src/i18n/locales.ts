@@ -266,6 +266,7 @@ export type Dict = {
   planSlWrongSell: string;
   planTpWrongBuy: string;
   planTpWrongSell: string;
+  planSlTooClose: string;
   planRiskWord: string;
   planRewardWord: string;
   planLowRR: string;
@@ -1007,6 +1008,7 @@ const ar: Dict = {
   planSlWrongSell: 'الوقف يجب أن يكون فوق سعر الدخول في صفقة البيع',
   planTpWrongBuy: 'الهدف يجب أن يكون فوق سعر الدخول في صفقة الشراء',
   planTpWrongSell: 'الهدف يجب أن يكون تحت سعر الدخول في صفقة البيع',
+  planSlTooClose: 'الوقف أقرب من 1 pip للدخول — أضيق من السبريد نفسه؛ راجع الرقم',
   planRiskWord: 'المخاطرة',
   planRewardWord: 'الربح المحتمل',
   planLowRR: '⚠ الربح المحتمل أقل من المخاطرة',
@@ -1756,6 +1758,7 @@ const enUS: Dict = {
   planSlWrongSell: 'For a sell, the stop must be above the entry',
   planTpWrongBuy: 'For a buy, the target must be above the entry',
   planTpWrongSell: 'For a sell, the target must be below the entry',
+  planSlTooClose: 'Stop is less than 1 pip from entry — tighter than the spread itself; check the number',
   planRiskWord: 'Risk',
   planRewardWord: 'Reward',
   planLowRR: '⚠ Potential reward is smaller than the risk',
@@ -2524,6 +2527,7 @@ const ku: Dict = {
   planSlWrongSell: 'بۆ فرۆشتن، وەستان دەبێت لە سەرووی نرخی چوونەژوورەوە بێت',
   planTpWrongBuy: 'بۆ کڕین، ئامانج دەبێت لە سەرووی نرخی چوونەژوورەوە بێت',
   planTpWrongSell: 'بۆ فرۆشتن، ئامانج دەبێت لە خوار نرخی چوونەژوورەوە بێت',
+  planSlTooClose: 'وەستان کەمتر لە 1 pip لە چوونەژوورەوە دوورە — لە سپرێد تەسکترە؛ ژمارەکە بپشکنە',
   planRiskWord: 'مەترسی',
   planRewardWord: 'قازانجی ئەگەری',
   planLowRR: '⚠ قازانجی ئەگەری لە مەترسی کەمترە',

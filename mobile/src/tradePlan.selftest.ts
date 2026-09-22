@@ -86,3 +86,22 @@ assert.equal(formatR(0), '0R');
 assert.equal(formatR(null), null);
 
 console.log('tradePlan selftest OK');
+
+// وقف أقرب من 1 pip: كان «0 pip · R:R 1:5000» — الآن مشكلة صريحة
+const tc = analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08499, tp: 1.09 });
+assert.equal(tc.ok, false);
+assert.equal(tc.issue, 'slTooClose');
+assert.equal(tc.rr, null);
+// 1 pip بالضبط مقبول رغم الفاصلة العائمة (1.0851 − 1.0850 = 0.0000999…)
+const one = analyzePlan({ symbol: 'EURUSD', side: 'sell', entry: 1.085, sl: 1.0851, tp: 1.084 });
+assert.equal(one.ok, true);
+assert.equal(one.riskPips, 1);
+// الين: 0.005 أقل من pip (0.01)
+assert.equal(analyzePlan({ symbol: 'USDJPY', side: 'buy', entry: 150, sl: 149.995, tp: 151 }).issue, 'slTooClose');
+// الجهة الخطأ تسبق «قريب جداً»
+assert.equal(analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08501, tp: 1.09 }).issue, 'slWrongSide');
+// رمز بلا pip معروف: لا حكم «قريب جداً»
+assert.equal(analyzePlan({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59999.99, tp: 61000 }).ok, true);
+
+console.log('tradePlan slTooClose selftest OK');
+
