@@ -8294,7 +8294,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingTop: 6,
   },
-  paneInner: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 2 },
+  // محاذاة العمود: **flex-start وليس flex-end**. كل اللوحات الـ108 تضع شريطها بـ`marginTop`
+  // محسوباً من قيمة المؤشر، ومع `alignItems: 'flex-end'` يُلغي Yoga هذا الهامش تماماً:
+  // الموضع = ارتفاع الحاوية − ارتفاع الشريط، فـ`marginTop` يدخل ويخرج من المعادلة
+  // (pos = marginTop + (H − (marginTop + h)) ). النتيجة عملياً: كل لوحة شريطها بارتفاع ثابت
+  // (RSI، ستوكاستيك، %R، MFI، ADX، CVD…) كانت **خطاً مسطَّحاً على قاع اللوحة** مهما كانت
+  // القيمة — لا يميّز المتداول RSI عند 55 من RSI عند 85 إلا بتغيّر اللون؛ وهيستوغرام MACD
+  // كان يرسم الموجب والسالب بنفس الموضع تماماً فيختفي اتجاه الزخم.
+  // مع flex-start يصير الموضع = marginTop كما تقصده كل المعادلات (مداها 0..paneH−16).
+  paneInner: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 2 },
   // شريط اللوحات المطويّة: بارتفاع لوحة مصغَّرة (16px) — يذكر العدد والأسماء بدل
   // إخفاء اللوحات بصمت عند ضيق ارتفاع الشارت.
   collapsedBar: {
