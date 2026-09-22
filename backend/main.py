@@ -908,7 +908,7 @@ def check_indicator_alerts(
     """تنبيهات المستدعي فقط (نفس قاعدة الرؤية في /api/indicator-alerts).
 
     سلسلة واحدة لكل (رمز، فريم) بالطلب — كانت تُبنى لكل تنبيه (3 تنبيهات EURUSD 1h = 3 طلبات للمزوّد
-    من كل جهاز مفتوح). الفشل يُخزَّن أيضاً فلا يُعاد لنفس المفتاح."""
+    من كل جهاز مفتوح). الفشل يُخزَّن أيضاً فلا يُعاد لنفس المفتاح. سلسلة demo البذرية تُعامَل كفشل."""
     uid = user["user_id"] if user else None
     triggered: list[dict] = []
     cache: dict[tuple[str, str], list[dict] | None] = {}
@@ -919,7 +919,12 @@ def check_indicator_alerts(
         if ck not in cache:
             try:
                 series = build_series(a["symbol"], a["timeframe"])
-                cache[ck] = [c.model_dump() for c in series.candles]
+                # سلسلة بذرية (المزوّد متعذّر) = شموع مختلَقة: كان تقاطع/RSI عليها يُطلق التنبيه ويعلّمه
+                # «مُطلَق» نهائياً بلا حدث سوقي حقيقي. نتخطّاها كفشل (يُعاد الفحص بالطلب التالي).
+                if series.data_source.kind == "demo":
+                    cache[ck] = None
+                else:
+                    cache[ck] = [c.model_dump() for c in series.candles]
             except Exception:
                 cache[ck] = None
         candles = cache[ck]
