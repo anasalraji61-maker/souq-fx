@@ -392,18 +392,6 @@ NEWS: list[dict] = [
 COURSES: list[dict] = []  # replaced by /api/academy/*
 
 
-def _alert_price(symbol: str) -> float | None:
-    try:
-        q = market.fetch_quote(symbol)
-        if q is not None:
-            return float(q)
-    except Exception:
-        pass
-    snap = td_ws.snapshot()
-    p = snap.get(symbol.upper())
-    return float(p) if p is not None else None
-
-
 def _seed_walk(
     symbol: str, base: float, n: int = 80, vol: float = 0.0012, step_sec: int = 900
 ) -> list[Candle]:
@@ -818,16 +806,19 @@ def check_alerts(user: dict | None = Depends(_auth_user), key: str | None = Depe
     وجهاز مجهول كان يُطلق تنبيهات كل المجهولين — الآن تنبيهات جهازه فقط عبر `X-Install-Id`)."""
     uid = user["user_id"] if user else None
     triggered: list[dict] = []
+    # طلب واحد لكل رمز (كان طلب quote لكل تنبيه — 10 تنبيهات EURUSD × كل جهاز مفتوح كل دقيقة تستنزف حد
+    # Twelve Data)، ونفس قاعدة الـworker: السعر الحالي أو ذيل شمعة 1m بعد دقيقة التسليح.
+    quotes: dict[str, tuple[float | None, list[dict]]] = {}
     for a in db.list_alerts(uid, owner_key=key):
         if not a.get("active") or a.get("triggered"):
             continue
-        q = _alert_price(a["symbol"])
+        sym = str(a["symbol"]).upper()
+        if sym not in quotes:
+            quotes[sym] = alert_worker._recent_minutes(sym)
+        q, candles = quotes[sym]
         if q is None:
             continue
-        hit = (a["condition"] == "above" and q >= a["price"]) or (
-            a["condition"] == "below" and q <= a["price"]
-        )
-        if hit and db.mark_alert_triggered(a["id"]):
+        if alert_worker._price_hit(a, q, candles) and db.mark_alert_triggered(a["id"]):
             triggered.append({**a, "current": q})
     return {"triggered": triggered, "alerts": db.list_alerts(uid, owner_key=key)}
 
