@@ -99,7 +99,13 @@ export function MatrixSidePanel({
             </Pressable>
             <Text style={[styles.title, { textAlign: align }]}>{TITLES[panel]}</Text>
           </View>
-          <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+          {/* نفس علّة ورقة الهاتف: نماذج التنبيهات/تنبيهات المؤشرات/الدفتر/الباكتست تعيش بهذا
+              الـScrollView، فبلا "handled" تُبتلع أول لمسة بعد الكتابة لإغلاق لوحة المفاتيح. */}
+          <ScrollView
+            contentContainerStyle={styles.body}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
             {panel === 'draw' ? (
               <View style={[styles.grid, rtl && styles.gridRtl]}>
                 {localizedDrawTools(t).filter((tool) => tool.id !== 'none').map((tool) => (

@@ -115,10 +115,17 @@ export function MatrixBottomDock({
               {TABS.find((tb) => tb.id === tab)?.label ?? t.dockLibraryFallback}
             </Text>
           </View>
+          {/* النماذج التي تعيش داخل هذه الورقة (سعر التنبيه، حدّ تنبيه المؤشر، صفقة الدفتر، الباكتست،
+              الدردشة) أزرارُها خارج ScrollView الداخلي لكل لوحة، أي داخل هذا الـScrollView. وبلا
+              keyboardShouldPersistTaps تُبتلع أول لمسة بعد الكتابة لإغلاق لوحة المفاتيح وحدها: يكتب
+              المتداول سعر التنبيه ثم يضغط «إضافة» فلا يحدث شيء ظاهر، ويضغط ثانية. وهذه ورقة الهاتف —
+              المسار الأساسي لإنشاء تنبيه بضغطات قليلة. "handled" هو النمط المتّبع بالتطبيق أصلاً
+              (شاشة الأدوات، لوح التصويت، الدفتر)، والنقر على فراغ يظلّ يُغلق لوحة المفاتيح كما هو. */}
           <ScrollView
             style={styles.sheetBody}
             contentContainerStyle={styles.sheetContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
             {tab === 'draw' ? (
               <View style={styles.drawWrap}>
