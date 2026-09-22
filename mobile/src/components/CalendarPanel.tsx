@@ -12,6 +12,11 @@ type Ev = {
   impact: string;
   when: string;
   forecast: string;
+  /** أرقام مسمّاة منفصلة (باك-إند أحدث). `forecast` وحده يخلط «السابق» بالتوقّع عند غيابه — يُستخدم
+   * فقط إن لم تصل هذه الحقول (باك-إند أقدم). */
+  forecast_value?: string;
+  previous?: string;
+  actual?: string;
   /** ثوانٍ UTC — إن وُجد يُعرض الحدث بتوقيت جهاز المستخدم مع عدّ تنازلي؛ غيابه (باك-إند أقدم/مصدر XML)
    * يعيد السلوك السابق (نص `when` كما هو). */
   ts?: number | null;
@@ -151,6 +156,18 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
     return `${day} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   };
 
+  /** «فعلي 0.4% · توقّع 0.3% · سابق 0.2%» — الفارغ يُحذف؛ باك-إند أقدم → نص `forecast` كما كان. */
+  const figuresLine = (e: Ev): string => {
+    if (e.forecast_value === undefined && e.previous === undefined && e.actual === undefined) {
+      return e.forecast && e.forecast !== '—' ? e.forecast : '';
+    }
+    const parts: string[] = [];
+    if (e.actual) parts.push(`${t.calActual} ${e.actual}`);
+    if (e.forecast_value) parts.push(`${t.calForecast} ${e.forecast_value}`);
+    if (e.previous) parts.push(`${t.calPrevious} ${e.previous}`);
+    return parts.join(' · ');
+  };
+
   const relLabel = (ts: number) => {
     const diff = ts * 1000 - now;
     if (Math.abs(diff) <= NOW_WINDOW_MS) return t.calNow;
@@ -230,6 +247,7 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
             const ts = hasTs(e) ? e.ts : null;
             const soon = ts != null && ts * 1000 >= now - NOW_WINDOW_MS && ts * 1000 <= now + SOON_MS;
             const done = ts != null && ts * 1000 < now - NOW_WINDOW_MS;
+            const figures = figuresLine(e);
             return (
               <View key={e.id} style={[styles.row, rtl && styles.rowRtl, soon && styles.rowSoon, done && styles.rowDone]}>
                 <View
@@ -238,8 +256,11 @@ export function CalendarPanel({ compact = false, onPickCurrency }: Props) {
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.evTitle, { textAlign: align }]}>{e.title}</Text>
                   <Text style={[styles.meta, { textAlign: align }]}>
-                    {e.currency} · {ts != null ? fmtLocal(ts) : e.when} · {e.forecast}
+                    {e.currency} · {ts != null ? fmtLocal(ts) : e.when}
                   </Text>
+                  {figures ? (
+                    <Text style={[styles.figures, { textAlign: align }]}>{figures}</Text>
+                  ) : null}
                 </View>
                 {ts != null && !done ? (
                   <Text style={[styles.rel, soon && styles.relSoon]}>{relLabel(ts)}</Text>
@@ -288,4 +309,5 @@ const styles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 4, marginTop: spacing.xs },
   evTitle: { color: colors.text, textAlign: 'right', fontSize: 12, fontWeight: '600' },
   meta: { color: colors.textDim, textAlign: 'right', fontSize: 10, marginTop: 2 },
+  figures: { color: colors.textMuted, textAlign: 'right', fontSize: 10, marginTop: 1 },
 });

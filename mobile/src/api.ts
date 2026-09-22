@@ -548,6 +548,9 @@ export const api = {
         impact: string;
         when: string;
         forecast: string;
+        forecast_value?: string;
+        previous?: string;
+        actual?: string;
         ts?: number | null;
         sample?: boolean;
       }[];

@@ -120,7 +120,9 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
         date = _text(ev.find("date"))
         tm = _text(ev.find("time"))
         when = f"{date} {tm}".strip() or "هذا الأسبوع"
-        forecast = _text(ev.find("forecast")) or _text(ev.find("previous")) or "—"
+        fc_raw = _text(ev.find("forecast"))
+        prev_raw = _text(ev.find("previous"))
+        forecast = fc_raw or prev_raw or "—"
         out.append(
             {
                 "id": f"ff-{hash(title + when) % 10_000_000}",
@@ -129,11 +131,22 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
                 "impact": _impact(_text(ev.find("impact"))),
                 "when": when[:32],
                 "forecast": forecast[:40],
+                **_figures(fc_raw, prev_raw, _text(ev.find("actual"))),
             }
         )
         if len(out) >= 40:
             break
     return out
+
+
+def _figures(forecast: str, previous: str, actual: str) -> dict[str, str]:
+    """أرقام الحدث منفصلة ومسمّاة. `forecast` القديم يسقط للقيمة السابقة عند غياب التوقّع (فيظهر
+    «السابق» كأنه توقّع) — يبقى كما هو لتوافق العملاء القدامى، والعميل الجديد يقرأ هذه الحقول."""
+    return {
+        "forecast_value": forecast[:40],
+        "previous": previous[:40],
+        "actual": actual[:40],
+    }
 
 
 def _parse_ff_json(text: str) -> list[dict[str, Any]]:
@@ -163,7 +176,9 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
             except ValueError:
                 pass
         country = str(ev.get("country") or "USD").strip()
-        forecast = str(ev.get("forecast") or "").strip() or str(ev.get("previous") or "").strip() or "—"
+        fc_raw = str(ev.get("forecast") or "").strip()
+        prev_raw = str(ev.get("previous") or "").strip()
+        forecast = fc_raw or prev_raw or "—"
         out.append(
             {
                 "id": f"ff-{hash(title + raw_date) % 10_000_000}",
@@ -172,6 +187,7 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
                 "impact": _impact(str(ev.get("impact") or "")),
                 "when": when[:32],
                 "forecast": forecast[:40],
+                **_figures(fc_raw, prev_raw, str(ev.get("actual") or "").strip()),
                 "ts": ts,
             }
         )

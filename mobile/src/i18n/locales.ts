@@ -280,6 +280,9 @@ export type Dict = {
   calToday: string;
   calTomorrow: string;
   calSampleBanner: string;
+  calForecast: string;
+  calPrevious: string;
+  calActual: string;
   // WeeklyReportPanel/TradeJournalPanel/BacktestPanel/IndicatorAlertsPanel/CalendarPanel/LayoutPanel — 2026-09-17
   reportsTitle: string;
   reportsSubGrid: string;
@@ -995,6 +998,9 @@ const ar: Dict = {
   calToday: 'اليوم',
   calTomorrow: 'غداً',
   calSampleBanner: '⚠ أمثلة توضيحية — تعذّر جلب التقويم الحي الآن',
+  calForecast: 'توقّع',
+  calPrevious: 'سابق',
+  calActual: 'فعلي',
   reportsTitle: 'تقارير MATRIX',
   reportsSubGrid: 'نفس حجم الفريمات · قدّم/أخّر · اضغط للقراءة',
   reportsSub: 'أسبوعي · أداء · رأي المنصة ونصائح',
@@ -1718,6 +1724,9 @@ const enUS: Dict = {
   calToday: 'Today',
   calTomorrow: 'Tomorrow',
   calSampleBanner: '⚠ Sample events — live calendar unavailable right now',
+  calForecast: 'Fcst',
+  calPrevious: 'Prev',
+  calActual: 'Actual',
   reportsTitle: 'MATRIX Reports',
   reportsSubGrid: 'Same frame size · prev/next · tap to read',
   reportsSub: 'Weekly · Performance · Platform view & tips',
@@ -2460,6 +2469,9 @@ const ku: Dict = {
   calToday: 'ئەمڕۆ',
   calTomorrow: 'سبەینێ',
   calSampleBanner: '⚠ نموونەی ڕوونکردنەوە — ڕۆژژمێری ڕاستەوخۆ ئێستا بەردەست نییە',
+  calForecast: 'پێشبینی',
+  calPrevious: 'پێشوو',
+  calActual: 'ڕاستەقینە',
   reportsTitle: 'ڕاپۆرتەکانی MATRIX',
   reportsSubGrid: 'هەمان قەبارەی چوارچێوە · پێشوو/دواتر · دەستلێدان بۆ خوێندنەوە',
   reportsSub: 'هەفتانە · کارایی · بۆچوونی پلاتفۆرم و ئامۆژگاری',
