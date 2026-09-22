@@ -39,6 +39,7 @@ import { pointFigure } from './pointFigure';
 import { rangeBars } from './range';
 import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
+import { macdPaneGeom } from './macdPane';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
 import {
@@ -7503,22 +7504,68 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>MACD</Text>
           <View style={styles.paneInner}>
-            {macd.hist.map((v, i) => {
-              if (v == null) return <View key={i} style={{ flex: 1 }} />;
-              const h = Math.min(paneH - 16, Math.abs(v) * 8000);
+            {(() => {
+              // المقياس من مدى البيانات بالنافذة، لا من الثابت 8000 الذي كان يجعل
+              // الهيستوغرام كتلة مصمتة على الذهب والين وخيطاً غير مرئي على اليورو.
+              const g = macdPaneGeom(macd.hist, macd.macdLine, macd.signal, paneH);
               return (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: Math.max(2, h),
-                    marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
-                    backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                    opacity: 0.7,
-                  }}
-                />
+                <>
+                  {/* خطّ الصفر: مرجع التقاطع الذي كان غائباً */}
+                  <View
+                    pointerEvents="none"
+                    style={[styles.paneZeroLine, { top: g.zeroY }]}
+                  />
+                  {macd.hist.map((v, i) => {
+                    if (!g.valid(i)) return <View key={i} style={{ flex: 1 }} />;
+                    const m = macd.macdLine[i];
+                    const sg = macd.signal[i];
+                    const bh = v == null ? 0 : g.barH(v);
+                    return (
+                      <View key={i} style={{ flex: 1, height: g.innerH, position: 'relative' }}>
+                        {v != null ? (
+                          <View
+                            style={{
+                              position: 'absolute',
+                              left: 0,
+                              right: 0,
+                              top: v >= 0 ? g.zeroY - bh : g.zeroY,
+                              height: Math.max(1, bh),
+                              backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                              opacity: 0.55,
+                            }}
+                          />
+                        ) : null}
+                        {sg != null ? (
+                          <View
+                            style={{
+                              position: 'absolute',
+                              left: 0,
+                              right: 0,
+                              top: g.y(sg),
+                              height: 2,
+                              backgroundColor: colors.warn,
+                              opacity: 0.9,
+                            }}
+                          />
+                        ) : null}
+                        {m != null ? (
+                          <View
+                            style={{
+                              position: 'absolute',
+                              left: 0,
+                              right: 0,
+                              top: g.y(m),
+                              height: 2,
+                              backgroundColor: accent,
+                            }}
+                          />
+                        ) : null}
+                      </View>
+                    );
+                  })}
+                </>
               );
-            })}
+            })()}
           </View>
         </View>
       ) : null}
@@ -8303,6 +8350,14 @@ const styles = StyleSheet.create({
   // كان يرسم الموجب والسالب بنفس الموضع تماماً فيختفي اتجاه الزخم.
   // مع flex-start يصير الموضع = marginTop كما تقصده كل المعادلات (مداها 0..paneH−16).
   paneInner: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 2 },
+  // خطّ الصفر داخل لوحة ذات قيم موجبة/سالبة (MACD وأمثاله): مرجع التقاطع.
+  paneZeroLine: {
+    position: 'absolute',
+    left: 2,
+    right: 2,
+    height: 1,
+    backgroundColor: colors.border,
+  },
   // شريط اللوحات المطويّة: بارتفاع لوحة مصغَّرة (16px) — يذكر العدد والأسماء بدل
   // إخفاء اللوحات بصمت عند ضيق ارتفاع الشارت.
   collapsedBar: {
