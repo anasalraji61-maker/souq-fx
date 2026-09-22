@@ -261,6 +261,8 @@ export type Dict = {
   alertsFiresNowWarn: string;
   alertsActiveCount: string;
   alertsTapToEdit: string;
+  alertsClearFiredBtn: string;
+  alertsClearFiredConfirm: string;
   alertsEditA11yPrefix: string;
   alertsStatusArmed: string;
   alertsStatusTriggered: string;
@@ -1057,6 +1059,8 @@ const ar: Dict = {
   alertsFiresNowWarn: '⚠ الشرط متحقق الآن — سيُطلق التنبيه فوراً',
   alertsActiveCount: 'نشطة',
   alertsTapToEdit: 'اضغط تنبيهاً لتعديله',
+  alertsClearFiredBtn: 'مسح المُطلقة ({n})',
+  alertsClearFiredConfirm: 'حذف {n} تنبيه أُطلق؟ التنبيهات التي تراقب تبقى كما هي.',
   alertsEditA11yPrefix: 'تعديل التنبيه',
   alertsStatusArmed: '● مُفعَّل — بانتظار السعر',
   alertsStatusTriggered: 'انطلق ✓',
@@ -1861,6 +1865,8 @@ const enUS: Dict = {
   alertsFiresNowWarn: '⚠ Condition already met — this alert will fire immediately',
   alertsActiveCount: 'Active',
   alertsTapToEdit: 'Tap an alert to edit it',
+  alertsClearFiredBtn: 'Clear fired ({n})',
+  alertsClearFiredConfirm: 'Delete {n} fired alert(s)? Alerts still watching stay as they are.',
   alertsEditA11yPrefix: 'Edit alert',
   alertsStatusArmed: '● Armed — waiting for price',
   alertsStatusTriggered: 'Triggered ✓',
@@ -2684,6 +2690,8 @@ const ku: Dict = {
   alertsFiresNowWarn: '⚠ مەرجەکە ئێستا هاتۆتە دی — ئاگادارکردنەوەکە یەکسەر دەردەچێت',
   alertsActiveCount: 'چالاک',
   alertsTapToEdit: 'بۆ گۆڕین کلیک لە ئاگادارکردنەوەیەک بکە',
+  alertsClearFiredBtn: 'سڕینەوەی کارابووەکان ({n})',
+  alertsClearFiredConfirm: '{n} ئاگادارکردنەوەی کارابوو بسڕدرێتەوە؟ ئەوانەی چاودێری دەکەن وەک خۆیان دەمێننەوە.',
   alertsEditA11yPrefix: 'گۆڕینی ئاگادارکردنەوە',
   alertsStatusArmed: '● چالاکە — چاوەڕێی نرخ',
   alertsStatusTriggered: 'دەرچوو ✓',

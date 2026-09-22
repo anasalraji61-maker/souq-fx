@@ -278,6 +278,28 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
     }
   };
 
+  /** التنبيهات المُطلقة تتراكم أسفل القائمة (لمرة واحدة) وكان حذفها واحداً واحداً بتأكيد لكلٍّ منها. */
+  const firedCount = alerts.filter((a) => a.triggered).length;
+  const clearFired = async () => {
+    const fired = alerts.filter((a) => a.triggered);
+    setBusy(true);
+    let failed = false;
+    for (const a of fired) {
+      try {
+        await api.deleteAlert(a.id);
+        if (editingId === a.id) cancelEdit();
+      } catch {
+        failed = true;
+      }
+    }
+    try {
+      await refresh();
+    } finally {
+      if (mountedRef.current) setBusy(false);
+    }
+    if (failed && mountedRef.current) Alert.alert(t.alertsDeleteFailedTitle, t.alertsDeleteFailedBody);
+  };
+
   return (
     <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
       {embedded ? (
@@ -460,6 +482,38 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
               {t.alertsActiveCount}: {alerts.filter((a) => a.active && !a.triggered).length} · {t.alertsTapToEdit}
             </Text>
           ) : null}
+          {firedCount > 0 ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled: busy }}
+              disabled={busy}
+              style={({ pressed }) => [
+                styles.clearFired,
+                rtl ? styles.clearFiredRtl : null,
+                busy && { opacity: 0.4 },
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() =>
+                Alert.alert(
+                  t.alertsDeleteConfirmTitle,
+                  t.alertsClearFiredConfirm.replace('{n}', String(firedCount)),
+                  [
+                    { text: t.cancel, style: 'cancel' },
+                    { text: t.deleteWord, style: 'destructive', onPress: () => void clearFired() },
+                  ]
+                )
+              }
+              accessibilityLabel={t.alertsClearFiredBtn.replace('{n}', String(firedCount))}
+              hitSlop={8}
+            >
+              <Text style={styles.clearFiredText}>
+                {t.alertsClearFiredBtn.replace('{n}', String(firedCount))}
+              </Text>
+            </Pressable>
+          ) : null}
           {alerts.length === 0 ? (
             <Text style={[styles.empty, { textAlign: align }]}>
               {listError ? t.alertsLoadError : t.alertsEmpty}
@@ -619,6 +673,9 @@ const styles = StyleSheet.create({
   itemStatusDone: { color: colors.textDim },
   itemEditing: { backgroundColor: colors.accentSoft, borderRadius: radii.sm },
   listHead: { color: colors.textDim, fontSize: 10, marginTop: spacing.sm, fontWeight: '700' },
+  clearFired: { alignSelf: 'flex-start', marginTop: spacing.xs, paddingVertical: 2 },
+  clearFiredRtl: { alignSelf: 'flex-end' },
+  clearFiredText: { color: colors.bear, fontSize: 10, fontWeight: '700' },
   currentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
   currentText: { color: colors.textDim, fontSize: 11, flex: 1 },
   currentVal: { color: colors.text, fontWeight: '800' },
