@@ -236,6 +236,9 @@ export type Dict = {
   alertsTitle: string;
   alertsSub: string;
   alertsPushTitle: string;
+  /** اسم قناة إشعارات أندرويد كما يراه المتداول بإعدادات النظام */
+  notifChannelName: string;
+  notifChannelDesc: string;
   alertsSymbolA11y: string;
   alertsPriceA11y: string;
   alertsAboveConditionA11y: string;
@@ -1070,6 +1073,8 @@ const ar: Dict = {
   alertsTitle: 'تنبيهات السعر',
   alertsSub: 'فوق / تحت · Twelve Data · إشعار عند التفعيل',
   alertsPushTitle: 'MATRIX · تنبيه سعر',
+  notifChannelName: 'تنبيهات الأسعار والمؤشرات',
+  notifChannelDesc: 'إشعار فوري عند بلوغ السوق مستوىً ضبطتَه بنفسك',
   alertsSymbolA11y: 'رمز الأداة للتنبيه',
   alertsPriceA11y: 'سعر التنبيه',
   alertsAboveConditionA11y: 'شرط التنبيه: فوق السعر',
@@ -1917,6 +1922,8 @@ const enUS: Dict = {
   alertsTitle: 'Price alerts',
   alertsSub: 'Above / Below · Twelve Data · Notification when triggered',
   alertsPushTitle: 'MATRIX · Price alert',
+  notifChannelName: 'Price & indicator alerts',
+  notifChannelDesc: 'A notification the moment the market reaches a level you set',
   alertsSymbolA11y: 'Instrument symbol for the alert',
   alertsPriceA11y: 'Alert price',
   alertsAboveConditionA11y: 'Alert condition: above price',
@@ -2784,6 +2791,8 @@ const ku: Dict = {
   alertsTitle: 'ئاگادارکردنەوەی نرخ',
   alertsSub: 'سەرەوە / خوارەوە · Twelve Data · ئاگادارکردنەوە کاتێک چالاک دەبێت',
   alertsPushTitle: 'MATRIX · ئاگادارکردنەوەی نرخ',
+  notifChannelName: 'ئاگادارکردنەوەی نرخ و پێوەر',
+  notifChannelDesc: 'ئاگادارکردنەوەیەکی دەستبەجێ کاتێک بازاڕ دەگاتە ئەو ئاستەی خۆت دیاریت کردووە',
   alertsSymbolA11y: 'هێمای ئامراز بۆ ئاگادارکردنەوە',
   alertsPriceA11y: 'نرخی ئاگادارکردنەوە',
   alertsAboveConditionA11y: 'مەرجی ئاگادارکردنەوە: سەرەوەی نرخ',

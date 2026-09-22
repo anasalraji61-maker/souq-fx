@@ -11,7 +11,7 @@ import { ToolsScreen } from './src/screens/ToolsScreen';
 import { AuthProvider } from './src/context/AuthContext';
 import { I18nProvider, useI18n } from './src/i18n/I18nContext';
 import { colors } from './src/theme';
-import { registerPushToken } from './src/notifications';
+import { ensureAlertChannel, registerPushToken } from './src/notifications';
 import { OnboardingOverlay } from './src/components/OnboardingOverlay';
 import { AppErrorBoundary } from './src/components/AppErrorBoundary';
 import { hasSeenOnboarding, markOnboardingSeen } from './src/onboarding';
@@ -58,6 +58,9 @@ function RootTabs() {
     // تفتح نافذة إذن (راجع `src/notifications.ts`) — فأول فتح للتطبيق لم يعد يبدأ بنافذة نظام
     // فوق الجولة الترحيبية، والسؤال يقع بلوح التنبيهات أو بزرّ الحساب حيث يعرف المتداول لماذا.
     void registerPushToken();
+    // قناة إشعارات التنبيهات تُنشأ بلا إذن ولا نافذة نظام — فتوجد قبل أول تنبيه، ويُحدَّث اسمها
+    // بلغة الواجهة المحفوظة عند كل إقلاع (راجع `ensureAlertChannel` بـ`src/notifications.ts`).
+    void ensureAlertChannel(true);
   }, []);
 
   useEffect(() => {

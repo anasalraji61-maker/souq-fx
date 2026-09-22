@@ -3,6 +3,7 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
+import { DICTS, LangId } from './i18n/locales';
 
 /** مفتاح لغة الواجهة المحفوظ (نفس `KEY` بـ`i18n/I18nContext.tsx`) — يُرسل مع توكن الـPush ليصل
  * إشعار التنبيه من الخادم بلغة المتداول لا بنص إنجليزي خام. */
@@ -14,6 +15,52 @@ async function savedLang(): Promise<string | undefined> {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * قناة إشعارات أندرويد لتنبيهات الأسعار والمؤشرات.
+ *
+ * **بلا قناة صريحة** كان كل إشعار تنبيه — المحلي (`pushPriceAlert`) والقادم من الخادم معاً — يسقط
+ * بقناة `expo-notifications` الاحتياطية المسمّاة «Miscellaneous» بأهمية افتراضية: لا ظهور فوق
+ * الشاشة (heads-up)، واسمٌ إنجليزي لا معنى له بإعدادات إشعارات النظام، فمن أراد ضبط صوت تنبيهات
+ * الأسعار وحدها لا يجد لها مدخلاً. وتنبيه السعر بالذات لا قيمة له متأخراً: مستوى بلغه السوق ومرّ
+ * ليس خبراً يُقرأ بعد ساعة من درج الإشعارات.
+ *
+ * القناة تُنشأ **بلا أي إذن** (إنشاء القناة لا يستلزم إذن الإشعارات بأندرويد) فتُنادى عند الإقلاع،
+ * واسمها ووصفها بلغة الواجهة المحفوظة — ومناداتها ثانيةً بالمعرّف نفسه **تحدّث** الاسم والوصف، فتغيير
+ * اللغة يظهر بإعدادات النظام عند الإقلاع التالي. الأهمية نفسها لا يخفضها إلا المتداول من النظام،
+ * وهذا مقصود: قراره يبقى له.
+ */
+export const ALERT_CHANNEL_ID = 'matrix-alerts';
+
+let channelPromise: Promise<void> | null = null;
+
+async function createAlertChannel(): Promise<void> {
+  try {
+    const lang = (await savedLang()) as LangId | undefined;
+    const t = (lang && DICTS[lang]) || DICTS.ar;
+    await Notifications.setNotificationChannelAsync(ALERT_CHANNEL_ID, {
+      name: t.notifChannelName,
+      description: t.notifChannelDesc,
+      importance: Notifications.AndroidImportance.HIGH,
+      sound: 'default',
+      vibrationPattern: [0, 250, 250, 250],
+      enableVibrate: true,
+      lightColor: '#2DD4BF',
+      // السعر والرمز يظهران على شاشة القفل عمداً: تنبيه يُقرأ بنظرة هو كل غرضه، وليس ببياناته
+      // شيء شخصي (رمز ومستوى سعر من سوق علني).
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    });
+  } catch {
+    /* جهاز/بيئة بلا قنوات (أندرويد قديم، ويب) — الإشعار يبقى يعمل بالقناة الافتراضية */
+  }
+}
+
+/** يضمن وجود القناة. `refresh` يعيد الإنشاء (تحديث الاسم بعد تغيّر اللغة) بدل النتيجة المخزَّنة. */
+export function ensureAlertChannel(refresh = false): Promise<void> {
+  if (Platform.OS !== 'android') return Promise.resolve();
+  if (!channelPromise || refresh) channelPromise = createAlertChannel();
+  return channelPromise;
 }
 
 Notifications.setNotificationHandler({
@@ -83,9 +130,19 @@ export async function registerPushToken(): Promise<void> {
 export async function pushPriceAlert(title: string, body: string): Promise<void> {
   if (Platform.OS === 'web') return;
   try {
+    await ensureAlertChannel();
     await Notifications.scheduleNotificationAsync({
-      content: { title, body, sound: true },
-      trigger: null,
+      content: {
+        title,
+        body,
+        sound: true,
+        // أندرويد 7 وما دونه لا يعرف القنوات — الأولوية هناك هي ما يصنع الظهور فوق الشاشة
+        priority: Notifications.AndroidNotificationPriority.HIGH,
+        color: '#2DD4BF',
+      },
+      // `{ channelId }` هو مشغّل «فوري على هذه القناة» بأندرويد، وبـiOS يترجمه
+      // `expo-notifications` إلى `null` أي فوري كما كان بالضبط (`parseTrigger`).
+      trigger: { channelId: ALERT_CHANNEL_ID },
     });
   } catch {
     /* ignore */

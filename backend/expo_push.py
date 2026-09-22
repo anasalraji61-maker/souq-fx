@@ -7,6 +7,13 @@ import httpx
 
 EXPO_URL = "https://exp.host/--/api/v2/push/send"
 
+# قناة إشعارات أندرويد التي ينشئها التطبيق عند الإقلاع (`mobile/src/notifications.ts` →
+# `ALERT_CHANNEL_ID`). بلا هذا الحقل تسقط كل دفعة على القناة الاحتياطية «Miscellaneous»
+# بأهمية افتراضية: لا ظهور فوق الشاشة، ولا مدخل باسم مفهوم بإعدادات النظام لضبط صوت
+# تنبيهات الأسعار وحدها. **المعرّف مرتبط بالتطبيق حرفياً — لا يُغيَّر بطرف واحد.**
+# قناة غير موجودة (تطبيق قديم لم يُحدَّث) تسقط تلقائياً للقناة الافتراضية كما كان، بلا فشل.
+ANDROID_CHANNEL_ID = "matrix-alerts"
+
 # أخطاء دائمة فقط — لا تحذف لـ MessageTooBig / MessageRateExceeded وغيرها
 _PERMANENT_TOKEN_ERRORS = frozenset({"DeviceNotRegistered"})
 
@@ -41,6 +48,7 @@ def send_push(tokens: list[str], title: str, body: str, data: dict | None = None
             "body": body,
             "sound": "default",
             "priority": "high",
+            "channelId": ANDROID_CHANNEL_ID,
             "data": data or {},
         }
         for t in batch
