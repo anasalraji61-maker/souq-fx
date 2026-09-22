@@ -18,7 +18,7 @@ import {
 import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
-import { analyzePlan, formatPips, formatRR } from '../tradePlan';
+import { analyzePlan, formatPips, formatRR, type TradeSide } from '../tradePlan';
 
 type Props = {
   defaultSymbol?: string;
@@ -211,18 +211,31 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       : null;
 
   /**
-   * خطة كاملة حين يُكتب الهدف أيضاً: الاتجاه يُستنتج من موضع الوقف (وقف تحت الدخول = شراء)، فلا يُسأل
-   * المتداول عن شيء يعرفه رقمه أصلاً. النتيجة: المخاطرة/العائد بالنقاط، R:R، والربح المحتمل بعملة
-   * الحساب لحجم اللوت المحسوب نفسه.
+   * اتجاه الصفقة كما تستنتجه الحاسبة من موضع الوقف (وقف تحت الدخول = شراء) — **مصدر واحد** بدل
+   * استنتاجه ثلاث مرّات بثلاثة مواضع (الخطة، وتسجيل الصفقة بالدفتر، والسطر المعروض). يكفيه الدخول
+   * والوقف: الهدف لا يغيّر الاتجاه، فيظهر الاتجاه بمجرّد كتابة الرقمين لا بعد اكتمال الخطة.
+   */
+  const planSide = useMemo<TradeSide | null>(() => {
+    const e = num(entryPx);
+    const sPx = num(stopPx);
+    if (!spec || ![e, sPx].every((v) => Number.isFinite(v) && v > 0) || e === sPx) return null;
+    return sPx < e ? 'buy' : 'sell';
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spec, entryPx, stopPx]);
+
+  /**
+   * خطة كاملة حين يُكتب الهدف أيضاً: الاتجاه من `planSide` أعلاه (موضع الوقف)، فلا يُسأل المتداول عن
+   * شيء يعرفه رقمه أصلاً — لكنه يراه الآن مكتوباً. النتيجة: المخاطرة/العائد بالنقاط، R:R، والربح
+   * المحتمل بعملة الحساب لحجم اللوت المحسوب نفسه.
    */
   const plan = useMemo(() => {
     const e = num(entryPx);
     const sPx = num(stopPx);
     const tPx = num(targetPx);
-    if (!spec || ![e, sPx, tPx].every((v) => Number.isFinite(v) && v > 0) || e === sPx) return null;
-    return analyzePlan({ symbol: spec.symbol, side: sPx < e ? 'buy' : 'sell', entry: e, sl: sPx, tp: tPx });
+    if (!spec || planSide == null || !Number.isFinite(tPx) || tPx <= 0) return null;
+    return analyzePlan({ symbol: spec.symbol, side: planSide, entry: e, sl: sPx, tp: tPx });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spec, entryPx, stopPx, targetPx]);
+  }, [spec, planSide, entryPx, stopPx, targetPx]);
   /** الهدف بالجهة الخطأ (فوق الدخول ببيع/تحته بشراء) — خطأ كتابة شائع، يُقال صراحةً بدل تجاهل الهدف */
   const targetWrongSide = plan?.issue === 'tpWrongSide';
   const lots = result && !result.belowMinLot ? result.lots : null;
@@ -251,13 +264,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     const e = num(entryPx);
     const sPx = num(stopPx);
     const tPx = num(targetPx);
-    if (!spec || !plan?.ok || lots == null || logBusy || logMsg?.ok) return;
+    if (!spec || !plan?.ok || planSide == null || lots == null || logBusy || logMsg?.ok) return;
     setLogBusy(true);
     setLogMsg(null);
     try {
       await api.createTrade({
         symbol: spec.symbol,
-        side: sPx < e ? 'buy' : 'sell',
+        side: planSide,
         entry: e,
         sl: sPx,
         tp: tPx,
@@ -500,6 +513,21 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         ) : riskImpossible ? null : (
           <Text style={[styles.resultMeta, { textAlign: align }]}>{t.riskCalcFillHint}</Text>
         )}
+        {/* الاتجاه كان **مستنتَجاً بصمت**: وقف تحت الدخول = شراء، ثم يُرسَل كما هو بـ`side` لصفقة
+            الدفتر — فمن قلب الرقمين (أو خطّط بيعاً وكتب وقفه تحت الدخول سهواً) يسجّل صفقة بالاتجاه
+            المعاكس ولا شيء بالشاشة يقول له ذلك، وهو الرقم الوحيد بالخطة الذي لا يكتبه بنفسه. */}
+        {planSide ? (
+          <Text
+            style={[
+              styles.sideLine,
+              { textAlign: align, color: planSide === 'buy' ? colors.bull : colors.bear },
+            ]}
+            accessibilityLabel={`${t.riskCalcSideLabel}: ${planSide === 'buy' ? t.dirBuy : t.dirSell}`}
+          >
+            {planSide === 'buy' ? `▲ ${t.dirBuy}` : `▼ ${t.dirSell}`}
+            <Text style={styles.sideHint}> · {t.riskCalcSideFromStop}</Text>
+          </Text>
+        ) : null}
         {plan?.ok ? (
           <>
             <Text style={[styles.resultMeta, { textAlign: align }]}>
@@ -533,7 +561,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
               },
             ]}
             onPress={() => void logPlanToJournal()}
-            accessibilityLabel={t.riskCalcLogToJournal}
+            // الاتجاه بنصّ الزر الصوتي أيضاً: هنا بالضبط يُكتب `side` بالدفتر بلا أن يختاره المتداول.
+            accessibilityLabel={`${t.riskCalcLogToJournal} — ${planSide === 'sell' ? t.dirSell : t.dirBuy}`}
             hitSlop={8}
           >
             <Text style={styles.logBtnText}>{logBusy ? '...' : t.riskCalcLogToJournal}</Text>
@@ -605,6 +634,8 @@ const styles = StyleSheet.create({
   resultLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   resultLots: { color: colors.accent, fontSize: 28, fontWeight: '800' },
   resultMeta: { color: colors.textDim, fontSize: 11 },
+  sideLine: { fontSize: 13, fontWeight: '800' },
+  sideHint: { color: colors.textDim, fontSize: 10, fontWeight: '600' },
   disclaimer: { color: colors.textDim, fontSize: 10, marginTop: spacing.xs },
   logBtn: {
     marginTop: spacing.sm,

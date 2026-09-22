@@ -307,6 +307,8 @@ export type Dict = {
   riskCalcTargetPlaceholder: string;
   riskCalcPotentialProfit: string;
   riskCalcLogToJournal: string;
+  riskCalcSideLabel: string;
+  riskCalcSideFromStop: string;
   riskCalcLoggedToJournal: string;
   riskCalcLogFailed: string;
   riskCalcUseLivePrice: string;
@@ -1137,6 +1139,8 @@ const ar: Dict = {
   riskCalcTargetPlaceholder: 'سعر الهدف',
   riskCalcPotentialProfit: 'الربح المحتمل',
   riskCalcLogToJournal: 'سجّل هذه الخطة بالدفتر',
+  riskCalcSideLabel: 'اتجاه الصفقة',
+  riskCalcSideFromStop: 'مستنتَج من موضع الوقف',
   riskCalcLoggedToJournal: '✓ سُجِّلت صفقة مفتوحة بالدفتر — أغلقها من «الدفتر» عند الخروج',
   riskCalcLogFailed: 'تعذّر التسجيل بالدفتر — تحقّق من الاتصال وحاول مرة أخرى',
   riskCalcUseLivePrice: '↓ الدخول = السعر الحالي',
@@ -1978,6 +1982,8 @@ const enUS: Dict = {
   riskCalcTargetPlaceholder: 'Target price',
   riskCalcPotentialProfit: 'Potential profit',
   riskCalcLogToJournal: 'Log this plan to the journal',
+  riskCalcSideLabel: 'Trade direction',
+  riskCalcSideFromStop: 'inferred from the stop',
   riskCalcLoggedToJournal: '✓ Logged as an open trade — close it from «Journal» when you exit',
   riskCalcLogFailed: 'Could not log to the journal — check your connection and try again',
   riskCalcUseLivePrice: '↓ Entry = current price',
@@ -2839,6 +2845,8 @@ const ku: Dict = {
   riskCalcTargetPlaceholder: 'نرخی ئامانج',
   riskCalcPotentialProfit: 'قازانجی چاوەڕوانکراو',
   riskCalcLogToJournal: 'ئەم پلانە لە دەفتەر تۆمار بکە',
+  riskCalcSideLabel: 'ئاراستەی مامەڵە',
+  riskCalcSideFromStop: 'لە شوێنی وەستان دەرهێنراوە',
   riskCalcLoggedToJournal: '✓ وەک مامەڵەیەکی کراوە تۆمارکرا — لە «دەفتەر» بیخە کاتی دەرچوون',
   riskCalcLogFailed: 'تۆمارکردن لە دەفتەر سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەوە',
   riskCalcUseLivePrice: '↓ چوونەژوورەوە = نرخی ئێستا',
