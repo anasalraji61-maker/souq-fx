@@ -25,7 +25,16 @@ type Ev = {
   sample?: boolean;
 };
 
+/** أفق عدّاد الترويسة «القادم خلال 24 ساعة» — يوم التداول القادم كما يخطّط له المتداول مساءً. */
 const SOON_MS = 24 * 60 * 60 * 1000;
+/**
+ * أفق **تلوين الصفّ** وحده. كان التلوين يستعمل `SOON_MS` نفسه (24 ساعة) بقائمة تقويم **أسبوعية**:
+ * أي أن خمسة عشر صفاً متتالياً تُضاء معاً، فيفقد التمييز معناه بالضبط حيث يُراد منه — الصفّ الذي
+ * يجب ألّا يفتح المتداول مركزاً قبله. ثلاث ساعات: نفس أفق بانر «خبر قوي قريب» فوق الشارت
+ * (`NEWS_HORIZON_MS` بـ`chart/newsRisk.ts`)، فـ«قريب» تعني الشيء نفسه بالشاشتين.
+ * عدّاد الترويسة لم يُمسّ — نصّه يقول «24 ساعة» ويظلّ صادقاً.
+ */
+const ROW_SOON_MS = 3 * 60 * 60 * 1000;
 const NOW_WINDOW_MS = 15 * 60 * 1000;
 /** إعادة جلب صامتة للتقويم وهو مفتوح — الخادم يخزّن النتيجة 30 دقيقة (`econ_calendar.TTL`)
  * فالطلب لا يمسّ حدّ المزوّد، لكنه يلتقط «الفعلي» بعد صدور الرقم. */
@@ -328,7 +337,7 @@ export function CalendarPanel({ compact = false, symbol, onPickCurrency }: Props
         ) : (
           ordered.map((e) => {
             const ts = hasTs(e) ? e.ts : null;
-            const soon = ts != null && ts * 1000 >= now - NOW_WINDOW_MS && ts * 1000 <= now + SOON_MS;
+            const soon = ts != null && ts * 1000 >= now - NOW_WINDOW_MS && ts * 1000 <= now + ROW_SOON_MS;
             const done = ts != null && ts * 1000 < now - NOW_WINDOW_MS;
             const figures = figuresLine(e);
             return (
