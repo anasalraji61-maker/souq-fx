@@ -148,6 +148,34 @@ def init_db() -> None:
         _migrate_push_lang(c)
         _migrate_group_user(c)
         _migrate_content_reports(c)
+        _migrate_owner_key(c)
+
+
+def _migrate_owner_key(c: sqlite3.Connection) -> None:
+    """معرّف تثبيت الجهاز (`X-Install-Id`) مالكاً لصفوف المجهول — تنبيهات السعر/المؤشر واليومية وتوكن الـPush.
+    كانت كل صفوف المجهولين دلواً واحداً (`user_id IS NULL`): أي متداول غير مسجّل يرى تنبيهات ويوميات
+    كل المجهولين ويعدّلها ويحذفها، وفحص `/api/alerts/check` من جهاز B يُطلق تنبيه A فيصل الإشعار لكل
+    الأجهزة المجهولة. الصفوف القديمة بلا مفتاح تبقى لعملاء قدامى لا يرسلون الترويسة (راجع `_owner_clause`)."""
+    for table in ("alerts", "indicator_alerts", "trades", "push_tokens"):
+        cols = {r[1] for r in c.execute(f"PRAGMA table_info({table})").fetchall()}
+        if "owner_key" not in cols:
+            c.execute(f"ALTER TABLE {table} ADD COLUMN owner_key TEXT")
+
+
+def _owner_clause(user_id: int | None, owner_key: str | None = None) -> tuple[str, tuple]:
+    """شرط الملكية الموحّد لصفوف التنبيهات/المؤشرات/اليومية.
+
+    - مسجّل: صفوفه + صفوف المجهول التي أنشأها هذا الجهاز قبل الدخول (نفس `owner_key`).
+    - مجهول بمعرّف تثبيت: صفوف جهازه فقط.
+    - بلا ترويسة (عميل قديم): الصفوف القديمة بلا مفتاح فقط — لا يرى صفوف العملاء الجدد أبداً.
+    """
+    if user_id:
+        if owner_key:
+            return "(user_id=? OR (user_id IS NULL AND owner_key=?))", (user_id, owner_key)
+        return "(user_id=? OR (user_id IS NULL AND owner_key IS NULL))", (user_id,)
+    if owner_key:
+        return "(user_id IS NULL AND owner_key=?)", (owner_key,)
+    return "(user_id IS NULL AND owner_key IS NULL)", ()
 
 
 def _migrate_content_reports(c: sqlite3.Connection) -> None:
@@ -861,22 +889,19 @@ def delete_user_account(user_id: int) -> None:
 
 # ─── Alerts ───────────────────────────────────────────────────────────────────
 
-def list_alerts(user_id: int | None = None, *, all_users: bool = False) -> list[dict]:
-    """Alerts visible to a caller: a signed-in user → their own + legacy anonymous ones
-    (user_id IS NULL); an anonymous caller → anonymous ones only (it used to get EVERY
-    user's alerts). ``all_users=True`` is for the server-side worker only and adds the
-    internal ``user_id`` so pushes reach the owner's devices, not everyone's."""
+def list_alerts(
+    user_id: int | None = None, *, all_users: bool = False, owner_key: str | None = None
+) -> list[dict]:
+    """Alerts visible to a caller — see `_owner_clause` (own account + this device's anonymous
+    ones; an anonymous device sees only its own). ``all_users=True`` is for the server-side
+    worker only and adds the internal ``user_id``/``owner_key`` so pushes reach the owner's
+    devices, not everyone's."""
     with _conn() as c:
         if all_users:
             rows = c.execute("SELECT * FROM alerts ORDER BY ts DESC").fetchall()
-            return [{**_alert_row(r), "user_id": r["user_id"]} for r in rows]
-        if user_id:
-            rows = c.execute(
-                "SELECT * FROM alerts WHERE user_id IS NULL OR user_id=? ORDER BY ts DESC",
-                (user_id,),
-            ).fetchall()
-        else:
-            rows = c.execute("SELECT * FROM alerts WHERE user_id IS NULL ORDER BY ts DESC").fetchall()
+            return [{**_alert_row(r), "user_id": r["user_id"], "owner_key": r["owner_key"]} for r in rows]
+        sql, args = _owner_clause(user_id, owner_key)
+        rows = c.execute(f"SELECT * FROM alerts WHERE {sql} ORDER BY ts DESC", args).fetchall()
     return [_alert_row(r) for r in rows]
 
 
@@ -893,14 +918,15 @@ def _alert_row(r: sqlite3.Row) -> dict:
     }
 
 
-def create_alert(data: dict, user_id: int | None = None) -> dict:
+def create_alert(data: dict, user_id: int | None = None, owner_key: str | None = None) -> dict:
     with _conn() as c:
         c.execute(
-            """INSERT INTO alerts(id,user_id,symbol,condition,price,note,active,triggered,ts)
-               VALUES(?,?,?,?,?,?,1,0,?)""",
+            """INSERT INTO alerts(id,user_id,owner_key,symbol,condition,price,note,active,triggered,ts)
+               VALUES(?,?,?,?,?,?,?,1,0,?)""",
             (
                 data["id"],
                 user_id,
+                owner_key,
                 data["symbol"],
                 data["condition"],
                 data["price"],
@@ -911,44 +937,33 @@ def create_alert(data: dict, user_id: int | None = None) -> dict:
     return data
 
 
-def update_alert(alert_id: str, data: dict, user_id: int | None = None) -> dict | None:
+def update_alert(
+    alert_id: str, data: dict, user_id: int | None = None, owner_key: str | None = None
+) -> dict | None:
     """Atomic edit of a price alert (symbol/condition/price/note) — re-arms it (triggered=0).
 
-    Ownership: a signed-in user may edit their own alerts or legacy/anonymous ones
-    (user_id IS NULL); an anonymous client only anonymous ones. Returns the updated row,
-    or None when no row matched (missing or not owned) → the API answers 404.
+    Ownership: `_owner_clause` (own account or this device's anonymous alerts). Returns the
+    updated row, or None when no row matched (missing or not owned) → the API answers 404.
     """
+    sql, args = _owner_clause(user_id, owner_key)
     with _conn() as c:
-        if user_id:
-            cur = c.execute(
-                """UPDATE alerts SET symbol=?, condition=?, price=?, note=?, active=1, triggered=0, ts=?
-                   WHERE id=? AND (user_id IS NULL OR user_id=?)""",
-                (data["symbol"], data["condition"], data["price"], data.get("note", ""),
-                 data["ts"], alert_id, user_id),
-            )
-        else:
-            cur = c.execute(
-                """UPDATE alerts SET symbol=?, condition=?, price=?, note=?, active=1, triggered=0, ts=?
-                   WHERE id=? AND user_id IS NULL""",
-                (data["symbol"], data["condition"], data["price"], data.get("note", ""),
-                 data["ts"], alert_id),
-            )
+        cur = c.execute(
+            f"""UPDATE alerts SET symbol=?, condition=?, price=?, note=?, active=1, triggered=0, ts=?
+               WHERE id=? AND {sql}""",
+            (data["symbol"], data["condition"], data["price"], data.get("note", ""),
+             data["ts"], alert_id, *args),
+        )
         if cur.rowcount == 0:
             return None
         row = c.execute("SELECT * FROM alerts WHERE id=?", (alert_id,)).fetchone()
     return _alert_row(row) if row else None
 
 
-def delete_alert(alert_id: str, user_id: int | None = None) -> bool:
-    """Same ownership rule as update_alert: own or legacy-anonymous for a signed-in user,
-    anonymous only for an anonymous caller (anyone could delete anyone's alert before)."""
+def delete_alert(alert_id: str, user_id: int | None = None, owner_key: str | None = None) -> bool:
+    """Same ownership rule as update_alert (`_owner_clause`)."""
+    sql, args = _owner_clause(user_id, owner_key)
     with _conn() as c:
-        if user_id:
-            cur = c.execute(
-                "DELETE FROM alerts WHERE id=? AND (user_id IS NULL OR user_id=?)", (alert_id, user_id)
-            )
-        else:
-            cur = c.execute("DELETE FROM alerts WHERE id=? AND user_id IS NULL", (alert_id,))
+        cur = c.execute(f"DELETE FROM alerts WHERE id=? AND {sql}", (alert_id, *args))
     return cur.rowcount > 0
 
 
@@ -1210,13 +1225,17 @@ def ballot(vote_id: str, choice: str, user_id: int) -> dict | None:
 # ─── Push / layouts / watchlist / progress ────────────────────────────────────
 
 def save_push_token(
-    token: str, platform: str, user_id: int | None = None, lang: str | None = None
+    token: str,
+    platform: str,
+    user_id: int | None = None,
+    lang: str | None = None,
+    owner_key: str | None = None,
 ) -> None:
     with _conn() as c:
         c.execute(
-            """INSERT OR REPLACE INTO push_tokens(token,user_id,platform,updated_at,lang)
-               VALUES(?,?,?,?,?)""",
-            (token, user_id, platform, time.time(), lang),
+            """INSERT OR REPLACE INTO push_tokens(token,user_id,platform,updated_at,lang,owner_key)
+               VALUES(?,?,?,?,?,?)""",
+            (token, user_id, platform, time.time(), lang, owner_key),
         )
 
 
@@ -1226,28 +1245,30 @@ def all_push_tokens() -> list[str]:
     return [r["token"] for r in rows]
 
 
-def push_tokens_for(user_id: int | None) -> list[str]:
-    """Devices of one owner: a user's registered tokens, or — for a legacy anonymous alert —
-    the tokens registered without an account. Alert pushes used to go to every device."""
+def _push_owner_sql(user_id: int | None, owner_key: str | None) -> tuple[str, tuple]:
+    """أجهزة مالك التنبيه: حساب المستخدم، أو — لتنبيه مجهول — الجهاز الذي أنشأه (`owner_key`، حتى لو
+    سجّل الدخول بعدها). تنبيه مجهول قديم بلا مفتاح → الأجهزة المجهولة القديمة بلا مفتاح فقط (كان
+    إشعار أي تنبيه مجهول يصل لكل جهاز غير مسجّل)."""
+    if user_id:
+        return "user_id=?", (user_id,)
+    if owner_key:
+        return "owner_key=?", (owner_key,)
+    return "user_id IS NULL AND owner_key IS NULL", ()
+
+
+def push_tokens_for(user_id: int | None, owner_key: str | None = None) -> list[str]:
+    """Devices of one owner (see `_push_owner_sql`). Alert pushes used to go to every device."""
+    sql, args = _push_owner_sql(user_id, owner_key)
     with _conn() as c:
-        if user_id:
-            rows = c.execute("SELECT token FROM push_tokens WHERE user_id=?", (user_id,)).fetchall()
-        else:
-            rows = c.execute("SELECT token FROM push_tokens WHERE user_id IS NULL").fetchall()
+        rows = c.execute(f"SELECT token FROM push_tokens WHERE {sql}", args).fetchall()
     return [r["token"] for r in rows]
 
 
-def push_targets_for(user_id: int | None) -> list[tuple[str, str | None]]:
+def push_targets_for(user_id: int | None, owner_key: str | None = None) -> list[tuple[str, str | None]]:
     """مثل `push_tokens_for` لكن مع لغة واجهة كل جهاز: [(token, lang)]."""
+    sql, args = _push_owner_sql(user_id, owner_key)
     with _conn() as c:
-        if user_id:
-            rows = c.execute(
-                "SELECT token, lang FROM push_tokens WHERE user_id=?", (user_id,)
-            ).fetchall()
-        else:
-            rows = c.execute(
-                "SELECT token, lang FROM push_tokens WHERE user_id IS NULL"
-            ).fetchall()
+        rows = c.execute(f"SELECT token, lang FROM push_tokens WHERE {sql}", args).fetchall()
     return [(r["token"], r["lang"]) for r in rows]
 
 
@@ -1372,21 +1393,20 @@ def get_progress(user_id: int) -> list[dict]:
 
 # ─── Indicator alerts ─────────────────────────────────────────────────────────
 
-def list_indicator_alerts(user_id: int | None = None, *, all_users: bool = False) -> list[dict]:
+def list_indicator_alerts(
+    user_id: int | None = None, *, all_users: bool = False, owner_key: str | None = None
+) -> list[dict]:
     """Same visibility rule as list_alerts (see there)."""
     with _conn() as c:
         if all_users:
             rows = c.execute("SELECT * FROM indicator_alerts ORDER BY ts DESC").fetchall()
-            return [{**_ind_alert_row(r), "user_id": r["user_id"]} for r in rows]
-        if user_id:
-            rows = c.execute(
-                "SELECT * FROM indicator_alerts WHERE user_id IS NULL OR user_id=? ORDER BY ts DESC",
-                (user_id,),
-            ).fetchall()
-        else:
-            rows = c.execute(
-                "SELECT * FROM indicator_alerts WHERE user_id IS NULL ORDER BY ts DESC"
-            ).fetchall()
+            return [
+                {**_ind_alert_row(r), "user_id": r["user_id"], "owner_key": r["owner_key"]} for r in rows
+            ]
+        sql, args = _owner_clause(user_id, owner_key)
+        rows = c.execute(
+            f"SELECT * FROM indicator_alerts WHERE {sql} ORDER BY ts DESC", args
+        ).fetchall()
     return [_ind_alert_row(r) for r in rows]
 
 
@@ -1407,15 +1427,18 @@ def _ind_alert_row(r: sqlite3.Row) -> dict:
     }
 
 
-def create_indicator_alert(data: dict, user_id: int | None = None) -> dict:
+def create_indicator_alert(
+    data: dict, user_id: int | None = None, owner_key: str | None = None
+) -> dict:
     with _conn() as c:
         c.execute(
             """INSERT INTO indicator_alerts
-               (id,user_id,symbol,timeframe,alert_type,condition,value,fast_period,slow_period,note,active,triggered,ts)
-               VALUES(?,?,?,?,?,?,?,?,?,?,1,0,?)""",
+               (id,user_id,owner_key,symbol,timeframe,alert_type,condition,value,fast_period,slow_period,note,active,triggered,ts)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,1,0,?)""",
             (
                 data["id"],
                 user_id,
+                owner_key,
                 data["symbol"],
                 data["timeframe"],
                 data["alert_type"],
@@ -1430,16 +1453,13 @@ def create_indicator_alert(data: dict, user_id: int | None = None) -> dict:
     return data
 
 
-def delete_indicator_alert(alert_id: str, user_id: int | None = None) -> bool:
+def delete_indicator_alert(
+    alert_id: str, user_id: int | None = None, owner_key: str | None = None
+) -> bool:
     """Same ownership rule as delete_alert."""
+    sql, args = _owner_clause(user_id, owner_key)
     with _conn() as c:
-        if user_id:
-            cur = c.execute(
-                "DELETE FROM indicator_alerts WHERE id=? AND (user_id IS NULL OR user_id=?)",
-                (alert_id, user_id),
-            )
-        else:
-            cur = c.execute("DELETE FROM indicator_alerts WHERE id=? AND user_id IS NULL", (alert_id,))
+        cur = c.execute(f"DELETE FROM indicator_alerts WHERE id=? AND {sql}", (alert_id, *args))
     return cur.rowcount > 0
 
 
@@ -1477,30 +1497,28 @@ def _opt_level(v) -> float | None:
     return f if f > 0 and f != float("inf") else None
 
 
-def list_trades(user_id: int | None = None, days: int = 30) -> list[dict]:
-    """Journal visible to the caller: own + legacy anonymous trades for a signed-in user,
-    anonymous ones only otherwise (an anonymous caller used to get every user's journal)."""
+def list_trades(
+    user_id: int | None = None, days: int = 30, owner_key: str | None = None
+) -> list[dict]:
+    """Journal visible to the caller — same ownership rule as alerts (`_owner_clause`): an
+    anonymous device used to see (and close/delete) every anonymous trader's journal."""
+    sql, args = _owner_clause(user_id, owner_key)
     with _conn() as c:
-        if user_id is not None:
-            rows = c.execute(
-                "SELECT * FROM trades WHERE user_id=? OR user_id IS NULL ORDER BY opened_at DESC LIMIT 200",
-                (user_id,),
-            ).fetchall()
-        else:
-            rows = c.execute(
-                "SELECT * FROM trades WHERE user_id IS NULL ORDER BY opened_at DESC LIMIT 200"
-            ).fetchall()
-    return [dict(r) for r in rows]
+        rows = c.execute(
+            f"SELECT * FROM trades WHERE {sql} ORDER BY opened_at DESC LIMIT 200", args
+        ).fetchall()
+    out = [dict(r) for r in rows]
+    for r in out:
+        r.pop("owner_key", None)  # معرّف التثبيت سرّ الجهاز — لا يُعاد بالاستجابة
+    return out
 
 
-def _trade_owner_clause(user_id: int | None) -> tuple[str, tuple]:
-    """Same ownership rule as alerts: own or legacy-anonymous, or anonymous-only when signed out."""
-    if user_id is not None:
-        return "(user_id IS NULL OR user_id=?)", (user_id,)
-    return "user_id IS NULL", ()
+def _trade_owner_clause(user_id: int | None, owner_key: str | None = None) -> tuple[str, tuple]:
+    """Same ownership rule as alerts."""
+    return _owner_clause(user_id, owner_key)
 
 
-def add_trade(data: dict, user_id: int | None = None) -> dict:
+def add_trade(data: dict, user_id: int | None = None, owner_key: str | None = None) -> dict:
     # معرّف بدقّة ميلي ثانية وحده كان يتصادم بين مستخدمَين يسجّلان بنفس اللحظة → IntegrityError (500)
     tid = data.get("id") or f"t{int(time.time() * 1000)}{secrets.token_hex(3)}"
     row = {
@@ -1529,11 +1547,12 @@ def add_trade(data: dict, user_id: int | None = None) -> dict:
     with _conn() as c:
         c.execute(
             """INSERT INTO trades
-               (id,user_id,symbol,side,entry,exit,size,pnl,note,sl,tp,opened_at,closed_at,status)
-               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+               (id,user_id,owner_key,symbol,side,entry,exit,size,pnl,note,sl,tp,opened_at,closed_at,status)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 row["id"],
                 row["user_id"],
+                owner_key,
                 row["symbol"],
                 row["side"],
                 row["entry"],
@@ -1551,8 +1570,10 @@ def add_trade(data: dict, user_id: int | None = None) -> dict:
     return row
 
 
-def close_trade(trade_id: str, exit_price: float, user_id: int | None = None) -> dict | None:
-    owner_sql, owner_args = _trade_owner_clause(user_id)
+def close_trade(
+    trade_id: str, exit_price: float, user_id: int | None = None, owner_key: str | None = None
+) -> dict | None:
+    owner_sql, owner_args = _trade_owner_clause(user_id, owner_key)
     with _conn() as c:
         r = c.execute(
             f"SELECT * FROM trades WHERE id=? AND {owner_sql}", (trade_id, *owner_args)
@@ -1560,6 +1581,7 @@ def close_trade(trade_id: str, exit_price: float, user_id: int | None = None) ->
         if not r:
             return None
         row = dict(r)
+        row.pop("owner_key", None)
         entry = float(row["entry"])
         size = float(row["size"] or 1)
         if row["side"] == "buy":
@@ -1575,15 +1597,15 @@ def close_trade(trade_id: str, exit_price: float, user_id: int | None = None) ->
         return row
 
 
-def delete_trade(trade_id: str, user_id: int | None = None) -> bool:
-    owner_sql, owner_args = _trade_owner_clause(user_id)
+def delete_trade(trade_id: str, user_id: int | None = None, owner_key: str | None = None) -> bool:
+    owner_sql, owner_args = _trade_owner_clause(user_id, owner_key)
     with _conn() as c:
         cur = c.execute(f"DELETE FROM trades WHERE id=? AND {owner_sql}", (trade_id, *owner_args))
     return cur.rowcount > 0
 
 
-def trade_stats(user_id: int | None = None) -> dict:
-    trades = [t for t in list_trades(user_id) if t.get("status") == "closed" and t.get("pnl") is not None]
+def trade_stats(user_id: int | None = None, owner_key: str | None = None) -> dict:
+    trades = [t for t in list_trades(user_id, owner_key=owner_key) if t.get("status") == "closed" and t.get("pnl") is not None]
     if not trades:
         return {
             "trade_count": 0,

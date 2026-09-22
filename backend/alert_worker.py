@@ -111,9 +111,9 @@ def _compose(ev: dict, lang: str) -> tuple[str, str]:
 
 
 def _check_once() -> None:
-    # (owner user_id, event) — each push goes only to the alert owner's devices (it used to
-    # go to every registered device, leaking one trader's alerts to all the others).
-    triggered_msgs: list[tuple[int | None, dict]] = []
+    # (owner user_id, owner install key, event) — each push goes only to the alert owner's devices
+    # (it used to go to every registered device, leaking one trader's alerts to all the others).
+    triggered_msgs: list[tuple[int | None, str | None, dict]] = []
     # سعر واحد لكل رمز بالدورة: 30 تنبيهاً على EURUSD كانت 30 طلباً للمزوّد (تستنزف حد Twelve Data).
     prices: dict[str, float | None] = {}
 
@@ -134,6 +134,7 @@ def _check_once() -> None:
             if hit and db.mark_alert_triggered(a["id"]):
                 triggered_msgs.append((
                     a.get("user_id"),
+                    a.get("owner_key"),
                     {"kind": "price", "symbol": a["symbol"], "condition": a["condition"], "price": a["price"]},
                 ))
         except Exception:
@@ -150,6 +151,7 @@ def _check_once() -> None:
             if _check_indicator(a) and db.mark_indicator_alert_triggered(a["id"]):
                 triggered_msgs.append((
                     a.get("user_id"),
+                    a.get("owner_key"),
                     {
                         "kind": "indicator",
                         "symbol": a["symbol"],
@@ -168,8 +170,8 @@ def _check_once() -> None:
 
     if not triggered_msgs:
         return
-    for owner, ev in triggered_msgs:
-        targets = db.push_targets_for(owner)
+    for owner, owner_key, ev in triggered_msgs:
+        targets = db.push_targets_for(owner, owner_key)
         if not targets:
             continue
         by_lang: dict[str, list[str]] = {}

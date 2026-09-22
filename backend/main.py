@@ -29,7 +29,7 @@ import elevenlabs_tts as tts
 import twelve_data as market
 import twelve_data_ws as td_ws
 import db
-from core.auth import _auth_user
+from core.auth import _auth_user, _install_key
 import news_feed
 import openrouter_ai
 import alert_worker
@@ -649,9 +649,13 @@ def commissions_report(user: dict | None = Depends(_auth_user)):
 
 
 @app.post("/api/push/register")
-def push_register(body: PushRegister, user: dict | None = Depends(_auth_user)):
+def push_register(
+    body: PushRegister,
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+):
     uid = user["user_id"] if user else None
-    db.save_push_token(body.token, body.platform, uid, body.lang)
+    db.save_push_token(body.token, body.platform, uid, body.lang, owner_key=key)
     return {"ok": True}
 
 
@@ -752,13 +756,17 @@ def chart(symbol: str, timeframe: str = "15m", outputsize: int = 180):
 
 
 @app.get("/api/alerts")
-def list_alerts(user: dict | None = Depends(_auth_user)):
+def list_alerts(user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)):
     uid = user["user_id"] if user else None
-    return {"alerts": db.list_alerts(uid)}
+    return {"alerts": db.list_alerts(uid, owner_key=key)}
 
 
 @app.post("/api/alerts")
-def create_alert(body: AlertCreate, user: dict | None = Depends(_auth_user)):
+def create_alert(
+    body: AlertCreate,
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+):
     alert = {
         "id": _new_id("a"),
         "symbol": body.symbol.upper(),
@@ -770,12 +778,17 @@ def create_alert(body: AlertCreate, user: dict | None = Depends(_auth_user)):
         "ts": datetime.now(timezone.utc).isoformat(),
     }
     uid = user["user_id"] if user else None
-    db.create_alert(alert, uid)
+    db.create_alert(alert, uid, owner_key=key)
     return {"ok": True, "alert": alert}
 
 
 @app.patch("/api/alerts/{alert_id}")
-def update_alert(alert_id: str, body: AlertCreate, user: dict | None = Depends(_auth_user)):
+def update_alert(
+    alert_id: str,
+    body: AlertCreate,
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+):
     """تعديل ذرّي للتنبيه (بدل إنشاء جديد ثم حذف القديم) — يُعيد تفعيله. 404 إن لم يوجد أو لا يملكه."""
     data = {
         "symbol": body.symbol.upper(),
@@ -785,24 +798,27 @@ def update_alert(alert_id: str, body: AlertCreate, user: dict | None = Depends(_
         "ts": datetime.now(timezone.utc).isoformat(),
     }
     uid = user["user_id"] if user else None
-    alert = db.update_alert(alert_id, data, uid)
+    alert = db.update_alert(alert_id, data, uid, owner_key=key)
     if alert is None:
         raise HTTPException(status_code=404, detail="alert not found")
     return {"ok": True, "alert": alert}
 
 
 @app.delete("/api/alerts/{alert_id}")
-def delete_alert(alert_id: str, user: dict | None = Depends(_auth_user)):
+def delete_alert(
+    alert_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+):
     uid = user["user_id"] if user else None
-    return {"ok": db.delete_alert(alert_id, uid)}
+    return {"ok": db.delete_alert(alert_id, uid, owner_key=key)}
 
 
 @app.post("/api/alerts/check")
-def check_alerts(user: dict | None = Depends(_auth_user)):
-    """يفحص تنبيهات المستدعي فقط ويعيدها (كان يعيد تنبيهات كل المستخدمين فتستبدل قائمة العميل)."""
+def check_alerts(user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)):
+    """يفحص تنبيهات المستدعي فقط ويعيدها (كان يعيد تنبيهات كل المستخدمين فتستبدل قائمة العميل،
+    وجهاز مجهول كان يُطلق تنبيهات كل المجهولين — الآن تنبيهات جهازه فقط عبر `X-Install-Id`)."""
     uid = user["user_id"] if user else None
     triggered: list[dict] = []
-    for a in db.list_alerts(uid):
+    for a in db.list_alerts(uid, owner_key=key):
         if not a.get("active") or a.get("triggered"):
             continue
         q = _alert_price(a["symbol"])
@@ -813,7 +829,7 @@ def check_alerts(user: dict | None = Depends(_auth_user)):
         )
         if hit and db.mark_alert_triggered(a["id"]):
             triggered.append({**a, "current": q})
-    return {"triggered": triggered, "alerts": db.list_alerts(uid)}
+    return {"triggered": triggered, "alerts": db.list_alerts(uid, owner_key=key)}
 
 
 def _check_indicator_alert(alert: dict, candles: list[dict]) -> bool:
@@ -846,13 +862,19 @@ def _check_indicator_alert(alert: dict, candles: list[dict]) -> bool:
 
 
 @app.get("/api/indicator-alerts")
-def list_indicator_alerts(user: dict | None = Depends(_auth_user)):
+def list_indicator_alerts(
+    user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+):
     uid = user["user_id"] if user else None
-    return {"alerts": db.list_indicator_alerts(uid)}
+    return {"alerts": db.list_indicator_alerts(uid, owner_key=key)}
 
 
 @app.post("/api/indicator-alerts")
-def create_indicator_alert(body: IndicatorAlertCreate, user: dict | None = Depends(_auth_user)):
+def create_indicator_alert(
+    body: IndicatorAlertCreate,
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+):
     alert = {
         "id": _new_id("ia"),
         "symbol": body.symbol.upper(),
@@ -868,22 +890,26 @@ def create_indicator_alert(body: IndicatorAlertCreate, user: dict | None = Depen
         "ts": datetime.now(timezone.utc).isoformat(),
     }
     uid = user["user_id"] if user else None
-    db.create_indicator_alert(alert, uid)
+    db.create_indicator_alert(alert, uid, owner_key=key)
     return {"ok": True, "alert": alert}
 
 
 @app.delete("/api/indicator-alerts/{alert_id}")
-def delete_indicator_alert(alert_id: str, user: dict | None = Depends(_auth_user)):
+def delete_indicator_alert(
+    alert_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+):
     uid = user["user_id"] if user else None
-    return {"ok": db.delete_indicator_alert(alert_id, uid)}
+    return {"ok": db.delete_indicator_alert(alert_id, uid, owner_key=key)}
 
 
 @app.post("/api/indicator-alerts/check")
-def check_indicator_alerts(user: dict | None = Depends(_auth_user)):
+def check_indicator_alerts(
+    user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+):
     """تنبيهات المستدعي فقط (نفس قاعدة الرؤية في /api/indicator-alerts)."""
     uid = user["user_id"] if user else None
     triggered: list[dict] = []
-    for a in db.list_indicator_alerts(uid):
+    for a in db.list_indicator_alerts(uid, owner_key=key):
         if not a.get("active") or a.get("triggered"):
             continue
         try:
@@ -893,7 +919,7 @@ def check_indicator_alerts(user: dict | None = Depends(_auth_user)):
             continue
         if _check_indicator_alert(a, candles) and db.mark_indicator_alert_triggered(a["id"]):
             triggered.append(a)
-    return {"triggered": triggered, "alerts": db.list_indicator_alerts(uid)}
+    return {"triggered": triggered, "alerts": db.list_indicator_alerts(uid, owner_key=key)}
 
 
 @app.post("/api/screener/run")
@@ -1023,34 +1049,43 @@ def market_quote(symbol: str):
 
 
 @app.get("/api/trades")
-def trades_list(user: dict | None = Depends(_auth_user)):
+def trades_list(user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)):
     uid = user["user_id"] if user else None
-    return {"trades": db.list_trades(uid), "stats": db.trade_stats(uid)}
+    return {"trades": db.list_trades(uid, owner_key=key), "stats": db.trade_stats(uid, owner_key=key)}
 
 
 @app.post("/api/trades")
-def trades_create(body: TradeCreate, user: dict | None = Depends(_auth_user)):
+def trades_create(
+    body: TradeCreate, user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+):
     uid = user["user_id"] if user else None
-    row = db.add_trade(body.model_dump(), uid)
-    return {"ok": True, "trade": row, "stats": db.trade_stats(uid)}
+    row = db.add_trade(body.model_dump(), uid, owner_key=key)
+    return {"ok": True, "trade": row, "stats": db.trade_stats(uid, owner_key=key)}
 
 
 @app.post("/api/trades/{trade_id}/close")
-def trades_close(trade_id: str, body: TradeClose, user: dict | None = Depends(_auth_user)):
+def trades_close(
+    trade_id: str,
+    body: TradeClose,
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+):
     uid = user["user_id"] if user else None
-    row = db.close_trade(trade_id, body.exit, uid)
+    row = db.close_trade(trade_id, body.exit, uid, owner_key=key)
     if not row:
         raise HTTPException(404, "trade not found")
-    return {"ok": True, "trade": row, "stats": db.trade_stats(uid)}
+    return {"ok": True, "trade": row, "stats": db.trade_stats(uid, owner_key=key)}
 
 
 @app.delete("/api/trades/{trade_id}")
-def trades_delete(trade_id: str, user: dict | None = Depends(_auth_user)):
+def trades_delete(
+    trade_id: str, user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+):
     uid = user["user_id"] if user else None
-    ok = db.delete_trade(trade_id, uid)
+    ok = db.delete_trade(trade_id, uid, owner_key=key)
     if not ok:
         raise HTTPException(404, "trade not found")
-    return {"ok": True, "stats": db.trade_stats(uid)}
+    return {"ok": True, "stats": db.trade_stats(uid, owner_key=key)}
 
 
 @app.get("/api/chat/group")

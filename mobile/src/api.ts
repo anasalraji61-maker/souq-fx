@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 const extra = (Constants.expoConfig?.extra ?? {}) as { apiUrl?: string };
@@ -25,8 +26,49 @@ export function setAuthToken(token: string | null) {
   authToken = token;
 }
 
+/**
+ * معرّف تثبيت عشوائي لهذا الجهاز (`X-Install-Id`) — يُولَّد مرة ويُحفظ. الخادم يجعله «مالك» صفوف
+ * المجهول (تنبيهات السعر/المؤشر، اليومية، توكن الإشعارات): كانت كل صفوف غير المسجّلين دلواً واحداً،
+ * فيرى أي متداول بلا حساب تنبيهات ويوميات الآخرين ويحذفها، وفحص التنبيهات من جهازه يُطلق تنبيهاتهم.
+ * ليس هوية ولا يُرسل لأي طرف ثالث. فشل التخزين → معرّف لهذه الجلسة فقط (لا يُعطّل الواجهة).
+ */
+const INSTALL_ID_KEY = 'matrix.install.v1';
+const INSTALL_ID_RE = /^[A-Za-z0-9_-]{16,64}$/;
+let installId: string | null = null;
+
+function randomInstallId(): string {
+  const bytes = new Uint8Array(16);
+  const c = (globalThis as { crypto?: { getRandomValues?: (a: Uint8Array) => Uint8Array } }).crypto;
+  if (c && typeof c.getRandomValues === 'function') {
+    c.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+  }
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** يُحَل دائماً (لا يرفض) — كل طلب ينتظره حتى لا يُنشأ تنبيه قبل معرفة المعرّف فيضيع بعد إعادة التشغيل. */
+const installIdReady: Promise<void> = AsyncStorage.getItem(INSTALL_ID_KEY)
+  .then((stored) => {
+    if (stored && INSTALL_ID_RE.test(stored)) {
+      installId = stored;
+      return;
+    }
+    const fresh = randomInstallId();
+    installId = fresh;
+    return AsyncStorage.setItem(INSTALL_ID_KEY, fresh).catch(() => {
+      /* ignore — المعرّف يبقى لهذه الجلسة */
+    });
+  })
+  .catch(() => {
+    installId = installId ?? randomInstallId();
+  });
+
 export function authHeaders(): Record<string, string> {
-  return authToken ? { Authorization: `Bearer ${authToken}` } : {};
+  const h: Record<string, string> = {};
+  if (authToken) h.Authorization = `Bearer ${authToken}`;
+  if (installId) h['X-Install-Id'] = installId;
+  return h;
 }
 
 export type Candle = {
@@ -148,6 +190,7 @@ async function fetchWithTimeout(url: string, init: RequestInit, ms: number): Pro
 }
 
 async function getJson<T>(path: string): Promise<T> {
+  await installIdReady;
   const res = await fetchWithTimeout(
     `${API_URL}${path}`,
     { headers: { ...authHeaders() } },
@@ -158,6 +201,7 @@ async function getJson<T>(path: string): Promise<T> {
 }
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
+  await installIdReady;
   const res = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -169,6 +213,7 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
 
 /** PATCH with the HTTP status on the thrown error (`err.status`) so callers can fall back on 404/405. */
 async function patchJson<T>(path: string, body: unknown): Promise<T> {
+  await installIdReady;
   const res = await fetch(`${API_URL}${path}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -183,6 +228,7 @@ async function patchJson<T>(path: string, body: unknown): Promise<T> {
 }
 
 async function deleteJson<T>(path: string): Promise<T> {
+  await installIdReady;
   const res = await fetch(`${API_URL}${path}`, {
     method: 'DELETE',
     headers: { ...authHeaders() },
@@ -370,13 +416,17 @@ export const api = {
   ) => patchJson<{ ok: boolean; alert: PriceAlert }>(`/api/alerts/${encodeURIComponent(id)}`, body),
   /** Sends the auth token: the backend only deletes the caller's own (or legacy anonymous) alerts. */
   deleteAlert: (id: string) =>
-    fetch(`${API_URL}/api/alerts/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-      headers: authHeaders(),
-    }).then((r) => {
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return r.json();
-    }),
+    installIdReady
+      .then(() =>
+        fetch(`${API_URL}/api/alerts/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: authHeaders(),
+        })
+      )
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }),
   checkAlerts: () =>
     postJson<{ triggered: (PriceAlert & { current?: number })[]; alerts: PriceAlert[] }>(
       '/api/alerts/check',
@@ -446,13 +496,17 @@ export const api = {
     note?: string;
   }) => postJson<{ ok: boolean }>('/api/indicator-alerts', body),
   deleteIndicatorAlert: (id: string) =>
-    fetch(`${API_URL}/api/indicator-alerts/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-      headers: authHeaders(),
-    }).then((r) => {
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return r.json();
-    }),
+    installIdReady
+      .then(() =>
+        fetch(`${API_URL}/api/indicator-alerts/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: authHeaders(),
+        })
+      )
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }),
   checkIndicatorAlerts: () =>
     postJson<{
       triggered: {
@@ -598,13 +652,17 @@ export const api = {
       { exit }
     ),
   deleteTrade: (id: string) =>
-    fetch(`${API_URL}/api/trades/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-      headers: authHeaders(),
-    }).then((r) => {
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return r.json();
-    }),
+    installIdReady
+      .then(() =>
+        fetch(`${API_URL}/api/trades/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: authHeaders(),
+        })
+      )
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }),
   courses: () => getJson<{ courses: Course[] }>('/api/courses'),
   course: (id: string) =>
     getJson<Course & { ai_intro: string; modules: unknown[] }>(`/api/courses/${id}`),
