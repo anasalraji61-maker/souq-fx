@@ -170,10 +170,39 @@ export type ReportReason = 'spam' | 'abuse' | 'scam' | 'other';
 /**
  * مهلة لطلبات القراءة: بلا مهلة، خادم غير قابل للوصول (عنوان LAN قديم، شبكة ضعيفة) يترك الشاشة
  * بمؤشر تحميل دقيقة كاملة أو أكثر (OkHttp على أندرويد بلا مهلة قراءة افتراضياً). بعد المهلة يُرمى
- * خطأ عادي فتعرض كل لوحة حالة الخطأ/إعادة المحاولة الموجودة لديها أصلاً. طلبات POST (ذكاء
- * اصطناعي، باكتست، ماسح) قد تطول شرعياً فتبقى بلا مهلة.
+ * خطأ عادي فتعرض كل لوحة حالة الخطأ/إعادة المحاولة الموجودة لديها أصلاً.
  */
 const GET_TIMEOUT_MS = 25000;
+
+/**
+ * نفس المهلة لطلبات **الكتابة القصيرة** (تسجيل دخول، إنشاء تنبيه، تسجيل صفقة، تصويت، حذف…): هذه
+ * أفعال يضغطها المتداول بنفسه وينتظر أمامها زرّاً بـ«...»، فبلا مهلة يبقى الزرّ معطَّلاً دقيقة كاملة
+ * على خادم غير قابل للوصول ثم يفشل على أي حال — بينما كل لوحة لديها أصلاً رسالة خطأ وطريق لإعادة
+ * المحاولة. المهلة تُرمى كخطأ عادي بلا `status`، فمسار PATCH→(404/405)→إنشاء+حذف لا يُشتغَّل عليها
+ * (لا تنبيه مكرَّر عند انقطاع الشبكة).
+ */
+const WRITE_TIMEOUT_MS = 25000;
+
+/**
+ * مسارات POST التي تحسب أو تولّد فعلياً (نموذج لغوي، تركيب صوت، باكتست، ماسح، فحص دوري لكل رمز) —
+ * قد تطول شرعياً أكثر من المهلة أعلاه، فتبقى بلا مهلة كما كانت. المطابقة على المسار قبل `?` فقط.
+ */
+const SLOW_POST_PATHS = [
+  '/api/ai/ask',
+  '/api/backtest',
+  '/api/screener/run',
+  '/api/signals/indicators/forecast',
+  '/api/signals/social/consensus',
+  '/api/academy/interrupt',
+  '/api/academy/tts',
+  '/api/alerts/check',
+  '/api/indicator-alerts/check',
+];
+
+function isSlowPostPath(path: string): boolean {
+  const base = path.split('?')[0] ?? path;
+  return SLOW_POST_PATHS.includes(base);
+}
 
 async function fetchWithTimeout(url: string, init: RequestInit, ms: number): Promise<Response> {
   if (typeof AbortController === 'undefined') return fetch(url, init);
@@ -202,11 +231,15 @@ async function getJson<T>(path: string): Promise<T> {
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   await installIdReady;
-  const res = await fetch(`${API_URL}${path}`, {
+  const url = `${API_URL}${path}`;
+  const init: RequestInit = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(body),
-  });
+  };
+  const res = isSlowPostPath(path)
+    ? await fetch(url, init)
+    : await fetchWithTimeout(url, init, WRITE_TIMEOUT_MS);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
@@ -214,11 +247,15 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
 /** PATCH with the HTTP status on the thrown error (`err.status`) so callers can fall back on 404/405. */
 async function patchJson<T>(path: string, body: unknown): Promise<T> {
   await installIdReady;
-  const res = await fetch(`${API_URL}${path}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify(body),
-  });
+  const res = await fetchWithTimeout(
+    `${API_URL}${path}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify(body),
+    },
+    WRITE_TIMEOUT_MS
+  );
   if (!res.ok) {
     const err = new Error(`HTTP ${res.status}`) as Error & { status?: number };
     err.status = res.status;
@@ -229,10 +266,11 @@ async function patchJson<T>(path: string, body: unknown): Promise<T> {
 
 async function deleteJson<T>(path: string): Promise<T> {
   await installIdReady;
-  const res = await fetch(`${API_URL}${path}`, {
-    method: 'DELETE',
-    headers: { ...authHeaders() },
-  });
+  const res = await fetchWithTimeout(
+    `${API_URL}${path}`,
+    { method: 'DELETE', headers: { ...authHeaders() } },
+    WRITE_TIMEOUT_MS
+  );
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
@@ -351,10 +389,11 @@ export const api = {
   deleteLayout: (id: string) =>
     installIdReady
       .then(() =>
-        fetch(`${API_URL}/api/layouts/${encodeURIComponent(id)}`, {
-          method: 'DELETE',
-          headers: authHeaders(),
-        })
+        fetchWithTimeout(
+          `${API_URL}/api/layouts/${encodeURIComponent(id)}`,
+          { method: 'DELETE', headers: authHeaders() },
+          WRITE_TIMEOUT_MS
+        )
       )
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -431,10 +470,11 @@ export const api = {
   deleteAlert: (id: string) =>
     installIdReady
       .then(() =>
-        fetch(`${API_URL}/api/alerts/${encodeURIComponent(id)}`, {
-          method: 'DELETE',
-          headers: authHeaders(),
-        })
+        fetchWithTimeout(
+          `${API_URL}/api/alerts/${encodeURIComponent(id)}`,
+          { method: 'DELETE', headers: authHeaders() },
+          WRITE_TIMEOUT_MS
+        )
       )
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -517,10 +557,11 @@ export const api = {
   deleteIndicatorAlert: (id: string) =>
     installIdReady
       .then(() =>
-        fetch(`${API_URL}/api/indicator-alerts/${encodeURIComponent(id)}`, {
-          method: 'DELETE',
-          headers: authHeaders(),
-        })
+        fetchWithTimeout(
+          `${API_URL}/api/indicator-alerts/${encodeURIComponent(id)}`,
+          { method: 'DELETE', headers: authHeaders() },
+          WRITE_TIMEOUT_MS
+        )
       )
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -700,10 +741,11 @@ export const api = {
   deleteTrade: (id: string) =>
     installIdReady
       .then(() =>
-        fetch(`${API_URL}/api/trades/${encodeURIComponent(id)}`, {
-          method: 'DELETE',
-          headers: authHeaders(),
-        })
+        fetchWithTimeout(
+          `${API_URL}/api/trades/${encodeURIComponent(id)}`,
+          { method: 'DELETE', headers: authHeaders() },
+          WRITE_TIMEOUT_MS
+        )
       )
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
