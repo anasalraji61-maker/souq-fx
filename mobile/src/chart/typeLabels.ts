@@ -98,6 +98,10 @@ export type ChartExtraLabels = {
   panesCollapsedA11y: string;
   switching: string;
   switchingA11y: string;
+  syncTimeOn: string;
+  syncTimeOff: string;
+  syncLeadHint: string;
+  syncToggleA11y: string;
 };
 
 const CHART_EXTRA: Record<'ar' | 'en' | 'ku', ChartExtraLabels> = {
@@ -109,6 +113,10 @@ const CHART_EXTRA: Record<'ar' | 'en' | 'ku', ChartExtraLabels> = {
     panesCollapsedA11y: 'لوحات مؤشرات مطويّة: ارتفاع الشارت لا يتّسع لها',
     switching: 'جارٍ…',
     switchingA11y: 'جارٍ تحميل الفريم الجديد — المعروض بيانات سابقة',
+    syncTimeOn: 'مزامنة الزمن',
+    syncTimeOff: 'بلا مزامنة',
+    syncLeadHint: 'اضغط أي شارت ليقود الزمن',
+    syncToggleA11y: 'تشغيل أو إيقاف مزامنة الزمن بين الشارتات الأربعة',
   },
   en: {
     undo: 'Undo',
@@ -118,6 +126,10 @@ const CHART_EXTRA: Record<'ar' | 'en' | 'ku', ChartExtraLabels> = {
     panesCollapsedA11y: 'Indicator panes collapsed: the chart is not tall enough',
     switching: 'Loading…',
     switchingA11y: 'Loading the new timeframe — what is shown is the previous data',
+    syncTimeOn: 'Time sync',
+    syncTimeOff: 'No sync',
+    syncLeadHint: 'Tap a chart to lead the time',
+    syncToggleA11y: 'Turn time sync between the four charts on or off',
   },
   ku: {
     undo: 'گەڕاندنەوە',
@@ -127,6 +139,10 @@ const CHART_EXTRA: Record<'ar' | 'en' | 'ku', ChartExtraLabels> = {
     panesCollapsedA11y: 'پانێلی ئاماژەکان نوقاون: بەرزی چارتەکە بەشیان ناکات',
     switching: 'بارکردن…',
     switchingA11y: 'بارکردنی ماوەی نوێ — ئەوەی پیشان دەدرێت داتای پێشووە',
+    syncTimeOn: 'هاوکاتیی کات',
+    syncTimeOff: 'بێ هاوکاتی',
+    syncLeadHint: 'کلیک لە چارتێک بکە بۆ ڕابەرایەتیی کات',
+    syncToggleA11y: 'هاوکاتیی کات لە نێوان چوار چارتەکە بکەوە یان بیکوژێنەوە',
   },
 };
 

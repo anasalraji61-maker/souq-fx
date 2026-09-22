@@ -11,12 +11,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api, type ChartSeries } from '../api';
-import { MatrixChart } from '../chart/MatrixChart';
+import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { livePriceForChart } from '../chart/liveSeries';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
 import { mockSeries } from '../mock';
 import { normalizeProvenance } from '../chart/dataSource';
+import { chartExtraLabels } from '../chart/typeLabels';
 import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
@@ -42,13 +43,29 @@ export function QuadChartModal({
   symbols = DEFAULT,
   timeframe = '15m',
 }: Props) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
+  const trx = chartExtraLabels(lang);
   const align = rtl ? ('right' as const) : ('left' as const);
   const { width, height } = useWindowDimensions();
   const phone = width < 700;
   const cellH = phone ? height * 0.28 : height * 0.32;
   const [series, setSeries] = useState<(ChartSeries | null)[]>([null, null, null, null]);
   const ticks = useMultiLiveTicks(symbols, visible);
+
+  // أربعة شارتات بنفس الفريم كانت تُرسم مستقلّة تماماً: لا شيء يربط نافذتها الزمنية
+  // ولا يقول للمتداول إن ما يراه هو نفس المدى على الأزواج الأربعة. الآن شارت واحد
+  // **يقود** الزمن (قابل للسحب) والثلاثة تتبعه زمنياً فقط، والقيادة تُنقل بضغطة على
+  // أي شارت — وكلا الحالتين موسومة بالرأس فلا مزامنة خفيّة.
+  const [syncTime, setSyncTime] = useState(true);
+  const [leader, setLeader] = useState(0);
+  const [syncWindow, setSyncWindow] = useState<SyncTimeWindow | null>(null);
+
+  // النافذة المشتركة تخصّ رموزاً وفريماً بعينهما: تُصفَّر مع أي تبديل أو إعادة فتح،
+  // وإلا تُطبَّق نافذة فريم سابق على شموع فريم جديد.
+  useEffect(() => {
+    setSyncWindow(null);
+    setLeader(0);
+  }, [visible, symbols, timeframe]);
 
   useEffect(() => {
     if (!visible) return;
@@ -90,38 +107,90 @@ export function QuadChartModal({
           <Text style={[styles.title, { textAlign: align }]}>
             {t.quadTitlePrefix} · {timeframe}
           </Text>
+          <Pressable
+            accessibilityRole="switch"
+            accessibilityState={{ checked: syncTime }}
+            accessibilityLabel={trx.syncToggleA11y}
+            onPress={() => setSyncTime((v) => !v)}
+            hitSlop={8}
+            style={({ pressed }) => [
+              styles.syncToggle,
+              syncTime && styles.syncToggleOn,
+              pressed && {
+                opacity: buttons.pressedOpacity,
+                transform: [{ scale: buttons.pressedScale }],
+              },
+            ]}
+          >
+            <Text style={[styles.syncToggleText, syncTime && styles.syncToggleTextOn]}>
+              {syncTime ? trx.syncTimeOn : trx.syncTimeOff}
+            </Text>
+          </Pressable>
         </View>
+        {syncTime ? (
+          <Text style={[styles.syncHint, { textAlign: align }]}>
+            {`${trx.syncLeadHint} — ${symbols[leader]}`}
+          </Text>
+        ) : null}
         <View style={[styles.grid, rtl && styles.gridRtl, phone && styles.gridPhone]}>
-          {symbols.map((sym, i) => (
-            <View key={sym} style={[styles.cell, phone && styles.cellPhone]}>
-              {/* شموع تجريبية (فشل الطلب → mockSeries، أو سلسلة demo من الخادم) كانت تُرسم هنا بلا أي
-                  وسم فتُقرأ كسوق حقيقي — بعكس ChartFrame/الشارت الرئيسي اللذين يوسمانها «تجريبي». */}
-              <View style={[styles.cellHead, rtl && styles.cellHeadRtl]}>
-                <Text style={[styles.sym, { textAlign: align }]}>{sym}</Text>
-                {series[i] && normalizeProvenance(series[i]!.data_source).kind === 'demo' ? (
-                  <Text style={styles.demoTag}>{t.dsKindDemo}</Text>
-                ) : null}
-              </View>
-              {series[i] ? (
-                <MatrixChart
-                  series={series[i]!}
-                  height={cellH}
-                  interactive={false}
-                  persistDrawings={false}
-                  livePrice={livePriceForChart(series[i]!, ticks[sym] ?? null, {
-                    tickAsOf: ticks[sym]?.source.as_of ?? null,
-                    timeframe: series[i]!.timeframe,
-                  })}
-                  liveTickSource={ticks[sym]?.source ?? null}
-                  accent={sym === 'DXY' ? colors.dxy : colors.accent}
-                  initialLens="clean"
-                  initialIndicators={[]}
-                />
-              ) : (
-                <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
-              )}
-            </View>
-          ))}
+          {symbols.map((sym, i) => {
+            const isLeader = i === leader;
+            const following = syncTime && !isLeader;
+            return (
+              <Pressable
+                key={sym}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  syncTime && !isLeader ? `${t.cfSyncActivateA11yPrefix}${sym}` : undefined
+                }
+                disabled={!syncTime || isLeader}
+                accessibilityState={{ disabled: !syncTime || isLeader }}
+                onPress={() => setLeader(i)}
+                style={[
+                  styles.cell,
+                  phone && styles.cellPhone,
+                  syncTime && isLeader && styles.cellLeader,
+                ]}
+              >
+                {/* شموع تجريبية (فشل الطلب → mockSeries، أو سلسلة demo من الخادم) كانت تُرسم هنا بلا أي
+                    وسم فتُقرأ كسوق حقيقي — بعكس ChartFrame/الشارت الرئيسي اللذين يوسمانها «تجريبي». */}
+                <View style={[styles.cellHead, rtl && styles.cellHeadRtl]}>
+                  <Text style={[styles.sym, { textAlign: align }]}>{sym}</Text>
+                  {syncTime ? (
+                    <Text style={[styles.syncBadge, isLeader && styles.syncBadgeLeader]}>
+                      {isLeader ? t.cfSyncLeaderBadge : t.cfSyncFollowBadge}
+                    </Text>
+                  ) : null}
+                  {series[i] && normalizeProvenance(series[i]!.data_source).kind === 'demo' ? (
+                    <Text style={styles.demoTag}>{t.dsKindDemo}</Text>
+                  ) : null}
+                </View>
+                {series[i] ? (
+                  <MatrixChart
+                    series={series[i]!}
+                    height={cellH}
+                    interactive={false}
+                    persistDrawings={false}
+                    livePrice={livePriceForChart(series[i]!, ticks[sym] ?? null, {
+                      tickAsOf: ticks[sym]?.source.as_of ?? null,
+                      timeframe: series[i]!.timeframe,
+                    })}
+                    liveTickSource={ticks[sym]?.source ?? null}
+                    accent={sym === 'DXY' ? colors.dxy : colors.accent}
+                    initialLens="clean"
+                    initialIndicators={[]}
+                    panControls={!syncTime || isLeader}
+                    syncWindow={following ? syncWindow : null}
+                    onSyncWindow={syncTime && isLeader ? setSyncWindow : undefined}
+                    syncFollow={following}
+                    syncTimeOnly
+                  />
+                ) : (
+                  <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
+                )}
+              </Pressable>
+            );
+          })}
         </View>
       </SafeAreaView>
     </Modal>
@@ -165,4 +234,32 @@ const styles = StyleSheet.create({
   cellHeadRtl: { flexDirection: 'row-reverse' },
   sym: { color: colors.accent, fontWeight: '800' },
   demoTag: { color: colors.warn, fontSize: 10, fontWeight: '800' },
+  // القيادة والتبعية موسومتان بالرأس وبحدّ الخلية: المزامنة لا تعمل بصمت.
+  syncBadge: {
+    color: colors.textDim,
+    fontSize: 9,
+    fontWeight: '800',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: radii.sm,
+    backgroundColor: colors.borderSoft,
+  },
+  syncBadgeLeader: { color: colors.accent, backgroundColor: colors.accentSoft },
+  cellLeader: { borderColor: colors.accent },
+  syncToggle: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  syncToggleOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  syncToggleText: { color: colors.textDim, fontSize: 11, fontWeight: '800' },
+  syncToggleTextOn: { color: colors.accent },
+  syncHint: {
+    color: colors.textMuted,
+    fontSize: 10,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+  },
 });
