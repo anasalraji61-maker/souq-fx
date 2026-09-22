@@ -224,8 +224,8 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
         </Text>
         {levels && direction !== 'neutral' ? (
           <Text style={[styles.levels, { textAlign: align }]}>
-            {t.suggestedTradeLabel}: {t.entryLabel} {formatPrice(levels.entry)} · {t.slLabel}{' '}
-            {formatPrice(levels.sl)} · {t.tpLabel} {formatPrice(levels.tp)}
+            {t.suggestedTradeLabel}: {t.entryLabel} {formatPrice(levels.entry, symbol)} · {t.slLabel}{' '}
+            {formatPrice(levels.sl, symbol)} · {t.tpLabel} {formatPrice(levels.tp, symbol)}
           </Text>
         ) : (
           <Text style={[styles.levels, { textAlign: align }]}>{t.socialNoClearTrade}</Text>

@@ -117,8 +117,8 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
         </Text>
         {levels ? (
           <Text style={[styles.levels, { textAlign: align }]}>
-            {t.entryLabel} {formatPrice(levels.entry)} · {t.slLabel} {formatPrice(levels.sl)} ·{' '}
-            {t.tpLabel} {formatPrice(levels.tp)}
+            {t.entryLabel} {formatPrice(levels.entry, symbol)} · {t.slLabel} {formatPrice(levels.sl, symbol)}{' '}
+            · {t.tpLabel} {formatPrice(levels.tp, symbol)}
           </Text>
         ) : null}
       </View>
@@ -135,7 +135,7 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
                 {dirLabel(a.direction, t)}
               </Text>
               <Text style={styles.target}>
-                {t.tpLabel} {formatPrice(a.target)}
+                {t.tpLabel} {formatPrice(a.target, symbol)}
               </Text>
               <Text style={styles.horizon}>{a.horizon}</Text>
             </View>

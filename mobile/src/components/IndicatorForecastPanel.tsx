@@ -211,8 +211,8 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           </Text>
           {levels && direction !== 'neutral' ? (
             <Text style={[styles.levels, { textAlign: align }]}>
-              {t.forecastTradeLabel}: {t.entryLabel} {formatPrice(levels.entry)} · {t.slLabel}{' '}
-              {formatPrice(levels.sl)} · {t.tpLabel} {formatPrice(levels.tp)}
+              {t.forecastTradeLabel}: {t.entryLabel} {formatPrice(levels.entry, symbol)} · {t.slLabel}{' '}
+              {formatPrice(levels.sl, symbol)} · {t.tpLabel} {formatPrice(levels.tp, symbol)}
               {rr != null ? ` · R:R ${formatRR(rr)}` : ''}
             </Text>
           ) : (
