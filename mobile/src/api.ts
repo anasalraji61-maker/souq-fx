@@ -359,8 +359,12 @@ export const api = {
     id: string,
     body: { symbol: string; condition: 'above' | 'below'; price: number; note?: string }
   ) => patchJson<{ ok: boolean; alert: PriceAlert }>(`/api/alerts/${encodeURIComponent(id)}`, body),
+  /** Sends the auth token: the backend only deletes the caller's own (or legacy anonymous) alerts. */
   deleteAlert: (id: string) =>
-    fetch(`${API_URL}/api/alerts/${encodeURIComponent(id)}`, { method: 'DELETE' }).then((r) => {
+    fetch(`${API_URL}/api/alerts/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    }).then((r) => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json();
     }),

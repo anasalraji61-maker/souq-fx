@@ -760,14 +760,17 @@ def update_alert(alert_id: str, body: AlertCreate, user: dict | None = Depends(_
 
 
 @app.delete("/api/alerts/{alert_id}")
-def delete_alert(alert_id: str):
-    return {"ok": db.delete_alert(alert_id)}
+def delete_alert(alert_id: str, user: dict | None = Depends(_auth_user)):
+    uid = user["user_id"] if user else None
+    return {"ok": db.delete_alert(alert_id, uid)}
 
 
 @app.post("/api/alerts/check")
-def check_alerts():
+def check_alerts(user: dict | None = Depends(_auth_user)):
+    """يفحص تنبيهات المستدعي فقط ويعيدها (كان يعيد تنبيهات كل المستخدمين فتستبدل قائمة العميل)."""
+    uid = user["user_id"] if user else None
     triggered: list[dict] = []
-    for a in db.list_alerts():
+    for a in db.list_alerts(uid):
         if not a.get("active") or a.get("triggered"):
             continue
         q = _alert_price(a["symbol"])
@@ -779,7 +782,7 @@ def check_alerts():
         if hit:
             db.mark_alert_triggered(a["id"])
             triggered.append({**a, "current": q})
-    return {"triggered": triggered, "alerts": db.list_alerts()}
+    return {"triggered": triggered, "alerts": db.list_alerts(uid)}
 
 
 def _check_indicator_alert(alert: dict, candles: list[dict]) -> bool:
@@ -839,14 +842,17 @@ def create_indicator_alert(body: IndicatorAlertCreate, user: dict | None = Depen
 
 
 @app.delete("/api/indicator-alerts/{alert_id}")
-def delete_indicator_alert(alert_id: str):
-    return {"ok": db.delete_indicator_alert(alert_id)}
+def delete_indicator_alert(alert_id: str, user: dict | None = Depends(_auth_user)):
+    uid = user["user_id"] if user else None
+    return {"ok": db.delete_indicator_alert(alert_id, uid)}
 
 
 @app.post("/api/indicator-alerts/check")
-def check_indicator_alerts():
+def check_indicator_alerts(user: dict | None = Depends(_auth_user)):
+    """تنبيهات المستدعي فقط (نفس قاعدة الرؤية في /api/indicator-alerts)."""
+    uid = user["user_id"] if user else None
     triggered: list[dict] = []
-    for a in db.list_indicator_alerts():
+    for a in db.list_indicator_alerts(uid):
         if not a.get("active") or a.get("triggered"):
             continue
         try:
@@ -857,7 +863,7 @@ def check_indicator_alerts():
         if _check_indicator_alert(a, candles):
             db.mark_indicator_alert_triggered(a["id"])
             triggered.append(a)
-    return {"triggered": triggered, "alerts": db.list_indicator_alerts()}
+    return {"triggered": triggered, "alerts": db.list_indicator_alerts(uid)}
 
 
 @app.post("/api/screener/run")

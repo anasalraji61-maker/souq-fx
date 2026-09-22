@@ -803,21 +803,29 @@ def delete_user_account(user_id: int) -> None:
         )
         c.execute("DELETE FROM sessions WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM alerts WHERE user_id=?", (user_id,))
+        c.execute("DELETE FROM indicator_alerts WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM push_tokens WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM layouts WHERE user_id=?", (user_id,))
 
 
 # ─── Alerts ───────────────────────────────────────────────────────────────────
 
-def list_alerts(user_id: int | None = None) -> list[dict]:
+def list_alerts(user_id: int | None = None, *, all_users: bool = False) -> list[dict]:
+    """Alerts visible to a caller: a signed-in user → their own + legacy anonymous ones
+    (user_id IS NULL); an anonymous caller → anonymous ones only (it used to get EVERY
+    user's alerts). ``all_users=True`` is for the server-side worker only and adds the
+    internal ``user_id`` so pushes reach the owner's devices, not everyone's."""
     with _conn() as c:
+        if all_users:
+            rows = c.execute("SELECT * FROM alerts ORDER BY ts DESC").fetchall()
+            return [{**_alert_row(r), "user_id": r["user_id"]} for r in rows]
         if user_id:
             rows = c.execute(
                 "SELECT * FROM alerts WHERE user_id IS NULL OR user_id=? ORDER BY ts DESC",
                 (user_id,),
             ).fetchall()
         else:
-            rows = c.execute("SELECT * FROM alerts ORDER BY ts DESC").fetchall()
+            rows = c.execute("SELECT * FROM alerts WHERE user_id IS NULL ORDER BY ts DESC").fetchall()
     return [_alert_row(r) for r in rows]
 
 
@@ -880,9 +888,16 @@ def update_alert(alert_id: str, data: dict, user_id: int | None = None) -> dict 
     return _alert_row(row) if row else None
 
 
-def delete_alert(alert_id: str) -> bool:
+def delete_alert(alert_id: str, user_id: int | None = None) -> bool:
+    """Same ownership rule as update_alert: own or legacy-anonymous for a signed-in user,
+    anonymous only for an anonymous caller (anyone could delete anyone's alert before)."""
     with _conn() as c:
-        cur = c.execute("DELETE FROM alerts WHERE id=?", (alert_id,))
+        if user_id:
+            cur = c.execute(
+                "DELETE FROM alerts WHERE id=? AND (user_id IS NULL OR user_id=?)", (alert_id, user_id)
+            )
+        else:
+            cur = c.execute("DELETE FROM alerts WHERE id=? AND user_id IS NULL", (alert_id,))
     return cur.rowcount > 0
 
 
@@ -1032,6 +1047,17 @@ def all_push_tokens() -> list[str]:
     return [r["token"] for r in rows]
 
 
+def push_tokens_for(user_id: int | None) -> list[str]:
+    """Devices of one owner: a user's registered tokens, or — for a legacy anonymous alert —
+    the tokens registered without an account. Alert pushes used to go to every device."""
+    with _conn() as c:
+        if user_id:
+            rows = c.execute("SELECT token FROM push_tokens WHERE user_id=?", (user_id,)).fetchall()
+        else:
+            rows = c.execute("SELECT token FROM push_tokens WHERE user_id IS NULL").fetchall()
+    return [r["token"] for r in rows]
+
+
 def delete_push_token(token: str) -> None:
     with _conn() as c:
         c.execute("DELETE FROM push_tokens WHERE token = ?", (token,))
@@ -1125,15 +1151,21 @@ def get_progress(user_id: int) -> list[dict]:
 
 # ─── Indicator alerts ─────────────────────────────────────────────────────────
 
-def list_indicator_alerts(user_id: int | None = None) -> list[dict]:
+def list_indicator_alerts(user_id: int | None = None, *, all_users: bool = False) -> list[dict]:
+    """Same visibility rule as list_alerts (see there)."""
     with _conn() as c:
+        if all_users:
+            rows = c.execute("SELECT * FROM indicator_alerts ORDER BY ts DESC").fetchall()
+            return [{**_ind_alert_row(r), "user_id": r["user_id"]} for r in rows]
         if user_id:
             rows = c.execute(
                 "SELECT * FROM indicator_alerts WHERE user_id IS NULL OR user_id=? ORDER BY ts DESC",
                 (user_id,),
             ).fetchall()
         else:
-            rows = c.execute("SELECT * FROM indicator_alerts ORDER BY ts DESC").fetchall()
+            rows = c.execute(
+                "SELECT * FROM indicator_alerts WHERE user_id IS NULL ORDER BY ts DESC"
+            ).fetchall()
     return [_ind_alert_row(r) for r in rows]
 
 
@@ -1177,9 +1209,16 @@ def create_indicator_alert(data: dict, user_id: int | None = None) -> dict:
     return data
 
 
-def delete_indicator_alert(alert_id: str) -> bool:
+def delete_indicator_alert(alert_id: str, user_id: int | None = None) -> bool:
+    """Same ownership rule as delete_alert."""
     with _conn() as c:
-        cur = c.execute("DELETE FROM indicator_alerts WHERE id=?", (alert_id,))
+        if user_id:
+            cur = c.execute(
+                "DELETE FROM indicator_alerts WHERE id=? AND (user_id IS NULL OR user_id=?)",
+                (alert_id, user_id),
+            )
+        else:
+            cur = c.execute("DELETE FROM indicator_alerts WHERE id=? AND user_id IS NULL", (alert_id,))
     return cur.rowcount > 0
 
 

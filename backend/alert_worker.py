@@ -68,9 +68,11 @@ def _check_indicator(a: dict) -> bool:
 
 
 def _check_once() -> None:
-    triggered_msgs: list[str] = []
+    # (owner user_id, message) — each push goes only to the alert owner's devices (it used to
+    # go to every registered device, leaking one trader's alerts to all the others).
+    triggered_msgs: list[tuple[int | None, str]] = []
 
-    for a in db.list_alerts():
+    for a in db.list_alerts(all_users=True):
         try:
             if not a.get("active") or a.get("triggered"):
                 continue
@@ -83,7 +85,7 @@ def _check_once() -> None:
             )
             if hit:
                 db.mark_alert_triggered(a["id"])
-                triggered_msgs.append(f"{a['symbol']} price {a['condition']} {a['price']}")
+                triggered_msgs.append((a.get("user_id"), f"{a['symbol']} price {a['condition']} {a['price']}"))
         except Exception:
             log.exception(
                 "price alert processing failed id=%s symbol=%s",
@@ -91,14 +93,14 @@ def _check_once() -> None:
                 a.get("symbol"),
             )
 
-    for a in db.list_indicator_alerts():
+    for a in db.list_indicator_alerts(all_users=True):
         try:
             if not a.get("active") or a.get("triggered"):
                 continue
             if _check_indicator(a):
                 db.mark_indicator_alert_triggered(a["id"])
                 triggered_msgs.append(
-                    f"{a['symbol']} {a['alert_type']} {a['condition']}"
+                    (a.get("user_id"), f"{a['symbol']} {a['alert_type']} {a['condition']}")
                 )
         except Exception:
             log.exception(
@@ -109,10 +111,10 @@ def _check_once() -> None:
 
     if not triggered_msgs:
         return
-    tokens = db.all_push_tokens()
-    if not tokens:
-        return
-    for msg in triggered_msgs:
+    for owner, msg in triggered_msgs:
+        tokens = db.push_tokens_for(owner)
+        if not tokens:
+            continue
         try:
             result = expo_push.send_push(tokens, "MATRIX · تنبيه", msg, {})
             for tok in result.get("invalid_tokens") or []:
