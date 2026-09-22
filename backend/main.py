@@ -632,8 +632,8 @@ def layouts_list(user: dict | None = Depends(_auth_user)):
 @app.post("/api/layouts")
 def layouts_save(body: LayoutSave, user: dict | None = Depends(_auth_user)):
     uid = user["user_id"] if user else None
-    lid = body.id or f"layout{int(time.time())}"
-    saved = db.save_layout(lid, body.name, body.payload, uid)
+    # db.save_layout يتولّى توليد معرّف فريد عند غيابه ويمنع الكتابة فوق تخطيط مالك آخر
+    saved = db.save_layout(body.id, body.name, body.payload, uid)
     return {"ok": True, "layout": saved}
 
 

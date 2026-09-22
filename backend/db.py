@@ -1064,8 +1064,36 @@ def delete_push_token(token: str) -> None:
         c.execute("DELETE FROM push_tokens WHERE token = ?", (token,))
 
 
-def save_layout(layout_id: str, name: str, payload: dict, user_id: int | None = None) -> dict:
+def _new_layout_id(c: sqlite3.Cursor) -> str:
+    """معرّف تخطيط فريد فعلياً (لا يعتمد على ثانية الحفظ). ثانية الطابع الزمني القديمة
+    كانت تتصادم بين مستخدمَين يحفظان بنفس الثانية → INSERT OR REPLACE يمحو تخطيط أحدهما."""
+    for _ in range(6):
+        cand = f"layout_{secrets.token_hex(6)}"
+        if c.execute("SELECT 1 FROM layouts WHERE id=?", (cand,)).fetchone() is None:
+            return cand
+    return f"layout_{secrets.token_hex(12)}"
+
+
+def save_layout(
+    layout_id: str | None, name: str, payload: dict, user_id: int | None = None
+) -> dict:
+    """يحفظ تخطيطاً ويعيده بمعرّفه الفعلي.
+
+    الأمان/الملكية: `id` كان مفتاحاً أساسياً عاماً، و`INSERT OR REPLACE` يسمح لأي مستخدم
+    بالكتابة فوق تخطيط غيره (وإعادة إسناد ملكيته) بإرسال المعرّف نفسه — أو بتصادم بريء بين
+    مستخدمَين بنفس الثانية. الآن: لا يُكتب فوق صفٍّ يملكه مستخدم آخر — عند التعارض يُخصَّص
+    معرّف جديد للمستدعي (نسخته الخاصة)، فلا فقدان بيانات ولا اختطاف ملكية.
+    """
     with _conn() as c:
+        if layout_id:
+            row = c.execute(
+                "SELECT user_id FROM layouts WHERE id=?", (layout_id,)
+            ).fetchone()
+            # صفّ قائم بمالك مختلف (أو تخطيط عام مقابل مستخدم مسجّل) → لا تُصِبه، خصّص معرّفاً جديداً
+            if row is not None and row["user_id"] != user_id:
+                layout_id = None
+        if not layout_id:
+            layout_id = _new_layout_id(c)
         c.execute(
             """INSERT OR REPLACE INTO layouts(id,user_id,name,payload,updated_at)
                VALUES(?,?,?,?,?)""",
