@@ -30,9 +30,18 @@ const navTheme = {
   },
 };
 
+/**
+ * شارة التبويب: رمزان لاتينيان بهوية MATRIX الطرفية. **مخفيّة عن قارئ الشاشة عمداً** — التسمية
+ * المترجَمة (`tabBarLabel`) تحتها تقول الاسم كاملاً، فبلا الإخفاء يسمع المتداول حرفين لا معنى لهما
+ * قبل كل اسم تبويب.
+ */
 function TabIcon({ label, focused }: { label: string; focused: boolean }) {
   return (
-    <View style={[styles.iconWrap, focused && styles.iconActive]}>
+    <View
+      style={[styles.iconWrap, focused && styles.iconActive]}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
       <Text style={[styles.iconText, focused && styles.iconTextActive]}>{label}</Text>
     </View>
   );
@@ -93,7 +102,7 @@ function RootTabs() {
           options={{
             title: t.tabTools,
             tabBarLabel: t.tabTools,
-            tabBarIcon: ({ focused }) => <TabIcon label="SC" focused={focused} />,
+            tabBarIcon: ({ focused }) => <TabIcon label="TL" focused={focused} />,
           }}
         />
         <Tab.Screen
@@ -102,7 +111,7 @@ function RootTabs() {
           options={{
             title: t.tabAcademy,
             tabBarLabel: t.tabAcademy,
-            tabBarIcon: ({ focused }) => <TabIcon label="AI" focused={focused} />,
+            tabBarIcon: ({ focused }) => <TabIcon label="ED" focused={focused} />,
           }}
         />
         <Tab.Screen
