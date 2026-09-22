@@ -40,6 +40,12 @@ import { rangeBars } from './range';
 import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
+import {
+  formatPaneValue,
+  latestPaneValue,
+  paneValueState,
+  placeGuides,
+} from './paneGuides';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
 import {
@@ -496,6 +502,73 @@ const webAxisLockStyle =
         userSelect: 'none',
       } as const as object)
     : null;
+
+/**
+ * خطوط العتبات داخل لوحة محصورة المدى (RSI 30/70، ستوكاستيك 20/80، ADX 25، ‎%R −20/−80‎).
+ * تُرسم أولاً فتبقى خلف شريط المؤشّر، وبنفس `innerH` الذي تستعمله معادلة الشريط بالضبط
+ * فتتطابق العتبة مع موضعها على الرسم لا تقاربه. تختفي الخطوط الوسطى ثم الأرقام ثم الخطوط
+ * كلّها كلّما قصُرت اللوحة (انظر `placeGuides`).
+ */
+function PaneGuideLines({ paneId, innerH }: { paneId: string; innerH: number }) {
+  const guides = placeGuides(paneId, innerH);
+  if (guides.length === 0) return null;
+  return (
+    <>
+      {guides.map((g) => (
+        <React.Fragment key={g.v}>
+          <View
+            pointerEvents="none"
+            style={[styles.paneGuideLine, g.kind === 'mid' && styles.paneGuideLineMid, { top: g.top }]}
+          />
+          {g.label ? (
+            // الرقم داخل View لا مباشرةً: `pointerEvents` خاصية View، و`Text` عارٍ قد يبتلع
+            // بداية سحب الشارت عند أقصى اليسار.
+            <View pointerEvents="none" style={[styles.paneGuideLabelBox, { top: Math.max(0, g.top - 5) }]}>
+              <Text style={styles.paneGuideLabel}>{g.label}</Text>
+            </View>
+          ) : null}
+        </React.Fragment>
+      ))}
+    </>
+  );
+}
+
+/**
+ * رأس اللوحة: الاسم + **قيمة الشمعة الأخيرة**. اللوحات كانت تذكر الاسم وحده، فلا يفرّق
+ * المتداول بين RSI عند 62 و68 وكلاهما «بين الخطين». الرقم وحده هو الملوَّن (لا الرسم):
+ * أحمر عند تجاوز العتبة العليا وأخضر تحت السفلى — نفس دلالة ألوان الشريط القائمة.
+ */
+function PaneHead({
+  paneId,
+  name,
+  values,
+  highColor = colors.bear,
+}: {
+  paneId: string;
+  name: string;
+  values: readonly (number | null)[];
+  highColor?: string;
+}) {
+  const v = latestPaneValue(values);
+  const txt = formatPaneValue(v);
+  const state = paneValueState(paneId, v);
+  return (
+    <View style={styles.paneHead}>
+      <Text style={styles.paneHeadName}>{name}</Text>
+      {txt ? (
+        <Text
+          style={[
+            styles.paneHeadValue,
+            state === 'high' && { color: highColor },
+            state === 'low' && { color: colors.bull },
+          ]}
+        >
+          {txt}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
 
 export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChart(
   {
@@ -5600,8 +5673,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {rsi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>RSI</Text>
+          <PaneHead paneId="rsi" name="RSI" values={rsi} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="rsi" innerH={paneH - 16} />
             {rsi.map((v, i) =>
               v == null ? (
                 <View key={i} style={{ flex: 1 }} />
@@ -5624,8 +5698,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {mfi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>MFI</Text>
+          <PaneHead paneId="mfi" name="MFI" values={mfi} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="mfi" innerH={paneH - 16} />
             {mfi.map((v, i) =>
               v == null ? (
                 <View key={i} style={{ flex: 1 }} />
@@ -5648,8 +5723,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {adx ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>ADX</Text>
+          <PaneHead paneId="adx" name="ADX" values={adx} highColor={colors.warn} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="adx" innerH={paneH - 16} />
             {adx.map((v, i) =>
               v == null ? (
                 <View key={i} style={{ flex: 1 }} />
@@ -7572,8 +7648,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {stoch ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>STO</Text>
+          <PaneHead paneId="stoch" name="STO" values={stoch.k} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="stoch" innerH={paneH - 16} />
             {stoch.k.map((v, i) =>
               v == null ? (
                 <View key={i} style={{ flex: 1 }} />
@@ -7623,8 +7700,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {willr ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>%R</Text>
+          <PaneHead paneId="willr" name="%R" values={willr} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="willr" innerH={paneH - 16} />
             {willr.map((v, i) =>
               v == null ? (
                 <View key={i} style={{ flex: 1 }} />
@@ -8351,6 +8429,23 @@ const styles = StyleSheet.create({
   // مع flex-start يصير الموضع = marginTop كما تقصده كل المعادلات (مداها 0..paneH−16).
   paneInner: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 2 },
   // خطّ الصفر داخل لوحة ذات قيم موجبة/سالبة (MACD وأمثاله): مرجع التقاطع.
+  // رأس اللوحة: الاسم فوق قيمة الشمعة الأخيرة، بنفس عرض paneLabel (36px) فلا يتغيّر
+  // تخطيط أي لوحة أخرى ما زالت تستعمل paneLabel وحده.
+  paneHead: { width: 36, paddingTop: 5, alignItems: 'center' },
+  paneHeadName: { color: colors.textDim, fontSize: 9, fontWeight: '800', textAlign: 'center' },
+  paneHeadValue: { color: colors.textMuted, fontSize: 9, fontWeight: '700', textAlign: 'center', marginTop: 1 },
+  // خطّ عتبة داخل لوحة محصورة المدى. الرقم عند أقصى اليسار — أبعد موضع عن اسم اللوحة
+  // (اللوحة row-reverse فاسمها يميناً) وأقلّها حجباً للشموع الأخيرة التي يقرؤها المتداول.
+  paneGuideLine: {
+    position: 'absolute',
+    left: 2,
+    right: 2,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  paneGuideLineMid: { opacity: 0.45 },
+  paneGuideLabelBox: { position: 'absolute', left: 3 },
+  paneGuideLabel: { color: colors.textDim, fontSize: 8, fontWeight: '700' },
   paneZeroLine: {
     position: 'absolute',
     left: 2,
