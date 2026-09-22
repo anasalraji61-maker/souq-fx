@@ -298,6 +298,9 @@ export type Dict = {
   riskCalcFillHint: string;
   invalidNumberHint: string;
   riskCalcPipValue: string;
+  riskCalcTarget: string;
+  riskCalcTargetPlaceholder: string;
+  riskCalcPotentialProfit: string;
   riskCalcDisclaimer: string;
   toolsTabRisk: string;
   calTimesLocal: string;
@@ -1104,6 +1107,9 @@ const ar: Dict = {
   riskCalcFillHint: 'أدخل الرصيد ونسبة المخاطرة ووقف الخسارة',
   invalidNumberHint: 'رقم غير مفهوم — اكتبه بلا فواصل آلاف، مثل 10000 أو 1.0850',
   riskCalcPipValue: 'قيمة النقطة للوت',
+  riskCalcTarget: 'الهدف (اختياري) — لحساب R:R والربح المحتمل',
+  riskCalcTargetPlaceholder: 'سعر الهدف',
+  riskCalcPotentialProfit: 'الربح المحتمل',
   riskCalcDisclaimer: 'تقدير تعليمي: مواصفات العقود (خصوصاً الذهب) قد تختلف لدى وسيطك — تحقّق قبل التداول.',
   toolsTabRisk: 'المخاطرة',
   calTimesLocal: 'الأوقات بتوقيتك',
@@ -1918,6 +1924,9 @@ const enUS: Dict = {
   riskCalcFillHint: 'Enter balance, risk % and stop loss',
   invalidNumberHint: 'Number not recognised — type it without thousands separators, e.g. 10000 or 1.0850',
   riskCalcPipValue: 'Pip value per lot',
+  riskCalcTarget: 'Target (optional) — for R:R and potential profit',
+  riskCalcTargetPlaceholder: 'Target price',
+  riskCalcPotentialProfit: 'Potential profit',
   riskCalcDisclaimer: 'Educational estimate: contract specs (especially gold) can differ at your broker — check before trading.',
   toolsTabRisk: 'Risk',
   calTimesLocal: 'Times in your timezone',
@@ -2751,6 +2760,9 @@ const ku: Dict = {
   riskCalcFillHint: 'باڵانس، ڕێژەی مەترسی و وەستانی زیان بنووسە',
   invalidNumberHint: 'ژمارەکە ناناسرێتەوە — بەبێ جیاکەرەوەی هەزاران بنووسە، وەک 10000 یان 1.0850',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
+  riskCalcTarget: 'ئامانج (ئارەزوومەندانە) — بۆ R:R و قازانجی چاوەڕوانکراو',
+  riskCalcTargetPlaceholder: 'نرخی ئامانج',
+  riskCalcPotentialProfit: 'قازانجی چاوەڕوانکراو',
   riskCalcDisclaimer: 'خەمڵاندنی فێرکاری: تایبەتمەندی گرێبەستەکان (بەتایبەتی زێڕ) لای بڕۆکەرەکەت جیاواز دەبێت — پێش مامەڵە پشتڕاستی بکەرەوە.',
   toolsTabRisk: 'مەترسی',
   calTimesLocal: 'کاتەکان بە کاتی خۆت',

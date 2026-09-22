@@ -17,6 +17,7 @@ import {
 } from '../positionSize';
 import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
+import { analyzePlan, formatPips, formatRR } from '../tradePlan';
 
 type Props = {
   defaultSymbol?: string;
@@ -40,6 +41,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** بديل اختياري: سعرا الدخول والوقف كما يراهما المتداول على الشارت → تُملأ خانة النقاط تلقائياً */
   const [entryPx, setEntryPx] = useState('');
   const [stopPx, setStopPx] = useState('');
+  /** هدف اختياري: يحوّل «كم لوت» إلى خطة كاملة (مخاطرة/عائد بالمال) — المتداول يقرّر بالـR:R لا باللوت وحده */
+  const [targetPx, setTargetPx] = useState('');
   /** سعر زوج التحويل (عملة التسعير → عملة الحساب)؛ null أثناء التحميل أو عند الفشل. يُخزَّن مع رمزه
    * فلا يُقرن سعر الزوج السابق بالزوج الجديد لإطار عرض واحد بعد تبديل الأداة/عملة الحساب.
    * `key` = زوج التحويل المتوقَّع (مفتاح الطلب)، و`invert` لما جُلب فعلاً — قد يكون الزوج المعكوس. */
@@ -136,7 +139,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** أرقام عربية/فاصل آلاف/فاصلة عشرية — راجع parseDecimal.ts. NaN = فارغ أو غير صالح. */
   const num = (s: string) => parseDecimal(s) ?? NaN;
   /** خانة فيها نص لكنه ليس رقماً مفهوماً («10,000» مبهم، «1.2.3») — نقول ذلك بدل «أدخل الرصيد…» */
-  const badNumber = [balance, riskPct, slPips, entryPx, stopPx, manualConv].some(
+  const badNumber = [balance, riskPct, slPips, entryPx, stopPx, targetPx, manualConv].some(
     (v) => v.trim() !== '' && parseDecimal(v) == null
   );
   const derivedSl = spec ? slPipsFromPrices(spec, num(entryPx), num(stopPx)) : null;
@@ -174,6 +177,26 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           contractSize: spec.contractSize,
         })
       : null;
+
+  /**
+   * خطة كاملة حين يُكتب الهدف أيضاً: الاتجاه يُستنتج من موضع الوقف (وقف تحت الدخول = شراء)، فلا يُسأل
+   * المتداول عن شيء يعرفه رقمه أصلاً. النتيجة: المخاطرة/العائد بالنقاط، R:R، والربح المحتمل بعملة
+   * الحساب لحجم اللوت المحسوب نفسه.
+   */
+  const plan = useMemo(() => {
+    const e = num(entryPx);
+    const sPx = num(stopPx);
+    const tPx = num(targetPx);
+    if (!spec || ![e, sPx, tPx].every((v) => Number.isFinite(v) && v > 0) || e === sPx) return null;
+    return analyzePlan({ symbol: spec.symbol, side: sPx < e ? 'buy' : 'sell', entry: e, sl: sPx, tp: tPx });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spec, entryPx, stopPx, targetPx]);
+  /** الهدف بالجهة الخطأ (فوق الدخول ببيع/تحته بشراء) — خطأ كتابة شائع، يُقال صراحةً بدل تجاهل الهدف */
+  const targetWrongSide = plan?.issue === 'tpWrongSide';
+  const lots = result && !result.belowMinLot ? result.lots : null;
+  /** الربح المحتمل ≈ نقاط الهدف × قيمة النقطة للوت × اللوت (تقدير كالمخاطرة تماماً) */
+  const potentialProfit =
+    plan?.ok && plan.rewardPips != null && pv != null && lots != null ? plan.rewardPips * pv * lots : null;
 
   const money = (v: number) =>
     `${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${account}`;
@@ -272,6 +295,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           {input(stopPx, setStopPx, t.riskCalcStop, t.riskCalcStop)}
         </View>
       </View>
+      <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcTarget}</Text>
+      {input(targetPx, setTargetPx, t.riskCalcTargetPlaceholder, t.riskCalcTarget)}
+      {targetWrongSide ? (
+        <Text style={[styles.warn, { textAlign: align }]}>
+          {num(stopPx) < num(entryPx) ? t.planTpWrongBuy : t.planTpWrongSell}
+        </Text>
+      ) : null}
       {derivedSl != null ? (
         <Text style={[styles.hint, styles.hintOn, { textAlign: align }]} accessibilityLiveRegion="polite">
           = {derivedSl} pip
@@ -309,6 +339,17 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             {badNumber ? t.invalidNumberHint : t.riskCalcFillHint}
           </Text>
         )}
+        {plan?.ok ? (
+          <>
+            <Text style={[styles.resultMeta, { textAlign: align }]}>
+              {t.planRewardWord} {formatPips(plan.rewardPips) ?? '—'} pip · R:R {formatRR(plan.rr)}
+              {potentialProfit != null ? ` · ${t.riskCalcPotentialProfit} ≈ ${money(potentialProfit)}` : ''}
+            </Text>
+            {plan.rr != null && plan.rr < 1 ? (
+              <Text style={[styles.warn, { textAlign: align }]}>{t.planLowRR}</Text>
+            ) : null}
+          </>
+        ) : null}
         {pv != null ? (
           <Text style={[styles.resultMeta, { textAlign: align }]}>
             {t.riskCalcPipValue}: {money(pv)}
