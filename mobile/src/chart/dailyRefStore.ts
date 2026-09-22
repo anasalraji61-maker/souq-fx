@@ -45,7 +45,7 @@ async function drain() {
       try {
         const s = await api.chart(sym, 'D', 50);
         const demo = s?.data_source?.kind === 'demo';
-        const prev = demo ? null : prevCloseFromDaily(s?.candles ?? []);
+        const prev = demo ? null : prevCloseFromDaily(s?.candles ?? [], Date.now() / 1000);
         cache.set(sym, { prevClose: prev, at: Date.now(), ok: true });
       } catch {
         cache.set(sym, { prevClose: null, at: Date.now(), ok: false });

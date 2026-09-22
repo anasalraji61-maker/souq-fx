@@ -5,13 +5,39 @@
 import assert from 'node:assert/strict';
 import { dailyChange, formatPct, prevCloseFromDaily, tickDirection } from './dailyChange';
 
-// إغلاق الأمس = الشمعة قبل الأخيرة، حتى لو وصلت الشموع غير مرتّبة
-assert.equal(prevCloseFromDaily([{ time: 1, close: 1.08 }, { time: 2, close: 1.09 }, { time: 3, close: 1.1 }]), 1.09);
-assert.equal(prevCloseFromDaily([{ time: 3, close: 1.1 }, { time: 1, close: 1.08 }, { time: 2, close: 1.09 }]), 1.09);
-assert.equal(prevCloseFromDaily([{ time: 1, close: 1.08 }]), null);
+// أيام UTC حقيقية (ثوانٍ): 2026-09-14 إثنين … 2026-09-20 أحد، 2026-09-21 إثنين
+const D = (iso: string) => Date.parse(`${iso}T00:00:00Z`) / 1000;
+const H = 3600;
+const wed = { time: D('2026-09-16'), close: 1.08 };
+const thu = { time: D('2026-09-17'), close: 1.09 };
+const fri = { time: D('2026-09-18'), close: 1.1 };
+const sun = { time: D('2026-09-20'), close: 1.105 };
+const mon = { time: D('2026-09-21'), close: 1.12 };
+
+// إغلاق الأمس = الجلسة السابقة، حتى لو وصلت الشموع غير مرتّبة
+assert.equal(prevCloseFromDaily([wed, thu, fri]), 1.09);
+assert.equal(prevCloseFromDaily([fri, wed, thu]), 1.09);
+assert.equal(prevCloseFromDaily([wed]), null);
 assert.equal(prevCloseFromDaily([]), null);
-assert.equal(prevCloseFromDaily([{ time: 1, close: 0 }, { time: 2, close: 1 }]), null);
-assert.equal(prevCloseFromDaily([{ time: 1, close: NaN }, { time: 2, close: 1 }]), null);
+assert.equal(prevCloseFromDaily([{ ...thu, close: 0 }, fri]), null);
+assert.equal(prevCloseFromDaily([{ ...thu, close: NaN }, fri]), null);
+// السبت/صباح الأحد (السوق مغلق): الجمعة مقابل الخميس كما تعرضه تطبيقات التداول
+assert.equal(prevCloseFromDaily([wed, thu, fri], D('2026-09-19') + 12 * H), 1.09);
+assert.equal(prevCloseFromDaily([wed, thu, fri], D('2026-09-20') + 10 * H), 1.09);
+// مساء الأحد بعد الافتتاح وقبل ظهور شمعة الأحد: المرجع إغلاق الجمعة (كان الخميس)
+assert.equal(prevCloseFromDaily([wed, thu, fri], D('2026-09-20') + 22 * H), 1.1);
+// شمعة الأحد جزء من جلسة الإثنين: المرجع الجمعة مساء الأحد ويوم الإثنين (كان إغلاق شمعة الأحد)
+assert.equal(prevCloseFromDaily([thu, fri, sun], D('2026-09-20') + 23 * H), 1.1);
+assert.equal(prevCloseFromDaily([thu, fri, sun, mon], D('2026-09-21') + 9 * H), 1.1);
+assert.equal(prevCloseFromDaily([thu, fri, mon]), 1.1);
+// الثلاثاء قبل ظهور شمعته (مزوّد متأخر): المرجع إغلاق الإثنين المكتمل
+assert.equal(prevCloseFromDaily([fri, sun, mon], D('2026-09-22') + 3 * H), 1.12);
+// أداة تتداول بالعطلة (شمعة سبت بالسلسلة): أيام UTC عادية — الأحد مقابل السبت
+const sat = { time: D('2026-09-19'), close: 64000 };
+assert.equal(
+  prevCloseFromDaily([{ time: D('2026-09-18'), close: 63000 }, sat, { time: D('2026-09-20'), close: 65000 }], D('2026-09-20') + 12 * H),
+  64000
+);
 
 // تغيّر موجب/سالب/ثابت
 const up = dailyChange(1.1, 1.0)!;
