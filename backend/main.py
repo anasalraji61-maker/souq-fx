@@ -1044,12 +1044,13 @@ def market_quote(symbol: str):
     if not book:
         series = build_series(symbol.upper(), "15m")
         last = series.last
-        spread = last * 0.00008
         return {
             "symbol": symbol.upper(),
             "price": last,
-            "bid": last - spread / 2,
-            "ask": last + spread / 2,
+            # لا Bid/Ask بلا دفتر أسعار حقيقي: كان سبريد ثابت مختلَق (0.8 نقطة أساس من الإغلاق) يُعرض
+            # بالشارت كـ«Bid/Ask/سبريد» للمتداول — العميل يُخفي السطر حين يكونان null.
+            "bid": None,
+            "ask": None,
             "source": "ohlc_fallback",
             # provider/cache = آخر إغلاق حقيقي؛ demo = سلسلة بذرية (المزوّد غير مهيّأ أو لا يعرف الرمز) —
             # سعر غير حقيقي لا يصلح لحساب رقمي (حاسبة حجم المركز تتجاهله وتطلب السعر يدوياً).

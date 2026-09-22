@@ -20,7 +20,7 @@ import { WATCHLIST } from '../chart/watchlist';
 import { loadWatchlistItems } from '../chart/watchlistStore';
 import { formatPrice } from '../chart/math';
 import { livePriceForChart } from '../chart/liveSeries';
-import { provenanceLabel, tickStatusLabel, normalizeProvenance } from '../chart/dataSource';
+import { provenanceLabel, tickStatusLabel, normalizeProvenance, isRealQuote } from '../chart/dataSource';
 import { marketStatusLabel } from '../chart/marketHours';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import { mockSeries } from '../mock';
@@ -201,7 +201,8 @@ export function FocusChartModal({
       let ref: number | null = liveTick?.price ?? seriesLast;
       if (ref == null) {
         const q = await api.marketQuote(sym);
-        ref = typeof q.price === 'number' && Number.isFinite(q.price) && q.price > 0 ? q.price : null;
+        // نفس القاعدة للاقتباس: البذري التجريبي (المزوّد متعذّر) لا يحدّد اتجاه التنبيه
+        ref = isRealQuote(q) ? q.price : null;
       }
       if (ref == null) throw new Error('no reference price');
       const condition: 'above' | 'below' = price >= ref ? 'above' : 'below';
