@@ -439,7 +439,7 @@ export function FocusChartModal({
               </Text>
             ) : null}
             <AlertsPanel defaultSymbol={sym} refreshKey={alertsRefreshKey} />
-            <IndicatorAlertsPanel defaultSymbol={sym} />
+            <IndicatorAlertsPanel defaultSymbol={sym} defaultTimeframe={tf} />
             <BacktestPanel defaultSymbol={sym} defaultTimeframe={tf} />
           </ScrollView>
         </View>

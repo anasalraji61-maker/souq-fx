@@ -198,7 +198,7 @@ export function MatrixBottomDock({
             {tab === 'alerts' ? (
               <>
                 <AlertsPanel defaultSymbol={symbol} />
-                <IndicatorAlertsPanel defaultSymbol={symbol} />
+                <IndicatorAlertsPanel defaultSymbol={symbol} defaultTimeframe={timeframe} />
               </>
             ) : null}
             {tab === 'news' ? <NewsPanel /> : null}

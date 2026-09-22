@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from academy_data import get_lecture, get_school, get_schools_summary
 import elevenlabs_tts as tts
@@ -249,6 +249,22 @@ class IndicatorAlertCreate(BaseModel):
     fast_period: int = 9
     slow_period: int = 21
     note: str = ""
+
+    @model_validator(mode="after")
+    def _consistent(self) -> "IndicatorAlertCreate":
+        """تنبيه لا يمكن أن يُطلق يُرفض بـ422 بدل حفظه بصمت: ma_cross/macd_cross بشرط above/below، أو RSI بلا
+        عتبة (NaN من العميل يصل null) أو خارج 0–100، أو فريم غير معروف (build_series كان يحوّله لـ15m بصمت
+        بينما التنبيه يُعرض بفريمه المكتوب)."""
+        if self.alert_type == "rsi":
+            if self.condition not in ("above", "below"):
+                raise ValueError("rsi alert needs condition above/below")
+            if self.value is None or not (0 < self.value < 100):
+                raise ValueError("rsi threshold must be between 0 and 100")
+        elif self.condition not in ("cross_up", "cross_down"):
+            raise ValueError("cross alert needs condition cross_up/cross_down")
+        if self.timeframe not in TF_SECONDS:
+            raise ValueError("unknown timeframe")
+        return self
 
 
 class TradeCreate(BaseModel):

@@ -180,7 +180,7 @@ export function MatrixSidePanel({
             ) : null}
 
             {panel === 'alerts' ? <AlertsPanel defaultSymbol={symbol} /> : null}
-            {panel === 'indAlerts' ? <IndicatorAlertsPanel defaultSymbol={symbol} /> : null}
+            {panel === 'indAlerts' ? <IndicatorAlertsPanel defaultSymbol={symbol} defaultTimeframe={timeframe} /> : null}
             {panel === 'calendar' ? <CalendarPanel /> : null}
             {panel === 'screener' ? <ScreenerMini /> : null}
             {panel === 'reports' ? <WeeklyReportPanel /> : null}

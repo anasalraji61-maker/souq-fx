@@ -20,7 +20,13 @@ import type { Dict } from '../i18n/locales';
 /** «EURUSD · RSI · تحت 30» / «GBPUSD · تقاطع المتوسطات · تقاطع صاعد ▲» بلغة الواجهة — القائمة وتأكيد
  * الحذف والإشعار كانت تعرض المعرّفات الخام (rsi · below / ma_cross · cross_up) بكل اللغات. */
 function describeIndAlert(
-  a: { symbol: string; alert_type: string; condition: string; value?: number | null },
+  a: {
+    symbol: string;
+    timeframe?: string | null;
+    alert_type: string;
+    condition: string;
+    value?: number | null;
+  },
   t: Dict
 ): string {
   const typeLabel: Record<string, string> = {
@@ -39,8 +45,18 @@ function describeIndAlert(
           : a.condition === 'cross_down'
             ? t.indAlertsCrossDownChip
             : `${a.condition}${val}`;
-  return `${a.symbol} · ${typeLabel[a.alert_type] ?? a.alert_type} · ${cond}`;
+  // الفريم جزء من المعنى: «RSI تحت 30» على 15 دقيقة غير نفسه على اليومي — كان مخفياً (15m ثابت).
+  const tf = a.timeframe ? ` · ${a.timeframe}` : '';
+  return `${a.symbol}${tf} · ${typeLabel[a.alert_type] ?? a.alert_type} · ${cond}`;
 }
+
+/** نفس قائمة الحاسبة والدفتر والباك-تست — اختيار الزوج بنقرة بيد واحدة، والخانة تبقى للرموز الأخرى. */
+const QUICK_SYMBOLS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'GBPJPY', 'EURGBP'];
+/** فريمات التنبيه الشائعة للمتداول الفردي (معرّفات الخادم TF_SECONDS). كان 15m ثابتاً وغير ظاهر. */
+const ALERT_TFS = ['15m', '1H', '4H', 'D'] as const;
+type AlertTf = (typeof ALERT_TFS)[number];
+type IndType = 'rsi' | 'ma_cross' | 'macd_cross';
+type IndCond = 'above' | 'below' | 'cross_up' | 'cross_down';
 
 type IndAlert = {
   id: string;
@@ -55,16 +71,25 @@ type IndAlert = {
 
 type Props = {
   defaultSymbol?: string;
+  /** فريم الشارت المفتوح (إن كان من فريمات التنبيه) — التنبيه من الشارت يبدأ بنفس فريمه. */
+  defaultTimeframe?: string;
 };
 
-export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
+function asAlertTf(v: string | undefined): AlertTf | null {
+  return v && (ALERT_TFS as readonly string[]).includes(v) ? (v as AlertTf) : null;
+}
+
+export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD', defaultTimeframe }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [alerts, setAlerts] = useState<IndAlert[]>([]);
   const [symbol, setSymbol] = useState(defaultSymbol);
-  const [type, setType] = useState<'rsi' | 'ma_cross' | 'macd_cross'>('rsi');
-  const [condition, setCondition] = useState<'above' | 'below' | 'cross_up' | 'cross_down'>('below');
+  const [type, setType] = useState<IndType>('rsi');
+  const [condition, setCondition] = useState<IndCond>('below');
   const [value, setValue] = useState('30');
+  const [tf, setTf] = useState<AlertTf>(asAlertTf(defaultTimeframe) ?? '1H');
+  /** تأكيد «مفعَّل» بعد الإضافة الناجحة — كانت الإضافة تنجح بصمت (نقرة صوتية فقط). */
+  const [armed, setArmed] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   /** وضوح الحالة: يميّز فشل تحميل القائمة عن عدم وجود تنبيهات فعلاً */
@@ -75,6 +100,11 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
   useEffect(() => {
     setSymbol(defaultSymbol);
   }, [defaultSymbol]);
+
+  useEffect(() => {
+    const d = asAlertTf(defaultTimeframe);
+    if (d) setTf(d);
+  }, [defaultTimeframe]);
 
   // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة — يشمل نتيجة الاستطلاع
   // الدوري (setInterval) التي قد تصل بعد إلغاء التركيب رغم إيقاف المؤقت نفسه — نفس مبدأ
@@ -119,126 +149,171 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
     return () => clearInterval(id);
   }, [refresh, t]);
 
-  const add = async () => {
-    setBusy(true);
+  /** تغيير النوع يضبط شرطاً صالحاً له: كان الشرط «تحت» يبقى عند التحويل لتقاطع MA/MACD فلا زر مختار،
+   * ويُرسَل ma_cross + below للخادم → تنبيه لا يُطلق أبداً (لا فرع له بـ_check_indicator_alert). */
+  const pickType = (ty: IndType) => {
+    setType(ty);
+    setArmed(null);
     setFormError(null);
-    try {
-      const needsVal = type === 'rsi';
-      await api.createIndicatorAlert({
-        symbol: symbol.trim().toUpperCase(),
-        timeframe: '15m',
-        alert_type: type,
-        condition: type === 'rsi' ? condition : type.includes('cross') ? condition : 'cross_up',
-        value: needsVal ? (parseDecimal(value) ?? NaN) : undefined,
-      });
-      playSoftClick();
-      await refresh();
-    } catch {
-      setFormError(t.indAlertsAddError);
-    } finally {
-      setBusy(false);
+    if (ty === 'rsi') {
+      if (condition !== 'above' && condition !== 'below') {
+        setCondition('below');
+        setValue('30');
+      }
+    } else if (condition !== 'cross_up' && condition !== 'cross_down') {
+      setCondition('cross_up');
     }
   };
 
-  const TYPE_LABEL: Record<'rsi' | 'ma_cross' | 'macd_cross', string> = {
+  /** «RSI فوق» بعتبة 30 المتروكة من «تحت» = تنبيه يُطلق فوراً تقريباً؛ نقلب العتبة الافتراضية 30↔70 فقط
+   * إن لم يغيّرها المتداول بنفسه. */
+  const pickRsiSide = (c: 'above' | 'below') => {
+    setCondition(c);
+    setArmed(null);
+    const cur = value.trim();
+    if (c === 'above' && (cur === '30' || cur === '')) setValue('70');
+    if (c === 'below' && (cur === '70' || cur === '')) setValue('30');
+  };
+
+  const add = async () => {
+    setFormError(null);
+    setArmed(null);
+    const sym = symbol.trim().toUpperCase();
+    if (!/^[A-Z0-9./]{3,12}$/.test(sym)) {
+      setFormError(t.indAlertsSymbolInvalid);
+      return;
+    }
+    let rsiValue: number | undefined;
+    if (type === 'rsi') {
+      // كان رقم غير مفهوم يُرسَل NaN → JSON null → تنبيه RSI بلا عتبة لا يُطلق أبداً، بصمت.
+      const v = parseDecimal(value);
+      if (v == null || !Number.isFinite(v) || v < 1 || v > 99) {
+        setFormError(t.indAlertsRsiRange);
+        return;
+      }
+      rsiValue = v;
+    }
+    const cond: IndCond =
+      type === 'rsi'
+        ? condition === 'above'
+          ? 'above'
+          : 'below'
+        : condition === 'cross_down'
+          ? 'cross_down'
+          : 'cross_up';
+    setBusy(true);
+    try {
+      await api.createIndicatorAlert({
+        symbol: sym,
+        timeframe: tf,
+        alert_type: type,
+        condition: cond,
+        value: rsiValue,
+      });
+      playSoftClick();
+      if (mountedRef.current) {
+        setArmed(
+          `${t.indAlertsArmed} ${describeIndAlert(
+            { symbol: sym, timeframe: tf, alert_type: type, condition: cond, value: rsiValue },
+            t
+          )}`
+        );
+      }
+      await refresh();
+    } catch {
+      if (mountedRef.current) setFormError(t.indAlertsAddError);
+    } finally {
+      if (mountedRef.current) setBusy(false);
+    }
+  };
+
+  const TYPE_LABEL: Record<IndType, string> = {
     rsi: t.indAlertsTypeRsi,
     ma_cross: t.indAlertsTypeMaCross,
     macd_cross: t.indAlertsTypeMacdCross,
   };
 
+  /** زر اختيار واحد بنفس نمط أزرار الحاسبة/الباك-تست (حالة «مختار» ظاهرة ومقروءة لقارئ الشاشة). */
+  const chip = (key: string, label: string, on: boolean, onPress: () => void, a11y: string) => (
+    <Pressable
+      key={key}
+      accessibilityRole="button"
+      accessibilityState={{ selected: on }}
+      style={({ pressed }) => [
+        styles.chip,
+        on && styles.chipOn,
+        pressed && {
+          opacity: buttons.pressedOpacity,
+          transform: [{ scale: buttons.pressedScale }],
+        },
+      ]}
+      onPress={onPress}
+      accessibilityLabel={a11y}
+    >
+      <Text style={[styles.chipText, on && styles.chipTextOn]}>{label}</Text>
+    </Pressable>
+  );
+
   return (
     <View style={styles.wrap}>
       <Text style={[styles.title, { textAlign: align }]}>{t.indAlertsTitle}</Text>
       <Text style={[styles.sub, { textAlign: align }]}>{t.indAlertsSub}</Text>
-      <TextInput style={[styles.input, { textAlign: align }]} value={symbol} onChangeText={setSymbol} placeholder="EURUSD" placeholderTextColor={colors.textDim} autoCapitalize="characters" autoCorrect={false} returnKeyType="done" underlineColorAndroid="transparent" clearButtonMode="while-editing" keyboardAppearance="dark" selectionColor={colors.accent} accessibilityLabel={t.indAlertsSymbolA11y} />
       <View style={[styles.row, rtl && styles.rowRtl]}>
-        {(['rsi', 'ma_cross', 'macd_cross'] as const).map((ty) => (
-          <Pressable
-            accessibilityRole="button"
-            key={ty}
-            style={({ pressed }) => [
-              styles.chip,
-              type === ty && styles.chipOn,
-              pressed && {
-                opacity: buttons.pressedOpacity,
-                transform: [{ scale: buttons.pressedScale }],
-              },
-            ]}
-            onPress={() => setType(ty)}
-            accessibilityLabel={`${t.indAlertsTypeA11yPrefix}: ${TYPE_LABEL[ty]}`}
-          >
-            <Text style={[styles.chipText, type === ty && styles.chipTextOn]}>{ty}</Text>
-          </Pressable>
-        ))}
+        {QUICK_SYMBOLS.map((q) =>
+          chip(
+            q,
+            q,
+            symbol.trim().toUpperCase() === q,
+            () => {
+              setSymbol(q);
+              setArmed(null);
+            },
+            `${t.indAlertsSymbolA11y}: ${q}`
+          )
+        )}
       </View>
+      <TextInput style={[styles.input, { textAlign: align }]} value={symbol} onChangeText={(v) => { setSymbol(v); setArmed(null); }} placeholder="EURUSD" placeholderTextColor={colors.textDim} autoCapitalize="characters" autoCorrect={false} returnKeyType="done" underlineColorAndroid="transparent" clearButtonMode="while-editing" keyboardAppearance="dark" selectionColor={colors.accent} accessibilityLabel={t.indAlertsSymbolA11y} />
+      <View style={[styles.row, styles.rowCenter, rtl && styles.rowRtl]}>
+        <Text style={styles.rowLabel}>{t.indAlertsTfLabel}</Text>
+        {ALERT_TFS.map((x) =>
+          chip(
+            x,
+            x,
+            tf === x,
+            () => {
+              setTf(x);
+              setArmed(null);
+            },
+            `${t.indAlertsTfLabel} ${x}`
+          )
+        )}
+      </View>
+      <View style={[styles.row, rtl && styles.rowRtl]}>
+        {(['rsi', 'ma_cross', 'macd_cross'] as const).map((ty) =>
+          chip(
+            ty,
+            TYPE_LABEL[ty],
+            type === ty,
+            () => pickType(ty),
+            `${t.indAlertsTypeA11yPrefix}: ${TYPE_LABEL[ty]}`
+          )
+        )}
+      </View>
+      <Text style={[styles.hint, { textAlign: align }]}>
+        {type === 'rsi' ? t.indAlertsHintRsi : type === 'ma_cross' ? t.indAlertsHintMa : t.indAlertsHintMacd}
+      </Text>
       {type === 'rsi' ? (
         <>
           <View style={[styles.row, rtl && styles.rowRtl]}>
-            <Pressable
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.chip,
-                condition === 'below' && styles.chipOn,
-                pressed && {
-                  opacity: buttons.pressedOpacity,
-                  transform: [{ scale: buttons.pressedScale }],
-                },
-              ]}
-              onPress={() => setCondition('below')}
-              accessibilityLabel={t.indAlertsBelowA11y}
-            >
-              <Text style={styles.chipText}>{t.indAlertsBelowChip}</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.chip,
-                condition === 'above' && styles.chipOn,
-                pressed && {
-                  opacity: buttons.pressedOpacity,
-                  transform: [{ scale: buttons.pressedScale }],
-                },
-              ]}
-              onPress={() => setCondition('above')}
-              accessibilityLabel={t.indAlertsAboveA11y}
-            >
-              <Text style={styles.chipText}>{t.indAlertsAboveChip}</Text>
-            </Pressable>
+            {chip('below', t.indAlertsBelowChip, condition === 'below', () => pickRsiSide('below'), t.indAlertsBelowA11y)}
+            {chip('above', t.indAlertsAboveChip, condition === 'above', () => pickRsiSide('above'), t.indAlertsAboveA11y)}
           </View>
-          <TextInput style={[styles.input, { textAlign: align }]} value={value} onChangeText={setValue} keyboardType="decimal-pad" maxLength={12} placeholder="30" placeholderTextColor={colors.textDim} returnKeyType="done" underlineColorAndroid="transparent" clearButtonMode="while-editing" keyboardAppearance="dark" selectionColor={colors.accent} accessibilityLabel={t.indAlertsThresholdA11y} />
+          <TextInput style={[styles.input, { textAlign: align }]} value={value} onChangeText={(v) => { setValue(v); setArmed(null); }} keyboardType="decimal-pad" maxLength={12} placeholder={condition === 'above' ? '70' : '30'} placeholderTextColor={colors.textDim} returnKeyType="done" underlineColorAndroid="transparent" clearButtonMode="while-editing" keyboardAppearance="dark" selectionColor={colors.accent} accessibilityLabel={t.indAlertsThresholdA11y} />
         </>
       ) : (
         <View style={[styles.row, rtl && styles.rowRtl]}>
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.chip,
-              condition === 'cross_up' && styles.chipOn,
-              pressed && {
-                opacity: buttons.pressedOpacity,
-                transform: [{ scale: buttons.pressedScale }],
-              },
-            ]}
-            onPress={() => setCondition('cross_up')}
-            accessibilityLabel={t.indAlertsCrossUpA11y}
-          >
-            <Text style={styles.chipText}>{t.indAlertsCrossUpChip}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.chip,
-              condition === 'cross_down' && styles.chipOn,
-              pressed && {
-                opacity: buttons.pressedOpacity,
-                transform: [{ scale: buttons.pressedScale }],
-              },
-            ]}
-            onPress={() => setCondition('cross_down')}
-            accessibilityLabel={t.indAlertsCrossDownA11y}
-          >
-            <Text style={styles.chipText}>{t.indAlertsCrossDownChip}</Text>
-          </Pressable>
+          {chip('cross_up', t.indAlertsCrossUpChip, condition === 'cross_up', () => { setCondition('cross_up'); setArmed(null); }, t.indAlertsCrossUpA11y)}
+          {chip('cross_down', t.indAlertsCrossDownChip, condition === 'cross_down', () => { setCondition('cross_down'); setArmed(null); }, t.indAlertsCrossDownA11y)}
         </View>
       )}
       <Pressable
@@ -260,6 +335,11 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
         <Text style={styles.btnText}>{busy ? '...' : t.indAlertsAddBtn}</Text>
       </Pressable>
       {formError ? <Text style={[styles.formError, { textAlign: align }]}>{formError}</Text> : null}
+      {armed ? (
+        <Text style={[styles.armed, { textAlign: align }]} accessibilityLiveRegion="polite">
+          {armed}
+        </Text>
+      ) : null}
       {loading ? (
         <ActivityIndicator color={colors.accent} />
       ) : (
@@ -273,7 +353,10 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
               <View key={a.id} style={[styles.item, rtl && styles.itemRtl]}>
                 <Text style={[styles.itemText, { textAlign: align }]}>
                   {describeIndAlert(a, t)}
-                  {a.triggered ? ' ✓' : ''}
+                  {/* كان «✓» غامضاً (مفعَّل؟ تحقّق؟) — الآن حالة مسمّاة: يراقب / أُطلق (لا يُعاد إطلاقه) */}
+                  <Text style={a.triggered ? styles.tagFired : styles.tagWatching}>
+                    {` · ${a.triggered ? t.indAlertsFiredTag : t.indAlertsWatchingTag}`}
+                  </Text>
                 </Text>
                 <Pressable
                   accessibilityRole="button"
@@ -340,6 +423,12 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   rowRtl: { flexDirection: 'row-reverse' },
+  rowCenter: { alignItems: 'center' },
+  rowLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700' },
+  hint: { color: colors.textDim, fontSize: 10, lineHeight: 15 },
+  armed: { color: colors.bull, fontSize: 11, fontWeight: '800', marginTop: spacing.xs },
+  tagWatching: { color: colors.accent, fontWeight: '700' },
+  tagFired: { color: colors.textDim, fontWeight: '700' },
   chip: {
     paddingHorizontal: 10,
     paddingVertical: spacing.sm,

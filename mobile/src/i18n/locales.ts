@@ -415,6 +415,15 @@ export type Dict = {
   indAlertsDeleteFailedBody: string;
   indAlertsDeleteA11yPrefix: string;
   indAlertsPushTitle: string;
+  indAlertsTfLabel: string;
+  indAlertsHintRsi: string;
+  indAlertsHintMa: string;
+  indAlertsHintMacd: string;
+  indAlertsRsiRange: string;
+  indAlertsSymbolInvalid: string;
+  indAlertsArmed: string;
+  indAlertsFiredTag: string;
+  indAlertsWatchingTag: string;
   calendarTitle: string;
   calendarCurrencyA11yPrefix: string;
   calendarAllWord: string;
@@ -1187,6 +1196,15 @@ const ar: Dict = {
   indAlertsDeleteFailedBody: 'حدث خطأ أثناء حذف تنبيه المؤشر، حاول مرة أخرى.',
   indAlertsDeleteA11yPrefix: 'حذف تنبيه مؤشر',
   indAlertsPushTitle: 'MATRIX · تنبيه مؤشر',
+  indAlertsTfLabel: 'الفريم:',
+  indAlertsHintRsi: 'RSI 14: تحت 30 = تشبّع بيعي، فوق 70 = تشبّع شرائي — قد يبقى متشبّعاً طويلاً بترند قوي',
+  indAlertsHintMa: 'المتوسط السريع SMA 9 يقطع البطيء SMA 21 على آخر شمعة من الفريم المختار',
+  indAlertsHintMacd: 'خط MACD (12، 26) يقطع خط الإشارة (9) على آخر شمعة من الفريم المختار',
+  indAlertsRsiRange: 'عتبة RSI رقم بين 1 و99 (الشائع 30 أو 70)',
+  indAlertsSymbolInvalid: 'اكتب رمزاً صحيحاً مثل EURUSD',
+  indAlertsArmed: '✓ التنبيه مفعَّل:',
+  indAlertsFiredTag: 'أُطلق',
+  indAlertsWatchingTag: 'يراقب',
   calendarTitle: 'تقويم اقتصادي · حي',
   calendarCurrencyA11yPrefix: 'تصفية حسب العملة',
   calendarAllWord: 'الكل',
@@ -1966,6 +1984,15 @@ const enUS: Dict = {
   indAlertsDeleteFailedBody: 'An error occurred while deleting the indicator alert, try again.',
   indAlertsDeleteA11yPrefix: 'Delete indicator alert',
   indAlertsPushTitle: 'MATRIX · Indicator alert',
+  indAlertsTfLabel: 'Timeframe:',
+  indAlertsHintRsi: 'RSI 14: below 30 = oversold, above 70 = overbought — it can stay stretched for a long time in a strong trend',
+  indAlertsHintMa: 'Fast SMA 9 crosses slow SMA 21 on the latest candle of the chosen timeframe',
+  indAlertsHintMacd: 'MACD line (12, 26) crosses its signal line (9) on the latest candle of the chosen timeframe',
+  indAlertsRsiRange: 'RSI threshold must be a number from 1 to 99 (30 or 70 are common)',
+  indAlertsSymbolInvalid: 'Enter a valid symbol such as EURUSD',
+  indAlertsArmed: '✓ Alert armed:',
+  indAlertsFiredTag: 'fired',
+  indAlertsWatchingTag: 'watching',
   calendarTitle: 'Economic calendar · Live',
   calendarCurrencyA11yPrefix: 'Filter by currency',
   calendarAllWord: 'All',
@@ -2766,6 +2793,15 @@ const ku: Dict = {
   indAlertsDeleteFailedBody: 'هەڵەیەک ڕوویدا لە کاتی سڕینەوەی ئاگادارکردنەوەی پێوەرەکە، دووبارە هەوڵبدەرەوە.',
   indAlertsDeleteA11yPrefix: 'سڕینەوەی ئاگادارکردنەوەی پێوەر',
   indAlertsPushTitle: 'MATRIX · ئاگادارکردنەوەی پێوەر',
+  indAlertsTfLabel: 'تایم‌فرەیم:',
+  indAlertsHintRsi: 'RSI 14: خوار 30 = زۆر فرۆشراو، سەرووی 70 = زۆر کڕدراو — لە ترێندی بەهێزدا دەتوانێت بۆ ماوەیەکی درێژ وا بمێنێتەوە',
+  indAlertsHintMa: 'SMA 9ی خێرا SMA 21ی هێواش دەبڕێت لەسەر دوایین مۆمی تایم‌فرەیمی هەڵبژێردراو',
+  indAlertsHintMacd: 'هێڵی MACD (12، 26) هێڵی ئاماژە (9) دەبڕێت لەسەر دوایین مۆمی تایم‌فرەیمی هەڵبژێردراو',
+  indAlertsRsiRange: 'سنووری RSI دەبێت ژمارەیەک بێت لە 1 تا 99 (باوترین 30 یان 70)',
+  indAlertsSymbolInvalid: 'هێمایەکی دروست بنووسە وەک EURUSD',
+  indAlertsArmed: '✓ ئاگادارکردنەوە چالاکە:',
+  indAlertsFiredTag: 'کارا بوو',
+  indAlertsWatchingTag: 'چاودێری دەکات',
   calendarTitle: 'ڕۆژژمێری ئابووری · ڕاستەوخۆ',
   calendarCurrencyA11yPrefix: 'پاڵاوتن بەپێی دراو',
   calendarAllWord: 'هەمووی',
