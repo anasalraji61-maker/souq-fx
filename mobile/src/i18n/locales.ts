@@ -194,6 +194,22 @@ export type Dict = {
   voteDisagreeWord: string;
   voteCastError: string;
   voteLoginRequired: string;
+  chatLinksNotAllowed: string;
+  votePublishLoginRequired: string;
+  voteLinksNotAllowed: string;
+  modMessageOptionsA11y: string;
+  modIdeaOptionsA11y: string;
+  modReportLabel: string;
+  modReasonSpam: string;
+  modReasonAbuse: string;
+  modReasonScam: string;
+  modBlockUser: string;
+  modReported: string;
+  modReportLoginRequired: string;
+  modReportError: string;
+  modBlocked: string;
+  modBlockedCount: string;
+  modUnblockA11y: string;
   voteAgreeA11yPrefix: string;
   voteDisagreeA11yPrefix: string;
   indicatorBollinger: string;
@@ -917,6 +933,22 @@ const ar: Dict = {
   voteDisagreeWord: 'رافض',
   voteCastError: 'تعذر إرسال صوتك للخادم — قد لا يُحتسب، حاول لاحقاً',
   voteLoginRequired: 'سجّل الدخول للتصويت — صوت واحد لكل حساب حتى تبقى نسبة الموافقة صادقة',
+  chatLinksNotAllowed: 'الروابط غير مسموحة بالمجموعة — حماية من قنوات «التوصيات» الاحتيالية',
+  votePublishLoginRequired: 'سجّل الدخول لنشر فكرة — تظهر باسم حسابك',
+  voteLinksNotAllowed: 'الروابط غير مسموحة بالأفكار — اكتب تحليلك نصاً',
+  modMessageOptionsA11y: 'خيارات الرسالة: إبلاغ أو حظر',
+  modIdeaOptionsA11y: 'خيارات الفكرة: إبلاغ أو حظر',
+  modReportLabel: 'إبلاغ:',
+  modReasonSpam: 'مزعج',
+  modReasonAbuse: 'مسيء',
+  modReasonScam: 'احتيال',
+  modBlockUser: 'حظر {user}',
+  modReported: 'شكراً — أُخفي المحتوى عندك وسيُراجَع البلاغ',
+  modReportLoginRequired: 'سجّل الدخول للإبلاغ — أو احظر المرسل ليختفي عندك',
+  modReportError: 'تعذّر إرسال البلاغ — حاول مجدداً',
+  modBlocked: 'حُظر {user} — لن تظهر رسائله وأفكاره عندك',
+  modBlockedCount: 'محظورون: {n} · إلغاء الحظر',
+  modUnblockA11y: 'إلغاء حظر كل المستخدمين المحظورين',
   voteAgreeA11yPrefix: 'موافقة على فكرة',
   voteDisagreeA11yPrefix: 'رفض فكرة',
   indicatorBollinger: 'بولنجر',
@@ -1649,6 +1681,22 @@ const enUS: Dict = {
   voteDisagreeWord: 'Disagree',
   voteCastError: 'Could not send your vote to the server — it may not count, try later',
   voteLoginRequired: 'Sign in to vote — one vote per account keeps the approval rate honest',
+  chatLinksNotAllowed: 'Links aren\'t allowed in the group — protection against scam "signal" channels',
+  votePublishLoginRequired: 'Sign in to publish an idea — it shows under your account name',
+  voteLinksNotAllowed: 'Links aren\'t allowed in ideas — write your analysis as text',
+  modMessageOptionsA11y: 'Message options: report or block',
+  modIdeaOptionsA11y: 'Idea options: report or block',
+  modReportLabel: 'Report:',
+  modReasonSpam: 'Spam',
+  modReasonAbuse: 'Abusive',
+  modReasonScam: 'Scam',
+  modBlockUser: 'Block {user}',
+  modReported: 'Thanks — hidden for you, and the report will be reviewed',
+  modReportLoginRequired: 'Sign in to report — or block the sender to hide them for you',
+  modReportError: 'Couldn\'t send the report — try again',
+  modBlocked: '{user} blocked — their messages and ideas won\'t show for you',
+  modBlockedCount: 'Blocked: {n} · Unblock',
+  modUnblockA11y: 'Unblock all blocked users',
   voteAgreeA11yPrefix: 'Agree with idea',
   voteDisagreeA11yPrefix: 'Disagree with idea',
   indicatorBollinger: 'Bollinger',
@@ -2400,6 +2448,22 @@ const ku: Dict = {
   voteDisagreeWord: 'ڕازی نیم',
   voteCastError: 'نەکرا دەنگت بۆ ڕاژە بنێردرێت — لەوانەیە نەژمێردرێت، دواتر هەوڵبدەرەوە',
   voteLoginRequired: 'بۆ دەنگدان بچۆ ژوورەوە — یەک دەنگ بۆ هەر هەژمارێک',
+  chatLinksNotAllowed: 'بەستەر لە گروپدا ڕێگەپێدراو نییە — پاراستن لە کەناڵی «ئامۆژگاری» فێڵبازانە',
+  votePublishLoginRequired: 'بۆ بڵاوکردنەوەی بیرۆکە بچۆ ژوورەوە — بە ناوی هەژمارەکەت دەردەکەوێت',
+  voteLinksNotAllowed: 'بەستەر لە بیرۆکەکاندا ڕێگەپێدراو نییە — شیکارییەکەت بە دەق بنووسە',
+  modMessageOptionsA11y: 'هەڵبژاردەکانی نامە: ڕاپۆرت یان بلۆک',
+  modIdeaOptionsA11y: 'هەڵبژاردەکانی بیرۆکە: ڕاپۆرت یان بلۆک',
+  modReportLabel: 'ڕاپۆرت:',
+  modReasonSpam: 'بێزارکەر',
+  modReasonAbuse: 'سووکایەتی',
+  modReasonScam: 'فێڵ',
+  modBlockUser: 'بلۆککردنی {user}',
+  modReported: 'سوپاس — لای تۆ شاردرایەوە و ڕاپۆرتەکە پێداچوونەوەی بۆ دەکرێت',
+  modReportLoginRequired: 'بۆ ڕاپۆرتدان بچۆ ژوورەوە — یان نێرەر بلۆک بکە تا لای تۆ نەبینرێت',
+  modReportError: 'ناردنی ڕاپۆرت سەرکەوتوو نەبوو — دووبارە هەوڵ بدەوە',
+  modBlocked: '{user} بلۆک کرا — نامە و بیرۆکەکانی لای تۆ دەرناکەون',
+  modBlockedCount: 'بلۆککراوەکان: {n} · لابردنی بلۆک',
+  modUnblockA11y: 'لابردنی بلۆک لە هەموو بەکارهێنەرە بلۆککراوەکان',
   voteAgreeA11yPrefix: 'ڕازیبوون لەگەڵ بیرۆکەی',
   voteDisagreeA11yPrefix: 'ڕەتکردنەوەی بیرۆکەی',
   indicatorBollinger: 'بۆلینگەر',

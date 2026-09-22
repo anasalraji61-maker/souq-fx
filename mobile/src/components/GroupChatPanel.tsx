@@ -12,6 +12,8 @@ import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail,
 import { api, type ChatMsg } from '../api';
 import { mockChat } from '../mock';
 import { useI18n } from '../i18n/I18nContext';
+import { useBlockedUsers } from '../moderation';
+import { ModerationActions, ModerationToggle } from './ModerationActions';
 
 // اتجاه الواجهة يتبع لغة المستخدم المختارة عبر useI18n().rtl — لا نفرض RTL على النظام بالكامل هنا
 void I18nManager;
@@ -24,6 +26,9 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
   /** وضوح الحالة: يعلم المستخدم إذا فشل تحميل/إرسال رسائل الدردشة بدل صمت كامل
    * (لا تُفعَّل قبل أول محاولة فعلية — لا ادّعاء فشل قبل حدوثه). */
   const [notice, setNotice] = useState<string | null>(null);
+  /** شرط أبل 1.2: صف «إبلاغ/حظر» مفتوح لرسالة واحدة (زر ⋯)، والمحظورون محلياً يُخفَون */
+  const [actionFor, setActionFor] = useState<string | null>(null);
+  const { blocked, isBlocked, unblockAll } = useBlockedUsers();
 
   useEffect(() => {
     // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (مثلاً تبديل قسم hub قبل اكتمال
@@ -70,6 +75,12 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
         setNotice(t.chatLoginRequired);
         return;
       }
+      if (r && r.ok === false && r.error === 'links_not_allowed') {
+        setMessages((m) => m.filter((x) => x.id !== local.id));
+        setText(msg);
+        setNotice(t.chatLinksNotAllowed);
+        return;
+      }
       if (r && r.message) {
         const saved: ChatMsg = { ...r.message, mine: true };
         setMessages((m) => m.map((x) => (x.id === local.id ? saved : x)));
@@ -83,6 +94,8 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
   /** رسالتي: من الخادم (`mine`) أو المحلية قبل وصول الرد. لا مقارنة بالاسم «أنت» — كان كل
    * الرسائل القديمة محفوظة بـ«أنت» فتظهر كلها كأنها رسائلك. */
   const isMine = (m: ChatMsg) => m.mine === true || m.id.startsWith('local-');
+
+  const visible = messages.filter((m) => isMine(m) || !isBlocked(m.user));
 
   return (
     <View style={[styles.panel, embedded && styles.panelInFrame]}>
@@ -99,29 +112,64 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
         <Text style={[styles.title, { textAlign: align }]}>{t.chatTitle}</Text>
       )}
       {notice ? <Text style={[styles.notice, { textAlign: align }]}>{notice}</Text> : null}
-      {!notice && messages.length === 0 ? (
+      {!notice && visible.length === 0 ? (
         <Text style={styles.empty}>{t.chatEmpty}</Text>
       ) : null}
       <ScrollView style={styles.scroll} contentContainerStyle={{ gap: spacing.sm }}>
-        {messages.map((m) => (
+        {visible.map((m) => (
           <View
             key={m.id}
             style={[styles.bubble, isMine(m) && styles.mine]}
           >
-            <Text style={[styles.user, { textAlign: align }]}>
-              {isMine(m) ? t.chatYou : (m.user ?? t.chatAnonTrader)}
-            </Text>
+            <View style={[styles.head, rtl && styles.headRtl]}>
+              <Text style={[styles.user, styles.userFlex, { textAlign: align }]}>
+                {isMine(m) ? t.chatYou : (m.user ?? t.chatAnonTrader)}
+              </Text>
+              {!isMine(m) ? (
+                <ModerationToggle
+                  open={actionFor === m.id}
+                  onPress={() => setActionFor((cur) => (cur === m.id ? null : m.id))}
+                  label={t.modMessageOptionsA11y}
+                />
+              ) : null}
+            </View>
             <Text style={[styles.msg, { textAlign: align }]}>{m.text}</Text>
             <Text style={styles.ts}>{m.ts}</Text>
+            {actionFor === m.id ? (
+              <ModerationActions
+                kind="group_message"
+                targetId={m.id}
+                author={m.user}
+                onClose={() => setActionFor(null)}
+                onResult={(n, hide) => {
+                  setActionFor(null);
+                  setNotice(n);
+                  if (hide) setMessages((list) => list.filter((x) => x.id !== m.id));
+                }}
+              />
+            ) : null}
           </View>
         ))}
       </ScrollView>
+      {blocked.length > 0 ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t.modUnblockA11y}
+          onPress={unblockAll}
+          hitSlop={6}
+        >
+          <Text style={[styles.blockedLine, { textAlign: align }]}>
+            {t.modBlockedCount.replace('{n}', String(blocked.length))}
+          </Text>
+        </Pressable>
+      ) : null}
       <View style={[styles.row, rtl && styles.rowRtl]}>
         <TextInput
           style={[styles.input, { textAlign: align }]}
           value={text}
           onChangeText={setText}
           placeholder={t.chatInputPlaceholder}
+          maxLength={1000}
           placeholderTextColor={colors.textDim}
           onSubmitEditing={send}
           returnKeyType="send"
@@ -198,6 +246,10 @@ const styles = StyleSheet.create({
   },
   mine: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   user: { color: colors.accent, fontSize: 11, fontWeight: '700' },
+  userFlex: { flex: 1 },
+  head: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  headRtl: { flexDirection: 'row-reverse' },
+  blockedLine: { color: colors.textDim, fontSize: 10, fontWeight: '700', marginTop: spacing.xs },
   msg: { color: colors.text, fontSize: 12, marginTop: 2, lineHeight: 18 },
   ts: { color: colors.textDim, fontSize: 10, marginTop: spacing.xs, textAlign: 'left' },
   row: { flexDirection: 'row', gap: 6, marginTop: spacing.sm },
