@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api } from '../api';
 import { formatPrice } from '../chart/math';
+import { formatRR } from '../tradePlan';
 import { useI18n } from '../i18n/I18nContext';
 import type { Dict } from '../i18n/locales';
 
@@ -195,7 +196,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           <Text style={[styles.levels, { textAlign: align }]}>
             {t.forecastTradeLabel}: {t.entryLabel} {formatPrice(levels.entry)} · {t.slLabel}{' '}
             {formatPrice(levels.sl)} · {t.tpLabel} {formatPrice(levels.tp)}
-            {rr != null ? ` · ${t.forecastRrLabel} ${rr.toFixed(2)}:1` : ''}
+            {rr != null ? ` · R:R ${formatRR(rr)}` : ''}
           </Text>
         ) : (
           <Text style={[styles.levels, { textAlign: align }]}>{t.forecastNoSignal}</Text>
