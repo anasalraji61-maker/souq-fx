@@ -139,7 +139,7 @@ def init_db() -> None:
             );
             """
         )
-        _seed_if_empty(c)
+        _purge_demo_seed(c)
         _migrate_indicator_alerts(c)
         _migrate_trades(c)
         _migrate_network(c)
@@ -273,34 +273,35 @@ def _migrate_indicator_alerts(c: sqlite3.Connection) -> None:
     )
 
 
-def _seed_if_empty(c: sqlite3.Connection) -> None:
-    n = c.execute("SELECT COUNT(*) FROM group_messages").fetchone()[0]
-    if n:
-        return
-    seeds = [
-        ("g1", "أحمد", "DXY يكسر 104.2 — راقبوا EURUSD", "21:02"),
-        ("g2", "سارة", "تصويتي شراء GBPUSD على الريتست", "21:05"),
-        ("g3", "كريم", "خبر CPI بعد ساعة — حجم منخفض الآن", "21:08"),
-    ]
-    c.executemany(
-        "INSERT INTO group_messages(id,user_name,text,ts) VALUES(?,?,?,?)", seeds
-    )
-    c.executemany(
-        "INSERT INTO dm_messages(id,peer,user_name,text,ts) VALUES(?,?,?,?,?)",
-        [
-            ("d1", "سارة", "سارة", "شفت السيولة عند 1.0850؟", "20:40"),
-            ("d2", "سارة", "أنت", "نعم، أنتظر تأكيد الكسر", "20:42"),
-            ("d3", "كريم", "كريم", "أرسلتك سيناريو الذهب", "19:15"),
-        ],
-    )
-    c.executemany(
-        """INSERT INTO votes(id,symbol,direction,entry,sl,tp,note,agree,disagree,author,ts)
-           VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
-        [
-            ("v1", "EURUSD", "sell", 1.0862, 1.0895, 1.0790, "رفض عند المقاومة", 18, 5, "أحمد", "21:00"),
-            ("v2", "XAUUSD", "buy", 2348.5, 2335.0, 2372.0, "دعم أسبوعي", 12, 9, "سارة", "20:50"),
-        ],
-    )
+# كانت قاعدة البيانات تُبذَر عند أول تشغيل برسائل مجموعة من «أحمد/سارة/كريم» وفكرتَي صفقة بأصوات
+# مختلَقة (EURUSD بيع 18 موافق/5، XAUUSD شراء عند 2348.5) ورسائل خاصة — على خادم الإنتاج يراها أول
+# المستخدمين كمجتمع حقيقي وتوصيات بأسعار قديمة (دليل اجتماعي مزيّف؛ خطر مراجعة المتجر). لا بذر بعد
+# الآن، وتُحذف الصفوف البذرية القديمة فقط إن طابقت معرّفها **ونصّها** معاً (لا مساس بمحتوى حقيقي).
+_DEMO_SEED_GROUP = (
+    ("g1", "أحمد", "DXY يكسر 104.2 — راقبوا EURUSD"),
+    ("g2", "سارة", "تصويتي شراء GBPUSD على الريتست"),
+    ("g3", "كريم", "خبر CPI بعد ساعة — حجم منخفض الآن"),
+)
+_DEMO_SEED_DM = (
+    ("d1", "سارة", "شفت السيولة عند 1.0850؟"),
+    ("d2", "أنت", "نعم، أنتظر تأكيد الكسر"),
+    ("d3", "كريم", "أرسلتك سيناريو الذهب"),
+)
+_DEMO_SEED_VOTES = (
+    ("v1", "أحمد", "رفض عند المقاومة"),
+    ("v2", "سارة", "دعم أسبوعي"),
+)
+
+
+def _purge_demo_seed(c: sqlite3.Connection) -> None:
+    for gid, name, text in _DEMO_SEED_GROUP:
+        c.execute("DELETE FROM group_messages WHERE id=? AND user_name=? AND text=?", (gid, name, text))
+    for did, name, text in _DEMO_SEED_DM:
+        c.execute("DELETE FROM dm_messages WHERE id=? AND user_name=? AND text=?", (did, name, text))
+    for vid, author, note in _DEMO_SEED_VOTES:
+        cur = c.execute("DELETE FROM votes WHERE id=? AND author=? AND note=?", (vid, author, note))
+        if cur.rowcount:
+            c.execute("DELETE FROM vote_ballots WHERE vote_id=?", (vid,))
 
 
 def _hash_password(password: str, salt: str) -> str:

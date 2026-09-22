@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, ActivityIndicator } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons } from '../theme';
 import { api, type Vote } from '../api';
-import { mockVotes } from '../mock';
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
@@ -13,7 +12,10 @@ import { ModerationActions, ModerationToggle } from './ModerationActions';
 export function VotePanel({ embedded }: { embedded?: boolean }) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
-  const [votes, setVotes] = useState<Vote[]>(mockVotes);
+  /** تبدأ فارغة: كانت تُبذَر بـ`mockVotes` — أفكار صفقات «أحمد/سارة» بأصوات مختلَقة (18/5) وأسعار قديمة
+   * (ذهب 2348.5) تظهر كتوصيات مجتمع حقيقية قبل التحميل وتبقى عند فشله. */
+  const [votes, setVotes] = useState<Vote[]>([]);
+  const [loaded, setLoaded] = useState(false);
   /** وضوح الحالة: يعلم المستخدم إذا فشل تحديث/إرسال التصويت بدل صمت كامل
    * (لا تُفعَّل قبل أول محاولة فعلية — لا ادّعاء فشل قبل حدوثه). */
   const [notice, setNotice] = useState<string | null>(null);
@@ -53,10 +55,14 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
         if (mountedRef.current) {
           setVotes(r.votes);
           setNotice(null);
+          setLoaded(true);
         }
       })
       .catch(() => {
-        if (mountedRef.current) setNotice(t.voteLoadError);
+        if (mountedRef.current) {
+          setNotice(t.voteLoadError);
+          setLoaded(true);
+        }
       });
   };
 
@@ -367,7 +373,8 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
       ) : null}
 
       {notice ? <Text style={[styles.notice, { textAlign: align }]}>{notice}</Text> : null}
-      {!notice && visible.length === 0 ? (
+      {!loaded ? <ActivityIndicator color={colors.accent} style={{ paddingVertical: spacing.lg }} /> : null}
+      {loaded && !notice && visible.length === 0 ? (
         <Text style={styles.empty}>{t.voteEmpty}</Text>
       ) : null}
       <ScrollView contentContainerStyle={{ gap: 10 }} keyboardShouldPersistTaps="handled">

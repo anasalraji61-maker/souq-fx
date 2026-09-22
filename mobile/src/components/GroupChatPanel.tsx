@@ -7,10 +7,10 @@ import {
   TextInput,
   Pressable,
   I18nManager,
+  ActivityIndicator,
 } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons } from '../theme';
 import { api, type ChatMsg } from '../api';
-import { mockChat } from '../mock';
 import { useI18n } from '../i18n/I18nContext';
 import { useBlockedUsers } from '../moderation';
 import { ModerationActions, ModerationToggle } from './ModerationActions';
@@ -21,7 +21,10 @@ void I18nManager;
 export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
   const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
-  const [messages, setMessages] = useState<ChatMsg[]>(mockChat);
+  /** تبدأ فارغة: كانت تُبذَر بـ`mockChat` («أحمد/سارة/كريم») فتظهر كمحادثة مجتمع حقيقية قبل التحميل
+   * وتبقى عند فشله. الآن مؤشر تحميل ← رسائل الخادم أو «لا رسائل» أو خطأ صريح. */
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [text, setText] = useState('');
   /** وضوح الحالة: يعلم المستخدم إذا فشل تحميل/إرسال رسائل الدردشة بدل صمت كامل
    * (لا تُفعَّل قبل أول محاولة فعلية — لا ادّعاء فشل قبل حدوثه). */
@@ -40,10 +43,14 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
         if (alive) {
           setMessages(r.messages);
           setNotice(null);
+          setLoaded(true);
         }
       })
       .catch(() => {
-        if (alive) setNotice(t.chatLoadError);
+        if (alive) {
+          setNotice(t.chatLoadError);
+          setLoaded(true);
+        }
       });
     return () => {
       alive = false;
@@ -112,7 +119,8 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
         <Text style={[styles.title, { textAlign: align }]}>{t.chatTitle}</Text>
       )}
       {notice ? <Text style={[styles.notice, { textAlign: align }]}>{notice}</Text> : null}
-      {!notice && visible.length === 0 ? (
+      {!loaded ? <ActivityIndicator color={colors.accent} style={{ paddingVertical: spacing.lg }} /> : null}
+      {loaded && !notice && visible.length === 0 ? (
         <Text style={styles.empty}>{t.chatEmpty}</Text>
       ) : null}
       <ScrollView style={styles.scroll} contentContainerStyle={{ gap: spacing.sm }}>
