@@ -9,6 +9,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
@@ -105,6 +106,7 @@ const HUB_ANALYSIS_ORDER = ['ai', 'analysts', 'forecast', 'alerts'] as const;
 
 export function ToolsScreen() {
   const { t, rtl } = useI18n();
+  const navigation = useNavigation();
   const align = rtl ? ('right' as const) : ('left' as const);
   const FILTERS = buildFilters(t);
   const TABS = buildTabs(t);
@@ -162,6 +164,16 @@ export function ToolsScreen() {
     }
   }, [scanKey, tf]);
   const filterLabel = (id: string) => FILTERS.find((f) => f.id === id)?.label ?? id;
+  /** نتيجة فحص بلا طريق للشارت = نسخ الرمز يدوياً والبحث عنه — الآن نقرة تفتح شارت التركيز
+   * بنفس الفريم المفحوص (TerminalScreen يقرأ openSymbol/openTf؛ nonce يسمح بفتح نفس الرمز مرتين). */
+  const openOnChart = (sym: string) => {
+    playSoftClick();
+    (navigation as unknown as { navigate: (name: string, params: object) => void }).navigate('Home', {
+      openSymbol: sym,
+      openTf: scanInfo.tf,
+      nonce: Date.now(),
+    });
+  };
 
   const toggleFilter = (id: string) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -417,6 +429,9 @@ export function ToolsScreen() {
           {!loading && scanDone && providerConfigured === null ? (
             <Text style={[styles.scanHint, { textAlign: align }]}>{t.screenerFailed}</Text>
           ) : null}
+          {!loading && results.length > 0 ? (
+            <Text style={[styles.filterHintText, { textAlign: align }]}>{t.screenerTapToOpen}</Text>
+          ) : null}
           {!loading && results.length > 8 ? (
             <Text style={[styles.filterHintText, { textAlign: align }]}>
               {t.screenerShowingOf.replace('{n}', '8').replace('{total}', String(results.length))}
@@ -428,7 +443,18 @@ export function ToolsScreen() {
             items={results.slice(0, 8).map((r) => ({
               id: r.symbol,
               node: (
-                <View style={styles.hitCard}>
+                <Pressable
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.hitCard,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
+                  onPress={() => openOnChart(r.symbol)}
+                  accessibilityLabel={`${t.screenerOpenChartA11y}: ${r.symbol} ${scanInfo.tf}`}
+                >
                   <Text style={[styles.sym, { textAlign: align }]}>{r.symbol}</Text>
                   <Text style={[styles.meta, { textAlign: align }]}>
                     {r.last} · RSI {r.rsi} ·{' '}
@@ -443,8 +469,10 @@ export function ToolsScreen() {
                     </Text>{' '}
                     <Text style={styles.match}>{t.screenerChangeSpan}</Text>
                   </Text>
-                  <Text style={[styles.match, { textAlign: align }]}>{r.filters_matched.map(filterLabel).join(' · ')}</Text>
-                </View>
+                  <Text style={[styles.match, { textAlign: align }]}>
+                    {r.filters_matched.map(filterLabel).join(' · ')}
+                  </Text>
+                </Pressable>
               ),
             }))}
           />

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -749,6 +750,22 @@ export function TerminalScreen() {
       setOnline(false);
     }
   };
+
+  /** طلب فتح شارت من تبويب آخر (نتيجة الماسح): { openSymbol, openTf, nonce } — يُفتح شارت التركيز
+   * ثم تُمسح المعاملات كي لا يُعاد فتحه عند العودة للشاشة. */
+  const route = useRoute();
+  const navigation = useNavigation();
+  const openReq = route.params as
+    | { openSymbol?: string; openTf?: string; nonce?: number }
+    | undefined;
+  useEffect(() => {
+    const sym = openReq?.openSymbol;
+    if (!sym) return;
+    const reqTf = openReq?.openTf && isTimeframe(openReq.openTf) ? openReq.openTf : tf;
+    openFocus(sym, reqTf);
+    navigation.setParams({ openSymbol: undefined, openTf: undefined, nonce: undefined } as never);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openReq?.nonce]);
 
   const pickSymbol = (sym: string, timeframe?: Timeframe) => {
     setSymbol(sym);

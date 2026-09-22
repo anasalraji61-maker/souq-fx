@@ -131,6 +131,8 @@ export type Dict = {
   screenerNoMatchOf: string;
   screenerShowingOf: string;
   screenerChangeSpan: string;
+  screenerTapToOpen: string;
+  screenerOpenChartA11y: string;
   newsTitle: string;
   newsStale: string;
   newsEmpty: string;
@@ -897,6 +899,8 @@ const ar: Dict = {
   screenerNoMatchOf: 'لا تطابق بين {k} رمزاً مفحوصاً على فريم {tf}',
   screenerShowingOf: 'عرض أقوى {n} من {total} نتيجة (الأكبر حركةً أولاً)',
   screenerChangeSpan: '(آخر 80 شمعة)',
+  screenerTapToOpen: 'اضغط أي نتيجة لفتح شارتها على نفس الفريم',
+  screenerOpenChartA11y: 'فتح الشارت',
   newsTitle: 'أخبار مؤثرة على الفوركس',
   newsStale: 'تعذر تحديث الأخبار — تُعرض بيانات محفوظة',
   newsEmpty: 'لا توجد أخبار حالياً',
@@ -1672,6 +1676,8 @@ const enUS: Dict = {
   screenerNoMatchOf: 'No match among {k} scanned symbols on {tf}',
   screenerShowingOf: 'Showing the top {n} of {total} results (biggest movers first)',
   screenerChangeSpan: '(last 80 candles)',
+  screenerTapToOpen: 'Tap a result to open its chart on the same timeframe',
+  screenerOpenChartA11y: 'Open chart',
   newsTitle: 'News affecting forex',
   newsStale: 'Could not refresh news — showing saved data',
   newsEmpty: 'No news right now',
@@ -2467,6 +2473,8 @@ const ku: Dict = {
   screenerNoMatchOf: 'هیچ گونجانێک نییە لە نێوان {k} هێمای پشکنراو لە {tf}',
   screenerShowingOf: 'پیشاندانی بەهێزترین {n} لە {total} ئەنجام (زۆرترین جووڵە سەرەتا)',
   screenerChangeSpan: '(دوایین 80 مۆم)',
+  screenerTapToOpen: 'کرتە لە هەر ئەنجامێک بکە بۆ کردنەوەی چارتەکەی لە هەمان کات',
+  screenerOpenChartA11y: 'کردنەوەی چارت',
   newsTitle: 'هەواڵی کاریگەر لەسەر فۆرێکس',
   newsStale: 'نەکرا هەواڵ نوێبکرێتەوە — زانیاری پاشەکەوتکراو پیشان دەدرێت',
   newsEmpty: 'هیچ هەواڵێک لە ئێستادا نییە',
