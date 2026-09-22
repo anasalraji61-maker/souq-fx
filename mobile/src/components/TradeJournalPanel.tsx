@@ -186,7 +186,12 @@ export function TradeJournalPanel() {
 
   const closeOpen = async (id: string) => {
     const x = num(exit);
-    if (x == null) return;
+    // خانة الخروج فارغة/غير مفهومة: كان الضغط لا يفعل شيئاً بصمت تام (المبتدئ لا يعرف أن الإغلاق يقرأ خانة
+    // «خروج» بأعلى النموذج).
+    if (x == null) {
+      Alert.alert(t.journalCloseFailedTitle, unreadable(exit) ? t.invalidNumberHint : t.journalCloseNeedsExit);
+      return;
+    }
     setBusy(true);
     try {
       await api.closeTrade(id, x);
@@ -198,6 +203,30 @@ export function TradeJournalPanel() {
       setBusy(false);
     }
   };
+
+  /** حذف صفقة سُجِّلت خطأً — بلا حذف كانت صفقة خاطئة واحدة تُفسد الإحصاءات للأبد (api.deleteTrade كان غير مستخدم). */
+  const removeTrade = async (id: string) => {
+    setBusy(true);
+    try {
+      await api.deleteTrade(id);
+      playSoftClick();
+      await refresh();
+    } catch {
+      Alert.alert(t.alertsDeleteFailedTitle, t.journalDeleteFailedBody);
+    } finally {
+      if (mountedRef.current) setBusy(false);
+    }
+  };
+
+  const confirmRemove = (tr: Trade) =>
+    Alert.alert(
+      t.journalDeleteConfirmTitle,
+      `${tr.side === 'sell' ? t.dirSell : t.dirBuy} ${tr.symbol} · ${formatPrice(tr.entry, tr.symbol)}`,
+      [
+        { text: t.cancel, style: 'cancel' },
+        { text: t.deleteWord, style: 'destructive', onPress: () => void removeTrade(tr.id) },
+      ]
+    );
 
   return (
     <View style={styles.wrap}>
@@ -459,7 +488,26 @@ export function TradeJournalPanel() {
                 </Text>
               );
             })()}
-            {tr.status === 'open' ? (
+            <View style={[styles.tradeActions, rtl && styles.rowRtl]}>
+              {tr.status === 'open' ? (
+                <Pressable
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    busy && styles.closeLinkDisabled,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
+                  onPress={() => void closeOpen(tr.id)}
+                  disabled={busy}
+                  accessibilityState={{ disabled: busy }}
+                  accessibilityLabel={t.journalCloseLinkA11y.replace('{symbol}', tr.symbol)}
+                  hitSlop={8}
+                >
+                  <Text style={[styles.closeLink, { textAlign: align }]}>{t.journalCloseLinkBtn}</Text>
+                </Pressable>
+              ) : null}
               <Pressable
                 accessibilityRole="button"
                 style={({ pressed }) => [
@@ -469,15 +517,15 @@ export function TradeJournalPanel() {
                     transform: [{ scale: buttons.pressedScale }],
                   },
                 ]}
-                onPress={() => void closeOpen(tr.id)}
+                onPress={() => confirmRemove(tr)}
                 disabled={busy}
                 accessibilityState={{ disabled: busy }}
-                accessibilityLabel={t.journalCloseLinkA11y.replace('{symbol}', tr.symbol)}
+                accessibilityLabel={t.journalDeleteA11y.replace('{symbol}', tr.symbol)}
                 hitSlop={8}
               >
-                <Text style={[styles.closeLink, { textAlign: align }]}>{t.journalCloseLinkBtn}</Text>
+                <Text style={styles.delLink}>{t.deleteWord}</Text>
               </Pressable>
-            ) : null}
+            </View>
           </View>
         ))}
       </ScrollView>
@@ -554,4 +602,6 @@ const styles = StyleSheet.create({
   planWarn: { color: colors.warn, fontSize: 11, fontWeight: '700' },
   closeLink: { color: colors.accent, textAlign: 'right', fontSize: 11, fontWeight: '700' },
   closeLinkDisabled: { opacity: 0.4 },
+  tradeActions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md },
+  delLink: { color: colors.bear, fontSize: 11, fontWeight: '700' },
 });

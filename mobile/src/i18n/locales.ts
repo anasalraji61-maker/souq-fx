@@ -358,6 +358,10 @@ export type Dict = {
   journalEmpty: string;
   journalOpenSuffix: string;
   journalClosedWord: string;
+  journalCloseNeedsExit: string;
+  journalDeleteConfirmTitle: string;
+  journalDeleteFailedBody: string;
+  journalDeleteA11y: string;
   journalCloseLinkA11y: string;
   journalCloseLinkBtn: string;
   backtestSub: string;
@@ -1117,6 +1121,10 @@ const ar: Dict = {
     'لا صفقات مسجّلة بعد — سجّل كل صفقة (حتى على حساب تجريبي) لتعرف مع الوقت ما ينجح معك وما لا ينجح.',
   journalOpenSuffix: '(مفتوحة)',
   journalClosedWord: 'مغلقة',
+  journalCloseNeedsExit: 'اكتب سعر الخروج في خانة «خروج» أعلى النموذج، ثم اضغط «إغلاق بسعر خانة الخروج» تحت الصفقة.',
+  journalDeleteConfirmTitle: 'حذف هذه الصفقة من الدفتر؟',
+  journalDeleteFailedBody: 'حدث خطأ أثناء حذف الصفقة، حاول مرة أخرى.',
+  journalDeleteA11y: 'حذف صفقة {symbol} من الدفتر',
   journalCloseLinkA11y: 'إغلاق صفقة {symbol} بسعر خانة الخروج',
   journalCloseLinkBtn: 'إغلاق بسعر خانة الخروج',
   backtestSub: 'MA · RSI · MACD · BB · منحنى Equity',
@@ -1883,6 +1891,10 @@ const enUS: Dict = {
     'No trades logged yet — log every trade (even on a demo account) to learn over time what works for you and what doesn\'t.',
   journalOpenSuffix: '(open)',
   journalClosedWord: 'Closed',
+  journalCloseNeedsExit: 'Type the exit price in the “Exit” field at the top of the form, then tap “Close at exit field price” under the trade.',
+  journalDeleteConfirmTitle: 'Delete this trade from the journal?',
+  journalDeleteFailedBody: 'An error occurred while deleting the trade, try again.',
+  journalDeleteA11y: 'Delete {symbol} trade from the journal',
   journalCloseLinkA11y: 'Close {symbol} trade at the exit field price',
   journalCloseLinkBtn: 'Close at exit field price',
   backtestSub: 'MA · RSI · MACD · BB · Equity curve',
@@ -2669,6 +2681,10 @@ const ku: Dict = {
     'هێشتا هیچ مامەڵەیەک تۆمار نەکراوە — هەموو مامەڵەیەک تۆمار بکە (تەنانەت لەسەر هەژماری تاقیکردنەوە) بۆ ئەوەی بزانیت چی بۆت سەرکەوتووە.',
   journalOpenSuffix: '(کراوەیە)',
   journalClosedWord: 'داخراو',
+  journalCloseNeedsExit: 'نرخی دەرچوون لە خانەی «دەرچوون» لە سەرەوەی فۆڕمەکە بنووسە، پاشان «داخستن بە نرخی خانەی دەرچوون» لە ژێر مامەڵەکە دابگرە.',
+  journalDeleteConfirmTitle: 'ئەم مامەڵەیە لە دەفتەرەکە بسڕدرێتەوە؟',
+  journalDeleteFailedBody: 'هەڵەیەک ڕوویدا لە کاتی سڕینەوەی مامەڵەکە، دووبارە هەوڵ بدەرەوە.',
+  journalDeleteA11y: 'سڕینەوەی مامەڵەی {symbol} لە دەفتەرەکە',
   journalCloseLinkA11y: 'داخستنی مامەڵەی {symbol} بە نرخی خانەی دەرچوون',
   journalCloseLinkBtn: 'داخستن بە نرخی خانەی دەرچوون',
   backtestSub: 'MA · RSI · MACD · BB · کەوانەی Equity',
