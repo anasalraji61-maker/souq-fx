@@ -304,7 +304,18 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const money = (v: number) => `${group(v.toFixed(2))} ${account}`;
   const pipLabel = spec ? String(spec.pipSize) : '';
   const riskNum = num(riskPct);
-  const riskHigh = Number.isFinite(riskNum) && riskNum > 2 && riskNum <= 100;
+  /**
+   * سقف الـ100 كان يُسكِت التحذير **عند الطرف الأخطر بالضبط**: من يكتب «20» فيصير الرقم «200»
+   * بضغطة زائدة يرى ⚠ عند 20% ثم يختفي التحذير كلّه عند 200%. الشرط الآن بلا سقف.
+   */
+  const riskHigh = Number.isFinite(riskNum) && riskNum > 2;
+  /**
+   * نسبة فوق 100% مستحيلة (لا يُخاطَر بأكثر من الرصيد كلّه) فيرفضها `positionSize` وتعود النتيجة
+   * `null` — وكان الصندوق يقول حينها «أدخل الرصيد ونسبة المخاطرة ووقف الخسارة» والثلاثة مكتوبة
+   * أمام المتداول، فيظنّ العطل بخانة أخرى ويقلّب فيها. التحذير ظاهر عند خانة النسبة نفسها، فلا
+   * يُضاف سطر يناقضه.
+   */
+  const riskImpossible = Number.isFinite(riskNum) && riskNum > 100;
 
   const chip = (label: string, on: boolean, onPress: () => void, a11y: string) => (
     <Pressable
@@ -465,10 +476,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           <Text style={[styles.warn, { textAlign: align }]}>
             {t.riskCalcBelowMin} ({money(result.riskAmount)})
           </Text>
-        ) : (
-          <Text style={[badNumber ? styles.warn : styles.resultMeta, { textAlign: align }]}>
-            {badNumber ? t.invalidNumberHint : t.riskCalcFillHint}
-          </Text>
+        ) : badNumber ? (
+          <Text style={[styles.warn, { textAlign: align }]}>{t.invalidNumberHint}</Text>
+        ) : riskImpossible ? null : (
+          <Text style={[styles.resultMeta, { textAlign: align }]}>{t.riskCalcFillHint}</Text>
         )}
         {plan?.ok ? (
           <>
