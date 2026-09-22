@@ -392,14 +392,14 @@ export function TradeJournalPanel() {
               <Text style={{ color: tr.side === 'sell' ? colors.bear : colors.bull }}>
                 {tr.side === 'sell' ? `▼ ${t.dirSell}` : `▲ ${t.dirBuy}`}
               </Text>{' '}
-              {tr.symbol} · {formatPrice(tr.entry)}
-              {tr.exit != null ? ` → ${formatPrice(tr.exit)}` : ` ${t.journalOpenSuffix}`}
+              {tr.symbol} · {formatPrice(tr.entry, tr.symbol)}
+              {tr.exit != null ? ` → ${formatPrice(tr.exit, tr.symbol)}` : ` ${t.journalOpenSuffix}`}
             </Text>
             {tr.sl != null || tr.tp != null ? (
               <Text style={[styles.tradeMeta, { textAlign: align }]}>
-                {tr.sl != null ? <Text style={{ color: colors.bear }}>SL {formatPrice(tr.sl)}</Text> : null}
+                {tr.sl != null ? <Text style={{ color: colors.bear }}>SL {formatPrice(tr.sl, tr.symbol)}</Text> : null}
                 {tr.sl != null && tr.tp != null ? ' · ' : ''}
-                {tr.tp != null ? <Text style={{ color: colors.bull }}>TP {formatPrice(tr.tp)}</Text> : null}
+                {tr.tp != null ? <Text style={{ color: colors.bull }}>TP {formatPrice(tr.tp, tr.symbol)}</Text> : null}
                 {(() => {
                   if (tr.sl == null || tr.tp == null) return '';
                   const plan = analyzePlan({

@@ -1387,7 +1387,7 @@ export function TerminalScreen() {
               </View>
               <View style={styles.desktopOhlc}>
                 <Text style={styles.desktopOhlcLabel}>{t.priceWord}</Text>
-                <Text style={styles.desktopOhlcValue}>{formatPrice(price)}</Text>
+                <Text style={styles.desktopOhlcValue}>{formatPrice(price, symbol)}</Text>
                 <Text
                   style={[
                     styles.desktopChange,
@@ -1402,8 +1402,8 @@ export function TerminalScreen() {
                 </Text>
                 {quote && quote.bid != null && quote.ask != null ? (
                   <Text style={styles.desktopSpread}>
-                    {t.termSpreadWord} {formatPrice(quote.ask - quote.bid)} · {t.termBidLabel}{' '}
-                    {formatPrice(quote.bid)} · {t.termAskLabel} {formatPrice(quote.ask)}
+                    {t.termSpreadWord} {formatPrice(quote.ask - quote.bid, symbol)} · {t.termBidLabel}{' '}
+                    {formatPrice(quote.bid, symbol)} · {t.termAskLabel} {formatPrice(quote.ask, symbol)}
                   </Text>
                 ) : null}
               </View>

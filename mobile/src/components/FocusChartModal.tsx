@@ -212,7 +212,7 @@ export function FocusChartModal({
         note: origin === 'crosshair' ? t.focusAlertFromChartNote : t.focusAlertFromDrawingNote,
       });
       playSoftClick();
-      setArmedMsg(`${t.alertsArmedPrefix}: ${sym} ${condition === 'above' ? '≥' : '≤'} ${formatPrice(price)}`);
+      setArmedMsg(`${t.alertsArmedPrefix}: ${sym} ${condition === 'above' ? '≥' : '≤'} ${formatPrice(price, sym)}`);
       if (armedTimerRef.current) clearTimeout(armedTimerRef.current);
       armedTimerRef.current = setTimeout(() => setArmedMsg(null), 4000);
       setAlertsRefreshKey((k) => k + 1);
@@ -267,7 +267,7 @@ export function FocusChartModal({
           {series ? (
             <View style={styles.quote}>
               <Text style={styles.price}>
-                {formatPrice(liveTick?.price ?? series.last)}
+                {formatPrice(liveTick?.price ?? series.last, sym)}
               </Text>
               <Text
                 style={[
@@ -293,7 +293,7 @@ export function FocusChartModal({
                   unknown: t.dsKindUnknown,
                 })}`}
                 {` · ${marketStatusLabel(sym, { open: t.dsMarketOpen, closed: t.dsMarketClosed })}`}
-                {hasSpread ? ` · B ${formatPrice(quote!.bid!)}/A ${formatPrice(quote!.ask!)}` : ''}
+                {hasSpread ? ` · B ${formatPrice(quote!.bid!, sym)}/A ${formatPrice(quote!.ask!, sym)}` : ''}
               </Text>
             </View>
           ) : null}

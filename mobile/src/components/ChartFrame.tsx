@@ -260,7 +260,7 @@ export function ChartFrame({
           ) : null}
         </View>
         <View style={styles.priceRow}>
-          <Text style={styles.price}>{formatPrice(headerPrice)}</Text>
+          <Text style={styles.price}>{formatPrice(headerPrice, series.symbol)}</Text>
           {tickTag ? (
             <Text
               style={[
@@ -274,7 +274,7 @@ export function ChartFrame({
           ) : null}
           {hasSpread ? (
             <Text style={styles.spreadTag} accessibilityLabel={t.cfSpreadA11y}>
-              {`B ${formatPrice(quote!.bid!)} · A ${formatPrice(quote!.ask!)}`}
+              {`B ${formatPrice(quote!.bid!, series.symbol)} · A ${formatPrice(quote!.ask!, series.symbol)}`}
             </Text>
           ) : null}
           <Text style={[styles.chg, { color: up ? colors.bull : colors.bear }]}>

@@ -49,7 +49,7 @@ export function DomLitePanel({ last, candles = [], symbol = 'EURUSD' }: Props) {
       <Text style={styles.title}>{t.domTitle}</Text>
       <Text style={styles.sub}>
         {liveBook
-          ? `Bid ${formatPrice(book!.bid!)} · Ask ${formatPrice(book!.ask!)} · ${t.domSourceQuote}`
+          ? `Bid ${formatPrice(book!.bid!, symbol)} · Ask ${formatPrice(book!.ask!, symbol)} · ${t.domSourceQuote}`
           : t.domEstimated}
       </Text>
       {rows.map((r) => {
@@ -66,7 +66,7 @@ export function DomLitePanel({ last, candles = [], symbol = 'EURUSD' }: Props) {
               />
               <Text style={styles.bid}>{r.bid}</Text>
             </View>
-            <Text style={[styles.price, atMid && styles.priceMid]}>{formatPrice(r.price)}</Text>
+            <Text style={[styles.price, atMid && styles.priceMid]}>{formatPrice(r.price, symbol)}</Text>
             <View style={styles.side}>
               <Text style={styles.ask}>{r.ask}</Text>
               <View

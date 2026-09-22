@@ -253,7 +253,7 @@ export function WatchlistPanel({
                     },
                   ]}
                   onPress={() => onPick(sym)}
-                  accessibilityLabel={`${sym}${price != null ? ` ${formatPrice(price)}` : ''}${pctText ? ` ${pctText}` : ''}${isDemoPrice ? t.wlDemoPriceA11ySuffix : ''}`}
+                  accessibilityLabel={`${sym}${price != null ? ` ${formatPrice(price, sym)}` : ''}${pctText ? ` ${pctText}` : ''}${isDemoPrice ? t.wlDemoPriceA11ySuffix : ''}`}
                   accessibilityState={{ selected: on }}
                 >
                   <View style={[styles.left, rtl && styles.leftRtl]}>
@@ -277,7 +277,7 @@ export function WatchlistPanel({
                         tickDir === 'down' && styles.priceDown,
                       ]}
                     >
-                      {price != null ? formatPrice(price) : '—'}
+                      {price != null ? formatPrice(price, sym) : '—'}
                     </Text>
                     {chg && pctText ? (
                       <Text

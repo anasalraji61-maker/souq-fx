@@ -1,8 +1,23 @@
 /** أدوات عامة (تنسيق السعر، تحويل الشموع) — لا علاقة مباشرة بعائلة مؤشرات معينة. */
 import type { Candle } from '../../api';
+import { instrumentSpec } from '../../positionSize';
 
 
-export function formatPrice(n: number) {
+/**
+ * منازل السعر العشرية حسب الأداة لا حسب حجم الرقم: pip + خانة كسرية (pipette) كما يعرضها وسطاء الـ5 منازل —
+ * EURUSD 1.08505 (5)، USDJPY/GBPJPY 157.423 (3)، XAUUSD 2650.35 (2)، XAGUSD 31.245 (3). null = أداة غير معروفة
+ * (DXY، مؤشرات، رموز الوسيط بلاحقة) فيُستخدم التقدير من حجم الرقم.
+ */
+export function symbolPriceDecimals(symbol: string): number | null {
+  const spec = instrumentSpec(symbol);
+  if (!spec) return null;
+  return Math.round(-Math.log10(spec.pipSize)) + 1;
+}
+
+/** `symbol` اختياري: بدونه تُقدَّر المنازل من حجم الرقم — وهذا كان يقصّ خانة الين (157.423 → 157.42). */
+export function formatPrice(n: number, symbol?: string) {
+  const d = symbol ? symbolPriceDecimals(symbol) : null;
+  if (d != null) return n.toFixed(d);
   if (n >= 1000) return n.toFixed(2);
   if (n >= 100) return n.toFixed(2);
   if (n >= 10) return n.toFixed(3);

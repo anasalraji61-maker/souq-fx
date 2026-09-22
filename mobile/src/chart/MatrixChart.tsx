@@ -2632,8 +2632,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <Text style={styles.readoutText}>{measureReadout}</Text>
         ) : crossCandle ? (
           <Text style={styles.readoutText}>
-            O {formatPrice(crossCandle.open)} H {formatPrice(crossCandle.high)} L{' '}
-            {formatPrice(crossCandle.low)} C {formatPrice(crossCandle.close)}
+            O {formatPrice(crossCandle.open, series.symbol)} H {formatPrice(crossCandle.high, series.symbol)} L{' '}
+            {formatPrice(crossCandle.low, series.symbol)} C {formatPrice(crossCandle.close, series.symbol)}
             {crossCandle.open > 0 ? (
               <Text
                 style={{
@@ -2652,7 +2652,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 ).toFixed(2)}%`}
               </Text>
             ) : null}
-            {compareSeries ? ` · ${compareSeries.symbol} ${formatPrice(compareSeries.last)}` : ''}
+            {compareSeries ? ` · ${compareSeries.symbol} ${formatPrice(compareSeries.last, compareSeries.symbol)}` : ''}
           </Text>
         ) : (
           <Text style={styles.readoutMuted}>
@@ -2668,7 +2668,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           // الاتجاه (فوق/تحت) يحدّده المستدعي من السعر الحالي، والتأكيد «مُفعَّل» يظهر عنده.
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`${tr.mcAlertAtCrossA11y} ${formatPrice(crossCandle.close)}`}
+            accessibilityLabel={`${tr.mcAlertAtCrossA11y} ${formatPrice(crossCandle.close, series.symbol)}`}
             hitSlop={6}
             style={({ pressed }) => [
               styles.crossAlertBtn,
@@ -2677,7 +2677,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ]}
             onPress={() => onCreateAlert(crossCandle.close, 'crosshair')}
           >
-            <Text style={[styles.crossAlertText, { color: accent }]}>🔔 {formatPrice(crossCandle.close)}</Text>
+            <Text style={[styles.crossAlertText, { color: accent }]}>🔔 {formatPrice(crossCandle.close, series.symbol)}</Text>
           </Pressable>
         ) : null}
         {interactive && !compactUi ? (
@@ -4334,7 +4334,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 { top: Math.max(0, Math.min(chartPlotH - 16, tick.ratio * chartPlotH - 7)) },
               ]}
             >
-              {formatPrice(tick.price)}
+              {formatPrice(tick.price, series.symbol)}
             </Text>
           )
         )}
@@ -4349,7 +4349,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               },
             ]}
           >
-            <Text style={styles.currentPriceText}>{formatPrice(currentPrice)}</Text>
+            <Text style={styles.currentPriceText}>{formatPrice(currentPrice, series.symbol)}</Text>
           </View>
           ) : null}
           {!hidePriceLabels && crossCandle ? (
@@ -4360,7 +4360,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               { top: Math.max(0, Math.min(chartPlotH - 20, crossY - 9)) },
             ]}
           >
-            <Text style={styles.crossTagText}>{formatPrice(crossCandle.close)}</Text>
+            <Text style={styles.crossTagText}>{formatPrice(crossCandle.close, series.symbol)}</Text>
           </View>
           ) : null}
         </View>
