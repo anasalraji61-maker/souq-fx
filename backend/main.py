@@ -9,6 +9,7 @@ import asyncio
 import math
 import os
 import random
+import re
 import secrets
 import time
 from contextlib import asynccontextmanager
@@ -107,12 +108,33 @@ class ChatMessage(BaseModel):
 
 
 class VoteCreate(BaseModel):
-    symbol: str
+    symbol: str = Field(min_length=1, max_length=20)
     direction: Literal["buy", "sell"]
     entry: float
     sl: float
     tp: float
-    note: str = ""
+    note: str = Field(default="", max_length=500)
+
+
+class ContentReport(BaseModel):
+    kind: Literal["group_message", "vote"]
+    target_id: str = Field(min_length=1, max_length=64)
+    reason: Literal["spam", "abuse", "scam", "other"] = "other"
+
+
+# فلتر المحتوى عند النشر (شرط أبل 1.2: «طريقة لتصفية المحتوى المرفوض قبل نشره»). أشيع ضرر في
+# مجتمعات الفوركس للمتداول الفردي: روابط «قنوات توصيات» و«إدارة حسابات» تجرّه لتيليغرام/واتساب
+# أو مواقع احتيال. لا روابط في الرسائل والأفكار — النص فقط. متعمَّد أن يكون ضيقاً (لا قائمة شتائم
+# بأربع لغات تحجب كلاماً بريئاً)؛ الإساءة تُعالَج بالبلاغ + الحظر.
+_LINK_RE = re.compile(
+    r"(https?://|www\.|\bt\.me/|\bwa\.me/|\btelegram\.me/|\bchat\.whatsapp\.com/|"
+    r"\b[a-z0-9-]+\.(?:com|net|org|io|me|xyz|link|site|online|top|info|biz|co|app)\b)",
+    re.IGNORECASE,
+)
+
+
+def _has_link(text: str) -> bool:
+    return bool(_LINK_RE.search(text or ""))
 
 
 class VoteBallot(BaseModel):
@@ -1047,6 +1069,8 @@ def post_group(msg: ChatMessage, user: dict | None = Depends(_auth_user)):
     text = msg.text.strip()
     if not text:
         return {"ok": False, "error": "empty"}
+    if _has_link(text):
+        return {"ok": False, "error": "links_not_allowed"}
     item = {
         "id": _new_id("g"),
         "user": user["username"],
@@ -1089,6 +1113,12 @@ def list_votes(user: dict | None = Depends(_auth_user)):
 
 @app.post("/api/votes")
 def create_vote(body: VoteCreate, user: dict | None = Depends(_auth_user)):
+    # النشر للمسجّل فقط (مثل محادثة المجموعة): فكرة بلا ناشر معروف لا يمكن حظر صاحبها ولا
+    # محاسبته على بلاغ — شرط أبل 1.2 (حظر المستخدم المسيء). القراءة تبقى للجميع.
+    if not user:
+        return {"ok": False, "error": "login_required"}
+    if _has_link(body.note) or _has_link(body.symbol):
+        return {"ok": False, "error": "links_not_allowed"}
     item = {
         "id": _new_id("v"),
         "symbol": body.symbol.upper(),
@@ -1117,6 +1147,19 @@ def ballot(body: VoteBallot, user: dict | None = Depends(_auth_user)):
     if not v:
         return {"ok": False, "error": "vote not found"}
     return {"ok": True, "vote": v}
+
+
+@app.post("/api/reports")
+def report_content(body: ContentReport, user: dict | None = Depends(_auth_user)):
+    # بلاغ عن رسالة مجموعة أو فكرة صفقة. العنصر يختفي فوراً عند المُبلِّغ، وعن الجميع عند بلوغ
+    # db.REPORT_HIDE_THRESHOLD حسابات مختلفة. المجهول لا يُبلغ (وإلا يُخفي أي أحد أي شيء بلا حد)
+    # — لكنه يقدر يحظر المرسل محلياً من الواجهة.
+    if not user:
+        return {"ok": False, "error": "login_required"}
+    r = db.report_content(body.kind, body.target_id, user["user_id"], body.reason)
+    if r is None:
+        return {"ok": False, "error": "not_found"}
+    return {"ok": True, "new": r}
 
 
 @app.get("/api/news")

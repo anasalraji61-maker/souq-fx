@@ -122,6 +122,9 @@ export type ChatMsg = {
   mine?: boolean;
 };
 
+export type ReportKind = 'group_message' | 'vote';
+export type ReportReason = 'spam' | 'abuse' | 'scam' | 'other';
+
 /**
  * مهلة لطلبات القراءة: بلا مهلة، خادم غير قابل للوصول (عنوان LAN قديم، شبكة ضعيفة) يترك الشاشة
  * بمؤشر تحميل دقيقة كاملة أو أكثر (OkHttp على أندرويد بلا مهلة قراءة افتراضياً). بعد المهلة يُرمى
@@ -334,10 +337,15 @@ export const api = {
   postGroup: (text: string) =>
     postJson<{ ok: boolean; message?: ChatMsg; error?: string }>('/api/chat/group', { text }),
   votes: () => getJson<{ votes: Vote[] }>('/api/votes'),
+  /** النشر للمسجّل فقط (`login_required`)، والروابط مرفوضة (`links_not_allowed`) */
   createVote: (v: { symbol: string; direction: 'buy' | 'sell'; entry: number; sl: number; tp: number; note?: string }) =>
-    postJson<{ ok: boolean; vote: Vote }>('/api/votes', v),
+    postJson<{ ok: boolean; vote?: Vote; error?: string }>('/api/votes', v),
   ballot: (vote_id: string, choice: 'agree' | 'disagree') =>
     postJson<{ ok: boolean; vote?: Vote; error?: string }>('/api/votes/ballot', { vote_id, choice }),
+  /** بلاغ عن رسالة مجموعة أو فكرة صفقة (شرط أبل 1.2). العنصر يختفي فوراً عند المُبلِّغ، وعن الجميع
+   * بعد بلاغات عدة حسابات. للمسجّل فقط (`login_required`). */
+  report: (kind: ReportKind, target_id: string, reason: ReportReason) =>
+    postJson<{ ok: boolean; new?: boolean; error?: string }>('/api/reports', { kind, target_id, reason }),
   news: () => getJson<{ news: NewsItem[] }>('/api/news'),
   marketStatus: () =>
     getJson<{

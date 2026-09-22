@@ -147,6 +147,23 @@ def init_db() -> None:
         _migrate_user_email(c)
         _migrate_push_lang(c)
         _migrate_group_user(c)
+        _migrate_content_reports(c)
+
+
+def _migrate_content_reports(c: sqlite3.Connection) -> None:
+    """بلاغات المحتوى الذي ينشئه المستخدمون (محادثة المجموعة + أفكار الصفقات) — شرط أبل 1.2
+    وسياسة Google Play للمحتوى الاجتماعي: آلية إبلاغ + إخفاء المحتوى المسيء. بلاغ واحد لكل حساب
+    لكل عنصر (المفتاح الأساسي) فلا يقدر حساب واحد يُخفي محتوى غيره وحده."""
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS content_reports (
+            kind TEXT NOT NULL,
+            target_id TEXT NOT NULL,
+            reporter_id INTEGER NOT NULL,
+            reason TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            PRIMARY KEY(kind, target_id, reporter_id)
+        )"""
+    )
 
 
 def _migrate_group_user(c: sqlite3.Connection) -> None:
@@ -813,7 +830,7 @@ def delete_user_account(user_id: int) -> None:
     الشخصية القابلة للتعريف (username → معرّف مجهول ثابت غير قابل لتسجيل دخول،
     email → NULL، password_hash → قيمة عشوائية غير صالحة أبداً لأي كلمة مرور حقيقية)،
     وتُلغى كل الجلسات النشطة فوراً، ويُحذف المحتوى الشخصي البحت غير المرجعي من طرف
-    آخر (تنبيهات الأسعار والمؤشرات، دفتر الصفقات، تخطيطات الشارت المحفوظة، رمز إشعارات Push، سجل أصواته على أفكار الصفقات — العدّادات تبقى، قائمة المتابعة المخصّصة، تقدّم الأكاديمية، رسائله بمحادثة المجموعة، واسمه كناشر لأفكار الصفقات). هذا يحقق
+    آخر (تنبيهات الأسعار والمؤشرات، دفتر الصفقات، تخطيطات الشارت المحفوظة، رمز إشعارات Push، سجل أصواته على أفكار الصفقات — العدّادات تبقى، قائمة المتابعة المخصّصة، تقدّم الأكاديمية، رسائله بمحادثة المجموعة، بلاغاته عن محتوى الآخرين، واسمه كناشر لأفكار الصفقات). هذا يحقق
     الشرط الفعلي لأبل (إزالة البيانات الشخصية القابلة للتعريف) دون كسر شجرة العمولات.
     """
     placeholder = f"deleted_user_{user_id}"
@@ -839,6 +856,7 @@ def delete_user_account(user_id: int) -> None:
         c.execute("DELETE FROM watchlist WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM academy_progress WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM group_messages WHERE user_id=?", (user_id,))
+        c.execute("DELETE FROM content_reports WHERE reporter_id=?", (user_id,))
 
 
 # ─── Alerts ───────────────────────────────────────────────────────────────────
@@ -946,13 +964,49 @@ def mark_alert_triggered(alert_id: str) -> None:
 _LEGACY_CHAT_USER = "أنت"
 
 
+# ─── Moderation (Apple 1.2 / Google Play UGC) ────────────────────────────────────
+
+# عدد الحسابات المختلفة التي تُبلغ عن عنصر حتى يُخفى عن الجميع تلقائياً (بانتظار مراجعة يدوية
+# لجدول content_reports). ثلاثة: حساب واحد غاضب لا يُسكت أحداً، وثلاثة بلاغات مستقلة تكفي لإزالة
+# الاحتيال/الإساءة الظاهرة بسرعة قبل أن يراها مبتدئ.
+REPORT_HIDE_THRESHOLD = 3
+REPORT_KINDS = ("group_message", "vote")
+
+
+def report_content(kind: str, target_id: str, reporter_id: int, reason: str) -> bool | None:
+    """يسجّل بلاغاً. None = العنصر غير موجود؛ True = بلاغ جديد؛ False = الحساب أبلغ عنه سابقاً."""
+    table = {"group_message": "group_messages", "vote": "votes"}.get(kind)
+    if table is None:
+        return None
+    with _conn() as c:
+        if not c.execute(f"SELECT 1 FROM {table} WHERE id=?", (target_id,)).fetchone():
+            return None
+        cur = c.execute(
+            """INSERT OR IGNORE INTO content_reports(kind,target_id,reporter_id,reason,created_at)
+               VALUES(?,?,?,?,?)""",
+            (kind, target_id, reporter_id, reason, time.time()),
+        )
+        return cur.rowcount > 0
+
+
+def _hidden_ids(c: sqlite3.Connection, kind: str, viewer_id: int | None) -> set[str]:
+    """عناصر تُخفى عن هذا المشاهد: بلغت عتبة البلاغات، أو أبلغ هو عنها بنفسه (تختفي عنده فوراً)."""
+    rows = c.execute(
+        """SELECT target_id FROM content_reports WHERE kind=?
+           GROUP BY target_id HAVING COUNT(*) >= ? OR SUM(reporter_id = ?) > 0""",
+        (kind, REPORT_HIDE_THRESHOLD, viewer_id if viewer_id is not None else -1),
+    ).fetchall()
+    return {r["target_id"] for r in rows}
+
+
 def group_messages(viewer_id: int | None = None, limit: int = 200) -> list[dict]:
     with _conn() as c:
         rows = c.execute(
             "SELECT id,user_name,text,ts,user_id FROM group_messages ORDER BY rowid DESC LIMIT ?",
             (limit,),
         ).fetchall()
-    rows = list(reversed(rows))
+        hidden = _hidden_ids(c, "group_message", viewer_id)
+    rows = [r for r in reversed(rows) if r["id"] not in hidden]
     return [
         {
             "id": r["id"],
@@ -1041,6 +1095,8 @@ def _vote_row(r, my_choice: str | None = None) -> dict:
 def list_votes(user_id: int | None = None) -> list[dict]:
     with _conn() as c:
         rows = c.execute("SELECT * FROM votes ORDER BY rowid DESC").fetchall()
+        hidden = _hidden_ids(c, "vote", user_id)
+        rows = [r for r in rows if r["id"] not in hidden]
         mine: dict[str, str] = {}
         if user_id is not None:
             mine = {
