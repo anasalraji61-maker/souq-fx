@@ -1671,11 +1671,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // Indicator panes shrink (48 → 34px) before they are allowed to crush the price
   // area: price keeps at least ~55% of the chart height, so 4-5 oscillators on a
   // phone no longer squeeze candles into a ~100px strip.
-  const PANE_GAP = 4;
-  const availableH = height - (interactive ? 8 : 0);
-  const minMainH = Math.max(140, Math.round(availableH * 0.55));
+  //
+  // فجوة اللوحة تساوي فجوة الجذر الفعلية: `styles.root` بـ`gap: 6` و`rootDense` بـ`gap: 0`،
+  // لكن الحساب كان مثبَّتاً على 4 — فبالوضع العادي كل لوحة تأكل 2px أكثر ممّا حُسب لها
+  // (تفيض خارج صندوق الشارت مع تراكم اللوحات)، وبالوضع المدمج يُحجَز 4px لكل لوحة بلا
+  // مقابل فيُقضَم من لوحة السعر بلا سبب. أي تعديل على `root.gap` يجب أن يتبعه هنا.
+  const PANE_GAP = dense ? 0 : 6;
+  const availableH = Math.max(0, height - (interactive ? 8 : 0));
+  // أرضية السعر لا تتجاوز الارتفاع المتاح أصلاً: بإطار قصير (خلية الرباعي/شارت مدمج)
+  // كانت 140 أكبر من المتاح فتصير ميزانية اللوحات سالبة ويصبح الحساب بلا معنى.
+  const minMainH = Math.min(availableH, Math.max(140, Math.round(availableH * 0.55)));
+  const paneBudget = Math.max(0, availableH - minMainH);
   const paneH = paneCount
-    ? Math.max(34, Math.min(48, Math.floor((availableH - minMainH) / paneCount) - PANE_GAP))
+    ? Math.max(34, Math.min(48, Math.floor(paneBudget / paneCount) - PANE_GAP))
     : 48;
   const mainH = Math.max(minMainH, availableH - paneCount * (paneH + PANE_GAP));
 
