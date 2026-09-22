@@ -56,14 +56,22 @@ function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
-function showFallbackPage(message, hint) {
+/**
+ * الصفحة **ثنائية اللغة عمداً** (عربي + إنجليزي معاً): تظهر قبل تحميل الواجهة، أي قبل أن تُعرف
+ * لغة المتداول المحفوظة داخل التطبيق، والأسواق المستهدفة ثلاثة (الوطن العربي وأمريكا وأوروبا) —
+ * فنسخة عربية وحدها تترك مستخدم exe/dmg بأوروبا أمام نصّ لا يقرأه.
+ */
+function showFallbackPage(ar, en) {
   if (!mainWindow) return;
   const html =
-    '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>MATRIX Charts</title></head>' +
+    '<!doctype html><html lang="ar"><head><meta charset="utf-8"><title>MATRIX Charts</title></head>' +
     '<body style="background:#0B1220;color:#94A3B8;font-family:system-ui,sans-serif;padding:40px;text-align:center">' +
     '<h1 style="color:#2DD4BF;letter-spacing:4px">MATRIX</h1>' +
-    `<p style="color:#E8EEF9;font-size:17px">${escapeHtml(message)}</p>` +
-    `<p>${escapeHtml(hint)}</p></body></html>`;
+    `<div dir="rtl"><p style="color:#E8EEF9;font-size:17px">${escapeHtml(ar.message)}</p>` +
+    `<p>${escapeHtml(ar.hint)}</p></div>` +
+    '<hr style="border:0;border-top:1px solid #243049;max-width:320px;margin:28px auto">' +
+    `<div dir="ltr"><p style="color:#E8EEF9;font-size:17px">${escapeHtml(en.message)}</p>` +
+    `<p>${escapeHtml(en.hint)}</p></div></body></html>`;
   mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`).catch(() => {});
   if (!mainWindow.isVisible()) mainWindow.show();
 }
@@ -98,12 +106,36 @@ function createWindow() {
   }, 5000);
   mainWindow.once('show', () => clearTimeout(showTimer));
 
+  // نصّ المستخدم النهائي مقابل نصّ المطوّر: النسخة الموزَّعة (exe/dmg) كانت تعرض للمتداول
+  // «شغّل start-mobile.bat» أو «أعد تصدير حزمة الويب (expo export --platform web)» ومعهما عنوان
+  // `http://127.0.0.1:8081` — تعليمات بيئة تطوير لا معنى لها لمن حمّل المثبِّت من الموقع. الآن
+  // تظهر تلك الحروف بالتشغيل غير المحزَّم وحده (`app.isPackaged === false`).
   loadApp.catch(() => {
-    const fallbackHint = hasBundledBuild
-      ? 'أعد تصدير حزمة الويب (expo export --platform web) ثم أعد التثبيت'
-      : 'شغّل start-mobile.bat ثم أعد فتح سطح المكتب';
-    const fallbackTarget = hasBundledBuild ? 'الحزمة المضمَّنة' : WEB_URL;
-    showFallbackPage(`تعذر الاتصال بـ ${fallbackTarget}`, fallbackHint);
+    if (!app.isPackaged) {
+      const devHintAr = hasBundledBuild
+        ? 'أعد تصدير حزمة الويب (expo export --platform web) ثم أعد التثبيت'
+        : 'شغّل start-mobile.bat ثم أعد فتح سطح المكتب';
+      const devHintEn = hasBundledBuild
+        ? 'Re-export the web bundle (expo export --platform web), then reinstall'
+        : 'Run start-mobile.bat, then reopen the desktop app';
+      const devTargetAr = hasBundledBuild ? 'الحزمة المضمَّنة' : WEB_URL;
+      const devTargetEn = hasBundledBuild ? 'the bundled web build' : WEB_URL;
+      showFallbackPage(
+        { message: `تعذر الاتصال بـ ${devTargetAr}`, hint: devHintAr },
+        { message: `Could not load ${devTargetEn}`, hint: devHintEn }
+      );
+      return;
+    }
+    showFallbackPage(
+      {
+        message: 'تعذّر فتح واجهة MATRIX',
+        hint: 'أغلق التطبيق وأعد فتحه — وإن تكرّر، أعد تثبيت MATRIX Charts. رسوماتك وإعداداتك محفوظة.',
+      },
+      {
+        message: 'MATRIX could not start',
+        hint: 'Close the app and open it again — if it keeps happening, reinstall MATRIX Charts. Your drawings and settings are safe.',
+      }
+    );
   });
 
   // انهيار عملية العرض (نفاد ذاكرة/خطأ GPU…) كان يترك نافذة فارغة سوداء بلا أي تفسير.
@@ -115,7 +147,16 @@ function createWindow() {
       mainWindow.webContents.reload();
       return;
     }
-    showFallbackPage('توقّفت واجهة MATRIX بشكل غير متوقع', 'أغلق التطبيق وأعد فتحه — رسوماتك وإعداداتك محفوظة');
+    showFallbackPage(
+      {
+        message: 'توقّفت واجهة MATRIX بشكل غير متوقع',
+        hint: 'أغلق التطبيق وأعد فتحه — رسوماتك وإعداداتك محفوظة',
+      },
+      {
+        message: 'MATRIX stopped unexpectedly',
+        hint: 'Close the app and open it again — your drawings and settings are safe',
+      }
+    );
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
