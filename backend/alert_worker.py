@@ -33,7 +33,9 @@ def _price(symbol: str) -> float | None:
             return float(q)
     except Exception:
         log.warning("price quote fetch failed for %s", symbol, exc_info=True)
-    snap = td_ws.snapshot()
+    # سعر الـWS فقط إن وصل خلال 3 دقائق (نفس حدّ حداثة شموع 1m) — سعر مجمَّد من انقطاع قديم كان يُطلق
+    # تنبيهاً سُلِّح بعده على سعر لم يعد قائماً.
+    snap = td_ws.snapshot(max_age=180)
     p = snap.get(symbol.upper())
     return float(p) if p is not None else None
 

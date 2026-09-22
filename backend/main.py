@@ -1505,13 +1505,18 @@ async def ticks(ws: WebSocket):
     await ws.accept()
     try:
         while True:
-            live = td_ws.snapshot()
+            live, live_at = td_ws.recent_snapshot()
             if live:
                 payload = {
                     "ts": time.time(),
                     "ticks": live,
                     "source": "twelvedata_ws",
-                    "data_source": {"kind": "provider", "as_of": time.time(), "channel": "twelvedata_ws"},
+                    # وقت الاستلام الحقيقي لا «الآن»: سعر مجمَّد (انقطاع/عطلة) كان يظهر بشارة «حي»
+                    "data_source": {
+                        "kind": "provider",
+                        "as_of": live_at or time.time(),
+                        "channel": "twelvedata_ws",
+                    },
                 }
             else:
                 payload = {

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import time
 from typing import Any
 
 import websockets
@@ -14,6 +15,9 @@ WS_URL = "wss://ws.twelvedata.com/v1/quotes/price"
 
 # MATRIX symbol -> latest price
 LATEST: dict[str, float] = {}
+# MATRIX symbol -> وقت استلام آخر سعر (epoch) — بلا هذا كان سعر مجمَّد (انقطاع الـWS أو عطلة السوق) يُبثّ
+# للعميل كـ«حي» بوقت الآن، ويُطلق عليه الـworker تنبيهات كأنه السعر الحالي.
+LATEST_AT: dict[str, float] = {}
 _connected = False
 _last_error: str | None = None
 
@@ -79,10 +83,12 @@ async def run_forever() -> None:
                             parsed = _parse_price(item)
                             if parsed:
                                 LATEST[parsed[0]] = parsed[1]
+                                LATEST_AT[parsed[0]] = time.time()
                         continue
                     parsed = _parse_price(data)
                     if parsed:
                         LATEST[parsed[0]] = parsed[1]
+                        LATEST_AT[parsed[0]] = time.time()
         except asyncio.CancelledError:
             _connected = False
             raise
@@ -101,5 +107,19 @@ def status() -> dict:
     }
 
 
-def snapshot() -> dict[str, float]:
-    return dict(LATEST)
+def snapshot(max_age: float | None = None) -> dict[str, float]:
+    """آخر الأسعار؛ مع `max_age` (ثوانٍ) فقط ما وصل خلالها — سعر أقدم ليس «السعر الحالي»."""
+    if max_age is None:
+        return dict(LATEST)
+    cutoff = time.time() - max_age
+    return {s: p for s, p in LATEST.items() if LATEST_AT.get(s, 0.0) >= cutoff}
+
+
+def recent_snapshot(window: float = 120.0) -> tuple[dict[str, float], float | None]:
+    """(الأسعار القريبة من أحدث استلام، وقت أحدث استلام) — لبثّ `/ws/ticks` بوقت حقيقي `as_of` بدل
+    «الآن»: حين يتجمّد الـWS يصير as_of قديماً فيعرض العميل «آخر سعر» لا «حي». رمز تأخّر أكثر من
+    `window` عن أحدث رمز يُستبعد كي لا يحمل وقت غيره."""
+    if not LATEST_AT:
+        return dict(LATEST), None
+    newest = max(LATEST_AT.values())
+    return {s: p for s, p in LATEST.items() if LATEST_AT.get(s, 0.0) >= newest - window}, newest
