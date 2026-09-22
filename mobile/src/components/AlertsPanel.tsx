@@ -158,7 +158,14 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
       const res = await api.checkAlerts();
       if (mountedRef.current) setAlerts(res.alerts);
       if (res.triggered.length) {
-        const msg = res.triggered.map((trig) => `${trig.symbol} ${trig.condition} ${trig.price}`).join(' · ');
+        /** «EURUSD فوق 1.085 (1.0853)» بلغة الواجهة — كان يعرض above/below الإنجليزية الخام بكل اللغات. */
+        const msg = res.triggered
+          .map((trig) => {
+            const word = trig.condition === 'above' ? t.aboveWord : t.belowWord;
+            const cur = typeof trig.current === 'number' && Number.isFinite(trig.current) ? ` (${trig.current})` : '';
+            return `${trig.symbol} ${word} ${trig.price}${cur}`;
+          })
+          .join(' · ');
         if (mountedRef.current) setFlash(msg);
         for (const trig of res.triggered) {
           await pushPriceAlert(

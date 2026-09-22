@@ -359,6 +359,8 @@ export type Dict = {
   indAlertsThresholdA11y: string;
   indAlertsCrossUpA11y: string;
   indAlertsCrossDownA11y: string;
+  indAlertsCrossUpChip: string;
+  indAlertsCrossDownChip: string;
   indAlertsAddA11y: string;
   indAlertsAddBtn: string;
   indAlertsAddError: string;
@@ -1079,6 +1081,8 @@ const ar: Dict = {
   indAlertsThresholdA11y: 'قيمة عتبة المؤشر',
   indAlertsCrossUpA11y: 'شرط: تقاطع صاعد',
   indAlertsCrossDownA11y: 'شرط: تقاطع هابط',
+  indAlertsCrossUpChip: 'تقاطع صاعد ▲',
+  indAlertsCrossDownChip: 'تقاطع هابط ▼',
   indAlertsAddA11y: 'إضافة تنبيه مؤشر',
   indAlertsAddBtn: 'إضافة تنبيه',
   indAlertsAddError: 'تعذر إضافة تنبيه المؤشر — تحقق من الاتصال وحاول مرة أخرى',
@@ -1806,6 +1810,8 @@ const enUS: Dict = {
   indAlertsThresholdA11y: 'Indicator threshold value',
   indAlertsCrossUpA11y: 'Condition: cross up',
   indAlertsCrossDownA11y: 'Condition: cross down',
+  indAlertsCrossUpChip: 'Cross up ▲',
+  indAlertsCrossDownChip: 'Cross down ▼',
   indAlertsAddA11y: 'Add indicator alert',
   indAlertsAddBtn: 'Add alert',
   indAlertsAddError: 'Could not add the indicator alert — check your connection and try again',
@@ -2553,6 +2559,8 @@ const ku: Dict = {
   indAlertsThresholdA11y: 'نرخی ئاستی سنووری پێوەر',
   indAlertsCrossUpA11y: 'مەرج: بڕینەوەی بەرزبوونەوە',
   indAlertsCrossDownA11y: 'مەرج: بڕینەوەی دابەزین',
+  indAlertsCrossUpChip: 'بڕینەوەی بەرزبوونەوە ▲',
+  indAlertsCrossDownChip: 'بڕینەوەی دابەزین ▼',
   indAlertsAddA11y: 'زیادکردنی ئاگادارکردنەوەی پێوەر',
   indAlertsAddBtn: 'زیادکردنی ئاگادارکردنەوە',
   indAlertsAddError:

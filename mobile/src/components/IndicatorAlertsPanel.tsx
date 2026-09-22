@@ -14,6 +14,32 @@ import { api } from '../api';
 import { pushPriceAlert } from '../notifications';
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
+import type { Dict } from '../i18n/locales';
+
+/** «EURUSD · RSI · تحت 30» / «GBPUSD · تقاطع المتوسطات · تقاطع صاعد ▲» بلغة الواجهة — القائمة وتأكيد
+ * الحذف والإشعار كانت تعرض المعرّفات الخام (rsi · below / ma_cross · cross_up) بكل اللغات. */
+function describeIndAlert(
+  a: { symbol: string; alert_type: string; condition: string; value?: number | null },
+  t: Dict
+): string {
+  const typeLabel: Record<string, string> = {
+    rsi: t.indAlertsTypeRsi,
+    ma_cross: t.indAlertsTypeMaCross,
+    macd_cross: t.indAlertsTypeMacdCross,
+  };
+  const val = a.value != null ? ` ${a.value}` : '';
+  const cond =
+    a.condition === 'above'
+      ? `${t.aboveWord}${val}`
+      : a.condition === 'below'
+        ? `${t.belowWord}${val}`
+        : a.condition === 'cross_up'
+          ? t.indAlertsCrossUpChip
+          : a.condition === 'cross_down'
+            ? t.indAlertsCrossDownChip
+            : `${a.condition}${val}`;
+  return `${a.symbol} · ${typeLabel[a.alert_type] ?? a.alert_type} · ${cond}`;
+}
 
 type IndAlert = {
   id: string;
@@ -83,14 +109,14 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
         const res = await api.checkIndicatorAlerts();
         if (mountedRef.current) setAlerts(res.alerts);
         for (const trig of res.triggered) {
-          await pushPriceAlert(t.indAlertsPushTitle, `${trig.symbol} ${trig.alert_type} ${trig.condition}`);
+          await pushPriceAlert(t.indAlertsPushTitle, describeIndAlert(trig, t));
         }
       } catch {
         /* ignore */
       }
     }, 60_000);
     return () => clearInterval(id);
-  }, [refresh, t.indAlertsPushTitle]);
+  }, [refresh, t]);
 
   const add = async () => {
     setBusy(true);
@@ -195,7 +221,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
             onPress={() => setCondition('cross_up')}
             accessibilityLabel={t.indAlertsCrossUpA11y}
           >
-            <Text style={styles.chipText}>Cross Up</Text>
+            <Text style={styles.chipText}>{t.indAlertsCrossUpChip}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -210,7 +236,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
             onPress={() => setCondition('cross_down')}
             accessibilityLabel={t.indAlertsCrossDownA11y}
           >
-            <Text style={styles.chipText}>Cross Down</Text>
+            <Text style={styles.chipText}>{t.indAlertsCrossDownChip}</Text>
           </Pressable>
         </View>
       )}
@@ -245,8 +271,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
             alerts.map((a) => (
               <View key={a.id} style={[styles.item, rtl && styles.itemRtl]}>
                 <Text style={[styles.itemText, { textAlign: align }]}>
-                  {a.symbol} · {a.alert_type} · {a.condition}
-                  {a.value != null ? ` ${a.value}` : ''}
+                  {describeIndAlert(a, t)}
                   {a.triggered ? ' ✓' : ''}
                 </Text>
                 <Pressable
@@ -260,7 +285,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
                   onPress={() =>
                     Alert.alert(
                       t.indAlertsDeleteConfirmTitle,
-                      `${a.symbol} · ${a.alert_type} · ${a.condition}`,
+                      describeIndAlert(a, t),
                       [
                         { text: t.cancel, style: 'cancel' },
                         {
@@ -277,7 +302,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
                       ]
                     )
                   }
-                  accessibilityLabel={`${t.indAlertsDeleteA11yPrefix}: ${a.symbol} · ${a.alert_type} · ${a.condition}`}
+                  accessibilityLabel={`${t.indAlertsDeleteA11yPrefix}: ${describeIndAlert(a, t)}`}
                   hitSlop={8}
                 >
                   <Text style={styles.del}>{t.deleteWord}</Text>
