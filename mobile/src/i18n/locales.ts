@@ -254,6 +254,10 @@ export type Dict = {
   alertsInvalidInput: string;
   alertsUnknownSymbolWarn: string;
   alertsEditOldRemains: string;
+  alertsRearmBtn: string;
+  alertsRearmA11yPrefix: string;
+  alertsRearmedMsg: string;
+  alertsRearmFailed: string;
   alertsArmedPrefix: string;
   alertsUpdatedPrefix: string;
   alertsCurrentPrefix: string;
@@ -1085,6 +1089,10 @@ const ar: Dict = {
   alertsInvalidInput: 'أدخل رمزاً وسعراً صحيحاً أكبر من صفر',
   alertsUnknownSymbolWarn: 'مزوّد الأسعار لا يعرف هذا الرمز — راجع كتابته، وإلا لن يُطلق التنبيه',
   alertsEditOldRemains: 'حُفظ التنبيه الجديد لكن تعذّر حذف القديم — احذفه يدوياً من القائمة',
+  alertsRearmBtn: 'إعادة التسليح',
+  alertsRearmA11yPrefix: 'إعادة تسليح التنبيه',
+  alertsRearmedMsg: 'مُسلَّح من جديد: {desc} — إن كان السعر ما زال متجاوزاً المستوى يُطلق بالفحص التالي',
+  alertsRearmFailed: 'تعذّرت إعادة التسليح — تحقّق من الاتصال وحاول مرة أخرى',
   alertsArmedPrefix: 'مُفعَّل',
   alertsUpdatedPrefix: 'حُدِّث',
   alertsCurrentPrefix: 'السعر الآن',
@@ -1928,6 +1936,10 @@ const enUS: Dict = {
   alertsInvalidInput: 'Enter a symbol and a valid price above zero',
   alertsUnknownSymbolWarn: 'The price provider does not know this symbol — check the spelling, or this alert will never fire',
   alertsEditOldRemains: 'New alert saved, but the old one could not be removed — delete it from the list',
+  alertsRearmBtn: 'Re-arm',
+  alertsRearmA11yPrefix: 'Re-arm alert',
+  alertsRearmedMsg: 'Armed again: {desc} — if price is still past the level it fires on the next check',
+  alertsRearmFailed: 'Could not re-arm — check your connection and try again',
   alertsArmedPrefix: 'Armed',
   alertsUpdatedPrefix: 'Updated',
   alertsCurrentPrefix: 'Now',
@@ -2791,6 +2803,10 @@ const ku: Dict = {
   alertsInvalidInput: 'هێمایەک و نرخێکی دروست لە سەرووی سفر بنووسە',
   alertsUnknownSymbolWarn: 'دابینکەری نرخ ئەم هێمایە ناناسێت — ڕێنووسەکەی بپشکنە، ئەگەرنا ئەم ئاگادارکردنەوەیە هەرگیز ناچالاک نابێت',
   alertsEditOldRemains: 'ئاگادارکردنەوەی نوێ پاشەکەوت کرا بەڵام کۆنەکە نەسڕایەوە — لە لیستەکە بیسڕەوە',
+  alertsRearmBtn: 'دووبارە چالاککردن',
+  alertsRearmA11yPrefix: 'دووبارە چالاککردنی ئاگادارکردنەوە',
+  alertsRearmedMsg: 'دووبارە چالاکە: {desc} — ئەگەر نرخ هێشتا لەو ئاستە تێپەڕیوە لە پشکنینی داهاتوودا دەتەقێتەوە',
+  alertsRearmFailed: 'دووبارە چالاککردن سەرنەکەوت — پەیوەندی بپشکنە و دووبارە هەوڵ بدە',
   alertsArmedPrefix: 'چالاککرا',
   alertsUpdatedPrefix: 'نوێکرایەوە',
   alertsCurrentPrefix: 'نرخی ئێستا',

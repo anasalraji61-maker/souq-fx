@@ -352,6 +352,55 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
     }
   };
 
+  /**
+   * تنبيه السعر لمرة واحدة: بعد «أُطلق» كان الطريق الوحيد لإعادته **حذفه ثم كتابة الرمز والسعر من
+   * جديد بخمس منازل** — والمستوى الذي لمسه السوق مرة هو بالضبط ما يعود إليه المتداول (إعادة اختبار
+   * دعم/مقاومة)، أي أن أكثر التنبيهات جدارةً بالبقاء كان أكثرها كلفةً بإعادة الكتابة، بالخطوة نفسها
+   * التي عولجت مراراً بهذه اللوحة (رقم ناقص = تنبيه عند مستوى آخر). `PATCH /api/alerts/{id}` يُعيد
+   * التسليح **أصلاً** (`db.update_alert`: `triggered=0, active=1`) فلا حاجة لأي تغيير بالباك-إند،
+   * ولوح تنبيهات المؤشرات يحمل الزر نفسه منذ مدّة (`rearmIndicatorAlert`) — هذه اللوحة وحدها بلا.
+   * باك-إند أقدم بلا PATCH (405) أو تنبيه لم يعد موجوداً (404) → الطريق القديم نفسه المتّبع بـ`add`:
+   * إنشاء نسخة ثم حذف القديم (بهذا الترتيب لا يُفقد القديم إن فشل الإنشاء).
+   */
+  const rearm = async (a: PriceAlert) => {
+    setBusy(true);
+    setFormError(null);
+    const body = { symbol: a.symbol, condition: a.condition, price: a.price, note: a.note || '' };
+    try {
+      let stale: string | null = null;
+      try {
+        await api.updateAlert(a.id, body);
+      } catch (e) {
+        const status = (e as { status?: number }).status;
+        if (status !== 404 && status !== 405) throw e;
+        await api.createAlert(body);
+        stale = a.id;
+      }
+      if (stale) {
+        try {
+          await api.deleteAlert(stale);
+        } catch {
+          if (mountedRef.current) setFormError(t.alertsEditOldRemains);
+        }
+      }
+      if (!mountedRef.current) return;
+      playSoftClick();
+      // التنبيه المُعاد تسليحه لم يعد «مُطلَقاً»: تعديل مفتوح عليه بالنموذج يصير على حالة قديمة.
+      if (editingId === a.id) cancelEdit();
+      showArmed(
+        t.alertsRearmedMsg.replace(
+          '{desc}',
+          `${a.symbol} ${condMark(a.condition)} ${fmtPrice(a.price, a.symbol)}`
+        )
+      );
+      await refresh();
+    } catch {
+      if (mountedRef.current) setFormError(t.alertsRearmFailed);
+    } finally {
+      if (mountedRef.current) setBusy(false);
+    }
+  };
+
   const remove = async (id: string) => {
     try {
       await api.deleteAlert(id);
@@ -691,6 +740,27 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
                     {a.note ? ` · ${a.note}` : ''}
                   </Text>
                 </Pressable>
+                {a.triggered ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: busy }}
+                    disabled={busy}
+                    style={({ pressed }) => [
+                      busy && { opacity: 0.4 },
+                      pressed && {
+                        opacity: buttons.pressedOpacity,
+                        transform: [{ scale: buttons.pressedScale }],
+                      },
+                    ]}
+                    onPress={() => void rearm(a)}
+                    accessibilityLabel={`${t.alertsRearmA11yPrefix}: ${a.symbol} ${condMark(
+                      a.condition
+                    )} ${fmtPrice(a.price, a.symbol)}`}
+                    hitSlop={8}
+                  >
+                    <Text style={styles.rearm}>{t.alertsRearmBtn}</Text>
+                  </Pressable>
+                ) : null}
                 <Pressable
                   accessibilityRole="button"
                   style={({ pressed }) => [
@@ -857,5 +927,6 @@ const styles = StyleSheet.create({
   cancelEditText: { color: colors.textMuted, fontSize: 11, fontWeight: '700', marginTop: spacing.xs },
   firesNow: { color: colors.warn, fontSize: 10, fontWeight: '700', marginTop: spacing.xs },
   armed: { color: colors.bull, fontSize: 11, fontWeight: '800', marginTop: spacing.xs },
+  rearm: { color: colors.accent, fontWeight: '700', fontSize: 12 },
   del: { color: colors.bear, fontWeight: '700', fontSize: 12 },
 });
