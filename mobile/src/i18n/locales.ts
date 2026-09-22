@@ -220,6 +220,8 @@ export type Dict = {
   forecastAvgLabel: string;
   forecastTradeLabel: string;
   forecastNoSignal: string;
+  forecastAgreeLabel: string;
+  forecastRrLabel: string;
   forecastError: string;
   alertsTitle: string;
   alertsSub: string;
@@ -962,6 +964,8 @@ const ar: Dict = {
   forecastAvgLabel: 'معدل مؤشرات',
   forecastTradeLabel: 'صفقة',
   forecastNoSignal: 'لا إشارة قوية — انتظر تأكيد المؤشرات',
+  forecastAgreeLabel: 'مؤشرات متوافقة',
+  forecastRrLabel: 'الربح:المخاطرة',
   forecastError: 'تعذر حساب توقعات المؤشرات',
   alertsTitle: 'تنبيهات السعر',
   alertsSub: 'فوق / تحت · Twelve Data · إشعار عند التفعيل',
@@ -1713,6 +1717,8 @@ const enUS: Dict = {
   forecastAvgLabel: 'Indicator avg',
   forecastTradeLabel: 'Trade',
   forecastNoSignal: 'No strong signal — wait for indicator confirmation',
+  forecastAgreeLabel: 'Indicators agreeing',
+  forecastRrLabel: 'Reward:Risk',
   forecastError: 'Could not compute indicator forecasts',
   alertsTitle: 'Price alerts',
   alertsSub: 'Above / Below · Twelve Data · Notification when triggered',
@@ -2483,6 +2489,8 @@ const ku: Dict = {
   forecastAvgLabel: 'ناوەندی پێوەرەکان',
   forecastTradeLabel: 'مامەڵە',
   forecastNoSignal: 'هیچ نیشانەیەکی بەهێز نییە — چاوەڕێی دڵنیاکردنەوەی پێوەرەکان بکە',
+  forecastAgreeLabel: 'پێوەرە هاوڕاکان',
+  forecastRrLabel: 'قازانج:مەترسی',
   forecastError: 'نەکرا پێشبینیەکانی پێوەرەکان بژمێردرێت',
   alertsTitle: 'ئاگادارکردنەوەی نرخ',
   alertsSub: 'سەرەوە / خوارەوە · Twelve Data · ئاگادارکردنەوە کاتێک چالاک دەبێت',

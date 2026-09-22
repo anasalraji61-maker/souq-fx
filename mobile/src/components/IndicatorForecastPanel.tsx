@@ -46,7 +46,6 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   const [enabled, setEnabled] = useState(opts.map((x) => x.id));
   const [loading, setLoading] = useState(false);
   const [direction, setDirection] = useState('neutral');
-  const [confidence, setConfidence] = useState(0);
   const [avg, setAvg] = useState(0);
   const [levels, setLevels] = useState<{ entry: number; sl: number; tp: number } | null>(null);
   const [votes, setVotes] = useState<Vote[]>([]);
@@ -75,7 +74,6 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
 
   const clearResult = () => {
     setDirection('neutral');
-    setConfidence(0);
     setAvg(0);
     setLevels(null);
     setVotes([]);
@@ -98,7 +96,6 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
         return;
       }
       setDirection(res.direction);
-      setConfidence(res.confidence);
       setAvg(res.avg_score);
       setLevels(res.levels);
       setVotes(res.votes);
@@ -118,6 +115,14 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   useEffect(() => {
     void run();
   }, [run]);
+
+  // «ثقة 83%» كانت معادلة ثابتة (|المعدل|×0.75+0.35) تُقرأ كاحتمال نجاح — نعرض بدلها عدد المؤشرات
+  // المتوافقة مع الاتجاه (قابل للتحقق من القائمة تحتها)، ونسبة الربح:المخاطرة للمستويات المقترحة.
+  const agreeing = votes.filter((v) => v.direction === direction).length;
+  const rr =
+    levels && direction !== 'neutral' && Math.abs(levels.entry - levels.sl) > 0
+      ? Math.abs(levels.tp - levels.entry) / Math.abs(levels.entry - levels.sl)
+      : null;
 
   return (
     <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
@@ -182,13 +187,15 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           {dirLabel(direction, t)}
         </Text>
         <Text style={[styles.meta, { textAlign: align }]}>
-          {t.confidenceLabel} {(confidence * 100).toFixed(0)}% · {t.forecastAvgLabel} {avg >= 0 ? '+' : ''}
+          {votes.length ? `${t.forecastAgreeLabel} ${agreeing}/${votes.length} · ` : ''}
+          {t.forecastAvgLabel} {avg >= 0 ? '+' : ''}
           {avg.toFixed(2)}
         </Text>
         {levels && direction !== 'neutral' ? (
           <Text style={[styles.levels, { textAlign: align }]}>
             {t.forecastTradeLabel}: {t.entryLabel} {formatPrice(levels.entry)} · {t.slLabel}{' '}
             {formatPrice(levels.sl)} · {t.tpLabel} {formatPrice(levels.tp)}
+            {rr != null ? ` · ${t.forecastRrLabel} ${rr.toFixed(2)}:1` : ''}
           </Text>
         ) : (
           <Text style={[styles.levels, { textAlign: align }]}>{t.forecastNoSignal}</Text>
