@@ -1010,7 +1010,8 @@ const ar: Dict = {
   votePublishError: 'تعذر نشر الفكرة — تحقق من الاتصال وحاول مرة أخرى',
   votePublishBtn: 'نشر الفكرة',
   voteLoadError: 'تعذر تحميل التصويتات — تحقق من الاتصال',
-  voteEmpty: 'لا توجد تصويتات نشطة حالياً',
+  voteEmpty:
+    'لا تصويتات نشطة حالياً — انشر فكرتك بالأعلى (رمز واتجاه ودخول ووقف وهدف) وشاهد رأي بقية المتداولين.',
   voteByAuthor: 'بواسطة {author}',
   voteApprovalLabel: 'موافقة',
   voteAgreeWord: 'موافق',
@@ -1254,7 +1255,8 @@ const ar: Dict = {
   indAlertsAddBtn: 'إضافة تنبيه',
   indAlertsAddError: 'تعذر إضافة تنبيه المؤشر — تحقق من الاتصال وحاول مرة أخرى',
   indAlertsLoadError: 'تعذر تحميل تنبيهات المؤشرات',
-  indAlertsEmpty: 'لا تنبيهات مؤشرات بعد',
+  indAlertsEmpty:
+    'لا تنبيهات مؤشرات بعد — اختر مؤشراً وشرطاً بالأعلى (RSI تحت 30 مثلاً) ليصلك إشعار دون مراقبة الشارت.',
   indAlertsDeleteConfirmTitle: 'حذف تنبيه المؤشر؟',
   indAlertsDeleteFailedTitle: 'تعذر الحذف',
   indAlertsDeleteFailedBody: 'حدث خطأ أثناء حذف تنبيه المؤشر، حاول مرة أخرى.',
@@ -1282,7 +1284,8 @@ const ar: Dict = {
   calImpactMedPlusA11y: 'عالي ومتوسط',
   calendarLoading: 'جاري تحميل التقويم…',
   calendarLoadError: 'تعذر تحميل التقويم — تحقق من الاتصال',
-  calendarEmpty: 'لا أحداث بهذا الفلتر',
+  calendarEmpty:
+    'لا أحداث بهذا الفلتر — وسّع الأهمية أو أزل فلتر العملة، أو اختر يوماً آخر.',
   layoutDefaultName: 'تخطيطي',
   layoutFallbackName: 'تخطيط',
   layoutsTitle: 'تخطيطات محفوظة',
@@ -1422,7 +1425,8 @@ const ar: Dict = {
   wlRetryA11y: 'إعادة محاولة تحميل قائمة المتابعة',
   wlRetryBtn: 'إعادة المحاولة',
   wlLoadingWord: 'جاري التحميل…',
-  wlEmpty: 'لا رموز في المتابعة',
+  wlEmpty:
+    'لا رموز في المتابعة — أضف أزواجك من الزرّ أدناه لتراها بسعرها وتغيّرها اليومي وتبدّل الشارت بنقرة.',
   wlAddEmptyBtn: 'إضافة رمز',
   wlDemoPriceA11ySuffix: ' · سعر افتراضي',
   wlDemoTag: 'افتراضي',
@@ -1834,7 +1838,8 @@ const enUS: Dict = {
   votePublishError: 'Could not publish the idea — check your connection and try again',
   votePublishBtn: 'Publish idea',
   voteLoadError: 'Could not load votes — check your connection',
-  voteEmpty: 'No active votes right now',
+  voteEmpty:
+    'No active votes right now — post your idea above (symbol, direction, entry, stop, target) and see what other traders think.',
   voteByAuthor: 'By {author}',
   voteApprovalLabel: 'Approval',
   voteAgreeWord: 'Agree',
@@ -2079,7 +2084,8 @@ const enUS: Dict = {
   indAlertsAddBtn: 'Add alert',
   indAlertsAddError: 'Could not add the indicator alert — check your connection and try again',
   indAlertsLoadError: 'Could not load indicator alerts',
-  indAlertsEmpty: 'No indicator alerts yet',
+  indAlertsEmpty:
+    'No indicator alerts yet — pick an indicator and a condition above (RSI below 30, say) and get notified without watching the chart.',
   indAlertsDeleteConfirmTitle: 'Delete the indicator alert?',
   indAlertsDeleteFailedTitle: 'Could not delete',
   indAlertsDeleteFailedBody: 'An error occurred while deleting the indicator alert, try again.',
@@ -2107,7 +2113,8 @@ const enUS: Dict = {
   calImpactMedPlusA11y: 'High and medium',
   calendarLoading: 'Loading the calendar…',
   calendarLoadError: 'Could not load the calendar — check your connection',
-  calendarEmpty: 'No events match this filter',
+  calendarEmpty:
+    'No events match this filter — widen the impact, clear the currency filter, or pick another day.',
   layoutDefaultName: 'My layout',
   layoutFallbackName: 'Layout',
   layoutsTitle: 'Saved layouts',
@@ -2247,7 +2254,8 @@ const enUS: Dict = {
   wlRetryA11y: 'Retry loading watchlist',
   wlRetryBtn: 'Retry',
   wlLoadingWord: 'Loading…',
-  wlEmpty: 'No symbols in watchlist',
+  wlEmpty:
+    'No symbols in your watchlist — add your pairs with the button below to see price, daily change, and switch the chart in one tap.',
   wlAddEmptyBtn: 'Add symbol',
   wlDemoPriceA11ySuffix: ' · demo price',
   wlDemoTag: 'Demo',
@@ -2677,7 +2685,8 @@ const ku: Dict = {
   votePublishError: 'نەکرا بیرۆکە بڵاوبکرێتەوە — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
   votePublishBtn: 'بیرۆکە بڵاوبکەرەوە',
   voteLoadError: 'نەکرا دەنگەکان باربکرێن — پەیوەندییەکەت بپشکنە',
-  voteEmpty: 'هیچ دەنگدانێکی چالاک لە ئێستادا نییە',
+  voteEmpty:
+    'هیچ دەنگدانێکی چالاک لە ئێستادا نییە — بیرۆکەکەت لە سەرەوە بڵاو بکەرەوە (هێما، ئاراستە، چوونەژوورەوە، وەستان، ئامانج) و بۆچوونی بازرگانانی تر ببینە.',
   voteByAuthor: 'لەلایەن {author}',
   voteApprovalLabel: 'ڕەزامەندی',
   voteAgreeWord: 'ڕازیم',
@@ -2925,7 +2934,8 @@ const ku: Dict = {
   indAlertsAddError:
     'نەکرا ئاگادارکردنەوەی پێوەر زیادبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
   indAlertsLoadError: 'نەکرا ئاگادارکردنەوەکانی پێوەر باربکرێن',
-  indAlertsEmpty: 'هێشتا هیچ ئاگادارکردنەوەیەکی پێوەر نییە',
+  indAlertsEmpty:
+    'هێشتا هیچ ئاگادارکردنەوەیەکی پێوەر نییە — پێوەرێک و مەرجێک لە سەرەوە هەڵبژێرە (بۆ نموونە RSI خوار ٣٠) تا ئاگادار بکرێیتەوە بەبێ چاودێری چارتەکە.',
   indAlertsDeleteConfirmTitle: 'ئاگادارکردنەوەی پێوەرەکە بسڕدرێتەوە؟',
   indAlertsDeleteFailedTitle: 'سڕینەوە سەرکەوتوو نەبوو',
   indAlertsDeleteFailedBody: 'هەڵەیەک ڕوویدا لە کاتی سڕینەوەی ئاگادارکردنەوەی پێوەرەکە، دووبارە هەوڵبدەرەوە.',
@@ -2953,7 +2963,8 @@ const ku: Dict = {
   calImpactMedPlusA11y: 'بەرز و مامناوەند',
   calendarLoading: 'ڕۆژژمێرەکە بار دەکرێت…',
   calendarLoadError: 'نەکرا ڕۆژژمێرەکە باربکرێت — پەیوەندییەکەت بپشکنە',
-  calendarEmpty: 'هیچ ڕووداوێک لەگەڵ ئەم فلتەرە نییە',
+  calendarEmpty:
+    'هیچ ڕووداوێک لەگەڵ ئەم فلتەرە نییە — گرنگی فراوانتر بکە، فلتەری دراو لابە، یان ڕۆژێکی تر هەڵبژێرە.',
   layoutDefaultName: 'نەخشەسازیم',
   layoutFallbackName: 'نەخشەسازی',
   layoutsTitle: 'نەخشەسازییە پاشەکەوتکراوەکان',
@@ -3093,7 +3104,8 @@ const ku: Dict = {
   wlRetryA11y: 'دووبارە هەوڵدانەوەی بارکردنی لیستی چاودێری',
   wlRetryBtn: 'دووبارە هەوڵدان',
   wlLoadingWord: 'بارکردن...',
-  wlEmpty: 'هیچ هێمایەک لە چاودێریدا نییە',
+  wlEmpty:
+    'هیچ هێمایەک لە چاودێریدا نییە — بە دوگمەی خوارەوە جوتەکانت زیاد بکە تا نرخ و گۆڕانی ڕۆژانە ببینیت و بە یەک دەست چارتەکە بگۆڕیت.',
   wlAddEmptyBtn: 'زیادکردنی هێما',
   wlDemoPriceA11ySuffix: ' · نرخی نموونەیی',
   wlDemoTag: 'نموونەیی',
