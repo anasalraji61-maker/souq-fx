@@ -35,11 +35,19 @@ type Props = {
   defaultTimeframe?: Timeframe;
 };
 
-const STRATEGIES: { id: Strategy; label: string }[] = [
-  { id: 'ma_cross', label: 'MA Cross' },
-  { id: 'rsi_reversal', label: 'RSI' },
-  { id: 'macd_cross', label: 'MACD' },
-  { id: 'bb_bounce', label: 'BB Bounce' },
+/** التسمية مفتاح قاموس لا نصّ إنجليزي: رمز المؤشّر (MA/RSI/MACD/BB) يبقى لاتينياً كما يعرفه المتداول،
+ * والفعل (تقاطع/انعكاس/ارتداد) يُترجَم. */
+type StrategyLabelKey =
+  | 'backtestStratMaCross'
+  | 'backtestStratRsi'
+  | 'backtestStratMacd'
+  | 'backtestStratBb';
+
+const STRATEGIES: { id: Strategy; labelKey: StrategyLabelKey }[] = [
+  { id: 'ma_cross', labelKey: 'backtestStratMaCross' },
+  { id: 'rsi_reversal', labelKey: 'backtestStratRsi' },
+  { id: 'macd_cross', labelKey: 'backtestStratMacd' },
+  { id: 'bb_bounce', labelKey: 'backtestStratBb' },
 ];
 
 /** نفس قائمة الأزواج السريعة بحاسبة المخاطرة والدفتر — اختبار زوج شائع بنقرة بيد واحدة بدل الكتابة. */
@@ -61,6 +69,8 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
   const [error, setError] = useState<string | null>(null);
   /** لأي رمز·فريم·استراتيجية حُسبت النتيجة الظاهرة — تُعرض فوقها كي لا تُقرأ لاختيار آخر. */
   const [ranFor, setRanFor] = useState<string | null>(null);
+  /** رمز التشغيل الظاهر — لازم لتنسيق أسعار الصفقات بمنازل الأداة (الين 3 منازل لا 5). */
+  const [ranSymbol, setRanSymbol] = useState<string | null>(null);
 
   useEffect(() => {
     setSymbol(defaultSymbol);
@@ -75,6 +85,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
     setEquity([]);
     setError(null);
     setRanFor(null);
+    setRanSymbol(null);
   }, [symbol, tf, strategy]);
 
   const run = async () => {
@@ -94,8 +105,10 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         setError(t.noLiveDataResult);
         return;
       }
-      const label = STRATEGIES.find((s) => s.id === strategy)?.label ?? strategy;
+      const key = STRATEGIES.find((s) => s.id === strategy)?.labelKey;
+      const label = key ? t[key] : strategy;
       setRanFor(`${symbol.trim().toUpperCase()} · ${tf} · ${label}`);
+      setRanSymbol(symbol.trim().toUpperCase());
       setStats(res.stats as Stats);
       setTrades(res.trades ?? []);
       setEquity(res.equity_curve ?? []);
@@ -115,7 +128,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
 
   return (
     <View style={styles.wrap}>
-      <Text style={[styles.title, { textAlign: align }]}>Strategy Backtest</Text>
+      <Text style={[styles.title, { textAlign: align }]}>{t.backtestTitle}</Text>
       <Text style={[styles.sub, { textAlign: align }]}>{t.backtestSub}</Text>
       <View style={[styles.row, rtl && styles.rowRtl]}>
         {QUICK_SYMBOLS.map((q) => {
@@ -171,9 +184,11 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
               },
             ]}
             onPress={() => setStrategy(s.id)}
-            accessibilityLabel={`${t.backtestStrategyA11yPrefix}: ${s.label}`}
+            accessibilityLabel={`${t.backtestStrategyA11yPrefix}: ${t[s.labelKey]}`}
           >
-            <Text style={[styles.chipText, strategy === s.id && styles.chipTextOn]}>{s.label}</Text>
+            <Text style={[styles.chipText, strategy === s.id && styles.chipTextOn]}>
+              {t[s.labelKey]}
+            </Text>
           </Pressable>
         ))}
       </View>
@@ -245,7 +260,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
       ) : null}
       {equity.length > 1 ? (
         <View style={styles.curve}>
-          <Text style={[styles.curveTitle, { textAlign: align }]}>Equity Curve</Text>
+          <Text style={[styles.curveTitle, { textAlign: align }]}>{t.backtestEquityTitle}</Text>
           <View style={styles.curveRow}>
             {equity.map((e) => {
               const span = maxEq - minEq || 1;
@@ -269,12 +284,22 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
         </View>
       ) : null}
       <ScrollView style={{ maxHeight: 180 }}>
-        {trades.map((tr, i) => (
-          <Text key={i} style={[styles.trade, { textAlign: align }]}>
-            {tr.side} {formatPrice(tr.entry)} → {formatPrice(tr.exit)} · {tr.pnl_pct >= 0 ? '+' : ''}
-            {tr.pnl_pct}%
-          </Text>
-        ))}
+        {trades.map((tr, i) => {
+          const isSell = tr.side === 'short' || tr.side === 'sell';
+          const sym = ranSymbol ?? undefined;
+          return (
+            <Text key={i} style={[styles.trade, { textAlign: align }]}>
+              <Text style={{ color: isSell ? colors.bear : colors.bull, fontWeight: '700' }}>
+                {isSell ? t.dirSell : t.dirBuy}
+              </Text>{' '}
+              {formatPrice(tr.entry, sym)} → {formatPrice(tr.exit, sym)} ·{' '}
+              <Text style={{ color: tr.pnl_pct >= 0 ? colors.bull : colors.bear }}>
+                {tr.pnl_pct >= 0 ? '+' : ''}
+                {tr.pnl_pct}%
+              </Text>
+            </Text>
+          );
+        })}
       </ScrollView>
     </View>
   );

@@ -418,6 +418,12 @@ export type Dict = {
   backtestNoTrades: string;
   backtestSmallSample: string;
   backtestSpreadNote: string;
+  backtestTitle: string;
+  backtestEquityTitle: string;
+  backtestStratMaCross: string;
+  backtestStratRsi: string;
+  backtestStratMacd: string;
+  backtestStratBb: string;
   indAlertsTitle: string;
   indAlertsSub: string;
   indAlertsSymbolA11y: string;
@@ -1238,6 +1244,12 @@ const ar: Dict = {
   backtestNoTrades: 'لم تُولِّد الاستراتيجية أي صفقة بهذه الفترة — لا نسبة نجاح ولا عائد لعرضهما. جرّب فريماً آخر.',
   backtestSmallSample: '⚠ عينة صغيرة ({n} صفقات) — نسبة النجاح هنا غير موثوقة؛ لا تبنِ قراراً على أقل من ~30 صفقة.',
   backtestSpreadNote: 'النتائج بعد خصم سبريد تقديري {pips} pip لكل صفقة (يختلف حسب الوسيط).',
+  backtestTitle: 'اختبار خلفي للاستراتيجية',
+  backtestEquityTitle: 'منحنى Equity',
+  backtestStratMaCross: 'تقاطع MA',
+  backtestStratRsi: 'انعكاس RSI',
+  backtestStratMacd: 'تقاطع MACD',
+  backtestStratBb: 'ارتداد BB',
   indAlertsTitle: 'تنبيهات المؤشرات',
   indAlertsSub: 'RSI · تقاطع MA · MACD',
   indAlertsSymbolA11y: 'رمز الأداة',
@@ -2068,6 +2080,12 @@ const enUS: Dict = {
   backtestNoTrades: 'The strategy produced no trades in this period — no win rate or return to show. Try another timeframe.',
   backtestSmallSample: '⚠ Small sample ({n} trades) — this win rate isn’t reliable; don’t decide on fewer than ~30 trades.',
   backtestSpreadNote: 'Results are after an estimated {pips}-pip spread per trade (varies by broker).',
+  backtestTitle: 'Strategy Backtest',
+  backtestEquityTitle: 'Equity curve',
+  backtestStratMaCross: 'MA Cross',
+  backtestStratRsi: 'RSI Reversal',
+  backtestStratMacd: 'MACD Cross',
+  backtestStratBb: 'BB Bounce',
   indAlertsTitle: 'Indicator alerts',
   indAlertsSub: 'RSI · MA cross · MACD',
   indAlertsSymbolA11y: 'Instrument symbol',
@@ -2918,6 +2936,12 @@ const ku: Dict = {
   backtestNoTrades: 'ستراتیژییەکە لەم ماوەیەدا هیچ مامەڵەیەکی دروست نەکرد — ڕێژەی سەرکەوتن و قازانج نییە بۆ پیشاندان. کاتێکی تر تاقی بکەرەوە.',
   backtestSmallSample: '⚠ نموونەی بچووک ({n} مامەڵە) — ئەم ڕێژەی سەرکەوتنە متمانەپێکراو نییە؛ لەسەر کەمتر لە ~30 مامەڵە بڕیار مەدە.',
   backtestSpreadNote: 'ئەنجامەکان دوای لابردنی سپرێدێکی خەمڵێنراوی {pips} pip بۆ هەر مامەڵەیەکن (بەپێی بڕۆکەر جیاوازە).',
+  backtestTitle: 'تاقیکردنەوەی دواوەی ستراتیژی',
+  backtestEquityTitle: 'کەوانەی Equity',
+  backtestStratMaCross: 'بڕینەوەی MA',
+  backtestStratRsi: 'گەڕانەوەی RSI',
+  backtestStratMacd: 'بڕینەوەی MACD',
+  backtestStratBb: 'وەرگەڕانەوەی BB',
   indAlertsTitle: 'ئاگادارکردنەوەی پێوەرەکان',
   indAlertsSub: 'RSI · بڕینەوەی MA · MACD',
   indAlertsSymbolA11y: 'هێمای ئامراز',
