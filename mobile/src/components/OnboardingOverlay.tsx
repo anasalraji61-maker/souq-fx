@@ -35,16 +35,29 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
       <View style={styles.backdrop}>
         <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
           <View style={styles.card}>
-            <View style={styles.dots}>
+            <View
+              style={styles.dots}
+              accessibilityRole="progressbar"
+              accessibilityLabel={t.onboardStepCounterA11y
+                .replace('{n}', String(step + 1))
+                .replace('{total}', String(steps.length))}
+            >
               {steps.map((_, i) => (
-                <View key={i} style={[styles.dot, i <= step && styles.dotOn, i < step && styles.dotDone]} />
+                <View
+                  key={i}
+                  // النقاط زخرفية: التقدّم يُنطق مرة واحدة من الحاوية أعلاه لا خمس مرّات كعناصر فارغة.
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                  style={[styles.dot, i <= step && styles.dotOn, i < step && styles.dotDone]}
+                />
               ))}
             </View>
             <Text style={[styles.title, { textAlign: align }]}>{steps[step]!.title}</Text>
             <Text style={[styles.body, { textAlign: align }]}>{steps[step]!.body}</Text>
-            {last ? (
-              <Text style={[styles.riskNote, { textAlign: align }]}>{t.onboardRiskNote}</Text>
-            ) : null}
+            {/* تنبيه المخاطرة بكل خطوة لا بالأخيرة وحدها: زرّ «تخطي» ظاهر من الخطوة الأولى، فمن يضغطه
+                كان يغلق الجولة بلا أن يرى «تحليل وتعليم فقط، لا نصيحة مالية» إطلاقاً — وهو موضع
+                التطبيق المعلَن بالمتجر (`app.json` وdocs/STORE-LISTING.md). سطران صغيران لا يزاحمان. */}
+            <Text style={[styles.riskNote, { textAlign: align }]}>{t.onboardRiskNote}</Text>
             <View style={[styles.actions, rtl && styles.actionsRtl]}>
               <Pressable
                 accessibilityRole="button"

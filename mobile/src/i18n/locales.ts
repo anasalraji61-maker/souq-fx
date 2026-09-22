@@ -63,6 +63,7 @@ export type Dict = {
   onboardStep5Title: string;
   onboardStep5Body: string;
   onboardRiskNote: string;
+  onboardStepCounterA11y: string;
   onboardSkip: string;
   onboardNext: string;
   onboardStart: string;
@@ -885,6 +886,7 @@ const ar: Dict = {
     'قبل أي صفقة افتح «أدوات ← حاسبة حجم المركز»: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة بالـpip لتعرف حجم اللوت المناسب. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
   onboardRiskNote:
     'MATRIX أداة تحليل وتعليم، لا تنفّذ صفقات ولا تقدّم نصيحة مالية. التداول بالرافعة ينطوي على مخاطرة عالية بخسارة المال.',
+  onboardStepCounterA11y: 'الخطوة {n} من {total}',
   onboardSkip: 'تخطي',
   onboardNext: 'التالي',
   onboardStart: 'ابدأ',
@@ -1718,6 +1720,7 @@ const enUS: Dict = {
     'Before any trade, open Tools → Position size calculator: enter your balance, risk % and stop loss in pips to get the right lot size. Many traders risk no more than 1–2% per trade.',
   onboardRiskNote:
     'MATRIX is an analysis and learning tool. It does not place trades or give financial advice. Leveraged trading carries a high risk of losing money.',
+  onboardStepCounterA11y: 'Step {n} of {total}',
   onboardSkip: 'Skip',
   onboardNext: 'Next',
   onboardStart: 'Start',
@@ -2572,6 +2575,7 @@ const ku: Dict = {
     'پێش هەر مامەڵەیەک «ئامرازەکان ← ژمێرەری قەبارەی پۆزیشن» بکەرەوە: باڵانس و ڕێژەی مەترسی و ستۆپ لۆس بە pip بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
   onboardRiskNote:
     'MATRIX ئامرازێکی شیکردنەوە و فێربوونە، مامەڵە ناکات و ئامۆژگاری دارایی نادات. بازرگانی بە لیڤەرێج مەترسیی بەرزی لەدەستدانی پارەی تێدایە.',
+  onboardStepCounterA11y: 'هەنگاوی {n} لە {total}',
   onboardSkip: 'تێپەڕاندن',
   onboardNext: 'دواتر',
   onboardStart: 'دەستپێبکە',
