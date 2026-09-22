@@ -18,7 +18,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
-import { instrumentSpec } from '../positionSize';
+import { instrumentSpec, priceAtPipOffset } from '../positionSize';
 
 /** إيقاع تحديث «السعر الآن» بالنموذج — نفس إيقاع فحص التنبيهات بهذه اللوحة (60 ثانية). */
 const QUOTE_REFRESH_MS = 60_000;
@@ -486,9 +486,10 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
           <View style={[styles.offsets, rtl && styles.rowRtl]}>
             <Text style={styles.offsetUnit}>pip</Text>
             {PIP_OFFSETS.map((off) => {
-              const px = current + off * spec.pipSize;
-              // مسافة تتجاوز السعر نفسه (أداة سعرها أصغر من المسافة) لا تُعرض بدل سعر ≤ 0
-              if (!(px > 0)) return null;
+              // الحساب بـ`positionSize.ts` حيث تعيش كل رياضيات الـpip ومغطّى بحالات selftest دائمة —
+              // null لمسافة تتجاوز السعر نفسه (أداة سعرها أصغر من المسافة) فلا تُعرض الشريحة
+              const px = priceAtPipOffset(spec, current, off);
+              if (px == null) return null;
               const text = fmtPrice(px, spec.symbol);
               return (
                 <Pressable

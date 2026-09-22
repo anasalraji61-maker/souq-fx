@@ -11,6 +11,8 @@ import {
   pipValuePerLot,
   positionSize,
   slPipsFromPrices,
+  priceAtPipOffset,
+  type InstrumentSpec,
 } from './positionSize';
 
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps;
@@ -120,5 +122,63 @@ const zc = reversedConversion(cz);
 assert.deepEqual(zc, { symbol: 'ZARCHF', invert: false });
 assert.ok(near(quoteToAccountRate(cz, 20)!, quoteToAccountRate(zc, 1 / 20)!));
 assert.deepEqual(reversedConversion(zc), cz);
+
+// السعر على بُعد مسافة بالنقاط (شرائح المسافات بلوح التنبيهات): حجم pip الأداة لا رقم عام
+const uj2 = instrumentSpec('USDJPY')!;
+const au = instrumentSpec('XAUUSD')!;
+const ag = instrumentSpec('XAGUSD')!;
+assert.ok(near(priceAtPipOffset(eu, 1.085, 10)!, 1.086));
+assert.ok(near(priceAtPipOffset(eu, 1.085, -25)!, 1.0825));
+assert.ok(near(priceAtPipOffset(uj2, 157.4, 10)!, 157.5)); // الين: pip = 0.01 ⇒ +0.10
+assert.ok(near(priceAtPipOffset(uj2, 157.4, -50)!, 156.9));
+assert.ok(near(priceAtPipOffset(au, 2650, 10)!, 2651)); // الذهب: pip = 0.1 ⇒ +1.00 دولار
+assert.ok(near(priceAtPipOffset(au, 2650, -50)!, 2645));
+assert.ok(near(priceAtPipOffset(ag, 31.2, 25)!, 31.45)); // الفضة: pip = 0.01 ⇒ +0.25
+assert.ok(near(priceAtPipOffset(instrumentSpec('GBPJPY')!, 198.5, -10)!, 198.4));
+// الجمع بالفاصلة العائمة لا يسرّب أرقاماً طويلة لخانة يقرأها المتداول
+assert.equal(priceAtPipOffset(eu, 1.085, 10), 1.086);
+assert.equal(priceAtPipOffset(eu, 1.08503, 10), 1.08603);
+assert.equal(priceAtPipOffset(uj2, 157.423, 25), 157.673);
+// الاتجاه محفوظ دائماً: موجب فوق السعر وسالب تحته، بلا تساوٍ بعد التقريب
+for (const [spec, px] of [[eu, 1.08503], [uj2, 157.423], [au, 2650.07], [ag, 31.204]] as const) {
+  for (const off of [-50, -25, -10, 10, 25, 50]) {
+    const v = priceAtPipOffset(spec, px, off)!;
+    assert.ok(off > 0 ? v > px : v < px, `${spec.symbol} ${off}`);
+    assert.ok(Math.abs((v - px) / spec.pipSize - off) < 1e-6, `${spec.symbol} ${off}: المسافة`);
+  }
+}
+// مدخلات غير صالحة / سعر ناتج ≤ 0
+assert.equal(priceAtPipOffset(eu, NaN, 10), null);
+assert.equal(priceAtPipOffset(eu, 1.085, NaN), null);
+assert.equal(priceAtPipOffset(eu, 0, 10), null);
+assert.equal(priceAtPipOffset(eu, -1, 10), null);
+assert.equal(priceAtPipOffset(instrumentSpec('EURGBP')!, 0.003, -50), null);
+assert.equal(priceAtPipOffset(eu, 1.085, 0), 1.085); // مسافة صفر = السعر نفسه بلا ذيل عائم
+// التقريب بمنزلة الأداة لا بـ`Math.round(x/step)*step` — الضرب العكسي كان يعيد الخطأ العائم نفسه
+assert.equal(priceAtPipOffset(uj2, 157.4, 0), 157.4);
+assert.equal(priceAtPipOffset(au, 2650, 0), 2650);
+assert.equal(priceAtPipOffset(ag, 31.2, 0), 31.2);
+// ولا يقصّ منزلة حقيقية: الـpipette محفوظة لكل أداة
+assert.equal(priceAtPipOffset(eu, 1.08503, 0), 1.08503);
+assert.equal(priceAtPipOffset(uj2, 157.423, 0), 157.423);
+assert.equal(priceAtPipOffset(au, 2650.05, 0), 2650.05);
+assert.equal(priceAtPipOffset(ag, 31.204, 0), 31.204);
+/**
+ * الثابت الحاكم: القيمة المعادة = النصّ الذي يعرضه `formatPrice` لها، بالبناء لا بالمصادفة —
+ * فلا يُحفظ تنبيه عند رقم غير الذي قرأه المتداول على الشريحة. (`decimals` هنا نسخة من
+ * `symbolPriceDecimals` بـchart/indicators/utils.ts، وهي المعادلة التي يبني عليها `formatPrice`.)
+ */
+const decimalsOf = (sp: InstrumentSpec) => Math.round(-Math.log10(sp.pipSize)) + 1;
+for (const sp of [eu, uj2, au, ag, instrumentSpec('GBPJPY')!, instrumentSpec('EURGBP')!]) {
+  const base = { EURUSD: 1.08503, USDJPY: 157.423, XAUUSD: 2650.07, XAGUSD: 31.204, GBPJPY: 198.556, EURGBP: 0.84217 }[
+    sp.symbol
+  ]!;
+  for (const off of [-50, -25, -10, 0, 10, 25, 50]) {
+    const v = priceAtPipOffset(sp, base, off)!;
+    assert.equal(v, Number(v.toFixed(decimalsOf(sp))), `${sp.symbol} ${off}: ذيل عائم`);
+    const frac = String(v).split('.')[1]?.length ?? 0;
+    assert.ok(frac <= decimalsOf(sp), `${sp.symbol} ${off}: ${frac} منزلة > ${decimalsOf(sp)}`);
+  }
+}
 
 console.log('positionSize selftest: OK');

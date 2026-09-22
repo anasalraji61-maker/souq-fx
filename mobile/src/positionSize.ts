@@ -106,6 +106,27 @@ export function slPipsFromPrices(spec: InstrumentSpec, entry: number, stop: numb
   return pips > 0 ? pips : null;
 }
 
+/**
+ * السعر الواقع على بُعد `offsetPips` نقطة من `price` (موجب = فوقه، سالب = تحته) بحجم pip **الأداة**:
+ * الين 0.01، الذهب 0.1، الفضة 0.01، والبقية 0.0001. المتداول يفكّر بالمسافة («عشرون نقطة فوق
+ * السوق») لا بالرقم، فهذا التحويل يقع كلما تُرجمت مسافة إلى سعر يُعرض أو يُحفظ — وشرائح المسافات
+ * بلوح التنبيهات أوّلها. null لمدخل غير صالح أو سعر ناتج ≤ 0 (لا سعر سالب بخانة تنبيه).
+ *
+ * يُقرَّب لمنزلة الأداة العشرية (`-log10(pipSize) + 1`، أي منزلة الـpipette) كي لا يخرج
+ * «1.0860000000000003» من جمع الفاصلة العائمة إلى خانة يقرأها المتداول أو يُحفظ بها تنبيه. وهي
+ * **نفس** معادلة `symbolPriceDecimals` التي يبني عليها `formatPrice` عرضَ الأسعار، فالقيمة
+ * المحفوظة والنصّ المعروض متطابقان بالبناء لا بالمصادفة. (التقريب بـ`Math.round(x/step)*step`
+ * لا يكفي: الضرب العكسي يعيد الخطأ العائم نفسه — 1.085 + 0 كان يخرج 1.0850000000000002.)
+ */
+export function priceAtPipOffset(spec: InstrumentSpec, price: number, offsetPips: number): number | null {
+  if (![price, offsetPips].every((v) => Number.isFinite(v))) return null;
+  if (price <= 0) return null;
+  const raw = price + offsetPips * spec.pipSize;
+  if (!(raw > 0)) return null;
+  const decimals = Math.round(-Math.log10(spec.pipSize)) + 1;
+  return Number(raw.toFixed(decimals));
+}
+
 export const LOT_STEP = 0.01;
 
 export type SizeResult = {
