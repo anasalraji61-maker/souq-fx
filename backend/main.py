@@ -648,30 +648,38 @@ def push_register(
 
 
 @app.get("/api/layouts")
-def layouts_list(user: dict | None = Depends(_auth_user)):
+def layouts_list(user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)):
     uid = user["user_id"] if user else None
-    return {"layouts": db.list_layouts(uid)}
+    return {"layouts": db.list_layouts(uid, owner_key=key)}
 
 
 @app.post("/api/layouts")
-def layouts_save(body: LayoutSave, user: dict | None = Depends(_auth_user)):
+def layouts_save(
+    body: LayoutSave,
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+):
     uid = user["user_id"] if user else None
-    # db.save_layout يتولّى توليد معرّف فريد عند غيابه ويمنع الكتابة فوق تخطيط مالك آخر
-    saved = db.save_layout(body.id, body.name, body.payload, uid)
+    # db.save_layout يتولّى توليد معرّف فريد عند غيابه ويمنع الكتابة فوق تخطيط مالك آخر (مجهول أو مسجّل)
+    saved = db.save_layout(body.id, body.name, body.payload, uid, owner_key=key)
     return {"ok": True, "layout": saved}
 
 
 @app.get("/api/watchlist/custom")
-def custom_watchlist(user: dict | None = Depends(_auth_user)):
+def custom_watchlist(user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)):
     uid = user["user_id"] if user else None
-    syms = db.get_watchlist(uid)
+    syms = db.get_watchlist(uid, owner_key=key)
     return {"symbols": syms}
 
 
 @app.post("/api/watchlist/custom")
-def custom_watchlist_add(body: WatchlistAdd, user: dict | None = Depends(_auth_user)):
+def custom_watchlist_add(
+    body: WatchlistAdd,
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+):
     uid = user["user_id"] if user else None
-    syms = db.add_watchlist_symbol(body.symbol.upper(), uid)
+    syms = db.add_watchlist_symbol(body.symbol.upper(), uid, owner_key=key)
     return {"ok": True, "symbols": syms}
 
 

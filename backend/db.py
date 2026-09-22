@@ -155,8 +155,10 @@ def _migrate_owner_key(c: sqlite3.Connection) -> None:
     """معرّف تثبيت الجهاز (`X-Install-Id`) مالكاً لصفوف المجهول — تنبيهات السعر/المؤشر واليومية وتوكن الـPush.
     كانت كل صفوف المجهولين دلواً واحداً (`user_id IS NULL`): أي متداول غير مسجّل يرى تنبيهات ويوميات
     كل المجهولين ويعدّلها ويحذفها، وفحص `/api/alerts/check` من جهاز B يُطلق تنبيه A فيصل الإشعار لكل
-    الأجهزة المجهولة. الصفوف القديمة بلا مفتاح تبقى لعملاء قدامى لا يرسلون الترويسة (راجع `_owner_clause`)."""
-    for table in ("alerts", "indicator_alerts", "trades", "push_tokens"):
+    الأجهزة المجهولة. الصفوف القديمة بلا مفتاح تبقى لعملاء قدامى لا يرسلون الترويسة (راجع `_owner_clause`).
+    `layouts`/`watchlist` بنفس القاعدة: كان أي مجهول (وأي مسجّل!) يقرأ تخطيطات كل المجهولين، ومجهول يكتب فوق
+    تخطيط مجهول آخر بإرسال معرّفه، وقائمة الرموز المخصّصة للمجهول مشتركة بين كل الأجهزة."""
+    for table in ("alerts", "indicator_alerts", "trades", "push_tokens", "layouts", "watchlist"):
         cols = {r[1] for r in c.execute(f"PRAGMA table_info({table})").fetchall()}
         if "owner_key" not in cols:
             c.execute(f"ALTER TABLE {table} ADD COLUMN owner_key TEXT")
@@ -1288,69 +1290,86 @@ def _new_layout_id(c: sqlite3.Cursor) -> str:
 
 
 def save_layout(
-    layout_id: str | None, name: str, payload: dict, user_id: int | None = None
+    layout_id: str | None,
+    name: str,
+    payload: dict,
+    user_id: int | None = None,
+    owner_key: str | None = None,
 ) -> dict:
     """يحفظ تخطيطاً ويعيده بمعرّفه الفعلي.
 
-    الأمان/الملكية: `id` كان مفتاحاً أساسياً عاماً، و`INSERT OR REPLACE` يسمح لأي مستخدم
-    بالكتابة فوق تخطيط غيره (وإعادة إسناد ملكيته) بإرسال المعرّف نفسه — أو بتصادم بريء بين
-    مستخدمَين بنفس الثانية. الآن: لا يُكتب فوق صفٍّ يملكه مستخدم آخر — عند التعارض يُخصَّص
-    معرّف جديد للمستدعي (نسخته الخاصة)، فلا فقدان بيانات ولا اختطاف ملكية.
+    الأمان/الملكية: `id` مفتاح أساسي عام، و`INSERT OR REPLACE` كان يسمح بالكتابة فوق تخطيط الغير
+    (وإعادة إسناد ملكيته) بإرسال المعرّف نفسه. الآن: يُكتب فوق الصف فقط إن كان ضمن ملكية المستدعي
+    (`_owner_clause` — حسابه أو تخطيطات جهازه المجهولة)؛ وإلا يُخصَّص معرّف جديد (نسخته الخاصة)،
+    فلا فقدان بيانات ولا اختطاف ملكية — ولا يكتب مجهول فوق تخطيط مجهول آخر بعد الآن.
     """
     with _conn() as c:
         if layout_id:
-            row = c.execute(
-                "SELECT user_id FROM layouts WHERE id=?", (layout_id,)
-            ).fetchone()
-            # صفّ قائم بمالك مختلف (أو تخطيط عام مقابل مستخدم مسجّل) → لا تُصِبه، خصّص معرّفاً جديداً
-            if row is not None and row["user_id"] != user_id:
-                layout_id = None
+            row = c.execute("SELECT 1 FROM layouts WHERE id=?", (layout_id,)).fetchone()
+            if row is not None:
+                sql, args = _owner_clause(user_id, owner_key)
+                mine = c.execute(
+                    f"SELECT 1 FROM layouts WHERE id=? AND {sql}", (layout_id, *args)
+                ).fetchone()
+                if mine is None:
+                    layout_id = None
         if not layout_id:
             layout_id = _new_layout_id(c)
         c.execute(
-            """INSERT OR REPLACE INTO layouts(id,user_id,name,payload,updated_at)
-               VALUES(?,?,?,?,?)""",
-            (layout_id, user_id, name, json.dumps(payload), time.time()),
+            """INSERT OR REPLACE INTO layouts(id,user_id,owner_key,name,payload,updated_at)
+               VALUES(?,?,?,?,?,?)""",
+            (layout_id, user_id, owner_key, name, json.dumps(payload), time.time()),
         )
     return {"id": layout_id, "name": name, "payload": payload}
 
 
-def list_layouts(user_id: int | None = None) -> list[dict]:
+def list_layouts(user_id: int | None = None, owner_key: str | None = None) -> list[dict]:
+    """تخطيطات المستدعي فقط (`_owner_clause`). كانت تُعيد كل تخطيطات المجهولين لأي مستدعٍ."""
+    sql, args = _owner_clause(user_id, owner_key)
     with _conn() as c:
-        if user_id:
-            rows = c.execute(
-                "SELECT id,name,payload FROM layouts WHERE user_id IS NULL OR user_id=?",
-                (user_id,),
-            ).fetchall()
-        else:
-            rows = c.execute("SELECT id,name,payload FROM layouts WHERE user_id IS NULL").fetchall()
+        rows = c.execute(
+            f"SELECT id,name,payload FROM layouts WHERE {sql} ORDER BY updated_at", args
+        ).fetchall()
     out = []
     for r in rows:
         out.append({"id": r["id"], "name": r["name"], "payload": json.loads(r["payload"])})
     return out
 
 
-def get_watchlist(user_id: int | None = None) -> list[str]:
+def get_watchlist(user_id: int | None = None, owner_key: str | None = None) -> list[str]:
+    """رموز المستدعي المخصّصة (`_owner_clause`)، بلا تكرار — المسجّل يرى أيضاً ما أضافه جهازه قبل الدخول."""
+    sql, args = _owner_clause(user_id, owner_key)
     with _conn() as c:
         rows = c.execute(
-            "SELECT symbol FROM watchlist WHERE user_id IS ? ORDER BY sort_order",
-            (user_id,),
+            f"SELECT symbol FROM watchlist WHERE {sql} ORDER BY sort_order, rowid", args
         ).fetchall()
-    return [r["symbol"] for r in rows]
+    out: list[str] = []
+    for r in rows:
+        if r["symbol"] not in out:
+            out.append(r["symbol"])
+    return out
 
 
-def add_watchlist_symbol(symbol: str, user_id: int | None = None) -> list[str]:
+def add_watchlist_symbol(
+    symbol: str, user_id: int | None = None, owner_key: str | None = None
+) -> list[str]:
+    """يضيف رمزاً لقائمة المستدعي. التكرار يُفحص صراحةً: المفتاح الأساسي (user_id, symbol) لا يمنعه
+    لصفوف المجهول لأن NULL لا يتساوى بـSQLite (كان كل ضغط «أضف» يُكرّر الرمز)."""
     sym = symbol.upper()
+    sql, args = _owner_clause(user_id, owner_key)
     with _conn() as c:
-        mx = c.execute(
-            "SELECT COALESCE(MAX(sort_order),0) FROM watchlist WHERE user_id IS ?",
-            (user_id,),
-        ).fetchone()[0]
-        c.execute(
-            "INSERT OR IGNORE INTO watchlist(user_id,symbol,sort_order) VALUES(?,?,?)",
-            (user_id, sym, int(mx) + 1),
-        )
-    return get_watchlist(user_id)
+        exists = c.execute(
+            f"SELECT 1 FROM watchlist WHERE symbol=? AND {sql}", (sym, *args)
+        ).fetchone()
+        if exists is None:
+            mx = c.execute(
+                f"SELECT COALESCE(MAX(sort_order),0) FROM watchlist WHERE {sql}", args
+            ).fetchone()[0]
+            c.execute(
+                "INSERT OR IGNORE INTO watchlist(user_id,owner_key,symbol,sort_order) VALUES(?,?,?,?)",
+                (user_id, owner_key, sym, int(mx) + 1),
+            )
+    return get_watchlist(user_id, owner_key)
 
 
 def save_progress(
