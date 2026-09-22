@@ -14,6 +14,9 @@ import httpx
 _CACHE: list[dict] = []
 _CACHE_TS = 0.0
 TTL = 1800
+# الاحتياطي (أمثلة `sample`) يُعاد فحصه بعد دقيقتين: كان يُخزَّن 30 دقيقة كالحقيقي، فعطل عابر لـForexFactory
+# يُبقي المتداول على أمثلة توضيحية بدل التقويم الفعلي نصف ساعة (وقد يفوته خبر عالي التأثير).
+SAMPLE_TTL = 120
 # حدّ الأحداث المُعادة **بعد** فلترة العملة/التأثير (أسبوع ForexFactory نادراً ما يتجاوز ~200 حدث)
 MAX_EVENTS = 250
 
@@ -223,7 +226,8 @@ def fetch_calendar(
     impact: str | None = None,
 ) -> list[dict]:
     global _CACHE, _CACHE_TS
-    if not _CACHE or time.time() - _CACHE_TS >= TTL:
+    ttl = SAMPLE_TTL if _CACHE and _CACHE[0].get("sample") else TTL
+    if not _CACHE or time.time() - _CACHE_TS >= ttl:
         merged: list[dict] = []
         try:
             with httpx.Client(timeout=14.0, follow_redirects=True) as client:
