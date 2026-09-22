@@ -14,6 +14,7 @@ import {
   positionSize,
   slPipsFromPrices,
 } from '../positionSize';
+import { parseDecimal } from '../parseDecimal';
 
 type Props = {
   defaultSymbol?: string;
@@ -37,13 +38,16 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** بديل اختياري: سعرا الدخول والوقف كما يراهما المتداول على الشارت → تُملأ خانة النقاط تلقائياً */
   const [entryPx, setEntryPx] = useState('');
   const [stopPx, setStopPx] = useState('');
-  /** سعر زوج التحويل (عملة التسعير → عملة الحساب)؛ null أثناء التحميل أو عند الفشل */
-  const [convPrice, setConvPrice] = useState<number | null>(null);
+  /** سعر زوج التحويل (عملة التسعير → عملة الحساب)؛ null أثناء التحميل أو عند الفشل. يُخزَّن مع رمزه
+   * فلا يُقرن سعر الزوج السابق بالزوج الجديد لإطار عرض واحد بعد تبديل الأداة/عملة الحساب. */
+  const [convQuote, setConvQuote] = useState<{ symbol: string; price: number } | null>(null);
   const [convLoading, setConvLoading] = useState(false);
   const [convFailed, setConvFailed] = useState(false);
   /** إدخال يدوي لسعر التحويل عند تعذّر جلبه — لا تتوقف الحاسبة بسبب انقطاع مزوّد الأسعار */
   const [manualConv, setManualConv] = useState('');
   const gen = useRef(0);
+  /** خانة النقاط مملوءة من سعرَي الدخول/الوقف (لا يدوياً) — فتُمسح إن لم يعد السعران صالحين */
+  const slFromPrices = useRef(false);
   const mountedRef = useRef(true);
   const loadedRef = useRef(false);
 
@@ -85,7 +89,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
 
   useEffect(() => {
     const g = ++gen.current;
-    setConvPrice(null);
+    setConvQuote(null);
     setConvFailed(false);
     setManualConv('');
     if (!convSymbol) {
@@ -99,7 +103,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         .then((q) => {
           if (!mountedRef.current || g !== gen.current) return;
           const ok = typeof q.price === 'number' && Number.isFinite(q.price) && q.price > 0;
-          setConvPrice(ok ? q.price : null);
+          setConvQuote(ok ? { symbol: convSymbol, price: q.price } : null);
           setConvFailed(!ok);
         })
         .catch(() => {
@@ -112,14 +116,31 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     return () => clearTimeout(id);
   }, [convSymbol]);
 
-  const num = (s: string) => parseFloat(s.replace(',', '.'));
+  /** أرقام عربية/فاصل آلاف/فاصلة عشرية — راجع parseDecimal.ts. NaN = فارغ أو غير صالح. */
+  const num = (s: string) => parseDecimal(s) ?? NaN;
+  /** خانة فيها نص لكنه ليس رقماً مفهوماً («10,000» مبهم، «1.2.3») — نقول ذلك بدل «أدخل الرصيد…» */
+  const badNumber = [balance, riskPct, slPips, entryPx, stopPx, manualConv].some(
+    (v) => v.trim() !== '' && parseDecimal(v) == null
+  );
   const derivedSl = spec ? slPipsFromPrices(spec, num(entryPx), num(stopPx)) : null;
 
   // الوقف من السعر يكتب قيمته بخانة النقاط (مصدر واحد للحساب)؛ تعديل النقاط يدوياً يبقى ممكناً بعده.
   // تغيير الأداة يعيد الحساب بحجم pip الجديد (الين/الذهب).
   useEffect(() => {
-    if (derivedSl != null) setSlPips(String(derivedSl));
+    if (derivedSl != null) {
+      slFromPrices.current = true;
+      setSlPips(String(derivedSl));
+    } else if (slFromPrices.current) {
+      // السعران مُسحا/تساويا/صارا غير صالحين: لا نحسب اللوت من وقف قديم لم يعد يطابق ما على الشاشة
+      slFromPrices.current = false;
+      setSlPips('');
+    }
   }, [derivedSl]);
+  const onSlPipsChange = (v: string) => {
+    slFromPrices.current = false;
+    setSlPips(v);
+  };
+  const convPrice = convQuote && convQuote.symbol === convSymbol ? convQuote.price : null;
   const manual = num(manualConv);
   const pairPrice = convPrice ?? (Number.isFinite(manual) && manual > 0 ? manual : null);
   const rate = quoteToAccountRate(conv, pairPrice);
@@ -222,7 +243,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         {t.riskCalcSlPips}
         {spec ? ` · 1 pip = ${pipLabel}` : ''}
       </Text>
-      {input(slPips, setSlPips, '20', t.riskCalcSlPips)}
+      {input(slPips, onSlPipsChange, '20', t.riskCalcSlPips)}
       <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcFromPrice}</Text>
       <View style={[styles.pxRow, rtl && styles.pxRowRtl]}>
         <View style={styles.pxCell}>
@@ -265,7 +286,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             {t.riskCalcBelowMin} ({money(result.riskAmount)})
           </Text>
         ) : (
-          <Text style={[styles.resultMeta, { textAlign: align }]}>{t.riskCalcFillHint}</Text>
+          <Text style={[badNumber ? styles.warn : styles.resultMeta, { textAlign: align }]}>
+            {badNumber ? t.invalidNumberHint : t.riskCalcFillHint}
+          </Text>
         )}
         {pv != null ? (
           <Text style={[styles.resultMeta, { textAlign: align }]}>

@@ -14,6 +14,7 @@ import { api } from '../api';
 import { pushPriceAlert } from '../notifications';
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
+import { parseDecimal } from '../parseDecimal';
 import type { Dict } from '../i18n/locales';
 
 /** «EURUSD · RSI · تحت 30» / «GBPUSD · تقاطع المتوسطات · تقاطع صاعد ▲» بلغة الواجهة — القائمة وتأكيد
@@ -128,7 +129,7 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD' }: Props) {
         timeframe: '15m',
         alert_type: type,
         condition: type === 'rsi' ? condition : type.includes('cross') ? condition : 'cross_up',
-        value: needsVal ? parseFloat(value.replace(',', '.')) : undefined,
+        value: needsVal ? (parseDecimal(value) ?? NaN) : undefined,
       });
       playSoftClick();
       await refresh();

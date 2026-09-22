@@ -284,6 +284,7 @@ export type Dict = {
   riskCalcUnits: string;
   riskCalcBelowMin: string;
   riskCalcFillHint: string;
+  invalidNumberHint: string;
   riskCalcPipValue: string;
   riskCalcDisclaimer: string;
   toolsTabRisk: string;
@@ -1024,6 +1025,7 @@ const ar: Dict = {
   riskCalcUnits: 'الوحدات',
   riskCalcBelowMin: 'المخاطرة أقل من أصغر لوت (0.01) — وسّع الرصيد أو قلّل الوقف',
   riskCalcFillHint: 'أدخل الرصيد ونسبة المخاطرة ووقف الخسارة',
+  invalidNumberHint: 'رقم غير مفهوم — اكتبه بلا فواصل آلاف، مثل 10000 أو 1.0850',
   riskCalcPipValue: 'قيمة النقطة للوت',
   riskCalcDisclaimer: 'تقدير تعليمي: مواصفات العقود (خصوصاً الذهب) قد تختلف لدى وسيطك — تحقّق قبل التداول.',
   toolsTabRisk: 'المخاطرة',
@@ -1772,6 +1774,7 @@ const enUS: Dict = {
   riskCalcUnits: 'Units',
   riskCalcBelowMin: 'Risk is below the smallest lot (0.01) — increase balance or tighten the stop',
   riskCalcFillHint: 'Enter balance, risk % and stop loss',
+  invalidNumberHint: 'Number not recognised — type it without thousands separators, e.g. 10000 or 1.0850',
   riskCalcPipValue: 'Pip value per lot',
   riskCalcDisclaimer: 'Educational estimate: contract specs (especially gold) can differ at your broker — check before trading.',
   toolsTabRisk: 'Risk',
@@ -2539,6 +2542,7 @@ const ku: Dict = {
   riskCalcUnits: 'یەکەکان',
   riskCalcBelowMin: 'مەترسی لە بچووکترین لۆت (0.01) کەمترە — باڵانس زیاد بکە یان وەستان نزیک بکەرەوە',
   riskCalcFillHint: 'باڵانس، ڕێژەی مەترسی و وەستانی زیان بنووسە',
+  invalidNumberHint: 'ژمارەکە ناناسرێتەوە — بەبێ جیاکەرەوەی هەزاران بنووسە، وەک 10000 یان 1.0850',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
   riskCalcDisclaimer: 'خەمڵاندنی فێرکاری: تایبەتمەندی گرێبەستەکان (بەتایبەتی زێڕ) لای بڕۆکەرەکەت جیاواز دەبێت — پێش مامەڵە پشتڕاستی بکەرەوە.',
   toolsTabRisk: 'مەترسی',

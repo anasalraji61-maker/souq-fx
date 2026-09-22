@@ -5,6 +5,7 @@ import { api, type Vote } from '../api';
 import { mockVotes } from '../mock';
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
+import { parseDecimal } from '../parseDecimal';
 import { analyzePlan, formatPips, formatRR, type PlanIssue, type TradePlan } from '../tradePlan';
 import { useBlockedUsers } from '../moderation';
 import { ModerationActions, ModerationToggle } from './ModerationActions';
@@ -81,17 +82,17 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
 
   // معاينة حيّة للخطة أثناء الكتابة (لا تُعرض قبل اكتمال الأرقام الثلاثة).
   const draftPlan = useMemo(() => {
-    const entry = parseFloat(pEntry.replace(',', '.'));
-    const sl = parseFloat(pSl.replace(',', '.'));
-    const tp = parseFloat(pTp.replace(',', '.'));
+    const entry = parseDecimal(pEntry) ?? NaN;
+    const sl = parseDecimal(pSl) ?? NaN;
+    const tp = parseDecimal(pTp) ?? NaN;
     if (Number.isNaN(entry) || Number.isNaN(sl) || Number.isNaN(tp)) return null;
     return analyzePlan({ symbol: pSymbol, side: pDirection, entry, sl, tp });
   }, [pSymbol, pDirection, pEntry, pSl, pTp]);
 
   const publish = async () => {
-    const entry = parseFloat(pEntry.replace(',', '.'));
-    const sl = parseFloat(pSl.replace(',', '.'));
-    const tp = parseFloat(pTp.replace(',', '.'));
+    const entry = parseDecimal(pEntry) ?? NaN;
+    const sl = parseDecimal(pSl) ?? NaN;
+    const tp = parseDecimal(pTp) ?? NaN;
     if (!pSymbol.trim() || Number.isNaN(entry) || Number.isNaN(sl) || Number.isNaN(tp)) {
       setPError(t.voteFormError);
       return;

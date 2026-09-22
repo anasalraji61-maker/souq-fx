@@ -15,6 +15,7 @@ import { ensureAlertNotifications, pushPriceAlert, registerPushToken } from '../
 import { playSoftClick } from '../audio/playSoftClick';
 import { hasCelebratedFirstAlert, markFirstAlertCelebrated } from '../achievements';
 import { useI18n } from '../i18n/I18nContext';
+import { parseDecimal } from '../parseDecimal';
 
 type Props = {
   defaultSymbol?: string;
@@ -98,13 +99,13 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
   const onPriceChange = (txt: string) => {
     setPrice(txt);
     setFormError(null);
-    const p = parseFloat(txt.replace(',', '.'));
+    const p = parseDecimal(txt) ?? NaN;
     if (current != null && Number.isFinite(p) && p > 0 && p !== current) {
       setCondition(p > current ? 'above' : 'below');
     }
   };
 
-  const parsedPrice = parseFloat(price.replace(',', '.'));
+  const parsedPrice = parseDecimal(price) ?? NaN;
   const firesNow =
     current != null &&
     Number.isFinite(parsedPrice) &&
@@ -191,7 +192,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
   }, [refreshKey, refresh]);
 
   const add = async () => {
-    const p = parseFloat(price.replace(',', '.'));
+    const p = parseDecimal(price) ?? NaN;
     const sym = symbol.trim().toUpperCase();
     if (!sym || !Number.isFinite(p) || p <= 0) {
       setFormError(t.alertsInvalidInput);

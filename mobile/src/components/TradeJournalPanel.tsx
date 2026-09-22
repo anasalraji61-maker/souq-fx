@@ -13,6 +13,7 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
+import { parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import {
   analyzePlan,
@@ -101,11 +102,13 @@ export function TradeJournalPanel() {
     void refresh();
   }, [refresh]);
 
-  /** "1,0850" بلوحة مفاتيح أوروبية/عربية → 1.085؛ خانة فارغة أو غير رقمية → null. */
+  /** "1,0850" / «١٫٠٨٥٠» / «2,350.50» → رقم (راجع parseDecimal.ts)؛ خانة فارغة أو غير رقمية → null. */
   const num = (v: string): number | null => {
-    const n = parseFloat(v.replace(',', '.'));
-    return Number.isFinite(n) && n > 0 ? n : null;
+    const n = parseDecimal(v);
+    return n != null && n > 0 ? n : null;
   };
+  /** نص مكتوب لكنه غير مفهوم — كان الوقف/الهدف/الخروج يُحفظ فارغاً بصمت (صفقة مغلقة تُسجَّل مفتوحة). */
+  const unreadable = (v: string) => v.trim() !== '' && num(v) == null;
 
   /** رسالة واضحة لوقف/هدف بالجهة الخطأ — نفس نصوص خطة الصفقة بلوحة الأفكار. */
   const planIssueText = (issue: PlanIssue | null): string | null => {
@@ -140,6 +143,10 @@ export function TradeJournalPanel() {
     const e = num(entry);
     if (!symbol.trim() || e == null) {
       setFormError(t.journalInvalidEntry);
+      return;
+    }
+    if ([sl, tp, exit].some(unreadable)) {
+      setFormError(t.invalidNumberHint);
       return;
     }
     const s = num(sl);
