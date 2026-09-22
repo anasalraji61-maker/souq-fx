@@ -17,6 +17,7 @@ import { hasCelebratedFirstAlert, markFirstAlertCelebrated } from '../achievemen
 import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
+import { formatPrice } from '../chart/math';
 
 type Props = {
   defaultSymbol?: string;
@@ -103,7 +104,13 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
     return () => clearTimeout(id);
   }, [symbol]);
 
-  const fmtPrice = (v: number) => String(Number(v.toFixed(v >= 1000 ? 2 : v >= 20 ? 3 : 5)));
+  /**
+   * منازل السعر حسب **الأداة** لا حجم الرقم، وبلا قصّ أصفار: كانت اللوحة آخر موضع بالتطبيق يقدّر
+   * المنازل من الحجم ثم يمرّرها بـ`String(Number(...))` فتُقصّ الأصفار الأخيرة — والمتداول يقرأ
+   * «157.4» ولا يعرف أهو 157.400 أم 157.04، ويقرأ «1.085» حيث يضع وقفه على 1.08500. وسطر التنبيه
+   * هو بالضبط السطر الذي يُبنى عليه القرار.
+   */
+  const fmtPrice = (v: number, sym?: string) => formatPrice(v, (sym ?? symbol).trim().toUpperCase());
   const condMark = (c: 'above' | 'below') => (c === 'above' ? '≥' : '≤');
 
   /** الاتجاه يُستنتج من موقع السعر المدخل بالنسبة للسعر الحالي — المستخدم يكتب الرقم فقط،
@@ -181,15 +188,21 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
         const msg = res.triggered
           .map((trig) => {
             const word = trig.condition === 'above' ? t.aboveWord : t.belowWord;
-            const cur = typeof trig.current === 'number' && Number.isFinite(trig.current) ? ` (${trig.current})` : '';
-            return `${trig.symbol} ${word} ${trig.price}${cur}`;
+            const cur =
+              typeof trig.current === 'number' && Number.isFinite(trig.current)
+                ? ` (${formatPrice(trig.current, trig.symbol)})`
+                : '';
+            return `${trig.symbol} ${word} ${formatPrice(trig.price, trig.symbol)}${cur}`;
           })
           .join(' · ');
         if (mountedRef.current) setFlash(msg);
         for (const trig of res.triggered) {
           await pushPriceAlert(
             t.alertsPushTitle,
-            `${trig.symbol} ${trig.condition === 'above' ? t.aboveWord : t.belowWord} ${trig.price}`
+            `${trig.symbol} ${trig.condition === 'above' ? t.aboveWord : t.belowWord} ${formatPrice(
+              trig.price,
+              trig.symbol
+            )}`
           );
         }
       }
@@ -250,7 +263,12 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
           setFormError(t.alertsEditOldRemains);
         }
       }
-      showArmed(`${replacing ? t.alertsUpdatedPrefix : t.alertsArmedPrefix}: ${sym} ${condMark(condition)} ${p}`);
+      showArmed(
+        `${replacing ? t.alertsUpdatedPrefix : t.alertsArmedPrefix}: ${sym} ${condMark(condition)} ${formatPrice(
+          p,
+          sym
+        )}`
+      );
       await refresh();
       /** لحظة إنجاز/تشجيع محدَّدة (matrix-tactile-feel.mdc: "ضبط أول تنبيه") — تُحتفَل بها مرة
        * واحدة فقط عبر عمر التطبيق على الجهاز عبر `achievements.ts`، لا في كل مرة تُضاف تنبيهاً،
@@ -530,10 +548,13 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
                   style={({ pressed }) => [{ flex: 1 }, pressed && { opacity: buttons.pressedOpacity }]}
                   onPress={() => startEdit(a)}
                   accessibilityRole="button"
-                  accessibilityLabel={`${t.alertsEditA11yPrefix}: ${a.symbol} ${condMark(a.condition)} ${a.price}`}
+                  accessibilityLabel={`${t.alertsEditA11yPrefix}: ${a.symbol} ${condMark(a.condition)} ${fmtPrice(
+                    a.price,
+                    a.symbol
+                  )}`}
                 >
                   <Text style={[styles.itemSym, a.triggered && styles.itemSymDone, { textAlign: align }]}>
-                    {a.symbol} {condMark(a.condition)} {a.price}
+                    {a.symbol} {condMark(a.condition)} {fmtPrice(a.price, a.symbol)}
                   </Text>
                   <Text
                     style={[styles.itemStatus, a.triggered ? styles.itemStatusDone : styles.itemStatusLive, { textAlign: align }]}
@@ -553,14 +574,17 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey }: 
                   onPress={() =>
                     Alert.alert(
                       t.alertsDeleteConfirmTitle,
-                      `${a.symbol} ${condMark(a.condition)} ${a.price}`,
+                      `${a.symbol} ${condMark(a.condition)} ${fmtPrice(a.price, a.symbol)}`,
                       [
                         { text: t.cancel, style: 'cancel' },
                         { text: t.deleteWord, style: 'destructive', onPress: () => remove(a.id) },
                       ]
                     )
                   }
-                  accessibilityLabel={`${t.alertsDeleteA11yPrefix}: ${a.symbol} ${condMark(a.condition)} ${a.price}`}
+                  accessibilityLabel={`${t.alertsDeleteA11yPrefix}: ${a.symbol} ${condMark(a.condition)} ${fmtPrice(
+                    a.price,
+                    a.symbol
+                  )}`}
                   hitSlop={8}
                 >
                   <Text style={styles.del}>{t.deleteWord}</Text>
