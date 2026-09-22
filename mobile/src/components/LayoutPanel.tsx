@@ -26,6 +26,18 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
   const [layouts, setLayouts] = useState<TerminalLayout[]>([DEFAULT_LAYOUT]);
   const [name, setName] = useState(t.layoutDefaultName);
   const [saveError, setSaveError] = useState<LayoutsSaveErrorCode | null>(null);
+  /** تأكيد الحفظ — كان الحفظ صامتاً (نقرة صوتية فقط). */
+  const [savedMsg, setSavedMsg] = useState<string | null>(null);
+
+  /** «EURUSD 15m · GBPUSD 1H · XAUUSD 4H» — كان السطر يعرض الأزواج فقط، والفريم نصف التخطيط. */
+  const describe = (l: TerminalLayout) =>
+    l.frameSymbols.map((sym, i) => `${sym} ${l.frameTfs[i] ?? ''}`.trim()).join(' · ');
+  /** الاسم المعروض: الافتراضي مخزَّن باسم عربي ثابت («افتراضي») فيُترجم عند العرض. */
+  const displayName = (l: TerminalLayout) => (l.id === 'default' ? t.layoutBuiltinName : l.name);
+  /** يطابق ما على الشاشة الرئيسية الآن؟ (يُعلَّم «الحالي» كي يعرف المتداول ما المطبَّق) */
+  const isCurrent = (l: TerminalLayout) =>
+    l.frameSymbols.every((sym, i) => sym === frameSymbols[i]) &&
+    l.frameTfs.every((x, i) => x === frameTfs[i]);
 
   useEffect(() => {
     // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب اللوحة قبل اكتمال الطلب — نفس نمط
@@ -42,9 +54,12 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
   }, []);
 
   const save = async () => {
+    const layoutName = name.trim() || t.layoutFallbackName;
+    // نفس الاسم = تحديث ذلك التخطيط لا نسخة مكرّرة (الاسم الافتراضي «تخطيطي» كان يُكدّس نسخاً متطابقة الاسم).
+    const existing = layouts.find((x) => x.id !== 'default' && x.name === layoutName);
     const layout: TerminalLayout = {
-      id: `l${Date.now()}`,
-      name: name.trim() || t.layoutFallbackName,
+      id: existing?.id ?? `l${Date.now()}`,
+      name: layoutName,
       dxyTf: '15m',
       frameSymbols,
       frameTfs: [frameTfs[0], frameTfs[1], frameTfs[2]],
@@ -57,19 +72,28 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
       /* local ok */
     }
     playSoftClick();
-    setLayouts((prev) => [DEFAULT_LAYOUT, layout, ...prev.filter((x) => x.id !== layout.id)]);
+    setLayouts((prev) => [
+      DEFAULT_LAYOUT,
+      layout,
+      ...prev.filter((x) => x.id !== layout.id && x.id !== 'default'),
+    ]);
+    setSavedMsg(`${t.layoutSavedMsg} ${layout.name} — ${describe(layout)}`);
   };
 
   return (
     <View style={styles.wrap}>
       <Text style={[styles.title, { textAlign: align }]}>{t.layoutsTitle}</Text>
+      <Text style={[styles.hint, { textAlign: align }]}>{t.layoutsHint}</Text>
       {saveError ? (
         <Text style={[styles.saveError, { textAlign: align }]}>{t[saveError]}</Text>
       ) : null}
       <TextInput
         style={[styles.input, { textAlign: align }]}
         value={name}
-        onChangeText={setName}
+        onChangeText={(v) => {
+          setName(v);
+          setSavedMsg(null);
+        }}
         placeholder={t.layoutNamePlaceholder}
         placeholderTextColor={colors.textDim}
         returnKeyType="done"
@@ -94,6 +118,11 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
       >
         <Text style={styles.btnText}>{t.layoutSaveBtn}</Text>
       </Pressable>
+      {savedMsg && !saveError ? (
+        <Text style={[styles.saved, { textAlign: align }]} accessibilityLiveRegion="polite">
+          {savedMsg}
+        </Text>
+      ) : null}
       {layouts.map((l) => (
         <View key={l.id} style={[styles.row, rtl && styles.rowRtl]}>
           <Pressable
@@ -105,19 +134,24 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
                 transform: [{ scale: buttons.pressedScale }],
               },
             ]}
-            onPress={() => onApply(l)}
-            accessibilityLabel={`${t.layoutApplyA11yPrefix}: ${l.name}`}
+            onPress={() => {
+              playSoftClick();
+              onApply(l);
+            }}
+            accessibilityState={{ selected: isCurrent(l) }}
+            accessibilityLabel={`${t.layoutApplyA11yPrefix}: ${displayName(l)} — ${describe(l)}`}
           >
-            <Text style={[styles.rowName, { textAlign: align }]}>{l.name}</Text>
-            <Text style={[styles.rowSub, { textAlign: align }]}>
-              {l.frameSymbols.join(' · ')}
+            <Text style={[styles.rowName, { textAlign: align }]}>
+              {displayName(l)}
+              {isCurrent(l) ? <Text style={styles.currentTag}>{` · ${t.layoutCurrentTag}`}</Text> : null}
             </Text>
+            <Text style={[styles.rowSub, { textAlign: align }]}>{describe(l)}</Text>
           </Pressable>
           {l.id !== 'default' ? (
             <Pressable
               accessibilityRole="button"
               onPress={() =>
-                Alert.alert(t.layoutDeleteConfirmTitle, l.name, [
+                Alert.alert(t.layoutDeleteConfirmTitle, `${l.name} — ${describe(l)}`, [
                   { text: t.cancel, style: 'cancel' },
                   {
                     text: t.deleteWord,
@@ -156,6 +190,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   title: { color: colors.text, fontWeight: '800', textAlign: 'right' },
+  hint: { color: colors.textDim, fontSize: 11, lineHeight: 16 },
+  saved: { color: colors.bull, fontSize: 11, fontWeight: '800' },
+  currentTag: { color: colors.accent, fontWeight: '800', fontSize: 11 },
   input: {
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,

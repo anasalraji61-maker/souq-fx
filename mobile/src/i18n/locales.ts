@@ -441,6 +441,10 @@ export type Dict = {
   layoutSaveBtn: string;
   layoutApplyA11yPrefix: string;
   layoutDeleteConfirmTitle: string;
+  layoutsHint: string;
+  layoutCurrentTag: string;
+  layoutSavedMsg: string;
+  layoutBuiltinName: string;
   layoutDeleteA11yPrefix: string;
   coursesTitle: string;
   coursesSub: string;
@@ -1222,6 +1226,10 @@ const ar: Dict = {
   layoutSaveBtn: 'حفظ التخطيط الحالي',
   layoutApplyA11yPrefix: 'تطبيق تخطيط',
   layoutDeleteConfirmTitle: 'حذف التخطيط؟',
+  layoutsHint: 'التخطيط = أزواج وفريمات الشارتات الثلاثة بالشاشة الرئيسية. اضغط تخطيطاً لتطبيقه وفتح الشارت.',
+  layoutCurrentTag: 'الحالي',
+  layoutSavedMsg: '✓ حُفظ:',
+  layoutBuiltinName: 'افتراضي',
   layoutDeleteA11yPrefix: 'حذف تخطيط',
   coursesTitle: 'الأكاديمية',
   coursesSub: 'شاشة كاملة · شرح صوتي · أوقف واسأل عن أي جزء',
@@ -2010,6 +2018,10 @@ const enUS: Dict = {
   layoutSaveBtn: 'Save current layout',
   layoutApplyA11yPrefix: 'Apply layout',
   layoutDeleteConfirmTitle: 'Delete the layout?',
+  layoutsHint: 'A layout = the pairs and timeframes of the three charts on the main screen. Tap one to apply it and open the chart.',
+  layoutCurrentTag: 'current',
+  layoutSavedMsg: '✓ Saved:',
+  layoutBuiltinName: 'Default',
   layoutDeleteA11yPrefix: 'Delete layout',
   coursesTitle: 'Academy',
   coursesSub: 'Full screen · voice narration · pause and ask about any part',
@@ -2819,6 +2831,10 @@ const ku: Dict = {
   layoutSaveBtn: 'پاشەکەوتکردنی نەخشەسازی ئێستا',
   layoutApplyA11yPrefix: 'جێبەجێکردنی نەخشەسازی',
   layoutDeleteConfirmTitle: 'نەخشەسازییەکە بسڕدرێتەوە؟',
+  layoutsHint: 'نەخشەسازی = جووت و تایم‌فرەیمی سێ چارتەکەی شاشەی سەرەکی. یەکێک دابگرە بۆ جێبەجێکردن و کردنەوەی چارت.',
+  layoutCurrentTag: 'ئێستا',
+  layoutSavedMsg: '✓ پاشەکەوت کرا:',
+  layoutBuiltinName: 'بنەڕەت',
   layoutDeleteA11yPrefix: 'سڕینەوەی نەخشەسازی',
   coursesTitle: 'ئەکادیمی',
   coursesSub: 'شاشەی تەواو · ڕوونکردنەوەی دەنگی · ڕاوەستە و پرسیار بکە دەربارەی هەر بەشێک',

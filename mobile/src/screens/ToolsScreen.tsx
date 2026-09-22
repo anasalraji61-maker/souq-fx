@@ -130,8 +130,10 @@ export function ToolsScreen() {
     DEFAULT_LAYOUT.frameSymbols
   );
 
+  // يُعاد القراءة عند كل عودة للتبويب: كانت تُقرأ مرة عند التركيب فقط، فتغيير أزواج/فريمات الشارت بالشاشة
+  // الرئيسية ثم «حفظ التخطيط الحالي» هنا يحفظ إعداداً قديماً، و«الحالي» يُعلَّم على تخطيط غير المطبَّق.
   React.useEffect(() => {
-    (async () => {
+    const load = async () => {
       try {
         const raw = await AsyncStorage.getItem('matrix.frameTimeframes.v1');
         if (raw) {
@@ -146,8 +148,13 @@ export function ToolsScreen() {
       } catch {
         /* ignore */
       }
-    })();
-  }, []);
+    };
+    load();
+    const unsub = (
+      navigation as unknown as { addListener: (e: 'focus', cb: () => void) => () => void }
+    ).addListener('focus', load);
+    return unsub;
+  }, [navigation]);
 
   /** لا رمز قُرئ أصلاً (كل الطلبات فشلت) — «لا تطابق» هنا كاذبة. */
   const scanNone = scanInfo.scanned === 0 && scanInfo.failed.length > 0;
@@ -512,6 +519,16 @@ export function ToolsScreen() {
               await AsyncStorage.setItem(
                 'matrix.frameTimeframes.v1',
                 JSON.stringify(layout.frameTfs)
+              );
+              // الشاشة الرئيسية مركّبة مسبقاً وتقرأ التخزين عند التركيب فقط — كان التطبيق يبدو بلا أثر
+              // حتى إعادة تشغيل التطبيق. نمرّر التخطيط كمعاملات (نفس نمط openSymbol) وننتقل للشارت.
+              (navigation as unknown as { navigate: (name: string, params: object) => void }).navigate(
+                'Home',
+                {
+                  layoutSymbols: layout.frameSymbols,
+                  layoutTfs: layout.frameTfs,
+                  layoutNonce: Date.now(),
+                }
               );
             }}
           />

@@ -767,6 +767,29 @@ export function TerminalScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openReq?.nonce]);
 
+  /** تطبيق تخطيط محفوظ من تبويب الأدوات: { layoutSymbols, layoutTfs, layoutNonce } — كان التخطيط يُكتب
+   * للتخزين فقط والشاشة (مركّبة مسبقاً) لا تقرؤه إلا عند التركيب، فلا يتغيّر شيء حتى إعادة التشغيل. */
+  const layoutReq = route.params as
+    | { layoutSymbols?: string[]; layoutTfs?: string[]; layoutNonce?: number }
+    | undefined;
+  useEffect(() => {
+    const syms = layoutReq?.layoutSymbols;
+    const tfs = layoutReq?.layoutTfs;
+    if (!layoutReq?.layoutNonce) return;
+    if (Array.isArray(syms) && syms.length === 3 && syms.every((x) => typeof x === 'string' && x)) {
+      setFrameSymbols([syms[0], syms[1], syms[2]]);
+    }
+    if (Array.isArray(tfs) && tfs.length === 3 && tfs.every(isTimeframe)) {
+      setFrameTfs([...tfs]);
+    }
+    navigation.setParams({
+      layoutSymbols: undefined,
+      layoutTfs: undefined,
+      layoutNonce: undefined,
+    } as never);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layoutReq?.layoutNonce]);
+
   const pickSymbol = (sym: string, timeframe?: Timeframe) => {
     setSymbol(sym);
     if (timeframe) setTf(timeframe);
