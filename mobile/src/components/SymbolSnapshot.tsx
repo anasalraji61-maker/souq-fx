@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, radii, spacing } from '../theme';
 import { api } from '../api';
+import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
   symbol: string;
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export function SymbolSnapshot({ symbol, timeframe = '15m' }: Props) {
+  const { rtl } = useI18n();
   const [snap, setSnap] = useState<{
     rsi?: number;
     change_pct?: number;
@@ -33,11 +35,14 @@ export function SymbolSnapshot({ symbol, timeframe = '15m' }: Props) {
     };
   }, [symbol, timeframe]);
 
-  if (!snap?.rsi) return null;
+  // `!snap.rsi` كان يُخفي الشريط كلّه عند RSI = 0 — وهي قيمة حقيقية ممكنة (كل إغلاقات الفترة هابطة،
+  // يحدث بفريم صغير وسط حركة أحادية الاتجاه)، أي يختفي التلميح باللحظة التي يعني فيها أكثر ما يعني.
+  if (snap?.rsi == null) return null;
+  const rsi = snap.rsi;
 
   return (
-    <View style={styles.wrap}>
-      <Text style={styles.chip}>RSI {snap.rsi?.toFixed(0)}</Text>
+    <View style={[styles.wrap, rtl && styles.wrapRtl]}>
+      <Text style={styles.chip}>RSI {rsi.toFixed(0)}</Text>
       <Text style={styles.chip}>
         {snap.change_pct != null ? `${snap.change_pct >= 0 ? '+' : ''}${snap.change_pct.toFixed(2)}%` : '—'}
       </Text>
@@ -49,7 +54,10 @@ export function SymbolSnapshot({ symbol, timeframe = '15m' }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6 },
+  // كان `row-reverse` ثابتاً — أي أن الشرائح تُقرأ معكوسة بالإنجليزية (وأمريكا/أوروبا سوقان
+  // مستهدفان)؛ بقية ألواح التطبيق تقلب الاتجاه بشرط `rtl` لا دائماً.
+  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  wrapRtl: { flexDirection: 'row-reverse' },
   chip: {
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
