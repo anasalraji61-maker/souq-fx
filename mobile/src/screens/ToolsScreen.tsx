@@ -481,7 +481,7 @@ export function ToolsScreen() {
 
       {tab === 'backtest' ? (
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <BacktestPanel />
+          <BacktestPanel defaultSymbol={signalSym} />
         </ScrollView>
       ) : null}
 

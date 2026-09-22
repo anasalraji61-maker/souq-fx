@@ -42,6 +42,9 @@ const STRATEGIES: { id: Strategy; label: string }[] = [
   { id: 'bb_bounce', label: 'BB Bounce' },
 ];
 
+/** نفس قائمة الأزواج السريعة بحاسبة المخاطرة والدفتر — اختبار زوج شائع بنقرة بيد واحدة بدل الكتابة. */
+const QUICK_SYMBOLS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'GBPJPY', 'EURGBP'];
+
 export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15m' }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
@@ -114,6 +117,30 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
     <View style={styles.wrap}>
       <Text style={[styles.title, { textAlign: align }]}>Strategy Backtest</Text>
       <Text style={[styles.sub, { textAlign: align }]}>{t.backtestSub}</Text>
+      <View style={[styles.row, rtl && styles.rowRtl]}>
+        {QUICK_SYMBOLS.map((q) => {
+          const on = symbol.trim().toUpperCase() === q;
+          return (
+            <Pressable
+              key={q}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+              style={({ pressed }) => [
+                styles.chip,
+                on && styles.chipOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => setSymbol(q)}
+              accessibilityLabel={`${t.backtestSymbolA11y}: ${q}`}
+            >
+              <Text style={[styles.chipText, on && styles.chipTextOn]}>{q}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
       <TextInput
         style={[styles.input, { textAlign: align }]}
         value={symbol}
