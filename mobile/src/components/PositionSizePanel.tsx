@@ -19,6 +19,7 @@ import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
 import { analyzePlan, formatPips, formatRR, type TradeSide } from '../tradePlan';
+import { NewsRiskBanner } from './NewsRiskBanner';
 
 type Props = {
   defaultSymbol?: string;
@@ -492,6 +493,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         </>
       ) : null}
 
+      {/* «خبر قوي قريب» لعملتَي الأداة: كان فوق الشارت وبلوح التركيز فقط — بينما **هنا** يُحسم حجم
+          المركز ويُسجَّل بالدفتر، وهي اللحظة التي يعني فيها التحذير شيئاً (وقف ينزلق بقفزة NFP =
+          خسارة أكبر من «1% مخاطرة» المكتوبة بالخانة أعلاه بالضبط). بلا أي طلب شبكة إضافي: البانر
+          يقرأ من مخزن الوحدة المشترك (طلب واحد كل 10 دقائق لكل التطبيق)، ولا يعرض شيئاً بلا حدث
+          حقيقي قريب (بيانات الأمثلة الاحتياطية مستثناة بالبناء). `spec` وحدها تضمن أداة معروفة. */}
+      {spec ? <NewsRiskBanner symbol={spec.symbol} /> : null}
       <View style={styles.resultBox}>
         {result && !result.belowMinLot ? (
           <>
