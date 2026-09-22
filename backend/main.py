@@ -9,6 +9,7 @@ import asyncio
 import math
 import os
 import random
+import secrets
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -243,6 +244,16 @@ class TradeCreate(BaseModel):
 
 class TradeClose(BaseModel):
     exit: float
+
+
+def _new_id(prefix: str) -> str:
+    """معرّف فريد فعلاً لصفّ جديد (تنبيه/تنبيه مؤشر/فكرة صفقة).
+
+    كانت المعرّفات `a{int(time.time())}{random 10–99}` و`v{int(time.time())}` — بدقّة ثانية، والجدول
+    يُدرج بـ`INSERT` عادي على مفتاح أساسي: تنبيهان بنفس الثانية (1 من 90) أو فكرتا صفقة بنفس الثانية
+    (دائماً) → `IntegrityError` = HTTP 500 للمستخدم الثاني. البادئة تبقى كما هي (لا عميل يحلّل المعرّف).
+    """
+    return f"{prefix}{int(time.time())}{secrets.token_hex(4)}"
 
 
 # ─── In-memory store (MVP) ────────────────────────────────────────────────────
@@ -728,7 +739,7 @@ def list_alerts(user: dict | None = Depends(_auth_user)):
 @app.post("/api/alerts")
 def create_alert(body: AlertCreate, user: dict | None = Depends(_auth_user)):
     alert = {
-        "id": f"a{int(time.time())}{random.randint(10, 99)}",
+        "id": _new_id("a"),
         "symbol": body.symbol.upper(),
         "condition": body.condition,
         "price": round(body.price, 5),
@@ -823,7 +834,7 @@ def list_indicator_alerts(user: dict | None = Depends(_auth_user)):
 @app.post("/api/indicator-alerts")
 def create_indicator_alert(body: IndicatorAlertCreate, user: dict | None = Depends(_auth_user)):
     alert = {
-        "id": f"ia{int(time.time())}{random.randint(10, 99)}",
+        "id": _new_id("ia"),
         "symbol": body.symbol.upper(),
         "timeframe": body.timeframe,
         "alert_type": body.alert_type,
@@ -1069,7 +1080,7 @@ def list_votes():
 @app.post("/api/votes")
 def create_vote(body: VoteCreate):
     item = {
-        "id": f"v{int(time.time())}",
+        "id": _new_id("v"),
         "symbol": body.symbol.upper(),
         "direction": body.direction,
         "entry": body.entry,

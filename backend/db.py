@@ -1309,7 +1309,8 @@ def _trade_owner_clause(user_id: int | None) -> tuple[str, tuple]:
 
 
 def add_trade(data: dict, user_id: int | None = None) -> dict:
-    tid = data.get("id") or f"t{int(time.time() * 1000)}"
+    # معرّف بدقّة ميلي ثانية وحده كان يتصادم بين مستخدمَين يسجّلان بنفس اللحظة → IntegrityError (500)
+    tid = data.get("id") or f"t{int(time.time() * 1000)}{secrets.token_hex(3)}"
     row = {
         "id": tid,
         "user_id": user_id,
