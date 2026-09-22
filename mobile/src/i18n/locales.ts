@@ -384,6 +384,12 @@ export type Dict = {
   journalEditError: string;
   journalCloseLinkA11y: string;
   journalCloseLinkBtn: string;
+  journalCloseMarketBtn: string;
+  journalCloseMarketA11y: string;
+  journalCloseMarketConfirmTitle: string;
+  journalCloseMarketConfirmBody: string;
+  journalCloseMarketConfirmBtn: string;
+  journalCloseMarketNoQuote: string;
   backtestSub: string;
   backtestSymbolA11y: string;
   backtestStrategyA11yPrefix: string;
@@ -1184,6 +1190,12 @@ const ar: Dict = {
   journalEditError: 'تعذّر حفظ التعديل — تحقّق من الاتصال وحاول مرة أخرى',
   journalCloseLinkA11y: 'إغلاق صفقة {symbol} بسعر خانة الخروج',
   journalCloseLinkBtn: 'إغلاق بسعر خانة الخروج',
+  journalCloseMarketBtn: 'إغلاق بالسعر الحالي',
+  journalCloseMarketA11y: 'إغلاق صفقة {symbol} بالسعر الحالي',
+  journalCloseMarketConfirmTitle: 'إغلاق بالسعر الحالي؟',
+  journalCloseMarketConfirmBody: '{side} {symbol} · {entry} → {exit}\nالنتيجة: {result}\n\nالسعر من مزوّد البيانات (Bid للشراء، Ask للبيع) وقد يختلف قليلاً عن سعر وسيطك — يمكنك تعديله بعد الإغلاق.',
+  journalCloseMarketConfirmBtn: 'إغلاق',
+  journalCloseMarketNoQuote: 'لا سعر حي لهذا الرمز الآن — اكتب سعر الخروج بخانة «خروج» ثم «إغلاق بسعر خانة الخروج»',
   backtestSub: 'MA · RSI · MACD · BB · منحنى Equity',
   backtestSymbolA11y: 'رمز الأداة للاختبار الخلفي',
   backtestStrategyA11yPrefix: 'استراتيجية',
@@ -1991,6 +2003,12 @@ const enUS: Dict = {
   journalEditError: 'Couldn’t save the changes — check your connection and try again',
   journalCloseLinkA11y: 'Close {symbol} trade at the exit field price',
   journalCloseLinkBtn: 'Close at exit field price',
+  journalCloseMarketBtn: 'Close at market',
+  journalCloseMarketA11y: 'Close {symbol} trade at the current price',
+  journalCloseMarketConfirmTitle: 'Close at market price?',
+  journalCloseMarketConfirmBody: '{side} {symbol} · {entry} → {exit}\nResult: {result}\n\nPrice from the data provider (Bid for buys, Ask for sells) and may differ slightly from your broker — you can edit it after closing.',
+  journalCloseMarketConfirmBtn: 'Close',
+  journalCloseMarketNoQuote: 'No live price for this symbol right now — type the exit in the «Exit» field, then use «Close at exit field price»',
   backtestSub: 'MA · RSI · MACD · BB · Equity curve',
   backtestSymbolA11y: 'Instrument symbol for the backtest',
   backtestStrategyA11yPrefix: 'Strategy',
@@ -2818,6 +2836,12 @@ const ku: Dict = {
   journalEditError: 'نەکرا گۆڕانکارییەکان پاشەکەوت بکرێن — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
   journalCloseLinkA11y: 'داخستنی مامەڵەی {symbol} بە نرخی خانەی دەرچوون',
   journalCloseLinkBtn: 'داخستن بە نرخی خانەی دەرچوون',
+  journalCloseMarketBtn: 'داخستن بە نرخی ئێستا',
+  journalCloseMarketA11y: 'داخستنی مامەڵەی {symbol} بە نرخی ئێستا',
+  journalCloseMarketConfirmTitle: 'داخستن بە نرخی ئێستا؟',
+  journalCloseMarketConfirmBody: '{side} {symbol} · {entry} → {exit}\nئەنجام: {result}\n\nنرخەکە لە دابینکەری داتاوەیە (Bid بۆ کڕین، Ask بۆ فرۆشتن) و لەوانەیە کەمێک جیاواز بێت لە نرخی بریکەرەکەت — دەتوانیت دوای داخستن دەستکاری بکەیت.',
+  journalCloseMarketConfirmBtn: 'داخستن',
+  journalCloseMarketNoQuote: 'ئێستا نرخی ڕاستەوخۆ بۆ ئەم هێمایە نییە — نرخی دەرچوون لە خانەی «دەرچوون» بنووسە و پاشان «داخستن بە نرخی خانەی دەرچوون»',
   backtestSub: 'MA · RSI · MACD · BB · کەوانەی Equity',
   backtestSymbolA11y: 'هێمای ئامراز بۆ تاقیکردنەوەی دواوە',
   backtestStrategyA11yPrefix: 'ستراتیژی',

@@ -335,6 +335,72 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
     }
   };
 
+  /**
+   * إغلاق صفقة مفتوحة بالسعر الحالي بنقرة — كان الإغلاق يقرأ خانة «خروج» العامة بأعلى النموذج فقط (المتداول
+   * يغلق من الوسيط ثم يريد تسجيل ذلك فوراً بلا كتابة سعر). يُغلق عند السعر الذي يُنفَّذ عليه الإغلاق فعلاً: Bid
+   * للشراء وAsk للبيع إن توفّرا، وإلا السعر. اقتباس بذري تجريبي لا يُستخدم أبداً (isRealQuote) — لا خروج مختلَق.
+   * تأكيد يعرض سعر الخروج والنتيجة قبل الحفظ (سعر المزوّد قد يختلف قليلاً عن وسيطك — يمكن تعديله بعدها).
+   */
+  const closeAtMarket = async (tr: Trade) => {
+    if (busy) return;
+    setBusy(true);
+    let px: number | null = null;
+    try {
+      const q = await api.marketQuote(tr.symbol);
+      if (!mountedRef.current) return;
+      if (isRealQuote(q)) {
+        const sidePx = tr.side === 'sell' ? q.ask : q.bid;
+        px = typeof sidePx === 'number' && Number.isFinite(sidePx) && sidePx > 0 ? sidePx : q.price;
+      }
+    } catch {
+      px = null;
+    } finally {
+      if (mountedRef.current) setBusy(false);
+    }
+    if (!mountedRef.current) return;
+    if (px == null) {
+      Alert.alert(t.journalCloseFailedTitle, t.journalCloseMarketNoQuote);
+      return;
+    }
+    const exitPx = px;
+    const trSide = tr.side === 'sell' ? 'sell' : 'buy';
+    const mv = realizedMove({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: exitPx });
+    const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
+    const result = mv
+      ? `${mv.pips != null ? `${formatSignedPips(mv.pips)} pip · ` : ''}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%`
+      : '';
+    Alert.alert(
+      t.journalCloseMarketConfirmTitle,
+      t.journalCloseMarketConfirmBody
+        .replace('{side}', trSide === 'sell' ? t.dirSell : t.dirBuy)
+        .replace('{symbol}', tr.symbol)
+        .replace('{entry}', formatPrice(tr.entry, tr.symbol))
+        .replace('{exit}', formatPrice(exitPx, tr.symbol))
+        .replace('{result}', result),
+      [
+        { text: t.cancel, style: 'cancel' },
+        {
+          text: t.journalCloseMarketConfirmBtn,
+          onPress: () => {
+            void (async () => {
+              setBusy(true);
+              try {
+                await api.closeTrade(tr.id, exitPx);
+                if (!mountedRef.current) return;
+                playSoftClick();
+                await refresh();
+              } catch {
+                if (mountedRef.current) Alert.alert(t.journalCloseFailedTitle, t.journalCloseFailedBody);
+              } finally {
+                if (mountedRef.current) setBusy(false);
+              }
+            })();
+          },
+        },
+      ]
+    );
+  };
+
   /** حذف صفقة سُجِّلت خطأً — بلا حذف كانت صفقة خاطئة واحدة تُفسد الإحصاءات للأبد (api.deleteTrade كان غير مستخدم). */
   const removeTrade = async (id: string) => {
     setBusy(true);
@@ -702,6 +768,25 @@ export function TradeJournalPanel({ defaultSymbol }: Props = {}) {
                 <Pressable
                   accessibilityRole="button"
                   style={({ pressed }) => [
+                    busy && styles.closeLinkDisabled,
+                    pressed && {
+                      opacity: buttons.pressedOpacity,
+                      transform: [{ scale: buttons.pressedScale }],
+                    },
+                  ]}
+                  onPress={() => void closeAtMarket(tr)}
+                  disabled={busy}
+                  accessibilityState={{ disabled: busy }}
+                  accessibilityLabel={t.journalCloseMarketA11y.replace('{symbol}', tr.symbol)}
+                  hitSlop={8}
+                >
+                  <Text style={[styles.closeLink, { textAlign: align }]}>{t.journalCloseMarketBtn}</Text>
+                </Pressable>
+              ) : null}
+              {tr.status === 'open' ? (
+                <Pressable
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
                     (busy || editing != null) && styles.closeLinkDisabled,
                     pressed && {
                       opacity: buttons.pressedOpacity,
@@ -838,7 +923,13 @@ const styles = StyleSheet.create({
   planWarn: { color: colors.warn, fontSize: 11, fontWeight: '700' },
   closeLink: { color: colors.accent, textAlign: 'right', fontSize: 11, fontWeight: '700' },
   closeLinkDisabled: { opacity: 0.4 },
-  tradeActions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md },
+  tradeActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
   delLink: { color: colors.bear, fontSize: 11, fontWeight: '700' },
   editBanner: {
     backgroundColor: colors.accentSoft,
