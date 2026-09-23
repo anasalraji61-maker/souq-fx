@@ -10,6 +10,7 @@ import {
   PANE_GUIDES,
   PANE_VALUE_MAX_CHARS,
   formatPaneValue,
+  paneBoundedDecimals,
   formatPaneValueScaled,
   latestPaneValue,
   paneSeriesMaxAbs,
@@ -314,6 +315,52 @@ for (const id of ['cci', 'roc', 'atr', 'volume', '', 'nope']) {
   assert.equal(paneValueTrend(v, null), 'up');
   // فجوة null قبل شمعة التقاطع لا تُسقط المقارنة
   assert.equal(paneValueTrend([1, null, 3, 9], 2), 'up');
+}
+
+// ي) StochRSI و‎%B‎: العتبتان الجديدتان وخانات الكسر المشتقّة من المدى
+{
+  // StochRSI بعتبات الستوكاستيك لا عتبات RSI — وهو الخطأ الذي يسهل الوقوع فيه
+  const sr = placeGuides('stochRsi', INNER);
+  assert.deepEqual(sr.map((g) => g.v).sort((a, b) => b - a), [80, 20]);
+  assert.equal(sr.find((g) => g.v === 80)!.top, 12); // ((100-80)/100)*60
+  assert.ok(!sr.some((g) => g.v === 70 || g.v === 30), 'ليست عتبات RSI');
+  assert.equal(paneValueState('stochRsi', 85), 'high');
+  assert.equal(paneValueState('stochRsi', 50), 'mid');
+  assert.equal(paneValueState('stochRsi', 5), 'low');
+
+  // ‎%B‎ بوحدة السلسلة (كسر): الخط عند 0.8 بموضع ((1-0.8)/1)*60
+  const pb = placeGuides('percentB', INNER);
+  assert.deepEqual(pb.map((g) => g.v), [0.8, 0.5, 0.2]);
+  // مدى ‎0..1‎ فالقسمة كسريّة: المقارنة بهامش ‎1e-9‎ بكسل — الفرق دون البكسل الواحد
+  // بمراتب، ولا يُطلب هنا تطابق ثنائي تامّ (‎0.2‎ نفسها ليست تمثيلاً تامّاً).
+  const near = (a: number, b: number, m: string) =>
+    assert.ok(Math.abs(a - b) < 1e-9, `${m}: ${a} ≠ ${b}`);
+  near(pb.find((g) => g.v === 0.8)!.top, 12, '%B 0.8');
+  near(pb.find((g) => g.v === 0.5)!.top, 30, 'الوسط = المتوسّط المتحرّك');
+  near(pb.find((g) => g.v === 0.2)!.top, 48, '%B 0.2');
+  assert.equal(pb.find((g) => g.v === 0.5)!.label, '0.5');
+  // خارج الحزام: القيمة تتجاوز المدى فعلاً — الحالة تُقرأ ولا تُقصّ
+  assert.equal(paneValueState('percentB', 1.2), 'high');
+  assert.equal(paneValueState('percentB', -0.1), 'low');
+  assert.equal(paneValueState('percentB', 0.5), 'mid');
+
+  // خانات الكسر: مدى واسع ⇐ واحدة، مدى ضيّق ⇐ اثنتان، لوحة بلا عتبات ⇐ واحدة
+  assert.equal(paneBoundedDecimals('rsi'), 1);
+  assert.equal(paneBoundedDecimals('stochRsi'), 1);
+  assert.equal(paneBoundedDecimals('willr'), 1, 'مدى سالب واسع');
+  assert.equal(paneBoundedDecimals('percentB'), 2);
+  assert.equal(paneBoundedDecimals('nope'), 1);
+  // وبها يُقرأ ‎%B‎ فعلاً بدل أن تتساوى كل قراءاته
+  assert.equal(formatPaneValue(0.42, 2), '0.42');
+  assert.equal(formatPaneValue(0.47, 2), '0.47');
+  assert.notEqual(formatPaneValue(0.42, 2), formatPaneValue(0.47, 2));
+  assert.equal(formatPaneValue(0.42), '0.4', 'الافتراض لم يتغيّر');
+  assert.equal(formatPaneValue(1.05, 2), '1.05', 'فوق الحزام يُكتب كما هو');
+  // معامل فاسد ⇐ الافتراض، لا NaN ولا استثناء من toFixed
+  assert.equal(formatPaneValue(0.42, -1), '0.4');
+  assert.equal(formatPaneValue(0.42, 99), '0.4');
+  assert.equal(formatPaneValue(0.42, 1.5), '0.4');
+  assert.equal(formatPaneValue(123.4, 2), '123', '≥100 بلا كسر مهما كانت الخانات');
 }
 
 console.log('paneGuides.selftest: PASS');

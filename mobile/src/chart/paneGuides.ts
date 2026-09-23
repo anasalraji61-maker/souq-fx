@@ -72,6 +72,34 @@ export const PANE_GUIDES: Readonly<Record<string, PaneGuideSpec>> = {
       { v: -80, kind: 'extreme' },
     ],
   },
+  /**
+   * StochRSI: عتبات الستوكاستيك (20/80) لا عتبات RSI (30/70) — فهي ستوكاستيك **على**
+   * RSI لا RSI نفسه، ومداها 0..100 تصل طرفيه في كل موجة تقريباً. بلا الخطّين تبقى
+   * اللوحة لوناً متغيّراً بلا مرجع يُقاس عليه.
+   */
+  stochRsi: {
+    min: 0,
+    max: 100,
+    levels: [
+      { v: 80, kind: 'extreme' },
+      { v: 20, kind: 'extreme' },
+    ],
+  },
+  /**
+   * ‎%B‎: موضع السعر داخل نطاق بولنجر — ‎1‎ الحزام العلوي و‎0‎ السفلي و‎0.5‎ الوسط (المتوسّط
+   * المتحرّك نفسه، وهو أهمّ مرجع باللوحة). العتبات بوحدة السلسلة (كسر لا نسبة مئوية)
+   * وعند ‎0.8/0.2‎ لا ‎1/0‎: حدّا الحزام ينطبقان على حافتَي اللوحة فلا يُريان، و‎0.8/0.2‎
+   * هما بالضبط حدّا ألوان الأعمدة بالرسم فيُقرأ الخط واللون كشيء واحد.
+   */
+  percentB: {
+    min: 0,
+    max: 1,
+    levels: [
+      { v: 0.8, kind: 'extreme' },
+      { v: 0.5, kind: 'mid' },
+      { v: 0.2, kind: 'extreme' },
+    ],
+  },
 };
 
 export interface PlacedGuide {
@@ -146,10 +174,22 @@ export function paneValueAt(
   return typeof v === 'number' && Number.isFinite(v) ? v : null;
 }
 
-/** صياغة مختصرة تتّسع بعرض 36px: منزلة عشرية واحدة، وبلا عشرية عند ≥100. */
-export function formatPaneValue(v: number | null): string | null {
+/**
+ * خانات الكسر المناسبة لمدى لوحة محصورة: مدى واسع (‎0..100‎) ⇐ خانة واحدة تكفي، ومدى
+ * ضيّق (‎%B‎ بين ‎0‎ و‎1‎) ⇐ خانتان — وإلا صارت كل قراءات ‎%B‎ «0.4» و«0.8» فحسب ولا
+ * يفرّق المتداول بين ملامسة الحزام وابتعاد ربع النطاق عنه.
+ */
+export function paneBoundedDecimals(paneId: string): number {
+  const spec = PANE_GUIDES[paneId];
+  if (!spec) return 1;
+  return spec.max - spec.min >= 10 ? 1 : 2;
+}
+
+/** صياغة مختصرة تتّسع بعرض 36px: خانة عشرية واحدة افتراضاً، وبلا عشرية عند ≥100. */
+export function formatPaneValue(v: number | null, decimals = 1): string | null {
   if (v == null || !Number.isFinite(v)) return null;
-  return Math.abs(v) >= 100 ? String(Math.round(v)) : v.toFixed(1);
+  const d = Number.isInteger(decimals) && decimals >= 0 && decimals <= 8 ? decimals : 1;
+  return Math.abs(v) >= 100 ? String(Math.round(v)) : v.toFixed(d);
 }
 
 /* ——— صياغة قيمة لوحة ثنائية الجانب (مقياس ديناميكي) ——— */

@@ -53,6 +53,7 @@ import {
 } from './priceLegend';
 import {
   formatPaneValue,
+  paneBoundedDecimals,
   formatPaneValueScaled,
   paneSpreadSeries,
   paneValueAt,
@@ -571,7 +572,8 @@ function PaneHead({
   highColor?: string;
 }) {
   const v = paneValueAt(values, at);
-  const txt = formatPaneValue(v);
+  // خانات الكسر من **مدى اللوحة** لا ثابتة: ‎%B‎ بين 0 و1 فخانة واحدة تطمس كل قراءاته.
+  const txt = formatPaneValue(v, paneBoundedDecimals(paneId));
   const state = paneValueState(paneId, v);
   return (
     <View style={styles.paneHead}>
@@ -7041,8 +7043,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {stochRsi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>StochRSI</Text>
+          <PaneHead paneId="stochRsi" name="StochRSI" values={stochRsi} at={crossIndex} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="stochRsi" innerH={paneH - 16} />
             {stochRsi.map((v, i) =>
               v == null ? (
                 <View key={i} style={{ flex: 1 }} />
@@ -7159,8 +7162,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {percentB ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>%B</Text>
+          <PaneHead paneId="percentB" name="%B" values={percentB} at={crossIndex} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="percentB" innerH={paneH - 16} />
             {percentB.map((v, i) => {
               if (v == null) return <View key={i} style={{ flex: 1 }} />;
               const pct = v * 100;
