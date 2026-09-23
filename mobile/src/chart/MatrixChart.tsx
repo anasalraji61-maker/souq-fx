@@ -4587,64 +4587,106 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           ))}
         {indicators.includes('ichimoku') &&
           ichimoku &&
-          ichimoku.tenkan.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`icht${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#60A5FA' }]}
-              />
-            )
-          )}
+          planLineSegments(ichimoku.tenkan, xOf, yOf).map((sg) => (
+            <View
+              key={`icht${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#60A5FA',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('ichimoku') &&
           ichimoku &&
-          ichimoku.kijun.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`ichk${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#F87171' }]}
-              />
-            )
-          )}
+          planLineSegments(ichimoku.kijun, xOf, yOf).map((sg) => (
+            <View
+              key={`ichk${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#F87171',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('ichimoku') &&
           ichimoku &&
-          ichimoku.chikou.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`ichc2-${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#C084FC' }]}
-              />
-            )
-          )}
+          planLineSegments(ichimoku.chikou, xOf, yOf).map((sg) => (
+            <View
+              key={`ichc2-${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#C084FC',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('alligator') &&
           alligator &&
-          alligator.jaw.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`agj${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#3B82F6' }]}
-              />
-            )
-          )}
+          planLineSegments(alligator.jaw, xOf, yOf).map((sg) => (
+            <View
+              key={`agj${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#3B82F6',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('alligator') &&
           alligator &&
-          alligator.teeth.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`agt${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#EF4444' }]}
-              />
-            )
-          )}
+          planLineSegments(alligator.teeth, xOf, yOf).map((sg) => (
+            <View
+              key={`agt${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#EF4444',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('alligator') &&
           alligator &&
-          alligator.lips.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`agl${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#84CC16' }]}
-              />
-            )
-          )}
+          planLineSegments(alligator.lips, xOf, yOf).map((sg) => (
+            <View
+              key={`agl${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#84CC16',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
 
         {/* Pine-lite overlay */}
         {pineLine.map((v, i) => {
