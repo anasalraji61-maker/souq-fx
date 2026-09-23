@@ -280,19 +280,35 @@ class IndicatorAlertCreate(BaseModel):
 
 
 class TradeCreate(BaseModel):
+    """صفقة جديدة بالدفتر. **الأسعار والحجم موجبة منتهية** — نفس قاعدة `TradeUpdate` المعلنة والتي
+    كان مسار الإنشاء وحده خارجها:
+
+    - `entry=0`: **500** فوراً إن أُرسل `exit` معه (قسمة على صفر بحساب النتيجة)؛ وبلا `exit`
+      تُحفظ صفقة **مفتوحة لا تُغلق أبداً**: كل ضغطة «إغلاق» عليها 500 بلا ما يدلّ المتداول على السبب.
+    - `entry` سالب: النتيجة تنقلب إشارتها (قسمة على عدد سالب) فتُعرض صفقة رابحة خاسرة والعكس.
+    - `size=0`: كان يصير **1 صامتاً** (`float(size or 1)`) فيرى المتداول حجماً لم يكتبه.
+    - `sl`/`tp` غير موجب: `_opt_level` يبدّله بـNone صامتاً — أي **وقف خسارة كتبه المتداول ثم اختفى**.
+
+    و`allow_inf_nan=False`: `inf` يجتاز `gt=0` ويعطي `pnl=nan` لا يقبله JSON قياسياً (و`_opt_level`
+    يستثني `inf` للمستويات أصلًا) — ومحلل JSON ببايثون يقبل `Infinity` حرفياً فالطريق مفتوح.
+    """
+
     symbol: str = Field(min_length=3, max_length=12)
     side: Literal["buy", "sell"]
-    entry: float
-    exit: float | None = None
-    size: float = 1.0
-    note: str = ""
+    entry: float = Field(gt=0, allow_inf_nan=False)
+    exit: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    size: float = Field(default=1.0, gt=0, allow_inf_nan=False)
+    note: str = Field(default="", max_length=500)
     opened_at: str | None = None
-    sl: float | None = None
-    tp: float | None = None
+    sl: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    tp: float | None = Field(default=None, gt=0, allow_inf_nan=False)
 
 
 class TradeClose(BaseModel):
-    exit: float
+    """سعر إغلاق الصفقة. موجب منتهٍ: إغلاق بـ`exit=0` كان يُحفظ بـ`-100%` وبسعر سالب
+    بـ`-554%`، وكلاهما يدخل نسبة النجاح وصافي الدفتر ولا يُمحى إلا بحذف الصفقة."""
+
+    exit: float = Field(gt=0, allow_inf_nan=False)
 
 
 class TradeUpdate(BaseModel):
@@ -301,12 +317,12 @@ class TradeUpdate(BaseModel):
 
     symbol: str | None = Field(default=None, min_length=3, max_length=12)
     side: Literal["buy", "sell"] | None = None
-    entry: float | None = Field(default=None, gt=0)
-    exit: float | None = Field(default=None, gt=0)
-    size: float | None = Field(default=None, gt=0)
+    entry: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    exit: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    size: float | None = Field(default=None, gt=0, allow_inf_nan=False)
     note: str | None = Field(default=None, max_length=500)
-    sl: float | None = None
-    tp: float | None = None
+    sl: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    tp: float | None = Field(default=None, gt=0, allow_inf_nan=False)
 
 
 def _new_id(prefix: str) -> str:

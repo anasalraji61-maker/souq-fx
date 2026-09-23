@@ -1636,6 +1636,20 @@ def _opt_level(v) -> float | None:
     return f if f > 0 and f != float("inf") else None
 
 
+def _pnl_pct(side: str, entry: float, exit_price: float) -> float | None:
+    """نسبة حركة السعر فقط — الحساب الوحيد بالملف (`add_trade`/`close_trade`/`update_trade` تستدعيه).
+
+    **سعر دخول غير موجب يعيد None لا ZeroDivisionError**: المُصادِق يرفضه الآن عند الإنشاء، لكن صفّاً
+    قديماً حُفظ قبل ذلك (`entry=0`) كان يجعل كل محاولة إغلاق تسقط بـ500 — أي صفقة عالقة مفتوحة
+    للأبد لا يملك المتداول إزالتها إلا بحذفها. الآن تُغلق بنتيجة غير محسوبة (`pnl=None`، تتخطّاها
+    الإحصاءات أصلاً)، ويستعيدها تصحيح سعر الدخول بـPATCH — فهو يعيد الحساب."""
+    if not entry or entry <= 0:
+        return None
+    if side == "buy":
+        return (exit_price - entry) / entry * 100
+    return (entry - exit_price) / entry * 100
+
+
 def list_trades(
     user_id: int | None = None, days: int = 30, owner_key: str | None = None
 ) -> list[dict]:
@@ -1678,10 +1692,8 @@ def add_trade(data: dict, user_id: int | None = None, owner_key: str | None = No
     }
     if row["exit"] is not None and row["pnl"] is None:
         # نسبة حركة السعر فقط (الوحدة المعروضة «%»): «% × الحجم» كان رقماً بلا وحدة مفهومة لحجم ≠ 1.
-        if row["side"] == "buy":
-            row["pnl"] = (row["exit"] - row["entry"]) / row["entry"] * 100
-        else:
-            row["pnl"] = (row["entry"] - row["exit"]) / row["entry"] * 100
+        # الحساب بـ_pnl_pct لا بنسخة ثالثة منه: النسخ المكرّرة كانت ترمي ZeroDivisionError على entry=0.
+        row["pnl"] = _pnl_pct(row["side"], row["entry"], row["exit"])
         row["status"] = "closed"
         row["closed_at"] = row["closed_at"] or time.strftime("%Y-%m-%d %H:%M")
     with _conn() as c:
@@ -1722,12 +1734,8 @@ def close_trade(
             return None
         row = dict(r)
         row.pop("owner_key", None)
-        entry = float(row["entry"])
-        # نسبة حركة السعر فقط — راجع add_trade
-        if row["side"] == "buy":
-            pnl = (exit_price - entry) / entry * 100
-        else:
-            pnl = (entry - exit_price) / entry * 100
+        # نسبة حركة السعر فقط — راجع add_trade. None لصفّ قديم بدخول غير موجب (بدل 500 دائم).
+        pnl = _pnl_pct(row["side"], float(row["entry"]), exit_price)
         closed_at = time.strftime("%Y-%m-%d %H:%M")
         c.execute(
             "UPDATE trades SET exit=?, pnl=?, closed_at=?, status='closed' WHERE id=?",
@@ -1735,13 +1743,6 @@ def close_trade(
         )
         row.update({"exit": exit_price, "pnl": pnl, "closed_at": closed_at, "status": "closed"})
         return row
-
-
-def _pnl_pct(side: str, entry: float, exit_price: float) -> float:
-    """نسبة حركة السعر فقط — نفس حساب add_trade/close_trade."""
-    if side == "buy":
-        return (exit_price - entry) / entry * 100
-    return (entry - exit_price) / entry * 100
 
 
 def update_trade(
