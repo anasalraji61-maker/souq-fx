@@ -139,3 +139,31 @@ export function formatR(r: number | null): string | null {
   const abs = Number.isInteger(r) ? String(Math.abs(r)) : Math.abs(r).toFixed(1);
   return `${r > 0 ? '+' : r < 0 ? '−' : ''}${abs}R`;
 }
+
+/**
+ * النتيجة **العائمة** لصفقة ما تزال مفتوحة، من سعر السوق الآن: بالـpip، وبنسبة حركة السعر، وبالـR
+ * حين يكون للصفقة وقفٌ مسجَّل.
+ *
+ * لماذا: سطر الصفقة المفتوحة بالدفتر كان يقول «▲ شراء EURUSD · 1.0850 (مفتوحة)» وحسب — الصفقات
+ * التي عليها مالٌ **الآن** هي وحدها التي لا يقول عنها الدفتر شيئاً، بينما المغلقة (وقد انتهى أمرها)
+ * يعرض لكلٍّ منها نقاطها ونسبتها ونتيجتها بالـR. والمتداول الذي سجّل خطته من الحاسبة يجد صفقته
+ * مفتوحة بلا أيّ خبر عنها.
+ *
+ * لا رياضيات جديدة: `realizedMove` و`realizedR` تقيسان المسافة من الدخول إلى سعرٍ يُمرَّر، ولا
+ * يعنيهما أهو سعر خروجٍ نُفِّذ أم سعر السوق الآن. فالفارق الوحيد هو من أين يأتي الرقم — وهذا يضمن
+ * أن الصفقة المفتوحة والمغلقة تُقاسان بالمسطرة نفسها حرفياً، فلا يقفز الرقم عند الإغلاق.
+ *
+ * `null` لسعرٍ غير صالح (لا نخترع نتيجة من سعرٍ لا نملكه)، و`r` وحدها `null` بصفقة بلا وقف.
+ */
+export function floatingResult(input: {
+  symbol: string;
+  side: TradeSide;
+  entry: number;
+  sl?: number | null;
+  current?: number | null;
+}): { pips: number | null; pct: number; r: number | null } | null {
+  const { symbol, side, entry, sl, current } = input;
+  const mv = realizedMove({ symbol, side, entry, exit: current });
+  if (!mv) return null;
+  return { ...mv, r: realizedR({ side, entry, sl, exit: current }) };
+}

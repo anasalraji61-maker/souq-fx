@@ -18,6 +18,7 @@ import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
 import {
   analyzePlan,
+  floatingResult,
   formatPips,
   formatR,
   formatRR,
@@ -30,6 +31,15 @@ import {
 
 /** نفس أزواج الاختيار السريع بحاسبة المخاطرة — تسجيل صفقة بنقرة بدل كتابة الرمز بلوحة مفاتيح بيد واحدة. */
 const QUICK_SYMBOLS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'GBPJPY', 'EURGBP'];
+
+/**
+ * سقف عدد الأدوات التي يُجلب لها سعر السوق للنتيجة العائمة. `/api/market/quote` **لا يُخزَّن**
+ * بالخادم (خلافاً للشموع والتقويم): كل نداء = طلبٌ عند المزوّد. ومن يفتح عشرين صفقة على عشرين أداة
+ * حالةٌ نادرة لا تستحق عشرين طلباً دفعةً واحدة — أدوات الصفقات المفتوحة الأربع الأولى بترتيب الخادم
+ * (الأحدث تسجيلاً أولاً، وهي الأولى بالحاجة) تغطّي دفتر متداول التجزئة عملياً، وما بعدها يبقى كما
+ * كان بلا سطر عائم.
+ */
+const MAX_LIVE_QUOTES = 4;
 
 /**
  * تقريبٌ مطابق لتقريب بايثون (`round`) الذي يحسب به الخادم إحصاءات الدفتر: **النصف إلى الزوجي**،
@@ -137,13 +147,63 @@ export function TradeJournalPanel({ defaultSymbol, flow = false }: Props = {}) {
     };
   }, []);
 
+  /**
+   * سعر السوق الآن لأدوات الصفقات **المفتوحة** وحدها — مصدر السطر العائم بصفوفها. الرموز بحروف
+   * كبيرة كما تُكتب بالمفتاح. رمزٌ غاب عن الكائن = لا سعر موثوق له (اقتباس بذري تجريبي، أو فشل
+   * شبكة، أو تجاوَز السقف) فيبقى صفّه كما كان تماماً — لا رقم عائم من سعر لا نملكه.
+   */
+  const [quotes, setQuotes] = useState<Record<string, number>>({});
+  const quoteGenRef = useRef(0);
+
+  /**
+   * **لماذا بلا مؤقّت**: `/api/market/quote` غير مخزَّن بالخادم، فاستطلاعٌ كل دقيقة لأربع أدوات =
+   * أربعة طلبات بالدقيقة ما بقي التبويب مفتوحاً — كلفةٌ تُقاس مقابل حدّ المزوّد قبل أن تُفتعَل. فالسعر
+   * هنا **لقطةٌ** تُؤخذ مع كل تحميل للدفتر (فتح التبويب، وبعد كل إضافة/تعديل/إغلاق/حذف)، والسطر
+   * العائم أداةُ توجيهٍ لا سعرُ تنفيذ: زرّ «إغلاق بسعر السوق» يجلب اقتباسه الطازج بنفسه لحظة الضغط
+   * ويعرضه بالتأكيد قبل الحفظ، فالرقم الذي يُحسم عليه القرار ليس هذه اللقطة أبداً.
+   */
+  const loadOpenQuotes = useCallback(async (list: Trade[]) => {
+    const syms = [
+      ...new Set(
+        list
+          .filter((tr) => tr.status === 'open')
+          .map((tr) => (tr.symbol || '').trim().toUpperCase())
+          .filter((sym) => sym.length >= 3)
+      ),
+    ].slice(0, MAX_LIVE_QUOTES);
+    const gen = ++quoteGenRef.current;
+    if (syms.length === 0) {
+      // لا صفقات مفتوحة ⇒ لا طلب أصلاً، ويُفرَّغ الكائن (بالمرجع نفسه إن كان فارغاً: لا تصيير زائد)
+      if (mountedRef.current) setQuotes((cur) => (Object.keys(cur).length === 0 ? cur : {}));
+      return;
+    }
+    const got = await Promise.all(
+      syms.map(async (sym) => {
+        try {
+          const q = await api.marketQuote(sym);
+          // اقتباس بذري تجريبي (مزوّد غير مهيّأ/رمز مجهول) ليس سعر سوق — نتيجة عائمة منه رقمٌ مختلَق
+          return isRealQuote(q) ? ([sym, q.price] as const) : null;
+        } catch {
+          return null;
+        }
+      })
+    );
+    // تبديل قائمة الصفقات أثناء الطلب (إغلاق صفقة مثلاً) يُلغي هذه النتيجة — لا أسعار لقائمة سابقة
+    if (!mountedRef.current || gen !== quoteGenRef.current) return;
+    const next: Record<string, number> = {};
+    for (const pair of got) if (pair) next[pair[0]] = pair[1];
+    setQuotes(next);
+  }, []);
+
   const refresh = useCallback(async () => {
     try {
       const res = await api.trades();
       if (!mountedRef.current) return;
-      setTrades(res.trades as Trade[]);
+      const list = res.trades as Trade[];
+      setTrades(list);
       setStats(res.stats as Stats);
       setListError(false);
+      void loadOpenQuotes(list);
     } catch {
       if (mountedRef.current) {
         setTrades([]);
@@ -153,7 +213,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false }: Props = {}) {
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, []);
+  }, [loadOpenQuotes]);
 
   useEffect(() => {
     void refresh();
@@ -606,30 +666,44 @@ export function TradeJournalPanel({ defaultSymbol, flow = false }: Props = {}) {
               من الباك-إند. الآن: «مغلقة · +25 pip · +0.23%» بلون الربح/الخسارة من الدخول/الخروج مباشرة؛
               المفتوحة لا تكرّر الحالة (السطر الأول يقول «(مفتوحة)»). */}
           {(() => {
-            const mv =
-              tr.status === 'closed'
-                ? realizedMove({
-                    symbol: tr.symbol,
-                    side: tr.side === 'sell' ? 'sell' : 'buy',
-                    entry: tr.entry,
-                    exit: tr.exit,
-                  })
-                : null;
+            const trSide = tr.side === 'sell' ? 'sell' : 'buy';
+            const closed = tr.status === 'closed';
+            /**
+             * **الصفقة المفتوحة تقول أين هي الآن.** كان صفّها ينتهي عند «(مفتوحة)»: فالصفقات التي
+             * عليها مالٌ هذه اللحظة هي وحدها التي لا يخبر الدفتر عنها بشيء، بينما المغلقة — وقد
+             * انتهى أمرها — يعرض لكلٍّ منها نقاطها ونسبتها. ومن سجّل خطته من الحاسبة يجدها مفتوحة
+             * بلا أيّ خبر. الرقم بنفس دالّة المغلقة تماماً (`floatingResult` تبني على `realizedMove`/
+             * `realizedR`) فلا يقفز شيء لحظة الإغلاق على السعر نفسه، وبنفس الشكل والألوان.
+             *
+             * والـR تُعرض هنا للمفتوحة وحدها: سطر الوقف/الهدف أعلاه يحسبها من سعر الخروج، وهو معدوم
+             * ما دامت مفتوحة — فـ«−0.4R» يقول للمتداول أين هو من وقفه، وهو سؤال الصفقة المفتوحة
+             * بالضبط. بلا سعر موثوق للأداة لا يُعرض شيء ويبقى الصفّ كما كان حرفياً.
+             */
+            const live = closed ? null : quotes[(tr.symbol || '').trim().toUpperCase()] ?? null;
+            const mv = closed
+              ? realizedMove({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: tr.exit })
+              : floatingResult({ symbol: tr.symbol, side: trSide, entry: tr.entry, sl: tr.sl, current: live });
             const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
             const pips = mv ? formatPips(mv.pips == null ? null : Math.abs(mv.pips)) : null;
+            const rText = !closed && mv && 'r' in mv ? formatR(mv.r) : null;
             const result = mv
-              ? `${pips != null ? `${sign(mv.pips ?? 0)}${pips} pip · ` : ''}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%`
+              ? `${pips != null ? `${sign(mv.pips ?? 0)}${pips} pip · ` : ''}${sign(mv.pct)}${Math.abs(
+                  mv.pct
+                ).toFixed(2)}%${rText ? ` · ${rText}` : ''}`
               : '';
-            if (tr.status !== 'closed' && !tr.note) return null;
+            if (!closed && !result && !tr.note) return null;
+            // الكلمة تسبق النتيجة بالمغلقة؛ بالمفتوحة لا كلمة (السطر الأول يقول «(مفتوحة)») فلا يبدأ
+            // السطر بفاصل معلّق.
+            const head = closed ? t.journalClosedWord : '';
             return (
               <Text style={[styles.tradeMeta, { textAlign: align }]}>
-                {tr.status === 'closed' ? t.journalClosedWord : ''}
+                {head}
                 {result ? (
                   <Text style={{ color: mv && mv.pct < 0 ? colors.bear : mv && mv.pct > 0 ? colors.bull : colors.textDim, fontWeight: '700' }}>
-                    {` · ${result}`}
+                    {`${head ? ' · ' : ''}${result}`}
                   </Text>
                 ) : null}
-                {tr.note ? `${tr.status === 'closed' ? ' · ' : ''}${tr.note}` : ''}
+                {tr.note ? `${head || result ? ' · ' : ''}${tr.note}` : ''}
               </Text>
             );
           })()}
