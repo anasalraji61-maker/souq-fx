@@ -106,9 +106,18 @@ type Props = {
    * داخلية، فالصفحة هي التي تُمرَّر. بغيره تبقى النافذة المحدودة كما هي بمواضع المشاركة.
    */
   flow?: boolean;
+  /**
+   * أسعار حيّة جاهزة من مقبس التيكات بالشاشة الحاضنة — **مفتاحها رمزُ الأداة بحروف كبيرة**.
+   * تُقدَّم على لقطة `/api/market/quote` بالسطر العائم للصفقة المفتوحة لأنها تتحرّك مع السوق
+   * بدل أن تتجمّد عند لحظة التحميل، وهي **بلا أي طلب إضافي** (بثٌّ واحد للشاشة كلها).
+   *
+   * الحاضنة هي التي تضمن أن ما يصل هنا سعرٌ يصحّ البناء عليه (لا بثّ تجريبي عشوائي، ولا سعر
+   * مجمَّد فات عمره). فالغياب هنا يعني «لا سعر حيّ موثوق» لا «لا سعر»: يعود الصفّ للّقطة.
+   */
+  ticks?: Record<string, number>;
 };
 
-export function TradeJournalPanel({ defaultSymbol, flow = false }: Props = {}) {
+export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props = {}) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -161,6 +170,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false }: Props = {}) {
    * هنا **لقطةٌ** تُؤخذ مع كل تحميل للدفتر (فتح التبويب، وبعد كل إضافة/تعديل/إغلاق/حذف)، والسطر
    * العائم أداةُ توجيهٍ لا سعرُ تنفيذ: زرّ «إغلاق بسعر السوق» يجلب اقتباسه الطازج بنفسه لحظة الضغط
    * ويعرضه بالتأكيد قبل الحفظ، فالرقم الذي يُحسم عليه القرار ليس هذه اللقطة أبداً.
+   *
+   * **وتبقى اللقطة رغم وصول التيكات الحيّة** (`ticks`): البثّ يحمل ما اشترك به الخادم لا كل
+   * أداة قد تكون بصفقة مفتوحة، ويسقط بالعطلة وبانقطاع المزوّد. فهما طبقتان لا بديلتان —
+   * الحيّ يتقدّم حيث وُجد، واللقطة تغطّي الباقي.
    */
   const loadOpenQuotes = useCallback(async (list: Trade[]) => {
     const syms = [
@@ -679,7 +692,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false }: Props = {}) {
              * ما دامت مفتوحة — فـ«−0.4R» يقول للمتداول أين هو من وقفه، وهو سؤال الصفقة المفتوحة
              * بالضبط. بلا سعر موثوق للأداة لا يُعرض شيء ويبقى الصفّ كما كان حرفياً.
              */
-            const live = closed ? null : quotes[(tr.symbol || '').trim().toUpperCase()] ?? null;
+            const trSym = (tr.symbol || '').trim().toUpperCase();
+            // التيك الحيّ أولاً (يتحرّك مع السوق)، ثم لقطة التحميل — والغياب التامّ يُبقي الصفّ كما كان
+            const live = closed ? null : ticks?.[trSym] ?? quotes[trSym] ?? null;
             const mv = closed
               ? realizedMove({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: tr.exit })
               : floatingResult({ symbol: tr.symbol, side: trSide, entry: tr.entry, sl: tr.sl, current: live });

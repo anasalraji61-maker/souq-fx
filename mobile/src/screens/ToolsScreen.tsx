@@ -33,6 +33,8 @@ import { VotePanel } from '../components/VotePanel';
 import { FrameSizedGrid } from '../components/FrameSizedGrid';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import { formatPrice } from '../chart/math';
+import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
+import { isFreshTick } from '../chart/dataSource';
 import { ensureWatchlistLoaded, subscribeWatchlist } from '../chart/watchlistStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useI18n } from '../i18n/I18nContext';
@@ -130,6 +132,21 @@ const FALLBACK_SYMBOLS = ['EURUSD', 'GBPUSD', 'XAUUSD', 'DXY'];
 const TOOLS_SYMBOL_KEY = 'matrix.tools.symbol.v1';
 const MAX_SYMBOL_CHIPS = 8;
 
+/**
+ * التبويبات التي يعني فيها **سعر السوق الآن** شيئاً — عليها وحدها يُفتح مقبس التيكات.
+ * فتحُه بكل التبويبات يعني مقبساً ثانياً (لشاشة الشارت واحدٌ دائماً) لمن يجلس على الماسح أو
+ * التخطيطات، بلا أن يقرأ أحدٌ رقماً منه.
+ */
+const TICK_TABS: readonly TabId[] = ['journal'];
+
+/**
+ * القائمة المُمرَّرة لخطّاف التيكات **ثابتة عمداً**: `/ws/ticks` يبثّ ما اشترك به الخادم كلّه
+ * ويتجاهل أي قائمة من العميل (`backend/main.py` — لا رسالة اشتراك أصلاً)، بينما `syms` تابعٌ
+ * لأثر الخطّاف. فتمريرُ شرائح الرموز كان سيقطع المقبس ويعيد وصله **مع كل نقرة رمز** بلا أن
+ * يتغيّر حرفٌ ممّا يصل. الدفتر يقرأ ما يصل ويطابقه برمز الصفقة، لا برمز الشاشة.
+ */
+const TICK_WS_SYMBOLS = FALLBACK_SYMBOLS;
+
 const HUB_COMMUNITY_ORDER = ['news', 'social', 'chat', 'votes'] as const;
 const HUB_ANALYSIS_ORDER = ['ai', 'analysts', 'forecast', 'alerts'] as const;
 
@@ -222,6 +239,55 @@ export function ToolsScreen() {
     );
     return extras.length > 0 ? [...extras, ...list].slice(0, MAX_SYMBOL_CHIPS) : list;
   }, [watchSymbols, signalSym, chartSymbols]);
+
+  /**
+   * تركيز الشاشة — لا يكفي التبويب وحده. شاشات التبويبات السفلية **تبقى مُركَّبة** بعد الانتقال
+   * عنها، فمن فتح «الدفتر» ثم عاد للشارت كان سيبقي مقبساً ثانياً مفتوحاً طول الجلسة. القيمة
+   * الابتدائية `true`: الشاشة تُركَّب وهي المعروضة، وحدث `focus` قد يكون مضى قبل تسجيل المستمع.
+   */
+  const [screenFocused, setScreenFocused] = useState(true);
+  useEffect(() => {
+    const nav = navigation as unknown as {
+      addListener: (e: 'focus' | 'blur', cb: () => void) => () => void;
+      isFocused?: () => boolean;
+    };
+    if (typeof nav.isFocused === 'function') setScreenFocused(nav.isFocused());
+    const offFocus = nav.addListener('focus', () => setScreenFocused(true));
+    const offBlur = nav.addListener('blur', () => setScreenFocused(false));
+    return () => {
+      offFocus();
+      offBlur();
+    };
+  }, [navigation]);
+
+  /**
+   * **تيكات حيّة بشاشة الأدوات.** الدفتر كان يعرض «أين هي الصفقة المفتوحة الآن» من **لقطة**
+   * تُجلب مع كل تحميل (`/api/market/quote` غير مخزَّن بالخادم، فاستطلاعه بمؤقّت كلفةٌ تُقاس عند
+   * المزوّد). والتيكات الواصلة بالمقبس **مجّانية تماماً**: بثٌّ واحد للشاشة كلها، قراءةُ ما
+   * اشترك به الخادم أصلاً، بلا طلب لكل رمز ولا حدٍّ يُستهلك — وهي التي جعلت مسافة التنبيه
+   * بقائمة المتابعة ممكنة بشاشة الشارت. فالسطر العائم يتحرّك مع السوق بدل أن يتجمّد لقطةً.
+   */
+  const liveTicks = useMultiLiveTicks(TICK_WS_SYMBOLS, screenFocused && TICK_TABS.includes(tab));
+
+  /**
+   * الأسعار الصالحة لأن يُبنى عليها رقمٌ يُقرأ كقرار — **شرطان، وكلاهما موجود لسبب**:
+   * (أ) `kind !== 'demo'`: حين يتعذّر المزوّد يبثّ `/ws/ticks` سلسلة **عشوائية** حول أسعار
+   * بذرية (`ws_seed`) — نتيجةٌ عائمة منها رقمٌ مختلَق تماماً، وهو الشرط نفسه الذي يفرضه
+   * `isRealQuote` على اقتباس REST بالدفتر. (ب) `isFreshTick`: سعرٌ مجمَّد (عطلة/انقطاع مزوّد)
+   * ليس «أين هي الآن»؛ عند سقوطه يعود الدفتر للقطة REST كما كان تماماً — أي أن هذا البند
+   * **يضيف الحركة ولا يسحب شيئاً**.
+   */
+  const livePrices = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const [sym, tick] of Object.entries(liveTicks)) {
+      if (tick.source.kind === 'demo') continue;
+      if (!isFreshTick(tick.source.as_of)) continue;
+      if (typeof tick.price === 'number' && Number.isFinite(tick.price) && tick.price > 0) {
+        out[sym.toUpperCase()] = tick.price;
+      }
+    }
+    return out;
+  }, [liveTicks]);
 
   // يُعاد القراءة عند كل عودة للتبويب: كانت تُقرأ مرة عند التركيب فقط، فتغيير أزواج/فريمات الشارت بالشاشة
   // الرئيسية ثم «حفظ التخطيط الحالي» هنا يحفظ إعداداً قديماً، و«الحالي» يُعلَّم على تخطيط غير المطبَّق.
@@ -458,7 +524,7 @@ export function ToolsScreen() {
           بدل نافذة 220px معشَّشة داخل تمرير الصفحة. */}
       {tab === 'journal' ? (
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <TradeJournalPanel flow defaultSymbol={signalSym} />
+          <TradeJournalPanel flow defaultSymbol={signalSym} ticks={livePrices} />
         </ScrollView>
       ) : null}
 
