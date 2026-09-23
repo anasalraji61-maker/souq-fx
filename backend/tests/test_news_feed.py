@@ -112,7 +112,7 @@ def feed(monkeypatch):
 )
 def test_pubdate_becomes_utc_with_a_time_not_a_bare_date(raw, expected_when):
     """`pub.text[:16]` كان يعطي «Tue, 23 Sep 2026» — تاريخاً بلا وقت وبلا منطقة زمنية."""
-    when, ts = nf._when_and_ts(raw)
+    when, ts = nf.when_and_ts(raw)
     assert when == expected_when
     assert isinstance(ts, int) and ts > 0
 
@@ -120,7 +120,7 @@ def test_pubdate_becomes_utc_with_a_time_not_a_bare_date(raw, expected_when):
 @pytest.mark.parametrize("raw", ["not a date at all", "", None])
 def test_unreadable_pubdate_keeps_a_string_and_no_ts(raw):
     """تاريخ لا يُقرأ لا يُسقط الخبر ولا يخترع وقتاً: نصّه كما هو (أو «اليوم») و`ts` فارغ."""
-    when, ts = nf._when_and_ts(raw)
+    when, ts = nf.when_and_ts(raw)
     assert ts is None and isinstance(when, str) and when
 
 

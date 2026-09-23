@@ -11,13 +11,18 @@ from typing import Any
 
 import httpx
 
+from news_feed import when_and_ts
+
 _CACHE: list[dict] = []
 _CACHE_TS = 0.0
 TTL = 1800
 # الاحتياطي (أمثلة `sample`) يُعاد فحصه بعد دقيقتين: كان يُخزَّن 30 دقيقة كالحقيقي، فعطل عابر لـForexFactory
 # يُبقي المتداول على أمثلة توضيحية بدل التقويم الفعلي نصف ساعة (وقد يفوته خبر عالي التأثير).
 SAMPLE_TTL = 120
-# حدّ الأحداث المُعادة **بعد** فلترة العملة/التأثير (أسبوع ForexFactory نادراً ما يتجاوز ~200 حدث)
+# حدّ الأحداث المُعادة **بعد** فلترة العملة/التأثير (أسبوع ForexFactory نادراً ما يتجاوز ~200 حدث).
+# القصّ بـ`fetch_calendar` وحده: كان `_parse_ff` يقصّ هنا أيضاً **قبل** الفلاتر — نفس ما أُزيل من
+# `_parse_ff_json` بتشغيل سابق (راجع تعليقه) وبقي شقيقه خارجه: بأسبوع مزدحم يُسقط أحداث آخره
+# (NFP يوم الجمعة) حتى عمّن طلب `impact=high` وحده، وهو الفلتر الذي يعتمد عليه شريط «خبر قوي قريب».
 MAX_EVENTS = 250
 
 FF_URL = "https://www.forexfactory.com/ffcal_week_this.xml"
@@ -104,18 +109,22 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
             m = re.search(r"\b([A-Z]{3})\b", desc or title)
             if m:
                 cur = m.group(1)
+            # `[:22]` كان **يقصّ الإزاحة الزمنية**: «Tue, 23 Sep 2026 14:30:00 -0400» تصير
+            # «Tue, 23 Sep 2026 14:30» — الوقت بلا منطقته، يقرؤه متداول ببغداد وآخر بلندن سواءً
+            # وهو في الحقيقة 18:30 UTC. نفس عيب `news_feed` المصحَّح بتشغيل سابق، وبقاعدته
+            # نفسها حرفياً فلا تنحرف نسختان — ومعه `ts` فيُعرض بتوقيت الجهاز ويُرتَّب كمسار JSON.
+            when, ts = when_and_ts(_text(item.find("pubDate")), default="هذا الأسبوع")
             out.append(
                 {
                     "id": _stable_id(title, desc or ""),
                     "title": title[:160],
                     "currency": cur,
                     "impact": _impact(_text(item.find("category"))),
-                    "when": _text(item.find("pubDate"))[:22] or "هذا الأسبوع",
+                    "when": when,
+                    "ts": ts,
                     "forecast": "—",
                 }
             )
-            if len(out) >= MAX_EVENTS:
-                break
         return out
 
     for ev in events:
@@ -138,10 +147,13 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
                 "when": when[:32],
                 "forecast": forecast[:40],
                 **_figures(fc_raw, prev_raw, _text(ev.find("actual"))),
+                # XML الأسبوعي يعطي تاريخاً ووقتاً **بلا منطقة زمنية** (راجع تعليق `FF_URL`): لا
+                # يُخمَّن له `ts`، لكنه كان يُعرض خاماً بلوحة التقويم بجانب أوقاتٍ محوَّلة لتوقيت
+                # الجهاز — فيقرؤه المتداول توقيتَه وهو ليس كذلك. العلامة صريحة كـ`sample`.
+                "ts": None,
+                "tz_unknown": True,
             }
         )
-        if len(out) >= MAX_EVENTS:
-            break
     return out
 
 

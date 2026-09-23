@@ -52,8 +52,12 @@ def _impact_from_title(title: str) -> str:
     return "low"
 
 
-def _when_and_ts(raw: str | None) -> tuple[str, int | None]:
+def when_and_ts(raw: str | None, *, default: str = "اليوم") -> tuple[str, int | None]:
     """(نصّ الوقت، ثواني UTC) من `pubDate` بصيغة RFC 2822.
+
+    **عامّة لأن فرع RSS بالتقويم الاقتصادي كان خارجها بنفس العيب حرفياً** (`pubDate[:22]`
+    يقصّ الإزاحة): قاعدة واحدة بمكان واحد بدل نسختين تنحرفان. و`default` لأن نصّ الغياب
+    يختلف بين اللوحتين («اليوم» للأخبار، «هذا الأسبوع» لأسبوع التقويم) والقاعدة واحدة.
 
     كان `pub.text[:16]` وحده: قصُّ «Tue, 23 Sep 2026 14:30:00 +0000» عند 16 حرفاً يعطي
     **التاريخ بلا وقت**، ويُلقي إزاحة المنطقة الزمنية معه — فالخبر يُعرض «Tue, 23 Sep 2026»
@@ -62,11 +66,11 @@ def _when_and_ts(raw: str | None) -> tuple[str, int | None]:
     منذ تشغيل سابق. الصيغة هنا نفس صيغة التقويم حرفياً حتى تُقرأ اللوحتان بنفس العين.
     """
     if not raw:
-        return "اليوم", None
+        return default, None
     try:
         dt = parsedate_to_datetime(raw.strip())
     except (TypeError, ValueError):
-        return raw.strip()[:32] or "اليوم", None
+        return raw.strip()[:32] or default, None
     if dt.tzinfo is None:  # خلاصة بلا منطقة زمنية: تُقرأ UTC ولا تُخمَّن منطقة
         dt = dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), int(dt.timestamp())
@@ -84,7 +88,7 @@ def _parse_rss(xml_text: str, source: str) -> list[dict]:
             continue
         title = re.sub(r"\s+", " ", title_el.text.strip())[:180]
         pub = item.find("pubDate")
-        when, ts = _when_and_ts(pub.text if pub is not None else None)
+        when, ts = when_and_ts(pub.text if pub is not None else None)
         out.append(
             {
                 "id": _stable_id(title),
