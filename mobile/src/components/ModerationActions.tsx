@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api, type ReportKind, type ReportReason } from '../api';
@@ -30,6 +30,19 @@ export function ModerationActions({
   const [busy, setBusy] = useState(false);
   const align = rtl ? ('right' as const) : ('left' as const);
 
+  /**
+   * الصفّ **يُفكَّك بنجاح البلاغ نفسه**: `onResult(…, true)` يُخفي العنصر باللوحة الأم، فهذه
+   * الحاوية تختفي معه — ثم يصل `setBusy(false)` بـ`finally` إلى مكوِّن لم يعد موجوداً. حارس
+   * `mounted` هو نمط `ChartFrame`/`SymbolSnapshot` المؤسَّس بالكود.
+   */
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const report = async (reason: ReportReason) => {
     if (busy) return;
     setBusy(true);
@@ -44,14 +57,26 @@ export function ModerationActions({
     } catch {
       onResult(t.modReportError, false);
     } finally {
-      setBusy(false);
+      if (mountedRef.current) setBusy(false);
     }
   };
 
+  /**
+   * **الحظر كان بلا حارس ضغطٍ مكرَّر** خلافاً لرقاقات البلاغ. `block` يقرأ التخزين قبل أن يكتب
+   * (`loadBlocked` بـ`moderation.ts`) فبينه وبين النتيجة انتظار: ضغطتان متتاليتان — وهما مألوفتان
+   * على زرّ لا يتغيّر شكله لحظة الضغط — كانتا تُنتجان **إشعارَي «حُظر فلان»** باللوحة الأم. الحظر
+   * نفسه سليم (`list.includes(n)` يمنع التكرار بالقائمة)، والمكرَّر هو ما يراه المتداول وحده.
+   * والزرّ يُعطَّل الآن كرقاقات البلاغ حرفياً، فالحالة تصل قارئ الشاشة أيضاً.
+   */
   const doBlock = async () => {
-    if (!author) return;
-    await block(author);
-    onResult(t.modBlocked.replace('{user}', author), false);
+    if (!author || busy) return;
+    setBusy(true);
+    try {
+      await block(author);
+      onResult(t.modBlocked.replace('{user}', author), false);
+    } finally {
+      if (mountedRef.current) setBusy(false);
+    }
   };
 
   const pressed = ({ pressed: p }: { pressed: boolean }) =>
@@ -85,9 +110,11 @@ export function ModerationActions({
         {author ? (
           <Pressable
             accessibilityRole="button"
+            accessibilityState={{ disabled: busy }}
             accessibilityLabel={t.modBlockUser.replace('{user}', author)}
+            disabled={busy}
             onPress={doBlock}
-            style={(s) => [styles.chip, styles.blockChip, pressed(s)]}
+            style={(s) => [styles.chip, styles.blockChip, busy && styles.chipDisabled, pressed(s)]}
           >
             <Text style={[styles.chipText, styles.blockText]} numberOfLines={1}>
               {t.modBlockUser.replace('{user}', author)}
