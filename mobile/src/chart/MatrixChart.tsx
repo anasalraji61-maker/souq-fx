@@ -74,6 +74,7 @@ import { dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
 import { fibLevelPrice, planFibLabels } from './fibLabels';
 import { measureReadoutText } from './measureReadout';
 import { thinByGap } from './levelLabels';
+import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
 import {
@@ -3734,34 +3735,55 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             );
           })}
 
-        {/* overlay lines as dots */}
+        {/* طبقات السعر: الثلاثة الشائعة (SMA20/SMA50/EMA21) قطعاً متّصلة، والباقي نقاطاً */}
         {indicators.includes('sma20') &&
-          overlays.sma20.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`s20${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FBBF24' }]}
-              />
-            )
-          )}
+          planLineSegments(overlays.sma20, xOf, yOf).map((sg) => (
+            <View
+              key={`s20${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#FBBF24',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('sma50') &&
-          overlays.sma50.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`s50${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: colors.infoAccent }]}
-              />
-            )
-          )}
+          planLineSegments(overlays.sma50, xOf, yOf).map((sg) => (
+            <View
+              key={`s50${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: colors.infoAccent,
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('ema21') &&
-          overlays.ema21.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`e21${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: accent }]}
-              />
-            )
-          )}
+          planLineSegments(overlays.ema21, xOf, yOf).map((sg) => (
+            <View
+              key={`e21${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: accent,
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('wma20') &&
           overlays.wma20.map((v, i) =>
             v == null ? null : (
