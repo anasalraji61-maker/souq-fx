@@ -49,7 +49,21 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
               * شيئاً، فإخفاؤها يحجب الطريق الوحيد للرجوع عمّن يستعمل قارئ الشاشة. وكلٌّ منها يحمل
               * موضعه و`selected`، فالتقدّم ما زال منطوقاً وزيادةً.
               */}
-            <View style={styles.dots}>
+            {/**
+              * **وصفُّ النقاط لا ينقلب بالعربية.** كان `flexDirection: 'row'` بلا شرط `rtl` —
+              * وهو الصفّ الوحيد بهذه اللوحة الذي بقي كذلك (صفّ الأزرار تحته يقلب بـ`actionsRtl`).
+              * وقد كان مقبولاً حين كانت النقاط **زخرفةً** تقول «أنت بالثالثة من خمس»: شريطُ تقدّمٍ
+              * يُقرأ بامتلائه لا بجهته. ثم صارت النقاط **أزراراً للتنقّل** (الطريق الوحيد للرجوع
+              * بجولةٍ تُعرض مرّة واحدة بالعمر)، فصارت جهتها تعني شيئاً: قارئ العربية يمدّ يده إلى
+              * أقصى اليمين قاصداً **الخطوة الأولى** فيقع على الخامسة — أي أنّ الزرّ الموضوع ليُرجعه
+              * يقفز به إلى النهاية، والجولة تُختم قبل أن يقرأها. والنقطة الحالية ممدودة (عرض 18)
+              * فيقرأ معها تقدّمه معكوساً كذلك.
+              *
+              * ونفس علاج بقية التطبيق حرفاً بحرف (`ScreenerMini`/`CalendarPanel`/`WatchlistPanel`):
+              * شرطٌ يضيف حالة RTL ولا يمسّ الإنجليزية بشيء. والاسم المنطوق يحمل رقم الخطوة أصلاً
+              * (`onboardStepCounterA11y`) فلا يعتمد قارئ الشاشة على الترتيب البصري بحال.
+              */}
+            <View style={[styles.dots, rtl && styles.dotsRtl]}>
               {steps.map((_, i) => (
                 <Pressable
                   key={i}
@@ -134,6 +148,7 @@ const styles = StyleSheet.create({
   },
   // بلا `gap`: التباعد صار من حشو هدف اللمس نفسه (5+5 = عشر بكسلات بين نقطتين).
   dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.xs },
+  dotsRtl: { flexDirection: 'row-reverse' },
   dotHit: { paddingHorizontal: 5, paddingVertical: 12, justifyContent: 'center', alignItems: 'center' },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.border },
   dotOn: { backgroundColor: colors.accent, width: 18 },
