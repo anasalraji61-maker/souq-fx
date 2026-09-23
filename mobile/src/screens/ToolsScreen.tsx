@@ -690,7 +690,7 @@ export function ToolsScreen() {
           بدل نافذة 280px معشَّشة داخل تمرير الصفحة والشاشة فارغة تحتها. */}
       {tab === 'calendar' ? (
         <ScrollView contentContainerStyle={styles.body}>
-          <CalendarPanel flow symbol={signalSym} />
+          <CalendarPanel flow symbol={signalSym} active={screenFocused} />
         </ScrollView>
       ) : null}
 

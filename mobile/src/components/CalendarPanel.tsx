@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, radii, spacing, buttons } from '../theme';
@@ -77,9 +77,22 @@ type Props = {
   /** زوج الشارت/الإشارة المفتوح — يضيف رقاقة بعملتَي الزوج معاً (أخبار ما يتداوله الآن فعلاً). */
   symbol?: string;
   onPickCurrency?: (currency: string) => void;
+  /**
+   * اللوحة معروضة فعلاً للمتداول. `false` يوقف **مؤقّتَيها** (ساعة العدّ التنازلي كل دقيقة،
+   * وإعادة الجلب الصامتة كل خمس دقائق) ولا يمسّ شيئاً معروضاً.
+   *
+   * شاشات التبويبات السفلية **تبقى مركَّبة بعد الانتقال عنها**: فمن فتح تبويب «التقويم» ثم عاد
+   * للشارت كان يترك خلفه ساعةً **تُعيد تصيير قائمة التقويم كلّها كل دقيقة** بقيّة الجلسة — صفوفاً
+   * لا يراها أحد، وهي القائمة الأطول بالتطبيق (تقويم أسبوع كامل بصندوق تمرير لا نافذة). وإعادة
+   * الجلب أخفّ كلفةً (الخادم يخزّن النتيجة ثلاثين دقيقة) لكنها طلبٌ بلا قارئ كذلك.
+   *
+   * **وبالعودة تُضبط الساعة ويُعاد الجلب فوراً** لا بانتظار دورة، فأول ما يراه المتداول أحدث ممّا
+   * كان يراه لا أقدم. الافتراض `true` فكل موضع لا يمرّرها (الشريط الجانبي، الرصيف) يبقى كما كان.
+   */
+  active?: boolean;
 };
 
-export function CalendarPanel({ compact = false, flow = false, symbol, onPickCurrency }: Props) {
+export function CalendarPanel({ compact = false, flow = false, symbol, onPickCurrency, active = true }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [events, setEvents] = useState<Ev[]>([]);
@@ -93,9 +106,14 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
+    if (!active) return;
+    // ضبطٌ فوري عند العودة: بلا ذلك يبقى العدّ التنازلي **دقيقةً كاملة** على رقمٍ عمره غيابُ
+    // الشاشة كلّه («بعد 3س» لحدثٍ صدر منذ ساعة). ومناداتها لحظة التركيب لا تغيّر معروضاً —
+    // القيمة الابتدائية هي `Date.now()` نفسها والعدّ بدقّة الدقيقة.
+    setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
-  }, []);
+  }, [active]);
 
   useEffect(() => {
     let alive = true;
@@ -158,19 +176,43 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
     [currency, impact]
   );
 
+  /**
+   * الجلب **الظاهر**: أول تحميل، وكل تغيّر فلتر. حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب
+   * اللوحة أو تغيّر الفلتر قبل وصول طلب سابق (نفس نمط ChartFrame/SymbolSnapshot/FocusChartModal
+   * المؤسَّس بالكود).
+   *
+   * **لا يحجبه `active`** عمداً: لوحةٌ رُكِّبت وهي مخفيّة كانت ستبقى على «جارٍ التحميل» إلى الأبد لو
+   * مُنع عنها أول جلب. والفلتر لا يتغيّر إلا بيد من يرى اللوحة، فلا طلب هنا بلا قارئ.
+   */
   useEffect(() => {
     if (!filtersReady) return;
-    // حارس "alive" واحد يغطّي الطلب الأول **وكل إعادة جلب دورية** — يمنع تحديث الحالة بعد إلغاء
-    // تركيب اللوحة أو تغيّر الفلتر قبل وصول طلب سابق (نفس نمط ChartFrame/SymbolSnapshot/
-    // FocusChartModal المؤسَّس بالكود).
     const alive = { on: true };
     load(false, alive);
+    return () => {
+      alive.on = false;
+    };
+  }, [filtersReady, load]);
+
+  /**
+   * الدورة الصامتة — **موقوفة خلف الشاشة**، وتُستأنف بجلبٍ فوري عند العودة.
+   *
+   * `returning` يميّز «عادت الشاشة» عن «تغيّر الفلتر»: الأول يستحقّ جلباً صامتاً فورياً (القائمة
+   * معروضة، فـ«جارٍ التحميل» كان سيمسحها وفشلُ الشبكة كان سيُفرّغها)، والثاني يتكفّل به الأثر أعلاه
+   * ظاهراً كما كان. وعند التركيب `returning` كاذب دائماً فلا طلب مكرَّر مع أول تحميل.
+   */
+  const wasActiveRef = useRef(active);
+  useEffect(() => {
+    const returning = active && !wasActiveRef.current;
+    wasActiveRef.current = active;
+    if (!filtersReady || !active) return;
+    const alive = { on: true };
+    if (returning) load(true, alive);
     const id = setInterval(() => load(true, alive), RELOAD_MS);
     return () => {
       alive.on = false;
       clearInterval(id);
     };
-  }, [filtersReady, load]);
+  }, [filtersReady, load, active]);
 
   const IMPACT_LABEL: Record<'high' | 'medium' | 'low', string> = {
     high: t.impactHigh,
