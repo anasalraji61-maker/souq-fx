@@ -1304,6 +1304,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('obv') ? computeObv(source.plot) : null),
     [source.plot, indicators]
   );
+  /**
+   * أحجام نافذة الرسم كسلسلة — لرأس لوحة الفوليوم وحده؛ الأعمدة تقرأ `source.plot`
+   * مباشرةً كما كانت. الشمعة بلا حجم ⇐ `null` لا `0`: المصدر الذي لا يرسل أحجاماً
+   * أصلاً يجب أن يُظهر رأساً بلا رقم، لا صفراً يوهم بحجم مقيس.
+   */
+  const volumeSeries = useMemo(
+    () =>
+      indicators.includes('volume')
+        ? source.plot.map((c) => (typeof c.volume === 'number' ? c.volume : null))
+        : null,
+    [source.plot, indicators]
+  );
   const mfi = useMemo(
     () => (indicators.includes('mfi') ? computeMfi(source.plot) : null),
     [source.plot, indicators]
@@ -4898,7 +4910,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       {/* panes */}
       {indicators.includes('volume') ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>VOL</Text>
+          {/* بلا لون: أعمدة اللوحة ملوّنة باتجاه الشمعة (شراء/بيع)، فلونٌ ثانٍ على
+              الرقم بمعنى ثالث (أعلى/أدنى من السابق) يجعل اللوحة تقول شيئين متنافسين. */}
+          <PaneValueHead name="VOL" values={volumeSeries ?? []} at={crossIndex} tone="none" />
           <View style={styles.paneInner}>
             {(() => {
               // Max computed once per render (was recomputed per bar → O(n²) at 1000 bars).
@@ -4957,7 +4971,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {obv ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>OBV</Text>
+          {/* اللون بالاتّجاه لا بالإشارة: OBV تراكمي فإشارته تعتمد على نقطة البدء
+              (نافذة الرسم) لا على السوق، بينما ألوان أعمدته أصلاً `v >= obv[i-1]`. */}
+          <PaneValueHead name="OBV" values={obv} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const minO = Math.min(...obv);
