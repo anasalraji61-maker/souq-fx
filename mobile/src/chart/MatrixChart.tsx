@@ -2112,6 +2112,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     48,
     Math.max(2, chartPlotW / Math.max(1, source.plot.length) - 1)
   );
+  /**
+   * عرض شريحة النطاق (بولنجر/كلتنر/دونشيان…) = خطوة العمود، فالمساحة متّصلة بكل تكبير
+   * وشفافيّتها لا تتبدّل بتراكب الشرائح. `polyline.bandStripWidth` تشرح العطلين.
+   */
+  const bandW = bandStripWidth(chartPlotW, source.plot.length);
 
   /** مسارات عمودية: أساسي فوق · ثم الظلال من الأكبر → الأصغر */
   const shadowStack = useMemo(() => {
@@ -3832,23 +3837,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           )}
         {indicators.includes('vwapBands') &&
           vwapBands &&
-          vwapBands.upper.map((v, i) => {
-            const lo = vwapBands.lower[i];
-            if (v == null || lo == null) return null;
-            return (
-              <View
-                key={`vwb${i}`}
-                style={{
-                  position: 'absolute',
-                  left: xOf(i) - 1,
-                  top: yOf(v),
-                  width: 2,
-                  height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(234,179,8,0.14)',
-                }}
-              />
-            );
-          })}
+          planBandStrips(vwapBands.upper, vwapBands.lower, xOf, yOf, bandW).map((bnd) => (
+            <View
+              key={`vwb${bnd.at}`}
+              style={{
+                position: 'absolute',
+                left: bnd.left,
+                top: bnd.top,
+                width: bnd.width,
+                height: bnd.height,
+                backgroundColor: 'rgba(234,179,8,0.14)',
+              }}
+            />
+          ))}
         {indicators.includes('twap') &&
           twap &&
           twap.map((v, i) =>
@@ -4179,7 +4180,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               overlays.bbLower,
               xOf,
               yOf,
-              bandStripWidth(chartPlotW, source.plot.length)
+              bandW
             ).map((bnd) => (
               <View
                 key={`bb${bnd.at}`}
@@ -4215,217 +4216,185 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         )}
         {indicators.includes('keltner') &&
           keltner &&
-          keltner.upper.map((v, i) => {
-            const lo = keltner.lower[i];
-            if (v == null || lo == null) return null;
-            return (
-              <View
-                key={`kc${i}`}
-                style={{
-                  position: 'absolute',
-                  left: xOf(i) - 1,
-                  top: yOf(v),
-                  width: 2,
-                  height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(216,180,254,0.18)',
-                }}
-              />
-            );
-          })}
+          planBandStrips(keltner.upper, keltner.lower, xOf, yOf, bandW).map((bnd) => (
+            <View
+              key={`kc${bnd.at}`}
+              style={{
+                position: 'absolute',
+                left: bnd.left,
+                top: bnd.top,
+                width: bnd.width,
+                height: bnd.height,
+                backgroundColor: 'rgba(216,180,254,0.18)',
+              }}
+            />
+          ))}
         {indicators.includes('starcBands') &&
           starcBands &&
-          starcBands.upper.map((v, i) => {
-            const lo = starcBands.lower[i];
-            if (v == null || lo == null) return null;
-            return (
-              <View
-                key={`starc${i}`}
-                style={{
-                  position: 'absolute',
-                  left: xOf(i) - 1,
-                  top: yOf(v),
-                  width: 2,
-                  height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(249,168,212,0.14)',
-                }}
-              />
-            );
-          })}
+          planBandStrips(starcBands.upper, starcBands.lower, xOf, yOf, bandW).map((bnd) => (
+            <View
+              key={`starc${bnd.at}`}
+              style={{
+                position: 'absolute',
+                left: bnd.left,
+                top: bnd.top,
+                width: bnd.width,
+                height: bnd.height,
+                backgroundColor: 'rgba(249,168,212,0.14)',
+              }}
+            />
+          ))}
         {indicators.includes('linRegChannel') &&
           linRegChannel &&
-          linRegChannel.upper.map((v, i) => {
-            const lo = linRegChannel.lower[i];
-            if (v == null || lo == null) return null;
-            return (
-              <View
-                key={`lrc${i}`}
-                style={{
-                  position: 'absolute',
-                  left: xOf(i) - 1,
-                  top: yOf(v),
-                  width: 2,
-                  height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(191,219,254,0.14)',
-                }}
-              />
-            );
-          })}
+          planBandStrips(linRegChannel.upper, linRegChannel.lower, xOf, yOf, bandW).map((bnd) => (
+            <View
+              key={`lrc${bnd.at}`}
+              style={{
+                position: 'absolute',
+                left: bnd.left,
+                top: bnd.top,
+                width: bnd.width,
+                height: bnd.height,
+                backgroundColor: 'rgba(191,219,254,0.14)',
+              }}
+            />
+          ))}
         {indicators.includes('stdErrorBands') &&
           stdErrorBands &&
-          stdErrorBands.upper.map((v, i) => {
-            const lo = stdErrorBands.lower[i];
-            if (v == null || lo == null) return null;
-            return (
-              <View
-                key={`seb${i}`}
-                style={{
-                  position: 'absolute',
-                  left: xOf(i) - 1,
-                  top: yOf(v),
-                  width: 2,
-                  height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(190,242,100,0.14)',
-                }}
-              />
-            );
-          })}
+          planBandStrips(stdErrorBands.upper, stdErrorBands.lower, xOf, yOf, bandW).map((bnd) => (
+            <View
+              key={`seb${bnd.at}`}
+              style={{
+                position: 'absolute',
+                left: bnd.left,
+                top: bnd.top,
+                width: bnd.width,
+                height: bnd.height,
+                backgroundColor: 'rgba(190,242,100,0.14)',
+              }}
+            />
+          ))}
         {indicators.includes('envelopes') &&
           envelopes &&
-          envelopes.upper.map((v, i) => {
-            const lo = envelopes.lower[i];
-            if (v == null || lo == null) return null;
-            return (
-              <View
-                key={`env${i}`}
-                style={{
-                  position: 'absolute',
-                  left: xOf(i) - 1,
-                  top: yOf(v),
-                  width: 2,
-                  height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(245,158,11,0.14)',
-                }}
-              />
-            );
-          })}
+          planBandStrips(envelopes.upper, envelopes.lower, xOf, yOf, bandW).map((bnd) => (
+            <View
+              key={`env${bnd.at}`}
+              style={{
+                position: 'absolute',
+                left: bnd.left,
+                top: bnd.top,
+                width: bnd.width,
+                height: bnd.height,
+                backgroundColor: 'rgba(245,158,11,0.14)',
+              }}
+            />
+          ))}
         {indicators.includes('accelBands') &&
           accelBands &&
-          accelBands.upper.map((v, i) => {
-            const lo = accelBands.lower[i];
-            if (v == null || lo == null) return null;
-            return (
-              <View
-                key={`acb${i}`}
-                style={{
-                  position: 'absolute',
-                  left: xOf(i) - 1,
-                  top: yOf(v),
-                  width: 2,
-                  height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(254,215,170,0.14)',
-                }}
-              />
-            );
-          })}
+          planBandStrips(accelBands.upper, accelBands.lower, xOf, yOf, bandW).map((bnd) => (
+            <View
+              key={`acb${bnd.at}`}
+              style={{
+                position: 'absolute',
+                left: bnd.left,
+                top: bnd.top,
+                width: bnd.width,
+                height: bnd.height,
+                backgroundColor: 'rgba(254,215,170,0.14)',
+              }}
+            />
+          ))}
         {indicators.includes('donchian') &&
           donchian &&
-          donchian.upper.map((v, i) => {
-            const lo = donchian.lower[i];
-            if (v == null || lo == null) return null;
-            return (
-              <View
-                key={`dc${i}`}
-                style={{
-                  position: 'absolute',
-                  left: xOf(i) - 1,
-                  top: yOf(v),
-                  width: 2,
-                  height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(163,180,208,0.14)',
-                }}
-              />
-            );
-          })}
+          planBandStrips(donchian.upper, donchian.lower, xOf, yOf, bandW).map((bnd) => (
+            <View
+              key={`dc${bnd.at}`}
+              style={{
+                position: 'absolute',
+                left: bnd.left,
+                top: bnd.top,
+                width: bnd.width,
+                height: bnd.height,
+                backgroundColor: 'rgba(163,180,208,0.14)',
+              }}
+            />
+          ))}
         {indicators.includes('fractalChaosBands') &&
           fractalChaosBands &&
-          fractalChaosBands.upper.map((v, i) => {
-            const lo = fractalChaosBands.lower[i];
-            if (v == null || lo == null) return null;
-            return (
-              <View
-                key={`fcb${i}`}
-                style={{
-                  position: 'absolute',
-                  left: xOf(i) - 1,
-                  top: yOf(v),
-                  width: 2,
-                  height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(240,171,252,0.14)',
-                }}
-              />
-            );
-          })}
+          planBandStrips(fractalChaosBands.upper, fractalChaosBands.lower, xOf, yOf, bandW).map((bnd) => (
+            <View
+              key={`fcb${bnd.at}`}
+              style={{
+                position: 'absolute',
+                left: bnd.left,
+                top: bnd.top,
+                width: bnd.width,
+                height: bnd.height,
+                backgroundColor: 'rgba(240,171,252,0.14)',
+              }}
+            />
+          ))}
         {indicators.includes('chandeKroll') &&
           chandeKroll &&
-          chandeKroll.shortStop.map((v, i) => {
-            const lo = chandeKroll.longStop[i];
-            if (v == null || lo == null) return null;
-            return (
-              <View
-                key={`ck${i}`}
-                style={{
-                  position: 'absolute',
-                  left: xOf(i) - 1,
-                  top: yOf(v),
-                  width: 2,
-                  height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(153,246,228,0.16)',
-                }}
-              />
-            );
-          })}
+          planBandStrips(
+            chandeKroll.shortStop,
+            chandeKroll.longStop,
+            xOf,
+            yOf,
+            bandW
+          ).map((bnd) => (
+            <View
+              key={`ck${bnd.at}`}
+              style={{
+                position: 'absolute',
+                left: bnd.left,
+                top: bnd.top,
+                width: bnd.width,
+                height: bnd.height,
+                backgroundColor: 'rgba(153,246,228,0.16)',
+              }}
+            />
+          ))}
         {indicators.includes('chandelierExit') &&
           chandelierExit &&
-          chandelierExit.longStop.map((lv, i) => {
-            const sv = chandelierExit.shortStop[i];
-            if (lv == null || sv == null) return null;
-            const top = sv >= lv ? sv : lv;
-            const bottom = sv >= lv ? lv : sv;
-            return (
-              <View
-                key={`ce${i}`}
-                style={{
-                  position: 'absolute',
-                  left: xOf(i) - 1,
-                  top: yOf(top),
-                  width: 2,
-                  height: Math.max(2, yOf(bottom) - yOf(top)),
-                  backgroundColor: 'rgba(253,224,71,0.16)',
-                }}
-              />
-            );
-          })}
+          planBandStrips(
+            chandelierExit.longStop,
+            chandelierExit.shortStop,
+            xOf,
+            yOf,
+            bandW
+          ).map((bnd) => (
+            <View
+              key={`ce${bnd.at}`}
+              style={{
+                position: 'absolute',
+                left: bnd.left,
+                top: bnd.top,
+                width: bnd.width,
+                height: bnd.height,
+                backgroundColor: 'rgba(253,224,71,0.16)',
+              }}
+            />
+          ))}
         {indicators.includes('ichimoku') &&
           ichimoku &&
-          ichimoku.spanA.map((a, i) => {
-            const b = ichimoku.spanB[i];
-            if (a == null || b == null) return null;
-            const top = a >= b ? a : b;
-            const bottom = a >= b ? b : a;
-            return (
-              <View
-                key={`ichc${i}`}
-                style={{
-                  position: 'absolute',
-                  left: xOf(i) - 1,
-                  top: yOf(top),
-                  width: 2,
-                  height: Math.max(2, yOf(bottom) - yOf(top)),
-                  backgroundColor: a >= b ? 'rgba(34,197,94,0.14)' : 'rgba(244,63,94,0.14)',
-                }}
-              />
-            );
-          })}
+          planBandStrips(ichimoku.spanA, ichimoku.spanB, xOf, yOf, bandW).map((bnd) => (
+            <View
+              key={`ichc${bnd.at}`}
+              style={{
+                position: 'absolute',
+                left: bnd.left,
+                top: bnd.top,
+                width: bnd.width,
+                height: bnd.height,
+                // لون السحابة من اتجاهها: A فوق B صاعدة. `bnd.at` فهرس الشمعة نفسه.
+                backgroundColor:
+                  (ichimoku.spanA[bnd.at] ?? 0) >= (ichimoku.spanB[bnd.at] ?? 0)
+                    ? 'rgba(34,197,94,0.14)'
+                    : 'rgba(244,63,94,0.14)',
+              }}
+            />
+          ))}
         {indicators.includes('ichimoku') &&
           ichimoku &&
           ichimoku.tenkan.map((v, i) =>
