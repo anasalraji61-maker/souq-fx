@@ -56,9 +56,16 @@ type Props = {
   flow?: boolean;
   /** يزيده الأب بعد إنشاء تنبيه من خارج اللوحة (من الشارت) لتحديث القائمة فوراً بدل انتظار الاستطلاع. */
   refreshKey?: number;
+  /**
+   * أسعار حيّة جاهزة من مقبس التيكات بالشاشة الحاضنة — **مفتاحها رمزُ الأداة بحروف كبيرة**.
+   * بها تُعرض مسافة النقاط **لكل صفّ** لا لصفوف رمز النموذج وحدها. الحاضنة هي التي تضمن أن ما
+   * يصل هنا سعرٌ يصحّ البناء عليه (لا بثّ تجريبي عشوائي، ولا سعر مجمَّد فات عمره)؛ فالغياب هنا
+   * يعني «لا سعر حيّ موثوق» وتعود اللوحة لسلوكها السابق حرفياً.
+   */
+  ticks?: Record<string, number>;
 };
 
-export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, flow = false }: Props) {
+export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, flow = false, ticks }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
@@ -202,15 +209,28 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
    * يُقرأ من «قائمة واضحة بالتنبيهات النشطة». والمسافة بحجم pip **الأداة** (الين 0.01، الذهب 0.1)
    * كبقية أرقام النقاط بالتطبيق، فهي الوحدة نفسها التي يكتب بها وقفه بحاسبة المخاطرة.
    *
-   * لا تظهر إلا حيث تكون **صادقة**: رمز النموذج وحده هو الذي يُجلب سعره الآن (`current`)، فتنبيهات
-   * الرموز الأخرى تبقى كما كانت بلا رقم بدل رقمٍ من سعرٍ لا نملكه. والمُطلَق لا مسافة له — مستوىً
-   * بلغه السوق ومضى.
+   * لا تظهر إلا حيث تكون **صادقة**، وهذا هو القيد الذي انحلّ: كان رمز النموذج وحده يُجلب سعره
+   * (`current` — طلب REST لرمزٍ واحد)، فمتداولٌ عليه تنبيهات بالذهب واليورو والمجنون يرى المسافة
+   * على صفوف واحدٍ منها ويقرأ الباقي أرقاماً مجرّدة — **وهو الأغلب: القائمة تُفتح لتُقرأ كلّها، لا
+   * لرمزٍ واحد**. تيكات المقبس تصل الشاشة الحاضنة أصلاً لكل ما اشترك به الخادم، بلا طلب ولا حدٍّ
+   * يُستهلك، فصار لكل صفّ مسافته — **وتتحرّك مع السوق** بدل لقطةٍ تتجمّد.
+   *
+   * التيك يُقدَّم على `current` لرمز النموذج نفسه: كلاهما موثوق (الحاضنة ترشّح التجريبي والمجمَّد،
+   * و`isRealQuote` ترشّح الاقتباس)، والتيك أحدث — ثانيةً مقابل دورة استطلاع. وما لا سعر له يبقى
+   * بلا رقم كما كان تماماً: لا رقم من سعرٍ لا نملكه. والمُطلَق لا مسافة له — مستوىً بلغه السوق ومضى.
    */
   const alertDistancePips = (a: PriceAlert): number | null => {
-    if (a.triggered || current == null || !spec) return null;
-    if ((a.symbol || '').trim().toUpperCase() !== spec.symbol) return null;
+    if (a.triggered) return null;
+    const sym = (a.symbol || '').trim().toUpperCase();
+    // سعر رمز **هذا الصفّ** لا رمز النموذج؛ و`current` احتياطٌ لرمز النموذج وحده كما كان
+    const px = ticks?.[sym] ?? (spec && sym === spec.symbol ? current : null);
+    if (px == null) return null;
+    // مواصفة رمز الصفّ — بحث جدوليّ خالص (`instrumentSpec`)، و`null` لما لا حجم pip له (DXY،
+    // العملات الرقمية) فلا رقم مختلَق. مواصفة النموذج تُعاد استعمالاً حين يتطابق الرمز.
+    const rowSpec = spec && sym === spec.symbol ? spec : instrumentSpec(sym);
+    if (!rowSpec) return null;
     // الحساب بـ`positionSize.ts` حيث تعيش كل رياضيات الـpip ومغطّى بحالات selftest دائمة
-    return pipsBetween(spec, a.price, current);
+    return pipsBetween(rowSpec, a.price, px);
   };
   /** «24 pip» — «pip» كلمة لاتينية ثابتة بكل اللغات بهذا التطبيق (راجع `journalStatNetPips`). */
   const distText = (a: PriceAlert): string | null => {

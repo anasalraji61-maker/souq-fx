@@ -137,7 +137,7 @@ const MAX_SYMBOL_CHIPS = 8;
  * فتحُه بكل التبويبات يعني مقبساً ثانياً (لشاشة الشارت واحدٌ دائماً) لمن يجلس على الماسح أو
  * التخطيطات، بلا أن يقرأ أحدٌ رقماً منه.
  */
-const TICK_TABS: readonly TabId[] = ['journal'];
+const TICK_TABS: readonly TabId[] = ['journal', 'alerts'];
 
 /**
  * القائمة المُمرَّرة لخطّاف التيكات **ثابتة عمداً**: `/ws/ticks` يبثّ ما اشترك به الخادم كلّه
@@ -676,7 +676,7 @@ export function ToolsScreen() {
           نفسها — بدل نافذة 160px بخليّة شبكة تشاركها ثلاث لوحات أخرى. */}
       {tab === 'alerts' ? (
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <AlertsPanel flow defaultSymbol={signalSym} />
+          <AlertsPanel flow defaultSymbol={signalSym} ticks={livePrices} />
         </ScrollView>
       ) : null}
 
