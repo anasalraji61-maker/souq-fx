@@ -73,6 +73,7 @@ import { DrawingsSaveQueue, drawingsKey } from './drawingsPersist';
 import { dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
 import { fibLevelPrice, planFibLabels } from './fibLabels';
 import { measureReadoutText } from './measureReadout';
+import { thinByGap } from './levelLabels';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
 import {
@@ -386,6 +387,8 @@ const DRAW_HANDLE_R = 18;
 const DRAW_HISTORY_MAX = 25;
 /** أقلّ تباعد رأسي بين وسمَي مستوى فيبو = علوّ سطر الوسم (`fibLevelLabel`: 13px). */
 const FIB_LABEL_GAP = 13;
+/** ومثله لوسم سعر الخطّ الأفقي (`levelPriceLabel`). */
+const HLINE_LABEL_GAP = 13;
 
 /** مرجع ثابت لـ«لا رسومات» — مصفوفة جديدة كل رسم تُبطل ذاكرة كل ما يعتمد عليها. */
 const NO_DRAWINGS: Drawing[] = [];
@@ -2915,6 +2918,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     })
     .filter(({ aLocal, bLocal }) => aLocal >= -2 || bLocal >= -2);
 
+  /**
+   * أي الخطوط الأفقية يحمل وسم سعره. الخطّ الأفقي هو أداة الدعم/المقاومة الأولى عند
+   * متداول التجزئة، وكان يُرسم **بلا سعر إطلاقاً**: ثلاثة خطوط على الشارت ولا سبيل
+   * لمعرفة أيّها عند 1.0850 إلا بجرّ التقاطع إلى كل واحد. والوسوم تُنقّى بـ`thinByGap`
+   * لأن خطّين متقاربين (وهو الشائع: حدّا منطقة واحدة) يضعان وسميهما فوق بعضهما.
+   * الأهمية بالسعر الأعلى أولاً — ترتيب ثابت لا يتبدّل بترتيب الرسم.
+   *
+   * تُحسب عند كل رسم بلا `useMemo` عن قصد: `visibleDrawings` مصفوفة جديدة بكل إطار
+   * (ومواضع `yOf` تتبدّل بالتكبير والإزاحة والتيك الحيّ)، فالتذكير كان سيعيد الحساب
+   * دائماً ويضيف وهم استقرار. والخطوط الأفقية قليلة بطبيعتها.
+   */
+  const hlinePriceLabels = new Set(
+    thinByGap(
+      visibleDrawings.filter(({ d }) => d.tool === 'hline'),
+      ({ d }) => yOf(d.a.price),
+      ({ d }) => -d.a.price,
+      HLINE_LABEL_GAP
+    ).map(({ d }) => d.id)
+  );
+
   // عدد علامات السعر من ارتفاع اللوح لا رقماً ثابتاً: السبع الثابتة كانت تتباعد
   // 16.6px بلوح 100px (حدّه الأدنى عند فتح لوحات المؤشرات) وعلوّ النصّ 14px.
   // مدى القصّ `chartPlotH − 2` كي يطابق `maxStart` ما كانت الشاشة تقصّ عنده بالضبط.
@@ -4665,10 +4688,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   {
                     top: yOf(d.a.price),
                     borderColor: d.color,
-                    borderWidth: sel ? 2.5 : 1,
+                    // `borderTopWidth` لا `borderWidth`: الأخيرة تُلوّن الأضلاع الأربعة،
+                    // وبـ`left:0/right:0` وبلا ارتفاع كان خطّ الدعم يُرسم **شريطاً مجوّفاً**
+                    // (حدّ أعلى وحدّ أسفل وطرفان) لا خطّاً واحداً — وحالة التحديد تُسمِك
+                    // الشريط بدل الخطّ. بقيّة الرسوم تستعمل الخاصيّة الاتجاهية أصلاً.
+                    borderTopWidth: sel ? 2.5 : 1,
                   },
                 ]}
-              />
+              >
+                {hlinePriceLabels.has(d.id) ? (
+                  <Text style={[styles.levelPriceLabel, { color: d.color }, sel && styles.levelPriceLabelSel]}>
+                    {formatPrice(d.a.price, series.symbol)}
+                  </Text>
+                ) : null}
+              </View>
             );
           }
           if (d.tool === 'vline' && aLocal >= 0 && aLocal < source.plot.length) {
@@ -9085,6 +9118,21 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     fontSize: 9,
   },
+  // وسم سعر على خطٍّ أفقي (خطّ المتداول): بلون الخطّ نفسه ليُقرأ كتابعٍ له لا كوسم
+  // محور. يسار اللوح لنفس سبب وسم فيبو أدناه.
+  levelPriceLabel: {
+    position: 'absolute',
+    left: 4,
+    top: -11,
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '800',
+    paddingHorizontal: 3,
+    borderRadius: radii.sm,
+    backgroundColor: colors.bgGlass,
+    overflow: 'hidden',
+  },
+  levelPriceLabelSel: { backgroundColor: colors.bgPanel },
   // وسم مستوى فيبو: **يسار اللوح** لا يمينه. اليمين هو محور السعر ووسماه (الحيّ
   // والتقاطع) يُرسمان فوق كل شيء، ووسمٌ صار يحمل سعراً أعرض من أن يشاركهما الحافة.
   // وخلفية خفيفة لأن النصّ يقع الآن فوق الشموع لا فوق حافة فارغة.

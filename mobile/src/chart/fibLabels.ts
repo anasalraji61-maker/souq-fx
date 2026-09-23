@@ -23,7 +23,9 @@
  *    23.6% لا يزيح 61.8% لمجرّد أنه أعلى منه بالشاشة.
  *
  * الوحدة خالصة (تأخذ `yOf` و`format` كدالّتين) فتُفحص بـ`fibLabels.selftest.ts`.
+ * والتنقية نفسها بـ`levelLabels.ts` — يستعملها الخطّ الأفقي أيضاً بعدما صار يحمل سعره.
  */
+import { LEVEL_LABEL_GAP, thinByGap } from './levelLabels';
 
 /** ترتيب الأهمية عند الازدحام — الأول يبقى والأخير يُسقَط أولاً. */
 const FIB_IMPORTANCE = [0, 1, 0.618, 0.5, 0.382, 0.786, 0.236];
@@ -82,9 +84,7 @@ export function planFibLabels(input: {
   minGapPx?: number;
 }): FibLabelPlan[] {
   const { levels, hi, lo, yOf, format } = input;
-  const minGap = Number.isFinite(input.minGapPx) && (input.minGapPx as number) > 0
-    ? (input.minGapPx as number)
-    : 13;
+  const minGap = input.minGapPx ?? LEVEL_LABEL_GAP;
   if (!Number.isFinite(hi) || !Number.isFinite(lo)) return [];
 
   const candidates: FibLabelPlan[] = [];
@@ -98,10 +98,6 @@ export function planFibLabels(input: {
     candidates.push({ level, price, y, text: `${fibRatioText(level)} · ${format(price)}` });
   }
 
-  const kept: FibLabelPlan[] = [];
-  for (const c of [...candidates].sort((a, b) => importanceRank(a.level) - importanceRank(b.level))) {
-    if (kept.some((k) => Math.abs(k.y - c.y) < minGap)) continue;
-    kept.push(c);
-  }
+  const kept = thinByGap(candidates, (c) => c.y, (c) => importanceRank(c.level), minGap);
   return kept.sort((a, b) => b.price - a.price || a.level - b.level);
 }
