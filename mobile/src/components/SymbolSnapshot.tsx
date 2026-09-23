@@ -3,6 +3,16 @@ import { View, Text, StyleSheet } from 'react-native';
 import { colors, radii, spacing } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
+import { formatPct } from '../chart/dailyChange';
+
+/**
+ * عتبة «ثابت» بالنسبة المئوية — **منقولة حرفياً** من `dailyChange` بـ`chart/dailyChange.ts`، وهي
+ * الحكم المعتمد بهذا التطبيق على «هل تحرّك السعر أصلاً» (قائمة المتابعة وشاشة الطرفية تلوّنان به).
+ * لا تُنادى الدالّة نفسها هنا لأنها تحتاج سعراً ومرجعاً، ولا يصل هذه اللوحة إلا النسبة جاهزةً من
+ * `indicatorSnapshot` — ومحاولة تمرير `(100 + pct, 100)` إليها **لا تكافئ القاعدة**: الفاصلة
+ * العائمة تُخرج 0.005 بالضبط كـ«ثابت» بينما القاعدة تعدّه حركة. فالعتبة رقمٌ واحد هنا بلا وساطة.
+ */
+const FLAT_PCT = 0.005;
 
 type Props = {
   symbol: string;
@@ -40,11 +50,30 @@ export function SymbolSnapshot({ symbol, timeframe = '15m' }: Props) {
   if (snap?.rsi == null) return null;
   const rsi = snap.rsi;
 
+  /**
+   * **نسبة التغيّر كانت رمادية بلا اتجاه، وتُنسَّق بيدها.** الشريط يقف فوق الشارت الموسَّع
+   * (`FocusChartModal`)، وفيه شرائح MA/MACD ملوّنة بالصعود والهبوط — ورقمُ التغيّر وحده، وهو
+   * أوّل ما تقع عليه العين، بلون النصّ المكتوم نفسه سواء صعد الزوج نصف بالمئة أو هبط. وبقيّة
+   * التطبيق تلوّن هذا الرقم بالضبط (قائمة المتابعة وشاشة الطرفية: `bull`/`bear` مع ▲/▼).
+   *
+   * والتنسيق كان محليّاً (`pct >= 0 ? '+' : ''` ثم `toFixed(2)`) فيخالف `formatPct` المعتمد بأمرين
+   * يظهران على الشاشة: صفرٌ يُكتب «+0.00%» كأنه صعودٌ قُرِّب، وحركةٌ هابطة دقيقة تُكتب «-0.00%» —
+   * سالبُ صفر — وبشَرطة ASCII لا علامة الناقص الطباعية «−» التي يكتب بها التطبيق أرقامه. الآن
+   * الدالّة المعتمدة نفسها، فالرقم واحد بكل شاشة يظهر فيها.
+   *
+   * ولا لون إلا بحركة حقيقية: ما دون العتبة يبقى مكتوماً كما كان، فلا وميضَ أخضر على ضجيج كسور.
+   */
+  const pct =
+    typeof snap.change_pct === 'number' && Number.isFinite(snap.change_pct) ? snap.change_pct : null;
+  const pctDir = pct == null || Math.abs(pct) < FLAT_PCT ? 'flat' : pct > 0 ? 'up' : 'down';
+
   return (
     <View style={[styles.wrap, rtl && styles.wrapRtl]}>
       <Text style={styles.chip}>RSI {rsi.toFixed(0)}</Text>
-      <Text style={styles.chip}>
-        {snap.change_pct != null ? `${snap.change_pct >= 0 ? '+' : ''}${snap.change_pct.toFixed(2)}%` : '—'}
+      <Text
+        style={[styles.chip, pctDir === 'up' && styles.bull, pctDir === 'down' && styles.bear]}
+      >
+        {pct != null ? formatPct(pct) : '—'}
       </Text>
       {snap.ma_cross_up ? <Text style={[styles.chip, styles.bull]}>MA ↑</Text> : null}
       {snap.ma_cross_down ? <Text style={[styles.chip, styles.bear]}>MA ↓</Text> : null}
