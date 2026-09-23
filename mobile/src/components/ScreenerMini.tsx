@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
@@ -33,13 +33,35 @@ export function ScreenerMini() {
   const [error, setError] = useState(false);
   /** بعد فحص ناجح بلا نتائج: «لا تطابق» أو «لم يُقرأ أي رمز» (حدّ المزوّد) — كان لا يظهر شيء إطلاقاً. */
   const [emptyNote, setEmptyNote] = useState<string | null>(null);
+  /**
+   * **أيّ فلتر أنتج ما هو معروض.** الرقاقات الثلاث كانت أزراراً بلا حالة: يضغط المتداول «MA ↑»
+   * فتظهر خمسة رموز، ثم يضغط «RSI↓» فتظهر خمسة رموز — ولا شيء بالشاشة يقول أيّ قائمةٍ هذه. وحين
+   * تتقاطع نتيجتا فلترين (وهو الشائع: زوج بتقاطع صاعد كثيراً ما يكون زخمُه صاعداً) تصير القائمتان
+   * متشابهتين فلا يُميَّز بينهما أصلاً. الرقاقة المُنتِجة تبقى مُضاءة الآن، وحالتها تصل قارئ الشاشة
+   * بـ`selected` كبقية رقاقات التطبيق.
+   */
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  /**
+   * اللوحة تُركَّب وتُفكَّك بتبديل تبويب اللوح الجانبي/الرصيف، والفحص طلبٌ بطيء (يفحص عدّة رموز
+   * بالخادم) — فنتيجته كانت تكتب الحالة بعد إلغاء التركيب. حارس `mounted` هو النمط المؤسَّس
+   * بالتطبيق (ChartFrame/AlertsPanel/PositionSizePanel).
+   */
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const run = useCallback(async (filter: string) => {
     setLoading(true);
     setError(false);
     setEmptyNote(null);
+    setActiveFilter(filter);
     try {
       const res = await api.screenerRun({ timeframe: '15m', filters: [filter] });
+      if (!mountedRef.current) return;
       setHits(res.results.slice(0, 5));
       if (res.provider_configured === false) {
         setEmptyNote(t.screenerNeedApiKey);
@@ -53,10 +75,11 @@ export function ScreenerMini() {
         );
       }
     } catch {
+      if (!mountedRef.current) return;
       setHits([]);
       setError(true);
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, [t]);
 
@@ -64,26 +87,30 @@ export function ScreenerMini() {
     <View style={styles.wrap}>
       <Text style={[styles.title, { textAlign: align }]}>{t.smnTitle}</Text>
       <View style={[styles.row, rtl && styles.rowRtl]}>
-        {quick.map((q) => (
-          <Pressable
-            accessibilityRole="button"
-            key={q.id}
-            style={({ pressed }) => [
-              styles.chip,
-              loading && styles.chipDisabled,
-              pressed && {
-                opacity: buttons.pressedOpacity,
-                transform: [{ scale: buttons.pressedScale }],
-              },
-            ]}
-            onPress={() => run(q.id)}
-            disabled={loading}
-            accessibilityState={{ disabled: loading }}
-            accessibilityLabel={q.a11y}
-          >
-            <Text style={styles.chipText}>{q.label}</Text>
-          </Pressable>
-        ))}
+        {quick.map((q) => {
+          const on = activeFilter === q.id;
+          return (
+            <Pressable
+              accessibilityRole="button"
+              key={q.id}
+              style={({ pressed }) => [
+                styles.chip,
+                on && styles.chipOn,
+                loading && styles.chipDisabled,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => run(q.id)}
+              disabled={loading}
+              accessibilityState={{ disabled: loading, selected: on }}
+              accessibilityLabel={q.a11y}
+            >
+              <Text style={[styles.chipText, on && styles.chipTextOn]}>{q.label}</Text>
+            </Pressable>
+          );
+        })}
       </View>
       {loading ? <ActivityIndicator color={colors.accent} size="small" /> : null}
       {!loading && error ? (
@@ -141,7 +168,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  // نفس رقاقة «مختارة» المؤسَّسة بالتطبيق (PositionSizePanel/CalendarPanel): حدٌّ ملوّن وخلفية
+  // شفيفة، لا قلبٌ كامل للألوان — matrix-tactile-feel.mdc.
+  chipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
   chipText: { color: colors.accent, fontWeight: '700', fontSize: 11 },
+  chipTextOn: { color: colors.accent, fontWeight: '800' },
   chipDisabled: { opacity: 0.4 },
   hit: {
     paddingHorizontal: 10,
