@@ -4,6 +4,11 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 
+/** فريم الفحص السريع — موضعٌ واحد بدل تكراره بالنداء وبنصّ «لا تطابق». */
+const TF = '15m';
+/** أقصى ما يُعرض من نتائج بهذه اللوحة المصغّرة (شريط أفقي داخل لوحٍ جانبي/رصيف). */
+const MAX_HITS = 5;
+
 export function ScreenerMini() {
   /**
    * كانت هذه اللوحة **مثبَّتة على العربية بالتخطيط**: `rtl` لم تكن تُقرأ أصلاً من `useI18n`،
@@ -34,6 +39,16 @@ export function ScreenerMini() {
   /** بعد فحص ناجح بلا نتائج: «لا تطابق» أو «لم يُقرأ أي رمز» (حدّ المزوّد) — كان لا يظهر شيء إطلاقاً. */
   const [emptyNote, setEmptyNote] = useState<string | null>(null);
   /**
+   * **فحصٌ ناقص ومعه نتائج** — كان يُعرض كأنه كامل. الخادم يُرجع `failed` للرموز التي تعذّرت قراءة
+   * شموعها (حدّ طلبات المزوّد غالباً)، واللوحة كانت تقرأها **بحالة واحدة فقط**: أن يفشل الجميع
+   * (`scanned === 0`). أمّا أن يُفحص نصف الرموز فتظهر نتيجتان — وهي الحالة الشائعة عند الحدّ — فكان
+   * الصمت التامّ: يقرأ المتداول غياب الذهب على أنه «لا إشارة على الذهب» بينما الذهب **لم يُفحص**.
+   * نفس نصّ الماسح الكامل بشاشة الأدوات (`screenerScanPartial`) وبنفس بنائه حرفاً بحرف.
+   */
+  const [partialNote, setPartialNote] = useState<string | null>(null);
+  /** عدد النتائج **قبل** القصّ إلى `MAX_HITS` — «عرض أقوى 5 من 12» بدل صمتٍ يوهم أنها كل ما وُجد. */
+  const [totalHits, setTotalHits] = useState(0);
+  /**
    * **أيّ فلتر أنتج ما هو معروض.** الرقاقات الثلاث كانت أزراراً بلا حالة: يضغط المتداول «MA ↑»
    * فتظهر خمسة رموز، ثم يضغط «RSI↓» فتظهر خمسة رموز — ولا شيء بالشاشة يقول أيّ قائمةٍ هذه. وحين
    * تتقاطع نتيجتا فلترين (وهو الشائع: زوج بتقاطع صاعد كثيراً ما يكون زخمُه صاعداً) تصير القائمتان
@@ -58,30 +73,54 @@ export function ScreenerMini() {
     setLoading(true);
     setError(false);
     setEmptyNote(null);
+    setPartialNote(null);
+    /**
+     * **نتائج الفلتر السابق تُمسح فوراً.** الرقاقة المضيئة تنتقل للفلتر المضغوط في اللحظة نفسها
+     * (`setActiveFilter` أدناه)، بينما الصفوف تحتها كانت تبقى صفوف الفحص السابق طوال الطلب —
+     * أي «RSI↓» مضيئة فوق نتائج «MA ↑». وإضاءة الرقاقة أُضيفت أصلاً ليُعرف **أيّ فلتر أنتج ما هو
+     * معروض**، فكانت تكذب في الحالة الوحيدة التي تُسأل فيها.
+     */
+    setHits([]);
+    setTotalHits(0);
     setActiveFilter(filter);
     try {
-      const res = await api.screenerRun({ timeframe: '15m', filters: [filter] });
+      const res = await api.screenerRun({ timeframe: TF, filters: [filter] });
       if (!mountedRef.current) return;
-      setHits(res.results.slice(0, 5));
+      const all = res.results;
+      const failed = res.failed ?? [];
+      setHits(all.slice(0, MAX_HITS));
+      setTotalHits(all.length);
       if (res.provider_configured === false) {
         setEmptyNote(t.screenerNeedApiKey);
-      } else if (res.scanned === 0 && (res.failed?.length ?? 0) > 0) {
+      } else if (res.scanned === 0 && failed.length > 0) {
         setEmptyNote(t.screenerScanNone);
-      } else if (!res.results.length) {
-        setEmptyNote(
-          res.scanned != null
-            ? t.screenerNoMatchOf.replace('{k}', String(res.scanned)).replace('{tf}', '15m')
-            : t.screenerNoResults
-        );
+      } else {
+        // ناقصٌ ومعه نتائج: تحذيرٌ **بجانب** النتائج لا بدلاً منها.
+        if (failed.length > 0) {
+          setPartialNote(
+            t.screenerScanPartial
+              .replace('{k}', String(res.scanned ?? 0))
+              .replace('{total}', String(res.total ?? failed.length))
+              .replace('{list}', failed.join(rtl ? '، ' : ', '))
+          );
+        }
+        if (!all.length) {
+          setEmptyNote(
+            res.scanned != null
+              ? t.screenerNoMatchOf.replace('{k}', String(res.scanned)).replace('{tf}', TF)
+              : t.screenerNoResults
+          );
+        }
       }
     } catch {
       if (!mountedRef.current) return;
       setHits([]);
+      setTotalHits(0);
       setError(true);
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [t]);
+  }, [t, rtl]);
 
   return (
     <View style={styles.wrap}>
@@ -118,6 +157,14 @@ export function ScreenerMini() {
       ) : null}
       {!loading && !error && emptyNote ? (
         <Text style={[styles.errorNote, { textAlign: align }]}>{emptyNote}</Text>
+      ) : null}
+      {!loading && !error && partialNote ? (
+        <Text style={[styles.errorNote, { textAlign: align }]}>{partialNote}</Text>
+      ) : null}
+      {!loading && !error && totalHits > MAX_HITS ? (
+        <Text style={[styles.moreNote, { textAlign: align }]}>
+          {t.screenerShowingOf.replace('{n}', String(MAX_HITS)).replace('{total}', String(totalHits))}
+        </Text>
       ) : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={[styles.hits, rtl && styles.hitsRtl]}>
@@ -156,6 +203,7 @@ const styles = StyleSheet.create({
   },
   title: { color: colors.textMuted, fontWeight: '800', fontSize: 12 },
   errorNote: { color: colors.warn, fontSize: 11 },
+  moreNote: { color: colors.textDim, fontSize: 10 },
   row: { flexDirection: 'row', gap: 6 },
   rowRtl: { flexDirection: 'row-reverse' },
   hits: { flexDirection: 'row', gap: spacing.sm },
