@@ -4,6 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import {
+  ACCOUNT_CCYS,
   instrumentSpec,
   conversionPair,
   reversedConversion,
@@ -268,5 +269,33 @@ assert.deepEqual(usdBridge('GBP', 'JPY'), {
   assert.equal(bridgedRate(bridge, 1.3588, null), null);
   assert.equal(bridgedRate(bridge, 1.3588, 0), null);
 }
+
+/* ─────────────── عملات الحساب ─────────────── */
+
+// العملات الثماني الرئيسية كاملةً — النيوزيلندي منها، وNZDUSD أداةٌ يتداولها التطبيق
+assert.deepEqual(ACCOUNT_CCYS, ['USD', 'EUR', 'GBP', 'AUD', 'NZD', 'CAD', 'CHF', 'JPY']);
+assert.equal(new Set(ACCOUNT_CCYS).size, ACCOUNT_CCYS.length);
+/**
+ * **الثابتة التي يقوم عليها جسر الدولار**: لكل عملة حساب مدعومة زوجُ دولارٍ مباشر — وإلا فلا ساق
+ * ثانية للجسر، وتعود تلك العملة لطلب السعر يدوياً بنصف أدواتها. أي عملة حساب تُضاف مستقبلاً بلا
+ * زوج دولار يكسر هذا السطر قبل أن تصل للمتداول.
+ */
+for (const acc of ACCOUNT_CCYS) {
+  if (acc === 'USD') continue;
+  const leg = conversionPair('USD', acc)!;
+  assert.ok(leg != null, `${acc}: لا زوج تحويل`);
+  assert.equal(leg.symbol.replace('USD', ''), acc, `${acc}: ساق غير دولارية ${leg.symbol}`);
+  // والاتجاه صحيح: سعر NZDUSD يُقلب ليعطي «كم نيوزيلندياً لكل دولار»، وسعر USDCHF لا يُقلب
+  assert.equal(leg.invert, leg.symbol.startsWith(acc), `${acc}: اتجاه ${leg.symbol}`);
+}
+// حساب نيوزيلندي على USDJPY: `NZDJPY` تقاطعٌ خارج قائمة المزوّد ← الجسر بساقين دولاريتين
+assert.deepEqual(conversionPair('JPY', 'NZD'), { symbol: 'NZDJPY', invert: true });
+assert.deepEqual(usdBridge('JPY', 'NZD'), {
+  first: { symbol: 'USDJPY', invert: true },
+  second: { symbol: 'NZDUSD', invert: true },
+});
+// وعلى NZDUSD نفسه لا جسر أصلاً: التسعير دولار ← الزوج المباشر NZDUSD مقلوباً
+assert.deepEqual(conversionPair('USD', 'NZD'), { symbol: 'NZDUSD', invert: true });
+assert.equal(usdBridge('USD', 'NZD'), null);
 
 console.log('positionSize selftest: OK');
