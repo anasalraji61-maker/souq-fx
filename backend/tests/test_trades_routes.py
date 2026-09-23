@@ -137,3 +137,119 @@ def test_fixing_the_entry_of_such_a_row_restores_its_result(client):
     client.post("/api/trades/legacy2/close", json={"exit": 1.21}, headers=_DEV1)
     row = client.patch("/api/trades/legacy2", json={"entry": 1.1}, headers=_DEV1).json()["trade"]
     assert row["pnl"] == pytest.approx((1.21 - 1.1) / 1.1 * 100)
+
+
+# ─── دلالات PATCH: حقل غائب ≠ null صريح ──────────────────────────────────────
+
+def test_an_absent_field_changes_nothing_while_an_explicit_null_clears(client):
+    """العقد المعلن بـ`TradeUpdate`: ما لم يُرسَل لا يتغيّر، و`null` الصريح يمسح. وهما
+    شيئان لا يميّزهما JSON وحده — `model_fields_set` هو ما يميّزهما."""
+    trade = _open_trade(client)
+    only_note = client.patch(
+        f"/api/trades/{trade['id']}", json={"note": "معدّلة"}, headers=_DEV1
+    ).json()["trade"]
+    assert only_note["sl"] == 1.0950 and only_note["tp"] == 1.1100, "الغائب لم يُمسح"
+    assert only_note["symbol"] == "EURUSD" and only_note["size"] == 0.5
+    cleared = client.patch(f"/api/trades/{trade['id']}", json={"sl": None}, headers=_DEV1).json()["trade"]
+    assert cleared["sl"] is None and cleared["tp"] == 1.1100, "المسح يطال المُرسَل وحده"
+
+
+def test_clearing_the_exit_reopens_the_trade(client):
+    """«أغلقتُ الصفقة بالخطأ» — مسح `exit` يعيدها مفتوحة بلا نتيجة ولا تاريخ إغلاق،
+    وتخرج من الإحصاءات لأنها لم تُغلق."""
+    trade = _open_trade(client, exit=1.1100)
+    assert trade["status"] == "closed"
+    r = client.patch(f"/api/trades/{trade['id']}", json={"exit": None}, headers=_DEV1).json()
+    assert r["trade"]["status"] == "open"
+    assert r["trade"]["exit"] is None and r["trade"]["pnl"] is None and r["trade"]["closed_at"] is None
+    assert r["stats"]["trade_count"] == 0
+
+
+def test_a_null_on_a_required_field_is_ignored_not_written(client):
+    """أعمدة إلزامية بالجدول: `null` لها يُتجاهل بدل أن يكسر الصفّ بـ500."""
+    trade = _open_trade(client)
+    r = client.patch(
+        f"/api/trades/{trade['id']}",
+        json={"symbol": None, "side": None, "entry": None, "size": None, "note": None},
+        headers=_DEV1,
+    )
+    assert r.status_code == 200, r.text
+    row = r.json()["trade"]
+    assert (row["symbol"], row["side"], row["entry"], row["size"]) == ("EURUSD", "buy", 1.1000, 0.5)
+    assert row["note"] == "خطة الافتتاح"
+
+
+def test_correcting_a_typo_in_the_entry_recomputes_the_result(client):
+    """خطأ كتابة بسعر الدخول كان يُفسد نسبة النجاح وصافي الدفتر للأبد (الحلّ الوحيد
+    كان الحذف وإعادة الكتابة)."""
+    trade = _open_trade(client, exit=1.1100)
+    row = client.patch(f"/api/trades/{trade['id']}", json={"entry": 1.1050}, headers=_DEV1).json()["trade"]
+    assert row["pnl"] == pytest.approx((1.1100 - 1.1050) / 1.1050 * 100)
+    assert row["status"] == "closed", "التصحيح لا يفتح صفقة مغلقة"
+
+
+def test_patching_an_unknown_trade_is_404(client):
+    assert client.patch("/api/trades/nope", json={"note": "x"}, headers=_DEV1).status_code == 404
+
+
+# ─── النتيجة والإحصاءات ──────────────────────────────────────────────────────
+
+@pytest.mark.parametrize(
+    "side, exit_price, sign",
+    [("buy", 1.1100, 1), ("buy", 1.0900, -1), ("sell", 1.0900, 1), ("sell", 1.1100, -1)],
+)
+def test_the_sign_of_the_result_follows_the_direction(client, side, exit_price, sign):
+    """البيع يربح بالهبوط — وانقلاب الإشارة هنا يقلب دفتر المتداول كلّه."""
+    trade = _open_trade(client, side=side, sl=None, tp=None)
+    row = client.post(f"/api/trades/{trade['id']}/close", json={"exit": exit_price}, headers=_DEV1).json()["trade"]
+    assert row["pnl"] * sign > 0, f"{side} @ {exit_price}"
+    assert row["status"] == "closed" and row["closed_at"]
+
+
+def test_statistics_count_closed_trades_only(client):
+    """صفقة مفتوحة ليست نتيجةً بعد: إدخالها بنسبة النجاح يجعلها تهبط بكل صفقة تُفتح."""
+    _open_trade(client)
+    won = _open_trade(client, exit=1.1100)
+    lost = _open_trade(client, exit=1.0900)
+    stats = client.get("/api/trades", headers=_DEV1).json()["stats"]
+    assert stats["trade_count"] == 2, "المفتوحة خارج العدّ"
+    assert stats["win_rate"] == 50.0
+    assert stats["best"] == pytest.approx(round(won["pnl"], 2))
+    assert stats["worst"] == pytest.approx(round(lost["pnl"], 2))
+    assert stats["total_pnl_pct"] == pytest.approx(round(won["pnl"] + lost["pnl"], 2), abs=0.01)
+
+
+def test_an_empty_journal_has_zeroed_statistics_not_an_error(client):
+    """أول ما يراه متداول جديد — لا قسمة على صفر ولا 500."""
+    stats = client.get("/api/trades", headers=_DEV1).json()["stats"]
+    assert stats == {
+        "trade_count": 0,
+        "win_rate": 0,
+        "total_pnl_pct": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "best": 0,
+        "worst": 0,
+    }
+
+
+# ─── الملكية: لا أحد يمسّ دفتر غيره ───────────────────────────────────────────
+
+def test_another_device_can_neither_see_nor_touch_the_journal(client):
+    """وكل محاولة يُتحقَّق بعدها أن صفّ المالك **بقي سليماً** — فلا يمرّ حذف صامت
+    باختبار «404 وكفى»."""
+    trade = _open_trade(client, headers=_DEV1)
+    assert client.get("/api/trades", headers=_DEV2).json()["trades"] == []
+    assert client.patch(f"/api/trades/{trade['id']}", json={"note": "غريب"}, headers=_DEV2).status_code == 404
+    assert client.post(f"/api/trades/{trade['id']}/close", json={"exit": 9.9}, headers=_DEV2).status_code == 404
+    assert client.delete(f"/api/trades/{trade['id']}", headers=_DEV2).status_code == 404
+    mine = client.get("/api/trades", headers=_DEV1).json()["trades"]
+    assert len(mine) == 1
+    assert (mine[0]["note"], mine[0]["status"], mine[0]["exit"]) == ("خطة الافتتاح", "open", None)
+
+
+def test_the_owner_deletes_their_own_trade(client):
+    trade = _open_trade(client)
+    assert client.delete(f"/api/trades/{trade['id']}", headers=_DEV1).status_code == 200
+    assert client.get("/api/trades", headers=_DEV1).json()["trades"] == []
+    assert client.delete(f"/api/trades/{trade['id']}", headers=_DEV1).status_code == 404, "والحذف مرّتين 404"
