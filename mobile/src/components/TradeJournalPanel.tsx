@@ -31,6 +31,31 @@ import {
 /** نفس أزواج الاختيار السريع بحاسبة المخاطرة — تسجيل صفقة بنقرة بدل كتابة الرمز بلوحة مفاتيح بيد واحدة. */
 const QUICK_SYMBOLS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'GBPJPY', 'EURGBP'];
 
+/**
+ * تقريبٌ مطابق لتقريب بايثون (`round`) الذي يحسب به الخادم إحصاءات الدفتر: **النصف إلى الزوجي**،
+ * لا `Math.round` الذي يرفع النصف دائماً. ليس تدقيقاً نظرياً: نسبة النجاح بست عشرة صفقة مغلقة
+ * وفوزٍ واحد هي 6.25 بالضبط (قيمة ثنائية تامّة، لا تقريب عائم) — الخادم يكتبها 6.2 و`Math.round`
+ * يكتبها 6.3. ومجموع النتائج يقع على 0.125 و0.375 وأمثالها كثيراً. فالفارق يظهر بالشاشة رقماً
+ * يخالف ما يعرضه الخادم لنفس الصفقات.
+ */
+const roundHalfEven = (v: number, d: 1 | 2): number => {
+  if (!Number.isFinite(v)) return v;
+  /**
+   * النصف التامّ لا يقع إلا على مضاعفٍ فرديّ لـ0.25 (خانة) أو 0.125 (خانتان) — وحدها الأنصافُ
+   * الممثَّلة ثنائياً تماماً. و«19.925» المكتوبة ليست نصفاً: قيمتها الثنائية 19.92500000000000071
+   * أي **فوق** النصف، فالخادم يرفعها لـ19.93. وضربها في 100 يُنتج 1992.5 بالضبط فيُخفي ذلك —
+   * ولهذا لا يُستعمل الضرب إلا حيث ثبت أنه مضبوط.
+   */
+  const y = v * (d === 1 ? 4 : 8);
+  if (Number.isInteger(y) && Math.abs(y % 2) === 1) {
+    const p = d === 1 ? 10 : 100;
+    const fl = Math.floor(v * p); // مضبوط هنا: القيمة ثنائية تامّة
+    return (fl % 2 === 0 ? fl : fl + 1) / p; // النصف إلى الزوجي، بالإشارتين
+  }
+  // ما عدا ذلك: toFixed يُقرِّب من القيمة الثنائية **الدقيقة** لا من حاصل ضربٍ مُقرَّب، كبايثون.
+  return Number(v.toFixed(d));
+};
+
 /** +80 / −12.5 pip — نفس علامة الناقص المطبعية لـformatR. */
 const formatSignedPips = (p: number): string => {
   const abs = formatPips(Math.abs(p)) ?? '0';
@@ -100,6 +125,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false }: Props = {}) {
   /** صفقة قيد التعديل — النموذج نفسه يُملأ بها و«إضافة» يصبح «حفظ التعديل» (خطأ كتابة بالدخول كان يُفسد
    * الإحصاءات، والحلّ الوحيد كان الحذف وإعادة الكتابة). */
   const [editing, setEditing] = useState<Trade | null>(null);
+  /** عدسة المراجعة: الأداة المختارة بشرائح الفلتر — `null` = الكل. */
+  const [filterSym, setFilterSym] = useState<string | null>(null);
 
   // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (تبديل تبويب
   // ToolsScreen قبل اكتمال الطلب) — نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود.
@@ -203,6 +230,38 @@ export function TradeJournalPanel({ defaultSymbol, flow = false }: Props = {}) {
   }, [symbol, side, entry, sl, tp]);
 
   /**
+   * أدوات الدفتر وعدد صفقات كلٍّ منها، الأكثر تداولاً أولاً. الشرائح لا تظهر إلا بأداتين فأكثر:
+   * من يتداول زوجاً واحداً لا يُعرض له فلترٌ بخيار واحد.
+   */
+  const symbolCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const tr of trades) {
+      const key = (tr.symbol || '').trim().toUpperCase();
+      if (!key) continue;
+      m.set(key, (m.get(key) ?? 0) + 1);
+    }
+    return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }, [trades]);
+
+  /**
+   * الفلتر الفعّال **مشتقّ** لا مخزَّن: لو حُذفت آخر صفقة للأداة المختارة اختفت شريحتها، فيعود
+   * العرض «للكل» من تلقائه — بلا `useEffect` يُعيد الضبط بعد إطارٍ يُعرض فيه دفترٌ فارغ بلا سبب.
+   */
+  const activeSym = useMemo(
+    () => (filterSym && symbolCounts.some(([sym]) => sym === filterSym) ? filterSym : null),
+    [filterSym, symbolCounts]
+  );
+
+  /** ما تراه القائمة وتُحسب عليه الإحصاءات معاً — فلا نصف سطرٍ يتبع الفلتر ونصفه لا. */
+  const visibleTrades = useMemo(
+    () =>
+      activeSym == null
+        ? trades
+        : trades.filter((tr) => (tr.symbol || '').trim().toUpperCase() === activeSym),
+    [trades, activeSym]
+  );
+
+  /**
    * ما يقيس به متداول التجزئة أداءه فعلاً: صافي النقاط (pip) ومتوسط النتيجة بالـR (التوقّع لكل صفقة) —
    * من الصفقات المغلقة المعروضة، لا من `pnl` المخزَّن. الـR فقط للصفقات التي سُجِّل لها وقف.
    */
@@ -217,7 +276,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false }: Props = {}) {
     const byPips = new Map<string, { pips: number; n: number }>();
     let rSum = 0;
     let rN = 0;
-    for (const tr of trades) {
+    for (const tr of visibleTrades) {
       if (tr.status !== 'closed') continue;
       const side = tr.side === 'sell' ? 'sell' : 'buy';
       const mv = realizedMove({ symbol: tr.symbol, side, entry: tr.entry, exit: tr.exit });
@@ -248,7 +307,46 @@ export function TradeJournalPanel({ defaultSymbol, flow = false }: Props = {}) {
       avgR: rN ? formatR(Math.round((rSum / rN) * 10) / 10) : null,
       rN,
     };
-  }, [trades]);
+  }, [visibleTrades]);
+
+  /**
+   * إحصاءات ما هو معروض. بلا فلتر: أرقام الخادم حرفياً كما كانت (لا تغيّر بتاتاً بالحالة الشائعة).
+   * وبفلتر أداة: تُحسب محليّاً **بمعادلة الخادم نفسها** (`db.trade_stats`: المغلقة ذات `pnl` فقط،
+   * نسبة النجاح بخانة عشرية والبقيّة بخانتين). وهذا حسابٌ مطابق لا تقريب: `trade_stats` يقرأ
+   * **نفس** قائمة `list_trades` التي تصل اللوحة — الحدّ 200 نفسه وشرط الملكية نفسه — فلا صفقات
+   * عند الخادم خارج ما بيد اللوحة. هذا بالضبط ما كان يمنع الفلترة قبل اليوم.
+   */
+  const shownStats = useMemo<Stats | null>(() => {
+    if (activeSym == null) return stats;
+    const pnls = visibleTrades
+      .filter((tr) => tr.status === 'closed' && tr.pnl != null && Number.isFinite(Number(tr.pnl)))
+      .map((tr) => Number(tr.pnl));
+    if (pnls.length === 0) {
+      return {
+        trade_count: 0,
+        win_rate: 0,
+        total_pnl_pct: 0,
+        avg_win: 0,
+        avg_loss: 0,
+        best: 0,
+        worst: 0,
+      };
+    }
+    const wins = pnls.filter((v) => v > 0);
+    const losses = pnls.filter((v) => v <= 0);
+    const sum = (a: number[]) => a.reduce((x, y) => x + y, 0);
+    const r1 = (v: number) => roundHalfEven(v, 1);
+    const r2 = (v: number) => roundHalfEven(v, 2);
+    return {
+      trade_count: pnls.length,
+      win_rate: r1((wins.length / pnls.length) * 100),
+      total_pnl_pct: r2(sum(pnls)),
+      avg_win: wins.length ? r2(sum(wins) / wins.length) : 0,
+      avg_loss: losses.length ? r2(sum(losses) / losses.length) : 0,
+      best: r2(Math.max(...pnls)),
+      worst: r2(Math.min(...pnls)),
+    };
+  }, [activeSym, stats, visibleTrades]);
 
   const resetForm = () => {
     setEntry('');
@@ -462,7 +560,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false }: Props = {}) {
   /** صفوف الصفقات — تُركَّب مرة وتُعرض بصندوقين بحسب من يستضيف اللوحة (انظر `flow`). */
   const rows = (
     <>
-      {[...trades]
+      {[...visibleTrades]
         .sort((x, y) => Number(x.status === 'closed') - Number(y.status === 'closed'))
         .map((tr) => (
         <View key={tr.id} style={styles.trade}>
@@ -622,19 +720,55 @@ export function TradeJournalPanel({ defaultSymbol, flow = false }: Props = {}) {
 
       {/* صفر صفقات مغلقة: «نسبة نجاح 0% · PnL 0% · أفضل/أسوأ 0%/0%» تُقرأ لمبتدئ كأداء سيئ وهي غياب
           بيانات — تُعرض الإحصاءات من أول صفقة مغلقة، وقبلها سطر يشرح متى تظهر. */}
-      {stats && stats.trade_count === 0 && trades.length > 0 ? (
+      {/**
+        * عدسة المراجعة: شرائح أدوات الدفتر فوق الإحصاءات مباشرة، لأنها تحكم **الصفوف والإحصاءات
+        * معاً**. «أيّ أداة أربح فيها فعلاً» سؤالٌ لا يُجاب من سطرٍ واحد يخلط الذهب باليورو.
+        */}
+      {symbolCounts.length > 1 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={[styles.row, rtl && styles.rowRtl]}>
+            {[null, ...symbolCounts.map(([sym]) => sym)].map((sym) => (
+              <Pressable
+                accessibilityRole="button"
+                key={sym ?? 'ALL'}
+                style={({ pressed }) => [
+                  styles.chip,
+                  activeSym === sym && styles.chipOn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => setFilterSym(sym)}
+                accessibilityLabel={`${t.journalSymbolA11y}: ${sym ?? t.calendarAllWord}`}
+                accessibilityState={{ selected: activeSym === sym }}
+              >
+                <Text style={[styles.chipText, activeSym === sym && styles.chipTextOn]}>
+                  {sym ?? t.calendarAllWord}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </ScrollView>
+      ) : null}
+
+      {shownStats && shownStats.trade_count === 0 && visibleTrades.length > 0 ? (
         <Text style={[styles.sub, { textAlign: align }]}>{t.journalStatsPending}</Text>
       ) : null}
-      {stats && stats.trade_count > 0 ? (
+      {shownStats && shownStats.trade_count > 0 ? (
         <View style={styles.stats}>
           <Text style={[styles.stat, { textAlign: align }]}>
-            {t.journalStatClosed.replace('{n}', String(stats.trade_count))}
+            {t.journalStatClosed.replace('{n}', String(shownStats.trade_count))}
           </Text>
           <Text style={[styles.stat, { textAlign: align }]}>
-            {t.journalStatWinRate.replace('{pct}', String(stats.win_rate))}
+            {t.journalStatWinRate.replace('{pct}', String(shownStats.win_rate))}
           </Text>
           <Text style={[styles.stat, { textAlign: align }]}>
-            {t.journalStatTotalPnl.replace('{pct}', String(stats.total_pnl_pct))}
+            {t.journalStatTotalPnl.replace('{pct}', String(shownStats.total_pnl_pct))}
           </Text>
           {extraStats.pips != null ? (
             <Text style={[styles.stat, { textAlign: align }]}>
@@ -653,8 +787,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false }: Props = {}) {
           ) : null}
           <Text style={[styles.stat, { textAlign: align }]}>
             {t.journalStatBestWorst
-              .replace('{best}', String(stats.best))
-              .replace('{worst}', String(stats.worst))}
+              .replace('{best}', String(shownStats.best))
+              .replace('{worst}', String(shownStats.worst))}
           </Text>
         </View>
       ) : null}
