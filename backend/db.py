@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import secrets
 import sqlite3
@@ -304,8 +305,62 @@ def _purge_demo_seed(c: sqlite3.Connection) -> None:
             c.execute("DELETE FROM vote_ballots WHERE vote_id=?", (vid,))
 
 
-def _hash_password(password: str, salt: str) -> str:
+_PBKDF2_ALGO = "pbkdf2_sha256"
+_PBKDF2_ITERATIONS = 210_000
+
+
+def _hash_password_legacy(password: str, salt: str) -> str:
+    """الصيغة القديمة: sha256(salt:password) بجولة واحدة.
+
+    تُستعمل **للتحقّق فقط** من كلمات المرور المخزَّنة قبل الترقية — لا يُكتب بها شيء جديد.
+    """
     return hashlib.sha256(f"{salt}:{password}".encode()).hexdigest()
+
+
+def _hash_password_pbkdf2(password: str, salt: str, iterations: int) -> str:
+    return hashlib.pbkdf2_hmac(
+        "sha256", password.encode("utf-8"), salt.encode("ascii"), iterations
+    ).hex()
+
+
+def _encode_password(password: str) -> str:
+    """تجزئة جديدة بصيغة ‎pbkdf2_sha256$<جولات>$<ملح>$<تجزئة>‎."""
+    salt = secrets.token_hex(16)
+    ph = _hash_password_pbkdf2(password, salt, _PBKDF2_ITERATIONS)
+    return f"{_PBKDF2_ALGO}${_PBKDF2_ITERATIONS}${salt}${ph}"
+
+
+def _verify_password(password: str, stored: str) -> tuple[bool, bool]:
+    """يُعيد ‎(صحيحة؟, تحتاج إعادة تجزئة؟)‎ — بلا أي استثناء لأي مدخَل مشوَّه.
+
+    إعادة التجزئة مطلوبة عند نجاح كلمة مرور مخزَّنة بالصيغة القديمة، أو بجولات أقلّ
+    من العدد الحالي — فتُرقّى كسولاً عند أول دخول ناجح بلا مسّ كلمة المرور نفسها.
+    """
+    stored = str(stored or "")
+    if stored.startswith(f"{_PBKDF2_ALGO}$"):
+        parts = stored.split("$", 3)
+        if len(parts) != 4:
+            return (False, False)
+        _, iter_s, salt, ph = parts
+        try:
+            iterations = int(iter_s)
+        except ValueError:
+            return (False, False)
+        if iterations < 1 or not salt or not ph:
+            return (False, False)
+        try:
+            calc = _hash_password_pbkdf2(password, salt, iterations)
+        except (UnicodeEncodeError, ValueError):
+            return (False, False)
+        ok = hmac.compare_digest(calc, ph)
+        return (ok, ok and iterations < _PBKDF2_ITERATIONS)
+
+    # الصيغة القديمة: ‎<ملح>$<sha256>‎
+    if "$" not in stored:
+        return (False, False)
+    salt, ph = stored.split("$", 1)
+    ok = hmac.compare_digest(_hash_password_legacy(password, salt), ph)
+    return (ok, ok)
 
 
 def register_user(
@@ -332,9 +387,7 @@ def register_user(
     if side_norm and side_norm not in ("left", "right"):
         raise ValueError("side must be left or right")
 
-    salt = secrets.token_hex(8)
-    ph = _hash_password(password, salt)
-    stored = f"{salt}${ph}"
+    stored = _encode_password(password)
     with _conn() as c:
         sponsor_id: int | None = None
         if sponsor_code:
@@ -564,9 +617,7 @@ def place_under_sponsor(
             raise ValueError("under_user_id not in your tree")
         parent_id = int(under_user_id)
 
-    salt = secrets.token_hex(8)
-    ph = _hash_password(pwd, salt)
-    stored = f"{salt}${ph}"
+    stored = _encode_password(pwd)
     now = time.time()
     with _conn() as c:
         taken = c.execute(
@@ -803,9 +854,19 @@ def login_user(username_or_email: str, password: str) -> dict[str, Any]:
             ).fetchone()
     if not row:
         raise ValueError("invalid credentials")
-    salt, ph = str(row["password_hash"]).split("$", 1)
-    if _hash_password(password, salt) != ph:
+    ok, needs_rehash = _verify_password(password, str(row["password_hash"]))
+    if not ok:
         raise ValueError("invalid credentials")
+    if needs_rehash:
+        # ترقية كسولة: الدخول نجح فكلمة المرور بين أيدينا الآن وحدها هذه اللحظة.
+        try:
+            with _conn() as c:
+                c.execute(
+                    "UPDATE users SET password_hash=? WHERE id=?",
+                    (_encode_password(password), int(row["id"])),
+                )
+        except sqlite3.Error:
+            pass  # الدخول ناجح على أي حال؛ تُعاد المحاولة بالدخول التالي.
     return create_session(
         int(row["id"]),
         str(row["username"]),
