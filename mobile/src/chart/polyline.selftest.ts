@@ -170,6 +170,92 @@ const Y = (v: number) => 100 - v;
   ok('نطاق فارغ', planBandStrips([], [], X, Y, 10).length === 0);
 }
 
+// ===== `breakBetween`: انقلاب الوقف المتحرّك نهايةُ مقطع لا منحدر =====
+
+// ١٣) بلا `breakBetween` السلوك القديم حرفياً.
+{
+  const a = planLineSegments([1, 2, 3, 4], X, Y);
+  const b = planLineSegments([1, 2, 3, 4], X, Y, {});
+  const c = planLineSegments([1, 2, 3, 4], X, Y, { breakBetween: () => false });
+  ok('غياب الخيار = false = السلوك القديم', JSON.stringify(a) === JSON.stringify(b));
+  ok('breakBetween ثابتة false لا تغيّر شيئاً', JSON.stringify(a) === JSON.stringify(c));
+}
+
+// ١٤) الانقلاب يقطع: أربع قيم بانقلاب بالوسط ⇒ قطعتان لا ثلاث.
+{
+  const up = [true, true, false, false];
+  const segs = planLineSegments([1, 2, 30, 31], X, Y, {
+    breakBetween: (i) => up[i] !== up[i - 1],
+  });
+  ok('انقلاب واحد ⇒ قطعتان', segs.length === 2);
+  ok('لا قطعة تعبر الانقلاب', !segs.some((s) => s.at === 2));
+  ok('مقطعا الانقلاب at = 1 و3', segs.map((s) => s.at).join(',') === '1,3');
+}
+
+// ١٥) **القفزة العمودية هي العطل**: بلا قطع تُرسم قطعة شبه عمودية تقول وقفاً لم يكن.
+{
+  const up = [true, false];
+  const joined = planLineSegments([1, 60], X, Y);
+  const split = planLineSegments([1, 60], X, Y, {
+    breakBetween: (i) => up[i] !== up[i - 1],
+  });
+  ok('بلا قطع: قطعة واحدة طويلة تعبر المدى', joined.length === 1 && joined[0]!.len > 55);
+  ok('بقطع: لا قطعة عابرة', !split.some((s) => s.len > 55));
+}
+
+// ١٦) مقطع بشمعة واحدة (انقلاب ثم انقلاب) ⇒ قطعة بديلة لا اختفاء.
+{
+  const up = [true, false, true];
+  const segs = planLineSegments([1, 50, 2], X, Y, {
+    breakBetween: (i) => up[i] !== up[i - 1],
+  });
+  ok('ثلاثة مقاطع بشمعة ⇒ ثلاث قطع بديلة', segs.length === 3);
+  ok('كلّها بطول القطعة البديلة', segs.every((s) => s.len === 3 && s.deg === 0));
+  ok('البديلة متمركزة على الشمعة', segs[1]!.left === X(1) - 1.5);
+}
+
+// ١٧) القطع والفجوة معاً: `null` تقطع كما كانت، والقطع يقطع فوقها بلا ازدواج قطعة.
+{
+  const up = [true, true, true, false, false];
+  const segs = planLineSegments([1, null, 3, 40, 41], X, Y, {
+    breakBetween: (i) => up[i] !== up[i - 1],
+  });
+  ok('فجوة + انقلاب ⇒ قطعة واحدة (3→4) وبديلتان', segs.length === 3);
+  ok('لا قطعة تعبر الانقلاب', !segs.some((s) => s.at === 3));
+  // الفهرسان 0 و2 محصوران بين فجوة وانقلاب ⇒ **بديلتان لا وصلتان**: النقطة تبقى
+  // مرئية ولا تُوصَل بشيء. الوصلة الحقيقية الوحيدة هي 3→4.
+  const real = segs.filter((s) => s.deg !== 0 || s.len !== 3);
+  ok('الوصلة الحقيقية وحيدة هي 3→4', real.length === 1 && real[0]!.at === 4);
+  ok('0 و2 بديلتان متمركزتان', [0, 2].every((i) => segs.some((s) => s.at === i && s.len === 3)));
+}
+
+// ١٨) `breakBetween` تُستدعى بفهرس الطرف الثاني — لا انزياح بواحد.
+{
+  const seen: number[] = [];
+  planLineSegments([1, 2, 3], X, Y, {
+    breakBetween: (i) => {
+      seen.push(i);
+      return false;
+    },
+  });
+  ok('تُستدعى بفهارس داخل المدى فقط', seen.every((i) => i >= 0 && i <= 3));
+  ok('تُستدعى بـ1 و2 (طرفا القطعتين)', seen.includes(1) && seen.includes(2));
+}
+
+// ١٩) `breakBetween` ليست دالّة ⇒ تُتجاهل ولا تُعطِّل الرسم.
+{
+  const segs = planLineSegments([1, 2, 3], X, Y, {
+    breakBetween: undefined as unknown as (i: number) => boolean,
+  });
+  ok('خيار فاسد ⇒ السلوك القديم', segs.length === 2);
+}
+
+// ٢٠) القطع عند **كل** شمعة ⇒ كلّها قطع بديلة، ولا شيء يختفي.
+{
+  const segs = planLineSegments([1, 2, 3], X, Y, { breakBetween: () => true });
+  ok('قطع دائم ⇒ ثلاث بديلات', segs.length === 3 && segs.every((s) => s.len === 3));
+}
+
 if (failures) {
   console.error(`polyline.selftest: ${failures} FAILED`);
   process.exitCode = 1;

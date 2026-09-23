@@ -4348,21 +4348,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           : null}
         {indicators.includes('supertrend') &&
           supertrend &&
-          supertrend.value.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`st${i}`}
-                style={[
-                  styles.dot,
-                  {
-                    left: xOf(i) - 1.5,
-                    top: yOf(v) - 1.5,
-                    backgroundColor: supertrend.up[i] ? colors.bull : colors.bear,
-                  },
-                ]}
-              />
-            )
-          )}
+          planLineSegments(supertrend.value, xOf, yOf, {
+            // الانقلاب **نهاية مقطع**: وصل الوقف من تحت السعر إلى فوقه يرسم عموداً
+            // يمرّ بكل سعر بينهما، وهو يقول «كان وقفك هنا» ولم يكن بأيٍّ منها قطّ.
+            breakBetween: (i) => supertrend.up[i] !== supertrend.up[i - 1],
+          }).map((sg) => (
+            <View
+              key={`st${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                // `sg.at` فهرس الطرف الثاني ⇒ القطعة بلون الاتجاه الذي وصلت إليه.
+                backgroundColor: supertrend.up[sg.at] ? colors.bull : colors.bear,
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('bb') && (
           <>
             {planBandStrips(

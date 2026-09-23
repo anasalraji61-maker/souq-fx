@@ -45,6 +45,17 @@ export interface LineSegOptions {
    * حيث كان صحيحاً.
    */
   stubLen?: number;
+  /**
+   * قَطْعٌ **بين** الشمعة `i-1` والشمعة `i` رغم أن كلتيهما قيمة صالحة.
+   *
+   * لِمَ: مؤشّرات الوقف المتحرّك (سوبرترند، وقفا شاندي-كرول) تنقلب من تحت السعر إلى
+   * فوقه **بشمعة واحدة**. وصل الطرفين يرسم خطّاً شبه عموديّ يعبر الشمعة كلّها — وهو
+   * ليس تجميلاً: الخطّ يقول للمتداول «كان وقفك هنا» عند كل سعر يمرّ به، ولم يكن
+   * وقفه بأيٍّ منها قطّ. الانقلاب **نهاية مقطع وبداية آخر** لا منحدر.
+   *
+   * تُستدعى بفهرس الطرف الثاني (`i`)، فـ`brk(i)` تعني «لا تصل i-1 بـ i».
+   */
+  breakBetween?: (i: number) => boolean;
 }
 
 const DEFAULT_STUB = 3;
@@ -72,16 +83,25 @@ export function planLineSegments(
       : DEFAULT_STUB;
   const out: LineSeg[] = [];
   const ok = (v: SeriesValue): v is number => typeof v === 'number' && Number.isFinite(v);
+  const brk = typeof opts.breakBetween === 'function' ? opts.breakBetween : () => false;
+  /**
+   * هل تتّصل `i-1` بـ`i`؟ **الطرفان** صالحان ولا قَطْع بينهما.
+   *
+   * فحص الطرفين معاً ضروريّ: تُستدعى أيضاً بـ`i + 1` لكشف النقطة المعزولة، وهناك
+   * `values[i + 1]` **هي** المجهولة — الاكتفاء بالطرف الأول يجعل كل نقطة قبل فجوة
+   * تبدو موصولة فتفقد قطعتها البديلة.
+   */
+  const linked = (i: number): boolean => ok(values[i - 1]) && ok(values[i]) && !brk(i);
 
   for (let i = 0; i < values.length; i++) {
     const v = values[i];
     if (!ok(v)) continue;
     const prev = values[i - 1];
-    const next = values[i + 1];
 
-    if (!ok(prev)) {
-      // بداية مقطع. إن كانت التالية فجوة أيضاً فهي نقطة معزولة ⇒ قطعة بديلة.
-      if (!ok(next)) {
+    // `ok(prev)` صراحةً لا عبر `linked` وحدها: هي ما يُضيّق نوع `prev` إلى `number`.
+    if (!ok(prev) || brk(i)) {
+      // بداية مقطع. إن كانت التالية غير موصولة أيضاً فهي نقطة معزولة ⇒ قطعة بديلة.
+      if (!linked(i + 1)) {
         const x = xOf(i);
         const y = yOf(v);
         if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
