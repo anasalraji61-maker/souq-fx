@@ -1200,6 +1200,8 @@ def indicators_forecast(body: IndicatorForecastBody):
 
 @app.get("/api/calendar")
 def economic_calendar(currency: str | None = None, impact: str | None = None):
+    """`currency` و`impact` يقبلان عدّة قيم مفصولة بفواصل (`EUR,USD` و`high,medium`): المتداول
+    على زوج واحد يهمّه عملتاه معاً، و«متوسط فما فوق» شرطان لا شرط. القيمة الواحدة تبقى كما كانت."""
     return {"events": econ_calendar.fetch_calendar(currency=currency, impact=impact)}
 
 

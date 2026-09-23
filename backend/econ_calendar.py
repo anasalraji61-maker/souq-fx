@@ -221,6 +221,22 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
     return out
 
 
+def _wanted(raw: str | None) -> set[str]:
+    """قيم فلتر مفصولة بفواصل → مجموعة بحروف صغيرة موحّدة. الفارغ (أو «,» و«ALL» وحدها) = بلا فلترة.
+
+    **الفلتر كان قيمة واحدة فقط**، والمتداول على زوج واحد يهمّه عملتاه معاً (EURUSD = EUR وUSD)
+    و«متوسط فما فوق» تعني `high` و`medium` — فكانت اللوحة تجلب **الأسبوع كلّه** ثم تصفّي بالجهاز
+    (موثّق صراحةً بـ`CalendarPanel`: «فلترا الزوج ومتوسط+ محليان: نجلب الكل ثم نصفّي»). ومن يرسل
+    `currency=EUR,USD` على النسخة القديمة كان يُقابَل بمطابقة نصّية فاشلة = **تقويم فارغ صامت**
+    لا رسالة خطأ."""
+    if not raw:
+        return set()
+    vals = {v.strip().lower() for v in raw.split(",")}
+    vals.discard("")
+    vals.discard("all")
+    return vals
+
+
 def fetch_calendar(
     currency: str | None = None,
     impact: str | None = None,
@@ -245,10 +261,10 @@ def fetch_calendar(
         _CACHE_TS = time.time()
 
     events = list(_CACHE)
-    if currency:
-        cur = currency.upper()
-        events = [e for e in events if str(e.get("currency", "")).upper() == cur]
-    if impact:
-        imp = impact.lower()
-        events = [e for e in events if str(e.get("impact", "")).lower() == imp]
+    curs = _wanted(currency)
+    if curs:
+        events = [e for e in events if str(e.get("currency", "")).lower() in curs]
+    imps = _wanted(impact)
+    if imps:
+        events = [e for e in events if str(e.get("impact", "")).lower() in imps]
     return _unique_ids(events[:MAX_EVENTS])
