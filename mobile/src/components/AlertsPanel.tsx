@@ -352,6 +352,12 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
     }
   }, [t.alertsPushTitle, t.aboveWord, t.belowWord]);
 
+  /**
+   * طلب إذن الإشعارات وقراءة حالته — **أثرٌ مستقلّ بلا تبعيات، مرّةً عند التركيب**. كان مطويّاً
+   * داخل أثر الاستطلاع (`[refresh, check]`) وهو يُعاد بناؤه مع كل تغيّر لغة (`check` تابعة لـ`t`):
+   * أي أن تبديل اللغة كان يعيد طلب الإذن ويعيد تسجيل رمز الدفع بلا داعٍ. الطلب لا علاقة له بإيقاع
+   * الفحص ولا بلغة الواجهة، فموضعه أثرٌ وحده.
+   */
   useEffect(() => {
     // رفض `getPermissionsAsync` (حالات أندرويد/Expo Go) كان يخرج كـunhandled rejection:
     // `registerPushToken` يحمي داخله فقط، والانتظار هنا كان بلا catch.
@@ -360,7 +366,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
       .catch(() => {
         /* الإشعارات تحسين اختياري — فشل الإذن لا يمنع التنبيهات داخل التطبيق */
       })
-      // تُقرأ الحالة بعد المحاولة بكل الأحوال (نجحت أم رُفضت أم رمت) — هي ما يُعرض للمتداول
+      // القراءة بعد المحاولة **بكل المسارات** (نجحت أم رُفضت أم رمت) — هي ما يُعرض للمتداول
       .then(() => getNotificationPermissionState())
       .then((st) => {
         if (mountedRef.current) setNotifState(st);
@@ -368,6 +374,9 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
       .catch(() => {
         /* تعذّرت قراءة الحالة: لا نعرض ادّعاءً عنها (تبقى null فلا سطر) */
       });
+  }, []);
+
+  useEffect(() => {
     /**
      * فحص فوري عند فتح اللوحة، لا بعد دقيقة. `setInterval` وحده كان يعني أن أول فحص داخل
      * التطبيق يقع بعد 60 ثانية من الفتح — ومن يفتح اللوحة بالذات يفتحها ليرى إن كان مستواه قد
