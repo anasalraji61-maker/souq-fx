@@ -670,17 +670,27 @@ function PaneSpreadHead({
   upper,
   lower,
   at = null,
+  tone = 'trend',
 }: {
   name: string;
   upper: readonly (number | null)[];
   lower: readonly (number | null)[];
   /** شمعة التقاطع (فهرس داخل نافذة الرسم)، أو null فآخر شمعة. */
   at?: number | null;
+  /**
+   * ما يعنيه لون الفارق — ويختلف باختلاف اللوحة اختلافاً جوهرياً:
+   * - `'trend'` (الافتراض، Gator): السلسلتان بجانبَي الصفر فالفارق موجب أبداً، ولا
+   *   إشارة تُلوَّن. المعنى: يتّسع أم ينكمش.
+   * - `'sign'` (DMI): السلسلتان موجبتان كلتاهما، **وإشارة الفارق هي الإشارة نفسها** —
+   *   ‎+DI‎ فوق ‎−DI‎ يعني كفّة الشراء، وهو ما يُقرأ من DMI أصلاً. تلوينه بالاتّجاه هنا
+   *   يخفي انقلاب الكفّة ويُظهر «يضيق/يتّسع» مكانه.
+   */
+  tone?: 'trend' | 'sign';
 }) {
   const spread = useMemo(() => paneSpreadSeries(upper, lower), [upper, lower]);
   const v = paneValueAt(spread, at);
   const txt = formatPaneValueScaled(spread, v);
-  const trend = paneValueTrend(spread, at);
+  const trend = tone === 'trend' ? paneValueTrend(spread, at) : null;
   return (
     <View style={styles.paneHead}>
       <Text style={styles.paneHeadName}>{name}</Text>
@@ -691,6 +701,8 @@ function PaneSpreadHead({
             txt.length >= 7 && styles.paneHeadValueLong,
             trend === 'up' && { color: colors.bull },
             trend === 'down' && { color: colors.bear },
+            tone === 'sign' && v != null && v > 0 && { color: colors.bull },
+            tone === 'sign' && v != null && v < 0 && { color: colors.bear },
           ]}
         >
           {txt}
@@ -7539,7 +7551,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {dmi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>DMI</Text>
+          <PaneSpreadHead
+            name="DMI"
+            upper={dmi.plusDI}
+            lower={dmi.minusDI}
+            at={crossIndex}
+            tone="sign"
+          />
           <View style={styles.paneInner}>
             {(() => {
               const plusVals = dmi.plusDI.filter((x): x is number => x != null);
