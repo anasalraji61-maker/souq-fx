@@ -14,6 +14,7 @@ import {
   pipValuePerLot,
   positionSize,
   slPipsFromPrices,
+  pipsBetween,
   priceAtPipOffset,
   type InstrumentSpec,
 } from './positionSize';
@@ -299,3 +300,31 @@ assert.deepEqual(conversionPair('USD', 'NZD'), { symbol: 'NZDUSD', invert: true 
 assert.equal(usdBridge('USD', 'NZD'), null);
 
 console.log('positionSize selftest: OK');
+
+// المسافة بين سعرين بنقاط الأداة — الموضع الواحد الذي تقرأ منه كل أدوات المتداول
+const jpSpec = instrumentSpec('USDJPY')!;
+const goldSpec = instrumentSpec('XAUUSD')!;
+const silverSpec = instrumentSpec('XAGUSD')!;
+assert.equal(pipsBetween(eu, 1.085, 1.0874), 24);
+// بلا إشارة: الترتيب لا يغيّر المسافة
+assert.equal(pipsBetween(eu, 1.0874, 1.085), 24);
+// الين بحجم pip 0.01 لا 0.0001 — الخطأ الذي كان يُخرج «12000 نقطة» على 120 نقطة
+assert.equal(pipsBetween(jpSpec, 157.4, 158.6), 120);
+assert.equal(pipsBetween(goldSpec, 2350, 2355), 50);
+assert.equal(pipsBetween(silverSpec, 28.4, 28.65), 25);
+// عُشر النقطة (pipette) يبقى، وما دونه يُقرَّب
+assert.equal(pipsBetween(eu, 1.085, 1.08505), 0.5);
+assert.equal(pipsBetween(eu, 1.085, 1.085003), 0);
+// الصفر قيمة صادقة (سعر عند السوق تماماً) لا «لا شيء»
+assert.equal(pipsBetween(eu, 1.085, 1.085), 0);
+// سعر غير صالح أو غير موجب ⇒ لا مسافة
+assert.equal(pipsBetween(eu, 1.085, 0), null);
+assert.equal(pipsBetween(eu, 1.085, -1), null);
+assert.equal(pipsBetween(eu, NaN, 1.085), null);
+assert.equal(pipsBetween(eu, 1.085, Infinity), null);
+// وقف الخسارة يُبنى عليها ولا يقبل الصفر (وقفٌ عند الدخول ليس وقفاً)
+assert.equal(slPipsFromPrices(eu, 1.085, 1.085), null);
+assert.equal(slPipsFromPrices(eu, 1.085, 1.0825), 25);
+assert.equal(slPipsFromPrices(jpSpec, 157.4, 157.7), 30);
+
+console.log('positionSize pipsBetween selftest OK');

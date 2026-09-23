@@ -10,7 +10,10 @@ import {
   Alert,
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
+import { api, type PriceAlert } from '../api';
 import { formatPrice } from '../chart/math';
+import { instrumentSpec, pipsBetween } from '../positionSize';
+import { formatPips } from '../tradePlan';
 import { playSoftClick } from '../audio/playSoftClick';
 import { SymbolSearchBar } from './SymbolSearchBar';
 import { useI18n } from '../i18n/I18nContext';
@@ -31,6 +34,13 @@ import { dailyChange, formatPct, tickDirection, type Direction } from '../chart/
 /** مدّة بقاء لون آخر تيك. عشرون ثانية: أطول كثيراً من تردّد تيكات زوجٍ نشط (فلا وميض بالسوق
  * المفتوح)، وأقصر كثيراً من أن يُقرأ لونٌ عمره ساعة على أنه حركةٌ الآن. */
 const TICK_DIR_MS = 20_000;
+
+/**
+ * إيقاع إعادة قراءة التنبيهات المُسلَّحة. `/api/alerts` قراءةُ قاعدة بيانات محلية بالخادم (لا نداء
+ * عند مزوّد الأسعار ولا حدّ يُستهلك)، فالدقيقة إيقاعٌ آمن — وهو إيقاع فحص لوح التنبيهات نفسه، فتنبيهٌ
+ * أُطلق يختفي من المتابعة خلال دقيقة بدل أن يبقى معلّقاً «مُسلَّحاً» بعد أن مضى.
+ */
+const ALERTS_REFRESH_MS = 60_000;
 
 type Props = {
   activeSymbol: string;
@@ -96,6 +106,47 @@ export function WatchlistPanel({
       unsubErr();
     };
   }, [loadList]);
+
+  /**
+   * **أين تنبيهاتي؟** المتابعة تعرض السعر والتغيّر والاتجاه، والتنبيهات تعيش بشاشة أخرى —
+   * فالمتداول يضع مستوى على الذهب ثم يمرّ على قائمته عشر مرّات بلا ما يذكّره أن هناك مستوىً
+   * ينتظر، ولا كم يبعد عنه. وهذه القائمة بالذات هي الشاشة التي يفتحها ليسأل «أين السوق الآن».
+   *
+   * التنبيهات المُسلَّحة وحدها (المُطلَق مستوىً مضى)، مجمّعةً بالرمز. الطلب واحد لا طلبٌ لكل رمز،
+   * وهو قراءة قاعدة بيانات لا نداءُ مزوّد. **والمسافة تُحسب من التيك الحيّ** الواصل للّوحة أصلاً:
+   * بلا أي طلب إضافي، وتتحرّك مع السوق بدل أن تكون لقطةً تتجمّد.
+   */
+  const [armedBySymbol, setArmedBySymbol] = useState<Record<string, number[]>>({});
+  useEffect(() => {
+    let alive = true;
+    const load = () => {
+      api
+        .alerts()
+        .then((res) => {
+          if (!alive) return;
+          const next: Record<string, number[]> = {};
+          for (const a of res.alerts as PriceAlert[]) {
+            if (a.triggered || !a.active) continue;
+            if (!Number.isFinite(a.price) || a.price <= 0) continue;
+            const sym = (a.symbol || '').trim().toUpperCase();
+            if (!sym) continue;
+            const bucket = next[sym];
+            if (bucket) bucket.push(a.price);
+            else next[sym] = [a.price];
+          }
+          setArmedBySymbol(next);
+        })
+        .catch(() => {
+          /* التنبيهات إضافةٌ على المتابعة — فشل قراءتها لا يمسّ الأسعار ولا يُفرَّغ ما هو معروض */
+        });
+    };
+    load();
+    const id = setInterval(load, ALERTS_REFRESH_MS);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, []);
 
   const ready = symbols != null;
   const list = symbols ?? [];
@@ -301,6 +352,30 @@ export function WatchlistPanel({
             const chg = live != null && !tickIsDemo ? dailyChange(live, dailyRefs[sym]) : null;
             const tickDir = live != null && !tickIsDemo ? tickDirs[sym]?.dir : undefined;
             const pctText = chg ? formatPct(chg.pct) : null;
+            /**
+             * الجرس يقول «لك هنا مستوى ينتظر»، والرقم يقول كم يبعد عنه السوق الآن بنقاط **الأداة**
+             * (`pipsBetween` بـpositionSize.ts، الموضع المبرهَن الوحيد لهذا الحساب — الين 0.01 لا
+             * 0.0001). بأكثر من مستوى يُعرض عددها والأقرب منها، فصفٌّ واحد يقول كم تنبيهاً على هذه
+             * الأداة وأيّها على وشك.
+             *
+             * المسافة **لا تظهر إلا حيث تكون صادقة**: سعر حيّ حقيقي (لا افتراضي ولا بثّ تجريبي)
+             * وأداةٌ معلومة حجم الـpip (DXY والعملات الرقمية لا). بغير ذلك يبقى الجرس وحده — وجودُ
+             * التنبيه معلومةٌ مؤكّدة حتى حين تكون المسافة مجهولة.
+             */
+            const armedLevels = armedBySymbol[sym];
+            const armedSpec = armedLevels && armedLevels.length > 0 ? instrumentSpec(sym) : null;
+            const armedNearest =
+              armedSpec && live != null && !tickIsDemo
+                ? armedLevels!.reduce<number | null>((best, lvl) => {
+                    const d = pipsBetween(armedSpec, lvl, live);
+                    return d == null ? best : best == null || d < best ? d : best;
+                  }, null)
+                : null;
+            const armedDist = armedNearest != null ? formatPips(armedNearest) : null;
+            const armedText =
+              armedLevels && armedLevels.length > 0
+                ? `🔔${armedLevels.length > 1 ? armedLevels.length : ''}${armedDist != null ? ` ${armedDist} pip` : ''}`
+                : null;
             return (
               <View
                 key={sym}
@@ -317,7 +392,9 @@ export function WatchlistPanel({
                     },
                   ]}
                   onPress={() => onPick(sym)}
-                  accessibilityLabel={`${sym}${price != null ? ` ${formatPrice(price, sym)}` : ''}${pctText ? ` ${pctText}` : ''}${isDemoPrice ? t.wlDemoPriceA11ySuffix : ''}`}
+                  accessibilityLabel={`${sym}${price != null ? ` ${formatPrice(price, sym)}` : ''}${pctText ? ` ${pctText}` : ''}${isDemoPrice ? t.wlDemoPriceA11ySuffix : ''}${
+                    armedText ? ` · ${t.alertsStatusArmed}${armedLevels!.length > 1 ? ` ${armedLevels!.length}` : ''}${armedDist != null ? ` ${armedDist} pip` : ''}` : ''
+                  }`}
                   accessibilityState={{ selected: on }}
                 >
                   <View style={[styles.left, rtl && styles.leftRtl]}>
@@ -355,6 +432,7 @@ export function WatchlistPanel({
                         {pctText}
                       </Text>
                     ) : null}
+                    {armedText ? <Text style={styles.armedTag}>{armedText}</Text> : null}
                   </View>
                 </Pressable>
                 <View style={[styles.ops, rtl && styles.opsRtl]}>
@@ -569,6 +647,8 @@ const styles = StyleSheet.create({
   right: { alignItems: 'flex-end' },
   rightRtl: { alignItems: 'flex-start' },
   chg: { color: colors.textDim, fontSize: 9, fontWeight: '800', marginTop: 1 },
+  /** الجرس بلون هوية التطبيق (teal) — لا أخضر/أحمر: المسافة كمّية ولا تقول ربحاً ولا خسارة. */
+  armedTag: { color: colors.accent, fontSize: 8, fontWeight: '800', marginTop: 1 },
   chgUp: { color: colors.bull },
   chgDown: { color: colors.bear },
   ops: {

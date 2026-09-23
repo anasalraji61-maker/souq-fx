@@ -144,13 +144,28 @@ export function pipValuePerLot(spec: InstrumentSpec, quoteToAccount: number): nu
 }
 
 /**
+ * المسافة بين سعرين بنقاط **الأداة** (الين 0.01، الذهب 0.1، الفضة 0.01، والبقية 0.0001)، مقرَّبة
+ * لعُشر pip (النقطة الكسرية pipette). بلا إشارة: المسافة كمّية، ومن يريد الاتجاه يعرفه من السعرين.
+ *
+ * «كم يبعد هذا السعر عن السوق» سؤالٌ يتكرّر بكل أدوات المتداول — وقفٌ عن دخول، تنبيهٌ عن السوق،
+ * هدفٌ عن سعرٍ حيّ — وكان يُكتب بكل موضع بيده (`Math.round(Math.abs(a-b)/pipSize*10)/10`). موضعٌ
+ * واحد مبرهَن بحالات دائمة يمنع أن يُكتب أحدها بحجم pip عام فيخرج «12000 نقطة» على زوج ين.
+ *
+ * `null` لسعرٍ غير صالح أو غير موجب. **الصفر قيمة صادقة** (سعرٌ عند السوق تماماً) لا «لا شيء».
+ */
+export function pipsBetween(spec: InstrumentSpec, a: number, b: number): number | null {
+  if (![a, b].every((v) => Number.isFinite(v) && v > 0)) return null;
+  return Math.round((Math.abs(a - b) / spec.pipSize) * 10) / 10;
+}
+
+/**
  * مسافة وقف الخسارة بالنقاط من سعرَي الدخول والوقف (المتداول يفكّر غالباً بالسعر على الشارت لا بالـpip).
- * مقرَّبة لعُشر pip (النقاط الكسرية pipette). null إن كان أحدهما غير صالح أو تساويا.
+ * مقرَّبة لعُشر pip (النقاط الكسرية pipette). null إن كان أحدهما غير صالح أو تساويا — وقفٌ عند الدخول
+ * ليس وقفاً، خلافاً لتنبيهٍ عند السوق.
  */
 export function slPipsFromPrices(spec: InstrumentSpec, entry: number, stop: number): number | null {
-  if (![entry, stop].every((v) => Number.isFinite(v) && v > 0)) return null;
-  const pips = Math.round((Math.abs(entry - stop) / spec.pipSize) * 10) / 10;
-  return pips > 0 ? pips : null;
+  const pips = pipsBetween(spec, entry, stop);
+  return pips != null && pips > 0 ? pips : null;
 }
 
 /**

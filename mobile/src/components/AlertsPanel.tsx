@@ -18,7 +18,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
-import { instrumentSpec, priceAtPipOffset } from '../positionSize';
+import { instrumentSpec, pipsBetween, priceAtPipOffset } from '../positionSize';
 import { formatPips } from '../tradePlan';
 
 /** إيقاع تحديث «السعر الآن» بالنموذج — نفس إيقاع فحص التنبيهات بهذه اللوحة (60 ثانية). */
@@ -190,8 +190,8 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
   const alertDistancePips = (a: PriceAlert): number | null => {
     if (a.triggered || current == null || !spec) return null;
     if ((a.symbol || '').trim().toUpperCase() !== spec.symbol) return null;
-    if (!Number.isFinite(a.price)) return null;
-    return Math.round((Math.abs(a.price - current) / spec.pipSize) * 10) / 10;
+    // الحساب بـ`positionSize.ts` حيث تعيش كل رياضيات الـpip ومغطّى بحالات selftest دائمة
+    return pipsBetween(spec, a.price, current);
   };
   /** «24 pip» — «pip» كلمة لاتينية ثابتة بكل اللغات بهذا التطبيق (راجع `journalStatNetPips`). */
   const distText = (a: PriceAlert): string | null => {
