@@ -72,6 +72,7 @@ import {
 import { DrawingsSaveQueue, drawingsKey } from './drawingsPersist';
 import { dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
 import { fibLevelPrice, planFibLabels } from './fibLabels';
+import { measureReadoutText } from './measureReadout';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
 import {
@@ -2231,9 +2232,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const t = tool;
       if (t === 'none') return;
       if (t === 'measure' && b) {
-        const stats = measureStats(a, b);
+        // بالنقاط (pip) بحجم pip الأداة — راجع `measureReadout.ts`. كان الفرق السعري
+        // الخام وحده، ومصاغاً بلا رمز (فتُقدَّر منازله من حجم الرقم: خمس منازل لكل فرق
+        // دون العشرة مهما كانت الأداة).
         setMeasureReadout(
-          `${stats.bars} ${tr.mcMeasureBarsWord} · ${stats.diff >= 0 ? '+' : ''}${formatPrice(stats.diff)} (${stats.pct.toFixed(2)}%)`
+          measureReadoutText({
+            symbol: series.symbol,
+            a,
+            b,
+            stats: measureStats(a, b),
+            barsWord: tr.mcMeasureBarsWord,
+          })
         );
         setPending(null);
         setDragEnd(null);
@@ -2263,7 +2272,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       setDragEnd(null);
       setTool('none');
     },
-    [tool, accent, tr, pushDrawHistory]
+    [tool, accent, tr, pushDrawHistory, series.symbol]
   );
 
   /**
