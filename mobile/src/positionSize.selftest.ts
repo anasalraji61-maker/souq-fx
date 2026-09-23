@@ -328,3 +328,22 @@ assert.equal(slPipsFromPrices(eu, 1.085, 1.0825), 25);
 assert.equal(slPipsFromPrices(jpSpec, 157.4, 157.7), 30);
 
 console.log('positionSize pipsBetween selftest OK');
+
+/**
+ * لماذا يُرفض وقفٌ أضيق من 1 pip بالحاسبة (`slTooClose` بـPositionSizePanel): حجم اللوت يتناسب
+ * **عكسياً** مع الوقف بالضبط — فخطأ كتابة يُصغّر الوقف عشرة أضعاف يُكبّر المركز عشرة أضعاف،
+ * ويخرج برقمٍ أنيق يبدو محسوباً. الحدّ هو حدّ `analyzePlan` نفسه (`slTooClose`) فلا قاعدتان.
+ */
+const pvEu = pipValuePerLot(eu, 1); // EURUSD بحساب دولار: 10$ للنقطة للوت
+const deep = positionSize({ balance: 10_000, riskPct: 1, slPips: 20, pipValuePerLot: pvEu, contractSize: eu.contractSize })!;
+const typo = positionSize({ balance: 10_000, riskPct: 1, slPips: 2, pipValuePerLot: pvEu, contractSize: eu.contractSize })!;
+assert.equal(deep.lots, 0.5);
+assert.equal(typo.lots, 5);
+assert.ok(near(typo.lots / deep.lots, 10));
+// وعُشر النقطة يُخرج خمسين ضعفاً — رقمٌ لا يُميَّز بالنظر عن رقم صحيح
+const absurd = positionSize({ balance: 10_000, riskPct: 1, slPips: 0.5, pipValuePerLot: pvEu, contractSize: eu.contractSize })!;
+assert.equal(absurd.lots, 20);
+// المخاطرة المعلنة تبقى 100$ بالثلاثة — فالرقم الخاطئ لا يفضح نفسه بسطر «المخاطرة الفعلية»
+for (const r of [deep, typo, absurd]) assert.ok(near(r.actualRisk, 100));
+
+console.log('positionSize slTooClose-rationale selftest OK');

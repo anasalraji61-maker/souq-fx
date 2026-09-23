@@ -223,6 +223,19 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     !slFromPrices.current && derivedSl != null && Number.isFinite(slTyped) && Math.abs(slTyped - derivedSl) > 0.05
       ? { typed: slPips.trim(), derived: derivedSl }
       : null;
+  /**
+   * **وقف أضيق من 1 pip.** مستحيلٌ بأي أداة تجزئة — أضيق من السبريد نفسه — وهو خطأ كتابة شبه
+   * مؤكّد: «2» بدل «20» بخانة النقاط، أو منزلة عشرية زائدة بسعر الوقف. وكلفته **هنا** أفدح منها
+   * بأي موضع آخر: حجم اللوت يتناسب عكسياً مع الوقف، فوقفٌ عُشر الصحيح = **مركزٌ عشرة أضعاف**
+   * يخرج برقمٍ أنيق يبدو محسوباً تماماً، ويُسجَّل بالدفتر بنقرة. `analyzePlan` يرفض هذا المدخل منذ
+   * مدّة بلوح الأفكار وبالدفتر (`planSlTooClose`)، والحاسبة — وهي الموضع الذي يتحوّل فيه الرقم
+   * إلى مال — كانت وحدها تقبله وتحسب عليه.
+   *
+   * يُعامَل كـ`riskImpossible` بالضبط: تحذيرٌ ظاهر عند خانته، وبلا حجم مركز — لا رقم من مدخل
+   * مستحيل. والخانة واحدة سواء كُتبت النقاط يدوياً أو اشتُقّت من السعرين، فالفحص واحد يغطّيهما.
+   * القيمة مقرَّبة لعُشر pip أصلاً (`slPipsFromPrices`) فلا حاجة لهامش عائم.
+   */
+  const slTooClose = spec != null && Number.isFinite(slTyped) && slTyped > 0 && slTyped < 1;
   const fetchedConv = convQuote && convQuote.key === convSymbol ? convQuote : null;
   const manual = num(manualConv);
   // السعر المجلوب (زوجاً مباشراً كان أم معكوساً أم جسراً)، وإلا الإدخال اليدوي بترتيب الزوج المعروض
@@ -231,7 +244,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     : quoteToAccountRate(conv, Number.isFinite(manual) && manual > 0 ? manual : null);
   const pv = spec && rate != null ? pipValuePerLot(spec, rate) : null;
   const result =
-    spec && pv != null
+    spec && pv != null && !slTooClose
       ? positionSize({
           balance: num(balance),
           riskPct: num(riskPct),
@@ -512,6 +525,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           {t.riskCalcSlMismatch.replace('{pips}', slMismatch.typed).replace('{derived}', String(slMismatch.derived))}
         </Text>
       ) : null}
+      {slTooClose ? (
+        <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
+          {t.planSlTooClose}
+        </Text>
+      ) : null}
 
       {conv && convLoading ? <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.sm }} /> : null}
       {conv && convFailed ? (
@@ -547,7 +565,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           </Text>
         ) : badNumber ? (
           <Text style={[styles.warn, { textAlign: align }]}>{t.invalidNumberHint}</Text>
-        ) : riskImpossible ? null : (
+        ) : riskImpossible || slTooClose ? null : (
           <Text style={[styles.resultMeta, { textAlign: align }]}>{t.riskCalcFillHint}</Text>
         )}
         {/* الاتجاه كان **مستنتَجاً بصمت**: وقف تحت الدخول = شراء، ثم يُرسَل كما هو بـ`side` لصفقة
