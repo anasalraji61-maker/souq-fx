@@ -10,6 +10,7 @@ import {
   LEGEND_CHIP_W,
   LEGEND_MAX_CHIPS,
   LEGEND_MORE_W,
+  DIRECTIONAL_OVERLAYS,
   PRICE_OVERLAYS,
   PRICE_OVERLAY_ORDER,
   activePriceOverlays,
@@ -218,6 +219,77 @@ import {
   assert.deepEqual(a.map((c) => c.id), ['sma20', 'bb', 'vidya']);
   assert.equal(activePriceOverlays(PRICE_OVERLAY_ORDER).length, PRICE_OVERLAY_ORDER.length);
   assert.equal(activePriceOverlays([]).length, 0);
+}
+
+// ١٣) **تفرّد اللون**: لا طبقتان تُرسمان بنفس اللون بالضبط على لوحة السعر.
+//     السبب: مفتاح فيه مربّعان متطابقان لا يميّز شيئاً — ومن يفعّل SMA 50 مع Keltner
+//     كان يرى خطّاً ووشاحاً بلون #A78BFA نفسه، وBB مع Ichimoku بلون #38BDF8 نفسه.
+//     يُستثنى ما لونه دلالي (اتجاه) لا هويّتي: Supertrend وFractals وElder.
+{
+  const theme = fs.readFileSync(path.join(__dirname, '..', 'theme.ts'), 'utf8');
+  const tokens: Record<string, string> = {};
+  for (const m of theme.matchAll(
+    /^\s*([A-Za-z][A-Za-z0-9]*): '(#[0-9A-Fa-f]{6}|rgba?\([^']*\))',/gm
+  )) {
+    tokens[`colors.${m[1]!}`] = m[2]!;
+  }
+  tokens.accent = tokens['colors.accent']!;
+  assert.ok(tokens['colors.infoAccent'], 'لم تُقرأ رموز السمة');
+
+  /** يوحّد التعبير إلى ‎#RRGGBB‎ حتى يُكشف تطابق رمز مع hex حرفي (وهو ما كان يُخفي الخلل). */
+  const solid = (expr: string): string => {
+    const raw = tokens[expr] ?? expr;
+    const m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(raw);
+    if (!m) return raw.toUpperCase();
+    const hex = (n: string) => Number(n).toString(16).padStart(2, '0');
+    return `#${hex(m[1]!)}${hex(m[2]!)}${hex(m[3]!)}`.toUpperCase();
+  };
+
+  const owner = new Map<string, string>();
+  for (const id of PRICE_OVERLAY_ORDER) {
+    if (DIRECTIONAL_OVERLAYS.includes(id)) continue;
+    for (const expr of PRICE_OVERLAYS[id]!.swatch) {
+      const c = solid(expr);
+      const prev = owner.get(c);
+      assert.equal(prev, undefined, `اللون ${c} مشترك بين ${prev} و${id} — المفتاح لا يميّز`);
+      owner.set(c, id);
+    }
+  }
+  assert.ok(owner.size >= 45, `ألوان متفرّدة ${owner.size} — المسح انكسر`);
+
+  // والاستثناء مقصود لا ثغرة: الدلالية فعلاً تتشارك bull/bear، ولا تُذكر بلا سبب
+  for (const id of DIRECTIONAL_OVERLAYS) {
+    assert.ok(PRICE_OVERLAYS[id], `${id}: باستثناء الدلالية وليس بالجدول`);
+    const sw = PRICE_OVERLAYS[id]!.swatch.map(solid);
+    assert.ok(
+      sw.includes(solid('colors.bull')) && sw.includes(solid('colors.bear')),
+      `${id}: مستثنى كدلالي لكنه لا يستعمل ألوان الاتجاه`
+    );
+  }
+}
+
+// ١٤) كل رمز سمة بالجدول موجود فعلاً بـ`legendTokens` داخل MatrixChart.tsx.
+//     وإلا أعاد `resolveColorExpr` لونه الاحتياطي ‎#94A3B8‎ — وهو لون Median نفسه،
+//     أي مربّع رمادي يدّعي أنه لون الطبقة. فشل صامت بالضبط كالذي يمنعه هذا الملف.
+{
+  const src = fs.readFileSync(path.join(__dirname, 'MatrixChart.tsx'), 'utf8');
+  const at = src.indexOf('const legendTokens = useMemo(');
+  assert.ok(at > 0, 'legendTokens غير موجودة — تغيّر اسمها؟');
+  const block = src.slice(at, src.indexOf('[accent]', at));
+  const provided = new Set<string>();
+  if (/(^|\W)accent,/m.test(block)) provided.add('accent');
+  for (const m of block.matchAll(/'(colors\.[A-Za-z]+)':/g)) provided.add(m[1]!);
+
+  const needed = new Set<string>();
+  for (const spec of Object.values(PRICE_OVERLAYS)) {
+    for (const expr of spec.swatch) {
+      if (!expr.startsWith('#') && !expr.startsWith('rgb')) needed.add(expr);
+    }
+  }
+  const unresolved = [...needed].filter((t) => !provided.has(t)).sort();
+  assert.deepEqual(unresolved, [], `رموز بلا قيمة بـlegendTokens: ${unresolved.join(', ')}`);
+  const unused = [...provided].filter((t) => !needed.has(t)).sort();
+  assert.deepEqual(unused, [], `رموز بـlegendTokens لا يستعملها الجدول: ${unused.join(', ')}`);
 }
 
 console.log('priceLegend.selftest: PASS');

@@ -42,10 +42,10 @@ export const PRICE_OVERLAYS: Readonly<Record<string, PriceOverlaySpec>> = {
   supertrend: { label: 'Supertrend', swatch: ['colors.bull', 'colors.bear'] },
   ichimoku: {
     label: 'Ichimoku',
-    swatch: ['colors.dxy', 'colors.highImpact', '#C084FC'],
+    swatch: ['#60A5FA', '#F87171', '#C084FC'],
   },
   psar: { label: 'PSAR', swatch: ['#A3E635'] },
-  keltner: { label: 'Keltner', swatch: ['#A78BFA'], drawn: ['rgba(167,139,250,0.18)'] },
+  keltner: { label: 'Keltner', swatch: ['#D8B4FE'], drawn: ['rgba(216,180,254,0.18)'] },
   donchian: { label: 'Donchian', swatch: ['#A3B4D0'], drawn: ['rgba(163,180,208,0.14)'] },
   alligator: { label: 'Alligator', swatch: ['#3B82F6', '#EF4444', '#84CC16'] },
   pivotsHL: { label: 'Pivots', swatch: ['#FB7185', '#4ADE80'] },
@@ -57,7 +57,7 @@ export const PRICE_OVERLAYS: Readonly<Record<string, PriceOverlaySpec>> = {
   tema20: { label: 'TEMA 20', swatch: ['#FB923C'] },
   vwma: { label: 'VWMA', swatch: ['#FACC15'] },
   twap: { label: 'TWAP', swatch: ['#BAE6FD'] },
-  kama: { label: 'KAMA', swatch: ['#A78BFA'] },
+  kama: { label: 'KAMA', swatch: ['#67E8F9'] },
   alma: { label: 'ALMA', swatch: ['#E879F9'] },
   t3: { label: 'T3', swatch: ['#0EA5E9'] },
   zlema: { label: 'ZLEMA', swatch: ['#FDBA74'] },
@@ -66,27 +66,27 @@ export const PRICE_OVERLAYS: Readonly<Record<string, PriceOverlaySpec>> = {
   trima: { label: 'TRIMA', swatch: ['#D9F99D'] },
   mcginley: { label: 'McGinley', swatch: ['#5EEAD4'] },
   lsma: { label: 'LSMA', swatch: ['#22D3EE'] },
-  tsf: { label: 'TSF', swatch: ['#38BDF8'] },
+  tsf: { label: 'TSF', swatch: ['#A5B4FC'] },
   dma: { label: 'DMA', swatch: ['#C7D2FE'] },
   gmma: { label: 'GMMA', swatch: ['#6EE7B7', '#93C5FD'] },
   gannHiLo: { label: 'Gann HiLo', swatch: ['#FCD34D'] },
   envelopes: { label: 'Envelopes', swatch: ['#F59E0B'], drawn: ['rgba(245,158,11,0.14)'] },
-  zigzag: { label: 'ZigZag', swatch: ['colors.infoAccent'] },
+  zigzag: { label: 'ZigZag', swatch: ['#D946EF'] },
   chandelierExit: {
     label: 'Chandelier',
-    swatch: ['#FDBA74'],
-    drawn: ['rgba(253,186,116,0.16)'],
+    swatch: ['#FDE047'],
+    drawn: ['rgba(253,224,71,0.16)'],
   },
-  linRegChannel: { label: 'LinReg', swatch: ['#7DD3FC'], drawn: ['rgba(125,211,252,0.14)'] },
+  linRegChannel: { label: 'LinReg', swatch: ['#BFDBFE'], drawn: ['rgba(191,219,254,0.14)'] },
   starcBands: { label: 'STARC', swatch: ['#F9A8D4'], drawn: ['rgba(249,168,212,0.14)'] },
-  accelBands: { label: 'Accel', swatch: ['#5EEAD4'], drawn: ['rgba(94,234,212,0.14)'] },
+  accelBands: { label: 'Accel', swatch: ['#FED7AA'], drawn: ['rgba(254,215,170,0.14)'] },
   stdErrorBands: { label: 'Std Err', swatch: ['#BEF264'], drawn: ['rgba(190,242,100,0.14)'] },
-  vwapBands: { label: 'VWAP Bnd', swatch: ['#FACC15'], drawn: ['rgba(250,204,21,0.14)'] },
-  chandeKroll: { label: 'ChandeKrl', swatch: ['#2DD4BF'], drawn: ['rgba(45,212,191,0.16)'] },
+  vwapBands: { label: 'VWAP Bnd', swatch: ['#EAB308'], drawn: ['rgba(234,179,8,0.14)'] },
+  chandeKroll: { label: 'ChandeKrl', swatch: ['#99F6E4'], drawn: ['rgba(153,246,228,0.16)'] },
   fractalChaosBands: {
     label: 'FCB',
-    swatch: ['#A78BFA'],
-    drawn: ['rgba(167,139,250,0.14)'],
+    swatch: ['#F0ABFC'],
+    drawn: ['rgba(240,171,252,0.14)'],
   },
   elderImpulse: {
     label: 'Elder',
@@ -100,6 +100,17 @@ export const PRICE_OVERLAYS: Readonly<Record<string, PriceOverlaySpec>> = {
 
 /** ترتيب الأولوية مشتقّ من ترتيب المفاتيح أعلاه — تعريف واحد لا قائمتان تتباعدان. */
 export const PRICE_OVERLAY_ORDER: readonly string[] = Object.keys(PRICE_OVERLAYS);
+
+/**
+ * طبقات لونها **دلالي** لا هويّتي: أخضر = صعود، أحمر = هبوط (وأزرق = حياد عند Elder).
+ * هذه وحدها يجوز أن تتشارك اللون — فتشارُكها هو المعنى نفسه، وتمييزها يقع على الشكل
+ * والموضع لا على اللون. ما عداها يجب أن ينفرد بلونه، ويفرض ذلك اختبارُ التفرّد.
+ */
+export const DIRECTIONAL_OVERLAYS: readonly string[] = [
+  'supertrend',
+  'fractals',
+  'elderImpulse',
+];
 
 export interface LegendChip {
   id: string;

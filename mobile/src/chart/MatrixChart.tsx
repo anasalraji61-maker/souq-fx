@@ -1881,7 +1881,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       'colors.bull': colors.bull,
       'colors.bear': colors.bear,
       'colors.dxy': colors.dxy,
-      'colors.highImpact': colors.highImpact,
     }),
     [accent]
   );
@@ -3517,7 +3516,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   top: yOf(v),
                   width: 2,
                   height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(250,204,21,0.14)',
+                  backgroundColor: 'rgba(234,179,8,0.14)',
                 }}
               />
             );
@@ -3687,7 +3686,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             v == null ? null : (
               <View
                 key={`tsf${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#38BDF8' }]}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#A5B4FC' }]}
               />
             )
           )}
@@ -3747,7 +3746,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             v == null ? null : (
               <View
                 key={`kama${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#A78BFA' }]}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#67E8F9' }]}
               />
             )
           )}
@@ -3818,7 +3817,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       top: y1,
                       width: len,
                       height: 1.5,
-                      backgroundColor: colors.infoAccent,
+                      backgroundColor: '#D946EF',
                       opacity: 0.9,
                       transform: [{ rotate: `${angle}deg` }],
                       transformOrigin: 'left center',
@@ -3877,7 +3876,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   top: yOf(v),
                   width: 2,
                   height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(167,139,250,0.18)',
+                  backgroundColor: 'rgba(216,180,254,0.18)',
                 }}
               />
             );
@@ -3915,7 +3914,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   top: yOf(v),
                   width: 2,
                   height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(125,211,252,0.14)',
+                  backgroundColor: 'rgba(191,219,254,0.14)',
                 }}
               />
             );
@@ -3972,7 +3971,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   top: yOf(v),
                   width: 2,
                   height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(94,234,212,0.14)',
+                  backgroundColor: 'rgba(254,215,170,0.14)',
                 }}
               />
             );
@@ -4010,7 +4009,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   top: yOf(v),
                   width: 2,
                   height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(167,139,250,0.14)',
+                  backgroundColor: 'rgba(240,171,252,0.14)',
                 }}
               />
             );
@@ -4029,7 +4028,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   top: yOf(v),
                   width: 2,
                   height: Math.max(2, yOf(lo) - yOf(v)),
-                  backgroundColor: 'rgba(45,212,191,0.16)',
+                  backgroundColor: 'rgba(153,246,228,0.16)',
                 }}
               />
             );
@@ -4050,7 +4049,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   top: yOf(top),
                   width: 2,
                   height: Math.max(2, yOf(bottom) - yOf(top)),
-                  backgroundColor: 'rgba(253,186,116,0.16)',
+                  backgroundColor: 'rgba(253,224,71,0.16)',
                 }}
               />
             );
@@ -4082,7 +4081,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             v == null ? null : (
               <View
                 key={`icht${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: colors.dxy }]}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#60A5FA' }]}
               />
             )
           )}
@@ -4092,7 +4091,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             v == null ? null : (
               <View
                 key={`ichk${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: colors.highImpact }]}
+                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#F87171' }]}
               />
             )
           )}
