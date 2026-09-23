@@ -238,6 +238,21 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
     return d == null ? null : `${d} pip`;
   };
 
+  /**
+   * **«السعر الحالي» صار حالياً فعلاً.** `current` اقتباسُ REST يُستطلَع كل `QUOTE_REFRESH_MS`
+   * (دقيقة) — وهو مكتوبٌ أمام المتداول بكلمة «الحالي»، **ويُبنى عليه أكثر من عرض**: زرّ «استعمل
+   * الحالي» يكتب رقمه بخانة السعر، وشرائح «±20 pip» تُحسب منه مستوياتٍ تُسلَّح بنقرة، والاتجاه
+   * (فوق/تحت) يُستنتج بمقارنته، والتحذير «سيُطلق فوراً» يُقال أو يُكتم به. ودقيقةٌ على الذهب حركةٌ
+   * تُقاس بعشرات النقاط: فالمتداول كان يضع مستوىً «عشرين نقطة فوق السوق» فوق سوقٍ مضى، ويُطمأن
+   * إلى أن تنبيهه لن يُطلق فوراً وقد جاوزه السعر أصلاً.
+   *
+   * التيك الحيّ (ثانية) يتقدّم حيث وُجد، و`current` يبقى الاحتياط كما كان — وكلاهما مرشَّح من
+   * السعر المختلَق: الحاضنة ترشّح البثّ التجريبي والمجمَّد، و`isRealQuote` ترشّح الاقتباس.
+   * **ولا يمسّ هذا استنتاج `unknownSymbol`**: غياب رمزٍ عن البثّ يعني أن الخادم لا يشترك به، لا
+   * أنه رمز مجهول — وذلك الحكم يبقى على REST وحده حيث كان.
+   */
+  const currentPx = (spec ? ticks?.[spec.symbol] : undefined) ?? current;
+
   /** الاتجاه يُستنتج من موقع السعر المدخل بالنسبة للسعر الحالي — المستخدم يكتب الرقم فقط،
    * ويبقى قادراً على قلب الاتجاه يدوياً بعدها (مع تحذير إن صار التنبيه سيُطلق فوراً). */
   const onPriceChange = (txt: string) => {
@@ -246,17 +261,18 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
     condManualRef.current = false;
     setFormError(null);
     const p = parseDecimal(txt) ?? NaN;
-    if (current != null && Number.isFinite(p) && p > 0 && p !== current) {
-      setCondition(p > current ? 'above' : 'below');
+    if (currentPx != null && Number.isFinite(p) && p > 0 && p !== currentPx) {
+      setCondition(p > currentPx ? 'above' : 'below');
     }
   };
 
   const parsedPrice = parseDecimal(price) ?? NaN;
   const firesNow =
-    current != null &&
+    currentPx != null &&
     Number.isFinite(parsedPrice) &&
     parsedPrice > 0 &&
-    ((condition === 'above' && current >= parsedPrice) || (condition === 'below' && current <= parsedPrice));
+    ((condition === 'above' && currentPx >= parsedPrice) ||
+      (condition === 'below' && currentPx <= parsedPrice));
 
   const showArmed = (msg: string) => {
     setArmed(msg);
@@ -772,10 +788,10 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
           selectionColor={colors.accent}
           accessibilityLabel={t.alertsPriceA11y}
         />
-        {current != null ? (
+        {currentPx != null ? (
           <View style={[styles.currentRow, rtl && styles.rowRtl]}>
             <Text style={[styles.currentText, { textAlign: align }]}>
-              {t.alertsCurrentPrefix}: <Text style={styles.currentVal}>{fmtPrice(current)}</Text>
+              {t.alertsCurrentPrefix}: <Text style={styles.currentVal}>{fmtPrice(currentPx)}</Text>
             </Text>
             <Pressable
               accessibilityRole="button"
@@ -786,8 +802,8 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
                   transform: [{ scale: buttons.pressedScale }],
                 },
               ]}
-              onPress={() => onPriceChange(fmtPrice(current))}
-              accessibilityLabel={`${t.alertsUseCurrentA11y}: ${fmtPrice(current)}`}
+              onPress={() => onPriceChange(fmtPrice(currentPx))}
+              accessibilityLabel={`${t.alertsUseCurrentA11y}: ${fmtPrice(currentPx)}`}
               hitSlop={6}
             >
               <Text style={styles.useCurrentText}>{t.alertsUseCurrent}</Text>
@@ -796,13 +812,13 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
         ) : null}
         {/* مسافات جاهزة بالنقاط حول السعر الحالي — «عشرون نقطة فوق السوق» بنقرة بدل كتابة خمس منازل
             على لوحة مفاتيح هاتف. تظهر فقط بسعر حقيقي معروف وأداة معلومة حجم الـpip. */}
-        {current != null && spec ? (
+        {currentPx != null && spec ? (
           <View style={[styles.offsets, rtl && styles.rowRtl]}>
             <Text style={styles.offsetUnit}>pip</Text>
             {PIP_OFFSETS.map((off) => {
               // الحساب بـ`positionSize.ts` حيث تعيش كل رياضيات الـpip ومغطّى بحالات selftest دائمة —
               // null لمسافة تتجاوز السعر نفسه (أداة سعرها أصغر من المسافة) فلا تُعرض الشريحة
-              const px = priceAtPipOffset(spec, current, off);
+              const px = priceAtPipOffset(spec, currentPx, off);
               if (px == null) return null;
               const text = fmtPrice(px, spec.symbol);
               return (
