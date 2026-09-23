@@ -1,0 +1,129 @@
+"""الأكاديمية — المسار المجهول يجب أن يكون 404 لا 200 بجسم خطأ.
+
+**لماذا هذا الملف**: الأكاديمية ثالث شاشات الـMVP، ومساراتها الثلاثة كانت تردّ **200**
+بجسم `{"error": "not found"}` على معرّف لا وجود له. وعميل التطبيق يرمي عند `!res.ok` وحده
+(`getJson`)، وله مسار احتياطي مكتوب لهذه الحالة بالضبط — فردُّ 200 كان **يعطّل احتياطيَّه**:
+
+- `CoursesScreen`: يُسنَد كائن الخطأ كأنه مدرسة، فـ`school.levels` غير معرّفة = قائمة
+  مستويات فارغة بلا رسالة ولا محتوى بديل (و`setSchoolFallback` لا يعمل أبداً).
+- `LectureClassroom`: يبني محاضرة احتياطية بمقطعين عند الخطأ، وردُّ 200 يمرّ من فوقه فيُعرض
+  «درس» بلا عنوان ولا مقاطع.
+
+**بلا شبكة**: محتوى الأكاديمية ثابت بالمستودع (`academy_data`)، ولا مسار هنا يستدعي مزوّداً.
+"""
+from __future__ import annotations
+
+import pytest
+from fastapi.testclient import TestClient
+
+import db
+import main
+from academy_data import ACADEMY_SCHOOLS
+from core import db_conn
+
+
+@pytest.fixture()
+def client(tmp_path, monkeypatch):
+    path = tmp_path / "test_academy.db"
+    assert "souq-fx" not in str(path), f"قاعدة الاختبار يجب أن تكون خارج المستودع: {path}"
+    monkeypatch.setattr(db_conn, "DB_PATH", path)
+    monkeypatch.setattr(db, "DB_PATH", path)
+    monkeypatch.setattr(db, "_PBKDF2_ITERATIONS", 1_000)
+    db.init_db()
+    return TestClient(main.app, raise_server_exceptions=False)
+
+
+_SCHOOL = ACADEMY_SCHOOLS[0]
+_LECTURE = _SCHOOL["levels"][0]["lectures"][0]
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/api/academy/schools/does-not-exist",
+        "/api/courses/does-not-exist",
+    ],
+)
+def test_unknown_school_is_404(client, path):
+    r = client.get(path)
+    assert r.status_code == 404, r.text
+
+
+def test_unknown_lecture_is_404(client):
+    r = client.get(f"/api/academy/schools/{_SCHOOL['id']}/lectures/does-not-exist")
+    assert r.status_code == 404, r.text
+
+
+def test_lecture_of_unknown_school_is_404(client):
+    r = client.get(f"/api/academy/schools/nope/lectures/{_LECTURE['id']}")
+    assert r.status_code == 404, r.text
+
+
+def test_error_body_never_returned_with_200(client):
+    """الشكل نفسه هو العيب: جسمٌ يقول «خطأ» تحت حالة تقول «نجاح» لا يراه العميل خطأً."""
+    for path in (
+        "/api/academy/schools/nope",
+        "/api/courses/nope",
+        f"/api/academy/schools/{_SCHOOL['id']}/lectures/nope",
+    ):
+        r = client.get(path)
+        assert not (r.status_code == 200 and "not found" in r.text), path
+
+
+def test_real_school_and_lecture_still_served(client):
+    """الحارس المعاكس: بلا هذا الاختبار قد يمرّ ردٌّ يجعل **كل** معرّف 404."""
+    school = client.get(f"/api/academy/schools/{_SCHOOL['id']}")
+    assert school.status_code == 200, school.text
+    assert school.json()["levels"], "مدرسة بلا مستويات لا تُعرض شيئاً"
+
+    course = client.get(f"/api/courses/{_SCHOOL['id']}")
+    assert course.status_code == 200 and course.json()["id"] == _SCHOOL["id"]
+
+    lec = client.get(f"/api/academy/schools/{_SCHOOL['id']}/lectures/{_LECTURE['id']}")
+    assert lec.status_code == 200, lec.text
+    assert lec.json()["script_segments"], "محاضرة بلا مقاطع لا تُسرد"
+
+
+def test_schools_list_and_courses_list_still_served(client):
+    assert client.get("/api/academy/schools").json()["schools"]
+    assert client.get("/api/courses").json()["courses"]
+
+
+def _register(client, username="student1"):
+    r = client.post(
+        "/api/auth/register",
+        json={"username": username, "email": f"{username}@x.co", "password": "pass1234"},
+    )
+    assert r.status_code == 200, r.text
+    return {"Authorization": f"Bearer {r.json()['token']}"}
+
+
+def test_negative_segment_index_is_422(client):
+    """الاستئناف يقرأ الموضع المحفوظ — وموضعٌ سالب يجعل المقطع الحالي غير معرّف بالقاعة."""
+    r = client.post(
+        "/api/academy/progress",
+        json={"school_id": _SCHOOL["id"], "lecture_id": _LECTURE["id"], "segment_index": -1},
+        headers=_register(client),
+    )
+    assert r.status_code == 422, r.text
+
+
+def test_absurd_identifier_is_422(client):
+    r = client.post(
+        "/api/academy/progress",
+        json={"school_id": "s" * 500, "lecture_id": _LECTURE["id"], "segment_index": 0},
+        headers=_register(client, "student2"),
+    )
+    assert r.status_code == 422, r.text
+
+
+def test_real_progress_save_still_works_and_completed_is_not_lowered(client):
+    """الحارس المعاكس + قاعدة قائمة: «أنهاها» حدثٌ لا يُلغى بإعادة فتح المحاضرة للمراجعة."""
+    headers = _register(client, "student3")
+    body = {"school_id": _SCHOOL["id"], "lecture_id": _LECTURE["id"]}
+    done = client.post("/api/academy/progress", json={**body, "segment_index": 2, "completed": True}, headers=headers)
+    assert done.status_code == 200, done.text
+    again = client.post("/api/academy/progress", json={**body, "segment_index": 0}, headers=headers)
+    assert again.status_code == 200, again.text
+    assert again.json()["progress"]["completed"] is True
+    assert again.json()["progress"]["segment_index"] == 0

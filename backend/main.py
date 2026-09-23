@@ -233,9 +233,18 @@ class WatchlistAdd(BaseModel):
 
 
 class ProgressSave(BaseModel):
-    school_id: str
-    lecture_id: str
-    segment_index: int = 0
+    """موضع المتداول بالمحاضرة. الحقول الثلاثة كانت **بلا حدّ واحد** وتُكتب كما وصلت بصفٍّ
+    دائم (`academy_progress`):
+
+    - `segment_index` سالب: الاستئناف يقرأ الموضع المحفوظ، وموضعٌ سالب يجعل المقطع الحالي
+      **غير معرّف** — قاعة محاضرة تُفتح بلا نصّ. لا عميل يرسله، وهذا سبب رفضه لا سبب قبوله.
+    - `school_id`/`lecture_id` بلا طول: مفتاحٌ بحجم صفحة يُخزَّن للأبد بمفتاح الصفّ نفسه.
+      الحدّ 64 يتجاوز أطول معرّف بالأكاديمية بكثير.
+    """
+
+    school_id: str = Field(min_length=1, max_length=64)
+    lecture_id: str = Field(min_length=1, max_length=64)
+    segment_index: int = Field(default=0, ge=0)
     completed: bool = False
 
 
@@ -1504,17 +1513,23 @@ def academy_schools():
 
 @app.get("/api/academy/schools/{school_id}")
 def academy_school(school_id: str):
+    """**404 لا 200 بجسم `{"error": "not found"}`**: العميل يرمي عند `!res.ok` وحده
+    (`getJson`)، وله مسار احتياطي مكتوب لهذه الحالة بالضبط (`setSchoolFallback`) — فردُّ 200
+    كان **يعطّل احتياطيَّه**: يُسنَد كائن الخطأ كأنه مدرسة، فـ`school.levels` غير معرّفة
+    وتُعرض قائمة مستويات فارغة بلا رسالة ولا محتوى بديل."""
     school = get_school(school_id)
     if not school:
-        return {"error": "not found"}
+        raise HTTPException(status_code=404, detail="school not found")
     return school
 
 
 @app.get("/api/academy/schools/{school_id}/lectures/{lecture_id}")
 def academy_lecture(school_id: str, lecture_id: str):
+    """نفس السبب، وأثره هنا أوضح: `LectureClassroom` يبني **محاضرة احتياطية بمقطعين** عند
+    الخطأ، وردُّ 200 كان يمرّ من فوقه فيُعرض «درس» بلا عنوان ولا مقاطع ولا نصّ."""
     lec = get_lecture(school_id, lecture_id)
     if not lec:
-        return {"error": "not found"}
+        raise HTTPException(status_code=404, detail="lecture not found")
     return lec
 
 
@@ -1653,7 +1668,7 @@ def courses():
 def course_detail(course_id: str):
     school = get_school(course_id)
     if not school:
-        return {"error": "not found"}
+        raise HTTPException(status_code=404, detail="course not found")
     return {
         "id": school["id"],
         "school": school["name_ar"],
