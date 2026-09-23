@@ -108,6 +108,21 @@ export function layoutAxisLabels(
   return out;
 }
 
+/**
+ * هل خرج موضعٌ عن مدى المحور المرئيّ، وإلى أيّ جهة؟
+ *
+ * وسوم السعر تُقصّ إلى الحافة فتبقى مقروءة، لكنها عندئذٍ **تكذب**: سعرٌ فوق أعلى
+ * المدى (بعد تكبير المحور أو تحريكه) يظهر وسمه ملتصقاً بالسقف كأن السوق هناك، بينما
+ * أعلى علامة تحته تقول رقماً آخر. والخطّ المتقطّع الذي كان سيدلّ على الموضع مقصوص
+ * خارج اللوح فلا يُرى. فتُعلَّم الجهة بدل الإيهام.
+ */
+export function offAxisSide(pos: number, extent: number): 'above' | 'below' | null {
+  if (!Number.isFinite(pos) || !Number.isFinite(extent)) return null;
+  if (pos < 0) return 'above';
+  if (pos > extent) return 'below';
+  return null;
+}
+
 /** تلامس علبتين على المحور نفسه (تُستعمل للوسوم فوق العلامات). */
 export function boxesTouch(
   aStart: number,

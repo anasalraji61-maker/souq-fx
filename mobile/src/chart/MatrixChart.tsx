@@ -41,7 +41,13 @@ import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
 import { indexOfBarTime } from './crossAnchor';
-import { axisTickCount, axisTickRatios, layoutAxisLabels, boxesTouch } from './axisTicks';
+import {
+  axisTickCount,
+  axisTickRatios,
+  layoutAxisLabels,
+  boxesTouch,
+  offAxisSide,
+} from './axisTicks';
 import {
   centeredBarH,
   centeredBarTop,
@@ -2930,6 +2936,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const crossTimeTagLeft = crossCandle
     ? Math.max(0, Math.min(chartPlotW - CROSS_TIME_TAG_W, crossX - CROSS_TIME_TAG_W / 2))
     : null;
+  // سعر خارج المدى المرئيّ (بعد تكبير محور السعر أو تحريكه): الوسم يُقصّ إلى الحافة
+  // فيبدو كأن السوق هناك، وأعلى علامة تحته تقول رقماً آخر — ويُقَصّ الخطّ المتقطّع
+  // خارج اللوح فلا يبقى ما يكذّبه. تُعلَّم الجهة بسهم، ولا يُرسم خطٌّ لا موضع له.
+  const currentPriceOff = offAxisSide(currentPriceY, chartPlotH);
+  const crossPriceOff = crossCandle ? offAxisSide(crossY, chartPlotH) : null;
+  const offMark = (side: 'above' | 'below' | null) =>
+    side === 'above' ? '▲ ' : side === 'below' ? '▼ ' : '';
 
   return (
     <View style={[styles.root, dense && styles.rootDense]}>
@@ -4780,10 +4793,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {cross && crossCandle ? (
           <>
             <View pointerEvents="none" style={[styles.crossV, { left: crossX, bottom: timeAxisH }]} />
-            <View
-              pointerEvents="none"
-              style={[styles.crossH, { top: crossY, right: PRICE_AXIS_WIDTH }]}
-            />
+            {crossPriceOff ? null : (
+              <View
+                pointerEvents="none"
+                style={[styles.crossH, { top: crossY, right: PRICE_AXIS_WIDTH }]}
+              />
+            )}
           </>
         ) : null}
 
@@ -4806,7 +4821,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           />
         ) : null}
 
-        {!hidePriceLabels ? (
+        {!hidePriceLabels && !currentPriceOff ? (
           <View
             pointerEvents="none"
             style={[
@@ -4849,12 +4864,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             pointerEvents="none"
             style={[styles.currentPriceTag, { top: currentTagTop, backgroundColor: accent }]}
           >
-            <Text style={styles.currentPriceText}>{formatPrice(currentPrice, series.symbol)}</Text>
+            <Text style={styles.currentPriceText}>
+              {offMark(currentPriceOff)}
+              {formatPrice(currentPrice, series.symbol)}
+            </Text>
           </View>
           ) : null}
           {!hidePriceLabels && crossCandle && crossTagTop != null ? (
           <View pointerEvents="none" style={[styles.crossPriceTag, { top: crossTagTop }]}>
-            <Text style={styles.crossTagText}>{formatPrice(crossCandle.close, series.symbol)}</Text>
+            <Text style={styles.crossTagText}>
+              {offMark(crossPriceOff)}
+              {formatPrice(crossCandle.close, series.symbol)}
+            </Text>
           </View>
           ) : null}
         </View>

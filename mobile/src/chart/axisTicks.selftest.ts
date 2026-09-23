@@ -3,7 +3,13 @@
  * Run: npx --yes tsx src/chart/axisTicks.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { axisTickCount, axisTickRatios, layoutAxisLabels, boxesTouch } from './axisTicks';
+import {
+  axisTickCount,
+  axisTickRatios,
+  layoutAxisLabels,
+  boxesTouch,
+  offAxisSide,
+} from './axisTicks';
 
 const TIME_GAP = 6;
 const PRICE_GAP = 4;
@@ -174,6 +180,17 @@ const minGap = (starts: number[], size: number) => {
   const crossLeft = (x: number, plotW: number) => Math.max(0, Math.min(plotW - 104, x - 52));
   assert.equal(boxesTouch(0, 88, crossLeft(60, 400), 104, CLEAR), true);
   assert.equal(boxesTouch(0, 88, crossLeft(300, 400), 104, CLEAR), false);
+}
+
+// ===== offAxisSide =====
+{
+  assert.equal(offAxisSide(120, 400), null);
+  assert.equal(offAxisSide(0, 400), null); // الحافة داخل المدى
+  assert.equal(offAxisSide(400, 400), null);
+  assert.equal(offAxisSide(-0.5, 400), 'above'); // أعلى من السقف ⇒ فوق
+  assert.equal(offAxisSide(400.5, 400), 'below');
+  assert.equal(offAxisSide(Number.NaN, 400), null);
+  assert.equal(offAxisSide(120, Number.NaN), null);
 }
 
 console.log('axisTicks.selftest: PASS');
