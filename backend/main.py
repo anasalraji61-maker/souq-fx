@@ -731,7 +731,15 @@ def academy_progress_get(user: dict | None = Depends(_auth_user)):
 
 
 @app.post("/api/academy/progress")
-def academy_progress_save(body: ProgressSave, user: dict = Depends(_auth_user)):
+def academy_progress_save(body: ProgressSave, user: dict | None = Depends(_auth_user)):
+    """401 لا 500 بلا توكن صالح. كان النوع `dict` بينما `_auth_user` يعيد `None` لكل
+    طلب بلا ترويسة أو بتوكن منتهٍ — فـ`user["user_id"]` يرمي TypeError ويخرج **500**.
+    وهو مسار يُستدعى تلقائياً مع **كل** انتقال مقطع بقاعة المحاضرة: جلسة انتهت صلاحيتها
+    والعميل ما زال يحمل بيانات المستخدم محلياً (فيمرّ شرط `if (user)` عنده) = خطأ خادم
+    لكل مقطع، بلا ما يدلّ العميل أن المطلوب إعادة دخول. الشقيق GET يعيد قائمة فارغة
+    للمجهول أصلاً — فالتباين كان بهذا المسار وحده."""
+    if not user:
+        raise HTTPException(status_code=401, detail="not authenticated")
     item = db.save_progress(
         user["user_id"],
         body.school_id,
