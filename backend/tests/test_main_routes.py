@@ -17,6 +17,8 @@
 """
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -304,3 +306,196 @@ def test_progress_response_reports_what_the_database_holds(client):
     ).json()["progress"]
     got = client.get("/api/academy/progress", headers=_auth(token)).json()["progress"][0]
     assert r == got
+
+
+# ─── تنبيهات المؤشرات: دورة الحياة والملكية ─────────────────────────────────
+
+_IND_RSI = {
+    "symbol": "eurusd",
+    "timeframe": "1H",
+    "alert_type": "rsi",
+    "condition": "above",
+    "value": 70,
+}
+
+
+def _fake_series(kind: str, closes: list[float]):
+    """بديل `build_series` بالاختبار — الحقول التي يقرأها المسار وحدها.
+
+    المسار الحقيقي يطلب سلسلة شموع من المزوّد عبر الشبكة؛ هنا تُحقَن سلسلة معلومة
+    الاتجاه فيصير «هل أُطلق التنبيه؟» سؤالاً حتمياً لا رهاناً على السوق.
+    """
+    candles = [
+        SimpleNamespace(model_dump=lambda v=v: {"close": v, "open": v, "high": v, "low": v})
+        for v in closes
+    ]
+    return SimpleNamespace(data_source=SimpleNamespace(kind=kind), candles=candles)
+
+
+_RISING = [1.0 + i * 0.01 for i in range(60)]   # صعود خالص → RSI = 100
+_FALLING = [2.0 - i * 0.01 for i in range(60)]  # هبوط خالص → RSI = 0
+
+
+@pytest.fixture()
+def series_calls(monkeypatch):
+    """يلتقط كل نداء لـ`build_series` ويعيد سلسلة صاعدة من مزوّد حقيقي."""
+    calls: list[tuple[str, str]] = []
+
+    def fake(symbol: str, timeframe: str = "15m", outputsize: int = 180):
+        calls.append((symbol, timeframe))
+        return _fake_series("twelvedata", _RISING)
+
+    monkeypatch.setattr(main, "build_series", fake)
+    return calls
+
+
+def test_indicator_alert_is_created_armed_and_uppercased(client):
+    token = _register(client, "indmaker")
+    alert = client.post("/api/indicator-alerts", json=_IND_RSI, headers=_auth(token)).json()["alert"]
+    assert alert["symbol"] == "EURUSD", "الرمز يُوحَّد كما بمسار تنبيهات السعر"
+    assert alert["active"] is True and alert["triggered"] is False, "يُنشأ مُسلَّحاً"
+    assert alert["timeframe"] == "1H"
+
+
+def test_indicator_alerts_of_one_account_are_invisible_to_another(client):
+    a, b = _register(client, "indalice"), _register(client, "indbob")
+    created = client.post("/api/indicator-alerts", json=_IND_RSI, headers=_auth(a)).json()["alert"]
+    mine = client.get("/api/indicator-alerts", headers=_auth(a)).json()["alerts"]
+    assert [x["id"] for x in mine] == [created["id"]]
+    assert client.get("/api/indicator-alerts", headers=_auth(b)).json()["alerts"] == []
+
+
+def test_another_account_cannot_delete_or_rearm_an_indicator_alert(client):
+    """نفس حراسة تنبيهات السعر — ومع كل محاولة يُتحقَّق أن صفّ المالك **بقي سليماً**،
+    فلا يمرّ حذفٌ صامت باختبار «404 وكفى»."""
+    a, b = _register(client, "indcarol"), _register(client, "inddave")
+    aid = client.post("/api/indicator-alerts", json=_IND_RSI, headers=_auth(a)).json()["alert"]["id"]
+    assert client.delete(f"/api/indicator-alerts/{aid}", headers=_auth(b)).json()["ok"] is False
+    assert client.post(f"/api/indicator-alerts/{aid}/rearm", headers=_auth(b)).status_code == 404
+    still = client.get("/api/indicator-alerts", headers=_auth(a)).json()["alerts"]
+    assert len(still) == 1 and still[0]["active"] is True
+
+
+def test_rearming_an_unknown_indicator_alert_is_404(client):
+    token = _register(client, "indghost")
+    assert client.post("/api/indicator-alerts/ia-nope/rearm", headers=_auth(token)).status_code == 404
+
+
+def test_owner_deletes_their_own_indicator_alert(client):
+    token = _register(client, "indowner")
+    aid = client.post("/api/indicator-alerts", json=_IND_RSI, headers=_auth(token)).json()["alert"]["id"]
+    assert client.delete(f"/api/indicator-alerts/{aid}", headers=_auth(token)).json()["ok"] is True
+    assert client.get("/api/indicator-alerts", headers=_auth(token)).json()["alerts"] == []
+
+
+def test_anonymous_devices_do_not_share_indicator_alerts(client):
+    client.post("/api/indicator-alerts", json=_IND_RSI, headers=_DEV1)
+    assert len(client.get("/api/indicator-alerts", headers=_DEV1).json()["alerts"]) == 1
+    assert client.get("/api/indicator-alerts", headers=_DEV2).json()["alerts"] == []
+    assert client.get("/api/indicator-alerts").json()["alerts"] == []
+
+
+# ─── تنبيهات المؤشرات: الفحص ────────────────────────────────────────────────
+
+def test_a_fired_indicator_alert_is_returned_once_only(client, series_calls):
+    """`mark_indicator_alert_triggered` ذرّي: التنبيه لمرة واحدة، فلا إشعار مكرّر
+    لمن يفحص كل دقيقة ولا سباق بين جهازين للمتداول نفسه."""
+    token = _register(client, "indfire")
+    client.post("/api/indicator-alerts", json=_IND_RSI, headers=_auth(token))
+    first = client.post("/api/indicator-alerts/check", headers=_auth(token)).json()
+    assert len(first["triggered"]) == 1, "سلسلة صاعدة خالصة → RSI = 100 فوق العتبة 70"
+    assert [a["triggered"] for a in first["alerts"]] == [True]
+    second = client.post("/api/indicator-alerts/check", headers=_auth(token)).json()
+    assert second["triggered"] == [], "لا يُعاد تسليمه مرّة ثانية"
+
+
+def test_rearming_a_fired_indicator_alert_puts_it_back_to_watching(client, series_calls):
+    """كان الحلّ الوحيد لإعادة تنبيه أُطلق هو حذفه وإعادة إنشائه بكل حقوله."""
+    token = _register(client, "indrearm")
+    aid = client.post("/api/indicator-alerts", json=_IND_RSI, headers=_auth(token)).json()["alert"]["id"]
+    client.post("/api/indicator-alerts/check", headers=_auth(token))
+    back = client.post(f"/api/indicator-alerts/{aid}/rearm", headers=_auth(token)).json()["alert"]
+    assert back["triggered"] is False and back["active"] is True
+    again = client.post("/api/indicator-alerts/check", headers=_auth(token)).json()
+    assert len(again["triggered"]) == 1, "بعد إعادة التسليح يُطلق ثانيةً"
+
+
+def test_a_seeded_demo_series_never_fires_an_indicator_alert(client, monkeypatch):
+    """حين يتعذّر المزوّد يبني الخادم شموعاً بذرية. كان تقاطع/RSI عليها **يُطلق**
+    التنبيه ويعلّمه «مُطلَق» نهائياً بلا حدث سوقي حقيقي — أي أن انقطاع المزوّد كان
+    يحرق تنبيهات المتداول بإشعارات كاذبة."""
+    token = _register(client, "inddemo")
+    client.post("/api/indicator-alerts", json=_IND_RSI, headers=_auth(token))
+    monkeypatch.setattr(
+        main, "build_series", lambda s, timeframe="15m", outputsize=180: _fake_series("demo", _RISING)
+    )
+    res = client.post("/api/indicator-alerts/check", headers=_auth(token)).json()
+    assert res["triggered"] == []
+    assert res["alerts"][0]["triggered"] is False, "ويبقى مُسلَّحاً — لم يُحرق"
+
+
+def test_a_failing_provider_leaves_the_alert_armed(client, monkeypatch):
+    """استثناء من المزوّد يُتخطّى بهدوء ويُعاد الفحص بالطلب التالي."""
+    token = _register(client, "indfail")
+    client.post("/api/indicator-alerts", json=_IND_RSI, headers=_auth(token))
+
+    def boom(symbol, timeframe="15m", outputsize=180):
+        raise RuntimeError("provider down")
+
+    monkeypatch.setattr(main, "build_series", boom)
+    res = client.post("/api/indicator-alerts/check", headers=_auth(token))
+    assert res.status_code == 200, "عطل المزوّد لا يصير 500 بوجه المتداول"
+    assert res.json()["triggered"] == []
+    assert res.json()["alerts"][0]["triggered"] is False
+
+
+def test_one_series_is_fetched_per_symbol_and_timeframe_not_per_alert(client, series_calls):
+    """أثقل استطلاع بالتطبيق: كانت السلسلة تُبنى لكل تنبيه — ثلاثة تنبيهات EURUSD 1H
+    = ثلاثة طلبات للمزوّد من كل جهاز مفتوح، كل دقيقة. الآن طلب واحد لكل (رمز، فريم)."""
+    token = _register(client, "indcache")
+    for value in (10, 20, 30):
+        client.post("/api/indicator-alerts", json={**_IND_RSI, "value": value}, headers=_auth(token))
+    client.post("/api/indicator-alerts", json={**_IND_RSI, "symbol": "XAUUSD"}, headers=_auth(token))
+    client.post("/api/indicator-alerts/check", headers=_auth(token))
+    assert sorted(series_calls) == [("EURUSD", "1H"), ("XAUUSD", "1H")], series_calls
+
+
+def test_an_unmet_condition_does_not_fire(client, monkeypatch):
+    """الحارس المعاكس: بلا هذا الاختبار يمرّ «كل شيء يُطلق دائماً»."""
+    token = _register(client, "indquiet")
+    client.post("/api/indicator-alerts", json=_IND_RSI, headers=_auth(token))
+    monkeypatch.setattr(
+        main,
+        "build_series",
+        lambda s, timeframe="15m", outputsize=180: _fake_series("twelvedata", _FALLING),
+    )
+    res = client.post("/api/indicator-alerts/check", headers=_auth(token)).json()
+    assert res["triggered"] == [], "سلسلة هابطة خالصة → RSI = 0، لا شيء فوق 70"
+
+
+def test_the_check_only_ever_sees_the_callers_own_alerts(client, series_calls):
+    a, b = _register(client, "indmine"), _register(client, "indyours")
+    client.post("/api/indicator-alerts", json=_IND_RSI, headers=_auth(a))
+    res = client.post("/api/indicator-alerts/check", headers=_auth(b)).json()
+    assert res == {"triggered": [], "alerts": []}
+    assert series_calls == [], "ولا يُستهلك حدّ المزوّد على تنبيهات غيره"
+
+
+# ─── تنبيه لا يمكن أن يُطلق يُرفض بـ422 بدل حفظه بصمت ───────────────────────
+
+@pytest.mark.parametrize(
+    "body, why",
+    [
+        ({**_IND_RSI, "alert_type": "ma_cross", "condition": "above"}, "تقاطع بشرط above"),
+        ({**_IND_RSI, "alert_type": "macd_cross", "condition": "below"}, "تقاطع بشرط below"),
+        ({**_IND_RSI, "value": None}, "RSI بلا عتبة (NaN من العميل يصل null)"),
+        ({**_IND_RSI, "value": 150}, "عتبة خارج 0–100"),
+        ({**_IND_RSI, "value": 0}, "عتبة عند الحدّ"),
+        ({**_IND_RSI, "timeframe": "1h"}, "فريم غير معروف (الحروف الكبيرة هي المعجم)"),
+        ({**_IND_RSI, "timeframe": "3y"}, "فريم غير موجود"),
+        ({**_IND_RSI, "alert_type": "stoch"}, "نوع غير مدعوم"),
+    ],
+)
+def test_an_alert_that_could_never_fire_is_rejected(client, body, why):
+    token = _register(client, "indvalid")
+    assert client.post("/api/indicator-alerts", json=body, headers=_auth(token)).status_code == 422, why
