@@ -35,21 +35,37 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
       <View style={styles.backdrop}>
         <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
           <View style={styles.card}>
-            <View
-              style={styles.dots}
-              accessibilityRole="progressbar"
-              accessibilityLabel={t.onboardStepCounterA11y
-                .replace('{n}', String(step + 1))
-                .replace('{total}', String(steps.length))}
-            >
+            {/**
+              * **النقاط صارت الطريق للخلف.** الجولة خمس خطوات بزرَّين لا غير: «التالي» و«تخطي» —
+              * فمن ضغط «التالي» مرّةً زائدة (أو لمس الشاشة وهو يقرأ) **لا سبيل له للرجوع** إلا أن
+              * يُنهي الجولة كلّها، وهي تُعرض **مرّة واحدة بالعمر** (`matrix.onboarding.v1`): أي أن
+              * الخطوة التي فاتته فاتته للأبد. وأوّل من يقع له هذا هو بالضبط من كُتبت الجولة له.
+              *
+              * ولا مفتاح نصّ جديد: النقاط لغةٌ عالمية، والاسم المنطوق يُبنى من `onboardStepCounterA11y`
+              * القائم بالثلاث لغات («الخطوة {n} من {total}»).
+              *
+              * **وقد رُفع الإخفاء عن النقاط عمداً**: كانت مخفيّةً عن قارئ الشاشة لأنها **عناصر
+              * فارغة زخرفية**، والتقدّم يُنطق مرّة من الحاوية. وقد بطل السبب — صارت أزراراً تفعل
+              * شيئاً، فإخفاؤها يحجب الطريق الوحيد للرجوع عمّن يستعمل قارئ الشاشة. وكلٌّ منها يحمل
+              * موضعه و`selected`، فالتقدّم ما زال منطوقاً وزيادةً.
+              */}
+            <View style={styles.dots}>
               {steps.map((_, i) => (
-                <View
+                <Pressable
                   key={i}
-                  // النقاط زخرفية: التقدّم يُنطق مرة واحدة من الحاوية أعلاه لا خمس مرّات كعناصر فارغة.
-                  accessibilityElementsHidden
-                  importantForAccessibility="no-hide-descendants"
-                  style={[styles.dot, i <= step && styles.dotOn, i < step && styles.dotDone]}
-                />
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: i === step }}
+                  accessibilityLabel={t.onboardStepCounterA11y
+                    .replace('{n}', String(i + 1))
+                    .replace('{total}', String(steps.length))}
+                  // مساحة اللمس لا الشكل: النقطة ستّ بكسلات، والهدف حولها ~18×46 بعد الحشو
+                  // وhitSlop الرأسي. وhitSlop أفقي معدوم عمداً كي لا تتداخل أهداف النقاط المتجاورة.
+                  hitSlop={{ top: 10, bottom: 10 }}
+                  style={({ pressed }) => [styles.dotHit, pressed && { opacity: buttons.pressedOpacity }]}
+                  onPress={() => setStep(i)}
+                >
+                  <View style={[styles.dot, i <= step && styles.dotOn, i < step && styles.dotDone]} />
+                </Pressable>
               ))}
             </View>
             <Text style={[styles.title, { textAlign: align }]}>{steps[step]!.title}</Text>
@@ -116,7 +132,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     elevation: buttons.elevation,
   },
-  dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: spacing.xs },
+  // بلا `gap`: التباعد صار من حشو هدف اللمس نفسه (5+5 = عشر بكسلات بين نقطتين).
+  dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.xs },
+  dotHit: { paddingHorizontal: 5, paddingVertical: 12, justifyContent: 'center', alignItems: 'center' },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.border },
   dotOn: { backgroundColor: colors.accent, width: 18 },
   dotDone: { width: 6, opacity: 0.55 },
