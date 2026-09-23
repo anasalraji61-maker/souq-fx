@@ -3790,51 +3790,86 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             />
           ))}
         {indicators.includes('wma20') &&
-          overlays.wma20.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`w20${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#F472B6' }]}
-              />
-            )
-          )}
+          planLineSegments(overlays.wma20, xOf, yOf).map((sg) => (
+            <View
+              key={`w20${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#F472B6',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('dema20') &&
-          overlays.dema20.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`d20${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#34D399' }]}
-              />
-            )
-          )}
+          planLineSegments(overlays.dema20, xOf, yOf).map((sg) => (
+            <View
+              key={`d20${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#34D399',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('tema20') &&
-          overlays.tema20.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`t20${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FB923C' }]}
-              />
-            )
-          )}
+          planLineSegments(overlays.tema20, xOf, yOf).map((sg) => (
+            <View
+              key={`t20${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#FB923C',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('hma20') &&
-          overlays.hma20.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`h20${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#818CF8' }]}
-              />
-            )
-          )}
+          planLineSegments(overlays.hma20, xOf, yOf).map((sg) => (
+            <View
+              key={`h20${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#818CF8',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('vwap') &&
           vwap &&
-          vwap.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`vw${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: colors.white }]}
-              />
-            )
-          )}
+          planLineSegments(vwap, xOf, yOf).map((sg) => (
+            <View
+              key={`vw${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: colors.white,
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('vwapBands') &&
           vwapBands &&
           planBandStrips(vwapBands.upper, vwapBands.lower, xOf, yOf, bandW).map((bnd) => (
@@ -3852,14 +3887,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           ))}
         {indicators.includes('twap') &&
           twap &&
-          twap.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`tw${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#BAE6FD' }]}
-              />
-            )
-          )}
+          planLineSegments(twap, xOf, yOf).map((sg) => (
+            <View
+              key={`tw${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#BAE6FD',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('psar') &&
           psar &&
           psar.map((v, i) =>
@@ -3872,14 +3914,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           )}
         {indicators.includes('gannHiLo') &&
           gannHiLo &&
-          gannHiLo.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`ghl${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FCD34D' }]}
-              />
-            )
-          )}
+          planLineSegments(gannHiLo, xOf, yOf).map((sg) => (
+            <View
+              key={`ghl${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#FCD34D',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('fractals') &&
           fractals &&
           fractals.top.map((v, i) =>
@@ -3939,189 +3988,330 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           )}
         {indicators.includes('medianPrice') &&
           medianPrice &&
-          medianPrice.map((v, i) => (
+          planLineSegments(medianPrice, xOf, yOf).map((sg) => (
             <View
-              key={`mp${i}`}
-              style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#94A3B8' }]}
+              key={`mp${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#94A3B8',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
             />
           ))}
         {indicators.includes('typicalPrice') &&
           typicalPrice &&
-          typicalPrice.map((v, i) => (
+          planLineSegments(typicalPrice, xOf, yOf).map((sg) => (
             <View
-              key={`tp${i}`}
-              style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FDE68A' }]}
+              key={`tp${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#FDE68A',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
             />
           ))}
         {indicators.includes('weightedClose') &&
           weightedClose &&
-          weightedClose.map((v, i) => (
+          planLineSegments(weightedClose, xOf, yOf).map((sg) => (
             <View
-              key={`wc${i}`}
-              style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FCA5A5' }]}
+              key={`wc${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#FCA5A5',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
             />
           ))}
         {indicators.includes('avgPrice') &&
           avgPrice &&
-          avgPrice.map((v, i) => (
+          planLineSegments(avgPrice, xOf, yOf).map((sg) => (
             <View
-              key={`avgp${i}`}
-              style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#C4B5FD' }]}
+              key={`avgp${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#C4B5FD',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
             />
           ))}
         {indicators.includes('dma') &&
           dma &&
-          dma.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`dma${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#C7D2FE' }]}
-              />
-            )
-          )}
+          planLineSegments(dma, xOf, yOf).map((sg) => (
+            <View
+              key={`dma${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#C7D2FE',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('trima') &&
           trima &&
-          trima.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`trima${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#D9F99D' }]}
-              />
-            )
-          )}
+          planLineSegments(trima, xOf, yOf).map((sg) => (
+            <View
+              key={`trima${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#D9F99D',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('mcginley') &&
           mcginley &&
-          mcginley.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`mg${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#5EEAD4' }]}
-              />
-            )
-          )}
+          planLineSegments(mcginley, xOf, yOf).map((sg) => (
+            <View
+              key={`mg${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#5EEAD4',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('lsma') &&
           lsma &&
-          lsma.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`lsma${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#22D3EE' }]}
-              />
-            )
-          )}
+          planLineSegments(lsma, xOf, yOf).map((sg) => (
+            <View
+              key={`lsma${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#22D3EE',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('tsf') &&
           tsf &&
-          tsf.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`tsf${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#A5B4FC' }]}
-              />
-            )
-          )}
+          planLineSegments(tsf, xOf, yOf).map((sg) => (
+            <View
+              key={`tsf${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#A5B4FC',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('vwma') &&
           vwma &&
-          vwma.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`vwma${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FACC15' }]}
-              />
-            )
-          )}
+          planLineSegments(vwma, xOf, yOf).map((sg) => (
+            <View
+              key={`vwma${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#FACC15',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('alma') &&
           alma &&
-          alma.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`alma${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#E879F9' }]}
-              />
-            )
-          )}
+          planLineSegments(alma, xOf, yOf).map((sg) => (
+            <View
+              key={`alma${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#E879F9',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('t3') &&
           t3 &&
-          t3.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`t3${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#0EA5E9' }]}
-              />
-            )
-          )}
+          planLineSegments(t3, xOf, yOf).map((sg) => (
+            <View
+              key={`t3${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#0EA5E9',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('vidya') &&
           vidya &&
-          vidya.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`vidya${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FDA4AF' }]}
-              />
-            )
-          )}
+          planLineSegments(vidya, xOf, yOf).map((sg) => (
+            <View
+              key={`vidya${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#FDA4AF',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('smma20') &&
           smma20 &&
-          smma20.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`smma20_${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#F97316' }]}
-              />
-            )
-          )}
+          planLineSegments(smma20, xOf, yOf).map((sg) => (
+            <View
+              key={`smma20_${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#F97316',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('kama') &&
           kama &&
-          kama.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`kama${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#67E8F9' }]}
-              />
-            )
-          )}
+          planLineSegments(kama, xOf, yOf).map((sg) => (
+            <View
+              key={`kama${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#67E8F9',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('frama') &&
           frama &&
-          frama.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`frama${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#7DD3FC' }]}
-              />
-            )
-          )}
+          planLineSegments(frama, xOf, yOf).map((sg) => (
+            <View
+              key={`frama${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#7DD3FC',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('zlema') &&
           zlema &&
-          zlema.map((v, i) =>
-            v == null ? null : (
-              <View
-                key={`zl${i}`}
-                style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#FDBA74' }]}
-              />
-            )
-          )}
+          planLineSegments(zlema, xOf, yOf).map((sg) => (
+            <View
+              key={`zl${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#FDBA74',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
         {indicators.includes('gmma') &&
           gmma &&
           gmma.shortLines.map((line, li) =>
-            line.map((v, i) =>
-              v == null ? null : (
-                <View
-                  key={`gmmaS${li}_${i}`}
-                  style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#6EE7B7' }]}
-                />
-              )
-            )
+            planLineSegments(line, xOf, yOf).map((sg) => (
+              <View
+                key={`gmmaS${li}_${sg.at}`}
+                style={{
+                  position: 'absolute',
+                  left: sg.left,
+                  top: sg.top - 1,
+                  width: sg.len,
+                  height: 2,
+                  backgroundColor: '#6EE7B7',
+                  transform: [{ rotate: `${sg.deg}deg` }],
+                  transformOrigin: 'left center',
+                }}
+              />
+            ))
           )}
         {indicators.includes('gmma') &&
           gmma &&
           gmma.longLines.map((line, li) =>
-            line.map((v, i) =>
-              v == null ? null : (
-                <View
-                  key={`gmmaL${li}_${i}`}
-                  style={[styles.dot, { left: xOf(i) - 1.5, top: yOf(v) - 1.5, backgroundColor: '#93C5FD' }]}
-                />
-              )
-            )
+            planLineSegments(line, xOf, yOf).map((sg) => (
+              <View
+                key={`gmmaL${li}_${sg.at}`}
+                style={{
+                  position: 'absolute',
+                  left: sg.left,
+                  top: sg.top - 1,
+                  width: sg.len,
+                  height: 2,
+                  backgroundColor: '#93C5FD',
+                  transform: [{ rotate: `${sg.deg}deg` }],
+                  transformOrigin: 'left center',
+                }}
+              />
+            ))
           )}
         {indicators.includes('zigzag') && zigzag
           ? (() => {
