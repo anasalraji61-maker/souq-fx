@@ -40,6 +40,7 @@ import { rangeBars } from './range';
 import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
+import { indexOfBarTime } from './crossAnchor';
 import {
   centeredBarH,
   centeredBarTop,
@@ -795,9 +796,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [canUndo, setCanUndo] = useState(false);
   const [pending, setPending] = useState<ChartPoint | null>(null);
   const [dragEnd, setDragEnd] = useState<ChartPoint | null>(null);
-  const [cross, setCross] = useState<{ index: number; x: number; y: number } | null>(null);
-  // فهرس شمعة التقاطع داخل نافذة الرسم — رؤوس اللوحات تقرأ عندها بدل آخر شمعة دائماً.
-  const crossIndex = cross ? cross.index : null;
+  // مرساة التقاطع **بزمن الشمعة** لا بفهرسها داخل النافذة — راجع `crossAnchor.ts`:
+  // النافذة متحرّكة، فالفهرس وحده يجعل القراءة تتبع الخانة لا الشمعة المختارة.
+  const [cross, setCross] = useState<{ time: number } | null>(null);
   const [windowCount, setWindowCount] = useState(80);
   const [offset, setOffset] = useState(0);
   const [priceScale, setPriceScale] = useState(1);
@@ -2354,7 +2355,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const index = hitIndex(x);
     const candle = source.plot[index];
     if (!candle) return;
-    setCross({ index, x: xOf(index), y: yOf(candle.close) });
+    setCross({ time: candle.time });
     if (!interactive) return;
 
     if (tool === 'select') {
@@ -2846,11 +2847,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     });
   };
 
-  const crossCandle = cross ? source.plot[cross.index] : null;
+  // فهرس شمعة التقاطع داخل النافذة الحاليّة — يُحلّ من الزمن عند كل رسم، فالتقاطع
+  // يتبع الشمعة عبر التيكات الحيّة وزرّي التكبير والتصغير، ويسقط من نفسه إن خرجت
+  // الشمعة من النافذة أو بدّل المتداول الفريم/الرمز. رؤوس اللوحات تقرأ عنده.
+  const crossIndex = cross ? indexOfBarTime(source.plot, cross.time) : null;
+  const crossCandle = crossIndex != null ? source.plot[crossIndex] ?? null : null;
   // Recomputed every render so the crosshair and its axis tags stay glued to the
-  // candle after zoom buttons / live ticks (the stored pixel x/y can go stale).
-  const crossX = cross && crossCandle ? xOf(cross.index) : 0;
-  const crossY = cross && crossCandle ? yOf(crossCandle.close) : 0;
+  // candle after zoom buttons / live ticks.
+  const crossX = crossIndex != null && crossCandle ? xOf(crossIndex) : 0;
+  const crossY = crossCandle ? yOf(crossCandle.close) : 0;
 
   const visibleDrawings = drawings
     .map((d) => {
