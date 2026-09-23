@@ -8,10 +8,17 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Linking,
 } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api, type PriceAlert } from '../api';
-import { ensureAlertNotifications, pushPriceAlert, registerPushToken } from '../notifications';
+import {
+  ensureAlertNotifications,
+  getNotificationPermissionState,
+  pushPriceAlert,
+  registerPushToken,
+  type NotificationPermissionState,
+} from '../notifications';
 import { playSoftClick } from '../audio/playSoftClick';
 import { hasCelebratedFirstAlert, markFirstAlertCelebrated } from '../achievements';
 import { useI18n } from '../i18n/I18nContext';
@@ -94,6 +101,18 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
   /** تأكيد صريح بعد كل حفظ ناجح ("مُفعَّل: EURUSD ≥ 1.0850") — كان التأكيد الوحيد شارة أول تنبيه. */
   const [armed, setArmed] = useState<string | null>(null);
   const armedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /**
+   * **هل سيصلك الإشعار أصلاً؟** اللوحة تقول «✓ مُفعَّل: EURUSD ≥ 1.0850» ثم تصمت — وهي تقولها
+   * بالضبط نفسها سواء أكان إذن الإشعارات ممنوحاً أم مرفوضاً من إعدادات الجهاز. والفرق بينهما هو
+   * كلّ شيء: بالرفض لا يصل إشعار إطلاقاً، ويبقى التنبيه محصوراً بفحص اللوحة **وهي مفتوحة** — أي
+   * أن المتداول الذي أغلق التطبيق واثقاً أنه سيُنادى لن يُنادى، وسيعلم ذلك بعد أن يمرّ السوق
+   * بمستواه. وعنوان اللوحة نفسه يَعِد بـ«إشعار عند الإطلاق» (`alertsSub`).
+   *
+   * يُقرأ الإذن بعد محاولة الطلب عند الفتح، ولا يُعرض شيء إذا كان ممنوحاً (لا ضجيج حيث يعمل كل
+   * شيء). الأزرار والنصوص كلها مفاتيح قائمة بالثلاث لغات (`notif*`) بنفس منطق شاشة الحساب.
+   */
+  const [notifState, setNotifState] = useState<NotificationPermissionState | null>(null);
+  const [notifBusy, setNotifBusy] = useState(false);
   /** تعديل تنبيه قائم: الضغط على سطره يحمّل قيمه بالنموذج؛ الحفظ = إنشاء الجديد ثم حذف القديم
    * (لا يوجد مسار تحديث بالباك-إند، وهذا الترتيب لا يُفقد التنبيه القديم إن فشل الإنشاء). */
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -304,6 +323,14 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
       .then(() => registerPushToken())
       .catch(() => {
         /* الإشعارات تحسين اختياري — فشل الإذن لا يمنع التنبيهات داخل التطبيق */
+      })
+      // تُقرأ الحالة بعد المحاولة بكل الأحوال (نجحت أم رُفضت أم رمت) — هي ما يُعرض للمتداول
+      .then(() => getNotificationPermissionState())
+      .then((st) => {
+        if (mountedRef.current) setNotifState(st);
+      })
+      .catch(() => {
+        /* تعذّرت قراءة الحالة: لا نعرض ادّعاءً عنها (تبقى null فلا سطر) */
       });
     /**
      * فحص فوري عند فتح اللوحة، لا بعد دقيقة. `setInterval` وحده كان يعني أن أول فحص داخل
@@ -323,6 +350,30 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
   useEffect(() => {
     if (refreshKey) void refresh();
   }, [refreshKey, refresh]);
+
+  /** نفس مسار شاشة الحساب: الرفض ⇒ إعدادات النظام (لا سبيل لإعادة السؤال بiOS)، وما عداه ⇒ طلب الإذن. */
+  const enableNotifications = async () => {
+    if (notifBusy) return;
+    setNotifBusy(true);
+    try {
+      if (notifState === 'denied') {
+        await Linking.openSettings();
+      } else {
+        const ok = await ensureAlertNotifications();
+        if (ok) await registerPushToken();
+      }
+    } catch {
+      /* رفض النظام/بيئة بلا إعدادات — الحالة تُعاد قراءتها أدناه فيبقى المعروض صادقاً */
+    } finally {
+      try {
+        const st = await getNotificationPermissionState();
+        if (mountedRef.current) setNotifState(st);
+      } catch {
+        /* تُترك الحالة كما هي */
+      }
+      if (mountedRef.current) setNotifBusy(false);
+    }
+  };
 
   const add = async () => {
     const p = parseDecimal(price) ?? NaN;
@@ -856,6 +907,41 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
           ✓ {armed}
         </Text>
       ) : null}
+      {/* لا يظهر شيء حين يكون الإذن ممنوحاً — السطر لا يُقال إلا حين يغيّر ما سيحدث فعلاً. */}
+      {notifState != null && notifState !== 'granted' ? (
+        <View style={[styles.currentRow, rtl && styles.rowRtl]}>
+          <Text style={[styles.notifWarn, { textAlign: align }]}>
+            {t.notifications}:{' '}
+            {notifState === 'denied'
+              ? t.notifStatusDenied
+              : notifState === 'unsupported'
+                ? t.notifStatusUnsupported
+                : t.notifStatusUndetermined}
+          </Text>
+          {notifState !== 'unsupported' ? (
+            <Pressable
+              accessibilityRole="button"
+              disabled={notifBusy}
+              accessibilityState={{ disabled: notifBusy, busy: notifBusy }}
+              style={({ pressed }) => [
+                styles.useCurrent,
+                notifBusy && { opacity: 0.5 },
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => void enableNotifications()}
+              accessibilityLabel={notifState === 'denied' ? t.notifOpenSettingsBtn : t.notifEnableBtn}
+              hitSlop={6}
+            >
+              <Text style={styles.useCurrentText}>
+                {notifBusy ? '...' : notifState === 'denied' ? t.notifOpenSettingsBtn : t.notifEnableBtn}
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
       {showFirstBadge ? (
         <View style={styles.firstAlertBadge}>
           <Text style={styles.firstAlertBadgeText}>{t.alertsFirstBadge}</Text>
@@ -893,6 +979,9 @@ const styles = StyleSheet.create({
    */
   listFill: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: LIST_WINDOW_H },
   listCapped: { maxHeight: LIST_WINDOW_H },
+  /** تحذيرٌ لا خطأ: بلون التحذير المؤسَّس (كـ`firesNow`) لا بالأحمر — التنبيه مُسلَّح فعلاً بالخادم،
+   * والناقص هو طريق وصول الخبر للجهاز. */
+  notifWarn: { color: colors.warn, fontSize: 10, fontWeight: '700', flex: 1 },
   wrap: {
     flex: 1,
     height: '100%',
