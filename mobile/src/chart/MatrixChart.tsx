@@ -41,7 +41,7 @@ import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
 import { indexOfBarTime } from './crossAnchor';
-import { axisTickCount, axisTickRatios, layoutAxisLabels } from './axisTicks';
+import { axisTickCount, axisTickRatios, layoutAxisLabels, boxesTouch } from './axisTicks';
 import {
   centeredBarH,
   centeredBarTop,
@@ -360,6 +360,9 @@ const CROSS_TIME_TAG_W = 104;
 const TIME_LABEL_GAP = 6;
 const PRICE_LABEL_H = 14;
 const PRICE_LABEL_GAP = 4;
+/** علوّ وسم السعر (الحيّ ووسم التقاطع)، وفجوة ما يُخفى من العلامات تحته. */
+const PRICE_TAG_H = 18;
+const TAG_CLEAR_GAP = 2;
 
 function candleTimeSec(t: number): number {
   return t > 1e12 ? t / 1000 : t;
@@ -2906,6 +2909,28 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const currentPrice = livePrice ?? source.plot[source.plot.length - 1]?.close ?? series.last;
   const currentPriceY = yOf(currentPrice);
 
+  // الوسوم تُرسم **فوق** علامات المحور، وعرضها عرض المحور كلّه — فعلامة تقع تحت وسم
+  // كانت تظهر شريحةً من أرقامها حول حافته: تشويش يُقرأ كرقم ثالث لا كرقم مقصوص.
+  // ووسم التقاطع (فاتح) ووسم السعر الحيّ (فيروزيّ) يتكدّسان متى لمس المتداول شمعة
+  // قرب السعر الحاليّ — وهي الحالة الأكثر وقوعاً لا الأندر. تُحسب مواضعها هنا مرّة
+  // واحدة فالفحص والرسم يقرآن الرقم نفسه.
+  const currentTagTop = Math.max(0, Math.min(chartPlotH - 20, currentPriceY - 9));
+  const crossTagTop = crossCandle
+    ? Math.max(0, Math.min(chartPlotH - 20, crossY - 9))
+    : null;
+  // وسم السعر الحيّ هو ما يُخفى عند التكدّس: وسم التقاطع هو ما طلبه المتداول للتوّ،
+  // وسعره على بُعد أقلّ من علوّ وسم واحد فلا يضيع شيء.
+  const currentTagHidden =
+    crossTagTop != null && boxesTouch(currentTagTop, PRICE_TAG_H, crossTagTop, PRICE_TAG_H, 0);
+  const priceTickUnderTag = (start: number) =>
+    (!currentTagHidden &&
+      boxesTouch(start, PRICE_LABEL_H, currentTagTop, PRICE_TAG_H, TAG_CLEAR_GAP)) ||
+    (crossTagTop != null &&
+      boxesTouch(start, PRICE_LABEL_H, crossTagTop, PRICE_TAG_H, TAG_CLEAR_GAP));
+  const crossTimeTagLeft = crossCandle
+    ? Math.max(0, Math.min(chartPlotW - CROSS_TIME_TAG_W, crossX - CROSS_TIME_TAG_W / 2))
+    : null;
+
   return (
     <View style={[styles.root, dense && styles.rootDense]}>
       {interactive && compactUi ? (
@@ -4806,7 +4831,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           {...(canPan && Platform.OS === 'web' ? priceWheelHandlers : {})}
         >
         {priceTicks.map((tick, i) =>
-          hidePriceLabels || !priceTickBoxes[i] || priceTickBoxes[i].hidden ? null : (
+          hidePriceLabels ||
+          !priceTickBoxes[i] ||
+          priceTickBoxes[i].hidden ||
+          priceTickUnderTag(priceTickBoxes[i].start) ? null : (
             <Text
               key={tick.ratio}
               pointerEvents="none"
@@ -4816,28 +4844,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             </Text>
           )
         )}
-          {!hidePriceLabels ? (
+          {!hidePriceLabels && !currentTagHidden ? (
           <View
             pointerEvents="none"
-            style={[
-              styles.currentPriceTag,
-              {
-                top: Math.max(0, Math.min(chartPlotH - 20, currentPriceY - 9)),
-                backgroundColor: accent,
-              },
-            ]}
+            style={[styles.currentPriceTag, { top: currentTagTop, backgroundColor: accent }]}
           >
             <Text style={styles.currentPriceText}>{formatPrice(currentPrice, series.symbol)}</Text>
           </View>
           ) : null}
-          {!hidePriceLabels && crossCandle ? (
-          <View
-            pointerEvents="none"
-            style={[
-              styles.crossPriceTag,
-              { top: Math.max(0, Math.min(chartPlotH - 20, crossY - 9)) },
-            ]}
-          >
+          {!hidePriceLabels && crossCandle && crossTagTop != null ? (
+          <View pointerEvents="none" style={[styles.crossPriceTag, { top: crossTagTop }]}>
             <Text style={styles.crossTagText}>{formatPrice(crossCandle.close, series.symbol)}</Text>
           </View>
           ) : null}
@@ -4859,6 +4875,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           >
             {timeTickBoxes.map((box) => {
               if (box.hidden) return null;
+              // تحت وسم زمن التقاطع: الوسم يغطّيها فلا يظهر منها إلا طرفٌ مبتور
+              if (
+                crossTimeTagLeft != null &&
+                boxesTouch(box.start, timeLabelW, crossTimeTagLeft, CROSS_TIME_TAG_W, TAG_CLEAR_GAP)
+              )
+                return null;
               const index = timeTickIndexes[box.i];
               const candle = source.plot[index];
               if (!candle) return null;
@@ -4884,13 +4906,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 pointerEvents="none"
                 style={[
                   styles.crossTimeTag,
-                  {
-                    width: CROSS_TIME_TAG_W,
-                    left: Math.max(
-                      0,
-                      Math.min(chartPlotW - CROSS_TIME_TAG_W, crossX - CROSS_TIME_TAG_W / 2)
-                    ),
-                  },
+                  { width: CROSS_TIME_TAG_W, left: crossTimeTagLeft ?? 0 },
                 ]}
               >
                 <Text style={styles.crossTagText} numberOfLines={1}>

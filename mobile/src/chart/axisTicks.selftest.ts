@@ -147,4 +147,33 @@ const minGap = (starts: number[], size: number) => {
   assert.equal(boxesTouch(Number.NaN, 18, 0, 18, 0), false);
 }
 
+// ===== وسوم المحور فوق علاماته (بالأرقام الحقيقيّة من MatrixChart) =====
+{
+  const TAG_H = 18;
+  const LABEL_H = 14;
+  const CLEAR = 2;
+  const tagTop = (y: number, plotH: number) => Math.max(0, Math.min(plotH - 20, y - 9));
+
+  // علامة تقع تحت الوسم ⇒ تُخفى (كانت تظهر شريحة من أرقامها حول حافته)
+  assert.equal(boxesTouch(60, LABEL_H, tagTop(70, 400), TAG_H, CLEAR), true);
+  // وعلامة تُفلت منه ⇒ تبقى
+  assert.equal(boxesTouch(20, LABEL_H, tagTop(70, 400), TAG_H, CLEAR), false);
+
+  // تكدّس الوسمين: المتداول يلمس شمعة على بُعد 6px من السعر الحيّ
+  const live = tagTop(200, 400);
+  assert.equal(boxesTouch(live, TAG_H, tagTop(206, 400), TAG_H, 0), true);
+  // وعلى بُعد 20px ⇒ وسمان منفصلان، كلاهما يبقى
+  assert.equal(boxesTouch(live, TAG_H, tagTop(220, 400), TAG_H, 0), false);
+
+  // القصّ عند الحافتين لا يُنتج تكدّساً وهميّاً بين وسمين متباعدين فعلاً
+  assert.equal(boxesTouch(tagTop(-50, 400), TAG_H, tagTop(390, 400), TAG_H, 0), false);
+  // لكن سعرين خارج المدى من الجهة نفسها يُقصّان إلى الحافة ذاتها ⇒ تكدّس حقيقيّ
+  assert.equal(boxesTouch(tagTop(-50, 400), TAG_H, tagTop(-10, 400), TAG_H, 0), true);
+
+  // وسم زمن التقاطع (104px) فوق علامة تاريخ (88px)
+  const crossLeft = (x: number, plotW: number) => Math.max(0, Math.min(plotW - 104, x - 52));
+  assert.equal(boxesTouch(0, 88, crossLeft(60, 400), 104, CLEAR), true);
+  assert.equal(boxesTouch(0, 88, crossLeft(300, 400), 104, CLEAR), false);
+}
+
 console.log('axisTicks.selftest: PASS');
