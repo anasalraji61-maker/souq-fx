@@ -566,3 +566,74 @@ def test_the_period_bound_matches_the_series_the_check_actually_uses(client):
     over = ind_engine.sma(values, main.MAX_MA_PERIOD + 1)
     assert sum(v is not None for v in at_max) == 2, "آخر فترة تُنتج القيمتين اللتين يلزمهما التقاطع"
     assert sum(v is not None for v in over) < 2, "وما بعدها لا يتقاطع مهما فعل السوق"
+
+
+# ─── التخطيطات: دلالات الحفظ والحذف ─────────────────────────────────────────
+
+def _layout(client, token: str, name: str, local_id: str, layout_id: str | None = None) -> dict:
+    body = {"name": name, "payload": {"id": local_id, "k": name}}
+    if layout_id:
+        body["id"] = layout_id
+    return client.post("/api/layouts", json=body, headers=_auth(token)).json()["layout"]
+
+
+def test_saving_onto_another_accounts_layout_id_makes_a_copy_not_a_theft(client):
+    """`id` مفتاح أساسي **عام**: `INSERT OR REPLACE` كان يسمح بالكتابة فوق تخطيط الغير
+    وإعادة إسناد ملكيته بإرسال المعرّف نفسه. الآن يُخصَّص للمُرسِل معرّف جديد — نسخته
+    الخاصة: **لا فقدان بيانات ولا اختطاف ملكية**، لا رفضٌ يُفقده عمله."""
+    a, b = _register(client, "layowner"), _register(client, "laythief")
+    mine = _layout(client, a, "mine", "local-1", layout_id="L1")
+    theirs = _layout(client, b, "theirs", "local-1", layout_id="L1")
+    assert mine["id"] == "L1"
+    assert theirs["id"] != "L1", "معرّف جديد لا كتابةٌ فوق صفّ غيره"
+    assert client.get("/api/layouts", headers=_auth(a)).json()["layouts"] == [mine]
+    assert [x["name"] for x in client.get("/api/layouts", headers=_auth(b)).json()["layouts"]] == ["theirs"]
+
+
+def test_deleting_an_unknown_layout_is_not_an_error(client):
+    """تخطيط محلي لم يصل للخادم قط: الحذف ينجح بـ`deleted: 0` — العميل لا يُعالج خطأً
+    لشيء غير موجود أصلاً."""
+    token = _register(client, "laynone")
+    assert client.delete("/api/layouts/never-saved", headers=_auth(token)).json() == {
+        "ok": True,
+        "deleted": 0,
+    }
+
+
+def test_deleting_by_the_local_id_removes_every_server_copy_of_it(client):
+    """الحفظ القديم كان يُنشئ صفاً بمعرّف خادم **جديد** بكل حفظ لنفس التخطيط المحلي،
+    فتتراكم نسخ يراها المتداول تخطيطات مستقلّة. الحذف بالمعرّف المحلي يزيلها كلها."""
+    token = _register(client, "laydup")
+    for _ in range(3):
+        _layout(client, token, "dup", "loc-9")
+    assert len(client.get("/api/layouts", headers=_auth(token)).json()["layouts"]) == 3
+    assert client.delete("/api/layouts/loc-9", headers=_auth(token)).json()["deleted"] == 3
+    assert client.get("/api/layouts", headers=_auth(token)).json()["layouts"] == []
+
+
+def test_deleting_by_a_local_id_never_reaches_another_accounts_rows(client):
+    """أخطر حالة بهذا المسار: المعرّف المحلي يولّده **جهاز المتداول**، فتصادمه بين
+    حسابين وارد جداً (تخطيط اسمه `default` عند الاثنين). بلا شرط الملكية داخل نفس
+    جملة الحذف يمحو أحدهما تخطيط الآخر بضغطة «حذف» عادية."""
+    a, b = _register(client, "layself"), _register(client, "layother")
+    _layout(client, a, "mine", "shared-local-id")
+    _layout(client, b, "theirs", "shared-local-id")
+    assert client.delete("/api/layouts/shared-local-id", headers=_auth(a)).json()["deleted"] == 1
+    assert client.get("/api/layouts", headers=_auth(a)).json()["layouts"] == []
+    survivors = client.get("/api/layouts", headers=_auth(b)).json()["layouts"]
+    assert [x["name"] for x in survivors] == ["theirs"], "تخطيط الحساب الآخر بقي سليماً"
+
+
+def test_deleting_another_accounts_layout_by_its_server_id_does_nothing(client):
+    a, b = _register(client, "laydelA"), _register(client, "laydelB")
+    theirs = _layout(client, b, "theirs", "loc-b")
+    assert client.delete(f"/api/layouts/{theirs['id']}", headers=_auth(a)).json()["deleted"] == 0
+    assert len(client.get("/api/layouts", headers=_auth(b)).json()["layouts"]) == 1
+
+
+def test_anonymous_devices_do_not_share_or_delete_each_others_layouts(client):
+    client.post("/api/layouts", json={"name": "d1", "payload": {"id": "same"}}, headers=_DEV1)
+    client.post("/api/layouts", json={"name": "d2", "payload": {"id": "same"}}, headers=_DEV2)
+    assert client.delete("/api/layouts/same", headers=_DEV1).json()["deleted"] == 1
+    assert client.get("/api/layouts", headers=_DEV1).json()["layouts"] == []
+    assert [x["name"] for x in client.get("/api/layouts", headers=_DEV2).json()["layouts"]] == ["d2"]
