@@ -4870,6 +4870,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>COG</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = cog.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxCog = Math.max(...vals, 1e-9);
@@ -4898,6 +4904,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Squeeze</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = squeeze.momentum
                 .filter((x): x is number => x != null)
@@ -4931,6 +4943,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Woodie CCI</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = woodieCci.cci.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxWc = Math.max(...vals, 1e-9);
@@ -5072,6 +5090,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>CFO</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = cfo.filter((x): x is number => x != null).map((x) => Math.abs(x));
               const maxC = Math.max(...vals, 1e-9);
@@ -5170,6 +5194,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Disparity</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = disparityIndex.filter((x): x is number => x != null).map((x) => Math.abs(x));
               const maxD = Math.max(...vals, 1e-9);
@@ -5294,6 +5324,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>PGO</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = pgo.filter((x): x is number => x != null).map((x) => Math.abs(x));
               const maxP = Math.max(...vals, 1e-9);
@@ -5322,6 +5358,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>PFE</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = pfe.filter((x): x is number => x != null).map((x) => Math.abs(x));
               const maxP = Math.max(...vals, 1e-9);
@@ -5402,6 +5444,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>VPCI</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = vpci.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxV = Math.max(...vals, 1e-9);
@@ -5430,6 +5478,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>TTF</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = ttf.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxT = Math.max(...vals, 1e-9);
@@ -5508,6 +5562,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>VFI</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = vfi.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxV = Math.max(...vals, 1e-9);
@@ -5560,6 +5620,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Twiggs MF</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {twiggsMoneyFlow.map((v, i) => {
               if (v == null) return <View key={i} style={{ flex: 1 }} />;
               const h = centeredBarH(v, 1, paneH);
@@ -5584,6 +5650,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>VZO</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {vzo.map((v, i) => {
               if (v == null) return <View key={i} style={{ flex: 1 }} />;
               const h = centeredBarH(v, 100, paneH);
@@ -5608,6 +5680,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>GMMA Osc</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = gmmaOsc.filter((x): x is number => x != null).map((x) => Math.abs(x));
               const maxG = Math.max(...vals, 1e-9);
@@ -5636,6 +5714,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>IFT-RSI</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               // محصورة نظرياً بصرامة داخل (−1,1) — نطاق ثابت معروف مسبقاً بدل تطبيع ديناميكي
               // بالحد الأقصى، بنفس أسلوب Twiggs MF/VZO أعلاه (رياضياً محصورة لا تجريبياً فقط).
@@ -5868,6 +5952,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>TRIX</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = trix.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxT = Math.max(...vals, 1e-9);
@@ -5896,6 +5986,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Force</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = force.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxF = Math.max(...vals, 1e-9);
@@ -5924,6 +6020,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Chaikin</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = chaikinOsc.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxC = Math.max(...vals, 1e-9);
@@ -5952,6 +6054,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>DPO</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = dpo.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxD = Math.max(...vals, 1e-9);
@@ -5980,6 +6088,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>AO</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = ao.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxA = Math.max(...vals, 1e-9);
@@ -6008,6 +6122,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>AC</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = ac.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxAc = Math.max(...vals, 1e-9);
@@ -6036,6 +6156,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Fractal Chaos Osc</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = fractalChaosOsc
                 .filter((x): x is number => x != null)
@@ -6066,6 +6192,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>BOP</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = bop.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxB = Math.max(...vals, 1e-9);
@@ -6094,6 +6226,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Bull Power</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = bullPower.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxBp = Math.max(...vals, 1e-9);
@@ -6122,6 +6260,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Bear Power</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = bearPower.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxBe = Math.max(...vals, 1e-9);
@@ -6150,6 +6294,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>TSI</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = tsi.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxTsi = Math.max(...vals, 1e-9);
@@ -6178,6 +6328,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Coppock</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = coppock.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxCop = Math.max(...vals, 1e-9);
@@ -6206,6 +6362,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>EOM</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = eom.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxEom = Math.max(...vals, 1e-9);
@@ -6234,6 +6396,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>PPO</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = ppo.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxP = Math.max(...vals, 1e-9);
@@ -6262,6 +6430,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Chaikin Vol</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = chaikinVol.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxCv = Math.max(...vals, 1e-9);
@@ -6290,6 +6464,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Qstick</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = qstick.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxQ = Math.max(...vals, 1e-9);
@@ -6370,6 +6550,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>PVO</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = pvo.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxPv = Math.max(...vals, 1e-9);
@@ -6398,6 +6584,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>APO</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = apo.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxA = Math.max(...vals, 1e-9);
@@ -6426,6 +6618,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Volume Osc</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = vo.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxVo = Math.max(...vals, 1e-9);
@@ -6675,6 +6873,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>RVI</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = rvi.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxR = Math.max(...vals, 1e-9);
@@ -6703,6 +6907,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>LR Slope</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = linRegSlope
                 .filter((x): x is number => x != null)
@@ -6817,6 +7027,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Momentum</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = momentum.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxM = Math.max(...vals, 1e-9);
@@ -6931,6 +7147,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>RAVI</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = ravi.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxR = Math.max(...vals, 1e-9);
@@ -6987,6 +7209,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Fisher Transform</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = fisher.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxF = Math.max(...vals, 1e-9);
@@ -7015,6 +7243,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>KST</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = kst.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxK = Math.max(...vals, 1e-9);
@@ -7343,6 +7577,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>SMI Ergodic Osc</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = smiErgodic.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxM = Math.max(...vals, 1e-9);
@@ -7371,6 +7611,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>PMO</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = pmo.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxP = Math.max(...vals, 1e-9);
@@ -7483,6 +7729,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Volume ROC</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = volRoc.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxV = Math.max(...vals, 1e-9);
@@ -7592,6 +7844,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Gator</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = [...gator.upper, ...gator.lower].filter(
                 (x): x is number => x != null
@@ -7819,6 +8077,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>CCI</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = cci.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxC = Math.max(...vals, 1e-9);
@@ -7847,6 +8111,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>ROC</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = roc.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxR = Math.max(...vals, 1e-9);
@@ -7903,6 +8173,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>AROON</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = aroon.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxA = Math.max(...vals, 1e-9);
@@ -7931,6 +8207,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>CMF</Text>
           <View style={styles.paneInner}>
+            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
+                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
               const vals = cmf.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxC = Math.max(...vals, 1e-9);
