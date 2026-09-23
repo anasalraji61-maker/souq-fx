@@ -682,7 +682,7 @@ export function ToolsScreen() {
 
       {tab === 'indAlerts' ? (
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <IndicatorAlertsPanel flow defaultSymbol={signalSym} />
+          <IndicatorAlertsPanel flow defaultSymbol={signalSym} active={screenFocused} />
         </ScrollView>
       ) : null}
 

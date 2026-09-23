@@ -85,13 +85,32 @@ type Props = {
    * تمرير داخلية، فالصفحة هي التي تُمرَّر. بغيره تبقى النافذة المحدودة كما هي بمواضع المشاركة.
    */
   flow?: boolean;
+  /**
+   * **هل اللوحة معروضة الآن؟** الافتراضي `true` فكل موضع لا يمرّرها — الشريط الجانبي والرصيف
+   * وشارت التركيز — يبقى كما كان حرفياً.
+   *
+   * `checkIndicatorAlerts` **أثقل استطلاع بالتطبيق**: الخادم يجلب سلسلة شموع لكل (رمز، فريم)
+   * بكل تنبيه مُسلَّح ثم يحسب المؤشّر عليها. وشاشات التبويبات السفلية تبقى مركَّبة بعد الانتقال
+   * عنها، فمن فتح تبويب «تنبيهات+» ثم عاد للشارت كان يترك هذا يعمل **كل دقيقة بقيّة الجلسة**
+   * على لوحة لا يراها أحد.
+   *
+   * ولا يُفقَد تنبيه واحد: `alert_worker.run_alert_loop(60.0)` بالخادم يفحص تنبيهات المؤشرات
+   * لكل المستخدمين كل دقيقة ويرسل الإشعار بنفسه (`backend/alert_worker.py` — `list_indicator_alerts
+   * (all_users=True)`). فحص اللوحة تعجيلٌ لمن يجلس أمامها، لا مصدر الإطلاق.
+   */
+  active?: boolean;
 };
 
 function asAlertTf(v: string | undefined): AlertTf | null {
   return v && (ALERT_TFS as readonly string[]).includes(v) ? (v as AlertTf) : null;
 }
 
-export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD', defaultTimeframe, flow = false }: Props) {
+export function IndicatorAlertsPanel({
+  defaultSymbol = 'EURUSD',
+  defaultTimeframe,
+  flow = false,
+  active = true,
+}: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [alerts, setAlerts] = useState<IndAlert[]>([]);
@@ -116,6 +135,8 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD', defaultTimefram
   const [notifState, setNotifState] = useState<NotificationPermissionState | null>(null);
   const [notifBusy, setNotifBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  /** هل وقع أول تحميل للقائمة؟ — يضمن أن لوحةً رُكِّبت مخفيّة لا تبقى على «جارٍ التحميل» (انظر أثر الفحص). */
+  const loadedOnceRef = useRef(false);
   const [busy, setBusy] = useState(false);
   /** وضوح الحالة: يميّز فشل تحميل القائمة عن عدم وجود تنبيهات فعلاً */
   const [listError, setListError] = useState(false);
@@ -180,10 +201,19 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD', defaultTimefram
      * لا إشعار مكرَّر ولو أُعيد الفحص (تبديل اللغة يعيد بناء `check`): `db.mark_indicator_alert_triggered`
      * ذرّي فلا يُرجَع التنبيه إلا لمن قلبه أولاً، والسلسلة البذرية (demo) لا تُطلق شيئاً أصلاً.
      */
-    void refresh().then(check);
+    /**
+     * `active` يوقف **الدورة** لا التحميل الأول: لوحةٌ رُكِّبت وهي مخفيّة تبقى على «جارٍ التحميل»
+     * إلى الأبد لو مُنع عنها أول `refresh`. وبالعودة يقع الفحص **فوراً** لا بانتظار دورة، فأول ما
+     * يراه المتداول أحدث ممّا كان يراه سابقاً لا أقدم.
+     */
+    if (active || !loadedOnceRef.current) {
+      loadedOnceRef.current = true;
+      void refresh().then(check);
+    }
+    if (!active) return;
     const id = setInterval(check, 60_000);
     return () => clearInterval(id);
-  }, [refresh, check]);
+  }, [active, refresh, check]);
 
   /**
    * طلب إذن الإشعارات وقراءة حالته — **أثرٌ مستقلّ بلا تبعيات، مرّةً عند التركيب**. كان مطويّاً
