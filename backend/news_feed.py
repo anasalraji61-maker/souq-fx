@@ -5,6 +5,8 @@ import hashlib
 import re
 import time
 import xml.etree.ElementTree as ET
+from datetime import timezone
+from email.utils import parsedate_to_datetime
 
 import httpx
 
@@ -50,6 +52,26 @@ def _impact_from_title(title: str) -> str:
     return "low"
 
 
+def _when_and_ts(raw: str | None) -> tuple[str, int | None]:
+    """(نصّ الوقت، ثواني UTC) من `pubDate` بصيغة RFC 2822.
+
+    كان `pub.text[:16]` وحده: قصُّ «Tue, 23 Sep 2026 14:30:00 +0000» عند 16 حرفاً يعطي
+    **التاريخ بلا وقت**، ويُلقي إزاحة المنطقة الزمنية معه — فالخبر يُعرض «Tue, 23 Sep 2026»
+    لمتداول ببغداد وآخر بلندن سواءً، بلا ما يقول أيّهما قبل الآخر. والنتيجة بلا `ts` أصلاً
+    فلا التطبيق يحوّلها لتوقيت الجهاز ولا يرتّب بها — خلافاً لأحداث التقويم التي تحمل `ts`
+    منذ تشغيل سابق. الصيغة هنا نفس صيغة التقويم حرفياً حتى تُقرأ اللوحتان بنفس العين.
+    """
+    if not raw:
+        return "اليوم", None
+    try:
+        dt = parsedate_to_datetime(raw.strip())
+    except (TypeError, ValueError):
+        return raw.strip()[:32] or "اليوم", None
+    if dt.tzinfo is None:  # خلاصة بلا منطقة زمنية: تُقرأ UTC ولا تُخمَّن منطقة
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), int(dt.timestamp())
+
+
 def _parse_rss(xml_text: str, source: str) -> list[dict]:
     out: list[dict] = []
     try:
@@ -62,7 +84,7 @@ def _parse_rss(xml_text: str, source: str) -> list[dict]:
             continue
         title = re.sub(r"\s+", " ", title_el.text.strip())[:180]
         pub = item.find("pubDate")
-        when = pub.text[:16] if pub is not None and pub.text else "اليوم"
+        when, ts = _when_and_ts(pub.text if pub is not None else None)
         out.append(
             {
                 "id": _stable_id(title),
@@ -70,6 +92,7 @@ def _parse_rss(xml_text: str, source: str) -> list[dict]:
                 "title": title,
                 "pair_effect": "Forex",
                 "when": when,
+                "ts": ts,
                 "source": source,
             }
         )
@@ -95,7 +118,12 @@ def fetch_news() -> list[dict]:
 
     if not merged:
         merged = list(FALLBACK)
+    # الأحدث أولاً، وما لا وقت له بالذيل. كانت القائمة **بترتيب الخلاصات**: كل أخبار المصدر
+    # الأول ثم كل أخبار الثاني مهما تفاوتت أعمارها — فخبرُ أمس يعلو خبر هذه الساعة. والقصّ
+    # عند 20 كان يُبقي الأقدم لمجرّد أن مصدره أوّلاً؛ الترتيب قبله فلا يسقط إلا الأقدم فعلاً.
+    merged.sort(key=lambda n: (n.get("ts") is None, -(n.get("ts") or 0)))
     # نفس الخبر من مصدرين (أو مكرراً بالخلاصة) مرة واحدة — كان يُنتج مفتاح React مكرراً.
+    # وبعد الترتيب تبقى **النسخة الأحدث** لا التي صادف أن مصدرها أوّلاً.
     seen: set[str] = set()
     merged = [n for n in merged if not (n["id"] in seen or seen.add(n["id"]))]
     _CACHE = merged[:20]
