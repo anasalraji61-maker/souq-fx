@@ -60,6 +60,7 @@ import {
   paneValueTrend,
   placeGuides,
 } from './paneGuides';
+import { DrawingsSaveQueue, drawingsKey } from './drawingsPersist';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
 import {
@@ -364,6 +365,9 @@ const DRAW_HANDLE_R = 18;
 
 /** سقف لقطات التراجع — يكفي جلسة رسم كاملة ولا يكبر بلا حدّ بذاكرة الهاتف. */
 const DRAW_HISTORY_MAX = 25;
+
+/** مرجع ثابت لـ«لا رسومات» — مصفوفة جديدة كل رسم تُبطل ذاكرة كل ما يعتمد عليها. */
+const NO_DRAWINGS: Drawing[] = [];
 
 let drawingSeq = 0;
 /** `d${Date.now()}` كان يتصادم عند رسمَين بنفس المللي ثانية (نقرتان سريعتان بخط أفقي). */
@@ -727,7 +731,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [lens, setLens] = useState<LensMode>(initialLens ?? 'clean');
   const [extraInd, setExtraInd] = useState<IndicatorId[]>(initialIndicators ?? []);
   const [tool, setTool] = useState<DrawTool>(initialTool ?? 'none');
-  const [drawings, setDrawings] = useState<Drawing[]>([]);
+  const [loadedDrawings, setDrawings] = useState<Drawing[]>([]);
+  // **مفتاح الرمز/الفريم الذي تخصّه `loadedDrawings` فعلاً.** تبديل الرمز يغيّر
+  // `series.symbol` فوراً بينما `loadDrawings` غير متزامنة، فبين اللحظتين كانت رسومات
+  // الرمز السابق تُعرض على الشارت الجديد. القراءة هنا لا بالتأثير: التأثير يقع بعد
+  // الرسم، فيبقى إطار كامل تظهر فيه خطوط رمز آخر — وهو أوضح ما يكون عند تبديل
+  // **الفريم** (نفس السعر فنفس المقياس، فالخطوط تُرى بمواضع لا تعنيها).
+  // بلا حفظ (شارت الرباعية `persistDrawings={false}`) لا تحميل غير متزامن أصلاً،
+  // فالحالة هي الحقيقة ولا يصحّ حجبها — وإلا استحال الرسم على تلك الشاشات.
+  const drawingsPersisted = persistDrawings && interactive;
+  const loadedDrawingsKey = useRef<string | null>(null);
+  const drawings =
+    !drawingsPersisted ||
+    loadedDrawingsKey.current === drawingsKey(series.symbol, series.timeframe)
+      ? loadedDrawings
+      : NO_DRAWINGS;
   // تراجع الرسم: لم يكن هناك أي تراجع إطلاقاً — خط ترند في غير موضعه كان يُصلَّح إما
   // بتبديل الأداة لـ«تحديد» واصطياد طرفه ثم تأكيد حذف، أو بمسح كل الرسومات. لقطات
   // محدودة العدد (لا حالة مشتقّة) لأن `drawings` بأكملها صغيرة ويحفظها التأثير الموجود.
@@ -766,7 +784,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const webChartPointer = useRef({ active: false, x: 0, y: 0, pointerId: 0 });
   const webPricePointer = useRef({ active: false, y: 0, pointerId: 0 });
   const webTimePointer = useRef({ active: false, x: 0, pointerId: 0 });
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // طابور الحفظ المؤجَّل — نسخة واحدة لعمر المكوّن، تحمل مفتاح حمولتها معها
+  // (`drawingsPersist.ts` يشرح الخطأين اللذين نشأ عنهما).
+  const saveQueue = useMemo(() => new DrawingsSaveQueue(saveDrawings), []);
+  // آخر مصفوفة أتت من التخزين — لا تُعاد كتابتها كما هي بعد كل تبديل.
+  const justLoadedDrawings = useRef<Drawing[] | null>(null);
   const rangeRef = useRef({ min: 0, max: 1, span: 1 });
   const chartPlotWRef = useRef(320);
   const chartPlotHRef = useRef(200);
@@ -1091,26 +1113,49 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   }, [series.symbol, interactive, initialLens, initialIndicators]);
 
   useEffect(() => {
-    if (!persistDrawings || !interactive) return;
+    if (!drawingsPersisted) return;
+    const k = drawingsKey(series.symbol, series.timeframe);
+    // ما تأجّل يخصّ المفتاح **السابق** — يُكتب الآن بمفتاحه هو قبل أن تُستبدل الحمولة.
+    // بلا هذا: من يرسم خطّاً ثم يبدّل خلال أقلّ من 400ms يفقده، ومؤقّت الرمز السابق
+    // قد ينطلق بعد التبديل فيكتب رسوماته تحت مفتاح الرمز الجديد.
+    saveQueue.flush();
+    loadedDrawingsKey.current = null;
+    setDrawings(NO_DRAWINGS);
+    setSelectedId(null);
+    setPending(null);
+    setDragEnd(null);
     let alive = true;
     loadDrawings(series.symbol, series.timeframe).then((d) => {
-      if (alive) setDrawings(d);
+      if (!alive) return;
+      loadedDrawingsKey.current = k;
+      justLoadedDrawings.current = d;
+      setDrawings(d);
     });
     return () => {
       alive = false;
     };
-  }, [series.symbol, series.timeframe, persistDrawings, interactive]);
+  }, [series.symbol, series.timeframe, drawingsPersisted, saveQueue]);
 
   useEffect(() => {
-    if (!persistDrawings || !interactive) return;
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      void saveDrawings(series.symbol, series.timeframe, drawings);
-    }, 400);
+    if (!drawingsPersisted) return;
+    // `drawings` هنا هي المحجوبة بالمفتاح: قبل انتهاء التحميل تساوي NO_DRAWINGS،
+    // فالشرط يمنع كتابة فراغ فوق رسومات محفوظة للرمز الجديد.
+    if (loadedDrawingsKey.current !== drawingsKey(series.symbol, series.timeframe)) return;
+    // ما جاء من التخزين توّاً لا يُعاد إليه كما هو — كتابة بلا تغيير عند كل تبديل.
+    if (justLoadedDrawings.current === drawings) {
+      justLoadedDrawings.current = null;
+      return;
+    }
+    saveQueue.schedule(series.symbol, series.timeframe, drawings);
+  }, [drawings, series.symbol, series.timeframe, drawingsPersisted, saveQueue]);
+
+  // تفكيك المكوّن: يُكتب ما تأجّل بدل إسقاطه — إغلاق نافذة التركيز بعد رسم مباشرةً
+  // كان يضيع الرسم لنفس سبب التبديل.
+  useEffect(() => {
     return () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveQueue.flush();
     };
-  }, [drawings, series.symbol, series.timeframe, persistDrawings, interactive]);
+  }, [saveQueue]);
 
   useEffect(() => {
     drawingsRef.current = drawings;
