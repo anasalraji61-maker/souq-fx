@@ -19,6 +19,7 @@ import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
 import { instrumentSpec, priceAtPipOffset } from '../positionSize';
+import { formatPips } from '../tradePlan';
 
 /** إيقاع تحديث «السعر الآن» بالنموذج — نفس إيقاع فحص التنبيهات بهذه اللوحة (60 ثانية). */
 const QUOTE_REFRESH_MS = 60_000;
@@ -174,6 +175,29 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
    */
   const fmtPrice = (v: number, sym?: string) => formatPrice(v, (sym ?? symbol).trim().toUpperCase());
   const condMark = (c: 'above' | 'below') => (c === 'above' ? '≥' : '≤');
+
+  /**
+   * **كم يبعد التنبيه عن السوق الآن، بالنقاط.** سطر التنبيه كان يقول «EURUSD ≥ 1.0850 · مُسلَّح»
+   * وحسب: رقمٌ بخمس منازل لا يُقارَن بالسعر الحالي ذهنياً وهو ليس أمامه بالسطر نفسه. فقائمةٌ فيها
+   * ستّة تنبيهات مُسلَّحة لا تقول أيّها على بُعد خمس نقاط وأيّها على بُعد ثلاثمئة — وهذا بالضبط ما
+   * يُقرأ من «قائمة واضحة بالتنبيهات النشطة». والمسافة بحجم pip **الأداة** (الين 0.01، الذهب 0.1)
+   * كبقية أرقام النقاط بالتطبيق، فهي الوحدة نفسها التي يكتب بها وقفه بحاسبة المخاطرة.
+   *
+   * لا تظهر إلا حيث تكون **صادقة**: رمز النموذج وحده هو الذي يُجلب سعره الآن (`current`)، فتنبيهات
+   * الرموز الأخرى تبقى كما كانت بلا رقم بدل رقمٍ من سعرٍ لا نملكه. والمُطلَق لا مسافة له — مستوىً
+   * بلغه السوق ومضى.
+   */
+  const alertDistancePips = (a: PriceAlert): number | null => {
+    if (a.triggered || current == null || !spec) return null;
+    if ((a.symbol || '').trim().toUpperCase() !== spec.symbol) return null;
+    if (!Number.isFinite(a.price)) return null;
+    return Math.round((Math.abs(a.price - current) / spec.pipSize) * 10) / 10;
+  };
+  /** «24 pip» — «pip» كلمة لاتينية ثابتة بكل اللغات بهذا التطبيق (راجع `journalStatNetPips`). */
+  const distText = (a: PriceAlert): string | null => {
+    const d = formatPips(alertDistancePips(a));
+    return d == null ? null : `${d} pip`;
+  };
 
   /** الاتجاه يُستنتج من موقع السعر المدخل بالنسبة للسعر الحالي — المستخدم يكتب الرقم فقط،
    * ويبقى قادراً على قلب الاتجاه يدوياً بعدها (مع تحذير إن صار التنبيه سيُطلق فوراً). */
@@ -549,7 +573,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
                   accessibilityLabel={`${t.alertsEditA11yPrefix}: ${a.symbol} ${condMark(a.condition)} ${fmtPrice(
                     a.price,
                     a.symbol
-                  )}`}
+                  )}${distText(a) ? ` — ${distText(a)}` : ''}`}
                 >
                   <Text style={[styles.itemSym, a.triggered && styles.itemSymDone, { textAlign: align }]}>
                     {a.symbol} {condMark(a.condition)} {fmtPrice(a.price, a.symbol)}
@@ -558,6 +582,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
                     style={[styles.itemStatus, a.triggered ? styles.itemStatusDone : styles.itemStatusLive, { textAlign: align }]}
                   >
                     {a.triggered ? t.alertsStatusTriggered : t.alertsStatusArmed}
+                    {distText(a) ? ` · ${distText(a)}` : ''}
                     {a.note ? ` · ${a.note}` : ''}
                   </Text>
                 </Pressable>
