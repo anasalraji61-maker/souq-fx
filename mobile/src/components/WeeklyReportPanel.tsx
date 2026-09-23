@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -73,6 +73,22 @@ export function WeeklyReportPanel({ grid = false }: Props) {
    * ثابت بدل تحليل فعلي مخصَّص (لا ادّعاء فشل قبل حدوثه). */
   const [aiFallback, setAiFallback] = useState(false);
 
+  /**
+   * **اللوحة الوحيدة بالتطبيق بلا حارس تركيب** — وهي صاحبة أطول طلب فيه. `run` ينتظر نداءين
+   * متتاليين (`api.trades` ثم `api.aiAsk`، والثاني توليدُ نصٍّ بنموذج: ثوانٍ لا أجزاء ثانية)،
+   * وتبويبات شاشة الأدوات **تُفكَّك عند التبديل** (`tab === 'reports' ? … : null`) — فمن ضغط
+   * «تقرير الأسبوع» ثم عاد للشارت وهو ينتظر كان يترك خلفه نداءً يكتب أربع حالات على لوحة مُفكَّكة،
+   * **ويُطلق نقرة صوتية** (`playSoftClick`) من شاشةٍ أخرى بلا أيّ سبب ظاهر للمتداول.
+   * الحارس هو نمط `ChartFrame`/`SymbolSnapshot` المؤسَّس بالكود حرفاً بحرف.
+   */
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const run = async (kind: ReportKind) => {
     const item = KINDS.find((k) => k.id === kind);
     if (!item) return;
@@ -84,6 +100,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
     let hasJournalData = false;
     try {
       const tr = await api.trades();
+      if (!mountedRef.current) return;
       const s = (tr.stats ?? {}) as Record<string, number>;
       const count = Number(s.trade_count);
       if (Number.isFinite(count) && count > 0) {
@@ -108,9 +125,11 @@ export function WeeklyReportPanel({ grid = false }: Props) {
         'EURUSD',
         lang
       );
+      if (!mountedRef.current) return;
       setText(res.answer.replace(/\*\*/g, ''));
       playSoftClick();
     } catch {
+      if (!mountedRef.current) return;
       setText(
         kind === 'weekly_pnl'
           ? t.reportFallbackWeekly.replace('{journalLine}', journalLine)
@@ -122,7 +141,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
       );
       setAiFallback(true);
     } finally {
-      setLoading(null);
+      if (mountedRef.current) setLoading(null);
     }
   };
 
