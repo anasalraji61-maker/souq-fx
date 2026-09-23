@@ -84,6 +84,45 @@ export function reversedConversion(conv: { symbol: string; invert: boolean }): {
   return { symbol: `${conv.symbol.slice(3, 6)}${conv.symbol.slice(0, 3)}`, invert: !conv.invert };
 }
 
+/**
+ * **جسر الدولار**: عملة التسعير → USD → عملة الحساب، حين لا يعرف المزوّد زوج التحويل المباشر ولا
+ * معكوسه.
+ *
+ * مزوّد الأسعار يعرف قائمة أزواج محدودة، وأزواج الدولار كلها فيها بينما كثير من التقاطعات ليست:
+ * فحسابٌ بالفرنك على USDJPY يطلب `CHFJPY`، وحسابٌ بالكندي على USDCAD يطلب `AUDCAD`، وحسابٌ باليورو
+ * على USDCAD يطلب `EURCAD` — وهذه كلها تقاطعات قد لا يجدها المزوّد، فتقف الحاسبة عند «أدخل سعر
+ * التحويل يدوياً» بتركيبات **عادية تماماً** لمتداول تجزئة، لا بحالات نادرة. وكل عملة حساب مدعومة
+ * لها زوج دولار متداول (EURUSD/GBPUSD/AUDUSD/USDCAD/USDCHF/USDJPY)، فالجسر يُغلق الفجوة بطلبين
+ * معروفَي التوفّر بدل طلب واحد قد لا يوجد.
+ *
+ * `null` حين لا معنى للجسر: عملة التسعير أو عملة الحساب دولارٌ أصلاً (الجسر حينها **هو** الزوج
+ * المباشر نفسه، فطلبه ثانيةً لا يضيف شيئاً)، أو العملتان واحدة (لا تحويل).
+ */
+export function usdBridge(
+  quote: string,
+  account: string
+): { first: { symbol: string; invert: boolean }; second: { symbol: string; invert: boolean } } | null {
+  if (quote === account || quote === 'USD' || account === 'USD') return null;
+  const first = conversionPair(quote, 'USD');
+  const second = conversionPair('USD', account);
+  if (!first || !second) return null;
+  return { first, second };
+}
+
+/**
+ * سعر التحويل عبر الجسر: (وحدات دولار لكل وحدة تسعير) × (وحدات حساب لكل دولار). `null` إن تعذّر
+ * أحد السعرين — لا يُحسب حجم مركز من ساقٍ واحدة.
+ */
+export function bridgedRate(
+  bridge: { first: { invert: boolean }; second: { invert: boolean } },
+  firstPrice: number | null,
+  secondPrice: number | null
+): number | null {
+  const a = quoteToAccountRate(bridge.first, firstPrice);
+  const b = quoteToAccountRate(bridge.second, secondPrice);
+  return a != null && b != null ? a * b : null;
+}
+
 /** كم وحدة من عملة الحساب تساوي وحدة واحدة من عملة التسعير، من سعر زوج التحويل. */
 export function quoteToAccountRate(conv: { invert: boolean } | null, pairPrice: number | null): number | null {
   if (!conv) return 1;

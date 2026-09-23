@@ -10,6 +10,8 @@ import {
   instrumentSpec,
   conversionPair,
   reversedConversion,
+  usdBridge,
+  bridgedRate,
   quoteToAccountRate,
   pipValuePerLot,
   positionSize,
@@ -48,12 +50,15 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** جلب سعر الدخول بنقرة: المتداول يخطّط غالباً حول السعر الذي يراه الآن، وكتابته يدوياً مَظنّة خطأ */
   const [livePxBusy, setLivePxBusy] = useState(false);
   const [livePxMsg, setLivePxMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  /** سعر زوج التحويل (عملة التسعير → عملة الحساب)؛ null أثناء التحميل أو عند الفشل. يُخزَّن مع رمزه
-   * فلا يُقرن سعر الزوج السابق بالزوج الجديد لإطار عرض واحد بعد تبديل الأداة/عملة الحساب.
-   * `key` = زوج التحويل المتوقَّع (مفتاح الطلب)، و`invert` لما جُلب فعلاً — قد يكون الزوج المعكوس. */
-  const [convQuote, setConvQuote] = useState<{ key: string; symbol: string; invert: boolean; price: number } | null>(
-    null
-  );
+  /**
+   * سعر التحويل **محسوباً** (كم وحدة من عملة الحساب لكل وحدة من عملة التسعير)؛ null أثناء التحميل
+   * أو عند الفشل. يُخزَّن مع `key` = زوج التحويل المتوقَّع، فلا يُقرن سعر الأداة السابقة بالأداة
+   * الجديدة لإطار عرض واحد بعد تبديل الأداة/عملة الحساب.
+   *
+   * يُخزَّن **السعر المحسوب** لا (الزوج + `invert` + سعره الخام) لأن المصدر صار ثلاثة لا واحداً:
+   * الزوج المتوقَّع، أو معكوسه، أو **ساقا جسر الدولار** معاً — وللأخير لا «زوج واحد وسعره» أصلاً.
+   */
+  const [convQuote, setConvQuote] = useState<{ key: string; rate: number } | null>(null);
   const [convLoading, setConvLoading] = useState(false);
   const [convFailed, setConvFailed] = useState(false);
   /** إدخال يدوي لسعر التحويل عند تعذّر جلبه — لا تتوقف الحاسبة بسبب انقطاع مزوّد الأسعار */
@@ -114,6 +119,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const conv = useMemo(() => (spec ? conversionPair(spec.quote, account) : null), [spec, account]);
   const convSymbol = conv?.symbol ?? null;
   const convInvert = conv?.invert ?? false;
+  /** جسر الدولار: بديل الزوج المباشر حين لا يعرفه المزوّد (`usdBridge` بـpositionSize.ts). */
+  const bridge = useMemo(() => (spec ? usdBridge(spec.quote, account) : null), [spec, account]);
 
   useEffect(() => {
     const g = ++gen.current;
@@ -143,7 +150,30 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           const price = await fetchPrice(c.symbol);
           if (!mountedRef.current || g !== gen.current) return;
           if (price != null) {
-            setConvQuote({ key: convSymbol, symbol: c.symbol, invert: c.invert, price });
+            const r = quoteToAccountRate(c, price);
+            if (r != null) {
+              setConvQuote({ key: convSymbol, rate: r });
+              setConvLoading(false);
+              return;
+            }
+          }
+        }
+        /**
+         * **جسر الدولار** قبل اللجوء للإدخال اليدوي: مزوّد الأسعار يعرف أزواج الدولار كلها بينما
+         * كثير من التقاطعات ليست بقائمته، فتركيبات عادية تماماً (حساب بالفرنك على USDJPY ← `CHFJPY`،
+         * حساب أسترالي على USDCAD ← `AUDCAD`، حساب باليورو على USDCAD ← `EURCAD`) كانت تقف عند
+         * «أدخل سعر التحويل يدوياً» بلا سبب يفهمه المتداول. الساقان تُجلبان معاً (`Promise.all`)
+         * ولا تُطلبان إلا بعد فشل المحاولتين المباشرتين، فلا طلب زائد بالحالة الشائعة.
+         */
+        if (bridge) {
+          const [p1, p2] = await Promise.all([
+            fetchPrice(bridge.first.symbol),
+            fetchPrice(bridge.second.symbol),
+          ]);
+          if (!mountedRef.current || g !== gen.current) return;
+          const viaUsd = bridgedRate(bridge, p1, p2);
+          if (viaUsd != null) {
+            setConvQuote({ key: convSymbol, rate: viaUsd });
             setConvLoading(false);
             return;
           }
@@ -153,7 +183,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       })();
     }, 400);
     return () => clearTimeout(id);
-  }, [convSymbol, convInvert]);
+  }, [convSymbol, convInvert, bridge]);
 
   /** أرقام عربية/فاصل آلاف/فاصلة عشرية — راجع parseDecimal.ts. NaN = فارغ أو غير صالح. */
   const num = (s: string) => parseDecimal(s) ?? NaN;
@@ -195,9 +225,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       : null;
   const fetchedConv = convQuote && convQuote.key === convSymbol ? convQuote : null;
   const manual = num(manualConv);
-  // السعر المجلوب بترتيب زوجه الفعلي (قد يكون معكوساً)، وإلا الإدخال اليدوي بترتيب الزوج المعروض
+  // السعر المجلوب (زوجاً مباشراً كان أم معكوساً أم جسراً)، وإلا الإدخال اليدوي بترتيب الزوج المعروض
   const rate = fetchedConv
-    ? quoteToAccountRate({ invert: fetchedConv.invert }, fetchedConv.price)
+    ? fetchedConv.rate
     : quoteToAccountRate(conv, Number.isFinite(manual) && manual > 0 ? manual : null);
   const pv = spec && rate != null ? pipValuePerLot(spec, rate) : null;
   const result =

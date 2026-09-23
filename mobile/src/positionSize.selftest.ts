@@ -7,6 +7,8 @@ import {
   instrumentSpec,
   conversionPair,
   reversedConversion,
+  usdBridge,
+  bridgedRate,
   quoteToAccountRate,
   pipValuePerLot,
   positionSize,
@@ -179,6 +181,92 @@ for (const sp of [eu, uj2, au, ag, instrumentSpec('GBPJPY')!, instrumentSpec('EU
     const frac = String(v).split('.')[1]?.length ?? 0;
     assert.ok(frac <= decimalsOf(sp), `${sp.symbol} ${off}: ${frac} منزلة > ${decimalsOf(sp)}`);
   }
+}
+
+
+/* ─────────────── جسر الدولار (التحويل عبر USD حين لا يوجد زوج مباشر) ─────────────── */
+
+// لا جسر حين لا معنى له: طرفٌ دولار (الجسر = الزوج المباشر نفسه) أو العملتان واحدة
+assert.equal(usdBridge('USD', 'EUR'), null);
+assert.equal(usdBridge('JPY', 'USD'), null);
+assert.equal(usdBridge('CHF', 'CHF'), null);
+
+// حساب بالفرنك على USDJPY: `CHFJPY` تقاطعٌ قد لا يعرفه المزوّد — الجسر يطلب زوجَي دولار
+assert.deepEqual(usdBridge('JPY', 'CHF'), {
+  first: { symbol: 'USDJPY', invert: true },
+  second: { symbol: 'USDCHF', invert: false },
+});
+// حساب أسترالي على USDCAD: `AUDCAD` ← USDCAD + AUDUSD
+assert.deepEqual(usdBridge('CAD', 'AUD'), {
+  first: { symbol: 'USDCAD', invert: true },
+  second: { symbol: 'AUDUSD', invert: true },
+});
+// حساب باليورو على زوج مسعَّر بالإسترليني (EURGBP مثلاً لو كان الحساب بعملة ثالثة): الساقان دولاريتان
+assert.deepEqual(usdBridge('GBP', 'JPY'), {
+  first: { symbol: 'GBPUSD', invert: false },
+  second: { symbol: 'USDJPY', invert: false },
+});
+
+/**
+ * **الثابت الحاكم للجسر**: سعره يساوي سعر الزوج المباشر المكافئ. يُفحص عددياً من أسعار دولار
+ * متسقة: لكل عملة «كم دولاراً تساوي الوحدة منها»، فالزوج المباشر يُشتقّ منها بالقسمة، والجسر
+ * يُحسب من ساقيه — ويجب أن يتطابقا. لو انقلبت `invert` بساقٍ واحدة لانفجر الفرق فوراً.
+ */
+{
+  const USD_PER: Record<string, number> = {
+    EUR: 1.0845,
+    GBP: 1.2712,
+    AUD: 0.6634,
+    NZD: 0.6011,
+    USD: 1,
+    CAD: 1 / 1.3588,
+    CHF: 1 / 0.8823,
+    JPY: 1 / 157.42,
+  };
+  /** سعر أي زوج من جدول الدولار: كم وحدة من عملة التسعير لكل وحدة من العملة الأساس. */
+  const priceOf = (sym: string) => USD_PER[sym.slice(0, 3)]! / USD_PER[sym.slice(3, 6)]!;
+  const ccys = Object.keys(USD_PER);
+  let checked = 0;
+  for (const quote of ccys) {
+    for (const account of ccys) {
+      const direct = conversionPair(quote, account);
+      const expected = direct == null ? 1 : quoteToAccountRate(direct, priceOf(direct.symbol))!;
+      // القيمة الصحيحة بحكم الجدول: وحدات الحساب لكل وحدة تسعير
+      assert.ok(near(expected, USD_PER[quote]! / USD_PER[account]!, 1e-9), `مباشر ${quote}->${account}`);
+      const bridge = usdBridge(quote, account);
+      if (!bridge) {
+        assert.ok(quote === account || quote === 'USD' || account === 'USD', `جسر مفقود ${quote}->${account}`);
+        continue;
+      }
+      // ساقا الجسر دولاريتان دائماً — وهي بالضبط الأزواج التي يعرفها المزوّد
+      for (const leg of [bridge.first, bridge.second]) {
+        assert.ok(leg.symbol.includes('USD'), `ساق غير دولارية: ${leg.symbol}`);
+      }
+      const viaUsd = bridgedRate(bridge, priceOf(bridge.first.symbol), priceOf(bridge.second.symbol))!;
+      assert.ok(near(viaUsd, expected, 1e-9), `جسر ${quote}->${account}: ${viaUsd} ≠ ${expected}`);
+      checked += 1;
+    }
+  }
+  assert.equal(checked, 42); // 8×8 تركيبة ناقص 8 متطابقة وناقص 14 لها طرفٌ دولاري
+}
+
+// قيمة الـpip عبر الجسر تساوي قيمتها بالزوج المباشر: USDJPY بحساب فرنك
+{
+  const bridge = usdBridge('JPY', 'CHF')!;
+  // USDJPY = 157.42 ، USDCHF = 0.8823
+  const viaUsd = bridgedRate(bridge, 157.42, 0.8823)!;
+  const direct = quoteToAccountRate(conversionPair('JPY', 'CHF'), 157.42 / 0.8823)!; // CHFJPY
+  assert.ok(near(viaUsd, direct, 1e-12));
+  // 100000 × 0.01 = 1000 ين للـpip ← بالفرنك
+  assert.ok(near(pipValuePerLot(instrumentSpec('USDJPY')!, viaUsd), (1000 / 157.42) * 0.8823, 1e-9));
+}
+
+// ساقٌ مفقودة = لا سعر (لا يُحسب حجم مركز من نصف تحويل)
+{
+  const bridge = usdBridge('CAD', 'AUD')!;
+  assert.equal(bridgedRate(bridge, null, 0.6634), null);
+  assert.equal(bridgedRate(bridge, 1.3588, null), null);
+  assert.equal(bridgedRate(bridge, 1.3588, 0), null);
 }
 
 console.log('positionSize selftest: OK');
