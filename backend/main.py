@@ -19,9 +19,11 @@ from typing import Literal
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field, model_validator
 
 from academy_data import get_lecture, get_school, get_schools_summary
@@ -71,6 +73,32 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _json_safe(v):
+    """قيمة صالحة لـJSON قياسي: `inf`/`nan` تصير نصّها، والبقية كما هي (تنازلياً بالقوائم والقواميس)."""
+    if isinstance(v, float) and not math.isfinite(v):
+        return repr(v)
+    if isinstance(v, dict):
+        return {k: _json_safe(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple)):
+        return [_json_safe(x) for x in v]
+    return v
+
+
+@app.exception_handler(RequestValidationError)
+async def _validation_error_stays_422(request: Request, exc: RequestValidationError):
+    """**خطأ تصديق برقم غير منتهٍ كان يخرج 500 لا 422** — بكل مسارات الخادم لا بالصفقات وحدها.
+
+    معالج FastAPI الافتراضي يُعيد القيمة المرفوضة نفسها داخل جسم الـ422 (`input`)، و
+    `json.dumps` القياسي يرفض `Infinity`/`NaN` فيرمي ValueError **بعد** أن نجح التصديق بعمله:
+    العميل يرى «خطأ خادم» على جسمٍ هو من أرسله، ويُسجَّل بسجلّ الأعطال كأنه عطب بالخادم.
+    ومحلّل JSON ببايثون يقبل `Infinity` حرفياً، فالجسم يصل سليماً حتى نهاية التصديق.
+
+    الشكل نفسه (`{"detail": [...]}`) كي لا يتغيّر عقد الخطأ على أيّ عميل — القيمة غير المنتهية
+    وحدها تُعرض نصّاً — و`jsonable_encoder` يبقى كما بالمعالج الافتراضي لأن `ctx` بأخطاء
+    `model_validator` يحمل كائن `ValueError` نفسه (إسقاطه كان يُسقط 14 اختباراً قائماً بـ500)."""
+    return JSONResponse(status_code=422, content={"detail": _json_safe(jsonable_encoder(exc.errors()))})
 
 
 # ─── Models ───────────────────────────────────────────────────────────────────

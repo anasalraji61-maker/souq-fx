@@ -96,6 +96,18 @@ def test_patching_to_a_non_positive_price_is_rejected(client):
         assert r.status_code == 422, f"{bad} — الردّ {r.status_code}"
 
 
+def test_an_infinite_price_is_rejected(client):
+    """`inf` يجتاز `gt=0` ويعطي `pnl=nan` لا يقبله JSON قياسياً — ومحلّل JSON ببايثون يقبل
+    `Infinity` حرفياً بالجسم الوارد، فالطريق مفتوح بلا `allow_inf_nan=False`."""
+    r = client.post(
+        "/api/trades",
+        content=b'{"symbol":"EURUSD","side":"buy","entry":Infinity}',
+        headers={**_DEV1, "Content-Type": "application/json"},
+    )
+    assert r.status_code == 422, r.text
+    assert client.get("/api/trades", headers=_DEV1).json()["trades"] == []
+
+
 def test_a_note_longer_than_the_field_allows_is_rejected(client):
     """`TradeUpdate.note` محدودة بـ500 حرف؛ الإنشاء كان بلا حدّ أصلاً."""
     assert client.post(

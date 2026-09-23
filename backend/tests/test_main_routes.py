@@ -640,3 +640,20 @@ def test_anonymous_devices_do_not_share_or_delete_each_others_layouts(client):
     assert client.delete("/api/layouts/same", headers=_DEV1).json()["deleted"] == 1
     assert client.get("/api/layouts", headers=_DEV1).json()["layouts"] == []
     assert [x["name"] for x in client.get("/api/layouts", headers=_DEV2).json()["layouts"]] == ["d2"]
+
+
+# ─── جسم الخطأ نفسه لا يُسقط الخادم ──────────────────────────────────────────
+
+def test_a_non_finite_number_is_a_422_not_a_500_on_any_route(client):
+    """القيمة المرفوضة تُعاد داخل جسم الـ422 (`input`)، و`json.dumps` القياسي يرفض
+    `Infinity`/`NaN` — فالتصديق كان ينجح بعمله ثم يسقط المعالج نفسه بـ500 **بكل مسار**،
+    والعميل يرى «خطأ خادم» على جسمٍ هو من أرسله. ومحلّل JSON ببايثون يقبل `Infinity`
+    حرفياً فالجسم يصل سليماً حتى هناك. مسار التنبيهات شاهداً على أن الإصلاح عامّ."""
+    r = client.post(
+        "/api/alerts",
+        content=b'{"symbol":"EURUSD","condition":"above","price":NaN}',
+        headers={**_DEV1, "Content-Type": "application/json"},
+    )
+    assert r.status_code == 422, r.text
+    assert r.json()["detail"], "شكل الخطأ يبقى {'detail': [...]} كما يتوقّعه العميل"
+    assert client.get("/api/alerts", headers=_DEV1).json()["alerts"] == []
