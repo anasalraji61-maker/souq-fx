@@ -13,8 +13,10 @@ import {
   formatPaneValueScaled,
   latestPaneValue,
   paneSeriesMaxAbs,
+  paneSpreadSeries,
   paneValueDecimals,
   paneValueState,
+  paneValueTrend,
   placeGuides,
 } from './paneGuides';
 
@@ -230,6 +232,44 @@ for (const id of ['cci', 'roc', 'atr', 'volume', '', 'nope']) {
       );
     }
   }
+}
+
+// ز) اتّساع الفكّ (Gator): نقطة صالحة متى صحّت السلسلتان معاً، والقيمة موجبة أبداً
+{
+  // نفس اصطلاح computeGator: upper ≥ 0 وlower ≤ 0
+  assert.deepEqual(paneSpreadSeries([1, 2, 3], [-1, -2, -3]), [2, 4, 6]);
+  assert.deepEqual(
+    paneSpreadSeries([1, null, 3], [-1, -2, null]),
+    [2, null, null],
+    'طول جانب واحد ليس اتّساعاً'
+  );
+  assert.deepEqual(paneSpreadSeries([Number.NaN, 2], [-1, -2]), [null, 4]);
+  assert.deepEqual(paneSpreadSeries([1, 2, 3], [-1]), [2], 'الطول أقصر السلسلتين');
+  assert.deepEqual(paneSpreadSeries([], []), []);
+  assert.equal(paneSpreadSeries([0], [0])[0], 0, 'فكّ منطبق ⇐ صفر لا null');
+  // موجب أبداً بهذا الاصطلاح — وهو سبب أن التلوين بالإشارة لا يقول شيئاً
+  for (const [u, l] of [[0.0001, -0.00002], [5, -0.1], [0, -3]] as const) {
+    assert.ok(paneSpreadSeries([u], [l])[0]! >= 0);
+  }
+  // والصياغة تمرّ بنفس دالّة الـ47 لوحة بلا شيفرة جديدة
+  assert.equal(formatPaneValueScaled(paneSpreadSeries([1, 2], [-1, -2]), 4), '4');
+}
+
+// ح) اتّجاه آخر قيمتين صالحتين — أساس لون رأس Gator
+{
+  assert.equal(paneValueTrend([1, 2]), 'up');
+  assert.equal(paneValueTrend([2, 1]), 'down');
+  assert.equal(paneValueTrend([2, 2]), 'flat');
+  assert.equal(paneValueTrend([]), null);
+  assert.equal(paneValueTrend([5]), null, 'قيمة واحدة ⇐ لا اتّجاه');
+  assert.equal(paneValueTrend([null, null]), null);
+  // فجوة null بين آخر قيمتين لا تُسقط المقارنة
+  assert.equal(paneValueTrend([1, null, null, 3]), 'up');
+  assert.equal(paneValueTrend([3, Number.NaN, 1]), 'down');
+  // ذيل null بعد القيم لا يخفي الاتّجاه
+  assert.equal(paneValueTrend([1, 2, null]), 'up');
+  // آخر قيمتين لا أوّلهما
+  assert.equal(paneValueTrend([9, 1, 2]), 'up');
 }
 
 console.log('paneGuides.selftest: PASS');

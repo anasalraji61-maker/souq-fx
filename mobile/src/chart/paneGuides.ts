@@ -218,3 +218,59 @@ export function paneValueState(paneId: string, v: number | null): 'high' | 'low'
   if (only && v > only.v) return 'high';
   return 'mid';
 }
+
+/* ——— لوحة ذات سلسلتين (Gator) ——— */
+
+/**
+ * فرق سلسلتَي لوحة ثنائية السلسلة — **اتّساع الفكّ** بلغة التمساح.
+ *
+ * Gator هي اللوحة الوحيدة التي بقيت بالاسم وحده بعد ربط قيمة الشمعة الأخيرة بالـ47
+ * الأخرى: سلسلتان (`upper ≥ 0` فوق الصفر و`lower ≤ 0` تحته) فقيمة واحدة لا تمثّلها،
+ * وعمود الرأس ‎36px‎ لا يسع رقمين. وما يقرؤه المتداول من التمساح أصلاً ليس أيّ الشريطين
+ * أطول بل **مجموع طولهما**: اتّساع الفكّ = `upper − lower` (وهو `upper + |lower|` لأن
+ * السفلى سالبة دائماً). قيمة واحدة صادقة، لا اختزال لإحدى السلسلتين.
+ *
+ * نقطة صالحة فقط متى صحّت السلسلتان معاً — فطول جانب واحد ليس اتّساعاً.
+ */
+export function paneSpreadSeries(
+  upper: readonly (number | null | undefined)[],
+  lower: readonly (number | null | undefined)[]
+): (number | null)[] {
+  const n = Math.min(upper.length, lower.length);
+  const out: (number | null)[] = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    const u = upper[i];
+    const l = lower[i];
+    if (typeof u === 'number' && Number.isFinite(u) && typeof l === 'number' && Number.isFinite(l)) {
+      out[i] = u - l;
+    }
+  }
+  return out;
+}
+
+/**
+ * اتّجاه آخر قيمتين صالحتين بالسلسلة — للتلوين حيث لا معنى لإشارة القيمة نفسها.
+ *
+ * باتّساع الفكّ القيمة موجبة دائماً، فتلوين الجانب (`PaneValueHead`) يجعلها خضراء أبداً
+ * ولا يقول شيئاً. الإشارة المعنيّة هنا **اتّساع أم انكماش**: وهي نفس دلالة ألوان أعمدة
+ * التمساح أسفل الرأس (`upperGrowing`/`lowerGrowing` ⇐ أخضر عند النمو)، فيُقرأ الرقم
+ * ولونُه مع الأعمدة كوحدة واحدة لا كإشارتين متنافستين.
+ *
+ * يقارن آخر قيمة صالحة بالتي قبلها لا بالخانة السابقة مباشرةً — فجوة null بينهما
+ * (بداية السلسلة أو شمعة ناقصة) لا تُسقط المقارنة.
+ */
+export function paneValueTrend(
+  values: readonly (number | null | undefined)[]
+): 'up' | 'down' | 'flat' | null {
+  let last: number | null = null;
+  for (let i = values.length - 1; i >= 0; i--) {
+    const v = values[i];
+    if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+    if (last == null) {
+      last = v;
+      continue;
+    }
+    return v < last ? 'up' : v > last ? 'down' : 'flat';
+  }
+  return null;
+}

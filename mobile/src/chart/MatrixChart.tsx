@@ -55,7 +55,9 @@ import {
   formatPaneValue,
   formatPaneValueScaled,
   latestPaneValue,
+  paneSpreadSeries,
   paneValueState,
+  paneValueTrend,
   placeGuides,
 } from './paneGuides';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
@@ -611,6 +613,51 @@ function PaneValueHead({
             txt.length >= 7 && styles.paneHeadValueLong,
             v != null && v > 0 && { color: colors.bull },
             v != null && v < 0 && { color: colors.bear },
+          ]}
+        >
+          {txt}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * رأس لوحة **ذات سلسلتين** (Gator وحدها اليوم): الاسم، وتحته **اتّساع الفكّ** —
+ * `upper − lower` لآخر شمعة صالحة.
+ *
+ * كانت اللوحة الوحيدة الباقية بالاسم وحده: سلسلتان لا واحدة، وعمود ‎36px‎ لا يسع رقمين،
+ * فبقي المتداول يرى شريطين ولا يعرف أهُما ‎0.0004‎ أم ‎0.4‎ — ولا يقارن اتّساع اليوم
+ * باتّساع الأمس. والاتّساع هو ما يقرؤه من التمساح فعلاً: فكّ مفتوح ⇐ اتجاه، ومنطبق ⇐ نوم.
+ *
+ * الصياغة بنفس `formatPaneValueScaled` المستعملة بالـ47 لوحة — لا شيفرة صياغة جديدة،
+ * والمقياس من سلسلة الاتّساع نفسها فتثبت خانات الكسر ولا يتغيّر شكل الرقم مع كل تيك.
+ * واللون من **اتّجاه الاتّساع** لا من إشارته: الإشارة موجبة أبداً هنا فتلوينها بالجانب
+ * يجعلها خضراء دائماً ولا يقول شيئاً.
+ */
+function PaneSpreadHead({
+  name,
+  upper,
+  lower,
+}: {
+  name: string;
+  upper: readonly (number | null)[];
+  lower: readonly (number | null)[];
+}) {
+  const spread = useMemo(() => paneSpreadSeries(upper, lower), [upper, lower]);
+  const v = latestPaneValue(spread);
+  const txt = formatPaneValueScaled(spread, v);
+  const trend = paneValueTrend(spread);
+  return (
+    <View style={styles.paneHead}>
+      <Text style={styles.paneHeadName}>{name}</Text>
+      {txt ? (
+        <Text
+          style={[
+            styles.paneHeadValue,
+            txt.length >= 7 && styles.paneHeadValueLong,
+            trend === 'up' && { color: colors.bull },
+            trend === 'down' && { color: colors.bear },
           ]}
         >
           {txt}
@@ -7931,7 +7978,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {gator ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Gator</Text>
+          <PaneSpreadHead name="Gator" upper={gator.upper} lower={gator.lower} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
