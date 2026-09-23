@@ -1,6 +1,7 @@
 """Twelve Data market feed for MATRIX charts (Grow / shared with robot)."""
 from __future__ import annotations
 
+import math
 import os
 import time
 from datetime import datetime, timezone
@@ -85,6 +86,9 @@ _stats: dict[str, int | float | None] = {
     "stale_served": 0,
     "rate_limited": 0,
     "last_rate_limit_at": None,
+    # صفوف أسقطها `_candle` لعدم صلاحيتها — تُقرأ بـ/api/market/status كبقيّة صحّة المزوّد.
+    # ارتفاعها المفاجئ = خلل بالمصدر لا بالتطبيق، وكان يظهر قبلها «شارت تجريبي» بلا سبب ظاهر.
+    "rows_dropped": 0,
 }
 
 
@@ -100,15 +104,53 @@ def td_symbol(matrix_symbol: str) -> str:
     return SYMBOL_MAP.get(matrix_symbol.upper(), matrix_symbol.upper())
 
 
-def _parse_ts(dt_str: str) -> int:
-    dt_str = dt_str.strip()
+def _parse_ts(dt_str: str) -> int | None:
+    """ثواني UTC، أو `None` إن لم يُقرأ الوقت.
+
+    كان يُعيد `int(time.time())` أي **الآن**: شمعة بوقت غير مقروء تُدَسّ عند الحافة اليمنى
+    للشارت — بعد `candles.sort` تصير **آخر شمعة**، أي «آخر ما جرى بالسوق» بعين المتداول،
+    وهي صفٌّ لم يُعرف وقته أصلاً. الصفّ يُسقَط الآن بدل أن يُخترع له وقت."""
+    dt_str = (dt_str or "").strip()
     for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
         try:
             dt = datetime.strptime(dt_str, fmt).replace(tzinfo=timezone.utc)
             return int(dt.timestamp())
         except ValueError:
             continue
-    return int(time.time())
+    return None
+
+
+def _candle(row: object) -> dict | None:
+    """شمعة واحدة من صفّ المزوّد، أو `None` إن كان الصفّ غير صالح.
+
+    **العيب**: الصفّ كان يُبنى مباشرةً (`float(row["open"])` …) داخل حلقة بلا حارس، فـ**قيمة
+    `null` واحدة** — يرسلها المزوّد بالعطلات وأعطاله العابرة — ترمي `TypeError` من
+    `fetch_time_series_with_meta` كلّها. و`build_series` يلتقط كل استثناء بـ
+    `except Exception: pass` ثم يبني **سلسلة بذرية عشوائية**: مُثبَت بالسندبوكس أن 59 شمعة
+    حقيقية تُلقى ويُعرض مكانها مسار مولَّد بـ180 شمعة و«سعر» مخترَع (`kind="demo"`).
+    أي أن صفّاً واحداً معطوباً كان يحوّل شارت المتداول كلّه إلى بيانات غير حقيقية.
+
+    والصفّ غير الصالح يُسقَط وحده الآن فتبقى بقيّة الشموع حقيقية وموسومةً `provider`.
+    و`NaN`/`inf` يجتازان `float()` ولا يقبلهما JSON قياسياً — يُسقطان كالمفقود.
+    """
+    if not isinstance(row, dict):
+        return None
+    ts = _parse_ts(str(row.get("datetime") or ""))
+    if ts is None:
+        return None
+    try:
+        o, h, l, c = (float(row[k]) for k in ("open", "high", "low", "close"))
+    except (TypeError, ValueError, KeyError):
+        return None
+    if not all(math.isfinite(v) for v in (o, h, l, c)):
+        return None
+    try:
+        volume = float(row.get("volume") or 0)
+    except (TypeError, ValueError):
+        volume = 0.0
+    if not math.isfinite(volume):
+        volume = 0.0
+    return {"time": ts, "open": o, "high": h, "low": l, "close": c, "volume": volume}
 
 
 def _serve_stale(cache_key: str, now: float) -> tuple[list[dict], float] | None:
@@ -145,7 +187,11 @@ def fetch_time_series_with_meta(
     params = {
         "symbol": td_sym,
         "interval": interval,
-        "outputsize": str(min(outputsize, 5000)),
+        # `min(outputsize, 5000)` كان يمرّر غير الموجب كما هو للمزوّد (نفس عائلة عيب
+        # `symbol_search`). كل نداء اليوم يمرّ بثابت أو بقيمة محصورة بـ`build_series`،
+        # فهذا حارس مسارٍ مستقبليّ — ورفعُ الخطأ هنا لا يصلح: `build_series` يبتلعه فيُعرض
+        # شارت تجريبي بدل رسالة.
+        "outputsize": str(max(1, min(outputsize, 5000))),
         "apikey": key,
         "timezone": "UTC",
         "order": "ASC",
@@ -181,17 +227,24 @@ def fetch_time_series_with_meta(
         raise RuntimeError(f"Twelve Data: {msg}")
 
     candles: list[dict] = []
-    for row in data["values"]:
-        candles.append(
-            {
-                "time": _parse_ts(row["datetime"]),
-                "open": float(row["open"]),
-                "high": float(row["high"]),
-                "low": float(row["low"]),
-                "close": float(row["close"]),
-                "volume": float(row.get("volume") or 0),
-            }
-        )
+    dropped = 0
+    for row in data["values"] or []:
+        candle = _candle(row)
+        if candle is None:
+            dropped += 1
+            continue
+        candles.append(candle)
+    if dropped:
+        _stats["rows_dropped"] = int(_stats["rows_dropped"] or 0) + dropped
+
+    # ولا صفّ صالح: يُعامَل كردّ خطأ من المزوّد — قديمٌ حقيقي إن وُجد، وإلا خطأ صريح. ولا
+    # تُخزَّن القائمة الفارغة: كانت ستُعاد من الكاش طوال الـTTL فيبقى العطل العابر ربع ساعة.
+    if not candles:
+        stale = _serve_stale(cache_key, now)
+        if stale:
+            cached, as_of = stale
+            return cached, {"kind": "cache", "as_of": as_of, "channel": "twelvedata"}
+        raise RuntimeError("Twelve Data: no usable candles in response")
 
     candles.sort(key=lambda c: c["time"])
     _cache[cache_key] = (now, candles)

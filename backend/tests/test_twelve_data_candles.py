@@ -1,0 +1,187 @@
+"""`twelve_data` كان **بلا اختبار واحد** وهو طبقة المزوّد خلف كل شارت بالتطبيق.
+
+**العيب الأكبر**: صفّ الشمعة كان يُبنى داخل حلقة بلا حارس (`float(row["open"])` …)، فقيمة
+`null` واحدة — يرسلها المزوّد بالعطلات وأعطاله العابرة — ترمي `TypeError` من الدالّة كلّها،
+و`build_series` يلتقط كل استثناء بـ`except Exception: pass` فيبني **سلسلة بذرية عشوائية**:
+59 شمعة حقيقية تُلقى ويُعرض مكانها مسار مولَّد و«سعر» مخترَع. صفٌّ واحد معطوب = شارت
+المتداول كلّه بيانات غير حقيقية.
+
+ومعه: وقتٌ لا يُقرأ كان يصير **`time.time()`** أي الآن، فبعد الفرز تصير تلك الشمعة **آخر
+شمعة** بالشارت أي «آخر ما جرى بالسوق»؛ و`outputsize` غير الموجب كان يُرسَل حرفياً للمزوّد.
+
+**بلا شبكة**: `httpx.Client` مُستبدَل بمزيّف يردّ جسم المزوّد من الذاكرة.
+"""
+from __future__ import annotations
+
+import pytest
+
+import main
+import twelve_data as market
+
+
+def _rows(n: int = 6) -> list[dict]:
+    return [
+        {
+            "datetime": f"2026-09-23 10:{i:02d}:00",
+            "open": "1.1000", "high": "1.1050", "low": "1.0950",
+            "close": "1.1020", "volume": "5",
+        }
+        for i in range(n)
+    ]
+
+
+class _FakeResponse:
+    def __init__(self, payload: dict, status: int = 200):
+        self._payload = payload
+        self.status_code = status
+
+    def raise_for_status(self) -> None:
+        return None
+
+    def json(self) -> dict:
+        return self._payload
+
+
+class _FakeClient:
+    def __init__(self, sink: dict, payload: dict, status: int = 200, **_kw):
+        self._sink, self._payload, self._status = sink, payload, status
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_exc):
+        return False
+
+    def get(self, url, params=None, **_kw):
+        self._sink["params"] = dict(params or {})
+        return _FakeResponse(self._payload, self._status)
+
+
+@pytest.fixture()
+def provider(monkeypatch):
+    """يردّ ما يوضع بـ`box['payload']`، ويلتقط ما أُرسل للمزوّد. الكاش مُفرَّغ لكل اختبار."""
+    box: dict = {"payload": {"values": _rows()}, "sink": {}}
+    monkeypatch.setattr(market, "_api_key", lambda: "test-key")
+    monkeypatch.setattr(market, "_cache", {})
+    monkeypatch.setattr(
+        market.httpx, "Client",
+        lambda **kw: _FakeClient(box["sink"], box["payload"], **{k: v for k, v in kw.items() if k == "x"}),
+    )
+    return box
+
+
+# ------------------------- صفّ معطوب لا يُلغي الشموع السليمة
+
+@pytest.mark.parametrize(
+    "broken",
+    [
+        {"open": None},                      # null من المزوّد
+        {"close": "not-a-number"},
+        {"high": float("nan")},
+        {"low": "Infinity"},
+        {"datetime": "لا وقت"},
+    ],
+)
+def test_one_broken_row_does_not_discard_the_real_candles(provider, broken):
+    rows = _rows(6)
+    rows[3] = {**rows[3], **broken}
+    provider["payload"] = {"values": rows}
+    candles, meta = market.fetch_time_series_with_meta("EURUSD", "15m", 180)
+    assert len(candles) == 5, "الصفّ المعطوب وحده يُسقَط"
+    assert meta["kind"] == "provider", "ما بقي شموع حقيقية لا بيانات تجريبية"
+
+
+def test_a_missing_field_drops_only_its_row(provider):
+    rows = _rows(4)
+    del rows[1]["close"]
+    provider["payload"] = {"values": rows}
+    candles, _ = market.fetch_time_series_with_meta("EURUSD", "15m", 180)
+    assert len(candles) == 3
+
+
+def test_the_chart_stays_real_instead_of_turning_into_a_demo_walk(provider):
+    """الأثر النهائي كما يراه المتداول: كان `kind` يصير `demo` بسلسلة مولَّدة كاملة."""
+    rows = _rows(6)
+    rows[2] = {**rows[2], "open": None}
+    provider["payload"] = {"values": rows}
+    series = main.build_series("EURUSD", "15m", 180)
+    assert series.data_source.kind == "provider"
+    assert len(series.candles) == 5
+    assert series.last == pytest.approx(1.1020)
+
+
+def test_every_row_broken_is_an_error_not_an_invented_series(provider):
+    provider["payload"] = {"values": [{**r, "close": None} for r in _rows(4)]}
+    with pytest.raises(RuntimeError, match="no usable candles"):
+        market.fetch_time_series_with_meta("EURUSD", "15m", 180)
+
+
+def test_an_all_broken_response_is_not_cached(provider):
+    """القائمة الفارغة لو خُزِّنت لأُعيدت طوال الـTTL، فيبقى عطل عابر ربع ساعة."""
+    provider["payload"] = {"values": [{**r, "close": None} for r in _rows(4)]}
+    with pytest.raises(RuntimeError):
+        market.fetch_time_series_with_meta("EURUSD", "15m", 180)
+    provider["payload"] = {"values": _rows(4)}
+    candles, meta = market.fetch_time_series_with_meta("EURUSD", "15m", 180)
+    assert len(candles) == 4 and meta["kind"] == "provider"
+
+
+def test_dropped_rows_are_counted_for_the_status_page(provider):
+    market._stats["rows_dropped"] = 0
+    rows = _rows(6)
+    rows[1] = {**rows[1], "open": None}
+    rows[4] = {**rows[4], "open": None}
+    provider["payload"] = {"values": rows}
+    market.fetch_time_series_with_meta("EURUSD", "15m", 180)
+    assert market._stats["rows_dropped"] == 2
+
+
+# ------------------------------------- وقت لا يُقرأ لا يصير «الآن»
+
+@pytest.mark.parametrize("bad", ["", "لا وقت", "23/09/2026", None])
+def test_unreadable_datetime_is_none_not_now(bad):
+    assert market._parse_ts(bad) is None
+
+
+def test_a_timeless_row_never_becomes_the_latest_candle(provider):
+    """كان يأخذ `time.time()` فيقف بعد الفرز **آخر** الشارت: «آخر ما جرى بالسوق»."""
+    rows = _rows(4)
+    rows[1] = {**rows[1], "datetime": "لا وقت", "close": "9.9999"}
+    provider["payload"] = {"values": rows}
+    candles, _ = market.fetch_time_series_with_meta("EURUSD", "15m", 180)
+    assert len(candles) == 3
+    assert candles[-1]["close"] != pytest.approx(9.9999)
+
+
+def test_readable_dates_still_parse_both_shapes():
+    assert market._parse_ts("2026-09-23 10:30:00") == 1790159400
+    assert market._parse_ts("2026-09-23") == 1790121600
+
+
+# --------------------------------------------- ما لم يتغيّر
+
+def test_a_clean_response_is_untouched_and_sorted(provider):
+    rows = list(reversed(_rows(5)))
+    provider["payload"] = {"values": rows}
+    candles, meta = market.fetch_time_series_with_meta("EURUSD", "15m", 180)
+    assert len(candles) == 5
+    assert [c["time"] for c in candles] == sorted(c["time"] for c in candles)
+    assert meta["kind"] == "provider"
+    assert candles[0]["volume"] == 5.0
+
+
+def test_volume_is_optional_and_never_breaks_a_row(provider):
+    rows = _rows(3)
+    rows[0] = {k: v for k, v in rows[0].items() if k != "volume"}
+    rows[1] = {**rows[1], "volume": None}
+    rows[2] = {**rows[2], "volume": "x"}
+    provider["payload"] = {"values": rows}
+    candles, _ = market.fetch_time_series_with_meta("EURUSD", "15m", 180)
+    assert len(candles) == 3, "الحجم ليس سعراً — غيابه لا يُسقط شمعة"
+    assert [c["volume"] for c in candles] == [0.0, 0.0, 0.0]
+
+
+@pytest.mark.parametrize("asked,sent", [(-5, "1"), (0, "1"), (180, "180"), (99_999, "5000")])
+def test_outputsize_never_leaves_as_a_non_positive_number(provider, asked, sent):
+    market.fetch_time_series_with_meta("EURUSD", "15m", asked)
+    assert provider["sink"]["params"]["outputsize"] == sent
