@@ -389,26 +389,31 @@ export function AlertsPanel({
       const res = await api.checkAlerts();
       if (mountedRef.current) setAlerts(res.alerts);
       if (res.triggered.length) {
-        /** «EURUSD فوق 1.085 (1.0853)» بلغة الواجهة — كان يعرض above/below الإنجليزية الخام بكل اللغات. */
-        const msg = res.triggered
-          .map((trig) => {
-            const word = trig.condition === 'above' ? t.aboveWord : t.belowWord;
-            const cur =
-              typeof trig.current === 'number' && Number.isFinite(trig.current)
-                ? ` (${formatPrice(trig.current, trig.symbol)})`
-                : '';
-            return `${trig.symbol} ${word} ${formatPrice(trig.price, trig.symbol)}${cur}`;
-          })
-          .join(' · ');
-        if (mountedRef.current) setFlash(msg);
+        /**
+         * وصف الإطلاق — **مصدر واحد للسطرين**. «EURUSD فوق 1.0850 (1.0853)» بلغة الواجهة
+         * (كان يعرض above/below الإنجليزية الخام بكل اللغات).
+         *
+         * كان يُبنى مرّتين بصيغتين مختلفتين: سطر اللوحة يحمل **السعر الذي طُبع فعلاً** بين
+         * قوسين، والإشعار — وهو الوحيد الذي يصل المتداول وهاتفه مقفل، أي باللحظة التي يعني
+         * فيها التنبيه شيئاً — يقول المستوى وحده. والسعران ليسا واحداً: المستوى هو ما طلبه
+         * المتداول، والمطبوع هو **أين السوق الآن**، وبينهما بالذهب عشرات النقاط حين يُطلق
+         * التنبيه على قفزة. فمن قرأ الإشعار وحده كان عليه فتح التطبيق ليعرف ما إن كان المستوى
+         * لُمس ومضى أم ما زال عنده. وهو رقمٌ **بيد اللوحة أصلاً** (`trig.current`) لا طلبَ له.
+         *
+         * وبالبناء الواحد لا يفترق ما يُقرأ بالإشعار عمّا يُقرأ باللوحة أبداً. والحارس على
+         * `current` باقٍ كما كان: باك-إند أقدم لا يُرسله ⇒ المستوى وحده، بلا قوسين فارغين.
+         */
+        const describe = (trig: (typeof res.triggered)[number]) => {
+          const word = trig.condition === 'above' ? t.aboveWord : t.belowWord;
+          const cur =
+            typeof trig.current === 'number' && Number.isFinite(trig.current)
+              ? ` (${formatPrice(trig.current, trig.symbol)})`
+              : '';
+          return `${trig.symbol} ${word} ${formatPrice(trig.price, trig.symbol)}${cur}`;
+        };
+        if (mountedRef.current) setFlash(res.triggered.map(describe).join(' · '));
         for (const trig of res.triggered) {
-          await pushPriceAlert(
-            t.alertsPushTitle,
-            `${trig.symbol} ${trig.condition === 'above' ? t.aboveWord : t.belowWord} ${formatPrice(
-              trig.price,
-              trig.symbol
-            )}`
-          );
+          await pushPriceAlert(t.alertsPushTitle, describe(trig));
         }
       }
     } catch {
