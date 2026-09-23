@@ -9,10 +9,14 @@ import path from 'node:path';
 import {
   LEGEND_CHIP_W,
   LEGEND_MAX_CHIPS,
+  LEGEND_MORE_W,
   PRICE_OVERLAYS,
   PRICE_OVERLAY_ORDER,
+  activePriceOverlays,
   legendCapacity,
+  legendChipWidth,
   planPriceLegend,
+  planPriceLegendForWidth,
   resolveColorExpr,
 } from './priceLegend';
 
@@ -147,6 +151,73 @@ import {
     }
   }
   assert.ok(checked >= 40, `عدد الألوان المتحقَّق منها ${checked} < 40`);
+}
+
+// ١٠) **تغطية كاملة**: كل طبقة تُرسم على لوحة السعر لها مدخل بالجدول — لا طبقة تُرسم
+//     بلا اسم، ولا مدخل يشير لطبقة لا تُرسم. (كان الجدول يغطّي 35 من 48 فيبدو المفتاح
+//     كاملاً وهو ليس كذلك: من يفعّل Supertrend وحده لم يكن يرى شارة واحدة.)
+{
+  const src = fs.readFileSync(path.join(__dirname, 'MatrixChart.tsx'), 'utf8');
+  // مواضع الرسم على لوحة السعر وحدها: ابن JSX بمسافة بادئة 8 بالضبط
+  const drawnIds = new Set<string>();
+  for (const m of src.matchAll(/\n        \{indicators\.includes\('([A-Za-z0-9_]+)'\)/g)) {
+    drawnIds.add(m[1]!);
+  }
+  assert.ok(drawnIds.size >= 48, `مواضع الرسم المكتشَفة ${drawnIds.size} — المسح انكسر`);
+  const tableIds = new Set(PRICE_OVERLAY_ORDER);
+  const missing = [...drawnIds].filter((id) => !tableIds.has(id)).sort();
+  const orphan = [...tableIds].filter((id) => !drawnIds.has(id)).sort();
+  assert.deepEqual(missing, [], `طبقات تُرسم بلا مدخل بالمفتاح: ${missing.join(', ')}`);
+  assert.deepEqual(orphan, [], `مداخل بالمفتاح لا تُرسم: ${orphan.join(', ')}`);
+}
+
+// ١١) التخطيط بالعرض الحقيقي: «+ن» محجوزة، والثابت محفوظ بكل عرض
+{
+  const ALL = PRICE_OVERLAY_ORDER;
+  for (const w of [-50, 0, 12, 24, 40, 80, 150, 240, 320, 700, 2000, Number.NaN]) {
+    const plan = planPriceLegendForWidth(ALL, w);
+    assert.equal(
+      plan.chips.length + plan.more,
+      ALL.length,
+      `w=${w}: إخفاء صامت (${plan.chips.length}+${plan.more} ≠ ${ALL.length})`
+    );
+    assert.ok(plan.chips.length <= LEGEND_MAX_CHIPS, `w=${w}: تجاوز السقف`);
+    if (plan.chips.length > 0) {
+      // الشارات المعروضة + «+ن» المحجوزة تسع فعلاً بالعرض المتاح
+      let used = 0;
+      for (const c of plan.chips) used += legendChipWidth(c);
+      const need = plan.more > 0 ? used + LEGEND_MORE_W : used;
+      assert.ok(need <= w, `w=${w}: العرض المخطَّط ${need} يتجاوز المتاح`);
+    }
+  }
+  // رتابة: العرض الأكبر لا يعرض شارات أقلّ
+  let prev = -1;
+  for (const w of [0, 40, 80, 150, 240, 320, 480, 700]) {
+    const n = planPriceLegendForWidth(ALL, w).chips.length;
+    assert.ok(n >= prev, `w=${w}: ${n} < ${prev}`);
+    prev = n;
+  }
+  // الحالة التي دفعت لهذا: اسمان طويلان بعرض هاتف ضيّق — العدّاد يبقى مرئياً
+  const longOnes = planPriceLegendForWidth(['supertrend', 'chandelierExit', 'sma20'], 120);
+  assert.equal(longOnes.chips.length + longOnes.more, 3);
+  // التقدير الثابت السابق (58px) كان يَعِد بشارتين على الأقل بنفس العرض
+  assert.ok(legendChipWidth({ label: 'Supertrend', swatch: ['a', 'b'] }) > LEGEND_CHIP_W);
+  // لا شيء مفعَّل ← لا مفتاح ولا عدّاد
+  assert.deepEqual(planPriceLegendForWidth([], 400), { chips: [], more: 0 });
+  // مؤشرات اللوحات المستقلّة لا تدخل ولا تُحسب
+  assert.deepEqual(planPriceLegendForWidth(['rsi', 'macd'], 400), { chips: [], more: 0 });
+  // كل المفعَّل يتّسع ← بلا «+ن» إطلاقاً
+  const few = planPriceLegendForWidth(['sma20', 'bb'], 600);
+  assert.equal(few.more, 0);
+  assert.equal(few.chips.length, 2);
+}
+
+// ١٢) `activePriceOverlays`: الترتيب أولوية، بلا تكرار، وبلا حدّ
+{
+  const a = activePriceOverlays(['vidya', 'vidya', 'sma20', 'rsi', 'bb']);
+  assert.deepEqual(a.map((c) => c.id), ['sma20', 'bb', 'vidya']);
+  assert.equal(activePriceOverlays(PRICE_OVERLAY_ORDER).length, PRICE_OVERLAY_ORDER.length);
+  assert.equal(activePriceOverlays([]).length, 0);
 }
 
 console.log('priceLegend.selftest: PASS');

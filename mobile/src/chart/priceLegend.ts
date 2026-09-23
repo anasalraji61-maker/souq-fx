@@ -39,12 +39,14 @@ export const PRICE_OVERLAYS: Readonly<Record<string, PriceOverlaySpec>> = {
   ema21: { label: 'EMA 21', swatch: ['accent'] },
   bb: { label: 'BB', swatch: ['#38BDF8'], drawn: ['rgba(56,189,248,0.18)'] },
   vwap: { label: 'VWAP', swatch: ['colors.white'] },
+  supertrend: { label: 'Supertrend', swatch: ['colors.bull', 'colors.bear'] },
   ichimoku: {
     label: 'Ichimoku',
     swatch: ['colors.dxy', 'colors.highImpact', '#C084FC'],
   },
   psar: { label: 'PSAR', swatch: ['#A3E635'] },
   keltner: { label: 'Keltner', swatch: ['#A78BFA'], drawn: ['rgba(167,139,250,0.18)'] },
+  donchian: { label: 'Donchian', swatch: ['#A3B4D0'], drawn: ['rgba(163,180,208,0.14)'] },
   alligator: { label: 'Alligator', swatch: ['#3B82F6', '#EF4444', '#84CC16'] },
   pivotsHL: { label: 'Pivots', swatch: ['#FB7185', '#4ADE80'] },
   fractals: { label: 'Fractals', swatch: ['colors.bear', 'colors.bull'] },
@@ -68,6 +70,28 @@ export const PRICE_OVERLAYS: Readonly<Record<string, PriceOverlaySpec>> = {
   dma: { label: 'DMA', swatch: ['#C7D2FE'] },
   gmma: { label: 'GMMA', swatch: ['#6EE7B7', '#93C5FD'] },
   gannHiLo: { label: 'Gann HiLo', swatch: ['#FCD34D'] },
+  envelopes: { label: 'Envelopes', swatch: ['#F59E0B'], drawn: ['rgba(245,158,11,0.14)'] },
+  zigzag: { label: 'ZigZag', swatch: ['colors.infoAccent'] },
+  chandelierExit: {
+    label: 'Chandelier',
+    swatch: ['#FDBA74'],
+    drawn: ['rgba(253,186,116,0.16)'],
+  },
+  linRegChannel: { label: 'LinReg', swatch: ['#7DD3FC'], drawn: ['rgba(125,211,252,0.14)'] },
+  starcBands: { label: 'STARC', swatch: ['#F9A8D4'], drawn: ['rgba(249,168,212,0.14)'] },
+  accelBands: { label: 'Accel', swatch: ['#5EEAD4'], drawn: ['rgba(94,234,212,0.14)'] },
+  stdErrorBands: { label: 'Std Err', swatch: ['#BEF264'], drawn: ['rgba(190,242,100,0.14)'] },
+  vwapBands: { label: 'VWAP Bnd', swatch: ['#FACC15'], drawn: ['rgba(250,204,21,0.14)'] },
+  chandeKroll: { label: 'ChandeKrl', swatch: ['#2DD4BF'], drawn: ['rgba(45,212,191,0.16)'] },
+  fractalChaosBands: {
+    label: 'FCB',
+    swatch: ['#A78BFA'],
+    drawn: ['rgba(167,139,250,0.14)'],
+  },
+  elderImpulse: {
+    label: 'Elder',
+    swatch: ['colors.bull', 'colors.bear', 'colors.dxy'],
+  },
   medianPrice: { label: 'Median', swatch: ['#94A3B8'] },
   typicalPrice: { label: 'Typical', swatch: ['#FDE68A'] },
   weightedClose: { label: 'W. Close', swatch: ['#FCA5A5'] },
@@ -101,18 +125,84 @@ export function planPriceLegend(
   indicators: readonly string[],
   maxChips: number
 ): LegendPlan {
-  const seen = new Set<string>();
-  const active: LegendChip[] = [];
-  for (const id of PRICE_OVERLAY_ORDER) {
-    if (seen.has(id)) continue;
-    if (!indicators.includes(id)) continue;
-    seen.add(id);
-    const spec = PRICE_OVERLAYS[id]!;
-    active.push({ id, label: spec.label, swatch: spec.swatch });
-  }
+  const active = activePriceOverlays(indicators);
   const cap = Number.isFinite(maxChips) ? Math.max(0, Math.floor(maxChips)) : 0;
   if (cap >= active.length) return { chips: active, more: 0 };
   return { chips: active.slice(0, cap), more: active.length - cap };
+}
+
+/**
+ * الطبقات المفعَّلة بترتيب الأولوية، بلا حدّ. مصدر واحد للاختيار والترتيب يستعمله
+ * كلا المخطِّطَين أدناه — فلا يتباعد ترتيبهما.
+ */
+export function activePriceOverlays(indicators: readonly string[]): LegendChip[] {
+  const out: LegendChip[] = [];
+  for (const id of PRICE_OVERLAY_ORDER) {
+    if (!indicators.includes(id)) continue;
+    const spec = PRICE_OVERLAYS[id]!;
+    out.push({ id, label: spec.label, swatch: spec.swatch });
+  }
+  return out;
+}
+
+/* ——— قياس الشارة ——— */
+/** هوامش الشارة الأفقية (`paddingHorizontal: 4` جانبين). */
+export const LEGEND_CHIP_PAD = 8;
+/** الفراغ بين شارتين (`marginRight: 6`). */
+export const LEGEND_CHIP_GAP = 6;
+/** عرض مربّع لون واحد بفراغه (`width: 6` + `marginRight: 3`). */
+export const LEGEND_SWATCH_W = 9;
+/** تقدير عرض المحرف بـ`fontSize: 9` ووزن 700 — تقدير متحفّظ (أعلى من المتوسط الفعلي). */
+export const LEGEND_CHAR_W = 5.2;
+/** ما تحجزه «+ن» من العرض حتى لا تُقصّ هي نفسها فيختفي العدد بصمت. */
+export const LEGEND_MORE_W = 24;
+
+/** عرض شارة بعينها — يعتمد طول اسمها وعدد مربّعات لونها، لا رقماً واحداً للجميع. */
+export function legendChipWidth(chip: Pick<LegendChip, 'label' | 'swatch'>): number {
+  return (
+    LEGEND_CHIP_PAD +
+    chip.swatch.length * LEGEND_SWATCH_W +
+    chip.label.length * LEGEND_CHAR_W +
+    LEGEND_CHIP_GAP
+  );
+}
+
+/**
+ * يخطّط المفتاح بعرض متاح فعليّ بدل عدّ شارات بعرض ثابت.
+ *
+ * السبب: الصفّ `nowrap` + `overflow: hidden`، فما لا يتّسع **يُقصّ** — و«+ن» آخر الصفّ
+ * فهي أول ما يُقصّ. بتقدير عرض واحد للجميع (58px) تكفي شارتان طويلتان كـ«Supertrend»
+ * و«Chandelier» لتجاوز العرض، فيبتلع القصّ العدّاد ويظنّ المتداول أن ما يراه هو كل
+ * الطبقات المفعَّلة. هنا: مجموع العروض الحقيقية، و«+ن» محجوزة مسبقاً متى وُجدت.
+ *
+ * ثابت دائماً: `chips.length + more === عدد الطبقات المفعَّلة` — لا إخفاء صامت بأيّ عرض.
+ */
+export function planPriceLegendForWidth(
+  indicators: readonly string[],
+  availableW: number
+): LegendPlan {
+  const active = activePriceOverlays(indicators);
+  if (active.length === 0) return { chips: [], more: 0 };
+  const w = Number.isFinite(availableW) ? availableW : 0;
+  if (w <= 0) return { chips: [], more: active.length };
+
+  if (active.length <= LEGEND_MAX_CHIPS) {
+    let total = 0;
+    for (const c of active) total += legendChipWidth(c);
+    if (total <= w) return { chips: active, more: 0 };
+  }
+
+  const budget = w - LEGEND_MORE_W;
+  const chips: LegendChip[] = [];
+  let used = 0;
+  for (const c of active) {
+    if (chips.length >= LEGEND_MAX_CHIPS) break;
+    const cw = legendChipWidth(c);
+    if (used + cw > budget) break;
+    used += cw;
+    chips.push(c);
+  }
+  return { chips, more: active.length - chips.length };
 }
 
 /** عرض الشارة الواحدة تقريباً (مربّع اللون + النصّ + الفراغ) — لحساب ما يتّسع. */

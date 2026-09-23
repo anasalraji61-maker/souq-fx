@@ -48,8 +48,7 @@ import {
 } from './centeredPane';
 import { STOCH_LINE_H, stochPaneGeom } from './stochPane';
 import {
-  legendCapacity,
-  planPriceLegend,
+  planPriceLegendForWidth,
   resolveColorExpr,
 } from './priceLegend';
 import {
@@ -1887,7 +1886,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [accent]
   );
   const priceLegend = useMemo(
-    () => planPriceLegend(indicators, legendCapacity(chartPlotW - 12)),
+    () => planPriceLegendForWidth(indicators, chartPlotW - 12),
     [indicators, chartPlotW]
   );
   const viewXPan =
