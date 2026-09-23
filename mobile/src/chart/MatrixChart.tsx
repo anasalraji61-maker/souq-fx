@@ -48,6 +48,11 @@ import {
 } from './centeredPane';
 import { STOCH_LINE_H, stochPaneGeom } from './stochPane';
 import {
+  legendCapacity,
+  planPriceLegend,
+  resolveColorExpr,
+} from './priceLegend';
+import {
   formatPaneValue,
   latestPaneValue,
   paneValueState,
@@ -1866,6 +1871,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const chartPlotH = Math.max(100, mainH - timeAxisH);
   chartPlotWRef.current = chartPlotW;
   chartPlotHRef.current = chartPlotH;
+
+  // مفتاح ألوان طبقات السعر. `legendTokens` يحلّ رموز السمة المكتوبة بجدول priceLegend
+  // بنصّها كما هي بمواضع الرسم — فالمفتاح واللوحة يقرآن اللون نفسه لا نسختين تتباعدان.
+  const legendTokens = useMemo(
+    () => ({
+      accent,
+      'colors.infoAccent': colors.infoAccent,
+      'colors.white': colors.white,
+      'colors.bull': colors.bull,
+      'colors.bear': colors.bear,
+      'colors.dxy': colors.dxy,
+      'colors.highImpact': colors.highImpact,
+    }),
+    [accent]
+  );
+  const priceLegend = useMemo(
+    () => planPriceLegend(indicators, legendCapacity(chartPlotW - 12)),
+    [indicators, chartPlotW]
+  );
   const viewXPan =
     syncFollow && syncWindow?.xPanNorm != null
       ? syncWindow.xPanNorm * chartPlotW
@@ -3209,6 +3233,34 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             }}
           >
             <Text style={{ color: colors.accent, fontSize: 10, fontWeight: '800' }}>{tr.mcPrimaryLane}</Text>
+          </View>
+        ) : null}
+
+        {/* مفتاح ألوان طبقات السعر: أيّ خطّ منقّط هو أيّ مؤشّر. بدونه تقاطع متوسطَين
+            إشارةٌ لا تُقرأ أصلاً — ثلاثة ألوان بلا أسماء. pointerEvents="none" فلا
+            يعترض السحب ولا الرسم، ويُزاح لأسفل عند وجود شارة الطبقة الأساسية. */}
+        {priceLegend.chips.length > 0 || priceLegend.more > 0 ? (
+          <View
+            pointerEvents="none"
+            style={[styles.priceLegend, { top: shadowStack ? 24 : 4 }]}
+          >
+            {priceLegend.chips.map((chip) => (
+              <View key={chip.id} style={styles.priceLegendChip}>
+                {chip.swatch.map((expr, si) => (
+                  <View
+                    key={si}
+                    style={[
+                      styles.priceLegendSwatch,
+                      { backgroundColor: resolveColorExpr(expr, legendTokens) },
+                    ]}
+                  />
+                ))}
+                <Text style={styles.priceLegendText}>{chip.label}</Text>
+              </View>
+            ))}
+            {priceLegend.more > 0 ? (
+              <Text style={styles.priceLegendMore}>{`+${priceLegend.more}`}</Text>
+            ) : null}
           </View>
         ) : null}
 
@@ -8854,6 +8906,31 @@ const styles = StyleSheet.create({
   paneGuideLineMid: { opacity: 0.45 },
   paneGuideLabelBox: { position: 'absolute', left: 3 },
   paneGuideLabel: { color: colors.textDim, fontSize: 8, fontWeight: '700' },
+  // مفتاح ألوان طبقات السعر: صفّ شارات أعلى يسار لوحة السعر، فوق الشموع بلا اعتراضها.
+  priceLegend: {
+    position: 'absolute',
+    left: 6,
+    // لا يتجاوز محور السعر أبداً مهما طال اسم مؤشّر (McGinley أطول من تقدير
+    // LEGEND_CHIP_W)، وما زاد يُقصّ بدل أن يغطّي الأسعار على اليمين.
+    right: PRICE_AXIS_WIDTH + 6,
+    overflow: 'hidden',
+    zIndex: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'nowrap',
+  },
+  priceLegendChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 6,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+    backgroundColor: 'rgba(7,16,24,0.78)',
+  },
+  priceLegendSwatch: { width: 6, height: 6, borderRadius: 1, marginRight: 3 },
+  priceLegendText: { color: colors.text, fontSize: 9, fontWeight: '700' },
+  priceLegendMore: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
   paneZeroLine: {
     position: 'absolute',
     left: 2,
