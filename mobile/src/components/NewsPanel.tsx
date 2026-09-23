@@ -4,6 +4,27 @@ import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail,
 import { api, type NewsItem } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 
+/**
+ * لون شارة التأثير — **ثلاث درجات لا اثنتان**. كان السطر `impact === 'high' ? highImpact : warn`،
+ * أي أن «منخفض» يلبس **لون «متوسط» نفسه بالضبط** (العنبري): خبرٌ ضجيجٌ لا يُقرأ يقف بالقائمة
+ * بنفس إلحاح خبرٍ يحرّك الزوج، والكلمة وحدها هي ما يفرّق بينهما — واللون هو ما يُقرأ أولاً بشريطٍ
+ * يُمسح بالنظر. ولوح التقويم بهذا التطبيق يميّز الدرجات الثلاث منذ مدّة (`IMPACT_COLOR`:
+ * `bear`/`warn`/`textDim`)، فكانت شاشتان تقولان عن الدرجة نفسها شيئين مختلفين.
+ *
+ * الدرجات هنا بألوان اللوح نفسه (`highImpact` الوردي بقي كما كان حرفياً لـ«عالي»، و`warn` العنبري
+ * لـ«متوسط» كما كان)، و«منخفض» ينزل إلى `textDim` المكتوم — أي **لا يخسر أحدٌ إشارةً**، إنما يكفّ
+ * المنخفض عن ادّعاء إلحاحٍ ليس له. ونصّ الشارة يبقى `onWarnFill` الداكن بالدرجات الثلاث: تباينه
+ * فوق `textDim` (‎#7B8DA8‎) يفوق 5:1، أعلى من الحدّ المطلوب لنصٍّ عريض صغير.
+ *
+ * المفتاح غير المعروف (باك-إند أحدث بدرجة رابعة) يسقط على «منخفض» — نفس ما يفعله نصّ الشارة
+ * أسفله بالضبط، فلا يختلف اللون عن الكلمة أبداً.
+ */
+const IMPACT_FILL: Record<NewsItem['impact'], string> = {
+  high: colors.highImpact,
+  medium: colors.warn,
+  low: colors.textDim,
+};
+
 export function NewsPanel({ embedded }: { embedded?: boolean }) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
@@ -64,10 +85,7 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
               <View
                 style={[
                   styles.impact,
-                  {
-                    backgroundColor:
-                      n.impact === 'high' ? colors.highImpact : colors.warn,
-                  },
+                  { backgroundColor: IMPACT_FILL[n.impact] ?? IMPACT_FILL.low },
                 ]}
               >
                 <Text style={styles.impactText}>
