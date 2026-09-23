@@ -28,6 +28,10 @@ import {
 import { useDailyRefs } from '../chart/dailyRefStore';
 import { dailyChange, formatPct, tickDirection, type Direction } from '../chart/dailyChange';
 
+/** مدّة بقاء لون آخر تيك. عشرون ثانية: أطول كثيراً من تردّد تيكات زوجٍ نشط (فلا وميض بالسوق
+ * المفتوح)، وأقصر كثيراً من أن يُقرأ لونٌ عمره ساعة على أنه حركةٌ الآن. */
+const TICK_DIR_MS = 20_000;
+
 type Props = {
   activeSymbol: string;
   ticks: Record<string, number>;
@@ -99,19 +103,30 @@ export function WatchlistPanel({
   // مرجع "إغلاق الأمس" لنسبة تغيّر اليوم (مخزن مشترك، 10 دقائق، يتجاهل البيانات التجريبية).
   const dailyRefs = useDailyRefs(list);
   const demoSet = useMemo(() => new Set(demoTicks ?? []), [demoTicks]);
-  // اتجاه آخر تيك لكل رمز (يلوّن السعر أخضر/أحمر كما يعتاد المتداول) — يُحدَّث فقط عند تغيّر السعر فعلاً.
+  /**
+   * اتجاه آخر تيك لكل رمز (يلوّن السعر أخضر/أحمر كما يعتاد المتداول) — يُحدَّث فقط عند تغيّر السعر
+   * فعلاً، **وينتهي** بعد `TICK_DIR_MS` من آخر حركة.
+   *
+   * لماذا ينتهي: اللون كان يُخزَّن بلا أي انتهاء، ومعناه «تحرّك للتوّ» — فزوجٌ ساكنٌ منذ ساعة، أو
+   * سوقٌ أُغلق ليلة الجمعة، يبقى سعره أخضر إلى ما لا نهاية. وبجانبه مباشرةً سهمُ تغيّر اليوم بلونه
+   * هو، فيقرأ المتداول صفّاً واحداً بلونين متناقضين (سعر أخضر · ▼ أحمر) بلا ما يدلّ على أنهما
+   * يقيسان مدّتين مختلفتين. وبسوق نشط لا يتغيّر شيء عمليّاً: تيكات EURUSD تصل عبر WebSocket أكثر
+   * كثيراً من مرّة كل عشرين ثانية، فاللون يتجدّد قبل أن ينتهي — الانتهاء لا يظهر إلا حيث يكون
+   * صادقاً، أي حين تتوقّف الحركة فعلاً.
+   */
   const prevTicksRef = useRef<Record<string, number>>({});
-  const [tickDirs, setTickDirs] = useState<Record<string, Direction>>({});
+  const [tickDirs, setTickDirs] = useState<Record<string, { dir: Direction; at: number }>>({});
   useEffect(() => {
     const prev = prevTicksRef.current;
-    let changed: Record<string, Direction> | null = null;
+    let changed: Record<string, { dir: Direction; at: number }> | null = null;
+    const at = Date.now();
     for (const [sym, price] of Object.entries(ticks)) {
       const before = prev[sym];
       if (before != null && before !== price) {
         const d = tickDirection(before, price);
         if (d !== 'flat') {
           changed = changed ?? {};
-          changed[sym] = d;
+          changed[sym] = { dir: d, at };
         }
       }
       prev[sym] = price;
@@ -121,6 +136,55 @@ export function WatchlistPanel({
       setTickDirs((cur) => ({ ...cur, ...upd }));
     }
   }, [ticks]);
+
+  /**
+   * مؤقّت **واحد** للوحة كلها يُضبط على أقرب انتهاء، لا مؤقّت لكل رمز ولا استطلاع كل ثانية. حين لا
+   * يُسقط شيئاً يُعيد المرجع نفسه فيتوقّف React عن إعادة التصيير — فلا حلقة.
+   */
+  useEffect(() => {
+    const entries = Object.entries(tickDirs);
+    if (entries.length === 0) return;
+    const now = Date.now();
+    const nextIn = Math.min(...entries.map(([, v]) => v.at + TICK_DIR_MS - now));
+    const id = setTimeout(
+      () => {
+        if (!mountedRef.current) return;
+        setTickDirs((cur) => {
+          const t = Date.now();
+          const out: typeof cur = {};
+          let dropped = false;
+          for (const [sym, v] of Object.entries(cur)) {
+            if (t - v.at < TICK_DIR_MS) out[sym] = v;
+            else dropped = true;
+          }
+          return dropped ? out : cur;
+        });
+      },
+      Math.max(nextIn, 50)
+    );
+    return () => clearTimeout(id);
+  }, [tickDirs]);
+
+  /**
+   * رمزٌ حُذف من المتابعة يُنسى: كان سعره السابق واتجاهه يبقيان، فإعادة إضافته لاحقاً تلوّن سعره
+   * بمقارنةٍ مع سعرٍ من وقتٍ مضى — ويكبر الكائنان بلا حدّ بجلسة طويلة.
+   */
+  useEffect(() => {
+    if (symbols == null) return;
+    const keep = new Set(symbols);
+    for (const sym of Object.keys(prevTicksRef.current)) {
+      if (!keep.has(sym)) delete prevTicksRef.current[sym];
+    }
+    setTickDirs((cur) => {
+      const out: typeof cur = {};
+      let dropped = false;
+      for (const [sym, v] of Object.entries(cur)) {
+        if (keep.has(sym)) out[sym] = v;
+        else dropped = true;
+      }
+      return dropped ? out : cur;
+    });
+  }, [symbols]);
 
   const onAdd = useCallback(async (sym: string) => {
     await addWatchSymbol(sym);
@@ -235,7 +299,7 @@ export function WatchlistPanel({
             const isDxy = sym === 'DXY';
             // تغيّر اليوم فقط مع سعر حيّ + مرجع حقيقي — لا نسبة من سعر افتراضي.
             const chg = live != null && !tickIsDemo ? dailyChange(live, dailyRefs[sym]) : null;
-            const tickDir = live != null && !tickIsDemo ? tickDirs[sym] : undefined;
+            const tickDir = live != null && !tickIsDemo ? tickDirs[sym]?.dir : undefined;
             const pctText = chg ? formatPct(chg.pct) : null;
             return (
               <View
