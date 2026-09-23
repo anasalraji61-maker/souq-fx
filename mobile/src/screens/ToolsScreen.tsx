@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -130,6 +130,36 @@ const SYMBOL_TABS: readonly TabId[] = [
 const FALLBACK_SYMBOLS = ['EURUSD', 'GBPUSD', 'XAUUSD', 'DXY'];
 /** آخر رمز اختاره المتداول بشاشة الأدوات — يبقى بين الجلسات كبقية تفضيلات الشاشة */
 const TOOLS_SYMBOL_KEY = 'matrix.tools.symbol.v1';
+/**
+ * آخر تبويب فتحه المتداول بشاشة الأدوات.
+ *
+ * الشاشة كانت تفتح على «الهب» كل مرّة مهما كان التبويب الذي يعيش فيه صاحبها: من يفتح «الأدوات»
+ * ليحسب حجم مركز، أو ليضع تنبيهاً قبل خبر، يدفع نقرتين **زائدتين** بكل مرّة (شريط أفقي بأحد عشر
+ * تبويباً — فالوجهة قد تكون خارج الشاشة فيسبقها تمرير). والرمز المختار يبقى بين الجلسات بهذه
+ * الشاشة نفسها (`TOOLS_SYMBOL_KEY`)، والفلاتر تبقى بالتقويم، وفريمات الإطارات تبقى: التبويب كان
+ * التفضيل الوحيد الذي يُنسى.
+ */
+const TOOLS_TAB_KEY = 'matrix.tools.tab.v1';
+/**
+ * التبويبات المعروفة — `Record<TabId, true>` عمداً لا مصفوفة: إضافة تبويب لـ`TabId` **تكسر البناء**
+ * حتى يُذكر هنا، فلا يُستعاد يوماً معرّفٌ حُذف ولا يُنسى معرّفٌ أُضيف (قيمة محفوظة لا تطابق أياً من
+ * هذه تُهمَل ويبقى الافتراضي — تخزينٌ قديم أو تالف لا يفتح شاشةً بلا محتوى).
+ */
+const TAB_IDS: Record<TabId, true> = {
+  hub: true,
+  reports: true,
+  journal: true,
+  risk: true,
+  screener: true,
+  backtest: true,
+  alerts: true,
+  indAlerts: true,
+  calendar: true,
+  layouts: true,
+  ai: true,
+};
+const isTabId = (v: unknown): v is TabId =>
+  typeof v === 'string' && Object.prototype.hasOwnProperty.call(TAB_IDS, v);
 const MAX_SYMBOL_CHIPS = 8;
 
 /**
@@ -218,6 +248,40 @@ export function ToolsScreen() {
       /* ignore */
     });
   }, [signalSym, symbolRestored]);
+
+  /**
+   * التبويب المفتوح يبقى بين الجلسات — نفس نمط الرمز أعلاه حرفياً.
+   *
+   * `tabTouchedRef` يحرس السباق الوحيد هنا: القراءة من التخزين غير متزامنة، ومن نقر تبويباً قبل
+   * أن تعود كان المحفوظُ **سيدهس نقرته تحت إصبعه**. وموضع التغيير واحد لا غير (شريط التبويبات)
+   * فالحارس يُرفع من مكان واحد.
+   */
+  const [tabRestored, setTabRestored] = useState(false);
+  const tabTouchedRef = useRef(false);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(TOOLS_TAB_KEY);
+        if (alive && !tabTouchedRef.current && isTabId(raw)) setTab(raw);
+      } catch {
+        /* تخزين معطَّل/تالف — يبقى الافتراضي كما كان */
+      } finally {
+        if (alive) setTabRestored(true);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+  useEffect(() => {
+    // لا يُكتب قبل أن تُقرأ القيمة المحفوظة: وإلا كتب «الهب» الافتراضي فوق تبويب المتداول
+    // بمجرّد فتح الشاشة، فلا يُستعاد شيء أبداً.
+    if (!tabRestored) return;
+    AsyncStorage.setItem(TOOLS_TAB_KEY, tab).catch(() => {
+      /* ignore */
+    });
+  }, [tab, tabRestored]);
 
   /** أزواج الشارت المفتوح (الإطارات الثلاثة، بلا تكرار) — المتداول قادم لتوّه من زوج يراه أمامه،
    * فغيابه عن الشريط يعني فتح المتابعة وإضافته لمجرّد حساب لوت أو قراءة خبر. تُضاف الأزواج فقط ولا
@@ -389,7 +453,10 @@ export function ToolsScreen() {
                   transform: [{ scale: buttons.pressedScale }],
                 },
               ]}
-              onPress={() => setTab(tItem.id)}
+              onPress={() => {
+                tabTouchedRef.current = true;
+                setTab(tItem.id);
+              }}
               accessibilityLabel={`${t.a11yTabPrefix}: ${tItem.label}`}
             >
               <Text style={[styles.tabMark, tab === tItem.id && styles.tabMarkOn]}>{tItem.mark}</Text>
