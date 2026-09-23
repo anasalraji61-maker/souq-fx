@@ -154,3 +154,119 @@ def test_direct_messages_are_gone_410(client):
     assert client.get("/api/dm").status_code == 410
     assert client.get("/api/dm/someone").status_code == 410
     assert client.post("/api/dm", json={"to_user": "x", "text": "y"}).status_code == 410
+
+
+# ─── عزل الملكية بين حسابين ─────────────────────────────────────────────────
+
+_ALERT = {"symbol": "EURUSD", "condition": "above", "price": 1.1, "note": "n"}
+_TRADE = {"symbol": "EURUSD", "side": "buy", "entry": 1.1, "size": 1.0}
+
+
+def test_alerts_of_one_account_are_invisible_to_another(client):
+    a, b = _register(client, "alice"), _register(client, "bob")
+    created = client.post("/api/alerts", json=_ALERT, headers=_auth(a)).json()["alert"]
+    assert [x["id"] for x in client.get("/api/alerts", headers=_auth(a)).json()["alerts"]] == [created["id"]]
+    assert client.get("/api/alerts", headers=_auth(b)).json()["alerts"] == []
+
+
+def test_another_account_cannot_edit_or_delete_an_alert(client):
+    a, b = _register(client, "carol"), _register(client, "dave")
+    aid = client.post("/api/alerts", json=_ALERT, headers=_auth(a)).json()["alert"]["id"]
+    assert client.patch(f"/api/alerts/{aid}", json=_ALERT, headers=_auth(b)).status_code == 404
+    assert client.delete(f"/api/alerts/{aid}", headers=_auth(b)).json()["ok"] is False
+    # وبقي التنبيه سليماً عند مالكه — لا حذف صامت
+    assert len(client.get("/api/alerts", headers=_auth(a)).json()["alerts"]) == 1
+
+
+def test_trades_of_one_account_are_invisible_to_another(client):
+    a, b = _register(client, "erin"), _register(client, "frank")
+    tid = client.post("/api/trades", json=_TRADE, headers=_auth(a)).json()["trade"]["id"]
+    assert client.get("/api/trades", headers=_auth(b)).json()["trades"] == []
+    assert client.delete(f"/api/trades/{tid}", headers=_auth(b)).status_code == 404
+    assert client.patch(f"/api/trades/{tid}", json={"note": "x"}, headers=_auth(b)).status_code == 404
+    assert client.post(f"/api/trades/{tid}/close", json={"exit": 1.2}, headers=_auth(b)).status_code == 404
+
+
+def test_layout_of_one_account_is_not_overwritten_by_another(client):
+    a, b = _register(client, "gina"), _register(client, "hank")
+    mine = client.post(
+        "/api/layouts", json={"id": "L1", "name": "mine", "payload": {"k": 1}}, headers=_auth(a)
+    ).json()["layout"]
+    client.post(
+        "/api/layouts", json={"id": "L1", "name": "theirs", "payload": {"k": 2}}, headers=_auth(b)
+    )
+    names = {x["name"] for x in client.get("/api/layouts", headers=_auth(a)).json()["layouts"]}
+    assert names == {"mine"}, f"تخطيط حساب آخر كُتب فوقه: {mine}"
+
+
+def test_custom_watchlist_is_per_account(client):
+    a, b = _register(client, "iris"), _register(client, "jack")
+    client.post("/api/watchlist/custom", json={"symbol": "xauusd"}, headers=_auth(a))
+    assert "XAUUSD" in client.get("/api/watchlist/custom", headers=_auth(a)).json()["symbols"]
+    assert client.get("/api/watchlist/custom", headers=_auth(b)).json()["symbols"] == []
+
+
+def test_academy_progress_is_per_account(client):
+    a, b = _register(client, "kim"), _register(client, "liam")
+    client.post("/api/academy/progress", json=_PROGRESS_BODY, headers=_auth(a))
+    assert len(client.get("/api/academy/progress", headers=_auth(a)).json()["progress"]) == 1
+    assert client.get("/api/academy/progress", headers=_auth(b)).json()["progress"] == []
+
+
+# ─── عزل الأجهزة المجهولة بـ`X-Install-Id` ──────────────────────────────────
+
+_DEV1 = {"X-Install-Id": "install-aaaaaaaaaaaaaaaa"}
+_DEV2 = {"X-Install-Id": "install-bbbbbbbbbbbbbbbb"}
+
+
+def test_anonymous_devices_do_not_share_alerts(client):
+    """جهاز مجهول يرى تنبيهات جهازه فقط — كان كل المجهولين دلواً واحداً."""
+    client.post("/api/alerts", json=_ALERT, headers=_DEV1)
+    assert len(client.get("/api/alerts", headers=_DEV1).json()["alerts"]) == 1
+    assert client.get("/api/alerts", headers=_DEV2).json()["alerts"] == []
+    # وعميل قديم بلا ترويسة لا يرى صفوف الأجهزة الجديدة
+    assert client.get("/api/alerts").json()["alerts"] == []
+
+
+def test_signing_in_adopts_the_rows_made_on_that_device_before_login(client):
+    """الصفوف التي أنشأها المتداول قبل إنشاء حسابه على نفس الجهاز تتبعه بعد الدخول —
+    وإلا اختفت تنبيهاته لحظة التسجيل."""
+    client.post("/api/alerts", json=_ALERT, headers=_DEV1)
+    token = _register(client, "newbie")
+    seen = client.get("/api/alerts", headers={**_auth(token), **_DEV1}).json()["alerts"]
+    assert len(seen) == 1
+    assert client.get("/api/alerts", headers={**_auth(token), **_DEV2}).json()["alerts"] == []
+
+
+# ─── فلتر الروابط (شرط أبل 1.2) ─────────────────────────────────────────────
+
+def test_group_chat_needs_an_account_and_rejects_links(client):
+    assert client.post("/api/chat/group", json={"text": "مرحبا"}).json()["error"] == "login_required"
+    token = _register(client, "chatter")
+    ok = client.post("/api/chat/group", json={"text": "الذهب يصحّح"}, headers=_auth(token)).json()
+    assert ok["ok"] is True and ok["message"]["user"] == "chatter"
+    for bad in ("تعال t.me/signals", "https://scam.example", "زُر fx-signals.xyz الآن"):
+        r = client.post("/api/chat/group", json={"text": bad}, headers=_auth(token)).json()
+        assert r["error"] == "links_not_allowed", bad
+
+
+def test_vote_needs_an_account_and_counts_one_ballot_per_account(client):
+    _VOTE = {"symbol": "EURUSD", "direction": "buy", "entry": 1.1, "sl": 1.0, "tp": 1.2, "note": ""}
+    assert client.post("/api/votes", json=_VOTE).json()["error"] == "login_required"
+    token = _register(client, "voter")
+    vid = client.post("/api/votes", json=_VOTE, headers=_auth(token)).json()["vote"]["id"]
+    first = client.post("/api/votes/ballot", json={"vote_id": vid, "choice": "agree"}, headers=_auth(token))
+    second = client.post("/api/votes/ballot", json={"vote_id": vid, "choice": "agree"}, headers=_auth(token))
+    assert first.json()["ok"] is True and second.json()["ok"] is True
+    assert second.json()["vote"]["agree"] == 1, "صوت واحد لكل حساب"
+
+
+# ─── حذف الحساب (شرط أبل 5.1.1(v)) ──────────────────────────────────────────
+
+def test_deleting_the_account_kills_the_token_and_its_rows(client):
+    token = _register(client, "leaver")
+    client.post("/api/alerts", json=_ALERT, headers=_auth(token))
+    client.post("/api/academy/progress", json=_PROGRESS_BODY, headers=_auth(token))
+    assert client.delete("/api/auth/account", headers=_auth(token)).status_code == 200
+    assert client.get("/api/auth/me", headers=_auth(token)).status_code == 401, "التوكن بطل فوراً"
+    assert client.post("/api/auth/login", json={"username": "leaver", "password": "pass1234"}).status_code == 401
