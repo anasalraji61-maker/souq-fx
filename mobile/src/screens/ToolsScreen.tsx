@@ -67,6 +67,7 @@ type TabId =
   | 'risk'
   | 'screener'
   | 'backtest'
+  | 'alerts'
   | 'indAlerts'
   | 'calendar'
   | 'layouts'
@@ -81,6 +82,9 @@ function buildTabs(t: Dict): { id: TabId; label: string; mark: string }[] {
     { id: 'journal', label: t.toolsTabJournal, mark: '₴' },
     { id: 'risk', label: t.toolsTabRisk, mark: '%' },
     { id: 'screener', label: t.toolsTabScreener, mark: '⌕' },
+    // «تنبيهات السعر» تستعمل عنوان اللوحة نفسه (`alertsTitle`) — لا مفتاح نصّ جديد، والاسم
+    // هو ما تسمّيه به اللوحة بكل اللغات. ووجوده يجعل «تنبيهات+» المجاور مفهوماً أخيراً.
+    { id: 'alerts', label: t.alertsTitle, mark: '◎' },
     { id: 'backtest', label: t.toolsTabBacktest, mark: '↺' },
     { id: 'indAlerts', label: t.toolsTabIndAlerts, mark: '⚡' },
     { id: 'calendar', label: t.toolsTabCalendar, mark: '◷' },
@@ -585,6 +589,14 @@ export function ToolsScreen() {
       {tab === 'backtest' ? (
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <BacktestPanel defaultSymbol={signalSym} />
+        </ScrollView>
+      ) : null}
+
+      {/* تبويب تنبيهات السعر: اللوحة تملك الصفحة وحدها، فالقائمة تُسرَد متدفّقة وتُمرَّر الصفحةُ
+          نفسها — بدل نافذة 160px بخليّة شبكة تشاركها ثلاث لوحات أخرى. */}
+      {tab === 'alerts' ? (
+        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+          <AlertsPanel flow defaultSymbol={signalSym} />
         </ScrollView>
       ) : null}
 
