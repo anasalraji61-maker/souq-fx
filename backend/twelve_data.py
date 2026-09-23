@@ -282,17 +282,33 @@ def _f(v: object) -> float | None:
         return None
 
 
+# حدّا بحث الرموز — معلنان هنا لأنهما **حدّا المزوّد**: `limit` يُرسَل `outputsize` ويُستعمل
+# شريحةً على القائمة العائدة، و`query` يذهب حرفياً برابط الطلب. `main.symbols_search` يعلن
+# القيمتين نفسيهما بـ`Query` فيصل المتداول 422 لا 502 — قاعدة واحدة بمكان واحد كـ
+# `screener.MAX_SCAN_SYMBOLS`.
+MAX_SEARCH_RESULTS = 30
+MAX_SEARCH_QUERY = 64
+
+
 def symbol_search(query: str, limit: int = 20) -> list[dict]:
     key = _api_key()
     if not key:
         raise RuntimeError("TWELVE_DATA_API_KEY missing")
+    # `min(limit, 30)` كان يمرّر غير الموجب كما هو، و`out[:limit]` بالنهاية **شريحة سالبة
+    # تحذف من الذيل**: `limit=-5` يُسقط آخر خمس نتائج بصمت و`limit=0` يُفرغ القائمة كلّها —
+    # بعد أن صُرف طلب المزوّد من الحدّ المشترك. حارسٌ لأي مسار مستقبليّ؛ المسار الوحيد اليوم
+    # (`/api/symbols/search`) يعلن القاعدة نفسها فلا يبلغه غير موجب أصلاً.
+    if not (1 <= limit <= MAX_SEARCH_RESULTS):
+        raise ValueError(f"limit must be between 1 and {MAX_SEARCH_RESULTS}")
+    if len(query) > MAX_SEARCH_QUERY:
+        raise ValueError(f"query must be at most {MAX_SEARCH_QUERY} characters")
     q = query.strip()
     if len(q) < 1:
         return []
     with httpx.Client(timeout=20.0) as client:
         r = client.get(
             f"{API_BASE}/symbol_search",
-            params={"symbol": q, "outputsize": str(min(limit, 30)), "apikey": key},
+            params={"symbol": q, "outputsize": str(limit), "apikey": key},
         )
         r.raise_for_status()
         data = r.json()

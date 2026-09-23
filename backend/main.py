@@ -19,7 +19,7 @@ from typing import Literal
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Header, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -911,13 +911,28 @@ def academy_progress_save(body: ProgressSave, user: dict | None = Depends(_auth_
 
 
 @app.get("/api/symbols/search")
-def symbols_search(q: str = "", limit: int = 20):
+def symbols_search(
+    q: str = Query(default="", max_length=market.MAX_SEARCH_QUERY),
+    limit: int = Query(default=20, ge=1, le=market.MAX_SEARCH_RESULTS),
+):
+    """بحث الرموز. الحدّان الجديدان ضدّ **صمت** كسابقيهما لا ضدّ قيمة نادرة:
+
+    - `limit` غير موجب كان يمرّ من `min(limit, 30)` كما هو، ثم يُستعمل شريحةً `out[:limit]`
+      بـ`twelve_data.symbol_search`: **الشريحة السالبة تحذف من الذيل**، فـ`limit=-5` يُسقط آخر
+      خمس نتائج بصمت و`limit=0` يُفرغ القائمة كلّها — يقرؤها المتداول «لا رمز بهذا الاسم» على
+      بحثٍ نجح فعلاً، وطلبُ المزوّد قد صُرف من الحدّ المشترك قبل أن تُرمى نتيجته.
+    - `q` بلا حدّ طول يذهب **حرفياً** لرابط المزوّد: نصٌّ ملصوق بطول صفحة يُخرج **502** من ردّ
+      خطأ المزوّد لا رسالةً تدلّ المتداول، وقد صُرف الطلب. والحدّ يرصد المستحيل لا الصغير —
+      64 حرفاً يتجاوز أطول اسم أداة بالمزوّد بكثير (أطولها دون الخمسين).
+
+    والقاعدة معلنة بـ`twelve_data` نفسه (حيث يقع حدّ المزوّد) ويُقرأ منه هنا، فلا تنحرف نسختان.
+    """
     if not q.strip():
         return {"results": []}
     if not market.configured():
         raise HTTPException(status_code=503, detail="Twelve Data not configured")
     try:
-        results = market.symbol_search(q, limit=min(limit, 30))
+        results = market.symbol_search(q, limit=limit)
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     return {"results": results}
