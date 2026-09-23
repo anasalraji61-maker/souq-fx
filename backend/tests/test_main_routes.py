@@ -406,6 +406,9 @@ def test_a_fired_indicator_alert_is_returned_once_only(client, series_calls):
     first = client.post("/api/indicator-alerts/check", headers=_auth(token)).json()
     assert len(first["triggered"]) == 1, "سلسلة صاعدة خالصة → RSI = 100 فوق العتبة 70"
     assert [a["triggered"] for a in first["alerts"]] == [True]
+    assert first["triggered"][0]["triggered"] is True, (
+        "الصفّ كما استقرّ بالقاعدة: كان يُسلَّم تنبيهٌ أُطلق للتوّ موسوماً «يراقب»"
+    )
     second = client.post("/api/indicator-alerts/check", headers=_auth(token)).json()
     assert second["triggered"] == [], "لا يُعاد تسليمه مرّة ثانية"
 

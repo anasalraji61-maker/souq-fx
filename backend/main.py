@@ -1011,7 +1011,12 @@ def check_indicator_alerts(
         if candles is None:
             continue
         if _check_indicator_alert(a, candles) and db.mark_indicator_alert_triggered(a["id"]):
-            triggered.append(a)
+            # الصفّ كما استقرّ بالقاعدة لا كما قُرئ قبل القلب: `a` لُقّط قبل
+            # `mark_indicator_alert_triggered` فيحمل `triggered: false` — أي أن المسار كان
+            # يسلّم تنبيهاً **أُطلق للتوّ** موسوماً «يراقب». العميل الحالي يستعمل هذه القائمة
+            # للإشعار وحده فلم يظهر الأثر، لكنه فخّ لأي عرض يبني على الوسم (نفس قاعدة
+            # `/api/academy/progress`: يُعاد ما بالقاعدة لا ما وصل بالطلب).
+            triggered.append({**a, "triggered": True})
     return {"triggered": triggered, "alerts": db.list_indicator_alerts(uid, owner_key=key)}
 
 
