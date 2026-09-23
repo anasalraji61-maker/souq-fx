@@ -1,6 +1,7 @@
-const { app, BrowserWindow, shell, Menu } = require('electron');
+const { app, BrowserWindow, shell, Menu, protocol, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { pathToFileURL } = require('url');
 
 const WEB_URL = process.env.MATRIX_WEB_URL || 'http://127.0.0.1:8081';
 // وضع التطوير: متغيّر البيئة كما كان، **أو** الراية `--dev` بسطر الأوامر. المتغيّر وحده كان يعني أن
@@ -14,7 +15,65 @@ const isDev = process.env.MATRIX_DESKTOP_DEV === '1' || process.argv.includes('-
 // الفارق الحقيقي بين "غلاف حول خادم تطوير محلي" (الوضع الحالي بلا هذا الملف) و"تطبيق سطح
 // مكتب فعلي يعمل عند أي مستخدم نهائي" (المطلوب للإطلاق العام). في وضع التطوير
 // (MATRIX_DESKTOP_DEV=1) يبقى السلوك القديم كما هو دوماً — تحميل حي من WEB_URL، بلا تغيير.
-const BUNDLED_WEB_INDEX = path.join(__dirname, 'web-build', 'index.html');
+const BUNDLED_WEB_DIR = path.join(__dirname, 'web-build');
+const BUNDLED_WEB_INDEX = path.join(BUNDLED_WEB_DIR, 'index.html');
+
+// ـــ لماذا مخطّط خاص (`matrix://app`) ولا `file://` ـــ
+// `expo export --platform web` يكتب بـ`index.html` مساراً **مطلقاً من الجذر**:
+//   <script src="/_expo/static/js/web/entry-<hash>.js" defer></script>
+// (مُتحقَّق من شيفرة `@expo/cli@57.0.24` نفسها: `combineUrlPath(baseUrl, filename)` بـ
+// `serializeHtml.js` و`baseUrl` فارغ ما لم يُضبط `experiments.baseUrl` — وهو غير مضبوط
+// بـ`mobile/app.json`، فالناتج يبدأ بشرطة مائلة دائماً).
+// بـ`loadFile` يصير أصل الصفحة `file://`، فيُحلّ `/_expo/...` إلى **جذر قرص المستخدم**
+// (`file:///_expo/...`) لا إلى مجلّد الحزمة — فلا يُحمَّل أي سكربت. والأسوأ أن
+// `loadFile` نفسه **ينجح** (ملف الـhtml قُرئ فعلاً)، فـ`loadApp.catch` لا يُستدعى ولا تظهر
+// صفحة التعذّر: يحصل من ثبّت الـexe على **نافذة سوداء صامتة** بلا أي تفسير.
+// المخطّط المخصَّص يعطي الصفحة أصلاً حقيقياً (`matrix://app`) فتُحلّ المسارات المطلقة
+// داخل `web-build/`، ويجعلها **سياقاً آمناً** (`secure: true`) فيعمل `localStorage`
+// (تخزين react-native-web) و`crypto.subtle` — وكلاهما يُمنع أو يُصبح غير موثوق بأصل
+// `file://` المُعتِم. ولأن الباك-إند `allow_origins=["*"]` (backend/main.py) فلا أثر
+// لتغيير الأصل على نداءات الـAPI.
+const APP_SCHEME = 'matrix';
+const APP_HOST = 'app';
+const APP_ORIGIN = `${APP_SCHEME}://${APP_HOST}`;
+
+// يجب أن يسبق `app.ready` — لذلك بالمستوى الأعلى لا داخل `whenReady`.
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: APP_SCHEME,
+    privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, codeCache: true },
+  },
+]);
+
+/** يخدم ملفّات `web-build/` عبر المخطّط الخاص، بحارس ضد الخروج من المجلّد. */
+function registerBundledWebProtocol() {
+  const root = fs.realpathSync(BUNDLED_WEB_DIR);
+  protocol.handle(APP_SCHEME, async (request) => {
+    let pathname;
+    try {
+      ({ pathname } = new URL(request.url));
+    } catch {
+      return new Response('bad request', { status: 400 });
+    }
+    // `decodeURIComponent` لأن أسماء الملفات قد تحمل محارف مُرمَّزة؛ فشل الترميز = طلب فاسد.
+    let rel;
+    try {
+      rel = decodeURIComponent(pathname);
+    } catch {
+      return new Response('bad request', { status: 400 });
+    }
+    if (rel === '/' || rel === '') rel = '/index.html';
+    const target = path.join(root, rel);
+    // الحارس: `path.join` يطوي `..` — فبعده يكفي التأكّد أن الناتج داخل الجذر.
+    if (target !== root && !target.startsWith(root + path.sep)) {
+      return new Response('forbidden', { status: 403 });
+    }
+    if (!fs.existsSync(target) || !fs.statSync(target).isFile()) {
+      return new Response('not found', { status: 404 });
+    }
+    return net.fetch(pathToFileURL(target).toString());
+  });
+}
 
 /** @type {Electron.BrowserWindow | null} */
 let mainWindow = null;
@@ -47,7 +106,10 @@ function openExternalSafe(url) {
 function isAppUrl(url, bundled) {
   try {
     const target = new URL(url);
-    if (bundled) return target.protocol === 'file:';
+    // لا تُقارَن الأصول: `new URL('matrix://app/x').origin` بـNode يساوي السلسلة 'null'
+    // (مخطّط غير قياسي بمحلّل WHATWG) — فمقارنة الأصول كانت ستُصدِّق **أي** رابط بمخطّط
+    // غريب. المخطّط والمضيف معاً هما الفحص الصحيح بالعملية الرئيسة.
+    if (bundled) return target.protocol === `${APP_SCHEME}:` && target.host === APP_HOST;
     return target.origin === new URL(WEB_URL).origin;
   } catch {
     return false;
@@ -100,9 +162,7 @@ function createWindow() {
   mainWindow.once('ready-to-show', () => mainWindow?.show());
 
   const hasBundledBuild = !isDev && fs.existsSync(BUNDLED_WEB_INDEX);
-  const loadApp = hasBundledBuild
-    ? mainWindow.loadFile(BUNDLED_WEB_INDEX)
-    : mainWindow.loadURL(WEB_URL);
+  const loadApp = mainWindow.loadURL(hasBundledBuild ? `${APP_ORIGIN}/index.html` : WEB_URL);
 
   // شبكة أمان: إن علق التحميل (خادم لا يردّ) لا يبقى التطبيق مخفياً بلا نافذة إطلاقاً.
   const showTimer = setTimeout(() => {
@@ -196,6 +256,15 @@ if (!hasSingleInstanceLock) {
 
 app.whenReady().then(() => {
   if (!hasSingleInstanceLock) return;
+  // يُسجَّل فقط حين توجد حزمة فعلاً: بالتشغيل غير المحزَّم لا مجلّد `web-build/` أصلاً
+  // (`realpathSync` كان سيرمي)، والتحميل يبقى من `WEB_URL` كما كان.
+  if (!isDev && fs.existsSync(BUNDLED_WEB_INDEX)) {
+    try {
+      registerBundledWebProtocol();
+    } catch (err) {
+      console.error('[MATRIX] failed to register bundled web protocol:', err);
+    }
+  }
   createMenu();
   createWindow();
   app.on('activate', () => {

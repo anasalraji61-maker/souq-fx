@@ -95,11 +95,17 @@ curl -X POST -H "X-Moderation-Token: $TOKEN" -H "Content-Type: application/json"
    ```
    يُنتج مجلد `mobile/dist/` (حزمة ويب ثابتة قابلة للتشغيل بلا خادم Metro حي).
 2. **نسخ الحزمة إلى `desktop/web-build/`** (الاسم الذي يقرأه `desktop/main.js` فعلياً —
-   `BUNDLED_WEB_INDEX` سطر 14):
+   الثابت `BUNDLED_WEB_DIR`):
    ```
    xcopy /E /I mobile\dist desktop\web-build
    ```
    (أو نسخ يدوي عادي بمستكشف الملفات — المهم اسم المجلد `web-build` بالضبط داخل `desktop/`).
+
+   **الحزمة تُخدَم بمخطّط `matrix://app` لا بـ`file://`** (`desktop/main.js`): `expo export`
+   يكتب بـ`index.html` مساراً مطلقاً من الجذر (`/_expo/static/js/web/entry-<hash>.js`) لأن
+   `experiments.baseUrl` غير مضبوط، وبأصل `file://` كان ذلك يُحلّ إلى جذر قرص المستخدم فتظهر
+   **نافذة سوداء صامتة** (تحميل الـhtml ينجح، فلا تظهر حتى صفحة التعذّر). فلا تُغيَّر طريقة
+   التحميل إلى `loadFile` مجدَّداً، ولو بدت أبسط.
 3. **تثبيت تبعيات Electron** (مرة واحدة، أو بعد أي تحديث لـ`desktop/package.json`):
    ```
    cd desktop
