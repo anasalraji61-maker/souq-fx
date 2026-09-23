@@ -5077,22 +5077,68 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>VW-MACD</Text>
           <View style={styles.paneInner}>
-            {vwMacd.hist.map((v, i) => {
-              if (v == null) return <View key={i} style={{ flex: 1 }} />;
-              const h = Math.min(paneH - 16, Math.abs(v) * 8000);
+            {(() => {
+              // كان آخر موضع بقي فيه المقياس الثابت `Math.abs(v) * 8000` بعد إصلاح MACD —
+              // ومخرجات هذه الدالة بنفس شكل computeMacd تماماً (macdLine/signal/hist)
+              // وبنفس ثغرة signal المبنيّ على null معوَّضاً بصفر، فتنطبق macdPaneGeom حرفياً.
+              const g = macdPaneGeom(vwMacd.hist, vwMacd.macdLine, vwMacd.signal, paneH);
               return (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: Math.max(2, h),
-                    marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
-                    backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                    opacity: 0.7,
-                  }}
-                />
+                <>
+                  <View
+                    pointerEvents="none"
+                    style={[styles.paneZeroLine, { top: g.zeroY }]}
+                  />
+                  {vwMacd.hist.map((v, i) => {
+                    if (!g.valid(i)) return <View key={i} style={{ flex: 1 }} />;
+                    const m = vwMacd.macdLine[i];
+                    const sg = vwMacd.signal[i];
+                    const bh = v == null ? 0 : g.barH(v);
+                    return (
+                      <View key={i} style={{ flex: 1, height: g.innerH, position: 'relative' }}>
+                        {v != null ? (
+                          <View
+                            style={{
+                              position: 'absolute',
+                              left: 0,
+                              right: 0,
+                              top: v >= 0 ? g.zeroY - bh : g.zeroY,
+                              height: Math.max(1, bh),
+                              backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                              opacity: 0.55,
+                            }}
+                          />
+                        ) : null}
+                        {sg != null ? (
+                          <View
+                            style={{
+                              position: 'absolute',
+                              left: 0,
+                              right: 0,
+                              top: g.y(sg),
+                              height: 2,
+                              backgroundColor: colors.warn,
+                              opacity: 0.9,
+                            }}
+                          />
+                        ) : null}
+                        {m != null ? (
+                          <View
+                            style={{
+                              position: 'absolute',
+                              left: 0,
+                              right: 0,
+                              top: g.y(m),
+                              height: 2,
+                              backgroundColor: accent,
+                            }}
+                          />
+                        ) : null}
+                      </View>
+                    );
+                  })}
+                </>
               );
-            })}
+            })()}
           </View>
         </View>
       ) : null}
