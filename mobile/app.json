@@ -9,11 +9,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0B1220",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0B1220"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.matrix.charts",
@@ -38,6 +33,15 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 360,
+          "resizeMode": "contain",
+          "backgroundColor": "#0B1220"
+        }
+      ],
       [
         "expo-notifications",
         {
