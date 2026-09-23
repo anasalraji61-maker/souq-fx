@@ -71,6 +71,7 @@ import {
 } from './paneGuides';
 import { DrawingsSaveQueue, drawingsKey } from './drawingsPersist';
 import { dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
+import { fibLevelPrice, planFibLabels } from './fibLabels';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
 import {
@@ -382,6 +383,8 @@ const DRAW_HANDLE_R = 18;
 
 /** سقف لقطات التراجع — يكفي جلسة رسم كاملة ولا يكبر بلا حدّ بذاكرة الهاتف. */
 const DRAW_HISTORY_MAX = 25;
+/** أقلّ تباعد رأسي بين وسمَي مستوى فيبو = علوّ سطر الوسم (`fibLevelLabel`: 13px). */
+const FIB_LABEL_GAP = 13;
 
 /** مرجع ثابت لـ«لا رسومات» — مصفوفة جديدة كل رسم تُبطل ذاكرة كل ما يعتمد عليها. */
 const NO_DRAWINGS: Drawing[] = [];
@@ -2341,11 +2344,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           );
         } else if (d.tool === 'fib') {
           // مستويات فيبو خطوط أفقية بعرض الشارت — المسافة الرأسية لأقرب مستوى.
+          // نفس `fibLevelPrice` التي يُرسم بها المستوى — وإلا اختلف ما يُلمس عمّا يُرى
+          // (المدى الصفري كان يُحسب هنا وهناك بـ`|| 1`، أي على مدى وحدة سعرية كاملة).
           const hi = Math.max(d.a.price, d.b.price);
           const lo = Math.min(d.a.price, d.b.price);
-          const span = hi - lo || 1;
           for (const lv of FIB_LEVELS) {
-            bodyDist = Math.min(bodyDist, Math.abs(y - yOf(hi - span * lv)));
+            bodyDist = Math.min(bodyDist, Math.abs(y - yOf(fibLevelPrice(hi, lo, lv))));
           }
         }
         const dist = Math.min(endDist, bodyDist);
@@ -4755,11 +4759,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           if (d.tool === 'fib' && d.b) {
             const hi = Math.max(d.a.price, d.b.price);
             const lo = Math.min(d.a.price, d.b.price);
-            const span = hi - lo || 1;
+            // الخطوط كلّها تُرسم (هي الأداة)، والوسوم وحدها تُنقّى — راجع `fibLabels.ts`:
+            // النسبة والسعر معاً، وإسقاط المتلاصق بترتيب الأهمية لا بترتيب المصفوفة.
+            const labels = planFibLabels({
+              levels: FIB_LEVELS,
+              hi,
+              lo,
+              yOf,
+              format: (v) => formatPrice(v, series.symbol),
+              minGapPx: FIB_LABEL_GAP,
+            });
+            const labelled = new Map(labels.map((l) => [l.level, l.text]));
             return (
               <View key={d.id}>
                 {FIB_LEVELS.map((lv) => {
-                  const price = hi - span * lv;
+                  const price = fibLevelPrice(hi, lo, lv);
+                  const text = labelled.get(lv);
                   return (
                     <View
                       key={lv}
@@ -4768,7 +4783,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                         { top: yOf(price), borderColor: d.color, borderTopWidth: sel ? 2.5 : 1 },
                       ]}
                     >
-                      <Text style={styles.fibLabel}>{lv.toFixed(3)}</Text>
+                      {text ? <Text style={styles.fibLevelLabel}>{text}</Text> : null}
                     </View>
                   );
                 })}
@@ -9060,6 +9075,22 @@ const styles = StyleSheet.create({
     top: -10,
     color: colors.textDim,
     fontSize: 9,
+  },
+  // وسم مستوى فيبو: **يسار اللوح** لا يمينه. اليمين هو محور السعر ووسماه (الحيّ
+  // والتقاطع) يُرسمان فوق كل شيء، ووسمٌ صار يحمل سعراً أعرض من أن يشاركهما الحافة.
+  // وخلفية خفيفة لأن النصّ يقع الآن فوق الشموع لا فوق حافة فارغة.
+  fibLevelLabel: {
+    position: 'absolute',
+    left: 4,
+    top: -11,
+    color: colors.textMuted,
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '700',
+    paddingHorizontal: 3,
+    borderRadius: radii.sm,
+    backgroundColor: colors.bgGlass,
+    overflow: 'hidden',
   },
   note: { position: 'absolute', fontSize: 10, fontWeight: '800' },
   // حالة التحديد كانت مطبَّقة على الخط الأفقي وحده، فالمتداول يختار خط ترند أو مستطيلاً
