@@ -787,6 +787,23 @@ def custom_watchlist_add(
     return {"ok": True, "symbols": syms}
 
 
+@app.delete("/api/watchlist/custom/{symbol}")
+def custom_watchlist_remove(
+    symbol: str,
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+):
+    """إزالة رمز من قائمة متابعة المستدعي — **لم يكن للإضافة نقيض**: رمز يُضاف بضغطة ويبقى
+    بالقائمة إلى الأبد (الرموز المدعومة ستة عشر، وقائمة مزدحمة برموز لا يتداولها تُفقد
+    التبديل بلمسة واحدة معناه).
+
+    حذف رمز ليس بالقائمة ليس خطأ للعميل (زرّ ضُغط مرّتين، أو قائمة محلية سبقت الخادم) —
+    يُعاد `removed: 0` وقائمة المستدعي كما هي، كما بحذف التخطيط."""
+    uid = user["user_id"] if user else None
+    removed, syms = db.remove_watchlist_symbol(symbol, uid, owner_key=key)
+    return {"ok": True, "removed": removed, "symbols": syms}
+
+
 @app.get("/api/academy/progress")
 def academy_progress_get(user: dict | None = Depends(_auth_user)):
     if not user:

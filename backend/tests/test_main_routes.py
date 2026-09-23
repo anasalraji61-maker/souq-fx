@@ -57,6 +57,11 @@ def _auth(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
+def _me(client, token: str) -> int:
+    """معرّف حساب التوكن — لكتابة صفّ بالقاعدة مباشرةً كما يكتبه الخادم."""
+    return client.get("/api/auth/me", headers=_auth(token)).json()["user_id"]
+
+
 # ─── بوّابات المصادقة ────────────────────────────────────────────────────────
 
 @pytest.mark.parametrize(
@@ -657,3 +662,58 @@ def test_a_non_finite_number_is_a_422_not_a_500_on_any_route(client):
     assert r.status_code == 422, r.text
     assert r.json()["detail"], "شكل الخطأ يبقى {'detail': [...]} كما يتوقّعه العميل"
     assert client.get("/api/alerts", headers=_DEV1).json()["alerts"] == []
+
+
+# ─── قائمة المتابعة المخصّصة: للإضافة نقيض ───────────────────────────────────
+
+def test_a_symbol_can_be_removed_from_the_custom_watchlist(client):
+    """كانت الإضافة بلا نقيض: رمز يُضاف بضغطة ويبقى بالقائمة إلى الأبد."""
+    for sym in ("EURUSD", "XAUUSD"):
+        client.post("/api/watchlist/custom", json={"symbol": sym}, headers=_DEV1)
+    r = client.delete("/api/watchlist/custom/EURUSD", headers=_DEV1)
+    assert r.status_code == 200, r.text
+    assert r.json()["removed"] == 1
+    assert r.json()["symbols"] == ["XAUUSD"], "والباقي يبقى بترتيبه"
+    assert client.get("/api/watchlist/custom", headers=_DEV1).json()["symbols"] == ["XAUUSD"]
+
+
+def test_removing_a_symbol_that_is_not_there_is_not_an_error(client):
+    """زرّ ضُغط مرّتين أو قائمة محلية سبقت الخادم — كحذف التخطيط تماماً."""
+    r = client.delete("/api/watchlist/custom/GBPUSD", headers=_DEV1)
+    assert r.status_code == 200 and r.json()["removed"] == 0
+
+
+def test_removing_a_symbol_never_touches_another_devices_list(client):
+    client.post("/api/watchlist/custom", json={"symbol": "EURUSD"}, headers=_DEV1)
+    client.post("/api/watchlist/custom", json={"symbol": "EURUSD"}, headers=_DEV2)
+    assert client.delete("/api/watchlist/custom/EURUSD", headers=_DEV2).json()["removed"] == 1
+    assert client.get("/api/watchlist/custom", headers=_DEV1).json()["symbols"] == ["EURUSD"]
+
+
+def test_a_symbol_added_before_signing_in_can_still_be_removed_after(client):
+    """`get_watchlist` يتبنّى صفوف الجهاز للمسجّل — فحذفٌ بشرط `user_id` وحده كان يعني
+    رمزاً يراه المتداول بقائمته ولا يقدر إزالته أبداً."""
+    client.post("/api/watchlist/custom", json={"symbol": "XAUUSD"}, headers=_DEV1)
+    token = _register(client, "lister")
+    headers = {**_auth(token), **_DEV1}
+    assert client.get("/api/watchlist/custom", headers=headers).json()["symbols"] == ["XAUUSD"]
+    assert client.delete("/api/watchlist/custom/XAUUSD", headers=headers).json()["removed"] == 1
+    assert client.get("/api/watchlist/custom", headers=headers).json()["symbols"] == []
+
+
+def test_removing_clears_every_duplicate_row_of_the_symbol(client):
+    """الصفّ المجهول والصفّ المسجّل يحملان الرمز نفسه معاً و`get_watchlist` يخفي التكرار
+    بالعرض — فحذف صفٍّ واحد كان يُبقي الرمز ظاهراً كأن «إزالة» لم تعمل."""
+    client.post("/api/watchlist/custom", json={"symbol": "EURUSD"}, headers=_DEV1)
+    token = _register(client, "dupes")
+    db.add_watchlist_symbol("EURUSD", _me(client, token), owner_key=None)
+    headers = {**_auth(token), **_DEV1}
+    assert client.get("/api/watchlist/custom", headers=headers).json()["symbols"] == ["EURUSD"]
+    assert client.delete("/api/watchlist/custom/EURUSD", headers=headers).json()["removed"] == 2
+    assert client.get("/api/watchlist/custom", headers=headers).json()["symbols"] == []
+
+
+def test_the_symbol_in_the_path_is_matched_case_insensitively(client):
+    """الرموز تُحفظ بالحروف الكبيرة عند الإضافة — والعميل قد يرسلها كما كتبها المتداول."""
+    client.post("/api/watchlist/custom", json={"symbol": "eurusd"}, headers=_DEV1)
+    assert client.delete("/api/watchlist/custom/eurusd", headers=_DEV1).json()["removed"] == 1

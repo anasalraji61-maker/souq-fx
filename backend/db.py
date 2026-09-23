@@ -1462,6 +1462,26 @@ def add_watchlist_symbol(
     return get_watchlist(user_id, owner_key)
 
 
+def remove_watchlist_symbol(
+    symbol: str, user_id: int | None = None, owner_key: str | None = None
+) -> tuple[int, list[str]]:
+    """يحذف رمزاً من قائمة المستدعي ويعيد (عدد الصفوف المحذوفة، القائمة بعد الحذف).
+
+    **بنفس شرط الملكية الذي يقرأ به** (`_owner_clause`) لا بـ`user_id` وحده: الرمز الذي أضافه
+    الجهاز قبل إنشاء الحساب يظهر للمسجّل (`get_watchlist` يتبنّاه) — فحذفٌ بشرط أضيق كان يعني
+    رمزاً يراه المتداول ولا يقدر إزالته أبداً.
+
+    ويحذف **كل** الصفوف المطابقة لا صفّاً واحداً: الصفّ المجهول والصفّ المسجّل يحملان الرمز
+    نفسه معاً، و`get_watchlist` يخفي التكرار بالعرض — فحذف صفٍّ واحد كان يُبقي الرمز ظاهراً
+    كأن «إزالة» لم تعمل."""
+    sym = symbol.strip().upper()
+    sql, args = _owner_clause(user_id, owner_key)
+    with _conn() as c:
+        cur = c.execute(f"DELETE FROM watchlist WHERE symbol=? AND {sql}", (sym, *args))
+        removed = cur.rowcount
+    return removed, get_watchlist(user_id, owner_key)
+
+
 def save_progress(
     user_id: int,
     school_id: str,
