@@ -270,3 +270,37 @@ def test_deleting_the_account_kills_the_token_and_its_rows(client):
     assert client.delete("/api/auth/account", headers=_auth(token)).status_code == 200
     assert client.get("/api/auth/me", headers=_auth(token)).status_code == 401, "التوكن بطل فوراً"
     assert client.post("/api/auth/login", json={"username": "leaver", "password": "pass1234"}).status_code == 401
+
+
+# ─── تثبيت «أنهى المحاضرة» ──────────────────────────────────────────────────
+
+def test_finishing_a_lecture_survives_rewatching_it(client):
+    """كان `INSERT OR REPLACE` يكتب الصفّ كاملاً: محاضرة أنهاها المتداول ثم أعاد
+    فتحها لمراجعة المقدّمة تُكتب `completed=0` فوراً — إعادة المشاهدة تمحو الإنجاز.
+    الموضع يتبع آخر مكان فعلاً (يصحّ رجوعه للخلف)، أما «أنهاها» فلا يُلغى."""
+    token = _register(client, "finisher")
+    done = {"school_id": "s1", "lecture_id": "l1", "segment_index": 9, "completed": True}
+    assert client.post("/api/academy/progress", json=done, headers=_auth(token)).status_code == 200
+    again = {"school_id": "s1", "lecture_id": "l1", "segment_index": 0, "completed": False}
+    saved = client.post("/api/academy/progress", json=again, headers=_auth(token)).json()["progress"]
+    assert saved["segment_index"] == 0, "الموضع يتبع إعادة المشاهدة"
+    assert saved["completed"] is True, "«أنهاها» لا يُلغى بإعادة فتحها"
+    rows = client.get("/api/academy/progress", headers=_auth(token)).json()["progress"]
+    assert rows == [{"school_id": "s1", "lecture_id": "l1", "segment_index": 0, "completed": True}]
+
+
+def test_progress_response_reports_what_the_database_holds(client):
+    """الردّ يعيد الصفّ كما استقرّ بالقاعدة لا كما وصل بالطلب — العميل يبني عليه."""
+    token = _register(client, "reporter")
+    client.post(
+        "/api/academy/progress",
+        json={"school_id": "s2", "lecture_id": "l2", "segment_index": 4, "completed": True},
+        headers=_auth(token),
+    )
+    r = client.post(
+        "/api/academy/progress",
+        json={"school_id": "s2", "lecture_id": "l2", "segment_index": 1, "completed": False},
+        headers=_auth(token),
+    ).json()["progress"]
+    got = client.get("/api/academy/progress", headers=_auth(token)).json()["progress"][0]
+    assert r == got

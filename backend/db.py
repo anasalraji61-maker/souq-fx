@@ -1470,17 +1470,32 @@ def save_progress(
     completed: bool = False,
 ) -> dict:
     with _conn() as c:
+        # `completed` **يُثبَّت ولا يُخفَّض**: كان `INSERT OR REPLACE` يكتب الصفّ كاملاً، فمحاضرة
+        # أنهاها المتداول ثم أعاد فتحها لمراجعة المقدّمة تُكتب فوراً `completed=0` — أي أن إعادة
+        # المشاهدة تمحو الإنجاز. الموضع (`segment_index`) يتبع آخر مكان فعلاً (يصحّ أن يرجع
+        # للخلف عند إعادة المشاهدة)، أما «أنهاها» فحدثٌ وقع ولا يُلغى بفتحها ثانيةً.
         c.execute(
-            """INSERT OR REPLACE INTO academy_progress
+            """INSERT INTO academy_progress
                (user_id,school_id,lecture_id,segment_index,completed,updated_at)
-               VALUES(?,?,?,?,?,?)""",
+               VALUES(?,?,?,?,?,?)
+               ON CONFLICT(user_id,school_id,lecture_id) DO UPDATE SET
+                 segment_index=excluded.segment_index,
+                 completed=MAX(academy_progress.completed, excluded.completed),
+                 updated_at=excluded.updated_at""",
             (user_id, school_id, lecture_id, segment_index, int(completed), time.time()),
         )
+        row = c.execute(
+            """SELECT segment_index, completed FROM academy_progress
+               WHERE user_id=? AND school_id=? AND lecture_id=?""",
+            (user_id, school_id, lecture_id),
+        ).fetchone()
+    # يُعاد الصفّ **كما استقرّ بالقاعدة** لا كما وصل بالطلب: بعد التثبيت أعلاه قد يختلفان،
+    # والعميل يبني عليه («أكمل من حيث توقفت» يقرأ هذا الردّ).
     return {
         "school_id": school_id,
         "lecture_id": lecture_id,
-        "segment_index": segment_index,
-        "completed": completed,
+        "segment_index": int(row["segment_index"]) if row else segment_index,
+        "completed": bool(row["completed"]) if row else completed,
     }
 
 
