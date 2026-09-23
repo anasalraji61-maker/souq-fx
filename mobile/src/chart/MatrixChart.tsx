@@ -70,6 +70,7 @@ import {
   placeGuides,
 } from './paneGuides';
 import { DrawingsSaveQueue, drawingsKey } from './drawingsPersist';
+import { dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
 import {
@@ -2262,14 +2263,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [tool, accent, tr, pushDrawHistory]
   );
 
+  /**
+   * تحريك طرف رسم. **الكتابة تُسقَط إن لم تتغيّر النقطة** — مع المغناطيس مفعّلاً تعطي حركة
+   * إصبع داخل الشمعة نفسها النقطةَ ذاتها حرفياً، وكل كتابة تُنشئ مصفوفة جديدة تُشغّل مؤقّت
+   * الحفظ (`saveQueue`) وتُعيد رسم الشارت بلا أي فرق مرئي. (الفرعان كانا متطابقين قبلاً:
+   * `d.b ? {...d, b} : {...d, b}` — والسحب لطرف `b` لا يقع أصلاً إلا على رسمٍ له `b`.)
+   */
   const moveDrawing = useCallback((id: string, point: ChartPoint, end: 'a' | 'b') => {
-    setDrawings((list) =>
-      list.map((d) => {
-        if (d.id !== id) return d;
-        if (end === 'a') return { ...d, a: point };
-        return d.b ? { ...d, b: point } : { ...d, b: point };
-      })
-    );
+    setDrawings((list) => {
+      const cur = list.find((x) => x.id === id);
+      if (!dragChangesDrawing(cur, end, point)) return list;
+      return list.map((d) =>
+        d.id !== id ? d : end === 'a' ? { ...d, a: point } : { ...d, b: point }
+      );
+    });
   }, []);
 
   /**
@@ -2452,39 +2459,55 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
   const selectPan = useMemo(() => {
     let dragging: 'a' | 'b' | null = null;
+    // النقطة التي يقف عندها الطرف المسحوب الآن، و«هل دُفِعت لقطة تراجع لهذه السحبة؟».
+    // راجع `drawEdit.ts`: اللقطة تُدفَع عند **أول حركة تُغيّر الطرف فعلاً** لا عند بدء
+    // اللمس — وإلا استهلكت لمسةٌ لم تغيّر شيئاً مكاناً من سجلّ التراجع (25 لقطة).
+    let dragAt: ChartPoint | null = null;
+    let pushedForDrag = false;
     return PanResponder.create({
       onStartShouldSetPanResponder: () => interactive && tool === 'select' && !!selectedId,
       onMoveShouldSetPanResponder: () => interactive && tool === 'select' && !!selectedId,
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (evt) => {
+        dragging = null;
+        dragAt = null;
+        pushedForDrag = false;
         if (!selectedId) return;
         const { locationX, locationY } = evt.nativeEvent;
-        dragging = 'a';
         const d = drawings.find((x) => x.id === selectedId);
-        if (d?.b) {
+        if (!d) return;
+        let end: 'a' | 'b' = 'a';
+        if (d.b) {
           const da = Math.hypot(locationX - xOf(d.a.index - source.start), locationY - yOf(d.a.price));
           const db = Math.hypot(locationX - xOf(d.b.index - source.start), locationY - yOf(d.b.price));
           // صار يمكن تحديد الخط من أي نقطة على جسمه، فالسحب من المنتصف كان سيجرّ أقرب
           // طرف ويشوّه خطاً لمسه المتداول ليحدّده فقط: لا سحب إلا من مقبض طرفي ظاهر.
-          if (Math.min(da, db) > DRAW_HANDLE_R) {
-            dragging = null;
-            return;
-          }
-          dragging = db < da ? 'b' : 'a';
+          if (Math.min(da, db) > DRAW_HANDLE_R) return;
+          end = db < da ? 'b' : 'a';
         }
-        // لقطة واحدة عند بدء السحب — لا لقطة لكل إطار حركة.
-        pushDrawHistory();
+        dragging = end;
+        dragAt = drawingEnd(d, end);
       },
       onPanResponderMove: (evt) => {
         if (!selectedId || !dragging) return;
         const p = pointFromXY(evt.nativeEvent.locationX, evt.nativeEvent.locationY);
+        // المقارنة بـ`dragAt` (آخر موضع بلغه الطرف بهذه السحبة) لا بحالة React: الحالة
+        // تصل متأخّرة إطاراً عن أحداث الحركة، فمقارنتها كانت ستسمح بلقطة مكرّرة.
+        if (samePoint(dragAt, p)) return;
+        if (!pushedForDrag) {
+          pushDrawHistory();
+          pushedForDrag = true;
+        }
+        dragAt = p;
         moveDrawing(selectedId, p, dragging);
       },
       onPanResponderRelease: () => {
         dragging = null;
+        dragAt = null;
       },
       onPanResponderTerminate: () => {
         dragging = null;
+        dragAt = null;
       },
     });
   }, [
