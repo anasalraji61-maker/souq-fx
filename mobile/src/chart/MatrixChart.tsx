@@ -41,6 +41,7 @@ import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
 import { indexOfBarTime } from './crossAnchor';
+import { axisTickCount, axisTickRatios, layoutAxisLabels } from './axisTicks';
 import {
   centeredBarH,
   centeredBarTop,
@@ -355,6 +356,10 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
 const PRICE_AXIS_WIDTH = 68;
 const TIME_AXIS_HEIGHT = 48;
 const CROSS_TIME_TAG_W = 104;
+/** فجوة دنيا بين علامتي زمن متجاورتين، ومقاس علامة السعر وفجوتها — راجع `axisTicks.ts`. */
+const TIME_LABEL_GAP = 6;
+const PRICE_LABEL_H = 14;
+const PRICE_LABEL_GAP = 4;
 
 function candleTimeSec(t: number): number {
   return t > 1e12 ? t / 1000 : t;
@@ -2865,25 +2870,38 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     })
     .filter(({ aLocal, bLocal }) => aLocal >= -2 || bLocal >= -2);
 
-  const priceTicks = Array.from({ length: 7 }, (_, index) => {
-    const ratio = index / 6;
-    return {
-      ratio,
-      price: fromScale(range.max - ratio * range.span),
-    };
-  });
+  // عدد علامات السعر من ارتفاع اللوح لا رقماً ثابتاً: السبع الثابتة كانت تتباعد
+  // 16.6px بلوح 100px (حدّه الأدنى عند فتح لوحات المؤشرات) وعلوّ النصّ 14px.
+  // مدى القصّ `chartPlotH − 2` كي يطابق `maxStart` ما كانت الشاشة تقصّ عنده بالضبط.
+  const priceTicks = axisTickRatios(
+    axisTickCount(chartPlotH - 2, PRICE_LABEL_H, PRICE_LABEL_GAP, 7)
+  ).map((ratio) => ({ ratio, price: fromScale(range.max - ratio * range.span) }));
+  const priceTickBoxes = layoutAxisLabels(
+    priceTicks.map((t) => t.ratio * chartPlotH),
+    PRICE_LABEL_H,
+    PRICE_LABEL_GAP,
+    chartPlotH - 2
+  );
   const firstVisibleTime = source.plot[0]?.time ?? 0;
   const lastVisibleTime = source.plot[source.plot.length - 1]?.time ?? firstVisibleTime;
   const visibleTimeSpan = Math.abs(lastVisibleTime - firstVisibleTime);
   const timeLabelW = chartPlotW < 200 ? 56 : chartPlotW < 280 ? 72 : 88;
-  const timeTickRatios =
-    chartPlotW < 200 ? [0, 0.5, 1] : chartPlotW < 320 ? [0, 0.5, 1] : [0, 1 / 3, 2 / 3, 1];
+  // العدد من عرض العلامة نفسها لا من عتبة مكتوبة: أربع علامات عرضها 88px تلزمها
+  // 414px بعد القصّ، ولوح هاتف كبير ≈ 338px — فكانت الأولى والثانية تتراكبان.
   const timeTickIndexes = Array.from(
     new Set(
-      timeTickRatios.map((ratio) =>
+      axisTickRatios(axisTickCount(chartPlotW, timeLabelW, TIME_LABEL_GAP, 4)).map((ratio) =>
         Math.max(0, Math.round((source.plot.length - 1) * ratio))
       )
     )
+  );
+  // المواضع المرسومة نفسها: المراكز من `xOf` فتحمل إزاحة التمرير، والقصّ والإخفاء
+  // من `layoutAxisLabels` — فلا يتباعد المفحوص عن المرسوم.
+  const timeTickBoxes = layoutAxisLabels(
+    timeTickIndexes.map((i) => xOf(i)),
+    timeLabelW,
+    TIME_LABEL_GAP,
+    chartPlotW
   );
   const currentPrice = livePrice ?? source.plot[source.plot.length - 1]?.close ?? series.last;
   const currentPriceY = yOf(currentPrice);
@@ -4787,15 +4805,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           {...(canPan ? priceAxisPan.panHandlers : {})}
           {...(canPan && Platform.OS === 'web' ? priceWheelHandlers : {})}
         >
-        {priceTicks.map((tick) =>
-          hidePriceLabels ? null : (
+        {priceTicks.map((tick, i) =>
+          hidePriceLabels || !priceTickBoxes[i] || priceTickBoxes[i].hidden ? null : (
             <Text
               key={tick.ratio}
               pointerEvents="none"
-              style={[
-                styles.priceAxisLabel,
-                { top: Math.max(0, Math.min(chartPlotH - 16, tick.ratio * chartPlotH - 7)) },
-              ]}
+              style={[styles.priceAxisLabel, { top: priceTickBoxes[i].start }]}
             >
               {formatPrice(tick.price, series.symbol)}
             </Text>
@@ -4842,7 +4857,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {...(canPan ? timeAxisPan.panHandlers : {})}
             {...(canPan && Platform.OS === 'web' ? timeWheelHandlers : {})}
           >
-            {timeTickIndexes.map((index) => {
+            {timeTickBoxes.map((box) => {
+              if (box.hidden) return null;
+              const index = timeTickIndexes[box.i];
               const candle = source.plot[index];
               if (!candle) return null;
               return (
@@ -4855,13 +4872,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   style={[
                     styles.timeAxisLabel,
                     chartPlotW < 280 && styles.timeAxisLabelCompact,
-                    {
-                      width: timeLabelW,
-                      left: Math.max(
-                        0,
-                        Math.min(chartPlotW - timeLabelW, xOf(index) - timeLabelW / 2)
-                      ),
-                    },
+                    { width: timeLabelW, left: box.start },
                   ]}
                 >
                   {formatAxisTime(candle.time, visibleTimeSpan, tr.mcMonths, chartPlotW < 280)}
