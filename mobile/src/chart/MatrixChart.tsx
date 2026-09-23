@@ -40,6 +40,7 @@ import { rangeBars } from './range';
 import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
+import { STOCH_LINE_H, stochPaneGeom } from './stochPane';
 import {
   formatPaneValue,
   latestPaneValue,
@@ -7651,21 +7652,45 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneHead paneId="stoch" name="STO" values={stoch.k} />
           <View style={styles.paneInner}>
             <PaneGuideLines paneId="stoch" innerH={paneH - 16} />
-            {stoch.k.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: '#F472B6',
-                  }}
-                />
-              )
-            )}
+            {(() => {
+              // %D كان محسوباً ولا يُرسم — والتقاطع بينه وبين %K هو غرض المؤشّر كلّه.
+              // نفس نمط حاوية MACD: عمود `position: 'relative'` لكل شمعة يحمل الخطّين معاً.
+              const g = stochPaneGeom(paneH);
+              return stoch.k.map((v, i) => {
+                const kY = g.y(v);
+                const dY = g.y(stoch.d[i]);
+                if (kY == null && dY == null) return <View key={i} style={{ flex: 1 }} />;
+                return (
+                  <View key={i} style={{ flex: 1, height: g.innerH, position: 'relative' }}>
+                    {dY != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          top: dY,
+                          height: STOCH_LINE_H,
+                          backgroundColor: colors.warn,
+                          opacity: 0.9,
+                        }}
+                      />
+                    ) : null}
+                    {kY != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          top: kY,
+                          height: STOCH_LINE_H,
+                          backgroundColor: accent,
+                        }}
+                      />
+                    ) : null}
+                  </View>
+                );
+              });
+            })()}
           </View>
         </View>
       ) : null}

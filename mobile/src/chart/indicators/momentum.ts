@@ -56,10 +56,20 @@ export function computeStoch(candles: Candle[], kPeriod = 14, dPeriod = 3) {
     const span = hi - lo || 1;
     k.push(((candles[i].close - lo) / span) * 100);
   }
-  const d = sma(
+  // `sma` لا تقبل null فيُعوَّض بصفر — وهذا يولّد قيم %D **وهمية** عند الشموع الأولى:
+  // متوسط نافذة نصفها أصفار يهبط نحو الصفر، فيرى المتداول تقاطعاً صعودياً مفتعلاً لـ%K
+  // فوق %D عند أقصى يسار الشارت. فأي نافذة تضمّ فهرساً بلا %K حقيقي قيمتها null لا رقم.
+  const dRaw = sma(
     k.map((v) => v ?? 0),
     dPeriod
   );
+  const d: (number | null)[] = dRaw.map((v, i) => {
+    if (v == null) return null;
+    for (let j = i - dPeriod + 1; j <= i; j++) {
+      if (k[j] == null) return null;
+    }
+    return v;
+  });
   return { k, d };
 }
 
