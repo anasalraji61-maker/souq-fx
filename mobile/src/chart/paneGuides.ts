@@ -119,6 +119,33 @@ export function latestPaneValue(values: readonly (number | null | undefined)[]):
   return null;
 }
 
+/**
+ * قيمة اللوحة **عند شمعة التقاطع**، أو قيمة آخر شمعة متى لا تقاطع.
+ *
+ * رأس اللوحة كان يعرض آخر قيمة دائماً: يضع المتداول التقاطع على شمعة أمس ليقرأ RSI
+ * عندها فيرى قراءة **اليوم** — والرقم بجانب الشمعة الخطأ أسوأ من لا رقم. هنا الرقم
+ * يتبع التقاطع كما يتبعه صندوق السعر.
+ *
+ * مؤشّر خارج المدى (النافذة تحرّكت والتقاطع ما زال قائماً) ⇐ آخر قيمة، لا فراغ.
+ * قيمة غير صالحة عند شمعة صحيحة (المؤشّر لم ينضج بعد) ⇐ null: لا يُزوَّر رقم لشمعة
+ * لا رقم لها.
+ */
+export function paneValueAt(
+  values: readonly (number | null | undefined)[],
+  index: number | null | undefined
+): number | null {
+  if (
+    index == null ||
+    !Number.isInteger(index) ||
+    index < 0 ||
+    index >= values.length
+  ) {
+    return latestPaneValue(values);
+  }
+  const v = values[index];
+  return typeof v === 'number' && Number.isFinite(v) ? v : null;
+}
+
 /** صياغة مختصرة تتّسع بعرض 36px: منزلة عشرية واحدة، وبلا عشرية عند ≥100. */
 export function formatPaneValue(v: number | null): string | null {
   if (v == null || !Number.isFinite(v)) return null;
@@ -260,10 +287,16 @@ export function paneSpreadSeries(
  * (بداية السلسلة أو شمعة ناقصة) لا تُسقط المقارنة.
  */
 export function paneValueTrend(
-  values: readonly (number | null | undefined)[]
+  values: readonly (number | null | undefined)[],
+  upTo?: number | null
 ): 'up' | 'down' | 'flat' | null {
+  // حدّ أعلى اختياري = شمعة التقاطع: يتبع اللون الشمعة المقروءة لا آخر السلسلة.
+  const end =
+    upTo != null && Number.isInteger(upTo) && upTo >= 0 && upTo < values.length
+      ? upTo
+      : values.length - 1;
   let last: number | null = null;
-  for (let i = values.length - 1; i >= 0; i--) {
+  for (let i = end; i >= 0; i--) {
     const v = values[i];
     if (typeof v !== 'number' || !Number.isFinite(v)) continue;
     if (last == null) {

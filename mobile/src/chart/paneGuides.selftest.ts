@@ -14,6 +14,7 @@ import {
   latestPaneValue,
   paneSeriesMaxAbs,
   paneSpreadSeries,
+  paneValueAt,
   paneValueDecimals,
   paneValueState,
   paneValueTrend,
@@ -270,6 +271,49 @@ for (const id of ['cci', 'roc', 'atr', 'volume', '', 'nope']) {
   assert.equal(paneValueTrend([1, 2, null]), 'up');
   // آخر قيمتين لا أوّلهما
   assert.equal(paneValueTrend([9, 1, 2]), 'up');
+}
+
+// ح٢) القراءة عند شمعة التقاطع — الرقم يتبع التقاطع لا آخر السلسلة
+{
+  const v = [10, 20, 30, 40];
+  assert.equal(paneValueAt(v, 0), 10);
+  assert.equal(paneValueAt(v, 2), 30);
+  assert.equal(paneValueAt(v, 3), 40);
+  // بلا تقاطع ⇐ آخر قيمة صالحة (السلوك السابق كما هو)
+  assert.equal(paneValueAt(v, null), 40);
+  assert.equal(paneValueAt(v, undefined), 40);
+  assert.equal(paneValueAt([10, 20, null], null), 20, 'آخر صالحة لا آخر خانة');
+  // خارج المدى (النافذة تحرّكت والتقاطع قائم) ⇐ آخر قيمة، لا فراغ
+  assert.equal(paneValueAt(v, 4), 40);
+  assert.equal(paneValueAt(v, 99), 40);
+  assert.equal(paneValueAt(v, -1), 40);
+  assert.equal(paneValueAt(v, 1.5), 40, 'فهرس غير صحيح ⇐ آخر قيمة');
+  assert.equal(paneValueAt(v, Number.NaN), 40);
+  // شمعة صحيحة لكن المؤشّر لم ينضج عندها ⇐ لا رقم مزوَّر
+  assert.equal(paneValueAt([null, null, 30], 0), null);
+  assert.equal(paneValueAt([Number.NaN, 20], 0), null);
+  assert.equal(paneValueAt([], 0), null, 'سلسلة فارغة ⇐ null');
+  assert.equal(paneValueAt([], null), null);
+  // والصياغة تمرّ كما هي على القيمة المقروءة
+  assert.equal(formatPaneValue(paneValueAt([62.34, 68.91], 0)), '62.3');
+  assert.equal(paneValueState('rsi', paneValueAt([75, 40], 0)), 'high', 'الحالة من شمعة التقاطع');
+  assert.equal(paneValueState('rsi', paneValueAt([75, 40], 1)), 'mid');
+}
+
+// ط) اتّجاه محدود بشمعة التقاطع — لون رأس Gator يتبع المقروء
+{
+  const v = [1, 2, 1, 5];
+  assert.equal(paneValueTrend(v), 'up', 'بلا حدّ: آخر قيمتين (1 ⇒ 5)');
+  assert.equal(paneValueTrend(v, 2), 'down', 'عند الفهرس 2: (2 ⇒ 1)');
+  assert.equal(paneValueTrend(v, 1), 'up');
+  assert.equal(paneValueTrend(v, 0), null, 'أول شمعة ⇐ لا سابق فلا اتّجاه');
+  // حدّ خارج المدى يُتجاهَل فيعود للسلوك الافتراضي
+  assert.equal(paneValueTrend(v, 99), 'up');
+  assert.equal(paneValueTrend(v, -1), 'up');
+  assert.equal(paneValueTrend(v, 1.5), 'up');
+  assert.equal(paneValueTrend(v, null), 'up');
+  // فجوة null قبل شمعة التقاطع لا تُسقط المقارنة
+  assert.equal(paneValueTrend([1, null, 3, 9], 2), 'up');
 }
 
 console.log('paneGuides.selftest: PASS');
