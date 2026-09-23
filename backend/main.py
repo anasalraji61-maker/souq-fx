@@ -239,22 +239,93 @@ class ProgressSave(BaseModel):
     completed: bool = False
 
 
+def _check_ma_periods(fast: int, slow: int, *, fast_name: str, slow_name: str) -> None:
+    """قاعدة فترتَي المتوسط بمكان واحد — يعلنها `IndicatorAlertCreate` منذ تشغيل سابق، وكان
+    **الفحص السريع والاختبار الخلفي وحدهما خارجها** رغم أنهما يستدعيان `indicators.sma` نفسها:
+
+    - **فترة 0 = 500 فعليّ** لا 422: `sma` تقسم مجموع شريحة فارغة على صفر (`ZeroDivisionError`)،
+      وليست بداخل `try` بأيٍّ من المسارين — أي أن رقماً كتبه المتداول بخانة الفترة يُخرج «خطأ خادم».
+    - **فترة سالبة تُقبل بصمت**: الشريحة فارغة والقسمة على عدد سالب تعطي ‎-0.0‎ لكل شمعة — خطّ
+      مسطّح لا يتقاطع أبداً، فيرى المتداول «لا نتائج» على كل فحص ويظنّها حالة السوق.
+    - **فترة ≥ طول السلسلة** لا تُنتج قيمتين فلا تتقاطع؛ نفس «لا نتائج» الكاذبة.
+    """
+    for name, period in ((fast_name, fast), (slow_name, slow)):
+        if not (MIN_MA_PERIOD <= period <= MAX_MA_PERIOD):
+            raise ValueError(f"{name} must be between {MIN_MA_PERIOD} and {MAX_MA_PERIOD}")
+
+
+def _check_timeframe(tf: str) -> None:
+    """فريم غير معروف يُبدَّل بـ`15m` صامتاً (`build_series` و`twelve_data.fetch_time_series` كلاهما
+    `tf if tf in ... else "15m"`) بينما النتيجة تُعاد موسومةً **بالفريم المكتوب**: نتيجة فحص/اختبار
+    خلفي على شموع 15 دقيقة يقرؤها المتداول على أنها ساعة. نفس القاعدة التي يطبّقها تنبيه المؤشر."""
+    if tf not in TF_SECONDS:
+        raise ValueError("unknown timeframe")
+
+
 class ScreenerRun(BaseModel):
+    """طلب فحص. القيود الثلاثة الجديدة كلّها ضدّ **صمت** لا ضد قيمة نادرة (راجع
+    `_check_ma_periods`/`_check_timeframe`)، ورابعها ضدّ استنزاف حدّ المزوّد:
+
+    - `symbols` بلا سقف: كل رمز طلبٌ متسلسل للمزوّد بمفتاح مشترك بين كل المستخدمين — طلبٌ بـ400
+      رمز كان يُقبل كما هو (مُثبَت: `total: 400`). السقف `screener_engine.MAX_SCAN_SYMBOLS`.
+    - معرّف فلتر مجهول كان يُقابَل بقائمة فارغة صامتة تُقرأ «لا تطابق».
+    - `filters`/`symbols` فارغةً كانت تُستبدَل بالافتراضي (`filters or [...]`) فيرى المتداول
+      نتائج فلترٍ لم يختره؛ والواجهة تعطّل الزرّ بلا فلتر أصلاً فلا عميل يرسل الفارغ.
+    """
+
     timeframe: str = "15m"
-    filters: list[str] = Field(default_factory=lambda: ["ma_cross_up"])
-    symbols: list[str] | None = None
+    filters: list[str] = Field(
+        default_factory=lambda: ["ma_cross_up"], min_length=1, max_length=len(screener_engine.FILTER_IDS)
+    )
+    symbols: list[str] | None = Field(default=None, min_length=1, max_length=screener_engine.MAX_SCAN_SYMBOLS)
     fast: int = 9
     slow: int = 21
 
+    @model_validator(mode="after")
+    def _bounded(self) -> "ScreenerRun":
+        _check_timeframe(self.timeframe)
+        _check_ma_periods(self.fast, self.slow, fast_name="fast", slow_name="slow")
+        unknown = sorted({f for f in self.filters if f not in screener_engine.FILTER_IDS})
+        if unknown:
+            raise ValueError(f"unknown filter: {', '.join(unknown)}")
+        # متوسطان بالفترة نفسها خطّ واحد حرفياً فتقاطعه بنفسه مستحيل — نفس قاعدة تنبيه المؤشر،
+        # ومحصورةً بفلتري التقاطع وحدهما: فلاتر RSI/الزخم لا تستعمل الفترتين أصلاً.
+        if self.fast == self.slow and {"ma_cross_up", "ma_cross_down"} & set(self.filters):
+            raise ValueError("fast and slow periods must differ")
+        for sym in self.symbols or []:
+            if not (3 <= len(sym.strip()) <= 12):
+                raise ValueError("symbol must be 3-12 characters")
+        return self
+
 
 class BacktestRun(BaseModel):
-    symbol: str = "EURUSD"
+    """اختبار خلفي. نفس قاعدتَي الفترة والفريم أعلاه (كان خارجهما تماماً)، و`symbol` بلا حدّ طول
+    خلافاً لكل حقل رمز آخر بالملف، وعتبتا RSI بلا حدّ:
+
+    - `rsi_low >= rsi_high` يجعل `rsi_reversal` تشتري على كل شمعة تقريباً (شرطها الأول يتحقّق
+      دائماً) — **نتيجة تُعرض كأداء استراتيجية** وهي ناتج عتبتين متناقضتين (مُثبَت: 90/10 يعطي
+      صفقة واحدة ونسبة نجاح 0%). وعتبة خارج 0–100 لا يبلغها RSI فلا صفقة أبداً: «الاستراتيجية
+      لا تعطي إشارات» وهي عتبة مستحيلة.
+    """
+
+    symbol: str = Field(default="EURUSD", min_length=3, max_length=12)
     timeframe: str = "15m"
     strategy: Literal["ma_cross", "rsi_reversal", "macd_cross", "bb_bounce"] = "ma_cross"
     fast: int = 9
     slow: int = 21
-    rsi_low: float = 30
-    rsi_high: float = 70
+    rsi_low: float = Field(default=30, gt=0, lt=100, allow_inf_nan=False)
+    rsi_high: float = Field(default=70, gt=0, lt=100, allow_inf_nan=False)
+
+    @model_validator(mode="after")
+    def _bounded(self) -> "BacktestRun":
+        _check_timeframe(self.timeframe)
+        _check_ma_periods(self.fast, self.slow, fast_name="fast", slow_name="slow")
+        if self.rsi_low >= self.rsi_high:
+            raise ValueError("rsi_low must be below rsi_high")
+        # كما بتنبيه المؤشر: خطٌّ واحد لا يتقاطع بنفسه. محصورةً بـ`ma_cross` وحدها.
+        if self.strategy == "ma_cross" and self.fast == self.slow:
+            raise ValueError("fast and slow periods must differ")
+        return self
 
 
 class SocialConsensusBody(BaseModel):
@@ -291,16 +362,15 @@ class IndicatorAlertCreate(BaseModel):
                 raise ValueError("rsi threshold must be between 0 and 100")
         elif self.condition not in ("cross_up", "cross_down"):
             raise ValueError("cross alert needs condition cross_up/cross_down")
-        if self.timeframe not in TF_SECONDS:
-            raise ValueError("unknown timeframe")
+        _check_timeframe(self.timeframe)
         # نفس القاعدة مطبَّقة على فترتَي المتوسط: كانتا بلا أي حدّ. فترة 0 كان يبتلعها
         # `_check_indicator_alert` بـ`or 9`/`or 21` فيصير التنبيه بفترة غير التي طلبها
         # المتداول وتُعرض له؛ وفترة سالبة تجعل `sma` تعيد ‎-0.0‎ لكل شمعة (شريحة فارغة
         # مقسومة على عدد سالب) — خطّ مسطّح لا يتقاطع أبداً؛ وفترة ≥ طول السلسلة لا تُنتج
         # قيمتين فلا تتقاطع. الثلاث كانت تُحفَظ بـ200 ويراها المتداول «يراقب» إلى الأبد.
-        for name, period in (("fast_period", self.fast_period), ("slow_period", self.slow_period)):
-            if not (MIN_MA_PERIOD <= period <= MAX_MA_PERIOD):
-                raise ValueError(f"{name} must be between {MIN_MA_PERIOD} and {MAX_MA_PERIOD}")
+        _check_ma_periods(
+            self.fast_period, self.slow_period, fast_name="fast_period", slow_name="slow_period"
+        )
         # متوسطان بالفترة نفسها خطّ واحد حرفياً: تقاطعه بنفسه مستحيل.
         if self.alert_type != "rsi" and self.fast_period == self.slow_period:
             raise ValueError("fast and slow periods must differ")

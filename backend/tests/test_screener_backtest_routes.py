@@ -1,0 +1,233 @@
+"""حدود مسارَي الفحص السريع والاختبار الخلفي — نفس القاعدة التي يعلنها تنبيه المؤشر.
+
+**لماذا هذا الملف**: `/api/screener/run` و`/api/backtest` كانا **بلا اختبار واحد** رغم أنهما
+المسارين الوحيدين اللذين يأخذان فترتَي متوسط من المتداول ويمرّرانهما لـ`indicators.sma` مباشرة.
+و`IndicatorAlertCreate` يعلن قاعدة الفترة منذ تشغيل سابق بينما هذان المساران خارجها:
+
+- **فترة 0 كانت 500 حقيقياً** بالمسارين (قسمة على صفر بـ`sma`، خارج أي `try`) — رقمٌ كتبه
+  المتداول بخانة يراه «خطأ خادم».
+- فترة سالبة تُقبل بـ200 وتعطي خطّاً مسطّحاً (‎-0.0‎) لا يتقاطع أبداً = «لا نتائج» كاذبة.
+- فريم مجهول يُبدَّل بـ15m صامتاً بينما النتيجة تُعاد موسومةً بالفريم المكتوب.
+- معرّف فلتر مجهول = قائمة فارغة صامتة تُقرأ «لا تطابق».
+- `symbols` بلا سقف: 400 رمز = 400 طلب متسلسل للمزوّد بمفتاح مشترك بين كل المستخدمين.
+- `rsi_low >= rsi_high` يعطي «أداء استراتيجية» هو ناتج عتبتين متناقضتين.
+
+**بلا شبكة**: المزوّد مُستبدَل بشموع مبنيّة بالذاكرة (`_candles`)، ولا `with TestClient` فلا
+دورة حياة ولا عامل خلفي.
+"""
+from __future__ import annotations
+
+import pytest
+from fastapi.testclient import TestClient
+
+import db
+import main
+import screener as screener_engine
+import twelve_data as market
+from core import db_conn
+
+
+def _candles(n: int = 200) -> list[dict]:
+    """شموع مصطنعة تتذبذب فعلاً (فتتقاطع المتوسطات) — لا مسار عشوائي، فالنتيجة قابلة للإعادة."""
+    out: list[dict] = []
+    price = 1.1000
+    for i in range(n):
+        price += 0.0004 if (i // 7) % 2 == 0 else -0.0003
+        out.append(
+            {
+                "time": 1_700_000_000 + i * 900,
+                "open": price,
+                "high": price + 0.0005,
+                "low": price - 0.0005,
+                "close": price,
+                "volume": 100,
+            }
+        )
+    return out
+
+
+@pytest.fixture()
+def client(tmp_path, monkeypatch):
+    path = tmp_path / "test_scan.db"
+    assert "souq-fx" not in str(path), f"قاعدة الاختبار يجب أن تكون خارج المستودع: {path}"
+    monkeypatch.setattr(db_conn, "DB_PATH", path)
+    monkeypatch.setattr(db, "DB_PATH", path)
+    monkeypatch.setattr(db, "_PBKDF2_ITERATIONS", 1_000)
+    db.init_db()
+    monkeypatch.setattr(
+        market, "fetch_time_series", lambda sym, tf, outputsize=180: _candles()
+    )
+    # raise_server_exceptions=False: الـ500 يصل كردّ حقيقي بدل أن يُرمى — وهو ما يُرصد هنا.
+    return TestClient(main.app, raise_server_exceptions=False)
+
+
+# ---------------------------------------------------------------- الفحص السريع
+
+
+def test_scan_with_valid_body_still_works(client):
+    """الحارس المعاكس: بلا هذا الاختبار قد تمرّ حدودٌ ترفض **كل** طلب."""
+    r = client.post(
+        "/api/screener/run",
+        json={"symbols": ["EURUSD", "GBPUSD"], "timeframe": "15m", "filters": ["bullish", "bearish"]},
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["total"] == 2 and body["scanned"] == 2 and body["failed"] == []
+    assert body["count"] == len(body["results"])
+    for hit in body["results"]:
+        assert hit["symbol"] in ("EURUSD", "GBPUSD")
+        assert hit["filters_matched"], "نتيجة بلا فلتر مطابق لا معنى لها"
+
+
+@pytest.mark.parametrize("bad", [0, -5, main.MAX_MA_PERIOD + 1])
+def test_scan_impossible_period_is_422_not_500(client, bad):
+    """0 كانت **500** فعلياً (قسمة على صفر)، والسالبة والأطول من السلسلة كانتا 200 بلا نتائج."""
+    r = client.post("/api/screener/run", json={"symbols": ["EURUSD"], "fast": bad})
+    assert r.status_code == 422, r.text
+    assert "fast" in r.text
+
+
+@pytest.mark.parametrize("period", [main.MIN_MA_PERIOD, 2, main.MAX_MA_PERIOD])
+def test_scan_edge_but_usable_periods_pass(client, period):
+    """الحدّ يرصد المستحيل لا الصغير: فترة 1 و179 فترتان حقيقيتان تمرّان كما هما."""
+    r = client.post(
+        "/api/screener/run",
+        json={"symbols": ["EURUSD"], "fast": period, "slow": period + 1 if period < main.MAX_MA_PERIOD else period - 1},
+    )
+    assert r.status_code == 200, r.text
+
+
+def test_scan_equal_periods_rejected_only_for_cross_filters(client):
+    """خطّان بنفس الفترة خطّ واحد: تقاطعه بنفسه مستحيل — وفلاتر RSI لا تستعمل الفترتين أصلاً."""
+    cross = client.post(
+        "/api/screener/run", json={"symbols": ["EURUSD"], "fast": 9, "slow": 9, "filters": ["ma_cross_up"]}
+    )
+    assert cross.status_code == 422, cross.text
+    rsi = client.post(
+        "/api/screener/run", json={"symbols": ["EURUSD"], "fast": 9, "slow": 9, "filters": ["rsi_oversold"]}
+    )
+    assert rsi.status_code == 200, rsi.text
+
+
+def test_scan_unknown_filter_is_422_not_silent_empty(client):
+    r = client.post("/api/screener/run", json={"symbols": ["EURUSD"], "filters": ["rsi_oversold_typo"]})
+    assert r.status_code == 422, r.text
+    assert "rsi_oversold_typo" in r.text
+
+
+def test_scan_accepts_every_published_filter_id(client):
+    """كل معرّف يعلنه `/api/screener/filters` مقبول فعلاً بالفحص — وإلا رفض الخادمُ زرَّه نفسه."""
+    published = [f["id"] for f in client.get("/api/screener/filters").json()["filters"]]
+    assert sorted(published) == sorted(screener_engine.FILTER_IDS), "قائمة الأزرار انحرفت عن القائمة المفهومة"
+    r = client.post("/api/screener/run", json={"symbols": ["EURUSD"], "filters": published})
+    assert r.status_code == 200, r.text
+
+
+def test_scan_symbol_list_is_capped(client):
+    """400 رمز = 400 طلب متسلسل للمزوّد بمفتاح مشترك — كانت تُقبل كما هي (`total: 400`)."""
+    over = screener_engine.MAX_SCAN_SYMBOLS + 1
+    r = client.post("/api/screener/run", json={"symbols": ["EURUSD"] * over})
+    assert r.status_code == 422, r.text
+    at_cap = client.post(
+        "/api/screener/run", json={"symbols": ["EURUSD"] * screener_engine.MAX_SCAN_SYMBOLS}
+    )
+    assert at_cap.status_code == 200, at_cap.text
+
+
+def test_scan_default_symbol_set_fits_under_the_cap(client):
+    """السقف لا يمنع فحص خريطة الرموز كاملةً — وإلا كان حدّاً يكسر استعمالاً قائماً."""
+    assert len(screener_engine.DEFAULT_SYMBOLS) <= screener_engine.MAX_SCAN_SYMBOLS
+
+
+@pytest.mark.parametrize("body", [{"symbols": []}, {"filters": []}])
+def test_scan_empty_list_is_422_not_silent_default(client, body):
+    """`filters or [...]` كانت تستبدل الفارغ بالافتراضي فيرى المتداول نتائج فلترٍ لم يختره."""
+    r = client.post("/api/screener/run", json={"symbols": ["EURUSD"], **body})
+    assert r.status_code == 422, r.text
+
+
+def test_scan_absurd_symbol_string_rejected(client):
+    r = client.post("/api/screener/run", json={"symbols": ["E" * 300]})
+    assert r.status_code == 422, r.text
+
+
+def test_scan_unknown_timeframe_is_422_not_silently_15m(client):
+    r = client.post("/api/screener/run", json={"symbols": ["EURUSD"], "timeframe": "1h"})
+    assert r.status_code == 422, r.text
+    ok = client.post("/api/screener/run", json={"symbols": ["EURUSD"], "timeframe": "1H"})
+    assert ok.status_code == 200, ok.text
+
+
+@pytest.mark.parametrize("tf", sorted(main.TF_SECONDS))
+def test_scan_accepts_every_supported_timeframe(client, tf):
+    """كل فريم يعرضه الشارت مقبول بالفحص — الحدّ يطابق الفريمات القائمة لا قائمةً جديدة."""
+    r = client.post("/api/screener/run", json={"symbols": ["EURUSD"], "timeframe": tf})
+    assert r.status_code == 200, r.text
+
+
+# ------------------------------------------------------------ الاختبار الخلفي
+
+
+def test_backtest_with_valid_body_still_works(client):
+    r = client.post("/api/backtest", json={"symbol": "EURUSD", "timeframe": "15m", "strategy": "ma_cross"})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["symbol"] == "EURUSD" and body["timeframe"] == "15m"
+    assert "stats" in body and "equity_curve" in body
+
+
+@pytest.mark.parametrize("bad", [0, -5, main.MAX_MA_PERIOD + 1])
+def test_backtest_impossible_period_is_422_not_500(client, bad):
+    r = client.post("/api/backtest", json={"symbol": "EURUSD", "slow": bad})
+    assert r.status_code == 422, r.text
+    assert "slow" in r.text
+
+
+def test_backtest_equal_periods_rejected_only_for_ma_cross(client):
+    same = {"symbol": "EURUSD", "fast": 9, "slow": 9}
+    assert client.post("/api/backtest", json={**same, "strategy": "ma_cross"}).status_code == 422
+    assert client.post("/api/backtest", json={**same, "strategy": "rsi_reversal"}).status_code == 200
+
+
+def test_backtest_inverted_rsi_thresholds_are_422(client):
+    """90/10 كانت تُقبل وتُخرج «نسبة نجاح» لصفقة ناتجة عن شرطٍ يتحقّق على كل شمعة."""
+    r = client.post(
+        "/api/backtest", json={"symbol": "EURUSD", "strategy": "rsi_reversal", "rsi_low": 90, "rsi_high": 10}
+    )
+    assert r.status_code == 422, r.text
+
+
+@pytest.mark.parametrize("thresholds", [{"rsi_low": 0}, {"rsi_high": 100}, {"rsi_low": -20}, {"rsi_high": 140}])
+def test_backtest_unreachable_rsi_threshold_is_422(client, thresholds):
+    """RSI محصور 0–100: عتبة خارجه لا تُلمس أبداً = «الاستراتيجية بلا إشارات» وهي عتبة مستحيلة."""
+    r = client.post("/api/backtest", json={"symbol": "EURUSD", "strategy": "rsi_reversal", **thresholds})
+    assert r.status_code == 422, r.text
+
+
+def test_backtest_narrow_but_real_rsi_band_passes(client):
+    """الحدّ يرصد المستحيل لا الضيّق: 45/55 نطاقٌ يستعمله متداول فعلاً."""
+    r = client.post(
+        "/api/backtest", json={"symbol": "EURUSD", "strategy": "rsi_reversal", "rsi_low": 45, "rsi_high": 55}
+    )
+    assert r.status_code == 200, r.text
+
+
+def test_backtest_unknown_timeframe_is_422_not_silently_15m(client):
+    """النتيجة تُعاد موسومةً بالفريم المكتوب، فالإبدال الصامت = نتيجة 15m يقرؤها المتداول ساعةً."""
+    r = client.post("/api/backtest", json={"symbol": "EURUSD", "timeframe": "1h"})
+    assert r.status_code == 422, r.text
+
+
+def test_backtest_absurd_symbol_string_rejected(client):
+    r = client.post("/api/backtest", json={"symbol": "E" * 300})
+    assert r.status_code == 422, r.text
+
+
+def test_indicator_alert_period_rule_unchanged(client):
+    """القاعدة انتقلت لدالّة مشتركة — هذا يثبت أن تنبيه المؤشر ما زال يطبّقها بنفس الرسالة."""
+    r = client.post(
+        "/api/indicator-alerts",
+        json={"symbol": "EURUSD", "alert_type": "ma_cross", "condition": "cross_up", "fast_period": 0},
+    )
+    assert r.status_code == 422, r.text
+    assert "fast_period" in r.text

@@ -1,7 +1,7 @@
 """Symbol screener — scan MATRIX watchlist with indicator filters."""
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 import indicators as ind
 import twelve_data as market
@@ -15,6 +15,17 @@ FilterId = Literal[
     "bullish",
     "bearish",
 ]
+
+# نفس القائمة التي تفهمها حلقة المطابقة أدناه، مشتقّة من `FilterId` لا مكتوبة ثانيةً: معرّف فلتر
+# لا تعرفه الحلقة كان **يُقابَل بقائمة فارغة صامتة** — يقرؤها المتداول «لا تطابق» وهي «لم يُفهم
+# الفلتر»، وهو نفس الالتباس الذي أُضيف `scanned`/`failed` لإزالته. المسار يرفضه بـ422 الآن.
+FILTER_IDS: tuple[str, ...] = get_args(FilterId)
+
+# سقف رموز الفحص بالطلب الواحد. كل رمز **طلبٌ متسلسل للمزوّد** داخل طلب HTTP واحد، والمفتاح
+# مشترك بين كل مستخدمي الخادم (الخطة المجانية ~8 طلبات/دقيقة): طلبٌ بـ400 رمز كان يُقبل كما هو
+# فيحجز عاملاً دقائق ويستنزف حدّ المزوّد على الجميع. الخريطة 21 رمزاً والافتراضي 12، والسقف
+# يترك مساحةً لرموز قائمة متابعة مخصّصة خارج الخريطة.
+MAX_SCAN_SYMBOLS = 30
 
 DEFAULT_SYMBOLS = list(market.SYMBOL_MAP.keys())
 # نسبة التغيّر بالنتيجة تبقى «آخر 80 شمعة» كما تعرضها الواجهة (`screenerChangeSpan`)، بينما المؤشرات
