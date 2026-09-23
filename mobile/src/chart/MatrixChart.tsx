@@ -690,11 +690,28 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   }, [lens, extraInd]);
 
   const availableH = Math.max(0, height - (interactive ? 8 : 0));
+  // صفحة اللوحات: الطيّ كان يُخفي الأولوية الأدنى نهائياً فلا سبيل لرؤيتها إلا بإلغاء
+  // اختيار مؤشّر آخر. الصفحة مخزّنة مع **مفتاح الاختيار** لا وحدها: تغيُّر مجموعة
+  // المؤشرات يعيدها إلى الصفر اشتقاقاً بلا useEffect وبلا دورة رسم زائدة.
+  const paneSelKey = useMemo(() => [...selectedInd].sort().join(','), [selectedInd]);
+  const [paneNav, setPaneNav] = useState<{ key: string; page: number }>({ key: '', page: 0 });
+  const panePage = paneNav.key === paneSelKey ? paneNav.page : 0;
   const panePlan = useMemo(
-    () => planPanes({ active: selectedInd, availableH, dense }),
-    [selectedInd, availableH, dense]
+    () => planPanes({ active: selectedInd, availableH, dense, page: panePage }),
+    [selectedInd, availableH, dense, panePage]
   );
-  const { paneH, mainH, collapsed: collapsedPanes, barH: collapsedBarH } = panePlan;
+  const {
+    paneH,
+    mainH,
+    collapsed: collapsedPanes,
+    barH: collapsedBarH,
+    page: panePageShown,
+    pageCount: panePageCount,
+  } = panePlan;
+  const nextPanePage = useCallback(
+    () => setPaneNav({ key: paneSelKey, page: panePageShown + 1 }),
+    [paneSelKey, panePageShown]
+  );
   const indicators = useMemo(() => {
     if (!collapsedPanes.length) return selectedInd;
     const off = new Set(collapsedPanes);
@@ -7933,20 +7950,53 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         </View>
       ) : null}
 
-      {/* شريط اللوحات المطويّة: بديل الفيض الصامت خارج صندوق الشارت */}
+      {/* شريط اللوحات المطويّة: بديل الفيض الصامت خارج صندوق الشارت.
+          وبضغطة واحدة يعرض المطويّ بدل الظاهر — فالمؤشّر المطويّ لم يعد مفقوداً
+          حتى يُلغى اختيار غيره. يبقى نصّاً غير قابل للضغط إذا كانت صفحة واحدة
+          (لا يتّسع ولا لوحة) فلا يَعِد الشريط بتبديل لا يحدث. */}
       {collapsedPanes.length ? (
-        <View
-          accessibilityRole="text"
-          accessibilityLabel={trx.panesCollapsedA11y}
-          style={[styles.collapsedBar, { height: collapsedBarH }]}
-        >
-          <Text numberOfLines={1} style={styles.collapsedCount}>
-            {`${trx.panesCollapsed} ${collapsedPanes.length}`}
-          </Text>
-          <Text numberOfLines={1} style={styles.collapsedNames}>
-            {collapsedBarText(collapsedPanes)}
-          </Text>
-        </View>
+        panePageCount > 1 ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={trx.panesCollapsedA11y}
+            accessibilityHint={trx.panesPageA11y}
+            onPress={nextPanePage}
+            hitSlop={6}
+            style={({ pressed }) => [
+              styles.collapsedBar,
+              styles.collapsedBarTappable,
+              { height: collapsedBarH },
+              pressed && styles.collapsedBarPressed,
+            ]}
+          >
+            <Text numberOfLines={1} style={styles.collapsedCount}>
+              {`${trx.panesCollapsed} ${collapsedPanes.length}`}
+            </Text>
+            <Text numberOfLines={1} style={styles.collapsedNames}>
+              {collapsedBarText(collapsedPanes)}
+            </Text>
+            {/* عدّاد الصفحة كشارة تيل: أرقام بلا نصّ مترجَم وبلا سهم — السهم اتجاهه
+                ينقلب بين العربية والإنجليزية، ورموز الدوران قد تسقط بخطوط أندرويد. */}
+            <View style={styles.collapsedPageChip}>
+              <Text style={styles.collapsedPage}>
+                {`${panePageShown + 1}/${panePageCount}`}
+              </Text>
+            </View>
+          </Pressable>
+        ) : (
+          <View
+            accessibilityRole="text"
+            accessibilityLabel={trx.panesCollapsedA11y}
+            style={[styles.collapsedBar, { height: collapsedBarH }]}
+          >
+            <Text numberOfLines={1} style={styles.collapsedCount}>
+              {`${trx.panesCollapsed} ${collapsedPanes.length}`}
+            </Text>
+            <Text numberOfLines={1} style={styles.collapsedNames}>
+              {collapsedBarText(collapsedPanes)}
+            </Text>
+          </View>
+        )
       ) : null}
 
       {interactive && !compactUi ? (
@@ -8547,6 +8597,25 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     fontSize: 9,
     fontWeight: '600',
+  },
+  /** الشريط القابل للضغط: حدّ تيل خفيف يميّزه عن الشريط الإخباري الصامت. */
+  collapsedBarTappable: {
+    borderColor: colors.accentBorderGlow,
+  },
+  collapsedBarPressed: {
+    backgroundColor: colors.accentFaint,
+  },
+  /** شارة «2/3»: خلفية تيل خفيفة تقول إن الشريط زرّ لا نصّ. */
+  collapsedPageChip: {
+    backgroundColor: colors.accentSoft,
+    borderRadius: radii.sm,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  collapsedPage: {
+    color: colors.accent,
+    fontSize: 9,
+    fontWeight: '800',
   },
   dock: {
     marginTop: 4,

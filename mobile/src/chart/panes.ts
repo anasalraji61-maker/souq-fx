@@ -291,6 +291,10 @@ export type PanePlan = {
   collapsed: readonly string[];
   /** ارتفاع شريط المطويّات (0 إذا لا يوجد مطويّ). */
   barH: number;
+  /** صفحة اللوحات المعروضة (0 = الأعلى أولوية) بعد الحصر داخل `pageCount`. */
+  page: number;
+  /** عدد صفحات اللوحات عند الضيق (1 = الكل يتّسع، فلا تبديل). */
+  pageCount: number;
 };
 
 function rankOf(id: string): number {
@@ -310,6 +314,13 @@ export function planPanes(opts: {
   active: readonly string[];
   availableH: number;
   dense: boolean;
+  /**
+   * صفحة اللوحات عند الضيق. الطيّ كان يُخفي الأولوية الأدنى **نهائياً** فلا سبيل لرؤيتها
+   * إلا بإلغاء اختيار مؤشّر آخر؛ فصارت اللوحات صفحاتٍ يدوّرها المتداول بضغطة على الشريط
+   * بلا إلغاء أي اختيار. أي رقم مقبول — يُحصر دورياً داخل `pageCount` — فلا يحتاج
+   * المستدعي لتصفيره عند تغيّر الارتفاع أو عدد المؤشرات.
+   */
+  page?: number;
 }): PanePlan {
   const gap = paneGap(opts.dense);
   const availableH = Math.max(0, Math.floor(opts.availableH));
@@ -317,7 +328,16 @@ export function planPanes(opts: {
   const panes = PANE_IDS.filter((id) => activeSet.has(id));
 
   if (panes.length === 0) {
-    return { paneH: MAX_PANE_H, mainH: availableH, gap, shown: [], collapsed: [], barH: 0 };
+    return {
+      paneH: MAX_PANE_H,
+      mainH: availableH,
+      gap,
+      shown: [],
+      collapsed: [],
+      barH: 0,
+      page: 0,
+      pageCount: 1,
+    };
   }
 
   const step = MIN_PANE_H + gap;
@@ -333,6 +353,8 @@ export function planPanes(opts: {
   let shownIds: string[];
   let collapsedIds: string[];
   let barH: number;
+  let page = 0;
+  let pageCount = 1;
 
   if (panes.length <= fitsAll) {
     shownIds = panes.slice();
@@ -340,7 +362,13 @@ export function planPanes(opts: {
     barH = 0;
   } else {
     const fits = Math.max(0, Math.floor(Math.max(0, paneBudget - barCost) / step));
-    const keep = new Set([...panes].sort((a, b) => rankOf(a) - rankOf(b)).slice(0, fits));
+    const ordered = [...panes].sort((a, b) => rankOf(a) - rankOf(b));
+    // fits = 0 يعني لا تتّسع ولا لوحة واحدة: صفحة واحدة فارغة، لا قسمة على صفر ولا
+    // شريط يَعِد بتبديل لا يحدث.
+    pageCount = fits > 0 ? Math.ceil(ordered.length / fits) : 1;
+    const raw = Number.isFinite(opts.page) ? Math.floor(opts.page as number) : 0;
+    page = fits > 0 ? ((raw % pageCount) + pageCount) % pageCount : 0;
+    const keep = new Set(ordered.slice(page * fits, page * fits + fits));
     shownIds = panes.filter((id) => keep.has(id));
     collapsedIds = panes.filter((id) => !keep.has(id));
     barH = collapsedIds.length ? COLLAPSED_BAR_H : 0;
@@ -356,7 +384,7 @@ export function planPanes(opts: {
   const used = shownIds.length * (paneH + gap) + barCostUsed;
   const mainH = Math.max(minMainH, availableH - used);
 
-  return { paneH, mainH, gap, shown: shownIds, collapsed: collapsedIds, barH };
+  return { paneH, mainH, gap, shown: shownIds, collapsed: collapsedIds, barH, page, pageCount };
 }
 
 /** نص شريط المطويّات: «+3 مطويّة: RSI · MACD · ATR» (يقصّ الأسماء الطويلة). */

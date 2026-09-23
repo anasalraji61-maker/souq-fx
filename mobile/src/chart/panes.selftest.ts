@@ -116,4 +116,86 @@ assert.equal(collapsedBarText(['rsi', 'macd']), 'RSI · MACD');
 assert.equal(collapsedBarText(['rsi', 'macd', 'atr', 'cci', 'adx']), 'RSI · MACD · ATR · CCI …');
 assert.equal(collapsedBarText([]), '');
 
+// ===== صفحات اللوحات: ضغطة الشريط تُظهر المطويّ بدل الظاهر =====
+
+// الصفحة 0 = السلوك السابق حرفياً (الأعلى أولوية أولاً) — لا انحدار لمن لا يضغط الشريط
+{
+  const active = [...PANE_IDS];
+  const a = plan(active, 420);
+  const b = planPanes({ active, availableH: 420, dense: false, page: 0 });
+  assert.deepEqual(a.shown, b.shown);
+  assert.deepEqual(a.collapsed, b.collapsed);
+  assert.equal(a.page, 0);
+  assert.ok(a.pageCount > 1, `pageCount=${a.pageCount}`);
+}
+
+// الصفحات تقسّم اللوحات قسمةً تامّة: كل لوحة تظهر بصفحة واحدة بالضبط عبر الدورة كاملة
+{
+  const active = ['volume', 'rsi', 'macd', 'stoch', 'atr', 'adx', 'cci', 'obv', 'mfi'];
+  const p0 = planPanes({ active, availableH: 420, dense: false, page: 0 });
+  assert.ok(p0.collapsed.length > 0, 'expected collapsing at 420px with 9 panes');
+  const seen = new Set<string>();
+  for (let i = 0; i < p0.pageCount; i++) {
+    const p = planPanes({ active, availableH: 420, dense: false, page: i });
+    assert.equal(p.page, i);
+    assert.equal(p.pageCount, p0.pageCount);
+    assert.equal(p.shown.length + p.collapsed.length, active.length);
+    // لا لوحة بصفحتين
+    for (const id of p.shown) {
+      assert.ok(!seen.has(id), `pane shown twice across pages: ${id}`);
+      seen.add(id);
+    }
+    // الظاهر يبقى بترتيب الرسم لا بترتيب الأولوية
+    const order = p.shown.map((id) => PANE_IDS.indexOf(id));
+    for (let j = 1; j < order.length; j++) assert.ok(order[j] > order[j - 1], 'draw order broken');
+    // ولا فيض بأي صفحة
+    const total = p.mainH + p.shown.length * (p.paneH + p.gap) + (p.barH ? p.barH + p.gap : 0);
+    assert.ok(total <= 420, `overflow on page ${i}: ${total}`);
+  }
+  assert.equal(seen.size, active.length, 'every pane must be reachable by paging');
+}
+
+// الدورة مغلقة: بعد آخر صفحة تعود الأولى — والرقم غير المحصور يُحصر دورياً
+{
+  const active = ['volume', 'rsi', 'macd', 'stoch', 'atr', 'adx', 'cci', 'obv', 'mfi'];
+  const n = planPanes({ active, availableH: 420, dense: false, page: 0 }).pageCount;
+  const first = planPanes({ active, availableH: 420, dense: false, page: 0 });
+  for (const raw of [n, 2 * n, 97 * n]) {
+    const p = planPanes({ active, availableH: 420, dense: false, page: raw });
+    assert.equal(p.page, 0, `page ${raw} should wrap to 0`);
+    assert.deepEqual(p.shown, first.shown);
+  }
+  // الأرقام السالبة (لا تحدث من الواجهة لكن لا تكسر الدالة) وغير الرقمية
+  assert.equal(planPanes({ active, availableH: 420, dense: false, page: -1 }).page, n - 1);
+  assert.equal(planPanes({ active, availableH: 420, dense: false, page: Number.NaN }).page, 0);
+  assert.equal(planPanes({ active, availableH: 420, dense: false, page: 2.7 }).page, 2 % n);
+}
+
+// إطار لا يتّسع ولا للوحة واحدة: صفحة واحدة فقط — فلا يَعِد الشريط بتبديل لا يحدث
+{
+  const active = ['volume', 'rsi', 'macd'];
+  for (const h of [0, 40, 120]) {
+    const p = planPanes({ active, availableH: h, dense: false, page: 3 });
+    if (p.shown.length === 0) {
+      assert.equal(p.pageCount, 1, `h=${h} pageCount=${p.pageCount}`);
+      assert.equal(p.page, 0);
+    }
+  }
+}
+
+// لا طيّ أصلاً: صفحة واحدة مهما كان الرقم الممرَّر
+{
+  const p = planPanes({ active: ['volume', 'rsi'], availableH: 600, dense: false, page: 5 });
+  assert.equal(p.collapsed.length, 0);
+  assert.equal(p.pageCount, 1);
+  assert.equal(p.page, 0);
+}
+
+// بلا لوحات إطلاقاً
+{
+  const p = planPanes({ active: [], availableH: 420, dense: false, page: 4 });
+  assert.equal(p.pageCount, 1);
+  assert.equal(p.page, 0);
+}
+
 console.log('panes.selftest: PASS');

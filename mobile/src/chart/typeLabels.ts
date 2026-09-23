@@ -96,6 +96,7 @@ export type ChartExtraLabels = {
   nothingToUndo: string;
   panesCollapsed: string;
   panesCollapsedA11y: string;
+  panesPageA11y: string;
   switching: string;
   switchingA11y: string;
   syncTimeOn: string;
@@ -111,6 +112,7 @@ const CHART_EXTRA: Record<'ar' | 'en' | 'ku', ChartExtraLabels> = {
     nothingToUndo: 'لا يوجد ما يُتراجَع عنه',
     panesCollapsed: 'لا تتّسع',
     panesCollapsedA11y: 'لوحات مؤشرات مطويّة: ارتفاع الشارت لا يتّسع لها',
+    panesPageA11y: 'اضغط لعرض اللوحات المطويّة بدل الظاهرة',
     switching: 'جارٍ…',
     switchingA11y: 'جارٍ تحميل الفريم الجديد — المعروض بيانات سابقة',
     syncTimeOn: 'مزامنة الزمن',
@@ -124,6 +126,7 @@ const CHART_EXTRA: Record<'ar' | 'en' | 'ku', ChartExtraLabels> = {
     nothingToUndo: 'Nothing to undo',
     panesCollapsed: 'No room',
     panesCollapsedA11y: 'Indicator panes collapsed: the chart is not tall enough',
+    panesPageA11y: 'Tap to show the collapsed panes instead of the visible ones',
     switching: 'Loading…',
     switchingA11y: 'Loading the new timeframe — what is shown is the previous data',
     syncTimeOn: 'Time sync',
@@ -137,6 +140,7 @@ const CHART_EXTRA: Record<'ar' | 'en' | 'ku', ChartExtraLabels> = {
     nothingToUndo: 'هیچ شتێک نییە بگەڕێندرێتەوە',
     panesCollapsed: 'جێگا نییە',
     panesCollapsedA11y: 'پانێلی ئاماژەکان نوقاون: بەرزی چارتەکە بەشیان ناکات',
+    panesPageA11y: 'کلیک بکە بۆ پیشاندانی پانێلە نوقاوەکان لە جیاتی ئەوانەی دیارن',
     switching: 'بارکردن…',
     switchingA11y: 'بارکردنی ماوەی نوێ — ئەوەی پیشان دەدرێت داتای پێشووە',
     syncTimeOn: 'هاوکاتیی کات',
