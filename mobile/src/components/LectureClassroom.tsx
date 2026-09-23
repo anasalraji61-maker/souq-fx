@@ -19,6 +19,7 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { playSoftClick } from '../audio/playSoftClick';
 import { API_URL, api, type ChartSeries } from '../api';
 import type { AcademyLecture, ScriptSegment } from '../academy';
+import { parseStoredIndex, resumeSegmentIndex } from '../academyResume';
 import { MatrixChart } from '../chart/MatrixChart';
 import { academyChartFor } from '../chart/academyChart';
 import { mockSeries } from '../mock';
@@ -37,6 +38,20 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const { user } = useAuth();
   const [lecture, setLecture] = useState<AcademyLecture | null>(null);
   const [segIndex, setSegIndex] = useState(0);
+  /**
+   * هل استُعيد موضع المتداول بعد؟ الموضع كان يُحفظ بمكانين (AsyncStorage وجدول
+   * `academy_progress` بالخادم) و**لا يُقرأ من أيٍّ منهما**: كل فتح للمحاضرة يبدأ من
+   * المقطع الأول مهما بلغ المتداول. وهذا الحارس شرطٌ لا تحسين: أثر الحفظ يعمل فور
+   * وصول المحاضرة، فبلا انتظار الاستعادة يُكتب 0 فوق الموضع المخزَّن قبل قراءته.
+   */
+  const [restored, setRestored] = useState(false);
+  /**
+   * الموضع الذي وُضع المتداول عنده بآخر استعادة. الأثر أدناه يُعاد تشغيله حين تصل
+   * المصادقة متأخّرة (فتحُ محاضرة بإقلاع بارد)، وبلا هذا كانت الاستعادة الثانية تسحب
+   * مَن تقدّم بالفعل إلى صفّ خادم أقدم — أي قفزة للخلف وسط المحاضرة. فإن كان المتداول
+   * قد تحرّك عن موضع الاستعادة يبقى مكانه، وإلا يُطبَّق ما وصل من الخادم.
+   */
+  const restoredAtRef = useRef<number | null>(null);
   const [paused, setPaused] = useState(false);
   const [question, setQuestion] = useState('');
   const [asking, setAsking] = useState(false);
@@ -76,8 +91,51 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
     };
   }, [schoolId, chartMeta.symbol, chartMeta.tf]);
 
+  // هوية الحساب لا كائنه: الأثر أدناه يُعاد تشغيله حين تصل المصادقة (قد تصل بعد فتح
+  // القاعة، فبلا ذلك لا يُقرأ صفّ الخادم أبداً) — لا مع كل تحديث لبيانات المستخدم.
+  const userId = user?.user_id ?? null;
+
   useEffect(() => {
     let alive = true;
+    // إعادة تشغيل الأثر (تبديل محاضرة أو وصول المصادقة) تُعيد الحارس: لا حفظ قبل
+    // استعادة الموضع من جديد.
+    setRestored(false);
+
+    /**
+     * أين توقّف المتداول بهذه المحاضرة. **الخادم أولاً** (يتبعه بين أجهزته وبعد إعادة
+     * التثبيت) ثم المحفوظ محلياً حين لا حساب أو تعذّر الاتصال — وكلاهما كان يُكتب ولا
+     * يُقرأ إطلاقاً قبل هذا.
+     *
+     * وموضعٌ عند **آخر** مقطع يعني محاضرة منتهية، فتُفتح من أولها لا من خاتمتها:
+     * هذا الشرط وحده يغطّي الحالتين بلا قراءة عَلَم `completed`، فيصحّ للمجهول أيضاً
+     * (لا صفّ خادم له)، ويُبقي استئناف **إعادة** مشاهدة متوقّفة بمنتصفها يعمل كما هو.
+     */
+    const resolveResume = async (total: number): Promise<number> => {
+      let stored: number | null = null;
+      if (userId !== null) {
+        try {
+          const res = await api.getProgress();
+          const row = res.progress.find(
+            (p) => p.school_id === schoolId && p.lecture_id === lectureId
+          );
+          if (row) stored = row.segment_index;
+        } catch {
+          // الخادم غير متاح — يُعتمد المحفوظ محلياً أدناه
+        }
+      }
+      if (stored === null) {
+        try {
+          stored = parseStoredIndex(
+            await AsyncStorage.getItem(`matrix.progress.${schoolId}.${lectureId}`)
+          );
+        } catch {
+          // تخزين الجهاز غير متاح — يُبدأ من الأول
+        }
+      }
+      // القصّ وشرط «انتهت» بـ`academyResume` (خالص، ومغطّى بـ`academyResume.selftest.ts`)
+      return resumeSegmentIndex(stored, total);
+    };
+
     (async () => {
       try {
         try {
@@ -87,13 +145,25 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           // الصوت غير متاح في Expo Go لهذا الإصدار — نكمل بدون تهيئة الصوت
         }
         const lec = await api.academyLecture(schoolId, lectureId);
+        const resume = await resolveResume(lec.script_segments?.length ?? 0);
         if (alive) {
+          // الموضع والمحاضرة بدفعة واحدة: لو ضُبط الموضع بعدها لبدأ السرد من المقطع
+          // الأول ثم قفز، ولأعاد تحميل الصوت مرتين.
+          setSegIndex((cur) => {
+            const moved = restoredAtRef.current !== null && cur !== restoredAtRef.current;
+            return moved ? cur : resume;
+          });
+          restoredAtRef.current = resume;
           setLecture(lec);
           setLectureFallback(false);
         }
       } catch {
         if (alive) {
           setLectureFallback(true);
+          // المحاضرة الاحتياطية محتوى عام بمقطعين — تُبدأ من أولها دائماً، وإلا بقي
+          // موضعٌ أبعد من طولها فيصير `current` غير معرّف.
+          setSegIndex(0);
+          restoredAtRef.current = 0;
           setLecture({
             id: lectureId,
             title: t.lectureFallbackTitle,
@@ -118,7 +188,12 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           });
         }
       } finally {
-        if (alive) setLoading(false);
+        if (alive) {
+          setLoading(false);
+          // يُرفع دائماً — ولو فشل التحميل وعُرضت المحاضرة الاحتياطية — وإلا توقّف
+          // حفظ التقدّم بصمت لبقية الجلسة.
+          setRestored(true);
+        }
       }
     })();
     return () => {
@@ -126,7 +201,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
       void soundRef.current?.unloadAsync();
       soundRef.current = null;
     };
-  }, [schoolId, lectureId]);
+  }, [schoolId, lectureId, userId]);
 
   const segments: ScriptSegment[] = lecture?.script_segments ?? [];
   const current = segments[segIndex];
@@ -137,7 +212,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   }, [segIndex, segments.length]);
 
   useEffect(() => {
-    if (!lecture) return;
+    if (!lecture || !restored) return;
     const key = `matrix.progress.${schoolId}.${lectureId}`;
     void AsyncStorage.setItem(key, String(segIndex));
     if (user) {
@@ -148,7 +223,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         completed: segIndex >= segments.length - 1,
       });
     }
-  }, [segIndex, schoolId, lectureId, lecture, user, segments.length]);
+  }, [segIndex, schoolId, lectureId, lecture, restored, user, segments.length]);
 
   useEffect(() => {
     let cancelled = false;
