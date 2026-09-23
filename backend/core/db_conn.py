@@ -16,13 +16,32 @@ db.py يستوردهما من هنا بدل تعريفهما محلياً — ك
 """
 from __future__ import annotations
 
+import os
 import sqlite3
 from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parent.parent / "matrix.db"
+# مسار القاعدة قابل للضبط بمتغيّر بيئة — **شرط نشر لا رفاهية**.
+# `docs/DEPLOYMENT.md` يشترط قرصاً دائماً (persistent volume) لـ`matrix.db` وإلا مُحي كل
+# تسجيل مستخدم/تنبيه/رسالة عند كل إعادة نشر. لكن المسار كان مثبَّتاً داخل الصورة
+# (`/app/matrix.db`)، ومنصّات الاستضافة (Railway/Render/Fly.io) تُركّب القرص الدائم على
+# **مسار تختاره أنت** (`/data` عادةً) — ولا يمكن تركيبه فوق `/app` لأن ذلك يحجب شيفرة
+# التطبيق نفسها. أي أن الشرط المكتوب بالوثيقة كان **غير قابل للتنفيذ**: يُربَط القرص،
+# ويبدو النشر ناجحاً، وتُمحى قاعدة المتداولين بصمت مع كل إعادة نشر.
+# بلا المتغيّر: نفس المسار السابق حرفياً — فلا يتغيّر شيء محليّاً ولا على الـVPS.
+_ENV_DB_PATH = (os.getenv("MATRIX_DB_PATH") or "").strip()
+DB_PATH = (
+    Path(_ENV_DB_PATH).expanduser()
+    if _ENV_DB_PATH
+    else Path(__file__).resolve().parent.parent / "matrix.db"
+)
 
 
 def _conn() -> sqlite3.Connection:
+    # مجلّد القرص الدائم قد يكون فارغاً عند أول إقلاع؛ بلا إنشائه يرمي sqlite
+    # «unable to open database file» — رسالة لا تدلّ على السبب إطلاقاً.
+    parent = DB_PATH.parent
+    if not parent.is_dir():
+        parent.mkdir(parents=True, exist_ok=True)
     c = sqlite3.connect(DB_PATH)
     c.row_factory = sqlite3.Row
     return c
