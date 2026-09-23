@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
+import { formatPct } from '../chart/dailyChange';
 
 /** فريم الفحص السريع — موضعٌ واحد بدل تكراره بالنداء وبنصّ «لا تطابق». */
 const TF = '15m';
@@ -168,24 +169,54 @@ export function ScreenerMini() {
       ) : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={[styles.hits, rtl && styles.hitsRtl]}>
-          {hits.map((h) => (
-            <View key={h.symbol} style={styles.hit}>
-              <Text style={styles.sym}>{h.symbol}</Text>
-              <Text style={styles.meta}>
-                RSI {h.rsi} ·{' '}
-                <Text
-                  style={{
-                    color: h.change_pct >= 0 ? colors.bull : colors.bear,
-                    fontWeight: '800',
-                  }}
-                >
-                  {h.change_pct >= 0 ? '+' : ''}
-                  {h.change_pct}%
-                </Text>{' '}
-                {t.screenerChangeSpan}
-              </Text>
-            </View>
-          ))}
+          {hits.map((h) => {
+            /**
+             * **نسبة التغيّر كانت تُطبع خاماً، وصفرُها أخضر.** الشرط `>= 0` يُدخل الصفر بجهة
+             * الصعود: فزوجٌ لم يتحرّك (أو تحرّك حركةً تُقرَّب إلى صفر) يقف بالقائمة **«+0%»
+             * بالأخضر** كأنه صاعد — والماسح يرتّب نتائجه بمقدار الحركة تنازلياً، فأصغرها حركةً هي
+             * بالضبط ما يقع بذيل القائمة حيث يُقرأ هذا. **وسالبُ الصفر أسوأ**: الخادم يقرّب
+             * بـ`round(chg, 2)` فيُخرج `-0.0` لحركةٍ هابطة دقيقة، و`-0 >= 0` صحيحٌ بجافاسكربت —
+             * أي أن **الهبوط** كان يُكتب «+0%» بالأخضر.
+             *
+             * والتنسيق كان بلا منازل ثابتة (`{h.change_pct}%` يطبع «0.5%» لا «0.50%»)، فيخالف
+             * `formatPct` المعتمد بأربعة مخارج تُقرأ على الشاشة: علامة الناقص الطباعية «−»،
+             * ومنزلتان دائماً، وصفرٌ بلا إشارة، وشَرطةٌ لقيمة غير منتهية بدل «NaN%». الآن الدالّة
+             * نفسها التي تكتب بها قائمةُ المتابعة وشريطُ الشارت هذا الرقم بالضبط.
+             *
+             * ولا لون إلا بحركة حقيقية: ما دون العتبة يبقى مكتوماً، فلا وميضَ أخضر على ضجيج كسور.
+             */
+            const pct =
+              typeof h.change_pct === 'number' && Number.isFinite(h.change_pct) ? h.change_pct : null;
+            /**
+             * الاتجاه مشتقٌّ من **الرقم المطبوع** لا من الخام. `formatPct` تقرّب لمنزلتين ثم تكتب
+             * «0.00%» بلا إشارة لكل ما يقرّب إلى صفر، فاشتقاق اللون من حاصل التقريب **نفسه** يجعل
+             * اللون والكلمة متطابقين بالبناء لا بالمصادفة — وهي قاعدة هذا التطبيق (شارة الأخبار
+             * عولجت بها). والعتبة الناتجة 0.005 بالضبط، أي **قاعدة «ثابت» بـ`dailyChange` نفسها**،
+             * عدا القيمة الواحدة ‎−0.005‎ التي تطبعها `formatPct` «0.00%»: بغير هذا الاشتقاق كانت
+             * ستُكتب صفراً **بالأحمر**.
+             */
+            const pctRounded = pct == null ? null : Math.round(pct * 100) / 100;
+            const pctDir =
+              pctRounded == null || pctRounded === 0 ? 'flat' : pctRounded > 0 ? 'up' : 'down';
+            return (
+              <View key={h.symbol} style={styles.hit}>
+                <Text style={styles.sym}>{h.symbol}</Text>
+                <Text style={styles.meta}>
+                  RSI {h.rsi} ·{' '}
+                  <Text
+                    style={[
+                      styles.metaPct,
+                      pctDir === 'up' && styles.metaPctUp,
+                      pctDir === 'down' && styles.metaPctDown,
+                    ]}
+                  >
+                    {pct != null ? formatPct(pct) : '—'}
+                  </Text>{' '}
+                  {t.screenerChangeSpan}
+                </Text>
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
     </View>
@@ -232,4 +263,8 @@ const styles = StyleSheet.create({
   },
   sym: { color: colors.text, fontWeight: '800', fontSize: 12 },
   meta: { color: colors.textDim, fontSize: 10 },
+  /** لون النسبة يأتي من الاتجاه وحده — بلا اتجاه تبقى بلون `meta` المكتوم. */
+  metaPct: { fontWeight: '800' },
+  metaPctUp: { color: colors.bull },
+  metaPctDown: { color: colors.bear },
 });

@@ -33,6 +33,7 @@ import { VotePanel } from '../components/VotePanel';
 import { FrameSizedGrid } from '../components/FrameSizedGrid';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import { formatPrice } from '../chart/math';
+import { formatPct } from '../chart/dailyChange';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { isFreshTick } from '../chart/dataSource';
 import { ensureWatchlistLoaded, subscribeWatchlist } from '../chart/watchlistStore';
@@ -692,43 +693,63 @@ export function ToolsScreen() {
           <FrameSizedGrid
             storageKey="matrix.tools.screener.order.v1"
             showAll
-            items={results.slice(0, 8).map((r) => ({
-              id: r.symbol,
-              node: (
-                <Pressable
-                  accessibilityRole="button"
-                  style={({ pressed }) => [
-                    styles.hitCard,
-                    pressed && {
-                      opacity: buttons.pressedOpacity,
-                      transform: [{ scale: buttons.pressedScale }],
-                    },
-                  ]}
-                  onPress={() => openOnChart(r.symbol)}
-                  accessibilityLabel={`${t.screenerOpenChartA11y}: ${r.symbol} ${scanInfo.tf}`}
-                >
-                  <Text style={[styles.sym, { textAlign: align }]}>{r.symbol}</Text>
-                  <Text style={[styles.meta, { textAlign: align }]}>
-                    {/* منازل السعر حسب الأداة لا حجم الرقم: كان هذا آخر موضع بالتطبيق يطبع سعراً خاماً
-                        من الباك-إند — «157.4» للين و«1.085» لليورو بالسطر الذي يفتح عليه المتداول الشارت. */}
-                    {formatPrice(r.last, r.symbol)} · RSI {r.rsi} ·{' '}
-                    <Text
-                      style={{
-                        color: r.change_pct >= 0 ? colors.bull : colors.bear,
-                        fontWeight: '800',
-                      }}
-                    >
-                      {r.change_pct >= 0 ? '+' : ''}
-                      {r.change_pct}%
-                    </Text>{' '}
-                    <Text style={styles.match}>{t.screenerChangeSpan}</Text>
-                  </Text>
-                  <Text style={[styles.match, { textAlign: align }]}>
-                    {r.filters_matched.map(filterLabel).join(' · ')}
-                  </Text>
-                </Pressable>
-              ),
-            }))}
+            items={results.slice(0, 8).map((r) => {
+              /**
+               * **نسبة التغيّر كانت تُطبع خاماً، وصفرُها أخضر.** الشرط `>= 0` يُدخل الصفر بجهة
+               * الصعود، **وسالبُ الصفر معه**: الخادم يقرّب بـ`round(chg, 2)` فيُخرج `-0.0` لحركةٍ
+               * هابطة دقيقة، و`-0 >= 0` صحيحٌ بجافاسكربت — أي أن الهبوط كان يُكتب «+0%» بالأخضر
+               * بالبطاقة التي يفتح منها المتداول الشارت. والتنسيق كان بلا منازل ثابتة («0.5%» لا
+               * «0.50%») فيخالف `formatPct` المعتمد ببقيّة الشاشات. نفس علاج `ScreenerMini` حرفاً
+               * بحرف — واللوحتان تعرضان نتائج الماسح نفسه.
+               */
+              const pct =
+                typeof r.change_pct === 'number' && Number.isFinite(r.change_pct) ? r.change_pct : null;
+              /**
+               * الاتجاه من **الرقم المطبوع** لا من الخام: اللون يُشتقّ من حاصل تقريب `formatPct`
+               * نفسه، فلا يخالف ما يُقرأ أبداً. العتبة الناتجة 0.005 — قاعدة «ثابت» بـ`dailyChange`
+               * نفسها. (الشرح الكامل بـ`ScreenerMini`، واللوحتان تعرضان نتائج الماسح نفسه.)
+               */
+              const pctRounded = pct == null ? null : Math.round(pct * 100) / 100;
+              const pctDir =
+                pctRounded == null || pctRounded === 0 ? 'flat' : pctRounded > 0 ? 'up' : 'down';
+              return {
+                id: r.symbol,
+                node: (
+                  <Pressable
+                    accessibilityRole="button"
+                    style={({ pressed }) => [
+                      styles.hitCard,
+                      pressed && {
+                        opacity: buttons.pressedOpacity,
+                        transform: [{ scale: buttons.pressedScale }],
+                      },
+                    ]}
+                    onPress={() => openOnChart(r.symbol)}
+                    accessibilityLabel={`${t.screenerOpenChartA11y}: ${r.symbol} ${scanInfo.tf}`}
+                  >
+                    <Text style={[styles.sym, { textAlign: align }]}>{r.symbol}</Text>
+                    <Text style={[styles.meta, { textAlign: align }]}>
+                      {/* منازل السعر حسب الأداة لا حجم الرقم: كان هذا آخر موضع بالتطبيق يطبع سعراً خاماً
+                          من الباك-إند — «157.4» للين و«1.085» لليورو بالسطر الذي يفتح عليه المتداول الشارت. */}
+                      {formatPrice(r.last, r.symbol)} · RSI {r.rsi} ·{' '}
+                      <Text
+                        style={[
+                          styles.hitPct,
+                          pctDir === 'up' && styles.hitPctUp,
+                          pctDir === 'down' && styles.hitPctDown,
+                        ]}
+                      >
+                        {pct != null ? formatPct(pct) : '—'}
+                      </Text>{' '}
+                      <Text style={styles.match}>{t.screenerChangeSpan}</Text>
+                    </Text>
+                    <Text style={[styles.match, { textAlign: align }]}>
+                      {r.filters_matched.map(filterLabel).join(' · ')}
+                    </Text>
+                  </Pressable>
+                ),
+              };
+            })}
           />
         </ScrollView>
       ) : null}
@@ -903,5 +924,9 @@ const styles = StyleSheet.create({
   },
   sym: { color: colors.accent, fontWeight: '800', fontSize: 15 },
   meta: { color: colors.text, fontSize: 13 },
+  /** لون النسبة يأتي من الاتجاه وحده — بلا اتجاه تبقى بلون `meta` كبقية السطر. */
+  hitPct: { fontWeight: '800' },
+  hitPctUp: { color: colors.bull },
+  hitPctDown: { color: colors.bear },
   match: { color: colors.textDim, fontSize: 11 },
 });
