@@ -4172,24 +4172,47 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             )
           )}
-        {indicators.includes('bb') &&
-          overlays.bbUpper.map((v, i) => {
-            const lo = overlays.bbLower[i];
-            if (v == null || lo == null) return null;
-            return (
+        {indicators.includes('bb') && (
+          <>
+            {planBandStrips(
+              overlays.bbUpper,
+              overlays.bbLower,
+              xOf,
+              yOf,
+              bandStripWidth(chartPlotW, source.plot.length)
+            ).map((bnd) => (
               <View
-                key={`bb${i}`}
+                key={`bb${bnd.at}`}
                 style={{
                   position: 'absolute',
-                  left: xOf(i) - 1,
-                  top: yOf(v),
-                  width: 2,
-                  height: Math.max(2, yOf(lo) - yOf(v)),
+                  left: bnd.left,
+                  top: bnd.top,
+                  width: bnd.width,
+                  height: bnd.height,
                   backgroundColor: 'rgba(56,189,248,0.18)',
+                  borderTopWidth: 1,
+                  borderBottomWidth: 1,
+                  borderColor: 'rgba(56,189,248,0.7)',
                 }}
               />
-            );
-          })}
+            ))}
+            {planLineSegments(overlays.bbMid, xOf, yOf).map((sg) => (
+              <View
+                key={`bbm${sg.at}`}
+                style={{
+                  position: 'absolute',
+                  left: sg.left,
+                  top: sg.top - 1,
+                  width: sg.len,
+                  height: 2,
+                  backgroundColor: 'rgba(56,189,248,0.55)',
+                  transform: [{ rotate: `${sg.deg}deg` }],
+                  transformOrigin: 'left center',
+                }}
+              />
+            ))}
+          </>
+        )}
         {indicators.includes('keltner') &&
           keltner &&
           keltner.upper.map((v, i) => {
