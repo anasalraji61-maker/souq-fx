@@ -127,6 +127,15 @@ export function AlertsPanel({
   const providerRealRef = useRef(false);
   /** هل وقع أول تحميل للقائمة؟ — يضمن أن لوحةً رُكِّبت مخفيّة لا تبقى على «جارٍ التحميل» (انظر أثر الفحص). */
   const loadedOnceRef = useRef(false);
+  /**
+   * هل يغطّي التيك الحيّ **رمز النموذج** الآن، ولأيّ رمز؟ — شرطه مطابقٌ حرفياً لشرط `currentPx`
+   * أدناه (`spec ? ticks[spec.symbol] : undefined`) لا لمجرّد وجود المفتاح بالتيكات: رمزٌ بلا
+   * مواصفة (DXY، العملات الرقمية) لا يقرأ `currentPx` تيكَه أصلاً، فلو عُدَّ «مغطّى» لتوقّف
+   * استطلاعه وبقي رقمه جامداً بلا بديل.
+   */
+  const tickCoverRef = useRef<{ sym: string; covered: boolean }>({ sym: '', covered: false });
+  /** آخر دالّة جلب اقتباس (تابعة للرمز الحالي) — لتُنادى فور سقوط التيك، انظر الأثر بعد أثر الاقتباس. */
+  const fetchQuoteRef = useRef<(() => void) | null>(null);
   const [unknownSymbol, setUnknownSymbol] = useState(false);
   /** تأكيد صريح بعد كل حفظ ناجح ("مُفعَّل: EURUSD ≥ 1.0850") — كان التأكيد الوحيد شارة أول تنبيه. */
   const [armed, setArmed] = useState<string | null>(null);
@@ -211,13 +220,42 @@ export function AlertsPanel({
           /* السعر الحالي تحسين اختياري — فشله لا يمنع إضافة التنبيه ولا يمسح آخر سعر معروف */
         });
     };
+    fetchQuoteRef.current = fetchQuote;
+    // **الجلب الأول يقع دائماً** ولو كان التيك يغطّي الرمز: منه وحده يُستنتج الاتجاه لسعرٍ كُتب
+    // قبل وصول الاقتباس، ومنه يأتي الدليل الموجب الذي يبني عليه `unknownSymbol` حكمه
+    // (`providerRealRef`) — والتيك لا يحمل أيّاً منهما. طلبٌ واحد عند الفتح، لا ستّون بالساعة.
     const id = setTimeout(fetchQuote, 600);
-    const poll = setInterval(fetchQuote, QUOTE_REFRESH_MS);
+    const poll = setInterval(() => {
+      // التيك الحيّ يغطّي هذا الرمز ⇒ `currentPx` يقرؤه لا يقرأ `current`، فطلب REST بالدقيقة
+      // إنفاقٌ عند المزوّد لرقمٍ لا يُقرأ. وسقوطُ التغطية يُنادي الجلب فوراً (الأثر التالي)، فلا
+      // يُترك `current` بائتاً احتياطاً.
+      if (tickCoverRef.current.covered) return;
+      fetchQuote();
+    }, QUOTE_REFRESH_MS);
     return () => {
       clearTimeout(id);
       clearInterval(poll);
+      if (fetchQuoteRef.current === fetchQuote) fetchQuoteRef.current = null;
     };
   }, [symbol, active]);
+
+  /**
+   * تتبّع تغطية التيك لرمز النموذج، **وجلبٌ فوري عند سقوطها**.
+   *
+   * بلا هذا الجلب كان الاحتياط يتعفّن بصمت: طوال فترة التغطية لا يُستطلَع `current`، فإن انقطع
+   * البثّ (إغلاق السوق، سقوط المزوّد) عاد `currentPx` إلى `current` — رقمٍ عمره طولُ التغطية
+   * كلّها، لا دقيقة. وهو الرقم الذي تُحسب منه شرائح «±20 نقطة» ويُقال به «سيُطلق فوراً».
+   *
+   * الحارس `prev.sym === sym` يمنع جلباً مكرَّراً عند **تبديل الرمز**: هناك يكون أثر الاقتباس قد
+   * أعاد التركيب وجدول جلبه الخاص أصلاً، فسقوط التغطية أثرٌ جانبي للتبديل لا حدثٌ بذاته.
+   */
+  useEffect(() => {
+    const sym = spec?.symbol ?? '';
+    const covered = sym ? ticks?.[sym] != null : false;
+    const prev = tickCoverRef.current;
+    tickCoverRef.current = { sym, covered };
+    if (prev.sym === sym && prev.covered && !covered) fetchQuoteRef.current?.();
+  }, [ticks, spec]);
 
   /**
    * منازل السعر حسب **الأداة** لا حجم الرقم، وبلا قصّ أصفار: كانت اللوحة آخر موضع بالتطبيق يقدّر
