@@ -43,6 +43,9 @@ ANALYSTS: list[dict[str, Any]] = [
 ]
 
 
+SOCIAL_SOURCE_IDS: tuple[str, ...] = tuple(s["id"] for s in SOCIAL_CATALOG)
+
+
 def _bucket(hours: int = 4) -> int:
     return int(time.time() // (hours * 3600))
 
@@ -77,6 +80,12 @@ def _confidence(score: float, n: int) -> float:
     base = min(0.92, abs(score) * 0.75 + 0.35)
     crowd = min(0.08, n * 0.008)
     return round(min(0.95, base + crowd), 3)
+
+
+# معرّفات مؤشّرات التوقّع ومصادر الإجماع — معلنة هنا (حيث تُستهلَك) ويقرأ منها `main` لتصديق
+# الطلب، كـ`screener.FILTER_IDS`: معرّف مجهول كان يُهمَل بصمت فيُحسب التوقّع بمؤشّرات أقلّ
+# ممّا تعرضه الواجهة.
+FORECAST_INDICATOR_IDS: tuple[str, ...] = ("rsi", "ma", "macd", "bb", "stoch", "trend")
 
 
 def _trade_levels(last: float, direction: str, atr_pct: float = 0.0018) -> dict[str, float]:
@@ -225,7 +234,7 @@ def indicator_forecast(
     closes = [float(c["close"]) for c in candles] if candles else []
     last = float(snap.get("last") or (closes[-1] if closes else _fallback_price(sym)))
 
-    want = set(enabled or ["rsi", "ma", "macd", "bb", "stoch", "trend"])
+    want = set(enabled or FORECAST_INDICATOR_IDS)
     votes: list[dict[str, Any]] = []
 
     def add(key: str, label: str, score: float, detail: str) -> None:

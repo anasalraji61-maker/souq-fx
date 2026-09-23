@@ -338,15 +338,54 @@ class BacktestRun(BaseModel):
 
 
 class SocialConsensusBody(BaseModel):
-    symbol: str = "EURUSD"
+    """إجماع المصادر. كان **الجسم الوحيد بالملف بلا قيد واحد** مع شقيقه أدناه، بينما كل جسم آخر
+    يعلن حدّ الرمز والفريم منذ تشغيلات سابقة:
+
+    - **معرّف مصدر مجهول كان يُهمَل بصمت**، وإن كانت المعرّفات كلّها مجهولة يسقط الطلب على
+      `SOCIAL_CATALOG[:5]` الافتراضية: أي أن المتداول الذي اختار مصادره يُعرض له إجماع **خمسة
+      مصادر لم يخترها** موسوماً باختياره — نفس عيب `filters or [...]` بالفحص السريع.
+    - `symbol` بلا حدّ طول يذهب لرابط المزوّد عبر `build_series`.
+    - فريم مجهول يُبدَّل بـ15m صامتاً داخل `build_series`.
+    """
+
+    symbol: str = Field(default="EURUSD", min_length=3, max_length=12)
     timeframe: str = "15m"
-    source_ids: list[str] = Field(default_factory=list)
+    source_ids: list[str] = Field(default_factory=list, max_length=len(signal_hub.SOCIAL_SOURCE_IDS))
+
+    @model_validator(mode="after")
+    def _bounded(self) -> "SocialConsensusBody":
+        _check_timeframe(self.timeframe)
+        unknown = sorted({s for s in self.source_ids if s not in signal_hub.SOCIAL_SOURCE_IDS})
+        if unknown:
+            raise ValueError(f"unknown source: {', '.join(unknown)}")
+        return self
 
 
 class IndicatorForecastBody(BaseModel):
-    symbol: str = "EURUSD"
+    """توقّع المؤشّرات — **رياضيات حقيقية على شموع حقيقية** (خلافاً للوحتي الإجماع والمحلّلين)،
+    ويقف على شاشة الشارت أي أولى شاشات الـMVP. وكان بلا قيد واحد:
+
+    - **الفريم المجهول يُبدَّل بـ15m صامتاً** بـ`build_series`، **والردّ لا يحمل الفريم أصلاً**:
+      المتداول يختار «4H» فتُحسب مؤشّراته على شموع 15 دقيقة ولا شيء بالردّ يقول ذلك — وهو
+      بالضبط العيب المُصحَّح بالفحص السريع والاختبار الخلفي وتنبيه المؤشر، وبقي هذا خارجه.
+    - **معرّف مؤشّر مجهول كان يُهمَل بصمت**: `want` مجموعة، والمعرّف الذي لا يطابق لا يصوّت —
+      فيُبنى التوقّع بمؤشّرين بينما الواجهة تعرض ثلاثة، بلا ما يدلّ على الفرق.
+    - `symbol` بلا حدّ طول يذهب لرابط المزوّد.
+    """
+
+    symbol: str = Field(default="EURUSD", min_length=3, max_length=12)
     timeframe: str = "15m"
-    indicators: list[str] | None = None
+    indicators: list[str] | None = Field(
+        default=None, min_length=1, max_length=len(signal_hub.FORECAST_INDICATOR_IDS)
+    )
+
+    @model_validator(mode="after")
+    def _bounded(self) -> "IndicatorForecastBody":
+        _check_timeframe(self.timeframe)
+        unknown = sorted({i for i in (self.indicators or []) if i not in signal_hub.FORECAST_INDICATOR_IDS})
+        if unknown:
+            raise ValueError(f"unknown indicator: {', '.join(unknown)}")
+        return self
 
 
 class IndicatorAlertCreate(BaseModel):
