@@ -63,9 +63,30 @@ type Props = {
    * يعني «لا سعر حيّ موثوق» وتعود اللوحة لسلوكها السابق حرفياً.
    */
   ticks?: Record<string, number>;
+  /**
+   * **هل اللوحة معروضة الآن؟** الافتراضي `true` فكل موضع لا يمرّرها يبقى كما كان حرفياً.
+   *
+   * اللوحة تُشغّل مؤقّتَين كلٌّ منهما دقيقة: فحص التنبيهات (`checkAlerts`) واستطلاع «السعر الآن»
+   * (`/api/market/quote`) — وكلاهما **نداءٌ عند مزوّد الأسعار** لا قراءةُ ذاكرة. وشاشات التبويبات
+   * السفلية تبقى مركَّبة بعد الانتقال عنها: فمن فتح تبويب «تنبيهات السعر» ثم عاد للشارت كان يترك
+   * **طلبين بالدقيقة** يعملان بقيّة الجلسة على لوحة لا يراها أحد — بطاريةً وحدّ مزوّد يُستهلكان
+   * لرقمٍ لا يُقرأ. الإشعار نفسه لا يتأثّر: الـworker الخلفي بالخادم هو الذي يُطلق التنبيه ويرسل
+   * الإشعار، وفحص اللوحة تعجيلٌ لمن يجلس أمامها.
+   *
+   * وبالعودة يُعاد الفحص والاستطلاع **فوراً** (لا انتظار دورة)، فأول ما يراه المتداول أحدث مما
+   * كان يراه سابقاً لا أقدم.
+   */
+  active?: boolean;
 };
 
-export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, flow = false, ticks }: Props) {
+export function AlertsPanel({
+  defaultSymbol = 'EURUSD',
+  embedded,
+  refreshKey,
+  flow = false,
+  ticks,
+  active = true,
+}: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
@@ -104,6 +125,8 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
    * بلا هذا الدليل لا يُعرض شيء، كما كان.
    */
   const providerRealRef = useRef(false);
+  /** هل وقع أول تحميل للقائمة؟ — يضمن أن لوحةً رُكِّبت مخفيّة لا تبقى على «جارٍ التحميل» (انظر أثر الفحص). */
+  const loadedOnceRef = useRef(false);
   const [unknownSymbol, setUnknownSymbol] = useState(false);
   /** تأكيد صريح بعد كل حفظ ناجح ("مُفعَّل: EURUSD ≥ 1.0850") — كان التأكيد الوحيد شارة أول تنبيه. */
   const [armed, setArmed] = useState<string | null>(null);
@@ -160,6 +183,9 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
     const gen = ++quoteGen.current;
     setCurrent(null);
     setUnknownSymbol(false);
+    // اللوحة خارج الشاشة: لا استطلاع. والمسح أعلاه يقع **قبل** الخروج عمداً — فبالعودة لا يُعرض
+    // رقمٌ عمره جلسةٌ كاملة ولو للحظة، وعليه تُبنى شرائح «±20 نقطة» وتحذير «سيُطلق فوراً».
+    if (!active) return;
     if (sym.length < 3) return;
     // أول اقتباس **ناجح** لهذا الرمز (الفشل لا يستهلكها) هو وحده الذي يستنتج الاتجاه
     let firstQuote = true;
@@ -191,7 +217,7 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
       clearTimeout(id);
       clearInterval(poll);
     };
-  }, [symbol]);
+  }, [symbol, active]);
 
   /**
    * منازل السعر حسب **الأداة** لا حجم الرقم، وبلا قصّ أصفار: كانت اللوحة آخر موضع بالتطبيق يقدّر
@@ -387,10 +413,18 @@ export function AlertsPanel({ defaultSymbol = 'EURUSD', embedded, refreshKey, fl
      * الفحص **بعد** `refresh` لا بالتوازي معه: كلاهما يكتب `setAlerts`، ولو سبق ردّ الفحص ردَّ
      * القائمة لَدهَس الأقدمُ الأحدثَ فتبقى اللوحة على حالة ما قبل الفحص دقيقة كاملة.
      */
-    void refresh().then(check);
+    /**
+     * `active` يوقف **الدورة** لا التحميل الأول: لوحةٌ رُكِّبت وهي مخفيّة تبقى على «جارٍ التحميل»
+     * إلى الأبد لو مُنع عنها أول `refresh` — فالحارس يستثنيه مرّةً واحدة، ثم لا شيء يعمل وهي مخفيّة.
+     */
+    if (active || !loadedOnceRef.current) {
+      loadedOnceRef.current = true;
+      void refresh().then(check);
+    }
+    if (!active) return;
     const id = setInterval(check, 60_000);
     return () => clearInterval(id);
-  }, [refresh, check]);
+  }, [active, refresh, check]);
 
   useEffect(() => {
     if (refreshKey) void refresh();

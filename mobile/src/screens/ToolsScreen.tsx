@@ -506,7 +506,7 @@ export function ToolsScreen() {
                 },
                 {
                   id: 'alerts',
-                  node: <AlertsPanel embedded defaultSymbol={signalSym} />,
+                  node: <AlertsPanel embedded defaultSymbol={signalSym} active={screenFocused} />,
                 },
               ]}
             />
@@ -676,7 +676,7 @@ export function ToolsScreen() {
           نفسها — بدل نافذة 160px بخليّة شبكة تشاركها ثلاث لوحات أخرى. */}
       {tab === 'alerts' ? (
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <AlertsPanel flow defaultSymbol={signalSym} ticks={livePrices} />
+          <AlertsPanel flow defaultSymbol={signalSym} ticks={livePrices} active={screenFocused} />
         </ScrollView>
       ) : null}
 
