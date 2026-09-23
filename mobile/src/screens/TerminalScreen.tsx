@@ -763,6 +763,33 @@ export function TerminalScreen() {
    * ثم تُمسح المعاملات كي لا يُعاد فتحه عند العودة للشاشة. */
   const route = useRoute();
   const navigation = useNavigation();
+
+  /**
+   * تركيز الشاشة — شاشات التبويبات السفلية **تبقى مُركَّبة** بعد الانتقال عنها، فما تحمله من
+   * مؤقّتات يعمل بقيّة الجلسة خلف الشاشة. يُقرأ بـ`addListener('focus'/'blur')` كما بشاشة الأدوات
+   * حرفياً. القيمة الابتدائية `true`: الشاشة تُركَّب وهي المعروضة، وحدث `focus` قد يكون مضى قبل
+   * تسجيل المستمع.
+   *
+   * **يُمرَّر لقائمة المتابعة وحدها** اليوم (دورة قراءة `/api/alerts`). مقبس التيكات
+   * (`useMultiLiveTicks` أعلاه) لم يُمسّ عمداً: ما يصل منه يغذّي أُطر الشارت نفسها
+   * (`liveTick={...}`) فقرارُ إيقافه خلف الشاشة قرارُ مَن يملك الشارت — انظر «طلب تنسيق»
+   * بـ`docs/LOG-TOOLS.md`.
+   */
+  const [screenFocused, setScreenFocused] = useState(true);
+  useEffect(() => {
+    const nav = navigation as unknown as {
+      addListener: (e: 'focus' | 'blur', cb: () => void) => () => void;
+      isFocused?: () => boolean;
+    };
+    if (typeof nav.isFocused === 'function') setScreenFocused(nav.isFocused());
+    const offFocus = nav.addListener('focus', () => setScreenFocused(true));
+    const offBlur = nav.addListener('blur', () => setScreenFocused(false));
+    return () => {
+      offFocus();
+      offBlur();
+    };
+  }, [navigation]);
+
   const openReq = route.params as
     | { openSymbol?: string; openTf?: string; nonce?: number }
     | undefined;
@@ -1722,6 +1749,7 @@ export function TerminalScreen() {
               demoTicks={demoTickSymbols}
               onPick={(s) => pickSymbol(s)}
               compact={narrowWatch}
+              active={screenFocused}
             />
             <RightPanelRail
               activePanel={edgePanel}
@@ -1827,6 +1855,7 @@ export function TerminalScreen() {
               setPhoneWatchOpen(false);
             }}
             fullWidth
+            active={screenFocused}
           />
         </SafeAreaView>
       </Modal>

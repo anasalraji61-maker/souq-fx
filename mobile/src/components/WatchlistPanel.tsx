@@ -51,6 +51,14 @@ type Props = {
   onPick: (symbol: string) => void;
   compact?: boolean;
   fullWidth?: boolean;
+  /**
+   * الشاشة الحاضنة معروضة فعلاً. `false` يوقف **دورة قراءة التنبيهات المُسلَّحة** وحدها ولا يمسّ
+   * الأسعار (تصل بالتيكات، بلا مؤقّت هنا) ولا شيئاً معروضاً.
+   *
+   * شاشة الشارت **تبقى مركَّبة** بعد الانتقال لتبويب آخر، فقائمة المتابعة كانت تقرأ `/api/alerts`
+   * كل دقيقة بقيّة الجلسة لصفوفٍ لا يراها أحد. الافتراض `true` فكل موضع لا يمرّرها يبقى كما كان.
+   */
+  active?: boolean;
 };
 
 const FALLBACK: Record<string, number> = {
@@ -72,6 +80,7 @@ export function WatchlistPanel({
   onPick,
   compact = false,
   fullWidth = false,
+  active = true,
 }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
@@ -117,6 +126,8 @@ export function WatchlistPanel({
    * بلا أي طلب إضافي، وتتحرّك مع السوق بدل أن تكون لقطةً تتجمّد.
    */
   const [armedBySymbol, setArmedBySymbol] = useState<Record<string, number[]>>({});
+  /** قُرئت القائمة مرّةً على الأقل — كي لا تُحرَم لوحةٌ رُكِّبت مخفيّةً من القراءة الأولى للأبد. */
+  const alertsLoadedRef = useRef(false);
   useEffect(() => {
     let alive = true;
     const load = () => {
@@ -140,13 +151,26 @@ export function WatchlistPanel({
           /* التنبيهات إضافةٌ على المتابعة — فشل قراءتها لا يمسّ الأسعار ولا يُفرَّغ ما هو معروض */
         });
     };
-    load();
+    /**
+     * `active` يوقف **الدورة** لا القراءة الأولى: لوحةٌ رُكِّبت وهي خلف الشاشة تُقرأ مرّةً فتكون
+     * شارة «مُسلَّح» جاهزةً لحظة العودة لا بعد دقيقة منها. وبالعودة تُقرأ القائمة **فوراً**:
+     * تنبيهٌ أُطلق أثناء الغياب يختفي من صفّه عند أول نظرة، لا بعد دقيقة من التحديق بحالةٍ مضت.
+     */
+    if (active || !alertsLoadedRef.current) {
+      alertsLoadedRef.current = true;
+      load();
+    }
+    if (!active) {
+      return () => {
+        alive = false;
+      };
+    }
     const id = setInterval(load, ALERTS_REFRESH_MS);
     return () => {
       alive = false;
       clearInterval(id);
     };
-  }, []);
+  }, [active]);
 
   const ready = symbols != null;
   const list = symbols ?? [];
