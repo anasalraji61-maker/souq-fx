@@ -607,16 +607,30 @@ function PaneValueHead({
   name,
   values,
   at = null,
+  tone = 'sign',
 }: {
   name: string;
   values: readonly (number | null | undefined)[];
   /** شمعة التقاطع (فهرس داخل نافذة الرسم)، أو null فآخر شمعة. */
   at?: number | null;
+  /**
+   * ما يعنيه لون الرقم:
+   * - `'sign'` (الافتراض): الجانب — للوحة تدور حول الصفر، وهي نفس دلالة لون أعمدتها.
+   * - `'trend'`: صعوداً أم هبوطاً عن الشمعة السابقة — للوحة **موجبة دائماً** (ATR،
+   *   BBW، الانحراف المعياري): إشارتها لا تتغيّر أبداً فتلوين الجانب يجعل الرقم أخضر
+   *   أبداً ولا يقول شيئاً، بينما ما يقرؤه المتداول من هذه اللوحات هو **التوسّع أم
+   *   الانكماش**. نفس منطق رأس Gator.
+   * - `'none'`: بلا لون — حيث تحمل الأعمدة دلالةً أخرى (اتجاه الشمعة مثلاً) فيتنافس
+   *   لونان على معنيين مختلفين.
+   */
+  tone?: 'sign' | 'trend' | 'none';
 }) {
   const v = paneValueAt(values, at);
   // المقياس من السلسلة كاملةً لا من الشمعة المقروءة — فلا يتبدّل شكل الرقم
   // بتحرّك التقاطع، وهو نفس سبب اشتقاق الصياغة من مقياس اللوحة أصلاً.
   const txt = formatPaneValueScaled(values, v);
+  // الاتّجاه محدود بشمعة التقاطع كالقيمة نفسها — فاللون والرقم يصفان شمعة واحدة.
+  const trend = tone === 'trend' ? paneValueTrend(values, at) : null;
   return (
     <View style={styles.paneHead}>
       <Text style={styles.paneHeadName}>{name}</Text>
@@ -625,8 +639,10 @@ function PaneValueHead({
           style={[
             styles.paneHeadValue,
             txt.length >= 7 && styles.paneHeadValueLong,
-            v != null && v > 0 && { color: colors.bull },
-            v != null && v < 0 && { color: colors.bear },
+            tone === 'sign' && v != null && v > 0 && { color: colors.bull },
+            tone === 'sign' && v != null && v < 0 && { color: colors.bear },
+            trend === 'up' && { color: colors.bull },
+            trend === 'down' && { color: colors.bear },
           ]}
         >
           {txt}
@@ -6903,7 +6919,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {atrp ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>ATR%</Text>
+          <PaneValueHead name="ATR%" values={atrp} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = atrp.filter((x): x is number => x != null);
@@ -7195,7 +7211,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {bbw ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>BBW</Text>
+          <PaneValueHead name="BBW" values={bbw} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = bbw.filter((x): x is number => x != null);
@@ -8221,7 +8237,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {atr ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>ATR</Text>
+          <PaneValueHead name="ATR" values={atr} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = atr.filter((x): x is number => x != null);
@@ -8341,7 +8357,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {stddev ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>STDEV</Text>
+          <PaneValueHead name="STDEV" values={stddev} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = stddev.filter((x): x is number => x != null);
