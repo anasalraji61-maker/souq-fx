@@ -82,10 +82,11 @@ function buildTabs(t: Dict): { id: TabId; label: string; mark: string }[] {
     { id: 'journal', label: t.toolsTabJournal, mark: '₴' },
     { id: 'risk', label: t.toolsTabRisk, mark: '%' },
     { id: 'screener', label: t.toolsTabScreener, mark: '⌕' },
-    // «تنبيهات السعر» تستعمل عنوان اللوحة نفسه (`alertsTitle`) — لا مفتاح نصّ جديد، والاسم
-    // هو ما تسمّيه به اللوحة بكل اللغات. ووجوده يجعل «تنبيهات+» المجاور مفهوماً أخيراً.
-    { id: 'alerts', label: t.alertsTitle, mark: '◎' },
     { id: 'backtest', label: t.toolsTabBacktest, mark: '↺' },
+    // «تنبيهات السعر» تستعمل عنوان اللوحة نفسه (`alertsTitle`) — لا مفتاح نصّ جديد، والاسم هو ما
+    // تسمّيه به اللوحة بكل اللغات. وموضعها **ملاصق** لـ«تنبيهات+»: التبويبان أخوان، ووجود الأول
+    // هو ما يجعل «+» بالثاني مفهوماً أصلاً؛ متفرّقين يقرأ المتداول اسمين متشابهين بلا رابط.
+    { id: 'alerts', label: t.alertsTitle, mark: '◎' },
     { id: 'indAlerts', label: t.toolsTabIndAlerts, mark: '⚡' },
     { id: 'calendar', label: t.toolsTabCalendar, mark: '◷' },
     { id: 'layouts', label: t.toolsTabLayouts, mark: '▦' },
