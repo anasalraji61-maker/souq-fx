@@ -171,6 +171,13 @@ const MAX_SYMBOL_CHIPS = 8;
 const TICK_TABS: readonly TabId[] = ['journal', 'alerts'];
 
 /**
+ * إيقاع إعادة تقييم حداثة التيكات (`isFreshTick`، نافذتها `FRESH_TICK_SEC` = 15 ثانية). خمس ثوانٍ:
+ * تُسقط السعر البائت خلال عشرين ثانية من آخر تيك بدل أن يبقى معروضاً إلى الأبد، وهي أبطأ كثيراً من
+ * تردّد التيكات بسوق مفتوح فلا تضيف تصييراً هناك. حسابٌ محلّي صِرف — لا طلب ولا مقبس.
+ */
+const FRESH_RECHECK_MS = 5000;
+
+/**
  * القائمة المُمرَّرة لخطّاف التيكات **ثابتة عمداً**: `/ws/ticks` يبثّ ما اشترك به الخادم كلّه
  * ويتجاهل أي قائمة من العميل (`backend/main.py` — لا رسالة اشتراك أصلاً)، بينما `syms` تابعٌ
  * لأثر الخطّاف. فتمريرُ شرائح الرموز كان سيقطع المقبس ويعيد وصله **مع كل نقرة رمز** بلا أن
@@ -325,6 +332,9 @@ export function ToolsScreen() {
     };
   }, [navigation]);
 
+  /** المقبس يعمل الآن؟ — نفس شرط الخطّاف، مرفوعاً إلى متغيّر كي يحكم ترشيح الأسعار أدناه أيضاً. */
+  const ticksLive = screenFocused && TICK_TABS.includes(tab);
+
   /**
    * **تيكات حيّة بشاشة الأدوات.** الدفتر كان يعرض «أين هي الصفقة المفتوحة الآن» من **لقطة**
    * تُجلب مع كل تحميل (`/api/market/quote` غير مخزَّن بالخادم، فاستطلاعه بمؤقّت كلفةٌ تُقاس عند
@@ -332,7 +342,19 @@ export function ToolsScreen() {
    * اشترك به الخادم أصلاً، بلا طلب لكل رمز ولا حدٍّ يُستهلك — وهي التي جعلت مسافة التنبيه
    * بقائمة المتابعة ممكنة بشاشة الشارت. فالسطر العائم يتحرّك مع السوق بدل أن يتجمّد لقطةً.
    */
-  const liveTicks = useMultiLiveTicks(TICK_WS_SYMBOLS, screenFocused && TICK_TABS.includes(tab));
+  const liveTicks = useMultiLiveTicks(TICK_WS_SYMBOLS, ticksLive);
+  /**
+   * **نبضة إعادة تقييم الحداثة.** `isFreshTick` نافذتها **خمس عشرة ثانية**، لكنها كانت تُقيَّم
+   * داخل `useMemo` تابعٍ لـ`liveTicks` وحدها — أي **عند وصول تيك جديد لا غير**. فما إن يتوقّف
+   * البثّ (إغلاق السوق ليلة الجمعة، انقطاع المزوّد) حتى تتجمّد آخر قيمة محسوبة وتبقى معروضةً
+   * بقيّة الجلسة: الحارس الذي وُضع ليمنع السعر البائت **يكفّ عن العمل بالضبط حين يبيت السعر**.
+   *
+   * النبضة تُعيد التقييم كل خمس ثوانٍ، و**لا تعمل إلا حيث المقبس عامل** (نفس انضباط `active`
+   * المتّبع بهذه الشاشة). وتتوقّف عن إحداث تصيير متى فرغت الأسعار فعلاً: المُحدِّث يُرجع القيمة
+   * نفسها فيتخطّى React التصيير — فالسوق المغلق لا يترك خلفه نبضاً يعمل بلا أثر. وبالسوق المفتوح
+   * لا تضيف شيئاً أصلاً: التيكات تصل أسرع منها فالـmemo يُعاد بها لا بهذه.
+   */
+  const [freshBeat, setFreshBeat] = useState(0);
 
   /**
    * الأسعار الصالحة لأن يُبنى عليها رقمٌ يُقرأ كقرار — **شرطان، وكلاهما موجود لسبب**:
@@ -342,17 +364,44 @@ export function ToolsScreen() {
    * ليس «أين هي الآن»؛ عند سقوطه يعود الدفتر للقطة REST كما كان تماماً — أي أن هذا البند
    * **يضيف الحركة ولا يسحب شيئاً**.
    */
+  const livePricesRef = useRef<Record<string, number>>({});
   const livePrices = useMemo(() => {
     const out: Record<string, number> = {};
-    for (const [sym, tick] of Object.entries(liveTicks)) {
-      if (tick.source.kind === 'demo') continue;
-      if (!isFreshTick(tick.source.as_of)) continue;
-      if (typeof tick.price === 'number' && Number.isFinite(tick.price) && tick.price > 0) {
-        out[sym.toUpperCase()] = tick.price;
+    // المقبس متوقّف ⇒ لا «سعرٌ الآن». الخطّاف **لا يمسح حالته** عند التعطيل (أثره لا يعمل وحسب)،
+    // فكانت آخر أسعارٍ وصلت قبل مغادرة الشاشة تبقى بيد اللوحات بقيّة الجلسة — يعود المتداول بعد
+    // ساعة فيقرأ مسافة تنبيهه ونتيجة صفقته المفتوحة من سعر عمره ساعة. بالفراغ ترجع كلٌّ منهما
+    // إلى لقطة REST الخاصّة بها (تُعاد بالعودة فوراً) كما كانتا قبل وصول التيكات أصلاً.
+    if (ticksLive) {
+      for (const [sym, tick] of Object.entries(liveTicks)) {
+        if (tick.source.kind === 'demo') continue;
+        if (!isFreshTick(tick.source.as_of)) continue;
+        if (typeof tick.price === 'number' && Number.isFinite(tick.price) && tick.price > 0) {
+          out[sym.toUpperCase()] = tick.price;
+        }
       }
     }
+    // ثباتُ الهوية: نبضةٌ لم تُسقط شيئاً يجب ألّا تُنتج مرجعاً جديداً، وإلا أُعيد تصيير كل لوحة
+    // تستقبل `ticks` كل خمس ثوانٍ بلا أن يتغيّر رقم واحد.
+    const prev = livePricesRef.current;
+    const pk = Object.keys(prev);
+    const ok = Object.keys(out);
+    if (pk.length === ok.length && ok.every((k) => prev[k] === out[k])) return prev;
+    livePricesRef.current = out;
     return out;
-  }, [liveTicks]);
+    // `freshBeat` تبعيةٌ **مقصودة بلا استعمال بالجسم**: هي وحدها ما يُعيد تقييم `isFreshTick`
+    // حين يتوقّف البثّ (لا تيك جديد ⇒ لا تغيّر بـ`liveTicks`).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveTicks, ticksLive, freshBeat]);
+
+  /** النبضة نفسها — انظر `freshBeat` أعلاه. */
+  useEffect(() => {
+    if (!ticksLive) return;
+    const id = setInterval(() => {
+      // لا تصيير بلا سبب: بلا أسعار معروضة لا شيء يمكن أن يسقط، وإرجاع القيمة نفسها يوقف التحديث.
+      setFreshBeat((v) => (Object.keys(livePricesRef.current).length > 0 ? v + 1 : v));
+    }, FRESH_RECHECK_MS);
+    return () => clearInterval(id);
+  }, [ticksLive]);
 
   // يُعاد القراءة عند كل عودة للتبويب: كانت تُقرأ مرة عند التركيب فقط، فتغيير أزواج/فريمات الشارت بالشاشة
   // الرئيسية ثم «حفظ التخطيط الحالي» هنا يحفظ إعداداً قديماً، و«الحالي» يُعلَّم على تخطيط غير المطبَّق.
