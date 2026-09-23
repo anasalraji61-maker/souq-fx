@@ -73,13 +73,18 @@ type Props = {
   defaultSymbol?: string;
   /** فريم الشارت المفتوح (إن كان من فريمات التنبيه) — التنبيه من الشارت يبدأ بنفس فريمه. */
   defaultTimeframe?: string;
+  /**
+   * اللوحة تملك الصفحة وحدها (تبويب «تنبيهات+» بشاشة الأدوات): التنبيهات تُسرَد متدفّقة بلا نافذة
+   * تمرير داخلية، فالصفحة هي التي تُمرَّر. بغيره تبقى النافذة المحدودة كما هي بمواضع المشاركة.
+   */
+  flow?: boolean;
 };
 
 function asAlertTf(v: string | undefined): AlertTf | null {
   return v && (ALERT_TFS as readonly string[]).includes(v) ? (v as AlertTf) : null;
 }
 
-export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD', defaultTimeframe }: Props) {
+export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD', defaultTimeframe, flow = false }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [alerts, setAlerts] = useState<IndAlert[]>([]);
@@ -283,6 +288,86 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD', defaultTimefram
     </Pressable>
   );
 
+  /**
+   * صفوف قائمة التنبيهات — تُركَّب مرّة واحدة وتُعرض بصندوقين مختلفين بحسب من يستضيف اللوحة
+   * (انظر `flow` بالخصائص أعلاه). الكتلة منقولة كما هي حرفياً من داخل `ScrollView` السابق.
+   */
+  const rows = (
+    <>
+          {alerts.length === 0 ? (
+            <Text style={[styles.empty, { textAlign: align }]}>
+              {listError ? t.indAlertsLoadError : t.indAlertsEmpty}
+            </Text>
+          ) : (
+            alerts.map((a) => (
+              <View key={a.id} style={[styles.item, rtl && styles.itemRtl]}>
+                <Text style={[styles.itemText, { textAlign: align }]}>
+                  {describeIndAlert(a, t)}
+                  {/* كان «✓» غامضاً (مفعَّل؟ تحقّق؟) — الآن حالة مسمّاة: يراقب / أُطلق (لا يُعاد إطلاقه) */}
+                  <Text style={a.triggered ? styles.tagFired : styles.tagWatching}>
+                    {` · ${a.triggered ? t.indAlertsFiredTag : t.indAlertsWatchingTag}`}
+                  </Text>
+                </Text>
+                <View style={[styles.itemActions, rtl && styles.itemRtl]}>
+                  {a.triggered ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: busy }}
+                      disabled={busy}
+                      style={({ pressed }) => [
+                        busy && { opacity: 0.4 },
+                        pressed && {
+                          opacity: buttons.pressedOpacity,
+                          transform: [{ scale: buttons.pressedScale }],
+                        },
+                      ]}
+                      onPress={() => void rearm(a)}
+                      accessibilityLabel={`${t.indAlertsRearmA11yPrefix}: ${describeIndAlert(a, t)}`}
+                      hitSlop={8}
+                    >
+                      <Text style={styles.rearm}>{t.indAlertsRearmBtn}</Text>
+                    </Pressable>
+                  ) : null}
+                  <Pressable
+                    accessibilityRole="button"
+                    style={({ pressed }) => [
+                      pressed && {
+                        opacity: buttons.pressedOpacity,
+                        transform: [{ scale: buttons.pressedScale }],
+                      },
+                    ]}
+                    onPress={() =>
+                      Alert.alert(
+                        t.indAlertsDeleteConfirmTitle,
+                        describeIndAlert(a, t),
+                        [
+                          { text: t.cancel, style: 'cancel' },
+                          {
+                            text: t.deleteWord,
+                            style: 'destructive',
+                            onPress: () =>
+                              api
+                                .deleteIndicatorAlert(a.id)
+                                .then(refresh)
+                                .catch(() =>
+                                  Alert.alert(t.indAlertsDeleteFailedTitle, t.indAlertsDeleteFailedBody)
+                                ),
+                          },
+                        ]
+                      )
+                    }
+                    accessibilityLabel={`${t.indAlertsDeleteA11yPrefix}: ${describeIndAlert(a, t)}`}
+                    hitSlop={8}
+                  >
+                    <Text style={styles.del}>{t.deleteWord}</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ))
+          )}
+    </>
+  );
+
   return (
     <View style={styles.wrap}>
       <Text style={[styles.title, { textAlign: align }]}>{t.indAlertsTitle}</Text>
@@ -371,79 +456,11 @@ export function IndicatorAlertsPanel({ defaultSymbol = 'EURUSD', defaultTimefram
       ) : null}
       {loading ? (
         <ActivityIndicator color={colors.accent} />
+      ) : flow ? (
+        <View>{rows}</View>
       ) : (
         <ScrollView style={{ maxHeight: 180 }} keyboardShouldPersistTaps="handled">
-          {alerts.length === 0 ? (
-            <Text style={[styles.empty, { textAlign: align }]}>
-              {listError ? t.indAlertsLoadError : t.indAlertsEmpty}
-            </Text>
-          ) : (
-            alerts.map((a) => (
-              <View key={a.id} style={[styles.item, rtl && styles.itemRtl]}>
-                <Text style={[styles.itemText, { textAlign: align }]}>
-                  {describeIndAlert(a, t)}
-                  {/* كان «✓» غامضاً (مفعَّل؟ تحقّق؟) — الآن حالة مسمّاة: يراقب / أُطلق (لا يُعاد إطلاقه) */}
-                  <Text style={a.triggered ? styles.tagFired : styles.tagWatching}>
-                    {` · ${a.triggered ? t.indAlertsFiredTag : t.indAlertsWatchingTag}`}
-                  </Text>
-                </Text>
-                <View style={[styles.itemActions, rtl && styles.itemRtl]}>
-                  {a.triggered ? (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityState={{ disabled: busy }}
-                      disabled={busy}
-                      style={({ pressed }) => [
-                        busy && { opacity: 0.4 },
-                        pressed && {
-                          opacity: buttons.pressedOpacity,
-                          transform: [{ scale: buttons.pressedScale }],
-                        },
-                      ]}
-                      onPress={() => void rearm(a)}
-                      accessibilityLabel={`${t.indAlertsRearmA11yPrefix}: ${describeIndAlert(a, t)}`}
-                      hitSlop={8}
-                    >
-                      <Text style={styles.rearm}>{t.indAlertsRearmBtn}</Text>
-                    </Pressable>
-                  ) : null}
-                  <Pressable
-                    accessibilityRole="button"
-                    style={({ pressed }) => [
-                      pressed && {
-                        opacity: buttons.pressedOpacity,
-                        transform: [{ scale: buttons.pressedScale }],
-                      },
-                    ]}
-                    onPress={() =>
-                      Alert.alert(
-                        t.indAlertsDeleteConfirmTitle,
-                        describeIndAlert(a, t),
-                        [
-                          { text: t.cancel, style: 'cancel' },
-                          {
-                            text: t.deleteWord,
-                            style: 'destructive',
-                            onPress: () =>
-                              api
-                                .deleteIndicatorAlert(a.id)
-                                .then(refresh)
-                                .catch(() =>
-                                  Alert.alert(t.indAlertsDeleteFailedTitle, t.indAlertsDeleteFailedBody)
-                                ),
-                          },
-                        ]
-                      )
-                    }
-                    accessibilityLabel={`${t.indAlertsDeleteA11yPrefix}: ${describeIndAlert(a, t)}`}
-                    hitSlop={8}
-                  >
-                    <Text style={styles.del}>{t.deleteWord}</Text>
-                  </Pressable>
-                </View>
-              </View>
-            ))
-          )}
+          {rows}
         </ScrollView>
       )}
     </View>
