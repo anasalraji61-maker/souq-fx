@@ -125,6 +125,79 @@ export function formatPaneValue(v: number | null): string | null {
   return Math.abs(v) >= 100 ? String(Math.round(v)) : v.toFixed(1);
 }
 
+/* ——— صياغة قيمة لوحة ثنائية الجانب (مقياس ديناميكي) ——— */
+
+/**
+ * أقصى قيمة مطلقة صالحة بالسلسلة — **مقياس اللوحة** الذي تُصاغ عليه كل قيمها.
+ *
+ * الصياغة تُشتقّ من مقياس اللوحة لا من القيمة المعروضة وحدها، لسببين:
+ * تبقى خانات الكسر ثابتة فلا يتغيّر شكل الرقم مع كل تيك؛ ويتساوى الجانبان فلا يظهر
+ * ‎0.00042‎ صعوداً و‎-4.2e-4‎ هبوطاً بنفس اللوحة.
+ */
+export function paneSeriesMaxAbs(values: readonly (number | null | undefined)[]): number {
+  let m = 0;
+  for (const v of values) {
+    if (typeof v === 'number' && Number.isFinite(v)) {
+      const a = Math.abs(v);
+      if (a > m) m = a;
+    }
+  }
+  return m;
+}
+
+/**
+ * خانات الكسر لثلاث خانات معنوية عند هذا المقياس، محصورة 0..8.
+ * ‎0.00042‎ ⇐ 6، و‎56.7‎ ⇐ 1، و‎5678‎ ⇐ 0. مقياس صفر/فاسد ⇐ 2 (افتراض محايد).
+ */
+export function paneValueDecimals(maxAbs: number): number {
+  if (!Number.isFinite(maxAbs) || maxAbs <= 0) return 2;
+  return Math.min(8, Math.max(0, 2 - Math.floor(Math.log10(maxAbs))));
+}
+
+/** أقصى عدد محارف يتّسع بعمود الرأس (‎36px‎ بـ‎fontSize 8‎ للطويل). */
+export const PANE_VALUE_MAX_CHARS = 8;
+
+function trimZeros(s: string): string {
+  return s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s;
+}
+
+/**
+ * صياغة قيمة بلوحة مقياسها ديناميكي (MACD والزخم والتدفّق… — 47 لوحة لا عتبات لها).
+ * تُختار الصيغة **مرّة لكل لوحة** من مقياسها: عادية، أو بآلاف/ملايين للوحات الحجم
+ * الضخمة، أو أسّية متى لم يتّسع أطول نصّ ممكن باللوحة — فالشكل واحد لكل قيمها.
+ */
+export function formatPaneValueScaled(
+  values: readonly (number | null | undefined)[],
+  v: number | null | undefined
+): string | null {
+  if (v == null || !Number.isFinite(v)) return null;
+  if (v === 0) return '0';
+  // القيمة المعروضة داخل المقياس دائماً — يحمي من سلسلة فارغة أو لا تضمّ `v` نفسها
+  const maxAbs = Math.max(paneSeriesMaxAbs(values), Math.abs(v));
+  let scale = 1;
+  let suffix = '';
+  if (maxAbs >= 1e8) {
+    scale = 1e6;
+    suffix = 'M';
+  } else if (maxAbs >= 1e5) {
+    scale = 1e3;
+    suffix = 'K';
+  }
+  const base = maxAbs / scale;
+  // أطول نصّ ممكن باللوحة: أكبر قيمة، سالبة، **بلا حذف أصفار** — فحذفها يقصّر بعض
+  // القيم لا كلّها، والقيمة الوسطى قد تكون أطول من القصوى (‎-0.0001‎ أقصر من ‎-0.000033‎).
+  const worstLen = (d: number) => (-base).toFixed(d).length + suffix.length;
+  let d = paneValueDecimals(base);
+  while (d > 0 && worstLen(d) > PANE_VALUE_MAX_CHARS) d--;
+  // لا يتّسع حتى بلا كسور، أو المقياس نفسه يُدوَّر إلى صفر ⇐ أسّي للّوحة كلّها
+  if (worstLen(d) > PANE_VALUE_MAX_CHARS || Number(base.toFixed(d)) === 0) {
+    return v.toExponential(1);
+  }
+  const s = trimZeros((v / scale).toFixed(d));
+  if (s === '0' || s === '-0') return '0';
+  return `${s}${suffix}`;
+}
+
 /**
  * حالة القيمة مقابل عتبات اللوحة — لتلوين الرقم وحده (لا لتغيير الرسم):
  * 'high' فوق العتبة العليا، 'low' تحت السفلى، وإلا 'mid'.

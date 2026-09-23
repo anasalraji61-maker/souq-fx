@@ -53,6 +53,7 @@ import {
 } from './priceLegend';
 import {
   formatPaneValue,
+  formatPaneValueScaled,
   latestPaneValue,
   paneValueState,
   placeGuides,
@@ -572,6 +573,44 @@ function PaneHead({
             styles.paneHeadValue,
             state === 'high' && { color: highColor },
             state === 'low' && { color: colors.bull },
+          ]}
+        >
+          {txt}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * رأس لوحة **ثنائية الجانب**: الاسم، وتحته قيمة آخر شمعة.
+ *
+ * بخلاف `PaneHead` لا عتبات هنا — مقياس هذه اللوحات ديناميكي، فلا «تشبّع» يُلوَّن له.
+ * الإشارة الوحيدة المعنيّة بلوحة تدور حول الصفر هي **الجانب**، وهي نفس دلالة لون
+ * الأعمدة أسفلها (أخضر فوق الصفر، أحمر تحته) فيقرأ المتداول الاثنين كوحدة واحدة.
+ *
+ * وكان هذا الصفّ يعرض الاسم وحده بالـ47 لوحة: يرى المتداول عموداً أخضر قصيراً ولا
+ * يعرف أهو ‎0.0004‎ أم ‎0.4‎ — ولا يقارن قراءة اليوم بقراءة الأمس أصلاً.
+ */
+function PaneValueHead({
+  name,
+  values,
+}: {
+  name: string;
+  values: readonly (number | null | undefined)[];
+}) {
+  const v = latestPaneValue(values);
+  const txt = formatPaneValueScaled(values, v);
+  return (
+    <View style={styles.paneHead}>
+      <Text style={styles.paneHeadName}>{name}</Text>
+      {txt ? (
+        <Text
+          style={[
+            styles.paneHeadValue,
+            txt.length >= 7 && styles.paneHeadValueLong,
+            v != null && v > 0 && { color: colors.bull },
+            v != null && v < 0 && { color: colors.bear },
           ]}
         >
           {txt}
@@ -4918,7 +4957,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {cog ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>COG</Text>
+          <PaneValueHead name="COG" values={cog} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -4952,7 +4991,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {squeeze ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Squeeze</Text>
+          <PaneValueHead name="Squeeze" values={squeeze.momentum} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -4991,7 +5030,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {woodieCci ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Woodie CCI</Text>
+          <PaneValueHead name="Woodie CCI" values={woodieCci.cci} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -5138,7 +5177,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {cfo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>CFO</Text>
+          <PaneValueHead name="CFO" values={cfo} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -5172,7 +5211,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vwMacd ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>VW-MACD</Text>
+          <PaneValueHead name="VW-MACD" values={vwMacd.hist} />
           <View style={styles.paneInner}>
             {(() => {
               // كان آخر موضع بقي فيه المقياس الثابت `Math.abs(v) * 8000` بعد إصلاح MACD —
@@ -5242,7 +5281,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {disparityIndex ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Disparity</Text>
+          <PaneValueHead name="Disparity" values={disparityIndex} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -5372,7 +5411,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {pgo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>PGO</Text>
+          <PaneValueHead name="PGO" values={pgo} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -5406,7 +5445,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {pfe ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>PFE</Text>
+          <PaneValueHead name="PFE" values={pfe} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -5492,7 +5531,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vpci ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>VPCI</Text>
+          <PaneValueHead name="VPCI" values={vpci} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -5526,7 +5565,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ttf ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>TTF</Text>
+          <PaneValueHead name="TTF" values={ttf} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -5610,7 +5649,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vfi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>VFI</Text>
+          <PaneValueHead name="VFI" values={vfi} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -5668,7 +5707,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {twiggsMoneyFlow ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Twiggs MF</Text>
+          <PaneValueHead name="Twiggs MF" values={twiggsMoneyFlow} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -5698,7 +5737,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vzo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>VZO</Text>
+          <PaneValueHead name="VZO" values={vzo} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -5728,7 +5767,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {gmmaOsc ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>GMMA Osc</Text>
+          <PaneValueHead name="GMMA Osc" values={gmmaOsc} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -5762,7 +5801,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {iftRsi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>IFT-RSI</Text>
+          <PaneValueHead name="IFT-RSI" values={iftRsi} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6000,7 +6039,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {trix ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>TRIX</Text>
+          <PaneValueHead name="TRIX" values={trix} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6034,7 +6073,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {force ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Force</Text>
+          <PaneValueHead name="Force" values={force} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6068,7 +6107,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {chaikinOsc ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Chaikin</Text>
+          <PaneValueHead name="Chaikin" values={chaikinOsc} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6102,7 +6141,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {dpo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>DPO</Text>
+          <PaneValueHead name="DPO" values={dpo} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6136,7 +6175,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ao ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>AO</Text>
+          <PaneValueHead name="AO" values={ao} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6170,7 +6209,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ac ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>AC</Text>
+          <PaneValueHead name="AC" values={ac} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6204,7 +6243,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {fractalChaosOsc ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Fractal Chaos Osc</Text>
+          <PaneValueHead name="Fractal Chaos Osc" values={fractalChaosOsc} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6240,7 +6279,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {bop ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>BOP</Text>
+          <PaneValueHead name="BOP" values={bop} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6274,7 +6313,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {bullPower ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Bull Power</Text>
+          <PaneValueHead name="Bull Power" values={bullPower} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6308,7 +6347,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {bearPower ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Bear Power</Text>
+          <PaneValueHead name="Bear Power" values={bearPower} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6342,7 +6381,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {tsi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>TSI</Text>
+          <PaneValueHead name="TSI" values={tsi} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6376,7 +6415,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {coppock ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Coppock</Text>
+          <PaneValueHead name="Coppock" values={coppock} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6410,7 +6449,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {eom ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>EOM</Text>
+          <PaneValueHead name="EOM" values={eom} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6444,7 +6483,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ppo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>PPO</Text>
+          <PaneValueHead name="PPO" values={ppo} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6478,7 +6517,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {chaikinVol ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Chaikin Vol</Text>
+          <PaneValueHead name="Chaikin Vol" values={chaikinVol} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6512,7 +6551,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {qstick ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Qstick</Text>
+          <PaneValueHead name="Qstick" values={qstick} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6598,7 +6637,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {pvo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>PVO</Text>
+          <PaneValueHead name="PVO" values={pvo} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6632,7 +6671,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {apo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>APO</Text>
+          <PaneValueHead name="APO" values={apo} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6666,7 +6705,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Volume Osc</Text>
+          <PaneValueHead name="Volume Osc" values={vo} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6921,7 +6960,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {rvi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>RVI</Text>
+          <PaneValueHead name="RVI" values={rvi} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -6955,7 +6994,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {linRegSlope ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>LR Slope</Text>
+          <PaneValueHead name="LR Slope" values={linRegSlope} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -7075,7 +7114,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {momentum ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Momentum</Text>
+          <PaneValueHead name="Momentum" values={momentum} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -7195,7 +7234,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ravi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>RAVI</Text>
+          <PaneValueHead name="RAVI" values={ravi} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -7257,7 +7296,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {fisher ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Fisher Transform</Text>
+          <PaneValueHead name="Fisher Transform" values={fisher} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -7291,7 +7330,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {kst ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>KST</Text>
+          <PaneValueHead name="KST" values={kst} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -7625,7 +7664,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {smiErgodic ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>SMI Ergodic Osc</Text>
+          <PaneValueHead name="SMI Ergodic Osc" values={smiErgodic} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -7659,7 +7698,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {pmo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>PMO</Text>
+          <PaneValueHead name="PMO" values={pmo} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -7777,7 +7816,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {volRoc ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Volume ROC</Text>
+          <PaneValueHead name="Volume ROC" values={volRoc} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -7955,7 +7994,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {macd ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>MACD</Text>
+          <PaneValueHead name="MACD" values={macd.hist} />
           <View style={styles.paneInner}>
             {(() => {
               // المقياس من مدى البيانات بالنافذة، لا من الثابت 8000 الذي كان يجعل
@@ -8125,7 +8164,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {cci ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>CCI</Text>
+          <PaneValueHead name="CCI" values={cci} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -8159,7 +8198,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {roc ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>ROC</Text>
+          <PaneValueHead name="ROC" values={roc} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -8221,7 +8260,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {aroon ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>AROON</Text>
+          <PaneValueHead name="AROON" values={aroon} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -8255,7 +8294,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {cmf ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>CMF</Text>
+          <PaneValueHead name="CMF" values={cmf} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -8892,6 +8931,8 @@ const styles = StyleSheet.create({
   paneHead: { width: 36, paddingTop: 5, alignItems: 'center' },
   paneHeadName: { color: colors.textDim, fontSize: 9, fontWeight: '800', textAlign: 'center' },
   paneHeadValue: { color: colors.textMuted, fontSize: 9, fontWeight: '700', textAlign: 'center', marginTop: 1 },
+  // رقم طويل (مقياس دقيق كـMACD على زوج عملات) — 8 محارف لا تتّسع بـ36px عند حجم 9.
+  paneHeadValueLong: { fontSize: 8 },
   // خطّ عتبة داخل لوحة محصورة المدى. الرقم عند أقصى اليسار — أبعد موضع عن اسم اللوحة
   // (اللوحة row-reverse فاسمها يميناً) وأقلّها حجباً للشموع الأخيرة التي يقرؤها المتداول.
   paneGuideLine: {

@@ -8,8 +8,12 @@ import {
   GUIDES_MID_MIN_INNER_H,
   GUIDES_MIN_INNER_H,
   PANE_GUIDES,
+  PANE_VALUE_MAX_CHARS,
   formatPaneValue,
+  formatPaneValueScaled,
   latestPaneValue,
+  paneSeriesMaxAbs,
+  paneValueDecimals,
   paneValueState,
   placeGuides,
 } from './paneGuides';
@@ -129,6 +133,103 @@ for (const id of ['cci', 'roc', 'atr', 'volume', '', 'nope']) {
   assert.equal(paneValueState('adx', 10), 'mid');
   assert.equal(paneValueState('rsi', null), 'mid');
   assert.equal(paneValueState('cci', 500), 'mid');
+}
+
+// ——— صياغة قيمة لوحة ثنائية الجانب (مقياس ديناميكي) ———
+
+// أ) مقياس اللوحة: أقصى مطلق صالح، ويتجاهل null/NaN/Infinity
+{
+  assert.equal(paneSeriesMaxAbs([1, -5, 3]), 5);
+  assert.equal(paneSeriesMaxAbs([null, -0.004, 0.002]), 0.004);
+  assert.equal(paneSeriesMaxAbs([]), 0);
+  assert.equal(paneSeriesMaxAbs([null, undefined]), 0);
+  assert.equal(paneSeriesMaxAbs([Number.NaN, Number.POSITIVE_INFINITY, 2]), 2);
+  assert.equal(paneSeriesMaxAbs([0]), 0);
+}
+
+// ب) الخانات العشرية: ثلاث خانات معنوية عند المقياس، محصورة 0..8
+{
+  assert.equal(paneValueDecimals(0.00042), 6);
+  assert.equal(paneValueDecimals(0.5), 3);
+  assert.equal(paneValueDecimals(5.67), 2);
+  assert.equal(paneValueDecimals(56.7), 1);
+  assert.equal(paneValueDecimals(567), 0);
+  assert.equal(paneValueDecimals(5678), 0);
+  assert.equal(paneValueDecimals(0), 2);
+  assert.equal(paneValueDecimals(-1), 2);
+  assert.equal(paneValueDecimals(Number.NaN), 2);
+  assert.ok(paneValueDecimals(1e-30) <= 8);
+  let prev = -1;
+  for (const a of [1e4, 1e3, 100, 10, 1, 0.1, 0.01, 0.001]) {
+    const d = paneValueDecimals(a);
+    assert.ok(d >= prev, `a=${a}`);
+    prev = d;
+  }
+}
+
+// ج) الصياغة: **الشكل واحد لكل اللوحة**، والجانبان متماثلان
+{
+  // MACD على زوج عملات: القيم بحدود 1e-4 — الصياغة الثابتة السابقة كانت تعطي «0.0»
+  const macdLike = [0.00042, -0.00031, 0.00018, null, 0.00007];
+  assert.equal(formatPaneValue(0.00042), '0.0', 'الصياغة القديمة فعلاً عديمة الفائدة هنا');
+  // خمس خانات لا ستّ: ستّ لا تتّسع بالسالب (‎-0.000310‎ تسعة محارف)، فتُخفَّض للّوحة
+  // كلّها — لا لبعض قيمها — فيبقى الشكل واحداً والجانبان متماثلين.
+  assert.equal(formatPaneValueScaled(macdLike, 0.00042), '0.00042');
+  assert.equal(formatPaneValueScaled(macdLike, -0.00031), '-0.00031');
+  // نفس عدد الخانات للقيمتين — لا شكلان بلوحة واحدة
+  const pos = formatPaneValueScaled(macdLike, 0.00042)!;
+  const neg = formatPaneValueScaled(macdLike, -0.00031)!;
+  assert.equal(pos.split('.')[1]!.length, neg.split('.')[1]!.length);
+
+  // الصياغة لا تتغيّر بتغيّر القيمة المعروضة وحدها (ثبات مع كل تيك)
+  const decs = new Set(
+    macdLike
+      .filter((v): v is number => v != null)
+      .map((v) => formatPaneValueScaled(macdLike, v)!.split('.')[1]?.length ?? 0)
+  );
+  assert.equal(decs.size, 1, 'خانات مختلفة داخل لوحة واحدة');
+}
+
+// د) المدى الكامل: مقاييس صغيرة وكبيرة، وK/M للحجم الضخم
+{
+  // مقياس 120 ⇐ ثلاث خانات معنوية = أعداد صحيحة (وهكذا يُقرأ CCI وROC فعلاً)
+  assert.equal(formatPaneValueScaled([120, -80], 62.5), '63');
+  assert.equal(formatPaneValueScaled([120, -80], -80), '-80');
+  // ومقياس 2.4 ⇐ خانتان، فالدقّة تتبع اللوحة لا رقماً ثابتاً
+  assert.equal(formatPaneValueScaled([2.4, -2.4], 0.625), '0.63');
+  assert.equal(formatPaneValueScaled([2.5, -1.2], 1.234), '1.23');
+  assert.equal(formatPaneValueScaled([9000, -9000], 1234.5), '1235');
+  // OBV/حجم: المقياس ≥1e5 ⇐ آلاف، و≥1e8 ⇐ ملايين
+  assert.ok(formatPaneValueScaled([5e5, -5e5], 250000)!.endsWith('K'));
+  assert.ok(formatPaneValueScaled([5e9, -5e9], 2.5e9)!.endsWith('M'));
+  // وتحت 1e5 تبقى أرقاماً عادية (لا «0.1K» لقيمة 120)
+  assert.equal(formatPaneValueScaled([5e4, -5e4], 120), '120');
+}
+
+// هـ) الحدود: null/NaN ⇐ لا نصّ، والصفر صفر لا «-0»
+{
+  assert.equal(formatPaneValueScaled([1, 2], null), null);
+  assert.equal(formatPaneValueScaled([1, 2], undefined), null);
+  assert.equal(formatPaneValueScaled([1, 2], Number.NaN), null);
+  assert.equal(formatPaneValueScaled([1, 2], Number.POSITIVE_INFINITY), null);
+  assert.equal(formatPaneValueScaled([1, 2], 0), '0');
+  assert.equal(formatPaneValueScaled([0.5, -0.5], -0.0001), '0', 'لا «-0» بالواجهة');
+  assert.equal(formatPaneValueScaled([], 5), '5');
+}
+
+// و) **حدّ العرض**: لا نصّ يتجاوز ما يتّسع بعمود الرأس، بأيّ مقياس وأيّ إشارة
+{
+  const scales = [1e-9, 1e-6, 1e-4, 0.001, 0.01, 1, 9.99, 99.9, 1234, 99999, 5e5, 5e9, 1e14];
+  for (const m of scales) {
+    for (const v of [m, -m, m / 3, -m / 3, m / 1000, 0]) {
+      const t = formatPaneValueScaled([m, -m], v);
+      if (t == null) continue;
+      assert.ok(
+        t.length <= PANE_VALUE_MAX_CHARS,
+        `مقياس ${m} قيمة ${v} ⇐ «${t}» (${t.length} محرفاً > ${PANE_VALUE_MAX_CHARS})`
+      );
+    }
+  }
 }
 
 console.log('paneGuides.selftest: PASS');
