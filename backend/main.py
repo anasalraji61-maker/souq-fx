@@ -1035,7 +1035,13 @@ def check_alerts(user: dict | None = Depends(_auth_user), key: str | None = Depe
         if q is None:
             continue
         if alert_worker._price_hit(a, q, candles) and db.mark_alert_triggered(a["id"]):
-            triggered.append({**a, "current": q})
+            # الصفّ كما استقرّ بالقاعدة لا كما قُرئ قبل القلب: `a` لُقّط قبل
+            # `mark_alert_triggered` فيحمل `triggered: false` — أي أن المسار كان يسلّم تنبيهاً
+            # **أُطلق للتوّ** موسوماً «يراقب». نفس التصحيح المطبَّق على تنبيهات المؤشر
+            # (`/api/indicator-alerts/check`) وكان شقيقه السعريّ خارجه. العميل الحالي يبني
+            # قائمته من `alerts` ويستعمل `triggered` للوميض والإشعار وحدهما فلا يظهر الأثر
+            # اليوم — **يُقال كما هو**: هذا إغلاق فخّ لا إصلاح عطب ظاهر.
+            triggered.append({**a, "triggered": True, "current": q})
     return {"triggered": triggered, "alerts": db.list_alerts(uid, owner_key=key)}
 
 
