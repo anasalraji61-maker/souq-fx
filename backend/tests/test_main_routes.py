@@ -23,6 +23,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import db
+import indicators as ind_engine
 import main
 from core import db_conn
 
@@ -499,3 +500,69 @@ def test_the_check_only_ever_sees_the_callers_own_alerts(client, series_calls):
 def test_an_alert_that_could_never_fire_is_rejected(client, body, why):
     token = _register(client, "indvalid")
     assert client.post("/api/indicator-alerts", json=body, headers=_auth(token)).status_code == 422, why
+
+
+# ─── فترتا المتوسط: نفس قاعدة «لا يمكن أن يُطلق ← 422» ──────────────────────
+
+_IND_CROSS = {
+    "symbol": "EURUSD",
+    "timeframe": "1H",
+    "alert_type": "ma_cross",
+    "condition": "cross_up",
+}
+
+
+@pytest.mark.parametrize(
+    "periods, why",
+    [
+        ({"fast_period": 0}, "0 كان يبتلعه `or 9` فيعمل التنبيه بفترة غير المعروضة"),
+        ({"slow_period": 0}, "و`or 21` مثله بالفترة البطيئة"),
+        ({"fast_period": -3}, "سالبة → sma تعيد ‎-0.0‎ لكل شمعة: خطّ مسطّح لا يتقاطع"),
+        ({"slow_period": -1}, "سالبة بالبطيئة كذلك"),
+        ({"slow_period": main.CHECK_SERIES_SIZE}, "بطول السلسلة → قيمة واحدة لا قيمتان"),
+        ({"fast_period": 100_000, "slow_period": 200_000}, "أبعد من أي سلسلة"),
+        ({"fast_period": 9, "slow_period": 9}, "متوسطان متطابقان = خطّ واحد لا يتقاطع بنفسه"),
+    ],
+)
+def test_a_cross_alert_with_periods_that_can_never_cross_is_rejected(client, periods, why):
+    """الحقلان كانا **بلا أي حدّ**: يُحفظان بـ200 ويرى المتداول تنبيهاً «يراقب» إلى
+    الأبد بلا ما يدلّه أنه ميت. نفس القاعدة المعلنة بأعلى هذا المُصادِق، مطبَّقة عليهما."""
+    token = _register(client, "indperiod")
+    r = client.post("/api/indicator-alerts", json={**_IND_CROSS, **periods}, headers=_auth(token))
+    assert r.status_code == 422, why
+
+
+@pytest.mark.parametrize("periods", [
+    {"fast_period": 1, "slow_period": 21},                       # السعر نفسه مقابل متوسط
+    {"fast_period": 9, "slow_period": main.MAX_MA_PERIOD},       # الحدّ الأقصى تماماً
+    {"fast_period": 50, "slow_period": 9},                       # سريعة أطول من بطيئة: غير شائع لكنه يتقاطع
+])
+def test_periods_that_can_actually_cross_are_still_accepted(client, periods):
+    """الحدّ ليس تشدّداً: `MAX_MA_PERIOD` هو آخر فترة تُنتج **قيمتين** بسلسلة الفحص —
+    وهما ما يلزم `cross_up`. ولا يُفرض ترتيب بين الفترتين: «الـ50 يقطع الـ9 صعوداً»
+    سؤال مشروع، والمعروض هو المحفوظ."""
+    token = _register(client, "indokperiod")
+    r = client.post("/api/indicator-alerts", json={**_IND_CROSS, **periods}, headers=_auth(token))
+    assert r.status_code == 200, r.text
+    assert r.json()["alert"]["slow_period"] == periods["slow_period"]
+
+
+def test_equal_periods_are_only_rejected_for_cross_alerts(client):
+    """تنبيه RSI لا يستعمل الفترتين إطلاقاً (`rsi` بفترة 14 ثابتة داخل `snapshot`)،
+    فلا يُرفض على تطابقهما — الرفض حيث يعني «لا يُطلق أبداً» فقط."""
+    token = _register(client, "indrsiperiod")
+    r = client.post(
+        "/api/indicator-alerts",
+        json={**_IND_RSI, "fast_period": 9, "slow_period": 9},
+        headers=_auth(token),
+    )
+    assert r.status_code == 200, r.text
+
+
+def test_the_period_bound_matches_the_series_the_check_actually_uses(client):
+    """الحدّ مشتقّ من طول سلسلة الفحص لا رقماً مختاراً: لو تغيّر أحدهما وحده انكسر هذا."""
+    values = [1.0 + i * 0.01 for i in range(main.CHECK_SERIES_SIZE)]
+    at_max = ind_engine.sma(values, main.MAX_MA_PERIOD)
+    over = ind_engine.sma(values, main.MAX_MA_PERIOD + 1)
+    assert sum(v is not None for v in at_max) == 2, "آخر فترة تُنتج القيمتين اللتين يلزمهما التقاطع"
+    assert sum(v is not None for v in over) < 2, "وما بعدها لا يتقاطع مهما فعل السوق"

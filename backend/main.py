@@ -265,6 +265,17 @@ class IndicatorAlertCreate(BaseModel):
             raise ValueError("cross alert needs condition cross_up/cross_down")
         if self.timeframe not in TF_SECONDS:
             raise ValueError("unknown timeframe")
+        # نفس القاعدة مطبَّقة على فترتَي المتوسط: كانتا بلا أي حدّ. فترة 0 كان يبتلعها
+        # `_check_indicator_alert` بـ`or 9`/`or 21` فيصير التنبيه بفترة غير التي طلبها
+        # المتداول وتُعرض له؛ وفترة سالبة تجعل `sma` تعيد ‎-0.0‎ لكل شمعة (شريحة فارغة
+        # مقسومة على عدد سالب) — خطّ مسطّح لا يتقاطع أبداً؛ وفترة ≥ طول السلسلة لا تُنتج
+        # قيمتين فلا تتقاطع. الثلاث كانت تُحفَظ بـ200 ويراها المتداول «يراقب» إلى الأبد.
+        for name, period in (("fast_period", self.fast_period), ("slow_period", self.slow_period)):
+            if not (MIN_MA_PERIOD <= period <= MAX_MA_PERIOD):
+                raise ValueError(f"{name} must be between {MIN_MA_PERIOD} and {MAX_MA_PERIOD}")
+        # متوسطان بالفترة نفسها خطّ واحد حرفياً: تقاطعه بنفسه مستحيل.
+        if self.alert_type != "rsi" and self.fast_period == self.slow_period:
+            raise ValueError("fast and slow periods must differ")
         return self
 
 
@@ -486,6 +497,15 @@ TF_SECONDS = {
     "D": 86400,
     "W": 604800,
 }
+
+
+# حجم السلسلة التي يفحص عليها `check_indicator_alerts` (الافتراضي أدناه)، ومنه أطول فترة
+# متوسط يمكن أن تتقاطع فعلاً: `sma` تعطي أول قيمة عند الفهرس period-1، و`cross_up`/`cross_down`
+# يلزمهما آخر **قيمتين** غير فارغتين — أي أن فترة أطول من (الطول − 1) لا تُنتج قيمتين أبداً
+# فلا يتقاطع المتوسط مهما فعل السوق.
+CHECK_SERIES_SIZE = 180
+MIN_MA_PERIOD = 1
+MAX_MA_PERIOD = CHECK_SERIES_SIZE - 1
 
 
 def build_series(symbol: str, timeframe: str = "15m", outputsize: int = 180) -> ChartSeries:
