@@ -40,6 +40,12 @@ import { rangeBars } from './range';
 import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
+import {
+  centeredBarH,
+  centeredBarTop,
+  centeredPaneInnerH,
+  centeredPaneZeroY,
+} from './centeredPane';
 import { STOCH_LINE_H, stochPaneGeom } from './stochPane';
 import {
   formatPaneValue,
@@ -4869,14 +4875,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxCog = Math.max(...vals, 1e-9);
               return cog.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxCog) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxCog, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -4899,7 +4905,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxSq = Math.max(...vals, 1e-9);
               return squeeze.momentum.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxSq) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxSq, paneH);
                 const on = squeeze.squeezeOn[i];
                 return (
                   <View
@@ -4907,7 +4913,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: on ? 0.35 : 0.85,
                       borderWidth: on ? 0 : 1,
@@ -4930,7 +4936,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxWc = Math.max(...vals, 1e-9);
               return woodieCci.cci.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxWc) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxWc, paneH);
                 const turbo = woodieCci.turbo[i];
                 const turboAbove = turbo != null && turbo > v;
                 return (
@@ -4939,7 +4945,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                       borderWidth: turbo == null ? 0 : 1,
@@ -5071,14 +5077,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxC = Math.max(...vals, 1e-9);
               return cfo.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxC) * (paneH / 2 - 4));
+                const h = centeredBarH(v, maxC, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -5169,14 +5175,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxD = Math.max(...vals, 1e-9);
               return disparityIndex.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxD) * (paneH / 2 - 4));
+                const h = centeredBarH(v, maxD, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -5293,14 +5299,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxP = Math.max(...vals, 1e-9);
               return pgo.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxP) * (paneH / 2 - 4));
+                const h = centeredBarH(v, maxP, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -5321,14 +5327,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxP = Math.max(...vals, 1e-9);
               return pfe.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxP) * (paneH / 2 - 4));
+                const h = centeredBarH(v, maxP, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -5401,14 +5407,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxV = Math.max(...vals, 1e-9);
               return vpci.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxV) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxV, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -5429,14 +5435,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxT = Math.max(...vals, 1e-9);
               return ttf.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxT) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxT, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -5507,14 +5513,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxV = Math.max(...vals, 1e-9);
               return vfi.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxV) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxV, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -5556,14 +5562,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={styles.paneInner}>
             {twiggsMoneyFlow.map((v, i) => {
               if (v == null) return <View key={i} style={{ flex: 1 }} />;
-              const h = Math.min(paneH - 16, Math.abs(v) * (paneH / 2 - 4));
+              const h = centeredBarH(v, 1, paneH);
               return (
                 <View
                   key={i}
                   style={{
                     flex: 1,
                     height: Math.max(2, h),
-                    marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                    marginTop: centeredBarTop(v, h, paneH),
                     backgroundColor: v >= 0 ? colors.bull : colors.bear,
                     opacity: 0.7,
                   }}
@@ -5580,14 +5586,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={styles.paneInner}>
             {vzo.map((v, i) => {
               if (v == null) return <View key={i} style={{ flex: 1 }} />;
-              const h = Math.min(paneH - 16, (Math.abs(v) / 100) * (paneH / 2 - 4));
+              const h = centeredBarH(v, 100, paneH);
               return (
                 <View
                   key={i}
                   style={{
                     flex: 1,
                     height: Math.max(2, h),
-                    marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                    marginTop: centeredBarTop(v, h, paneH),
                     backgroundColor: v >= 0 ? colors.bull : colors.bear,
                     opacity: 0.7,
                   }}
@@ -5607,14 +5613,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxG = Math.max(...vals, 1e-9);
               return gmmaOsc.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxG) * (paneH / 2 - 4));
+                const h = centeredBarH(v, maxG, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -5635,14 +5641,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               // بالحد الأقصى، بنفس أسلوب Twiggs MF/VZO أعلاه (رياضياً محصورة لا تجريبياً فقط).
               return iftRsi.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, Math.abs(v) * (paneH / 2 - 4));
+                const h = centeredBarH(v, 1, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -5867,14 +5873,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxT = Math.max(...vals, 1e-9);
               return trix.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxT) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxT, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -5895,14 +5901,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxF = Math.max(...vals, 1e-9);
               return force.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxF) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxF, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -5923,14 +5929,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxC = Math.max(...vals, 1e-9);
               return chaikinOsc.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxC) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxC, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -5951,14 +5957,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxD = Math.max(...vals, 1e-9);
               return dpo.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxD) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxD, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -5979,14 +5985,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxA = Math.max(...vals, 1e-9);
               return ao.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxA) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxA, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6007,14 +6013,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxAc = Math.max(...vals, 1e-9);
               return ac.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxAc) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxAc, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6037,14 +6043,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxF = Math.max(...vals, 1e-9);
               return fractalChaosOsc.map((v, i) => {
                 if (v == null || v === 0) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxF) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxF, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bear : colors.bull,
                       opacity: 0.7,
                     }}
@@ -6065,14 +6071,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxB = Math.max(...vals, 1e-9);
               return bop.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxB) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxB, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6093,14 +6099,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxBp = Math.max(...vals, 1e-9);
               return bullPower.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxBp) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxBp, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6121,14 +6127,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxBe = Math.max(...vals, 1e-9);
               return bearPower.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxBe) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxBe, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6149,14 +6155,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxTsi = Math.max(...vals, 1e-9);
               return tsi.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxTsi) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxTsi, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6177,14 +6183,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxCop = Math.max(...vals, 1e-9);
               return coppock.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxCop) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxCop, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6205,14 +6211,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxEom = Math.max(...vals, 1e-9);
               return eom.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxEom) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxEom, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6233,14 +6239,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxP = Math.max(...vals, 1e-9);
               return ppo.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxP) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxP, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6261,14 +6267,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxCv = Math.max(...vals, 1e-9);
               return chaikinVol.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxCv) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxCv, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6289,14 +6295,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxQ = Math.max(...vals, 1e-9);
               return qstick.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxQ) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxQ, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6369,14 +6375,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxPv = Math.max(...vals, 1e-9);
               return pvo.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxPv) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxPv, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6397,14 +6403,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxA = Math.max(...vals, 1e-9);
               return apo.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxA) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxA, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6425,14 +6431,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxVo = Math.max(...vals, 1e-9);
               return vo.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxVo) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxVo, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6674,14 +6680,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxR = Math.max(...vals, 1e-9);
               return rvi.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxR) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxR, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6704,14 +6710,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxL = Math.max(...vals, 1e-9);
               return linRegSlope.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxL) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxL, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6816,14 +6822,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxM = Math.max(...vals, 1e-9);
               return momentum.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxM) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxM, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6930,14 +6936,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxR = Math.max(...vals, 1e-9);
               return ravi.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxR) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxR, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -6986,14 +6992,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxF = Math.max(...vals, 1e-9);
               return fisher.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxF) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxF, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -7014,14 +7020,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxK = Math.max(...vals, 1e-9);
               return kst.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxK) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxK, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -7342,14 +7348,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxM = Math.max(...vals, 1e-9);
               return smiErgodic.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxM) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxM, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -7370,14 +7376,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxP = Math.max(...vals, 1e-9);
               return pmo.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxP) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxP, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -7482,14 +7488,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxV = Math.max(...vals, 1e-9);
               return volRoc.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxV) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxV, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -7594,25 +7600,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               return gator.upper.map((uv, i) => {
                 const lv = gator.lower[i];
                 if (uv == null && lv == null) return <View key={i} style={{ flex: 1 }} />;
-                const uh =
-                  uv != null
-                    ? Math.min(paneH / 2 - 8, (Math.abs(uv) / maxG) * (paneH / 2 - 8))
-                    : 0;
-                const lh =
-                  lv != null
-                    ? Math.min(paneH / 2 - 8, (Math.abs(lv) / maxG) * (paneH / 2 - 8))
-                    : 0;
+                // نفس مرجع بقية اللوحات ثنائية الجانب: مركز مساحة الرسم لا مركز اللوحة.
+                const zeroY = centeredPaneZeroY(paneH);
+                const uh = uv != null ? centeredBarH(uv, maxG, paneH) : 0;
+                const lh = lv != null ? centeredBarH(lv, maxG, paneH) : 0;
                 const upGrow = gator.upperGrowing[i];
                 const lowGrow = gator.lowerGrowing[i];
                 return (
-                  <View key={i} style={{ flex: 1, position: 'relative', height: paneH }}>
+                  <View
+                    key={i}
+                    style={{ flex: 1, position: 'relative', height: centeredPaneInnerH(paneH) }}
+                  >
                     {uv != null ? (
                       <View
                         style={{
                           position: 'absolute',
                           left: 1,
                           right: 1,
-                          top: paneH / 2 - uh,
+                          top: zeroY - uh,
                           height: Math.max(2, uh),
                           backgroundColor: upGrow ? colors.bull : colors.bear,
                           opacity: 0.7,
@@ -7625,7 +7630,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           position: 'absolute',
                           left: 1,
                           right: 1,
-                          top: paneH / 2,
+                          top: zeroY,
                           height: Math.max(2, lh),
                           backgroundColor: lowGrow ? colors.bull : colors.bear,
                           opacity: 0.7,
@@ -7819,14 +7824,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxC = Math.max(...vals, 1e-9);
               return cci.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxC) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxC, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -7847,14 +7852,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxR = Math.max(...vals, 1e-9);
               return roc.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxR) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxR, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -7903,14 +7908,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxA = Math.max(...vals, 1e-9);
               return aroon.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxA) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxA, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
@@ -7931,14 +7936,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const maxC = Math.max(...vals, 1e-9);
               return cmf.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (Math.abs(v) / maxC) * (paneH / 2 - 8));
+                const h = centeredBarH(v, maxC, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: v >= 0 ? paneH / 2 - h : paneH / 2,
+                      marginTop: centeredBarTop(v, h, paneH),
                       backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
