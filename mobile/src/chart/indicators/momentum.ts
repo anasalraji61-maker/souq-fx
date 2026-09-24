@@ -142,15 +142,15 @@ export function computeRoc(closes: number[], period = 10): (number | null)[] {
  * أطر زمنية بوزن مختلف لتقليل إشارات الانعكاس الكاذبة الشائعة بمؤشر زخم واحد. لكل شمعة:
  * BP (Buying Pressure) = إغلاق − min(أدنى، إغلاق الشمعة السابقة)، TR (بنفس منطق computeAtr لكن
  * بحدَّين فقط) = max(أعلى، إغلاق سابق) − min(أدنى، إغلاق سابق). لكل فترة: avg = مجموع(BP)/مجموع(TR)
- * على نافذتها (صفر عند مجموع TR صفري بدل قسمة على صفر). UO = 100×(4×avg1 + 2×avg2 + avg3)/7 (مدى
+ * على نافذتها (null عند مجموع TR صفري). UO = 100×(4×avg1 + 2×avg2 + avg3)/7 (مدى
  * 0..100، ≥70 تشبّع شرائي، ≤30 تشبّع بيعي — نفس عتبات RSI القياسية). **تحقّق يدوي بحالات حدّية
  * (بدل التقاط قيم من صف عشوائي كما بمؤشرات سابقة، لأن التحقّق العددي المباشر أوضح هنا)**: (أ) لو
  * BP=TR/2 بكل شمعة (ضغط شراء نصف المدى تماماً) فكل avg=0.5 → UO=100×(2+1+0.5)/7=50 — يطابق "50 =
  * محايد" المعروف عن هذا المؤشر بالضبط. (ب) لو BP=TR بكل شمعة (إغلاق=أعلى، وأدنى=إغلاق سابق فتصبح
  * trueLow=trueHigh السابقة صفراً للفارق) فكل avg=1 → UO=100×(4+2+1)/7=100 — الحد الأقصى النظري،
  * يطابق "ضغط شرائي كامل" تماماً. (ج) لو BP=0 بكل شمعة (إغلاق=أدنى دائماً) فكل avg=0 → UO=0 — الحد
- * الأدنى النظري. الحالات الثلاث تطابق تعريف المؤشر القياسي حرفياً. يعيد null حتى تتوفر maxPeriod-1
- * شمعة سابقة على الأقل (period3=28 افتراضياً هو الأطول، فأول قيمة فعلية عند المؤشر 27).
+ * الأدنى النظري. الحالات الثلاث تطابق تعريف المؤشر القياسي حرفياً. يعيد null حتى تتوفر maxPeriod
+ * شمعة بإغلاق سابق (period3=28 افتراضياً هو الأطول، فأول قيمة فعلية عند المؤشر 28 كـTradingView).
  */
 export function computeUltimateOsc(
   candles: Candle[],
@@ -176,16 +176,23 @@ export function computeUltimateOsc(
   const maxPeriod = Math.max(period1, period2, period3);
   const out: (number | null)[] = [];
   for (let i = 0; i < n; i++) {
-    if (i < maxPeriod - 1) {
+    // الشمعة 0 بلا إغلاق سابق: BP/TR لها مختلَقان من إغلاقها نفسه (TradingView: `close[1]` na ⇒ na)،
+    // فأوّل نافذة سليمة تبدأ بالشمعة 1 وأوّل قيمة بالفهرس maxPeriod لا maxPeriod−1.
+    if (i < maxPeriod) {
       out.push(null);
       continue;
     }
     const trSum1 = sumWindow(tr, i, period1);
     const trSum2 = sumWindow(tr, i, period2);
     const trSum3 = sumWindow(tr, i, period3);
-    const avg1 = trSum1 === 0 ? 0 : sumWindow(bp, i, period1) / trSum1;
-    const avg2 = trSum2 === 0 ? 0 : sumWindow(bp, i, period2) / trSum2;
-    const avg3 = trSum3 === 0 ? 0 : sumWindow(bp, i, period3) / trSum3;
+    // نافذة بلا مدى (سوق مغلق، شموع مسطّحة) ⇒ لا قيمة كـTradingView (قسمة على صفر = na)، لا 0 «تشبّع بيعي».
+    if (trSum1 === 0 || trSum2 === 0 || trSum3 === 0) {
+      out.push(null);
+      continue;
+    }
+    const avg1 = sumWindow(bp, i, period1) / trSum1;
+    const avg2 = sumWindow(bp, i, period2) / trSum2;
+    const avg3 = sumWindow(bp, i, period3) / trSum3;
     out.push((100 * (4 * avg1 + 2 * avg2 + avg3)) / 7);
   }
   return out;
