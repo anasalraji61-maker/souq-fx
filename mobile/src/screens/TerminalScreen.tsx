@@ -49,6 +49,7 @@ import {
 } from '../chart/alertFromChart';
 import { playSoftClick } from '../audio/playSoftClick';
 import { notify } from '../chart/confirmDestructive';
+import { createSeriesCache, seriesCacheKey } from '../chart/seriesCache';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { livePriceForChart } from '../chart/liveSeries';
 import { provenanceLabel, tickStatusLabel, normalizeProvenance } from '../chart/dataSource';
@@ -120,6 +121,21 @@ const BASES: Record<string, number> = {
 
 function offlineFrame(symbol: string, tf: Timeframe): ChartSeries {
   return mockSeries(symbol, BASES[symbol] ?? 1, tf, 120);
+}
+
+/**
+ * ذاكرة جلسة لشموع (رمز، فريم) كالرباعي (`seriesCache`، 5 دقائق): تبديل فريم/رمز كان يُبقي شموع الفريم السابق
+ * معروضة **تحت اسم الفريم الجديد** حتى يصل الجلب (15m موسومة 1H)، والرجوع لفريم فُتح قبل ثوانٍ = جولة انتظار كاملة.
+ * الآن آخر سلسلة حقيقية لنفس (الرمز، الفريم) تُعرض فوراً والجلب يستبدلها؛ وفشل الجلب يُبقيها بدل شموع وهمية.
+ * الإطارات والشارت الرئيسي والبطل تتشارك الذاكرة: فتح رمز/فريم ظاهر بإطار آخر فوري. لا تُخزَّن السلاسل التجريبية.
+ */
+const terminalSeriesCache = createSeriesCache<ChartSeries>();
+const cachedSeries = (sym: string, tf: Timeframe): ChartSeries | null =>
+  terminalSeriesCache.get(seriesCacheKey(sym, tf));
+async function fetchSeries(sym: string, tf: Timeframe): Promise<ChartSeries> {
+  const s = await api.chart(sym, tf);
+  if (normalizeProvenance(s.data_source).kind !== 'demo') terminalSeriesCache.put(seriesCacheKey(sym, tf), s);
+  return s;
 }
 
 export function TerminalScreen() {
@@ -360,8 +376,16 @@ export function TerminalScreen() {
       await persistFrameSymbols(next);
       pickSymbol(nextSym, frameTfs[index]);
       const gen = ++frameLoadGen.current[index];
+      const hit = cachedSeries(nextSym, frameTfs[index]);
+      if (hit) {
+        setFrames((prev) => {
+          const copy = [...prev];
+          copy[index] = hit;
+          return copy;
+        });
+      }
       try {
-        const s = await api.chart(nextSym, frameTfs[index]);
+        const s = await fetchSeries(nextSym, frameTfs[index]);
         if (gen !== frameLoadGen.current[index]) return;
         setFrames((prev) => {
           const copy = [...prev];
@@ -373,7 +397,7 @@ export function TerminalScreen() {
         if (gen !== frameLoadGen.current[index]) return;
         setFrames((prev) => {
           const copy = [...prev];
-          copy[index] = offlineFrame(nextSym, frameTfs[index]);
+          copy[index] = cachedSeries(nextSym, frameTfs[index]) ?? offlineFrame(nextSym, frameTfs[index]);
           return copy;
         });
         setOnline(false);
@@ -392,14 +416,16 @@ export function TerminalScreen() {
         /* ignore */
       }
       const gen = ++dxyLoadGen.current;
+      const hit = cachedSeries(nextSym, dxyTf);
+      if (hit) setDxy(hit);
       try {
-        const s = await api.chart(nextSym, dxyTf);
+        const s = await fetchSeries(nextSym, dxyTf);
         if (gen !== dxyLoadGen.current) return;
         setDxy(s);
         setOnline(true);
       } catch {
         if (gen !== dxyLoadGen.current) return;
-        setDxy(offlineFrame(nextSym, dxyTf));
+        setDxy(cachedSeries(nextSym, dxyTf) ?? offlineFrame(nextSym, dxyTf));
         setOnline(false);
       }
     },
@@ -585,17 +611,17 @@ export function TerminalScreen() {
       };
       try {
         const [heroSeries, a, b, c] = await Promise.all([
-          api.chart(heroSymbol, dxyTimeframe),
-          api.chart(frameSymbols[0], tfs[0]),
-          api.chart(frameSymbols[1], tfs[1]),
-          api.chart(frameSymbols[2], tfs[2]),
+          fetchSeries(heroSymbol, dxyTimeframe),
+          fetchSeries(frameSymbols[0], tfs[0]),
+          fetchSeries(frameSymbols[1], tfs[1]),
+          fetchSeries(frameSymbols[2], tfs[2]),
         ]);
         apply(heroSeries, [a, b, c]);
         setOnline(true);
       } catch {
         apply(
-          offlineFrame(heroSymbol, dxyTimeframe),
-          frameSymbols.map((s, i) => offlineFrame(s, tfs[i]))
+          cachedSeries(heroSymbol, dxyTimeframe) ?? offlineFrame(heroSymbol, dxyTimeframe),
+          frameSymbols.map((s, i) => cachedSeries(s, tfs[i]) ?? offlineFrame(s, tfs[i]))
         );
         setOnline(false);
       }
@@ -606,13 +632,13 @@ export function TerminalScreen() {
   const loadChart = useCallback(
     async (sym: string, timeframe: Timeframe, isStale?: () => boolean) => {
       try {
-        const s = await api.chart(sym, timeframe);
+        const s = await fetchSeries(sym, timeframe);
         if (isStale?.()) return;
         setSeries(s);
         setOnline(true);
       } catch {
         if (isStale?.()) return;
-        setSeries(mockSeries(sym, BASES[sym] ?? 1, timeframe, 180));
+        setSeries(cachedSeries(sym, timeframe) ?? mockSeries(sym, BASES[sym] ?? 1, timeframe, 180));
         setOnline(false);
       }
     },
@@ -631,6 +657,8 @@ export function TerminalScreen() {
   // (لا آخر رمز مختار فعلياً) هو ما يُعرَض، بصرف النظر عن ترتيب وصول الشبكة الفعلي.
   useEffect(() => {
     let alive = true;
+    const hit = cachedSeries(symbol, tf);
+    if (hit) setSeries(hit);
     void loadChart(symbol, tf, () => !alive);
     const id = setInterval(() => void loadChart(symbol, tf, () => !alive), 90_000);
     return () => {
@@ -741,14 +769,15 @@ export function TerminalScreen() {
     next[index] = nextTf;
     await persistTfs(next);
     const sym = frameSymbols[index];
+    const hit = cachedSeries(sym, nextTf);
     setFrames((prev) => {
       const copy = [...prev];
-      copy[index] = { ...copy[index], timeframe: nextTf };
+      copy[index] = hit ?? { ...copy[index], timeframe: nextTf };
       return copy;
     });
     const gen = ++frameLoadGen.current[index];
     try {
-      const s = await api.chart(sym, nextTf);
+      const s = await fetchSeries(sym, nextTf);
       if (gen !== frameLoadGen.current[index]) return;
       setFrames((prev) => {
         const copy = [...prev];
@@ -760,7 +789,7 @@ export function TerminalScreen() {
       if (gen !== frameLoadGen.current[index]) return;
       setFrames((prev) => {
         const copy = [...prev];
-        copy[index] = offlineFrame(sym, nextTf);
+        copy[index] = cachedSeries(sym, nextTf) ?? offlineFrame(sym, nextTf);
         return copy;
       });
       setOnline(false);
@@ -770,16 +799,17 @@ export function TerminalScreen() {
   const changeDxyTf = async (nextTf: Timeframe) => {
     if (dxyTf === nextTf) return;
     await persistDxyTf(nextTf);
-    setDxy((prev) => ({ ...prev, timeframe: nextTf }));
+    const hit = cachedSeries(heroSymbol, nextTf);
+    setDxy((prev) => hit ?? { ...prev, timeframe: nextTf });
     const gen = ++dxyLoadGen.current;
     try {
-      const s = await api.chart(heroSymbol, nextTf);
+      const s = await fetchSeries(heroSymbol, nextTf);
       if (gen !== dxyLoadGen.current) return;
       setDxy(s);
       setOnline(true);
     } catch {
       if (gen !== dxyLoadGen.current) return;
-      setDxy(offlineFrame(heroSymbol, nextTf));
+      setDxy(cachedSeries(heroSymbol, nextTf) ?? offlineFrame(heroSymbol, nextTf));
       setOnline(false);
     }
   };
