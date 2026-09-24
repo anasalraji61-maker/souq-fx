@@ -16,7 +16,6 @@
 | chart/launch | chart | إنهاء `chartExtraLabels` المؤقت ⇒ `tr.mcClearAllBody` / `tr.mcToLatestA11y` (ما زال في 4781،7270،10028) | chart15 ★ |
 | launch | chart | مفاتيح بلا مستخدم: `mcMeasureBarOne/Two`، `mcReplayEndedOnSwitch`، `cfReplayPriceA11y`، `mcHintSelect/Selected`، `mcHint*Web` | launch5 ★ |
 | launch | chart | DeMarker على 0..100 والمنصات 0..1 (قرار — انظر STATUS) | launch48 |
-| launch | tools | ربط `riskCalcCommissionNoteMicro/Cent` بالحاسبة | launch46 |
 | launch | tools | ربط `journalSizeFromSmallFix` (سنت⇒قياسي يبقى الحجم ×100) | launch48 |
 | tools | launch | مفتاح عملة مال صفقات السنت/المايكرو في الدفتر | tools30 |
 | tools+launch | backend | حذف spread وهمي (السعر × 0.00008) في `backend/twelve_data.py:315-318` | tools13 ★ |
@@ -33,9 +32,9 @@
 | chart | الجميع | تأكيدات الحذف لا تعمل على الويب (`Alert.alert`) — مساعد `confirmDestructive` مشترك | chart29 |
 | chart | MatrixEdgeRails | علامات أدوات long/short (تسقط إلى «·») `MatrixEdgeRails.tsx:28-40` | chart20 |
 | chart | launch | مفتاح `ctlToolHray` + علامة `hray` | chart23 |
-| chart | launch | وحدات الزمن بالكردية لأداة القياس (`mcDurMin/Hour/Day`) | chart16 ★ |
+| launch⇐chart | chart | المفتاح `mcMeasureDurUnits` جاهز (eab35cb) — اربطه بقراءة أداة القياس | chart16 |
 | chart | positionSize | EURUSDpro / GOLDm ⇒ null | chart33 |
 | launch | UI | أيقونة «₴» (الهريفنيا الأوكرانية) لتبويب الدفتر (`ToolsScreen.tsx:85`، `MatrixEdgeRails.tsx:142`) | launch4 ★ |
 | launch | backend/أنس | موجّه `openrouter_ai.py:71` «أنت خبير تداول» ويطلب دخول/وقف/هدف | launch9 ★ |
 
-منجز ومُتحقَّق منه (أُسقط): مفاتيح `mcUndo*`، تحويل cent/micro للحاسبة، `riskCalcOverOrderMax*`، وصف VWAP بالأكاديمية.
+منجز ومُتحقَّق منه (أُسقط): ملاحظة عمولة micro/cent (b878127)، مفاتيح `mcUndo*`، تحويل cent/micro للحاسبة، `riskCalcOverOrderMax*`، وصف VWAP بالأكاديمية.
