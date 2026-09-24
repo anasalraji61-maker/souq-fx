@@ -65,4 +65,18 @@ const near = (a: number | null, b: number, eps = 1e-9, msg = '') =>
   for (let i = 33; i < 80; i++) assert.ok(hist[i]! >= -1e-12, `hist[${i}]=${hist[i]}`);
 }
 
+// ta.hma: النصف والجذر مقطوعان للأسفل — HMA(9) = wma(2·wma(4) − wma(9), 3)
+{
+  const xs = Array.from({ length: 40 }, (_, i) => 1.1 + Math.sin(i / 3) * 0.01 + i * 0.0003);
+  const w4 = wma(xs, 4);
+  const w9 = wma(xs, 9);
+  const raw = xs.map((_, i) => (w4[i] != null && w9[i] != null ? 2 * w4[i]! - w9[i]! : null));
+  const want = wma(raw, 3);
+  const got = hma(xs, 9);
+  for (let i = 0; i < xs.length; i++) {
+    if (want[i] == null) assert.equal(got[i], null, `hma9 ${i}`);
+    else assert.ok(Math.abs((got[i] as number) - (want[i] as number)) < 1e-12, `hma9 ${i}`);
+  }
+}
+
 console.log('movingAverages.selftest: OK');

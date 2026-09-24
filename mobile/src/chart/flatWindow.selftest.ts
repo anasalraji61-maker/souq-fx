@@ -4,7 +4,7 @@
  * Run: npx --yes tsx src/chart/flatWindow.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { computeCci, computeStoch, computeStochRsi, computeWilliamsR } from './indicators/momentum';
+import { computeCci, computeCmo, computeStoch, computeStochRsi, computeWilliamsR } from './indicators/momentum';
 import { computeCmf, computeMfi } from './indicators/volume';
 
 const flat = (n: number, p = 1.1, volume?: number) =>
@@ -44,5 +44,9 @@ assert.equal(sr.d[closes.length - 1], null, 'StochRSI D');
 // لا تغيير على بيانات متحرّكة: لا null بعد الإحماء
 const k = computeStoch(moving).k;
 for (let i = 13; i < moving.length; i++) assert.equal(typeof k[i], 'number', `k[${i}]`);
+
+// CMO: 14 شمعة بلا حركة ⇒ null (`ta.cmo` 0/0 = na)، لا 0 «محايد»؛ بيانات متحرّكة ⇒ رقم
+assert.equal(computeCmo(closes)[closes.length - 1], null, 'CMO flat');
+assert.equal(typeof computeCmo(moving.map((b) => b.close))[29], 'number', 'CMO moving');
 
 console.log('flatWindow selftest: PASS');

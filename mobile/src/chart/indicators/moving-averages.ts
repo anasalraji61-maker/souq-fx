@@ -104,8 +104,10 @@ export function tema(values: number[], period: number): (number | null)[] {
  * مبنية فوق wma() المحلية بدل ema() — تصميم Hull القياسي لتقليل تأخر WMA العادي أكثر من DEMA/TEMA.
  */
 export function hma(values: number[], period: number): (number | null)[] {
-  const halfPeriod = Math.round(period / 2);
-  const sqrtPeriod = Math.max(1, Math.round(Math.sqrt(period)));
+  // `ta.hma`: طولا النصف والجذر مقطوعان للأسفل (Pine يقطع الطول الكسري). التقريب كان يعطي HMA(9) نصفاً 5 لا 4
+  // وHMA(7) جذراً 3 لا 2 — منحنى آخر لأي طول فردي أو جذر كسره ≥ .5 (الافتراضي 20 لا يتغيّر).
+  const halfPeriod = Math.max(1, Math.floor(period / 2));
+  const sqrtPeriod = Math.max(1, Math.floor(Math.sqrt(period)));
   const wmaHalf = wma(values, halfPeriod);
   const wmaFull = wma(values, period);
   const raw = values.map((_, i) =>

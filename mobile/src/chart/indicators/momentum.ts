@@ -201,8 +201,8 @@ export function computeUltimateOsc(
 /**
  * CMO (Chande Momentum Oscillator، period=14 — نفس افتراضي RSI/ADX/MFI/Aroon بهذا الملف) — يشبه
  * RSI هيكلياً (نفس تصنيف حركة كل شمعة لـup/down) لكن بدون تمهيد Wilder الأسي: مجموع مباشر لحركات
- * الصعود والهبوط داخل نافذة period فقط، ثم CMO = 100×(sumUp−sumDown)/(sumUp+sumDown) (صفر عند
- * مجموع كلي صفري بدل قسمة على صفر). المدى -100..100 (بعكس RSI 0..100)، +50/-50 عتبتا تشبّع
+ * الصعود والهبوط داخل نافذة period فقط، ثم CMO = 100×(sumUp−sumDown)/(sumUp+sumDown) (null عند
+ * مجموع كلي صفري، كـ`ta.cmo`). المدى -100..100 (بعكس RSI 0..100)، +50/-50 عتبتا تشبّع
  * شرائي/بيعي شائعتان. **تحقّق يدوي بثلاث حالات حدّية**: صعود ثابت كل شمعة (كل الحركات موجبة) →
  * sumDown=0 → CMO=100×sumUp/sumUp=100 (الحد الأقصى، يطابق "زخم صاعد كامل")؛ هبوط ثابت كل شمعة →
  * sumUp=0 → CMO=100×(0−sumDown)/sumDown=-100 (الحد الأدنى)؛ تعادل تام بين مجموع الصعود والهبوط
@@ -222,7 +222,8 @@ export function computeCmo(closes: number[], period = 14): (number | null)[] {
       if (d > 0) sumUp += d;
       else if (d < 0) sumDown += -d;
     }
-    out.push(sumUp + sumDown === 0 ? 0 : (100 * (sumUp - sumDown)) / (sumUp + sumDown));
+    // نافذة بلا حركة (سوق مغلق) ⇒ لا قيمة كـ`ta.cmo` (0/0 = na)، لا صفر يُقرأ «زخم محايد» على شموع لم تتداول.
+    out.push(sumUp + sumDown === 0 ? null : (100 * (sumUp - sumDown)) / (sumUp + sumDown));
   }
   return out;
 }
