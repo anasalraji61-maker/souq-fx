@@ -1,3 +1,5 @@
+import type { Timeframe } from '../timeframes';
+
 export type LangId = 'ar' | 'en-US' | 'en-GB' | 'ku';
 
 export type Dict = {
@@ -945,6 +947,13 @@ export type Dict = {
   pdwPrevA11yPrefix: string;
   pdwCurrentA11yPrefix: string;
   pdwNextA11yPrefix: string;
+  /**
+   * شريحة الإطار الزمني بـ`TimeframeBar` حسب اللغة — بدل `TIMEFRAME_LABELS` العربي الثابت بـ`timeframes.ts` الذي يراه الكردي أيضاً
+   * (`arabic={rtl}` و`isRtl('ku')` = true). الإنجليزية والكردية بالرموز اللاتينية كما بمنصّة الوسيط (1m/1H)؛ العربية كما هي اليوم حرفياً.
+   */
+  tfLabels: Record<Timeframe, string>;
+  /** ما يقرؤه قارئ الشاشة بعد `termTimeframeA11yPrefix` — كلمات كاملة لا «1H» */
+  tfLabelsA11y: Record<Timeframe, string>;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -1884,6 +1893,17 @@ const ar: Dict = {
   pdwPrevA11yPrefix: 'الزوج السابق: ',
   pdwCurrentA11yPrefix: 'اختيار الزوج الحالي: ',
   pdwNextA11yPrefix: 'الزوج التالي: ',
+  tfLabels: { '1m': 'دقيقة', '5m': '5 د', '15m': '15 د', '30m': '30 د', '1H': 'ساعة', '4H': '4 س', D: 'يومي', W: 'أسبوعي' },
+  tfLabelsA11y: {
+    '1m': 'دقيقة واحدة',
+    '5m': '5 دقائق',
+    '15m': '15 دقيقة',
+    '30m': '30 دقيقة',
+    '1H': 'ساعة واحدة',
+    '4H': '4 ساعات',
+    D: 'يومي',
+    W: 'أسبوعي',
+  },
 };
 
 const enUS: Dict = {
@@ -2817,6 +2837,17 @@ const enUS: Dict = {
   pdwPrevA11yPrefix: 'Previous pair: ',
   pdwCurrentA11yPrefix: 'Select current pair: ',
   pdwNextA11yPrefix: 'Next pair: ',
+  tfLabels: { '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '1H': '1H', '4H': '4H', D: 'D', W: 'W' },
+  tfLabelsA11y: {
+    '1m': '1 minute',
+    '5m': '5 minutes',
+    '15m': '15 minutes',
+    '30m': '30 minutes',
+    '1H': '1 hour',
+    '4H': '4 hours',
+    D: 'Daily',
+    W: 'Weekly',
+  },
 };
 
 const enGB: Dict = {
@@ -3774,6 +3805,18 @@ const ku: Dict = {
   pdwPrevA11yPrefix: 'جووتی پێشوو: ',
   pdwCurrentA11yPrefix: 'دیاریکردنی جووتی ئێستا: ',
   pdwNextA11yPrefix: 'جووتی داهاتوو: ',
+  // لا اختصار كردي شائع لـ«خولەک/کاتژمێر» ⇒ الرموز اللاتينية كمنصّة الوسيط؛ قارئ الشاشة يقرأ الكلمة كاملة (الكردية لا تجمع بعد العدد).
+  tfLabels: { '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '1H': '1H', '4H': '4H', D: 'D', W: 'W' },
+  tfLabelsA11y: {
+    '1m': '1 خولەک',
+    '5m': '5 خولەک',
+    '15m': '15 خولەک',
+    '30m': '30 خولەک',
+    '1H': '1 کاتژمێر',
+    '4H': '4 کاتژمێر',
+    D: 'ڕۆژانە',
+    W: 'هەفتانە',
+  },
 };
 
 export const DICTS: Record<LangId, Dict> = {
