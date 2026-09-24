@@ -409,6 +409,8 @@ export type Dict = {
   journalExitAtSlA11y: string;
   journalExitAtBeA11y: string;
   journalExitAtTpA11y: string;
+  /** قارئ الشاشة لشرائح الوقف بالمسافة («−20 pip») تحت خانة الوقف — `{pips}` العدد، `{price}` سعر الوقف المكتوب */
+  journalSlAtPipsA11y: string;
   journalNotePlaceholder: string;
   journalSlPlaceholder: string;
   journalTpPlaceholder: string;
@@ -715,6 +717,9 @@ export type Dict = {
   ctlToolZone: string;
   ctlToolNote: string;
   ctlToolMeasure: string;
+  /** أداتا مركز الشراء/البيع على الشارت (دخول، وقف، هدف) — «شراء» وحدها بشريط أدوات تُقرأ زرَّ أمر؛ هذه رسمة تخطيط لا صفقة */
+  ctlToolLong: string;
+  ctlToolShort: string;
   ctlLensClean: string;
   ctlLensCleanHint: string;
   ctlLensStructure: string;
@@ -1290,6 +1295,7 @@ const ar: Dict = {
   journalExitAtSlA11y: 'الخروج عند وقف الخسارة {price}',
   journalExitAtBeA11y: 'الخروج عند سعر الدخول (تعادل) {price}',
   journalExitAtTpA11y: 'الخروج عند الهدف {price}',
+  journalSlAtPipsA11y: 'وقف الخسارة على بُعد {pips} نقطة من الدخول: {price}',
   journalNotePlaceholder: 'ملاحظة',
   journalSlPlaceholder: 'وقف الخسارة (اختياري)',
   journalTpPlaceholder: 'الهدف (اختياري)',
@@ -1602,6 +1608,8 @@ const ar: Dict = {
   ctlToolZone: 'منطقة',
   ctlToolNote: 'ملاحظة',
   ctlToolMeasure: 'قياس',
+  ctlToolLong: 'خطة شراء',
+  ctlToolShort: 'خطة بيع',
   ctlLensClean: 'نظيف',
   ctlLensCleanHint: 'سعر فقط',
   ctlLensStructure: 'هيكل',
@@ -2178,6 +2186,7 @@ const enUS: Dict = {
   journalExitAtSlA11y: 'Exit at stop loss {price}',
   journalExitAtBeA11y: 'Exit at entry (breakeven) {price}',
   journalExitAtTpA11y: 'Exit at take profit {price}',
+  journalSlAtPipsA11y: 'Stop loss {pips} pips from entry: {price}',
   journalNotePlaceholder: 'Note',
   journalSlPlaceholder: 'Stop loss (optional)',
   journalTpPlaceholder: 'Take profit (optional)',
@@ -2491,6 +2500,8 @@ const enUS: Dict = {
   ctlToolZone: 'Zone',
   ctlToolNote: 'Note',
   ctlToolMeasure: 'Measure',
+  ctlToolLong: 'Buy plan',
+  ctlToolShort: 'Sell plan',
   ctlLensClean: 'Clean',
   ctlLensCleanHint: 'Price only',
   ctlLensStructure: 'Structure',
@@ -3093,6 +3104,7 @@ const ku: Dict = {
   journalExitAtSlA11y: 'دەرچوون لەسەر وەستانی زیان {price}',
   journalExitAtBeA11y: 'دەرچوون لەسەر نرخی چوونەژوورەوە (بێ قازانج و زیان) {price}',
   journalExitAtTpA11y: 'دەرچوون لەسەر ئامانج {price}',
+  journalSlAtPipsA11y: 'وەستانی زیان {pips} pip دوور لە چوونەژوورەوە: {price}',
   journalNotePlaceholder: 'تێبینی',
   journalSlPlaceholder: 'وەستانی زیان (ئیختیاری)',
   journalTpPlaceholder: 'ئامانج (ئیختیاری)',
@@ -3407,6 +3419,8 @@ const ku: Dict = {
   ctlToolZone: 'ناوچە',
   ctlToolNote: 'تێبینی',
   ctlToolMeasure: 'پێوان',
+  ctlToolLong: 'پلانی کڕین',
+  ctlToolShort: 'پلانی فرۆشتن',
   ctlLensClean: 'پاک',
   ctlLensCleanHint: 'تەنها نرخ',
   ctlLensStructure: 'پێکهاتە',
