@@ -346,6 +346,8 @@ export type Dict = {
   riskCalcUseLivePrice: string;
   riskCalcUseLivePriceA11y: string;
   riskCalcLiveFilled: string;
+  /** الدخول الحيّ نُقل تلقائياً لـAsk/Bid حين ظهرت جهة الوقف — {quote} = Ask|Bid، {side} = dirBuy|dirSell، {price} */
+  riskCalcLiveSideMoved: string;
   riskCalcNoLiveQuote: string;
   riskCalcDisclaimer: string;
   toolsTabRisk: string;
@@ -1244,6 +1246,7 @@ const ar: Dict = {
   riskCalcUseLivePrice: '↓ الدخول = السعر الحالي',
   riskCalcUseLivePriceA11y: 'تعبئة خانة الدخول بسعر السوق الحالي (Ask للشراء وBid للبيع حسب موضع الوقف)',
   riskCalcLiveFilled: '✓ الدخول من السعر الحالي:',
+  riskCalcLiveSideMoved: '✓ نُقل الدخول إلى {quote} (سعر {side}): {price}',
   riskCalcNoLiveQuote: 'لا سعر حي لهذا الرمز الآن — اكتب سعر الدخول يدوياً',
   riskCalcDisclaimer: 'تقدير تعليمي: مواصفات العقود (خصوصاً الذهب) قد تختلف لدى وسيطك — تحقّق قبل التداول.',
   toolsTabRisk: 'المخاطرة',
@@ -2142,6 +2145,7 @@ const enUS: Dict = {
   riskCalcUseLivePrice: '↓ Entry = current price',
   riskCalcUseLivePriceA11y: 'Fill the entry with the current market price (Ask for buy, Bid for sell, from where the stop sits)',
   riskCalcLiveFilled: '✓ Entry from the current price:',
+  riskCalcLiveSideMoved: '✓ Entry moved to {quote} ({side} price): {price}',
   riskCalcNoLiveQuote: 'No live price for this symbol right now — type the entry manually',
   riskCalcDisclaimer: 'Educational estimate: contract specs (especially gold) can differ at your broker — check before trading.',
   toolsTabRisk: 'Risk',
@@ -3065,6 +3069,7 @@ const ku: Dict = {
   riskCalcUseLivePrice: '↓ چوونەژوورەوە = نرخی ئێستا',
   riskCalcUseLivePriceA11y: 'پڕکردنەوەی خانەی چوونەژوورەوە بە نرخی بازاڕی ئێستا (Ask بۆ کڕین و Bid بۆ فرۆشتن بەپێی شوێنی وەستان)',
   riskCalcLiveFilled: '✓ چوونەژوورەوە لە نرخی ئێستاوە:',
+  riskCalcLiveSideMoved: '✓ چوونەژوورەوە گوازرایەوە بۆ {quote} (نرخی {side}): {price}',
   riskCalcNoLiveQuote: 'ئێستا نرخی ڕاستەوخۆ بۆ ئەم هێمایە نییە — نرخی چوونەژوورەوە بە دەست بنووسە',
   riskCalcDisclaimer: 'خەمڵاندنی فێرکاری: تایبەتمەندی گرێبەستەکان (بەتایبەتی زێڕ) لای بڕۆکەرەکەت جیاواز دەبێت — پێش مامەڵە پشتڕاستی بکەرەوە.',
   toolsTabRisk: 'مەترسی',
