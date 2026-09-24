@@ -90,3 +90,15 @@ export function marketStatusLabel(
 ): string {
   return isForexMarketOpen(symbol, now) ? labels.open : labels.closed;
 }
+
+/**
+ * بداية يوم التداول الذي يقع فيه `sec` (ثوانٍ UTC): آخر 17:00 نيويورك عنده أو قبله — حدّ
+ * التبييت (rollover) الذي تفصل عنده المنصّات أيام الفوركس (21:00 UTC صيفاً، 22:00 شتاءً).
+ * الكريبتو بلا تبييت: منتصف ليل UTC كما يفعل TradingView لها.
+ */
+export function tradingDayStartSec(symbol: string, sec: number): number {
+  const dayStart = Math.floor(sec / DAY_SEC) * DAY_SEC;
+  if (ALWAYS_OPEN.has(symbol.toUpperCase())) return dayStart;
+  const today = nyFivePmUtcSec(dayStart);
+  return sec >= today ? today : nyFivePmUtcSec(dayStart - DAY_SEC);
+}

@@ -87,6 +87,7 @@ import {
 } from './measureReadout';
 import { thinByGap } from './levelLabels';
 import { planHiLoLabels } from './hiLoLabels';
+import { planDayBreaks } from './dayBreaks';
 import { formatPct } from './dailyChange';
 import { timeframeStepSec } from './dataSource';
 import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
@@ -3876,6 +3877,27 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 style={[styles.gridLine, { top: chartPlotH * p, right: PRICE_AXIS_WIDTH }]}
               />
             ))
+          : null}
+
+        {/* فواصل أيام التداول (17:00 نيويورك) على الفريمات داخل اليوم — راجع `dayBreaks.ts`.
+            لا على Renko/Kagi/P&F/Range: خانتها ليست زمناً فالكثافة لا تُقدَّر بالفريم. */}
+        {!hideGrid && kind !== 'renko' && kind !== 'kagi' && kind !== 'pnf' && kind !== 'range'
+          ? planDayBreaks(
+              source.plot.map((b) => candleTimeSec(b.time)),
+              timeframeStepSec(series.timeframe),
+              series.symbol,
+              chartPlotW
+            ).map((i) => {
+              const x = (xOf(i - 1) + xOf(i)) / 2;
+              if (!(x >= 0 && x <= chartPlotW)) return null;
+              return (
+                <View
+                  key={`dbrk${i}`}
+                  pointerEvents="none"
+                  style={[styles.dayBreak, { left: x, height: chartPlotH }]}
+                />
+              );
+            })
           : null}
 
         {/* area / line / baseline */}
@@ -9919,6 +9941,14 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     borderRadius: 0,
     backgroundColor: 'transparent',
+  },
+  dayBreak: {
+    position: 'absolute',
+    top: 0,
+    width: 0,
+    borderLeftWidth: StyleSheet.hairlineWidth,
+    borderLeftColor: 'rgba(255,255,255,0.14)',
+    borderStyle: 'dashed',
   },
   gridLine: {
     position: 'absolute',
