@@ -2709,6 +2709,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [chartPlotH, chartPlotW, source.all.length, schedulePublishSync]
   );
 
+  // زرّا ‹ › : الحدّ كان من `series.candles` لا من السلسلة المرسومة — بـRenko/Kagi/P&F/Range
+  // (لبنات أقلّ بكثير من الشموع) يدفع ‹ الإزاحة أبعد من طول السلسلة فيفرغ الشارت كلّه ولا
+  // يعيده إلا عدّة نقرات › عمياء. وسلسلة أقصر من 10 كانت تعطي إزاحة سالبة. ولم يكن الزرّ
+  // ينشر نافذته بالتخطيط الرباعي كما يفعل السحب.
+  const panByButton = useCallback(
+    (bars: number) => {
+      const maxOffset = Math.max(0, sourceRef.current.all.length - 10);
+      const next = Math.max(0, Math.min(maxOffset, offsetRef.current + bars));
+      if (next === offsetRef.current) return;
+      offsetRef.current = next;
+      setOffset(next);
+      schedulePublishSync(false);
+    },
+    [schedulePublishSync]
+  );
+
   const beginDrag = useCallback(() => {
     panStartOffset.current = offsetRef.current;
     panStartX.current = xPanRef.current;
@@ -3520,7 +3536,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 styles.zoomBtn,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
-              onPress={() => setOffset((o) => Math.min(series.candles.length - 10, o + 15))}
+              onPress={() => panByButton(15)}
             >
               <Text style={styles.zoomText}>‹</Text>
             </Pressable>
@@ -3531,7 +3547,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 styles.zoomBtn,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
-              onPress={() => setOffset((o) => Math.max(0, o - 15))}
+              onPress={() => panByButton(-15)}
             >
               <Text style={styles.zoomText}>›</Text>
             </Pressable>
