@@ -30,6 +30,7 @@ import {
   recentLotSizes,
   journalContractKind,
   journalSmallLotsStdEquiv,
+  pySum,
   quickJournalSymbols,
   stopsForPips,
   quickStopPips,
@@ -1685,3 +1686,17 @@ console.log('tradePlan journal small-lot std equivalent selftest OK');
   assert.deepEqual(quickStopPips('XAUJPYc', 352000), [3000, 5000, 10000, 20000]);
 }
 console.log('tradePlan quickStopPips metal-in-JPY selftest OK');
+
+{
+  // الجمع كـsum() بايثون 3.12+ (Neumaier) — أرقام CPython الحرفية (repr) لنفس القوائم
+  assert.equal(pySum([2.687, 0.91, 1.93, -0.81, 2.46, -2.775, -0.49]), 3.912); // الجمع المباشر 3.912000000000001
+  assert.equal(pySum([-2.646, -2.22, -0.613, -2.517, -0.59, 2.3, 2.184, 1.238, 1.096]), -1.7679999999999998);
+  assert.equal(pySum([0.4, 1.14, -0.26, -0.612, -2.379, -2.63, 2.908, -2.026, 0.6, -3, 0.22]), -5.639);
+  assert.equal(pySum([]), 0);
+  assert.equal(pySum([1e308, 1e308]), Infinity); // تعويضٌ غير منتهٍ لا يقلب اللانهاية NaN
+  // إحصاءات الدفتر المفلتر = الخادم: round(sum(...), 2) ببايثون
+  const st = (p: number[]) => journalStats(p.map((pnl) => ({ status: 'closed', pnl })));
+  assert.equal(st([1.946, 0.95, 1.234, -0.71, -0.015, -0.95, 0.43]).total_pnl_pct, 2.88); // كان 2.89
+  assert.equal(st([0.635, 0.22, 0.57, -1.891]).avg_win, 0.48); // كان 0.47
+}
+console.log('tradePlan journalStats python-sum selftest OK');

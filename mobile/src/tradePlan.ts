@@ -441,6 +441,22 @@ export function roundHalfEven(v: number, d: 1 | 2): number {
   return Number(v.toFixed(d));
 }
 
+/**
+ * `sum()` بايثون 3.12+ للأعداد العشرية حرفياً (جمع Neumaier المعوَّض، CPython `builtin_sum`): الخادم يجمع به
+ * نسب `db.trade_stats`، والجمع المباشر هنا كان يقع على الجهة الأخرى من حدّ «.xx5» في ~3% من الدفاتر —
+ * «2.89%» مفلتراً و«2.88%» بلا فلتر لنفس الصفقات.
+ */
+export function pySum(values: readonly number[]): number {
+  let s = 0;
+  let c = 0;
+  for (const x of values) {
+    const t = s + x;
+    c += Math.abs(s) >= Math.abs(x) ? s - t + x : x - t + s;
+    s = t;
+  }
+  return c !== 0 && Number.isFinite(c) ? s + c : s;
+}
+
 /** إحصاءات الدفتر بشكل ردّ الخادم (`db.trade_stats`) — نسبة النجاح وصافي/متوسط النتائج بالنسبة. */
 export type JournalStats = {
   trade_count: number;
@@ -469,14 +485,13 @@ export function journalStats(
   }
   const wins = pnls.filter((v) => v > 0);
   const losses = pnls.filter((v) => v <= 0);
-  const sum = (a: number[]) => a.reduce((x, y) => x + y, 0);
   const r2 = (v: number) => roundHalfEven(v, 2);
   return {
     trade_count: pnls.length,
     win_rate: roundHalfEven((wins.length / pnls.length) * 100, 1),
-    total_pnl_pct: r2(sum(pnls)),
-    avg_win: wins.length ? r2(sum(wins) / wins.length) : 0,
-    avg_loss: losses.length ? r2(sum(losses) / losses.length) : 0,
+    total_pnl_pct: r2(pySum(pnls)),
+    avg_win: wins.length ? r2(pySum(wins) / wins.length) : 0,
+    avg_loss: losses.length ? r2(pySum(losses) / losses.length) : 0,
     best: r2(Math.max(...pnls)),
     worst: r2(Math.min(...pnls)),
   };
