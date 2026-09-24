@@ -3541,7 +3541,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         if (!d) return;
         // لمسة على جسم الرسم المحدَّد (لا على مقبض) ⇒ تحريكه كلّه بشكله.
         const grabBody = () => {
-          if (hitDrawing(locationX, locationY)?.id !== d.id) return;
+          if (hitDrawing(locationX, locationY) !== d.id) return;
           selDragEnd.current = 'body';
           selBodyFrom.current = { x: locationX, y: locationY, d };
           selBodyLast.current = d;
