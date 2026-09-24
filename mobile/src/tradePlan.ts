@@ -741,6 +741,18 @@ export function journalSymbol(raw: string): string | null {
  * `null` = رمز لا يصلح للحفظ أصلاً.
  */
 export function quoteSymbol(raw: string): string | null {
+  return centAccountSymbol(raw.trim().toUpperCase()) ?? instrumentSymbol(raw);
+}
+
+/**
+ * الأداة القانونية بلا باب السنت — أساس `quoteSymbol` و`journalInstrumentKey`.
+ *
+ * **حساب السنت** («EURUSDc» تُحفظ «EURUSDC») يُسعَّر كالزوج العادي تماماً، فـ`quoteSymbol` يطلب «EURUSD»: كان
+ * يطلب «EURUSDC» التي لا يعرفها المزوّد فلا نتيجة عائمة ولا «أغلق بسعر السوق» ولا «الدخول = السعر الحالي» —
+ * والنقاط تُحسب لها أصلاً (`journalPipSize`). لكن **مفتاح الأداة يبقى منفصلاً**: عقد السنت أصغر بمئة مرّة
+ * ومالها غير معروف، فدمجها مع «EURUSD» كان سيُسقط صافي EURUSD بالمال (`netByInstrument`).
+ */
+function instrumentSymbol(raw: string): string | null {
   return instrumentSpec(raw)?.symbol ?? knownSingleName(raw) ?? journalSymbol(raw);
 }
 
@@ -761,7 +773,7 @@ export function quoteSymbol(raw: string): string | null {
 export function journalInstrumentKey(raw: string | null | undefined): string {
   const up = (raw || '').trim().toUpperCase();
   if (!up) return '';
-  return quoteSymbol(up) ?? up;
+  return instrumentSymbol(up) ?? up;
 }
 
 /**

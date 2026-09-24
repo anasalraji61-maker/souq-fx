@@ -1381,3 +1381,37 @@ console.log('tradePlan noteWithTypedSize selftest OK');
   assert.ok(cashRisk({ symbol: 'EURUSD', entry: 1.085, sl: 1.0825, lots: 1 }) != null);
 }
 console.log('tradePlan journalPipSize selftest OK');
+
+// quoteSymbol لحساب السنت: السعر من الزوج العادي، ومفتاح الأداة منفصل (المال لا يُدمج)
+{
+  assert.equal(quoteSymbol('EURUSDC'), 'EURUSD');
+  assert.equal(quoteSymbol('EURUSDc'), 'EURUSD');
+  assert.equal(quoteSymbol(journalSymbol('EURUSDc')!), 'EURUSD');
+  assert.equal(quoteSymbol('USDJPYC'), 'USDJPY');
+  assert.equal(quoteSymbol('XAUUSDC'), 'XAUUSD');
+  assert.equal(quoteSymbol('GOLDC'), 'XAUUSD');
+  // ليست سنتاً: كما كانت
+  assert.equal(quoteSymbol('EURUSD'), 'EURUSD');
+  assert.equal(quoteSymbol('EURUSDT'), 'EURUSDT');
+  assert.equal(quoteSymbol('EURUSDCC'), 'EURUSDCC');
+  assert.equal(quoteSymbol('US30C'), 'US30C');
+  assert.equal(quoteSymbol('XAUUSD.m'), 'XAUUSD');
+  // مفتاح الأداة: السنت شريحة وحدها
+  assert.equal(journalInstrumentKey('EURUSDC'), 'EURUSDC');
+  assert.equal(journalInstrumentKey('GOLDC'), 'GOLDC');
+  assert.equal(journalInstrumentKey('EURUSD'), 'EURUSD');
+  // صافي EURUSD بالمال لا يسقط بصفقة سنت بجانبه
+  const c = (symbol: string, exit: number) => ({ symbol, side: 'buy', entry: 1.1, exit, size: 0.5, status: 'closed' });
+  const rows = netByInstrument([c('EURUSD', 1.102), c('EURUSDC', 1.101)]);
+  const std = rows.find((r) => r.symbol === 'EURUSD')!;
+  assert.deepEqual(std, { symbol: 'EURUSD', n: 1, pips: 20, cash: { amount: 100, ccy: 'USD' } });
+  assert.deepEqual(rows.find((r) => r.symbol === 'EURUSDC'), { symbol: 'EURUSDC', n: 1, pips: 10, cash: null });
+  // النتيجة العائمة لسنت على سعر الزوج العادي: نقاط وR، والمال مجهول
+  assert.deepEqual(floatingResult({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.0825, current: 1.0875 }), {
+    pips: 25,
+    pct: 0.23,
+    r: 1,
+  });
+  assert.equal(pnlInQuoteCcy({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, exit: 1.0875, lots: 1 }), null);
+}
+console.log('tradePlan cent quoteSymbol selftest OK');
