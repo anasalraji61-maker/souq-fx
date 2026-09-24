@@ -1,4 +1,4 @@
-import type { Dict, LangId } from '../i18n/locales';
+import type { Dict } from '../i18n/locales';
 import type { SessionId } from './sessions';
 import {
   CHART_KINDS,
@@ -92,33 +92,13 @@ export function localizedIndicators(t: Dict): typeof INDICATORS {
   });
 }
 
-/**
- * نصوص بلا مفتاح بالقاموس بعد (`i18n/locales.ts` خارج نطاق وكيل الشارت — «طلب تنسيق» بـ`docs/LOG-CHART.md`،
- * المقترح: `mcLogScaleA11y` / `mcShareDialogTitle` / `mcSessTokyo|London|NewYork`). حين تُضاف تُستبدل هذه بـ`tr.*`.
- * زرّ «Log» يبقى نصّه اللاتيني القصير (مصطلح المقياس كما يعرفه المتداول) ويُوصف لقارئ الشاشة فقط.
- */
-export function chartLocalLabels(lang: LangId): {
-  logScaleA11y: string;
-  shareDialogTitle: string;
-  sessions: Record<SessionId, string>;
-} {
-  if (lang === 'ar') {
-    return {
-      logScaleA11y: 'مقياس لوغاريتمي للسعر',
-      shareDialogTitle: 'شارت MATRIX',
-      sessions: { tokyo: 'طوكيو', london: 'لندن', ny: 'نيويورك' },
-    };
-  }
-  if (lang === 'ku') {
-    return {
-      logScaleA11y: 'پێوەری لۆگاریتمی بۆ نرخ',
-      shareDialogTitle: 'چارتی MATRIX',
-      sessions: { tokyo: 'تۆکیۆ', london: 'لەندەن', ny: 'نیویۆرک' },
-    };
-  }
-  return {
-    logScaleA11y: 'Logarithmic price scale',
-    shareDialogTitle: 'MATRIX Chart',
-    sessions: { tokyo: 'Tokyo', london: 'London', ny: 'New York' },
-  };
+const SESSION_KEYS: Record<SessionId, keyof Dict> = {
+  tokyo: 'mcSessTokyo',
+  london: 'mcSessLondon',
+  ny: 'mcSessNewYork',
+};
+
+/** اسم الجلسة فوق تظليل مؤشّر «Sessions» بلغة الواجهة. */
+export function sessionLabel(t: Dict, id: SessionId): string {
+  return t[SESSION_KEYS[id]] as string;
 }

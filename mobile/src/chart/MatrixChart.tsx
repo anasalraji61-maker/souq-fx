@@ -134,8 +134,8 @@ import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
 import {
-  chartLocalLabels,
   localizedChartKinds,
+  sessionLabel,
   localizedDrawTools,
   localizedIndicators,
   localizedLenses,
@@ -1111,7 +1111,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   ref
 ) {
   const { t: tr, lang } = useI18n();
-  const localLabels = chartLocalLabels(lang);
   const canPan = syncFollow ? false : (panControls ?? interactive);
   const candleBull = mutedCandles ? 'rgba(34,197,94,0.34)' : colors.bull;
   const candleBear = mutedCandles ? 'rgba(244,63,94,0.34)' : colors.bear;
@@ -3470,7 +3469,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         return;
       }
       if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: localLabels.shareDialogTitle });
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: tr.mcShareDialogTitle });
       }
     } catch {
       notify('MATRIX', tr.mcSnapshotFailed);
@@ -5162,7 +5161,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ) : null}
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={localLabels.logScaleA11y}
+              accessibilityLabel={tr.mcLogScaleA11y}
               accessibilityState={{ selected: logScale }}
               style={({ pressed }) => [
                 styles.zoomBtn,
@@ -5260,7 +5259,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <View style={[styles.sessionStrip, { backgroundColor: color }]} />
               {right - left >= 44 ? (
                 <Text style={[styles.sessionLabel, { color }]} numberOfLines={1}>
-                  {localLabels.sessions[run.id]}
+                  {sessionLabel(tr, run.id)}
                   {/* مدى الجلسة (أعلى − أدنى) بالـpip: نطاق آسيا الضيّق الذي يُكسر بلندن، وحركة
                       لندن مقابل متوسّطها — بحقيقي الشموع لا هايكن آشي. متى اتّسعت الشريحة. */}
                   {right - left >= 110
