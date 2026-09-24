@@ -1285,3 +1285,16 @@ console.log('tradePlan pnlPctContradictsCash selftest OK');
   }
 }
 console.log('tradePlan stopTooClose selftest OK');
+
+// ——— editExitValue: خروج فارغ بحفظ التعديل ———
+{
+  const { editExitValue } = require('./tradePlan') as typeof import('./tradePlan');
+  // بدأ مفتوحاً (ثم أُغلق بالسوق أثناء التعديل): الفارغ لا يُرسل — كان null فيعيد الصفقة مفتوحة
+  assert.equal(editExitValue(false, null), undefined);
+  // بدأ مغلقاً: الفارغ = إعادة فتح مقصودة
+  assert.equal(editExitValue(true, null), null);
+  // سعرٌ مكتوب يُرسل كما هو بالحالتين
+  assert.equal(editExitValue(false, 1.0875), 1.0875);
+  assert.equal(editExitValue(true, 1.0875), 1.0875);
+}
+console.log('tradePlan editExitValue selftest OK');

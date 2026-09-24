@@ -49,6 +49,7 @@ import {
   targetAtRR,
   type PlanIssue,
   type TradePlan,
+  editExitValue,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
@@ -642,12 +643,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     setFormError(null);
     if (editing) {
       try {
-        // تعديل: خانة فارغة = مسح (وقف/هدف بلا قيمة، وخروج فارغ يعيد الصفقة مفتوحة) — لا «بلا تغيير» صامت
+        // تعديل: خانة فارغة = مسح (وقف/هدف بلا قيمة، وخروج فارغ يعيد صفقةً بدأ تعديلها مغلقة مفتوحةً) — لا «بلا تغيير» صامت.
+        // بدأ مفتوحاً: الخروج الفارغ لا يُرسل، فإغلاقٌ بالسوق أثناء التعديل لا يُلغى بالحفظ (`editExitValue`)
         await api.updateTrade(editing.id, {
           symbol: sym,
           side,
           entry: e,
-          exit: pnum(exit),
+          exit: editExitValue(editing.status !== 'open', pnum(exit)),
           sl: s,
           tp: p,
           // خانة الحجم الفارغة = «لا تغيير» لا مسحاً: الحقل إلزامي بالجدول (`main.py:1174` يُسقط null له)
