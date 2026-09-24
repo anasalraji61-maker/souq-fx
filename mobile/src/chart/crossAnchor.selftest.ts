@@ -86,6 +86,10 @@ const bar = (time: number) => ({ time });
   assert.equal(crossPriceAt(0.654321, null, false, null), 0.65432);
   assert.equal(crossPriceAt(NaN, c, true, 5), null);
   assert.equal(crossPriceAt(Infinity, c, false, 5), null);
+  // حدّ الجذب: قريب ⇒ القمّة، بعيد ⇒ المستوى الملموس مقرَّباً
+  assert.equal(crossPriceAt(1.0874, c, true, 5, 0.0003), 1.0872);
+  assert.equal(crossPriceAt(1.09001, c, true, 5, 0.0003), 1.09001);
+  assert.equal(crossPriceAt(1.0856, c, true, 5, 0.0003), 1.0856); // بين الفتح والإغلاق
 }
 
 console.log('crossAnchor.selftest: PASS');

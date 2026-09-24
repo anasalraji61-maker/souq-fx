@@ -42,8 +42,10 @@ export type OhlcBar = { open: number; high: number; low: number; close: number }
  * يلتصقون بـ`close` أيّاً كان موضع اللمس، فلا سبيل لقراءة قمّة ذيل أو مستوى بين شمعتين —
  * وهو أوّل ما يفعله متداول يضع تنبيهاً عند مقاومة.
  *
- * - المغناطيس مفعّل ⇒ أقرب O/H/L/C للشمعة الملموسة (كأدوات الرسم تماماً، نفس زرّ 🧲):
- *   لمسة قرب الذيل تعطي القمّة الحقيقية بالضبط لا تقريباً منها.
+ * - المغناطيس مفعّل ⇒ أقرب O/H/L/C للشمعة الملموسة **إن وقع ضمن `snapTol`** (بوحدة السعر،
+ *   المستدعي يحوّلها من بكسلات): لمسة قرب الذيل تعطي القمّة الحقيقية بالضبط، ولمسة بعيدة
+ *   عن الشمعة تبقى على مستواها — وإلا صار كل مستوى فوق الشمعة «قمّتها» ولم يبقَ معنى
+ *   لقراءة سعر بين شمعتين إلا بإطفاء 🧲 (الذي يطفئه لأدوات الرسم معه).
  * - بدونه ⇒ السعر الخام مقرَّباً لمنازل الأداة، فما يُرسل للتنبيه هو **حرفياً** ما يُقرأ
  *   على الوسم (لا 1.0852371948 خلف «1.08524»).
  *
@@ -54,7 +56,8 @@ export function crossPriceAt(
   raw: number,
   bar: OhlcBar | null | undefined,
   magnet: boolean,
-  decimals: number | null
+  decimals: number | null,
+  snapTol = Infinity
 ): number | null {
   if (!Number.isFinite(raw)) return null;
   if (magnet && bar) {
@@ -67,7 +70,7 @@ export function crossPriceAt(
         best = p;
       }
     }
-    return best;
+    if (d <= snapTol) return best;
   }
   const a = Math.abs(raw);
   const dp = decimals ?? (a >= 100 ? 2 : a >= 10 ? 3 : 5);

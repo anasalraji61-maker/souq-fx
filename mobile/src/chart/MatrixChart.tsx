@@ -330,6 +330,9 @@ type Props = {
   syncTimeOnly?: boolean;
 };
 
+/** جذب التقاطع لـO/H/L/C: أقرب من هذا (px) فقط — وإلا يبقى على المستوى الملموس. */
+const CROSS_SNAP_PX = 14;
+
 type PointerEventLike = {
   nativeEvent?: {
     clientX?: number;
@@ -2435,9 +2438,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const placeCross = (x: number, y: number) => {
     const candle = source.plot[hitIndex(x)];
     if (!candle) return;
+    const raw = priceAtY(y);
+    // 14px حول الإصبع بوحدة السعر عند موضعه (يصحّ مع المقياس اللوغاريتمي كذلك).
+    const snapTol = Math.abs(priceAtY(y - CROSS_SNAP_PX) - raw);
     setCross({
       time: candle.time,
-      price: crossPriceAt(priceAtY(y), candle, magnet, symbolPriceDecimals(series.symbol)),
+      price: crossPriceAt(raw, candle, magnet, symbolPriceDecimals(series.symbol), snapTol),
     });
   };
 
