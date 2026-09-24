@@ -85,8 +85,12 @@ type Props = {
 const QUICK_RISK = ['0.5', '1', '2'];
 const STORE_KEY = 'matrix.tools.riskCalc.v1';
 
+/** أقدم سعر سوق يُبنى عليه سطر الهامش: دورتا تحديث (60 ث) — بعدها لا سطر بدل رقمٍ من سعرٍ قديم. */
+const MKT_QUOTE_MAX_AGE_MS = 120_000;
+
 /** حاسبة حجم المركز: رصيد × نسبة مخاطرة ÷ (وقف بالنقاط × قيمة النقطة) — مع قيمة نقطة صحيحة لأزواج
  * الين والتقاطعات والذهب عبر سعر تحويل حيّ لعملة الحساب. الرياضيات كلها بـ`positionSize.ts`. */
+
 export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
@@ -734,6 +738,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     ask?: number | null;
     /** قيمة `mktRefresh` حين جُلب — أقدم منها ⇒ يُعاد الجلب بصمت */
     refresh: number;
+    /** وقت الجلب (ms) — راجع `MKT_QUOTE_MAX_AGE_MS` */
+    at: number;
   } | null>(null);
   const entryTyped = Number.isFinite(priceNum(entryPx)) && priceNum(entryPx) > 0;
   const needMarketPx = spec != null && !entryTyped && leverageNum != null && lots != null;
@@ -749,6 +755,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     const id = setTimeout(() => setMktRefresh((n: number) => n + 1), 60_000);
     return () => clearTimeout(id);
   }, [mktSym, mktRefresh]);
+  /**
+   * المؤقّت يقف ما دام الدخول مكتوباً (لا حاجة لسعر السوق)، فالعدّاد يقف معه: مسحُ الدخول بعد ساعة كان يعيد
+   * الهامش ونسبته و«أكبر لوت» فوراً من سعرٍ عمره ساعة موسوماً «@» كأنه حيّ، حتى التحديث التالي بعد 60 ث.
+   * الآن كل فترة بلا حاجة تُقدِّم العدّاد ⇒ عودة الحاجة تعيد الجلب فوراً.
+   */
+  useEffect(() => {
+    if (!mktSym) setMktRefresh((n: number) => n + 1);
+  }, [mktSym]);
   const haveMktSym = mktQuote != null && mktQuote.sym === mktSym;
   const haveMkt = haveMktSym && mktQuote!.refresh === mktRefresh;
   useEffect(() => {
@@ -759,7 +773,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       api.marketQuote(mktSym).then(
         (q) => {
           if (!alive || !mountedRef.current || !isRealQuote(q)) return;
-          setMktQuote({ sym: mktSym, price: q.price, bid: q.bid, ask: q.ask, refresh });
+          setMktQuote({ sym: mktSym, price: q.price, bid: q.bid, ask: q.ask, refresh, at: Date.now() });
         },
         () => {
           /* بلا سعر لا سطر هامش — كما قبل؛ وبالتحديث يبقى آخر سعر ناجح */
@@ -774,7 +788,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   }, [mktSym, haveMkt, mktRefresh]);
   const marginPx = marginPrice({
     entry: priceNum(entryPx),
-    quote: spec && mktQuote && mktQuote.sym === spec.symbol ? mktQuote : null,
+    // وأثناء إعادة الجلب لا يُستعمل سعرٌ أقدم من دقيقتين (فشلٌ متكرّر، أو عودة بعد فترة بلا حاجة)
+    quote:
+      spec && mktQuote && mktQuote.sym === spec.symbol && Date.now() - mktQuote.at <= MKT_QUOTE_MAX_AGE_MS ? mktQuote : null,
     side: planSide,
   });
   /** الأساس = عملة الحساب ⇒ الهامش بلا سعر (أمرٌ معلّق بعيد عن السوق كان ينحرف بنسبة الدخول/الحيّ) — `marginBaseToAccount` */
