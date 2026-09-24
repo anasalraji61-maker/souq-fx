@@ -1,9 +1,10 @@
 import type { Candle } from '../api';
+import type { SyntheticBar } from './types';
 
 /** Classic Kagi: thick yang (up) / yin (down) line with reversal threshold. */
-export function kagi(candles: Candle[], reversalPct = 0.004): Candle[] {
+export function kagi(candles: Candle[], reversalPct = 0.004): SyntheticBar[] {
   if (candles.length < 2) return candles;
-  const out: Candle[] = [];
+  const out: SyntheticBar[] = [];
   let lastClose = candles[0].close;
   let direction: 1 | -1 = candles[1].close >= lastClose ? 1 : -1;
   let extreme = lastClose;
@@ -22,6 +23,7 @@ export function kagi(candles: Candle[], reversalPct = 0.004): Candle[] {
           low: Math.min(lastClose, price),
           close: price,
           volume: candles[i].volume,
+          srcTime: candles[i].time,
         });
         lastClose = price;
         t += 60;
@@ -35,6 +37,7 @@ export function kagi(candles: Candle[], reversalPct = 0.004): Candle[] {
           low: price,
           close: price,
           volume: candles[i].volume,
+          srcTime: candles[i].time,
         });
         lastClose = price;
         t += 60;
@@ -48,6 +51,7 @@ export function kagi(candles: Candle[], reversalPct = 0.004): Candle[] {
         low: price,
         close: price,
         volume: candles[i].volume,
+        srcTime: candles[i].time,
       });
       lastClose = price;
       t += 60;
@@ -61,6 +65,7 @@ export function kagi(candles: Candle[], reversalPct = 0.004): Candle[] {
         low: Math.min(lastClose, price),
         close: price,
         volume: candles[i].volume,
+        srcTime: candles[i].time,
       });
       lastClose = price;
       t += 60;

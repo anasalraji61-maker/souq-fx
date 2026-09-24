@@ -1,4 +1,5 @@
 import type { Candle } from '../api';
+import type { SyntheticBar } from './types';
 
 function atrBox(candles: Candle[]): number {
   if (candles.length < 2) return 1e-8;
@@ -12,10 +13,10 @@ function atrBox(candles: Candle[]): number {
 }
 
 /** Renko bricks — ATR box by default, optional fixed size, with wick extremes. */
-export function renko(candles: Candle[], boxSize?: number): Candle[] {
+export function renko(candles: Candle[], boxSize?: number): SyntheticBar[] {
   if (candles.length < 2) return candles;
   const box = boxSize ?? atrBox(candles) * 0.55;
-  const out: Candle[] = [];
+  const out: SyntheticBar[] = [];
   let brickOpen = candles[0].close;
   let t = candles[0].time;
   for (const c of candles) {
@@ -31,6 +32,7 @@ export function renko(candles: Candle[], boxSize?: number): Candle[] {
         low: brickOpen,
         close,
         volume: c.volume,
+        srcTime: c.time,
       });
       brickOpen = close;
       t += 60;
@@ -44,6 +46,7 @@ export function renko(candles: Candle[], boxSize?: number): Candle[] {
         low: Math.min(close, c.low),
         close,
         volume: c.volume,
+        srcTime: c.time,
       });
       brickOpen = close;
       t += 60;

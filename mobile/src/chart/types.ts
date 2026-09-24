@@ -202,6 +202,8 @@ export type DrawTool =
  * (لا زمن تقويمي مختلَق تُسقطه العطلة). راجع `drawingAnchors.ts`.
  * `aheadStep`: خطوة الفريم (ثوانٍ) التي عُدّت بها `ahead` — الرسومات مشتركة بين الفريمات،
  * فعشر شموع ساعة على اليومي أقلّ من نصف شمعة لا عشر شموع. غيابها ⇒ خطوة الفريم الحالي.
+ * `sub`: نقطة رُسمت على Renko/Kagi/P&F — ترتيب لبنتها بين لبنات شمعتها المصدر (شمعة واحدة
+ * قد تصنع عدّة لبنات بالزمن نفسه)، فتعود للّبنة ذاتها لا لأولى أخواتها. تُهمَل على الشموع.
  */
 export type ChartPoint = {
   index: number;
@@ -209,7 +211,15 @@ export type ChartPoint = {
   time?: number;
   ahead?: number;
   aheadStep?: number;
+  sub?: number;
 };
+
+/**
+ * لبنة Renko/Kagi/P&F: `time` مختلَق (أوّل شمعة + 60 ث لكل لبنة، ليبقى المحور متزايداً)،
+ * و`srcTime` زمن الشمعة **الحقيقية** التي أكملتها — هو ما تُرسى عليه الرسومات بين الأنواع
+ * والفريمات (`drawingAnchors.ts`).
+ */
+export type SyntheticBar = Candle & { srcTime?: number };
 
 export type Drawing = {
   id: string;

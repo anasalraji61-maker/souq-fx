@@ -42,11 +42,11 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
 // جوهر البند: رُسم أمس، واليوم النافذة زحفت 24 شمعة ⇒ الخطّ على الشموع نفسها
 {
   const yesterday = bars(1000 * H, 300);
-  const stamped = anchorDrawings([line(250, 280)], yesterday, H, true);
+  const stamped = anchorDrawings([line(250, 280)], yesterday, H, false);
   assert.equal(stamped[0].a.time, 1250 * H);
   assert.equal(stamped[0].b!.time, 1280 * H);
   const today = bars(1024 * H, 300); // آخر 300 بعد 24 شمعة جديدة
-  const re = anchorDrawings(stamped, today, H, true);
+  const re = anchorDrawings(stamped, today, H, false);
   assert.equal(re[0].a.index, 226);
   assert.equal(re[0].b!.index, 256);
   assert.equal(today[re[0].a.index].time, 1250 * H); // الشمعة نفسها، لا الخانة
@@ -56,35 +56,56 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
 // لا تغيير ⇒ المصفوفة نفسها (لا رسم ولا كتابة بكل تيك)؛ وسلسلة فارغة ⇒ لا ختم
 {
   const b = bars(0, 50);
-  const once = anchorDrawings([line(10, 20)], b, H, true);
-  assert.equal(anchorDrawings(once, b, H, true), once);
+  const once = anchorDrawings([line(10, 20)], b, H, false);
+  assert.equal(anchorDrawings(once, b, H, false), once);
   const raw = [line(10, 20)];
-  assert.equal(anchorDrawings(raw, [], H, true), raw);
+  assert.equal(anchorDrawings(raw, [], H, false), raw);
 }
 
 // نقطة سُحبت (جديدة بلا time) تُختم بموضعها الجديد، والطرف الآخر يبقى على زمنه
 {
   const b = bars(0, 50);
-  const d = anchorDrawings([line(10, 20)], b, H, true)[0];
+  const d = anchorDrawings([line(10, 20)], b, H, false)[0];
   const moved = { ...d, b: { index: 30, price: 1.1 } };
-  const out = anchorDrawings([moved], b, H, true)[0];
+  const out = anchorDrawings([moved], b, H, false)[0];
   assert.equal(out.b!.time, 30 * H);
   assert.equal(out.a, d.a);
 }
 
-// الأنواع الاصطناعية: ختم فقط، بلا إعادة فهرسة
+// الأنواع الاصطناعية: الإرساء بزمن الشمعة المصدر (`srcTime`) لا بزمن اللبنة المختلَق
 {
-  const b = bars(0, 50);
-  const d = { ...line(10, 20), a: { index: 3, price: 1, time: 40 * H } };
-  const out = anchorDrawings([d], b, H, false)[0];
-  assert.equal(out.a.index, 3);
-  assert.equal(out.b!.time, 20 * H);
+  // لبنات Renko: الشمعة 100 صنعت لبنتين، 103 ثلاثاً، 107 واحدة. `time` مختلَق كما بـrenko.ts.
+  const src = [100, 100, 103, 103, 103, 107];
+  const bricks = src.map((h, i) => ({ time: 100 * H + i * 60, srcTime: h * H }));
+  // ختم لبنة: زمن شمعتها الحقيقية، و`sub` ترتيبها بين أخواتها
+  assert.deepEqual(stampAtIndex(bricks, 3, H), { time: 103 * H, sub: 1 });
+  assert.deepEqual(stampAtIndex(bricks, 2, H), { time: 103 * H });
+  // رُسم على اللبنة 3 ⇒ يعود إليها بعد إعادة التحميل بفهرس قديم
+  const drawn = { ...line(0, 0), a: { index: 3, price: 1 }, b: { index: 5, price: 1 } };
+  const s1 = anchorDrawings([drawn], bricks, H, true)[0];
+  assert.deepEqual([s1.a.time, s1.a.sub, s1.a.index], [103 * H, 1, 3]);
+  assert.equal(anchorDrawings([{ ...s1, a: { ...s1.a, index: 0 } }], bricks, H, true)[0].a.index, 3);
+  // على شموع الساعة: عند الشمعة 103 لا عند بداية السلسلة (كان زمن اللبنة 100h+180s)
+  const hours = bars(90 * H, 30);
+  assert.equal(anchorDrawings([s1], hours, H, false)[0].a.index, 13);
+  // نقطة من شموع الساعة (104h، لا لبنة عندها) ⇒ آخر لبنة اكتملت قبلها
+  const fromH1 = { ...line(0, 0), a: { index: 14, price: 1, time: 104 * H }, b: { index: 17, price: 1, time: 107 * H } };
+  const onRenko = anchorDrawings([fromH1], bricks, H, true)[0];
+  assert.equal(onRenko.a.index, 4);
+  assert.equal(onRenko.b!.index, 5);
+  // `sub` أكبر من عدد اللبنات الحالي ⇒ آخرهنّ لا ما بعدهنّ
+  const far = { ...line(0, 0), a: { index: 0, price: 1, time: 100 * H, sub: 5 } };
+  assert.equal(anchorDrawings([far], bricks, H, true)[0].a.index, 1);
+  // Range: أزمنة حقيقية بلا `srcTime` ⇒ نفس القاعدة بلا كسر داخل الخانة
+  const range = [0, 3, 4, 9].map((h) => ({ time: h * H }));
+  const mid = { ...line(0, 0), a: { index: 0, price: 1, time: 5 * H } };
+  assert.equal(anchorDrawings([mid], range, H, true)[0].a.index, 2);
 }
 
 // رسم بطرف واحد (hline) لا يكتسب `b`
 {
   const d = { id: 'h', tool: 'hline', a: { index: 5, price: 1 }, color: '#fff' } as Drawing;
-  const out = anchorDrawings([d], bars(0, 10), H, true)[0];
+  const out = anchorDrawings([d], bars(0, 10), H, false)[0];
   assert.equal('b' in out, false);
   assert.equal(out.a.time, 5 * H);
 }
@@ -95,17 +116,17 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   assert.deepEqual(stampAtIndex(fri, 59, H), { time: 1049 * H, ahead: 10, aheadStep: H });
   assert.deepEqual(stampAtIndex(fri, 20, H), { time: 1020 * H });
   assert.equal(stampAtIndex([], 3, H), null);
-  const d = anchorDrawings([line(40, 59)], fri, H, true)[0];
+  const d = anchorDrawings([line(40, 59)], fri, H, false)[0];
   assert.equal(d.b!.ahead, 10);
   // الاثنين: فجوة 49 ساعة ثم 5 شموع جديدة، والنافذة زحفت 5
   const mon = [...fri.slice(5), ...bars(1098 * H, 5)];
-  const re = anchorDrawings([d], mon, H, true)[0];
+  const re = anchorDrawings([d], mon, H, false)[0];
   assert.equal(re.a.index, 35);
   assert.equal(re.b!.index, 44 + 10); // خانة شمعة الجمعة الأخيرة + 10 شموع متداولة
   // الزمن التقويمي القديم (1059) كان سيسقط على آخر شمعة الجمعة: الخانة 44
   assert.equal(indexAtTime(mon, 1059 * H, H), 44);
   // ثابتة: لا تغيير ثانٍ
-  assert.equal(anchorDrawings([re], mon, H, true)[0], re);
+  assert.equal(anchorDrawings([re], mon, H, false)[0], re);
 }
 
 // مشتركة بين الفريمات: خطّ رُسم على الساعة يُفتح على اليومي (وعكسه)
@@ -118,7 +139,7 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
     a: { index: 0, price: 1.08, time: 110 * D + 6 * H },
     b: { index: 0, price: 1.09, time: 110 * D + 18 * H },
   };
-  const onD1 = anchorDrawings([fromH1], days, D, true)[0];
+  const onD1 = anchorDrawings([fromH1], days, D, false)[0];
   assert.equal(onD1.a.index, 10.25);
   assert.equal(onD1.b!.index, 10.75);
   // طرف بالمستقبل: 48 شمعة ساعة = شمعتان يوميّتان
@@ -127,11 +148,11 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
     a: { index: 0, price: 1, time: 120 * D },
     b: { index: 0, price: 1, time: 129 * D, ahead: 48, aheadStep: H },
   };
-  const a2 = anchorDrawings([ahead], days, D, true)[0];
+  const a2 = anchorDrawings([ahead], days, D, false)[0];
   assert.equal(a2.b!.index, 29 + 2);
   // يومي ⇒ ساعة: الزمن على بداية اليوم تماماً ⇒ خانة صحيحة بلا كسر
   const hours = bars(110 * 24 * H, 72);
-  const back = anchorDrawings([{ ...line(0, 0), a: { index: 3, price: 1, time: 111 * D } }], hours, H, true)[0];
+  const back = anchorDrawings([{ ...line(0, 0), a: { index: 3, price: 1, time: 111 * D } }], hours, H, false)[0];
   assert.equal(back.a.index, 24);
 }
 

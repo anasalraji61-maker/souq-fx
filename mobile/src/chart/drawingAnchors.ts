@@ -12,9 +12,13 @@
  * الإصلاح) تُختم بزمن شمعتها الآن. ولأن الإنشاء والسحب يصنعان نقطة جديدة `{index, price}`
  * دائماً، لا تحمل نقطةٌ عُدّلت زمناً قديماً يعيدها لمكانها السابق.
  *
- * الأنواع الاصطناعية (Renko وKagi وP&F وRange) لا تقابل شمعة بخانة، فلا يُعاد فيها
- * الفهرسة (`reindex = false`) — تُختم النقاط الجديدة بزمن لبنتها فقط، ليجد الرسم مكانه
- * حين يعود المتداول للشموع.
+ * الأنواع الاصطناعية (Renko وKagi وP&F وRange، `synthetic = true`) لا تقابل شمعة بخانة، وزمن
+ * لبنة Renko/Kagi/P&F مختلَق (أوّل شمعة + 60 ث لكل لبنة): كان خطّ رُسم على Renko يُختم به
+ * فيظهر على شموع الساعة **عند بداية السلسلة** لا عند حركته، وخطّ الساعة يبقى على Renko بفهرس
+ * شموع لا معنى له بين اللبنات. الآن كل لبنة تحمل `srcTime` (زمن الشمعة الحقيقية التي أكملتها)
+ * وهو زمنها هنا بالختم والإرساء (`barTime`). وشمعة واحدة قد تصنع عدّة لبنات بالزمن نفسه، فنقطة
+ * رُسمت على لبنة تحفظ ترتيبها بين أخواتها (`sub`) لتعود إليها لا لأولاهنّ؛ ونقطة من فريم الشموع
+ * تسقط على آخر لبنة اكتملت عند زمنها أو قبله. لا كسر داخل اللبنة (لا خطوة زمنية ثابتة لها).
  *
  * نقطة **بعد آخر شمعة** (طرف خطّ يمتدّ للمستقبل) لا تُختم بزمن تقويمي `آخر + k×خطوة`:
  * العطلة ليست شموعاً، فطرف على اليومي بعد 10 شموع يوم الجمعة كان يصير +7 يوم الاثنين، وعلى
@@ -31,15 +35,28 @@
  */
 import type { ChartPoint, Drawing } from './types';
 
-export type TimeBar = { time: number };
+export type TimeBar = { time: number; srcTime?: number };
+
+/** الزمن الحقيقي للخانة: `srcTime` للّبنة الاصطناعية، وإلا زمن الشمعة. */
+function barTime(bar: TimeBar): number {
+  return bar.srcTime != null && Number.isFinite(bar.srcTime) ? bar.srcTime : bar.time;
+}
+
+/** أوّل خانة بالزمن الحقيقي نفسه حتى `i` (لبنات شمعة مصدر واحدة). */
+function runStart(bars: readonly TimeBar[], i: number): number {
+  const t = barTime(bars[i]!);
+  let j = i;
+  while (j > 0 && barTime(bars[j - 1]!) === t) j--;
+  return j;
+}
 
 /** زمن الخانة `index` — خارج السلسلة يُمدّ بخطوة الفريم (رسم يمتدّ لمستقبل لم يُرسم بعد). */
 export function timeAtIndex(bars: readonly TimeBar[], index: number, stepSec: number): number | null {
   const n = bars.length;
   if (!n || !Number.isFinite(index)) return null;
-  if (index < 0) return bars[0].time + index * stepSec;
-  if (index >= n) return bars[n - 1].time + (index - (n - 1)) * stepSec;
-  return bars[Math.floor(index)].time;
+  if (index < 0) return barTime(bars[0]) + index * stepSec;
+  if (index >= n) return barTime(bars[n - 1]) + (index - (n - 1)) * stepSec;
+  return barTime(bars[Math.floor(index)]);
 }
 
 /**
@@ -51,13 +68,15 @@ export function indexAtTime(bars: readonly TimeBar[], time: number, stepSec: num
   const n = bars.length;
   if (!n || !Number.isFinite(time)) return null;
   const step = stepSec > 0 ? stepSec : 1;
-  if (time < bars[0].time) return Math.round((time - bars[0].time) / step);
-  if (time > bars[n - 1].time) return n - 1 + Math.round((time - bars[n - 1].time) / step);
+  const first = barTime(bars[0]);
+  const last = barTime(bars[n - 1]);
+  if (time < first) return Math.round((time - first) / step);
+  if (time > last) return n - 1 + Math.round((time - last) / step);
   let lo = 0;
   let hi = n - 1;
   while (lo < hi) {
     const mid = (lo + hi + 1) >> 1;
-    if (bars[mid].time <= time) lo = mid;
+    if (barTime(bars[mid]) <= time) lo = mid;
     else hi = mid - 1;
   }
   return lo;
@@ -65,41 +84,58 @@ export function indexAtTime(bars: readonly TimeBar[], time: number, stepSec: num
 
 /**
  * ختم نقطة جديدة عند الخانة `index`: داخل السلسلة وقبلها بزمنها (`timeAtIndex`)، وبعد آخر
- * شمعة بزمن آخر شمعة + `ahead` (عدد شموع لا زمن تقويمي — راجع رأس الملف).
+ * شمعة بزمن آخر شمعة + `ahead` (عدد شموع لا زمن تقويمي — راجع رأس الملف). على لبنة
+ * اصطناعية ليست أولى لبنات شمعتها المصدر: `sub` ترتيبها بينهنّ.
  */
 export function stampAtIndex(
   bars: readonly TimeBar[],
   index: number,
   stepSec: number
-): { time: number; ahead?: number; aheadStep?: number } | null {
+): { time: number; ahead?: number; aheadStep?: number; sub?: number } | null {
   const n = bars.length;
   if (n && Number.isFinite(index) && index > n - 1) {
-    return { time: bars[n - 1].time, ahead: index - (n - 1), aheadStep: stepSec };
+    return { time: barTime(bars[n - 1]), ahead: index - (n - 1), aheadStep: stepSec };
   }
   const time = timeAtIndex(bars, index, stepSec);
-  return time == null ? null : { time };
+  if (time == null) return null;
+  if (index >= 0 && bars[Math.floor(index)]?.srcTime != null) {
+    const i = Math.floor(index);
+    const sub = i - runStart(bars, i);
+    if (sub > 0) return { time, sub };
+  }
+  return { time };
 }
 
 function anchorPoint(
   p: ChartPoint,
   bars: readonly TimeBar[],
   stepSec: number,
-  reindex: boolean
+  synthetic: boolean
 ): ChartPoint {
   if (p.time == null || !Number.isFinite(p.time)) {
     const stamp = stampAtIndex(bars, p.index, stepSec);
     return stamp == null ? p : { ...p, ...stamp };
   }
-  if (!reindex) return p;
   const base = indexAtTime(bars, p.time, stepSec);
   const ahead = p.ahead != null && Number.isFinite(p.ahead) ? p.ahead : 0;
   const aheadStep =
     p.aheadStep != null && Number.isFinite(p.aheadStep) && p.aheadStep > 0 ? p.aheadStep : stepSec;
-  const index =
-    base == null
-      ? null
-      : base + withinBar(bars, base, p.time, stepSec) + (ahead * aheadStep) / stepSec;
+  const inBar = base == null ? 0 : synthetic ? brickOffset(bars, base, p) : withinBar(bars, base, p.time, stepSec);
+  const index = base == null ? null : base + inBar + (ahead * aheadStep) / stepSec;
   return index == null || index === p.index ? p : { ...p, index };
+}
+
+/**
+ * على الأنواع الاصطناعية: `indexAtTime` يعطي **آخر** لبنة بالزمن الحقيقي المطابق؛ نقطة رُسمت
+ * على لبنة تعود إلى أولى لبنات شمعتها + `sub` (مقصوراً على عددهنّ — اللبنات تتغيّر مع السلسلة).
+ * زمن لا يطابق لبنة (نقطة من فريم الشموع) ⇒ آخر لبنة قبله كما هي.
+ */
+function brickOffset(bars: readonly TimeBar[], base: number, p: ChartPoint): number {
+  const bar = bars[base];
+  if (!bar || barTime(bar) !== p.time) return 0;
+  const first = runStart(bars, base);
+  const sub = p.sub != null && Number.isFinite(p.sub) && p.sub > 0 ? Math.floor(p.sub) : 0;
+  return first + Math.min(sub, base - first) - base;
 }
 
 /**
@@ -123,13 +159,13 @@ export function anchorDrawings(
   drawings: Drawing[],
   bars: readonly TimeBar[],
   stepSec: number,
-  reindex: boolean
+  synthetic: boolean
 ): Drawing[] {
   if (!bars.length || !drawings.length) return drawings;
   let changed = false;
   const out = drawings.map((d) => {
-    const a = anchorPoint(d.a, bars, stepSec, reindex);
-    const b = d.b ? anchorPoint(d.b, bars, stepSec, reindex) : d.b;
+    const a = anchorPoint(d.a, bars, stepSec, synthetic);
+    const b = d.b ? anchorPoint(d.b, bars, stepSec, synthetic) : d.b;
     if (a === d.a && b === d.b) return d;
     changed = true;
     return b === undefined ? { ...d, a } : { ...d, a, b };

@@ -1116,7 +1116,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       loadedDrawings,
       source.all as { time: number }[],
       timeframeStepSec(series.timeframe),
-      !synthetic
+      synthetic
     );
     if (next !== loadedDrawings) setDrawings(next);
   }, [drawings, loadedDrawings, source.all, kind, series.timeframe]);
@@ -1355,7 +1355,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         d,
         sourceRef.current.all as { time: number }[],
         timeframeStepSec(series.timeframe),
-        !synthetic
+        synthetic
       );
     };
     loadDrawings(series.symbol, series.timeframe).then((d) => {
@@ -1428,7 +1428,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         prev,
         sourceRef.current.all as { time: number }[],
         timeframeStepSec(series.timeframe),
-        !synthetic
+        synthetic
       )
     );
     setSelectedId(null);
