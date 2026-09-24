@@ -33,6 +33,7 @@ import {
   costsLotsAdvice,
   profitAfterCosts,
   lowRewardWarning,
+  lotsOverOrderMax,
   spreadTooWide,
   planJournalNote,
   LOT_STEP,
@@ -370,6 +371,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** الهدف بالجهة الخطأ (فوق الدخول ببيع/تحته بشراء) — خطأ كتابة شائع، يُقال صراحةً بدل تجاهل الهدف */
   const targetWrongSide = plan?.issue === 'tpWrongSide';
   const lots = result && !result.belowMinLot ? result.lots : null;
+  const overOrderMax = lotsOverOrderMax(result);
   /**
    * المخاطرة الفعلية بنسبةٍ من الرصيد: للّوت المحسوب (التقريب للأسفل يجعلها أقل من المطلوبة)، ولأصغر
    * لوت حين يخرج الحجم تحته — «0.01 lot = 3.00 USD · 6.00%» هو ما يحتاج أن يراه قبل أن يفتح أصغر لوت
@@ -852,6 +854,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
               {actualNow ? ` (${formatRiskPct(actualNow.pct)})` : ''} · {t.riskCalcUnits}:{' '}
               {group(String(result.units))}
             </Text>
+            {/* فوق أكبر أمر يقبله الوسيط (200 lot من وقف 1 pip): الرقم صحيح حسابياً لكن الأمر يُرفض — أو الوقف خطأ كتابة. راجع `lotsOverOrderMax` */}
+            {overOrderMax != null ? (
+              <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
+                {t.riskCalcOverOrderMax.replace('{lots}', overOrderMax.toFixed(2))}
+              </Text>
+            ) : null}
           </>
         ) : result && result.belowMinLot ? (
           <>

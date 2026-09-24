@@ -744,6 +744,17 @@ export function parseCommission(raw: string): number | null {
 export const MAX_SANE_LOTS = 100;
 
 /**
+ * الحجم المحسوب **فوق أكبر أمر** يقبله أغلب الوسطاء (`MAX_SANE_LOTS`): رصيد 100,000 بمخاطرة 2% ووقف
+ * 1 pip يُخرج 200 لوت — رقمٌ صحيح حسابياً لكن الأمر يُرفض عند الوسيط (أو الوقف نفسه خطأ كتابة: «1»
+ * بدل «10»). يُرجع اللوت المقرَّب ليُذكر بالتحذير، أو `null` (ضمن الحدّ، أو دون أصغر لوت، أو لا نتيجة).
+ * `MAX_SANE_LOTS` بالضبط مقبول — الحدّ نفسه يُقبل عند الوسطاء الذين يحدّون بـ100.
+ */
+export function lotsOverOrderMax(result: SizeResult | null): number | null {
+  if (!result || result.belowMinLot || !Number.isFinite(result.lots)) return null;
+  return result.lots > MAX_SANE_LOTS ? result.lots : null;
+}
+
+/**
  * حجمٌ مكتوب بالدفتر يبدو **وحداتٍ لا لوتات**: cTrader وكثير من المنصّات تعرض الحجم «10,000» (وحدة)
  * لا «0.10» — فينسخه المتداول كما هو، فتُحفظ صفقة بعشرة آلاف لوت وتخرج مخاطرتها «125,000,000 USD»
  * ويُلوَّث صافي الأداة بالدفتر كلّه. فوق `MAX_SANE_LOTS` يُعدّ الرقم مريباً؛ و`lots` = الرقم ÷ حجم

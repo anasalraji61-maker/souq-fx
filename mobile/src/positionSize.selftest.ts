@@ -32,6 +32,7 @@ import {
   stopPipsMismatch,
   marginPrice,
   sizeLooksLikeUnits,
+  lotsOverOrderMax,
   MAX_SANE_LOTS,
   parseSpreadPips,
   spreadRisk,
@@ -1348,3 +1349,37 @@ console.log('positionSize parseRiskInput selftest OK');
   }
 }
 console.log('positionSize toggleRiskUnit selftest OK');
+
+// —— lotsOverOrderMax: حجمٌ فوق أكبر أمر يقبله الوسيط
+{
+  // مثال التحذير: رصيد 100,000، 2%، وقف 1 pip، EURUSD بحساب دولار (10 USD للـpip) ⇒ 200 lot
+  const big = positionSize({ balance: 100_000, riskPct: 2, slPips: 1, pipValuePerLot: 10, contractSize: 100_000 })!;
+  assert.equal(big.lots, 200);
+  assert.equal(lotsOverOrderMax(big), 200);
+  // الوقف المقصود 10 pip ⇒ 20 lot — لا تحذير
+  const ok = positionSize({ balance: 100_000, riskPct: 2, slPips: 10, pipValuePerLot: 10, contractSize: 100_000 })!;
+  assert.equal(ok.lots, 20);
+  assert.equal(lotsOverOrderMax(ok), null);
+  // الحدّ بالضبط مقبول، وفوقه بخطوة واحدة يحذّر
+  const at = positionSize({ balance: 100_000, riskPct: 1, slPips: 1, pipValuePerLot: 10, contractSize: 100_000 })!;
+  assert.equal(at.lots, MAX_SANE_LOTS);
+  assert.equal(lotsOverOrderMax(at), null);
+  const over = positionSize({ balance: 100_010, riskPct: 1, slPips: 1, pipValuePerLot: 10, contractSize: 100_000 })!;
+  assert.equal(over.lots, 100.01);
+  assert.equal(lotsOverOrderMax(over), 100.01);
+  // دون أصغر لوت / بلا نتيجة ⇒ لا شيء
+  const tiny = positionSize({ balance: 50, riskPct: 1, slPips: 100, pipValuePerLot: 10, contractSize: 100_000 })!;
+  assert.ok(tiny.belowMinLot);
+  assert.equal(lotsOverOrderMax(tiny), null);
+  assert.equal(lotsOverOrderMax(null), null);
+  // شبكة: يحذّر ⇔ اللوت المقرَّب > الحدّ، ويُرجع اللوت نفسه
+  for (const bal of [1_000, 25_000, 100_000, 1_000_000]) {
+    for (const sl of [0.5, 1, 3, 10, 50]) {
+      const r = positionSize({ balance: bal, riskPct: 1, slPips: sl, pipValuePerLot: 10, contractSize: 100_000 })!;
+      const w = lotsOverOrderMax(r);
+      assert.equal(w != null, !r.belowMinLot && r.lots > MAX_SANE_LOTS, `${bal}/${sl}`);
+      if (w != null) assert.equal(w, r.lots);
+    }
+  }
+}
+console.log('positionSize lotsOverOrderMax selftest OK');
