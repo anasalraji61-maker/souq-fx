@@ -272,12 +272,8 @@ export type Dict = {
   riskCalcSub: string;
   riskCalcSymbol: string;
   riskCalcBadSymbol: string;
-  /** رمز حساب Exness Cent («USDJPYc») — الحاسبة ترفضه عمداً (حجم العقد مختلف)؛ `{symbol}` كما كُتب، `{pair}` بلا «c» */
-  riskCalcCentSymbolHint: string;
-  /** رمز حساب micro («EURUSDmicro»، «EURUSD.micro») — مرفوض عمداً كالسنت (لوت micro = 1,000 وحدة)؛ `{symbol}` كما كُتب، `{pair}` الزوج العادي (`smallContractPair`) */
-  riskCalcMicroSymbolHint: string;
   /**
-   * وضع حساب السنت/micro بالحاسبة (مقترح لوكيل الأدوات — جاهز غير موصول): رمز سنت يُحسب بدل رفضه والرصيد يُقرأ بالسنت
+   * وضع حساب السنت/micro بالحاسبة (موصول بـ`PositionSizePanel.tsx`، `6408499`): رمز سنت يُحسب بدل رفضه والرصيد يُقرأ بالسنت
    * (عقدٌ أصغر بمئة مرّة ورصيدٌ بوحدة أصغر بمئة مرّة ⇒ الحساب العادي نفسه بالأرقام نفسها إن عومل USC كـUSD بالتحويل)؛ رمز micro رصيده بعملة الحساب ولوته
    * = اللوت العادي × 100. `{symbol}` كما كُتب؛ `{usd}` مبلغ USC ÷ 100؛ `{std}` اللوت بمقياس الحساب العادي (÷ 100)
    */
@@ -1213,11 +1209,7 @@ const ar: Dict = {
   riskCalcSub: 'كم لوت تفتح حتى لا تخسر أكثر من نسبة محددة من رصيدك',
   riskCalcSymbol: 'الأداة',
   riskCalcBadSymbol:
-    'رمز غير مدعوم — الحاسبة تحسب أزواج الفوركس والذهب والفضة لحساب عادي، مثل EURUSD أو XAUUSD أو GOLD أو EURUSD.m',
-  riskCalcCentSymbolHint:
-    '«{symbol}» رمز حساب سنت — الحاسبة تحسب لوت الحساب العادي فقط، وعقد السنت أصغر بمئة مرّة. لحساب عادي اكتب {pair}',
-  riskCalcMicroSymbolHint:
-    '«{symbol}» رمز حساب micro — الحاسبة تحسب لوت الحساب العادي فقط، ولوت micro أصغر بمئة مرّة (1,000 وحدة). لحساب عادي اكتب {pair}',
+    'رمز غير مدعوم — الحاسبة تحسب أزواج الفوركس والذهب والفضة، مثل EURUSD أو XAUUSD أو GOLD أو EURUSD.m، ورموز حساب السنت مثل EURUSDc',
   riskCalcCentModeNote:
     '«{symbol}» رمز حساب سنت: اكتب الرصيد بالسنت (USC) كما تعرضه منصّتك — 10,000 USC = 100 USD. اللوت أدناه هو ما تكتبه بحساب السنت',
   riskCalcCentBalance: 'رصيد الحساب (USC — بالسنت)',
@@ -2135,11 +2127,7 @@ const enUS: Dict = {
   riskCalcSub: 'How many lots to open so you never lose more than a set % of your balance',
   riskCalcSymbol: 'Instrument',
   riskCalcBadSymbol:
-    'Unsupported symbol — the calculator sizes forex pairs, gold and silver for a standard account, e.g. EURUSD, XAUUSD, GOLD or EURUSD.m',
-  riskCalcCentSymbolHint:
-    '“{symbol}” is a cent-account symbol — the calculator sizes standard-account lots only, and a cent lot is 100 times smaller. For a standard account type {pair}',
-  riskCalcMicroSymbolHint:
-    '“{symbol}” is a micro-account symbol — the calculator sizes standard-account lots only, and a micro lot is 100 times smaller (1,000 units). For a standard account type {pair}',
+    'Unsupported symbol — the calculator sizes forex pairs, gold and silver, e.g. EURUSD, XAUUSD, GOLD or EURUSD.m, and cent-account symbols such as EURUSDc',
   riskCalcCentModeNote:
     '“{symbol}” is a cent-account symbol: enter your balance in cents (USC) as your platform shows it — 10,000 USC = 100 USD. Type the lot below on the cent account',
   riskCalcCentBalance: 'Account balance (USC — cents)',
@@ -3079,11 +3067,7 @@ const ku: Dict = {
   riskCalcSub: 'چەند لۆت بکەیتەوە بۆ ئەوەی زیاتر لە ڕێژەیەکی دیاریکراوی باڵانسەکەت لەدەست نەدەیت',
   riskCalcSymbol: 'ئامراز',
   riskCalcBadSymbol:
-    'هێمای پشتگیری نەکراو — ژمێرەرەکە جووتەکانی فۆرێکس و زێڕ و زیو بۆ هەژماری ئاسایی دەژمێرێت، وەک EURUSD یان XAUUSD یان GOLD یان EURUSD.m',
-  riskCalcCentSymbolHint:
-    '«{symbol}» هێمای هەژماری سەنتە — ژمێرەرەکە تەنها لۆتی هەژماری ئاسایی دەژمێرێت، و لۆتی سەنت سەد جار بچووکترە. بۆ هەژماری ئاسایی {pair} بنووسە',
-  riskCalcMicroSymbolHint:
-    '«{symbol}» هێمای هەژماری مایکرۆیە — ژمێرەرەکە تەنها لۆتی هەژماری ئاسایی دەژمێرێت، و لۆتی مایکرۆ سەد جار بچووکترە (1,000 یەکە). بۆ هەژماری ئاسایی {pair} بنووسە',
+    'هێمای پشتگیری نەکراو — ژمێرەرەکە جووتەکانی فۆرێکس و زێڕ و زیو دەژمێرێت، وەک EURUSD یان XAUUSD یان GOLD یان EURUSD.m، و هێماکانی هەژماری سەنت وەک EURUSDc',
   riskCalcCentModeNote:
     '«{symbol}» هێمای هەژماری سەنتە: باڵانس بە سەنت (USC) بنووسە وەک پلاتفۆرمەکەت پیشانی دەدات — 10,000 USC = 100 USD. ئەو لۆتەی خوارەوە لە هەژماری سەنت بنووسە',
   riskCalcCentBalance: 'باڵانسی هەژمار (USC — سەنت)',
