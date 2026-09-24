@@ -59,6 +59,7 @@ import {
   axisTickCount,
   axisTickRatios,
   nicePriceTicks,
+  niceTimeTickIndexes,
   axisShowsHours,
   layoutAxisLabels,
   boxesTouch,
@@ -4859,13 +4860,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const timeLabelW = chartPlotW < 200 ? 56 : chartPlotW < 280 ? 72 : 88;
   // العدد من عرض العلامة نفسها لا من عتبة مكتوبة: أربع علامات عرضها 88px تلزمها
   // 414px بعد القصّ، ولوح هاتف كبير ≈ 338px — فكانت الأولى والثانية تتراكبان.
-  const timeTickIndexes = Array.from(
-    new Set(
-      axisTickRatios(axisTickCount(chartPlotW, timeLabelW, TIME_LABEL_GAP, 4)).map((ratio) =>
-        Math.max(0, Math.round((source.plot.length - 1) * ratio))
+  // على حدود مستديرة (12:00، بداية اليوم/الشهر) بتوقيت العرض نفسه (`candleDateParts`: محلّي دون اليوم، UTC
+  // لليومي) — كانت نِسَباً من النافذة تقع على 13:45 ثم 14:00 مع كل تمرير. النِّسَب احتياط لنافذة قصيرة.
+  const timeTickCap = axisTickCount(chartPlotW, timeLabelW, TIME_LABEL_GAP, 4);
+  const timeTickIndexes =
+    niceTimeTickIndexes(
+      source.plot.map((c) => barTime(c)),
+      timeframeStepSec(series.timeframe),
+      timeTickCap,
+      dayCandles ? undefined : (t) => -new Date(t * 1000).getTimezoneOffset() * 60
+    ) ??
+    Array.from(
+      new Set(
+        axisTickRatios(timeTickCap).map((ratio) => Math.max(0, Math.round((source.plot.length - 1) * ratio)))
       )
-    )
-  );
+    );
   // المواضع المرسومة نفسها: المراكز من `xOf` فتحمل إزاحة التمرير، والقصّ والإخفاء
   // من `layoutAxisLabels` — فلا يتباعد المفحوص عن المرسوم.
   const timeTickBoxes = layoutAxisLabels(

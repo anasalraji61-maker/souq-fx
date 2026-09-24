@@ -11,6 +11,7 @@ import {
   offAxisSide,
   axisShowsHours,
   nicePriceTicks,
+  niceTimeTickIndexes,
 } from './axisTicks';
 
 const TIME_GAP = 6;
@@ -236,3 +237,35 @@ console.log('axisTicks.selftest: PASS');
 }
 
 }
+
+{
+  // علامات الزمن على حدود مستديرة
+  const H = 3600;
+  const t0 = Date.UTC(2026, 0, 14, 9, 15) / 1000; // الأربعاء 09:15
+  const m15 = Array.from({ length: 80 }, (_, i) => t0 + i * 900); // 20 ساعة
+  const idx = niceTimeTickIndexes(m15, 900, 4)!;
+  assert.ok(idx && idx.length >= 2 && idx.length <= 4);
+  // كل علامة على ساعة مستديرة، وبفاصل واحد مستدير
+  for (const i of idx) assert.equal((m15[i]! % (6 * H)) % H, 0);
+  const gaps = idx.slice(1).map((v, k) => m15[v]! - m15[idx[k]!]!);
+  assert.ok(gaps.every((g) => g === gaps[0]));
+  assert.ok([6 * H, 12 * H].includes(gaps[0]!));
+  // الإزاحة المحلية: +3 ساعات ⇒ الحدود على ساعات محليّة مستديرة
+  const idxL = niceTimeTickIndexes(m15, 900, 4, () => 3 * H)!;
+  for (const i of idxL) assert.equal((m15[i]! + 3 * H) % (6 * H), 0);
+  // العطلة: شمعة الأحد 22:00 تحمل حدّ اليوم/الاثنين الذي لا شمعة عنده
+  const fri = Date.UTC(2026, 0, 16, 12) / 1000;
+  const sun = Date.UTC(2026, 0, 18, 22) / 1000;
+  const wk = [...Array.from({ length: 10 }, (_, i) => fri + i * H), ...Array.from({ length: 30 }, (_, i) => sun + i * H)];
+  const iw = niceTimeTickIndexes(wk, H, 3)!;
+  assert.ok(iw.includes(10) || iw.some((i) => wk[i]! % 86400 === 0));
+  // اليومي: حدود أسابيع/أشهر لا أيام
+  const d0 = Date.UTC(2026, 0, 1) / 1000;
+  const days = Array.from({ length: 120 }, (_, i) => d0 + i * 86400);
+  const id = niceTimeTickIndexes(days, 86400, 4)!;
+  for (const i of id) assert.equal(new Date(days[i]! * 1000).getUTCDate(), 1);
+  // حدّ العدد محترم، وقليل الشموع ⇒ null
+  for (const cap of [2, 3, 4]) assert.ok((niceTimeTickIndexes(m15, 900, cap) ?? []).length <= cap);
+  assert.equal(niceTimeTickIndexes(m15.slice(0, 2), 900, 4), null);
+}
+

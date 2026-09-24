@@ -184,3 +184,52 @@ export function axisShowsHours(
   for (let i = 1; i < times.length; i++) minGap = Math.min(minGap, Math.abs(times[i] - times[i - 1]));
   return minGap < 86400;
 }
+
+/** فواصل علامات محور الزمن المستديرة (ثوانٍ) دون الشهر؛ الشهر فما فوق بالتقويم (`MONTH_STEPS`). */
+const TIME_STEPS = [60, 300, 900, 1800, 3600, 7200, 10800, 14400, 21600, 43200, 86400, 604800];
+const MONTH_STEPS = [1, 3, 6, 12];
+
+/**
+ * فهارس علامات محور الزمن على **حدود مستديرة** (12:00، بداية اليوم، بداية الشهر) كما بـTradingView، لا
+ * نِسَب متساوية من النافذة: النِّسَب تقع على أزمنة كيفيّة (13:45، 17:15) تتبدّل مع كل تمرير أو شمعة جديدة
+ * فلا يُقرأ المحور. الفاصل أصغر مستدير > خطوة الفريم لا تتجاوز حدوده `maxCount`؛ العلامة أوّل شمعة بعد كل
+ * حدّ (الشمعة التي تبدأ عنده أو تعبره — العطلة لا تُسقط حدّ الاثنين). `tzOffsetSec(t)` إزاحة التوقيت الذي
+ * تُطبع به العلامة (المحلّي دون اليوم، 0 للشموع اليومية المطبوعة UTC) كي تقع الحدود على ساعات مستديرة
+ * بالعرض نفسه. أقلّ من علامتين ⇒ `null` (المستدعي يعود للنِّسَب).
+ */
+export function niceTimeTickIndexes(
+  times: readonly number[],
+  stepSec: number,
+  maxCount: number,
+  tzOffsetSec: (t: number) => number = () => 0
+): number[] | null {
+  const cap = Math.max(1, Math.floor(Number.isFinite(maxCount) ? maxCount : 1));
+  if (times.length < 3 || cap < 2) return null;
+  const local = times.map((t) => (Number.isFinite(t) ? t + tzOffsetSec(t) : Number.NaN));
+  const boundaries = (bucket: (t: number) => number): number[] => {
+    const out: number[] = [];
+    for (let i = 1; i < local.length; i++) {
+      const a = local[i - 1]!;
+      const b = local[i]!;
+      if (Number.isFinite(a) && Number.isFinite(b) && bucket(b) !== bucket(a)) out.push(i);
+      if (out.length > cap) break;
+    }
+    return out;
+  };
+  const step = Number.isFinite(stepSec) && stepSec > 0 ? stepSec : 0;
+  for (const s of TIME_STEPS) {
+    if (s <= step) continue;
+    // الأسبوع يبدأ الاثنين (1970-01-01 خميس ⇒ +3 أيام)
+    const off = s === 604800 ? 3 * 86400 : 0;
+    const idx = boundaries((t) => Math.floor((t + off) / s));
+    if (idx.length <= cap) return idx.length >= 2 ? idx : null;
+  }
+  for (const months of MONTH_STEPS) {
+    const idx = boundaries((t) => {
+      const d = new Date(t * 1000);
+      return Math.floor((d.getUTCFullYear() * 12 + d.getUTCMonth()) / months);
+    });
+    if (idx.length <= cap) return idx.length >= 2 ? idx : null;
+  }
+  return null;
+}
