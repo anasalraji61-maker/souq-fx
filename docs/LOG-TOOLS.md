@@ -3004,3 +3004,52 @@ micro، شريحة «0.04 lot» بعد العبور، الشريط بعنوان 
 ### ما يبدأ منه التشغيل القادم
 1. النتيجة العائمة بـBid/Ask (أعلاه).
 2. مال الدفتر للسنت/micro بعد مفتاح من وكيل الإطلاق.
+
+---
+
+## 2026-09-24 (رابع وثلاثون) — التشغيل: GOLDm بالحاسبة، مال صفقات السنت/micro بالدفتر، أيقونة الدفتر، كلمات ملاحظة الخطة بلغة الواجهة، سطر الخطة المشترك
+
+قرأتُ `docs/COORDINATION.md` أولاً (موجود الآن). صفوفي: 4 من 5 منفّذة، والخامس (`dirColor`) خارج نطاقي — تفصيلٌ أدناه.
+
+### 1. `instrumentSpec('GOLDm')` = XAUUSD كالشارت (`positionSize.ts`) — `c59cc11`
+**يُغلق صف QA2 (GOLDm).** `METAL_NAMES` تقبل الآن M وكلمات نوع الحساب ملاصقةً (GOLDm، SILVERm، GOLDpro/ecn/raw/std/stp/vip) — القاعدة نفسها
+التي تقبل «XAUUSDm» منذ مدّة. الحاسبة والدفتر كانا «رمز غير معروف» والشارت يقرؤها ذهباً. حرفٌ آخر ملاصق يبقى مرفوضاً (GOLDX، GOLDI، GOLDMM، SILVERT)،
+و«GOLDc»/«GOLDmicro» تبقى عقداً أصغر. **اختبارات**: 7 كتابات ذهب و3 فضة = مواصفات XAUUSD/XAGUSD حرفياً، لوت 0.2 على «GOLDm» كـXAUUSD، 5 عقود صغيرة null، 9 مرفوضة.
+
+### 2. مال صفقات السنت/micro بالدفتر (`tradePlan.ts` + `TradeJournalPanel.tsx`) — `4c38069`
+**يُغلق صف tools30** (`journalCentMoneyNote`/`journalMoneyUsc` بلا قارئ). `journalPnl`/`journalRisk`: العادي = `pnlInQuoteCcy`/`riskInQuoteCcy` حرفياً؛
+سنتٌ مسعَّر بالدولار (EURUSDc، GOLDc) ⇒ **USC** (العقد ÷100 × 100 سنت = اللوت نفسه على الزوج العادي)؛ سنتٌ بعملة أخرى (USDJPYc) وmicro ⇒ عملة التسعير بعقد ÷100.
+EURUSDc 4 لوت +25 pip = «+1,000.00 USC (≈ +10.00 USD)» (`formatJournalMoney` بقالب `journalMoneyUsc`). يعمل بكل مكان: سطر المخاطرة، الربح عند الهدف، معاينة الخروج،
+تأكيد الإغلاق، سطر الصفقة، صافي الأدوات، وإخفاء «إجمالي PnL%» المعاكس (USC ÷100 تُجمع مع USD). سطر `journalCentMoneyNote` يظهر حين يُعرض مبلغٌ بالـUSC.
+أُزيلت `netHasCentWithLots`/`netHasMicroWithLots` (صارت بلا مستخدم). **اختبارات**: 4 رموز عادية = السابق حرفياً، سنت دولار/ذهب/ين، micro بالدولار والجنيه، 0.01 micro،
+مجهولة/أحجام غير صالحة، المخاطرة، معاينة الخروج، صافي كتابتين للسنت 125 USC، مزيج USD+USC بـ`pnlPctContradictsCash`، 7 حالات تنسيق. 11 توقّعاً قديماً (`cash: null`) حُدِّثت بقيم حُسبت باليد.
+
+**لوكيل الإطلاق:**
+- `journalCentNoMoney` و`journalMicroNoMoney` **بلا مستخدم الآن** — احذفهما.
+- `journalMicroMoneyNote` **لم أوصله عمداً**: يقول «المبالغ بعملة حسابك»، والدفتر يعرض micro بعملة **التسعير** (EURGBPmicro بالجنيه) كالصفقات العادية — لا يعرف
+  عملة الحساب. أعد صياغته («بعملة تسعير الزوج، بعقد micro 1,000 وحدة للوت») أو احذفه. المبلغ مكتوبٌ برمز عملته فلا سطر ضروري.
+
+### 3. أيقونة الدفتر «₴» ⇒ «▤» (`ToolsScreen.tsx`) — `732a7d4`
+**جزء نطاقي من صف launch4 ★.** «₴» رمز الهريفنيا. `MatrixBottomDock.tsx:85` و`MatrixEdgeRails.tsx:142` ليسا بنطاقي — **يحتاجان «▤» نفسه** ليبقى الرمز واحداً بين الهاتف واللابتوب.
+
+### 4. ملاحظة الخطة من الحاسبة بلغة الواجهة (`positionSize.ts` + `PositionSizePanel.tsx`) — `d0da6fc`
+**صف QA2 (planJournalNote) — جزئي.** `planJournalNote({ words })`: «المخاطرة» (`planRiskWord`) و«سبريد» (`termSpreadWord`) من مفاتيح موجودة. «lot» و«R:R» و«pip» تبقى
+لاتينية عمداً: «1.00 lot» أول الملاحظة علامة `knownLots`. **اختبارات**: عربي/كردي، كلمات فارغة ⇒ الإنجليزية حرفياً، `knownLots(1, …)` = 1 بملاحظة عربية وكردية.
+**لوكيل الإطلاق:** مفتاحان قصيران لإكمالها — `planNoteCommission` («عمولة» / «commission» / «کۆمیسیۆن») و`planNoteNetRR` («R:R الصافي» / «net R:R» / كردي).
+أوصلهما بـ`words.commission`/`words.netRR` فور وجودهما (سطر واحد).
+
+### 5. سطر الخطة المشترك `planSummaryText` (`tradePlan.ts` + `TradeJournalPanel.tsx`) — `1cabb16`
+**صف QA1 (planSummary ×2) — نصفي.** الدفتر يستعمل الدالّة المختبَرة؛ `VotePanel.tsx:82` ليس بنطاقي — مالكه يستبدل نسخته بـ
+`planSummaryText(plan, { risk: t.planRiskWord, reward: t.planRewardWord })` (الناتج حرفياً ما يكتبه الآن). **اختبارات**: بمال/بلا مال/نصّ فارغ، US30 بفرق السعر.
+
+### لم يُنفَّذ من صفوفي
+- `dirColor` ×3 (`AnalystsPanel`/`IndicatorForecastPanel`/`SocialConsensusPanel`): **خارج نطاقي** بكل ملفاته — أعيد توجيهه لمالك تلك اللوحات.
+- صفوف الخادم (spread مختلَق، الحجم 1، كاش quote) و`AccountScreen.tsx:111` والشارت: خارج نطاقي، كما كانت.
+
+### التحقّق
+`bash scripts/qa-build-check.sh` **GREEN (0)** قبل كل التزام. Node 22 + tsx: كل الاختبارات الذاتية بالمستودع (59) تمرّ.
+**يحتاج جهازاً**: سطر «+1,000.00 USC (≈ +10.00 USD)» بعرض الهاتف (قد يلتفّ)، «▤» بخطّ الجهاز.
+
+### ما يبدأ منه التشغيل القادم
+1. وصل `planNoteCommission`/`planNoteNetRR` حين يضيفهما وكيل الإطلاق.
+2. النتيجة العائمة بـBid/Ask (من التشغيل 33).
