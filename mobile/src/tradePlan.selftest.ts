@@ -30,6 +30,7 @@ import {
   recentLotSizes,
   journalContractKind,
   journalSmallLotsStdEquiv,
+  journalSizeFromSmall,
   pySum,
   quickJournalSymbols,
   stopsForPips,
@@ -1700,3 +1701,29 @@ console.log('tradePlan quickStopPips metal-in-JPY selftest OK');
   assert.equal(st([0.635, 0.22, 0.57, -1.891]).avg_win, 0.48); // كان 0.47
 }
 console.log('tradePlan journalStats python-sum selftest OK');
+
+{
+  // «4» كُتبت لـEURUSDC ثم شريحة EURUSD ⇒ 4 لوت عادي (مئة ضعف) — يُقترح 0.04
+  assert.deepEqual(journalSizeFromSmall(4, 'EURUSDc', 'EURUSD'), { std: '0.04', prev: 'EURUSDC' });
+  assert.deepEqual(journalSizeFromSmall(4, 'EURUSDc', 'GBPUSD'), { std: '0.04', prev: 'EURUSDC' });
+  assert.deepEqual(journalSizeFromSmall(50, 'eurusd.micro', 'eurusd'), { std: '0.5', prev: 'EURUSD.MICRO' });
+  assert.deepEqual(journalSizeFromSmall(200, 'XAUUSD_cent', 'XAUUSD'), { std: '2', prev: 'XAUUSD_CENT' });
+  // الاقتراح بمعنى السنت نفسه: مخاطرة 25 pip بـ«4» سنت = مخاطرة 0.04 لوت عادي (10 USD)، لا 4 لوت (1,000 USD)
+  {
+    const fix = journalSizeFromSmall(4, 'EURUSDc', 'EURUSD')!;
+    const r = draftRiskFigures({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, lots: Number(fix.std) })!;
+    assert.ok(Math.abs(r.cash!.amount - 10) < 1e-9);
+  }
+  // لا تبدّل من صغير إلى عادي ⇒ لا سطر
+  assert.equal(journalSizeFromSmall(4, 'EURUSD', 'EURUSD'), null);
+  assert.equal(journalSizeFromSmall(4, 'EURUSDc', 'EURUSDc'), null);
+  assert.equal(journalSizeFromSmall(4, 'EURUSDc', 'GBPUSDc'), null);
+  assert.equal(journalSizeFromSmall(0.04, 'EURUSD', 'EURUSDc'), null);
+  assert.equal(journalSizeFromSmall(4, '', 'EURUSD'), null);
+  assert.equal(journalSizeFromSmall(4, null, 'EURUSD'), null);
+  // الرمز الحالي مجهول (وسط الكتابة) ⇒ لا سطر بعد
+  for (const s of ['EURUS', '', 'FOOBAR', null]) assert.equal(journalSizeFromSmall(4, 'EURUSDc', s), null, String(s));
+  // حجم غير صالح أو فوق حدّ السنت (سطر الوحدات يتكفّل به)
+  for (const v of [0, -1, NaN, Infinity, null, undefined, 201]) assert.equal(journalSizeFromSmall(v, 'EURUSDc', 'EURUSD'), null, String(v));
+}
+console.log('tradePlan journal size from small contract selftest OK');

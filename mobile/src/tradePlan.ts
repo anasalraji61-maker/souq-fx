@@ -981,6 +981,23 @@ export function journalSmallLotsStdEquiv(size: number | null | undefined, symbol
 }
 
 /**
+ * حجمٌ كُتب لرمز سنت/micro ثم تبدّل الرمز إلى عقدٍ عادي معروف (`journalSizeFromSmallFix`): «4» لـ«EURUSDC» = 0.04 لوت عادي،
+ * وبعد شريحة «EURUSD» تبقى «4» بالخانة = **4 لوت عادي** — مئة ضعف، وسطر «= 0.04» يختفي مع الرمز فلا شيء يذكّر. `std` =
+ * `smallLotsStdEquiv(size)` تُقترح بنقرة. `typedFor` = الرمز الذي كُتب له الحجم (آخر كتابة/شريحة/تعديل). `null` = لا سطر:
+ * العقد لم يتبدّل من صغير إلى عادي، الرمز الحالي مجهول (وسط الكتابة «EURUS»)، أو الحجم غير صالح/فوق `MAX_SMALL_LOTS`.
+ */
+export function journalSizeFromSmall(
+  size: number | null | undefined,
+  typedFor: string | null | undefined,
+  symbol: string | null | undefined,
+): { std: string; prev: string } | null {
+  if (journalSmallLotsStdEquiv(size, typedFor) == null) return null;
+  const up = (symbol || '').trim().toUpperCase();
+  if (!instrumentSpec(up)) return null;
+  return { std: smallLotsStdEquiv(size!), prev: (typedFor || '').trim().toUpperCase() };
+}
+
+/**
  * آخر أحجام اللوت **المختلفة** التي سجّلها المتداول (الأحدث أولاً، `max` على الأكثر) — شرائح بخانة الحجم
  * بنموذج الدفتر.
  *

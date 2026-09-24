@@ -39,6 +39,7 @@ import {
   draftRiskFigures,
   journalSizeLooksLikeUnits,
   journalSmallLotsStdEquiv,
+  journalSizeFromSmall,
   realizedMove,
   realizedR,
   recentLotSizes,
@@ -133,6 +134,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * لا يرسل `size` إطلاقاً فيضع الباك-إند 1 (`db.py:1578`): صفقتان متطابقتان بحجمين مختلفين حسب طريق
    * التسجيل. اختياري — الفارغ يبقى كما كان بالضبط (لا يُرسل الحقل). */
   const [size, setSize] = useState('');
+  /** الرمز الذي كُتب له الحجم (كتابة/شريحة/تعديل) — «4» لـ«EURUSDC» لا تعني 4 لوت بعد شريحة «EURUSD» (`journalSizeFromSmall`). */
+  const [sizeFor, setSizeFor] = useState('');
   const [sl, setSl] = useState('');
   const [tp, setTp] = useState('');
   const [note, setNote] = useState('');
@@ -588,6 +591,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     setEntry('');
     setExit('');
     setSize('');
+    setSizeFor('');
     setSl('');
     setTp('');
     setNote('');
@@ -605,6 +609,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     // (إلا 1.00 مسجَّلة من الحاسبة — ملاحظتها تشهد بها، راجع `knownLots`)
     const kl = knownLots(tr.size, tr.note);
     setSize(kl != null ? String(kl) : '');
+    setSizeFor(tr.symbol);
     setSl(tr.sl != null ? String(tr.sl) : '');
     setTp(tr.tp != null ? String(tr.tp) : '');
     setNote(tr.note || '');
@@ -1273,6 +1278,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           value={size}
           onChangeText={(v) => {
             setSize(v);
+            setSizeFor(symbol);
             setFormError(null);
           }}
           placeholder={t.journalSizePlaceholder}
@@ -1293,6 +1299,43 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         return std != null ? (
           <Text style={[styles.planLine, { textAlign: align }]}>{t.riskCalcSmallLotsStdEquiv.replace('{std}', () => std)}</Text>
         ) : null;
+      })()}
+      {/*
+        حجمٌ كُتب لرمز سنت/micro ثم تبدّل الرمز إلى عادي: «4» صارت 4 لوت عادي (مئة ضعف) — نقرة تحوّلها إلى مكافئها
+        (`journalSizeFromSmall`). لا يمنع الحفظ: 4 لوت على EURUSD قد تكون مقصودة، وكتابة الحجم من جديد تُسكت السطر.
+      */}
+      {(() => {
+        const fromSmall = journalSizeFromSmall(num(size), sizeFor, symbol);
+        if (!fromSmall) return null;
+        const text = t.journalSizeFromSmallFix
+          .split('{n}')
+          .join(size.trim())
+          .replace('{prev}', () => fromSmall.prev)
+          .replace('{symbol}', () => symbol.trim().toUpperCase())
+          .replace('{std}', () => fromSmall.std);
+        return (
+          <View style={[styles.qChips, rtl && styles.rowRtl]}>
+            <Pressable
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.qChip,
+                styles.chipOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => {
+                setSize(fromSmall.std);
+                setSizeFor(symbol);
+                setFormError(null);
+              }}
+              accessibilityLabel={text}
+            >
+              <Text style={[styles.qChipText, styles.chipTextOn]}>{text}</Text>
+            </Pressable>
+          </View>
+        );
       })()}
       {/*
         آخر أحجام اللوت المختلفة (الأحدث أولاً): المتداول يكرّر حجماً أو اثنين، وكتابة خانة المال بيدٍ كل
@@ -1318,6 +1361,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
                 ]}
                 onPress={() => {
                   setSize(l.toFixed(2));
+                  setSizeFor(symbol);
                   setFormError(null);
                 }}
                 accessibilityLabel={`${t.journalSizeA11y}: ${text}`}
@@ -1343,6 +1387,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
               ]}
               onPress={() => {
                 setSize(sizeUnits.lots!.toFixed(2));
+                setSizeFor(symbol);
                 setFormError(null);
               }}
               accessibilityLabel={sizeUnitsText()}
