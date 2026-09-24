@@ -934,6 +934,14 @@ export type Dict = {
   mcHideDrawings: string;
   /** الزرّ نفسه والرسومات مخفيّة؛ المستدعي يضيف «(n)» */
   mcShowDrawings: string;
+  /** قارئ الشاشة لزرّ «Log» (النصّ الظاهر يبقى «Log» اللاتيني) — كان `chartLocalLabels(lang).logScaleA11y` بـ`typeLabels.ts` */
+  mcLogScaleA11y: string;
+  /** عنوان نافذة المشاركة (`Sharing.shareAsync` dialogTitle) — كان `chartLocalLabels(lang).shareDialogTitle` */
+  mcShareDialogTitle: string;
+  /** أسماء الجلسات فوق تظليل مؤشّر «Sessions» — كانت `chartLocalLabels(lang).sessions` */
+  mcSessTokyo: string;
+  mcSessLondon: string;
+  mcSessNewYork: string;
   mcPanesCollapsed: string;
   mcPanesCollapsedA11y: string;
   mcPanesPageA11y: string;
@@ -1936,6 +1944,11 @@ const ar: Dict = {
   mcToLatestA11y: 'العودة لآخر شمعة',
   mcHideDrawings: 'إخفاء الرسوم',
   mcShowDrawings: 'إظهار الرسوم',
+  mcLogScaleA11y: 'مقياس لوغاريتمي للسعر',
+  mcShareDialogTitle: 'شارت MATRIX',
+  mcSessTokyo: 'طوكيو',
+  mcSessLondon: 'لندن',
+  mcSessNewYork: 'نيويورك',
   mcPanesCollapsed: 'مطويّة',
   mcPanesCollapsedA11y: 'لوحات مؤشرات مطويّة: ارتفاع الشارت لا يتّسع لها',
   mcPanesPageA11y: 'اضغط لعرض اللوحات المطويّة بدل الظاهرة',
@@ -2963,6 +2976,11 @@ const enUS: Dict = {
   mcToLatestA11y: 'Scroll to the latest candle',
   mcHideDrawings: 'Hide drawings',
   mcShowDrawings: 'Show drawings',
+  mcLogScaleA11y: 'Logarithmic price scale',
+  mcShareDialogTitle: 'MATRIX chart',
+  mcSessTokyo: 'Tokyo',
+  mcSessLondon: 'London',
+  mcSessNewYork: 'New York',
   mcPanesCollapsed: 'Hidden',
   mcPanesCollapsedA11y: 'Indicator panes hidden: the chart is too short to fit them',
   mcPanesPageA11y: 'Tap to show the hidden panes instead of the visible ones',
@@ -4014,6 +4032,11 @@ const ku: Dict = {
   mcToLatestA11y: 'گەڕانەوە بۆ دوایین مۆم',
   mcHideDrawings: 'شاردنەوەی هێڵکارییەکان',
   mcShowDrawings: 'پیشاندانی هێڵکارییەکان',
+  mcLogScaleA11y: 'پێوەری لۆگاریتمی بۆ نرخ',
+  mcShareDialogTitle: 'چارتی MATRIX',
+  mcSessTokyo: 'تۆکیۆ',
+  mcSessLondon: 'لەندەن',
+  mcSessNewYork: 'نیویۆرک',
   mcPanesCollapsed: 'شاراوە',
   mcPanesCollapsedA11y: 'پانێڵی پێوەرەکان شاراونەتەوە: بەرزی چارتەکە بەشیان ناکات',
   mcPanesPageA11y: 'دەستی لێ بدە بۆ پیشاندانی پانێڵە شاراوەکان لە جیاتی ئەوانەی دیارن',
