@@ -96,6 +96,7 @@ import {
   type PositionSide,
 } from './positionTool';
 import { anchorDrawings, barTime, stampAtIndex, type TimeBar } from './drawingAnchors';
+import { placeSelectionTags, selectionPrices } from './selectionTags';
 import { appendedAfter } from './holdView';
 import { priceSpan } from './priceSpan';
 import { fibLevelPrice, planFibLabels, type FibLabelPlan } from './fibLabels';
@@ -4167,11 +4168,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // وسعره على بُعد أقلّ من علوّ وسم واحد فلا يضيع شيء.
   const currentTagHidden =
     crossTagTop != null && boxesTouch(currentTagTop, currentTagH, crossTagTop, crossTagH, 0);
+  // أسعار الرسم المحدَّد على المحور بلونه (`selectionTags.ts`) — تتبع الإصبع أثناء سحب طرفه.
+  // وسم السعر الحيّ محجوز لا يُغطّى؛ وسم التقاطع يُرسم فوقها.
+  const selectedDrawing = selectedId && !hidePriceLabels ? drawings.find((d) => d.id === selectedId) : undefined;
+  const selectionTags = selectedDrawing
+    ? placeSelectionTags(
+        selectionPrices(selectedDrawing, series.symbol),
+        yOf,
+        chartPlotH,
+        PRICE_TAG_H,
+        currentTagHidden ? [] : [{ top: currentTagTop, h: currentTagH }]
+      )
+    : [];
   const priceTickUnderTag = (start: number) =>
     (!currentTagHidden &&
       boxesTouch(start, PRICE_LABEL_H, currentTagTop, currentTagH, TAG_CLEAR_GAP)) ||
     (crossTagTop != null &&
-      boxesTouch(start, PRICE_LABEL_H, crossTagTop, crossTagH, TAG_CLEAR_GAP));
+      boxesTouch(start, PRICE_LABEL_H, crossTagTop, crossTagH, TAG_CLEAR_GAP)) ||
+    selectionTags.some((t) => boxesTouch(start, PRICE_LABEL_H, t.top, PRICE_TAG_H, TAG_CLEAR_GAP));
   const crossTimeTagLeft = crossCandle
     ? Math.max(0, Math.min(chartPlotW - CROSS_TIME_TAG_W, crossX - CROSS_TIME_TAG_W / 2))
     : null;
@@ -6440,6 +6454,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ) : null}
           </View>
           ) : null}
+          {selectionTags.map((t) => (
+            <View
+              key={`sel-${t.tone}-${t.price}`}
+              pointerEvents="none"
+              style={[
+                styles.selectionPriceTag,
+                {
+                  top: t.top,
+                  backgroundColor:
+                    t.tone === 'bull' ? colors.bull : t.tone === 'bear' ? colors.bear : selectedDrawing?.color ?? accent,
+                },
+              ]}
+            >
+              <Text style={styles.crossTagText}>{formatPrice(t.price, series.symbol)}</Text>
+            </View>
+          ))}
           {!hidePriceLabels && crossPrice != null && crossTagTop != null ? (
           <View pointerEvents="none" style={[styles.crossPriceTag, { top: crossTagTop }]}>
             <Text style={styles.crossTagText}>
@@ -10829,6 +10859,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
     backgroundColor: colors.text,
     zIndex: 2,
+  },
+  selectionPriceTag: {
+    position: 'absolute',
+    left: 2,
+    right: 2,
+    height: 18,
+    borderRadius: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+    zIndex: 1,
   },
   crossTimeTag: {
     position: 'absolute',
