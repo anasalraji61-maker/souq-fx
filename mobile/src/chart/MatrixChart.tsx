@@ -31,7 +31,7 @@ import {
   type DrawingsSaveErrorCode,
 } from './drawingStore';
 import { compareOverlayPrices } from './compare';
-import { withLivePrice } from './liveSeries';
+import { tickPlausibleForSeries, withLivePrice } from './liveSeries';
 import { computeVolumeProfile, pocPrice, computeTpo } from './volumeProfile';
 import { evalPineLite, INDICATOR_LIBRARY } from './pineLite';
 import { renko, measureStats, snapPrice } from './renko';
@@ -3398,8 +3398,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // بلا تيك حيّ (السوق مغلق، أو قبل أوّل تيك): إغلاق **آخر شمعة بالسلسلة** لا آخر شمعة ظاهرة —
   // بعد الرجوع 50 شمعة كان الوسم والخطّ المتقطّع يقفزان لإغلاق قديم والرأس يقول غيره، وبـHeikin
   // يعرضان إغلاقاً متوسَّطاً لا السعر. بالإعادة وحدها: شمعة الإعادة هي «الآن».
+  // `livePrice` يصل من المستدعي؛ الحاليّون يمرّرونه عبر `livePriceForChart` (محروس)، لكن تيكاً
+  // خاماً — تيك الرمز الجديد فوق شموع القديم أثناء التبديل، أو صفراً من عطل مزوّد — كان يضع
+  // الوسم والخطّ المتقطّع خارج المحور ويحسب بُعد التقاطع بالـpip منه. يُحرس هنا بالقاعدة نفسها.
+  const liveTagPrice =
+    livePrice != null &&
+    Number.isFinite(livePrice) &&
+    livePrice > 0 &&
+    tickPlausibleForSeries(series, livePrice)
+      ? livePrice
+      : null;
   const currentPrice =
-    livePrice ??
+    liveTagPrice ??
     (replayOn
       ? source.plot[source.plot.length - 1]?.close
       : liveSeries.candles[liveSeries.candles.length - 1]?.close) ??
