@@ -45,6 +45,8 @@ import {
   spreadTooWide,
   stopInsideSpread,
   misplacedArabicThousandsSignInRisk,
+  leverageOutOfRange,
+  MAX_LEVERAGE,
   planJournalNote,
   parseCommission,
   costsLotsAdvice,
@@ -1595,3 +1597,19 @@ console.log('positionSize stopInsideSpread selftest OK');
   assert.deepEqual(parseRiskInput('$0٫5', 10_000, 'USD'), { pct: 0.005, amount: 0.5 });
 }
 console.log('positionSize misplacedArabicThousandsSignInRisk selftest OK');
+
+// leverageOutOfRange — «1:5000» مفهومة لكنها فوق الحدّ: رسالتها لا «رقم غير مفهوم»
+{
+  for (const r of ['1:5000', '5000', '١:٥٠٠٠', '1／5000', '1 : 10000', '0.5', '1:0', '0', '3000.5'])
+    assert.equal(leverageOutOfRange(r), true, r);
+  // مقبولة، فارغة، أو صيغة غير مفهومة (تبقى للرسالة العامة)
+  for (const r of ['', '1:1', '1', '500', '1:500', '3000', '1:3000', '100:1', 'abc', '1:1:500', '1,000', '-100'])
+    assert.equal(leverageOutOfRange(r), false, r);
+  assert.equal(MAX_LEVERAGE, 3000);
+  // القراءة لم تتغيّر
+  assert.equal(parseLeverage('1:5000'), null);
+  assert.equal(parseLeverage('1:3000'), 3000);
+  assert.equal(parseLeverage('1:500'), 500);
+  assert.equal(parseLeverage('0.5'), null);
+}
+console.log('positionSize leverageOutOfRange selftest OK');

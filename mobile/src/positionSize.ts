@@ -532,6 +532,15 @@ export function formatMoney(v: number, ccy: string): string {
  * `null` لفارغ أو غير صالح أو خارج الحدّ.
  */
 export function parseLeverage(raw: string): number | null {
+  const v = readLeverage(raw);
+  return v != null && v >= 1 && v <= MAX_LEVERAGE ? v : null;
+}
+
+/** أعلى رافعة تقبلها `parseLeverage` — تُعرض بالرسالة حين تُكتب أعلى منها */
+export const MAX_LEVERAGE = 3000;
+
+/** الرقم كما كُتب بصيغة رافعة مفهومة («1:5000» ⇒ 5000)، بلا فحص الحدّ. `null` = ليست صيغة رافعة. */
+function readLeverage(raw: string): number | null {
   const s = normalizeDigits(raw)
     .replace(/[：]/g, ':')
     .replace(/[／]/g, '/')
@@ -539,7 +548,18 @@ export function parseLeverage(raw: string): number | null {
   const m = /^(?:1[:/])?(\d+(?:\.\d+)?)$/.exec(s);
   if (!m) return null;
   const v = Number(m[1]);
-  return Number.isFinite(v) && v >= 1 && v <= 3000 ? v : null;
+  return Number.isFinite(v) ? v : null;
+}
+
+/**
+ * رافعة **مفهومة الصيغة لكنها خارج الحدّ** («1:5000»، «10000»، «0.5»): كانت ترفضها `parseLeverage` فتظهر
+ * رسالة «رقم غير مفهوم — اكتبه بلا فواصل آلاف» — والرقم مفهوم وبلا فواصل، فيعيد المتداول كتابته كما هو.
+ * true ⇒ رسالة `riskCalcLeverageOutOfRange` بالحدّ. الخانة تبقى مرفوضة (لا تغيير بالحساب).
+ * false لفارغ، ومقبول، وصيغة غير مفهومة («100:1» مرفوضة عمداً — راجع `parseLeverage`).
+ */
+export function leverageOutOfRange(raw: string): boolean {
+  const v = readLeverage(raw);
+  return v != null && parseLeverage(raw) == null;
 }
 
 /**

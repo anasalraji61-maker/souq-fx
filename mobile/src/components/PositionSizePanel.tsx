@@ -23,6 +23,8 @@ import {
   formatMoney,
   profitAtTarget,
   parseLeverage,
+  leverageOutOfRange,
+  MAX_LEVERAGE,
   requiredMargin,
   maxLotsForMargin,
   marginPrice,
@@ -260,12 +262,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * خانة فيها نص لكنه ليس رقماً مفهوماً («10,000» مبهم، «1.2.3») — نقول ذلك بدل «أدخل الرصيد…».
    * السبريد خارجها: خطؤه يُقال تحت خانته (راجع `spreadErr`) لأن اللوت يُحسب بدونه.
    */
-  const badNumber =
+  const badOtherThanLeverage =
     (balance.trim() !== '' && parseDecimal(balance, { amount: true }) == null) ||
     (riskPct.trim() !== '' && parseRiskInput(riskPct, balanceNum, account) == null) ||
     [slPips, manualConv].some((v) => v.trim() !== '' && parseDecimal(v) == null) ||
-    [entryPx, stopPx, targetPx].some((v) => v.trim() !== '' && Number.isNaN(priceNum(v))) ||
-    (leverage.trim() !== '' && parseLeverage(leverage) == null);
+    [entryPx, stopPx, targetPx].some((v) => v.trim() !== '' && Number.isNaN(priceNum(v)));
+  const badNumber = badOtherThanLeverage || (leverage.trim() !== '' && parseLeverage(leverage) == null);
   /**
    * خطأ خانة السبريد، تحتها مباشرةً. كان يُضمّ لـ`badNumber` الذي لا يظهر إلا **بلا نتيجة** — واللوت
    * يُحسب من الوقف وحده، فسبريدٌ مرفوض كان يُسقط سطر «شاملة السبريد» بصمت واللوت معروض كأن لا خطأ.
@@ -285,7 +287,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         [slPips, manualConv, entryPx, stopPx, targetPx].some((v) => misplacedArabicThousandsSign(v))
       ? // «0٬5» بخانة المخاطرة: «٬» بجانب «٫» على اللوحة العربية — يُقال أيّهما يُكتب للكسر
         t.arabicThousandsSignHint
-      : t.invalidNumberHint;
+      : !badOtherThanLeverage && leverageOutOfRange(leverage)
+        ? // «1:5000» مفهومة وبلا فواصل — «رقم غير مفهوم، بلا فواصل آلاف» كانت تجعله يعيد كتابتها كما هي.
+          // وحدها فقط: مع خانة أخرى مرفوضة تبقى الرسالة العامة كي لا تُسمّى الرافعة وحدها
+          t.riskCalcLeverageOutOfRange.replace('{value}', leverage.trim()).replace('{max}', String(MAX_LEVERAGE))
+        : t.invalidNumberHint;
   const spreadWide = spreadTooWide(spread);
   const spreadErr =
     parseSpreadPips(spread) != null
