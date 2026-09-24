@@ -10,7 +10,7 @@
  * - أحداث بلا وقت دقيق (`ts`) تُتجاهَل: لا نعرض عدّاً تنازلياً لا نعرفه.
  */
 
-import { instrumentSpec } from '../positionSize';
+import { instrumentSpec, smallContractPair } from '../positionSize';
 
 export type NewsEvent = {
   id: string;
@@ -117,6 +117,12 @@ export function knownSingleName(raw: string): string | null {
 const CRYPTO = /^(BTC|ETH|LTC|XRP|SOL|BCH|BNB|ADA|DOT|DOGE|AVAX|LINK|XLM|TRX)(USDT|USDC|[A-Z]{3})$/;
 
 export function symbolCurrencies(symbol: string): string[] {
+  /**
+   * حساب **micro** بلاحقة ملاصقة (XM: «EURUSDmicro»، «GOLDmicro»): الحروف كلها 11 والملاصقة حرفٌ واحد فقط، فكانت
+   * `[]` — صفقة يورو/دولار بلا تحذير قبل الرواتب. الزوج العادي نفسه (`smallContractPair`) يُحذَّر له.
+   */
+  const small = smallContractPair(symbol);
+  if (small) return symbolCurrencies(small);
   /**
    * الرمز القانوني أولاً (`instrumentSpec` يُسقط لاحقة الوسيط): الدفتر يمرّر الرمز كما كتبه المتداول،
    * و«XAUUSD.m» كان يصير «XAUUSDM» (7 أحرف) فيغيب تحذير الرواتب الأمريكية عن نموذج الصفقة قبل الدخول.

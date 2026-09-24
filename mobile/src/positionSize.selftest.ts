@@ -1665,7 +1665,7 @@ console.log('positionSize centAccountSymbol selftest OK');
     assert.equal(smallContractPair(raw), pair, raw);
   }
   // micro: مرفوض بالحاسبة، وليس «سنتاً» (رسالة السنت لا تصفه) — لكن زوجه معروف لنقاط الدفتر وسعر السوق
-  for (const [raw, pair] of [['EURUSD.micro', 'EURUSD'], ['USDJPY-MICRO', 'USDJPY'], ['GOLD_micro', 'XAUUSD']] as const) {
+  for (const [raw, pair] of [['EURUSD.micro', 'EURUSD'], ['USDJPY-MICRO', 'USDJPY'], ['GOLD_micro', 'XAUUSD'], ['EURUSDmicro', 'EURUSD'], ['XAUUSDmicro', 'XAUUSD'], ['GOLDmicro', 'XAUUSD'], ['usdjpyMICRO', 'USDJPY']] as const) {
     assert.equal(instrumentSpec(raw), null, raw);
     assert.equal(centAccountSymbol(raw), null, raw);
     assert.equal(smallContractPair(raw), pair, raw);
@@ -1673,7 +1673,7 @@ console.log('positionSize centAccountSymbol selftest OK');
   // اللواحق العادية كما كانت: العقد عقد الحساب العادي
   for (const raw of ['EURUSD.m', 'EURUSD.pro', 'EURUSD.ecn', 'EURUSD.cfd', 'EURUSD.c1', 'EURUSD#', 'GOLD.m', 'EURUSD.std'])
     assert.ok(instrumentSpec(raw), raw);
-  for (const raw of ['EURUSD.m', 'EURUSD', 'US30.c', 'BTCUSD.cent', 'EURUSD.cents', 'EURUSDmicro'])
+  for (const raw of ['EURUSD.m', 'EURUSD', 'US30.c', 'BTCUSD.cent', 'EURUSD.cents', 'EURUSDmicros', 'US30micro', 'BTCUSDmicro'])
     assert.equal(smallContractPair(raw), null, raw);
   // الحاسبة: 1% من 1000 بوقف 25 pip = 0.04 لوت عادي — كان يُعرض هذا لـ«EURUSD.c» (حساب السنت يحتاج 4.00)
   const std = instrumentSpec('EURUSD')!;

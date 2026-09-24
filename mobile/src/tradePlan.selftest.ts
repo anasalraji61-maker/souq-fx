@@ -1507,6 +1507,9 @@ console.log('tradePlan netHasCentWithLots selftest OK');
     ['GOLD.c', 'GOLD.C', 'XAUUSD', 0.1],
     ['EURUSD.micro', 'EURUSD.MICRO', 'EURUSD', 0.0001],
     ['USDJPY-micro', 'USDJPY-MICRO', 'USDJPY', 0.01],
+    // XM Micro: «micro» ملاصقة — كانت تُحفظ «EURUSDMICRO» بلا نقاط ولا سعر سوق
+    ['EURUSDmicro', 'EURUSDMICRO', 'EURUSD', 0.0001],
+    ['GOLDmicro', 'GOLDMICRO', 'XAUUSD', 0.1],
   ] as const) {
     assert.equal(journalSymbol(raw), saved, raw);
     assert.equal(quoteSymbol(saved), pair, raw);

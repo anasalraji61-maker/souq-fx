@@ -469,3 +469,18 @@ console.log('newsRisk glued-c selftest OK');
   assert.equal(calendarUnavailable(calendarAfterFetch(tooOld, [nfp], t0 + NEWS_STALE_MAX_MS + 5), 'EURUSD'), false);
 }
 console.log('newsRisk calendarUnavailable selftest OK');
+
+// حساب micro بلاحقة ملاصقة (XM) أو سنت بفاصل: عملات الزوج العادي — كانت «EURUSDmicro» `[]` بلا تحذير
+{
+  assert.deepEqual(symbolCurrencies('EURUSDmicro'), ['EUR', 'USD']);
+  assert.deepEqual(symbolCurrencies('EURUSDMICRO'), ['EUR', 'USD']);
+  assert.deepEqual(symbolCurrencies('USDJPYmicro'), ['USD', 'JPY']);
+  assert.deepEqual(symbolCurrencies('GOLDmicro'), ['USD']);
+  assert.deepEqual(symbolCurrencies('XAUUSD.micro'), ['USD']);
+  assert.deepEqual(symbolCurrencies('EURUSD-cent'), ['EUR', 'USD']);
+  assert.deepEqual(symbolCurrencies('GOLD.c'), ['USD']);
+  // كما كانت
+  assert.deepEqual(symbolCurrencies('EURUSD'), ['EUR', 'USD']);
+  assert.deepEqual(symbolCurrencies('EURUSDc'), ['EUR', 'USD']);
+}
+console.log('newsRisk micro/cent suffix selftest OK');

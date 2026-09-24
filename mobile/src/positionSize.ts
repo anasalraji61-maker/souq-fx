@@ -123,13 +123,14 @@ export function centAccountSymbol(raw: string): string | null {
 }
 
 /**
- * رمز حساب **بعقدٍ أصغر بمئة مرّة** — سنت (`centAccountSymbol`) أو micro بفاصل («EURUSD.micro») ⇒ الزوج العادي.
- * السعر والـpip كالزوج العادي تماماً (لنقاط الدفتر وسعر السوق)، والمال وحده مجهول. null = ليس كذلك.
+ * رمز حساب **بعقدٍ أصغر بمئة مرّة** — سنت (`centAccountSymbol`) أو micro («EURUSD.micro»، ومُلاصقةً «EURUSDmicro» كما
+ * يسمّيها XM بحساب Micro) ⇒ الزوج العادي. السعر والـpip كالزوج العادي تماماً (لنقاط الدفتر وسعر السوق)، والمال وحده
+ * مجهول. «micro» الملاصقة كلمةٌ لا عملة، فلا تُخلط بأداة أخرى كـ«c»/«T» الملاصقتين. null = ليس كذلك.
  */
 export function smallContractPair(raw: string): string | null {
   const cent = centAccountSymbol(raw);
   if (cent) return cent;
-  const m = /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER)[.\-_#+]MICRO$/i.exec(raw.trim());
+  const m = /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER)[.\-_#+]?MICRO$/i.exec(raw.trim());
   return m ? instrumentSpec(m[1])?.symbol ?? null : null;
 }
 
