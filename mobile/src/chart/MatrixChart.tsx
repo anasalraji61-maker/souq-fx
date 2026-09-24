@@ -862,6 +862,93 @@ function PaneSpreadHead({
  * اللون يبقى للجانب — نفس دلالة رقم الرأس فوقها. المقياس والموضع بهندسة MACD
  * (`macdPaneGeom` بالسلسلة نفسها للثلاث)، فالصفر بمنتصف مساحة الرسم كالأعمدة سابقاً.
  */
+/** خطّ واحد بطبقة `PaneLineLayer`: قيمه ولونه (ثابت، أو لكل قطعة بفهرس طرفها الثاني). */
+interface PaneLineSpec {
+  values: readonly (number | null)[];
+  color: string | ((i: number) => string);
+  opacity?: number;
+}
+
+/**
+ * خطوط لوحة المؤشّر قطعاً متّصلة بين الشموع (`planLineSegments`، كطبقات السعر) لا شرطة
+ * أفقية لكل عمود: الشرطات تُقرأ خطّاً ما دامت الحركة بطيئة، وعند قفزة (خبر، أو تكبير
+ * لعشرين شمعة فخطوة العمود ‎~16px‎) تصير درجات منفصلة بفراغات عمودية — بالضبط حيث يُقرأ
+ * الانعطاف والتقاطع. الطبقة مطلقة بعرض صفّ الأعمدة (‎left/right: 2‎ = حشوة `paneInner`)،
+ * فالعمود `i` مركزه ‎(i + ½) × w / n‎ كما كان عمود ‎flex: 1‎ تماماً، والتقاطع العمودي
+ * ما زال فوق شمعته. `y` تعطي **مركز** الخطّ (سُمكه 2px).
+ */
+function PaneLineLayer({
+  lines,
+  y,
+  innerH,
+}: {
+  lines: readonly PaneLineSpec[];
+  y: (v: number) => number;
+  innerH: number;
+}) {
+  const [w, setW] = useState(0);
+  return (
+    <View
+      pointerEvents="none"
+      style={{ position: 'absolute', left: 2, right: 2, top: 0, height: innerH }}
+      onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)}
+    >
+      {w > 0
+        ? lines.map((ln, k) => {
+            const n = ln.values.length;
+            return planLineSegments(ln.values, (i) => ((i + 0.5) * w) / n, y).map((sg) => (
+              <View
+                key={`${k}:${sg.at}`}
+                style={{
+                  position: 'absolute',
+                  left: sg.left,
+                  top: sg.top - 1,
+                  width: sg.len,
+                  height: 2,
+                  backgroundColor: typeof ln.color === 'string' ? ln.color : ln.color(sg.at),
+                  opacity: ln.opacity,
+                  transform: [{ rotate: `${sg.deg}deg` }],
+                  transformOrigin: 'left center',
+                }}
+              />
+            ));
+          })
+        : null}
+    </View>
+  );
+}
+
+/**
+ * لوحة بمدى ثابت (RSI وأخواته 0..100، CMO ‎−100..100‎) خطّاً متّصلاً. كانت شرطة 3px لكل
+ * عمود حافّتها العليا عند القيمة — فالخطّ عند 70 يقع **تحت** خطّ العتبة 70 بـ1.5px، وقيمة 0
+ * تخرج كلّها أسفل مساحة الرسم. الآن مركز الخطّ على القيمة بمعادلة `paneGuides` نفسها
+ * (‎top = (max − v) / (max − min) × innerH‎)، مقصوصاً داخل المساحة. اللون لكل قطعة بقيمة
+ * طرفها الثاني — دلالة المنطقة كما كانت الشرطات.
+ */
+function BoundedLineSeries({
+  values,
+  paneH,
+  color,
+  min = 0,
+  max = 100,
+}: {
+  values: readonly (number | null)[];
+  paneH: number;
+  color: (v: number) => string;
+  min?: number;
+  max?: number;
+}) {
+  const innerH = Math.max(0, paneH - 16);
+  const y = (v: number) => Math.min(Math.max(((max - v) / (max - min)) * innerH, 1), Math.max(1, innerH - 1));
+  return (
+    <PaneLineLayer
+      innerH={innerH}
+      y={y}
+      lines={[{ values, color: (i) => color(values[i] ?? min) }]}
+    />
+  );
+}
+
 /** CCI: ‎±100‎ حدّا «النطاق العادي» اللذان يُقرأ المؤشّر بتجاوزهما (خطّا TradingView الافتراضيّان). */
 const CCI_LEVELS = [100, -100] as const;
 
@@ -884,7 +971,6 @@ function ZeroLineSeries({
   // أبعد مستوى تضمن اتّساع المقياس له دون أن تُرسم.
   const floor = useMemo(() => (reach == null ? values : values.map(() => reach)), [values, reach]);
   const g = macdPaneGeom(floor, values, values, paneH);
-  const [w, setW] = useState(0);
   const showLevels = levels && g.innerH >= GUIDES_MIN_INNER_H;
   const showLabels = g.innerH >= GUIDES_LABEL_MIN_INNER_H;
   return (
@@ -905,34 +991,11 @@ function ZeroLineSeries({
             </React.Fragment>
           ))
         : null}
-      {/* قطع متّصلة بين الشموع (`planLineSegments`، كطبقات السعر) لا شرطة أفقية لكل عمود:
-          الشرطات تُقرأ خطّاً ما دامت الحركة بطيئة، وعند قفزة (خبر، أو تكبير لعشرين شمعة
-          فخطوة العمود ‎~16px‎) تصير درجات منفصلة بفراغات عمودية — بالضبط حيث يُقرأ الانعطاف.
-          الطبقة مطلقة بعرض صفّ الأعمدة (‎left/right: 2‎ = حشوة `paneInner`)، فالعمود `i`
-          مركزه ‎(i + ½) × w / n‎ كما كان عمود ‎flex: 1‎ تماماً. */}
-      <View
-        pointerEvents="none"
-        style={{ position: 'absolute', left: 2, right: 2, top: 0, height: g.innerH }}
-        onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)}
-      >
-        {w > 0
-          ? planLineSegments(values, (i) => ((i + 0.5) * w) / values.length, g.y).map((sg) => (
-              <View
-                key={sg.at}
-                style={{
-                  position: 'absolute',
-                  left: sg.left,
-                  top: sg.top - 1,
-                  width: sg.len,
-                  height: 2,
-                  backgroundColor: (values[sg.at] ?? 0) >= 0 ? colors.bull : colors.bear,
-                  transform: [{ rotate: `${sg.deg}deg` }],
-                  transformOrigin: 'left center',
-                }}
-              />
-            ))
-          : null}
-      </View>
+      <PaneLineLayer
+        innerH={g.innerH}
+        y={g.y}
+        lines={[{ values, color: (i) => ((values[i] ?? 0) >= 0 ? colors.bull : colors.bear) }]}
+      />
     </>
   );
 }
@@ -7313,22 +7376,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>RVI (Vol)</Text>
           <View style={styles.paneInner}>
-            {rvix.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: v > 50 ? colors.bull : v < 50 ? colors.bear : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={rvix} paneH={paneH} color={(v) => (v > 50 ? colors.bull : v < 50 ? colors.bear : accent)} />
           </View>
         </View>
       ) : null}
@@ -7337,22 +7385,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>STC</Text>
           <View style={styles.paneInner}>
-            {stc.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: v > 75 ? colors.bear : v < 25 ? colors.bull : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={stc} paneH={paneH} color={(v) => (v > 75 ? colors.bear : v < 25 ? colors.bull : accent)} />
           </View>
         </View>
       ) : null}
@@ -7529,22 +7562,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Connors RSI</Text>
           <View style={styles.paneInner}>
-            {connorsRsi.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: v > 90 ? colors.bear : v < 10 ? colors.bull : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={connorsRsi} paneH={paneH} color={(v) => (v > 90 ? colors.bear : v < 10 ? colors.bull : accent)} />
           </View>
         </View>
       ) : null}
@@ -7720,22 +7738,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>TII</Text>
           <View style={styles.paneInner}>
-            {tii.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: v > 80 ? colors.bull : v < 20 ? colors.bear : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={tii} paneH={paneH} color={(v) => (v > 80 ? colors.bull : v < 20 ? colors.bear : accent)} />
           </View>
         </View>
       ) : null}
@@ -7744,22 +7747,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>DeMarker</Text>
           <View style={styles.paneInner}>
-            {demarker.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: v > 70 ? colors.bear : v < 30 ? colors.bull : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={demarker} paneH={paneH} color={(v) => (v > 70 ? colors.bear : v < 30 ? colors.bull : accent)} />
           </View>
         </View>
       ) : null}
@@ -7768,22 +7756,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>RMI</Text>
           <View style={styles.paneInner}>
-            {rmi.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: v > 70 ? colors.bear : v < 30 ? colors.bull : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={rmi} paneH={paneH} color={(v) => (v > 70 ? colors.bear : v < 30 ? colors.bull : accent)} />
           </View>
         </View>
       ) : null}
@@ -7792,22 +7765,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Cutler's RSI</Text>
           <View style={styles.paneInner}>
-            {cutlerRsi.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: v > 70 ? colors.bear : v < 30 ? colors.bull : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={cutlerRsi} paneH={paneH} color={(v) => (v > 70 ? colors.bear : v < 30 ? colors.bull : accent)} />
           </View>
         </View>
       ) : null}
@@ -8322,22 +8280,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneHead paneId="rsi" name="RSI" values={rsi} at={crossIndex} />
           <View style={styles.paneInner}>
             <PaneGuideLines paneId="rsi" innerH={paneH - 16} />
-            {rsi.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: v > 70 ? colors.bear : v < 30 ? colors.bull : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={rsi} paneH={paneH} color={(v) => (v > 70 ? colors.bear : v < 30 ? colors.bull : accent)} />
           </View>
         </View>
       ) : null}
@@ -8347,22 +8290,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneHead paneId="mfi" name="MFI" values={mfi} at={crossIndex} />
           <View style={styles.paneInner}>
             <PaneGuideLines paneId="mfi" innerH={paneH - 16} />
-            {mfi.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: v > 80 ? colors.bear : v < 20 ? colors.bull : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={mfi} paneH={paneH} color={(v) => (v > 80 ? colors.bear : v < 20 ? colors.bull : accent)} />
           </View>
         </View>
       ) : null}
@@ -8372,22 +8300,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneHead paneId="adx" name="ADX" values={adx} highColor={colors.warn} at={crossIndex} />
           <View style={styles.paneInner}>
             <PaneGuideLines paneId="adx" innerH={paneH - 16} />
-            {adx.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: v >= 25 ? colors.warn : colors.textDim,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={adx} paneH={paneH} color={(v) => (v >= 25 ? colors.warn : colors.textDim)} />
           </View>
         </View>
       ) : null}
@@ -8396,22 +8309,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>UO</Text>
           <View style={styles.paneInner}>
-            {ultimateOsc.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: v > 70 ? colors.bear : v < 30 ? colors.bull : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={ultimateOsc} paneH={paneH} color={(v) => (v > 70 ? colors.bear : v < 30 ? colors.bull : accent)} />
           </View>
         </View>
       ) : null}
@@ -8420,22 +8318,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>CMO</Text>
           <View style={styles.paneInner}>
-            {cmo.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 200) * (paneH - 16),
-                    backgroundColor: v > 50 ? colors.bear : v < -50 ? colors.bull : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={cmo} paneH={paneH} min={-100} color={(v) => (v > 50 ? colors.bear : v < -50 ? colors.bull : accent)} />
           </View>
         </View>
       ) : null}
@@ -8837,22 +8720,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Choppiness</Text>
           <View style={styles.paneInner}>
-            {chop.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: v > 61.8 ? colors.textDim : v < 38.2 ? colors.bull : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={chop} paneH={paneH} color={(v) => (v > 61.8 ? colors.textDim : v < 38.2 ? colors.bull : accent)} />
           </View>
         </View>
       ) : null}
@@ -10147,22 +10015,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>ADXR</Text>
           <View style={styles.paneInner}>
-            {adxr.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: v >= 25 ? colors.warn : colors.textDim,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={adxr} paneH={paneH} color={(v) => (v >= 25 ? colors.warn : colors.textDim)} />
           </View>
         </View>
       ) : null}
