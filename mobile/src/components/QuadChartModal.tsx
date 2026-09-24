@@ -15,6 +15,7 @@ import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { liveChangePct, livePriceForChart } from '../chart/liveSeries';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
+import { TimeframeBar } from './TimeframeBar';
 import { mockSeries } from '../mock';
 import { normalizeProvenance } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
@@ -56,6 +57,18 @@ export function QuadChartModal({
   const cellH = phone ? height * 0.28 : height * 0.32;
   const [series, setSeries] = useState<(ChartSeries | null)[]>([null, null, null, null]);
   const ticks = useMultiLiveTicks(symbols, visible);
+  // الفريم كان ثابتاً من الشاشة الأمّ: مقارنة الأزواج الأربعة على فريم آخر تعني إغلاق الرباعي،
+  // وتغيير فريم الإطار الأول، ثم فتحه من جديد. الآن شريط فريمات داخله يبدّل الأربعة معاً.
+  // الاختيار يخصّ هذه الجلسة وحدها: يُنسى عند الإغلاق (وعند تغيّر فريم الأمّ) فلا يُفتح
+  // الرباعي لاحقاً على فريم لا يطابق ما يوحي به الإطار الأول.
+  const [tfOverride, setTfOverride] = useState<Timeframe | null>(null);
+  useEffect(() => {
+    if (!visible) setTfOverride(null);
+  }, [visible]);
+  useEffect(() => {
+    setTfOverride(null);
+  }, [timeframe]);
+  const tf = tfOverride ?? timeframe;
 
   // أربعة شارتات بنفس الفريم كانت تُرسم مستقلّة تماماً: لا شيء يربط نافذتها الزمنية
   // ولا يقول للمتداول إن ما يراه هو نفس المدى على الأزواج الأربعة. الآن شارت واحد
@@ -73,7 +86,7 @@ export function QuadChartModal({
     setSyncWindow(null);
     setCrossTime(null);
     setLeader(0);
-  }, [visible, symbols, timeframe]);
+  }, [visible, symbols, tf]);
 
   useEffect(() => {
     if (!visible) return;
@@ -85,8 +98,8 @@ export function QuadChartModal({
     setSeries([null, null, null, null]);
     symbols.forEach((sym, i) => {
       api
-        .chart(sym, timeframe)
-        .catch(() => mockSeries(sym, BASES[sym] ?? 1, timeframe, 80))
+        .chart(sym, tf)
+        .catch(() => mockSeries(sym, BASES[sym] ?? 1, tf, 80))
         .then((s) => {
           if (!alive) return;
           setSeries((prev) => {
@@ -99,7 +112,7 @@ export function QuadChartModal({
     return () => {
       alive = false;
     };
-  }, [visible, symbols, timeframe]);
+  }, [visible, symbols, tf]);
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -120,7 +133,7 @@ export function QuadChartModal({
             <Text style={styles.close}>{t.closeWord}</Text>
           </Pressable>
           <Text style={[styles.title, { textAlign: align }]}>
-            {t.quadTitlePrefix} · {timeframe}
+            {t.quadTitlePrefix} · {tf}
           </Text>
           <Pressable
             accessibilityRole="switch"
@@ -141,6 +154,9 @@ export function QuadChartModal({
               {syncTime ? t.mcSyncTimeOn : t.mcSyncTimeOff}
             </Text>
           </Pressable>
+        </View>
+        <View style={[styles.tfRow, rtl && styles.tfRowRtl]}>
+          <TimeframeBar value={tf} onChange={setTfOverride} compact />
         </View>
         {syncTime ? (
           <Text style={[styles.syncHint, { textAlign: align }]}>
@@ -248,6 +264,8 @@ const styles = StyleSheet.create({
   },
   topRtl: { flexDirection: 'row-reverse' },
   close: { color: colors.accent, fontWeight: '800' },
+  tfRow: { flexDirection: 'row', paddingHorizontal: spacing.md, paddingTop: spacing.xs },
+  tfRowRtl: { flexDirection: 'row-reverse' },
   title: { flex: 1, color: colors.text, fontWeight: '800', fontSize: 16 },
   grid: {
     flex: 1,
