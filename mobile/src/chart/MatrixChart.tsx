@@ -84,6 +84,8 @@ import {
   paneValueState,
   paneValueTrend,
   placeGuides,
+  GUIDES_LABEL_MIN_INNER_H,
+  GUIDES_MIN_INNER_H,
 } from './paneGuides';
 import { DrawingsSaveQueue, drawingsKey, drawingsSignature } from './drawingsPersist';
 import {
@@ -859,11 +861,48 @@ function PaneSpreadHead({
  * اللون يبقى للجانب — نفس دلالة رقم الرأس فوقها. المقياس والموضع بهندسة MACD
  * (`macdPaneGeom` بالسلسلة نفسها للثلاث)، فالصفر بمنتصف مساحة الرسم كالأعمدة سابقاً.
  */
-function ZeroLineSeries({ values, paneH }: { values: readonly (number | null)[]; paneH: number }) {
-  const g = macdPaneGeom(values, values, values, paneH);
+/** CCI: ‎±100‎ حدّا «النطاق العادي» اللذان يُقرأ المؤشّر بتجاوزهما (خطّا TradingView الافتراضيّان). */
+const CCI_LEVELS = [100, -100] as const;
+
+function ZeroLineSeries({
+  values,
+  paneH,
+  levels,
+}: {
+  values: readonly (number | null)[];
+  paneH: number;
+  /**
+   * مستويات ثابتة متناظرة حول الصفر تُرسم خطوطاً (CCI ‎±100‎). تدخل **بالمقياس** نفسه:
+   * لولا ذلك لقصّ نافذةٌ هادئة (CCI بين ‎±60‎) الخطّين على حافتَي اللوحة فيبدو كل
+   * تذبذب عادي «تجاوزاً» لهما.
+   */
+  levels?: readonly number[];
+}) {
+  const reach = levels && levels.length ? Math.max(...levels.map(Math.abs)) : null;
+  // `hist` بـmacdPaneGeom يدخل المقياس عند الشموع الصالحة وحدها — فسلسلة ثابتة بقيمة
+  // أبعد مستوى تضمن اتّساع المقياس له دون أن تُرسم.
+  const floor = useMemo(() => (reach == null ? values : values.map(() => reach)), [values, reach]);
+  const g = macdPaneGeom(floor, values, values, paneH);
+  const showLevels = levels && g.innerH >= GUIDES_MIN_INNER_H;
+  const showLabels = g.innerH >= GUIDES_LABEL_MIN_INNER_H;
   return (
     <>
       <View pointerEvents="none" style={[styles.paneZeroLine, { top: g.zeroY }]} />
+      {showLevels
+        ? levels.map((lv) => (
+            <React.Fragment key={lv}>
+              <View pointerEvents="none" style={[styles.paneGuideLine, { top: g.y(lv) }]} />
+              {showLabels ? (
+                <View
+                  pointerEvents="none"
+                  style={[styles.paneGuideLabelBox, { top: Math.max(0, g.y(lv) - 5) }]}
+                >
+                  <Text style={styles.paneGuideLabel}>{String(lv)}</Text>
+                </View>
+              ) : null}
+            </React.Fragment>
+          ))
+        : null}
       {values.map((v, i) =>
         v == null ? (
           <View key={i} style={{ flex: 1 }} />
@@ -10538,32 +10577,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead name="CCI" values={cci} at={crossIndex} />
           <View style={styles.paneInner}>
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
-            {(() => {
-              const vals = cci.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxC = Math.max(...vals, 1e-9);
-              return cci.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxC, paneH);
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <ZeroLineSeries values={cci} paneH={paneH} levels={CCI_LEVELS} />
           </View>
         </View>
       ) : null}
