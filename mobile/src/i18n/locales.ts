@@ -326,6 +326,9 @@ export type Dict = {
   riskCalcRiskWithSpread: string;
   riskCalcSpreadLotsWithin: string;
   riskCalcSpreadTooWide: string;
+  riskCalcCommission: string;
+  riskCalcCommissionNote: string;
+  riskCalcRiskWithCosts: string;
   riskCalcUseLivePrice: string;
   riskCalcUseLivePriceA11y: string;
   riskCalcLiveFilled: string;
@@ -994,7 +997,7 @@ const ar: Dict = {
   screenerTapToOpen: 'اضغط أي نتيجة لفتح شارتها على نفس الفريم',
   screenerOpenChartA11y: 'فتح الشارت',
   newsTitle: 'أخبار مؤثرة على الفوركس',
-  newsStale: 'تعذر تحديث الأخبار — تُعرض بيانات محفوظة',
+  newsStale: 'تعذّر التحديث — الموعد من تقويم محفوظ',
   newsEmpty: 'لا عناوين مؤثرة الآن — ومواعيد البيانات القادمة (الفائدة، الوظائف، التضخم) تجدها في «تقويم».',
   newsLoadError: 'تعذّر تحميل الأخبار — تحقق من الاتصال وافتح اللوحة لاحقاً',
   aiPanelTitle: 'مساعد ذكاء اصطناعي',
@@ -1192,6 +1195,9 @@ const ar: Dict = {
   riskCalcRiskWithSpread: 'المخاطرة شاملة السبريد',
   riskCalcSpreadLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة السبريد: {lots} lot',
   riskCalcSpreadTooWide: 'سبريد {n} نقطة غير واقعي — هل كتبتَ سعراً بدل النقاط؟ اكتب الفرق بين Ask وBid بالنقاط (مثل 1.5).',
+  riskCalcCommission: 'العمولة لكل لوت، فتحاً وإغلاقاً (اختياري)',
+  riskCalcCommissionNote: 'حسابات Raw/ECN تأخذ عمولة عند الفتح وعند الإغلاق. اكتب مجموع الطرفين للوت الواحد بعملة حسابك (مثل 7)، واتركها فارغة إن كان حسابك بلا عمولة.',
+  riskCalcRiskWithCosts: 'المخاطرة شاملة التكاليف (سبريد + عمولة)',
   riskCalcUseLivePrice: '↓ الدخول = السعر الحالي',
   riskCalcUseLivePriceA11y: 'تعبئة خانة الدخول بسعر السوق الحالي (Ask للشراء وBid للبيع حسب موضع الوقف)',
   riskCalcLiveFilled: '✓ الدخول من السعر الحالي:',
@@ -1868,7 +1874,7 @@ const enUS: Dict = {
   screenerTapToOpen: 'Tap a result to open its chart on the same timeframe',
   screenerOpenChartA11y: 'Open chart',
   newsTitle: 'News affecting forex',
-  newsStale: 'Could not refresh news — showing saved data',
+  newsStale: 'Not refreshed — time from saved calendar',
   newsEmpty: 'No market-moving headlines right now — upcoming releases (rates, jobs, inflation) are in Calendar.',
   newsLoadError: 'Couldn’t load news — check your connection and reopen the panel later',
   aiPanelTitle: 'AI assistant',
@@ -2066,6 +2072,9 @@ const enUS: Dict = {
   riskCalcRiskWithSpread: 'Risk including spread',
   riskCalcSpreadLotsWithin: 'To keep your risk at {pct}% including spread: {lots} lot',
   riskCalcSpreadTooWide: 'A {n}-pip spread isn’t realistic — did you type a price instead of pips? Enter the gap between Ask and Bid in pips (e.g. 1.5).',
+  riskCalcCommission: 'Commission per lot, open + close (optional)',
+  riskCalcCommissionNote: 'Raw/ECN accounts charge commission when you open and again when you close. Enter both sides for one lot in your account currency (e.g. 7), or leave it empty if your account has no commission.',
+  riskCalcRiskWithCosts: 'Risk including costs (spread + commission)',
   riskCalcUseLivePrice: '↓ Entry = current price',
   riskCalcUseLivePriceA11y: 'Fill the entry with the current market price (Ask for buy, Bid for sell, from where the stop sits)',
   riskCalcLiveFilled: '✓ Entry from the current price:',
@@ -2768,7 +2777,7 @@ const ku: Dict = {
   screenerTapToOpen: 'کرتە لە هەر ئەنجامێک بکە بۆ کردنەوەی چارتەکەی لە هەمان کات',
   screenerOpenChartA11y: 'کردنەوەی چارت',
   newsTitle: 'هەواڵی کاریگەر لەسەر فۆرێکس',
-  newsStale: 'نەکرا هەواڵ نوێبکرێتەوە — زانیاری پاشەکەوتکراو پیشان دەدرێت',
+  newsStale: 'نوێ نەکرایەوە — کات لە ڕۆژژمێری پاشەکەوتکراوە',
   newsEmpty: 'ئێستا هیچ سەردێڕێکی کاریگەر نییە — کاتی داتا داهاتووەکان (سوود، کار، هەڵاوسان) لە «ڕۆژژمێر» دەبینیت.',
   newsLoadError: 'نەکرا هەواڵەکان باربکرێن — پەیوەندییەکەت بپشکنە و دواتر پانێڵەکە بکەرەوە',
   aiPanelTitle: 'یاریدەدەری زیرەکی دەستکرد',
@@ -2966,6 +2975,9 @@ const ku: Dict = {
   riskCalcRiskWithSpread: 'مەترسی لەگەڵ سپرێد',
   riskCalcSpreadLotsWithin: 'بۆ ئەوەی مەترسییەکەت لەگەڵ سپرێد لە {pct}% بمێنێتەوە: {lots} lot',
   riskCalcSpreadTooWide: 'سپرێدی {n} pip ئاسایی نییە — نرخت نووسیوە لە جیاتی pip؟ جیاوازی نێوان Ask و Bid بە pip بنووسە (وەک 1.5).',
+  riskCalcCommission: 'کۆمیسیۆن بۆ هەر lot، کردنەوە و داخستن (ئیختیاری)',
+  riskCalcCommissionNote: 'هەژمارەکانی Raw/ECN لە کاتی کردنەوە و داخستندا کۆمیسیۆن وەردەگرن. کۆی هەردوو لا بۆ یەک lot بە دراوی هەژمارەکەت بنووسە (وەک 7)، یان بەتاڵی بهێڵەوە ئەگەر هەژمارەکەت بێ کۆمیسیۆنە.',
+  riskCalcRiskWithCosts: 'مەترسی لەگەڵ تێچووەکان (سپرێد + کۆمیسیۆن)',
   riskCalcUseLivePrice: '↓ چوونەژوورەوە = نرخی ئێستا',
   riskCalcUseLivePriceA11y: 'پڕکردنەوەی خانەی چوونەژوورەوە بە نرخی بازاڕی ئێستا (Ask بۆ کڕین و Bid بۆ فرۆشتن بەپێی شوێنی وەستان)',
   riskCalcLiveFilled: '✓ چوونەژوورەوە لە نرخی ئێستاوە:',

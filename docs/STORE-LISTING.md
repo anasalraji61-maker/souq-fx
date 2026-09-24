@@ -114,7 +114,7 @@ WATCHLIST & ALERTS
 • Economic calendar and market news in one place.
 
 TRADER TOOLS
-• Position size calculator: enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get your lot size, with one-tap targets from 1:1 to 1:3 an estimate of the margin your broker holds at your leverage, and an optional spread field that shows your risk with the spread included.
+• Position size calculator: enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get your lot size, with one-tap targets from 1:1 to 1:3, an estimate of the margin your broker holds at your leverage, and an optional spread field that shows your risk with the spread included.
 • A trade journal you fill in yourself: the potential profit in money before you enter, each trade's result in pips and money after you exit, then win rate, net result per instrument and average result in units of risk (R).
 • A heads-up before a trade when high-impact economic news is close for the pair's or index's currency.
 • Market screener using common indicator conditions.
