@@ -347,14 +347,26 @@ export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
  * ثابت 50 شمعة → تطابق تام بكل نقطة (فرق<10⁻¹²)؛ 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity
  * عبر كل الـ300 نقطة (بلا أي فترة إحماء، بعكس معظم دوال الملف).
  */
-export function computeTwap(candles: Candle[]): (number | null)[] {
+export function computeTwap(candles: Candle[], sessionOf?: (c: Candle) => number): (number | null)[] {
+  // `sessionOf` (اختياري، نمط computeVwap): المجموع والعدد يُصفَّران عند تغيّر مفتاح الجلسة
   const out: (number | null)[] = [];
   let cumTP = 0;
+  let n = 0;
+  let session: number | null = null;
   for (let i = 0; i < candles.length; i++) {
     const c = candles[i];
+    if (sessionOf) {
+      const k = sessionOf(c);
+      if (session != null && k !== session) {
+        cumTP = 0;
+        n = 0;
+      }
+      session = k;
+    }
     const tp = (c.high + c.low + c.close) / 3;
     cumTP += tp;
-    out.push(cumTP / (i + 1));
+    n++;
+    out.push(cumTP / n);
   }
   return out;
 }

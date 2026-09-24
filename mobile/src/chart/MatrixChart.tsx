@@ -1803,8 +1803,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [indBars, indicators, vwapSessionOf]
   );
   const twap = useMemo(
-    () => (indicators.includes('twap') ? ind(computeTwap(indBars)) : null),
-    [indBars, indicators]
+    // TWAP يُصفَّر مع VWAP بالجلسة نفسها — كان تراكماً من أوّل شمعة محمَّلة فيتسطّح على 15m بعد أيام
+    () => (indicators.includes('twap') ? ind(computeTwap(indBars, vwapSessionOf)) : null),
+    [indBars, indicators, vwapSessionOf]
+  );
+  // انقطاع خطَّي VWAP وTWAP بين آخر شمعة من يوم وأوّل شمعة من التالي — لا قطعة مائلة بين قيمتَي جلستين
+  const vwapSessionBreak = useCallback(
+    (i: number) =>
+      vwapSessionOf != null &&
+      i > 0 &&
+      source.plot[i] != null &&
+      source.plot[i - 1] != null &&
+      vwapSessionOf(source.plot[i]) !== vwapSessionOf(source.plot[i - 1]),
+    [source.plot, vwapSessionOf]
   );
   const obv = useMemo(
     () => (indicators.includes('obv') ? ind(computeObv(indBars)) : null),
@@ -5413,12 +5424,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           vwap &&
           planLineSegments(vwap, xOf, yOf, {
             // لا قطعة مائلة من VWAP أمس إلى أوّل قيمة اليوم — الخطّ ينقطع عند التصفير كـTradingView
-            breakBetween: (i) =>
-              vwapSessionOf != null &&
-              i > 0 &&
-              source.plot[i] != null &&
-              source.plot[i - 1] != null &&
-              vwapSessionOf(source.plot[i]) !== vwapSessionOf(source.plot[i - 1]),
+            breakBetween: vwapSessionBreak,
           }).map((sg) => (
             <View
               key={`vw${sg.at}`}
@@ -5451,7 +5457,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           ))}
         {indicators.includes('twap') &&
           twap &&
-          planLineSegments(twap, xOf, yOf).map((sg) => (
+          planLineSegments(twap, xOf, yOf, { breakBetween: vwapSessionBreak }).map((sg) => (
             <View
               key={`tw${sg.at}`}
               style={{

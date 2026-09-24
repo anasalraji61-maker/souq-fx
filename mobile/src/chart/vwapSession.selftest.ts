@@ -1,9 +1,10 @@
 /**
- * Self-test: VWAP / VWAP Bands تُصفَّر عند يوم تداول جديد (17:00 نيويورك) حين يُمرَّر `sessionOf`.
+ * Self-test: VWAP / VWAP Bands / TWAP تُصفَّر عند يوم تداول جديد (17:00 نيويورك) حين يُمرَّر `sessionOf`.
  * Run: npx --yes tsx src/chart/vwapSession.selftest.ts
  */
 import assert from 'node:assert/strict';
 import type { Candle } from '../api';
+import { computeTwap } from './indicators/price-transform';
 import { computeVwap, computeVwapBands } from './indicators/volume';
 import { tradingDayStartSec } from './marketHours';
 
@@ -37,5 +38,12 @@ near(b.upper[15], 1.2);
 near(b.lower[15], 1.2);
 const bc = computeVwapBands(candles);
 assert.ok(bc.upper[15]! - bc.lower[15]! > 0.01, 'continuous bands keep old variance');
+
+// TWAP بالجلسة نفسها: يُصفَّر مع VWAP، وبلا sessionOf المتوسط التراكمي كما كان
+const tw = computeTwap(candles, sessionOf);
+near(tw[8], 1.1);
+near(tw[9], 1.2, 'twap reset at rollover');
+near(tw[23], 1.2);
+near(computeTwap(candles)[9]!, (1.1 * 9 + 1.2) / 10, 'twap continuous unchanged');
 
 console.log('vwapSession selftest PASS');
