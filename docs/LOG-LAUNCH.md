@@ -1025,3 +1025,30 @@
 
 **يحتاج جهازاً**: البنود 45–48 — خاصةً 46: هل يفهم المتداول لماذا تغيّر الدخول وحده (حتى يُوصل `riskCalcLiveSideMoved`)؛ وهل يتّسع
 `journalEmpty` الأطول الآن على 360px. وصف المتجر لم يُلمس (الهامش الإنجليزي ما زال 9 أحرف).
+
+## 2026-09-24 — التشغيلة الحادية والثلاثون
+
+تتبع `b58f32e` (وصل `riskCalcLiveSideMoved`)، `ce0b3ae` (الشعاع حتى الحافّة)، `058607a` (الترند في منطقة المستقبل) و`b5664ed`
+(فيبو الهابط من القاع). التحقّق بـNode 22 (`/tmp/node-v22.11.0-linux-x64`) و`tsc --strict --noEmit --skipLibCheck --target es2020`
+على `locales.ts` نظيف، صفر `U+FFFD`. **لم يُشغَّل التطبيق.**
+
+1. **`FEATURE-INVENTORY.md`** (`bdc4302`) — تحقّقت بالكود: `rayReach` (الشعاع يخرج من اللوح، ولمس التحديد يتبع الطول المرسوم)؛
+   `lastDrawLocal` يقصّ الترند/الشعاع عند حافّة اللوح لا الشمعة الحيّة؛ `fibLevelPrice(…, down)` — 0% عند القاع لموجة رُسمت من القمّة
+   (فيبو هابط محفوظ قبلُ تنقلب مستوياته بالنقطتين نفسيهما)؛ و`liveEntryQuote` يسمّي Ask/Bid فقط إن جاء الرقم منهما.
+2. **`RELEASE-MOBILE.md` §5** (`b213c19`): البنود 49–51 (الشعاع، الترند في المستقبل، فيبو الهابط مقارنةً بـTradingView)، والبند 46
+   صار يسمّي السطر الجديد ويسأل هل يتّسع على 360px.
+3. **الإنجليزية** (`c63abf6`): `riskCalcLiveSideMoved` كان «✓ Entry moved to Ask (Buy price): …» — Buy بحرف كبير وسط الجملة لأن
+   `{side}` = `dirBuy`. الآن «✓ Buy at Ask — entry moved to 1.08520» / «✓ Sell at Bid — …». العربية والكردية كما هما.
+4. **`FEATURE-INVENTORY.md`** (`e11c51a`): الجرد قال إن «▲ شراء: الوقف 1.0830» (`riskCalcStopChip`) جاهز غير موصول — موصول منذ
+   `9218363`، ومعه وسم قارئ الشاشة `journalSlAtPipsA11y`.
+
+### طلبات التنسيق
+- **أُغلق** — لوكيل الأدوات: `riskCalcLiveSideMoved` (موصول بـ`b58f32e`) و`journalSlAtPipsA11y` بالدفتر (موصول، `TradeJournalPanel.tsx`).
+- **قائم** — لوكيل الشارت، بلا تغيير (تحقّقت بـgrep: لا استعمال بأيّ `.tsx`): `mcAutoA11y`/`mcAutoManualA11y`؛ `mcHintSelect`/`mcHintSelected`
+  و`mcHint*Web`؛ `clearAllBody` ← `tr.mcClearAllBody`؛ و`` `Bar Replay · …` `` الحرفي بـ`MatrixChart.tsx` (`ip-legal-caution.mdc`).
+
+**خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (`backend/openrouter_ai.py` «خبير تداول»، `lot` الثابتة، `₴`، `extra.apiUrl` المحلي
+ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
+
+**يحتاج جهازاً**: البنود 49–51 — خاصةً 51 (أسعار فيبو الهابط مقابل TradingView على الموجة نفسها)، وسطر Ask/Bid بالبند 46 على 360px.
+`npx` غير موجود بالـPATH — استعمل node من `/tmp`. وصف المتجر لم يُلمس (الهامش الإنجليزي 9 أحرف).
