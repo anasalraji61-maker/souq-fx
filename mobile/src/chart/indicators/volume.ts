@@ -7,18 +7,28 @@ import { computeStdDev, computeTrueRange } from './volatility';
 
 
 /**
- * VWAP (Volume Weighted Average Price) — تراكم مستمر لـ TP×فوليوم / فوليوم من أول شمعة بالنافذة
- * المحمَّلة حتى كل نقطة. **ملاحظة صادقة**: هذا تراكم مستمر من بداية النافذة الحالية، وليس تصفيراً
- * يومياً بحدود الجلسة كما تفعل TradingView وأغلب المنصات — تبسيط متعمَّد لعدم وجود حدود جلسة/يوم
- * موثوقة بالبيانات الحالية (لا معلومة توقيت/منطقة زمنية لتحديد "بداية يوم تداول" لكل رمز)، قابل
- * للتحسين لاحقاً. فوليوم مفقود يُعوَّض بنفس الصيغة التركيبية المستخدَمة بـorderflow.ts (computeCvd/
+ * VWAP (Volume Weighted Average Price) — تراكم TP×فوليوم / فوليوم. مع `sessionOf` (مفتاح جلسة الشمعة، مثل بداية
+ * يوم التداول 17:00 نيويورك) يُصفَّر التراكم عند كل جلسة جديدة كـVWAP بـTradingView (Anchor = Session)؛ بدونه
+ * تراكم مستمر من أول شمعة. فوليوم مفقود يُعوَّض بنفس الصيغة التركيبية المستخدَمة بـorderflow.ts (computeCvd/
  * computeFootprint) للاتساق.
  */
-export function computeVwap(candles: (Candle & { volume?: number })[]): (number | null)[] {
+export function computeVwap(
+  candles: (Candle & { volume?: number })[],
+  sessionOf?: (c: Candle) => number
+): (number | null)[] {
   const out: (number | null)[] = [];
   let cumPV = 0;
   let cumVol = 0;
+  let session: number | null = null;
   for (const c of candles) {
+    if (sessionOf) {
+      const k = sessionOf(c);
+      if (session != null && k !== session) {
+        cumPV = 0;
+        cumVol = 0;
+      }
+      session = k;
+    }
     const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
     const tp = (c.high + c.low + c.close) / 3;
     cumPV += tp * vol;
@@ -673,15 +683,26 @@ export function computeVzo(candles: (Candle & { volume?: number })[], period = 1
  */
 export function computeVwapBands(
   candles: (Candle & { volume?: number })[],
-  multiplier = 2
+  multiplier = 2,
+  sessionOf?: (c: Candle) => number
 ): { mid: (number | null)[]; upper: (number | null)[]; lower: (number | null)[] } {
-  const mid = computeVwap(candles);
+  const mid = computeVwap(candles, sessionOf);
   const upper: (number | null)[] = [];
   const lower: (number | null)[] = [];
   let cumVolSqDiff = 0;
   let cumVol = 0;
+  let session: number | null = null;
   for (let i = 0; i < candles.length; i++) {
     const c = candles[i];
+    // التباين يُصفَّر مع VWAP نفسه عند الجلسة الجديدة
+    if (sessionOf) {
+      const k = sessionOf(c);
+      if (session != null && k !== session) {
+        cumVolSqDiff = 0;
+        cumVol = 0;
+      }
+      session = k;
+    }
     const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
     const tp = (c.high + c.low + c.close) / 3;
     const v = mid[i];

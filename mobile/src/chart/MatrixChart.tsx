@@ -22,7 +22,7 @@ import {
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { buttons, colors, radii, spacing } from '../theme';
-import type { ChartSeries } from '../api';
+import type { Candle, ChartSeries } from '../api';
 import {
   loadDrawings,
   saveDrawings,
@@ -119,6 +119,7 @@ import {
 import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
 import { planHiLoLabels } from './hiLoLabels';
 import { planDayBreaks } from './dayBreaks';
+import { tradingDayStartSec } from './marketHours';
 import { planSessionRuns, SESSION_LABEL, type SessionId } from './sessions';
 import { formatPct, prevSessionFromDaily, validSessionBar } from './dailyChange';
 import { useDailyPrevBar } from './dailyRefStore';
@@ -1783,13 +1784,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('roc') ? ind(computeRoc(closes)) : null),
     [closes, indicators]
   );
+  // VWAP يُصفَّر كل يوم تداول (17:00 نيويورك) على الفريمات داخل اليوم كـTradingView — كان تراكماً من أوّل شمعة
+  // محمَّلة: على 15m بعد أيام يصير متوسطاً شبه ثابت بعيداً عن السعر، ويتغيّر مع كل تحميل تاريخ إضافي.
+  // اليومي فأكبر: كل شمعة جلسة، فيبقى التراكم المستمر. `barTime` ⇒ زمن الشمعة المصدر للّبنات.
+  const vwapSessionOf = useMemo(
+    () =>
+      timeframeStepSec(series.timeframe) < 86400
+        ? (c: Candle) => tradingDayStartSec(series.symbol, candleTimeSec(barTime(c)))
+        : undefined,
+    [series.symbol, series.timeframe]
+  );
   const vwap = useMemo(
-    () => (indicators.includes('vwap') ? ind(computeVwap(indBars)) : null),
-    [indBars, indicators]
+    () => (indicators.includes('vwap') ? ind(computeVwap(indBars, vwapSessionOf)) : null),
+    [indBars, indicators, vwapSessionOf]
   );
   const vwapBands = useMemo(
-    () => (indicators.includes('vwapBands') ? ind(computeVwapBands(indBars)) : null),
-    [indBars, indicators]
+    () => (indicators.includes('vwapBands') ? ind(computeVwapBands(indBars, 2, vwapSessionOf)) : null),
+    [indBars, indicators, vwapSessionOf]
   );
   const twap = useMemo(
     () => (indicators.includes('twap') ? ind(computeTwap(indBars)) : null),
