@@ -1,13 +1,11 @@
 export type LangId = 'ar' | 'en-US' | 'en-GB' | 'ku';
 
 export type Dict = {
-  langName: string;
   accountTitle: string;
   accountSub: string;
   tabHome: string;
   tabTools: string;
   tabAcademy: string;
-  tabMessages: string;
   tabAccount: string;
   login: string;
   register: string;
@@ -34,8 +32,6 @@ export type Dict = {
   loginError: string;
   registerError: string;
   language: string;
-  commissionsReport: string;
-  networkTree: string;
   deleteAccount: string;
   deleteAccountConfirmTitle: string;
   deleteAccountConfirmBody: string;
@@ -938,13 +934,11 @@ export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
 ];
 
 const ar: Dict = {
-  langName: 'العربية',
   accountTitle: 'حساب MATRIX',
   accountSub: 'مزامنة · أكاديمية · عمولات الشبكة الثنائية',
   tabHome: 'الرئيسية',
   tabTools: 'أدوات',
   tabAcademy: 'أكاديمية',
-  tabMessages: 'رسائل',
   tabAccount: 'حساب',
   login: 'دخول',
   register: 'تسجيل',
@@ -971,8 +965,6 @@ const ar: Dict = {
   loginError: 'تعذّر الدخول — تحقّق من الاسم أو الإيميل وكلمة المرور، ومن اتصالك بالإنترنت',
   registerError: 'تعذّر التسجيل — تحقّق من الإيميل والبيانات ورمز الدعوة، ومن اتصالك بالإنترنت',
   language: 'اللغة',
-  commissionsReport: 'تقرير العمولات',
-  networkTree: 'شجرة الشبكة',
   deleteAccount: 'حذف الحساب',
   deleteAccountConfirmTitle: 'حذف الحساب نهائياً؟',
   deleteAccountConfirmBody:
@@ -1864,13 +1856,11 @@ const ar: Dict = {
 };
 
 const enUS: Dict = {
-  langName: 'English (US)',
   accountTitle: 'MATRIX Account',
   accountSub: 'Sync · Academy · Binary network commissions',
   tabHome: 'Home',
   tabTools: 'Tools',
   tabAcademy: 'Academy',
-  tabMessages: 'Messages',
   tabAccount: 'Account',
   login: 'Log in',
   register: 'Sign up',
@@ -1897,8 +1887,6 @@ const enUS: Dict = {
   loginError: 'Login failed — check your name or email, your password, and your connection',
   registerError: 'Sign-up failed — check your email, details, invite code, and connection',
   language: 'Language',
-  commissionsReport: 'Commissions report',
-  networkTree: 'Network tree',
   deleteAccount: 'Delete account',
   deleteAccountConfirmTitle: 'Delete account permanently?',
   deleteAccountConfirmBody:
@@ -2792,7 +2780,6 @@ const enUS: Dict = {
 
 const enGB: Dict = {
   ...enUS,
-  langName: 'English (UK)',
   login: 'Sign in',
   register: 'Register',
   enter: 'Sign in',
@@ -2805,8 +2792,6 @@ const enGB: Dict = {
   loginError: 'Sign-in failed — check your name or email, your password, and your connection',
   registerError: 'Registration failed — check your email, details, invite code, and connection',
   language: 'Language',
-  commissionsReport: 'Commission report',
-  networkTree: 'Network tree',
   // التهجئة البريطانية لما افترق. (نصّ الجولة `onboardStep3Body` لم يعد فيه «summarize» فلا يحتاج نسخة هنا.)
   wlCatalogTitle: 'Add from catalogue',
   wlCatalogAllAdded: 'All catalogue symbols added',
@@ -2815,13 +2800,11 @@ const enGB: Dict = {
 };
 
 const ku: Dict = {
-  langName: 'کوردی',
   accountTitle: 'هەژماری MATRIX',
   accountSub: 'هاوکاتکردن · ئەکادیمی · کۆمیسیۆنی تۆڕی دووقۆڵی',
   tabHome: 'سەرەکی',
   tabTools: 'ئامرازەکان',
   tabAcademy: 'ئەکادیمی',
-  tabMessages: 'نامەکان',
   tabAccount: 'هەژمار',
   login: 'چوونەژوورەوە',
   register: 'تۆمارکردن',
@@ -2848,8 +2831,6 @@ const ku: Dict = {
   loginError: 'چوونەژوورەوە سەرکەوتوو نەبوو — ناو یان ئیمەیڵ و وشەی نهێنی بپشکنە، هەروەها پەیوەندیت بە ئینتەرنێتەوە',
   registerError: 'تۆمارکردن سەرکەوتوو نەبوو — ئیمەیڵ و زانیاری و کۆدی بانگهێشت بپشکنە، هەروەها پەیوەندیت بە ئینتەرنێتەوە',
   language: 'زمان',
-  commissionsReport: 'ڕاپۆرتی کۆمیسیۆن',
-  networkTree: 'دارەکەی تۆڕ',
   deleteAccount: 'سڕینەوەی هەژمار',
   deleteAccountConfirmTitle: 'هەژمار بە تەواوی بسڕدرێتەوە؟',
   deleteAccountConfirmBody:
