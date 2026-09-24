@@ -3558,3 +3558,43 @@ StochRSI · CVD وأخواتها. وأسوأ منه هيستوغرام MACD: ا�
   داخل `chart/**` فور توفّر المفاتيح).
 - **مفتاحان صارا بلا مستعمل** بـ`locales.ts` بعد حذف نافذة تأكيد حذف العنصر الواحد:
   `mcDeleteDrawingTitle` و`mcDeleteDrawingBody`. لم يُلمَسا من هنا؛ لصاحب الملف قرار حذفهما.
+
+---
+
+# تشغيل 2026-09-25
+
+## صفوف COORDINATION المُغلقة (للتحقّق والحذف من QA)
+1. **`mcDrawColor*` (صف chart43/launch) + `mcAutoManualA11y` (صف launch53)** — `edda61e`.
+   زرّ لون الرسم يقرأ `tr.mcDrawColorWord`، ووصفه `tr.mcDrawColorA11y` بـ`{color}` ← `tr.mcColorNames[i]`
+   بترتيب `drawPalette` (إزالة اللون المكرّر حين يطابق التمييز أحد الألوان تُسقط اسمه معه فلا ينزاح الترتيب).
+   حُذفت `drawColorLabels` المؤقّتة من `typeLabels.ts`. زاوية AUTO تعلن `mcAutoManualA11y` حين `priceManual`.
+2. **PDH/PDL/Pivot بحدّين مختلفين (QA5)** — `2fa00c1`. على الفريمات داخل اليوم تُحسب الجلسة السابقة من
+   شموع السلسلة بحدّ 17:00 نيويورك (يوم MT4/MT5) **أوّلاً**، وشموع D1 (يوم UTC من `twelve_data.py`) احتياط
+   فقط حين لا تغطّي السلسلة الأمس كاملاً (1m بـ180 شمعة مثلاً). الباقي خارج نطاقي: حدّ يوم D1 بالخادم
+   (`twelve_data.py:196`) ما زال UTC ⇒ الفريم اليومي والاحتياط يختلفان عن MT — قرار أنس/الخادم.
+   `pivotBase.selftest` PASS.
+3. **Footprint/CVD مختلَقان (QA5)** — `9d937e5`. رأس لوحة CVD صار «CVD (تقديري)» / "CVD (est.)" /
+   «CVD (خەمڵێنراو)»، وأرقام الفوتبرنت فوق الشموع تبدأ بـ«≈». اخترتُ الوسم لا الإخفاء: المؤشّران
+   اختياريان وعدسة Liquidity موصوفة بالمتجر كـ«تقديري» أصلاً (2105e87).
+4. **`marketHours` بلا عطل (QA5)** — `bd99eca`. `isForexHolidaySession`: جلسة 25 ديسمبر و1 يناير
+   (من 17:00 نيويورك باليوم السابق) مغلقة ⇒ شارة «السوق مغلق» بـ`ChartFrame` وعدّاد الشمعة (`barCountdown`)
+   يختفي. `marketHours.selftest.ts` جديد (12 حالة) PASS. لا يشمل: إغلاق مبكّر 24/31 ديسمبر، و`forexWeekCloseSec`
+   لا يعرف العطل (لا حاجة: العدّاد يُخفى أصلاً حين السوق مغلق).
+
+## طلب تنسيق (لوكيل launch/التعريب)
+- **`mcEstimatedTag`** بـ`locales.ts` (ar «تقديري» / en «est.» / ku «خەمڵێنراو» — مراجعة الكردية مطلوبة).
+  مؤقّتاً بـ`chart/typeLabels.ts` → `estimatedTag(lang)`؛ أستبدلها بـ`tr.mcEstimatedTag` فور توفّره.
+
+## صفوف موجّهة لي لكنها خارج نطاق ملفاتي (لم تُلمس)
+`MatrixEdgeRails`/`MatrixBottomDock`/`MatrixSidePanel` (DRAW_MARK، «₴»، a11y)، `TerminalScreen` (dxyPrice،
+seriesCache، إيقاف السوكت)، `hooks/useMultiLiveTicks.ts` (حدّ التقادم)، `FocusChartModal`، `Alert.alert` بملفات
+أخرى — نطاقي هذا التشغيل: `chart/**` و`MatrixChart*`/`QuadChartModal`/`ChartFrame*`/`IndicatorForecastPanel`/
+`LayoutPanel`/`useLiveTicks.ts` فقط. تحتاج مالكاً يحدّده أنس. سحب الرسم على الجهاز (QA1) يحتاج جهازاً حقيقياً.
+
+## التحقّق
+`scripts/qa-build-check.sh` أخضر (0 أخطاء) قبل كل commit؛ كل `src/chart/*.selftest.ts` PASS.
+
+## يبدأ التشغيل القادم من هنا
+1. شريط طيّ لوحات المؤشرات (٥ لوحات فأكثر أو خلية الرباعي) — ما زال مفتوحاً من التشغيل السابق.
+2. تبديل الفريم/الرمز بلا وميض شموع قديمة (`ChartFrame.tsx` + `MatrixChart.tsx`).
+3. وضوح القيادة بالرباعي (`QuadChartModal`).
