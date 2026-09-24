@@ -460,3 +460,58 @@ export function maxLotsForMargin(input: {
   const raw = (available * leverage) / (spec.contractSize * price * quoteToAccount);
   return Math.round(Math.floor(raw / LOT_STEP + 1e-9) * LOT_STEP * 100) / 100;
 }
+
+/**
+ * خانة النقاط تخالف مسافة سعرَي الدخول والوقف؟ `typed` ما بخانة النقاط، `derived` = `slPipsFromPrices`.
+ *
+ * **غير متماثل عمداً.** نقاطٌ أضيق من السعرين = لوتٌ أكبر مما يحتمله الوقف المحفوظ، فأيّ فرقٍ للأسفل
+ * تعارض — كان هامش ±0.05 يمرّر «24.96» على وقفٍ مسافته 25.0: لوتٌ من 24.96 ووقفٌ محفوظ على 25، أي
+ * مخاطرة فوق المكتوبة بلا إشارة، و`slPipsFromPrices` تقرّب **للأعلى** أصلاً كي لا يحدث هذا بالضبط.
+ * ونقاطٌ أوسع = لوتٌ أصغر (أأمن) فيُسمح بهامش نصف pipette لما يكتبه المتداول بيده («25.04»).
+ *
+ * `null` = لا تعارض (أو لا شيء يُقارن).
+ */
+export function stopPipsMismatch(typed: number, derived: number | null): { typed: number; derived: number } | null {
+  if (derived == null || !Number.isFinite(typed) || !Number.isFinite(derived)) return null;
+  const narrower = typed < derived - 1e-9;
+  const wider = typed - derived > 0.05 + 1e-9;
+  return narrower || wider ? { typed, derived } : null;
+}
+
+/**
+ * السعر الذي يُحسب عليه الهامش: الدخول المكتوب إن صلح، وإلا سعر السوق الحيّ بجهة الصفقة (Ask للشراء،
+ * Bid للبيع — ما يُنفَّذ عليه فعلاً) ثم الوسطي. سطر الهامش كان يختفي بلا دخول مكتوب، ومن يحسب من
+ * النقاط وحدها — أغلب الاستعمال — لا يعرف أبداً أن 0.50 لوت تحجز 1,800$ من حسابه ذي الخمسمئة.
+ * `live` = true حين جاء السعر من السوق (يُعرض «@ السعر» كي لا يُظنّ مكتوباً). `null` بلا سعر صالح.
+ */
+export function marginPrice(input: {
+  entry: number;
+  quote: { price: number; bid?: number | null; ask?: number | null } | null;
+  side: 'buy' | 'sell' | null;
+}): { price: number; live: boolean } | null {
+  const ok = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v > 0;
+  if (ok(input.entry)) return { price: input.entry, live: false };
+  const q = input.quote;
+  if (!q) return null;
+  const sided = input.side === 'buy' ? q.ask : input.side === 'sell' ? q.bid : null;
+  if (ok(sided)) return { price: sided, live: true };
+  return ok(q.price) ? { price: q.price, live: true } : null;
+}
+
+/** أكبر حجم باللوت يُعقل بخانة «الحجم لوت»: وسطاء التجزئة يحدّون الأمر الواحد بـ50–100 لوت عادةً. */
+export const MAX_SANE_LOTS = 100;
+
+/**
+ * حجمٌ مكتوب بالدفتر يبدو **وحداتٍ لا لوتات**: cTrader وكثير من المنصّات تعرض الحجم «10,000» (وحدة)
+ * لا «0.10» — فينسخه المتداول كما هو، فتُحفظ صفقة بعشرة آلاف لوت وتخرج مخاطرتها «125,000,000 USD»
+ * ويُلوَّث صافي الأداة بالدفتر كلّه. فوق `MAX_SANE_LOTS` يُعدّ الرقم مريباً؛ و`lots` = الرقم ÷ حجم
+ * العقد حين يقع على خطوة اللوت (10,000 على EURUSD = 0.10، و1,000 أونصة ذهب = 10) ليُقترح بنقرة،
+ * وإلا `null` (مريب بلا تحويل واضح). `null` كلّه = الحجم معقول (أو الأداة مجهولة فلا حجم عقد).
+ */
+export function sizeLooksLikeUnits(size: number, spec: InstrumentSpec | null): { lots: number | null } | null {
+  if (!spec || !Number.isFinite(size) || size <= MAX_SANE_LOTS) return null;
+  const raw = size / spec.contractSize;
+  const steps = Math.round(raw / LOT_STEP);
+  const aligned = steps >= 1 && Math.abs(raw / LOT_STEP - steps) < 1e-6 && raw <= MAX_SANE_LOTS;
+  return { lots: aligned ? Math.round(steps * LOT_STEP * 100) / 100 : null };
+}

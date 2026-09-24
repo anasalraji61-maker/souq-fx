@@ -27,6 +27,10 @@ import {
   parseLeverage,
   requiredMargin,
   maxLotsForMargin,
+  stopPipsMismatch,
+  marginPrice,
+  sizeLooksLikeUnits,
+  MAX_SANE_LOTS,
   type InstrumentSpec,
 } from './positionSize';
 
@@ -743,3 +747,75 @@ console.log('positionSize margin selftest OK');
   assert.equal(mx('EURUSD', 500, 1.085, 1, NaN), null);
 }
 console.log('positionSize maxLotsForMargin selftest OK');
+
+// —— stopPipsMismatch: غير متماثل — الأضيق تعارضٌ بأي فرق، الأوسع بهامش نصف pipette
+{
+  assert.equal(stopPipsMismatch(25, 25), null);
+  assert.equal(stopPipsMismatch(25.04, 25), null); // أوسع قليلاً = لوت أصغر، مسموح
+  assert.equal(stopPipsMismatch(25.05, 25), null);
+  assert.deepEqual(stopPipsMismatch(25.1, 25), { typed: 25.1, derived: 25 });
+  // الحالة التي كان هامش ±0.05 يمرّرها: نقاط أضيق من السعرين ⇒ لوت أكبر من وقفه المحفوظ
+  assert.deepEqual(stopPipsMismatch(24.96, 25), { typed: 24.96, derived: 25 });
+  assert.deepEqual(stopPipsMismatch(15, 25), { typed: 15, derived: 25 });
+  // ضجيج عائم لا يُعدّ أضيق
+  assert.equal(stopPipsMismatch(0.1 + 0.2, 0.3), null);
+  // لا مقارنة بلا سعرين أو بخانة فارغة
+  assert.equal(stopPipsMismatch(20, null), null);
+  assert.equal(stopPipsMismatch(NaN, 25), null);
+  // البرهان المالي: كل «لا تعارض» يعني أن مخاطرة اللوت على الوقف المحفوظ لا تتجاوز المطلوبة
+  const pv = pipValuePerLot(eu, 1);
+  for (const derived of [5, 12.3, 25, 40.7]) {
+    for (let d = -1; d <= 1; d += 0.01) {
+      const typed = Math.round((derived + d) * 100) / 100;
+      if (typed <= 0 || stopPipsMismatch(typed, derived)) continue;
+      const r = positionSize({ balance: 10_000, riskPct: 1, slPips: typed, pipValuePerLot: pv, contractSize: eu.contractSize })!;
+      assert.ok(r.lots * derived * pv <= 100 + 1e-6, `typed ${typed} derived ${derived}`);
+    }
+  }
+}
+console.log('positionSize stopPipsMismatch selftest OK');
+
+// —— marginPrice: الدخول المكتوب أولاً، ثم السوق بجهة الصفقة، ثم الوسطي
+{
+  const q = { price: 1.085, bid: 1.0849, ask: 1.0851 };
+  assert.deepEqual(marginPrice({ entry: 1.09, quote: q, side: 'buy' }), { price: 1.09, live: false });
+  assert.deepEqual(marginPrice({ entry: NaN, quote: q, side: 'buy' }), { price: 1.0851, live: true });
+  assert.deepEqual(marginPrice({ entry: NaN, quote: q, side: 'sell' }), { price: 1.0849, live: true });
+  assert.deepEqual(marginPrice({ entry: NaN, quote: q, side: null }), { price: 1.085, live: true });
+  assert.deepEqual(marginPrice({ entry: 0, quote: { price: 2400, bid: null, ask: 0 }, side: 'buy' }), { price: 2400, live: true });
+  assert.equal(marginPrice({ entry: NaN, quote: null, side: 'buy' }), null);
+  assert.equal(marginPrice({ entry: NaN, quote: { price: NaN }, side: null }), null);
+  // السيناريو المقصود: 1% من 500$ على وقف 1 pip بلا دخول مكتوب — السطر يظهر بسعر السوق
+  const lots = positionSize({ balance: 500, riskPct: 1, slPips: 1, pipValuePerLot: pipValuePerLot(eu, 1), contractSize: eu.contractSize })!.lots;
+  const mp = marginPrice({ entry: NaN, quote: q, side: null })!;
+  const m = requiredMargin({ spec: eu, lots, price: mp.price, quoteToAccount: 1, leverage: 30 })!;
+  assert.ok(near(m, (0.5 * 100_000 * 1.085) / 30, 1e-6));
+  assert.ok(m > 500);
+}
+console.log('positionSize marginPrice selftest OK');
+
+// —— sizeLooksLikeUnits: وحدات منسوخة من المنصّة بخانة «الحجم لوت»
+{
+  const gold = instrumentSpec('XAUUSD')!;
+  const jpy = instrumentSpec('USDJPY')!;
+  // لوتات معقولة: لا شيء
+  for (const s of [0.01, 0.1, 1, 2.5, 50, MAX_SANE_LOTS]) assert.equal(sizeLooksLikeUnits(s, eu), null);
+  assert.deepEqual(sizeLooksLikeUnits(10_000, eu), { lots: 0.1 });
+  assert.deepEqual(sizeLooksLikeUnits(1_000, eu), { lots: 0.01 });
+  assert.deepEqual(sizeLooksLikeUnits(150_000, jpy), { lots: 1.5 });
+  assert.deepEqual(sizeLooksLikeUnits(1_000, gold), { lots: 10 });
+  assert.deepEqual(sizeLooksLikeUnits(250, gold), { lots: 2.5 });
+  // مريب بلا تحويل واضح: دون أصغر لوت، أو ليس على خطوة اللوت، أو التحويل نفسه فوق الحدّ
+  assert.deepEqual(sizeLooksLikeUnits(500, eu), { lots: null });
+  assert.deepEqual(sizeLooksLikeUnits(12_345, eu), { lots: null });
+  assert.deepEqual(sizeLooksLikeUnits(50_000, gold), { lots: null });
+  // أداة مجهولة (US30): لا حجم عقد فلا حكم
+  assert.equal(sizeLooksLikeUnits(10_000, null), null);
+  assert.equal(sizeLooksLikeUnits(NaN, eu), null);
+  // الاقتراح يُرجِع الوحدات نفسها بالضبط
+  for (const units of [1_000, 3_000, 10_000, 25_000, 110_000, 1_000_000]) {
+    const r = sizeLooksLikeUnits(units, eu)!;
+    assert.ok(r.lots != null && Math.round(r.lots * eu.contractSize) === units, String(units));
+  }
+}
+console.log('positionSize sizeLooksLikeUnits selftest OK');

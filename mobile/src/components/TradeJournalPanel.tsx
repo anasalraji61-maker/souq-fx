@@ -16,7 +16,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
-import { formatMoney, instrumentSpec, pipsBetween, pnlInQuoteCcy, riskInQuoteCcy } from '../positionSize';
+import { formatMoney, instrumentSpec, pipsBetween, pnlInQuoteCcy, riskInQuoteCcy, sizeLooksLikeUnits } from '../positionSize';
 import {
   analyzePlan,
   floatingResult,
@@ -283,6 +283,20 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   /** نص مكتوب لكنه غير مفهوم — كان الوقف/الهدف/الخروج يُحفظ فارغاً بصمت (صفقة مغلقة تُسجَّل مفتوحة). */
   const unreadable = (v: string) => v.trim() !== '' && num(v) == null;
 
+  /**
+   * حجمٌ يبدو وحداتٍ منسوخة من المنصّة («10000» بدل «0.10») — راجع `sizeLooksLikeUnits`. يُعرض سطر
+   * تحذير بنقرة تحويل، ويُمنع الحفظ حتى يُصحَّح: صفقة بعشرة آلاف لوت تلوّث صافي الأداة بالمال كلّه.
+   */
+  const sizeUnits = (() => {
+    const l = num(size);
+    return l != null ? sizeLooksLikeUnits(l, instrumentSpec(symbol.trim().toUpperCase())) : null;
+  })();
+  const sizeUnitsText = (): string => {
+    const l = num(size) ?? 0;
+    const n = String(l).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return `⚠ ${n} ${t.riskCalcUnits}?${sizeUnits?.lots != null ? ` → ${sizeUnits.lots.toFixed(2)} lot` : ''}`;
+  };
+
   /** رسالة واضحة لوقف/هدف بالجهة الخطأ — نفس نصوص خطة الصفقة بلوحة الأفكار. */
   const planIssueText = (issue: PlanIssue | null): string | null => {
     if (issue === 'slWrongSide') return side === 'buy' ? t.planSlWrongBuy : t.planSlWrongSell;
@@ -301,6 +315,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     if (e == null || s == null || l == null || levelSideIssue({ side, entry: e, sl: s })) return null;
     const sym = symbol.trim().toUpperCase();
     const spec = instrumentSpec(sym);
+    // مالٌ من حجمٍ يبدو وحداتٍ («125,000,000 USD») أسوأ من لا شيء — سطر التحذير يقول ما الخطأ
+    if (sizeLooksLikeUnits(l, spec)) return null;
     const r = riskInQuoteCcy({ symbol: sym, entry: e, sl: s, lots: l });
     if (!spec || !r) return null;
     return { pips: pipsBetween(spec, e, s), money: formatMoney(r.amount, r.ccy) };
@@ -524,6 +540,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     }
     if ([sl, tp, exit, size].some(unreadable)) {
       setFormError(t.invalidNumberHint);
+      return;
+    }
+    if (sizeUnits) {
+      setFormError(sizeUnitsText());
       return;
     }
     const s = num(sl);
@@ -1138,6 +1158,32 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           accessibilityLabel={t.journalSizeA11y}
         />
       </View>
+      {sizeUnits ? (
+        <View style={[styles.qChips, rtl && styles.rowRtl]}>
+          {sizeUnits.lots != null ? (
+            <Pressable
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.qChip,
+                styles.chipOn,
+                pressed && {
+                  opacity: buttons.pressedOpacity,
+                  transform: [{ scale: buttons.pressedScale }],
+                },
+              ]}
+              onPress={() => {
+                setSize(sizeUnits.lots!.toFixed(2));
+                setFormError(null);
+              }}
+              accessibilityLabel={sizeUnitsText()}
+            >
+              <Text style={[styles.qChipText, styles.chipTextOn]}>{sizeUnitsText()}</Text>
+            </Pressable>
+          ) : (
+            <Text style={[styles.planWarn, { textAlign: align }]}>{sizeUnitsText()}</Text>
+          )}
+        </View>
+      ) : null}
       <View style={[styles.row, rtl && styles.rowRtl]}>
         <TextInput
           style={[styles.input, styles.inputHalf, { textAlign: align }]}

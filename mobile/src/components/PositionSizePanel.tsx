@@ -23,6 +23,8 @@ import {
   parseLeverage,
   requiredMargin,
   maxLotsForMargin,
+  marginPrice,
+  stopPipsMismatch,
   LOT_STEP,
 } from '../positionSize';
 import { parseDecimal } from '../parseDecimal';
@@ -236,9 +238,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * إطارٍ واحد أثناء كتابة سعر الوقف: `derivedSl` يتغيّر بالإطار الذي لم يكتب فيه الـeffect الخانة بعد.
    */
   const slTyped = num(slPips);
+  /** غير متماثل: نقاط أضيق من السعرين بأي فرق = لوت أكبر من وقفه المحفوظ — راجع `stopPipsMismatch` */
   const slMismatch =
-    !slFromPrices.current && derivedSl != null && Number.isFinite(slTyped) && Math.abs(slTyped - derivedSl) > 0.05
-      ? { typed: slPips.trim(), derived: derivedSl }
+    !slFromPrices.current && stopPipsMismatch(slTyped, derivedSl) != null
+      ? { typed: slPips.trim(), derived: derivedSl! }
       : null;
   /**
    * **وقف أضيق من 1 pip.** مستحيلٌ بأي أداة تجزئة — أضيق من السبريد نفسه — وهو خطأ كتابة شبه
@@ -343,9 +346,44 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * هامشاً، وفوق 100% لا تُفتح أصلاً. راجع `requiredMargin`.
    */
   const leverageNum = parseLeverage(leverage);
+  /**
+   * بلا دخول مكتوب يُجلب سعر السوق للأداة مرّة (لكل رمز) كي يظهر سطر الهامش لمن يحسب من النقاط وحدها —
+   * وهو أغلب الاستعمال، وهو بالضبط من يُفاجأ بهامش لا يتّسع له حسابه. لا طلب إلا حين يلزم السطر فعلاً
+   * (رافعة مكتوبة وحجم محسوب)، واقتباس بذري تجريبي لا يُستعمل (`isRealQuote`). السعر يُكتب بالسطر
+   * «@ 1.08510» كي لا يُظنّ دخولاً مكتوباً — راجع `marginPrice`.
+   */
+  const [mktQuote, setMktQuote] = useState<{ sym: string; price: number; bid?: number | null; ask?: number | null } | null>(null);
+  const entryTyped = Number.isFinite(num(entryPx)) && num(entryPx) > 0;
+  const needMarketPx = spec != null && !entryTyped && leverageNum != null && lots != null;
+  const mktSym = needMarketPx ? spec!.symbol : null;
+  const haveMkt = mktQuote != null && mktQuote.sym === mktSym;
+  useEffect(() => {
+    if (!mktSym || haveMkt) return;
+    let alive = true;
+    const id = setTimeout(() => {
+      api.marketQuote(mktSym).then(
+        (q) => {
+          if (!alive || !mountedRef.current || !isRealQuote(q)) return;
+          setMktQuote({ sym: mktSym, price: q.price, bid: q.bid, ask: q.ask });
+        },
+        () => {
+          /* بلا سعر لا سطر هامش — كما قبل */
+        }
+      );
+    }, 600);
+    return () => {
+      alive = false;
+      clearTimeout(id);
+    };
+  }, [mktSym, haveMkt]);
+  const marginPx = marginPrice({
+    entry: num(entryPx),
+    quote: spec && mktQuote && mktQuote.sym === spec.symbol ? mktQuote : null,
+    side: planSide,
+  });
   const margin =
-    spec && rate != null && lots != null && leverageNum != null
-      ? requiredMargin({ spec, lots, price: num(entryPx), quoteToAccount: rate, leverage: leverageNum })
+    spec && rate != null && lots != null && leverageNum != null && marginPx
+      ? requiredMargin({ spec, lots, price: marginPx.price, quoteToAccount: rate, leverage: leverageNum })
       : null;
   const marginPct = margin != null && Number.isFinite(balanceNum) && balanceNum > 0 ? (margin / balanceNum) * 100 : null;
   /** الهامش يتجاوز الرصيد: لا تتّسع له الصفقة (أو تُغلق بأول تذبذب) — يُكتب بلون التحذير */
@@ -353,7 +391,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** وحين يتجاوز: أكبر لوت يتّسع له الرصيد كلّه هامشاً — حدٌّ أعلى لا توصية (الهامش الحرّ صفر عنده) */
   const marginMaxLots =
     marginOver && spec && rate != null && leverageNum != null
-      ? maxLotsForMargin({ spec, available: balanceNum, price: num(entryPx), quoteToAccount: rate, leverage: leverageNum })
+      ? maxLotsForMargin({ spec, available: balanceNum, price: marginPx!.price, quoteToAccount: rate, leverage: leverageNum })
       : null;
   /** الربح المحتمل من المسافة الخام للهدف لا من نقاطه المقرَّبة للعرض — راجع `profitAtTarget` */
   const potentialProfit =
@@ -703,7 +741,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
               accessibilityLiveRegion="polite"
             >
               {marginOver ? '⚠ ' : ''}
-              {t.riskCalcMargin} ({lots!.toFixed(2)} lot · 1:{leverageNum}): {money(margin)}
+              {t.riskCalcMargin} ({lots!.toFixed(2)} lot · 1:{leverageNum}
+              {marginPx?.live && spec ? ` @ ${formatPrice(marginPx.price, spec.symbol)}` : ''}): {money(margin)}
               {marginPct != null ? ` (${formatRiskPct(marginPct)})` : ''}
               {marginMaxLots != null ? ` · ≤ ${marginMaxLots.toFixed(2)} lot` : ''}
             </Text>
