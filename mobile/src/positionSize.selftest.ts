@@ -38,6 +38,8 @@ import {
   spreadTooWide,
   planJournalNote,
   parseCommission,
+  costsLotsAdvice,
+  profitAfterCosts,
 } from './positionSize';
 
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps;
@@ -1032,3 +1034,118 @@ console.log('positionSize planJournalNote selftest OK');
   }
 }
 console.log('positionSize commission selftest OK');
+
+// ---- costsLotsAdvice: ما يُقال تحت سطر «شاملة التكاليف» ----
+{
+  const spec = instrumentSpec('EURUSD')!;
+  const pv = pipValuePerLot(spec, 1);
+  // الحالة التي كانت تسكت: رصيد 100، 1%، وقف 10، سبريد 1 → 0.01 لوت = 1.10 من 1.00
+  const s0 = positionSize({ balance: 100, riskPct: 1, slPips: 10, pipValuePerLot: pv, contractSize: spec.contractSize })!;
+  assert.equal(s0.lots, 0.01);
+  const w0 = spreadRisk({ lots: s0.lots, slPips: 10, spreadPips: 1, pipValuePerLot: pv, balance: 100, riskPct: 1, contractSize: spec.contractSize })!;
+  assert.ok(Math.abs(w0.risk - 1.1) < 1e-9);
+  assert.equal(w0.lotsWithin, null);
+  assert.deepEqual(costsLotsAdvice(s0.lots, w0), { kind: 'none' });
+  // والعمولة وحدها كذلك: 0.01 × (10 × 10 + 7) = 1.07 من 1.00
+  const w1 = spreadRisk({ lots: 0.01, slPips: 10, spreadPips: 0, pipValuePerLot: pv, balance: 100, riskPct: 1, contractSize: spec.contractSize, commissionPerLot: 7 })!;
+  assert.deepEqual(costsLotsAdvice(0.01, w1), { kind: 'none' });
+  // مثال الحاسبة: 10,000 USD، 1%، وقف 20، سبريد 1.5، عمولة 7 → 0.50 لوت، والأصغر 0.45
+  const w2 = spreadRisk({ lots: 0.5, slPips: 20, spreadPips: 1.5, pipValuePerLot: pv, balance: 10_000, riskPct: 1, contractSize: spec.contractSize, commissionPerLot: 7 })!;
+  assert.deepEqual(costsLotsAdvice(0.5, w2), { kind: 'smaller', lots: 0.45 });
+  // اللوت المحسوب يتّسع للتكاليف (التقريب للأسفل ترك هامشاً) → لا سطر
+  assert.equal(costsLotsAdvice(0.45, { lotsWithin: 0.45 }), null);
+  assert.equal(costsLotsAdvice(0.3, { lotsWithin: 0.30000000000000004 }), null);
+  // بلا تكاليف أو بلا لوت → لا شيء
+  assert.equal(costsLotsAdvice(0.5, null), null);
+  assert.equal(costsLotsAdvice(null, { lotsWithin: null }), null);
+  assert.equal(costsLotsAdvice(0, { lotsWithin: null }), null);
+  assert.equal(costsLotsAdvice(NaN, { lotsWithin: 0.1 }), null);
+  // شبكة: كلّ «smaller» فعلاً ضمن النسبة وأصغر من اللوت، وكلّ «none» أصغر لوت فيه يتجاوزها
+  for (const bal of [50, 100, 500, 2_000, 10_000]) {
+    for (const sl of [3, 5, 10, 25]) {
+      for (const sp of [0, 0.8, 2]) {
+        for (const cm of [0, 3.5, 7]) {
+          if (sp === 0 && cm === 0) continue;
+          const sz = positionSize({ balance: bal, riskPct: 1, slPips: sl, pipValuePerLot: pv, contractSize: spec.contractSize });
+          if (!sz || sz.belowMinLot) continue;
+          const w = spreadRisk({ lots: sz.lots, slPips: sl, spreadPips: sp, pipValuePerLot: pv, balance: bal, riskPct: 1, contractSize: spec.contractSize, commissionPerLot: cm })!;
+          const a = costsLotsAdvice(sz.lots, w);
+          const want = bal / 100;
+          const costOf = (l: number) => l * ((sl + sp) * pv + cm);
+          if (a?.kind === 'smaller') {
+            assert.ok(a.lots < sz.lots && costOf(a.lots) <= want + 1e-9, `${bal}/${sl}/${sp}/${cm}`);
+          } else if (a?.kind === 'none') {
+            assert.ok(costOf(LOT_STEP) > want, `${bal}/${sl}/${sp}/${cm}`);
+          } else {
+            assert.ok(costOf(sz.lots) <= want + 1e-9, `${bal}/${sl}/${sp}/${cm}`);
+          }
+        }
+      }
+    }
+  }
+}
+console.log('positionSize costsLotsAdvice selftest OK');
+
+// ---- profitAfterCosts: الربح وR:R بعد السبريد والعمولة ----
+{
+  const spec = instrumentSpec('EURUSD')!;
+  const pv = pipValuePerLot(spec, 1);
+  // 0.50 لوت، وقف 20، هدف 40، سبريد 1.5، عمولة 7: الإجمالي 200، التكاليف 0.5 × (15 + 7) = 11
+  const gross = profitAtTarget({ spec, entry: 1.085, target: 1.089, lots: 0.5, quoteToAccount: 1 })!;
+  assert.ok(Math.abs(gross - 200) < 1e-6);
+  const w = spreadRisk({ lots: 0.5, slPips: 20, spreadPips: 1.5, pipValuePerLot: pv, balance: 10_000, riskPct: 1, contractSize: spec.contractSize, commissionPerLot: 7 })!;
+  assert.ok(Math.abs(w.risk - 111) < 1e-9);
+  const n = profitAfterCosts({ grossProfit: gross, lots: 0.5, spreadPips: 1.5, pipValuePerLot: pv, commissionPerLot: 7, riskWithCosts: w.risk })!;
+  assert.ok(Math.abs(n.costs - 11) < 1e-9);
+  assert.ok(Math.abs(n.net - 189) < 1e-6);
+  assert.ok(Math.abs(n.rr! - 189 / 111) < 1e-6);
+  assert.equal(formatMoney(n.net, 'USD'), '189.00 USD');
+  // سكالبينغ 5/5 بلوت واحد، سبريد 1، عمولة 7: إجمالي 50 → صافٍ 33، مخاطرة 67 → 1:0.5 لا 1:1
+  const sc = profitAfterCosts({ grossProfit: 50, lots: 1, spreadPips: 1, pipValuePerLot: pv, commissionPerLot: 7, riskWithCosts: 67 })!;
+  assert.ok(Math.abs(sc.net - 33) < 1e-9);
+  assert.ok(Math.abs(sc.rr! - 33 / 67) < 1e-9);
+  // السبريد وحده، والعمولة وحدها
+  const sOnly = profitAfterCosts({ grossProfit: 200, lots: 0.5, spreadPips: 1.5, pipValuePerLot: pv, riskWithCosts: 107.5 })!;
+  assert.ok(Math.abs(sOnly.net - 192.5) < 1e-9);
+  const cOnly = profitAfterCosts({ grossProfit: 200, lots: 0.5, spreadPips: 0, pipValuePerLot: pv, commissionPerLot: 7, riskWithCosts: 103.5 })!;
+  assert.ok(Math.abs(cOnly.net - 196.5) < 1e-9);
+  // التكاليف تبتلع الهدف: الصافي سالب يُرجَع صادقاً، وR:R null
+  const neg = profitAfterCosts({ grossProfit: 10, lots: 1, spreadPips: 1, pipValuePerLot: pv, commissionPerLot: 7, riskWithCosts: 67 })!;
+  assert.ok(Math.abs(neg.net - -7) < 1e-9);
+  assert.equal(neg.rr, null);
+  const zero = profitAfterCosts({ grossProfit: 17, lots: 1, spreadPips: 1, pipValuePerLot: pv, commissionPerLot: 7, riskWithCosts: 67 })!;
+  assert.equal(zero.rr, null);
+  // بلا تكاليف أو بمدخل غير صالح → null
+  for (const sp of [0, NaN, -1]) {
+    for (const cm of [0, undefined, NaN, -7]) {
+      assert.equal(profitAfterCosts({ grossProfit: 200, lots: 0.5, spreadPips: sp, pipValuePerLot: pv, commissionPerLot: cm, riskWithCosts: 100 }), null);
+    }
+  }
+  for (const bad of [0, -1, NaN, Infinity]) {
+    assert.equal(profitAfterCosts({ grossProfit: bad, lots: 0.5, spreadPips: 1, pipValuePerLot: pv, riskWithCosts: 100 }), null);
+    assert.equal(profitAfterCosts({ grossProfit: 200, lots: bad, spreadPips: 1, pipValuePerLot: pv, riskWithCosts: 100 }), null);
+    assert.equal(profitAfterCosts({ grossProfit: 200, lots: 0.5, spreadPips: 1, pipValuePerLot: bad, riskWithCosts: 100 }), null);
+    assert.equal(profitAfterCosts({ grossProfit: 200, lots: 0.5, spreadPips: 1, pipValuePerLot: pv, riskWithCosts: bad }), null);
+  }
+  // حساب بالين على USDJPY (سعر تحويل 1): وقف 20، هدف 40 على 0.3 لوت، سبريد 1، عمولة 1000 JPY
+  const jp = instrumentSpec('USDJPY')!;
+  const jpv = pipValuePerLot(jp, 1); // 1000 JPY
+  const jg = profitAtTarget({ spec: jp, entry: 150, target: 150.4, lots: 0.3, quoteToAccount: 1 })!;
+  const jw = spreadRisk({ lots: 0.3, slPips: 20, spreadPips: 1, pipValuePerLot: jpv, balance: 1_000_000, riskPct: 1, contractSize: jp.contractSize, commissionPerLot: 1000 })!;
+  const jn = profitAfterCosts({ grossProfit: jg, lots: 0.3, spreadPips: 1, pipValuePerLot: jpv, commissionPerLot: 1000, riskWithCosts: jw.risk })!;
+  assert.equal(formatMoney(jn.net, 'JPY'), '11,400 JPY'); // 12,000 − 0.3 × 2,000
+  // اتّساق: الصافي + التكاليف = الإجمالي، وR:R الصافية ≤ الإجمالية دائماً
+  for (const sp of [0.5, 1, 3]) {
+    for (const cm of [0, 7]) {
+      for (const [sl, tp] of [[10, 10], [20, 40], [15, 45]]) {
+        const lots = 0.37;
+        const g = lots * tp * pv;
+        const r = spreadRisk({ lots, slPips: sl, spreadPips: sp, pipValuePerLot: pv, balance: 10_000, riskPct: 1, contractSize: spec.contractSize, commissionPerLot: cm })!;
+        const x = profitAfterCosts({ grossProfit: g, lots, spreadPips: sp, pipValuePerLot: pv, commissionPerLot: cm, riskWithCosts: r.risk })!;
+        assert.ok(Math.abs(x.net + x.costs - g) < 1e-9);
+        if (x.rr != null) assert.ok(x.rr < tp / sl);
+      }
+    }
+  }
+}
+console.log('positionSize profitAfterCosts selftest OK');

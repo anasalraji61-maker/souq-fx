@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { AppState, type AppStateStatus, View, Text, StyleSheet } from 'react-native';
 import { colors, radii, spacing } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
@@ -7,6 +7,7 @@ import {
   calendarAfterFetch,
   calendarFetchEvents,
   newsCountdown,
+  newsTickDelayMs,
   nextHighImpact,
   symbolCurrencies,
   type CalendarCache,
@@ -59,20 +60,35 @@ export function NewsRiskBanner({ symbol }: Props) {
     };
     listeners.add(onUpdate);
     ensureFresh(Date.now());
-    // ساعة دقيقة: تحدّث العدّ التنازلي وتعيد الجلب عند انتهاء صلاحية المخزن.
+    // ساعة دقيقة: تعيد الجلب عند انتهاء صلاحية المخزن (العدّ نفسه يُجدَّد بمؤقّته أدناه).
     const id = setInterval(() => {
       const n = Date.now();
       if (alive) setNow(n);
       ensureFresh(n);
     }, 60_000);
+    // العودة من الخلفية: مؤقّتات JS متوقّفة هناك، فكان «بعد 12د» يبقى على الشاشة عن خبرٍ بعد دقيقتين
+    // حتى تدقّ الساعة — وهي لحظة فتح التطبيق للدخول بالضبط.
+    const sub = AppState.addEventListener('change', (st: AppStateStatus) => {
+      if (st !== 'active' || !alive) return;
+      const n = Date.now();
+      setNow(n);
+      ensureFresh(n);
+    });
     return () => {
       alive = false;
       listeners.delete(onUpdate);
       clearInterval(id);
+      sub.remove();
     };
   }, []);
 
   const hit = cache ? nextHighImpact(cache.events, symbolCurrencies(symbol), now) : null;
+  const hitDelta = hit ? hit.deltaMs : null;
+  // تجديد العدّ **لحظة يتغيّر** لا بساعة من لحظة التركيب — وإلا بقي «بعد 3د» والخبر بعد 2:50، راجع `newsTickDelayMs`
+  useEffect(() => {
+    const id = setTimeout(() => setNow(Date.now()), newsTickDelayMs(hitDelta));
+    return () => clearTimeout(id);
+  }, [now, hitDelta]);
   if (!hit) return null;
 
   const { event, deltaMs } = hit;

@@ -582,6 +582,61 @@ export function spreadRisk(input: {
 }
 
 /**
+ * ما يُقال تحت سطر «المخاطرة شاملة التكاليف»: `smaller` = لوت أصغر يُبقي النسبة المكتوبة، و`none` = حتى
+ * أصغر لوت (0.01) يتجاوزها حين تُحسب التكاليف، و`null` = لا شيء يُقال (بلا تكاليف، أو اللوت المحسوب
+ * يتّسع لها أصلاً).
+ *
+ * لماذا `none`: `spreadRisk().lotsWithin` يصير `null` حين تبتلع التكاليف المخاطرة كلّها (رصيد 100، 1%،
+ * وقف 10، سبريد 1: 0.01 لوت = 1.10 من 1.00) — وكان السطر يسكت حينها، فيقرأ المتداول «0.01 lot» فوقه
+ * كأنها ضمن نسبته. `withCosts` هو ناتج `spreadRisk` للّوت نفسه (لا يصير `null` لـ`lotsWithin` إلا لهذا
+ * السبب ما دام اللوت محسوباً بنسبة صالحة).
+ */
+export function costsLotsAdvice(
+  lots: number | null,
+  withCosts: { lotsWithin: number | null } | null
+): { kind: 'smaller'; lots: number } | { kind: 'none' } | null {
+  if (withCosts == null || lots == null || !Number.isFinite(lots) || lots <= 0) return null;
+  if (withCosts.lotsWithin == null) return { kind: 'none' };
+  return withCosts.lotsWithin < lots - 1e-9 ? { kind: 'smaller', lots: withCosts.lotsWithin } : null;
+}
+
+/**
+ * الربح عند الهدف **بعد التكاليف** وR:R الصافية: السبريد يُدفع مرّة بالرحلة (الشراء يُفتح على Ask ويُغلق
+ * هدفه على Bid)، والعمولة فتحاً وإغلاقاً لكل لوت — فالصافي = الإجمالي − اللوت × (السبريد × قيمة النقطة
+ * + العمولة)، وR:R الصافية = الصافي ÷ المخاطرة شاملة التكاليف (`spreadRisk().risk`، التي تُضيف السبريد
+ * والعمولة نفسيهما للوقف).
+ *
+ * لماذا: «الربح المحتمل ≈ 200.00 USD · R:R 1:2.0» إجماليان والسطر تحتهما يقول «المخاطرة شاملة التكاليف
+ * 111.00 USD» — فالخطة الحقيقية 189 مقابل 111، أي 1:1.7 لا 1:2. وعلى وقف وهدف ضيّقين (سكالبينغ 5/5،
+ * سبريد 1، عمولة 7، لوت واحد EURUSD) الإجمالي 1:1 والصافي 33 مقابل 67، أي 1:0.5 — خطة تُعرض متعادلة
+ * وهي تربح نصف ما تخاطر به.
+ *
+ * `net` قد يكون ≤ 0 (التكاليف تبتلع الهدف كلّه) — رقمٌ صادق يُعرض لا يُخفى؛ `rr` حينها `null`. `null`
+ * كلّه بلا تكاليف (السطر يكرّر الإجمالي) أو بمدخل غير صالح.
+ */
+export function profitAfterCosts(input: {
+  grossProfit: number;
+  lots: number;
+  spreadPips: number;
+  pipValuePerLot: number;
+  commissionPerLot?: number;
+  /** `spreadRisk().risk` للّوت نفسه */
+  riskWithCosts: number;
+}): { net: number; costs: number; rr: number | null } | null {
+  const { grossProfit, lots, pipValuePerLot: pv, riskWithCosts } = input;
+  if (![grossProfit, lots, pv, riskWithCosts].every((v) => Number.isFinite(v) && v > 0)) return null;
+  const spread = Number.isFinite(input.spreadPips) && input.spreadPips > 0 ? input.spreadPips : 0;
+  const comm =
+    input.commissionPerLot != null && Number.isFinite(input.commissionPerLot) && input.commissionPerLot > 0
+      ? input.commissionPerLot
+      : 0;
+  if (spread === 0 && comm === 0) return null;
+  const costs = lots * (spread * pv + comm);
+  const net = grossProfit - costs;
+  return { net, costs, rr: net > 0 ? Math.round((net / riskWithCosts) * 1e9) / 1e9 : null };
+}
+
+/**
  * خانة العمولة (لكل لوت، فتحاً وإغلاقاً، بعملة الحساب): فارغة = 0 (حسابات Standard بلا عمولة)، وإلا
  * مبلغ ≥ 0 بقاعدة الرصيد (`amount`: «7.000» مبهمة تُرفض بدل أن تُقرأ 7). `null` = غير مفهوم أو سالب.
  */

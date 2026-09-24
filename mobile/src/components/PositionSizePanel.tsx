@@ -28,6 +28,7 @@ import {
   parseSpreadPips,
   parseCommission,
   spreadRisk,
+  costsLotsAdvice,
   spreadTooWide,
   planJournalNote,
   LOT_STEP,
@@ -372,9 +373,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const [logBusy, setLogBusy] = useState(false);
   const [logMsg, setLogMsg] = useState<{ ok: boolean; text: string } | null>(null);
   // تغيّر أي رقم بالخطة يمسح رسالة التسجيل ويتيح الزر من جديد — وبقاؤها يمنع نقرة ثانية تُنشئ صفقة مكرّرة
+  // والسبريد والعمولة كذلك: كلاهما يُكتب بملاحظة الصفقة (`planJournalNote`)، فتعديلهما بعد التسجيل كان
+  // يترك «سُجِّلت» والزرّ معطّلاً — لا تُسجَّل الخطة بتكاليفها المصحَّحة إلا بتغيير رقم آخر ثم إرجاعه
   useEffect(() => {
     setLogMsg(null);
-  }, [symbol, account, balance, riskPct, slPips, entryPx, stopPx, targetPx]);
+  }, [symbol, account, balance, riskPct, slPips, entryPx, stopPx, targetPx, spread, commission]);
   // السعر المجلوب يخصّ رمزاً واحداً ولحظة واحدة: تبديل الأداة يُسقط الرسالة (وإلا بقي «الدخول = ‎1.0850»
   // معروضاً تحت زوج آخر)
   useEffect(() => {
@@ -404,6 +407,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           commissionPerLot,
         })
       : null;
+  /**
+   * تحت سطر التكاليف: اللوت الأصغر الذي يُبقي النسبة المكتوبة («شاملة السبريد» أو «شاملة التكاليف» حين
+   * تدخل العمولة — الأولى كانت تُقال عن عمولة)، أو تحذير «أصغر لوت يتجاوز ما حدّدتَه» حين تبتلع التكاليف
+   * المخاطرة كلّها — كان السطر يسكت حينها و«0.01 lot» فوقه تُقرأ ضمن النسبة. راجع `costsLotsAdvice`.
+   */
+  const costsAdvice = costsLotsAdvice(lots, withSpread);
   /** «(+1.5 pip + 7.00 USD/lot)» — ما دخل السطر فعلاً، كي لا تُقرأ المخاطرة الأعلى بلا سبب ظاهر */
   const costParts = [
     spreadPips ? `${spreadPips} pip` : null,
@@ -848,12 +857,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
               {commissionPerLot ? t.riskCalcRiskWithCosts : t.riskCalcRiskWithSpread} (+{costParts.join(' + ')}):{' '}
               {money(withSpread.risk)} ({formatRiskPct(withSpread.pct)})
             </Text>
-            {withSpread.lotsWithin != null && withSpread.lotsWithin < lots! ? (
+            {costsAdvice?.kind === 'smaller' ? (
               <Text style={[styles.resultMeta, { textAlign: align }]}>
-                {t.riskCalcSpreadLotsWithin
+                {(commissionPerLot ? t.riskCalcCostsLotsWithin : t.riskCalcSpreadLotsWithin)
                   .replace('{pct}', String(riskNum))
-                  .replace('{lots}', withSpread.lotsWithin.toFixed(2))}
+                  .replace('{lots}', costsAdvice.lots.toFixed(2))}
               </Text>
+            ) : costsAdvice?.kind === 'none' ? (
+              <Text style={[styles.warn, { textAlign: align }]}>{t.riskCalcBelowMin}</Text>
             ) : null}
           </>
         ) : null}

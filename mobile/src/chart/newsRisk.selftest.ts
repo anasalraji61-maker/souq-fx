@@ -7,6 +7,8 @@ import {
   calendarAfterFetch,
   calendarFetchEvents,
   newsCountdown,
+  newsTickDelayMs,
+  NEWS_GRACE_MS,
   nextHighImpact,
   symbolCurrencies,
   NEWS_STALE_MAX_MS,
@@ -252,3 +254,36 @@ console.log('newsRisk calendarFetchEvents selftest OK');
   for (const c of ['BTCUSD', 'ETHUSD', 'USDTRX', 'XRPUSD', 'USDBTC']) assert.deepEqual(symbolCurrencies(c), [], c);
 }
 console.log('newsRisk exotic-currency selftest OK');
+
+// newsTickDelayMs — الشريط يُجدَّد لحظة يتغيّر العدّ، فلا يبقى «بعد 3د» والخبر بعد 2:50
+{
+  const M = 60_000;
+  // ظهر والخبر بعد 3:30 → التجديد بعد 30 ثانية وجزء، فيصير «بعد 2د» لا بعد دقيقة كاملة
+  assert.equal(newsTickDelayMs(3.5 * M), 30_001);
+  assert.equal(newsTickDelayMs(2 * M + 5_000), 5_001);
+  // على المضاعف تماماً: «بعد 3د» صادقة الآن، وتتغيّر بعد 1ms (لا حلقة: الحدّ الأدنى 250)
+  assert.equal(newsTickDelayMs(3 * M), 250);
+  // الدقيقة الأخيرة: «بعد 1د» حتى 60,000 بالضبط ثم «الآن»
+  assert.equal(newsTickDelayMs(M + 20_000), 20_000);
+  assert.ok(newsCountdown(M + 20_000 - 20_000).now);
+  // ساعات: لا تتجاوز دقيقة أبداً
+  assert.equal(newsTickDelayMs(2 * 60 * M + 45_000), 45_001);
+  assert.equal(newsTickDelayMs(3 * 60 * M), 250);
+  // «الآن»: حتى خروج الخبر من المهلة، محصوراً بدقيقة
+  assert.equal(newsTickDelayMs(30_000), M);
+  assert.equal(newsTickDelayMs(-NEWS_GRACE_MS + 10_000), 10_001);
+  assert.equal(newsTickDelayMs(-NEWS_GRACE_MS), 250);
+  // بلا خبر أو قيمة غير صالحة → الساعة القديمة
+  for (const v of [null, NaN, Infinity, -Infinity]) assert.equal(newsTickDelayMs(v as number | null), M, String(v));
+  // الخاصية: بين الآن والتجديد لا يتغيّر نصّ العدّ، وبعد التجديد يتغيّر (أو بلغ الحدّ الأقصى)
+  const key = (d: number) => JSON.stringify(newsCountdown(d));
+  for (let d = -NEWS_GRACE_MS + 1_000; d <= 3 * 60 * M; d += 7_919) {
+    const w = newsTickDelayMs(d);
+    assert.ok(w >= 250 && w <= M, `${d}`);
+    // قبل التجديد بلحظة: النصّ نفسه (لا تغيّر يفوت الشريط)
+    if (w > 250) assert.equal(key(d - (w - 1)), key(d), `stale at ${d}`);
+    // عند التجديد: تغيّر، إلا حين حُصر بالدقيقة
+    if (w < M && w > 250) assert.notEqual(key(d - w), key(d), `no change at ${d}`);
+  }
+}
+console.log('newsRisk tick selftest OK');
