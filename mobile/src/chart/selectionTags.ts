@@ -6,6 +6,7 @@
  * React، فتُفحص بـ`selectionTags.selftest.ts`.
  */
 import { boxesTouch } from './axisTicks';
+import { measurePipsText } from './measureReadout';
 import { positionLevels, isPositionTool } from './positionTool';
 import type { Drawing } from './types';
 
@@ -61,6 +62,26 @@ export function lineValueAt(
   if (t < 0 || (!ray && t > 1)) return null;
   const price = a.price + (b.price - a.price) * t;
   return Number.isFinite(price) && price > 0 ? price : null;
+}
+
+/**
+ * «1.08520 · −6.2 pip»: أين يقع الترند/الشعاع المحدَّد عند الشمعة الحيّة وكم يبعد السعر عنه — نصّ
+ * وسم الهاتف وسطر القراءة. وسم المحور يعطي السعر وحده، والمتداول ينتظر الكسر/الارتداد فيسأل «كم
+ * بقي؟». الإشارة كالخطّ الأفقي: من السعر إلى الخطّ (+ الخطّ فوقه، − تحته). `null` لغير الترند/الشعاع،
+ * لخطّ لا يبلغ الشمعة الحيّة، أو لأداة بلا مواصفة pip.
+ */
+export function lineNowText(
+  d: Drawing,
+  nowIndex: number,
+  livePrice: number,
+  symbol: string,
+  fmt: (price: number) => string
+): string | null {
+  if ((d.tool !== 'trend' && d.tool !== 'ray') || !d.b || !Number.isFinite(livePrice)) return null;
+  const now = lineValueAt(d.a, d.b, nowIndex, d.tool === 'ray');
+  if (now == null) return null;
+  const pips = measurePipsText(symbol, livePrice, now);
+  return pips ? `${fmt(now)} · ${pips}` : null;
 }
 
 /**

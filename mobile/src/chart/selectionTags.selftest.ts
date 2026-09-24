@@ -1,6 +1,6 @@
 /** فحص ذاتي لـ`selectionTags.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
 import assert from 'node:assert/strict';
-import { lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
+import { lineNowText, lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
 import type { Drawing } from './types';
 
 const d = (tool: Drawing['tool'], a: number, b?: number, rr?: number): Drawing => ({
@@ -65,3 +65,20 @@ tags = placeSelectionTags([{ price: 1.0801, tone: 'line' }], yOf, 200, 18, []);
 assert.equal(tags[0].top, 180);
 
 console.log('selectionTags.selftest: PASS');
+
+// lineNowText: سعر الخطّ عند الحيّة وبُعد السعر عنه.
+{
+  const fmt = (v: number) => v.toFixed(5);
+  // ترند 1.0800@1 → 1.0830@4 ⇒ عند 4 = 1.0830 (طرف) — الشعاع يمتدّ ⇒ عند 7 = 1.0860.
+  assert.equal(lineNowText(d('ray', 1.08, 1.083), 7, 1.0866, 'EURUSD', fmt), '1.08600 · −6.0 pip');
+  assert.equal(lineNowText(d('ray', 1.08, 1.083), 7, 1.0850, 'EURUSD', fmt), '1.08600 · +10.0 pip');
+  assert.equal(lineNowText(d('trend', 1.08, 1.083), 3, 1.0820, 'EURUSD', fmt), '1.08200 · 0.0 pip');
+  // الترند لا يبلغ ما بعد طرفه الثاني.
+  assert.equal(lineNowText(d('trend', 1.08, 1.083), 7, 1.0850, 'EURUSD', fmt), null);
+  assert.equal(lineNowText(d('hline', 1.08), 7, 1.0850, 'EURUSD', fmt), null);
+  assert.equal(lineNowText(d('fib', 1.08, 1.083), 3, 1.0850, 'EURUSD', fmt), null);
+  assert.equal(lineNowText(d('ray', 1.08, 1.083), 7, Number.NaN, 'EURUSD', fmt), null);
+  // أداة بلا مواصفة pip ⇒ لا نصّ.
+  assert.equal(lineNowText(d('ray', 100, 103), 7, 104, 'NOPE123', fmt), null);
+}
+console.log('selectionTags lineNowText OK');

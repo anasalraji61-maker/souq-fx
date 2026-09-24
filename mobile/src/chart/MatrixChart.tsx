@@ -105,7 +105,7 @@ import {
   type PositionSide,
 } from './positionTool';
 import { anchorDrawings, barTime, stampAtIndex, type TimeBar } from './drawingAnchors';
-import { placeSelectionTags, selectionPrices } from './selectionTags';
+import { lineNowText, placeSelectionTags, selectionPrices } from './selectionTags';
 import { appendedAfter } from './holdView';
 import { priceSpan } from './priceSpan';
 import { FIB_EXTENSIONS, fibLevelPrice, isFibExtension, planFibLabels, type FibLabelPlan } from './fibLabels';
@@ -4314,6 +4314,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       : liveSeries.candles[liveSeries.candles.length - 1]?.close) ??
     series.last;
   const currentPriceY = yOf(currentPrice);
+  // الترند/الشعاع المحدَّد: سعره عند الشمعة الحيّة وبُعد السعر عنه («1.08520 · −6.2 pip») — يُلحق
+  // بقراءته، فمنتظر الكسر يعرف كم بقي بلا جرّ التقاطع إلى الخطّ.
+  const selectedLineNow = selectedSpan
+    ? lineNowText(selectedSpan, source.all.length - 1, currentPrice, series.symbol, (v) =>
+        formatPrice(v, series.symbol)
+      )
+    : null;
+  const selectedSpanText =
+    selectedSpanReadout && selectedLineNow
+      ? `${selectedSpanReadout} | ${selectedLineNow}`
+      : selectedSpanReadout;
 
   // الوسوم تُرسم **فوق** علامات المحور، وعرضها عرض المحور كلّه — فعلامة تقع تحت وسم
   // كانت تظهر شريحةً من أرقامها حول حافته: تشويش يُقرأ كرقم ثالث لا كرقم مقصوص.
@@ -4552,7 +4563,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           </Text>
         ) : selectedSpanReadout ? (
           <Text style={[styles.readoutText, selectedSpan ? { color: selectedSpan.color } : null]}>
-            {selectedSpanReadout}
+            {selectedSpanText}
           </Text>
         ) : (
           <Text style={styles.readoutMuted}>
@@ -6645,7 +6656,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const x2 = xOf(bi);
               const y2 = yOf(end.price);
               if (bi < 0 || bi > source.plot.length - 1 || !(y2 >= 0 && y2 <= chartPlotH)) return null;
-              const top = Math.max(2, Math.min(chartPlotH - 22, y2 - 44 >= 2 ? y2 - 44 : y2 + 24));
+              const tagH = selectedLineNow ? 38 : 22;
+              const top = Math.max(2, Math.min(chartPlotH - tagH, y2 - 44 >= 2 ? y2 - 44 : y2 + 24));
               const inset = x2 < chartPlotW / 2 ? Math.max(2, x2 - 12) : Math.max(2, chartW - x2 - 12);
               const side = x2 < chartPlotW / 2 ? { left: inset } : { right: inset };
               const tagMaxW = chartW - 2 - inset;
@@ -6662,6 +6674,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   >
                     {selectedSpanReadout}
                   </Text>
+                  {/* سطر ثانٍ لا لاحقة: السطر الأول يملأ عرض الهاتف أصلاً. */}
+                  {selectedLineNow ? (
+                    <Text
+                      style={[styles.measureLiveText, { color }]}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.75}
+                    >
+                      {selectedLineNow}
+                    </Text>
+                  ) : null}
                 </View>
               );
             })()
