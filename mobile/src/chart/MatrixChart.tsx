@@ -852,6 +852,40 @@ function PaneSpreadHead({
   );
 }
 
+/**
+ * لوحة **خطّ واحد يدور حول الصفر** (TRIX، DPO، Coppock) — كما ترسمها TradingView: خطّ
+ * وخطّ صفر، لا أعمدة. كانت أعمدة بلون الجانب وحده، فانعطاف الخطّ (ما يُقرأ من TRIX
+ * وCoppock قبل تقاطع الصفر بشموع) لا يُرى إلا بمقارنة أطوال أعمدة متجاورة بالعين.
+ * اللون يبقى للجانب — نفس دلالة رقم الرأس فوقها. المقياس والموضع بهندسة MACD
+ * (`macdPaneGeom` بالسلسلة نفسها للثلاث)، فالصفر بمنتصف مساحة الرسم كالأعمدة سابقاً.
+ */
+function ZeroLineSeries({ values, paneH }: { values: readonly (number | null)[]; paneH: number }) {
+  const g = macdPaneGeom(values, values, values, paneH);
+  return (
+    <>
+      <View pointerEvents="none" style={[styles.paneZeroLine, { top: g.zeroY }]} />
+      {values.map((v, i) =>
+        v == null ? (
+          <View key={i} style={{ flex: 1 }} />
+        ) : (
+          <View key={i} style={{ flex: 1, height: g.innerH, position: 'relative' }}>
+            <View
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: Math.min(g.y(v), g.innerH - 2),
+                height: 2,
+                backgroundColor: v >= 0 ? colors.bull : colors.bear,
+              }}
+            />
+          </View>
+        )
+      )}
+    </>
+  );
+}
+
 export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChart(
   {
   series,
@@ -8359,32 +8393,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead name="TRIX" values={trix} at={crossIndex} />
           <View style={styles.paneInner}>
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
-            {(() => {
-              const vals = trix.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxT = Math.max(...vals, 1e-9);
-              return trix.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxT, paneH);
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <ZeroLineSeries values={trix} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -8461,32 +8470,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead name="DPO" values={dpo} at={crossIndex} />
           <View style={styles.paneInner}>
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
-            {(() => {
-              const vals = dpo.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxD = Math.max(...vals, 1e-9);
-              return dpo.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxD, paneH);
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <ZeroLineSeries values={dpo} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -8757,32 +8741,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead name="Coppock" values={coppock} at={crossIndex} />
           <View style={styles.paneInner}>
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
-            {(() => {
-              const vals = coppock.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxCop = Math.max(...vals, 1e-9);
-              return coppock.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxCop, paneH);
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <ZeroLineSeries values={coppock} paneH={paneH} />
           </View>
         </View>
       ) : null}
