@@ -20,6 +20,8 @@ import {
   netByInstrument,
   knownLots,
   recentLotSizes,
+  quickStopPips,
+  stopAtPips,
   journalInstrumentKey,
   realizedMove,
   realizedR,
@@ -27,7 +29,7 @@ import {
   targetAtRR,
   QUICK_RR,
 } from './tradePlan';
-import { instrumentSpec, pipValuePerLot, planJournalNote, pnlInQuoteCcy, positionSize } from './positionSize';
+import { instrumentSpec, pipValuePerLot, planJournalNote, pnlInQuoteCcy, positionSize, slPipsFromPrices } from './positionSize';
 
 // شراء EURUSD صحيح: وقف 25 pip، هدف 50 pip ⇒ 1:2
 const a = analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, tp: 1.09 });
@@ -827,3 +829,52 @@ console.log('tradePlan journalStats selftest OK');
   assert.deepEqual(recentLotSizes([]), []);
 }
 console.log('tradePlan recentLotSizes selftest OK');
+
+// —— stopAtPips / quickStopPips: شرائح الوقف بالمسافة بالدفتر ——
+{
+  assert.equal(stopAtPips({ symbol: 'EURUSD', side: 'buy', entry: 1.085, pips: 20 }), 1.083);
+  assert.equal(stopAtPips({ symbol: 'EURUSD', side: 'sell', entry: 1.085, pips: 20 }), 1.087);
+  assert.equal(stopAtPips({ symbol: 'USDJPY', side: 'buy', entry: 157.4, pips: 20 }), 157.2);
+  assert.equal(stopAtPips({ symbol: 'USDJPY', side: 'sell', entry: 157.4, pips: 20 }), 157.6);
+  assert.equal(stopAtPips({ symbol: 'XAUUSD', side: 'buy', entry: 2400, pips: 100 }), 2390);
+  assert.equal(stopAtPips({ symbol: 'XAUUSD.m', side: 'sell', entry: 2400.35, pips: 50 }), 2405.35);
+  assert.equal(stopAtPips({ symbol: 'XAGUSD', side: 'buy', entry: 30.125, pips: 10 }), 30.025);
+  // دخول بمنزلة pipette: لا ضجيج عائم بالناتج
+  assert.equal(stopAtPips({ symbol: 'GBPUSD', side: 'buy', entry: 1.27345, pips: 30 }), 1.27045);
+  // بلا مواصفات / مدخلات غير صالحة / وقف ≤ 0
+  assert.equal(stopAtPips({ symbol: 'US30', side: 'buy', entry: 39000, pips: 20 }), null);
+  assert.equal(stopAtPips({ symbol: 'EURUSD', side: 'buy', entry: 0, pips: 20 }), null);
+  assert.equal(stopAtPips({ symbol: 'EURUSD', side: 'buy', entry: NaN, pips: 20 }), null);
+  assert.equal(stopAtPips({ symbol: 'EURUSD', side: 'buy', entry: 1.085, pips: 0 }), null);
+  assert.equal(stopAtPips({ symbol: 'EURUSD', side: 'buy', entry: 1.085, pips: -20 }), null);
+  assert.equal(stopAtPips({ symbol: 'EURUSD', side: 'buy', entry: 0.001, pips: 50 }), null);
+  assert.deepEqual(quickStopPips('XAUUSD'), [30, 50, 100, 200]);
+  assert.deepEqual(quickStopPips('xauusd.m'), [30, 50, 100, 200]);
+  assert.deepEqual(quickStopPips('EURUSD'), [10, 20, 30, 50]);
+  assert.deepEqual(quickStopPips('XAGUSD'), [10, 20, 30, 50]);
+  assert.deepEqual(quickStopPips('US30'), []);
+  // الشبكة: الوقف الناتج بالجهة الصحيحة، ومسافته تُقرأ `pips` بالضبط بمسطرة الخطة وبمسطرة حجم اللوت
+  // (slPipsFromPrices تقرّب للأعلى — ضجيجٌ عائم كان سيُحسب 20.1 pip فيُصغَّر اللوت)، والنتيجة −1R عند الوقف.
+  let n = 0;
+  for (const symbol of ['EURUSD', 'GBPJPY', 'USDJPY', 'XAUUSD', 'XAGUSD', 'EURGBP', 'USDCHF', 'AUDNZD']) {
+    const spec = instrumentSpec(symbol)!;
+    const bases = spec.base === 'XAU' ? [1850.3, 2400, 2654.87] : spec.base === 'XAG' ? [22.345, 30.125]
+      : spec.quote === 'JPY' ? [98.765, 157.4, 191.123] : [0.61234, 0.8765, 1.085, 1.27345];
+    for (const entry of bases) {
+      for (const side of ['buy', 'sell'] as const) {
+        for (const pips of [...quickStopPips(symbol), 7, 12.5, 15.3]) {
+          const sl = stopAtPips({ symbol, side, entry, pips })!;
+          assert.ok(sl != null && sl > 0);
+          assert.equal(levelSideIssue({ side, entry, sl }), null);
+          assert.equal(slPipsFromPrices(spec, entry, sl), pips, `${symbol} ${side} ${entry} ${pips}`);
+          const tp = side === 'buy' ? entry * 1.1 : entry * 0.9;
+          assert.equal(analyzePlan({ symbol, side, entry, sl, tp }).riskPips, pips);
+          assert.equal(realizedR({ side, entry, sl, exit: sl }), -1);
+          n++;
+        }
+      }
+    }
+  }
+  assert.ok(n > 300);
+}
+console.log('tradePlan stopAtPips selftest OK');

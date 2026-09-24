@@ -34,6 +34,8 @@ import {
   realizedMove,
   realizedR,
   recentLotSizes,
+  quickStopPips,
+  stopAtPips,
   averageR,
   journalStats,
   type JournalStats,
@@ -354,6 +356,23 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry, sl]);
+
+  /**
+   * شرائح الوقف بالمسافة («20 pip») تحت خانة الوقف: سعر الوقف من الدخول بجهة الخسارة (`stopAtPips`) —
+   * المتداول يقرّر وقفه بالنقاط، وكان يطرح بيده فيقع الوقف بالجهة الخطأ أو بحجم pip خاطئ. تظهر بدخول صالح
+   * لأداة معروفة المواصفات فقط.
+   */
+  const slTargets = useMemo(() => {
+    const e = num(entry);
+    const sym = symbol.trim().toUpperCase();
+    const spec = instrumentSpec(sym);
+    if (e == null || !spec) return [];
+    return quickStopPips(sym).flatMap((pips) => {
+      const v = stopAtPips({ symbol: sym, side, entry: e, pips });
+      return v != null ? [{ pips, v, tol: spec.pipSize / 20, text: formatPrice(v, sym) }] : [];
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol, side, entry]);
 
   /** آخر أحجام اللوت المختلفة من صفقات المتداول نفسه — شرائح تحت خانة الحجم (`recentLotSizes`) */
   const lotChips = useMemo(() => recentLotSizes(trades), [trades]);
@@ -1307,6 +1326,36 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           accessibilityLabel={t.journalTpPlaceholder}
         />
       </View>
+      {slTargets.length > 0 ? (
+        <View style={[styles.qChips, rtl && styles.rowRtl]}>
+          {slTargets.map((x: { pips: number; v: number; tol: number; text: string }) => {
+            const cur = num(sl);
+            const on = cur != null && Math.abs(cur - x.v) <= x.tol;
+            return (
+              <Pressable
+                key={x.pips}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                style={({ pressed }) => [
+                  styles.qChip,
+                  on && styles.chipOn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => {
+                  setSl(x.text);
+                  setFormError(null);
+                }}
+                accessibilityLabel={`${t.journalSlPlaceholder} ${x.pips} pip = ${x.text}`}
+              >
+                <Text style={[styles.qChipText, on ? styles.chipTextOn : { color: colors.bear }]}>{`−${x.pips} pip`}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
       {rrTargets.length > 0 ? (
         <View style={[styles.qChips, rtl && styles.rowRtl]}>
           {rrTargets.map((x) => {

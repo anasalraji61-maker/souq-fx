@@ -8,7 +8,7 @@
  * - وقف أقرب من 1 pip للدخول (أضيق من أي سبريد تجزئة) خطأ كتابة شبه مؤكد: كان يُعرض «0 pip · R:R 1:5000».
  */
 import { knownSingleName } from './chart/newsRisk';
-import { instrumentSpec, LOT_STEP, MAX_SANE_LOTS, pnlInQuoteCcy } from './positionSize';
+import { instrumentSpec, LOT_STEP, MAX_SANE_LOTS, pnlInQuoteCcy, priceAtPipOffset } from './positionSize';
 
 export type TradeSide = 'buy' | 'sell';
 
@@ -406,6 +406,35 @@ export function targetAtRR(input: {
   const away = buy ? Math.ceil(scaled) : Math.floor(scaled);
   const out = Number((away / scale).toFixed(decimals));
   return out > 0 ? out : null;
+}
+
+/**
+ * مسافات الوقف السريعة بالـpip لشرائح خانة الوقف بالدفتر، بحسب الأداة: pip الذهب 0.1 (20 pip = دولاران
+ * فقط، أضيق من ضجيج دقيقة واحدة) فمسافاته أكبر؛ الفوركس والفضة بالمسافات المعتادة لمتداول التجزئة.
+ * `[]` لرمز بلا مواصفات (مؤشر/عملة رقمية) — لا pip يُقاس به.
+ */
+export function quickStopPips(symbol: string): readonly number[] {
+  const spec = instrumentSpec(symbol);
+  if (!spec) return [];
+  return spec.base === 'XAU' ? [30, 50, 100, 200] : [10, 20, 30, 50];
+}
+
+/**
+ * سعر الوقف على بُعد `pips` من الدخول **بجهة الخسارة**: تحته للشراء، فوقه للبيع — بمنزلة الأداة
+ * (`priceAtPipOffset`، نفس منزلة `formatPrice`).
+ *
+ * لماذا: المتداول يقرّر وقفه بالمسافة («20 نقطة») لا بالسعر، فكان يطرح بيده من الدخول ثم يكتب — وهي
+ * الخطوة التي يقع فيها الطرح بالجهة الخطأ (وقف شراء فوق الدخول) أو بحجم pip خاطئ (0.0020 على زوج ين).
+ * والمسافة الناتجة تُقرأ بعدها `pips` بالضبط بكل مسطرة بالتطبيق (`analyzePlan`، `slPipsFromPrices`)،
+ * فالنتيجة بالـR والمخاطرة بالمال تُحسب من المسافة التي نُقرت حرفياً.
+ *
+ * `null` لرمز بلا مواصفات، أو دخول/مسافة غير صالحة، أو وقف ناتج ≤ 0.
+ */
+export function stopAtPips(input: { symbol: string; side: TradeSide; entry: number; pips: number }): number | null {
+  const { side, entry, pips } = input;
+  const spec = instrumentSpec(input.symbol);
+  if (!spec || !finitePos(entry) || !finitePos(pips)) return null;
+  return priceAtPipOffset(spec, entry, side === 'buy' ? -pips : pips);
 }
 
 /**
