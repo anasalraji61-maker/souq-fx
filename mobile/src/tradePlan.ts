@@ -767,6 +767,19 @@ export function knownLots(size: number | null | undefined, note?: string | null)
 }
 
 /**
+ * الملاحظة المحفوظة حين **كتب** المتداول الحجم 1 بيده: تُسبق بـ«1.00 lot» (العلامة التي يقرؤها `knownLots`) إن
+ * لم تكن فيها. غير 1 (أو بلا حجم) ⇒ الملاحظة كما هي.
+ *
+ * لماذا: الخادم يحفظ 1 لصفقة بلا حجم، فالحجم 1 المكتوب باليد كان «مجهولاً»: EURUSD 1.0850 ⇒ 1.0875 بلوت واحد تُعرض
+ * بلا «1 lot» ولا «+250.00 USD»، ويسقط صافي EURUSD بالمال كلّه، ولا تُقترح 1.00 شريحةً، وتفتح بالتعديل بخانة حجم فارغة.
+ */
+export function noteWithTypedSize(size: number | null | undefined, note: string): string {
+  if (size !== 1 || knownLots(1, note) === 1) return note;
+  const n = note.trim();
+  return n ? `1.00 lot · ${n}` : '1.00 lot';
+}
+
+/**
  * آخر أحجام اللوت **المختلفة** التي سجّلها المتداول (الأحدث أولاً، `max` على الأكثر) — شرائح بخانة الحجم
  * بنموذج الدفتر.
  *

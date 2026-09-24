@@ -51,6 +51,7 @@ import {
   type TradePlan,
   editExitValue,
   netLineIsWhole,
+  noteWithTypedSize,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
@@ -657,7 +658,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           tp: p,
           // خانة الحجم الفارغة = «لا تغيير» لا مسحاً: الحقل إلزامي بالجدول (`main.py:1174` يُسقط null له)
           size: num(size) ?? undefined,
-          note,
+          // 1 مكتوبة باليد تُعلَّم بالملاحظة وإلا عُدّت افتراض الخادم (`noteWithTypedSize`)
+          note: noteWithTypedSize(num(size), note),
         });
         if (!mountedRef.current) return;
         playSoftClick();
@@ -681,7 +683,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         sl: s ?? undefined,
         tp: p ?? undefined,
         size: num(size) ?? undefined,
-        note,
+        note: noteWithTypedSize(num(size), note),
       });
       // الإضافة كالتعديل أعلاه: اللوحة قد تُغلق أثناء الطلب (تبديل التبويب) — لا تحديث حالة بعد الفكّ
       if (!mountedRef.current) return;

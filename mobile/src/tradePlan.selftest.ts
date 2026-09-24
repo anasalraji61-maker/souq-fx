@@ -1321,3 +1321,30 @@ console.log('tradePlan editExitValue selftest OK');
   assert.equal(netLineIsWhole([eu, { ...eu, exit: null }], netByInstrument([eu, { ...eu, exit: null }])), true);
 }
 console.log('tradePlan netLineIsWhole selftest OK');
+
+// ——— noteWithTypedSize: الحجم 1 المكتوب باليد يصير معروفاً ———
+{
+  const { noteWithTypedSize, knownLots, netByInstrument } = require('./tradePlan') as typeof import('./tradePlan');
+  assert.equal(noteWithTypedSize(1, ''), '1.00 lot');
+  assert.equal(noteWithTypedSize(1, '  breakout London '), '1.00 lot · breakout London');
+  // ملاحظة الحاسبة فيها العلامة أصلاً: لا تتكرّر
+  const plan = '1.00 lot · risk 100.00 USD · R:R 1:2';
+  assert.equal(noteWithTypedSize(1, plan), plan);
+  assert.equal(noteWithTypedSize(1, '1.00 lot'), '1.00 lot');
+  // «1 lot مثلاً» بيد المتداول ليست العلامة: تُسبق
+  assert.equal(noteWithTypedSize(1, '1 lot test'), '1.00 lot · 1 lot test');
+  // غير 1 أو بلا حجم: كما هي
+  assert.equal(noteWithTypedSize(0.5, 'x'), 'x');
+  assert.equal(noteWithTypedSize(null, ''), '');
+  assert.equal(noteWithTypedSize(undefined, 'y'), 'y');
+  assert.equal(noteWithTypedSize(10, ''), '');
+  // الأثر: EURUSD 1.0850 ⇒ 1.0875 بلوت واحد مكتوب ⇒ معروف و+250 USD بالصافي (كان null)
+  const tr = { symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.0875, size: 1, status: 'closed' };
+  assert.equal(netByInstrument([{ ...tr, note: '' }])[0]!.cash, null);
+  const note = noteWithTypedSize(1, '');
+  assert.equal(knownLots(1, note), 1);
+  const cash = netByInstrument([{ ...tr, note }])[0]!.cash!;
+  assert.equal(cash.ccy, 'USD');
+  assert.equal(cash.amount, 250);
+}
+console.log('tradePlan noteWithTypedSize selftest OK');
