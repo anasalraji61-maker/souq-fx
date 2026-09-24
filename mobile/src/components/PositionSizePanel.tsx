@@ -154,6 +154,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   }, [defaultSymbol]);
 
   const spec = useMemo(() => instrumentSpec(symbol), [symbol]);
+  /** الأداة **الآن** — لسعرٍ حيّ يصل بعد تبديلها (راجع `fillEntryFromLive`) */
+  const liveSymRef = useRef<string | null>(null);
+  liveSymRef.current = spec?.symbol ?? null;
   const conv = useMemo(() => (spec ? conversionPair(spec.quote, account) : null), [spec, account]);
   const convSymbol = conv?.symbol ?? null;
   const convInvert = conv?.invert ?? false;
@@ -584,6 +587,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     try {
       const q = await api.marketQuote(sym);
       if (!mountedRef.current) return;
+      // بُدّلت الأداة أثناء الطلب (نقرة GBPUSD قبل وصول سعر EURUSD): سعر EURUSD كان يُكتب دخولاً تحت
+      // GBPUSD ومعه «عُبّئ» — فيُحسب الوقف واللوت ويُسجَّل بالدفتر من سعر أداة أخرى. يُسقط بصمت.
+      if (liveSymRef.current !== sym) return;
       if (!isRealQuote(q)) {
         setLivePxMsg({ ok: false, text: t.riskCalcNoLiveQuote });
         return;

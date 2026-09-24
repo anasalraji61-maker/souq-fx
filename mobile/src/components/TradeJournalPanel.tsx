@@ -110,6 +110,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   const [loading, setLoading] = useState(true);
   const [symbol, setSymbol] = useState(defaultSymbol || 'EURUSD');
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
+  /** رمز السعر والجهة **الآن** — لسعرٍ حيّ يصل بعد تبديل أحدهما (راجع `fillLivePrice`) */
+  const liveKeyRef = useRef('');
+  liveKeyRef.current = `${quoteSymbol(symbol)}|${side}`;
   const [entry, setEntry] = useState('');
   const [exit, setExit] = useState('');
   /** حجم الصفقة باللوت — «سجّل الخطة بالدفتر» بالحاسبة يرسل اللوت المحسوب، بينما التسجيل اليدوي كان
@@ -230,12 +233,15 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * عليه فعلاً)، وإلا السعر. اقتباس بذري تجريبي لا يُستخدم أبداً (isRealQuote) — لا دخول مختلَق. */
   const fillLivePrice = async () => {
     const sym = quoteSymbol(symbol);
+    const key = `${sym}|${side}`;
     if (sym == null || quoteBusy) return;
     setQuoteBusy(true);
     setFormError(null);
     try {
       const q = await api.marketQuote(sym);
       if (!mountedRef.current) return;
+      // الرمز أو الجهة تغيّرا أثناء الطلب: سعر EURUSD تحت GBPUSD، أو Ask الشراء لصفقة صارت بيعاً — يُسقط
+      if (liveKeyRef.current !== key) return;
       if (!isRealQuote(q)) {
         setFormError(t.journalNoLiveQuote);
         return;
