@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import type { Candle } from '../api';
-import { pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
+import { candlesThrough, pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
 import { tradingDayStartSec } from './marketHours';
 import { computePivotPoints } from './indicators/price-transform';
 
@@ -109,6 +109,21 @@ assert.equal(pivotLabelRank('??'), 5);
   assert.equal(pivotSessionStartIndex(w, NaN, 'EURUSD'), -1);
   // NaN داخل النافذة يُتخطّى
   assert.equal(pivotSessionStartIndex([NaN, s0 + H], s0 + H, 'EURUSD'), 1);
+}
+
+// الإعادة: القطع عند شمعة من جلسة الأربعاء ⇒ السابقة جلسة الثلاثاء (الناقصة هنا ⇒ null)، لا الأربعاء.
+{
+  const cut = wedStart + 5 * H;
+  const through = candlesThrough(hourly, cut);
+  assert.equal(through.length, hourly.filter((c) => c.time <= cut).length);
+  assert.equal(through[through.length - 1].time, cut);
+  assert.equal(prevDayFromIntraday(through, 'EURUSD'), null);
+  // القطع يوم الخميس ⇒ الأربعاء كما بلا إعادة؛ وبالمللي ثانية بالقطع نفسه.
+  assert.equal(prevDayFromIntraday(candlesThrough(hourly, wedStart + 26 * H), 'EURUSD')?.time, wedStart);
+  const ms = hourly.map((c) => ({ ...c, time: c.time * 1000 }));
+  assert.equal(candlesThrough(ms, cut).length, through.length);
+  // بلا قطع ⇒ المرجع نفسه.
+  assert.equal(candlesThrough(hourly, null), hourly);
 }
 
 console.log('pivotBase.selftest: PASS');

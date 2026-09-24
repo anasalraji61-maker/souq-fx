@@ -52,6 +52,15 @@ export function prevDayFromIntraday(candles: readonly Candle[], symbol: string):
 }
 
 /**
+ * الشموع حتى `cutSec` (ضمناً) — للإعادة: جلسة «الأمس» هي ما قبل يوم شمعة الإعادة لا ما قبل اليوم.
+ * `cutSec` غير محدّد ⇒ السلسلة كما هي (نفس المرجع، فلا يُعاد حساب ما يعتمد عليها).
+ */
+export function candlesThrough<T extends Pick<Candle, 'time'>>(candles: readonly T[], cutSec: number | null): readonly T[] {
+  if (cutSec == null || !Number.isFinite(cutSec)) return candles;
+  return candles.filter((c) => c && Number.isFinite(c.time) && candleTimeSec(c.time) <= cutSec);
+}
+
+/**
  * مدخل دوالّ الارتكاز بفترة 1: كل واحدة تقرأ `candles.slice(n - period - 1, n - 1)`، فالشمعة
  * الأولى هنا هي نافذتها كاملة والثانية حشوة (الشمعة «الجارية» التي تُستثنى).
  */

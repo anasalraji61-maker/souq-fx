@@ -121,7 +121,7 @@ import { planDayBreaks } from './dayBreaks';
 import { planSessionRuns, SESSION_LABEL, type SessionId } from './sessions';
 import { formatPct, prevSessionFromDaily, validSessionBar } from './dailyChange';
 import { useDailyPrevBar } from './dailyRefStore';
-import { pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
+import { candlesThrough, pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
 import { candleTimeSec, normalizeProvenance, timeframeStepSec } from './dataSource';
 import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
@@ -1344,17 +1344,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const anyPivot = indicators.some((id) => PIVOT_IDS.has(id));
   const seriesDemo = normalizeProvenance(series.data_source).kind === 'demo';
   const dailyPrevBar = useDailyPrevBar(anyPivot && !seriesDemo ? series.symbol : null);
+  // بالإعادة: «الجلسة السابقة» لشمعة الإعادة لا لليوم — كانت PDH/PDL والارتكاز كلّها مستويات اليوم
+  // مرسومةً فوق شموع الأسبوع الماضي، أي أهدافاً من المستقبل يرتدّ عندها السعر «بدقّة» في التمرين.
+  // شموع D1 من المخزن مستويات اليوم فتُترك، والأساس من شموع السلسلة حتى شمعة الإعادة (ناقصة ⇒ لا خطوط).
+  const replayLast = replayOn ? source.plot[source.plot.length - 1] : undefined;
+  const replayCutSec = replayLast ? candleTimeSec(barTime(replayLast)) : null;
   const pivotBars = useMemo(() => {
     if (!anyPivot) return null;
-    const fromDaily = seriesDemo ? null : validSessionBar(dailyPrevBar);
+    const fromDaily = seriesDemo || replayCutSec != null ? null : validSessionBar(dailyPrevBar);
     if (fromDaily) return pivotInput(fromDaily);
-    const candles = series.candles ?? [];
+    const candles = candlesThrough(series.candles ?? [], replayCutSec);
     if (timeframeStepSec(series.timeframe) >= 86400) {
       const secs = candles.map((c) => ({ ...c, time: candleTimeSec(c.time) }));
-      return pivotInput(validSessionBar(prevSessionFromDaily(secs, Date.now() / 1000)));
+      return pivotInput(validSessionBar(prevSessionFromDaily(secs, replayCutSec ?? Date.now() / 1000)));
     }
     return pivotInput(validSessionBar(prevDayFromIntraday(candles, series.symbol)));
-  }, [anyPivot, seriesDemo, dailyPrevBar, series.candles, series.timeframe, series.symbol]);
+  }, [anyPivot, seriesDemo, dailyPrevBar, series.candles, series.timeframe, series.symbol, replayCutSec]);
   const pivots = useMemo(
     () => (indicators.includes('pivots') && pivotBars ? computePivotPoints(pivotBars, 1) : null),
     [pivotBars, indicators]
@@ -4208,7 +4213,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // خطوط الارتكاز من بداية الجلسة الجارية لا بعرض اللوح (`pivotSessionStartIndex`): داخل
   // اليوم وحده — على D فأكبر الجلسة شمعة واحدة، فتبقى بعرض اللوح كما كانت. `null` ⇒ بعرض اللوح.
   let pivotStartX: number | null = null;
-  const lastAll = source.all[source.all.length - 1];
+  // بالإعادة الجلسة الجارية جلسة شمعة الإعادة.
+  const lastAll = replayOn ? source.plot[source.plot.length - 1] : source.all[source.all.length - 1];
   if (pivotLevels.length && lastAll && timeframeStepSec(series.timeframe) < 86400) {
     const i = pivotSessionStartIndex(
       source.plot.map((b) => candleTimeSec(barTime(b))),
