@@ -310,7 +310,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   ] as const;
   const badFieldsText = badFields
     .filter(([, v, bad]) => v.trim() !== '' && bad)
-    .map(([label, v]) => `${shortLabel(label)} «${v.trim()}»`)
+    // دالّة لا نصّ بديل: «$$50» بخانة المخاطرة كانت ستُعرض «$50» (`$$` نمطٌ بـ`replace`)
+    .map(([label, v]) =>
+      t.riskCalcBadFieldValue.replace('{field}', () => shortLabel(label)).replace('{value}', () => v.trim())
+    )
     .join(' · ');
   /**
    * خطأ خانة السبريد، تحتها مباشرةً. كان يُضمّ لـ`badNumber` الذي لا يظهر إلا **بلا نتيجة** — واللوت
