@@ -30,7 +30,7 @@ import {
   subscribeDrawingsSaveError,
   type DrawingsSaveErrorCode,
 } from './drawingStore';
-import { compareOverlayPrices } from './compare';
+import { compareOverlay } from './compare';
 import { tickPlausibleForSeries, withLiveExtremes, withLivePrice, type LiveExtremes } from './liveSeries';
 import { computeVolumeProfile, pocPrice, computeTpo } from './volumeProfile';
 import { evalPineLite, INDICATOR_LIBRARY } from './pineLite';
@@ -2043,10 +2043,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     };
   }, []);
 
-  const comparePrices = useMemo(() => {
-    if (!compareSeries?.candles?.length) return null;
-    return compareOverlayPrices(source.plot, compareSeries.candles.slice(-source.plot.length));
-  }, [compareSeries, source.plot]);
+  const compareOv = useMemo(() => {
+    if (!compareSeries?.candles?.length || source.plot.length < 2) return null;
+    return compareOverlay(source.plot, compareSeries.candles, timeframeStepSec(series.timeframe));
+  }, [compareSeries, source.plot, series.timeframe]);
+  const comparePrices = compareOv?.prices ?? null;
 
   const shadowLayers = useMemo(() => {
     if (!shadowSeries.length || !source.plot.length) return [];
@@ -5165,7 +5166,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const range = candleRangePipsText(series.symbol, crossCandle.high, crossCandle.low);
               return range ? ` ${range}` : '';
             })()}
-            {compareSeries ? ` · ${compareSeries.symbol} ${formatPrice(compareSeries.last, compareSeries.symbol)}` : ''}
+            {compareSeries
+              ? (() => {
+                  // إغلاق رمز المقارنة عند شمعة التقاطع (كان `last` الحاليّ أيّاً كانت الشمعة)
+                  const c = crossIndex != null ? compareOv?.closes[crossIndex] : null;
+                  return ` · ${compareSeries.symbol} ${c != null ? formatPrice(c, compareSeries.symbol) : '—'}`;
+                })()
+              : ''}
           </Text>
         ) : selectedSpanReadout ? (
           <Text style={[styles.readoutText, selectedSpan ? { color: selectedSpan.color } : null]}>
@@ -5895,9 +5902,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {/* compare symbol overlay */}
         {comparePrices &&
           comparePrices.map((p, i) => {
-            if (i === 0) return null;
+            const prev = i > 0 ? comparePrices[i - 1] : null;
+            if (p == null || prev == null) return null;
             const x1 = xOf(i - 1);
-            const y1 = yOf(comparePrices[i - 1]);
+            const y1 = yOf(prev);
             const x2 = xOf(i);
             const y2 = yOf(p);
             const len = Math.hypot(x2 - x1, y2 - y1);
