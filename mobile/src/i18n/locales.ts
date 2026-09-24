@@ -891,7 +891,7 @@ const ar: Dict = {
     'أنشئ تنبيه سعر أو مؤشر، ويصلك إشعار على جهازك حين يتحقّق شرطه (يُفحص كل دقيقة تقريباً) — فلا داعي لمراقبة الشارت طوال اليوم. فعّل الإشعارات من لوح التنبيهات نفسه.',
   onboardStep5Title: 'المخاطرة أولاً',
   onboardStep5Body:
-    'قبل أي صفقة افتح «أدوات ← حاسبة حجم المركز»: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة بالـpip لتعرف حجم اللوت المناسب. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
+    'قبل أي صفقة افتح «أدوات ← المخاطرة»: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالـpip أو بسعرَي الدخول والوقف) لتعرف حجم اللوت المناسب. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
   onboardRiskNote:
     'MATRIX أداة تحليل وتعليم، لا تنفّذ صفقات ولا تقدّم نصيحة مالية. التداول بالرافعة ينطوي على مخاطرة عالية بخسارة المال.',
   onboardStepCounterA11y: 'الخطوة {n} من {total}',
@@ -922,7 +922,7 @@ const ar: Dict = {
   toolsSub: 'مجتمع وأخبار · تحليل وتنبيهات — قسمان قابلان للتبديل',
   toolsTabHub: 'إشارات ومجتمع',
   toolsTabReports: 'تقارير',
-  toolsTabJournal: 'PnL',
+  toolsTabJournal: 'الدفتر',
   toolsTabScreener: 'فحص',
   toolsTabBacktest: 'Backtest',
   toolsTabIndAlerts: 'تنبيهات+',
@@ -1140,7 +1140,7 @@ const ar: Dict = {
   riskCalcLots: 'حجم الصفقة (لوت)',
   riskCalcRiskAmount: 'المخاطرة الفعلية',
   riskCalcUnits: 'الوحدات',
-  riskCalcBelowMin: 'المخاطرة أقل من أصغر لوت (0.01) — وسّع الرصيد أو قلّل الوقف',
+  riskCalcBelowMin: 'لا حجم يناسب هذه المخاطرة: أصغر لوت (0.01) يتجاوز ما حدّدتَه',
   riskCalcFillHint: 'أدخل الرصيد ونسبة المخاطرة ووقف الخسارة',
   invalidNumberHint: 'رقم غير مفهوم — اكتبه بلا فواصل آلاف، مثل 10000 أو 1.0850',
   riskCalcPipValue: 'قيمة النقطة للوت',
@@ -1192,12 +1192,12 @@ const ar: Dict = {
     'بيانات دفتر الصفقات الفعلية (كل الصفقات المغلقة، لا هذا الأسبوع وحده): صفقات={trades} نجاح={winRate}% PnL={pnl}% أفضل={best}% أسوأ={worst}%. اعتمد عليها في التقرير.',
   reportJournalEmptyLine: '(لا توجد صفقات مغلقة في الدفتر بعد — لا أرقام أداء لعرضها).',
   reportJournalUnavailableLine: '(تعذّرت قراءة دفتر الصفقات الآن — التقرير بلا أرقامك).',
-  reportFallbackWeekly: 'تقرير من دفتر الصفقات{journalLine}\nسجّل صفقاتك في تبويب PnL لبناء تقرير أدق.',
+  reportFallbackWeekly: 'تقرير من دفتر الصفقات{journalLine}\nسجّل صفقاتك في تبويب «الدفتر» لبناء تقرير أدق.',
   reportFallbackPerformance: 'تقييم مبني على الدفتر{journalLine}',
   reportFallbackRisk: 'موجز مخاطر{journalLine}\n1) مخاطرة ≤1%.\n2) وقف واضح.\n3) تجنّب الأخبار الثقيلة.',
   reportFallbackAdvice:
     'نصائح MATRIX{journalLine}\n1) راجع صفقاتك المفتوحة.\n2) اربط الدخول بـ DXY.\n3) مخاطرة ≤1%.\n4) تجنّب الأخبار عالية التأثير.\n5) ركّز على 2–3 أزواج.',
-  journalTitle: 'دفتر الصفقات · PnL حقيقي',
+  journalTitle: 'دفتر الصفقات · PnL من صفقاتك',
   journalSub: 'سجّل صفقاتك — التقارير تُبنى من يوميتك',
   journalStatClosed: 'صفقات مغلقة: {n}',
   journalStatWinRate: 'نسبة نجاح: {pct}%',
@@ -1229,7 +1229,7 @@ const ar: Dict = {
   journalAddBtn: 'إضافة صفقة',
   journalAddError: 'تعذر إضافة الصفقة — تحقق من الاتصال وحاول مرة أخرى',
   journalCloseFailedTitle: 'تعذر الإغلاق',
-  journalCloseFailedBody: 'حدث خطأ أثناء إغلاق الصفقة، حاول مرة أخرى.',
+  journalCloseFailedBody: 'تعذّر تأكيد الإغلاق — تحقّق من الاتصال. إن بقيت الصفقة «مفتوحة» في القائمة فأغلقها مرة أخرى.',
   journalLoadError: 'تعذّر تحميل الدفتر — تحقّق من الاتصال. صفقاتك المسجّلة لم تُحذف.',
   journalEmpty:
     'لا صفقات مسجّلة بعد — سجّل كل صفقة (حتى على حساب تجريبي) لتعرف مع الوقت ما ينجح معك وما لا ينجح.',
@@ -1737,7 +1737,7 @@ const enUS: Dict = {
     'Set a price or indicator alert and your device gets a notification when it triggers (checked about once a minute) — no need to watch the chart all day. Turn on notifications from the alerts panel.',
   onboardStep5Title: 'Risk first',
   onboardStep5Body:
-    'Before any trade, open Tools → Position size calculator: enter your balance, risk % and stop loss in pips to get the right lot size. Many traders risk no more than 1–2% per trade.',
+    'Before any trade, open Tools → Risk: enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get the right lot size. Many traders risk no more than 1–2% per trade.',
   onboardRiskNote:
     'MATRIX is an analysis and learning tool. It does not place trades or give financial advice. Leveraged trading carries a high risk of losing money.',
   onboardStepCounterA11y: 'Step {n} of {total}',
@@ -1768,7 +1768,7 @@ const enUS: Dict = {
   toolsSub: 'Community & news · Analysis & alerts — two switchable sections',
   toolsTabHub: 'Signals & community',
   toolsTabReports: 'Reports',
-  toolsTabJournal: 'PnL',
+  toolsTabJournal: 'Journal',
   toolsTabScreener: 'Screener',
   toolsTabBacktest: 'Backtest',
   toolsTabIndAlerts: 'Alerts+',
@@ -1987,9 +1987,9 @@ const enUS: Dict = {
   riskCalcLots: 'Position size (lots)',
   riskCalcRiskAmount: 'Actual risk',
   riskCalcUnits: 'Units',
-  riskCalcBelowMin: 'Risk is below the smallest lot (0.01) — increase balance or tighten the stop',
+  riskCalcBelowMin: 'No size fits this risk: the smallest lot (0.01) risks more than you set',
   riskCalcFillHint: 'Enter balance, risk % and stop loss',
-  invalidNumberHint: 'Number not recognised — type it without thousands separators, e.g. 10000 or 1.0850',
+  invalidNumberHint: 'Number not recognized — type it without thousands separators, e.g. 10000 or 1.0850',
   riskCalcPipValue: 'Pip value per lot',
   riskCalcTarget: 'Target (optional) — for R:R and potential profit',
   riskCalcTargetPlaceholder: 'Target price',
@@ -2040,12 +2040,12 @@ const enUS: Dict = {
   reportJournalEmptyLine: '(No closed trades in the journal yet — no performance numbers to show).',
   reportJournalUnavailableLine: '(Could not read the trade journal right now — this report has none of your numbers).',
   reportFallbackWeekly:
-    'Report from the trade journal{journalLine}\nLog your trades in the PnL tab for a more accurate report.',
+    'Report from the trade journal{journalLine}\nLog your trades in the «Journal» tab for a more accurate report.',
   reportFallbackPerformance: 'Assessment based on the journal{journalLine}',
   reportFallbackRisk: 'Risk brief{journalLine}\n1) Risk ≤1%.\n2) Use a clear stop.\n3) Avoid heavy news.',
   reportFallbackAdvice:
     'MATRIX tips{journalLine}\n1) Review your open trades.\n2) Tie entries to DXY.\n3) Risk ≤1%.\n4) Avoid high-impact news.\n5) Focus on 2–3 pairs.',
-  journalTitle: 'Trade journal · Real PnL',
+  journalTitle: 'Trade journal · PnL from your trades',
   journalSub: 'Log your trades — reports are built from your journal',
   journalStatClosed: 'Closed trades: {n}',
   journalStatWinRate: 'Win rate: {pct}%',
@@ -2077,7 +2077,7 @@ const enUS: Dict = {
   journalAddBtn: 'Add trade',
   journalAddError: 'Could not add the trade — check your connection and try again',
   journalCloseFailedTitle: 'Could not close',
-  journalCloseFailedBody: 'An error occurred while closing the trade, try again.',
+  journalCloseFailedBody: 'Couldn’t confirm the close — check your connection. If the trade still shows as open, close it again.',
   journalLoadError: 'Couldn\'t load your journal — check your connection. Your logged trades haven\'t been deleted.',
   journalEmpty:
     'No trades logged yet — log every trade (even on a demo account) to learn over time what works for you and what doesn\'t.',
@@ -2544,6 +2544,7 @@ const enGB: Dict = {
     'Choose from dozens of ready indicators (RSI, MACD, Bollinger, and more), or turn on a lens that summarises market state at a glance.',
   wlCatalogTitle: 'Add from catalogue',
   wlCatalogAllAdded: 'All catalogue symbols added',
+  invalidNumberHint: 'Number not recognised — type it without thousands separators, e.g. 10000 or 1.0850',
   domOtcNote: 'Forex is decentralised: there is no single market depth, and your real spread depends on your broker.',
 };
 
@@ -2611,7 +2612,7 @@ const ku: Dict = {
     'ئاگادارکردنەوەیەکی نرخ یان پێوەر دروست بکە و کاتێک مەرجەکەی هاتەدی ئاگاداری لەسەر ئامێرەکەت وەربگرە (نزیکەی هەر خولەکێک دەپشکنرێت) — پێویست ناکات بە درێژایی ڕۆژ چاودێری شێوەنیگار بکەیت. ئاگادارکردنەوەکان لە پانێڵی ئاگادارکردنەوەکان خۆیەوە چالاک بکە.',
   onboardStep5Title: 'سەرەتا مەترسی',
   onboardStep5Body:
-    'پێش هەر مامەڵەیەک «ئامرازەکان ← ژمێرەری قەبارەی پۆزیشن» بکەرەوە: باڵانس و ڕێژەی مەترسی و ستۆپ لۆس بە pip بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
+    'پێش هەر مامەڵەیەک «ئامرازەکان ← مەترسی» بکەرەوە: باڵانس و ڕێژەی مەترسی و ستۆپ لۆس (بە pip یان بە نرخی چوونەژوورەوە و وەستان) بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
   onboardRiskNote:
     'MATRIX ئامرازێکی شیکردنەوە و فێربوونە، مامەڵە ناکات و ئامۆژگاری دارایی نادات. بازرگانی بە لیڤەرێج مەترسیی بەرزی لەدەستدانی پارەی تێدایە.',
   onboardStepCounterA11y: 'هەنگاوی {n} لە {total}',
@@ -2642,7 +2643,7 @@ const ku: Dict = {
   toolsSub: 'کۆمەڵگا و هەواڵ · شیکاری و ئاگادارکردنەوە — دوو بەشی گۆڕاو',
   toolsTabHub: 'نیشانەکان و کۆمەڵگا',
   toolsTabReports: 'ڕاپۆرتەکان',
-  toolsTabJournal: 'PnL',
+  toolsTabJournal: 'دەفتەر',
   toolsTabScreener: 'پشکنین',
   toolsTabBacktest: 'Backtest',
   toolsTabIndAlerts: 'ئاگادارکردنەوە+',
@@ -2861,7 +2862,7 @@ const ku: Dict = {
   riskCalcLots: 'قەبارەی مامەڵە (لۆت)',
   riskCalcRiskAmount: 'مەترسی ڕاستەقینە',
   riskCalcUnits: 'یەکەکان',
-  riskCalcBelowMin: 'مەترسی لە بچووکترین لۆت (0.01) کەمترە — باڵانس زیاد بکە یان وەستان نزیک بکەرەوە',
+  riskCalcBelowMin: 'هیچ قەبارەیەک لەگەڵ ئەم مەترسییە ناگونجێت: بچووکترین لۆت (0.01) زیاتر لەوەی دیاریت کردووە دەخاتە مەترسییەوە',
   riskCalcFillHint: 'باڵانس، ڕێژەی مەترسی و وەستانی زیان بنووسە',
   invalidNumberHint: 'ژمارەکە ناناسرێتەوە — بەبێ جیاکەرەوەی هەزاران بنووسە، وەک 10000 یان 1.0850',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
@@ -2915,13 +2916,13 @@ const ku: Dict = {
   reportJournalEmptyLine: '(هێشتا هیچ مامەڵەیەکی داخراو لە دەفتەرەکەدا نییە — ژمارەی ئەدا نییە بۆ پیشاندان).',
   reportJournalUnavailableLine: '(ئێستا دەفتەری مامەڵە نەخوێندرایەوە — ئەم ڕاپۆرتە ژمارەکانی تۆی تێدا نییە).',
   reportFallbackWeekly:
-    'ڕاپۆرت لە دەفتەری مامەڵە{journalLine}\nمامەڵەکانت لە تابی PnL تۆماربکە بۆ ڕاپۆرتێکی وردتر.',
+    'ڕاپۆرت لە دەفتەری مامەڵە{journalLine}\nمامەڵەکانت لە تابی «دەفتەر» تۆماربکە بۆ ڕاپۆرتێکی وردتر.',
   reportFallbackPerformance: 'هەڵسەنگاندن لەسەر بنەمای دەفتەرەکە{journalLine}',
   reportFallbackRisk:
     'کورتەی مەترسی{journalLine}\n1) مەترسی ≤1%.\n2) وەستانێکی ڕوون بەکاربهێنە.\n3) دوور بە لە هەواڵی قورس.',
   reportFallbackAdvice:
     'ئامۆژگاری MATRIX{journalLine}\n1) مامەڵە کراوەکانت پێداچوونەوەیان بۆ بکە.\n2) چوونەژوورەوەکان بە DXY ببەستەوە.\n3) مەترسی ≤1%.\n4) دوور بە لە هەواڵی کاریگەری بەرز.\n5) سەرنج بدە بە 2-3 جووت.',
-  journalTitle: 'دەفتەری مامەڵە · PnL ڕاستەقینە',
+  journalTitle: 'دەفتەری مامەڵە · PnL لە مامەڵەکانت',
   journalSub: 'مامەڵەکانت تۆماربکە — ڕاپۆرتەکان لە ڕۆژنووسەکەت دروستدەبن',
   journalStatClosed: 'مامەڵە داخراوەکان: {n}',
   journalStatWinRate: 'ڕێژەی سەرکەوتن: {pct}%',
@@ -2953,7 +2954,7 @@ const ku: Dict = {
   journalAddBtn: 'زیادکردنی مامەڵە',
   journalAddError: 'نەکرا مامەڵە زیادبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
   journalCloseFailedTitle: 'داخستن سەرکەوتوو نەبوو',
-  journalCloseFailedBody: 'هەڵەیەک ڕوویدا لە کاتی داخستنی مامەڵەکە، دووبارە هەوڵبدەرەوە.',
+  journalCloseFailedBody: 'داخستنەکە پشتڕاست نەکرایەوە — پەیوەندییەکەت بپشکنە. ئەگەر مامەڵەکە هێشتا کراوە دیار بوو، دووبارە دایبخە.',
   journalLoadError: 'نەکرا تۆمارەکە باربکرێت — پەیوەندییەکەت بپشکنە. مامەڵە تۆمارکراوەکانت نەسڕاونەتەوە.',
   journalEmpty:
     'هێشتا هیچ مامەڵەیەک تۆمار نەکراوە — هەموو مامەڵەیەک تۆمار بکە (تەنانەت لەسەر هەژماری تاقیکردنەوە) بۆ ئەوەی بزانیت چی بۆت سەرکەوتووە.',

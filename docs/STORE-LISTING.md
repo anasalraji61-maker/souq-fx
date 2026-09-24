@@ -53,6 +53,8 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • تقويم اقتصادي وأخبار السوق في مكان واحد.
 
 أدوات المتداول
+• حاسبة حجم المركز: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالنقاط أو بسعرَي الدخول والوقف) لتعرف حجم اللوت، مع أهداف جاهزة بنسبة 1:1 حتى 1:3.
+• دفتر صفقات تسجّل فيه صفقاتك بنفسك: نسبة النجاح وصافي النقاط ومتوسط النتيجة بوحدة المخاطرة (R).
 • فلتر أسواق (Screener) بشروط المؤشرات الشائعة.
 • اختبار استراتيجيات بسيطة على البيانات التاريخية — لأغراض تعليمية.
 • مساعد ذكاء اصطناعي يجيب عن أسئلتك في التحليل الفني بلغتك، وتقرير أسبوعي مختصر.
@@ -105,6 +107,8 @@ WATCHLIST & ALERTS
 • Economic calendar and market news in one place.
 
 TRADER TOOLS
+• Position size calculator: enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get your lot size, with one-tap targets from 1:1 to 1:3.
+• A trade journal you fill in yourself: win rate, net pips and average result in units of risk (R).
 • Market screener using common indicator conditions.
 • Simple strategy backtesting on historical data — for learning purposes.
 • An AI assistant that answers your technical-analysis questions in your language, plus a short weekly report.
@@ -121,4 +125,5 @@ Important: MATRIX is an analysis and education app only. It does not execute tra
 **What's New (first release)**
 The first release of MATRIX: multi-chart layouts, indicators and drawing tools, price and indicator alerts, an economic calendar, and an audio academy for technical analysis.
 
-> **en-GB**: النص نفسه صالح كما هو (لا كلمات أمريكية حصرية فيه — «color» بالسطر قبل الأخير تُكتب «colour» لنسخة UK).
+> **en-GB**: النص نفسه صالح بتعديلين للتهجئة البريطانية: «Analyze» بالنص الترويجي ← «Analyse»، و«colors» بالسطر قبل
+> الأخير من الوصف ← «colours». لا تغيير في حدود الأحرف (نفس العدد).
