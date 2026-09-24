@@ -88,6 +88,22 @@ export function clipSegmentToBars(
   };
 }
 
+/**
+ * كم ضعفاً من القطعة (الطرف الأوّل ⇐ الثاني) يمتدّ الشعاع حتى يخرج من اللوح `[0,w]×[0,h]` — كـTradingView
+ * حيث الشعاع يبلغ حافّة الشارت. كان ثابتاً 1.6: شعاع قصير على خمس شموع يتوقّف بعد ثلاث أخرى، فلا يرى
+ * المتداول أين يلتقي خطّ الترند الممتدّ بالسعر القادم — وهذا سبب رسم الشعاع لا الخطّ. ≥1 دائماً (القطعة
+ * نفسها تُرسم ولو كان طرفها خارج اللوح)، وقطعة صفرية ⇒ 1.
+ */
+export function rayReach(x1: number, y1: number, x2: number, y2: number, w: number, h: number): number {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  if (Math.hypot(dx, dy) < 1e-6) return 1;
+  const tx = dx > 0 ? (w - x1) / dx : dx < 0 ? -x1 / dx : Infinity;
+  const ty = dy > 0 ? (h - y1) / dy : dy < 0 ? -y1 / dy : Infinity;
+  const t = Math.min(tx, ty);
+  return Number.isFinite(t) ? Math.max(1, t) : 1;
+}
+
 /** ختم الزمن لخانة (`stampAtIndex` مربوطة بالسلسلة والفريم) — يُمرَّر لتبقى الدالة خالصة. */
 export type StampAt = (index: number) => { time: number; ahead?: number; aheadStep?: number; sub?: number } | null;
 

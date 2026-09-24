@@ -3,7 +3,7 @@
  * الغرض: إثبات أن اللمسة التي لا تُغيّر شيئاً لا تدفع لقطة تراجع، وأن التغيّر الحقيقي يدفعها.
  */
 import type { ChartPoint, Drawing } from './types';
-import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, translateDrawing, sameDrawingPlace } from './drawEdit';
+import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace } from './drawEdit';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -95,6 +95,18 @@ ok('translate: single point has no b key', !('b' in moved) && moved.a.index === 
 ok('sameDrawingPlace: zero move', sameDrawingPlace(trend, translateDrawing(trend, 0, (p) => p, () => null)));
 ok('sameDrawingPlace: moved', !sameDrawingPlace(trend, translateDrawing(trend, 1, (p) => p, () => null)));
 ok('sameDrawingPlace: null', !sameDrawingPlace(null, trend));
+
+// ── rayReach ─────────────────────────────────────────────────────────────
+// شعاع أفقي من 100 إلى 110 بلوح 300 ⇒ يبلغ الحافّة اليمنى (t = 20)
+ok('شعاع أفقي يبلغ الحافّة اليمنى', rayReach(100, 50, 110, 50, 300, 200) === 20);
+// صاعد بالشاشة: يخرج من الأعلى قبل اليمين
+ok('شعاع صاعد يخرج من الأعلى', rayReach(100, 50, 110, 40, 300, 200) === 5);
+// متّجه يساراً ⇒ الحافّة اليسرى
+ok('شعاع لليسار يبلغ x=0', rayReach(100, 50, 90, 50, 300, 200) === 10);
+// الطرف الثاني بعد الحافّة ⇒ القطعة كاملة لا أقصر
+ok('لا يقصر عن القطعة', rayReach(100, 50, 400, 50, 300, 200) === 1);
+ok('قطعة صفرية ⇒ 1', rayReach(100, 50, 100, 50, 300, 200) === 1);
+ok('رأسي لأسفل ⇒ الحافّة السفلى', rayReach(100, 50, 100, 60, 300, 200) === 15);
 
 if (failures) {
   console.error(`drawEdit.selftest: ${failures} FAILED`);

@@ -87,6 +87,7 @@ import {
   clipSegmentToBars,
   dragChangesDrawing,
   drawingEnd,
+  rayReach,
   sameDrawingPlace,
   samePoint,
   translateDrawing,
@@ -3032,16 +3033,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             Math.hypot(x - box.xEnd, y - box.yTarget)
           );
         } else if (d.tool === 'trend' || d.tool === 'ray') {
-          // نفس ما يُرسَم: الطرفان مقصوصان على النافذة (على الخطّ)، والشعاع يمتدّ 1.6 من طول القطعة.
+          // نفس ما يُرسَم: الطرفان مقصوصان على النافذة (على الخطّ)، والشعاع يمتدّ حتى حافّة اللوح.
           const seg = clipSegmentToBars(aLocal, ay, bLocal, by, lastLocal);
+          const sx1 = xOf(seg.ai);
+          const sx2 = xOf(seg.bi);
           bodyDist = segmentDistance(
             x,
             y,
-            xOf(seg.ai),
+            sx1,
             seg.ay,
-            xOf(seg.bi),
+            sx2,
             seg.by,
-            d.tool === 'ray' ? 1.6 : 1
+            d.tool === 'ray' ? rayReach(sx1, seg.ay, sx2, seg.by, chartPlotW, chartPlotH) : 1
           );
         } else if (d.tool === 'rect' || d.tool === 'zone') {
           const l = Math.min(ax, bx);
@@ -3069,7 +3072,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       }
       return best?.id ?? null;
     },
-    [drawings, source.start, source.plot.length, xOf, yOf, positionBox]
+    [drawings, source.start, source.plot.length, xOf, yOf, positionBox, chartPlotW, chartPlotH]
   );
 
   const exportChart = async () => {
@@ -6400,7 +6403,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const y1 = seg.ay;
             const x2 = xOf(seg.bi);
             const y2 = seg.by;
-            const len = Math.hypot(x2 - x1, y2 - y1) * (d.tool === 'ray' ? 1.6 : 1);
+            const len =
+              Math.hypot(x2 - x1, y2 - y1) * (d.tool === 'ray' ? rayReach(x1, y1, x2, y2, chartPlotW, chartPlotH) : 1);
             const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
             return (
               <React.Fragment key={d.id}>
