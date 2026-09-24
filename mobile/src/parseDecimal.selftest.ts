@@ -92,3 +92,25 @@ assert.equal(parseDecimal('1٫０8５'), 1.085);
   }
 }
 console.log('parseDecimal selftest OK');
+
+// ٬ و' والمسافة بين رقمين: فاصل آلاف بمجموعات من 3 فقط — «0٬5» بخانة المخاطرة كانت 5 (لوت أكبر عشر مرات)
+{
+  for (const [inp, want] of [
+    ['0٬5', null], ['٠٬٥', null], ['1٬5', null], ["1'5", null], ['1 5', null], ['2 50', null], ['1 2345', null],
+    ['1234 567', null], ['1 23 456', null], ['1.085 50', null], ['1,5 000', null], ['1 5', null],
+    // ما يفصل آلافاً فعلاً يبقى
+    ['١٬٠٠٠', 1000], ['10 000', 10000], ['1 234 567', 1234567], ['1 234,5', 1234.5], ["1'234.50", 1234.5],
+    ['1 234,50', 1234.5], ['1 000', 1000], ['١٠٬٠٠٠٫٥', 10000.5], ["12'345'678", 12345678],
+    // مسافة ليست بين رقمين: كما كانت
+    [' 0.5 ', 0.5], [' 1.0850', 1.085],
+  ] as [string, number | null][]) {
+    assert.equal(parseDecimal(inp), want, `parseDecimal(${JSON.stringify(inp)})`);
+  }
+  assert.equal(parseDecimal('0.5 ٪', { percent: true }), 0.5);
+  assert.equal(parseDecimal('0٬5 ٪', { percent: true }), null);
+  assert.equal(parseDecimal('10 000', { amount: true }), 10000);
+  assert.equal(parseDecimal('2 50', { amount: true }), null);
+  assert.equal(parseDecimal('− 1 234', { signed: true }), -1234);
+  assert.equal(parseDecimal('−1٬5', { signed: true }), null);
+}
+console.log('parseDecimal group separators selftest OK');

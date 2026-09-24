@@ -34,6 +34,21 @@ const THOUSANDS_GROUPS = (body: string, sep: string) => {
 };
 
 /**
+ * «٬» (فاصل الآلاف العربي) و«'» (السويسري) والمسافة **بين رقمين** تُحذف — لكن فقط حيث تفصل آلافاً فعلاً:
+ * أول مجموعة 1–3 أرقام وكل ما بعدها 3 بالضبط، وقبل أيّ فاصلة/نقطة عشرية. كانت تُحذف بلا شرط: «0٬5» بخانة
+ * المخاطرة (٬ تكاد لا تُميَّز عن ٫ العشرية على لوحة المفاتيح العربية) = **5%** بدل 0.5% ⇒ لوت أكبر عشر مرات،
+ * و«2 50» = 250. الفاصلة والنقطة تمرّان أصلاً بـ`THOUSANDS_GROUPS`؛ الآن كل فواصل الآلاف بالقاعدة نفسها.
+ * «1 234,5»، «١٬٠٠٠»، «1'234.50»، «10 000» تبقى؛ مسافة قبل «%» أو بعد الرقم لا تُفحص (ليست بين رقمين).
+ */
+function groupsBetweenDigitsOk(s: string): boolean {
+  const marked = s.replace(/(\d)[\s   ٬']+(?=\d)/g, '$1\u0000');
+  if (!marked.includes('\u0000')) return true;
+  const parts = marked.split('\u0000');
+  if (!/^[^\d.,]*\d{1,3}$/.test(parts[0])) return false;
+  return parts.slice(1).every((p, i, rest) => (i === rest.length - 1 ? /^\d{3}(?!\d)/.test(p) : /^\d{3}$/.test(p)));
+}
+
+/**
  * @param opts.signed اسمح بإشارة سالبة (قيم مؤشرات مثل MACD) — الأسعار والأرصدة موجبة دائماً.
  * @param opts.amount خانة **مبلغ** (رصيد الحساب): النقطة الوحيدة متبوعة بثلاثة أرقام بالضبط تُرفض كالفاصلة
  *   المبهمة تماماً. الأسعار تحتاج «1.085» عشريةً فتبقى القاعدة العامة كما هي، لكن رصيداً بثلاث منازل لا
@@ -48,7 +63,9 @@ export function parseDecimal(
   raw: string,
   opts: { signed?: boolean; amount?: boolean; percent?: boolean } = {}
 ): number | null {
-  let s = normalizeDigits(raw)
+  const digits = normalizeDigits(raw).trim();
+  if (!groupsBetweenDigitsOk(digits)) return null;
+  let s = digits
     .replace(/[\s   ٬']/g, '')
     .replace(/[٫．]/g, '.')
     .replace(/，/g, ',');
