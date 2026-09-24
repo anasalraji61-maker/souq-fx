@@ -960,10 +960,11 @@ function BoundedLineSeries({
  * كل قفزة حجم. اللون لكل قطعة باتّجاهها (طرفها الثاني ≥ الأوّل) كما كانت الشرطات؛ أوّل شمعة
  * بلا قطعة كما كانت بلا شرطة.
  */
-function TrendLineSeries({ values, paneH }: { values: readonly number[]; paneH: number }) {
+function TrendLineSeries({ values, paneH }: { values: readonly (number | null)[]; paneH: number }) {
   const innerH = Math.max(0, paneH - 16);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  const vals = values.filter((x): x is number => x != null);
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
   return (
     <PaneLineLayer
       innerH={innerH}
@@ -972,7 +973,10 @@ function TrendLineSeries({ values, paneH }: { values: readonly number[]; paneH: 
       lines={[
         {
           values,
-          color: (i) => (i > 0 && values[i] >= values[i - 1] ? colors.bull : colors.bear),
+          color: (i) => {
+            const prev = values[i - 1];
+            return prev == null || (values[i] ?? prev) >= prev ? colors.bull : colors.bear;
+          },
           opacity: 0.9,
         },
       ]}
@@ -7937,22 +7941,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Laguerre RSI</Text>
           <View style={styles.paneInner}>
-            {laguerreRsi.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: (1 - v) * (paneH - 16),
-                    backgroundColor: v > 0.85 ? colors.bear : v < 0.15 ? colors.bull : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            {/* خطّ متّصل بمداه الثابت 0..1 لا شرطة 3px حافّتها العليا عند القيمة (قيمة 0 كانت خارج المساحة). */}
+            <BoundedLineSeries
+              values={laguerreRsi}
+              paneH={paneH}
+              min={0}
+              max={1}
+              color={(v) => (v > 0.85 ? colors.bear : v < 0.15 ? colors.bull : accent)}
+            />
           </View>
         </View>
       ) : null}
@@ -8118,29 +8114,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Mass Index</Text>
           <View style={styles.paneInner}>
-            {(() => {
-              const vals = massIndex.filter((x): x is number => x != null);
-              const minM = Math.min(...vals, 0);
-              const maxM = Math.max(...vals, 1e-9);
-              const span = maxM - minM || 1;
-              return massIndex.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const prev = i > 0 ? massIndex[i - 1] : null;
-                const yNorm = (v - minM) / span;
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: 3,
-                      marginTop: (1 - yNorm) * (paneH - 16),
-                      backgroundColor: prev == null || v >= prev ? colors.bull : colors.bear,
-                      opacity: 0.8,
-                    }}
-                  />
-                );
-              });
-            })()}
+            {/* على مدى النافذة لا من الصفر: Mass Index يدور حول 25–27، فأرضية 0 كانت تحشر «الانتفاخ»
+                (فوق 27 ثم تحت 26.5) — القراءة كلّها — بأعلى عُشر اللوحة. */}
+            <TrendLineSeries values={massIndex} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -9079,22 +9055,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>VHF</Text>
           <View style={styles.paneInner}>
-            {vhf.map((v, i) => {
-              if (v == null) return <View key={i} style={{ flex: 1 }} />;
-              const pct = Math.max(0, Math.min(100, v * 100));
-              return (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - pct) / 100) * (paneH - 16),
-                    backgroundColor: pct > 61.8 ? colors.bull : pct < 38.2 ? colors.textDim : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              );
-            })}
+            <BoundedLineSeries
+              values={vhf}
+              paneH={paneH}
+              min={0}
+              max={1}
+              color={(v) => (v > 0.618 ? colors.bull : v < 0.382 ? colors.textDim : accent)}
+            />
           </View>
         </View>
       ) : null}
@@ -9112,31 +9079,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>GAPO</Text>
           <View style={styles.paneInner}>
-            {(() => {
-              const vals = gapo.filter((v): v is number => v != null);
-              const minP = Math.min(...vals, 0);
-              const maxP = Math.max(...vals, 1e-9);
-              const span = maxP - minP || 1;
-              return gapo.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const prev = i > 0 ? gapo[i - 1] : null;
-                const yNorm = (v - minP) / span;
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: 3,
-                      marginTop: (1 - yNorm) * (paneH - 16),
-                      backgroundColor:
-                        prev == null ? accent : v >= prev ? colors.bull : colors.bear,
-                      opacity: 0.8,
-                      borderRadius: 2,
-                    }}
-                  />
-                );
-              });
-            })()}
+            {/* على مدى النافذة لا من الصفر: مدى زوج فوركس أقلّ من 1 فلوغاريتم GAPO سالب غالباً، وأرضية
+                0 كانت تحشر الخطّ كلّه بأسفل اللوحة (‎−3.3..−2.8‎ على مقياس ‎−3.3..0‎ ⇒ سُدسها). */}
+            <TrendLineSeries values={gapo} paneH={paneH} />
           </View>
         </View>
       ) : null}
