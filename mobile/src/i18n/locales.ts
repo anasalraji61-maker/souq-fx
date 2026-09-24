@@ -319,6 +319,8 @@ export type Dict = {
   priceAmbiguousThousandsHint: string;
   /** رقم فيه «٬» (فاصل الآلاف العربي) بغير موضع آلاف — «0٬5» يُرفض (`parseDecimal`، `49db13b`)؛ الحرفان متشابهان على لوحة المفاتيح العربية فيُقال أيّهما يُكتب للكسر */
   arabicThousandsSignHint: string;
+  /** اسم الخانة المرفوضة وما كُتب فيها، يسبق `invalidNumberHint`/`arabicThousandsSignHint` («الهدف «3.5.0»: …» — `d28991b`)؛ {field} الاسم القصير، {value} كما كُتب. علامتا الاقتباس بحسب اللغة: «» للعربية والكردية، “” للإنجليزية */
+  riskCalcBadFieldValue: string;
   riskCalcPipValue: string;
   /** حاسبة الهامش (طلب وكيل الأدوات): خانة الرافعة، سطر الهامش، وملاحظة أن الهامش ليس الخسارة */
   riskCalcLeverage: string;
@@ -874,6 +876,8 @@ export type Dict = {
   mcUndo: string;
   mcUndoA11y: string;
   mcNothingToUndo: string;
+  /** قارئ الشاشة لزرّ «»» (العودة لآخر شمعة) — كان `chartExtraLabels(lang).toLatest` بـ`typeLabels.ts` */
+  mcToLatestA11y: string;
   mcPanesCollapsed: string;
   mcPanesCollapsedA11y: string;
   mcPanesPageA11y: string;
@@ -1238,6 +1242,7 @@ const ar: Dict = {
   invalidNumberHint: 'رقم غير مفهوم — اكتبه بلا فواصل آلاف، مثل 10000 أو 1.0850',
   priceAmbiguousThousandsHint: 'السعر «{value}» مبهم — هل النقطة فاصل آلاف أم فاصلة عشرية؟ اكتب {whole} أو {small}',
   arabicThousandsSignHint: '«٬» فاصلة الآلاف لا الفاصلة العشرية — للكسر اكتب «٫» أو نقطة، مثل 0٫5',
+  riskCalcBadFieldValue: '{field} «{value}»',
   riskCalcPipValue: 'قيمة النقطة للوت',
   riskCalcLeverage: 'الرافعة المالية (100 تعني 1:100)',
   riskCalcLeverageOutOfRange: 'رافعة «{value}» خارج ما تحسبه الحاسبة (من 1:1 حتى 1:{max}) — اكتب رافعة حسابك كما تظهر بمنصّتك، مثل 500.',
@@ -1793,6 +1798,7 @@ const ar: Dict = {
   mcUndo: 'تراجع',
   mcUndoA11y: 'تراجع عن آخر تغيير في الرسم',
   mcNothingToUndo: 'لا شيء للتراجع عنه',
+  mcToLatestA11y: 'العودة لآخر شمعة',
   mcPanesCollapsed: 'مطويّة',
   mcPanesCollapsedA11y: 'لوحات مؤشرات مطويّة: ارتفاع الشارت لا يتّسع لها',
   mcPanesPageA11y: 'اضغط لعرض اللوحات المطويّة بدل الظاهرة',
@@ -2149,6 +2155,7 @@ const enUS: Dict = {
   invalidNumberHint: 'Number not recognized — type it without thousands separators, e.g. 10000 or 1.0850',
   priceAmbiguousThousandsHint: 'Price “{value}” is ambiguous — is the dot a thousands separator or a decimal point? Type {whole} or {small}',
   arabicThousandsSignHint: '“٬” is the Arabic thousands sign, not the decimal comma — for a fraction type “٫” or a dot, e.g. 0.5',
+  riskCalcBadFieldValue: '{field} “{value}”',
   riskCalcPipValue: 'Pip value per lot',
   riskCalcLeverage: 'Leverage (100 means 1:100)',
   riskCalcLeverageOutOfRange: 'Leverage “{value}” is outside what the calculator handles (1:1 to 1:{max}) — enter your account’s leverage as your platform shows it, e.g. 500.',
@@ -2705,6 +2712,7 @@ const enUS: Dict = {
   mcUndo: 'Undo',
   mcUndoA11y: 'Undo the last drawing change',
   mcNothingToUndo: 'Nothing to undo',
+  mcToLatestA11y: 'Scroll to the latest candle',
   mcPanesCollapsed: 'Hidden',
   mcPanesCollapsedA11y: 'Indicator panes hidden: the chart is too short to fit them',
   mcPanesPageA11y: 'Tap to show the hidden panes instead of the visible ones',
@@ -3085,6 +3093,7 @@ const ku: Dict = {
   invalidNumberHint: 'ژمارەکە ناناسرێتەوە — بەبێ جیاکەرەوەی هەزاران بنووسە، وەک 10000 یان 1.0850',
   priceAmbiguousThousandsHint: 'نرخی «{value}» ڕوون نییە — خاڵەکە جیاکەرەوەی هەزارانە یان خاڵی دەیی؟ {whole} یان {small} بنووسە',
   arabicThousandsSignHint: '«٬» جیاکەرەوەی هەزارانە نەک فاریزەی دەیی — بۆ کەرت «٫» یان خاڵ بنووسە، وەک 0٫5',
+  riskCalcBadFieldValue: '{field} «{value}»',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
   riskCalcLeverage: 'لێڤەرێج (100 واتە 1:100)',
   riskCalcLeverageOutOfRange: 'لێڤەرێجی «{value}» لە دەرەوەی ئەوەیە کە حاسیبەکە حیسابی دەکات (لە 1:1 تا 1:{max}) — لێڤەرێجی هەژمارەکەت وەک لە پلاتفۆرمەکەتدا دەردەکەوێت بنووسە، وەک 500.',
@@ -3644,6 +3653,7 @@ const ku: Dict = {
   mcUndo: 'گەڕاندنەوە',
   mcUndoA11y: 'گەڕاندنەوەی دوایین گۆڕانکاری لە کێشان',
   mcNothingToUndo: 'هیچ شتێک نییە بۆ گەڕاندنەوە',
+  mcToLatestA11y: 'گەڕانەوە بۆ دوایین مۆم',
   mcPanesCollapsed: 'شاراوە',
   mcPanesCollapsedA11y: 'پانێڵی پێوەرەکان شاراونەتەوە: بەرزی چارتەکە بەشیان ناکات',
   mcPanesPageA11y: 'دەستی لێ بدە بۆ پیشاندانی پانێڵە شاراوەکان لە جیاتی ئەوانەی دیارن',
