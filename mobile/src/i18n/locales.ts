@@ -1330,7 +1330,7 @@ const ar: Dict = {
   journalCloseFailedBody: 'تعذّر تأكيد الإغلاق — تحقّق من الاتصال. إن بقيت الصفقة «مفتوحة» في القائمة فأغلقها مرة أخرى.',
   journalLoadError: 'تعذّر تحميل الدفتر — تحقّق من الاتصال. صفقاتك المسجّلة لم تُحذف.',
   journalEmpty:
-    'لا صفقات مسجّلة بعد — سجّل كل صفقة (حتى على حساب تجريبي) لتعرف مع الوقت ما ينجح معك وما لا ينجح. اكتبها بالنموذج أعلاه، أو احسبها في «المخاطرة» ثم اضغط «سجّل هذه الخطة بالدفتر».',
+    'لا صفقات مسجّلة بعد — سجّل كل صفقة (حتى على حساب تجريبي) لتعرف مع الوقت ما ينجح معك وما لا ينجح. اكتبها بالنموذج أعلاه («↓ السعر الحالي» يملأ الدخول لحظة فتحها)، أو احسبها في «المخاطرة» ثم اضغط «سجّل هذه الخطة بالدفتر».',
   journalOpenSuffix: '(مفتوحة)',
   journalClosedWord: 'مغلقة',
   journalCloseNeedsExit: 'اكتب سعر الخروج في خانة «خروج» أعلى النموذج، ثم اضغط «إغلاق بسعر خانة الخروج» تحت الصفقة.',
@@ -2122,7 +2122,7 @@ const enUS: Dict = {
   riskCalcLogToJournal: 'Log this plan to the journal',
   riskCalcSideLabel: 'Trade direction',
   riskCalcSideFromStop: 'inferred from the stop',
-  riskCalcLoggedToJournal: '✓ Logged as an open trade — close it from «Journal» when you exit',
+  riskCalcLoggedToJournal: '✓ Logged as an open trade — close it from “Journal” when you exit',
   riskCalcLogFailed: 'Could not log to the journal — check your connection and try again',
   riskCalcMarginMaxLots: 'Largest size your balance can cover in margin: {lots} lot — a ceiling that leaves no free margin for any swing',
   riskCalcLogBlockedMismatch:
@@ -2183,7 +2183,7 @@ const enUS: Dict = {
   reportJournalEmptyLine: '(No closed trades in the journal yet — no performance numbers to show).',
   reportJournalUnavailableLine: '(Could not read the trade journal right now — this report has none of your numbers).',
   reportFallbackWeekly:
-    'Report from the trade journal{journalLine}\nLog your trades in the «Journal» tab for a more accurate report.',
+    'Report from the trade journal{journalLine}\nLog your trades in the “Journal” tab for a more accurate report.',
   reportFallbackPerformance: 'Assessment based on the journal{journalLine}',
   reportFallbackRisk: 'Risk brief{journalLine}\n1) Risk ≤1%.\n2) Use a clear stop.\n3) Avoid heavy news.',
   reportFallbackAdvice:
@@ -2229,7 +2229,7 @@ const enUS: Dict = {
   journalCloseFailedBody: 'Couldn’t confirm the close — check your connection. If the trade still shows as open, close it again.',
   journalLoadError: 'Couldn\'t load your journal — check your connection. Your logged trades haven\'t been deleted.',
   journalEmpty:
-    'No trades logged yet — log every trade (even on a demo account) to learn over time what works for you and what doesn\'t. Fill in the form above, or size it under «Risk» and tap «Log this plan to the journal».',
+    'No trades logged yet — log every trade (even on a demo account) to learn over time what works for you and what doesn\'t. Fill in the form above (“↓ Current price” fills the entry as you open it), or size it under “Risk” and tap “Log this plan to the journal”.',
   journalOpenSuffix: '(open)',
   journalClosedWord: 'Closed',
   journalCloseNeedsExit: 'Type the exit price in the “Exit” field at the top of the form, then tap “Close at exit field price” under the trade.',
@@ -2249,7 +2249,7 @@ const enUS: Dict = {
   journalCloseMarketConfirmTitle: 'Close at market price?',
   journalCloseMarketConfirmBody: '{side} {symbol} · {entry} → {exit}\nResult: {result}\n\nPrice from the data provider (Bid for buys, Ask for sells) and may differ slightly from your broker — you can edit it after closing.',
   journalCloseMarketConfirmBtn: 'Close',
-  journalCloseMarketNoQuote: 'No live price for this symbol right now — type the exit in the «Exit» field, then use «Close at exit field price»',
+  journalCloseMarketNoQuote: 'No live price for this symbol right now — type the exit in the “Exit” field, then use “Close at exit field price”',
   backtestSub: 'MA · RSI · MACD · BB · Equity curve',
   backtestSymbolA11y: 'Instrument symbol for the backtest',
   backtestStrategyA11yPrefix: 'Strategy',
@@ -3155,7 +3155,7 @@ const ku: Dict = {
   journalCloseFailedBody: 'داخستنەکە پشتڕاست نەکرایەوە — پەیوەندییەکەت بپشکنە. ئەگەر مامەڵەکە هێشتا کراوە دیار بوو، دووبارە دایبخە.',
   journalLoadError: 'نەکرا تۆمارەکە باربکرێت — پەیوەندییەکەت بپشکنە. مامەڵە تۆمارکراوەکانت نەسڕاونەتەوە.',
   journalEmpty:
-    'هێشتا هیچ مامەڵەیەک تۆمار نەکراوە — هەموو مامەڵەیەک تۆمار بکە (تەنانەت لەسەر هەژماری تاقیکردنەوە) بۆ ئەوەی بە تێپەڕبوونی کات بزانیت چی بۆت سەرکەوتووە و چی نا. لە فۆرمەکەی سەرەوە بینووسە، یان لە «مەترسی» حیسابی بکە و «ئەم پلانە لە دەفتەر تۆمار بکە» دابگرە.',
+    'هێشتا هیچ مامەڵەیەک تۆمار نەکراوە — هەموو مامەڵەیەک تۆمار بکە (تەنانەت لەسەر هەژماری تاقیکردنەوە) بۆ ئەوەی بە تێپەڕبوونی کات بزانیت چی بۆت سەرکەوتووە و چی نا. لە فۆرمەکەی سەرەوە بینووسە («↓ نرخی ئێستا» چوونەژوورەوە لە کاتی کردنەوەدا پڕ دەکاتەوە)، یان لە «مەترسی» حیسابی بکە و «ئەم پلانە لە دەفتەر تۆمار بکە» دابگرە.',
   journalOpenSuffix: '(کراوەیە)',
   journalClosedWord: 'داخراو',
   journalCloseNeedsExit: 'نرخی دەرچوون لە خانەی «دەرچوون» لە سەرەوەی فۆڕمەکە بنووسە، پاشان «داخستن بە نرخی خانەی دەرچوون» لە ژێر مامەڵەکە دابگرە.',
