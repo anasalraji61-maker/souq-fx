@@ -51,6 +51,7 @@ import {
   journalPnl,
   journalRisk,
   formatJournalMoney,
+  planSummaryText,
 } from './tradePlan';
 import { riskInQuoteCcy as cashRisk } from './positionSize';
 import { instrumentSpec, pipValuePerLot, planJournalNote, pnlInQuoteCcy, positionSize, slPipsFromPrices } from './positionSize';
@@ -1765,3 +1766,17 @@ console.log('tradePlan formatJournalMoney selftest OK');
   assert.equal(knownLots(1, planJournalNote({ lots: 1, risk: null, ccy: 'USD', rr: '1:2', words: { risk: 'مەترسی' } })), 1);
 }
 console.log('tradePlan knownLots localized plan note selftest OK');
+
+// planSummaryText — سطر الخطة المشترك (الدفتر، ولوحة الأفكار حين تنتقل إليه)
+{
+  const w = { risk: 'Risk', reward: 'Reward' };
+  const plan = analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, tp: 1.09 });
+  assert.equal(planSummaryText(plan, w), 'Risk 25 pip · Reward 50 pip · R:R 1:2.0');
+  assert.equal(planSummaryText(plan, w, '125.00 USD', '250.00 USD'), 'Risk 25 pip (125.00 USD) · Reward 50 pip (250.00 USD) · R:R 1:2.0');
+  assert.equal(planSummaryText(plan, w, null, '250.00 USD'), 'Risk 25 pip · Reward 50 pip (250.00 USD) · R:R 1:2.0');
+  assert.equal(planSummaryText(plan, w, '', ''), 'Risk 25 pip · Reward 50 pip · R:R 1:2.0');
+  // بلا مواصفات pip: فرق السعر منظَّفاً لخمس منازل
+  const us30 = analyzePlan({ symbol: 'US30', side: 'sell', entry: 39000, sl: 39100, tp: 38800 });
+  assert.equal(planSummaryText(us30, w), 'Risk 100 · Reward 200 · R:R 1:2.0');
+}
+console.log('tradePlan planSummaryText selftest OK');

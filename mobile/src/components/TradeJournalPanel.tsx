@@ -25,6 +25,7 @@ import {
   exitShortcuts,
   exitPreview,
   formatJournalMoney,
+  planSummaryText,
   journalPnl,
   floatingResult,
   formatPips,
@@ -372,11 +373,6 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
 
   /** "المخاطرة 25 pip (125.00 USD) · الربح المحتمل 50 pip · R:R 1:2.0" — المال حين يُكتب الحجم. */
   const planSummary = (plan: TradePlan): string => {
-    const dist = (pips: number | null, d: number) => {
-      const p = formatPips(pips);
-      return p != null ? `${p} pip` : String(Math.round(d * 1e5) / 1e5);
-    };
-    const money = draftRisk?.money ? ` (${draftRisk.money})` : '';
     /**
      * الربح المحتمل بالمال بجانب المخاطرة بالمال: كان السطر يقول «المخاطرة 25 pip (125.00 USD) · الربح
      * المحتمل 50 pip» فيُترك المتداول ليضرب نصف المعادلة بنفسه. نتيجة الخروج عند الهدف بالدالّة نفسها
@@ -389,8 +385,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       draftRisk && plan.ok && e != null && p != null && l != null
         ? journalPnl({ symbol, side, entry: e, exit: p, lots: l })
         : null;
-    const gainText = gain && gain.amount > 0 ? ` (${formatJournalMoney(gain, t.journalMoneyUsc)})` : '';
-    return `${t.planRiskWord} ${dist(plan.riskPips, plan.riskDist)}${money} · ${t.planRewardWord} ${dist(plan.rewardPips, plan.rewardDist)}${gainText} · R:R ${formatRR(plan.rr)}`;
+    const gainText = gain && gain.amount > 0 ? formatJournalMoney(gain, t.journalMoneyUsc) : null;
+    return planSummaryText(plan, { risk: t.planRiskWord, reward: t.planRewardWord }, draftRisk?.money, gainText);
   };
 
   // معاينة حيّة أثناء الكتابة: خطأ جهة فوراً (حتى بوقف وحده)، والملخّص حين تكتمل الأرقام الثلاثة.

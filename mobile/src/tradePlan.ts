@@ -199,6 +199,25 @@ export type TradePlan = {
 const finitePos = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n > 0;
 
 /**
+ * سطر الخطة: «المخاطرة 25 pip (125.00 USD) · الربح المحتمل 50 pip (250.00 USD) · R:R 1:2» — بفرق السعر حين لا يُعرف الـpip
+ * (منظَّفاً لخمس منازل). كان منسوخاً بالدفتر ولوحة الأفكار (`VotePanel`) — نسختان تتباعدان. `riskMoney`/`gainMoney` نصّ
+ * المال جاهزاً (أو null ⇒ بلا قوسين).
+ */
+export function planSummaryText(
+  plan: TradePlan,
+  words: { risk: string; reward: string },
+  riskMoney?: string | null,
+  gainMoney?: string | null
+): string {
+  const dist = (pips: number | null, d: number) => {
+    const p = formatPips(pips);
+    return p != null ? `${p} pip` : String(Math.round(d * 1e5) / 1e5);
+  };
+  const paren = (m: string | null | undefined) => (m ? ` (${m})` : '');
+  return `${words.risk} ${dist(plan.riskPips, plan.riskDist)}${paren(riskMoney)} · ${words.reward} ${dist(plan.rewardPips, plan.rewardDist)}${paren(gainMoney)} · R:R ${formatRR(plan.rr)}`;
+}
+
+/**
  * نسبة مسافتين سعريتين **منظَّفةً من ضجيج الفاصلة العائمة** (دقّة 1e-9، أدقّ بكثير من أي نسبة
  * تعني شيئاً). طرح الأسعار لا يُنتج المسافة الدقيقة: وقف 20 pip وهدف 20 pip على USDJPY
  * (157.40/157.20/157.60) يعطي R:R = 0.99999999999986 — فتقول اللوحة «⚠ الربح المحتمل أقل من
