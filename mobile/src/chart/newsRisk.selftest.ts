@@ -21,6 +21,12 @@ assert.deepEqual(symbolCurrencies('xag/aud'), ['USD', 'AUD']);
 assert.deepEqual(symbolCurrencies('XAUJPY'), ['USD', 'JPY']);
 assert.deepEqual(symbolCurrencies('XAUXAG'), []);
 assert.deepEqual(symbolCurrencies('XAUBTC'), []);
+// رمز الدفتر بلاحقة الوسيط كما كُتب: نفس عملات الأداة
+assert.deepEqual(symbolCurrencies('XAUUSD.m'), ['USD']);
+assert.deepEqual(symbolCurrencies('EURUSDm'), ['EUR', 'USD']);
+assert.deepEqual(symbolCurrencies('gbpjpy.pro'), ['GBP', 'JPY']);
+assert.deepEqual(symbolCurrencies('XAUEUR-ECN'), ['USD', 'EUR']);
+assert.deepEqual(symbolCurrencies('USDCNH.m'), ['USD', 'CNY']);
 // كل ما تقبله حاسبة المخاطرة له تحذير أخبار: الخليج وإسرائيل بساق الدولار أو اليورو
 assert.deepEqual(symbolCurrencies('USDSAR'), ['USD', 'SAR']);
 assert.deepEqual(symbolCurrencies('USDAED'), ['USD', 'AED']);

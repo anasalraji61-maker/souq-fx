@@ -10,6 +10,8 @@
  * - أحداث بلا وقت دقيق (`ts`) تُتجاهَل: لا نعرض عدّاً تنازلياً لا نعرفه.
  */
 
+import { instrumentSpec } from '../positionSize';
+
 export type NewsEvent = {
   id: string;
   title: string;
@@ -34,7 +36,11 @@ const METALS = new Set(['XAU', 'XAG']);
 const USD_DRIVEN = new Set(['DXY', 'USOIL', 'UKOIL', 'WTI', 'BRENT', 'XAUUSD', 'XAGUSD']);
 
 export function symbolCurrencies(symbol: string): string[] {
-  const s = symbol.toUpperCase().replace(/[^A-Z]/g, '');
+  /**
+   * الرمز القانوني أولاً (`instrumentSpec` يُسقط لاحقة الوسيط): الدفتر يمرّر الرمز كما كتبه المتداول،
+   * و«XAUUSD.m» كان يصير «XAUUSDM» (7 أحرف) فيغيب تحذير الرواتب الأمريكية عن نموذج الصفقة قبل الدخول.
+   */
+  const s = instrumentSpec(symbol)?.symbol ?? symbol.toUpperCase().replace(/[^A-Z]/g, '');
   if (USD_DRIVEN.has(s)) return ['USD'];
   if (s.length !== 6) return [];
   // CNH (يوان خارجي) يظهر بالتقويم كـCNY.
