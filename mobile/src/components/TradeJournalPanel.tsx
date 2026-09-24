@@ -31,7 +31,7 @@ import {
   journalInstrumentKey,
   realizedMove,
   realizedR,
-  roundR,
+  averageR,
   QUICK_RR,
   targetAtRR,
   type PlanIssue,
@@ -429,17 +429,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
      * متداول التجزئة أداءه. متوسط الـR بجانبه سليم كما هو: نسبة بلا وحدة تقارن الأدوات بحق.
      */
     const ranked = netByInstrument(visibleTrades);
-    let rSum = 0;
-    let rN = 0;
-    for (const tr of visibleTrades) {
-      if (tr.status !== 'closed') continue;
-      const side = tr.side === 'sell' ? 'sell' : 'buy';
-      const r = realizedR({ side, entry: tr.entry, sl: tr.sl, exit: tr.exit });
-      if (r != null) {
-        rSum += r;
-        rN += 1;
-      }
-    }
+    const avg = averageR(visibleTrades);
     /**
      * ثلاث أدوات بالسطر وما بعدها «+N» كي لا يطول سطر الإحصاءات (الترتيب من `netByInstrument`). المال
      * بعملة تسعير الأداة بجانب نقاطها حين يُعرف حجم كل صفقاتها — «EURUSD +25 (+125.00 USD)».
@@ -458,8 +448,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       /** صافي المال للأداة الواحدة — يُلحق بسطر النقاط نفسه */
       cash: ranked.length === 1 ? cashOf(ranked[0]!.cash) : null,
       pipsBySymbol: ranked.length > 1 ? parts.join(' · ') + (rest > 0 ? ` +${rest}` : '') : null,
-      avgR: rN ? formatR(roundR(rSum / rN)) : null,
-      rN,
+      avgR: avg ? formatR(avg.r) : null,
+      rN: avg?.n ?? 0,
     };
   }, [visibleTrades]);
 

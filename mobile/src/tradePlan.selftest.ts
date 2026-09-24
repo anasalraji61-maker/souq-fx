@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import {
   analyzePlan,
+  averageR,
   floatingResult,
   formatPips,
   formatR,
@@ -583,3 +584,35 @@ console.log('tradePlan journalInstrumentKey selftest OK');
   assert.equal(netByInstrument([c(1.085, 1.087, 0.5), c(1.085, 1.083, 1, 'manual')])[0]!.cash, null);
 }
 console.log('tradePlan knownLots selftest OK');
+
+// averageR — متوسط R من القيم الدقيقة لا المقرَّبة لكل صفقة
+{
+  const t = (side: string, entry: number, sl: number | null, exit: number | null, status = 'closed') => ({
+    side, entry, sl, exit, status,
+  });
+  // +0.05R و+0.05R و+0.04R على EURUSD (وقف 100 pip): المتوسط 0.0467 ⇒ 0R (المقرَّبة كانت تعطي +0.1R)
+  const small = [t('buy', 1.1, 1.09, 1.1005), t('buy', 1.1, 1.09, 1.1005), t('buy', 1.1, 1.09, 1.1004)];
+  assert.deepEqual(averageR(small), { r: 0, n: 3 });
+  const oldWay = roundR(small.reduce((a, x) => a + realizedR({ side: 'buy', entry: x.entry, sl: x.sl, exit: x.exit })!, 0) / 3);
+  assert.equal(oldWay, 0.1); // الخطأ الذي يُصلحه
+  // +2R و−1R ⇒ +0.5R؛ بيع يُحسب بجهته
+  assert.deepEqual(averageR([t('buy', 1.1, 1.09, 1.12), t('sell', 150, 151, 151)]), { r: 0.5, n: 2 });
+  // المفتوحة، وبلا وقف، ووقف بالجهة الخطأ، وبلا خروج: لا تُحسب
+  assert.deepEqual(
+    averageR([
+      t('buy', 1.1, 1.09, 1.12),
+      t('buy', 1.1, 1.09, 1.2, 'open'),
+      t('buy', 1.1, null, 1.2),
+      t('buy', 1.1, 1.11, 1.2),
+      t('sell', 1.1, 1.11, null),
+    ]),
+    { r: 2, n: 1 }
+  );
+  assert.equal(averageR([]), null);
+  assert.equal(averageR([t('buy', 1.1, null, 1.2)]), null);
+  // تقريب متماثل: −0.25R ⇒ −0.3R (لا −0.2)
+  assert.deepEqual(averageR([t('buy', 1.1, 1.09, 1.0975)]), { r: -0.3, n: 1 });
+  // realizedR لم يتغيّر
+  assert.equal(realizedR({ side: 'buy', entry: 1.1, sl: 1.09, exit: 1.12 }), 2);
+}
+console.log('tradePlan averageR selftest OK');

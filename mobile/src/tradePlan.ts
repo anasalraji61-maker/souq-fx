@@ -147,13 +147,41 @@ export function realizedR(input: {
   sl?: number | null;
   exit?: number | null;
 }): number | null {
+  const r = exactR(input);
+  return r == null ? null : roundR(r);
+}
+
+function exactR(input: { side: TradeSide; entry: number; sl?: number | null; exit?: number | null }): number | null {
   const { side, entry, sl, exit } = input;
   if (!finitePos(entry) || !finitePos(sl) || !finitePos(exit)) return null;
   const buy = side === 'buy';
   const risk = buy ? entry - sl : sl - entry;
   if (risk <= 0) return null;
   const move = buy ? exit - entry : entry - exit;
-  return roundR(move / risk);
+  return move / risk;
+}
+
+/**
+ * متوسط النتيجة بالـR للصفقات المغلقة ذات الوقف الصالح (التوقّع لكل صفقة)، وعددها — لسطر «متوسط R»
+ * بالدفتر. `null` بلا صفقة واحدة تُحسب.
+ *
+ * يُحسب من الـR **الدقيقة** ثم يُقرَّب مرّة واحدة: متوسط القيم المقرَّبة لكل صفقة (`realizedR`) كان
+ * يُراكم خطأ التقريب — ثلاث صفقات +0.05R و+0.05R و+0.04R (متوسطها +0.047R ⇒ «0R») كانت تُقرأ «+0.1R»:
+ * نظام بلا أفضلية يبدو رابحاً. وهذا السطر هو ما يقرّر به المتداول أيستمرّ على نظامه.
+ */
+export function averageR(
+  trades: readonly { side: string; entry: number; sl?: number | null; exit?: number | null; status: string }[]
+): { r: number; n: number } | null {
+  let sum = 0;
+  let n = 0;
+  for (const tr of trades) {
+    if (tr.status !== 'closed') continue;
+    const r = exactR({ side: tr.side === 'sell' ? 'sell' : 'buy', entry: tr.entry, sl: tr.sl, exit: tr.exit });
+    if (r == null) continue;
+    sum += r;
+    n += 1;
+  }
+  return n ? { r: roundR(sum / n), n } : null;
 }
 
 /**
