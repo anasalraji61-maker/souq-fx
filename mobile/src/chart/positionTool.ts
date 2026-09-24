@@ -112,15 +112,20 @@ export function positionLabels(levels: PositionLevels, symbol: string): { target
   };
 }
 
-export type PositionOutcomeState = 'open' | 'target' | 'stop' | 'ended';
+export type PositionOutcomeState = 'open' | 'target' | 'stop' | 'ended' | 'pending' | 'missed';
 
 export type PositionOutcome = {
-  /** `open` الصندوق يمتدّ للشمعة الأخيرة ولم يُلمس حدّ؛ `ended` انتهى الصندوق قبلها بلا لمس. */
+  /**
+   * `open` الصندوق يمتدّ للشمعة الأخيرة ولم يُلمس حدّ؛ `ended` انتهى الصندوق قبلها بلا لمس.
+   * `pending` لم يبلغ السعر الدخول بعد (أمر معلّق: شراء عند دعم تحت السعر)؛ `missed` انتهى الصندوق ولم يبلغه.
+   */
   state: PositionOutcomeState;
   /** سعر الخروج: الهدف/الوقف عند اللمس، وإلا إغلاق آخر شمعة داخل الصندوق. */
   exit: number;
   /** فهرس الشمعة التي حُسب عندها الخروج (بفهارس السلسلة نفسها). */
   exitIndex: number;
+  /** فهرس شمعة التنفيذ (بلوغ سعر الدخول)؛ للمعلّق/الفائت = `exitIndex`. */
+  fillIndex: number;
   /** الربح/الخسارة بوحدة المخاطرة: +2 عند هدف R:R 2، و−1 عند الوقف. */
   r: number;
 };
@@ -128,9 +133,15 @@ export type PositionOutcome = {
 type Bar = { high: number; low: number; close: number };
 
 /**
- * نتيجة الصفقة المرسومة على الشموع كما يفعل TradingView: الدخول عند سعره بشمعة الدخول، ثم أوّل
- * شمعة **بعدها** داخل الصندوق تلمس الهدف أو الوقف. شمعة تلمسهما معاً ⇒ الوقف (لا يُعرف الأسبق داخل
- * الشمعة، والافتراض المتفائل يعِد بربح لم يحدث). لم يُلمس شيء ⇒ إغلاق آخر شمعة داخل الصندوق.
+ * نتيجة الصفقة المرسومة على الشموع كما يفعل TradingView: الصفقة تُنفَّذ حين يبلغ السعر الدخول — بشمعة
+ * الدخول إن كان سعره داخل مداها (الرسم عند السعر الجاري، الحالة الغالبة)، وإلا بأوّل شمعة بعدها تبلغه
+ * (أمر معلّق: شراء عند دعم تحت السعر، بيع عند مقاومة فوقه). ثم أوّل شمعة **بعد التنفيذ** داخل الصندوق
+ * تلمس الهدف أو الوقف. شمعة تلمسهما معاً ⇒ الوقف (لا يُعرف الأسبق داخل الشمعة، والافتراض المتفائل يعِد
+ * بربح لم يحدث)؛ وشمعة التنفيذ نفسها تُحسب وقفاً إن لمسته (السعر الهابط لدخول شراء معلّق قد يكمل للوقف)،
+ * لا هدفاً. لم يُلمس شيء ⇒ إغلاق آخر شمعة داخل الصندوق.
+ *
+ * قبل ذلك كانت كل صفقة تُعدّ منفَّذة عند رسمها: شراء معلّق مرسوم 30 pip تحت السعر يُقرأ فوراً «+30 pip ·
+ * +1.2R» ربحاً لصفقة لم تُفتح، وقد «يصيب الهدف» دون أن يبلغ السعر دخولها أصلاً.
  *
  * `lastIndex` آخر شمعة **معروضة** (بالإعادة: خطوة الإعادة لا نهاية السلسلة — فلا تُكشف النتيجة
  * قبل أوانها). صندوق بلا عرض زمني (الطرفان على الشمعة نفسها) ⇒ مفتوح حتى آخر شمعة. دخول بعد آخر
@@ -151,17 +162,31 @@ export function positionOutcome(
   const to = Math.min(boxEnd, last);
   const long = levels.side === 'long';
   const rOf = (exit: number) => ((long ? exit - levels.entry : levels.entry - exit) / risk);
+  const hitsStop = (b: Bar) => (long ? b.low <= levels.stop : b.high >= levels.stop);
+  // جهة الدخول من شمعة الرسم: تحت مداها ⇒ يُنفَّذ حين ينزل القاع إليه، فوقه ⇒ حين تبلغه القمّة. عبورٌ
+  // لا احتواء، فالفجوة التي تقفز فوق الدخول (افتتاح الأسبوع) تنفّذه كما تنفّذ الوسيط الأمر المعلّق.
+  const first = bars[entryIndex];
+  const below = first != null && levels.entry < first.low;
+  const above = first != null && levels.entry > first.high;
+  let fill = below || above ? -1 : entryIndex;
   for (let i = entryIndex + 1; i <= to; i++) {
     const b = bars[i];
     if (!b) continue;
-    const hitStop = long ? b.low <= levels.stop : b.high >= levels.stop;
-    if (hitStop) return { state: 'stop', exit: levels.stop, exitIndex: i, r: -1 };
+    if (fill < 0) {
+      if (below ? b.low > levels.entry : b.high < levels.entry) continue;
+      fill = i;
+      if (hitsStop(b)) return { state: 'stop', exit: levels.stop, exitIndex: i, fillIndex: i, r: -1 };
+      continue;
+    }
+    if (hitsStop(b)) return { state: 'stop', exit: levels.stop, exitIndex: i, fillIndex: fill, r: -1 };
     const hitTarget = long ? b.high >= levels.target : b.low <= levels.target;
-    if (hitTarget) return { state: 'target', exit: levels.target, exitIndex: i, r: levels.rr };
+    if (hitTarget) return { state: 'target', exit: levels.target, exitIndex: i, fillIndex: fill, r: levels.rr };
   }
   const exit = bars[to]?.close;
   if (exit == null || !Number.isFinite(exit)) return null;
-  return { state: to >= last && boxEnd >= last ? 'open' : 'ended', exit, exitIndex: to, r: rOf(exit) };
+  const running = to >= last && boxEnd >= last;
+  if (fill < 0) return { state: running ? 'pending' : 'missed', exit, exitIndex: to, fillIndex: to, r: 0 };
+  return { state: running ? 'open' : 'ended', exit, exitIndex: to, fillIndex: fill, r: rOf(exit) };
 }
 
 /**
@@ -169,6 +194,9 @@ export function positionOutcome(
  * عند الوقف. الإشارة دائماً ظاهرة (+/−) لأن اللون وحده لا يكفي لمن لا يميّز الأحمر من الأخضر.
  */
 export function positionOutcomeText(levels: PositionLevels, outcome: PositionOutcome, symbol: string): string {
+  // لم يُنفَّذ: كم يبعد السعر عن الدخول («Entry ⌛ 12.3 pip»)، أو «Entry ✕» إن انتهى الصندوق قبل بلوغه.
+  if (outcome.state === 'missed') return 'Entry ✕';
+  if (outcome.state === 'pending') return `Entry ⌛ ${distanceText(symbol, outcome.exit, levels.entry)}`;
   const up = outcome.r >= 0;
   const sign = up ? '+' : '−';
   const spec = instrumentSpec(symbol);

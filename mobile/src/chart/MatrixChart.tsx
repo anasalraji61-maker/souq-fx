@@ -2877,8 +2877,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       source.start + source.plot.length - 1
     );
     const outcomeUp = outcome != null && outcome.r >= 0;
+    // لم يبلغ السعر الدخول بعد (أمر معلّق) ⇒ وسم محايد بلا شريط مسار: لا ربح ولا خسارة لصفقة لم تُفتح.
+    const unfilled = outcome != null && (outcome.state === 'pending' || outcome.state === 'missed');
+    const outcomeTone = unfilled ? colors.textMuted : outcomeUp ? colors.bull : colors.bear;
     const outcomeText = outcome ? positionOutcomeText(box.lv, outcome, series.symbol) : '';
     const xExit = outcome ? Math.min(box.right, xOf(outcome.exitIndex - source.start)) : 0;
+    // المسار يبدأ من شمعة التنفيذ لا شمعة الرسم — دخول معلّق نُفّذ بعد عشر شمعات يُظلَّل منها.
+    const xFill = outcome ? Math.max(box.xEntry, xOf(outcome.fillIndex - source.start)) : 0;
     const band = (y1: number, y2: number, fill: string, edge: string) => (
       <View
         style={{
@@ -2926,14 +2931,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             borderColor: color,
           }}
         />
-        {outcome && xExit > box.xEntry ? (
+        {outcome && !unfilled && xExit > xFill ? (
           // ما قطعه السعر من الدخول إلى الخروج/السعر الجاري — أغمق من الصندوق كما في TradingView.
           <View
             style={{
               position: 'absolute',
-              left: box.xEntry,
+              left: xFill,
               top: Math.min(box.yEntry, yOf(outcome.exit)),
-              width: xExit - box.xEntry,
+              width: xExit - xFill,
               height: Math.max(1, Math.abs(yOf(outcome.exit) - box.yEntry)),
               backgroundColor: outcomeUp ? 'rgba(34,197,94,0.22)' : 'rgba(244,63,94,0.22)',
             }}
@@ -2951,8 +2956,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 left: positionLabelLeft(box.left + 10, outcomeText, chartPlotW),
                 top: box.yEntry - 7,
                 maxWidth: Math.max(60, chartPlotW - positionLabelLeft(box.left + 10, outcomeText, chartPlotW) - 2),
-                color: outcomeUp ? colors.bull : colors.bear,
-                borderColor: outcomeUp ? colors.bull : colors.bear,
+                color: outcomeTone,
+                borderColor: outcomeTone,
               },
             ]}
           >

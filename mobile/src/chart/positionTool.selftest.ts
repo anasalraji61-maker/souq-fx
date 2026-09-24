@@ -102,6 +102,34 @@ assert.equal(positionOutcome(PL, bars, 5, 8, 3), null);
 o = positionOutcome(PL, bars, 3, 6, 3)!;
 assert.equal(o.state, 'open');
 assert.equal(positionOutcomeText(PL, o, 'EURUSD'), '−40.0 pip · −1.6R');
+// شراء معلّق تحت السعر: لم يُنفَّذ ⇒ لا ربح ولا خسارة، بل بُعد السعر عن الدخول
+const hi = [bar(1.087, 1.089, 1.088), bar(1.0865, 1.0915, 1.0872)]; // 1 يلمس «الهدف» قبل الدخول
+o = positionOutcome(PL, hi, 0, 3, 1)!;
+assert.equal(o.state, 'pending');
+assert.equal(o.r, 0);
+assert.equal(positionOutcomeText(PL, o, 'EURUSD'), 'Entry ⌛ 22.0 pip');
+// الصندوق انتهى قبل بلوغه ⇒ فائت
+o = positionOutcome(PL, [...hi, bar(1.086, 1.088, 1.087)], 0, 1, 2)!;
+assert.equal(o.state, 'missed');
+assert.equal(positionOutcomeText(PL, o, 'EURUSD'), 'Entry ✕');
+// يُنفَّذ بالشمعة 2، والهدف يُحسب بعد التنفيذ لا قبله
+o = positionOutcome(PL, [...hi, bar(1.0845, 1.087, 1.086), bar(1.086, 1.0905, 1.09)], 0, 5, 3)!;
+assert.equal(o.state, 'target');
+assert.equal(o.fillIndex, 2);
+assert.equal(o.exitIndex, 3);
+// شمعة التنفيذ تلمس الوقف أيضاً ⇒ وقف
+o = positionOutcome(PL, [...hi, bar(1.082, 1.087, 1.0822)], 0, 5, 2)!;
+assert.equal(o.state, 'stop');
+// فجوة تقفز فوق الدخول تنفّذه (عبور لا احتواء)
+o = positionOutcome(PL, [...hi, bar(1.0835, 1.0845, 1.084)], 0, 5, 2)!;
+assert.equal(o.state, 'open');
+assert.equal(o.fillIndex, 2);
+// بيع معلّق فوق السعر
+const SP = positionLevels('short', 1.09, 1.0925, 2, 'EURUSD');
+assert.equal(positionOutcome(SP, [bar(1.085, 1.087, 1.086)], 0, 3, 0)!.state, 'pending');
+o = positionOutcome(SP, [bar(1.085, 1.087, 1.086), bar(1.086, 1.0901, 1.089)], 0, 3, 1)!;
+assert.equal(o.state, 'open');
+assert.equal(positionOutcomeText(SP, o, 'EURUSD'), '+10.0 pip · +0.4R');
 // بيع ذهب: الوقف فوق
 const SG = positionLevels('short', 2650, 2655, 3, 'XAUUSD');
 o = positionOutcome(SG, [bar(2648, 2651, 2650), bar(2640, 2656, 2645)], 0, 1, 1)!;
