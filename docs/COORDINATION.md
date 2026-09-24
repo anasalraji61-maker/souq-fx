@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 11، بعد 20f0ade) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 12، بعد 4af5d4c) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -19,7 +19,7 @@
 | QA | بلا مالك | **a11y**: `AccountScreen` :195 :324 :338 :439 :477 :493 بلا وصف ولا نصّ ابن (أيقونات)؛ `MessagesScreen` :93 :144 :179 (ميّتة — ⛔ أنس 10) | QA3 ★ |
 | chart+QA | بلا مالك | **`useMultiLiveTicks.ts` بلا حدّ تقادم ولا رفض ≤0** (`useLiveTicks` 20ث) ⇒ قائمة المتابعة قد تعرض سعراً متجمّداً. (مرجع التنبيه أُصلح عند المستهلك: `freshTickRefPrice` d68e485) | chart2 ★ |
 | chart | بلا مالك | `FocusChartModal`: الرأس يطبع تيك الرمز الجديد فوق شموع القديم؛ «+0.00%» أخضر | chart3 ★ |
-| chart | الجميع | 10 `Alert.alert` باقية بـ5 ملفات (Alerts ×4، IndicatorAlerts ×2، Watchlist ×2، FocusChart ×1، Account ×1) ← `confirmDestructive`/`notify` — دالّة فارغة على الويب. الدفتر والطرفية أُصلحا (4adb377) | chart29 |
+| chart | الجميع | 10 `Alert.alert` باقية بـ5 ملفات (Alerts ×4، IndicatorAlerts ×2، Watchlist ×2، FocusChart ×1، Account ×1) ← `confirmDestructive`/`notify` — دالّة فارغة على الويب. **أخطرها** `AccountScreen.tsx:162` تأكيد «حذف الحساب» ⇒ الحذف لا يعمل على الويب (launch61) | chart29 ★ |
 | QA+tools | بلا مالك | **(a)** `dirColor`/`dirLabel` ×3 (Analysts/IndicatorForecast/SocialConsensus)؛ `VotePanel.tsx:82` نسخة `planSummaryText` | QA1 ★ |
 | QA+tools | بلا مالك | **(a)** `QUICK_SYMBOLS` ما زال منسوخاً في `BacktestPanel.tsx:54` و`IndicatorAlertsPanel.tsx:61` ← `import { QUICK_SYMBOLS } from '../tradePlan'` (الثابت جاهز db44382) | QA6 ★ |
 | QA | بلا مالك | **(a)** `RECONNECT_BASE_MS`/`MAX_MS` ×2 (`useLiveTicks.ts:7` و`useMultiLiveTicks.ts:6`) — chart: التوحيد لمالك `useMultiLiveTicks` | QA6 ★ |
@@ -34,10 +34,11 @@
 | QA | الخادم | **(d)** `main.py:1774` يقرّب الوقف/الهدف لخانتين إن السعر ≥50 ⇒ USDJPY/DXY تفقد خانة | QA4 ★ |
 | QA | الخادم | **(d) الدفتر يقصّ بصمت عند 200 صفقة**: `db.py:1681` `LIMIT 200` (مفتوحة+مغلقة) و`trade_stats` :1836 يحسب منها ⇒ بعد 200 صفقة «الصفقات المغلقة: n»/نسبة الفوز/صافي الـpip تُحسب على الأحدث فقط وتختفي القديمة من القائمة بلا إشارة. والمعامل `days=30` :1673 لا يُستعمل (ميّت). نصّ «آخر 200» صار ظاهراً (0c34e61)؛ الباقي: إحصاء بـSQL على الكل + ترقيم | QA9 |
 | QA | الخادم | **(e)** تقويم العيّنة `econ_calendar.py:39-47` أوقات خاطئة و«5.25%» قديم؛ `_impact` :77. الواجهة تقول الآن «عيّنة لا تتداول عليها» (63c2ef6) | QA5 ★ |
-| QA | chart | **QA10 (بقيّة)**: المعادن أُصلحت (`83dd284`، شغّلتُه: XAUUSD ⇒ الأحد 22:00Z صيفاً/23:00Z شتاءً) — لكن **المؤشرات** ما زالت 17:00 NY: `projectBarTimeSec('US30', الجمعة 20:00Z, H1, 1)` = الأحد 21:00Z، وUS30/NAS100/SPX تفتح 18:00 NY (جلسة CME) كالذهب ⇒ `LATE_OPEN_RE` :149 يُضاف لها. ومن سجلّ chart نفسه: `isForexMarketOpen` يقول «مفتوح» للذهب الأحد 17–18 NY وكسر المعادن اليومي غير محسوب | QA11 |
+| QA | chart | **QA10 (بقيّة)**: المعادن أُصلحت (`83dd284`، شغّلتُه: XAUUSD ⇒ الأحد 22:00Z صيفاً/23:00Z شتاءً) — لكن **المؤشرات** ما زالت 17:00 NY: أعدتُ التشغيل بعد 4af5d4c — `projectBarTimeSec('US30', الجمعة 20:00Z, H1, 1)` = الأحد 21:00Z، وUS30/NAS100/SPX تفتح 18:00 NY (جلسة CME) كالذهب ⇒ `LATE_OPEN_RE` `marketHours.ts:158` يُضاف لها (حالة السوق :62 أيضاً — لا كسر يومي للمؤشرات بها). حالة الذهب بالكسر اليومي أُصلحت (`b77315c`)؛ **الإسقاط لم يتخطّه**: `XAUUSD` الثلاثاء 20:00Z +H1 = 21:00Z (داخل الكسر) — بخطة chart التالية | QA11 |
 | QA | بلا مالك | **(a) جديد**: `DomLitePanel.tsx:67-73` يحسب السبريد بالـpip محلياً — نسخة `quoteSpreadPips` (`positionSize.ts:360`) الجديدة (tools: «ليس بنطاقي»)؛ والخاصية `last` ميتة (`void last` :75) والمستدعون ما زالوا يمرّرونها | QA11 |
+| chart | launch | مفتاح `mcWeekdays` (7 أسماء قصيرة ×ar/en/ku) لوسم زمن التقاطع «الجمعة 25 سبتمبر 14:00» — غير موجود بـ`locales.ts` (تحقّقتُ: 0) | chart 09-25 (6) |
 | QA | chart | **(a) جديد، منخفض**: `PANE_PAD = 16` و`clamp` و`finite` منسوخة ×3 (`centeredPane.ts:32` مُصدَّر، `macdPane.ts:21`، `stochPane.ts:18`) — تعليق `centeredPane.ts:9` يعتمد على تطابقها ⇒ استيراد واحد يمنع انحرافاً صامتاً | QA11 |
 
-**أُسقط هذه الدورة — مُتحقَّق منه بالكود:** QA10/tools (`697f2cd`: `TerminalScreen.tsx:1579` `quoteSpreadPips` ⇒ «0.9 pip»)؛ tools40 (`afbb0c2` المفتاح ×3 لغات + `d6c7408` `PositionSizePanel.tsx:1236`)؛
-تلميح الملاحظة (`afbb0c2`: `mcHintNoteSelected` «بالخانة المجاورة لها/next to it»)؛ QA10/chart للمعادن (`83dd284`). النصف التجميلي لعلامة المحور أُسقط بردّ chart (الإخفاء مقصود).
-**تحقّق بلا تغيير:** `useMultiLiveTicks.ts` ما زال بلا تقادم (`d59afdc` أصلح `useLiveTicks` وحده)؛ `Alert.alert` 10؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `QUICK_SYMBOLS` ×3 تعريفات؛ قائمة التصديرات الميتة كما هي (16).
+**أُسقط هذه الدورة:** لا شيء — ردّ launch61 عن tools40/تلميح الملاحظة سبق إسقاطه بالدورة 11.
+**تحقّق بلا تغيير (بالكود):** `Alert.alert` 10؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `QUICK_SYMBOLS` ×3 تعريفات؛ US30 الأحد 21:00Z.
+**(b) هذه الدورة:** الكود الجديد منذ الدورة 7 (24 ملفاً) بلا نصّ ظاهر ثابت؛ القواميس 950 مفتاحاً بلا فارغ ولا قيمة إنجليزية منسوخة ولا عدم تطابق `{…}` بين اللغات.
