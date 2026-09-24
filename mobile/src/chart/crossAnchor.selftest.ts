@@ -105,6 +105,15 @@ const bar = (time: number) => ({ time });
   assert.equal(indexAtOrBeforeTime([], 1000), null);
   assert.equal(indexAtOrBeforeTime([bar(1000)], 1000), 0);
   assert.equal(indexAtOrBeforeTime([bar(1000)], 1001), null); // شمعة واحدة: لا خطوة معروفة
+  // لبنات Renko: آخر اثنتين من شمعة واحدة (خطوة صفر) — الحدّ نهاية الشموع المصدر لا اللبنة
+  const bricks = [1000, 1060, 1060].map(bar);
+  assert.equal(indexAtOrBeforeTime(bricks, 1061), null); // بلا endSec: الخطوة صفر ⇒ رفض
+  assert.equal(indexAtOrBeforeTime(bricks, 5000, undefined, 7260), 2); // الشمعة الحيّة ⇒ آخر لبنة
+  assert.equal(indexAtOrBeforeTime(bricks, 7260, undefined, 7260), 2);
+  assert.equal(indexAtOrBeforeTime(bricks, 7261, undefined, 7260), null); // بعد نهاية المصدر
+  assert.equal(indexAtOrBeforeTime(bricks, 1030, undefined, 7260), 0);
+  assert.equal(indexAtOrBeforeTime(bricks, 999, undefined, 7260), null);
+  assert.equal(indexAtOrBeforeTime(bricks, 1060, undefined, 500), 2); // endSec قبل آخر لبنة ⇒ لا يقصّها
   // مللي ثانية بالتابع وثوانٍ من القائد
   assert.equal(indexAtOrBeforeTime([bar(1.7e12), bar(1.70006e12)], 1.70003e9, (t) => (t > 1e12 ? t / 1000 : t)), 0);
 }

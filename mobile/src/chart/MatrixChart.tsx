@@ -1107,17 +1107,28 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       return;
     }
     // المقارنة بالزمن الحقيقي (لبنات Renko بزمن شمعتها)، والمفتاح المحفوظ زمن الخانة نفسها.
+    // اللبنة الأخيرة (والنافذة عند طرف السلسلة) سارية حتى نهاية الشموع المصدر — وإلا لا خطّ
+    // عند تابع Renko والقائد على الشمعة الحيّة حتى تكتمل لبنة.
+    const synthetic = kind === 'renko' || kind === 'kagi' || kind === 'pnf' || kind === 'range';
+    const lastCandle = liveSeries.candles[liveSeries.candles.length - 1];
+    const atSeriesEnd =
+      source.plot.length > 0 && source.plot[source.plot.length - 1] === source.all[source.all.length - 1];
+    const endSec =
+      synthetic && atSeriesEnd && lastCandle
+        ? candleTimeSec(lastCandle.time) + timeframeStepSec(series.timeframe)
+        : undefined;
     const i = indexAtOrBeforeTime(
       source.plot.map((b) => ({ time: barTime(b) })),
       syncCrossTime,
-      candleTimeSec
+      candleTimeSec,
+      endSec
     );
     const time = i != null ? source.plot[i]!.time : null;
     crossFromSync.current = true;
     setCross((prev) =>
       time == null ? null : prev && prev.time === time && prev.price == null ? prev : { time, price: null }
     );
-  }, [syncCrossTime, source.plot]);
+  }, [syncCrossTime, source.plot, source.all, kind, liveSeries.candles, series.timeframe]);
 
   // الرسومات تتبع شموعها بالزمن لا بالخانة — راجع `drawingAnchors.ts`. لا يعمل قبل أن
   // تُحمَّل رسومات هذا الرمز/الفريم (`drawings === loadedDrawings`)، ويعيد المصفوفة نفسها

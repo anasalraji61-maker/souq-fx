@@ -86,11 +86,17 @@ export function crossPriceAt(
  * `null` خارج مدى السلسلة: قبل أول شمعة، أو بعد آخر شمعة بأكثر من خطوة واحدة (بيانات
  * التابع متأخّرة — إظهار آخر شمعة كأنها «عند ذلك الزمن» كذب). `toSec` يوحّد
  * الثواني/المللي ثانية كما تفعل بقية المزامنة.
+ *
+ * `endSec` يستبدل حدّ «آخر شمعة + خطوة» حين يعرفه المستدعي أدقّ: لبنات Renko/Kagi/P&F/Range
+ * تعيش ساعات بلا لبنة جديدة والخطوة بين آخر لبنتين قد تكون صفراً (شمعة واحدة صنعت اثنتين)،
+ * فقائد على الشمعة الحيّة كان يُرفض ولا خطّ عند التابع حتى تكتمل لبنة. المستدعي يمرّر هنا
+ * نهاية شموعه المصدر (آخر شمعة + فريمها) — فاللبنة الأخيرة سارية حتى ذلك الحين لا أبعد.
  */
 export function indexAtOrBeforeTime(
   plot: readonly TimedBar[],
   timeSec: number | null | undefined,
-  toSec: (t: number) => number = (t) => t
+  toSec: (t: number) => number = (t) => t,
+  endSec?: number
 ): number | null {
   if (timeSec == null || !Number.isFinite(timeSec) || plot.length === 0) return null;
   const first = toSec(plot[0]!.time);
@@ -98,7 +104,8 @@ export function indexAtOrBeforeTime(
   const n = plot.length;
   const last = toSec(plot[n - 1]!.time);
   const step = n >= 2 ? last - toSec(plot[n - 2]!.time) : 0;
-  if (timeSec > last + Math.max(0, step)) return null;
+  const end = endSec != null && Number.isFinite(endSec) ? Math.max(last, endSec) : last + Math.max(0, step);
+  if (timeSec > end) return null;
   let found: number | null = null;
   for (let i = 0; i < n; i++) {
     if (toSec(plot[i]!.time) <= timeSec) found = i;
