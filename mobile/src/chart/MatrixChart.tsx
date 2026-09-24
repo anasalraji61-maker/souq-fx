@@ -1195,6 +1195,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const priceDecimalsRef = series.last;
   const fmtPrice = (v: number) => formatPrice(v, series.symbol, priceDecimalsRef);
   const [replayOn, setReplayOn] = useState(false);
+  const replayOnRef = useRef(false);
+  replayOnRef.current = replayOn;
+  // تبديل الرمز/الفريم يُنهي الإعادة (أدناه) — كانت تختفي بلا أثر فيظنّ المتداول أن الشموع الظاهرة
+  // ما زالت نقطة الإعادة. سطر القراءة يقول ذلك لبضع ثوانٍ.
+  const [replayEndedNotice, setReplayEndedNotice] = useState(false);
+  useEffect(() => {
+    if (!replayEndedNotice) return;
+    const id = setTimeout(() => setReplayEndedNotice(false), 6000);
+    return () => clearTimeout(id);
+  }, [replayEndedNotice]);
   const [replayStep, setReplayStep] = useState(15);
   const [replayPlaying, setReplayPlaying] = useState(false);
   const [logScale, setLogScale] = useState(false);
@@ -1328,6 +1338,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     syncKeyRef.current = '';
     // الإعادة تخرج مع التبديل: خطوتها فهرس داخل نافذة الفريم السابق، فكانت الخطوة 12 من 80 على 15m
     // (~17 ساعة للخلف) تصير على 1H ~68 ساعة ويوماً آخر، وعلى زوج آخر يستمرّ التشغيل فوق شموع لم يخترها.
+    if (replayOnRef.current) setReplayEndedNotice(true);
     setReplayOn(false);
     setReplayPlaying(false);
   }, [series.symbol, series.timeframe]);
@@ -5001,7 +5012,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           </Text>
         ) : (
           <Text style={styles.readoutMuted}>
-            {replayOn
+            {replayEndedNotice && !replayOn
+              ? tr.mcReplayEndedOnSwitch
+              : replayOn
               ? tr.mcReplayReadout
                   .replace('{n}', String(source.plot.length))
                   .replace('{total}', String(source.windowLen))

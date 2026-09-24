@@ -329,7 +329,16 @@ export function ChartFrame({
           ) : null}
         </View>
         <View style={[styles.priceRow, switching && styles.stale]}>
-          <Text style={styles.price}>{formatPrice(headerPrice, series.symbol, series.last)}</Text>
+          <Text
+            style={styles.price}
+            accessibilityLabel={
+              replayPrice != null
+                ? `${formatPrice(headerPrice, series.symbol, series.last)} — ${t.cfReplayPriceA11y}`
+                : undefined
+            }
+          >
+            {formatPrice(headerPrice, series.symbol, series.last)}
+          </Text>
           {replayPrice != null ? (
             <Text style={[styles.liveTag, styles.liveTagMuted]} accessibilityLabel={t.mcReplayModeA11y}>
               ⏪
