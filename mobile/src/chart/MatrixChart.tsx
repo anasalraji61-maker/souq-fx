@@ -4191,8 +4191,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           chartPlotW
         )
       : [];
-  // أقلّ من هذا بين بداية الخطّ وحافّة اللوح ⇒ الوسم يُثبَّت يمين اللوح لا يسار الخطّ.
-  const pivotLabelAtEnd = pivotStartX != null && chartPlotW - pivotStartX < 120;
+  // أقلّ من هذا بين بداية الخطّ وحافّة اللوح ⇒ الوسم يُثبَّت يمين اللوح لا يسار الخطّ. وسم
+  // PDH/PDL أطول بـ«· +23.4 pip» (~70px) فيُثبَّت أبكر، وإلّا قُصّ البُعد تحت محور السعر.
+  const pivotLabelAtEnd =
+    pivotStartX != null && chartPlotW - pivotStartX < (indicators.includes('pdhl') ? 190 : 120);
 
   // يسار وسم الارتكاز: عند الحافّة (بعرض اللوح)، أو بعد بداية الجلسة، أو مثبَّتاً يميناً (تقدير
   // محافظ لعرضه). خارج حارة الحافّة اليسرى ⇒ لا يُنقّى مع وسوم الخطّ الأفقي وفيبو هناك.
@@ -6208,6 +6210,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   numberOfLines={1}
                 >
                   {lv.label} {formatPrice(lv.price, series.symbol)}
+                  {/* أعلى/أدنى الأمس هدفا اليوم الأوّلان: كم بقي للسعر ليبلغهما بالـpip، كوسم الخطّ
+                      الأفقي. لا لبقيّة الارتكاز — ستّة وسوم بأبعادها تزحم اللوح. */}
+                  {(() => {
+                    const pips =
+                      (lv.label === 'PDH' || lv.label === 'PDL') && Number.isFinite(currentPrice)
+                        ? measurePipsText(series.symbol, currentPrice, lv.price)
+                        : null;
+                    return pips ? <Text style={styles.levelPipText}>{` · ${pips}`}</Text> : null;
+                  })()}
                 </Text>
               ) : null}
             </View>
