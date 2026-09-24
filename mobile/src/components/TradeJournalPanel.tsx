@@ -37,6 +37,7 @@ import {
   levelSideIssue,
   netByInstrument,
   openRiskTotals,
+  openTradesWithoutStop,
   knownLots,
   journalInstrumentKey,
   draftRiskFigures,
@@ -581,7 +582,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    */
   const openRiskLine = useMemo(() => {
     const o = openRiskTotals(visibleTrades);
-    if (!o) return null;
+    if (!o) {
+      // السبب الأشيع لغياب المجموع: مفتوحة بلا وقف — يُقال بدل الصمت (حجمٌ مجهول وحده يبقى بلا سطر)
+      const noStop = openTradesWithoutStop(visibleTrades);
+      return noStop > 0 ? t.journalOpenRiskNoStop.replace('{n}', String(noStop)) : null;
+    }
     return `${t.planRiskWord} ${t.journalOpenSuffix}: ${o.totals.map((c) => formatJournalMoney(c, t.journalMoneyUsc)).join(' · ')}`;
   }, [visibleTrades, t]);
 

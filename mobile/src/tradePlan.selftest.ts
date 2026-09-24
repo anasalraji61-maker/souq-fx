@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import {
   analyzePlan,
   openRiskTotals,
+  openTradesWithoutStop,
   entryAfterSideSwitch,
   executionPrice,
   floatingExitPrice,
@@ -1876,3 +1877,25 @@ console.log('tradePlan floatingExitPrice selftest OK');
   assert.deepEqual(openRiskTotals([one])!.totals, [journalRisk({ symbol: 'GBPJPY', entry: 190.5, sl: 190.123, lots: 0.37 })]);
 }
 console.log('tradePlan openRiskTotals selftest OK');
+
+// —— openTradesWithoutStop: سبب غياب سطر «المخاطرة (مفتوحة)»
+{
+  const T = (o: Partial<{ symbol: string; side: string; entry: number; sl: number | null; size: number | null; note: string | null; status: string }>) => ({
+    symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083 as number | null, size: 0.5, note: null, status: 'open', ...o,
+  });
+  assert.equal(openTradesWithoutStop([]), 0);
+  assert.equal(openTradesWithoutStop([T({})]), 0);
+  // غائب/صفر/سالب/NaN/Infinity ⇒ بلا وقف؛ المغلقة لا تُعدّ
+  const list = [T({ sl: null }), T({ sl: 0 }), T({ sl: -1 }), T({ sl: NaN }), T({ sl: Infinity }), T({ sl: null, status: 'closed' }), T({})];
+  assert.equal(openTradesWithoutStop(list), 5);
+  // حقل غائب كلياً (صفقة قديمة من الخادم) = بلا وقف
+  assert.equal(openTradesWithoutStop([{ status: 'open' }]), 1);
+  // اتّساق مع openRiskTotals: كلّما عُدّت صفقة بلا وقف فالمجموع null — لا يظهر السطران معاً
+  for (const tr of list) {
+    const arr = [T({}), tr];
+    if (openTradesWithoutStop(arr) > 0) assert.equal(openRiskTotals(arr), null);
+  }
+  // وقفٌ صالح بجهة الربح ليس «بلا وقف»
+  assert.equal(openTradesWithoutStop([T({ sl: 1.09 })]), 0);
+}
+console.log('tradePlan openTradesWithoutStop selftest OK');

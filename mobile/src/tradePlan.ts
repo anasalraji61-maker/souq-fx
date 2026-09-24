@@ -1234,6 +1234,21 @@ export function netLineIsWhole(
 }
 
 /**
+ * عدد الصفقات **المفتوحة** بلا وقفٍ صالح (غائب، صفر، سالب، غير رقم) — لسطر `journalOpenRiskNoStop` «صفقات مفتوحة بلا وقف: {n}»
+ * الذي يقول لماذا غاب سطر «المخاطرة (مفتوحة)» بدل الصمت. الشرط نفسه الذي يُرجع به `openRiskTotals` ‏`null`، فلا يظهر
+ * السطران معاً. المغلقة لا تُعدّ (وقفها لم يعد خطراً).
+ */
+export function openTradesWithoutStop(trades: readonly { sl?: number | null; status: string }[]): number {
+  let n = 0;
+  for (const tr of trades) {
+    if (tr.status !== 'open') continue;
+    const sl = tr.sl;
+    if (typeof sl !== 'number' || !Number.isFinite(sl) || sl <= 0) n += 1;
+  }
+  return n;
+}
+
+/**
  * **المخاطرة المفتوحة الآن**: مجموع المال بين الدخول والوقف لكل الصفقات المفتوحة المعروضة، لكل عملة تسعير — لسطر
  * «المخاطرة (مفتوحة): 150.00 USD · 12,000 JPY» بالدفتر. أربع صفقات بـ1% لكلٍّ هي 4% من الحساب معرَّضة معاً، والدفتر
  * كان يقول مخاطرة كل صفقة وحدها (`journalRisk`) ويسكت عن المجموع — الرقم الذي يُسأل قبل فتح الخامسة.
