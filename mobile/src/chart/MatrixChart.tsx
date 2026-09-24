@@ -855,7 +855,8 @@ function PaneSpreadHead({
 }
 
 /**
- * لوحة **خطّ واحد يدور حول الصفر** (TRIX، DPO، Coppock) — كما ترسمها TradingView: خطّ
+ * لوحة **خطّ واحد يدور حول الصفر** (TRIX، DPO، Coppock، CCI، ROC، Momentum، Force، Chaikin،
+ * CMF، EOM، BOP) — كما ترسمها TradingView: خطّ
  * وخطّ صفر، لا أعمدة. كانت أعمدة بلون الجانب وحده، فانعطاف الخطّ (ما يُقرأ من TRIX
  * وCoppock قبل تقاطع الصفر بشموع) لا يُرى إلا بمقارنة أطوال أعمدة متجاورة بالعين.
  * اللون يبقى للجانب — نفس دلالة رقم الرأس فوقها. المقياس والموضع بهندسة MACD
@@ -8441,32 +8442,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead name="Force" values={force} at={crossIndex} />
           <View style={styles.paneInner}>
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
-            {(() => {
-              const vals = force.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxF = Math.max(...vals, 1e-9);
-              return force.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxF, paneH);
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <ZeroLineSeries values={force} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -8475,32 +8451,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead name="Chaikin" values={chaikinOsc} at={crossIndex} />
           <View style={styles.paneInner}>
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
-            {(() => {
-              const vals = chaikinOsc.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxC = Math.max(...vals, 1e-9);
-              return chaikinOsc.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxC, paneH);
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <ZeroLineSeries values={chaikinOsc} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -8624,32 +8575,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead name="BOP" values={bop} at={crossIndex} />
           <View style={styles.paneInner}>
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
-            {(() => {
-              const vals = bop.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxB = Math.max(...vals, 1e-9);
-              return bop.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxB, paneH);
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <ZeroLineSeries values={bop} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -8789,32 +8715,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead name="EOM" values={eom} at={crossIndex} />
           <View style={styles.paneInner}>
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
-            {(() => {
-              const vals = eom.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxEom = Math.max(...vals, 1e-9);
-              return eom.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxEom, paneH);
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <ZeroLineSeries values={eom} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -9478,32 +9379,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead name="Momentum" values={momentum} at={crossIndex} />
           <View style={styles.paneInner}>
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
-            {(() => {
-              const vals = momentum.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxM = Math.max(...vals, 1e-9);
-              return momentum.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxM, paneH);
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <ZeroLineSeries values={momentum} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -10586,32 +10462,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead name="ROC" values={roc} at={crossIndex} />
           <View style={styles.paneInner}>
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
-            {(() => {
-              const vals = roc.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxR = Math.max(...vals, 1e-9);
-              return roc.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxR, paneH);
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <ZeroLineSeries values={roc} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -10682,32 +10533,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <PaneValueHead name="CMF" values={cmf} at={crossIndex} />
           <View style={styles.paneInner}>
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
-            {(() => {
-              const vals = cmf.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxC = Math.max(...vals, 1e-9);
-              return cmf.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxC, paneH);
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <ZeroLineSeries values={cmf} paneH={paneH} />
           </View>
         </View>
       ) : null}
