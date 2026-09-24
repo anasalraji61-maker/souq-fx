@@ -100,6 +100,20 @@ export const PANE_GUIDES: Readonly<Record<string, PaneGuideSpec>> = {
       { v: 0.2, kind: 'extreme' },
     ],
   },
+  /**
+   * Laguerre RSI (Ehlers) مداه 0..1 ويصل طرفيه كثيراً، فبلا خطّين كان اللون وحده يقول
+   * «تشبّع». العتبتان ‎0.85/0.15‎ هما حدّا ألوان الخطّ بالرسم نفسه، فيُقرأ الخطّ واللون
+   * شيئاً واحداً (كـ‎%B‎).
+   */
+  laguerreRsi: {
+    min: 0,
+    max: 1,
+    levels: [
+      { v: 0.85, kind: 'extreme' },
+      { v: 0.5, kind: 'mid' },
+      { v: 0.15, kind: 'extreme' },
+    ],
+  },
 };
 
 export interface PlacedGuide {

@@ -7939,8 +7939,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {laguerreRsi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Laguerre RSI" values={laguerreRsi} at={crossIndex} tone="none" />
+          <PaneHead paneId="laguerreRsi" name="Laguerre RSI" values={laguerreRsi} at={crossIndex} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="laguerreRsi" innerH={paneH - 16} />
             {/* خطّ متّصل بمداه الثابت 0..1 لا شرطة 3px حافّتها العليا عند القيمة (قيمة 0 كانت خارج المساحة). */}
             <BoundedLineSeries
               values={laguerreRsi}

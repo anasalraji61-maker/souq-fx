@@ -349,6 +349,14 @@ for (const id of ['cci', 'roc', 'atr', 'volume', '', 'nope']) {
   assert.equal(paneBoundedDecimals('stochRsi'), 1);
   assert.equal(paneBoundedDecimals('willr'), 1, 'مدى سالب واسع');
   assert.equal(paneBoundedDecimals('percentB'), 2);
+  // Laguerre RSI: خطّا ‎0.85/0.15‎ على حدّي ألوان الخطّ، ومداه 0..1 ⇒ خانتان عشريتان.
+  const lg = placeGuides('laguerreRsi', INNER);
+  assert.deepEqual(lg.map((g) => g.v), [0.85, 0.5, 0.15]);
+  assert.ok(Math.abs(lg[0].top - 0.15 * INNER) < 1e-9);
+  assert.equal(paneValueState('laguerreRsi', 0.9), 'high');
+  assert.equal(paneValueState('laguerreRsi', 0.1), 'low');
+  assert.equal(paneValueState('laguerreRsi', 0.85), 'mid');
+  assert.equal(paneBoundedDecimals('laguerreRsi'), 2);
   assert.equal(paneBoundedDecimals('nope'), 1);
   // وبها يُقرأ ‎%B‎ فعلاً بدل أن تتساوى كل قراءاته
   assert.equal(formatPaneValue(0.42, 2), '0.42');
