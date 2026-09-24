@@ -82,23 +82,37 @@ Notifications.setNotificationHandler({
  */
 export async function ensureAlertNotifications(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
-  const { status: existing } = await Notifications.getPermissionsAsync();
-  if (existing === 'granted') return true;
-  await ensureAlertChannel();
-  const { status } = await Notifications.requestPermissionsAsync();
-  return status === 'granted';
+  // **لا ترفض أبداً** (كـ`getNotificationPermissionState` أدناه): اللوحتان تناديانها بـ`.then` بلا `catch`،
+  // ورفضٌ من `expo-notifications` (Expo Go، أندرويد بلا خدمات) كان يترك زرّ التفعيل على «…». رفضٌ = لا إذن.
+  try {
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    if (existing === 'granted') return true;
+    await ensureAlertChannel();
+    const { status } = await Notifications.requestPermissionsAsync();
+    return status === 'granted';
+  } catch {
+    return false;
+  }
 }
 
 export type NotificationPermissionState = 'granted' | 'denied' | 'undetermined' | 'unsupported';
 
 /** حالة إذن الإشعارات الحالية — لعرض زر تفعيل/تعطيل واضح بالإعدادات بدل الاعتماد
- * على نافذة نظام التشغيل الافتراضية فقط (بند 9 من قائمة الإطلاق، docs/ROADMAP.md). */
+ * على نافذة نظام التشغيل الافتراضية فقط (بند 9 من قائمة الإطلاق، docs/ROADMAP.md).
+ *
+ * **لا ترفض أبداً**: `AccountScreen` يناديها بـ`.then` بلا `catch` وداخل `finally` قبل `setNotifBusy(false)` — رفضٌ
+ * من `getPermissionsAsync` (Expo Go، أندرويد بلا خدمات Google) كان يُبقي زرّ «تفعيل الإشعارات» على «…» للأبد.
+ * حالةٌ لا تُقرأ = `'unsupported'`: الواجهة تقول إن الإشعارات غير متاحة هنا وتُخفي زرّاً لن يعمل. */
 export async function getNotificationPermissionState(): Promise<NotificationPermissionState> {
   if (Platform.OS === 'web') return 'unsupported';
-  const { status } = await Notifications.getPermissionsAsync();
-  if (status === 'granted') return 'granted';
-  if (status === 'denied') return 'denied';
-  return 'undetermined';
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status === 'granted') return 'granted';
+    if (status === 'denied') return 'denied';
+    return 'undetermined';
+  } catch {
+    return 'unsupported';
+  }
 }
 
 /**
