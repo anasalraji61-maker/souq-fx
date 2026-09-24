@@ -45,6 +45,22 @@ export function isCentJournalSymbol(symbol: string | null | undefined): boolean 
 }
 
 /**
+ * حجمٌ بخانة الدفتر يبدو **وحداتٍ لا لوتات** (`sizeLooksLikeUnits`) — وبرمز حساب سنت أيضاً.
+ *
+ * التحذير كان على `instrumentSpec` وحده، فـ«EURUSDC» بحجم «10000» لا يُنبَّه عليها ولا يُمنع حفظها: صفقة بعشرة
+ * آلاف لوت بالدفتر. السنت يُكشف بضعف الحدّ (`MAX_SANE_LOTS` × 2: لوت السنت أصغر بمئة مرّة فأرقامه أكبر بطبيعتها،
+ * ومنع حفظ صفقة حقيقية أسوأ من تركها)، و**بلا اقتراح تحويل** (`lots: null`): حجم عقد
+ * السنت بالوحدات يختلف بين الوسطاء، و«0.10» مقترحة خطأً بمئة ضعف أسوأ من سطرٍ يقول «تحقّق من الحجم».
+ */
+export function journalSizeLooksLikeUnits(size: number, symbol: string | null | undefined): { lots: number | null } | null {
+  const up = (symbol || '').trim().toUpperCase();
+  const spec = instrumentSpec(up);
+  if (spec) return sizeLooksLikeUnits(size, spec);
+  if (!isCentJournalSymbol(up)) return null;
+  return Number.isFinite(size) && size > 2 * MAX_SANE_LOTS ? { lots: null } : null;
+}
+
+/**
  * «كم أخاطر» لمسودّة الدفتر: نقاط الوقف والمال بعملة التسعير للحجم المكتوب. `null` = لا سطر (بلا حجم، وقف
  * بالجهة الخطأ أو على الدخول، حجمٌ يبدو وحدات، أداة مجهولة).
  *
@@ -67,7 +83,7 @@ export function draftRiskFigures(input: {
   const spec = std ?? (cent ? instrumentSpec(centAccountSymbol(sym) ?? '') : null);
   if (!spec) return null;
   // مالٌ من حجمٍ يبدو وحداتٍ («125,000,000 USD») أسوأ من لا شيء — سطر التحذير يقول ما الخطأ
-  if (sizeLooksLikeUnits(lots, spec)) return null;
+  if (journalSizeLooksLikeUnits(lots, sym)) return null;
   if (cent) return { pips: pipsBetween(spec, entry, sl), cash: null, cent: true };
   const cash = riskInQuoteCcy({ symbol: sym, entry, sl, lots });
   if (!cash) return null;

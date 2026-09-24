@@ -35,6 +35,7 @@ import {
   knownLots,
   journalInstrumentKey,
   draftRiskFigures,
+  journalSizeLooksLikeUnits,
   realizedMove,
   realizedR,
   recentLotSizes,
@@ -328,7 +329,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    */
   const sizeUnits = (() => {
     const l = num(size);
-    return l != null ? sizeLooksLikeUnits(l, instrumentSpec(symbol.trim().toUpperCase())) : null;
+    // رمز سنت كذلك، بلا اقتراح تحويل (`journalSizeLooksLikeUnits`)
+    return l != null ? journalSizeLooksLikeUnits(l, symbol) : null;
   })();
   const sizeUnitsText = (): string => {
     const l = num(size) ?? 0;
@@ -470,7 +472,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       entry: pnum(entry),
       sl: pnum(sl),
       exit: pnum(exit),
-      lots: l != null && !sizeLooksLikeUnits(l, instrumentSpec(symbol.trim().toUpperCase())) ? l : null,
+      lots: l != null && !journalSizeLooksLikeUnits(l, symbol) ? l : null,
     });
     if (!p) return null;
     const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');

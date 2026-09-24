@@ -40,6 +40,7 @@ import {
   QUICK_RR,
   journalPipSize,
   draftRiskFigures,
+  journalSizeLooksLikeUnits,
   isCentJournalSymbol,
 } from './tradePlan';
 import { riskInQuoteCcy as cashRisk } from './positionSize';
@@ -1447,3 +1448,29 @@ console.log('tradePlan cent quoteSymbol selftest OK');
     assert.equal(isCentJournalSymbol(s), false, String(s));
 }
 console.log('tradePlan draftRiskFigures selftest OK');
+
+// journalSizeLooksLikeUnits — تحذير «الحجم يبدو وحدات» لرمز سنت أيضاً، بلا اقتراح تحويل
+{
+  // العادي كـsizeLooksLikeUnits تماماً
+  assert.deepEqual(journalSizeLooksLikeUnits(10000, 'EURUSD'), { lots: 0.1 });
+  assert.deepEqual(journalSizeLooksLikeUnits(10000, 'eurusd.m'), { lots: 0.1 });
+  assert.equal(journalSizeLooksLikeUnits(0.5, 'EURUSD'), null);
+  assert.equal(journalSizeLooksLikeUnits(100, 'EURUSD'), null);
+  // السنت: كان null (يُحفظ بعشرة آلاف لوت)
+  assert.deepEqual(journalSizeLooksLikeUnits(10000, 'EURUSDC'), { lots: null });
+  assert.deepEqual(journalSizeLooksLikeUnits(250, 'GOLDC'), { lots: null });
+  // أحجام سنت معقولة لا تُمنع — حتى فوق حدّ العادي
+  for (const n of [0.01, 1, 150, 200]) assert.equal(journalSizeLooksLikeUnits(n, 'EURUSDC'), null, String(n));
+  // مجهول: لا حكم
+  assert.equal(journalSizeLooksLikeUnits(10000, 'US30'), null);
+  assert.equal(journalSizeLooksLikeUnits(10000, ''), null);
+  assert.equal(journalSizeLooksLikeUnits(NaN, 'EURUSDC'), null);
+  // سطر المخاطرة يختفي لحجم السنت الذي يبدو وحدات، ويبقى لـ150
+  assert.equal(draftRiskFigures({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.0825, lots: 10000 }), null);
+  assert.deepEqual(draftRiskFigures({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.0825, lots: 150 }), {
+    pips: 25,
+    cash: null,
+    cent: true,
+  });
+}
+console.log('tradePlan journalSizeLooksLikeUnits selftest OK');
