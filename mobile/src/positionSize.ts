@@ -65,8 +65,19 @@ export function normalizeSymbol(raw: string): string {
  */
 const BROKER_SUFFIXED = /^([A-Z]{3})[/\s_-]?([A-Z]{3})(?:[.\-_#+][A-Z0-9]{0,5}|M)$/;
 
+/**
+ * اسما الذهب والفضة الفوريين بمنصّات وسطاء كثيرين («GOLD»، «SILVER»، «GOLD#»، «GOLD.m») — العقد نفسه
+ * (الذهب 100 أونصة بالدولار، الفضة 5,000) باسمٍ آخر. كانا يُرفضان: صفقة «GOLD» بالدفتر تُحفظ بلا نقاط ولا
+ * R ولا مال ولا نتيجة عائمة (المزوّد لا يعرف إلا XAU/USD)، والحاسبة تقول «رمز غير معروف». اللاحقة **بفاصل**
+ * فقط كقاعدة `BROKER_SUFFIXED` («GOLDM» ملاصقة قد تكون اسماً آخر — تبقى مرفوضة).
+ */
+const METAL_NAMES = /^(GOLD|SILVER)(?:[.\-_#+][A-Z0-9]{0,5})?$/;
+const METAL_NAME_SYMBOL: Record<string, string> = { GOLD: 'XAUUSD', SILVER: 'XAGUSD' };
+
 export function instrumentSpec(raw: string): InstrumentSpec | null {
   let symbol = normalizeSymbol(raw);
+  const named = METAL_NAMES.exec(raw.trim().toUpperCase());
+  if (named) symbol = METAL_NAME_SYMBOL[named[1]];
   if (!/^[A-Z]{6}$/.test(symbol)) {
     const m = BROKER_SUFFIXED.exec(raw.trim().toUpperCase());
     if (!m) return null;

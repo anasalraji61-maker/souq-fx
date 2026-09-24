@@ -547,7 +547,7 @@ console.log('tradePlan netByInstrument selftest OK');
     ['us30-ecn', 'US30'],
     ['NAS100.m', 'NAS100'],
     ['GER40Cash', 'GER40'],
-    ['GOLD#', 'GOLD'],
+    ['GOLD#', 'XAUUSD'], // اسم الذهب لدى الوسيط = XAUUSD نفسه (`instrumentSpec`)
     ['usoil.pro', 'USOIL'],
     ['US30M', 'US30M'], // حرف ملاصق غير Cash: لا تخمين
     ['AAPL.US', 'AAPL.US'], // اسم غير معروف: كما يُحفظ
@@ -728,7 +728,7 @@ console.log('tradePlan exitPreview selftest OK');
 {
   const cases: [string, string, string][] = [
     // [كما كُتب, كما يُحفظ, رمز السعر]
-    ['GOLD#', 'GOLD#', 'GOLD'],
+    ['GOLD#', 'GOLD#', 'XAUUSD'], // المزوّد لا يعرف «GOLD»
     ['us30#', 'US30#', 'US30'],
     ['us30-ecn', 'US30-ECN', 'US30'],
     ['US30_pro', 'US30_PRO', 'US30'],
@@ -1019,3 +1019,26 @@ console.log('tradePlan quickJournalSymbols selftest OK');
   assert.ok(n > 150);
 }
 console.log('tradePlan stopsForPips selftest OK');
+
+// —— «GOLD»/«SILVER» بالدفتر: تُحفظ كما كُتبت، وتُحسب نقاطها وسعر سوقها كـXAUUSD/XAGUSD
+{
+  assert.equal(journalSymbol('gold'), 'GOLD');
+  assert.equal(journalSymbol('GOLD#'), 'GOLD#');
+  assert.equal(journalSymbol('silver'), 'SILVER');
+  assert.equal(journalSymbol('silver.m'), 'SILVER.M');
+  assert.equal(quoteSymbol('GOLD'), 'XAUUSD');
+  assert.equal(quoteSymbol('SILVER.M'), 'XAGUSD');
+  assert.equal(journalInstrumentKey('GOLD'), 'XAUUSD');
+  assert.deepEqual(realizedMove({ symbol: 'GOLD', side: 'buy', entry: 2350, exit: 2355.5 }), { pips: 55, pct: 0.23 });
+  assert.deepEqual(
+    realizedMove({ symbol: 'GOLD#', side: 'sell', entry: 2000, exit: 2002.5 }),
+    realizedMove({ symbol: 'XAUUSD', side: 'sell', entry: 2000, exit: 2002.5 })
+  );
+  // صفقتا GOLD و XAUUSD أداة واحدة بصافي واحد
+  const net = netByInstrument([
+    { symbol: 'GOLD', side: 'buy', entry: 2000, exit: 2004, size: 0.1, status: 'closed' },
+    { symbol: 'XAUUSD', side: 'sell', entry: 2010, exit: 2012, size: 0.1, status: 'closed' },
+  ]);
+  assert.deepEqual(net, [{ symbol: 'XAUUSD', n: 2, pips: 20, cash: { amount: 20, ccy: 'USD' } }]);
+}
+console.log('tradePlan GOLD/SILVER journal selftest OK');

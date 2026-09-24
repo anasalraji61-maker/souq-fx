@@ -1398,3 +1398,28 @@ console.log('positionSize toggleRiskUnit selftest OK');
   }
 }
 console.log('positionSize lotsOverOrderMax selftest OK');
+
+// ---- instrumentSpec: «GOLD»/«SILVER» (أسماء الوسطاء) = XAUUSD/XAGUSD بمواصفاتهما حرفياً ----
+{
+  const xau = instrumentSpec('XAUUSD')!;
+  const xag = instrumentSpec('XAGUSD')!;
+  for (const raw of ['GOLD', 'gold', ' Gold ', 'GOLD#', 'GOLD.m', 'GOLD-ECN', 'GOLD_pro', 'GOLD+'])
+    assert.deepEqual(instrumentSpec(raw), xau, raw);
+  for (const raw of ['SILVER', 'silver', 'SILVER#', 'SILVER.pro'])
+    assert.deepEqual(instrumentSpec(raw), xag, raw);
+  // ملاصقة بلا فاصل، أو اسم آخر: مرفوضة كما كانت (لا تخمين)
+  for (const raw of ['GOLDM', 'GOLDX', 'GOLDEUR', 'GOLD.TOOLONG', 'SILVERY', 'GOL', 'PLATINUM', 'GOLD SILVER'])
+    assert.equal(instrumentSpec(raw), null, raw);
+  // الحساب نفسه: وقف 5 دولار على GOLD = 50 pip × 10 USD/pip/lot؛ 1% من 10,000 ⇒ 0.2 lot (كـXAUUSD تماماً)
+  const g = instrumentSpec('GOLD#')!;
+  assert.equal(slPipsFromPrices(g, 2350, 2345), 50);
+  const r = positionSize({ balance: 10_000, riskPct: 1, slPips: 50, pipValuePerLot: pipValuePerLot(g, 1), contractSize: g.contractSize })!;
+  assert.equal(r.lots, 0.2);
+  assert.equal(r.actualRisk, 100);
+  const s = instrumentSpec('SILVER')!;
+  // فضة: 0.25 دولار = 25 pip × 50 USD/pip/lot
+  assert.equal(slPipsFromPrices(s, 30, 29.75), 25);
+  assert.equal(pipValuePerLot(s, 1), 50);
+  assert.deepEqual(pnlInQuoteCcy({ symbol: 'GOLD.m', side: 'buy', entry: 2350, exit: 2355.5, lots: 0.2 }), { amount: 110, ccy: 'USD' });
+}
+console.log('positionSize metal broker names selftest OK');
