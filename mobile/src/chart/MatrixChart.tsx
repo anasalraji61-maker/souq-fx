@@ -2241,6 +2241,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
    */
   const bandW = bandStripWidth(chartPlotW, source.plot.length);
 
+  const viewPriceScale =
+    syncFollow && syncWindow?.priceScale != null ? syncWindow.priceScale : priceScale;
+  const viewPricePan =
+    syncFollow && syncWindow?.pricePan != null ? syncWindow.pricePan : pricePan;
+
   /** مسارات عمودية: أساسي فوق · ثم الظلال من الأكبر → الأصغر */
   const shadowStack = useMemo(() => {
     if (!shadowLayers.length) return null;
@@ -2281,15 +2286,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       return { min, max, span: max - min || 1 };
     };
 
+    // تكبير/إزاحة المحور الرأسي على الحارة الأساسية — كانت بمدى شموعها وحده فالسحب الرأسي
+    // وعجلة المحور بلا أثر مع الظلال. الإزاحة بوحدة الإطار الممدود (`priceFrame`) لا الحارة،
+    // فالشمعة تتبع الإصبع بكسلاً ببكسل كما بلا ظلال.
+    const primaryFit = laneRange(
+      source.plot.map((c) => c.low),
+      source.plot.map((c) => c.high)
+    );
+    const frameSpan = (primaryFit.span * chartPlotH) / Math.max(1, primaryH);
+    const primaryCenter = (primaryFit.max + primaryFit.min) / 2 + viewPricePan * frameSpan;
+    const primarySpan = primaryFit.span * viewPriceScale;
     const primaryLane = {
       id: 'primary',
       label: tr.mcPrimaryLane,
       top: 0,
       height: primaryH,
-      ...laneRange(
-        source.plot.map((c) => c.low),
-        source.plot.map((c) => c.high)
-      ),
+      min: primaryCenter - primarySpan / 2,
+      max: primaryCenter + primarySpan / 2,
+      span: primarySpan,
     };
 
     let cursor = primaryH + gap;
@@ -2311,7 +2325,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     });
 
     return { primaryLane, shadowLanes };
-  }, [shadowLayers, chartPlotH, source.plot, range.min, range.max, range.span, logScale, tr]);
+  }, [
+    shadowLayers,
+    chartPlotH,
+    source.plot,
+    range.min,
+    range.max,
+    range.span,
+    logScale,
+    tr,
+    viewPriceScale,
+    viewPricePan,
+  ]);
 
   // إطار السعر الذي يقرأ به **كل شيء** (المحور، التقاطع و`priceAtY`، الرسومات، وسم السعر
   // الحيّ، التنبيه): مع الظلال الشموع الأساسية تُرسم بمدى حارتها العليا (`yPrimary`)، بينما
@@ -3945,6 +3970,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const bodyTop = yP(Math.max(c.open, c.close));
             const bodyBot = yP(Math.min(c.open, c.close));
             const wickH = Math.max(2, yP(c.low) - yP(c.high));
+            // مع الظلال والتكبير الرأسي: شمعة خارج حارتها كلّها لا تُرسم فوق حارات الظلال.
+            if (
+              shadowStack &&
+              (top >= shadowStack.primaryLane.height || top + wickH <= 0)
+            ) {
+              return null;
+            }
             const bodyH = Math.max(2, bodyBot - bodyTop);
             const left = xOf(i) - primaryColW / 2;
             if (kind === 'kagi') {
