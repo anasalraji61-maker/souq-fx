@@ -82,7 +82,9 @@ function buildTabs(t: Dict): { id: TabId; label: string; mark: string }[] {
   return [
     { id: 'hub', label: t.toolsTabHub, mark: '✦' },
     { id: 'reports', label: t.toolsTabReports, mark: '≡' },
-    { id: 'journal', label: t.toolsTabJournal, mark: '₴' },
+    // «₴» رمز الهريفنيا الأوكرانية لا دفتر — ولا علاقة له بالصفقات؛ «▤» صفحةٌ مسطّرة (طلب الإطلاق launch4).
+    // الـDock والشريط الجانبي (`MatrixBottomDock`/`MatrixEdgeRails`) يحتاجان الرمز نفسه — ليسا بنطاق الأدوات.
+    { id: 'journal', label: t.toolsTabJournal, mark: '▤' },
     { id: 'risk', label: t.toolsTabRisk, mark: '%' },
     { id: 'screener', label: t.toolsTabScreener, mark: '⌕' },
     { id: 'backtest', label: t.toolsTabBacktest, mark: '↺' },
