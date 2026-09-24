@@ -33,6 +33,9 @@ type Props = {
 // بالشارت فيعيد رسمه مرّة ثانية ويمسح أي مؤشّر أضافه المتداول.
 const NO_INDICATORS: never[] = [];
 
+/** حشو الخلية وحدّها ورأسها (الرمز والسعر) فوق الشارت — راجع `phoneCellH`. */
+const PHONE_CELL_CHROME = 2 * spacing.xs + 2 + 18 + spacing.xs;
+
 const DEFAULT: [string, string, string, string] = ['EURUSD', 'GBPUSD', 'XAUUSD', 'DXY'];
 const BASES: Record<string, number> = {
   EURUSD: 1.0854,
@@ -58,7 +61,16 @@ export function QuadChartModal({
   const align = rtl ? ('right' as const) : ('left' as const);
   const { width, height } = useWindowDimensions();
   const phone = width < 700;
-  const cellH = phone ? height * 0.28 : height * 0.32;
+  // الهاتف: أربع خلايا بعمود واحد بلا تمرير. كانت كل خلية 28% من الشاشة + رأسها وسطر قراءتها
+  // وحشوها (~285pt على 844pt) فالأربع ≈ 1140pt: الخلية الرابعة (DXY) ونصف الثالثة خارج الشاشة
+  // ولا سبيل إليهما. الآن الارتفاع من الشبكة المقيسة فعلاً مقسوماً على أربع، والشارت بلا سطر
+  // القراءة (`dense`، كإطارات الشاشة الرئيسية المملوءة).
+  const [gridH, setGridH] = useState(0);
+  const phoneCellH =
+    gridH > 0
+      ? Math.max(96, (gridH - 5 * spacing.sm) / 4 - PHONE_CELL_CHROME)
+      : height * 0.18;
+  const cellH = phone ? phoneCellH : height * 0.32;
   const [series, setSeries] = useState<(ChartSeries | null)[]>([null, null, null, null]);
   const ticks = useMultiLiveTicks(symbols, visible);
   // الفريم كان ثابتاً من الشاشة الأمّ: مقارنة الأزواج الأربعة على فريم آخر تعني إغلاق الرباعي،
@@ -167,7 +179,10 @@ export function QuadChartModal({
             {`${t.mcSyncLeadHint} — ${symbols[leader]}`}
           </Text>
         ) : null}
-        <View style={[styles.grid, rtl && styles.gridRtl, phone && styles.gridPhone]}>
+        <View
+          style={[styles.grid, rtl && styles.gridRtl, phone && styles.gridPhone]}
+          onLayout={(e) => setGridH(e.nativeEvent.layout.height)}
+        >
           {symbols.map((sym, i) => {
             const isLeader = i === leader;
             const following = syncTime && !isLeader;
@@ -236,6 +251,7 @@ export function QuadChartModal({
                     accent={sym === 'DXY' ? colors.dxy : colors.accent}
                     initialLens="clean"
                     initialIndicators={NO_INDICATORS}
+                    dense={phone}
                     panControls={!syncTime || isLeader}
                     syncWindow={following ? syncWindow : null}
                     onSyncWindow={syncTime && isLeader ? setSyncWindow : undefined}
@@ -290,7 +306,7 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
     minHeight: 200,
   },
-  cellPhone: { width: '100%' },
+  cellPhone: { width: '100%', minHeight: 0 },
   cellHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
   cellHeadRtl: { flexDirection: 'row-reverse' },
   sym: { color: colors.accent, fontWeight: '800' },
