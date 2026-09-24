@@ -6,7 +6,7 @@
  * - الأرقام العربية الهندية ولوحة المفاتيح العربية: «١٫٠٨٥٠» → NaN، و«1٫0850» → 1 (يتوقف عند ٫).
  * - الكتابة الأوروبية: «1.085,50» → 1.085.
  *
- * القواعد: الأرقام ٠-٩ و۰-۹ → 0-9، «٫» → نقطة عشرية، «٬» والمسافات تُحذف. إن وُجدت فاصلة ونقطة معاً فالأخيرة
+ * القواعد: الأرقام ٠-٩ و۰-۹ و٠-٩ العريضة (０-９) → 0-9، «٫» و«．» → نقطة عشرية، «，» → فاصلة، «٬» والمسافات تُحذف. إن وُجدت فاصلة ونقطة معاً فالأخيرة
  * هي العشرية والأخرى فاصل آلاف. فاصل واحد متكرر (1,000,000 أو 1.000.000) = آلاف بشرط مجموعات من 3 أرقام.
  * فاصلة وحيدة = عشرية («1,0850»)، **إلا** إذا تلاها 3 أرقام بالضبط («10,000» أو «1,085») — مبهمة (عشرة آلاف أم
  * 10.000؟) فتُرفض بدل التخمين؛ الحقول مالية والتخمين الخاطئ يغيّر الحجم ألف مرة. كل ما عدا ذلك → null.
@@ -14,11 +14,18 @@
 
 const ARABIC_INDIC = /[٠-٩]/g;
 const EXT_ARABIC_INDIC = /[۰-۹]/g;
+/**
+ * الأرقام العريضة (U+FF10–FF19) — ما تكتبه لوحة المفاتيح اليابانية بوضع الإدخال الافتراضي («１．０８５»)،
+ * وطوكيو من أولويات المشروع. كانت كل خانة بالحاسبة والدفتر ترفضها «رقماً غير مفهوم» بينما «％» العريضة
+ * مقبولة أصلاً بخانة النسبة.
+ */
+const FULLWIDTH = /[０-９]/g;
 
 export function normalizeDigits(s: string): string {
   return s
     .replace(ARABIC_INDIC, (c) => String(c.charCodeAt(0) - 0x0660))
-    .replace(EXT_ARABIC_INDIC, (c) => String(c.charCodeAt(0) - 0x06f0));
+    .replace(EXT_ARABIC_INDIC, (c) => String(c.charCodeAt(0) - 0x06f0))
+    .replace(FULLWIDTH, (c) => String(c.charCodeAt(0) - 0xff10));
 }
 
 const THOUSANDS_GROUPS = (body: string, sep: string) => {
@@ -43,13 +50,14 @@ export function parseDecimal(
 ): number | null {
   let s = normalizeDigits(raw)
     .replace(/[\s   ٬']/g, '')
-    .replace(/٫/g, '.');
+    .replace(/[٫．]/g, '.')
+    .replace(/，/g, ',');
   if (opts.percent) {
     const signs = s.match(/[%٪％]/g)?.length ?? 0;
     if (signs === 1 && /^[%٪％]|[%٪％]$/.test(s)) s = s.replace(/[%٪％]/, '');
   }
   let neg = false;
-  if (opts.signed && /^[-−]/.test(s)) {
+  if (opts.signed && /^[-−－]/.test(s)) {
     neg = true;
     s = s.slice(1);
   }

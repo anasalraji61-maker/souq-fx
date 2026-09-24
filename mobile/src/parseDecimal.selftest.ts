@@ -63,4 +63,32 @@ assert.equal(parseDecimal('1%%', { percent: true }), null);
 assert.equal(parseDecimal('%1%', { percent: true }), null);
 assert.equal(parseDecimal('1%5', { percent: true }), null);
 assert.equal(parseDecimal('1%'), null); // بلا الخيار: العلامة مرفوضة كما كانت (خانات السعر والرصيد)
+// الأرقام العريضة (لوحة المفاتيح اليابانية) بقواعد الفواصل نفسها — لا قراءة أرخى من اللاتينية
+assert.equal(parseDecimal('１．０８５０'), 1.085);
+assert.equal(parseDecimal('１５７．４２'), 157.42);
+assert.equal(parseDecimal('1.0850'), parseDecimal('１．０８５０'));
+assert.equal(parseDecimal('２，３５０．５０'), 2350.5);
+assert.equal(parseDecimal('１，０８５０'), 1.085);
+assert.equal(parseDecimal('１００００'), 10000);
+assert.equal(parseDecimal('１，０００，０００', { amount: true }), 1000000);
+assert.equal(parseDecimal('１０，０００', { amount: true }), null); // مبهمة كنظيرتها «10,000»
+assert.equal(parseDecimal('１０．０００', { amount: true }), null);
+assert.equal(parseDecimal('　１．５　'), 1.5); // المسافة العريضة
+assert.equal(parseDecimal('０．５％', { percent: true }), 0.5);
+assert.equal(parseDecimal('－０．００１２', { signed: true }), -0.0012);
+assert.equal(parseDecimal('－５'), null); // بلا الخيار: السالب مرفوض كما كان
+assert.equal(parseDecimal('１．２．３'), null);
+assert.equal(parseDecimal('１ｅ５'), null);
+// الخليط (لاتيني + عريض + عربي) يُقرأ كلّه أرقاماً — كل رقم بقيمته
+assert.equal(parseDecimal('1٫０8５'), 1.085);
+// شبكة: كل رقم لاتيني صالح يُقرأ بعد تحويله للعريض إلى القيمة نفسها بالضبط
+{
+  const toWide = (x: string) =>
+    x.replace(/[0-9]/g, (d) => String.fromCharCode(0xff10 + Number(d))).replace(/\./g, '．').replace(/,/g, '，');
+  for (const x of ['1.0850', '2,350.50', '1.085,50', '100,000', '0,085', '1,000,000', '157.423', '.5', '1.', '10000', 'abc', '1.2.3']) {
+    for (const opts of [{}, { amount: true }, { percent: true }]) {
+      assert.equal(parseDecimal(toWide(x), opts), parseDecimal(x, opts), `${x} ${JSON.stringify(opts)}`);
+    }
+  }
+}
 console.log('parseDecimal selftest OK');

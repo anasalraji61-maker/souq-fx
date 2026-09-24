@@ -10,7 +10,7 @@
  * تنبيه: مواصفات العقود تختلف بين الوسطاء (خصوصاً المعادن) — النتيجة تقدير تعليمي.
  */
 
-import { parseDecimal } from './parseDecimal';
+import { normalizeDigits, parseDecimal } from './parseDecimal';
 
 /**
  * عملات الحساب الشائعة لدى وسطاء التجزئة: العملات الثماني الرئيسية كاملةً.
@@ -268,6 +268,10 @@ const MONEY_SIGNS: Record<string, readonly string[]> = {
   '€': ['EUR'],
   '£': ['GBP'],
   '¥': ['JPY'],
+  // العريضة من لوحة المفاتيح اليابانية («￥5000»): العلامة نفسها
+  '＄': ['USD', 'AUD', 'NZD', 'CAD'],
+  '￥': ['JPY'],
+  '￡': ['GBP'],
 };
 
 /**
@@ -290,7 +294,7 @@ export function parseRiskInput(
 ): { pct: number | null; amount: number | null } | null {
   const pct = parseDecimal(raw, { percent: true });
   if (pct != null) return { pct, amount: null };
-  const m = /^\s*(?:([$€£¥])|([A-Za-z]{3}))?\s*([^$€£¥A-Za-z]+?)\s*(?:([$€£¥])|([A-Za-z]{3}))?\s*$/.exec(raw);
+  const m = /^\s*(?:([$€£¥＄￥￡])|([A-Za-z]{3}))?\s*([^$€£¥＄￥￡A-Za-z]+?)\s*(?:([$€£¥＄￥￡])|([A-Za-z]{3}))?\s*$/.exec(raw);
   if (!m) return null;
   const markers = [m[1], m[2], m[4], m[5]].filter((x): x is string => x != null);
   if (markers.length !== 1) return null;
@@ -459,7 +463,7 @@ export function formatMoney(v: number, ccy: string): string {
 }
 
 /**
- * الرافعة كما يكتبها المتداول: «100»، «1:100»، «1/500»، بأرقام عربية أيضاً («١:٢٠٠»). الرقم المعتمد هو
+ * الرافعة كما يكتبها المتداول: «100»، «1:100»، «1/500»، بأرقام عربية أيضاً («١:٢٠٠») وعريضة («１：５００»). الرقم المعتمد هو
  * المقام وحده — «1:100» تعني 100.
  *
  * لماذا دالّة لا `parseDecimal` مباشرة: المنصّات وصفحات الوسطاء تكتب الرافعة «1:100» دائماً، فينسخها
@@ -470,9 +474,9 @@ export function formatMoney(v: number, ccy: string): string {
  * `null` لفارغ أو غير صالح أو خارج الحدّ.
  */
 export function parseLeverage(raw: string): number | null {
-  const s = raw
-    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
-    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+  const s = normalizeDigits(raw)
+    .replace(/[：]/g, ':')
+    .replace(/[／]/g, '/')
     .replace(/\s/g, '');
   const m = /^(?:1[:/])?(\d+(?:\.\d+)?)$/.exec(s);
   if (!m) return null;

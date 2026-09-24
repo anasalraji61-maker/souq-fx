@@ -690,6 +690,11 @@ console.log('positionSize journal plan gain selftest OK');
   assert.equal(parseLeverage('1/30'), 30);
   assert.equal(parseLeverage('١:٢٠٠'), 200);
   assert.equal(parseLeverage('۱:۴۰۰'), 400);
+  // لوحة المفاتيح اليابانية: أرقام ونقطتان وشرطة مائلة عريضة
+  assert.equal(parseLeverage('１：５００'), 500);
+  assert.equal(parseLeverage('１／２５'), 25);
+  assert.equal(parseLeverage('２００'), 200);
+  assert.equal(parseLeverage('１０００００'), null); // الحدّ نفسه
   assert.equal(parseLeverage('1'), 1); // بلا رافعة: الهامش = القيمة الاسمية كاملة
   for (const bad of ['', '0', '0.5', '1:0', '10000', '100:1', '2:100', 'abc', '1:', ':100', '-100']) {
     assert.equal(parseLeverage(bad), null, bad);
@@ -1257,6 +1262,16 @@ console.log('positionSize planJournalNote netRR selftest OK');
     assert.deepEqual(parseRiskInput(raw, 10_000, 'USD'), { pct: 0.5, amount: 50 }, raw);
   }
   assert.deepEqual(parseRiskInput('€40', 8_000, 'EUR'), { pct: 0.5, amount: 40 });
+  // العريضة: «￥5000» بحساب ين، «１％»، «＄50» — كالعلامات العادية تماماً، وبعملة لا تطابق الحساب مرفوضة
+  assert.deepEqual(parseRiskInput('￥5000', 1_000_000, 'JPY'), { pct: 0.5, amount: 5000 });
+  assert.deepEqual(parseRiskInput('５０００￥', 1_000_000, 'JPY'), { pct: 0.5, amount: 5000 });
+  assert.deepEqual(parseRiskInput('＄５０', 10_000, 'USD'), { pct: 0.5, amount: 50 });
+  assert.deepEqual(parseRiskInput('￡２５', 5_000, 'GBP'), { pct: 0.5, amount: 25 });
+  assert.deepEqual(parseRiskInput('１％', 10_000, 'USD'), { pct: 1, amount: null });
+  assert.deepEqual(parseRiskInput('０．５', 10_000, 'USD'), { pct: 0.5, amount: null });
+  assert.equal(parseRiskInput('￥5000', 10_000, 'USD'), null);
+  assert.equal(parseRiskInput('＄50', 10_000, 'EUR'), null);
+  assert.equal(parseRiskInput('＄50￥', 10_000, 'USD'), null);
   assert.deepEqual(parseRiskInput('£25', 5_000, 'GBP'), { pct: 0.5, amount: 25 });
   assert.deepEqual(parseRiskInput('¥15,000', 1_500_000, 'JPY'), null); // «15,000» مبهمة بقاعدة المبلغ
   assert.deepEqual(parseRiskInput('¥15000', 1_500_000, 'JPY'), { pct: 1, amount: 15_000 });
