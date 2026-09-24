@@ -93,6 +93,20 @@ export function forexWeekCloseSec(symbol: string, nowMs: number): number | null 
   return close > sec ? close : nyFivePmUtcSec(friday + 7 * DAY_SEC);
 }
 
+/**
+ * الإغلاق التالي للسوق: إغلاق الجمعة، أو 17:00 نيويورك عشيّة جلسة عطلة (24 و31 ديسمبر) إن سبقته.
+ * عدّاد 4H الساعة 20:00 UTC يوم 24 ديسمبر كان يعدّ أربع ساعات والسوق يُغلق بعد ساعتين حتى 26.
+ */
+export function forexNextCloseSec(symbol: string, nowMs: number): number | null {
+  const weekClose = forexWeekCloseSec(symbol, nowMs);
+  if (weekClose == null) return null;
+  const sec = nowMs / 1000;
+  const dayStart = Math.floor(sec / DAY_SEC) * DAY_SEC;
+  const today = nyFivePmUtcSec(dayStart);
+  const next = sec < today ? today : nyFivePmUtcSec(dayStart + DAY_SEC);
+  return next < weekClose && isForexHolidaySession(next) ? next : weekClose;
+}
+
 export type MarketStatusLabels = { open: string; closed: string };
 
 /** تسميات افتراضية بالعربية — توافق خلفي لأي استدعاء بلا كائن ترجمة. */

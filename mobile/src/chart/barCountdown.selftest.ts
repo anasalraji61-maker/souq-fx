@@ -46,4 +46,11 @@ assert.equal(barCloseCountdown(friD, 86400, utc(25, 21, 30), 'BTCUSD'), '2:30:00
 const friW = Date.UTC(2026, 11, 4) / 1000;
 assert.equal(barCloseCountdown(friW, 86400, Date.UTC(2026, 11, 4, 21, 30), 'EURUSD'), '30:00');
 
+// عشيّة الميلاد (الخميس 2026-12-24، إغلاق 22:00 UTC حتى 26): 4H الساعة 20:00 ⇒ ساعتان لا أربع
+const xmasEve = Date.UTC(2026, 11, 24) / 1000;
+assert.equal(barCloseCountdown(xmasEve + 20 * 3600, 14400, Date.UTC(2026, 11, 24, 20), 'EURUSD'), '2:00:00');
+assert.equal(barCloseCountdown(xmasEve, 86400, Date.UTC(2026, 11, 24, 12), 'EURUSD'), '10:00:00');
+// اليوم السابق عادي
+assert.equal(barCloseCountdown(xmasEve - 86400, 86400, Date.UTC(2026, 11, 23, 12), 'EURUSD'), '12:00:00');
+
 console.log('barCountdown.selftest: PASS');
