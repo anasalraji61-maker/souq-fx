@@ -398,10 +398,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const [logMsg, setLogMsg] = useState<{ ok: boolean; text: string } | null>(null);
   // تغيّر أي رقم بالخطة يمسح رسالة التسجيل ويتيح الزر من جديد — وبقاؤها يمنع نقرة ثانية تُنشئ صفقة مكرّرة
   // والسبريد والعمولة كذلك: كلاهما يُكتب بملاحظة الصفقة (`planJournalNote`)، فتعديلهما بعد التسجيل كان
-  // يترك «سُجِّلت» والزرّ معطّلاً — لا تُسجَّل الخطة بتكاليفها المصحَّحة إلا بتغيير رقم آخر ثم إرجاعه
+  // يترك «سُجِّلت» والزرّ معطّلاً — لا تُسجَّل الخطة بتكاليفها المصحَّحة إلا بتغيير رقم آخر ثم إرجاعه.
+  // وسعر التحويل اليدوي كذلك: هو قيمة النقطة نفسها (`rate` ⇒ `pv` ⇒ اللوت)، فتصحيح «1.05» إلى «1.50» بعد
+  // التسجيل كان يغيّر اللوت على الشاشة بينما الزرّ معطّل والدفتر يحفظ اللوت الخاطئ
   useEffect(() => {
     setLogMsg(null);
-  }, [symbol, account, balance, riskPct, slPips, entryPx, stopPx, targetPx, spread, commission]);
+  }, [symbol, account, balance, riskPct, slPips, entryPx, stopPx, targetPx, spread, commission, manualConv]);
   // السعر المجلوب يخصّ رمزاً واحداً ولحظة واحدة: تبديل الأداة يُسقط الرسالة (وإلا بقي «الدخول = ‎1.0850»
   // معروضاً تحت زوج آخر)
   useEffect(() => {
