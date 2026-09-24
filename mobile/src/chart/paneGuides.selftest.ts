@@ -20,6 +20,8 @@ import {
   paneValueState,
   paneValueTrend,
   placeGuides,
+  placeScaledGuides,
+  GUIDE_LABEL_MIN_GAP,
 } from './paneGuides';
 
 // سلامة الجدول: كل عتبة داخل مدى لوحتها، والمدى صاعد
@@ -392,3 +394,26 @@ for (const id of ['cci', 'roc', 'atr', 'volume', '', 'nope']) {
 }
 
 console.log('paneGuides.selftest: PASS');
+
+// عتبات بمقياس النافذة (Mass Index ‎27 / 26.5‎)
+{
+  // مقياس ‎24..28‎ على 60px: 27 عند 15px، و26.5 عند 22.5 — أقرب من 10px فيُسقَط رقمها لا خطّها
+  const g = placeScaledGuides([26.5, 27], 24, 28, 60);
+  assert.deepEqual(g.map((x) => x.v), [27, 26.5], 'الأعلى أولاً مهما كان ترتيب الإدخال');
+  assert.equal(g[0].top, 15);
+  assert.equal(g[1].top, 22.5);
+  assert.equal(g[0].label, '27');
+  assert.equal(g[1].label, null);
+  // مقياس ضيّق (‎26..27.5‎): تتباعدان بما يكفي ⇒ الرقمان معاً
+  const w = placeScaledGuides([27, 26.5], 26, 27.5, 60);
+  assert.ok(w[1].top - w[0].top >= GUIDE_LABEL_MIN_GAP);
+  assert.deepEqual(w.map((x) => x.label), ['27', '26.5']);
+  // لوحة قصيرة: خطوط بلا أرقام؛ أقصر من الحدّ: لا شيء؛ مدى صفر/فاسد: لا شيء
+  assert.ok(placeScaledGuides([27], 24, 28, GUIDES_MIN_INNER_H).every((x) => x.label === null));
+  assert.deepEqual(placeScaledGuides([27], 24, 28, GUIDES_MIN_INNER_H - 1), []);
+  assert.deepEqual(placeScaledGuides([27], 27, 27, 60), []);
+  assert.deepEqual(placeScaledGuides([27], 24, NaN, 60), []);
+  // العتبة على الحافّة تبقى داخل المساحة
+  assert.equal(placeScaledGuides([28], 24, 28, 60)[0].top, 0);
+  assert.equal(placeScaledGuides([24], 24, 28, 60)[0].top, 59);
+}

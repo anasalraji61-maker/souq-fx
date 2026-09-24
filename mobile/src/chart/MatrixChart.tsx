@@ -84,6 +84,7 @@ import {
   paneValueState,
   paneValueTrend,
   placeGuides,
+  placeScaledGuides,
   GUIDES_LABEL_MIN_INNER_H,
   GUIDES_MIN_INNER_H,
 } from './paneGuides';
@@ -963,29 +964,61 @@ function BoundedLineSeries({
  * كل قفزة حجم. اللون لكل قطعة باتّجاهها (طرفها الثاني ≥ الأوّل) كما كانت الشرطات؛ أوّل شمعة
  * بلا قطعة كما كانت بلا شرطة.
  */
-function TrendLineSeries({ values, paneH }: { values: readonly (number | null)[]; paneH: number }) {
+function TrendLineSeries({
+  values,
+  paneH,
+  levels,
+}: {
+  values: readonly (number | null)[];
+  paneH: number;
+  /**
+   * عتبات ثابتة (Mass Index ‎27 / 26.5‎). تدخل المقياس كـCCI ‎±100‎: بلا ذلك تقصّها نافذة
+   * هادئة (Mass Index بين 24 و26) على الحافّة العليا فيبدو كل ارتفاع عادي «انتفاخاً».
+   */
+  levels?: readonly number[];
+}) {
   const innerH = Math.max(0, paneH - 16);
   const vals = values.filter((x): x is number => x != null);
-  const min = Math.min(...vals);
-  const max = Math.max(...vals);
+  const scaleVals = levels && vals.length ? [...vals, ...levels] : vals;
+  const min = Math.min(...scaleVals);
+  const max = Math.max(...scaleVals);
+  const guides = levels ? placeScaledGuides(levels, min, max, innerH) : [];
   return (
-    <PaneLineLayer
-      innerH={innerH}
-      // نافذة مسطّحة (مدى صفر) ⇒ الخطّ بمنتصف اللوحة لا قسمة على صفر.
-      y={max > min ? boundedPaneY(innerH, min, max) : () => innerH / 2}
-      lines={[
-        {
-          values,
-          color: (i) => {
-            const prev = values[i - 1];
-            return prev == null || (values[i] ?? prev) >= prev ? colors.bull : colors.bear;
+    <>
+      {guides.map((g) => (
+        <React.Fragment key={g.v}>
+          <View pointerEvents="none" style={[styles.paneGuideLine, { top: g.top }]} />
+          {g.label ? (
+            <View pointerEvents="none" style={[styles.paneGuideLabelBox, { top: Math.max(0, g.top - 5) }]}>
+              <Text style={styles.paneGuideLabel}>{g.label}</Text>
+            </View>
+          ) : null}
+        </React.Fragment>
+      ))}
+      <PaneLineLayer
+        innerH={innerH}
+        // نافذة مسطّحة (مدى صفر) ⇒ الخطّ بمنتصف اللوحة لا قسمة على صفر.
+        y={max > min ? boundedPaneY(innerH, min, max) : () => innerH / 2}
+        lines={[
+          {
+            values,
+            color: (i) => {
+              const prev = values[i - 1];
+              return prev == null || (values[i] ?? prev) >= prev ? colors.bull : colors.bear;
+            },
+            opacity: 0.9,
           },
-          opacity: 0.9,
-        },
-      ]}
-    />
+        ]}
+      />
+    </>
   );
 }
+
+/**
+ * Mass Index (Dorsey، مجموع 25): «انتفاخ الانعكاس» — صعود فوق 27 ثم هبوط تحت 26.5.
+ * العتبتان لطول 25 تحديداً (طول 10 بـTradingView يدور حول 10 فلا ينطبقان عليه).
+ */
+const MASS_INDEX_LEVELS = [27, 26.5] as const;
 
 /** CCI: ‎±100‎ حدّا «النطاق العادي» اللذان يُقرأ المؤشّر بتجاوزهما (خطّا TradingView الافتراضيّان). */
 const CCI_LEVELS = [100, -100] as const;
@@ -8126,7 +8159,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={styles.paneInner}>
             {/* على مدى النافذة لا من الصفر: Mass Index يدور حول 25–27، فأرضية 0 كانت تحشر «الانتفاخ»
                 (فوق 27 ثم تحت 26.5) — القراءة كلّها — بأعلى عُشر اللوحة. */}
-            <TrendLineSeries values={massIndex} paneH={paneH} />
+            <TrendLineSeries values={massIndex} paneH={paneH} levels={MASS_INDEX_LEVELS} />
           </View>
         </View>
       ) : null}

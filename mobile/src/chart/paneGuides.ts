@@ -237,6 +237,36 @@ export function placeGuides(paneId: string, innerH: number): PlacedGuide[] {
   return out;
 }
 
+/** أقلّ مسافة بين رقمَي عتبتين متجاورتين (خطّ 8px) — أقرب منها يتراكب الرقمان. */
+export const GUIDE_LABEL_MIN_GAP = 10;
+
+/**
+ * عتبات ثابتة داخل لوحة **مقياسها من النافذة** (Mass Index ‎27 / 26.5‎) — بخلاف `placeGuides`
+ * ذات المدى الثابت. المقياس يُعطى جاهزاً (`min..max` بعد إدخال العتبات فيه، كي لا تقصّها
+ * نافذة هادئة على الحافّة). الأعلى أولاً؛ رقم عتبة أقرب من `GUIDE_LABEL_MIN_GAP` لرقمٍ
+ * كُتب يُسقَط (الخطّ يبقى) — ‎27‎ و‎26.5‎ متلاصقتان متى اتّسع المقياس.
+ */
+export function placeScaledGuides(
+  levels: readonly number[],
+  min: number,
+  max: number,
+  innerH: number
+): PlacedGuide[] {
+  if (!Number.isFinite(innerH) || innerH < GUIDES_MIN_INNER_H) return [];
+  const span = max - min;
+  if (!(span > 0) || !Number.isFinite(span)) return [];
+  const withLabels = innerH >= GUIDES_LABEL_MIN_INNER_H;
+  const out: PlacedGuide[] = [];
+  let lastLabelTop = -Infinity;
+  for (const v of [...levels].filter(Number.isFinite).sort((a, b) => b - a)) {
+    const top = clamp(((max - v) / span) * innerH, 0, Math.max(0, innerH - 1));
+    const label = withLabels && top - lastLabelTop >= GUIDE_LABEL_MIN_GAP ? String(v) : null;
+    if (label) lastLabelTop = top;
+    out.push({ v, kind: 'extreme', top, label });
+  }
+  return out;
+}
+
 /** قيمة آخر شمعة صالحة بالسلسلة (وهي ما يقرأه المتداول)، أو null. */
 export function latestPaneValue(values: readonly (number | null | undefined)[]): number | null {
   for (let i = values.length - 1; i >= 0; i--) {
