@@ -313,6 +313,9 @@ export type Dict = {
   planTpWrongSell: string;
   planSlTooClose: string;
   planRiskWord: string;
+  /** كلمتا ملاحظة الدفتر من الحاسبة (`planJournalNote` words.commission / words.netRR): «عمولة 7.00 USD/lot» و«R:R بعد التكاليف 1:1.7» */
+  planNoteCommission: string;
+  planNoteNetRR: string;
   planRewardWord: string;
   planLowRR: string;
   riskCalcAccountCcy: string;
@@ -443,14 +446,8 @@ export type Dict = {
   journalStatWinRate: string;
   /** الرقم مجموع نسب حركة السعر لكل صفقة بلا حجم (`db.trade_stats`)، لا ربح الحساب */
   journalStatPriceMoveSum: string;
-  /** صفقة حساب سنت («EURUSDC»): نقاط وR بلا مال — لماذا يغيب المبلغ (`journalPipSize`، `ab4ca84`) */
-  journalCentNoMoney: string;
-  /** صفقة حساب micro («EURUSDMICRO»): كـ`journalCentNoMoney` — نصّ ذاك عن السنت فلا يصلح هنا */
-  journalMicroNoMoney: string;
-  /** يحلّ محلّ `journalCentNoMoney` حين يُحسب مال صفقات السنت بعقد ÷100 (`smallContractSpec`، طلب الأدوات 30): المبلغ بـUSC لا USD */
+  /** سطر صفقات السنت (مالها بعقد ÷100، `smallContractSpec`): المبلغ بـUSC لا USD. micro لا يحتاج سطراً: مبلغه بعملة التسعير كالحساب العادي */
   journalCentMoneyNote: string;
-  /** يحلّ محلّ `journalMicroNoMoney` حين يُحسب مال micro بعقد ÷100: المبلغ بعملة الحساب الحقيقية */
-  journalMicroMoneyNote: string;
   /** مبلغ صفقة سنت: `{usc}` بالسنت، `{usd}` = usc ÷ 100 — كلاهما منسّقان مع الإشارة */
   journalMoneyUsc: string;
   journalStatBestWorst: string;
@@ -1351,6 +1348,8 @@ const ar: Dict = {
   planTpWrongSell: 'الهدف يجب أن يكون تحت سعر الدخول في صفقة البيع',
   planSlTooClose: 'الوقف أقرب من 1 pip للدخول — أضيق من السبريد نفسه؛ راجع الرقم',
   planRiskWord: 'المخاطرة',
+  planNoteCommission: 'عمولة',
+  planNoteNetRR: 'R:R بعد التكاليف',
   planRewardWord: 'الربح المحتمل',
   planLowRR: '⚠ الربح المحتمل أقل من المخاطرة',
   riskCalcAccountCcy: 'عملة الحساب',
@@ -1469,10 +1468,7 @@ const ar: Dict = {
   journalStatClosed: 'صفقات مغلقة: {n}',
   journalStatWinRate: 'نسبة نجاح: {pct}%',
   journalStatPriceMoveSum: 'مجموع حركة السعر (بلا حجم الصفقة): {pct}%',
-  journalCentNoMoney: 'حساب سنت: بالنقاط فقط — عقد السنت أصغر بمئة مرّة، فلا يُحسب مبلغٌ بعقد الحساب العادي',
-  journalMicroNoMoney: 'حساب micro: بالنقاط فقط — لوت micro أصغر بمئة مرّة، فلا يُحسب مبلغٌ بعقد الحساب العادي',
   journalCentMoneyNote: 'حساب سنت: المبالغ بالسنت الأمريكي (USC) كما تظهر في حسابك — كل 100 USC = 1 USD',
-  journalMicroMoneyNote: 'حساب micro: المبالغ بعملة حسابك، محسوبة بعقد micro (1,000 وحدة للوت)',
   journalMoneyUsc: '{usc} USC (≈ {usd} USD)',
   journalStatBestWorst: 'أفضل/أسوأ: {best}% / {worst}%',
   journalStatsPending: 'لا صفقات مغلقة بعد — نسبة النجاح والـPnL تظهر بعد إغلاق أول صفقة.',
@@ -2383,6 +2379,8 @@ const enUS: Dict = {
   planTpWrongSell: 'For a sell, the target must be below the entry',
   planSlTooClose: 'Stop is less than 1 pip from entry — tighter than the spread itself; check the number',
   planRiskWord: 'Risk',
+  planNoteCommission: 'Commission',
+  planNoteNetRR: 'Net R:R',
   planRewardWord: 'Reward',
   planLowRR: '⚠ Potential reward is smaller than the risk',
   riskCalcAccountCcy: 'Account currency',
@@ -2501,10 +2499,7 @@ const enUS: Dict = {
   journalStatClosed: 'Closed trades: {n}',
   journalStatWinRate: 'Win rate: {pct}%',
   journalStatPriceMoveSum: 'Sum of price moves (lot size ignored): {pct}%',
-  journalCentNoMoney: 'Cent account: pips only — a cent contract is 100 times smaller, so no money amount is worked out from the standard contract',
-  journalMicroNoMoney: 'Micro account: pips only — a micro lot is 100 times smaller, so no money amount is worked out from the standard contract',
   journalCentMoneyNote: 'Cent account: amounts are in US cents (USC), as your account shows them — 100 USC = 1 USD',
-  journalMicroMoneyNote: 'Micro account: amounts are in your account currency, worked out on the micro contract (1,000 units per lot)',
   journalMoneyUsc: '{usc} USC (≈ {usd} USD)',
   journalStatBestWorst: 'Best/Worst: {best}% / {worst}%',
   journalStatsPending: 'No closed trades yet — win rate and PnL appear once you close your first trade.',
@@ -3437,6 +3432,8 @@ const ku: Dict = {
   planTpWrongSell: 'بۆ فرۆشتن، ئامانج دەبێت لە خوار نرخی چوونەژوورەوە بێت',
   planSlTooClose: 'وەستان کەمتر لە 1 pip لە چوونەژوورەوە دوورە — لە سپرێد تەسکترە؛ ژمارەکە بپشکنە',
   planRiskWord: 'مەترسی',
+  planNoteCommission: 'کۆمیسیۆن',
+  planNoteNetRR: 'R:R دوای تێچووەکان',
   planRewardWord: 'قازانجی ئەگەری',
   planLowRR: '⚠ قازانجی ئەگەری لە مەترسی کەمترە',
   riskCalcAccountCcy: 'دراوی هەژمار',
@@ -3557,10 +3554,7 @@ const ku: Dict = {
   journalStatClosed: 'مامەڵە داخراوەکان: {n}',
   journalStatWinRate: 'ڕێژەی سەرکەوتن: {pct}%',
   journalStatPriceMoveSum: 'کۆی جووڵەی نرخ (بێ قەبارەی مامەڵە): {pct}%',
-  journalCentNoMoney: 'هەژماری سەنت: تەنها بە پیپ — گرێبەستی سەنت سەد جار بچووکترە، بۆیە بڕی پارە بە گرێبەستی ئاسایی ناژمێردرێت',
-  journalMicroNoMoney: 'هەژماری مایکرۆ: تەنها بە پیپ — لۆتی مایکرۆ سەد جار بچووکترە، بۆیە بڕی پارە بە گرێبەستی ئاسایی ناژمێردرێت',
   journalCentMoneyNote: 'هەژماری سەنت: بڕەکان بە سەنتی ئەمریکین (USC)، وەک لە هەژمارەکەتدا دەردەکەون — هەر 100 USC = 1 USD',
-  journalMicroMoneyNote: 'هەژماری مایکرۆ: بڕەکان بە دراوی هەژمارەکەتن، بە گرێبەستی مایکرۆ ژمێردراون (1,000 یەکە بۆ هەر لۆتێک)',
   journalMoneyUsc: '{usc} USC (≈ {usd} USD)',
   journalStatBestWorst: 'باشترین/خراپترین: {best}% / {worst}%',
   journalStatsPending: 'هێشتا هیچ مامەڵەیەکی داخراو نییە — ڕێژەی سەرکەوتن و PnL دوای داخستنی یەکەم مامەڵە دەردەکەون.',
