@@ -196,7 +196,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   useEffect(() => {
     if (!convQuote) return;
     // يُعاد التسليح مع كل تحديث (`convRefresh`) لا مع النجاح وحده: تحديثٌ فاشل لا يوقف التالي
-    const id = setTimeout(() => setConvRefresh((n) => n + 1), 60_000);
+    const id = setTimeout(() => setConvRefresh((n: number) => n + 1), 60_000);
     return () => clearTimeout(id);
   }, [convQuote, convRefresh]);
 
