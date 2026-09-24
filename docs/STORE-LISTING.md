@@ -47,7 +47,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • شموع يابانية، هايكن آشي، رينكو، كاجي، ونقطة ورقم.
 • حتى أربعة شارتات في شاشة واحدة، مع مزامنة الزمن بينها عند الحاجة — فتقرأ الشمعة نفسها على الأربعة معاً.
 • المس أي شمعة لترى افتتاحها وأعلاها وأدناها وإغلاقها ومداها بالنقاط، وكم نقطة يبعد المستوى عن السعر الحالي، ثم المس 🔔 لتضع تنبيه سعر عنده.
-• كبّر وصغّر بإصبعين، والشمعة الجارية تبقى أمامك. ارجع للخلف تدرس نموذجاً قديماً فتبقى الشموع ثابتة تحت إصبعك، ولمسة واحدة تعيدك لآخر شمعة دون أن تفقد التكبير.
+• كبّر وصغّر بإصبعين، والشمعة الجارية تبقى أمامك. واسحب محور السعر لتطول الشموع أو تقصر. ارجع للخلف تدرس نموذجاً قديماً فتبقى الشموع ثابتة تحت إصبعك، ولمسة واحدة تعيدك لآخر شمعة دون أن تفقد التكبير.
 • عدّاد تحت السعر الحيّ يخبرك كم بقي على إغلاق الشمعة الجارية.
 • سعر أعلى قمّة وأدنى قاع على الشاشة مكتوب عند ذيليهما ويتحدّث وأنت تسحب، وخطّ خافت يفصل كل يوم تداول عن الذي يليه على الفريمات الصغيرة.
 • المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، الفوليوم وغيرها، ومستويات الارتكاز (Pivot وCamarilla وفيبوناتشي) وبجانب كل مستوى سعره.
@@ -108,7 +108,7 @@ CHARTS
 • Candlesticks, Heikin-Ashi, Renko, Kagi and Point & Figure.
 • Up to four charts on one screen, with optional time sync between them — read the same candle on all four at once.
 • Tap any candle to see its open, high, low, close and range in pips, plus how many pips that level is from the current price, then tap 🔔 to set a price alert there.
-• Pinch with two fingers to zoom — the live candle stays in view. Scroll back to study an old pattern and the candles stay put under your finger; one tap brings you back to the latest candle without losing your zoom.
+• Pinch with two fingers to zoom — the live candle stays in view. Drag the price axis to make candles taller or shorter. Scroll back to study an old pattern and the candles stay put under your finger; one tap brings you back to the latest candle without losing your zoom.
 • A countdown under the live price shows how long until the current candle closes.
 • The highest high and lowest low on screen carry their price and update as you scroll, and a faint line marks where each trading day starts on intraday charts.
 • The indicators traders actually use: SMA and EMA moving averages, Bollinger Bands, RSI, MACD, Volume and more, plus pivot levels (classic, Camarilla, Fibonacci) with each level's price beside it.
