@@ -46,6 +46,7 @@ import {
   formatPips,
   formatRR,
   liveEntryForStop,
+  liveStopChip,
   QUICK_RR,
   stopsForPips,
   targetAtRR,
@@ -84,6 +85,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** بديل اختياري: سعرا الدخول والوقف كما يراهما المتداول على الشارت → تُملأ خانة النقاط تلقائياً */
   const [entryPx, setEntryPx] = useState('');
   const [stopPx, setStopPx] = useState('');
+  /** آخر تعبئة لـ«السعر الحالي» ولقطتها (Bid/Ask) — راجع `liveEntryForStop`/`liveStopChip` */
+  const liveFillRef = useRef<{ symbol: string; text: string; q: { price: number; bid?: number | null; ask?: number | null } } | null>(
+    null
+  );
   /** هدف اختياري: يحوّل «كم لوت» إلى خطة كاملة (مخاطرة/عائد بالمال) — المتداول يقرّر بالـR:R لا باللوت وحده */
   const [targetPx, setTargetPx] = useState('');
   /** جلب سعر الدخول بنقرة: المتداول يخطّط غالباً حول السعر الذي يراه الآن، وكتابته يدوياً مَظنّة خطأ */
@@ -386,10 +391,22 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    */
   const stopChoices =
     spec && stopPx.trim() === '' && !slFromPrices.current && !slTooClose && Number.isFinite(slTyped) && slTyped > 0
-      ? stopsForPips({ symbol: spec.symbol, entry: num(entryPx), pips: slTyped }).map((x) => ({
-          ...x,
-          text: formatPrice(x.price, spec.symbol),
-        }))
+      ? stopsForPips({ symbol: spec.symbol, entry: num(entryPx), pips: slTyped }).map((x) => {
+          // الدخول ما زال السعر الحيّ الوسطي كما عُبّئ: الشريحة تقيس من سعر جهتها وتنقل الدخول إليه عند النقر
+          // (`liveStopChip`) — فالسعر المكتوب عليها هو ما يُكتب بالخانة، و«20 pip» تبقى 20
+          const f = liveFillRef.current;
+          const live =
+            f && f.symbol === spec.symbol && entryPx.trim() === f.text
+              ? liveStopChip({ symbol: f.symbol, side: x.side, pips: slTyped, q: f.q })
+              : null;
+          const price = live ? live.stop : x.price;
+          return {
+            side: x.side,
+            price,
+            text: formatPrice(price, spec.symbol),
+            entryText: live ? formatPrice(live.entry, spec.symbol) : null,
+          };
+        })
       : [];
   const targetNum = num(targetPx);
   /** الهدف بالجهة الخطأ (فوق الدخول ببيع/تحته بشراء) — خطأ كتابة شائع، يُقال صراحةً بدل تجاهل الهدف */
@@ -604,9 +621,6 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * (وقف تحت السعر = شراء → Ask، وهو ما يُنفَّذ عليه فعلاً)، وبلا وقف يُستخدم السعر الوسطي.
    * اقتباس بذري تجريبي لا يُستخدم أبداً (`isRealQuote`) — حجم مركز من سعر مختلَق أخطر من لا شيء.
    */
-  const liveFillRef = useRef<{ symbol: string; text: string; q: { price: number; bid?: number | null; ask?: number | null } } | null>(
-    null
-  );
   // الدخول عُبّئ بالسعر الوسطي قبل كتابة الوقف (لا جهة بعد)، أو انتقل الوقف لجهة السعر الأخرى: ما دامت الخانة
   // بنصّ التعبئة حرفياً وللأداة نفسها، يُنقل الدخول لـAsk الشراء/Bid البيع **من اللقطة نفسها** — وإلا حُسب اللوت
   // على وقفٍ أضيق من الحقيقي بنصف السبريد (أكثر على الذهب والتقاطعات). ما كتبه المتداول بيده لا يُمسّ.
@@ -837,7 +851,15 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
                 .replace('{side}', x.side === 'buy' ? t.dirBuy : t.dirSell)
                 .replace('{price}', x.text)}`,
               false,
-              () => setStopPx(x.text),
+              () => {
+                const f = liveFillRef.current;
+                if (x.entryText != null && f) {
+                  liveFillRef.current = { ...f, text: x.entryText };
+                  setEntryPx(x.entryText);
+                  setLivePxMsg({ ok: true, text: `${t.riskCalcLiveFilled} ${x.entryText}` });
+                }
+                setStopPx(x.text);
+              },
               `${x.side === 'buy' ? t.dirBuy : t.dirSell} — ${t.journalSlAtPipsA11y
                 .replace('{pips}', slPips.trim())
                 .replace('{price}', x.text)}`

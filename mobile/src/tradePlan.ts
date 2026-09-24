@@ -530,6 +530,24 @@ export function stopsForPips(input: { symbol: string; entry: number; pips: numbe
 }
 
 /**
+ * شريحة «▲ شراء: الوقف …» بالحاسبة والدخول ما زال «السعر الحالي» الوسطي كما عُبّئ: الدخول يصير سعر الجهة
+ * (Ask للشراء، Bid للبيع — `executionPrice`) **والوقف يُقاس منه** بالنقاط المكتوبة. لو قيس من الوسطي ثم نُقل
+ * الدخول لجهته (`liveEntryForStop`) لصارت «20 pip» المكتوبة 20.5 بخانة النقاط بلا سبب يراه المتداول.
+ * `null` لمدخل غير صالح.
+ */
+export function liveStopChip(input: {
+  symbol: string;
+  side: TradeSide;
+  pips: number;
+  q: { price: number; bid?: number | null; ask?: number | null };
+}): { entry: number; stop: number } | null {
+  const entry = executionPrice(input.q, input.side, 'open');
+  if (entry == null) return null;
+  const stop = stopsForPips({ symbol: input.symbol, entry, pips: input.pips }).find((x) => x.side === input.side);
+  return stop ? { entry, stop: stop.price } : null;
+}
+
+/**
  * رمز الصفقة كما يُحفظ بالدفتر: أحرف كبيرة بلا مسافات ولا فواصل (`/` `-` `_`)، ثم 3–12 حرفاً/رقماً/نقطة.
  *
  * لماذا: «EUR/USD» و«eur usd» كانا يُحفظان كما كُتبا، فتنقسم إحصاءات الدفتر وشرائح فلتره إلى أداتين

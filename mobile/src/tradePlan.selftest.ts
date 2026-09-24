@@ -8,6 +8,7 @@ import {
   entryAfterSideSwitch,
   executionPrice,
   liveEntryForStop,
+  liveStopChip,
   exitShortcuts,
   exitPreview,
   averageR,
@@ -1111,3 +1112,32 @@ console.log('tradePlan executionPrice / side switch selftest OK');
   assert.equal(liveEntryForStop(q, 1.087), executionPrice(q, 'sell'));
 }
 console.log('tradePlan liveEntryForStop selftest OK');
+
+// ── شريحة الوقف والدخول ما زال السعر الحيّ الوسطي: الوقف يُقاس من سعر الجهة ──
+{
+  const q = { price: 1.0851, bid: 1.085, ask: 1.0852 };
+  const buy = liveStopChip({ symbol: 'EURUSD', side: 'buy', pips: 20, q })!;
+  assert.deepEqual(buy, { entry: 1.0852, stop: 1.0832 });
+  const sell = liveStopChip({ symbol: 'EURUSD', side: 'sell', pips: 20, q })!;
+  assert.deepEqual(sell, { entry: 1.085, stop: 1.087 });
+  const spec = instrumentSpec('EURUSD')!;
+  // النقاط المكتوبة تبقى كما هي بعد النقرة (لا 20.5)، والجهة المستنتجة من الوقف = جهة الشريحة
+  assert.equal(slPipsFromPrices(spec, buy.entry, buy.stop), 20);
+  assert.equal(slPipsFromPrices(spec, sell.entry, sell.stop), 20);
+  assert.equal(liveEntryForStop(q, buy.stop), buy.entry);
+  assert.equal(liveEntryForStop(q, sell.stop), sell.entry);
+  // الين والذهب والنقاط الكسرية (بعيداً عن الدخول كـstopsForPips)
+  const j = liveStopChip({ symbol: 'USDJPY', side: 'buy', pips: 33.33, q: { price: 150.005, bid: 150.0, ask: 150.01 } })!;
+  assert.equal(j.entry, 150.01);
+  assert.equal(j.stop, 149.676);
+  assert.ok(slPipsFromPrices(instrumentSpec('USDJPY')!, j.entry, j.stop)! >= 33.33);
+  const g = liveStopChip({ symbol: 'XAUUSD', side: 'sell', pips: 50, q: { price: 2350.5, bid: 2350.35, ask: 2350.65 } })!;
+  assert.deepEqual(g, { entry: 2350.35, stop: 2355.35 });
+  // بلا Bid/Ask ⇒ من الوسطي كما كانت الشريحة
+  assert.deepEqual(liveStopChip({ symbol: 'EURUSD', side: 'buy', pips: 20, q: { price: 1.0851 } }), { entry: 1.0851, stop: 1.0831 });
+  // مدخل غير صالح
+  assert.equal(liveStopChip({ symbol: 'EURUSD', side: 'buy', pips: 20, q: { price: 0 } }), null);
+  assert.equal(liveStopChip({ symbol: 'EURUSD', side: 'buy', pips: 0, q }), null);
+  assert.equal(liveStopChip({ symbol: 'NOPE', side: 'buy', pips: 20, q }), null);
+}
+console.log('tradePlan liveStopChip selftest OK');
