@@ -11,6 +11,7 @@ import {
   NEWS_GRACE_MS,
   nextHighImpact,
   symbolCurrencies,
+  knownSingleName,
   NEWS_STALE_MAX_MS,
   type NewsEvent,
 } from './newsRisk';
@@ -37,6 +38,22 @@ assert.deepEqual(symbolCurrencies('AUS200'), ['AUD']);
 assert.deepEqual(symbolCurrencies('XTIUSD'), ['USD']);
 assert.deepEqual(symbolCurrencies('XBRUSD'), ['USD']);
 assert.deepEqual(symbolCurrencies('GOLD'), ['USD']);
+// أسماء Exness/IC Markets/XM/Pepperstone/FXCM — بلاحقة الوسيط أيضاً، ومفتاحٌ واحد بالدفتر
+for (const [sym, ccy, key] of [
+  ['FR40', 'EUR', 'FR40'], ['F40', 'EUR', 'F40'], ['ES35', 'EUR', 'ES35'], ['SPAIN35Cash', 'EUR', 'SPAIN35'],
+  ['CN50', 'CNY', 'CN50'], ['CHN50', 'CNY', 'CHN50'], ['China50', 'CNY', 'CHINA50'], ['CHI50Cash', 'CNY', 'CHI50'],
+  ['CHINAA50.m', 'CNY', 'CHINAA50'], ['HKG33', 'HKD', 'HKG33'], ['HSI', 'HKD', 'HSI'], ['ASX200', 'AUD', 'ASX200'],
+  ['AU200', 'AUD', 'AU200'], ['SpotCrude', 'USD', 'SPOTCRUDE'], ['SPOTBRENT#', 'USD', 'SPOTBRENT'], ['VIX', 'USD', 'VIX'],
+  ['fr40.cash', 'EUR', 'FR40'], ['F40-ECN', 'EUR', 'F40'],
+] as const) {
+  assert.deepEqual(symbolCurrencies(sym), [ccy], sym);
+  assert.equal(knownSingleName(sym), key, sym);
+}
+// الأسماء الجديدة لا تبتلع زوجاً أو اسماً مجهولاً
+assert.deepEqual(symbolCurrencies('F40X'), []);
+assert.deepEqual(symbolCurrencies('CN500'), []);
+assert.equal(knownSingleName('CN50M'), null);
+assert.deepEqual(symbolCurrencies('EURCNH'), ['EUR', 'CNY']);
 assert.deepEqual(symbolCurrencies('silver'), ['USD']);
 assert.deepEqual(symbolCurrencies('USOIL'), ['USD']);
 // لاحقة الوسيط بفاصل تسقط؛ الملاصقة بلا فاصل لا تُخمَّن

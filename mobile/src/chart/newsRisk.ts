@@ -71,6 +71,15 @@ const SINGLE_CCY: Record<string, string> = {
   JP225: 'JPY', JPN225: 'JPY', NIKKEI: 'JPY',
   AUS200: 'AUD',
   HK50: 'HKD',
+  /**
+   * أسماء وسطاء المنطقة الأوسع انتشاراً كانت بلا تحذير: Exness «FR40»، IC Markets «F40»/«ES35»/«CHINA50»،
+   * XM «SPAIN35Cash»/«CHI50Cash»، Pepperstone «CN50»/«SpotCrude»/«SpotBrent»، FXCM «HKG33»/«CHN50». مؤشر الصين
+   * A50 يقفز ببيانات الصين (اليوان — `CNY` بالتقويم) قبل غيرها؛ و«VIX» بخبر الدولار.
+   */
+  FR40: 'EUR', F40: 'EUR', ES35: 'EUR', SPAIN35: 'EUR',
+  CN50: 'CNY', CHN50: 'CNY', CHINA50: 'CNY', CHI50: 'CNY', CHINAA50: 'CNY',
+  HKG33: 'HKD', HSI: 'HKD', ASX200: 'AUD', AU200: 'AUD',
+  SPOTCRUDE: 'USD', SPOTBRENT: 'USD', VIX: 'USD',
 };
 
 /**
