@@ -16,7 +16,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
-import { ambiguousThousandsPrice, formatMoney, instrumentSpec, parsePriceFor, pipsBetween, pnlInQuoteCcy, riskInQuoteCcy, sizeLooksLikeUnits } from '../positionSize';
+import { ambiguousThousandsPrice, formatMoney, instrumentSpec, parsePriceFor, pnlInQuoteCcy, sizeLooksLikeUnits } from '../positionSize';
 import {
   analyzePlan,
   entryAfterSideSwitch,
@@ -34,6 +34,7 @@ import {
   netByInstrument,
   knownLots,
   journalInstrumentKey,
+  draftRiskFigures,
   realizedMove,
   realizedR,
   recentLotSizes,
@@ -352,14 +353,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const e = pnum(entry);
     const s = pnum(sl);
     const l = num(size);
-    if (e == null || s == null || l == null || levelSideIssue({ side, entry: e, sl: s })) return null;
-    const sym = symbol.trim().toUpperCase();
-    const spec = instrumentSpec(sym);
-    // مالٌ من حجمٍ يبدو وحداتٍ («125,000,000 USD») أسوأ من لا شيء — سطر التحذير يقول ما الخطأ
-    if (sizeLooksLikeUnits(l, spec)) return null;
-    const r = riskInQuoteCcy({ symbol: sym, entry: e, sl: s, lots: l });
-    if (!spec || !r) return null;
-    return { pips: pipsBetween(spec, e, s), money: formatMoney(r.amount, r.ccy) };
+    if (e == null || s == null || l == null) return null;
+    // حساب السنت: النقاط بلا مال (`draftRiskFigures`) — سطر `journalCentNoMoney` يقول لماذا
+    const r = draftRiskFigures({ symbol, side, entry: e, sl: s, lots: l });
+    if (!r) return null;
+    return { pips: r.pips, money: r.cash ? formatMoney(r.cash.amount, r.cash.ccy) : null, cent: r.cent };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry, sl, size]);
 
@@ -369,7 +367,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       const p = formatPips(pips);
       return p != null ? `${p} pip` : String(Math.round(d * 1e5) / 1e5);
     };
-    const money = draftRisk ? ` (${draftRisk.money})` : '';
+    const money = draftRisk?.money ? ` (${draftRisk.money})` : '';
     /**
      * الربح المحتمل بالمال بجانب المخاطرة بالمال: كان السطر يقول «المخاطرة 25 pip (125.00 USD) · الربح
      * المحتمل 50 pip» فيُترك المتداول ليضرب نصف المعادلة بنفسه. نتيجة الخروج عند الهدف بالدالّة نفسها
@@ -1502,8 +1500,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       ) : !draft && draftRisk ? (
         // بلا هدف بعد: المخاطرة وحدها (الوقف والحجم مكتوبان) — لا تنتظر اكتمال الخطة
         <Text style={[styles.planLine, { textAlign: align }]}>
-          {t.planRiskWord} {formatPips(draftRisk.pips) ?? '—'} pip ({draftRisk.money})
+          {t.planRiskWord} {formatPips(draftRisk.pips) ?? '—'} pip{draftRisk.money ? ` (${draftRisk.money})` : ''}
         </Text>
+      ) : null}
+      {draftRisk?.cent && !(draft?.issue && draft.issue !== 'slTooClose') ? (
+        // النقاط بلا مبلغ لحساب السنت: السطر يقول لماذا بدل أن يبدو الغياب عطلاً
+        <Text style={[styles.planWarn, { textAlign: align }]}>{t.journalCentNoMoney}</Text>
       ) : null}
       <TextInput
         style={[styles.input, { textAlign: align }]}

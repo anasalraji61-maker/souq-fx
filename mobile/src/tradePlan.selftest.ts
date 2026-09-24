@@ -39,6 +39,8 @@ import {
   targetAtRR,
   QUICK_RR,
   journalPipSize,
+  draftRiskFigures,
+  isCentJournalSymbol,
 } from './tradePlan';
 import { riskInQuoteCcy as cashRisk } from './positionSize';
 import { instrumentSpec, pipValuePerLot, planJournalNote, pnlInQuoteCcy, positionSize, slPipsFromPrices } from './positionSize';
@@ -1415,3 +1417,33 @@ console.log('tradePlan journalPipSize selftest OK');
   assert.equal(pnlInQuoteCcy({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, exit: 1.0875, lots: 1 }), null);
 }
 console.log('tradePlan cent quoteSymbol selftest OK');
+
+// draftRiskFigures — سطر «المخاطرة» بمسودّة الدفتر؛ حساب السنت بنقاطه بلا مال
+{
+  const d = (symbol: string, side: 'buy' | 'sell', entry: number, sl: number, lots: number) =>
+    draftRiskFigures({ symbol, side, entry, sl, lots });
+  // العادي كما كان (riskInQuoteCcy + pipsBetween)
+  assert.deepEqual(d('EURUSD', 'buy', 1.085, 1.0825, 0.5), { pips: 25, cash: { amount: 125, ccy: 'USD' }, cent: false });
+  assert.deepEqual(d('xauusd.m', 'sell', 2400, 2405, 0.1), { pips: 50, cash: { amount: 50, ccy: 'USD' }, cent: false });
+  assert.deepEqual(d('USDJPY', 'buy', 150, 149.7, 1), { pips: 30, cash: { amount: 30000, ccy: 'JPY' }, cent: false });
+  // السنت: نقاط بلا مال (كان null كلّه)
+  assert.deepEqual(d('EURUSDC', 'buy', 1.085, 1.0825, 0.5), { pips: 25, cash: null, cent: true });
+  assert.deepEqual(d('EURUSDc', 'buy', 1.085, 1.0825, 0.5), { pips: 25, cash: null, cent: true });
+  assert.deepEqual(d('USDJPYC', 'sell', 150, 150.3, 2), { pips: 30, cash: null, cent: true });
+  assert.deepEqual(d('GOLDC', 'buy', 2400, 2397.5, 1), { pips: 25, cash: null, cent: true });
+  // لا سطر: جهة خطأ، وقف على الدخول، حجم يبدو وحدات، مجهول، أرقام غير صالحة
+  assert.equal(d('EURUSD', 'buy', 1.085, 1.09, 0.5), null);
+  assert.equal(d('EURUSDC', 'sell', 1.085, 1.08, 0.5), null);
+  assert.equal(d('EURUSD', 'buy', 1.085, 1.085, 0.5), null);
+  assert.equal(d('EURUSD', 'buy', 1.085, 1.0825, 10000), null);
+  assert.equal(d('EURUSDC', 'buy', 1.085, 1.0825, 10000), null);
+  assert.equal(d('US30', 'buy', 39000, 38900, 1), null);
+  assert.equal(d('EURUSDT', 'buy', 1.085, 1.0825, 1), null);
+  assert.equal(d('EURUSD', 'buy', 1.085, 1.0825, 0), null);
+  assert.equal(d('EURUSD', 'buy', NaN, 1.0825, 1), null);
+  // isCentJournalSymbol
+  for (const s of ['EURUSDC', 'eurusdc', 'XAUUSDC', 'GOLDC', ' USDJPYc ']) assert.equal(isCentJournalSymbol(s), true, s);
+  for (const s of ['EURUSD', 'EURUSDT', 'EURUSDCC', 'US30C', 'XAUUSD.m', '', null, undefined])
+    assert.equal(isCentJournalSymbol(s), false, String(s));
+}
+console.log('tradePlan draftRiskFigures selftest OK');

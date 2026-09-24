@@ -8,7 +8,17 @@
  * - وقف أقرب من 1 pip للدخول (أضيق من أي سبريد تجزئة) خطأ كتابة شبه مؤكد: كان يُعرض «0 pip · R:R 1:5000».
  */
 import { knownSingleName } from './chart/newsRisk';
-import { centAccountSymbol, instrumentSpec, LOT_STEP, MAX_SANE_LOTS, pnlInQuoteCcy, priceAtPipOffset } from './positionSize';
+import {
+  centAccountSymbol,
+  instrumentSpec,
+  LOT_STEP,
+  MAX_SANE_LOTS,
+  pipsBetween,
+  pnlInQuoteCcy,
+  priceAtPipOffset,
+  riskInQuoteCcy,
+  sizeLooksLikeUnits,
+} from './positionSize';
 
 export type TradeSide = 'buy' | 'sell';
 
@@ -23,6 +33,45 @@ export function journalPipSize(symbol: string | null | undefined): number | null
   if (!symbol) return null;
   const spec = instrumentSpec(symbol) ?? instrumentSpec(centAccountSymbol(symbol) ?? '');
   return spec?.pipSize ?? null;
+}
+
+/**
+ * رمز **حساب سنت** بالدفتر («EURUSDC»، «GOLDC»)؟ — لسطر `journalCentNoMoney`: النقاط تُحسب له (`journalPipSize`)
+ * والمال لا، فبلا سطرٍ يقول لماذا يبدو غياب المبلغ عطلاً.
+ */
+export function isCentJournalSymbol(symbol: string | null | undefined): boolean {
+  const up = (symbol || '').trim().toUpperCase();
+  return !!up && !instrumentSpec(up) && centAccountSymbol(up) != null;
+}
+
+/**
+ * «كم أخاطر» لمسودّة الدفتر: نقاط الوقف والمال بعملة التسعير للحجم المكتوب. `null` = لا سطر (بلا حجم، وقف
+ * بالجهة الخطأ أو على الدخول، حجمٌ يبدو وحدات، أداة مجهولة).
+ *
+ * **حساب السنت** («EURUSDC») كان `null` كلّه لأن المال مجهول — فالمتداول الذي كتب الوقف والحجم بلا هدف بعد لا يرى
+ * حتى «المخاطرة 25 pip» التي تراها خطته الكاملة. الآن النقاط بمواصفات الزوج العادي و`cash: null`، `cent: true`.
+ */
+export function draftRiskFigures(input: {
+  symbol: string;
+  side: TradeSide;
+  entry: number;
+  sl: number;
+  lots: number;
+}): { pips: number | null; cash: { amount: number; ccy: string } | null; cent: boolean } | null {
+  const { side, entry, sl, lots } = input;
+  if (![entry, sl, lots].every((v) => Number.isFinite(v) && v > 0) || entry === sl) return null;
+  if (levelSideIssue({ side, entry, sl })) return null;
+  const sym = input.symbol.trim().toUpperCase();
+  const std = instrumentSpec(sym);
+  const cent = !std && isCentJournalSymbol(sym);
+  const spec = std ?? (cent ? instrumentSpec(centAccountSymbol(sym) ?? '') : null);
+  if (!spec) return null;
+  // مالٌ من حجمٍ يبدو وحداتٍ («125,000,000 USD») أسوأ من لا شيء — سطر التحذير يقول ما الخطأ
+  if (sizeLooksLikeUnits(lots, spec)) return null;
+  if (cent) return { pips: pipsBetween(spec, entry, sl), cash: null, cent: true };
+  const cash = riskInQuoteCcy({ symbol: sym, entry, sl, lots });
+  if (!cash) return null;
+  return { pips: pipsBetween(spec, entry, sl), cash, cent: false };
 }
 
 export type PlanIssue = 'invalid' | 'slWrongSide' | 'tpWrongSide' | 'slTooClose';
