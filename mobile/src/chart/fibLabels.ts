@@ -82,6 +82,8 @@ export function planFibLabels(input: {
   format: (price: number) => string;
   /** أقلّ تباعد رأسي مقبول بين وسمين (علوّ سطر الوسم). */
   minGapPx?: number;
+  /** مواضع وسوم أهمّ على الحافّة نفسها (وسوم الخطوط الأفقية، وفيبو مرسوم قبله). */
+  taken?: readonly number[];
 }): FibLabelPlan[] {
   const { levels, hi, lo, yOf, format } = input;
   const minGap = input.minGapPx ?? LEVEL_LABEL_GAP;
@@ -98,6 +100,6 @@ export function planFibLabels(input: {
     candidates.push({ level, price, y, text: `${fibRatioText(level)} · ${format(price)}` });
   }
 
-  const kept = thinByGap(candidates, (c) => c.y, (c) => importanceRank(c.level), minGap);
+  const kept = thinByGap(candidates, (c) => c.y, (c) => importanceRank(c.level), minGap, input.taken);
   return kept.sort((a, b) => b.price - a.price || a.level - b.level);
 }

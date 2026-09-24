@@ -20,12 +20,15 @@ export const LEVEL_LABEL_GAP = 13;
  *   بترتيبها الأصلي.
  * - التباعد **بالمطلق**، فمقياس مقلوب (y يكبر مع السعر) لا يعطّل الفحص.
  * - الناتج بترتيب `items` الأصلي لا بترتيب القبول، فترتيب عناصر React ثابت بين الإطارات.
+ * - `taken`: مواضع وسوم أهمّ من مجموعة أخرى على الحافّة نفسها (خطّ المتداول قبل فيبو قبل
+ *   الارتكاز) — لا يُقبل وسمٌ بقربها. غير المحدود منها يُتجاهل.
  */
 export function thinByGap<T>(
   items: readonly T[],
   yOf: (item: T) => number,
   rank: (item: T) => number,
-  minGap: number = LEVEL_LABEL_GAP
+  minGap: number = LEVEL_LABEL_GAP,
+  taken: readonly number[] = []
 ): T[] {
   const gap = Number.isFinite(minGap) && minGap > 0 ? minGap : LEVEL_LABEL_GAP;
   const withY: { item: T; y: number; at: number }[] = [];
@@ -34,8 +37,10 @@ export function thinByGap<T>(
     if (!Number.isFinite(y)) return;
     withY.push({ item, y, at });
   });
+  const blocked = taken.filter((t) => Number.isFinite(t));
   const kept: { item: T; y: number; at: number }[] = [];
   for (const c of [...withY].sort((a, b) => rank(a.item) - rank(b.item) || a.at - b.at)) {
+    if (blocked.some((t) => Math.abs(t - c.y) < gap)) continue;
     if (kept.some((k) => Math.abs(k.y - c.y) < gap)) continue;
     kept.push(c);
   }

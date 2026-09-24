@@ -78,7 +78,7 @@ import { DrawingsSaveQueue, drawingsKey, drawingsSignature } from './drawingsPer
 import { clipSegmentToBars, dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
 import { anchorDrawings, barTime, stampAtIndex } from './drawingAnchors';
 import { priceSpan } from './priceSpan';
-import { fibLevelPrice, planFibLabels } from './fibLabels';
+import { fibLevelPrice, planFibLabels, type FibLabelPlan } from './fibLabels';
 import {
   candleRangePipsText,
   measureDurationSec,
@@ -3641,6 +3641,31 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     ).map(({ d }) => d.id)
   );
 
+  /**
+   * وسوم الخطّ الأفقي وفيبو والارتكاز كلّها على الحافّة اليسرى (`left: 4`) وكانت تُنقّى كلّ
+   * مجموعة على حدة: خطّ دعم عند 1.08500 وPP عند 1.08497 ⇒ وسمان فوق بعضهما لا يُقرأ أيّهما.
+   * الآن بالترتيب: خطّ المتداول أوّلاً (هو ما رسمه ليقرأه)، ثم فيبو بترتيب الرسم، ثم الارتكاز
+   * — وكلّ مجموعة تتجنّب مواضع وسوم ما قبلها (`taken`). الخطوط نفسها تُرسم كلّها كما كانت.
+   */
+  const takenLabelYs: number[] = visibleDrawings
+    .filter(({ d }) => d.tool === 'hline' && hlinePriceLabels.has(d.id))
+    .map(({ d }) => yOf(d.a.price));
+  const fibLabelPlans = new Map<string, FibLabelPlan[]>();
+  for (const { d } of visibleDrawings) {
+    if (d.tool !== 'fib' || !d.b) continue;
+    const plan = planFibLabels({
+      levels: FIB_LEVELS,
+      hi: Math.max(d.a.price, d.b.price),
+      lo: Math.min(d.a.price, d.b.price),
+      yOf,
+      format: (v) => formatPrice(v, series.symbol),
+      minGapPx: FIB_LABEL_GAP,
+      taken: [...takenLabelYs],
+    });
+    fibLabelPlans.set(d.id, plan);
+    for (const l of plan) takenLabelYs.push(l.y);
+  }
+
   // وسوم الارتكاز: الظاهرة باللوح وحدها تتنافس على المكان (مستوى خارج اللوح لا يحجز وسماً).
   const pivotLabelKeys = new Set(
     thinByGap(
@@ -3650,7 +3675,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       }),
       (lv) => yOf(lv.price),
       (lv) => pivotLabelRank(lv.label),
-      HLINE_LABEL_GAP
+      HLINE_LABEL_GAP,
+      takenLabelYs
     ).map((lv) => lv.key)
   );
 
@@ -5794,17 +5820,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           if (d.tool === 'fib' && d.b) {
             const hi = Math.max(d.a.price, d.b.price);
             const lo = Math.min(d.a.price, d.b.price);
-            // الخطوط كلّها تُرسم (هي الأداة)، والوسوم وحدها تُنقّى — راجع `fibLabels.ts`:
-            // النسبة والسعر معاً، وإسقاط المتلاصق بترتيب الأهمية لا بترتيب المصفوفة.
-            const labels = planFibLabels({
-              levels: FIB_LEVELS,
-              hi,
-              lo,
-              yOf,
-              format: (v) => formatPrice(v, series.symbol),
-              minGapPx: FIB_LABEL_GAP,
-            });
-            const labelled = new Map(labels.map((l) => [l.level, l.text]));
+            // الخطوط كلّها تُرسم (هي الأداة)، والوسوم وحدها تُنقّى — راجع `fibLabels.ts`
+            // و`fibLabelPlans` أعلاه (تتجنّب وسوم الخطوط الأفقية وفيبو المرسوم قبله).
+            const labelled = new Map((fibLabelPlans.get(d.id) ?? []).map((l) => [l.level, l.text]));
             return (
               <View key={d.id}>
                 {FIB_LEVELS.map((lv) => {

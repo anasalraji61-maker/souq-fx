@@ -90,6 +90,14 @@ ok('مقياس مقلوب: لا وسمين متلاصقين',
   inverted.every((a) => inverted.every((b) => a === b || Math.abs(a.y - b.y) >= 13)));
 ok('مقياس مقلوب: نفس عدد الوسوم', inverted.length === tight.length);
 
+// وسم خطّ أفقي عند y=150 (مستوى 50% بالضبط) ⇒ وسم 50% يُسقَط والبقيّة كما هي.
+const besideLine = planFibLabels({
+  levels: FIB_LEVELS, hi: 1.1, lo: 1.0,
+  yOf: (p) => (1.1 - p) * 3000, format: fmt, minGapPx: 13, taken: [150],
+});
+ok('taken يُسقط المستوى تحت وسم الخطّ', !besideLine.some((l) => l.level === 0.5));
+ok('taken لا يمسّ البعيد', besideLine.length === roomy.length - 1);
+
 if (failures) {
   console.error(`fibLabels.selftest: ${failures} FAILED`);
   process.exitCode = 1;

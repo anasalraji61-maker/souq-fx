@@ -84,6 +84,20 @@ const src: L[] = [{ id: 'b', y: 40, rank: 2 }, { id: 'a', y: 10, rank: 1 }];
 thinByGap(src, y, r, 13);
 ok('المصفوفة الأصلية لم تُرتَّب بالمكان', src[0]!.id === 'b');
 
+// `taken`: مواضع وسوم أهمّ من مجموعة أخرى — لا يُقبل وسمٌ بقربها، والبعيد يبقى.
+const beside: L[] = [
+  { id: 'pp', y: 50, rank: 1 },
+  { id: 'r1', y: 20, rank: 2 },
+];
+ok('taken يحجب القريب فقط',
+  thinByGap(beside, y, r, 13, [52]).map((l) => l.id).join('') === 'r1');
+ok('taken بعيد ⇒ لا أثر', thinByGap(beside, y, r, 13, [90]).length === 2);
+ok('taken غير محدود يُتجاهل', thinByGap(beside, y, r, 13, [NaN, Infinity]).length === 2);
+// محجوب الأهمّ لا يُسقط جاره الأقلّ أهمية: r1 بعيد عن الحجز فيبقى رغم قربه من pp المحجوب.
+ok('المحجوب لا يحجز مكاناً',
+  thinByGap([{ id: 'pp', y: 50, rank: 1 }, { id: 'r1', y: 60, rank: 2 }], y, r, 13, [40])
+    .map((l) => l.id).join('') === 'r1');
+
 if (failures) {
   console.error(`levelLabels.selftest: ${failures} FAILED`);
   process.exitCode = 1;
