@@ -26,6 +26,7 @@ import {
   loadDrawings,
   saveDrawings,
   clearDrawings,
+  subscribeDrawings,
   subscribeDrawingsSaveError,
   type DrawingsSaveErrorCode,
 } from './drawingStore';
@@ -73,7 +74,7 @@ import {
   paneValueTrend,
   placeGuides,
 } from './paneGuides';
-import { DrawingsSaveQueue, drawingsKey } from './drawingsPersist';
+import { DrawingsSaveQueue, drawingsKey, drawingsSignature } from './drawingsPersist';
 import { clipSegmentToBars, dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
 import { anchorDrawings, stampAtIndex } from './drawingAnchors';
 import { priceSpan } from './priceSpan';
@@ -90,6 +91,7 @@ import {
   localizedDrawTools,
   localizedIndicators,
   localizedLenses,
+  chartExtraLabels,
 } from './typeLabels';
 import {
   type ChartKind,
@@ -846,6 +848,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [pineOn, setPineOn] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [kind, setKind] = useState<ChartKind>(initialKind ?? 'candles');
+  const kindRef = useRef(kind);
+  kindRef.current = kind;
   // مفتاح الشمعة التي انتهى عدّادها (رمز|فريم|وقت) — يُقصَّر وسم السعر لسطر واحد حتى شمعة جديدة.
   const [countdownEndedKey, setCountdownEndedKey] = useState<string | null>(null);
   const [lens, setLens] = useState<LensMode>(initialLens ?? 'clean');
@@ -928,9 +932,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const webTimePointer = useRef({ active: false, x: 0, pointerId: 0 });
   // طابور الحفظ المؤجَّل — نسخة واحدة لعمر المكوّن، تحمل مفتاح حمولتها معها
   // (`drawingsPersist.ts` يشرح الخطأين اللذين نشأ عنهما).
-  const saveQueue = useMemo(() => new DrawingsSaveQueue(saveDrawings), []);
-  // آخر مصفوفة أتت من التخزين — لا تُعاد كتابتها كما هي بعد كل تبديل.
-  const justLoadedDrawings = useRef<Drawing[] | null>(null);
+  // الرسومات للرمز لا للفريم (`drawingStore.ts`)؛ الفريم بالطابور يبقى لمفتاح الحمولة وحده.
+  // `drawingsOwner` يميّز هذا الشارت فلا تُعاد إليه كتابته من `subscribeDrawings`.
+  const drawingsOwner = useMemo(() => ({}), []);
+  const saveQueue = useMemo(
+    () =>
+      new DrawingsSaveQueue((symbol, _timeframe, list) => {
+        void saveDrawings(symbol, list, drawingsOwner);
+      }),
+    [drawingsOwner]
+  );
+  // بصمة آخر ما كُتب/حُمّل (`drawingsSignature`: بلا الفهرس المشتقّ من الزمن) — لا كتابة
+  // لما جاء من التخزين توّاً، ولا لإعادة فهرسة بحتة عند كل شمعة جديدة أو تبديل فريم.
+  const savedDrawingsSig = useRef<string | null>(null);
   const rangeRef = useRef({ min: 0, max: 1, span: 1 });
   const chartPlotWRef = useRef(320);
   const chartPlotHRef = useRef(200);
@@ -1331,27 +1345,52 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setPending(null);
     setDragEnd(null);
     let alive = true;
+    // القائمة مشتركة بين الفريمات، ففهارسها قد تخصّ فريماً آخر: تُرسى على شموع هذا
+    // الفريم **قبل** العرض، وإلا رُسمت إطاراً واحداً بمواضع الفريم الآخر قبل تأثير الإرساء.
+    // البصمة من القائمة كما وصلت: ختم نقاط بلا زمن تعديلٌ يستحقّ الكتابة.
+    const anchorHere = (d: Drawing[]) => {
+      const km = kindRef.current;
+      const synthetic = km === 'renko' || km === 'kagi' || km === 'pnf' || km === 'range';
+      return anchorDrawings(
+        d,
+        sourceRef.current.all as { time: number }[],
+        timeframeStepSec(series.timeframe),
+        !synthetic
+      );
+    };
     loadDrawings(series.symbol, series.timeframe).then((d) => {
       if (!alive) return;
       loadedDrawingsKey.current = k;
-      justLoadedDrawings.current = d;
-      setDrawings(d);
+      savedDrawingsSig.current = drawingsSignature(d);
+      setDrawings(anchorHere(d));
+    });
+    // شارت آخر على الرمز نفسه كتب (نافذة التركيز فوق الشاشة، أو فريم آخر): يُعرض هنا
+    // فوراً، ولا يبقى هنا قديمه ليُكتب فوقه عند أوّل تعديل. تاريخ التراجع يخصّ القائمة
+    // السابقة فيُفرَغ.
+    const unsubscribe = subscribeDrawings(series.symbol, drawingsOwner, (d) => {
+      if (!alive || loadedDrawingsKey.current !== k) return;
+      savedDrawingsSig.current = drawingsSignature(d);
+      drawHistory.current = [];
+      setCanUndo(false);
+      setSelectedId(null);
+      setDragEnd(null);
+      setDrawings(anchorHere(d));
     });
     return () => {
       alive = false;
+      unsubscribe();
     };
-  }, [series.symbol, series.timeframe, drawingsPersisted, saveQueue]);
+  }, [series.symbol, series.timeframe, drawingsPersisted, saveQueue, drawingsOwner]);
 
   useEffect(() => {
     if (!drawingsPersisted) return;
     // `drawings` هنا هي المحجوبة بالمفتاح: قبل انتهاء التحميل تساوي NO_DRAWINGS،
     // فالشرط يمنع كتابة فراغ فوق رسومات محفوظة للرمز الجديد.
     if (loadedDrawingsKey.current !== drawingsKey(series.symbol, series.timeframe)) return;
-    // ما جاء من التخزين توّاً لا يُعاد إليه كما هو — كتابة بلا تغيير عند كل تبديل.
-    if (justLoadedDrawings.current === drawings) {
-      justLoadedDrawings.current = null;
-      return;
-    }
+    // ما جاء من التخزين توّاً، أو إعادة فهرسة بحتة، لا تُكتب — كتابة بلا تغيير.
+    const sig = drawingsSignature(drawings);
+    if (sig === savedDrawingsSig.current) return;
+    savedDrawingsSig.current = sig;
     saveQueue.schedule(series.symbol, series.timeframe, drawings);
   }, [drawings, series.symbol, series.timeframe, drawingsPersisted, saveQueue]);
 
@@ -3493,7 +3532,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => {
-                Alert.alert(tr.mcClearAllTitle, tr.mcClearAllBody, [
+                Alert.alert(tr.mcClearAllTitle, chartExtraLabels(lang).clearAllBody, [
                   { text: tr.cancel, style: 'cancel' },
                   {
                     text: tr.mcClearWord,
@@ -3503,7 +3542,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       setDrawings([]);
                       setPending(null);
                       setSelectedId(null);
-                      void clearDrawings(series.symbol, series.timeframe);
+                      void clearDrawings(series.symbol, drawingsOwner);
                     },
                   },
                 ]);
@@ -9479,7 +9518,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => {
-                Alert.alert(tr.mcClearAllTitle, tr.mcClearAllBody, [
+                Alert.alert(tr.mcClearAllTitle, chartExtraLabels(lang).clearAllBody, [
                   { text: tr.cancel, style: 'cancel' },
                   {
                     text: tr.mcClearWord,
@@ -9489,7 +9528,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       setDrawings([]);
                       setPending(null);
                       setSelectedId(null);
-                      void clearDrawings(series.symbol, series.timeframe);
+                      void clearDrawings(series.symbol, drawingsOwner);
                     },
                   },
                 ]);

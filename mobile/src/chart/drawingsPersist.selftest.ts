@@ -8,6 +8,7 @@ import {
   DrawingsSaveQueue,
   type DrawingsTimers,
   drawingsKey,
+  drawingsSignature,
 } from './drawingsPersist';
 import type { Drawing } from './types';
 
@@ -158,6 +159,19 @@ function recorder() {
   assert.deepEqual(
     r.out.map((w) => `${w.symbol}/${w.timeframe}:${w.ids.join(',')}`),
     ['EURUSD/1H:x', 'XAUUSD/1H:y', 'XAUUSD/4H:z']
+  );
+}
+
+// البصمة: فهرس مشتقّ من زمن لا يغيّرها، وفهرس بلا زمن يغيّرها، وأي تعديل آخر يغيّرها
+{
+  const d = (a: Drawing['a']): Drawing => ({ id: 'x', tool: 'hline', a, color: '#fff' }) as Drawing;
+  const s = drawingsSignature([d({ index: 10, price: 1.1, time: 3600 })]);
+  assert.equal(drawingsSignature([d({ index: 34, price: 1.1, time: 3600 })]), s);
+  assert.notEqual(drawingsSignature([d({ index: 10, price: 1.2, time: 3600 })]), s);
+  assert.notEqual(drawingsSignature([d({ index: 10, price: 1.1, time: 7200 })]), s);
+  assert.notEqual(
+    drawingsSignature([d({ index: 10, price: 1.1 })]),
+    drawingsSignature([d({ index: 11, price: 1.1 })])
   );
 }
 

@@ -200,8 +200,16 @@ export type DrawTool =
 /**
  * `ahead`: نقطة بعد آخر شمعة — `time` زمن آخر شمعة وقت الرسم، و`ahead` عدد الشموع بعدها
  * (لا زمن تقويمي مختلَق تُسقطه العطلة). راجع `drawingAnchors.ts`.
+ * `aheadStep`: خطوة الفريم (ثوانٍ) التي عُدّت بها `ahead` — الرسومات مشتركة بين الفريمات،
+ * فعشر شموع ساعة على اليومي أقلّ من نصف شمعة لا عشر شموع. غيابها ⇒ خطوة الفريم الحالي.
  */
-export type ChartPoint = { index: number; price: number; time?: number; ahead?: number };
+export type ChartPoint = {
+  index: number;
+  price: number;
+  time?: number;
+  ahead?: number;
+  aheadStep?: number;
+};
 
 export type Drawing = {
   id: string;

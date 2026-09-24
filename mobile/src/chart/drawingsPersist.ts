@@ -98,3 +98,18 @@ export class DrawingsSaveQueue {
     }
   }
 }
+
+/**
+ * بصمة الرسومات **بلا الفهرس المشتقّ**: نقطة لها زمن فهرسها يُعاد حسابه من السلسلة
+ * (`drawingAnchors.ts`)، ويختلف بين الفريمات وكلّما زحفت نافذة الخادم شمعة. المقارنة
+ * بالبصمة تمنع (1) كتابة التخزين عند كل شمعة جديدة بلا تعديل من المتداول، و(2) ارتداداً
+ * بين شارتَين على الرمز نفسه بفريمين: كلٌّ يعيد الفهرسة على شموعه فيكتب فيُبلَّغ الآخر.
+ */
+export function drawingsSignature(drawings: readonly Drawing[]): string {
+  return JSON.stringify(drawings, function (this: { time?: unknown }, key: string, value: unknown) {
+    // نقطة بلا زمن: فهرسها هو الحقيقة فيبقى بالبصمة.
+    return key === 'index' && typeof this.time === 'number' && Number.isFinite(this.time)
+      ? undefined
+      : value;
+  });
+}

@@ -1,4 +1,4 @@
-import type { Dict } from '../i18n/locales';
+import type { Dict, LangId } from '../i18n/locales';
 import {
   CHART_KINDS,
   DRAW_TOOLS,
@@ -81,4 +81,15 @@ export function localizedIndicators(t: Dict): typeof INDICATORS {
     const key = INDICATOR_KEYS[ind.id];
     return key ? { ...ind, label: t[key] } : ind;
   });
+}
+
+/**
+ * نصوص مؤقّتة بانتظار نقلها إلى `i18n/locales.ts` (خارج نطاق وكيل الشارت) — راجع «طلب
+ * تنسيق» بـ`docs/LOG-CHART.md`. `clearAllBody`: الرسومات صارت للرمز على كل فريماته،
+ * فـ`mcClearAllBody` («بهذا الرمز/الإطار الزمني») يَعِد بأقلّ ممّا يُمسح فعلاً.
+ */
+export function chartExtraLabels(lang: LangId): { clearAllBody: string } {
+  if (lang === 'ar') return { clearAllBody: 'سيتم حذف كل عناصر الرسم بهذا الرمز على كل الأطر الزمنية' };
+  if (lang === 'ku') return { clearAllBody: 'هەموو توخمەکانی کێشان بۆ ئەم هێمایە لە هەموو ماوە کاتییەکاندا دەسڕێنەوە' };
+  return { clearAllBody: 'Every drawing on this symbol will be deleted, on all timeframes' };
 }

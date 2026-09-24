@@ -22,6 +22,11 @@
  * شموعاً بعدها، وفهرسها = خانة ذلك الزمن + `ahead` — ثابتة بالشموع المتداولة مهما جاءت عطلة.
  * نقاط المستقبل القديمة (زمن تقويمي بلا `ahead`) تُقرأ كما كانت.
  *
+ * **الرسومات مشتركة بين فريمات الرمز** (`drawingStore.ts`): خطّ رُسم على الساعة يُفتح على
+ * اليومي والعكس. فالنقطة داخل شمعة الفريم الأكبر تأخذ **كسراً** من عرضها بحسب زمنها
+ * (ساعة 18:00 على اليومي = الخانة + 0.75)، فخطّ ترند بين قمّتين بنفس اليوم لا ينهار عمودياً
+ * على شمعة واحدة. و`ahead` يُحوَّل بين الفريمات بخطوة الفريم التي عُدّ بها (`aheadStep`).
+ *
  * خالص بلا React: يُفحص بـ`drawingAnchors.selftest.ts`.
  */
 import type { ChartPoint, Drawing } from './types';
@@ -66,10 +71,10 @@ export function stampAtIndex(
   bars: readonly TimeBar[],
   index: number,
   stepSec: number
-): { time: number; ahead?: number } | null {
+): { time: number; ahead?: number; aheadStep?: number } | null {
   const n = bars.length;
   if (n && Number.isFinite(index) && index > n - 1) {
-    return { time: bars[n - 1].time, ahead: index - (n - 1) };
+    return { time: bars[n - 1].time, ahead: index - (n - 1), aheadStep: stepSec };
   }
   const time = timeAtIndex(bars, index, stepSec);
   return time == null ? null : { time };
@@ -88,8 +93,25 @@ function anchorPoint(
   if (!reindex) return p;
   const base = indexAtTime(bars, p.time, stepSec);
   const ahead = p.ahead != null && Number.isFinite(p.ahead) ? p.ahead : 0;
-  const index = base == null ? null : base + ahead;
+  const aheadStep =
+    p.aheadStep != null && Number.isFinite(p.aheadStep) && p.aheadStep > 0 ? p.aheadStep : stepSec;
+  const index =
+    base == null
+      ? null
+      : base + withinBar(bars, base, p.time, stepSec) + (ahead * aheadStep) / stepSec;
   return index == null || index === p.index ? p : { ...p, index };
+}
+
+/**
+ * كسر النقطة داخل شمعتها: زمن من فريم أصغر يقع داخل شمعة الفريم الحالي (لا على بدايتها).
+ * صفر على الفريم نفسه (الزمن = زمن الشمعة)، وصفر في فجوة عطلة (الزمن بعد نهاية الشمعة)
+ * وخارج السلسلة — هناك تبقى القاعدة السابقة: آخر شمعة قبله.
+ */
+function withinBar(bars: readonly TimeBar[], i: number, time: number, stepSec: number): number {
+  const bar = bars[i];
+  if (!bar || !(stepSec > 0)) return 0;
+  const frac = (time - bar.time) / stepSec;
+  return frac > 0 && frac < 1 ? frac : 0;
 }
 
 /**

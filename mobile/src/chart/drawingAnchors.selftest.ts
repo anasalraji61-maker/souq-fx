@@ -92,7 +92,7 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
 // طرف بالمستقبل: يُختم بآخر شمعة + عدد شموع، فالعطلة لا تزيحه ولا تُسقطه على الجمعة
 {
   const fri = bars(1000 * H, 50); // آخر شمعة 1049
-  assert.deepEqual(stampAtIndex(fri, 59, H), { time: 1049 * H, ahead: 10 });
+  assert.deepEqual(stampAtIndex(fri, 59, H), { time: 1049 * H, ahead: 10, aheadStep: H });
   assert.deepEqual(stampAtIndex(fri, 20, H), { time: 1020 * H });
   assert.equal(stampAtIndex([], 3, H), null);
   const d = anchorDrawings([line(40, 59)], fri, H, true)[0];
@@ -106,6 +106,33 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   assert.equal(indexAtTime(mon, 1059 * H, H), 44);
   // ثابتة: لا تغيير ثانٍ
   assert.equal(anchorDrawings([re], mon, H, true)[0], re);
+}
+
+// مشتركة بين الفريمات: خطّ رُسم على الساعة يُفتح على اليومي (وعكسه)
+{
+  const D = 24 * H;
+  const days = Array.from({ length: 30 }, (_, i) => ({ time: (100 + i) * D }));
+  // قمّتان بيوم واحد (06:00 و18:00) ⇒ ربع ونصف+ربع شمعة، لا خطّ عمودي على شمعة واحدة
+  const fromH1: Drawing = {
+    ...line(0, 0),
+    a: { index: 0, price: 1.08, time: 110 * D + 6 * H },
+    b: { index: 0, price: 1.09, time: 110 * D + 18 * H },
+  };
+  const onD1 = anchorDrawings([fromH1], days, D, true)[0];
+  assert.equal(onD1.a.index, 10.25);
+  assert.equal(onD1.b!.index, 10.75);
+  // طرف بالمستقبل: 48 شمعة ساعة = شمعتان يوميّتان
+  const ahead: Drawing = {
+    ...line(0, 0),
+    a: { index: 0, price: 1, time: 120 * D },
+    b: { index: 0, price: 1, time: 129 * D, ahead: 48, aheadStep: H },
+  };
+  const a2 = anchorDrawings([ahead], days, D, true)[0];
+  assert.equal(a2.b!.index, 29 + 2);
+  // يومي ⇒ ساعة: الزمن على بداية اليوم تماماً ⇒ خانة صحيحة بلا كسر
+  const hours = bars(110 * 24 * H, 72);
+  const back = anchorDrawings([{ ...line(0, 0), a: { index: 3, price: 1, time: 111 * D } }], hours, H, true)[0];
+  assert.equal(back.a.index, 24);
 }
 
 console.log('drawingAnchors.selftest: PASS');
