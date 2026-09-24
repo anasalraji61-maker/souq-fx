@@ -14,6 +14,10 @@ const d = (tool: Drawing['tool'], a: number, b?: number, rr?: number): Drawing =
 
 assert.deepEqual(selectionPrices(d('hline', 1.085), 'EURUSD'), [{ price: 1.085, tone: 'line' }]);
 assert.deepEqual(selectionPrices(d('hray', 1.085), 'EURUSD'), [{ price: 1.085, tone: 'line' }]);
+assert.deepEqual(
+  selectionPrices({ ...d('channel', 1.08, 1.09), width: 0.005 }, 'EURUSD').map((x) => x.price),
+  [1.08, 1.09, 1.08 + 0.005, 1.09 + 0.005]
+);
 assert.deepEqual(selectionPrices(d('vline', 1.085), 'EURUSD'), []);
 assert.deepEqual(selectionPrices(d('note', 1.085), 'EURUSD'), []);
 assert.equal(selectionPrices(d('trend', 1.08, 1.09), 'EURUSD').length, 2);

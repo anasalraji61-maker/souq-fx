@@ -68,19 +68,26 @@ export function localizedChartKinds(t: Dict): typeof CHART_KINDS {
 }
 
 /**
- * «شعاع أفقي» بلا مفتاح بالقاموس بعد (`locales.ts` خارج نطاق وكيل الشارت — طلب تنسيق بـLOG-CHART):
+ * «شعاع أفقي» و«قناة» بلا مفتاح بالقاموس بعد (`locales.ts` خارج نطاق وكيل الشارت — طلب تنسيق بـLOG-CHART):
  * تُعرف اللغة من تسمية «شعاع» نفسها بالقاموس المعطى، فيعمل عند كل مستدعٍ يمرّر `t` وحده.
  */
-function hrayLabel(t: Dict): string {
-  if (t.ctlToolRay === 'Ray') return 'H-ray';
-  if (t.ctlToolRay === 'تیشک') return 'تیشکی ئاسۆیی';
-  return 'شعاع أفقي';
+const EXTRA_TOOL_LABELS: Partial<Record<DrawTool, { ar: string; en: string; ku: string }>> = {
+  hray: { ar: 'شعاع أفقي', en: 'H-ray', ku: 'تیشکی ئاسۆیی' },
+  channel: { ar: 'قناة', en: 'Channel', ku: 'کەناڵ' },
+};
+
+function extraToolLabel(t: Dict, id: DrawTool, fallback: string): string {
+  const l = EXTRA_TOOL_LABELS[id];
+  if (!l) return fallback;
+  if (t.ctlToolRay === 'Ray') return l.en;
+  if (t.ctlToolRay === 'تیشک') return l.ku;
+  return l.ar;
 }
 
 export function localizedDrawTools(t: Dict): typeof DRAW_TOOLS {
   return DRAW_TOOLS.map((tool) => {
     const key = TOOL_KEYS[tool.id];
-    return { ...tool, label: key ? t[key] : tool.id === 'hray' ? hrayLabel(t) : tool.label };
+    return { ...tool, label: key ? t[key] : extraToolLabel(t, tool.id, tool.label) };
   });
 }
 

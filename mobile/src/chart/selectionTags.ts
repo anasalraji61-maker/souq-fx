@@ -36,6 +36,12 @@ export function selectionPrices(
   }
   const out: { price: number; tone: SelectionTagTone }[] = [{ price: d.a.price, tone: 'line' }];
   if (d.b.price !== d.a.price) out.push({ price: d.b.price, tone: 'line' });
+  // القناة: طرفا الموازي أيضاً — حدّها الآخر هو ما يُقرأ للهدف/الوقف.
+  if (d.tool === 'channel' && d.width) {
+    for (const price of [d.a.price + d.width, d.b.price + d.width]) {
+      if (!out.some((o) => o.price === price)) out.push({ price, tone: 'line' });
+    }
+  }
   if ((d.tool === 'trend' || d.tool === 'ray') && nowIndex != null) {
     const now = lineValueAt(d.a, d.b, nowIndex, d.tool === 'ray');
     // عند طرفٍ بالضبط (رُسم على الشمعة الحيّة) ⇒ وسم الطرف يكفي.

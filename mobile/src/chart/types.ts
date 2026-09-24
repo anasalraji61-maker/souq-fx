@@ -187,6 +187,7 @@ export type DrawTool =
   | 'select'
   | 'trend'
   | 'ray'
+  | 'channel'
   | 'hline'
   | 'hray'
   | 'vline'
@@ -235,6 +236,8 @@ export type Drawing = {
   color: string;
   /** أداتا `long`/`short`: نسبة الهدف إلى المخاطرة (غيابها ⇒ 2) — راجع `positionTool.ts`. */
   rr?: number;
+  /** أداة `channel`: بُعد الخطّ الموازي عن خطّ الأساس بوحدة السعر (موجب = فوقه) — راجع `channel.ts`. */
+  width?: number;
 };
 
 export type LensMode = 'clean' | 'structure' | 'momentum' | 'liquidity';
@@ -428,6 +431,7 @@ export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [
   { id: 'select', label: 'تحديد' },
   { id: 'trend', label: 'ترند' },
   { id: 'ray', label: 'شعاع' },
+  { id: 'channel', label: 'قناة' },
   { id: 'hline', label: 'أفقي' },
   { id: 'hray', label: 'شعاع أفقي' },
   { id: 'vline', label: 'عمودي' },

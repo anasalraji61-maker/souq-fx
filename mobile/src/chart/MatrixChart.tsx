@@ -110,6 +110,7 @@ import {
   rrFromTarget,
   type PositionSide,
 } from './positionTool';
+import { channelHandlePrice, channelWidthAt, fitChannelWidth } from './channel';
 import { anchorDrawings, barTime, stampAtIndex, type TimeBar } from './drawingAnchors';
 import { lineNowText, placeSelectionTags, selectionPrices } from './selectionTags';
 import { appendedAfter } from './holdView';
@@ -423,6 +424,7 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
   select: '↖',
   trend: '╱',
   ray: '↗',
+  channel: '⫽',
   hline: '━',
   hray: '⊢',
   vline: '┃',
@@ -3085,16 +3087,28 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         const end = isPositionTool(t)
           ? { ...positionEndPoint(a, b), price: positionStop(t, a.price, b.price, series.symbol) }
           : b;
+        // القناة سحبة واحدة: الموازي يُقدَّر من الشموع بين الطرفين (احتياطه سُبع المدى الظاهر).
+        const width =
+          t === 'channel'
+            ? fitChannelWidth(
+                sourceRef.current.all as { high: number; low: number }[],
+                a,
+                end,
+                Math.abs(priceAtY(0) - priceAtY(chartPlotH)) / 7
+              )
+            : undefined;
         setDrawings((d) => [
           ...d,
-          { id: nextDrawingId(), tool: t, a, b: end, color: accent },
+          width == null
+            ? { id: nextDrawingId(), tool: t, a, b: end, color: accent }
+            : { id: nextDrawingId(), tool: t, a, b: end, color: accent, width },
         ]);
       }
       setPending(null);
       setDragEnd(null);
       setTool('none');
     },
-    [tool, accent, tr, pushDrawHistory, series.symbol, positionEndPoint]
+    [tool, accent, tr, pushDrawHistory, series.symbol, positionEndPoint, priceAtY, chartPlotH]
   );
 
   /**
@@ -3123,6 +3137,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     },
     [series.symbol, positionEndPoint]
   );
+
+  /** مقبض عرض القناة: يحرّك الخطّ الموازي وحده. */
+  const setChannelWidth = useCallback((id: string, width: number) => {
+    setDrawings((list) => {
+      const cur = list.find((x) => x.id === id);
+      if (!cur || cur.width === width) return list;
+      return list.map((d) => (d.id !== id ? d : { ...d, width }));
+    });
+  }, []);
 
   /** مقبض الهدف لأداتَي شراء/بيع: يغيّر النسبة وحدها (الهدف مشتقّ من الدخول والوقف). */
   const setDrawingRr = useCallback((id: string, rr: number) => {
@@ -3364,6 +3387,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             seg.by,
             d.tool === 'ray' ? rayReach(sx1, seg.ay, sx2, seg.by, chartPlotW, chartPlotH) : 1
           );
+        } else if (d.tool === 'channel') {
+          // خطّا القناة كما يُرسمان (مقصوصان على النافذة)، ومقبض العرض بمنتصف الموازي هدفٌ كالطرفين.
+          const w = d.width ?? 0;
+          const base = clipSegmentToBars(aLocal, ay, bLocal, by, lastDrawLocal);
+          const par = clipSegmentToBars(aLocal, yOf(d.a.price + w), bLocal, yOf(d.b.price + w), lastDrawLocal);
+          bodyDist = Math.min(
+            segmentDistance(x, y, xOf(base.ai), base.ay, xOf(base.bi), base.by, 1),
+            segmentDistance(x, y, xOf(par.ai), par.ay, xOf(par.bi), par.by, 1)
+          );
+          endDist = Math.min(
+            endDist,
+            Math.hypot(x - xOf((aLocal + bLocal) / 2), y - yOf(channelHandlePrice(d.a, d.b, w)))
+          );
         } else if (d.tool === 'rect' || d.tool === 'zone') {
           const l = Math.min(ax, bx);
           const r = Math.max(ax, bx);
@@ -3520,7 +3556,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // يبدأ `null` بالكائن الجديد ويتوقّف المقبض بعد خطوة واحدة تحت الإصبع.
   // `t`: مقبض هدف شراء/بيع — يغيّر النسبة `rr` لا نقطة (`selDragRr` آخر نسبة بلغها بهذه السحبة).
   // `body`: جسم الرسم لا مقبضه ⇒ يتحرّك كلّه (`translateDrawing`) من الرسم كما كان عند بدء السحب.
-  const selDragEnd = useRef<'a' | 'b' | 't' | 'body' | null>(null);
+  const selDragEnd = useRef<'a' | 'b' | 't' | 'w' | 'body' | null>(null);
   const selBodyFrom = useRef<{ x: number; y: number; d: Drawing } | null>(null);
   const selBodyLast = useRef<Drawing | null>(null);
   // النقطة التي يقف عندها الطرف المسحوب الآن، و«هل دُفِعت لقطة تراجع لهذه السحبة؟».
@@ -3569,6 +3605,27 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           selDragRr.current = grabbed === 't' ? box.lv.rr : null;
           return;
         }
+        if (d.b && d.tool === 'channel') {
+          const aL = d.a.index - source.start;
+          const bL = d.b.index - source.start;
+          const handles: ['a' | 'b' | 'w', number][] = [
+            ['a', Math.hypot(locationX - xOf(aL), locationY - yOf(d.a.price))],
+            ['b', Math.hypot(locationX - xOf(bL), locationY - yOf(d.b.price))],
+            [
+              'w',
+              Math.hypot(
+                locationX - xOf((aL + bL) / 2),
+                locationY - yOf(channelHandlePrice(d.a, d.b, d.width ?? 0))
+              ),
+            ],
+          ];
+          handles.sort((x, y) => x[1] - y[1]);
+          if (handles[0][1] > DRAW_HANDLE_R) return grabBody();
+          const grabbed = handles[0][0];
+          selDragEnd.current = grabbed;
+          selDragAt.current = grabbed === 'w' ? null : drawingEnd(d, grabbed);
+          return;
+        }
         if (d.b) {
           const da = Math.hypot(locationX - xOf(d.a.index - source.start), locationY - yOf(d.a.price));
           const db = Math.hypot(locationX - xOf(d.b.index - source.start), locationY - yOf(d.b.price));
@@ -3607,6 +3664,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           }
           selBodyLast.current = next;
           setDrawings((list) => list.map((x) => (x.id === next.id ? next : x)));
+          return;
+        }
+        if (end === 'w') {
+          // السعر تحت الإصبع مباشرةً لا المُمغنَط: العرض يتبع الإصبع كما يُرى.
+          const d = drawings.find((x) => x.id === selectedId);
+          if (!d?.b) return;
+          const width = channelWidthAt(d.a, d.b, priceAtY(evt.nativeEvent.locationY));
+          if (width === d.width) return;
+          if (!selDragPushed.current) {
+            pushDrawHistory();
+            selDragPushed.current = true;
+          }
+          setChannelWidth(selectedId, width);
           return;
         }
         const p = pointFromXY(evt.nativeEvent.locationX, evt.nativeEvent.locationY);
@@ -3656,6 +3726,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     drawings,
     moveDrawing,
     setDrawingRr,
+    setChannelWidth,
     positionBox,
     series.symbol,
     pointFromXY,
@@ -6786,6 +6857,61 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   <>
                     <View style={[styles.grabHandle, { left: x1, top: y1, borderColor: d.color }]} />
                     <View style={[styles.grabHandle, { left: x2, top: y2, borderColor: d.color }]} />
+                  </>
+                ) : null}
+              </React.Fragment>
+            );
+          }
+          if (d.tool === 'channel' && d.b) {
+            // خطّ الأساس والموازي بلون الرسم، والوسط متقطّع باهت (نصف القناة — حيث يرتدّ السعر كثيراً).
+            const w = d.width ?? 0;
+            const yA = yOf(d.a.price);
+            const yB = yOf(d.b.price);
+            const line = (key: string, ay: number, by: number, style: object) => {
+              const seg = clipSegmentToBars(aLocal, ay, bLocal, by, lastDrawLocal);
+              const x1 = xOf(seg.ai);
+              const x2 = xOf(seg.bi);
+              return (
+                <View
+                  key={key}
+                  style={[
+                    {
+                      position: 'absolute',
+                      left: x1,
+                      top: seg.ay,
+                      width: Math.hypot(x2 - x1, seg.by - seg.ay),
+                      transform: [{ rotate: `${(Math.atan2(seg.by - seg.ay, x2 - x1) * 180) / Math.PI}deg` }],
+                      transformOrigin: 'left center',
+                    },
+                    style,
+                  ]}
+                />
+              );
+            };
+            const solid = { height: sel ? 3.5 : 2, backgroundColor: d.color };
+            return (
+              <React.Fragment key={d.id}>
+                {line('base', yA, yB, solid)}
+                {line('par', yOf(d.a.price + w), yOf(d.b.price + w), solid)}
+                {line('mid', yOf(d.a.price + w / 2), yOf(d.b.price + w / 2), [
+                  styles.channelMid,
+                  { borderColor: d.color },
+                ])}
+                {sel ? (
+                  <>
+                    <View style={[styles.grabHandle, { left: xOf(aLocal), top: yA, borderColor: d.color }]} />
+                    <View style={[styles.grabHandle, { left: xOf(bLocal), top: yB, borderColor: d.color }]} />
+                    <View
+                      style={[
+                        styles.grabHandle,
+                        styles.channelWidthHandle,
+                        {
+                          left: xOf((aLocal + bLocal) / 2),
+                          top: yOf(channelHandlePrice(d.a, d.b, w)),
+                          borderColor: d.color,
+                        },
+                      ]}
+                    />
                   </>
                 ) : null}
               </React.Fragment>
@@ -10523,6 +10649,9 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   hRay: { right: undefined, borderStyle: 'solid' },
+  channelMid: { height: 0, borderTopWidth: 1, borderStyle: 'dashed', opacity: 0.55 },
+  /** مقبض العرض مربّع لا دائرة: يحرّك الموازي وحده، لا طرفاً. */
+  channelWidthHandle: { borderRadius: 3 },
   /** بعد مقبض البداية (نصف قطره 6) لا فوقه. */
   hRayLabel: { left: 10 },
   vLine: {
