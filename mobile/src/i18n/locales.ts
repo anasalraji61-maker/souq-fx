@@ -338,6 +338,8 @@ export type Dict = {
   riskCalcRiskWithSpread: string;
   riskCalcSpreadLotsWithin: string;
   riskCalcSpreadTooWide: string;
+  /** الوقف ليس أبعد من السبريد — يُضرب لحظة الفتح تقريباً (طلب وكيل الأدوات)؛ `{sl}` و`{spread}` بالنقاط كما تُعرض */
+  riskCalcStopInsideSpread: string;
   riskCalcCommission: string;
   riskCalcCommissionNote: string;
   riskCalcRiskWithCosts: string;
@@ -1248,6 +1250,8 @@ const ar: Dict = {
   riskCalcRiskWithSpread: 'المخاطرة شاملة السبريد',
   riskCalcSpreadLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة السبريد: {lots} lot',
   riskCalcSpreadTooWide: 'سبريد {n} نقطة غير واقعي — هل كتبتَ سعراً بدل النقاط؟ اكتب الفرق بين Ask وBid بالنقاط (مثل 1.5).',
+  riskCalcStopInsideSpread:
+    'الوقف ({sl} نقطة) ليس أبعد من السبريد ({spread} نقطة) — قد يُضرب فور فتح الصفقة. وسّع الوقف وقلّل اللوت، أو انتظر سبريداً أضيق.',
   riskCalcCommission: 'عمولة اختيارية لكل لوت، فتحاً وإغلاقاً',
   riskCalcCommissionNote: 'حسابات Raw/ECN تأخذ عمولة عند الفتح وعند الإغلاق. اكتب مجموع الطرفين للوت الواحد بعملة حسابك (مثل 7)، واتركها فارغة إن كان حسابك بلا عمولة.',
   riskCalcRiskWithCosts: 'المخاطرة شاملة التكاليف',
@@ -2153,6 +2157,8 @@ const enUS: Dict = {
   riskCalcRiskWithSpread: 'Risk including spread',
   riskCalcSpreadLotsWithin: 'To keep your risk at {pct}% including spread: {lots} lot',
   riskCalcSpreadTooWide: 'A {n}-pip spread isn’t realistic — did you type a price instead of pips? Enter the gap between Ask and Bid in pips (e.g. 1.5).',
+  riskCalcStopInsideSpread:
+    'Your stop ({sl} pips) is no wider than the spread ({spread} pips) — it can be hit the moment the trade opens. Widen the stop and cut the lot, or wait for a tighter spread.',
   riskCalcCommission: 'Optional commission per lot, open + close',
   riskCalcCommissionNote: 'Raw/ECN accounts charge commission when you open and again when you close. Enter both sides for one lot in your account currency (e.g. 7), or leave it empty if your account has no commission.',
   riskCalcRiskWithCosts: 'Risk including costs',
@@ -3083,6 +3089,8 @@ const ku: Dict = {
   riskCalcRiskWithSpread: 'مەترسی لەگەڵ سپرێد',
   riskCalcSpreadLotsWithin: 'بۆ ئەوەی مەترسییەکەت لەگەڵ سپرێد لە {pct}% بمێنێتەوە: {lots} lot',
   riskCalcSpreadTooWide: 'سپرێدی {n} pip ئاسایی نییە — نرخت نووسیوە لە جیاتی pip؟ جیاوازی نێوان Ask و Bid بە pip بنووسە (وەک 1.5).',
+  riskCalcStopInsideSpread:
+    'وەستان ({sl} pip) لە سپرێد ({spread} pip) دوورتر نییە — لەوانەیە هەر کە مامەڵەکە کرایەوە لێی بدرێت. وەستان فراوانتر بکە و لۆت کەم بکەرەوە، یان چاوەڕێی سپرێدی تەسکتر بکە.',
   riskCalcCommission: 'کۆمیسیۆنی ئیختیاری بۆ هەر lot، کردنەوە و داخستن',
   riskCalcCommissionNote: 'هەژمارەکانی Raw/ECN لە کاتی کردنەوە و داخستندا کۆمیسیۆن وەردەگرن. کۆی هەردوو لا بۆ یەک lot بە دراوی هەژمارەکەت بنووسە (وەک 7)، یان بەتاڵی بهێڵەوە ئەگەر هەژمارەکەت بێ کۆمیسیۆنە.',
   riskCalcRiskWithCosts: 'مەترسی لەگەڵ تێچووەکان',
