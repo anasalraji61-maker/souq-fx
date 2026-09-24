@@ -124,6 +124,26 @@ assert.deepEqual(realizedMove({ symbol: 'USDJPY', side: 'sell', entry: 150, exit
 assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2350, exit: 2355.5 }), { pips: 55, pct: 0.23 });
 assert.equal(realizedMove({ symbol: 'BTCUSD', side: 'buy', entry: 60000, exit: 60600 })?.pips, null);
 assert.equal(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: null }), null);
+// تقريب متماثل حول الصفر: الخسارة لا تُكتب أصغر من الربح المماثل
+assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2000, exit: 2002.5 }), { pips: 25, pct: 0.13 });
+assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2000, exit: 1997.5 }), { pips: -25, pct: -0.13 });
+assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'sell', entry: 2000, exit: 2002.5 }), { pips: -25, pct: -0.13 });
+assert.equal(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.085005 })?.pips, 0.1);
+assert.equal(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.084995 })?.pips, -0.1);
+assert.equal(realizedMove({ symbol: 'EURUSD', side: 'sell', entry: 1.085, exit: 1.085005 })?.pips, -0.1);
+// صفر بلا إشارة
+assert.ok(Object.is(realizedMove({ symbol: 'EURUSD', side: 'sell', entry: 1.085, exit: 1.085 })!.pips, 0));
+assert.ok(Object.is(realizedMove({ symbol: 'EURUSD', side: 'sell', entry: 1.085, exit: 1.085 })!.pct, 0));
+// خاصية: الاتجاهان متعاكسان تماماً بالقيمة على شبكة أسعار الأدوات
+for (const [sym, entry, step] of [['EURUSD', 1.085, 0.00001], ['USDJPY', 157.4, 0.001], ['XAUUSD', 2000, 0.01], ['GBPJPY', 198.5, 0.001]] as const) {
+  for (let k = 1; k <= 3000; k++) {
+    const exit = Number((entry + k * step).toFixed(6));
+    const up = realizedMove({ symbol: sym, side: 'buy', entry, exit })!;
+    const dn = realizedMove({ symbol: sym, side: 'sell', entry, exit })!;
+    assert.equal(up.pips, 0 - dn.pips!, `${sym} ${exit} pips`);
+    assert.equal(up.pct, 0 - dn.pct, `${sym} ${exit} pct`);
+  }
+}
 
 // النتيجة العائمة لصفقة مفتوحة — نفس مسطرة الصفقة المغلقة بالضبط، والمصدر وحده يختلف (سعر السوق
 // الآن بدل سعر خروج نُفِّذ). فلا يقفز الرقم المعروض لحظة الإغلاق على السعر نفسه.

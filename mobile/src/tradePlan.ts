@@ -44,8 +44,18 @@ const cleanRatio = (num: number, den: number): number => Math.round((num / den) 
  * ولمتوسّطها.
  */
 export function roundR(v: number): number {
+  return roundAway(v, 1);
+}
+
+/**
+ * تقريب لـ`decimals` منزلة **متماثلاً حول الصفر** بعد تنظيف ضجيج الفاصلة العائمة مرّتين: بالقيمة
+ * نفسها (‎−0.04999999…‎ pip = ‎−0.05‎)، وبعد الضرب بالمقياس (‎1.005 × 100 = 100.49999…‎). بلا «−0».
+ * قاعدة `roundR` نفسها، معمَّمة لنقاط الصفقة ونسبتها بـ`realizedMove`.
+ */
+function roundAway(v: number, decimals: number): number {
+  const scale = 10 ** decimals;
   const c = Math.round(v * 1e9) / 1e9;
-  const r = Math.round(Math.abs(c) * 10) / 10;
+  const r = Math.round(Math.round(Math.abs(c) * scale * 1e6) / 1e6) / scale;
   return c < 0 ? -r || 0 : r;
 }
 
@@ -149,9 +159,12 @@ export function realizedMove(input: {
   if (!finitePos(entry) || !finitePos(exit)) return null;
   const move = side === 'buy' ? exit - entry : entry - exit;
   const pip = instrumentSpec(input.symbol)?.pipSize ?? null;
+  // تقريب متماثل (`roundAway`) لا `Math.round`: هذا يرفع النصف نحو +∞ فتُكتب الخسارة أصغر من الربح
+  // المماثل — ذهب 2000 → 1997.5 كان «−0.12%» ومقابله 2000 → 2002.5 «+0.13%»، ونصف pipette خاسر
+  // (1.08500 → 1.084995) كان «−0» pip بينما الرابح المماثل «+0.1». وإحصاءات الدفتر تجمع هذه الأرقام.
   return {
-    pips: pip ? Math.round((move / pip) * 10) / 10 : null,
-    pct: Math.round((move / entry) * 100 * 100) / 100,
+    pips: pip ? roundAway(move / pip, 1) : null,
+    pct: roundAway((move / entry) * 100, 2),
   };
 }
 
