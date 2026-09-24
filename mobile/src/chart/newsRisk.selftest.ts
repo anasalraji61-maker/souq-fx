@@ -62,7 +62,7 @@ assert.deepEqual(symbolCurrencies('NAS100-ECN'), ['USD']);
 assert.deepEqual(symbolCurrencies('USOIL.m'), ['USD']);
 assert.deepEqual(symbolCurrencies('GOLD#'), ['USD']);
 assert.deepEqual(symbolCurrencies(' ger40.pro '), ['EUR']);
-assert.deepEqual(symbolCurrencies('US30M'), []);
+assert.deepEqual(symbolCurrencies('US30M'), ['USD']); // «m» ملاصقة (Exness) — للتحذير فقط
 assert.deepEqual(symbolCurrencies('NAS1000'), []);
 assert.deepEqual(symbolCurrencies('US'), []);
 assert.deepEqual(symbolCurrencies('ETHUSD'), ['USD']);
@@ -358,7 +358,7 @@ console.log('newsRisk metals/aliases selftest OK');
   assert.deepEqual(symbolCurrencies('ETHJPY.pro'), ['USD', 'JPY']);
   assert.deepEqual(symbolCurrencies('BTCCNH'), ['USD', 'CNY']);
   // رقميّة مقابل رقميّة، مقلوبة، أو اسم غير مدرج: بلا ربط مخمَّن
-  for (const c of ['ETHBTC', 'BTCETH', 'USDBTC', 'USDTRX', 'SHIBUSD', 'PEPEUSD', 'BTCXYZ', 'BTC', 'BTCUSDTT', 'BTCUSDM'])
+  for (const c of ['ETHBTC', 'BTCETH', 'USDBTC', 'USDTRX', 'SHIBUSD', 'PEPEUSD', 'BTCXYZ', 'BTC', 'BTCUSDTT', 'ETHBTCM', 'SHIBUSDM'])
     assert.deepEqual(symbolCurrencies(c), [], c);
   // الحاسبة والدفتر بلا تغيير: لا مواصفات pip، ولا اسمٌ «معروف» يُدمج به مفتاح الأداة
   assert.equal(instrumentSpec('BTCUSD'), null);
@@ -370,3 +370,23 @@ console.log('newsRisk metals/aliases selftest OK');
   assert.equal(nextHighImpact([cpi, ecb], symbolCurrencies('ETHBTC'), 1_800_000_000_000), null);
 }
 console.log('newsRisk crypto selftest OK');
+
+// «m» الملاصقة (Exness Standard): تحذّر حين يبقى بعدها اسمٌ/زوج معروف؛ دمج مفتاح الأداة بلا تغيير
+{
+  for (const [c, want] of [
+    ['US30m', ['USD']], ['USTECm', ['USD']], ['US500m', ['USD']], ['USOILm', ['USD']], ['UKOILm', ['USD']],
+    ['XNGUSDm', ['USD']], ['DE30m', ['EUR']], ['UK100m', ['GBP']], ['JP225m', ['JPY']], ['HK50m', ['HKD']],
+    ['AUS200m', ['AUD']], ['STOXX50m', ['EUR']], ['FR40m', ['EUR']], ['BTCUSDm', ['USD']], ['ETHUSDm', ['USD']],
+    ['BTCEURm', ['USD', 'EUR']], ['XAUUSDm', ['USD']], ['EURUSDm', ['EUR', 'USD']], ['us30m', ['USD']],
+  ] as [string, string[]][])
+    assert.deepEqual(symbolCurrencies(c), want, c);
+  // اسمٌ مجهول بـm يبقى صامتاً؛ حرف ملاصق غير m لا يُقبل؛ m وحدها أو اسم قصير لا يُقرأ
+  for (const c of ['AAPLm', 'US30x', 'NAS1000m', 'Mm', 'OIm', 'ETHBTCm', 'SHIBUSDm', 'US30mm'])
+    assert.deepEqual(symbolCurrencies(c), [], c);
+  // مفتاح الأداة بالدفتر كما كان: لا دمج «US30M» مع «US30»
+  assert.equal(knownSingleName('US30m'), null);
+  assert.equal(knownSingleName('BTCUSDm'), null);
+  const nfp: NewsEvent = { id: 'nfp', title: 'Non-Farm Payrolls', currency: 'USD', impact: 'High', ts: 1_800_000_000 + 900 };
+  assert.equal(nextHighImpact([nfp], symbolCurrencies('USTECm'), 1_800_000_000_000)?.event.id, 'nfp');
+}
+console.log('newsRisk glued-m selftest OK');

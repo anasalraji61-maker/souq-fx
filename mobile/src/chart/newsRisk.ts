@@ -123,9 +123,18 @@ export function symbolCurrencies(symbol: string): string[] {
    */
   const letters = symbol.toUpperCase().replace(/[^A-Z]/g, '');
   const bare = suffixFree(symbol).replace(/[\s/]/g, '');
-  const single = SINGLE_CCY[instrumentSpec(symbol)?.symbol ?? letters] ?? SINGLE_CCY[bare];
+  /**
+   * **«m» الملاصقة** (Exness — أوسع الوسطاء انتشاراً بالمنطقة — تُلصقها بكل رموز الحساب Standard: «US30m»،
+   * «USTECm»، «USOILm»، «BTCUSDm»): كانت كلها `[]` بلا تحذير، بينما «EURUSDm» و«XAUUSDm» بجانبها تحذّر
+   * (`instrumentSpec`). تُقبل هنا **فقط** إن بقي بعدها اسمٌ معروف أو زوج رقميّ معروف — للتحذير وحده:
+   * عقدٌ آخر باسم «US30M» يقفز بخبر الدولار كذلك، أما دمج مفتاح الأداة بالدفتر (`knownSingleName`) فيبقى بلا تخمين.
+   */
+  const glued = /^[A-Z0-9]{3,}M$/.test(bare) ? bare.slice(0, -1) : null;
+  const single =
+    SINGLE_CCY[instrumentSpec(symbol)?.symbol ?? letters] ?? SINGLE_CCY[bare] ?? (glued ? SINGLE_CCY[glued] : undefined);
   if (single) return [single];
-  const coin = CRYPTO.exec(bare.replace(/[-_]/g, '')) ?? CRYPTO.exec(letters);
+  const coin =
+    CRYPTO.exec(bare.replace(/[-_]/g, '')) ?? CRYPTO.exec(letters) ?? (glued ? CRYPTO.exec(glued.replace(/[-_]/g, '')) : null);
   if (coin) {
     const q = coin[2] === 'USDT' || coin[2] === 'USDC' ? 'USD' : coin[2] === 'CNH' ? 'CNY' : coin[2];
     return FIAT.has(q) ? (q === 'USD' ? ['USD'] : ['USD', q]) : [];
