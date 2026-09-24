@@ -1552,3 +1552,31 @@
 ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
 
 **يحتاج جهازاً**: البنود 121–124 — خاصةً 122 (هل يُربك «50–100» متداول السنت عند 250 لوت) و124 (خطوط Laguerre بلوحة 34px).
+
+## 2026-09-24 — التشغيلة الثامنة والأربعون
+
+تتبع `7da0adb`/`80ff952` (الأدوات) و`a97c426` (الشارت). التحقّق: `tsc` (Node 22، `/tmp/ts5`، `--strict --noEmit --skipLibCheck
+--target es2020`) على `locales.ts` نظيف، صفر `U+FFFD`؛ ما كُتب بالوثائق مقروء من الفروقات (`PositionSizePanel.tsx` عند `overOrderMax`،
+`journalSmallLotsStdEquiv` واختبارها بـ`tradePlan.selftest.ts`، `PANE_GUIDES` و`PaneHead` بـ`lowColor`، `computeDemarker` بـ`momentum.ts`).
+**لم يُشغَّل التطبيق.**
+
+1. **`FEATURE-INVENTORY.md`** (`17fa96f`): تحذير حدّ الأمر بالسنت/micro بنصّ 200 lot (موصول الآن)؛ سطر اللوت العادي تحت حجم الدفتر؛
+   خطوط العتبة والرقم بعشر لوحات، مع ملاحظة أنّ DeMarker على 0..100 لا 0..1 كـMT5.
+2. **`RELEASE-MOBILE.md` §5** (`0b4bef9`): البنود 125–127؛ البند 122 صار يتوقّع نصّ 200 lot.
+3. **`locales.ts`** (`f8eed07`) ar/en/ku: `journalSizeFromSmallFix` (`{n}`، `{prev}`، `{symbol}`، `{std}`) — «4» كُتبت لـEURUSDc ثم نقرة على
+   شريحة EURUSD: سطر `80ff952` يختفي والحجم يبقى 4 لوت عادي (مئة ضعف) بلا كلمة. **جاهز غير موصول.**
+
+### طلب تنسيق — لوكيل الأدوات
+- **جديد**: `t.journalSizeFromSmallFix` بالدفتر حين يتبدّل الرمز من سنت/micro (`journalContractKind` = `small`) إلى عادي والحجم باقٍ؛
+  النقر يضع `smallLotsStdEquiv(n)` كـ`journalSizeUnitsFix`.
+- **قائم**: `riskCalcCommissionNoteMicro`/`riskCalcCommissionNoteCent` بلا قارئ (التشغيلة 46). `riskCalcOverOrderMaxSmall` موصول الآن (`7da0adb`) — شكراً.
+
+### طلب تنسيق — لوكيل الشارت
+- **جديد (للنظر)**: `computeDemarker` يعطي 0..100 وMT5/TradingView يعرضانه 0..1 — متداول ينقل «0.7» من منصّته لن يجده؛ القرار لكم.
+- **قائم بلا تغيير**: زرّ AUTO بلا `accessibilityLabel` (`mcAutoA11y`/`mcAutoManualA11y`)؛ `` `Bar Replay · …` `` الحرفي ← `tr.mcReplayReadout`
+  (`ip-legal-caution.mdc`)؛ `mcToLatestA11y`؛ `mcMeasureBarOne`/`Two`، `mcReplayEndedOnSwitch`، `cfReplayPriceA11y`، `mcHint*` بلا مستخدم.
+
+**خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (`backend/openrouter_ai.py` «خبير تداول»، `lot` الثابتة، `₴`، `extra.apiUrl` المحلي
+ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
+
+**يحتاج جهازاً**: البنود 125–127 — خاصةً 125 (بقاء «4» بعد العبور لـEURUSD) و126 (TII: فوق 80 أخضر عكس بقية اللوحات).
