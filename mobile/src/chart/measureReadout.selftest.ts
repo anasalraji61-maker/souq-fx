@@ -1,5 +1,5 @@
 /** فحص ذاتي لـ`measureReadout.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
-import { measurePipsText, measureReadoutText, type MeasureStats } from './measureReadout';
+import { barsCountText, measurePipsText, measureReadoutText, type MeasureStats } from './measureReadout';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -106,6 +106,25 @@ ok('كلمة الشموع تُمرَّر كما هي',
     symbol: 'EURUSD', a: { price: 1.08 }, b: { price: 1.0824 },
     stats: stats(12, 0.0024, 0.22), barsWord: 'مۆم',
   }).startsWith('12 مۆم · '));
+
+// ── صيغة العدد ─────────────────────────────────────────────────────────────
+ok('ar 1 ⇒ شمعة', barsCountText(1, 'شموع', 'ar') === '1 شمعة');
+ok('ar 2 ⇒ شمعتان', barsCountText(2, 'شموع', 'ar') === '2 شمعتان');
+ok('ar 3 ⇒ الجمع', barsCountText(3, 'شموع', 'ar') === '3 شموع');
+ok('ar 10 ⇒ الجمع', barsCountText(10, 'شموع', 'ar') === '10 شموع');
+ok('ar 11 ⇒ مفرد', barsCountText(11, 'شموع', 'ar') === '11 شمعة');
+ok('ar 100 ⇒ مفرد', barsCountText(100, 'شموع', 'ar') === '100 شمعة');
+ok('ar 105 ⇒ الجمع', barsCountText(105, 'شموع', 'ar') === '105 شموع');
+ok('ar 0 ⇒ الكلمة كما هي', barsCountText(0, 'شموع', 'ar') === '0 شموع');
+ok('en 1 ⇒ bar', barsCountText(1, 'bars', 'en') === '1 bar');
+ok('en 2 ⇒ bars', barsCountText(2, 'bars', 'en') === '2 bars');
+ok('ku ⇒ الكلمة كما هي', barsCountText(1, 'مۆم', 'ku') === '1 مۆم');
+ok('بلا لغة ⇒ الكلمة كما هي', barsCountText(1, 'شموع') === '1 شموع');
+ok('السطر يمرّر اللغة',
+  measureReadoutText({
+    symbol: 'EURUSD', a: { price: 1.08 }, b: { price: 1.0824 },
+    stats: stats(1, 0.0024, 0.22), barsWord: 'bars', lang: 'en',
+  }).startsWith('1 bar · '));
 
 if (failures) {
   console.error(`measureReadout.selftest: ${failures} FAILED`);

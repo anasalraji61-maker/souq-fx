@@ -2284,6 +2284,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             b,
             stats: measureStats(a, b),
             barsWord: tr.mcMeasureBarsWord,
+            lang,
           })
         );
         setPending(null);
@@ -2314,7 +2315,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       setDragEnd(null);
       setTool('none');
     },
-    [tool, accent, tr, pushDrawHistory, series.symbol]
+    [tool, accent, tr, lang, pushDrawHistory, series.symbol]
   );
 
   /**

@@ -42,6 +42,29 @@ export function measurePipsText(symbol: string, a: number, b: number): string | 
 }
 
 /**
+ * «عدد + كلمة الشموع» بصيغة العدد الصحيحة. كان `{n} {mcMeasureBarsWord}` بصيغة واحدة:
+ * «1 شموع» و«2 شموع» و«15 شموع» بالعربية، و«1 bars» بالإنجليزية — وقياس شمعة واحدة
+ * أو اثنتين هو أكثر قياس يُجرى (طول ذيل، فجوة افتتاح).
+ *
+ * العربية: 1 شمعة، 2 شمعتان، 3–10 (وما ينتهي بها بعد المئة) بالجمع المترجَم نفسه،
+ * والبقية بالمفرد «11 شمعة». الإنجليزية: «1 bar». الكردية: الاسم بعد العدد مفرد
+ * أصلاً («12 مۆم»)، فالكلمة المترجَمة كما هي. `lang` غائب ⇒ الكلمة كما هي (السلوك السابق).
+ * صيغ المفرد والمثنّى هنا لا بـ`i18n/locales.ts` لأنه ملك وكيل آخر (راجع «طلب تنسيق»
+ * بـdocs/LOG-CHART.md).
+ */
+export function barsCountText(n: number, word: string, lang?: string): string {
+  if (lang === 'ar') {
+    const tail = n % 100;
+    if (n === 1) return '1 شمعة';
+    if (n === 2) return '2 شمعتان';
+    if (n === 0 || (tail >= 3 && tail <= 10)) return `${n} ${word}`;
+    return `${n} شمعة`;
+  }
+  if (lang === 'en' && n === 1) return '1 bar';
+  return `${n} ${word}`;
+}
+
+/**
  * سطر القياس كاملاً: `12 شمعة · +24.0 pip · +0.22%`.
  *
  * النسبة تبقى (تُقارن الحركة بين أدوات مختلفة الأسعار) وتُصاغ بإشارتها هي —
@@ -54,8 +77,10 @@ export function measureReadoutText(input: {
   stats: MeasureStats;
   /** كلمة «شموع» المترجَمة (`tr.mcMeasureBarsWord`). */
   barsWord: string;
+  /** لغة الواجهة لصيغة العدد (`barsCountText`). */
+  lang?: string;
 }): string {
-  const { symbol, a, b, stats, barsWord } = input;
+  const { symbol, a, b, stats, barsWord, lang } = input;
   const pips = measurePipsText(symbol, a.price, b.price);
   // الإشارة من الرقم **المطبوع** لا الخام (قاعدة `formatPct` برأس الإطار والتقاطع): قياس
   // 0.4 pip على اليورو نسبته 0.004% فكان يُكتب «+0.4 pip · +0.00%»، وقياس أفقيّ على DXY
@@ -64,5 +89,5 @@ export function measureReadoutText(input: {
   const diffSign = Number(diffText) === 0 ? '' : stats.diff > 0 ? '+' : '−';
   const amount = pips ?? `${diffSign}${diffText}`;
   const pctText = formatPct(Number.isFinite(stats.pct) ? stats.pct : 0);
-  return `${stats.bars} ${barsWord} · ${amount} · ${pctText}`;
+  return `${barsCountText(stats.bars, barsWord, lang)} · ${amount} · ${pctText}`;
 }
