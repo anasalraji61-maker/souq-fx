@@ -44,6 +44,7 @@ import {
   smallLotsStdEquiv,
   smallContractSuffix,
   commissionAcrossModes,
+  conversionKey,
   SYMBOL_INPUT_MAX_LEN,
   withSmallSuffix,
   CENTS_PER_USD,
@@ -1923,3 +1924,22 @@ console.log('positionSize SYMBOL_INPUT_MAX_LEN selftest OK');
   assert.equal(lotsOverOrderMax(std, false), 200);
 }
 console.log('positionSize lotsOverOrderMax small selftest OK');
+
+// conversionKey — سعر التحويل المحفوظ لا يُقرأ للاتجاه المعاكس
+{
+  // GBPUSD بحساب إسترليني: USD ⇒ GBP = 1 / GBPUSD؛ EURGBPc (سنت دولار): GBP ⇒ USD = GBPUSD
+  const a = conversionPair('USD', 'GBP')!;
+  const b = conversionPair('GBP', 'USD')!;
+  assert.equal(a.symbol, b.symbol);
+  assert.notEqual(a.invert, b.invert);
+  assert.notEqual(conversionKey(a), conversionKey(b));
+  // لو قُرئ أحدهما للآخر: 0.787 بدل 1.27 — الفرق الذي كان يظهر إطاراً
+  const px = 1.27;
+  assert.ok(Math.abs(quoteToAccountRate(a, px)! - 1 / 1.27) < 1e-12);
+  assert.equal(quoteToAccountRate(b, px), 1.27);
+  // الزوج والاتجاه نفسهما ⇒ المفتاح نفسه (التحديث الصامت كل دقيقة يبقى مقروءاً)
+  assert.equal(conversionKey(conversionPair('JPY', 'USD')), conversionKey(conversionPair('JPY', 'USD')));
+  assert.equal(conversionKey(null), null);
+  assert.equal(conversionKey(conversionPair('USD', 'USD')), null);
+}
+console.log('positionSize conversionKey selftest OK');

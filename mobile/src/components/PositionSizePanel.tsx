@@ -39,6 +39,7 @@ import {
   parseSpreadPips,
   parseCommission,
   commissionAcrossModes,
+  conversionKey,
   SYMBOL_INPUT_MAX_LEN,
   type CommissionMode,
   spreadRisk,
@@ -280,6 +281,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const conv = useMemo(() => (spec ? conversionPair(spec.quote, convAccount) : null), [spec, convAccount]);
   const convSymbol = conv?.symbol ?? null;
   const convInvert = conv?.invert ?? false;
+  /** السعر المحفوظ يخصّ الزوج **واتجاهه** — راجع `conversionKey` */
+  const convKey = conversionKey(conv);
   /** جسر الدولار: بديل الزوج المباشر حين لا يعرفه المزوّد (`usdBridge` بـpositionSize.ts). */
   const bridge = useMemo(() => (spec ? usdBridge(spec.quote, convAccount) : null), [spec, convAccount]);
 
@@ -335,7 +338,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           if (price != null) {
             const r = quoteToAccountRate(c, price);
             if (r != null) {
-              setConvQuote({ key: convSymbol, rate: r });
+              setConvQuote({ key: conversionKey({ symbol: convSymbol, invert: convInvert })!, rate: r });
               setConvLoading(false);
               return;
             }
@@ -356,7 +359,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           if (!mountedRef.current || g !== gen.current) return;
           const viaUsd = bridgedRate(bridge, p1, p2);
           if (viaUsd != null) {
-            setConvQuote({ key: convSymbol, rate: viaUsd });
+            setConvQuote({ key: conversionKey({ symbol: convSymbol, invert: convInvert })!, rate: viaUsd });
             setConvLoading(false);
             return;
           }
@@ -525,7 +528,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * القيمة مقرَّبة لعُشر pip أصلاً (`slPipsFromPrices`) فلا حاجة لهامش عائم.
    */
   const slTooClose = spec != null && Number.isFinite(slTyped) && slTyped > 0 && slTyped < 1;
-  const fetchedConv = convQuote && convQuote.key === convSymbol ? convQuote : null;
+  const fetchedConv = convQuote && convQuote.key === convKey ? convQuote : null;
   const manual = num(manualConv);
   // السعر المجلوب (زوجاً مباشراً كان أم معكوساً أم جسراً)، وإلا الإدخال اليدوي بترتيب الزوج المعروض
   const convRate = fetchedConv

@@ -310,6 +310,15 @@ export function bridgedRate(
   return a != null && b != null ? a * b : null;
 }
 
+/**
+ * مفتاح سعر التحويل المحفوظ: الزوج **واتجاهه**. بالزوج وحده كان سعر «GBPUSD معكوساً» (0.787: USD ⇒ GBP لـGBPUSD بحساب
+ * إسترليني) يُقرأ لأداةٍ تحتاج «GBPUSD مباشراً» (1.27: GBP ⇒ USD لـEURGBPc بحساب سنت دولار) إطاراً واحداً قبل مسحه —
+ * قيمة pip ولوت وهامش أبعد بـ38%. null = لا تحويل.
+ */
+export function conversionKey(conv: { symbol: string; invert: boolean } | null): string | null {
+  return conv ? `${conv.symbol}|${conv.invert ? 'inv' : 'dir'}` : null;
+}
+
 /** كم وحدة من عملة الحساب تساوي وحدة واحدة من عملة التسعير، من سعر زوج التحويل. */
 export function quoteToAccountRate(conv: { invert: boolean } | null, pairPrice: number | null): number | null {
   if (!conv) return 1;
