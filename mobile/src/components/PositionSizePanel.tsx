@@ -29,8 +29,10 @@ import {
   requiredMargin,
   maxLotsForMargin,
   marginPrice,
-  centAccountSymbol,
-  microAccountSymbol,
+  smallContractSpec,
+  centQuoteToAccount,
+  smallLotsStdEquiv,
+  CENTS_PER_USD,
   stopPipsMismatch,
   parseSpreadPips,
   parseCommission,
@@ -61,6 +63,7 @@ import {
   QUICK_RR,
   stopsForPips,
   targetAtRR,
+  journalSymbol,
   type TradeSide,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
@@ -82,6 +85,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const [symbol, setSymbol] = useState(() => (instrumentSpec(defaultSymbol) ? defaultSymbol : 'EURUSD'));
   const [account, setAccount] = useState<AccountCcy>('USD');
   const [balance, setBalance] = useState('');
+  /**
+   * رصيد **حساب السنت** بالـUSC — خانة منفصلة ومحفوظة وحدها: رصيدٌ واحد للنوعين كان سيقرأ «100000» (سنت = 1,000 USD)
+   * رصيداً بالدولار عند العودة إلى «EURUSD» ⇒ لوتٌ بمئة ضعف. راجع `smallContractSpec`.
+   */
+  const [centBalance, setCentBalance] = useState('');
   const [riskPct, setRiskPct] = useState('1');
   /** رافعة الحساب — ثابتة للمتداول كرصيده، فتُحفظ معه. فارغة = لا سطر هامش */
   const [leverage, setLeverage] = useState('');
@@ -138,12 +146,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         if (raw && mountedRef.current) {
           const p = JSON.parse(raw) as {
             balance?: string;
+            centBalance?: string;
             riskPct?: string;
             account?: string;
             leverage?: string;
             commission?: string;
           };
           if (typeof p.balance === 'string') setBalance(p.balance);
+          if (typeof p.centBalance === 'string') setCentBalance(p.centBalance);
           if (typeof p.leverage === 'string') setLeverage(p.leverage);
           if (typeof p.commission === 'string') setCommission(p.commission);
           if (typeof p.riskPct === 'string') setRiskPct(p.riskPct);
@@ -159,10 +169,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
 
   useEffect(() => {
     if (!loadedRef.current) return;
-    AsyncStorage.setItem(STORE_KEY, JSON.stringify({ balance, riskPct, account, leverage, commission })).catch(() => {
-      /* ignore */
-    });
-  }, [balance, riskPct, account, leverage, commission]);
+    AsyncStorage.setItem(STORE_KEY, JSON.stringify({ balance, centBalance, riskPct, account, leverage, commission })).catch(
+      () => {
+        /* ignore */
+      }
+    );
+  }, [balance, centBalance, riskPct, account, leverage, commission]);
 
   /**
    * تبديل الزوج من شريط رموز شاشة الأدوات يصل هنا بـ`defaultSymbol` — وكان يُهمَل بعد أول تركيب،
@@ -178,19 +190,27 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     setSymbol(defaultSymbol);
   }, [defaultSymbol]);
 
-  const spec = useMemo(() => instrumentSpec(symbol), [symbol]);
-  /** «EURUSDc» مرفوض عمداً (لوت السنت أصغر بمئة مرّة) — يُقال لماذا بدل «زوج من 6 أحرف». راجع `centAccountSymbol` */
-  const centPair = spec ? null : centAccountSymbol(symbol);
-  /** «EURUSDmicro» كذلك (لوت micro أصغر بمئة مرّة) — رسالته تقول micro لا سنت. راجع `microAccountSymbol` */
-  const microPair = spec || centPair ? null : microAccountSymbol(symbol);
+  const stdSpec = useMemo(() => instrumentSpec(symbol), [symbol]);
+  /**
+   * «EURUSDc»/«EURUSDmicro»: كانا مرفوضين برسالة «استخدم الزوج العادي» — الآن يُحسبان بعقد الزوج ÷ 100 (`smallContractSpec`)،
+   * فاللوت بلوت السنت/micro كما يُكتب بالمنصّة. السنت بعملة USC (رصيد وعمولة ومال)، والـmicro بعملة الحساب.
+   */
+  const small = useMemo(() => (stdSpec ? null : smallContractSpec(symbol)), [stdSpec, symbol]);
+  const spec = stdSpec ?? small?.spec ?? null;
+  const cent = small?.kind === 'cent';
+  /** عملة كل مبلغ باللوحة: USC لحساب السنت (سعر التحويل لحساب دولار × 100)، وإلا عملة الحساب */
+  const moneyCcy: string = cent ? 'USC' : account;
+  const convAccount: AccountCcy = cent ? 'USD' : account;
+  const balanceText = cent ? centBalance : balance;
+  const setBalanceText = cent ? setCentBalance : setBalance;
   /** الأداة **الآن** — لسعرٍ حيّ يصل بعد تبديلها (راجع `fillEntryFromLive`) */
   const liveSymRef = useRef<string | null>(null);
   liveSymRef.current = spec?.symbol ?? null;
-  const conv = useMemo(() => (spec ? conversionPair(spec.quote, account) : null), [spec, account]);
+  const conv = useMemo(() => (spec ? conversionPair(spec.quote, convAccount) : null), [spec, convAccount]);
   const convSymbol = conv?.symbol ?? null;
   const convInvert = conv?.invert ?? false;
   /** جسر الدولار: بديل الزوج المباشر حين لا يعرفه المزوّد (`usdBridge` بـpositionSize.ts). */
-  const bridge = useMemo(() => (spec ? usdBridge(spec.quote, account) : null), [spec, account]);
+  const bridge = useMemo(() => (spec ? usdBridge(spec.quote, convAccount) : null), [spec, convAccount]);
 
   /**
    * **تحديث سعر التحويل كل 60 ث** ما دام مجلوباً تلقائياً: كان يُجلب مرّة عند اختيار الأداة ثم يبقى — واللوحة
@@ -287,14 +307,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    */
   const priceNum = (s: string) => parsePriceFor(s, spec?.symbol) ?? NaN;
   /** الرصيد مبلغ: «10.000» أوروبية = عشرة آلاف فتُرفض كـ«10,000» بدل حساب لوت من 10 — راجع parseDecimal.ts */
-  const balanceNum = parseDecimal(balance, { amount: true }) ?? NaN;
+  const balanceNum = parseDecimal(balanceText, { amount: true }) ?? NaN;
   /**
    * خانة فيها نص لكنه ليس رقماً مفهوماً («10,000» مبهم، «1.2.3») — نقول ذلك بدل «أدخل الرصيد…».
    * السبريد خارجها: خطؤه يُقال تحت خانته (راجع `spreadErr`) لأن اللوت يُحسب بدونه.
    */
   const badOtherThanLeverage =
-    (balance.trim() !== '' && parseDecimal(balance, { amount: true }) == null) ||
-    (riskPct.trim() !== '' && parseRiskInput(riskPct, balanceNum, account) == null) ||
+    (balanceText.trim() !== '' && parseDecimal(balanceText, { amount: true }) == null) ||
+    (riskPct.trim() !== '' && parseRiskInput(riskPct, balanceNum, moneyCcy) == null) ||
     [slPips, manualConv].some((v) => v.trim() !== '' && parseDecimal(v) == null) ||
     [entryPx, stopPx, targetPx].some((v) => v.trim() !== '' && Number.isNaN(priceNum(v)));
   const badNumber = badOtherThanLeverage || (leverage.trim() !== '' && parseLeverage(leverage) == null);
@@ -305,8 +325,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    */
   const shortLabel = (label: string) => label.split(' (')[0].trim();
   const badFields = [
-    [t.riskCalcBalance, balance, parseDecimal(balance, { amount: true }) == null],
-    [t.riskCalcRiskPct, riskPct, parseRiskInput(riskPct, balanceNum, account) == null],
+    [t.riskCalcBalance, balanceText, parseDecimal(balanceText, { amount: true }) == null],
+    [t.riskCalcRiskPct, riskPct, parseRiskInput(riskPct, balanceNum, moneyCcy) == null],
     [t.riskCalcLeverage, leverage, parseLeverage(leverage) == null],
     [t.riskCalcSlPips, slPips, parseDecimal(slPips) == null],
     [t.riskCalcEntry, entryPx, Number.isNaN(priceNum(entryPx))],
@@ -335,8 +355,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         .replace('{value}', ambiguousPx.value)
         .replace('{whole}', ambiguousPx.whole)
         .replace('{small}', ambiguousPx.small)
-    : misplacedArabicThousandsSign(balance, { amount: true }) ||
-        misplacedArabicThousandsSignInRisk(riskPct, balanceNum, account) ||
+    : misplacedArabicThousandsSign(balanceText, { amount: true }) ||
+        misplacedArabicThousandsSignInRisk(riskPct, balanceNum, moneyCcy) ||
         [slPips, manualConv, entryPx, stopPx, targetPx].some((v) => misplacedArabicThousandsSign(v))
       ? // «0٬5» بخانة المخاطرة: «٬» بجانب «٫» على اللوحة العربية — يُقال أيّهما يُكتب للكسر
         `${badFieldsText}: ${t.arabicThousandsSignHint}`
@@ -365,7 +385,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * «1%» / «0.5٪» كما يقولها المتداول، أو **مبلغ** بعلامة عملة الحساب («$50»، «50 USD») تُحسب نسبته من
    * الرصيد — راجع `parseRiskInput`. الرقم وحده يبقى نسبة.
    */
-  const riskIn = parseRiskInput(riskPct, balanceNum, account);
+  const riskIn = parseRiskInput(riskPct, balanceNum, moneyCcy);
   const riskNum = riskIn?.pct ?? NaN;
   /** النسبة كما تُكتب بالنصوص («يتجاوز {pct}%»): المكتوبة كما هي، والمحسوبة من مبلغ لمنزلتين («0.5» لا «0.4999…») */
   const riskPctText = riskIn?.amount != null ? String(Math.round(riskNum * 100) / 100) : String(riskNum);
@@ -422,9 +442,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const fetchedConv = convQuote && convQuote.key === convSymbol ? convQuote : null;
   const manual = num(manualConv);
   // السعر المجلوب (زوجاً مباشراً كان أم معكوساً أم جسراً)، وإلا الإدخال اليدوي بترتيب الزوج المعروض
-  const rate = fetchedConv
+  const convRate = fetchedConv
     ? fetchedConv.rate
     : quoteToAccountRate(conv, Number.isFinite(manual) && manual > 0 ? manual : null);
+  // السنت: عملة التسعير ⇒ USD ثم × 100 ⇒ USC، فيخرج كل مبلغ (pip، مخاطرة، هامش، ربح) بالسنت كرصيده
+  const rate = cent ? centQuoteToAccount(convRate) : convRate;
   const pv = spec && rate != null ? pipValuePerLot(spec, rate) : null;
   const result =
     spec && pv != null && !slTooClose
@@ -526,7 +548,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   // التسجيل كان يغيّر اللوت على الشاشة بينما الزرّ معطّل والدفتر يحفظ اللوت الخاطئ
   useEffect(() => {
     setLogMsg(null);
-  }, [symbol, account, balance, riskPct, slPips, entryPx, stopPx, targetPx, spread, commission, manualConv]);
+  }, [symbol, account, balance, centBalance, riskPct, slPips, entryPx, stopPx, targetPx, spread, commission, manualConv]);
   // السعر المجلوب يخصّ رمزاً واحداً ولحظة واحدة: تبديل الأداة يُسقط الرسالة (وإلا بقي «الدخول = ‎1.0850»
   // معروضاً تحت زوج آخر)
   useEffect(() => {
@@ -591,7 +613,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** «(+1.5 pip + 7.00 USD/lot)» — ما دخل السطر فعلاً، كي لا تُقرأ المخاطرة الأعلى بلا سبب ظاهر */
   const costParts = [
     spreadPips ? `${spreadPips} pip` : null,
-    commissionPerLot ? `${formatMoney(commissionPerLot, account)}/lot` : null,
+    commissionPerLot ? `${formatMoney(commissionPerLot, moneyCcy)}/lot` : null,
   ].filter(Boolean);
   /**
    * الهامش المحجوز للّوت المحسوب — من سعر الدخول المكتوب (القيمة الاسمية تحتاج سعراً، ولا يُختلق من
@@ -709,11 +731,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     const sPx = priceNum(stopPx);
     const tPx = priceNum(targetPx);
     if (!spec || !plan?.ok || planSide == null || lots == null || logBusy || logMsg?.ok || logBlocked) return;
+    // لوت السنت/micro يُسجَّل **برمزه** («EURUSDC»): تحت «EURUSD» كان الدفتر سيحسب مالها بعقد الحساب العادي (×100)
+    const logSymbol = small ? journalSymbol(symbol) : spec.symbol;
+    if (!logSymbol) return;
     setLogBusy(true);
     setLogMsg(null);
     try {
       await api.createTrade({
-        symbol: spec.symbol,
+        symbol: logSymbol,
         side: planSide,
         entry: e,
         sl: sPx,
@@ -724,7 +749,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         note: planJournalNote({
           lots,
           risk: result ? result.actualRisk : null,
-          ccy: account,
+          ccy: moneyCcy,
           rr: formatRR(plan.rr),
           spreadPips: parseSpreadPips(spread),
           commissionPerLot: parseCommission(commission),
@@ -812,7 +837,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    */
   const group = (s: string) => s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   /** الين بلا كسور، والبقية منزلتان — راجع `formatMoney` */
-  const money = (v: number) => formatMoney(v, account);
+  const money = (v: number) => formatMoney(v, moneyCcy);
   const pipLabel = spec ? String(spec.pipSize) : '';
   /**
    * سقف الـ100 كان يُسكِت التحذير **عند الطرف الأخطر بالضبط**: من يكتب «20» فيصير الرقم «200»
@@ -826,7 +851,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * يُضاف سطر يناقضه.
    */
   const riskImpossible = Number.isFinite(riskNum) && riskNum > 100;
-  const riskOver = riskOverBalance(riskPct, balanceNum, account);
+  const riskOver = riskOverBalance(riskPct, balanceNum, moneyCcy);
 
   const chip = (label: string, on: boolean, onPress: () => void, a11y: string, disabled = false) => (
     <Pressable
@@ -883,43 +908,52 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
 
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcSymbol}</Text>
       <View style={[styles.chips, rtl && styles.chipsRtl]}>
-        {QUICK_SYMBOLS.map((s) => chip(s, spec?.symbol === s, () => setSymbol(s), `${t.riskCalcSymbol}: ${s}`))}
+        {QUICK_SYMBOLS.map((s) => chip(s, stdSpec?.symbol === s, () => setSymbol(s), `${t.riskCalcSymbol}: ${s}`))}
       </View>
       {input(symbol, setSymbol, 'EURUSD', t.riskCalcSymbol, false)}
       {!spec && symbol.trim().length > 0 ? (
-        <Text style={[styles.warn, { textAlign: align }]}>
-          {centPair
-            ? t.riskCalcCentSymbolHint.replace('{symbol}', () => symbol.trim()).replace('{pair}', () => centPair)
-            : microPair
-              ? t.riskCalcMicroSymbolHint.replace('{symbol}', () => symbol.trim()).replace('{pair}', () => microPair)
-              : t.riskCalcBadSymbol}
+        <Text style={[styles.warn, { textAlign: align }]}>{t.riskCalcBadSymbol}</Text>
+      ) : null}
+      {small ? (
+        <Text style={[styles.hint, styles.hintOn, { textAlign: align }]} accessibilityLiveRegion="polite">
+          {(cent ? t.riskCalcCentModeNote : t.riskCalcMicroModeNote).replace('{symbol}', () => symbol.trim())}
         </Text>
       ) : null}
 
-      <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcAccountCcy}</Text>
-      <View style={[styles.chips, rtl && styles.chipsRtl]}>
-        {ACCOUNT_CCYS.map((c) =>
-          chip(
-            c,
-            account === c,
-            () => {
-              if (c !== account) {
-                setCommission('');
-                // «USD 50» لا تعني 50 يورو: المخاطرة بالمال تعود نسبةً (بالرصيد نفسه) قبل تبديل العملة،
-                // وبلا رصيد تُمسح بدل أن تبقى علامةً لعملة لم تعد عملة الحساب
-                if (riskIn?.amount != null) setRiskPct(toggleRiskUnit(riskPct, balanceNum, account) ?? '');
-              }
-              setAccount(c);
-            },
-            `${t.riskCalcAccountCcy}: ${c}`
-          )
-        )}
-      </View>
+      {/* حساب السنت بالـUSC دائماً (سعر التحويل لحساب دولار) — شرائح العملة لا تغيّر فيه شيئاً فتُخفى */}
+      {cent ? null : (
+        <>
+          <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcAccountCcy}</Text>
+          <View style={[styles.chips, rtl && styles.chipsRtl]}>
+            {ACCOUNT_CCYS.map((c) =>
+              chip(
+                c,
+                account === c,
+                () => {
+                  if (c !== account) {
+                    setCommission('');
+                    // «USD 50» لا تعني 50 يورو: المخاطرة بالمال تعود نسبةً (بالرصيد نفسه) قبل تبديل العملة،
+                    // وبلا رصيد تُمسح بدل أن تبقى علامةً لعملة لم تعد عملة الحساب
+                    if (riskIn?.amount != null) setRiskPct(toggleRiskUnit(riskPct, balanceNum, account) ?? '');
+                  }
+                  setAccount(c);
+                },
+                `${t.riskCalcAccountCcy}: ${c}`
+              )
+            )}
+          </View>
+        </>
+      )}
 
       <Text style={[styles.label, { textAlign: align }]}>
-        {t.riskCalcBalance} ({account})
+        {cent ? t.riskCalcCentBalance : `${t.riskCalcBalance} (${account})`}
       </Text>
-      {input(balance, setBalance, '10000', t.riskCalcBalance)}
+      {input(balanceText, setBalanceText, cent ? '100000' : '10000', cent ? t.riskCalcCentBalance : t.riskCalcBalance)}
+      {cent && Number.isFinite(balanceNum) && balanceNum > 0 ? (
+        <Text style={[styles.hint, { textAlign: align }]}>
+          {t.riskCalcCentUsdEquiv.replace('{usd}', () => formatMoney(balanceNum / CENTS_PER_USD, 'USD').replace(/ USD$/, ''))}
+        </Text>
+      ) : null}
 
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcRiskPct}</Text>
       <View style={[styles.chips, rtl && styles.chipsRtl]}>
@@ -927,22 +961,22 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         {/* المخاطرة بالمال: يقلب الخانة «1» ⇄ «USD 100» بالمخاطرة نفسها — لوحة الأرقام بلا «$» (راجع
             `toggleRiskUnit`). معطَّل بلا رصيد: لا نسبة من مبلغ ولا مبلغ من نسبة */}
         {(() => {
-          const flipped = toggleRiskUnit(riskPct, balanceNum, account);
+          const flipped = toggleRiskUnit(riskPct, balanceNum, moneyCcy);
           return chip(
-            account,
+            moneyCcy,
             riskIn?.amount != null,
             () => {
               if (flipped != null) setRiskPct(flipped);
             },
-            `${t.riskCalcRiskPct}: ${account}`,
+            `${t.riskCalcRiskPct}: ${moneyCcy}`,
             flipped == null
           );
         })()}
       </View>
       {input(riskPct, setRiskPct, '1', t.riskCalcRiskPct)}
       {/* زرّ عملة الحساب وحده لا يقول ما يفعل — التلميح ما دامت الخانة نسبةً والقلب ممكناً */}
-      {riskIn?.amount == null && toggleRiskUnit(riskPct, balanceNum, account) != null ? (
-        <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcRiskMoneyHint.replace('{ccy}', account)}</Text>
+      {riskIn?.amount == null && toggleRiskUnit(riskPct, balanceNum, moneyCcy) != null ? (
+        <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcRiskMoneyHint.replace('{ccy}', moneyCcy)}</Text>
       ) : null}
       {/* أكبر من الرصيد: لا لوت أصلاً، و«أكثر من 2% عالية» وحدها لا تقول لماذا — راجع `riskOverBalance` */}
       {riskOver ? (
@@ -1075,7 +1109,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcSpreadNote}</Text>
 
       <Text style={[styles.label, { textAlign: align }]}>
-        {t.riskCalcCommission} ({account})
+        {t.riskCalcCommission} ({moneyCcy})
       </Text>
       {input(commission, setCommission, '7', t.riskCalcCommission)}
       {commissionErr ? (
@@ -1113,6 +1147,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
               {actualNow ? ` (${formatRiskPct(actualNow.pct)})` : ''} · {t.riskCalcUnits}:{' '}
               {group(String(result.units))}
             </Text>
+            {/* لوت السنت/micro بلوت الحساب العادي — ليطابقه المتداول مع ما يعرفه («4.00» = 0.04) */}
+            {small ? (
+              <Text style={[styles.resultMeta, { textAlign: align }]}>
+                {t.riskCalcSmallLotsStdEquiv.replace('{std}', () => smallLotsStdEquiv(result.lots))}
+              </Text>
+            ) : null}
             {/* فوق أكبر أمر يقبله الوسيط (200 lot من وقف 1 pip): الرقم صحيح حسابياً لكن الأمر يُرفض — أو الوقف خطأ كتابة. راجع `lotsOverOrderMax` */}
             {overOrderMax != null ? (
               <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">

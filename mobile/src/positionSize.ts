@@ -144,6 +144,42 @@ export function microAccountSymbol(raw: string): string | null {
   return smallContractPair(raw);
 }
 
+/** السنت بالدولار: 100 USC = 1 USD. عملة حساب السنت (`smallContractSpec`) = الدولار ÷ 100. */
+export const CENTS_PER_USD = 100;
+
+/**
+ * مواصفات **الحاسبة** لرمز حساب سنت/micro: الزوج العادي بعقدٍ أصغر بمئة مرّة (EURUSD 1,000 وحدة، الذهب أونصة، الفضة
+ * 50) — فتخرج اللوتات بلوت السنت/micro الذي يكتبه المتداول بمنصّته، والوحدات والهامش والربح من العقد الحقيقي.
+ * `kind` = `'cent'` ⇒ عملة المال USC (رصيد وعمولة ومخاطرة بالسنت كما تعرضها المنصّة): سعر التحويل يُحسب لحساب دولار
+ * ثم × `CENTS_PER_USD` (`centQuoteToAccount`). `'micro'` ⇒ عملة الحساب كما هي.
+ *
+ * لماذا: الحاسبة كانت ترفض «EURUSDc»/«EURUSDmicro» (رسالة «استخدم الزوج العادي») — والمتداول بحساب سنت لا يستطيع
+ * حساب لوته إلا بقسمة رصيده على مئة ثم ضرب اللوت بمئة بيده: الخطوتان اللتان تنزلق فيهما منزلتان ⇒ مركزٌ بمئة ضعف.
+ * null = رمز عادي (`instrumentSpec`) أو مجهول.
+ */
+export function smallContractSpec(raw: string): { kind: 'cent' | 'micro'; spec: InstrumentSpec } | null {
+  if (instrumentSpec(raw)) return null;
+  const pair = smallContractPair(raw);
+  const std = pair ? instrumentSpec(pair) : null;
+  if (!std) return null;
+  const kind = centAccountSymbol(raw) ? 'cent' : 'micro';
+  return { kind, spec: { ...std, contractSize: std.contractSize / 100 } };
+}
+
+/** سعر التحويل (عملة التسعير ⇒ USD) لحساب سنت: × 100 ⇒ عملة التسعير ⇒ USC. null يبقى null. */
+export function centQuoteToAccount(usdRate: number | null): number | null {
+  return usdRate != null && Number.isFinite(usdRate) && usdRate > 0 ? usdRate * CENTS_PER_USD : null;
+}
+
+/**
+ * لوت سنت/micro بلوت الحساب العادي (÷ 100) للسطر `riskCalcSmallLotsStdEquiv` — «4.00 = 0.04 لوت بالحساب العادي» كي
+ * يطابقه المتداول مع ما يعرفه. بلا أصفار زائدة («0.004» لا «0.0040»)، وحتى أربع منازل (خطوة 0.01 ÷ 100).
+ */
+export function smallLotsStdEquiv(lots: number): string {
+  if (!Number.isFinite(lots) || lots <= 0) return '—';
+  return String(Number((lots / 100).toFixed(4)));
+}
+
 /**
  * سعرٌ مكتوب بخانة أداةٍ معروفة: `parseDecimal`، مع رفض النقطة الوحيدة المتبوعة بثلاثة أرقام بالضبط («3.450»)
  * حين لا يُسعَّر المعروض بثلاث منازل أصلاً (الذهب بمنزلتين).

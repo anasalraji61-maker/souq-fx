@@ -38,6 +38,10 @@ import {
   parseSpreadPips,
   spreadRisk,
   parsePriceFor,
+  smallContractSpec,
+  centQuoteToAccount,
+  smallLotsStdEquiv,
+  CENTS_PER_USD,
   ambiguousThousandsPrice,
   spreadBeyondLiveEntry,
   MAX_SPREAD_PIPS,
@@ -1710,3 +1714,72 @@ console.log('positionSize ambiguousThousandsPrice small-contract selftest OK');
     assert.equal(microAccountSymbol(raw), null, raw);
 }
 console.log('positionSize microAccountSymbol selftest OK');
+
+// smallContractSpec — الحاسبة تحسب لوت السنت (رصيد USC) ولوت micro بدل رفضهما
+{
+  // التعرّف: السنت والـmicro بكتاباتهما، والعقد أصغر بمئة مرّة
+  for (const [raw, kind, sym, contract] of [
+    ['EURUSDc', 'cent', 'EURUSD', 1000], ['EURUSD.c', 'cent', 'EURUSD', 1000], ['GBPJPY-cent', 'cent', 'GBPJPY', 1000],
+    ['XAUUSDc', 'cent', 'XAUUSD', 1], ['GOLDc', 'cent', 'XAUUSD', 1], ['XAGUSDc', 'cent', 'XAGUSD', 50],
+    ['EURUSDmicro', 'micro', 'EURUSD', 1000], ['GOLD_micro', 'micro', 'XAUUSD', 1],
+  ] as const) {
+    const s = smallContractSpec(raw);
+    assert.ok(s, raw);
+    assert.equal(s!.kind, kind, raw);
+    assert.equal(s!.spec.symbol, sym, raw);
+    assert.equal(s!.spec.contractSize, contract, raw);
+    assert.equal(s!.spec.pipSize, instrumentSpec(sym)!.pipSize, raw);
+  }
+  for (const raw of ['EURUSD', 'EURUSD.m', 'EURUSDm', 'XAUUSD', 'US30micro', 'BTCUSDc', 'EURUSDT', ''])
+    assert.equal(smallContractSpec(raw), null, raw);
+
+  // سنت EURUSD: 10,000 USC (= 100 USD)، 1%، وقف 25 ⇒ 100 USC ÷ (25 × 10 USC) = 0.40 لوت سنت
+  // = 0.004 لوت عادي — بالضبط ما يعطيه حساب عادي برصيد 100 USD
+  const cent = smallContractSpec('EURUSDc')!.spec;
+  const centRate = centQuoteToAccount(1)!;
+  assert.equal(centRate, CENTS_PER_USD);
+  const centPv = pipValuePerLot(cent, centRate);
+  assert.ok(Math.abs(centPv - 10) < 1e-9, 'pip = 10 USC لكل لوت سنت');
+  const r = positionSize({ balance: 10_000, riskPct: 1, slPips: 25, pipValuePerLot: centPv, contractSize: cent.contractSize })!;
+  assert.equal(r.lots, 0.4);
+  assert.equal(r.units, 400);
+  assert.ok(Math.abs(r.actualRisk - 100) < 1e-9);
+  assert.equal(smallLotsStdEquiv(r.lots), '0.004');
+  const std = positionSize({ balance: 100, riskPct: 1, slPips: 25, pipValuePerLot: pipValuePerLot(instrumentSpec('EURUSD')!, 1), contractSize: 100_000 })!;
+  assert.ok(Math.abs(std.rawLots * 100 - r.rawLots) < 1e-9, 'لوت السنت = اللوت العادي × 100');
+  // الرصيد الذي كان يُكتب بالسنت ويُحسب بالحساب العادي كان سيُعطي لوتاً بمئة ضعف — هنا 0.40 لا 40
+  assert.ok(r.lots < 1);
+
+  // هامش السنت بـUSC: 0.40 لوت × 1,000 × 1.08 ÷ 100 = 4.32 USD = 432 USC
+  const m = requiredMargin({ spec: cent, lots: 0.4, price: 1.08, quoteToAccount: centRate, leverage: 100 })!;
+  assert.ok(Math.abs(m - 432) < 1e-9);
+  // الربح عند هدف +50 pip: 0.40 × 1,000 × 0.005 = 2 USD = 200 USC
+  const p = profitAtTarget({ spec: cent, entry: 1.08, target: 1.085, lots: 0.4, quoteToAccount: centRate })!;
+  assert.ok(Math.abs(p - 200) < 1e-6);
+
+  // سنت USDJPY عند 150: تحويل JPY ⇒ USD = 1/150، والـpip لكل لوت سنت = 0.01 × 1,000 × 100/150 = 6.67 USC
+  // (= 6.67 USD للوت العادي ÷ 100 × 100)
+  const jpy = smallContractSpec('USDJPYc')!.spec;
+  const jpyPv = pipValuePerLot(jpy, centQuoteToAccount(1 / 150)!);
+  assert.ok(Math.abs(jpyPv - pipValuePerLot(instrumentSpec('USDJPY')!, 1 / 150)) < 1e-9);
+
+  // ذهب سنت: pip (0.1) لكل لوت سنت = 0.1 × 1 × 100 = 10 USC = 0.10 USD (عُشر دولار = 1/100 من 10 USD العادي)
+  const gold = smallContractSpec('XAUUSDc')!.spec;
+  assert.ok(Math.abs(pipValuePerLot(gold, centQuoteToAccount(1)!) - 10) < 1e-9);
+
+  // micro EURUSD بحساب دولار: 1,000 USD، 1%، وقف 25 ⇒ 10 ÷ (25 × 0.10) = 4.00 لوت micro = 0.04 عادي
+  const micro = smallContractSpec('EURUSDmicro')!.spec;
+  const mpv = pipValuePerLot(micro, 1);
+  assert.ok(Math.abs(mpv - 0.1) < 1e-12);
+  const mr = positionSize({ balance: 1000, riskPct: 1, slPips: 25, pipValuePerLot: mpv, contractSize: micro.contractSize })!;
+  assert.equal(mr.lots, 4);
+  assert.equal(mr.units, 4000);
+  assert.equal(smallLotsStdEquiv(mr.lots), '0.04');
+
+  assert.equal(centQuoteToAccount(null), null);
+  assert.equal(centQuoteToAccount(0), null);
+  assert.equal(smallLotsStdEquiv(0.01), '0.0001');
+  assert.equal(smallLotsStdEquiv(250), '2.5');
+  assert.equal(smallLotsStdEquiv(0), '—');
+}
+console.log('positionSize smallContractSpec selftest OK');
