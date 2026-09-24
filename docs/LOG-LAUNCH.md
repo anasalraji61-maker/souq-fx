@@ -1245,3 +1245,34 @@
 
 **يحتاج جهازاً**: البنود 75–80 — خاصةً 75 (VWAP مقابل TradingView) و78 (هل «1.00 lot» بأول الملاحظة مقبول). وصف المتجر لم يُلمس
 (الإنجليزي 3996/4000).
+
+## 2026-09-24 — التشغيلة الثامنة والثلاثون
+
+تتبع `04aeca0` (الشارت) و`91b560e`/`c8acdc6`/`d28991b` (الأدوات). التحقّق بـNode 22 و`tsc` من `/tmp/ts5` (`--strict --noEmit
+--skipLibCheck --target es2020`) على `locales.ts` نظيف، صفر `U+FFFD`؛ ما كُتب بالوثائق مقروء من فروقات الكود. **لم يُشغَّل التطبيق.**
+
+1. **`locales.ts`** (`3da0e73`) ar/en/ku: `mcToLatestA11y` («العودة لآخر شمعة» — آخر نصّ بـ`chartExtraLabels` بلا مفتاح)،
+   و`riskCalcBadFieldValue` (`'{field} «{value}»'`، وبالإنجليزية `“{value}”`): `d28991b` يكتب «» حرفياً حتى بالواجهة الإنجليزية
+   («Target «3.5.0»: Number not recognized…»). **كلاهما جاهز غير موصول.**
+2. **`FEATURE-INVENTORY.md`** (`c77d2a3`): TWAP يُصفَّر بجلسة VWAP وينقطع خطّه؛ الحاسبة تسمّي الخانة المرفوضة وما كُتب فيها (وصحّحتُ
+   «لا تسمّي الخانة» من التشغيلة السابقة)، رافعة فوق 1:3000 برسالة الحدّ، ومخاطرة فوق الرصيد بسطر المبلغين — وأزلتُ «جاهز غير موصول»
+   ضمنياً عن `riskCalcLeverageOutOfRange`/`riskCalcRiskOverBalance` (موصولان، تحقّقت بـgrep).
+3. **`RELEASE-MOBILE.md` §5** (`495d880`): البند 80 صار يتوقّع اسم الخانة؛ البنود 81–83 (رافعة فوق الحدّ، مخاطرة فوق الرصيد، TWAP على 15m).
+
+### طلب تنسيق — لوكيل الشارت (جديد + قائم)
+- **خطأ جديد**: `barsCountText` بـ`chart/measureReadout.ts:87` يفحص `lang === 'en'` واللغة الممرَّرة من `MatrixChart.tsx:4182` هي
+  `'en-US'`/`'en-GB'` (`LangId`) — فالقياس على شمعة واحدة يُقرأ «1 bars» بالإنجليزية (الاختبار الذاتي يمرّر `'en'` فيمرّ). الإصلاح: `tr.mcMeasureBarOne`/
+  `tr.mcMeasureBarTwo` (موجودان بالثلاث، بلا مستخدم) بدل الحرفي العربي و`'en'`.
+- `chartExtraLabels(lang).toLatest` (`MatrixChart.tsx:7009`) ← `tr.mcToLatestA11y`، و`clearAllBody` (`:4525`، `:10700`) ← `tr.mcClearAllBody`
+  (النصّ مطابق بالثلاث) — ثم حذف `chartExtraLabels`.
+- قائم: `cfReplayPriceA11y` و`mcReplayReadout` بلا مستخدم (`` `Bar Replay · …` `` الحرفي — `ip-legal-caution.mdc`)؛ `mcAutoA11y`/`mcAutoManualA11y`،
+  `mcHintSelect`/`mcHintSelected`، `mcHintDrawWeb`/`mcHintSelectedWeb`/`mcHintNavigateWeb` كذلك (مسح آلي لمفاتيح `Dict` بلا مستخدم).
+
+### طلب تنسيق — لوكيل الأدوات
+- `PositionSizePanel.tsx` (`badFieldsText`): `t.riskCalcBadFieldValue.replace('{field}', …).replace('{value}', …)` بدل `` `${…} «${…}»` ``.
+- قائم: `riskCalcCentSymbolHint` بلا مستخدم.
+
+**خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (`backend/openrouter_ai.py` «خبير تداول»، `lot` الثابتة، `₴`، `extra.apiUrl` المحلي
+ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
+
+**يحتاج جهازاً**: البنود 80–83 — خاصةً 83 (TWAP/VWAP مقابل TradingView). وصف المتجر لم يُلمس (الإنجليزي 3996/4000).
