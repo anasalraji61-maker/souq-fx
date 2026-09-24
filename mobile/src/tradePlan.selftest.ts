@@ -1669,3 +1669,19 @@ console.log('tradePlan small-contract instrument key selftest OK');
   for (const v of [0, -1, NaN, Infinity, null, undefined, 201, 10000]) assert.equal(journalSmallLotsStdEquiv(v, 'EURUSDc'), null, String(v));
 }
 console.log('tradePlan journal small-lot std equivalent selftest OK');
+
+{
+  // المعادن بعملة تسعير بعيدة (الين): pip الـ0.1 نفسه على سعرٍ أكبر 150 مرّة — الشرائح ×100
+  assert.deepEqual(quickStopPips('XAUJPY', 352000), [3000, 5000, 10000, 20000]);
+  assert.deepEqual(quickStopPips('XAGJPY', 4600), [1000, 2000, 3000, 5000]);
+  const st = stopAtPips({ symbol: 'XAUJPY', side: 'buy', entry: 352000, pips: quickStopPips('XAUJPY', 352000)[0] });
+  assert.equal(st, 351700); // 300 ين، لا 3
+  // الذهب/الفضة بعملات قريبة كما كانت حرفياً (أسعار 2026 المعقولة)
+  for (const [sym, px] of [['XAUUSD', 1200], ['XAUUSD', 2400], ['XAUUSD', 3800], ['XAUUSD', 6000], ['XAUEUR', 3300], ['XAUAUD', 5800]] as const)
+    assert.deepEqual(quickStopPips(sym, px), [30, 50, 100, 200], `${sym} ${px}`);
+  for (const [sym, px] of [['XAGUSD', 15], ['XAGUSD', 32], ['XAGUSD', 70], ['XAGEUR', 28]] as const)
+    assert.deepEqual(quickStopPips(sym, px), [10, 20, 30, 50], `${sym} ${px}`);
+  assert.deepEqual(quickStopPips('XAUJPY'), [30, 50, 100, 200]); // بلا دخول: لا سعر يُقاس به
+  assert.deepEqual(quickStopPips('XAUJPYc', 352000), [3000, 5000, 10000, 20000]);
+}
+console.log('tradePlan quickStopPips metal-in-JPY selftest OK');

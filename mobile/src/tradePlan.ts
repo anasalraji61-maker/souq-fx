@@ -703,17 +703,19 @@ const STOP_SCALES = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100] as const;
  * نفسه، وقفٌ يُضرب لحظة الفتح؛ والعكس على ZARJPY/MXNJPY (8.5) حيث pip الـ0.01 أكبر بعشر مرات فـ«10 pip»
  * وقفٌ أوسع من EURUSD بـ50 pip. المرجع EURUSD عند 1.10: `f = entry / pipSize / 11000`؛ الرئيسية والين
  * (f بين 0.4 و2.5 — AUDUSD 0.59، GBPNZD 1.9، GBPJPY 1.7) كما كانت حرفياً، وخارجها تُضرب المسافات بأقرب
- * مضاعف مستدير (لوغاريتمياً): USDZAR ×20 ⇒ 200/400/600/1000، ZARJPY ×0.1 ⇒ 1/2/3/5. المعادن كما هي
- * (تذبذبها النسبي لا يتبع سعرها).
+ * مضاعف مستدير (لوغاريتمياً): USDZAR ×20 ⇒ 200/400/600/1000، ZARJPY ×0.1 ⇒ 1/2/3/5. المعادن بمرجع
+ * معدنها (XAUUSD بين 1,000 و6,250 كما كانت حرفياً)، فـXAUJPY/XAGJPY ×100: وقف الذهب بالين 300–2,000 ين لا 3–20.
  */
 export function quickStopPips(symbol: string, entry?: number | null): readonly number[] {
   // سنت/micro بمسافات زوجه العادي: «EURUSDC» كانت بلا شرائح وقف إطلاقاً
   const spec = journalSpec(symbol);
   if (!spec) return [];
-  if (spec.base === 'XAU') return [30, 50, 100, 200];
-  const base = [10, 20, 30, 50];
-  if (spec.base === 'XAG' || !finitePos(entry)) return base;
-  const f = entry / spec.pipSize / 11000;
+  const base = spec.base === 'XAU' ? [30, 50, 100, 200] : [10, 20, 30, 50];
+  if (!finitePos(entry)) return base;
+  // المعدن بمرجع معدنه (الذهب 2500 بـpip الـ0.1، الفضة 30 بـpip الـ0.01): pip الـ0.1 نفسه على XAUJPY (352,000)
+  // جعل «30 pip» وقفاً بثلاثة ين على ذهبٍ بـ352 ألف — يُضرب بالسبريد، ونتيجته +166R تقلب متوسط R للدفتر كلّه
+  const ref = spec.base === 'XAU' ? 25000 : spec.base === 'XAG' ? 3000 : 11000;
+  const f = entry / spec.pipSize / ref;
   if (f > 0.4 && f < 2.5) return base;
   let m: number = STOP_SCALES[0];
   for (const c of STOP_SCALES) if (Math.abs(Math.log(c / f)) < Math.abs(Math.log(m / f))) m = c;
