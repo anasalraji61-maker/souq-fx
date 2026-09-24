@@ -5,7 +5,7 @@
  * نربط عملتي الزوج بأحداث التقويم عالية التأثير خلال الساعات القليلة القادمة (أو الجارية الآن).
  *
  * - عملات الزوج: EURUSD → EUR,USD؛ XAUUSD → USD (لا أحداث للذهب نفسه)؛ DXY/النفط/NAS100 → USD،
- *   GER40 → EUR (`SINGLE_CCY`). رموز غير معروفة (عملات رقمية/أسهم مفردة) → [] بدل ربط مخمَّن.
+ *   GER40 → EUR (`SINGLE_CCY`)؛ BTCUSD → USD كالذهب (`CRYPTO`). رموز غير معروفة (أسهم مفردة) → [] بدل ربط مخمَّن.
  * - أحداث المثال (`sample`) لا تُستخدم أبداً: تحذير من خبر وهمي أسوأ من غياب التحذير.
  * - أحداث بلا وقت دقيق (`ts`) تُتجاهَل: لا نعرض عدّاً تنازلياً لا نعرفه.
  */
@@ -50,7 +50,7 @@ const METALS = new Set(['XAU', 'XAG', 'XPT', 'XPD', 'XCU']);
  * بدقائق** بلا أي تحذير، وهي من أعنف ما يقفز على الخبر. والنفط والذهب بأسماء منصّات MT5 (XTIUSD،
  * XBRUSD، GOLD، SILVER) كانت كذلك. الربط ليس تخميناً: عملة تسعير المؤشر وبنكه المركزي هما خبره الأول
  * (الناسداك بالدولار، الداكس باليورو، الفوتسي بالإسترليني، النيكاي بالين، ASX بالأسترالي).
- * ما لا يُعرف (عملات رقمية، أسهم مفردة) يبقى `[]`.
+ * ما لا يُعرف (أسهم مفردة) يبقى `[]`؛ العملات الرقمية بقاعدتها (`CRYPTO`).
  */
 const SINGLE_CCY: Record<string, string> = {
   DXY: 'USD', USDX: 'USD',
@@ -107,6 +107,15 @@ export function knownSingleName(raw: string): string | null {
   return SINGLE_CCY[bare] ? bare : null;
 }
 
+/**
+ * العملات الرقمية الكبرى مقابل عملة ورقية («BTCUSD» — بقائمة المراقبة نفسها — «ETHUSD.m»، «BTCUSDT»،
+ * «DOGEUSD»): كالذهب تماماً، أصلٌ مسعَّر بالدولار بلا تقويم أخبار خاص به، وأعنف ما يقفز عليه مجدولاً هو
+ * التضخّم الأمريكي وقرار الفيدرالي والرواتب. كانت `[]` فيفتح متداول البيتكوين صفقته قبل CPI بدقائق بلا
+ * تحذير. العملة المستقرّة (USDT/USDC) = الدولار؛ بعملة غير الدولار الساقان معاً (كـXAUEUR)؛ رقميّة مقابل
+ * رقميّة («ETHBTC») أو اسم غير مدرج يبقى `[]`.
+ */
+const CRYPTO = /^(BTC|ETH|LTC|XRP|SOL|BCH|BNB|ADA|DOT|DOGE|AVAX|LINK|XLM|TRX)(USDT|USDC|[A-Z]{3})$/;
+
 export function symbolCurrencies(symbol: string): string[] {
   /**
    * الرمز القانوني أولاً (`instrumentSpec` يُسقط لاحقة الوسيط): الدفتر يمرّر الرمز كما كتبه المتداول،
@@ -116,6 +125,11 @@ export function symbolCurrencies(symbol: string): string[] {
   const bare = suffixFree(symbol).replace(/[\s/]/g, '');
   const single = SINGLE_CCY[instrumentSpec(symbol)?.symbol ?? letters] ?? SINGLE_CCY[bare];
   if (single) return [single];
+  const coin = CRYPTO.exec(bare.replace(/[-_]/g, '')) ?? CRYPTO.exec(letters);
+  if (coin) {
+    const q = coin[2] === 'USDT' || coin[2] === 'USDC' ? 'USD' : coin[2] === 'CNH' ? 'CNY' : coin[2];
+    return FIAT.has(q) ? (q === 'USD' ? ['USD'] : ['USD', q]) : [];
+  }
   /**
    * زوجٌ لا تعرفه الحاسبة (معدن غير الذهب/الفضة، عملة ناشئة) بلاحقة وسيط بفاصل: «XPDUSD.m» كانت تصير
    * «XPDUSDM» (7 أحرف) فتُرفض. الحروف كلها أولاً («USD-HUF» ⇒ USDHUF — الشرطة هنا فاصل الزوج لا لاحقة)،

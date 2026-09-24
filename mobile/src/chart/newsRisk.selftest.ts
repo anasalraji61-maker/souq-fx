@@ -23,7 +23,7 @@ assert.deepEqual(symbolCurrencies('XAUUSD'), ['USD']);
 assert.deepEqual(symbolCurrencies('DXY'), ['USD']);
 assert.deepEqual(symbolCurrencies('USDCNH'), ['USD', 'CNY']);
 assert.deepEqual(symbolCurrencies('EUR/USD'), ['EUR', 'USD']);
-assert.deepEqual(symbolCurrencies('BTCUSD'), []);
+assert.deepEqual(symbolCurrencies('BTCUSD'), ['USD']);
 // مؤشرات/نفط/معادن بأسماء منصّات الوسطاء: عملة تسعيرها وبنكها المركزي خبرها الأول (كانت [] كلها)
 assert.deepEqual(symbolCurrencies('NAS100'), ['USD']);
 assert.deepEqual(symbolCurrencies('us30'), ['USD']);
@@ -65,7 +65,7 @@ assert.deepEqual(symbolCurrencies(' ger40.pro '), ['EUR']);
 assert.deepEqual(symbolCurrencies('US30M'), []);
 assert.deepEqual(symbolCurrencies('NAS1000'), []);
 assert.deepEqual(symbolCurrencies('US'), []);
-assert.deepEqual(symbolCurrencies('ETHUSD'), []);
+assert.deepEqual(symbolCurrencies('ETHUSD'), ['USD']);
 assert.deepEqual(symbolCurrencies('AAPL'), []);
 // بلاتين/بلاديوم/نحاس بأسماء MT5: خبر الدولار أولاً كالذهب (كانت [])، وبعملة غير الدولار الساقان معاً
 assert.deepEqual(symbolCurrencies('XPTUSD'), ['USD']);
@@ -298,7 +298,7 @@ console.log('newsRisk calendar cache selftest OK');
 }
 console.log('newsRisk calendarFetchEvents selftest OK');
 
-// عملات خارج الحاسبة تُكتب بالدفتر: ساق الدولار/اليورو تُحذَّر، والعملات الرقمية تبقى []
+// عملات خارج الحاسبة تُكتب بالدفتر: ساق الدولار/اليورو تُحذَّر؛ رمزٌ مقلوب/رقميّة مقابل رقميّة تبقى []
 {
   assert.deepEqual(symbolCurrencies('USDHUF'), ['USD', 'HUF']);
   assert.deepEqual(symbolCurrencies('USDTHB'), ['USD', 'THB']);
@@ -306,7 +306,7 @@ console.log('newsRisk calendarFetchEvents selftest OK');
   assert.deepEqual(symbolCurrencies('usd/krw'), ['USD', 'KRW']);
   const nfp: NewsEvent = { id: 'nfp', title: 'NFP', currency: 'USD', impact: 'High', ts: 1_800_000_000 + 1800 };
   assert.equal(nextHighImpact([nfp], symbolCurrencies('USDHUF'), 1_800_000_000_000)?.event.id, 'nfp');
-  for (const c of ['BTCUSD', 'ETHUSD', 'USDTRX', 'XRPUSD', 'USDBTC']) assert.deepEqual(symbolCurrencies(c), [], c);
+  for (const c of ['USDTRX', 'USDBTC', 'BTCETH', 'ETHBTC']) assert.deepEqual(symbolCurrencies(c), [], c);
 }
 console.log('newsRisk exotic-currency selftest OK');
 
@@ -346,5 +346,27 @@ console.log('newsRisk tick selftest OK');
 assert.deepEqual(symbolCurrencies('USD-HUF'), ['USD', 'HUF']);
 assert.deepEqual(symbolCurrencies('USDHUF.pro'), ['USD', 'HUF']);
 assert.deepEqual(symbolCurrencies('XPTUSD#'), ['USD']);
-assert.deepEqual(symbolCurrencies('BTCUSD.m'), []);
+assert.deepEqual(symbolCurrencies('BTCUSD.m'), ['USD']);
 console.log('newsRisk metals/aliases selftest OK');
+
+// العملات الرقمية مقابل عملة ورقية: خبر الدولار كالذهب (CPI/الفيدرالي/الرواتب)، وساق العملة الأخرى معه
+{
+  for (const c of ['BTCUSD', 'btc/usd', 'ETHUSD', 'XRPUSD', 'LTCUSD', 'SOLUSD', 'DOGEUSD', 'BTCUSDT', 'ETHUSDC',
+    'BTCUSD.m', 'BTCUSD#', 'ETHUSD-ECN', 'BTC-USD', 'BTC_USDT', ' bnbusd ', 'BTCUSDT.pro'])
+    assert.deepEqual(symbolCurrencies(c), ['USD'], c);
+  assert.deepEqual(symbolCurrencies('BTCEUR'), ['USD', 'EUR']);
+  assert.deepEqual(symbolCurrencies('ETHJPY.pro'), ['USD', 'JPY']);
+  assert.deepEqual(symbolCurrencies('BTCCNH'), ['USD', 'CNY']);
+  // رقميّة مقابل رقميّة، مقلوبة، أو اسم غير مدرج: بلا ربط مخمَّن
+  for (const c of ['ETHBTC', 'BTCETH', 'USDBTC', 'USDTRX', 'SHIBUSD', 'PEPEUSD', 'BTCXYZ', 'BTC', 'BTCUSDTT', 'BTCUSDM'])
+    assert.deepEqual(symbolCurrencies(c), [], c);
+  // الحاسبة والدفتر بلا تغيير: لا مواصفات pip، ولا اسمٌ «معروف» يُدمج به مفتاح الأداة
+  assert.equal(instrumentSpec('BTCUSD'), null);
+  assert.equal(knownSingleName('BTCUSD.m'), null);
+  const cpi: NewsEvent = { id: 'cpi', title: 'CPI y/y', currency: 'USD', impact: 'High', ts: 1_800_000_000 + 1200 };
+  const ecb: NewsEvent = { id: 'ecb', title: 'ECB rate', currency: 'EUR', impact: 'High', ts: 1_800_000_000 + 600 };
+  assert.equal(nextHighImpact([cpi, ecb], symbolCurrencies('BTCUSD'), 1_800_000_000_000)?.event.id, 'cpi');
+  assert.equal(nextHighImpact([cpi, ecb], symbolCurrencies('BTCEUR'), 1_800_000_000_000)?.event.id, 'ecb');
+  assert.equal(nextHighImpact([cpi, ecb], symbolCurrencies('ETHBTC'), 1_800_000_000_000), null);
+}
+console.log('newsRisk crypto selftest OK');
