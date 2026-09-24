@@ -188,9 +188,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** أرقام عربية/فاصل آلاف/فاصلة عشرية — راجع parseDecimal.ts. NaN = فارغ أو غير صالح. */
   const num = (s: string) => parseDecimal(s) ?? NaN;
   /** خانة فيها نص لكنه ليس رقماً مفهوماً («10,000» مبهم، «1.2.3») — نقول ذلك بدل «أدخل الرصيد…» */
-  const badNumber = [balance, riskPct, slPips, entryPx, stopPx, targetPx, manualConv].some(
-    (v) => v.trim() !== '' && parseDecimal(v) == null
-  );
+  const badNumber =
+    (balance.trim() !== '' && parseDecimal(balance, { amount: true }) == null) ||
+    [riskPct, slPips, entryPx, stopPx, targetPx, manualConv].some((v) => v.trim() !== '' && parseDecimal(v) == null);
+  /** الرصيد مبلغ: «10.000» أوروبية = عشرة آلاف فتُرفض كـ«10,000» بدل حساب لوت من 10 — راجع parseDecimal.ts */
+  const balanceNum = parseDecimal(balance, { amount: true }) ?? NaN;
   const derivedSl = spec ? slPipsFromPrices(spec, num(entryPx), num(stopPx)) : null;
 
   // الوقف من السعر يكتب قيمته بخانة النقاط (مصدر واحد للحساب)؛ تعديل النقاط يدوياً يبقى ممكناً بعده.
@@ -246,7 +248,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const result =
     spec && pv != null && !slTooClose
       ? positionSize({
-          balance: num(balance),
+          balance: balanceNum,
           riskPct: num(riskPct),
           slPips: num(slPips),
           pipValuePerLot: pv,

@@ -28,9 +28,13 @@ const THOUSANDS_GROUPS = (body: string, sep: string) => {
 
 /**
  * @param opts.signed اسمح بإشارة سالبة (قيم مؤشرات مثل MACD) — الأسعار والأرصدة موجبة دائماً.
+ * @param opts.amount خانة **مبلغ** (رصيد الحساب): النقطة الوحيدة متبوعة بثلاثة أرقام بالضبط تُرفض كالفاصلة
+ *   المبهمة تماماً. الأسعار تحتاج «1.085» عشريةً فتبقى القاعدة العامة كما هي، لكن رصيداً بثلاث منازل لا
+ *   يوجد، و«10.000» بكتابة أوروبية/تركية/إندونيسية تعني **عشرة آلاف** — كانت تُقرأ 10 فتقترح الحاسبة
+ *   لوتاً أصغر ألف مرة بصمت، بينما «10,000» بجانبها تُرفض. الآن يتصرّف الفاصلان بالخانة نفسها بالقاعدة نفسها.
  * @returns الرقم، أو null إن كان النص فارغاً/غير صالح/مبهماً.
  */
-export function parseDecimal(raw: string, opts: { signed?: boolean } = {}): number | null {
+export function parseDecimal(raw: string, opts: { signed?: boolean; amount?: boolean } = {}): number | null {
   let s = normalizeDigits(raw)
     .replace(/[\s   ٬']/g, '')
     .replace(/٫/g, '.');
@@ -56,10 +60,11 @@ export function parseDecimal(raw: string, opts: { signed?: boolean } = {}): numb
     if (count > 1) {
       if (!THOUSANDS_GROUPS(s, sep)) return null;
       s = s.split(sep).join('');
-    } else if (sep === ',') {
-      const [a, b] = s.split(',');
-      if (/^\d{3}$/.test(b) && a !== '0' && a !== '') return null;
-      s = `${a}.${b}`;
+    } else {
+      const [a, b] = s.split(sep);
+      const ambiguous = /^\d{3}$/.test(b) && a !== '0' && a !== '';
+      if (ambiguous && (sep === ',' || opts.amount)) return null;
+      if (sep === ',') s = `${a}.${b}`;
     }
   }
   if (!/^(\d+\.?\d*|\.\d+)$/.test(s)) return null;
