@@ -1,6 +1,6 @@
 /** مؤشرات التذبذب والنطاقات (Volatility / Bands family). */
 import type { Candle } from '../../api';
-import { ema, sma, tema } from './moving-averages';
+import { ema, sma, smma, tema } from './moving-averages';
 import { computeFractals, computeGmma, computeGmmaOscillator, computeLinRegChannel, computeOverlays, computeRwi, computeVhf } from './trend';
 import { computeRoc, computeRvi } from './momentum';
 import { computeAccumDist, computeChaikinOsc, computeVzo } from './volume';
@@ -28,6 +28,12 @@ export function computeStdDev(closes: number[], period = 20): (number | null)[] 
   return out;
 }
 
+/**
+ * ATR بتنعيم Wilder (RMA/SMMA: بذرة SMA لأول period ثم (سابق×(n−1)+TR)/n) — تعريف وايلدر الأصلي وما تعرضه
+ * TradingView (`ta.atr`) — مرجع هذا الشارت (MT5 وحده يعرض iATR بـSMA). كان SMA: ATR14 يخالف TradingView بعد كل شمعة كبيرة (يهبط فجأة
+ * بعد 14 شمعة حين تخرج من النافذة بدل أن يتلاشى أثرها)، ومعه SuperTrend وKeltner وChandelier وChande Kroll
+ * وSTARC وATR% وPGO وRWI ونسبة التقلّب — كلها تقرأ من هنا.
+ */
 export function computeAtr(candles: Candle[], period = 14): (number | null)[] {
   const tr: number[] = [];
   for (let i = 0; i < candles.length; i++) {
@@ -44,12 +50,12 @@ export function computeAtr(candles: Candle[], period = 14): (number | null)[] {
       )
     );
   }
-  return sma(tr, period);
+  return smma(tr, period);
 }
 
 /**
  * True Range (TR) — المدى الحقيقي الخام لكل شمعة منفردة **بلا تنعيم** (خلافاً لـcomputeAtr الذي
- * يطبّق SMA على نفس القيمة). يقيس أقصى تذبذب فعلي بالشمعة الواحدة بثلاث مقارنات: مدى الشمعة نفسها
+ * يطبّق عليها تنعيم Wilder). يقيس أقصى تذبذب فعلي بالشمعة الواحدة بثلاث مقارنات: مدى الشمعة نفسها
  * (أعلى−أدنى)، الفجوة الصاعدة عن إغلاق الشمعة السابقة (|أعلى−إغلاق سابق|)، والفجوة الهابطة عنه
  * (|أدنى−إغلاق سابق|) — القيمة الأكبر بينها (وايلدر، 1978، نفس التعريف الأساسي المستخدَم داخلياً
  * بـcomputeAtr حرفياً، **مُستخرَجة هنا كدالة مستقلة مُصدَّرة** بدل بقائها منطقاً داخلياً غير قابل
@@ -59,7 +65,7 @@ export function computeAtr(candles: Candle[], period = 14): (number | null)[] {
  * الكتابة)**: سوق مسطّح تماماً (بلا فتائل، high=low=close لكل شمعة) → TR=0 بالضبط لكل نقطة؛ سيناريو
  * فجوة صناعي (شمعة ثانية تفتح بفجوة صاعدة كاملة فوق مدى الشمعة الأولى) → التحقّق يدوياً أن الفجوة
  * (|أدنى−إغلاق سابق|) هي المهيمنة لا مدى الشمعة نفسه، طابق التوقع بالضبط (2 ثم 11)؛ **تحقّق تناسق
- * حاسم**: `sma(computeTrueRange(candles), period)` يطابق `computeAtr(candles, period)` بالضبط
+ * حاسم** (يوم كانت ATR بـSMA؛ صارت Wilder — `smma` لا `sma`): `sma(computeTrueRange(candles), period)` طابق `computeAtr` بالضبط
  * (فرق=0 حرفياً) عبر 300 شمعة عشوائية بذرة ثابتة (mulberry32) — إثبات أن الدالة المستقلة الجديدة هي
  * حرفياً نفس اللبنة الداخلية المستخدَمة بـATR الموثَّقة والمستخدَمة بالإنتاج منذ البداية، صفر خطر
  * رياضي جديد. صفر NaN/Infinity/قيمة سالبة عبر كل النقاط.
@@ -86,8 +92,7 @@ export function computeTrueRange(candles: Candle[]): (number | null)[] {
 /**
  * Volatility Ratio (نسبة التقلّب، أسلوب وايلدر) — **إعادة استخدام كاملة لدالتَين موجودتين مسبقاً
  * بالملف** بلا أي حساب رياضي جديد: نسبة المدى الحقيقي الخام للشمعة الحالية (`computeTrueRange`) إلى
- * متوسطه المتدحرج (`computeAtr`، نفس `period`، القيمة القياسية 14 — وهي فعلياً SMA للمدى الحقيقي كما
- * أثبت تحقّق التناسق الموثَّق أعلاه لـTrueRange). VR≈1 = تقلّب الشمعة الحالية طبيعي مقارنة بمتوسطها
+ * متوسطه المتدحرج (`computeAtr`، نفس `period`، القيمة القياسية 14 — وهي تنعيم Wilder للمدى الحقيقي نفسه). VR≈1 = تقلّب الشمعة الحالية طبيعي مقارنة بمتوسطها
  * الأخير، VR≫1 = طفرة تقلّب حادة تتجاوز المعتاد بوضوح (فجوة سعرية أو شمعة استثنائية)، VR≪1 = انكماش
  * تقلّب (سوق يهدأ قبل حركة محتملة). حارس صريح: `atr===0` (سوق مسطّح تماماً بلا أي مدى) → null بدل
  * قسمة على صفر. **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: سوق مسطّح تماماً (40 شمعة)

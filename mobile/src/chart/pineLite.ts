@@ -66,7 +66,16 @@ function atr(candles: Candle[], period: number): (number | null)[] {
     const prev = candles[i - 1].close;
     tr.push(Math.max(c.high - c.low, Math.abs(c.high - prev), Math.abs(c.low - prev)));
   }
-  return sma(tr, period);
+  // Wilder (RMA) كمؤشر ATR بالشارت وكـta.atr — كانت SMA فـ`atr(14)` هنا تخالف لوحة ATR بجانبها
+  const out: (number | null)[] = Array(tr.length).fill(null);
+  if (period < 1 || tr.length < period) return out;
+  let prevAtr = tr.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  out[period - 1] = prevAtr;
+  for (let i = period; i < tr.length; i++) {
+    prevAtr = (prevAtr * (period - 1) + tr[i]) / period;
+    out[i] = prevAtr;
+  }
+  return out;
 }
 
 function stochK(candles: Candle[], period: number): (number | null)[] {
