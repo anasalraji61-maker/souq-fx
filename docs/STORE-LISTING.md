@@ -57,7 +57,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • سعر أعلى قمّة وأدنى قاع على الشاشة مكتوب عند ذيليهما ويتحدّث وأنت تسحب، وخطّ خافت يفصل كل يوم تداول عن الذي يليه على الفريمات الصغيرة.
 • المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، الفوليوم وغيرها، ومستويات الارتكاز (Pivot وCamarilla وفيبوناتشي) وأعلى الأمس وأدناه وبجانب كل مستوى سعره، وتظليل جلسات طوكيو ولندن ونيويورك.
 • «عدسات» تضع مجموعة مؤشرات جاهزة بلمسة: هيكل (المتوسطات)، زخم (RSI وMACD)، سيولة (الفوليوم وبولنجر وCVD تقديري من الشموع، لا من تدفّق أوامر حقيقي).
-• أدوات رسم: خط اتجاه، شعاع، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات، مع زرّ تراجع. الخط الأفقي يكتب بُعده عن السعر بالنقاط، والمنطقة ارتفاعها. وما ترسمه على فريم يظهر على بقية فريمات الرمز نفسه.
+• أدوات رسم: خط اتجاه، شعاع، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات تكتب نصّها، مع زرّ تراجع — حتى في المساحة الفارغة يمين آخر شمعة. الخط الأفقي يكتب بُعده عن السعر بالنقاط، والمنطقة ارتفاعها. وما ترسمه على فريم يظهر على بقية فريمات الرمز نفسه.
 • خطّط صفقة شراء أو بيع على الشارت: اسحب من الدخول إلى الوقف فيظهر الهدف، والمسافتان بالنقاط، ونسبة العائد إلى المخاطرة — واسحب الهدف لتغيّر النسبة. وعلى الشموع السابقة ترى هل بلغ السعر الهدف أم الوقف.
 • أداة قياس تكتب المسافة بالنقاط والنسبة وعدد الشموع وكم استغرقت الحركة من وقت، وأنت تسحب.
 • إعادة تشغيل الشموع لتدريب عينك على قراءة الحركة.
@@ -118,10 +118,10 @@ CHARTS
 • The on-screen high and low carry their price and update as you scroll, and a faint line marks where each trading day starts on intraday charts.
 • The indicators traders use: SMA and EMA, Bollinger Bands, RSI, MACD, Volume and more, plus pivot levels (classic, Camarilla, Fibonacci) and yesterday's high and low, and Tokyo, London and New York session shading.
 • One-tap "lenses" that add a ready set of indicators: Structure (moving averages), Momentum (RSI and MACD), Liquidity (volume, Bollinger and a CVD estimated from candles, not order flow).
-• Drawing tools: trend line, ray, horizontal and vertical lines, rectangle, Fibonacci, zones and notes, with undo. A horizontal line shows its distance from price in pips; a zone, its height. Drawings follow the symbol across timeframes.
+• Drawing tools: trend line, ray, horizontal and vertical lines, rectangle, Fibonacci, zones and typed notes, with undo — also past the live candle. A horizontal line shows its distance from price in pips; a zone, its height. Drawings follow the symbol across timeframes.
 • Plan a buy or sell on the chart: drag from entry to stop to see the target, both distances in pips and the reward-to-risk ratio — drag the target to change it. On past candles it shows whether price hit the target or the stop.
 • A measure tool showing pips, percent, bar count and how long the move took as you drag.
-• Candle replay to train your eye on price action.
+• Candle replay to train your eye.
 
 WATCHLIST & ALERTS
 • A personal watchlist for the currency pairs and symbols you follow.
@@ -133,7 +133,7 @@ TRADER TOOLS
 • A trade journal you fill in yourself: the potential profit in money before you enter, each trade's result in pips and money before you save it — with one tap to close it exactly at its stop, breakeven or target — then win rate, net result per instrument and average result in units of risk (R).
 • A heads-up before a trade when high-impact economic news is close for the pair's, index's or metal's currency — using your broker's symbol names. If the calendar fails to load, it says so.
 • Market screener using common indicator conditions.
-• Simple strategy backtesting on historical data — for learning purposes.
+• Simple strategy backtesting on past data, for learning.
 • An AI assistant that answers your technical-analysis questions in your language, plus a short weekly report.
 • Share a chart image in one tap.
 
@@ -154,3 +154,6 @@ The first release of MATRIX: multi-chart layouts, indicators and drawing tools, 
 > **2026-09-25 (launch 57)**: أُضيفت «المقارنة» (ar سطر مستقل؛ en مدموجة بسطر الشارتات الأربعة) — `FocusChartModal` ضغطة مطوّلة على رمز
 > بالقائمة، مطابقة بالزمن (`compareOverlay`، `3ac665b`). الإنجليزي كان 3979 حرفاً فاختُصرت أربع عبارات (الارتكاز، الرجوع للخلف، القمّة/القاع،
 > أداة القياس) بلا حذف ميزة. العدّ بسكربت: **ar 3649 / en 3993** من 4000.
+
+> **2026-09-25 (launch 58)**: سطر الرسم يذكر الملاحظة المكتوبة (`92a3a87`) والرسم يمين الشمعة الحيّة (`80f4235`)؛ لإفساح الإنجليزي اختُصر سطرا
+> الإعادة والباكتست بلا حذف ميزة. العدّ: **ar 3699 / en 3995** من 4000.
