@@ -80,6 +80,27 @@ for (const v of [-0, 0.004, -0.004, 0.005, -0.006, 0.23, -1.5, 0.0049, -0.0051])
   assert.equal(d === 'down', printed.startsWith('−'), `pctDirection(${v}) vs ${printed}`);
 }
 
+// تقريب متماثل حول الصفر: الهبوط لا يُكتب أصغر من الصعود المماثل، والحدّ ±0.005% يطابق `dailyChange().dir`
+assert.equal(formatPct(0.125), '+0.13%');
+assert.equal(formatPct(-0.125), '−0.13%');
+assert.equal(formatPct(-0.005), '−0.01%');
+assert.equal(formatPct(0.005), '+0.01%');
+assert.equal(pctDirection(-0.005), 'down');
+assert.equal(formatPct(1.005), '+1.01%'); // 1.005×100 = 100.4999… بالفاصلة العائمة
+assert.equal(formatPct(-1.005), '−1.01%');
+assert.equal(formatPct(-0.0049), '0.00%');
+assert.equal(pctDirection(-0.0049), 'flat');
+for (const v of [0.005, 0.015, 0.125, 0.335, 1.005, 2.675, 10.245]) {
+  assert.equal(formatPct(-v), formatPct(v).replace('+', '−'), `symmetry ${v}`);
+}
+// لون السهم بقائمة المتابعة (`dailyChange().dir`) يطابق النص المطبوع عند حدّ العتبة
+for (const price of [99.995, 100.005, 99.9951, 100.0049]) {
+  const ch = dailyChange(price, 100)!;
+  const printed = formatPct(ch.pct);
+  assert.equal(ch.dir === 'down', printed.startsWith('−'), `dir vs text @${price}: ${ch.dir} ${printed}`);
+  assert.equal(ch.dir === 'up', printed.startsWith('+'), `dir vs text @${price}: ${ch.dir} ${printed}`);
+}
+
 // اتجاه التيك
 assert.equal(tickDirection(1, 2), 'up');
 assert.equal(tickDirection(2, 1), 'down');

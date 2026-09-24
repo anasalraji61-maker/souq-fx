@@ -72,7 +72,7 @@ export function prevCloseFromDaily(
 }
 
 /**
- * تغيّر السعر الحالي عن المرجع. عتبة "ثابت" نسبية صغيرة (0.005%) كي لا يومض السهم أخضر/أحمر
+ * تغيّر السعر الحالي عن المرجع. عتبة "ثابت" نسبية صغيرة (ما يُطبع «0.00%») كي لا يومض السهم أخضر/أحمر
  * على ضجيج الكسور العشرية.
  */
 export function dailyChange(price: number | null | undefined, prevClose: number | null | undefined): DailyChange | null {
@@ -80,14 +80,30 @@ export function dailyChange(price: number | null | undefined, prevClose: number 
   if (typeof prevClose !== 'number' || !Number.isFinite(prevClose) || prevClose <= 0) return null;
   const abs = price - prevClose;
   const pct = (abs / prevClose) * 100;
-  const dir: Direction = Math.abs(pct) < 0.005 ? 'flat' : pct > 0 ? 'up' : 'down';
-  return { abs, pct, dir };
+  // العتبة = «هل تُطبع النسبة غير صفرية» (`pctDirection`) لا مقارنة خام بـ0.005: 99.995 مقابل 100 تعطي
+  // ‎−0.00499999…‎ بالفاصلة العائمة فكانت «ثابتاً» بجانب «−0.01%» المطبوعة.
+  return { abs, pct, dir: pctDirection(pct) };
+}
+
+/**
+ * تقريب النسبة لمنزلتين **متماثلاً حول الصفر** بعد تنظيف ضجيج الفاصلة العائمة — مصدر واحد لـ`formatPct`
+ * و`pctDirection` كي يتطابق اللون والرقم بالبناء.
+ *
+ * `Math.round` يرفع النصف نحو +∞: هبوط ‎−0.125%‎ كان «−0.12%» وصعود ‎+0.125%‎ المماثل «+0.13%» — الهبوط
+ * يُكتب أصغر من الصعود بالحجم نفسه. والأسوأ عند الحدّ: ‎−0.005%‎ كان «0.00%» (Math.round(−0.5) = −0)
+ * بينما `dailyChange` يعطيه `dir: 'down'` (عتبته ≥ 0.005) فيومض السهم أحمر بجانب «0.00%». و‎1.005 × 100‎
+ * بالفاصلة العائمة 100.4999… فكان «+1.00%» لنسبةٍ أرسلها الخادم 1.005 حرفياً.
+ */
+function round2(pct: number): number {
+  const c = Math.round(Math.abs(pct) * 100 * 1e6) / 1e6;
+  const r = Math.round(c) / 100;
+  return pct < 0 ? -r || 0 : r;
 }
 
 /** "+0.23%" / "−0.41%" / "0.00%" — علامة ناقص طباعية واضحة، ومنزلتان دائماً. */
 export function formatPct(pct: number): string {
   if (!Number.isFinite(pct)) return '—';
-  const r = Math.round(pct * 100) / 100;
+  const r = round2(pct);
   if (r === 0) return '0.00%';
   return `${r > 0 ? '+' : '−'}${Math.abs(r).toFixed(2)}%`;
 }
@@ -100,7 +116,7 @@ export function formatPct(pct: number): string {
  */
 export function pctDirection(pct: number | null | undefined): Direction {
   if (typeof pct !== 'number' || !Number.isFinite(pct)) return 'flat';
-  const r = Math.round(pct * 100) / 100;
+  const r = round2(pct);
   return r > 0 ? 'up' : r < 0 ? 'down' : 'flat';
 }
 
