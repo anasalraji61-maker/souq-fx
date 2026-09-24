@@ -139,7 +139,6 @@ import {
   localizedDrawTools,
   localizedIndicators,
   localizedLenses,
-  estimatedTag,
 } from './typeLabels';
 import { confirmDestructive, notify } from './confirmDestructive';
 import {
@@ -7751,7 +7750,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       {cvd ? (
         <View style={[styles.pane, { height: paneH }]}>
           {/* تقديري من اتجاه الشموع (`orderflow.ts`)، لا دلتا تدفّق أوامر — الفوركس بلا شريط مركزي. */}
-          <PaneValueHead name={`CVD (${estimatedTag(lang)})`} values={cvd} at={crossIndex} tone="trend" />
+          <PaneValueHead name={`CVD (${tr.mcEstimatedTag})`} values={cvd} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             <TrendLineSeries values={cvd} paneH={paneH} />
           </View>
