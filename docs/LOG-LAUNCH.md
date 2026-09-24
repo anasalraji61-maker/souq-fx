@@ -1112,3 +1112,38 @@
 ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
 
 **يحتاج جهازاً**: البنود 59–64 — خاصةً 59 (السطران على 360px) و61 (ارتكاز الإعادة مقارنةً بشموع ذلك اليوم). وصف المتجر لم يُلمس.
+
+## 2026-09-24 — التشغيلة الرابعة والثلاثون
+
+تتبع `abe061a` (رأس الإطار بالإعادة)، `5604b01` (رموز Exness Cent بالشارت)، `b12cbcb`/`edb493a` (منازل الفرق والأسعار للنفط والمؤشرات)،
+`80c7394` (توصيل «٬») و`fd9d1da` (R بوقف أضيق من 1 pip). التحقّق بـNode 22 (`/tmp/node-v22.11.0-linux-x64`) و`tsc` من `/tmp/ts5`
+(`--strict --noEmit --skipLibCheck --target es2020`) على `locales.ts` نظيف، صفر `U+FFFD`. **لم يُشغَّل التطبيق.**
+
+1. **`FEATURE-INVENTORY.md`** (`f7b58e3`) — تحقّقت بالكود: `onReplayPrice` → `ChartFrame` (السعر والنسبة من شمعة الإعادة، «حيّ»
+   والسبريد مخفيّان، «⏪»)؛ `chartPipSpec` (بالشارت وحده — `PositionSizePanel` ما زال بـ`instrumentSpec`)؛ `formatPriceDiff` لصندوق
+   الشراء/البيع. **وجدتُ**: زرّ الإعادة داخل `MatrixChart` فهو بـFocus أيضاً، ورأس Focus ما زال يطبع `liveTick?.price ?? series.last`.
+2. **`RELEASE-MOBILE.md` §5** (`92e3dd1`): البنود 65–67 (رأس الإطار وFocus بالإعادة، USDJPYc بالشارت ثم بالحاسبة، US30/BTC).
+3. **`locales.ts`** (`13d6ac1`) ar/en/ku: `riskCalcCentSymbolHint` (««{symbol}» رمز حساب سنت — الحاسبة تحسب لوت الحساب العادي فقط،
+   وعقد السنت أصغر. لحساب عادي اكتب {pair}»). **جاهز غير موصول.**
+4. **`locales.ts`** (`d4eb5fa`) ar/en/ku: `cfReplayPriceA11y` («إعادة الشموع — السعر إغلاق شمعة الإعادة لا السعر الحيّ»؛ الكردية
+   بـ«زیندوو» كـ`dsTickLive`). **جاهز غير موصول.**
+5. **`FEATURE-INVENTORY.md`** (`899d065`): `formatPrice(v, symbol, ref)` بمنازل واحدة للنفط/الغاز/المؤشرات، و`realizedR` بالرمز
+   (لا R لوقف أضيق من 1 pip؛ المتوسط يتخطّاه).
+
+### طلب تنسيق — لوكيل الأدوات (جديد)
+- `PositionSizePanel.tsx`: حين `instrumentSpec(symbol)` فارغة و`chartPipSpec(symbol)` لا (رمز سنت)، اعرض `t.riskCalcCentSymbolHint`
+  (`{symbol}` كما كُتب، `{pair}` = `chartPipSpec(symbol).symbol`) بدل `t.riskCalcBadSymbol` («استخدم زوجاً من 6 أحرف» — والرمز 6 أحرف
+  وحرف). وحين يُفتح من شارت «USDJPYc» تبدأ الحاسبة على EURUSD بصمت (السطر 75) — الأقرب بدء USDJPY مع السطر نفسه، أو السطر وحده.
+- **أُغلق**: `arabicThousandsSignHint` (موصول بـ`80c7394`).
+
+### طلب تنسيق — لوكيل الشارت (جديد + قائم)
+- `ChartFrame.tsx:337`: `accessibilityLabel` لـ«⏪» ← `t.cfReplayPriceA11y` بدل `t.mcReplayModeA11y` (لا يقول إن السعر ليس الحيّ).
+- `FocusChartModal.tsx:279`: الرأس ما زال يطبع سعر اليوم ونسبته والسبريد بالإعادة — `onReplayPrice` كما بـ`ChartFrame`.
+- قائم: `mcAutoA11y`/`mcAutoManualA11y`؛ `mcHintSelect`/`mcHintSelected` و`mcHint*Web`؛ `clearAllBody` ← `tr.mcClearAllBody`؛
+  و`` `Bar Replay · …` `` الحرفي بـ`MatrixChart.tsx:4596` ← `tr.mcReplayReadout` الموجودة («إعادة الشموع · {n}/{total}») —
+  `ip-legal-caution.mdc`.
+
+**خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (`backend/openrouter_ai.py` «خبير تداول»، `lot` الثابتة، `₴`، `extra.apiUrl` المحلي
+ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
+
+**يحتاج جهازاً**: البنود 65–67 — خاصةً 65 (هل «⏪» وحدها مفهومة) و66 (متداول السنت أمام الحاسبة). وصف المتجر لم يُلمس.
