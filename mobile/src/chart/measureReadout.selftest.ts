@@ -21,6 +21,9 @@ ok('XAUUSD بحجم pip الذهب', measurePipsText('XAUUSD', 2650.0, 2662.5) =
 // الفضة: pip = 0.01.
 ok('XAGUSD بحجم pip الفضة', measurePipsText('XAGUSD', 31.00, 31.25) === '+25.0 pip');
 // النقطة الكسرية (pipette) تظهر: 2.4 نقطة لا 2.
+ok('من 1000 pip بلا منزلة عشرية', measurePipsText('XAUUSD', 4000.0, 2000.0) === '−20000 pip');
+ok('999.9 تبقى بمنزلتها', measurePipsText('EURUSD', 1.0, 1.09999) === '+999.9 pip');
+ok('مدى شمعة ذهب كبيرة بلا منزلة', candleRangePipsText('XAUUSD', 2750.0, 2600.0) === '↕ 1500 pip');
 ok('عُشر النقطة يظهر', measurePipsText('EURUSD', 1.08000, 1.08024) === '+2.4 pip');
 // صفر: قياس صادق بلا إشارة.
 ok('طرفان على السعر نفسه ⇒ بلا إشارة', measurePipsText('EURUSD', 1.085, 1.085) === '0.0 pip');

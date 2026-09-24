@@ -5757,7 +5757,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               {formatPrice(crossPrice, series.symbol)}
             </Text>
             {crossPipsText ? (
-              <Text style={styles.crossPipsText} numberOfLines={1}>
+              <Text
+                style={styles.crossPipsText}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+              >
                 {crossPipsText}
               </Text>
             ) : null}

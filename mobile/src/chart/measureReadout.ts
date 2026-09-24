@@ -30,6 +30,15 @@ import { instrumentSpec, pipsBetween } from '../positionSize';
 export type MeasureStats = { bars: number; diff: number; pct: number };
 
 /** «+24.0 pip» أو `null` لأداة بلا مواصفة pip معروفة. */
+/**
+ * عدد النقاط بمنزلة عشرية واحدة — إلا من 1000 فصاعداً: عُشر النقطة على مسافة 2000 pip
+ * ضجيج، و«−20000.0 pip» (ذهب عند 4000 بشارت أسبوعي، أو تقاطع ين بعيد) 12 حرفاً لا يتّسعها
+ * وسم محور السعر (68px) فيُقصّ بنقاط حذف.
+ */
+function pipsNumber(pips: number): string {
+  return Math.abs(pips) >= 1000 ? pips.toFixed(0) : pips.toFixed(1);
+}
+
 export function measurePipsText(symbol: string, a: number, b: number): string | null {
   const spec = instrumentSpec(symbol);
   if (!spec) return null;
@@ -38,7 +47,7 @@ export function measurePipsText(symbol: string, a: number, b: number): string | 
   // الإشارة من الاتجاه لا من `pips` (كمّية دائماً). الصفر بلا إشارة: «0.0 pip» قياسٌ
   // صادق (طرفان على السعر نفسه) و«+0.0» توحي باتجاه لا وجود له.
   const sign = pips === 0 ? '' : b - a > 0 ? '+' : '−';
-  return `${sign}${pips.toFixed(1)} pip`;
+  return `${sign}${pipsNumber(pips)} pip`;
 }
 
 /**
@@ -52,7 +61,7 @@ export function candleRangePipsText(symbol: string, high: number, low: number): 
   if (!spec) return null;
   const pips = pipsBetween(spec, low, high);
   if (pips == null) return null;
-  return `↕ ${pips.toFixed(1)} pip`;
+  return `↕ ${pipsNumber(pips)} pip`;
 }
 
 /**
