@@ -9516,8 +9516,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     // نموذج التنبيه الثابت الحالي). مفيد عملياً لمن يريد تنبيهاً عند عودة السعر لمستوى
                     // الخط الحالي، لكنه لا يتحرّك مع الخط لاحقاً — الفرق موضَّح بنص الزر نفسه.
                     const slope = (d.b.price - d.a.price) / (d.b.index - d.a.index);
-                    const lastGlobalIndex = source.start + source.plot.length - 1;
-                    const currentPrice = d.a.price + slope * (lastGlobalIndex - d.a.index);
+                    // «الشمعة الحالية» = آخر شمعة بالسلسلة، لا آخر شمعة ظاهرة: بعد الرجوع
+                    // بالشارت كان التنبيه يُضبط على قيمة الخطّ عند حافّة الشاشة (بعيداً بنقاط
+                    // عن مستواه الآن). بالإعادة الحالية هي شمعة الإعادة. ويُقرَّب لمنازل الزوج
+                    // كسعر التقاطع، لا 1.0852347 بنموذج التنبيه.
+                    const lastGlobalIndex = replayOn
+                      ? source.start + source.plot.length - 1
+                      : source.all.length - 1;
+                    const rawLinePrice = d.a.price + slope * (lastGlobalIndex - d.a.index);
+                    const lineDecimals = symbolPriceDecimals(series.symbol);
+                    const currentPrice =
+                      lineDecimals != null ? Number(rawLinePrice.toFixed(lineDecimals)) : rawLinePrice;
                     return (
                       <Pressable
                         accessibilityRole="button"
