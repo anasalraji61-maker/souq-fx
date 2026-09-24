@@ -3382,7 +3382,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     !countdownSynthetic &&
     lastRawBar != null &&
     offAxisSide(currentPriceY, chartPlotH) == null &&
-    barCloseCountdown(lastRawBar.time, countdownStep, Date.now()) != null;
+    barCloseCountdown(lastRawBar.time, countdownStep, Date.now(), series.symbol) != null;
   const currentTagH = showCountdown ? PRICE_TAG_H + COUNTDOWN_LINE_H : PRICE_TAG_H;
   const currentTagTop = Math.max(0, Math.min(chartPlotH - currentTagH - 2, currentPriceY - 9));
   const crossTagTop = crossPrice != null
@@ -5682,6 +5682,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <BarCountdown
                 lastBarTime={lastRawBar.time}
                 stepSec={countdownStep}
+                symbol={series.symbol}
                 style={styles.currentPriceCountdown}
               />
             ) : null}

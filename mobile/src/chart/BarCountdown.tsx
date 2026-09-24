@@ -9,10 +9,13 @@ import { barCloseCountdown } from './barCountdown';
 export function BarCountdown({
   lastBarTime,
   stepSec,
+  symbol,
   style,
 }: {
   lastBarTime: number;
   stepSec: number;
+  /** يحدّ العدّ بساعات السوق — `barCloseCountdown`. */
+  symbol?: string;
   style?: StyleProp<TextStyle>;
 }) {
   const [now, setNow] = useState(() => Date.now());
@@ -25,6 +28,6 @@ export function BarCountdown({
     id = setTimeout(tick, 1000 - (Date.now() % 1000) + 5);
     return () => clearTimeout(id);
   }, []);
-  const text = barCloseCountdown(lastBarTime, stepSec, now);
+  const text = barCloseCountdown(lastBarTime, stepSec, now, symbol);
   return text ? <Text style={style}>{text}</Text> : null;
 }

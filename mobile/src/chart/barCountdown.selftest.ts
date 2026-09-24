@@ -31,4 +31,19 @@ assert.equal(barCloseCountdown(open, 604800, at(10)), null);
 assert.equal(barCloseCountdown(NaN, 900, at(10)), null);
 assert.equal(barCloseCountdown(open, 0, at(10)), null);
 
+// ساعات السوق (مع الرمز): يومية الجمعة 2026-09-25 (مختومة 00:00 UTC، توقيت صيفي ⇒ الإغلاق 21:00 UTC)
+const friD = Date.UTC(2026, 8, 25) / 1000;
+const utc = (d: number, h: number, m = 0) => Date.UTC(2026, 8, d, h, m);
+assert.equal(barCloseCountdown(friD, 86400, utc(25, 12), 'EURUSD'), '9:00:00');
+assert.equal(barCloseCountdown(friD, 86400, utc(25, 12)), '12:00:00'); // بلا رمز كما كان
+// بعد الإغلاق: لا عدّاد (كان يعدّ حتى منتصف الليل)
+assert.equal(barCloseCountdown(friD, 86400, utc(25, 21, 30), 'EURUSD'), null);
+// 4H الساعة 20:00 الجمعة ⇒ ساعة واحدة حتى الإغلاق لا أربع
+assert.equal(barCloseCountdown(friD + 20 * 3600, 14400, utc(25, 20), 'EURUSD'), '1:00:00');
+// الكريبتو لا يُغلق
+assert.equal(barCloseCountdown(friD, 86400, utc(25, 21, 30), 'BTCUSD'), '2:30:00');
+// شتاءً الإغلاق 22:00 UTC: الجمعة 2026-12-04 الساعة 21:30 ما زال مفتوحاً
+const friW = Date.UTC(2026, 11, 4) / 1000;
+assert.equal(barCloseCountdown(friW, 86400, Date.UTC(2026, 11, 4, 21, 30), 'EURUSD'), '0:30:00');
+
 console.log('barCountdown.selftest: PASS');
