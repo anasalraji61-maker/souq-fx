@@ -9208,25 +9208,47 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {stochRsi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneHead paneId="stochRsi" name="StochRSI" values={stochRsi} at={crossIndex} />
+          <PaneHead paneId="stochRsi" name="StochRSI" values={stochRsi.k} at={crossIndex} />
           <View style={styles.paneInner}>
             <PaneGuideLines paneId="stochRsi" innerH={paneH - 16} />
-            {stochRsi.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - v) / 100) * (paneH - 16),
-                    backgroundColor: v > 80 ? colors.bear : v < 20 ? colors.bull : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              )
-            )}
+            {(() => {
+              // K وD كـTradingView (نمط لوحة الستوكاستيك): التقاطع هو الإشارة، و%K وحده كان بلا D
+              const g = stochPaneGeom(paneH);
+              return stochRsi.k.map((v, i) => {
+                const kY = g.y(v);
+                const dY = g.y(stochRsi.d[i]);
+                if (kY == null && dY == null) return <View key={i} style={{ flex: 1 }} />;
+                return (
+                  <View key={i} style={{ flex: 1, height: g.innerH, position: 'relative' }}>
+                    {dY != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          top: dY,
+                          height: STOCH_LINE_H,
+                          backgroundColor: colors.warn,
+                          opacity: 0.9,
+                        }}
+                      />
+                    ) : null}
+                    {kY != null ? (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          top: kY,
+                          height: STOCH_LINE_H,
+                          backgroundColor: accent,
+                        }}
+                      />
+                    ) : null}
+                  </View>
+                );
+              });
+            })()}
           </View>
         </View>
       ) : null}

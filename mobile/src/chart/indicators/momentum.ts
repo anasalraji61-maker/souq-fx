@@ -459,8 +459,18 @@ export function computeApo(closes: number[], fast = 12, slow = 26): (number | nu
 export function computeStochRsi(
   closes: number[],
   rsiPeriod = 14,
-  stochPeriod = 14
-): (number | null)[] {
+  stochPeriod = 14,
+  smoothK = 3,
+  smoothD = 3
+): { k: (number | null)[]; d: (number | null)[] } {
+  // TradingView (3,3,14,14): K = sma(الخام، 3) وD = sma(K، 3) — كان الخام وحده بلا D، أكثر تذبذباً بكثير
+  // من خطّ TradingView (خام 0/100/0 ⇒ K عنده 33.3 وهنا 0) وبلا تقاطع K/D الذي يُتداول عليه.
+  const raw = stochRsiRaw(closes, rsiPeriod, stochPeriod);
+  const k = smoothK > 1 ? sma(raw, smoothK) : raw;
+  return { k, d: sma(k, smoothD) };
+}
+
+function stochRsiRaw(closes: number[], rsiPeriod: number, stochPeriod: number): (number | null)[] {
   const rsi = computeRsi(closes, rsiPeriod);
   const out: (number | null)[] = [];
   for (let i = 0; i < closes.length; i++) {
