@@ -643,7 +643,10 @@ function formatCrossTime(
   if (dayCandles) return `${p.day} ${mon} ${p.year}`;
   const hh = String(p.hours).padStart(2, '0');
   const mm = String(p.minutes).padStart(2, '0');
-  return `${p.day} ${mon} ${hh}:${mm}`;
+  // شمعة من سنة سابقة تحمل سنتها («3 Dec '25 14:00»): تاريخ 4H/1H الطويل يعبر رأس السنة، و«3 Dec»
+  // وحدها لا تقول أيّ ديسمبر. شموع السنة الجارية تبقى بلا سنة (الوسم قصير على الهاتف).
+  const yr = p.year !== new Date().getFullYear() ? ` '${String(p.year).slice(-2)}` : '';
+  return `${p.day} ${mon}${yr} ${hh}:${mm}`;
 }
 
 function pointerXY(event: PointerEventLike): { x: number; y: number; pointerId: number } {
@@ -4923,8 +4926,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (crossTagTop != null &&
       boxesTouch(start, PRICE_LABEL_H, crossTagTop, crossTagH, TAG_CLEAR_GAP)) ||
     selectionTags.some((t) => boxesTouch(start, PRICE_LABEL_H, t.top, PRICE_TAG_H, TAG_CLEAR_GAP));
+  // الوسم يتّسع لسنة شمعة من سنة سابقة (`formatCrossTime`) — بالعرض الثابت كانت الساعة تُقصّ «…».
+  const crossTimeText = crossCandle
+    ? formatCrossTime(barTime(crossCandle), visibleTimeSpan, tr.mcMonths, dayCandles)
+    : '';
+  const crossTimeTagW = / '\d\d /.test(crossTimeText) ? CROSS_TIME_TAG_W + 22 : CROSS_TIME_TAG_W;
   const crossTimeTagLeft = crossCandle
-    ? Math.max(0, Math.min(chartPlotW - CROSS_TIME_TAG_W, crossX - CROSS_TIME_TAG_W / 2))
+    ? Math.max(0, Math.min(chartPlotW - crossTimeTagW, crossX - crossTimeTagW / 2))
     : null;
   // سعر خارج المدى المرئيّ (بعد تكبير محور السعر أو تحريكه): الوسم يُقصّ إلى الحافة
   // فيبدو كأن السوق هناك، وأعلى علامة تحته تقول رقماً آخر — ويُقَصّ الخطّ المتقطّع
@@ -7589,7 +7597,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               // تحت وسم زمن التقاطع: الوسم يغطّيها فلا يظهر منها إلا طرفٌ مبتور
               if (
                 crossTimeTagLeft != null &&
-                boxesTouch(box.start, timeLabelW, crossTimeTagLeft, CROSS_TIME_TAG_W, TAG_CLEAR_GAP)
+                boxesTouch(box.start, timeLabelW, crossTimeTagLeft, crossTimeTagW, TAG_CLEAR_GAP)
               )
                 return null;
               const index = timeTickIndexes[box.i];
@@ -7624,11 +7632,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 pointerEvents="none"
                 style={[
                   styles.crossTimeTag,
-                  { width: CROSS_TIME_TAG_W, left: crossTimeTagLeft ?? 0 },
+                  { width: crossTimeTagW, left: crossTimeTagLeft ?? 0 },
                 ]}
               >
                 <Text style={styles.crossTagText} numberOfLines={1}>
-                  {formatCrossTime(barTime(crossCandle), visibleTimeSpan, tr.mcMonths, dayCandles)}
+                  {crossTimeText}
                 </Text>
               </View>
             ) : null}
