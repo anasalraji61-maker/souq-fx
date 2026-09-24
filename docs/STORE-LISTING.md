@@ -51,7 +51,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، الفوليوم وغيرها.
 • «عدسات» تضع مجموعة مؤشرات جاهزة بلمسة: هيكل (المتوسطات)، زخم (RSI وMACD)، سيولة (الفوليوم وبولنجر).
 • أدوات رسم: خط اتجاه، شعاع، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات، مع زرّ تراجع. ما ترسمه على فريم يظهر على بقية فريمات الرمز نفسه.
-• أداة قياس تكتب المسافة بالنقاط والنسبة وعدد الشموع وأنت تسحب.
+• أداة قياس تكتب المسافة بالنقاط والنسبة وعدد الشموع وكم استغرقت الحركة من وقت، وأنت تسحب.
 • إعادة تشغيل الشموع لتدريب عينك على قراءة الحركة.
 
 المتابعة والتنبيهات
@@ -62,7 +62,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 أدوات المتداول
 • حاسبة حجم المركز: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالنقاط أو بسعرَي الدخول والوقف) لتعرف حجم اللوت، مع أهداف جاهزة بنسبة 1:1 حتى 1:3، وتقدير للهامش الذي يحجزه الوسيط حسب رافعتك، وخانتا سبريد وعمولة اختياريتان تُريانك مخاطرتك وربحك الصافي شاملَين التكاليف.
 • دفتر صفقات تسجّل فيه صفقاتك بنفسك: الربح المحتمل بالمال قبل الدخول، ونتيجة كل صفقة بالنقاط والمال بعد الخروج، ثم نسبة النجاح والصافي لكل أداة ومتوسط النتيجة بوحدة المخاطرة (R).
-• تنبيه قبل الصفقة إن اقترب خبر اقتصادي قوي على عملة الزوج أو المؤشر.
+• تنبيه قبل الصفقة إن اقترب خبر اقتصادي قوي على عملة الزوج أو المؤشر أو المعدن، وبأسماء الرموز كما يكتبها وسيطك.
 • «فحص السوق»: فلترة الأزواج بشروط المؤشرات الشائعة.
 • اختبار استراتيجيات بسيطة على البيانات التاريخية — لأغراض تعليمية.
 • مساعد ذكاء اصطناعي يجيب عن أسئلتك في التحليل الفني بلغتك، وتقرير أسبوعي مختصر.
@@ -109,7 +109,7 @@ CHARTS
 • The indicators traders actually use: SMA and EMA moving averages, Bollinger Bands, RSI, MACD, Volume and more.
 • One-tap "lenses" that add a ready set of indicators: Structure (moving averages), Momentum (RSI and MACD), Liquidity (volume and Bollinger).
 • Drawing tools: trend line, ray, horizontal and vertical lines, rectangle, Fibonacci, zones and notes, with undo. What you draw on one timeframe shows on every timeframe of that symbol.
-• A measure tool that shows pips, percent and bar count as you drag.
+• A measure tool that shows pips, percent, bar count and how long the move took as you drag.
 • Candle replay to train your eye on price action.
 
 WATCHLIST & ALERTS
@@ -120,7 +120,7 @@ WATCHLIST & ALERTS
 TRADER TOOLS
 • Position size calculator: enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get your lot size, with one-tap targets from 1:1 to 1:3, an estimate of the margin your broker holds at your leverage, and optional spread and commission fields that show your risk and net profit with costs included.
 • A trade journal you fill in yourself: the potential profit in money before you enter, each trade's result in pips and money after you exit, then win rate, net result per instrument and average result in units of risk (R).
-• A heads-up before a trade when high-impact economic news is close for the pair's or index's currency.
+• A heads-up before a trade when high-impact economic news is close for the pair's, index's or metal's currency — with symbols named the way your broker names them.
 • Market screener using common indicator conditions.
 • Simple strategy backtesting on historical data — for learning purposes.
 • An AI assistant that answers your technical-analysis questions in your language, plus a short weekly report.
