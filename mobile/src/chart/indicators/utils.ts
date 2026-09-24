@@ -6,11 +6,15 @@ import { instrumentSpec } from '../../positionSize';
 /**
  * منازل السعر العشرية حسب الأداة لا حسب حجم الرقم: pip + خانة كسرية (pipette) كما يعرضها وسطاء الـ5 منازل —
  * EURUSD 1.08505 (5)، USDJPY/GBPJPY 157.423 (3)، XAUUSD 2650.35 (2)، XAGUSD 31.245 (3). null = أداة غير معروفة
- * (DXY، مؤشرات، رموز الوسيط بلاحقة) فيُستخدم التقدير من حجم الرقم.
+ * (مؤشرات، عملات رقمية…) فيُستخدم التقدير من حجم الرقم. DXY ثلاث منازل.
  */
 export function symbolPriceDecimals(symbol: string): number | null {
   const spec = instrumentSpec(symbol);
-  if (!spec) return null;
+  if (!spec) {
+    // مؤشّر الدولار يُسعَّر بثلاث منازل (104.235) — وهو رمز افتراضي بالرباعي ومرجع أخبار الدولار.
+    // التقدير من حجم الرقم (≥100 ⇒ منزلتان) كان يقصّ خانته الأخيرة بالرأس والمحور والتقاطع.
+    return /^(DXY|USDX)$/.test(symbol.trim().toUpperCase().replace(/[^A-Z]/g, '')) ? 3 : null;
+  }
   return Math.round(-Math.log10(spec.pipSize)) + 1;
 }
 

@@ -85,7 +85,12 @@ export function measureReadoutText(input: {
   // الإشارة من الرقم **المطبوع** لا الخام (قاعدة `formatPct` برأس الإطار والتقاطع): قياس
   // 0.4 pip على اليورو نسبته 0.004% فكان يُكتب «+0.4 pip · +0.00%»، وقياس أفقيّ على DXY
   // «+0.00000 · +0.00%» — صفرٌ بإشارة يوحي باتجاه لا وجود له. الصفر المطبوع بلا إشارة.
-  const diffText = formatPrice(Math.abs(stats.diff), symbol);
+  // منازل الفرق = منازل **السعر** لا حجم الفرق: لأداة بلا منازل معروفة (مؤشّر، عملة رقمية)
+  // كان `formatPrice(diff)` يقدّرها من الفرق نفسه — والفرق رقم صغير دائماً — فقياس 5 دولارات
+  // على BTCUSD يُكتب «+5.00000» بخمس منازل لا يحملها سعره (67420.00).
+  const priceText = formatPrice(Math.abs(a.price), symbol);
+  const dp = priceText.includes('.') ? priceText.length - priceText.indexOf('.') - 1 : 0;
+  const diffText = Math.abs(stats.diff).toFixed(dp);
   const diffSign = Number(diffText) === 0 ? '' : stats.diff > 0 ? '+' : '−';
   const amount = pips ?? `${diffSign}${diffText}`;
   const pctText = formatPct(Number.isFinite(stats.pct) ? stats.pct : 0);
