@@ -37,14 +37,17 @@ const finitePos = (n: unknown): n is number => typeof n === 'number' && Number.i
 const cleanRatio = (num: number, den: number): number => Math.round((num / den) * 1e9) / 1e9;
 
 /**
- * تقريب لمنزلة واحدة **متماثل حول الصفر** (النصف يبتعد عن الصفر بالإشارتين). `Math.round` يرفع
- * النصف نحو +∞: ‎+1.25R‎ تصير +1.3R و‎−1.25R‎ تصير −1.2R — فالخسارة تُكتب أصغر من الربح المماثل
- * بالحجم، ويميل متوسط الـR بالدفتر لصالح المتداول بلا حق. ولا «−0» (يُطبع صفراً بلا إشارة).
+ * تقريب نتيجةٍ بالـR لمنزلة واحدة **متماثلاً حول الصفر** (النصف يبتعد عن الصفر بالإشارتين)، بعد
+ * تنظيف ضجيج الفاصلة العائمة. `Math.round` يرفع النصف نحو +∞: ‎+1.25R‎ تصير +1.3R و‎−1.25R‎ تصير
+ * −1.2R — فالخسارة تُكتب أصغر من الربح المماثل بالحجم، ويميل متوسط الـR بالدفتر لصالح المتداول
+ * بلا حق. ولا «−0» (يُطبع صفراً بلا إشارة). مُصدَّرة لمتوسط الـR بالدفتر: القاعدة نفسها للصفقة
+ * ولمتوسّطها.
  */
-const round1Sym = (v: number): number => {
-  const r = Math.round(Math.abs(v) * 10) / 10;
-  return v < 0 ? -r || 0 : r;
-};
+export function roundR(v: number): number {
+  const c = Math.round(v * 1e9) / 1e9;
+  const r = Math.round(Math.abs(c) * 10) / 10;
+  return c < 0 ? -r || 0 : r;
+}
 
 export function analyzePlan(input: {
   symbol: string;
@@ -128,7 +131,7 @@ export function realizedR(input: {
   const risk = buy ? entry - sl : sl - entry;
   if (risk <= 0) return null;
   const move = buy ? exit - entry : entry - exit;
-  return round1Sym(cleanRatio(move, risk));
+  return roundR(move / risk);
 }
 
 /**

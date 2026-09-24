@@ -12,6 +12,7 @@ import {
   levelSideIssue,
   realizedMove,
   realizedR,
+  roundR,
 } from './tradePlan';
 
 // شراء EURUSD صحيح: وقف 25 pip، هدف 50 pip ⇒ 1:2
@@ -207,3 +208,13 @@ assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.0825, exit: 1.0825 }),
 assert.equal(realizedR({ side: 'sell', entry: 150, sl: 150.3, exit: 150.15 }), -0.5);
 
 console.log('tradePlan float-noise selftest OK');
+
+// متوسط الـR بالدفتر بالقاعدة نفسها: (−1) و(−1.5) ⇒ −1.25 ⇒ −1.3R، مرآةً لـ+1.3R (كان −1.2R)
+assert.equal(roundR((-1 + -1.5) / 2), -1.3);
+assert.equal(roundR((1 + 1.5) / 2), 1.3);
+assert.equal(roundR(-0.04), 0);
+assert.ok(Object.is(roundR(-0.04), 0));
+assert.equal(roundR(0.349999999999), 0.4); // فرق 1e-12 ضجيجٌ لا قيمة
+assert.equal(roundR(-1.2499999999999722), -1.3);
+
+console.log('tradePlan roundR selftest OK');

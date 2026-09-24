@@ -25,6 +25,7 @@ import {
   levelSideIssue,
   realizedMove,
   realizedR,
+  roundR,
   type PlanIssue,
   type TradePlan,
 } from '../tradePlan';
@@ -377,7 +378,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       /** أداة واحدة → السطر كما كان بالضبط؛ أكثر من أداة → مفصَّل لكل أداة. */
       pips: ranked.length === 1 ? formatSignedPips(Math.round(ranked[0]![1].pips * 10) / 10) : null,
       pipsBySymbol: ranked.length > 1 ? parts.join(' · ') + (rest > 0 ? ` +${rest}` : '') : null,
-      avgR: rN ? formatR(Math.round((rSum / rN) * 10) / 10) : null,
+      avgR: rN ? formatR(roundR(rSum / rN)) : null,
       rN,
     };
   }, [visibleTrades]);
