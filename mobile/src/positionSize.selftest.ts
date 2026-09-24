@@ -36,6 +36,8 @@ import {
   sizeLooksLikeUnits,
   lotsOverOrderMax,
   ORDER_WARN_LOTS,
+  RISK_HIGH_PCT,
+  riskIsHigh,
   MAX_SANE_LOTS,
   MAX_SMALL_LOTS,
   parseSpreadPips,
@@ -2072,3 +2074,18 @@ console.log('positionSize glued account-type suffix selftest OK');
   assert.ok(near(requiredMargin({ spec: uj, lots: 1, price: 150, quoteToAccount: live, leverage: 100, baseToAccount: NaN })!, 1000));
 }
 console.log('positionSize margin base-currency account selftest OK');
+
+// riskIsHigh: التحذير فوق السقف 2% (الأكاديمية 1-2%)، لا فوق الموصى به 1%
+{
+  assert.equal(RISK_HIGH_PCT, 2);
+  for (const p of [0.5, 1, 1.5, 2]) assert.equal(riskIsHigh(p), false, String(p));
+  for (const p of [2.01, 3, 20, 200]) assert.equal(riskIsHigh(p), true, String(p));
+  for (const p of [NaN, Infinity, null, undefined]) assert.equal(riskIsHigh(p as number), false);
+  // مبلغ مكتوب مالاً يساوي 2% بالضبط لا يحذّر (لا فتات فاصلة عائمة)
+  for (const [bal, amt] of [[1765, '35.30'], [1500, '30'], [10_000, '200'], [3430, '68.60']] as const) {
+    const r = parseRiskInput(`$${amt}`, bal, 'USD')!;
+    assert.equal(riskIsHigh(r.pct), false, `${bal}/${amt} ⇒ ${r.pct}`);
+  }
+  assert.equal(riskIsHigh(parseRiskInput('$201', 10_000, 'USD')!.pct), true);
+}
+console.log('positionSize riskIsHigh selftest OK');

@@ -50,6 +50,7 @@ import {
   profitAfterCosts,
   lowRewardWarning,
   lotsOverOrderMax,
+  riskIsHigh,
   spreadTooWide,
   stopInsideSpread,
   misplacedArabicThousandsSignInRisk,
@@ -952,7 +953,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * سقف الـ100 كان يُسكِت التحذير **عند الطرف الأخطر بالضبط**: من يكتب «20» فيصير الرقم «200»
    * بضغطة زائدة يرى ⚠ عند 20% ثم يختفي التحذير كلّه عند 200%. الشرط الآن بلا سقف.
    */
-  const riskHigh = Number.isFinite(riskNum) && riskNum > 2;
+  const riskHigh = riskIsHigh(riskNum);
   /**
    * نسبة فوق 100% مستحيلة (لا يُخاطَر بأكثر من الرصيد كلّه) فيرفضها `positionSize` وتعود النتيجة
    * `null` — وكان الصندوق يقول حينها «أدخل الرصيد ونسبة المخاطرة ووقف الخسارة» والثلاثة مكتوبة
@@ -1263,7 +1264,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
                 {t.riskCalcSmallLotsStdEquiv.replace('{std}', () => smallLotsStdEquiv(result.lots))}
               </Text>
             ) : null}
-            {/* فوق أكبر أمر يقبله الوسيط (100 lot عادي، 200 lot سنت/micro — نصّ كلٍّ بحدّه): الرقم صحيح حسابياً لكن الأمر يُرفض — أو الوقف خطأ كتابة. راجع `lotsOverOrderMax` */}
+            {/* فوق أكبر أمر يقبله الوسيط (50 lot عادي `ORDER_WARN_LOTS`، 200 lot سنت/micro — نصّ كلٍّ بحدّه): الرقم صحيح حسابياً لكن الأمر يُرفض — أو الوقف خطأ كتابة. راجع `lotsOverOrderMax` */}
             {overOrderMax != null ? (
               <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
                 {(small != null ? t.riskCalcOverOrderMaxSmall : t.riskCalcOverOrderMax).replace('{lots}', overOrderMax.toFixed(2))}

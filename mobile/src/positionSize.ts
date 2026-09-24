@@ -1080,6 +1080,18 @@ export function commissionNoteExample(
   return { std: fmt(micro * 100), micro: fmt(micro), usc: fmt(micro * 100) };
 }
 
+/**
+ * سقف المخاطرة للصفقة الواحدة الذي تحذّر الحاسبة **فوقه** (`riskCalcHighRisk`: «أكثر من 2%… مخاطرة عالية»).
+ * الحدّ المعلَن بالتطبيق: **1% افتراضي موصى به** (الخانة تبدأ «1»، النصائح «≤1%») و**2% سقف** (الأكاديمية «1-2%»).
+ * التحذير على السقف لا على الموصى به: 1.5% اختيارٌ مشروع ضمن ما تعلّمه الأكاديمية، و⚠ عليه يُعلّم تجاهل التحذير.
+ */
+export const RISK_HIGH_PCT = 2;
+
+/** نسبة مخاطرة فوق `RISK_HIGH_PCT` (بلا سقف علوي: 200% بضغطة زائدة أخطر من 20%). غير رقم ⇒ false. */
+export function riskIsHigh(pct: number | null | undefined): boolean {
+  return pct != null && Number.isFinite(pct) && pct > RISK_HIGH_PCT;
+}
+
 /** أكبر حجم باللوت يُعقل بخانة «الحجم لوت»: وسطاء التجزئة يحدّون الأمر الواحد بـ50–100 لوت عادةً. */
 export const MAX_SANE_LOTS = 100;
 /**
