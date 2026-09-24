@@ -424,7 +424,7 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
 };
 
 const PRICE_AXIS_WIDTH = 68;
-const PIVOT_IDS = new Set<string>(['pivots', 'fibPivots', 'camarilla', 'woodiePivots', 'demarkPivots', 'cpr']);
+const PIVOT_IDS = new Set<string>(['pivots', 'fibPivots', 'camarilla', 'woodiePivots', 'demarkPivots', 'cpr', 'pdhl']);
 const TIME_AXIS_HEIGHT = 48;
 const CROSS_TIME_TAG_W = 104;
 /** فجوة دنيا بين علامتي زمن متجاورتين، ومقاس علامة السعر وفجوتها — راجع `axisTicks.ts`. */
@@ -1475,8 +1475,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         0.55
       );
     }
+    // أعلى/أدنى/إغلاق الجلسة السابقة نفسها (PDH/PDL/PDC) — أكثر مستويات الفوركس تداولاً بعد
+    // الارتكاز، ومن الأساس ذاته (D1 أوّلاً). لون محايد: ليسا دعماً/مقاومة بالمعنى الدلالي.
+    const prevDay = indicators.includes('pdhl') && pivotBars ? pivotBars[0] : null;
+    if (prevDay) {
+      add(
+        'pd',
+        [
+          ['PDH', prevDay.high],
+          ['PDL', prevDay.low],
+        ],
+        () => colors.textMuted,
+        0.85
+      );
+      add('pd', [['PDC', prevDay.close]], () => colors.textDim, 0.55);
+    }
     return out;
-  }, [pivots, fibPivots, camarilla, woodiePivots, demarkPivots, cpr]);
+  }, [pivots, fibPivots, camarilla, woodiePivots, demarkPivots, cpr, indicators, pivotBars]);
   const tpo = useMemo(
     () => (indicators.includes('tpo') ? computeTpo(source.plot, 18) : null),
     [source.plot, indicators]

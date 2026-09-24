@@ -61,10 +61,11 @@ export function pivotInput(prev: Candle | null): Candle[] | null {
 
 /**
  * أهمية وسم مستوى ارتكاز (الأصغر أهمّ) حين تتزاحم الوسوم رأسياً: المحور أوّلاً ثم المستويات
- * بقربها منه (R1/S1 قبل R3/S3). Camarilla يُتداول على R3/S3 (ارتداد) وR4/S4 (اختراق) لا R1.
+ * بقربها منه (R1/S1 قبل R3/S3). PDH/PDL بمرتبة المحور (يُتداول عليهما مباشرةً)، وPDC بعدهما. Camarilla يُتداول على R3/S3 (ارتداد) وR4/S4 (اختراق) لا R1.
  */
 export function pivotLabelRank(label: string): number {
-  if (/^(PP|FPP|WPP|CPR-P)$/.test(label)) return 0;
+  if (/^(PP|FPP|WPP|CPR-P|PDH|PDL)$/.test(label)) return 0;
+  if (label === 'PDC') return 2;
   const cam = /^C[RS]([1-4])$/.exec(label);
   if (cam) return ({ '3': 1, '4': 2, '2': 3, '1': 4 } as Record<string, number>)[cam[1]];
   if (/^CPR-[TB]$/.test(label)) return 1;
