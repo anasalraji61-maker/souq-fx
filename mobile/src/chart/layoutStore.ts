@@ -11,6 +11,10 @@ export type TerminalLayout = {
 
 const KEY = 'matrix.layouts.v1';
 
+/** سقف القائمة المحلية. كان 12: حفظ التخطيط الثالث عشر يطرد الأقدم بصمت (يظهر باللوحة ثم يختفي عند فتحها
+ *  التالي). التخطيط بضع عشرات من البايتات، فالسقف حارس نموّ لا حدّ يلمسه متداول. */
+export const MAX_LAYOUTS = 60;
+
 /** رمز حالة ثابت لا نص معروض — الترجمة بطبقة العرض عبر `t[code]` (نفس المبدأ الموثَّق
  *  بـchart/dataSource.ts: لا تقارن الواجهة نصاً حرفياً). أسماء الرموز مطابقة لمفاتيح
  *  Dict بـi18n/locales.ts. */
@@ -84,7 +88,7 @@ async function saveLayoutNow(layout: TerminalLayout): Promise<void> {
     const idx = all.findIndex((l) => l.id === layout.id);
     if (idx >= 0) all[idx] = layout;
     else all.unshift(layout);
-    await AsyncStorage.setItem(KEY, JSON.stringify(all.slice(0, 12)));
+    await AsyncStorage.setItem(KEY, JSON.stringify(all.slice(0, MAX_LAYOUTS)));
     setSaveError(null);
   } catch {
     setSaveError('layoutSaveFailed');
@@ -135,7 +139,7 @@ export function parseServerLayout(payload: unknown): TerminalLayout | null {
 
 /**
  * يضيف للقائمة المحلية تخطيطات الحساب المحفوظة بالخادم وغير الموجودة محلياً (تسجيل الدخول على جهاز آخر،
- * إعادة تثبيت التطبيق) — بمعرّفها المحلي أو باسمها، فلا نسخ مكرّرة. يعيد القائمة المدمجة (≤ 12).
+ * إعادة تثبيت التطبيق) — بمعرّفها المحلي أو باسمها، فلا نسخ مكرّرة. يعيد القائمة المدمجة (≤ MAX_LAYOUTS).
  */
 export function mergeServerLayouts(payloads: unknown[]): Promise<TerminalLayout[]> {
   return serial(() => mergeServerLayoutsNow(payloads));
@@ -154,7 +158,7 @@ async function mergeServerLayoutsNow(payloads: unknown[]): Promise<TerminalLayou
     added.push(l);
   }
   if (!added.length) return local;
-  const merged = [...local, ...added].slice(0, 12);
+  const merged = [...local, ...added].slice(0, MAX_LAYOUTS);
   try {
     await AsyncStorage.setItem(KEY, JSON.stringify(merged));
   } catch {

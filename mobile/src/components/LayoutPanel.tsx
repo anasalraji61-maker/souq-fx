@@ -31,6 +31,8 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   /** ما حذفه المتداول بهذه اللوحة — تحميلٌ قُرئ قبل الحذف لا يُعيده للقائمة. */
   const deletedRef = useRef(new Set<string>());
+  /** حفظ جارٍ — نقرتان سريعتان كانتا تحفظان نسختين بالاسم نفسه (القائمة لم تتحدّث بعد فلا «existing»). */
+  const savingRef = useRef(false);
 
   /** «EURUSD 15m · GBPUSD 1H · XAUUSD 4H» — كان السطر يعرض الأزواج فقط، والفريم نصف التخطيط. */
   const describe = (l: TerminalLayout) =>
@@ -76,6 +78,16 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
   }, []);
 
   const save = async () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    try {
+      await saveNow();
+    } finally {
+      savingRef.current = false;
+    }
+  };
+
+  const saveNow = async () => {
     const layoutName = name.trim() || t.layoutFallbackName;
     // نفس الاسم = تحديث ذلك التخطيط لا نسخة مكرّرة (الاسم الافتراضي «تخطيطي» كان يُكدّس نسخاً متطابقة الاسم).
     const existing = layouts.find((x) => x.id !== 'default' && x.name === layoutName);
