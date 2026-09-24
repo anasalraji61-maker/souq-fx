@@ -845,6 +845,8 @@ export type Dict = {
   mcMonths: string[];
   mcPrimaryLane: string;
   mcMeasureBarsWord: string;
+  /** لواحق مدّة سطر القياس (`measureDurationText`): `{m}`/`{h}`/`{d}` تُلصق بالعدد كما هي — المسافة جزء منها بالعربية والكردية. */
+  mcMeasureDurUnits: { m: string; h: string; d: string };
   mcNoteDefault: string;
   mcSnapshotSaved: string;
   mcSnapshotFailed: string;
@@ -1788,6 +1790,7 @@ const ar: Dict = {
   ],
   mcPrimaryLane: 'أساسي',
   mcMeasureBarsWord: 'شموع',
+  mcMeasureDurUnits: { m: ' د', h: ' س', d: ' يوم' },
   mcNoteDefault: 'ملاحظة',
   mcSnapshotSaved: 'تم حفظ لقطة الشارت',
   mcSnapshotFailed: 'تعذر تصدير الشارت',
@@ -2713,6 +2716,7 @@ const enUS: Dict = {
   ],
   mcPrimaryLane: 'Primary',
   mcMeasureBarsWord: 'bars',
+  mcMeasureDurUnits: { m: 'm', h: 'h', d: 'd' },
   mcNoteDefault: 'Note',
   mcSnapshotSaved: 'Chart snapshot saved',
   mcSnapshotFailed: 'Could not export the chart',
@@ -3662,6 +3666,7 @@ const ku: Dict = {
   ],
   mcPrimaryLane: 'سەرەکی',
   mcMeasureBarsWord: 'مۆم',
+  mcMeasureDurUnits: { m: ' خولەک', h: ' کاتژمێر', d: ' ڕۆژ' },
   mcNoteDefault: 'تێبینی',
   mcSnapshotSaved: 'وێنەی چارت پاشەکەوت کرا',
   mcSnapshotFailed: 'نەتوانرا چارت هەناردە بکرێت',
