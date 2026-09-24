@@ -77,6 +77,14 @@ import {
 } from './paneGuides';
 import { DrawingsSaveQueue, drawingsKey, drawingsSignature } from './drawingsPersist';
 import { clipSegmentToBars, dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
+import {
+  isPositionTool,
+  positionLabels,
+  positionLevels,
+  positionStop,
+  rrFromTarget,
+  type PositionSide,
+} from './positionTool';
 import { anchorDrawings, barTime, stampAtIndex, type TimeBar } from './drawingAnchors';
 import { appendedAfter } from './holdView';
 import { priceSpan } from './priceSpan';
@@ -392,6 +400,8 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
   zone: '▤',
   note: 'T',
   measure: '↔',
+  long: '⇡',
+  short: '⇣',
 };
 
 const PRICE_AXIS_WIDTH = 68;
@@ -2698,16 +2708,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         ]);
       } else if (b) {
         pushDrawHistory();
+        // شراء/بيع: `b` يُخزَّن عند الوقف بجهته الصحيحة (المقبض حيث يُرى الوقف) — `positionTool.ts`.
+        const end = isPositionTool(t) ? { ...b, price: positionStop(t, a.price, b.price, series.symbol) } : b;
         setDrawings((d) => [
           ...d,
-          { id: nextDrawingId(), tool: t, a, b, color: accent },
+          { id: nextDrawingId(), tool: t, a, b: end, color: accent },
         ]);
       }
       setPending(null);
       setDragEnd(null);
       setTool('none');
     },
-    [tool, accent, tr, pushDrawHistory]
+    [tool, accent, tr, pushDrawHistory, series.symbol]
   );
 
   /**
@@ -2716,15 +2728,138 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
    * الحفظ (`saveQueue`) وتُعيد رسم الشارت بلا أي فرق مرئي. (الفرعان كانا متطابقين قبلاً:
    * `d.b ? {...d, b} : {...d, b}` — والسحب لطرف `b` لا يقع أصلاً إلا على رسمٍ له `b`.)
    */
-  const moveDrawing = useCallback((id: string, point: ChartPoint, end: 'a' | 'b') => {
+  const moveDrawing = useCallback(
+    (id: string, point: ChartPoint, end: 'a' | 'b') => {
+      setDrawings((list) => {
+        const cur = list.find((x) => x.id === id);
+        // وقف مركز شراء/بيع سُحب لجهة الهدف ⇒ يُعكس لجهته (المقبض يتبع ما يُرسم).
+        const next =
+          cur && end === 'b' && isPositionTool(cur.tool)
+            ? { ...point, price: positionStop(cur.tool, cur.a.price, point.price, series.symbol) }
+            : point;
+        if (!dragChangesDrawing(cur, end, next)) return list;
+        return list.map((d) =>
+          d.id !== id ? d : end === 'a' ? { ...d, a: next } : { ...d, b: next }
+        );
+      });
+    },
+    [series.symbol]
+  );
+
+  /** مقبض الهدف لأداتَي شراء/بيع: يغيّر النسبة وحدها (الهدف مشتقّ من الدخول والوقف). */
+  const setDrawingRr = useCallback((id: string, rr: number) => {
     setDrawings((list) => {
       const cur = list.find((x) => x.id === id);
-      if (!dragChangesDrawing(cur, end, point)) return list;
-      return list.map((d) =>
-        d.id !== id ? d : end === 'a' ? { ...d, a: point } : { ...d, b: point }
-      );
+      if (!cur || cur.rr === rr) return list;
+      return list.map((d) => (d.id !== id ? d : { ...d, rr }));
     });
   }, []);
+
+  /**
+   * هندسة صندوقَي شراء/بيع على الشاشة: الحافّة اليسرى عند الأقدم من الدخول والوقف، ولا يقلّ العرض
+   * عن 36px (نقرتان على الشمعة نفسها كانتا ستعطيان صندوقاً بلا عرض لا يُرى ولا يُلمس). مقبضا الوقف
+   * والهدف عند طرف `b`، ومقبض الدخول عند `a`.
+   */
+  const positionBox = (
+    side: PositionSide,
+    a: ChartPoint,
+    b: ChartPoint,
+    rr: number | undefined,
+    aLocal: number,
+    bLocal: number
+  ) => {
+    const lv = positionLevels(side, a.price, b.price, rr, series.symbol);
+    const xEntry = xOf(aLocal);
+    const xEnd = xOf(bLocal);
+    const left = Math.min(xEntry, xEnd);
+    const right = Math.max(xEntry, xEnd, left + 36);
+    return {
+      lv,
+      left,
+      right,
+      xEntry,
+      xEnd,
+      yEntry: yOf(lv.entry),
+      yStop: yOf(lv.stop),
+      yTarget: yOf(lv.target),
+    };
+  };
+
+  /**
+   * صندوقا الهدف (أخضر) والوقف (أحمر) وخطّ الدخول، ووسما TP/SL **خارج** حافّتيهما البعيدتين
+   * (داخل صندوق ارتفاعه بضعة بكسلات لا يتّسع الوسم). `preview`: أثناء السحب الأول بلا مقابض.
+   */
+  const renderPosition = (
+    key: string,
+    side: PositionSide,
+    a: ChartPoint,
+    b: ChartPoint,
+    rr: number | undefined,
+    color: string,
+    sel: boolean,
+    preview: boolean
+  ) => {
+    const box = positionBox(side, a, b, rr, a.index - source.start, b.index - source.start);
+    const labels = positionLabels(box.lv, series.symbol);
+    const width = box.right - box.left;
+    const band = (y1: number, y2: number, fill: string, edge: string) => (
+      <View
+        style={{
+          position: 'absolute',
+          left: box.left,
+          top: Math.min(y1, y2),
+          width,
+          height: Math.max(1, Math.abs(y2 - y1)),
+          backgroundColor: fill,
+          borderColor: edge,
+          borderWidth: sel ? 1.5 : 1,
+        }}
+      />
+    );
+    const tag = (y: number, beyondEntry: boolean, text: string, tone: string) => (
+      <Text
+        numberOfLines={1}
+        style={[
+          styles.positionLabel,
+          {
+            left: box.left,
+            // الحافّة العليا ⇒ الوسم فوقها، والسفلى ⇒ تحتها.
+            top: beyondEntry ? y - 16 : y + 2,
+            maxWidth: Math.max(60, chartPlotW - box.left - 2),
+            color: tone,
+            borderColor: tone,
+          },
+        ]}
+      >
+        {text}
+      </Text>
+    );
+    return (
+      <View key={key} pointerEvents="none" style={StyleSheet.absoluteFill}>
+        {band(box.yEntry, box.yTarget, 'rgba(34,197,94,0.14)', 'rgba(34,197,94,0.55)')}
+        {band(box.yEntry, box.yStop, 'rgba(244,63,94,0.14)', 'rgba(244,63,94,0.55)')}
+        <View
+          style={{
+            position: 'absolute',
+            left: box.left,
+            top: box.yEntry,
+            width,
+            borderTopWidth: sel ? 2 : 1,
+            borderColor: color,
+          }}
+        />
+        {tag(box.yTarget, box.yTarget < box.yEntry, labels.target, colors.bull)}
+        {tag(box.yStop, box.yStop < box.yEntry, labels.stop, colors.bear)}
+        {sel && !preview ? (
+          <>
+            <View style={[styles.grabHandle, { left: box.xEntry, top: box.yEntry, borderColor: color }]} />
+            <View style={[styles.grabHandle, { left: box.xEnd, top: box.yStop, borderColor: colors.bear }]} />
+            <View style={[styles.grabHandle, { left: box.xEnd, top: box.yTarget, borderColor: colors.bull }]} />
+          </>
+        ) : null}
+      </View>
+    );
+  };
 
   /**
    * أي رسم تحت الإصبع.
@@ -2761,9 +2896,28 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         const bLocal = d.b.index - source.start;
         const bx = xOf(bLocal);
         const by = yOf(d.b.price);
-        const endDist = Math.min(Math.hypot(x - ax, y - ay), Math.hypot(x - bx, y - by));
+        let endDist = Math.min(Math.hypot(x - ax, y - ay), Math.hypot(x - bx, y - by));
         let bodyDist = Infinity;
-        if (d.tool === 'trend' || d.tool === 'ray') {
+        if (isPositionTool(d.tool)) {
+          // الصندوقان كلاهما هدف لمس (لا الحدود وحدها كالمستطيل): المتداول يلمس «صفقته».
+          const box = positionBox(d.tool, d.a, d.b, d.rr, aLocal, bLocal);
+          const t = Math.min(box.yTarget, box.yStop);
+          const b = Math.max(box.yTarget, box.yStop);
+          const inside = x >= box.left && x <= box.right && y >= t && y <= b;
+          bodyDist = inside
+            ? 0
+            : Math.min(
+                segmentDistance(x, y, box.left, t, box.right, t, 1),
+                segmentDistance(x, y, box.left, b, box.right, b, 1),
+                segmentDistance(x, y, box.left, t, box.left, b, 1),
+                segmentDistance(x, y, box.right, t, box.right, b, 1)
+              );
+          endDist = Math.min(
+            Math.hypot(x - box.xEntry, y - box.yEntry),
+            Math.hypot(x - box.xEnd, y - box.yStop),
+            Math.hypot(x - box.xEnd, y - box.yTarget)
+          );
+        } else if (d.tool === 'trend' || d.tool === 'ray') {
           // نفس ما يُرسَم: الطرفان مقصوصان على النافذة (على الخطّ)، والشعاع يمتدّ 1.6 من طول القطعة.
           const seg = clipSegmentToBars(aLocal, ay, bLocal, by, lastLocal);
           bodyDist = segmentDistance(
@@ -2801,7 +2955,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       }
       return best?.id ?? null;
     },
-    [drawings, source.start, source.plot.length, xOf, yOf]
+    [drawings, source.start, source.plot.length, xOf, yOf, positionBox]
   );
 
   const exportChart = async () => {
@@ -2927,12 +3081,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // حالة سحب المقبض بمراجع لا بمتغيّرات داخل `useMemo`: `selectPan` يُعاد بناؤه مع كل تغيّر بـ`drawings`
   // (وأوّل خطوة سحب تغيّرها)، ونظام المستجيب يستدعي معالجات **الخصائص الحالية** — فمتغيّر الإغلاق
   // يبدأ `null` بالكائن الجديد ويتوقّف المقبض بعد خطوة واحدة تحت الإصبع.
-  const selDragEnd = useRef<'a' | 'b' | null>(null);
+  // `t`: مقبض هدف شراء/بيع — يغيّر النسبة `rr` لا نقطة (`selDragRr` آخر نسبة بلغها بهذه السحبة).
+  const selDragEnd = useRef<'a' | 'b' | 't' | null>(null);
   // النقطة التي يقف عندها الطرف المسحوب الآن، و«هل دُفِعت لقطة تراجع لهذه السحبة؟».
   // راجع `drawEdit.ts`: اللقطة تُدفَع عند **أول حركة تُغيّر الطرف فعلاً** لا عند بدء
   // اللمس — وإلا استهلكت لمسةٌ لم تغيّر شيئاً مكاناً من سجلّ التراجع (25 لقطة).
   const selDragAt = useRef<ChartPoint | null>(null);
   const selDragPushed = useRef(false);
+  const selDragRr = useRef<number | null>(null);
   const selectPan = useMemo(() => {
     return PanResponder.create({
       onStartShouldSetPanResponder: () => interactive && tool === 'select' && !!selectedId,
@@ -2941,12 +3097,28 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       onPanResponderGrant: (evt) => {
         selDragEnd.current = null;
         selDragAt.current = null;
+        selDragRr.current = null;
         selDragPushed.current = false;
         if (!selectedId) return;
         const { locationX, locationY } = evt.nativeEvent;
         const d = drawings.find((x) => x.id === selectedId);
         if (!d) return;
         let end: 'a' | 'b' = 'a';
+        if (d.b && isPositionTool(d.tool)) {
+          const box = positionBox(d.tool, d.a, d.b, d.rr, d.a.index - source.start, d.b.index - source.start);
+          const handles: ['a' | 'b' | 't', number][] = [
+            ['a', Math.hypot(locationX - box.xEntry, locationY - box.yEntry)],
+            ['b', Math.hypot(locationX - box.xEnd, locationY - box.yStop)],
+            ['t', Math.hypot(locationX - box.xEnd, locationY - box.yTarget)],
+          ];
+          handles.sort((x, y) => x[1] - y[1]);
+          if (handles[0][1] > DRAW_HANDLE_R) return;
+          const grabbed = handles[0][0];
+          selDragEnd.current = grabbed;
+          selDragAt.current = grabbed === 't' ? null : drawingEnd(d, grabbed);
+          selDragRr.current = grabbed === 't' ? box.lv.rr : null;
+          return;
+        }
         if (d.b) {
           const da = Math.hypot(locationX - xOf(d.a.index - source.start), locationY - yOf(d.a.price));
           const db = Math.hypot(locationX - xOf(d.b.index - source.start), locationY - yOf(d.b.price));
@@ -2959,8 +3131,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         selDragAt.current = drawingEnd(d, end);
       },
       onPanResponderMove: (evt) => {
-        if (!selectedId || !selDragEnd.current) return;
+        const end = selDragEnd.current;
+        if (!selectedId || !end) return;
         const p = pointFromXY(evt.nativeEvent.locationX, evt.nativeEvent.locationY);
+        if (end === 't') {
+          const d = drawings.find((x) => x.id === selectedId);
+          if (!d?.b || !isPositionTool(d.tool)) return;
+          const lv = positionLevels(d.tool, d.a.price, d.b.price, d.rr, series.symbol);
+          const rr = rrFromTarget(lv, p.price);
+          if (rr === selDragRr.current) return;
+          if (!selDragPushed.current) {
+            pushDrawHistory();
+            selDragPushed.current = true;
+          }
+          selDragRr.current = rr;
+          setDrawingRr(selectedId, rr);
+          return;
+        }
         // المقارنة بـ`selDragAt.current` (آخر موضع بلغه الطرف بهذه السحبة) لا بحالة React: الحالة
         // تصل متأخّرة إطاراً عن أحداث الحركة، فمقارنتها كانت ستسمح بلقطة مكرّرة.
         if (samePoint(selDragAt.current, p)) return;
@@ -2969,15 +3156,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           selDragPushed.current = true;
         }
         selDragAt.current = p;
-        moveDrawing(selectedId, p, selDragEnd.current);
+        moveDrawing(selectedId, p, end);
       },
       onPanResponderRelease: () => {
         selDragEnd.current = null;
         selDragAt.current = null;
+        selDragRr.current = null;
       },
       onPanResponderTerminate: () => {
         selDragEnd.current = null;
         selDragAt.current = null;
+        selDragRr.current = null;
       },
     });
   }, [
@@ -2986,6 +3175,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     selectedId,
     drawings,
     moveDrawing,
+    setDrawingRr,
+    positionBox,
+    series.symbol,
     pointFromXY,
     pushDrawHistory,
     source.start,
@@ -5876,6 +6068,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               </React.Fragment>
             );
           }
+          if (isPositionTool(d.tool) && d.b) {
+            return renderPosition(d.id, d.tool, d.a, d.b, d.rr, d.color, sel, false);
+          }
           if (d.tool === 'fib' && d.b) {
             const hi = Math.max(d.a.price, d.b.price);
             const lo = Math.min(d.a.price, d.b.price);
@@ -5905,7 +6100,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           return null;
         })}
 
-        {pending && dragEnd && tool !== 'none' && tool !== 'select' && tool !== 'hline' && tool !== 'vline' && tool !== 'note' ? (
+        {pending && dragEnd && isPositionTool(tool)
+          ? // المعاينة هي الأداة نفسها: المتداول يرى الوقف والهدف ونقاطهما وهو يسحب، لا خطّاً يُخمّن منه.
+            renderPosition('positionPreview', tool, pending, dragEnd, undefined, accent, false, true)
+          : null}
+
+        {pending && dragEnd && tool !== 'none' && tool !== 'select' && tool !== 'hline' && tool !== 'vline' && tool !== 'note' && !isPositionTool(tool) ? (
           (() => {
             const x1 = xOf(pending.index - source.start);
             const y1 = yOf(pending.price);
@@ -10406,6 +10606,17 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingHorizontal: 3,
     backgroundColor: 'rgba(45,212,191,0.16)',
+  },
+  positionLabel: {
+    position: 'absolute',
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '800',
+    paddingHorizontal: 4,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radii.sm,
+    backgroundColor: colors.bgGlass,
+    overflow: 'hidden',
   },
   grabHandle: {
     position: 'absolute',

@@ -191,7 +191,9 @@ export type DrawTool =
   | 'fib'
   | 'zone'
   | 'note'
-  | 'measure';
+  | 'measure'
+  | 'long'
+  | 'short';
 
 /**
  * `time` (ثوانٍ) مرساة الرسم الحقيقية متى وُجدت — `index` موضع مشتقّ منها داخل السلسلة
@@ -228,6 +230,8 @@ export type Drawing = {
   b?: ChartPoint;
   text?: string;
   color: string;
+  /** أداتا `long`/`short`: نسبة الهدف إلى المخاطرة (غيابها ⇒ 2) — راجع `positionTool.ts`. */
+  rr?: number;
 };
 
 export type LensMode = 'clean' | 'structure' | 'momentum' | 'liquidity';
@@ -426,6 +430,8 @@ export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [
   { id: 'zone', label: 'منطقة' },
   { id: 'note', label: 'ملاحظة' },
   { id: 'measure', label: 'قياس' },
+  { id: 'long', label: 'شراء' },
+  { id: 'short', label: 'بيع' },
 ];
 
 export const LENSES: { id: LensMode; label: string; hint: string }[] = [

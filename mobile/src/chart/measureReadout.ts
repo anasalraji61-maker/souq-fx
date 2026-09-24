@@ -35,7 +35,7 @@ export type MeasureStats = { bars: number; diff: number; pct: number };
  * ضجيج، و«−20000.0 pip» (ذهب عند 4000 بشارت أسبوعي، أو تقاطع ين بعيد) 12 حرفاً لا يتّسعها
  * وسم محور السعر (68px) فيُقصّ بنقاط حذف.
  */
-function pipsNumber(pips: number): string {
+export function pipsNumber(pips: number): string {
   return Math.abs(pips) >= 1000 ? pips.toFixed(0) : pips.toFixed(1);
 }
 
