@@ -30,6 +30,7 @@ import {
   parseSpreadPips,
   parseCommission,
   spreadRisk,
+  spreadBeyondLiveEntry,
   costsLotsAdvice,
   profitAfterCosts,
   lowRewardWarning,
@@ -463,7 +464,15 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * المخاطرة شاملة السبريد للّوت المحسوب، وأكبر لوت يُبقيها ضمن النسبة — راجع `spreadRisk`. اللوت
    * الرئيسي يبقى من الوقف وحده (ما يكتبه كل مرجع وكل منصّة)، والسطر يقول الفرق وما العمل.
    */
-  const spreadPips = parseSpreadPips(spread);
+  const typedSpreadPips = parseSpreadPips(spread);
+  // الدخول ما زال Ask/Bid اللقطة الحيّة (نصّ التعبئة حرفياً وللأداة نفسها): السبريد داخل مسافة الوقف والهدف أصلاً،
+  // فلا يُضاف إلا ما يزيد به سبريد الوسيط المكتوب على سبريد اللقطة — راجع `spreadBeyondLiveEntry`
+  const liveFill = liveFillRef.current;
+  const liveQ = liveFill && spec && liveFill.symbol === spec.symbol && entryPx.trim() === liveFill.text ? liveFill.q : null;
+  const spreadPips =
+    typedSpreadPips != null && spec
+      ? spreadBeyondLiveEntry({ spreadPips: typedSpreadPips, spec, entry: num(entryPx), stop: num(stopPx), q: liveQ })
+      : typedSpreadPips;
   /** بعملة الحساب لكل لوت — تُضاف × اللوت داخل `spreadRisk`؛ سطرٌ واحد «شاملة التكاليف» حين تكون موجبة */
   const commissionPerLot = parseCommission(commission);
   const withSpread =

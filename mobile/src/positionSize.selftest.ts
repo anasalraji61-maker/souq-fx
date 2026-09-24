@@ -36,6 +36,7 @@ import {
   MAX_SANE_LOTS,
   parseSpreadPips,
   spreadRisk,
+  spreadBeyondLiveEntry,
   MAX_SPREAD_PIPS,
   type InstrumentSpec,
   spreadTooWide,
@@ -1423,3 +1424,47 @@ console.log('positionSize lotsOverOrderMax selftest OK');
   assert.deepEqual(pnlInQuoteCcy({ symbol: 'GOLD.m', side: 'buy', entry: 2350, exit: 2355.5, lots: 0.2 }), { amount: 110, ccy: 'USD' });
 }
 console.log('positionSize metal broker names selftest OK');
+
+// ── السبريد داخل المسافة حين يكون الدخول Ask/Bid اللقطة: لا يُضاف مرّتين ──
+{
+  const eu = instrumentSpec('EURUSD')!;
+  const q = { bid: 1.085, ask: 1.08515 }; // سبريد 1.5
+  // شراء على Ask ووقف تحته: السبريد كلّه داخل المسافة ⇒ 0
+  assert.equal(spreadBeyondLiveEntry({ spreadPips: 1.5, spec: eu, entry: 1.08515, stop: 1.08315, q }), 0);
+  // بيع على Bid ووقف فوقه
+  assert.equal(spreadBeyondLiveEntry({ spreadPips: 1.5, spec: eu, entry: 1.085, stop: 1.087, q }), 0);
+  // وسيط أوسع من اللقطة: الفرق وحده
+  assert.equal(spreadBeyondLiveEntry({ spreadPips: 2, spec: eu, entry: 1.08515, stop: 1.08315, q }), 0.5);
+  // لقطة أوسع من المكتوب ⇒ 0 لا سالب
+  assert.equal(spreadBeyondLiveEntry({ spreadPips: 1, spec: eu, entry: 1.08515, stop: 1.08315, q }), 0);
+  // جهة معاكسة (Ask ووقف فوقه ⇒ البيع يُنفَّذ على Bid) ⇒ كاملاً
+  assert.equal(spreadBeyondLiveEntry({ spreadPips: 1.5, spec: eu, entry: 1.08515, stop: 1.087, q }), 1.5);
+  // دخول بالوسطي/مكتوب يدوياً ⇒ كاملاً
+  assert.equal(spreadBeyondLiveEntry({ spreadPips: 1.5, spec: eu, entry: 1.08508, stop: 1.08315, q }), 1.5);
+  // بلا لقطة / Bid-Ask غائب أو معكوس ⇒ كاملاً
+  assert.equal(spreadBeyondLiveEntry({ spreadPips: 1.5, spec: eu, entry: 1.08515, stop: 1.08315, q: null }), 1.5);
+  assert.equal(spreadBeyondLiveEntry({ spreadPips: 1.5, spec: eu, entry: 1.08515, stop: 1.08315, q: { ask: 1.08515 } }), 1.5);
+  assert.equal(spreadBeyondLiveEntry({ spreadPips: 1.5, spec: eu, entry: 1.08515, stop: 1.08315, q: { bid: 1.08515, ask: 1.085 } }), 1.5);
+  // بلا سبريد مكتوب ⇒ 0؛ مدخلات تالفة ⇒ كاملاً
+  assert.equal(spreadBeyondLiveEntry({ spreadPips: 0, spec: eu, entry: 1.08515, stop: 1.08315, q }), 0);
+  assert.equal(spreadBeyondLiveEntry({ spreadPips: 1.5, spec: eu, entry: NaN, stop: 1.08315, q }), 1.5);
+  // سبريد اللقطة الكسري (المختلَق بالخادم 0.8 نقطة أساس ≈ 0.87 pip) يُقرَّب للأسفل ⇒ 0.8، الباقي 0.7؛
+  // والدخول نصٌّ منسَّق (1.08504) من Ask 1.0850434 ما زال «على الـAsk»
+  assert.equal(
+    spreadBeyondLiveEntry({ spreadPips: 1.5, spec: eu, entry: 1.08504, stop: 1.0830, q: { bid: 1.0849566, ask: 1.0850434 } }),
+    0.7,
+  );
+  // الذهب: سبريد 30 سنتاً = 3 pip، والوسيط 3.5
+  const xau = instrumentSpec('XAUUSD')!;
+  assert.equal(spreadBeyondLiveEntry({ spreadPips: 3.5, spec: xau, entry: 2350.65, stop: 2345.65, q: { bid: 2350.35, ask: 2350.65 } }), 0.5);
+  // مثال التدقيق كاملاً: 10,000 USD، 1%، وقف 20 من Ask ⇒ 0.50 lot بمخاطرة 100.00 بالضبط — لا سطر «شاملة السبريد»
+  const pv = pipValuePerLot(eu, 1);
+  const sized = positionSize({ balance: 10000, riskPct: 1, slPips: 20, pipValuePerLot: pv, contractSize: eu.contractSize })!;
+  assert.equal(sized.lots, 0.5);
+  const left = spreadBeyondLiveEntry({ spreadPips: 1.5, spec: eu, entry: 1.08515, stop: 1.08315, q });
+  assert.equal(
+    spreadRisk({ lots: 0.5, slPips: 20, spreadPips: left, pipValuePerLot: pv, balance: 10000, riskPct: 1, contractSize: eu.contractSize }),
+    null,
+  );
+}
+console.log('positionSize spreadBeyondLiveEntry selftest OK');

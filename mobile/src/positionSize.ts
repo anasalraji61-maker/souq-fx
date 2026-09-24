@@ -661,6 +661,39 @@ export function spreadRisk(input: {
 }
 
 /**
+ * السبريد الذي **بقي** ليُضاف للمخاطرة والربح حين يكون الدخول هو Ask الشراء/Bid البيع من لقطة حيّة.
+ *
+ * لماذا: `spreadRisk`/`profitAfterCosts` تفترضان دخولاً مكتوباً من الشارت، فالسبريد خارج المسافة. لكن «الدخول =
+ * السعر الحالي» وشرائح الوقف تكتب **Ask** الشراء (Bid البيع): الشراء على Ask 1.08515 ووقفه يُضرب حين يبلغ Bid
+ * 1.08315 = 20 pip خسارة بالضبط — السبريد داخل المسافة أصلاً. كانت الحاسبة تضيفه مرّة ثانية: «المخاطرة شاملة
+ * السبريد 107.50 (1.08%)» عن صفقة تخاطر بـ100 بالضبط، ونصيحة «0.46 lot» بدل 0.50، وR:R صافية 1:1.8 بدل 1:2
+ * تُحفظ بملاحظة الدفتر؛ وعلى حساب 100 بوقف 10: «حتى 0.01 تتجاوز 1%» عن لوتٍ يخاطر بـ1.00 تماماً.
+ *
+ * يُطرح سبريد اللقطة (مقرَّباً لعُشر pip **للأسفل**، فالباقي لا يُصغَّر) من السبريد المكتوب: وسيطٌ أوسع من
+ * اللقطة ما زال يُحسب فرقه. بشرط أن يكون الدخول على سعر **جهة الوقف** (Ask ووقفٌ تحته، أو Bid ووقفٌ فوقه) —
+ * غير ذلك (دخولٌ بالوسطي، Bid/Ask غائب، جهة معاكسة) ⇒ السبريد المكتوب كاملاً كما كان.
+ */
+export function spreadBeyondLiveEntry(input: {
+  spreadPips: number;
+  spec: InstrumentSpec;
+  entry: number;
+  stop: number;
+  q: { bid?: number | null; ask?: number | null } | null;
+}): number {
+  const { spreadPips, spec, entry, stop, q } = input;
+  if (!Number.isFinite(spreadPips) || spreadPips <= 0) return 0;
+  if (!q || ![entry, stop].every((v) => Number.isFinite(v) && v > 0) || entry === stop) return spreadPips;
+  const { bid, ask } = q;
+  if (typeof bid !== 'number' || typeof ask !== 'number' || !(bid > 0) || !(ask > bid)) return spreadPips;
+  const tol = spec.pipSize / 20; // نصف pipette: الدخول نصٌّ منسَّق من السعر نفسه
+  const atSide = stop < entry ? Math.abs(entry - ask) < tol : Math.abs(entry - bid) < tol;
+  if (!atSide) return spreadPips;
+  const inside = Math.floor(Math.round(((ask - bid) / spec.pipSize) * 10 * 1e6) / 1e6) / 10;
+  const left = Math.round((spreadPips - inside) * 1e9) / 1e9;
+  return left > 0 ? left : 0;
+}
+
+/**
  * ما يُقال تحت سطر «المخاطرة شاملة التكاليف»: `smaller` = لوت أصغر يُبقي النسبة المكتوبة، و`none` = حتى
  * أصغر لوت (0.01) يتجاوزها حين تُحسب التكاليف، و`null` = لا شيء يُقال (بلا تكاليف، أو اللوت المحسوب
  * يتّسع لها أصلاً).
