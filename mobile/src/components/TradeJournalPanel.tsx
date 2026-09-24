@@ -27,6 +27,7 @@ import {
   quoteSymbol,
   levelSideIssue,
   netByInstrument,
+  journalInstrumentKey,
   realizedMove,
   realizedR,
   roundR,
@@ -365,12 +366,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
 
   /**
    * أدوات الدفتر وعدد صفقات كلٍّ منها، الأكثر تداولاً أولاً. الشرائح لا تظهر إلا بأداتين فأكثر:
-   * من يتداول زوجاً واحداً لا يُعرض له فلترٌ بخيار واحد.
+   * من يتداول زوجاً واحداً لا يُعرض له فلترٌ بخيار واحد. المفتاح الأداة لا الرمز المكتوب
+   * (`journalInstrumentKey`): «XAUUSD.m» و«XAUUSD» شريحة واحدة.
    */
   const symbolCounts = useMemo(() => {
     const m = new Map<string, number>();
     for (const tr of trades) {
-      const key = (tr.symbol || '').trim().toUpperCase();
+      const key = journalInstrumentKey(tr.symbol);
       if (!key) continue;
       m.set(key, (m.get(key) ?? 0) + 1);
     }
@@ -391,7 +393,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     () =>
       activeSym == null
         ? trades
-        : trades.filter((tr) => (tr.symbol || '').trim().toUpperCase() === activeSym),
+        : trades.filter((tr) => journalInstrumentKey(tr.symbol) === activeSym),
     [trades, activeSym]
   );
 

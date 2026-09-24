@@ -13,6 +13,7 @@ import {
   quoteSymbol,
   levelSideIssue,
   netByInstrument,
+  journalInstrumentKey,
   realizedMove,
   realizedR,
   roundR,
@@ -466,9 +467,40 @@ console.log('tradePlan journalSymbol suffix selftest OK');
   const trades = [c('EURUSD', 'buy', 1.08512, 1.08777, 0.37), c('EURUSD', 'sell', 1.0901, 1.09233, 0.21)];
   const sumRows = trades.reduce((a, tr) => a + realizedMove({ ...tr, side: tr.side as 'buy' | 'sell' })!.pips!, 0);
   assert.equal(netByInstrument(trades)[0]!.pips, Math.round(sumRows * 10) / 10);
-  // الترتيب: الأكثر صفقاتٍ ثم أبجدياً؛ والمفتاح كما يُحفظ (شرائح الفلتر نفسها)
+  // الترتيب: الأكثر صفقاتٍ ثم أبجدياً؛ والمفتاح الأداة (شرائح الفلتر نفسها — لاحقة الوسيط تسقط)
   const order = netByInstrument([c('GBPUSD', 'buy', 1.27, 1.271), c('AUDUSD', 'buy', 0.66, 0.661), c('xauusd.m', 'buy', 2400, 2401)]);
-  assert.deepEqual(order.map((r) => r.symbol), ['AUDUSD', 'GBPUSD', 'XAUUSD.M']);
+  assert.deepEqual(order.map((r) => r.symbol), ['AUDUSD', 'GBPUSD', 'XAUUSD']);
+  // «XAUUSD.m» و«XAUUSD» و«XAUUSDm» أداة واحدة: صافٍ واحد بالنقاط والمال لا ثلاثة
+  const gold = netByInstrument([
+    c('XAUUSD', 'buy', 2400, 2404, 0.1), // +40 pip · +40.00
+    c('XAUUSD.m', 'sell', 2400, 2405.5, 0.1), // −55 pip · −55.00
+    c('xauusdm', 'buy', 2400, 2401, 0.2), // +10 pip · +20.00
+  ]);
+  assert.deepEqual(gold, [{ symbol: 'XAUUSD', n: 3, pips: -5, cash: { amount: 5, ccy: 'USD' } }]);
+  // المال الكلّي-أو-لا-شيء يسري على الأداة المدموجة: صفقة بلاحقة بلا حجم تُسقط مال الذهب كلّه
+  assert.equal(netByInstrument([c('XAUUSD', 'buy', 2400, 2404, 0.1), c('XAUUSD.PRO', 'buy', 2400, 2401, 1)])[0]!.cash, null);
   assert.deepEqual(netByInstrument([]), []);
 }
 console.log('tradePlan netByInstrument selftest OK');
+
+// —— journalInstrumentKey: مفتاح الأداة لشرائح الفلتر والصافي ——
+{
+  for (const [raw, key] of [
+    ['XAUUSD', 'XAUUSD'],
+    ['xauusd.m', 'XAUUSD'],
+    ['XAUUSDm', 'XAUUSD'],
+    ['GBPJPY-ECN', 'GBPJPY'],
+    ['USDJPY#', 'USDJPY'],
+    [' eurusd ', 'EURUSD'],
+    ['US30', 'US30'], // بلا مواصفات: الرمز كما يُحفظ
+    ['nas100', 'NAS100'],
+    ['EURUSDT', 'EURUSDT'], // ليس «EURUSD» بلاحقة — رمز آخر لا يُدمج
+    ['', ''],
+    ['   ', ''],
+  ] as const) {
+    assert.equal(journalInstrumentKey(raw), key, raw);
+  }
+  assert.equal(journalInstrumentKey(null), '');
+  assert.equal(journalInstrumentKey(undefined), '');
+}
+console.log('tradePlan journalInstrumentKey selftest OK');

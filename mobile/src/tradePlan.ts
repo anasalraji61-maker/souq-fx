@@ -288,6 +288,22 @@ export function quoteSymbol(raw: string): string | null {
 }
 
 /**
+ * مفتاح **الأداة** لصفقة بالدفتر — لشرائح الفلتر وصافي كل أداة: الرمز القانوني حين تُعرف مواصفاته
+ * (`quoteSymbol`: «XAUUSD.m»، «xauusd»، «XAUUSDm» ⇒ «XAUUSD»)، وإلا الرمز كما يُحفظ بحروف كبيرة
+ * (US30، NAS100)، و«» لرمز فارغ.
+ *
+ * لماذا: المفتاح كان الرمز كما يُحفظ، فمن ينسخ «XAUUSD.m» من منصّته مرّة ويكتب «XAUUSD» بيده مرّة يرى
+ * **أداتين**: شريحتان، وصافيان منفصلان («XAUUSD +40 · XAUUSD.M −55») بدل صافٍ واحد «−15» هو ما يسأل عنه
+ * — والفلتر على «XAUUSD» يُخفي نصف صفقات الذهب فتُحسب نسبة نجاحه ومتوسط R من نصفها. النقاط والمال
+ * تُحسب أصلاً بمواصفات الرمز القانوني (`instrumentSpec` يُسقط اللاحقة)، فالجمع لا يخلط وحدتين.
+ */
+export function journalInstrumentKey(raw: string | null | undefined): string {
+  const up = (raw || '').trim().toUpperCase();
+  if (!up) return '';
+  return quoteSymbol(up) ?? up;
+}
+
+/**
  * صافي الصفقات المغلقة **لكل أداة**: النقاط، وعددها، والمال بعملة التسعير — لسطر «صافي النقاط» بالدفتر.
  *
  * النقاط تُجمع لكل أداة على حدة (pip الذهب ليس pip اليورو)، وكانت تُجمع داخل اللوحة بلا اختبار. والمال
@@ -299,7 +315,7 @@ export function quoteSymbol(raw: string): string | null {
  * نفس قاعدة سطر الصفقة) فالمال `null` للأداة كلها — مجموعٌ جزئي يُقرأ كأنه الصافي كله فيضلّل أكثر من غيابه.
  * المفتوحة والمغلقة بلا خروج صالح لا تُحسب؛ ورمزٌ بلا مواصفات (US30…) بلا نقاط فلا يدخل.
  *
- * المفتاح الرمز كما يُحفظ (كشرائح الفلتر نفسها)، والترتيب: الأكثر صفقاتٍ أولاً ثم أبجدياً. المجاميع مقرَّبة
+ * المفتاح `journalInstrumentKey` (كشرائح الفلتر نفسها — «XAUUSD.m» و«XAUUSD» أداة واحدة)، والترتيب: الأكثر صفقاتٍ أولاً ثم أبجدياً. المجاميع مقرَّبة
  * متماثلاً حول الصفر (النقاط لعُشر، والمال لسنت) بلا «−0».
  */
 export function netByInstrument(
@@ -318,7 +334,7 @@ export function netByInstrument(
     const side: TradeSide = tr.side === 'sell' ? 'sell' : 'buy';
     const mv = realizedMove({ symbol: tr.symbol, side, entry: tr.entry, exit: tr.exit });
     if (mv?.pips == null) continue;
-    const key = (tr.symbol || '').trim().toUpperCase() || '—';
+    const key = journalInstrumentKey(tr.symbol) || '—';
     const cur = acc.get(key) ?? { n: 0, pips: 0, cash: 0, ccy: null, cashOk: true };
     cur.n += 1;
     cur.pips += mv.pips;
