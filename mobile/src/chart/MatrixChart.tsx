@@ -44,6 +44,13 @@ import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
 import { candleBodyWidth } from './candleGeometry';
 import { pinchSpread, pinchWindow, zoomWindow } from './zoomWindow';
+import {
+  AXIS_TAP_SLOP,
+  isDoubleTap,
+  priceAxisDragScale,
+  timeAxisDragWindow,
+  type AxisTap,
+} from './axisDrag';
 import { barCloseCountdown } from './barCountdown';
 import { BarCountdown } from './BarCountdown';
 import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime, stepCrossBar } from './crossAnchor';
@@ -975,8 +982,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const panStartPrice = useRef(0);
   const panStartX = useRef(0);
   const webChartPointer = useRef({ active: false, x: 0, y: 0, pointerId: 0 });
-  const webPricePointer = useRef({ active: false, y: 0, pointerId: 0 });
-  const webTimePointer = useRef({ active: false, x: 0, pointerId: 0 });
+  const webPricePointer = useRef({ active: false, x: 0, y: 0, pointerId: 0 });
+  const webTimePointer = useRef({ active: false, x: 0, y: 0, pointerId: 0 });
   // طابور الحفظ المؤجَّل — نسخة واحدة لعمر المكوّن، تحمل مفتاح حمولتها معها
   // (`drawingsPersist.ts` يشرح الخطأين اللذين نشأ عنهما).
   // الرسومات للرمز لا للفريم (`drawingStore.ts`)؛ الفريم بالطابور يبقى لمفتاح الحمولة وحده.
@@ -3421,6 +3428,71 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [schedulePublishSync]
   );
 
+  // سحب المحورَين يمطّ/يضغط كـTradingView (`axisDrag.ts`) — كان نسخة ثانية من سحب الشارت،
+  // فلا سبيل على الهاتف لمطّ السعر. كلاهما من حالة بدء السحب؛ نقرتان تعيدان مقياس المحور وحده.
+  const beginAxisDrag = useCallback(() => {
+    beginDrag();
+    priceScaleStart.current = priceScaleRef.current;
+    timeWindowStart.current = windowCountRef.current;
+  }, [beginDrag]);
+
+  const scalePriceByDrag = useCallback(
+    (dy: number) => {
+      const next = priceAxisDragScale(priceScaleStart.current, dy);
+      if (next === priceScaleRef.current) return;
+      priceScaleRef.current = next;
+      setPriceScale(next);
+      schedulePublishSync(false);
+    },
+    [schedulePublishSync]
+  );
+
+  const zoomTimeByDrag = useCallback(
+    (dx: number) => {
+      const z = timeAxisDragWindow(
+        sourceRef.current.all.length,
+        timeWindowStart.current,
+        panStartOffset.current,
+        dx
+      );
+      if (z.count === windowCountRef.current && z.offset === offsetRef.current) return;
+      windowCountRef.current = z.count;
+      offsetRef.current = z.offset;
+      setWindowCount(z.count);
+      setOffset(z.offset);
+      schedulePublishSync(false);
+    },
+    [schedulePublishSync]
+  );
+
+  const priceAxisTap = useRef<AxisTap | null>(null);
+  const timeAxisTap = useRef<AxisTap | null>(null);
+  // نقرة (لا سحب) على محور: الثانية خلال `DOUBLE_TAP_MS` تعيد مقياسه — السعر: المقياس والإزاحة
+  // الرأسية (تلقائي من جديد)؛ الزمن: 80 شمعة والطرف الأيمن كما هو. الآخر لا يُلمس.
+  const axisTapped = useCallback(
+    (axis: 'price' | 'time', tap: AxisTap) => {
+      const last = axis === 'price' ? priceAxisTap : timeAxisTap;
+      if (!isDoubleTap(last.current, tap)) {
+        last.current = tap;
+        return;
+      }
+      last.current = null;
+      if (axis === 'price') {
+        priceScaleRef.current = 1;
+        pricePanRef.current = 0;
+        setPriceScale(1);
+        setPricePan(0);
+      } else {
+        windowCountRef.current = 80;
+        xPanRef.current = 0;
+        setWindowCount(80);
+        setXPan(0);
+      }
+      schedulePublishSync(false);
+    },
+    [schedulePublishSync]
+  );
+
   useImperativeHandle(
     ref,
     () => ({
@@ -3605,15 +3677,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         onMoveShouldSetPanResponderCapture: () => canPan,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
-          beginDrag();
+          beginAxisDrag();
         },
         onPanResponderMove: (_, gesture) => {
-          applyChartDrag(0, gesture.dy);
+          scalePriceByDrag(gesture.dy);
         },
-        onPanResponderRelease: () => endDrag(),
+        onPanResponderRelease: (_, gesture) => {
+          if (Platform.OS !== 'web' && Math.hypot(gesture.dx, gesture.dy) < AXIS_TAP_SLOP) {
+            axisTapped('price', { at: Date.now(), x: gesture.x0, y: gesture.y0 });
+          }
+          endDrag();
+        },
         onPanResponderTerminate: () => endDrag(),
       }),
-    [canPan, beginDrag, endDrag, applyChartDrag]
+    [canPan, beginAxisDrag, endDrag, scalePriceByDrag, axisTapped]
   );
 
   const timeAxisPan = useMemo(
@@ -3625,15 +3702,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         onMoveShouldSetPanResponderCapture: () => canPan,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
-          beginDrag();
+          beginAxisDrag();
         },
         onPanResponderMove: (_, gesture) => {
-          applyChartDrag(gesture.dx, 0);
+          zoomTimeByDrag(gesture.dx);
         },
-        onPanResponderRelease: () => endDrag(),
+        onPanResponderRelease: (_, gesture) => {
+          if (Platform.OS !== 'web' && Math.hypot(gesture.dx, gesture.dy) < AXIS_TAP_SLOP) {
+            axisTapped('time', { at: Date.now(), x: gesture.x0, y: gesture.y0 });
+          }
+          endDrag();
+        },
         onPanResponderTerminate: () => endDrag(),
       }),
-    [canPan, beginDrag, endDrag, applyChartDrag]
+    [canPan, beginAxisDrag, endDrag, zoomTimeByDrag, axisTapped]
   );
 
   // React Native Web forwards these browser pointer events to the host element.
@@ -3816,10 +3898,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const point = pointerXY(event);
             webPricePointer.current = {
               active: true,
+              x: point.x,
               y: point.y,
               pointerId: point.pointerId,
             };
-            beginDrag();
+            beginAxisDrag();
             event.currentTarget?.setPointerCapture?.(point.pointerId);
           },
           onPointerMove: (event: PointerEventLike) => {
@@ -3827,10 +3910,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             event.preventDefault?.();
             event.stopPropagation?.();
             const point = pointerXY(event);
-            applyChartDrag(0, point.y - webPricePointer.current.y);
+            scalePriceByDrag(point.y - webPricePointer.current.y);
           },
           onPointerUp: (event: PointerEventLike) => {
             const point = pointerXY(event);
+            const start = webPricePointer.current;
+            if (start.active && Math.hypot(point.x - start.x, point.y - start.y) < AXIS_TAP_SLOP) {
+              axisTapped('price', { at: Date.now(), x: point.x, y: point.y });
+            }
             webPricePointer.current.active = false;
             event.currentTarget?.releasePointerCapture?.(point.pointerId);
             endDrag();
@@ -3853,9 +3940,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             webTimePointer.current = {
               active: true,
               x: point.x,
+              y: point.y,
               pointerId: point.pointerId,
             };
-            beginDrag();
+            beginAxisDrag();
             event.currentTarget?.setPointerCapture?.(point.pointerId);
           },
           onPointerMove: (event: PointerEventLike) => {
@@ -3863,10 +3951,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             event.preventDefault?.();
             event.stopPropagation?.();
             const point = pointerXY(event);
-            applyChartDrag(point.x - webTimePointer.current.x, 0);
+            zoomTimeByDrag(point.x - webTimePointer.current.x);
           },
           onPointerUp: (event: PointerEventLike) => {
             const point = pointerXY(event);
+            const start = webTimePointer.current;
+            if (start.active && Math.hypot(point.x - start.x, point.y - start.y) < AXIS_TAP_SLOP) {
+              axisTapped('time', { at: Date.now(), x: point.x, y: point.y });
+            }
             webTimePointer.current.active = false;
             event.currentTarget?.releasePointerCapture?.(point.pointerId);
             endDrag();
