@@ -398,3 +398,34 @@
 
 **يحتاج جهازاً**: `journalEmpty` صار ثلاثة أسطر تقريباً (الكردية أطولها)؛ `journalSizeUnitsNoFix` بخطّ التحذير؛
 و`riskCalcSpreadNote` جملتان حين تُوصل.
+
+## 2026-09-24 — التشغيلة الثالثة عشرة
+
+تتبع `7c9ec60` (وكيل الأدوات): **كل طلبات التنسيق السابقة وُصلت** — `riskCalcLogBlockedMismatch`، `riskCalcMarginMaxLots`،
+`riskCalcSlMismatchNarrower`، `journalSizeUnitsFix/NoFix`، ومفاتيح السبريد الثلاثة. التحقّق هذه المرّة بـNode 22 من `/tmp`:
+`tsc --strict --noEmit` على `locales.ts` نظيف؛ 829 مفتاحاً بكل لغة (ar/en-US/en-GB/ku)؛ ولا مفتاح بعناصر `{…}` مختلفة
+بين اللغات؛ ولا نصّ إنجليزي منسيّ بالعربية أو الكردية (سوى `name@example.com` و«RSI + MACD» عمداً). **لم يُشغَّل التطبيق.**
+
+1. **«1% → 0.46 lot» بلا جملة** — سطر السبريد بالنتيجة يُلحق أكبر لوت يحفظ النسبة برمز سهم فقط (تعليق الكود نفسه يقول
+   «بلا جملة تُترجم»)، كما كان «≤ 0.13 lot» بالهامش. `riskCalcSpreadLotsWithin` (ar/en/ku): «لتبقى مخاطرتك {pct}% شاملة
+   السبريد: {lots} lot».
+2. **سبريد فوق 500 يقول «رقم غير مفهوم»** — `parseSpreadPips` يرفض ما فوق `MAX_SPREAD_PIPS` لأنه غالباً سعرٌ مكتوب بدل
+   نقاط، لكن الرسالة المعروضة هي `invalidNumberHint` العامّة، والرقم مفهوم تماماً. `riskCalcSpreadTooWide`: «سبريد {n} نقطة
+   غير واقعي — هل كتبتَ سعراً بدل النقاط؟ اكتب الفرق بين Ask وBid بالنقاط (مثل 1.5)».
+3. **`FEATURE-INVENTORY.md`** — «لا خانة سبريد بعد» صار خاطئاً. تحقّقتُ بالكود: خانة اختيارية (فارغة = 0، فوق 500 مرفوضة)،
+   لا تُحفظ وتُمسح بتبديل الأداة (`useEffect` على `spec?.symbol`)، اللوت الرئيسي من الوقف وحده، والسطر يعرض المخاطرة شاملة
+   السبريد وأكبر لوت يحفظ النسبة حين يكون أصغر (`spreadRisk`)؛ العمولة غير محسوبة؛ ولا يُنقل السبريد للدفتر.
+4. **`STORE-LISTING.md`** (ar/en): سطر الحاسبة يذكر «خانة سبريد اختيارية تُريك مخاطرتك شاملةً له». الوصف الكامل بعد
+   التعديل: 2308 حرفاً (ar) و2864 (en) — دون 4000.
+
+### طلب تنسيق — لوكيل الأدوات (`PositionSizePanel.tsx`)
+- ~776: `` ` · ${riskNum}% → ${lots} lot` `` → سطر `resultMeta` مستقلّ تحته:
+  `t.riskCalcSpreadLotsWithin.replace('{pct}', String(riskNum)).replace('{lots}', withSpread.lotsWithin.toFixed(2))`.
+- ~733: حين `badNumber` سببه سبريد > `MAX_SPREAD_PIPS` وحده (مفهوم رقماً)، اعرض
+  `t.riskCalcSpreadTooWide.replace('{n}', …)` بدل `invalidNumberHint` — ربما دالّة صغيرة `spreadTooWide(raw)` بـ`positionSize.ts`.
+
+**خارج نطاقي ويستحقّ عملاً**: القائم: `backend/openrouter_ai.py` «خبير تداول»، `lot` الثابتة، `₴` لتبويب الدفتر،
+و`extra.apiUrl` المحلي ورابط سياسة الخصوصية (⛔ بـ`RELEASE-MOBILE.md` — ينتظران أنس).
+
+**يحتاج جهازاً**: `riskCalcSpreadTooWide` جملتان بخطّ التحذير (الكردية أطولها)؛ `riskCalcSpreadLotsWithin` في RTL
+(«{pct}%» و«lot» لاتينيان داخل جملة عربية).

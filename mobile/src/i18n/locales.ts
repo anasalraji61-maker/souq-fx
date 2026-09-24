@@ -324,6 +324,8 @@ export type Dict = {
   riskCalcSpread: string;
   riskCalcSpreadNote: string;
   riskCalcRiskWithSpread: string;
+  riskCalcSpreadLotsWithin: string;
+  riskCalcSpreadTooWide: string;
   riskCalcUseLivePrice: string;
   riskCalcUseLivePriceA11y: string;
   riskCalcLiveFilled: string;
@@ -1188,6 +1190,8 @@ const ar: Dict = {
   riskCalcSpread: 'السبريد (بالنقاط، اختياري)',
   riskCalcSpreadNote: 'السبريد يُضاف عادةً إلى مسافة الوقف: وقف 20 نقطة بسبريد 1.5 يخسر قرابة 21.5 عند ضربه. انظر السبريد الحالي بمنصّتك — يتّسع عند الأخبار وافتتاح الأسبوع.',
   riskCalcRiskWithSpread: 'المخاطرة شاملة السبريد',
+  riskCalcSpreadLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة السبريد: {lots} lot',
+  riskCalcSpreadTooWide: 'سبريد {n} نقطة غير واقعي — هل كتبتَ سعراً بدل النقاط؟ اكتب الفرق بين Ask وBid بالنقاط (مثل 1.5).',
   riskCalcUseLivePrice: '↓ الدخول = السعر الحالي',
   riskCalcUseLivePriceA11y: 'تعبئة خانة الدخول بسعر السوق الحالي (Ask للشراء وBid للبيع حسب موضع الوقف)',
   riskCalcLiveFilled: '✓ الدخول من السعر الحالي:',
@@ -2060,6 +2064,8 @@ const enUS: Dict = {
   riskCalcSpread: 'Spread (pips, optional)',
   riskCalcSpreadNote: 'Spread usually adds to your stop distance: a 20-pip stop with a 1.5 spread loses about 21.5 when hit. Check the current spread on your platform — it widens around news and the weekly open.',
   riskCalcRiskWithSpread: 'Risk including spread',
+  riskCalcSpreadLotsWithin: 'To keep your risk at {pct}% including spread: {lots} lot',
+  riskCalcSpreadTooWide: 'A {n}-pip spread isn’t realistic — did you type a price instead of pips? Enter the gap between Ask and Bid in pips (e.g. 1.5).',
   riskCalcUseLivePrice: '↓ Entry = current price',
   riskCalcUseLivePriceA11y: 'Fill the entry with the current market price (Ask for buy, Bid for sell, from where the stop sits)',
   riskCalcLiveFilled: '✓ Entry from the current price:',
@@ -2958,6 +2964,8 @@ const ku: Dict = {
   riskCalcSpread: 'سپرێد (pip، ئیختیاری)',
   riskCalcSpreadNote: 'سپرێد زۆرجار دەچێتە سەر دووری وەستان: وەستانی 20 pip بە سپرێدی 1.5 نزیکەی 21.5 لەدەست دەدات کاتێک لێی دەدرێت. سپرێدی ئێستا لە پلاتفۆرمەکەت ببینە — لە کاتی هەواڵ و کرانەوەی هەفتەدا فراوانتر دەبێت.',
   riskCalcRiskWithSpread: 'مەترسی لەگەڵ سپرێد',
+  riskCalcSpreadLotsWithin: 'بۆ ئەوەی مەترسییەکەت لەگەڵ سپرێد لە {pct}% بمێنێتەوە: {lots} lot',
+  riskCalcSpreadTooWide: 'سپرێدی {n} pip ئاسایی نییە — نرخت نووسیوە لە جیاتی pip؟ جیاوازی نێوان Ask و Bid بە pip بنووسە (وەک 1.5).',
   riskCalcUseLivePrice: '↓ چوونەژوورەوە = نرخی ئێستا',
   riskCalcUseLivePriceA11y: 'پڕکردنەوەی خانەی چوونەژوورەوە بە نرخی بازاڕی ئێستا (Ask بۆ کڕین و Bid بۆ فرۆشتن بەپێی شوێنی وەستان)',
   riskCalcLiveFilled: '✓ چوونەژوورەوە لە نرخی ئێستاوە:',
