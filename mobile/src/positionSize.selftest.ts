@@ -439,3 +439,34 @@ console.log('positionSize riskForLots selftest OK');
 }
 
 console.log('positionSize riskInQuoteCcy selftest OK');
+
+// لاحقة الوسيط (الدفتر يقبلها عمداً): الأداة نفسها بمواصفاتها، والرمز القانوني بلا لاحقة
+{
+  const same = (raw: string, canon: string) => {
+    const s = instrumentSpec(raw);
+    assert.ok(s, `${raw} should resolve`);
+    assert.deepEqual(s, instrumentSpec(canon), raw);
+  };
+  same('EURUSD.m', 'EURUSD');
+  same('EURUSDm', 'EURUSD');
+  same('XAUUSD.pro', 'XAUUSD');
+  same('GBPJPY-ECN', 'GBPJPY');
+  same('USDJPY#', 'USDJPY');
+  same('xagusd.m', 'XAGUSD');
+  same('EUR/USD.m', 'EURUSD');
+  same('EURUSD+', 'EURUSD');
+  assert.equal(instrumentSpec('XAUUSD.m')!.symbol, 'XAUUSD');
+  // حرف ملاصق غير M قد يكون رمزاً آخر (يورو/تيثر) — يبقى مرفوضاً بدل التخمين
+  assert.equal(instrumentSpec('EURUSDT'), null);
+  assert.equal(instrumentSpec('EURUSDX'), null);
+  // لاحقة طويلة، أو أساس غير ورقي، يبقيان مرفوضين
+  assert.equal(instrumentSpec('EURUSD.abcdef'), null);
+  assert.equal(instrumentSpec('BTCUSD.m'), null);
+  assert.equal(instrumentSpec('XAUXAG.m'), null);
+  assert.equal(instrumentSpec('US30.m'), null);
+  // ما كان يغيب بصمت عن صفقة الدفتر: المال المعرَّض والنقاط
+  assert.deepEqual(riskInQuoteCcy({ symbol: 'XAUUSD.m', entry: 2650, sl: 2645, lots: 0.1 }), { amount: 50, ccy: 'USD' });
+  assert.equal(pipsBetween(instrumentSpec('USDJPYm')!, 157.4, 157.2), 20);
+}
+
+console.log('positionSize broker-suffix selftest OK');

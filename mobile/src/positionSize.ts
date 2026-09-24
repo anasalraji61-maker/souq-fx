@@ -53,9 +53,23 @@ export function normalizeSymbol(raw: string): string {
   return raw.trim().toUpperCase().replace(/[^A-Z]/g, '');
 }
 
+/**
+ * لاحقة الوسيط على رمز فوركس/معدن: «EURUSD.m»، «XAUUSD.pro»، «GBPJPY-ECN»، «USDJPY#»، و«EURUSDm»
+ * (حرف m ملاصق — شائع جداً لدى وسطاء التجزئة بالمنطقة). الدفتر يقبل هذه الرموز عمداً (`journalSymbol`)
+ * لأن المتداول ينسخ الرمز من منصّته، لكن `normalizeSymbol` كان يُخرج «EURUSDM» (7 أحرف) فتُرفض الأداة:
+ * صفقة «XAUUSD.m» تُحفظ بلا نقاط ولا مخاطرة بالمال ولا شرائح هدف بالنسبة — بصمت، بينما «XAUUSD» بجانبها
+ * تُحسب كاملة. اللاحقة **بفاصل** (`. - _ # +`) حتى 5 أحرف/أرقام، أو **M وحدها ملاصقة** لا غير: حرف آخر
+ * ملاصق قد يكون جزءاً من رمز آخر («EURUSDT» زوج يورو/تيثر رقمي) فيُترك مرفوضاً بدل التخمين.
+ */
+const BROKER_SUFFIXED = /^([A-Z]{3})[/\s_-]?([A-Z]{3})(?:[.\-_#+][A-Z0-9]{0,5}|M)$/;
+
 export function instrumentSpec(raw: string): InstrumentSpec | null {
-  const symbol = normalizeSymbol(raw);
-  if (!/^[A-Z]{6}$/.test(symbol)) return null;
+  let symbol = normalizeSymbol(raw);
+  if (!/^[A-Z]{6}$/.test(symbol)) {
+    const m = BROKER_SUFFIXED.exec(raw.trim().toUpperCase());
+    if (!m) return null;
+    symbol = m[1] + m[2];
+  }
   const base = symbol.slice(0, 3);
   const quote = symbol.slice(3, 6);
   if (base === quote) return null;

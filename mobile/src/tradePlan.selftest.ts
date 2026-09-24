@@ -345,3 +345,20 @@ for (const raw of ['eur/usd', 'x a u / u s d', 'A-B', 'nas-100', 'a.b.c']) {
 }
 
 console.log('tradePlan targetAtRR selftest OK');
+
+// رمز الدفتر بلاحقة الوسيط كما يحفظه `journalSymbol` («XAUUSD.M») يُقاس بمسطرة الأداة نفسها
+{
+  const sym = journalSymbol('xauusd.m')!;
+  assert.equal(sym, 'XAUUSD.M');
+  assert.deepEqual(
+    realizedMove({ symbol: sym, side: 'buy', entry: 2650, exit: 2655 }),
+    realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2650, exit: 2655 })
+  );
+  assert.equal(realizedMove({ symbol: sym, side: 'buy', entry: 2650, exit: 2655 })!.pips, 50);
+  const p = analyzePlan({ symbol: 'EURUSDM', side: 'sell', entry: 1.085, sl: 1.0875, tp: 1.08 });
+  assert.equal(p.riskPips, 25);
+  assert.equal(p.rewardPips, 50);
+  assert.equal(targetAtRR({ symbol: 'USDJPY.pro', side: 'buy', entry: 157.4, sl: 157.2, rr: 2 }), 157.8);
+}
+
+console.log('tradePlan broker-suffix selftest OK');
