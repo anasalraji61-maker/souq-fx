@@ -41,6 +41,7 @@ import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
 import { candleBodyWidth } from './candleGeometry';
+import { zoomWindow } from './zoomWindow';
 import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime, stepCrossBar } from './crossAnchor';
 import {
   axisTickCount,
@@ -2739,23 +2740,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     schedulePublishSync(true);
   }, [schedulePublishSync]);
 
+  // حول المركز، إلا عند متابعة الحيّ (offset 0) فالطرف الأيمن مثبَّت — `zoomWindow.ts`.
   const zoomAroundCenter = useCallback(
     (factor: number) => {
       const current = windowCountRef.current;
-      const next = Math.max(2, Math.min(1000, Math.round(current * factor)));
-      if (next === current) return;
-      const allLen = sourceRef.current.all.length;
-      const off = offsetRef.current;
-      const oldEnd = allLen - off;
-      const oldStart = Math.max(0, oldEnd - current);
-      const center = (oldStart + oldEnd) / 2;
-      let newEnd = Math.round(center + next / 2);
-      newEnd = Math.min(allLen, Math.max(next, newEnd));
-      const nextOffset = Math.max(0, allLen - newEnd);
-      windowCountRef.current = next;
-      offsetRef.current = nextOffset;
-      setWindowCount(next);
-      setOffset(nextOffset);
+      const z = zoomWindow(sourceRef.current.all.length, current, offsetRef.current, factor);
+      if (z.count === current && z.offset === offsetRef.current) return;
+      windowCountRef.current = z.count;
+      offsetRef.current = z.offset;
+      setWindowCount(z.count);
+      setOffset(z.offset);
       schedulePublishSync(false);
     },
     [schedulePublishSync]
@@ -3510,9 +3504,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 styles.zoomBtn,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
-              onPress={() =>
-                setWindowCount((n) => Math.min(1000, n + Math.max(1, Math.round(n * 0.25))))
-              }
+              onPress={() => zoomAroundCenter(1.25)}
             >
               <Text style={styles.zoomText}>−</Text>
             </Pressable>
@@ -3523,9 +3515,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 styles.zoomBtn,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
-              onPress={() =>
-                setWindowCount((n) => Math.max(2, n - Math.max(1, Math.round(n * 0.25))))
-              }
+              onPress={() => zoomAroundCenter(0.8)}
             >
               <Text style={styles.zoomText}>+</Text>
             </Pressable>
