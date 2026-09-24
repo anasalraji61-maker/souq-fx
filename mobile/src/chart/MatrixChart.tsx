@@ -1188,7 +1188,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // مرساة التقاطع **بزمن الشمعة** لا بفهرسها داخل النافذة — راجع `crossAnchor.ts`:
   // النافذة متحرّكة، فالفهرس وحده يجعل القراءة تتبع الخانة لا الشمعة المختارة.
   // `price` سعر موضع اللمسة (بالمغناطيس إن كان مفعّلاً) — `null` ⇒ لا خطّ أفقي.
-  const [cross, setCross] = useState<{ time: number; price: number | null } | null>(null);
+  // `ahead`: خانات فارغة يمين الشمعة `time` (منطقة المستقبل) — الخطّ ووسم الزمن هناك، والقيم من الشمعة.
+  const [cross, setCross] = useState<{ time: number; price: number | null; ahead?: number } | null>(null);
   // تقاطع الويب يتبع الفأرة بلا نقر (معاينة)، والنقرة **تثبّته**. المعاينة بلا زرّ 🔔: الزرّ
   // خارج اللوح، فالطريق إليه يمرّ بمستويات أخرى ثم يخرج من اللوح فتُمسح المعاينة — التنبيه
   // يُوضع من تقاطع مثبَّت فقط. `crossPinned` مرآة بـref لأن معالجات المؤشر تُقرأ خارج الرسم.
@@ -3542,18 +3543,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
   // التقاطع عند (x, y) داخل اللوح: الشمعة من x، والسعر من y لا من إغلاقها.
   const placeCross = (x: number, y: number, hover = false) => {
-    const candle = source.plot[hitIndex(x)];
+    const local = hitIndex(x);
+    const candle = source.plot[local];
     if (!candle) return;
+    // يمين آخر شمعة (منطقة المستقبل بعد سحب الشارت): الخطّ يتبع الإصبع لا يلتصق بالشمعة الحيّة،
+    // ووسم الزمن يُسقَط بخطوة الفريم. لا على Renko/Kagi/P&F/Range — خانتها ليست زمناً.
+    const syntheticX = kind === 'renko' || kind === 'kagi' || kind === 'pnf' || kind === 'range';
+    const ahead = syntheticX ? 0 : Math.max(0, drawIndex(x) - local);
     const raw = priceAtY(y);
     // 14px حول الإصبع بوحدة السعر عند موضعه (يصحّ مع المقياس اللوغاريتمي كذلك).
     const snapTol = Math.abs(priceAtY(y - CROSS_SNAP_PX) - raw);
-    const price = crossPriceAt(raw, candle, magnet, symbolPriceDecimals(series.symbol), snapTol, priceDecimalsRef);
+    // بالمستقبل لا شمعة تحت الإصبع ⇒ بلا مغناطيس.
+    const price = crossPriceAt(raw, ahead ? null : candle, magnet, symbolPriceDecimals(series.symbol), snapTol, priceDecimalsRef);
     crossPinned.current = !hover;
     crossFromSync.current = false;
     setCrossHover(hover);
     // حركة الفأرة داخل الشمعة نفسها وعلى السعر المقرَّب نفسه لا تعيد رسم الشارت كلّه.
-    if (cross && cross.time === candle.time && cross.price === price) return;
-    setCross({ time: candle.time, price });
+    if (cross && cross.time === candle.time && cross.price === price && (cross.ahead ?? 0) === ahead) return;
+    setCross(ahead ? { time: candle.time, price, ahead } : { time: candle.time, price });
   };
 
   const onChartPress = (x: number, y: number) => {
@@ -4662,7 +4669,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const crossCandle = crossIndex != null ? source.plot[crossIndex] ?? null : null;
   // Recomputed every render so the crosshair and its axis tags stay glued to the
   // candle after zoom buttons / live ticks.
-  const crossX = crossIndex != null && crossCandle ? xOf(crossIndex) : 0;
+  // `ahead` يصحّ لآخر شمعة بالنافذة وحدها — بعد تيك يفتح شمعة جديدة أو تمرير يسقط.
+  const crossAhead =
+    cross?.ahead && crossIndex != null && crossIndex === source.plot.length - 1 ? cross.ahead : 0;
+  const crossX = crossIndex != null && crossCandle ? xOf(crossIndex + crossAhead) : 0;
   const denseOhlc = dense ? crossCandle : null;
   // «O 1.08520  H 1.08545  L 1.08501  C 1.08532» ≈ 40 حرفاً × ~5.4px (9pt عريض) ≈ 216px؛ ومع
   // «  ↕ 4.4 pip» ≈ 280px — فالمدى بالنقاط للوح العريض وحده، ولا يُقصّ الإغلاق بنقاط حذف.
@@ -4966,7 +4976,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     selectionTags.some((t) => boxesTouch(start, PRICE_LABEL_H, t.top, PRICE_TAG_H, TAG_CLEAR_GAP));
   // الوسم يتّسع لسنة شمعة من سنة سابقة (`formatCrossTime`) — بالعرض الثابت كانت الساعة تُقصّ «…».
   const crossTimeText = crossCandle
-    ? formatCrossTime(barTime(crossCandle), visibleTimeSpan, tr.mcMonths, dayCandles)
+    ? formatCrossTime(
+        barTime(crossCandle) + crossAhead * timeframeStepSec(series.timeframe),
+        visibleTimeSpan,
+        tr.mcMonths,
+        dayCandles
+      )
     : '';
   const crossTimeTagW = / '\d\d /.test(crossTimeText) ? CROSS_TIME_TAG_W + 22 : CROSS_TIME_TAG_W;
   const crossTimeTagLeft = crossCandle
