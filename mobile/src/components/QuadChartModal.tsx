@@ -21,6 +21,7 @@ import { normalizeProvenance } from '../chart/dataSource';
 import { anchorDemoSeries } from '../chart/demoAnchor';
 import { formatPrice } from '../chart/math';
 import { formatPct } from '../chart/dailyChange';
+import { createSeriesCache, seriesCacheKey } from '../chart/seriesCache';
 import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
@@ -36,6 +37,9 @@ const NO_INDICATORS: never[] = [];
 
 /** حشو الخلية وحدّها ورأسها (الرمز والسعر) فوق الشارت — راجع `phoneCellH`. */
 const PHONE_CELL_CHROME = 2 * spacing.xs + 2 + 18 + spacing.xs;
+
+/** آخر شموع ناجحة لكل (رمز، فريم) عبر الجلسة — الرجوع لفريم أو إعادة فتح الرباعي فوري. */
+const quadSeriesCache = createSeriesCache<ChartSeries>();
 
 const DEFAULT: [string, string, string, string] = ['EURUSD', 'GBPUSD', 'XAUUSD', 'DXY'];
 const BASES: Record<string, number> = {
@@ -115,15 +119,25 @@ export function QuadChartModal({
     if (!visible) return;
     let alive = true;
     // حتى ينتهي جلب الرموز كانت الخلايا تعرض شموع الفريم/الرموز السابقة
-    // (وسعرها بالرأس) بلا أي أثر. الآن مؤشّر تحميل صريح بدل بيانات قديمة تُقرأ كحالية.
+    // (وسعرها بالرأس) بلا أي أثر. الآن مؤشّر تحميل صريح بدل بيانات قديمة تُقرأ كحالية —
+    // إلا شموع الرمز/الفريم **نفسه** من ذاكرة الجلسة (`seriesCache`، 5 دقائق على الأكثر).
     // والجلب كان ينتظر الأربعة **واحداً بعد واحد** ثم يعرضها دفعة واحدة: أبطأ رمز يحجب
     // الثلاثة الجاهزة، والانتظار مجموع أزمنتها. الآن متوازٍ، وكل خلية تُملأ لحظة وصول شموعها.
-    setSeries([null, null, null, null]);
+    // الرجوع لفريم فُتح قبل قليل: شموعه المحفوظة فوراً بدل مؤشّر التحميل، والجلب يستبدلها.
+    setSeries(symbols.map((sym) => quadSeriesCache.get(seriesCacheKey(sym, tf))));
     pendingAnchor.current = [false, false, false, false];
     symbols.forEach((sym, i) => {
+      const key = seriesCacheKey(sym, tf);
       api
         .chart(sym, tf)
+        .then((s) => {
+          if (normalizeProvenance(s.data_source).kind !== 'demo') quadSeriesCache.put(key, s);
+          return s;
+        })
         .catch(() => {
+          // فشل التحديث وبالذاكرة شموع حقيقية حديثة ⇒ تبقى هي لا الوهمية.
+          const cached = quadSeriesCache.get(key);
+          if (cached) return cached;
           const mock = mockSeries(sym, BASES[sym] ?? 1, tf, 80);
           const tp = ticksRef.current[sym]?.price;
           if (tp != null && Number.isFinite(tp) && tp > 0) return anchorDemoSeries(mock, tp);
