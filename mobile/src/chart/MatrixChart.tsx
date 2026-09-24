@@ -1282,26 +1282,39 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     return () => clearInterval(id);
   }, [replayPlaying, replayOn]);
 
+  // القالب يُحمَّل عند التركيب (وعند تبدّل `interactive`) لا بكل تبديل زوج أو تغيّر مؤشّرات
+  // الأمّ: كان يعيد نوع الشارت واللوغاريتمي والمغناطيس للقالب مع كل زوج — Heikin مختار
+  // بالشريط يصير شموعاً عادية والزرّ ما زال مضاءً — ويمسح المؤشّرات المضافة. القيم الأوّلية
+  // من الأمّ تُقرأ من مرجع، ولكلٍّ منها تأثيره أعلاه حين يتغيّر فعلاً.
+  const initialPropsRef = useRef({ initialLens, initialKind, initialIndicators });
+  initialPropsRef.current = { initialLens, initialKind, initialIndicators };
   useEffect(() => {
+    const init = initialPropsRef.current;
     if (!interactive) {
       setPineOn(false);
       setPineFormula('');
-      setLens(initialLens ?? 'clean');
-      setExtraInd(initialIndicators ?? []);
+      setLens(init.initialLens ?? 'clean');
+      setExtraInd(init.initialIndicators ?? []);
       return;
     }
+    let alive = true;
     loadTemplates().then((t) => {
+      if (!alive) return;
       const tpl = t[0] ?? DEFAULT_TEMPLATE;
-      setKind(tpl.kind);
-      if (!initialLens) setLens(tpl.lens ?? 'clean');
-      if (!initialIndicators?.length) setExtraInd(tpl.indicators ?? []);
+      const cur = initialPropsRef.current;
+      if (!cur.initialKind) setKind(tpl.kind);
+      if (!cur.initialLens) setLens(tpl.lens ?? 'clean');
+      if (!cur.initialIndicators?.length) setExtraInd(tpl.indicators ?? []);
       // Pine اختياري — لا نفعّله تلقائياً من القالب
       setPineFormula(tpl.pineFormula || '');
       setPineOn(false);
       setLogScale(tpl.logScale);
       setMagnet(tpl.magnet);
     });
-  }, [series.symbol, interactive, initialLens, initialIndicators]);
+    return () => {
+      alive = false;
+    };
+  }, [interactive]);
 
   useEffect(() => {
     if (!drawingsPersisted) return;

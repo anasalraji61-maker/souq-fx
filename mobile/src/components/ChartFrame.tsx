@@ -48,6 +48,10 @@ type Props = {
   syncBadge?: 'leader' | 'follow' | 'partial' | 'off' | null;
 };
 
+// مصفوفة ثابتة لا `[]` بالسطر: الجديدة بكل رسم (كل تيك) تُطلق تأثير `initialIndicators`
+// بالشارت فيعيد رسمه مرّة ثانية ويمسح أي مؤشّر أضافه المتداول.
+const NO_INDICATORS: never[] = [];
+
 const HEIGHT: Record<Size, number> = {
   hero: FRAME_CHART_H,
   large: FRAME_CHART_H,
@@ -389,7 +393,7 @@ export function ChartFrame({
           dense={fill}
           panSpeed={panSpeed}
           initialLens="clean"
-          initialIndicators={[]}
+          initialIndicators={NO_INDICATORS}
           syncWindow={syncWindow}
           onSyncWindow={onSyncWindow}
           syncFollow={syncFollow}

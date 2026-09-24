@@ -29,6 +29,10 @@ type Props = {
   timeframe?: Timeframe;
 };
 
+// مصفوفة ثابتة لا `[]` بالسطر: الجديدة بكل رسم (كل تيك) تُطلق تأثير `initialIndicators`
+// بالشارت فيعيد رسمه مرّة ثانية ويمسح أي مؤشّر أضافه المتداول.
+const NO_INDICATORS: never[] = [];
+
 const DEFAULT: [string, string, string, string] = ['EURUSD', 'GBPUSD', 'XAUUSD', 'DXY'];
 const BASES: Record<string, number> = {
   EURUSD: 1.0854,
@@ -231,7 +235,7 @@ export function QuadChartModal({
                     liveTickSource={ticks[sym]?.source ?? null}
                     accent={sym === 'DXY' ? colors.dxy : colors.accent}
                     initialLens="clean"
-                    initialIndicators={[]}
+                    initialIndicators={NO_INDICATORS}
                     panControls={!syncTime || isLeader}
                     syncWindow={following ? syncWindow : null}
                     onSyncWindow={syncTime && isLeader ? setSyncWindow : undefined}
