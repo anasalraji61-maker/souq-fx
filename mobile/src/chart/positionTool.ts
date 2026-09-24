@@ -101,3 +101,70 @@ export function positionLabels(levels: PositionLevels, symbol: string): { target
     stop: `SL ${formatPrice(levels.stop, symbol)} · ${distanceText(symbol, levels.entry, levels.stop)}`,
   };
 }
+
+export type PositionOutcomeState = 'open' | 'target' | 'stop' | 'ended';
+
+export type PositionOutcome = {
+  /** `open` الصندوق يمتدّ للشمعة الأخيرة ولم يُلمس حدّ؛ `ended` انتهى الصندوق قبلها بلا لمس. */
+  state: PositionOutcomeState;
+  /** سعر الخروج: الهدف/الوقف عند اللمس، وإلا إغلاق آخر شمعة داخل الصندوق. */
+  exit: number;
+  /** فهرس الشمعة التي حُسب عندها الخروج (بفهارس السلسلة نفسها). */
+  exitIndex: number;
+  /** الربح/الخسارة بوحدة المخاطرة: +2 عند هدف R:R 2، و−1 عند الوقف. */
+  r: number;
+};
+
+type Bar = { high: number; low: number; close: number };
+
+/**
+ * نتيجة الصفقة المرسومة على الشموع كما يفعل TradingView: الدخول عند سعره بشمعة الدخول، ثم أوّل
+ * شمعة **بعدها** داخل الصندوق تلمس الهدف أو الوقف. شمعة تلمسهما معاً ⇒ الوقف (لا يُعرف الأسبق داخل
+ * الشمعة، والافتراض المتفائل يعِد بربح لم يحدث). لم يُلمس شيء ⇒ إغلاق آخر شمعة داخل الصندوق.
+ *
+ * `lastIndex` آخر شمعة **معروضة** (بالإعادة: خطوة الإعادة لا نهاية السلسلة — فلا تُكشف النتيجة
+ * قبل أوانها). صندوق بلا عرض زمني (الطرفان على الشمعة نفسها) ⇒ مفتوح حتى آخر شمعة. دخول بعد آخر
+ * شمعة (رسم بمنطقة المستقبل) ⇒ null.
+ */
+export function positionOutcome(
+  levels: PositionLevels,
+  bars: readonly Bar[],
+  entryIndex: number,
+  endIndex: number,
+  lastIndex: number
+): PositionOutcome | null {
+  const last = Math.min(lastIndex, bars.length - 1);
+  if (!(entryIndex >= 0) || entryIndex > last) return null;
+  const risk = Math.abs(levels.entry - levels.stop);
+  if (!(risk > 0)) return null;
+  const boxEnd = endIndex > entryIndex ? endIndex : Infinity;
+  const to = Math.min(boxEnd, last);
+  const long = levels.side === 'long';
+  const rOf = (exit: number) => ((long ? exit - levels.entry : levels.entry - exit) / risk);
+  for (let i = entryIndex + 1; i <= to; i++) {
+    const b = bars[i];
+    if (!b) continue;
+    const hitStop = long ? b.low <= levels.stop : b.high >= levels.stop;
+    if (hitStop) return { state: 'stop', exit: levels.stop, exitIndex: i, r: -1 };
+    const hitTarget = long ? b.high >= levels.target : b.low <= levels.target;
+    if (hitTarget) return { state: 'target', exit: levels.target, exitIndex: i, r: levels.rr };
+  }
+  const exit = bars[to]?.close;
+  if (exit == null || !Number.isFinite(exit)) return null;
+  return { state: to >= last && boxEnd >= last ? 'open' : 'ended', exit, exitIndex: to, r: rOf(exit) };
+}
+
+/**
+ * وسم خطّ الدخول: «+12.3 pip · +0.49R» مفتوحة، «TP ✓ +50.0 pip · +2R» عند الهدف، «SL ✕ −25.0 pip · −1R»
+ * عند الوقف. الإشارة دائماً ظاهرة (+/−) لأن اللون وحده لا يكفي لمن لا يميّز الأحمر من الأخضر.
+ */
+export function positionOutcomeText(levels: PositionLevels, outcome: PositionOutcome, symbol: string): string {
+  const up = outcome.r >= 0;
+  const sign = up ? '+' : '−';
+  const spec = instrumentSpec(symbol);
+  const pips = spec ? pipsBetween(spec, levels.entry, outcome.exit) : null;
+  const dist = pips != null ? `${sign}${pipsNumber(pips)} pip` : `${sign}${formatPrice(Math.abs(outcome.exit - levels.entry), symbol)}`;
+  const r = `${sign}${rrText(Math.abs(outcome.r))}R`;
+  const head = outcome.state === 'target' ? 'TP ✓ ' : outcome.state === 'stop' ? 'SL ✕ ' : '';
+  return `${head}${dist} · ${r}`;
+}

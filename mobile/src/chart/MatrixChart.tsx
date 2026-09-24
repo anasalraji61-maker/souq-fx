@@ -81,6 +81,8 @@ import {
   isPositionTool,
   positionLabels,
   positionLevels,
+  positionOutcome,
+  positionOutcomeText,
   positionStop,
   rrFromTarget,
   type PositionSide,
@@ -2802,6 +2804,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const box = positionBox(side, a, b, rr, a.index - source.start, b.index - source.start);
     const labels = positionLabels(box.lv, series.symbol);
     const width = box.right - box.left;
+    // النتيجة على الشموع الحقيقية (هايكن آشي أسعار مُركّبة بالفهارس نفسها)، حتى آخر شمعة معروضة —
+    // بالإعادة لا تُكشف قبل أوانها.
+    const outcome = positionOutcome(
+      box.lv,
+      kind === 'heikin' ? liveSeries.candles : source.all,
+      a.index,
+      b.index,
+      source.start + source.plot.length - 1
+    );
+    const outcomeUp = outcome != null && outcome.r >= 0;
+    const xExit = outcome ? Math.min(box.right, xOf(outcome.exitIndex - source.start)) : 0;
     const band = (y1: number, y2: number, fill: string, edge: string) => (
       <View
         style={{
@@ -2848,8 +2861,39 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             borderColor: color,
           }}
         />
+        {outcome && xExit > box.xEntry ? (
+          // ما قطعه السعر من الدخول إلى الخروج/السعر الجاري — أغمق من الصندوق كما في TradingView.
+          <View
+            style={{
+              position: 'absolute',
+              left: box.xEntry,
+              top: Math.min(box.yEntry, yOf(outcome.exit)),
+              width: xExit - box.xEntry,
+              height: Math.max(1, Math.abs(yOf(outcome.exit) - box.yEntry)),
+              backgroundColor: outcomeUp ? 'rgba(34,197,94,0.22)' : 'rgba(244,63,94,0.22)',
+            }}
+          />
+        ) : null}
         {tag(box.yTarget, box.yTarget < box.yEntry, labels.target, colors.bull)}
         {tag(box.yStop, box.yStop < box.yEntry, labels.stop, colors.bear)}
+        {outcome ? (
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.positionLabel,
+              {
+                // بعد مقبض الدخول لا فوقه.
+                left: box.left + 10,
+                top: box.yEntry - 7,
+                maxWidth: Math.max(60, chartPlotW - box.left - 12),
+                color: outcomeUp ? colors.bull : colors.bear,
+                borderColor: outcomeUp ? colors.bull : colors.bear,
+              },
+            ]}
+          >
+            {positionOutcomeText(box.lv, outcome, series.symbol)}
+          </Text>
+        ) : null}
         {sel && !preview ? (
           <>
             <View style={[styles.grabHandle, { left: box.xEntry, top: box.yEntry, borderColor: color }]} />

@@ -5,6 +5,8 @@ import {
   isPositionTool,
   positionLabels,
   positionLevels,
+  positionOutcome,
+  positionOutcomeText,
   positionStop,
   rrFromTarget,
   rrText,
@@ -64,5 +66,45 @@ assert.equal(lab.stop, 'SL 2655.00 · 50.0 pip');
 // بلا مواصفة pip ⇒ فرق السعر بخانات الرمز
 lab = positionLabels(positionLevels('long', 104.2, 104, 2, 'DXY'), 'DXY');
 assert.equal(lab.stop, 'SL 104.000 · 0.200');
+
+// النتيجة على الشموع: شراء 1.08500، وقف 1.08250، هدف 1.09000
+const PL = positionLevels('long', 1.085, 1.0825, 2, 'EURUSD');
+const bar = (low: number, high: number, close: number) => ({ low, high, close });
+const bars = [
+  bar(1.083, 1.087, 1.085), // 0 شمعة الدخول: لمسها للوقف قبل الدخول لا يُحسب
+  bar(1.084, 1.086, 1.0855), // 1
+  bar(1.0845, 1.0912, 1.089), // 2 تلمس الهدف
+  bar(1.08, 1.09, 1.081), // 3
+];
+let o = positionOutcome(PL, bars, 0, 3, 3)!;
+assert.equal(o.state, 'target');
+assert.equal(o.exitIndex, 2);
+assert.equal(o.r, 2);
+assert.equal(positionOutcomeText(PL, o, 'EURUSD'), 'TP ✓ +50.0 pip · +2R');
+// الإعادة عند الشمعة 1 ⇒ مفتوحة بإغلاقها، لا تُكشف النتيجة
+o = positionOutcome(PL, bars, 0, 3, 1)!;
+assert.equal(o.state, 'open');
+near(o.exit, 1.0855);
+assert.equal(positionOutcomeText(PL, o, 'EURUSD'), '+5.0 pip · +0.2R');
+// الصندوق ينتهي عند 1 والسلسلة أطول ⇒ انتهى بلا لمس
+assert.equal(positionOutcome(PL, bars, 0, 1, 3)!.state, 'ended');
+// شمعة تلمس الحدّين معاً ⇒ الوقف
+o = positionOutcome(PL, [bars[0], bar(1.08, 1.095, 1.09)], 0, 1, 1)!;
+assert.equal(o.state, 'stop');
+assert.equal(positionOutcomeText(PL, o, 'EURUSD'), 'SL ✕ −25.0 pip · −1R');
+// صندوق بلا عرض زمني ⇒ مفتوح حتى آخر شمعة
+assert.equal(positionOutcome(PL, bars, 0, 0, 3)!.state, 'target');
+// دخول بعد آخر شمعة ⇒ لا نتيجة
+assert.equal(positionOutcome(PL, bars, 5, 8, 3), null);
+// دخول على آخر شمعة ⇒ مفتوحة بإغلاقها
+o = positionOutcome(PL, bars, 3, 6, 3)!;
+assert.equal(o.state, 'open');
+assert.equal(positionOutcomeText(PL, o, 'EURUSD'), '−40.0 pip · −1.6R');
+// بيع ذهب: الوقف فوق
+const SG = positionLevels('short', 2650, 2655, 3, 'XAUUSD');
+o = positionOutcome(SG, [bar(2648, 2651, 2650), bar(2640, 2656, 2645)], 0, 1, 1)!;
+assert.equal(o.state, 'stop');
+o = positionOutcome(SG, [bar(2648, 2651, 2650), bar(2644, 2652, 2646)], 0, 1, 1)!;
+assert.equal(positionOutcomeText(SG, o, 'XAUUSD'), '+40.0 pip · +0.8R');
 
 console.log('positionTool.selftest: PASS');
