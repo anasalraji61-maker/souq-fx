@@ -3354,7 +3354,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     TIME_LABEL_GAP,
     chartPlotW
   );
-  const currentPrice = livePrice ?? source.plot[source.plot.length - 1]?.close ?? series.last;
+  // بلا تيك حيّ (السوق مغلق، أو قبل أوّل تيك): إغلاق **آخر شمعة بالسلسلة** لا آخر شمعة ظاهرة —
+  // بعد الرجوع 50 شمعة كان الوسم والخطّ المتقطّع يقفزان لإغلاق قديم والرأس يقول غيره، وبـHeikin
+  // يعرضان إغلاقاً متوسَّطاً لا السعر. بالإعادة وحدها: شمعة الإعادة هي «الآن».
+  const currentPrice =
+    livePrice ??
+    (replayOn
+      ? source.plot[source.plot.length - 1]?.close
+      : liveSeries.candles[liveSeries.candles.length - 1]?.close) ??
+    series.last;
   const currentPriceY = yOf(currentPrice);
 
   // الوسوم تُرسم **فوق** علامات المحور، وعرضها عرض المحور كلّه — فعلامة تقع تحت وسم
