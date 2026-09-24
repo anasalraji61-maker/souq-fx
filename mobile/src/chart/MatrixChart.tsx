@@ -86,6 +86,7 @@ import {
   measureReadoutText,
 } from './measureReadout';
 import { thinByGap } from './levelLabels';
+import { planHiLoLabels } from './hiLoLabels';
 import { formatPct } from './dailyChange';
 import { timeframeStepSec } from './dataSource';
 import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
@@ -398,6 +399,8 @@ const PRICE_LABEL_GAP = 4;
 /** علوّ وسم السعر (الحيّ ووسم التقاطع)، وفجوة ما يُخفى من العلامات تحته. */
 const PRICE_TAG_H = 18;
 const TAG_CLEAR_GAP = 2;
+/** ارتفاع وسمَي أعلى/أدنى سعر بالنافذة المرئيّة. */
+const HILO_LABEL_H = 14;
 /** سطر عدّاد إغلاق الشمعة تحت سعر الوسم الحيّ. */
 const COUNTDOWN_LINE_H = 11;
 
@@ -4235,6 +4238,44 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               </View>
             );
           })}
+
+        {/* أعلى قمّة وأدنى قاع بالنافذة المرئيّة بسعرهما (راجع `hiLoLabels.ts`). للشموع والأعمدة
+            فقط: قمم Heikin/Renko/Kagi/P&F مشتقّة لا أسعار تداول حقيقية. */}
+        {!hidePriceLabels && (kind === 'candles' || kind === 'hollow' || kind === 'bars')
+          ? (() => {
+              const plan = planHiLoLabels(source.plot, xOf, chartPlotW, chartPlotH);
+              if (!plan) return null;
+              const yP = hasShadows ? yPrimary : yOf;
+              const laneBot = shadowStack ? shadowStack.primaryLane.height : chartPlotH;
+              return (['high', 'low'] as const).map((which) => {
+                const m = plan[which];
+                const y = yP(m.price);
+                if (!(y >= 0 && y <= laneBot)) return null;
+                const text = formatPrice(m.price, series.symbol);
+                const w = text.length * 5.6 + 12;
+                const x = xOf(m.index);
+                const top = Math.max(0, Math.min(laneBot - HILO_LABEL_H, y - HILO_LABEL_H / 2));
+                return (
+                  <View
+                    key={`hilo-${which}`}
+                    pointerEvents="none"
+                    style={[
+                      styles.hiLoLabel,
+                      {
+                        top,
+                        left: m.leftSide ? x - primaryColW / 2 - 2 - w : x + primaryColW / 2 + 2,
+                        width: w,
+                        flexDirection: m.leftSide ? 'row-reverse' : 'row',
+                      },
+                    ]}
+                  >
+                    <View style={styles.hiLoLeader} />
+                    <Text style={styles.hiLoText}>{text}</Text>
+                  </View>
+                );
+              });
+            })()
+          : null}
 
         {/* compare symbol overlay */}
         {comparePrices &&
@@ -9916,6 +9957,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'monospace',
     textAlign: 'right',
+  },
+  hiLoLabel: {
+    position: 'absolute',
+    height: HILO_LABEL_H,
+    alignItems: 'center',
+    gap: 2,
+    zIndex: 6,
+  },
+  hiLoLeader: { width: 6, height: 1, backgroundColor: colors.textMuted, opacity: 0.8 },
+  hiLoText: {
+    color: colors.textMuted,
+    fontSize: 9,
+    lineHeight: HILO_LABEL_H,
+    fontWeight: '700',
+    fontFamily: 'monospace',
   },
   currentPriceLine: {
     position: 'absolute',
