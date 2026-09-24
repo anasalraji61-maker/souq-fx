@@ -64,6 +64,8 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
     let alive = true;
     let attempt = 0;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    /** آخر رسالة (أو لحظة الفتح) على المقبس الحالي — لكشف مقبس «مفتوح» صامت. */
+    let lastHeardAt = 0;
 
     const scheduleReconnect = () => {
       if (!alive) return;
@@ -79,9 +81,11 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
         wsRef.current = ws;
         ws.onopen = () => {
           attempt = 0;
+          lastHeardAt = Date.now();
         };
         ws.onmessage = (ev) => {
           if (!alive) return;
+          lastHeardAt = Date.now();
           try {
             const data = JSON.parse(String(ev.data)) as {
               ticks?: Record<string, number>;
@@ -118,6 +122,21 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
       const snap = snapRef.current;
       if (snap && Date.now() - snap.at <= TICK_STALE_MS) return;
       setState((s) => (s ? null : s));
+      // مقبس «مفتوح» بلا رسالة منذ 20s (والخادم يبثّ كل ثانية): اتصال نصف ميت بعد تبديل
+      // Wi-Fi↔خلوي — لا `onclose` حتى مهلة النظام (دقائق)، فالسعر الحيّ يبقى غائباً طوالها.
+      // يُترك ويُفتح غيره فوراً؛ وإن فشل الجديد تتولّى `onclose` التضاعف المعتاد.
+      const cur = wsRef.current;
+      if (!cur || cur.readyState !== WebSocket.OPEN || Date.now() - lastHeardAt <= TICK_STALE_MS) return;
+      wsRef.current = null;
+      try {
+        cur.close();
+      } catch {
+        /* ignore */
+      }
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+      attempt = 0;
+      connect();
     }, STALE_CHECK_MS);
 
     // بالخلفية يُغلق النظام المقبس وتفشل المحاولات فيتضاعف الانتظار حتى 30s: بعد العودة
