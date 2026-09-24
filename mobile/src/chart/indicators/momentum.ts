@@ -52,8 +52,9 @@ export function computeStoch(candles: Candle[], kPeriod = 14, dPeriod = 3) {
     const slice = candles.slice(i - kPeriod + 1, i + 1);
     const hi = Math.max(...slice.map((c) => c.high));
     const lo = Math.min(...slice.map((c) => c.low));
-    const span = hi - lo || 1;
-    k.push(((candles[i].close - lo) / span) * 100);
+    // نافذة مسطّحة (أعلى = أدنى): TradingView ‏`ta.stoch` يعطي na. `|| 1` كان يرسم 0 = «تشبّع بيعي» وهمي.
+    const span = hi - lo;
+    k.push(span === 0 ? null : ((candles[i].close - lo) / span) * 100);
   }
   // `sma` لا تقبل null فيُعوَّض بصفر — وهذا يولّد قيم %D **وهمية** عند الشموع الأولى:
   // متوسط نافذة نصفها أصفار يهبط نحو الصفر، فيرى المتداول تقاطعاً صعودياً مفتعلاً لـ%K
@@ -87,8 +88,9 @@ export function computeWilliamsR(candles: Candle[], period = 14): (number | null
     const slice = candles.slice(i - period + 1, i + 1);
     const hh = Math.max(...slice.map((c) => c.high));
     const ll = Math.min(...slice.map((c) => c.low));
-    const span = hh - ll || 1;
-    out.push(((hh - candles[i].close) / span) * -100);
+    // نافذة مسطّحة ⇒ null كـTradingView (na)؛ `|| 1` كان يرسم 0 = «تشبّع شرائي» وهمي.
+    const span = hh - ll;
+    out.push(span === 0 ? null : ((hh - candles[i].close) / span) * -100);
   }
   return out;
 }
@@ -96,7 +98,7 @@ export function computeWilliamsR(candles: Candle[], period = 14): (number | null
 /**
  * CCI (Commodity Channel Index) — الصيغة القياسية: (TP − SMA(TP)) / (0.015 × الانحراف المتوسط
  * المطلق لـTP عن SMA(TP)). TP (السعر النموذجي) = (أعلى+أدنى+إغلاق)/3. عند انحراف صفري (تسطّح
- * تام) تُرجع 0 بدل قسمة على صفر.
+ * تام) تُرجع null كـTradingView (na) — 0 كان يُقرأ «حياد» على نافذة بلا حركة أصلاً.
  */
 export function computeCci(candles: Candle[], period = 20): (number | null)[] {
   const tp = candles.map((c) => (c.high + c.low + c.close) / 3);
@@ -110,7 +112,9 @@ export function computeCci(candles: Candle[], period = 20): (number | null)[] {
     const mean = smaTp[i]!;
     const slice = tp.slice(i - period + 1, i + 1);
     const meanDev = slice.reduce((a, v) => a + Math.abs(v - mean), 0) / period;
-    out.push(meanDev === 0 ? 0 : (tp[i] - mean) / (0.015 * meanDev));
+    // `sma` مجموع متدحرج: على نافذة مسطّحة يبقى انحراف ~1e-16 من تراكم الكسور فيخرج CCI −66 أو
+    // +133 عشوائياً؛ انحراف أصغر من 1e-10 من السعر = لا حركة ⇒ null.
+    out.push(meanDev <= Math.abs(mean) * 1e-10 ? null : (tp[i] - mean) / (0.015 * meanDev));
   }
   return out;
 }
@@ -445,16 +449,16 @@ export function computeApo(closes: number[], fast = 12, slow = 26): (number | nu
  * Stochastic RSI (rsiPeriod=14 وstochPeriod=14 القيمتان القياسيتان — يطبّق صيغة %K القياسية
  * [بنفس منطق computeStoch أعلاه حرفياً] لكن على *قيم RSI نفسها* بدل السعر الخام) — يبني مباشرة فوق
  * computeRsi المُصدَّرة مسبقاً بهذا الملف (لا إعادة تطبيق): لكل نقطة، StochRSI[i] = (RSI[i] −
- * أدنى RSI بنافذة stochPeriod) / (أعلى RSI بنفس النافذة − أدنى RSI) × 100 (صفر عند تساوي أعلى/أدنى
- * RSI بالنافذة بدل قسمة على صفر — حالة "RSI ثابت تماماً بالنافذة"، ليست بالضرورة RSI=0 أو 100).
+ * أدنى RSI بنافذة stochPeriod) / (أعلى RSI بنفس النافذة − أدنى RSI) × 100 (null عند تساوي أعلى/أدنى
+ * RSI بالنافذة، كـna بـTradingView — حالة "RSI ثابت تماماً بالنافذة"، ليست بالضرورة RSI=0 أو 100).
  * **الفرق عن RSI الخام**: RSI نفسه أوسيليتر مُطبَّق على السعر، بينما StochRSI أوسيليتر *مُطبَّق على
  * أوسيليتر آخر* — أكثر حساسية وتذبذباً من RSI الخام (يعبر 80/20 أكثر تكراراً)، يُستخدم لرصد تحوّلات
  * زخم أدق. الفترة الفعّالة الكلية = rsiPeriod (لحساب RSI أولاً) + stochPeriod−1 (لنافذة %K فوق RSI) —
  * أطول إحماءً من RSI أو Stochastic الخام كلٍّ على حدة (النافذة تبدأ من أول نقطة RSI صالحة، لا الشمعة
  * الأولى مطلقاً). **تحقّق يدوي**: سعر ثابت تماماً بكل الشموع → RSI (بلا خسارة أو مكسب فعلي، avgLoss=0)
  * يستقر عند 100 بدءاً من أول نقطة صالحة له (نفس تحفّظ computeRsi الموثَّق بتعريفه أعلاه) → RSI
- * ثابت=100 طوال نافذة stochPeriod → أعلى=أدنى=100 → StochRSI=0 بالضبط (حالة "تساوي أعلى/أدنى"
- * المُعالَجة صراحة أعلاه، لا 100 كما قد يُظَن للوهلة الأولى).
+ * ثابت=100 طوال نافذة stochPeriod → أعلى=أدنى=100 → StochRSI=null (كانت 0 فيُقرأ السعر الثابت «تشبّعاً بيعياً») (حالة "تساوي أعلى/أدنى"
+ * المُعالَجة صراحة أعلاه، لا قيمة وهمية).
  */
 export function computeStochRsi(
   closes: number[],
@@ -485,7 +489,8 @@ function stochRsiRaw(closes: number[], rsiPeriod: number, stochPeriod: number): 
       lo = Math.min(lo, rsi[w]!);
     }
     const span = hi - lo;
-    out.push(span === 0 ? 0 : ((rsi[i]! - lo) / span) * 100);
+    // RSI ثابت على النافذة ⇒ na بـ`ta.stoch` عند TradingView؛ 0 كان «تشبّع بيعي» وهمياً.
+    out.push(span === 0 ? null : ((rsi[i]! - lo) / span) * 100);
   }
   return out;
 }

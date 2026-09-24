@@ -110,12 +110,12 @@ const candle = (i: number, close: number): Candle => ({
   assert.equal(d.length, 0);
 }
 
-// سعر مسطّح تماماً (المدى صفر): %K = 100 بلا قسمة على صفر، و%D يتبعه
+// سعر مسطّح تماماً (المدى صفر): %K وD‏ null كـna بـTradingView — لا 0 «تشبّع بيعي» وهمي، ولا NaN
 {
   const candles = Array.from({ length: 20 }, (_, i) => ({ ...candle(i, 100), high: 100, low: 100 }));
   const { k, d } = computeStoch(candles);
-  assert.ok(k.slice(13).every((v) => typeof v === 'number' && Number.isFinite(v)));
-  assert.ok(d.slice(15).every((v) => typeof v === 'number' && Number.isFinite(v)));
+  assert.ok(k.every((v) => v === null));
+  assert.ok(d.every((v) => v === null));
 }
 
 // كل قيم %K/%D الحقيقية داخل 0..100، فالقصّ لا يخفي خطأ تعيين

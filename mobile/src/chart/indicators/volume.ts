@@ -60,7 +60,7 @@ export function computeObv(candles: (Candle & { volume?: number })[]): number[] 
  * MFI (Money Flow Index) — "RSI الحجمي": TP (السعر النموذجي) = (أعلى+أدنى+إغلاق)/3، تدفق مالي خام
  * = TP×فوليوم. موجب عند TP > TP[الشمعة السابقة]، سالب عند TP < TP[السابقة]، لا يُضاف لأي جانب عند
  * تساوٍ (نفس اصطلاح OBV أعلاه بالضبط). لنافذة period: MFI = 100 − 100/(1+مجموع_موجب/مجموع_سالب)،
- * 100 عند مجموع سالب صفري (بدل قسمة على صفر). فوليوم مفقود يُعوَّض بنفس صيغة orderflow.ts للاتساق.
+ * 100 عند مجموع سالب صفري، وnull إن لم يتحرّك TP بالنافذة إطلاقاً. فوليوم مفقود يُعوَّض بنفس صيغة orderflow.ts للاتساق.
  */
 export function computeMfi(candles: (Candle & { volume?: number })[], period = 14): (number | null)[] {
   const n = candles.length;
@@ -85,7 +85,8 @@ export function computeMfi(candles: (Candle & { volume?: number })[], period = 1
       posSum += posFlow[w];
       negSum += negFlow[w];
     }
-    out.push(negSum === 0 ? 100 : 100 - 100 / (1 + posSum / negSum));
+    // لا تدفق بأي جانب (أسعار نموذجية ثابتة) ⇒ null كـTradingView؛ كان 100 = «تشبّع شرائي» وهمي.
+    out.push(posSum + negSum === 0 ? null : negSum === 0 ? 100 : 100 - 100 / (1 + posSum / negSum));
   }
   return out;
 }
@@ -93,7 +94,7 @@ export function computeMfi(candles: (Candle & { volume?: number })[], period = 1
 /**
  * Chaikin Money Flow (CMF، period=20 افتراضياً) — Money Flow Multiplier لكل شمعة =
  * ((إغلاق−أدنى)−(أعلى−إغلاق))/(أعلى−أدنى) (صفر عند مدى صفري)، Money Flow Volume = المضاعف×فوليوم،
- * CMF لكل نافذة = مجموع(MFV)/مجموع(فوليوم) (صفر عند فوليوم كلي صفري). مدى نظري تقريبي -1..1 (بعكس
+ * CMF لكل نافذة = مجموع(MFV)/مجموع(فوليوم) (null عند فوليوم كلي صفري، كـTradingView). مدى نظري تقريبي -1..1 (بعكس
  * MFI الذي يعيد قياسه لـ0..100) — تُرسم بنفس نمط پين CCI/ROC ثنائي التلوين بسقف ديناميكي فلا يهم
  * نطاقها المطلق. فوليوم مفقود يُعوَّض بنفس صيغة orderflow.ts للاتساق مع OBV/MFI أعلاه.
  */
@@ -121,7 +122,7 @@ export function computeCmf(candles: (Candle & { volume?: number })[], period = 2
       sumMfv += mfv[w];
       sumVol += vol[w];
     }
-    out.push(sumVol === 0 ? 0 : sumMfv / sumVol);
+    out.push(sumVol === 0 ? null : sumMfv / sumVol);
   }
   return out;
 }
