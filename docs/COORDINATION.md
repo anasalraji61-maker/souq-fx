@@ -1,40 +1,39 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-24 (دورة QA 1) · كل بند تحقّق منه في الكود لا في السجل وحده.
-"منذ" = أول ظهور بالسجلات (تشغيل رقم n للوكيل). ★ = عالق (أقدم من 3 دورات للمنفّذ).
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-24 (دورة QA 2، بعد a0197cc) · كل بند تحقّق منه في الكود لا في السجل وحده.
+"منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
 |---|---|---|---|
-| QA | chart | **تحقق على جهاز**: سحب جسم الرسم المحدَّد لم يكن يعمل إطلاقاً (`hitDrawing()?.id` على نص) — أصلحه QA في 4315956، راجِع السلوك | 09-24 QA1 |
-| QA | chart/data | **حجم التيك = 0 لا null** (`backend/twelve_data.py:148-153`) ⇒ fallback في `indicators/volume.ts:32` لا يعمل؛ OBV/MFI/CMF/VWAP تُحسب على حجم صفري بالفوركس | 09-24 QA1 |
-| QA | chart | `candleTimeSec` نسخة محلية ثانية في `components/ChartFrame.tsx:70` (الأولى بـMatrixChart حذفها QA) — استورد من `dataSource` | 09-24 QA1 |
-| QA | chart | `diOf` معرّفة مرتين في `indicators/trend.ts:87,1059`؛ منطق saveError منسوخ 4 مرات (template/drawing/layout/watchlist Store) | 09-24 QA1 |
-| QA | launch | `TerminalScreen.tsx:868` يحسب `dxyPrice` الحيّ ثم يرميه — هل عرض DXY مفقود؟ | 09-24 QA1 |
-| QA | tools | `dirColor/dirLabel` متطابقة في Analysts/IndicatorForecast/SocialConsensus Panel؛ `planSummary` في TradeJournal+VotePanel؛ استيراد `sizeLooksLikeUnits` ميت بـTradeJournalPanel:19 | 09-24 QA1 |
-| QA | الجميع | 17 تصديراً بلا أي مستخدم (mock.ts ×3، `computeDomLite`، `PINE_PRESETS`، `deleteTemplate`، `motion`، `FRAME_SYMBOLS`…) — احذف أو استخدم | 09-24 QA1 |
-| launch | chart | زر AUTO بلا `accessibilityLabel` (`MatrixChart.tsx:7260`) — المفاتيح `mcAutoA11y` جاهزة | launch27 ★ |
-| launch | chart | النص الحرفي «Bar Replay · n/total» اسم ميزة منافس (خطر قانوني) ⇒ `tr.mcReplayReadout` (`MatrixChart.tsx:4884`) | launch7 ★ |
-| chart/launch | chart | إنهاء `chartExtraLabels` المؤقت ⇒ `tr.mcClearAllBody` / `tr.mcToLatestA11y` (ما زال في 4781،7270،10028) | chart15 ★ |
-| launch | chart | مفاتيح بلا مستخدم: `mcMeasureBarOne/Two`، `mcReplayEndedOnSwitch`، `cfReplayPriceA11y`، `mcHintSelect/Selected`، `mcHint*Web` | launch5 ★ |
-| launch | chart | DeMarker على 0..100 والمنصات 0..1 (قرار — انظر STATUS) | launch48 |
-| launch | tools | ربط `journalSizeFromSmallFix` (سنت⇒قياسي يبقى الحجم ×100) | launch48 |
-| tools | launch | مفتاح عملة مال صفقات السنت/المايكرو في الدفتر | tools30 |
-| tools+launch | backend | حذف spread وهمي (السعر × 0.00008) في `backend/twelve_data.py:315-318` | tools13 ★ |
-| tools | backend | الخادم يخزّن الحجم 1 حين لا يُرسل (`backend/db.py:1704`) | 09-22 ★ |
-| tools | backend | كاش 30–60ث لـ`/api/market/quote` (`main.py:1347`) | 09-23 ★ |
-| tools | chart | إيقاف سوكت التيكات حين TerminalScreen غير مركّزة (`TerminalScreen.tsx:211`) | 09-23 ★ |
-| tools | chart | التغيّر اليومي يبقى على إغلاق الجلسة السابقة ≤10د بعد التدوير (`dailyRefStore.ts:27-31`) | tools25 |
-| tools | chart | `chartPipSpec('EURUSD.c')` = null (لواحق بنقطة) | tools28 |
-| tools | ScreenerMini | استخدام `pctDirection` المشترك (`ScreenerMini.tsx:198`) | tools≈14:00 |
-| tools | AccountScreen | `catch` حول `getNotificationPermissionState` (`AccountScreen.tsx:129`) — الزر قد يعلق على «…» | tools≈14:00 |
-| chart | TerminalScreen | عرض الشموع المخزّنة فوراً عند تبديل الفريم (`seriesCache` غير مستخدم) | chart17 |
+| QA | chart | **جهاز**: سحب جسم الرسم المحدَّد (ميت حتى 4315956) — RELEASE §5 بند 128 | QA1 |
+| QA | launch | **كردي يرى أطر زمنية بالعربية**: `TimeframeBar arabic={rtl}` (`TerminalScreen.tsx:988`) و`isRtl('ku')`=true ⇒ «دقيقة/ساعة/يومي» من `timeframes.ts:7-14` | QA2 |
+| QA | launch | `CommissionPlanPanel`/`NetworkTreePanel`/`TreeDiagramSketch` بلا `useI18n` إطلاقاً (~55 نصاً عربياً فقط)؛ `AccountScreen.tsx:248` نص عربي ثابت | QA2 |
+| QA | launch | `SubscriptionPlansPanel.tsx:32-100` قاموس ar/en/ku داخلي (~45 نصاً) خارج `locales.ts` | QA2 |
+| QA | chart | زر «Log» (`MatrixChart.tsx:5173`) نص ثابت وبلا `accessibilityLabel`؛ `dialogTitle: 'MATRIX Chart'` (:3473)؛ جلسات Tokyo/London/New York (`sessions.ts:24-28`) إنجليزية فقط | QA2 |
+| QA | tools | `planJournalNote()` (`positionSize.ts:1138-1150`) يكتب ملاحظة الدفتر إنجليزية دائماً («lot · risk · R:R · spread · commission») | QA2 |
+| QA | tools | `instrumentSpec('GOLDm')` = null بالحاسبة، و`chartPipSpec('GOLDm')` = XAUUSD بالشارت — الرمز نفسه يعمل بالشارت ولا يعمل بالحاسبة | QA2 |
+| QA | chart | `DRAW_MARK` (`MatrixEdgeRails.tsx:28-40`) بلا `hray`/`channel`/`long`/`short` ⇒ «·» | chart20 ★ |
+| launch | chart | `chartExtraLabels` ← `tr.mcHideDrawings/mcShowDrawings`؛ `EXTRA_TOOL_LABELS` ← `t.ctlToolHray/ctlToolChannel` (المفاتيح جاهزة، 0 مستخدم) | launch50 |
+| launch | chart | حذف `dxyPrice` الميت (`TerminalScreen.tsx:868`) — عرض DXY ليس مفقوداً (تحقق launch50) | QA1 |
+| QA | chart | منطق saveError منسوخ 4 مرات (template/drawing/layout/watchlist Store) | QA1 |
+| QA | tools | `dirColor` متطابقة ×3 (Analysts/IndicatorForecast/SocialConsensus)؛ `planSummary` ×2 | QA1 |
+| QA | الجميع | 17 تصديراً بلا مستخدم (mock.ts ×3، `computeDomLite`، `PINE_PRESETS`، `deleteTemplate`، `motion`، `FRAME_SYMBOLS`…) | QA1 |
+| launch | tools | `journalCentMoneyNote`/`journalMicroMoneyNote`/`journalMoneyUsc` جاهزة (4c8e529) بلا قارئ | tools30 |
+| chart | launch | `mcDeleteDrawingTitle/Body` بلا مستخدم — احذفهما | chart39 |
+| launch | chart | DeMarker 0..100 والمنصات 0..1 (قرار ⇒ أنس) | launch48 |
+| tools+launch | الخادم | spread مُختلَق = السعر × 0.00008 (`backend/twelve_data.py:315-318`) | tools13 ★ |
+| tools | الخادم | الحجم يُخزَّن 1 حين لا يُرسل (`backend/db.py:1704`) | 09-22 ★ |
+| tools | الخادم | كاش 30–60ث لـ`/api/market/quote` | 09-23 ★ |
+| launch | الخادم/أنس | `openrouter_ai.py:71` «أنت خبير تداول» ويعطي دخول/وقف/هدف | launch9 ★ |
+| tools | chart | إيقاف سوكت التيكات حين TerminalScreen غير مركّزة (`useMultiLiveTicks(watchSymbols, true)` :211) | 09-23 ★ |
+| tools | chart | التغيّر اليومي على إغلاق الجلسة السابقة ≤10د بعد التدوير (`dailyRefStore.ts`) | tools25 |
+| tools | AccountScreen | `AccountScreen.tsx:111` `.then` بلا `catch` حول `getNotificationPermissionState` — الزر قد يعلق على «…» | tools≈14:00 |
+| chart | TerminalScreen | عرض الشموع المخزّنة فوراً عند تبديل الفريم (`seriesCache` في QuadChartModal فقط) | chart17 |
 | chart | useMultiLiveTicks | إسقاط التيك بعد 20ث بلا بثّ + حارس `isFinite && >0` (`useMultiLiveTicks.ts:50`) | chart2 ★ |
-| chart | FocusChartModal | الرأس يطبع تيك الرمز الجديد فوق شموع القديم؛ «+0.00%» أخضر؛ يتجاهل سعر الإعادة (`:279,284-288`) | chart3 ★ |
-| chart | الجميع | تأكيدات الحذف لا تعمل على الويب (`Alert.alert`) — مساعد `confirmDestructive` مشترك | chart29 |
-| chart | MatrixEdgeRails | علامات أدوات long/short (تسقط إلى «·») `MatrixEdgeRails.tsx:28-40` | chart20 |
-| chart | launch | مفتاح `ctlToolHray` + علامة `hray` | chart23 |
-| launch⇐chart | chart | المفتاح `mcMeasureDurUnits` جاهز (eab35cb) — اربطه بقراءة أداة القياس | chart16 |
-| chart | positionSize | EURUSDpro / GOLDm ⇒ null | chart33 |
-| launch | UI | أيقونة «₴» (الهريفنيا الأوكرانية) لتبويب الدفتر (`ToolsScreen.tsx:85`، `MatrixEdgeRails.tsx:142`) | launch4 ★ |
-| launch | backend/أنس | موجّه `openrouter_ai.py:71` «أنت خبير تداول» ويطلب دخول/وقف/هدف | launch9 ★ |
+| chart | FocusChartModal | الرأس يطبع تيك الرمز الجديد فوق شموع القديم؛ «+0.00%» أخضر | chart3 ★ |
+| chart | الجميع | `Alert.alert` لا يعمل على الويب — مساعد `confirmDestructive` مشترك (غير موجود) | chart29 |
+| launch | UI | أيقونة «₴» (الهريفنيا) للدفتر: `ToolsScreen.tsx:85`، `MatrixBottomDock.tsx:85`، `MatrixEdgeRails.tsx:142` | launch4 ★ |
 
-منجز ومُتحقَّق منه (أُسقط): ملاحظة عمولة micro/cent (b878127)، مفاتيح `mcUndo*`، تحويل cent/micro للحاسبة، `riskCalcOverOrderMax*`، وصف VWAP بالأكاديمية.
+**أُسقط — مُتحقَّق منه بالكود هذه الدورة:** AUTO `tr.mcAutoA11y`، «Bar Replay» ⇒ `tr.mcReplayReadout`، `mcClearAllBody`/`mcToLatestA11y`، `candleTimeSec` بـChartFrame،
+`journalSizeFromSmallFix` وملاحظة عمولة micro/cent موصولة، `mcMeasureDurUnits`/`mcMeasureBarOne/Two`/`mcHint*`/`mcReplayEndedOnSwitch`/`cfReplayPriceA11y` موصولة
+(9d62079، a0197cc)، `chartPipSpec('EURUSD.c')` يعمل (89c3338)، `diOf` واحدة، حجم الفوركس الصفري له بديل بالتطبيق (300dad5)، `pctDirection` بـScreenerMini.
+لا اسم منافس في أي نص معروض (TradingView في تعليقات فقط).
