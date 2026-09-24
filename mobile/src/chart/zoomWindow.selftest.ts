@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/zoomWindow.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { zoomWindow } from './zoomWindow';
+import { pinchSpread, pinchWindow, zoomWindow } from './zoomWindow';
 
 // يتابع الحيّ: الطرف الأيمن مثبَّت بالتكبير والتصغير
 assert.deepEqual(zoomWindow(500, 80, 0, 0.8), { count: 64, offset: 0 });
@@ -29,5 +29,26 @@ assert.deepEqual(zoomWindow(0, 80, 0, 1.25), { count: 100, offset: 0 });
 // عامل غير صالح لا يغيّر شيئاً
 assert.deepEqual(zoomWindow(500, 80, 7, NaN), { count: 80, offset: 7 });
 assert.deepEqual(zoomWindow(500, 80, 7, 1), { count: 80, offset: 7 });
+
+// القرص: يتابع الحيّ ⇒ الطرف الأيمن مثبَّت
+assert.deepEqual(pinchWindow(500, 80, 0, 100, 200, 0.5), { count: 40, offset: 0 });
+assert.deepEqual(pinchWindow(500, 80, 0, 200, 100, 0.5), { count: 160, offset: 0 });
+// العودة لتباعد البدء تعيد النافذة نفسها (حساب من حالة البدء لا تراكمي)
+assert.deepEqual(pinchWindow(500, 80, 30, 100, 100, 0.3), { count: 80, offset: 30 });
+// بعيداً عن الحيّ: الشمعة تحت الإصبعين تبقى. [300,400) ربعها 325 ⇒ [313,363) ربعها 325.5
+assert.deepEqual(pinchWindow(500, 100, 100, 100, 200, 0.25), { count: 50, offset: 137 });
+assert.deepEqual(pinchWindow(500, 100, 100, 100, 200, 1), { count: 50, offset: 100 });
+// مقيَّد بطرفَي السلسلة
+assert.deepEqual(pinchWindow(500, 50, 10, 100, 25, 0.9), { count: 200, offset: 0 });
+assert.deepEqual(pinchWindow(500, 100, 390, 100, 25, 0), { count: 400, offset: 90 });
+assert.deepEqual(pinchWindow(180, 150, 0, 100, 20, 0.5), { count: 180, offset: 0 });
+assert.deepEqual(pinchWindow(500, 3, 0, 100, 1000, 0.5), { count: 2, offset: 0 });
+// تباعد غير صالح لا يغيّر شيئاً
+assert.deepEqual(pinchWindow(500, 80, 5, 0, 100, 0.5), { count: 80, offset: 5 });
+assert.deepEqual(pinchWindow(500, 80, 5, 100, NaN, 0.5), { count: 80, offset: 5 });
+// إصبعان متلاصقان أو على خطّ عمودي واحد: الحدّ الأدنى لا صفر
+assert.equal(pinchSpread(10, 12), 24);
+assert.equal(pinchSpread(200, 100), 100);
+assert.equal(pinchSpread(NaN, 1), 24);
 
 console.log('zoomWindow.selftest: PASS');

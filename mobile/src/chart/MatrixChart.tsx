@@ -42,7 +42,7 @@ import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
 import { candleBodyWidth } from './candleGeometry';
-import { zoomWindow } from './zoomWindow';
+import { pinchSpread, pinchWindow, zoomWindow } from './zoomWindow';
 import { barCloseCountdown } from './barCountdown';
 import { BarCountdown } from './BarCountdown';
 import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime, stepCrossBar } from './crossAnchor';
@@ -922,6 +922,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const panStartBars = useRef(0);
   const offsetRef = useRef(0);
   const panStartPoint = useRef({ x: 0, y: 0 });
+  // قرص بإصبعين: حالة البدء (`pinchWindow` يحسب منها كل إطار). `plotLeft` حافّة اللوح
+  // بإحداثيات الصفحة — إحداثيات اللمسات الأخرى `locationX` نسبةً لما لمسته لا للّوح.
+  const pinchStart = useRef<{
+    spread: number;
+    count: number;
+    offset: number;
+    focus: number;
+  } | null>(null);
+  const pinchUsed = useRef(false);
+  const plotPageLeft = useRef(0);
   const panMoved = useRef(false);
   const chartPressRef = useRef<(x: number, y: number) => void>(() => {});
   const crossAtRef = useRef<(x: number, y: number, hover?: boolean) => void>(() => {});
@@ -2966,6 +2976,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             x: evt.nativeEvent.locationX,
             y: evt.nativeEvent.locationY,
           };
+          plotPageLeft.current = evt.nativeEvent.pageX - evt.nativeEvent.locationX;
+          pinchStart.current = null;
+          pinchUsed.current = false;
           // إصبع ثابت 350ms ⇒ وضع التتبّع: كان كل سحب يحرّك الشارت، فقراءة شموع متتالية
           // تعني نقرة لكل شمعة. الانزياح ≤4px قبل المؤقّت يُلغى كي لا يبدأ التتبّع بشارت مزاح.
           scrubbing.current = false;
@@ -2978,7 +2991,50 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             chartPressRef.current(panStartPoint.current.x, panStartPoint.current.y);
           }, 350);
         },
-        onPanResponderMove: (_, g) => {
+        onPanResponderMove: (evt, g) => {
+          // إصبع ثانٍ ⇒ قرص يكبّر/يصغّر الشموع كـTradingView على الهاتف. لم يكن بالشارت أيّ
+          // تكبير باللمس: زرّا − + وحدهما (وعجلة الفأرة بالويب)، والإصبع الثاني كان يُقرأ
+          // سحباً فيقفز الشارت بمقدار انتقال مركز اللمسات.
+          const touches = evt.nativeEvent.touches;
+          if (touches && touches.length >= 2) {
+            const spread = pinchSpread(touches[0].pageX, touches[1].pageX);
+            if (!pinchStart.current) {
+              if (scrubTimer.current) clearTimeout(scrubTimer.current);
+              scrubTimer.current = null;
+              scrubbing.current = false;
+              panMoved.current = true;
+              pinchUsed.current = true;
+              crossPinned.current = false;
+              setCross(null);
+              const mid = (touches[0].pageX + touches[1].pageX) / 2 - plotPageLeft.current;
+              pinchStart.current = {
+                spread,
+                count: windowCountRef.current,
+                offset: offsetRef.current,
+                focus: mid / Math.max(1, chartPlotW),
+              };
+            }
+            const st = pinchStart.current;
+            const z = pinchWindow(
+              sourceRef.current.all.length,
+              st.count,
+              st.offset,
+              st.spread,
+              spread,
+              st.focus
+            );
+            if (z.count !== windowCountRef.current || z.offset !== offsetRef.current) {
+              windowCountRef.current = z.count;
+              offsetRef.current = z.offset;
+              setWindowCount(z.count);
+              setOffset(z.offset);
+              schedulePublishSync(false);
+            }
+            return;
+          }
+          pinchStart.current = null;
+          // رُفع أحد الإصبعين: الباقي لا يسحب الشارت حتى يُرفع — كان سيقفز بفرق مركز اللمسات.
+          if (pinchUsed.current) return;
           if (scrubbing.current) {
             crossAtRef.current(
               Math.max(0, Math.min(chartPlotW - 1, panStartPoint.current.x + g.dx)),
@@ -2990,7 +3046,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           applyChartDrag(g.dx, g.dy);
         },
         // أثناء التتبّع لا يُسلَّم الإصبع لتمرير الصفحة الأب — وإلا قطع سحبٌ رأسي التتبّع.
-        onPanResponderTerminationRequest: () => !scrubbing.current,
+        onPanResponderTerminationRequest: () => !scrubbing.current && !pinchUsed.current,
         onPanResponderRelease: () => {
           if (scrubTimer.current) clearTimeout(scrubTimer.current);
           scrubTimer.current = null;
@@ -2999,6 +3055,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             chartPressRef.current(panStartPoint.current.x, panStartPoint.current.y);
           }
           scrubbing.current = false;
+          pinchStart.current = null;
+          pinchUsed.current = false;
           endDrag();
         },
         onPanResponderTerminate: () => {
@@ -3006,6 +3064,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           scrubTimer.current = null;
           scrubbing.current = false;
           panMoved.current = false;
+          pinchStart.current = null;
+          pinchUsed.current = false;
           endDrag();
         },
       }),
@@ -3018,6 +3078,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       applyChartDrag,
       beginDrag,
       endDrag,
+      schedulePublishSync,
     ]
   );
   useEffect(

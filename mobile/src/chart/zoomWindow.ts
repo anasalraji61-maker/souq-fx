@@ -38,3 +38,44 @@ export function zoomWindow(
   const newEnd = Math.min(allLen, Math.max(next, Math.round(center + next / 2)));
   return { count: next, offset: Math.max(0, allLen - newEnd) };
 }
+
+/**
+ * قرص بإصبعين: تباعد أفقي بين الإصبعين، بحدّ أدنى — إصبعان متلاصقان (أو على خطّ عمودي
+ * واحد) كانا سيقسمان على صفر فتقفز النافذة لطرفها.
+ */
+export const PINCH_MIN_SPREAD = 24;
+
+export function pinchSpread(x1: number, x2: number): number {
+  const d = Math.abs(x1 - x2);
+  return Number.isFinite(d) ? Math.max(PINCH_MIN_SPREAD, d) : PINCH_MIN_SPREAD;
+}
+
+/**
+ * نافذة القرص: تُحسب **من حالة بدء القرص** كل إطار (لا تراكمياً)، فالعودة بالإصبعين لتباعدهما
+ * الأوّل تعيد النافذة نفسها بالضبط. تباعد الإصبعين ⇒ شموع أقلّ (تكبير).
+ * - `startOffset = 0` (يتابع الحيّ) ⇒ الطرف الأيمن مثبَّت كقاعدة `zoomWindow`.
+ * - غير ذلك ⇒ الشمعة تحت منتصف الإصبعين (`focus` من 0 يسار اللوح إلى 1 يمينه) تبقى تحتهما.
+ * بلا «شمعة على الأقلّ» لـ`zoomWindow`: إطار حركة صغير لا يُفترض أن يغيّر شيئاً.
+ */
+export function pinchWindow(
+  allLen: number,
+  startCount: number,
+  startOffset: number,
+  startSpread: number,
+  spread: number,
+  focus: number,
+  min = 2,
+  max = 1000
+): ZoomWindow {
+  if (allLen > 0) max = Math.max(min, Math.min(max, allLen));
+  const cur = Math.max(min, Math.min(max, Math.round(startCount)));
+  const off = Math.max(0, Math.round(startOffset));
+  if (!(startSpread > 0) || !(spread > 0)) return { count: cur, offset: off };
+  const next = Math.max(min, Math.min(max, Math.round((cur * startSpread) / spread)));
+  if (next === cur || off === 0 || allLen <= 0) return { count: next, offset: off };
+  const f = Number.isFinite(focus) ? Math.max(0, Math.min(1, focus)) : 0.5;
+  const oldEnd = allLen - off;
+  const focusBar = oldEnd - cur + f * cur;
+  const newEnd = Math.min(allLen, Math.max(next, Math.round(focusBar + (1 - f) * next)));
+  return { count: next, offset: Math.max(0, allLen - newEnd) };
+}
