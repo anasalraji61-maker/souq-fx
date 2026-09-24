@@ -46,3 +46,20 @@ export function thinByGap<T>(
   }
   return kept.sort((a, b) => a.at - b.at).map((k) => k.item);
 }
+
+/**
+ * عرض حارة الوسوم على الحافّة اليسرى (`left: 4`) بالبكسل — يتّسع لأعرض وسومها («61.8% 2650.35»
+ * بخطّ 10 عريض ≈ 95px) مع هامش.
+ */
+export const LEFT_LABEL_LANE_W = 120;
+
+/**
+ * هل يقع وسمٌ يبدأ عند `labelLeft` (بكسل من يسار اللوح) داخل حارة الحافّة اليسرى؟ وسوم الارتكاز
+ * تبدأ عند بداية الجلسة الجارية (وسط اللوح غالباً داخل اليوم)، فتنقيتها رأسياً مع وسوم الخطّ الأفقي
+ * وفيبو على الحافّة كانت تُسقط سعر R1 لأن خطّ دعم على ارتفاعه **بعيدٌ أفقياً** 300px. غير محدود ⇒
+ * يُعامل كالحافّة (التنقية المحافظة أسلم من وسمين متراكبين).
+ */
+export function inLeftLabelLane(labelLeft: number, laneW: number = LEFT_LABEL_LANE_W): boolean {
+  if (!Number.isFinite(labelLeft)) return true;
+  return labelLeft < laneW;
+}

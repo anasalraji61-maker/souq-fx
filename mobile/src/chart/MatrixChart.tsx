@@ -95,7 +95,7 @@ import {
   measurePipsText,
   measureReadoutText,
 } from './measureReadout';
-import { thinByGap } from './levelLabels';
+import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
 import { planHiLoLabels } from './hiLoLabels';
 import { planDayBreaks } from './dayBreaks';
 import { formatPct, prevSessionFromDaily, validSessionBar } from './dailyChange';
@@ -3904,6 +3904,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // أقلّ من هذا بين بداية الخطّ وحافّة اللوح ⇒ الوسم يُثبَّت يمين اللوح لا يسار الخطّ.
   const pivotLabelAtEnd = pivotStartX != null && chartPlotW - pivotStartX < 120;
 
+  // يسار وسم الارتكاز: عند الحافّة (بعرض اللوح)، أو بعد بداية الجلسة، أو مثبَّتاً يميناً (تقدير
+  // محافظ لعرضه). خارج حارة الحافّة اليسرى ⇒ لا يُنقّى مع وسوم الخطّ الأفقي وفيبو هناك.
+  const pivotLabelLeft =
+    pivotStartX == null
+      ? 4
+      : pivotLabelAtEnd
+        ? chartPlotW - PRICE_AXIS_WIDTH - LEFT_LABEL_LANE_W
+        : pivotStartX + 4;
   // وسوم الارتكاز: الظاهرة باللوح وحدها تتنافس على المكان (مستوى خارج اللوح لا يحجز وسماً).
   const pivotLabelKeys = new Set(
     thinByGap(
@@ -3915,7 +3923,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       (lv) => yOf(lv.price),
       (lv) => pivotLabelRank(lv.label),
       HLINE_LABEL_GAP,
-      takenLabelYs
+      inLeftLabelLane(pivotLabelLeft) ? takenLabelYs : []
     ).map((lv) => lv.key)
   );
 

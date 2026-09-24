@@ -1,5 +1,5 @@
 /** فحص ذاتي لـ`levelLabels.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
-import { thinByGap, LEVEL_LABEL_GAP } from './levelLabels';
+import { inLeftLabelLane, thinByGap, LEVEL_LABEL_GAP } from './levelLabels';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -97,6 +97,14 @@ ok('taken غير محدود يُتجاهل', thinByGap(beside, y, r, 13, [NaN, I
 ok('المحجوب لا يحجز مكاناً',
   thinByGap([{ id: 'pp', y: 50, rank: 1 }, { id: 'r1', y: 60, rank: 2 }], y, r, 13, [40])
     .map((l) => l.id).join('') === 'r1');
+
+// حارة الحافّة اليسرى: وسم الارتكاز عند الحافّة يتنافس، ووسط اللوح لا.
+ok('الحافّة ⇒ داخل الحارة', inLeftLabelLane(4));
+ok('ما دون العرض ⇒ داخلها', inLeftLabelLane(119));
+ok('وسط اللوح ⇒ خارجها', !inLeftLabelLane(300));
+ok('عند الحدّ ⇒ خارجها', !inLeftLabelLane(120));
+ok('غير محدود ⇒ محافظ', inLeftLabelLane(NaN) && inLeftLabelLane(Infinity));
+ok('عرض مخصّص', !inLeftLabelLane(60, 50) && inLeftLabelLane(40, 50));
 
 if (failures) {
   console.error(`levelLabels.selftest: ${failures} FAILED`);
