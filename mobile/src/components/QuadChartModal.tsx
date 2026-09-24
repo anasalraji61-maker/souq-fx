@@ -288,7 +288,7 @@ export function QuadChartModal({
                   syncTime && !isLeader ? `${t.cfSyncActivateA11yPrefix}${sym}` : undefined
                 }
                 disabled={!syncTime || isLeader}
-                accessibilityState={{ disabled: !syncTime || isLeader }}
+                accessibilityState={{ disabled: !syncTime || isLeader, selected: syncTime && isLeader }}
                 onPress={() => setLeader(i)}
                 style={[
                   styles.cell,

@@ -463,6 +463,14 @@ const COUNTDOWN_LINE_H = 11;
 /** آخر شارت نُقر على الويب — أسهم لوحة المفاتيح وEsc له وحده لا لكل شارت بالصفحة. */
 let webKeyChart: object | null = null;
 
+/** Alt+حرف ⇒ أداة رسم (اختصارات TradingView الافتراضية)، بالموضع الفيزيائي `KeyboardEvent.code`. */
+const WEB_TOOL_HOTKEYS: Partial<Record<string, DrawTool>> = {
+  KeyT: 'trend',
+  KeyH: 'hline',
+  KeyV: 'vline',
+  KeyF: 'fib',
+};
+
 type DrawingHit = { id: string; dist: number } | null;
 
 /** نصف قطر مقبض الطرف بالبكسل — التقاطاً للتحديد وسحباً للتحريك (قيمة واحدة للاثنين). */
@@ -3939,6 +3947,50 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     },
     [schedulePublishSync]
   );
+
+  // AUTO (زاوية المحورين) وAlt+R على الويب: مقياس السعر تلقائي، 80 شمعة، والطرف الأيمن حيّ.
+  const resetChartView = useCallback(() => {
+    // المراجع قبل النشر: `publishSyncWindow` يقرؤها لا الحالة، وبلا نشر كانت توابع
+    // الرباعي تبقى على النافذة القديمة بينما القائد عاد للحيّ.
+    priceScaleRef.current = 1;
+    windowCountRef.current = 80;
+    pricePanRef.current = 0;
+    xPanRef.current = 0;
+    offsetRef.current = 0;
+    setPriceScale(1);
+    setWindowCount(80);
+    setPricePan(0);
+    setXPan(0);
+    setOffset(0);
+    schedulePublishSync(false);
+  }, [schedulePublishSync]);
+
+  // اختصارات TradingView على الويب: Alt+T ترند، Alt+H أفقي، Alt+V عمودي، Alt+F فيبو، Alt+R إعادة
+  // العرض (كـAUTO). بـ`event.code` لا `event.key`: Alt على ماك يُخرج «†»/«˙»، وبلوحة عربية أو كردية
+  // يُخرج حرفاً عربياً — الموضع الفيزيائي للمفتاح هو الثابت. `preventDefault` يمنع Alt+F من فتح
+  // قائمة «ملف» بالمتصفّح. للشارت الذي لُمس أخيراً وحده، ولا يسرق المفاتيح من خانة كتابة.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || (!interactive && !canPan)) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (webKeyChart !== keyToken.current) return;
+      const target = event.target as { tagName?: string; isContentEditable?: boolean } | null;
+      if (target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '')) return;
+      if (event.code === 'KeyR') {
+        if (!canPan) return;
+        event.preventDefault();
+        resetChartView();
+        return;
+      }
+      const next = WEB_TOOL_HOTKEYS[event.code];
+      if (!next || !interactive) return;
+      event.preventDefault();
+      setTool(next);
+      setPending(null);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [interactive, canPan, resetChartView]);
 
   const priceAxisTap = useRef<AxisTap | null>(null);
   const timeAxisTap = useRef<AxisTap | null>(null);
@@ -7469,21 +7521,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               priceManual && styles.axisCornerManual,
               pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
             ]}
-            onPress={() => {
-              // المراجع قبل النشر: `publishSyncWindow` يقرؤها لا الحالة، وبلا نشر كانت توابع
-              // الرباعي تبقى على النافذة القديمة بينما القائد عاد للحيّ.
-              priceScaleRef.current = 1;
-              windowCountRef.current = 80;
-              pricePanRef.current = 0;
-              xPanRef.current = 0;
-              offsetRef.current = 0;
-              setPriceScale(1);
-              setWindowCount(80);
-              setPricePan(0);
-              setXPan(0);
-              setOffset(0);
-              schedulePublishSync(false);
-            }}
+            onPress={resetChartView}
             hitSlop={8}
             accessibilityLabel={tr.mcAutoA11y}
           >
