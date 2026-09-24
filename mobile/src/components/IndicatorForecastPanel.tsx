@@ -42,7 +42,10 @@ function dirColor(d: string) {
  */
 function formatScore(n: number): string {
   if (typeof n !== 'number' || !Number.isFinite(n)) return '—';
-  const r = Math.round(n * 100) / 100;
+  // تقريب متناظر حول الصفر كـ`round2` بـ`chart/dailyChange.ts`: `Math.round` يرفع النصف نحو +∞
+  // فكان ‎−0.125‎ «−0.12» و‎+0.125‎ «+0.13»، و‎1.005‎ بالفاصلة العائمة «+1.00».
+  const c = Math.round(Math.abs(n) * 100 * 1e6) / 1e6;
+  const r = (n < 0 ? -1 : 1) * (Math.round(c) / 100);
   if (r === 0) return '0.00';
   return `${r > 0 ? '+' : '−'}${Math.abs(r).toFixed(2)}`;
 }
