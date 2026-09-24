@@ -594,6 +594,9 @@ function formatAxisTime(
   const mon = months[p.month] ?? '';
   const dayMonth = compact ? `${p.day}/${p.month + 1}` : `${p.day} ${mon}`;
   if (withHours && !dayCandles) {
+    // علامة حدّ اليوم (00:00 بتوقيت العرض) تُطبع بتاريخها وحده كما بـTradingView: «00:00 ↵ 25 سبتمبر»
+    // يزاحم علامات الساعة بسطر زائد، والتاريخ وحده يفصل الأيام بنظرة. شمعة الأحد 22:00 تبقى بساعتها.
+    if (p.hours === 0 && p.minutes === 0) return dayMonth;
     return `${hh}:${mm}\n${dayMonth}`;
   }
   if (spanSeconds <= 120 * 86400) {
