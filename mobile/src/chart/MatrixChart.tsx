@@ -6296,8 +6296,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 ]}
               >
                 {hlinePriceLabels.has(d.id) ? (
-                  <Text style={[styles.levelPriceLabel, { color: d.color }, sel && styles.levelPriceLabelSel]}>
+                  <Text
+                    style={[styles.levelPriceLabel, { color: d.color }, sel && styles.levelPriceLabelSel]}
+                    numberOfLines={1}
+                  >
                     {formatPrice(d.a.price, series.symbol)}
+                    {/* كم يبعد المستوى عن السعر الجاري بالـpip (+ فوقه، − تحته) — المتداول يرسم
+                        الدعم ليعرف كم بقي للوصول إليه؛ الرقم نفسه الذي تعطيه أداة القياس. */}
+                    {(() => {
+                      const pips = Number.isFinite(currentPrice)
+                        ? measurePipsText(series.symbol, currentPrice, d.a.price)
+                        : null;
+                      return pips ? <Text style={styles.levelPipText}>{` · ${pips}`}</Text> : null;
+                    })()}
                   </Text>
                 ) : null}
               </View>
@@ -10960,6 +10971,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   levelPriceLabelSel: { backgroundColor: colors.bgPanel },
+  levelPipText: { fontWeight: '600', opacity: 0.8 },
   // وسم مستوى فيبو: **يسار اللوح** لا يمينه. اليمين هو محور السعر ووسماه (الحيّ
   // والتقاطع) يُرسمان فوق كل شيء، ووسمٌ صار يحمل سعراً أعرض من أن يشاركهما الحافة.
   // وخلفية خفيفة لأن النصّ يقع الآن فوق الشموع لا فوق حافة فارغة.
