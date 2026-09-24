@@ -19,6 +19,7 @@ import {
   riskForLots,
   formatRiskPct,
   formatMoney,
+  profitAtTarget,
   LOT_STEP,
 } from '../positionSize';
 import { parseDecimal } from '../parseDecimal';
@@ -329,9 +330,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   useEffect(() => {
     setLivePxMsg(null);
   }, [symbol]);
-  /** الربح المحتمل ≈ نقاط الهدف × قيمة النقطة للوت × اللوت (تقدير كالمخاطرة تماماً) */
+  /** الربح المحتمل من المسافة الخام للهدف لا من نقاطه المقرَّبة للعرض — راجع `profitAtTarget` */
   const potentialProfit =
-    plan?.ok && plan.rewardPips != null && pv != null && lots != null ? plan.rewardPips * pv * lots : null;
+    plan?.ok && spec && rate != null && lots != null
+      ? profitAtTarget({ spec, entry: num(entryPx), target: num(targetPx), lots, quoteToAccount: rate })
+      : null;
 
   /**
    * «سجّل الخطة بالدفتر»: الأرقام هنا (رمز/دخول/وقف/هدف) هي نفسها التي يطلبها الدفتر — إعادة كتابتها

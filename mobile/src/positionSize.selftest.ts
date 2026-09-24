@@ -19,6 +19,7 @@ import {
   riskForLots,
   riskInQuoteCcy,
   pnlInQuoteCcy,
+  profitAtTarget,
   formatRiskPct,
   formatMoney,
   moneyDecimals,
@@ -609,3 +610,32 @@ console.log('positionSize slPipsFromPrices ceil selftest OK');
 }
 
 console.log('positionSize pnlInQuoteCcy selftest OK');
+
+// —— profitAtTarget: الربح المحتمل من المسافة الخام لا من نقاط الهدف المقرَّبة للعرض ——
+{
+  // هدف بمنزلة دون الـpipette: 25.49 pip. القديم (rewardPips 25.5 × 10 × 0.4) = 102.00 — أكبر من الحقيقة
+  const p = profitAtTarget({ spec: eu, entry: 1.085, target: 1.087549, lots: 0.4, quoteToAccount: 1 })!;
+  assert.ok(near(p, 101.96, 1e-6), String(p));
+  assert.equal(formatMoney(p, 'USD'), '101.96 USD');
+  assert.notEqual(formatMoney(p, 'USD'), formatMoney(25.5 * pipValuePerLot(eu, 1) * 0.4, 'USD'));
+  // الاتجاه لا يهمّ (المسافة كمّية): هدف بيع تحت الدخول
+  assert.ok(near(profitAtTarget({ spec: eu, entry: 1.085, target: 1.082451, lots: 0.4, quoteToAccount: 1 })!, 101.96));
+  // على شبكة الـpipette يطابق الطريقة القديمة حرفياً: 50 pip × 10$ × 0.4 = 200
+  assert.ok(near(profitAtTarget({ spec: eu, entry: 1.085, target: 1.09, lots: 0.4, quoteToAccount: 1 })!, 200));
+  // USDJPY بحساب دولار: 50 pip × 100,000 × 0.01 ÷ 150 × 0.5 لوت = 33.33 USD
+  const jp = profitAtTarget({ spec: uj, entry: 150, target: 150.5, lots: 0.5, quoteToAccount: ujRate })!;
+  assert.equal(formatMoney(jp, 'USD'), '166.67 USD');
+  // الذهب: 12.35$ × 100 أونصة × 0.2 = 247.00
+  assert.ok(near(profitAtTarget({ spec: au, entry: 2400, target: 2412.35, lots: 0.2, quoteToAccount: 1 })!, 247));
+  // هدف 1:2 على خطة كاملة = ضعف المخاطرة الفعلية للّوت نفسه بالضبط (أسعار على الشبكة)
+  const sl = slPipsFromPrices(eu, 1.085, 1.0825)!;
+  const rs = positionSize({ balance: 10_000, riskPct: 1, slPips: sl, pipValuePerLot: pvEu, contractSize: eu.contractSize })!;
+  const tp2 = profitAtTarget({ spec: eu, entry: 1.085, target: 1.09, lots: rs.lots, quoteToAccount: 1 })!;
+  assert.ok(near(tp2, 2 * rs.actualRisk), `${tp2} vs ${rs.actualRisk}`);
+  // مدخلات غير صالحة
+  assert.equal(profitAtTarget({ spec: eu, entry: 1.085, target: 1.085, lots: 1, quoteToAccount: 1 }), null);
+  assert.equal(profitAtTarget({ spec: eu, entry: 1.085, target: 1.09, lots: 0, quoteToAccount: 1 }), null);
+  assert.equal(profitAtTarget({ spec: eu, entry: 1.085, target: NaN, lots: 1, quoteToAccount: 1 }), null);
+  assert.equal(profitAtTarget({ spec: eu, entry: 1.085, target: 1.09, lots: 1, quoteToAccount: -1 }), null);
+}
+console.log('positionSize profitAtTarget selftest OK');

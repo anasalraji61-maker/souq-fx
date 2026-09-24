@@ -345,6 +345,28 @@ export function pnlInQuoteCcy(input: {
 }
 
 /**
+ * الربح المحتمل بعملة **الحساب** لحجم لوت عند هدف: |الهدف − الدخول| × حجم العقد × اللوت × سعر التحويل.
+ *
+ * لماذا لا «نقاط الهدف × قيمة النقطة × اللوت»: نقاط الهدف (`analyzePlan().rewardPips`) مقرَّبة لأقرب
+ * عُشر pip **للعرض**، فهدفٌ بمنزلة دون الـpipette (1.085 → 1.087549 = 25.49 pip) كان يُحسب ربحه من
+ * 25.5 pip — 102.00 USD على 0.4 لوت بدل 101.96، رقمٌ أكبر من الحقيقة بجانب «المخاطرة الفعلية» التي
+ * تُحسب من وقفٍ مقرَّب **للأعلى**. المسافة الخام لا تُقرَّب إلا مرّة واحدة عند العرض (`formatMoney`).
+ *
+ * `null` لمدخل غير صالح أو هدف = دخول.
+ */
+export function profitAtTarget(input: {
+  spec: InstrumentSpec;
+  entry: number;
+  target: number;
+  lots: number;
+  quoteToAccount: number;
+}): number | null {
+  const { spec, entry, target, lots, quoteToAccount } = input;
+  if (![entry, target, lots, quoteToAccount].every((v) => Number.isFinite(v) && v > 0) || entry === target) return null;
+  return Math.abs(target - entry) * spec.contractSize * lots * quoteToAccount;
+}
+
+/**
  * منازل المبلغ العشرية لعملة: الين بلا كسور (لا «سِن» يُتداول به)، وبقية عملات الحساب والتسعير
  * المدعومة منزلتان.
  */
