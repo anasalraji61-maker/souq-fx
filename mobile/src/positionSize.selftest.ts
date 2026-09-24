@@ -510,3 +510,56 @@ console.log('positionSize broker-suffix selftest OK');
 }
 
 console.log('positionSize formatMoney selftest OK');
+
+/**
+ * `slPipsFromPrices` تقرّب **للأعلى** لعُشر pip: المسافة يُقسَم عليها حجم اللوت، فوقفٌ محسوب أقصر من
+ * الحقيقي = مركز يخاطر بأكثر من النسبة المختارة.
+ */
+{
+  const au = instrumentSpec('XAUUSD')!;
+  const jp = instrumentSpec('USDJPY')!;
+  // سعر وقف بمنزلة دون الـpipette: 24.51 pip ⇒ 24.6 (أعلى عُشر)، وكان 24.5
+  assert.equal(slPipsFromPrices(eu, 1.085, 1.082549), 24.6);
+  assert.equal(slPipsFromPrices(eu, 1.082549, 1.085), 24.6); // الاتجاه لا يغيّر شيئاً
+  // ذهب: 19.96 ⇒ 20، و19.49/19.41 ⇒ 19.5 (كان 19.4 للثانية)، و19.59 ⇒ 19.6
+  assert.equal(slPipsFromPrices(au, 2400, 2398.004), 20);
+  assert.equal(slPipsFromPrices(au, 2400, 2398.051), 19.5);
+  assert.equal(slPipsFromPrices(au, 2400, 2398.059), 19.5);
+  assert.equal(slPipsFromPrices(au, 2400, 2398.041), 19.6);
+  // ين بمنزلة رابعة: 150 − 149.7249 = 27.51 ⇒ 27.6 (كان 27.5)
+  assert.equal(slPipsFromPrices(jp, 150, 149.7249), 27.6);
+  // أسعار على شبكة الـpipette لا تتحرّك: ضجيج الفاصلة العائمة لا يدفع ceil منزلةً كاملة
+  assert.equal(slPipsFromPrices(eu, 1.08503, 1.08251), 25.2);
+  assert.equal(slPipsFromPrices(eu, 1.0851, 1.085), 1);
+  assert.equal(slPipsFromPrices(jp, 157.4, 157.2), 20);
+  assert.equal(slPipsFromPrices(au, 2350.5, 2340.5), 100);
+  for (let i = 1; i <= 3000; i++) {
+    // كل مسافة على الشبكة (i pipette) تعود كما هي حرفياً
+    assert.equal(slPipsFromPrices(eu, 1.1, Number((1.1 - i * 0.00001).toFixed(5))), i / 10);
+    assert.equal(slPipsFromPrices(jp, 150, Number((150 - i * 0.001).toFixed(3))), i / 10);
+  }
+  // البرهان المالي: وقف حقيقي 25.04 pip (1.085 → 1.082496)، 1% من 10,000. بالتقريب العادي كان 25.0 ⇒
+  // 0.40 لوت ⇒ خسارة فعلية عند الوقف 100.16$ > 100$. الآن 25.1 ⇒ 0.39 لوت ⇒ 97.66$.
+  const sl = slPipsFromPrices(eu, 1.085, 1.082496)!;
+  assert.equal(sl, 25.1);
+  const r = positionSize({ balance: 10_000, riskPct: 1, slPips: sl, pipValuePerLot: pvEu, contractSize: eu.contractSize })!;
+  assert.equal(r.lots, 0.39);
+  assert.ok(r.lots * 25.04 * pvEu <= 100);
+  const old = positionSize({ balance: 10_000, riskPct: 1, slPips: 25, pipValuePerLot: pvEu, contractSize: eu.contractSize })!;
+  assert.ok(old.lots * 25.04 * pvEu > 100); // ما كان يحدث
+  // مسح عشوائي: أي وقف حقيقي بأي منزلة، الخسارة عند الوقف بحجم الحاسبة ≤ المخاطرة المطلوبة
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < 5000; i++) {
+    const stop = 1.1 - (0.0005 + rnd() * 0.01);
+    const trueSl = (1.1 - stop) / eu.pipSize;
+    const p = slPipsFromPrices(eu, 1.1, stop)!;
+    const bal = 500 + Math.floor(rnd() * 50_000);
+    const z = positionSize({ balance: bal, riskPct: 1, slPips: p, pipValuePerLot: pvEu, contractSize: eu.contractSize })!;
+    assert.ok(z.lots * trueSl * pvEu <= bal / 100 + 1e-9, `stop ${stop} bal ${bal}`);
+  }
+  assert.equal(slPipsFromPrices(eu, 1.085, 1.085), null);
+  assert.equal(slPipsFromPrices(eu, NaN, 1.08), null);
+}
+
+console.log('positionSize slPipsFromPrices ceil selftest OK');

@@ -176,12 +176,21 @@ export function pipsBetween(spec: InstrumentSpec, a: number, b: number): number 
 
 /**
  * مسافة وقف الخسارة بالنقاط من سعرَي الدخول والوقف (المتداول يفكّر غالباً بالسعر على الشارت لا بالـpip).
- * مقرَّبة لعُشر pip (النقاط الكسرية pipette). null إن كان أحدهما غير صالح أو تساويا — وقفٌ عند الدخول
- * ليس وقفاً، خلافاً لتنبيهٍ عند السوق.
+ * مقرَّبة لعُشر pip (النقاط الكسرية pipette) **للأعلى**. null إن كان أحدهما غير صالح أو تساويا — وقفٌ
+ * عند الدخول ليس وقفاً، خلافاً لتنبيهٍ عند السوق.
+ *
+ * لماذا للأعلى لا لأقرب قيمة (`pipsBetween`): هذه المسافة **يُقسَم عليها** حجم اللوت، فوقفٌ أقصر
+ * من الحقيقي = مركزٌ أكبر من المخاطرة المختارة. سعر وقف بمنزلة دون الـpipette (1.085 − 1.082549 =
+ * 24.51 pip، أو ذهب 2400 − 2398.004 = 19.96 pip) كان يُحسب 24.5 و20.0 فيُفتح لوت يخاطر بأكثر مما
+ * قيل — ووعدُ التقريب للأسفل بحجم اللوت (`positionSize`) «لا يتجاوز المخاطرة أبداً» يُنقض من الخانة
+ * التي قبله. ضجيج الفاصلة العائمة يُنظَّف قبل `ceil` كي لا
+ * تصير 25.2 الدقيقة (1.08503 − 1.08251) «25.3».
  */
 export function slPipsFromPrices(spec: InstrumentSpec, entry: number, stop: number): number | null {
-  const pips = pipsBetween(spec, entry, stop);
-  return pips != null && pips > 0 ? pips : null;
+  if (![entry, stop].every((v) => Number.isFinite(v) && v > 0)) return null;
+  const tenths = Math.round((Math.abs(entry - stop) / spec.pipSize) * 10 * 1e6) / 1e6;
+  const pips = Math.ceil(tenths) / 10;
+  return pips > 0 ? pips : null;
 }
 
 /**
