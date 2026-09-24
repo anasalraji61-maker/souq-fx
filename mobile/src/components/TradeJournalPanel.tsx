@@ -1348,7 +1348,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
                   setSl(x.text);
                   setFormError(null);
                 }}
-                accessibilityLabel={`${t.journalSlPlaceholder} ${x.pips} pip = ${x.text}`}
+                accessibilityLabel={t.journalSlAtPipsA11y.replace('{pips}', String(x.pips)).replace('{price}', x.text)}
               >
                 <Text style={[styles.qChipText, on ? styles.chipTextOn : { color: colors.bear }]}>{`−${x.pips} pip`}</Text>
               </Pressable>
