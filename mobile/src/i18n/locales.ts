@@ -280,6 +280,16 @@ export type Dict = {
   riskCalcCentSymbolHint: string;
   /** رمز حساب micro («EURUSDmicro»، «EURUSD.micro») — مرفوض عمداً كالسنت (لوت micro = 1,000 وحدة)؛ `{symbol}` كما كُتب، `{pair}` الزوج العادي (`smallContractPair`) */
   riskCalcMicroSymbolHint: string;
+  /**
+   * وضع حساب السنت/micro بالحاسبة (مقترح لوكيل الأدوات — جاهز غير موصول): رمز سنت يُحسب بدل رفضه والرصيد يُقرأ بالسنت
+   * (عقدٌ أصغر بمئة مرّة ورصيدٌ بوحدة أصغر بمئة مرّة ⇒ الحساب العادي نفسه بالأرقام نفسها إن عومل USC كـUSD بالتحويل)؛ رمز micro رصيده بعملة الحساب ولوته
+   * = اللوت العادي × 100. `{symbol}` كما كُتب؛ `{usd}` مبلغ USC ÷ 100؛ `{std}` اللوت بمقياس الحساب العادي (÷ 100)
+   */
+  riskCalcCentModeNote: string;
+  riskCalcCentBalance: string;
+  riskCalcCentUsdEquiv: string;
+  riskCalcSmallLotsStdEquiv: string;
+  riskCalcMicroModeNote: string;
   appCrashTitle: string;
   appCrashBody: string;
   appCrashRepeatBody: string;
@@ -1216,6 +1226,13 @@ const ar: Dict = {
     '«{symbol}» رمز حساب سنت — الحاسبة تحسب لوت الحساب العادي فقط، وعقد السنت أصغر بمئة مرّة. لحساب عادي اكتب {pair}',
   riskCalcMicroSymbolHint:
     '«{symbol}» رمز حساب micro — الحاسبة تحسب لوت الحساب العادي فقط، ولوت micro أصغر بمئة مرّة (1,000 وحدة). لحساب عادي اكتب {pair}',
+  riskCalcCentModeNote:
+    '«{symbol}» رمز حساب سنت: اكتب الرصيد بالسنت (USC) كما تعرضه منصّتك — 10,000 USC = 100 USD. اللوت أدناه هو ما تكتبه بحساب السنت',
+  riskCalcCentBalance: 'رصيد الحساب (USC — بالسنت)',
+  riskCalcCentUsdEquiv: '≈ {usd} USD',
+  riskCalcSmallLotsStdEquiv: '= {std} لوت بالحساب العادي',
+  riskCalcMicroModeNote:
+    '«{symbol}» رمز حساب micro: الرصيد بعملة حسابك كما هو، واللوت أدناه بلوتات micro (1,000 وحدة) — اكتبه كما هو بحساب micro',
   appCrashTitle: 'حدث خطأ غير متوقع',
   appCrashBody: 'تعذّر عرض هذه الشاشة. بياناتك ورسوماتك محفوظة — اضغط «إعادة المحاولة» للمتابعة.',
   appCrashRepeatBody:
@@ -2135,6 +2152,13 @@ const enUS: Dict = {
     '“{symbol}” is a cent-account symbol — the calculator sizes standard-account lots only, and a cent lot is 100 times smaller. For a standard account type {pair}',
   riskCalcMicroSymbolHint:
     '“{symbol}” is a micro-account symbol — the calculator sizes standard-account lots only, and a micro lot is 100 times smaller (1,000 units). For a standard account type {pair}',
+  riskCalcCentModeNote:
+    '“{symbol}” is a cent-account symbol: enter your balance in cents (USC) as your platform shows it — 10,000 USC = 100 USD. Type the lot below on the cent account',
+  riskCalcCentBalance: 'Account balance (USC — cents)',
+  riskCalcCentUsdEquiv: '≈ {usd} USD',
+  riskCalcSmallLotsStdEquiv: '= {std} lots on a standard account',
+  riskCalcMicroModeNote:
+    '“{symbol}” is a micro-account symbol: the balance stays in your account currency, and the lot below is in micro lots (1,000 units) — type it as-is on the micro account',
   appCrashTitle: 'Something went wrong',
   appCrashBody: 'This screen could not be displayed. Your data and drawings are safe — tap “Try again” to continue.',
   appCrashRepeatBody:
@@ -3079,6 +3103,13 @@ const ku: Dict = {
     '«{symbol}» هێمای هەژماری سەنتە — ژمێرەرەکە تەنها لۆتی هەژماری ئاسایی دەژمێرێت، و لۆتی سەنت سەد جار بچووکترە. بۆ هەژماری ئاسایی {pair} بنووسە',
   riskCalcMicroSymbolHint:
     '«{symbol}» هێمای هەژماری مایکرۆیە — ژمێرەرەکە تەنها لۆتی هەژماری ئاسایی دەژمێرێت، و لۆتی مایکرۆ سەد جار بچووکترە (1,000 یەکە). بۆ هەژماری ئاسایی {pair} بنووسە',
+  riskCalcCentModeNote:
+    '«{symbol}» هێمای هەژماری سەنتە: باڵانس بە سەنت (USC) بنووسە وەک پلاتفۆرمەکەت پیشانی دەدات — 10,000 USC = 100 USD. ئەو لۆتەی خوارەوە لە هەژماری سەنت بنووسە',
+  riskCalcCentBalance: 'باڵانسی هەژمار (USC — سەنت)',
+  riskCalcCentUsdEquiv: '≈ {usd} USD',
+  riskCalcSmallLotsStdEquiv: '= {std} لۆت لە هەژماری ئاسایی',
+  riskCalcMicroModeNote:
+    '«{symbol}» هێمای هەژماری مایکرۆیە: باڵانس بە دراوی هەژمارەکەت دەمێنێتەوە، و لۆتی خوارەوە لۆتی مایکرۆیە (1,000 یەکە) — وەک خۆی لە هەژماری مایکرۆ بنووسە',
   appCrashTitle: 'هەڵەیەکی چاوەڕواننەکراو ڕوویدا',
   appCrashBody: 'ئەم شاشەیە نیشان نەدرا. زانیاری و کێشانەکانت پارێزراون — «دووبارە هەوڵبدەرەوە» دابگرە.',
   appCrashRepeatBody:
