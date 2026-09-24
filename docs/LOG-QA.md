@@ -94,3 +94,15 @@ PDH/PDL بيوم 17:00 NY أوّلاً (:1641-1646)، Footprint «≈»/CVD «ت
 - الأكاديمية: الكردي يرى `name_en` (لا حقل كردي) — ملاحظة فقط.
 **بعد 6 commits وصلت أثناء الدورة (2196e28):** أخضر 0، **62/62** (`compare.selftest` جديد). لا طلب تنسيق جديد؛ `RECONNECT_*` صار «بلا مالك» (chart: خارج نطاقه).
 **الدورة القادمة:** المراجعة (c) — عناصر تفاعلية بلا accessibilityLabel.
+
+## 2026-09-25 — الدورة 8
+**البناء:** أخضر 0 (بعد 6178185، وأُعيد بعد 92a3a87 الوافد أثناء الدورة: أخضر 0) — لا إصلاح لازم.
+**Selftests:** 62/62 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — chart17 (`TerminalScreen.tsx:52 :132` `createSeriesCache`، 60e8892)، tools38 (`journalExposureStacked` ×3 ويُعرض
+`TradeJournalPanel.tsx:600`)، حصّة tools من chart29 (`Alert.alert` = 0 بالدفتر/الطرفية). أُسقط QA7 «pip» بعد ردّ launch57 (اصطلاح التطبيق بـ9 مواضع وبالقاموس).
+**غير مُغلق:** 10 `Alert.alert` بـ5 ملفات، `QUICK_SYMBOLS` بـBacktest/IndicatorAlerts، `RECONNECT_*` ×2، «₴»، a11yBusy بـAlerts/Account/NetworkTree، `useMultiLiveTicks`.
+**المراجعة (c — a11y)، بسكربت (وسم الفتح كاملاً بعمق الأقواس) ثم قراءة:** 237 عنصراً/40 ملفاً؛ 27 بلا `accessibilityLabel` — 18 بنصّ ابن مقروء (سليمة)؛
+الحقيقية: `AccountScreen` ×6، خلفية `MatrixSidePanel:83`، `MessagesScreen` ×3 (ميّتة). **جديد:** `TimeframeBar.tsx:28` بلا `accessibilityState.selected` (6 شاشات) —
+دُمج بصفّ TimeframeBar ★. EdgeRails/BottomDock/SidePanel ما زالت صفر `accessibilityState`. الجديد منذ الدورة 3 (الرسم بالمستقبل، محرّر الملاحظة 92a3a87،
+الدفتر، مفاتيح `switch` بالرباعي/الطرفية) موصوف كلّه. كل النواقص بملفات بلا مالك ⇒ ⛔ أنس 1.
+**الدورة القادمة:** المراجعة (d) — أرقام وحدود متناقضة بين الملفات.
