@@ -69,7 +69,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 
 أدوات المتداول
 • حاسبة حجم المركز: أدخل رصيدك والمخاطرة (نسبةً أو مبلغاً بعملة حسابك) ووقف الخسارة (بالنقاط أو بسعرَي الدخول والوقف) لتعرف حجم اللوت — لحساب عادي أو حساب سنت أو micro — مع أهداف جاهزة بنسبة 1:1 حتى 1:3، وتقدير للهامش الذي يحجزه الوسيط حسب رافعتك، وخانتا سبريد وعمولة اختياريتان تُريانك مخاطرتك وربحك الصافي شاملَين التكاليف — وتنبّهك حين يكون وقفك أضيق من السبريد نفسه.
-• دفتر صفقات تسجّل فيه صفقاتك بنفسك: الربح المحتمل بالمال قبل الدخول، ونتيجة كل صفقة بالنقاط والمال تراها قبل أن تحفظها — ولمسة واحدة تغلقها على وقفها أو نقطة التعادل أو هدفها بالضبط — ثم نسبة النجاح والصافي لكل أداة ومتوسط النتيجة بوحدة المخاطرة (R).
+• دفتر صفقات تسجّل فيه صفقاتك بنفسك: الربح المحتمل بالمال قبل الدخول، ونتيجة كل صفقة بالنقاط والمال تراها قبل أن تحفظها — ولمسة واحدة تغلقها على وقفها أو نقطة التعادل أو هدفها بالضبط — ثم نسبة النجاح والصافي لكل أداة ومتوسط النتيجة بوحدة المخاطرة (R) مقيسةً من الوقف الذي دخلت به ولو حرّكته بعدها.
 • تنبيه قبل الصفقة إن اقترب خبر اقتصادي قوي على عملة الزوج أو المؤشر أو المعدن، وبأسماء الرموز كما يكتبها وسيطك. وإن تعذّر تحميل التقويم يقول لك ذلك صراحةً، فلا تظنّ أن لا خبر.
 • «فحص السوق»: فلترة الأزواج بشروط المؤشرات الشائعة.
 • اختبار استراتيجيات بسيطة على البيانات التاريخية — لأغراض تعليمية.
@@ -113,7 +113,7 @@ CHARTS
 • Candlesticks, Heikin-Ashi, Renko, Kagi and Point & Figure.
 • Up to four charts on one screen with optional time sync — or overlay a second symbol on one chart, aligned bar by bar in time.
 • Tap any candle to see its open, high, low, close and range in pips, plus that level's distance from price, then tap 🔔 to set an alert there.
-• Pinch to zoom — the live candle stays in view. Drag the price axis to make candles taller or shorter. Scroll back to study old patterns; one tap returns to the latest candle, zoom intact.
+• Pinch to zoom — the live candle stays in view. Drag the price axis to make candles taller or shorter. Scroll back through history; one tap returns to the live candle, zoom intact.
 • A countdown under the live price shows how long until the current candle closes.
 • The on-screen high and low carry their price and update as you scroll, and a faint line marks where each trading day starts on intraday charts.
 • The indicators traders use: SMA and EMA, Bollinger Bands, RSI, MACD, Volume and more, plus pivot levels (classic, Camarilla, Fibonacci) and yesterday's high and low, and Tokyo, London and New York session shading.
@@ -129,9 +129,9 @@ WATCHLIST & ALERTS
 • Economic calendar and market news in one place.
 
 TRADER TOOLS
-• Position size calculator: enter your balance, risk (percent or amount) and stop loss (in pips, or as entry and stop prices) to get your lot size — standard, cent or micro accounts — with one-tap targets from 1:1 to 1:3, an estimate of the margin your broker holds at your leverage, and optional spread and commission so your risk and net profit include costs — and warns when your stop sits inside the spread.
-• A trade journal you fill in yourself: the potential profit in money before you enter, each trade's result in pips and money before you save it — with one tap to close it exactly at its stop, breakeven or target — then win rate, net result per instrument and average result in units of risk (R).
-• A heads-up before a trade when high-impact economic news is close for the pair's, index's or metal's currency — using your broker's symbol names. If the calendar fails to load, it says so.
+• Position size calculator: enter your balance, risk (percent or amount) and stop loss (in pips, or entry and stop prices) to get your lot size — standard, cent or micro accounts — with one-tap targets from 1:1 to 1:3, an estimate of the margin your broker holds at your leverage, and optional spread and commission so your risk and net profit include costs — and warns when your stop sits inside the spread.
+• A trade journal you fill in yourself: the potential profit in money before you enter, each trade's result in pips and money before you save it — one tap closes it exactly at its stop, breakeven or target — then win rate, net result per instrument and average result in units of risk (R), from your entry stop even after trailing it.
+• A heads-up before a trade when high-impact news is close for the pair's, index's or metal's currency — using your broker's symbol names. If the calendar fails to load, it says so.
 • Market screener using common indicator conditions.
 • Simple strategy backtesting on past data, for learning.
 • An AI assistant that answers your technical-analysis questions in your language, plus a short weekly report.
@@ -141,7 +141,7 @@ ACADEMY
 • Structured audio lessons in graded levels, starting from the basics.
 • Ask the teacher mid-lesson and get an instant explanation.
 
-Calm colors, easy on the eyes in long sessions, with tactile feedback only where you touch.
+Calm colors for long sessions, with tactile feedback only where you touch.
 
 Important: MATRIX is an analysis and education app only. It does not execute trades, does not connect to any broker, and does not provide investment advice. Trading currencies and financial markets involves a high level of risk and may result in the loss of capital. Market data shown may be delayed or demo data depending on the source.
 
@@ -157,3 +157,6 @@ The first release of MATRIX: multi-chart layouts, indicators and drawing tools, 
 
 > **2026-09-25 (launch 58)**: سطر الرسم يذكر الملاحظة المكتوبة (`92a3a87`) والرسم يمين الشمعة الحيّة (`80f4235`)؛ لإفساح الإنجليزي اختُصر سطرا
 > الإعادة والباكتست بلا حذف ميزة. العدّ: **ar 3699 / en 3995** من 4000.
+
+> **2026-09-25 (launch 59)**: سطر الدفتر: متوسط R «من الوقف الذي دخلت به ولو حرّكته» — `noteWithInitialStop`/`initialStop` (`9798121`، مختبَر،
+> بلا جهاز). لإفساح الإنجليزي اختُصرت خمس عبارات (الدفتر، الحاسبة، الرجوع للخلف، تنبيه الخبر، سطر الألوان) بلا حذف ميزة. العدّ: **ar 3747 / en 3996** من 4000.
