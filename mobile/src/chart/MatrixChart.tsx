@@ -35,7 +35,7 @@ import { compareOverlayPrices } from './compare';
 import { tickPlausibleForSeries, withLivePrice } from './liveSeries';
 import { computeVolumeProfile, pocPrice, computeTpo } from './volumeProfile';
 import { evalPineLite, INDICATOR_LIBRARY } from './pineLite';
-import { renko, measureStats, snapPrice } from './renko';
+import { renko, measureStats } from './renko';
 import { kagi } from './kagi';
 import { pointFigure } from './pointFigure';
 import { rangeBars } from './range';
@@ -2717,10 +2717,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
   const pointFromXY = useCallback(
     (x: number, y: number): ChartPoint => {
-      let price = priceAtY(y);
+      const raw = priceAtY(y);
       const local = hitIndex(x);
       const candle = sourceRef.current.plot[local];
-      if (magnet && candle) price = snapPrice(price, candle);
+      // مغناطيس ضعيف كالتقاطع (`CROSS_SNAP_PX`): يجذب لـO/H/L/C متى اقترب الإصبع منها فقط. كان يجذب
+      // دائماً لأقرب الأربعة (`snapPrice`) مهما بعُد — والمغناطيس مفعَّل افتراضياً: خطّ مقاومة يُرسم 30 pip
+      // فوق السعر يقفز لقمّة الشمعة تحت الإصبع، ووقف خطّة الشراء لا يُسحب إلا بين أسعار الشموع.
+      // خارج الجذب: السعر مقرَّب لمنازل الأداة (1.08500 لا 1.0849973) كوسم التقاطع.
+      const snapTol = Math.abs(priceAtY(y - CROSS_SNAP_PX) - raw);
+      const price =
+        crossPriceAt(raw, candle, magnet, symbolPriceDecimals(series.symbol), snapTol) ?? raw;
       const index = sourceRef.current.start + local;
       // مختومة بزمنها من الولادة: السحب لا يمرّ بتأثير الختم إطاراً إطاراً (رسمتان لكل حركة).
       const stamp = stampAtIndex(
@@ -2730,7 +2736,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       );
       return stamp == null ? { index, price } : { index, price, ...stamp };
     },
-    [hitIndex, priceAtY, magnet, series.timeframe]
+    [hitIndex, priceAtY, magnet, series.timeframe, series.symbol]
   );
 
   // طرف `b` لخطّة شراء/بيع: يمين الدخول دائماً (`positionEndIndex`)، مختوماً بزمنه الجديد — وإلا
