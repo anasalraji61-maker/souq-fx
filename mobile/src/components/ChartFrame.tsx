@@ -237,7 +237,9 @@ export function ChartFrame({
           <TimeframeBar
             value={pendingSwitch?.tf ?? series.timeframe}
             onChange={(next) => {
-              if (next !== series.timeframe) setPendingSwitch({ tf: next });
+              // العودة للفريم الحاليّ قبل وصول المطلوب تُلغي الانتظار — كان الشريط يبقى على
+              // الفريم المتروك والشارت باهتاً «قيد التبديل» حتى مهلة 8 ثوانٍ.
+              setPendingSwitch(next !== series.timeframe ? { tf: next } : null);
               onTimeframeChange?.(next);
             }}
             compact={size === 'small' || fill}
@@ -365,7 +367,7 @@ export function ChartFrame({
           <PairDrumWheel
             value={series.symbol}
             onChange={(next) => {
-              if (next !== series.symbol) setPendingSwitch({ symbol: next });
+              setPendingSwitch(next !== series.symbol ? { symbol: next } : null);
               onSymbolChange?.(next);
             }}
             onClose={() => setWheelOpen(false)}
