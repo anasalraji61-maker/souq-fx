@@ -131,3 +131,14 @@ PDH/PDL بيوم 17:00 NY أوّلاً (:1641-1646)، Footprint «≈»/CVD «ت
 - **QA10 → chart:** `marketHours.ts:160` `projectBarTimeSec('XAUUSD', Fri 20:00Z, 3600, 1)` = الأحد 21:00Z (أعدتُ التشغيل) — الذهب يفتح 18:00 NY؛ وعلامة محور تجميلية.
 - **QA10 → tools:** `TerminalScreen.tsx:1575` السبريد سعراً خاماً مقابل `DomLitePanel.tsx:72` بالـpip.
 **الدورة القادمة:** المراجعة (a) — تكرار/كود ميت.
+
+## 2026-09-25 — الدورة 11
+**البناء:** أخضر 0 (بعد 20f0ade) — لا إصلاح لازم. **Selftests:** 62/62 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — QA10/tools (`TerminalScreen.tsx:1579` `quoteSpreadPips`)، tools40 (`afbb0c2` ×3 لغات + `PositionSizePanel.tsx:1236`)،
+تلميح الملاحظة (`mcHintNoteSelected` «المجاورة/next to it»)، QA10/chart للمعادن (`83dd284` — شغّلتُ `projectBarTimeSec`: XAUUSD الجمعة 20:00Z ⇒ الأحد 22:00Z، شتاءً 23:00Z).
+النصف التجميلي (علامة المحور) أُسقط بردّ chart. **غير مُغلق:** US30 ما زال ⇒ الأحد 21:00Z (صفّ QA10 بقيّة)؛ `useMultiLiveTicks` بلا تقادم (`d59afdc` لـ`useLiveTicks` فقط)؛
+10 `Alert.alert`، «₴» ×2، `TimeframeBar` بلا `accessibilityState`، `QUICK_SYMBOLS` ×3.
+**المراجعة (a — تكرار/كود ميت)، بسكربت يعدّ كل `export` خارج ملفه وداخله ثم تكرار أسماء التعريفات:** 160 تصديراً بلا مستورد (أغلبها أنواع/ثوابت مستعملة داخل ملفها)؛
+الميّتة تماماً 16 — القائمة نفسها منذ QA1 (+`WatchSymbol` نوع). **جديد:** `DomLitePanel.tsx:67-73` نسخة `quoteSpreadPips` و`last` خاصية ميتة (بلا مالك)؛
+`PANE_PAD`/`clamp`/`finite` ×3 بلوحات centered/macd/stoch (chart، منخفض). المكرّرات القديمة (`dirColor`/`dirLabel` ×3، `RECONNECT_*` ×2) بلا تغيير.
+**الدورة القادمة:** المراجعة (b) — نصوص ظاهرة ثابتة مكانها `locales.ts`.
