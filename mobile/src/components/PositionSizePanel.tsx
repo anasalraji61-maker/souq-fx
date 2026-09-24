@@ -1244,10 +1244,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
                 {t.riskCalcSmallLotsStdEquiv.replace('{std}', () => smallLotsStdEquiv(result.lots))}
               </Text>
             ) : null}
-            {/* فوق أكبر أمر يقبله الوسيط (200 lot من وقف 1 pip): الرقم صحيح حسابياً لكن الأمر يُرفض — أو الوقف خطأ كتابة. راجع `lotsOverOrderMax` */}
+            {/* فوق أكبر أمر يقبله الوسيط (100 lot عادي، 200 lot سنت/micro — نصّ كلٍّ بحدّه): الرقم صحيح حسابياً لكن الأمر يُرفض — أو الوقف خطأ كتابة. راجع `lotsOverOrderMax` */}
             {overOrderMax != null ? (
               <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
-                {t.riskCalcOverOrderMax.replace('{lots}', overOrderMax.toFixed(2))}
+                {(small != null ? t.riskCalcOverOrderMaxSmall : t.riskCalcOverOrderMax).replace('{lots}', overOrderMax.toFixed(2))}
               </Text>
             ) : null}
           </>
