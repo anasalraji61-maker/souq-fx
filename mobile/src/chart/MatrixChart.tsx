@@ -1089,6 +1089,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setCross(null);
     crossPinned.current = false;
     syncKeyRef.current = '';
+    // الإعادة تخرج مع التبديل: خطوتها فهرس داخل نافذة الفريم السابق، فكانت الخطوة 12 من 80 على 15m
+    // (~17 ساعة للخلف) تصير على 1H ~68 ساعة ويوماً آخر، وعلى زوج آخر يستمرّ التشغيل فوق شموع لم يخترها.
+    setReplayOn(false);
+    setReplayPlaying(false);
   }, [series.symbol, series.timeframe]);
 
   useEffect(() => {
@@ -1131,7 +1135,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       };
     }
 
-    const end = plot.length - offset;
+    // الإزاحة مقصوصة بطول السلسلة الحالية: سحب 120 شمعة للخلف ثم Renko (~40 لبنة) كان يعطي نهاية
+    // سالبة فـ`slice` فارغة — شارت فارغ حتى AUTO. الحدّ نفسه الذي تقف عنده `holdView` (آخر 10).
+    const end = plot.length - Math.min(offset, Math.max(0, plot.length - 10));
     const start = Math.max(0, end - windowCount);
     const windowPlot = plot.slice(start, end);
     const windowLen = windowPlot.length;
@@ -1167,14 +1173,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const prev = heldViewRef.current;
     if (prev.key === key && prev.len === all.length && prev.lastSec === lastSec) return; // تيك بالشمعة نفسها
     heldViewRef.current = { key, lastSec, len: all.length };
-    if (prev.key !== key || syncFollow || offsetRef.current <= 0) return;
+    // بالإعادة تُمسك النافذة حتى عند الطرف الأيمن: شمعة جديدة كانت تزحف بها فتصير «شمعة الإعادة» التالية
+    // غير المكشوفة — الإعادة تتقدّم وحدها وتكشف المستقبل بلا ضغط +1.
+    if (prev.key !== key || syncFollow || (offsetRef.current <= 0 && !replayOn)) return;
     const added = appendedAfter(prev.lastSec, all.map(barTime), prev.len);
     if (added <= 0) return;
     const next = Math.min(Math.max(0, all.length - 10), offsetRef.current + added);
     if (next === offsetRef.current) return;
     offsetRef.current = next;
     setOffset(next);
-  }, [source.all, series.symbol, series.timeframe, kind, syncFollow]);
+  }, [source.all, series.symbol, series.timeframe, kind, syncFollow, replayOn]);
 
   // تقاطع مشترك بالرباعي: كانت قراءة الشمعة نفسها على الأزواج الأربعة (هل كسر اليورو
   // والذهب معاً عند خبر الدولار؟) تعني عيناً تقيس المحاور الزمنية الأربعة. القائد ينشر زمن
