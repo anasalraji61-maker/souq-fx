@@ -168,11 +168,19 @@ export const NEWS_GRACE_MS = 15 * 60 * 1000;
 /**
  * أقرب حدث عالي التأثير لعملات الزوج ضمن [الآن − 15د، الآن + 3س]؛ null إن لا يوجد.
  *
- * «أقرب» = أصغر بُعدٍ عن اللحظة **بالاتجاهين** (`|deltaMs|`)، والتعادل للقادم. كان الاختيار بأصغر
+ * «أقرب» = أصغر بُعدٍ عن اللحظة **بالاتجاهين** (`distance` أدناه)، والتعادل للقادم. كان الاختيار بأصغر
  * `deltaMs` بإشارتها، فالحدث الذي مضى أقدم يغلب دائماً: خبرٌ يوروبي صدر قبل 14 دقيقة كان يحجب
  * «الرواتب الأمريكية بعد دقيقتين» عن متداول EURUSD — فيقرأ «الآن» عن خبر انتهى، ولا يعرف أن
  * القفزة الحقيقية لم تقع بعد. وبين حدثين مضيا كان يُعرض الأقدم لا الأحدث.
+ *
+ * والحدث الذي **مضى** يُحسب أبعد بمهلة الـ15 دقيقة (`distance`): بالبُعد المجرّد كان «المركزي الأوروبي قبل 5د»
+ * يحجب «الرواتب الأمريكية بعد 6د» عن EURUSD — السطر «الآن · ECB» فيظنّ المتداول أن القفزة وقعت ويدخل قبل
+ * الرواتب بدقائق. الآن كل قادمٍ خلال 15د يغلب كل ماضٍ (هو القرار القابل للفعل: لا تدخل الآن)، وما صدر للتوّ
+ * يبقى غالباً لقادمٍ بعيد (قبل 1د ⇒ 16د، يغلب «بعد ساعتين»)، وبين ماضيَين الأحدث كما كان.
  */
+/** البُعد للمقارنة فقط: القادم بدقائقه، والماضي بدقائقه + مهلة ما بعد الصدور — راجع `nextHighImpact`. */
+const distance = (deltaMs: number, graceMs: number) => (deltaMs < 0 ? -deltaMs + graceMs : deltaMs);
+
 export function nextHighImpact(
   events: readonly NewsEvent[],
   currencies: readonly string[],
@@ -190,8 +198,8 @@ export function nextHighImpact(
     if (!want.has(String(e.currency).toUpperCase())) continue;
     const delta = e.ts * 1000 - nowMs;
     if (delta < -graceMs || delta > horizonMs) continue;
-    const dist = Math.abs(delta);
-    const bestDist = best ? Math.abs(best.deltaMs) : Infinity;
+    const dist = distance(delta, graceMs);
+    const bestDist = best ? distance(best.deltaMs, graceMs) : Infinity;
     if (dist < bestDist || (best && dist === bestDist && delta > best.deltaMs)) best = { event: e, deltaMs: delta };
   }
   return best;

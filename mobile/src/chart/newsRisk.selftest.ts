@@ -200,6 +200,24 @@ assert.equal(
   nextHighImpact([ev('past-5', 'USD', 'high', -5), ev('in-5', 'USD', 'high', 5)], ['USD'], now)?.event.id,
   'in-5'
 );
+// خبرٌ مضى قبل 5د لا يحجب الرواتب بعد 6د (بالبُعد المجرّد كان «الآن · ECB» على EURUSD)
+{
+  const r = nextHighImpact([ev('ecb-past-5', 'EUR', 'high', -5), ev('nfp-in-6', 'USD', 'high', 6)], ['EUR', 'USD'], now);
+  assert.equal(r?.event.id, 'nfp-in-6');
+  assert.equal(r?.deltaMs, 6 * 60_000);
+  // كل قادمٍ خلال المهلة يغلب كل ماضٍ ضمنها — بالترتيبين
+  for (const past of [-0.5, -1, -5, -14, -15]) {
+    for (const ahead of [0.5, 1, 6, 14, 15]) {
+      const a = [ev('p', 'USD', 'high', past), ev('a', 'USD', 'high', ahead)];
+      assert.equal(nextHighImpact(a, ['USD'], now)?.event.id, 'a', `${past} ${ahead}`);
+      assert.equal(nextHighImpact([...a].reverse(), ['USD'], now)?.event.id, 'a', `${past} ${ahead} rev`);
+    }
+  }
+  // صدر للتوّ يغلب قادماً بعد المهلة: قبل 1د (16) مقابل بعد 20د
+  assert.equal(nextHighImpact([ev('p1', 'USD', 'high', -1), ev('a20', 'USD', 'high', 20)], ['USD'], now)?.event.id, 'p1');
+  // الماضي وحده يبقى ظاهراً كما كان
+  assert.equal(nextHighImpact([ev('p14', 'USD', 'high', -14)], ['USD'], now)?.event.id, 'p14');
+}
 assert.equal(
   nextHighImpact([ev('in-5', 'USD', 'high', 5), ev('past-5', 'USD', 'high', -5)], ['USD'], now)?.event.id,
   'in-5'
