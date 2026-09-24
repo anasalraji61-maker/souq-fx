@@ -2887,14 +2887,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const box = positionBox(side, a, b, rr, a.index - source.start, b.index - source.start);
     const labels = positionLabels(box.lv, series.symbol);
     const width = box.right - box.left;
-    // النتيجة على الشموع الحقيقية (هايكن آشي أسعار مُركّبة بالفهارس نفسها)، حتى آخر شمعة معروضة —
-    // بالإعادة لا تُكشف قبل أوانها.
+    // النتيجة على الشموع الحقيقية (هايكن آشي أسعار مُركّبة بالفهارس نفسها)، حتى الشمعة الحيّة —
+    // وبالإعادة حتى شمعة الإعادة فلا تُكشف قبل أوانها. كانت «آخر شمعة معروضة» دائماً: سحب الشارت
+    // للخلف لقراءة الدخول يغيّر ربح الصفقة المفتوحة، بل يعيد صفقة منفَّذة إلى «Entry ⌛».
     const outcome = positionOutcome(
       box.lv,
       kind === 'heikin' ? liveSeries.candles : source.all,
       a.index,
       b.index,
-      source.start + source.plot.length - 1
+      replayOn ? source.start + source.plot.length - 1 : source.all.length - 1
     );
     const outcomeUp = outcome != null && outcome.r >= 0;
     // لم يبلغ السعر الدخول بعد (أمر معلّق) ⇒ وسم محايد بلا شريط مسار: لا ربح ولا خسارة لصفقة لم تُفتح.
