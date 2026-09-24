@@ -37,8 +37,14 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
 
   useEffect(() => {
     symRef.current = sym;
+    // معطَّل ⇒ يُنسى آخر تيك: نافذة تُعاد بعد دقائق كانت تعرض سعر إغلاقها حتى أوّل بثّ
+    // بعد إعادة الاتصال (وبلا حدّ إن فشل الاتصال).
+    if (!enabled) {
+      setState(null);
+      return;
+    }
     const snap = snapRef.current;
-    if (!enabled || !snap || Date.now() - snap.at > SNAPSHOT_FRESH_MS) return;
+    if (!snap || Date.now() - snap.at > SNAPSHOT_FRESH_MS) return;
     const t = tickFromSnapshot(snap, sym);
     if (t) setState({ sym, tick: t });
   }, [sym, enabled]);
