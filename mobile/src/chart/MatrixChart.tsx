@@ -1246,7 +1246,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const chartPlotWRef = useRef(320);
   const chartPlotHRef = useRef(200);
   const sourceRef = useRef({
-    plot: [] as { close: number; open: number; high: number; low: number }[],
+    plot: [] as { time: number; close: number; open: number; high: number; low: number }[],
     start: 0,
     windowLen: 80,
     all: [] as unknown[],
@@ -6844,13 +6844,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           if (d.tool === 'fib' && d.b) {
             const hi = Math.max(d.a.price, d.b.price);
             const lo = Math.min(d.a.price, d.b.price);
+            const fromHigh = d.a.price > d.b.price;
             // الخطوط كلّها تُرسم (هي الأداة)، والوسوم وحدها تُنقّى — راجع `fibLabels.ts`
             // و`fibLabelPlans` أعلاه (تتجنّب وسوم الخطوط الأفقية وفيبو المرسوم قبله).
             const labelled = new Map((fibLabelPlans.get(d.id) ?? []).map((l) => [l.level, l.text]));
             return (
               <View key={d.id}>
                 {FIB_DRAW_LEVELS.map((lv) => {
-                  const price = fibLevelPrice(hi, lo, lv, d.a.price > d.b.price);
+                  const price = fibLevelPrice(hi, lo, lv, fromHigh);
                   const text = labelled.get(lv);
                   // الامتداد هدف لا مستوى دخول: منقّط وأخفت، فلا تُقرأ الأداة تسعة خطوط متساوية.
                   const ext = isFibExtension(lv);
@@ -6925,7 +6926,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               x2 < chartPlotW / 2
                 ? { left: Math.max(2, x2 - 12) }
                 : { right: Math.max(2, chartW - x2 - 12) };
-            const tagMaxW = chartW - 2 - ('left' in side ? side.left : side.right);
+            const tagMaxW = chartW - 2 - (side.left ?? side.right ?? 0);
             return (
               <>
                 {liveMeasure ? null : (
