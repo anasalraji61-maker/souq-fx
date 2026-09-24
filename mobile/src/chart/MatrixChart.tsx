@@ -74,6 +74,7 @@ import { dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
 import { fibLevelPrice, planFibLabels } from './fibLabels';
 import { measureReadoutText } from './measureReadout';
 import { thinByGap } from './levelLabels';
+import { formatPct } from './dailyChange';
 import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
@@ -3153,24 +3154,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <Text style={styles.readoutText}>
             O {formatPrice(crossCandle.open, series.symbol)} H {formatPrice(crossCandle.high, series.symbol)} L{' '}
             {formatPrice(crossCandle.low, series.symbol)} C {formatPrice(crossCandle.close, series.symbol)}
-            {crossCandle.open > 0 ? (
-              <Text
-                style={{
-                  color:
-                    crossCandle.close > crossCandle.open
-                      ? colors.bull
-                      : crossCandle.close < crossCandle.open
-                        ? colors.bear
-                        : colors.textDim,
-                  fontWeight: '800',
-                }}
-              >
-                {` ${crossCandle.close >= crossCandle.open ? '+' : '−'}${(
-                  (Math.abs(crossCandle.close - crossCandle.open) / crossCandle.open) *
-                  100
-                ).toFixed(2)}%`}
-              </Text>
-            ) : null}
+            {crossCandle.open > 0
+              ? (() => {
+                  // جسم الشمعة بالنسبة: شمعة دوجي كانت تُكتب «+0.00%» (الشرط `>=`)، وجسمٌ صاعد
+                  // دون 0.005% يُكتب «+0.00%» **بالأخضر**. الآن `formatPct` كرأس الإطار، واللون
+                  // من الرقم المطبوع نفسه فلا يخالف ما يُقرأ.
+                  const bodyPct = ((crossCandle.close - crossCandle.open) / crossCandle.open) * 100;
+                  const r = Math.round(bodyPct * 100) / 100;
+                  return (
+                    <Text
+                      style={{
+                        color: r > 0 ? colors.bull : r < 0 ? colors.bear : colors.textDim,
+                        fontWeight: '800',
+                      }}
+                    >
+                      {` ${formatPct(bodyPct)}`}
+                    </Text>
+                  );
+                })()
+              : null}
             {compareSeries ? ` · ${compareSeries.symbol} ${formatPrice(compareSeries.last, compareSeries.symbol)}` : ''}
           </Text>
         ) : (
