@@ -31,6 +31,9 @@ import {
   marginPrice,
   sizeLooksLikeUnits,
   MAX_SANE_LOTS,
+  parseSpreadPips,
+  spreadRisk,
+  MAX_SPREAD_PIPS,
   type InstrumentSpec,
 } from './positionSize';
 
@@ -753,10 +756,10 @@ console.log('positionSize maxLotsForMargin selftest OK');
   assert.equal(stopPipsMismatch(25, 25), null);
   assert.equal(stopPipsMismatch(25.04, 25), null); // أوسع قليلاً = لوت أصغر، مسموح
   assert.equal(stopPipsMismatch(25.05, 25), null);
-  assert.deepEqual(stopPipsMismatch(25.1, 25), { typed: 25.1, derived: 25 });
+  assert.deepEqual(stopPipsMismatch(25.1, 25), { typed: 25.1, derived: 25, narrower: false });
   // الحالة التي كان هامش ±0.05 يمرّرها: نقاط أضيق من السعرين ⇒ لوت أكبر من وقفه المحفوظ
-  assert.deepEqual(stopPipsMismatch(24.96, 25), { typed: 24.96, derived: 25 });
-  assert.deepEqual(stopPipsMismatch(15, 25), { typed: 15, derived: 25 });
+  assert.deepEqual(stopPipsMismatch(24.96, 25), { typed: 24.96, derived: 25, narrower: true });
+  assert.deepEqual(stopPipsMismatch(15, 25), { typed: 15, derived: 25, narrower: true });
   // ضجيج عائم لا يُعدّ أضيق
   assert.equal(stopPipsMismatch(0.1 + 0.2, 0.3), null);
   // لا مقارنة بلا سعرين أو بخانة فارغة
@@ -770,6 +773,20 @@ console.log('positionSize maxLotsForMargin selftest OK');
       if (typed <= 0 || stopPipsMismatch(typed, derived)) continue;
       const r = positionSize({ balance: 10_000, riskPct: 1, slPips: typed, pipValuePerLot: pv, contractSize: eu.contractSize })!;
       assert.ok(r.lots * derived * pv <= 100 + 1e-6, `typed ${typed} derived ${derived}`);
+    }
+  }
+  // `narrower` = الحالة الخطرة بالضبط: كل تعارض أوسع لا يُخرج لوتاً أكبر من لوت الوقف المحفوظ
+  for (const derived of [5, 12.3, 25, 40.7]) {
+    const atDerived = positionSize({ balance: 10_000, riskPct: 1, slPips: derived, pipValuePerLot: pv, contractSize: eu.contractSize })!;
+    for (let d = -3; d <= 3; d += 0.01) {
+      const typed = Math.round((derived + d) * 100) / 100;
+      const mm = typed > 0 ? stopPipsMismatch(typed, derived) : null;
+      if (!mm) continue;
+      assert.equal(mm.narrower, typed < derived, `typed ${typed} derived ${derived}`);
+      if (!mm.narrower) {
+        const r = positionSize({ balance: 10_000, riskPct: 1, slPips: typed, pipValuePerLot: pv, contractSize: eu.contractSize })!;
+        assert.ok(r.lots <= atDerived.lots, `wider ${typed} derived ${derived}`);
+      }
     }
   }
 }
@@ -819,3 +836,63 @@ console.log('positionSize marginPrice selftest OK');
   }
 }
 console.log('positionSize sizeLooksLikeUnits selftest OK');
+
+// —— السبريد: خانته، والمخاطرة شاملة السبريد، واللوت الذي يُبقيها ضمن النسبة
+{
+  assert.equal(parseSpreadPips(''), 0);
+  assert.equal(parseSpreadPips('  '), 0);
+  assert.equal(parseSpreadPips('1.5'), 1.5);
+  assert.equal(parseSpreadPips('1,5'), 1.5);
+  assert.equal(parseSpreadPips('٢٫٥'), 2.5);
+  assert.equal(parseSpreadPips('0'), 0);
+  assert.equal(parseSpreadPips(String(MAX_SPREAD_PIPS)), MAX_SPREAD_PIPS);
+  for (const bad of ['-1', '501', '10851', 'abc', '1.2.3']) assert.equal(parseSpreadPips(bad), null, bad);
+
+  const pv = pipValuePerLot(eu, 1); // 10 USD
+  const base = { pipValuePerLot: pv, balance: 10_000, riskPct: 1, contractSize: eu.contractSize };
+  // مثال مفتاح الترجمة نفسه: 1% من 10,000 على وقف 20 = 0.50 لوت؛ بسبريد 1.5 يخسر 21.5 pip = 107.50 = 1.075%
+  const sized = positionSize({ balance: 10_000, riskPct: 1, slPips: 20, pipValuePerLot: pv, contractSize: eu.contractSize })!;
+  assert.equal(sized.lots, 0.5);
+  const r = spreadRisk({ ...base, lots: sized.lots, slPips: 20, spreadPips: 1.5 })!;
+  assert.ok(near(r.risk, 107.5));
+  assert.ok(near(r.pct, 1.075));
+  // 100 / (21.5 × 10) = 0.465 → 0.46 للأسفل
+  assert.equal(r.lotsWithin, 0.46);
+  // وقف ضيّق: السبريد يأكل أكثر — 5 + 2 على 2.00 لوت = 140 = 1.4%
+  const tight = spreadRisk({ ...base, lots: 2, slPips: 5, spreadPips: 2 })!;
+  assert.ok(near(tight.pct, 1.4));
+  assert.equal(tight.lotsWithin, 1.42);
+  // بلا سبريد / مدخل غير صالح: لا سطر
+  assert.equal(spreadRisk({ ...base, lots: 0.5, slPips: 20, spreadPips: 0 }), null);
+  assert.equal(spreadRisk({ ...base, lots: 0.5, slPips: 20, spreadPips: NaN }), null);
+  assert.equal(spreadRisk({ ...base, lots: 0, slPips: 20, spreadPips: 1 }), null);
+  // دون أصغر لوت بعد السبريد: المخاطرة تُحسب، و`lotsWithin` = null
+  const small = spreadRisk({ ...base, balance: 50, lots: 0.01, slPips: 3, spreadPips: 3 })!;
+  assert.ok(near(small.risk, 0.6));
+  assert.equal(small.lotsWithin, null);
+  // البرهان: على شبكة، `lotsWithin` لا يتجاوز المخاطرة المطلوبة شاملة السبريد، وخطوة فوقه تتجاوزها،
+  // والمخاطرة شاملة السبريد ≥ المخاطرة بلا سبريد دائماً (لا يُطمئن السطر أكثر من الحساب الأصلي)
+  let checked = 0;
+  for (const spec of [eu, instrumentSpec('USDJPY')!, instrumentSpec('XAUUSD')!]) {
+    const p = pipValuePerLot(spec, spec.quote === 'JPY' ? 1 / 150 : 1);
+    for (const sl of [3, 8, 15, 20, 37.5, 120]) {
+      for (const sp of [0.1, 0.6, 1.5, 3, 12]) {
+        for (const bal of [300, 2_500, 48_000]) {
+          const want = bal * 0.01;
+          const s0 = positionSize({ balance: bal, riskPct: 1, slPips: sl, pipValuePerLot: p, contractSize: spec.contractSize });
+          if (!s0 || s0.belowMinLot) continue;
+          const x = spreadRisk({ lots: s0.lots, slPips: sl, spreadPips: sp, pipValuePerLot: p, balance: bal, riskPct: 1, contractSize: spec.contractSize })!;
+          assert.ok(x.risk > s0.actualRisk);
+          if (x.lotsWithin != null) {
+            assert.ok(x.lotsWithin <= s0.lots);
+            assert.ok(x.lotsWithin * (sl + sp) * p <= want + 1e-9, `${spec.symbol} ${sl}+${sp} ${bal}`);
+            assert.ok((x.lotsWithin + LOT_STEP) * (sl + sp) * p > want - 1e-9, `${spec.symbol} ${sl}+${sp} ${bal} step`);
+          }
+          checked++;
+        }
+      }
+    }
+  }
+  assert.ok(checked > 150, String(checked));
+}
+console.log('positionSize spread selftest OK');

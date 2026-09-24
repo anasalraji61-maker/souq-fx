@@ -294,7 +294,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   const sizeUnitsText = (): string => {
     const l = num(size) ?? 0;
     const n = String(l).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    return `⚠ ${n} ${t.riskCalcUnits}?${sizeUnits?.lots != null ? ` → ${sizeUnits.lots.toFixed(2)} lot` : ''}`;
+    return sizeUnits?.lots != null
+      ? t.journalSizeUnitsFix.replace('{n}', n).replace('{lots}', sizeUnits.lots.toFixed(2))
+      : t.journalSizeUnitsNoFix.replace('{n}', n);
   };
 
   /** رسالة واضحة لوقف/هدف بالجهة الخطأ — نفس نصوص خطة الصفقة بلوحة الأفكار. */

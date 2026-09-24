@@ -25,6 +25,8 @@ import {
   maxLotsForMargin,
   marginPrice,
   stopPipsMismatch,
+  parseSpreadPips,
+  spreadRisk,
   LOT_STEP,
 } from '../positionSize';
 import { parseDecimal } from '../parseDecimal';
@@ -54,6 +56,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** رافعة الحساب — ثابتة للمتداول كرصيده، فتُحفظ معه. فارغة = لا سطر هامش */
   const [leverage, setLeverage] = useState('');
   const [slPips, setSlPips] = useState('');
+  /** سبريد الأداة بالنقاط (اختياري) — يخصّ الأداة لا الحساب، فلا يُحفظ ويُمسح بتبديلها */
+  const [spread, setSpread] = useState('');
   /** بديل اختياري: سعرا الدخول والوقف كما يراهما المتداول على الشارت → تُملأ خانة النقاط تلقائياً */
   const [entryPx, setEntryPx] = useState('');
   const [stopPx, setStopPx] = useState('');
@@ -205,7 +209,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     (balance.trim() !== '' && parseDecimal(balance, { amount: true }) == null) ||
     (riskPct.trim() !== '' && parseDecimal(riskPct, { percent: true }) == null) ||
     [slPips, entryPx, stopPx, targetPx, manualConv].some((v) => v.trim() !== '' && parseDecimal(v) == null) ||
-    (leverage.trim() !== '' && parseLeverage(leverage) == null);
+    (leverage.trim() !== '' && parseLeverage(leverage) == null) ||
+    parseSpreadPips(spread) == null;
   /** الرصيد مبلغ: «10.000» أوروبية = عشرة آلاف فتُرفض كـ«10,000» بدل حساب لوت من 10 — راجع parseDecimal.ts */
   const balanceNum = parseDecimal(balance, { amount: true }) ?? NaN;
   /** «1%» / «0.5٪» كما يقولها المتداول — علامة النسبة تُقبل بهذه الخانة وحدها (راجع parseDecimal.ts) */
@@ -239,10 +244,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    */
   const slTyped = num(slPips);
   /** غير متماثل: نقاط أضيق من السعرين بأي فرق = لوت أكبر من وقفه المحفوظ — راجع `stopPipsMismatch` */
-  const slMismatch =
-    !slFromPrices.current && stopPipsMismatch(slTyped, derivedSl) != null
-      ? { typed: slPips.trim(), derived: derivedSl! }
-      : null;
+  const slMm = slFromPrices.current ? null : stopPipsMismatch(slTyped, derivedSl);
+  const slMismatch = slMm ? { typed: slPips.trim(), derived: slMm.derived, narrower: slMm.narrower } : null;
+  /** الأضيق هو الخطر (لوت أكبر من وقفه المحفوظ) فيقول خطره؛ الأوسع يصف الحساب فقط */
+  const slMismatchText = slMismatch
+    ? (slMismatch.narrower ? t.riskCalcSlMismatchNarrower : t.riskCalcSlMismatch)
+        .replace('{pips}', slMismatch.typed)
+        .replace('{derived}', String(slMismatch.derived))
+    : null;
   /**
    * **وقف أضيق من 1 pip.** مستحيلٌ بأي أداة تجزئة — أضيق من السبريد نفسه — وهو خطأ كتابة شبه
    * مؤكّد: «2» بدل «20» بخانة النقاط، أو منزلة عشرية زائدة بسعر الوقف. وكلفته **هنا** أفدح منها
@@ -340,6 +349,27 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   useEffect(() => {
     setLivePxMsg(null);
   }, [symbol]);
+  // سبريد EURUSD (0.8) على GBPJPY أو الذهب رقمٌ لا يخصّها — يُمسح مع الأداة
+  useEffect(() => {
+    setSpread('');
+  }, [spec?.symbol]);
+  /**
+   * المخاطرة شاملة السبريد للّوت المحسوب، وأكبر لوت يُبقيها ضمن النسبة — راجع `spreadRisk`. اللوت
+   * الرئيسي يبقى من الوقف وحده (ما يكتبه كل مرجع وكل منصّة)، والسطر يقول الفرق وما العمل.
+   */
+  const spreadPips = parseSpreadPips(spread);
+  const withSpread =
+    lots != null && pv != null && spreadPips != null && spec
+      ? spreadRisk({
+          lots,
+          slPips: num(slPips),
+          spreadPips,
+          pipValuePerLot: pv,
+          balance: balanceNum,
+          riskPct: riskNum,
+          contractSize: spec.contractSize,
+        })
+      : null;
   /**
    * الهامش المحجوز للّوت المحسوب — من سعر الدخول المكتوب (القيمة الاسمية تحتاج سعراً، ولا يُختلق من
    * سعر التحويل). بنسبةٍ من الرصيد: «542.50 USD (54%)» يقول قبل النقر إن الصفقة تأكل نصف الحساب
@@ -646,7 +676,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       ) : null}
       {slMismatch ? (
         <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
-          {t.riskCalcSlMismatch.replace('{pips}', slMismatch.typed).replace('{derived}', String(slMismatch.derived))}
+          {slMismatchText}
         </Text>
       ) : null}
       {slTooClose ? (
@@ -654,6 +684,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           {t.planSlTooClose}
         </Text>
       ) : null}
+
+      <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcSpread}</Text>
+      {input(spread, setSpread, '1.5', t.riskCalcSpread)}
+      <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcSpreadNote}</Text>
 
       {conv && convLoading ? <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.sm }} /> : null}
       {conv && convFailed ? (
@@ -734,6 +768,15 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             {result && lots != null ? ` · ${lots.toFixed(2)} lot = ${money(result.pipValue)}` : ''}
           </Text>
         ) : null}
+        {/* «1% → 0.46 lot»: النسبة المكتوبة نفسها واللوت الذي يحفظها شاملة السبريد — بلا جملة تُترجم */}
+        {withSpread ? (
+          <Text style={[styles.resultMeta, { textAlign: align }]} accessibilityLiveRegion="polite">
+            {t.riskCalcRiskWithSpread} (+{spreadPips} pip): {money(withSpread.risk)} ({formatRiskPct(withSpread.pct)})
+            {withSpread.lotsWithin != null && withSpread.lotsWithin < lots!
+              ? ` · ${riskNum}% → ${withSpread.lotsWithin.toFixed(2)} lot`
+              : ''}
+          </Text>
+        ) : null}
         {margin != null ? (
           <>
             <Text
@@ -744,8 +787,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
               {t.riskCalcMargin} ({lots!.toFixed(2)} lot · 1:{leverageNum}
               {marginPx?.live && spec ? ` @ ${formatPrice(marginPx.price, spec.symbol)}` : ''}): {money(margin)}
               {marginPct != null ? ` (${formatRiskPct(marginPct)})` : ''}
-              {marginMaxLots != null ? ` · ≤ ${marginMaxLots.toFixed(2)} lot` : ''}
             </Text>
+            {marginMaxLots != null ? (
+              <Text style={[styles.warn, { textAlign: align }]}>
+                {t.riskCalcMarginMaxLots.replace('{lots}', marginMaxLots.toFixed(2))}
+              </Text>
+            ) : null}
             <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcMarginNote}</Text>
           </>
         ) : null}
@@ -774,7 +821,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           </Pressable>
           {slMismatch ? (
             <Text style={[styles.warn, { textAlign: align }]}>
-              {t.riskCalcSlMismatch.replace('{pips}', slMismatch.typed).replace('{derived}', String(slMismatch.derived))}
+              {t.riskCalcLogBlockedMismatch.replace('{derived}', String(slMismatch.derived))}
             </Text>
           ) : null}
           {logMsg ? (

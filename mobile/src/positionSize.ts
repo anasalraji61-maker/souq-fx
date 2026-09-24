@@ -10,6 +10,8 @@
  * تنبيه: مواصفات العقود تختلف بين الوسطاء (خصوصاً المعادن) — النتيجة تقدير تعليمي.
  */
 
+import { parseDecimal } from './parseDecimal';
+
 /**
  * عملات الحساب الشائعة لدى وسطاء التجزئة: العملات الثماني الرئيسية كاملةً.
  *
@@ -469,13 +471,17 @@ export function maxLotsForMargin(input: {
  * مخاطرة فوق المكتوبة بلا إشارة، و`slPipsFromPrices` تقرّب **للأعلى** أصلاً كي لا يحدث هذا بالضبط.
  * ونقاطٌ أوسع = لوتٌ أصغر (أأمن) فيُسمح بهامش نصف pipette لما يكتبه المتداول بيده («25.04»).
  *
+ * `narrower`: أيّ الحالتين — الأضيق تقول خطرها (لوت أكبر من وقفه)، والأوسع تصف الحساب فقط.
  * `null` = لا تعارض (أو لا شيء يُقارن).
  */
-export function stopPipsMismatch(typed: number, derived: number | null): { typed: number; derived: number } | null {
+export function stopPipsMismatch(
+  typed: number,
+  derived: number | null
+): { typed: number; derived: number; narrower: boolean } | null {
   if (derived == null || !Number.isFinite(typed) || !Number.isFinite(derived)) return null;
   const narrower = typed < derived - 1e-9;
   const wider = typed - derived > 0.05 + 1e-9;
-  return narrower || wider ? { typed, derived } : null;
+  return narrower || wider ? { typed, derived, narrower } : null;
 }
 
 /**
@@ -496,6 +502,49 @@ export function marginPrice(input: {
   const sided = input.side === 'buy' ? q.ask : input.side === 'sell' ? q.bid : null;
   if (ok(sided)) return { price: sided, live: true };
   return ok(q.price) ? { price: q.price, live: true } : null;
+}
+
+/**
+ * أوسع سبريد يُقبل بخانته (بالنقاط). الغريبة (USDTRY/USDZAR) تتّسع لمئات النقاط عند الأخبار، وفوق 500
+ * خطأ كتابة شبه مؤكّد: سعرٌ مكتوب بدل نقاط («1.0851»؟ لا — «10851») يُضخّم المخاطرة المعروضة ويُصغّر اللوت.
+ */
+export const MAX_SPREAD_PIPS = 500;
+
+/**
+ * خانة السبريد: فارغة = 0 (اختيارية)، وإلا نقاط ≥ 0 حتى `MAX_SPREAD_PIPS`. أرقام عربية وفاصلة عشرية
+ * كبقية الخانات (`parseDecimal`). `null` = نصّ غير مفهوم أو سالب أو خارج الحدّ.
+ */
+export function parseSpreadPips(raw: string): number | null {
+  if (raw.trim() === '') return 0;
+  const v = parseDecimal(raw);
+  return v != null && v >= 0 && v <= MAX_SPREAD_PIPS ? v : null;
+}
+
+/**
+ * **المخاطرة شاملة السبريد.** الشراء يُفتح على Ask ويُغلق وقفه على Bid (والبيع عكسه)، فوقفٌ 20 نقطة
+ * بسبريد 1.5 يخسر قرابة 21.5 نقطة حين يُضرب — والحاسبة كانت تحسب اللوت والمخاطرة على الـ20 وحدها،
+ * فـ«1%» المكتوبة تصير 1.08% فعلاً، وأكثر بكثير على وقف ضيّق (وقف 5 بسبريد 2 = 1.4%).
+ *
+ * `risk`/`pct`: لـ`lots` المحسوب نفسه على (الوقف + السبريد). `lotsWithin`: أكبر لوت يُبقي المخاطرة
+ * شاملة السبريد ضمن النسبة المطلوبة (`positionSize` على الوقف الموسَّع، مقرَّباً للأسفل)؛ `null` حين
+ * يخرج دون أصغر لوت. `null` كلّه بلا سبريد (0) أو بمدخل غير صالح — لا سطر يكرّر المخاطرة نفسها.
+ */
+export function spreadRisk(input: {
+  lots: number;
+  slPips: number;
+  spreadPips: number;
+  pipValuePerLot: number;
+  balance: number;
+  riskPct: number;
+  contractSize: number;
+}): { risk: number; pct: number; lotsWithin: number | null } | null {
+  const { lots, slPips, spreadPips, pipValuePerLot, balance, riskPct, contractSize } = input;
+  if (!Number.isFinite(spreadPips) || spreadPips <= 0) return null;
+  const effSl = slPips + spreadPips;
+  const r = riskForLots({ lots, slPips: effSl, pipValuePerLot, balance });
+  if (!r) return null;
+  const within = positionSize({ balance, riskPct, slPips: effSl, pipValuePerLot, contractSize });
+  return { ...r, lotsWithin: within && !within.belowMinLot ? within.lots : null };
 }
 
 /** أكبر حجم باللوت يُعقل بخانة «الحجم لوت»: وسطاء التجزئة يحدّون الأمر الواحد بـ50–100 لوت عادةً. */
