@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import {
   calendarAfterFetch,
+  calendarUnavailable,
   calendarFetchEvents,
   newsCountdown,
   newsTickDelayMs,
@@ -435,3 +436,36 @@ console.log('newsRisk glued-m selftest OK');
   assert.equal(knownSingleName('US30c'), null);
 }
 console.log('newsRisk glued-c selftest OK');
+
+// calendarUnavailable — فشلٌ بلا محفوظ لا يشبه «لا خبر»
+{
+  const t0 = Date.UTC(2026, 8, 24, 10, 0);
+  const nfp: NewsEvent = { id: 'nfp', currency: 'USD', title: 'NFP', impact: 'high', ts: t0 + 40 * 60_000 };
+  // قبل أي ردّ: تحميل، لا شيء
+  assert.equal(calendarUnavailable(null, 'EURUSD'), false);
+  // أول فتح بلا شبكة ⇒ الرسالة
+  const failFirst = calendarAfterFetch(null, null, t0);
+  assert.equal(calendarUnavailable(failFirst, 'EURUSD'), true);
+  assert.equal(calendarUnavailable(failFirst, 'XAUUSDc'), true);
+  // رمزٌ لا يحذّر عنه الشريط أبداً ⇒ صامت
+  assert.equal(calendarUnavailable(failFirst, 'AAPL'), false);
+  assert.equal(calendarUnavailable(failFirst, ''), false);
+  // نجاح (حتى فارغ: أسبوع بلا خبر قوي حقيقة) ⇒ لا رسالة
+  const ok = calendarAfterFetch(null, [nfp], t0);
+  assert.equal(calendarUnavailable(ok, 'EURUSD'), false);
+  assert.equal(calendarUnavailable(calendarAfterFetch(null, [], t0), 'EURUSD'), false);
+  // فشل بعد نجاح حديث ⇒ المحفوظ يُستعمل (سطر «بيانات محفوظة»)، لا الرسالة
+  const staleOk = calendarAfterFetch(ok, null, t0 + 10 * 60_000);
+  assert.equal(staleOk.ok, false);
+  assert.equal(calendarUnavailable(staleOk, 'EURUSD'), false);
+  // محفوظ أقدم من يوم يُسقط ⇒ الرسالة
+  const tooOld = calendarAfterFetch(ok, null, t0 + NEWS_STALE_MAX_MS + 1);
+  assert.equal(tooOld.fetchedAt, null);
+  assert.equal(calendarUnavailable(tooOld, 'EURUSD'), true);
+  // ردّ أمثلة الخادم / تقويم بلا أوقات = فشل ⇒ الرسالة عند أول فتح
+  assert.equal(calendarUnavailable(calendarAfterFetch(null, calendarFetchEvents({ events: [{ ...nfp, sample: true }] }), t0), 'EURUSD'), true);
+  assert.equal(calendarUnavailable(calendarAfterFetch(null, calendarFetchEvents({ events: [{ ...nfp, ts: null }] }), t0), 'EURUSD'), true);
+  // ثم نجاح ⇒ تختفي
+  assert.equal(calendarUnavailable(calendarAfterFetch(tooOld, [nfp], t0 + NEWS_STALE_MAX_MS + 5), 'EURUSD'), false);
+}
+console.log('newsRisk calendarUnavailable selftest OK');

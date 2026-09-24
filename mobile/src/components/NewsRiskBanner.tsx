@@ -6,6 +6,7 @@ import { useI18n } from '../i18n/I18nContext';
 import {
   calendarAfterFetch,
   calendarFetchEvents,
+  calendarUnavailable,
   newsCountdown,
   newsTickDelayMs,
   nextHighImpact,
@@ -15,7 +16,8 @@ import {
 
 /**
  * سطر تحذير «خبر قوي قريب» فوق الشارت: أقرب حدث عالي التأثير لعملتي الزوج خلال 3 ساعات
- * (أو جارٍ الآن). لا يظهر شيء إن لم يوجد حدث، أو فشل التقويم، أو كانت البيانات أمثلة احتياطية.
+ * (أو جارٍ الآن). لا يظهر شيء إن لم يوجد حدث؛ وفشل التقويم بلا بيانات محفوظة يُقال صراحةً (`newsUnavailable`)
+ * بدل أن يبدو كـ«لا خبر» — راجع `calendarUnavailable`.
  *
  * مخزن ذاكرة مشترك: طلب `/api/calendar?impact=high` واحد كل 10 دقائق مهما تعدّدت الشاشات
  * (دقيقتان بعد فشل) — التقويم أسبوعي ولا يتغيّر كل دقيقة.
@@ -89,7 +91,17 @@ export function NewsRiskBanner({ symbol }: Props) {
     const id = setTimeout(() => setNow(Date.now()), newsTickDelayMs(hitDelta));
     return () => clearTimeout(id);
   }, [now, hitDelta]);
-  if (!hit) return null;
+  if (!hit) {
+    if (!calendarUnavailable(cache, symbol)) return null;
+    // فشلٌ بلا محفوظ: الغياب كان يُقرأ «لا خطر» — سطرٌ هادئ (عنبري لا أحمر: لا نعرف بخبر، نعرف أننا لا نعرف)
+    return (
+      <View style={[styles.wrap, styles.wrapUnavailable]} accessible accessibilityRole="alert" accessibilityLabel={t.newsUnavailable}>
+        <Text style={[styles.hint, styles.unavailable, { textAlign: align }]} numberOfLines={2}>
+          {`⚠ ${t.newsUnavailable}`}
+        </Text>
+      </View>
+    );
+  }
 
   const { event, deltaMs } = hit;
   // الدقائق مقرَّبة للأسفل و«0د» لا تُكتب بجانب ساعات — راجع `newsCountdown`
@@ -138,4 +150,6 @@ const styles = StyleSheet.create({
   },
   main: { color: colors.text, fontSize: 12, fontWeight: '800' },
   hint: { color: colors.textMuted, fontSize: 10, marginTop: 1 },
+  wrapUnavailable: { borderColor: colors.warn, backgroundColor: colors.warnSoft },
+  unavailable: { color: colors.text, fontSize: 11, marginTop: 0 },
 });

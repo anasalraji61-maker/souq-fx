@@ -312,3 +312,17 @@ export function calendarFetchEvents(raw: unknown): NewsEvent[] | null {
   if (real.length > 0 && !real.some((e) => typeof e.ts === 'number' && Number.isFinite(e.ts))) return null;
   return real;
 }
+
+/**
+ * هل يقول الشريط «تعذّر تحميل التقويم» لهذا الرمز؟
+ *
+ * كان فشل التقويم بلا بيانات محفوظة (أول فتح بلا شبكة، أو محفوظٌ أقدم من `NEWS_STALE_MAX_MS`) **لا يُظهر شيئاً** —
+ * الصورة نفسها تماماً لـ«لا خبر قوي خلال 3 ساعات»، فيدخل المتداول قبل الرواتب الأمريكية مطمئناً. true فقط حين:
+ * آخر جلب فشل، ولا تقويم محفوظ يُستعمل (`fetchedAt == null`)، وللرمز عملات يغطّيها التقويم (رمزٌ لا يحذّر
+ * عنه الشريط أبداً لا يُقال له إن التحذير تعطّل). قبل أول ردّ (`cache == null`) لا شيء — تحميلٌ لا فشل.
+ * فشلٌ مع محفوظ صالح يبقى على سطر «بيانات محفوظة» فوق التحذير كما كان.
+ */
+export function calendarUnavailable(cache: CalendarCache | null, symbol: string): boolean {
+  if (!cache || cache.ok || cache.fetchedAt != null) return false;
+  return symbolCurrencies(symbol).length > 0;
+}
