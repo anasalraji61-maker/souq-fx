@@ -919,7 +919,7 @@ const ar: Dict = {
     'اضغط على أي زوج بالشريط العلوي (EURUSD، GBPUSD، الذهب XAUUSD…) لينتقل الشارت إليه فوراً، مع تغيّر اليوم ▲▼ بجانبه. ولاحقاً افتح حتى أربع شارتات معاً للمقارنة.',
   onboardStep2Title: 'أدوات الرسم',
   onboardStep2Body:
-    'تبويب «رسم» بالشريط السفلي يفتح لك خطوط الترند وفيبوناتشي والمستطيلات وباقي أدوات التحليل الفني مباشرة على الشارت. أخطأت برسمة؟ زرّ «تراجع» بجانب الأدوات يلغي آخر تغيير.',
+    'تبويب «رسم» بالشريط السفلي يفتح لك خطوط الترند وفيبوناتشي والمستطيلات وباقي أدوات التحليل الفني مباشرة على الشارت، وما ترسمه على 4H يبقى حين تنزل إلى الساعة. أخطأت برسمة؟ زرّ «تراجع» بجانب الأدوات يلغي آخر تغيير.',
   onboardStep3Title: 'المؤشرات والعدسات',
   onboardStep3Body:
     'اختر من عشرات المؤشرات الجاهزة (RSI وMACD وبولنجر وغيرها)، أو ابدأ بعدسة تضع لك مجموعة مؤشرات بلمسة واحدة: «هيكل» للمتوسطات المتحركة، «زخم» لـRSI وMACD، «سيولة» للفوليوم وبولنجر وCVD.',
@@ -1801,7 +1801,7 @@ const enUS: Dict = {
     'Tap any pair in the top strip (EURUSD, GBPUSD, gold XAUUSD…) and the chart jumps to it, with today\'s change ▲▼ beside it. Later, open up to four charts side by side to compare.',
   onboardStep2Title: 'Drawing tools',
   onboardStep2Body:
-    'The Draw tab in the bottom bar opens trend lines, Fibonacci, rectangles, and more analysis tools right on the chart. Drew something wrong? The Undo button next to the tools reverses the last change.',
+    'The Draw tab in the bottom bar opens trend lines, Fibonacci, rectangles, and more analysis tools right on the chart — a line drawn on 4H stays when you drop to 1H. Drew something wrong? The Undo button next to the tools reverses the last change.',
   onboardStep3Title: 'Indicators & lenses',
   onboardStep3Body:
     'Choose from dozens of ready indicators (RSI, MACD, Bollinger, and more), or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD.',
@@ -2709,7 +2709,7 @@ const ku: Dict = {
     'دەست لە هەر جووتێک بدە لە شریتی سەرەوە (EURUSD، GBPUSD، زێڕ XAUUSD…) و چارتەکە یەکسەر دەچێتە سەری، لەگەڵ گۆڕانی ئەمڕۆ ▲▼ لە تەنیشتیەوە. دواتر هەتا چوار چارت بەیەکەوە بکەرەوە بۆ بەراورد.',
   onboardStep2Title: 'ئامرازەکانی وێنەکێشان',
   onboardStep2Body:
-    'تابی «وێنەکێشان» لە شریتی خوارەوە هێڵی ترێند و فیبۆناتچی و لاکێشەکان و ئامرازەکانی تری شیکردنەوەی تەکنیکی دەکاتەوە ڕاستەوخۆ لەسەر چارت. هەڵەت کرد؟ دوگمەی «گەڕاندنەوە» لە تەنیشت ئامرازەکان دوایین گۆڕانکاری هەڵدەوەشێنێتەوە.',
+    'تابی «وێنەکێشان» لە شریتی خوارەوە هێڵی ترێند و فیبۆناتچی و لاکێشەکان و ئامرازەکانی تری شیکردنەوەی تەکنیکی دەکاتەوە ڕاستەوخۆ لەسەر چارت، و ئەوەی لەسەر 4H دەیکێشیت دەمێنێتەوە کاتێک دادەبەزیت بۆ کاتژمێرێک. هەڵەت کرد؟ دوگمەی «گەڕاندنەوە» لە تەنیشت ئامرازەکان دوایین گۆڕانکاری هەڵدەوەشێنێتەوە.',
   onboardStep3Title: 'پێوەرەکان و لینزەکان',
   onboardStep3Body:
     'لە دەیان پێوەری ئامادە هەڵبژێرە (RSI، MACD، بۆلینجەر و زیاتر)، یان بە لینزێک دەست پێبکە کە بە یەک دەستدان کۆمەڵێک پێوەر زیاد دەکات: «پێکهاتە» بۆ ناوەندە جووڵاوەکان، «پاڵنە» بۆ RSI و MACD، «شلەیی» بۆ قەبارە و بۆلینجەر و CVD.',
