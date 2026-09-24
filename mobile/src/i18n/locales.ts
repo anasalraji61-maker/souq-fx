@@ -888,6 +888,8 @@ export type Dict = {
   dsMarketClosed: string;
   // chart/MatrixChart.tsx — نصوص الشارت والمرسى (i18n الشارت، 2026-09-20)
   mcMonths: string[];
+  /** 7 أسماء أيام قصيرة مرتّبة كـ`Date.getUTCDay()`: [0] = الأحد … [6] = السبت. لوسم زمن مثل «الجمعة 25 سبتمبر 14:00». */
+  mcWeekdays: string[];
   mcPrimaryLane: string;
   mcMeasureBarsWord: string;
   /** لواحق مدّة سطر القياس (`measureDurationText`): `{m}`/`{h}`/`{d}` تُلصق بالعدد كما هي — المسافة جزء منها بالعربية والكردية. */
@@ -1939,6 +1941,15 @@ const ar: Dict = {
     'نوفمبر',
     'ديسمبر',
   ],
+  mcWeekdays: [
+    'الأحد',
+    'الإثنين',
+    'الثلاثاء',
+    'الأربعاء',
+    'الخميس',
+    'الجمعة',
+    'السبت',
+  ],
   mcPrimaryLane: 'أساسي',
   mcMeasureBarsWord: 'شموع',
   mcMeasureDurUnits: { m: ' د', h: ' س', d: ' يوم' },
@@ -2984,6 +2995,15 @@ const enUS: Dict = {
     'Oct',
     'Nov',
     'Dec',
+  ],
+  mcWeekdays: [
+    'Sun',
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
   ],
   mcPrimaryLane: 'Primary',
   mcMeasureBarsWord: 'bars',
@@ -4057,6 +4077,15 @@ const ku: Dict = {
     'تشرینی یەکەم',
     'تشرینی دووەم',
     'کانوونی یەکەم',
+  ],
+  mcWeekdays: [
+    'یەکشەممە',
+    'دووشەممە',
+    'سێشەممە',
+    'چوارشەممە',
+    'پێنجشەممە',
+    'هەینی',
+    'شەممە',
   ],
   mcPrimaryLane: 'سەرەکی',
   mcMeasureBarsWord: 'مۆم',
