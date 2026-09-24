@@ -953,6 +953,33 @@ function BoundedLineSeries({
   );
 }
 
+/**
+ * لوحة تراكمية بلا مدى ثابت (OBV، A/D، CVD، NVI/PVI، VPT، Net Vol، Williams A/D) خطّاً
+ * متّصلاً على مدى النافذة المرئية. كانت شرطة 3px لكل عمود حافّتها العليا عند القيمة: قاع
+ * النافذة يقع كلّه تحت مساحة الرسم، وتباعد OBV عن السعر — ما يُقرأ منه — يتفكّك درجاتٍ عند
+ * كل قفزة حجم. اللون لكل قطعة باتّجاهها (طرفها الثاني ≥ الأوّل) كما كانت الشرطات؛ أوّل شمعة
+ * بلا قطعة كما كانت بلا شرطة.
+ */
+function TrendLineSeries({ values, paneH }: { values: readonly number[]; paneH: number }) {
+  const innerH = Math.max(0, paneH - 16);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  return (
+    <PaneLineLayer
+      innerH={innerH}
+      // نافذة مسطّحة (مدى صفر) ⇒ الخطّ بمنتصف اللوحة لا قسمة على صفر.
+      y={max > min ? boundedPaneY(innerH, min, max) : () => innerH / 2}
+      lines={[
+        {
+          values,
+          color: (i) => (i > 0 && values[i] >= values[i - 1] ? colors.bull : colors.bear),
+          opacity: 0.9,
+        },
+      ]}
+    />
+  );
+}
+
 /** CCI: ‎±100‎ حدّا «النطاق العادي» اللذان يُقرأ المؤشّر بتجاوزهما (خطّا TradingView الافتراضيّان). */
 const CCI_LEVELS = [100, -100] as const;
 
@@ -7262,27 +7289,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>CVD</Text>
           <View style={styles.paneInner}>
-            {(() => {
-              const minC = Math.min(...cvd);
-              const maxC = Math.max(...cvd);
-              const span = maxC - minC || 1;
-              return cvd.map((v, i) => {
-                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
-                const yNorm = (v - minC) / span;
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: 3,
-                      marginTop: (1 - yNorm) * (paneH - 16),
-                      backgroundColor: v >= cvd[i - 1] ? colors.bull : colors.bear,
-                      opacity: 0.8,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <TrendLineSeries values={cvd} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -7293,27 +7300,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               (نافذة الرسم) لا على السوق، بينما ألوان أعمدته أصلاً `v >= obv[i-1]`. */}
           <PaneValueHead name="OBV" values={obv} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
-            {(() => {
-              const minO = Math.min(...obv);
-              const maxO = Math.max(...obv);
-              const span = maxO - minO || 1;
-              return obv.map((v, i) => {
-                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
-                const yNorm = (v - minO) / span;
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: 3,
-                      marginTop: (1 - yNorm) * (paneH - 16),
-                      backgroundColor: v >= obv[i - 1] ? colors.bull : colors.bear,
-                      opacity: 0.8,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <TrendLineSeries values={obv} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -7322,27 +7309,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>NVI</Text>
           <View style={styles.paneInner}>
-            {(() => {
-              const minN = Math.min(...nvi);
-              const maxN = Math.max(...nvi);
-              const span = maxN - minN || 1;
-              return nvi.map((v, i) => {
-                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
-                const yNorm = (v - minN) / span;
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: 3,
-                      marginTop: (1 - yNorm) * (paneH - 16),
-                      backgroundColor: v >= nvi[i - 1] ? colors.bull : colors.bear,
-                      opacity: 0.8,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <TrendLineSeries values={nvi} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -7351,27 +7318,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>A/D</Text>
           <View style={styles.paneInner}>
-            {(() => {
-              const minA = Math.min(...adl);
-              const maxA = Math.max(...adl);
-              const span = maxA - minA || 1;
-              return adl.map((v, i) => {
-                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
-                const yNorm = (v - minA) / span;
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: 3,
-                      marginTop: (1 - yNorm) * (paneH - 16),
-                      backgroundColor: v >= adl[i - 1] ? colors.bull : colors.bear,
-                      opacity: 0.8,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <TrendLineSeries values={adl} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -7509,27 +7456,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Net Vol</Text>
           <View style={styles.paneInner}>
-            {(() => {
-              const minNv = Math.min(...netVolume);
-              const maxNv = Math.max(...netVolume);
-              const span = maxNv - minNv || 1;
-              return netVolume.map((v, i) => {
-                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
-                const yNorm = (v - minNv) / span;
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: 3,
-                      marginTop: (1 - yNorm) * (paneH - 16),
-                      backgroundColor: v >= netVolume[i - 1] ? colors.bull : colors.bear,
-                      opacity: 0.8,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <TrendLineSeries values={netVolume} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -8781,27 +8708,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>VPT</Text>
           <View style={styles.paneInner}>
-            {(() => {
-              const minV = Math.min(...vpt);
-              const maxV = Math.max(...vpt);
-              const span = maxV - minV || 1;
-              return vpt.map((v, i) => {
-                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
-                const yNorm = (v - minV) / span;
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: 3,
-                      marginTop: (1 - yNorm) * (paneH - 16),
-                      backgroundColor: v >= vpt[i - 1] ? colors.bull : colors.bear,
-                      opacity: 0.8,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <TrendLineSeries values={vpt} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -9196,27 +9103,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>PVI</Text>
           <View style={styles.paneInner}>
-            {(() => {
-              const minP = Math.min(...pvi);
-              const maxP = Math.max(...pvi);
-              const span = maxP - minP || 1;
-              return pvi.map((v, i) => {
-                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
-                const yNorm = (v - minP) / span;
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: 3,
-                      marginTop: (1 - yNorm) * (paneH - 16),
-                      backgroundColor: v >= pvi[i - 1] ? colors.bull : colors.bear,
-                      opacity: 0.8,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <TrendLineSeries values={pvi} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -9782,27 +9669,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           <Text style={styles.paneLabel}>Williams A/D</Text>
           <View style={styles.paneInner}>
-            {(() => {
-              const minA = Math.min(...williamsAd);
-              const maxA = Math.max(...williamsAd);
-              const span = maxA - minA || 1;
-              return williamsAd.map((v, i) => {
-                if (i === 0) return <View key={i} style={{ flex: 1 }} />;
-                const yNorm = (v - minA) / span;
-                return (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: 3,
-                      marginTop: (1 - yNorm) * (paneH - 16),
-                      backgroundColor: v >= williamsAd[i - 1] ? colors.bull : colors.bear,
-                      opacity: 0.8,
-                    }}
-                  />
-                );
-              });
-            })()}
+            <TrendLineSeries values={williamsAd} paneH={paneH} />
           </View>
         </View>
       ) : null}
