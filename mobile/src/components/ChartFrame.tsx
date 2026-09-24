@@ -198,7 +198,15 @@ export function ChartFrame({
     cache: t.dsKindCache,
     unknown: t.dsKindUnknown,
   });
-  const marketClosed = !isForexMarketOpen(series.symbol);
+  // يُعاد فحصه كل 30ث: عند إغلاق الجمعة (أو كسر الذهب اليومي) تتوقّف التيكات فلا يُعاد الرسم،
+  // وكان الوسم يبقى بلا «مغلق» حتى يلمس المتداول شيئاً.
+  const [marketClosed, setMarketClosed] = useState(() => !isForexMarketOpen(series.symbol));
+  useEffect(() => {
+    const check = () => setMarketClosed(!isForexMarketOpen(series.symbol));
+    check();
+    const id = setInterval(check, 30_000);
+    return () => clearInterval(id);
+  }, [series.symbol]);
 
   // السبريد مربوط بالرمز الذي جُلب له: كان `quote` يبقى على قيم الرمز السابق حتى
   // يصل جلب الرمز الجديد، فيقرأ المتداول سبريد زوج بجانب سعر زوج آخر.
