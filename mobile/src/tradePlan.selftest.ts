@@ -623,16 +623,19 @@ console.log('tradePlan averageR selftest OK');
 {
   // شراء EURUSD: الخروج على الوقف = −1R بالضبط، وعلى الهدف = R:R الخطة
   const sc = exitShortcuts({ side: 'buy', entry: 1.085, sl: 1.0825, tp: 1.09 });
-  assert.deepEqual(sc, [{ kind: 'sl', price: 1.0825 }, { kind: 'tp', price: 1.09 }]);
+  assert.deepEqual(sc, [{ kind: 'sl', price: 1.0825 }, { kind: 'be', price: 1.085 }, { kind: 'tp', price: 1.09 }]);
   assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.0825, exit: sc[0].price }), -1);
-  assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.0825, exit: sc[1].price }), 2);
+  assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.0825, exit: sc[1].price }), 0);
+  assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.0825, exit: sc[2].price }), 2);
   // بيع USDJPY كذلك
   const sj = exitShortcuts({ side: 'sell', entry: 150, sl: 150.3, tp: 149.55 });
-  assert.deepEqual(sj.map((x) => x.kind), ['sl', 'tp']);
+  assert.deepEqual(sj.map((x) => x.kind), ['sl', 'be', 'tp']);
   assert.equal(realizedR({ side: 'sell', entry: 150, sl: 150.3, exit: sj[0].price }), -1);
-  assert.equal(realizedR({ side: 'sell', entry: 150, sl: 150.3, exit: sj[1].price }), 1.5);
+  assert.equal(realizedR({ side: 'sell', entry: 150, sl: 150.3, exit: sj[1].price }), 0);
+  assert.equal(realizedR({ side: 'sell', entry: 150, sl: 150.3, exit: sj[2].price }), 1.5);
   // واحد فقط مكتوب
-  assert.deepEqual(exitShortcuts({ side: 'buy', entry: 2400, sl: 2390 }), [{ kind: 'sl', price: 2390 }]);
+  assert.deepEqual(exitShortcuts({ side: 'buy', entry: 2400, sl: 2390 }), [{ kind: 'sl', price: 2390 }, { kind: 'be', price: 2400 }]);
+  // بلا وقف لا «= BE» (التعادل معناه وقفٌ نُقل)
   assert.deepEqual(exitShortcuts({ side: 'buy', entry: 2400, tp: 2420, sl: null }), [{ kind: 'tp', price: 2420 }]);
   // بالجهة الخطأ أو عند الدخول: لا شريحة (الحفظ يرفضها أصلاً)
   assert.deepEqual(exitShortcuts({ side: 'buy', entry: 1.085, sl: 1.09, tp: 1.08 }), []);
@@ -643,6 +646,25 @@ console.log('tradePlan averageR selftest OK');
   assert.deepEqual(exitShortcuts({ side: 'buy', entry: NaN, sl: 1.08 }), []);
   assert.deepEqual(exitShortcuts({ side: 'buy', entry: 1.085, sl: 0, tp: -1 }), []);
   assert.deepEqual(exitShortcuts({ side: 'buy', entry: 1.085, sl: NaN, tp: Infinity }), []);
+}
+{
+  // «= BE»: 0 pip و0R و0 مال حرفياً، شراءً وبيعاً، على الفوركس والين والذهب
+  for (const [symbol, side, entry, sl] of [
+    ['EURUSD', 'buy', 1.085, 1.0825],
+    ['USDJPY', 'sell', 150, 150.3],
+    ['XAUUSD.m', 'buy', 2350.5, 2345],
+  ] as const) {
+    const be = exitShortcuts({ side, entry, sl }).find((x) => x.kind === 'be')!;
+    assert.equal(be.price, entry);
+    const p = exitPreview({ symbol, side, entry, sl, exit: be.price, lots: 1 })!;
+    assert.equal(p.pips, 0, symbol);
+    assert.equal(p.r, 0, symbol);
+    assert.equal(p.pct, 0, symbol);
+    assert.equal(p.cash!.amount, 0, symbol);
+    assert.equal(formatR(p.r), '0R');
+  }
+  // وقف بالجهة الخطأ ⇒ لا وقف ولا تعادل
+  assert.ok(!exitShortcuts({ side: 'sell', entry: 1.085, sl: 1.08, tp: 1.07 }).some((x) => x.kind === 'be'));
 }
 console.log('tradePlan exitShortcuts selftest OK');
 

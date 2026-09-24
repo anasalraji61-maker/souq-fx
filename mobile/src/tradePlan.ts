@@ -216,17 +216,24 @@ export function realizedMove(input: {
  * تُرجَع المستويات الصالحة وحدها: موجبة، وبالجهة الصحيحة من الدخول (`levelSideIssue`) — وقفٌ بالجهة
  * الخطأ يمنع الحفظ أصلاً فلا شريحة له، وبلا دخول صالح لا تُعرف الجهة فلا شيء. الوقف أولاً.
  * `price` هي قيمة الخانة نفسها (لا تقريب)، فنتيجة الصفقة بعدها −1R و+R:R الخطة **حرفياً**.
+ *
+ * و«= BE» (التعادل: الخروج = الدخول ⇒ 0 pip و0R) بين الوقف والهدف — ثالث أكثر إغلاق شيوعاً: وقفٌ نُقل
+ * إلى الدخول ثم ضُرب. كانت تُكتب بيدٍ فتنزلق منزلة («1.0805» بدل «1.0850» ⇒ −4.5R تُحفظ خسارة لم تقع).
+ * تظهر حين يكون للصفقة وقفٌ صالح فقط (التعادل معناه وقفٌ نُقل)، فتبقى الشرائح مرتّبة: خسارة، صفر، ربح.
  */
 export function exitShortcuts(input: {
   side: TradeSide;
   entry: number | null;
   sl?: number | null;
   tp?: number | null;
-}): { kind: 'sl' | 'tp'; price: number }[] {
+}): { kind: 'sl' | 'be' | 'tp'; price: number }[] {
   const { side, entry, sl, tp } = input;
   if (!finitePos(entry)) return [];
-  const out: { kind: 'sl' | 'tp'; price: number }[] = [];
-  if (finitePos(sl) && levelSideIssue({ side, entry, sl }) == null) out.push({ kind: 'sl', price: sl });
+  const out: { kind: 'sl' | 'be' | 'tp'; price: number }[] = [];
+  if (finitePos(sl) && levelSideIssue({ side, entry, sl }) == null) {
+    out.push({ kind: 'sl', price: sl });
+    out.push({ kind: 'be', price: entry });
+  }
   if (finitePos(tp) && levelSideIssue({ side, entry, tp }) == null) out.push({ kind: 'tp', price: tp });
   return out;
 }

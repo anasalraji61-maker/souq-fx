@@ -390,7 +390,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     () =>
       exitShortcuts({ side, entry: num(entry), sl: num(sl), tp: num(tp) }).map((x) => ({
         ...x,
-        text: x.kind === 'sl' ? sl.trim() : tp.trim(),
+        text: x.kind === 'sl' ? sl.trim() : x.kind === 'be' ? entry.trim() : tp.trim(),
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [side, entry, sl, tp]
@@ -1239,12 +1239,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         «الخروج = الوقف/الهدف»: أغلب الصفقات تُغلق على وقفها أو هدفها بالضبط، والرقم مكتوبٌ أصلاً تحت —
         إعادة كتابته هي الخطوة التي تنقلب فيها منزلة فتُحفظ خسارةٌ كاملة ربحاً. تنسخ نصّ الخانة نفسه (لا
         تقريب)، فالنتيجة −1R وR:R الخطة حرفياً. مستويات صالحة بجهتها وحدها — راجع `exitShortcuts`.
+        «= BE» بينهما (الخروج = الدخول ⇒ 0R) حين يكون للصفقة وقف: وقفٌ نُقل إلى الدخول ثم ضُرب.
       */}
       {exitChips.length > 0 ? (
         <View style={[styles.qChips, rtl && styles.rowRtl]}>
           {exitChips.map((x) => {
             const on = num(exit) === x.price;
-            const label = `${x.kind === 'sl' ? 'SL' : 'TP'} ${x.text}`;
+            const label = `${x.kind === 'sl' ? 'SL' : x.kind === 'be' ? 'BE' : 'TP'} ${x.text}`;
             return (
               <Pressable
                 key={x.kind}
@@ -1259,12 +1260,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
                   },
                 ]}
                 onPress={() => {
-                  setExit(x.kind === 'sl' ? sl.trim() : tp.trim());
+                  setExit(x.text);
                   setFormError(null);
                 }}
                 accessibilityLabel={`${t.journalExitA11y} = ${label}`}
               >
-                <Text style={[styles.qChipText, on ? styles.chipTextOn : { color: x.kind === 'sl' ? colors.bear : colors.bull }]}>
+                <Text style={[styles.qChipText, on ? styles.chipTextOn : { color: x.kind === 'sl' ? colors.bear : x.kind === 'be' ? colors.textDim : colors.bull }]}>
                   {`= ${label}`}
                 </Text>
               </Pressable>
