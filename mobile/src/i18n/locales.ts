@@ -311,6 +311,8 @@ export type Dict = {
   riskCalcBelowMin: string;
   riskCalcFillHint: string;
   invalidNumberHint: string;
+  /** سعر «3.450» مرفوض لأنه مبهم لأداة منازلها أقلّ من ثلاث (`parsePriceFor`) — {value} كما كُتب، {whole} بلا النقطة (3450)، {small} كسراً (3.45) */
+  priceAmbiguousThousandsHint: string;
   riskCalcPipValue: string;
   /** حاسبة الهامش (طلب وكيل الأدوات): خانة الرافعة، سطر الهامش، وملاحظة أن الهامش ليس الخسارة */
   riskCalcLeverage: string;
@@ -449,6 +451,8 @@ export type Dict = {
   journalCloseMarketA11y: string;
   journalCloseMarketConfirmTitle: string;
   journalCloseMarketConfirmBody: string;
+  /** عنوان تأكيد «إغلاق بسعر خانة الخروج» — سؤال، بدل `journalCloseLinkBtn` (اسم الزرّ) */
+  journalCloseFieldConfirmTitle: string;
   journalCloseMarketConfirmBtn: string;
   journalCloseMarketNoQuote: string;
   backtestSub: string;
@@ -1212,6 +1216,7 @@ const ar: Dict = {
   riskCalcBelowMin: 'لا حجم يناسب هذه المخاطرة: أصغر لوت (0.01) يتجاوز ما حدّدتَه',
   riskCalcFillHint: 'أدخل الرصيد ونسبة المخاطرة ووقف الخسارة',
   invalidNumberHint: 'رقم غير مفهوم — اكتبه بلا فواصل آلاف، مثل 10000 أو 1.0850',
+  priceAmbiguousThousandsHint: 'السعر «{value}» مبهم — هل النقطة فاصل آلاف أم فاصلة عشرية؟ اكتب {whole} أو {small}',
   riskCalcPipValue: 'قيمة النقطة للوت',
   riskCalcLeverage: 'الرافعة المالية (100 تعني 1:100)',
   riskCalcMargin: 'الهامش المحجوز',
@@ -1349,6 +1354,7 @@ const ar: Dict = {
   journalCloseMarketA11y: 'إغلاق صفقة {symbol} بالسعر الحالي',
   journalCloseMarketConfirmTitle: 'إغلاق بالسعر الحالي؟',
   journalCloseMarketConfirmBody: '{side} {symbol} · {entry} → {exit}\nالنتيجة: {result}\n\nالسعر من مزوّد البيانات (Bid للشراء، Ask للبيع) وقد يختلف قليلاً عن سعر وسيطك — يمكنك تعديله بعد الإغلاق.',
+  journalCloseFieldConfirmTitle: 'إغلاق بسعر خانة الخروج؟',
   journalCloseMarketConfirmBtn: 'إغلاق',
   journalCloseMarketNoQuote: 'لا سعر حي لهذا الرمز الآن — اكتب سعر الخروج بخانة «خروج» ثم «إغلاق بسعر خانة الخروج»',
   backtestSub: 'MA · RSI · MACD · BB · منحنى رأس المال',
@@ -2111,6 +2117,7 @@ const enUS: Dict = {
   riskCalcBelowMin: 'No size fits this risk: the smallest lot (0.01) risks more than you set',
   riskCalcFillHint: 'Enter balance, risk % and stop loss',
   invalidNumberHint: 'Number not recognized — type it without thousands separators, e.g. 10000 or 1.0850',
+  priceAmbiguousThousandsHint: 'Price “{value}” is ambiguous — is the dot a thousands separator or a decimal point? Type {whole} or {small}',
   riskCalcPipValue: 'Pip value per lot',
   riskCalcLeverage: 'Leverage (100 means 1:100)',
   riskCalcMargin: 'Margin held',
@@ -2248,6 +2255,7 @@ const enUS: Dict = {
   journalCloseMarketA11y: 'Close {symbol} trade at the current price',
   journalCloseMarketConfirmTitle: 'Close at market price?',
   journalCloseMarketConfirmBody: '{side} {symbol} · {entry} → {exit}\nResult: {result}\n\nPrice from the data provider (Bid for buys, Ask for sells) and may differ slightly from your broker — you can edit it after closing.',
+  journalCloseFieldConfirmTitle: 'Close at exit field price?',
   journalCloseMarketConfirmBtn: 'Close',
   journalCloseMarketNoQuote: 'No live price for this symbol right now — type the exit in the “Exit” field, then use “Close at exit field price”',
   backtestSub: 'MA · RSI · MACD · BB · Equity curve',
@@ -3035,6 +3043,7 @@ const ku: Dict = {
   riskCalcBelowMin: 'هیچ قەبارەیەک لەگەڵ ئەم مەترسییە ناگونجێت: بچووکترین لۆت (0.01) زیاتر لەوەی دیاریت کردووە دەخاتە مەترسییەوە',
   riskCalcFillHint: 'باڵانس، ڕێژەی مەترسی و وەستانی زیان بنووسە',
   invalidNumberHint: 'ژمارەکە ناناسرێتەوە — بەبێ جیاکەرەوەی هەزاران بنووسە، وەک 10000 یان 1.0850',
+  priceAmbiguousThousandsHint: 'نرخی «{value}» ڕوون نییە — خاڵەکە جیاکەرەوەی هەزارانە یان خاڵی دەیی؟ {whole} یان {small} بنووسە',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
   riskCalcLeverage: 'لێڤەرێج (100 واتە 1:100)',
   riskCalcMargin: 'مارجینی گیراو',
@@ -3174,6 +3183,7 @@ const ku: Dict = {
   journalCloseMarketA11y: 'داخستنی مامەڵەی {symbol} بە نرخی ئێستا',
   journalCloseMarketConfirmTitle: 'داخستن بە نرخی ئێستا؟',
   journalCloseMarketConfirmBody: '{side} {symbol} · {entry} → {exit}\nئەنجام: {result}\n\nنرخەکە لە دابینکەری داتاوەیە (Bid بۆ کڕین، Ask بۆ فرۆشتن) و لەوانەیە کەمێک جیاواز بێت لە نرخی بریکەرەکەت — دەتوانیت دوای داخستن دەستکاری بکەیت.',
+  journalCloseFieldConfirmTitle: 'داخستن بە نرخی خانەی دەرچوون؟',
   journalCloseMarketConfirmBtn: 'داخستن',
   journalCloseMarketNoQuote: 'ئێستا نرخی ڕاستەوخۆ بۆ ئەم هێمایە نییە — نرخی دەرچوون لە خانەی «دەرچوون» بنووسە و پاشان «داخستن بە نرخی خانەی دەرچوون»',
   backtestSub: 'MA · RSI · MACD · BB · کەوانەی سەرمایە',
