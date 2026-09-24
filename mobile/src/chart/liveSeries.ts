@@ -13,6 +13,29 @@ export type LiveMergeOpts = {
   nowSec?: number;
 };
 
+/**
+ * هل التيك سعرٌ لهذه السلسلة أصلاً؟ عند تبديل الرمز يتبع التيك الرمز الجديد فوراً والشموع تبقى
+ * للقديم حتى يصل الجلب: تيك الذهب (2650) كان يُدمج بآخر شمعة يورو (1.17) فتصير شمعة واحدة بطول
+ * الشاشة، ومحور السعر يُسحق لخطّ مسطّح، ووسم السعر يطبع 2650 على شارت اليورو — حتى وصول الجديد.
+ * والتبديل بين زوجين متقاربين (EURUSD↔GBPUSD، الفرق ~15%) يفعل الشيء نفسه بشكل أخفى.
+ * الحدّ: 3% من آخر إغلاق، أو 20 ضعف وسيط مدى الشموع الأخيرة (فريمات كبيرة/أدوات متقلّبة) — أيّهما أكبر.
+ * حركة فعلية بهذا الحجم بين جلبَين لا تحدث بالفوركس؛ الجلب التالي يُظهرها بشموعها على أي حال.
+ */
+export function tickPlausibleForSeries(series: ChartSeries, price: number): boolean {
+  const n = series.candles.length;
+  const ref = n ? series.candles[n - 1]!.close : NaN;
+  if (!Number.isFinite(ref) || ref <= 0) return true;
+  const ranges: number[] = [];
+  for (let i = Math.max(0, n - 50); i < n; i++) {
+    const c = series.candles[i]!;
+    const r = c.high - c.low;
+    if (Number.isFinite(r) && r > 0) ranges.push(r);
+  }
+  ranges.sort((a, b) => a - b);
+  const med = ranges.length ? ranges[Math.floor(ranges.length / 2)]! : 0;
+  return Math.abs(price - ref) <= Math.max(ref * 0.03, med * 20);
+}
+
 /** Merge live tick into last candle only when provenance + time bucket agree. */
 export function withLivePrice(
   series: ChartSeries,
@@ -29,6 +52,7 @@ export function withLivePrice(
   if (!canMergeLiveIntoCandles(candleSrc, tickSrc)) {
     return series;
   }
+  if (!tickPlausibleForSeries(series, livePrice)) return series;
   const last = series.candles[series.candles.length - 1]!;
   const step = timeframeStepSec(opts?.timeframe ?? series.timeframe);
   const tickAsOf = opts?.tickAsOf ?? tickSrc.as_of ?? null;
@@ -73,6 +97,7 @@ export function livePriceForChart(
   if (!Number.isFinite(tick.price) || tick.price <= 0) return null;
   if (!canMergeLiveIntoCandles(series.data_source, tick.source)) return null;
   if (!series.candles.length) return null;
+  if (!tickPlausibleForSeries(series, tick.price)) return null;
   const last = series.candles[series.candles.length - 1]!;
   const step = timeframeStepSec(opts?.timeframe ?? series.timeframe);
   const tickAsOf = opts?.tickAsOf ?? tick.source.as_of ?? null;
