@@ -7291,7 +7291,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {cvd ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>CVD</Text>
+          <PaneValueHead name="CVD" values={cvd} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             <TrendLineSeries values={cvd} paneH={paneH} />
           </View>
@@ -7311,7 +7311,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {nvi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>NVI</Text>
+          <PaneValueHead name="NVI" values={nvi} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             <TrendLineSeries values={nvi} paneH={paneH} />
           </View>
@@ -7320,7 +7320,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {adl ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>A/D</Text>
+          <PaneValueHead name="A/D" values={adl} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             <TrendLineSeries values={adl} paneH={paneH} />
           </View>
@@ -7458,7 +7458,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {netVolume ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Net Vol</Text>
+          <PaneValueHead name="Net Vol" values={netVolume} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             <TrendLineSeries values={netVolume} paneH={paneH} />
           </View>
@@ -7939,7 +7939,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {laguerreRsi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Laguerre RSI</Text>
+          <PaneValueHead name="Laguerre RSI" values={laguerreRsi} at={crossIndex} tone="none" />
           <View style={styles.paneInner}>
             {/* خطّ متّصل بمداه الثابت 0..1 لا شرطة 3px حافّتها العليا عند القيمة (قيمة 0 كانت خارج المساحة). */}
             <BoundedLineSeries
@@ -8112,7 +8112,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {massIndex ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Mass Index</Text>
+          <PaneValueHead name="Mass Index" values={massIndex} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {/* على مدى النافذة لا من الصفر: Mass Index يدور حول 25–27، فأرضية 0 كانت تحشر «الانتفاخ»
                 (فوق 27 ثم تحت 26.5) — القراءة كلّها — بأعلى عُشر اللوحة. */}
@@ -8682,7 +8682,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vpt ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>VPT</Text>
+          <PaneValueHead name="VPT" values={vpt} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             <TrendLineSeries values={vpt} paneH={paneH} />
           </View>
@@ -9053,7 +9053,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vhf ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>VHF</Text>
+          <PaneValueHead name="VHF" values={vhf} at={crossIndex} tone="none" />
           <View style={styles.paneInner}>
             <BoundedLineSeries
               values={vhf}
@@ -9068,7 +9068,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {pvi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>PVI</Text>
+          <PaneValueHead name="PVI" values={pvi} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             <TrendLineSeries values={pvi} paneH={paneH} />
           </View>
@@ -9077,7 +9077,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {gapo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>GAPO</Text>
+          <PaneValueHead name="GAPO" values={gapo} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {/* على مدى النافذة لا من الصفر: مدى زوج فوركس أقلّ من 1 فلوغاريتم GAPO سالب غالباً، وأرضية
                 0 كانت تحشر الخطّ كلّه بأسفل اللوحة (‎−3.3..−2.8‎ على مقياس ‎−3.3..0‎ ⇒ سُدسها). */}
@@ -9612,7 +9612,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {williamsAd ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Williams A/D</Text>
+          <PaneValueHead name="Williams A/D" values={williamsAd} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             <TrendLineSeries values={williamsAd} paneH={paneH} />
           </View>
