@@ -4694,7 +4694,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       stats: measureStats(m.a, m.b),
       barsWord: tr.mcMeasureBarsWord,
       lang,
-      durationSec: measureDurationSec(m.a, m.b, timeframeStepSec(series.timeframe)),
+      durationSec: measureDurationSec(m.a, m.b, timeframeStepSec(series.timeframe), series.symbol),
       durationUnits: tr.mcMeasureDurUnits,
       barForms: { one: tr.mcMeasureBarOne, two: tr.mcMeasureBarTwo },
       priceRef: priceDecimalsRef,

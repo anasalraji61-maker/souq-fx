@@ -27,6 +27,7 @@ import { formatPriceDiff } from './indicators/utils';
 import { formatPct } from './dailyChange';
 import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from './pipSpec';
+import { projectBarTimeSec } from './marketHours';
 
 export type MeasureStats = { bars: number; diff: number; pct: number };
 
@@ -103,13 +104,15 @@ export function barsCountText(
 export function measureDurationSec(
   a: { time?: number; ahead?: number; aheadStep?: number },
   b: { time?: number; ahead?: number; aheadStep?: number },
-  stepSec: number
+  stepSec: number,
+  /** الرمز ⇒ طرف المستقبل يتخطّى عطلة نهاية الأسبوع كوسم التقاطع (`projectBarTimeSec`). */
+  symbol?: string
 ): number | null {
   const at = (p: typeof a) => {
     if (p.time == null || !Number.isFinite(p.time)) return null;
     const ahead = p.ahead != null && Number.isFinite(p.ahead) ? p.ahead : 0;
     const step = p.aheadStep != null && p.aheadStep > 0 ? p.aheadStep : stepSec;
-    return p.time + ahead * step;
+    return symbol && ahead > 0 ? projectBarTimeSec(symbol, p.time, step, ahead) : p.time + ahead * step;
   };
   const ta = at(a);
   const tb = at(b);

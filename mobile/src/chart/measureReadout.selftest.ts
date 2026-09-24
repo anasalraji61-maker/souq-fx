@@ -180,6 +180,15 @@ ok('زمن: غائب ⇒ null', measureDurationText(null) === null);
 ok('زمن بالعربية', measureDurationText(52 * H, 'ar') === '2 يوم 4 س');
 ok('زمن من الطرفين (الجمعة ⇒ الاثنين، تقويمي)', measureDurationSec({ time: 0 }, { time: 3 * 24 * H }, H) === 3 * 24 * H);
 ok('زمن بطرف في المستقبل', measureDurationSec({ time: 0 }, { time: 10 * H, ahead: 2, aheadStep: 4 * H }, H) === 18 * H);
+{
+  // الجمعة 2026-01-16 20:00 UTC (إغلاق 22:00) + خانتان ساعة ⇒ افتتاح الأحد 22:00 = 50 ساعة لا ساعتان
+  const fri = Date.UTC(2026, 0, 16, 20) / 1000;
+  ok(
+    'طرف المستقبل يتخطّى عطلة نهاية الأسبوع',
+    measureDurationSec({ time: fri }, { time: fri, ahead: 2, aheadStep: H }, H, 'EURUSD') === 50 * H
+  );
+  ok('بلا رمز كما كان', measureDurationSec({ time: fri }, { time: fri, ahead: 2, aheadStep: H }, H) === 2 * H);
+}
 ok('زمن بطرف بلا ختم ⇒ null', measureDurationSec({}, { time: 10 }, H) === null);
 ok('سطر بالزمن',
   measureReadoutText({
