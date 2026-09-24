@@ -75,6 +75,7 @@ import { fibLevelPrice, planFibLabels } from './fibLabels';
 import { measureReadoutText } from './measureReadout';
 import { thinByGap } from './levelLabels';
 import { formatPct } from './dailyChange';
+import { timeframeStepSec } from './dataSource';
 import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
@@ -483,38 +484,68 @@ function formatAxisTime(
   unixTime: number,
   spanSeconds: number,
   months: string[],
-  compact = false
+  compact = false,
+  dayCandles = false
 ): string {
   const milliseconds = unixTime > 1e12 ? unixTime : unixTime * 1000;
   const date = new Date(milliseconds);
   if (Number.isNaN(date.getTime())) return '';
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
-  const day = date.getDate();
-  const mon = months[date.getMonth()] ?? '';
-  const dayMonth = compact ? `${day}/${date.getMonth() + 1}` : `${day} ${mon}`;
-  if (spanSeconds <= 2 * 86400) {
+  const p = candleDateParts(date, dayCandles);
+  const hh = String(p.hours).padStart(2, '0');
+  const mm = String(p.minutes).padStart(2, '0');
+  const mon = months[p.month] ?? '';
+  const dayMonth = compact ? `${p.day}/${p.month + 1}` : `${p.day} ${mon}`;
+  if (spanSeconds <= 2 * 86400 && !dayCandles) {
     return `${hh}:${mm}\n${dayMonth}`;
   }
   if (spanSeconds <= 120 * 86400) {
     return dayMonth;
   }
   return compact
-    ? `${date.getMonth() + 1}/${date.getFullYear()}`
-    : `${mon} ${date.getFullYear()}`;
+    ? `${p.month + 1}/${p.year}`
+    : `${mon} ${p.year}`;
+}
+
+/**
+ * شمعة اليوم/الأسبوع تُفتح عند 00:00 UTC (المزوّد يُرجع تاريخاً بلا ساعة، يُقرأ UTC).
+ * بالتوقيت المحلي كانت شمعة 24 سبتمبر تُكتب «23 سبتمبر 20:00» لمتداول بنيويورك —
+ * **يومٌ خاطئ** على الشارت اليومي، وساعةٌ لا معنى لها بشمعة يوم كامل. فالتاريخ بـUTC
+ * وبلا ساعة لهذه الفريمات؛ فريمات الساعات وما دونها تبقى بالتوقيت المحلي كما هي.
+ */
+function candleDateParts(date: Date, dayCandles: boolean) {
+  return dayCandles
+    ? {
+        year: date.getUTCFullYear(),
+        month: date.getUTCMonth(),
+        day: date.getUTCDate(),
+        hours: date.getUTCHours(),
+        minutes: date.getUTCMinutes(),
+      }
+    : {
+        year: date.getFullYear(),
+        month: date.getMonth(),
+        day: date.getDate(),
+        hours: date.getHours(),
+        minutes: date.getMinutes(),
+      };
 }
 
 /** Full date + time for the crosshair time tag (always explicit, unlike axis ticks). */
-function formatCrossTime(unixTime: number, spanSeconds: number, months: string[]): string {
+function formatCrossTime(
+  unixTime: number,
+  spanSeconds: number,
+  months: string[],
+  dayCandles = false
+): string {
   const milliseconds = unixTime > 1e12 ? unixTime : unixTime * 1000;
   const date = new Date(milliseconds);
   if (Number.isNaN(date.getTime())) return '';
-  const day = date.getDate();
-  const mon = months[date.getMonth()] ?? '';
-  if (spanSeconds > 120 * 86400) return `${day} ${mon} ${date.getFullYear()}`;
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
-  return `${day} ${mon} ${hh}:${mm}`;
+  const p = candleDateParts(date, dayCandles);
+  const mon = months[p.month] ?? '';
+  if (spanSeconds > 120 * 86400 || dayCandles) return `${p.day} ${mon} ${p.year}`;
+  const hh = String(p.hours).padStart(2, '0');
+  const mm = String(p.minutes).padStart(2, '0');
+  return `${p.day} ${mon} ${hh}:${mm}`;
 }
 
 function pointerXY(event: PointerEventLike): { x: number; y: number; pointerId: number } {
@@ -2960,6 +2991,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const firstVisibleTime = source.plot[0]?.time ?? 0;
   const lastVisibleTime = source.plot[source.plot.length - 1]?.time ?? firstVisibleTime;
   const visibleTimeSpan = Math.abs(lastVisibleTime - firstVisibleTime);
+  const dayCandles = timeframeStepSec(series.timeframe) >= 86400;
   const timeLabelW = chartPlotW < 200 ? 56 : chartPlotW < 280 ? 72 : 88;
   // العدد من عرض العلامة نفسها لا من عتبة مكتوبة: أربع علامات عرضها 88px تلزمها
   // 414px بعد القصّ، ولوح هاتف كبير ≈ 338px — فكانت الأولى والثانية تتراكبان.
@@ -5251,7 +5283,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     { width: timeLabelW, left: box.start },
                   ]}
                 >
-                  {formatAxisTime(candle.time, visibleTimeSpan, tr.mcMonths, chartPlotW < 280)}
+                  {formatAxisTime(
+                    candle.time,
+                    visibleTimeSpan,
+                    tr.mcMonths,
+                    chartPlotW < 280,
+                    dayCandles
+                  )}
                 </Text>
               );
             })}
@@ -5264,7 +5302,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 ]}
               >
                 <Text style={styles.crossTagText} numberOfLines={1}>
-                  {formatCrossTime(crossCandle.time, visibleTimeSpan, tr.mcMonths)}
+                  {formatCrossTime(crossCandle.time, visibleTimeSpan, tr.mcMonths, dayCandles)}
                 </Text>
               </View>
             ) : null}
