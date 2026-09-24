@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import { API_URL, type LiveTick } from '../api';
 import { parseWsDataSource } from '../chart/dataSource';
 
@@ -60,6 +61,8 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
           /* silent — onclose يتولى إعادة الاتصال */
         };
         ws.onclose = () => {
+          // مقبس استُبدل (إعادة اتصال عند العودة للواجهة) لا يجدول اتصالاً ثانياً.
+          if (wsRef.current !== ws) return;
           scheduleReconnect();
         };
       } catch {
@@ -69,8 +72,22 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
 
     connect();
 
+    // بالخلفية يُغلق النظام المقبس وتفشل المحاولات فيتضاعف الانتظار حتى 30s: بعد العودة
+    // للتطبيق كان السعر الحيّ يقف حتى نصف دقيقة كأنه حيّ. العودة للواجهة تعيد الاتصال فوراً
+    // وتصفّر التضاعف، إلا إن كان المقبس مفتوحاً أو قيد الاتصال أصلاً.
+    const appSub = AppState.addEventListener('change', (next) => {
+      if (next !== 'active' || !alive) return;
+      const cur = wsRef.current;
+      if (cur && (cur.readyState === WebSocket.OPEN || cur.readyState === WebSocket.CONNECTING)) return;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+      attempt = 0;
+      connect();
+    });
+
     return () => {
       alive = false;
+      appSub.remove();
       if (reconnectTimer) clearTimeout(reconnectTimer);
       wsRef.current?.close();
       wsRef.current = null;
