@@ -597,7 +597,8 @@ export function liveEntryOrphaned(input: {
   const { entryText, symbol, filled } = input;
   if (!filled || entryText.trim() !== filled.text) return false;
   // أداة **معروفة** فقط: `journalSymbol` يقبل «GBPUS» رمزاً حرّاً أثناء الكتابة
-  const now = instrumentSpec(symbol)?.symbol ?? knownSingleName(symbol);
+  // حساب سنت/micro («GBPUSDC») بسعر زوجه العادي كـ`quoteSymbol`: كان `null` فلا يُمسح دخول EURUSD تحت صفقة GBPUSDC
+  const now = smallContractPair(symbol) ?? instrumentSpec(symbol)?.symbol ?? knownSingleName(symbol);
   return now != null && now !== filled.symbol;
 }
 

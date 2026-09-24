@@ -1559,3 +1559,19 @@ console.log('tradePlan small-contract suffix selftest OK');
   assert.equal(journalSizeLooksLikeUnits(150, 'EURUSD.MICRO'), null);
 }
 console.log('tradePlan journalSpec chips selftest OK');
+
+// liveEntryOrphaned لحساب سنت/micro: السعر المعبَّأ مفتاحه `quoteSymbol` (الزوج العادي)
+{
+  const filled = { symbol: 'EURUSD', text: '1.08515' };
+  // شريحة GBPUSDc بعد سعر EURUSD ⇒ يُمسح (كان يبقى: صفقة GBPUSDC بدخول 1.08515)
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'GBPUSDC', filled }), true);
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'GBPUSD-cent', filled }), true);
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'XAUUSDmicro', filled }), true);
+  // الزوج نفسه بحساب سنت/micro — السعر نفسه ⇒ لا
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'EURUSDc', filled }), false);
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'EURUSDMICRO', filled }), false);
+  // عُبّئ لسنت (مفتاحه EURUSD) ثم العادي ⇒ لا؛ ثم زوج آخر ⇒ نعم
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'EURUSD', filled: { symbol: quoteSymbol('EURUSDC')!, text: '1.08515' } }), false);
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'USDJPY', filled: { symbol: quoteSymbol('EURUSDC')!, text: '1.08515' } }), true);
+}
+console.log('tradePlan liveEntryOrphaned small-contract selftest OK');
