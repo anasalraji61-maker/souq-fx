@@ -17,6 +17,7 @@ import {
   LayoutChangeEvent,
   PanResponder,
   Platform,
+  TextInput,
 } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
@@ -1146,6 +1147,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [pineFormula, setPineFormula] = useState('');
   const [pineOn, setPineOn] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const noteEditPushed = useRef(false);
   const [kind, setKind] = useState<ChartKind>(initialKind ?? 'candles');
   const kindRef = useRef(kind);
   kindRef.current = kind;
@@ -3168,16 +3170,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       }
       if (t === 'hline' || t === 'hray' || t === 'vline' || t === 'note') {
         pushDrawHistory();
-        setDrawings((d) => [
-          ...d,
-          {
-            id: nextDrawingId(),
-            tool: t,
-            a,
-            text: t === 'note' ? tr.mcNoteDefault : undefined,
-            color: accent,
-          },
-        ]);
+        const id = nextDrawingId();
+        // الملاحظة الجديدة بلا نصّ مخزَّن: تُعرض `tr.mcNoteDefault` بلغة الواجهة الجارية (كانت تُجمَّد
+        // «ملاحظة» بلغة إنشائها)، وتُحدَّد فوراً فيظهر محرّر نصّها.
+        setDrawings((d) => [...d, { id, tool: t, a, color: accent }]);
+        if (t === 'note') setSelectedId(id);
       } else if (b) {
         pushDrawHistory();
         // شراء/بيع: `b` يُخزَّن عند الوقف بجهته الصحيحة (المقبض حيث يُرى الوقف) — `positionTool.ts`.
@@ -7134,7 +7131,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   sel ? [styles.noteSel, { borderColor: d.color }] : null,
                 ]}
               >
-                {d.text || '•'}
+                {d.text || tr.mcNoteDefault}
               </Text>
             );
           }
@@ -7339,6 +7336,44 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           }
           return null;
         })}
+
+        {/* محرّر نصّ الملاحظة المحدَّدة — تحتها مباشرةً. التراجع يعيد النصّ السابق كلّه (لقطة واحدة
+            عند أوّل حرف لا لكل حرف). Backspace هنا لا يحذف الرسم (`webKeyChart` يتجاهل خانات الكتابة). */}
+        {(() => {
+          if (!interactive || drawingsHidden || !selectedId) return null;
+          const hit = visibleDrawings.find((v) => v.d.id === selectedId);
+          if (!hit || hit.d.tool !== 'note') return null;
+          const d = hit.d;
+          const noteW = Math.min(180, Math.max(96, chartPlotW - 8));
+          const left = Math.max(2, Math.min(chartPlotW - noteW - 2, xOf(hit.aLocal)));
+          const below = yOf(d.a.price) + 18;
+          const top = below + 30 > chartPlotH ? Math.max(0, yOf(d.a.price) - 32) : Math.max(0, below);
+          return (
+            <TextInput
+              key={`noteEdit-${d.id}`}
+              accessibilityLabel={tr.mcNoteDefault}
+              defaultValue={d.text ?? ''}
+              placeholder={tr.mcNoteDefault}
+              placeholderTextColor={colors.textMuted}
+              maxLength={60}
+              returnKeyType="done"
+              blurOnSubmit
+              selectTextOnFocus
+              onFocus={() => {
+                noteEditPushed.current = false;
+              }}
+              onChangeText={(value) => {
+                if (!noteEditPushed.current) {
+                  pushDrawHistory();
+                  noteEditPushed.current = true;
+                }
+                const text = value.trim() ? value : undefined;
+                setDrawings((list) => list.map((x) => (x.id === d.id ? { ...x, text } : x)));
+              }}
+              style={[styles.noteEdit, { left, top, width: noteW, borderColor: d.color, color: d.color }]}
+            />
+          );
+        })()}
 
         {pending && dragEnd && isPositionTool(tool)
           ? // المعاينة هي الأداة نفسها: المتداول يرى الوقف والهدف ونقاطهما وهو يسحب، لا خطّاً يُخمّن منه.
@@ -11066,6 +11101,17 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   note: { position: 'absolute', fontSize: 10, fontWeight: '800' },
+  noteEdit: {
+    position: 'absolute',
+    height: 28,
+    paddingHorizontal: 6,
+    paddingVertical: 0,
+    borderWidth: 1,
+    borderRadius: radii.sm,
+    backgroundColor: 'rgba(6,10,14,0.92)',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   // حالة التحديد كانت مطبَّقة على الخط الأفقي وحده، فالمتداول يختار خط ترند أو مستطيلاً
   // ثم يضغط «حذف» بلا أي دليل بصري على العنصر الذي سيُحذف.
   noteSel: {
