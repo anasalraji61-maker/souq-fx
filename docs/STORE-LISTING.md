@@ -42,7 +42,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 الشارت
 • شموع يابانية، هايكن آشي، رينكو، كاجي، ونقطة ورقم.
 • حتى أربعة شارتات في شاشة واحدة، مع مزامنة الزمن بينها عند الحاجة — فتقرأ الشمعة نفسها على الأربعة معاً.
-• المس أي شمعة لترى افتتاحها وأعلاها وأدناها وإغلاقها، ومن المستوى نفسه ضع تنبيه سعر بلمسة.
+• المس أي شمعة لترى افتتاحها وأعلاها وأدناها وإغلاقها، ثم المس 🔔 لتضع تنبيه سعر عند ذلك المستوى.
 • المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، الفوليوم وغيرها.
 • «عدسات» جاهزة تبدّل طريقة قراءة الشارت بلمسة: نظيف، هيكل، زخم، سيولة.
 • أدوات رسم: خط اتجاه، شعاع، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات، مع زرّ تراجع.
@@ -98,7 +98,7 @@ MATRIX is a technical-analysis workspace built for individual traders: fast char
 CHARTS
 • Candlesticks, Heikin-Ashi, Renko, Kagi and Point & Figure.
 • Up to four charts on one screen, with optional time sync between them — read the same candle on all four at once.
-• Tap any candle to see its open, high, low and close, and set a price alert at that level in one tap.
+• Tap any candle to see its open, high, low and close, then tap 🔔 to set a price alert at that level.
 • The indicators traders actually use: SMA and EMA moving averages, Bollinger Bands, RSI, MACD, Volume and more.
 • One-tap "lenses" that change how you read the chart: Clean, Structure, Momentum, Liquidity.
 • Drawing tools: trend line, ray, horizontal and vertical lines, rectangle, Fibonacci, zones and notes, with undo.

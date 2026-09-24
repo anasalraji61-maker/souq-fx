@@ -31,7 +31,7 @@
 | فريمات 1–4 + بطل | implemented | `TerminalScreen.tsx`, `ChartFrame.tsx`, `FrameSizedGrid.tsx` | مربع/مستطيل؛ تعبئة سطح المكتب لـ 2×2+ |
 | فريم الظل | implemented | `TerminalScreen.tsx`, `shadowOverlay.ts` | مسارات عمودية s/m/b |
 | 2×2 / Focus | implemented | `QuadChartModal.tsx`, `FocusChartModal.tsx` | مزامنة زمن اختيارية بزرّ؛ الشارت المضغوط «يقود» والبقية تتبع وقته (`leader`)؛ مع المزامنة يرسم كل تابع خطّ تقاطع القائد وسطر OHLC لشمعته السارية عند ذلك الزمن (`syncCrossTime`، `indexAtOrBeforeTime`)؛ الجلب متوازٍ وكل خلية تظهر لحظة وصولها |
-| تقاطع / قراءة الشمعة | implemented (الويب والرباعي بلا تجربة على جهاز بعد) | `MatrixChart.tsx`, `crossAnchor.ts` | الهاتف: لمسة تضعه عند الموضع، وإصبع ثابت 350ms ثم سحب يتتبّع الشموع؛ الويب: مرور الفأرة معاينة، النقرة تثبّت، ←/→ شمعة، Esc يفكّ؛ السعر تحت الإصبع (المغناطيس 🧲 — مفعَّل افتراضياً — يجذب لـO/H/L/C ضمن 14px)؛ زرّ 🔔 ينشئ تنبيه سعر من المثبَّت فقط (`createChartAlert`)؛ DXY بثلاث منازل |
+| تقاطع / قراءة الشمعة | implemented (الويب والرباعي بلا تجربة على جهاز بعد) | `MatrixChart.tsx`, `crossAnchor.ts` | الهاتف: لمسة تضعه عند الموضع، وإصبع ثابت 350ms ثم سحب يتتبّع الشموع؛ الويب: مرور الفأرة معاينة، النقرة تثبّت، ←/→ شمعة (وعند حافّة النافذة تزيحها شمعةً — `stepCrossBar`)، Esc يفكّ؛ السعر تحت الإصبع (المغناطيس 🧲 — مفعَّل افتراضياً — يجذب لـO/H/L/C ضمن 14px)؛ زرّ 🔔 ينشئ تنبيه سعر من المثبَّت فقط (`createChartAlert`)؛ DXY بثلاث منازل |
 | مقارنة رمز | implemented | `compare.ts`, `FocusChartModal.tsx` | |
 | مزامنة نافذة بين شارتات | **implemented** (مُتحقق سلوكياً — مهمة 7) | `MatrixChart.tsx`, `ChartFrame.tsx`, `TerminalScreen.tsx` | OFF افتراضياً؛ سكون بلا حلقة نشر؛ OFF→ON يعيد النشر؛ بان/زوم يزيد النشر عند تغيّر النطاق؛ 2/4 فريمات؛ يختفي عند 1 فريم؛ زمن فقط؛ معطل في الظل |
 | DOM lite | جزئي / تقديري | `DomLitePanel.tsx`, `orderflow.ts` | ليس L2 حقيقي |
@@ -52,7 +52,7 @@
 | العنصر | الحالة | مسارات | ملاحظة |
 |--------|--------|--------|--------|
 | أدوات الرسم | implemented | `MatrixChart.tsx`, `DRAW_TOOLS` | trend/ray/hline/vline/rect/fib/zone/note/measure؛ زرّ «تراجع» (`undoDrawing`)؛ القياس يكتب «عدد الشموع · pip · %» فوق الإصبع أثناء السحب (`measureReadout.ts`) |
-| تنبيه من خط أفقي | implemented | `FocusChartModal.tsx` | عبر API تنبيهات |
+| تنبيه من الشارت | implemented | `chart/alertFromChart.ts`, `TerminalScreen.tsx`, `FocusChartModal.tsx` | من 🔔 التقاطع المثبَّت أو من خط/منطقة مرسومة، بالشارت الرئيسي وشارت التركيز؛ الاتجاه (فوق/تحت) من سعر حقيقي للرمز — على أسعار تجريبية لا يُنشأ التنبيه (`createChartAlert`) |
 
 ## 4. Saving / persistence
 
@@ -67,7 +67,7 @@
 
 | العنصر | الحالة | مسارات | ملاحظة |
 |--------|--------|--------|--------|
-| WS ticks | connected (+ demo) | `/ws/ticks`, `useLiveTicks.ts` | |
+| WS ticks | connected (+ demo) | `/ws/ticks`, `useLiveTicks.ts` | إعادة اتصال بتضاعف حتى 30s؛ العودة للتطبيق من الخلفية تعيد الاتصال فوراً (`AppState`) |
 | بحث رموز | connected | `/api/symbols/search` | 503 بلا مفتاح |
 | alert worker | implemented | `alert_worker.py` | ~60s + push |
 
@@ -114,8 +114,8 @@
 
 | العنصر | الحالة | مسارات | ملاحظة |
 |--------|--------|--------|--------|
-| حاسبة حجم المركز | implemented (حساب محلي) | `positionSize.ts`, `tradePlan.ts`, `PositionSizePanel.tsx` (أدوات ← المخاطرة) | وقف بالـpip أو من سعرَي الدخول والوقف؛ شرائح هدف `QUICK_RR` = 1:1 · 1:1.5 · 1:2 · 1:3؛ المخاطرة الفعلية % بعد تقريب اللوت؛ تحذير أصغر لوت 0.01 مع كم يخاطر أصغر لوت فعلاً (مال ونسبة، `riskForLots`)؛ سعر التحويل من API مع إدخال يدوي عند الفشل؛ اختبارات ذاتية `*.selftest.ts` |
-| دفتر الصفقات | implemented (SQLite) | `TradeJournalPanel.tsx` (أدوات ← الدفتر), `db.py` (`add_trade`/`close_trade`) | إدخال يدوي فقط — لا ربط وسيط؛ شرائح هدف `QUICK_RR` نفسها تحت الوقف والهدف؛ إحصاءات: نسبة النجاح، صافي النقاط، متوسط R للصفقات بوقف مسجَّل؛ المال المعرَّض بعملة التسعير حين يُكتب الحجم |
+| حاسبة حجم المركز | implemented (حساب محلي) | `positionSize.ts`, `tradePlan.ts`, `PositionSizePanel.tsx` (أدوات ← المخاطرة) | وقف بالـpip أو من سعرَي الدخول والوقف؛ شرائح هدف `QUICK_RR` = 1:1 · 1:1.5 · 1:2 · 1:3؛ المخاطرة الفعلية % بعد تقريب اللوت؛ تحذير أصغر لوت 0.01 مع كم يخاطر أصغر لوت فعلاً (مال ونسبة، `riskForLots`)؛ سعر التحويل من API مع إدخال يدوي عند الفشل؛ الين بلا كسور (`formatMoney`)؛ سطر «خبر قوي قريب» لعملتي الزوج (`NewsRiskBanner`، العدّ مقرَّب للأسفل)؛ اختبارات ذاتية `*.selftest.ts` |
+| دفتر الصفقات | implemented (SQLite) | `TradeJournalPanel.tsx` (أدوات ← الدفتر), `db.py` (`add_trade`/`close_trade`) | إدخال يدوي فقط — لا ربط وسيط؛ رموز الوسيط بلاحقة (XAUUSD.m، GBPJPY-ECN) تُحفظ كما كُتبت وتُحسب نقاطها وسعرها الحيّ بالرمز القانوني (`journalSymbol`/`quoteSymbol`)؛ شرائح هدف `QUICK_RR` نفسها تحت الوقف والهدف؛ إحصاءات: نسبة النجاح، صافي النقاط، متوسط R للصفقات بوقف مسجَّل؛ المال المعرَّض بعملة التسعير حين يُكتب الحجم |
 | تسجيل الخطة من الحاسبة بالدفتر | implemented | `PositionSizePanel.tsx` (`riskCalcLogToJournal`) | تُسجَّل صفقة مفتوحة |
 
 ---

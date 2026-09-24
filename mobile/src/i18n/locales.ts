@@ -140,8 +140,6 @@ export type Dict = {
   aiPanelTitle: string;
   aiGreeting: string;
   aiOfflineFallback: string;
-  aiWinEstimate: string;
-  aiWinDisclaimer: string;
   aiInputPlaceholder: string;
   aiInputA11y: string;
   aiSendA11y: string;
@@ -352,7 +350,6 @@ export type Dict = {
   reportRiskHint: string;
   reportOpenWord: string;
   reportAiFallbackNote: string;
-  reportWinLabel: string;
   reportJournalDataLine: string;
   reportJournalEmptyLine: string;
   reportJournalUnavailableLine: string;
@@ -859,8 +856,8 @@ const ar: Dict = {
   namePlaceholder: 'اسم المستخدم',
   email: 'الإيميل',
   emailPlaceholder: 'name@example.com',
-  password: 'باسوورد',
-  passwordPlaceholder: 'باسوورد',
+  password: 'كلمة المرور',
+  passwordPlaceholder: 'كلمة المرور',
   enter: 'دخول',
   createAccount: 'إنشاء حساب',
   logout: 'تسجيل خروج',
@@ -875,8 +872,8 @@ const ar: Dict = {
   broker: 'بروكر',
   agent: 'وكيل',
   company: 'شركة',
-  loginError: 'تعذر الدخول — تحقق من الاسم/الإيميل والباسوورد',
-  registerError: 'تعذر التسجيل — تحقق من الإيميل والبيانات ورمز الكفيل',
+  loginError: 'تعذّر الدخول — تحقّق من الاسم أو الإيميل وكلمة المرور، ومن اتصالك بالإنترنت',
+  registerError: 'تعذّر التسجيل — تحقّق من الإيميل والبيانات ورمز الكفيل، ومن اتصالك بالإنترنت',
   language: 'اللغة',
   commissionsReport: 'تقرير العمولات',
   networkTree: 'شجرة الشبكة',
@@ -990,8 +987,6 @@ const ar: Dict = {
   aiGreeting: 'أنا خبير تداول MATRIX. اسأل عن تحليل، سيناريو صفقة، إدارة مخاطر، أو علاقة الزوج بـ DXY.',
   aiOfflineFallback:
     'تعذّر الاتصال بالخادم — تحقّق من اتصالك بالإنترنت وحاول بعد قليل.\n\nتحليل محلي سريع: راقب DXY قبل أي دخول على أزواج الدولار، واستخدم وقف واضح بنسبة مخاطرة ≤ 1%.',
-  aiWinEstimate: 'توقع نجاح تقديري: {pct}%',
-  aiWinDisclaimer: 'تقدير إحصائي وليس ضماناً — أدر مخاطرك دوماً',
   aiInputPlaceholder: 'مثال: تحليل {symbol} اليوم؟',
   aiInputA11y: 'سؤال لمساعد الذكاء الاصطناعي',
   aiSendA11y: 'إرسال سؤال لمساعد الذكاء الاصطناعي',
@@ -1100,7 +1095,7 @@ const ar: Dict = {
     'لا تنبيهات بعد — اكتب سعراً بالأعلى (أو اضغط «استخدمه» للسعر الحالي) واختر فوق/تحت، وسيصلك إشعار حين يصل السعر إليه.',
   alertsDeleteConfirmTitle: 'حذف التنبيه؟',
   alertsDeleteFailedTitle: 'تعذر الحذف',
-  alertsDeleteFailedBody: 'حدث خطأ أثناء حذف التنبيه، حاول مرة أخرى.',
+  alertsDeleteFailedBody: 'لم نتأكّد من الحذف — تحقّق من الاتصال. إن بقي التنبيه بالقائمة فاحذفه مرة أخرى.',
   alertsDeleteA11yPrefix: 'حذف تنبيه',
   alertsInvalidInput: 'أدخل رمزاً وسعراً صحيحاً أكبر من صفر',
   alertsUnknownSymbolWarn: 'مزوّد الأسعار لا يعرف هذا الرمز — راجع كتابته، وإلا لن يُطلق التنبيه',
@@ -1204,7 +1199,6 @@ const ar: Dict = {
   reportRiskHint: 'إدارة رأس المال',
   reportOpenWord: 'مفتوح ↓',
   reportAiFallbackNote: 'تعذر الاتصال بالذكاء الاصطناعي — هذا قالب عام بدل تحليل مخصَّص',
-  reportWinLabel: 'ثقة تقديرية للسيناريو: {pct}%',
   reportJournalDataLine:
     'بيانات دفتر الصفقات الفعلية (كل الصفقات المغلقة، لا هذا الأسبوع وحده): صفقات={trades} نجاح={winRate}% PnL={pnl}% أفضل={best}% أسوأ={worst}%. اعتمد عليها في التقرير.',
   reportJournalEmptyLine: '(لا توجد صفقات مغلقة في الدفتر بعد — لا أرقام أداء لعرضها).',
@@ -1254,7 +1248,7 @@ const ar: Dict = {
   journalClosedWord: 'مغلقة',
   journalCloseNeedsExit: 'اكتب سعر الخروج في خانة «خروج» أعلى النموذج، ثم اضغط «إغلاق بسعر خانة الخروج» تحت الصفقة.',
   journalDeleteConfirmTitle: 'حذف هذه الصفقة من الدفتر؟',
-  journalDeleteFailedBody: 'حدث خطأ أثناء حذف الصفقة، حاول مرة أخرى.',
+  journalDeleteFailedBody: 'لم نتأكّد من الحذف — تحقّق من الاتصال. إن بقيت الصفقة بالدفتر فاحذفها مرة أخرى.',
   journalDeleteA11y: 'حذف صفقة {symbol} من الدفتر',
   journalEditBtn: 'تعديل',
   journalEditA11y: 'تعديل صفقة {symbol}',
@@ -1316,7 +1310,7 @@ const ar: Dict = {
     'لا تنبيهات مؤشرات بعد — اختر مؤشراً وشرطاً بالأعلى (RSI تحت 30 مثلاً) ليصلك إشعار دون مراقبة الشارت.',
   indAlertsDeleteConfirmTitle: 'حذف تنبيه المؤشر؟',
   indAlertsDeleteFailedTitle: 'تعذر الحذف',
-  indAlertsDeleteFailedBody: 'حدث خطأ أثناء حذف تنبيه المؤشر، حاول مرة أخرى.',
+  indAlertsDeleteFailedBody: 'لم نتأكّد من الحذف — تحقّق من الاتصال. إن بقي تنبيه المؤشر بالقائمة فاحذفه مرة أخرى.',
   indAlertsDeleteA11yPrefix: 'حذف تنبيه مؤشر',
   indAlertsPushTitle: 'MATRIX · تنبيه مؤشر',
   indAlertsTfLabel: 'الفريم:',
@@ -1508,7 +1502,8 @@ const ar: Dict = {
   focusCompareUnavailable: 'تعذّر تحميل بيانات {sym} الحقيقية — لا خط مقارنة',
   focusInComparisonSuffix: ' · قيد المقارنة',
   focusAlertCreateFailedTitle: 'تعذر إنشاء التنبيه',
-  focusAlertCreateFailedBody: 'حدث خطأ أثناء إنشاء تنبيه من خط الرسم، حاول مرة أخرى.',
+  focusAlertCreateFailedBody:
+    'لم يُنشأ التنبيه. تحقّق من اتصالك وحاول مرة أخرى. التنبيه يحتاج سعراً حقيقياً للرمز ليعرف أينتظر صعوداً أم هبوطاً، فلا يُنشأ والشارت يعرض أسعاراً تجريبية.',
   focusAlertFromDrawingNote: 'من خط رسم',
   focusAlertFromChartNote: 'من الشارت',
   gridFramesWord: 'الفريمات',
@@ -1735,8 +1730,8 @@ const enUS: Dict = {
   broker: 'Broker',
   agent: 'Agent',
   company: 'Company',
-  loginError: 'Login failed — check name/email and password',
-  registerError: 'Sign-up failed — check email, details, and sponsor code',
+  loginError: 'Login failed — check your name or email, your password, and your connection',
+  registerError: 'Sign-up failed — check your email, details, sponsor code, and connection',
   language: 'Language',
   commissionsReport: 'Commissions report',
   networkTree: 'Network tree',
@@ -1851,8 +1846,6 @@ const enUS: Dict = {
     "I'm the MATRIX trading expert. Ask about analysis, a trade scenario, risk management, or the pair's relation to DXY.",
   aiOfflineFallback:
     'Could not reach the server — check your internet connection and try again shortly.\n\nQuick local take: watch DXY before entering any dollar pair, and use a clear stop with risk ≤ 1%.',
-  aiWinEstimate: 'Estimated success chance: {pct}%',
-  aiWinDisclaimer: 'A statistical estimate, not a guarantee — always manage your risk',
   aiInputPlaceholder: 'e.g. analysis of {symbol} today?',
   aiInputA11y: 'Question for the AI assistant',
   aiSendA11y: 'Send question to the AI assistant',
@@ -1961,7 +1954,7 @@ const enUS: Dict = {
     'No alerts yet — enter a price above (or tap “Use it” for the current price), pick above/below, and you\'ll be notified when price gets there.',
   alertsDeleteConfirmTitle: 'Delete the alert?',
   alertsDeleteFailedTitle: 'Could not delete',
-  alertsDeleteFailedBody: 'An error occurred while deleting the alert, try again.',
+  alertsDeleteFailedBody: 'We couldn’t confirm the delete — check your connection. If the alert is still in the list, delete it again.',
   alertsDeleteA11yPrefix: 'Delete alert',
   alertsInvalidInput: 'Enter a symbol and a valid price above zero',
   alertsUnknownSymbolWarn: 'The price provider does not know this symbol — check the spelling, or this alert will never fire',
@@ -2065,7 +2058,6 @@ const enUS: Dict = {
   reportRiskHint: 'Capital management',
   reportOpenWord: 'Open ↓',
   reportAiFallbackNote: 'Could not reach the AI — this is a general template, not a custom analysis',
-  reportWinLabel: 'Estimated scenario confidence: {pct}%',
   reportJournalDataLine:
     'Actual trade journal data (all closed trades, not just this week): trades={trades} win rate={winRate}% PnL={pnl}% best={best}% worst={worst}%. Base the report on it.',
   reportJournalEmptyLine: '(No closed trades in the journal yet — no performance numbers to show).',
@@ -2116,7 +2108,7 @@ const enUS: Dict = {
   journalClosedWord: 'Closed',
   journalCloseNeedsExit: 'Type the exit price in the “Exit” field at the top of the form, then tap “Close at exit field price” under the trade.',
   journalDeleteConfirmTitle: 'Delete this trade from the journal?',
-  journalDeleteFailedBody: 'An error occurred while deleting the trade, try again.',
+  journalDeleteFailedBody: 'We couldn’t confirm the delete — check your connection. If the trade is still in the journal, delete it again.',
   journalDeleteA11y: 'Delete {symbol} trade from the journal',
   journalEditBtn: 'Edit',
   journalEditA11y: 'Edit {symbol} trade',
@@ -2178,7 +2170,7 @@ const enUS: Dict = {
     'No indicator alerts yet — pick an indicator and a condition above (RSI below 30, say) and get notified without watching the chart.',
   indAlertsDeleteConfirmTitle: 'Delete the indicator alert?',
   indAlertsDeleteFailedTitle: 'Could not delete',
-  indAlertsDeleteFailedBody: 'An error occurred while deleting the indicator alert, try again.',
+  indAlertsDeleteFailedBody: 'We couldn’t confirm the delete — check your connection. If the indicator alert is still in the list, delete it again.',
   indAlertsDeleteA11yPrefix: 'Delete indicator alert',
   indAlertsPushTitle: 'MATRIX · Indicator alert',
   indAlertsTfLabel: 'Timeframe:',
@@ -2371,7 +2363,8 @@ const enUS: Dict = {
   focusCompareUnavailable: 'Couldn’t load real {sym} data — no comparison line',
   focusInComparisonSuffix: ' · in comparison',
   focusAlertCreateFailedTitle: "Couldn't create alert",
-  focusAlertCreateFailedBody: 'An error occurred creating an alert from the drawing line, try again.',
+  focusAlertCreateFailedBody:
+    'The alert wasn’t created. Check your connection and try again. An alert needs a real price for the symbol to know whether to wait for a rise or a drop, so it can’t be set while the chart shows demo prices.',
   focusAlertFromDrawingNote: 'From drawing line',
   focusAlertFromChartNote: 'From chart',
   gridFramesWord: 'Frames',
@@ -2579,8 +2572,8 @@ const enGB: Dict = {
   // «E-mail» بشرطة صار قديماً ببريطانيا نفسها (الحكومة وBBC تكتبان email).
   email: 'Email',
   sponsorCode: 'Sponsor code (optional)',
-  loginError: 'Sign-in failed — check name/email and password',
-  registerError: 'Registration failed — check email, details, and sponsor code',
+  loginError: 'Sign-in failed — check your name or email, your password, and your connection',
+  registerError: 'Registration failed — check your email, details, sponsor code, and connection',
   language: 'Language',
   commissionsReport: 'Commission report',
   networkTree: 'Network tree',
@@ -2608,8 +2601,8 @@ const ku: Dict = {
   namePlaceholder: 'ناوی بەکارهێنەر',
   email: 'ئیمەیڵ',
   emailPlaceholder: 'name@example.com',
-  password: 'پاسوۆرد',
-  passwordPlaceholder: 'پاسوۆرد',
+  password: 'وشەی نهێنی',
+  passwordPlaceholder: 'وشەی نهێنی',
   enter: 'چوونەژوورەوە',
   createAccount: 'دروستکردنی هەژمار',
   logout: 'دەرچوون',
@@ -2624,15 +2617,15 @@ const ku: Dict = {
   broker: 'برۆکەر',
   agent: 'بریکار',
   company: 'کۆمپانیا',
-  loginError: 'چوونەژوورەوە سەرکەوتوو نەبوو — ناو/ئیمەیڵ و پاسوۆرد بپشکنە',
-  registerError: 'تۆمارکردن سەرکەوتوو نەبوو — ئیمەیڵ و زانیاری و کۆدی سپۆنسەر بپشکنە',
+  loginError: 'چوونەژوورەوە سەرکەوتوو نەبوو — ناو یان ئیمەیڵ و وشەی نهێنی بپشکنە، هەروەها پەیوەندیت بە ئینتەرنێتەوە',
+  registerError: 'تۆمارکردن سەرکەوتوو نەبوو — ئیمەیڵ و زانیاری و کۆدی سپۆنسەر بپشکنە، هەروەها پەیوەندیت بە ئینتەرنێتەوە',
   language: 'زمان',
   commissionsReport: 'ڕاپۆرتی کۆمیسیۆن',
   networkTree: 'دارەکەی تۆڕ',
   deleteAccount: 'سڕینەوەی هەژمار',
   deleteAccountConfirmTitle: 'هەژمار بە تەواوی بسڕدرێتەوە؟',
   deleteAccountConfirmBody:
-    'ناوی بەکارهێنەر و ئیمەیڵ و پاسوۆرد بە تەواوی دەسڕدرێنەوە و ئیتر ناتوانیت بچیتەژوورەوەی ئەم هەژمارە. ئەم کردارە ناگەڕێتەوە.',
+    'ناوی بەکارهێنەر و ئیمەیڵ و وشەی نهێنی بە تەواوی دەسڕدرێنەوە و ئیتر ناتوانیت بچیتەژوورەوەی ئەم هەژمارە. ئەم کردارە ناگەڕێتەوە.',
   deleteAccountConfirmBtn: 'بە تەواوی بسڕەوە',
   deleteAccountError: 'سڕینەوەی هەژمار سەرکەوتوو نەبوو — دواتر هەوڵبدەرەوە',
   cancel: 'پاشگەزبوونەوە',
@@ -2740,8 +2733,6 @@ const ku: Dict = {
     'من پسپۆڕی مامەڵەکردنی MATRIX ـم. پرسیار بکە دەربارەی شیکاری، دیمەنی مامەڵە، بەڕێوەبردنی مەترسی، یان پەیوەندی جووتەکە بە DXY.',
   aiOfflineFallback:
     'نەکرا پەیوەندی بە ڕاژەوە بکرێت — لە پەیوەندییەکەت بە ئینتەرنێت دڵنیابە و دوای کەمێک دووبارە هەوڵ بدەرەوە.\n\nشیکاری خێرای ناوخۆیی: چاودێری DXY بکە پێش هەر چوونەژوورەوەیەک بۆ جووتەکانی دۆلار، و وەستانێکی ڕوون بەکاربهێنە بە مەترسی ≤ 1%.',
-  aiWinEstimate: 'ڕێژەی سەرکەوتنی خەمڵێنراو: {pct}%',
-  aiWinDisclaimer: 'خەمڵاندنێکی ئاماریە نەک دڵنیایی — هەمیشە مەترسیت بەڕێوە ببە',
   aiInputPlaceholder: 'نموونە: شیکاری {symbol} ئەمڕۆ؟',
   aiInputA11y: 'پرسیار بۆ یاریدەدەری زیرەکی دەستکرد',
   aiSendA11y: 'ناردنی پرسیار بۆ یاریدەدەری زیرەکی دەستکرد',
@@ -2850,7 +2841,7 @@ const ku: Dict = {
     'هێشتا هیچ ئاگادارکردنەوەیەک نییە — نرخێک لە سەرەوە بنووسە و سەرەوە/خوارەوە هەڵبژێرە، کاتێک نرخ گەیشتە ئەوێ ئاگادار دەکرێیتەوە.',
   alertsDeleteConfirmTitle: 'ئاگادارکردنەوەکە بسڕدرێتەوە؟',
   alertsDeleteFailedTitle: 'سڕینەوە سەرکەوتوو نەبوو',
-  alertsDeleteFailedBody: 'هەڵەیەک ڕوویدا لە کاتی سڕینەوەی ئاگادارکردنەوەکە، دووبارە هەوڵبدەرەوە.',
+  alertsDeleteFailedBody: 'دڵنیا نەبووینەوە لە سڕینەوە — پەیوەندییەکەت بپشکنە. ئەگەر ئاگادارکردنەوەکە هێشتا لە لیستەکەدایە، دووبارە بیسڕەوە.',
   alertsDeleteA11yPrefix: 'سڕینەوەی ئاگادارکردنەوە',
   alertsInvalidInput: 'هێمایەک و نرخێکی دروست لە سەرووی سفر بنووسە',
   alertsUnknownSymbolWarn: 'دابینکەری نرخ ئەم هێمایە ناناسێت — ڕێنووسەکەی بپشکنە، ئەگەرنا ئەم ئاگادارکردنەوەیە هەرگیز ناچالاک نابێت',
@@ -2955,7 +2946,6 @@ const ku: Dict = {
   reportOpenWord: 'کراوەیە ↓',
   reportAiFallbackNote:
     'نەکرا پەیوەندی بە زیرەکی دەستکردەوە بکرێت — ئەمە داڵدەیەکی گشتییە نەک شیکارییەکی تایبەت',
-  reportWinLabel: 'دڵنیایی خەمڵێنراوی دیمەن: {pct}%',
   reportJournalDataLine:
     'زانیاری ڕاستەقینەی دەفتەری مامەڵە (هەموو مامەڵە داخراوەکان، نەک تەنها ئەم هەفتەیە): مامەڵە={trades} ڕێژەی سەرکەوتن={winRate}% PnL={pnl}% باشترین={best}% خراپترین={worst}%. پشت بەمە ببەستە لە ڕاپۆرتەکە.',
   reportJournalEmptyLine: '(هێشتا هیچ مامەڵەیەکی داخراو لە دەفتەرەکەدا نییە — ژمارەی ئەدا نییە بۆ پیشاندان).',
@@ -3007,7 +2997,7 @@ const ku: Dict = {
   journalClosedWord: 'داخراو',
   journalCloseNeedsExit: 'نرخی دەرچوون لە خانەی «دەرچوون» لە سەرەوەی فۆڕمەکە بنووسە، پاشان «داخستن بە نرخی خانەی دەرچوون» لە ژێر مامەڵەکە دابگرە.',
   journalDeleteConfirmTitle: 'ئەم مامەڵەیە لە دەفتەرەکە بسڕدرێتەوە؟',
-  journalDeleteFailedBody: 'هەڵەیەک ڕوویدا لە کاتی سڕینەوەی مامەڵەکە، دووبارە هەوڵ بدەرەوە.',
+  journalDeleteFailedBody: 'دڵنیا نەبووینەوە لە سڕینەوە — پەیوەندییەکەت بپشکنە. ئەگەر مامەڵەکە هێشتا لە دەفتەرەکەدایە، دووبارە بیسڕەوە.',
   journalDeleteA11y: 'سڕینەوەی مامەڵەی {symbol} لە دەفتەرەکە',
   journalEditBtn: 'دەستکاری',
   journalEditA11y: 'دەستکاریکردنی مامەڵەی {symbol}',
@@ -3070,7 +3060,7 @@ const ku: Dict = {
     'هێشتا هیچ ئاگادارکردنەوەیەکی پێوەر نییە — پێوەرێک و مەرجێک لە سەرەوە هەڵبژێرە (بۆ نموونە RSI خوار ٣٠) تا ئاگادار بکرێیتەوە بەبێ چاودێری چارتەکە.',
   indAlertsDeleteConfirmTitle: 'ئاگادارکردنەوەی پێوەرەکە بسڕدرێتەوە؟',
   indAlertsDeleteFailedTitle: 'سڕینەوە سەرکەوتوو نەبوو',
-  indAlertsDeleteFailedBody: 'هەڵەیەک ڕوویدا لە کاتی سڕینەوەی ئاگادارکردنەوەی پێوەرەکە، دووبارە هەوڵبدەرەوە.',
+  indAlertsDeleteFailedBody: 'دڵنیا نەبووینەوە لە سڕینەوە — پەیوەندییەکەت بپشکنە. ئەگەر ئاگادارکردنەوەی پێوەرەکە هێشتا لە لیستەکەدایە، دووبارە بیسڕەوە.',
   indAlertsDeleteA11yPrefix: 'سڕینەوەی ئاگادارکردنەوەی پێوەر',
   indAlertsPushTitle: 'MATRIX · ئاگادارکردنەوەی پێوەر',
   indAlertsTfLabel: 'تایم‌فرەیم:',
@@ -3263,7 +3253,8 @@ const ku: Dict = {
   focusCompareUnavailable: 'نەکرا زانیاری ڕاستەقینەی {sym} باربکرێت — هێڵی بەراوردکردن نییە',
   focusInComparisonSuffix: ' · لە بەراوردکردندایە',
   focusAlertCreateFailedTitle: 'نەتوانرا ئاگادارکردنەوە دروست بکرێت',
-  focusAlertCreateFailedBody: 'هەڵەیەک ڕوویدا لە دروستکردنی ئاگادارکردنەوە لە هێڵی وێنەکێشان، دووبارە هەوڵبدەرەوە.',
+  focusAlertCreateFailedBody:
+    'ئاگادارکردنەوەکە دروست نەکرا. پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە. ئاگادارکردنەوە پێویستی بە نرخی ڕاستەقینەی هێماکەیە تا بزانێت چاوەڕێی بەرزبوونەوە بێت یان دابەزین، بۆیە کاتێک چارتەکە نرخی نموونەیی پیشان دەدات دروست ناکرێت.',
   focusAlertFromDrawingNote: 'لە هێڵی وێنەکێشانەوە',
   focusAlertFromChartNote: 'لە چارتەوە',
   gridFramesWord: 'چوارچێوەکان',
