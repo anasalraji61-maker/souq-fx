@@ -934,6 +934,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     focus: number;
   } | null>(null);
   const pinchUsed = useRef(false);
+  // مؤشّرات الويب المضغوطة الآن (معرّف ⇒ x) — قرص على شاشات اللمس بالمتصفّح.
+  const webPointers = useRef(new Map<number, number>());
   const plotPageLeft = useRef(0);
   const panMoved = useRef(false);
   const chartPressRef = useRef<(x: number, y: number) => void>(() => {});
@@ -3066,6 +3068,49 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [beginDrag, applyChartDrag, endDrag, zoomAroundCenter, zoomPrice]
   );
 
+  // القرص بإصبعين — مشترك بين مسار الهاتف (`chartPan`) ومسار لمس الويب (`webChartHandlers`).
+  // `x1/x2` بإحداثيات الصفحة/النافذة، و`plotLeft` حافّة اللوح بنفس الإحداثيات.
+  const beginPinch = useCallback(
+    (x1: number, x2: number, plotLeft: number) => {
+      if (scrubTimer.current) clearTimeout(scrubTimer.current);
+      scrubTimer.current = null;
+      scrubbing.current = false;
+      panMoved.current = true;
+      pinchUsed.current = true;
+      crossPinned.current = false;
+      setCross(null);
+      pinchStart.current = {
+        spread: pinchSpread(x1, x2),
+        count: windowCountRef.current,
+        offset: offsetRef.current,
+        focus: ((x1 + x2) / 2 - plotLeft) / Math.max(1, chartPlotW),
+      };
+    },
+    [chartPlotW]
+  );
+
+  const movePinch = useCallback(
+    (x1: number, x2: number) => {
+      const st = pinchStart.current;
+      if (!st) return;
+      const z = pinchWindow(
+        sourceRef.current.all.length,
+        st.count,
+        st.offset,
+        st.spread,
+        pinchSpread(x1, x2),
+        st.focus
+      );
+      if (z.count === windowCountRef.current && z.offset === offsetRef.current) return;
+      windowCountRef.current = z.count;
+      offsetRef.current = z.offset;
+      setWindowCount(z.count);
+      setOffset(z.offset);
+      schedulePublishSync(false);
+    },
+    [schedulePublishSync]
+  );
+
   const chartPan = useMemo(
     () =>
       PanResponder.create({
@@ -3125,39 +3170,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           // سحباً فيقفز الشارت بمقدار انتقال مركز اللمسات.
           const touches = evt.nativeEvent.touches;
           if (touches && touches.length >= 2) {
-            const spread = pinchSpread(touches[0].pageX, touches[1].pageX);
-            if (!pinchStart.current) {
-              if (scrubTimer.current) clearTimeout(scrubTimer.current);
-              scrubTimer.current = null;
-              scrubbing.current = false;
-              panMoved.current = true;
-              pinchUsed.current = true;
-              crossPinned.current = false;
-              setCross(null);
-              const mid = (touches[0].pageX + touches[1].pageX) / 2 - plotPageLeft.current;
-              pinchStart.current = {
-                spread,
-                count: windowCountRef.current,
-                offset: offsetRef.current,
-                focus: mid / Math.max(1, chartPlotW),
-              };
-            }
-            const st = pinchStart.current;
-            const z = pinchWindow(
-              sourceRef.current.all.length,
-              st.count,
-              st.offset,
-              st.spread,
-              spread,
-              st.focus
-            );
-            if (z.count !== windowCountRef.current || z.offset !== offsetRef.current) {
-              windowCountRef.current = z.count;
-              offsetRef.current = z.offset;
-              setWindowCount(z.count);
-              setOffset(z.offset);
-              schedulePublishSync(false);
-            }
+            if (!pinchStart.current) beginPinch(touches[0].pageX, touches[1].pageX, plotPageLeft.current);
+            movePinch(touches[0].pageX, touches[1].pageX);
             return;
           }
           pinchStart.current = null;
@@ -3206,7 +3220,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       applyChartDrag,
       beginDrag,
       endDrag,
-      schedulePublishSync,
+      beginPinch,
+      movePinch,
     ]
   );
   useEffect(
@@ -3264,6 +3279,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           onPointerDown: (event: PointerEventLike) => {
             event.preventDefault?.();
             const point = pointerXY(event);
+            // لا سحب جارٍ ⇒ لا مؤشّر مضغوط: رفعٌ فات الحدث (خروج النافذة) لا يترك قرصاً وهمياً.
+            if (!webChartPointer.current.active) webPointers.current.clear();
+            webPointers.current.set(point.pointerId, point.x);
+            // إصبع ثانٍ على شاشة لمس ⇒ قرص. كان يستبدل مؤشّر السحب الأوّل، فيُقاس
+            // الإصبعان كلاهما من أصل الثاني ويقفز الشارت؛ و`touchAction: none` يمنع تكبير
+            // المتصفّح، فلم يكن بالويب على الهاتف أيّ تكبير إطلاقاً.
+            if (webChartPointer.current.active && webPointers.current.size >= 2) {
+              event.currentTarget?.setPointerCapture?.(point.pointerId);
+              const [a, b] = [...webPointers.current.values()];
+              const rect = event.currentTarget?.getBoundingClientRect?.();
+              beginPinch(a, b, rect?.left ?? 0);
+              return;
+            }
+            pinchStart.current = null;
+            pinchUsed.current = false;
             webChartPointer.current = {
               active: true,
               x: point.x,
@@ -3303,6 +3333,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             }
             event.preventDefault?.();
             const point = pointerXY(event);
+            if (webPointers.current.has(point.pointerId)) webPointers.current.set(point.pointerId, point.x);
+            if (pinchStart.current && webPointers.current.size >= 2) {
+              const [a, b] = [...webPointers.current.values()];
+              movePinch(a, b);
+              return;
+            }
+            // رُفع أحد الإصبعين: الباقي لا يسحب حتى يُرفع.
+            if (pinchUsed.current || point.pointerId !== webChartPointer.current.pointerId) return;
             applyChartDrag(
               point.x - webChartPointer.current.x,
               point.y - webChartPointer.current.y
@@ -3310,6 +3348,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           },
           onPointerUp: (event: PointerEventLike) => {
             const point = pointerXY(event);
+            webPointers.current.delete(point.pointerId);
+            if (pinchUsed.current) {
+              event.currentTarget?.releasePointerCapture?.(point.pointerId);
+              pinchStart.current = null;
+              if (webPointers.current.size > 0) return;
+              pinchUsed.current = false;
+              webChartPointer.current.active = false;
+              endDrag();
+              return;
+            }
             const wasActive = webChartPointer.current.active;
             webChartPointer.current.active = false;
             event.currentTarget?.releasePointerCapture?.(point.pointerId);
@@ -3323,7 +3371,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             }
             endDrag();
           },
-          onPointerCancel: () => {
+          onPointerCancel: (event: PointerEventLike) => {
+            webPointers.current.delete(pointerXY(event).pointerId);
+            if (webPointers.current.size > 0) return;
+            pinchStart.current = null;
+            pinchUsed.current = false;
             webChartPointer.current.active = false;
             endDrag();
           },
