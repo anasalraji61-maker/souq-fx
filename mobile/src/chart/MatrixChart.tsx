@@ -42,6 +42,8 @@ import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
 import { candleBodyWidth } from './candleGeometry';
 import { zoomWindow } from './zoomWindow';
+import { barCloseCountdown } from './barCountdown';
+import { BarCountdown } from './BarCountdown';
 import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime, stepCrossBar } from './crossAnchor';
 import {
   axisTickCount,
@@ -388,6 +390,8 @@ const PRICE_LABEL_GAP = 4;
 /** علوّ وسم السعر (الحيّ ووسم التقاطع)، وفجوة ما يُخفى من العلامات تحته. */
 const PRICE_TAG_H = 18;
 const TAG_CLEAR_GAP = 2;
+/** سطر عدّاد إغلاق الشمعة تحت سعر الوسم الحيّ. */
+const COUNTDOWN_LINE_H = 11;
 
 /** آخر شارت نُقر على الويب — أسهم لوحة المفاتيح وEsc له وحده لا لكل شارت بالصفحة. */
 let webKeyChart: object | null = null;
@@ -3280,17 +3284,31 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // ووسم التقاطع (فاتح) ووسم السعر الحيّ (فيروزيّ) يتكدّسان متى لمس المتداول شمعة
   // قرب السعر الحاليّ — وهي الحالة الأكثر وقوعاً لا الأندر. تُحسب مواضعها هنا مرّة
   // واحدة فالفحص والرسم يقرآن الرقم نفسه.
-  const currentTagTop = Math.max(0, Math.min(chartPlotH - 20, currentPriceY - 9));
+  // عدّاد إغلاق الشمعة سطرٌ ثانٍ تحت السعر (`barCountdown.ts`) — للفريمات الزمنية وحدها،
+  // لا بالإعادة (الشمعة «الجارية» هناك تاريخ مُغلق) ولا حين يكون السعر خارج المدى المرئيّ.
+  const lastRawBar = liveSeries.candles[liveSeries.candles.length - 1];
+  const countdownStep = timeframeStepSec(series.timeframe);
+  const countdownSynthetic =
+    kind === 'renko' || kind === 'kagi' || kind === 'pnf' || kind === 'range';
+  const showCountdown =
+    !hidePriceLabels &&
+    !replayOn &&
+    !countdownSynthetic &&
+    lastRawBar != null &&
+    offAxisSide(currentPriceY, chartPlotH) == null &&
+    barCloseCountdown(lastRawBar.time, countdownStep, Date.now()) != null;
+  const currentTagH = showCountdown ? PRICE_TAG_H + COUNTDOWN_LINE_H : PRICE_TAG_H;
+  const currentTagTop = Math.max(0, Math.min(chartPlotH - currentTagH - 2, currentPriceY - 9));
   const crossTagTop = crossPrice != null
     ? Math.max(0, Math.min(chartPlotH - 20, crossY - 9))
     : null;
   // وسم السعر الحيّ هو ما يُخفى عند التكدّس: وسم التقاطع هو ما طلبه المتداول للتوّ،
   // وسعره على بُعد أقلّ من علوّ وسم واحد فلا يضيع شيء.
   const currentTagHidden =
-    crossTagTop != null && boxesTouch(currentTagTop, PRICE_TAG_H, crossTagTop, PRICE_TAG_H, 0);
+    crossTagTop != null && boxesTouch(currentTagTop, currentTagH, crossTagTop, PRICE_TAG_H, 0);
   const priceTickUnderTag = (start: number) =>
     (!currentTagHidden &&
-      boxesTouch(start, PRICE_LABEL_H, currentTagTop, PRICE_TAG_H, TAG_CLEAR_GAP)) ||
+      boxesTouch(start, PRICE_LABEL_H, currentTagTop, currentTagH, TAG_CLEAR_GAP)) ||
     (crossTagTop != null &&
       boxesTouch(start, PRICE_LABEL_H, crossTagTop, PRICE_TAG_H, TAG_CLEAR_GAP));
   const crossTimeTagLeft = crossCandle
@@ -5532,12 +5550,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           {!hidePriceLabels && !currentTagHidden ? (
           <View
             pointerEvents="none"
-            style={[styles.currentPriceTag, { top: currentTagTop, backgroundColor: accent }]}
+            style={[
+              styles.currentPriceTag,
+              { top: currentTagTop, minHeight: currentTagH, backgroundColor: accent },
+            ]}
           >
             <Text style={styles.currentPriceText}>
               {offMark(currentPriceOff)}
               {formatPrice(currentPrice, series.symbol)}
             </Text>
+            {showCountdown && lastRawBar ? (
+              <BarCountdown
+                lastBarTime={lastRawBar.time}
+                stepSec={countdownStep}
+                style={styles.currentPriceCountdown}
+              />
+            ) : null}
           </View>
           ) : null}
           {!hidePriceLabels && crossPrice != null && crossTagTop != null ? (
@@ -9652,6 +9680,14 @@ const styles = StyleSheet.create({
     fontSize: 9,
     lineHeight: 14,
     fontWeight: '900',
+    fontFamily: 'monospace',
+  },
+  currentPriceCountdown: {
+    color: '#041514',
+    opacity: 0.72,
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: '700',
     fontFamily: 'monospace',
   },
   timeAxis: {

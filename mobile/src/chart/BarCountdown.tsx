@@ -1,0 +1,30 @@
+import React, { useEffect, useState } from 'react';
+import { Text, type StyleProp, type TextStyle } from 'react-native';
+import { barCloseCountdown } from './barCountdown';
+
+/**
+ * عدّاد إغلاق الشمعة بمؤقّته الخاصّ: يعيد رسم نصّه وحده كل ثانية لا `MatrixChart` كلّه.
+ * المؤقّت يُضبط على حدّ الثانية فلا يقفز الرقم ثانيتين بانجراف `setInterval`.
+ */
+export function BarCountdown({
+  lastBarTime,
+  stepSec,
+  style,
+}: {
+  lastBarTime: number;
+  stepSec: number;
+  style?: StyleProp<TextStyle>;
+}) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    let id: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      setNow(Date.now());
+      id = setTimeout(tick, 1000 - (Date.now() % 1000) + 5);
+    };
+    id = setTimeout(tick, 1000 - (Date.now() % 1000) + 5);
+    return () => clearTimeout(id);
+  }, []);
+  const text = barCloseCountdown(lastBarTime, stepSec, now);
+  return text ? <Text style={style}>{text}</Text> : null;
+}
