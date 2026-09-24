@@ -3,7 +3,7 @@
  * الغرض: إثبات أن اللمسة التي لا تُغيّر شيئاً لا تدفع لقطة تراجع، وأن التغيّر الحقيقي يدفعها.
  */
 import type { ChartPoint, Drawing } from './types';
-import { samePoint, drawingEnd, dragChangesDrawing } from './drawEdit';
+import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars } from './drawEdit';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -55,6 +55,20 @@ ok('طرف b بلا تغيّر ⇒ لا لقطة', !dragChangesDrawing(t, 'b', p
 ok('طرف b غائب ⇒ لا لقطة', !dragChangesDrawing(h, 'b', pt(5, 1.2)));
 ok('رسم غائب ⇒ لا لقطة', !dragChangesDrawing(null, 'a', pt(5, 1.2)));
 ok('رسم غير معرَّف ⇒ لا لقطة', !dragChangesDrawing(undefined, 'a', pt(5, 1.2)));
+
+// ── clipSegmentToBars ─────────────────────────────────────────────────────
+// خطّ من −30 (y=100) إلى 30 (y=40): عند الفهرس 0 يقع في منتصفه ⇒ y=70 (لا 100 كما كان).
+const c1 = clipSegmentToBars(-30, 100, 30, 40, 79);
+ok('قصّ اليسار على الخطّ', c1.ai === 0 && c1.ay === 70 && c1.bi === 30 && c1.by === 40);
+// الطرفان داخل النافذة ⇒ بلا تغيير.
+const c2 = clipSegmentToBars(5, 10, 20, 50, 79);
+ok('داخل النافذة كما هو', c2.ai === 5 && c2.ay === 10 && c2.bi === 20 && c2.by === 50);
+// طرف أيمن بالمستقبل (100) مقصوص على 79: y عند 79 من خطّ 0→100 (0→200) = 158.
+const c3 = clipSegmentToBars(0, 0, 100, 200, 79);
+ok('قصّ اليمين على الخطّ', c3.bi === 79 && c3.by === 158);
+// طرفان بنفس الفهرس خارج النافذة ⇒ لا قسمة على صفر.
+const c4 = clipSegmentToBars(-5, 10, -5, 30, 79);
+ok('فهرس واحد ⇒ بلا NaN', c4.ai === 0 && c4.ay === 10 && c4.by === 30);
 
 if (failures) {
   console.error(`drawEdit.selftest: ${failures} FAILED`);

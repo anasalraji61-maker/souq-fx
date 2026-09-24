@@ -74,7 +74,7 @@ import {
   placeGuides,
 } from './paneGuides';
 import { DrawingsSaveQueue, drawingsKey } from './drawingsPersist';
-import { dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
+import { clipSegmentToBars, dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
 import { anchorDrawings, timeAtIndex } from './drawingAnchors';
 import { fibLevelPrice, planFibLabels } from './fibLabels';
 import { candleRangePipsText, measureReadoutText } from './measureReadout';
@@ -989,6 +989,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setPriceScale(1);
     setPricePan(0);
     setXPan(0);
+    // التقاطع المثبَّت يخصّ الرمز السابق: بالفريم نفسه تُوجد شمعة بزمنه غالباً، فكان يبقى
+    // على الزوج الجديد بسعر الزوج القديم (وسم «1.085» فوق محور الين) ما دام الشارت مركَّباً.
+    setCross(null);
+    crossPinned.current = false;
     syncKeyRef.current = '';
   }, [series.symbol, series.timeframe]);
 
@@ -2433,7 +2437,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const HANDLE_R = DRAW_HANDLE_R; // مقبض الطرف: هدف سحب، مدى ألطف
       const BODY_R = 14; // جسم الخط/الحدّ
       const lastLocal = Math.max(0, source.plot.length - 1);
-      const clampLocal = (i: number) => Math.max(0, Math.min(lastLocal, i));
       let best: DrawingHit = null;
       for (const d of drawings) {
         const aLocal = d.a.index - source.start;
@@ -2458,14 +2461,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         const endDist = Math.min(Math.hypot(x - ax, y - ay), Math.hypot(x - bx, y - by));
         let bodyDist = Infinity;
         if (d.tool === 'trend' || d.tool === 'ray') {
-          // نفس ما يُرسَم: الطرفان مقصوصان على النافذة، والشعاع يمتدّ 1.6 من طول القطعة.
+          // نفس ما يُرسَم: الطرفان مقصوصان على النافذة (على الخطّ)، والشعاع يمتدّ 1.6 من طول القطعة.
+          const seg = clipSegmentToBars(aLocal, ay, bLocal, by, lastLocal);
           bodyDist = segmentDistance(
             x,
             y,
-            xOf(clampLocal(aLocal)),
-            ay,
-            xOf(clampLocal(bLocal)),
-            by,
+            xOf(seg.ai),
+            seg.ay,
+            xOf(seg.bi),
+            seg.by,
             d.tool === 'ray' ? 1.6 : 1
           );
         } else if (d.tool === 'rect' || d.tool === 'zone') {
@@ -3225,7 +3229,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const bLocal = d.b ? d.b.index - source.start : aLocal;
       return { d, aLocal, bLocal };
     })
-    .filter(({ aLocal, bLocal }) => aLocal >= -2 || bLocal >= -2);
+    // الخطّ الأفقي وفيبو بعرض الشارت كلّه: موضع مرساتهما لا يحدّد ظهورهما. كان خطّ دعم
+    // مرسوم عند قاع قبل 120 شمعة يختفي (ووسم سعره) بمجرّد العودة للحيّ، ويبقى قابلاً للتحديد.
+    .filter(
+      ({ d, aLocal, bLocal }) =>
+        d.tool === 'hline' || d.tool === 'fib' || aLocal >= -2 || bLocal >= -2
+    );
 
   /**
    * أي الخطوط الأفقية يحمل وسم سعره. الخطّ الأفقي هو أداة الدعم/المقاومة الأولى عند
@@ -5300,10 +5309,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             );
           }
           if ((d.tool === 'trend' || d.tool === 'ray') && d.b) {
-            const x1 = xOf(Math.max(0, Math.min(source.plot.length - 1, aLocal)));
-            const y1 = yOf(d.a.price);
-            const x2 = xOf(Math.max(0, Math.min(source.plot.length - 1, bLocal)));
-            const y2 = yOf(d.b.price);
+            const seg = clipSegmentToBars(
+              aLocal,
+              yOf(d.a.price),
+              bLocal,
+              yOf(d.b.price),
+              source.plot.length - 1
+            );
+            const x1 = xOf(seg.ai);
+            const y1 = seg.ay;
+            const x2 = xOf(seg.bi);
+            const y2 = seg.by;
             const len = Math.hypot(x2 - x1, y2 - y1) * (d.tool === 'ray' ? 1.6 : 1);
             const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
             return (

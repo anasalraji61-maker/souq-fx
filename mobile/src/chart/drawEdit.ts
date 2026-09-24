@@ -58,3 +58,32 @@ export function dragChangesDrawing(
   if (!cur) return false;
   return !samePoint(cur, next);
 }
+
+/**
+ * طرفا خطّ الاتجاه/الشعاع مقصوصان على النافذة **على الخطّ نفسه**.
+ *
+ * كان الفهرس يُقصّ على `[0, last]` بينما يبقى الارتفاع عند سعر الطرف الأصلي: خطّ من شمعة
+ * خارج يسار الشاشة يُرسم من أول شمعة ظاهرة بسعر ذلك الطرف البعيد، فيصير أشدّ ميلاً ولا يمرّ
+ * بالقمم التي وصلها المتداول. الآن يُحسب الارتفاع عند الفهرس المقصوص خطّياً بين الطرفين.
+ * الاستيفاء بإحداثي الشاشة (`y`) لا بالسعر، فيبقى مستقيماً بالمقياس اللوغاريتمي كما يُرى.
+ */
+export function clipSegmentToBars(
+  aIdx: number,
+  aY: number,
+  bIdx: number,
+  bY: number,
+  lastIdx: number
+): { ai: number; ay: number; bi: number; by: number } {
+  const hi = Math.max(0, lastIdx);
+  const clamp = (i: number) => Math.max(0, Math.min(hi, i));
+  const ai = clamp(aIdx);
+  const bi = clamp(bIdx);
+  if (aIdx === bIdx) return { ai, ay: aY, bi, by: bY };
+  const yAt = (i: number) => aY + ((bY - aY) * (i - aIdx)) / (bIdx - aIdx);
+  return {
+    ai,
+    ay: ai === aIdx ? aY : yAt(ai),
+    bi,
+    by: bi === bIdx ? bY : yAt(bi),
+  };
+}
