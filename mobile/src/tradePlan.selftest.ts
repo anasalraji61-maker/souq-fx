@@ -17,6 +17,11 @@ import {
   exitShortcuts,
   exitPreview,
   averageR,
+  initialStop,
+  JOURNAL_NOTE_MAX,
+  knownLots as knownLotsForMark,
+  noteWithInitialStop,
+  trailedStopAllowed,
   pnlPctContradictsCash,
   stopTooClose,
   journalStats,
@@ -2041,3 +2046,68 @@ console.log('tradePlan openCurrencyExposure selftest OK');
   assert.deepEqual(stackedCurrencyExposure([]), []);
 }
 console.log('tradePlan stackedCurrencyExposure selftest OK');
+
+// ---- الوقف الأصلي «1R @ …»: R من المخاطرة التي دخل بها المتداول لا من وقفٍ حُرِّك بعدها ----
+{
+  const open = { side: 'buy', entry: 1.085, sl: 1.083, status: 'open' };
+  // مثال التدقيق حرفياً: شدّ الوقف إلى 1.0845 ثم الخروج 1.0890 = +2R لا +8R
+  const n1 = noteWithInitialStop({ symbol: 'EURUSD', note: '', before: open, after: { side: 'buy', entry: 1.085, sl: 1.0845 } });
+  assert.equal(n1, '1R @ 1.083');
+  assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, exit: 1.089 }), 8); // قبلُ
+  assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, exit: 1.089, note: n1 }), 2);
+  // ومتوسط R مع صفقة −1R: +0.5R لا +3.5R
+  const avg = averageR([
+    { symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, exit: 1.089, note: n1, status: 'closed' },
+    { symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083, exit: 1.083, status: 'closed' },
+  ])!;
+  assert.deepEqual(avg, { r: 0.5, n: 2 });
+  // نقلٌ للتعادل/حجز ربح: الوقف على الدخول أو خلفه ما زال يُحسب R من الأصلي؛ ضرب وقف التعادل = 0R
+  const be = noteWithInitialStop({ symbol: 'EURUSD', note: 'breakout', before: open, after: { side: 'buy', entry: 1.085, sl: 1.085 } });
+  assert.equal(be, 'breakout · 1R @ 1.083');
+  assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.085, exit: 1.085, note: be }), 0);
+  assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.086, exit: 1.086, note: be }), 0.5);
+  assert.equal(trailedStopAllowed({ symbol: 'EURUSD', side: 'buy', entry: 1.085, note: be }), true);
+  assert.equal(trailedStopAllowed({ symbol: 'EURUSD', side: 'buy', entry: 1.085, note: 'breakout' }), false);
+  // بيع USDJPY: الوقف يُشدّ للأسفل
+  const sj = noteWithInitialStop({
+    symbol: 'USDJPY',
+    note: '1.00 lot',
+    before: { side: 'sell', entry: 150, sl: 150.3, status: 'open' },
+    after: { side: 'sell', entry: 150, sl: 149.9 },
+  });
+  assert.equal(sj, '1.00 lot · 1R @ 150.3');
+  assert.equal(knownLotsForMark(1, sj), 1); // علامة الحجم «1.00 lot» لا تنكسر
+  assert.equal(realizedR({ symbol: 'USDJPY', side: 'sell', entry: 150, sl: 149.9, exit: 149.4, note: sj }), 2);
+  // علامة واحدة فقط: الشدّ الثاني يُبقي الأصلي
+  assert.equal(
+    noteWithInitialStop({ symbol: 'EURUSD', note: n1, before: { ...open, sl: 1.0845 }, after: { side: 'buy', entry: 1.085, sl: 1.086 } }),
+    n1
+  );
+  // لا علامة: مغلقة (تصحيح)، توسيع، بلا تغيير، بلا وقف قديم/جديد، اتجاه أو دخول تغيّر، وقف قديم بالجهة الخطأ أو أضيق من pip
+  const nw = (before: object, after: object, symbol = 'EURUSD') =>
+    noteWithInitialStop({ symbol, note: 'x', before: { ...open, ...before }, after: { side: 'buy', entry: 1.085, sl: 1.0845, ...after } as never });
+  assert.equal(nw({ status: 'closed' }, {}), 'x');
+  assert.equal(nw({}, { sl: 1.082 }), 'x');
+  assert.equal(nw({}, { sl: 1.083 }), 'x');
+  assert.equal(nw({ sl: null }, {}), 'x');
+  assert.equal(nw({}, { sl: null }), 'x');
+  assert.equal(nw({ side: 'sell' }, {}), 'x');
+  assert.equal(nw({}, { entry: 1.0851 }), 'x');
+  assert.equal(nw({ sl: 1.086 }, { sl: 1.087 }), 'x');
+  assert.equal(nw({ sl: 1.08499 }, { sl: 1.08499 + 0.000005 }), 'x');
+  // حدّ الخادم 500: علامة تتجاوزه لا تُلحق (الحفظ كان سيفشل كلّه)
+  const long = 'a'.repeat(JOURNAL_NOTE_MAX - 5);
+  assert.equal(noteWithInitialStop({ symbol: 'EURUSD', note: long, before: open, after: { side: 'buy', entry: 1.085, sl: 1.0845 } }), long);
+  // قراءة العلامة: مقطعٌ كامل فقط، وصالحٌ لهذا الدخول والاتجاه، وإلا R من `sl` كما كان
+  assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, note: 'a · 1R @ 1.083 · b' }), 1.083);
+  assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, note: 'x1R @ 1.083' }), null);
+  assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, note: '1R @ 1.083x' }), null);
+  assert.equal(initialStop({ symbol: 'EURUSD', side: 'sell', entry: 1.085, note: n1 }), null);
+  assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.08, note: n1 }), null);
+  assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.08305, note: n1 }), null); // أضيق من pip
+  assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, note: null }), null);
+  assert.equal(realizedR({ symbol: 'EURUSD', side: 'sell', entry: 1.085, sl: 1.087, exit: 1.083, note: n1 }), 1);
+  // بلا وقف حالي (مُسح بالتعديل) والعلامة باقية: R من الأصلي
+  assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: null, exit: 1.087, note: n1 }), 1);
+}
+console.log('tradePlan initial stop (1R mark) selftest OK');

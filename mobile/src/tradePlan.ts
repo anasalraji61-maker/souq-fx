@@ -373,6 +373,8 @@ export function realizedR(input: {
   entry: number;
   sl?: number | null;
   exit?: number | null;
+  /** علامة الوقف الأصلي «1R @ …» (`noteWithInitialStop`) — حين تصلح، هي مسافة الـ1R لا `sl` الحالي */
+  note?: string | null;
 }): number | null {
   const r = exactR(input);
   return r == null ? null : roundR(r);
@@ -384,9 +386,13 @@ function exactR(input: {
   entry: number;
   sl?: number | null;
   exit?: number | null;
+  note?: string | null;
 }): number | null {
-  const { side, entry, sl, exit } = input;
-  if (!finitePos(entry) || !finitePos(sl) || !finitePos(exit)) return null;
+  const { side, entry, exit } = input;
+  if (!finitePos(entry) || !finitePos(exit)) return null;
+  // الوقف الأصلي من الملاحظة (`noteWithInitialStop`) هو الـ1R حين يُعرف: وقفٌ حُرِّك بعد الدخول لا يغيّر المسطرة
+  const sl = initialStop({ symbol: input.symbol, side, entry, note: input.note }) ?? input.sl;
+  if (!finitePos(sl)) return null;
   const buy = side === 'buy';
   const risk = buy ? entry - sl : sl - entry;
   if (risk <= 0) return null;
@@ -394,6 +400,74 @@ function exactR(input: {
   if (pip && risk < pip * (1 - 1e-6)) return null;
   const move = buy ? exit - entry : entry - exit;
   return move / risk;
+}
+
+/** علامة الوقف الأصلي بالملاحظة: «1R @ 1.083» — مقطعٌ بين « · » كعلامة «1.00 lot» (`knownLots`). */
+const INITIAL_STOP_RE = /(?:^| · )1R @ (\d+(?:\.\d+)?)(?= · |$)/;
+
+/**
+ * الوقف الأصلي (مسافة الـ1R) المحفوظ بملاحظة الصفقة، إن كان صالحاً لهذا الدخول والاتجاه (بالجهة الصحيحة وليس
+ * أضيق من 1 pip). `null` بلا علامة أو بعلامة لا تصلح (الدخول/الاتجاه عُدِّلا بعدها) — فيُحسب من `sl` كما كان.
+ */
+export function initialStop(input: {
+  symbol?: string;
+  side: TradeSide;
+  entry: number;
+  note?: string | null;
+}): number | null {
+  const m = typeof input.note === 'string' ? INITIAL_STOP_RE.exec(input.note.trim()) : null;
+  if (!m || !finitePos(input.entry)) return null;
+  const v = Number(m[1]);
+  if (!finitePos(v)) return null;
+  const risk = input.side === 'buy' ? input.entry - v : v - input.entry;
+  if (!(risk > 0)) return null;
+  const pip = journalPipSize(input.symbol);
+  return pip && risk < pip * (1 - 1e-6) ? null : v;
+}
+
+/**
+ * الملاحظة المحفوظة بتعديل صفقة **مفتوحة** يُحرَّك فيه الوقف نحو الدخول أو خلفه (وقف متحرّك، نقلٌ للتعادل، حجز ربح):
+ * يُلحق بها «1R @ <الوقف القديم>» مرّة واحدة، فيبقى الـR محسوباً من المخاطرة **التي دخل بها** المتداول.
+ *
+ * لماذا: الخادم يحفظ `sl` واحداً. شراء EURUSD 1.0850 بوقف 1.0830 وخروج 1.0890 = +2R؛ حرّك الوقف إلى 1.0845 قبل
+ * الإغلاق فصارت «+8R»، ومع صفقة −1R صار «متوسط R» +3.5R بدل +0.5R — الرقم الذي يقرّر به أيستمرّ على نظامه.
+ *
+ * لا علامة حين: الصفقة مغلقة (تعديلها تصحيحٌ لا تحريك)، أو الاتجاه/الدخول تغيّرا (تصحيح خطأ كتابة)، أو الوقف القديم
+ * غير صالح أو غائب (لا مخاطرة أصلية معروفة)، أو الجديد أوسع/غائب/مساوٍ، أو بالملاحظة علامة صالحة أصلاً.
+ */
+export function noteWithInitialStop(input: {
+  symbol: string;
+  note: string;
+  before: { side: string; entry: number; sl?: number | null; status: string };
+  after: { side: TradeSide; entry: number; sl: number | null };
+}): string {
+  const { note, before, after } = input;
+  if (before.status !== 'open' || before.side !== after.side) return note;
+  if (!finitePos(before.entry) || Math.abs(before.entry - after.entry) > 1e-12 * Math.max(1, before.entry)) return note;
+  if (initialStop({ symbol: input.symbol, side: after.side, entry: after.entry, note }) != null) return note;
+  const old = before.sl;
+  if (!finitePos(old) || !finitePos(after.sl)) return note;
+  const risk = after.side === 'buy' ? after.entry - old : old - after.entry;
+  const pip = journalPipSize(input.symbol);
+  if (!(risk > 0) || (pip && risk < pip * (1 - 1e-6))) return note;
+  const tighter = after.side === 'buy' ? after.sl > old : after.sl < old;
+  if (!tighter) return note;
+  const n = note.trim();
+  const mark = `1R @ ${old}`;
+  const out = n ? `${n} · ${mark}` : mark;
+  // ملاحظةٌ تتجاوز حدّ الخادم (`note` ≤ 500) تُفشل الحفظ كلّه — الـR بالوقف الحالي أهون من تعديلٍ لا يُحفظ
+  return out.length > JOURNAL_NOTE_MAX ? note : out;
+}
+
+/** حدّ طول الملاحظة بالخادم (`backend/main.py` `note: max_length=500`). */
+export const JOURNAL_NOTE_MAX = 500;
+
+/**
+ * وقفٌ **على الدخول أو خلفه** مقبول (لا «الوقف بالجهة الخطأ») حين للصفقة وقفٌ أصلي معروف بالملاحظة — تعادلٌ أو ربحٌ
+ * محجوز لصفقة مفتوحة، لا خطأ كتابة. `note` هي الملاحظة **بعد** `noteWithInitialStop`.
+ */
+export function trailedStopAllowed(input: { symbol: string; side: TradeSide; entry: number; note: string }): boolean {
+  return initialStop(input) != null;
 }
 
 /**
@@ -411,6 +485,7 @@ export function averageR(
     entry: number;
     sl?: number | null;
     exit?: number | null;
+    note?: string | null;
     status: string;
   }[]
 ): { r: number; n: number } | null {
@@ -419,7 +494,7 @@ export function averageR(
   for (const tr of trades) {
     if (tr.status !== 'closed') continue;
     // وقفٌ أضيق من 1 pip لا يُحسب (راجع `realizedR`) — صفقة «+200R» واحدة كانت تبتلع المتوسط كلّه
-    const r = exactR({ symbol: tr.symbol, side: tr.side === 'sell' ? 'sell' : 'buy', entry: tr.entry, sl: tr.sl, exit: tr.exit });
+    const r = exactR({ symbol: tr.symbol, side: tr.side === 'sell' ? 'sell' : 'buy', entry: tr.entry, sl: tr.sl, exit: tr.exit, note: tr.note });
     if (r == null) continue;
     sum += r;
     n += 1;

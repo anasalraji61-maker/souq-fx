@@ -64,6 +64,8 @@ import {
   editExitValue,
   netLineIsWhole,
   noteWithTypedSize,
+  noteWithInitialStop,
+  trailedStopAllowed,
   QUICK_SYMBOLS,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
@@ -395,14 +397,29 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     return planSummaryText(plan, { risk: t.planRiskWord, reward: t.planRewardWord }, draftRisk?.money, gainText);
   };
 
+  /**
+   * خطأ جهة الوقف/الهدف، إلا وقفاً على الدخول أو خلفه لصفقة وقفُها الأصلي معروف بالملاحظة (`trailedStopAllowed`):
+   * نقلٌ للتعادل أو حجزُ ربح، والهدف ما زال يُفحص.
+   */
+  const trailedIssue = (sym: string, e: number, s: number | null, p: number | null, n: string): PlanIssue | null => {
+    const issue = levelSideIssue({ side, entry: e, sl: s, tp: p });
+    if (issue !== 'slWrongSide' || !trailedStopAllowed({ symbol: sym, side, entry: e, note: n })) return issue;
+    return levelSideIssue({ side, entry: e, tp: p });
+  };
+
   // معاينة حيّة أثناء الكتابة: خطأ جهة فوراً (حتى بوقف وحده)، والملخّص حين تكتمل الأرقام الثلاثة.
   const draft = useMemo(() => {
     const e = pnum(entry);
     if (e == null) return null;
     const s = pnum(sl);
     const p = pnum(tp);
-    const issue = levelSideIssue({ side, entry: e, sl: s, tp: p });
+    const trailNote = editing
+      ? noteWithInitialStop({ symbol: symbol.trim(), note, before: editing, after: { side, entry: e, sl: s } })
+      : note;
+    const issue = trailedIssue(symbol.trim(), e, s, p, trailNote);
     if (issue) return { issue, plan: null as TradePlan | null };
+    // وقفٌ متحرّك على الدخول أو خلفه: لا «مخاطرة» تُلخَّص — الوقف الأصلي بالملاحظة هو الـ1R
+    if (s != null && levelSideIssue({ side, entry: e, sl: s })) return null;
     // وقفٌ أقرب من 1 pip بلا هدف بعد: التحذير نفسه بدل «المخاطرة 0.1 pip» كأنها خطة عادية
     if (s != null && p == null && stopTooClose({ symbol: symbol.trim(), side, entry: e, sl: s })) {
       return { issue: 'slTooClose' as PlanIssue, plan: null };
@@ -410,7 +427,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     if (s == null || p == null) return null;
     return { issue: null, plan: analyzePlan({ symbol: symbol.trim(), side, entry: e, sl: s, tp: p }) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, side, entry, sl, tp]);
+  }, [symbol, side, entry, sl, tp, note, editing]);
 
   /**
    * أهداف جاهزة بالنسبة (1:1 · 1:1.5 · 1:2 · 1:3) من الدخول والوقف المكتوبين — نفس شرائح الحاسبة:
@@ -680,7 +697,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     }
     const s = pnum(sl);
     const p = pnum(tp);
-    const issue = levelSideIssue({ side, entry: e, sl: s, tp: p });
+    // 1 مكتوبة باليد تُعلَّم بالملاحظة وإلا عُدّت افتراض الخادم (`noteWithTypedSize`)؛ ووقفٌ مفتوحٌ يُشدّ يحفظ
+    // وقفه الأصلي «1R @ …» فلا يتضخّم الـR بعد تحريكه (`noteWithInitialStop`)
+    const typedNote = noteWithTypedSize(num(size), note);
+    const savedNote = editing
+      ? noteWithInitialStop({ symbol: sym, note: typedNote, before: editing, after: { side, entry: e, sl: s } })
+      : typedNote;
+    const issue = trailedIssue(sym, e, s, p, savedNote);
     if (issue) {
       setFormError(planIssueText(issue));
       return;
@@ -700,8 +723,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           tp: p,
           // خانة الحجم الفارغة = «لا تغيير» لا مسحاً: الحقل إلزامي بالجدول (`main.py:1174` يُسقط null له)
           size: num(size) ?? undefined,
-          // 1 مكتوبة باليد تُعلَّم بالملاحظة وإلا عُدّت افتراض الخادم (`noteWithTypedSize`)
-          note: noteWithTypedSize(num(size), note),
+          note: savedNote,
         });
         if (!mountedRef.current) return;
         playSoftClick();
@@ -725,7 +747,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         sl: s ?? undefined,
         tp: p ?? undefined,
         size: num(size) ?? undefined,
-        note: noteWithTypedSize(num(size), note),
+        note: savedNote,
       });
       // الإضافة كالتعديل أعلاه: اللوحة قد تُغلق أثناء الطلب (تبديل التبويب) — لا تحديث حالة بعد الفكّ
       if (!mountedRef.current) return;
@@ -797,7 +819,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
      * إغلاقٌ مبكر، −0.9R قريبٌ من وقفه)، وسطر الصفقة يعرضه أصلاً فكان التأكيد وحده يُسقطه. المسطرة
      * نفسها (`realizedR` على سعر الخروج نفسه)، فما يؤكّده هو ما يظهر بالسطر بعد الحفظ حرفياً.
      */
-    const rText = formatR(realizedR({ symbol: tr.symbol, side: trSide, entry: tr.entry, sl: tr.sl, exit: exitPx }));
+    const rText = formatR(realizedR({ symbol: tr.symbol, side: trSide, entry: tr.entry, sl: tr.sl, exit: exitPx, note: tr.note }));
     /**
      * **والمال** بعملة التسعير كما يكتبه سطر الصفقة بعد الحفظ («+25 pip · +125.00 USD · +0.23%»): التأكيد
      * كان يُسقطه فيقرّر المتداول «أغلق الآن؟» على نقاطٍ ونسبة حركة سعر، ثم يظهر المبلغ بعد الإغلاق لا
@@ -910,6 +932,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
                     entry: tr.entry,
                     sl: tr.sl,
                     exit: tr.exit,
+                    note: tr.note,
                   })
                 );
                 return r ? ` · ${t.journalResultR.replace('{r}', r)}` : '';
