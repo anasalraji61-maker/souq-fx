@@ -20,13 +20,6 @@ export type SessionId = 'tokyo' | 'london' | 'ny';
 
 export const SESSION_IDS: readonly SessionId[] = ['tokyo', 'london', 'ny'];
 
-/** وسم قصير لاتيني (كبقية وسوم الشارت) يتّسع فوق شرائح ضيّقة على الهاتف. */
-export const SESSION_LABEL: Record<SessionId, string> = {
-  tokyo: 'Tokyo',
-  london: 'London',
-  ny: 'New York',
-};
-
 const DAY_SEC = 86400;
 const HOUR = 3600;
 

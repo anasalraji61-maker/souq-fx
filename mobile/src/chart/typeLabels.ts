@@ -1,4 +1,5 @@
 import type { Dict, LangId } from '../i18n/locales';
+import type { SessionId } from './sessions';
 import {
   CHART_KINDS,
   DRAW_TOOLS,
@@ -46,6 +47,8 @@ const TOOL_KEYS: Partial<Record<DrawTool, LabelKey>> = {
   // خطّة شراء/بيع (دخول، وقف، هدف) — «خطة» كي لا تُقرأ الأداة زرّ أمر.
   long: 'ctlToolLong',
   short: 'ctlToolShort',
+  hray: 'ctlToolHray',
+  channel: 'ctlToolChannel',
 };
 
 const LENS_KEYS: Record<LensMode, { label: LabelKey; hint: LabelKey }> = {
@@ -67,27 +70,10 @@ export function localizedChartKinds(t: Dict): typeof CHART_KINDS {
   });
 }
 
-/**
- * «شعاع أفقي» و«قناة» بلا مفتاح بالقاموس بعد (`locales.ts` خارج نطاق وكيل الشارت — طلب تنسيق بـLOG-CHART):
- * تُعرف اللغة من تسمية «شعاع» نفسها بالقاموس المعطى، فيعمل عند كل مستدعٍ يمرّر `t` وحده.
- */
-const EXTRA_TOOL_LABELS: Partial<Record<DrawTool, { ar: string; en: string; ku: string }>> = {
-  hray: { ar: 'شعاع أفقي', en: 'H-ray', ku: 'تیشکی ئاسۆیی' },
-  channel: { ar: 'قناة', en: 'Channel', ku: 'کەناڵ' },
-};
-
-function extraToolLabel(t: Dict, id: DrawTool, fallback: string): string {
-  const l = EXTRA_TOOL_LABELS[id];
-  if (!l) return fallback;
-  if (t.ctlToolRay === 'Ray') return l.en;
-  if (t.ctlToolRay === 'تیشک') return l.ku;
-  return l.ar;
-}
-
 export function localizedDrawTools(t: Dict): typeof DRAW_TOOLS {
   return DRAW_TOOLS.map((tool) => {
     const key = TOOL_KEYS[tool.id];
-    return { ...tool, label: key ? t[key] : extraToolLabel(t, tool.id, tool.label) };
+    return { ...tool, label: key ? t[key] : tool.label };
   });
 }
 
@@ -107,13 +93,32 @@ export function localizedIndicators(t: Dict): typeof INDICATORS {
 }
 
 /**
- * نصوص مؤقّتة بانتظار نقلها إلى `i18n/locales.ts` (خارج نطاق وكيل الشارت) — راجع «طلب
- * تنسيق» بـ`docs/LOG-CHART.md`. `clearAllBody`: الرسومات صارت للرمز على كل فريماته،
- * فـ`mcClearAllBody` («بهذا الرمز/الإطار الزمني») يَعِد بأقلّ ممّا يُمسح فعلاً. `toLatest`: وصف
- * زرّ «»» (العودة لآخر شمعة) لقارئ الشاشة — الزرّ نفسه رمز بلا نصّ.
+ * نصوص بلا مفتاح بالقاموس بعد (`i18n/locales.ts` خارج نطاق وكيل الشارت — «طلب تنسيق» بـ`docs/LOG-CHART.md`،
+ * المقترح: `mcLogScaleA11y` / `mcShareDialogTitle` / `mcSessTokyo|London|NewYork`). حين تُضاف تُستبدل هذه بـ`tr.*`.
+ * زرّ «Log» يبقى نصّه اللاتيني القصير (مصطلح المقياس كما يعرفه المتداول) ويُوصف لقارئ الشاشة فقط.
  */
-export function chartExtraLabels(lang: LangId): { hideDrawings: string; showDrawings: string } {
-  if (lang === 'ar') return { hideDrawings: 'إخفاء الرسوم', showDrawings: 'إظهار الرسوم' };
-  if (lang === 'ku') return { hideDrawings: 'شاردنەوەی وێنەکان', showDrawings: 'پیشاندانی وێنەکان' };
-  return { hideDrawings: 'Hide drawings', showDrawings: 'Show drawings' };
+export function chartLocalLabels(lang: LangId): {
+  logScaleA11y: string;
+  shareDialogTitle: string;
+  sessions: Record<SessionId, string>;
+} {
+  if (lang === 'ar') {
+    return {
+      logScaleA11y: 'مقياس لوغاريتمي للسعر',
+      shareDialogTitle: 'شارت MATRIX',
+      sessions: { tokyo: 'طوكيو', london: 'لندن', ny: 'نيويورك' },
+    };
+  }
+  if (lang === 'ku') {
+    return {
+      logScaleA11y: 'پێوەری لۆگاریتمی بۆ نرخ',
+      shareDialogTitle: 'چارتی MATRIX',
+      sessions: { tokyo: 'تۆکیۆ', london: 'لەندەن', ny: 'نیویۆرک' },
+    };
+  }
+  return {
+    logScaleA11y: 'Logarithmic price scale',
+    shareDialogTitle: 'MATRIX Chart',
+    sessions: { tokyo: 'Tokyo', london: 'London', ny: 'New York' },
+  };
 }

@@ -126,7 +126,7 @@ import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
 import { planHiLoLabels } from './hiLoLabels';
 import { planDayBreaks } from './dayBreaks';
 import { tradingDayStartSec } from './marketHours';
-import { planSessionRuns, SESSION_LABEL, type SessionId } from './sessions';
+import { planSessionRuns, type SessionId } from './sessions';
 import { formatPct, prevSessionFromDaily, validSessionBar } from './dailyChange';
 import { useDailyPrevBar } from './dailyRefStore';
 import { candlesThrough, pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
@@ -135,11 +135,11 @@ import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
 import {
+  chartLocalLabels,
   localizedChartKinds,
   localizedDrawTools,
   localizedIndicators,
   localizedLenses,
-  chartExtraLabels,
 } from './typeLabels';
 import {
   type ChartKind,
@@ -1111,7 +1111,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   ref
 ) {
   const { t: tr, lang } = useI18n();
-  const extraLabels = chartExtraLabels(lang);
+  const localLabels = chartLocalLabels(lang);
   const canPan = syncFollow ? false : (panControls ?? interactive);
   const candleBull = mutedCandles ? 'rgba(34,197,94,0.34)' : colors.bull;
   const candleBear = mutedCandles ? 'rgba(244,63,94,0.34)' : colors.bear;
@@ -3470,7 +3470,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         return;
       }
       if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'MATRIX Chart' });
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: localLabels.shareDialogTitle });
       }
     } catch {
       Alert.alert('MATRIX', tr.mcSnapshotFailed);
@@ -4871,7 +4871,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {drawings.length ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={drawingsHidden ? extraLabels.showDrawings : extraLabels.hideDrawings}
+                accessibilityLabel={drawingsHidden ? tr.mcShowDrawings : tr.mcHideDrawings}
                 accessibilityState={{ selected: drawingsHidden }}
                 style={({ pressed }) => [
                   styles.compactTool,
@@ -4884,7 +4884,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   {drawingsHidden ? '◎' : '◉'}
                 </Text>
                 <Text style={[styles.compactToolLabel, drawingsHidden && styles.compactToolTextOn]}>
-                  {drawingsHidden ? `${extraLabels.showDrawings} (${drawings.length})` : extraLabels.hideDrawings}
+                  {drawingsHidden ? `${tr.mcShowDrawings} (${drawings.length})` : tr.mcHideDrawings}
                 </Text>
               </Pressable>
             ) : null}
@@ -5163,6 +5163,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ) : null}
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel={localLabels.logScaleA11y}
+              accessibilityState={{ selected: logScale }}
               style={({ pressed }) => [
                 styles.zoomBtn,
                 logScale && styles.replayOn,
@@ -5259,7 +5261,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <View style={[styles.sessionStrip, { backgroundColor: color }]} />
               {right - left >= 44 ? (
                 <Text style={[styles.sessionLabel, { color }]} numberOfLines={1}>
-                  {SESSION_LABEL[run.id]}
+                  {localLabels.sessions[run.id]}
                   {/* مدى الجلسة (أعلى − أدنى) بالـpip: نطاق آسيا الضيّق الذي يُكسر بلندن، وحركة
                       لندن مقابل متوسّطها — بحقيقي الشموع لا هايكن آشي. متى اتّسعت الشريحة. */}
                   {right - left >= 110
@@ -10230,7 +10232,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {drawings.length ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={drawingsHidden ? extraLabels.showDrawings : extraLabels.hideDrawings}
+                accessibilityLabel={drawingsHidden ? tr.mcShowDrawings : tr.mcHideDrawings}
                 accessibilityState={{ selected: drawingsHidden }}
                 style={({ pressed }) => [
                   styles.tool,
@@ -10241,8 +10243,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               >
                 <Text style={[styles.toolText, drawingsHidden && styles.toolTextOn]}>
                   {drawingsHidden
-                    ? `◎ ${extraLabels.showDrawings} (${drawings.length})`
-                    : `◉ ${extraLabels.hideDrawings}`}
+                    ? `◎ ${tr.mcShowDrawings} (${drawings.length})`
+                    : `◉ ${tr.mcHideDrawings}`}
                 </Text>
               </Pressable>
             ) : null}
