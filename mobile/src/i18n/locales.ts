@@ -945,7 +945,7 @@ const ar: Dict = {
   notifOpenSettingsBtn: 'فتح إعدادات الجهاز',
   onboardStep1Title: 'بدّل الزوج بلمسة',
   onboardStep1Body:
-    'اضغط على أي زوج بالشريط العلوي (EURUSD، GBPUSD، الذهب XAUUSD…) لينتقل الشارت إليه فوراً، مع تغيّر اليوم ▲▼ بجانبه. ولاحقاً افتح حتى أربع شارتات معاً للمقارنة.',
+    'اضغط على أي زوج بالشريط العلوي (EURUSD، GBPUSD، الذهب XAUUSD…) لينتقل الشارت إليه فوراً، مع تغيّر اليوم ▲▼ بجانبه. وعلى الشارت: اقرص بإصبعين للتكبير، واسحب محور السعر لتطول الشموع أو تقصر، وزرّ AUTO يعيد العرض لوضعه التلقائي. ولاحقاً افتح حتى أربع شارتات معاً للمقارنة.',
   onboardStep2Title: 'أدوات الرسم',
   onboardStep2Body:
     'تبويب «رسم» بالشريط السفلي يفتح خطوط الترند وفيبوناتشي وباقي الأدوات على الشارت، وما ترسمه على 4H يبقى حين تنزل إلى الساعة. ولتخطيط صفقة استعمل «خطة شراء» أو «خطة بيع»: اسحب من الدخول إلى الوقف فيظهر الهدف والنقاط ونسبة العائد إلى المخاطرة. أخطأت؟ زرّ «تراجع» يلغي آخر تغيير.',
@@ -1843,7 +1843,7 @@ const enUS: Dict = {
   notifOpenSettingsBtn: 'Open device settings',
   onboardStep1Title: 'Switch pairs in one tap',
   onboardStep1Body:
-    'Tap any pair in the top strip (EURUSD, GBPUSD, gold XAUUSD…) and the chart jumps to it, with today\'s change ▲▼ beside it. Later, open up to four charts side by side to compare.',
+    'Tap any pair in the top strip (EURUSD, GBPUSD, gold XAUUSD…) and the chart jumps to it, with today\'s change ▲▼ beside it. On the chart, pinch to zoom, drag the price axis to make candles taller or shorter, and AUTO puts the view back. Later, open up to four charts side by side to compare.',
   onboardStep2Title: 'Drawing tools',
   onboardStep2Body:
     'The Draw tab in the bottom bar opens trend lines, Fibonacci and more tools right on the chart — a line drawn on 4H stays when you drop to 1H. To plan a trade, use Buy plan or Sell plan: drag from entry to stop to see the target, pips and reward-to-risk. Drew something wrong? Undo reverses the last change.',
@@ -2766,7 +2766,7 @@ const ku: Dict = {
   notifOpenSettingsBtn: 'کردنەوەی ڕێکخستنی ئامێر',
   onboardStep1Title: 'گۆڕینی جووت بە یەک دەستدان',
   onboardStep1Body:
-    'دەست لە هەر جووتێک بدە لە شریتی سەرەوە (EURUSD، GBPUSD، زێڕ XAUUSD…) و چارتەکە یەکسەر دەچێتە سەری، لەگەڵ گۆڕانی ئەمڕۆ ▲▼ لە تەنیشتیەوە. دواتر هەتا چوار چارت بەیەکەوە بکەرەوە بۆ بەراورد.',
+    'دەست لە هەر جووتێک بدە لە شریتی سەرەوە (EURUSD، GBPUSD، زێڕ XAUUSD…) و چارتەکە یەکسەر دەچێتە سەری، لەگەڵ گۆڕانی ئەمڕۆ ▲▼ لە تەنیشتیەوە. لەسەر چارت: بە دوو پەنجە گەورەی بکە، تەوەری نرخ ڕابکێشە بۆ درێژکردن یان کورتکردنی مۆمەکان، و دوگمەی AUTO دیمەنەکە دەگەڕێنێتەوە بۆ خۆکار. دواتر هەتا چوار چارت بەیەکەوە بکەرەوە بۆ بەراورد.',
   onboardStep2Title: 'ئامرازەکانی وێنەکێشان',
   onboardStep2Body:
     'تابی «وێنەکێشان» لە شریتی خوارەوە هێڵی ترێند و فیبۆناتچی و ئامرازەکانی تر ڕاستەوخۆ لەسەر چارت دەکاتەوە، و ئەوەی لەسەر 4H دەیکێشیت دەمێنێتەوە کاتێک دادەبەزیت بۆ کاتژمێرێک. بۆ پلاندانانی مامەڵەیەک «پلانی کڕین» یان «پلانی فرۆشتن» بەکاربهێنە: لە چوونەژوورەوە بۆ وەستان ڕایبکێشە و ئامانج و pip و ڕێژەی قازانج بۆ مەترسی دەبینیت. هەڵەت کرد؟ «گەڕاندنەوە» دوایین گۆڕانکاری هەڵدەوەشێنێتەوە.',
