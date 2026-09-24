@@ -78,7 +78,7 @@ import { clipSegmentToBars, dragChangesDrawing, drawingEnd, samePoint } from './
 import { anchorDrawings, stampAtIndex } from './drawingAnchors';
 import { priceSpan } from './priceSpan';
 import { fibLevelPrice, planFibLabels } from './fibLabels';
-import { candleRangePipsText, measureReadoutText } from './measureReadout';
+import { candleRangePipsText, measurePipsText, measureReadoutText } from './measureReadout';
 import { thinByGap } from './levelLabels';
 import { formatPct } from './dailyChange';
 import { timeframeStepSec } from './dataSource';
@@ -3389,18 +3389,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     barCloseCountdown(lastRawBar.time, countdownStep, Date.now(), series.symbol) != null;
   const currentTagH = showCountdown ? PRICE_TAG_H + COUNTDOWN_LINE_H : PRICE_TAG_H;
   const currentTagTop = Math.max(0, Math.min(chartPlotH - currentTagH - 2, currentPriceY - 9));
+  // بُعد التقاطع عن السعر الحالي بالـpip تحت سعره: «أين أضع الوقف/الهدف» كان يعني فتح أداة
+  // القياس وسحبها من السعر إلى المستوى. الإشارة من السعر الحالي إلى التقاطع (+ فوقه، − تحته)،
+  // وأداة بلا مواصفة pip (DXY، مؤشرات) تبقى بسطر السعر وحده.
+  const crossPipsText =
+    crossPrice != null && Number.isFinite(currentPrice)
+      ? measurePipsText(series.symbol, currentPrice, crossPrice)
+      : null;
+  const crossTagH = crossPipsText ? PRICE_TAG_H + COUNTDOWN_LINE_H : PRICE_TAG_H;
   const crossTagTop = crossPrice != null
-    ? Math.max(0, Math.min(chartPlotH - 20, crossY - 9))
+    ? Math.max(0, Math.min(chartPlotH - crossTagH - 2, crossY - 9))
     : null;
   // وسم السعر الحيّ هو ما يُخفى عند التكدّس: وسم التقاطع هو ما طلبه المتداول للتوّ،
   // وسعره على بُعد أقلّ من علوّ وسم واحد فلا يضيع شيء.
   const currentTagHidden =
-    crossTagTop != null && boxesTouch(currentTagTop, currentTagH, crossTagTop, PRICE_TAG_H, 0);
+    crossTagTop != null && boxesTouch(currentTagTop, currentTagH, crossTagTop, crossTagH, 0);
   const priceTickUnderTag = (start: number) =>
     (!currentTagHidden &&
       boxesTouch(start, PRICE_LABEL_H, currentTagTop, currentTagH, TAG_CLEAR_GAP)) ||
     (crossTagTop != null &&
-      boxesTouch(start, PRICE_LABEL_H, crossTagTop, PRICE_TAG_H, TAG_CLEAR_GAP));
+      boxesTouch(start, PRICE_LABEL_H, crossTagTop, crossTagH, TAG_CLEAR_GAP));
   const crossTimeTagLeft = crossCandle
     ? Math.max(0, Math.min(chartPlotW - CROSS_TIME_TAG_W, crossX - CROSS_TIME_TAG_W / 2))
     : null;
@@ -5699,6 +5707,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               {offMark(crossPriceOff)}
               {formatPrice(crossPrice, series.symbol)}
             </Text>
+            {crossPipsText ? (
+              <Text style={styles.crossPipsText} numberOfLines={1}>
+                {crossPipsText}
+              </Text>
+            ) : null}
           </View>
           ) : null}
         </View>
@@ -10010,6 +10023,14 @@ const styles = StyleSheet.create({
     fontSize: 9,
     lineHeight: 14,
     fontWeight: '900',
+    fontFamily: 'monospace',
+  },
+  crossPipsText: {
+    color: '#041514',
+    opacity: 0.72,
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: '700',
     fontFamily: 'monospace',
   },
   pane: {
