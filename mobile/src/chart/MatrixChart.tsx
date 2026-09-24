@@ -40,6 +40,7 @@ import { rangeBars } from './range';
 import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
+import { candleBodyWidth } from './candleGeometry';
 import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime, stepCrossBar } from './crossAnchor';
 import {
   axisTickCount,
@@ -2304,6 +2305,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
   const hasShadows = !!shadowStack;
   const primaryColW = colW;
+  // الجسم متمركز تحت الفتيل (`left: colW/2 − 0.5`) — كان يبدأ من 0 بعرض colW − 1 فينحرف نصف بكسل.
+  const primaryBodyW = candleBodyWidth(primaryColW);
   const yPrimary = (price: number) => {
     if (!shadowStack) return yOf(price);
     const lane = shadowStack.primaryLane;
@@ -3981,9 +3984,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <View
                   style={{
                     position: 'absolute',
-                    left: 0,
+                    left: (primaryColW - primaryBodyW) / 2,
                     top: bodyTop,
-                    width: Math.max(2, primaryColW - 1),
+                    width: primaryBodyW,
                     height: bodyH,
                     backgroundColor: kind === 'hollow' && bull ? 'transparent' : color,
                     borderWidth: kind === 'hollow' ? 1.5 : 0,
