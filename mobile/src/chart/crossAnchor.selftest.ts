@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/crossAnchor.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime } from './crossAnchor';
+import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime, stepCrossBar } from './crossAnchor';
 
 const bar = (time: number) => ({ time });
 
@@ -107,6 +107,19 @@ const bar = (time: number) => ({ time });
   assert.equal(indexAtOrBeforeTime([bar(1000)], 1001), null); // شمعة واحدة: لا خطوة معروفة
   // مللي ثانية بالتابع وثوانٍ من القائد
   assert.equal(indexAtOrBeforeTime([bar(1.7e12), bar(1.70006e12)], 1.70003e9, (t) => (t > 1e12 ? t / 1000 : t)), 0);
+}
+
+// ←/→ عند حافّة النافذة: تُزاح النافذة شمعةً بدل الوقوف
+{
+  const all = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(bar); // offset 2، نافذة 4 ⇒ الخانات 4..7
+  assert.deepEqual(stepCrossBar(all, 2, 4, 5, 1), { time: 6, offset: 2 }); // داخل النافذة
+  assert.deepEqual(stepCrossBar(all, 2, 4, 7, 1), { time: 8, offset: 1 }); // الحافّة اليمنى
+  assert.deepEqual(stepCrossBar(all, 2, 4, 4, -1), { time: 3, offset: 3 }); // الحافّة اليسرى
+  assert.equal(stepCrossBar(all, 0, 4, 9, 1), null); // آخر شمعة بالسلسلة
+  assert.equal(stepCrossBar(all, 6, 4, 0, -1), null); // أول شمعة بالسلسلة
+  assert.equal(stepCrossBar(all, 2, 4, 2, 1), null); // الزمن خارج النافذة
+  assert.equal(stepCrossBar([0, 1, 2].map(bar), 0, 80, 0, -1), null); // سلسلة أقصر من النافذة
+  assert.deepEqual(stepCrossBar([0, 1, 2].map(bar), 0, 80, 0, 1), { time: 1, offset: 0 });
 }
 
 console.log('crossAnchor.selftest: PASS');

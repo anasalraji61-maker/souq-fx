@@ -40,7 +40,7 @@ import { rangeBars } from './range';
 import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
-import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime } from './crossAnchor';
+import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime, stepCrossBar } from './crossAnchor';
 import {
   axisTickCount,
   axisTickRatios,
@@ -1055,6 +1055,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const onCrossTimeRef = useRef(onCrossTime);
   onCrossTimeRef.current = onCrossTime;
   const crossTimeSec = cross ? candleTimeSec(cross.time) : null;
+  const crossTimeRef = useRef<number | null>(null);
+  crossTimeRef.current = cross?.time ?? null;
   const publishesCross = onCrossTime != null;
   useEffect(() => {
     if (!publishesCross) return;
@@ -2983,7 +2985,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
   // Esc على الويب يفكّ تثبيت التقاطع ويمسحه فتعود المعاينة مع حركة الفأرة. و←/→ تنقل
   // التقاطع المثبَّت شمعةً شمعة (السعر المثبَّت كما هو) — قراءة شموع متتالية بدقّة لا تبلغها
-  // الفأرة على شموع بعرض 3px. داخل النافذة المرئيّة فقط، ولا تسرق الأسهم من خانة كتابة.
+  // الفأرة على شموع بعرض 3px. عند حافّة النافذة تُزاح شمعةً ويتابع التقاطع (`stepCrossBar`)؛
+  // بالإعادة وبالتابع المتزامن النافذة ليست ملكه فيقف عند حافّتها. ولا تسرق الأسهم من خانة كتابة.
   useEffect(() => {
     if (Platform.OS !== 'web' || !canPan) return;
     const onKey = (event: KeyboardEvent) => {
@@ -2999,6 +3002,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const plot = sourceRef.current.plot as { time: number }[];
       const step = event.key === 'ArrowRight' ? 1 : -1;
       event.preventDefault();
+      if (!replayOn && !syncFollow) {
+        const time = crossTimeRef.current;
+        if (time == null) return;
+        const moved = stepCrossBar(
+          sourceRef.current.all as { time: number }[],
+          offsetRef.current,
+          windowCountRef.current,
+          time,
+          step
+        );
+        if (!moved) return;
+        if (moved.offset !== offsetRef.current) {
+          offsetRef.current = moved.offset;
+          setOffset(moved.offset);
+          schedulePublishSync(false);
+        }
+        setCross((prev) => (prev ? { ...prev, time: moved.time } : prev));
+        return;
+      }
       setCross((prev) => {
         if (!prev) return prev;
         const i = indexOfBarTime(plot, prev.time);
@@ -3012,7 +3034,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       document.removeEventListener('keydown', onKey);
       if (hoverRaf.current != null) cancelAnimationFrame(hoverRaf.current);
     };
-  }, [canPan]);
+  }, [canPan, replayOn, syncFollow, schedulePublishSync]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const priceWheelHandlers: any =

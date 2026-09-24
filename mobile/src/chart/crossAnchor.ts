@@ -106,3 +106,37 @@ export function indexAtOrBeforeTime(
   }
   return found;
 }
+
+/**
+ * خطوة شمعة واحدة للتقاطع المثبَّت (←/→ على الويب) **مع إزاحة النافذة** عند حافّتها.
+ * كانت الأسهم تقف عند أول/آخر شمعة مرئيّة: قراءة ما بعد الحافّة تعني ترك لوحة المفاتيح
+ * لسحب الشارت ثم إعادة تثبيت التقاطع. الآن الخطوة خارج النافذة تزيحها شمعةً واحدة
+ * (`offset` بعدد الشموع من يمين السلسلة، كما بـ`source`) فيبقى التقاطع على الحافّة ويتابع.
+ *
+ * `all` السلسلة كاملة (بنوع الشموع المرسوم)، والنافذة `[all.length − offset − windowCount,
+ * all.length − offset)`. `null` ⇒ لا حركة: الزمن ليس بالنافذة، أو لا شمعة بعد طرف السلسلة.
+ */
+export function stepCrossBar(
+  all: readonly TimedBar[],
+  offset: number,
+  windowCount: number,
+  time: number,
+  step: 1 | -1
+): { time: number; offset: number } | null {
+  const end = Math.max(0, all.length - offset);
+  const start = Math.max(0, end - windowCount);
+  let i = -1;
+  for (let k = start; k < end; k++) {
+    if (all[k]?.time === time) {
+      i = k;
+      break;
+    }
+  }
+  if (i < 0) return null;
+  const j = i + step;
+  if (j < 0 || j >= all.length) return null;
+  let nextOffset = offset;
+  if (j >= end) nextOffset = all.length - (j + 1);
+  else if (j < start) nextOffset = offset + (start - j);
+  return { time: all[j].time, offset: nextOffset };
+}
