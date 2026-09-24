@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   View,
@@ -42,9 +42,14 @@ const BASES: Record<string, number> = {
 export function QuadChartModal({
   visible,
   onClose,
-  symbols = DEFAULT,
+  symbols: symbolsProp = DEFAULT,
   timeframe = '15m',
 }: Props) {
+  // المستدعي يمرّر مصفوفة حرفية جديدة بكل رسم (`[a, b, c, 'DXY']`): كانت كل إعادة رسم
+  // للشاشة الأمّ تعيد جلب الشارتات الأربعة وتُرجع القيادة للخلية الأولى. الهوية الآن بالمحتوى.
+  const symKey = symbolsProp.join(',');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const symbols = useMemo(() => symbolsProp, [symKey]);
   const { t, rtl, lang } = useI18n();
   const trx = chartExtraLabels(lang);
   const align = rtl ? ('right' as const) : ('left' as const);
