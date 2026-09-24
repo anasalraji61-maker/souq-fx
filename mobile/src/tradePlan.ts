@@ -256,8 +256,33 @@ export function targetAtRR(input: {
  * رموز وسطاء بلاحقة) — الدفتر يسجّل ما يتداوله المتداول لا ما يحسبه التطبيق فقط.
  *
  * `null` = رمز غير صالح للحفظ.
+ *
+ * **لاحقة الوسيط تُحفظ كما كُتبت** حين تُعرف الأداة (`instrumentSpec`): حذف `-`/`_` من الرمز كلّه كان
+ * يحوّل «GBPJPY-ECN» إلى «GBPJPYECN» و«EURUSD_PRO» إلى «EURUSDPRO» — رمزٌ ملاصق لا تقبله
+ * `instrumentSpec` (قد يكون أداة أخرى، كـ«EURUSDT»)، فتُحفظ الصفقة **بلا نقاط ولا R ولا مخاطرة بالمال**
+ * بصمت. و«USDJPY#» كانت تُرفض كلياً («#» خارج الأحرف المسموحة). الزوج نفسه يُطبَّع («gbp/jpy-ecn» ⇒
+ * «GBPJPY-ECN») والحدّ 12 مضمون: 6 + فاصل + 5 على الأكثر.
  */
 export function journalSymbol(raw: string): string | null {
+  const up = raw.trim().toUpperCase();
+  const spec = instrumentSpec(up);
+  const pair = /^([A-Z]{3})[\s/_-]*([A-Z]{3})(.*)$/.exec(up);
+  if (spec && pair && pair[1] + pair[2] === spec.symbol) return spec.symbol + pair[3];
   const s = raw.toUpperCase().replace(/[\s/_-]/g, '');
   return /^[A-Z0-9.]{3,12}$/.test(s) ? s : null;
+}
+
+/**
+ * الرمز الذي يُطلب به **سعر السوق** لصفقة بالدفتر: الأداة القانونية حين تُعرف مواصفاتها (لاحقة الوسيط
+ * تسقط — `instrumentSpec`)، وإلا الرمز كما يُحفظ (`journalSymbol`: US30، NAS100…).
+ *
+ * لماذا: الدفتر يحفظ «XAUUSD.M» و«EURUSDM» كما نسخها المتداول من منصّته (عمداً)، لكن مزوّد الأسعار لا
+ * يعرف إلا «XAUUSD» — فكانت الصفقة المفتوحة بلاحقة **بلا نتيجة عائمة**، و«أغلق بسعر السوق» يقول «لا
+ * سعر حيّ» عنها، و«الدخول = السعر الحالي» كذلك، بينما الصفقة نفسها بلا لاحقة بجانبها تعمل كاملة.
+ * وتيكات الشاشة مفتاحها الرمز القانوني أيضاً، فالمفتاح نفسه يخدم الطبقتين.
+ *
+ * `null` = رمز لا يصلح للحفظ أصلاً.
+ */
+export function quoteSymbol(raw: string): string | null {
+  return instrumentSpec(raw)?.symbol ?? journalSymbol(raw);
 }

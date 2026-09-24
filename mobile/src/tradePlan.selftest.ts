@@ -10,6 +10,7 @@ import {
   formatR,
   formatRR,
   journalSymbol,
+  quoteSymbol,
   levelSideIssue,
   realizedMove,
   realizedR,
@@ -17,6 +18,7 @@ import {
   targetAtRR,
   QUICK_RR,
 } from './tradePlan';
+import { instrumentSpec } from './positionSize';
 
 // شراء EURUSD صحيح: وقف 25 pip، هدف 50 pip ⇒ 1:2
 const a = analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, tp: 1.09 });
@@ -362,3 +364,66 @@ console.log('tradePlan targetAtRR selftest OK');
 }
 
 console.log('tradePlan broker-suffix selftest OK');
+
+// quoteSymbol — الرمز الذي يُطلب به سعر السوق لصفقة بالدفتر
+{
+  // كما يحفظها الدفتر (journalSymbol يرفع الأحرف): اللاحقة تسقط فيُطلب اقتباس الأداة نفسها
+  for (const [raw, want] of [
+    ['XAUUSD.M', 'XAUUSD'],
+    ['EURUSDM', 'EURUSD'],
+    ['GBPJPY-ECN', 'GBPJPY'],
+    ['USDJPY#', 'USDJPY'],
+    ['XAUUSD.pro', 'XAUUSD'],
+    ['eur/usd', 'EURUSD'],
+    ['EURUSD', 'EURUSD'],
+    [' xauusd ', 'XAUUSD'],
+  ] as const) {
+    assert.equal(quoteSymbol(raw), want, raw);
+    // والرمز المحفوظ بالدفتر نفسه يعطي النتيجة ذاتها
+    assert.equal(quoteSymbol(journalSymbol(raw)!), want, `stored ${raw}`);
+  }
+  // رموز بلا مواصفات تبقى كما يحفظها الدفتر (المزوّد قد يعرفها) — لا تُرمى
+  assert.equal(quoteSymbol('US30'), 'US30');
+  assert.equal(quoteSymbol('nas100'), 'NAS100');
+  assert.equal(quoteSymbol('BTCUSD'), 'BTCUSD');
+  // «EURUSDT» ليس EURUSD (يورو/تيثر) — لا يُطلب له اقتباس اليورو/دولار
+  assert.equal(quoteSymbol('EURUSDT'), 'EURUSDT');
+  assert.equal(quoteSymbol('EU'), null);
+  assert.equal(quoteSymbol(''), null);
+}
+
+console.log('tradePlan quoteSymbol selftest OK');
+
+// journalSymbol يحفظ لاحقة الوسيط بفاصلها — فتبقى الأداة معروفة بعد الحفظ (نقاط/R/مخاطرة بالمال)
+{
+  for (const [raw, want] of [
+    ['GBPJPY-ECN', 'GBPJPY-ECN'],
+    ['gbp/jpy-ecn', 'GBPJPY-ECN'],
+    ['EURUSD_PRO', 'EURUSD_PRO'],
+    ['USDJPY#', 'USDJPY#'],
+    ['XAUUSD+', 'XAUUSD+'],
+    ['xauusd.m', 'XAUUSD.M'],
+    ['EURUSDm', 'EURUSDM'],
+    ['EUR USD', 'EURUSD'],
+    [' eur / usd ', 'EURUSD'],
+    ['XAUUSD.ABCDE', 'XAUUSD.ABCDE'],
+  ] as const) {
+    const stored = journalSymbol(raw);
+    assert.equal(stored, want, raw);
+    assert.ok(stored!.length <= 12, `server max 12: ${stored}`);
+    // الرمز المحفوظ تعرفه الأداة: نقاط الصفقة ونتيجتها بالـR تُحسب كالرمز النظيف حرفياً
+    const clean = instrumentSpec(raw)!.symbol;
+    assert.deepEqual(
+      realizedMove({ symbol: stored!, side: 'buy', entry: 150, exit: 150.5 }),
+      realizedMove({ symbol: clean, side: 'buy', entry: 150, exit: 150.5 }),
+      `pips ${stored}`
+    );
+    assert.notEqual(realizedMove({ symbol: stored!, side: 'buy', entry: 150, exit: 150.5 })!.pips, null);
+  }
+  // ما لا مواصفات له يبقى على القاعدة القديمة
+  assert.equal(journalSymbol('US-30'), 'US30');
+  assert.equal(journalSymbol('EURUSDT'), 'EURUSDT');
+}
+
+console.log('tradePlan journalSymbol suffix selftest OK');
+

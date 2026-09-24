@@ -24,6 +24,7 @@ import {
   formatR,
   formatRR,
   journalSymbol,
+  quoteSymbol,
   levelSideIssue,
   realizedMove,
   realizedR,
@@ -186,8 +187,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       ...new Set(
         list
           .filter((tr) => tr.status === 'open')
-          .map((tr) => (tr.symbol || '').trim().toUpperCase())
-          .filter((sym) => sym.length >= 3)
+          // رمز الاقتباس لا الرمز المحفوظ: «XAUUSD.M» لا يعرفها المزوّد، «XAUUSD» يعرفها (`quoteSymbol`)
+          .map((tr) => quoteSymbol(tr.symbol || ''))
+          .filter((sym): sym is string => sym != null)
       ),
     ].slice(0, MAX_LIVE_QUOTES);
     const gen = ++quoteGenRef.current;
@@ -249,7 +251,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   /** سعر الدخول بنقرة: المتداول يسجّل الصفقة لحظة فتحها غالباً. Ask للشراء وBid للبيع إن توفّرا (ما ينفَّذ
    * عليه فعلاً)، وإلا السعر. اقتباس بذري تجريبي لا يُستخدم أبداً (isRealQuote) — لا دخول مختلَق. */
   const fillLivePrice = async () => {
-    const sym = journalSymbol(symbol);
+    const sym = quoteSymbol(symbol);
     if (sym == null || quoteBusy) return;
     setQuoteBusy(true);
     setFormError(null);
@@ -598,7 +600,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     setBusy(true);
     let px: number | null = null;
     try {
-      const q = await api.marketQuote(tr.symbol);
+      const q = await api.marketQuote(quoteSymbol(tr.symbol) ?? tr.symbol);
       if (!mountedRef.current) return;
       if (isRealQuote(q)) {
         const sidePx = tr.side === 'sell' ? q.ask : q.bid;
@@ -746,7 +748,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
              * ما دامت مفتوحة — فـ«−0.4R» يقول للمتداول أين هو من وقفه، وهو سؤال الصفقة المفتوحة
              * بالضبط. بلا سعر موثوق للأداة لا يُعرض شيء ويبقى الصفّ كما كان حرفياً.
              */
-            const trSym = (tr.symbol || '').trim().toUpperCase();
+            // مفتاح التيكات واللقطة رمزُ الاقتباس (لاحقة الوسيط ساقطة) — راجع `quoteSymbol`
+            const trSym = quoteSymbol(tr.symbol || '') ?? (tr.symbol || '').trim().toUpperCase();
             // التيك الحيّ أولاً (يتحرّك مع السوق)، ثم لقطة التحميل — والغياب التامّ يُبقي الصفّ كما كان
             const live = closed ? null : ticks?.[trSym] ?? quotes[trSym] ?? null;
             const mv = closed
