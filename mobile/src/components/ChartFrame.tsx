@@ -232,6 +232,16 @@ export function ChartFrame({
   const spreadSpec = hasSpread ? chartPipSpec(series.symbol) : null;
   const spreadPips =
     spreadSpec && hasSpread ? pipsBetween(spreadSpec, liveQuote!.bid!, liveQuote!.ask!) : null;
+  // العرض/الطلب يُجلبان مع تغيّر `series.last` وحده (كل جلب ~90ث) والسعر بجانبهما تيك كل ثانية: بخبر
+  // قويّ كان الرأس «1.08760 · B 1.08540 · A 1.08550» — عرض وطلب بعيدان 21 pip عن السعر المطبوع. حين
+  // يخرج السعر الحيّ عن [bid − 3×spread، ask + 3×spread] يُخفى السعران ويبقى السبريد بالـpip وحده.
+  const quoteStale =
+    hasSpread &&
+    resolvedTick != null &&
+    (() => {
+      const sp = liveQuote!.ask! - liveQuote!.bid!;
+      return headerPrice < liveQuote!.bid! - 3 * sp || headerPrice > liveQuote!.ask! + 3 * sp;
+    })();
 
   const subtitle = useMemo(() => {
     if (interactive) return t.cfSubtitleInteractive;
@@ -367,11 +377,13 @@ export function ChartFrame({
               {tickTag}
             </Text>
           ) : null}
-          {hasSpread ? (
+          {hasSpread && !(quoteStale && spreadPips == null) ? (
             <Text style={styles.spreadTag} accessibilityLabel={t.cfSpreadA11y}>
-              {`B ${formatPrice(liveQuote!.bid!, series.symbol, series.last)} · A ${formatPrice(liveQuote!.ask!, series.symbol, series.last)}`}
+              {quoteStale
+                ? ''
+                : `B ${formatPrice(liveQuote!.bid!, series.symbol, series.last)} · A ${formatPrice(liveQuote!.ask!, series.symbol, series.last)}`}
               {spreadPips != null ? (
-                <Text style={styles.spreadPips}>{` · ${spreadPips.toFixed(1)} pip`}</Text>
+                <Text style={styles.spreadPips}>{`${quoteStale ? '' : ' · '}${spreadPips.toFixed(1)} pip`}</Text>
               ) : null}
             </Text>
           ) : null}
