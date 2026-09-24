@@ -160,7 +160,8 @@ export function ambiguousThousandsPrice(
   raw: string,
   symbol: string | null | undefined,
 ): { value: string; whole: string; small: string } | null {
-  const spec = symbol ? instrumentSpec(symbol) : null;
+  // ذهب حساب سنت/micro («XAUUSDC»، «GOLDMICRO») بسعر الذهب نفسه: «3.450» بخانته كانت تُقرأ 3.45 بالدفتر
+  const spec = symbol ? instrumentSpec(symbol) ?? instrumentSpec(smallContractPair(symbol) ?? '') : null;
   if (!spec) return null;
   const decimals = Math.round(-Math.log10(spec.pipSize)) + 1;
   if (decimals >= 3) return null;

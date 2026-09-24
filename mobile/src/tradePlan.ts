@@ -11,6 +11,7 @@ import { knownSingleName } from './chart/newsRisk';
 import {
   centAccountSymbol,
   instrumentSpec,
+  type InstrumentSpec,
   smallContractPair,
   LOT_STEP,
   MAX_SANE_LOTS,
@@ -31,9 +32,16 @@ export type TradeSide = 'buy' | 'sell';
  * بالسنت كالعادي تماماً؛ المال وحده يختلف، فهو يبقى على `instrumentSpec` (مجهولاً للسنت) لا على هذه.
  */
 export function journalPipSize(symbol: string | null | undefined): number | null {
+  return journalSpec(symbol)?.pipSize ?? null;
+}
+
+/**
+ * مواصفات **الأسعار والنقاط** لرمز بالدفتر: `instrumentSpec`، أو الزوج العادي لحساب سنت/micro (`smallContractPair`).
+ * للمسافات والأسعار وحدها (نقاط، شرائح الوقف والهدف، منازل السعر) — **لا للمال**: عقد السنت/micro أصغر بمئة مرّة.
+ */
+export function journalSpec(symbol: string | null | undefined): InstrumentSpec | null {
   if (!symbol) return null;
-  const spec = instrumentSpec(symbol) ?? instrumentSpec(smallContractPair(symbol) ?? '');
-  return spec?.pipSize ?? null;
+  return instrumentSpec(symbol) ?? instrumentSpec(smallContractPair(symbol) ?? '');
 }
 
 /**
@@ -57,7 +65,8 @@ export function journalSizeLooksLikeUnits(size: number, symbol: string | null | 
   const up = (symbol || '').trim().toUpperCase();
   const spec = instrumentSpec(up);
   if (spec) return sizeLooksLikeUnits(size, spec);
-  if (!isCentJournalSymbol(up)) return null;
+  // micro («EURUSDMICRO») كالسنت: لوتها أصغر بمئة مرّة فأرقامها أكبر، وعشرة آلاف لوت خطأ كتابة بها أيضاً
+  if (!smallContractPair(up)) return null;
   return Number.isFinite(size) && size > 2 * MAX_SANE_LOTS ? { lots: null } : null;
 }
 
@@ -81,11 +90,13 @@ export function draftRiskFigures(input: {
   const sym = input.symbol.trim().toUpperCase();
   const std = instrumentSpec(sym);
   const cent = !std && isCentJournalSymbol(sym);
-  const spec = std ?? (cent ? instrumentSpec(centAccountSymbol(sym) ?? '') : null);
+  // micro («EURUSD.MICRO») كالسنت: نقاط بلا مال — لكن بلا سطر `journalCentNoMoney` (نصّه عن حساب السنت)
+  const small = std ? null : smallContractPair(sym);
+  const spec = std ?? (small ? instrumentSpec(small) : null);
   if (!spec) return null;
   // مالٌ من حجمٍ يبدو وحداتٍ («125,000,000 USD») أسوأ من لا شيء — سطر التحذير يقول ما الخطأ
   if (journalSizeLooksLikeUnits(lots, sym)) return null;
-  if (cent) return { pips: pipsBetween(spec, entry, sl), cash: null, cent: true };
+  if (small) return { pips: pipsBetween(spec, entry, sl), cash: null, cent };
   const cash = riskInQuoteCcy({ symbol: sym, entry, sl, lots });
   if (!cash) return null;
   return { pips: pipsBetween(spec, entry, sl), cash, cent: false };
@@ -654,7 +665,8 @@ export function targetAtRR(input: {
   if (!(risk > 0)) return null;
   const raw = buy ? entry + rr * risk : entry - rr * risk;
   if (!(raw > 0)) return null;
-  const spec = instrumentSpec(input.symbol);
+  // سنت/micro («EURUSDC») بمنازل زوجه العادي — كانت شرائح 1:1…1:3 بالدفتر تُكتب بعشر خانات معنوية
+  const spec = journalSpec(input.symbol);
   if (!spec) return Number(raw.toPrecision(10));
   const decimals = Math.round(-Math.log10(spec.pipSize)) + 1;
   const scale = 10 ** decimals;
@@ -681,7 +693,8 @@ const STOP_SCALES = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100] as const;
  * (تذبذبها النسبي لا يتبع سعرها).
  */
 export function quickStopPips(symbol: string, entry?: number | null): readonly number[] {
-  const spec = instrumentSpec(symbol);
+  // سنت/micro بمسافات زوجه العادي: «EURUSDC» كانت بلا شرائح وقف إطلاقاً
+  const spec = journalSpec(symbol);
   if (!spec) return [];
   if (spec.base === 'XAU') return [30, 50, 100, 200];
   const base = [10, 20, 30, 50];
@@ -706,7 +719,7 @@ export function quickStopPips(symbol: string, entry?: number | null): readonly n
  */
 export function stopAtPips(input: { symbol: string; side: TradeSide; entry: number; pips: number }): number | null {
   const { side, entry, pips } = input;
-  const spec = instrumentSpec(input.symbol);
+  const spec = journalSpec(input.symbol);
   if (!spec || !finitePos(entry) || !finitePos(pips)) return null;
   return priceAtPipOffset(spec, entry, side === 'buy' ? -pips : pips);
 }

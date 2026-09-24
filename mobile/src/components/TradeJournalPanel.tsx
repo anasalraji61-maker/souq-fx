@@ -16,7 +16,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
-import { ambiguousThousandsPrice, formatMoney, instrumentSpec, parsePriceFor, pnlInQuoteCcy, sizeLooksLikeUnits } from '../positionSize';
+import { ambiguousThousandsPrice, formatMoney, parsePriceFor, pnlInQuoteCcy, sizeLooksLikeUnits } from '../positionSize';
 import {
   analyzePlan,
   entryAfterSideSwitch,
@@ -41,6 +41,7 @@ import {
   realizedR,
   recentLotSizes,
   quickJournalSymbols,
+  journalSpec,
   quickStopPips,
   stopAtPips,
   averageR,
@@ -414,13 +415,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const s = pnum(sl);
     if (e == null || s == null || levelSideIssue({ side, entry: e, sl: s })) return [];
     const sym = symbol.trim().toUpperCase();
-    const spec = instrumentSpec(sym);
+    // سنت/micro («EURUSDC») بمواصفات زوجه العادي ومنازله (`journalSpec`)
+    const spec = journalSpec(sym);
     if (stopTooClose({ symbol: sym, side, entry: e, sl: s })) return [];
     return QUICK_RR.flatMap((rr) => {
       const v = targetAtRR({ symbol: sym, side, entry: e, sl: s, rr });
       // `tol`: الشريحة «مختارة» حين تطابق الخانةُ سعرَها (نصف pipette، أو مطابقة شبه تامّة بلا مواصفات)
       const tol = spec ? spec.pipSize / 20 : Math.abs(v ?? 0) * 1e-9;
-      return v != null ? [{ rr, v, tol, text: spec ? formatPrice(v, sym) : String(v) }] : [];
+      return v != null ? [{ rr, v, tol, text: spec ? formatPrice(v, spec.symbol) : String(v) }] : [];
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry, sl]);
@@ -433,11 +435,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   const slTargets = useMemo(() => {
     const e = pnum(entry);
     const sym = symbol.trim().toUpperCase();
-    const spec = instrumentSpec(sym);
+    const spec = journalSpec(sym);
     if (e == null || !spec) return [];
     return quickStopPips(sym, e).flatMap((pips) => {
       const v = stopAtPips({ symbol: sym, side, entry: e, pips });
-      return v != null ? [{ pips, v, tol: spec.pipSize / 20, text: formatPrice(v, sym) }] : [];
+      return v != null ? [{ pips, v, tol: spec.pipSize / 20, text: formatPrice(v, spec.symbol) }] : [];
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry]);

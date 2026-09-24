@@ -39,6 +39,7 @@ import {
   targetAtRR,
   QUICK_RR,
   journalPipSize,
+  journalSpec,
   draftRiskFigures,
   journalSizeLooksLikeUnits,
   netHasCentWithLots,
@@ -1528,3 +1529,33 @@ console.log('tradePlan netHasCentWithLots selftest OK');
   assert.deepEqual(pnlInQuoteCcy({ symbol: 'EURUSD.PRO', side: 'buy', entry: 1.085, exit: 1.0875, lots: 0.1 }), { amount: 25, ccy: 'USD' });
 }
 console.log('tradePlan small-contract suffix selftest OK');
+
+// شرائح الوقف والهدف بالدفتر لحساب سنت/micro: مسافات ومنازل الزوج العادي (`journalSpec`) — كانت بلا شرائح وقف،
+// وأهداف 1:1…1:3 بعشر خانات معنوية
+{
+  assert.equal(journalSpec('EURUSDC')!.symbol, 'EURUSD');
+  assert.equal(journalSpec('GOLD.C')!.pipSize, 0.1);
+  assert.equal(journalSpec('EURUSDMICRO')!.symbol, 'EURUSD');
+  assert.equal(journalSpec('US30C'), null);
+  assert.equal(journalSpec(''), null);
+  assert.deepEqual(quickStopPips('EURUSDC', 1.085), quickStopPips('EURUSD', 1.085));
+  assert.deepEqual(quickStopPips('XAUUSDC', 2400), [30, 50, 100, 200]);
+  assert.deepEqual(quickStopPips('USDJPY-MICRO', 157.4), quickStopPips('USDJPY', 157.4));
+  assert.equal(stopAtPips({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, pips: 20 }), 1.083);
+  assert.equal(stopAtPips({ symbol: 'USDJPYC', side: 'sell', entry: 157.4, pips: 20 }), 157.6);
+  assert.equal(stopAtPips({ symbol: 'GOLDMICRO', side: 'buy', entry: 2400, pips: 50 }), 2395);
+  for (const rr of [1, 1.5, 2, 3])
+    assert.equal(
+      targetAtRR({ symbol: 'EURUSDC', side: 'buy', entry: 1.08503, sl: 1.08251, rr }),
+      targetAtRR({ symbol: 'EURUSD', side: 'buy', entry: 1.08503, sl: 1.08251, rr }),
+      String(rr)
+    );
+  // 1:1.5 على وقف 24.9 pip = 37.35 pip: 1.08874 بمنزلة الـpipette بعيداً عن الدخول (كانت «1.088735» بست منازل)
+  assert.equal(targetAtRR({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.08251, rr: 1.5 }), 1.08874);
+  // المال ما زال مجهولاً
+  assert.equal(draftRiskFigures({ symbol: 'EURUSDMICRO', side: 'buy', entry: 1.085, sl: 1.0825, lots: 1 })!.cash, null);
+  assert.deepEqual(draftRiskFigures({ symbol: 'EURUSDMICRO', side: 'buy', entry: 1.085, sl: 1.0825, lots: 1 }), { pips: 25, cash: null, cent: false });
+  assert.deepEqual(journalSizeLooksLikeUnits(10000, 'EURUSDMICRO'), { lots: null });
+  assert.equal(journalSizeLooksLikeUnits(150, 'EURUSD.MICRO'), null);
+}
+console.log('tradePlan journalSpec chips selftest OK');

@@ -1680,3 +1680,17 @@ console.log('positionSize centAccountSymbol selftest OK');
   assert.equal(positionSize({ balance: 1000, riskPct: 1, slPips: 25, pipValuePerLot: pipValuePerLot(std, 1), contractSize: std.contractSize })!.lots, 0.04);
 }
 console.log('positionSize smallContractPair selftest OK');
+
+// «3.450» بخانة ذهب حساب سنت/micro مبهمة كالذهب العادي — كانت تُقرأ 3.45 فيُحفظ الدخول بالدفتر خطأً
+{
+  for (const sym of ['XAUUSDC', 'XAUUSDc', 'GOLDC', 'GOLD.c', 'XAUUSD-cent', 'GOLDMICRO', 'XAUUSD.micro']) {
+    assert.equal(parsePriceFor('3.450', sym), null, sym);
+    assert.deepEqual(ambiguousThousandsPrice('3.450', sym), { value: '3.450', whole: '3450', small: '3.45' }, sym);
+    assert.equal(parsePriceFor('3450.5', sym), 3450.5, sym);
+  }
+  // الين والفضة بثلاث منازل فعلاً — كما كانت
+  assert.equal(parsePriceFor('157.250', 'USDJPYC'), 157.25);
+  assert.equal(parsePriceFor('31.450', 'XAGUSDc'), 31.45);
+  assert.equal(parsePriceFor('1.085', 'EURUSDC'), 1.085);
+}
+console.log('positionSize ambiguousThousandsPrice small-contract selftest OK');
