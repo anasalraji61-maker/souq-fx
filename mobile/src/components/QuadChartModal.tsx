@@ -12,7 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api, type ChartSeries } from '../api';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
-import { liveChangePct, livePriceForChart, livePriceForHeader } from '../chart/liveSeries';
+import { headerChangePct, livePriceForChart, livePriceForHeader } from '../chart/liveSeries';
+import { useDailyRefs } from '../chart/dailyRefStore';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
 import { TimeframeBar } from './TimeframeBar';
@@ -34,6 +35,7 @@ type Props = {
 // مصفوفة ثابتة لا `[]` بالسطر: الجديدة بكل رسم (كل تيك) تُطلق تأثير `initialIndicators`
 // بالشارت فيعيد رسمه مرّة ثانية ويمسح أي مؤشّر أضافه المتداول.
 const NO_INDICATORS: never[] = [];
+const NO_SYMBOLS: string[] = [];
 
 /** حشو الخلية وحدّها ورأسها (الرمز والسعر) فوق الشارت — راجع `phoneCellH`. */
 const PHONE_CELL_CHROME = 2 * spacing.xs + 2 + 18 + spacing.xs;
@@ -78,6 +80,8 @@ export function QuadChartModal({
   const cellH = phone ? phoneCellH : height * 0.32;
   const [series, setSeries] = useState<(ChartSeries | null)[]>([null, null, null, null]);
   const ticks = useMultiLiveTicks(symbols, visible);
+  // نسبة رأس الخلية = تغيّر اليوم (كقائمة المتابعة) لا «منذ أول شمعة محمّلة» — تختلف بين الخلايا بالفريم.
+  const dailyRefs = useDailyRefs(visible ? symbols : NO_SYMBOLS);
   // فشل الجلب ⇒ شموع تجريبية من أساس ثابت قديم (EURUSD 1.0854) بجانب تيك حيّ حقيقي بالرأس:
   // السعر المطبوع بعيد عن كل الشموع، ودمجه بآخر شمعة يرسم شمعة عملاقة تسطّح الباقي. الآن تُرسى
   // السلسلة التجريبية على التيك: فوراً إن وصل، وإلا عند أوّل تيك للخلية (مرّة واحدة).
@@ -269,7 +273,9 @@ export function QuadChartModal({
             const px = tp != null && Number.isFinite(tp) && tp > 0 ? tp : (s?.last ?? NaN);
             // النسبة تتبع التيك المطبوع بجانبها (لا نسبة الجلب الأخير بجانب سعر أحدث منه)، ولو بعد
             // إغلاق الشمعة الأخيرة وقبل الجلب التالي.
-            const livePct = s ? liveChangePct(s, livePriceForHeader(s, ticks[sym] ?? null)) : NaN;
+            const livePct = s
+              ? headerChangePct(s, livePriceForHeader(s, ticks[sym] ?? null), dailyRefs[sym.toUpperCase()])
+              : NaN;
             // الشمعة الحيّة تأخذ التيك الواقع بها وحده.
             const merged = s
               ? livePriceForChart(s, ticks[sym] ?? null, {

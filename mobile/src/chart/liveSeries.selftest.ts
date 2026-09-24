@@ -4,6 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import {
+  headerChangePct,
   livePriceForChart,
   livePriceForHeader,
   tickPlausibleForSeries,
@@ -94,6 +95,20 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   const gbp = { ...eur, symbol: 'GBPUSD' };
   const g = withLiveExtremes(gbp, withLivePrice(gbp, 1.1704, src, { nowSec: now + 1 }), ext).series;
   assert.equal(g.candles[29]!.high, 1.1705);
+}
+
+// نسبة الرأس = تغيّر اليوم من إغلاق الأمس، لا من أول شمعة محمّلة
+{
+  const s = { ...eur, candles: eur.candles.map((c, i) => (i === 0 ? { ...c, close: 1.16 } : c)) };
+  assert.ok(Math.abs(headerChangePct(s, 1.1817, 1.17) - 1) < 1e-9);
+  // بلا تيك ⇒ آخر إغلاق مقابل مرجع الأمس
+  assert.ok(Math.abs(headerChangePct(s, null, 1.17) - ((1.1702 - 1.17) / 1.17) * 100) < 1e-9);
+  // لا مرجع ⇒ من أول شمعة (السلوك السابق)
+  assert.ok(Math.abs(headerChangePct(s, 1.1716, undefined) - 1) < 1e-9);
+  // مرجع لا يعقل (>25%) أو شموع تجريبية ⇒ السلوك السابق
+  assert.ok(Math.abs(headerChangePct(s, 1.1716, 150) - 1) < 1e-9);
+  const demo = { ...s, data_source: { kind: 'demo' as const, as_of: now, channel: null } };
+  assert.ok(Math.abs(headerChangePct(demo, 1.1716, 1.17) - 1) < 1e-9);
 }
 
 console.log('liveSeries selftest: OK');

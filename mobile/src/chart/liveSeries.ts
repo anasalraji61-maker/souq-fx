@@ -115,6 +115,33 @@ export function liveChangePct(series: ChartSeries, livePrice: number | null | un
   return ((livePrice - first) / first) * 100;
 }
 
+/**
+ * نسبة رأس الإطار/خلية الرباعي: **تغيّر اليوم** (من إغلاق الجلسة السابقة، `useDailyRefs`) كما تعرضه قائمة
+ * المتابعة وشريط الهاتف وTradingView. كانت `liveChangePct` وحدها (من أول شمعة محمّلة) فيقرأ الزوج نفسه
+ * +0.1% على 15m (~3 أيام تاريخ) و−1.8% على 4H (~50 يوماً) وثالثةً بالقائمة. المرجع يُهمل ⇒ النسبة القديمة:
+ * لا مرجع بعد (تحميل/فشل)، أو شموع تجريبية (مرجع حقيقي مقابل سعر مُولَّد)، أو فرق >25% (مرجع لأداة أخرى).
+ * `price` السعر المطبوع بالرأس (التيك الحيّ للسلسلة أو null ⇒ `series.last`).
+ */
+export function headerChangePct(
+  series: ChartSeries,
+  price: number | null | undefined,
+  prevClose: number | null | undefined
+): number {
+  const px = price != null && Number.isFinite(price) && price > 0 ? price : series.last;
+  if (
+    normalizeProvenance(series.data_source).kind !== 'demo' &&
+    prevClose != null &&
+    Number.isFinite(prevClose) &&
+    prevClose > 0 &&
+    Number.isFinite(px) &&
+    px > 0
+  ) {
+    const pct = ((px - prevClose) / prevClose) * 100;
+    if (Math.abs(pct) <= 25) return pct;
+  }
+  return liveChangePct(series, price);
+}
+
 export function livePriceForChart(
   series: ChartSeries,
   tick: LiveTick | null | undefined,

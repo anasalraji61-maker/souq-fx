@@ -15,7 +15,14 @@ import {
   tickStatusKind,
   normalizeProvenance,
 } from '../chart/dataSource';
-import { liveChangePct, livePriceForChart, livePriceForHeader, tickPlausibleForSeries } from '../chart/liveSeries';
+import {
+  headerChangePct,
+  liveChangePct,
+  livePriceForChart,
+  livePriceForHeader,
+  tickPlausibleForSeries,
+} from '../chart/liveSeries';
+import { useDailyRefs } from '../chart/dailyRefStore';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import { isForexMarketOpen } from '../chart/marketHours';
 
@@ -164,7 +171,12 @@ export function ChartFrame({
   // بالإعادة الرأس يقرأ شمعة الإعادة: كان يطبع سعر اليوم ونسبته و«حيّ» والسبريد فوق شموع الأسبوع
   // الماضي — الجواب مكشوف قبل أن يقرّر المتداول. النسبة من المرجع نفسه (أوّل شمعة بالسلسلة).
   const [replayPrice, setReplayPrice] = useState<number | null>(null);
-  const livePct = liveChangePct(series, replayPrice ?? livePriceForHeader(series, resolvedTick));
+  // خارج الإعادة: تغيّر اليوم من إغلاق الجلسة السابقة (`headerChangePct`) — الرقم نفسه بقائمة المتابعة.
+  const dailyRefs = useDailyRefs([series.symbol]);
+  const livePct =
+    replayPrice != null
+      ? liveChangePct(series, replayPrice)
+      : headerChangePct(series, livePriceForHeader(series, resolvedTick), dailyRefs[series.symbol.toUpperCase()]);
   const chgPct = Number.isFinite(livePct) ? livePct : null;
   const chgRounded = chgPct == null ? 0 : Math.round(chgPct * 100) / 100;
   const chgColor = chgRounded > 0 ? colors.bull : chgRounded < 0 ? colors.bear : colors.textDim;
