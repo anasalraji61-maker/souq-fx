@@ -90,7 +90,6 @@ const MKT_QUOTE_MAX_AGE_MS = 120_000;
 
 /** حاسبة حجم المركز: رصيد × نسبة مخاطرة ÷ (وقف بالنقاط × قيمة النقطة) — مع قيمة نقطة صحيحة لأزواج
  * الين والتقاطعات والذهب عبر سعر تحويل حيّ لعملة الحساب. الرياضيات كلها بـ`positionSize.ts`. */
-
 export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
