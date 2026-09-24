@@ -175,9 +175,9 @@ function nextForexOpenSec(sec: number, lateOpen = false): number {
     ) {
       t = forexSundayOpenSec(dayStart) + 3600;
     } else if (isForexHolidaySession(t)) {
-      // نهاية الجلسة: 17:00 نيويورك التالية
+      // نهاية الجلسة: 17:00 نيويورك التالية (المعادن 18:00 — `isForexMarketOpen`)
       const today = nyFivePmUtcSec(dayStart);
-      t = t < today ? today : nyFivePmUtcSec(dayStart + DAY_SEC);
+      t = (t < today ? today : nyFivePmUtcSec(dayStart + DAY_SEC)) + (lateOpen ? 3600 : 0);
     } else return t;
   }
   return t;

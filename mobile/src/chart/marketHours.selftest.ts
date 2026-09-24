@@ -75,3 +75,7 @@ assert.equal(isForexMarketOpen('XAGUSD', at(2026, 8, 22, 20, 59)), true);
 assert.equal(isForexMarketOpen('XAUUSD', at(2026, 8, 22, 22, 0)), true);
 assert.equal(isForexMarketOpen('XAUUSD', at(2026, 0, 13, 22, 30)), false); // شتاءً 22:00–23:00 UTC
 assert.equal(isForexMarketOpen('XAUUSD', at(2026, 0, 13, 23, 0)), true);
+
+// الذهب بعد عطلة رأس السنة يفتح 18:00 نيويورك (23:00 UTC شتاءً) — يطابق حالة السوق
+assert.equal(projectBarTimeSec('XAUUSD', s(at(2025, 11, 31, 21)), 3600, 1), s(at(2026, 0, 1, 23)));
+assert.equal(projectBarTimeSec('EURUSD', s(at(2025, 11, 31, 21)), 3600, 1), s(at(2026, 0, 1, 22)));
