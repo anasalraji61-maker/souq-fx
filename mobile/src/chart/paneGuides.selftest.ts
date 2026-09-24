@@ -358,6 +358,26 @@ for (const id of ['cci', 'roc', 'atr', 'volume', '', 'nope']) {
   assert.equal(paneValueState('laguerreRsi', 0.85), 'mid');
   assert.equal(paneBoundedDecimals('laguerreRsi'), 2);
   assert.equal(paneBoundedDecimals('nope'), 1);
+  // العشر لوحات المحصورة الجديدة: عتباتها = حدود ألوان خطّها بالرسم (تُطابَق حرفياً هنا).
+  assert.deepEqual(PANE_GUIDES.stc.levels.map((l) => l.v), [75, 25]);
+  assert.deepEqual(PANE_GUIDES.connorsRsi.levels.map((l) => l.v), [90, 10]);
+  assert.deepEqual(PANE_GUIDES.tii.levels.map((l) => l.v), [80, 20]);
+  for (const id of ['demarker', 'rmi', 'cutlerRsi', 'ultimateOsc']) {
+    assert.deepEqual(PANE_GUIDES[id].levels.map((l) => l.v), [70, 30], id);
+  }
+  assert.equal(paneValueState('chop', 62), 'high');
+  assert.equal(paneValueState('chop', 38), 'low');
+  assert.equal(paneValueState('chop', 50), 'mid');
+  // CMO بمدى ‎−100..100‎: ‎+50‎ بربع الارتفاع و‎−50‎ بثلاثة أرباعه، و0 بالمنتصف
+  const cm = placeGuides('cmo', INNER);
+  assert.deepEqual(cm.map((g) => [g.v, g.top]), [[50, 15], [0, 30], [-50, 45]]);
+  assert.equal(paneValueState('cmo', -60), 'low');
+  assert.equal(paneValueState('cmo', 55), 'high');
+  assert.equal(paneValueState('cmo', 0), 'mid');
+  // ADXR كـADX: عتبة 25 واحدة، تحتها 'mid' لا 'low'
+  assert.equal(paneValueState('adxr', 30), 'high');
+  assert.equal(paneValueState('adxr', 10), 'mid');
+  assert.equal(paneBoundedDecimals('cmo'), 1);
   // وبها يُقرأ ‎%B‎ فعلاً بدل أن تتساوى كل قراءاته
   assert.equal(formatPaneValue(0.42, 2), '0.42');
   assert.equal(formatPaneValue(0.47, 2), '0.47');

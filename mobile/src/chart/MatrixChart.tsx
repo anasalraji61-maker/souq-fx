@@ -705,6 +705,7 @@ function PaneHead({
   values,
   at = null,
   highColor = colors.bear,
+  lowColor = colors.bull,
 }: {
   paneId: string;
   name: string;
@@ -712,6 +713,8 @@ function PaneHead({
   /** شمعة التقاطع (فهرس داخل نافذة الرسم)، أو null فآخر شمعة. */
   at?: number | null;
   highColor?: string;
+  /** لون ما تحت العتبة السفلى — يُعكَس للوحات «فوق = قوّة صاعدة» (TII) كألوان خطّها. */
+  lowColor?: string;
 }) {
   const v = paneValueAt(values, at);
   // خانات الكسر من **مدى اللوحة** لا ثابتة: ‎%B‎ بين 0 و1 فخانة واحدة تطمس كل قراءاته.
@@ -725,7 +728,7 @@ function PaneHead({
           style={[
             styles.paneHeadValue,
             state === 'high' && { color: highColor },
-            state === 'low' && { color: colors.bull },
+            state === 'low' && { color: lowColor },
           ]}
         >
           {txt}
@@ -7338,8 +7341,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {stc ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>STC</Text>
+          <PaneHead paneId="stc" name="STC" values={stc} at={crossIndex} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="stc" innerH={paneH - 16} />
             <BoundedLineSeries values={stc} paneH={paneH} color={(v) => (v > 75 ? colors.bear : v < 25 ? colors.bull : accent)} />
           </View>
         </View>
@@ -7495,8 +7499,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {connorsRsi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Connors RSI</Text>
+          <PaneHead paneId="connorsRsi" name="Connors RSI" values={connorsRsi} at={crossIndex} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="connorsRsi" innerH={paneH - 16} />
             <BoundedLineSeries values={connorsRsi} paneH={paneH} color={(v) => (v > 90 ? colors.bear : v < 10 ? colors.bull : accent)} />
           </View>
         </View>
@@ -7652,8 +7657,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {tii ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>TII</Text>
+          <PaneHead paneId="tii" name="TII" values={tii} at={crossIndex} highColor={colors.bull} lowColor={colors.bear} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="tii" innerH={paneH - 16} />
             <BoundedLineSeries values={tii} paneH={paneH} color={(v) => (v > 80 ? colors.bull : v < 20 ? colors.bear : accent)} />
           </View>
         </View>
@@ -7661,8 +7667,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {demarker ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>DeMarker</Text>
+          <PaneHead paneId="demarker" name="DeMarker" values={demarker} at={crossIndex} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="demarker" innerH={paneH - 16} />
             <BoundedLineSeries values={demarker} paneH={paneH} color={(v) => (v > 70 ? colors.bear : v < 30 ? colors.bull : accent)} />
           </View>
         </View>
@@ -7670,8 +7677,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {rmi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>RMI</Text>
+          <PaneHead paneId="rmi" name="RMI" values={rmi} at={crossIndex} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="rmi" innerH={paneH - 16} />
             <BoundedLineSeries values={rmi} paneH={paneH} color={(v) => (v > 70 ? colors.bear : v < 30 ? colors.bull : accent)} />
           </View>
         </View>
@@ -7679,8 +7687,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {cutlerRsi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Cutler's RSI</Text>
+          <PaneHead paneId="cutlerRsi" name="Cutler's RSI" values={cutlerRsi} at={crossIndex} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="cutlerRsi" innerH={paneH - 16} />
             <BoundedLineSeries values={cutlerRsi} paneH={paneH} color={(v) => (v > 70 ? colors.bear : v < 30 ? colors.bull : accent)} />
           </View>
         </View>
@@ -8154,8 +8163,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ultimateOsc ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>UO</Text>
+          <PaneHead paneId="ultimateOsc" name="UO" values={ultimateOsc} at={crossIndex} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="ultimateOsc" innerH={paneH - 16} />
             <BoundedLineSeries values={ultimateOsc} paneH={paneH} color={(v) => (v > 70 ? colors.bear : v < 30 ? colors.bull : accent)} />
           </View>
         </View>
@@ -8163,8 +8173,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {cmo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>CMO</Text>
+          <PaneHead paneId="cmo" name="CMO" values={cmo} at={crossIndex} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="cmo" innerH={paneH - 16} />
             <BoundedLineSeries values={cmo} paneH={paneH} min={-100} color={(v) => (v > 50 ? colors.bear : v < -50 ? colors.bull : accent)} />
           </View>
         </View>
@@ -8544,8 +8555,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {chop ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Choppiness</Text>
+          <PaneHead paneId="chop" name="Choppiness" values={chop} at={crossIndex} highColor={colors.textDim} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="chop" innerH={paneH - 16} />
             <BoundedLineSeries values={chop} paneH={paneH} color={(v) => (v > 61.8 ? colors.textDim : v < 38.2 ? colors.bull : accent)} />
           </View>
         </View>
@@ -9576,8 +9588,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {adxr ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>ADXR</Text>
+          <PaneHead paneId="adxr" name="ADXR" values={adxr} at={crossIndex} highColor={colors.warn} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="adxr" innerH={paneH - 16} />
             <BoundedLineSeries values={adxr} paneH={paneH} color={(v) => (v >= 25 ? colors.warn : colors.textDim)} />
           </View>
         </View>

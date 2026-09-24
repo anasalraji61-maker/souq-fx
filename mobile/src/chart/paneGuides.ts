@@ -114,6 +114,91 @@ export const PANE_GUIDES: Readonly<Record<string, PaneGuideSpec>> = {
       { v: 0.15, kind: 'extreme' },
     ],
   },
+  /*
+   * عشر لوحات محصورة كانت تُرسم خطّاً ملوَّناً بعتبات ثابتة، لكن بلا خطوط العتبة ولا الرقم:
+   * يتغيّر لون الخطّ ولا يرى المتداول الحدّ الذي عبره. العتبات هنا هي **حدود ألوان الخطّ
+   * القائمة بالرسم** نفسها (كـ‎%B‎ وLaguerre) — فلا يتناقض الخطّ واللون والرقم.
+   */
+  /** STC: ‎75/25‎ (Schaff) — حدّا ألوان الخطّ. */
+  stc: {
+    min: 0,
+    max: 100,
+    levels: [
+      { v: 75, kind: 'extreme' },
+      { v: 25, kind: 'extreme' },
+    ],
+  },
+  /** Connors RSI: ‎90/10‎ — أقصى من RSI لأن مكوّن streak وpercent-rank يصلان الطرفين كثيراً. */
+  connorsRsi: {
+    min: 0,
+    max: 100,
+    levels: [
+      { v: 90, kind: 'extreme' },
+      { v: 10, kind: 'extreme' },
+    ],
+  },
+  /** TII: ‎80/20‎ — فوق 80 اتّجاه صاعد قويّ (أخضر بالرسم، لا «تشبّع»)، فالرأس يعكس الألوان. */
+  tii: {
+    min: 0,
+    max: 100,
+    levels: [
+      { v: 80, kind: 'extreme' },
+      { v: 20, kind: 'extreme' },
+    ],
+  },
+  demarker: {
+    min: 0,
+    max: 100,
+    levels: [
+      { v: 70, kind: 'extreme' },
+      { v: 30, kind: 'extreme' },
+    ],
+  },
+  rmi: {
+    min: 0,
+    max: 100,
+    levels: [
+      { v: 70, kind: 'extreme' },
+      { v: 30, kind: 'extreme' },
+    ],
+  },
+  cutlerRsi: {
+    min: 0,
+    max: 100,
+    levels: [
+      { v: 70, kind: 'extreme' },
+      { v: 30, kind: 'extreme' },
+    ],
+  },
+  ultimateOsc: {
+    min: 0,
+    max: 100,
+    levels: [
+      { v: 70, kind: 'extreme' },
+      { v: 30, kind: 'extreme' },
+    ],
+  },
+  /** CMO بمداه الكامل ‎−100..100‎: ‎±50‎ حدّا ألوان الخطّ. */
+  cmo: {
+    min: -100,
+    max: 100,
+    levels: [
+      { v: 50, kind: 'extreme' },
+      { v: 0, kind: 'mid' },
+      { v: -50, kind: 'extreme' },
+    ],
+  },
+  /** Choppiness: ‎61.8‎ تذبذب و‎38.2‎ اتّجاه (نسبتا فيبوناتشي القياسيّتان للمؤشّر). */
+  chop: {
+    min: 0,
+    max: 100,
+    levels: [
+      { v: 61.8, kind: 'extreme' },
+      { v: 38.2, kind: 'extreme' },
+    ],
+  },
+  /** ADXR كـADX: عتبة 25 واحدة. */
+  adxr: { min: 0, max: 100, levels: [{ v: 25, kind: 'mid' }] },
 };
 
 export interface PlacedGuide {
