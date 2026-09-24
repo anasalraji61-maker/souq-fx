@@ -4,8 +4,8 @@
  * المتداول الفردي يُفاجأ غالباً بخبر عالي التأثير (NFP/قرار فائدة) يقفز فيه السعر وينزلق الوقف.
  * نربط عملتي الزوج بأحداث التقويم عالية التأثير خلال الساعات القليلة القادمة (أو الجارية الآن).
  *
- * - عملات الزوج: EURUSD → EUR,USD؛ XAUUSD → USD (لا أحداث للذهب نفسه)؛ DXY/النفط → USD.
- *   رموز غير معروفة (مؤشرات أسهم/عملات رقمية) → [] فلا تنبيه بدل ربط مخمَّن.
+ * - عملات الزوج: EURUSD → EUR,USD؛ XAUUSD → USD (لا أحداث للذهب نفسه)؛ DXY/النفط/NAS100 → USD،
+ *   GER40 → EUR (`SINGLE_CCY`). رموز غير معروفة (عملات رقمية/أسهم مفردة) → [] بدل ربط مخمَّن.
  * - أحداث المثال (`sample`) لا تُستخدم أبداً: تحذير من خبر وهمي أسوأ من غياب التحذير.
  * - أحداث بلا وقت دقيق (`ts`) تُتجاهَل: لا نعرض عدّاً تنازلياً لا نعرفه.
  */
@@ -32,8 +32,36 @@ const FIAT = new Set([
   'ILS', 'SAR', 'AED',
 ]);
 const METALS = new Set(['XAU', 'XAG']);
-/** رموز تُسعَّر بالدولار ويحرّكها خبر الدولار أولاً. */
-const USD_DRIVEN = new Set(['DXY', 'USOIL', 'UKOIL', 'WTI', 'BRENT', 'XAUUSD', 'XAGUSD']);
+/**
+ * رموز ليست زوجاً من 6 أحرف ويحرّكها خبر عملةٍ واحدة أولاً — بأسمائها الشائعة لدى وسطاء التجزئة.
+ *
+ * الدفتر يقبل US30/NAS100/GER40 عمداً (`journalSymbol`)، ونموذج الصفقة يعرض تحذير الأخبار للرمز
+ * المكتوب — لكن هذه الرموز كانت تُرجع `[]` فيسجّل متداول الناسداك صفقته **قبل الرواتب الأمريكية
+ * بدقائق** بلا أي تحذير، وهي من أعنف ما يقفز على الخبر. والنفط والذهب بأسماء منصّات MT5 (XTIUSD،
+ * XBRUSD، GOLD، SILVER) كانت كذلك. الربط ليس تخميناً: عملة تسعير المؤشر وبنكه المركزي هما خبره الأول
+ * (الناسداك بالدولار، الداكس باليورو، الفوتسي بالإسترليني، النيكاي بالين، ASX بالأسترالي).
+ * ما لا يُعرف (عملات رقمية، أسهم مفردة) يبقى `[]`.
+ */
+const SINGLE_CCY: Record<string, string> = {
+  DXY: 'USD', USDX: 'USD',
+  USOIL: 'USD', UKOIL: 'USD', WTI: 'USD', BRENT: 'USD', XTIUSD: 'USD', XBRUSD: 'USD', XNGUSD: 'USD', NGAS: 'USD',
+  XAUUSD: 'USD', XAGUSD: 'USD', GOLD: 'USD', SILVER: 'USD',
+  US30: 'USD', DJ30: 'USD', DJI: 'USD', WS30: 'USD',
+  NAS100: 'USD', US100: 'USD', USTEC: 'USD', NDX: 'USD',
+  SPX500: 'USD', US500: 'USD', SPX: 'USD', US2000: 'USD',
+  GER40: 'EUR', DE40: 'EUR', GER30: 'EUR', DE30: 'EUR', DAX40: 'EUR',
+  FRA40: 'EUR', EU50: 'EUR', STOXX50: 'EUR', ESP35: 'EUR', IT40: 'EUR',
+  UK100: 'GBP', FTSE100: 'GBP',
+  JP225: 'JPY', JPN225: 'JPY', NIKKEI: 'JPY',
+  AUS200: 'AUD',
+  HK50: 'HKD',
+};
+
+/**
+ * يُسقط لاحقة الوسيط **بفاصل** («US30.cash»، «NAS100-ECN»، «USOIL.m»، «GOLD#») عن رمز غير فوركس. لا
+ * حرف ملاصق بلا فاصل: «US30M» قد يكون اسماً آخر، فيُترك مرفوضاً بدل التخمين.
+ */
+const suffixFree = (raw: string): string => raw.trim().toUpperCase().replace(/[.\-_#+][A-Z0-9]{0,5}$/, '');
 
 export function symbolCurrencies(symbol: string): string[] {
   /**
@@ -41,7 +69,8 @@ export function symbolCurrencies(symbol: string): string[] {
    * و«XAUUSD.m» كان يصير «XAUUSDM» (7 أحرف) فيغيب تحذير الرواتب الأمريكية عن نموذج الصفقة قبل الدخول.
    */
   const s = instrumentSpec(symbol)?.symbol ?? symbol.toUpperCase().replace(/[^A-Z]/g, '');
-  if (USD_DRIVEN.has(s)) return ['USD'];
+  const single = SINGLE_CCY[s] ?? SINGLE_CCY[suffixFree(symbol).replace(/[\s/]/g, '')];
+  if (single) return [single];
   if (s.length !== 6) return [];
   // CNH (يوان خارجي) يظهر بالتقويم كـCNY.
   const norm = (c: string) => (c === 'CNH' ? 'CNY' : c);

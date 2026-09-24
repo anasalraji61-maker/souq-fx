@@ -13,7 +13,42 @@ assert.deepEqual(symbolCurrencies('DXY'), ['USD']);
 assert.deepEqual(symbolCurrencies('USDCNH'), ['USD', 'CNY']);
 assert.deepEqual(symbolCurrencies('EUR/USD'), ['EUR', 'USD']);
 assert.deepEqual(symbolCurrencies('BTCUSD'), []);
-assert.deepEqual(symbolCurrencies('NAS100'), []);
+// مؤشرات/نفط/معادن بأسماء منصّات الوسطاء: عملة تسعيرها وبنكها المركزي خبرها الأول (كانت [] كلها)
+assert.deepEqual(symbolCurrencies('NAS100'), ['USD']);
+assert.deepEqual(symbolCurrencies('us30'), ['USD']);
+assert.deepEqual(symbolCurrencies('SPX500'), ['USD']);
+assert.deepEqual(symbolCurrencies('US500'), ['USD']);
+assert.deepEqual(symbolCurrencies('USTEC'), ['USD']);
+assert.deepEqual(symbolCurrencies('GER40'), ['EUR']);
+assert.deepEqual(symbolCurrencies('DE40'), ['EUR']);
+assert.deepEqual(symbolCurrencies('UK100'), ['GBP']);
+assert.deepEqual(symbolCurrencies('JP225'), ['JPY']);
+assert.deepEqual(symbolCurrencies('AUS200'), ['AUD']);
+assert.deepEqual(symbolCurrencies('XTIUSD'), ['USD']);
+assert.deepEqual(symbolCurrencies('XBRUSD'), ['USD']);
+assert.deepEqual(symbolCurrencies('GOLD'), ['USD']);
+assert.deepEqual(symbolCurrencies('silver'), ['USD']);
+assert.deepEqual(symbolCurrencies('USOIL'), ['USD']);
+// لاحقة الوسيط بفاصل تسقط؛ الملاصقة بلا فاصل لا تُخمَّن
+assert.deepEqual(symbolCurrencies('US30.cash'), ['USD']);
+assert.deepEqual(symbolCurrencies('NAS100-ECN'), ['USD']);
+assert.deepEqual(symbolCurrencies('USOIL.m'), ['USD']);
+assert.deepEqual(symbolCurrencies('GOLD#'), ['USD']);
+assert.deepEqual(symbolCurrencies(' ger40.pro '), ['EUR']);
+assert.deepEqual(symbolCurrencies('US30M'), []);
+assert.deepEqual(symbolCurrencies('NAS1000'), []);
+assert.deepEqual(symbolCurrencies('US'), []);
+assert.deepEqual(symbolCurrencies('ETHUSD'), []);
+assert.deepEqual(symbolCurrencies('AAPL'), []);
+// الرواتب الأمريكية تصل لنموذج صفقة الناسداك بالدفتر، وخبر المركزي الأوروبي لا يصله
+{
+  const ev = [
+    { id: 'ecb', title: 'ECB', currency: 'EUR', impact: 'high', ts: 1_800_000_300 },
+    { id: 'nfp', title: 'NFP', currency: 'USD', impact: 'high', ts: 1_800_000_600 },
+  ];
+  assert.equal(nextHighImpact(ev, symbolCurrencies('NAS100.cash'), 1_800_000_000_000)?.event.id, 'nfp');
+  assert.equal(nextHighImpact(ev, symbolCurrencies('GER40'), 1_800_000_000_000)?.event.id, 'ecb');
+}
 assert.deepEqual(symbolCurrencies(''), []);
 // معدن بعملة غير الدولار: خبر الدولار أولاً ثم عملة التسعير؛ معدن مقابل معدن/رقمي لا
 assert.deepEqual(symbolCurrencies('XAUEUR'), ['USD', 'EUR']);
