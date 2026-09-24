@@ -902,6 +902,8 @@ export type Dict = {
   mcAutoA11y: string;
   /** AUTO ممتلئ حين مقياس السعر يدوي (مطّ المحور أو سحب رأسي) — يشرح لماذا قد تختفي شمعة جديدة. */
   mcAutoManualA11y: string;
+  /** وسم بين قوسين بعد اسم لوحة مشتقّة من شكل الشمعة لا من تدفّق أوامر حقيقي — «CVD (تقديري)». قصير: يُطبع برأس اللوحة. */
+  mcEstimatedTag: string;
   mcZoomOutA11y: string;
   mcZoomInA11y: string;
   mcPanBackA11y: string;
@@ -1931,6 +1933,7 @@ const ar: Dict = {
   mcHintSelected: 'اسحب الرسم لتحريكه · اسحب مقبضاً لتعديل طرف · يُحفظ تلقائياً',
   mcAutoA11y: 'تلقائي: ملاءمة الأسعار والعودة لآخر شمعة',
   mcAutoManualA11y: 'مقياس السعر يدوي — قد تخرج الشموع الجديدة عن العرض. اضغط لإعادته تلقائياً والعودة لآخر شمعة',
+  mcEstimatedTag: 'تقديري',
   mcZoomOutA11y: 'تصغير',
   mcZoomInA11y: 'تكبير',
   mcPanBackA11y: 'تحريك للخلف',
@@ -2967,6 +2970,7 @@ const enUS: Dict = {
   mcHintSelected: 'Drag the drawing to move it · drag a handle to adjust one end · saved automatically',
   mcAutoA11y: 'Auto: fit prices and return to the latest candle',
   mcAutoManualA11y: 'Price scale is manual — new candles may leave the view. Tap to restore auto and return to the latest candle',
+  mcEstimatedTag: 'est.',
   mcZoomOutA11y: 'Zoom out',
   mcZoomInA11y: 'Zoom in',
   mcPanBackA11y: 'Pan back',
@@ -4030,6 +4034,7 @@ const ku: Dict = {
   mcHintSelected: 'کێشراوەکە ڕایبکێشە بۆ جوولاندنی · دەسکێک ڕایبکێشە بۆ گۆڕینی لایەکی · خۆکار پاشەکەوت دەبێت',
   mcAutoA11y: 'خۆکار: گونجاندنی نرخەکان و گەڕانەوە بۆ دوایین مۆم',
   mcAutoManualA11y: 'پێوەری نرخ دەستییە — لەوانەیە مۆمە نوێیەکان لە دیمەن دەربچن. دابگرە بۆ گەڕاندنەوەی خۆکار و گەڕانەوە بۆ دوایین مۆم',
+  mcEstimatedTag: 'خەمڵێنراو',
   mcZoomOutA11y: 'بچووککردنەوە',
   mcZoomInA11y: 'گەورەکردن',
   mcPanBackA11y: 'جوڵان بۆ دواوە',
