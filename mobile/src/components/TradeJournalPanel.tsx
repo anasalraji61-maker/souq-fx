@@ -38,6 +38,7 @@ import {
   journalInstrumentKey,
   draftRiskFigures,
   journalSizeLooksLikeUnits,
+  journalSmallLotsStdEquiv,
   realizedMove,
   realizedR,
   recentLotSizes,
@@ -1286,6 +1287,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           accessibilityLabel={t.journalSizeA11y}
         />
       </View>
+      {/* حجم سنت/micro بلوت الحساب العادي — كسطر الحاسبة، فلا يبقى «4» بعد العبور لرمزٍ عادي بلا ما يذكّر بمعناه (`journalSmallLotsStdEquiv`) */}
+      {(() => {
+        const std = journalSmallLotsStdEquiv(num(size), symbol);
+        return std != null ? (
+          <Text style={[styles.planLine, { textAlign: align }]}>{t.riskCalcSmallLotsStdEquiv.replace('{std}', () => std)}</Text>
+        ) : null;
+      })()}
       {/*
         آخر أحجام اللوت المختلفة (الأحدث أولاً): المتداول يكرّر حجماً أو اثنين، وكتابة خانة المال بيدٍ كل
         صفقة هي حيث تُحفظ «5» بدل «0.5». تُخفى حين يظهر تحذير «هذا بالوحدات» كي لا تتزاحم شريحتان للخانة.

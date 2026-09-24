@@ -29,6 +29,7 @@ import {
   knownLots,
   recentLotSizes,
   journalContractKind,
+  journalSmallLotsStdEquiv,
   quickJournalSymbols,
   stopsForPips,
   quickStopPips,
@@ -1657,3 +1658,14 @@ console.log('tradePlan liveEntryOrphaned small-contract selftest OK');
   assert.equal(netHasCentWithLots([{ symbol: 'EURUSD-CENT', status: 'closed', size: 0.5 }], ['EURUSDC']), true);
 }
 console.log('tradePlan small-contract instrument key selftest OK');
+
+{
+  // سطر «= X لوت بالحساب العادي» تحت حجم الدفتر: سنت/micro فقط، وحتى حدّ السنت
+  assert.equal(journalSmallLotsStdEquiv(4, 'EURUSDc'), '0.04');
+  assert.equal(journalSmallLotsStdEquiv(0.5, 'eurusd.micro'), '0.005');
+  assert.equal(journalSmallLotsStdEquiv(200, 'XAUUSD_cent'), '2');
+  assert.equal(journalSmallLotsStdEquiv(0.01, 'GBPJPYc'), '0.0001');
+  for (const s of ['EURUSD', 'XAUUSD', '', null, undefined, 'FOOBAR']) assert.equal(journalSmallLotsStdEquiv(4, s), null, String(s));
+  for (const v of [0, -1, NaN, Infinity, null, undefined, 201, 10000]) assert.equal(journalSmallLotsStdEquiv(v, 'EURUSDc'), null, String(v));
+}
+console.log('tradePlan journal small-lot std equivalent selftest OK');

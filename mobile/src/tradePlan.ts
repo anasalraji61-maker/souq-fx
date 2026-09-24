@@ -22,6 +22,7 @@ import {
   priceAtPipOffset,
   riskInQuoteCcy,
   sizeLooksLikeUnits,
+  smallLotsStdEquiv,
 } from './positionSize';
 
 export type TradeSide = 'buy' | 'sell';
@@ -948,6 +949,18 @@ export function noteWithTypedSize(size: number | null | undefined, note: string)
 export function journalContractKind(symbol: string | null | undefined): 'std' | 'small' {
   const up = (symbol || '').trim().toUpperCase();
   return up && !instrumentSpec(up) && smallContractPair(up) ? 'small' : 'std';
+}
+
+/**
+ * حجم صفقة سنت/micro بلوت الحساب العادي لسطر `riskCalcSmallLotsStdEquiv` تحت خانة الحجم («4 = 0.04 لوت بالحساب
+ * العادي») — الحاسبة تعرضه منذ حسبت لوت السنت، والدفتر لا: «4» لـ«EURUSDC» ثم نقرة على شريحة «EURUSD» تبقي «4»
+ * (مئة ضعف) بلا ما يذكّر بمعناها. `null` = لا سطر: رمزٌ عادي/مجهول، حجمٌ غير صالح، أو فوق `MAX_SMALL_LOTS` (يعرض
+ * سطر الوحدات بدله، `journalSizeLooksLikeUnits`).
+ */
+export function journalSmallLotsStdEquiv(size: number | null | undefined, symbol: string | null | undefined): string | null {
+  if (journalContractKind(symbol) !== 'small') return null;
+  if (size == null || !Number.isFinite(size) || size <= 0 || size > MAX_SMALL_LOTS) return null;
+  return smallLotsStdEquiv(size);
 }
 
 /**
