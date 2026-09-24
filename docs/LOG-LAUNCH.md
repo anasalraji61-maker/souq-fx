@@ -1834,3 +1834,28 @@
 **خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (أسماء البنوك و`"TradingCentral-like"` بـ`signal_hub.py`، `openrouter_ai.py:71`، السبريد المختلَق، `₴`،
 أطر الكردي، `extra.apiUrl` المحلّي). ولوكيل يملك `I18nContext.tsx` (لا أحد حالياً): إن فشلت الخطوة 139 فـ`expo-localization` `getLocales()[0].languageCode` أصدق من `Intl`.
 **يحتاج جهازاً**: الخطوة 139؛ طول `riskCalcConvFailed` الجديد على 360px.
+
+## 2026-09-25 — التشغيلة السابعة والخمسون
+
+أوّلاً `COORDINATION.md`: صفّ واحد منفَّذه «launch» — **tools38 `journalExposureStacked`** — نُفّذ أوّلاً. `bash scripts/qa-build-check.sh` **أخضر بصفر
+أخطاء قبل كل commit**؛ صفر `U+FFFD` بـ`locales.ts`. كل ادّعاء بالوثائق مقروء من الكود. **لم يُشغَّل التطبيق.**
+
+1. **`locales.ts`** (`d9c5555`) — **صفّ tools38**: `journalExposureStacked` ×ar/en/ku — «صفقات مفتوحة تراهن على {ccy} بالاتجاه نفسه: {n} — خبرٌ واحد
+   يضربها معاً، فمخاطرتها تتجمّع لا تتوزّع». العدد بعد النقطتين (لا صيغ جمع، كـ`journalOpenRiskNoStop`)، وكلّ عنصر نائب مرّة واحدة فيكفي `.replace`.
+2. **`RELEASE-MOBILE.md` / `FEATURE-INVENTORY.md`** (`1dc1e2d`): خطوات جهاز **140–143** — نسبة رأس الإطار/الرباعي = تغيّر اليوم (`headerChangePct`،
+   `64133e1`؛ بالإعادة من أول شمعة)، إخفاء B/A حين يبتعد السعر >3×السبريد (`fb20f71`)، المقارنة بالزمن وقراءة التقاطع بإغلاق تلك الشمعة و«—» بلا مطابقة
+   (`3ac665b`)، وإغلاق/حذف صفقة بالدفتر على الويب (`4adb377`). صفّ «مقارنة رمز» بالجرد يذكر المطابقة بالزمن.
+3. **`locales.ts`** (`5123c25`): `newsLoadError` كان «افتح اللوحة لاحقاً» واللوحة مفتوحة، و`journalLoadError` بلا طريق إعادة — كلاهما يُجلب مرّة عند
+   التركيب (`NewsPanel.tsx:39` `useEffect([])`؛ `TradeJournalPanel.tsx:243`)، وكل مواضع تركيبهما شرطية (تبويب/قسم) ⇒ «غادر هذا القسم/الدفتر وارجع
+   إليه لإعادة المحاولة»، كما `chatLoadError`. ×ar/en/ku.
+4. **`STORE-LISTING.md`** (`dda7c1d`): ميزة المقارنة لم تكن بالوصف — مُتحقَّق: ضغطة مطوّلة على رمز بقائمة `FocusChartModal` (:334، `focusCompareHint`)،
+   بنفسجي (`focusCompareNoteSuffix`). الإنجليزي كان 3979/4000 ⇒ دُمجت بسطر الشارتات الأربعة واختُصرت أربع عبارات بلا حذف ميزة: **ar 3649 / en 3993**.
+
+### ردّ على COORDINATION
+- **tools38 `journalExposureStacked`**: **منجز** (البند 1) — العرض بالدفتر على `legs ≥ 2 && sameWay` للأدوات.
+- **QA7 «pip» ثابت بـ`AlertsPanel.tsx:903`**: لا أراه خللاً — «pip» لاتينية هي اصطلاح التطبيق كلّه وبالقاموس نفسه (`journalStatNetPips` «الصافي: {pips} pip»،
+  `riskCalcSlPips` «(بالنقاط pip)»)، وهي كذلك بـ`ChartFrame:386`، `WatchlistPanel:401 :420`، `PositionSizePanel:715`، `TradeJournalPanel:493 :1555`،
+  `DomLitePanel:72`، `VotePanel:85`. المتداول العربي يقرأ «pip» كما بمنصّته؛ أقترح إسقاط الصفّ. إن أراد أنس «نقطة» فمفتاح واحد وتسعة مواضع.
+
+**خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (أسماء البنوك و`"TradingCentral-like"`، `openrouter_ai.py:71`، السبريد المختلَق، `₴`، أطر الكردي).
+**يحتاج جهازاً**: الخطوات 140–143؛ طول `journalExposureStacked` على 360px بالدفتر حين يُعرض.
