@@ -2548,6 +2548,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
   const xOf = (i: number) =>
     ((i + 0.5) / Math.max(1, source.plot.length)) * chartPlotW + viewXPan;
+  // آخر خانة يبلغها اللوح يميناً: آخر شمعة، أو أبعد منها حين يُسحب الشارت يساراً فتظهر منطقة المستقبل.
+  // خطّ الترند يُقصّ عندها لا عند آخر شمعة — ترند رُسم نحو المستقبل كان ينقطع عند الشمعة الحيّة.
+  const lastDrawLocal = Math.max(
+    source.plot.length - 1,
+    Math.ceil(((chartPlotW - viewXPan) / chartPlotW) * Math.max(1, source.plot.length))
+  );
   const colW = Math.min(
     48,
     Math.max(2, chartPlotW / Math.max(1, source.plot.length) - 1)
@@ -2989,7 +2995,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (x: number, y: number) => {
       const HANDLE_R = DRAW_HANDLE_R; // مقبض الطرف: هدف سحب، مدى ألطف
       const BODY_R = 14; // جسم الخط/الحدّ
-      const lastLocal = Math.max(0, source.plot.length - 1);
       let best: DrawingHit = null;
       for (const d of drawings) {
         const aLocal = d.a.index - source.start;
@@ -3034,7 +3039,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           );
         } else if (d.tool === 'trend' || d.tool === 'ray') {
           // نفس ما يُرسَم: الطرفان مقصوصان على النافذة (على الخطّ)، والشعاع يمتدّ حتى حافّة اللوح.
-          const seg = clipSegmentToBars(aLocal, ay, bLocal, by, lastLocal);
+          const seg = clipSegmentToBars(aLocal, ay, bLocal, by, lastDrawLocal);
           const sx1 = xOf(seg.ai);
           const sx2 = xOf(seg.bi);
           bodyDist = segmentDistance(
@@ -3072,7 +3077,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       }
       return best?.id ?? null;
     },
-    [drawings, source.start, source.plot.length, xOf, yOf, positionBox, chartPlotW, chartPlotH]
+    [drawings, source.start, source.plot.length, xOf, yOf, positionBox, chartPlotW, chartPlotH, lastDrawLocal]
   );
 
   const exportChart = async () => {
@@ -6397,7 +6402,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               yOf(d.a.price),
               bLocal,
               yOf(d.b.price),
-              source.plot.length - 1
+              lastDrawLocal
             );
             const x1 = xOf(seg.ai);
             const y1 = seg.ay;
