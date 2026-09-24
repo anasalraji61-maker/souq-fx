@@ -398,6 +398,19 @@ export function entryAfterSideSwitch(input: {
   return executionPrice(filled.q, side, 'open');
 }
 
+/**
+ * «الدخول = السعر الحالي» بالحاسبة، حيث لا زرّ جهة: الجهة من موضع الوقف بالنسبة للسعر (تحته = شراء ⇒ Ask،
+ * فوقه = بيع ⇒ Bid). بلا وقف صالح، أو وقف عند السعر نفسه، ⇒ السعر المفرد (لا نخمّن جهة).
+ */
+export function liveEntryForStop(
+  q: { price: number; bid?: number | null; ask?: number | null },
+  stop: number | null | undefined,
+): number | null {
+  if (!(Number.isFinite(q.price) && q.price > 0)) return null;
+  if (stop == null || !Number.isFinite(stop) || stop <= 0 || stop === q.price) return q.price;
+  return executionPrice(q, stop < q.price ? 'buy' : 'sell', 'open');
+}
+
 /** نسب الهدف السريعة بالحاسبة والدفتر: ما يخطّط عليه متداول التجزئة فعلاً (1:1 تعادل، 1:2 القاعدة الشائعة). */
 export const QUICK_RR = [1, 1.5, 2, 3] as const;
 

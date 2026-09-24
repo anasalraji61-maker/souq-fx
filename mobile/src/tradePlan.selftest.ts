@@ -7,6 +7,7 @@ import {
   analyzePlan,
   entryAfterSideSwitch,
   executionPrice,
+  liveEntryForStop,
   exitShortcuts,
   exitPreview,
   averageR,
@@ -1086,3 +1087,27 @@ console.log('tradePlan GOLD/SILVER journal selftest OK');
   assert.equal(right.riskPips, 20);
 }
 console.log('tradePlan executionPrice / side switch selftest OK');
+
+// ── «الدخول = السعر الحالي» بالحاسبة: الجهة من موضع الوقف ──
+{
+  const q = { price: 1.0851, bid: 1.085, ask: 1.0852 };
+  assert.equal(liveEntryForStop(q, null), 1.0851); // بلا وقف ⇒ الوسطي
+  assert.equal(liveEntryForStop(q, undefined), 1.0851);
+  assert.equal(liveEntryForStop(q, NaN), 1.0851); // خانة غير مفهومة (num ⇒ NaN)
+  assert.equal(liveEntryForStop(q, 0), 1.0851);
+  assert.equal(liveEntryForStop(q, 1.0851), 1.0851); // وقف عند السعر: لا جهة
+  assert.equal(liveEntryForStop(q, 1.083), 1.0852); // وقف تحت ⇒ شراء ⇒ Ask
+  assert.equal(liveEntryForStop(q, 1.087), 1.085); // وقف فوق ⇒ بيع ⇒ Bid
+  assert.equal(liveEntryForStop({ price: 1.0851 }, 1.083), 1.0851); // بلا Bid/Ask ⇒ الوسطي
+  assert.equal(liveEntryForStop({ price: 0, bid: 1, ask: 1 }, 1.083), null);
+  // الذهب: سبريد 30 سنتاً — شراء بوقف 5$ تحت الوسطي = 5.15$ فعلياً لا 5
+  const g = { price: 2350.5, bid: 2350.35, ask: 2350.65 };
+  const e = liveEntryForStop(g, 2345.5)!;
+  assert.equal(e, 2350.65);
+  assert.equal(slPipsFromPrices(instrumentSpec('XAUUSD')!, e, 2345.5), 51.5);
+  assert.equal(slPipsFromPrices(instrumentSpec('XAUUSD')!, g.price, 2345.5), 50);
+  // اتّساق مع مسار الدفتر: الجهة المستنتجة = executionPrice بالجهة نفسها
+  assert.equal(liveEntryForStop(q, 1.083), executionPrice(q, 'buy'));
+  assert.equal(liveEntryForStop(q, 1.087), executionPrice(q, 'sell'));
+}
+console.log('tradePlan liveEntryForStop selftest OK');

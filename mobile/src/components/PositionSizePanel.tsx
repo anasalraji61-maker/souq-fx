@@ -41,7 +41,16 @@ import {
 import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
-import { analyzePlan, formatPips, formatRR, QUICK_RR, stopsForPips, targetAtRR, type TradeSide } from '../tradePlan';
+import {
+  analyzePlan,
+  formatPips,
+  formatRR,
+  liveEntryForStop,
+  QUICK_RR,
+  stopsForPips,
+  targetAtRR,
+  type TradeSide,
+} from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
 type Props = {
@@ -595,6 +604,25 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * (وقف تحت السعر = شراء → Ask، وهو ما يُنفَّذ عليه فعلاً)، وبلا وقف يُستخدم السعر الوسطي.
    * اقتباس بذري تجريبي لا يُستخدم أبداً (`isRealQuote`) — حجم مركز من سعر مختلَق أخطر من لا شيء.
    */
+  const liveFillRef = useRef<{ symbol: string; text: string; q: { price: number; bid?: number | null; ask?: number | null } } | null>(
+    null
+  );
+  // الدخول عُبّئ بالسعر الوسطي قبل كتابة الوقف (لا جهة بعد)، أو انتقل الوقف لجهة السعر الأخرى: ما دامت الخانة
+  // بنصّ التعبئة حرفياً وللأداة نفسها، يُنقل الدخول لـAsk الشراء/Bid البيع **من اللقطة نفسها** — وإلا حُسب اللوت
+  // على وقفٍ أضيق من الحقيقي بنصف السبريد (أكثر على الذهب والتقاطعات). ما كتبه المتداول بيده لا يُمسّ.
+  useEffect(() => {
+    const f = liveFillRef.current;
+    if (!f || f.symbol !== spec?.symbol || entryPx.trim() !== f.text) return;
+    const px = liveEntryForStop(f.q, num(stopPx));
+    if (px == null) return;
+    const text = formatPrice(px, f.symbol);
+    if (text === f.text) return;
+    liveFillRef.current = { ...f, text };
+    setEntryPx(text);
+    setLivePxMsg({ ok: true, text: `${t.riskCalcLiveFilled} ${text}` });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stopPx]);
+
   const fillEntryFromLive = async () => {
     if (!spec || livePxBusy) return;
     const sym = spec.symbol;
@@ -610,12 +638,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         setLivePxMsg({ ok: false, text: t.riskCalcNoLiveQuote });
         return;
       }
-      const stop = num(stopPx);
-      const side = Number.isFinite(stop) && stop > 0 ? (stop < q.price ? 'buy' : 'sell') : null;
-      const sidePx = side === 'buy' ? q.ask : side === 'sell' ? q.bid : null;
-      const px = typeof sidePx === 'number' && Number.isFinite(sidePx) && sidePx > 0 ? sidePx : q.price;
+      const px = liveEntryForStop(q, num(stopPx));
+      if (px == null) {
+        setLivePxMsg({ ok: false, text: t.riskCalcNoLiveQuote });
+        return;
+      }
       const text = formatPrice(px, sym);
       setEntryPx(text);
+      liveFillRef.current = { symbol: sym, text, q };
       setLivePxMsg({ ok: true, text: `${t.riskCalcLiveFilled} ${text}` });
     } catch {
       if (mountedRef.current) setLivePxMsg({ ok: false, text: t.riskCalcNoLiveQuote });
