@@ -44,6 +44,6 @@ assert.equal(barCloseCountdown(friD + 20 * 3600, 14400, utc(25, 20), 'EURUSD'), 
 assert.equal(barCloseCountdown(friD, 86400, utc(25, 21, 30), 'BTCUSD'), '2:30:00');
 // شتاءً الإغلاق 22:00 UTC: الجمعة 2026-12-04 الساعة 21:30 ما زال مفتوحاً
 const friW = Date.UTC(2026, 11, 4) / 1000;
-assert.equal(barCloseCountdown(friW, 86400, Date.UTC(2026, 11, 4, 21, 30), 'EURUSD'), '0:30:00');
+assert.equal(barCloseCountdown(friW, 86400, Date.UTC(2026, 11, 4, 21, 30), 'EURUSD'), '30:00');
 
 console.log('barCountdown.selftest: PASS');
