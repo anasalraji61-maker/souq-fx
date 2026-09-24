@@ -5755,11 +5755,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
             ]}
             onPress={() => {
+              // المراجع قبل النشر: `publishSyncWindow` يقرؤها لا الحالة، وبلا نشر كانت توابع
+              // الرباعي تبقى على النافذة القديمة بينما القائد عاد للحيّ.
+              priceScaleRef.current = 1;
+              windowCountRef.current = 80;
+              pricePanRef.current = 0;
+              xPanRef.current = 0;
+              offsetRef.current = 0;
               setPriceScale(1);
               setWindowCount(80);
               setPricePan(0);
               setXPan(0);
               setOffset(0);
+              schedulePublishSync(false);
             }}
             hitSlop={8}
           >
