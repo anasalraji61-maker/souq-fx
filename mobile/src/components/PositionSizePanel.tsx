@@ -270,6 +270,26 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     [entryPx, stopPx, targetPx].some((v) => v.trim() !== '' && Number.isNaN(priceNum(v)));
   const badNumber = badOtherThanLeverage || (leverage.trim() !== '' && parseLeverage(leverage) == null);
   /**
+   * **أيّ خانة** مرفوضة، باسمها القصير (ما قبل « (» — «Stop loss (pips)» ⇒ «Stop loss») والنصّ كما كُتب. الرسالة
+   * العامة تحت لوتٍ ظاهر لم تكن تسمّي الخانة، فيبحث المتداول بين عشر خانات عن «1.2.3» — وقد تكون بأسفل
+   * اللوحة (الهدف) أو بأعلاها (الرصيد). سعر التحويل اليدوي باسم زوجه. عرضٌ فقط، بلا تغيير حساب.
+   */
+  const shortLabel = (label: string) => label.split(' (')[0].trim();
+  const badFields = [
+    [t.riskCalcBalance, balance, parseDecimal(balance, { amount: true }) == null],
+    [t.riskCalcRiskPct, riskPct, parseRiskInput(riskPct, balanceNum, account) == null],
+    [t.riskCalcLeverage, leverage, parseLeverage(leverage) == null],
+    [t.riskCalcSlPips, slPips, parseDecimal(slPips) == null],
+    [t.riskCalcEntry, entryPx, Number.isNaN(priceNum(entryPx))],
+    [t.riskCalcStop, stopPx, Number.isNaN(priceNum(stopPx))],
+    [t.riskCalcTarget, targetPx, Number.isNaN(priceNum(targetPx))],
+    [conv?.symbol ?? '', manualConv, parseDecimal(manualConv) == null],
+  ] as const;
+  const badFieldsText = badFields
+    .filter(([, v, bad]) => v.trim() !== '' && bad)
+    .map(([label, v]) => `${shortLabel(label)} «${v.trim()}»`)
+    .join(' · ');
+  /**
    * خطأ خانة السبريد، تحتها مباشرةً. كان يُضمّ لـ`badNumber` الذي لا يظهر إلا **بلا نتيجة** — واللوت
    * يُحسب من الوقف وحده، فسبريدٌ مرفوض كان يُسقط سطر «شاملة السبريد» بصمت واللوت معروض كأن لا خطأ.
    * وفوق `MAX_SPREAD_PIPS` الرقم مفهوم: يُقال إنه غالباً سعر مكتوب بدل نقاط لا «رقم غير مفهوم».
@@ -287,12 +307,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         misplacedArabicThousandsSignInRisk(riskPct, balanceNum, account) ||
         [slPips, manualConv, entryPx, stopPx, targetPx].some((v) => misplacedArabicThousandsSign(v))
       ? // «0٬5» بخانة المخاطرة: «٬» بجانب «٫» على اللوحة العربية — يُقال أيّهما يُكتب للكسر
-        t.arabicThousandsSignHint
+        `${badFieldsText}: ${t.arabicThousandsSignHint}`
       : !badOtherThanLeverage && leverageOutOfRange(leverage)
         ? // «1:5000» مفهومة وبلا فواصل — «رقم غير مفهوم، بلا فواصل آلاف» كانت تجعله يعيد كتابتها كما هي.
           // وحدها فقط: مع خانة أخرى مرفوضة تبقى الرسالة العامة كي لا تُسمّى الرافعة وحدها
           t.riskCalcLeverageOutOfRange.replace('{value}', leverage.trim()).replace('{max}', String(MAX_LEVERAGE))
-        : t.invalidNumberHint;
+        : `${badFieldsText}: ${t.invalidNumberHint}`;
   const spreadWide = spreadTooWide(spread);
   const spreadErr =
     parseSpreadPips(spread) != null
