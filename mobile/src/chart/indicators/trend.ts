@@ -279,7 +279,10 @@ export function computeSuperTrend(
     if (!started) {
       finalUpper = basicUpper;
       finalLower = basicLower;
-      trendUp = candles[i].close >= mid;
+      // TradingView (`ta.supertrend`) يبدأ هابطاً دائماً (`_direction := 1` حين `na(atr[1])`) ولا ينقلب إلا
+      // بإغلاق فوق الحدّ العلوي. كان `close >= hl2` ⇒ صاعد: نصف البدايات بلون وخطّ معاكسَين حتى أوّل انعكاس،
+      // ومع تاريخ قصير (رمز جديد، فريم أسبوعي) تظهر تلك الفترة كلّها بالشارت.
+      trendUp = false;
       value[i] = trendUp ? finalLower : finalUpper;
       up[i] = trendUp;
       started = true;
