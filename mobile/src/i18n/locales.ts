@@ -1199,7 +1199,7 @@ const ar: Dict = {
   newsTitle: 'أخبار مؤثرة على الفوركس',
   newsStale: 'تعذّر التحديث — الموعد من تقويم محفوظ',
   newsEmpty: 'لا عناوين مؤثرة الآن — ومواعيد البيانات القادمة (الفائدة، الوظائف، التضخم) تجدها في «تقويم».',
-  newsLoadError: 'تعذّر تحميل الأخبار — تحقق من الاتصال وافتح اللوحة لاحقاً',
+  newsLoadError: 'تعذّر تحميل الأخبار — تحقّق من الاتصال، ثم غادر هذا القسم وارجع إليه لإعادة المحاولة',
   aiPanelTitle: 'مساعد ذكاء اصطناعي',
   aiGreeting:
     'أنا مساعد MATRIX الآلي. اسألني عن تحليل الزوج، سيناريو صفقة، إدارة المخاطرة، أو علاقته بـDXY. إجاباتي تحليل آلي تتعلّم منه، لا نصيحة مالية — راجع أي مستوى على الشارت قبل أن تعتمد عليه.',
@@ -1518,7 +1518,7 @@ const ar: Dict = {
   journalAddError: 'تعذر إضافة الصفقة — تحقق من الاتصال وحاول مرة أخرى',
   journalCloseFailedTitle: 'تعذر الإغلاق',
   journalCloseFailedBody: 'تعذّر تأكيد الإغلاق — تحقّق من الاتصال. إن بقيت الصفقة «مفتوحة» في القائمة فأغلقها مرة أخرى.',
-  journalLoadError: 'تعذّر تحميل الدفتر — تحقّق من الاتصال. صفقاتك المسجّلة لم تُحذف.',
+  journalLoadError: 'تعذّر تحميل الدفتر — تحقّق من الاتصال، ثم غادر الدفتر وارجع إليه لإعادة المحاولة. صفقاتك المسجّلة لم تُحذف.',
   journalEmpty:
     'لا صفقات مسجّلة بعد — سجّل كل صفقة (حتى على حساب تجريبي) لتعرف مع الوقت ما ينجح معك وما لا ينجح. اكتبها بالنموذج أعلاه («↓ السعر الحالي» يملأ الدخول لحظة فتحها)، أو احسبها في «المخاطرة» ثم اضغط «سجّل هذه الخطة بالدفتر».',
   journalOpenSuffix: '(مفتوحة)',
@@ -2236,7 +2236,7 @@ const enUS: Dict = {
   newsTitle: 'News affecting forex',
   newsStale: 'Not refreshed — time from saved calendar',
   newsEmpty: 'No market-moving headlines right now — upcoming releases (rates, jobs, inflation) are in Calendar.',
-  newsLoadError: 'Couldn’t load news — check your connection and reopen the panel later',
+  newsLoadError: "Couldn't load news — check your connection, then leave this section and come back to retry",
   aiPanelTitle: 'AI assistant',
   aiGreeting:
     "I'm MATRIX's AI assistant. Ask me about the pair's analysis, a trade scenario, risk management, or its relation to DXY. My answers are automated analysis to learn from, not financial advice — check any level on the chart before relying on it.",
@@ -2555,7 +2555,7 @@ const enUS: Dict = {
   journalAddError: 'Could not add the trade — check your connection and try again',
   journalCloseFailedTitle: 'Could not close',
   journalCloseFailedBody: 'Couldn’t confirm the close — check your connection. If the trade still shows as open, close it again.',
-  journalLoadError: 'Couldn\'t load your journal — check your connection. Your logged trades haven\'t been deleted.',
+  journalLoadError: 'Couldn\'t load your journal — check your connection, then leave the journal and come back to retry. Your logged trades haven\'t been deleted.',
   journalEmpty:
     'No trades logged yet — log every trade (even on a demo account) to learn over time what works for you and what doesn\'t. Fill in the form above (“↓ Current price” fills the entry as you open it), or size it under “Risk” and tap “Log this plan to the journal”.',
   journalOpenSuffix: '(open)',
@@ -3298,7 +3298,7 @@ const ku: Dict = {
   newsTitle: 'هەواڵی کاریگەر لەسەر فۆرێکس',
   newsStale: 'نوێ نەکرایەوە — کات لە ڕۆژژمێری پاشەکەوتکراوە',
   newsEmpty: 'ئێستا هیچ سەردێڕێکی کاریگەر نییە — کاتی داتا داهاتووەکان (سوود، کار، هەڵاوسان) لە «ڕۆژژمێر» دەبینیت.',
-  newsLoadError: 'نەکرا هەواڵەکان باربکرێن — پەیوەندییەکەت بپشکنە و دواتر پانێڵەکە بکەرەوە',
+  newsLoadError: 'نەکرا هەواڵەکان باربکرێن — پەیوەندییەکەت بپشکنە، پاشان ئەم بەشە جێبهێڵە و بگەڕێوە بۆی بۆ هەوڵدانەوە',
   aiPanelTitle: 'یاریدەدەری زیرەکی دەستکرد',
   aiGreeting:
     'من یاریدەدەری خۆکاری MATRIX ـم. پرسیارم لێ بکە دەربارەی شیکاری جووتەکە، دیمەنی مامەڵە، بەڕێوەبردنی مەترسی، یان پەیوەندی بە DXY. وەڵامەکانم شیکاری خۆکارن بۆ فێربوون، نەک ئامۆژگاری دارایی — پێش ئەوەی پشتی پێ ببەستیت هەر ئاستێک لەسەر چارتەکە بپشکنە.',
@@ -3619,7 +3619,7 @@ const ku: Dict = {
   journalAddError: 'نەکرا مامەڵە زیادبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
   journalCloseFailedTitle: 'داخستن سەرکەوتوو نەبوو',
   journalCloseFailedBody: 'داخستنەکە پشتڕاست نەکرایەوە — پەیوەندییەکەت بپشکنە. ئەگەر مامەڵەکە هێشتا کراوە دیار بوو، دووبارە دایبخە.',
-  journalLoadError: 'نەکرا تۆمارەکە باربکرێت — پەیوەندییەکەت بپشکنە. مامەڵە تۆمارکراوەکانت نەسڕاونەتەوە.',
+  journalLoadError: 'نەکرا تۆمارەکە باربکرێت — پەیوەندییەکەت بپشکنە، پاشان تۆمارەکە جێبهێڵە و بگەڕێوە بۆی بۆ هەوڵدانەوە. مامەڵە تۆمارکراوەکانت نەسڕاونەتەوە.',
   journalEmpty:
     'هێشتا هیچ مامەڵەیەک تۆمار نەکراوە — هەموو مامەڵەیەک تۆمار بکە (تەنانەت لەسەر هەژماری تاقیکردنەوە) بۆ ئەوەی بە تێپەڕبوونی کات بزانیت چی بۆت سەرکەوتووە و چی نا. لە فۆرمەکەی سەرەوە بینووسە («↓ نرخی ئێستا» چوونەژوورەوە لە کاتی کردنەوەدا پڕ دەکاتەوە)، یان لە «مەترسی» حیسابی بکە و «ئەم پلانە لە دەفتەر تۆمار بکە» دابگرە.',
   journalOpenSuffix: '(کراوەیە)',
