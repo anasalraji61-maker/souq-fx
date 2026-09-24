@@ -107,3 +107,17 @@ export function parseDecimal(
   if (!Number.isFinite(n)) return null;
   return neg ? -n : n;
 }
+
+/**
+ * «0٬5» مرفوض لأن «٬» (فاصل الآلاف العربي) بغير موضع آلاف — والحرفان «٬» و«٫» متجاوران ومتشابهان على لوحة
+ * المفاتيح العربية، فالأرجح أن المتداول قصد الكسر. true حين: فيه «٬»، و`parseDecimal` يرفضه، واستبدال «٬» بـ«٫»
+ * يجعله مقروءاً — عندها تقول الرسالة (`arabicThousandsSignHint`) أيّ الحرفين يُكتب، بدل «اكتبه بلا فواصل آلاف».
+ * لا يقرأ الرقم ولا يخمّنه: القيمة تبقى مرفوضة حتى يصحّحها المتداول.
+ */
+export function misplacedArabicThousandsSign(
+  raw: string,
+  opts: { signed?: boolean; amount?: boolean; percent?: boolean } = {}
+): boolean {
+  if (!raw.includes('٬') || parseDecimal(raw, opts) != null) return false;
+  return parseDecimal(raw.replace(/٬/g, '٫'), opts) != null;
+}

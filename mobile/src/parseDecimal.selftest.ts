@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/parseDecimal.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { parseDecimal } from './parseDecimal';
+import { misplacedArabicThousandsSign, parseDecimal } from './parseDecimal';
 
 const cases: [string, number | null][] = [
   ['1.0850', 1.085],
@@ -114,3 +114,21 @@ console.log('parseDecimal selftest OK');
   assert.equal(parseDecimal('−1٬5', { signed: true }), null);
 }
 console.log('parseDecimal group separators selftest OK');
+
+// «0٬5» المرفوض يُقال لماذا: «٬» بموضع الكسر — لا يُقرأ الرقم، الرسالة فقط
+{
+  for (const inp of ['0٬5', '٠٬٥', '1٬5', '1٬0850', '0٬5 ٪']) {
+    assert.equal(misplacedArabicThousandsSign(inp, { percent: true }), true, inp);
+    assert.equal(parseDecimal(inp, { percent: true }), null, `${inp} still rejected`);
+  }
+  // مقبول أصلاً، أو بلا «٬»، أو لا يُصلحه «٫»: الرسالة العامة
+  for (const inp of ['١٬٠٠٠', '10٬000', '0.5', '0,5', '1 5', "1'5", '', 'abc', '1٬5٬5', '1٬2.5', '1٫0٬5']) {
+    assert.equal(misplacedArabicThousandsSign(inp), false, inp);
+  }
+  // خانة المبلغ: «10٬5» مرفوض ويُصلحه «٫» ⇒ true؛ «10٬000» مقبول ⇒ false
+  assert.equal(misplacedArabicThousandsSign('10٬5', { amount: true }), true);
+  assert.equal(misplacedArabicThousandsSign('10٬000', { amount: true }), false);
+  // سالب
+  assert.equal(misplacedArabicThousandsSign('−0٬5', { signed: true }), true);
+}
+console.log('parseDecimal arabic thousands sign hint selftest OK');

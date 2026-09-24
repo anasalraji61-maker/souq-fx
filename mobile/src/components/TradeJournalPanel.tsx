@@ -13,7 +13,7 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
-import { parseDecimal } from '../parseDecimal';
+import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
 import { ambiguousThousandsPrice, formatMoney, instrumentSpec, parsePriceFor, pipsBetween, pnlInQuoteCcy, riskInQuoteCcy, sizeLooksLikeUnits } from '../positionSize';
@@ -311,7 +311,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const a = ambiguousThousandsPrice(v, sym);
     return a
       ? t.priceAmbiguousThousandsHint.replace('{value}', a.value).replace('{whole}', a.whole).replace('{small}', a.small)
-      : t.invalidNumberHint;
+      : misplacedArabicThousandsSign(v)
+        ? t.arabicThousandsSignHint
+        : t.invalidNumberHint;
   };
 
   /**
@@ -601,12 +603,22 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const sym = journalSymbol(symbol);
     if (sym == null || e == null) {
       // دخول ذهب «3.450»: «أدخل رمزاً وسعر دخول صحيحين» لا يقول ما الخطأ بالسعر المكتوب
-      setFormError(sym != null && ambiguousThousandsPrice(entry, symbol) ? pxErrorText(entry) : t.journalInvalidEntry);
+      setFormError(
+        sym != null && (ambiguousThousandsPrice(entry, symbol) || misplacedArabicThousandsSign(entry))
+          ? pxErrorText(entry)
+          : t.journalInvalidEntry
+      );
       return;
     }
     const badPx = [sl, tp, exit].find((v) => unreadablePx(v));
     if (badPx != null || unreadable(size)) {
-      setFormError(badPx != null ? pxErrorText(badPx) : t.invalidNumberHint);
+      setFormError(
+        badPx != null
+          ? pxErrorText(badPx)
+          : misplacedArabicThousandsSign(size)
+            ? t.arabicThousandsSignHint
+            : t.invalidNumberHint
+      );
       return;
     }
     if (sizeUnits) {

@@ -41,7 +41,7 @@ import {
   parsePriceFor,
   ambiguousThousandsPrice,
 } from '../positionSize';
-import { parseDecimal } from '../parseDecimal';
+import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
 import {
@@ -278,16 +278,28 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         .replace('{value}', ambiguousPx.value)
         .replace('{whole}', ambiguousPx.whole)
         .replace('{small}', ambiguousPx.small)
-    : t.invalidNumberHint;
+    : misplacedArabicThousandsSign(balance, { amount: true }) ||
+        misplacedArabicThousandsSign(riskPct, { percent: true }) ||
+        [slPips, manualConv, entryPx, stopPx, targetPx].some((v) => misplacedArabicThousandsSign(v))
+      ? // «0٬5» بخانة المخاطرة: «٬» بجانب «٫» على اللوحة العربية — يُقال أيّهما يُكتب للكسر
+        t.arabicThousandsSignHint
+      : t.invalidNumberHint;
   const spreadWide = spreadTooWide(spread);
   const spreadErr =
     parseSpreadPips(spread) != null
       ? null
       : spreadWide != null
         ? t.riskCalcSpreadTooWide.replace('{n}', String(spreadWide))
-        : t.invalidNumberHint;
+        : misplacedArabicThousandsSign(spread)
+          ? t.arabicThousandsSignHint
+          : t.invalidNumberHint;
   /** خطأ خانة العمولة تحتها — للسبب نفسه: اللوت يُحسب بدونها فلا يصل `badNumber` إليها */
-  const commissionErr = parseCommission(commission) != null ? null : t.invalidNumberHint;
+  const commissionErr =
+    parseCommission(commission) != null
+      ? null
+      : misplacedArabicThousandsSign(commission, { amount: true })
+        ? t.arabicThousandsSignHint
+        : t.invalidNumberHint;
   /**
    * «1%» / «0.5٪» كما يقولها المتداول، أو **مبلغ** بعلامة عملة الحساب («$50»، «50 USD») تُحسب نسبته من
    * الرصيد — راجع `parseRiskInput`. الرقم وحده يبقى نسبة.
