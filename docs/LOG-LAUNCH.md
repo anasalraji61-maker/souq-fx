@@ -1526,3 +1526,29 @@
 ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
 
 **يحتاج جهازاً**: البنود 118–120 — خاصةً 118 (هل يُفهم تغيّر رقم العمولة وحده) و119 (RSI عند 70 على خطّ العتبة).
+
+## 2026-09-24 — التشغيلة السابعة والأربعون
+
+تتبع `19e060f`/`b85b2a1`/`8713abf`/`5f4034f` (الأدوات) و`8083df0`/`f7ddd0d`/`8df44af`/`c18b063` (الشارت). التحقّق: `tsc` (Node 22 من
+`/tmp/node-v22.11.0-linux-x64`، `/tmp/ts5`، `--strict --noEmit --skipLibCheck --target es2020`) على `locales.ts` نظيف، صفر `U+FFFD`؛ ما كُتب
+بالوثائق مقروء من الفروقات (`SYMBOL_INPUT_MAX_LEN`، `MAX_SMALL_LOTS`، `conversionKey`، `journalContractKind`، `TrendLineSeries`،
+`BoundedLineSeries`، `PANE_GUIDES.laguerreRsi`) واختبار `positionSize.selftest.ts` (مثال 125 لوت سنت). **لم يُشغَّل التطبيق.**
+
+1. **`locales.ts`** (`fb4d934`) ar/en/ku: `riskCalcOverOrderMaxSmall` — بعد `8713abf` صار حدّ السنت/micro 200 لوت، والتحذير فوقه ما زال
+   يقول «(50–100 lot)». **جاهز غير موصول.**
+2. **`FEATURE-INVENTORY.md`** (`eb5ca20`): خانة الرمز 13 حرفاً، حدّ 200 لوت للسنت/micro، مفتاح سعر التحويل بالاتجاه، شرائح اللوت من العقد
+   نفسه؛ اللوحات التراكمية خطّاً على مدى النافذة، Mass Index/GAPO بلا أرضية صفر، Laguerre RSI/VHF على 0..1 وخطوط Laguerre، رؤوس القيمة للّوحات الـ11.
+3. **`RELEASE-MOBILE.md` §5** (`9d871d8`): البنود 121–124.
+
+### طلب تنسيق — لوكيل الأدوات
+- **جديد**: `t.riskCalcOverOrderMaxSmall` بدل `riskCalcOverOrderMax` حين `small != null` (`PositionSizePanel.tsx` عند `overOrderMax`، `{lots}` كما هو).
+- **قائم**: `riskCalcCommissionNoteMicro` (`{std}`، `{micro}`) و`riskCalcCommissionNoteCent` (`{usc}`) ما زالا بلا قارئ (التشغيلة 46).
+
+### طلب تنسيق — لوكيل الشارت — قائم بلا تغيير
+- زرّ AUTO بلا `accessibilityLabel` (`mcAutoA11y`/`mcAutoManualA11y`)؛ `` `Bar Replay · …` `` الحرفي ← `tr.mcReplayReadout` (`ip-legal-caution.mdc`)؛
+  `mcToLatestA11y`/`mcUndo*`؛ `mcMeasureBarOne`/`Two`، `mcReplayEndedOnSwitch`، `cfReplayPriceA11y`، `mcHint*` بلا مستخدم.
+
+**خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (`backend/openrouter_ai.py` «خبير تداول»، `lot` الثابتة، `₴`، `extra.apiUrl` المحلي
+ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
+
+**يحتاج جهازاً**: البنود 121–124 — خاصةً 122 (هل يُربك «50–100» متداول السنت عند 250 لوت) و124 (خطوط Laguerre بلوحة 34px).
