@@ -131,12 +131,39 @@ function inForexWeekend(sec: number): boolean {
   return false;
 }
 
+/** أوّل لحظة تداول عند `sec` أو بعده (يتخطّى عطلة نهاية الأسبوع وجلستَي 25/12 و1/1، ولو تتابعتا). */
+function nextForexOpenSec(sec: number): number {
+  let t = sec;
+  for (let guard = 0; guard < 4; guard++) {
+    const dayStart = Math.floor(t / DAY_SEC) * DAY_SEC;
+    if (inForexWeekend(t)) {
+      const dow = new Date(dayStart * 1000).getUTCDay();
+      t = forexSundayOpenSec(dayStart + ((7 - dow) % 7) * DAY_SEC);
+    } else if (isForexHolidaySession(t)) {
+      // نهاية الجلسة: 17:00 نيويورك التالية
+      const today = nyFivePmUtcSec(dayStart);
+      t = t < today ? today : nyFivePmUtcSec(dayStart + DAY_SEC);
+    } else return t;
+  }
+  return t;
+}
+
+/** يوم UTC بلا شمعة يومية فوركس: السبت/الأحد و25 ديسمبر و1 يناير. */
+function forexDailyClosed(sec: number): boolean {
+  const d = new Date(sec * 1000);
+  const day = d.getUTCDay();
+  const m = d.getUTCMonth();
+  const dd = d.getUTCDate();
+  return day === 6 || day === 0 || (m === 11 && dd === 25) || (m === 0 && dd === 1);
+}
+
 /**
- * زمن الشمعة رقم `ahead` بعد الشمعة `lastSec` (منطقة المستقبل بالشارت) **متخطّياً عطلة نهاية الأسبوع**.
+ * زمن الشمعة رقم `ahead` بعد الشمعة `lastSec` (منطقة المستقبل بالشارت) **متخطّياً عطلة نهاية الأسبوع**
+ * وعطلتَي الفوركس (25 ديسمبر، 1 يناير — `isForexHolidaySession`).
  * كان `lastSec + ahead × step`: تقاطع يمين شمعة الجمعة 16:00 على الساعة يقرأ «السبت 03:00» بينما
  * الشمعة الحقيقية التالية بتلك الخانة تُفتح مساء الأحد — والمتداول يخطّط على هذا الوسم لإصدار بيانات.
- * - دون اليوم: خطوة لا تبدأ داخل العطلة؛ ما يقع فيها يقفز لشمعة الافتتاح (الشمعة المحتوية لـ17:00 نيويورك الأحد).
- * - اليومي: السبت والأحد بلا شموع (شموع 00:00 UTC). الأسبوعي فما فوق والكريبتو: كما كان.
+ * - دون اليوم: خطوة لا تبدأ داخل الإغلاق؛ ما يقع فيه يقفز لشمعة الافتتاح التالي (الشمعة المحتوية له).
+ * - اليومي: السبت والأحد و25/12 و1/1 بلا شموع (شموع 00:00 UTC). الأسبوعي فما فوق والكريبتو: كما كان.
  */
 export function projectBarTimeSec(symbol: string, lastSec: number, stepSec: number, ahead: number): number {
   const n = Math.max(0, Math.floor(ahead));
@@ -146,18 +173,12 @@ export function projectBarTimeSec(symbol: string, lastSec: number, stepSec: numb
   for (let i = 0; i < n; i++) {
     t += stepSec;
     if (stepSec === DAY_SEC) {
-      let day = new Date(t * 1000).getUTCDay();
-      while (day === 6 || day === 0) {
-        t += DAY_SEC;
-        day = new Date(t * 1000).getUTCDay();
-      }
+      while (forexDailyClosed(t)) t += DAY_SEC;
       continue;
     }
-    if (!inForexWeekend(t)) continue;
-    // افتتاح الأحد التالي، ثم بداية الشمعة التي تحتويه على شبكة الفريم
-    const dayStart = Math.floor(t / DAY_SEC) * DAY_SEC;
-    const dow = new Date(dayStart * 1000).getUTCDay();
-    const open = forexSundayOpenSec(dayStart + ((7 - dow) % 7) * DAY_SEC);
+    const open = nextForexOpenSec(t);
+    if (open === t) continue;
+    // بداية الشمعة التي تحتوي الافتتاح على شبكة الفريم
     const bar = Math.floor(open / stepSec) * stepSec;
     t = bar > t - stepSec ? bar : open;
   }

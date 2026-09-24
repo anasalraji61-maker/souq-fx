@@ -47,4 +47,12 @@ assert.equal(projectBarTimeSec('BTCUSD', s(at(2026, 0, 16, 20)), H, 2), s(at(202
 assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 0, 12, 0)), 7 * 86400, 1), s(at(2026, 0, 19, 0)));
 assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 0, 16, 20)), H, 0), s(at(2026, 0, 16, 20)));
 
+// عطل الفوركس: 25/12/2026 خميس→جمعة ⇒ من مساء الخميس حتى افتتاح الأحد 27؛ 1/1/2026 خميس
+assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 11, 24, 21)), H, 1), s(at(2026, 11, 27, 22)));
+assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 11, 24, 0)), 86400, 1), s(at(2026, 11, 28, 0)));
+assert.equal(projectBarTimeSec('EURUSD', s(at(2025, 11, 31, 21)), H, 1), s(at(2026, 0, 1, 22)));
+assert.equal(projectBarTimeSec('EURUSD', s(at(2025, 11, 31, 20)), 4 * H, 1), s(at(2026, 0, 1, 20)));
+assert.equal(projectBarTimeSec('EURUSD', s(at(2025, 11, 31, 0)), 86400, 1), s(at(2026, 0, 2, 0)));
+assert.equal(projectBarTimeSec('BTCUSD', s(at(2025, 11, 31, 21)), H, 1), s(at(2025, 11, 31, 22)));
+
 console.log('marketHours.selftest: PASS');
