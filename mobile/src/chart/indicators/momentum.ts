@@ -221,26 +221,29 @@ export function computeCmo(closes: number[], period = 14): (number | null)[] {
 }
 
 /**
- * DPO (Detrended Price Oscillator، period=20 وإزاحة قياسية ⌊period/2⌋+1 نحو الخلف) — يزيل تأثير
- * الاتجاه طويل المدى من السعر لإبراز الدورات القصيرة: DPO[i] = إغلاق[i-shift] − SMA(period)[i]
- * (shift=11 لـperiod=20، القيمة القياسية الشائعة). **ليس** مؤشر زخم متأخر عادي — الإزاحة للخلف
+ * DPO (Detrended Price Oscillator، period=21 كـTradingView وإزاحة قياسية ⌊period/2⌋+1 نحو الخلف) — يزيل تأثير
+ * الاتجاه طويل المدى من السعر لإبراز الدورات القصيرة: DPO[i] = إغلاق[i] − SMA(period)[i-shift]
+ * (shift=11 لـperiod=21). **ليس** مؤشر زخم متأخر عادي — الإزاحة للخلف
  * تُصحّح انزياح SMA الطبيعي فتجعل DPO يقارن السعر بمتوسط "مُتمركز" حول نفس نقطته الزمنية تقريباً،
  * فيبرز القمم/القيعان الدورية القصيرة بدل الاتجاه العام. صفر = السعر عند مستوى اتجاهه العام،
  * موجب/سالب = أعلى/أدنى من الاتجاه العام عند تلك النقطة تحديداً. **تحقّق يدوي**: لو الإغلاق ثابت
  * تماماً بكل الشموع، SMA(period) تستقر على نفس القيمة الثابتة وإغلاق[i-shift] يساويها أيضاً →
  * DPO=0 لكل نقطة صالحة — يطابق "لا انحراف دوري عن اتجاه ثابت مسطّح" بالتعريف تماماً.
  */
-export function computeDpo(closes: number[], period = 20): (number | null)[] {
+export function computeDpo(closes: number[], period = 21): (number | null)[] {
+  // TradingView (غير مُتمركز، الافتراضي): `close − sma(close, 21)[barsback]`، barsback = 11. كان
+  // `close[i−11] − sma[i]` — صيغة الوضع المُتمركز مرسومة على الشمعة الحالية لا قبلها بـ11، فلا تطابق
+  // أيّاً من وضعَي TradingView: كل قمّة وقاع دوري متأخّر 11 شمعة عن السعر الذي صنعه.
   const mid = sma(closes, period);
   const shift = Math.floor(period / 2) + 1;
   const out: (number | null)[] = [];
   for (let i = 0; i < closes.length; i++) {
-    const srcIdx = i - shift;
-    if (mid[i] == null || srcIdx < 0) {
+    const maIdx = i - shift;
+    if (maIdx < 0 || mid[maIdx] == null) {
       out.push(null);
       continue;
     }
-    out.push(closes[srcIdx] - mid[i]!);
+    out.push(closes[i] - mid[maIdx]!);
   }
   return out;
 }
@@ -384,9 +387,12 @@ export function computeCoppock(closes: number[], roc1 = 14, roc2 = 11, wmaPeriod
   const sum: number[] = closes.map((_, i) =>
     rocA[i] != null && rocB[i] != null ? rocA[i]! + rocB[i]! : NaN
   );
-  const sumFilled = sum.map((v) => (Number.isNaN(v) ? 0 : v));
-  const smoothed = wma(sumFilled, wmaPeriod);
-  return closes.map((_, i) => (Number.isNaN(sum[i]) ? null : smoothed[i]));
+  // `wma` تُسقط أي نافذة فيها null: تعويض الإحماء بأصفار كان يرسم 9 قيم وهمية (منحنى يصعد من الصفر)
+  // قبل أول نافذة كاملة، وTradingView يعطي na حتى الشمعة 14 + 10 − 1.
+  return wma(
+    sum.map((v) => (Number.isNaN(v) ? null : v)),
+    wmaPeriod
+  );
 }
 
 /**

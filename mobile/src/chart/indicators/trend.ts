@@ -303,19 +303,22 @@ export function computeSuperTrend(
 }
 
 /**
- * TRIX (period=15 القيمة القياسية الشائعة) — معدّل التغيّر المئوي (rate of change) لمتوسط EMA
- * مُطبَّق ثلاث مرات متتالية على الإغلاق (**تبني بالضبط على نفس طبقات ema() المستخدَمة بـdema()/
+ * TRIX (period=18 كـTradingView) — تغيّر (×10000) متوسط EMA مُطبَّق ثلاث مرات متتالية على **لوغاريتم** الإغلاق (**تبني بالضبط على نفس طبقات ema() المستخدَمة بـdema()/
  * tema() أعلاه بهذا الملف، بما فيها أسلوب تعويض null بصفر لحساب الطبقة التالية ثم بوابة صلاحية
  * بالقيمة الأصلية — تحمل نفس تحفّظ الإحماء الأولي الموثَّق مسبقاً لتلك الدوال، وليس افتراضاً
  * جديداً**)، لكن الناتج هنا نسبة *تغيّر* الطبقة الثالثة من شمعة لأخرى، لا دمجاً خطياً للطبقات
- * كـTEMA: TRIX[i] = ((tripleEma[i] − tripleEma[i-1]) / tripleEma[i-1]) × 100 (صفر عند طبقة سابقة
- * صفرية بدل قسمة على صفر). صفر = ثبات زخم الاتجاه طويل المدى، موجب/سالب = تسارع/تباطؤ الاتجاه —
+ * كـTEMA: TRIX[i] = (tripleEma[i] − tripleEma[i-1]) × 10000 (فرق لوغاريتمين ≈ نسبة التغيّر). صفر = ثبات زخم الاتجاه طويل المدى، موجب/سالب = تسارع/تباطؤ الاتجاه —
  * أكثر "تصفية" من MACD العادي (ثلاث طبقات EMA بدل طبقتين). **تحقّق منطقي**: لو الإغلاق ثابت تماماً
  * بعد انتهاء الإحماء، tripleEma تستقر على نفس القيمة الثابتة فيصبح الفرق صفراً → TRIX=0 (يطابق
  * "لا تغيّر بالزخم" لسعر ثابت تماماً).
  */
-export function computeTrix(closes: number[], period = 15): (number | null)[] {
-  const e1 = ema(closes, period);
+export function computeTrix(closes: number[], period = 18): (number | null)[] {
+  // TradingView: `10000 * ta.change(ema(ema(ema(math.log(close), 18), 18), 18))`. كان EMA الإغلاق الخام
+  // بفترة 15 ونسبة ×100 — قيمة أصغر 100 مرّة من TradingView وتقاطعات صفر على شموع أخرى.
+  const e1 = ema(
+    closes.map((c) => (c > 0 ? Math.log(c) : null)),
+    period
+  );
   const e2 = ema(e1, period);
   const e3 = ema(e2, period);
   const out: (number | null)[] = [];
@@ -324,8 +327,7 @@ export function computeTrix(closes: number[], period = 15): (number | null)[] {
       out.push(null);
       continue;
     }
-    const prev = e3[i - 1]!;
-    out.push(prev === 0 ? 0 : ((e3[i]! - prev) / prev) * 100);
+    out.push((e3[i]! - e3[i - 1]!) * 10000);
   }
   return out;
 }
