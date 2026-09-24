@@ -41,6 +41,7 @@ import { useDailyRefs } from '../chart/dailyRefStore';
 import { dailyChange, formatPct, freshTickRefPrice, pctDirection } from '../chart/dailyChange';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import { formatPrice } from '../chart/math';
+import { quoteSpreadPips } from '../positionSize';
 import {
   armedText,
   createChartAlert,
@@ -1572,7 +1573,13 @@ export function TerminalScreen() {
                 })()}
                 {quote && quote.bid != null && quote.ask != null ? (
                   <Text style={styles.desktopSpread}>
-                    {t.termSpreadWord} {formatPrice(quote.ask - quote.bid, symbol)} · {t.termBidLabel}{' '}
+                    {t.termSpreadWord}{' '}
+                    {(() => {
+                      // بالـpip كلوح العمق (`DomLitePanel`) — الفرق الخام «0.00009» لا يقارَن بسبريد الوسيط
+                      const sp = quoteSpreadPips(symbol, quote.bid, quote.ask);
+                      return sp != null ? `${sp.toFixed(1)} pip` : formatPrice(quote.ask - quote.bid, symbol);
+                    })()}{' '}
+                    · {t.termBidLabel}{' '}
                     {formatPrice(quote.bid, symbol)} · {t.termAskLabel} {formatPrice(quote.ask, symbol)}
                   </Text>
                 ) : null}

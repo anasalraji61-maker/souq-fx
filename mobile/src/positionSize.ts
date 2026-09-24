@@ -352,6 +352,19 @@ export function pipsBetween(spec: InstrumentSpec, a: number, b: number): number 
 }
 
 /**
+ * سبريد تسعيرةٍ حيّة **بالـpip** (Ask − Bid ÷ حجم pip الأداة، لأقرب عُشر) — ما يقارنه المتداول بسبريد وسيطه.
+ * رأس الطرفية كان يطبع الفرق سعراً خاماً «0.00009» بينما لوح العمق يقول «0.9 pip» للتسعيرة نفسها.
+ * `null` لرمزٍ بلا مواصفات (يعرض المستدعي الفرق سعراً)، أو تسعيرة غير صالحة: سعرٌ ≤ 0 أو دفترٌ مقلوب (Ask < Bid)
+ * — لا يُطبع سبريد سالب.
+ */
+export function quoteSpreadPips(symbol: string, bid: number | null | undefined, ask: number | null | undefined): number | null {
+  const spec = instrumentSpec(symbol);
+  if (!spec || bid == null || ask == null) return null;
+  if (!(ask >= bid)) return null;
+  return pipsBetween(spec, ask, bid);
+}
+
+/**
  * مسافة وقف الخسارة بالنقاط من سعرَي الدخول والوقف (المتداول يفكّر غالباً بالسعر على الشارت لا بالـpip).
  * مقرَّبة لعُشر pip (النقاط الكسرية pipette) **للأعلى**. null إن كان أحدهما غير صالح أو تساويا — وقفٌ
  * عند الدخول ليس وقفاً، خلافاً لتنبيهٍ عند السوق.

@@ -18,6 +18,7 @@ import {
   positionSize,
   slPipsFromPrices,
   pipsBetween,
+  quoteSpreadPips,
   priceAtPipOffset,
   riskForLots,
   riskInQuoteCcy,
@@ -2099,3 +2100,23 @@ console.log('positionSize margin base-currency account selftest OK');
   assert.equal(riskIsHigh(parseRiskInput('$201', 10_000, 'USD')!.pct), true);
 }
 console.log('positionSize riskIsHigh selftest OK');
+
+// quoteSpreadPips: سبريد التسعيرة الحيّة بالـpip — رأس الطرفية = لوح العمق (صفّ QA10)
+{
+  assert.equal(quoteSpreadPips('EURUSD', 1.08501, 1.0851), 0.9); // «0.00009» سابقاً
+  assert.equal(quoteSpreadPips('EUR/USD', 1.085, 1.0852), 2);
+  assert.equal(quoteSpreadPips('USDJPY', 151.234, 151.249), 1.5); // pip الين 0.01
+  assert.equal(quoteSpreadPips('XAUUSD', 2400.1, 2400.45), 3.5); // pip الذهب 0.1
+  assert.equal(quoteSpreadPips('XAGUSD', 30.01, 30.035), 2.5); // pip الفضة 0.01
+  assert.equal(quoteSpreadPips('GBPJPY', 190.5, 190.5), 0); // سبريد صفر قيمة صادقة
+  // لا سبريد سالب ولا من تسعيرة ناقصة أو غير موجبة
+  assert.equal(quoteSpreadPips('EURUSD', 1.0852, 1.085), null);
+  assert.equal(quoteSpreadPips('EURUSD', null, 1.085), null);
+  assert.equal(quoteSpreadPips('EURUSD', 1.085, undefined), null);
+  assert.equal(quoteSpreadPips('EURUSD', 0, 1.085), null);
+  assert.equal(quoteSpreadPips('EURUSD', NaN, 1.085), null);
+  // رمزٌ بلا مواصفات ⇒ null فيعرض المستدعي الفرق سعراً
+  assert.equal(quoteSpreadPips('BTCUSD', 60000, 60010), null);
+  assert.equal(quoteSpreadPips('US30', 39000, 39002), null);
+}
+console.log('positionSize quoteSpreadPips selftest OK');
