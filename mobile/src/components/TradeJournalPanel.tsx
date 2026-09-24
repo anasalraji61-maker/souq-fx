@@ -667,8 +667,18 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
      * نفسها (`realizedR` على سعر الخروج نفسه)، فما يؤكّده هو ما يظهر بالسطر بعد الحفظ حرفياً.
      */
     const rText = formatR(realizedR({ side: trSide, entry: tr.entry, sl: tr.sl, exit: exitPx }));
+    /**
+     * **والمال** بعملة التسعير كما يكتبه سطر الصفقة بعد الحفظ («+25 pip · +125.00 USD · +0.23%»): التأكيد
+     * كان يُسقطه فيقرّر المتداول «أغلق الآن؟» على نقاطٍ ونسبة حركة سعر، ثم يظهر المبلغ بعد الإغلاق لا
+     * قبله. نفس الشرط (حجمٌ معروف — `knownLots`) ونفس الدالّة، فالرقمان حرفياً واحد.
+     */
+    const cash =
+      mv && knownLots(tr.size, tr.note) != null
+        ? pnlInQuoteCcy({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: exitPx, lots: tr.size })
+        : null;
+    const cashText = cash ? `${cash.amount > 0 ? '+' : ''}${formatMoney(cash.amount, cash.ccy)} · ` : '';
     const result = mv
-      ? `${mv.pips != null ? `${formatSignedPips(mv.pips)} pip · ` : ''}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%${rText ? ` · ${rText}` : ''}`
+      ? `${mv.pips != null ? `${formatSignedPips(mv.pips)} pip · ` : ''}${cashText}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%${rText ? ` · ${rText}` : ''}`
       : '';
     Alert.alert(
       t.journalCloseMarketConfirmTitle,
