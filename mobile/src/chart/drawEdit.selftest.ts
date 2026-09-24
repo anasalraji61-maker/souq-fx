@@ -3,7 +3,7 @@
  * الغرض: إثبات أن اللمسة التي لا تُغيّر شيئاً لا تدفع لقطة تراجع، وأن التغيّر الحقيقي يدفعها.
  */
 import type { ChartPoint, Drawing } from './types';
-import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars } from './drawEdit';
+import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, translateDrawing, sameDrawingPlace } from './drawEdit';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -69,6 +69,32 @@ ok('قصّ اليمين على الخطّ', c3.bi === 79 && c3.by === 158);
 // طرفان بنفس الفهرس خارج النافذة ⇒ لا قسمة على صفر.
 const c4 = clipSegmentToBars(-5, 10, -5, 30, 79);
 ok('فهرس واحد ⇒ بلا NaN', c4.ai === 0 && c4.ay === 10 && c4.by === 30);
+
+// تحريك الرسم كلّه: الطرفان بالإزاحة نفسها، وختم جديد، ولا خانة قبل الصفر
+const stamp = (i: number) => (i > 9 ? { time: 1000 + 9 * 60, ahead: i - 9, aheadStep: 60 } : { time: 1000 + i * 60 });
+const trend: Drawing = {
+  id: 't1',
+  tool: 'trend',
+  a: { index: 2, price: 1.08, time: 1 },
+  b: { index: 5, price: 1.09, time: 2 },
+  color: '#fff',
+};
+const up = (p: number) => Math.round((p + 0.001) * 1e6) / 1e6;
+let moved = translateDrawing(trend, 3, up, stamp);
+ok('translate: a index', moved.a.index === 5 && moved.b!.index === 8);
+ok('translate: price shift keeps slope', moved.a.price === 1.081 && moved.b!.price === 1.091);
+ok('translate: restamped (old time dropped)', moved.a.time === 1300 && moved.b!.time === 1480);
+ok('translate: other fields kept', moved.id === 't1' && moved.tool === 'trend' && moved.color === '#fff');
+moved = translateDrawing(trend, -10, (p) => p, stamp);
+ok('translate: stops at index 0', moved.a.index === 0 && moved.b!.index === 3);
+moved = translateDrawing(trend, 6, (p) => p, stamp);
+ok('translate: into the future gets ahead', moved.b!.index === 11 && moved.b!.ahead === 2);
+const hl: Drawing = { id: 'h', tool: 'hline', a: { index: 4, price: 1.1 }, color: '#fff' };
+moved = translateDrawing(hl, 1, (p) => p, stamp);
+ok('translate: single point has no b key', !('b' in moved) && moved.a.index === 5);
+ok('sameDrawingPlace: zero move', sameDrawingPlace(trend, translateDrawing(trend, 0, (p) => p, () => null)));
+ok('sameDrawingPlace: moved', !sameDrawingPlace(trend, translateDrawing(trend, 1, (p) => p, () => null)));
+ok('sameDrawingPlace: null', !sameDrawingPlace(null, trend));
 
 if (failures) {
   console.error(`drawEdit.selftest: ${failures} FAILED`);

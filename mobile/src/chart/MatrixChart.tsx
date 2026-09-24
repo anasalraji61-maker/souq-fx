@@ -76,7 +76,14 @@ import {
   placeGuides,
 } from './paneGuides';
 import { DrawingsSaveQueue, drawingsKey, drawingsSignature } from './drawingsPersist';
-import { clipSegmentToBars, dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
+import {
+  clipSegmentToBars,
+  dragChangesDrawing,
+  drawingEnd,
+  sameDrawingPlace,
+  samePoint,
+  translateDrawing,
+} from './drawEdit';
 import {
   isPositionTool,
   positionLabelLeft,
@@ -3131,7 +3138,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // (وأوّل خطوة سحب تغيّرها)، ونظام المستجيب يستدعي معالجات **الخصائص الحالية** — فمتغيّر الإغلاق
   // يبدأ `null` بالكائن الجديد ويتوقّف المقبض بعد خطوة واحدة تحت الإصبع.
   // `t`: مقبض هدف شراء/بيع — يغيّر النسبة `rr` لا نقطة (`selDragRr` آخر نسبة بلغها بهذه السحبة).
-  const selDragEnd = useRef<'a' | 'b' | 't' | null>(null);
+  // `body`: جسم الرسم لا مقبضه ⇒ يتحرّك كلّه (`translateDrawing`) من الرسم كما كان عند بدء السحب.
+  const selDragEnd = useRef<'a' | 'b' | 't' | 'body' | null>(null);
+  const selBodyFrom = useRef<{ x: number; y: number; d: Drawing } | null>(null);
+  const selBodyLast = useRef<Drawing | null>(null);
   // النقطة التي يقف عندها الطرف المسحوب الآن، و«هل دُفِعت لقطة تراجع لهذه السحبة؟».
   // راجع `drawEdit.ts`: اللقطة تُدفَع عند **أول حركة تُغيّر الطرف فعلاً** لا عند بدء
   // اللمس — وإلا استهلكت لمسةٌ لم تغيّر شيئاً مكاناً من سجلّ التراجع (25 لقطة).
@@ -3149,10 +3159,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         selDragAt.current = null;
         selDragRr.current = null;
         selDragPushed.current = false;
+        selBodyFrom.current = null;
+        selBodyLast.current = null;
         if (!selectedId) return;
         const { locationX, locationY } = evt.nativeEvent;
         const d = drawings.find((x) => x.id === selectedId);
         if (!d) return;
+        // لمسة على جسم الرسم المحدَّد (لا على مقبض) ⇒ تحريكه كلّه بشكله.
+        const grabBody = () => {
+          if (hitDrawing(locationX, locationY)?.id !== d.id) return;
+          selDragEnd.current = 'body';
+          selBodyFrom.current = { x: locationX, y: locationY, d };
+          selBodyLast.current = d;
+        };
         let end: 'a' | 'b' = 'a';
         if (d.b && isPositionTool(d.tool)) {
           const box = positionBox(d.tool, d.a, d.b, d.rr, d.a.index - source.start, d.b.index - source.start);
@@ -3162,7 +3181,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ['t', Math.hypot(locationX - box.xEnd, locationY - box.yTarget)],
           ];
           handles.sort((x, y) => x[1] - y[1]);
-          if (handles[0][1] > DRAW_HANDLE_R) return;
+          if (handles[0][1] > DRAW_HANDLE_R) return grabBody();
           const grabbed = handles[0][0];
           selDragEnd.current = grabbed;
           selDragAt.current = grabbed === 't' ? null : drawingEnd(d, grabbed);
@@ -3173,8 +3192,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           const da = Math.hypot(locationX - xOf(d.a.index - source.start), locationY - yOf(d.a.price));
           const db = Math.hypot(locationX - xOf(d.b.index - source.start), locationY - yOf(d.b.price));
           // صار يمكن تحديد الخط من أي نقطة على جسمه، فالسحب من المنتصف كان سيجرّ أقرب
-          // طرف ويشوّه خطاً لمسه المتداول ليحدّده فقط: لا سحب إلا من مقبض طرفي ظاهر.
-          if (Math.min(da, db) > DRAW_HANDLE_R) return;
+          // طرف ويشوّه خطاً لمسه المتداول ليحدّده فقط: المقبض يحرّك طرفه، والجسم يحرّك الرسم كلّه.
+          if (Math.min(da, db) > DRAW_HANDLE_R) return grabBody();
           end = db < da ? 'b' : 'a';
         }
         selDragEnd.current = end;
@@ -3183,6 +3202,32 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       onPanResponderMove: (evt) => {
         const end = selDragEnd.current;
         if (!selectedId || !end) return;
+        if (end === 'body') {
+          const from = selBodyFrom.current;
+          if (!from) return;
+          const { locationX, locationY } = evt.nativeEvent;
+          // إزاحة السعر بمقياس المحور الجاري (خطّي/لوغاريتمي) لا بفرق سعري ثابت.
+          const dScaled = toScale(priceAtY(locationY)) - toScale(priceAtY(from.y));
+          const next = translateDrawing(
+            from.d,
+            hitIndex(locationX) - hitIndex(from.x),
+            (price) => fromScale(toScale(price) + dScaled),
+            (index) =>
+              stampAtIndex(
+                sourceRef.current.all as { time: number }[],
+                index,
+                timeframeStepSec(series.timeframe)
+              )
+          );
+          if (sameDrawingPlace(selBodyLast.current, next)) return;
+          if (!selDragPushed.current) {
+            pushDrawHistory();
+            selDragPushed.current = true;
+          }
+          selBodyLast.current = next;
+          setDrawings((list) => list.map((x) => (x.id === next.id ? next : x)));
+          return;
+        }
         const p = pointFromXY(evt.nativeEvent.locationX, evt.nativeEvent.locationY);
         if (end === 't') {
           const d = drawings.find((x) => x.id === selectedId);
@@ -3212,11 +3257,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         selDragEnd.current = null;
         selDragAt.current = null;
         selDragRr.current = null;
+        selBodyFrom.current = null;
+        selBodyLast.current = null;
       },
       onPanResponderTerminate: () => {
         selDragEnd.current = null;
         selDragAt.current = null;
         selDragRr.current = null;
+        selBodyFrom.current = null;
+        selBodyLast.current = null;
       },
     });
   }, [
@@ -3233,6 +3282,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     source.start,
     xOf,
     yOf,
+    hitDrawing,
+    hitIndex,
+    priceAtY,
+    logScale,
+    series.timeframe,
   ]);
 
   // لوحة المفاتيح للرسم على الويب (كما بـTradingView): Delete/Backspace تحذف الرسم المحدَّد، وEsc

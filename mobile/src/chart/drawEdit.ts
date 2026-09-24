@@ -87,3 +87,41 @@ export function clipSegmentToBars(
     by: bi === bIdx ? bY : yAt(bi),
   };
 }
+
+/** ختم الزمن لخانة (`stampAtIndex` مربوطة بالسلسلة والفريم) — يُمرَّر لتبقى الدالة خالصة. */
+export type StampAt = (index: number) => { time: number; ahead?: number; aheadStep?: number; sub?: number } | null;
+
+/**
+ * تحريك الرسم **كلّه** (سحب جسمه لا مقبضه) كما في TradingView: الطرفان بالإزاحة نفسها بالشموع
+ * وبالسعر، فيبقى الشكل (ميل الترند، ارتفاع المستطيل، مسافة وقف شراء/بيع ونسبته) كما هو.
+ *
+ * - الإزاحة تُحسب دائماً من **الرسم كما كان عند بدء السحب** لا من آخر إطار: تراكم الإطارات كان
+ *   سيجمع أخطاء التقريب، والعودة بالإصبع لمكانه الأوّل تعيد الرسم لمكانه حرفياً.
+ * - `priceOf` تنقل السعر بإزاحة الشاشة (بمقياس السعر الجاري: خطّي أو لوغاريتمي) — بلا مغناطيس،
+ *   فالجذب لأقرب O/H/L/C لكل طرف وحده كان سيشوّه الشكل الذي يريد المتداول نقله كما هو.
+ * - لا خانة قبل أوّل السلسلة: الإزاحة يساراً تتوقّف حين يبلغ أقدم الطرفين الخانة 0.
+ * - كل نقطة تُختم من جديد (`stamp`): الزمن القديم لو بقي لأعاد الإرساء بين الفريمات الرسمَ لمكانه
+ *   الأوّل عند أوّل تبديل فريم.
+ */
+export function translateDrawing(
+  orig: Drawing,
+  dIndex: number,
+  priceOf: (price: number) => number,
+  stamp: StampAt
+): Drawing {
+  const minIndex = Math.min(orig.a.index, orig.b?.index ?? orig.a.index);
+  const di = Math.max(Math.round(dIndex), -Math.max(0, minIndex));
+  const move = (p: ChartPoint): ChartPoint => {
+    const index = p.index + di;
+    const price = priceOf(p.price);
+    const s = stamp(index);
+    return s == null ? { index, price } : { index, price, ...s };
+  };
+  return orig.b ? { ...orig, a: move(orig.a), b: move(orig.b) } : { ...orig, a: move(orig.a) };
+}
+
+/** هل غيّر التحريك موضع الرسم؟ (يُسقط كتابة لا تغيّر شيئاً — راجع رأس الملف). */
+export function sameDrawingPlace(x: Drawing | null | undefined, y: Drawing | null | undefined): boolean {
+  if (!x || !y) return false;
+  return samePoint(x.a, y.a) && (x.b == null ? y.b == null : samePoint(x.b, y.b));
+}
