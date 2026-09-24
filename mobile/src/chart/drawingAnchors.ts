@@ -37,8 +37,11 @@ import type { ChartPoint, Drawing } from './types';
 
 export type TimeBar = { time: number; srcTime?: number };
 
-/** الزمن الحقيقي للخانة: `srcTime` للّبنة الاصطناعية، وإلا زمن الشمعة. */
-function barTime(bar: TimeBar): number {
+/**
+ * الزمن الحقيقي للخانة: `srcTime` للّبنة الاصطناعية، وإلا زمن الشمعة. هو ما يُطبع أيضاً بمحور
+ * الزمن ووسم التقاطع (`MatrixChart.tsx`).
+ */
+export function barTime(bar: TimeBar): number {
   return bar.srcTime != null && Number.isFinite(bar.srcTime) ? bar.srcTime : bar.time;
 }
 

@@ -76,7 +76,7 @@ import {
 } from './paneGuides';
 import { DrawingsSaveQueue, drawingsKey, drawingsSignature } from './drawingsPersist';
 import { clipSegmentToBars, dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
-import { anchorDrawings, stampAtIndex } from './drawingAnchors';
+import { anchorDrawings, barTime, stampAtIndex } from './drawingAnchors';
 import { priceSpan } from './priceSpan';
 import { fibLevelPrice, planFibLabels } from './fibLabels';
 import { candleRangePipsText, measurePipsText, measureReadoutText } from './measureReadout';
@@ -3386,8 +3386,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     PRICE_LABEL_GAP,
     chartPlotH - 2
   );
-  const firstVisibleTime = source.plot[0]?.time ?? 0;
-  const lastVisibleTime = source.plot[source.plot.length - 1]?.time ?? firstVisibleTime;
+  // Renko/Kagi/P&F: زمن اللبنة مختلَق (أوّل شمعة + 60 ث لكل لبنة) — المحور والتقاطع كانا يطبعانه،
+  // فـRenko الساعة يقرأ ساعات من الدقائق عند بداية السلسلة. يُطبع زمن شمعتها المصدر (`barTime`).
+  const firstVisibleTime = source.plot[0] ? barTime(source.plot[0]) : 0;
+  const lastVisible = source.plot[source.plot.length - 1];
+  const lastVisibleTime = lastVisible ? barTime(lastVisible) : firstVisibleTime;
   const visibleTimeSpan = Math.abs(lastVisibleTime - firstVisibleTime);
   const dayCandles = timeframeStepSec(series.timeframe) >= 86400;
   const timeLabelW = chartPlotW < 200 ? 56 : chartPlotW < 280 ? 72 : 88;
@@ -5822,7 +5825,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   ]}
                 >
                   {formatAxisTime(
-                    candle.time,
+                    barTime(candle),
                     visibleTimeSpan,
                     tr.mcMonths,
                     chartPlotW < 280,
@@ -5840,7 +5843,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 ]}
               >
                 <Text style={styles.crossTagText} numberOfLines={1}>
-                  {formatCrossTime(crossCandle.time, visibleTimeSpan, tr.mcMonths, dayCandles)}
+                  {formatCrossTime(barTime(crossCandle), visibleTimeSpan, tr.mcMonths, dayCandles)}
                 </Text>
               </View>
             ) : null}
