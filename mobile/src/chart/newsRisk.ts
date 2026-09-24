@@ -35,7 +35,13 @@ const FIAT = new Set([
   'HUF', 'CZK', 'RON', 'THB', 'KRW', 'INR', 'IDR', 'MYR', 'PHP', 'TWD', 'BRL', 'CLP', 'COP',
   'RUB', 'KWD', 'QAR', 'BHD', 'OMR', 'JOD', 'EGP', 'KZT',
 ]);
-const METALS = new Set(['XAU', 'XAG']);
+/**
+ * معادن تُسعَّر عالمياً بالدولار: الذهب والفضة، و**البلاتين والبلاديوم والنحاس** بأسماء منصّات MT5
+ * (XPTUSD، XPDUSD، XCUUSD). الثلاثة الأخيرة كانت تُرجع `[]` فيُسجَّل عقد بلاتين قبل الرواتب الأمريكية
+ * بدقائق بلا تحذير — وهي تقفز بخبر الدولار كالذهب تماماً. للتحذير وحده: حاسبة المخاطرة لا تحسبها
+ * (مواصفات عقودها تختلف بين الوسطاء أكثر من الذهب).
+ */
+const METALS = new Set(['XAU', 'XAG', 'XPT', 'XPD', 'XCU']);
 /**
  * رموز ليست زوجاً من 6 أحرف ويحرّكها خبر عملةٍ واحدة أولاً — بأسمائها الشائعة لدى وسطاء التجزئة.
  *
@@ -50,12 +56,18 @@ const SINGLE_CCY: Record<string, string> = {
   DXY: 'USD', USDX: 'USD',
   USOIL: 'USD', UKOIL: 'USD', WTI: 'USD', BRENT: 'USD', XTIUSD: 'USD', XBRUSD: 'USD', XNGUSD: 'USD', NGAS: 'USD',
   XAUUSD: 'USD', XAGUSD: 'USD', GOLD: 'USD', SILVER: 'USD',
+  PLATINUM: 'USD', PALLADIUM: 'USD', COPPER: 'USD', NATGAS: 'USD', OIL: 'USD',
+  // أسماء OANDA: الأداة ثم عملة تسعيرها ملاصقةً
+  WTICOUSD: 'USD', BCOUSD: 'USD', NATGASUSD: 'USD', SPX500USD: 'USD', NAS100USD: 'USD', US30USD: 'USD',
+  DE30EUR: 'EUR', DE40EUR: 'EUR', EU50EUR: 'EUR', UK100GBP: 'GBP', AU200AUD: 'AUD',
   US30: 'USD', DJ30: 'USD', DJI: 'USD', WS30: 'USD',
   NAS100: 'USD', US100: 'USD', USTEC: 'USD', NDX: 'USD',
-  SPX500: 'USD', US500: 'USD', SPX: 'USD', US2000: 'USD',
-  GER40: 'EUR', DE40: 'EUR', GER30: 'EUR', DE30: 'EUR', DAX40: 'EUR',
-  FRA40: 'EUR', EU50: 'EUR', STOXX50: 'EUR', ESP35: 'EUR', IT40: 'EUR',
-  UK100: 'GBP', FTSE100: 'GBP',
+  SPX500: 'USD', US500: 'USD', SPX: 'USD', SP500: 'USD', US2000: 'USD',
+  GER40: 'EUR', DE40: 'EUR', GER30: 'EUR', DE30: 'EUR', DAX40: 'EUR', DAX: 'EUR',
+  FRA40: 'EUR', CAC40: 'EUR', EU50: 'EUR', STOXX50: 'EUR', EUSTX50: 'EUR', ESTX50: 'EUR',
+  ESP35: 'EUR', SPA35: 'EUR', IBEX35: 'EUR', IT40: 'EUR', NETH25: 'EUR',
+  UK100: 'GBP', FTSE100: 'GBP', FTSE: 'GBP',
+  SWI20: 'CHF', SMI20: 'CHF',
   JP225: 'JPY', JPN225: 'JPY', NIKKEI: 'JPY',
   AUS200: 'AUD',
   HK50: 'HKD',
@@ -64,17 +76,35 @@ const SINGLE_CCY: Record<string, string> = {
 /**
  * يُسقط لاحقة الوسيط **بفاصل** («US30.cash»، «NAS100-ECN»، «USOIL.m»، «GOLD#») عن رمز غير فوركس. لا
  * حرف ملاصق بلا فاصل: «US30M» قد يكون اسماً آخر، فيُترك مرفوضاً بدل التخمين.
+ *
+ * **إلا «Cash» الملاصقة**: هكذا تسمّي XM — من أوسع الوسطاء انتشاراً بالمنطقة — عقودها الفورية
+ * («US30Cash»، «US100Cash»، «GER40Cash»، «OILCash»)، فكانت كلها `[]` بلا تحذير. الكلمة لا تكون جزءاً من
+ * اسم مؤشر، والنتيجة تُقبل فقط إن طابقت اسماً معروفاً بـ`SINGLE_CCY`.
  */
-const suffixFree = (raw: string): string => raw.trim().toUpperCase().replace(/[.\-_#+][A-Z0-9]{0,5}$/, '');
+const suffixFree = (raw: string): string =>
+  raw
+    .trim()
+    .toUpperCase()
+    .replace(/[.\-_#+][A-Z0-9]{0,5}$/, '')
+    .replace(/(.)CASH$/, '$1');
 
 export function symbolCurrencies(symbol: string): string[] {
   /**
    * الرمز القانوني أولاً (`instrumentSpec` يُسقط لاحقة الوسيط): الدفتر يمرّر الرمز كما كتبه المتداول،
    * و«XAUUSD.m» كان يصير «XAUUSDM» (7 أحرف) فيغيب تحذير الرواتب الأمريكية عن نموذج الصفقة قبل الدخول.
    */
-  const s = instrumentSpec(symbol)?.symbol ?? symbol.toUpperCase().replace(/[^A-Z]/g, '');
-  const single = SINGLE_CCY[s] ?? SINGLE_CCY[suffixFree(symbol).replace(/[\s/]/g, '')];
+  const letters = symbol.toUpperCase().replace(/[^A-Z]/g, '');
+  const bare = suffixFree(symbol).replace(/[\s/]/g, '');
+  const single = SINGLE_CCY[instrumentSpec(symbol)?.symbol ?? letters] ?? SINGLE_CCY[bare];
   if (single) return [single];
+  /**
+   * زوجٌ لا تعرفه الحاسبة (معدن غير الذهب/الفضة، عملة ناشئة) بلاحقة وسيط بفاصل: «XPDUSD.m» كانت تصير
+   * «XPDUSDM» (7 أحرف) فتُرفض. الحروف كلها أولاً («USD-HUF» ⇒ USDHUF — الشرطة هنا فاصل الزوج لا لاحقة)،
+   * ثم الرمز بلا لاحقته.
+   */
+  const s =
+    instrumentSpec(symbol)?.symbol ??
+    (letters.length === 6 ? letters : /^[A-Z]{6}$/.test(bare) ? bare : letters);
   if (s.length !== 6) return [];
   // CNH (يوان خارجي) يظهر بالتقويم كـCNY.
   const norm = (c: string) => (c === 'CNH' ? 'CNY' : c);

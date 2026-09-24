@@ -50,6 +50,44 @@ assert.deepEqual(symbolCurrencies('NAS1000'), []);
 assert.deepEqual(symbolCurrencies('US'), []);
 assert.deepEqual(symbolCurrencies('ETHUSD'), []);
 assert.deepEqual(symbolCurrencies('AAPL'), []);
+// بلاتين/بلاديوم/نحاس بأسماء MT5: خبر الدولار أولاً كالذهب (كانت [])، وبعملة غير الدولار الساقان معاً
+assert.deepEqual(symbolCurrencies('XPTUSD'), ['USD']);
+assert.deepEqual(symbolCurrencies('xpdusd.m'), ['USD']);
+assert.deepEqual(symbolCurrencies('XCUUSD'), ['USD']);
+assert.deepEqual(symbolCurrencies('XPTEUR'), ['USD', 'EUR']);
+assert.deepEqual(symbolCurrencies('USDXPT'), []);
+assert.deepEqual(symbolCurrencies('XPTBTC'), []);
+for (const c of ['PLATINUM', 'PALLADIUM', 'COPPER', 'NATGAS', 'OIL']) assert.deepEqual(symbolCurrencies(c), ['USD'], c);
+// أسماء شائعة كانت غائبة (مؤشرات أوروبا والسويسري وS&P بلا X)
+assert.deepEqual(symbolCurrencies('SP500'), ['USD']);
+for (const c of ['DAX', 'CAC40', 'IBEX35', 'SPA35', 'EUSTX50', 'ESTX50', 'NETH25']) assert.deepEqual(symbolCurrencies(c), ['EUR'], c);
+assert.deepEqual(symbolCurrencies('FTSE'), ['GBP']);
+assert.deepEqual(symbolCurrencies('SWI20'), ['CHF']);
+// أسماء OANDA: الأداة وعملتها ملاصقتين
+assert.deepEqual(symbolCurrencies('SPX500USD'), ['USD']);
+assert.deepEqual(symbolCurrencies('NAS100USD'), ['USD']);
+assert.deepEqual(symbolCurrencies('WTICOUSD'), ['USD']);
+assert.deepEqual(symbolCurrencies('BCOUSD'), ['USD']);
+assert.deepEqual(symbolCurrencies('DE30EUR'), ['EUR']);
+assert.deepEqual(symbolCurrencies('UK100GBP'), ['GBP']);
+// عقود XM الفورية بـ«Cash» ملاصقة (بأيّ حالة أحرف، وبلاحقة فاصلة بعدها أيضاً)
+assert.deepEqual(symbolCurrencies('US30Cash'), ['USD']);
+assert.deepEqual(symbolCurrencies('US100Cash'), ['USD']);
+assert.deepEqual(symbolCurrencies('GER40Cash'), ['EUR']);
+assert.deepEqual(symbolCurrencies('UK100CASH'), ['GBP']);
+assert.deepEqual(symbolCurrencies('OILCash'), ['USD']);
+assert.deepEqual(symbolCurrencies('JP225Cash'), ['JPY']);
+// «Cash» لا تُسقَط إلا عن اسم معروف؛ وحدها أو عن رمز مجهول تبقى []
+assert.deepEqual(symbolCurrencies('CASH'), []);
+assert.deepEqual(symbolCurrencies('AAPLCash'), []);
+// الأزواج المعروفة لم تتغيّر
+assert.deepEqual(symbolCurrencies('XAUEUR'), ['USD', 'EUR']);
+assert.deepEqual(symbolCurrencies('EURUSD.m'), ['EUR', 'USD']);
+{
+  const nfp = { id: 'nfp', title: 'NFP', currency: 'USD', impact: 'high', ts: 1_800_000_600 };
+  assert.equal(nextHighImpact([nfp], symbolCurrencies('XPTUSD'), 1_800_000_000_000)?.event.id, 'nfp');
+  assert.equal(nextHighImpact([nfp], symbolCurrencies('US30Cash'), 1_800_000_000_000)?.event.id, 'nfp');
+}
 // الرواتب الأمريكية تصل لنموذج صفقة الناسداك بالدفتر، وخبر المركزي الأوروبي لا يصله
 {
   const ev = [
@@ -287,3 +325,9 @@ console.log('newsRisk exotic-currency selftest OK');
   }
 }
 console.log('newsRisk tick selftest OK');
+// زوج بفاصل داخلي يبقى زوجاً، والمجهول بلاحقة فاصلة يُقرأ بلا لاحقته
+assert.deepEqual(symbolCurrencies('USD-HUF'), ['USD', 'HUF']);
+assert.deepEqual(symbolCurrencies('USDHUF.pro'), ['USD', 'HUF']);
+assert.deepEqual(symbolCurrencies('XPTUSD#'), ['USD']);
+assert.deepEqual(symbolCurrencies('BTCUSD.m'), []);
+console.log('newsRisk metals/aliases selftest OK');
