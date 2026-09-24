@@ -12,6 +12,7 @@
  */
 import type { Candle } from '../api';
 import { DAY_SEC, forexSundayOpenSec } from './marketHours';
+import { isFreshTick } from './dataSource';
 
 export type Direction = 'up' | 'down' | 'flat';
 
@@ -160,4 +161,22 @@ export function tickDirection(prev: number | null | undefined, next: number | nu
   if (next > prev) return 'up';
   if (next < prev) return 'down';
   return 'flat';
+}
+
+/**
+ * سعر التيك الحيّ **صالحاً مرجعاً** لقرار — اتجاه تنبيهٍ من الشارت («فوق/تحت السعر الحالي») — أو `null`.
+ *
+ * المقبس يحتفظ بآخر تيك لكل رمز بلا حدّ عمر (`useMultiLiveTicks`)، والشاشة تُبقي تيكات ما قبل الخلفية معروضة حتى
+ * أول رسالة — فتيكٌ عمره دقائق كان يقرّر الاتجاه: السوق صعد 30 pip، والتنبيه تحت السعر الحالي يُحفظ «≥» فيطلق فوراً
+ * (أو «≤» فوقه فلا يطلق أبداً). يُرفض: تيك البثّ التجريبي (سعر عشوائي — كـ`seriesRefPrice` للسلسلة)، وعمرٌ خارج
+ * نافذة «حيّ» (`isFreshTick`، نفس شارة الحداثة بالشاشة)، وسعر غير موجب. المستدعي يسقط بعدها لمرجعٍ آخر.
+ */
+export function freshTickRefPrice(
+  tick: { price: number; source: { kind: string; as_of?: number | null } } | null | undefined,
+  nowSec = Date.now() / 1000
+): number | null {
+  if (!tick || tick.source.kind === 'demo') return null;
+  if (!isFreshTick(tick.source.as_of, nowSec)) return null;
+  const p = tick.price;
+  return typeof p === 'number' && Number.isFinite(p) && p > 0 ? p : null;
 }

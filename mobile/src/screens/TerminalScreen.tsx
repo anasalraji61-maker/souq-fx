@@ -39,7 +39,7 @@ import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { WATCHLIST } from '../chart/watchlist';
 import { ensureWatchlistLoaded, subscribeWatchlist } from '../chart/watchlistStore';
 import { useDailyRefs } from '../chart/dailyRefStore';
-import { dailyChange, formatPct, pctDirection } from '../chart/dailyChange';
+import { dailyChange, formatPct, freshTickRefPrice, pctDirection } from '../chart/dailyChange';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import { formatPrice } from '../chart/math';
 import {
@@ -851,7 +851,8 @@ export function TerminalScreen() {
         const res = await createChartAlert({
           symbol,
           price: alertPrice,
-          refPrice: liveTicks[symbol]?.price ?? seriesRefPrice(series, symbol),
+          // تيكٌ متجمّد/تجريبي لا يقرّر «فوق/تحت» — آخر إغلاق حقيقي للسلسلة، أو اقتباس حيّ داخل createChartAlert
+          refPrice: freshTickRefPrice(liveTicks[symbol]) ?? seriesRefPrice(series, symbol),
           note: origin === 'crosshair' ? t.focusAlertFromChartNote : t.focusAlertFromDrawingNote,
         });
         playSoftClick();
@@ -864,7 +865,6 @@ export function TerminalScreen() {
     },
     [symbol, series, liveTicks, t]
   );
-  const dxyPrice = liveTicks.DXY?.price ?? dxy.last;
   const tickPrices = useMemo(() => {
     const out: Record<string, number> = {};
     for (const [sym, tick] of Object.entries(liveTicks)) {

@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import {
   dailyChange,
   formatPct,
+  freshTickRefPrice,
   pctDirection,
   prevCloseFromDaily,
   sessionKeyAt,
@@ -134,3 +135,30 @@ assert.equal(weekendMergeOf([wed, thu]), true);
 assert.equal(weekendMergeOf([wed, { time: D('2026-09-19'), close: 1 }]), false);
 
 console.log('dailyChange selftest OK');
+
+// freshTickRefPrice: مرجع اتجاه التنبيه من الشارت — لا تيك متجمّد ولا تجريبي ولا ≤0
+{
+  const now = 1_790_000_000;
+  const T = (price: number, kind: string, age: number | null) => ({
+    price,
+    source: { kind, as_of: age == null ? null : now - age },
+  });
+  assert.equal(freshTickRefPrice(T(1.085, 'provider', 2), now), 1.085);
+  assert.equal(freshTickRefPrice(T(1.085, 'cache', 0), now), 1.085);
+  assert.equal(freshTickRefPrice(T(1.085, 'provider', 14.9), now), 1.085);
+  // متجمّد: خارج نافذة «حيّ» (15ث) — دقائق خلف الخلفية
+  assert.equal(freshTickRefPrice(T(1.085, 'provider', 15), now), null);
+  assert.equal(freshTickRefPrice(T(1.085, 'provider', 600), now), null);
+  // بلا وقت / وقت بالمستقبل البعيد
+  assert.equal(freshTickRefPrice(T(1.085, 'provider', null), now), null);
+  assert.equal(freshTickRefPrice(T(1.085, 'provider', -3600), now), null);
+  // البثّ التجريبي ليس سعراً — حتى لو حديثاً
+  assert.equal(freshTickRefPrice(T(1.085, 'demo', 1), now), null);
+  // سعر فاسد
+  assert.equal(freshTickRefPrice(T(0, 'provider', 1), now), null);
+  assert.equal(freshTickRefPrice(T(-1, 'provider', 1), now), null);
+  assert.equal(freshTickRefPrice(T(NaN, 'provider', 1), now), null);
+  assert.equal(freshTickRefPrice(null, now), null);
+  assert.equal(freshTickRefPrice(undefined, now), null);
+}
+console.log('dailyChange freshTickRefPrice selftest OK');
