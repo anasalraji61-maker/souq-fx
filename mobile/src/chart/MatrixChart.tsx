@@ -583,7 +583,8 @@ function formatAxisTime(
   months: string[],
   compact = false,
   dayCandles = false,
-  withHours = spanSeconds <= 2 * 86400
+  withHours = spanSeconds <= 2 * 86400,
+  prevUnixTime?: number
 ): string {
   const milliseconds = unixTime > 1e12 ? unixTime : unixTime * 1000;
   const date = new Date(milliseconds);
@@ -592,12 +593,22 @@ function formatAxisTime(
   const hh = String(p.hours).padStart(2, '0');
   const mm = String(p.minutes).padStart(2, '0');
   const mon = months[p.month] ?? '';
-  const dayMonth = compact ? `${p.day}/${p.month + 1}` : `${p.day} ${mon}`;
+  // أوّل علامة بعد رأس السنة تحمل السنة: «28 ديسمبر · 4 يناير» بلا سنة لا يُعرف أنّ بينهما سنة جديدة.
+  const prevMs = prevUnixTime == null ? Number.NaN : prevUnixTime > 1e12 ? prevUnixTime : prevUnixTime * 1000;
+  const newYear =
+    Number.isFinite(prevMs) && candleDateParts(new Date(prevMs), dayCandles).year !== p.year;
+  const dayMonth = compact
+    ? newYear
+      ? `${p.day}/${p.month + 1}/${String(p.year).slice(-2)}`
+      : `${p.day}/${p.month + 1}`
+    : newYear
+      ? `${p.day} ${mon}\n${p.year}`
+      : `${p.day} ${mon}`;
   if (withHours && !dayCandles) {
     // علامة حدّ اليوم (00:00 بتوقيت العرض) تُطبع بتاريخها وحده كما بـTradingView: «00:00 ↵ 25 سبتمبر»
     // يزاحم علامات الساعة بسطر زائد، والتاريخ وحده يفصل الأيام بنظرة. شمعة الأحد 22:00 تبقى بساعتها.
     if (p.hours === 0 && p.minutes === 0) return dayMonth;
-    return `${hh}:${mm}\n${dayMonth}`;
+    return `${hh}:${mm}\n${newYear && !compact ? `${p.day} ${mon} ${p.year}` : dayMonth}`;
   }
   if (spanSeconds <= 120 * 86400) {
     return dayMonth;
@@ -7741,7 +7752,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     tr.mcMonths,
                     chartPlotW < 280,
                     dayCandles,
-                    timeAxisHours
+                    timeAxisHours,
+                    box.i > 0 ? barTime(source.plot[timeTickIndexes[box.i - 1]!] ?? candle) : undefined
                   )}
                 </Text>
               );
