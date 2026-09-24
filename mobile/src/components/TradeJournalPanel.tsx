@@ -452,10 +452,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * أهداف جاهزة بالنسبة (1:1 · 1:1.5 · 1:2 · 1:3) من الدخول والوقف المكتوبين — نفس شرائح الحاسبة:
    * الهدف يُقرَّر بالنسبة غالباً، وكتابته بيدٍ بعد حسابه ذهنياً هي الخطوة التي تنقلب فيها منزلة.
    * لا تظهر بوقف بالجهة الخطأ (التحذير يقول ذلك أصلاً) ولا بوقف أضيق من pip (`slTooClose`).
+   * بعد تحريك الوقف تُحسب من **الوقف الأصلي** «1R @ …» (`noteStop`، كـ`planStop` بسطر الصفقة): وقفٌ مشدود من 20 pip
+   * إلى 5 كان يجعل «1:2» هدفاً على بُعد 10 pip بدل 40 المخطَّطة، والنقل للتعادل كان يُخفي الشرائح كلّها.
    */
   const rrTargets = useMemo(() => {
     const e = pnum(entry);
-    const s = pnum(sl);
+    const s = noteStop ?? pnum(sl);
     if (e == null || s == null || levelSideIssue({ side, entry: e, sl: s })) return [];
     const sym = symbol.trim().toUpperCase();
     // سنت/micro («EURUSDC») بمواصفات زوجه العادي ومنازله (`journalSpec`)
@@ -468,7 +470,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       return v != null ? [{ rr, v, tol, text: spec ? formatPrice(v, spec.symbol) : String(v) }] : [];
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, side, entry, sl]);
+  }, [symbol, side, entry, sl, noteStop]);
 
   /**
    * شرائح الوقف بالمسافة («20 pip») تحت خانة الوقف: سعر الوقف من الدخول بجهة الخسارة (`stopAtPips`) —

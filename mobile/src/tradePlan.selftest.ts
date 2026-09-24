@@ -2130,3 +2130,24 @@ console.log('tradePlan initial stop (1R mark) selftest OK');
   assert.equal(planStop({ symbol: 'EURUSD', side: 'sell', entry: 1.085, sl: 1.087, note }), 1.087);
 }
 console.log('tradePlan planStop selftest OK');
+
+// ---- شرائح أهداف R بالدفتر بعد تحريك الوقف: من الوقف الأصلي (سلسلة اللوحة: noteWithInitialStop ⇒ initialStop ⇒ targetAtRR) ----
+{
+  const before = { side: 'buy', entry: 1.085, sl: 1.083, status: 'open' };
+  const panelTargets = (symbol: string, side: 'buy' | 'sell', b: typeof before, sl: number) => {
+    const n = noteWithInitialStop({ symbol, note: 'breakout', before: b, after: { side, entry: b.entry, sl } });
+    const base = initialStop({ symbol, side, entry: b.entry, note: n }) ?? sl;
+    return [1, 1.5, 2, 3].map((rr) => targetAtRR({ symbol, side, entry: b.entry, sl: base, rr }));
+  };
+  // شدّ 20 ⇒ 5 pip: كانت 1:2 = 1.086 (10 pip)؛ الآن 1.089 (40 pip) كالخطة
+  assert.equal(targetAtRR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, rr: 2 }), 1.086);
+  assert.deepEqual(panelTargets('EURUSD', 'buy', before, 1.0845), [1.087, 1.088, 1.089, 1.091]);
+  // نقلٌ للتعادل: الشرائح باقية (كانت تختفي — وقفٌ على الدخول)
+  assert.deepEqual(panelTargets('EURUSD', 'buy', before, 1.085), [1.087, 1.088, 1.089, 1.091]);
+  // بيع USDJPY: 151.50 بوقف 151.80 (30 pip) شُدّ إلى 151.60 ⇒ 1:2 = 150.90
+  const jpy = { side: 'sell', entry: 151.5, sl: 151.8, status: 'open' };
+  assert.deepEqual(panelTargets('USDJPY', 'sell', jpy, 151.6), [151.2, 151.05, 150.9, 150.6]);
+  // صفقة مغلقة (تصحيح لا تحريك): من الوقف الحالي كما كان
+  assert.deepEqual(panelTargets('EURUSD', 'buy', { ...before, status: 'closed' }, 1.0845), [1.0855, 1.08575, 1.086, 1.0865]);
+}
+console.log('tradePlan journal R targets from initial stop selftest OK');
