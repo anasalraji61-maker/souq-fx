@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import type { Candle } from '../api';
-import { pivotInput, pivotLabelRank, prevDayFromIntraday } from './pivotBase';
+import { pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
 import { tradingDayStartSec } from './marketHours';
 import { computePivotPoints } from './indicators/price-transform';
 
@@ -87,5 +87,25 @@ assert.equal(pivotLabelRank('CS3'), 1);
 assert.equal(pivotLabelRank('CR4'), 2);
 assert.equal(pivotLabelRank('CR1'), 4);
 assert.equal(pivotLabelRank('??'), 5);
+
+
+// بداية الجلسة الجارية داخل النافذة المرئيّة (خطوط الارتكاز تُرسم منها).
+{
+  // 14 يناير 2026 (شتاء): الجلسة تبدأ 22:00 UTC.
+  const s0 = tradingDayStartSec('EURUSD', Date.UTC(2026, 0, 14, 12) / 1000);
+  const hours = (from: number, n: number) => Array.from({ length: n }, (_, i) => from + i * H);
+  const w = hours(s0 - 3 * H, 6); // 3 قبل الجلسة و3 بعدها
+  assert.equal(pivotSessionStartIndex(w, w[5]!, 'EURUSD'), 3);
+  // النافذة كلّها داخل الجلسة ⇒ 0
+  assert.equal(pivotSessionStartIndex(hours(s0 + H, 4), s0 + 10 * H, 'EURUSD'), 0);
+  // المتداول سحب للخلف: النافذة كلّها قبل الجلسة الجارية ⇒ الطول (لا خطوط)
+  const back = hours(s0 - 30 * H, 5);
+  assert.equal(pivotSessionStartIndex(back, s0 + 2 * H, 'EURUSD'), back.length);
+  // مدخل غير صالح
+  assert.equal(pivotSessionStartIndex([], s0, 'EURUSD'), -1);
+  assert.equal(pivotSessionStartIndex(w, NaN, 'EURUSD'), -1);
+  // NaN داخل النافذة يُتخطّى
+  assert.equal(pivotSessionStartIndex([NaN, s0 + H], s0 + H, 'EURUSD'), 1);
+}
 
 console.log('pivotBase.selftest: PASS');

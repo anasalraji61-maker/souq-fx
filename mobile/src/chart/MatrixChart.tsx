@@ -90,7 +90,7 @@ import { planHiLoLabels } from './hiLoLabels';
 import { planDayBreaks } from './dayBreaks';
 import { formatPct, prevSessionFromDaily, validSessionBar } from './dailyChange';
 import { useDailyPrevBar } from './dailyRefStore';
-import { pivotInput, pivotLabelRank, prevDayFromIntraday } from './pivotBase';
+import { pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
 import { candleTimeSec, normalizeProvenance, timeframeStepSec } from './dataSource';
 import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
@@ -3666,10 +3666,27 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     for (const l of plan) takenLabelYs.push(l.y);
   }
 
+  // خطوط الارتكاز من بداية الجلسة الجارية لا بعرض اللوح (`pivotSessionStartIndex`): داخل
+  // اليوم وحده — على D فأكبر الجلسة شمعة واحدة، فتبقى بعرض اللوح كما كانت. `null` ⇒ بعرض اللوح.
+  let pivotStartX: number | null = null;
+  const lastAll = source.all[source.all.length - 1];
+  if (pivotLevels.length && lastAll && timeframeStepSec(series.timeframe) < 86400) {
+    const i = pivotSessionStartIndex(
+      source.plot.map((b) => candleTimeSec(barTime(b))),
+      candleTimeSec(barTime(lastAll)),
+      series.symbol
+    );
+    if (i >= source.plot.length) pivotStartX = Infinity;
+    else if (i > 0) pivotStartX = Math.max(0, (xOf(i - 1) + xOf(i)) / 2);
+  }
+  // أقلّ من هذا بين بداية الخطّ وحافّة اللوح ⇒ الوسم يُثبَّت يمين اللوح لا يسار الخطّ.
+  const pivotLabelAtEnd = pivotStartX != null && chartPlotW - pivotStartX < 120;
+
   // وسوم الارتكاز: الظاهرة باللوح وحدها تتنافس على المكان (مستوى خارج اللوح لا يحجز وسماً).
   const pivotLabelKeys = new Set(
     thinByGap(
       pivotLevels.filter((lv) => {
+        if (pivotStartX === Infinity) return false;
         const y = yOf(lv.price);
         return y >= 11 && y <= chartPlotH - 2;
       }),
@@ -5597,13 +5614,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {pivotLevels.map((lv) => {
           const y = yOf(lv.price);
           if (!Number.isFinite(y) || y < -1 || y > chartPlotH + 1) return null;
+          if (pivotStartX === Infinity) return null;
           return (
             <View
               key={lv.key}
-              style={[styles.hLine, { top: y, borderColor: lv.color, opacity: lv.opacity }]}
+              style={[
+                styles.hLine,
+                { top: y, borderColor: lv.color, opacity: lv.opacity },
+                pivotStartX != null && { left: pivotStartX },
+              ]}
             >
               {pivotLabelKeys.has(lv.key) ? (
-                <Text style={[styles.levelPriceLabel, { color: lv.color }]} numberOfLines={1}>
+                <Text
+                  style={[
+                    styles.levelPriceLabel,
+                    { color: lv.color },
+                    pivotLabelAtEnd && { left: undefined, right: PRICE_AXIS_WIDTH + 4 },
+                  ]}
+                  numberOfLines={1}
+                >
                   {lv.label} {formatPrice(lv.price, series.symbol)}
                 </Text>
               ) : null}

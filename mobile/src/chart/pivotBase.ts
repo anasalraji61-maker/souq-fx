@@ -71,3 +71,26 @@ export function pivotLabelRank(label: string): number {
   const n = /[RS]([1-3])$/.exec(label);
   return n ? Number(n[1]) : 5;
 }
+
+/**
+ * من أين يبدأ رسم خطوط الارتكاز داخل النافذة المرئيّة: أوّل شمعة من **الجلسة الجارية** (جلسة
+ * `lastSec`، آخر شمعة بالسلسلة كلّها). المستويات محسوبة للجلسة الجارية من الجلسة السابقة، فمدّها
+ * فوق شموع أمس يوحي بأن السعر «احترمها» أو «كسرها» قبل أن توجد — TradingView يرسمها من بداية
+ * جلستها وحدها.
+ *
+ * - `0` ⇒ الجلسة بدأت قبل النافذة (بعرض اللوح كلّه).
+ * - `timesSec.length` ⇒ النافذة كلّها قبل الجلسة (المتداول سحب للخلف) ⇒ لا خطوط.
+ * - `-1` ⇒ مدخل غير صالح ⇒ يتصرّف المستدعي كما كان (بعرض اللوح).
+ */
+export function pivotSessionStartIndex(
+  timesSec: readonly number[],
+  lastSec: number,
+  symbol: string
+): number {
+  if (!Array.isArray(timesSec) || timesSec.length === 0 || !Number.isFinite(lastSec)) return -1;
+  const session = tradingDayStartSec(symbol, lastSec);
+  for (let i = 0; i < timesSec.length; i++) {
+    if (Number.isFinite(timesSec[i]) && timesSec[i]! >= session) return i;
+  }
+  return timesSec.length;
+}
