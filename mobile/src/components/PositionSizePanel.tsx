@@ -38,6 +38,8 @@ import {
   stopPipsMismatch,
   parseSpreadPips,
   parseCommission,
+  commissionAcrossModes,
+  type CommissionMode,
   spreadRisk,
   spreadBeyondLiveEntry,
   costsLotsAdvice,
@@ -108,6 +110,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * كالرافعة، فتُحفظ معه؛ وتُمسح حين يبدّل المتداول عملة الحساب بيده (7 USD ليست 7 JPY).
    */
   const [commission, setCommission] = useState('');
+  /**
+   * الوضع الذي كُتبت له العمولة (آخر رمزٍ معروف): «لكل لوت» تعني لوتاً عادياً أو سنتاً أو micro — تُحوَّل بتبدّله
+   * (`commissionAcrossModes`) وتُحفظ معه. الرمز الأوّل دائماً عادي (`useState` أعلاه).
+   */
+  const commissionModeRef = useRef<CommissionMode>({ kind: 'std', account: 'USD' });
   /** بديل اختياري: سعرا الدخول والوقف كما يراهما المتداول على الشارت → تُملأ خانة النقاط تلقائياً */
   const [entryPx, setEntryPx] = useState('');
   const [stopPx, setStopPx] = useState('');
@@ -159,15 +166,25 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             account?: string;
             leverage?: string;
             commission?: string;
+            commissionMode?: CommissionMode;
           };
           if (typeof p.balance === 'string') setBalance(p.balance);
           if (typeof p.centBalance === 'string') setCentBalance(p.centBalance);
           // لاحقة لا تصلح (نسخة قديمة أو محرَّرة) لا تُعرض شريحةً تقود لرمز مرفوض
           if (typeof p.smallSuffix === 'string' && withSmallSuffix('EURUSD', p.smallSuffix)) setSmallSuffix(p.smallSuffix);
           if (typeof p.leverage === 'string') setLeverage(p.leverage);
-          if (typeof p.commission === 'string') setCommission(p.commission);
+          const loadedAccount =
+            p.account && (ACCOUNT_CCYS as string[]).includes(p.account) ? (p.account as AccountCcy) : null;
+          if (typeof p.commission === 'string') {
+            // «0.07» محفوظة من «EURUSDmicro» واللوحة تفتح على زوجٍ عادي ⇒ 7 (نسخة بلا وضع محفوظ تُقرأ كما هي)
+            const m = p.commissionMode;
+            const now: CommissionMode = { kind: commissionModeRef.current.kind, account: loadedAccount ?? commissionModeRef.current.account };
+            const saved =
+              m && (m.kind === 'std' || m.kind === 'cent' || m.kind === 'micro') && typeof m.account === 'string' ? m : now;
+            setCommission(commissionAcrossModes(p.commission, saved, now));
+          }
           if (typeof p.riskPct === 'string') setRiskPct(p.riskPct);
-          if (p.account && (ACCOUNT_CCYS as string[]).includes(p.account)) setAccount(p.account as AccountCcy);
+          if (loadedAccount) setAccount(loadedAccount);
         }
       } catch {
         /* ignore */
@@ -176,15 +193,6 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       }
     })();
   }, []);
-
-  useEffect(() => {
-    if (!loadedRef.current) return;
-    AsyncStorage.setItem(STORE_KEY, JSON.stringify({ balance, centBalance, smallSuffix, riskPct, account, leverage, commission })).catch(
-      () => {
-        /* ignore */
-      }
-    );
-  }, [balance, centBalance, smallSuffix, riskPct, account, leverage, commission]);
 
   /**
    * تبديل الزوج من شريط رموز شاشة الأدوات يصل هنا بـ`defaultSymbol` — وكان يُهمَل بعد أول تركيب،
@@ -215,6 +223,39 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** عملة كل مبلغ باللوحة: USC لحساب السنت (سعر التحويل لحساب دولار × 100)، وإلا عملة الحساب */
   const moneyCcy: string = cent ? 'USC' : account;
   const convAccount: AccountCcy = cent ? 'USD' : account;
+  /**
+   * «7» للوت العادي كانت تبقى 7 USD **لكل لوت micro** بعد «EURUSDmicro» (مئة ضعف: تكاليف مضخّمة ولوت «شامل التكاليف» أصغر
+   * وسطر دفتر خاطئ). تُحوَّل بمكافئ اللوت العادي — راجع `commissionAcrossModes`. رمزٌ مجهول وسط الكتابة («EURUSDmi») لا يغيّر
+   * الوضع؛ وتبديل العملة وحده تمسحه الشريحة نفسها.
+   */
+  const commissionKind: CommissionMode['kind'] | null = stdSpec ? 'std' : small?.kind ?? null;
+  useEffect(() => {
+    if (commissionKind == null) return;
+    const prev = commissionModeRef.current;
+    const next: CommissionMode = { kind: commissionKind, account };
+    commissionModeRef.current = next;
+    if (prev.kind !== next.kind) setCommission((c: string) => commissionAcrossModes(c, prev, next));
+  }, [commissionKind, account]);
+
+  // بعد تحويل العمولة (الترتيب مقصود): تُحفظ مع وضعها الجديد لا القديم
+  useEffect(() => {
+    if (!loadedRef.current) return;
+    AsyncStorage.setItem(
+      STORE_KEY,
+      JSON.stringify({
+        balance,
+        centBalance,
+        smallSuffix,
+        riskPct,
+        account,
+        leverage,
+        commission,
+        commissionMode: commissionModeRef.current,
+      })
+    ).catch(() => {
+      /* ignore */
+    });
+  }, [balance, centBalance, smallSuffix, riskPct, account, leverage, commission, commissionKind]);
   const balanceText = cent ? centBalance : balance;
   const setBalanceText = cent ? setCentBalance : setBalance;
   /** لاحقة الوضع الحالي (null = حساب عادي) */

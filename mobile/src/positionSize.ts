@@ -995,6 +995,28 @@ export function parseCommission(raw: string): number | null {
   return v != null && v >= 0 ? v : null;
 }
 
+/** وضع الحساب الذي تُقرأ به خانة العمولة: `std` (عقد عادي)، `cent` (لوت سنت بالـUSC)، `micro` (لوت micro بعملة الحساب). */
+export type CommissionMode = { kind: 'std' | 'cent' | 'micro'; account: string };
+
+/**
+ * نصّ خانة العمولة بعد تبدّل وضع الحساب («EURUSD» ⇄ «EURUSDc» ⇄ «EURUSDmicro») — العمولة «لكل لوت» واللوت تغيّر.
+ * بمكافئها للوت العادي: 7 USD/لوت عادي = 7 USC/لوت سنت (عقدٌ ÷ 100 بعملةٍ ÷ 100 — الرقم نفسه) = 0.07 USD/لوت micro.
+ *
+ * لماذا: الخانة واحدة وتُحفظ، فـ«7» المكتوبة للحساب العادي كانت تُقرأ 7 USD **لكل لوت micro** (مئة ضعف) بعد «EURUSDmicro»،
+ * فتُضخَّم التكاليف ويُصغَّر اللوت «الشامل للتكاليف» وسطر الدفتر يكتب «commission 7.00 USD/lot». عملةٌ أساس مختلفة (حساب
+ * يورو ⇄ سنت دولار) ⇒ `''` كشريحة عملة الحساب (7 EUR ليست 7 USC). فارغة أو غير مفهومة أو الوضع نفسه ⇒ النصّ كما هو.
+ */
+export function commissionAcrossModes(raw: string, from: CommissionMode, to: CommissionMode): string {
+  if (from.kind === to.kind && from.account === to.account) return raw;
+  const v = parseCommission(raw);
+  if (raw.trim() === '' || v == null) return raw;
+  const base = (m: CommissionMode) => (m.kind === 'cent' ? 'USD' : m.account);
+  if (base(from) !== base(to)) return '';
+  const perStdLot = (m: CommissionMode) => (m.kind === 'micro' ? 100 : 1);
+  if (v === 0 || perStdLot(from) === perStdLot(to)) return raw;
+  return String(Number(((v * perStdLot(from)) / perStdLot(to)).toFixed(6)));
+}
+
 /** أكبر حجم باللوت يُعقل بخانة «الحجم لوت»: وسطاء التجزئة يحدّون الأمر الواحد بـ50–100 لوت عادةً. */
 export const MAX_SANE_LOTS = 100;
 

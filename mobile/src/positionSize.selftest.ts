@@ -42,6 +42,7 @@ import {
   centQuoteToAccount,
   smallLotsStdEquiv,
   smallContractSuffix,
+  commissionAcrossModes,
   withSmallSuffix,
   CENTS_PER_USD,
   ambiguousThousandsPrice,
@@ -1836,3 +1837,42 @@ console.log('positionSize USC risk-input selftest OK');
   assert.equal(withSmallSuffix('BTCUSD', 'c'), null);
 }
 console.log('positionSize smallContractSuffix selftest OK');
+
+// commissionAcrossModes — «7» للوت العادي لا تصير 7 USD لكل لوت micro
+{
+  const std = { kind: 'std', account: 'USD' } as const;
+  const cent = { kind: 'cent', account: 'USD' } as const;
+  const micro = { kind: 'micro', account: 'USD' } as const;
+  // 7 USD/لوت عادي = 0.07 USD/لوت micro (1,000 وحدة) = 7 USC/لوت سنت (1,000 وحدة، 7 سنتات = 0.07 USD)
+  assert.equal(commissionAcrossModes('7', std, micro), '0.07');
+  assert.equal(commissionAcrossModes('0.07', micro, std), '7');
+  assert.equal(commissionAcrossModes('7', std, cent), '7');
+  assert.equal(commissionAcrossModes('7', cent, std), '7');
+  assert.equal(commissionAcrossModes('7', cent, micro), '0.07');
+  assert.equal(commissionAcrossModes('0.07', micro, cent), '7');
+  // المعنى محفوظ: عمولة لوتٍ micro واحد = عمولة 0.01 لوت عادي
+  const perMicro = parseCommission(commissionAcrossModes('6.5', std, micro))!;
+  assert.ok(Math.abs(perMicro * 1 - 6.5 * 0.01) < 1e-12);
+  // ذهاب وعودة بلا انزلاق منزلة
+  for (const v of ['7', '6.5', '3.75', '0.5', '0.01', '12'])
+    assert.equal(commissionAcrossModes(commissionAcrossModes(v, std, micro), micro, std), v, v);
+  // الناتج يُقرأ بخانة العمولة نفسها
+  for (const v of ['7', '0.5', '0.01']) assert.ok(parseCommission(commissionAcrossModes(v, std, micro)) != null, v);
+  // حساب يورو: micro يبقى باليورو (÷100)، والسنت بالدولار ⇒ تُمسح (7 EUR ليست 7 USC)
+  const stdEur = { kind: 'std', account: 'EUR' } as const;
+  assert.equal(commissionAcrossModes('7', stdEur, { kind: 'micro', account: 'EUR' }), '0.07');
+  assert.equal(commissionAcrossModes('7', stdEur, cent), '');
+  assert.equal(commissionAcrossModes('7', cent, stdEur), '');
+  assert.equal(commissionAcrossModes('7', std, stdEur), '');
+  // السنت بالدولار أياً كانت شريحة الحساب المخفية
+  assert.equal(commissionAcrossModes('7', cent, { kind: 'cent', account: 'EUR' }), '7');
+  // فارغة / صفر / غير مفهومة / الوضع نفسه ⇒ كما هي
+  assert.equal(commissionAcrossModes('', std, micro), '');
+  assert.equal(commissionAcrossModes('0', std, micro), '0');
+  assert.equal(commissionAcrossModes('abc', std, micro), 'abc');
+  assert.equal(commissionAcrossModes('7.000', std, micro), '7.000');
+  assert.equal(commissionAcrossModes('7', micro, micro), '7');
+  // الكتابة العربية تُقرأ
+  assert.equal(commissionAcrossModes('٧', std, micro), '0.07');
+}
+console.log('positionSize commissionAcrossModes selftest OK');
