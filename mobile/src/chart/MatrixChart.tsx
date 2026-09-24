@@ -2924,21 +2924,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [interactive, tool, pending, pointFromXY, finalizeDrawing]
   );
 
+  // حالة سحب المقبض بمراجع لا بمتغيّرات داخل `useMemo`: `selectPan` يُعاد بناؤه مع كل تغيّر بـ`drawings`
+  // (وأوّل خطوة سحب تغيّرها)، ونظام المستجيب يستدعي معالجات **الخصائص الحالية** — فمتغيّر الإغلاق
+  // يبدأ `null` بالكائن الجديد ويتوقّف المقبض بعد خطوة واحدة تحت الإصبع.
+  const selDragEnd = useRef<'a' | 'b' | null>(null);
+  // النقطة التي يقف عندها الطرف المسحوب الآن، و«هل دُفِعت لقطة تراجع لهذه السحبة؟».
+  // راجع `drawEdit.ts`: اللقطة تُدفَع عند **أول حركة تُغيّر الطرف فعلاً** لا عند بدء
+  // اللمس — وإلا استهلكت لمسةٌ لم تغيّر شيئاً مكاناً من سجلّ التراجع (25 لقطة).
+  const selDragAt = useRef<ChartPoint | null>(null);
+  const selDragPushed = useRef(false);
   const selectPan = useMemo(() => {
-    let dragging: 'a' | 'b' | null = null;
-    // النقطة التي يقف عندها الطرف المسحوب الآن، و«هل دُفِعت لقطة تراجع لهذه السحبة؟».
-    // راجع `drawEdit.ts`: اللقطة تُدفَع عند **أول حركة تُغيّر الطرف فعلاً** لا عند بدء
-    // اللمس — وإلا استهلكت لمسةٌ لم تغيّر شيئاً مكاناً من سجلّ التراجع (25 لقطة).
-    let dragAt: ChartPoint | null = null;
-    let pushedForDrag = false;
     return PanResponder.create({
       onStartShouldSetPanResponder: () => interactive && tool === 'select' && !!selectedId,
       onMoveShouldSetPanResponder: () => interactive && tool === 'select' && !!selectedId,
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (evt) => {
-        dragging = null;
-        dragAt = null;
-        pushedForDrag = false;
+        selDragEnd.current = null;
+        selDragAt.current = null;
+        selDragPushed.current = false;
         if (!selectedId) return;
         const { locationX, locationY } = evt.nativeEvent;
         const d = drawings.find((x) => x.id === selectedId);
@@ -2952,29 +2955,29 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           if (Math.min(da, db) > DRAW_HANDLE_R) return;
           end = db < da ? 'b' : 'a';
         }
-        dragging = end;
-        dragAt = drawingEnd(d, end);
+        selDragEnd.current = end;
+        selDragAt.current = drawingEnd(d, end);
       },
       onPanResponderMove: (evt) => {
-        if (!selectedId || !dragging) return;
+        if (!selectedId || !selDragEnd.current) return;
         const p = pointFromXY(evt.nativeEvent.locationX, evt.nativeEvent.locationY);
-        // المقارنة بـ`dragAt` (آخر موضع بلغه الطرف بهذه السحبة) لا بحالة React: الحالة
+        // المقارنة بـ`selDragAt.current` (آخر موضع بلغه الطرف بهذه السحبة) لا بحالة React: الحالة
         // تصل متأخّرة إطاراً عن أحداث الحركة، فمقارنتها كانت ستسمح بلقطة مكرّرة.
-        if (samePoint(dragAt, p)) return;
-        if (!pushedForDrag) {
+        if (samePoint(selDragAt.current, p)) return;
+        if (!selDragPushed.current) {
           pushDrawHistory();
-          pushedForDrag = true;
+          selDragPushed.current = true;
         }
-        dragAt = p;
-        moveDrawing(selectedId, p, dragging);
+        selDragAt.current = p;
+        moveDrawing(selectedId, p, selDragEnd.current);
       },
       onPanResponderRelease: () => {
-        dragging = null;
-        dragAt = null;
+        selDragEnd.current = null;
+        selDragAt.current = null;
       },
       onPanResponderTerminate: () => {
-        dragging = null;
-        dragAt = null;
+        selDragEnd.current = null;
+        selDragAt.current = null;
       },
     });
   }, [
