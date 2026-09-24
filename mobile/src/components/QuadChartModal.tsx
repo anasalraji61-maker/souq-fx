@@ -17,6 +17,8 @@ import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
 import { mockSeries } from '../mock';
 import { normalizeProvenance } from '../chart/dataSource';
+import { formatPrice } from '../chart/math';
+import { formatPct } from '../chart/dailyChange';
 import { chartExtraLabels } from '../chart/typeLabels';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -70,6 +72,9 @@ export function QuadChartModal({
   useEffect(() => {
     if (!visible) return;
     let alive = true;
+    // الجلب تسلسليّ لأربعة رموز: حتى ينتهي كانت الخلايا تعرض شموع الفريم/الرموز السابقة
+    // (وسعرها بالرأس) بلا أي أثر. الآن مؤشّر تحميل صريح بدل بيانات قديمة تُقرأ كحالية.
+    setSeries([null, null, null, null]);
     (async () => {
       const out: ChartSeries[] = [];
       for (const sym of symbols) {
@@ -136,6 +141,14 @@ export function QuadChartModal({
           {symbols.map((sym, i) => {
             const isLeader = i === leader;
             const following = syncTime && !isLeader;
+            // رأس الخلية كان الرمز وحده: أربعة أزواج بلا سعر ولا نسبة، فالمقارنة — سبب فتح
+            // الرباعي أصلاً — تتطلّب قراءة محور كل شارت. السعر الحيّ (أو آخر إغلاق) بخانات
+            // الزوج، والنسبة بقاعدة رأس الإطار نفسها: اللون من الرقم المطبوع، وصفره مكتوم.
+            const s = series[i];
+            const px = ticks[sym]?.price ?? s?.last ?? NaN;
+            const pct = s && Number.isFinite(s.change_pct) ? s.change_pct : null;
+            const pctR = pct == null ? 0 : Math.round(pct * 100) / 100;
+            const pctColor = pctR > 0 ? colors.bull : pctR < 0 ? colors.bear : colors.textDim;
             return (
               <Pressable
                 key={sym}
@@ -159,6 +172,14 @@ export function QuadChartModal({
                   {syncTime ? (
                     <Text style={[styles.syncBadge, isLeader && styles.syncBadgeLeader]}>
                       {isLeader ? t.cfSyncLeaderBadge : t.cfSyncFollowBadge}
+                    </Text>
+                  ) : null}
+                  {s && Number.isFinite(px) ? (
+                    <Text style={styles.cellPrice}>{formatPrice(px, sym)}</Text>
+                  ) : null}
+                  {s ? (
+                    <Text style={[styles.cellPct, { color: pctColor }]}>
+                      {pct == null ? '—' : formatPct(pct)}
                     </Text>
                   ) : null}
                   {series[i] && normalizeProvenance(series[i]!.data_source).kind === 'demo' ? (
@@ -233,6 +254,8 @@ const styles = StyleSheet.create({
   cellHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
   cellHeadRtl: { flexDirection: 'row-reverse' },
   sym: { color: colors.accent, fontWeight: '800' },
+  cellPrice: { color: colors.text, fontSize: 12, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  cellPct: { fontSize: 11, fontWeight: '800', fontVariant: ['tabular-nums'] },
   demoTag: { color: colors.warn, fontSize: 10, fontWeight: '800' },
   // القيادة والتبعية موسومتان بالرأس وبحدّ الخلية: المزامنة لا تعمل بصمت.
   syncBadge: {
