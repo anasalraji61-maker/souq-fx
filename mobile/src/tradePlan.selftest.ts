@@ -21,6 +21,7 @@ import {
   knownLots,
   recentLotSizes,
   quickJournalSymbols,
+  stopsForPips,
   quickStopPips,
   stopAtPips,
   journalInstrumentKey,
@@ -925,3 +926,51 @@ console.log('tradePlan stopAtPips selftest OK');
   assert.ok(!quickJournalSymbols([{ symbol: 'GBPJPY-ECN' }], D).includes('GBPJPY'));
 }
 console.log('tradePlan quickJournalSymbols selftest OK');
+
+// —— stopsForPips: سعرا الوقف للاتجاهين من نقاط الحاسبة ——
+{
+  assert.deepEqual(stopsForPips({ symbol: 'EURUSD', entry: 1.085, pips: 20 }), [
+    { side: 'buy', price: 1.083 },
+    { side: 'sell', price: 1.087 },
+  ]);
+  assert.deepEqual(stopsForPips({ symbol: 'USDJPY', entry: 157.4, pips: 20 }), [
+    { side: 'buy', price: 157.2 },
+    { side: 'sell', price: 157.6 },
+  ]);
+  assert.deepEqual(stopsForPips({ symbol: 'XAUUSD.m', entry: 2400, pips: 50 }), [
+    { side: 'buy', price: 2395 },
+    { side: 'sell', price: 2405 },
+  ]);
+  // بلا مواصفات / مدخلات غير صالحة
+  assert.deepEqual(stopsForPips({ symbol: 'US30', entry: 39000, pips: 20 }), []);
+  assert.deepEqual(stopsForPips({ symbol: 'EURUSD', entry: NaN, pips: 20 }), []);
+  assert.deepEqual(stopsForPips({ symbol: 'EURUSD', entry: 1.085, pips: 0 }), []);
+  assert.deepEqual(stopsForPips({ symbol: 'EURUSD', entry: 1.085, pips: -5 }), []);
+  // وقف الشراء ≤ 0 يسقط وحده، والبيع يبقى
+  assert.deepEqual(stopsForPips({ symbol: 'EURUSD', entry: 0.001, pips: 50 }), [{ side: 'sell', price: 0.006 }]);
+  // الشبكة: الجهة صحيحة، والمسافة المقروءة بمسطرة اللوت لا تقلّ عن المكتوبة (لا لوت أكبر بعد النقرة)،
+  // وتساويها حرفياً لمسافة بعُشر pip؛ والاتجاه المستنتَج من الوقف (وقف تحت الدخول = شراء) هو الجهة نفسها
+  let n = 0;
+  for (const symbol of ['EURUSD', 'GBPJPY', 'XAUUSD', 'XAGUSD', 'AUDNZD', 'USDCHF.pro']) {
+    const spec = instrumentSpec(symbol)!;
+    const entries = spec.base === 'XAU' ? [1850.3, 2654.87] : spec.base === 'XAG' ? [22.345, 30.125]
+      : spec.quote === 'JPY' ? [157.4, 191.123] : [0.61234, 1.085, 1.27345];
+    for (const entry of entries) {
+      for (const pips of [1, 5, 7.5, 12.3, 20, 33.33, 50, 100.05]) {
+        const out = stopsForPips({ symbol, entry, pips });
+        assert.equal(out.length, 2);
+        for (const { side, price } of out) {
+          assert.equal(price < entry ? 'buy' : 'sell', side);
+          assert.equal(levelSideIssue({ side, entry, sl: price }), null);
+          const got = slPipsFromPrices(spec, entry, price)!;
+          assert.ok(got >= pips - 1e-9, `${symbol} ${side} ${entry} ${pips} → ${got}`);
+          assert.ok(got - pips < 0.1 + 1e-9);
+          if (Number.isInteger(Math.round(pips * 10 * 1e6) / 1e6)) assert.equal(got, pips);
+          n++;
+        }
+      }
+    }
+  }
+  assert.ok(n > 150);
+}
+console.log('tradePlan stopsForPips selftest OK');

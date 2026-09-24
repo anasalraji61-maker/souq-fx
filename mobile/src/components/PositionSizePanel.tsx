@@ -41,7 +41,7 @@ import {
 import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
-import { analyzePlan, formatPips, formatRR, QUICK_RR, targetAtRR, type TradeSide } from '../tradePlan';
+import { analyzePlan, formatPips, formatRR, QUICK_RR, stopsForPips, targetAtRR, type TradeSide } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
 type Props = {
@@ -367,6 +367,18 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spec, planSide, derivedSl, entryPx, stopPx]);
+  /**
+   * نقاطٌ مكتوبة ودخولٌ بلا سعر وقف: شريحتا «▲ شراء / ▼ بيع» بسعر الوقف لكلّ اتجاه (`stopsForPips`) —
+   * المنصّة تطلب سعر الوقف لا النقاط، والاتجاه لا يُعرف هنا إلا من السعر. النقرة تكتب خانة سعر الوقف،
+   * فيُشتقّ منها الاتجاه وشرائح الهدف وزرّ التسجيل؛ والنقاط المقروءة بعدها لا تقلّ عن المكتوبة (لوت لا يكبر).
+   */
+  const stopChoices =
+    spec && stopPx.trim() === '' && !slFromPrices.current && !slTooClose && Number.isFinite(slTyped) && slTyped > 0
+      ? stopsForPips({ symbol: spec.symbol, entry: num(entryPx), pips: slTyped }).map((x) => ({
+          ...x,
+          text: formatPrice(x.price, spec.symbol),
+        }))
+      : [];
   const targetNum = num(targetPx);
   /** الهدف بالجهة الخطأ (فوق الدخول ببيع/تحته بشراء) — خطأ كتابة شائع، يُقال صراحةً بدل تجاهل الهدف */
   const targetWrongSide = plan?.issue === 'tpWrongSide';
@@ -761,6 +773,20 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           >
             <Text style={styles.chipText}>{livePxBusy ? '...' : t.riskCalcUseLivePrice}</Text>
           </Pressable>
+        </View>
+      ) : null}
+      {stopChoices.length > 0 ? (
+        <View style={[styles.chips, rtl && styles.chipsRtl]}>
+          {stopChoices.map((x) =>
+            chip(
+              `${x.side === 'buy' ? '▲' : '▼'} ${x.side === 'buy' ? t.dirBuy : t.dirSell} ${x.text}`,
+              false,
+              () => setStopPx(x.text),
+              `${x.side === 'buy' ? t.dirBuy : t.dirSell} — ${t.journalSlAtPipsA11y
+                .replace('{pips}', slPips.trim())
+                .replace('{price}', x.text)}`
+            )
+          )}
         </View>
       ) : null}
       {livePxMsg ? (

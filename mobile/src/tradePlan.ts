@@ -438,6 +438,34 @@ export function stopAtPips(input: { symbol: string; side: TradeSide; entry: numb
 }
 
 /**
+ * سعرا الوقف **للاتجاهين** من دخولٍ ومسافةٍ بالنقاط: تحت الدخول للشراء، فوقه للبيع (`stopAtPips`).
+ *
+ * لماذا: بالحاسبة يكتب المتداول وقفه بالنقاط («20») والدخول، ثم يضع الأمر بمنصّته — وهي تطلب **سعر**
+ * الوقف، فكان يطرح بيده (0.0020 على زوج ين، أو بالجهة الخطأ). والاتجاه لا تعرفه الحاسبة إلا من سعر الوقف
+ * نفسه، فبلا سعرٍ لا شرائح هدف بالنسبة ولا «سجّل الخطة». شريحتان «▲ شراء 1.0830 · ▼ بيع 1.0870» تكتب
+ * إحداهما خانة سعر الوقف فيتقرّر الاتجاه بنقرة **يختارها** المتداول لا بتخمين.
+ *
+ * المسافة المقروءة بعدها بمسطرة حجم اللوت (`slPipsFromPrices`، للأعلى) **لا تقلّ** عن المكتوبة أبداً — وتساويها
+ * لمسافة بعُشر pip — فالنقرة لا تُكبّر اللوت. `[]` لرمز بلا مواصفات أو مدخل غير صالح؛ جهةٌ يخرج وقفها ≤ 0
+ * تسقط وحدها.
+ */
+export function stopsForPips(input: { symbol: string; entry: number; pips: number }): { side: TradeSide; price: number }[] {
+  const { entry, pips } = input;
+  const spec = instrumentSpec(input.symbol);
+  if (!spec || !finitePos(entry) || !finitePos(pips)) return [];
+  // **بعيداً عن الدخول** لمنزلة الـpipette، لا لأقربها (`stopAtPips`): «33.33» كانت تصير وقفاً على 33.3 —
+  // أضيق من المكتوب، فلوتٌ أكبر من المخاطرة المختارة بعد النقرة. ضجيج الفاصلة يُنظَّف قبل floor/ceil.
+  const decimals = Math.round(-Math.log10(spec.pipSize)) + 1;
+  const scale = 10 ** decimals;
+  return (['buy', 'sell'] as const).flatMap((side) => {
+    const raw = side === 'buy' ? entry - pips * spec.pipSize : entry + pips * spec.pipSize;
+    const scaled = Math.round(raw * scale * 1e6) / 1e6;
+    const price = Number(((side === 'buy' ? Math.floor(scaled) : Math.ceil(scaled)) / scale).toFixed(decimals));
+    return price > 0 ? [{ side, price }] : [];
+  });
+}
+
+/**
  * رمز الصفقة كما يُحفظ بالدفتر: أحرف كبيرة بلا مسافات ولا فواصل (`/` `-` `_`)، ثم 3–12 حرفاً/رقماً/نقطة.
  *
  * لماذا: «EUR/USD» و«eur usd» كانا يُحفظان كما كُتبا، فتنقسم إحصاءات الدفتر وشرائح فلتره إلى أداتين
