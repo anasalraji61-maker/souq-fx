@@ -42,6 +42,7 @@ import {
   stopAtPips,
   averageR,
   pnlPctContradictsCash,
+  stopTooClose,
   journalStats,
   type JournalStats,
   QUICK_RR,
@@ -390,6 +391,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const p = pnum(tp);
     const issue = levelSideIssue({ side, entry: e, sl: s, tp: p });
     if (issue) return { issue, plan: null as TradePlan | null };
+    // وقفٌ أقرب من 1 pip بلا هدف بعد: التحذير نفسه بدل «المخاطرة 0.1 pip» كأنها خطة عادية
+    if (s != null && p == null && stopTooClose({ symbol: symbol.trim(), side, entry: e, sl: s })) {
+      return { issue: 'slTooClose' as PlanIssue, plan: null };
+    }
     if (s == null || p == null) return null;
     return { issue: null, plan: analyzePlan({ symbol: symbol.trim(), side, entry: e, sl: s, tp: p }) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -406,7 +411,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     if (e == null || s == null || levelSideIssue({ side, entry: e, sl: s })) return [];
     const sym = symbol.trim().toUpperCase();
     const spec = instrumentSpec(sym);
-    if (spec && Math.abs(e - s) < spec.pipSize * (1 - 1e-6)) return [];
+    if (stopTooClose({ symbol: sym, side, entry: e, sl: s })) return [];
     return QUICK_RR.flatMap((rr) => {
       const v = targetAtRR({ symbol: sym, side, entry: e, sl: s, rr });
       // `tol`: الشريحة «مختارة» حين تطابق الخانةُ سعرَها (نصف pipette، أو مطابقة شبه تامّة بلا مواصفات)
@@ -1473,7 +1478,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           })}
         </View>
       ) : null}
-      {draft?.issue ? (
+      {draft?.issue && draft.issue !== 'slTooClose' ? (
         <Text style={[styles.formError, { textAlign: align }]}>{planIssueText(draft.issue)}</Text>
       ) : draft?.plan?.ok ? (
         <>
@@ -1482,7 +1487,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             <Text style={[styles.planWarn, { textAlign: align }]}>{t.planLowRR}</Text>
           ) : null}
         </>
-      ) : draft?.plan?.issue === 'slTooClose' ? (
+      ) : draft?.issue === 'slTooClose' || draft?.plan?.issue === 'slTooClose' ? (
         // تحذير لا يمنع الحفظ: اليومية تسجّل ما حدث فعلاً
         <Text style={[styles.planWarn, { textAlign: align }]}>⚠ {t.planSlTooClose}</Text>
       ) : !draft && draftRisk ? (

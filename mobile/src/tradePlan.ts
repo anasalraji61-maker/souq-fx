@@ -97,6 +97,20 @@ export function analyzePlan(input: {
 }
 
 /**
+ * الوقف بالجهة الصحيحة لكنه **أقرب من 1 pip** للدخول — حدّ `analyzePlan` (`slTooClose`) نفسه بلا حاجة لهدف.
+ * الدفتر كان يحذّر منه فقط حين يُكتب الهدف أيضاً؛ بوقفٍ وحده كان يعرض «المخاطرة 0.1 pip (1.00 USD)» كخطة
+ * عادية، ثم لا R للصفقة بعد إغلاقها (`realizedR`) بلا سبب مرئي. false لرمزٍ مجهول الـpip أو وقفٍ بالجهة الخطأ
+ * (لذاك تحذيره) أو أسعار غير صالحة.
+ */
+export function stopTooClose(input: { symbol: string; side: TradeSide; entry: number | null; sl: number | null }): boolean {
+  const { side, entry, sl } = input;
+  if (!finitePos(entry) || !finitePos(sl)) return false;
+  const risk = side === 'buy' ? entry - sl : sl - entry;
+  const pip = instrumentSpec(input.symbol)?.pipSize ?? null;
+  return pip != null && risk > 0 && risk < pip * (1 - 1e-6);
+}
+
+/**
  * "1:2.0" — منزلة عشرية واحدة تكفي للقرار، ونقرّب لا نقصّ من 1 فما فوق.
  *
  * **تحت 1 نقصّ**: 0.96 كانت تُطبع «1:1.0» وتحتها «⚠ الربح أقل من المخاطرة» — رقمٌ يقول تعادلاً وتحذيرٌ

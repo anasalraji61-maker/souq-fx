@@ -15,6 +15,7 @@ import {
   exitPreview,
   averageR,
   pnlPctContradictsCash,
+  stopTooClose,
   journalStats,
   roundHalfEven,
   floatingResult,
@@ -1255,3 +1256,32 @@ console.log('tradePlan sub-pip stop R selftest OK');
   assert.equal(pnlPctContradictsCash([t('EURUSD', 'sell', 1.1, 1.105, 0.5)], 0.2), true);
 }
 console.log('tradePlan pnlPctContradictsCash selftest OK');
+
+// stopTooClose: حدّ slTooClose بلا هدف — الدفتر يحذّر بوقفٍ وحده
+{
+  assert.equal(stopTooClose({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08499 }), true);
+  assert.equal(stopTooClose({ symbol: 'EURUSD', side: 'sell', entry: 1.085, sl: 1.08505 }), true);
+  // 1 pip بالضبط (هامش الفاصلة العائمة) وما فوقه: لا
+  assert.equal(stopTooClose({ symbol: 'EURUSD', side: 'buy', entry: 1.0851, sl: 1.085 }), false);
+  assert.equal(stopTooClose({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083 }), false);
+  // الجهة الخطأ/الوقف = الدخول: تحذير آخر، لا هذا
+  assert.equal(stopTooClose({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08501 }), false);
+  assert.equal(stopTooClose({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.085 }), false);
+  // ين وذهب بحجم pip كلٍّ منهما
+  assert.equal(stopTooClose({ symbol: 'USDJPY', side: 'buy', entry: 150, sl: 149.995 }), true);
+  assert.equal(stopTooClose({ symbol: 'USDJPY', side: 'buy', entry: 150, sl: 149.99 }), false);
+  assert.equal(stopTooClose({ symbol: 'XAUUSD', side: 'sell', entry: 2350, sl: 2350.05 }), true);
+  assert.equal(stopTooClose({ symbol: 'XAUUSD', side: 'sell', entry: 2350, sl: 2350.1 }), false);
+  // رمز مجهول أو أسعار غير صالحة: لا
+  assert.equal(stopTooClose({ symbol: 'ZZZ', side: 'buy', entry: 1, sl: 0.99999 }), false);
+  assert.equal(stopTooClose({ symbol: 'EURUSD', side: 'buy', entry: null, sl: 1.08 }), false);
+  assert.equal(stopTooClose({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: null }), false);
+  // يتّفق مع analyzePlan حين يُكتب الهدف، ومع realizedR الذي لا يعطي R لهذا الوقف
+  for (const [side, entry, sl] of [['buy', 1.085, 1.08499], ['buy', 1.0851, 1.085], ['sell', 1.085, 1.08505], ['sell', 1.085, 1.0852]] as const) {
+    const tp = side === 'buy' ? entry + 0.01 : entry - 0.01;
+    const close = stopTooClose({ symbol: 'EURUSD', side, entry, sl });
+    assert.equal(analyzePlan({ symbol: 'EURUSD', side, entry, sl, tp }).issue === 'slTooClose', close, `${side} ${sl}`);
+    assert.equal(realizedR({ symbol: 'EURUSD', side, entry, sl, exit: tp }) == null, close, `R ${side} ${sl}`);
+  }
+}
+console.log('tradePlan stopTooClose selftest OK');
