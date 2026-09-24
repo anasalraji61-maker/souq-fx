@@ -264,6 +264,72 @@ export function exitPreview(input: {
   return { ...mv, r: realizedR({ side, entry, sl, exit }), cash };
 }
 
+/**
+ * تقريبٌ مطابق لتقريب بايثون (`round`) الذي يحسب به الخادم إحصاءات الدفتر: **النصف إلى الزوجي**،
+ * لا `Math.round` الذي يرفع النصف دائماً. ليس تدقيقاً نظرياً: نسبة النجاح بست عشرة صفقة مغلقة
+ * وفوزٍ واحد هي 6.25 بالضبط (قيمة ثنائية تامّة، لا تقريب عائم) — الخادم يكتبها 6.2 و`Math.round`
+ * يكتبها 6.3. ومجموع النتائج يقع على 0.125 و0.375 وأمثالها كثيراً. فالفارق يظهر بالشاشة رقماً
+ * يخالف ما يعرضه الخادم لنفس الصفقات.
+ */
+export function roundHalfEven(v: number, d: 1 | 2): number {
+  if (!Number.isFinite(v)) return v;
+  /**
+   * النصف التامّ لا يقع إلا على مضاعفٍ فرديّ لـ0.25 (خانة) أو 0.125 (خانتان) — وحدها الأنصافُ
+   * الممثَّلة ثنائياً تماماً. و«19.925» المكتوبة ليست نصفاً: قيمتها الثنائية 19.92500000000000071
+   * أي **فوق** النصف، فالخادم يرفعها لـ19.93. وضربها في 100 يُنتج 1992.5 بالضبط فيُخفي ذلك —
+   * ولهذا لا يُستعمل الضرب إلا حيث ثبت أنه مضبوط.
+   */
+  const y = v * (d === 1 ? 4 : 8);
+  if (Number.isInteger(y) && Math.abs(y % 2) === 1) {
+    const p = d === 1 ? 10 : 100;
+    const fl = Math.floor(v * p); // مضبوط هنا: القيمة ثنائية تامّة
+    return (fl % 2 === 0 ? fl : fl + 1) / p; // النصف إلى الزوجي، بالإشارتين
+  }
+  // ما عدا ذلك: toFixed يُقرِّب من القيمة الثنائية **الدقيقة** لا من حاصل ضربٍ مُقرَّب، كبايثون.
+  return Number(v.toFixed(d));
+}
+
+/** إحصاءات الدفتر بشكل ردّ الخادم (`db.trade_stats`) — نسبة النجاح وصافي/متوسط النتائج بالنسبة. */
+export type JournalStats = {
+  trade_count: number;
+  win_rate: number;
+  total_pnl_pct: number;
+  avg_win: number;
+  avg_loss: number;
+  best: number;
+  worst: number;
+};
+
+/**
+ * إحصاءات الدفتر لقائمة صفقات (الدفتر مفلتراً على أداة) **بمعادلة الخادم نفسها** (`db.trade_stats`):
+ * المغلقة ذات `pnl` منتهٍ فقط، الربح > 0 والتعادل يُعدّ خسارة (`<= 0`)، نسبة النجاح بخانة والبقيّة
+ * بخانتين بتقريب بايثون (`roundHalfEven`). كانت محسوبة داخل اللوحة بلا اختبار — ورقمٌ يخالف ما يقوله
+ * الخادم لنفس الصفقات (6.3% هنا و6.2% بلا فلتر) يجعل المتداول يشكّ بالدفتر كلّه.
+ */
+export function journalStats(
+  trades: readonly { status: string; pnl?: number | string | null }[]
+): JournalStats {
+  const pnls = trades
+    .filter((tr) => tr.status === 'closed' && tr.pnl != null && Number.isFinite(Number(tr.pnl)))
+    .map((tr) => Number(tr.pnl));
+  if (pnls.length === 0) {
+    return { trade_count: 0, win_rate: 0, total_pnl_pct: 0, avg_win: 0, avg_loss: 0, best: 0, worst: 0 };
+  }
+  const wins = pnls.filter((v) => v > 0);
+  const losses = pnls.filter((v) => v <= 0);
+  const sum = (a: number[]) => a.reduce((x, y) => x + y, 0);
+  const r2 = (v: number) => roundHalfEven(v, 2);
+  return {
+    trade_count: pnls.length,
+    win_rate: roundHalfEven((wins.length / pnls.length) * 100, 1),
+    total_pnl_pct: r2(sum(pnls)),
+    avg_win: wins.length ? r2(sum(wins) / wins.length) : 0,
+    avg_loss: losses.length ? r2(sum(losses) / losses.length) : 0,
+    best: r2(Math.max(...pnls)),
+    worst: r2(Math.min(...pnls)),
+  };
+}
+
 /** +1.8R / −1R / 0R */
 export function formatR(r: number | null): string | null {
   if (r == null || !Number.isFinite(r)) return null;
