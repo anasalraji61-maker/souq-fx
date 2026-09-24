@@ -1205,7 +1205,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
                   setExit(x.text);
                   setFormError(null);
                 }}
-                accessibilityLabel={`${t.journalExitA11y} = ${label}`}
+                // «= SL 1.0820» يُقرأ حروفاً لقارئ الشاشة («إس إل») — الجملة الكاملة بلغة المستخدم بدلها
+                accessibilityLabel={(x.kind === 'sl'
+                  ? t.journalExitAtSlA11y
+                  : x.kind === 'be'
+                    ? t.journalExitAtBeA11y
+                    : t.journalExitAtTpA11y
+                ).replace('{price}', x.text)}
               >
                 <Text style={[styles.qChipText, on ? styles.chipTextOn : { color: x.kind === 'sl' ? colors.bear : x.kind === 'be' ? colors.textDim : colors.bull }]}>
                   {`= ${label}`}
