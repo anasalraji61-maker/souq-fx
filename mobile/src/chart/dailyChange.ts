@@ -11,6 +11,7 @@
  * وأداة تتداول بالعطلة (شمعة سبت بالسلسلة — عملات رقمية) تبقى على أيام UTC العادية.
  */
 import type { Candle } from '../api';
+import { forexSundayOpenSec } from './marketHours';
 
 export type Direction = 'up' | 'down' | 'flat';
 
@@ -21,8 +22,6 @@ export type DailyChange = {
 };
 
 const DAY_SEC = 86400;
-/** افتتاح الأسبوع التقريبي للفوركس مساء الأحد (UTC) — قبله السوق مغلق وجلسة «اليوم» ما زالت الجمعة. */
-const SUNDAY_OPEN_SEC = 20 * 3600;
 
 /** 0=الأحد … 6=السبت لرقم يوم UTC منذ 1970-01-01 (الخميس). */
 const weekdayOf = (day: number) => (((day + 4) % 7) + 7) % 7;
@@ -37,7 +36,9 @@ function sessionOf(tSec: number, weekendMerge: boolean, isNow: boolean): number 
   const wd = weekdayOf(day);
   if (wd === 6) return day - 1;
   if (wd === 0) {
-    if (isNow && tSec - day * DAY_SEC < SUNDAY_OPEN_SEC) return day - 2;
+    // قبل افتتاح الأسبوع (17:00 نيويورك: 21:00 UTC صيفاً، 22:00 شتاءً) جلسة «اليوم» ما زالت
+    // الجمعة. كان الحدّ 20:00 ثابتاً: ساعة أو ساعتان من سوق مغلق تعرض «0.00%» بدل حركة الجمعة.
+    if (isNow && tSec < forexSundayOpenSec(day * DAY_SEC)) return day - 2;
     return day + 1;
   }
   return day;

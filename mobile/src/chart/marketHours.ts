@@ -39,6 +39,14 @@ function nyFivePmUtcSec(dayStartSec: number): number {
   return at + (nyDst(at) ? 0 : 3600);
 }
 
+/**
+ * افتتاح الأسبوع (الأحد 17:00 نيويورك) بالثواني UTC ليوم الأحد الذي يبدأ عند `sundayStartSec`
+ * (منتصف ليل UTC): 21:00 صيفاً، 22:00 شتاءً.
+ */
+export function forexSundayOpenSec(sundayStartSec: number): number {
+  return nyFivePmUtcSec(sundayStartSec);
+}
+
 /** مفتوح الآن؟ بتوقيت UTC — 0=الأحد..6=السبت (نفس اصطلاح Date#getUTCDay). */
 export function isForexMarketOpen(symbol: string, now: Date = new Date()): boolean {
   const sym = symbol.toUpperCase();

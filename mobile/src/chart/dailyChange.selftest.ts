@@ -24,6 +24,12 @@ assert.equal(prevCloseFromDaily([{ ...thu, close: NaN }, fri]), null);
 // السبت/صباح الأحد (السوق مغلق): الجمعة مقابل الخميس كما تعرضه تطبيقات التداول
 assert.equal(prevCloseFromDaily([wed, thu, fri], D('2026-09-19') + 12 * H), 1.09);
 assert.equal(prevCloseFromDaily([wed, thu, fri], D('2026-09-20') + 10 * H), 1.09);
+// الأحد 20:30 UTC صيفاً (الافتتاح 21:00) ثم 21:30 شتاءً (الافتتاح 22:00): السوق مغلق بعد
+assert.equal(prevCloseFromDaily([wed, thu, fri], D('2026-09-20') + 20.5 * H), 1.09);
+const friW = { time: D('2026-11-13'), close: 1.1 };
+const thuW = { time: D('2026-11-12'), close: 1.09 };
+assert.equal(prevCloseFromDaily([thuW, friW], D('2026-11-15') + 21.5 * H), 1.09);
+assert.equal(prevCloseFromDaily([thuW, friW], D('2026-11-15') + 22.5 * H), 1.1);
 // مساء الأحد بعد الافتتاح وقبل ظهور شمعة الأحد: المرجع إغلاق الجمعة (كان الخميس)
 assert.equal(prevCloseFromDaily([wed, thu, fri], D('2026-09-20') + 22 * H), 1.1);
 // شمعة الأحد جزء من جلسة الإثنين: المرجع الجمعة مساء الأحد ويوم الإثنين (كان إغلاق شمعة الأحد)
