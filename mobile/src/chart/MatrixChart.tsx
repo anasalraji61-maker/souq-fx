@@ -10910,9 +10910,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       ? source.start + source.plot.length - 1
                       : source.all.length - 1;
                     const rawLinePrice = d.a.price + slope * (lastGlobalIndex - d.a.index);
-                    const lineDecimals = symbolPriceDecimals(series.symbol);
-                    const currentPrice =
-                      lineDecimals != null ? Number(rawLinePrice.toFixed(lineDecimals)) : rawLinePrice;
+                    // بمنازل الشارت نفسها (`fmtPrice`): لأداة بلا منازل معروفة (US30، BTCUSD، النفط) كان
+                    // المستوى المحفوظ 39123.4567891234 والمعروض 39123.46.
+                    const currentPrice = Number(fmtPrice(rawLinePrice));
                     return (
                       <Pressable
                         accessibilityRole="button"

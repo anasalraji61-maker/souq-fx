@@ -1,6 +1,6 @@
 /**
  * مواصفة الـpip **للشارت وحده** (منازل السعر وكل بُعد بالـpip): `instrumentSpec` + رموز حساب Exness Cent
- * بـ«c» ملاصقة («EURUSDc»، «USDJPYc»، «XAUUSDc»، «GOLDc»).
+ * بـ«c» ملاصقة («EURUSDc»، «USDJPYc»، «XAUUSDc»، «GOLDc»)، ولواحق الوسطاء الصغيرة («USDJPYmicro»، «GOLDm»).
  *
  * لماذا لا تكفي `instrumentSpec`: ترفض الحرف الملاصق عمداً (عقد الحاسبة يختلف بحساب السنت، وحرفٌ ملاصق قد
  * يكون أداةً أخرى)، فكان شارت «USDJPYc» يطبع 157.42 بدل 157.423 (التقدير من حجم الرقم)، ولا بُعد بالـpip
@@ -13,6 +13,12 @@ import { instrumentSpec, type InstrumentSpec } from '../positionSize';
 export function chartPipSpec(symbol: string): InstrumentSpec | null {
   const direct = instrumentSpec(symbol);
   if (direct) return direct;
-  const m = /^([A-Z]{6}|GOLD|SILVER)C$/i.exec(symbol.trim());
-  return m ? instrumentSpec(m[1]!) : null;
+  const t = symbol.trim();
+  const m = /^([A-Z]{6}|GOLD|SILVER)C$/i.exec(t);
+  if (m) return instrumentSpec(m[1]!);
+  // لاحقة وسيط **صغيرة الأحرف** ملاصقة («USDJPYmicro» XM، «EURUSDpro»، «EURUSDi»، «USDJPYm#»): كانت تُرفض
+  // فيُقدَّر العدد من حجم الرقم (157.42 بدل 157.423، والتقاطع يلتصق بمنزلتين) ولا pip بأي قراءة. الصغيرة
+  // وحدها: الملاصقة الكبيرة قد تكون أداةً أخرى («EURUSDT» يورو/تيثر). و«GOLDm»/«SILVERm» معها.
+  const glued = /^([A-Z]{6}|GOLD|SILVER|Gold|Silver|gold|silver)[a-z]{1,5}[#+]?$/.exec(t);
+  return glued ? instrumentSpec(glued[1]!) : null;
 }

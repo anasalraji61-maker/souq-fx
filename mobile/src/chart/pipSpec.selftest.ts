@@ -31,6 +31,18 @@ eq('XNGUSD 9.985 ref 10.01', formatPrice(9.985, 'XNGUSD', 10.01), '9.985');
 eq('no ref ⇒ by size', formatPrice(99.8, 'USOIL'), '99.800');
 eq('ref ignored for known pair', formatPrice(157.4234, 'USDJPY', 1.08), '157.423');
 eq('bad ref ⇒ by size', formatPrice(5.5, 'X', NaN), '5.50000');
+// لواحق وسطاء صغيرة ملاصقة: منازل الزوج وبُعد بالـpip؛ الكبيرة تبقى مرفوضة
+eq('USDJPYmicro', chartPipSpec('USDJPYmicro')?.pipSize, 0.01);
+eq('USDJPYmicro 3 decimals', formatPrice(157.4234, 'USDJPYmicro'), '157.423');
+eq('EURUSDpro', chartPipSpec('EURUSDpro')?.symbol, 'EURUSD');
+eq('EURUSDi', chartPipSpec('EURUSDi')?.symbol, 'EURUSD');
+eq('USDJPYm#', chartPipSpec('USDJPYm#')?.symbol, 'USDJPY');
+eq('GOLDm', chartPipSpec('GOLDm')?.symbol, 'XAUUSD');
+eq('SILVERm', chartPipSpec('SILVERm')?.symbol, 'XAGUSD');
+eq('GOLDm pips', measurePipsText('GOLDm', 2650, 2652.5), '+25.0 pip');
+eq('EURUSDT tether', chartPipSpec('EURUSDT'), null);
+eq('BTCUSDpro', chartPipSpec('BTCUSDpro'), null);
+eq('EURUSDmicropro too long', chartPipSpec('EURUSDmicropro'), null);
 if (fail) {
   console.log(`pipSpec: ${fail} FAIL`);
   process.exit(1);
