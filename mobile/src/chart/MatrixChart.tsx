@@ -126,7 +126,7 @@ import {
 import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
 import { planHiLoLabels } from './hiLoLabels';
 import { planDayBreaks } from './dayBreaks';
-import { tradingDayStartSec } from './marketHours';
+import { projectBarTimeSec, tradingDayStartSec } from './marketHours';
 import { planSessionRuns, type SessionId } from './sessions';
 import { formatPct, prevSessionFromDaily, validSessionBar } from './dailyChange';
 import { useDailyPrevBar } from './dailyRefStore';
@@ -4977,7 +4977,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // الوسم يتّسع لسنة شمعة من سنة سابقة (`formatCrossTime`) — بالعرض الثابت كانت الساعة تُقصّ «…».
   const crossTimeText = crossCandle
     ? formatCrossTime(
-        barTime(crossCandle) + crossAhead * timeframeStepSec(series.timeframe),
+        // منطقة المستقبل تتخطّى عطلة نهاية الأسبوع: يمين شمعة الجمعة يُقرأ افتتاح الأحد لا «السبت 03:00»
+        projectBarTimeSec(series.symbol, barTime(crossCandle), timeframeStepSec(series.timeframe), crossAhead),
         visibleTimeSpan,
         tr.mcMonths,
         dayCandles

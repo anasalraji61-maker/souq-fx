@@ -120,3 +120,46 @@ export function tradingDayStartSec(symbol: string, sec: number): number {
   const today = nyFivePmUtcSec(dayStart);
   return sec >= today ? today : nyFivePmUtcSec(dayStart - DAY_SEC);
 }
+
+/** بداية شمعة الفوركس بعطلة نهاية الأسبوع (من إغلاق الجمعة حتى افتتاح الأحد)؟ العطل لا تُحسب. */
+function inForexWeekend(sec: number): boolean {
+  const dayStart = Math.floor(sec / DAY_SEC) * DAY_SEC;
+  const day = new Date(dayStart * 1000).getUTCDay();
+  if (day === 6) return true;
+  if (day === 0) return sec < nyFivePmUtcSec(dayStart);
+  if (day === 5) return sec >= nyFivePmUtcSec(dayStart);
+  return false;
+}
+
+/**
+ * زمن الشمعة رقم `ahead` بعد الشمعة `lastSec` (منطقة المستقبل بالشارت) **متخطّياً عطلة نهاية الأسبوع**.
+ * كان `lastSec + ahead × step`: تقاطع يمين شمعة الجمعة 16:00 على الساعة يقرأ «السبت 03:00» بينما
+ * الشمعة الحقيقية التالية بتلك الخانة تُفتح مساء الأحد — والمتداول يخطّط على هذا الوسم لإصدار بيانات.
+ * - دون اليوم: خطوة لا تبدأ داخل العطلة؛ ما يقع فيها يقفز لشمعة الافتتاح (الشمعة المحتوية لـ17:00 نيويورك الأحد).
+ * - اليومي: السبت والأحد بلا شموع (شموع 00:00 UTC). الأسبوعي فما فوق والكريبتو: كما كان.
+ */
+export function projectBarTimeSec(symbol: string, lastSec: number, stepSec: number, ahead: number): number {
+  const n = Math.max(0, Math.floor(ahead));
+  if (!(stepSec > 0) || !Number.isFinite(lastSec) || n === 0) return lastSec + n * (stepSec || 0);
+  if (ALWAYS_OPEN.has(symbol.toUpperCase()) || stepSec > DAY_SEC) return lastSec + n * stepSec;
+  let t = lastSec;
+  for (let i = 0; i < n; i++) {
+    t += stepSec;
+    if (stepSec === DAY_SEC) {
+      let day = new Date(t * 1000).getUTCDay();
+      while (day === 6 || day === 0) {
+        t += DAY_SEC;
+        day = new Date(t * 1000).getUTCDay();
+      }
+      continue;
+    }
+    if (!inForexWeekend(t)) continue;
+    // افتتاح الأحد التالي، ثم بداية الشمعة التي تحتويه على شبكة الفريم
+    const dayStart = Math.floor(t / DAY_SEC) * DAY_SEC;
+    const dow = new Date(dayStart * 1000).getUTCDay();
+    const open = forexSundayOpenSec(dayStart + ((7 - dow) % 7) * DAY_SEC);
+    const bar = Math.floor(open / stepSec) * stepSec;
+    t = bar > t - stepSec ? bar : open;
+  }
+  return t;
+}
