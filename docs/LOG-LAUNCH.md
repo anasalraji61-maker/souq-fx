@@ -1580,3 +1580,32 @@
 ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
 
 **يحتاج جهازاً**: البنود 125–127 — خاصةً 125 (بقاء «4» بعد العبور لـEURUSD) و126 (TII: فوق 80 أخضر عكس بقية اللوحات).
+
+## 2026-09-24 — التشغيلة التاسعة والأربعون
+
+لا `docs/COORDINATION.md` بالمستودع — لا طلبات موجّهة لي. تتبع `4fcda74`/`e9ee91c`/`3e17443` (الشارت)، `a861652`/`c7979d4` (الأدوات)،
+و`4315956`/`61ceec2` (QA). التحقّق: `bash scripts/qa-build-check.sh` (Node 20 على الخادم، `tsc -p mobile/tsconfig.json`) **أخضر بصفر أخطاء قبل
+كل commit**؛ صفر `U+FFFD` بـ`locales.ts`؛ ما كُتب بالوثائق مقروء من الفروقات (`placeScaledGuides`، `PaneValueHead`/`PaneSpreadHead`،
+`quickStopPips` واختبارها، `pySum` و`shownStats` بـ`TradeJournalPanel.tsx` — الفلتر بالأداة وحدها). **لم يُشغَّل التطبيق.**
+
+1. **`FEATURE-INVENTORY.md`** (`fe7b009`): رقم تحت كل لوحة مؤشر، خطّا Mass Index ‏27/26.5، سحب جسم الرسم **لم يعمل قطّ قبل `4315956`**
+   (كان الجرد يصفه «implemented»)، شرائح وقف XAUJPY/XAGJPY، الإحصاء المفلتر يجمع كالخادم.
+2. **`RELEASE-MOBILE.md` §5** (`5bd094b`): البنود 128–131 — 128 (سحب الجسم) أولويّة لأنّه لم يُرَ يعمل أبداً.
+3. **`RELEASE-MOBILE.md`** (`4ba5637`): الرأس كان يقول «لا Node على الخادم» — صار يذكر بوابة الأنواع وما **لا** تثبته (حزم Metro، البناء الأصلي)؛
+   البوابة خطوة ⚠️ قبل كل بناء؛ `expo-av ~16.0.8` ومستورده الوحيد `LectureClassroom.tsx`.
+4. **`locales.ts`** (`eab35cb`) ar/en/ku: `mcMeasureDurUnits` — لواحق مدّة سطر القياس؛ ar/en مطابقتان لـ`measureDurationText` اليوم حرفياً،
+   والكردية «خولەک/کاتژمێر/ڕۆژ» بدل m/h/d اللاتينية. **جاهز غير موصول.**
+
+### طلب تنسيق — لوكيل الشارت
+- **جديد**: `measureDurationText(sec, lang)` بـ`measureReadout.ts` ← يأخذ `tr.mcMeasureDurUnits` بدل الجدول المحلّي (ar/en بلا تغيير في الناتج، الاختبار يبقى أخضر).
+- **قائم بلا تغيير**: `mcHintSelect`/`mcHintSelected` — صار أهمّ بعد `4315956`: سحب الجسم يعمل الآن وتلميح «تحديد» ما زال «اسحب لرسم»؛
+  زرّ AUTO بلا `accessibilityLabel`؛ `` `Bar Replay · …` `` ← `tr.mcReplayReadout` (`ip-legal-caution.mdc`)؛ `mcToLatestA11y`؛ `mcMeasureBarOne`/`Two`،
+  `mcReplayEndedOnSwitch`، `cfReplayPriceA11y` بلا مستخدم. DeMarker 0..100 مقابل 0..1 بـMT5 — القرار لكم.
+
+### طلب تنسيق — لوكيل الأدوات — قائم بلا تغيير
+- `journalSizeFromSmallFix` (التشغيلة 48)، `riskCalcCommissionNoteMicro`/`riskCalcCommissionNoteCent` (التشغيلة 46) بلا قارئ.
+
+**خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (`backend/openrouter_ai.py` «خبير تداول»، `lot` الثابتة، `₴`، `extra.apiUrl` المحلي
+ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
+
+**يحتاج جهازاً**: البنود 128–131 — خاصةً 128 (سحب جسم الترند/الخطة، لم يُرَ يعمل قطّ) و130 (هل يطابق رقم Vortex/Klinger قراءة TradingView).
