@@ -30,7 +30,7 @@
 | قائمة متابعة شخصية | **implemented** (مهام 10–13، 19) | `watchlistStoreCore.ts`, `watchlistParse.ts`, `WatchlistPanel.tsx`, `TerminalScreen.tsx` | حفظ v2 موثوق؛ طابور؛ فشل حفظ/تحميل+إعادة؛ إدارة هاتف؛ قبول بصري (مهمة 13)؛ لمسة ضغط على إضافة/افتراضي/إضافة رمز (مهمة 19) |
 | فريمات 1–4 + بطل | implemented | `TerminalScreen.tsx`, `ChartFrame.tsx`, `FrameSizedGrid.tsx` | مربع/مستطيل؛ تعبئة سطح المكتب لـ 2×2+ |
 | فريم الظل | implemented | `TerminalScreen.tsx`, `shadowOverlay.ts` | مسارات عمودية s/m/b |
-| 2×2 / Focus | implemented | `QuadChartModal.tsx`, `FocusChartModal.tsx` | |
+| 2×2 / Focus | implemented | `QuadChartModal.tsx`, `FocusChartModal.tsx` | مزامنة زمن اختيارية بزرّ؛ الشارت المضغوط «يقود» والبقية تتبع وقته (`leader`)؛ الجلب متوازٍ وكل خلية تظهر لحظة وصولها |
 | مقارنة رمز | implemented | `compare.ts`, `FocusChartModal.tsx` | |
 | مزامنة نافذة بين شارتات | **implemented** (مُتحقق سلوكياً — مهمة 7) | `MatrixChart.tsx`, `ChartFrame.tsx`, `TerminalScreen.tsx` | OFF افتراضياً؛ سكون بلا حلقة نشر؛ OFF→ON يعيد النشر؛ بان/زوم يزيد النشر عند تغيّر النطاق؛ 2/4 فريمات؛ يختفي عند 1 فريم؛ زمن فقط؛ معطل في الظل |
 | DOM lite | جزئي / تقديري | `DomLitePanel.tsx`, `orderflow.ts` | ليس L2 حقيقي |
@@ -50,7 +50,7 @@
 
 | العنصر | الحالة | مسارات | ملاحظة |
 |--------|--------|--------|--------|
-| أدوات الرسم | implemented | `MatrixChart.tsx`, `DRAW_TOOLS` | trend/ray/hline/vline/rect/fib/zone/note/measure |
+| أدوات الرسم | implemented | `MatrixChart.tsx`, `DRAW_TOOLS` | trend/ray/hline/vline/rect/fib/zone/note/measure؛ زرّ «تراجع» (`undoDrawing`)؛ القياس يكتب «عدد الشموع · pip · %» فوق الإصبع أثناء السحب (`measureReadout.ts`) |
 | تنبيه من خط أفقي | implemented | `FocusChartModal.tsx` | عبر API تنبيهات |
 
 ## 4. Saving / persistence
@@ -113,8 +113,8 @@
 
 | العنصر | الحالة | مسارات | ملاحظة |
 |--------|--------|--------|--------|
-| حاسبة حجم المركز | implemented (حساب محلي) | `positionSize.ts`, `tradePlan.ts`, `PositionSizePanel.tsx` (أدوات ← المخاطرة) | وقف بالـpip أو من سعرَي الدخول والوقف؛ شرائح هدف `QUICK_RR` = 1:1 · 1:1.5 · 1:2 · 1:3؛ المخاطرة الفعلية % بعد تقريب اللوت؛ تحذير أصغر لوت 0.01؛ سعر التحويل من API مع إدخال يدوي عند الفشل؛ اختبارات ذاتية `*.selftest.ts` |
-| دفتر الصفقات | implemented (SQLite) | `TradeJournalPanel.tsx` (أدوات ← الدفتر), `db.py` (`add_trade`/`close_trade`) | إدخال يدوي فقط — لا ربط وسيط؛ إحصاءات: نسبة النجاح، صافي النقاط، متوسط R للصفقات بوقف مسجَّل؛ المال المعرَّض بعملة التسعير حين يُكتب الحجم |
+| حاسبة حجم المركز | implemented (حساب محلي) | `positionSize.ts`, `tradePlan.ts`, `PositionSizePanel.tsx` (أدوات ← المخاطرة) | وقف بالـpip أو من سعرَي الدخول والوقف؛ شرائح هدف `QUICK_RR` = 1:1 · 1:1.5 · 1:2 · 1:3؛ المخاطرة الفعلية % بعد تقريب اللوت؛ تحذير أصغر لوت 0.01 مع كم يخاطر أصغر لوت فعلاً (مال ونسبة، `riskForLots`)؛ سعر التحويل من API مع إدخال يدوي عند الفشل؛ اختبارات ذاتية `*.selftest.ts` |
+| دفتر الصفقات | implemented (SQLite) | `TradeJournalPanel.tsx` (أدوات ← الدفتر), `db.py` (`add_trade`/`close_trade`) | إدخال يدوي فقط — لا ربط وسيط؛ شرائح هدف `QUICK_RR` نفسها تحت الوقف والهدف؛ إحصاءات: نسبة النجاح، صافي النقاط، متوسط R للصفقات بوقف مسجَّل؛ المال المعرَّض بعملة التسعير حين يُكتب الحجم |
 | تسجيل الخطة من الحاسبة بالدفتر | implemented | `PositionSizePanel.tsx` (`riskCalcLogToJournal`) | تُسجَّل صفقة مفتوحة |
 
 ---

@@ -44,7 +44,8 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • حتى أربعة شارتات في شاشة واحدة، مع مزامنة الزمن بينها عند الحاجة.
 • المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، الفوليوم وغيرها.
 • «عدسات» جاهزة تبدّل طريقة قراءة الشارت بلمسة: نظيف، هيكل، زخم، سيولة.
-• أدوات رسم: خط اتجاه، شعاع، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق، ملاحظات وقياس.
+• أدوات رسم: خط اتجاه، شعاع، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات، مع زرّ تراجع.
+• أداة قياس تكتب المسافة بالنقاط والنسبة وعدد الشموع وأنت تسحب.
 • إعادة تشغيل الشموع لتدريب عينك على قراءة الحركة.
 
 المتابعة والتنبيهات
@@ -98,7 +99,8 @@ CHARTS
 • Up to four charts on one screen, with optional time sync between them.
 • The indicators traders actually use: SMA and EMA moving averages, Bollinger Bands, RSI, MACD, Volume and more.
 • One-tap "lenses" that change how you read the chart: Clean, Structure, Momentum, Liquidity.
-• Drawing tools: trend line, ray, horizontal and vertical lines, rectangle, Fibonacci, zones, notes and measure.
+• Drawing tools: trend line, ray, horizontal and vertical lines, rectangle, Fibonacci, zones and notes, with undo.
+• A measure tool that shows pips, percent and bar count as you drag.
 • Candle replay to train your eye on price action.
 
 WATCHLIST & ALERTS

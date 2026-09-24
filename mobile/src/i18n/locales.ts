@@ -791,12 +791,25 @@ export type Dict = {
   mcNoPineLine: string;
   mcExportPng: string;
   mcSaveTemplate: string;
-  mcDeleteDrawingTitle: string;
-  mcDeleteDrawingBody: string;
   mcAlertLine: string;
   mcAlertZone: string;
   mcAlertAtLineLevel: string;
   mcAlertAtCrossA11y: string;
+  // chart/typeLabels.ts chartExtraLabels ← هنا (طلب وكيل الشارت). mcMeasureBarOne/Two: صيغتا المفرد والمثنّى لعدّ القياس (barsCountText)
+  mcUndo: string;
+  mcUndoA11y: string;
+  mcNothingToUndo: string;
+  mcPanesCollapsed: string;
+  mcPanesCollapsedA11y: string;
+  mcPanesPageA11y: string;
+  mcSwitching: string;
+  mcSwitchingA11y: string;
+  mcSyncTimeOn: string;
+  mcSyncTimeOff: string;
+  mcSyncLeadHint: string;
+  mcSyncToggleA11y: string;
+  mcMeasureBarOne: string;
+  mcMeasureBarTwo: string;
   // components/SymbolSearchBar.tsx + ScreenerMini.tsx + DomLitePanel.tsx + PairDrumWheel.tsx
   // (i18n طبقة أدوات شاشة الشارت، 2026-09-21)
   ssbPlaceholder: string;
@@ -1645,12 +1658,24 @@ const ar: Dict = {
   mcNoPineLine: 'بدون خط Pine',
   mcExportPng: 'تصدير PNG',
   mcSaveTemplate: 'حفظ قالب',
-  mcDeleteDrawingTitle: 'حذف الرسم؟',
-  mcDeleteDrawingBody: 'سيُحذف عنصر الرسم المحدَّد من الشارت',
   mcAlertLine: 'تنبيه خط',
   mcAlertZone: 'تنبيه منطقة',
   mcAlertAtLineLevel: 'تنبيه عند مستوى الخط الحالي',
   mcAlertAtCrossA11y: 'إنشاء تنبيه سعر عند',
+  mcUndo: 'تراجع',
+  mcUndoA11y: 'تراجع عن آخر تغيير في الرسم',
+  mcNothingToUndo: 'لا شيء للتراجع عنه',
+  mcPanesCollapsed: 'مطويّة',
+  mcPanesCollapsedA11y: 'لوحات مؤشرات مطويّة: ارتفاع الشارت لا يتّسع لها',
+  mcPanesPageA11y: 'اضغط لعرض اللوحات المطويّة بدل الظاهرة',
+  mcSwitching: 'تحميل…',
+  mcSwitchingA11y: 'جارٍ تحميل الشارت الجديد — المعروض الآن بيانات سابقة',
+  mcSyncTimeOn: 'مزامنة الوقت',
+  mcSyncTimeOff: 'بلا مزامنة',
+  mcSyncLeadHint: 'اضغط أي شارت لتتبعه البقية في الوقت',
+  mcSyncToggleA11y: 'تشغيل مزامنة الوقت بين الشارتات الأربعة أو إيقافها',
+  mcMeasureBarOne: 'شمعة',
+  mcMeasureBarTwo: 'شمعتان',
   // أدوات شاشة الشارت (i18n، 2026-09-21)
   ssbPlaceholder: 'بحث رمز... EUR, XAU, BTC',
   ssbError: 'تعذر البحث — تحقق من الاتصال وحاول مرة أخرى',
@@ -2494,12 +2519,24 @@ const enUS: Dict = {
   mcNoPineLine: 'No Pine line',
   mcExportPng: 'Export PNG',
   mcSaveTemplate: 'Save template',
-  mcDeleteDrawingTitle: 'Delete drawing?',
-  mcDeleteDrawingBody: 'The selected drawing object will be removed from the chart',
   mcAlertLine: 'Line alert',
   mcAlertZone: 'Zone alert',
   mcAlertAtLineLevel: 'Alert at the current line level',
   mcAlertAtCrossA11y: 'Create a price alert at',
+  mcUndo: 'Undo',
+  mcUndoA11y: 'Undo the last drawing change',
+  mcNothingToUndo: 'Nothing to undo',
+  mcPanesCollapsed: 'Hidden',
+  mcPanesCollapsedA11y: 'Indicator panes hidden: the chart is too short to fit them',
+  mcPanesPageA11y: 'Tap to show the hidden panes instead of the visible ones',
+  mcSwitching: 'Loading…',
+  mcSwitchingA11y: 'Loading the new chart — showing the previous data until it arrives',
+  mcSyncTimeOn: 'Time sync',
+  mcSyncTimeOff: 'Sync off',
+  mcSyncLeadHint: 'Tap a chart and the others follow its time',
+  mcSyncToggleA11y: 'Turn time sync across the four charts on or off',
+  mcMeasureBarOne: 'bar',
+  mcMeasureBarTwo: 'bars',
   // Chart-screen widget layer (i18n, 2026-09-21)
   ssbPlaceholder: 'Search symbol… EUR, XAU, BTC',
   ssbError: 'Search failed — check your connection and try again',
@@ -2600,16 +2637,16 @@ const ku: Dict = {
   notifOpenSettingsBtn: 'کردنەوەی ڕێکخستنی ئامێر',
   onboardStep1Title: 'گۆڕینی جووت بە یەک دەستدان',
   onboardStep1Body:
-    'دەست لە هەر جووتێک بدە لە شریتی سەرەوە (EURUSD، GBPUSD، زێڕ XAUUSD…) و شێوەنیگارەکە یەکسەر دەچێتە سەری، لەگەڵ گۆڕانی ئەمڕۆ ▲▼ لە تەنیشتیەوە. دواتر هەتا چوار شێوەنیگار بەیەکەوە بکەرەوە بۆ بەراورد.',
+    'دەست لە هەر جووتێک بدە لە شریتی سەرەوە (EURUSD، GBPUSD، زێڕ XAUUSD…) و چارتەکە یەکسەر دەچێتە سەری، لەگەڵ گۆڕانی ئەمڕۆ ▲▼ لە تەنیشتیەوە. دواتر هەتا چوار چارت بەیەکەوە بکەرەوە بۆ بەراورد.',
   onboardStep2Title: 'ئامرازەکانی وێنەکێشان',
   onboardStep2Body:
-    'تابی «وێنەکێشان» لە شریتی خوارەوە هێڵی ترێند و فیبۆناتچی و لاکێشەکان و ئامرازەکانی تری شیکردنەوەی تەکنیکی دەکاتەوە ڕاستەوخۆ لەسەر شێوەنیگار.',
+    'تابی «وێنەکێشان» لە شریتی خوارەوە هێڵی ترێند و فیبۆناتچی و لاکێشەکان و ئامرازەکانی تری شیکردنەوەی تەکنیکی دەکاتەوە ڕاستەوخۆ لەسەر چارت.',
   onboardStep3Title: 'پێوەرەکان و لینزەکان',
   onboardStep3Body:
     'لە دەیان پێوەری ئامادە هەڵبژێرە (RSI، MACD، بۆلینگەر و زیاتر)، یان لینزێک چالاک بکە کە بارودۆخی بازاڕ بە یەک تەماشاکردن کورت دەکاتەوە.',
   onboardStep4Title: 'ئاگادارکردنەوەکان',
   onboardStep4Body:
-    'ئاگادارکردنەوەیەکی نرخ یان پێوەر دروست بکە و کاتێک مەرجەکەی هاتەدی ئاگاداری لەسەر ئامێرەکەت وەربگرە (نزیکەی هەر خولەکێک دەپشکنرێت) — پێویست ناکات بە درێژایی ڕۆژ چاودێری شێوەنیگار بکەیت. ئاگادارکردنەوەکان لە پانێڵی ئاگادارکردنەوەکان خۆیەوە چالاک بکە.',
+    'ئاگادارکردنەوەیەکی نرخ یان پێوەر دروست بکە و کاتێک مەرجەکەی هاتەدی ئاگاداری لەسەر ئامێرەکەت وەربگرە (نزیکەی هەر خولەکێک دەپشکنرێت) — پێویست ناکات بە درێژایی ڕۆژ چاودێری چارت بکەیت. ئاگادارکردنەوەکان لە پانێڵی ئاگادارکردنەوەکان خۆیەوە چالاک بکە.',
   onboardStep5Title: 'سەرەتا مەترسی',
   onboardStep5Body:
     'پێش هەر مامەڵەیەک «ئامرازەکان ← مەترسی» بکەرەوە: باڵانس و ڕێژەی مەترسی و ستۆپ لۆس (بە pip یان بە نرخی چوونەژوورەوە و وەستان) بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
@@ -3372,12 +3409,24 @@ const ku: Dict = {
   mcNoPineLine: 'بێ هێڵی Pine',
   mcExportPng: 'هەناردەی PNG',
   mcSaveTemplate: 'پاشەکەوتی ڕووکار',
-  mcDeleteDrawingTitle: 'سڕینەوەی کێشان؟',
-  mcDeleteDrawingBody: 'توخمی کێشانی دیاریکراو لە چارتەکە لادەبرێت',
   mcAlertLine: 'ئاگاداری هێڵ',
   mcAlertZone: 'ئاگاداری ناوچە',
   mcAlertAtLineLevel: 'ئاگاداری لە ئاستی هێڵی ئێستا',
   mcAlertAtCrossA11y: 'دروستکردنی ئاگاداری نرخ لە',
+  mcUndo: 'گەڕاندنەوە',
+  mcUndoA11y: 'گەڕاندنەوەی دوایین گۆڕانکاری لە کێشان',
+  mcNothingToUndo: 'هیچ شتێک نییە بۆ گەڕاندنەوە',
+  mcPanesCollapsed: 'شاراوە',
+  mcPanesCollapsedA11y: 'پانێڵی پێوەرەکان شاراونەتەوە: بەرزی چارتەکە بەشیان ناکات',
+  mcPanesPageA11y: 'دەستی لێ بدە بۆ پیشاندانی پانێڵە شاراوەکان لە جیاتی ئەوانەی دیارن',
+  mcSwitching: 'بارکردن…',
+  mcSwitchingA11y: 'بارکردنی چارتی نوێ — ئەوەی پیشان دەدرێت داتای پێشووە',
+  mcSyncTimeOn: 'هاوکاتکردنی کات',
+  mcSyncTimeOff: 'بێ هاوکاتکردن',
+  mcSyncLeadHint: 'دەست لە چارتێک بدە و ئەوانی تر کاتەکەی دوای دەکەون',
+  mcSyncToggleA11y: 'هاوکاتکردنی کات لە نێوان چوار چارتەکە بکەوە یان بیکوژێنەوە',
+  mcMeasureBarOne: 'مۆم',
+  mcMeasureBarTwo: 'مۆم',
   // ئامرازەکانی شاشەی چارت (i18n، 2026-09-21)
   ssbPlaceholder: 'گەڕان بۆ هێما... EUR, XAU, BTC',
   ssbError: 'گەڕان سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
