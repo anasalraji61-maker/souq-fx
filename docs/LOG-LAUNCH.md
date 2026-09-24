@@ -1735,3 +1735,41 @@
 
 **خارج نطاقي ويستحقّ عملاً**: قرار أنس بشأن العمولات/الشبكة (⛔)، `extra.apiUrl` المحلّي، `MessagesScreen` الميّتة، `backend/openrouter_ai.py`، السبريد المختلَق، `₴`.
 **يحتاج جهازاً**: إعلان خطوات الجولة بـVoiceOver/TalkBack فعلاً؛ Larger Text عند 200%.
+
+## 2026-09-24 — التشغيلة الرابعة والخمسون
+
+أوّلاً صفوف `COORDINATION.md` الموجّهة لي (خمسة). `bash scripts/qa-build-check.sh` **أخضر بصفر أخطاء قبل كل commit**؛ صفر `U+FFFD` بـ`locales.ts`؛
+كل ادّعاء بالوثائق مقروء من الكود. **لم يُشغَّل التطبيق.**
+
+1. **`locales.ts`** (`c8f93bf`) — **صفّا tools34 وlaunch50 منجزان من جهتي**:
+   - `planNoteCommission` («عمولة»/«Commission»/«کۆمیسیۆن») و`planNoteNetRR` («R:R بعد التكاليف»/«Net R:R»/«R:R دوای تێچووەکان») لـ`planJournalNote` `words.commission`/`words.netRR`.
+   - حُذفت `journalCentNoMoney`/`journalMicroNoMoney`/`journalMicroMoneyNote` (×3 لغات) — لا قارئ لأيّ منها (`grep` بـ`mobile/src`: تعليقات فقط).
+     `journalMicroMoneyNote` كان يقول «بعملة حسابك» والدفتر يعرض عملة التسعير؛ micro لا يحتاج سطراً أصلاً. تعليق `journalCentMoneyNote` صُحّح.
+2. **`locales.ts`** (`4688182`) — **صفّ QA4 (d المخاطرة)، جانب النصوص**: أخذت اقتراح الأدوات — «1% للصفقة، 2% حدّاً أقصى» بدل «≤1%» في
+   `reportFallbackRisk` و`reportFallback…` (النصائح) ورسالة تعذّر الاتصال (×3 لغات). يطابق الآن `RISK_HIGH_PCT = 2` (`positionSize.ts:1088`) والأكاديمية «1-2%».
+   **باقٍ خارج نطاقي**: `backend/main.py:1824` «never risk more than 1%» (الخادم ⇒ أنس). `FEATURE-INVENTORY.md`: تحذير أكبر أمر فوق 50 (`ORDER_WARN_LOTS`، `4c1bd75`) لا 100.
+   **صفّ QA4 «50–100 lot»**: أغلقه الأدوات بالكود (`4c1bd75`) — النصّ صحيح كما هو، لا تغيير مني.
+3. **`STORE-LISTING.md`** (`2105e87`) — **صفّ QA4 عدسة السيولة**: تذكر CVD، **وتقول إنه تقديري** — `computeCvd` (`chart/orderflow.ts:17`) «Synthetic CVD from candle
+   direction × volume»، وبلا حجم يختلق حجماً من جسم الشمعة (`× 1e6 + 1000`). الوصف الإنجليزي صار 4004 حرفاً بالإضافة ⇒ قُصّ سطران (بلا حذف ميزة) إلى **3979**
+   (عدّ بسكربت)؛ العربي 3506. نصّ المساعدة بالتطبيق (عدسة «سيولة») يقول «تقديري» كذلك ×3 لغات.
+4. **`locales.ts`** (`df3bc33`): `mcDrawColorWord`/`mcDrawColorA11y` (`{color}`)/`mcColorNames` (6، بترتيب `drawPalette`) ×ar/en-US/en-GB/ku — بدل
+   `drawColorLabels` المؤقّتة (`typeLabels.ts:110`). الوصف يسمّي اللون الحالي («لون الرسم: أخضر — انقر للّون التالي») فلا تبقى الحالة لونية فقط.
+5. **`locales.ts`** (`5ad5f7b`): `journalOpenRiskNoStop` («صفقات مفتوحة بلا وقف: {n} — خسارتها بلا حدّ…») — طلب الأدوات 36 الاختياري؛ العدد بعد نقطتين فلا صيغ جمع.
+
+### ردّ على COORDINATION
+- **tools34** (`planNoteCommission`/`planNoteNetRR`): المفتاحان موجودان — يُسقَط من جهتي، الربط للأدوات.
+- **launch50** (`journal*NoMoney`/`journalMicroMoneyNote`): محذوفة — يُسقَط. تبقى إشارات بتعليقات `tradePlan.ts:52 :61 :89 :173` و`positionSize.ts:150` و`tradePlan.selftest.ts:1518` (ليست بنطاقي).
+- **QA4 المخاطرة**: النصوص موحّدة؛ بقي `main.py:1824` (الخادم).
+- **QA4 أكبر أمر**: منجز بالكود من الأدوات.
+- **QA4 STORE-LISTING CVD**: منجز.
+- **ملاحظة لـQA**: `docs/STATUS.md:39 :65-67` ما زال يسرد المخاطرة/أكبر أمر/CVD متناقضة — لم ألمسه (ملفّ QA).
+
+### طلب تنسيق — لوكيل الشارت
+- `MatrixChart.tsx:2012` ← `tr.mcDrawColorWord`، والوصف `tr.mcDrawColorA11y.replace('{color}', name)`؛ ثم حذف `drawColorLabels`.
+  ⚠ `drawPalette` يمرّ بـ`new Set` — إن طابق `accent` لوناً آخر قصرت اللوحة وانزاحت الفهارس؛ اختر الاسم بقيمة اللون (`[accent, bull, bear, warn, dxy, text]` ⇒ فهرس ثابت) لا بفهرس `drawPalette`.
+
+### طلب تنسيق — لوكيل الأدوات
+- `planJournalNote` `words: { …, commission: t.planNoteCommission, netRR: t.planNoteNetRR }` (`PositionSizePanel.tsx:859`).
+- `journalOpenRiskNoStop` حين يغيب السطر بسبب مفتوحة بلا وقف فقط (لا للحجم المجهول)؛ وتحديث تعليقات `journal*NoMoney` المحذوفة.
+
+**خارج نطاقي ويستحقّ عملاً**: `main.py:1824` (1%)، CVD بحجم مختلَق حين لا حجم (`orderflow.ts:21`)، قرار العمولات/الشبكة (⛔)، `MessagesScreen` الميّتة، السبريد المختلَق، `₴`.
