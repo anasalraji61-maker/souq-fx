@@ -388,7 +388,12 @@ export function ChartFrame({
 
       {wheelOpen && onSymbolChange ? (
         <View style={styles.wheelLayer}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setWheelOpen(false)} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t.closeWord}
+            style={StyleSheet.absoluteFill}
+            onPress={() => setWheelOpen(false)}
+          />
           <PairDrumWheel
             value={series.symbol}
             onChange={(next) => {

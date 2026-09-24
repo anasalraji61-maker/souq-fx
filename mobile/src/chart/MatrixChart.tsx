@@ -4828,6 +4828,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {localizedDrawTools(tr).map((t) => (
               <Pressable
                 accessibilityRole="button"
+                accessibilityLabel={t.label}
+                accessibilityState={{ selected: tool === t.id }}
                 key={t.id}
                 style={({ pressed }) => [
                   styles.compactTool,
@@ -4904,6 +4906,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             </Pressable>
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel={tr.mcClearAllTitle}
               style={({ pressed }) => [
                 styles.compactTool,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -4935,6 +4938,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {localizedChartKinds(tr).map((k) => (
               <Pressable
                 accessibilityRole="button"
+                accessibilityState={{ selected: kind === k.id }}
                 key={k.id}
                 style={({ pressed }) => [
                   styles.chip,
@@ -4951,6 +4955,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {localizedLenses(tr).map((l) => (
               <Pressable
                 accessibilityRole="button"
+                accessibilityLabel={`${l.label} — ${l.hint}`}
+                accessibilityState={{ selected: lens === l.id }}
                 key={l.id}
                 style={({ pressed }) => [
                   styles.lens,
@@ -5097,6 +5103,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={tr.mcReplayModeA11y}
+              accessibilityState={{ selected: replayOn }}
               style={({ pressed }) => [
                 styles.zoomBtn,
                 replayOn && styles.replayOn,
@@ -5133,6 +5140,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={replayPlaying ? tr.mcReplayPauseA11y : tr.mcReplayPlayA11y}
+                  accessibilityState={{ selected: replayPlaying }}
                   style={({ pressed }) => [
                     styles.zoomBtn,
                     replayPlaying && styles.replayOn,
@@ -5175,6 +5183,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={tr.mcMagnetA11y}
+              accessibilityState={{ selected: magnet }}
               style={({ pressed }) => [
                 styles.zoomBtn,
                 magnet && styles.replayOn,
@@ -5204,6 +5213,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       >
         {!canPan || tool === 'select' ? (
           <Pressable
+            // لقارئ الشاشة: اسم الشارت (رمز · فريم) بدل عنصر بلا اسم؛ التفعيل (نقر مزدوج)
+            // يلمس مركز اللوح فيضع الـcrosshair هناك ويُقرأ سطر OHLC أعلاه.
+            accessibilityRole="image"
+            accessibilityLabel={`${series.symbol} · ${series.timeframe}`}
+            accessibilityHint={tr.mcHintNavigate}
             style={StyleSheet.absoluteFill}
             onPress={(e) =>
               onChartPress(e.nativeEvent.locationX, e.nativeEvent.locationY)
@@ -10213,6 +10227,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {localizedDrawTools(tr).map((t) => (
               <Pressable
                 accessibilityRole="button"
+                accessibilityLabel={t.label}
+                accessibilityState={{ selected: tool === t.id }}
                 key={t.id}
                 style={({ pressed }) => [
                   styles.tool,
@@ -10291,6 +10307,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               return (
                 <Pressable
                   accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
                   key={ind.id}
                   style={({ pressed }) => [
                     styles.ind,
@@ -10307,6 +10324,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
             <Pressable
               accessibilityRole="button"
+              accessibilityState={{ selected: !pineOn }}
               style={({ pressed }) => [
                 styles.ind,
                 !pineOn && styles.indOn,
@@ -10321,6 +10339,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               return (
                 <Pressable
                   accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
                   key={p.id}
                   style={({ pressed }) => [
                     styles.ind,
