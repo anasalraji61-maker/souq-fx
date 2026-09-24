@@ -1405,7 +1405,7 @@ console.log('tradePlan journalPipSize selftest OK');
   assert.equal(quoteSymbol('XAUUSD.m'), 'XAUUSD');
   // مفتاح الأداة: السنت شريحة وحدها
   assert.equal(journalInstrumentKey('EURUSDC'), 'EURUSDC');
-  assert.equal(journalInstrumentKey('GOLDC'), 'GOLDC');
+  assert.equal(journalInstrumentKey('GOLDC'), 'XAUUSDC');
   assert.equal(journalInstrumentKey('EURUSD'), 'EURUSD');
   // صافي EURUSD بالمال لا يسقط بصفقة سنت بجانبه
   const c = (symbol: string, exit: number) => ({ symbol, side: 'buy', entry: 1.1, exit, size: 0.5, status: 'closed' });
@@ -1496,7 +1496,7 @@ console.log('tradePlan journalSizeLooksLikeUnits selftest OK');
   assert.equal(netHasCentWithLots([c('EURUSDC', 0.5, 'open')], ['EURUSDC']), false);
   // 1.00 لوت مكتوبة بالملاحظة معروفة؛ «GOLDC» مفتاحها «GOLDC»
   assert.equal(netHasCentWithLots([c('EURUSDC', 1, 'closed', '1.00 lot · risk 1.00 USD')], ['EURUSDC']), true);
-  assert.equal(netHasCentWithLots([c('GOLDC', 0.2)], ['GOLDC']), true);
+  assert.equal(netHasCentWithLots([c('GOLDC', 0.2)], ['XAUUSDC']), true);
   assert.equal(netHasCentWithLots([c('GOLDC', 0.2)], ['XAUUSD']), false);
 }
 console.log('tradePlan netHasCentWithLots selftest OK');
@@ -1532,21 +1532,21 @@ console.log('tradePlan journalMicroNoMoney selftest OK');
 // لاحقة عقدٍ أصغر بمئة مرّة بفاصل («EURUSD-cent»، «XAUUSD_cent»، «GOLD.c»، «EURUSD.micro») بالدفتر: نقاط وسعر سوق بالزوج
 // العادي، **بلا مال** (كان يُحسب بعقد الحساب العادي ⇒ مبلغ أكبر بمئة مرّة)، ومفتاح أداة منفصل لا يُدمج بالعادي
 {
-  for (const [raw, saved, pair, pip] of [
-    ['EURUSD-cent', 'EURUSD-CENT', 'EURUSD', 0.0001],
-    ['eurusd.c', 'EURUSD.C', 'EURUSD', 0.0001],
-    ['XAUUSD_cent', 'XAUUSD_CENT', 'XAUUSD', 0.1],
-    ['GOLD.c', 'GOLD.C', 'XAUUSD', 0.1],
-    ['EURUSD.micro', 'EURUSD.MICRO', 'EURUSD', 0.0001],
-    ['USDJPY-micro', 'USDJPY-MICRO', 'USDJPY', 0.01],
+  for (const [raw, saved, pair, pip, key] of [
+    ['EURUSD-cent', 'EURUSD-CENT', 'EURUSD', 0.0001, 'EURUSDC'],
+    ['eurusd.c', 'EURUSD.C', 'EURUSD', 0.0001, 'EURUSDC'],
+    ['XAUUSD_cent', 'XAUUSD_CENT', 'XAUUSD', 0.1, 'XAUUSDC'],
+    ['GOLD.c', 'GOLD.C', 'XAUUSD', 0.1, 'XAUUSDC'],
+    ['EURUSD.micro', 'EURUSD.MICRO', 'EURUSD', 0.0001, 'EURUSDMICRO'],
+    ['USDJPY-micro', 'USDJPY-MICRO', 'USDJPY', 0.01, 'USDJPYMICRO'],
     // XM Micro: «micro» ملاصقة — كانت تُحفظ «EURUSDMICRO» بلا نقاط ولا سعر سوق
-    ['EURUSDmicro', 'EURUSDMICRO', 'EURUSD', 0.0001],
-    ['GOLDmicro', 'GOLDMICRO', 'XAUUSD', 0.1],
+    ['EURUSDmicro', 'EURUSDMICRO', 'EURUSD', 0.0001, 'EURUSDMICRO'],
+    ['GOLDmicro', 'GOLDMICRO', 'XAUUSD', 0.1, 'XAUUSDMICRO'],
   ] as const) {
     assert.equal(journalSymbol(raw), saved, raw);
     assert.equal(quoteSymbol(saved), pair, raw);
     assert.equal(journalPipSize(saved), pip, raw);
-    assert.equal(journalInstrumentKey(saved), saved, raw);
+    assert.equal(journalInstrumentKey(saved), key, raw);
     assert.equal(pnlInQuoteCcy({ symbol: saved, side: 'buy', entry: 1.085, exit: 1.0875, lots: 0.1 }), null, raw);
   }
   assert.equal(isCentJournalSymbol('EURUSD-CENT'), true);
@@ -1606,3 +1606,26 @@ console.log('tradePlan journalSpec chips selftest OK');
   assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'USDJPY', filled: { symbol: quoteSymbol('EURUSDC')!, text: '1.08515' } }), true);
 }
 console.log('tradePlan liveEntryOrphaned small-contract selftest OK');
+
+// مفتاح أداة واحد لكل كتابات السنت/micro للزوج نفسه — شريحة واحدة وصافٍ واحد
+{
+  for (const raw of ['EURUSDc', 'EURUSDC', 'EURUSD.c', 'EURUSD-cent', 'EURUSD_CENT', 'EURUSD#c', 'EUR/USD.cent'])
+    assert.equal(journalInstrumentKey(raw), 'EURUSDC', raw);
+  for (const raw of ['XAUUSDc', 'GOLDC', 'gold.c', 'XAUUSD_cent']) assert.equal(journalInstrumentKey(raw), 'XAUUSDC', raw);
+  for (const raw of ['EURUSDmicro', 'EURUSD.micro', 'EURUSD-MICRO']) assert.equal(journalInstrumentKey(raw), 'EURUSDMICRO', raw);
+  // السنت ≠ micro ≠ العادي، والمفتاح نفسه سنتٌ/micro (لسطرَي «بلا مال»)
+  assert.notEqual(journalInstrumentKey('EURUSDc'), journalInstrumentKey('EURUSDmicro'));
+  assert.equal(journalInstrumentKey('EURUSD.m'), 'EURUSD');
+  for (const k of ['EURUSDC', 'XAUUSDC', 'USDJPYC']) assert.equal(isCentJournalSymbol(k), true, k);
+  for (const k of ['EURUSDMICRO', 'XAUUSDMICRO']) assert.equal(isMicroJournalSymbol(k), true, k);
+  // صافٍ واحد: 10 + 15 pip لكتابتين، بلا مال؛ وEURUSD بماله كما كان
+  const c = (symbol: string, exit: number) => ({ symbol, side: 'buy', entry: 1.1, exit, size: 0.5, status: 'closed' });
+  const rows = netByInstrument([c('EURUSD.C', 1.101), c('EURUSDC', 1.1015), c('EURUSD', 1.102)]);
+  assert.deepEqual(rows.find((r) => r.symbol === 'EURUSDC'), { symbol: 'EURUSDC', n: 2, pips: 25, cash: null });
+  assert.deepEqual(rows.find((r) => r.symbol === 'EURUSD'), { symbol: 'EURUSD', n: 1, pips: 20, cash: { amount: 100, ccy: 'USD' } });
+  assert.equal(rows.length, 2);
+  // شرائح الرمز: كتابة واحدة (الأحدث) للأداة
+  assert.deepEqual(quickJournalSymbols([{ symbol: 'EURUSD.c' }, { symbol: 'EURUSDc' }], [], 6), ['EURUSD.C']);
+  assert.equal(netHasCentWithLots([{ symbol: 'EURUSD-CENT', status: 'closed', size: 0.5 }], ['EURUSDC']), true);
+}
+console.log('tradePlan small-contract instrument key selftest OK');

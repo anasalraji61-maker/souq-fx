@@ -847,8 +847,13 @@ export function quoteSymbol(raw: string): string | null {
  * ومالها غير معروف، فدمجها مع «EURUSD» كان سيُسقط صافي EURUSD بالمال (`netByInstrument`).
  */
 function instrumentSymbol(raw: string): string | null {
-  // «GOLD.c»/«XAUUSD_cent» كانت تُدمج مع «XAUUSD» عبر `knownSingleName` (اسمٌ معروف قبل اللاحقة) فتُسقط صافيه بالمال
-  if (smallContractPair(raw)) return journalSymbol(raw);
+  // «GOLD.c»/«XAUUSD_cent» كانت تُدمج مع «XAUUSD» عبر `knownSingleName` (اسمٌ معروف قبل اللاحقة) فتُسقط صافيه بالمال.
+  // ومفتاحٌ واحد لكل كتابات السنت/micro للزوج نفسه: «EURUSD.c» و«EURUSDc» و«EURUSD-cent» كانت ثلاث شرائح وثلاثة صوافٍ
+  // لأداة واحدة (كـ«XAUUSD.m»/«XAUUSD» قبل دمجهما) — النقاط بمواصفات الزوج العادي للكل، ولا مال يُخلط.
+  const cent = centAccountSymbol(raw);
+  if (cent) return `${cent}C`;
+  const micro = smallContractPair(raw);
+  if (micro) return `${micro}MICRO`;
   return instrumentSpec(raw)?.symbol ?? knownSingleName(raw) ?? journalSymbol(raw);
 }
 
