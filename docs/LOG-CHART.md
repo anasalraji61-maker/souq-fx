@@ -60,8 +60,8 @@ Delete/Backspace تحذف الرسم المحدَّد (قابل للتراجع)�
 ## طلب تنسيق
 - **`MatrixEdgeRails.tsx` / `MatrixBottomDock.tsx`**: أداتان جديدتان `long`/`short` بـ`DRAW_TOOLS` تظهران
   بعلامة `·` الاحتياطية — يُقترح `DRAW_MARK.long = '⇡'` و`DRAW_MARK.short = '⇣'` (كالشريط المدمج).
-- **`i18n/locales.ts`**: لا مفتاح جديد؛ إن رُغب باسم أدقّ للأداتين («مركز شراء»/"Long position") فمفتاحان
-  `ctlToolLong`/`ctlToolShort` ثم يُبدَّل `TOOL_KEYS` بـ`typeLabels.ts`.
+- **`i18n/locales.ts`**: أضاف وكيل التعريب `ctlToolLong`/`ctlToolShort` («خطة شراء/بيع») أثناء هذا التشغيل
+  (`1f78034`)، و`TOOL_KEYS` صار يستعملهما بدل `dirBuy`/`dirSell` — تمّ.
 - طلبات التشغيلات السابقة (`toLatest`، `clearAllBody`، `TerminalScreen` + `seriesCache`، `FocusChartModal.tsx`،
   `useMultiLiveTicks.ts`) قائمة.
 

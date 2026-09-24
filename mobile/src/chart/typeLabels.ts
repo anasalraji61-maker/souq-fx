@@ -43,9 +43,9 @@ const TOOL_KEYS: Record<DrawTool, LabelKey> = {
   zone: 'ctlToolZone',
   note: 'ctlToolNote',
   measure: 'ctlToolMeasure',
-  // مركز شراء/بيع (دخول، وقف، هدف) — «شراء/بيع» نفسا نصّي اتجاه الصفقة بالتطبيق.
-  long: 'dirBuy',
-  short: 'dirSell',
+  // خطّة شراء/بيع (دخول، وقف، هدف) — «خطة» كي لا تُقرأ الأداة زرّ أمر.
+  long: 'ctlToolLong',
+  short: 'ctlToolShort',
 };
 
 const LENS_KEYS: Record<LensMode, { label: LabelKey; hint: LabelKey }> = {
