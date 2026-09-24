@@ -53,7 +53,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، الفوليوم وغيرها، ومستويات الارتكاز (Pivot وCamarilla وفيبوناتشي) وبجانب كل مستوى سعره.
 • «عدسات» تضع مجموعة مؤشرات جاهزة بلمسة: هيكل (المتوسطات)، زخم (RSI وMACD)، سيولة (الفوليوم وبولنجر).
 • أدوات رسم: خط اتجاه، شعاع، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات، مع زرّ تراجع. ما ترسمه على فريم يظهر على بقية فريمات الرمز نفسه.
-• خطّط صفقة شراء أو بيع على الشارت: اسحب من الدخول إلى الوقف فيظهر الهدف، والمسافتان بالنقاط، ونسبة العائد إلى المخاطرة — واسحب الهدف لتغيّر النسبة.
+• خطّط صفقة شراء أو بيع على الشارت: اسحب من الدخول إلى الوقف فيظهر الهدف، والمسافتان بالنقاط، ونسبة العائد إلى المخاطرة — واسحب الهدف لتغيّر النسبة. وعلى الشموع السابقة ترى هل بلغ السعر الهدف أم الوقف.
 • أداة قياس تكتب المسافة بالنقاط والنسبة وعدد الشموع وكم استغرقت الحركة من وقت، وأنت تسحب.
 • إعادة تشغيل الشموع لتدريب عينك على قراءة الحركة.
 
@@ -114,7 +114,7 @@ CHARTS
 • The indicators traders actually use: SMA and EMA moving averages, Bollinger Bands, RSI, MACD, Volume and more, plus pivot levels (classic, Camarilla, Fibonacci) with each level's price beside it.
 • One-tap "lenses" that add a ready set of indicators: Structure (moving averages), Momentum (RSI and MACD), Liquidity (volume and Bollinger).
 • Drawing tools: trend line, ray, horizontal and vertical lines, rectangle, Fibonacci, zones and notes, with undo. What you draw on one timeframe shows on every timeframe of that symbol.
-• Plan a buy or sell on the chart: drag from entry to stop to see the target, both distances in pips and the reward-to-risk ratio — drag the target to change it.
+• Plan a buy or sell on the chart: drag from entry to stop to see the target, both distances in pips and the reward-to-risk ratio — drag the target to change it. On past candles it shows whether price hit the target or the stop.
 • A measure tool that shows pips, percent, bar count and how long the move took as you drag.
 • Candle replay to train your eye on price action.
 
