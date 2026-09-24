@@ -639,3 +639,23 @@ console.log('positionSize pnlInQuoteCcy selftest OK');
   assert.equal(profitAtTarget({ spec: eu, entry: 1.085, target: 1.09, lots: 1, quoteToAccount: -1 }), null);
 }
 console.log('positionSize profitAtTarget selftest OK');
+
+// —— ربح الهدف بملخّص خطة الدفتر: pnlInQuoteCcy عند الهدف = R:R × riskInQuoteCcy للحجم نفسه ——
+{
+  const cases = [
+    { symbol: 'EURUSD', side: 'buy' as const, entry: 1.085, sl: 1.0825, tp: 1.09, lots: 0.5, rr: 2, ccy: 'USD', gain: '250.00 USD' },
+    { symbol: 'USDJPY', side: 'sell' as const, entry: 150, sl: 150.3, tp: 149.55, lots: 0.2, rr: 1.5, ccy: 'JPY', gain: '9,000 JPY' },
+    { symbol: 'XAUUSD', side: 'buy' as const, entry: 2400, sl: 2390, tp: 2430, lots: 0.1, rr: 3, ccy: 'USD', gain: '300.00 USD' },
+    { symbol: 'GBPJPY-ECN', side: 'buy' as const, entry: 190, sl: 189.8, tp: 190.2, lots: 1.5, rr: 1, ccy: 'JPY', gain: '30,000 JPY' },
+  ];
+  for (const c of cases) {
+    const risk = riskInQuoteCcy({ symbol: c.symbol, entry: c.entry, sl: c.sl, lots: c.lots })!;
+    const gain = pnlInQuoteCcy({ symbol: c.symbol, side: c.side, entry: c.entry, exit: c.tp, lots: c.lots })!;
+    assert.equal(gain.ccy, risk.ccy, c.symbol);
+    assert.equal(gain.ccy, c.ccy, c.symbol);
+    assert.ok(gain.amount > 0, c.symbol);
+    assert.ok(near(gain.amount, c.rr * risk.amount, 1e-6), `${c.symbol}: ${gain.amount} vs ${c.rr}×${risk.amount}`);
+    assert.equal(formatMoney(gain.amount, gain.ccy), c.gain, c.symbol);
+  }
+}
+console.log('positionSize journal plan gain selftest OK');

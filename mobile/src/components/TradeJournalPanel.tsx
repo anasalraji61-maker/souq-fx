@@ -313,7 +313,20 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       return p != null ? `${p} pip` : String(Math.round(d * 1e5) / 1e5);
     };
     const money = draftRisk ? ` (${draftRisk.money})` : '';
-    return `${t.planRiskWord} ${dist(plan.riskPips, plan.riskDist)}${money} · ${t.planRewardWord} ${dist(plan.rewardPips, plan.rewardDist)} · R:R ${formatRR(plan.rr)}`;
+    /**
+     * الربح المحتمل بالمال بجانب المخاطرة بالمال: كان السطر يقول «المخاطرة 25 pip (125.00 USD) · الربح
+     * المحتمل 50 pip» فيُترك المتداول ليضرب نصف المعادلة بنفسه. نتيجة الخروج عند الهدف بالدالّة نفسها
+     * التي تحسب نتيجة الصفقة بعد إغلاقها (`pnlInQuoteCcy`)، فالرقم هنا هو ما سيراه بالقائمة لو بلغ الهدف.
+     */
+    const e = num(entry);
+    const p = num(tp);
+    const l = num(size);
+    const gain =
+      draftRisk && plan.ok && e != null && p != null && l != null
+        ? pnlInQuoteCcy({ symbol: symbol.trim().toUpperCase(), side, entry: e, exit: p, lots: l })
+        : null;
+    const gainText = gain && gain.amount > 0 ? ` (${formatMoney(gain.amount, gain.ccy)})` : '';
+    return `${t.planRiskWord} ${dist(plan.riskPips, plan.riskDist)}${money} · ${t.planRewardWord} ${dist(plan.rewardPips, plan.rewardDist)}${gainText} · R:R ${formatRR(plan.rr)}`;
   };
 
   // معاينة حيّة أثناء الكتابة: خطأ جهة فوراً (حتى بوقف وحده)، والملخّص حين تكتمل الأرقام الثلاثة.
