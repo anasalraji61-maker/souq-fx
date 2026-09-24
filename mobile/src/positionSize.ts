@@ -234,3 +234,35 @@ export function positionSize(input: {
     belowMinLot: roundedLots < LOT_STEP,
   };
 }
+
+/**
+ * المخاطرة **الفعلية** لحجم لوت معيّن على وقفٍ معيّن: بعملة الحساب وبنسبةٍ من الرصيد.
+ *
+ * لماذا: حين تخرج الحاسبة «أقل من أصغر لوت» كانت تقول كم **أراد** المتداول أن يخاطر (0.50 USD)
+ * وتسكت عن السؤال الذي يليه مباشرةً: «وإن فتحتُ أصغر لوت، كم أخاطر فعلاً؟» — 0.01 لوت على وقف 30
+ * pip برصيد 50$ = 3.00 USD أي **6%** من الحساب، أي ستة أضعاف ما اختاره. رقمٌ يجب أن يُرى قبل أن
+ * يفتح الصفقة بأصغر لوت ظنّاً أنه «الأقرب». وكذلك بالنتيجة العادية: التقريب للأسفل يجعل المخاطرة
+ * الفعلية أقل من المطلوبة (0.87% بدل 1%)، والنسبة تقول ذلك بوحدة المتداول نفسها.
+ *
+ * `null` لأي مدخل غير صالح أو غير موجب (لا نسبة من رصيد صفر).
+ */
+export function riskForLots(input: {
+  lots: number;
+  slPips: number;
+  pipValuePerLot: number;
+  balance: number;
+}): { risk: number; pct: number } | null {
+  const { lots, slPips, pipValuePerLot: pv, balance } = input;
+  if (![lots, slPips, pv, balance].every((v) => Number.isFinite(v) && v > 0)) return null;
+  const risk = lots * slPips * pv;
+  return { risk, pct: (risk / balance) * 100 };
+}
+
+/**
+ * نسبة مخاطرة للعرض: منزلتان تحت 10% («0.87%»، «6.00%»)، ومنزلة واحدة فوقها («12.5%»). تقريبٌ لا
+ * قصّ، وبلا إشارة (المخاطرة كمّية لا اتجاه).
+ */
+export function formatRiskPct(pct: number): string {
+  if (!Number.isFinite(pct) || pct < 0) return '—';
+  return `${pct.toFixed(pct < 10 ? 2 : 1)}%`;
+}

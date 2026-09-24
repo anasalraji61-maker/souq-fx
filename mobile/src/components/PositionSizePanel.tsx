@@ -16,6 +16,9 @@ import {
   pipValuePerLot,
   positionSize,
   slPipsFromPrices,
+  riskForLots,
+  formatRiskPct,
+  LOT_STEP,
 } from '../positionSize';
 import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
@@ -301,6 +304,15 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** الهدف بالجهة الخطأ (فوق الدخول ببيع/تحته بشراء) — خطأ كتابة شائع، يُقال صراحةً بدل تجاهل الهدف */
   const targetWrongSide = plan?.issue === 'tpWrongSide';
   const lots = result && !result.belowMinLot ? result.lots : null;
+  /**
+   * المخاطرة الفعلية بنسبةٍ من الرصيد: للّوت المحسوب (التقريب للأسفل يجعلها أقل من المطلوبة)، ولأصغر
+   * لوت حين يخرج الحجم تحته — «0.01 lot = 3.00 USD · 6.00%» هو ما يحتاج أن يراه قبل أن يفتح أصغر لوت
+   * ظنّاً أنه الأقرب لنسبته. راجع `riskForLots`.
+   */
+  const actualRiskOf = (l: number) =>
+    pv != null ? riskForLots({ lots: l, slPips: num(slPips), pipValuePerLot: pv, balance: balanceNum }) : null;
+  const actualNow = lots != null ? actualRiskOf(lots) : null;
+  const minLotRisk = result?.belowMinLot ? actualRiskOf(LOT_STEP) : null;
   /** تسجيل الخطة بالدفتر جارٍ / نتيجته — نقرة واحدة بدل إعادة كتابة الأرقام الأربعة بلوحة الدفتر */
   const [logBusy, setLogBusy] = useState(false);
   const [logMsg, setLogMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -585,14 +597,22 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
               {result.lots.toFixed(2)}
             </Text>
             <Text style={[styles.resultMeta, { textAlign: align }]}>
-              {t.riskCalcRiskAmount}: {money(result.actualRisk)} · {t.riskCalcUnits}:{' '}
+              {t.riskCalcRiskAmount}: {money(result.actualRisk)}
+              {actualNow ? ` (${formatRiskPct(actualNow.pct)})` : ''} · {t.riskCalcUnits}:{' '}
               {group(String(result.units))}
             </Text>
           </>
         ) : result && result.belowMinLot ? (
-          <Text style={[styles.warn, { textAlign: align }]}>
-            {t.riskCalcBelowMin} ({money(result.riskAmount)})
-          </Text>
+          <>
+            <Text style={[styles.warn, { textAlign: align }]}>
+              {t.riskCalcBelowMin} ({money(result.riskAmount)})
+            </Text>
+            {minLotRisk ? (
+              <Text style={[styles.resultMeta, { textAlign: align }]}>
+                {LOT_STEP.toFixed(2)} lot = {money(minLotRisk.risk)} · {formatRiskPct(minLotRisk.pct)}
+              </Text>
+            ) : null}
+          </>
         ) : badNumber ? (
           <Text style={[styles.warn, { textAlign: align }]}>{t.invalidNumberHint}</Text>
         ) : riskImpossible || slTooClose ? null : (

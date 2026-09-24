@@ -16,6 +16,9 @@ import {
   slPipsFromPrices,
   pipsBetween,
   priceAtPipOffset,
+  riskForLots,
+  formatRiskPct,
+  LOT_STEP,
   type InstrumentSpec,
 } from './positionSize';
 
@@ -373,3 +376,34 @@ console.log('positionSize slTooClose-rationale selftest OK');
 }
 
 console.log('positionSize pipValue-for-position selftest OK');
+
+// —— المخاطرة الفعلية لحجم لوت (سطر «أصغر لوت» والنسبة الفعلية بعد التقريب) ——
+{
+  // 0.01 لوت، وقف 30 pip، EURUSD (10$/لوت) = 3.00$ ⇒ 6% من رصيد 50$
+  const m = riskForLots({ lots: LOT_STEP, slPips: 30, pipValuePerLot: 10, balance: 50 });
+  assert.ok(m && Math.abs(m.risk - 3) < 1e-9 && Math.abs(m.pct - 6) < 1e-9);
+  assert.equal(formatRiskPct(m!.pct), '6.00%');
+  // متّسقة مع positionSize: المخاطرة الفعلية للّوت المقرَّب = actualRisk بالضبط
+  const r = positionSize({ balance: 10000, riskPct: 1, slPips: 23, pipValuePerLot: 10, contractSize: 100_000 })!;
+  const f = riskForLots({ lots: r.lots, slPips: 23, pipValuePerLot: 10, balance: 10000 })!;
+  assert.equal(r.lots, 0.43);
+  assert.ok(Math.abs(f.risk - r.actualRisk) < 1e-9);
+  assert.equal(formatRiskPct(f.pct), '0.99%'); // 0.43 × 23 × 10 = 98.9$ من 10000
+  // USDJPY@150 (6.667$/لوت)، 0.01 لوت، وقف 20 ⇒ 1.33$ من 100$ = 1.33%
+  const j = riskForLots({ lots: 0.01, slPips: 20, pipValuePerLot: pipValuePerLot(instrumentSpec('USDJPY')!, 1 / 150), balance: 100 })!;
+  assert.equal(formatRiskPct(j.pct), '1.33%');
+  // حالة «أقل من أصغر لوت» فعلاً: positionSize يقول belowMinLot، والنسبة لأصغر لوت أكبر من المطلوبة
+  const tiny = positionSize({ balance: 50, riskPct: 1, slPips: 30, pipValuePerLot: 10, contractSize: 100_000 })!;
+  assert.equal(tiny.belowMinLot, true);
+  assert.ok(riskForLots({ lots: LOT_STEP, slPips: 30, pipValuePerLot: 10, balance: 50 })!.pct > 1);
+  // تنسيق: منزلة واحدة من 10% فما فوق، وتقريب لا قصّ
+  assert.equal(formatRiskPct(12.46), '12.5%');
+  assert.equal(formatRiskPct(0.8666), '0.87%');
+  assert.equal(formatRiskPct(NaN), '—');
+  // مدخل فاسد
+  assert.equal(riskForLots({ lots: 0, slPips: 30, pipValuePerLot: 10, balance: 50 }), null);
+  assert.equal(riskForLots({ lots: 0.01, slPips: 30, pipValuePerLot: 10, balance: 0 }), null);
+  assert.equal(riskForLots({ lots: 0.01, slPips: NaN, pipValuePerLot: 10, balance: 50 }), null);
+}
+
+console.log('positionSize riskForLots selftest OK');
