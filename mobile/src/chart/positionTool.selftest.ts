@@ -68,6 +68,12 @@ assert.equal(lab.stop, 'SL 2655.00 · 50.0 pip');
 // بلا مواصفة pip ⇒ فرق السعر بخانات الرمز
 lab = positionLabels(positionLevels('long', 104.2, 104, 2, 'DXY'), 'DXY');
 assert.equal(lab.stop, 'SL 104.000 · 0.200');
+// منازل الفرق من السعر لا من حجم الفرق: وقف 35 نقطة على US30 كان «35.400»، و0.8 على BTC «0.80000»
+lab = positionLabels(positionLevels('long', 42100, 42064.6, 2, 'US30'), 'US30');
+assert.equal(lab.stop, 'SL 42064.60 · 35.40');
+lab = positionLabels(positionLevels('short', 64000, 64000.8, 1, 'BTCUSD'), 'BTCUSD');
+assert.equal(lab.stop, 'SL 64000.80 · 0.80');
+assert.equal(lab.target, 'TP 63999.20 · 0.80 · R:R 1');
 
 // النتيجة على الشموع: شراء 1.08500، وقف 1.08250، هدف 1.09000
 const PL = positionLevels('long', 1.085, 1.0825, 2, 'EURUSD');

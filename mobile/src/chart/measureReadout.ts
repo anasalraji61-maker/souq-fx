@@ -23,7 +23,7 @@
  * أداة خارج مواصفات الفوركس (DXY، مؤشر، عقد CFD) ⇒ `chartPipSpec` تعيد
  * `null`، فيبقى فرق السعر مكان النقاط — لكن مصاغاً بالرمز لا بحجم الرقم.
  */
-import { formatPrice } from './indicators/utils';
+import { formatPriceDiff } from './indicators/utils';
 import { formatPct } from './dailyChange';
 import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from './pipSpec';
@@ -153,9 +153,7 @@ export function measureReadoutText(input: {
   // منازل الفرق = منازل **السعر** لا حجم الفرق: لأداة بلا منازل معروفة (مؤشّر، عملة رقمية)
   // كان `formatPrice(diff)` يقدّرها من الفرق نفسه — والفرق رقم صغير دائماً — فقياس 5 دولارات
   // على BTCUSD يُكتب «+5.00000» بخمس منازل لا يحملها سعره (67420.00).
-  const priceText = formatPrice(Math.abs(a.price), symbol);
-  const dp = priceText.includes('.') ? priceText.length - priceText.indexOf('.') - 1 : 0;
-  const diffText = Math.abs(stats.diff).toFixed(dp);
+  const diffText = formatPriceDiff(stats.diff, a.price, symbol);
   const diffSign = Number(diffText) === 0 ? '' : stats.diff > 0 ? '+' : '−';
   const amount = pips ?? `${diffSign}${diffText}`;
   const pctText = formatPct(Number.isFinite(stats.pct) ? stats.pct : 0);

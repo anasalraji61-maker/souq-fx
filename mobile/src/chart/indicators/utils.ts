@@ -28,6 +28,17 @@ export function formatPrice(n: number, symbol?: string) {
   return n.toFixed(5);
 }
 
+/**
+ * فرق سعرَين بمنازل **السعر** لا بحجم الفرق: لأداة بلا منازل معروفة (US30، BTCUSD، النفط) كان `formatPrice(diff)`
+ * يقدّرها من الفرق نفسه — رقم صغير دائماً — فوقف 35 نقطة على US30 يُكتب «35.400» وحركة 0.8 «0.80000».
+ * `ref` السعر المرجعي (أحد الطرفين). كمّية بلا إشارة.
+ */
+export function formatPriceDiff(diff: number, ref: number, symbol?: string): string {
+  const priceText = formatPrice(Math.abs(ref), symbol);
+  const dp = priceText.includes('.') ? priceText.length - priceText.indexOf('.') - 1 : 0;
+  return Math.abs(diff).toFixed(dp);
+}
+
 export function heikinAshi(candles: Candle[]): Candle[] {
   const out: Candle[] = [];
   let prevClose = candles[0]?.close ?? 0;

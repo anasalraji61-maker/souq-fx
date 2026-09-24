@@ -13,7 +13,7 @@
  * الاتجاه من الأداة لا من موضع الإصبع: وقف رُسم بالجهة الخطأ (فوق دخول شراء) يُعكَس لجهته
  * بالمسافة نفسها — فالسحب «الخاطئ» يعطي رسمة صحيحة بدل صندوق مقلوب يَعِد بعكس ما أراد.
  */
-import { formatPrice } from './indicators/utils';
+import { formatPrice, formatPriceDiff } from './indicators/utils';
 import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from './pipSpec';
 import { pipsNumber } from './measureReadout';
@@ -99,7 +99,7 @@ function distanceText(symbol: string, a: number, b: number): string {
   const spec = chartPipSpec(symbol);
   const pips = spec ? pipsBetween(spec, a, b) : null;
   if (pips != null) return `${pipsNumber(pips)} pip`;
-  return formatPrice(Math.abs(a - b), symbol);
+  return formatPriceDiff(a - b, a, symbol);
 }
 
 /**
@@ -202,7 +202,7 @@ export function positionOutcomeText(levels: PositionLevels, outcome: PositionOut
   const sign = up ? '+' : '−';
   const spec = chartPipSpec(symbol);
   const pips = spec ? pipsBetween(spec, levels.entry, outcome.exit) : null;
-  const dist = pips != null ? `${sign}${pipsNumber(pips)} pip` : `${sign}${formatPrice(Math.abs(outcome.exit - levels.entry), symbol)}`;
+  const dist = pips != null ? `${sign}${pipsNumber(pips)} pip` : `${sign}${formatPriceDiff(outcome.exit - levels.entry, levels.entry, symbol)}`;
   const r = `${sign}${rrText(Math.abs(outcome.r))}R`;
   const head = outcome.state === 'target' ? 'TP ✓ ' : outcome.state === 'stop' ? 'SL ✕ ' : '';
   return `${head}${dist} · ${r}`;
