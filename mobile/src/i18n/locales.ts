@@ -1191,7 +1191,7 @@ const ar: Dict = {
   aiGreeting:
     'أنا مساعد MATRIX الآلي. اسألني عن تحليل الزوج، سيناريو صفقة، إدارة المخاطرة، أو علاقته بـDXY. إجاباتي تحليل آلي تتعلّم منه، لا نصيحة مالية — راجع أي مستوى على الشارت قبل أن تعتمد عليه.',
   aiOfflineFallback:
-    'تعذّر الاتصال بالخادم — تحقّق من اتصالك بالإنترنت وحاول بعد قليل.\n\nتحليل محلي سريع: راقب DXY قبل أي دخول على أزواج الدولار، واستخدم وقف واضح بنسبة مخاطرة ≤ 1%.',
+    'تعذّر الاتصال بالخادم — تحقّق من اتصالك بالإنترنت وحاول بعد قليل.\n\nتحليل محلي سريع: راقب DXY قبل أي دخول على أزواج الدولار، واستخدم وقفاً واضحاً بمخاطرة 1% للصفقة (2% حدّاً أقصى).',
   aiInputPlaceholder: 'مثال: تحليل {symbol} اليوم؟',
   aiInputA11y: 'سؤال لمساعد الذكاء الاصطناعي',
   aiSendA11y: 'إرسال سؤال لمساعد الذكاء الاصطناعي',
@@ -1460,9 +1460,9 @@ const ar: Dict = {
   reportJournalUnavailableLine: '(تعذّرت قراءة دفتر الصفقات الآن — التقرير بلا أرقامك).',
   reportFallbackWeekly: 'تقرير من دفتر الصفقات{journalLine}\nسجّل صفقاتك في تبويب «الدفتر» لبناء تقرير أدق.',
   reportFallbackPerformance: 'تقييم مبني على الدفتر{journalLine}',
-  reportFallbackRisk: 'موجز مخاطر{journalLine}\n1) مخاطرة ≤1%.\n2) وقف واضح.\n3) تجنّب الأخبار الثقيلة.',
+  reportFallbackRisk: 'موجز مخاطر{journalLine}\n1) مخاطرة 1% للصفقة، 2% حدّاً أقصى.\n2) وقف واضح.\n3) تجنّب الأخبار الثقيلة.',
   reportFallbackAdvice:
-    'نصائح MATRIX{journalLine}\n1) راجع صفقاتك المفتوحة.\n2) اربط الدخول بـ DXY.\n3) مخاطرة ≤1%.\n4) تجنّب الأخبار عالية التأثير.\n5) ركّز على 2–3 أزواج.',
+    'نصائح MATRIX{journalLine}\n1) راجع صفقاتك المفتوحة.\n2) اربط الدخول بـ DXY.\n3) مخاطرة 1% للصفقة، 2% حدّاً أقصى.\n4) تجنّب الأخبار عالية التأثير.\n5) ركّز على 2–3 أزواج.',
   journalTitle: 'دفتر الصفقات · PnL من صفقاتك',
   journalSub: 'سجّل صفقاتك — التقارير تُبنى من يوميتك',
   journalStatClosed: 'صفقات مغلقة: {n}',
@@ -2222,7 +2222,7 @@ const enUS: Dict = {
   aiGreeting:
     "I'm MATRIX's AI assistant. Ask me about the pair's analysis, a trade scenario, risk management, or its relation to DXY. My answers are automated analysis to learn from, not financial advice — check any level on the chart before relying on it.",
   aiOfflineFallback:
-    'Could not reach the server — check your internet connection and try again shortly.\n\nQuick local take: watch DXY before entering any dollar pair, and use a clear stop with risk ≤ 1%.',
+    'Could not reach the server — check your internet connection and try again shortly.\n\nQuick local take: watch DXY before entering any dollar pair, and use a clear stop, risking 1% per trade (2% at most).',
   aiInputPlaceholder: 'e.g. analysis of {symbol} today?',
   aiInputA11y: 'Question for the AI assistant',
   aiSendA11y: 'Send question to the AI assistant',
@@ -2491,9 +2491,9 @@ const enUS: Dict = {
   reportFallbackWeekly:
     'Report from the trade journal{journalLine}\nLog your trades in the “Journal” tab for a more accurate report.',
   reportFallbackPerformance: 'Assessment based on the journal{journalLine}',
-  reportFallbackRisk: 'Risk brief{journalLine}\n1) Risk ≤1%.\n2) Use a clear stop.\n3) Avoid heavy news.',
+  reportFallbackRisk: 'Risk brief{journalLine}\n1) Risk 1% per trade, 2% at most.\n2) Use a clear stop.\n3) Avoid heavy news.',
   reportFallbackAdvice:
-    'MATRIX tips{journalLine}\n1) Review your open trades.\n2) Tie entries to DXY.\n3) Risk ≤1%.\n4) Avoid high-impact news.\n5) Focus on 2–3 pairs.',
+    'MATRIX tips{journalLine}\n1) Review your open trades.\n2) Tie entries to DXY.\n3) Risk 1% per trade, 2% at most.\n4) Avoid high-impact news.\n5) Focus on 2–3 pairs.',
   journalTitle: 'Trade journal · PnL from your trades',
   journalSub: 'Log your trades — reports are built from your journal',
   journalStatClosed: 'Closed trades: {n}',
@@ -3275,7 +3275,7 @@ const ku: Dict = {
   aiGreeting:
     'من یاریدەدەری خۆکاری MATRIX ـم. پرسیارم لێ بکە دەربارەی شیکاری جووتەکە، دیمەنی مامەڵە، بەڕێوەبردنی مەترسی، یان پەیوەندی بە DXY. وەڵامەکانم شیکاری خۆکارن بۆ فێربوون، نەک ئامۆژگاری دارایی — پێش ئەوەی پشتی پێ ببەستیت هەر ئاستێک لەسەر چارتەکە بپشکنە.',
   aiOfflineFallback:
-    'نەکرا پەیوەندی بە ڕاژەوە بکرێت — لە پەیوەندییەکەت بە ئینتەرنێت دڵنیابە و دوای کەمێک دووبارە هەوڵ بدەرەوە.\n\nشیکاری خێرای ناوخۆیی: چاودێری DXY بکە پێش هەر چوونەژوورەوەیەک بۆ جووتەکانی دۆلار، و وەستانێکی ڕوون بەکاربهێنە بە مەترسی ≤ 1%.',
+    'نەکرا پەیوەندی بە ڕاژەوە بکرێت — لە پەیوەندییەکەت بە ئینتەرنێت دڵنیابە و دوای کەمێک دووبارە هەوڵ بدەرەوە.\n\nشیکاری خێرای ناوخۆیی: چاودێری DXY بکە پێش هەر چوونەژوورەوەیەک بۆ جووتەکانی دۆلار، و وەستانێکی ڕوون بەکاربهێنە بە مەترسی 1% بۆ هەر مامەڵەیەک (زۆرترین 2%).',
   aiInputPlaceholder: 'نموونە: شیکاری {symbol} ئەمڕۆ؟',
   aiInputA11y: 'پرسیار بۆ یاریدەدەری زیرەکی دەستکرد',
   aiSendA11y: 'ناردنی پرسیار بۆ یاریدەدەری زیرەکی دەستکرد',
@@ -3546,9 +3546,9 @@ const ku: Dict = {
     'ڕاپۆرت لە دەفتەری مامەڵە{journalLine}\nمامەڵەکانت لە تابی «دەفتەر» تۆماربکە بۆ ڕاپۆرتێکی وردتر.',
   reportFallbackPerformance: 'هەڵسەنگاندن لەسەر بنەمای دەفتەرەکە{journalLine}',
   reportFallbackRisk:
-    'کورتەی مەترسی{journalLine}\n1) مەترسی ≤1%.\n2) وەستانێکی ڕوون بەکاربهێنە.\n3) دوور بە لە هەواڵی قورس.',
+    'کورتەی مەترسی{journalLine}\n1) مەترسی 1% بۆ هەر مامەڵەیەک، زۆرترین 2%.\n2) وەستانێکی ڕوون بەکاربهێنە.\n3) دوور بە لە هەواڵی قورس.',
   reportFallbackAdvice:
-    'ئامۆژگاری MATRIX{journalLine}\n1) مامەڵە کراوەکانت پێداچوونەوەیان بۆ بکە.\n2) چوونەژوورەوەکان بە DXY ببەستەوە.\n3) مەترسی ≤1%.\n4) دوور بە لە هەواڵی کاریگەری بەرز.\n5) سەرنج بدە بە 2-3 جووت.',
+    'ئامۆژگاری MATRIX{journalLine}\n1) مامەڵە کراوەکانت پێداچوونەوەیان بۆ بکە.\n2) چوونەژوورەوەکان بە DXY ببەستەوە.\n3) مەترسی 1% بۆ هەر مامەڵەیەک، زۆرترین 2%.\n4) دوور بە لە هەواڵی کاریگەری بەرز.\n5) سەرنج بدە بە 2-3 جووت.',
   journalTitle: 'دەفتەری مامەڵە · PnL لە مامەڵەکانت',
   journalSub: 'مامەڵەکانت تۆماربکە — ڕاپۆرتەکان لە ڕۆژنووسەکەت دروستدەبن',
   journalStatClosed: 'مامەڵە داخراوەکان: {n}',
