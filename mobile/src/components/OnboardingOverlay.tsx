@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, StyleSheet, Pressable } from 'react-native';
+import { AccessibilityInfo, Modal, View, Text, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons } from '../theme';
 import { useI18n } from '../i18n/I18nContext';
@@ -30,10 +30,22 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
     onDone();
   };
 
+  // قارئ الشاشة كان لا يقرأ الخطوة الجديدة: بعد «التالي» يبقى تركيز VoiceOver/TalkBack على الزرّ
+  // نفسه، والعنوان والنصّ يتبدّلان فوقه بصمت — فيسمع «التالي، زر» خمس مرّات ثم «ابدأ» ولا يعرف
+  // ما قالته الجولة إلا إن مسح الشاشة بإصبعه بعد كل ضغطة. الآن يُعلَن رقم الخطوة وعنوانها ونصّها
+  // مع كل انتقال (التالي، النقاط، رجوع أندرويد). على الويب الدالة بلا أثر.
+  const go = (i: number) => {
+    setStep(i);
+    const s = steps[i]!;
+    AccessibilityInfo.announceForAccessibility(
+      `${t.onboardStepCounterA11y.replace('{n}', String(i + 1)).replace('{total}', String(steps.length))}. ${s.title}. ${s.body}`,
+    );
+  };
+
   // زرّ الرجوع بأندرويد يرجع خطوةً لا يُنهي الجولة: كان `onRequestClose={back}`، فضغطةٌ واحدة
   // لمن اعتاد «الرجوع» لتصحيح نقرة «التالي» الزائدة تُغلق جولةً لا تُعرض إلا مرّة بالعمر
   // (`matrix.onboarding.v1`). من الخطوة الأولى يبقى الرجوع خروجاً كما يتوقّع المتداول.
-  const back = () => (step > 0 ? setStep((s) => s - 1) : finish());
+  const back = () => (step > 0 ? go(step - 1) : finish());
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={back}>
@@ -81,13 +93,15 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
                   // وhitSlop الرأسي. وhitSlop أفقي معدوم عمداً كي لا تتداخل أهداف النقاط المتجاورة.
                   hitSlop={{ top: 10, bottom: 10 }}
                   style={({ pressed }) => [styles.dotHit, pressed && { opacity: buttons.pressedOpacity }]}
-                  onPress={() => setStep(i)}
+                  onPress={() => go(i)}
                 >
                   <View style={[styles.dot, i <= step && styles.dotOn, i < step && styles.dotDone]} />
                 </Pressable>
               ))}
             </View>
-            <Text style={[styles.title, { textAlign: align }]}>{steps[step]!.title}</Text>
+            <Text accessibilityRole="header" style={[styles.title, { textAlign: align }]}>
+              {steps[step]!.title}
+            </Text>
             <Text style={[styles.body, { textAlign: align }]}>{steps[step]!.body}</Text>
             {/* تنبيه المخاطرة بكل خطوة لا بالأخيرة وحدها: زرّ «تخطي» ظاهر من الخطوة الأولى، فمن يضغطه
                 كان يغلق الجولة بلا أن يرى «تحليل وتعليم فقط، لا نصيحة مالية» إطلاقاً — وهو موضع
@@ -117,7 +131,7 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
                     transform: [{ scale: buttons.pressedScale }],
                   },
                 ]}
-                onPress={() => (last ? finish() : setStep((s) => s + 1))}
+                onPress={() => (last ? finish() : go(step + 1))}
                 accessibilityLabel={last ? t.onboardStart : t.onboardNext}
               >
                 <Text style={styles.nextText}>{last ? t.onboardStart : t.onboardNext}</Text>
