@@ -139,6 +139,7 @@ import {
   localizedDrawTools,
   localizedIndicators,
   localizedLenses,
+  estimatedTag,
 } from './typeLabels';
 import { confirmDestructive, notify } from './confirmDestructive';
 import {
@@ -7018,7 +7019,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     fontWeight: '800',
                   }}
                 >
-                  {fp.delta >= 0 ? '+' : ''}
+                  {/* «≈»: دلتا تقديرية من شكل الشمعة (`computeFootprint`) لا أحجام شراء/بيع حقيقية. */}
+                  {fp.delta >= 0 ? '≈+' : '≈'}
                   {Math.round(fp.delta / 100)}
                 </Text>
               );
@@ -7748,7 +7750,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {cvd ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="CVD" values={cvd} at={crossIndex} tone="trend" />
+          {/* تقديري من اتجاه الشموع (`orderflow.ts`)، لا دلتا تدفّق أوامر — الفوركس بلا شريط مركزي. */}
+          <PaneValueHead name={`CVD (${estimatedTag(lang)})`} values={cvd} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             <TrendLineSeries values={cvd} paneH={paneH} />
           </View>

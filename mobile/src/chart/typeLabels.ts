@@ -1,4 +1,4 @@
-import type { Dict } from '../i18n/locales';
+import type { Dict, LangId } from '../i18n/locales';
 import type { SessionId } from './sessions';
 import {
   CHART_KINDS,
@@ -101,4 +101,15 @@ const SESSION_KEYS: Record<SessionId, keyof Dict> = {
 /** اسم الجلسة فوق تظليل مؤشّر «Sessions» بلغة الواجهة. */
 export function sessionLabel(t: Dict, id: SessionId): string {
   return t[SESSION_KEYS[id]] as string;
+}
+
+/**
+ * وسم «تقديري» للوحة CVD — مؤقّت هنا حتى يُضاف `mcEstimatedTag` إلى `locales.ts` (طلب تنسيق بسجلّ
+ * الشارت 2026-09-25). CVD والفوتبرنت مشتقّان من لون الشمعة × الحجم (`orderflow.ts`)، والفوركس بلا شريط
+ * مركزي ولا تدفّق أوامر حقيقي — فالاسم وحده يوحي بمؤشّر تدفّق فعلي.
+ */
+export function estimatedTag(lang: LangId): string {
+  if (lang === 'en-US' || lang === 'en-GB') return 'est.';
+  if (lang === 'ku') return 'خەمڵێنراو';
+  return 'تقديري';
 }
