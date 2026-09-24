@@ -79,9 +79,11 @@ const BROKER_SUFFIXED = /^([A-Z]{3})[/\s_-]?([A-Z]{3})(?:[.\-_#+][A-Z0-9]{0,5}|M
  * اسما الذهب والفضة الفوريين بمنصّات وسطاء كثيرين («GOLD»، «SILVER»، «GOLD#»، «GOLD.m») — العقد نفسه
  * (الذهب 100 أونصة بالدولار، الفضة 5,000) باسمٍ آخر. كانا يُرفضان: صفقة «GOLD» بالدفتر تُحفظ بلا نقاط ولا
  * R ولا مال ولا نتيجة عائمة (المزوّد لا يعرف إلا XAU/USD)، والحاسبة تقول «رمز غير معروف». اللاحقة **بفاصل**
- * فقط كقاعدة `BROKER_SUFFIXED` («GOLDM» ملاصقة قد تكون اسماً آخر — تبقى مرفوضة).
+ * كقاعدة `BROKER_SUFFIXED`: بفاصل، أو M وكلمات نوع الحساب ملاصقةً («GOLDm»، «SILVERm»، «GOLDpro»، «GOLDecn»). «GOLDm» كانت
+ * «رمز غير معروف» بالحاسبة والدفتر بينما الشارت يقرؤها ذهباً (`chartPipSpec`) — الرمز نفسه يعمل بشاشة ولا يعمل بأخرى،
+ * وM ملاصقة مقبولة أصلاً على «XAUUSDm». حرفٌ آخر ملاصق («GOLDX»، «SILVERY») يبقى مرفوضاً؛ «GOLDc»/«GOLDmicro» عقدٌ أصغر.
  */
-const METAL_NAMES = /^(GOLD|SILVER)(?:[.\-_#+][A-Z0-9]{0,5})?$/;
+const METAL_NAMES = /^(GOLD|SILVER)(?:[.\-_#+][A-Z0-9]{0,5}|M|PRO|ECN|RAW|STD|STP|VIP)?$/;
 const METAL_NAME_SYMBOL: Record<string, string> = { GOLD: 'XAUUSD', SILVER: 'XAGUSD' };
 
 /**
