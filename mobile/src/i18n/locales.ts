@@ -369,6 +369,8 @@ export type Dict = {
   calDayShort: string;
   newsRiskHigh: string;
   newsRiskHint: string;
+  /** شريط الخبر حين فشل التقويم ولا نسخة محفوظة — غياب التحذير هنا ليس «لا خطر» (طلب وكيل الأدوات) */
+  newsUnavailable: string;
   calToday: string;
   calTomorrow: string;
   calSampleBanner: string;
@@ -1279,6 +1281,7 @@ const ar: Dict = {
   calDayShort: ' يوم',
   newsRiskHigh: 'خبر قوي',
   newsRiskHint: 'تقلّب حاد وانزلاق محتمل — راجع وقف الخسارة وحجم الصفقة',
+  newsUnavailable: 'تعذّر تحميل تقويم الأخبار — لا نعرف إن كان خبر قوي قريباً؛ تحقّق قبل الدخول',
   calToday: 'اليوم',
   calTomorrow: 'غداً',
   calSampleBanner: '⚠ أمثلة توضيحية — تعذّر جلب التقويم الحي الآن',
@@ -2185,6 +2188,7 @@ const enUS: Dict = {
   calDayShort: 'd',
   newsRiskHigh: 'High-impact news',
   newsRiskHint: 'Expect sharp moves and slippage — check your stop and position size',
+  newsUnavailable: 'Couldn’t load the news calendar — we can’t tell if a big release is close; check before you enter',
   calToday: 'Today',
   calTomorrow: 'Tomorrow',
   calSampleBanner: '⚠ Sample events — live calendar unavailable right now',
@@ -3117,6 +3121,7 @@ const ku: Dict = {
   calDayShort: ' ڕۆژ',
   newsRiskHigh: 'هەواڵی بەهێز',
   newsRiskHint: 'جووڵەی توند و خلیسکان چاوەڕوانکراوە — وەستان و قەبارەی مامەڵە بپشکنە',
+  newsUnavailable: 'نەکرا ڕۆژژمێری هەواڵ باربکرێت — نازانین هەواڵێکی بەهێز نزیکە یان نا؛ پێش چوونەژوورەوە بپشکنە',
   calToday: 'ئەمڕۆ',
   calTomorrow: 'سبەینێ',
   calSampleBanner: '⚠ نموونەی ڕوونکردنەوە — ڕۆژژمێری ڕاستەوخۆ ئێستا بەردەست نییە',
