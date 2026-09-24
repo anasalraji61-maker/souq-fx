@@ -189,3 +189,46 @@ export function floatingResult(input: {
   if (!mv) return null;
   return { ...mv, r: realizedR({ side, entry, sl, exit: current }) };
 }
+
+/** نسب الهدف السريعة بالحاسبة والدفتر: ما يخطّط عليه متداول التجزئة فعلاً (1:1 تعادل، 1:2 القاعدة الشائعة). */
+export const QUICK_RR = [1, 1.5, 2, 3] as const;
+
+/**
+ * سعر الهدف الذي يعطي نسبة R:R معيّنة من دخولٍ ووقفٍ مكتوبين: `entry ± rr × |entry − sl|`.
+ *
+ * لماذا: المتداول يقرّر هدفه غالباً **بالنسبة** («1:2») لا بالسعر، فكان يحسب الرقم بيده من مسافة
+ * الوقف ثم يكتبه — وهي بالضبط الخطوة التي تُكتب فيها منزلةٌ خاطئة فتنقلب الخطة (هدف 1.0950 بدل
+ * 1.0905). الآن نقرة على «1:2» تكتب السعر.
+ *
+ * **التقريب بعيداً عن الدخول** لمنزلة الأداة (منزلة الـpipette، نفس `formatPrice`): وقف 25.3 pip
+ * بنسبة 1.5 يعطي 37.95 pip — التقريب العادي قد يُنزلها 37.9 فتصير النسبة 1:1.498 **أقل** مما اختاره.
+ * بعيداً عن الدخول تبقى النسبة ≥ المطلوبة دائماً، والفارق أقل من عُشر pip. (1:1 و1:2 و1:3 على
+ * أسعار بمنزلة الـpipette تقع على سعرٍ دقيق أصلاً فلا يتحرّك شيء.) ضجيج الفاصلة العائمة يُنظَّف
+ * قبل ذلك كي لا يدفع `ceil` سعراً دقيقاً منزلةً كاملة.
+ *
+ * رمزٌ بلا مواصفات (مؤشر/عملة رقمية): السعر بعشر خانات معنوية بلا قصّ لمنزلة.
+ * `null` لمدخل غير صالح، أو وقف بالجهة الخطأ للاتجاه، أو هدف ناتج ≤ 0 (بيع بعيد على سعر صغير).
+ */
+export function targetAtRR(input: {
+  symbol: string;
+  side: TradeSide;
+  entry: number;
+  sl: number;
+  rr: number;
+}): number | null {
+  const { side, entry, sl, rr } = input;
+  if (!finitePos(entry) || !finitePos(sl) || !finitePos(rr)) return null;
+  const buy = side === 'buy';
+  const risk = buy ? entry - sl : sl - entry;
+  if (!(risk > 0)) return null;
+  const raw = buy ? entry + rr * risk : entry - rr * risk;
+  if (!(raw > 0)) return null;
+  const spec = instrumentSpec(input.symbol);
+  if (!spec) return Number(raw.toPrecision(10));
+  const decimals = Math.round(-Math.log10(spec.pipSize)) + 1;
+  const scale = 10 ** decimals;
+  const scaled = Math.round(raw * scale * 1e6) / 1e6;
+  const away = buy ? Math.ceil(scaled) : Math.floor(scaled);
+  const out = Number((away / scale).toFixed(decimals));
+  return out > 0 ? out : null;
+}

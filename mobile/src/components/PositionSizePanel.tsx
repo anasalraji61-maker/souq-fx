@@ -20,7 +20,7 @@ import {
 import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
-import { analyzePlan, formatPips, formatRR, type TradeSide } from '../tradePlan';
+import { analyzePlan, formatPips, formatRR, QUICK_RR, targetAtRR, type TradeSide } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
 type Props = {
@@ -282,6 +282,22 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     return analyzePlan({ symbol: spec.symbol, side: planSide, entry: e, sl: sPx, tp: tPx });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spec, planSide, entryPx, stopPx, targetPx]);
+  /**
+   * أهداف جاهزة بالنسبة: المتداول يقرّر هدفه غالباً «1:2» لا بالسعر، فكان يحسب الرقم بيده من مسافة
+   * الوقف ثم يكتبه. تظهر حين يكون الدخول والوقف صالحَين (اتجاه معروف، وقف ليس أضيق من pip) —
+   * `targetAtRR` تقرّب بعيداً عن الدخول فالنسبة المكتوبة لا تقلّ عن المختارة أبداً.
+   */
+  const rrTargets = useMemo(() => {
+    const e = num(entryPx);
+    const sPx = num(stopPx);
+    if (!spec || planSide == null || derivedSl == null || derivedSl < 1) return [];
+    return QUICK_RR.flatMap((rr) => {
+      const tp = targetAtRR({ symbol: spec.symbol, side: planSide, entry: e, sl: sPx, rr });
+      return tp != null ? [{ rr, tp, text: formatPrice(tp, spec.symbol) }] : [];
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spec, planSide, derivedSl, entryPx, stopPx]);
+  const targetNum = num(targetPx);
   /** الهدف بالجهة الخطأ (فوق الدخول ببيع/تحته بشراء) — خطأ كتابة شائع، يُقال صراحةً بدل تجاهل الهدف */
   const targetWrongSide = plan?.issue === 'tpWrongSide';
   const lots = result && !result.belowMinLot ? result.lots : null;
@@ -512,6 +528,18 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       ) : null}
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcTarget}</Text>
       {input(targetPx, setTargetPx, t.riskCalcTargetPlaceholder, t.riskCalcTarget)}
+      {rrTargets.length > 0 ? (
+        <View style={[styles.chips, rtl && styles.chipsRtl]}>
+          {rrTargets.map((x) =>
+            chip(
+              `1:${x.rr}`,
+              Number.isFinite(targetNum) && Math.abs(targetNum - x.tp) < spec!.pipSize / 20,
+              () => setTargetPx(x.text),
+              `${t.riskCalcTargetPlaceholder} R:R 1:${x.rr} = ${x.text}`
+            )
+          )}
+        </View>
+      ) : null}
       {targetWrongSide ? (
         <Text style={[styles.warn, { textAlign: align }]}>
           {num(stopPx) < num(entryPx) ? t.planTpWrongBuy : t.planTpWrongSell}

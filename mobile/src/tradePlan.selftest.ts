@@ -13,6 +13,8 @@ import {
   realizedMove,
   realizedR,
   roundR,
+  targetAtRR,
+  QUICK_RR,
 } from './tradePlan';
 
 // شراء EURUSD صحيح: وقف 25 pip، هدف 50 pip ⇒ 1:2
@@ -240,3 +242,61 @@ console.log('tradePlan roundR selftest OK');
 }
 
 console.log('tradePlan close-confirm R selftest OK');
+
+// —— سعر الهدف من نسبة R:R (شرائح 1:1/1:1.5/1:2/1:3 بالحاسبة والدفتر) ——
+{
+  // القيم المرجعية: شراء EURUSD وقف 25 pip ⇒ 1:2 = +50 pip
+  assert.equal(targetAtRR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, rr: 2 }), 1.09);
+  assert.equal(targetAtRR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, rr: 1 }), 1.0875);
+  // بيع USDJPY وقف 20 pip ⇒ 1:1 = 157.20، و1:3 = 156.80 (منزلة الـpipette 3)
+  assert.equal(targetAtRR({ symbol: 'USDJPY', side: 'sell', entry: 157.4, sl: 157.6, rr: 1 }), 157.2);
+  assert.equal(targetAtRR({ symbol: 'USDJPY', side: 'sell', entry: 157.4, sl: 157.6, rr: 3 }), 156.8);
+  // ذهب: وقف 50 pip (5$) ⇒ 1:1.5 = +7.5$
+  assert.equal(targetAtRR({ symbol: 'XAUUSD', side: 'buy', entry: 2650, sl: 2645, rr: 1.5 }), 2657.5);
+  // تقريب بعيداً عن الدخول: وقف 25.3 pip × 1.5 = 37.95 pip ⇒ 38.0 (شراء) — لا 37.9 فتصير النسبة أقل
+  assert.equal(targetAtRR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08247, rr: 1.5 }), 1.0888);
+  assert.equal(targetAtRR({ symbol: 'EURUSD', side: 'sell', entry: 1.085, sl: 1.08753, rr: 1.5 }), 1.0812);
+  // رمز بلا مواصفات: بلا قصّ لمنزلة
+  assert.equal(targetAtRR({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59000, rr: 2 }), 62000);
+  // مرفوض: وقف بالجهة الخطأ / يساوي الدخول / مدخل فاسد / هدف بيع ≤ 0
+  assert.equal(targetAtRR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.09, rr: 2 }), null);
+  assert.equal(targetAtRR({ symbol: 'EURUSD', side: 'sell', entry: 1.085, sl: 1.08, rr: 2 }), null);
+  assert.equal(targetAtRR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.085, rr: 2 }), null);
+  assert.equal(targetAtRR({ symbol: 'EURUSD', side: 'buy', entry: NaN, sl: 1.08, rr: 2 }), null);
+  assert.equal(targetAtRR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08, rr: 0 }), null);
+  assert.equal(targetAtRR({ symbol: 'EURUSD', side: 'sell', entry: 0.5, sl: 0.9, rr: 2 }), null);
+
+  // الخاصية: على كل تركيبة، الهدف الناتج يعطي بـ`analyzePlan` خطةً صالحة نسبتها ≥ المطلوبة
+  // (بفارق أقل من عُشر pip) وتُطبع `formatRR` بالنسبة المختارة نفسها.
+  let n = 0;
+  const syms: Array<[string, number, number]> = [
+    ['EURUSD', 1.0852, 0.0001],
+    ['GBPJPY', 198.437, 0.01],
+    ['USDJPY', 157.403, 0.01],
+    ['XAUUSD', 2650.37, 0.1],
+    ['XAGUSD', 31.245, 0.01],
+    ['EURGBP', 0.8431, 0.0001],
+  ];
+  for (const [symbol, entry, pip] of syms) {
+    for (let tenths = 10; tenths <= 1500; tenths += 7) {
+      const slPips = tenths / 10;
+      for (const side of ['buy', 'sell'] as const) {
+        const sl = Number((side === 'buy' ? entry - slPips * pip : entry + slPips * pip).toFixed(6));
+        for (const rr of QUICK_RR) {
+          const tp = targetAtRR({ symbol, side, entry, sl, rr });
+          assert.ok(tp != null, `${symbol} ${side} ${slPips} ${rr}`);
+          const plan = analyzePlan({ symbol, side, entry, sl, tp: tp! });
+          assert.equal(plan.ok, true, `${symbol} ${side} ${slPips} ${rr} ok`);
+          assert.ok(plan.rr! >= rr - 1e-9, `${symbol} ${side} sl=${slPips} rr=${rr} got ${plan.rr}`);
+          const overPips = Math.abs(plan.rewardDist - rr * plan.riskDist) / pip;
+          assert.ok(overPips < 0.1 + 1e-6, `${symbol} ${side} sl=${slPips} rr=${rr} over ${overPips}`);
+          assert.equal(formatRR(plan.rr), formatRR(rr), `${symbol} ${side} sl=${slPips} rr=${rr} label`);
+          n++;
+        }
+      }
+    }
+  }
+  assert.ok(n > 10000);
+}
+
+console.log('tradePlan targetAtRR selftest OK');
