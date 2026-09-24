@@ -19,13 +19,28 @@ const listeners = new Set<(list: string[]) => void>();
 
 const norm = (name: string) => name.trim().toLowerCase();
 
+/**
+ * القائمة كما تُقرأ من القرص → أسماء مطبَّعة (`norm`) بلا فراغ ولا تكرار، آخر `MAX_BLOCKED` منها.
+ * `isBlocked` يقارن بالاسم **مطبَّعاً**، فاسمٌ محفوظ بحروف كبيرة أو بمسافة (تعديل يدوي، نسخة احتياطية،
+ * إصدار لاحق يكتب بشكل آخر) كان يبقى بالقائمة ولا يُحظر أبداً — وحظره ثانيةً يُضيف نسخة ثانية.
+ */
+export function sanitizeBlocked(parsed: unknown): string[] {
+  if (!Array.isArray(parsed)) return [];
+  const out: string[] = [];
+  for (const x of parsed) {
+    if (typeof x !== 'string') continue;
+    const n = norm(x);
+    if (n && !out.includes(n)) out.push(n);
+  }
+  return out.slice(-MAX_BLOCKED);
+}
+
 function loadBlocked(): Promise<string[]> {
   if (cache) return Promise.resolve(cache);
   if (!loading) {
     loading = AsyncStorage.getItem(KEY)
       .then((raw) => {
-        const parsed: unknown = raw ? JSON.parse(raw) : [];
-        const list = Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [];
+        const list = sanitizeBlocked(raw ? JSON.parse(raw) : []);
         // حظر تمّ أثناء القراءة لا يُمسح بقيمة القرص القديمة
         cache = cache ?? list;
         return cache;
