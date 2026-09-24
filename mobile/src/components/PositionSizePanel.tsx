@@ -186,16 +186,38 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** جسر الدولار: بديل الزوج المباشر حين لا يعرفه المزوّد (`usdBridge` بـpositionSize.ts). */
   const bridge = useMemo(() => (spec ? usdBridge(spec.quote, account) : null), [spec, account]);
 
+  /**
+   * **تحديث سعر التحويل كل 60 ث** ما دام مجلوباً تلقائياً: كان يُجلب مرّة عند اختيار الأداة ثم يبقى — واللوحة
+   * تُترك مفتوحة جلسةً كاملة، فقيمة النقطة لـUSDJPY بحساب دولار (÷ السعر) تنحرف مع السعر. التحديث صامت: لا
+   * «جارٍ التحميل»، ولا يُمسح الإدخال اليدوي، وفشله يُبقي آخر سعر ناجح. الإدخال اليدوي (بعد فشلٍ) لا يُحدَّث.
+   */
+  const [convRefresh, setConvRefresh] = useState(0);
+  const convRunKey = useRef<{ key: string; refresh: number } | null>(null);
   useEffect(() => {
+    if (!convQuote) return;
+    // يُعاد التسليح مع كل تحديث (`convRefresh`) لا مع النجاح وحده: تحديثٌ فاشل لا يوقف التالي
+    const id = setTimeout(() => setConvRefresh((n) => n + 1), 60_000);
+    return () => clearTimeout(id);
+  }, [convQuote, convRefresh]);
+
+  useEffect(() => {
+    const runKey = `${convSymbol}|${convInvert}|${bridge?.first.symbol ?? ''}|${bridge?.second.symbol ?? ''}`;
+    // الزوج نفسه والعدّاد تقدّم ⇒ تحديث المؤقّت: بلا مسح ولا مؤشّر تحميل، والفشل يُبقي السعر الحالي.
+    // (العدّاد شرطٌ لا الزوج وحده: تشغيل التأثير مرّتين بالتطوير لا يُعدّ تحديثاً صامتاً)
+    const prev = convRunKey.current;
+    const silent = prev != null && prev.key === runKey && prev.refresh !== convRefresh;
+    convRunKey.current = { key: runKey, refresh: convRefresh };
     const g = ++gen.current;
-    setConvQuote(null);
-    setConvFailed(false);
-    setManualConv('');
+    if (!silent) {
+      setConvQuote(null);
+      setConvFailed(false);
+      setManualConv('');
+    }
     if (!convSymbol) {
       setConvLoading(false);
       return;
     }
-    setConvLoading(true);
+    if (!silent) setConvLoading(true);
     // الزوج المتوقَّع أولاً، ثم المعكوس تلقائياً (CHFZAR ↔ ZARCHF…) قبل اللجوء للإدخال اليدوي
     const tries = [
       { symbol: convSymbol, invert: convInvert },
@@ -242,12 +264,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             return;
           }
         }
+        if (silent) return;
         setConvFailed(true);
         setConvLoading(false);
       })();
-    }, 400);
+    }, silent ? 0 : 400);
     return () => clearTimeout(id);
-  }, [convSymbol, convInvert, bridge]);
+  }, [convSymbol, convInvert, bridge, convRefresh]);
 
   /** أرقام عربية/فاصل آلاف/فاصلة عشرية — راجع parseDecimal.ts. NaN = فارغ أو غير صالح. */
   const num = (s: string) => parseDecimal(s) ?? NaN;
