@@ -14,6 +14,13 @@ assert.deepEqual(symbolCurrencies('EUR/USD'), ['EUR', 'USD']);
 assert.deepEqual(symbolCurrencies('BTCUSD'), []);
 assert.deepEqual(symbolCurrencies('NAS100'), []);
 assert.deepEqual(symbolCurrencies(''), []);
+// معدن بعملة غير الدولار: خبر الدولار أولاً ثم عملة التسعير؛ معدن مقابل معدن/رقمي لا
+assert.deepEqual(symbolCurrencies('XAUEUR'), ['USD', 'EUR']);
+assert.deepEqual(symbolCurrencies('xag/aud'), ['USD', 'AUD']);
+assert.deepEqual(symbolCurrencies('XAUJPY'), ['USD', 'JPY']);
+assert.deepEqual(symbolCurrencies('XAUXAG'), []);
+assert.deepEqual(symbolCurrencies('XAUBTC'), []);
+assert.equal(nextHighImpact([{ id: 'nfp', title: 'NFP', currency: 'USD', impact: 'high', ts: 1_800_000_600 }], symbolCurrencies('XAUEUR'), 1_800_000_000_000)?.event.id, 'nfp');
 
 const now = 1_800_000_000_000;
 const ev = (id: string, cur: string, impact: string, minsFromNow: number | null, sample = false): NewsEvent => ({

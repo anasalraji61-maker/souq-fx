@@ -23,6 +23,7 @@ const FIAT = new Set([
   'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'NZD', 'CAD', 'CHF', 'CNY',
   'SEK', 'NOK', 'DKK', 'PLN', 'TRY', 'ZAR', 'MXN', 'SGD', 'HKD',
 ]);
+const METALS = new Set(['XAU', 'XAG']);
 /** رموز تُسعَّر بالدولار ويحرّكها خبر الدولار أولاً. */
 const USD_DRIVEN = new Set(['DXY', 'USOIL', 'UKOIL', 'WTI', 'BRENT', 'XAUUSD', 'XAGUSD']);
 
@@ -34,6 +35,12 @@ export function symbolCurrencies(symbol: string): string[] {
   const norm = (c: string) => (c === 'CNH' ? 'CNY' : c);
   const base = norm(s.slice(0, 3));
   const quote = norm(s.slice(3));
+  /**
+   * المعدن بعملة غير الدولار (XAUEUR، XAUAUD، XAGEUR…): الذهب يُسعَّر عالمياً بالدولار فيقفز بخبر
+   * الدولار أولاً، ثم بخبر عملة التسعير. كانا يُرفضان كـ«ليس فوركس» فيغيب التحذير كلياً عن زوجٍ تقبله
+   * حاسبة المخاطرة (`instrumentSpec`) وتحسب له حجم مركز — أي قبل الرواتب الأمريكية بدقائق بالضبط.
+   */
+  if (METALS.has(base)) return FIAT.has(quote) ? (quote === 'USD' ? ['USD'] : ['USD', quote]) : [];
   if (!FIAT.has(base) || !FIAT.has(quote)) return [];
   return base === quote ? [base] : [base, quote];
 }
