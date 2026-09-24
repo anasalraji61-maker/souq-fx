@@ -1256,11 +1256,11 @@ console.log('positionSize rewardBelowRisk selftest OK');
 {
   const spec = instrumentSpec('EURUSD')!;
   const pv = pipValuePerLot(spec, 1);
-  // مثال rewardBelowRisk أعلاه: الإجمالي 1:1.05 (يُطبع «1:1.1» فوق التحذير)، الصافي 1:0.8 ⇒ «بعد التكاليف»
+  // مثال rewardBelowRisk أعلاه: الإجمالي 1:1.05 (يُطبع «1:1.0» فوق التحذير)، الصافي 1:0.8 ⇒ «بعد التكاليف»
   const gross = profitAtTarget({ spec, entry: 1.085, target: 1.0871, lots: 0.5, quoteToAccount: 1 })!;
   const w = spreadRisk({ lots: 0.5, slPips: 20, spreadPips: 1.5, pipValuePerLot: pv, balance: 10_000, riskPct: 1, contractSize: spec.contractSize, commissionPerLot: 7 })!;
   const n = profitAfterCosts({ grossProfit: gross, lots: 0.5, spreadPips: 1.5, pipValuePerLot: pv, commissionPerLot: 7, riskWithCosts: w.risk })!;
-  assert.equal(formatRR(1.05), '1:1.1');
+  assert.equal(formatRR(1.05), '1:1.0');
   assert.equal(lowRewardWarning(1.05, n), 'net');
   // الإجمالي نفسه دون 1:1 — الجملة العامة تصف السطر فوقها، بتكاليف أو بدونها
   assert.equal(lowRewardWarning(0.9, null), 'gross');

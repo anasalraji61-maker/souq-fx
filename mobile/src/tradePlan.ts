@@ -300,7 +300,11 @@ export function stopTooClose(input: { symbol: string; side: TradeSide; entry: nu
 }
 
 /**
- * "1:2.0" — منزلة عشرية واحدة تكفي للقرار، ونقرّب لا نقصّ من 1 فما فوق.
+ * "1:2.0" — منزلة عشرية واحدة تكفي للقرار، **مقصوصة للأسفل دائماً**.
+ *
+ * **فوق 1 نقصّ أيضاً**: كانت 1.95 تُقرَّب «1:2.0» — متداولٌ قاعدته «لا أدخل تحت 1:2» يأخذ صفقةً دون حدّه،
+ * والنصّ نفسه يُحفظ بملاحظة الدفتر (`planJournalNote`). القصّ لا يعِد بأكثر من الخطة. شرائح «1:1.5»…
+ * لا تتأثّر: `targetAtRR` يقرّب الهدف بعيداً عن الدخول فالنسبة ≥ المختارة دائماً.
  *
  * **تحت 1 نقصّ**: 0.96 كانت تُطبع «1:1.0» وتحتها «⚠ الربح أقل من المخاطرة» — رقمٌ يقول تعادلاً وتحذيرٌ
  * يقول خسارة. والصغيرة جداً (R:R بعد التكاليف حين تكاد تبتلع الهدف) كانت «1:0.0» كأن لا ربح أصلاً:
@@ -308,9 +312,10 @@ export function stopTooClose(input: { symbol: string; side: TradeSide; entry: nu
  */
 export function formatRR(rr: number | null): string {
   if (rr == null || !Number.isFinite(rr) || rr <= 0) return '—';
-  if (rr >= 1) return `1:${(Math.round(rr * 10) / 10).toFixed(1)}`;
-  // هامش الفاصلة العائمة (0.3 × 10 = 2.999…) لا يرفع ما دون 1 إلى «1:1.0»
-  const tenths = Math.min(0.9, Math.floor(rr * 10 + 1e-9) / 10);
+  // هامش الفاصلة العائمة (0.3 × 10 = 2.999…، 1.1 × 10 = 11.000…1) لا يُسقط منزلة؛ وما دون 1 لا يصير «1:1.0»
+  const tenths = Math.floor(Math.round(rr * 10 * 1e6) / 1e6) / 10;
+  if (rr >= 1) return `1:${tenths.toFixed(1)}`;
+  if (tenths >= 1) return '1:0.9';
   if (tenths > 0) return `1:${tenths.toFixed(1)}`;
   const hundredths = Math.floor(rr * 100 + 1e-9) / 100;
   return hundredths > 0 ? `1:${hundredths.toFixed(2)}` : '1:<0.01';

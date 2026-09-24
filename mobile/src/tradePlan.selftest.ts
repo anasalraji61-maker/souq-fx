@@ -111,7 +111,33 @@ assert.equal(analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1, sl: -1, tp: 
 // تنسيق
 assert.equal(formatRR(null), '—');
 assert.equal(formatRR(0.333), '1:0.3');
-assert.equal(formatRR(1.25), '1:1.3');
+assert.equal(formatRR(1.25), '1:1.2');
+// فوق 1 نقصّ أيضاً: 1.95 لا تُطبع «1:2.0» لمتداولٍ حدّه الأدنى 1:2 (مثال التدقيق حرفياً)
+const rr195 = analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083, tp: 1.0889 });
+assert.ok(Math.abs(rr195.rr! - 1.95) < 1e-9);
+assert.equal(formatRR(rr195.rr), '1:1.9');
+assert.equal(formatRR(1.99), '1:1.9');
+assert.equal(formatRR(2.999), '1:2.9');
+assert.equal(formatRR(1), '1:1.0');
+// ضجيج الفاصلة العائمة لا يُسقط منزلة: 1.1 و2.3 و1.7 بالضبط تبقى كما هي
+assert.equal(formatRR(1.1), '1:1.1');
+assert.equal(formatRR(2.3), '1:2.3');
+assert.equal(formatRR(1.7), '1:1.7');
+assert.equal(formatRR(1.0999999999), '1:1.1');
+assert.equal(formatRR(0.9999999999), '1:0.9');
+// شرائح R:R السريعة تُطبع النسبة المختارة نفسها بعد القصّ (الهدف يُقرَّب بعيداً عن الدخول)
+for (const [sym, side, entry, sl] of [
+  ['EURUSD', 'buy', 1.08503, 1.08247],
+  ['USDJPY', 'sell', 150.123, 150.377],
+  ['XAUUSD', 'buy', 2350.17, 2344.91],
+  ['GBPJPY', 'sell', 191.004, 191.337],
+] as const) {
+  for (const q of [1, 1.5, 2, 3]) {
+    const tp = targetAtRR({ symbol: sym, side, entry, sl, rr: q })!;
+    const p = analyzePlan({ symbol: sym, side, entry, sl, tp });
+    assert.equal(formatRR(p.rr), `1:${q.toFixed(1)}`, `${sym} ${q}`);
+  }
+}
 // تحت 1 نقصّ لا تقريب: 0.96 لا تُطبع «1:1.0» فوق تحذير «الربح أقل من المخاطرة»
 assert.equal(formatRR(0.96), '1:0.9');
 assert.equal(formatRR(0.999999), '1:0.9');
@@ -268,7 +294,7 @@ const jpy11 = analyzePlan({ symbol: 'USDJPY', side: 'buy', entry: 157.4, sl: 157
 assert.equal(jpy11.rr, 1);
 assert.ok(!(jpy11.rr! < 1));
 assert.equal(analyzePlan({ symbol: 'USDJPY', side: 'sell', entry: 157.4, sl: 157.6, tp: 157.2 }).rr, 1);
-// 2.25 بالضبط (وقف 20، هدف 45) يُكتب واحداً بكل الأدوات — كان «1:2.2» على اليورو و«1:2.3» على الذهب
+// 2.25 بالضبط (وقف 20، هدف 45) يُكتب واحداً بكل الأدوات — كان «1:2.2» على اليورو و«1:2.3» على الذهب؛ مقصوصةً «1:2.2» بكلّها
 for (const [sym, e, s, tp] of [
   ['EURUSD', 1.085, 1.083, 1.0895],
   ['GBPUSD', 1.27, 1.268, 1.2745],
@@ -278,7 +304,7 @@ for (const [sym, e, s, tp] of [
 ] as const) {
   const p = analyzePlan({ symbol: sym, side: 'buy', entry: e, sl: s, tp });
   assert.equal(p.rr, 2.25, sym);
-  assert.equal(formatRR(p.rr), '1:2.3', sym);
+  assert.equal(formatRR(p.rr), '1:2.2', sym);
 }
 // ما دون 1 حقاً ما زال دون 1
 assert.ok(analyzePlan({ symbol: 'USDJPY', side: 'buy', entry: 157.4, sl: 157.2, tp: 157.59 }).rr! < 1);
