@@ -43,6 +43,7 @@ import {
   MAX_SPREAD_PIPS,
   type InstrumentSpec,
   spreadTooWide,
+  stopInsideSpread,
   planJournalNote,
   parseCommission,
   costsLotsAdvice,
@@ -1544,3 +1545,34 @@ console.log('positionSize ambiguousThousandsPrice selftest OK');
   assert.equal(slPipsFromPrices(jp, parsePriceFor('157.250', 'USDJPY')!, parsePriceFor('157.050', 'USDJPY')!), 20);
 }
 console.log('positionSize calculator price parsing selftest OK');
+
+// stopInsideSpread — وقفٌ ليس أبعد من السبريد يُضرب لحظة الفتح
+{
+  assert.equal(stopInsideSpread(1, 1.5), true);
+  assert.equal(stopInsideSpread(1.5, 1.5), true); // على Bid بالضبط = مضروب
+  assert.equal(stopInsideSpread(0.1 + 0.2, 0.3), true); // تقريب الأعداد العشرية لا يقلب المساواة
+  assert.equal(stopInsideSpread(parseSpreadPips('١٫٥')!, parseSpreadPips('1.5')), true);
+  assert.equal(stopInsideSpread(1.6, 1.5), false);
+  assert.equal(stopInsideSpread(20, 1.5), false);
+  // سبريد فارغ (0) أو مرفوض أو غير منتهٍ: لا تحذير
+  assert.equal(stopInsideSpread(1, parseSpreadPips('')), false);
+  assert.equal(stopInsideSpread(1, parseSpreadPips('abc')), false);
+  assert.equal(stopInsideSpread(1, parseSpreadPips('10851')), false);
+  assert.equal(stopInsideSpread(1, NaN), false);
+  // وقفٌ غير صالح: لا تحذير (خطؤه يُقال بمكانه)
+  assert.equal(stopInsideSpread(NaN, 1.5), false);
+  assert.equal(stopInsideSpread(0, 1.5), false);
+  assert.equal(stopInsideSpread(-1, 1.5), false);
+  // المثال الذي يبرّره: 10,000 USD، 1%، وقف 1 pip EURUSD ⇒ 10 لوت، ووقفه داخل سبريد 1.5
+  const eu = instrumentSpec('EURUSD')!;
+  const r = positionSize({ balance: 10_000, riskPct: 1, slPips: 1, pipValuePerLot: 10, contractSize: eu.contractSize })!;
+  assert.equal(r.lots, 10);
+  assert.equal(stopInsideSpread(1, 1.5), true);
+  // الذهب: الوقف من سعرين ⇒ النقاط، وسبريد 30 pip شائع بالأخبار
+  const xau = instrumentSpec('XAUUSD')!;
+  const sl = slPipsFromPrices(xau, 2650.0, 2647.5)!;
+  assert.equal(sl, 25);
+  assert.equal(stopInsideSpread(sl, 30), true);
+  assert.equal(stopInsideSpread(sl, 20), false);
+}
+console.log('positionSize stopInsideSpread selftest OK');

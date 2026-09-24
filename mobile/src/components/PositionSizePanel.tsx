@@ -36,6 +36,7 @@ import {
   lowRewardWarning,
   lotsOverOrderMax,
   spreadTooWide,
+  stopInsideSpread,
   planJournalNote,
   LOT_STEP,
   parsePriceFor,
@@ -496,6 +497,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * الرئيسي يبقى من الوقف وحده (ما يكتبه كل مرجع وكل منصّة)، والسطر يقول الفرق وما العمل.
    */
   const typedSpreadPips = parseSpreadPips(spread);
+  /** وقفٌ ليس أبعد من السبريد المكتوب: يُضرب لحظة الفتح — راجع `stopInsideSpread` */
+  const slInsideSpread = stopInsideSpread(num(slPips), typedSpreadPips);
   // الدخول ما زال Ask/Bid اللقطة الحيّة (نصّ التعبئة حرفياً وللأداة نفسها): السبريد داخل مسافة الوقف والهدف أصلاً،
   // فلا يُضاف إلا ما يزيد به سبريد الوسيط المكتوب على سبريد اللقطة — راجع `spreadBeyondLiveEntry`
   const liveFill = liveFillRef.current;
@@ -1083,6 +1086,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           <Text style={[styles.resultMeta, { textAlign: align }]}>
             {t.riskCalcPipValue}: {money(pv)}
             {result && lots != null ? ` · ${lots.toFixed(2)} lot = ${money(result.pipValue)}` : ''}
+          </Text>
+        ) : null}
+        {slInsideSpread ? (
+          <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
+            {t.riskCalcStopInsideSpread.replace('{sl}', String(num(slPips))).replace('{spread}', String(typedSpreadPips))}
           </Text>
         ) : null}
         {/* المخاطرة شاملة السبريد (والعمولة إن كُتبت)، وتحتها جملة اللوت الذي يحفظ النسبة المكتوبة حين يكون أصغر */}
