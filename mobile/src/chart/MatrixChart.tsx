@@ -7332,7 +7332,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {rvix ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>RVI (Vol)</Text>
+          <PaneValueHead name="RVI (Vol)" values={rvix} at={crossIndex} tone="none" />
           <View style={styles.paneInner}>
             <BoundedLineSeries values={rvix} paneH={paneH} color={(v) => (v > 50 ? colors.bull : v < 50 ? colors.bear : accent)} />
           </View>
@@ -7471,7 +7471,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {donchianWidth ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>DC Width</Text>
+          <PaneValueHead name="DC Width" values={donchianWidth} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = donchianWidth.filter((x): x is number => x != null);
@@ -7509,7 +7509,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {keltnerWidth ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>KC Width</Text>
+          <PaneValueHead name="KC Width" values={keltnerWidth} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = keltnerWidth.filter((x): x is number => x != null);
@@ -7765,7 +7765,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {rainbowOsc ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Rainbow Osc</Text>
+          <PaneValueHead name="Rainbow Osc" values={rainbowOsc} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = rainbowOsc.filter((x): x is number => x != null);
@@ -7793,7 +7793,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {efficiencyRatio ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Efficiency Ratio</Text>
+          <PaneValueHead name="Efficiency Ratio" values={efficiencyRatio} at={crossIndex} tone="none" />
           <View style={styles.paneInner}>
             {efficiencyRatio.map((v, i) => {
               if (v == null) return <View key={i} style={{ flex: 1 }} />;
@@ -8565,7 +8565,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {bwmfi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>BW MFI</Text>
+          <PaneValueHead name="BW MFI" values={bwmfi} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = bwmfi.filter((x): x is number => x != null);
@@ -8704,7 +8704,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {hv ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>HV</Text>
+          <PaneValueHead name="HV" values={hv} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = hv.filter((x): x is number => x != null);
@@ -8760,7 +8760,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {parkinsonVol ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Parkinson Vol</Text>
+          <PaneValueHead name="Parkinson Vol" values={parkinsonVol} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = parkinsonVol.filter((x): x is number => x != null);
@@ -8788,7 +8788,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {garmanKlassVol ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>G-K Vol</Text>
+          <PaneValueHead name="G-K Vol" values={garmanKlassVol} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = garmanKlassVol.filter((x): x is number => x != null);
@@ -8816,7 +8816,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {rogersSatchellVol ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>R-S Vol</Text>
+          <PaneValueHead name="R-S Vol" values={rogersSatchellVol} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = rogersSatchellVol.filter((x): x is number => x != null);
@@ -8844,7 +8844,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {yangZhangVol ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Y-Z Vol</Text>
+          <PaneValueHead name="Y-Z Vol" values={yangZhangVol} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = yangZhangVol.filter((x): x is number => x != null);
@@ -8989,7 +8989,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {linRegR2 ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>LR R²</Text>
+          <PaneValueHead name="LR R²" values={linRegR2} at={crossIndex} tone="none" />
           <View style={styles.paneInner}>
             {linRegR2.map((v, i) =>
               v == null ? (
@@ -9135,7 +9135,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ulcer ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Ulcer Index</Text>
+          <PaneValueHead name="Ulcer Index" values={ulcer} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = ulcer.filter((x): x is number => x != null);
@@ -9470,7 +9470,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {trueRange ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>True Range</Text>
+          <PaneValueHead name="True Range" values={trueRange} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = trueRange.filter((x): x is number => x != null);
@@ -9498,7 +9498,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {stdError ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Std Error</Text>
+          <PaneValueHead name="Std Error" values={stdError} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = stdError.filter((x): x is number => x != null);
@@ -9526,7 +9526,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ewmaVol ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>EWMA Vol</Text>
+          <PaneValueHead name="EWMA Vol" values={ewmaVol} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = ewmaVol.filter((x): x is number => x != null);
@@ -9598,7 +9598,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {volatilityRatio ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Volatility Ratio</Text>
+          <PaneValueHead name="Volatility Ratio" values={volatilityRatio} at={crossIndex} tone="trend" />
           <View style={styles.paneInner}>
             {(() => {
               const vals = volatilityRatio.filter((x): x is number => x != null);
