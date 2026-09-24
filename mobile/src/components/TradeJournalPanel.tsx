@@ -33,6 +33,7 @@ import {
   journalInstrumentKey,
   realizedMove,
   realizedR,
+  recentLotSizes,
   averageR,
   journalStats,
   type JournalStats,
@@ -353,6 +354,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry, sl]);
+
+  /** آخر أحجام اللوت المختلفة من صفقات المتداول نفسه — شرائح تحت خانة الحجم (`recentLotSizes`) */
+  const lotChips = useMemo(() => recentLotSizes(trades), [trades]);
 
   /** شرائح «الخروج = الوقف/الهدف» تحت خانة الخروج — راجع `exitShortcuts` */
   const exitChips = useMemo(
@@ -1151,6 +1155,40 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           accessibilityLabel={t.journalSizeA11y}
         />
       </View>
+      {/*
+        آخر أحجام اللوت المختلفة (الأحدث أولاً): المتداول يكرّر حجماً أو اثنين، وكتابة خانة المال بيدٍ كل
+        صفقة هي حيث تُحفظ «5» بدل «0.5». تُخفى حين يظهر تحذير «هذا بالوحدات» كي لا تتزاحم شريحتان للخانة.
+      */}
+      {lotChips.length > 0 && !sizeUnits ? (
+        <View style={[styles.qChips, rtl && styles.rowRtl]}>
+          {lotChips.map((l: number) => {
+            const text = `${l.toFixed(2)} lot`;
+            const on = num(size) === l;
+            return (
+              <Pressable
+                key={text}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                style={({ pressed }) => [
+                  styles.qChip,
+                  on && styles.chipOn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => {
+                  setSize(l.toFixed(2));
+                  setFormError(null);
+                }}
+                accessibilityLabel={`${t.journalSizeA11y}: ${text}`}
+              >
+                <Text style={[styles.qChipText, on && styles.chipTextOn]}>{text}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
       {sizeUnits ? (
         <View style={[styles.qChips, rtl && styles.rowRtl]}>
           {sizeUnits.lots != null ? (

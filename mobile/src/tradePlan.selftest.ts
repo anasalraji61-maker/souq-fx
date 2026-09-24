@@ -19,6 +19,7 @@ import {
   levelSideIssue,
   netByInstrument,
   knownLots,
+  recentLotSizes,
   journalInstrumentKey,
   realizedMove,
   realizedR,
@@ -796,3 +797,33 @@ console.log('tradePlan journalSymbol index-suffix selftest OK');
   });
 }
 console.log('tradePlan journalStats selftest OK');
+
+// —— recentLotSizes: شرائح آخر أحجام اللوت بخانة الحجم ——
+{
+  // الأحدث أولاً، بلا تكرار، 3 على الأكثر
+  assert.deepEqual(
+    recentLotSizes([{ size: 0.5 }, { size: 0.1 }, { size: 0.5 }, { size: 0.2 }, { size: 0.3 }]),
+    [0.5, 0.1, 0.2]
+  );
+  assert.deepEqual(recentLotSizes([{ size: 0.5 }, { size: 0.1 }, { size: 0.2 }], 2), [0.5, 0.1]);
+  // الـ1 الافتراضي بالخادم لا يُقترح؛ الـ1 الذي كتبته الحاسبة بالملاحظة يُقترح
+  assert.deepEqual(recentLotSizes([{ size: 1, note: '' }, { size: 0.25 }]), [0.25]);
+  assert.deepEqual(recentLotSizes([{ size: 1, note: '1.00 lot · risk 100.00 USD · R:R 1:2.0' }]), [1]);
+  // وحدات لا لوت، حجم خارج خطوة 0.01، صفر/سالب/NaN/null/غائب: لا شيء
+  assert.deepEqual(
+    recentLotSizes([{ size: 100000 }, { size: 0.015 }, { size: 0 }, { size: -0.1 }, { size: NaN }, { size: null }, {}]),
+    []
+  );
+  // 100 بالضبط مقبول، 100.01 لا
+  assert.deepEqual(recentLotSizes([{ size: 100.01 }, { size: 100 }]), [100]);
+  // ضجيج الفاصلة العائمة (0.1 + 0.2) يُقترح 0.3 ولا يُكرَّر مع 0.3 المكتوبة
+  assert.deepEqual(recentLotSizes([{ size: 0.1 + 0.2 }, { size: 0.3 }, { size: 0.07 }]), [0.3, 0.07]);
+  // نصّ الشريحة toFixed(2) يطابق القيمة المقترحة حرفياً لكل خطوة حتى 100 لوت
+  for (let k = 1; k <= 10000; k++) {
+    const v = recentLotSizes([{ size: k / 100, note: k === 100 ? '1.00 lot' : null }])[0];
+    assert.equal(Number(v.toFixed(2)), v);
+    assert.equal(Math.round(v * 100), k);
+  }
+  assert.deepEqual(recentLotSizes([]), []);
+}
+console.log('tradePlan recentLotSizes selftest OK');

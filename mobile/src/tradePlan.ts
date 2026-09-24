@@ -8,7 +8,7 @@
  * - وقف أقرب من 1 pip للدخول (أضيق من أي سبريد تجزئة) خطأ كتابة شبه مؤكد: كان يُعرض «0 pip · R:R 1:5000».
  */
 import { knownSingleName } from './chart/newsRisk';
-import { instrumentSpec, pnlInQuoteCcy } from './positionSize';
+import { instrumentSpec, LOT_STEP, MAX_SANE_LOTS, pnlInQuoteCcy } from './positionSize';
 
 export type TradeSide = 'buy' | 'sell';
 
@@ -494,6 +494,35 @@ export function knownLots(size: number | null | undefined, note?: string | null)
   if (typeof size !== 'number' || !Number.isFinite(size) || size <= 0) return null;
   if (size !== 1) return size;
   return typeof note === 'string' && /^1\.00 lot( ·|$)/.test(note) ? 1 : null;
+}
+
+/**
+ * آخر أحجام اللوت **المختلفة** التي سجّلها المتداول (الأحدث أولاً، `max` على الأكثر) — شرائح بخانة الحجم
+ * بنموذج الدفتر.
+ *
+ * لماذا: أغلب متداولي التجزئة يكرّرون حجماً أو اثنين («0.10» و«0.50») بكل صفقة، وكانت الخانة تُكتب
+ * بيدٍ كل مرّة — وهي خانة المال: «5» بدل «0.5» صفقةٌ بعشرة أضعاف حجمها تُحفظ بصمت. الأحجام من صفقات
+ * المتداول نفسه، فالشريحة لا تقترح رقماً لم يكتبه قط.
+ *
+ * `trades` بترتيب الخادم (الأحدث تسجيلاً أولاً). الحجم المعروف وحده (`knownLots`: الـ1 الافتراضي بالخادم
+ * لا يُقترح)، على خطوة اللوت (0.01) بالضبط كي يطابق نصّ الشريحة «0.50» القيمة المحفوظة، ولا يتجاوز
+ * `MAX_SANE_LOTS` (100000 كُتبت وحداتٍ لا لوتاً — لا تُقترح لتتكرّر).
+ */
+export function recentLotSizes(
+  trades: readonly { size?: number | null; note?: string | null }[],
+  max = 3
+): number[] {
+  const out: number[] = [];
+  for (const tr of trades) {
+    if (out.length >= max) break;
+    const lots = knownLots(tr.size, tr.note);
+    if (lots == null || lots > MAX_SANE_LOTS) continue;
+    const steps = Math.round(lots / LOT_STEP);
+    if (steps < 1 || Math.abs(lots / LOT_STEP - steps) > 1e-6) continue;
+    const v = Math.round(steps * LOT_STEP * 100) / 100;
+    if (!out.includes(v)) out.push(v);
+  }
+  return out;
 }
 
 /**
