@@ -37,6 +37,7 @@ import {
   type InstrumentSpec,
   spreadTooWide,
   planJournalNote,
+  parseCommission,
 } from './positionSize';
 
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps;
@@ -941,3 +942,93 @@ console.log('positionSize spreadTooWide selftest OK');
   );
 }
 console.log('positionSize planJournalNote selftest OK');
+
+// العمولة — لكل لوت فتحاً وإغلاقاً بعملة الحساب، تُضاف × اللوت إلى المخاطرة وتُصغّر `lotsWithin`
+{
+  // الخانة: فارغة = 0، أرقام عربية وفاصلة عشرية، «7.000» مبهمة تُرفض (قاعدة المبلغ)، سالب/نصّ = null
+  assert.equal(parseCommission(''), 0);
+  assert.equal(parseCommission('  '), 0);
+  assert.equal(parseCommission('7'), 7);
+  assert.equal(parseCommission('٧'), 7);
+  assert.equal(parseCommission('3,5'), 3.5);
+  assert.equal(parseCommission('0'), 0);
+  // «1,000» مبهمة كالرصيد تماماً (ألف؟ واحد بكسر؟) فتُرفض بدل تخمين
+  for (const bad of ['-7', 'abc', '7.000', '1,000', '1.2.3']) assert.equal(parseCommission(bad), null, bad);
+
+  const eu = instrumentSpec('EURUSD')!;
+  const pv = pipValuePerLot(eu, 1); // 10 USD
+  const base = { pipValuePerLot: pv, balance: 10_000, riskPct: 1, contractSize: eu.contractSize };
+  // مثال الملاحظة: 0.50 لوت، وقف 20، سبريد 1.5، عمولة 7 → 107.50 + 3.50 = 111 = 1.11%
+  const c = spreadRisk({ ...base, lots: 0.5, slPips: 20, spreadPips: 1.5, commissionPerLot: 7 })!;
+  assert.ok(near(c.risk, 111));
+  assert.ok(near(c.pct, 1.11));
+  // 100 / (21.5 × 10 + 7) = 100 / 222 = 0.4504 → 0.45
+  assert.equal(c.lotsWithin, 0.45);
+  // عمولة وحدها بلا سبريد تكفي للسطر: 100 + 3.5، و100 / 207 = 0.483 → 0.48
+  const only = spreadRisk({ ...base, lots: 0.5, slPips: 20, spreadPips: 0, commissionPerLot: 7 })!;
+  assert.ok(near(only.risk, 103.5));
+  assert.equal(only.lotsWithin, 0.48);
+  // عمولة 0 / NaN / سالبة / غائبة = سلوك السبريد وحده حرفياً
+  const s0 = spreadRisk({ ...base, lots: 0.5, slPips: 20, spreadPips: 1.5 })!;
+  for (const cm of [0, NaN, -3, undefined]) {
+    assert.deepEqual(spreadRisk({ ...base, lots: 0.5, slPips: 20, spreadPips: 1.5, commissionPerLot: cm }), s0, String(cm));
+  }
+  assert.equal(spreadRisk({ ...base, lots: 0.5, slPips: 20, spreadPips: 0, commissionPerLot: 0 }), null);
+  // عمولة تبتلع المخاطرة كلها: الرصيد 100، 1% = 1 USD، عمولة 7 للوت → 0.01 لوت يكلّف 0.07 عمولة
+  // + 0.01×20×10 = 2 → لا لوت يتّسع
+  const tiny = spreadRisk({ ...base, balance: 100, lots: 0.01, slPips: 20, spreadPips: 0, commissionPerLot: 7 })!;
+  assert.equal(tiny.lotsWithin, null);
+  // حساب بالين: عمولة 1,000 JPY للوت (7 USD تقريباً) على USDJPY، 1,000,000 JPY، 1%
+  const uj = instrumentSpec('USDJPY')!;
+  const pvj = pipValuePerLot(uj, 1); // 1,000 JPY
+  const j = spreadRisk({ lots: 0.5, slPips: 20, spreadPips: 1, pipValuePerLot: pvj, balance: 1_000_000, riskPct: 1, contractSize: uj.contractSize, commissionPerLot: parseCommission('1000')! })!;
+  assert.ok(near(j.risk, 0.5 * 21 * pvj + 500));
+  // البرهان على شبكة: `lotsWithin` لا يتجاوز المخاطرة المطلوبة شاملة العمولة، وخطوة فوقه تتجاوزها؛
+  // والعمولة لا تُصغّر المخاطرة أبداً ولا تُكبّر `lotsWithin` عن قيمته بالسبريد وحده
+  let checked = 0;
+  for (const spec of [eu, uj, instrumentSpec('XAUUSD')!, instrumentSpec('GBPJPY')!]) {
+    const p = pipValuePerLot(spec, spec.quote === 'JPY' ? 1 / 150 : 1);
+    for (const sl of [3, 8, 20, 37.5, 120]) {
+      for (const sp of [0, 0.6, 3]) {
+        for (const cm of [0.5, 3.5, 7, 12]) {
+          for (const bal of [300, 2_500, 48_000]) {
+            const want = bal * 0.01;
+            const s = positionSize({ balance: bal, riskPct: 1, slPips: sl, pipValuePerLot: p, contractSize: spec.contractSize });
+            if (!s || s.belowMinLot) continue;
+            const args = { lots: s.lots, slPips: sl, spreadPips: sp, pipValuePerLot: p, balance: bal, riskPct: 1, contractSize: spec.contractSize };
+            const x = spreadRisk({ ...args, commissionPerLot: cm })!;
+            const noC = spreadRisk(args);
+            assert.ok(x.risk > (noC ? noC.risk : s.actualRisk));
+            assert.ok(near(x.risk, s.lots * ((sl + sp) * p + cm), 1e-6));
+            if (x.lotsWithin != null) {
+              assert.ok(x.lotsWithin <= (noC?.lotsWithin ?? s.lots));
+              const cost = (sl + sp) * p + cm;
+              assert.ok(x.lotsWithin * cost <= want + 1e-9, `${spec.symbol} ${sl}+${sp}+${cm} ${bal}`);
+              assert.ok((x.lotsWithin + LOT_STEP) * cost > want - 1e-9, `${spec.symbol} ${sl}+${sp}+${cm} ${bal} step`);
+            }
+            checked++;
+          }
+        }
+      }
+    }
+  }
+  assert.ok(checked > 300, String(checked));
+
+  // ملاحظة الدفتر: العمولة بعملة الحساب لكل لوت، بعد السبريد، وحين تكون موجبة فقط
+  assert.equal(
+    planJournalNote({ lots: 0.45, risk: 90, ccy: 'USD', rr: '1:2', spreadPips: 1.5, commissionPerLot: 7 }),
+    '0.45 lot · risk 90.00 USD · R:R 1:2 · spread 1.5 pip · commission 7.00 USD/lot'
+  );
+  assert.equal(
+    planJournalNote({ lots: 0.5, risk: 7500, ccy: 'JPY', rr: '1:2', commissionPerLot: 1000 }),
+    '0.50 lot · risk 7,500 JPY · R:R 1:2 · commission 1,000 JPY/lot'
+  );
+  for (const cm of [0, null, NaN, -1, undefined]) {
+    assert.equal(
+      planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2', commissionPerLot: cm }),
+      '0.50 lot · risk 100.00 USD · R:R 1:2',
+      String(cm)
+    );
+  }
+}
+console.log('positionSize commission selftest OK');

@@ -30,6 +30,10 @@ const FIAT = new Set([
   'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'NZD', 'CAD', 'CHF', 'CNY',
   'SEK', 'NOK', 'DKK', 'PLN', 'TRY', 'ZAR', 'MXN', 'SGD', 'HKD',
   'ILS', 'SAR', 'AED',
+  // عملات تُكتب بالدفتر نصّاً حرّاً (USDHUF، USDTHB…) ولا تحسبها الحاسبة: كانت تُرجع [] فيغيب تحذير
+  // الرواتب الأمريكية وقرار الفيدرالي عن ساق الدولار. عملات ورقية بأكواد ISO فقط — لا عملات رقمية.
+  'HUF', 'CZK', 'RON', 'THB', 'KRW', 'INR', 'IDR', 'MYR', 'PHP', 'TWD', 'BRL', 'CLP', 'COP',
+  'RUB', 'KWD', 'QAR', 'BHD', 'OMR', 'JOD', 'EGP', 'KZT',
 ]);
 const METALS = new Set(['XAU', 'XAG']);
 /**
@@ -167,4 +171,22 @@ export function calendarAfterFetch(
   return keep
     ? { events: prev.events, at: nowMs, ok: false, fetchedAt: prev.fetchedAt }
     : { events: [], at: nowMs, ok: false, fetchedAt: null };
+}
+
+/**
+ * ردّ خادم التقويم كما يُمرَّر إلى `calendarAfterFetch`: الأحداث إن كان تقويماً حقيقياً، و`null` (فشل) إن
+ * لم يكن.
+ *
+ * لماذا: حين يتعذّر على الخادم جلب التقويم من مصدره يجيب **HTTP 200** بأحداث المثال (`sample: true`،
+ * بلا `ts`) لا بخطأ — فكان التطبيق يعدّها نجاحاً يستبدل التقويم المحفوظ، و`nextHighImpact` يتخطّى الأمثلة
+ * بحقّ، فيختفي تحذير «الرواتب الأمريكية بعد 40د» بلا سطر «بيانات محفوظة» (العلَم `ok: true`). وهي بالضبط
+ * الثغرة التي أُغلقت لفشل الشبكة. ردٌّ كلّه أمثلة، أو بلا مصفوفة أحداث، = فشل. مصفوفة فارغة تبقى نجاحاً
+ * (أسبوع بلا خبر قوي بعد الفلتر حقيقةٌ لا عطل).
+ */
+export function calendarFetchEvents(raw: unknown): NewsEvent[] | null {
+  const events = raw && typeof raw === 'object' ? (raw as { events?: unknown }).events : undefined;
+  if (!Array.isArray(events)) return null;
+  const list = events as NewsEvent[];
+  if (list.length > 0 && list.every((e) => e && e.sample)) return null;
+  return list.filter((e) => e && !e.sample);
 }

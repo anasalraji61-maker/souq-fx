@@ -5,6 +5,7 @@ import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import {
   calendarAfterFetch,
+  calendarFetchEvents,
   newsCountdown,
   nextHighImpact,
   symbolCurrencies,
@@ -31,7 +32,8 @@ function ensureFresh(now: number) {
   inflight = api
     .calendar({ impact: 'high' })
     .then((r) => {
-      cache = calendarAfterFetch(cache, Array.isArray(r.events) ? r.events : [], Date.now());
+      // ردّ الأمثلة (الخادم لم يبلغ مصدره) فشلٌ لا نجاح — لا يمحو تقويماً محفوظاً، راجع `calendarFetchEvents`
+      cache = calendarAfterFetch(cache, calendarFetchEvents(r), Date.now());
     })
     .catch(() => {
       cache = calendarAfterFetch(cache, null, Date.now());

@@ -304,6 +304,21 @@ export function journalInstrumentKey(raw: string | null | undefined): string {
 }
 
 /**
+ * حجم صفقة الدفتر **المعروف** باللوت، أو `null` إن لم يُعرف.
+ *
+ * الخادم يضع 1 لصفقة سُجِّلت بلا حجم، فالدفتر يعامل 1 كـ«غير معروف» — لكن 1.00 لوت حجمٌ حقيقي شائع،
+ * والحاسبة تُخرجه بالضبط (10,000 USD، 1%، وقف 10 pip على EURUSD) فتُسجَّل الخطة بـ1 ثم يخفي الدفتر حجمها
+ * ونتيجتها بالمال، ويُسقط صافي الأداة كلّها بالمال. «سجّل الخطة» يكتب الحجم بالملاحظة أيضاً
+ * (`planJournalNote`: «1.00 lot · risk …») — فملاحظةٌ تبدأ بـ«1.00 lot» بهذا الشكل حرفياً تشهد أن 1 رقمٌ
+ * كُتب لا افتراض. غير ذلك 1 يبقى مجهولاً كما كان (لا تخمين من ملاحظة كتبها المتداول بيده).
+ */
+export function knownLots(size: number | null | undefined, note?: string | null): number | null {
+  if (typeof size !== 'number' || !Number.isFinite(size) || size <= 0) return null;
+  if (size !== 1) return size;
+  return typeof note === 'string' && /^1\.00 lot( ·|$)/.test(note) ? 1 : null;
+}
+
+/**
  * صافي الصفقات المغلقة **لكل أداة**: النقاط، وعددها، والمال بعملة التسعير — لسطر «صافي النقاط» بالدفتر.
  *
  * النقاط تُجمع لكل أداة على حدة (pip الذهب ليس pip اليورو)، وكانت تُجمع داخل اللوحة بلا اختبار. والمال
@@ -325,6 +340,7 @@ export function netByInstrument(
     entry: number;
     exit?: number | null;
     size?: number | null;
+    note?: string | null;
     status: string;
   }[]
 ): { symbol: string; n: number; pips: number; cash: { amount: number; ccy: string } | null }[] {
@@ -338,9 +354,9 @@ export function netByInstrument(
     const cur = acc.get(key) ?? { n: 0, pips: 0, cash: 0, ccy: null, cashOk: true };
     cur.n += 1;
     cur.pips += mv.pips;
-    const lots = tr.size;
+    const lots = knownLots(tr.size, tr.note);
     const cash =
-      typeof lots === 'number' && Number.isFinite(lots) && lots > 0 && lots !== 1 && tr.exit != null
+      lots != null && tr.exit != null
         ? pnlInQuoteCcy({ symbol: tr.symbol, side, entry: tr.entry, exit: tr.exit, lots })
         : null;
     if (cash && (cur.ccy == null || cur.ccy === cash.ccy)) {

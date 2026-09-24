@@ -27,6 +27,7 @@ import {
   quoteSymbol,
   levelSideIssue,
   netByInstrument,
+  knownLots,
   journalInstrumentKey,
   realizedMove,
   realizedR,
@@ -518,7 +519,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     setEntry(String(tr.entry));
     setExit(tr.exit != null ? String(tr.exit) : '');
     // 1 هو افتراضُ الباك-إند لصفقة سُجِّلت بلا حجم — لا يُملأ بالخانة كأنه رقم كتبه المتداول
-    setSize(tr.size != null && Number.isFinite(tr.size) && tr.size > 0 && tr.size !== 1 ? String(tr.size) : '');
+    // (إلا 1.00 مسجَّلة من الحاسبة — ملاحظتها تشهد بها، راجع `knownLots`)
+    const kl = knownLots(tr.size, tr.note);
+    setSize(kl != null ? String(kl) : '');
     setSl(tr.sl != null ? String(tr.sl) : '');
     setTp(tr.tp != null ? String(tr.tp) : '');
     setNote(tr.note || '');
@@ -595,13 +598,15 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         size: num(size) ?? undefined,
         note,
       });
+      // الإضافة كالتعديل أعلاه: اللوحة قد تُغلق أثناء الطلب (تبديل التبويب) — لا تحديث حالة بعد الفكّ
+      if (!mountedRef.current) return;
       playSoftClick();
       resetForm();
       await refresh();
     } catch {
-      setFormError(t.journalAddError);
+      if (mountedRef.current) setFormError(t.journalAddError);
     } finally {
-      setBusy(false);
+      if (mountedRef.current) setBusy(false);
     }
   };
 
@@ -736,10 +741,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             </Text>{' '}
             {tr.symbol}
             {/* 1 هو افتراض الباك-إند لصفقة بلا حجم مسجَّل — لا يُميَّز عن حجم كتبه المتداول، فلا يُعرض
-                كأنه رقمه. ما عداه حجم سجّله فعلاً (يدوياً أو عبر «سجّل الخطة» من الحاسبة). */}
-            {typeof tr.size === 'number' && Number.isFinite(tr.size) && tr.size > 0 && tr.size !== 1
-              ? ` · ${Number(tr.size.toFixed(2))} lot`
-              : ''}{' '}
+                كأنه رقمه. ما عداه حجم سجّله فعلاً (يدوياً أو عبر «سجّل الخطة» من الحاسبة)، و1.00 من «سجّل الخطة»
+                تشهد بها ملاحظتها — راجع `knownLots`. */}
+            {knownLots(tr.size, tr.note) != null ? ` · ${Number(tr.size.toFixed(2))} lot` : ''}{' '}
             · {formatPrice(tr.entry, tr.symbol)}
             {tr.exit != null ? ` → ${formatPrice(tr.exit, tr.symbol)}` : ` ${t.journalOpenSuffix}`}
           </Text>
@@ -799,7 +803,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
              * لا الحساب، فـ«+0.23%» على لوتين هي 500$ — والمتداول كان يضرب بنفسه. الحجم 1 بلا معنى
              * (يضعه الخادم حين لا يُرسل حجم — راجع خانة الحجم) فلا يُحسب منه مال، كسطر الحجم أعلاه.
              */
-            const lotsKnown = typeof tr.size === 'number' && Number.isFinite(tr.size) && tr.size > 0 && tr.size !== 1;
+            const lotsKnown = knownLots(tr.size, tr.note) != null;
             const px = closed ? tr.exit : live;
             const cash =
               mv && lotsKnown && px != null

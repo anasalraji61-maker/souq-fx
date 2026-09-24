@@ -26,6 +26,7 @@ import {
   marginPrice,
   stopPipsMismatch,
   parseSpreadPips,
+  parseCommission,
   spreadRisk,
   spreadTooWide,
   planJournalNote,
@@ -60,6 +61,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const [slPips, setSlPips] = useState('');
   /** سبريد الأداة بالنقاط (اختياري) — يخصّ الأداة لا الحساب، فلا يُحفظ ويُمسح بتبديلها */
   const [spread, setSpread] = useState('');
+  /**
+   * عمولة الحساب لكل لوت فتحاً وإغلاقاً، **بعملة الحساب** (اختيارية — Raw/ECN). تخصّ الحساب لا الأداة
+   * كالرافعة، فتُحفظ معه؛ وتُمسح حين يبدّل المتداول عملة الحساب بيده (7 USD ليست 7 JPY).
+   */
+  const [commission, setCommission] = useState('');
   /** بديل اختياري: سعرا الدخول والوقف كما يراهما المتداول على الشارت → تُملأ خانة النقاط تلقائياً */
   const [entryPx, setEntryPx] = useState('');
   const [stopPx, setStopPx] = useState('');
@@ -99,9 +105,16 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       try {
         const raw = await AsyncStorage.getItem(STORE_KEY);
         if (raw && mountedRef.current) {
-          const p = JSON.parse(raw) as { balance?: string; riskPct?: string; account?: string; leverage?: string };
+          const p = JSON.parse(raw) as {
+            balance?: string;
+            riskPct?: string;
+            account?: string;
+            leverage?: string;
+            commission?: string;
+          };
           if (typeof p.balance === 'string') setBalance(p.balance);
           if (typeof p.leverage === 'string') setLeverage(p.leverage);
+          if (typeof p.commission === 'string') setCommission(p.commission);
           if (typeof p.riskPct === 'string') setRiskPct(p.riskPct);
           if (p.account && (ACCOUNT_CCYS as string[]).includes(p.account)) setAccount(p.account as AccountCcy);
         }
@@ -115,10 +128,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
 
   useEffect(() => {
     if (!loadedRef.current) return;
-    AsyncStorage.setItem(STORE_KEY, JSON.stringify({ balance, riskPct, account, leverage })).catch(() => {
+    AsyncStorage.setItem(STORE_KEY, JSON.stringify({ balance, riskPct, account, leverage, commission })).catch(() => {
       /* ignore */
     });
-  }, [balance, riskPct, account, leverage]);
+  }, [balance, riskPct, account, leverage, commission]);
 
   /**
    * تبديل الزوج من شريط رموز شاشة الأدوات يصل هنا بـ`defaultSymbol` — وكان يُهمَل بعد أول تركيب،
@@ -227,6 +240,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       : spreadWide != null
         ? t.riskCalcSpreadTooWide.replace('{n}', String(spreadWide))
         : t.invalidNumberHint;
+  /** خطأ خانة العمولة تحتها — للسبب نفسه: اللوت يُحسب بدونها فلا يصل `badNumber` إليها */
+  const commissionErr = parseCommission(commission) != null ? null : t.invalidNumberHint;
   /** الرصيد مبلغ: «10.000» أوروبية = عشرة آلاف فتُرفض كـ«10,000» بدل حساب لوت من 10 — راجع parseDecimal.ts */
   const balanceNum = parseDecimal(balance, { amount: true }) ?? NaN;
   /** «1%» / «0.5٪» كما يقولها المتداول — علامة النسبة تُقبل بهذه الخانة وحدها (راجع parseDecimal.ts) */
@@ -374,8 +389,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * الرئيسي يبقى من الوقف وحده (ما يكتبه كل مرجع وكل منصّة)، والسطر يقول الفرق وما العمل.
    */
   const spreadPips = parseSpreadPips(spread);
+  /** بعملة الحساب لكل لوت — تُضاف × اللوت داخل `spreadRisk`؛ سطرٌ واحد «شاملة التكاليف» حين تكون موجبة */
+  const commissionPerLot = parseCommission(commission);
   const withSpread =
-    lots != null && pv != null && spreadPips != null && spec
+    lots != null && pv != null && spreadPips != null && commissionPerLot != null && spec
       ? spreadRisk({
           lots,
           slPips: num(slPips),
@@ -384,8 +401,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           balance: balanceNum,
           riskPct: riskNum,
           contractSize: spec.contractSize,
+          commissionPerLot,
         })
       : null;
+  /** «(+1.5 pip + 7.00 USD/lot)» — ما دخل السطر فعلاً، كي لا تُقرأ المخاطرة الأعلى بلا سبب ظاهر */
+  const costParts = [
+    spreadPips ? `${spreadPips} pip` : null,
+    commissionPerLot ? `${formatMoney(commissionPerLot, account)}/lot` : null,
+  ].filter(Boolean);
   /**
    * الهامش المحجوز للّوت المحسوب — من سعر الدخول المكتوب (القيمة الاسمية تحتاج سعراً، ولا يُختلق من
    * سعر التحويل). بنسبةٍ من الرصيد: «542.50 USD (54%)» يقول قبل النقر إن الصفقة تأكل نصف الحساب
@@ -482,6 +505,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           ccy: account,
           rr: formatRR(plan.rr),
           spreadPips: parseSpreadPips(spread),
+          commissionPerLot: parseCommission(commission),
         }),
       });
       if (!mountedRef.current) return;
@@ -612,7 +636,17 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
 
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcAccountCcy}</Text>
       <View style={[styles.chips, rtl && styles.chipsRtl]}>
-        {ACCOUNT_CCYS.map((c) => chip(c, account === c, () => setAccount(c), `${t.riskCalcAccountCcy}: ${c}`))}
+        {ACCOUNT_CCYS.map((c) =>
+          chip(
+            c,
+            account === c,
+            () => {
+              if (c !== account) setCommission('');
+              setAccount(c);
+            },
+            `${t.riskCalcAccountCcy}: ${c}`
+          )
+        )}
       </View>
 
       <Text style={[styles.label, { textAlign: align }]}>
@@ -717,6 +751,17 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       ) : null}
       <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcSpreadNote}</Text>
 
+      <Text style={[styles.label, { textAlign: align }]}>
+        {t.riskCalcCommission} ({account})
+      </Text>
+      {input(commission, setCommission, '7', t.riskCalcCommission)}
+      {commissionErr ? (
+        <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
+          {commissionErr}
+        </Text>
+      ) : null}
+      <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcCommissionNote}</Text>
+
       {conv && convLoading ? <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.sm }} /> : null}
       {conv && convFailed ? (
         <>
@@ -796,11 +841,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             {result && lots != null ? ` · ${lots.toFixed(2)} lot = ${money(result.pipValue)}` : ''}
           </Text>
         ) : null}
-        {/* المخاطرة شاملة السبريد، وتحتها جملة اللوت الذي يحفظ النسبة المكتوبة حين يكون أصغر */}
+        {/* المخاطرة شاملة السبريد (والعمولة إن كُتبت)، وتحتها جملة اللوت الذي يحفظ النسبة المكتوبة حين يكون أصغر */}
         {withSpread ? (
           <>
             <Text style={[styles.resultMeta, { textAlign: align }]} accessibilityLiveRegion="polite">
-              {t.riskCalcRiskWithSpread} (+{spreadPips} pip): {money(withSpread.risk)} ({formatRiskPct(withSpread.pct)})
+              {commissionPerLot ? t.riskCalcRiskWithCosts : t.riskCalcRiskWithSpread} (+{costParts.join(' + ')}):{' '}
+              {money(withSpread.risk)} ({formatRiskPct(withSpread.pct)})
             </Text>
             {withSpread.lotsWithin != null && withSpread.lotsWithin < lots! ? (
               <Text style={[styles.resultMeta, { textAlign: align }]}>

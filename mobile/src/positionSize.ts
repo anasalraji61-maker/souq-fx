@@ -539,6 +539,10 @@ export function spreadTooWide(raw: string): number | null {
  * `risk`/`pct`: لـ`lots` المحسوب نفسه على (الوقف + السبريد). `lotsWithin`: أكبر لوت يُبقي المخاطرة
  * شاملة السبريد ضمن النسبة المطلوبة (`positionSize` على الوقف الموسَّع، مقرَّباً للأسفل)؛ `null` حين
  * يخرج دون أصغر لوت. `null` كلّه بلا سبريد (0) أو بمدخل غير صالح — لا سطر يكرّر المخاطرة نفسها.
+ *
+ * `commissionPerLot`: حسابات Raw/ECN تأخذ عمولة عند الفتح وعند الإغلاق (7 USD للوت شائعة) — على 0.50
+ * لوت ووقف 20 هي 3.50 فوق الـ100، أي 1.035% لا 1%. تُضاف × اللوت إلى المخاطرة، و`lotsWithin` يقسم
+ * المخاطرة المطلوبة على كلفة اللوت كاملةً. عمولة وحدها بلا سبريد تكفي لإظهار السطر.
  */
 export function spreadRisk(input: {
   lots: number;
@@ -548,14 +552,43 @@ export function spreadRisk(input: {
   balance: number;
   riskPct: number;
   contractSize: number;
+  /** العمولة لكل لوت فتحاً وإغلاقاً **بعملة الحساب** — راجع `parseCommission`. غائبة/0 = بلا عمولة. */
+  commissionPerLot?: number;
 }): { risk: number; pct: number; lotsWithin: number | null } | null {
-  const { lots, slPips, spreadPips, pipValuePerLot, balance, riskPct, contractSize } = input;
-  if (!Number.isFinite(spreadPips) || spreadPips <= 0) return null;
+  const { lots, slPips, pipValuePerLot, balance, riskPct, contractSize } = input;
+  const spreadPips = Number.isFinite(input.spreadPips) && input.spreadPips > 0 ? input.spreadPips : 0;
+  const comm =
+    input.commissionPerLot != null && Number.isFinite(input.commissionPerLot) && input.commissionPerLot > 0
+      ? input.commissionPerLot
+      : 0;
+  if (spreadPips === 0 && comm === 0) return null;
   const effSl = slPips + spreadPips;
   const r = riskForLots({ lots, slPips: effSl, pipValuePerLot, balance });
   if (!r) return null;
-  const within = positionSize({ balance, riskPct, slPips: effSl, pipValuePerLot, contractSize });
-  return { ...r, lotsWithin: within && !within.belowMinLot ? within.lots : null };
+  if (comm === 0) {
+    const within = positionSize({ balance, riskPct, slPips: effSl, pipValuePerLot, contractSize });
+    return { ...r, lotsWithin: within && !within.belowMinLot ? within.lots : null };
+  }
+  // العمولة تُدفع على كل لوت مهما كان الوقف: كلفة اللوت الواحد = (الوقف + السبريد) × قيمة النقطة + العمولة
+  const risk = r.risk + lots * comm;
+  let lotsWithin: number | null = null;
+  if (Number.isFinite(riskPct) && riskPct > 0 && riskPct <= 100) {
+    const want = (balance * riskPct) / 100;
+    const steps = Math.floor(want / (effSl * pipValuePerLot + comm) / LOT_STEP + 1e-9);
+    const l = Math.round(steps * LOT_STEP * 100) / 100;
+    lotsWithin = l >= LOT_STEP ? l : null;
+  }
+  return { risk, pct: (risk / balance) * 100, lotsWithin };
+}
+
+/**
+ * خانة العمولة (لكل لوت، فتحاً وإغلاقاً، بعملة الحساب): فارغة = 0 (حسابات Standard بلا عمولة)، وإلا
+ * مبلغ ≥ 0 بقاعدة الرصيد (`amount`: «7.000» مبهمة تُرفض بدل أن تُقرأ 7). `null` = غير مفهوم أو سالب.
+ */
+export function parseCommission(raw: string): number | null {
+  if (raw.trim() === '') return 0;
+  const v = parseDecimal(raw, { amount: true });
+  return v != null && v >= 0 ? v : null;
 }
 
 /** أكبر حجم باللوت يُعقل بخانة «الحجم لوت»: وسطاء التجزئة يحدّون الأمر الواحد بـ50–100 لوت عادةً. */
@@ -591,12 +624,17 @@ export function planJournalNote(input: {
   ccy: string;
   rr: string;
   spreadPips?: number | null;
+  /** لكل لوت فتحاً وإغلاقاً بعملة الحساب — يُكتب «commission 7.00 USD/lot» حين يكون موجباً */
+  commissionPerLot?: number | null;
 }): string {
-  const { lots, risk, ccy, rr, spreadPips } = input;
+  const { lots, risk, ccy, rr, spreadPips, commissionPerLot } = input;
   const riskText = risk != null && Number.isFinite(risk) ? formatMoney(risk, ccy) : ccy;
   const parts = [`${lots.toFixed(2)} lot`, `risk ${riskText}`, `R:R ${rr}`];
   if (spreadPips != null && Number.isFinite(spreadPips) && spreadPips > 0) {
     parts.push(`spread ${Number(spreadPips.toFixed(2))} pip`);
+  }
+  if (commissionPerLot != null && Number.isFinite(commissionPerLot) && commissionPerLot > 0) {
+    parts.push(`commission ${formatMoney(commissionPerLot, ccy)}/lot`);
   }
   return parts.join(' · ');
 }

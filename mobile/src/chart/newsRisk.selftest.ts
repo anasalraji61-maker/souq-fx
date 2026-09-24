@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import {
   calendarAfterFetch,
+  calendarFetchEvents,
   newsCountdown,
   nextHighImpact,
   symbolCurrencies,
@@ -215,3 +216,39 @@ console.log('newsRisk countdown selftest OK');
   assert.deepEqual(c.events, [nfp]);
 }
 console.log('newsRisk calendar cache selftest OK');
+
+// calendarFetchEvents — ردّ الأمثلة من الخادم (مصدره متعذّر، HTTP 200) فشلٌ لا يمحو تقويماً محفوظاً
+{
+  const H = 60 * 60 * 1000;
+  const t0 = 1_800_000_000_000;
+  const nfp: NewsEvent = { id: 'nfp', title: 'Non-Farm Payrolls', currency: 'USD', impact: 'High', ts: (t0 + 2 * H) / 1000 };
+  const sample: NewsEvent = { id: 's1', title: 'Non-Farm Payrolls', currency: 'USD', impact: 'High', ts: null, sample: true };
+  // الحالة التي وجدها الفحص: تقويم فيه NFP بعد 40د، ثم تحديث يعيد أمثلة فقط
+  const saved = calendarAfterFetch(null, [{ ...nfp, ts: (t0 + 40 * 60 * 1000) / 1000 }], t0 - 10 * 60 * 1000);
+  const after = calendarAfterFetch(saved, calendarFetchEvents({ events: [sample, { ...sample, id: 's2' }] }), t0);
+  assert.equal(after.ok, false); // سطر «من تقويم محفوظ» يظهر
+  assert.equal(nextHighImpact(after.events, symbolCurrencies('EURUSD'), t0)?.event.id, 'nfp');
+  // ردود ليست تقويماً: فشل
+  for (const bad of [null, undefined, 'x', 42, {}, { events: null }, { events: 'x' }, { events: {} }]) {
+    assert.equal(calendarFetchEvents(bad), null, JSON.stringify(bad));
+  }
+  // تقويم حقيقي: يمرّ كما هو، والفارغ نجاح (أسبوع بلا خبر قوي)
+  assert.deepEqual(calendarFetchEvents({ events: [nfp] }), [nfp]);
+  assert.deepEqual(calendarFetchEvents({ events: [] }), []);
+  assert.deepEqual(calendarAfterFetch(saved, calendarFetchEvents({ events: [] }), t0).ok, true);
+  // خليط (لا يُرسله الخادم اليوم): الحقيقي يُؤخذ والأمثلة تُسقط
+  assert.deepEqual(calendarFetchEvents({ events: [sample, nfp] }), [nfp]);
+}
+console.log('newsRisk calendarFetchEvents selftest OK');
+
+// عملات خارج الحاسبة تُكتب بالدفتر: ساق الدولار/اليورو تُحذَّر، والعملات الرقمية تبقى []
+{
+  assert.deepEqual(symbolCurrencies('USDHUF'), ['USD', 'HUF']);
+  assert.deepEqual(symbolCurrencies('USDTHB'), ['USD', 'THB']);
+  assert.deepEqual(symbolCurrencies('EURCZK'), ['EUR', 'CZK']);
+  assert.deepEqual(symbolCurrencies('usd/krw'), ['USD', 'KRW']);
+  const nfp: NewsEvent = { id: 'nfp', title: 'NFP', currency: 'USD', impact: 'High', ts: 1_800_000_000 + 1800 };
+  assert.equal(nextHighImpact([nfp], symbolCurrencies('USDHUF'), 1_800_000_000_000)?.event.id, 'nfp');
+  for (const c of ['BTCUSD', 'ETHUSD', 'USDTRX', 'XRPUSD', 'USDBTC']) assert.deepEqual(symbolCurrencies(c), [], c);
+}
+console.log('newsRisk exotic-currency selftest OK');

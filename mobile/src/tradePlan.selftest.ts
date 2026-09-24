@@ -13,6 +13,7 @@ import {
   quoteSymbol,
   levelSideIssue,
   netByInstrument,
+  knownLots,
   journalInstrumentKey,
   realizedMove,
   realizedR,
@@ -20,7 +21,7 @@ import {
   targetAtRR,
   QUICK_RR,
 } from './tradePlan';
-import { instrumentSpec } from './positionSize';
+import { instrumentSpec, pipValuePerLot, planJournalNote, positionSize } from './positionSize';
 
 // شراء EURUSD صحيح: وقف 25 pip، هدف 50 pip ⇒ 1:2
 const a = analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, tp: 1.09 });
@@ -504,3 +505,33 @@ console.log('tradePlan netByInstrument selftest OK');
   assert.equal(journalInstrumentKey(undefined), '');
 }
 console.log('tradePlan journalInstrumentKey selftest OK');
+
+// knownLots — 1.00 لوت من «سجّل الخطة» حجمٌ معروف، و1 بلا شاهد يبقى افتراض الخادم
+{
+  // الحالة التي وجدها الفحص: 10,000 USD، 1%، وقف 10 pip EURUSD = 1.00 لوت بالضبط
+  const eu = instrumentSpec('EURUSD')!;
+  const r = positionSize({ balance: 10_000, riskPct: 1, slPips: 10, pipValuePerLot: pipValuePerLot(eu, 1), contractSize: eu.contractSize })!;
+  assert.equal(r.lots, 1);
+  const note = planJournalNote({ lots: r.lots, risk: r.actualRisk, ccy: 'USD', rr: '1:2', spreadPips: 1.2 });
+  assert.equal(knownLots(r.lots, note), 1);
+  assert.equal(knownLots(1, planJournalNote({ lots: 1, risk: null, ccy: 'USD', rr: '1:2' })), 1);
+  // 1 بلا شاهد: مجهول كما كان
+  for (const n of [undefined, null, '', 'breakout', '1 lot', '1.0 lot', '0.50 lot · risk 50.00 USD', ' 1.00 lot', '1.00 lots', '1.00 lot!']) {
+    assert.equal(knownLots(1, n), null, String(n));
+  }
+  // غير 1: الحجم كما هو مهما كانت الملاحظة؛ وغير الصالح null
+  assert.equal(knownLots(0.5, undefined), 0.5);
+  assert.equal(knownLots(2, '1.00 lot · risk'), 2);
+  for (const bad of [0, -1, NaN, Infinity, null, undefined]) assert.equal(knownLots(bad as number, '1.00 lot'), null, String(bad));
+
+  // صافي الأداة: 0.5 لوت رابحة + 1.00 من الحاسبة خاسرة — كان المال null للأداة كلّها
+  const c = (entry: number, exit: number, size: number, note?: string) =>
+    ({ symbol: 'EURUSD', side: 'buy', entry, exit, size, note, status: 'closed' });
+  const rows = netByInstrument([c(1.085, 1.087, 0.5), c(1.085, 1.083, 1, note)]);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0]!.pips, 0);
+  assert.deepEqual(rows[0]!.cash, { amount: -100, ccy: 'USD' }); // +100 − 200
+  // و1 بلا ملاحظة الحاسبة يبقى يُسقط المال (المجموع الجزئي أسوأ من غيابه)
+  assert.equal(netByInstrument([c(1.085, 1.087, 0.5), c(1.085, 1.083, 1, 'manual')])[0]!.cash, null);
+}
+console.log('tradePlan knownLots selftest OK');
