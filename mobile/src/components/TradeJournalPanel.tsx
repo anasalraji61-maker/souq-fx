@@ -37,6 +37,7 @@ import {
   levelSideIssue,
   netByInstrument,
   openRiskTotals,
+  stackedCurrencyExposure,
   openTradesWithoutStop,
   knownLots,
   journalInstrumentKey,
@@ -589,6 +590,19 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   }, [visibleTrades, t]);
 
   /**
+   * «صفقات مفتوحة تراهن على USD بالاتجاه نفسه: 3 — خبرٌ واحد يضربها معاً» (`stackedCurrencyExposure`): EURUSD وGBPUSD
+   * شراءً وUSDJPY بيعاً تبدو ثلاث صفقات مستقلّة وهي رهانٌ واحد ضد الدولار. على **كل** المفتوحة لا المفلترة: فلتر أداة
+   * واحدة يُخفي بقية الرهان ولا يُلغيه.
+   */
+  const stackedLines = useMemo(
+    () =>
+      stackedCurrencyExposure(trades).map((x) =>
+        t.journalExposureStacked.replace('{ccy}', x.ccy).replace('{n}', String(x.n))
+      ),
+    [trades, t]
+  );
+
+  /**
    * إحصاءات ما هو معروض. بلا فلتر: أرقام الخادم حرفياً كما كانت (لا تغيّر بتاتاً بالحالة الشائعة).
    * وبفلتر أداة: تُحسب محليّاً **بمعادلة الخادم نفسها** (`db.trade_stats`: المغلقة ذات `pnl` فقط،
    * نسبة النجاح بخانة عشرية والبقيّة بخانتين). وهذا حسابٌ مطابق لا تقريب: `trade_stats` يقرأ
@@ -1090,6 +1104,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       ) : null}
 
       {openRiskLine ? <Text style={[styles.stat, { textAlign: align }]}>{openRiskLine}</Text> : null}
+      {stackedLines.map((line) => (
+        <Text key={line} style={[styles.planWarn, { textAlign: align }]}>
+          {line}
+        </Text>
+      ))}
       {shownStats && shownStats.trade_count === 0 && visibleTrades.length > 0 ? (
         <Text style={[styles.sub, { textAlign: align }]}>{t.journalStatsPending}</Text>
       ) : null}

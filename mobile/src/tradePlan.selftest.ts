@@ -57,6 +57,7 @@ import {
   planSummaryText,
   QUICK_SYMBOLS,
   openCurrencyExposure,
+  stackedCurrencyExposure,
 } from './tradePlan';
 import { riskInQuoteCcy as cashRisk } from './positionSize';
 import { instrumentSpec, pipValuePerLot, planJournalNote, pnlInQuoteCcy, positionSize, slPipsFromPrices } from './positionSize';
@@ -1975,3 +1976,42 @@ console.log('tradePlan QUICK_SYMBOLS selftest OK');
   assert.equal(openCurrencyExposure([O({ symbol: 'GBPJPY', side: 'buy', entry: 190, size: 0.1 })])![0].units, 0.1 * instrumentSpec('GBPJPY')!.contractSize);
 }
 console.log('tradePlan openCurrencyExposure selftest OK');
+
+// stackedCurrencyExposure: اتجاهٌ لا حجم — عملات تراهن عليها ≥2 مفتوحة بالاتجاه نفسه
+{
+  const o = (symbol: string, side: string, status = 'open') => ({ symbol, side, status });
+  // المثال الأصلي: شراء EURUSD + شراء GBPUSD + بيع USDJPY = ثلاث مرّات بيع الدولار
+  assert.deepEqual(stackedCurrencyExposure([o('EURUSD', 'buy'), o('GBPUSD', 'buy'), o('USDJPY', 'sell')]), [
+    { ccy: 'USD', n: 3, dir: 'short' },
+  ]);
+  // تحوّط: شراء EURUSD + شراء USDCHF ⇒ الدولار بساقين متعاكستين ⇒ لا سطر
+  assert.deepEqual(stackedCurrencyExposure([o('EURUSD', 'buy'), o('USDCHF', 'buy')]), []);
+  // صفقة واحدة ⇒ لا تراكم
+  assert.deepEqual(stackedCurrencyExposure([o('EURUSD', 'buy')]), []);
+  // المغلقة لا تُحسب
+  assert.deepEqual(stackedCurrencyExposure([o('EURUSD', 'buy'), o('GBPUSD', 'buy', 'closed')]), []);
+  // الزوج نفسه مرّتين ⇒ سطرٌ واحد بعملة الأساس لا EUR وUSD معاً
+  assert.deepEqual(stackedCurrencyExposure([o('EURUSD', 'buy'), o('EURUSD', 'buy')]), [{ ccy: 'EUR', n: 2, dir: 'long' }]);
+  assert.deepEqual(stackedCurrencyExposure([o('USDJPY', 'sell'), o('USDJPY', 'sell')]), [{ ccy: 'USD', n: 2, dir: 'short' }]);
+  // الزوج نفسه بيعاً وشراءً ⇒ تحوّط تام
+  assert.deepEqual(stackedCurrencyExposure([o('EURUSD', 'buy'), o('EURUSD', 'sell')]), []);
+  // الذهب ساقُ USD كأيّ زوج؛ «GOLD» اسم وسيط للأداة نفسها؛ لاحقة وسيط وأحرف صغيرة
+  assert.deepEqual(stackedCurrencyExposure([o('XAUUSD', 'buy'), o('eurusd.m', 'buy')]), [{ ccy: 'USD', n: 2, dir: 'short' }]);
+  assert.deepEqual(stackedCurrencyExposure([o('GOLD', 'buy'), o('XAUUSD', 'buy')]), [{ ccy: 'XAU', n: 2, dir: 'long' }]);
+  // أداة بلا مواصفات تُتخطّى ولا تُسقط الباقي
+  assert.deepEqual(stackedCurrencyExposure([o('NAS100', 'buy'), o('EURJPY', 'sell'), o('GBPJPY', 'sell')]), [
+    { ccy: 'JPY', n: 2, dir: 'long' },
+  ]);
+  // عملتان متراكمتان بمجموعتين مختلفتين: الأكثر صفقات أولاً
+  assert.deepEqual(
+    stackedCurrencyExposure([o('EURUSD', 'buy'), o('GBPUSD', 'buy'), o('AUDUSD', 'buy'), o('EURJPY', 'buy')]),
+    [
+      { ccy: 'USD', n: 3, dir: 'short' },
+      { ccy: 'EUR', n: 2, dir: 'long' },
+    ]
+  );
+  // سنت/micro: عقدٌ أصغر لكن الاتجاه نفسه
+  assert.deepEqual(stackedCurrencyExposure([o('EURUSDC', 'buy'), o('GBPUSD.micro', 'buy')]), [{ ccy: 'USD', n: 2, dir: 'short' }]);
+  assert.deepEqual(stackedCurrencyExposure([]), []);
+}
+console.log('tradePlan stackedCurrencyExposure selftest OK');

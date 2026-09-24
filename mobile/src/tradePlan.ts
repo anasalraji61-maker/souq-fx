@@ -1363,3 +1363,45 @@ export function openCurrencyExposure(
       return { ccy, units, legs: v.legs, sameWay: units !== 0 && (v.long === 0 || v.short === 0) };
     });
 }
+
+/**
+ * عملاتٌ تراهن عليها **صفقتان مفتوحتان أو أكثر بالاتجاه نفسه** — لسطر `journalExposureStacked` بالدفتر.
+ * شراء EURUSD + شراء GBPUSD + بيع USDJPY = ثلاث صفقات «مختلفة» كلّها بيعٌ للدولار: خبرٌ أمريكي واحد يضربها معاً.
+ *
+ * اتجاهٌ فقط لا حجم (بخلاف `openCurrencyExposure`): الصفقة المسجَّلة بلا حجم (الخادم يخزّن 1) ما زالت تراهن
+ * بالاتجاه نفسه، فلا يُسكت حجمٌ مجهول التحذير. أداة بلا مواصفات (مؤشرات، نفط، كريبتو) تُتخطّى — لا ساق عملة
+ * تُنسب لها، والعدّ «n صفقات بالاتجاه نفسه» يبقى صادقاً. أيّ ساقٍ معاكسة على العملة ⇒ تحوّط لا تراكم ⇒ لا سطر.
+ * مجموعة الصفقات نفسها على عملتين (EURUSD ×2 ⇒ EUR وUSD) تُذكر مرّة واحدة — بالعملة التي هي أساسها.
+ */
+export function stackedCurrencyExposure(
+  trades: readonly { id?: string | number; symbol: string; side: string; status: string }[]
+): { ccy: string; n: number; dir: 'long' | 'short' }[] {
+  const acc = new Map<string, { idx: number[]; long: number; short: number; asBase: number }>();
+  trades.forEach((tr, i) => {
+    if (tr.status !== 'open') return;
+    const spec = journalSpec(tr.symbol?.trim().toUpperCase());
+    if (!spec) return;
+    const buy = tr.side !== 'sell';
+    const leg = (ccy: string, long: boolean, base: boolean) => {
+      const cur = acc.get(ccy) ?? { idx: [], long: 0, short: 0, asBase: 0 };
+      cur.idx.push(i);
+      if (long) cur.long += 1;
+      else cur.short += 1;
+      if (base) cur.asBase += 1;
+      acc.set(ccy, cur);
+    };
+    leg(spec.base, buy, true);
+    leg(spec.quote, !buy, false);
+  });
+  const seen = new Set<string>();
+  return [...acc.entries()]
+    .filter(([, v]) => v.idx.length >= 2 && (v.long === 0 || v.short === 0))
+    .sort((a, b) => b[1].idx.length - a[1].idx.length || b[1].asBase - a[1].asBase || a[0].localeCompare(b[0]))
+    .filter(([, v]) => {
+      const key = v.idx.join(',');
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .map(([ccy, v]) => ({ ccy, n: v.idx.length, dir: v.long > 0 ? ('long' as const) : ('short' as const) }));
+}
