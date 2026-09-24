@@ -64,11 +64,14 @@ export function QuadChartModal({
   const [syncTime, setSyncTime] = useState(true);
   const [leader, setLeader] = useState(0);
   const [syncWindow, setSyncWindow] = useState<SyncTimeWindow | null>(null);
+  // زمن تقاطع القائد (ثوانٍ): التوابع ترسم خطّاً عمودياً وقراءة OHLC لشمعتها عنده.
+  const [crossTime, setCrossTime] = useState<number | null>(null);
 
   // النافذة المشتركة تخصّ رموزاً وفريماً بعينهما: تُصفَّر مع أي تبديل أو إعادة فتح،
   // وإلا تُطبَّق نافذة فريم سابق على شموع فريم جديد.
   useEffect(() => {
     setSyncWindow(null);
+    setCrossTime(null);
     setLeader(0);
   }, [visible, symbols, timeframe]);
 
@@ -218,6 +221,8 @@ export function QuadChartModal({
                     onSyncWindow={syncTime && isLeader ? setSyncWindow : undefined}
                     syncFollow={following}
                     syncTimeOnly
+                    syncCrossTime={following ? crossTime : undefined}
+                    onCrossTime={syncTime && isLeader ? setCrossTime : undefined}
                   />
                 ) : (
                   <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />

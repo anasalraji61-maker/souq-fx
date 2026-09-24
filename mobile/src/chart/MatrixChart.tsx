@@ -40,7 +40,7 @@ import { rangeBars } from './range';
 import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
-import { crossPriceAt, indexOfBarTime } from './crossAnchor';
+import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime } from './crossAnchor';
 import {
   axisTickCount,
   axisTickRatios,
@@ -328,6 +328,10 @@ type Props = {
   panSpeed?: PanSpeedPercent;
   /** مزامنة زمن فقط (بدون priceScale/pricePan) عند النشر */
   syncTimeOnly?: boolean;
+  /** تقاطع مشترك (التابع): زمن شمعة القائد بالثواني ⇒ خطّ عمودي على الشمعة السارية عنده. */
+  syncCrossTime?: number | null;
+  /** تقاطع مشترك (القائد): يُنشر زمن شمعة التقاطع بالثواني، و`null` عند مسحه. */
+  onCrossTime?: (timeSec: number | null) => void;
 };
 
 /** جذب التقاطع لـO/H/L/C: أقرب من هذا (px) فقط — وإلا يبقى على المستوى الملموس. */
@@ -804,6 +808,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   syncFollow = false,
   panSpeed: panSpeedProp,
   syncTimeOnly = false,
+  syncCrossTime,
+  onCrossTime,
 }: Props,
   ref
 ) {
@@ -1035,6 +1041,36 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     syncWindow?.start,
     syncWindow?.end,
   ]);
+
+  // تقاطع مشترك بالرباعي: كانت قراءة الشمعة نفسها على الأزواج الأربعة (هل كسر اليورو
+  // والذهب معاً عند خبر الدولار؟) تعني عيناً تقيس المحاور الزمنية الأربعة. القائد ينشر زمن
+  // تقاطعه، والتابع يرسم خطّه العمودي وسطر OHLC لشمعته السارية عندها — بلا خطّ أفقي
+  // (`price: null`): سعر القائد لا معنى له على زوج آخر. `crossFromSync` يميّز هذا التقاطع
+  // عن تقاطع المتداول نفسه، فيُمسح وحده عند انتهاء التبعية (إطفاء المزامنة/نقل القيادة).
+  const crossFromSync = useRef(false);
+  const onCrossTimeRef = useRef(onCrossTime);
+  onCrossTimeRef.current = onCrossTime;
+  const crossTimeSec = cross ? candleTimeSec(cross.time) : null;
+  const publishesCross = onCrossTime != null;
+  useEffect(() => {
+    if (!publishesCross) return;
+    onCrossTimeRef.current?.(crossFromSync.current ? null : crossTimeSec);
+  }, [crossTimeSec, publishesCross]);
+  useEffect(() => {
+    if (syncCrossTime === undefined) {
+      if (crossFromSync.current) {
+        crossFromSync.current = false;
+        setCross(null);
+      }
+      return;
+    }
+    const i = indexAtOrBeforeTime(source.plot, syncCrossTime, candleTimeSec);
+    const time = i != null ? source.plot[i]!.time : null;
+    crossFromSync.current = true;
+    setCross((prev) =>
+      time == null ? null : prev && prev.time === time && prev.price == null ? prev : { time, price: null }
+    );
+  }, [syncCrossTime, source.plot]);
 
   // الرسومات تتبع شموعها بالزمن لا بالخانة — راجع `drawingAnchors.ts`. لا يعمل قبل أن
   // تُحمَّل رسومات هذا الرمز/الفريم (`drawings === loadedDrawings`)، ويعيد المصفوفة نفسها
@@ -2472,6 +2508,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const snapTol = Math.abs(priceAtY(y - CROSS_SNAP_PX) - raw);
     const price = crossPriceAt(raw, candle, magnet, symbolPriceDecimals(series.symbol), snapTol);
     crossPinned.current = !hover;
+    crossFromSync.current = false;
     setCrossHover(hover);
     // حركة الفأرة داخل الشمعة نفسها وعلى السعر المقرَّب نفسه لا تعيد رسم الشارت كلّه.
     if (cross && cross.time === candle.time && cross.price === price) return;
@@ -2669,6 +2706,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     panStartPrice.current = pricePanRef.current;
     panMoved.current = false;
     crossPinned.current = false;
+    crossFromSync.current = false;
     setCross(null);
   }, []);
 

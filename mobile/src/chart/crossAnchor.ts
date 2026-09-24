@@ -76,3 +76,33 @@ export function crossPriceAt(
   const dp = decimals ?? (a >= 100 ? 2 : a >= 10 ? 3 : 5);
   return Number(raw.toFixed(dp));
 }
+
+/**
+ * تقاطع مشترك بين شارتات التخطيط الرباعي: الشارت القائد ينشر **زمن** شمعته (بالثواني)،
+ * وكل تابع يضع خطّه العمودي على شمعته **السارية** عند ذلك الزمن — آخر شمعة فتحت عنده
+ * أو قبله. التطابق التامّ (`indexOfBarTime`) لا يكفي هنا: رموز مختلفة قد تفتقد شمعة
+ * (DXY مقابل الذهب، ساعة بلا تداول)، فيختفي خطّ التابع بلا سبب يراه المتداول.
+ *
+ * `null` خارج مدى السلسلة: قبل أول شمعة، أو بعد آخر شمعة بأكثر من خطوة واحدة (بيانات
+ * التابع متأخّرة — إظهار آخر شمعة كأنها «عند ذلك الزمن» كذب). `toSec` يوحّد
+ * الثواني/المللي ثانية كما تفعل بقية المزامنة.
+ */
+export function indexAtOrBeforeTime(
+  plot: readonly TimedBar[],
+  timeSec: number | null | undefined,
+  toSec: (t: number) => number = (t) => t
+): number | null {
+  if (timeSec == null || !Number.isFinite(timeSec) || plot.length === 0) return null;
+  const first = toSec(plot[0]!.time);
+  if (timeSec < first) return null;
+  const n = plot.length;
+  const last = toSec(plot[n - 1]!.time);
+  const step = n >= 2 ? last - toSec(plot[n - 2]!.time) : 0;
+  if (timeSec > last + Math.max(0, step)) return null;
+  let found: number | null = null;
+  for (let i = 0; i < n; i++) {
+    if (toSec(plot[i]!.time) <= timeSec) found = i;
+    else break;
+  }
+  return found;
+}

@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/crossAnchor.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { crossPriceAt, indexOfBarTime } from './crossAnchor';
+import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime } from './crossAnchor';
 
 const bar = (time: number) => ({ time });
 
@@ -90,6 +90,23 @@ const bar = (time: number) => ({ time });
   assert.equal(crossPriceAt(1.0874, c, true, 5, 0.0003), 1.0872);
   assert.equal(crossPriceAt(1.09001, c, true, 5, 0.0003), 1.09001);
   assert.equal(crossPriceAt(1.0856, c, true, 5, 0.0003), 1.0856); // بين الفتح والإغلاق
+}
+
+// تقاطع الرباعي: التابع على شمعته السارية عند زمن القائد
+{
+  const plot = [1000, 1060, 1180, 1240].map(bar); // 1120 مفقودة عند هذا الرمز
+  assert.equal(indexAtOrBeforeTime(plot, 1060), 1); // تطابق تامّ
+  assert.equal(indexAtOrBeforeTime(plot, 1120), 1); // مفقودة ⇒ السارية قبلها لا اختفاء
+  assert.equal(indexAtOrBeforeTime(plot, 1090), 1); // داخل الشمعة
+  assert.equal(indexAtOrBeforeTime(plot, 999), null); // قبل أول شمعة
+  assert.equal(indexAtOrBeforeTime(plot, 1300), 3); // داخل خطوة بعد الأخيرة
+  assert.equal(indexAtOrBeforeTime(plot, 1301), null); // بيانات التابع متأخّرة ⇒ لا خطّ
+  assert.equal(indexAtOrBeforeTime(plot, null), null);
+  assert.equal(indexAtOrBeforeTime([], 1000), null);
+  assert.equal(indexAtOrBeforeTime([bar(1000)], 1000), 0);
+  assert.equal(indexAtOrBeforeTime([bar(1000)], 1001), null); // شمعة واحدة: لا خطوة معروفة
+  // مللي ثانية بالتابع وثوانٍ من القائد
+  assert.equal(indexAtOrBeforeTime([bar(1.7e12), bar(1.70006e12)], 1.70003e9, (t) => (t > 1e12 ? t / 1000 : t)), 0);
 }
 
 console.log('crossAnchor.selftest: PASS');
