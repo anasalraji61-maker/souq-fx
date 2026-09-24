@@ -73,10 +73,18 @@ Notifications.setNotificationHandler({
   }),
 });
 
+/**
+ * **القناة قبل السؤال.** بأندرويد 13+ لا يعرض النظام نافذة إذن الإشعارات ما لم توجد قناة واحدة على
+ * الأقل — و`App.tsx` ينشئ القناة عند الإقلاع **بلا انتظار** (يقرأ اللغة من التخزين أولاً)، بينما لوح
+ * التنبيهات يسأل عن الإذن **عند تركيبه**. فمن يفتح التطبيق وتبويبه المحفوظ «التنبيهات» يقع السؤال
+ * قبل القناة: لا نافذة، والإذن يبقى غير ممنوح، فلا يصله إشعار تنبيه واحد. انتظار الوعد نفسه
+ * (`ensureAlertChannel` تخزّنه) لا يكلّف شيئاً حين تكون القناة جاهزة.
+ */
 export async function ensureAlertNotifications(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
   const { status: existing } = await Notifications.getPermissionsAsync();
   if (existing === 'granted') return true;
+  await ensureAlertChannel();
   const { status } = await Notifications.requestPermissionsAsync();
   return status === 'granted';
 }
