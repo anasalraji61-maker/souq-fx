@@ -327,30 +327,36 @@ export function computeBearPower(candles: Candle[], period = 13): (number | null
 
 /**
  * TSI (True Strength Index، فترتا القيمة القياسية r=25 (طويلة) وs=13 (قصيرة)) — زخم مزدوج التنعيم:
- * momentum[i] = إغلاق[i] − إغلاق[i-1] (صفر عند i=0 لغياب شمعة سابقة). يُمرَّر momentum عبر طبقتي
- * ema متتاليتين (r ثم s — **نفس تقنية طبقات ema المتتالية المستخدَمة بـdema/tema/trix أعلاه بهذا
- * الملف حرفياً، بما فيها تعويض null بصفر بين الطبقات ثم بوابة صلاحية بالقيمة الأصلية**)، وبالتوازي
- * |momentum| عبر نفس الطبقتين. TSI = 100×(الزخم المزدوج التنعيم)/(القيمة المطلقة المزدوجة التنعيم)
- * (صفر عند مقام صفري بدل قسمة على صفر — يغطي حالة سعر ثابت تماماً حيث momentum=0 بكل نقطة). مدى
- * نظري -100..100 (عملياً يبقى ضمن مدى أضيق غالباً)، +25/-25 عتبتا تشبّع شائعتان. **تحقّق يدوي**:
- * سعر ثابت تماماً بكل الشموع → momentum=0 لكل نقطة → كلا البسط والمقام يستقران على صفر بعد الإحماء
- * → TSI=0 (الحالة المُعالَجة صراحة أعلاه)، يطابق "لا زخم بسعر ساكن" بالتعريف تماماً.
+ * momentum[i] = إغلاق[i] − إغلاق[i-1] (null عند i=0 كـ`ta.change`). يُمرَّر momentum عبر طبقتي ema
+ * متتاليتين (r ثم s)، وبالتوازي |momentum| عبر نفس الطبقتين. TSI = 100×(الزخم المزدوج التنعيم)/(القيمة
+ * المطلقة المزدوجة التنعيم)؛ مقام صفري (سعر ثابت تماماً) ⇒ null كـTradingView. مدى نظري -100..100،
+ * +25/-25 عتبتا تشبّع شائعتان. خطّ الإشارة ema(TSI, 13).
  */
-export function computeTsi(closes: number[], r = 25, s = 13): (number | null)[] {
+export function computeTsi(
+  closes: number[],
+  r = 25,
+  s = 13,
+  signalLen = 13
+): { tsi: (number | null)[]; signal: (number | null)[] } {
   const n = closes.length;
-  const momentum: number[] = new Array(n).fill(0);
-  const absMomentum: number[] = new Array(n).fill(0);
+  // `ta.change(close)` na بالشمعة 0 كـTradingView: صفر مُختلَق هناك كان يدخل بذرة الـEMA الطويلة
+  // فيظهر أوّل TSI قبل شمعة من موعده وبقيمة مختلفة.
+  const momentum: (number | null)[] = new Array(n).fill(null);
+  const absMomentum: (number | null)[] = new Array(n).fill(null);
   for (let i = 1; i < n; i++) {
     momentum[i] = closes[i] - closes[i - 1];
-    absMomentum[i] = Math.abs(momentum[i]);
+    absMomentum[i] = Math.abs(momentum[i]!);
   }
   const ema1 = ema(momentum, r);
   const ema2 = ema(ema1, s);
   const absEma1 = ema(absMomentum, r);
   const absEma2 = ema(absEma1, s);
-  return closes.map((_, i) =>
-    ema2[i] != null && absEma2[i] != null ? (absEma2[i] === 0 ? 0 : (100 * ema2[i]!) / absEma2[i]!) : null
+  // مقام صفري (لا حركة إطلاقاً) ⇒ na كـTradingView، لا 0 يُقرأ «زخم محايد» على سوق لم يتداول.
+  const tsi = closes.map((_, i) =>
+    ema2[i] != null && absEma2[i] != null && absEma2[i]! > 0 ? (100 * ema2[i]!) / absEma2[i]! : null
   );
+  // خطّ الإشارة `ema(tsi, 13)` كـTradingView: تقاطع TSI معه هو قراءة المؤشّر المعتادة.
+  return { tsi, signal: ema(tsi, signalLen) };
 }
 
 /**
