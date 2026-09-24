@@ -14,13 +14,12 @@
  *
  * الشمعة تنتمي لجلسة إن **بدأت** داخلها. السبت والأحد (UTC) بلا جلسات.
  */
-import { nyDst } from './marketHours';
+import { DAY_SEC, nyDst } from './marketHours';
 
 export type SessionId = 'tokyo' | 'london' | 'ny';
 
 export const SESSION_IDS: readonly SessionId[] = ['tokyo', 'london', 'ny'];
 
-const DAY_SEC = 86400;
 const HOUR = 3600;
 
 /** آخر أحد من شهر `month` (0…11) — منتصف ليله بالثواني UTC. */

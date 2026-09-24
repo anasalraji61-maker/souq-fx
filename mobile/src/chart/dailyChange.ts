@@ -11,7 +11,7 @@
  * وأداة تتداول بالعطلة (شمعة سبت بالسلسلة — عملات رقمية) تبقى على أيام UTC العادية.
  */
 import type { Candle } from '../api';
-import { forexSundayOpenSec } from './marketHours';
+import { DAY_SEC, forexSundayOpenSec } from './marketHours';
 
 export type Direction = 'up' | 'down' | 'flat';
 
@@ -20,8 +20,6 @@ export type DailyChange = {
   pct: number;
   dir: Direction;
 };
-
-const DAY_SEC = 86400;
 
 /** 0=الأحد … 6=السبت لرقم يوم UTC منذ 1970-01-01 (الخميس). */
 const weekdayOf = (day: number) => (((day + 4) % 7) + 7) % 7;

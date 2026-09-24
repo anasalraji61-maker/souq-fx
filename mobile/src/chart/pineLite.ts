@@ -1,39 +1,5 @@
 import type { Candle } from '../api';
-
-function sma(values: number[], period: number): (number | null)[] {
-  const out: (number | null)[] = [];
-  for (let i = 0; i < values.length; i++) {
-    if (i < period - 1) {
-      out.push(null);
-      continue;
-    }
-    let sum = 0;
-    for (let j = i - period + 1; j <= i; j++) sum += values[j];
-    out.push(sum / period);
-  }
-  return out;
-}
-
-function ema(values: number[], period: number): (number | null)[] {
-  const out: (number | null)[] = [];
-  const k = 2 / (period + 1);
-  let prev: number | null = null;
-  for (let i = 0; i < values.length; i++) {
-    if (i < period - 1) {
-      out.push(null);
-      continue;
-    }
-    if (prev == null) {
-      let sum = 0;
-      for (let j = i - period + 1; j <= i; j++) sum += values[j];
-      prev = sum / period;
-    } else {
-      prev = values[i] * k + prev * (1 - k);
-    }
-    out.push(prev);
-  }
-  return out;
-}
+import { ema, sma } from './indicators/moving-averages';
 
 function rsi(values: number[], period: number): (number | null)[] {
   const out: (number | null)[] = Array(values.length).fill(null);

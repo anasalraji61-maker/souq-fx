@@ -12,7 +12,7 @@
 
 const ALWAYS_OPEN = new Set(['BTCUSD', 'ETHUSD']);
 
-const DAY_SEC = 86400;
+export const DAY_SEC = 86400;
 
 /** الأحد رقم `nth` (1…) من شهر `month` (0…11) بسنة `year` — منتصف ليله بالثواني UTC. */
 function nthSundayUtcSec(year: number, month: number, nth: number): number {
