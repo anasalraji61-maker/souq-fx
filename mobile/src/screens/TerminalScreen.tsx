@@ -11,7 +11,6 @@ import {
   RefreshControl,
   Platform,
   Modal,
-  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -49,6 +48,7 @@ import {
   type ChartAlertOrigin,
 } from '../chart/alertFromChart';
 import { playSoftClick } from '../audio/playSoftClick';
+import { notify } from '../chart/confirmDestructive';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { livePriceForChart } from '../chart/liveSeries';
 import { provenanceLabel, tickStatusLabel, normalizeProvenance } from '../chart/dataSource';
@@ -860,7 +860,7 @@ export function TerminalScreen() {
         if (armedTimerRef.current) clearTimeout(armedTimerRef.current);
         armedTimerRef.current = setTimeout(() => setArmedMsg(null), 4000);
       } catch {
-        Alert.alert(t.focusAlertCreateFailedTitle, t.focusAlertCreateFailedBody);
+        notify(t.focusAlertCreateFailedTitle, t.focusAlertCreateFailedBody);
       }
     },
     [symbol, series, liveTicks, t]

@@ -7,11 +7,11 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
+import { confirmDestructive, notify } from '../chart/confirmDestructive';
 import { useI18n } from '../i18n/I18nContext';
 import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
@@ -733,7 +733,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     // خانة الخروج فارغة/غير مفهومة: كان الضغط لا يفعل شيئاً بصمت تام (المبتدئ لا يعرف أن الإغلاق يقرأ خانة
     // «خروج» بأعلى النموذج).
     if (x == null) {
-      Alert.alert(t.journalCloseFailedTitle, unreadablePx(exit, tr.symbol) ? pxErrorText(exit, tr.symbol) : t.journalCloseNeedsExit);
+      notify(t.journalCloseFailedTitle, unreadablePx(exit, tr.symbol) ? pxErrorText(exit, tr.symbol) : t.journalCloseNeedsExit);
       return;
     }
     // تأكيدٌ بالنتيجة كالإغلاق بالسوق: الخانة واحدة للنموذج كلّه، فسعرٌ كُتب لصفقة ذهب (2651.30) ثم نُقر رابط
@@ -764,7 +764,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     }
     if (!mountedRef.current) return;
     if (px == null) {
-      Alert.alert(t.journalCloseFailedTitle, t.journalCloseMarketNoQuote);
+      notify(t.journalCloseFailedTitle, t.journalCloseMarketNoQuote);
       return;
     }
     confirmClose(tr, px, 'market');
@@ -798,36 +798,34 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       ? `${mv.pips != null ? `${formatSignedPips(mv.pips)} pip · ` : ''}${cashText}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%${rText ? ` · ${rText}` : ''}`
       : '';
     const body = source === 'market' ? t.journalCloseMarketConfirmBody : t.journalCloseMarketConfirmBody.split('\n\n')[0];
-    Alert.alert(
-      source === 'market' ? t.journalCloseMarketConfirmTitle : t.journalCloseFieldConfirmTitle,
-      body
+    // `confirmDestructive` لا `Alert.alert`: الأخيرة دالّة فارغة بـreact-native-web ⇒ «أغلق بالسوق»/«أغلق» كانا
+    // لا يفعلان شيئاً على الويب (لا تأكيد ولا إغلاق)
+    confirmDestructive({
+      title: source === 'market' ? t.journalCloseMarketConfirmTitle : t.journalCloseFieldConfirmTitle,
+      body: body
         .replace('{side}', trSide === 'sell' ? t.dirSell : t.dirBuy)
         .replace('{symbol}', tr.symbol)
         .replace('{entry}', formatPrice(tr.entry, tr.symbol))
         .replace('{exit}', formatPrice(exitPx, tr.symbol))
         .replace('{result}', result),
-      [
-        { text: t.cancel, style: 'cancel' },
-        {
-          text: t.journalCloseMarketConfirmBtn,
-          onPress: () => {
-            void (async () => {
-              setBusy(true);
-              try {
-                await api.closeTrade(tr.id, exitPx);
-                if (!mountedRef.current) return;
-                playSoftClick();
-                await refresh();
-              } catch {
-                if (mountedRef.current) Alert.alert(t.journalCloseFailedTitle, t.journalCloseFailedBody);
-              } finally {
-                if (mountedRef.current) setBusy(false);
-              }
-            })();
-          },
-        },
-      ]
-    );
+      cancelText: t.cancel,
+      confirmText: t.journalCloseMarketConfirmBtn,
+      onConfirm: () => {
+        void (async () => {
+          setBusy(true);
+          try {
+            await api.closeTrade(tr.id, exitPx);
+            if (!mountedRef.current) return;
+            playSoftClick();
+            await refresh();
+          } catch {
+            if (mountedRef.current) notify(t.journalCloseFailedTitle, t.journalCloseFailedBody);
+          } finally {
+            if (mountedRef.current) setBusy(false);
+          }
+        })();
+      },
+    });
   };
 
   /** حذف صفقة سُجِّلت خطأً — بلا حذف كانت صفقة خاطئة واحدة تُفسد الإحصاءات للأبد (api.deleteTrade كان غير مستخدم). */
@@ -839,21 +837,20 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       if (editing?.id === id) cancelEdit();
       await refresh();
     } catch {
-      Alert.alert(t.alertsDeleteFailedTitle, t.journalDeleteFailedBody);
+      notify(t.alertsDeleteFailedTitle, t.journalDeleteFailedBody);
     } finally {
       if (mountedRef.current) setBusy(false);
     }
   };
 
   const confirmRemove = (tr: Trade) =>
-    Alert.alert(
-      t.journalDeleteConfirmTitle,
-      `${tr.side === 'sell' ? t.dirSell : t.dirBuy} ${tr.symbol} · ${formatPrice(tr.entry, tr.symbol)}`,
-      [
-        { text: t.cancel, style: 'cancel' },
-        { text: t.deleteWord, style: 'destructive', onPress: () => void removeTrade(tr.id) },
-      ]
-    );
+    confirmDestructive({
+      title: t.journalDeleteConfirmTitle,
+      body: `${tr.side === 'sell' ? t.dirSell : t.dirBuy} ${tr.symbol} · ${formatPrice(tr.entry, tr.symbol)}`,
+      cancelText: t.cancel,
+      confirmText: t.deleteWord,
+      onConfirm: () => void removeTrade(tr.id),
+    });
 
   /** صفوف الصفقات — تُركَّب مرة وتُعرض بصندوقين بحسب من يستضيف اللوحة (انظر `flow`). */
   const rows = (
