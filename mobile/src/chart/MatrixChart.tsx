@@ -5223,7 +5223,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   .replace('{total}', String(source.windowLen))
               : tool === 'select'
                 ? selectedId
-                  ? Platform.OS === 'web'
+                  ? selectedSpan?.tool === 'note'
+                    ? Platform.OS === 'web'
+                      ? tr.mcHintNoteSelectedWeb
+                      : tr.mcHintNoteSelected
+                    : Platform.OS === 'web'
                     ? tr.mcHintSelectedWeb
                     : tr.mcHintSelected
                   : tr.mcHintSelect
@@ -7366,7 +7370,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           return (
             <TextInput
               key={`noteEdit-${d.id}`}
-              accessibilityLabel={tr.mcNoteDefault}
+              accessibilityLabel={tr.mcNoteTextA11y}
               defaultValue={d.text ?? ''}
               placeholder={tr.mcNoteDefault}
               placeholderTextColor={colors.textMuted}
