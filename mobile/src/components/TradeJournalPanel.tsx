@@ -29,6 +29,7 @@ import {
   type PlanIssue,
   type TradePlan,
 } from '../tradePlan';
+import { NewsRiskBanner } from './NewsRiskBanner';
 
 /** نفس أزواج الاختيار السريع بحاسبة المخاطرة — تسجيل صفقة بنقرة بدل كتابة الرمز بلوحة مفاتيح بيد واحدة. */
 const QUICK_SYMBOLS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'GBPJPY', 'EURGBP'];
@@ -978,6 +979,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         selectionColor={colors.accent}
         accessibilityLabel={t.journalSymbolA11y}
       />
+      {/*
+        تسجيل صفقة جديدة يقع غالباً **لحظة الدخول** — وهي اللحظة التي يعني فيها خبرٌ قوي قريب أكثر ما
+        يعني: الحاسبة والشارت ينبّهان إليه، والدفتر (حيث يُكتب الدخول فعلاً) كان وحده صامتاً. لا يظهر عند
+        تعديل صفقة قديمة (خبر اليوم لا يخصّها)، ولا يظهر شيء لرمز غير معروف أو بلا خبر ضمن ثلاث ساعات.
+        وبـ`flow` وحده (تبويب الدفتر بشاشة الأدوات): بمواضع المشاركة (اللوح الجانبي والرصيف) تقع اللوحة
+        بجانب الشارت الذي يعرض الشريط نفسه أصلاً، فلا يُكرَّر تحذيران متطابقان بشاشة واحدة.
+      */}
+      {flow && !editing ? <NewsRiskBanner symbol={symbol.trim()} /> : null}
       <TextInput
         style={[styles.input, { textAlign: align }]}
         value={entry}
