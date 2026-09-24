@@ -1635,14 +1635,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   useEffect(() => () => onReplayPriceRef.current?.(null), []);
   const pivotBars = useMemo(() => {
     if (!anyPivot) return null;
+    const candles = candlesThrough(series.candles ?? [], replayCutSec);
+    const intraday = timeframeStepSec(series.timeframe) < 86400;
+    // داخل اليوم: الجلسة المجمَّعة بحدّ 17:00 نيويورك **أوّلاً** — هو يوم منصّات MT4/MT5 (خوادم
+    // GMT+2/+3). شموع D1 من المزوّد بيوم UTC، فكانت PDH/PDL تقفز بين حدّين حسب نجاح جلبها؛ الآن D1
+    // احتياط فقط حين لا تغطّي السلسلة الجلسة السابقة كاملة (مثلاً 1m بـ180 شمعة).
+    const fromIntraday = intraday ? validSessionBar(prevDayFromIntraday(candles, series.symbol)) : null;
+    if (fromIntraday) return pivotInput(fromIntraday);
     const fromDaily = seriesDemo || replayCutSec != null ? null : validSessionBar(dailyPrevBar);
     if (fromDaily) return pivotInput(fromDaily);
-    const candles = candlesThrough(series.candles ?? [], replayCutSec);
-    if (timeframeStepSec(series.timeframe) >= 86400) {
+    if (!intraday) {
       const secs = candles.map((c) => ({ ...c, time: candleTimeSec(c.time) }));
       return pivotInput(validSessionBar(prevSessionFromDaily(secs, replayCutSec ?? Date.now() / 1000)));
     }
-    return pivotInput(validSessionBar(prevDayFromIntraday(candles, series.symbol)));
+    return null;
   }, [anyPivot, seriesDemo, dailyPrevBar, series.candles, series.timeframe, series.symbol, replayCutSec]);
   const pivots = useMemo(
     () => (indicators.includes('pivots') && pivotBars ? computePivotPoints(pivotBars, 1) : null),
