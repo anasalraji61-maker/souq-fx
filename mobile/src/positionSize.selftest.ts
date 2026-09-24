@@ -1520,3 +1520,27 @@ console.log('positionSize parsePriceFor selftest OK');
   assert.equal(parsePriceFor('3.450', null), 3.45);
 }
 console.log('positionSize ambiguousThousandsPrice selftest OK');
+
+// ── الحاسبة: أسعار الذهب تُقرأ بـparsePriceFor — «3.450»/«3.350» كانت 1 pip ⇒ 10 لوت بدل 0.01 ──
+{
+  const xau = instrumentSpec('XAUUSD')!;
+  const pv = pipValuePerLot(xau, 1); // 10 USD للوت لكل pip
+  const lotsFrom = (e: string, s: string) => {
+    const sl = slPipsFromPrices(xau, parsePriceFor(e, xau.symbol) ?? NaN, parsePriceFor(s, xau.symbol) ?? NaN);
+    return sl == null ? null : positionSize({ balance: 10000, riskPct: 1, slPips: sl, pipValuePerLot: pv, contractSize: xau.contractSize });
+  };
+  // القراءة القديمة (parseDecimal) للتوثيق: 1 pip ⇒ 10 لوت — هذا ما كان يُعرض
+  assert.equal(slPipsFromPrices(xau, parseDecimal('3.450')!, parseDecimal('3.350')!), 1);
+  assert.equal(positionSize({ balance: 10000, riskPct: 1, slPips: 1, pipValuePerLot: pv, contractSize: xau.contractSize })!.lots, 10);
+  // الآن: لا نتيجة (رسالة «مبهم»)، والكتابة الصريحة تعطي 1000 pip ⇒ 0.01
+  assert.equal(lotsFrom('3.450', '3.350'), null);
+  assert.equal(lotsFrom('3450', '3.350'), null);
+  assert.equal(lotsFrom('3450', '3350')!.lots, 0.01);
+  assert.equal(slPipsFromPrices(xau, parsePriceFor('3450.50', 'XAUUSD')!, parsePriceFor('3440.50', 'XAUUSD')!), 100);
+  assert.equal(lotsFrom('3450.50', '3440.50')!.lots, 0.1);
+  // أزواج الحاسبة الأخرى بلا تغيير: EURUSD «1.085»، USDJPY «157.250»
+  assert.equal(slPipsFromPrices(eu, parsePriceFor('1.085', 'EURUSD')!, parsePriceFor('1.0830', 'EURUSD')!), 20);
+  const jp = instrumentSpec('USDJPY')!;
+  assert.equal(slPipsFromPrices(jp, parsePriceFor('157.250', 'USDJPY')!, parsePriceFor('157.050', 'USDJPY')!), 20);
+}
+console.log('positionSize calculator price parsing selftest OK');

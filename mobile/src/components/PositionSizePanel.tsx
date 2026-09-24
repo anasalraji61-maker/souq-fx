@@ -38,6 +38,8 @@ import {
   spreadTooWide,
   planJournalNote,
   LOT_STEP,
+  parsePriceFor,
+  ambiguousThousandsPrice,
 } from '../positionSize';
 import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
@@ -244,6 +246,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
 
   /** أرقام عربية/فاصل آلاف/فاصلة عشرية — راجع parseDecimal.ts. NaN = فارغ أو غير صالح. */
   const num = (s: string) => parseDecimal(s) ?? NaN;
+  /**
+   * خانات **الأسعار** (دخول/وقف/هدف) بأداة الحاسبة: «3.450» بخانة ذهب مبهمة (3450 بكتابة أوروبية) فتُرفض —
+   * كانت تُقرأ 3.45: دخول 3.450 ووقف 3.350 = «1 pip» ⇒ **10 لوت** بدل 0.01، وهامشٌ أصغر بألف مرّة. راجع
+   * `parsePriceFor` (الدفتر يقرأ به منذ `53f1e03`). النقاط والرصيد والسبريد تبقى على `num`.
+   */
+  const priceNum = (s: string) => parsePriceFor(s, spec?.symbol) ?? NaN;
   /** الرصيد مبلغ: «10.000» أوروبية = عشرة آلاف فتُرفض كـ«10,000» بدل حساب لوت من 10 — راجع parseDecimal.ts */
   const balanceNum = parseDecimal(balance, { amount: true }) ?? NaN;
   /**
@@ -253,13 +261,24 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const badNumber =
     (balance.trim() !== '' && parseDecimal(balance, { amount: true }) == null) ||
     (riskPct.trim() !== '' && parseRiskInput(riskPct, balanceNum, account) == null) ||
-    [slPips, entryPx, stopPx, targetPx, manualConv].some((v) => v.trim() !== '' && parseDecimal(v) == null) ||
+    [slPips, manualConv].some((v) => v.trim() !== '' && parseDecimal(v) == null) ||
+    [entryPx, stopPx, targetPx].some((v) => v.trim() !== '' && Number.isNaN(priceNum(v))) ||
     (leverage.trim() !== '' && parseLeverage(leverage) == null);
   /**
    * خطأ خانة السبريد، تحتها مباشرةً. كان يُضمّ لـ`badNumber` الذي لا يظهر إلا **بلا نتيجة** — واللوت
    * يُحسب من الوقف وحده، فسبريدٌ مرفوض كان يُسقط سطر «شاملة السبريد» بصمت واللوت معروض كأن لا خطأ.
    * وفوق `MAX_SPREAD_PIPS` الرقم مفهوم: يُقال إنه غالباً سعر مكتوب بدل نقاط لا «رقم غير مفهوم».
    */
+  /** «3.450» بخانة ذهب: الرسالة تقول لماذا وتعرض القراءتين بدل «اكتبه بلا فواصل آلاف، مثل 1.0850» */
+  const ambiguousPx = [entryPx, stopPx, targetPx]
+    .map((v) => ambiguousThousandsPrice(v, spec?.symbol))
+    .find((a) => a != null);
+  const badNumberText = ambiguousPx
+    ? t.priceAmbiguousThousandsHint
+        .replace('{value}', ambiguousPx.value)
+        .replace('{whole}', ambiguousPx.whole)
+        .replace('{small}', ambiguousPx.small)
+    : t.invalidNumberHint;
   const spreadWide = spreadTooWide(spread);
   const spreadErr =
     parseSpreadPips(spread) != null
@@ -277,7 +296,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const riskNum = riskIn?.pct ?? NaN;
   /** النسبة كما تُكتب بالنصوص («يتجاوز {pct}%»): المكتوبة كما هي، والمحسوبة من مبلغ لمنزلتين («0.5» لا «0.4999…») */
   const riskPctText = riskIn?.amount != null ? String(Math.round(riskNum * 100) / 100) : String(riskNum);
-  const derivedSl = spec ? slPipsFromPrices(spec, num(entryPx), num(stopPx)) : null;
+  const derivedSl = spec ? slPipsFromPrices(spec, priceNum(entryPx), priceNum(stopPx)) : null;
 
   // الوقف من السعر يكتب قيمته بخانة النقاط (مصدر واحد للحساب)؛ تعديل النقاط يدوياً يبقى ممكناً بعده.
   // تغيير الأداة يعيد الحساب بحجم pip الجديد (الين/الذهب).
@@ -351,8 +370,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * والوقف: الهدف لا يغيّر الاتجاه، فيظهر الاتجاه بمجرّد كتابة الرقمين لا بعد اكتمال الخطة.
    */
   const planSide = useMemo<TradeSide | null>(() => {
-    const e = num(entryPx);
-    const sPx = num(stopPx);
+    const e = priceNum(entryPx);
+    const sPx = priceNum(stopPx);
     if (!spec || ![e, sPx].every((v) => Number.isFinite(v) && v > 0) || e === sPx) return null;
     return sPx < e ? 'buy' : 'sell';
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -364,9 +383,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * المحتمل بعملة الحساب لحجم اللوت المحسوب نفسه.
    */
   const plan = useMemo(() => {
-    const e = num(entryPx);
-    const sPx = num(stopPx);
-    const tPx = num(targetPx);
+    const e = priceNum(entryPx);
+    const sPx = priceNum(stopPx);
+    const tPx = priceNum(targetPx);
     if (!spec || planSide == null || !Number.isFinite(tPx) || tPx <= 0) return null;
     return analyzePlan({ symbol: spec.symbol, side: planSide, entry: e, sl: sPx, tp: tPx });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -377,8 +396,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * `targetAtRR` تقرّب بعيداً عن الدخول فالنسبة المكتوبة لا تقلّ عن المختارة أبداً.
    */
   const rrTargets = useMemo(() => {
-    const e = num(entryPx);
-    const sPx = num(stopPx);
+    const e = priceNum(entryPx);
+    const sPx = priceNum(stopPx);
     if (!spec || planSide == null || derivedSl == null || derivedSl < 1) return [];
     return QUICK_RR.flatMap((rr) => {
       const tp = targetAtRR({ symbol: spec.symbol, side: planSide, entry: e, sl: sPx, rr });
@@ -393,7 +412,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    */
   const stopChoices =
     spec && stopPx.trim() === '' && !slFromPrices.current && !slTooClose && Number.isFinite(slTyped) && slTyped > 0
-      ? stopsForPips({ symbol: spec.symbol, entry: num(entryPx), pips: slTyped }).map((x) => {
+      ? stopsForPips({ symbol: spec.symbol, entry: priceNum(entryPx), pips: slTyped }).map((x) => {
           // الدخول ما زال السعر الحيّ الوسطي كما عُبّئ: الشريحة تقيس من سعر جهتها وتنقل الدخول إليه عند النقر
           // (`liveStopChip`) — فالسعر المكتوب عليها هو ما يُكتب بالخانة، و«20 pip» تبقى 20
           const f = liveFillRef.current;
@@ -410,7 +429,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           };
         })
       : [];
-  const targetNum = num(targetPx);
+  const targetNum = priceNum(targetPx);
   /** الهدف بالجهة الخطأ (فوق الدخول ببيع/تحته بشراء) — خطأ كتابة شائع، يُقال صراحةً بدل تجاهل الهدف */
   const targetWrongSide = plan?.issue === 'tpWrongSide';
   const lots = result && !result.belowMinLot ? result.lots : null;
@@ -471,7 +490,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const liveQ = liveFill && spec && liveFill.symbol === spec.symbol && entryPx.trim() === liveFill.text ? liveFill.q : null;
   const spreadPips =
     typedSpreadPips != null && spec
-      ? spreadBeyondLiveEntry({ spreadPips: typedSpreadPips, spec, entry: num(entryPx), stop: num(stopPx), q: liveQ })
+      ? spreadBeyondLiveEntry({ spreadPips: typedSpreadPips, spec, entry: priceNum(entryPx), stop: priceNum(stopPx), q: liveQ })
       : typedSpreadPips;
   /** بعملة الحساب لكل لوت — تُضاف × اللوت داخل `spreadRisk`؛ سطرٌ واحد «شاملة التكاليف» حين تكون موجبة */
   const commissionPerLot = parseCommission(commission);
@@ -512,7 +531,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * «@ 1.08510» كي لا يُظنّ دخولاً مكتوباً — راجع `marginPrice`.
    */
   const [mktQuote, setMktQuote] = useState<{ sym: string; price: number; bid?: number | null; ask?: number | null } | null>(null);
-  const entryTyped = Number.isFinite(num(entryPx)) && num(entryPx) > 0;
+  const entryTyped = Number.isFinite(priceNum(entryPx)) && priceNum(entryPx) > 0;
   const needMarketPx = spec != null && !entryTyped && leverageNum != null && lots != null;
   const mktSym = needMarketPx ? spec!.symbol : null;
   const haveMkt = mktQuote != null && mktQuote.sym === mktSym;
@@ -536,7 +555,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     };
   }, [mktSym, haveMkt]);
   const marginPx = marginPrice({
-    entry: num(entryPx),
+    entry: priceNum(entryPx),
     quote: spec && mktQuote && mktQuote.sym === spec.symbol ? mktQuote : null,
     side: planSide,
   });
@@ -555,7 +574,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** الربح المحتمل من المسافة الخام للهدف لا من نقاطه المقرَّبة للعرض — راجع `profitAtTarget` */
   const potentialProfit =
     plan?.ok && spec && rate != null && lots != null
-      ? profitAtTarget({ spec, entry: num(entryPx), target: num(targetPx), lots, quoteToAccount: rate })
+      ? profitAtTarget({ spec, entry: priceNum(entryPx), target: priceNum(targetPx), lots, quoteToAccount: rate })
       : null;
   /**
    * الربح وR:R بعد السبريد والعمولة — الإجمالي فوقه يعد بـ1:2 والصفقة بتكاليفها 1:1.7، وسكالبينغ 5/5
@@ -590,9 +609,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * وملاحظة مختصرة، والاتجاه من موضع الوقف. لا يظهر الزر إلا بخطة صالحة وحجم لوت محسوب.
    */
   const logPlanToJournal = async () => {
-    const e = num(entryPx);
-    const sPx = num(stopPx);
-    const tPx = num(targetPx);
+    const e = priceNum(entryPx);
+    const sPx = priceNum(stopPx);
+    const tPx = priceNum(targetPx);
     if (!spec || !plan?.ok || planSide == null || lots == null || logBusy || logMsg?.ok || logBlocked) return;
     setLogBusy(true);
     setLogMsg(null);
@@ -637,7 +656,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   useEffect(() => {
     const f = liveFillRef.current;
     if (!f || f.symbol !== spec?.symbol || entryPx.trim() !== f.text) return;
-    const lq = liveEntryQuote(f.q, num(stopPx));
+    const lq = liveEntryQuote(f.q, priceNum(stopPx));
     if (lq == null) return;
     const text = formatPrice(lq.price, f.symbol);
     if (text === f.text) return;
@@ -671,7 +690,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         setLivePxMsg({ ok: false, text: t.riskCalcNoLiveQuote });
         return;
       }
-      const px = liveEntryForStop(q, num(stopPx));
+      const px = liveEntryForStop(q, priceNum(stopPx));
       if (px == null) {
         setLivePxMsg({ ok: false, text: t.riskCalcNoLiveQuote });
         return;
@@ -917,7 +936,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       ) : null}
       {targetWrongSide ? (
         <Text style={[styles.warn, { textAlign: align }]}>
-          {num(stopPx) < num(entryPx) ? t.planTpWrongBuy : t.planTpWrongSell}
+          {priceNum(stopPx) < priceNum(entryPx) ? t.planTpWrongBuy : t.planTpWrongSell}
         </Text>
       ) : null}
       {derivedSl != null ? (
@@ -1003,7 +1022,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             ) : null}
           </>
         ) : badNumber ? (
-          <Text style={[styles.warn, { textAlign: align }]}>{t.invalidNumberHint}</Text>
+          <Text style={[styles.warn, { textAlign: align }]}>{badNumberText}</Text>
         ) : riskImpossible || slTooClose ? null : (
           <Text style={[styles.resultMeta, { textAlign: align }]}>{t.riskCalcFillHint}</Text>
         )}
