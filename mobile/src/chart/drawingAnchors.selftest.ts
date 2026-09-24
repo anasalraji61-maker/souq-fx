@@ -142,6 +142,19 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   const onD1 = anchorDrawings([fromH1], days, D, false)[0];
   assert.equal(onD1.a.index, 10.25);
   assert.equal(onD1.b!.index, 10.75);
+  // سحب الخطّ على اليومي (رأسياً، أو بشمعة) يُبقي الساعة داخل اليوم: كان الختم يقصّ الكسر لـ00:00
+  assert.equal(stampAtIndex(days, 10.75, D)!.time, 110 * D + 18 * H);
+  assert.equal(stampAtIndex(days, 11.25, D)!.time, 111 * D + 6 * H);
+  assert.equal(timeAtIndex(days, 10, D), 110 * D);
+  const h1Bars = Array.from({ length: 24 * 30 }, (_, i) => ({ time: 100 * D + i * H }));
+  const moved: Drawing = {
+    ...line(0, 0),
+    a: { index: 11.25, price: 1.08, ...stampAtIndex(days, 11.25, D)! },
+    b: { index: 11.75, price: 1.09, ...stampAtIndex(days, 11.75, D)! },
+  };
+  const onH1 = anchorDrawings([moved], h1Bars, H, false)[0];
+  assert.equal(onH1.a.index, 11 * 24 + 6);
+  assert.equal(onH1.b!.index, 11 * 24 + 18);
   // طرف بالمستقبل: 48 شمعة ساعة = شمعتان يوميّتان
   const ahead: Drawing = {
     ...line(0, 0),

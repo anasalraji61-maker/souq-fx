@@ -53,13 +53,22 @@ function runStart(bars: readonly TimeBar[], i: number): number {
   return j;
 }
 
-/** زمن الخانة `index` — خارج السلسلة يُمدّ بخطوة الفريم (رسم يمتدّ لمستقبل لم يُرسم بعد). */
+/**
+ * زمن الخانة `index` — خارج السلسلة يُمدّ بخطوة الفريم (رسم يمتدّ لمستقبل لم يُرسم بعد).
+ * كسر الخانة (نقطة من فريم أصغر داخل شمعة هذا الفريم، `withinBar`) يبقى زمناً داخل الشمعة: كان
+ * يُقصّ لبدايتها، فسحب خطّ رُسم على الساعة 18:00 على اليومي — ولو رأسياً فقط — يُعيد ختم طرفه
+ * عند 00:00، فيقفز الخطّ على اليومي بعد الإفلات ويعود للساعة على شمعة أخرى.
+ */
 export function timeAtIndex(bars: readonly TimeBar[], index: number, stepSec: number): number | null {
   const n = bars.length;
   if (!n || !Number.isFinite(index)) return null;
   if (index < 0) return barTime(bars[0]) + index * stepSec;
   if (index >= n) return barTime(bars[n - 1]) + (index - (n - 1)) * stepSec;
-  return barTime(bars[Math.floor(index)]);
+  const i = Math.floor(index);
+  const bar = bars[i]!;
+  const frac = index - i;
+  if (frac > 0 && bar.srcTime == null && stepSec > 0) return bar.time + Math.round(frac * stepSec);
+  return barTime(bar);
 }
 
 /**
