@@ -47,7 +47,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • شموع يابانية، هايكن آشي، رينكو، كاجي، ونقطة ورقم.
 • حتى أربعة شارتات في شاشة واحدة، مع مزامنة الزمن بينها عند الحاجة — فتقرأ الشمعة نفسها على الأربعة معاً.
 • المس أي شمعة لترى افتتاحها وأعلاها وأدناها وإغلاقها ومداها بالنقاط، وكم نقطة يبعد المستوى عن السعر الحالي، ثم المس 🔔 لتضع تنبيه سعر عنده.
-• كبّر وصغّر بإصبعين، والشمعة الجارية تبقى أمامك.
+• كبّر وصغّر بإصبعين، والشمعة الجارية تبقى أمامك. ارجع للخلف تدرس نموذجاً قديماً فتبقى الشموع ثابتة تحت إصبعك، ولمسة واحدة تعيدك لآخر شمعة دون أن تفقد التكبير.
 • عدّاد تحت السعر الحيّ يخبرك كم بقي على إغلاق الشمعة الجارية.
 • سعر أعلى قمّة وأدنى قاع على الشاشة مكتوب عند ذيليهما ويتحدّث وأنت تسحب، وخطّ خافت يفصل كل يوم تداول عن الذي يليه على الفريمات الصغيرة.
 • المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، الفوليوم وغيرها، ومستويات الارتكاز (Pivot وCamarilla وفيبوناتشي) وبجانب كل مستوى سعره.
@@ -63,7 +63,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 
 أدوات المتداول
 • حاسبة حجم المركز: أدخل رصيدك والمخاطرة (نسبةً أو مبلغاً بعملة حسابك) ووقف الخسارة (بالنقاط أو بسعرَي الدخول والوقف) لتعرف حجم اللوت، مع أهداف جاهزة بنسبة 1:1 حتى 1:3، وتقدير للهامش الذي يحجزه الوسيط حسب رافعتك، وخانتا سبريد وعمولة اختياريتان تُريانك مخاطرتك وربحك الصافي شاملَين التكاليف.
-• دفتر صفقات تسجّل فيه صفقاتك بنفسك: الربح المحتمل بالمال قبل الدخول، ونتيجة كل صفقة بالنقاط والمال تراها قبل أن تحفظها — ولمسة واحدة تغلقها على وقفها أو هدفها بالضبط — ثم نسبة النجاح والصافي لكل أداة ومتوسط النتيجة بوحدة المخاطرة (R).
+• دفتر صفقات تسجّل فيه صفقاتك بنفسك: الربح المحتمل بالمال قبل الدخول، ونتيجة كل صفقة بالنقاط والمال تراها قبل أن تحفظها — ولمسة واحدة تغلقها على وقفها أو نقطة التعادل أو هدفها بالضبط — ثم نسبة النجاح والصافي لكل أداة ومتوسط النتيجة بوحدة المخاطرة (R).
 • تنبيه قبل الصفقة إن اقترب خبر اقتصادي قوي على عملة الزوج أو المؤشر أو المعدن، وبأسماء الرموز كما يكتبها وسيطك.
 • «فحص السوق»: فلترة الأزواج بشروط المؤشرات الشائعة.
 • اختبار استراتيجيات بسيطة على البيانات التاريخية — لأغراض تعليمية.
@@ -107,7 +107,7 @@ CHARTS
 • Candlesticks, Heikin-Ashi, Renko, Kagi and Point & Figure.
 • Up to four charts on one screen, with optional time sync between them — read the same candle on all four at once.
 • Tap any candle to see its open, high, low, close and range in pips, plus how many pips that level is from the current price, then tap 🔔 to set a price alert there.
-• Pinch with two fingers to zoom — the live candle stays in view.
+• Pinch with two fingers to zoom — the live candle stays in view. Scroll back to study an old pattern and the candles stay put under your finger; one tap brings you back to the latest candle without losing your zoom.
 • A countdown under the live price shows how long until the current candle closes.
 • The highest high and lowest low on screen carry their price and update as you scroll, and a faint line marks where each trading day starts on intraday charts.
 • The indicators traders actually use: SMA and EMA moving averages, Bollinger Bands, RSI, MACD, Volume and more, plus pivot levels (classic, Camarilla, Fibonacci) with each level's price beside it.
@@ -123,7 +123,7 @@ WATCHLIST & ALERTS
 
 TRADER TOOLS
 • Position size calculator: enter your balance, your risk (as a percent or an amount in your account currency) and stop loss (in pips, or as entry and stop prices) to get your lot size, with one-tap targets from 1:1 to 1:3, an estimate of the margin your broker holds at your leverage, and optional spread and commission fields that show your risk and net profit with costs included.
-• A trade journal you fill in yourself: the potential profit in money before you enter, each trade's result in pips and money shown before you save it — with one tap to close it exactly at its stop or target — then win rate, net result per instrument and average result in units of risk (R).
+• A trade journal you fill in yourself: the potential profit in money before you enter, each trade's result in pips and money shown before you save it — with one tap to close it exactly at its stop, breakeven or target — then win rate, net result per instrument and average result in units of risk (R).
 • A heads-up before a trade when high-impact economic news is close for the pair's, index's or metal's currency — with symbols named the way your broker names them.
 • Market screener using common indicator conditions.
 • Simple strategy backtesting on historical data — for learning purposes.
