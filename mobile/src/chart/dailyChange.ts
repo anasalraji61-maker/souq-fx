@@ -44,6 +44,19 @@ function sessionOf(tSec: number, weekendMerge: boolean, isNow: boolean): number 
   return day;
 }
 
+/** شمعة سبت بالسلسلة = أداة تتداول بالعطلة (عملات رقمية) ⇒ أيام UTC كما هي بلا دمج العطلة. */
+export function weekendMergeOf(candles: readonly Pick<Candle, 'time'>[]): boolean {
+  return !candles.some((c) => c && Number.isFinite(c.time) && weekdayOf(Math.floor(c.time / DAY_SEC)) === 6);
+}
+
+/**
+ * رقم الجلسة الجارية عند `nowSec` — مخزن المرجع (`dailyRefStore`) يقارنه بما حُسب عند الجلب:
+ * تغيّره (منتصف ليل UTC، افتتاح الأحد) يعني أن «إغلاق الأمس» المخزَّن صار إغلاق ما قبل الأمس.
+ */
+export function sessionKeyAt(nowSec: number, weekendMerge: boolean): number {
+  return sessionOf(nowSec, weekendMerge, true);
+}
+
 /**
  * شمعة الجلسة السابقة من شموع D1 (بالثواني، بأي ترتيب)؛ null إن لم تكفِ البيانات.
  * `nowSec` اختياري: إن كانت الجلسة الحالية بلا شمعة بعد (مساء الأحد، أو المزوّد متأخر) فالسابقة
@@ -58,8 +71,7 @@ export function prevSessionFromDaily<T extends Pick<Candle, 'time'>>(
     .filter((c) => c && typeof c.time === 'number' && Number.isFinite(c.time))
     .sort((a, b) => a.time - b.time);
   if (sorted.length < 2) return null;
-  // شمعة سبت = أداة تتداول بالعطلة (عملات رقمية) → أيام UTC كما هي
-  const weekendMerge = !sorted.some((c) => weekdayOf(Math.floor(c.time / DAY_SEC)) === 6);
+  const weekendMerge = weekendMergeOf(sorted);
   const last = sorted[sorted.length - 1];
   const lastSession = sessionOf(last.time, weekendMerge, false);
   if (typeof nowSec === 'number' && Number.isFinite(nowSec) && sessionOf(nowSec, weekendMerge, true) > lastSession) {

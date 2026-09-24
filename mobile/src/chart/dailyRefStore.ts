@@ -3,6 +3,9 @@
  *
  * - يجلب شموع D من `api.chart` مرة واحدة لكل رمز، ويخزّنها بالذاكرة 10 دقائق (المرجع لا يتغيّر
  *   خلال اليوم) — كل لوحات المتابعة المفتوحة تتشارك نفس المخزن فلا طلبات مكرّرة.
+ * - **إلا عند تبدّل الجلسة**: المخزَّن قبل منتصف ليل UTC (أو قبل افتتاح الأحد) يصير قديماً فوراً
+ *   لا بعد انتهاء عمره — كان التغيّر اليومي يُحسب على إغلاق ما قبل الأمس حتى 10 دقائق بعد التدوير
+ *   (يَظهر مثلاً +0.8% وهو فعلياً +0.1% اليوم). الفحص كل دقيقة، ولا جلب ما دامت الجلسة نفسها.
  * - طلبات متتالية (لا متوازية) كي لا تُغرق الباك-إند/حدود المزوّد عند فتح اللوحة.
  * - بيانات مصدرها `demo` لا تُستخدم مرجعاً: تغيّر محسوب من سلسلة وهمية مقابل سعر حيّ سيكون مضلِّلاً،
  *   فالأصدق ألا نعرض نسبة إطلاقاً.
@@ -10,13 +13,23 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import type { Candle } from '../api';
-import { prevSessionFromDaily, validSessionBar } from './dailyChange';
+import { prevSessionFromDaily, sessionKeyAt, validSessionBar, weekendMergeOf } from './dailyChange';
 
 const TTL_MS = 10 * 60 * 1000;
 const FAIL_TTL_MS = 2 * 60 * 1000;
+/** فحص تبدّل الجلسة — رخيص (`fresh` بلا شبكة)، فالتأخير بعد التدوير ≤ دقيقة لا ≤ 10. */
+const CHECK_MS = 60 * 1000;
 
 // `prevBar`: شمعة الجلسة السابقة كاملة — أساس نقاط الارتكاز بالشارت (`pivotBase.ts`).
-type Entry = { prevClose: number | null; prevBar: Candle | null; at: number; ok: boolean };
+// `session`/`weekendMerge`: الجلسة الجارية وقت الجلب وقاعدة حسابها لهذا الرمز (`sessionKeyAt`).
+type Entry = {
+  prevClose: number | null;
+  prevBar: Candle | null;
+  at: number;
+  ok: boolean;
+  session: number | null;
+  weekendMerge: boolean;
+};
 
 const cache = new Map<string, Entry>();
 const inflight = new Set<string>();
@@ -27,6 +40,7 @@ let running = false;
 function fresh(sym: string, now: number): boolean {
   const e = cache.get(sym);
   if (!e) return false;
+  if (e.session != null && sessionKeyAt(now / 1000, e.weekendMerge) !== e.session) return false;
   return now - e.at < (e.ok ? TTL_MS : FAIL_TTL_MS);
 }
 
@@ -47,12 +61,22 @@ async function drain() {
       try {
         const s = await api.chart(sym, 'D', 50);
         const demo = s?.data_source?.kind === 'demo';
-        const bar = demo ? null : prevSessionFromDaily(s?.candles ?? [], Date.now() / 1000);
+        const candles = s?.candles ?? [];
+        const now = Date.now();
+        const bar = demo ? null : prevSessionFromDaily(candles, now / 1000);
         const c = bar?.close;
         const prev = typeof c === 'number' && Number.isFinite(c) && c > 0 ? c : null;
-        cache.set(sym, { prevClose: prev, prevBar: validSessionBar(bar), at: Date.now(), ok: true });
+        const weekendMerge = weekendMergeOf(candles);
+        cache.set(sym, {
+          prevClose: prev,
+          prevBar: validSessionBar(bar),
+          at: now,
+          ok: true,
+          session: sessionKeyAt(now / 1000, weekendMerge),
+          weekendMerge,
+        });
       } catch {
-        cache.set(sym, { prevClose: null, prevBar: null, at: Date.now(), ok: false });
+        cache.set(sym, { prevClose: null, prevBar: null, at: Date.now(), ok: false, session: null, weekendMerge: true });
       } finally {
         inflight.delete(sym);
       }
@@ -95,8 +119,8 @@ export function useDailyRefs(symbols: readonly string[]): Record<string, number>
     listeners.add(update);
     update();
     request(list);
-    // تجديد دوري (المرجع يتبدّل عند بدء يوم تداول جديد)
-    const timer = setInterval(() => request(list), TTL_MS);
+    // تجديد دوري: `fresh` يُسقط المخزَّن عند بدء جلسة جديدة أو انتهاء عمره، وإلا لا طلب
+    const timer = setInterval(() => request(list), CHECK_MS);
     return () => {
       listeners.delete(update);
       clearInterval(timer);
@@ -125,7 +149,7 @@ export function useDailyPrevBar(symbol: string | null): Candle | undefined {
     listeners.add(update);
     update();
     request([sym]);
-    const timer = setInterval(() => request([sym]), TTL_MS);
+    const timer = setInterval(() => request([sym]), CHECK_MS);
     return () => {
       listeners.delete(update);
       clearInterval(timer);

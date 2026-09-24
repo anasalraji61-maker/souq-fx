@@ -3,7 +3,15 @@
  * Run: npx --yes tsx src/chart/dailyChange.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { dailyChange, formatPct, pctDirection, prevCloseFromDaily, tickDirection } from './dailyChange';
+import {
+  dailyChange,
+  formatPct,
+  pctDirection,
+  prevCloseFromDaily,
+  sessionKeyAt,
+  tickDirection,
+  weekendMergeOf,
+} from './dailyChange';
 
 // أيام UTC حقيقية (ثوانٍ): 2026-09-14 إثنين … 2026-09-20 أحد، 2026-09-21 إثنين
 const D = (iso: string) => Date.parse(`${iso}T00:00:00Z`) / 1000;
@@ -112,5 +120,17 @@ assert.equal(tickDirection(1, 2), 'up');
 assert.equal(tickDirection(2, 1), 'down');
 assert.equal(tickDirection(1, 1), 'flat');
 assert.equal(tickDirection(null, 1), 'flat');
+
+// مفتاح الجلسة لمخزن المرجع: يتبدّل عند منتصف ليل UTC، والعطلة تُدمج حتى افتتاح الأحد
+assert.equal(sessionKeyAt(D('2026-09-16') + 23 * H, true), sessionKeyAt(D('2026-09-16') + 1, true));
+assert.notEqual(sessionKeyAt(D('2026-09-17') + 60, true), sessionKeyAt(D('2026-09-16') + 23.9 * H, true));
+// الجمعة → السبت → صباح الأحد: جلسة واحدة (لا جلب بلا داعٍ)؛ مساء الأحد بعد الافتتاح = الإثنين
+assert.equal(sessionKeyAt(D('2026-09-19') + 12 * H, true), sessionKeyAt(D('2026-09-18') + 12 * H, true));
+assert.equal(sessionKeyAt(D('2026-09-20') + 10 * H, true), sessionKeyAt(D('2026-09-18') + 12 * H, true));
+assert.equal(sessionKeyAt(D('2026-09-20') + 23 * H, true), sessionKeyAt(D('2026-09-21') + 12 * H, true));
+// أداة تتداول بالعطلة: السبت جلسة مستقلة
+assert.notEqual(sessionKeyAt(D('2026-09-19') + 12 * H, false), sessionKeyAt(D('2026-09-18') + 12 * H, false));
+assert.equal(weekendMergeOf([wed, thu]), true);
+assert.equal(weekendMergeOf([wed, { time: D('2026-09-19'), close: 1 }]), false);
 
 console.log('dailyChange selftest OK');
