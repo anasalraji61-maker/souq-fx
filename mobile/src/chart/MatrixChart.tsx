@@ -4368,10 +4368,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // التقاطع المثبَّت شمعةً شمعة (السعر المثبَّت كما هو) — قراءة شموع متتالية بدقّة لا تبلغها
   // الفأرة على شموع بعرض 3px. عند حافّة النافذة تُزاح شمعةً ويتابع التقاطع (`stepCrossBar`)؛
   // بالإعادة وبالتابع المتزامن النافذة ليست ملكه فيقف عند حافّتها. ولا تسرق الأسهم من خانة كتابة.
+  //
+  // بلا تقاطع مثبَّت الأسهم تحرّك **العرض** كـTradingView: ←/→ شمعة (Shift: عشر شموع)، ↑/↓ تكبير/تصغير
+  // حول المركز. كانت لا تفعل شيئاً فيضطرّ متداول الويب للسحب أو لأزرار ‹ › بخطوة 15 شمعة. لا يُعترَض
+  // Alt/Ctrl/⌘ مع الأسهم (Alt+← رجوع المتصفّح)، ولا يُمسّ العرض بالإعادة (نافذتها ليست ملكه).
   useEffect(() => {
     if (Platform.OS !== 'web' || !canPan) return;
     const onKey = (event: KeyboardEvent) => {
-      if (!crossPinned.current || webKeyChart !== keyToken.current) return;
+      if (webKeyChart !== keyToken.current) return;
+      if (!crossPinned.current) {
+        if (event.altKey || event.ctrlKey || event.metaKey || replayOn) return;
+        const k = event.key;
+        if (k !== 'ArrowLeft' && k !== 'ArrowRight' && k !== 'ArrowUp' && k !== 'ArrowDown') return;
+        const target = event.target as { tagName?: string; isContentEditable?: boolean } | null;
+        if (target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '')) return;
+        event.preventDefault();
+        if (k === 'ArrowUp') zoomAroundCenter(0.8);
+        else if (k === 'ArrowDown') zoomAroundCenter(1.25);
+        else panByButton((k === 'ArrowLeft' ? 1 : -1) * (event.shiftKey ? 10 : 1));
+        return;
+      }
       if (event.key === 'Escape') {
         crossPinned.current = false;
         setCross(null);
@@ -4415,7 +4431,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       document.removeEventListener('keydown', onKey);
       if (hoverRaf.current != null) cancelAnimationFrame(hoverRaf.current);
     };
-  }, [canPan, replayOn, syncFollow, schedulePublishSync]);
+  }, [canPan, replayOn, syncFollow, schedulePublishSync, zoomAroundCenter, panByButton]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const priceWheelHandlers: any =
