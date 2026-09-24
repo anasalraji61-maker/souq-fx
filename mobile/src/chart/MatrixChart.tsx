@@ -76,6 +76,7 @@ import {
 import { DrawingsSaveQueue, drawingsKey } from './drawingsPersist';
 import { clipSegmentToBars, dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
 import { anchorDrawings, stampAtIndex } from './drawingAnchors';
+import { priceSpan } from './priceSpan';
 import { fibLevelPrice, planFibLabels } from './fibLabels';
 import { candleRangePipsText, measureReadoutText } from './measureReadout';
 import { thinByGap } from './levelLabels';
@@ -903,6 +904,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [drawingsSaveError, setDrawingsSaveError] = useState<DrawingsSaveErrorCode | null>(null);
   const [chartW, setChartW] = useState(320);
   const panStartOffset = useRef(0);
+  const panStartBars = useRef(0);
   const offsetRef = useRef(0);
   const panStartPoint = useRef({ x: 0, y: 0 });
   const panMoved = useRef(false);
@@ -2135,7 +2137,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       syncFollow && syncWindow?.priceScale != null ? syncWindow.priceScale : priceScale;
     const viewPan =
       syncFollow && syncWindow?.pricePan != null ? syncWindow.pricePan : pricePan;
-    const span = max - min || 1;
+    // سلسلة مسطّحة: ±0.2% من السعر لا وحدة سعرية كاملة — `priceSpan.ts`.
+    const span = priceSpan(min, max, logScale);
     const paddedSpan = span * 1.12;
     const center = (max + min) / 2 + viewPan * paddedSpan;
     const scaledSpan = paddedSpan * viewScale;
@@ -2692,7 +2695,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const mul = panSpeedMulRef.current;
       const sdx = dx * mul;
       const sdy = dy * mul;
-      const barWidth = chartPlotW / Math.max(2, windowCountRef.current);
+      // عرض الشمعة **المرسومة**: الرسم يقسم العرض على طول السلسلة المرسومة لا على النافذة،
+      // فسلسلة أقصر من النافذة (Renko، أو أقدم التاريخ) كانت تتحرّك أسرع من الإصبع بنسبتهما.
+      const barWidth = chartPlotW / Math.max(2, panStartBars.current || windowCountRef.current);
       const requestedBars = Math.round(sdx / Math.max(2, barWidth));
       const maxOffset = Math.max(
         0,
@@ -2736,6 +2741,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
   const beginDrag = useCallback(() => {
     panStartOffset.current = offsetRef.current;
+    // مثبَّت طوال السحب: تغيّره إطاراً إطاراً عند أوّل التاريخ يجعل السحب غير خطّي.
+    panStartBars.current = Math.min(
+      windowCountRef.current,
+      sourceRef.current.plot.length || windowCountRef.current
+    );
     panStartX.current = xPanRef.current;
     panStartPrice.current = pricePanRef.current;
     panMoved.current = false;
