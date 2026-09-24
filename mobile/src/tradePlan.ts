@@ -893,3 +893,21 @@ export function netByInstrument(
       cash: v.cashOk && v.ccy ? { amount: roundAway(v.cash, 2), ccy: v.ccy } : null,
     }));
 }
+
+/**
+ * سطر الصافي **بلا اسم أداة** («الصافي: +25 pip · +125.00 USD») صادقٌ فقط حين كل صفقة مغلقة معروضة داخلة فيه:
+ * أداةٌ واحدة بـ`netByInstrument` **وعددها = كل المغلقة بخروج صالح**. غير ذلك يُكتب بالاسم («الصافي لكل أداة: EURUSD +25 …»).
+ *
+ * لماذا: دفترٌ بلا فلتر فيه EURUSD رابحة (+125 USD) وUS30 خاسرة (بلا مواصفات pip فلا تدخل الصافي) كان يقول
+ * «الصافي: +25 pip · +125.00 USD» بلا رمز — يُقرأ صافي الدفتر كلّه والحساب خاسر.
+ */
+export function netLineIsWhole(
+  trades: readonly { status: string; exit?: number | null }[],
+  ranked: readonly { n: number }[]
+): boolean {
+  if (ranked.length !== 1) return false;
+  const closed = trades.filter(
+    (tr) => tr.status === 'closed' && typeof tr.exit === 'number' && Number.isFinite(tr.exit) && tr.exit > 0
+  ).length;
+  return ranked[0]!.n === closed;
+}

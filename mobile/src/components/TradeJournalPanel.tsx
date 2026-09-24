@@ -50,6 +50,7 @@ import {
   type PlanIssue,
   type TradePlan,
   editExitValue,
+  netLineIsWhole,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
@@ -547,12 +548,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       const cash = cashOf(v.cash);
       return `${v.symbol} ${formatSignedPips(v.pips)}${cash ? ` (${cash})` : ''}`;
     });
+    // بلا اسم أداة فقط حين تدخل كل المغلقة المعروضة فيه — US30 بجانب EURUSD لا تُخفى تحت «الصافي» (`netLineIsWhole`)
+    const whole = netLineIsWhole(visibleTrades, ranked);
     return {
-      /** أداة واحدة → السطر كما كان بالضبط؛ أكثر من أداة → مفصَّل لكل أداة. */
-      pips: ranked.length === 1 ? formatSignedPips(ranked[0]!.pips) : null,
+      /** أداة واحدة هي كل المغلقة → السطر كما كان بالضبط؛ وإلا مفصَّل بالاسم لكل أداة. */
+      pips: whole ? formatSignedPips(ranked[0]!.pips) : null,
       /** صافي المال للأداة الواحدة — يُلحق بسطر النقاط نفسه */
-      cash: ranked.length === 1 ? cashOf(ranked[0]!.cash) : null,
-      pipsBySymbol: ranked.length > 1 ? parts.join(' · ') + (rest > 0 ? ` +${rest}` : '') : null,
+      cash: whole ? cashOf(ranked[0]!.cash) : null,
+      pipsBySymbol: ranked.length > 0 && !whole ? parts.join(' · ') + (rest > 0 ? ` +${rest}` : '') : null,
       avgR: avg ? formatR(avg.r) : null,
       rN: avg?.n ?? 0,
     };

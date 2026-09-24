@@ -1298,3 +1298,26 @@ console.log('tradePlan stopTooClose selftest OK');
   assert.equal(editExitValue(true, 1.0875), 1.0875);
 }
 console.log('tradePlan editExitValue selftest OK');
+
+// ——— netLineIsWhole: «الصافي» بلا اسم فقط حين تدخل كل المغلقة ———
+{
+  const { netLineIsWhole, netByInstrument } = require('./tradePlan') as typeof import('./tradePlan');
+  const eu = { symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.0875, size: 0.5, note: '0.50 lot', status: 'closed' };
+  const us30 = { symbol: 'US30', side: 'buy', entry: 42000, exit: 41800, size: 1, note: '', status: 'closed' };
+  const open = { symbol: 'US30', side: 'buy', entry: 42000, exit: null, size: 1, note: '', status: 'open' };
+  // EURUSD وحدها (والمفتوحة لا تُحسب): بلا اسم كما كان
+  assert.equal(netLineIsWhole([eu, open], netByInstrument([eu, open])), true);
+  // EURUSD رابحة + US30 خاسرة: كانت «الصافي: +25 pip · +125.00 USD» بلا رمز ⇒ الآن بالاسم
+  assert.equal(netByInstrument([eu, us30]).length, 1);
+  assert.equal(netLineIsWhole([eu, us30], netByInstrument([eu, us30])), false);
+  // «XAUUSD.m» و«XAUUSD» أداة واحدة: بلا اسم
+  const g1 = { symbol: 'XAUUSD', side: 'buy', entry: 2350, exit: 2355, size: 1, note: '', status: 'closed' };
+  const g2 = { ...g1, symbol: 'XAUUSD.m', exit: 2340 };
+  assert.equal(netLineIsWhole([g1, g2], netByInstrument([g1, g2])), true);
+  // أداتان أو لا شيء: false
+  assert.equal(netLineIsWhole([eu, g1], netByInstrument([eu, g1])), false);
+  assert.equal(netLineIsWhole([us30], netByInstrument([us30])), false);
+  // مغلقة بلا خروج صالح لا تُعدّ ضدّه
+  assert.equal(netLineIsWhole([eu, { ...eu, exit: null }], netByInstrument([eu, { ...eu, exit: null }])), true);
+}
+console.log('tradePlan netLineIsWhole selftest OK');
