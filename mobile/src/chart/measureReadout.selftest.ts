@@ -1,5 +1,5 @@
 /** فحص ذاتي لـ`measureReadout.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
-import { barsCountText, measurePipsText, measureReadoutText, type MeasureStats } from './measureReadout';
+import { barsCountText, candleRangePipsText, measurePipsText, measureReadoutText, type MeasureStats } from './measureReadout';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -131,6 +131,14 @@ ok('السطر يمرّر اللغة',
     symbol: 'EURUSD', a: { price: 1.08 }, b: { price: 1.0824 },
     stats: stats(1, 0.0024, 0.22), barsWord: 'bars', lang: 'en',
   }).startsWith('1 bar · '));
+
+// ── مدى الشمعة بالنقاط لسطر التقاطع ─────────────────────────────────────────
+ok('مدى EURUSD', candleRangePipsText('EURUSD', 1.08612, 1.08450) === '↕ 16.2 pip');
+ok('مدى USDJPY بحجم pip الين', candleRangePipsText('USDJPY', 157.423, 157.1) === '↕ 32.3 pip');
+ok('مدى الذهب', candleRangePipsText('XAUUSD', 2662.5, 2650.0) === '↕ 125.0 pip');
+ok('دوجي بلا مدى', candleRangePipsText('EURUSD', 1.085, 1.085) === '↕ 0.0 pip');
+ok('DXY ⇒ null', candleRangePipsText('DXY', 104.3, 104.1) === null);
+ok('أعلى دون الأدنى ⇒ null', candleRangePipsText('EURUSD', 1.08, 1.09) === null);
 
 if (failures) {
   console.error(`measureReadout.selftest: ${failures} FAILED`);

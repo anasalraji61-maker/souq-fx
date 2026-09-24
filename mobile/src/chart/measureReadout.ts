@@ -42,6 +42,20 @@ export function measurePipsText(symbol: string, a: number, b: number): string | 
 }
 
 /**
+ * مدى الشمعة (أعلى − أدنى) بالنقاط لسطر التقاطع: «↕ 16.2 pip». متداول الفوركس يقيس الشمعة
+ * بالنقاط لا بالنسبة (شمعة خبر 40 pip مقابل شمعة آسيا 6 pip) — والنسبة وحدها كانت بالسطر.
+ * `null` لأداة بلا مواصفة pip (DXY، مؤشرات) فلا يُكتب شيء بدل رقم بوحدة خاطئة.
+ */
+export function candleRangePipsText(symbol: string, high: number, low: number): string | null {
+  if (!Number.isFinite(high) || !Number.isFinite(low) || high < low) return null;
+  const spec = instrumentSpec(symbol);
+  if (!spec) return null;
+  const pips = pipsBetween(spec, low, high);
+  if (pips == null) return null;
+  return `↕ ${pips.toFixed(1)} pip`;
+}
+
+/**
  * «عدد + كلمة الشموع» بصيغة العدد الصحيحة. كان `{n} {mcMeasureBarsWord}` بصيغة واحدة:
  * «1 شموع» و«2 شموع» و«15 شموع» بالعربية، و«1 bars» بالإنجليزية — وقياس شمعة واحدة
  * أو اثنتين هو أكثر قياس يُجرى (طول ذيل، فجوة افتتاح).

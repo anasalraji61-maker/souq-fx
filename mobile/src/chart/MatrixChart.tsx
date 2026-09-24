@@ -77,7 +77,7 @@ import { DrawingsSaveQueue, drawingsKey } from './drawingsPersist';
 import { dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
 import { anchorDrawings, timeAtIndex } from './drawingAnchors';
 import { fibLevelPrice, planFibLabels } from './fibLabels';
-import { measureReadoutText } from './measureReadout';
+import { candleRangePipsText, measureReadoutText } from './measureReadout';
 import { thinByGap } from './levelLabels';
 import { formatPct } from './dailyChange';
 import { timeframeStepSec } from './dataSource';
@@ -3485,6 +3485,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   );
                 })()
               : null}
+            {(() => {
+              const range = candleRangePipsText(series.symbol, crossCandle.high, crossCandle.low);
+              return range ? ` ${range}` : '';
+            })()}
             {compareSeries ? ` · ${compareSeries.symbol} ${formatPrice(compareSeries.last, compareSeries.symbol)}` : ''}
           </Text>
         ) : (
