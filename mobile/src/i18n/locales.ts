@@ -306,6 +306,10 @@ export type Dict = {
   riskCalcFillHint: string;
   invalidNumberHint: string;
   riskCalcPipValue: string;
+  /** حاسبة الهامش (طلب وكيل الأدوات): خانة الرافعة، سطر الهامش، وملاحظة أن الهامش ليس الخسارة */
+  riskCalcLeverage: string;
+  riskCalcMargin: string;
+  riskCalcMarginNote: string;
   riskCalcTarget: string;
   riskCalcTargetPlaceholder: string;
   riskCalcPotentialProfit: string;
@@ -905,7 +909,7 @@ const ar: Dict = {
     'أسرع طريق: المس المستوى على الشارت ثم زرّ 🔔 — بلا كتابة أرقام. ويصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، فلا داعي لمراقبة الشارت طوال اليوم. تنبيهات المؤشرات وتفعيل الإشعارات من لوح التنبيهات.',
   onboardStep5Title: 'المخاطرة أولاً',
   onboardStep5Body:
-    'قبل أي صفقة افتح «أدوات ← المخاطرة»: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالـpip أو بسعرَي الدخول والوقف) لتعرف حجم اللوت المناسب. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
+    'قبل أي صفقة افتح «أدوات ← المخاطرة»: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالـpip أو بسعرَي الدخول والوقف) لتعرف حجم اللوت المناسب، ثم «سجّل هذه الخطة بالدفتر» لتراجع نتيجتها لاحقاً. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
   onboardRiskNote:
     'MATRIX أداة تحليل وتعليم، لا تنفّذ صفقات ولا تقدّم نصيحة مالية. التداول بالرافعة ينطوي على مخاطرة عالية بخسارة المال.',
   onboardStepCounterA11y: 'الخطوة {n} من {total}',
@@ -1157,6 +1161,10 @@ const ar: Dict = {
   riskCalcFillHint: 'أدخل الرصيد ونسبة المخاطرة ووقف الخسارة',
   invalidNumberHint: 'رقم غير مفهوم — اكتبه بلا فواصل آلاف، مثل 10000 أو 1.0850',
   riskCalcPipValue: 'قيمة النقطة للوت',
+  riskCalcLeverage: 'الرافعة المالية (100 تعني 1:100)',
+  riskCalcMargin: 'الهامش المحجوز',
+  riskCalcMarginNote:
+    'الهامش مبلغ يحجزه الوسيط ما دامت الصفقة مفتوحة، وليس ما قد تخسره — خسارتك يحدّدها الوقف. والرافعة المتاحة تختلف حسب الوسيط والأداة.',
   riskCalcTarget: 'الهدف (اختياري) — لحساب R:R والربح المحتمل',
   riskCalcTargetPlaceholder: 'سعر الهدف',
   riskCalcPotentialProfit: 'الربح المحتمل',
@@ -1216,8 +1224,8 @@ const ar: Dict = {
   journalStatTotalPnl: 'إجمالي PnL: {pct}%',
   journalStatBestWorst: 'أفضل/أسوأ: {best}% / {worst}%',
   journalStatsPending: 'لا صفقات مغلقة بعد — نسبة النجاح والـPnL تظهر بعد إغلاق أول صفقة.',
-  journalStatNetPips: 'صافي النقاط: {pips} pip',
-  journalStatNetPipsBySymbol: 'صافي النقاط لكل أداة: {parts}',
+  journalStatNetPips: 'الصافي: {pips} pip',
+  journalStatNetPipsBySymbol: 'الصافي لكل أداة: {parts}',
   journalStatAvgR: 'متوسط النتيجة: {r} لكل صفقة ({n} بوقف مسجَّل)',
   journalSideA11yPrefix: 'اتجاه الصفقة',
   journalSymbolPlaceholder: 'الرمز',
@@ -1764,7 +1772,7 @@ const enUS: Dict = {
     'Fastest way: tap a level on the chart, then 🔔 — no typing. You get a notification when price reaches it (checked about once a minute), so no need to watch the chart all day. Indicator alerts and notification settings are in the alerts panel.',
   onboardStep5Title: 'Risk first',
   onboardStep5Body:
-    'Before any trade, open Tools → Risk: enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get the right lot size. Many traders risk no more than 1–2% per trade.',
+    'Before any trade, open Tools → Risk: enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get the right lot size, then “Log this plan to the journal” to review how it played out. Many traders risk no more than 1–2% per trade.',
   onboardRiskNote:
     'MATRIX is an analysis and learning tool. It does not place trades or give financial advice. Leveraged trading carries a high risk of losing money.',
   onboardStepCounterA11y: 'Step {n} of {total}',
@@ -2016,6 +2024,10 @@ const enUS: Dict = {
   riskCalcFillHint: 'Enter balance, risk % and stop loss',
   invalidNumberHint: 'Number not recognized — type it without thousands separators, e.g. 10000 or 1.0850',
   riskCalcPipValue: 'Pip value per lot',
+  riskCalcLeverage: 'Leverage (100 means 1:100)',
+  riskCalcMargin: 'Margin held',
+  riskCalcMarginNote:
+    'Margin is what your broker sets aside while the trade is open, not what you can lose — your stop decides that. Available leverage varies by broker and instrument.',
   riskCalcTarget: 'Target (optional) — for R:R and potential profit',
   riskCalcTargetPlaceholder: 'Target price',
   riskCalcPotentialProfit: 'Potential profit',
@@ -2076,8 +2088,8 @@ const enUS: Dict = {
   journalStatTotalPnl: 'Total PnL: {pct}%',
   journalStatBestWorst: 'Best/Worst: {best}% / {worst}%',
   journalStatsPending: 'No closed trades yet — win rate and PnL appear once you close your first trade.',
-  journalStatNetPips: 'Net pips: {pips} pip',
-  journalStatNetPipsBySymbol: 'Net pips per instrument: {parts}',
+  journalStatNetPips: 'Net: {pips} pip',
+  journalStatNetPipsBySymbol: 'Net per instrument: {parts}',
   journalStatAvgR: 'Average result: {r} per trade ({n} with a stop)',
   journalSideA11yPrefix: 'Trade direction',
   journalSymbolPlaceholder: 'Symbol',
@@ -2649,7 +2661,7 @@ const ku: Dict = {
     'خێراترین ڕێگا: دەست لە ئاستەکە بدە لەسەر چارت پاشان 🔔 — بێ نووسینی ژمارە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت)، پێویست ناکات بە درێژایی ڕۆژ چاودێری چارت بکەیت. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
   onboardStep5Title: 'سەرەتا مەترسی',
   onboardStep5Body:
-    'پێش هەر مامەڵەیەک «ئامرازەکان ← مەترسی» بکەرەوە: باڵانس و ڕێژەی مەترسی و ستۆپ لۆس (بە pip یان بە نرخی چوونەژوورەوە و وەستان) بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
+    'پێش هەر مامەڵەیەک «ئامرازەکان ← مەترسی» بکەرەوە: باڵانس و ڕێژەی مەترسی و ستۆپ لۆس (بە pip یان بە نرخی چوونەژوورەوە و وەستان) بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت، پاشان «ئەم پلانە لە دەفتەر تۆمار بکە» بۆ ئەوەی دواتر ئەنجامەکەی ببینیتەوە. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
   onboardRiskNote:
     'MATRIX ئامرازێکی شیکردنەوە و فێربوونە، مامەڵە ناکات و ئامۆژگاری دارایی نادات. بازرگانی بە لیڤەرێج مەترسیی بەرزی لەدەستدانی پارەی تێدایە.',
   onboardStepCounterA11y: 'هەنگاوی {n} لە {total}',
@@ -2901,6 +2913,10 @@ const ku: Dict = {
   riskCalcFillHint: 'باڵانس، ڕێژەی مەترسی و وەستانی زیان بنووسە',
   invalidNumberHint: 'ژمارەکە ناناسرێتەوە — بەبێ جیاکەرەوەی هەزاران بنووسە، وەک 10000 یان 1.0850',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
+  riskCalcLeverage: 'لێڤەرێج (100 واتە 1:100)',
+  riskCalcMargin: 'مارجینی گیراو',
+  riskCalcMarginNote:
+    'مارجین ئەو بڕەیە کە بڕۆکەر تا مامەڵەکە کراوە بێت دەیگرێت، نەک ئەوەی لەوانەیە لەدەستی بدەیت — زیانەکەت ستۆپەکە دیاری دەکات. لێڤەرێجی بەردەست بەپێی بڕۆکەر و ئامراز جیاوازە.',
   riskCalcTarget: 'ئامانج (ئارەزوومەندانە) — بۆ R:R و قازانجی چاوەڕوانکراو',
   riskCalcTargetPlaceholder: 'نرخی ئامانج',
   riskCalcPotentialProfit: 'قازانجی چاوەڕوانکراو',
@@ -2963,8 +2979,8 @@ const ku: Dict = {
   journalStatTotalPnl: 'کۆی PnL: {pct}%',
   journalStatBestWorst: 'باشترین/خراپترین: {best}% / {worst}%',
   journalStatsPending: 'هێشتا هیچ مامەڵەیەکی داخراو نییە — ڕێژەی سەرکەوتن و PnL دوای داخستنی یەکەم مامەڵە دەردەکەون.',
-  journalStatNetPips: 'کۆی خاڵەکان: {pips} pip',
-  journalStatNetPipsBySymbol: 'کۆی خاڵەکان بۆ هەر ئامرازێک: {parts}',
+  journalStatNetPips: 'کۆی گشتی: {pips} pip',
+  journalStatNetPipsBySymbol: 'کۆی گشتی بۆ هەر ئامرازێک: {parts}',
   journalStatAvgR: 'ناوەندی ئەنجام: {r} بۆ هەر مامەڵەیەک ({n} بە وەستان)',
   journalSideA11yPrefix: 'ئاراستەی مامەڵە',
   journalSymbolPlaceholder: 'هێما',
