@@ -40,7 +40,10 @@ class ErrorBoundaryInner extends React.Component<InnerProps, State> {
     return (
       <View style={styles.wrap} accessibilityRole="alert">
         <Text style={styles.brand}>MATRIX</Text>
-        <Text style={styles.title}>{this.props.title}</Text>
+        {/* عنوان للقارئ: بشاشة لا شيء غيرها، التنقّل بالعناوين (دوّار VoiceOver) يقفز إليه مباشرة. */}
+        <Text accessibilityRole="header" style={styles.title}>
+          {this.props.title}
+        </Text>
         <Text style={styles.body}>{this.state.repeated ? this.props.repeatBody : this.props.body}</Text>
         <Pressable
           accessibilityRole="button"
