@@ -353,6 +353,10 @@ export type Dict = {
   riskCalcStopInsideSpread: string;
   riskCalcCommission: string;
   riskCalcCommissionNote: string;
+  /** بدل `riskCalcCommissionNote` بوضع micro: العمولة لكل لوت micro، وتُحوَّل تلقائياً (`commissionAcrossModes`). {std} = مثال العادي، {micro} = مكافئه */
+  riskCalcCommissionNoteMicro: string;
+  /** بدل `riskCalcCommissionNote` بوضع السنت: بالـUSC لكل لوت سنت — الرقم نفسه كالعادي. {usc} = المثال */
+  riskCalcCommissionNoteCent: string;
   riskCalcRiskWithCosts: string;
   riskCalcCostsLotsWithin: string;
   riskCalcNetAfterCosts: string;
@@ -1282,6 +1286,10 @@ const ar: Dict = {
     'الوقف ({sl} نقطة) ليس أبعد من السبريد ({spread} نقطة) — قد يُضرب فور فتح الصفقة. وسّع الوقف وقلّل اللوت، أو انتظر سبريداً أضيق.',
   riskCalcCommission: 'عمولة اختيارية لكل لوت، فتحاً وإغلاقاً',
   riskCalcCommissionNote: 'حسابات Raw/ECN تأخذ عمولة عند الفتح وعند الإغلاق. اكتب مجموع الطرفين للوت الواحد بعملة حسابك (مثل 7)، واتركها فارغة إن كان حسابك بلا عمولة.',
+  riskCalcCommissionNoteMicro:
+    'العمولة هنا لكل لوت micro (0.01 لوت عادي): {std} للوت العادي = {micro} للوت micro. إن كتبتها لحساب عادي حوّلناها لك — راجعها بعقد حسابك.',
+  riskCalcCommissionNoteCent:
+    'العمولة هنا بالسنت (USC) لكل لوت سنت — غالباً صفر بحسابات السنت. {usc} USC للوت السنت تساوي {usc} USD للوت العادي، فالرقم لا يتغيّر.',
   riskCalcRiskWithCosts: 'المخاطرة شاملة التكاليف',
   riskCalcCostsLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة التكاليف: {lots} lot',
   riskCalcNetAfterCosts: 'بعد التكاليف: {profit} · R:R {rr}',
@@ -2200,6 +2208,10 @@ const enUS: Dict = {
     'Your stop ({sl} pips) is no wider than the spread ({spread} pips) — it can be hit the moment the trade opens. Widen the stop and cut the lot, or wait for a tighter spread.',
   riskCalcCommission: 'Optional commission per lot, open + close',
   riskCalcCommissionNote: 'Raw/ECN accounts charge commission when you open and again when you close. Enter both sides for one lot in your account currency (e.g. 7), or leave it empty if your account has no commission.',
+  riskCalcCommissionNoteMicro:
+    'Commission here is per micro lot (0.01 standard lot): {std} per standard lot = {micro} per micro lot. If you typed it for a standard account we converted it — check it against your account terms.',
+  riskCalcCommissionNoteCent:
+    'Commission here is in cents (USC) per cent lot — usually zero on cent accounts. {usc} USC per cent lot equals {usc} USD per standard lot, so the number stays the same.',
   riskCalcRiskWithCosts: 'Risk including costs',
   riskCalcCostsLotsWithin: 'To keep your risk at {pct}% including costs: {lots} lot',
   riskCalcNetAfterCosts: 'After costs: {profit} · R:R {rr}',
@@ -3140,6 +3152,10 @@ const ku: Dict = {
     'وەستان ({sl} pip) لە سپرێد ({spread} pip) دوورتر نییە — لەوانەیە هەر کە مامەڵەکە کرایەوە لێی بدرێت. وەستان فراوانتر بکە و لۆت کەم بکەرەوە، یان چاوەڕێی سپرێدی تەسکتر بکە.',
   riskCalcCommission: 'کۆمیسیۆنی ئیختیاری بۆ هەر lot، کردنەوە و داخستن',
   riskCalcCommissionNote: 'هەژمارەکانی Raw/ECN لە کاتی کردنەوە و داخستندا کۆمیسیۆن وەردەگرن. کۆی هەردوو لا بۆ یەک lot بە دراوی هەژمارەکەت بنووسە (وەک 7)، یان بەتاڵی بهێڵەوە ئەگەر هەژمارەکەت بێ کۆمیسیۆنە.',
+  riskCalcCommissionNoteMicro:
+    'کۆمیسیۆن لێرە بۆ هەر لۆتێکی مایکرۆیە (0.01 لۆتی ئاسایی): {std} بۆ لۆتی ئاسایی = {micro} بۆ لۆتی مایکرۆ. ئەگەر بۆ هەژماری ئاسایی نووسیبێتت گۆڕیمان — لەگەڵ مەرجەکانی هەژمارەکەت بەراوردی بکە.',
+  riskCalcCommissionNoteCent:
+    'کۆمیسیۆن لێرە بە سەنتە (USC) بۆ هەر لۆتێکی سەنت — زۆرجار سفرە لە هەژماری سەنت. {usc} USC بۆ لۆتی سەنت یەکسانە بە {usc} USD بۆ لۆتی ئاسایی، بۆیە ژمارەکە ناگۆڕێت.',
   riskCalcRiskWithCosts: 'مەترسی لەگەڵ تێچووەکان',
   riskCalcCostsLotsWithin: 'بۆ ئەوەی مەترسییەکەت لەگەڵ تێچووەکان لە {pct}% بمێنێتەوە: {lots} lot',
   riskCalcNetAfterCosts: 'دوای تێچووەکان: {profit} · R:R {rr}',
