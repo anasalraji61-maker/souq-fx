@@ -2151,3 +2151,29 @@ console.log('tradePlan planStop selftest OK');
   assert.deepEqual(panelTargets('EURUSD', 'buy', { ...before, status: 'closed' }, 1.0845), [1.0855, 1.08575, 1.086, 1.0865]);
 }
 console.log('tradePlan journal R targets from initial stop selftest OK');
+
+// ---- سطر خطة المسودّة بالدفتر أثناء تعديل صفقة حُرِّك وقفها: من الوقف الأصلي كسطر الصفقة (سلسلة اللوحة) ----
+{
+  const words = { risk: 'Risk', reward: 'Reward' };
+  const before = { side: 'buy', entry: 1.085, sl: 1.083, status: 'open' };
+  const draftLine = (b: typeof before, sl: number, tp: number, lots: number) => {
+    const n = noteWithInitialStop({ symbol: 'EURUSD', note: '', before: b, after: { side: 'buy', entry: b.entry, sl } });
+    const stop = initialStop({ symbol: 'EURUSD', side: 'buy', entry: b.entry, note: n }) ?? sl;
+    const plan = analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: b.entry, sl: stop, tp });
+    const r = draftRiskFigures({ symbol: 'EURUSD', side: 'buy', entry: b.entry, sl: stop, lots });
+    return plan.ok ? planSummaryText(plan, words, r?.cash ? `${r.cash.amount.toFixed(2)} ${r.cash.ccy}` : null) : null;
+  };
+  // الخطأ القديم: الوقف الحالي 1.0845 (5 pip) ⇒ «1:8.0» أثناء التعديل
+  assert.equal(formatRR(analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, tp: 1.089 }).rr), '1:8.0');
+  // الآن الخطة المخطَّطة: 20 pip (200 USD لـ1 لوت) · 40 pip · 1:2 — نفس R:R سطر الصفقة بعد الحفظ (`planStop`)
+  assert.equal(draftLine(before, 1.0845, 1.089, 1), 'Risk 20 pip (200.00 USD) · Reward 40 pip · R:R 1:2.0');
+  assert.equal(
+    formatRR(analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: planStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, note: 'x · 1R @ 1.083' })!, tp: 1.089 }).rr),
+    '1:2.0'
+  );
+  // نقلٌ للتعادل: السطر يبقى بالخطة (كان يختفي)
+  assert.equal(draftLine(before, 1.085, 1.089, 1), 'Risk 20 pip (200.00 USD) · Reward 40 pip · R:R 1:2.0');
+  // صفقة مغلقة (تصحيح): الوقف المكتوب هو الخطة كما كان
+  assert.equal(draftLine({ ...before, status: 'closed' }, 1.0845, 1.089, 1), 'Risk 5 pip (50.00 USD) · Reward 40 pip · R:R 1:8.0');
+}
+console.log('tradePlan journal draft line from initial stop selftest OK');

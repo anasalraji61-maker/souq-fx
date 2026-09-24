@@ -372,17 +372,17 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * المال المعرَّض بين الدخول والوقف للحجم المكتوب، بعملة التسعير (`riskInQuoteCcy`): «كم خاطرتُ
    * بهذه الصفقة» — الدفتر كان يعرف الأرقام الثلاثة ويسكت عنه. لا يظهر بلا حجم أو بوقف بالجهة الخطأ.
    */
-  const draftRisk = useMemo(() => {
+  const riskAt = (s: number | null) => {
     const e = pnum(entry);
-    const s = pnum(sl);
     const l = num(size);
     if (e == null || s == null || l == null) return null;
     // حساب السنت بالـUSC (≈ USD) وmicro بعقده (`journalRisk`) — سطر `journalCentMoneyNote` تحت USC
     const r = draftRiskFigures({ symbol, side, entry: e, sl: s, lots: l });
     if (!r) return null;
     return { pips: r.pips, money: r.cash ? formatJournalMoney(r.cash, t.journalMoneyUsc) : null, usc: r.cash?.ccy === 'USC' };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, side, entry, sl, size, t]);
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const draftRisk = useMemo(() => riskAt(pnum(sl)), [symbol, side, entry, sl, size, t]);
 
   /** "المخاطرة 25 pip (125.00 USD) · الربح المحتمل 50 pip · R:R 1:2.0" — المال حين يُكتب الحجم. */
   const planSummary = (plan: TradePlan): string => {
@@ -394,12 +394,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const e = pnum(entry);
     const p = pnum(tp);
     const l = num(size);
+    // المال بين قوسين من وقف الخطة نفسه (الأصلي «1R @ …» بعد الشدّ) لا من الوقف الحالي — السطر يصف خطة واحدة
+    const risk = noteStop != null ? riskAt(noteStop) : draftRisk;
     const gain =
-      draftRisk && plan.ok && e != null && p != null && l != null
+      risk && plan.ok && e != null && p != null && l != null
         ? journalPnl({ symbol, side, entry: e, exit: p, lots: l })
         : null;
     const gainText = gain && gain.amount > 0 ? formatJournalMoney(gain, t.journalMoneyUsc) : null;
-    return planSummaryText(plan, { risk: t.planRiskWord, reward: t.planRewardWord }, draftRisk?.money, gainText);
+    return planSummaryText(plan, { risk: t.planRiskWord, reward: t.planRewardWord }, risk?.money, gainText);
   };
 
   /**
@@ -437,7 +439,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       : note;
     const issue = trailedIssue(symbol.trim(), e, s, p, trailNote);
     if (issue) return { issue, plan: null as TradePlan | null };
-    // وقفٌ متحرّك على الدخول أو خلفه: لا «مخاطرة» تُلخَّص — الوقف الأصلي بالملاحظة هو الـ1R
+    // وقفٌ حُرِّك بعد الدخول (شدٌّ، تعادل، حجز ربح): الخطة تُلخَّص من الوقف الأصلي «1R @ …» (`noteStop`) — كـ`planStop`
+    // بسطر الصفقة. كان الشدّ من 20 pip إلى 5 يكتب «R:R 1:8.0» أثناء التعديل ثم «1:2.0» بالقائمة بعد الحفظ.
+    if (noteStop != null) {
+      if (p == null) return null;
+      return { issue: null, plan: analyzePlan({ symbol: symbol.trim(), side, entry: e, sl: noteStop, tp: p }) };
+    }
+    // وقفٌ على الدخول أو خلفه بلا وقف أصلي صالح: لا «مخاطرة» تُلخَّص
     if (s != null && levelSideIssue({ side, entry: e, sl: s })) return null;
     // وقفٌ أقرب من 1 pip بلا هدف بعد: التحذير نفسه بدل «المخاطرة 0.1 pip» كأنها خطة عادية
     if (s != null && p == null && stopTooClose({ symbol: symbol.trim(), side, entry: e, sl: s })) {
@@ -446,7 +454,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     if (s == null || p == null) return null;
     return { issue: null, plan: analyzePlan({ symbol: symbol.trim(), side, entry: e, sl: s, tp: p }) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, side, entry, sl, tp, note, editing]);
+  }, [symbol, side, entry, sl, tp, note, editing, noteStop]);
 
   /**
    * أهداف جاهزة بالنسبة (1:1 · 1:1.5 · 1:2 · 1:3) من الدخول والوقف المكتوبين — نفس شرائح الحاسبة:
