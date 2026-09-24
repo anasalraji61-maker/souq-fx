@@ -68,6 +68,7 @@ import {
   centeredBarTop,
   centeredPaneInnerH,
   centeredPaneZeroY,
+  risingBars,
 } from './centeredPane';
 import { STOCH_LINE_H, stochPaneGeom } from './stochPane';
 import {
@@ -1917,11 +1918,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [closes, indicators]
   );
   const ao = useMemo(
-    () => (indicators.includes('ao') ? ind(computeAwesomeOsc(indBars)) : null),
+    () => {
+      if (!indicators.includes('ao')) return null;
+      const v = computeAwesomeOsc(indBars);
+      return ind({ v, up: risingBars(v) });
+    },
     [indBars, indicators]
   );
   const ac = useMemo(
-    () => (indicators.includes('ac') ? ind(computeAcceleratorOsc(indBars)) : null),
+    () => {
+      if (!indicators.includes('ac')) return null;
+      const v = computeAcceleratorOsc(indBars);
+      return ind({ v, up: risingBars(v) });
+    },
     [indBars, indicators]
   );
   const bop = useMemo(
@@ -8475,7 +8484,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ao ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="AO" values={ao} at={crossIndex} />
+          <PaneValueHead name="AO" values={ao.v} at={crossIndex} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -8484,9 +8493,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = ao.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const vals = ao.v.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxA = Math.max(...vals, 1e-9);
-              return ao.map((v, i) => {
+              return ao.v.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxA, paneH);
                 return (
@@ -8496,7 +8505,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       flex: 1,
                       height: Math.max(2, h),
                       marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      // لون بارتفاع العمود عن سابقه لا بإشارته، كـTradingView (`risingBars`).
+                      backgroundColor: ao.up[i] ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
                   />
@@ -8509,7 +8519,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ac ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="AC" values={ac} at={crossIndex} />
+          <PaneValueHead name="AC" values={ac.v} at={crossIndex} />
           <View style={styles.paneInner}>
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
                 اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
@@ -8518,9 +8528,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = ac.filter((x): x is number => x != null).map((v) => Math.abs(v));
+              const vals = ac.v.filter((x): x is number => x != null).map((v) => Math.abs(v));
               const maxAc = Math.max(...vals, 1e-9);
-              return ac.map((v, i) => {
+              return ac.v.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxAc, paneH);
                 return (
@@ -8530,7 +8540,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       flex: 1,
                       height: Math.max(2, h),
                       marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                      // لون بارتفاع العمود عن سابقه لا بإشارته، كـTradingView (`risingBars`).
+                      backgroundColor: ac.up[i] ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
                   />

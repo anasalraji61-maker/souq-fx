@@ -71,3 +71,16 @@ export function centeredBarTop(v: number, h: number, paneH: number): number {
   if (!finite(v) || !finite(h)) return zeroY;
   return v >= 0 ? zeroY - clamp(h, 0, zeroY) : zeroY;
 }
+
+/**
+ * لون أعمدة Bill Williams (AO وAC) كـTradingView: أخضر حين يعلو العمود سابقه، أحمر حين لا يعلوه
+ * (`diff <= 0`) — **لا** بإشارة القيمة. «الصحن» وتسارع AC يُقرآن من تبدّل اللون فوق الصفر وتحته؛ التلوين
+ * بالإشارة يُخفيهما (عمود موجب يهبط يظهر أخضر). بلا عمود سابق ⇒ صاعد (`na <= 0` خطأ بـPine).
+ * يُحسب على السلسلة **قبل** قصّ نافذة العرض كي يعرف أوّل عمود مرئيّ سابقه.
+ */
+export function risingBars(values: readonly (number | null)[]): boolean[] {
+  return values.map((v, i) => {
+    const prev = i > 0 ? values[i - 1] : null;
+    return !(finite(v) && finite(prev) && v - prev <= 0);
+  });
+}
