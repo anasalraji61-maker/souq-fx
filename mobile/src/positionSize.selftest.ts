@@ -1783,3 +1783,20 @@ console.log('positionSize microAccountSymbol selftest OK');
   assert.equal(smallLotsStdEquiv(0), '—');
 }
 console.log('positionSize smallContractSpec selftest OK');
+
+// المخاطرة بالمال بعملة USC (حساب السنت): تُفهم وتُقلب نسبةً، ولا تُقرأ بعملة أخرى — ما يعتمد عليه تبديل EURUSD ⇄ EURUSDc
+{
+  assert.deepEqual(parseRiskInput('USC 100', 10_000, 'USC'), { pct: 1, amount: 100 });
+  assert.deepEqual(parseRiskInput('100 usc', 10_000, 'USC'), { pct: 1, amount: 100 });
+  assert.equal(parseRiskInput('USD 100', 10_000, 'USC'), null);
+  assert.equal(parseRiskInput('$100', 10_000, 'USC'), null, '$ ليست السنت');
+  assert.equal(parseRiskInput('USC 100', 10_000, 'USD'), null);
+  // «USD 50» من رصيد 1,000 ⇒ «5» (نسبة) قبل الانتقال للسنت، و«USC 250» من 50,000 ⇒ «0.5» قبل العودة
+  assert.equal(toggleRiskUnit('USD 50', 1000, 'USD'), '5');
+  assert.equal(toggleRiskUnit('USC 250', 50_000, 'USC'), '0.5');
+  // والنسبة تُقلب مالاً بـUSC لشريحة المخاطرة بالمال بوضع السنت
+  const flipped = toggleRiskUnit('1', 50_000, 'USC');
+  assert.ok(flipped && /USC/.test(flipped), String(flipped));
+  assert.equal(parseRiskInput(flipped!, 50_000, 'USC')!.pct, 1);
+}
+console.log('positionSize USC risk-input selftest OK');

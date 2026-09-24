@@ -386,6 +386,21 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * الرصيد — راجع `parseRiskInput`. الرقم وحده يبقى نسبة.
    */
   const riskIn = parseRiskInput(riskPct, balanceNum, moneyCcy);
+  /**
+   * عملة المال تتغيّر **بتبديل الرمز** لا بشريحة العملة وحدها: «EURUSD» ⇄ «EURUSDc» = USD ⇄ USC (ورصيدان مختلفان). المخاطرة
+   * المكتوبة مالاً («USD 50») كانت تصير «رقم غير مفهوم» تحت السنت، و«USC 5000» كذلك بالعودة. تعود نسبةً بعملة ورصيد
+   * الوضع السابق — النسبة وحدها معناها واحد بالحسابين — كما تفعل شريحة عملة الحساب. راجع `toggleRiskUnit`.
+   */
+  const prevMoneyRef = useRef({ ccy: moneyCcy, balance: balanceNum });
+  useEffect(() => {
+    const prev = prevMoneyRef.current;
+    prevMoneyRef.current = { ccy: moneyCcy, balance: balanceNum };
+    if (prev.ccy === moneyCcy) return;
+    if (parseRiskInput(riskPct, prev.balance, prev.ccy)?.amount == null) return;
+    setRiskPct(toggleRiskUnit(riskPct, prev.balance, prev.ccy) ?? '');
+    // riskPct خارج التبعيات عمداً: يُقرأ لحظة تبدّل العملة فقط، لا مع كل حرف يُكتب
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moneyCcy, balanceNum]);
   const riskNum = riskIn?.pct ?? NaN;
   /** النسبة كما تُكتب بالنصوص («يتجاوز {pct}%»): المكتوبة كما هي، والمحسوبة من مبلغ لمنزلتين («0.5» لا «0.4999…») */
   const riskPctText = riskIn?.amount != null ? String(Math.round(riskNum * 100) / 100) : String(riskNum);
