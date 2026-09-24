@@ -1777,7 +1777,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [closes, indicators]
   );
   const macd = useMemo(
-    () => (indicators.includes('macd') ? ind(computeMacd(closes)) : null),
+    () => {
+      if (!indicators.includes('macd')) return null;
+      const r = computeMacd(closes);
+      return ind({ ...r, histUp: risingBars(r.hist) });
+    },
     [closes, indicators]
   );
   const stoch = useMemo(
@@ -2258,7 +2262,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [closes, indicators]
   );
   const vwMacd = useMemo(
-    () => (indicators.includes('vwMacd') ? ind(computeVwMacd(indBars)) : null),
+    () => {
+      if (!indicators.includes('vwMacd')) return null;
+      const r = computeVwMacd(indBars);
+      return ind({ ...r, histUp: risingBars(r.hist) });
+    },
     [indBars, indicators]
   );
   const disparityIndex = useMemo(
@@ -7549,7 +7557,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                               top: v >= 0 ? g.zeroY - bh : g.zeroY,
                               height: Math.max(1, bh),
                               backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                              opacity: 0.55,
+                              // درجتان كهيستوغرام MACD أدناه: يقوى مُشبَع، يخبو باهت.
+                              opacity: (v >= 0) === vwMacd.histUp[i] ? 0.85 : 0.3,
                             }}
                           />
                         ) : null}
@@ -10424,7 +10433,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                               top: v >= 0 ? g.zeroY - bh : g.zeroY,
                               height: Math.max(1, bh),
                               backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                              opacity: 0.55,
+                              // أربع درجات كـTradingView: عمود يبتعد عن الصفر (زخم يقوى) مُشبَع، وعمود
+                              // يعود نحوه (زخم يخبو) باهت — كان لوناً واحداً لكل جانب فلا يُرى الخفوت
+                              // الذي يسبق تقاطع الخطّين.
+                              opacity: (v >= 0) === macd.histUp[i] ? 0.85 : 0.3,
                             }}
                           />
                         ) : null}
