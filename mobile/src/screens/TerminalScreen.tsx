@@ -208,7 +208,32 @@ export function TerminalScreen() {
     () => ['DXY', ...frameSymbols, ...WATCHLIST.map((w) => w.symbol)],
     [frameSymbols]
   );
-  const liveTicks = useMultiLiveTicks(watchSymbols, true);
+  /**
+   * تركيز الشاشة — شاشات التبويبات السفلية **تبقى مُركَّبة** بعد الانتقال عنها، فما تحمله من
+   * مؤقّتات يعمل بقيّة الجلسة خلف الشاشة. يُقرأ بـ`addListener('focus'/'blur')` كما بشاشة الأدوات
+   * حرفياً. القيمة الابتدائية `true`: الشاشة تُركَّب وهي المعروضة، وحدث `focus` قد يكون مضى قبل
+   * تسجيل المستمع.
+   *
+   * يُمرَّر لقائمة المتابعة (دورة قراءة `/api/alerts`) **ولمقبس التيكات** (`useMultiLiveTicks` أدناه): كان يبقى مفتوحاً
+   * خلف الشاشة بقيّة الجلسة (بطارية وبيانات وإعادة رسمٍ لشاشة مخفيّة مع كل تيك). بالعودة يُعاد الاتصال؛ التيكات السابقة
+   * تبقى معروضة بعمرها (`source.as_of`) حتى أول رسالة. صفّ التنسيق «tools ⇐ chart» (09-23) — موضع الاستدعاء هنا بملفّي.
+   */
+  const navigation = useNavigation();
+  const [screenFocused, setScreenFocused] = useState(true);
+  useEffect(() => {
+    const nav = navigation as unknown as {
+      addListener: (e: 'focus' | 'blur', cb: () => void) => () => void;
+      isFocused?: () => boolean;
+    };
+    if (typeof nav.isFocused === 'function') setScreenFocused(nav.isFocused());
+    const offFocus = nav.addListener('focus', () => setScreenFocused(true));
+    const offBlur = nav.addListener('blur', () => setScreenFocused(false));
+    return () => {
+      offFocus();
+      offBlur();
+    };
+  }, [navigation]);
+  const liveTicks = useMultiLiveTicks(watchSymbols, screenFocused);
 
   const openFocus = (
     sym: string,
@@ -762,33 +787,7 @@ export function TerminalScreen() {
   /** طلب فتح شارت من تبويب آخر (نتيجة الماسح): { openSymbol, openTf, nonce } — يُفتح شارت التركيز
    * ثم تُمسح المعاملات كي لا يُعاد فتحه عند العودة للشاشة. */
   const route = useRoute();
-  const navigation = useNavigation();
 
-  /**
-   * تركيز الشاشة — شاشات التبويبات السفلية **تبقى مُركَّبة** بعد الانتقال عنها، فما تحمله من
-   * مؤقّتات يعمل بقيّة الجلسة خلف الشاشة. يُقرأ بـ`addListener('focus'/'blur')` كما بشاشة الأدوات
-   * حرفياً. القيمة الابتدائية `true`: الشاشة تُركَّب وهي المعروضة، وحدث `focus` قد يكون مضى قبل
-   * تسجيل المستمع.
-   *
-   * **يُمرَّر لقائمة المتابعة وحدها** اليوم (دورة قراءة `/api/alerts`). مقبس التيكات
-   * (`useMultiLiveTicks` أعلاه) لم يُمسّ عمداً: ما يصل منه يغذّي أُطر الشارت نفسها
-   * (`liveTick={...}`) فقرارُ إيقافه خلف الشاشة قرارُ مَن يملك الشارت — انظر «طلب تنسيق»
-   * بـ`docs/LOG-TOOLS.md`.
-   */
-  const [screenFocused, setScreenFocused] = useState(true);
-  useEffect(() => {
-    const nav = navigation as unknown as {
-      addListener: (e: 'focus' | 'blur', cb: () => void) => () => void;
-      isFocused?: () => boolean;
-    };
-    if (typeof nav.isFocused === 'function') setScreenFocused(nav.isFocused());
-    const offFocus = nav.addListener('focus', () => setScreenFocused(true));
-    const offBlur = nav.addListener('blur', () => setScreenFocused(false));
-    return () => {
-      offFocus();
-      offBlur();
-    };
-  }, [navigation]);
 
   const openReq = route.params as
     | { openSymbol?: string; openTf?: string; nonce?: number }
