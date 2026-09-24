@@ -1805,3 +1805,32 @@
 **خارج نطاقي ويستحقّ عملاً**: أسماء البنوك الحقيقية و`"TradingCentral-like"` بـ`signal_hub.py` (ip-legal-caution)، مواعيد تقويم العيّنة، `openrouter_ai.py:71`،
 السبريد المختلَق، `₴`، أطر الكردي (`TimeframeBar` بلا مالك).
 **يحتاج جهازاً**: الخطوة 138؛ طول `analystsSubSuffix`/`socialPickHint` الجديدين على 360px داخل الإطار المضمَّن (`frameEmbedSub`).
+
+## 2026-09-25 — التشغيلة السادسة والخمسون
+
+أوّلاً `COORDINATION.md`: لا صفّ منفَّذه «launch». `bash scripts/qa-build-check.sh` **أخضر بصفر أخطاء قبل كل commit**؛ صفر `U+FFFD`
+بـ`locales.ts`. مسح آلي: كل مفاتيح `Dict` مستعملة خارج `locales.ts` عدا المنتظرة لصفوف بلا مالك (`tfLabels*`، `subPlans`، `cpp*`، `ntp*`، `tds*`،
+`accNetLoadError`)؛ ولا نصّ كردي/عربي مطابق للإنجليزي (سوى `name@example.com`). **لم يُشغَّل التطبيق ولا بناء EAS.**
+
+1. **`app.json` + `RELEASE-MOBILE.md`** (`9292d9b`) — **لغة أول فتح على iOS**: `deviceLang()` (`I18nContext.tsx`) يقرأ `Intl…resolvedOptions().locale`،
+   وعلى iOS تعكس هذه القيمة لغة **التطبيق** المحسومة من توطينات الحزمة؛ وحزمة Expo بلا `locales` تُعلن `en.lproj` وحده ⇒ المرجَّح أن آيفون عربياً
+   يُفتح بالإنجليزية لجمهور MATRIX الأول. أُضيف `expo.locales` مضمَّناً (`ar`/`en`/`ckb`؛ `ios.CFBundleDisplayName` و`android.app_name` = «MATRIX»
+   كما هو) — قرأت `@expo/config-plugins` (`ios/Locales.js` يكتب `<lang>.lproj/InfoPlist.strings` ويتخطّى الكائن الفارغ، لذا اسم العرض)،
+   و`npx expo config` يحلّه سليماً. خطوة جهاز جديدة **139** والخطوة 1 تحيل إليها. إن بقيت الإنجليزية فالعلاج بالكود (`expo-localization`)، لا بنطاقي.
+2. **`locales.ts`** (`196c4d7`): `riskCalcConvFailed` كان «تعذّر جلب سعر التحويل USDJPY» — ولا يقول إن حجم اللوت **لا يظهر** حتى يُكتب السعر يدوياً
+   (`PositionSizePanel.tsx:542-551`: `rate == null` ⇒ `result = null`). الآن «…اكتبه بالخانة أدناه كما تراه بمنصّتك ليظهر حجم اللوت. الزوج:» + الرمز
+   (الواجهة تُلحق ` {conv.symbol}` فانتهى النصّ بـ«الزوج:»). `mcSnapshotFailed`: «حاول مرة أخرى، أو خذ لقطة شاشة للشارت» (بلا «أزرار هاتفك» — للويب/سطح المكتب أيضاً). ×ar/en/ku.
+3. **`locales.ts`** (`8af3a72`) — أخطاء تحميل بلا طريق: `calendarLoadError` ⇒ «يعيد المحاولة وحده كل 5 دقائق، أو غيّر أحد الفلاتر» (مُتحقَّق:
+   `RELOAD_MS` 5د :41، الجلب الصامت يضع `status 'ok'` عند النجاح :166، وتغيّر الفلتر يعيد `load` الظاهر؛ الفلاتر ظاهرة بكل الأوضاع).
+   `chatLoadError`/`voteLoadError`/`socialSourcesError` ⇒ «غادر هذا القسم وارجع إليه لإعادة المحاولة» (تُجلب مرّة عند التركيب فقط:
+   `GroupChatPanel:37`، `VotePanel:69`، `SocialConsensusPanel:76`؛ تبديل قسم Tools/تبويب الـDock يعيد التركيب). ×ar/en/ku.
+4. **`STORE-LISTING.md`** (`3c52d2d`): حقل «اللغات» بصفحة App Store يُملأ من توطينات الحزمة لا من لغات الصفحة — كان سيقول «English» وحدها؛
+   يُفحص بعد أول TestFlight.
+
+### ردّ على COORDINATION
+- **launch55 (`mcEstimatedTag` ← الشارت)**: منجز بـ`64579a6` — `MatrixChart.tsx:7753` `` `CVD (${tr.mcEstimatedTag})` ``، و`estimatedTag` لا يظهر بأي ملف. **يُسقَط.**
+- **QA6 `QUICK_SYMBOLS`**: للعلم — ما زال نسختين حرفيتين بـ`IndicatorAlertsPanel.tsx:61` و`BacktestPanel.tsx:54` (الأدوات أنجزت 2 من 4).
+
+**خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (أسماء البنوك و`"TradingCentral-like"` بـ`signal_hub.py`، `openrouter_ai.py:71`، السبريد المختلَق، `₴`،
+أطر الكردي، `extra.apiUrl` المحلّي). ولوكيل يملك `I18nContext.tsx` (لا أحد حالياً): إن فشلت الخطوة 139 فـ`expo-localization` `getLocales()[0].languageCode` أصدق من `Intl`.
+**يحتاج جهازاً**: الخطوة 139؛ طول `riskCalcConvFailed` الجديد على 360px.
