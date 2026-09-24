@@ -372,6 +372,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * المال المعرَّض بين الدخول والوقف للحجم المكتوب، بعملة التسعير (`riskInQuoteCcy`): «كم خاطرتُ
    * بهذه الصفقة» — الدفتر كان يعرف الأرقام الثلاثة ويسكت عنه. لا يظهر بلا حجم أو بوقف بالجهة الخطأ.
    */
+  /** الملاحظة كما ستُحفظ: بعلامة «1R @ …» تُلحق حين يُشدّ وقف صفقة مفتوحة بهذا التعديل (`noteWithInitialStop`). */
+  const noteToSave = (e: number | null, s: number | null): string =>
+    editing && e != null ? noteWithInitialStop({ symbol: symbol.trim(), note, before: editing, after: { side, entry: e, sl: s } }) : note;
+
   const riskAt = (s: number | null) => {
     const e = pnum(entry);
     const l = num(size);
@@ -421,10 +425,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   const noteStop = useMemo(() => {
     const e = pnum(entry);
     if (e == null) return null;
-    const n = editing
-      ? noteWithInitialStop({ symbol: symbol.trim(), note, before: editing, after: { side, entry: e, sl: pnum(sl) } })
-      : note;
-    return initialStop({ symbol: symbol.trim(), side, entry: e, note: n });
+    return initialStop({ symbol: symbol.trim(), side, entry: e, note: noteToSave(e, pnum(sl)) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry, sl, note, editing]);
 
@@ -434,9 +435,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     if (e == null) return null;
     const s = pnum(sl);
     const p = pnum(tp);
-    const trailNote = editing
-      ? noteWithInitialStop({ symbol: symbol.trim(), note, before: editing, after: { side, entry: e, sl: s } })
-      : note;
+    const trailNote = noteToSave(e, s);
     const issue = trailedIssue(symbol.trim(), e, s, p, trailNote);
     if (issue) return { issue, plan: null as TradePlan | null };
     // وقفٌ حُرِّك بعد الدخول (شدٌّ، تعادل، حجز ربح): الخطة تُلخَّص من الوقف الأصلي «1R @ …» (`noteStop`) — كـ`planStop`
@@ -530,6 +529,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       sl: pnum(sl),
       exit: pnum(exit),
       lots: l != null && !journalSizeLooksLikeUnits(l, symbol) ? l : null,
+      // الملاحظة التي ستُحفظ (بعلامة «1R @ …» إن شُدّ الوقف الآن) — الـR نفسه الذي يعرضه السطر بعد الحفظ
+      note: noteToSave(pnum(entry), pnum(sl)),
     });
     if (!p) return null;
     const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
@@ -545,7 +546,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       .join(' · ');
     return { text, pct: p.pct };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, side, entry, sl, exit, size, t]);
+  }, [symbol, side, entry, sl, exit, size, note, editing, t]);
 
   /**
    * أدوات الدفتر وعدد صفقات كلٍّ منها، الأكثر تداولاً أولاً. الشرائح لا تظهر إلا بأداتين فأكثر:
@@ -997,7 +998,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
               : floatingExitPrice({ side: trSide, live: ticks?.[trSym], snap: quotes[trSym] ?? null });
             const mv = closed
               ? realizedMove({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: tr.exit })
-              : floatingResult({ symbol: tr.symbol, side: trSide, entry: tr.entry, sl: tr.sl, current: live });
+              : floatingResult({ symbol: tr.symbol, side: trSide, entry: tr.entry, sl: tr.sl, current: live, note: tr.note });
             const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
             const pips = mv ? formatPips(mv.pips == null ? null : Math.abs(mv.pips)) : null;
             const rText = !closed && mv && 'r' in mv ? formatR(mv.r as number | null) : null;

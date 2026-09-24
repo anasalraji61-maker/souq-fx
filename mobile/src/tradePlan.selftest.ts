@@ -2177,3 +2177,41 @@ console.log('tradePlan journal R targets from initial stop selftest OK');
   assert.equal(draftLine({ ...before, status: 'closed' }, 1.0845, 1.089, 1), 'Risk 5 pip (50.00 USD) · Reward 40 pip · R:R 1:8.0');
 }
 console.log('tradePlan journal draft line from initial stop selftest OK');
+
+// ---- الـR العائم (صفّ الصفقة المفتوحة) ومعاينة الخروج بالنموذج: من الوقف الأصلي «1R @ …» كالصفّ المغلق ----
+{
+  const note = noteWithInitialStop({
+    symbol: 'EURUSD',
+    note: 'breakout',
+    before: { side: 'buy', entry: 1.085, sl: 1.083, status: 'open' },
+    after: { side: 'buy', entry: 1.085, sl: 1.0845 },
+  });
+  const closedR = realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, exit: 1.089, note });
+  assert.equal(closedR, 2);
+  // الخطأ القديم: بلا ملاحظة «+8R» عائمةً ثم «+2R» عند الإغلاق
+  assert.equal(floatingResult({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, current: 1.089 })!.r, 8);
+  assert.equal(floatingResult({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, current: 1.089, note })!.r, closedR);
+  assert.equal(exitPreview({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, exit: 1.089, note })!.r, closedR);
+  // تعادل: كان بلا R؛ الآن +2R عائمة و−0 عند الوقف = 0R
+  const be = noteWithInitialStop({
+    symbol: 'EURUSD',
+    note: '',
+    before: { side: 'buy', entry: 1.085, sl: 1.083, status: 'open' },
+    after: { side: 'buy', entry: 1.085, sl: 1.085 },
+  });
+  assert.equal(floatingResult({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.085, current: 1.089 })!.r, null);
+  assert.equal(floatingResult({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.085, current: 1.089, note: be })!.r, 2);
+  assert.equal(exitPreview({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.085, exit: 1.085, note: be })!.r, 0);
+  // بيع USDJPY 151.50 بوقف 151.80 شُدّ إلى 151.60، السوق 150.90 ⇒ +2R (لا +6R)
+  const jpy = noteWithInitialStop({
+    symbol: 'USDJPY',
+    note: '',
+    before: { side: 'sell', entry: 151.5, sl: 151.8, status: 'open' },
+    after: { side: 'sell', entry: 151.5, sl: 151.6 },
+  });
+  assert.equal(floatingResult({ symbol: 'USDJPY', side: 'sell', entry: 151.5, sl: 151.6, current: 150.9 })!.r, 6);
+  assert.equal(floatingResult({ symbol: 'USDJPY', side: 'sell', entry: 151.5, sl: 151.6, current: 150.9, note: jpy })!.r, 2);
+  // بلا علامة: كما كان
+  assert.equal(exitPreview({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083, exit: 1.089, note: 'x' })!.r, 2);
+}
+console.log('tradePlan floating/exit preview R from initial stop selftest OK');

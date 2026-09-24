@@ -588,13 +588,15 @@ export function exitPreview(input: {
   sl?: number | null;
   exit: number | null;
   lots?: number | null;
+  /** الملاحظة التي ستُحفظ — علامة «1R @ …» بعد تحريك الوقف تجعل الـR من الوقف الأصلي كسطر الصفقة بعد الحفظ */
+  note?: string | null;
 }): { pips: number | null; pct: number; r: number | null; cash: { amount: number; ccy: string } | null } | null {
-  const { symbol, side, entry, sl, exit, lots } = input;
+  const { symbol, side, entry, sl, exit, lots, note } = input;
   if (!finitePos(entry) || !finitePos(exit)) return null;
   const mv = realizedMove({ symbol, side, entry, exit });
   if (!mv) return null;
   const cash = finitePos(lots) ? journalPnl({ symbol, side, entry, exit, lots }) : null;
-  return { ...mv, r: realizedR({ symbol, side, entry, sl, exit }), cash };
+  return { ...mv, r: realizedR({ symbol, side, entry, sl, exit, note }), cash };
 }
 
 /**
@@ -751,11 +753,16 @@ export function floatingResult(input: {
   entry: number;
   sl?: number | null;
   current?: number | null;
+  /**
+   * ملاحظة الصفقة: علامة الوقف الأصلي «1R @ …» (`noteWithInitialStop`). بدونها كان صفّ الصفقة المفتوحة بعد شدّ الوقف
+   * يعرض «+8R» ثم «+2R» لحظة الإغلاق (والتعادل بلا R أصلاً) — القفزة التي يَعِد هذا التعليق بمنعها.
+   */
+  note?: string | null;
 }): { pips: number | null; pct: number; r: number | null } | null {
-  const { symbol, side, entry, sl, current } = input;
+  const { symbol, side, entry, sl, current, note } = input;
   const mv = realizedMove({ symbol, side, entry, exit: current });
   if (!mv) return null;
-  return { ...mv, r: realizedR({ symbol, side, entry, sl, exit: current }) };
+  return { ...mv, r: realizedR({ symbol, side, entry, sl, exit: current, note }) };
 }
 
 /**
