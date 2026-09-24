@@ -7954,40 +7954,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
               const span = maxV - minV || 1;
-              const innerH = paneH - 16;
-              return tdi.tdi.map((tv, i) => {
-                const dv = tdi.di[i];
-                return (
-                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
-                    {tv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - tv) / span) * innerH,
-                          backgroundColor: tv >= 0 ? colors.bull : colors.bear,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                    {dv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - dv) / span) * innerH,
-                          backgroundColor: colors.accent,
-                          opacity: 0.55,
-                        }}
-                      />
-                    ) : null}
-                  </View>
-                );
-              });
+              const innerH = Math.max(0, paneH - 16);
+              // خطّان متّصلان (`PaneLineLayer`) لا شرطة 3px لكل عمود: تقاطعهما — القراءة كلّها — يقع
+              // غالباً بين شمعتين. المقياس نفسه (‎minV..maxV‎)، والقيمة بمركز الخطّ لا حافّته العليا.
+              return (
+                <PaneLineLayer
+                  innerH={innerH}
+                  y={boundedPaneY(innerH, maxV - span, maxV)}
+                  lines={[
+                    { values: tdi.tdi, color: (i) => ((tdi.tdi[i] ?? 0) >= 0 ? colors.bull : colors.bear), opacity: 0.85 },
+                    { values: tdi.di, color: colors.accent, opacity: 0.55 },
+                  ]}
+                />
+              );
             })()}
           </View>
         </View>
@@ -8190,40 +8169,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
               const span = maxV - minV || 1;
-              const innerH = paneH - 16;
-              return waveTrend.wt1.map((wv, i) => {
-                const sv = waveTrend.wt2[i];
-                return (
-                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
-                    {wv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - wv) / span) * innerH,
-                          backgroundColor: colors.accent,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                    {sv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - sv) / span) * innerH,
-                          backgroundColor: colors.infoAccent,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                  </View>
-                );
-              });
+              const innerH = Math.max(0, paneH - 16);
+              // خطّان متّصلان (`PaneLineLayer`) لا شرطة 3px لكل عمود: تقاطعهما — القراءة كلّها — يقع
+              // غالباً بين شمعتين. المقياس نفسه (‎minV..maxV‎)، والقيمة بمركز الخطّ لا حافّته العليا.
+              return (
+                <PaneLineLayer
+                  innerH={innerH}
+                  y={boundedPaneY(innerH, maxV - span, maxV)}
+                  lines={[
+                    { values: waveTrend.wt1, color: colors.accent, opacity: 0.85 },
+                    { values: waveTrend.wt2, color: colors.infoAccent, opacity: 0.85 },
+                  ]}
+                />
+              );
             })()}
           </View>
         </View>
@@ -9436,40 +9394,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
               const span = maxV - minV || 1;
-              const innerH = paneH - 16;
-              return vortex.plus.map((pv, i) => {
-                const mv = vortex.minus[i];
-                return (
-                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
-                    {pv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - pv) / span) * innerH,
-                          backgroundColor: colors.bull,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                    {mv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - mv) / span) * innerH,
-                          backgroundColor: colors.bear,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                  </View>
-                );
-              });
+              const innerH = Math.max(0, paneH - 16);
+              // خطّان متّصلان (`PaneLineLayer`) لا شرطة 3px لكل عمود: تقاطعهما — القراءة كلّها — يقع
+              // غالباً بين شمعتين. المقياس نفسه (‎minV..maxV‎)، والقيمة بمركز الخطّ لا حافّته العليا.
+              return (
+                <PaneLineLayer
+                  innerH={innerH}
+                  y={boundedPaneY(innerH, maxV - span, maxV)}
+                  lines={[
+                    { values: vortex.plus, color: colors.bull, opacity: 0.85 },
+                    { values: vortex.minus, color: colors.bear, opacity: 0.85 },
+                  ]}
+                />
+              );
             })()}
           </View>
         </View>
@@ -9492,40 +9429,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
               const span = maxV - minV || 1;
-              const innerH = paneH - 16;
-              return dmi.plusDI.map((pv, i) => {
-                const mv = dmi.minusDI[i];
-                return (
-                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
-                    {pv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - pv) / span) * innerH,
-                          backgroundColor: colors.bull,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                    {mv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - mv) / span) * innerH,
-                          backgroundColor: colors.bear,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                  </View>
-                );
-              });
+              const innerH = Math.max(0, paneH - 16);
+              // خطّان متّصلان (`PaneLineLayer`) لا شرطة 3px لكل عمود: تقاطعهما — القراءة كلّها — يقع
+              // غالباً بين شمعتين. المقياس نفسه (‎minV..maxV‎)، والقيمة بمركز الخطّ لا حافّته العليا.
+              return (
+                <PaneLineLayer
+                  innerH={innerH}
+                  y={boundedPaneY(innerH, maxV - span, maxV)}
+                  lines={[
+                    { values: dmi.plusDI, color: colors.bull, opacity: 0.85 },
+                    { values: dmi.minusDI, color: colors.bear, opacity: 0.85 },
+                  ]}
+                />
+              );
             })()}
           </View>
         </View>
@@ -9542,40 +9458,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
               const span = maxV - minV || 1;
-              const innerH = paneH - 16;
-              return rwi.rwiHigh.map((hv, i) => {
-                const lv = rwi.rwiLow[i];
-                return (
-                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
-                    {hv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - hv) / span) * innerH,
-                          backgroundColor: colors.bull,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                    {lv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - lv) / span) * innerH,
-                          backgroundColor: colors.bear,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                  </View>
-                );
-              });
+              const innerH = Math.max(0, paneH - 16);
+              // خطّان متّصلان (`PaneLineLayer`) لا شرطة 3px لكل عمود: تقاطعهما — القراءة كلّها — يقع
+              // غالباً بين شمعتين. المقياس نفسه (‎minV..maxV‎)، والقيمة بمركز الخطّ لا حافّته العليا.
+              return (
+                <PaneLineLayer
+                  innerH={innerH}
+                  y={boundedPaneY(innerH, maxV - span, maxV)}
+                  lines={[
+                    { values: rwi.rwiHigh, color: colors.bull, opacity: 0.85 },
+                    { values: rwi.rwiLow, color: colors.bear, opacity: 0.85 },
+                  ]}
+                />
+              );
             })()}
           </View>
         </View>
@@ -9614,40 +9509,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
               const span = maxV - minV || 1;
-              const innerH = paneH - 16;
-              return klinger.kvo.map((kv, i) => {
-                const sv = klinger.signal[i];
-                return (
-                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
-                    {kv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - kv) / span) * innerH,
-                          backgroundColor: colors.accent,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                    {sv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - sv) / span) * innerH,
-                          backgroundColor: colors.infoAccent,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                  </View>
-                );
-              });
+              const innerH = Math.max(0, paneH - 16);
+              // خطّان متّصلان (`PaneLineLayer`) لا شرطة 3px لكل عمود: تقاطعهما — القراءة كلّها — يقع
+              // غالباً بين شمعتين. المقياس نفسه (‎minV..maxV‎)، والقيمة بمركز الخطّ لا حافّته العليا.
+              return (
+                <PaneLineLayer
+                  innerH={innerH}
+                  y={boundedPaneY(innerH, maxV - span, maxV)}
+                  lines={[
+                    { values: klinger.kvo, color: colors.accent, opacity: 0.85 },
+                    { values: klinger.signal, color: colors.infoAccent, opacity: 0.85 },
+                  ]}
+                />
+              );
             })()}
           </View>
         </View>
@@ -9664,40 +9538,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
               const span = maxV - minV || 1;
-              const innerH = paneH - 16;
-              return smi.smi.map((sv, i) => {
-                const gv = smi.signal[i];
-                return (
-                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
-                    {sv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - sv) / span) * innerH,
-                          backgroundColor: colors.accent,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                    {gv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - gv) / span) * innerH,
-                          backgroundColor: colors.infoAccent,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                  </View>
-                );
-              });
+              const innerH = Math.max(0, paneH - 16);
+              // خطّان متّصلان (`PaneLineLayer`) لا شرطة 3px لكل عمود: تقاطعهما — القراءة كلّها — يقع
+              // غالباً بين شمعتين. المقياس نفسه (‎minV..maxV‎)، والقيمة بمركز الخطّ لا حافّته العليا.
+              return (
+                <PaneLineLayer
+                  innerH={innerH}
+                  y={boundedPaneY(innerH, maxV - span, maxV)}
+                  lines={[
+                    { values: smi.smi, color: colors.accent, opacity: 0.85 },
+                    { values: smi.signal, color: colors.infoAccent, opacity: 0.85 },
+                  ]}
+                />
+              );
             })()}
           </View>
         </View>
