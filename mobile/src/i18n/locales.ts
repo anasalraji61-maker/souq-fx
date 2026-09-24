@@ -322,6 +322,9 @@ export type Dict = {
   riskCalcPipValue: string;
   /** حاسبة الهامش (طلب وكيل الأدوات): خانة الرافعة، سطر الهامش، وملاحظة أن الهامش ليس الخسارة */
   riskCalcLeverage: string;
+  /** رافعة مفهومة لكن خارج مدى `parseLeverage` (كـ«1:5000») — بدل «رقم غير مفهوم… بلا فواصل آلاف» المضلِّل؛
+   *  `{value}` كما كُتبت، `{max}` سقف `parseLeverage` (3000 اليوم) */
+  riskCalcLeverageOutOfRange: string;
   riskCalcMargin: string;
   riskCalcMarginNote: string;
   riskCalcTarget: string;
@@ -1237,6 +1240,7 @@ const ar: Dict = {
   arabicThousandsSignHint: '«٬» فاصلة الآلاف لا الفاصلة العشرية — للكسر اكتب «٫» أو نقطة، مثل 0٫5',
   riskCalcPipValue: 'قيمة النقطة للوت',
   riskCalcLeverage: 'الرافعة المالية (100 تعني 1:100)',
+  riskCalcLeverageOutOfRange: 'رافعة «{value}» خارج ما تحسبه الحاسبة (من 1:1 حتى 1:{max}) — اكتب رافعة حسابك كما تظهر بمنصّتك، مثل 500.',
   riskCalcMargin: 'الهامش المحجوز',
   riskCalcMarginNote:
     'الهامش مبلغ يحجزه الوسيط ما دامت الصفقة مفتوحة، وليس ما قد تخسره — خسارتك يحدّدها الوقف. والرافعة المتاحة تختلف حسب الوسيط والأداة.',
@@ -2147,6 +2151,7 @@ const enUS: Dict = {
   arabicThousandsSignHint: '“٬” is the Arabic thousands sign, not the decimal comma — for a fraction type “٫” or a dot, e.g. 0.5',
   riskCalcPipValue: 'Pip value per lot',
   riskCalcLeverage: 'Leverage (100 means 1:100)',
+  riskCalcLeverageOutOfRange: 'Leverage “{value}” is outside what the calculator handles (1:1 to 1:{max}) — enter your account’s leverage as your platform shows it, e.g. 500.',
   riskCalcMargin: 'Margin held',
   riskCalcMarginNote:
     'Margin is what your broker sets aside while the trade is open, not what you can lose — your stop decides that. Available leverage varies by broker and instrument.',
@@ -3082,6 +3087,7 @@ const ku: Dict = {
   arabicThousandsSignHint: '«٬» جیاکەرەوەی هەزارانە نەک فاریزەی دەیی — بۆ کەرت «٫» یان خاڵ بنووسە، وەک 0٫5',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
   riskCalcLeverage: 'لێڤەرێج (100 واتە 1:100)',
+  riskCalcLeverageOutOfRange: 'لێڤەرێجی «{value}» لە دەرەوەی ئەوەیە کە حاسیبەکە حیسابی دەکات (لە 1:1 تا 1:{max}) — لێڤەرێجی هەژمارەکەت وەک لە پلاتفۆرمەکەتدا دەردەکەوێت بنووسە، وەک 500.',
   riskCalcMargin: 'مارجینی گیراو',
   riskCalcMarginNote:
     'مارجین ئەو بڕەیە کە بڕۆکەر تا مامەڵەکە کراوە بێت دەیگرێت، نەک ئەوەی لەوانەیە لەدەستی بدەیت — زیانەکەت ستۆپەکە دیاری دەکات. لێڤەرێجی بەردەست بەپێی بڕۆکەر و ئامراز جیاوازە.',
