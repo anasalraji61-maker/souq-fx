@@ -48,6 +48,20 @@ export function getLayoutsSaveError(): LayoutsSaveErrorCode | null {
   return saveError;
 }
 
+/**
+ * كل كتابة (حفظ/حذف/دمج الخادم) قراءةٌ ثم كتابة للقائمة كاملة — فتُنفَّذ بالتسلسل. كان حفظ
+ * تخطيط أثناء انتظار دمج الخادم يُمحى: الدمج قرأ القائمة قبل الحفظ ثم كتبها فوقه.
+ */
+let writeChain: Promise<unknown> = Promise.resolve();
+function serial<T>(fn: () => Promise<T>): Promise<T> {
+  const run = writeChain.then(fn, fn);
+  writeChain = run.catch(() => undefined);
+  return run;
+}
+
+/** محذوفات هذه الجلسة — استجابة خادم طُلبت قبل الحذف تحملها بعد، فلا يُعيدها الدمج. */
+const deletedIds = new Set<string>();
+
 export async function loadLayouts(): Promise<TerminalLayout[]> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
@@ -59,7 +73,12 @@ export async function loadLayouts(): Promise<TerminalLayout[]> {
   }
 }
 
-export async function saveLayout(layout: TerminalLayout): Promise<void> {
+export function saveLayout(layout: TerminalLayout): Promise<void> {
+  deletedIds.delete(layout.id);
+  return serial(() => saveLayoutNow(layout));
+}
+
+async function saveLayoutNow(layout: TerminalLayout): Promise<void> {
   try {
     const all = await loadLayouts();
     const idx = all.findIndex((l) => l.id === layout.id);
@@ -72,7 +91,12 @@ export async function saveLayout(layout: TerminalLayout): Promise<void> {
   }
 }
 
-export async function deleteLayout(id: string): Promise<void> {
+export function deleteLayout(id: string): Promise<void> {
+  deletedIds.add(id);
+  return serial(() => deleteLayoutNow(id));
+}
+
+async function deleteLayoutNow(id: string): Promise<void> {
   try {
     const all = (await loadLayouts()).filter((l) => l.id !== id);
     await AsyncStorage.setItem(KEY, JSON.stringify(all));
@@ -113,14 +137,18 @@ export function parseServerLayout(payload: unknown): TerminalLayout | null {
  * يضيف للقائمة المحلية تخطيطات الحساب المحفوظة بالخادم وغير الموجودة محلياً (تسجيل الدخول على جهاز آخر،
  * إعادة تثبيت التطبيق) — بمعرّفها المحلي أو باسمها، فلا نسخ مكرّرة. يعيد القائمة المدمجة (≤ 12).
  */
-export async function mergeServerLayouts(payloads: unknown[]): Promise<TerminalLayout[]> {
+export function mergeServerLayouts(payloads: unknown[]): Promise<TerminalLayout[]> {
+  return serial(() => mergeServerLayoutsNow(payloads));
+}
+
+async function mergeServerLayoutsNow(payloads: unknown[]): Promise<TerminalLayout[]> {
   const local = await loadLayouts();
   const ids = new Set(local.map((l) => l.id));
   const names = new Set(local.map((l) => l.name));
   const added: TerminalLayout[] = [];
   for (const raw of payloads) {
     const l = parseServerLayout(raw);
-    if (!l || ids.has(l.id) || names.has(l.name)) continue;
+    if (!l || ids.has(l.id) || names.has(l.name) || deletedIds.has(l.id)) continue;
     ids.add(l.id);
     names.add(l.name);
     added.push(l);

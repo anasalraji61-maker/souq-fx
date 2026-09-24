@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, TextInput, Alert } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import {
@@ -29,6 +29,8 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
   const [saveError, setSaveError] = useState<LayoutsSaveErrorCode | null>(null);
   /** تأكيد الحفظ — كان الحفظ صامتاً (نقرة صوتية فقط). */
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  /** ما حذفه المتداول بهذه اللوحة — تحميلٌ قُرئ قبل الحذف لا يُعيده للقائمة. */
+  const deletedRef = useRef(new Set<string>());
 
   /** «EURUSD 15m · GBPUSD 1H · XAUUSD 4H» — كان السطر يعرض الأزواج فقط، والفريم نصف التخطيط. */
   const describe = (l: TerminalLayout) =>
@@ -44,15 +46,24 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
     // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب اللوحة قبل اكتمال الطلب — نفس نمط
     // ChartFrame/SymbolSnapshot/FocusChartModal المؤسَّس بالكود.
     let alive = true;
+    // إضافة ما ينقص بالمعرّف لا استبدال القائمة: تحميلٌ يصل بعد حفظ/حذف لا يُخفي أثرهما.
+    const addMissing = (l: TerminalLayout[]) =>
+      setLayouts((prev) => {
+        const seen = new Set(prev.map((x) => x.id));
+        const added = l.filter((x) => !seen.has(x.id) && !deletedRef.current.has(x.id));
+        return added.length ? [...prev, ...added] : prev;
+      });
     loadLayouts().then((l) => {
-      if (alive) setLayouts(l.length ? [DEFAULT_LAYOUT, ...l] : [DEFAULT_LAYOUT]);
+      if (alive) addMissing(l);
     });
     // تخطيطات الحساب من الخادم (جهاز آخر/إعادة تثبيت) — كانت تُرسَل للخادم ولا تُقرأ منه أبداً.
     api
       .layouts()
       .then((res) => mergeServerLayouts((res.layouts ?? []).map((x) => x.payload)))
       .then((l) => {
-        if (alive) setLayouts(l.length ? [DEFAULT_LAYOUT, ...l] : [DEFAULT_LAYOUT]);
+        // المخزن يسلسل الكتابات فالقائمة المدمجة تحمل ما حُفظ قبلها؛ وما حُفظ/حُذف بعدها
+        // بالحالة يبقى كما هو — لا استبدال أعمى يُخفي تخطيطاً حُفظ للتوّ.
+        if (alive) addMissing(l);
       })
       .catch(() => {
         /* بلا خادم: القائمة المحلية كافية */
@@ -169,6 +180,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
                     text: t.deleteWord,
                     style: 'destructive',
                     onPress: async () => {
+                      deletedRef.current.add(l.id);
                       await deleteLayout(l.id);
                       setLayouts((prev) => prev.filter((x) => x.id !== l.id));
                       // وإلا عاد التخطيط المحذوف من الخادم عند فتح اللوحة التالي
