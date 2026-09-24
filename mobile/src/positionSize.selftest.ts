@@ -1968,3 +1968,29 @@ console.log('positionSize conversionKey selftest OK');
   assert.equal(commissionNoteExample('7', null), null);
 }
 console.log('positionSize commissionNoteExample selftest OK');
+
+// كلمات نوع الحساب الملاصقة: عقدٌ عادي كالشارت (`chartPipSpec('EURUSDpro')`)
+{
+  for (const [raw, sym] of [
+    ['EURUSDpro', 'EURUSD'],
+    ['GBPJPYecn', 'GBPJPY'],
+    ['XAUUSDraw', 'XAUUSD'],
+    ['USDJPYstd', 'USDJPY'],
+    ['EURUSDSTP', 'EURUSD'],
+    ['eurusdvip', 'EURUSD'],
+    ['EUR/USDpro', 'EURUSD'],
+  ] as const) {
+    assert.equal(instrumentSpec(raw)?.symbol, sym, raw);
+    assert.equal(smallContractPair(raw), null, raw);
+  }
+  // قيمة pip والحجم كالزوج بلا لاحقة
+  assert.equal(pipValuePerLot(instrumentSpec('USDJPYpro')!, 150), pipValuePerLot(instrumentSpec('USDJPY')!, 150));
+  // حروفٌ ملاصقة أخرى تبقى مرفوضة (EURUSDT تيثر)، والعقد الأصغر لا يصير عادياً
+  for (const raw of ['EURUSDT', 'EURUSDPROS', 'EURUSDPR', 'BTCUSDpro', 'EURUSDmicro', 'EURUSDc', 'EURUSDMICROPRO'])
+    assert.equal(instrumentSpec(raw), null, raw);
+  assert.equal(smallContractPair('EURUSDmicro'), 'EURUSD');
+  assert.equal(centAccountSymbol('EURUSDc'), 'EURUSD');
+  // الطول يتّسع بخانة الرمز
+  assert.ok('EUR/USDpro'.length <= SYMBOL_INPUT_MAX_LEN);
+}
+console.log('positionSize glued account-type suffix selftest OK');
