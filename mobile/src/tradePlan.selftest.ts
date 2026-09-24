@@ -694,3 +694,36 @@ console.log('tradePlan exitShortcuts selftest OK');
   }
 }
 console.log('tradePlan exitPreview selftest OK');
+
+// —— journalSymbol: مؤشرات/سلع بلاحقة وسيط («GOLD#»، «US30-ecn») تُقبل ولا تفقد سعر السوق
+{
+  const cases: [string, string, string][] = [
+    // [كما كُتب, كما يُحفظ, رمز السعر]
+    ['GOLD#', 'GOLD#', 'GOLD'],
+    ['us30#', 'US30#', 'US30'],
+    ['us30-ecn', 'US30-ECN', 'US30'],
+    ['US30_pro', 'US30_PRO', 'US30'],
+    ['usoil.m', 'USOIL.M', 'USOIL'],
+    ['US30.cash', 'US30.CASH', 'US30'],
+    ['nas100+', 'NAS100+', 'NAS100'],
+  ];
+  for (const [raw, stored, quote] of cases) {
+    assert.equal(journalSymbol(raw), stored, raw);
+    assert.equal(quoteSymbol(journalSymbol(raw)!), quote, `quote ${raw}`);
+    // مفتاح الأداة واحد مع الاسم المجرد: لا شريحة ثانية بالفلتر
+    assert.equal(journalInstrumentKey(stored), journalInstrumentKey(quote), `key ${raw}`);
+    // الحفظ ثابت: الرمز المحفوظ يُعاد كما هو
+    assert.equal(journalSymbol(stored), stored, `idempotent ${raw}`);
+  }
+  // بلا تغيير: الشرطة داخل الاسم فاصل، الاسم المجهول بـ«#» مرفوض، الملاصق يبقى كما كان، الفوركس كما كان
+  assert.equal(journalSymbol('US-30'), 'US30');
+  assert.equal(journalSymbol('AAPL#'), null);
+  assert.equal(journalSymbol('US30Cash'), 'US30CASH');
+  assert.equal(journalSymbol('US30'), 'US30');
+  assert.equal(journalSymbol('USDJPY#'), 'USDJPY#');
+  assert.equal(journalSymbol('gbp/jpy-ecn'), 'GBPJPY-ECN');
+  // الحدّ 12 (الخادم): كل ما يُقبل ≤ 12 و≥ 3
+  for (const raw of ['USOIL.ABCDE', 'NAS100.ABCDE', 'GOLD#', 'US30-ECN'])
+    { const v = journalSymbol(raw); if (v != null) assert.ok(v.length >= 3 && v.length <= 12, raw); }
+}
+console.log('tradePlan journalSymbol index-suffix selftest OK');

@@ -351,12 +351,21 @@ export function targetAtRR(input: {
  * `instrumentSpec` (قد يكون أداة أخرى، كـ«EURUSDT»)، فتُحفظ الصفقة **بلا نقاط ولا R ولا مخاطرة بالمال**
  * بصمت. و«USDJPY#» كانت تُرفض كلياً («#» خارج الأحرف المسموحة). الزوج نفسه يُطبَّع («gbp/jpy-ecn» ⇒
  * «GBPJPY-ECN») والحدّ 12 مضمون: 6 + فاصل + 5 على الأكثر.
+ *
+ * **والمؤشرات/السلع بلاحقة وسيط** كذلك حين يبقى بعدها اسمٌ معروف (`knownSingleName`): «GOLD#» و«US30#»
+ * كانت تُرفض («#» خارج الأحرف — والخادم يقبلها: `TradeCreate.symbol` طول فقط)، و«us30-ecn» كانت تُحفظ
+ * «US30ECN» فتضيع اللاحقة ومعها سعر السوق (`quoteSymbol` لا يعرف «US30ECN»). الآن «GOLD#»، «US30-ECN».
+ * الشرطة **داخل** الاسم («US-30») تبقى فاصلاً يُحذف ⇒ «US30»؛ الاسم المجهول («AAPL#») يُرفض كما كان.
  */
 export function journalSymbol(raw: string): string | null {
   const up = raw.trim().toUpperCase();
   const spec = instrumentSpec(up);
   const pair = /^([A-Z]{3})[\s/_-]*([A-Z]{3})(.*)$/.exec(up);
   if (spec && pair && pair[1] + pair[2] === spec.symbol) return spec.symbol + pair[3];
+  const known = knownSingleName(up);
+  const suffixed = known ? /^(.*?)([.\-_#+][A-Z0-9]{0,5})$/.exec(up.replace(/[\s/]/g, '')) : null;
+  if (known && suffixed && suffixed[1].replace(/[-_]/g, '') === known && (known + suffixed[2]).length <= 12)
+    return known + suffixed[2];
   const s = raw.toUpperCase().replace(/[\s/_-]/g, '');
   return /^[A-Z0-9.]{3,12}$/.test(s) ? s : null;
 }
