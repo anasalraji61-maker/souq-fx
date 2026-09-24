@@ -313,6 +313,17 @@ console.log('newsRisk calendar cache selftest OK');
   assert.deepEqual(calendarAfterFetch(saved, calendarFetchEvents({ events: [] }), t0).ok, true);
   // خليط (لا يُرسله الخادم اليوم): الحقيقي يُؤخذ والأمثلة تُسقط
   assert.deepEqual(calendarFetchEvents({ events: [sample, nfp] }), [nfp]);
+  // رجوع الخادم إلى XML الأسبوعي: أحداث حقيقية كلها بلا ts ⇒ فشل، فيبقى تحذير الرواتب المحفوظ بسطر «محفوظ»
+  const untimed = { ...nfp, id: 'nfp-xml', ts: null, tz_unknown: true } as unknown as typeof nfp;
+  assert.equal(calendarFetchEvents({ events: [untimed, { ...untimed, id: 'cpi-xml' }] }), null);
+  const kept = calendarAfterFetch(saved, calendarFetchEvents({ events: [untimed] }), t0);
+  assert.equal(kept.ok, false);
+  assert.equal(nextHighImpact(kept.events, symbolCurrencies('EURUSD'), t0)?.event.id, 'nfp');
+  // ts غير عددي/NaN = بلا وقت
+  assert.equal(calendarFetchEvents({ events: [{ ...untimed, ts: Number.NaN }, { ...untimed, ts: '1800' as unknown as number }] }), null);
+  // خليط: حدثٌ موقوت واحد يكفي — نجاح كما هو
+  assert.deepEqual(calendarFetchEvents({ events: [untimed, nfp] }), [untimed, nfp]);
+  assert.deepEqual(calendarFetchEvents({ events: [sample, untimed, nfp] }), [untimed, nfp]);
 }
 console.log('newsRisk calendarFetchEvents selftest OK');
 

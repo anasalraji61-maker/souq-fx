@@ -297,5 +297,14 @@ export function calendarFetchEvents(raw: unknown): NewsEvent[] | null {
   if (!Array.isArray(events)) return null;
   const list = events as NewsEvent[];
   if (list.length > 0 && list.every((e) => e && e.sample)) return null;
-  return list.filter((e) => e && !e.sample);
+  const real = list.filter((e) => e && !e.sample);
+  /**
+   * **والتقويم بلا وقتٍ لأيّ حدث** فشلٌ كذلك: حين يتعذّر مصدر JSON يرجع الخادم إلى XML الأسبوعي
+   * (`econ_calendar.py` — أحداث حقيقية لكن `ts: null` و`tz_unknown`، إذ لا منطقة زمنية للتوقيت). كانت تُعدّ
+   * نجاحاً يستبدل المحفوظ و`nextHighImpact` يتخطّاها كلها بحقّ — فيختفي «الرواتب الأمريكية بعد 40د» بلا
+   * سطر «بيانات محفوظة»، الثغرة نفسها من بابٍ آخر. للتحذير تقويمٌ بلا أوقات = لا تقويم. خليطٌ فيه حدثٌ موقوت
+   * واحد يبقى نجاحاً (أحداث «طوال اليوم»/«مؤجّل» بلا وقت بجانب المواعيد عاديةٌ بالمصدر).
+   */
+  if (real.length > 0 && !real.some((e) => typeof e.ts === 'number' && Number.isFinite(e.ts))) return null;
+  return real;
 }
