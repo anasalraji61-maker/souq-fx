@@ -15,6 +15,11 @@ const MAX_BLOCKED = 500;
 
 let cache: string[] | null = null;
 let loading: Promise<string[]> | null = null;
+/**
+ * قراءة القرص فشلت (خطأ تخزين، لا JSON تالف): القائمة بالذاكرة تبدأ فارغة، و**لا تُكتب فوق المحفوظة** —
+ * كان أول حظر بعد فشلٍ عابر يحفظ «[الاسم]» وحده فتُمسح قائمة المتداول كلّها بصمت. الحظر يعمل لهذه الجلسة.
+ */
+let diskUnread = false;
 const listeners = new Set<(list: string[]) => void>();
 
 const norm = (name: string) => name.trim().toLowerCase();
@@ -40,12 +45,19 @@ function loadBlocked(): Promise<string[]> {
   if (!loading) {
     loading = AsyncStorage.getItem(KEY)
       .then((raw) => {
-        const list = sanitizeBlocked(raw ? JSON.parse(raw) : []);
+        let parsed: unknown = [];
+        try {
+          parsed = raw ? JSON.parse(raw) : [];
+        } catch {
+          // تالفٌ لا يُستعاد — الكتابة فوقه لا تُضيّع شيئاً
+        }
+        const list = sanitizeBlocked(parsed);
         // حظر تمّ أثناء القراءة لا يُمسح بقيمة القرص القديمة
         cache = cache ?? list;
         return cache;
       })
       .catch(() => {
+        diskUnread = true;
         cache = cache ?? [];
         return cache;
       });
@@ -56,9 +68,23 @@ function loadBlocked(): Promise<string[]> {
 function publish(list: string[]) {
   cache = list;
   listeners.forEach((fn) => fn(list));
+  if (diskUnread) return;
   AsyncStorage.setItem(KEY, JSON.stringify(list)).catch(() => {
     /* ignore — الحظر يبقى فعّالاً لهذه الجلسة */
   });
+}
+
+/**
+ * حظر اسمٍ (مطبَّعاً) وإضافته **لآخر قائمة** بالذاكرة لا لما أعادته القراءة: حظران سريعان قبل انتهاء أول قراءة
+ * للقرص كانا ينتظران الوعد نفسه فيبني كلٌّ منهما على القائمة الأصلية — الثاني يكتب «[…، B]» فيضيع A (يعود ظاهراً).
+ */
+export async function blockUser(name: string): Promise<void> {
+  const n = norm(name);
+  if (!n) return;
+  await loadBlocked();
+  const list = cache ?? [];
+  if (list.includes(n)) return;
+  publish([...list, n].slice(-MAX_BLOCKED));
 }
 
 export function useBlockedUsers() {
@@ -81,15 +107,13 @@ export function useBlockedUsers() {
     [blocked]
   );
 
-  const block = useCallback(async (name: string) => {
-    const n = norm(name);
-    if (!n) return;
-    const list = await loadBlocked();
-    if (list.includes(n)) return;
-    publish([...list, n].slice(-MAX_BLOCKED));
-  }, []);
+  const block = useCallback((name: string) => blockUser(name), []);
 
-  const unblockAll = useCallback(() => publish([]), []);
+  const unblockAll = useCallback(() => {
+    // «إلغاء حظر الكل» يقصد القرص أيضاً — يُكتب حتى بعد قراءة فاشلة
+    diskUnread = false;
+    publish([]);
+  }, []);
 
   return { blocked, isBlocked, block, unblockAll };
 }

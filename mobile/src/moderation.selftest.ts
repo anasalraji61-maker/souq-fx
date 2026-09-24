@@ -39,3 +39,65 @@ assert.deepEqual(sanitizeBlocked([' أحمد ', 'ئارام']), ['أحمد', 'ئ
 assert.deepEqual(sanitizeBlocked(sanitizeBlocked(['B', 'b ', 'C'])), ['b', 'c']);
 
 console.log('moderation sanitizeBlocked selftest OK');
+
+// —— blockUser على تخزين وهمي: كل تحميل للوحدة نسخة حالة جديدة ——
+type Disk = { value: string | null; failRead?: boolean; writes: string[] };
+function freshModule(disk: Disk) {
+  let release!: () => void;
+  const gate = new Promise<void>((r) => (release = r));
+  stubs['@react-native-async-storage/async-storage'] = {
+    __esModule: true,
+    default: {
+      getItem: async () => {
+        await gate;
+        if (disk.failRead) throw new Error('io');
+        return disk.value;
+      },
+      setItem: async (_k: string, v: string) => {
+        disk.writes.push(v);
+        disk.value = v;
+      },
+    },
+  };
+  delete require.cache[require.resolve('./moderation')];
+  const mod = require('./moderation') as typeof import('./moderation');
+  return { mod, release };
+}
+
+(async () => {
+  // حظران سريعان قبل انتهاء أول قراءة: الاثنان يبقيان (كان الثاني يمحو الأول)
+  {
+    const disk: Disk = { value: JSON.stringify(['old']), writes: [] };
+    const { mod, release } = freshModule(disk);
+    const a = mod.blockUser('Spammer_A');
+    const b = mod.blockUser('spammer_b');
+    release();
+    await Promise.all([a, b]);
+    assert.deepEqual(JSON.parse(disk.value!), ['old', 'spammer_a', 'spammer_b']);
+    // ثانيةً بحروف أخرى: لا تكرار ولا كتابة
+    const n = disk.writes.length;
+    await mod.blockUser(' SPAMMER_A ');
+    assert.equal(disk.writes.length, n);
+  }
+  // قراءة فاشلة: الحظر لا يكتب فوق القائمة المحفوظة
+  {
+    const disk: Disk = { value: JSON.stringify(['a', 'b', 'c']), failRead: true, writes: [] };
+    const { mod, release } = freshModule(disk);
+    release();
+    await mod.blockUser('x');
+    assert.equal(disk.writes.length, 0);
+    assert.deepEqual(JSON.parse(disk.value!), ['a', 'b', 'c']);
+  }
+  // JSON تالف: يُعامل كقائمة فارغة ويُكتب فوقه (لا شيء يُستعاد)
+  {
+    const disk: Disk = { value: '{not json', writes: [] };
+    const { mod, release } = freshModule(disk);
+    release();
+    await mod.blockUser('x');
+    assert.deepEqual(JSON.parse(disk.value!), ['x']);
+  }
+  console.log('moderation selftest: OK');
+})().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
