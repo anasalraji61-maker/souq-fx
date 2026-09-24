@@ -1011,6 +1011,7 @@ export function TerminalScreen() {
                   ]}
                   onPress={() => void changeLayout(count, 'square')}
                   accessibilityLabel={`${t.termLayoutSquareA11yPrefix} ${count}`}
+                  accessibilityState={{ selected: active }}
                 >
                   <View style={styles.layoutSwitchMini}>
                     {Array.from({ length: count }).map((_, index) => (
@@ -1055,6 +1056,7 @@ export function TerminalScreen() {
                   ]}
                   onPress={() => void changeLayout(count, 'rect')}
                   accessibilityLabel={`${t.termLayoutRectA11yPrefix} ${count}`}
+                  accessibilityState={{ selected: active }}
                 >
                   <View
                     style={[
@@ -1101,6 +1103,7 @@ export function TerminalScreen() {
               ]}
               onPress={() => void changeLayout(1, 'shadow')}
               accessibilityLabel={t.termShadowFrameA11y}
+              accessibilityState={{ selected: layoutShape === 'shadow' }}
             >
               <Text style={styles.layoutSwitcherTagTop}>{t.termFrameWord}</Text>
               <Text
@@ -1128,6 +1131,7 @@ export function TerminalScreen() {
             ]}
             onPress={() => void toggleTimeSync()}
             accessibilityLabel={t.termTimeSyncLabel}
+            accessibilityState={{ checked: timeSyncActive }}
           >
             <Text style={[styles.timeSyncText, timeSyncActive && styles.timeSyncTextOn]}>
               {t.termTimeSyncLabel}
@@ -1198,6 +1202,7 @@ export function TerminalScreen() {
                 setShowKinds(false);
               }}
               accessibilityLabel={`${t.termChartKindA11yPrefix}: ${k.label}`}
+              accessibilityState={{ selected: kind === k.id }}
             >
               <Text style={[styles.kindText, kind === k.id && styles.kindTextOn]}>{k.label}</Text>
             </Pressable>
@@ -1344,6 +1349,7 @@ export function TerminalScreen() {
                     ]}
                     onPress={() => setTf(range)}
                     accessibilityLabel={`${t.termPrimaryTimeframeA11yPrefix}: ${range}`}
+                    accessibilityState={{ selected: tf === range }}
                   >
                     <Text style={styles.rangeText}>{range}</Text>
                   </Pressable>
@@ -1595,6 +1601,7 @@ export function TerminalScreen() {
                   ]}
                   onPress={() => setTf(range)}
                   accessibilityLabel={`${t.termTimeframeA11yPrefix}: ${range}`}
+                  accessibilityState={{ selected: tf === range }}
                 >
                   <Text style={styles.rangeText}>{range}</Text>
                 </Pressable>
