@@ -95,6 +95,23 @@ export function indexAtTime(bars: readonly TimeBar[], time: number, stepSec: num
 }
 
 /**
+ * خانة الرسم (محلّيّة بالنافذة) تحت `x`: كخانة التقاطع لكن **بلا قصّ عند آخر شمعة** — حتى آخر
+ * خانة يبلغها اللوح يميناً حين يُسحب الشارت فتظهر منطقة المستقبل. كان الرسم يقصّ لآخر شمعة:
+ * نقطة الترند/القياس/فيبو لا تُسقط للمستقبل، والخطّ العموديّ والملاحظة يقفزان لآخر شمعة.
+ * `len` عدد شموع النافذة، `w` عرض اللوح، `pan` إزاحة التمرير الأفقيّ بالبكسل.
+ */
+export function drawSlotAt(x: number, pan: number, w: number, len: number): number {
+  const n = Math.max(1, len);
+  const width = w > 0 ? w : 1;
+  const p = Number.isFinite(pan) ? pan : 0;
+  const i = Math.floor(((x - p) / width) * n);
+  // آخر خانة يقع مركزها داخل اللوح (لمسة على الحافّة لا تُسقط نقطة في خانة غير مرئيّة).
+  const lastSlot = Math.max(n - 1, Math.ceil(((width - p) / width) * n) - 1);
+  if (!Number.isFinite(i)) return n - 1;
+  return Math.max(0, Math.min(lastSlot, i));
+}
+
+/**
  * ختم نقطة جديدة عند الخانة `index`: داخل السلسلة وقبلها بزمنها (`timeAtIndex`)، وبعد آخر
  * شمعة بزمن آخر شمعة + `ahead` (عدد شموع لا زمن تقويمي — راجع رأس الملف). على لبنة
  * اصطناعية ليست أولى لبنات شمعتها المصدر: `sub` ترتيبها بينهنّ.

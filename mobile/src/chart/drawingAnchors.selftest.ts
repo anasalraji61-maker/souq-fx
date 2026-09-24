@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/drawingAnchors.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { anchorDrawings, indexAtTime, stampAtIndex, timeAtIndex } from './drawingAnchors';
+import { anchorDrawings, drawSlotAt, indexAtTime, stampAtIndex, timeAtIndex } from './drawingAnchors';
 import type { Drawing } from './types';
 
 const H = 3600;
@@ -167,6 +167,19 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   const hours = bars(110 * 24 * H, 72);
   const back = anchorDrawings([{ ...line(0, 0), a: { index: 3, price: 1, time: 111 * D } }], hours, H, false)[0];
   assert.equal(back.a.index, 24);
+}
+
+// drawSlotAt: بلا إزاحة يقصّ لآخر شمعة؛ مع سحب الشارت يساراً يبلغ خانات المستقبل الظاهرة فقط
+{
+  assert.equal(drawSlotAt(50, 0, 100, 10), 5);
+  assert.equal(drawSlotAt(99.9, 0, 100, 10), 9);
+  assert.equal(drawSlotAt(140, 0, 100, 10), 9);
+  assert.equal(drawSlotAt(-5, 0, 100, 10), 0);
+  // سُحب 30px يساراً ⇒ ثلاث خانات فارغة يمين آخر شمعة
+  assert.equal(drawSlotAt(95, -30, 100, 10), 12);
+  assert.equal(drawSlotAt(99, -30, 100, 10), 12);
+  assert.equal(drawSlotAt(400, -30, 100, 10), 12);
+  assert.equal(drawSlotAt(10, 0, 0, 0), 0);
 }
 
 console.log('drawingAnchors.selftest: PASS');

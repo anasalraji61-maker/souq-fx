@@ -110,7 +110,7 @@ import {
   type PositionSide,
 } from './positionTool';
 import { channelHandlePrice, channelWidthAt, fitChannelWidth } from './channel';
-import { anchorDrawings, barTime, stampAtIndex, type TimeBar } from './drawingAnchors';
+import { anchorDrawings, barTime, drawSlotAt, stampAtIndex, type TimeBar } from './drawingAnchors';
 import { lineNowText, placeSelectionTags, selectionPrices } from './selectionTags';
 import { appendedAfter } from './holdView';
 import { priceSpan } from './priceSpan';
@@ -3092,6 +3092,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     return Math.max(0, Math.min(len - 1, i));
   }, [chartPlotW, syncFollow, syncWindow?.xPanNorm]);
 
+  // خانة الرسم: كـ`hitIndex` لكن تبلغ منطقة المستقبل الظاهرة يمين آخر شمعة (`drawSlotAt`).
+  const drawIndex = useCallback((x: number) => {
+    const w = chartPlotW || 1;
+    const pan = syncFollow && syncWindow?.xPanNorm != null
+      ? syncWindow.xPanNorm * w
+      : xPanRef.current;
+    return drawSlotAt(x, pan, w, sourceRef.current.plot.length);
+  }, [chartPlotW, syncFollow, syncWindow?.xPanNorm]);
+
   const priceAtY = useCallback(
     (y: number) => {
       const r = rangeRef.current;
@@ -3104,7 +3113,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const pointFromXY = useCallback(
     (x: number, y: number): ChartPoint => {
       const raw = priceAtY(y);
-      const local = hitIndex(x);
+      const local = drawIndex(x);
+      // بمنطقة المستقبل لا شمعة تحت الإصبع ⇒ بلا مغناطيس، السعر من y مقرَّباً.
       const candle = sourceRef.current.plot[local];
       // مغناطيس ضعيف كالتقاطع (`CROSS_SNAP_PX`): يجذب لـO/H/L/C متى اقترب الإصبع منها فقط. كان يجذب
       // دائماً لأقرب الأربعة (`snapPrice`) مهما بعُد — والمغناطيس مفعَّل افتراضياً: خطّ مقاومة يُرسم 30 pip
@@ -3122,7 +3132,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       );
       return stamp == null ? { index, price } : { index, price, ...stamp };
     },
-    [hitIndex, priceAtY, magnet, series.timeframe, series.symbol, priceDecimalsRef]
+    [drawIndex, priceAtY, magnet, series.timeframe, series.symbol, priceDecimalsRef]
   );
 
   // طرف `b` لخطّة شراء/بيع: يمين الدخول دائماً (`positionEndIndex`)، مختوماً بزمنه الجديد — وإلا
@@ -3735,7 +3745,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           const dScaled = toScale(priceAtY(locationY)) - toScale(priceAtY(from.y));
           const next = translateDrawing(
             from.d,
-            hitIndex(locationX) - hitIndex(from.x),
+            drawIndex(locationX) - drawIndex(from.x),
             (price) => fromScale(toScale(price) + dScaled),
             (index) =>
               stampAtIndex(
@@ -3823,6 +3833,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     yOf,
     hitDrawing,
     hitIndex,
+    drawIndex,
     priceAtY,
     logScale,
     series.timeframe,
@@ -7087,7 +7098,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               </View>
             );
           }
-          if (d.tool === 'vline' && aLocal >= 0 && aLocal < source.plot.length) {
+          if (d.tool === 'vline' && aLocal >= 0 && aLocal <= lastDrawLocal) {
             return (
               <View
                 key={d.id}
@@ -7098,7 +7109,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               />
             );
           }
-          if (d.tool === 'note' && aLocal >= 0 && aLocal < source.plot.length) {
+          if (d.tool === 'note' && aLocal >= 0 && aLocal <= lastDrawLocal) {
             return (
               <Text
                 key={d.id}
