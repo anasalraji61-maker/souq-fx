@@ -276,6 +276,8 @@ export type Dict = {
   riskCalcSub: string;
   riskCalcSymbol: string;
   riskCalcBadSymbol: string;
+  /** رمز حساب Exness Cent («USDJPYc») — الحاسبة ترفضه عمداً (حجم العقد مختلف)؛ `{symbol}` كما كُتب، `{pair}` بلا «c» */
+  riskCalcCentSymbolHint: string;
   appCrashTitle: string;
   appCrashBody: string;
   appCrashRepeatBody: string;
@@ -1185,6 +1187,8 @@ const ar: Dict = {
   riskCalcSub: 'كم لوت تفتح حتى لا تخسر أكثر من نسبة محددة من رصيدك',
   riskCalcSymbol: 'الأداة',
   riskCalcBadSymbol: 'رمز غير مدعوم — استخدم زوجاً من 6 أحرف مثل EURUSD أو XAUUSD',
+  riskCalcCentSymbolHint:
+    '«{symbol}» رمز حساب سنت — الحاسبة تحسب لوت الحساب العادي فقط، وعقد السنت أصغر. لحساب عادي اكتب {pair}',
   appCrashTitle: 'حدث خطأ غير متوقع',
   appCrashBody: 'تعذّر عرض هذه الشاشة. بياناتك ورسوماتك محفوظة — اضغط «إعادة المحاولة» للمتابعة.',
   appCrashRepeatBody:
@@ -2087,6 +2091,8 @@ const enUS: Dict = {
   riskCalcSub: 'How many lots to open so you never lose more than a set % of your balance',
   riskCalcSymbol: 'Instrument',
   riskCalcBadSymbol: 'Unsupported symbol — use a 6-letter pair like EURUSD or XAUUSD',
+  riskCalcCentSymbolHint:
+    '“{symbol}” is a cent-account symbol — the calculator sizes standard-account lots only, and a cent lot is smaller. For a standard account type {pair}',
   appCrashTitle: 'Something went wrong',
   appCrashBody: 'This screen could not be displayed. Your data and drawings are safe — tap “Try again” to continue.',
   appCrashRepeatBody:
@@ -3014,6 +3020,8 @@ const ku: Dict = {
   riskCalcSub: 'چەند لۆت بکەیتەوە بۆ ئەوەی زیاتر لە ڕێژەیەکی دیاریکراوی باڵانسەکەت لەدەست نەدەیت',
   riskCalcSymbol: 'ئامراز',
   riskCalcBadSymbol: 'هێمای پشتگیری نەکراو — جووتێکی 6 پیتی وەک EURUSD یان XAUUSD بەکاربهێنە',
+  riskCalcCentSymbolHint:
+    '«{symbol}» هێمای هەژماری سەنتە — ژمێرەرەکە تەنها لۆتی هەژماری ئاسایی دەژمێرێت، و لۆتی سەنت بچووکترە. بۆ هەژماری ئاسایی {pair} بنووسە',
   appCrashTitle: 'هەڵەیەکی چاوەڕواننەکراو ڕوویدا',
   appCrashBody: 'ئەم شاشەیە نیشان نەدرا. زانیاری و کێشانەکانت پارێزراون — «دووبارە هەوڵبدەرەوە» دابگرە.',
   appCrashRepeatBody:
