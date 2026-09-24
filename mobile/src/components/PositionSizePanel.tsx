@@ -37,6 +37,7 @@ import {
   lotsOverOrderMax,
   spreadTooWide,
   stopInsideSpread,
+  misplacedArabicThousandsSignInRisk,
   planJournalNote,
   LOT_STEP,
   parsePriceFor,
@@ -280,7 +281,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         .replace('{whole}', ambiguousPx.whole)
         .replace('{small}', ambiguousPx.small)
     : misplacedArabicThousandsSign(balance, { amount: true }) ||
-        misplacedArabicThousandsSign(riskPct, { percent: true }) ||
+        misplacedArabicThousandsSignInRisk(riskPct, balanceNum, account) ||
         [slPips, manualConv, entryPx, stopPx, targetPx].some((v) => misplacedArabicThousandsSign(v))
       ? // «0٬5» بخانة المخاطرة: «٬» بجانب «٫» على اللوحة العربية — يُقال أيّهما يُكتب للكسر
         t.arabicThousandsSignHint

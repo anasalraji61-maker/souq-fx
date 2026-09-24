@@ -44,6 +44,7 @@ import {
   type InstrumentSpec,
   spreadTooWide,
   stopInsideSpread,
+  misplacedArabicThousandsSignInRisk,
   planJournalNote,
   parseCommission,
   costsLotsAdvice,
@@ -1576,3 +1577,21 @@ console.log('positionSize calculator price parsing selftest OK');
   assert.equal(stopInsideSpread(sl, 20), false);
 }
 console.log('positionSize stopInsideSpread selftest OK');
+
+// misplacedArabicThousandsSignInRisk — «$0٬5» يصلها التلميح كما «0٬5»
+{
+  for (const r of ['0٬5', '$0٬5', '0٬5$', 'USD 12٬5', 'usd ١٢٬٥', '٠٬٥', '＄0٬5'])
+    assert.equal(misplacedArabicThousandsSignInRisk(r, 10_000, 'USD'), true, r);
+  // مقبولة أصلاً (آلاف حقيقية أو فاصلة عشرية صحيحة)، عملة أخرى، أو مرفوضة لسببٍ آخر ⇒ لا تلميح
+  for (const r of ['USD 1٬000', '$1٬000', '0٫5', '$0٫5', '0.5', '€0٬5', 'EUR 0٬5', '$$0٬5', '1٬5٬5', '', 'abc'])
+    assert.equal(misplacedArabicThousandsSignInRisk(r, 10_000, 'USD'), false, r);
+  // بحساب يورو: «€0٬5» تلميح، «$0٬5» لا
+  assert.equal(misplacedArabicThousandsSignInRisk('€0٬5', 10_000, 'EUR'), true);
+  assert.equal(misplacedArabicThousandsSignInRisk('$0٬5', 10_000, 'EUR'), false);
+  // بلا رصيد بعد: المبلغ مفهوم بعد الاستبدال (pct null ليس رفضاً) ⇒ التلميح قائم
+  assert.equal(misplacedArabicThousandsSignInRisk('$0٬5', NaN, 'USD'), true);
+  // لا تغيّر القراءة: الخانة نفسها ما زالت مرفوضة
+  assert.equal(parseRiskInput('$0٬5', 10_000, 'USD'), null);
+  assert.deepEqual(parseRiskInput('$0٫5', 10_000, 'USD'), { pct: 0.005, amount: 0.5 });
+}
+console.log('positionSize misplacedArabicThousandsSignInRisk selftest OK');

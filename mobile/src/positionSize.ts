@@ -355,6 +355,18 @@ export function parseRiskInput(
 }
 
 /**
+ * «٬» بدل «٫» بخانة المخاطرة **بمسارَيها**: النسبة («0٬5») والمبلغ بعلامة («$0٬5»، «USD 12٬5»). كان التلميح
+ * (`misplacedArabicThousandsSign` بـ`percent`) يفحص النسبة وحدها، فـ«$0٬5» تُرفض بـ«رقم غير مفهوم» بلا سبب.
+ * true فقط حين الخانة مرفوضة كما هي، واستبدال «٬» بـ«٫» يجعلها مفهومة بقاعدة `parseRiskInput` نفسها — لا
+ * تُقرأ القيمة، تبقى مرفوضة. «USD 1٬000» (فاصل آلاف حقيقي) مقبولة أصلاً ⇒ false؛ «€0٬5» بحساب دولار تبقى
+ * مرفوضة بعد الاستبدال (عملة أخرى) ⇒ false.
+ */
+export function misplacedArabicThousandsSignInRisk(raw: string, balance: number, account: string): boolean {
+  if (!raw.includes('٬') || parseRiskInput(raw, balance, account) != null) return false;
+  return parseRiskInput(raw.replace(/٬/g, '٫'), balance, account) != null;
+}
+
+/**
  * زرّ عملة الحساب بجانب نسب المخاطرة السريعة: يقلب الخانة بين **النسبة والمبلغ** بالمخاطرة نفسها — «1»
  * برصيد 10,000 ⇒ «USD 100»، و«USD 100» ⇒ «1». لوحة الأرقام بالهاتف بلا «$» ولا حروف، فبلا هذا الزرّ لا
  * يُكتب المبلغ إلا لصقاً. الكود **قبل** المبلغ عمداً: الكتابة تُضاف بآخر الخانة فتبقى «USD 150» مفهومة.
