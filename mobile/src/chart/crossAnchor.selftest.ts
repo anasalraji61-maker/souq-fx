@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/crossAnchor.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { indexOfBarTime } from './crossAnchor';
+import { crossPriceAt, indexOfBarTime } from './crossAnchor';
 
 const bar = (time: number) => ({ time });
 
@@ -70,6 +70,22 @@ const bar = (time: number) => ({ time });
 {
   const plot = [0, 60].map(bar);
   assert.equal(indexOfBarTime(plot, 0), 0);
+}
+
+// سعر التقاطع تحت الإصبع: المغناطيس يجذب لأقرب O/H/L/C، وبدونه تقريب لمنازل الأداة
+{
+  const c = { open: 1.085, high: 1.0872, low: 1.0841, close: 1.0863 };
+  assert.equal(crossPriceAt(1.0870, c, true, 5), 1.0872); // قرب الذيل ⇒ القمّة بالضبط
+  assert.equal(crossPriceAt(1.0843, c, true, 5), 1.0841);
+  assert.equal(crossPriceAt(1.0851, c, true, 5), 1.085);
+  assert.equal(crossPriceAt(1.09, c, true, 5), 1.0872); // فوق الشمعة كلّها ⇒ القمّة
+  assert.equal(crossPriceAt(1.0852371948, c, false, 5), 1.08524); // ما يُقرأ = ما يُرسل
+  assert.equal(crossPriceAt(157.42349, null, true, 3), 157.423); // بلا شمعة ⇒ تقريب
+  assert.equal(crossPriceAt(2650.3549, null, false, 2), 2650.35);
+  assert.equal(crossPriceAt(104.1234, null, false, null), 104.12); // DXY: من حجم الرقم
+  assert.equal(crossPriceAt(0.654321, null, false, null), 0.65432);
+  assert.equal(crossPriceAt(NaN, c, true, 5), null);
+  assert.equal(crossPriceAt(Infinity, c, false, 5), null);
 }
 
 console.log('crossAnchor.selftest: PASS');

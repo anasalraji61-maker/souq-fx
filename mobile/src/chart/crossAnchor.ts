@@ -33,3 +33,43 @@ export function indexOfBarTime(
   }
   return null;
 }
+
+/** ما يلزم من الشمعة لجذب سعر التقاطع. */
+export type OhlcBar = { open: number; high: number; low: number; close: number };
+
+/**
+ * سعر التقاطع **تحت الإصبع** لا إغلاق الشمعة. كان الخطّ الأفقي ووسم المحور وزرّ 🔔
+ * يلتصقون بـ`close` أيّاً كان موضع اللمس، فلا سبيل لقراءة قمّة ذيل أو مستوى بين شمعتين —
+ * وهو أوّل ما يفعله متداول يضع تنبيهاً عند مقاومة.
+ *
+ * - المغناطيس مفعّل ⇒ أقرب O/H/L/C للشمعة الملموسة (كأدوات الرسم تماماً، نفس زرّ 🧲):
+ *   لمسة قرب الذيل تعطي القمّة الحقيقية بالضبط لا تقريباً منها.
+ * - بدونه ⇒ السعر الخام مقرَّباً لمنازل الأداة، فما يُرسل للتنبيه هو **حرفياً** ما يُقرأ
+ *   على الوسم (لا 1.0852371948 خلف «1.08524»).
+ *
+ * `decimals` من `symbolPriceDecimals`؛ `null` (DXY، رموز الوسيط) ⇒ التقدير من حجم الرقم
+ * بنفس قاعدة `formatPrice`. سعر غير محدود (لوح بارتفاع صفر) ⇒ `null`: لا تقاطع أفقي.
+ */
+export function crossPriceAt(
+  raw: number,
+  bar: OhlcBar | null | undefined,
+  magnet: boolean,
+  decimals: number | null
+): number | null {
+  if (!Number.isFinite(raw)) return null;
+  if (magnet && bar) {
+    let best = bar.close;
+    let d = Infinity;
+    for (const p of [bar.open, bar.high, bar.low, bar.close]) {
+      const dd = Math.abs(p - raw);
+      if (dd < d) {
+        d = dd;
+        best = p;
+      }
+    }
+    return best;
+  }
+  const a = Math.abs(raw);
+  const dp = decimals ?? (a >= 100 ? 2 : a >= 10 ? 3 : 5);
+  return Number(raw.toFixed(dp));
+}

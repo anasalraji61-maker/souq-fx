@@ -40,7 +40,7 @@ import { rangeBars } from './range';
 import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
-import { indexOfBarTime } from './crossAnchor';
+import { crossPriceAt, indexOfBarTime } from './crossAnchor';
 import {
   axisTickCount,
   axisTickRatios,
@@ -252,6 +252,7 @@ import {
   computeZlema,
   formatPrice,
   heikinAshi,
+  symbolPriceDecimals,
 } from './math';
 import {
   DEFAULT_PAN_SPEED,
@@ -854,7 +855,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [dragEnd, setDragEnd] = useState<ChartPoint | null>(null);
   // مرساة التقاطع **بزمن الشمعة** لا بفهرسها داخل النافذة — راجع `crossAnchor.ts`:
   // النافذة متحرّكة، فالفهرس وحده يجعل القراءة تتبع الخانة لا الشمعة المختارة.
-  const [cross, setCross] = useState<{ time: number } | null>(null);
+  // `price` سعر موضع اللمسة (بالمغناطيس إن كان مفعّلاً) — `null` ⇒ لا خطّ أفقي.
+  const [cross, setCross] = useState<{ time: number; price: number | null } | null>(null);
   const [windowCount, setWindowCount] = useState(80);
   const [offset, setOffset] = useState(0);
   const [priceScale, setPriceScale] = useState(1);
@@ -879,6 +881,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const panStartPoint = useRef({ x: 0, y: 0 });
   const panMoved = useRef(false);
   const chartPressRef = useRef<(x: number, y: number) => void>(() => {});
+  const crossAtRef = useRef<(x: number, y: number) => void>(() => {});
+  // ضغطة مطوّلة ثم سحب ⇒ التقاطع يتبع الإصبع بدل تحريك الشارت (scrub).
+  const scrubTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrubbing = useRef(false);
   const priceScaleRef = useRef(1);
   const priceScaleStart = useRef(1);
   const windowCountRef = useRef(80);
@@ -2425,12 +2431,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     }
   };
 
+  // التقاطع عند (x, y) داخل اللوح: الشمعة من x، والسعر من y لا من إغلاقها.
+  const placeCross = (x: number, y: number) => {
+    const candle = source.plot[hitIndex(x)];
+    if (!candle) return;
+    setCross({
+      time: candle.time,
+      price: crossPriceAt(priceAtY(y), candle, magnet, symbolPriceDecimals(series.symbol)),
+    });
+  };
+
   const onChartPress = (x: number, y: number) => {
     const index = hitIndex(x);
     const candle = source.plot[index];
     if (!candle) return;
     setMeasureDone(null);
-    setCross({ time: candle.time });
+    placeCross(x, y);
     if (!interactive) return;
 
     if (tool === 'select') {
@@ -2454,6 +2470,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     finalizeDrawing(pending, point);
   };
   chartPressRef.current = onChartPress;
+  crossAtRef.current = placeCross;
   offsetRef.current = offset;
   priceScaleRef.current = priceScale;
   windowCountRef.current = windowCount;
@@ -2703,18 +2720,45 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             x: evt.nativeEvent.locationX,
             y: evt.nativeEvent.locationY,
           };
+          // إصبع ثابت 350ms ⇒ وضع التتبّع: كان كل سحب يحرّك الشارت، فقراءة شموع متتالية
+          // تعني نقرة لكل شمعة. الانزياح ≤4px قبل المؤقّت يُلغى كي لا يبدأ التتبّع بشارت مزاح.
+          scrubbing.current = false;
+          if (scrubTimer.current) clearTimeout(scrubTimer.current);
+          scrubTimer.current = setTimeout(() => {
+            scrubTimer.current = null;
+            if (panMoved.current) return;
+            scrubbing.current = true;
+            applyChartDrag(0, 0);
+            chartPressRef.current(panStartPoint.current.x, panStartPoint.current.y);
+          }, 350);
         },
         onPanResponderMove: (_, g) => {
+          if (scrubbing.current) {
+            crossAtRef.current(
+              Math.max(0, Math.min(chartPlotW - 1, panStartPoint.current.x + g.dx)),
+              Math.max(0, Math.min(chartPlotH, panStartPoint.current.y + g.dy))
+            );
+            return;
+          }
           if (Math.abs(g.dx) > 4 || Math.abs(g.dy) > 4) panMoved.current = true;
           applyChartDrag(g.dx, g.dy);
         },
+        // أثناء التتبّع لا يُسلَّم الإصبع لتمرير الصفحة الأب — وإلا قطع سحبٌ رأسي التتبّع.
+        onPanResponderTerminationRequest: () => !scrubbing.current,
         onPanResponderRelease: () => {
-          if (!panMoved.current) {
+          if (scrubTimer.current) clearTimeout(scrubTimer.current);
+          scrubTimer.current = null;
+          // بعد التتبّع يبقى التقاطع حيث رُفع الإصبع؛ النقرة العادية كما كانت.
+          if (!panMoved.current && !scrubbing.current) {
             chartPressRef.current(panStartPoint.current.x, panStartPoint.current.y);
           }
+          scrubbing.current = false;
           endDrag();
         },
         onPanResponderTerminate: () => {
+          if (scrubTimer.current) clearTimeout(scrubTimer.current);
+          scrubTimer.current = null;
+          scrubbing.current = false;
           panMoved.current = false;
           endDrag();
         },
@@ -2729,6 +2773,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       beginDrag,
       endDrag,
     ]
+  );
+  useEffect(
+    () => () => {
+      if (scrubTimer.current) clearTimeout(scrubTimer.current);
+    },
+    []
   );
 
   const priceAxisPan = useMemo(
@@ -2968,7 +3018,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // Recomputed every render so the crosshair and its axis tags stay glued to the
   // candle after zoom buttons / live ticks.
   const crossX = crossIndex != null && crossCandle ? xOf(crossIndex) : 0;
-  const crossY = crossCandle ? yOf(crossCandle.close) : 0;
+  // السعر المحفوظ لا الإغلاق: الخطّ يبقى على المستوى الذي لُمس عبر التكبير والإزاحة.
+  const crossPrice = crossCandle ? cross?.price ?? null : null;
+  const crossY = crossPrice != null ? yOf(crossPrice) : 0;
 
   // القياس الجاري (أثناء السحب) أو آخر قياس مكتمل — نصّ واحد لسطر القراءة ولوسم الشارت.
   const liveMeasure = tool === 'measure' && pending && dragEnd ? { a: pending, b: dragEnd } : null;
@@ -3055,7 +3107,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // قرب السعر الحاليّ — وهي الحالة الأكثر وقوعاً لا الأندر. تُحسب مواضعها هنا مرّة
   // واحدة فالفحص والرسم يقرآن الرقم نفسه.
   const currentTagTop = Math.max(0, Math.min(chartPlotH - 20, currentPriceY - 9));
-  const crossTagTop = crossCandle
+  const crossTagTop = crossPrice != null
     ? Math.max(0, Math.min(chartPlotH - 20, crossY - 9))
     : null;
   // وسم السعر الحيّ هو ما يُخفى عند التكدّس: وسم التقاطع هو ما طلبه المتداول للتوّ،
@@ -3074,7 +3126,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // فيبدو كأن السوق هناك، وأعلى علامة تحته تقول رقماً آخر — ويُقَصّ الخطّ المتقطّع
   // خارج اللوح فلا يبقى ما يكذّبه. تُعلَّم الجهة بسهم، ولا يُرسم خطٌّ لا موضع له.
   const currentPriceOff = offAxisSide(currentPriceY, chartPlotH);
-  const crossPriceOff = crossCandle ? offAxisSide(crossY, chartPlotH) : null;
+  const crossPriceOff = crossPrice != null ? offAxisSide(crossY, chartPlotH) : null;
   const offMark = (side: 'above' | 'below' | null) =>
     side === 'above' ? '▲ ' : side === 'below' ? '▼ ' : '';
 
@@ -3252,21 +3304,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 : tr.mcHintNavigate}
           </Text>
         )}
-        {onCreateAlert && crossCandle && !measureReadout && !replayOn ? (
-          // تنبيه بلمستين من الشارت: المس شمعة (يظهر الـcrosshair بسعر إغلاقها) ثم 🔔 — بلا كتابة رقم.
+        {onCreateAlert && crossPrice != null && !measureReadout && !replayOn ? (
+          // تنبيه بلمستين من الشارت: المس المستوى (يظهر الـcrosshair بسعر موضع اللمسة) ثم 🔔 — بلا كتابة رقم.
           // الاتجاه (فوق/تحت) يحدّده المستدعي من السعر الحالي، والتأكيد «مُفعَّل» يظهر عنده.
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`${tr.mcAlertAtCrossA11y} ${formatPrice(crossCandle.close, series.symbol)}`}
+            accessibilityLabel={`${tr.mcAlertAtCrossA11y} ${formatPrice(crossPrice, series.symbol)}`}
             hitSlop={6}
             style={({ pressed }) => [
               styles.crossAlertBtn,
               { borderColor: accent },
               pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
             ]}
-            onPress={() => onCreateAlert(crossCandle.close, 'crosshair')}
+            onPress={() => onCreateAlert(crossPrice, 'crosshair')}
           >
-            <Text style={[styles.crossAlertText, { color: accent }]}>🔔 {formatPrice(crossCandle.close, series.symbol)}</Text>
+            <Text style={[styles.crossAlertText, { color: accent }]}>🔔 {formatPrice(crossPrice, series.symbol)}</Text>
           </Pressable>
         ) : null}
         {interactive && !compactUi ? (
@@ -5241,7 +5293,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {cross && crossCandle ? (
           <>
             <View pointerEvents="none" style={[styles.crossV, { left: crossX, bottom: timeAxisH }]} />
-            {crossPriceOff ? null : (
+            {crossPriceOff || crossPrice == null ? null : (
               <View
                 pointerEvents="none"
                 style={[styles.crossH, { top: crossY, right: PRICE_AXIS_WIDTH }]}
@@ -5318,11 +5370,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             </Text>
           </View>
           ) : null}
-          {!hidePriceLabels && crossCandle && crossTagTop != null ? (
+          {!hidePriceLabels && crossPrice != null && crossTagTop != null ? (
           <View pointerEvents="none" style={[styles.crossPriceTag, { top: crossTagTop }]}>
             <Text style={styles.crossTagText}>
               {offMark(crossPriceOff)}
-              {formatPrice(crossCandle.close, series.symbol)}
+              {formatPrice(crossPrice, series.symbol)}
             </Text>
           </View>
           ) : null}
