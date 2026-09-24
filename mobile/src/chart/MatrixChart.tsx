@@ -457,6 +457,8 @@ const PRICE_TAG_H = 18;
 const TAG_CLEAR_GAP = 2;
 /** ارتفاع وسمَي أعلى/أدنى سعر بالنافذة المرئيّة. */
 const HILO_LABEL_H = 14;
+/** سطر OHLC التقاطع أعلى اللوح بالوضع المدمج (`denseOhlc`). */
+const DENSE_OHLC_LINE_H = 12;
 /** سطر عدّاد إغلاق الشمعة تحت سعر الوسم الحيّ. */
 const COUNTDOWN_LINE_H = 11;
 
@@ -4573,6 +4575,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // Recomputed every render so the crosshair and its axis tags stay glued to the
   // candle after zoom buttons / live ticks.
   const crossX = crossIndex != null && crossCandle ? xOf(crossIndex) : 0;
+  const denseOhlc = dense ? crossCandle : null;
+  // «O 1.08520  H 1.08545  L 1.08501  C 1.08532» ≈ 40 حرفاً × ~5.4px (9pt عريض) ≈ 216px؛ ومع
+  // «  ↕ 4.4 pip» ≈ 280px — فالمدى بالنقاط للوح العريض وحده، ولا يُقصّ الإغلاق بنقاط حذف.
+  const denseOhlcWide = chartPlotW >= 240;
+  const denseOhlcRange =
+    denseOhlc && chartPlotW >= 320 ? candleRangePipsText(series.symbol, denseOhlc.high, denseOhlc.low) : null;
   // السعر المحفوظ لا الإغلاق: الخطّ يبقى على المستوى الذي لُمس عبر التكبير والإزاحة.
   const crossPrice = crossCandle ? cross?.price ?? null : null;
   const crossY = crossPrice != null ? yOf(crossPrice) : 0;
@@ -5524,10 +5532,50 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {/* مفتاح ألوان طبقات السعر: أيّ خطّ منقّط هو أيّ مؤشّر. بدونه تقاطع متوسطَين
             إشارةٌ لا تُقرأ أصلاً — ثلاثة ألوان بلا أسماء. pointerEvents="none" فلا
             يعترض السحب ولا الرسم، ويُزاح لأسفل عند وجود شارة الطبقة الأساسية. */}
+        {/* الوضع المدمج (إطارات الشاشة الرئيسية المملوءة، وخلايا الرباعي بالهاتف) يُخفي سطر القراءة
+            أسفل الشارت، فكان وضع التقاطع يعطي سعر المحور وزمنه فقط — بلا فتح/أعلى/أدنى/إغلاق.
+            كـTradingView بالهاتف: OHLC أعلى يسار اللوح ما دام التقاطع قائماً، بأرقام ثابتة العرض فلا
+            يرتجّ السطر أثناء السحب، والإغلاق بلون الشمعة. لوح أضيق من 240px (خلية رباعي) ⇒ سطران. */}
+        {denseOhlc ? (
+          <View
+            pointerEvents="none"
+            style={[styles.denseOhlc, { top: shadowStack ? 24 : 4 }]}
+          >
+            <Text style={styles.denseOhlcText} numberOfLines={1}>
+              {`O ${fmtPrice(denseOhlc.open)}  H ${fmtPrice(denseOhlc.high)}`}
+              {denseOhlcWide ? '  ' : null}
+              {denseOhlcWide ? (
+                <>
+                  {`L ${fmtPrice(denseOhlc.low)}  C `}
+                  <Text style={{ color: denseOhlc.close >= denseOhlc.open ? colors.bull : colors.bear }}>
+                    {fmtPrice(denseOhlc.close)}
+                  </Text>
+                  {denseOhlcRange ? `  ${denseOhlcRange}` : null}
+                </>
+              ) : null}
+            </Text>
+            {!denseOhlcWide ? (
+              <Text style={styles.denseOhlcText} numberOfLines={1}>
+                {`L ${fmtPrice(denseOhlc.low)}  C `}
+                <Text style={{ color: denseOhlc.close >= denseOhlc.open ? colors.bull : colors.bear }}>
+                  {fmtPrice(denseOhlc.close)}
+                </Text>
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
+
         {priceLegend.chips.length > 0 || priceLegend.more > 0 ? (
           <View
             pointerEvents="none"
-            style={[styles.priceLegend, { top: shadowStack ? 24 : 4 }]}
+            style={[
+              styles.priceLegend,
+              {
+                top:
+                  (shadowStack ? 24 : 4) +
+                  (denseOhlc ? (denseOhlcWide ? DENSE_OHLC_LINE_H : DENSE_OHLC_LINE_H * 2) + 6 : 0),
+              },
+            ]}
           >
             {priceLegend.chips.map((chip) => (
               <View key={chip.id} style={styles.priceLegendChip}>
@@ -11051,6 +11099,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 3,
+    backgroundColor: 'rgba(7,16,24,0.78)',
+  },
+  denseOhlc: {
+    position: 'absolute',
+    left: 6,
+    right: PRICE_AXIS_WIDTH + 6,
+    zIndex: 8,
+    alignItems: 'flex-start',
+  },
+  denseOhlcText: {
+    color: colors.text,
+    fontSize: 9,
+    lineHeight: DENSE_OHLC_LINE_H,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+    paddingHorizontal: 4,
+    borderRadius: 3,
+    overflow: 'hidden',
     backgroundColor: 'rgba(7,16,24,0.78)',
   },
   priceLegendSwatch: { width: 6, height: 6, borderRadius: 1, marginRight: 3 },
