@@ -21,6 +21,7 @@ import {
   JOURNAL_NOTE_MAX,
   knownLots as knownLotsForMark,
   noteWithInitialStop,
+  planStop,
   trailedStopAllowed,
   pnlPctContradictsCash,
   stopTooClose,
@@ -2111,3 +2112,21 @@ console.log('tradePlan stackedCurrencyExposure selftest OK');
   assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: null, exit: 1.087, note: n1 }), 1);
 }
 console.log('tradePlan initial stop (1R mark) selftest OK');
+
+// ---- planStop: R:R المخطَّطة بسطر الصفقة من الوقف الأصلي ----
+{
+  const note = 'breakout · 1R @ 1.083';
+  // وقف التعادل: كانت النسبة تسقط (slWrongSide) — الآن 1:2.0 المخطَّطة
+  assert.equal(analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.085, tp: 1.089 }).issue, 'slWrongSide');
+  const be = analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: planStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.085, note })!, tp: 1.089 });
+  assert.equal(formatRR(be.rr), '1:2.0');
+  // وقفٌ مشدود 5 pip: «1:8.0» غير المخطَّطة ⇒ 1:2.0
+  assert.equal(formatRR(analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: planStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, note })!, tp: 1.089 }).rr), '1:2.0');
+  // بلا علامة: الوقف الحالي كما كان؛ بلا وقف ⇒ null
+  assert.equal(planStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, note: 'x' }), 1.0845);
+  assert.equal(planStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: null }), null);
+  assert.equal(planStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 0 }), null);
+  // علامة لا تصلح لهذا الاتجاه ⇒ الوقف الحالي
+  assert.equal(planStop({ symbol: 'EURUSD', side: 'sell', entry: 1.085, sl: 1.087, note }), 1.087);
+}
+console.log('tradePlan planStop selftest OK');

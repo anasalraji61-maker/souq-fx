@@ -426,6 +426,21 @@ export function initialStop(input: {
 }
 
 /**
+ * الوقف الذي تُقاس به الخطة (R:R المخطَّطة بسطر الصفقة): الأصلي من الملاحظة إن صلح، وإلا `sl` الحالي. بعد نقل
+ * الوقف للتعادل كان سطر الصفقة يُسقط «R:R 1:2.0» (الوقف الحالي على الدخول ⇒ `slWrongSide`)، وبعد شدّه يعرض
+ * نسبةً أكبر لم تُخطَّط (وقف 5 pip بدل 20 ⇒ «1:8.0»).
+ */
+export function planStop(input: {
+  symbol?: string;
+  side: TradeSide;
+  entry: number;
+  sl?: number | null;
+  note?: string | null;
+}): number | null {
+  return initialStop(input) ?? (finitePos(input.sl) ? input.sl : null);
+}
+
+/**
  * الملاحظة المحفوظة بتعديل صفقة **مفتوحة** يُحرَّك فيه الوقف نحو الدخول أو خلفه (وقف متحرّك، نقلٌ للتعادل، حجز ربح):
  * يُلحق بها «1R @ <الوقف القديم>» مرّة واحدة، فيبقى الـR محسوباً من المخاطرة **التي دخل بها** المتداول.
  *

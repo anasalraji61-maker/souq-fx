@@ -66,6 +66,7 @@ import {
   noteWithTypedSize,
   noteWithInitialStop,
   trailedStopAllowed,
+  planStop,
   QUICK_SYMBOLS,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
@@ -915,11 +916,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
               {tr.tp != null ? <Text style={{ color: colors.bull }}>TP {formatPrice(tr.tp, tr.symbol)}</Text> : null}
               {(() => {
                 if (tr.sl == null || tr.tp == null) return '';
+                const trSide = tr.side === 'sell' ? 'sell' : 'buy';
                 const plan = analyzePlan({
                   symbol: tr.symbol,
-                  side: tr.side === 'sell' ? 'sell' : 'buy',
+                  side: trSide,
                   entry: tr.entry,
-                  sl: tr.sl,
+                  // الوقف الأصلي «1R @ …» حين حُرِّك الوقف بعد الدخول — النسبة التي خُطِّطت (`planStop`)
+                  sl: planStop({ symbol: tr.symbol, side: trSide, entry: tr.entry, sl: tr.sl, note: tr.note }) ?? tr.sl,
                   tp: tr.tp,
                 });
                 return plan.ok ? ` · R:R ${formatRR(plan.rr)}` : '';
