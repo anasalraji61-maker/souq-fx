@@ -49,6 +49,7 @@ import {
   riskOverBalance,
   centAccountSymbol,
   smallContractPair,
+  microAccountSymbol,
   MAX_LEVERAGE,
   planJournalNote,
   parseCommission,
@@ -1694,3 +1695,18 @@ console.log('positionSize smallContractPair selftest OK');
   assert.equal(parsePriceFor('1.085', 'EURUSDC'), 1.085);
 }
 console.log('positionSize ambiguousThousandsPrice small-contract selftest OK');
+
+// microAccountSymbol — رسالة micro بالحاسبة (لا «زوج من 6 أحرف»، ولا رسالة السنت)
+{
+  for (const [raw, pair] of [
+    ['EURUSDmicro', 'EURUSD'], ['EURUSD.micro', 'EURUSD'], ['USDJPY-MICRO', 'USDJPY'], ['GOLD_micro', 'XAUUSD'],
+    ['GOLDmicro', 'XAUUSD'], ['XAUUSDmicro', 'XAUUSD'], ['eurusdmicro', 'EURUSD'],
+  ] as const) {
+    assert.equal(microAccountSymbol(raw), pair, raw);
+    assert.equal(instrumentSpec(raw), null, raw);
+  }
+  // السنت له رسالته، والعادي والمجهول ليسا micro
+  for (const raw of ['EURUSDc', 'EURUSD.c', 'GOLD-cent', 'EURUSD', 'EURUSD.m', 'US30micro', 'BTCUSDmicro', 'EURUSDmicros', ''])
+    assert.equal(microAccountSymbol(raw), null, raw);
+}
+console.log('positionSize microAccountSymbol selftest OK');

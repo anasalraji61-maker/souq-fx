@@ -135,6 +135,16 @@ export function smallContractPair(raw: string): string | null {
 }
 
 /**
+ * رمز **حساب micro** («EURUSDmicro»، «EURUSD.micro»، «GOLD_micro») ⇒ الزوج العادي لرسالة `riskCalcMicroSymbolHint`؛
+ * null = ليس كذلك (والسنت ليس micro: له `centAccountSymbol` ورسالته). الحاسبة ترفضه كالسنت، لكنها كانت تقول تحته
+ * «استخدم زوجاً من 6 أحرف» — والمتداول نسخ الرمز من منصّة XM كما هو، فلا يعرف لماذا رُفض ولا ماذا يكتب.
+ */
+export function microAccountSymbol(raw: string): string | null {
+  if (centAccountSymbol(raw)) return null;
+  return smallContractPair(raw);
+}
+
+/**
  * سعرٌ مكتوب بخانة أداةٍ معروفة: `parseDecimal`، مع رفض النقطة الوحيدة المتبوعة بثلاثة أرقام بالضبط («3.450»)
  * حين لا يُسعَّر المعروض بثلاث منازل أصلاً (الذهب بمنزلتين).
  *
