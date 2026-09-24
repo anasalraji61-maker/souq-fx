@@ -26,6 +26,7 @@
 | tools | أنس | تغيّر اليوم بقائمة المتابعة يتدحرج 00:00 UTC، وPDH/PDL بالشارت 17:00 نيويورك ⇒ «أمس» مختلف بين الشاشتين 21:00–24:00 UTC — توحيد؟ | tools38 |
 | QA | الجميع | **(a)** تصديرات بلا مستخدم خارج ملفها: `deleteTemplate`، `subscribeTemplatesSaveError`، `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite`، `PINE_PRESETS`، `getToolPanel`، `__setWatchlistStorageForTests`/`__reset…` (ولا اختبار)، `motion`، `FRAME_SYMBOLS`، mock.ts ×3 | QA1 ★ |
 | launch | tools | **مفتاح `journalInitialStopNote`** ×ar/en/ku جاهز (`{stop}`): تحت خانة الملاحظة بـ`TradeJournalPanel.tsx` (~:1640) حين `initialStop({symbol, side, entry, note: trailNote})` ≠ null — الآن «1R @ 1.083» يظهر بملاحظة المستخدم بلا شرح، فيحذفه كنصّ غريب ويعود الـR المتضخّم | launch59 |
+| launch | tools | **مفتاح `journalCappedNote`** ×ar/en/ku جاهز (`{n}`) لنصف صفّ QA9 «آخر 200»: فوق القائمة حين `trades.length >= 200` (`TradeJournalPanel.tsx:229`) — الخادم يحتفظ بالأقدم (لا حذف إلا بحذف الحساب `db.py:959`) لكنها لا تصل، **ولو مفتوحة** (الترتيب `opened_at`). يبقى الحلّ الأصلي (إحصاء SQL + ترقيم) للخادم | launch59 |
 | launch | chart | DeMarker 0..100 والمنصات 0..1 (قرار ⇒ أنس) | launch48 |
 | tools+launch+QA | الخادم | **spread مُختلَق** = السعر × 0.00008 (`twelve_data.py:316`) موسوم `provider`، يناقض `backtest.py:26-37`؛ يُزيح أسعار الدفتر (`tradePlan.ts:669 :741`) | tools13 ★ |
 | tools | الخادم | الحجم يُخزَّن 1 حين لا يُرسل (`backend/db.py:1704`) | 09-22 ★ |
