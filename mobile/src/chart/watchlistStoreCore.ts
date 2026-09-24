@@ -6,6 +6,7 @@ import {
   sanitizeWatchSymbols,
 } from './watchlistSanitize';
 import { defaultsWatchlist, parseV1Payload, parseV2Payload } from './watchlistParse';
+import { createSaveErrorSignal } from './saveErrorSignal';
 
 export {
   DEFAULT_WATCH_SYMBOLS,
@@ -30,16 +31,14 @@ type Listener = (symbols: string[]) => void;
  *  Dict بـi18n/locales.ts. */
 export type WatchlistSaveErrorCode = 'wlSaveFailed';
 
-type ErrorListener = (code: WatchlistSaveErrorCode | null) => void;
-
 let storage: WatchlistStorage | null = null;
 let memory: string[] | null = null;
 let lastPersisted: string[] | null = null;
-let saveError: WatchlistSaveErrorCode | null = null;
+const saveError = createSaveErrorSignal<WatchlistSaveErrorCode>();
+const setSaveError = saveError.set;
 let loadPromise: Promise<string[]> | null = null;
 let opChain: Promise<unknown> = Promise.resolve();
 const listeners = new Set<Listener>();
-const errorListeners = new Set<ErrorListener>();
 
 function requireStorage(): WatchlistStorage {
   if (!storage) throw new Error('watchlist storage not configured');
@@ -55,21 +54,6 @@ function notify() {
       /* ignore */
     }
   }
-}
-
-function notifyError() {
-  for (const cb of errorListeners) {
-    try {
-      cb(saveError);
-    } catch {
-      /* ignore */
-    }
-  }
-}
-
-function setSaveError(code: WatchlistSaveErrorCode | null) {
-  saveError = code;
-  notifyError();
 }
 
 function enqueue<T>(fn: () => Promise<T>): Promise<T> {
@@ -93,26 +77,18 @@ export function subscribeWatchlist(cb: Listener): () => void {
   };
 }
 
-export function subscribeWatchlistSaveError(cb: ErrorListener): () => void {
-  errorListeners.add(cb);
-  cb(saveError);
-  return () => {
-    errorListeners.delete(cb);
-  };
-}
+export const subscribeWatchlistSaveError = saveError.subscribe;
 
 export function getWatchlistSnapshot(): string[] | null {
   return memory;
 }
 
-export function getWatchlistSaveError(): WatchlistSaveErrorCode | null {
-  return saveError;
-}
+export const getWatchlistSaveError = saveError.get;
 
 export function resetWatchlistMemory() {
   memory = null;
   lastPersisted = null;
-  saveError = null;
+  saveError.reset();
   loadPromise = null;
   opChain = Promise.resolve();
 }

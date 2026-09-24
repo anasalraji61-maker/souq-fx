@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createSaveErrorSignal } from './saveErrorSignal';
 import type { ChartKind, IndicatorId, LensMode } from './types';
 
 export type ChartTemplate = {
@@ -19,37 +20,11 @@ const KEY = 'matrix.chartTemplates.v1';
  *  Dict بـi18n/locales.ts. */
 export type TemplatesSaveErrorCode = 'chartTemplateSaveFailed' | 'chartTemplateDeleteFailed';
 
-/** إشارة فشل حفظ/حذف القالب — نفس نمط subscribeWatchlistSaveError بـwatchlistStoreCore.ts */
-type ErrorListener = (code: TemplatesSaveErrorCode | null) => void;
-let saveError: TemplatesSaveErrorCode | null = null;
-const errorListeners = new Set<ErrorListener>();
+const saveError = createSaveErrorSignal<TemplatesSaveErrorCode>();
+const setSaveError = saveError.set;
 
-function notifyError() {
-  for (const cb of errorListeners) {
-    try {
-      cb(saveError);
-    } catch {
-      /* ignore */
-    }
-  }
-}
-
-function setSaveError(code: TemplatesSaveErrorCode | null) {
-  saveError = code;
-  notifyError();
-}
-
-export function subscribeTemplatesSaveError(cb: ErrorListener): () => void {
-  errorListeners.add(cb);
-  cb(saveError);
-  return () => {
-    errorListeners.delete(cb);
-  };
-}
-
-export function getTemplatesSaveError(): TemplatesSaveErrorCode | null {
-  return saveError;
-}
+export const subscribeTemplatesSaveError = saveError.subscribe;
+export const getTemplatesSaveError = saveError.get;
 
 export async function loadTemplates(): Promise<ChartTemplate[]> {
   try {

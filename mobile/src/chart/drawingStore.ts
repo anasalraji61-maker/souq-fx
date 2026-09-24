@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createSaveErrorSignal } from './saveErrorSignal';
 import type { Drawing } from './types';
 import { timeframeStepSec } from './dataSource';
 
@@ -9,37 +10,11 @@ const PREFIX = 'matrix.drawings.v1';
  *  Dict بـi18n/locales.ts. */
 export type DrawingsSaveErrorCode = 'drawingsSaveFailed' | 'drawingsDeleteFailed';
 
-/** إشارة فشل حفظ/حذف الرسومات — نفس نمط subscribeWatchlistSaveError بـwatchlistStoreCore.ts */
-type ErrorListener = (code: DrawingsSaveErrorCode | null) => void;
-let saveError: DrawingsSaveErrorCode | null = null;
-const errorListeners = new Set<ErrorListener>();
+const saveError = createSaveErrorSignal<DrawingsSaveErrorCode>();
+const setSaveError = saveError.set;
 
-function notifyError() {
-  for (const cb of errorListeners) {
-    try {
-      cb(saveError);
-    } catch {
-      /* ignore */
-    }
-  }
-}
-
-function setSaveError(code: DrawingsSaveErrorCode | null) {
-  saveError = code;
-  notifyError();
-}
-
-export function subscribeDrawingsSaveError(cb: ErrorListener): () => void {
-  errorListeners.add(cb);
-  cb(saveError);
-  return () => {
-    errorListeners.delete(cb);
-  };
-}
-
-export function getDrawingsSaveError(): DrawingsSaveErrorCode | null {
-  return saveError;
-}
+export const subscribeDrawingsSaveError = saveError.subscribe;
+export const getDrawingsSaveError = saveError.get;
 
 /**
  * **الرسومات للرمز لا للفريم.** كانت تُحفظ تحت `v1.<رمز>.<فريم>`: خطّ دعم رُسم على 4H

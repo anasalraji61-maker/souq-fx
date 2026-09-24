@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createSaveErrorSignal } from './saveErrorSignal';
 
 export type TerminalLayout = {
   id: string;
@@ -20,37 +21,11 @@ export const MAX_LAYOUTS = 60;
  *  Dict بـi18n/locales.ts. */
 export type LayoutsSaveErrorCode = 'layoutSaveFailed' | 'layoutDeleteFailed';
 
-/** إشارة فشل حفظ/حذف التخطيط — نفس نمط subscribeWatchlistSaveError بـwatchlistStoreCore.ts */
-type ErrorListener = (code: LayoutsSaveErrorCode | null) => void;
-let saveError: LayoutsSaveErrorCode | null = null;
-const errorListeners = new Set<ErrorListener>();
+const saveError = createSaveErrorSignal<LayoutsSaveErrorCode>();
+const setSaveError = saveError.set;
 
-function notifyError() {
-  for (const cb of errorListeners) {
-    try {
-      cb(saveError);
-    } catch {
-      /* ignore */
-    }
-  }
-}
-
-function setSaveError(code: LayoutsSaveErrorCode | null) {
-  saveError = code;
-  notifyError();
-}
-
-export function subscribeLayoutsSaveError(cb: ErrorListener): () => void {
-  errorListeners.add(cb);
-  cb(saveError);
-  return () => {
-    errorListeners.delete(cb);
-  };
-}
-
-export function getLayoutsSaveError(): LayoutsSaveErrorCode | null {
-  return saveError;
-}
+export const subscribeLayoutsSaveError = saveError.subscribe;
+export const getLayoutsSaveError = saveError.get;
 
 /**
  * كل كتابة (حفظ/حذف/دمج الخادم) قراءةٌ ثم كتابة للقائمة كاملة — فتُنفَّذ بالتسلسل. كان حفظ
