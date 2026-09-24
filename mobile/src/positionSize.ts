@@ -199,6 +199,13 @@ export type SizeResult = {
   /** المخاطرة الفعلية بعد التقريب */
   actualRisk: number;
   units: number;
+  /**
+   * قيمة الـpip **لهذا المركز** (اللوت المقرَّب × قيمة الـpip للوت)، بعملة الحساب. الحاسبة كانت تعرض
+   * قيمة الـpip للوت القياسي وحده — «10 USD» — بينما ما يراقبه المتداول وهو بالصفقة هو «كل نقطة
+   * عليّ 3.50»، وكان يُترك ليضرب بنفسه. محسوبةٌ من اللوت **المقرَّب** نفسه الذي تُحسب منه
+   * `actualRisk`، فـ`pipValue × slPips = actualRisk` بالبناء.
+   */
+  pipValue: number;
   belowMinLot: boolean;
 };
 
@@ -223,6 +230,7 @@ export function positionSize(input: {
     lots: roundedLots,
     actualRisk: roundedLots * slPips * pv,
     units: Math.round(roundedLots * contractSize),
+    pipValue: roundedLots * pv,
     belowMinLot: roundedLots < LOT_STEP,
   };
 }

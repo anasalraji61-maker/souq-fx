@@ -594,9 +594,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             ) : null}
           </>
         ) : null}
+        {/* قيمة النقطة **للمركز المحسوب** بجانب قيمتها للوت القياسي: «كل نقطة عليّ 3.50» هو ما يراقبه
+            المتداول وهو بالصفقة، وكان يُترك ليضربه بنفسه. من اللوت المقرَّب نفسه (`result.pipValue`). */}
         {pv != null ? (
           <Text style={[styles.resultMeta, { textAlign: align }]}>
             {t.riskCalcPipValue}: {money(pv)}
+            {result && lots != null ? ` · ${lots.toFixed(2)} lot = ${money(result.pipValue)}` : ''}
           </Text>
         ) : null}
       </View>

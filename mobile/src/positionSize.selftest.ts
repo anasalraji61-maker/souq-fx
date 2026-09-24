@@ -347,3 +347,29 @@ assert.equal(absurd.lots, 20);
 for (const r of [deep, typo, absurd]) assert.ok(near(r.actualRisk, 100));
 
 console.log('positionSize slTooClose-rationale selftest OK');
+
+// قيمة الـpip **للمركز المحسوب** (لا للوت القياسي): «كل نقطة عليّ كذا» — من اللوت المقرَّب نفسه،
+// فـ`pipValue × slPips = actualRisk` بالبناء
+{
+  // EURUSD بحساب دولار: 0.33 لوت × 10$ = 3.30$ للنقطة
+  const a = positionSize({ balance: 10000, riskPct: 1, slPips: 30, pipValuePerLot: 10, contractSize: 100000 })!;
+  assert.equal(a.lots, 0.33);
+  assert.ok(near(a.pipValue, 3.3));
+  // USDJPY @150 بحساب دولار: 6.667$ للوت → 0.75 لوت → 5$ للنقطة بالضبط
+  const jpy = instrumentSpec('USDJPY')!;
+  const pvJ = pipValuePerLot(jpy, quoteToAccountRate(conversionPair('JPY', 'USD'), 150)!);
+  const b = positionSize({ balance: 10000, riskPct: 1, slPips: 20, pipValuePerLot: pvJ, contractSize: jpy.contractSize })!;
+  assert.equal(b.lots, 0.75);
+  assert.ok(near(b.pipValue, 5));
+  // الذهب: 10$ للوت، 150 نقطة → 0.06 لوت (مقرَّب للأسفل) → 0.60$ للنقطة، ومخاطرة فعلية 90$ لا 100$
+  const xau = instrumentSpec('XAUUSD')!;
+  const c = positionSize({ balance: 10000, riskPct: 1, slPips: 150, pipValuePerLot: pipValuePerLot(xau, 1), contractSize: xau.contractSize })!;
+  assert.equal(c.lots, 0.06);
+  assert.ok(near(c.pipValue, 0.6));
+  // تحت أصغر لوت: لا مركز ⇒ لا قيمة نقطة
+  const d = positionSize({ balance: 100, riskPct: 1, slPips: 50, pipValuePerLot: 10, contractSize: 100000 })!;
+  assert.equal(d.pipValue, 0);
+  for (const [r, sl] of [[a, 30], [b, 20], [c, 150], [d, 50]] as const) assert.ok(near(r.pipValue * sl, r.actualRisk));
+}
+
+console.log('positionSize pipValue-for-position selftest OK');
