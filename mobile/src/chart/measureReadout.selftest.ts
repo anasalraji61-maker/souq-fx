@@ -61,12 +61,37 @@ ok('النسبة السالبة تحمل إشارتها',
     stats: stats(3, -0.01, -0.9174), barsWord: 'b',
   }).includes('−0.92%'));
 
-// pct فاسدة (سعر مرجعي صفر) ⇒ 0.00% لا NaN%.
+// pct فاسدة (سعر مرجعي صفر) ⇒ 0.00% لا NaN%، وبلا إشارة.
 ok('pct فاسدة ⇒ 0.00%',
   measureReadoutText({
     symbol: 'EURUSD', a: { price: 1.08 }, b: { price: 1.0824 },
     stats: stats(2, 0.0024, NaN), barsWord: 'b',
-  }) === '2 b · +24.0 pip · +0.00%');
+  }) === '2 b · +24.0 pip · 0.00%');
+
+// حركة دون 0.005%: النسبة تُطبع صفراً فلا تحمل إشارة (كانت «+0.00%»).
+ok('نسبة تُقرَّب لصفر بلا إشارة',
+  measureReadoutText({
+    symbol: 'EURUSD', a: { price: 1.08 }, b: { price: 1.08004 },
+    stats: stats(1, 0.00004, 0.0037), barsWord: 'b',
+  }) === '1 b · +0.4 pip · 0.00%');
+ok('نسبة سالبة تُقرَّب لصفر بلا «−0.00%»',
+  measureReadoutText({
+    symbol: 'EURUSD', a: { price: 1.08004 }, b: { price: 1.08 },
+    stats: stats(1, -0.00004, -0.0037), barsWord: 'b',
+  }) === '1 b · −0.4 pip · 0.00%');
+
+// DXY أفقياً: الفرق المطبوع صفر ⇒ بلا إشارة (كان «+0.00000 · +0.00%»).
+ok('DXY أفقي بلا إشارة',
+  measureReadoutText({
+    symbol: 'DXY', a: { price: 101.2 }, b: { price: 101.2 },
+    stats: stats(4, 0, 0), barsWord: 'b',
+  }) === '4 b · 0.00000 · 0.00%');
+// DXY: فرق سالب يُقرَّب لصفر بخمس منازل ⇒ بلا «−».
+ok('DXY فرق مجهري سالب بلا إشارة',
+  measureReadoutText({
+    symbol: 'DXY', a: { price: 101.2 }, b: { price: 101.199999 },
+    stats: stats(1, -0.000001, 0), barsWord: 'b',
+  }) === '1 b · 0.00000 · 0.00%');
 
 // صفر شموع (قياس داخل شمعة واحدة) قيمة صالحة.
 ok('صفر شموع',

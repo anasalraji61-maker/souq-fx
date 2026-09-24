@@ -24,6 +24,7 @@
  * `null`، فيبقى فرق السعر مكان النقاط — لكن مصاغاً بالرمز لا بحجم الرقم.
  */
 import { formatPrice } from './indicators/utils';
+import { formatPct } from './dailyChange';
 import { instrumentSpec, pipsBetween } from '../positionSize';
 
 export type MeasureStats = { bars: number; diff: number; pct: number };
@@ -56,8 +57,12 @@ export function measureReadoutText(input: {
 }): string {
   const { symbol, a, b, stats, barsWord } = input;
   const pips = measurePipsText(symbol, a.price, b.price);
-  const amount = pips ?? `${stats.diff >= 0 ? '+' : '−'}${formatPrice(Math.abs(stats.diff), symbol)}`;
-  const pct = Number.isFinite(stats.pct) ? stats.pct : 0;
-  const pctText = `${pct >= 0 ? '+' : '−'}${Math.abs(pct).toFixed(2)}%`;
+  // الإشارة من الرقم **المطبوع** لا الخام (قاعدة `formatPct` برأس الإطار والتقاطع): قياس
+  // 0.4 pip على اليورو نسبته 0.004% فكان يُكتب «+0.4 pip · +0.00%»، وقياس أفقيّ على DXY
+  // «+0.00000 · +0.00%» — صفرٌ بإشارة يوحي باتجاه لا وجود له. الصفر المطبوع بلا إشارة.
+  const diffText = formatPrice(Math.abs(stats.diff), symbol);
+  const diffSign = Number(diffText) === 0 ? '' : stats.diff > 0 ? '+' : '−';
+  const amount = pips ?? `${diffSign}${diffText}`;
+  const pctText = formatPct(Number.isFinite(stats.pct) ? stats.pct : 0);
   return `${stats.bars} ${barsWord} · ${amount} · ${pctText}`;
 }
