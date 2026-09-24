@@ -145,48 +145,62 @@ export function computeAdxr(candles: Candle[], period = 14): (number | null)[] {
 }
 
 /**
- * Parabolic SAR (Stop And Reverse) — خوارزمية Wilder القياسية: نقطة تتبع السعر من الأسفل خلال
- * اتجاه صاعد ومن الأعلى خلال اتجاه هابط، بتسارع تدريجي (AF يبدأ من step ويزيد بمقدار step عند كل
- * قمة/قاع جديد حتى سقف maxStep). عند اختراق السعر لنقطة SAR الحالية ينعكس الاتجاه: تصبح SAR
- * الجديدة = آخر EP (نقطة أقصى) مسجَّلة، وEP الجديدة = السعر المُخترِق، وAF يُعاد لـstep. الاتجاه
- * الابتدائي يُحدَّد من إغلاق أول شمعتين (صاعد إن كان الإغلاق الثاني ≥ الأول). step=0.02/maxStep=0.2
- * هما القيمتان القياسيتان الشائعتان بكل المنصات.
+ * Parabolic SAR (Stop And Reverse) — بترتيب `ta.sar` في TradingView حرفياً: نقطة تتبع السعر من الأسفل
+ * خلال اتجاه صاعد ومن الأعلى خلال اتجاه هابط، بتسارع AF يبدأ من step ويزيد بمقدار step عند كل قمة/قاع
+ * جديد حتى maxStep. الترتيب هو ما كان يخالف TradingView حول كل انعكاس:
+ * 1. SAR = SAR + AF×(EP − SAR).
+ * 2. **اختبار الانعكاس على هذه القيمة قبل القصّ** بقاع/قمة الشمعتين السابقتين (كان القصّ أولاً، فشمعة
+ *    يخترق قاعُها SAR الخام ولا يخترق المقصوصة لا تعكس — أو العكس — والانعكاس يتأخّر أو يسبق شمعة).
+ * 3. عند الانعكاس: SAR = max(أعلى الشمعة، EP) للهابط (min(أدنى، EP) للصاعد) — كانت EP وحدها، فنقطة أول
+ *    شمعة هابطة تقع **تحت** قمة الشمعة التي عكست.
+ * 4. تحديث EP وAF إلا بأول شمعة من اتجاه جديد.
+ * 5. القصّ بقاع/قمة الشمعتين السابقتين (بعد الانعكاس أيضاً).
+ * البداية: الشمعة الثانية؛ صاعد إن أغلقت **فوق** الأولى (التعادل هابط)، EP = أعلى/أدنى الثانية وSAR =
+ * أدنى/أعلى الأولى. الأولى بلا قيمة. step=0.02/maxStep=0.2 القيمتان القياسيتان.
  */
 export function computePsar(candles: Candle[], step = 0.02, maxStep = 0.2): (number | null)[] {
   const n = candles.length;
   const out: (number | null)[] = new Array(n).fill(null);
   if (n < 2) return out;
-  let uptrend = candles[1].close >= candles[0].close;
+  let uptrend = candles[1].close > candles[0].close;
   let sar = uptrend ? candles[0].low : candles[0].high;
-  let ep = uptrend ? candles[0].high : candles[0].low;
+  let ep = uptrend ? candles[1].high : candles[1].low;
   let af = step;
-  out[0] = sar;
   for (let i = 1; i < n; i++) {
-    let next = sar + af * (ep - sar);
+    const c = candles[i];
+    let firstTrendBar = i === 1;
+    sar = sar + af * (ep - sar);
     if (uptrend) {
-      next = Math.min(next, candles[i - 1].low, i >= 2 ? candles[i - 2].low : candles[i - 1].low);
-      if (candles[i].low < next) {
+      if (sar > c.low) {
+        firstTrendBar = true;
         uptrend = false;
-        next = ep;
-        ep = candles[i].low;
+        sar = Math.max(c.high, ep);
+        ep = c.low;
         af = step;
-      } else if (candles[i].high > ep) {
-        ep = candles[i].high;
-        af = Math.min(maxStep, af + step);
       }
-    } else {
-      next = Math.max(next, candles[i - 1].high, i >= 2 ? candles[i - 2].high : candles[i - 1].high);
-      if (candles[i].high > next) {
-        uptrend = true;
-        next = ep;
-        ep = candles[i].high;
-        af = step;
-      } else if (candles[i].low < ep) {
-        ep = candles[i].low;
+    } else if (sar < c.high) {
+      firstTrendBar = true;
+      uptrend = true;
+      sar = Math.min(c.low, ep);
+      ep = c.high;
+      af = step;
+    }
+    if (!firstTrendBar) {
+      if (uptrend && c.high > ep) {
+        ep = c.high;
+        af = Math.min(maxStep, af + step);
+      } else if (!uptrend && c.low < ep) {
+        ep = c.low;
         af = Math.min(maxStep, af + step);
       }
     }
-    sar = next;
+    if (uptrend) {
+      sar = Math.min(sar, candles[i - 1].low);
+      if (i > 1) sar = Math.min(sar, candles[i - 2].low);
+    } else {
+      sar = Math.max(sar, candles[i - 1].high);
+      if (i > 1) sar = Math.max(sar, candles[i - 2].high);
+    }
     out[i] = sar;
   }
   return out;
