@@ -5411,7 +5411,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           ))}
         {indicators.includes('vwap') &&
           vwap &&
-          planLineSegments(vwap, xOf, yOf).map((sg) => (
+          planLineSegments(vwap, xOf, yOf, {
+            // لا قطعة مائلة من VWAP أمس إلى أوّل قيمة اليوم — الخطّ ينقطع عند التصفير كـTradingView
+            breakBetween: (i) =>
+              vwapSessionOf != null &&
+              i > 0 &&
+              source.plot[i] != null &&
+              source.plot[i - 1] != null &&
+              vwapSessionOf(source.plot[i]) !== vwapSessionOf(source.plot[i - 1]),
+          }).map((sg) => (
             <View
               key={`vw${sg.at}`}
               style={{
