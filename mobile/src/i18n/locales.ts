@@ -1103,7 +1103,7 @@ const ar: Dict = {
     'تبويب «رسم» بالشريط السفلي يفتح خطوط الترند وفيبوناتشي وباقي الأدوات على الشارت، وما ترسمه على 4H يبقى حين تنزل إلى الساعة. ولتخطيط صفقة استعمل «خطة شراء» أو «خطة بيع»: اسحب من الدخول إلى الوقف فيظهر الهدف والنقاط ونسبة العائد إلى المخاطرة. أخطأت؟ زرّ «تراجع» يلغي آخر تغيير.',
   onboardStep3Title: 'المؤشرات والعدسات',
   onboardStep3Body:
-    'اختر من عشرات المؤشرات الجاهزة (RSI وMACD وبولنجر وغيرها)، أو ابدأ بعدسة تضع لك مجموعة مؤشرات بلمسة واحدة: «هيكل» للمتوسطات المتحركة، «زخم» لـRSI وMACD، «سيولة» للفوليوم وبولنجر وCVD. وللفوركس خاصةً: «Sessions» يظلّل جلسات طوكيو ولندن ونيويورك بأوقاتها الصحيحة صيفاً وشتاءً، و«PDH / PDL» يرسم أعلى وأدنى جلسة الأمس.',
+    'اختر من عشرات المؤشرات الجاهزة (RSI وMACD وبولنجر وغيرها)، أو ابدأ بعدسة تضع لك مجموعة مؤشرات بلمسة واحدة: «هيكل» للمتوسطات المتحركة، «زخم» لـRSI وMACD، «سيولة» للفوليوم وبولنجر وCVD (تقديري من اتجاه الشموع، لا تدفّق أوامر حقيقي). وللفوركس خاصةً: «Sessions» يظلّل جلسات طوكيو ولندن ونيويورك بأوقاتها الصحيحة صيفاً وشتاءً، و«PDH / PDL» يرسم أعلى وأدنى جلسة الأمس.',
   onboardStep4Title: 'التنبيهات',
   onboardStep4Body:
     'أسرع طريق: المس المستوى على الشارت ثم زرّ 🔔 — بلا كتابة أرقام. ويصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، فلا داعي لمراقبة الشارت طوال اليوم. تنبيهات المؤشرات وتفعيل الإشعارات من لوح التنبيهات.',
@@ -2134,7 +2134,7 @@ const enUS: Dict = {
     'The Draw tab in the bottom bar opens trend lines, Fibonacci and more tools right on the chart — a line drawn on 4H stays when you drop to 1H. To plan a trade, use Buy plan or Sell plan: drag from entry to stop to see the target, pips and reward-to-risk. Drew something wrong? Undo reverses the last change.',
   onboardStep3Title: 'Indicators & lenses',
   onboardStep3Body:
-    'Choose from dozens of ready indicators (RSI, MACD, Bollinger, and more), or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD. For forex: Sessions shades the Tokyo, London and New York sessions at their correct hours through daylight saving, and PDH / PDL marks yesterday\'s session high and low.',
+    'Choose from dozens of ready indicators (RSI, MACD, Bollinger, and more), or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD (estimated from candle direction, not real order flow). For forex: Sessions shades the Tokyo, London and New York sessions at their correct hours through daylight saving, and PDH / PDL marks yesterday\'s session high and low.',
   onboardStep4Title: 'Alerts',
   onboardStep4Body:
     'Fastest way: tap a level on the chart, then 🔔 — no typing. You get a notification when price reaches it (checked about once a minute), so no need to watch the chart all day. Indicator alerts and notification settings are in the alerts panel.',
@@ -3187,7 +3187,7 @@ const ku: Dict = {
     'تابی «وێنەکێشان» لە شریتی خوارەوە هێڵی ترێند و فیبۆناتچی و ئامرازەکانی تر ڕاستەوخۆ لەسەر چارت دەکاتەوە، و ئەوەی لەسەر 4H دەیکێشیت دەمێنێتەوە کاتێک دادەبەزیت بۆ کاتژمێرێک. بۆ پلاندانانی مامەڵەیەک «پلانی کڕین» یان «پلانی فرۆشتن» بەکاربهێنە: لە چوونەژوورەوە بۆ وەستان ڕایبکێشە و ئامانج و pip و ڕێژەی قازانج بۆ مەترسی دەبینیت. هەڵەت کرد؟ «گەڕاندنەوە» دوایین گۆڕانکاری هەڵدەوەشێنێتەوە.',
   onboardStep3Title: 'پێوەرەکان و لینزەکان',
   onboardStep3Body:
-    'لە دەیان پێوەری ئامادە هەڵبژێرە (RSI، MACD، بۆلینجەر و زیاتر)، یان بە لینزێک دەست پێبکە کە بە یەک دەستدان کۆمەڵێک پێوەر زیاد دەکات: «پێکهاتە» بۆ ناوەندە جووڵاوەکان، «پاڵنە» بۆ RSI و MACD، «شلەیی» بۆ قەبارە و بۆلینجەر و CVD. بۆ فۆرێکس: «Sessions» دانیشتنەکانی تۆکیۆ و لەندەن و نیویۆرک بە کاتی دروستیان ڕەنگ دەکات هاوین و زستان، و «PDH / PDL» بەرزترین و نزمترینی دانیشتنی دوێنێ دەکێشێت.',
+    'لە دەیان پێوەری ئامادە هەڵبژێرە (RSI، MACD، بۆلینجەر و زیاتر)، یان بە لینزێک دەست پێبکە کە بە یەک دەستدان کۆمەڵێک پێوەر زیاد دەکات: «پێکهاتە» بۆ ناوەندە جووڵاوەکان، «پاڵنە» بۆ RSI و MACD، «شلەیی» بۆ قەبارە و بۆلینجەر و CVD (خەمڵێنراو لە ئاراستەی مۆمەکان، نەک ڕەوتی ڕاستەقینەی فەرمانەکان). بۆ فۆرێکس: «Sessions» دانیشتنەکانی تۆکیۆ و لەندەن و نیویۆرک بە کاتی دروستیان ڕەنگ دەکات هاوین و زستان، و «PDH / PDL» بەرزترین و نزمترینی دانیشتنی دوێنێ دەکێشێت.',
   onboardStep4Title: 'ئاگادارکردنەوەکان',
   onboardStep4Body:
     'خێراترین ڕێگا: دەست لە ئاستەکە بدە لەسەر چارت پاشان 🔔 — بێ نووسینی ژمارە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت)، پێویست ناکات بە درێژایی ڕۆژ چاودێری چارت بکەیت. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
