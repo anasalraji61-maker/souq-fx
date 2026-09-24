@@ -27,8 +27,24 @@
  */
 import { LEVEL_LABEL_GAP, thinByGap } from './levelLabels';
 
-/** ترتيب الأهمية عند الازدحام — الأول يبقى والأخير يُسقَط أولاً. */
-const FIB_IMPORTANCE = [0, 1, 0.618, 0.5, 0.382, 0.786, 0.236];
+/**
+ * مستويات الامتداد: **أهداف بعد نهاية الموجة** باتّجاهها (−27.2% و−61.8%، أي 127.2% و161.8% من طول الموجة
+ * مقيسةً من بدايتها). المتداول يرسم فيبو على الدفعة ليعرف أين يدخل (الارتداد) **وأين يجني** — وبلا هذين
+ * المستويين كان عليه أن يرسم أداة ثانية (أو يحسب بيده) لهدف الصفقة نفسها. بالسالب لأن 0% عند نهاية الموجة
+ * (`fibLevelPrice`): السالب يقع بعدها، فالصيغة نفسها تعطي سعر الهدف للموجتين الصاعدة والهابطة بلا فرع.
+ */
+export const FIB_EXTENSIONS: readonly number[] = [-0.272, -0.618];
+
+/** الامتداد (هدف) يُرسم بخطّ أخفّ من خطوط الارتداد — راجع `FIB_EXTENSIONS`. */
+export function isFibExtension(level: number): boolean {
+  return level < 0 || level > 1;
+}
+
+/**
+ * ترتيب الأهمية عند الازدحام — الأول يبقى والأخير يُسقَط أولاً. الامتداد بعد 38.2%: هدف الصفقة أهمّ من
+ * 78.6% و23.6% (قلّما يُتداوَلان)، وأقلّ من طرفي الموجة ومستويات الدخول الثلاثة.
+ */
+const FIB_IMPORTANCE = [0, 1, 0.618, 0.5, 0.382, -0.272, -0.618, 0.786, 0.236];
 
 /** مستوى غير مدرج بالترتيب يقع بعد المدرجين، وبينها بقيمتها (ثبات الترتيب). */
 function importanceRank(level: number): number {
@@ -44,8 +60,9 @@ function importanceRank(level: number): number {
 export function fibRatioText(level: number): string {
   if (!Number.isFinite(level)) return '';
   const pct = level * 100;
-  const s = pct.toFixed(1);
-  return `${s.endsWith('.0') ? s.slice(0, -2) : s}%`;
+  const s = Math.abs(pct).toFixed(1);
+  // علامة ناقص حقيقية (U+2212) لا شرطة: بخطّ 10px تُقرأ الشرطة كفاصل «-27.2%» لا كإشارة.
+  return `${pct < 0 && s !== '0.0' ? '−' : ''}${s.endsWith('.0') ? s.slice(0, -2) : s}%`;
 }
 
 export type FibLabelPlan = {
@@ -90,6 +107,11 @@ export function planFibLabels(input: {
   taken?: readonly number[];
   /** موجة هابطة (رُسمت من القمّة للقاع) ⇒ 0% عند القاع — راجع `fibLevelPrice`. */
   down?: boolean;
+  /**
+   * ارتفاع اللوح بالبكسل: وسم خارج `[0, plotH]` لا يُخطَّط. مستويات الامتداد تقع غالباً خارج الشاشة (الهدف
+   * لم يُبلَغ بعد) — وسمها المقصوص لا يُرى، لكنه كان سيحجز مكاناً ويُسقط وسماً ظاهراً قريباً من الحافّة.
+   */
+  plotH?: number;
 }): FibLabelPlan[] {
   const { levels, hi, lo, yOf, format } = input;
   const minGap = input.minGapPx ?? LEVEL_LABEL_GAP;
@@ -103,6 +125,7 @@ export function planFibLabels(input: {
     const y = yOf(price);
     // موضع غير محسوب (مقياس لم يُهيّأ بعد) لا يُعرض بموضع مختلَق.
     if (!Number.isFinite(y)) continue;
+    if (input.plotH != null && Number.isFinite(input.plotH) && (y < -1 || y > input.plotH + 1)) continue; // ±1px: خطّ على الحافّة نفسها ظاهر
     candidates.push({ level, price, y, text: `${fibRatioText(level)} · ${format(price)}` });
   }
 

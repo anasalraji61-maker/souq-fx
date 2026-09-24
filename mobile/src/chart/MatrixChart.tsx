@@ -108,7 +108,7 @@ import { anchorDrawings, barTime, stampAtIndex, type TimeBar } from './drawingAn
 import { placeSelectionTags, selectionPrices } from './selectionTags';
 import { appendedAfter } from './holdView';
 import { priceSpan } from './priceSpan';
-import { fibLevelPrice, planFibLabels, type FibLabelPlan } from './fibLabels';
+import { FIB_EXTENSIONS, fibLevelPrice, isFibExtension, planFibLabels, type FibLabelPlan } from './fibLabels';
 import {
   candleRangePipsText,
   measureDurationSec,
@@ -461,6 +461,8 @@ const DRAW_HANDLE_R = 18;
 
 /** سقف لقطات التراجع — يكفي جلسة رسم كاملة ولا يكبر بلا حدّ بذاكرة الهاتف. */
 const DRAW_HISTORY_MAX = 25;
+/** مستويات فيبو المرسومة: الارتداد ثم أهداف الامتداد بعد نهاية الموجة (`FIB_EXTENSIONS`). */
+const FIB_DRAW_LEVELS: readonly number[] = [...FIB_LEVELS, ...FIB_EXTENSIONS];
 /** أقلّ تباعد رأسي بين وسمَي مستوى فيبو = علوّ سطر الوسم (`fibLevelLabel`: 13px). */
 const FIB_LABEL_GAP = 13;
 /** ومثله لوسم سعر الخطّ الأفقي (`levelPriceLabel`). */
@@ -3068,7 +3070,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           // (المدى الصفري كان يُحسب هنا وهناك بـ`|| 1`، أي على مدى وحدة سعرية كاملة).
           const hi = Math.max(d.a.price, d.b.price);
           const lo = Math.min(d.a.price, d.b.price);
-          for (const lv of FIB_LEVELS) {
+          for (const lv of FIB_DRAW_LEVELS) {
             bodyDist = Math.min(bodyDist, Math.abs(y - yOf(fibLevelPrice(hi, lo, lv, d.a.price > d.b.price))));
           }
         }
@@ -4183,13 +4185,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   for (const { d } of visibleDrawings) {
     if (d.tool !== 'fib' || !d.b) continue;
     const plan = planFibLabels({
-      levels: FIB_LEVELS,
+      levels: FIB_DRAW_LEVELS,
       hi: Math.max(d.a.price, d.b.price),
       lo: Math.min(d.a.price, d.b.price),
       down: d.a.price > d.b.price,
       yOf,
       format: (v) => formatPrice(v, series.symbol),
       minGapPx: FIB_LABEL_GAP,
+      plotH: chartPlotH,
       taken: [...takenLabelYs],
     });
     fibLabelPlans.set(d.id, plan);
@@ -6513,15 +6516,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const labelled = new Map((fibLabelPlans.get(d.id) ?? []).map((l) => [l.level, l.text]));
             return (
               <View key={d.id}>
-                {FIB_LEVELS.map((lv) => {
+                {FIB_DRAW_LEVELS.map((lv) => {
                   const price = fibLevelPrice(hi, lo, lv, d.a.price > d.b.price);
                   const text = labelled.get(lv);
+                  // الامتداد هدف لا مستوى دخول: منقّط وأخفت، فلا تُقرأ الأداة تسعة خطوط متساوية.
+                  const ext = isFibExtension(lv);
                   return (
                     <View
                       key={lv}
                       style={[
                         styles.hLine,
                         { top: yOf(price), borderColor: d.color, borderTopWidth: sel ? 2.5 : 1 },
+                        ext ? styles.fibExtLine : null,
                       ]}
                     >
                       {text ? <Text style={styles.fibLevelLabel}>{text}</Text> : null}
@@ -11102,6 +11108,10 @@ const styles = StyleSheet.create({
   // وسم مستوى فيبو: **يسار اللوح** لا يمينه. اليمين هو محور السعر ووسماه (الحيّ
   // والتقاطع) يُرسمان فوق كل شيء، ووسمٌ صار يحمل سعراً أعرض من أن يشاركهما الحافة.
   // وخلفية خفيفة لأن النصّ يقع الآن فوق الشموع لا فوق حافة فارغة.
+  fibExtLine: {
+    borderStyle: 'dotted',
+    opacity: 0.7,
+  },
   fibLevelLabel: {
     position: 'absolute',
     left: 4,

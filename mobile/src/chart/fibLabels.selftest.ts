@@ -1,5 +1,5 @@
 /** فحص ذاتي لـ`fibLabels.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
-import { fibRatioText, fibLevelPrice, planFibLabels } from './fibLabels';
+import { FIB_EXTENSIONS, fibRatioText, fibLevelPrice, isFibExtension, planFibLabels } from './fibLabels';
 
 const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
 
@@ -105,6 +105,41 @@ const besideLine = planFibLabels({
 });
 ok('taken يُسقط المستوى تحت وسم الخطّ', !besideLine.some((l) => l.level === 0.5));
 ok('taken لا يمسّ البعيد', besideLine.length === roomy.length - 1);
+
+// ── الامتداد: أهداف بعد نهاية الموجة ─────────────────────────────────────
+ok('−27.2% بعلامة ناقص حقيقية', fibRatioText(-0.272) === '−27.2%');
+ok('−61.8%', fibRatioText(-0.618) === '−61.8%');
+ok('−0 لا يحمل علامة', fibRatioText(-0) === '0%');
+ok('الامتداد مُعلَّم', FIB_EXTENSIONS.every(isFibExtension) && ![0, 0.5, 1].some(isFibExtension));
+// صاعدة 1.0 ⇒ 1.1: الهدف فوق القمّة (127.2% و161.8% من الموجة مقيسةً من القاع).
+ok('صاعدة: −27.2% فوق القمّة', Math.abs(fibLevelPrice(1.1, 1.0, -0.272) - 1.1272) < 1e-12);
+ok('صاعدة: −61.8% = 161.8% من الموجة', Math.abs(fibLevelPrice(1.1, 1.0, -0.618) - 1.1618) < 1e-12);
+// هابطة 1.1 ⇒ 1.0: الهدف تحت القاع.
+ok('هابطة: −27.2% تحت القاع', Math.abs(fibLevelPrice(1.1, 1.0, -0.272, true) - 0.9728) < 1e-12);
+ok('هابطة: −61.8% تحت القاع', Math.abs(fibLevelPrice(1.1, 1.0, -0.618, true) - 0.9382) < 1e-12);
+// وسم خارج اللوح لا يُخطَّط ولا يحجز مكاناً: لوح 300px، والامتداد فوق حافّته العليا (y سالب).
+const withExt = planFibLabels({
+  levels: [...FIB_LEVELS, ...FIB_EXTENSIONS], hi: 1.1, lo: 1.0,
+  yOf: (p) => (1.1 - p) * 3000, format: fmt, minGapPx: 13, plotH: 300,
+});
+ok('plotH: الامتداد خارج اللوح لا وسم له', !withExt.some((l) => isFibExtension(l.level)));
+ok('plotH: مستويات الارتداد كلّها باقية', withExt.length === 7);
+// ولوح أطول (الهدف مرئيّ فوق الموجة) ⇒ وسما الامتداد يظهران بسعريهما.
+const extVisible = planFibLabels({
+  levels: [...FIB_LEVELS, ...FIB_EXTENSIONS], hi: 1.1, lo: 1.0,
+  yOf: (p) => (1.2 - p) * 3000, format: fmt, minGapPx: 13, plotH: 700,
+});
+ok('الامتداد المرئيّ موسوم', extVisible.length === 9);
+ok('وسم الامتداد نسبة ثم سعر', extVisible[0]!.text === `−61.8% · ${fmt(1.1618)}`);
+// ازدحام: الامتداد يسبق 78.6% و23.6% لكنه لا يزيح 38.2%.
+ok('الأهمية: −27.2% قبل 23.6%', (() => {
+  const t = planFibLabels({ levels: [0.236, -0.272], hi: 1.1, lo: 1.0, yOf: () => 50, format: fmt });
+  return t.length === 1 && t[0]!.level === -0.272;
+})());
+ok('الأهمية: 38.2% قبل −27.2%', (() => {
+  const t = planFibLabels({ levels: [-0.272, 0.382], hi: 1.1, lo: 1.0, yOf: () => 50, format: fmt });
+  return t.length === 1 && t[0]!.level === 0.382;
+})());
 
 if (failures) {
   console.error(`fibLabels.selftest: ${failures} FAILED`);
