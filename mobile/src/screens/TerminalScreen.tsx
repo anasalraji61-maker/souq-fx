@@ -39,7 +39,7 @@ import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { WATCHLIST } from '../chart/watchlist';
 import { ensureWatchlistLoaded, subscribeWatchlist } from '../chart/watchlistStore';
 import { useDailyRefs } from '../chart/dailyRefStore';
-import { dailyChange, formatPct } from '../chart/dailyChange';
+import { dailyChange, formatPct, pctDirection } from '../chart/dailyChange';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import { formatPrice } from '../chart/math';
 import {
@@ -1515,18 +1515,26 @@ export function TerminalScreen() {
               <View style={styles.desktopOhlc}>
                 <Text style={styles.desktopOhlcLabel}>{t.priceWord}</Text>
                 <Text style={styles.desktopOhlcValue}>{formatPrice(price, symbol)}</Text>
-                <Text
-                  style={[
-                    styles.desktopChange,
-                    {
-                      color:
-                        (series?.change_pct ?? 0) >= 0 ? colors.bull : colors.bear,
-                    },
-                  ]}
-                >
-                  {(series?.change_pct ?? 0) >= 0 ? '+' : ''}
-                  {(series?.change_pct ?? 0).toFixed(2)}%
-                </Text>
+                {(() => {
+                  // كان `(change_pct ?? 0) >= 0` يطبع «+0.00%» أخضر لسالب الصفر ولأي حركة دون 0.005%،
+                  // و«+0.00%» أخضر كذلك **بلا بيانات أصلاً** (السلسلة لم تصل)، ويطبع نسبة السلسلة
+                  // التجريبية (`mockSeries` بعد فشل الشبكة) كأنها تغيّر السوق. الآن `formatPct`
+                  // المعتمدة، واللون من الرقم المطبوع، و«—» حين لا نسبة حقيقية.
+                  const pct = series && series.data_source?.kind !== 'demo' ? series.change_pct : null;
+                  const dir = pctDirection(pct);
+                  return (
+                    <Text
+                      style={[
+                        styles.desktopChange,
+                        {
+                          color: dir === 'up' ? colors.bull : dir === 'down' ? colors.bear : colors.textDim,
+                        },
+                      ]}
+                    >
+                      {pct != null ? formatPct(pct) : '—'}
+                    </Text>
+                  );
+                })()}
                 {quote && quote.bid != null && quote.ask != null ? (
                   <Text style={styles.desktopSpread}>
                     {t.termSpreadWord} {formatPrice(quote.ask - quote.bid, symbol)} · {t.termBidLabel}{' '}

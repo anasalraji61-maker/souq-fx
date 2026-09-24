@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/dailyChange.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { dailyChange, formatPct, prevCloseFromDaily, tickDirection } from './dailyChange';
+import { dailyChange, formatPct, pctDirection, prevCloseFromDaily, tickDirection } from './dailyChange';
 
 // أيام UTC حقيقية (ثوانٍ): 2026-09-14 إثنين … 2026-09-20 أحد، 2026-09-21 إثنين
 const D = (iso: string) => Date.parse(`${iso}T00:00:00Z`) / 1000;
@@ -61,6 +61,24 @@ assert.equal(formatPct(-1.5), '−1.50%');
 assert.equal(formatPct(0.001), '0.00%');
 assert.equal(formatPct(-0.001), '0.00%');
 assert.equal(formatPct(NaN), '—');
+
+// لون النسبة يتبع الرقم المطبوع: سالب الصفر وما دون 0.005% «0.00%» بلا لون
+assert.equal(pctDirection(-0), 'flat');
+assert.equal(pctDirection(0.004), 'flat');
+assert.equal(pctDirection(-0.004), 'flat');
+assert.equal(pctDirection(0.005), 'up'); // يُطبع +0.01%
+assert.equal(pctDirection(-0.006), 'down');
+assert.equal(pctDirection(0.23), 'up');
+assert.equal(pctDirection(-1.5), 'down');
+assert.equal(pctDirection(NaN), 'flat');
+assert.equal(pctDirection(null), 'flat');
+assert.equal(pctDirection(undefined), 'flat');
+for (const v of [-0, 0.004, -0.004, 0.005, -0.006, 0.23, -1.5, 0.0049, -0.0051]) {
+  const printed = formatPct(v);
+  const d = pctDirection(v);
+  assert.equal(d === 'up', printed.startsWith('+'), `pctDirection(${v}) vs ${printed}`);
+  assert.equal(d === 'down', printed.startsWith('−'), `pctDirection(${v}) vs ${printed}`);
+}
 
 // اتجاه التيك
 assert.equal(tickDirection(1, 2), 'up');

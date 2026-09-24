@@ -92,6 +92,18 @@ export function formatPct(pct: number): string {
   return `${r > 0 ? '+' : '−'}${Math.abs(r).toFixed(2)}%`;
 }
 
+/**
+ * اتجاه النسبة **كما تطبعها `formatPct`** — للّون بجانبها. اشتقاق اللون من الخام (`pct >= 0`) يُخرج
+ * «+0.00%» بالأخضر لسالب الصفر (الخادم يقرّب بـ`round(chg, 2)` فيُرجع ‎-0.0‎ لهبوط دقيق، و`-0 >= 0`
+ * صحيح بجافاسكربت) ولأي حركة دون 0.005%، فيناقض اللونُ الرقمَ الذي بجانبه. من حاصل التقريب نفسه
+ * يتطابقان بالبناء. غير منتهٍ → 'flat' (و`formatPct` تطبع حينها «—»).
+ */
+export function pctDirection(pct: number | null | undefined): Direction {
+  if (typeof pct !== 'number' || !Number.isFinite(pct)) return 'flat';
+  const r = Math.round(pct * 100) / 100;
+  return r > 0 ? 'up' : r < 0 ? 'down' : 'flat';
+}
+
 /** اتجاه آخر حركة تيك (لوميض قصير بالصف): مقارنة بالسعر السابق المختلف. */
 export function tickDirection(prev: number | null | undefined, next: number | null | undefined): Direction {
   if (typeof prev !== 'number' || typeof next !== 'number' || !Number.isFinite(prev) || !Number.isFinite(next)) {
