@@ -51,3 +51,31 @@ assert.equal(nextHighImpact([ev('edge', 'USD', 'high', 180)], ['USD'], now)?.eve
 assert.equal(nextHighImpact([ev('edge2', 'USD', 'high', -15)], ['USD'], now)?.event.id, 'edge2');
 
 console.log('newsRisk selftest OK');
+
+// الأقرب للّحظة بالاتجاهين لا الأقدم: خبر مضى قبل 14 دقيقة كان يحجب خبراً بعد دقيقتين
+const r3 = nextHighImpact([ev('eur-past-14', 'EUR', 'high', -14), ev('usd-in-2', 'USD', 'high', 2)], ['EUR', 'USD'], now);
+assert.equal(r3?.event.id, 'usd-in-2');
+assert.equal(r3?.deltaMs, 2 * 60_000);
+// خبر صدر للتوّ (قفزته جارية) يغلب خبراً بعد ساعتين
+assert.equal(
+  nextHighImpact([ev('usd-past-1', 'USD', 'high', -1), ev('usd-in-120', 'USD', 'high', 120)], ['USD'], now)?.event.id,
+  'usd-past-1'
+);
+// بين حدثين مضيا: الأحدث لا الأقدم
+assert.equal(
+  nextHighImpact([ev('past-12', 'USD', 'high', -12), ev('past-3', 'USD', 'high', -3)], ['USD'], now)?.event.id,
+  'past-3'
+);
+// تعادل البُعد: القادم أولى (قفزته لم تقع بعد)
+assert.equal(
+  nextHighImpact([ev('past-5', 'USD', 'high', -5), ev('in-5', 'USD', 'high', 5)], ['USD'], now)?.event.id,
+  'in-5'
+);
+assert.equal(
+  nextHighImpact([ev('in-5', 'USD', 'high', 5), ev('past-5', 'USD', 'high', -5)], ['USD'], now)?.event.id,
+  'in-5'
+);
+// الترتيب بالمصفوفة لا يغيّر النتيجة
+assert.equal(nextHighImpact([...list].reverse(), ['EUR', 'USD'], now)?.event.id, 'eur-high-45');
+
+console.log('newsRisk nearest selftest OK');

@@ -41,7 +41,14 @@ export function symbolCurrencies(symbol: string): string[] {
 export const NEWS_HORIZON_MS = 3 * 60 * 60 * 1000;
 export const NEWS_GRACE_MS = 15 * 60 * 1000;
 
-/** أقرب حدث عالي التأثير لعملات الزوج ضمن [الآن − 15د، الآن + 3س]؛ null إن لا يوجد. */
+/**
+ * أقرب حدث عالي التأثير لعملات الزوج ضمن [الآن − 15د، الآن + 3س]؛ null إن لا يوجد.
+ *
+ * «أقرب» = أصغر بُعدٍ عن اللحظة **بالاتجاهين** (`|deltaMs|`)، والتعادل للقادم. كان الاختيار بأصغر
+ * `deltaMs` بإشارتها، فالحدث الذي مضى أقدم يغلب دائماً: خبرٌ يوروبي صدر قبل 14 دقيقة كان يحجب
+ * «الرواتب الأمريكية بعد دقيقتين» عن متداول EURUSD — فيقرأ «الآن» عن خبر انتهى، ولا يعرف أن
+ * القفزة الحقيقية لم تقع بعد. وبين حدثين مضيا كان يُعرض الأقدم لا الأحدث.
+ */
 export function nextHighImpact(
   events: readonly NewsEvent[],
   currencies: readonly string[],
@@ -59,7 +66,9 @@ export function nextHighImpact(
     if (!want.has(String(e.currency).toUpperCase())) continue;
     const delta = e.ts * 1000 - nowMs;
     if (delta < -graceMs || delta > horizonMs) continue;
-    if (!best || delta < best.deltaMs) best = { event: e, deltaMs: delta };
+    const dist = Math.abs(delta);
+    const bestDist = best ? Math.abs(best.deltaMs) : Infinity;
+    if (dist < bestDist || (best && dist === bestDist && delta > best.deltaMs)) best = { event: e, deltaMs: delta };
   }
   return best;
 }
