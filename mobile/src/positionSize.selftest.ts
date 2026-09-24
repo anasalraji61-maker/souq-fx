@@ -34,6 +34,12 @@ assert.equal(instrumentSpec('XAUUSD')!.pipSize, 0.1);
 assert.equal(instrumentSpec('XAUUSD')!.contractSize, 100);
 assert.equal(instrumentSpec('DXY'), null);
 assert.equal(instrumentSpec('USDXAU'), null);
+// معدن بعملة ورقية غير الدولار مقبول (حجم العقد نفسه، التسعير بعملته)؛ معدن مقابل معدن/عملة رقمية لا
+assert.deepEqual(instrumentSpec('XAUEUR'), { symbol: 'XAUEUR', base: 'XAU', quote: 'EUR', pipSize: 0.1, contractSize: 100 });
+assert.equal(instrumentSpec('XAGAUD')!.contractSize, 5000);
+assert.equal(instrumentSpec('XAUXAG'), null);
+assert.equal(instrumentSpec('XAGXAU'), null);
+assert.equal(instrumentSpec('XAUBTC'), null);
 // عملات رقمية/رموز غير ورقية ليست فوركس (لا pip 0.0001)
 assert.equal(instrumentSpec('BTCUSD'), null);
 assert.equal(instrumentSpec('ETHUSD'), null);

@@ -60,7 +60,9 @@ export function instrumentSpec(raw: string): InstrumentSpec | null {
   const quote = symbol.slice(3, 6);
   if (base === quote) return null;
   const metal = METALS[base];
-  if (metal) return { symbol, base, quote, ...metal };
+  // المعدن يُسعَّر بعملة ورقية فقط: «XAUXAG» أو «XAUBTC» كانا يُقبلان فتطلب الحاسبة زوج تحويل لا
+  // وجود له («USDXAG»، «USDBTC») وتحسب قيمة pip بعملة ليست عملة.
+  if (metal) return FIAT.has(quote) ? { symbol, base, quote, ...metal } : null;
   if (METALS[quote]) return null;
   if (!FIAT.has(base) || !FIAT.has(quote)) return null;
   return { symbol, base, quote, pipSize: quote === 'JPY' ? 0.01 : 0.0001, contractSize: 100_000 };
