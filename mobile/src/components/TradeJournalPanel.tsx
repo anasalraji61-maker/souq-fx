@@ -650,16 +650,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       Alert.alert(t.journalCloseFailedTitle, unreadable(exit) ? t.invalidNumberHint : t.journalCloseNeedsExit);
       return;
     }
-    setBusy(true);
-    try {
-      await api.closeTrade(id, x);
-      playSoftClick();
-      await refresh();
-    } catch {
-      Alert.alert(t.journalCloseFailedTitle, t.journalCloseFailedBody);
-    } finally {
-      setBusy(false);
-    }
+    const tr = trades.find((it: Trade) => it.id === id);
+    if (!tr) return;
+    // تأكيدٌ بالنتيجة كالإغلاق بالسوق: الخانة واحدة للنموذج كلّه، فسعرٌ كُتب لصفقة ذهب (2651.30) ثم نُقر رابط
+    // صفقة EURUSD كان يُحفظ فوراً «+26,502,150 pip · +244,259%» ويُفسد نسبة النجاح وأفضل صفقة ومتوسط الربح للأبد
+    confirmClose(tr, x, 'field');
   };
 
   /**
@@ -688,7 +683,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       Alert.alert(t.journalCloseFailedTitle, t.journalCloseMarketNoQuote);
       return;
     }
-    const exitPx = px;
+    confirmClose(tr, px, 'market');
+  };
+
+  /**
+   * تأكيد الإغلاق بسعر الخروج والنتيجة (نقاط · مال · نسبة · R) قبل الحفظ — للإغلاق بالسوق وبسعر خانة الخروج.
+   * `field`: العنوان «إغلاق بسعر خانة الخروج» والنصّ بلا سطر «السعر من مزوّد البيانات» (لا يخصّه).
+   */
+  const confirmClose = (tr: Trade, exitPx: number, source: 'market' | 'field') => {
     const trSide = tr.side === 'sell' ? 'sell' : 'buy';
     const mv = realizedMove({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: exitPx });
     const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
@@ -711,9 +713,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const result = mv
       ? `${mv.pips != null ? `${formatSignedPips(mv.pips)} pip · ` : ''}${cashText}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%${rText ? ` · ${rText}` : ''}`
       : '';
+    const body = source === 'market' ? t.journalCloseMarketConfirmBody : t.journalCloseMarketConfirmBody.split('\n\n')[0];
     Alert.alert(
-      t.journalCloseMarketConfirmTitle,
-      t.journalCloseMarketConfirmBody
+      source === 'market' ? t.journalCloseMarketConfirmTitle : t.journalCloseLinkBtn,
+      body
         .replace('{side}', trSide === 'sell' ? t.dirSell : t.dirBuy)
         .replace('{symbol}', tr.symbol)
         .replace('{entry}', formatPrice(tr.entry, tr.symbol))
