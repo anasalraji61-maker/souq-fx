@@ -4,6 +4,7 @@ import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBloc
 import { api } from '../api';
 import { formatPrice } from '../chart/math';
 import { formatRR } from '../tradePlan';
+import { instrumentSpec, pipsBetween } from '../positionSize';
 import { useI18n } from '../i18n/I18nContext';
 import type { Dict } from '../i18n/locales';
 
@@ -136,6 +137,13 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   // «ثقة 83%» كانت معادلة ثابتة (|المعدل|×0.75+0.35) تُقرأ كاحتمال نجاح — نعرض بدلها عدد المؤشرات
   // المتوافقة مع الاتجاه (قابل للتحقق من القائمة تحتها)، ونسبة الربح:المخاطرة للمستويات المقترحة.
   const agreeing = votes.filter((v) => v.direction === direction).length;
+  // الوقف والهدف كانا سعرَين فقط، والمتداول يزن الصفقة بالـpip (حجم لوته من مسافة وقفه).
+  // `pipsBetween` نفسها التي تبني عليها الحاسبة؛ أداة بلا مواصفة pip تبقى بالأسعار وحدها.
+  const levelSpec = levels ? instrumentSpec(symbol) : null;
+  const pipsTag = (a: number, b: number) => {
+    const p = levelSpec ? pipsBetween(levelSpec, a, b) : null;
+    return p != null ? ` (${p.toFixed(1)} pip)` : '';
+  };
   const rr =
     levels && direction !== 'neutral' && Math.abs(levels.entry - levels.sl) > 0
       ? Math.abs(levels.tp - levels.entry) / Math.abs(levels.entry - levels.sl)
@@ -212,7 +220,9 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           {levels && direction !== 'neutral' ? (
             <Text style={[styles.levels, { textAlign: align }]}>
               {t.forecastTradeLabel}: {t.entryLabel} {formatPrice(levels.entry, symbol)} · {t.slLabel}{' '}
-              {formatPrice(levels.sl, symbol)} · {t.tpLabel} {formatPrice(levels.tp, symbol)}
+              {formatPrice(levels.sl, symbol)}
+              {pipsTag(levels.entry, levels.sl)} · {t.tpLabel} {formatPrice(levels.tp, symbol)}
+              {pipsTag(levels.entry, levels.tp)}
               {rr != null ? ` · R:R ${formatRR(rr)}` : ''}
             </Text>
           ) : (
