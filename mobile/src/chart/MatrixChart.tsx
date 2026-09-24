@@ -6608,6 +6608,38 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           })()
         ) : null}
 
+        {/* الوضع المدمج (الهاتف) بلا سطر قراءة: قياس الرسم المحدَّد وسمٌ عند طرفه الثاني، بموضع
+            وسم أداة القياس نفسه وحدّه. طرف خارج اللوح ⇒ لا وسم (لا يُعلَّق على لا شيء). */}
+        {dense && selectedSpan?.b && selectedSpanReadout && !shownMeasure
+          ? (() => {
+              const end = selectedSpan.b;
+              const color = selectedSpan.color;
+              const bi = end.index - source.start;
+              const x2 = xOf(bi);
+              const y2 = yOf(end.price);
+              if (bi < 0 || bi > source.plot.length - 1 || !(y2 >= 0 && y2 <= chartPlotH)) return null;
+              const top = Math.max(2, Math.min(chartPlotH - 22, y2 - 44 >= 2 ? y2 - 44 : y2 + 24));
+              const inset = x2 < chartPlotW / 2 ? Math.max(2, x2 - 12) : Math.max(2, chartW - x2 - 12);
+              const side = x2 < chartPlotW / 2 ? { left: inset } : { right: inset };
+              const tagMaxW = chartW - 2 - inset;
+              return (
+                <View
+                  pointerEvents="none"
+                  style={[styles.measureLive, { top, borderColor: color, maxWidth: tagMaxW }, side]}
+                >
+                  <Text
+                    style={styles.measureLiveText}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.75}
+                  >
+                    {selectedSpanReadout}
+                  </Text>
+                </View>
+              );
+            })()
+          : null}
+
         {pending ? (
           <View
             style={[
