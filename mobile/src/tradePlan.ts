@@ -941,6 +941,15 @@ export function noteWithTypedSize(size: number | null | undefined, note: string)
 }
 
 /**
+ * عقد اللوت لرمزٍ بالدفتر: `small` لحساب سنت/micro (لوتٌ = 1,000 وحدة، `smallContractPair`)، وإلا `std` — رمزٌ عادي أو
+ * مجهول أو فارغ (لوت الحساب العادي هو الافتراض بكل الدفتر).
+ */
+export function journalContractKind(symbol: string | null | undefined): 'std' | 'small' {
+  const up = (symbol || '').trim().toUpperCase();
+  return up && !instrumentSpec(up) && smallContractPair(up) ? 'small' : 'std';
+}
+
+/**
  * آخر أحجام اللوت **المختلفة** التي سجّلها المتداول (الأحدث أولاً، `max` على الأكثر) — شرائح بخانة الحجم
  * بنموذج الدفتر.
  *
@@ -953,14 +962,23 @@ export function noteWithTypedSize(size: number | null | undefined, note: string)
  * `MAX_SANE_LOTS` (100000 كُتبت وحداتٍ لا لوتاً — لا تُقترح لتتكرّر).
  */
 export function recentLotSizes(
-  trades: readonly { size?: number | null; note?: string | null }[],
-  max = 3
+  trades: readonly { size?: number | null; note?: string | null; symbol?: string | null }[],
+  max = 3,
+  forSymbol?: string | null
 ): number[] {
+  /**
+   * `forSymbol`: الشرائح من صفقات **العقد نفسه** فقط (`journalContractKind`). لوت السنت/micro أصغر بمئة مرّة: آخر صفقة
+   * «EURUSDC» بـ4.00 كانت تُقترح «4.00» لصفقة «EURUSD» — مركزٌ بمئة ضعف بنقرة (مخاطرة 25 pip = 1,000 USD لا 10).
+   * غائب = كل الصفقات كما كان.
+   */
+  const want = forSymbol == null ? null : journalContractKind(forSymbol);
+  const cap = want === 'small' ? 2 * MAX_SANE_LOTS : MAX_SANE_LOTS;
   const out: number[] = [];
   for (const tr of trades) {
     if (out.length >= max) break;
+    if (want != null && journalContractKind(tr.symbol) !== want) continue;
     const lots = knownLots(tr.size, tr.note);
-    if (lots == null || lots > MAX_SANE_LOTS) continue;
+    if (lots == null || lots > cap) continue;
     const steps = Math.round(lots / LOT_STEP);
     if (steps < 1 || Math.abs(lots / LOT_STEP - steps) > 1e-6) continue;
     const v = Math.round(steps * LOT_STEP * 100) / 100;

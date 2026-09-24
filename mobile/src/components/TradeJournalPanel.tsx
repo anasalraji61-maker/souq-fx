@@ -449,7 +449,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   const symbolChips = useMemo(() => quickJournalSymbols(trades, QUICK_SYMBOLS), [trades]);
 
   /** آخر أحجام اللوت المختلفة من صفقات المتداول نفسه — شرائح تحت خانة الحجم (`recentLotSizes`) */
-  const lotChips = useMemo(() => recentLotSizes(trades), [trades]);
+  // لوت السنت/micro لا يُقترح لرمزٍ عادي ولا العكس — راجع `recentLotSizes`
+  const lotChips = useMemo(() => recentLotSizes(trades, 3, symbol), [trades, symbol]);
 
   /** شرائح «الخروج = الوقف/الهدف» تحت خانة الخروج — راجع `exitShortcuts` */
   const exitChips = useMemo(

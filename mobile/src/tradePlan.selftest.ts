@@ -28,6 +28,7 @@ import {
   netByInstrument,
   knownLots,
   recentLotSizes,
+  journalContractKind,
   quickJournalSymbols,
   stopsForPips,
   quickStopPips,
@@ -846,6 +847,33 @@ console.log('tradePlan journalStats selftest OK');
     assert.equal(Math.round(v * 100), k);
   }
   assert.deepEqual(recentLotSizes([]), []);
+
+  // لوت السنت/micro (1,000 وحدة) لا يُقترح لرمزٍ عادي ولا العكس
+  const mixed = [
+    { symbol: 'EURUSDC', size: 4 },
+    { symbol: 'EURUSD.MICRO', size: 2.5 },
+    { symbol: 'EURUSD', size: 0.04 },
+    { symbol: 'XAUUSDC', size: 150 },
+    { symbol: 'GBPUSD', size: 0.1 },
+    { symbol: 'US30', size: 0.5 },
+  ];
+  assert.deepEqual(recentLotSizes(mixed, 3, 'EURUSD'), [0.04, 0.1, 0.5]);
+  assert.deepEqual(recentLotSizes(mixed, 3, 'GBPUSDc'), [4, 2.5, 150]);
+  assert.deepEqual(recentLotSizes(mixed, 3, 'EURUSDmicro'), [4, 2.5, 150]);
+  // رمزٌ فارغ أو مجهول وسط الكتابة = عقدٌ عادي (الافتراض بالدفتر)
+  assert.deepEqual(recentLotSizes(mixed, 3, ''), [0.04, 0.1, 0.5]);
+  assert.deepEqual(recentLotSizes(mixed, 3, 'EURU'), [0.04, 0.1, 0.5]);
+  // بلا رمز = كما كان (كل الصفقات، حدّ 100)
+  assert.deepEqual(recentLotSizes(mixed), [4, 2.5, 0.04]);
+  // حدّ السنت ضعف العادي (كـ`journalSizeLooksLikeUnits`): 200 تُقترح، 200.01 لا
+  assert.deepEqual(recentLotSizes([{ symbol: 'EURUSDC', size: 200.01 }, { symbol: 'EURUSDC', size: 200 }], 3, 'EURUSDC'), [200]);
+  assert.deepEqual(recentLotSizes([{ symbol: 'EURUSD', size: 150 }], 3, 'EURUSD'), []);
+  // صفقة بلا رمز (نسخة قديمة) تُعدّ عادية
+  assert.deepEqual(recentLotSizes([{ size: 0.2 }, { symbol: 'EURUSDC', size: 3 }], 3, 'EURUSD'), [0.2]);
+  for (const s of ['EURUSDC', 'EURUSDc', 'GOLDC', 'EURUSD.c', 'EURUSD-cent', 'EURUSDMICRO', 'XAUUSD_micro'])
+    assert.equal(journalContractKind(s), 'small', s);
+  for (const s of ['EURUSD', 'EURUSDm', 'XAUUSD.m', 'US30', 'BTCUSDC', '', null, undefined])
+    assert.equal(journalContractKind(s), 'std', String(s));
 }
 console.log('tradePlan recentLotSizes selftest OK');
 
