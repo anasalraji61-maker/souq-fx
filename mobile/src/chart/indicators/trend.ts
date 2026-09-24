@@ -678,10 +678,10 @@ export function computeVortex(
  * Klinger"): إيشيموكو الأصلي يرسم Senkou A/B **متقدّمَين displacement شمعة إلى الأمام** (إسقاط
  * مستقبلي فوق مساحة فارغة بعد آخر شمعة) — محرك هذا المخطط لا يحجز تلك المساحة المستقبلية فعلياً،
  * فالتصميم المعتمَد هنا يحافظ بدلاً من ذلك على **محاذاة السحابة الصحيحة فوق السعر التاريخي**: عند
- * كل نقطة i، تُحسَب Span A/B الخام من نافذة منتهية عند i−displacement (لا i نفسها) ثم تُرسَم عند i
+ * كل نقطة i، تُحسَب Span A/B الخام من نافذة منتهية عند i−(displacement−1) (لا i نفسها؛ الشمعة الحالية أولى الـ26 كـTradingView) ثم تُرسَم عند i
  * — نفس الأثر البصري الذي يراه المتداول للسحابة الحالية فوق السعر الحالي فعلياً، فقط بلا امتداد
  * لمساحة مستقبلية غير موجودة أصلاً بهذا المخطط. Chikou Span (الخط المتأخر) = الإغلاق نفسه *مُزاح
- * displacement شمعة للخلف* (Chikou[i]=إغلاق[i+displacement]، يبقى ضمن حدود المصفوفة الحالية بعكس
+ * displacement شمعة للخلف* (Chikou[i]=إغلاق[i+displacement−1]، يبقى ضمن حدود المصفوفة الحالية بعكس
  * Span A/B، بلا حاجة لأي قرار تصميم خاص — غير معرَّف فقط لآخر displacement شمعة كما بالتعريف
  * الأصلي تماماً، لعدم وجود إغلاق مستقبلي بعد لتلك النقاط). **تحقّق يدوي**: سعر ثابت تماماً
  * (أعلى=أدنى=إغلاق=P لكل شمعة) → أعلى قمة=أدنى قاع=P لأي نافذة → Tenkan=Kijun=P دائماً بعد
@@ -726,13 +726,17 @@ export function computeIchimoku(
   const spanA: (number | null)[] = new Array(n).fill(null);
   const spanB: (number | null)[] = new Array(n).fill(null);
   const chikou: (number | null)[] = new Array(n).fill(null);
+  // الإزاحة الفعلية displacement−1 كـTradingView (`offset = displacement - 1` للسحابة و`-displacement + 1`
+  // للمتأخر: الشمعة الحالية هي الأولى من الـ26) — بـdisplacement كاملاً كانت السحابة كلها متأخرة شمعة عن
+  // TradingView والمتأخر متقدّماً شمعة، فكل التواء للسحابة وحافّتها على شمعة غير شمعته.
+  const shift = Math.max(0, displacement - 1);
   for (let i = 0; i < n; i++) {
-    if (i >= displacement) {
-      spanA[i] = spanARaw[i - displacement];
-      spanB[i] = spanBRaw[i - displacement];
+    if (i >= shift) {
+      spanA[i] = spanARaw[i - shift];
+      spanB[i] = spanBRaw[i - shift];
     }
-    if (i + displacement < n) {
-      chikou[i] = candles[i + displacement].close;
+    if (i + shift < n) {
+      chikou[i] = candles[i + shift].close;
     }
   }
   return { tenkan, kijun, spanA, spanB, chikou };
