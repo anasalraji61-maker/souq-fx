@@ -57,7 +57,25 @@ export function isForexMarketOpen(symbol: string, now: Date = new Date()): boole
   if (day === 6) return false; // السبت: مغلق طوال اليوم
   if (day === 0 && sec < nyFivePmUtcSec(dayStart)) return false; // الأحد قبل الافتتاح
   if (day === 5 && sec >= nyFivePmUtcSec(dayStart)) return false; // الجمعة بعد الإغلاق
+  if (isForexHolidaySession(sec)) return false;
   return true;
+}
+
+/**
+ * جلسة عطلة الفوركس (25 ديسمبر، 1 يناير)؟ كان «السوق مفتوح» يُعرض يومَي الميلاد ورأس السنة
+ * والسيولة صفر والمنصّات مغلقة. الجلسة تُسمّى باليوم الذي تنتهي فيه (تبدأ 17:00 نيويورك من
+ * اليوم السابق)، فجلسة «25 ديسمبر» من مساء 24 حتى مساء 25 — تبسيط لإغلاق أغلب الوسطاء (قد يُغلق
+ * بعضهم مبكّراً في 24 و31 ديسمبر). العطل الوطنية الأخرى لا تُغلق سوق الفوركس كلّه فلا تُحسب.
+ */
+export function isForexHolidaySession(sec: number): boolean {
+  const dayStart = Math.floor(sec / DAY_SEC) * DAY_SEC;
+  const today = nyFivePmUtcSec(dayStart);
+  const sessionStart = sec >= today ? today : nyFivePmUtcSec(dayStart - DAY_SEC);
+  // بداية الجلسة 21:00/22:00 UTC ⇒ +6 ساعات تقع بيوم اسمها.
+  const d = new Date((sessionStart + 6 * 3600) * 1000);
+  const m = d.getUTCMonth();
+  const dd = d.getUTCDate();
+  return (m === 11 && dd === 25) || (m === 0 && dd === 1);
 }
 
 /**
