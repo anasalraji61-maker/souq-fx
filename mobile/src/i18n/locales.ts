@@ -2145,7 +2145,7 @@ const enUS: Dict = {
   riskCalcUseLivePrice: '↓ Entry = current price',
   riskCalcUseLivePriceA11y: 'Fill the entry with the current market price (Ask for buy, Bid for sell, from where the stop sits)',
   riskCalcLiveFilled: '✓ Entry from the current price:',
-  riskCalcLiveSideMoved: '✓ Entry moved to {quote} ({side} price): {price}',
+  riskCalcLiveSideMoved: '✓ {side} at {quote} — entry moved to {price}',
   riskCalcNoLiveQuote: 'No live price for this symbol right now — type the entry manually',
   riskCalcDisclaimer: 'Educational estimate: contract specs (especially gold) can differ at your broker — check before trading.',
   toolsTabRisk: 'Risk',
