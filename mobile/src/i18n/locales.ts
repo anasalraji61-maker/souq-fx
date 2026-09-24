@@ -485,6 +485,11 @@ export type Dict = {
   journalInvalidEntry: string;
   journalResultR: string;
   journalNoteA11y: string;
+  /**
+   * تحت خانة الملاحظة حين تحمل (أو ستحمل بالحفظ) علامة الوقف الأصلي «1R @ …» (`noteWithInitialStop`/`initialStop` بـ`tradePlan.ts`):
+   * `{stop}` سعر الوقف الأصلي. يشرح لماذا ظهر النصّ بملاحظته وما يحدث إن حذفه.
+   */
+  journalInitialStopNote: string;
   journalAddA11y: string;
   journalAddBtn: string;
   journalAddError: string;
@@ -1520,6 +1525,8 @@ const ar: Dict = {
   journalInvalidEntry: 'اكتب رمزاً صحيحاً (مثل EURUSD أو XAUUSD) وسعر الدخول',
   journalResultR: 'النتيجة {r}',
   journalNoteA11y: 'ملاحظة الصفقة (اختياري)',
+  journalInitialStopNote:
+    '«1R @ {stop}» بالملاحظة يحفظ وقفك الأصلي عند الدخول: منه تُقاس النتيجة بـR ونسبة R:R المخطَّطة مهما حرّكت الوقف بعده. احذفه فتُقاس من الوقف الحالي',
   journalAddA11y: 'إضافة صفقة جديدة',
   journalAddBtn: 'إضافة صفقة',
   journalAddError: 'تعذر إضافة الصفقة — تحقق من الاتصال وحاول مرة أخرى',
@@ -2560,6 +2567,8 @@ const enUS: Dict = {
   journalInvalidEntry: 'Enter a valid symbol (e.g. EURUSD or XAUUSD) and the entry price',
   journalResultR: 'Result {r}',
   journalNoteA11y: 'Trade note (optional)',
+  journalInitialStopNote:
+    '"1R @ {stop}" in the note keeps your stop from when you entered: your R result and planned R:R are measured from it, however you move the stop later. Delete it to measure from the current stop',
   journalAddA11y: 'Add a new trade',
   journalAddBtn: 'Add trade',
   journalAddError: 'Could not add the trade — check your connection and try again',
@@ -3627,6 +3636,8 @@ const ku: Dict = {
   journalInvalidEntry: 'هێمایەکی دروست (وەک EURUSD یان XAUUSD) و نرخی چوونەژوورەوە بنووسە',
   journalResultR: 'ئەنجام {r}',
   journalNoteA11y: 'تێبینی مامەڵە (ئیختیاری)',
+  journalInitialStopNote:
+    '«1R @ {stop}» لە تێبینییەکەدا وەستانی سەرەتاییت لە کاتی چوونەژوورەوە دەپارێزێت: ئەنجامی R و ڕێژەی R:R ی پلاندانراو لەوەوە دەپێورێن، هەرچەندە دواتر وەستانەکە بجوڵێنیت. بیسڕەوە بۆ ئەوەی لە وەستانی ئێستاوە بپێورێت',
   journalAddA11y: 'زیادکردنی مامەڵەیەکی نوێ',
   journalAddBtn: 'زیادکردنی مامەڵە',
   journalAddError: 'نەکرا مامەڵە زیادبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
