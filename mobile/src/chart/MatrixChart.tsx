@@ -7646,8 +7646,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   />
                   {vwMacd.hist.map((v, i) => {
                     if (!g.valid(i)) return <View key={i} style={{ flex: 1 }} />;
-                    const m = vwMacd.macdLine[i];
-                    const sg = vwMacd.signal[i];
                     const bh = v == null ? 0 : g.barH(v);
                     return (
                       <View key={i} style={{ flex: 1, height: g.innerH, position: 'relative' }}>
@@ -7665,34 +7663,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                             }}
                           />
                         ) : null}
-                        {sg != null ? (
-                          <View
-                            style={{
-                              position: 'absolute',
-                              left: 0,
-                              right: 0,
-                              top: g.y(sg),
-                              height: 2,
-                              backgroundColor: colors.warn,
-                              opacity: 0.9,
-                            }}
-                          />
-                        ) : null}
-                        {m != null ? (
-                          <View
-                            style={{
-                              position: 'absolute',
-                              left: 0,
-                              right: 0,
-                              top: g.y(m),
-                              height: 2,
-                              backgroundColor: accent,
-                            }}
-                          />
-                        ) : null}
                       </View>
                     );
                   })}
+                  <PaneLineLayer
+                    innerH={g.innerH}
+                    y={g.y}
+                    lines={[
+                      { values: vwMacd.signal, color: colors.warn, opacity: 0.9 },
+                      { values: vwMacd.macdLine, color: accent },
+                    ]}
+                  />
                 </>
               );
             })()}
@@ -8556,39 +8537,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     pointerEvents="none"
                     style={[styles.paneZeroLine, { top: g.zeroY }]}
                   />
-                  {tsi.tsi.map((v, i) => {
-                    const sg = tsi.signal[i];
-                    if (v == null && sg == null) return <View key={i} style={{ flex: 1 }} />;
-                    return (
-                      <View key={i} style={{ flex: 1, height: g.innerH, position: 'relative' }}>
-                        {sg != null ? (
-                          <View
-                            style={{
-                              position: 'absolute',
-                              left: 0,
-                              right: 0,
-                              top: g.y(sg),
-                              height: 2,
-                              backgroundColor: colors.warn,
-                              opacity: 0.9,
-                            }}
-                          />
-                        ) : null}
-                        {v != null ? (
-                          <View
-                            style={{
-                              position: 'absolute',
-                              left: 0,
-                              right: 0,
-                              top: g.y(v),
-                              height: 2,
-                              backgroundColor: v >= (sg ?? v) ? colors.bull : colors.bear,
-                            }}
-                          />
-                        ) : null}
-                      </View>
-                    );
-                  })}
+                  <PaneLineLayer
+                    innerH={g.innerH}
+                    y={g.y}
+                    lines={[
+                      { values: tsi.signal, color: colors.warn, opacity: 0.9 },
+                      {
+                        values: tsi.tsi,
+                        // لون القطعة بجانبها من الإشارة عند طرفها الثاني — دلالة الشرطات السابقة.
+                        color: (i) => ((tsi.tsi[i] ?? 0) >= (tsi.signal[i] ?? tsi.tsi[i] ?? 0) ? colors.bull : colors.bear),
+                      },
+                    ]}
+                  />
                 </>
               );
             })()}
@@ -9459,39 +9419,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     pointerEvents="none"
                     style={[styles.paneZeroLine, { top: g.zeroY }]}
                   />
-                  {kst.kst.map((v, i) => {
-                    const sg = kst.signal[i];
-                    if (v == null && sg == null) return <View key={i} style={{ flex: 1 }} />;
-                    return (
-                      <View key={i} style={{ flex: 1, height: g.innerH, position: 'relative' }}>
-                        {sg != null ? (
-                          <View
-                            style={{
-                              position: 'absolute',
-                              left: 0,
-                              right: 0,
-                              top: g.y(sg),
-                              height: 2,
-                              backgroundColor: colors.warn,
-                              opacity: 0.9,
-                            }}
-                          />
-                        ) : null}
-                        {v != null ? (
-                          <View
-                            style={{
-                              position: 'absolute',
-                              left: 0,
-                              right: 0,
-                              top: g.y(v),
-                              height: 2,
-                              backgroundColor: v >= (sg ?? v) ? colors.bull : colors.bear,
-                            }}
-                          />
-                        ) : null}
-                      </View>
-                    );
-                  })}
+                  <PaneLineLayer
+                    innerH={g.innerH}
+                    y={g.y}
+                    lines={[
+                      { values: kst.signal, color: colors.warn, opacity: 0.9 },
+                      {
+                        values: kst.kst,
+                        // لون القطعة بجانبها من الإشارة عند طرفها الثاني — دلالة الشرطات السابقة.
+                        color: (i) => ((kst.kst[i] ?? 0) >= (kst.signal[i] ?? kst.kst[i] ?? 0) ? colors.bull : colors.bear),
+                      },
+                    ]}
+                  />
                 </>
               );
             })()}
@@ -9853,39 +9792,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     pointerEvents="none"
                     style={[styles.paneZeroLine, { top: g.zeroY }]}
                   />
-                  {pmo.pmo.map((v, i) => {
-                    const sg = pmo.signal[i];
-                    if (v == null && sg == null) return <View key={i} style={{ flex: 1 }} />;
-                    return (
-                      <View key={i} style={{ flex: 1, height: g.innerH, position: 'relative' }}>
-                        {sg != null ? (
-                          <View
-                            style={{
-                              position: 'absolute',
-                              left: 0,
-                              right: 0,
-                              top: g.y(sg),
-                              height: 2,
-                              backgroundColor: colors.warn,
-                              opacity: 0.9,
-                            }}
-                          />
-                        ) : null}
-                        {v != null ? (
-                          <View
-                            style={{
-                              position: 'absolute',
-                              left: 0,
-                              right: 0,
-                              top: g.y(v),
-                              height: 2,
-                              backgroundColor: v >= (sg ?? v) ? colors.bull : colors.bear,
-                            }}
-                          />
-                        ) : null}
-                      </View>
-                    );
-                  })}
+                  <PaneLineLayer
+                    innerH={g.innerH}
+                    y={g.y}
+                    lines={[
+                      { values: pmo.signal, color: colors.warn, opacity: 0.9 },
+                      {
+                        values: pmo.pmo,
+                        // لون القطعة بجانبها من الإشارة عند طرفها الثاني — دلالة الشرطات السابقة.
+                        color: (i) => ((pmo.pmo[i] ?? 0) >= (pmo.signal[i] ?? pmo.pmo[i] ?? 0) ? colors.bull : colors.bear),
+                      },
+                    ]}
+                  />
                 </>
               );
             })()}
@@ -10157,8 +10075,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   />
                   {macd.hist.map((v, i) => {
                     if (!g.valid(i)) return <View key={i} style={{ flex: 1 }} />;
-                    const m = macd.macdLine[i];
-                    const sg = macd.signal[i];
                     const bh = v == null ? 0 : g.barH(v);
                     return (
                       <View key={i} style={{ flex: 1, height: g.innerH, position: 'relative' }}>
@@ -10178,34 +10094,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                             }}
                           />
                         ) : null}
-                        {sg != null ? (
-                          <View
-                            style={{
-                              position: 'absolute',
-                              left: 0,
-                              right: 0,
-                              top: g.y(sg),
-                              height: 2,
-                              backgroundColor: colors.warn,
-                              opacity: 0.9,
-                            }}
-                          />
-                        ) : null}
-                        {m != null ? (
-                          <View
-                            style={{
-                              position: 'absolute',
-                              left: 0,
-                              right: 0,
-                              top: g.y(m),
-                              height: 2,
-                              backgroundColor: accent,
-                            }}
-                          />
-                        ) : null}
                       </View>
                     );
                   })}
+                  <PaneLineLayer
+                    innerH={g.innerH}
+                    y={g.y}
+                    lines={[
+                      { values: macd.signal, color: colors.warn, opacity: 0.9 },
+                      { values: macd.macdLine, color: accent },
+                    ]}
+                  />
                 </>
               );
             })()}
@@ -10220,42 +10119,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             <PaneGuideLines paneId="stoch" innerH={paneH - 16} />
             {(() => {
               // %D كان محسوباً ولا يُرسم — والتقاطع بينه وبين %K هو غرض المؤشّر كلّه.
-              // نفس نمط حاوية MACD: عمود `position: 'relative'` لكل شمعة يحمل الخطّين معاً.
               const g = stochPaneGeom(paneH);
-              return stoch.k.map((v, i) => {
-                const kY = g.y(v);
-                const dY = g.y(stoch.d[i]);
-                if (kY == null && dY == null) return <View key={i} style={{ flex: 1 }} />;
-                return (
-                  <View key={i} style={{ flex: 1, height: g.innerH, position: 'relative' }}>
-                    {dY != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          top: dY,
-                          height: STOCH_LINE_H,
-                          backgroundColor: colors.warn,
-                          opacity: 0.9,
-                        }}
-                      />
-                    ) : null}
-                    {kY != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          top: kY,
-                          height: STOCH_LINE_H,
-                          backgroundColor: accent,
-                        }}
-                      />
-                    ) : null}
-                  </View>
-                );
-              });
+              // %K و%D قطعاً متّصلة (`PaneLineLayer`) لا شرطة لكل عمود: تقاطعهما يقع غالباً **بين**
+              // شمعتين، والشرطتان المنفصلتان عند 80/20 تُظهران درجتين لا عبوراً. `g.y` حافّة خطّ
+              // بسُمك STOCH_LINE_H مقصوصة داخل المساحة، فمركزه نصف السُّمك تحتها.
+              const y = (v: number) => (g.y(v) ?? NaN) + STOCH_LINE_H / 2;
+              return (
+                <PaneLineLayer
+                  innerH={g.innerH}
+                  y={y}
+                  lines={[
+                    { values: stoch.d, color: colors.warn, opacity: 0.9 },
+                    { values: stoch.k, color: accent },
+                  ]}
+                />
+              );
             })()}
           </View>
         </View>
