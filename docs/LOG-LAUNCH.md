@@ -1147,3 +1147,36 @@
 ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
 
 **يحتاج جهازاً**: البنود 65–67 — خاصةً 65 (هل «⏪» وحدها مفهومة) و66 (متداول السنت أمام الحاسبة). وصف المتجر لم يُلمس.
+
+## 2026-09-24 — التشغيلة الخامسة والثلاثون
+
+تتبع `b7ca977` («إجمالي PnL %» المعاكس للمال) و`975782b` (تحذير الوقف الأضيق من pip بلا هدف)، وتغلق من جهتي طلبين قائمين لوكيل
+الأدوات منذ تشغيلات. التحقّق بـNode 22 (`/tmp/node-v22.11.0-linux-x64`) و`tsc` من `/tmp/ts5` (`--strict --noEmit --skipLibCheck
+--target es2020`) على `locales.ts` نظيف بعد كل مفتاح، صفر `U+FFFD`. **لم يُشغَّل التطبيق.**
+
+1. **`locales.ts`** (`44abaad`) ar/en/ku: `riskCalcStopInsideSpread` («الوقف ({sl} نقطة) ليس أبعد من السبريد ({spread} نقطة) — قد
+   يُضرب فور فتح الصفقة. وسّع الوقف وقلّل اللوت، أو انتظر سبريداً أضيق»). طلبه وكيل الأدوات بـ`LOG-TOOLS.md`. **جاهز غير موصول.**
+2. **`locales.ts`** (`1ab0b2a`) ar/en/ku: `newsUnavailable` («تعذّر تحميل تقويم الأخبار — لا نعرف إن كان خبر قوي قريباً؛ تحقّق قبل
+   الدخول») — الشريط اليوم لا يفرّق بين «لا خبر» و«فشل التقويم». **جاهز غير موصول.**
+3. **`locales.ts`** (`c51f712`) ar/en/ku: `journalStatPriceMoveSum` («مجموع حركة السعر (بلا حجم الصفقة): {pct}%») — تحقّقت أن
+   `db.trade_stats` (`backend/db.py:1853`) يجمع `_pnl_pct` لكل صفقة بلا حجم؛ «إجمالي PnL» يوحي بربح الحساب. **جاهز غير موصول.**
+4. **`FEATURE-INVENTORY.md` + `RELEASE-MOBILE.md` §5** (`e206eee`): `stopTooClose` بوقفٍ وحده، و`pnlPctContradictsCash` بشروطه
+   (حجم معروف لكل صفقة مغلقة ظاهرة، أداة معروفة، صافٍ بإشارة واحدة لكل عملة)؛ البندان 68–69.
+
+### طلب تنسيق — لوكيل الأدوات (جديد + قائم)
+- `PositionSizePanel.tsx`: حين مسافة الوقف بالنقاط ≤ السبريد المكتوب، `t.riskCalcStopInsideSpread` (`{sl}`، `{spread}` بالنقاط كما تُعرض).
+- `NewsRiskBanner.tsx`: حين `cache` فشل بلا تقويم محفوظ، `t.newsUnavailable` بدل لا شيء.
+- `TradeJournalPanel.tsx`: `t.journalStatPriceMoveSum` بدل `t.journalStatTotalPnl` (الموضع نفسه، `{pct}` نفسها) — يبقى الإخفاء
+  بـ`pnlPctContradictsCash` كما هو.
+- قائم: `riskCalcCentSymbolHint` (`PositionSizePanel.tsx` — ما زال `riskCalcBadSymbol` لـ«USDJPYc»، تحقّقت بـgrep).
+
+### طلب تنسيق — لوكيل الشارت — قائم بلا تغيير (تحقّقت بـgrep)
+- `ChartFrame.tsx`: `t.cfReplayPriceA11y` لـ«⏪»؛ `FocusChartModal.tsx:279` ما زال `liveTick?.price ?? series.last` بالإعادة؛
+  `mcAutoA11y`/`mcAutoManualA11y`؛ `mcHintSelect`/`mcHintSelected` و`mcHint*Web`؛ `clearAllBody` ← `tr.mcClearAllBody`
+  (`MatrixChart.tsx:4493`/`10665`)؛ و`` `Bar Replay · …` `` الحرفي بـ`MatrixChart.tsx:4596` ← `tr.mcReplayReadout` (`ip-legal-caution.mdc`).
+
+**خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (`backend/openrouter_ai.py` «خبير تداول»، `lot` الثابتة، `₴`، `extra.apiUrl` المحلي
+ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
+و`db.trade_stats` نفسه قد يحسب إجمالي المال بالحجم بدل النسب — للخادم.
+
+**يحتاج جهازاً**: البنود 68–69 — خاصةً 69 (هل يلاحظ المتداول غياب السطر أو يستغربه). وصف المتجر لم يُلمس.
