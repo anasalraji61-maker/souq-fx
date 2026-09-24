@@ -18,6 +18,14 @@ assert.deepEqual(zoomWindow(500, 2, 0, 1.25), { count: 3, offset: 0 });
 // الحدّان
 assert.deepEqual(zoomWindow(500, 2, 0, 0.5), { count: 2, offset: 0 });
 assert.deepEqual(zoomWindow(5000, 1000, 0, 1.25), { count: 1000, offset: 0 });
+// لا تصغير فوق طول السلسلة: 180 شمعة ⇒ السقف 180، والضغطة + التالية تتحرّك فوراً
+assert.deepEqual(zoomWindow(180, 156, 0, 1.25), { count: 180, offset: 0 });
+assert.deepEqual(zoomWindow(180, 180, 0, 1.25), { count: 180, offset: 0 });
+assert.deepEqual(zoomWindow(180, 1000, 0, 0.8), { count: 144, offset: 0 });
+// نافذة أكبر من السلسلة (Renko بـ30 لبنة، العدد 80): أوّل تكبير يُرى
+assert.deepEqual(zoomWindow(30, 80, 0, 0.8), { count: 24, offset: 0 });
+// سلسلة لم تُحمَّل بعد: الحدّ كما كان
+assert.deepEqual(zoomWindow(0, 80, 0, 1.25), { count: 100, offset: 0 });
 // عامل غير صالح لا يغيّر شيئاً
 assert.deepEqual(zoomWindow(500, 80, 7, NaN), { count: 80, offset: 7 });
 assert.deepEqual(zoomWindow(500, 80, 7, 1), { count: 80, offset: 7 });

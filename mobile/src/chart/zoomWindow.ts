@@ -9,7 +9,9 @@
  * - `offset = 0` (يتابع الحيّ) ⇒ الطرف الأيمن مثبَّت، الشمعة الجارية تبقى ظاهرة.
  * - غير ذلك ⇒ حول مركز النافذة، مقيَّداً بطرفَي السلسلة.
  * - كل ضغطة تغيّر العدد شمعةً على الأقلّ (عند نافذة صغيرة قد يُقرَّب العامل إلى لا شيء).
- * - العدد بين `min` و`max`.
+ * - العدد بين `min` و`max`، و`max` لا يتجاوز طول السلسلة: الخادم يعيد ~180 شمعة، فكان
+ *   التصغير يصعد 195، 244… حتى 1000 بلا أيّ تغيير مرئيّ، ثم يلزم ~8 ضغطات + قبل أن يتحرّك
+ *   الشارت. وكذلك عدد أكبر من السلسلة سلفاً (Renko بـ30 لبنة بنافذة 80) يُقرأ بطولها.
  */
 export type ZoomWindow = { count: number; offset: number };
 
@@ -21,6 +23,7 @@ export function zoomWindow(
   min = 2,
   max = 1000
 ): ZoomWindow {
+  if (allLen > 0) max = Math.max(min, Math.min(max, allLen));
   const cur = Math.max(min, Math.min(max, Math.round(count)));
   const off = Math.max(0, Math.round(offset));
   if (!Number.isFinite(factor) || factor <= 0 || factor === 1) return { count: cur, offset: off };
