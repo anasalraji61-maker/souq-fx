@@ -1208,7 +1208,7 @@ const ar: Dict = {
   riskCalcSymbol: 'الأداة',
   riskCalcBadSymbol: 'رمز غير مدعوم — استخدم زوجاً من 6 أحرف مثل EURUSD أو XAUUSD',
   riskCalcCentSymbolHint:
-    '«{symbol}» رمز حساب سنت — الحاسبة تحسب لوت الحساب العادي فقط، وعقد السنت أصغر. لحساب عادي اكتب {pair}',
+    '«{symbol}» رمز حساب سنت — الحاسبة تحسب لوت الحساب العادي فقط، وعقد السنت أصغر بمئة مرّة. لحساب عادي اكتب {pair}',
   appCrashTitle: 'حدث خطأ غير متوقع',
   appCrashBody: 'تعذّر عرض هذه الشاشة. بياناتك ورسوماتك محفوظة — اضغط «إعادة المحاولة» للمتابعة.',
   appCrashRepeatBody:
@@ -2123,7 +2123,7 @@ const enUS: Dict = {
   riskCalcSymbol: 'Instrument',
   riskCalcBadSymbol: 'Unsupported symbol — use a 6-letter pair like EURUSD or XAUUSD',
   riskCalcCentSymbolHint:
-    '“{symbol}” is a cent-account symbol — the calculator sizes standard-account lots only, and a cent lot is smaller. For a standard account type {pair}',
+    '“{symbol}” is a cent-account symbol — the calculator sizes standard-account lots only, and a cent lot is 100 times smaller. For a standard account type {pair}',
   appCrashTitle: 'Something went wrong',
   appCrashBody: 'This screen could not be displayed. Your data and drawings are safe — tap “Try again” to continue.',
   appCrashRepeatBody:
@@ -3063,7 +3063,7 @@ const ku: Dict = {
   riskCalcSymbol: 'ئامراز',
   riskCalcBadSymbol: 'هێمای پشتگیری نەکراو — جووتێکی 6 پیتی وەک EURUSD یان XAUUSD بەکاربهێنە',
   riskCalcCentSymbolHint:
-    '«{symbol}» هێمای هەژماری سەنتە — ژمێرەرەکە تەنها لۆتی هەژماری ئاسایی دەژمێرێت، و لۆتی سەنت بچووکترە. بۆ هەژماری ئاسایی {pair} بنووسە',
+    '«{symbol}» هێمای هەژماری سەنتە — ژمێرەرەکە تەنها لۆتی هەژماری ئاسایی دەژمێرێت، و لۆتی سەنت سەد جار بچووکترە. بۆ هەژماری ئاسایی {pair} بنووسە',
   appCrashTitle: 'هەڵەیەکی چاوەڕواننەکراو ڕوویدا',
   appCrashBody: 'ئەم شاشەیە نیشان نەدرا. زانیاری و کێشانەکانت پارێزراون — «دووبارە هەوڵبدەرەوە» دابگرە.',
   appCrashRepeatBody:
