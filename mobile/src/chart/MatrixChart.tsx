@@ -54,6 +54,7 @@ import {
 import { barCloseCountdown } from './barCountdown';
 import { BarCountdown } from './BarCountdown';
 import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime, stepCrossBar } from './crossAnchor';
+import { indicatorBase, trimIndicator } from './indicatorWindow';
 import {
   axisTickCount,
   axisTickRatios,
@@ -1744,51 +1745,59 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       .filter((x) => x.candles.length > 0);
   }, [shadowSeries, shadowTags, source.plot]);
 
-  const closes = source.plot.map((c) => c.close);
-  const overlays = useMemo(() => computeOverlays(closes), [closes]);
+  // المؤشرات على التاريخ حتى آخر شمعة معروضة ثم تُقصّ للنافذة (`indicatorWindow.ts`): كانت على
+  // المعروضة وحدها فيفرغ يسارها، ولا تظهر سحابة Ichimoku، وتتغيّر قيمة الشمعة نفسها بالسحب.
+  const indBase = useMemo(
+    () => indicatorBase(source.all, source.start, source.plot),
+    [source.all, source.start, source.plot]
+  );
+  const indBars = indBase.bars;
+  const closes = useMemo(() => indBars.map((c) => c.close), [indBars]);
+  const ind = <R,>(r: R): R => trimIndicator(r, indBars.length, indBase.cut);
+  const overlays = useMemo(() => ind(computeOverlays(closes)), [closes]);
   const rsi = useMemo(
-    () => (indicators.includes('rsi') ? computeRsi(closes) : null),
+    () => (indicators.includes('rsi') ? ind(computeRsi(closes)) : null),
     [closes, indicators]
   );
   const macd = useMemo(
-    () => (indicators.includes('macd') ? computeMacd(closes) : null),
+    () => (indicators.includes('macd') ? ind(computeMacd(closes)) : null),
     [closes, indicators]
   );
   const stoch = useMemo(
-    () => (indicators.includes('stoch') ? computeStoch(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('stoch') ? ind(computeStoch(indBars)) : null),
+    [indBars, indicators]
   );
   const atr = useMemo(
-    () => (indicators.includes('atr') ? computeAtr(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('atr') ? ind(computeAtr(indBars)) : null),
+    [indBars, indicators]
   );
   const willr = useMemo(
-    () => (indicators.includes('willr') ? computeWilliamsR(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('willr') ? ind(computeWilliamsR(indBars)) : null),
+    [indBars, indicators]
   );
   const cci = useMemo(
-    () => (indicators.includes('cci') ? computeCci(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('cci') ? ind(computeCci(indBars)) : null),
+    [indBars, indicators]
   );
   const roc = useMemo(
-    () => (indicators.includes('roc') ? computeRoc(closes) : null),
+    () => (indicators.includes('roc') ? ind(computeRoc(closes)) : null),
     [closes, indicators]
   );
   const vwap = useMemo(
-    () => (indicators.includes('vwap') ? computeVwap(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('vwap') ? ind(computeVwap(indBars)) : null),
+    [indBars, indicators]
   );
   const vwapBands = useMemo(
-    () => (indicators.includes('vwapBands') ? computeVwapBands(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('vwapBands') ? ind(computeVwapBands(indBars)) : null),
+    [indBars, indicators]
   );
   const twap = useMemo(
-    () => (indicators.includes('twap') ? computeTwap(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('twap') ? ind(computeTwap(indBars)) : null),
+    [indBars, indicators]
   );
   const obv = useMemo(
-    () => (indicators.includes('obv') ? computeObv(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('obv') ? ind(computeObv(indBars)) : null),
+    [indBars, indicators]
   );
   /**
    * أحجام نافذة الرسم كسلسلة — لرأس لوحة الفوليوم وحده؛ الأعمدة تقرأ `source.plot`
@@ -1803,548 +1812,548 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [source.plot, indicators]
   );
   const mfi = useMemo(
-    () => (indicators.includes('mfi') ? computeMfi(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('mfi') ? ind(computeMfi(indBars)) : null),
+    [indBars, indicators]
   );
   const adx = useMemo(
-    () => (indicators.includes('adx') ? computeAdx(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('adx') ? ind(computeAdx(indBars)) : null),
+    [indBars, indicators]
   );
   const psar = useMemo(
-    () => (indicators.includes('psar') ? computePsar(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('psar') ? ind(computePsar(indBars)) : null),
+    [indBars, indicators]
   );
   const gannHiLo = useMemo(
-    () => (indicators.includes('gannHiLo') ? computeGannHiLo(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('gannHiLo') ? ind(computeGannHiLo(indBars)) : null),
+    [indBars, indicators]
   );
   const stddev = useMemo(
-    () => (indicators.includes('stddev') ? computeStdDev(closes) : null),
+    () => (indicators.includes('stddev') ? ind(computeStdDev(closes)) : null),
     [closes, indicators]
   );
   const aroon = useMemo(
-    () => (indicators.includes('aroon') ? computeAroonOsc(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('aroon') ? ind(computeAroonOsc(indBars)) : null),
+    [indBars, indicators]
   );
   const cmf = useMemo(
-    () => (indicators.includes('cmf') ? computeCmf(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('cmf') ? ind(computeCmf(indBars)) : null),
+    [indBars, indicators]
   );
   const supertrend = useMemo(
-    () => (indicators.includes('supertrend') ? computeSuperTrend(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('supertrend') ? ind(computeSuperTrend(indBars)) : null),
+    [indBars, indicators]
   );
   const keltner = useMemo(
-    () => (indicators.includes('keltner') ? computeKeltner(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('keltner') ? ind(computeKeltner(indBars)) : null),
+    [indBars, indicators]
   );
   const envelopes = useMemo(
-    () => (indicators.includes('envelopes') ? computeEnvelopes(closes) : null),
+    () => (indicators.includes('envelopes') ? ind(computeEnvelopes(closes)) : null),
     [closes, indicators]
   );
   const donchian = useMemo(
-    () => (indicators.includes('donchian') ? computeDonchian(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('donchian') ? ind(computeDonchian(indBars)) : null),
+    [indBars, indicators]
   );
   const ultimateOsc = useMemo(
-    () => (indicators.includes('ultimateOsc') ? computeUltimateOsc(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('ultimateOsc') ? ind(computeUltimateOsc(indBars)) : null),
+    [indBars, indicators]
   );
   const cmo = useMemo(
-    () => (indicators.includes('cmo') ? computeCmo(closes) : null),
+    () => (indicators.includes('cmo') ? ind(computeCmo(closes)) : null),
     [closes, indicators]
   );
   const trix = useMemo(
-    () => (indicators.includes('trix') ? computeTrix(closes) : null),
+    () => (indicators.includes('trix') ? ind(computeTrix(closes)) : null),
     [closes, indicators]
   );
   const force = useMemo(
-    () => (indicators.includes('force') ? computeForceIndex(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('force') ? ind(computeForceIndex(indBars)) : null),
+    [indBars, indicators]
   );
   const chaikinOsc = useMemo(
-    () => (indicators.includes('chaikinOsc') ? computeChaikinOsc(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('chaikinOsc') ? ind(computeChaikinOsc(indBars)) : null),
+    [indBars, indicators]
   );
   const dpo = useMemo(
-    () => (indicators.includes('dpo') ? computeDpo(closes) : null),
+    () => (indicators.includes('dpo') ? ind(computeDpo(closes)) : null),
     [closes, indicators]
   );
   const ao = useMemo(
-    () => (indicators.includes('ao') ? computeAwesomeOsc(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('ao') ? ind(computeAwesomeOsc(indBars)) : null),
+    [indBars, indicators]
   );
   const ac = useMemo(
-    () => (indicators.includes('ac') ? computeAcceleratorOsc(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('ac') ? ind(computeAcceleratorOsc(indBars)) : null),
+    [indBars, indicators]
   );
   const bop = useMemo(
-    () => (indicators.includes('bop') ? computeBop(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('bop') ? ind(computeBop(indBars)) : null),
+    [indBars, indicators]
   );
   const bullPower = useMemo(
-    () => (indicators.includes('bullPower') ? computeBullPower(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('bullPower') ? ind(computeBullPower(indBars)) : null),
+    [indBars, indicators]
   );
   const bearPower = useMemo(
-    () => (indicators.includes('bearPower') ? computeBearPower(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('bearPower') ? ind(computeBearPower(indBars)) : null),
+    [indBars, indicators]
   );
   const tsi = useMemo(
-    () => (indicators.includes('tsi') ? computeTsi(closes) : null),
+    () => (indicators.includes('tsi') ? ind(computeTsi(closes)) : null),
     [closes, indicators]
   );
   const coppock = useMemo(
-    () => (indicators.includes('coppock') ? computeCoppock(closes) : null),
+    () => (indicators.includes('coppock') ? ind(computeCoppock(closes)) : null),
     [closes, indicators]
   );
   const eom = useMemo(
-    () => (indicators.includes('eom') ? computeEom(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('eom') ? ind(computeEom(indBars)) : null),
+    [indBars, indicators]
   );
   const nvi = useMemo(
-    () => (indicators.includes('nvi') ? computeNvi(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('nvi') ? ind(computeNvi(indBars)) : null),
+    [indBars, indicators]
   );
   const massIndex = useMemo(
-    () => (indicators.includes('massIndex') ? computeMassIndex(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('massIndex') ? ind(computeMassIndex(indBars)) : null),
+    [indBars, indicators]
   );
   const ppo = useMemo(
-    () => (indicators.includes('ppo') ? computePpo(closes) : null),
+    () => (indicators.includes('ppo') ? ind(computePpo(closes)) : null),
     [closes, indicators]
   );
   const chaikinVol = useMemo(
-    () => (indicators.includes('chaikinVol') ? computeChaikinVolatility(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('chaikinVol') ? ind(computeChaikinVolatility(indBars)) : null),
+    [indBars, indicators]
   );
   const qstick = useMemo(
-    () => (indicators.includes('qstick') ? computeQstick(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('qstick') ? ind(computeQstick(indBars)) : null),
+    [indBars, indicators]
   );
   const chop = useMemo(
-    () => (indicators.includes('chop') ? computeChoppiness(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('chop') ? ind(computeChoppiness(indBars)) : null),
+    [indBars, indicators]
   );
   const bwmfi = useMemo(
-    () => (indicators.includes('bwmfi') ? computeBwMfi(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('bwmfi') ? ind(computeBwMfi(indBars)) : null),
+    [indBars, indicators]
   );
   const pvo = useMemo(
-    () => (indicators.includes('pvo') ? computePvo(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('pvo') ? ind(computePvo(indBars)) : null),
+    [indBars, indicators]
   );
   const apo = useMemo(
-    () => (indicators.includes('apo') ? computeApo(closes) : null),
+    () => (indicators.includes('apo') ? ind(computeApo(closes)) : null),
     [closes, indicators]
   );
   const vo = useMemo(
-    () => (indicators.includes('vo') ? computeVolumeOscillator(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('vo') ? ind(computeVolumeOscillator(indBars)) : null),
+    [indBars, indicators]
   );
   const vpt = useMemo(
-    () => (indicators.includes('vpt') ? computeVpt(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('vpt') ? ind(computeVpt(indBars)) : null),
+    [indBars, indicators]
   );
   const hv = useMemo(
-    () => (indicators.includes('hv') ? computeHistoricalVolatility(closes) : null),
+    () => (indicators.includes('hv') ? ind(computeHistoricalVolatility(closes)) : null),
     [closes, indicators]
   );
   const stochRsi = useMemo(
-    () => (indicators.includes('stochRsi') ? computeStochRsi(closes) : null),
+    () => (indicators.includes('stochRsi') ? ind(computeStochRsi(closes)) : null),
     [closes, indicators]
   );
   const rvi = useMemo(
-    () => (indicators.includes('rvi') ? computeRvi(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('rvi') ? ind(computeRvi(indBars)) : null),
+    [indBars, indicators]
   );
   const linRegSlope = useMemo(
-    () => (indicators.includes('linRegSlope') ? computeLinRegSlope(closes) : null),
+    () => (indicators.includes('linRegSlope') ? ind(computeLinRegSlope(closes)) : null),
     [closes, indicators]
   );
   const linRegR2 = useMemo(
-    () => (indicators.includes('linRegR2') ? computeLinRegR2(closes) : null),
+    () => (indicators.includes('linRegR2') ? ind(computeLinRegR2(closes)) : null),
     [closes, indicators]
   );
   const percentB = useMemo(
-    () => (indicators.includes('percentB') ? computePercentB(closes) : null),
+    () => (indicators.includes('percentB') ? ind(computePercentB(closes)) : null),
     [closes, indicators]
   );
   const bbw = useMemo(
-    () => (indicators.includes('bbw') ? computeBollingerBandwidth(closes) : null),
+    () => (indicators.includes('bbw') ? ind(computeBollingerBandwidth(closes)) : null),
     [closes, indicators]
   );
   const medianPrice = useMemo(
-    () => (indicators.includes('medianPrice') ? computeMedianPrice(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('medianPrice') ? ind(computeMedianPrice(indBars)) : null),
+    [indBars, indicators]
   );
   const typicalPrice = useMemo(
-    () => (indicators.includes('typicalPrice') ? computeTypicalPrice(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('typicalPrice') ? ind(computeTypicalPrice(indBars)) : null),
+    [indBars, indicators]
   );
   const weightedClose = useMemo(
-    () => (indicators.includes('weightedClose') ? computeWeightedClose(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('weightedClose') ? ind(computeWeightedClose(indBars)) : null),
+    [indBars, indicators]
   );
   const mcginley = useMemo(
-    () => (indicators.includes('mcginley') ? computeMcGinleyDynamic(closes) : null),
+    () => (indicators.includes('mcginley') ? ind(computeMcGinleyDynamic(closes)) : null),
     [closes, indicators]
   );
   const lsma = useMemo(
-    () => (indicators.includes('lsma') ? computeLsma(closes) : null),
+    () => (indicators.includes('lsma') ? ind(computeLsma(closes)) : null),
     [closes, indicators]
   );
   const tsf = useMemo(
-    () => (indicators.includes('tsf') ? computeTsf(closes) : null),
+    () => (indicators.includes('tsf') ? ind(computeTsf(closes)) : null),
     [closes, indicators]
   );
   const linRegChannel = useMemo(
-    () => (indicators.includes('linRegChannel') ? computeLinRegChannel(closes) : null),
+    () => (indicators.includes('linRegChannel') ? ind(computeLinRegChannel(closes)) : null),
     [closes, indicators]
   );
   const momentum = useMemo(
-    () => (indicators.includes('momentum') ? computeMomentum(closes) : null),
+    () => (indicators.includes('momentum') ? ind(computeMomentum(closes)) : null),
     [closes, indicators]
   );
   const vhf = useMemo(
-    () => (indicators.includes('vhf') ? computeVhf(closes) : null),
+    () => (indicators.includes('vhf') ? ind(computeVhf(closes)) : null),
     [closes, indicators]
   );
   const pvi = useMemo(
-    () => (indicators.includes('pvi') ? computePvi(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('pvi') ? ind(computePvi(indBars)) : null),
+    [indBars, indicators]
   );
   const ravi = useMemo(
-    () => (indicators.includes('ravi') ? computeRavi(closes) : null),
+    () => (indicators.includes('ravi') ? ind(computeRavi(closes)) : null),
     [closes, indicators]
   );
   const ulcer = useMemo(
-    () => (indicators.includes('ulcer') ? computeUlcerIndex(closes) : null),
+    () => (indicators.includes('ulcer') ? ind(computeUlcerIndex(closes)) : null),
     [closes, indicators]
   );
   const fisher = useMemo(
-    () => (indicators.includes('fisher') ? computeFisherTransform(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('fisher') ? ind(computeFisherTransform(indBars)) : null),
+    [indBars, indicators]
   );
   const kst = useMemo(
-    () => (indicators.includes('kst') ? computeKst(closes) : null),
+    () => (indicators.includes('kst') ? ind(computeKst(closes)) : null),
     [closes, indicators]
   );
   const vortex = useMemo(
-    () => (indicators.includes('vortex') ? computeVortex(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('vortex') ? ind(computeVortex(indBars)) : null),
+    [indBars, indicators]
   );
   const klinger = useMemo(
-    () => (indicators.includes('klinger') ? computeKlinger(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('klinger') ? ind(computeKlinger(indBars)) : null),
+    [indBars, indicators]
   );
   const ichimoku = useMemo(
-    () => (indicators.includes('ichimoku') ? computeIchimoku(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('ichimoku') ? ind(computeIchimoku(indBars)) : null),
+    [indBars, indicators]
   );
   const alligator = useMemo(
-    () => (indicators.includes('alligator') ? computeAlligator(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('alligator') ? ind(computeAlligator(indBars)) : null),
+    [indBars, indicators]
   );
   const gator = useMemo(() => {
     if (!indicators.includes('gator')) return null;
-    const alli = alligator ?? computeAlligator(source.plot);
+    const alli = alligator ?? ind(computeAlligator(indBars));
     return computeGator(alli.jaw, alli.teeth, alli.lips);
-  }, [source.plot, indicators, alligator]);
+  }, [indBars, indicators, alligator]);
   const vwma = useMemo(
-    () => (indicators.includes('vwma') ? computeVwma(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('vwma') ? ind(computeVwma(indBars)) : null),
+    [indBars, indicators]
   );
   const alma = useMemo(
-    () => (indicators.includes('alma') ? computeAlma(closes) : null),
+    () => (indicators.includes('alma') ? ind(computeAlma(closes)) : null),
     [closes, indicators]
   );
   const chandeKroll = useMemo(
-    () => (indicators.includes('chandeKroll') ? computeChandeKrollStop(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('chandeKroll') ? ind(computeChandeKrollStop(indBars)) : null),
+    [indBars, indicators]
   );
   const smi = useMemo(
-    () => (indicators.includes('smi') ? computeSmi(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('smi') ? ind(computeSmi(indBars)) : null),
+    [indBars, indicators]
   );
   const smiErgodic = useMemo(
     () =>
-      indicators.includes('smiErgodic') ? computeSmiErgodicOscillator(source.plot) : null,
-    [source.plot, indicators]
+      indicators.includes('smiErgodic') ? ind(computeSmiErgodicOscillator(indBars)) : null,
+    [indBars, indicators]
   );
   const dmi = useMemo(
-    () => (indicators.includes('dmi') ? computeDmi(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('dmi') ? ind(computeDmi(indBars)) : null),
+    [indBars, indicators]
   );
   const chandelierExit = useMemo(
-    () => (indicators.includes('chandelierExit') ? computeChandelierExit(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('chandelierExit') ? ind(computeChandelierExit(indBars)) : null),
+    [indBars, indicators]
   );
   const gmma = useMemo(
-    () => (indicators.includes('gmma') ? computeGmma(closes) : null),
+    () => (indicators.includes('gmma') ? ind(computeGmma(closes)) : null),
     [closes, indicators]
   );
   const rwi = useMemo(
-    () => (indicators.includes('rwi') ? computeRwi(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('rwi') ? ind(computeRwi(indBars)) : null),
+    [indBars, indicators]
   );
   const aroonUpDown = useMemo(
-    () => (indicators.includes('aroonUpDown') ? computeAroonUpDown(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('aroonUpDown') ? ind(computeAroonUpDown(indBars)) : null),
+    [indBars, indicators]
   );
   const zigzag = useMemo(
-    () => (indicators.includes('zigzag') ? computeZigZag(closes) : null),
+    () => (indicators.includes('zigzag') ? ind(computeZigZag(closes)) : null),
     [closes, indicators]
   );
   const adl = useMemo(
-    () => (indicators.includes('adl') ? computeAccumDist(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('adl') ? ind(computeAccumDist(indBars)) : null),
+    [indBars, indicators]
   );
   const fractals = useMemo(
-    () => (indicators.includes('fractals') ? computeFractals(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('fractals') ? ind(computeFractals(indBars)) : null),
+    [indBars, indicators]
   );
   const fractalChaosOsc = useMemo(
-    () => (indicators.includes('fractalChaosOsc') ? computeFractalChaosOsc(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('fractalChaosOsc') ? ind(computeFractalChaosOsc(indBars)) : null),
+    [indBars, indicators]
   );
   const fractalChaosBands = useMemo(
-    () => (indicators.includes('fractalChaosBands') ? computeFractalChaosBands(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('fractalChaosBands') ? ind(computeFractalChaosBands(indBars)) : null),
+    [indBars, indicators]
   );
   const elderImpulse = useMemo(
-    () => (indicators.includes('elderImpulse') ? computeElderImpulse(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('elderImpulse') ? ind(computeElderImpulse(indBars)) : null),
+    [indBars, indicators]
   );
   const t3 = useMemo(
-    () => (indicators.includes('t3') ? computeT3(closes) : null),
+    () => (indicators.includes('t3') ? ind(computeT3(closes)) : null),
     [closes, indicators]
   );
   const rvix = useMemo(
-    () => (indicators.includes('rvix') ? computeRelativeVolatilityIndex(closes) : null),
+    () => (indicators.includes('rvix') ? ind(computeRelativeVolatilityIndex(closes)) : null),
     [closes, indicators]
   );
   const smma20 = useMemo(
-    () => (indicators.includes('smma20') ? computeSmma(closes) : null),
+    () => (indicators.includes('smma20') ? ind(computeSmma(closes)) : null),
     [closes, indicators]
   );
   const kama = useMemo(
-    () => (indicators.includes('kama') ? computeKama(closes) : null),
+    () => (indicators.includes('kama') ? ind(computeKama(closes)) : null),
     [closes, indicators]
   );
   const frama = useMemo(
-    () => (indicators.includes('frama') ? computeFrama(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('frama') ? ind(computeFrama(indBars)) : null),
+    [indBars, indicators]
   );
   const parkinsonVol = useMemo(
-    () => (indicators.includes('parkinsonVol') ? computeParkinsonVolatility(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('parkinsonVol') ? ind(computeParkinsonVolatility(indBars)) : null),
+    [indBars, indicators]
   );
   const garmanKlassVol = useMemo(
-    () => (indicators.includes('garmanKlassVol') ? computeGarmanKlassVolatility(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('garmanKlassVol') ? ind(computeGarmanKlassVolatility(indBars)) : null),
+    [indBars, indicators]
   );
   const rogersSatchellVol = useMemo(
     () =>
-      indicators.includes('rogersSatchellVol') ? computeRogersSatchellVolatility(source.plot) : null,
-    [source.plot, indicators]
+      indicators.includes('rogersSatchellVol') ? ind(computeRogersSatchellVolatility(indBars)) : null,
+    [indBars, indicators]
   );
   const yangZhangVol = useMemo(
     () =>
-      indicators.includes('yangZhangVol') ? computeYangZhangVolatility(source.plot) : null,
-    [source.plot, indicators]
+      indicators.includes('yangZhangVol') ? ind(computeYangZhangVolatility(indBars)) : null,
+    [indBars, indicators]
   );
   const stc = useMemo(
-    () => (indicators.includes('stc') ? computeStc(closes) : null),
+    () => (indicators.includes('stc') ? ind(computeStc(closes)) : null),
     [closes, indicators]
   );
   const zlema = useMemo(
-    () => (indicators.includes('zlema') ? computeZlema(closes) : null),
+    () => (indicators.includes('zlema') ? ind(computeZlema(closes)) : null),
     [closes, indicators]
   );
   const cog = useMemo(
-    () => (indicators.includes('cog') ? computeCog(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('cog') ? ind(computeCog(indBars)) : null),
+    [indBars, indicators]
   );
   const squeeze = useMemo(
-    () => (indicators.includes('squeeze') ? computeSqueeze(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('squeeze') ? ind(computeSqueeze(indBars)) : null),
+    [indBars, indicators]
   );
   const netVolume = useMemo(
-    () => (indicators.includes('netVolume') ? computeNetVolume(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('netVolume') ? ind(computeNetVolume(indBars)) : null),
+    [indBars, indicators]
   );
   const pivotsHL = useMemo(
-    () => (indicators.includes('pivotsHL') ? computePivotsHighLow(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('pivotsHL') ? ind(computePivotsHighLow(indBars)) : null),
+    [indBars, indicators]
   );
   const woodieCci = useMemo(
-    () => (indicators.includes('woodieCci') ? computeWoodieCci(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('woodieCci') ? ind(computeWoodieCci(indBars)) : null),
+    [indBars, indicators]
   );
   const stdErrorBands = useMemo(
-    () => (indicators.includes('stdErrorBands') ? computeStdErrorBands(closes) : null),
+    () => (indicators.includes('stdErrorBands') ? ind(computeStdErrorBands(closes)) : null),
     [closes, indicators]
   );
   const donchianWidth = useMemo(
-    () => (indicators.includes('donchianWidth') ? computeDonchianWidth(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('donchianWidth') ? ind(computeDonchianWidth(indBars)) : null),
+    [indBars, indicators]
   );
   const connorsRsi = useMemo(
-    () => (indicators.includes('connorsRsi') ? computeConnorsRsi(closes) : null),
+    () => (indicators.includes('connorsRsi') ? ind(computeConnorsRsi(closes)) : null),
     [closes, indicators]
   );
   const keltnerWidth = useMemo(
-    () => (indicators.includes('keltnerWidth') ? computeKeltnerWidth(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('keltnerWidth') ? ind(computeKeltnerWidth(indBars)) : null),
+    [indBars, indicators]
   );
   const cfo = useMemo(
-    () => (indicators.includes('cfo') ? computeCfo(closes) : null),
+    () => (indicators.includes('cfo') ? ind(computeCfo(closes)) : null),
     [closes, indicators]
   );
   const vwMacd = useMemo(
-    () => (indicators.includes('vwMacd') ? computeVwMacd(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('vwMacd') ? ind(computeVwMacd(indBars)) : null),
+    [indBars, indicators]
   );
   const disparityIndex = useMemo(
-    () => (indicators.includes('disparityIndex') ? computeDisparityIndex(closes) : null),
+    () => (indicators.includes('disparityIndex') ? ind(computeDisparityIndex(closes)) : null),
     [closes, indicators]
   );
   const tii = useMemo(
-    () => (indicators.includes('tii') ? computeTrendIntensityIndex(closes) : null),
+    () => (indicators.includes('tii') ? ind(computeTrendIntensityIndex(closes)) : null),
     [closes, indicators]
   );
   const demarker = useMemo(
-    () => (indicators.includes('demarker') ? computeDemarker(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('demarker') ? ind(computeDemarker(indBars)) : null),
+    [indBars, indicators]
   );
   const rmi = useMemo(
-    () => (indicators.includes('rmi') ? computeRmi(closes) : null),
+    () => (indicators.includes('rmi') ? ind(computeRmi(closes)) : null),
     [closes, indicators]
   );
   const pgo = useMemo(
-    () => (indicators.includes('pgo') ? computePgo(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('pgo') ? ind(computePgo(indBars)) : null),
+    [indBars, indicators]
   );
   const twiggsMoneyFlow = useMemo(
-    () => (indicators.includes('twiggsMoneyFlow') ? computeTwiggsMoneyFlow(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('twiggsMoneyFlow') ? ind(computeTwiggsMoneyFlow(indBars)) : null),
+    [indBars, indicators]
   );
   const vzo = useMemo(
-    () => (indicators.includes('vzo') ? computeVzo(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('vzo') ? ind(computeVzo(indBars)) : null),
+    [indBars, indicators]
   );
   const avgPrice = useMemo(
-    () => (indicators.includes('avgPrice') ? computeAveragePrice(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('avgPrice') ? ind(computeAveragePrice(indBars)) : null),
+    [indBars, indicators]
   );
   const atrp = useMemo(
-    () => (indicators.includes('atrp') ? computeAtrPercent(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('atrp') ? ind(computeAtrPercent(indBars)) : null),
+    [indBars, indicators]
   );
   const vidya = useMemo(
-    () => (indicators.includes('vidya') ? computeVidya(closes) : null),
+    () => (indicators.includes('vidya') ? ind(computeVidya(closes)) : null),
     [closes, indicators]
   );
   const gmmaOsc = useMemo(() => {
     if (!indicators.includes('gmmaOsc')) return null;
-    const g = gmma ?? computeGmma(closes);
+    const g = gmma ?? ind(computeGmma(closes));
     return computeGmmaOscillator(g.shortLines, g.longLines);
   }, [closes, indicators, gmma]);
   const iftRsi = useMemo(
-    () => (indicators.includes('iftRsi') ? computeInverseFisherRsi(closes) : null),
+    () => (indicators.includes('iftRsi') ? ind(computeInverseFisherRsi(closes)) : null),
     [closes, indicators]
   );
   const waveTrend = useMemo(
-    () => (indicators.includes('waveTrend') ? computeWaveTrend(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('waveTrend') ? ind(computeWaveTrend(indBars)) : null),
+    [indBars, indicators]
   );
   const accelBands = useMemo(
-    () => (indicators.includes('accelBands') ? computeAccelerationBands(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('accelBands') ? ind(computeAccelerationBands(indBars)) : null),
+    [indBars, indicators]
   );
   const cutlerRsi = useMemo(
-    () => (indicators.includes('cutlerRsi') ? computeCutlerRsi(closes) : null),
+    () => (indicators.includes('cutlerRsi') ? ind(computeCutlerRsi(closes)) : null),
     [closes, indicators]
   );
   const starcBands = useMemo(
-    () => (indicators.includes('starcBands') ? computeStarcBands(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('starcBands') ? ind(computeStarcBands(indBars)) : null),
+    [indBars, indicators]
   );
   const pmo = useMemo(
-    () => (indicators.includes('pmo') ? computePmo(closes) : null),
+    () => (indicators.includes('pmo') ? ind(computePmo(closes)) : null),
     [closes, indicators]
   );
   const trueRange = useMemo(
-    () => (indicators.includes('trueRange') ? computeTrueRange(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('trueRange') ? ind(computeTrueRange(indBars)) : null),
+    [indBars, indicators]
   );
   const stdError = useMemo(
-    () => (indicators.includes('stdError') ? computeStandardError(closes) : null),
+    () => (indicators.includes('stdError') ? ind(computeStandardError(closes)) : null),
     [closes, indicators]
   );
   const ewmaVol = useMemo(
-    () => (indicators.includes('ewmaVol') ? computeEwmaVolatility(closes) : null),
+    () => (indicators.includes('ewmaVol') ? ind(computeEwmaVolatility(closes)) : null),
     [closes, indicators]
   );
   const volRoc = useMemo(
-    () => (indicators.includes('volRoc') ? computeVolumeRoc(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('volRoc') ? ind(computeVolumeRoc(indBars)) : null),
+    [indBars, indicators]
   );
   const adxr = useMemo(
-    () => (indicators.includes('adxr') ? computeAdxr(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('adxr') ? ind(computeAdxr(indBars)) : null),
+    [indBars, indicators]
   );
   const volatilityRatio = useMemo(
-    () => (indicators.includes('volatilityRatio') ? computeVolatilityRatio(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('volatilityRatio') ? ind(computeVolatilityRatio(indBars)) : null),
+    [indBars, indicators]
   );
   const williamsAd = useMemo(
-    () => (indicators.includes('williamsAd') ? computeWilliamsAd(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('williamsAd') ? ind(computeWilliamsAd(indBars)) : null),
+    [indBars, indicators]
   );
   const gapo = useMemo(
-    () => (indicators.includes('gapo') ? computeGapo(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('gapo') ? ind(computeGapo(indBars)) : null),
+    [indBars, indicators]
   );
   const pfe = useMemo(
-    () => (indicators.includes('pfe') ? computePfe(closes) : null),
+    () => (indicators.includes('pfe') ? ind(computePfe(closes)) : null),
     [closes, indicators]
   );
   const dma = useMemo(
-    () => (indicators.includes('dma') ? computeDma(closes) : null),
+    () => (indicators.includes('dma') ? ind(computeDma(closes)) : null),
     [closes, indicators]
   );
   const rainbowOsc = useMemo(
-    () => (indicators.includes('rainbowOsc') ? computeRainbowOscillator(closes) : null),
+    () => (indicators.includes('rainbowOsc') ? ind(computeRainbowOscillator(closes)) : null),
     [closes, indicators]
   );
   const trima = useMemo(
-    () => (indicators.includes('trima') ? computeTrima(closes) : null),
+    () => (indicators.includes('trima') ? ind(computeTrima(closes)) : null),
     [closes, indicators]
   );
   const efficiencyRatio = useMemo(
-    () => (indicators.includes('efficiencyRatio') ? computeEfficiencyRatio(closes) : null),
+    () => (indicators.includes('efficiencyRatio') ? ind(computeEfficiencyRatio(closes)) : null),
     [closes, indicators]
   );
   const vpci = useMemo(
-    () => (indicators.includes('vpci') ? computeVpci(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('vpci') ? ind(computeVpci(indBars)) : null),
+    [indBars, indicators]
   );
   const ttf = useMemo(
-    () => (indicators.includes('ttf') ? computeTtf(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('ttf') ? ind(computeTtf(indBars)) : null),
+    [indBars, indicators]
   );
   const tdi = useMemo(
-    () => (indicators.includes('tdi') ? computeTdi(closes) : null),
+    () => (indicators.includes('tdi') ? ind(computeTdi(closes)) : null),
     [closes, indicators]
   );
   const vfi = useMemo(
-    () => (indicators.includes('vfi') ? computeVfi(source.plot) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('vfi') ? ind(computeVfi(indBars)) : null),
+    [indBars, indicators]
   );
   const laguerreRsi = useMemo(
-    () => (indicators.includes('laguerreRsi') ? computeLaguerreRsi(closes) : null),
+    () => (indicators.includes('laguerreRsi') ? ind(computeLaguerreRsi(closes)) : null),
     [closes, indicators]
   );
 
