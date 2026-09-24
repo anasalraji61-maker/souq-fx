@@ -4351,7 +4351,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const selectedDrawing = selectedId && !hidePriceLabels ? drawings.find((d) => d.id === selectedId) : undefined;
   const selectionTags = selectedDrawing
     ? placeSelectionTags(
-        selectionPrices(selectedDrawing, series.symbol),
+        selectionPrices(selectedDrawing, series.symbol, source.all.length - 1),
         yOf,
         chartPlotH,
         PRICE_TAG_H,
@@ -6762,22 +6762,39 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ) : null}
           </View>
           ) : null}
-          {selectionTags.map((t) => (
-            <View
-              key={`sel-${t.tone}-${t.price}`}
-              pointerEvents="none"
-              style={[
-                styles.selectionPriceTag,
-                {
-                  top: t.top,
-                  backgroundColor:
-                    t.tone === 'bull' ? colors.bull : t.tone === 'bear' ? colors.bear : selectedDrawing?.color ?? accent,
-                },
-              ]}
-            >
-              <Text style={styles.crossTagText}>{formatPrice(t.price, series.symbol)}</Text>
-            </View>
-          ))}
+          {selectionTags.map((t) =>
+            t.tone === 'now' ? (
+              // سعر الترند عند الشمعة الحيّة: مفرَّغ بلون الخطّ — مستوى يتحرّك مع كل شمعة، لا طرف مرسوم.
+              <View
+                key={`sel-now-${t.price}`}
+                pointerEvents="none"
+                style={[
+                  styles.selectionPriceTag,
+                  styles.selectionNowTag,
+                  { top: t.top, borderColor: selectedDrawing?.color ?? accent },
+                ]}
+              >
+                <Text style={[styles.crossTagText, { color: selectedDrawing?.color ?? accent }]}>
+                  {formatPrice(t.price, series.symbol)}
+                </Text>
+              </View>
+            ) : (
+              <View
+                key={`sel-${t.tone}-${t.price}`}
+                pointerEvents="none"
+                style={[
+                  styles.selectionPriceTag,
+                  {
+                    top: t.top,
+                    backgroundColor:
+                      t.tone === 'bull' ? colors.bull : t.tone === 'bear' ? colors.bear : selectedDrawing?.color ?? accent,
+                  },
+                ]}
+              >
+                <Text style={styles.crossTagText}>{formatPrice(t.price, series.symbol)}</Text>
+              </View>
+            )
+          )}
           {!hidePriceLabels && crossPrice != null && crossTagTop != null ? (
           <View pointerEvents="none" style={[styles.crossPriceTag, { top: crossTagTop }]}>
             <Text style={styles.crossTagText}>
@@ -11217,6 +11234,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 2,
     zIndex: 1,
+  },
+  selectionNowTag: {
+    backgroundColor: '#071018',
+    borderWidth: 1,
   },
   crossTimeTag: {
     position: 'absolute',

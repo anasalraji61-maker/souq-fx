@@ -1,6 +1,6 @@
 /** فحص ذاتي لـ`selectionTags.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
 import assert from 'node:assert/strict';
-import { placeSelectionTags, selectionPrices } from './selectionTags';
+import { lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
 import type { Drawing } from './types';
 
 const d = (tool: Drawing['tool'], a: number, b?: number, rr?: number): Drawing => ({
@@ -20,6 +20,26 @@ assert.equal(selectionPrices(d('trend', 1.08, 1.08), 'EURUSD').length, 1);
 const pos = selectionPrices(d('long', 1.085, 1.0825, 2), 'EURUSD');
 assert.deepEqual(pos.map((p) => p.tone), ['line', 'bear', 'bull']);
 assert.ok(Math.abs(pos[2].price - 1.09) < 1e-9);
+
+// سعر الترند/الشعاع عند الشمعة الحيّة (الطرفان عند 1 و4).
+const A = { index: 1, price: 1.08 };
+const B = { index: 4, price: 1.083 };
+assert.ok(Math.abs(lineValueAt(A, B, 3, false)! - 1.082) < 1e-12); // بين الطرفين
+assert.equal(lineValueAt(A, B, 7, false), null); // الترند لا يمتدّ بعد طرفه
+assert.ok(Math.abs(lineValueAt(A, B, 7, true)! - 1.086) < 1e-12); // الشعاع يمتدّ
+assert.equal(lineValueAt(A, B, 0, true), null); // ولا يمتدّ خلف بدايته
+assert.equal(lineValueAt(B, A, 7, true), null); // شعاع نحو اليسار لا يبلغ الحيّة
+assert.equal(lineValueAt(A, { index: 1, price: 1.09 }, 1, true), null); // طرفان على شمعة واحدة
+assert.equal(lineValueAt(A, { index: 2, price: 0.5 }, 9, true), null); // شعاع هابط تحت الصفر
+const ray = selectionPrices({ ...d('ray', 1.08, 1.083) }, 'EURUSD', 7);
+assert.deepEqual(ray.map((p) => p.tone), ['line', 'line', 'now']);
+assert.ok(Math.abs(ray[2].price - 1.086) < 1e-12);
+// ترند انتهى قبل الشمعة الحيّة ⇒ لا وسم «الآن»؛ وعند طرفه بالضبط ⇒ وسم الطرف يكفي.
+assert.equal(selectionPrices(d('trend', 1.08, 1.083), 'EURUSD', 7).length, 2);
+assert.equal(selectionPrices(d('trend', 1.08, 1.083), 'EURUSD', 4).length, 2);
+// بلا فهرس حيّ (المستدعي القديم) ⇒ كما كان؛ ولا وسم «الآن» لغير الترند/الشعاع.
+assert.equal(selectionPrices(d('ray', 1.08, 1.083), 'EURUSD').length, 2);
+assert.equal(selectionPrices(d('rect', 1.08, 1.083), 'EURUSD', 3).length, 2);
 
 // المواضع: محور 200px، السعر 1.08→200px و1.10→0px
 const yOf = (p: number) => ((1.1 - p) / 0.02) * 200;
