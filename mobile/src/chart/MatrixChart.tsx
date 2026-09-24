@@ -1087,7 +1087,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const crossFromSync = useRef(false);
   const onCrossTimeRef = useRef(onCrossTime);
   onCrossTimeRef.current = onCrossTime;
-  const crossTimeSec = cross ? candleTimeSec(cross.time) : null;
+  // Renko/Kagi/P&F: `cross.time` زمن اللبنة المختلَق — يُنشر زمن شمعتها المصدر (`barTime`)،
+  // وإلا وقف تقاطع التوابع عند بداية سلاسلها.
+  const crossBar = cross ? source.plot.find((b) => b.time === cross.time) : undefined;
+  const crossTimeSec = cross ? candleTimeSec(crossBar ? barTime(crossBar) : cross.time) : null;
   const crossTimeRef = useRef<number | null>(null);
   crossTimeRef.current = cross?.time ?? null;
   const publishesCross = onCrossTime != null;
@@ -1103,7 +1106,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       }
       return;
     }
-    const i = indexAtOrBeforeTime(source.plot, syncCrossTime, candleTimeSec);
+    // المقارنة بالزمن الحقيقي (لبنات Renko بزمن شمعتها)، والمفتاح المحفوظ زمن الخانة نفسها.
+    const i = indexAtOrBeforeTime(
+      source.plot.map((b) => ({ time: barTime(b) })),
+      syncCrossTime,
+      candleTimeSec
+    );
     const time = i != null ? source.plot[i]!.time : null;
     crossFromSync.current = true;
     setCross((prev) =>
