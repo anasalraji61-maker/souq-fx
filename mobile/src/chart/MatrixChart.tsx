@@ -340,6 +340,7 @@ type PointerEventLike = {
     pageX?: number;
     pageY?: number;
     pointerId?: number;
+    pointerType?: string;
   };
   currentTarget?: {
     setPointerCapture?: (pointerId: number) => void;
@@ -859,6 +860,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // النافذة متحرّكة، فالفهرس وحده يجعل القراءة تتبع الخانة لا الشمعة المختارة.
   // `price` سعر موضع اللمسة (بالمغناطيس إن كان مفعّلاً) — `null` ⇒ لا خطّ أفقي.
   const [cross, setCross] = useState<{ time: number; price: number | null } | null>(null);
+  // تقاطع الويب يتبع الفأرة بلا نقر (معاينة)، والنقرة **تثبّته**. المعاينة بلا زرّ 🔔: الزرّ
+  // خارج اللوح، فالطريق إليه يمرّ بمستويات أخرى ثم يخرج من اللوح فتُمسح المعاينة — التنبيه
+  // يُوضع من تقاطع مثبَّت فقط. `crossPinned` مرآة بـref لأن معالجات المؤشر تُقرأ خارج الرسم.
+  const [crossHover, setCrossHover] = useState(false);
+  const crossPinned = useRef(false);
+  const hoverRaf = useRef<number | null>(null);
+  const hoverPoint = useRef({ x: 0, y: 0 });
   const [windowCount, setWindowCount] = useState(80);
   const [offset, setOffset] = useState(0);
   const [priceScale, setPriceScale] = useState(1);
@@ -883,7 +891,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const panStartPoint = useRef({ x: 0, y: 0 });
   const panMoved = useRef(false);
   const chartPressRef = useRef<(x: number, y: number) => void>(() => {});
-  const crossAtRef = useRef<(x: number, y: number) => void>(() => {});
+  const crossAtRef = useRef<(x: number, y: number, hover?: boolean) => void>(() => {});
   // ضغطة مطوّلة ثم سحب ⇒ التقاطع يتبع الإصبع بدل تحريك الشارت (scrub).
   const scrubTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrubbing = useRef(false);
@@ -2456,16 +2464,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   };
 
   // التقاطع عند (x, y) داخل اللوح: الشمعة من x، والسعر من y لا من إغلاقها.
-  const placeCross = (x: number, y: number) => {
+  const placeCross = (x: number, y: number, hover = false) => {
     const candle = source.plot[hitIndex(x)];
     if (!candle) return;
     const raw = priceAtY(y);
     // 14px حول الإصبع بوحدة السعر عند موضعه (يصحّ مع المقياس اللوغاريتمي كذلك).
     const snapTol = Math.abs(priceAtY(y - CROSS_SNAP_PX) - raw);
-    setCross({
-      time: candle.time,
-      price: crossPriceAt(raw, candle, magnet, symbolPriceDecimals(series.symbol), snapTol),
-    });
+    const price = crossPriceAt(raw, candle, magnet, symbolPriceDecimals(series.symbol), snapTol);
+    crossPinned.current = !hover;
+    setCrossHover(hover);
+    // حركة الفأرة داخل الشمعة نفسها وعلى السعر المقرَّب نفسه لا تعيد رسم الشارت كلّه.
+    if (cross && cross.time === candle.time && cross.price === price) return;
+    setCross({ time: candle.time, price });
   };
 
   const onChartPress = (x: number, y: number) => {
@@ -2658,6 +2668,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     panStartX.current = xPanRef.current;
     panStartPrice.current = pricePanRef.current;
     panMoved.current = false;
+    crossPinned.current = false;
     setCross(null);
   }, []);
 
@@ -2872,7 +2883,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             };
           },
           onPointerMove: (event: PointerEventLike) => {
-            if (!webChartPointer.current.active) return;
+            if (!webChartPointer.current.active) {
+              // مرور الفأرة بلا زرّ مضغوط ⇒ معاينة التقاطع (شمعة وسعر) ما لم يكن مثبَّتاً بنقرة.
+              // كان التقاطع على الويب بالنقر وحده: قراءة عشر شموع = عشر نقرات. إطار واحد لكل
+              // رسم (`requestAnimationFrame`) لا رسم لكل حدث حركة.
+              if (crossPinned.current || event.nativeEvent?.pointerType === 'touch') return;
+              const rect = event.currentTarget?.getBoundingClientRect?.();
+              const point = pointerXY(event);
+              hoverPoint.current = {
+                x: Math.max(0, point.x - (rect?.left ?? 0)),
+                y: Math.max(0, point.y - (rect?.top ?? 0)),
+              };
+              if (hoverRaf.current == null) {
+                hoverRaf.current = requestAnimationFrame(() => {
+                  hoverRaf.current = null;
+                  if (crossPinned.current || webChartPointer.current.active) return;
+                  crossAtRef.current(hoverPoint.current.x, hoverPoint.current.y, true);
+                });
+              }
+              return;
+            }
             event.preventDefault?.();
             const point = pointerXY(event);
             applyChartDrag(
@@ -2899,8 +2929,29 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             webChartPointer.current.active = false;
             endDrag();
           },
+          // خروج الفأرة من اللوح يمسح المعاينة؛ التقاطع المثبَّت يبقى (زرّ 🔔 خارج اللوح).
+          onPointerLeave: () => {
+            if (hoverRaf.current != null) cancelAnimationFrame(hoverRaf.current);
+            hoverRaf.current = null;
+            if (!crossPinned.current && !webChartPointer.current.active) setCross(null);
+          },
         } as const)
       : {};
+
+  // Esc على الويب يفكّ تثبيت التقاطع ويمسحه فتعود المعاينة مع حركة الفأرة.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !canPan) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || !crossPinned.current) return;
+      crossPinned.current = false;
+      setCross(null);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      if (hoverRaf.current != null) cancelAnimationFrame(hoverRaf.current);
+    };
+  }, [canPan]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const priceWheelHandlers: any =
@@ -3331,7 +3382,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 : tr.mcHintNavigate}
           </Text>
         )}
-        {onCreateAlert && crossPrice != null && !measureReadout && !replayOn ? (
+        {onCreateAlert && crossPrice != null && !crossHover && !measureReadout && !replayOn ? (
           // تنبيه بلمستين من الشارت: المس المستوى (يظهر الـcrosshair بسعر موضع اللمسة) ثم 🔔 — بلا كتابة رقم.
           // الاتجاه (فوق/تحت) يحدّده المستدعي من السعر الحالي، والتأكيد «مُفعَّل» يظهر عنده.
           <Pressable
