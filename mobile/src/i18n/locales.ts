@@ -405,6 +405,10 @@ export type Dict = {
   journalSizeUnitsFix: string;
   journalSizeUnitsNoFix: string;
   journalExitA11y: string;
+  /** قارئ الشاشة لشرائح «= SL/= BE/= TP» تحت خانة الخروج — `{price}` نصّ الخانة المنسوخ؛ «SL»/«BE» تُقرأ حروفاً */
+  journalExitAtSlA11y: string;
+  journalExitAtBeA11y: string;
+  journalExitAtTpA11y: string;
   journalNotePlaceholder: string;
   journalSlPlaceholder: string;
   journalTpPlaceholder: string;
@@ -1283,6 +1287,9 @@ const ar: Dict = {
   journalSizeUnitsFix: '⚠ {n} تبدو عدد وحدات لا لوتات — اضغط لتحويلها إلى {lots} lot',
   journalSizeUnitsNoFix: '⚠ {n} lot حجم غير واقعي — يبدو عدد وحدات منسوخاً من منصّتك؛ اكتب الحجم باللوت (مثل 0.10)',
   journalExitA11y: 'سعر الخروج (اختياري)',
+  journalExitAtSlA11y: 'الخروج عند وقف الخسارة {price}',
+  journalExitAtBeA11y: 'الخروج عند سعر الدخول (تعادل) {price}',
+  journalExitAtTpA11y: 'الخروج عند الهدف {price}',
   journalNotePlaceholder: 'ملاحظة',
   journalSlPlaceholder: 'وقف الخسارة (اختياري)',
   journalTpPlaceholder: 'الهدف (اختياري)',
@@ -2168,6 +2175,9 @@ const enUS: Dict = {
   journalSizeUnitsFix: '⚠ {n} looks like units, not lots — tap to convert to {lots} lot',
   journalSizeUnitsNoFix: '⚠ {n} lots is not a realistic size — it looks like a unit count copied from your platform; type the size in lots (e.g. 0.10)',
   journalExitA11y: 'Exit price (optional)',
+  journalExitAtSlA11y: 'Exit at stop loss {price}',
+  journalExitAtBeA11y: 'Exit at entry (breakeven) {price}',
+  journalExitAtTpA11y: 'Exit at take profit {price}',
   journalNotePlaceholder: 'Note',
   journalSlPlaceholder: 'Stop loss (optional)',
   journalTpPlaceholder: 'Take profit (optional)',
@@ -3080,6 +3090,9 @@ const ku: Dict = {
   journalSizeUnitsFix: '⚠ {n} وەک ژمارەی یەکە دەردەکەوێت نەک لۆت — دەست بنێ بۆ گۆڕینی بۆ {lots} lot',
   journalSizeUnitsNoFix: '⚠ {n} lot قەبارەیەکی نائاساییە — وادیارە ژمارەی یەکەکانە لە پلاتفۆرمەکەتەوە کۆپی کراوە؛ قەبارە بە لۆت بنووسە (وەک 0.10)',
   journalExitA11y: 'نرخی دەرچوون (ئیختیاری)',
+  journalExitAtSlA11y: 'دەرچوون لەسەر وەستانی زیان {price}',
+  journalExitAtBeA11y: 'دەرچوون لەسەر نرخی چوونەژوورەوە (بێ قازانج و زیان) {price}',
+  journalExitAtTpA11y: 'دەرچوون لەسەر ئامانج {price}',
   journalNotePlaceholder: 'تێبینی',
   journalSlPlaceholder: 'وەستانی زیان (ئیختیاری)',
   journalTpPlaceholder: 'ئامانج (ئیختیاری)',
