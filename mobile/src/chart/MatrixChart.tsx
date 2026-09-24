@@ -71,6 +71,7 @@ import {
 } from './paneGuides';
 import { DrawingsSaveQueue, drawingsKey } from './drawingsPersist';
 import { dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
+import { anchorDrawings, timeAtIndex } from './drawingAnchors';
 import { fibLevelPrice, planFibLabels } from './fibLabels';
 import { measureReadoutText } from './measureReadout';
 import { thinByGap } from './levelLabels';
@@ -1028,6 +1029,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     syncWindow?.start,
     syncWindow?.end,
   ]);
+
+  // الرسومات تتبع شموعها بالزمن لا بالخانة — راجع `drawingAnchors.ts`. لا يعمل قبل أن
+  // تُحمَّل رسومات هذا الرمز/الفريم (`drawings === loadedDrawings`)، ويعيد المصفوفة نفسها
+  // حين لا تغيير فلا رسم ولا كتابة بكل تيك.
+  useEffect(() => {
+    if (drawings !== loadedDrawings) return;
+    const synthetic = kind === 'renko' || kind === 'kagi' || kind === 'pnf' || kind === 'range';
+    const next = anchorDrawings(
+      loadedDrawings,
+      source.all as { time: number }[],
+      timeframeStepSec(series.timeframe),
+      !synthetic
+    );
+    if (next !== loadedDrawings) setDrawings(next);
+  }, [drawings, loadedDrawings, source.all, kind, series.timeframe]);
 
   const publishSyncWindow = useCallback(() => {
     if (syncFollow) return;
@@ -2279,9 +2295,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const local = hitIndex(x);
       const candle = sourceRef.current.plot[local];
       if (magnet && candle) price = snapPrice(price, candle);
-      return { index: sourceRef.current.start + local, price };
+      const index = sourceRef.current.start + local;
+      // مختومة بزمنها من الولادة: السحب لا يمرّ بتأثير الختم إطاراً إطاراً (رسمتان لكل حركة).
+      const time = timeAtIndex(
+        sourceRef.current.all as { time: number }[],
+        index,
+        timeframeStepSec(series.timeframe)
+      );
+      return time == null ? { index, price } : { index, price, time };
     },
-    [hitIndex, priceAtY, magnet]
+    [hitIndex, priceAtY, magnet, series.timeframe]
   );
 
   const finalizeDrawing = useCallback(

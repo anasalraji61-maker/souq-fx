@@ -193,7 +193,11 @@ export type DrawTool =
   | 'note'
   | 'measure';
 
-export type ChartPoint = { index: number; price: number };
+/**
+ * `time` (ثوانٍ) مرساة الرسم الحقيقية متى وُجدت — `index` موضع مشتقّ منها داخل السلسلة
+ * الحاليّة. راجع `drawingAnchors.ts`: الفهرس وحده يزحف مع نافذة الخادم المتحرّكة.
+ */
+export type ChartPoint = { index: number; price: number; time?: number };
 
 export type Drawing = {
   id: string;
