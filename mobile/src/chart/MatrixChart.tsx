@@ -798,8 +798,8 @@ function PaneValueHead({
 }
 
 /**
- * رأس لوحة **ذات سلسلتين** (Gator وحدها اليوم): الاسم، وتحته **اتّساع الفكّ** —
- * `upper − lower` لآخر شمعة صالحة.
+ * رأس لوحة **ذات سلسلتين** (Gator، وبـ`tone="sign"` DMI وVortex وRWI وAroon وKlinger):
+ * الاسم، وتحته الفارق `upper − lower` عند شمعة التقاطع — للتقاطعات إشارته هي أيّ الخطّين فوق.
  *
  * كانت اللوحة الوحيدة الباقية بالاسم وحده: سلسلتان لا واحدة، وعمود ‎36px‎ لا يسع رقمين،
  * فبقي المتداول يرى شريطين ولا يعرف أهُما ‎0.0004‎ أم ‎0.4‎ — ولا يقارن اتّساع اليوم
@@ -7885,7 +7885,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {tdi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>TDI</Text>
+          <PaneValueHead name="TDI" values={tdi.tdi} at={crossIndex} />
           <View style={styles.paneInner}>
             {(() => {
               const tdiVals = tdi.tdi.filter((x): x is number => x != null);
@@ -8093,7 +8093,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {waveTrend ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>WaveTrend</Text>
+          <PaneValueHead name="WaveTrend" values={waveTrend.wt1} at={crossIndex} />
           <View style={styles.paneInner}>
             {(() => {
               const wt1Vals = waveTrend.wt1.filter((x): x is number => x != null);
@@ -9230,7 +9230,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vortex ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Vortex</Text>
+          <PaneSpreadHead name="Vortex" upper={vortex.plus} lower={vortex.minus} at={crossIndex} tone="sign" />
           <View style={styles.paneInner}>
             {(() => {
               const plusVals = vortex.plus.filter((x): x is number => x != null);
@@ -9294,7 +9294,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {rwi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>RWI</Text>
+          <PaneSpreadHead name="RWI" upper={rwi.rwiHigh} lower={rwi.rwiLow} at={crossIndex} tone="sign" />
           <View style={styles.paneInner}>
             {(() => {
               const highVals = rwi.rwiHigh.filter((x): x is number => x != null);
@@ -9323,7 +9323,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {aroonUpDown ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Aroon Up/Down</Text>
+          <PaneSpreadHead name="Aroon Up/Down" upper={aroonUpDown.up} lower={aroonUpDown.down} at={crossIndex} tone="sign" />
           <View style={styles.paneInner}>
             {(() => {
               // Aroon بين 0 و100 دائماً: خطّان متّصلان (تقاطع Up/Down هو القراءة) لا شرطة لكل عمود.
@@ -9345,7 +9345,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {klinger ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>Klinger</Text>
+          <PaneSpreadHead name="Klinger" upper={klinger.kvo} lower={klinger.signal} at={crossIndex} tone="sign" />
           <View style={styles.paneInner}>
             {(() => {
               const kvoVals = klinger.kvo.filter((x): x is number => x != null);
@@ -9374,7 +9374,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {smi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <Text style={styles.paneLabel}>SMI</Text>
+          <PaneValueHead name="SMI" values={smi.smi} at={crossIndex} />
           <View style={styles.paneInner}>
             {(() => {
               const smiVals = smi.smi.filter((x): x is number => x != null);
