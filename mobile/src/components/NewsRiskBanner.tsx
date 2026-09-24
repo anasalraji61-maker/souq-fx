@@ -8,8 +8,10 @@ import {
   calendarFetchEvents,
   calendarUnavailable,
   newsCountdown,
+  newsBannerText,
   newsTickDelayMs,
   nextHighImpact,
+  sameMinuteHighImpact,
   symbolCurrencies,
   type CalendarCache,
 } from '../chart/newsRisk';
@@ -84,7 +86,8 @@ export function NewsRiskBanner({ symbol }: Props) {
     };
   }, []);
 
-  const hit = cache ? nextHighImpact(cache.events, symbolCurrencies(symbol), now) : null;
+  const currencies = symbolCurrencies(symbol);
+  const hit = cache ? nextHighImpact(cache.events, currencies, now) : null;
   const hitDelta = hit ? hit.deltaMs : null;
   // تجديد العدّ **لحظة يتغيّر** لا بساعة من لحظة التركيب — وإلا بقي «بعد 3د» والخبر بعد 2:50، راجع `newsTickDelayMs`
   useEffect(() => {
@@ -111,7 +114,9 @@ export function NewsRiskBanner({ symbol }: Props) {
     : `${t.calInPrefix} ${[cd.h ? `${cd.h}${t.calHourShort}` : '', cd.m || !cd.h ? `${cd.m}${t.calMinShort}` : '']
         .filter(Boolean)
         .join(' ')}`;
-  const text = `⚠ ${t.newsRiskHigh} · ${event.currency} · ${event.title} · ${when}`;
+  // الموعد قبل العنوان: السطر يُقصّ من آخره، و«+2» لأخبار الدقيقة نفسها (الرواتب + البطالة + الأجور) — راجع `newsBannerText`
+  const more = cache ? sameMinuteHighImpact(cache.events, currencies, event) : 0;
+  const text = newsBannerText({ head: t.newsRiskHigh, currency: event.currency, when, title: event.title, more });
   // التحذير من تقويمٍ محفوظ بعد فشل التحديث: يُعرض (الوقت مطلق فيبقى صادقاً) مع قول ذلك
   const stale = cache != null && !cache.ok;
 

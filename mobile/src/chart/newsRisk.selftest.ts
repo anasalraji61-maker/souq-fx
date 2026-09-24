@@ -11,6 +11,8 @@ import {
   newsTickDelayMs,
   NEWS_GRACE_MS,
   nextHighImpact,
+  sameMinuteHighImpact,
+  newsBannerText,
   symbolCurrencies,
   knownSingleName,
   NEWS_STALE_MAX_MS,
@@ -484,3 +486,47 @@ console.log('newsRisk calendarUnavailable selftest OK');
   assert.deepEqual(symbolCurrencies('EURUSDc'), ['EUR', 'USD']);
 }
 console.log('newsRisk micro/cent suffix selftest OK');
+
+// الموعد قبل العنوان (السطر يُقصّ من آخره)، و«+N» لأخبار الدقيقة نفسها
+{
+  const t0 = 1_800_000_000;
+  const ev = (id: string, currency: string, ts: number | null, extra: Partial<NewsEvent> = {}): NewsEvent => ({
+    id,
+    title: id,
+    currency,
+    impact: 'High',
+    ts,
+    ...extra,
+  });
+  const nfp = ev('Non-Farm Employment Change', 'USD', t0);
+  const events = [
+    nfp,
+    ev('Unemployment Rate', 'USD', t0),
+    ev('Average Hourly Earnings m/m', 'USD', t0 + 1),
+    ev('Unemployment Rate', 'USD', t0, { id: 'dup' }), // نسخة مكرّرة بالتقويم
+    ev('ECB Press Conference', 'EUR', t0 + 30 * 60), // بعد نصف ساعة: ليس بالدقيقة نفسها
+    ev('CAD Employment Change', 'CAD', t0), // عملة أخرى
+    ev('Sample NFP', 'USD', t0, { sample: true }),
+    ev('Retail Sales', 'USD', t0, { impact: 'Medium' }),
+    ev('No time', 'USD', null),
+  ];
+  const cur = symbolCurrencies('EURUSD');
+  assert.equal(sameMinuteHighImpact(events, cur, nfp), 2);
+  assert.equal(sameMinuteHighImpact(events, symbolCurrencies('USDCAD'), nfp), 3);
+  assert.equal(sameMinuteHighImpact(events, symbolCurrencies('EURGBP'), events[4]), 0);
+  assert.equal(sameMinuteHighImpact([nfp], cur, nfp), 0);
+  assert.equal(sameMinuteHighImpact(events, cur, ev('x', 'USD', null)), 0);
+  // الحدث المعروض نفسه من nextHighImpact، والعدّ لا يشمله
+  const hit = nextHighImpact(events, cur, t0 * 1000 - 12 * 60_000)!;
+  assert.equal(sameMinuteHighImpact(events, cur, hit.event), 2);
+
+  const line = newsBannerText({ head: 'High-impact news', currency: 'USD', when: 'in 12m', title: nfp.title, more: 2 });
+  assert.equal(line, '⚠ High-impact news · USD · in 12m · Non-Farm Employment Change +2');
+  // الموعد ضمن أول 40 حرفاً مهما طال العنوان — يبقى بعد القصّ
+  assert.ok(line.indexOf('in 12m') + 'in 12m'.length <= 40);
+  assert.equal(
+    newsBannerText({ head: 'خبر قوي', currency: 'EUR', when: 'الآن', title: 'ECB', more: 0 }),
+    '⚠ خبر قوي · EUR · الآن · ECB'
+  );
+}
+console.log('newsRisk banner text selftest OK');

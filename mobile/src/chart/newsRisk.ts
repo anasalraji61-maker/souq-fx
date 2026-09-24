@@ -216,6 +216,36 @@ export function nextHighImpact(
 }
 
 /**
+ * أحداثٌ قوية **أخرى** لعملات الزوج بالدقيقة نفسها لحدث الشريط — «+2» بجانبه. الرواتب الأمريكية تصدر مع البطالة ومتوسط
+ * الأجور بثانية واحدة (والفائدة مع البيان)، والشريط يعرض واحداً منها — فيظنّ المتداول خبراً واحداً بينما القفزة من ثلاثة.
+ * نفس مرشّحات `nextHighImpact` (لا أمثلة، عالي التأثير، وقت دقيق)، ونسخةٌ مكرّرة بالتقويم (العنوان والعملة والوقت) لا تُعدّ.
+ */
+export function sameMinuteHighImpact(events: readonly NewsEvent[], currencies: readonly string[], event: NewsEvent): number {
+  if (typeof event.ts !== 'number' || !Number.isFinite(event.ts)) return 0;
+  const want = new Set(currencies);
+  const key = (e: NewsEvent) => `${String(e.currency).toUpperCase()}|${e.title}|${e.ts}`;
+  const seen = new Set([key(event)]);
+  for (const e of events) {
+    if (e === event || e.id === event.id || e.sample) continue;
+    if (String(e.impact).toLowerCase() !== 'high') continue;
+    if (typeof e.ts !== 'number' || !Number.isFinite(e.ts) || Math.abs(e.ts - event.ts) >= 60) continue;
+    if (!want.has(String(e.currency).toUpperCase())) continue;
+    seen.add(key(e));
+  }
+  return seen.size - 1;
+}
+
+/**
+ * سطر الشريط الأول: **الموعد قبل العنوان**. السطر سطرٌ واحد (`numberOfLines={1}`)، وكان «⚠ خبر قوي · USD · Non-Farm
+ * Employment Change · بعد 1س 12د» يُقصّ بنقاط عند العنوان الطويل — فيضيع الموعد، وهو ما يقرّر به المتداول الدخول. الآن
+ * يُقصّ العنوان إن ضاق السطر. `more` = `sameMinuteHighImpact` («+2»؛ صفر لا يُكتب).
+ */
+export function newsBannerText(p: { head: string; currency: string; when: string; title: string; more: number }): string {
+  const title = p.more > 0 ? `${p.title} +${p.more}` : p.title;
+  return `⚠ ${p.head} · ${p.currency} · ${p.when} · ${title}`;
+}
+
+/**
  * العدّ التنازلي لسطر التحذير: «الآن» حين يكون الخبر جارياً (مضى ≤ 15د) أو باقٍ عليه دقيقة أو أقل،
  * وإلا ساعات ودقائق **مقرَّبة للأسفل**.
  *
