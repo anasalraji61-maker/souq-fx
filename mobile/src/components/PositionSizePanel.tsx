@@ -193,9 +193,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** خانة فيها نص لكنه ليس رقماً مفهوماً («10,000» مبهم، «1.2.3») — نقول ذلك بدل «أدخل الرصيد…» */
   const badNumber =
     (balance.trim() !== '' && parseDecimal(balance, { amount: true }) == null) ||
-    [riskPct, slPips, entryPx, stopPx, targetPx, manualConv].some((v) => v.trim() !== '' && parseDecimal(v) == null);
+    (riskPct.trim() !== '' && parseDecimal(riskPct, { percent: true }) == null) ||
+    [slPips, entryPx, stopPx, targetPx, manualConv].some((v) => v.trim() !== '' && parseDecimal(v) == null);
   /** الرصيد مبلغ: «10.000» أوروبية = عشرة آلاف فتُرفض كـ«10,000» بدل حساب لوت من 10 — راجع parseDecimal.ts */
   const balanceNum = parseDecimal(balance, { amount: true }) ?? NaN;
+  /** «1%» / «0.5٪» كما يقولها المتداول — علامة النسبة تُقبل بهذه الخانة وحدها (راجع parseDecimal.ts) */
+  const riskNum = parseDecimal(riskPct, { percent: true }) ?? NaN;
   const derivedSl = spec ? slPipsFromPrices(spec, num(entryPx), num(stopPx)) : null;
 
   // الوقف من السعر يكتب قيمته بخانة النقاط (مصدر واحد للحساب)؛ تعديل النقاط يدوياً يبقى ممكناً بعده.
@@ -252,7 +255,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     spec && pv != null && !slTooClose
       ? positionSize({
           balance: balanceNum,
-          riskPct: num(riskPct),
+          riskPct: riskNum,
           slPips: num(slPips),
           pipValuePerLot: pv,
           contractSize: spec.contractSize,
@@ -404,7 +407,6 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const group = (s: string) => s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   const money = (v: number) => `${group(v.toFixed(2))} ${account}`;
   const pipLabel = spec ? String(spec.pipSize) : '';
-  const riskNum = num(riskPct);
   /**
    * سقف الـ100 كان يُسكِت التحذير **عند الطرف الأخطر بالضبط**: من يكتب «20» فيصير الرقم «200»
    * بضغطة زائدة يرى ⚠ عند 20% ثم يختفي التحذير كلّه عند 200%. الشرط الآن بلا سقف.

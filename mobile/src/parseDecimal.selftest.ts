@@ -51,4 +51,16 @@ assert.equal(parseDecimal('10000', { amount: true }), 10000);
 assert.equal(parseDecimal('2500.5', { amount: true }), 2500.5);
 assert.equal(parseDecimal('2500.50', { amount: true }), 2500.5);
 assert.equal(parseDecimal('١٠٫٠٠٠', { amount: true }), null);
+// خانة النسبة: «1%» كما يقولها المتداول — علامة واحدة بأحد الطرفين، عربية أو لاتينية أو عريضة
+assert.equal(parseDecimal('1%', { percent: true }), 1);
+assert.equal(parseDecimal('0.5 %', { percent: true }), 0.5);
+assert.equal(parseDecimal('٠٫٥٪', { percent: true }), 0.5);
+assert.equal(parseDecimal('%2', { percent: true }), 2);
+assert.equal(parseDecimal('1,5％', { percent: true }), 1.5);
+assert.equal(parseDecimal('2', { percent: true }), 2);
+assert.equal(parseDecimal('%', { percent: true }), null);
+assert.equal(parseDecimal('1%%', { percent: true }), null);
+assert.equal(parseDecimal('%1%', { percent: true }), null);
+assert.equal(parseDecimal('1%5', { percent: true }), null);
+assert.equal(parseDecimal('1%'), null); // بلا الخيار: العلامة مرفوضة كما كانت (خانات السعر والرصيد)
 console.log('parseDecimal selftest OK');

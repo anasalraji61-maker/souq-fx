@@ -32,12 +32,22 @@ const THOUSANDS_GROUPS = (body: string, sep: string) => {
  *   المبهمة تماماً. الأسعار تحتاج «1.085» عشريةً فتبقى القاعدة العامة كما هي، لكن رصيداً بثلاث منازل لا
  *   يوجد، و«10.000» بكتابة أوروبية/تركية/إندونيسية تعني **عشرة آلاف** — كانت تُقرأ 10 فتقترح الحاسبة
  *   لوتاً أصغر ألف مرة بصمت، بينما «10,000» بجانبها تُرفض. الآن يتصرّف الفاصلان بالخانة نفسها بالقاعدة نفسها.
+ * @param opts.percent خانة **نسبة** (مخاطرة %): علامة نسبة واحدة بأحد الطرفين تُحذف — «1%»، «0.5 ٪»، «%2».
+ *   المتداول يكتب المخاطرة كما يقولها («1%»)، وكانت تُرفض بـ«رقم غير مفهوم» فتقف الحاسبة عند خانة لا
+ *   خطأ فيها. علامتان («1%%»، «%1%») أو علامة بالوسط تبقى مرفوضة، وبلا هذا الخيار تُرفض العلامة كما كانت.
  * @returns الرقم، أو null إن كان النص فارغاً/غير صالح/مبهماً.
  */
-export function parseDecimal(raw: string, opts: { signed?: boolean; amount?: boolean } = {}): number | null {
+export function parseDecimal(
+  raw: string,
+  opts: { signed?: boolean; amount?: boolean; percent?: boolean } = {}
+): number | null {
   let s = normalizeDigits(raw)
     .replace(/[\s   ٬']/g, '')
     .replace(/٫/g, '.');
+  if (opts.percent) {
+    const signs = s.match(/[%٪％]/g)?.length ?? 0;
+    if (signs === 1 && /^[%٪％]|[%٪％]$/.test(s)) s = s.replace(/[%٪％]/, '');
+  }
   let neg = false;
   if (opts.signed && /^[-−]/.test(s)) {
     neg = true;
