@@ -114,9 +114,30 @@ export function knownSingleName(raw: string): string | null {
  * تحذير. العملة المستقرّة (USDT/USDC) = الدولار؛ بعملة غير الدولار الساقان معاً (كـXAUEUR)؛ رقميّة مقابل
  * رقميّة («ETHBTC») أو اسم غير مدرج يبقى `[]`.
  */
-const CRYPTO = /^(BTC|ETH|LTC|XRP|SOL|BCH|BNB|ADA|DOT|DOGE|AVAX|LINK|XLM|TRX)(USDT|USDC|[A-Z]{3})$/;
+const CRYPTO = /^(BTC|XBT|ETH|LTC|XRP|SOL|BCH|BNB|ADA|DOT|DOGE|AVAX|LINK|XLM|TRX)(USDT|USDC|[A-Z]{3})$/;
 
+/**
+ * كتابات الوسيط التي تبقى بعد القواعد أدناه بلا عملة — فلا تحذير، وسطر «التقويم غير متاح» لا يظهر أيضاً، فيُقرأ الصمت
+ * «لا أخبار» قبل الرواتب. الدفتر يمرّر الرمز كما كُتب، فهذه تصل فعلاً:
+ * - **لاحقتان بفاصل** («NAS100.cash.m»، «NAS100_USD.m»، «EURUSD.m.x»): `suffixFree` تُسقط واحدة، وقاعدة OANDA تريد
+ *   `_XXX` آخر الرمز. تُقشَّر لاحقةٌ بفاصل وتُعاد المحاولة.
+ * - **كلمة نوع حساب ملاصقة** («EURUSDmini»، «XAUUSDpro»، «GBPJPYecn»): كـ«micro» و«Cash» الملاصقتين.
+ * تُقبل النتيجة فقط إن لم تكن فارغة — التحذير الزائد لا يكلّف شيئاً، والغائب قد يكلّف.
+ */
 export function symbolCurrencies(symbol: string): string[] {
+  const r = currenciesOnce(symbol);
+  if (r.length) return r;
+  const up = symbol.trim().toUpperCase();
+  const peeled = up.replace(/[.\-_#+][A-Z0-9]{0,5}$/, '');
+  if (peeled !== up && peeled.length >= 2) {
+    const p = symbolCurrencies(peeled);
+    if (p.length) return p;
+  }
+  const word = /^([A-Z0-9]{3,}?)[.\-_#+]?(MINI|PRO|ECN|RAW|STD|ZERO|PLUS|VIP)$/.exec(up);
+  return word ? currenciesOnce(word[1]) : [];
+}
+
+function currenciesOnce(symbol: string): string[] {
   /**
    * حساب **micro** بلاحقة ملاصقة (XM: «EURUSDmicro»، «GOLDmicro»): الحروف كلها 11 والملاصقة حرفٌ واحد فقط، فكانت
    * `[]` — صفقة يورو/دولار بلا تحذير قبل الرواتب. الزوج العادي نفسه (`smallContractPair`) يُحذَّر له.

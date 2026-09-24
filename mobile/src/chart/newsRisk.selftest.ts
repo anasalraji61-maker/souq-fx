@@ -551,3 +551,33 @@ console.log('newsRisk banner text selftest OK');
   assert.deepEqual(symbolCurrencies('GER40_M'), ['EUR']);
 }
 console.log('newsRisk OANDA underscore selftest OK');
+
+// كتابات وسيط كانت `[]` بلا تحذير (تدقيق 2026-09-25): لاحقتان بفاصل، كلمة نوع حساب ملاصقة، XBT
+{
+  const cases: [string, string[]][] = [
+    ['NAS100.cash.m', ['USD']],
+    ['NAS100_USD.m', ['USD']],
+    ['EURUSD.m.x', ['EUR', 'USD']],
+    ['EURUSDmini', ['EUR', 'USD']],
+    ['EURUSD-mini', ['EUR', 'USD']],
+    ['XAUUSDpro', ['USD']],
+    ['GBPJPYecn', ['GBP', 'JPY']],
+    ['US30raw', ['USD']],
+    ['XBTUSD', ['USD']],
+    ['XBTEUR', ['USD', 'EUR']],
+    ['GER40.cash.x', ['EUR']],
+  ];
+  for (const [sym, want] of cases) assert.deepEqual(symbolCurrencies(sym), want, sym);
+  // ما كان يعمل لا يتغيّر
+  assert.deepEqual(symbolCurrencies('EURUSD'), ['EUR', 'USD']);
+  assert.deepEqual(symbolCurrencies('EURUSDmicro'), ['EUR', 'USD']);
+  assert.deepEqual(symbolCurrencies('JP225_USD'), ['JPY', 'USD']);
+  // المجهول يبقى مجهولاً — لا تخمين من التقشير
+  assert.deepEqual(symbolCurrencies('AAPL.US'), []);
+  assert.deepEqual(symbolCurrencies('AAPL.US.m'), []);
+  assert.deepEqual(symbolCurrencies('ETHBTC'), []);
+  assert.deepEqual(symbolCurrencies('MINI'), []);
+  assert.deepEqual(symbolCurrencies('.m'), []);
+  assert.deepEqual(symbolCurrencies(''), []);
+}
+console.log('newsRisk broker spellings selftest OK');
