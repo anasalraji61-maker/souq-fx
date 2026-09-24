@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 8، بعد 92a3a87) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 9، بعد 043683e) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -25,7 +25,6 @@
 | QA | بلا مالك | **(a)** `RECONNECT_BASE_MS`/`MAX_MS` ×2 (`useLiveTicks.ts:7` و`useMultiLiveTicks.ts:6`) — chart: التوحيد لمالك `useMultiLiveTicks` | QA6 |
 | tools | أنس | تغيّر اليوم بقائمة المتابعة يتدحرج 00:00 UTC، وPDH/PDL بالشارت 17:00 نيويورك ⇒ «أمس» مختلف بين الشاشتين 21:00–24:00 UTC — توحيد؟ | tools38 |
 | QA | الجميع | **(a)** تصديرات بلا مستخدم خارج ملفها: `deleteTemplate`، `subscribeTemplatesSaveError`، `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite`، `PINE_PRESETS`، `getToolPanel`، `__setWatchlistStorageForTests`/`__reset…` (ولا اختبار)، `motion`، `FRAME_SYMBOLS`، mock.ts ×3 | QA1 ★ |
-| launch | chart | **محرّر الملاحظة** (`92a3a87`): المفاتيح جاهزة ×ar/en/ku — `MatrixChart.tsx:7369` `accessibilityLabel={tr.mcNoteTextA11y}` (الـplaceholder يبقى `mcNoteDefault`)؛ وسطر التلميح :5226 حين المحدَّد `note` ⇒ `mcHintNoteSelected`/`…Web` بدل `mcHintSelected` الذي يقول «اسحب مقبضاً لتعديل طرف» والملاحظة بلا طرف ثانٍ ولا يذكر الخانة | launch58 |
 | launch | chart | DeMarker 0..100 والمنصات 0..1 (قرار ⇒ أنس) | launch48 |
 | tools+launch+QA | الخادم | **spread مُختلَق** = السعر × 0.00008 (`twelve_data.py:316`) موسوم `provider`، يناقض `backtest.py:26-37`؛ يُزيح أسعار الدفتر (`tradePlan.ts:669 :741`) | tools13 ★ |
 | tools | الخادم | الحجم يُخزَّن 1 حين لا يُرسل (`backend/db.py:1704`) | 09-22 ★ |
@@ -33,9 +32,11 @@
 | launch | الخادم/أنس | `openrouter_ai.py:71` «أنت خبير تداول» ويعطي دخول/وقف/هدف | launch9 ★ |
 | launch | أنس | `MessagesScreen` غير مستوردة (وحدها تستعمل `mockPeers`) — تُحذف أم تُربط؟ | launch52 |
 | QA | الخادم | **(d)** `main.py:1774` يقرّب الوقف/الهدف لخانتين إن السعر ≥50 ⇒ USDJPY/DXY تفقد خانة | QA4 |
+| QA | الخادم | **(d) الدفتر يقصّ بصمت عند 200 صفقة**: `db.py:1681` `LIMIT 200` (مفتوحة+مغلقة) و`trade_stats` :1836 يحسب منها ⇒ بعد 200 صفقة «الصفقات المغلقة: n»/نسبة الفوز/صافي الـpip تُحسب على الأحدث فقط وتختفي القديمة من القائمة بلا إشارة. والمعامل `days=30` :1673 لا يُستعمل (ميّت). إمّا إحصاء بـSQL على الكل + ترقيم، أو نصّ «آخر 200» | QA9 |
 | QA | الخادم | **(e)** تقويم العيّنة `econ_calendar.py:39-47` أوقات خاطئة و«5.25%» قديم؛ `_impact` :77. الواجهة تقول الآن «عيّنة لا تتداول عليها» (63c2ef6) | QA5 |
 
-**أُسقط هذه الدورة — مُتحقَّق منه بالكود:** chart17 (`TerminalScreen.tsx:52 :132` `createSeriesCache` — 60e8892)؛ tools38 (`journalExposureStacked` بالقاموس ×3
-ويُعرض `TradeJournalPanel.tsx:600` — d9c5555/d6dc4c8)؛ QA7 «pip» (ردّ launch57 مقبول: «pip» لاتينية اصطلاح التطبيق كلّه بـ9 مواضع وبالقاموس نفسه).
-**(c) هذه الدورة:** 237 عنصراً تفاعلياً/40 ملفاً؛ 27 بلا `accessibilityLabel` — 18 منها نصّها ابنٌ مقروء (أزرار الشارت ×11، «تحديث»، الحساب ×4) فهي سليمة؛
-الحقيقية كلّها بملفات بلا مالك (الصفوف أعلاه). كل ما أُضيف منذ الدورة 3 (الرسم بالمستقبل، محرّر الملاحظة، الدفتر، الرباعي) موصوف، و`switch` بحالته.
+**أُسقط هذه الدورة — مُتحقَّق منه بالكود:** launch58 (`043683e`: `MatrixChart.tsx:7373` `tr.mcNoteTextA11y`، والتلميح :5226 `selectedSpan?.tool === 'note'` ⇒ `mcHintNoteSelected`/`…Web`).
+**(d) هذه الدورة — أرقام متطابقة (تحقّقت بالطرفين):** المسح SMA 9/21، RSI 30/70، 80 شمعة، 65/35 (`screener.py:33 :104` = `filter*Hint`)؛ 2% (`RISK_HIGH_PCT`)؛
+50/200 لوت (`ORDER_WARN_LOTS`/`MAX_SMALL_LOTS` = `riskCalcOverOrderMax*`)؛ 1:{max} (`MAX_LEVERAGE`)؛ ~30 صفقة (`BacktestPanel:224`)؛ 60 حرفاً للملاحظة (`maxLength` :7377)؛
+«كل دقيقة» (`alert_worker` 60ث)؛ 5د للتقويم؛ 24س/3س/15د (`CalendarPanel` = `newsRisk`)؛ نصّ الدردشة 1000 والتصويت 500 (= الخادم)؛ الباقات $10/15/20 (= نصّها)؛
+pip الفضة 0.01 والذهب 0.1 (الحاسبة = `backtest.py`). الجديد الوحيد: صفّ QA9 أعلاه. ملاحظة غير عاجلة: «حيّ» ينتهي 15ث (`FRESH_TICK_SEC`) وإعادة الاتصال 20ث (`TICK_STALE_MS`) — مقصود.
