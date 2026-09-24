@@ -35,6 +35,18 @@ function dirColor(d: string) {
   return colors.textMuted;
 }
 
+/**
+ * متوسط الدرجات كان `avg >= 0 ? '+' : ''` + `toFixed(2)`: الصفر يُكتب «+0.00» (إجماع محايد يُقرأ
+ * ميلاً للشراء)، وسالب صغير يُقرَّب «-0.00»، وحقل غائب من الخادم يرمي عند `toFixed` فيسقط اللوح.
+ * الآن بقاعدة النسبة نفسها: الصفر المطبوع بلا علامة، وناقص طباعي، وشَرطة لما ليس رقماً.
+ */
+function formatScore(n: number): string {
+  if (typeof n !== 'number' || !Number.isFinite(n)) return '—';
+  const r = Math.round(n * 100) / 100;
+  if (r === 0) return '0.00';
+  return `${r > 0 ? '+' : '−'}${Math.abs(r).toFixed(2)}`;
+}
+
 function dirLabel(d: string, t: Dict) {
   if (d === 'buy') return t.dirBuy;
   if (d === 'sell') return t.dirSell;
@@ -214,8 +226,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           </Text>
           <Text style={[styles.meta, { textAlign: align }]}>
             {votes.length ? `${t.forecastAgreeLabel} ${agreeing}/${votes.length} · ` : ''}
-            {t.forecastAvgLabel} {avg >= 0 ? '+' : ''}
-            {avg.toFixed(2)}
+            {t.forecastAvgLabel} {formatScore(avg)}
           </Text>
           {levels && direction !== 'neutral' ? (
             <Text style={[styles.levels, { textAlign: align }]}>
