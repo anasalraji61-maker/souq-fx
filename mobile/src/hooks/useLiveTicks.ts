@@ -10,6 +10,14 @@ const RECONNECT_MAX_MS = 30000;
 /** لقطة البثّ الأخيرة أقدم من هذا ⇒ لا تُعرض فوراً عند تبديل الرمز (البثّ كل ثانية). */
 const SNAPSHOT_FRESH_MS = 5000;
 
+/**
+ * بلا بثّ أطول من هذا ⇒ يُسقَط التيك: انقطاع الشبكة والتطبيق بالواجهة كان يُبقي آخر سعر
+ * «حيّاً» بالرأس ووسم السعر (والتنبيهات تُقارن به) طوال محاولات إعادة الاتصال حتى 30s لكل
+ * محاولة، وبلا حدّ إن بقي الخادم متوقّفاً. بعد الإسقاط يعود الشارت لإغلاق آخر شمعة.
+ */
+const TICK_STALE_MS = 20000;
+const STALE_CHECK_MS = 5000;
+
 type Snapshot = { at: number; ticks: Record<string, number>; source: LiveTick['source'] };
 
 function tickFromSnapshot(snap: Snapshot | null, sym: string): LiveTick | null {
@@ -106,6 +114,12 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
 
     connect();
 
+    const staleTimer = setInterval(() => {
+      const snap = snapRef.current;
+      if (snap && Date.now() - snap.at <= TICK_STALE_MS) return;
+      setState((s) => (s ? null : s));
+    }, STALE_CHECK_MS);
+
     // بالخلفية يُغلق النظام المقبس وتفشل المحاولات فيتضاعف الانتظار حتى 30s: بعد العودة
     // للتطبيق كان السعر الحيّ يقف حتى نصف دقيقة كأنه حيّ. العودة للواجهة تعيد الاتصال فوراً
     // وتصفّر التضاعف، إلا إن كان المقبس مفتوحاً أو قيد الاتصال أصلاً.
@@ -121,6 +135,7 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
 
     return () => {
       alive = false;
+      clearInterval(staleTimer);
       appSub.remove();
       if (reconnectTimer) clearTimeout(reconnectTimer);
       wsRef.current?.close();
