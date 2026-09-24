@@ -49,9 +49,6 @@ export type Dict = {
   notifStatusUnsupported: string;
   notifEnableBtn: string;
   notifOpenSettingsBtn: string;
-  restartRequiredTitle: string;
-  restartRequiredBody: string;
-  restartRequiredBtn: string;
   onboardStep1Title: string;
   onboardStep1Body: string;
   onboardStep2Title: string;
@@ -879,10 +876,6 @@ const ar: Dict = {
   notifStatusUnsupported: 'غير مدعومة على الويب',
   notifEnableBtn: 'تفعيل الإشعارات',
   notifOpenSettingsBtn: 'فتح إعدادات الجهاز',
-  restartRequiredTitle: 'يلزم إعادة تشغيل التطبيق',
-  restartRequiredBody:
-    'تم تغيير اللغة. أغلق التطبيق وأعد فتحه لتطبيق اتجاه الواجهة (يمين/يسار) بالكامل على كل الشاشات.',
-  restartRequiredBtn: 'حسناً',
   onboardStep1Title: 'بدّل الزوج بلمسة',
   onboardStep1Body:
     'اضغط على أي زوج بالشريط العلوي (EURUSD، GBPUSD، الذهب XAUUSD…) لينتقل الشارت إليه فوراً، مع تغيّر اليوم ▲▼ بجانبه. ولاحقاً افتح حتى أربع شارتات معاً للمقارنة.',
@@ -894,7 +887,7 @@ const ar: Dict = {
     'اختر من عشرات المؤشرات الجاهزة (RSI, MACD, بولنجر وغيرها)، أو فعّل عدسة جاهزة تلخّص حالة السوق بنظرة واحدة.',
   onboardStep4Title: 'التنبيهات',
   onboardStep4Body:
-    'أنشئ تنبيه سعر أو مؤشر وسيصلك إشعار فوري على جهازك أينما كنت — لا حاجة لمراقبة الشارت طوال الوقت.',
+    'أنشئ تنبيه سعر أو مؤشر، ويصلك إشعار على جهازك حين يتحقّق شرطه (يُفحص كل دقيقة تقريباً) — فلا داعي لمراقبة الشارت طوال اليوم. فعّل الإشعارات من لوح التنبيهات نفسه.',
   onboardStep5Title: 'المخاطرة أولاً',
   onboardStep5Body:
     'قبل أي صفقة افتح «أدوات ← حاسبة حجم المركز»: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة بالـpip لتعرف حجم اللوت المناسب. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
@@ -1727,10 +1720,6 @@ const enUS: Dict = {
   notifStatusUnsupported: 'Not supported on web',
   notifEnableBtn: 'Enable notifications',
   notifOpenSettingsBtn: 'Open device settings',
-  restartRequiredTitle: 'Restart required',
-  restartRequiredBody:
-    'Language changed. Close and reopen the app to fully apply the new layout direction across all screens.',
-  restartRequiredBtn: 'OK',
   onboardStep1Title: 'Switch pairs in one tap',
   onboardStep1Body:
     'Tap any pair in the top strip (EURUSD, GBPUSD, gold XAUUSD…) and the chart jumps to it, with today\'s change ▲▼ beside it. Later, open up to four charts side by side to compare.',
@@ -1742,7 +1731,7 @@ const enUS: Dict = {
     'Choose from dozens of ready indicators (RSI, MACD, Bollinger, and more), or turn on a lens that summarizes market state at a glance.',
   onboardStep4Title: 'Alerts',
   onboardStep4Body:
-    'Create a price or indicator alert and get an instant notification on your device — no need to watch the chart all day.',
+    'Set a price or indicator alert and your device gets a notification when it triggers (checked about once a minute) — no need to watch the chart all day. Turn on notifications from the alerts panel.',
   onboardStep5Title: 'Risk first',
   onboardStep5Body:
     'Before any trade, open Tools → Position size calculator: enter your balance, risk % and stop loss in pips to get the right lot size. Many traders risk no more than 1–2% per trade.',
@@ -2596,10 +2585,6 @@ const ku: Dict = {
   notifStatusUnsupported: 'پشتگیری ناکرێت لەسەر وێب',
   notifEnableBtn: 'چالاککردنی ئاگادارکردنەوەکان',
   notifOpenSettingsBtn: 'کردنەوەی ڕێکخستنی ئامێر',
-  restartRequiredTitle: 'پێویستە ئەپەکە دووبارە بکرێتەوە',
-  restartRequiredBody:
-    'زمان گۆڕدرا. ئەپەکە دابخە و دووبارە بیکەرەوە بۆ ئەوەی ئاراستەی ڕووکار (ڕاست/چەپ) بە تەواوی لەسەر هەموو پەیجەکان جێبەجێ بێت.',
-  restartRequiredBtn: 'باشە',
   onboardStep1Title: 'گۆڕینی جووت بە یەک دەستدان',
   onboardStep1Body:
     'دەست لە هەر جووتێک بدە لە شریتی سەرەوە (EURUSD، GBPUSD، زێڕ XAUUSD…) و شێوەنیگارەکە یەکسەر دەچێتە سەری، لەگەڵ گۆڕانی ئەمڕۆ ▲▼ لە تەنیشتیەوە. دواتر هەتا چوار شێوەنیگار بەیەکەوە بکەرەوە بۆ بەراورد.',
@@ -2611,7 +2596,7 @@ const ku: Dict = {
     'لە دەیان پێوەری ئامادە هەڵبژێرە (RSI، MACD، بۆلینگەر و زیاتر)، یان لینزێک چالاک بکە کە بارودۆخی بازاڕ بە یەک تەماشاکردن کورت دەکاتەوە.',
   onboardStep4Title: 'ئاگادارکردنەوەکان',
   onboardStep4Body:
-    'ئاگادارکردنەوەیەکی نرخ یان پێوەر دروست بکە و ئاگاداری خێرا لەسەر ئامێرەکەت وەربگرە — پێویست ناکات بە درێژایی ڕۆژ چاودێری شێوەنیگار بکەیت.',
+    'ئاگادارکردنەوەیەکی نرخ یان پێوەر دروست بکە و کاتێک مەرجەکەی هاتەدی ئاگاداری لەسەر ئامێرەکەت وەربگرە — پێویست ناکات بە درێژایی ڕۆژ چاودێری شێوەنیگار بکەیت.',
   onboardStep5Title: 'سەرەتا مەترسی',
   onboardStep5Body:
     'پێش هەر مامەڵەیەک «ئامرازەکان ← ژمێرەری قەبارەی پۆزیشن» بکەرەوە: باڵانس و ڕێژەی مەترسی و ستۆپ لۆس بە pip بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',

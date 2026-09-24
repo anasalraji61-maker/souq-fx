@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { Alert, I18nManager, Platform } from 'react-native';
+import { I18nManager, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DICTS, Dict, LangId, LANGS, isRtl } from './locales';
 
@@ -14,6 +14,24 @@ type I18nCtx = {
 const Ctx = createContext<I18nCtx | null>(null);
 const KEY = 'matrix.lang.v1';
 
+/**
+ * لغة أول فتح (قبل أن يختار المتداول شيئاً): كانت العربية دائماً، فمن يثبّت التطبيق من صفحة المتجر
+ * الإنجليزية على جهاز إنجليزي تستقبله جولة ترحيب لا يقرؤها — وزرّ اللغة بتبويب الحساب لم يعرف بعد
+ * أين هو. نقرأ لغة الجهاز من `Intl` (بلا تبعية جديدة) ونطابق ما ندعمه فقط؛ غير ذلك يبقى العربية،
+ * جمهور MATRIX الأول. لا يُحفظ هذا التخمين — المحفوظ هو اختيار المتداول الصريح وحده.
+ */
+function deviceLang(): LangId {
+  try {
+    const tag = Intl.DateTimeFormat().resolvedOptions().locale.toLowerCase();
+    if (tag.startsWith('ckb') || tag.startsWith('ku')) return 'ku';
+    if (tag === 'en-gb' || tag.startsWith('en-gb-')) return 'en-GB';
+    if (tag.startsWith('en')) return 'en-US';
+  } catch {
+    /* Intl غائب: الافتراضي */
+  }
+  return 'ar';
+}
+
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<LangId>('ar');
   const [ready, setReady] = useState(false);
@@ -22,7 +40,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       try {
         const saved = await AsyncStorage.getItem(KEY);
-        if (saved && saved in DICTS) setLangState(saved as LangId);
+        setLangState(saved && saved in DICTS ? (saved as LangId) : deviceLang());
       } catch {
         /* ignore */
       } finally {
@@ -31,28 +49,30 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
+  useEffect(() => {
+    // **اتجاه المنصّة مُثبَّت على LTR، والانعكاس للعربية/الكردية يدويّ بكل الواجهة.** كل صفّ بالتطبيق
+    // يقلب نفسه بشرط `rtl` من هذا السياق (`rtl && styles.xRtl` ← `row-reverse`، و`textAlign` صريح)
+    // — أكثر من 170 موضعاً. وكان `setLang` يستدعي `forceRTL(true)` ويطلب إعادة التشغيل؛ فإذا أعاد
+    // المتداول فتح التطبيق كما طُلب منه صار Yoga يعكس كل `row` بنفسه، فينقلب `row-reverse` اليدويّ
+    // **مرّة ثانية إلى اليسار**: الواجهة العربية كلها بالاتجاه الخطأ، بسبب اتّباع التعليمات حرفياً.
+    // وجهاز أندرويد بلغة عربية يبدأ أصلاً بـRTL مفعّل (السماح افتراضيّ). فنثبّت LTR هنا مرّة عند
+    // الإقلاع؛ من سبق أن فُعِّل عنده يُصلَح من الفتح التالي. والويب يتجاهل `I18nManager` كلياً.
+    if (Platform.OS === 'web') return;
+    try {
+      I18nManager.allowRTL(false);
+      if (I18nManager.isRTL) I18nManager.forceRTL(false);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // تبديل اللغة فوريّ على كل الشاشات (الانعكاس يقرأ `rtl` من السياق) — لا إعادة تشغيل ولا نافذة.
   const setLang = useCallback(async (id: LangId) => {
     setLangState(id);
-    await AsyncStorage.setItem(KEY, id);
-    const wantRtl = isRtl(id);
-    const rtlChanged = I18nManager.isRTL !== wantRtl;
-    if (rtlChanged) {
-      try {
-        I18nManager.allowRTL(wantRtl);
-        I18nManager.forceRTL(wantRtl);
-      } catch {
-        /* web may ignore */
-      }
-      // forceRTL only takes effect on native (iOS/Android) after the app is fully
-      // relaunched — there is no in-app reload API available here (no expo-updates
-      // dependency), so tell the trader explicitly instead of leaving a half-mirrored
-      // layout with no explanation.
-      if (Platform.OS !== 'web') {
-        const nextDict = DICTS[id];
-        Alert.alert(nextDict.restartRequiredTitle, nextDict.restartRequiredBody, [
-          { text: nextDict.restartRequiredBtn },
-        ]);
-      }
+    try {
+      await AsyncStorage.setItem(KEY, id);
+    } catch {
+      /* فشل الحفظ: اللغة تسري بهذه الجلسة ويُعاد الافتراضي بالفتح التالي — أهون من استثناء */
     }
   }, []);
 

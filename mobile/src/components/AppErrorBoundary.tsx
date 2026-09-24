@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../theme';
+import { buttons, colors, radii } from '../theme';
 import { useI18n } from '../i18n/I18nContext';
 
 type Props = { children: React.ReactNode };
@@ -36,7 +36,10 @@ class ErrorBoundaryInner extends React.Component<InnerProps, State> {
           accessibilityRole="button"
           accessibilityLabel={this.props.retry}
           onPress={this.reset}
-          style={({ pressed }) => [styles.btn, pressed && styles.btnPressed]}
+          style={({ pressed }) => [
+            styles.btn,
+            pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+          ]}
         >
           <Text style={styles.btnText}>{this.props.retry}</Text>
         </Pressable>
@@ -66,13 +69,21 @@ const styles = StyleSheet.create({
   brand: { color: colors.accent, fontSize: 13, fontWeight: '800', letterSpacing: 3 },
   title: { color: colors.text, fontSize: 18, fontWeight: '800', textAlign: 'center' },
   body: { color: colors.textMuted, fontSize: 14, lineHeight: 21, textAlign: 'center' },
+  // الزر الوحيد بهذه الشاشة هو طريق الخروج منها: حبّة تيل ممتلئة بظل خفيف وضغطة تصغير، كزرّ
+  // «التالي» بالجولة الترحيبية — لا لوح مسطّح بزوايا 10 يبدو معطّلاً بشاشة خطأ أصلاً.
   btn: {
     marginTop: 8,
+    minWidth: 180,
+    alignItems: 'center',
     backgroundColor: colors.accent,
-    borderRadius: 10,
-    paddingHorizontal: 22,
-    paddingVertical: 12,
+    borderRadius: radii.pill,
+    paddingHorizontal: 26,
+    paddingVertical: 13,
+    shadowColor: buttons.shadowColor,
+    shadowOpacity: buttons.shadowOpacity,
+    shadowRadius: buttons.shadowRadius,
+    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
+    elevation: buttons.elevation,
   },
-  btnPressed: { opacity: 0.85 },
   btnText: { color: colors.onAccent, fontSize: 15, fontWeight: '800' },
 });
