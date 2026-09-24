@@ -78,6 +78,17 @@ npx eas-cli submit --profile production --platform ios
 - **الفئة والتصنيف العمري**: مقترحة في `STORE-LISTING.md` (Finance). محادثة المجموعة وأفكار الصفقات
   محتوى مستخدمين — أجب بصدق على أسئلة «user-generated content» بالاستبيان، وخطوات مراجعة البلاغات
   في `docs/DEPLOYMENT.md`.
+- **ملصقات الإتاحة (Accessibility Nutrition Labels) بـApp Store Connect**: تصريح طوعي لكل ميزة، وما يُعلَن يجب أن يصحّ
+  في «المهام الشائعة» كلها. الجواب الصادق اليوم (فُحص بالكود 2026-09-24، دورة QA 3 + `grep`):
+  - **Dark Interface — نعم**: `userInterfaceStyle: "dark"` بـ`app.json` والواجهة داكنة فقط.
+  - **VoiceOver — لا تُعلَن بعد**: شريط الرسم يُقرأ رموزاً («⫽ Channel»، «⌫ Clear»)، ونحو 55 مفتاحاً/تبويباً حالته لونية فقط بلا
+    `accessibilityState`، وأزرار الانتظار تُقرأ «...» (المفتاح `a11yBusy` جاهز غير موصول) — صفوف QA3 بـ`COORDINATION.md`.
+  - **Differentiate Without Color Alone — لا**: للسبب نفسه (التبويب المختار يُعرف بلونه فقط).
+  - **Larger Text — لا تُعلَن**: لا `allowFontScaling={false}` بأي ملف (النصّ يكبر مع النظام)، لكن 454 `fontSize` ثابتاً وتخطيطات
+    بارتفاعات ثابتة لم تُجرَّب عند 200% على جهاز — تُعلَن بعد فحص يدوي فقط.
+  - **Sufficient Contrast / Reduced Motion / Voice Control — لا تُعلَن**: لم تُقَس ولم تُجرَّب. **Captions / Audio Descriptions**: لا فيديو
+    بالتطبيق (دروس القاعة صوت عبر `expo-av`) — اتركها فارغة.
+  Google Play لا يطلب تصريحاً مماثلاً.
 
 ## 5. بعد تثبيت أول بناء — فحص يدوي قصير على جهاز حقيقي
 
