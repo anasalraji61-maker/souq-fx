@@ -84,6 +84,18 @@ const INNER = 60; // لوحة مريحة
   assert.deepEqual(placeGuides('rsi', Number.NaN), []);
 }
 
+// أعلى لوحة فعلية (MAX_PANE_H 48 ⇒ مساحة 32): العتبات مرقّمة والوسط مرسوم — كانت عتباتها 34/44 فلا يظهر أيّهما.
+{
+  const full = placeGuides('rsi', 32);
+  assert.equal(full.length, 3);
+  assert.deepEqual(full.map((x) => x.label), ['70', null, '30']); // 50 أقرب من 10px لـ70 ⇒ خطّ بلا رقم
+  const chop = placeGuides('chop', 32).filter((x) => x.label != null);
+  assert.equal(chop.length, 1); // 61.8 و38.2 على بعد ~7.6px ⇒ رقم واحد
+  const rvix = placeGuides('rvix', 32);
+  assert.deepEqual(rvix.map((x) => [x.v, x.label]), [[50, '50']]);
+  assert.deepEqual(placeGuides('rvix', GUIDES_MID_MIN_INNER_H - 1), []);
+}
+
 // لوحة بلا عتبات معروفة (مقياس ديناميكي) لا تُرسم لها خطوط مخترَعة
 for (const id of ['cci', 'roc', 'atr', 'volume', '', 'nope']) {
   assert.deepEqual(placeGuides(id, INNER), [], id);

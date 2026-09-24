@@ -29,13 +29,21 @@ export interface PaneGuideSpec {
 
 /** أقلّ ارتفاع مساحة رسم تُرسم عنده خطوط أصلاً (أدنى منه واللوحة شريحة رفيعة). */
 export const GUIDES_MIN_INNER_H = 18;
-/** أقلّ ارتفاع تظهر عنده الخطوط الوسطى (RSI 50، ADX 25) دون ازدحام. */
-export const GUIDES_MID_MIN_INNER_H = 44;
-/** أقلّ ارتفاع تُكتب عنده أرقام العتبات بجانب الخطوط. */
-export const GUIDES_LABEL_MIN_INNER_H = 34;
+/**
+ * أقلّ ارتفاع تظهر عنده الخطوط الوسطى (RSI 50، ADX 25) دون ازدحام.
+ *
+ * كانت 44 والأرقام 34 — بينما مساحة رسم اللوحة `paneH − 16` ولا تتجاوز `MAX_PANE_H` (48) ⇒ 32px
+ * أقصى. فلم يُكتب رقم عتبة ولم يُرسم خطّ وسط **بأي لوحة إطلاقاً**: 70/30 على RSI وخطّ 50 وخطّ ADX 25
+ * كانت شيفرة لا تُرى. صارت تظهر باللوحة الكاملة (44–48px)، وتزاحم الأرقام يُحسم بـ`GUIDE_LABEL_MIN_GAP`.
+ */
+export const GUIDES_MID_MIN_INNER_H = 28;
+/** أقلّ ارتفاع تُكتب عنده أرقام العتبات بجانب الخطوط (لوحة 42px فأكثر). */
+export const GUIDES_LABEL_MIN_INNER_H = 26;
 
 /** العتبات القياسية للوحات التي يستعملها المتداول الفردي فعلاً. */
 export const PANE_GUIDES: Readonly<Record<string, PaneGuideSpec>> = {
+  /** RVI (Dorsey) تقلّب: فوق 50 التقلّب صاعد، تحته هابط — خطّه يغيّر لونه عند 50. */
+  rvix: { min: 0, max: 100, levels: [{ v: 50, kind: 'mid' }] },
   rsi: {
     min: 0,
     max: 100,
@@ -231,8 +239,21 @@ export function placeGuides(paneId: string, innerH: number): PlacedGuide[] {
       v: lv.v,
       kind: lv.kind,
       top: clamp(((spec.max - lv.v) / span) * innerH, 0, Math.max(0, innerH - 1)),
-      label: withLabels ? String(lv.v) : null,
+      label: null,
     });
+  }
+  if (withLabels) {
+    // الأطراف أولاً ثم الوسط: رقم أقرب من `GUIDE_LABEL_MIN_GAP` لرقمٍ كُتب يُسقَط والخطّ يبقى
+    // (50 بين 70 و30 بلوحة 32px، أو 61.8/38.2 على Choppiness).
+    const written: number[] = [];
+    for (const kind of ['extreme', 'mid'] as const) {
+      for (const g of out) {
+        if (g.kind !== kind) continue;
+        if (written.some((t) => Math.abs(t - g.top) < GUIDE_LABEL_MIN_GAP)) continue;
+        g.label = String(g.v);
+        written.push(g.top);
+      }
+    }
   }
   return out;
 }

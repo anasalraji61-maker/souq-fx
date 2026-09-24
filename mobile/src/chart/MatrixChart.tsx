@@ -753,6 +753,7 @@ function PaneValueHead({
   values,
   at = null,
   tone = 'sign',
+  center = 0,
 }: {
   name: string;
   values: readonly (number | null | undefined)[];
@@ -769,6 +770,8 @@ function PaneValueHead({
    *   لونان على معنيين مختلفين.
    */
   tone?: 'sign' | 'trend' | 'none';
+  /** مركز `'sign'`: الجانب نسبةً إليه لا إلى الصفر (RVI (Vol) حول 50). */
+  center?: number;
 }) {
   const v = paneValueAt(values, at);
   // المقياس من السلسلة كاملةً لا من الشمعة المقروءة — فلا يتبدّل شكل الرقم
@@ -784,8 +787,8 @@ function PaneValueHead({
           style={[
             styles.paneHeadValue,
             txt.length >= 7 && styles.paneHeadValueLong,
-            tone === 'sign' && v != null && v > 0 && { color: colors.bull },
-            tone === 'sign' && v != null && v < 0 && { color: colors.bear },
+            tone === 'sign' && v != null && v > center && { color: colors.bull },
+            tone === 'sign' && v != null && v < center && { color: colors.bear },
             trend === 'up' && { color: colors.bull },
             trend === 'down' && { color: colors.bear },
           ]}
@@ -7546,8 +7549,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {rvix ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="RVI (Vol)" values={rvix} at={crossIndex} tone="none" />
+          <PaneValueHead name="RVI (Vol)" values={rvix} at={crossIndex} tone="sign" center={50} />
           <View style={styles.paneInner}>
+            <PaneGuideLines paneId="rvix" innerH={paneH - 16} />
             <BoundedLineSeries values={rvix} paneH={paneH} color={(v) => (v > 50 ? colors.bull : v < 50 ? colors.bear : accent)} />
           </View>
         </View>
