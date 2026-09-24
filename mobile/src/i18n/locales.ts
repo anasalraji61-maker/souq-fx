@@ -335,6 +335,8 @@ export type Dict = {
   riskCalcNetNegative: string;
   // تحذير R:R منخفضة حين تُقرأ من الصافي (`rewardBelowRisk` مع تكاليف): `planLowRR` («الربح المحتمل…») يسمّي السطر الإجمالي فوقه وقد يقول 1:1.1
   riskCalcLowNetRR: string;
+  // الحجم فوق `MAX_SANE_LOTS` (100): رصيد كبير بوقف 1 pip يُخرج 200 lot بلا إشارة، وأغلب الوسطاء يرفضون أمراً فوق 50–100
+  riskCalcOverOrderMax: string;
   riskCalcCostsBelowMin: string;
   riskCalcUseLivePrice: string;
   riskCalcUseLivePriceA11y: string;
@@ -1210,6 +1212,7 @@ const ar: Dict = {
   riskCalcNetAfterCosts: 'بعد التكاليف: {profit} · R:R {rr}',
   riskCalcNetNegative: 'التكاليف تأكل الهدف كلّه: الصافي {profit} — أبعِد الهدف أو اختر حساباً بتكاليف أقل',
   riskCalcLowNetRR: '⚠ بعد التكاليف يصير الربح أقل من المخاطرة',
+  riskCalcOverOrderMax: '⚠ {lots} lot أكبر من أقصى أمر يقبله أغلب الوسطاء (50–100 lot) — قسّم الصفقة على أوامر أو راجع الوقف',
   riskCalcCostsBelowMin: 'مع التكاليف، حتى أصغر لوت (0.01) يتجاوز {pct}% — ارفع النسبة أو قرّب الوقف',
   riskCalcUseLivePrice: '↓ الدخول = السعر الحالي',
   riskCalcUseLivePriceA11y: 'تعبئة خانة الدخول بسعر السوق الحالي (Ask للشراء وBid للبيع حسب موضع الوقف)',
@@ -2094,6 +2097,7 @@ const enUS: Dict = {
   riskCalcNetAfterCosts: 'After costs: {profit} · R:R {rr}',
   riskCalcNetNegative: 'Costs eat the whole target: net {profit} — move the target further or use a cheaper account',
   riskCalcLowNetRR: '⚠ After costs, the reward is smaller than the risk',
+  riskCalcOverOrderMax: "⚠ {lots} lot is above most brokers' largest order (50–100 lot) — split it into several orders or check the stop",
   riskCalcCostsBelowMin: 'With costs, even the smallest lot (0.01) risks more than {pct}% — raise the % or tighten the stop',
   riskCalcUseLivePrice: '↓ Entry = current price',
   riskCalcUseLivePriceA11y: 'Fill the entry with the current market price (Ask for buy, Bid for sell, from where the stop sits)',
@@ -3003,6 +3007,7 @@ const ku: Dict = {
   riskCalcNetAfterCosts: 'دوای تێچووەکان: {profit} · R:R {rr}',
   riskCalcNetNegative: 'تێچووەکان هەموو ئامانجەکە دەخۆن: پوختە {profit} — ئامانجەکە دوورتر بخە یان هەژمارێکی کەمتێچووتر هەڵبژێرە',
   riskCalcLowNetRR: '⚠ دوای تێچووەکان، قازانج لە مەترسی کەمتر دەبێت',
+  riskCalcOverOrderMax: '⚠ {lots} lot لە گەورەترین فەرمانێک زیاترە کە زۆربەی بڕۆکەرەکان وەریدەگرن (50–100 lot) — بیکە بە چەند فەرمانێک یان وەستانەکە بپشکنە',
   riskCalcCostsBelowMin: 'لەگەڵ تێچووەکان، تەنانەت بچووکترین لۆت (0.01) لە {pct}% زیاتر دەخاتە مەترسییەوە — ڕێژەکە بەرز بکەرەوە یان وەستانەکە نزیک بکەرەوە',
   riskCalcUseLivePrice: '↓ چوونەژوورەوە = نرخی ئێستا',
   riskCalcUseLivePriceA11y: 'پڕکردنەوەی خانەی چوونەژوورەوە بە نرخی بازاڕی ئێستا (Ask بۆ کڕین و Bid بۆ فرۆشتن بەپێی شوێنی وەستان)',
