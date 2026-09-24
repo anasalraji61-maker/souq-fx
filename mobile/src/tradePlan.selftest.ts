@@ -3,6 +3,7 @@
  * Run: npx --yes tsx src/tradePlan.selftest.ts
  */
 import assert from 'node:assert/strict';
+import { parseDecimal } from './parseDecimal';
 import {
   analyzePlan,
   openRiskTotals,
@@ -16,6 +17,7 @@ import {
   liveStopChip,
   exitShortcuts,
   exitPreview,
+  journalSizeDottedThousands,
   averageR,
   initialStop,
   JOURNAL_NOTE_MAX,
@@ -2215,3 +2217,28 @@ console.log('tradePlan journal draft line from initial stop selftest OK');
   assert.equal(exitPreview({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083, exit: 1.089, note: 'x' })!.r, 2);
 }
 console.log('tradePlan floating/exit preview R from initial stop selftest OK');
+
+// ---- حجم الدفتر «10.000»: آلافٌ بنقطة (cTrader أوروبي) أم 10 لوتات — مبهمٌ يُنبَّه عليه بقراءة الوحدات ----
+{
+  // الخطأ: parseDecimal يقرؤه 10 والتحذير لا يعمل تحت 100 لوت
+  assert.equal(parseDecimal('10.000'), 10);
+  assert.equal(journalSizeLooksLikeUnits(10, 'EURUSD'), null);
+  assert.deepEqual(journalSizeDottedThousands('10.000', 'EURUSD'), { units: 10000, lots: 0.1 });
+  assert.deepEqual(journalSizeDottedThousands('50.000', 'GBPJPY'), { units: 50000, lots: 0.5 });
+  assert.deepEqual(journalSizeDottedThousands('100.000', 'EURUSD'), { units: 100000, lots: 1 });
+  assert.deepEqual(journalSizeDottedThousands(' 1.000 ', 'USDJPY'), { units: 1000, lots: 0.01 });
+  assert.deepEqual(journalSizeDottedThousands('١٠.٠٠٠', 'EURUSD.m'), { units: 10000, lots: 0.1 });
+  // فضة: 10,000 أونصة = 2 لوت (أصغر من 10) ⇒ يُنبَّه
+  assert.deepEqual(journalSizeDottedThousands('10.000', 'XAGUSD'), { units: 10000, lots: 2 });
+  // غير مبهم: ذيلٌ غير صفري، أقلّ/أكثر من ثلاث منازل، فاصلة، بلا فاصل، صفر، أداة مجهولة/سنت
+  for (const raw of ['1.500', '2.250', '10.00', '10.0000', '10', '10,000', '0.000', '1000.000', '']) {
+    assert.equal(journalSizeDottedThousands(raw, 'EURUSD'), null, raw);
+  }
+  assert.equal(journalSizeDottedThousands('10.000', 'BTCUSD'), null);
+  assert.equal(journalSizeDottedThousands('10.000', 'EURUSDc'), null);
+  // الذهب 100 أونصة للّوت: قراءة الوحدات **أكبر** (1.000 = 10 لوتات، 10.000 = 100) ⇒ لا خطر ولا اقتراح؛ والفضة 1.000 = 0.2 لوت ⇒ يُنبَّه
+  for (const raw of ['1.000', '10.000', '100.000']) assert.equal(journalSizeDottedThousands(raw, 'XAUUSD'), null, raw);
+  assert.deepEqual(journalSizeDottedThousands('5.000', 'XAGUSD'), { units: 5000, lots: 1 });
+  assert.deepEqual(journalSizeDottedThousands('1.000', 'XAGUSD'), { units: 1000, lots: 0.2 });
+}
+console.log('tradePlan journal dotted-thousands size selftest OK');

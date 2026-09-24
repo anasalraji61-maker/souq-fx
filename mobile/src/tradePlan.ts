@@ -8,6 +8,7 @@
  * - وقف أقرب من 1 pip للدخول (أضيق من أي سبريد تجزئة) خطأ كتابة شبه مؤكد: كان يُعرض «0 pip · R:R 1:5000».
  */
 import { knownSingleName } from './chart/newsRisk';
+import { normalizeDigits } from './parseDecimal';
 import {
   centAccountSymbol,
   microAccountSymbol,
@@ -81,6 +82,28 @@ export function journalSizeLooksLikeUnits(size: number, symbol: string | null | 
   // micro («EURUSDMICRO») كالسنت: لوتها أصغر بمئة مرّة فأرقامها أكبر، وعشرة آلاف لوت خطأ كتابة بها أيضاً
   if (!smallContractPair(up)) return null;
   return Number.isFinite(size) && size > MAX_SMALL_LOTS ? { lots: null } : null;
+}
+
+/**
+ * حجمٌ بخانة الدفتر مكتوبٌ «10.000» — **آلافٌ بنقطة** (cTrader بلغة ألمانية/تركية/إندونيسية ينسخ حجم 10,000 وحدة هكذا)
+ * أم 10 لوتات؟ `parseDecimal` يقرؤه 10 (الخانة تقبل «1.500» = 1.5 لوت)، و`sizeLooksLikeUnits` لا ينبّه تحت 100 — فصفقة
+ * 0.10 لوت تُحفظ **10 لوتات**: مخاطرة وقف 20 pip تُكتب 2,000.00 USD بدل 20.00، والمال بالدفتر أكبر بمئة مرّة بلا إشارة.
+ *
+ * المبهم **«N.000» وحده**: ذيلٌ آخر («1.500» = 1,500 وحدة = 0.015 لوت) ليس خطوة لوت صحيحة بقراءة الوحدات فلا لبس فيه.
+ * يُعاد `{ units, lots }` حين تكون قراءة الوحدات لوتاً صالحاً (خطوة 0.01) **أصغر** من قراءة اللوت لأداةٍ معروفة العقد — فيقول سطر
+ * التحذير بنقرة تحويل (كالوحدات «10000») ولا يُحفظ حتى يختار المتداول: «0.10» أو «10». `null` = لا لبس.
+ */
+export function journalSizeDottedThousands(raw: string, symbol: string | null | undefined): { units: number; lots: number } | null {
+  const m = /^(\d{1,3})[.．]000$/.exec(normalizeDigits(raw).trim());
+  if (!m || Number(m[1]) < 1) return null;
+  const spec = instrumentSpec((symbol || '').trim().toUpperCase());
+  if (!spec) return null;
+  const units = Number(m[1]) * 1000;
+  const raw2 = units / spec.contractSize;
+  const steps = Math.round(raw2 / LOT_STEP);
+  // قراءة الوحدات **أصغر** من قراءة اللوت وإلا فلا خطر يُنبَّه عليه: ذهب «1.000» = 1,000 أونصة = 10 لوتات — اقتراحٌ أسوأ
+  if (steps < 1 || Math.abs(raw2 / LOT_STEP - steps) > 1e-6 || raw2 >= Number(m[1])) return null;
+  return { units, lots: Math.round(steps * LOT_STEP * 100) / 100 };
 }
 
 /**

@@ -43,6 +43,7 @@ import {
   journalInstrumentKey,
   draftRiskFigures,
   journalSizeLooksLikeUnits,
+  journalSizeDottedThousands,
   journalSmallLotsStdEquiv,
   journalSizeFromSmall,
   realizedMove,
@@ -348,14 +349,18 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * حجمٌ يبدو وحداتٍ منسوخة من المنصّة («10000» بدل «0.10») — راجع `sizeLooksLikeUnits`. يُعرض سطر
    * تحذير بنقرة تحويل، ويُمنع الحفظ حتى يُصحَّح: صفقة بعشرة آلاف لوت تلوّث صافي الأداة بالمال كلّه.
    */
+  // «10.000» آلافٌ بنقطة أم 10 لوتات؟ — التحذير نفسه بقراءة الوحدات (`journalSizeDottedThousands`)
+  const sizeDotted = journalSizeDottedThousands(size, symbol);
   const sizeUnits = (() => {
+    if (sizeDotted) return { lots: sizeDotted.lots };
     const l = num(size);
     // رمز سنت كذلك، بلا اقتراح تحويل (`journalSizeLooksLikeUnits`)
     return l != null ? journalSizeLooksLikeUnits(l, symbol) : null;
   })();
   const sizeUnitsText = (): string => {
     const l = num(size) ?? 0;
-    const n = String(l).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    // المبهم يُقتبس كما كُتب («10.000») — «10» لا تبدو وحدات
+    const n = sizeDotted ? size.trim() : String(l).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     return sizeUnits?.lots != null
       ? t.journalSizeUnitsFix.replace('{n}', n).replace('{lots}', sizeUnits.lots.toFixed(2))
       : t.journalSizeUnitsNoFix.replace('{n}', n);
