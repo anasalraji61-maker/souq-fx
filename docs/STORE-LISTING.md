@@ -63,9 +63,9 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • تقويم اقتصادي وأخبار السوق في مكان واحد.
 
 أدوات المتداول
-• حاسبة حجم المركز: أدخل رصيدك والمخاطرة (نسبةً أو مبلغاً بعملة حسابك) ووقف الخسارة (بالنقاط أو بسعرَي الدخول والوقف) لتعرف حجم اللوت، مع أهداف جاهزة بنسبة 1:1 حتى 1:3، وتقدير للهامش الذي يحجزه الوسيط حسب رافعتك، وخانتا سبريد وعمولة اختياريتان تُريانك مخاطرتك وربحك الصافي شاملَين التكاليف.
+• حاسبة حجم المركز: أدخل رصيدك والمخاطرة (نسبةً أو مبلغاً بعملة حسابك) ووقف الخسارة (بالنقاط أو بسعرَي الدخول والوقف) لتعرف حجم اللوت، مع أهداف جاهزة بنسبة 1:1 حتى 1:3، وتقدير للهامش الذي يحجزه الوسيط حسب رافعتك، وخانتا سبريد وعمولة اختياريتان تُريانك مخاطرتك وربحك الصافي شاملَين التكاليف — وتنبّهك حين يكون وقفك أضيق من السبريد نفسه.
 • دفتر صفقات تسجّل فيه صفقاتك بنفسك: الربح المحتمل بالمال قبل الدخول، ونتيجة كل صفقة بالنقاط والمال تراها قبل أن تحفظها — ولمسة واحدة تغلقها على وقفها أو نقطة التعادل أو هدفها بالضبط — ثم نسبة النجاح والصافي لكل أداة ومتوسط النتيجة بوحدة المخاطرة (R).
-• تنبيه قبل الصفقة إن اقترب خبر اقتصادي قوي على عملة الزوج أو المؤشر أو المعدن، وبأسماء الرموز كما يكتبها وسيطك.
+• تنبيه قبل الصفقة إن اقترب خبر اقتصادي قوي على عملة الزوج أو المؤشر أو المعدن، وبأسماء الرموز كما يكتبها وسيطك. وإن تعذّر تحميل التقويم يقول لك ذلك صراحةً، فلا تظنّ أن لا خبر.
 • «فحص السوق»: فلترة الأزواج بشروط المؤشرات الشائعة.
 • اختبار استراتيجيات بسيطة على البيانات التاريخية — لأغراض تعليمية.
 • مساعد ذكاء اصطناعي يجيب عن أسئلتك في التحليل الفني بلغتك، وتقرير أسبوعي مختصر.
@@ -106,12 +106,12 @@ MATRIX is a technical-analysis workspace built for individual traders: fast char
 
 CHARTS
 • Candlesticks, Heikin-Ashi, Renko, Kagi and Point & Figure.
-• Up to four charts on one screen, with optional time sync — read the same candle on all four at once.
-• Tap any candle to see its open, high, low, close and range in pips, plus that level's distance from price in pips, then tap 🔔 to set a price alert there.
-• Pinch to zoom — the live candle stays in view. Drag the price axis to make candles taller or shorter. Scroll back to study an old pattern; one tap brings you back to the latest candle without losing your zoom.
+• Up to four charts on one screen, with optional time sync to read the same candle on all four.
+• Tap any candle to see its open, high, low, close and range in pips, plus that level's distance from price, then tap 🔔 to set an alert there.
+• Pinch to zoom — the live candle stays in view. Drag the price axis to make candles taller or shorter. Scroll back to study an old pattern; one tap returns you to the latest candle, zoom intact.
 • A countdown under the live price shows how long until the current candle closes.
 • The highest high and lowest low on screen carry their price and update as you scroll, and a faint line marks where each trading day starts on intraday charts.
-• The indicators traders actually use: SMA and EMA moving averages, Bollinger Bands, RSI, MACD, Volume and more, plus pivot levels (classic, Camarilla, Fibonacci) and yesterday's high and low, each with its price beside it, and Tokyo, London and New York session shading.
+• The indicators traders use: SMA and EMA, Bollinger Bands, RSI, MACD, Volume and more, plus pivot levels (classic, Camarilla, Fibonacci) and yesterday's high and low, each with its price beside it, and Tokyo, London and New York session shading.
 • One-tap "lenses" that add a ready set of indicators: Structure (moving averages), Momentum (RSI and MACD), Liquidity (volume and Bollinger).
 • Drawing tools: trend line, ray, horizontal and vertical lines, rectangle, Fibonacci, zones and notes, with undo. A horizontal line shows its distance from price in pips; a zone, its height. Drawings follow the symbol across timeframes.
 • Plan a buy or sell on the chart: drag from entry to stop to see the target, both distances in pips and the reward-to-risk ratio — drag the target to change it. On past candles it shows whether price hit the target or the stop.
@@ -124,9 +124,9 @@ WATCHLIST & ALERTS
 • Economic calendar and market news in one place.
 
 TRADER TOOLS
-• Position size calculator: enter your balance, your risk (as a percent or an amount in your account currency) and stop loss (in pips, or as entry and stop prices) to get your lot size, with one-tap targets from 1:1 to 1:3, an estimate of the margin your broker holds at your leverage, and optional spread and commission so your risk and net profit include costs.
+• Position size calculator: enter your balance, your risk (as a percent or an amount in your account currency) and stop loss (in pips, or as entry and stop prices) to get your lot size, with one-tap targets from 1:1 to 1:3, an estimate of the margin your broker holds at your leverage, and optional spread and commission so your risk and net profit include costs — and warns when your stop sits inside the spread.
 • A trade journal you fill in yourself: the potential profit in money before you enter, each trade's result in pips and money before you save it — with one tap to close it exactly at its stop, breakeven or target — then win rate, net result per instrument and average result in units of risk (R).
-• A heads-up before a trade when high-impact economic news is close for the pair's, index's or metal's currency — with symbols named the way your broker names them.
+• A heads-up before a trade when high-impact economic news is close for the pair's, index's or metal's currency — with symbols named the way your broker names them. If the calendar fails to load, it says so.
 • Market screener using common indicator conditions.
 • Simple strategy backtesting on historical data — for learning purposes.
 • An AI assistant that answers your technical-analysis questions in your language, plus a short weekly report.
@@ -136,7 +136,7 @@ ACADEMY
 • Structured audio lessons in graded levels, starting from the basics.
 • Ask the teacher mid-lesson and get an instant explanation.
 
-Designed to stay readable: calm colors that are easy on the eyes in long sessions, with tactile feedback only where you touch.
+Calm colors that are easy on the eyes in long sessions, with tactile feedback only where you touch.
 
 Important: MATRIX is an analysis and education app only. It does not execute trades, does not connect to any broker, and does not provide investment advice. Trading currencies and financial markets involves a high level of risk and may result in the loss of capital. Market data shown may be delayed or demo data depending on the source.
 
