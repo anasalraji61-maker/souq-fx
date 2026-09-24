@@ -6,6 +6,7 @@ import { TimeframeBar } from './TimeframeBar';
 import type { Timeframe } from '../timeframes';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { formatPrice } from '../chart/math';
+import { formatPct } from '../chart/dailyChange';
 import {
   provenanceLabel,
   tickStatusKind,
@@ -123,7 +124,12 @@ export function ChartFrame({
   const baseH = (phone ? HEIGHT_PHONE : HEIGHT)[size] + (interactive ? 220 : 0);
   const [measuredH, setMeasuredH] = useState(baseH);
   const chartH = fill ? measuredH : baseH;
-  const up = series.change_pct >= 0;
+  // نسبة الرأس كانت تُطبع خاماً بشرط `>= 0`: الصفر يُكتب «+0.00%» بالأخضر، وسالبُ الصفر
+  // (`round(chg, 2)` بالخادم يُخرج ‎-0.0‎ لهبوط دقيق) كذلك — فزوجٌ هابط يقرأ صاعداً.
+  // الآن `formatPct` المعتمدة، واللون من **الرقم المطبوع** نفسه: ما يُقرّب إلى صفر مكتوم.
+  const chgPct = Number.isFinite(series.change_pct) ? series.change_pct : null;
+  const chgRounded = chgPct == null ? 0 : Math.round(chgPct * 100) / 100;
+  const chgColor = chgRounded > 0 ? colors.bull : chgRounded < 0 ? colors.bear : colors.textDim;
   const partial = syncFollow && isPartialTimeCover(series, syncWindow);
   const badge =
     syncBadge === 'leader'
@@ -316,9 +322,8 @@ export function ChartFrame({
               {`B ${formatPrice(liveQuote!.bid!, series.symbol)} · A ${formatPrice(liveQuote!.ask!, series.symbol)}`}
             </Text>
           ) : null}
-          <Text style={[styles.chg, { color: up ? colors.bull : colors.bear }]}>
-            {up ? '+' : ''}
-            {series.change_pct.toFixed(2)}%
+          <Text style={[styles.chg, { color: chgColor }]}>
+            {chgPct == null ? '—' : formatPct(chgPct)}
           </Text>
           {onFocus ? (
             <Pressable
