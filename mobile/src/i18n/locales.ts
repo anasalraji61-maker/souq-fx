@@ -291,6 +291,7 @@ export type Dict = {
   riskCalcAccountCcy: string;
   riskCalcBalance: string;
   riskCalcRiskPct: string;
+  riskCalcRiskMoneyHint: string;
   riskCalcHighRisk: string;
   riskCalcSlPips: string;
   riskCalcFromPrice: string;
@@ -1163,7 +1164,8 @@ const ar: Dict = {
   planLowRR: '⚠ الربح المحتمل أقل من المخاطرة',
   riskCalcAccountCcy: 'عملة الحساب',
   riskCalcBalance: 'رصيد الحساب',
-  riskCalcRiskPct: 'نسبة المخاطرة %',
+  riskCalcRiskPct: 'المخاطرة (% أو مبلغ)',
+  riskCalcRiskMoneyHint: 'اضغط {ccy} لتكتب المخاطرة مبلغاً بدل النسبة',
   riskCalcHighRisk: '⚠ أكثر من 2% للصفقة الواحدة مخاطرة عالية',
   riskCalcSlPips: 'وقف الخسارة (بالنقاط pip)',
   riskCalcFromPrice: 'أو احسبه من السعر: الدخول والوقف كما تراهما على الشارت',
@@ -2046,7 +2048,8 @@ const enUS: Dict = {
   planLowRR: '⚠ Potential reward is smaller than the risk',
   riskCalcAccountCcy: 'Account currency',
   riskCalcBalance: 'Account balance',
-  riskCalcRiskPct: 'Risk %',
+  riskCalcRiskPct: 'Risk (% or amount)',
+  riskCalcRiskMoneyHint: 'Tap {ccy} to enter the risk as an amount instead of a percent',
   riskCalcHighRisk: '⚠ More than 2% per trade is high risk',
   riskCalcSlPips: 'Stop loss (pips)',
   riskCalcFromPrice: 'Or from price: entry and stop as you see them on the chart',
@@ -2954,7 +2957,8 @@ const ku: Dict = {
   planLowRR: '⚠ قازانجی ئەگەری لە مەترسی کەمترە',
   riskCalcAccountCcy: 'دراوی هەژمار',
   riskCalcBalance: 'باڵانسی هەژمار',
-  riskCalcRiskPct: 'ڕێژەی مەترسی %',
+  riskCalcRiskPct: 'مەترسی (% یان بڕی پارە)',
+  riskCalcRiskMoneyHint: 'بۆ نووسینی مەترسی بە بڕی پارە لە جیاتی ڕێژە، {ccy} دابگرە',
   riskCalcHighRisk: '⚠ زیاتر لە 2% بۆ هەر مامەڵەیەک مەترسی زۆرە',
   riskCalcSlPips: 'وەستانی زیان (pip)',
   riskCalcFromPrice: 'یان لە نرخەوە: چوونەژوورەوە و وەستان وەک لە چارتەکەدا دەیانبینیت',
