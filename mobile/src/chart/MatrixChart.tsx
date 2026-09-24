@@ -459,10 +459,6 @@ const COUNTDOWN_LINE_H = 11;
 /** آخر شارت نُقر على الويب — أسهم لوحة المفاتيح وEsc له وحده لا لكل شارت بالصفحة. */
 let webKeyChart: object | null = null;
 
-function candleTimeSec(t: number): number {
-  return t > 1e12 ? t / 1000 : t;
-}
-
 type DrawingHit = { id: string; dist: number } | null;
 
 /** نصف قطر مقبض الطرف بالبكسل — التقاطاً للتحديد وسحباً للتحريك (قيمة واحدة للاثنين). */
