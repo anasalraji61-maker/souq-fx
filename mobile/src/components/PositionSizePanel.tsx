@@ -614,7 +614,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** الهدف بالجهة الخطأ (فوق الدخول ببيع/تحته بشراء) — خطأ كتابة شائع، يُقال صراحةً بدل تجاهل الهدف */
   const targetWrongSide = plan?.issue === 'tpWrongSide';
   const lots = result && !result.belowMinLot ? result.lots : null;
-  const overOrderMax = lotsOverOrderMax(result);
+  // لوت السنت/micro بحدّه (200): 125 لوت سنت = 1.25 لوت عادي ليست «أكبر من أقصى أمر»
+  const overOrderMax = lotsOverOrderMax(result, small != null);
   /**
    * المخاطرة الفعلية بنسبةٍ من الرصيد: للّوت المحسوب (التقريب للأسفل يجعلها أقل من المطلوبة)، ولأصغر
    * لوت حين يخرج الحجم تحته — «0.01 lot = 3.00 USD · 6.00%» هو ما يحتاج أن يراه قبل أن يفتح أصغر لوت

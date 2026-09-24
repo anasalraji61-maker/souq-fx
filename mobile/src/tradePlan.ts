@@ -16,6 +16,7 @@ import {
   smallContractPair,
   LOT_STEP,
   MAX_SANE_LOTS,
+  MAX_SMALL_LOTS,
   pipsBetween,
   pnlInQuoteCcy,
   priceAtPipOffset,
@@ -77,7 +78,7 @@ export function journalSizeLooksLikeUnits(size: number, symbol: string | null | 
   if (spec) return sizeLooksLikeUnits(size, spec);
   // micro («EURUSDMICRO») كالسنت: لوتها أصغر بمئة مرّة فأرقامها أكبر، وعشرة آلاف لوت خطأ كتابة بها أيضاً
   if (!smallContractPair(up)) return null;
-  return Number.isFinite(size) && size > 2 * MAX_SANE_LOTS ? { lots: null } : null;
+  return Number.isFinite(size) && size > MAX_SMALL_LOTS ? { lots: null } : null;
 }
 
 /**
@@ -972,7 +973,7 @@ export function recentLotSizes(
    * غائب = كل الصفقات كما كان.
    */
   const want = forSymbol == null ? null : journalContractKind(forSymbol);
-  const cap = want === 'small' ? 2 * MAX_SANE_LOTS : MAX_SANE_LOTS;
+  const cap = want === 'small' ? MAX_SMALL_LOTS : MAX_SANE_LOTS;
   const out: number[] = [];
   for (const tr of trades) {
     if (out.length >= max) break;

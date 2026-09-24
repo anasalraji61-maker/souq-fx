@@ -1026,6 +1026,12 @@ export function commissionAcrossModes(raw: string, from: CommissionMode, to: Com
 
 /** أكبر حجم باللوت يُعقل بخانة «الحجم لوت»: وسطاء التجزئة يحدّون الأمر الواحد بـ50–100 لوت عادةً. */
 export const MAX_SANE_LOTS = 100;
+/**
+ * الحدّ نفسه للوت **السنت/micro** (`smallContractSpec`، عقدٌ ÷ 100): ضعف العادي. 125 لوت سنت = 1.25 لوت عادي كانت تحذّر
+ * «أكبر من أقصى أمر» بالحاسبة (حدّ العادي 100)، ولوت السنت بطبيعته أرقامٌ أكبر. 200 = أقصى أمر سنت شائع (Exness Cent)،
+ * وهو الحدّ الذي يعدّ به الدفتر حجم السنت مريباً (`journalSizeLooksLikeUnits`) — فلا تُسجَّل خطةٌ يرفضها الدفتر.
+ */
+export const MAX_SMALL_LOTS = 2 * MAX_SANE_LOTS;
 
 /**
  * الحجم المحسوب **فوق أكبر أمر** يقبله أغلب الوسطاء (`MAX_SANE_LOTS`): رصيد 100,000 بمخاطرة 2% ووقف
@@ -1033,9 +1039,9 @@ export const MAX_SANE_LOTS = 100;
  * بدل «10»). يُرجع اللوت المقرَّب ليُذكر بالتحذير، أو `null` (ضمن الحدّ، أو دون أصغر لوت، أو لا نتيجة).
  * `MAX_SANE_LOTS` بالضبط مقبول — الحدّ نفسه يُقبل عند الوسطاء الذين يحدّون بـ100.
  */
-export function lotsOverOrderMax(result: SizeResult | null): number | null {
+export function lotsOverOrderMax(result: SizeResult | null, small = false): number | null {
   if (!result || result.belowMinLot || !Number.isFinite(result.lots)) return null;
-  return result.lots > MAX_SANE_LOTS ? result.lots : null;
+  return result.lots > (small ? MAX_SMALL_LOTS : MAX_SANE_LOTS) ? result.lots : null;
 }
 
 /**

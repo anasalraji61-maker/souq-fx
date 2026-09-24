@@ -35,6 +35,7 @@ import {
   sizeLooksLikeUnits,
   lotsOverOrderMax,
   MAX_SANE_LOTS,
+  MAX_SMALL_LOTS,
   parseSpreadPips,
   spreadRisk,
   parsePriceFor,
@@ -1899,3 +1900,26 @@ console.log('positionSize commissionAcrossModes selftest OK');
   assert.equal(smallContractSpec('EURUSDmicro')?.kind, 'micro');
 }
 console.log('positionSize SYMBOL_INPUT_MAX_LEN selftest OK');
+
+// lotsOverOrderMax بلوت السنت/micro — حدّه 200 (كالدفتر)، لا 100
+{
+  // EURUSDc: 500,000 USC · 2% · وقف 8 pip · 10 USC/pip للوت سنت ⇒ 125 لوت سنت = 1.25 لوت عادي
+  const pv = pipValuePerLot(smallContractSpec('EURUSDc')!.spec, centQuoteToAccount(1)!);
+  assert.equal(pv, 10);
+  const r = positionSize({ balance: 500_000, riskPct: 2, slPips: 8, pipValuePerLot: pv, contractSize: 1_000 })!;
+  assert.equal(r.lots, 125);
+  assert.equal(lotsOverOrderMax(r, true), null);
+  assert.equal(lotsOverOrderMax(r), 125); // حدّ العادي كان يحذّر
+  // الحدّ بالضبط مقبول، وفوقه يحذّر
+  const at = positionSize({ balance: 1_000_000, riskPct: 1, slPips: 5, pipValuePerLot: 10, contractSize: 1_000 })!;
+  assert.equal(at.lots, MAX_SMALL_LOTS);
+  assert.equal(lotsOverOrderMax(at, true), null);
+  const over = positionSize({ balance: 1_000_000, riskPct: 2, slPips: 8, pipValuePerLot: 10, contractSize: 1_000 })!;
+  assert.equal(over.lots, 250);
+  assert.equal(lotsOverOrderMax(over, true), 250);
+  assert.equal(MAX_SMALL_LOTS, 200);
+  // حسابٌ عادي كما كان
+  const std = positionSize({ balance: 100_000, riskPct: 2, slPips: 1, pipValuePerLot: 10, contractSize: 100_000 })!;
+  assert.equal(lotsOverOrderMax(std, false), 200);
+}
+console.log('positionSize lotsOverOrderMax small selftest OK');
