@@ -1706,3 +1706,32 @@
 
 **خارج نطاقي ويستحقّ عملاً**: قرار أنس بشأن العمولات/الشبكة (⛔)، `MessagesScreen` الميّتة، `backend/openrouter_ai.py`، السبريد المختلَق، `₴`.
 **يحتاج جهازاً**: Larger Text عند 200% قبل إعلانها بالمتجر.
+
+## 2026-09-24 — التشغيلة الثالثة والخمسون
+
+`bash scripts/qa-build-check.sh` **أخضر بصفر أخطاء قبل كل commit**؛ صفر `U+FFFD` بـ`locales.ts`؛ كل ادّعاء بالوثائق مقروء من الكود. **لم يُشغَّل التطبيق.**
+
+1. **`OnboardingOverlay.tsx`** (`a317a66`): الجولة لم تكن تُسمِع قارئ الشاشة الخطوة الجديدة — بعد «التالي» يبقى تركيز VoiceOver/TalkBack على الزرّ
+   والنصّ يتبدّل فوقه بصمت. الآن `AccessibilityInfo.announceForAccessibility` بـ«الخطوة n من 5. العنوان. النصّ» مع كل انتقال (التالي، النقاط،
+   رجوع أندرويد — دالّة `go` واحدة)، والعنوان `accessibilityRole="header"`. على الويب الدالّة فارغة بـreact-native-web (تحقّقت). بلا مفتاح جديد.
+2. **`RELEASE-MOBILE.md` §4** (`db056fd`): أجوبة ملصقات الإتاحة حُدّثت بعد إصلاحات chart/tools — ما أُصلح بأرقام commits، وما بقي بالكود:
+   `MatrixEdgeRails` (15 Pressable) و`MatrixBottomDock` (9) بصفر `accessibilityState`؛ `AccountScreen` :279 :316 :429 و`AlertsPanel` :983 :1061 ما زالت «...».
+   VoiceOver وDifferentiate Without Color ما زالا «لا». خطوة الاختبار 34: AUTO يُقرأ الآن `mcAutoA11y` (كانت الوثيقة تقول «AUTO» فقط).
+3. **`locales.ts`** (`94b5150`) ar/en/ku: اختصارات Alt الجديدة على الويب (`82b0de0`) لم يذكرها أيّ نصّ — `mcHintNavigateWeb` يذكر Alt+R وAlt+T/H/V/F
+   بأسماء الأدوات من `ctlTool*`، و`mcHintDrawWeb` يذكر Alt+T/H/V/F. قرأت `MatrixChart.tsx:469` و`:3976` قبل الكتابة. `FEATURE-INVENTORY.md` يسردها
+   بصياغة محايدة («Alt+حرف على الويب») لا «اختصارات TradingView» (ip-legal-caution: الاختصارات وظيفية، الاسم لا يُستورد)، ويصحّح «لا تلميح يذكرها» — التلميحان موصولان.
+4. **`AppErrorBoundary.tsx`** (`b9cba70`): عنوان شاشة الخطأ `header`.
+
+### ردّ على COORDINATION
+- **chart41 (`mcLogScaleA11y`/`mcShareDialogTitle`/`mcSess*`)**: مفاتيحي منذ `48b5e23`، وربطها وكيل الشارت بـ`dcb738e` — `grep` يجد `tr.mcShareDialogTitle`
+  (`MatrixChart.tsx:3482`) و`tr.mcLogScaleA11y` (:5232)، و`chartLocalLabels` لا يظهر بأي ملف. **الصفّ منجز من الطرفين — يُسقَط.**
+
+### طلب تنسيق — لوكيل الشارت
+- `mcAutoManualA11y` جاهز غير موصول: `MatrixChart.tsx:7574` ← `priceManual ? tr.mcAutoManualA11y : tr.mcAutoA11y` (الحالة اليدوية لونية فقط اليوم).
+- `MatrixEdgeRails`/`MatrixBottomDock`: `accessibilityState={{ selected }}` — آخر ما يمنع «Differentiate Without Color» في §4.
+
+### طلب تنسيق — لمالك AlertsPanel
+- `:983` و`:1061`: `accessibilityLabel={busy ? t.a11yBusy : …}` — آخر زرَّي «...» خارج AccountScreen.
+
+**خارج نطاقي ويستحقّ عملاً**: قرار أنس بشأن العمولات/الشبكة (⛔)، `extra.apiUrl` المحلّي، `MessagesScreen` الميّتة، `backend/openrouter_ai.py`، السبريد المختلَق، `₴`.
+**يحتاج جهازاً**: إعلان خطوات الجولة بـVoiceOver/TalkBack فعلاً؛ Larger Text عند 200%.
