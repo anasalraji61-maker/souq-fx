@@ -31,7 +31,7 @@ const KIND_KEYS: Partial<Record<ChartKind, LabelKey>> = {
   range: 'ctlKindRange',
 };
 
-const TOOL_KEYS: Record<DrawTool, LabelKey> = {
+const TOOL_KEYS: Partial<Record<DrawTool, LabelKey>> = {
   none: 'ctlToolNone',
   select: 'ctlToolSelect',
   trend: 'ctlToolTrend',
@@ -67,8 +67,21 @@ export function localizedChartKinds(t: Dict): typeof CHART_KINDS {
   });
 }
 
+/**
+ * «شعاع أفقي» بلا مفتاح بالقاموس بعد (`locales.ts` خارج نطاق وكيل الشارت — طلب تنسيق بـLOG-CHART):
+ * تُعرف اللغة من تسمية «شعاع» نفسها بالقاموس المعطى، فيعمل عند كل مستدعٍ يمرّر `t` وحده.
+ */
+function hrayLabel(t: Dict): string {
+  if (t.ctlToolRay === 'Ray') return 'H-ray';
+  if (t.ctlToolRay === 'تیشک') return 'تیشکی ئاسۆیی';
+  return 'شعاع أفقي';
+}
+
 export function localizedDrawTools(t: Dict): typeof DRAW_TOOLS {
-  return DRAW_TOOLS.map((tool) => ({ ...tool, label: t[TOOL_KEYS[tool.id]] }));
+  return DRAW_TOOLS.map((tool) => {
+    const key = TOOL_KEYS[tool.id];
+    return { ...tool, label: key ? t[key] : tool.id === 'hray' ? hrayLabel(t) : tool.label };
+  });
 }
 
 export function localizedLenses(t: Dict): typeof LENSES {

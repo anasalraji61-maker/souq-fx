@@ -424,6 +424,7 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
   trend: '╱',
   ray: '↗',
   hline: '━',
+  hray: '⊢',
   vline: '┃',
   rect: '□',
   fib: 'Φ',
@@ -3066,7 +3067,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         setTool('none');
         return;
       }
-      if (t === 'hline' || t === 'vline' || t === 'note') {
+      if (t === 'hline' || t === 'hray' || t === 'vline' || t === 'note') {
         pushDrawHistory();
         setDrawings((d) => [
           ...d,
@@ -3310,6 +3311,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           best = considerHit(d.id, Math.abs(y - ay), BODY_R, best);
           continue;
         }
+        if (d.tool === 'hray') {
+          // من مرساته إلى حافّة اللوح كما يُرسم — يسار المرساة ليس من الرسم.
+          const sx = Math.max(0, ax);
+          best = considerHit(d.id, segmentDistance(x, y, sx, ay, Math.max(sx + 1, chartPlotW), ay, 1), BODY_R, best);
+          continue;
+        }
         if (d.tool === 'vline') {
           best = considerHit(d.id, Math.abs(x - ax), BODY_R, best);
           continue;
@@ -3437,7 +3444,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       return;
     }
     const point = pointFromXY(x, y);
-    if (tool === 'hline' || tool === 'vline' || tool === 'note') {
+    if (tool === 'hline' || tool === 'hray' || tool === 'vline' || tool === 'note') {
       finalizeDrawing(point);
       return;
     }
@@ -3470,7 +3477,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           webKeyChart = keyToken.current;
           const { locationX, locationY } = evt.nativeEvent;
           const p = pointFromXY(locationX, locationY);
-          if (tool === 'hline' || tool === 'vline' || tool === 'note') return;
+          if (tool === 'hline' || tool === 'hray' || tool === 'vline' || tool === 'note') return;
           if (tool === 'measure') setMeasureDone(null);
           drawGestureHadPending.current = !!pending;
           drawAnchorRef.current = pending ?? p;
@@ -3484,7 +3491,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         onPanResponderRelease: (evt, g) => {
           const { locationX, locationY } = evt.nativeEvent;
           const end = pointFromXY(locationX, locationY);
-          if (tool === 'hline' || tool === 'vline' || tool === 'note') {
+          if (tool === 'hline' || tool === 'hray' || tool === 'vline' || tool === 'note') {
             onChartPress(locationX, locationY);
             return;
           }
@@ -4454,7 +4461,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // مرسوم عند قاع قبل 120 شمعة يختفي (ووسم سعره) بمجرّد العودة للحيّ، ويبقى قابلاً للتحديد.
     .filter(
       ({ d, aLocal, bLocal }) =>
-        d.tool === 'hline' || d.tool === 'fib' || aLocal >= -2 || bLocal >= -2
+        d.tool === 'hline' || d.tool === 'hray' || d.tool === 'fib' || aLocal >= -2 || bLocal >= -2
     );
 
   /**
@@ -4470,7 +4477,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
    */
   const hlinePriceLabels = new Set(
     thinByGap(
-      visibleDrawings.filter(({ d }) => d.tool === 'hline'),
+      visibleDrawings.filter(({ d }) => d.tool === 'hline' || d.tool === 'hray'),
       ({ d }) => yOf(d.a.price),
       ({ d }) => -d.a.price,
       HLINE_LABEL_GAP
@@ -4484,7 +4491,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
    * — وكلّ مجموعة تتجنّب مواضع وسوم ما قبلها (`taken`). الخطوط نفسها تُرسم كلّها كما كانت.
    */
   const takenLabelYs: number[] = visibleDrawings
-    .filter(({ d }) => d.tool === 'hline' && hlinePriceLabels.has(d.id))
+    .filter(({ d }) => (d.tool === 'hline' || d.tool === 'hray') && hlinePriceLabels.has(d.id))
     .map(({ d }) => yOf(d.a.price));
   const fibLabelPlans = new Map<string, FibLabelPlan[]>();
   for (const { d } of visibleDrawings) {
@@ -6671,12 +6678,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {/* drawings */}
         {visibleDrawings.map(({ d, aLocal, bLocal }) => {
           const sel = d.id === selectedId;
-          if (d.tool === 'hline') {
+          if (d.tool === 'hline' || d.tool === 'hray') {
+            // الشعاع الأفقي: مستوى يبدأ من قمّة/قاع بعينه ويمتدّ يميناً فقط — ما يرسمه متداول
+            // الفوركس للدعم/المقاومة كي لا يقطع الخطّ تاريخاً سابقاً لم يكن فيه المستوى قائماً.
+            // خطّ متّصل لا متقطّع كي لا يُخلَط بالأفقي الكامل، ووسمه عند بدايته.
+            const rayX = d.tool === 'hray' ? Math.max(0, xOf(aLocal)) : 0;
+            if (d.tool === 'hray' && rayX >= chartPlotW - 2) return null;
             return (
               <View
                 key={d.id}
                 style={[
                   styles.hLine,
+                  d.tool === 'hray' && [styles.hRay, { left: rayX, width: chartPlotW - rayX }],
                   {
                     top: yOf(d.a.price),
                     borderColor: d.color,
@@ -6688,9 +6701,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   },
                 ]}
               >
+                {d.tool === 'hray' && sel ? (
+                  <View style={[styles.grabHandle, { left: 0, top: -1.25, borderColor: d.color }]} />
+                ) : null}
                 {hlinePriceLabels.has(d.id) ? (
                   <Text
-                    style={[styles.levelPriceLabel, { color: d.color }, sel && styles.levelPriceLabelSel]}
+                    style={[
+                      styles.levelPriceLabel,
+                      { color: d.color },
+                      d.tool === 'hray' && styles.hRayLabel,
+                      sel && styles.levelPriceLabelSel,
+                    ]}
                     numberOfLines={1}
                   >
                     {fmtPrice(d.a.price)}
@@ -6879,7 +6900,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             renderPosition('positionPreview', tool, pending, positionEndPoint(pending, dragEnd), undefined, accent, false, true)
           : null}
 
-        {pending && dragEnd && tool !== 'none' && tool !== 'select' && tool !== 'hline' && tool !== 'vline' && tool !== 'note' && !isPositionTool(tool) ? (
+        {pending && dragEnd && tool !== 'none' && tool !== 'select' && tool !== 'hline' && tool !== 'hray' && tool !== 'vline' && tool !== 'note' && !isPositionTool(tool) ? (
           (() => {
             const x1 = xOf(pending.index - source.start);
             const y1 = yOf(pending.price);
@@ -10139,7 +10160,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 </Pressable>
                 {(() => {
                   const d = drawings.find((x) => x.id === selectedId);
-                  if (d?.tool === 'hline' && onCreateAlert) {
+                  if ((d?.tool === 'hline' || d?.tool === 'hray') && onCreateAlert) {
                     return (
                       <Pressable
                         accessibilityRole="button"
@@ -10501,6 +10522,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderStyle: 'dashed',
   },
+  hRay: { right: undefined, borderStyle: 'solid' },
+  /** بعد مقبض البداية (نصف قطره 6) لا فوقه. */
+  hRayLabel: { left: 10 },
   vLine: {
     position: 'absolute',
     top: 0,

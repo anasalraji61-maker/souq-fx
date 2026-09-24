@@ -188,6 +188,7 @@ export type DrawTool =
   | 'trend'
   | 'ray'
   | 'hline'
+  | 'hray'
   | 'vline'
   | 'rect'
   | 'fib'
@@ -428,6 +429,7 @@ export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [
   { id: 'trend', label: 'ترند' },
   { id: 'ray', label: 'شعاع' },
   { id: 'hline', label: 'أفقي' },
+  { id: 'hray', label: 'شعاع أفقي' },
   { id: 'vline', label: 'عمودي' },
   { id: 'rect', label: 'مستطيل' },
   { id: 'fib', label: 'فيبو' },
