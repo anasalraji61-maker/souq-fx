@@ -4111,6 +4111,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       durationSec: measureDurationSec(m.a, m.b, timeframeStepSec(series.timeframe)),
     });
   const measureReadout = measureDone ? measureText(measureDone) : null;
+  // الرسم المحدَّد بطرفين يُقرأ كقياس بسطر القراءة («+24.0 pip · 12 شمعة · 3h») — كم قطع خطّ
+  // الترند وبكم شمعة، وكم عرض المنطقة زمنياً، بلا إعادة رسمه بأداة القياس. كـTradingView.
+  const selectedSpan = selectedId ? drawings.find((d) => d.id === selectedId) : undefined;
+  const selectedSpanReadout =
+    selectedSpan?.b &&
+    (selectedSpan.tool === 'trend' ||
+      selectedSpan.tool === 'ray' ||
+      selectedSpan.tool === 'fib' ||
+      selectedSpan.tool === 'rect' ||
+      selectedSpan.tool === 'zone')
+      ? measureText({ a: selectedSpan.a, b: selectedSpan.b })
+      : null;
 
   const visibleDrawings = drawings
     .map((d) => {
@@ -4514,6 +4526,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               return range ? ` ${range}` : '';
             })()}
             {compareSeries ? ` · ${compareSeries.symbol} ${formatPrice(compareSeries.last, compareSeries.symbol)}` : ''}
+          </Text>
+        ) : selectedSpanReadout ? (
+          <Text style={[styles.readoutText, selectedSpan ? { color: selectedSpan.color } : null]}>
+            {selectedSpanReadout}
           </Text>
         ) : (
           <Text style={styles.readoutMuted}>
