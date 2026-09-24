@@ -596,30 +596,51 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * (رافعة مكتوبة وحجم محسوب)، واقتباس بذري تجريبي لا يُستعمل (`isRealQuote`). السعر يُكتب بالسطر
    * «@ 1.08510» كي لا يُظنّ دخولاً مكتوباً — راجع `marginPrice`.
    */
-  const [mktQuote, setMktQuote] = useState<{ sym: string; price: number; bid?: number | null; ask?: number | null } | null>(null);
+  const [mktQuote, setMktQuote] = useState<{
+    sym: string;
+    price: number;
+    bid?: number | null;
+    ask?: number | null;
+    /** قيمة `mktRefresh` حين جُلب — أقدم منها ⇒ يُعاد الجلب بصمت */
+    refresh: number;
+  } | null>(null);
   const entryTyped = Number.isFinite(priceNum(entryPx)) && priceNum(entryPx) > 0;
   const needMarketPx = spec != null && !entryTyped && leverageNum != null && lots != null;
   const mktSym = needMarketPx ? spec!.symbol : null;
-  const haveMkt = mktQuote != null && mktQuote.sym === mktSym;
+  /**
+   * **يتجدّد كل 60 ث** كسعر التحويل: كان يُجلب مرّة لكل رمز، واللوحة تُترك مفتوحة جلسةً — والهامش ونسبته
+   * و«أكبر لوت يتّسع له الرصيد» كلّها من هذا السعر. التحديث صامت: السعر القديم يبقى معروضاً حتى يصل
+   * الجديد، والفشل يُبقيه ولا يوقف التالي (المؤقّت يُعاد تسليحه مع العدّاد لا مع النجاح).
+   */
+  const [mktRefresh, setMktRefresh] = useState(0);
+  useEffect(() => {
+    if (!mktSym) return;
+    const id = setTimeout(() => setMktRefresh((n: number) => n + 1), 60_000);
+    return () => clearTimeout(id);
+  }, [mktSym, mktRefresh]);
+  const haveMktSym = mktQuote != null && mktQuote.sym === mktSym;
+  const haveMkt = haveMktSym && mktQuote!.refresh === mktRefresh;
   useEffect(() => {
     if (!mktSym || haveMkt) return;
     let alive = true;
+    const refresh = mktRefresh;
     const id = setTimeout(() => {
       api.marketQuote(mktSym).then(
         (q) => {
           if (!alive || !mountedRef.current || !isRealQuote(q)) return;
-          setMktQuote({ sym: mktSym, price: q.price, bid: q.bid, ask: q.ask });
+          setMktQuote({ sym: mktSym, price: q.price, bid: q.bid, ask: q.ask, refresh });
         },
         () => {
-          /* بلا سعر لا سطر هامش — كما قبل */
+          /* بلا سعر لا سطر هامش — كما قبل؛ وبالتحديث يبقى آخر سعر ناجح */
         }
       );
-    }, 600);
+    }, haveMktSym ? 0 : 600);
     return () => {
       alive = false;
       clearTimeout(id);
     };
-  }, [mktSym, haveMkt]);
+    // haveMktSym خارج التبعيات عمداً: يتغيّر مع وصول السعر نفسه، ولا يغيّر إلا مهلة الطلب الأول
+  }, [mktSym, haveMkt, mktRefresh]);
   const marginPx = marginPrice({
     entry: priceNum(entryPx),
     quote: spec && mktQuote && mktQuote.sym === spec.symbol ? mktQuote : null,
