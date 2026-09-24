@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-24 (دورة QA 4، بعد dcb738e) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-24 (دورة QA 4، بعد 7c16343) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 «بلا مالك» = ملفات مكوّنات لم يلمسها أي وكيل (تاريخ git: أنس وحده) — المفاتيح جاهزة ولا أحد مخوَّل بالربط ⇒ أنس يحدّد المالك.
 
@@ -10,7 +10,7 @@
 | QA | بلا مالك | `CommissionPlanPanel`/`NetworkTreePanel`/`TreeDiagramSketch` بلا `useI18n` (مفاتيح `cpp*`/`ntp*`/`tds*` جاهزة)؛ `SubscriptionPlansPanel.tsx:34-100` يقرأ `COPY` الداخلي لا `t.subPlans`؛ `AccountScreen.tsx:248` ثابت | QA2 |
 | tools | launch | مفتاحا `planNoteCommission`/`planNoteNetRR` (غير موجودين) لإكمال ملاحظة الدفتر بلغة الواجهة (d0da6fc أنجز الباقي) | tools34 |
 | tools | launch | `journalCentNoMoney`/`journalMicroNoMoney` بلا قارئ (تعليقات فقط) ⇒ احذفهما؛ `journalMicroMoneyNote` يقول «بعملة حسابك» والدفتر يعرض عملة التسعير ⇒ أعد صياغته أو احذفه | launch50 |
-| launch | tools | `a11yBusy` (0 استعمال): `TradeJournalPanel:1250 :1598`، `AlertsPanel:983 :1061`، `PositionSizePanel:1134 :1404` + `accessibilityState={{busy}}` | launch52 |
+| launch | tools | `a11yBusy`: موصول بـ`PositionSizePanel`/`TradeJournalPanel`/`ToolsScreen` (72cf43e)؛ **بقي** `AlertsPanel:980 :1047` (حالة busy بلا الوسم) | launch52 |
 | launch | بلا مالك | `a11yBusy` لـ`AccountScreen:279 :316 :429`، `NetworkTreePanel:168`؛ رقائق اللغة/الدور/الجهة بوسوم مركّبة + `selected` | launch52 |
 | QA | chart | `DRAW_MARK` (`MatrixEdgeRails.tsx:28-40`) بلا `hray`/`channel`/`long`/`short` ⇒ «·» | chart20 ★ |
 | launch | chart | «₴» للدفتر: `MatrixEdgeRails.tsx:142`، `MatrixBottomDock.tsx:85` ← «▤» كما بـ`ToolsScreen` | launch4 ★ |
@@ -28,9 +28,8 @@
 | tools | بلا مالك | `AccountScreen.tsx:111` `.then` بلا `catch` حول `getNotificationPermissionState` — الزر قد يعلق على «…» | tools≈14:00 |
 | chart | TerminalScreen | عرض الشموع المخزّنة فوراً عند تبديل الفريم (`seriesCache` في QuadChartModal فقط) | chart17 |
 | chart | الجميع | `confirmDestructive` صار موجوداً (`chart/confirmDestructive.ts`) — بقي 21 `Alert.alert` بـ7 ملفات (Watchlist/Alerts/IndicatorAlerts/TradeJournal/FocusChart/Terminal/Account) | chart29 |
-| QA | chart | **a11y**: أزرار الرسم المدمجة (`MatrixChart.tsx:4830`) تُقرأ «⫽ Channel» وبلا حالة؛ «⌫ Clear» (:4906)؛ ضغط الشارت (:5208)، خلفيتا `MatrixSidePanel:83`/`ChartFrame:391` | QA3 |
-| QA | chart | **a11y**: ~40 مفتاحاً/تبويباً حالته لونية فقط: `MatrixChart` :4938 :4954 :10216 :10295-10325، `TerminalScreen` ×7، `MatrixEdgeRails` ×6، `MatrixBottomDock` ×3، `TimeframeBar:28` | QA3 |
-| QA | tools | **a11y**: تبويبات `ToolsScreen` :497 :570 :662 وشراء/بيع `TradeJournalPanel` :1142 :1157 بلا `accessibilityState`؛ وصف SL/TP (:1456 :1473) = نص الـplaceholder | QA3 |
+| QA | chart | **a11y**: بقيت خلفية `MatrixSidePanel.tsx:83` بلا اسم ولا دور (أزرار الرسم/Clear/ضغط الشارت/ChartFrame أُصلحت 6d50f09) | QA3 |
+| QA | chart | **a11y**: حالة لونية فقط باقية في `MatrixEdgeRails` ×6، `MatrixBottomDock` ×3 (0 `accessibilityState`)؛ `TimeframeBar:28` بلا مالك (MatrixChart/TerminalScreen أُصلحا 6d50f09/f66ce07) | QA3 |
 | QA | بلا مالك | **a11y**: `AccountScreen` :195 :324 :338 :439 :477 :493 بلا وصف ولا حالة؛ `NetworkTreePanel:136/:152` | QA3 |
 | launch | أنس | `MessagesScreen` غير مستوردة بأي ملف، نصوصها عربية ثابتة — تُحذف أم تُربط؟ | launch52 |
 | QA | launch+tools | **(d) المخاطرة**: النصائح «≤1%» (`locales.ts:1463 :1465 :2228`، `main.py:1824`) والأكاديمية «1-2%» (`academy_data.py:94`)، والحاسبة تحذّر فقط فوق 2% (`PositionSizePanel.tsx:955`) — وحّدوا الحدّ المعلَن | QA4 |
@@ -38,6 +37,6 @@
 | QA | launch | **(d)** `STORE-LISTING.md:116` عدسة Liquidity = volume+Bollinger، والكود يضيف CVD (`MatrixChart.tsx:420`) | QA4 |
 | QA | الخادم | **(d)** `main.py:1774` يقرّب الوقف/الهدف لخانتين إن السعر ≥50 وإلا 5 ⇒ USDJPY/DXY تفقد خانة، XAGUSD 5 (التطبيق: `indicators/utils.ts:6-18`)؛ لا شاشة تعرضه اليوم | QA4 |
 
-**أُسقط — مُتحقَّق منه بالكود هذه الدورة:** saveError ×4 ⇒ `createSaveErrorSignal` واحد بالمتاجر الأربعة (cdaceca)؛ التغيّر اليومي يتجدّد ≤1د بعد تدوير الجلسة (`sessionKeyAt`، 3665071)؛ chart41 — `chartLocalLabels` محذوفة، `MatrixChart.tsx:3472/:5164` تقرأ `tr.mcShareDialogTitle`/`tr.mcLogScaleA11y` (dcb738e)؛
+**أُسقط — مُتحقَّق منه بالكود هذه الدورة:** saveError ×4 ⇒ `createSaveErrorSignal` واحد بالمتاجر الأربعة (cdaceca)؛ التغيّر اليومي يتجدّد ≤1د بعد تدوير الجلسة (`sessionKeyAt`، 3665071)؛ **a11y QA3 أدوات** — تبويبات ToolsScreen/شراء-بيع/SL-TP بحالة ووصف (72cf43e)؛ chart41 — `chartLocalLabels` محذوفة، `MatrixChart.tsx:3472/:5164` تقرأ `tr.mcShareDialogTitle`/`tr.mcLogScaleA11y` (dcb738e)؛
 `newsUnavailable` و`riskCalcStopInsideSpread` موجودان وموصولان؛ `planJournalNote` صار بلغة الواجهة (d0da6fc، الباقي صفّ tools34).
 **(d) متّسق:** pip/عقد/لوت (مصدر واحد `chartPipSpec`)، سنت/مايكرو ÷100، الرافعة 3000، أسعار الباقات $10/15/20، العمولات 10%/5%، الأطر، الجلسات وDST، فترات المؤشرات.
