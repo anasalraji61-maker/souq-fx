@@ -4300,7 +4300,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // `livePrice` يصل من المستدعي؛ الحاليّون يمرّرونه عبر `livePriceForChart` (محروس)، لكن تيكاً
   // خاماً — تيك الرمز الجديد فوق شموع القديم أثناء التبديل، أو صفراً من عطل مزوّد — كان يضع
   // الوسم والخطّ المتقطّع خارج المحور ويحسب بُعد التقاطع بالـpip منه. يُحرس هنا بالقاعدة نفسها.
+  // وبالإعادة لا تيك إطلاقاً: كان التيك الحيّ يغلب شمعة الإعادة (`??`)، فوسم السعر وخطّه المتقطّع يكشفان
+  // سعر اليوم فوق شموع الأسبوع الماضي، وبُعد التقاطع والخطوط الأفقية بالـpip يُقاس منه لا من «الآن» المُعاد.
   const liveTagPrice =
+    !replayOn &&
     livePrice != null &&
     Number.isFinite(livePrice) &&
     livePrice > 0 &&
@@ -4316,8 +4319,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const currentPriceY = yOf(currentPrice);
   // الترند/الشعاع المحدَّد: سعره عند الشمعة الحيّة وبُعد السعر عنه («1.08520 · −6.2 pip») — يُلحق
   // بقراءته، فمنتظر الكسر يعرف كم بقي بلا جرّ التقاطع إلى الخطّ.
+  // «الآن» بالإعادة خطوة الإعادة لا آخر شمعة بالسلسلة: وإلا يُقرأ الخطّ عند شمعة لم تُكشف بعد،
+  // ويُقاس بُعده من سعر الإعادة (`currentPrice`) — رقم يخلط الماضي بالمستقبل.
+  const nowIndex = replayOn ? source.start + source.plot.length - 1 : source.all.length - 1;
   const selectedLineNow = selectedSpan
-    ? lineNowText(selectedSpan, source.all.length - 1, currentPrice, series.symbol, (v) =>
+    ? lineNowText(selectedSpan, nowIndex, currentPrice, series.symbol, (v) =>
         formatPrice(v, series.symbol)
       )
     : null;
@@ -4368,7 +4374,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const selectedDrawing = selectedId && !hidePriceLabels ? drawings.find((d) => d.id === selectedId) : undefined;
   const selectionTags = selectedDrawing
     ? placeSelectionTags(
-        selectionPrices(selectedDrawing, series.symbol, source.all.length - 1),
+        selectionPrices(selectedDrawing, series.symbol, nowIndex),
         yOf,
         chartPlotH,
         PRICE_TAG_H,
