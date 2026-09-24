@@ -78,3 +78,17 @@ PDH/PDL بيوم 17:00 NY أوّلاً (:1641-1646)، Footprint «≈»/CVD «ت
 **المراجعة (a — تكرار/كود ميت)، بسكربت ثم قراءة:** `QUICK_SYMBOLS` ×4 حرفياً؛ `pineLite` بنسخة `sma`/`ema` خاصة (مطابقة على بيانات بلا فراغات)؛ `DAY_SEC` ×3؛
 `RECONNECT_*` ×2؛ `dirColor`/`dirLabel` ×3 باقية؛ ~12 تصديراً بلا مستخدم (`priceLegend` ×3 للاختبار فقط — مقبول). `estimatedTag` المؤقّت ما زال بدل `mcEstimatedTag`.
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة خارج locales.ts.
+
+## 2026-09-25 — الدورة 7
+**البناء:** أخضر 0 (بعد 0df9a68) — لا إصلاح لازم.
+**Selftests:** 61/61 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — launch55 (`tr.mcEstimatedTag`، `estimatedTag` محذوفة)، `dxyPrice` (0)، مرجع تنبيه الشارت (`TerminalScreen:855` `freshTickRefPrice`)،
+`pineLite` يستورد `sma`/`ema`، `DAY_SEC` مرة واحدة، `QUICK_SYMBOLS` بـPositionSize/TradeJournal. **جزئي:** `QUICK_SYMBOLS` باقٍ بـBacktest/IndicatorAlerts (بلا مالك)،
+`RECONNECT_*` ×2، `useMultiLiveTicks` بلا حدّ تقادم (القائمة). `TerminalScreen` صار للأدوات ⇒ صف seriesCache أُسند لهم. جديد: tools38 مفتاح `journalExposureStacked`
+للإطلاق، وقرار «أمس» UTC مقابل 17:00 NY ⇒ ⛔ أنس 11. **غير مُغلق:** a11yBusy (0)، «₴»، EdgeRails/BottomDock صفر `accessibilityState`، `TimeframeBar`، 17 `Alert.alert`.
+**المراجعة (b — نصوص ثابتة خارج locales.ts)، بسكربت (حروف عربية/جمل إنجليزية/props نصية) ثم قراءة كل ملف:**
+- القوائم العربية بـ`types.ts`/`dataSource.ts`/`marketHours.ts`/`measureReadout.ts` احتياطات فقط — كل مستدعٍ يمرّر `t.*` (`localized*`، `dsMarketOpen`…).
+- مطالبات `WeeklyReportPanel` داخلية واللغة من `lang`؛ اسم التخطيط الافتراضي بـ`t.layoutBuiltinName`؛ لا `e.message` يصل الشاشة؛ أسماء المؤشرات الإنجليزية معيارية.
+- الثابت الحقيقي كلّه بملفات بلا مالك (Subscription/Commission/NetworkTree/TreeDiagram/Messages/TimeframeBar) + `AlertsPanel:903` «pip» (صف QA7).
+- الأكاديمية: الكردي يرى `name_en` (لا حقل كردي) — ملاحظة فقط.
+**الدورة القادمة:** المراجعة (c) — عناصر تفاعلية بلا accessibilityLabel.
