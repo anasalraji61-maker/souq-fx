@@ -8,6 +8,66 @@
 
 ---
 
+## 2026-09-24 (التشغيل الحادي والأربعون) — تشغيل VPS مجدول
+
+كل العمل هذا التشغيل من صفوف `docs/COORDINATION.md` الموجَّهة لوكيل الشارت. **منجزة — للتحقّق والحذف من QA:**
+
+### ١) صفّ launch50: مفاتيح القاموس الجاهزة موصولة — `b92e81c`
+- `EXTRA_TOOL_LABELS` و`extraToolLabel` (تخمين اللغة من تسمية «شعاع») حُذفا؛ `hray`/`channel` صارا بـ`TOOL_KEYS`
+  ← `ctlToolHray`/`ctlToolChannel`. الكردية تأخذ الآن صياغة القاموس لا صياغتي المؤقّتة.
+- `chartExtraLabels` حُذفت؛ زرّا إخفاء/إظهار الرسوم (المدمج والرصيف الكامل) ← `tr.mcHideDrawings/mcShowDrawings`.
+  بالكردية صار «هێڵکارییەکان» (القاموس) بدل «وێنەکان» (= صور، كان خطأ).
+
+### ٢) صفّ QA2: زرّ «Log»، عنوان المشاركة، أسماء الجلسات — `b92e81c`
+- زرّ «Log»: `accessibilityLabel` («مقياس لوغاريتمي للسعر» / "Logarithmic price scale" / كردي) و`accessibilityState.selected`.
+  النصّ الظاهر يبقى «Log» (مصطلح المقياس كما يعرفه المتداول، والزرّ ضيّق).
+- `dialogTitle` للمشاركة: «شارت MATRIX» / "MATRIX Chart" / «چارتی MATRIX».
+- شرائط الجلسات: طوكيو/لندن/نيويورك بلغة الواجهة (كانت إنجليزية دائماً). `SESSION_LABEL` حُذف من `sessions.ts` (بلا مستعمل).
+- لا مفاتيح لها بالقاموس ⇒ مؤقّتاً بـ`chartLocalLabels(lang)` بـ`chart/typeLabels.ts` (راجع «طلب تنسيق»).
+
+### ٣) صفّ QA1: منطق saveError المنسوخ 4 مرات — `cdaceca`
+`chart/saveErrorSignal.ts` (`createSaveErrorSignal<C>()`: set/subscribe/get/reset). المخازن الأربعة (رسومات، قوالب، تخطيطات،
+قائمة المراقبة) تستعمله؛ الواجهة المصدَّرة (`subscribe*SaveError`/`get*SaveError`) بلا تغيير، والتصفير الصامت بـ`resetWatchlistMemory` محفوظ.
+
+### ٤) صفّ tools25: التغيّر اليومي بعد التدوير — `3665071`
+المخزَّن بـ`dailyRefStore` يحمل الجلسة الجارية وقت الجلب (`sessionKeyAt` الجديدة بـ`dailyChange.ts`، بنفس قاعدة دمج العطلة)؛
+`fresh()` يُسقطه فور تبدّل الجلسة (منتصف ليل UTC، أو افتتاح الأحد)، والفحص كل 60ث بدل 10د (بلا شبكة ما دامت الجلسة نفسها).
+النتيجة: بعد التدوير بدقيقة على الأكثر النسبة على إغلاق الأمس، لا على ما قبله لعشر دقائق. العمر 10د لبقية الحالات كما هو.
+
+### ٥) صفّ chart29: `Alert.alert` صامتة على الويب — `d7e754f`
+`chart/confirmDestructive.ts`: `confirmDestructive({title, body, cancelText, confirmText, onConfirm})` (على الويب `window.confirm`)
+و`notify(title, body)` (على الويب `window.alert`). «مسح الكل» بالشارت (موضعان) كان **لا يفعل شيئاً إطلاقاً** على الويب — صار يعمل؛
+رسائل «حُفظ القالب» ونجاح/فشل اللقطة تظهر على الويب؛ `LayoutPanel` استبدل نسخته اليدوية بالمساعد. **متاح لبقية الوكلاء** — مسار
+الاستيراد `../chart/confirmDestructive`.
+
+## صفوف لم تُنفَّذ — ولماذا
+- **سحب جسم الرسم المحدَّد (جهاز)**: يحتاج جهازاً حقيقياً؛ لا شيء يُفعل من الـVPS.
+- **`DRAW_MARK` بـ`MatrixEdgeRails.tsx`**: الملف خارج نطاقي (مكوّن الواجهة). الإصلاح لمالكه: إضافة `hray: '→'`، `channel: '∥'`،
+  `long: '▲'`، `short: '▼'` (أو ما يناسب خطّ الأيقونات) للخريطة.
+- **`dxyPrice` الميت بـ`TerminalScreen.tsx`**: خارج نطاقي (TerminalScreen). أوافق على الحذف — لمالك الشاشة.
+- **إيقاف سوكت التيكات حين TerminalScreen غير مركّزة**: الاستدعاء بـ`TerminalScreen.tsx:211` و`useMultiLiveTicks.ts` كلاهما خارج
+  قائمة ملفّاتي (نطاقي `useLiveTicks.ts` فقط). الإصلاح: `useIsFocused()` بالشاشة وتمريره بدل `true` الثابتة — لمالك الشاشة.
+- **DeMarker 0..100 مقابل 0..1**: قرار أنس كما بالصفّ.
+
+## التحقّق بهذا التشغيل
+- `bash scripts/qa-build-check.sh` قبل كل commit: **0 أخطاء، GREEN** (أربع مرّات).
+- `watchlistStore.selftest` (يشمل persist-failure ⇒ `wlSaveFailed`) و`dailyChange.selftest` (+8 تأكيدات لـ`sessionKeyAt`/`weekendMergeOf`:
+  منتصف الليل، جمعة→سبت→صباح الأحد جلسة واحدة، مساء الأحد بعد الافتتاح = الإثنين، أداة العطلة) — PASS.
+- لم يُختبر على جهاز ولا متصفّح.
+
+## يبدأ التشغيل القادم من هنا
+1. استبدال `chartLocalLabels` بـ`tr.*` حين تُضاف المفاتيح (أدناه).
+2. وضوح القيادة بالتخطيط الرباعي (`QuadChartModal`): أي شارت يقود المزامنة وما المتزامن — غير ظاهر للمتداول.
+3. أيّ صفّ جديد بـ`COORDINATION.md`.
+
+## طلب تنسيق
+- **launch/التعريب** — مفاتيح جديدة لـ`Dict` (القيم الحالية بـ`chartLocalLabels` بـ`chart/typeLabels.ts`، مراجعة الكردية مطلوبة):
+  `mcLogScaleA11y`، `mcShareDialogTitle`، `mcSessTokyo`، `mcSessLondon`، `mcSessNewYork`.
+- **مالك `MatrixEdgeRails.tsx`**: `DRAW_MARK` (أعلاه). **مالك `TerminalScreen.tsx`**: `dxyPrice` وتركيز سوكت التيكات (أعلاه).
+- **الجميع**: `confirmDestructive`/`notify` بـ`mobile/src/chart/confirmDestructive.ts` جاهزان لبقية مواضع `Alert.alert` بأزرار.
+
+---
+
 ## 2026-09-24 (التشغيل الأربعون) — تشغيل VPS مجدول
 
 أربعة بنود من خطّة التشغيل + ستّة صفوف من `docs/COORDINATION.md` (ظهر الملف أثناء التشغيل؛ لم يكن موجوداً عند البدء).
