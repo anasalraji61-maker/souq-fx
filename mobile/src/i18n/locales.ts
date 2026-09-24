@@ -403,6 +403,8 @@ export type Dict = {
   journalStatClosed: string;
   journalStatWinRate: string;
   journalStatTotalPnl: string;
+  /** بديل أصدق لـ`journalStatTotalPnl`: الرقم مجموع نسب حركة السعر لكل صفقة بلا حجم (`db.trade_stats`)، لا ربح الحساب */
+  journalStatPriceMoveSum: string;
   journalStatBestWorst: string;
   journalStatsPending: string;
   journalStatNetPips: string;
@@ -1315,6 +1317,7 @@ const ar: Dict = {
   journalStatClosed: 'صفقات مغلقة: {n}',
   journalStatWinRate: 'نسبة نجاح: {pct}%',
   journalStatTotalPnl: 'إجمالي PnL: {pct}%',
+  journalStatPriceMoveSum: 'مجموع حركة السعر (بلا حجم الصفقة): {pct}%',
   journalStatBestWorst: 'أفضل/أسوأ: {best}% / {worst}%',
   journalStatsPending: 'لا صفقات مغلقة بعد — نسبة النجاح والـPnL تظهر بعد إغلاق أول صفقة.',
   journalStatNetPips: 'الصافي: {pips} pip',
@@ -2223,6 +2226,7 @@ const enUS: Dict = {
   journalStatClosed: 'Closed trades: {n}',
   journalStatWinRate: 'Win rate: {pct}%',
   journalStatTotalPnl: 'Total PnL: {pct}%',
+  journalStatPriceMoveSum: 'Sum of price moves (lot size ignored): {pct}%',
   journalStatBestWorst: 'Best/Worst: {best}% / {worst}%',
   journalStatsPending: 'No closed trades yet — win rate and PnL appear once you close your first trade.',
   journalStatNetPips: 'Net: {pips} pip',
@@ -3158,6 +3162,7 @@ const ku: Dict = {
   journalStatClosed: 'مامەڵە داخراوەکان: {n}',
   journalStatWinRate: 'ڕێژەی سەرکەوتن: {pct}%',
   journalStatTotalPnl: 'کۆی PnL: {pct}%',
+  journalStatPriceMoveSum: 'کۆی جووڵەی نرخ (بێ قەبارەی مامەڵە): {pct}%',
   journalStatBestWorst: 'باشترین/خراپترین: {best}% / {worst}%',
   journalStatsPending: 'هێشتا هیچ مامەڵەیەکی داخراو نییە — ڕێژەی سەرکەوتن و PnL دوای داخستنی یەکەم مامەڵە دەردەکەون.',
   journalStatNetPips: 'کۆی گشتی: {pips} pip',
