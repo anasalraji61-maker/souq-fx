@@ -139,7 +139,6 @@ import {
   localizedDrawTools,
   localizedIndicators,
   localizedLenses,
-  drawColorLabels,
 } from './typeLabels';
 import { confirmDestructive, notify } from './confirmDestructive';
 import {
@@ -1990,10 +1989,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // لون الرسم المحدَّد: كل رسم كان يُرسم بلون تمييز الشارت وحده، فالدعم والمقاومة وخطّ الترند وفيبو
   // بلون واحد لا يُفرَّق بينها بنظرة (TradingView يلوّن كل رسم). النقر يدور على لوحة قصيرة؛ قابل للتراجع
   // ويُحفظ مع الرسم (`color` جزء منه أصلاً). خطّتا شراء/بيع والقياس ألوانها دلالية (ربح/خسارة) فلا تُلوَّن.
-  const drawPalette = useMemo(
-    () => Array.from(new Set([accent, colors.bull, colors.bear, colors.warn, colors.dxy, colors.text])),
-    [accent]
-  );
+  // `drawPaletteNames[i]` ← `tr.mcColorNames` بنفس الترتيب؛ إزالة المكرّر (لون التمييز = أحد الألوان) تُسقط الاسم معه.
+  const [drawPalette, drawPaletteNames] = useMemo(() => {
+    const raw = [accent, colors.bull, colors.bear, colors.warn, colors.dxy, colors.text];
+    const cols: string[] = [];
+    const names: string[] = [];
+    raw.forEach((c, i) => {
+      if (cols.includes(c)) return;
+      cols.push(c);
+      names.push(tr.mcColorNames[i] ?? '');
+    });
+    return [cols, names] as const;
+  }, [accent, tr]);
   const recolorTarget = selectedId ? drawings.find((x) => x.id === selectedId) ?? null : null;
   const canRecolor =
     !!recolorTarget &&
@@ -2009,7 +2016,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     pushDrawHistory();
     setDrawings((list) => list.map((x) => (x.id === selectedId ? { ...x, color } : x)));
   }, [selectedId, drawPalette, pushDrawHistory]);
-  const colorLabels = drawColorLabels(lang);
+  const recolorIdx = recolorTarget ? drawPalette.indexOf(recolorTarget.color) : -1;
+  const colorLabels = {
+    word: tr.mcDrawColorWord,
+    a11y: tr.mcDrawColorA11y.replace('{color}', drawPaletteNames[recolorIdx] ?? drawPaletteNames[0] ?? ''),
+  };
 
   // تبديل الرمز يحمّل رسومات أخرى، فتاريخ الرسم السابق لم يعد يخصّها. تبديل **الفريم**
   // لا يمسّه: الرسومات للرمز على كل فريماته (`drawingStore.ts`) — خطّ رُسم على 4H خطأً يُتراجع
@@ -7656,7 +7667,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ]}
             onPress={resetChartView}
             hitSlop={8}
-            accessibilityLabel={tr.mcAutoA11y}
+            accessibilityLabel={priceManual ? tr.mcAutoManualA11y : tr.mcAutoA11y}
           >
             <Text style={[styles.axisCornerText, priceManual && styles.axisCornerTextManual]}>AUTO</Text>
           </Pressable>
