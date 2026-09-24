@@ -411,6 +411,8 @@ export type Dict = {
   journalStatWinRate: string;
   /** الرقم مجموع نسب حركة السعر لكل صفقة بلا حجم (`db.trade_stats`)، لا ربح الحساب */
   journalStatPriceMoveSum: string;
+  /** صفقة حساب سنت («EURUSDC»): نقاط وR بلا مال — لماذا يغيب المبلغ (`journalPipSize`، `ab4ca84`) */
+  journalCentNoMoney: string;
   journalStatBestWorst: string;
   journalStatsPending: string;
   journalStatNetPips: string;
@@ -1331,6 +1333,7 @@ const ar: Dict = {
   journalStatClosed: 'صفقات مغلقة: {n}',
   journalStatWinRate: 'نسبة نجاح: {pct}%',
   journalStatPriceMoveSum: 'مجموع حركة السعر (بلا حجم الصفقة): {pct}%',
+  journalCentNoMoney: 'حساب سنت: النتيجة بالنقاط فقط — عقد السنت أصغر بمئة مرّة، فلا يُحسب مبلغها بعقد الحساب العادي',
   journalStatBestWorst: 'أفضل/أسوأ: {best}% / {worst}%',
   journalStatsPending: 'لا صفقات مغلقة بعد — نسبة النجاح والـPnL تظهر بعد إغلاق أول صفقة.',
   journalStatNetPips: 'الصافي: {pips} pip',
@@ -2245,6 +2248,7 @@ const enUS: Dict = {
   journalStatClosed: 'Closed trades: {n}',
   journalStatWinRate: 'Win rate: {pct}%',
   journalStatPriceMoveSum: 'Sum of price moves (lot size ignored): {pct}%',
+  journalCentNoMoney: 'Cent account: result in pips only — a cent contract is 100 times smaller, so no money amount is worked out from the standard contract',
   journalStatBestWorst: 'Best/Worst: {best}% / {worst}%',
   journalStatsPending: 'No closed trades yet — win rate and PnL appear once you close your first trade.',
   journalStatNetPips: 'Net: {pips} pip',
@@ -3186,6 +3190,7 @@ const ku: Dict = {
   journalStatClosed: 'مامەڵە داخراوەکان: {n}',
   journalStatWinRate: 'ڕێژەی سەرکەوتن: {pct}%',
   journalStatPriceMoveSum: 'کۆی جووڵەی نرخ (بێ قەبارەی مامەڵە): {pct}%',
+  journalCentNoMoney: 'هەژماری سەنت: ئەنجام تەنها بە پیپ — گرێبەستی سەنت سەد جار بچووکترە، بۆیە بڕی پارە بە گرێبەستی ئاسایی ناژمێردرێت',
   journalStatBestWorst: 'باشترین/خراپترین: {best}% / {worst}%',
   journalStatsPending: 'هێشتا هیچ مامەڵەیەکی داخراو نییە — ڕێژەی سەرکەوتن و PnL دوای داخستنی یەکەم مامەڵە دەردەکەون.',
   journalStatNetPips: 'کۆی گشتی: {pips} pip',
