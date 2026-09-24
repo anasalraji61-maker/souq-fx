@@ -1,0 +1,37 @@
+/**
+ * Self-test: أسعار تحت 0.01 بأربعة أرقام معنوية على الأقل (SHIBUSD كان «0.00001» بكل المحور والتقاطع).
+ * Run: npx --yes tsx src/chart/cheapPrice.selftest.ts
+ */
+import assert from 'node:assert/strict';
+import { crossPriceAt } from './crossAnchor';
+import { formatPrice, formatPriceDiff, magnitudeDecimals } from './indicators/utils';
+
+// ما فوق 0.01 كما كان تماماً
+assert.equal(magnitudeDecimals(2650), 2);
+assert.equal(magnitudeDecimals(99.8), 3);
+assert.equal(magnitudeDecimals(1.085), 5);
+assert.equal(magnitudeDecimals(0.15), 5);
+assert.equal(magnitudeDecimals(0.01), 5);
+assert.equal(magnitudeDecimals(0), 5);
+assert.equal(magnitudeDecimals(NaN), 5);
+// تحت 0.01
+assert.equal(magnitudeDecimals(0.005), 6);
+assert.equal(magnitudeDecimals(0.001), 7);
+assert.equal(magnitudeDecimals(0.00001234), 8);
+assert.equal(magnitudeDecimals(0.0000089), 9);
+assert.equal(magnitudeDecimals(1e-15), 10);
+
+// SHIBUSD: المحور والتقاطع يميّزان علامتين متجاورتين
+assert.equal(formatPrice(0.00001234, 'SHIBUSD'), '0.00001234');
+assert.notEqual(formatPrice(0.00001234, 'SHIBUSD', 0.0000123), formatPrice(0.00001251, 'SHIBUSD', 0.0000123));
+// المنازل من سعر الأداة لا من الرقم: علامة 0.0000099 على محور سعره 0.0000123 بثماني منازل أيضاً
+assert.equal(formatPrice(0.0000099, 'SHIBUSD', 0.0000123), '0.00000990');
+// فرق القياس بمنازل السعر
+assert.equal(formatPriceDiff(0.00000017, 0.00001234, 'SHIBUSD'), '0.00000017');
+// التقاطع لا يلتصق بصفر
+assert.equal(crossPriceAt(0.0000089123, null, false, null, Infinity, 0.0000089), 0.000008912);
+// الأزواج بمواصفتها لا تتأثّر
+assert.equal(formatPrice(1.085054, 'EURUSD'), '1.08505');
+assert.equal(formatPrice(157.4234, 'USDJPY'), '157.423');
+
+console.log('cheapPrice selftest: PASS');

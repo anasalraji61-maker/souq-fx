@@ -6846,6 +6846,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             <Text
               key={tick.ratio}
               pointerEvents="none"
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
               style={[styles.priceAxisLabel, { top: priceTickBoxes[i].start }]}
             >
               {fmtPrice(tick.price)}

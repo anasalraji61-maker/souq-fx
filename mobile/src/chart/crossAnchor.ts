@@ -1,3 +1,5 @@
+import { magnitudeDecimals } from './indicators/utils';
+
 /**
  * مرساة التقاطع (crosshair): الشمعة المختارة تُحفَظ **بزمنها** لا بموضعها داخل نافذة الرسم.
  *
@@ -75,7 +77,7 @@ export function crossPriceAt(
     if (d <= snapTol) return best;
   }
   const a = ref != null && Number.isFinite(ref) && ref > 0 ? ref : Math.abs(raw);
-  const dp = decimals ?? (a >= 100 ? 2 : a >= 10 ? 3 : 5);
+  const dp = decimals ?? magnitudeDecimals(a);
   return Number(raw.toFixed(dp));
 }
 
