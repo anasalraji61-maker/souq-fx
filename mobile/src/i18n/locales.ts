@@ -372,6 +372,7 @@ export type Dict = {
   riskCalcSlMismatchNarrower: string;
   riskCalcSpread: string;
   riskCalcSpreadNote: string;
+  riskCalcSpreadPipsHint: string;
   riskCalcRiskWithSpread: string;
   riskCalcSpreadLotsWithin: string;
   riskCalcSpreadTooWide: string;
@@ -1425,11 +1426,12 @@ const ar: Dict = {
   riskCalcLogBlockedMismatch:
     'لا تُسجَّل الخطة بوقفين مختلفين — اكتب {derived} بخانة النقاط، أو عدّل سعر الوقف ليطابق نقاطك',
   riskCalcSlMismatchNarrower: '⚠ نقاطك ({pips}) أضيق من مسافة السعرين ({derived} pip) — اللوت المحسوب أكبر مما تحتمله مخاطرتك إن بقي الوقف عند سعره',
-  riskCalcSpread: 'السبريد (بالنقاط، اختياري)',
-  riskCalcSpreadNote: 'السبريد يُضاف عادةً إلى مسافة الوقف: وقف 20 نقطة بسبريد 1.5 يخسر قرابة 21.5 عند ضربه. انظر السبريد الحالي بمنصّتك — يتّسع عند الأخبار وافتتاح الأسبوع.',
+  riskCalcSpread: 'السبريد (pip، اختياري)',
+  riskCalcSpreadPipsHint: 'اكتبه بالـpip لا بالـpoints: MT4/MT5 تعرض السبريد بالـpoints غالباً، وكل 10 points = 1 pip — فـ12 بالمنصّة تُكتب هنا 1.2.',
+  riskCalcSpreadNote: 'السبريد يُضاف عادةً إلى مسافة الوقف: وقف 20 pip بسبريد 1.5 يخسر قرابة 21.5 عند ضربه. انظر السبريد الحالي بمنصّتك — يتّسع عند الأخبار وافتتاح الأسبوع.',
   riskCalcRiskWithSpread: 'المخاطرة شاملة السبريد',
   riskCalcSpreadLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة السبريد: {lots} lot',
-  riskCalcSpreadTooWide: 'سبريد {n} نقطة غير واقعي — هل كتبتَ سعراً بدل النقاط؟ اكتب الفرق بين Ask وBid بالنقاط (مثل 1.5).',
+  riskCalcSpreadTooWide: 'سبريد {n} pip غير واقعي — هل كتبتَ سعراً أو points بدل الـpip؟ اكتب الفرق بين Ask وBid بالـpip (مثل 1.5).',
   riskCalcStopInsideSpread:
     'الوقف ({sl} نقطة) ليس أبعد من السبريد ({spread} نقطة) — قد يُضرب فور فتح الصفقة. وسّع الوقف وقلّل اللوت، أو انتظر سبريداً أضيق.',
   riskCalcCommission: 'عمولة اختيارية لكل لوت، فتحاً وإغلاقاً',
@@ -1942,8 +1944,8 @@ const ar: Dict = {
   mcMeasureDurUnits: { m: ' د', h: ' س', d: ' يوم' },
   mcNoteDefault: 'ملاحظة',
   mcNoteTextA11y: 'نصّ الملاحظة على الشارت — حتى 60 حرفاً',
-  mcHintNoteSelected: 'اكتب نصّ الملاحظة بالخانة تحتها · اسحبها لتحريكها · يُحفظ تلقائياً',
-  mcHintNoteSelectedWeb: 'اكتب نصّ الملاحظة بالخانة تحتها · اسحبها لتحريكها · Esc لإلغاء التحديد · Ctrl+Z للتراجع',
+  mcHintNoteSelected: 'اكتب نصّ الملاحظة بالخانة المجاورة لها · اسحبها لتحريكها · يُحفظ تلقائياً',
+  mcHintNoteSelectedWeb: 'اكتب نصّ الملاحظة بالخانة المجاورة لها · اسحبها لتحريكها · Esc لإلغاء التحديد · Ctrl+Z للتراجع',
   mcSnapshotSaved: 'تم حفظ لقطة الشارت',
   mcSnapshotFailed: 'تعذّر تصدير الشارت — حاول مرة أخرى، أو خذ لقطة شاشة للشارت',
   mcTemplateDefaultName: 'افتراضي',
@@ -2470,10 +2472,11 @@ const enUS: Dict = {
     'A plan with two different stops can\'t be logged — type {derived} in the pips box, or move your stop price to match your pips',
   riskCalcSlMismatchNarrower: '⚠ Your pips ({pips}) are tighter than the distance between your prices ({derived} pip) — the lot size is larger than your risk allows if the stop stays at its price',
   riskCalcSpread: 'Spread (pips, optional)',
+  riskCalcSpreadPipsHint: 'Enter pips, not points: MT4/MT5 usually show spread in points, and 10 points = 1 pip — so 12 on your platform is 1.2 here.',
   riskCalcSpreadNote: 'Spread usually adds to your stop distance: a 20-pip stop with a 1.5 spread loses about 21.5 when hit. Check the current spread on your platform — it widens around news and the weekly open.',
   riskCalcRiskWithSpread: 'Risk including spread',
   riskCalcSpreadLotsWithin: 'To keep your risk at {pct}% including spread: {lots} lot',
-  riskCalcSpreadTooWide: 'A {n}-pip spread isn’t realistic — did you type a price instead of pips? Enter the gap between Ask and Bid in pips (e.g. 1.5).',
+  riskCalcSpreadTooWide: 'A {n}-pip spread isn’t realistic — did you type a price or points instead of pips? Enter the gap between Ask and Bid in pips (e.g. 1.5).',
   riskCalcStopInsideSpread:
     'Your stop ({sl} pips) is no wider than the spread ({spread} pips) — it can be hit the moment the trade opens. Widen the stop and cut the lot, or wait for a tighter spread.',
   riskCalcCommission: 'Optional commission per lot, open + close',
@@ -2987,8 +2990,8 @@ const enUS: Dict = {
   mcMeasureDurUnits: { m: 'm', h: 'h', d: 'd' },
   mcNoteDefault: 'Note',
   mcNoteTextA11y: 'Note text on the chart — up to 60 characters',
-  mcHintNoteSelected: 'Type the note in the box below it · drag the note to move it · saved automatically',
-  mcHintNoteSelectedWeb: 'Type the note in the box below it · drag the note to move it · Esc deselects · Ctrl+Z to undo',
+  mcHintNoteSelected: 'Type the note in the box next to it · drag the note to move it · saved automatically',
+  mcHintNoteSelectedWeb: 'Type the note in the box next to it · drag the note to move it · Esc deselects · Ctrl+Z to undo',
   mcSnapshotSaved: 'Chart snapshot saved',
   mcSnapshotFailed: "Couldn't export the chart — try again, or take a screenshot of the chart",
   mcTemplateDefaultName: 'Default',
@@ -3539,10 +3542,11 @@ const ku: Dict = {
     'پلانێک بە دوو وەستانی جیاواز تۆمار ناکرێت — {derived} لە خانەی خاڵەکان بنووسە، یان نرخی وەستان بگۆڕە تا لەگەڵ خاڵەکانت بگونجێت',
   riskCalcSlMismatchNarrower: '⚠ خاڵەکانت ({pips}) تەسکترن لە دووری نێوان دوو نرخەکە ({derived} pip) — لۆتی حیسابکراو گەورەترە لەوەی مەترسییەکەت هەڵیدەگرێت ئەگەر وەستان لە نرخی خۆی بمێنێتەوە',
   riskCalcSpread: 'سپرێد (pip، ئیختیاری)',
+  riskCalcSpreadPipsHint: 'بە pip بینووسە نەک points: MT4/MT5 زۆرجار سپرێد بە points پیشان دەدەن، و هەر 10 points = 1 pip — کەواتە 12 لە پلاتفۆرمەکەت لێرە دەبێتە 1.2.',
   riskCalcSpreadNote: 'سپرێد زۆرجار دەچێتە سەر دووری وەستان: وەستانی 20 pip بە سپرێدی 1.5 نزیکەی 21.5 لەدەست دەدات کاتێک لێی دەدرێت. سپرێدی ئێستا لە پلاتفۆرمەکەت ببینە — لە کاتی هەواڵ و کرانەوەی هەفتەدا فراوانتر دەبێت.',
   riskCalcRiskWithSpread: 'مەترسی لەگەڵ سپرێد',
   riskCalcSpreadLotsWithin: 'بۆ ئەوەی مەترسییەکەت لەگەڵ سپرێد لە {pct}% بمێنێتەوە: {lots} lot',
-  riskCalcSpreadTooWide: 'سپرێدی {n} pip ئاسایی نییە — نرخت نووسیوە لە جیاتی pip؟ جیاوازی نێوان Ask و Bid بە pip بنووسە (وەک 1.5).',
+  riskCalcSpreadTooWide: 'سپرێدی {n} pip ئاسایی نییە — نرخ یان points ت نووسیوە لە جیاتی pip؟ جیاوازی نێوان Ask و Bid بە pip بنووسە (وەک 1.5).',
   riskCalcStopInsideSpread:
     'وەستان ({sl} pip) لە سپرێد ({spread} pip) دوورتر نییە — لەوانەیە هەر کە مامەڵەکە کرایەوە لێی بدرێت. وەستان فراوانتر بکە و لۆت کەم بکەرەوە، یان چاوەڕێی سپرێدی تەسکتر بکە.',
   riskCalcCommission: 'کۆمیسیۆنی ئیختیاری بۆ هەر lot، کردنەوە و داخستن',
@@ -4059,8 +4063,8 @@ const ku: Dict = {
   mcMeasureDurUnits: { m: ' خولەک', h: ' کاتژمێر', d: ' ڕۆژ' },
   mcNoteDefault: 'تێبینی',
   mcNoteTextA11y: 'دەقی تێبینی لەسەر چارت — تا 60 پیت',
-  mcHintNoteSelected: 'دەقی تێبینییەکە لە خانەی ژێری بنووسە · ڕایبکێشە بۆ جوولاندنی · خۆکار پاشەکەوت دەبێت',
-  mcHintNoteSelectedWeb: 'دەقی تێبینییەکە لە خانەی ژێری بنووسە · ڕایبکێشە بۆ جوولاندنی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z بۆ گەڕانەوە',
+  mcHintNoteSelected: 'دەقی تێبینییەکە لە خانەی تەنیشتی بنووسە · ڕایبکێشە بۆ جوولاندنی · خۆکار پاشەکەوت دەبێت',
+  mcHintNoteSelectedWeb: 'دەقی تێبینییەکە لە خانەی تەنیشتی بنووسە · ڕایبکێشە بۆ جوولاندنی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z بۆ گەڕانەوە',
   mcSnapshotSaved: 'وێنەی چارت پاشەکەوت کرا',
   mcSnapshotFailed: 'نەتوانرا چارت هەناردە بکرێت — دووبارە هەوڵ بدەرەوە، یان وێنەی شاشەی چارتەکە بگرە',
   mcTemplateDefaultName: 'بنەڕەت',
