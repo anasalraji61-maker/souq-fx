@@ -4749,6 +4749,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               {right - left >= 44 ? (
                 <Text style={[styles.sessionLabel, { color }]} numberOfLines={1}>
                   {SESSION_LABEL[run.id]}
+                  {/* مدى الجلسة (أعلى − أدنى) بالـpip: نطاق آسيا الضيّق الذي يُكسر بلندن، وحركة
+                      لندن مقابل متوسّطها — بحقيقي الشموع لا هايكن آشي. متى اتّسعت الشريحة. */}
+                  {right - left >= 110
+                    ? (() => {
+                        let hi = -Infinity;
+                        let lo = Infinity;
+                        for (let i = run.from; i <= run.to; i++) {
+                          const c = liveSeries.candles[source.start + i] ?? source.plot[i];
+                          if (!c) continue;
+                          hi = Math.max(hi, c.high);
+                          lo = Math.min(lo, c.low);
+                        }
+                        const range = candleRangePipsText(series.symbol, hi, lo);
+                        return range ? ` ${range}` : null;
+                      })()
+                    : null}
                 </Text>
               ) : null}
             </View>
