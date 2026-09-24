@@ -352,6 +352,49 @@ export function journalStats(
   };
 }
 
+/**
+ * سطر «إجمالي PnL: X%» **يعاكس المال** المعروف — فيُخفى. الخادم (`db.trade_stats`) يجمع نسب حركة السعر لكل صفقة
+ * **بلا حجم**: صفقة 0.01 لوت +2% وصفقة 1 لوت −0.5% = «+1.5%» بينما المال −1,058 USD تقريباً؛ السطر يقول
+ * ربحاً والحساب خاسر. true فقط حين يُعرف مال **كل** صفقة مغلقة (حجم معروف `knownLots` وأداة معروفة)، والمال
+ * بكل عملة تسعير بالإشارة نفسها (صافٍ واضح الاتجاه بلا تحويل عملات)، وإشارة النسبة عكسها. غير ذلك false
+ * والسطر كما كان — لا نخفي رقماً لا نملك ما يناقضه.
+ */
+export function pnlPctContradictsCash(
+  trades: readonly {
+    symbol: string;
+    side: string;
+    entry: number;
+    exit?: number | null;
+    size?: number | null;
+    note?: string | null;
+    status: string;
+  }[],
+  pct: number
+): boolean {
+  if (!Number.isFinite(pct) || pct === 0) return false;
+  const byCcy = new Map<string, number>();
+  let n = 0;
+  for (const tr of trades) {
+    if (tr.status !== 'closed') continue;
+    const lots = knownLots(tr.size, tr.note);
+    if (lots == null || !finitePos(tr.exit)) return false;
+    const side: TradeSide = tr.side === 'sell' ? 'sell' : 'buy';
+    const cash = pnlInQuoteCcy({ symbol: tr.symbol, side, entry: tr.entry, exit: tr.exit, lots });
+    if (!cash) return false;
+    byCcy.set(cash.ccy, (byCcy.get(cash.ccy) ?? 0) + cash.amount);
+    n += 1;
+  }
+  if (n === 0) return false;
+  // سنت واحد هامشاً: صافٍ 0.004 ليس «ربحاً» يُخفى لأجله شيء
+  const sums = [...byCcy.values()].map((v) => (Math.abs(v) < 0.005 ? 0 : v));
+  const cashSign = sums.every((v) => v >= 0) && sums.some((v) => v > 0)
+    ? 1
+    : sums.every((v) => v <= 0) && sums.some((v) => v < 0)
+      ? -1
+      : 0;
+  return cashSign !== 0 && Math.sign(pct) !== cashSign;
+}
+
 /** +1.8R / −1R / 0R */
 export function formatR(r: number | null): string | null {
   if (r == null || !Number.isFinite(r)) return null;

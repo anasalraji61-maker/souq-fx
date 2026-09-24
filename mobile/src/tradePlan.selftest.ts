@@ -14,6 +14,7 @@ import {
   exitShortcuts,
   exitPreview,
   averageR,
+  pnlPctContradictsCash,
   journalStats,
   roundHalfEven,
   floatingResult,
@@ -1220,3 +1221,37 @@ console.log('tradePlan liveEntryOrphaned selftest OK');
   assert.equal(exitPreview({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08499, exit: 1.087 })!.pips, 20);
 }
 console.log('tradePlan sub-pip stop R selftest OK');
+
+// «إجمالي PnL %» يُخفى حين يعاكس مالاً معروفاً لكل صفقة
+{
+  const t = (symbol: string, side: string, entry: number, exit: number, size: number | null, note: string | null = null) => ({
+    symbol, side, entry, exit, size, note, status: 'closed',
+  });
+  // 0.01 لوت +2% (1.0 ⇒ 1.02) و2 لوت −0.5% (1.1 ⇒ 1.0945): النسب +1.5%، المال +20 −1,100 = −1,080 USD
+  const pair = [t('EURUSD', 'buy', 1.0, 1.02, 0.01), t('EURUSD', 'buy', 1.1, 1.0945, 2)];
+  const pct = journalStats(pair.map((x) => ({ status: 'closed', pnl: ((x.exit - x.entry) / x.entry) * 100 }))).total_pnl_pct;
+  assert.equal(pct, 1.5);
+  assert.equal(pnlPctContradictsCash(pair, pct), true);
+  // الإشارة نفسها: يبقى
+  assert.equal(pnlPctContradictsCash(pair, -0.3), false);
+  // صفقة بلا حجم معروف (1 افتراض الخادم بلا ملاحظة الحاسبة): لا نعرف المال كلّه ⇒ يبقى
+  assert.equal(pnlPctContradictsCash([...pair, t('EURUSD', 'buy', 1.1, 1.2, 1)], pct), false);
+  // 1.00 من الحاسبة (ملاحظتها تشهد): معروف
+  assert.equal(pnlPctContradictsCash([t('EURUSD', 'buy', 1.0, 1.02, 0.01), t('EURUSD', 'buy', 1.1, 1.0945, 1, '1.00 lot · x')], 1.5), true);
+  // أداة مجهولة: يبقى
+  assert.equal(pnlPctContradictsCash([...pair, t('ZZZ', 'buy', 1, 2, 0.5)], pct), false);
+  // عملتان بإشارتين مختلفتين (EURUSD −1,080 USD، USDJPY +JPY): الصافي غير واضح ⇒ يبقى
+  assert.equal(pnlPctContradictsCash([...pair, t('USDJPY', 'buy', 150, 151, 2)], 1.5), false);
+  // عملتان كلتاهما خاسرة والنسبة موجبة ⇒ يُخفى
+  assert.equal(pnlPctContradictsCash([...pair, t('USDJPY', 'buy', 151, 150.9, 0.1)], 1.2), true);
+  // المفتوحة لا تُحسب؛ نسبة صفر أو NaN لا تُخفى؛ بلا صفقات لا تُخفى
+  assert.equal(pnlPctContradictsCash([...pair, { ...t('EURUSD', 'buy', 1, 1, null), status: 'open', exit: null as unknown as number }], pct), true);
+  assert.equal(pnlPctContradictsCash(pair, 0), false);
+  assert.equal(pnlPctContradictsCash(pair, NaN), false);
+  assert.equal(pnlPctContradictsCash([], 1), false);
+  // مال بصفر تماماً (خروج = دخول): لا إشارة ⇒ يبقى
+  assert.equal(pnlPctContradictsCash([t('EURUSD', 'buy', 1.1, 1.1, 2)], 0.1), false);
+  // بيع يُحسب بجهته: بيع 0.5 لوت 1.1 ⇒ 1.105 = −250 USD، والنسبة +0.2 ⇒ يُخفى
+  assert.equal(pnlPctContradictsCash([t('EURUSD', 'sell', 1.1, 1.105, 0.5)], 0.2), true);
+}
+console.log('tradePlan pnlPctContradictsCash selftest OK');

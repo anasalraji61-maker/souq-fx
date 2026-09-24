@@ -41,6 +41,7 @@ import {
   quickStopPips,
   stopAtPips,
   averageR,
+  pnlPctContradictsCash,
   journalStats,
   type JournalStats,
   QUICK_RR,
@@ -1058,9 +1059,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           <Text style={[styles.stat, { textAlign: align }]}>
             {t.journalStatWinRate.replace('{pct}', String(shownStats.win_rate))}
           </Text>
-          <Text style={[styles.stat, { textAlign: align }]}>
-            {t.journalStatTotalPnl.replace('{pct}', String(shownStats.total_pnl_pct))}
-          </Text>
+          {/* «+1.5%» والمال −1,058 USD: النسبة تجمع حركة السعر بلا حجم — تُخفى حين يناقضها مالٌ معروف لكل صفقة */}
+          {pnlPctContradictsCash(visibleTrades, shownStats.total_pnl_pct) ? null : (
+            <Text style={[styles.stat, { textAlign: align }]}>
+              {t.journalStatTotalPnl.replace('{pct}', String(shownStats.total_pnl_pct))}
+            </Text>
+          )}
           {extraStats.pips != null ? (
             <Text style={[styles.stat, { textAlign: align }]}>
               {t.journalStatNetPips.replace('{pips}', extraStats.pips)}
