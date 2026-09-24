@@ -9,6 +9,7 @@ import {
   executionPrice,
   liveEntryForStop,
   liveEntryQuote,
+  liveEntryOrphaned,
   liveStopChip,
   exitShortcuts,
   exitPreview,
@@ -1161,3 +1162,28 @@ console.log('tradePlan liveEntryQuote selftest OK');
   assert.equal(liveStopChip({ symbol: 'NOPE', side: 'buy', pips: 20, q }), null);
 }
 console.log('tradePlan liveStopChip selftest OK');
+
+// ── الدفتر: دخولٌ حيّ لأداة سابقة يُمسح عند تبديل الأداة، وما كُتب باليد لا يُمسّ ──
+{
+  const filled = { symbol: 'EURUSD', text: '1.08515' };
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'GBPUSD', filled }), true);
+  assert.equal(liveEntryOrphaned({ entryText: ' 1.08515 ', symbol: 'gbp/usd', filled }), true);
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'XAUUSD', filled }), true);
+  // الأداة نفسها بلاحقة وسيط أو بالحروف الصغيرة ⇒ لا
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'EURUSD', filled }), false);
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'eurusd.m', filled }), false);
+  assert.equal(
+    liveEntryOrphaned({ entryText: '2350.65', symbol: 'GOLD#', filled: { symbol: 'XAUUSD', text: '2350.65' } }),
+    false,
+  );
+  // أثناء الكتابة (رمز ناقص/فارغ) ⇒ لا
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'GBPUS', filled }), false);
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: '', filled }), false);
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'AAPL', filled }), false); // غير معروفة: لا تخمين
+  // شريحة مؤشر معروف ⇒ نعم
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'US30', filled }), true);
+  // كتبه المتداول بيده (أو عدّله) ⇒ لا يُمسّ
+  assert.equal(liveEntryOrphaned({ entryText: '1.0852', symbol: 'GBPUSD', filled }), false);
+  assert.equal(liveEntryOrphaned({ entryText: '1.27', symbol: 'GBPUSD', filled: null }), false);
+}
+console.log('tradePlan liveEntryOrphaned selftest OK');

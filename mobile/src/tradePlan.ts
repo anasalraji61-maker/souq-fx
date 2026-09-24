@@ -399,6 +399,27 @@ export function entryAfterSideSwitch(input: {
 }
 
 /**
+ * الدخول بالدفتر ما زال **سعر أداةٍ أخرى** عبّأه «السعر الحالي»: الخانة بنصّ التعبئة حرفياً، والرمز المكتوب الآن
+ * أداةٌ معروفة (مواصفات أو اسم مؤشر/سلعة معروف) غيرُ أداة التعبئة. حينها يُمسح الدخول.
+ *
+ * لماذا: «السعر الحالي» على EURUSD (1.08515) ثم شريحة GBPUSD ⇒ صفقة GBPUSD بدخول 1.08515 — تُحفظ بخروج 1.2700
+ * «+1,848.5 pip · +9,242.50 USD · +17%»، وبلا خروج نتيجةً عائمة مختلَقة. ما كتبه المتداول بيده **لا يُمسّ**
+ * (الدفتر يسجّل صفقات سابقة غالباً، وقد يكتب السعر قبل الرمز)، ولا يُمسح أثناء كتابة الرمز («GBPUS» غير معروفة
+ * بعد) ولا بلاحقة الوسيط أو الاسم البديل للأداة نفسها («EURUSD.m»، «GOLD» ⇒ XAUUSD).
+ */
+export function liveEntryOrphaned(input: {
+  entryText: string;
+  symbol: string;
+  filled: { symbol: string; text: string } | null;
+}): boolean {
+  const { entryText, symbol, filled } = input;
+  if (!filled || entryText.trim() !== filled.text) return false;
+  // أداة **معروفة** فقط: `journalSymbol` يقبل «GBPUS» رمزاً حرّاً أثناء الكتابة
+  const now = instrumentSpec(symbol)?.symbol ?? knownSingleName(symbol);
+  return now != null && now !== filled.symbol;
+}
+
+/**
  * «الدخول = السعر الحالي» بالحاسبة، حيث لا زرّ جهة: الجهة من موضع الوقف بالنسبة للسعر (تحته = شراء ⇒ Ask،
  * فوقه = بيع ⇒ Bid). بلا وقف صالح، أو وقف عند السعر نفسه، ⇒ السعر المفرد (لا نخمّن جهة).
  */

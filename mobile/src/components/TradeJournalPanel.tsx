@@ -20,6 +20,7 @@ import { formatMoney, instrumentSpec, parsePriceFor, pipsBetween, pnlInQuoteCcy,
 import {
   analyzePlan,
   entryAfterSideSwitch,
+  liveEntryOrphaned,
   executionPrice,
   exitShortcuts,
   exitPreview,
@@ -235,6 +236,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * عليه فعلاً)، وإلا السعر. اقتباس بذري تجريبي لا يُستخدم أبداً (isRealQuote) — لا دخول مختلَق. */
   /** آخر تعبئة لـ«السعر الحالي» — تبديل الجهة بعدها يأخذ سعر الجهة الأخرى من اللقطة نفسها (`entryAfterSideSwitch`) */
   const liveFillRef = useRef<{ symbol: string; text: string; q: { price: number; bid?: number | null; ask?: number | null } } | null>(null);
+  // تبديل الأداة يمسح دخولاً عبّأه «السعر الحالي» لأداة أخرى (لا ما كُتب باليد) — راجع `liveEntryOrphaned`
+  useEffect(() => {
+    if (liveEntryOrphaned({ entryText: entryRef.current, symbol, filled: liveFillRef.current })) {
+      setEntry('');
+      liveFillRef.current = null;
+    }
+  }, [symbol]);
+
   const pickSide = (next: 'buy' | 'sell') => {
     if (next === side) return;
     const sym = quoteSymbol(symbol);
