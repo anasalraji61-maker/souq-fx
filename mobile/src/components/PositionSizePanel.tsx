@@ -32,6 +32,8 @@ import {
   smallContractSpec,
   centQuoteToAccount,
   smallLotsStdEquiv,
+  smallContractSuffix,
+  withSmallSuffix,
   CENTS_PER_USD,
   stopPipsMismatch,
   parseSpreadPips,
@@ -90,6 +92,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * رصيداً بالدولار عند العودة إلى «EURUSD» ⇒ لوتٌ بمئة ضعف. راجع `smallContractSpec`.
    */
   const [centBalance, setCentBalance] = useState('');
+  /**
+   * آخر لاحقة سنت/micro استعملها («c»، «.c»، «micro») — محفوظة: شريحةٌ واحدة «EURUSDc» بجانب الأزواج بدل كتابة الرمز كل
+   * جلسة، وشرائح الأزواج وشريط رموز الأدوات تبقى بوضعه ما دام فيه. راجع `smallContractSuffix`.
+   */
+  const [smallSuffix, setSmallSuffix] = useState('');
   const [riskPct, setRiskPct] = useState('1');
   /** رافعة الحساب — ثابتة للمتداول كرصيده، فتُحفظ معه. فارغة = لا سطر هامش */
   const [leverage, setLeverage] = useState('');
@@ -147,6 +154,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           const p = JSON.parse(raw) as {
             balance?: string;
             centBalance?: string;
+            smallSuffix?: string;
             riskPct?: string;
             account?: string;
             leverage?: string;
@@ -154,6 +162,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           };
           if (typeof p.balance === 'string') setBalance(p.balance);
           if (typeof p.centBalance === 'string') setCentBalance(p.centBalance);
+          // لاحقة لا تصلح (نسخة قديمة أو محرَّرة) لا تُعرض شريحةً تقود لرمز مرفوض
+          if (typeof p.smallSuffix === 'string' && withSmallSuffix('EURUSD', p.smallSuffix)) setSmallSuffix(p.smallSuffix);
           if (typeof p.leverage === 'string') setLeverage(p.leverage);
           if (typeof p.commission === 'string') setCommission(p.commission);
           if (typeof p.riskPct === 'string') setRiskPct(p.riskPct);
@@ -169,12 +179,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
 
   useEffect(() => {
     if (!loadedRef.current) return;
-    AsyncStorage.setItem(STORE_KEY, JSON.stringify({ balance, centBalance, riskPct, account, leverage, commission })).catch(
+    AsyncStorage.setItem(STORE_KEY, JSON.stringify({ balance, centBalance, smallSuffix, riskPct, account, leverage, commission })).catch(
       () => {
         /* ignore */
       }
     );
-  }, [balance, centBalance, riskPct, account, leverage, commission]);
+  }, [balance, centBalance, smallSuffix, riskPct, account, leverage, commission]);
 
   /**
    * تبديل الزوج من شريط رموز شاشة الأدوات يصل هنا بـ`defaultSymbol` — وكان يُهمَل بعد أول تركيب،
@@ -184,10 +194,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    */
   const planTypedRef = useRef(false);
   planTypedRef.current = [entryPx, stopPx, targetPx].some((v) => v.trim() !== '');
+  /** لاحقة الرمز **الآن** إن كان سنتاً/micro — شريط الرموز ينقل الزوج ويُبقي الوضع («GBPUSD» ⇒ «GBPUSDc») */
+  const symSuffixRef = useRef<string | null>(null);
+  symSuffixRef.current = smallContractSuffix(symbol);
   useEffect(() => {
     if (!defaultSymbol || planTypedRef.current) return;
     if (!instrumentSpec(defaultSymbol)) return;
-    setSymbol(defaultSymbol);
+    const suf = symSuffixRef.current;
+    setSymbol((suf && withSmallSuffix(defaultSymbol, suf)) || defaultSymbol);
   }, [defaultSymbol]);
 
   const stdSpec = useMemo(() => instrumentSpec(symbol), [symbol]);
@@ -203,6 +217,21 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const convAccount: AccountCcy = cent ? 'USD' : account;
   const balanceText = cent ? centBalance : balance;
   const setBalanceText = cent ? setCentBalance : setBalance;
+  /** لاحقة الوضع الحالي (null = حساب عادي) */
+  const curSuffix = small ? smallContractSuffix(symbol) : null;
+  useEffect(() => {
+    if (curSuffix) setSmallSuffix(curSuffix);
+  }, [curSuffix]);
+  /**
+   * شرائح الأزواج الجاهزة: بوضع السنت/micro بلاحقته («GBPUSDc») — كانت «GBPUSD» تُخرجه إلى الحساب العادي برصيده الآخر؛
+   * وشريحة أخيرة تعبر بين الوضعين للزوج الحالي: «EURUSDc» (آخر لاحقة محفوظة) من الحساب العادي، و«EURUSD» منه.
+   */
+  const quickSyms = QUICK_SYMBOLS.map((pair) => ({ pair, s: (curSuffix && withSmallSuffix(pair, curSuffix)) || pair }));
+  const crossSym = curSuffix
+    ? spec!.symbol
+    : stdSpec && smallSuffix
+      ? withSmallSuffix(stdSpec.symbol, smallSuffix)
+      : null;
   /** الأداة **الآن** — لسعرٍ حيّ يصل بعد تبديلها (راجع `fillEntryFromLive`) */
   const liveSymRef = useRef<string | null>(null);
   liveSymRef.current = spec?.symbol ?? null;
@@ -923,7 +952,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
 
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcSymbol}</Text>
       <View style={[styles.chips, rtl && styles.chipsRtl]}>
-        {QUICK_SYMBOLS.map((s) => chip(s, stdSpec?.symbol === s, () => setSymbol(s), `${t.riskCalcSymbol}: ${s}`))}
+        {quickSyms.map(({ pair, s }) => chip(s, spec?.symbol === pair, () => setSymbol(s), `${t.riskCalcSymbol}: ${s}`))}
+        {crossSym ? chip(crossSym, false, () => setSymbol(crossSym), `${t.riskCalcSymbol}: ${crossSym}`) : null}
       </View>
       {input(symbol, setSymbol, 'EURUSD', t.riskCalcSymbol, false)}
       {!spec && symbol.trim().length > 0 ? (

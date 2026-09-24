@@ -166,6 +166,30 @@ export function smallContractSpec(raw: string): { kind: 'cent' | 'micro'; spec: 
   return { kind, spec: { ...std, contractSize: std.contractSize / 100 } };
 }
 
+/**
+ * لاحقة السنت/micro كما كتبها المتداول («c»، «.c»، «-cent»، «micro»، «_MICRO») — لتُعاد على زوجٍ آخر بنقرة
+ * (`withSmallSuffix`): حساب السنت يكتب «c» على كل رموزه، فشرائح الأزواج الجاهزة بلا لاحقته كانت تُخرجه من وضع السنت
+ * برصيدٍ آخر. null = ليس رمز سنت/micro.
+ */
+export function smallContractSuffix(raw: string): string | null {
+  const s = raw.trim();
+  if (!smallContractSpec(s)) return null;
+  const m = /[.\-_#+]?(?:micro|cent|c)$/i.exec(s);
+  return m ? m[0] : null;
+}
+
+/**
+ * الزوج العادي («GBPUSD») بلاحقة سنت/micro (`smallContractSuffix`) ⇒ «GBPUSDc» — فقط حين يبقى الناتج رمز سنت/micro
+ * **للزوج نفسه** (`smallContractSpec`). null لزوج مجهول أو لاحقة لا تصلح.
+ */
+export function withSmallSuffix(pair: string, suffix: string): string | null {
+  const std = instrumentSpec(pair);
+  if (!std || !suffix) return null;
+  const s = pair.trim() + suffix;
+  const small = smallContractSpec(s);
+  return small && small.spec.symbol === std.symbol && smallContractSuffix(s) === suffix ? s : null;
+}
+
 /** سعر التحويل (عملة التسعير ⇒ USD) لحساب سنت: × 100 ⇒ عملة التسعير ⇒ USC. null يبقى null. */
 export function centQuoteToAccount(usdRate: number | null): number | null {
   return usdRate != null && Number.isFinite(usdRate) && usdRate > 0 ? usdRate * CENTS_PER_USD : null;

@@ -41,6 +41,8 @@ import {
   smallContractSpec,
   centQuoteToAccount,
   smallLotsStdEquiv,
+  smallContractSuffix,
+  withSmallSuffix,
   CENTS_PER_USD,
   ambiguousThousandsPrice,
   spreadBeyondLiveEntry,
@@ -1800,3 +1802,37 @@ console.log('positionSize smallContractSpec selftest OK');
   assert.equal(parseRiskInput(flipped!, 50_000, 'USC')!.pct, 1);
 }
 console.log('positionSize USC risk-input selftest OK');
+
+// smallContractSuffix / withSmallSuffix — شرائح الأزواج تبقى بوضع السنت/micro
+{
+  for (const [raw, suf] of [
+    ['EURUSDc', 'c'], ['EURUSDC', 'C'], ['EURUSD.c', '.c'], ['GBPJPY-cent', '-cent'], ['XAUUSD_CENT', '_CENT'],
+    ['GOLDc', 'c'], ['EURUSDmicro', 'micro'], ['EURUSD.micro', '.micro'], ['GOLDmicro', 'micro'], [' USDJPYc ', 'c'],
+  ] as const)
+    assert.equal(smallContractSuffix(raw), suf, raw);
+  for (const raw of ['EURUSD', 'EURUSD.m', 'EURUSDm', 'US30micro', 'BTCUSDc', 'EURUSDT', ''])
+    assert.equal(smallContractSuffix(raw), null, raw);
+
+  assert.equal(withSmallSuffix('GBPUSD', 'c'), 'GBPUSDc');
+  assert.equal(withSmallSuffix('XAUUSD', '.c'), 'XAUUSD.c');
+  assert.equal(withSmallSuffix('USDJPY', '-cent'), 'USDJPY-cent');
+  assert.equal(withSmallSuffix('EURGBP', 'micro'), 'EURGBPmicro');
+  // الناتج أداة سنت/micro للزوج نفسه، بعقدٍ أصغر بمئة مرّة
+  for (const pair of ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'GBPJPY', 'EURGBP']) {
+    for (const suf of ['c', '.c', '-cent', 'micro', '_MICRO']) {
+      const s = withSmallSuffix(pair, suf)!;
+      assert.ok(s, pair + suf);
+      const sp = smallContractSpec(s)!;
+      assert.equal(sp.spec.symbol, pair);
+      assert.equal(sp.spec.contractSize, instrumentSpec(pair)!.contractSize / 100);
+      assert.equal(sp.kind, /micro/i.test(suf) ? 'micro' : 'cent');
+    }
+  }
+  // لاحقة ليست سنتاً/micro، أو زوج مجهول ⇒ null (لا رمزٌ يُحسب بعقد خطأ)
+  assert.equal(withSmallSuffix('EURUSD', 'm'), null);
+  assert.equal(withSmallSuffix('EURUSD', '.pro'), null);
+  assert.equal(withSmallSuffix('EURUSD', ''), null);
+  assert.equal(withSmallSuffix('US30', 'c'), null);
+  assert.equal(withSmallSuffix('BTCUSD', 'c'), null);
+}
+console.log('positionSize smallContractSuffix selftest OK');
