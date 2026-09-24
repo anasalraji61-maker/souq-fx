@@ -318,6 +318,33 @@ export function riskInQuoteCcy(input: {
 }
 
 /**
+ * نتيجة صفقة بالمال **بعملة التسعير**، بإشارتها (ربح موجب، خسارة سالبة): (الخروج − الدخول) × حجم العقد
+ * × اللوت، معكوسةً للبيع. `exit` سعر خروج نُفِّذ أو سعر السوق الآن للصفقة المفتوحة — المسطرة واحدة.
+ *
+ * لماذا: سطر الصفقة بالدفتر يقول «+25 pip · +0.23%» ويسكت عن «كم ربحتُ» — والنسبة هناك نسبة حركة
+ * السعر لا نسبة الحساب، فـ+0.23% على لوتين هي 500$ لا «ربع بالمئة». المال بعملة التسعير رقمٌ دقيق
+ * بلا سعر تحويل (الدفتر لا يعرف عملة الحساب)، ويُكتب برمز عملته صراحةً — كـ`riskInQuoteCcy` تماماً،
+ * فمخاطرة الصفقة ونتيجتها بعملة واحدة تُقرآن معاً.
+ *
+ * مقرَّب لمنزلتين متماثلاً حول الصفر (الخسارة لا تُكتب أصغر من الربح المماثل)، وبلا «−0». `null`
+ * لأداة بلا مواصفات أو مدخل غير صالح.
+ */
+export function pnlInQuoteCcy(input: {
+  symbol: string;
+  side: 'buy' | 'sell';
+  entry: number;
+  exit: number;
+  lots: number;
+}): { amount: number; ccy: string } | null {
+  const spec = instrumentSpec(input.symbol);
+  const { side, entry, exit, lots } = input;
+  if (!spec || ![entry, exit, lots].every((v) => Number.isFinite(v) && v > 0)) return null;
+  const raw = (side === 'sell' ? entry - exit : exit - entry) * spec.contractSize * lots;
+  const abs = Math.round(Math.round(Math.abs(raw) * 100 * 1e6) / 1e6) / 100;
+  return { amount: raw < 0 ? -abs || 0 : abs, ccy: spec.quote };
+}
+
+/**
  * منازل المبلغ العشرية لعملة: الين بلا كسور (لا «سِن» يُتداول به)، وبقية عملات الحساب والتسعير
  * المدعومة منزلتان.
  */

@@ -18,6 +18,7 @@ import {
   priceAtPipOffset,
   riskForLots,
   riskInQuoteCcy,
+  pnlInQuoteCcy,
   formatRiskPct,
   formatMoney,
   moneyDecimals,
@@ -549,10 +550,10 @@ console.log('positionSize formatMoney selftest OK');
   assert.ok(old.lots * 25.04 * pvEu > 100); // ما كان يحدث
   // مسح عشوائي: أي وقف حقيقي بأي منزلة، الخسارة عند الوقف بحجم الحاسبة ≤ المخاطرة المطلوبة
   let seed = 7;
-  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const rnd = (): number => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   for (let i = 0; i < 5000; i++) {
     const stop = 1.1 - (0.0005 + rnd() * 0.01);
-    const trueSl = (1.1 - stop) / eu.pipSize;
+    const trueSl: number = (1.1 - stop) / eu.pipSize;
     const p = slPipsFromPrices(eu, 1.1, stop)!;
     const bal = 500 + Math.floor(rnd() * 50_000);
     const z = positionSize({ balance: bal, riskPct: 1, slPips: p, pipValuePerLot: pvEu, contractSize: eu.contractSize })!;
@@ -563,3 +564,48 @@ console.log('positionSize formatMoney selftest OK');
 }
 
 console.log('positionSize slPipsFromPrices ceil selftest OK');
+
+/** `pnlInQuoteCcy`: نتيجة الصفقة بالمال بعملة التسعير لسطر الدفتر. */
+{
+  // EURUSD شراء 0.50 لوت، +25 pip ⇒ +125 USD
+  assert.deepEqual(pnlInQuoteCcy({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.0875, lots: 0.5 }), { amount: 125, ccy: 'USD' });
+  // البيع معكوس
+  assert.deepEqual(pnlInQuoteCcy({ symbol: 'EURUSD', side: 'sell', entry: 1.085, exit: 1.0875, lots: 0.5 }), { amount: -125, ccy: 'USD' });
+  // الين: USDJPY بيع 1 لوت، 30 pip لصالحه ⇒ +30,000 JPY
+  const jpy = pnlInQuoteCcy({ symbol: 'USDJPY', side: 'sell', entry: 157.4, exit: 157.1, lots: 1 })!;
+  assert.deepEqual(jpy, { amount: 30000, ccy: 'JPY' });
+  assert.equal(formatMoney(jpy.amount, jpy.ccy), '30,000 JPY');
+  // الذهب 100 أونصة: شراء 0.10 من 2350.5 إلى 2340.25 ⇒ −102.50 USD
+  const g = pnlInQuoteCcy({ symbol: 'XAUUSD', side: 'buy', entry: 2350.5, exit: 2340.25, lots: 0.1 })!;
+  assert.deepEqual(g, { amount: -102.5, ccy: 'USD' });
+  assert.equal(formatMoney(g.amount, g.ccy), '−102.50 USD');
+  // الفضة 5,000 أونصة
+  assert.deepEqual(pnlInQuoteCcy({ symbol: 'XAGUSD', side: 'buy', entry: 30, exit: 30.1, lots: 0.2 }), { amount: 100, ccy: 'USD' });
+  // تقاطع: EURGBP بالإسترليني
+  assert.deepEqual(pnlInQuoteCcy({ symbol: 'EURGBP', side: 'buy', entry: 0.85, exit: 0.852, lots: 1 }), { amount: 200, ccy: 'GBP' });
+  // رمز الوسيط بلاحقة يُحسب كالقانوني
+  assert.deepEqual(pnlInQuoteCcy({ symbol: 'XAUUSD.m', side: 'buy', entry: 2350.5, exit: 2340.25, lots: 0.1 }), g);
+  // ضجيج الفاصلة العائمة: 1.0851 − 1.085 على لوت = 10 بالضبط لا 9.999999
+  assert.deepEqual(pnlInQuoteCcy({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.0851, lots: 1 }), { amount: 10, ccy: 'USD' });
+  // تماثل حول الصفر: الربح والخسارة المتماثلان بنفس الرقم (0.005 USD ⇒ ±0.01)
+  const up = pnlInQuoteCcy({ symbol: 'EURUSD', side: 'buy', entry: 1.1, exit: 1.10001, lots: 0.005 })!;
+  const dn = pnlInQuoteCcy({ symbol: 'EURUSD', side: 'sell', entry: 1.1, exit: 1.10001, lots: 0.005 })!;
+  assert.equal(up.amount, -dn.amount);
+  // التعادل صفر بلا «−0»
+  const flat = pnlInQuoteCcy({ symbol: 'EURUSD', side: 'sell', entry: 1.085, exit: 1.085, lots: 1 })!;
+  assert.ok(Object.is(flat.amount, 0));
+  // مطابقة مخاطرة الصفقة: الخروج عند الوقف = −riskInQuoteCcy حرفياً
+  for (const [sym, e, s, l] of [['EURUSD', 1.085, 1.0825, 0.37], ['USDJPY', 150, 149.62, 0.2], ['XAUUSD', 2400, 2385.5, 0.03]] as const) {
+    const risk = riskInQuoteCcy({ symbol: sym, entry: e, sl: s, lots: l })!;
+    const hit = pnlInQuoteCcy({ symbol: sym, side: 'buy', entry: e, exit: s, lots: l })!;
+    assert.equal(hit.amount, -risk.amount, sym);
+    assert.equal(hit.ccy, risk.ccy);
+  }
+  // مدخل غير صالح / أداة بلا مواصفات
+  assert.equal(pnlInQuoteCcy({ symbol: 'NAS100', side: 'buy', entry: 18000, exit: 18100, lots: 1 }), null);
+  assert.equal(pnlInQuoteCcy({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 0, lots: 1 }), null);
+  assert.equal(pnlInQuoteCcy({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.09, lots: 0 }), null);
+  assert.equal(pnlInQuoteCcy({ symbol: 'EURUSD', side: 'buy', entry: NaN, exit: 1.09, lots: 1 }), null);
+}
+
+console.log('positionSize pnlInQuoteCcy selftest OK');

@@ -16,7 +16,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
-import { formatMoney, instrumentSpec, pipsBetween, riskInQuoteCcy } from '../positionSize';
+import { formatMoney, instrumentSpec, pipsBetween, pnlInQuoteCcy, riskInQuoteCcy } from '../positionSize';
 import {
   analyzePlan,
   floatingResult,
@@ -757,8 +757,20 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
             const pips = mv ? formatPips(mv.pips == null ? null : Math.abs(mv.pips)) : null;
             const rText = !closed && mv && 'r' in mv ? formatR(mv.r) : null;
+            /**
+             * **كم ربحتُ/خسرتُ بالمال** بعملة التسعير (`pnlInQuoteCcy`): النسبة بالسطر نسبة حركة السعر
+             * لا الحساب، فـ«+0.23%» على لوتين هي 500$ — والمتداول كان يضرب بنفسه. الحجم 1 بلا معنى
+             * (يضعه الخادم حين لا يُرسل حجم — راجع خانة الحجم) فلا يُحسب منه مال، كسطر الحجم أعلاه.
+             */
+            const lotsKnown = typeof tr.size === 'number' && Number.isFinite(tr.size) && tr.size > 0 && tr.size !== 1;
+            const px = closed ? tr.exit : live;
+            const cash =
+              mv && lotsKnown && px != null
+                ? pnlInQuoteCcy({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: px, lots: tr.size })
+                : null;
+            const cashText = cash ? `${cash.amount > 0 ? '+' : ''}${formatMoney(cash.amount, cash.ccy)} · ` : '';
             const result = mv
-              ? `${pips != null ? `${sign(mv.pips ?? 0)}${pips} pip · ` : ''}${sign(mv.pct)}${Math.abs(
+              ? `${pips != null ? `${sign(mv.pips ?? 0)}${pips} pip · ` : ''}${cashText}${sign(mv.pct)}${Math.abs(
                   mv.pct
                 ).toFixed(2)}%${rText ? ` · ${rText}` : ''}`
               : '';
