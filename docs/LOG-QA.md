@@ -66,3 +66,15 @@
 - سليم: الجلسات/DST، افتتاح الأحد/إغلاق الجمعة، pip الين، Bid للإغلاق، وسم بيانات العرض.
 **بعد 7 commits وصلت أثناء الدورة (ba9f33b):** أخضر 0، 59/59. أُغلقت: tools34 (c8f93bf)، launch50 (المفاتيح الميتة حُذفت)، STORE-LISTING CVD (2105e87)؛ chart43 صار «اربط `mcDrawColor*`» للشارت.
 **الدورة القادمة:** دورة جديدة للمراجعة — (a) تكرار/كود ميت.
+
+## 2026-09-25 — الدورة 6
+**البناء:** أخضر 0 (بعد 478b0a6) — لا إصلاح لازم.
+**Selftests:** 61/61 ناجح (`npx tsx`؛ جديدان: `marketHours`، `notifications`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — chart43 (`tr.mcColorNames`/`mcDrawColor*` :1999-2029، `drawColorLabels` محذوفة)، launch53 (:7678)، عطل 25/12 و1/1 (bd99eca)،
+PDH/PDL بيوم 17:00 NY أوّلاً (:1641-1646)، Footprint «≈»/CVD «تقديري» (9d937e5)، مقبس التيكات بـ`screenFocused` (3d1bda8)، `getNotificationPermissionState` لا ترمي (08429d3).
+جزئي: أسماء البنوك/«TradingCentral-like» باقية بالخادم والواجهة موسومة «محاكاة» (376434d)؛ تقويم العيّنة موسوم (63c2ef6) وأوقاته خاطئة بالخادم.
+**فجوة الملكية اتّسعت:** chart صرّح أن EdgeRails/BottomDock/SidePanel/TerminalScreen/useMultiLiveTicks/FocusChartModal خارج نطاقه، وtools قال ذلك عن Analysts/Vote/AlertsPanel
+⇒ 13 صفاً «بلا مالك» (9 ★) ⇒ ⛔ أنس 1.
+**المراجعة (a — تكرار/كود ميت)، بسكربت ثم قراءة:** `QUICK_SYMBOLS` ×4 حرفياً؛ `pineLite` بنسخة `sma`/`ema` خاصة (مطابقة على بيانات بلا فراغات)؛ `DAY_SEC` ×3؛
+`RECONNECT_*` ×2؛ `dirColor`/`dirLabel` ×3 باقية؛ ~12 تصديراً بلا مستخدم (`priceLegend` ×3 للاختبار فقط — مقبول). `estimatedTag` المؤقّت ما زال بدل `mcEstimatedTag`.
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة خارج locales.ts.
