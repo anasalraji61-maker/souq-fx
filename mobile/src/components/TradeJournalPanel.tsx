@@ -16,6 +16,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
+import { instrumentSpec } from '../positionSize';
 import {
   analyzePlan,
   floatingResult,
@@ -26,6 +27,8 @@ import {
   realizedMove,
   realizedR,
   roundR,
+  QUICK_RR,
+  targetAtRR,
   type PlanIssue,
   type TradePlan,
 } from '../tradePlan';
@@ -303,6 +306,27 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     return { issue: null, plan: analyzePlan({ symbol: symbol.trim(), side, entry: e, sl: s, tp: p }) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry, sl, tp]);
+
+  /**
+   * أهداف جاهزة بالنسبة (1:1 · 1:1.5 · 1:2 · 1:3) من الدخول والوقف المكتوبين — نفس شرائح الحاسبة:
+   * الهدف يُقرَّر بالنسبة غالباً، وكتابته بيدٍ بعد حسابه ذهنياً هي الخطوة التي تنقلب فيها منزلة.
+   * لا تظهر بوقف بالجهة الخطأ (التحذير يقول ذلك أصلاً) ولا بوقف أضيق من pip (`slTooClose`).
+   */
+  const rrTargets = useMemo(() => {
+    const e = num(entry);
+    const s = num(sl);
+    if (e == null || s == null || levelSideIssue({ side, entry: e, sl: s })) return [];
+    const sym = symbol.trim().toUpperCase();
+    const spec = instrumentSpec(sym);
+    if (spec && Math.abs(e - s) < spec.pipSize * (1 - 1e-6)) return [];
+    return QUICK_RR.flatMap((rr) => {
+      const v = targetAtRR({ symbol: sym, side, entry: e, sl: s, rr });
+      // `tol`: الشريحة «مختارة» حين تطابق الخانةُ سعرَها (نصف pipette، أو مطابقة شبه تامّة بلا مواصفات)
+      const tol = spec ? spec.pipSize / 20 : Math.abs(v ?? 0) * 1e-9;
+      return v != null ? [{ rr, v, tol, text: spec ? formatPrice(v, sym) : String(v) }] : [];
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol, side, entry, sl]);
 
   /**
    * أدوات الدفتر وعدد صفقات كلٍّ منها، الأكثر تداولاً أولاً. الشرائح لا تظهر إلا بأداتين فأكثر:
@@ -1098,6 +1122,36 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           accessibilityLabel={t.journalTpPlaceholder}
         />
       </View>
+      {rrTargets.length > 0 ? (
+        <View style={[styles.qChips, rtl && styles.rowRtl]}>
+          {rrTargets.map((x) => {
+            const cur = num(tp);
+            const on = cur != null && Math.abs(cur - x.v) <= x.tol;
+            return (
+              <Pressable
+                key={x.rr}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                style={({ pressed }) => [
+                  styles.qChip,
+                  on && styles.chipOn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => {
+                  setTp(x.text);
+                  setFormError(null);
+                }}
+                accessibilityLabel={`${t.journalTpPlaceholder} R:R 1:${x.rr} = ${x.text}`}
+              >
+                <Text style={[styles.qChipText, on && styles.chipTextOn]}>{`1:${x.rr}`}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
       {draft?.issue ? (
         <Text style={[styles.formError, { textAlign: align }]}>{planIssueText(draft.issue)}</Text>
       ) : draft?.plan?.ok ? (
