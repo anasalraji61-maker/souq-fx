@@ -36,6 +36,7 @@ import {
   quoteSymbol,
   levelSideIssue,
   netByInstrument,
+  openRiskTotals,
   knownLots,
   journalInstrumentKey,
   draftRiskFigures,
@@ -575,6 +576,16 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   }, [visibleTrades, t]);
 
   /**
+   * «المخاطرة (مفتوحة): 250.00 USD · 100,000 JPY» — مجموع ما بين الدخول والوقف للمفتوحة المعروضة (`openRiskTotals`):
+   * أربع صفقات بـ1% هي 4% معرَّضة معاً. لا سطر إن كانت بينها صفقة بلا وقف أو بحجم مجهول (مجموعٌ جزئي يطمئن كذباً).
+   */
+  const openRiskLine = useMemo(() => {
+    const o = openRiskTotals(visibleTrades);
+    if (!o) return null;
+    return `${t.planRiskWord} ${t.journalOpenSuffix}: ${o.totals.map((c) => formatJournalMoney(c, t.journalMoneyUsc)).join(' · ')}`;
+  }, [visibleTrades, t]);
+
+  /**
    * إحصاءات ما هو معروض. بلا فلتر: أرقام الخادم حرفياً كما كانت (لا تغيّر بتاتاً بالحالة الشائعة).
    * وبفلتر أداة: تُحسب محليّاً **بمعادلة الخادم نفسها** (`db.trade_stats`: المغلقة ذات `pnl` فقط،
    * نسبة النجاح بخانة عشرية والبقيّة بخانتين). وهذا حسابٌ مطابق لا تقريب: `trade_stats` يقرأ
@@ -1078,6 +1089,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         </ScrollView>
       ) : null}
 
+      {openRiskLine ? <Text style={[styles.stat, { textAlign: align }]}>{openRiskLine}</Text> : null}
       {shownStats && shownStats.trade_count === 0 && visibleTrades.length > 0 ? (
         <Text style={[styles.sub, { textAlign: align }]}>{t.journalStatsPending}</Text>
       ) : null}

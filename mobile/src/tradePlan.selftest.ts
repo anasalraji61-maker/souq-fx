@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import {
   analyzePlan,
+  openRiskTotals,
   entryAfterSideSwitch,
   executionPrice,
   floatingExitPrice,
@@ -1827,3 +1828,51 @@ console.log('tradePlan planSummaryText selftest OK');
   }
 }
 console.log('tradePlan floatingExitPrice selftest OK');
+
+// —— openRiskTotals: مجموع المخاطرة المفتوحة لكل عملة تسعير
+{
+  const T = (o: Partial<{ symbol: string; side: string; entry: number; sl: number | null; size: number | null; note: string | null; status: string }>) => ({
+    symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083, size: 0.5, note: null, status: 'open', ...o,
+  });
+  // EURUSD 0.5 لوت، وقف 20 pip: 0.0020 × 100,000 × 0.5 = 100 USD
+  // GBPUSD بيع 0.3 لوت من 1.2700 ووقف 1.2750 (50 pip): 0.0050 × 100,000 × 0.3 = 150 USD
+  // USDJPY شراء 1 لوت من 150.00 ووقف 149.50 (50 pip): 0.50 × 100,000 × 1 = 50,000 JPY
+  const r = openRiskTotals([
+    T({}),
+    T({ symbol: 'GBPUSD', side: 'sell', entry: 1.27, sl: 1.275, size: 0.3 }),
+    T({ symbol: 'USDJPY', entry: 150, sl: 149.5, size: 2 }),
+    T({ status: 'closed', size: 10 }), // المغلقة لا تدخل
+  ])!;
+  assert.equal(r.n, 3);
+  assert.deepEqual(r.totals, [
+    { amount: 250, ccy: 'USD' },
+    { amount: 100_000, ccy: 'JPY' },
+  ]);
+  // وقفٌ نُقل للتعادل أو لجهة الربح ⇒ 0 (لا |الدخول − الوقف|)
+  const be = openRiskTotals([T({ sl: 1.085 }), T({ sl: 1.087 }), T({ side: 'sell', sl: 1.08 })])!;
+  assert.deepEqual(be.totals, [{ amount: 0, ccy: 'USD' }]);
+  assert.equal(be.n, 3);
+  // وقفٌ بجهة الربح لا يُنقص مخاطرة صفقة أخرى
+  assert.deepEqual(openRiskTotals([T({}), T({ sl: 1.09 })])!.totals, [{ amount: 100, ccy: 'USD' }]);
+  // الكلّ أو لا شيء: بلا وقف / حجم مجهول (1 الافتراضي) / أداة بلا مواصفات ⇒ null
+  assert.equal(openRiskTotals([T({}), T({ sl: null })]), null);
+  assert.equal(openRiskTotals([T({}), T({ size: 1 })]), null);
+  assert.equal(openRiskTotals([T({}), T({ size: null })]), null);
+  assert.equal(openRiskTotals([T({}), T({ symbol: 'NOTAPAIR' })]), null);
+  // 1 مكتوب بعلامة «1.00 lot» معروف: 0.0020 × 100,000 = 200
+  assert.deepEqual(openRiskTotals([T({ size: 1, note: '1.00 lot · risk 200.00 USD' })])!.totals, [{ amount: 200, ccy: 'USD' }]);
+  // لا مفتوحة ⇒ null
+  assert.equal(openRiskTotals([T({ status: 'closed' })]), null);
+  assert.equal(openRiskTotals([]), null);
+  // الذهب: 1 لوت = 100 أونصة، وقف 5 دولار ⇒ 500 USD؛ مع EURUSD بالعملة نفسها ⇒ 600
+  assert.deepEqual(openRiskTotals([T({ symbol: 'XAUUSD', entry: 2650, sl: 2645, size: 1, note: '1.00 lot' }), T({})])!.totals, [
+    { amount: 600, ccy: 'USD' },
+  ]);
+  // سنت الدولار: USC كسطر الصفقة (`journalRisk`) — 1 لوت سنت، 20 pip ⇒ 0.0020 × 100,000 = 200 USC
+  const c = openRiskTotals([T({ symbol: 'EURUSDc', size: 1, note: '1.00 lot' })])!;
+  assert.deepEqual(c.totals, [{ amount: 200, ccy: 'USC' }]);
+  // مطابقة `journalRisk` صفقةً صفقة
+  const one = T({ symbol: 'GBPJPY', entry: 190.5, sl: 190.123, size: 0.37 });
+  assert.deepEqual(openRiskTotals([one])!.totals, [journalRisk({ symbol: 'GBPJPY', entry: 190.5, sl: 190.123, lots: 0.37 })]);
+}
+console.log('tradePlan openRiskTotals selftest OK');

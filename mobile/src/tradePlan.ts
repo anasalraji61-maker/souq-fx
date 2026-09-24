@@ -1232,3 +1232,56 @@ export function netLineIsWhole(
   ).length;
   return ranked[0]!.n === closed;
 }
+
+/**
+ * **المخاطرة المفتوحة الآن**: مجموع المال بين الدخول والوقف لكل الصفقات المفتوحة المعروضة، لكل عملة تسعير — لسطر
+ * «المخاطرة (مفتوحة): 150.00 USD · 12,000 JPY» بالدفتر. أربع صفقات بـ1% لكلٍّ هي 4% من الحساب معرَّضة معاً، والدفتر
+ * كان يقول مخاطرة كل صفقة وحدها (`journalRisk`) ويسكت عن المجموع — الرقم الذي يُسأل قبل فتح الخامسة.
+ *
+ * - **وقفٌ بجهة الربح أو على الدخول** (شراء بوقف ≥ الدخول، بيع بوقف ≤ الدخول — وقفٌ نُقل للتعادل أو يحجز ربحاً):
+ *   مخاطرته 0، لا `|الدخول − الوقف|` الذي يعدّ الربح المحجوز خسارةً محتملة.
+ * - **الكلّ أو لا شيء** (كـ`netByInstrument`): صفقة مفتوحة بلا وقف (مخاطرتها بلا حدّ)، أو بحجم مجهول (`knownLots`)،
+ *   أو أداة بلا مواصفات ⇒ `null` كلّه. مجموعٌ جزئي يُقرأ «هذا كل ما أخاطر به» وهو أقلّ من الحقيقة.
+ * - عملاتٌ مختلفة لا تُجمع (الدفتر لا يعرف سعر التحويل) — عنصرٌ لكل عملة، الأكبر عدداً أولاً ثم أبجدياً.
+ * - `null` أيضاً حين لا صفقة مفتوحة. المبالغ مقرَّبة لسنت.
+ */
+export function openRiskTotals(
+  trades: readonly {
+    symbol: string;
+    side: string;
+    entry: number;
+    sl?: number | null;
+    size?: number | null;
+    note?: string | null;
+    status: string;
+  }[]
+): { n: number; totals: { amount: number; ccy: string }[] } | null {
+  const acc = new Map<string, { amount: number; n: number }>();
+  let n = 0;
+  for (const tr of trades) {
+    if (tr.status !== 'open') continue;
+    n += 1;
+    const lots = knownLots(tr.size, tr.note);
+    const sl = tr.sl;
+    if (lots == null || typeof sl !== 'number' || !Number.isFinite(sl) || sl <= 0) return null;
+    if (!Number.isFinite(tr.entry) || tr.entry <= 0) return null;
+    const side: TradeSide = tr.side === 'sell' ? 'sell' : 'buy';
+    const locked = side === 'buy' ? sl >= tr.entry : sl <= tr.entry;
+    // المحجوز: نتيجةٌ بخروجٍ على الدخول نفسه = 0 بعملة الأداة (وتُثبت أن الأداة معروفة)
+    const r = locked
+      ? journalPnl({ symbol: tr.symbol, side, entry: tr.entry, exit: tr.entry, lots })
+      : journalRisk({ symbol: tr.symbol, entry: tr.entry, sl, lots });
+    if (!r) return null;
+    const cur = acc.get(r.ccy) ?? { amount: 0, n: 0 };
+    cur.amount += locked ? 0 : r.amount;
+    cur.n += 1;
+    acc.set(r.ccy, cur);
+  }
+  if (n === 0) return null;
+  return {
+    n,
+    totals: [...acc.entries()]
+      .sort((a, b) => b[1].n - a[1].n || a[0].localeCompare(b[0]))
+      .map(([ccy, v]) => ({ amount: Math.round(v.amount * 100 + 1e-7) / 100, ccy })),
+  };
+}
