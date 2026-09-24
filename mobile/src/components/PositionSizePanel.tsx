@@ -1232,6 +1232,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           {spreadErr}
         </Text>
       ) : null}
+      {/* المنصّة تعرض السبريد بالـpoints (عُشر pip) غالباً — «12» منها هنا 1.2، وإلا تُضخَّم التكاليف ×10 */}
+      <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcSpreadPipsHint}</Text>
       <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcSpreadNote}</Text>
 
       <Text style={[styles.label, { textAlign: align }]}>
