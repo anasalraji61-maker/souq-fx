@@ -719,7 +719,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
 
   /**
    * تأكيد الإغلاق بسعر الخروج والنتيجة (نقاط · مال · نسبة · R) قبل الحفظ — للإغلاق بالسوق وبسعر خانة الخروج.
-   * `field`: العنوان «إغلاق بسعر خانة الخروج» والنصّ بلا سطر «السعر من مزوّد البيانات» (لا يخصّه).
+   * `field`: العنوان سؤال «إغلاق بسعر خانة الخروج؟» (لا اسم الزرّ) والنصّ بلا سطر «السعر من مزوّد البيانات» (لا يخصّه).
    */
   const confirmClose = (tr: Trade, exitPx: number, source: 'market' | 'field') => {
     const trSide = tr.side === 'sell' ? 'sell' : 'buy';
@@ -746,7 +746,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       : '';
     const body = source === 'market' ? t.journalCloseMarketConfirmBody : t.journalCloseMarketConfirmBody.split('\n\n')[0];
     Alert.alert(
-      source === 'market' ? t.journalCloseMarketConfirmTitle : t.journalCloseLinkBtn,
+      source === 'market' ? t.journalCloseMarketConfirmTitle : t.journalCloseFieldConfirmTitle,
       body
         .replace('{side}', trSide === 'sell' ? t.dirSell : t.dirBuy)
         .replace('{symbol}', tr.symbol)
