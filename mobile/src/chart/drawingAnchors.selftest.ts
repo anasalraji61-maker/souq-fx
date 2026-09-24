@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/drawingAnchors.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { anchorDrawings, indexAtTime, timeAtIndex } from './drawingAnchors';
+import { anchorDrawings, indexAtTime, stampAtIndex, timeAtIndex } from './drawingAnchors';
 import type { Drawing } from './types';
 
 const H = 3600;
@@ -87,6 +87,25 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   const out = anchorDrawings([d], bars(0, 10), H, true)[0];
   assert.equal('b' in out, false);
   assert.equal(out.a.time, 5 * H);
+}
+
+// طرف بالمستقبل: يُختم بآخر شمعة + عدد شموع، فالعطلة لا تزيحه ولا تُسقطه على الجمعة
+{
+  const fri = bars(1000 * H, 50); // آخر شمعة 1049
+  assert.deepEqual(stampAtIndex(fri, 59, H), { time: 1049 * H, ahead: 10 });
+  assert.deepEqual(stampAtIndex(fri, 20, H), { time: 1020 * H });
+  assert.equal(stampAtIndex([], 3, H), null);
+  const d = anchorDrawings([line(40, 59)], fri, H, true)[0];
+  assert.equal(d.b!.ahead, 10);
+  // الاثنين: فجوة 49 ساعة ثم 5 شموع جديدة، والنافذة زحفت 5
+  const mon = [...fri.slice(5), ...bars(1098 * H, 5)];
+  const re = anchorDrawings([d], mon, H, true)[0];
+  assert.equal(re.a.index, 35);
+  assert.equal(re.b!.index, 44 + 10); // خانة شمعة الجمعة الأخيرة + 10 شموع متداولة
+  // الزمن التقويمي القديم (1059) كان سيسقط على آخر شمعة الجمعة: الخانة 44
+  assert.equal(indexAtTime(mon, 1059 * H, H), 44);
+  // ثابتة: لا تغيير ثانٍ
+  assert.equal(anchorDrawings([re], mon, H, true)[0], re);
 }
 
 console.log('drawingAnchors.selftest: PASS');

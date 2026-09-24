@@ -16,6 +16,12 @@
  * الفهرسة (`reindex = false`) — تُختم النقاط الجديدة بزمن لبنتها فقط، ليجد الرسم مكانه
  * حين يعود المتداول للشموع.
  *
+ * نقطة **بعد آخر شمعة** (طرف خطّ يمتدّ للمستقبل) لا تُختم بزمن تقويمي `آخر + k×خطوة`:
+ * العطلة ليست شموعاً، فطرف على اليومي بعد 10 شموع يوم الجمعة كان يصير +7 يوم الاثنين، وعلى
+ * الساعة يسقط زمنه (السبت) على آخر شمعة الجمعة فينهار الخطّ. تُختم بزمن آخر شمعة + `ahead`
+ * شموعاً بعدها، وفهرسها = خانة ذلك الزمن + `ahead` — ثابتة بالشموع المتداولة مهما جاءت عطلة.
+ * نقاط المستقبل القديمة (زمن تقويمي بلا `ahead`) تُقرأ كما كانت.
+ *
  * خالص بلا React: يُفحص بـ`drawingAnchors.selftest.ts`.
  */
 import type { ChartPoint, Drawing } from './types';
@@ -52,6 +58,23 @@ export function indexAtTime(bars: readonly TimeBar[], time: number, stepSec: num
   return lo;
 }
 
+/**
+ * ختم نقطة جديدة عند الخانة `index`: داخل السلسلة وقبلها بزمنها (`timeAtIndex`)، وبعد آخر
+ * شمعة بزمن آخر شمعة + `ahead` (عدد شموع لا زمن تقويمي — راجع رأس الملف).
+ */
+export function stampAtIndex(
+  bars: readonly TimeBar[],
+  index: number,
+  stepSec: number
+): { time: number; ahead?: number } | null {
+  const n = bars.length;
+  if (n && Number.isFinite(index) && index > n - 1) {
+    return { time: bars[n - 1].time, ahead: index - (n - 1) };
+  }
+  const time = timeAtIndex(bars, index, stepSec);
+  return time == null ? null : { time };
+}
+
 function anchorPoint(
   p: ChartPoint,
   bars: readonly TimeBar[],
@@ -59,11 +82,13 @@ function anchorPoint(
   reindex: boolean
 ): ChartPoint {
   if (p.time == null || !Number.isFinite(p.time)) {
-    const time = timeAtIndex(bars, p.index, stepSec);
-    return time == null ? p : { ...p, time };
+    const stamp = stampAtIndex(bars, p.index, stepSec);
+    return stamp == null ? p : { ...p, ...stamp };
   }
   if (!reindex) return p;
-  const index = indexAtTime(bars, p.time, stepSec);
+  const base = indexAtTime(bars, p.time, stepSec);
+  const ahead = p.ahead != null && Number.isFinite(p.ahead) ? p.ahead : 0;
+  const index = base == null ? null : base + ahead;
   return index == null || index === p.index ? p : { ...p, index };
 }
 

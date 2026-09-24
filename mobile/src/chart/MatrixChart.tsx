@@ -75,7 +75,7 @@ import {
 } from './paneGuides';
 import { DrawingsSaveQueue, drawingsKey } from './drawingsPersist';
 import { clipSegmentToBars, dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
-import { anchorDrawings, timeAtIndex } from './drawingAnchors';
+import { anchorDrawings, stampAtIndex } from './drawingAnchors';
 import { fibLevelPrice, planFibLabels } from './fibLabels';
 import { candleRangePipsText, measureReadoutText } from './measureReadout';
 import { thinByGap } from './levelLabels';
@@ -2357,12 +2357,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (magnet && candle) price = snapPrice(price, candle);
       const index = sourceRef.current.start + local;
       // مختومة بزمنها من الولادة: السحب لا يمرّ بتأثير الختم إطاراً إطاراً (رسمتان لكل حركة).
-      const time = timeAtIndex(
+      const stamp = stampAtIndex(
         sourceRef.current.all as { time: number }[],
         index,
         timeframeStepSec(series.timeframe)
       );
-      return time == null ? { index, price } : { index, price, time };
+      return stamp == null ? { index, price } : { index, price, ...stamp };
     },
     [hitIndex, priceAtY, magnet, series.timeframe]
   );

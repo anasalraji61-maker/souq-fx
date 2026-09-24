@@ -197,7 +197,11 @@ export type DrawTool =
  * `time` (ثوانٍ) مرساة الرسم الحقيقية متى وُجدت — `index` موضع مشتقّ منها داخل السلسلة
  * الحاليّة. راجع `drawingAnchors.ts`: الفهرس وحده يزحف مع نافذة الخادم المتحرّكة.
  */
-export type ChartPoint = { index: number; price: number; time?: number };
+/**
+ * `ahead`: نقطة بعد آخر شمعة — `time` زمن آخر شمعة وقت الرسم، و`ahead` عدد الشموع بعدها
+ * (لا زمن تقويمي مختلَق تُسقطه العطلة). راجع `drawingAnchors.ts`.
+ */
+export type ChartPoint = { index: number; price: number; time?: number; ahead?: number };
 
 export type Drawing = {
   id: string;
