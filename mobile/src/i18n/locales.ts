@@ -859,6 +859,8 @@ export type Dict = {
   mcReplayModeA11y: string;
   /** سطر القراءة أثناء الإعادة: `{n}` الشموع المعروضة من `{total}`. بديل «Bar Replay» الثابت (اسم ميزة منافس). */
   mcReplayReadout: string;
+  /** سطر قصير حين يُنهي تبديل الفريم أو الرمز الإعادة (`7c24e7e`) — كانت تنتهي بصمت فيبدو الشارت كأنه قفز للحيّ بلا سبب */
+  mcReplayEndedOnSwitch: string;
   mcReplayStepBackA11y: string;
   mcReplayPauseA11y: string;
   mcReplayPlayA11y: string;
@@ -1782,6 +1784,7 @@ const ar: Dict = {
   mcPanForwardA11y: 'تحريك للأمام',
   mcReplayModeA11y: 'وضع الإعادة',
   mcReplayReadout: 'إعادة الشموع · {n}/{total}',
+  mcReplayEndedOnSwitch: 'انتهت الإعادة لتغيّر الإطار الزمني أو الرمز — الشارت الآن على السعر الحيّ',
   mcReplayStepBackA11y: 'خطوة إعادة للخلف',
   mcReplayPauseA11y: 'إيقاف الإعادة',
   mcReplayPlayA11y: 'تشغيل الإعادة',
@@ -2696,6 +2699,7 @@ const enUS: Dict = {
   mcPanForwardA11y: 'Pan forward',
   mcReplayModeA11y: 'Replay mode',
   mcReplayReadout: 'Candle replay · {n}/{total}',
+  mcReplayEndedOnSwitch: 'Replay ended because the timeframe or symbol changed — the chart is back on the live price',
   mcReplayStepBackA11y: 'Replay step back',
   mcReplayPauseA11y: 'Pause replay',
   mcReplayPlayA11y: 'Play replay',
@@ -3637,6 +3641,7 @@ const ku: Dict = {
   mcPanForwardA11y: 'جوڵان بۆ پێشەوە',
   mcReplayModeA11y: 'دۆخی دووبارەکردنەوە',
   mcReplayReadout: 'دووبارەکردنەوەی مۆم · {n}/{total}',
+  mcReplayEndedOnSwitch: 'دووبارەکردنەوە کۆتایی هات چونکە تایم‌فرەیم یان هێما گۆڕا — چارتەکە ئێستا لەسەر نرخی زیندووە',
   mcReplayStepBackA11y: 'هەنگاوی دووبارەکردنەوە بۆ دواوە',
   mcReplayPauseA11y: 'وەستاندنی دووبارەکردنەوە',
   mcReplayPlayA11y: 'پێکردنی دووبارەکردنەوە',
