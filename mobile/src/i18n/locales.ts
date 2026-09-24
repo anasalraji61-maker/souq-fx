@@ -298,6 +298,11 @@ export type Dict = {
   riskCalcSlMismatch: string;
   riskCalcEntry: string;
   riskCalcStop: string;
+  /**
+   * شريحة سعر الوقف لكلّ اتجاه (`stopsForPips`) حين تُكتب النقاط والدخول بلا سعر وقف — `{side}` «▲ شراء»/«▼ بيع».
+   * «▲ شراء 1.0830» وحدها تُقرأ «اشترِ عند 1.0830»؛ السعر هنا سعر **الوقف** لو كانت الصفقة بهذا الاتجاه.
+   */
+  riskCalcStopChip: string;
   riskCalcConvFailed: string;
   riskCalcConvManual: string;
   riskCalcLots: string;
@@ -1192,6 +1197,7 @@ const ar: Dict = {
     '⚠ النقاط المكتوبة ({pips}) لا تطابق سعرَي الدخول والوقف ({derived} pip) — حجم اللوت والمخاطرة محسوبان من النقاط، وR:R من السعرين',
   riskCalcEntry: 'سعر الدخول',
   riskCalcStop: 'سعر الوقف',
+  riskCalcStopChip: '{side}: الوقف {price}',
   riskCalcConvFailed: 'تعذّر جلب سعر التحويل',
   riskCalcConvManual: 'أدخل سعر',
   riskCalcLots: 'حجم الصفقة (لوت)',
@@ -2087,6 +2093,7 @@ const enUS: Dict = {
     '⚠ The pips you typed ({pips}) do not match your entry and stop prices ({derived} pip) — lot size and risk use the pips, R:R uses the prices',
   riskCalcEntry: 'Entry price',
   riskCalcStop: 'Stop price',
+  riskCalcStopChip: '{side}: stop {price}',
   riskCalcConvFailed: 'Could not fetch conversion rate',
   riskCalcConvManual: 'Enter price of',
   riskCalcLots: 'Position size (lots)',
@@ -3007,6 +3014,7 @@ const ku: Dict = {
     '⚠ خاڵە نووسراوەکان ({pips}) لەگەڵ نرخی چوونەژوورەوە و وەستان ({derived} pip) ناگونجێن — قەبارەی لۆت و مەترسی لە خاڵەکانەوە دەردەچن، R:R لە نرخەکانەوە',
   riskCalcEntry: 'نرخی چوونەژوورەوە',
   riskCalcStop: 'نرخی وەستان',
+  riskCalcStopChip: '{side}: وەستان {price}',
   riskCalcConvFailed: 'نرخی گۆڕینەوە وەرنەگیرا',
   riskCalcConvManual: 'نرخی ئەمە بنووسە',
   riskCalcLots: 'قەبارەی مامەڵە (لۆت)',
