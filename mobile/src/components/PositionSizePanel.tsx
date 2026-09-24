@@ -29,6 +29,7 @@ import {
   requiredMargin,
   maxLotsForMargin,
   marginPrice,
+  centAccountSymbol,
   stopPipsMismatch,
   parseSpreadPips,
   parseCommission,
@@ -177,6 +178,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   }, [defaultSymbol]);
 
   const spec = useMemo(() => instrumentSpec(symbol), [symbol]);
+  /** «EURUSDc» مرفوض عمداً (لوت السنت أصغر بمئة مرّة) — يُقال لماذا بدل «زوج من 6 أحرف». راجع `centAccountSymbol` */
+  const centPair = spec ? null : centAccountSymbol(symbol);
   /** الأداة **الآن** — لسعرٍ حيّ يصل بعد تبديلها (راجع `fillEntryFromLive`) */
   const liveSymRef = useRef<string | null>(null);
   liveSymRef.current = spec?.symbol ?? null;
@@ -881,7 +884,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       </View>
       {input(symbol, setSymbol, 'EURUSD', t.riskCalcSymbol, false)}
       {!spec && symbol.trim().length > 0 ? (
-        <Text style={[styles.warn, { textAlign: align }]}>{t.riskCalcBadSymbol}</Text>
+        <Text style={[styles.warn, { textAlign: align }]}>
+          {centPair
+            ? t.riskCalcCentSymbolHint.replace('{symbol}', () => symbol.trim()).replace('{pair}', () => centPair)
+            : t.riskCalcBadSymbol}
+        </Text>
       ) : null}
 
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcAccountCcy}</Text>

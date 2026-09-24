@@ -47,6 +47,7 @@ import {
   misplacedArabicThousandsSignInRisk,
   leverageOutOfRange,
   riskOverBalance,
+  centAccountSymbol,
   MAX_LEVERAGE,
   planJournalNote,
   parseCommission,
@@ -1633,3 +1634,20 @@ console.log('positionSize leverageOutOfRange selftest OK');
     assert.equal(riskOverBalance(r, b, 'USD'), null, `${r} @ ${b}`);
 }
 console.log('positionSize riskOverBalance selftest OK');
+
+// centAccountSymbol — رمز حساب سنت يُسمّى بدل «استخدم زوجاً من 6 أحرف»
+{
+  for (const [raw, pair] of [
+    ['EURUSDc', 'EURUSD'], ['USDJPYc', 'USDJPY'], ['XAUUSDc', 'XAUUSD'], ['XAGUSDc', 'XAGUSD'],
+    ['EURUSDC', 'EURUSD'], ['eurusdc', 'EURUSD'], [' GBPJPYc ', 'GBPJPY'], ['EUR/USDc', 'EURUSD'],
+    ['GOLDc', 'XAUUSD'], ['SILVERc', 'XAGUSD'],
+  ] as const) {
+    assert.equal(centAccountSymbol(raw), pair, raw);
+    // ما زالت مرفوضة بالحاسبة: عقد السنت لا يُحسب بعقد الحساب العادي
+    assert.equal(instrumentSpec(raw), null, raw);
+  }
+  // مقبولة أصلاً، أو ليست سنتاً، أو لا تُخمَّن
+  for (const raw of ['EURUSD', 'EURUSDm', 'EURUSD.c', 'XAUUSD.pro', 'EURUSDT', 'EURUSDmc', 'EURUSDcc', 'USDC', 'ABCDEFc', 'XAUXAGc', 'US30c', 'BTCUSDc', 'c', ''])
+    assert.equal(centAccountSymbol(raw), null, raw);
+}
+console.log('positionSize centAccountSymbol selftest OK');

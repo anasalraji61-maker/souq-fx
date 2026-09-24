@@ -96,6 +96,21 @@ export function instrumentSpec(raw: string): InstrumentSpec | null {
 }
 
 /**
+ * رمز **حساب سنت** (Exness Cent: «EURUSDc»، «USDJPYc»، «XAUUSDc»، «GOLDc») ⇒ الزوج العادي («EURUSD») لرسالة
+ * `riskCalcCentSymbolHint`؛ null = ليس كذلك. الحاسبة ترفضه عمداً (`instrumentSpec` لا يقبل «c» الملاصقة): لوت السنت
+ * أصغر بمئة مرّة، فحسابه بعقد الحساب العادي كان سيُعطي لوتاً خاطئاً بمئة ضعف — لكن «استخدم زوجاً من 6 أحرف» تحته
+ * لا تقول لماذا، والمتداول نسخ الرمز من منصّته كما هو. «c» أو «C» ملاصقة لزوج صالح أو اسم معدن فقط، كالشارت
+ * (`chartPipSpec`)؛ رمزٌ تقبله الحاسبة أصلاً ليس سنتاً، ولاحقة فوق لاحقة («EURUSDmc») لا تُخمَّن.
+ */
+export function centAccountSymbol(raw: string): string | null {
+  const s = raw.trim();
+  if (instrumentSpec(s)) return null;
+  const m = /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER|gold|silver|Gold|Silver)[cC]$/.exec(s);
+  if (!m) return null;
+  return instrumentSpec(m[1])?.symbol ?? null;
+}
+
+/**
  * سعرٌ مكتوب بخانة أداةٍ معروفة: `parseDecimal`، مع رفض النقطة الوحيدة المتبوعة بثلاثة أرقام بالضبط («3.450»)
  * حين لا يُسعَّر المعروض بثلاث منازل أصلاً (الذهب بمنزلتين).
  *
