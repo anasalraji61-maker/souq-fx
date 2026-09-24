@@ -1107,6 +1107,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   ref
 ) {
   const { t: tr, lang } = useI18n();
+  const extraLabels = chartExtraLabels(lang);
   const canPan = syncFollow ? false : (panControls ?? interactive);
   const candleBull = mutedCandles ? 'rgba(34,197,94,0.34)' : colors.bull;
   const candleBear = mutedCandles ? 'rgba(244,63,94,0.34)' : colors.bear;
@@ -1136,6 +1137,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [lens, setLens] = useState<LensMode>(initialLens ?? 'clean');
   const [extraInd, setExtraInd] = useState<IndicatorId[]>(initialIndicators ?? []);
   const [tool, setTool] = useState<DrawTool>(initialTool ?? 'none');
+  // إخفاء الرسومات مؤقّتاً لقراءة الشموع نظيفة (خطوط وقنوات تغطّي شاشة الهاتف) بلا حذفها.
+  // اختيار أي أداة رسم يُظهرها: لا يرسم المتداول خطّاً لا يراه.
+  const [drawingsHidden, setDrawingsHidden] = useState(false);
+  useEffect(() => {
+    if (tool !== 'none') setDrawingsHidden(false);
+  }, [tool]);
   const [loadedDrawings, setDrawings] = useState<Drawing[]>([]);
   // **مفتاح الرمز/الفريم الذي تخصّه `loadedDrawings` فعلاً.** تبديل الرمز يغيّر
   // `series.symbol` فوراً بينما `loadDrawings` غير متزامنة، فبين اللحظتين كانت رسومات
@@ -1920,12 +1927,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setCanUndo(true);
   }, []);
 
+  const toggleDrawingsHidden = useCallback(() => {
+    setDrawingsHidden((h) => !h);
+    setSelectedId(null);
+    setPending(null);
+    setDragEnd(null);
+    setTool('none');
+  }, []);
+
   const undoDrawing = useCallback(() => {
     const hist = drawHistory.current;
     if (!hist.length) return;
     const prev = hist[hist.length - 1]!;
     drawHistory.current = hist.slice(0, -1);
     setCanUndo(drawHistory.current.length > 0);
+    setDrawingsHidden(false); // لا تراجع عن رسم لا يُرى
     // اللقطة قد تكون من فريم آخر (التاريخ يبقى عبر تبديل الفريم): تُرسى على شموع هذا الفريم
     // قبل العرض، لا إطاراً بمواضع ذلك الفريم.
     const km = kindRef.current;
@@ -3326,6 +3342,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const HANDLE_R = DRAW_HANDLE_R; // مقبض الطرف: هدف سحب، مدى ألطف
       const BODY_R = 14; // جسم الخط/الحدّ
       let best: DrawingHit = null;
+      if (drawingsHidden) return null;
       for (const d of drawings) {
         const aLocal = d.a.index - source.start;
         const ax = xOf(aLocal);
@@ -3426,7 +3443,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       }
       return best?.id ?? null;
     },
-    [drawings, source.start, source.plot.length, xOf, yOf, positionBox, chartPlotW, chartPlotH, lastDrawLocal]
+    [drawings, drawingsHidden, source.start, source.plot.length, xOf, yOf, positionBox, chartPlotW, chartPlotH, lastDrawLocal]
   );
 
   const exportChart = async () => {
@@ -4522,7 +4539,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       ? measureText({ a: selectedSpan.a, b: selectedSpan.b })
       : null;
 
-  const visibleDrawings = drawings
+  const visibleDrawings = (drawingsHidden ? [] : drawings)
     .map((d) => {
       const aLocal = d.a.index - source.start;
       const bLocal = d.b ? d.b.index - source.start : aLocal;
@@ -4832,6 +4849,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               >
                 <Text style={[styles.compactToolIcon, { color: colors.bear }]}>✕</Text>
                 <Text style={styles.compactToolLabel}>{tr.deleteWord}</Text>
+              </Pressable>
+            ) : null}
+            {drawings.length ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={drawingsHidden ? extraLabels.showDrawings : extraLabels.hideDrawings}
+                accessibilityState={{ selected: drawingsHidden }}
+                style={({ pressed }) => [
+                  styles.compactTool,
+                  drawingsHidden && styles.compactToolOn,
+                  pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                ]}
+                onPress={toggleDrawingsHidden}
+              >
+                <Text style={[styles.compactToolIcon, drawingsHidden && styles.compactToolTextOn]}>
+                  {drawingsHidden ? '◎' : '◉'}
+                </Text>
+                <Text style={[styles.compactToolLabel, drawingsHidden && styles.compactToolTextOn]}>
+                  {drawingsHidden ? `${extraLabels.showDrawings} (${drawings.length})` : extraLabels.hideDrawings}
+                </Text>
               </Pressable>
             ) : null}
             <Pressable
@@ -10151,6 +10188,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={[styles.toolText, tool === t.id && styles.toolTextOn]}>{t.label}</Text>
               </Pressable>
             ))}
+            {drawings.length ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={drawingsHidden ? extraLabels.showDrawings : extraLabels.hideDrawings}
+                accessibilityState={{ selected: drawingsHidden }}
+                style={({ pressed }) => [
+                  styles.tool,
+                  drawingsHidden && styles.toolOn,
+                  pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                ]}
+                onPress={toggleDrawingsHidden}
+              >
+                <Text style={[styles.toolText, drawingsHidden && styles.toolTextOn]}>
+                  {drawingsHidden
+                    ? `◎ ${extraLabels.showDrawings} (${drawings.length})`
+                    : `◉ ${extraLabels.hideDrawings}`}
+                </Text>
+              </Pressable>
+            ) : null}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={canUndo ? tr.mcUndoA11y : tr.mcNothingToUndo}

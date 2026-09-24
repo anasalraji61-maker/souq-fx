@@ -112,13 +112,30 @@ export function localizedIndicators(t: Dict): typeof INDICATORS {
  * فـ`mcClearAllBody` («بهذا الرمز/الإطار الزمني») يَعِد بأقلّ ممّا يُمسح فعلاً. `toLatest`: وصف
  * زرّ «»» (العودة لآخر شمعة) لقارئ الشاشة — الزرّ نفسه رمز بلا نصّ.
  */
-export function chartExtraLabels(lang: LangId): { clearAllBody: string; toLatest: string } {
+export function chartExtraLabels(lang: LangId): {
+  clearAllBody: string;
+  toLatest: string;
+  hideDrawings: string;
+  showDrawings: string;
+} {
   if (lang === 'ar')
-    return { clearAllBody: 'سيتم حذف كل عناصر الرسم بهذا الرمز على كل الأطر الزمنية', toLatest: 'العودة لآخر شمعة' };
+    return {
+      clearAllBody: 'سيتم حذف كل عناصر الرسم بهذا الرمز على كل الأطر الزمنية',
+      toLatest: 'العودة لآخر شمعة',
+      hideDrawings: 'إخفاء الرسوم',
+      showDrawings: 'إظهار الرسوم',
+    };
   if (lang === 'ku')
     return {
       clearAllBody: 'هەموو توخمەکانی کێشان بۆ ئەم هێمایە لە هەموو ماوە کاتییەکاندا دەسڕێنەوە',
       toLatest: 'گەڕانەوە بۆ دوایین مۆم',
+      hideDrawings: 'شاردنەوەی وێنەکان',
+      showDrawings: 'پیشاندانی وێنەکان',
     };
-  return { clearAllBody: 'Every drawing on this symbol will be deleted, on all timeframes', toLatest: 'Scroll to the latest candle' };
+  return {
+    clearAllBody: 'Every drawing on this symbol will be deleted, on all timeframes',
+    toLatest: 'Scroll to the latest candle',
+    hideDrawings: 'Hide drawings',
+    showDrawings: 'Show drawings',
+  };
 }
