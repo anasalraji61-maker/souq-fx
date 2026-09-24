@@ -4515,6 +4515,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         } as const)
       : {};
 
+  const wheelPanCarry = useRef(0);
   // RN Web's synthetic onWheel is often passive, so page scroll still wins.
   // Capture wheel on document (non-passive): axes + zoom من منتصف منطقة الشارت.
   useEffect(() => {
@@ -4536,6 +4537,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       event.stopImmediatePropagation();
       event.stopPropagation();
 
+      // سحبة أفقية على لوح اللمس (أو Shift+عجلة) فوق اللوح تمرّر الزمن كـTradingView — كانت تُقرأ
+      // تكبيراً (deltaY الجانبي الصغير) أو لا شيء، فمتداول الماك يسحب بالنقر ليرى التاريخ.
+      // بكسلات السحبة ÷ عرض الشمعة، والكسر يُحمَل للحزّة التالية فلا تضيع السحبات البطيئة.
+      const lineMul = event.deltaMode === 1 ? 16 : 1;
+      const dx = event.shiftKey && !event.deltaX ? event.deltaY : event.deltaX;
+      if (overPlot && !overPrice && !overTime && (event.shiftKey || Math.abs(dx) > Math.abs(event.deltaY))) {
+        if (replayOnRef.current) return;
+        const barW = chartPlotW / Math.max(2, windowCountRef.current);
+        wheelPanCarry.current -= (dx * lineMul * panSpeedMulRef.current) / barW;
+        const bars = Math.trunc(wheelPanCarry.current);
+        if (bars) {
+          wheelPanCarry.current -= bars;
+          panByButton(bars);
+        }
+        return;
+      }
       const delta = event.deltaY * panSpeedMulRef.current;
       const factor = Math.exp(delta * 0.006);
       if (overPrice) {
@@ -4561,7 +4578,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     return () => {
       document.removeEventListener('wheel', onWheel, true);
     };
-  }, [canPan, chartW, schedulePublishSync, zoomAroundCenter, zoomPrice]);
+  }, [canPan, chartW, chartPlotW, schedulePublishSync, zoomAroundCenter, zoomPrice, panByButton]);
 
   const toggleInd = (id: IndicatorId) => {
     setExtraInd((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
