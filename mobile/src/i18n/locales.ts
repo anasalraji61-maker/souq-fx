@@ -330,6 +330,9 @@ export type Dict = {
   riskCalcCommissionNote: string;
   riskCalcRiskWithCosts: string;
   riskCalcCostsLotsWithin: string;
+  riskCalcNetAfterCosts: string;
+  riskCalcNetNegative: string;
+  riskCalcCostsBelowMin: string;
   riskCalcUseLivePrice: string;
   riskCalcUseLivePriceA11y: string;
   riskCalcLiveFilled: string;
@@ -923,7 +926,7 @@ const ar: Dict = {
     'أسرع طريق: المس المستوى على الشارت ثم زرّ 🔔 — بلا كتابة أرقام. ويصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، فلا داعي لمراقبة الشارت طوال اليوم. تنبيهات المؤشرات وتفعيل الإشعارات من لوح التنبيهات.',
   onboardStep5Title: 'المخاطرة أولاً',
   onboardStep5Body:
-    'قبل أي صفقة افتح «أدوات ← المخاطرة»: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالـpip أو بسعرَي الدخول والوقف) لتعرف حجم اللوت المناسب، ثم «سجّل هذه الخطة بالدفتر» لتراجع نتيجتها لاحقاً. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
+    'قبل أي صفقة افتح «أدوات ← المخاطرة»: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالـpip أو بسعرَي الدخول والوقف) لتعرف حجم اللوت المناسب (وأضف السبريد والعمولة ليشملهما الرقم)، ثم «سجّل هذه الخطة بالدفتر» لتراجع نتيجتها لاحقاً. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
   onboardRiskNote:
     'MATRIX أداة تحليل وتعليم، لا تنفّذ صفقات ولا تقدّم نصيحة مالية. التداول بالرافعة ينطوي على مخاطرة عالية بخسارة المال.',
   onboardStepCounterA11y: 'الخطوة {n} من {total}',
@@ -985,8 +988,8 @@ const ar: Dict = {
   filterBearishHint: 'السعر أدنى مما كان قبل 80 شمعة، وRSI فوق 35 (غير متشبّع)',
   a11yFilterPrefix: 'فلتر',
   screenerRunning: 'جاري الفحص...',
-  screenerRunBtn: 'تشغيل Screener',
-  screenerRunNeedFilter: 'تشغيل Screener، اختر فلتراً أولاً',
+  screenerRunBtn: 'شغّل الفحص',
+  screenerRunNeedFilter: 'اختر فلتراً أولاً ثم شغّل الفحص',
   screenerNeedApiKey: 'الفحص يحتاج مفتاح Twelve Data مفعّلاً على الخادم',
   screenerNoResults: 'لا نتائج مطابقة للفلاتر الحالية',
   screenerFailed: 'تعذر تشغيل الفحص — تحقق من الاتصال وحاول مرة أخرى',
@@ -1200,6 +1203,9 @@ const ar: Dict = {
   riskCalcCommissionNote: 'حسابات Raw/ECN تأخذ عمولة عند الفتح وعند الإغلاق. اكتب مجموع الطرفين للوت الواحد بعملة حسابك (مثل 7)، واتركها فارغة إن كان حسابك بلا عمولة.',
   riskCalcRiskWithCosts: 'المخاطرة شاملة التكاليف',
   riskCalcCostsLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة التكاليف: {lots} lot',
+  riskCalcNetAfterCosts: 'بعد التكاليف: {profit} · R:R {rr}',
+  riskCalcNetNegative: 'التكاليف تأكل الهدف كلّه: الصافي {profit} — أبعِد الهدف أو اختر حساباً بتكاليف أقل',
+  riskCalcCostsBelowMin: 'مع التكاليف، حتى أصغر لوت (0.01) يتجاوز {pct}% — ارفع النسبة أو قرّب الوقف',
   riskCalcUseLivePrice: '↓ الدخول = السعر الحالي',
   riskCalcUseLivePriceA11y: 'تعبئة خانة الدخول بسعر السوق الحالي (Ask للشراء وBid للبيع حسب موضع الوقف)',
   riskCalcLiveFilled: '✓ الدخول من السعر الحالي:',
@@ -1612,7 +1618,7 @@ const ar: Dict = {
   dockAnalystsTab: 'محللون',
   dockSocialTab: 'قنوات',
   dockIndForecastTab: 'مؤشرات+',
-  dockScreenerTab: 'ماسح',
+  dockScreenerTab: 'فحص',
   dockAlertsTab: 'تنبيهات',
   dockNewsTab: 'أخبار',
   dockCommunityTab: 'مجتمع',
@@ -1694,7 +1700,7 @@ const ar: Dict = {
   mcReplayStepFwdA11y: 'خطوة إعادة للأمام',
   mcMagnetA11y: 'الالتصاق بالشبكة',
   mcDockTitle: 'مرسى الأدوات · MATRIX',
-  mcNoPineLine: 'بدون خط Pine',
+  mcNoPineLine: 'بلا خط معادلة',
   mcExportPng: 'تصدير PNG',
   mcSaveTemplate: 'حفظ قالب',
   mcAlertLine: 'تنبيه خط',
@@ -1801,7 +1807,7 @@ const enUS: Dict = {
     'Fastest way: tap a level on the chart, then 🔔 — no typing. You get a notification when price reaches it (checked about once a minute), so no need to watch the chart all day. Indicator alerts and notification settings are in the alerts panel.',
   onboardStep5Title: 'Risk first',
   onboardStep5Body:
-    'Before any trade, open Tools → Risk: enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get the right lot size, then “Log this plan to the journal” to review how it played out. Many traders risk no more than 1–2% per trade.',
+    'Before any trade, open Tools → Risk: enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get the right lot size (add spread and commission to include them), then “Log this plan to the journal” to review how it played out. Many traders risk no more than 1–2% per trade.',
   onboardRiskNote:
     'MATRIX is an analysis and learning tool. It does not place trades or give financial advice. Leveraged trading carries a high risk of losing money.',
   onboardStepCounterA11y: 'Step {n} of {total}',
@@ -1864,7 +1870,7 @@ const enUS: Dict = {
   a11yFilterPrefix: 'Filter',
   screenerRunning: 'Scanning...',
   screenerRunBtn: 'Run screener',
-  screenerRunNeedFilter: 'Run screener — pick a filter first',
+  screenerRunNeedFilter: 'Pick a filter first, then run the screener',
   screenerNeedApiKey: 'The screener needs an active Twelve Data key on the server',
   screenerNoResults: 'No results match the current filters',
   screenerFailed: 'Could not run the scan — check your connection and try again',
@@ -2078,6 +2084,9 @@ const enUS: Dict = {
   riskCalcCommissionNote: 'Raw/ECN accounts charge commission when you open and again when you close. Enter both sides for one lot in your account currency (e.g. 7), or leave it empty if your account has no commission.',
   riskCalcRiskWithCosts: 'Risk including costs',
   riskCalcCostsLotsWithin: 'To keep your risk at {pct}% including costs: {lots} lot',
+  riskCalcNetAfterCosts: 'After costs: {profit} · R:R {rr}',
+  riskCalcNetNegative: 'Costs eat the whole target: net {profit} — move the target further or use a cheaper account',
+  riskCalcCostsBelowMin: 'With costs, even the smallest lot (0.01) risks more than {pct}% — raise the % or tighten the stop',
   riskCalcUseLivePrice: '↓ Entry = current price',
   riskCalcUseLivePriceA11y: 'Fill the entry with the current market price (Ask for buy, Bid for sell, from where the stop sits)',
   riskCalcLiveFilled: '✓ Entry from the current price:',
@@ -2492,7 +2501,7 @@ const enUS: Dict = {
   dockAnalystsTab: 'Analysts',
   dockSocialTab: 'Channels',
   dockIndForecastTab: 'Indicators+',
-  dockScreenerTab: 'Scanner',
+  dockScreenerTab: 'Screener',
   dockAlertsTab: 'Alerts',
   dockNewsTab: 'News',
   dockCommunityTab: 'Community',
@@ -2574,7 +2583,7 @@ const enUS: Dict = {
   mcReplayStepFwdA11y: 'Replay step forward',
   mcMagnetA11y: 'Snap to grid',
   mcDockTitle: 'Tool dock · MATRIX',
-  mcNoPineLine: 'No Pine line',
+  mcNoPineLine: 'No formula line',
   mcExportPng: 'Export PNG',
   mcSaveTemplate: 'Save template',
   mcAlertLine: 'Line alert',
@@ -2705,7 +2714,7 @@ const ku: Dict = {
     'خێراترین ڕێگا: دەست لە ئاستەکە بدە لەسەر چارت پاشان 🔔 — بێ نووسینی ژمارە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت)، پێویست ناکات بە درێژایی ڕۆژ چاودێری چارت بکەیت. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
   onboardStep5Title: 'سەرەتا مەترسی',
   onboardStep5Body:
-    'پێش هەر مامەڵەیەک «ئامرازەکان ← مەترسی» بکەرەوە: باڵانس و ڕێژەی مەترسی و ستۆپ لۆس (بە pip یان بە نرخی چوونەژوورەوە و وەستان) بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت، پاشان «ئەم پلانە لە دەفتەر تۆمار بکە» بۆ ئەوەی دواتر ئەنجامەکەی ببینیتەوە. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
+    'پێش هەر مامەڵەیەک «ئامرازەکان ← مەترسی» بکەرەوە: باڵانس و ڕێژەی مەترسی و ستۆپ لۆس (بە pip یان بە نرخی چوونەژوورەوە و وەستان) بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت (سپرێد و کۆمیسیۆن زیاد بکە بۆ ئەوەی ژمارەکە بیانگرێتەوە)، پاشان «ئەم پلانە لە دەفتەر تۆمار بکە» بۆ ئەوەی دواتر ئەنجامەکەی ببینیتەوە. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
   onboardRiskNote:
     'MATRIX ئامرازێکی شیکردنەوە و فێربوونە، مامەڵە ناکات و ئامۆژگاری دارایی نادات. بازرگانی بە لیڤەرێج مەترسیی بەرزی لەدەستدانی پارەی تێدایە.',
   onboardStepCounterA11y: 'هەنگاوی {n} لە {total}',
@@ -2768,7 +2777,7 @@ const ku: Dict = {
   a11yFilterPrefix: 'فلتەر',
   screenerRunning: 'پشکنین بەردەوامە...',
   screenerRunBtn: 'کارپێکردنی پشکنەر',
-  screenerRunNeedFilter: 'کارپێکردنی پشکنەر — سەرەتا فلتەرێک هەڵبژێرە',
+  screenerRunNeedFilter: 'سەرەتا فلتەرێک هەڵبژێرە، پاشان پشکنین کارپێبکە',
   screenerNeedApiKey: 'پشکنین پێویستی بە کلیلی چالاکی Twelve Data لەسەر ڕاژە هەیە',
   screenerNoResults: 'هیچ ئەنجامێک لەگەڵ فلتەرە ئێستاکان ناگونجێت',
   screenerFailed: 'نەکرا پشکنین کارپێبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
@@ -2982,6 +2991,9 @@ const ku: Dict = {
   riskCalcCommissionNote: 'هەژمارەکانی Raw/ECN لە کاتی کردنەوە و داخستندا کۆمیسیۆن وەردەگرن. کۆی هەردوو لا بۆ یەک lot بە دراوی هەژمارەکەت بنووسە (وەک 7)، یان بەتاڵی بهێڵەوە ئەگەر هەژمارەکەت بێ کۆمیسیۆنە.',
   riskCalcRiskWithCosts: 'مەترسی لەگەڵ تێچووەکان',
   riskCalcCostsLotsWithin: 'بۆ ئەوەی مەترسییەکەت لەگەڵ تێچووەکان لە {pct}% بمێنێتەوە: {lots} lot',
+  riskCalcNetAfterCosts: 'دوای تێچووەکان: {profit} · R:R {rr}',
+  riskCalcNetNegative: 'تێچووەکان هەموو ئامانجەکە دەخۆن: پوختە {profit} — ئامانجەکە دوورتر بخە یان هەژمارێکی کەمتێچووتر هەڵبژێرە',
+  riskCalcCostsBelowMin: 'لەگەڵ تێچووەکان، تەنانەت بچووکترین لۆت (0.01) لە {pct}% زیاتر دەخاتە مەترسییەوە — ڕێژەکە بەرز بکەرەوە یان وەستانەکە نزیک بکەرەوە',
   riskCalcUseLivePrice: '↓ چوونەژوورەوە = نرخی ئێستا',
   riskCalcUseLivePriceA11y: 'پڕکردنەوەی خانەی چوونەژوورەوە بە نرخی بازاڕی ئێستا (Ask بۆ کڕین و Bid بۆ فرۆشتن بەپێی شوێنی وەستان)',
   riskCalcLiveFilled: '✓ چوونەژوورەوە لە نرخی ئێستاوە:',
@@ -3399,7 +3411,7 @@ const ku: Dict = {
   dockAnalystsTab: 'شیکارکاران',
   dockSocialTab: 'کەناڵەکان',
   dockIndForecastTab: 'نیشانەکان+',
-  dockScreenerTab: 'سکانەر',
+  dockScreenerTab: 'پشکنین',
   dockAlertsTab: 'ئاگادارکردنەوەکان',
   dockNewsTab: 'هەواڵ',
   dockCommunityTab: 'کۆمەڵگا',
@@ -3481,7 +3493,7 @@ const ku: Dict = {
   mcReplayStepFwdA11y: 'هەنگاوی دووبارەکردنەوە بۆ پێشەوە',
   mcMagnetA11y: 'لکاندن بە تۆڕ',
   mcDockTitle: 'لەنگەری ئامرازەکان · MATRIX',
-  mcNoPineLine: 'بێ هێڵی Pine',
+  mcNoPineLine: 'بێ هێڵی هاوکێشە',
   mcExportPng: 'هەناردەی PNG',
   mcSaveTemplate: 'پاشەکەوتی ڕووکار',
   mcAlertLine: 'ئاگاداری هێڵ',
