@@ -3999,6 +3999,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               return null;
             }
             const bodyH = Math.max(2, bodyBot - bodyTop);
+            // وشمعة على حدّ الحارة تُقصّ عنده: كان ذيلها/جسمها يمتدّ فوق أولى حارات الظلال.
+            // بلا ظلال الحدّان لانهائيان فالهندسة كما هي.
+            const laneTop = shadowStack ? 0 : -Infinity;
+            const laneBot = shadowStack ? shadowStack.primaryLane.height : Infinity;
+            const wickTop = Math.max(laneTop, top);
+            const wickClipH = Math.min(laneBot, top + wickH) - wickTop;
+            const bodyClipTop = Math.max(laneTop, bodyTop);
+            const bodyClipH = Math.min(laneBot, bodyTop + bodyH) - bodyClipTop;
+            const inLane = (y: number) => y >= laneTop && y + 2 <= laneBot;
             const left = xOf(i) - primaryColW / 2;
             if (kind === 'kagi') {
               const x1 = i === 0 ? xOf(0) : xOf(i - 1);
@@ -4050,32 +4059,36 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     style={{
                       position: 'absolute',
                       left: primaryColW / 2,
-                      top,
+                      top: wickTop,
                       width: 1.5,
-                      height: wickH,
+                      height: wickClipH,
                       backgroundColor: color,
                     }}
                   />
-                  <View
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: yP(c.open),
-                      width: primaryColW / 2,
-                      height: 2,
-                      backgroundColor: color,
-                    }}
-                  />
-                  <View
-                    style={{
-                      position: 'absolute',
-                      left: primaryColW / 2,
-                      top: yP(c.close),
-                      width: primaryColW / 2,
-                      height: 2,
-                      backgroundColor: color,
-                    }}
-                  />
+                  {inLane(yP(c.open)) ? (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        left: 0,
+                        top: yP(c.open),
+                        width: primaryColW / 2,
+                        height: 2,
+                        backgroundColor: color,
+                      }}
+                    />
+                  ) : null}
+                  {inLane(yP(c.close)) ? (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        left: primaryColW / 2,
+                        top: yP(c.close),
+                        width: primaryColW / 2,
+                        height: 2,
+                        backgroundColor: color,
+                      }}
+                    />
+                  ) : null}
                 </View>
               );
             }
@@ -4095,26 +4108,28 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   style={{
                     position: 'absolute',
                     left: primaryColW / 2 - 0.5,
-                    top,
+                    top: wickTop,
                     width: 1,
-                    height: wickH,
+                    height: wickClipH,
                     backgroundColor: color,
                     opacity: 0.9,
                   }}
                 />
-                <View
-                  style={{
-                    position: 'absolute',
-                    left: (primaryColW - primaryBodyW) / 2,
-                    top: bodyTop,
-                    width: primaryBodyW,
-                    height: bodyH,
-                    backgroundColor: kind === 'hollow' && bull ? 'transparent' : color,
-                    borderWidth: kind === 'hollow' ? 1.5 : 0,
-                    borderColor: color,
-                    borderRadius: 1,
-                  }}
-                />
+                {bodyClipH > 0 ? (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      left: (primaryColW - primaryBodyW) / 2,
+                      top: bodyClipTop,
+                      width: primaryBodyW,
+                      height: bodyClipH,
+                      backgroundColor: kind === 'hollow' && bull ? 'transparent' : color,
+                      borderWidth: kind === 'hollow' ? 1.5 : 0,
+                      borderColor: color,
+                      borderRadius: 1,
+                    }}
+                  />
+                ) : null}
               </View>
             );
           })}
