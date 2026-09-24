@@ -332,6 +332,8 @@ export type Dict = {
   riskCalcCostsLotsWithin: string;
   riskCalcNetAfterCosts: string;
   riskCalcNetNegative: string;
+  // تحذير R:R منخفضة حين تُقرأ من الصافي (`rewardBelowRisk` مع تكاليف): `planLowRR` («الربح المحتمل…») يسمّي السطر الإجمالي فوقه وقد يقول 1:1.1
+  riskCalcLowNetRR: string;
   riskCalcCostsBelowMin: string;
   riskCalcUseLivePrice: string;
   riskCalcUseLivePriceA11y: string;
@@ -1205,6 +1207,7 @@ const ar: Dict = {
   riskCalcCostsLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة التكاليف: {lots} lot',
   riskCalcNetAfterCosts: 'بعد التكاليف: {profit} · R:R {rr}',
   riskCalcNetNegative: 'التكاليف تأكل الهدف كلّه: الصافي {profit} — أبعِد الهدف أو اختر حساباً بتكاليف أقل',
+  riskCalcLowNetRR: '⚠ بعد التكاليف يصير الربح أقل من المخاطرة',
   riskCalcCostsBelowMin: 'مع التكاليف، حتى أصغر لوت (0.01) يتجاوز {pct}% — ارفع النسبة أو قرّب الوقف',
   riskCalcUseLivePrice: '↓ الدخول = السعر الحالي',
   riskCalcUseLivePriceA11y: 'تعبئة خانة الدخول بسعر السوق الحالي (Ask للشراء وBid للبيع حسب موضع الوقف)',
@@ -2086,6 +2089,7 @@ const enUS: Dict = {
   riskCalcCostsLotsWithin: 'To keep your risk at {pct}% including costs: {lots} lot',
   riskCalcNetAfterCosts: 'After costs: {profit} · R:R {rr}',
   riskCalcNetNegative: 'Costs eat the whole target: net {profit} — move the target further or use a cheaper account',
+  riskCalcLowNetRR: '⚠ After costs, the reward is smaller than the risk',
   riskCalcCostsBelowMin: 'With costs, even the smallest lot (0.01) risks more than {pct}% — raise the % or tighten the stop',
   riskCalcUseLivePrice: '↓ Entry = current price',
   riskCalcUseLivePriceA11y: 'Fill the entry with the current market price (Ask for buy, Bid for sell, from where the stop sits)',
@@ -2993,6 +2997,7 @@ const ku: Dict = {
   riskCalcCostsLotsWithin: 'بۆ ئەوەی مەترسییەکەت لەگەڵ تێچووەکان لە {pct}% بمێنێتەوە: {lots} lot',
   riskCalcNetAfterCosts: 'دوای تێچووەکان: {profit} · R:R {rr}',
   riskCalcNetNegative: 'تێچووەکان هەموو ئامانجەکە دەخۆن: پوختە {profit} — ئامانجەکە دوورتر بخە یان هەژمارێکی کەمتێچووتر هەڵبژێرە',
+  riskCalcLowNetRR: '⚠ دوای تێچووەکان، قازانج لە مەترسی کەمتر دەبێت',
   riskCalcCostsBelowMin: 'لەگەڵ تێچووەکان، تەنانەت بچووکترین لۆت (0.01) لە {pct}% زیاتر دەخاتە مەترسییەوە — ڕێژەکە بەرز بکەرەوە یان وەستانەکە نزیک بکەرەوە',
   riskCalcUseLivePrice: '↓ چوونەژوورەوە = نرخی ئێستا',
   riskCalcUseLivePriceA11y: 'پڕکردنەوەی خانەی چوونەژوورەوە بە نرخی بازاڕی ئێستا (Ask بۆ کڕین و Bid بۆ فرۆشتن بەپێی شوێنی وەستان)',
