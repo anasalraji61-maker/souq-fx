@@ -913,7 +913,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
               : floatingResult({ symbol: tr.symbol, side: trSide, entry: tr.entry, sl: tr.sl, current: live });
             const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
             const pips = mv ? formatPips(mv.pips == null ? null : Math.abs(mv.pips)) : null;
-            const rText = !closed && mv && 'r' in mv ? formatR(mv.r) : null;
+            const rText = !closed && mv && 'r' in mv ? formatR(mv.r as number | null) : null;
             /**
              * **كم ربحتُ/خسرتُ بالمال** بعملة التسعير (`pnlInQuoteCcy`): النسبة بالسطر نسبة حركة السعر
              * لا الحساب، فـ«+0.23%» على لوتين هي 500$ — والمتداول كان يضرب بنفسه. الحجم 1 بلا معنى
