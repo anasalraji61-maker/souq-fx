@@ -278,6 +278,8 @@ export type Dict = {
   riskCalcBadSymbol: string;
   /** رمز حساب Exness Cent («USDJPYc») — الحاسبة ترفضه عمداً (حجم العقد مختلف)؛ `{symbol}` كما كُتب، `{pair}` بلا «c» */
   riskCalcCentSymbolHint: string;
+  /** رمز حساب micro («EURUSDmicro»، «EURUSD.micro») — مرفوض عمداً كالسنت (لوت micro = 1,000 وحدة)؛ `{symbol}` كما كُتب، `{pair}` الزوج العادي (`smallContractPair`) */
+  riskCalcMicroSymbolHint: string;
   appCrashTitle: string;
   appCrashBody: string;
   appCrashRepeatBody: string;
@@ -413,6 +415,8 @@ export type Dict = {
   journalStatPriceMoveSum: string;
   /** صفقة حساب سنت («EURUSDC»): نقاط وR بلا مال — لماذا يغيب المبلغ (`journalPipSize`، `ab4ca84`) */
   journalCentNoMoney: string;
+  /** صفقة حساب micro («EURUSDMICRO»): كـ`journalCentNoMoney` — نصّ ذاك عن السنت فلا يصلح هنا */
+  journalMicroNoMoney: string;
   journalStatBestWorst: string;
   journalStatsPending: string;
   journalStatNetPips: string;
@@ -1210,6 +1214,8 @@ const ar: Dict = {
     'رمز غير مدعوم — الحاسبة تحسب أزواج الفوركس والذهب والفضة لحساب عادي، مثل EURUSD أو XAUUSD أو GOLD أو EURUSD.m',
   riskCalcCentSymbolHint:
     '«{symbol}» رمز حساب سنت — الحاسبة تحسب لوت الحساب العادي فقط، وعقد السنت أصغر بمئة مرّة. لحساب عادي اكتب {pair}',
+  riskCalcMicroSymbolHint:
+    '«{symbol}» رمز حساب micro — الحاسبة تحسب لوت الحساب العادي فقط، ولوت micro أصغر بمئة مرّة (1,000 وحدة). لحساب عادي اكتب {pair}',
   appCrashTitle: 'حدث خطأ غير متوقع',
   appCrashBody: 'تعذّر عرض هذه الشاشة. بياناتك ورسوماتك محفوظة — اضغط «إعادة المحاولة» للمتابعة.',
   appCrashRepeatBody:
@@ -1335,6 +1341,7 @@ const ar: Dict = {
   journalStatWinRate: 'نسبة نجاح: {pct}%',
   journalStatPriceMoveSum: 'مجموع حركة السعر (بلا حجم الصفقة): {pct}%',
   journalCentNoMoney: 'حساب سنت: بالنقاط فقط — عقد السنت أصغر بمئة مرّة، فلا يُحسب مبلغٌ بعقد الحساب العادي',
+  journalMicroNoMoney: 'حساب micro: بالنقاط فقط — لوت micro أصغر بمئة مرّة، فلا يُحسب مبلغٌ بعقد الحساب العادي',
   journalStatBestWorst: 'أفضل/أسوأ: {best}% / {worst}%',
   journalStatsPending: 'لا صفقات مغلقة بعد — نسبة النجاح والـPnL تظهر بعد إغلاق أول صفقة.',
   journalStatNetPips: 'الصافي: {pips} pip',
@@ -2126,6 +2133,8 @@ const enUS: Dict = {
     'Unsupported symbol — the calculator sizes forex pairs, gold and silver for a standard account, e.g. EURUSD, XAUUSD, GOLD or EURUSD.m',
   riskCalcCentSymbolHint:
     '“{symbol}” is a cent-account symbol — the calculator sizes standard-account lots only, and a cent lot is 100 times smaller. For a standard account type {pair}',
+  riskCalcMicroSymbolHint:
+    '“{symbol}” is a micro-account symbol — the calculator sizes standard-account lots only, and a micro lot is 100 times smaller (1,000 units). For a standard account type {pair}',
   appCrashTitle: 'Something went wrong',
   appCrashBody: 'This screen could not be displayed. Your data and drawings are safe — tap “Try again” to continue.',
   appCrashRepeatBody:
@@ -2251,6 +2260,7 @@ const enUS: Dict = {
   journalStatWinRate: 'Win rate: {pct}%',
   journalStatPriceMoveSum: 'Sum of price moves (lot size ignored): {pct}%',
   journalCentNoMoney: 'Cent account: pips only — a cent contract is 100 times smaller, so no money amount is worked out from the standard contract',
+  journalMicroNoMoney: 'Micro account: pips only — a micro lot is 100 times smaller, so no money amount is worked out from the standard contract',
   journalStatBestWorst: 'Best/Worst: {best}% / {worst}%',
   journalStatsPending: 'No closed trades yet — win rate and PnL appear once you close your first trade.',
   journalStatNetPips: 'Net: {pips} pip',
@@ -3067,6 +3077,8 @@ const ku: Dict = {
     'هێمای پشتگیری نەکراو — ژمێرەرەکە جووتەکانی فۆرێکس و زێڕ و زیو بۆ هەژماری ئاسایی دەژمێرێت، وەک EURUSD یان XAUUSD یان GOLD یان EURUSD.m',
   riskCalcCentSymbolHint:
     '«{symbol}» هێمای هەژماری سەنتە — ژمێرەرەکە تەنها لۆتی هەژماری ئاسایی دەژمێرێت، و لۆتی سەنت سەد جار بچووکترە. بۆ هەژماری ئاسایی {pair} بنووسە',
+  riskCalcMicroSymbolHint:
+    '«{symbol}» هێمای هەژماری مایکرۆیە — ژمێرەرەکە تەنها لۆتی هەژماری ئاسایی دەژمێرێت، و لۆتی مایکرۆ سەد جار بچووکترە (1,000 یەکە). بۆ هەژماری ئاسایی {pair} بنووسە',
   appCrashTitle: 'هەڵەیەکی چاوەڕواننەکراو ڕوویدا',
   appCrashBody: 'ئەم شاشەیە نیشان نەدرا. زانیاری و کێشانەکانت پارێزراون — «دووبارە هەوڵبدەرەوە» دابگرە.',
   appCrashRepeatBody:
@@ -3194,6 +3206,7 @@ const ku: Dict = {
   journalStatWinRate: 'ڕێژەی سەرکەوتن: {pct}%',
   journalStatPriceMoveSum: 'کۆی جووڵەی نرخ (بێ قەبارەی مامەڵە): {pct}%',
   journalCentNoMoney: 'هەژماری سەنت: تەنها بە پیپ — گرێبەستی سەنت سەد جار بچووکترە، بۆیە بڕی پارە بە گرێبەستی ئاسایی ناژمێردرێت',
+  journalMicroNoMoney: 'هەژماری مایکرۆ: تەنها بە پیپ — لۆتی مایکرۆ سەد جار بچووکترە، بۆیە بڕی پارە بە گرێبەستی ئاسایی ناژمێردرێت',
   journalStatBestWorst: 'باشترین/خراپترین: {best}% / {worst}%',
   journalStatsPending: 'هێشتا هیچ مامەڵەیەکی داخراو نییە — ڕێژەی سەرکەوتن و PnL دوای داخستنی یەکەم مامەڵە دەردەکەون.',
   journalStatNetPips: 'کۆی گشتی: {pips} pip',
