@@ -37,7 +37,9 @@ function tickFromSnapshot(snap: Snapshot | null, sym: string): LiveTick | null {
  * (إن كانت حديثة) ثم يتبع البثّ. */
 export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null {
   const sym = symbol.toUpperCase();
-  const [state, setState] = useState<{ sym: string; tick: LiveTick } | null>(null);
+  // `at`: لحظة وصول هذا الرمز تحديداً — لا آخر رسالة: البثّ قد يستمرّ بأسعار الأزواج الأخرى
+  // ويغيب عنه هذا الرمز (أو يصل صفراً)، فكان آخر سعر صالح له يبقى «حيّاً» بلا حدّ.
+  const [state, setState] = useState<{ sym: string; tick: LiveTick; at: number } | null>(null);
   const tick = state && state.sym === sym ? state.tick : null;
   const wsRef = useRef<WebSocket | null>(null);
   const symRef = useRef(sym);
@@ -54,7 +56,7 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
     const snap = snapRef.current;
     if (!snap || Date.now() - snap.at > SNAPSHOT_FRESH_MS) return;
     const t = tickFromSnapshot(snap, sym);
-    if (t) setState({ sym, tick: t });
+    if (t) setState({ sym, tick: t, at: snap.at });
   }, [sym, enabled]);
 
   useEffect(() => {
@@ -98,7 +100,7 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
             snapRef.current = snap;
             const cur = symRef.current;
             const t = tickFromSnapshot(snap, cur);
-            if (t) setState({ sym: cur, tick: t });
+            if (t) setState({ sym: cur, tick: t, at: snap.at });
           } catch {
             /* ignore */
           }
@@ -119,9 +121,10 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
     connect();
 
     const staleTimer = setInterval(() => {
+      // تيك الرمز نفسه أقدم من الحدّ ⇒ يُسقَط ولو ظلّ البثّ يصل برموز أخرى.
+      setState((s) => (s && Date.now() - s.at > TICK_STALE_MS ? null : s));
       const snap = snapRef.current;
       if (snap && Date.now() - snap.at <= TICK_STALE_MS) return;
-      setState((s) => (s ? null : s));
       // مقبس «مفتوح» بلا رسالة منذ 20s (والخادم يبثّ كل ثانية): اتصال نصف ميت بعد تبديل
       // Wi-Fi↔خلوي — لا `onclose` حتى مهلة النظام (دقائق)، فالسعر الحيّ يبقى غائباً طوالها.
       // يُترك ويُفتح غيره فوراً؛ وإن فشل الجديد تتولّى `onclose` التضاعف المعتاد.
