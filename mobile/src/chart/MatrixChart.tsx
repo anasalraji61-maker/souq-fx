@@ -3153,9 +3153,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         return;
       }
       if (overTime) {
-        setWindowCount((current) =>
-          Math.max(2, Math.min(1000, Math.round(current * factor)))
-        );
+        // فوق محور الزمن: الطرف الأيمن مثبَّت دائماً (الإزاحة كما هي) — بعدّ `zoomWindow` نفسه
+        // (شمعة على الأقلّ لكل حزّة، فلا تضيع حزّات العجلة الصغيرة بنافذة ضيّقة). كان يغيّر
+        // `windowCount` وحده بلا `windowCountRef`، فالنشر للرباعي يرسل العدد القديم والتوابع تتأخّر حزّة.
+        const current = windowCountRef.current;
+        const z = zoomWindow(sourceRef.current.all.length, current, 0, factor);
+        if (z.count === current) return;
+        windowCountRef.current = z.count;
+        setWindowCount(z.count);
         schedulePublishSync(false);
         return;
       }
