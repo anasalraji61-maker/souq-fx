@@ -1042,6 +1042,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         ) : riskImpossible || slTooClose ? null : (
           <Text style={[styles.resultMeta, { textAlign: align }]}>{t.riskCalcFillHint}</Text>
         )}
+        {/* خانةٌ مرفوضة **واللوت محسوب** (من خانات أخرى): الرسالة كانت تظهر بلا نتيجة فقط، فرافعة «1:5000» تُسقط
+            سطر الهامش وهدف ذهب «3.500» يُسقط R:R والربح وزرّ التسجيل — بصمت تحت لوتٍ يبدو كاملاً */}
+        {result && badNumber ? <Text style={[styles.warn, { textAlign: align }]}>{badNumberText}</Text> : null}
         {/* الاتجاه كان **مستنتَجاً بصمت**: وقف تحت الدخول = شراء، ثم يُرسَل كما هو بـ`side` لصفقة
             الدفتر — فمن قلب الرقمين (أو خطّط بيعاً وكتب وقفه تحت الدخول سهواً) يسجّل صفقة بالاتجاه
             المعاكس ولا شيء بالشاشة يقول له ذلك، وهو الرقم الوحيد بالخطة الذي لا يكتبه بنفسه. */}
