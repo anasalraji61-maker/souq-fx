@@ -1,5 +1,13 @@
 /** فحص ذاتي لـ`measureReadout.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
-import { barsCountText, candleRangePipsText, measurePipsText, measureReadoutText, type MeasureStats } from './measureReadout';
+import {
+  barsCountText,
+  candleRangePipsText,
+  measureDurationSec,
+  measureDurationText,
+  measurePipsText,
+  measureReadoutText,
+  type MeasureStats,
+} from './measureReadout';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -142,6 +150,30 @@ ok('مدى الذهب', candleRangePipsText('XAUUSD', 2662.5, 2650.0) === '↕ 1
 ok('دوجي بلا مدى', candleRangePipsText('EURUSD', 1.085, 1.085) === '↕ 0.0 pip');
 ok('DXY ⇒ null', candleRangePipsText('DXY', 104.3, 104.1) === null);
 ok('أعلى دون الأدنى ⇒ null', candleRangePipsText('EURUSD', 1.08, 1.09) === null);
+
+// ── زمن القياس ────────────────────────────────────────────────────────────
+const H = 3600;
+ok('زمن: ساعة وربع', measureDurationText(4500) === '1h 15m');
+ok('زمن: ساعات بلا دقائق', measureDurationText(4 * H) === '4h');
+ok('زمن: يومان و4 ساعات', measureDurationText(52 * H) === '2d 4h');
+ok('زمن: أيام بلا ساعات', measureDurationText(3 * 24 * H) === '3d');
+ok('زمن: دقائق', measureDurationText(45 * 60) === '45m');
+ok('زمن: شمعة واحدة ⇒ null', measureDurationText(0) === null);
+ok('زمن: غائب ⇒ null', measureDurationText(null) === null);
+ok('زمن بالعربية', measureDurationText(52 * H, 'ar') === '2 يوم 4 س');
+ok('زمن من الطرفين (الجمعة ⇒ الاثنين، تقويمي)', measureDurationSec({ time: 0 }, { time: 3 * 24 * H }, H) === 3 * 24 * H);
+ok('زمن بطرف في المستقبل', measureDurationSec({ time: 0 }, { time: 10 * H, ahead: 2, aheadStep: 4 * H }, H) === 18 * H);
+ok('زمن بطرف بلا ختم ⇒ null', measureDurationSec({}, { time: 10 }, H) === null);
+ok('سطر بالزمن',
+  measureReadoutText({
+    symbol: 'EURUSD', a: { price: 1.08 }, b: { price: 1.0824 },
+    stats: stats(12, 0.0024, 0.2222), barsWord: 'bars', lang: 'en', durationSec: 12 * H,
+  }) === '12 bars · 12h · +24.0 pip · +0.22%');
+ok('سطر بلا زمن كما كان',
+  measureReadoutText({
+    symbol: 'EURUSD', a: { price: 1.08 }, b: { price: 1.0824 },
+    stats: stats(12, 0.0024, 0.2222), barsWord: 'شموع', durationSec: null,
+  }) === '12 شموع · +24.0 pip · +0.22%');
 
 if (failures) {
   console.error(`measureReadout.selftest: ${failures} FAILED`);

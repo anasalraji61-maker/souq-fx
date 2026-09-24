@@ -88,7 +88,45 @@ export function barsCountText(n: number, word: string, lang?: string): string {
 }
 
 /**
- * سطر القياس كاملاً: `12 شمعة · +24.0 pip · +0.22%`.
+ * زمن القياس بين طرفيه (ثوانٍ) من زمنَيهما المختومين — الزمن الحقيقي حتى على Renko
+ * (`srcTime`، راجع `drawingAnchors.ts`)، وطرف بالمستقبل بـ`ahead` شموعاً بعد زمنه. زمن تقويمي
+ * كما بـTradingView: حركة من الجمعة للاثنين تُقرأ «3d». طرف بلا زمن ⇒ `null` (لا سطر زمن).
+ */
+export function measureDurationSec(
+  a: { time?: number; ahead?: number; aheadStep?: number },
+  b: { time?: number; ahead?: number; aheadStep?: number },
+  stepSec: number
+): number | null {
+  const at = (p: typeof a) => {
+    if (p.time == null || !Number.isFinite(p.time)) return null;
+    const ahead = p.ahead != null && Number.isFinite(p.ahead) ? p.ahead : 0;
+    const step = p.aheadStep != null && p.aheadStep > 0 ? p.aheadStep : stepSec;
+    return p.time + ahead * step;
+  };
+  const ta = at(a);
+  const tb = at(b);
+  return ta == null || tb == null ? null : Math.abs(tb - ta);
+}
+
+/**
+ * «2d 4h» / «3h 15m» / «45m» — وحدتان على الأكثر (كقياس TradingView). بالعربية حروف أسماء
+ * الفريمات بالتطبيق نفسها («5 د»، «4 س»، `timeframes.ts`) و«يوم» كاملة (لا حرف لها هناك).
+ * صفر (طرفان على شمعة واحدة) ⇒ `null`: «0m» ضجيج.
+ */
+export function measureDurationText(sec: number | null, lang?: string): string | null {
+  if (sec == null || !Number.isFinite(sec) || sec < 60) return null;
+  const u = lang === 'ar' ? { m: ' د', h: ' س', d: ' يوم' } : { m: 'm', h: 'h', d: 'd' };
+  const mins = Math.round(sec / 60);
+  const d = Math.floor(mins / 1440);
+  const h = Math.floor((mins % 1440) / 60);
+  const m = mins % 60;
+  if (d > 0) return h > 0 ? `${d}${u.d} ${h}${u.h}` : `${d}${u.d}`;
+  if (h > 0) return m > 0 ? `${h}${u.h} ${m}${u.m}` : `${h}${u.h}`;
+  return `${m}${u.m}`;
+}
+
+/**
+ * سطر القياس كاملاً: `12 شمعة · 2d 4h · +24.0 pip · +0.22%` (الزمن حين يُعرف).
  *
  * النسبة تبقى (تُقارن الحركة بين أدوات مختلفة الأسعار) وتُصاغ بإشارتها هي —
  * كانت بلا إشارة فيُقرأ هبوطٌ بنسبة صعود.
@@ -102,8 +140,11 @@ export function measureReadoutText(input: {
   barsWord: string;
   /** لغة الواجهة لصيغة العدد (`barsCountText`). */
   lang?: string;
+  /** زمن القياس (`measureDurationSec`)؛ غائب ⇒ لا خانة زمن. */
+  durationSec?: number | null;
 }): string {
   const { symbol, a, b, stats, barsWord, lang } = input;
+  const dur = measureDurationText(input.durationSec ?? null, lang);
   const pips = measurePipsText(symbol, a.price, b.price);
   // الإشارة من الرقم **المطبوع** لا الخام (قاعدة `formatPct` برأس الإطار والتقاطع): قياس
   // 0.4 pip على اليورو نسبته 0.004% فكان يُكتب «+0.4 pip · +0.00%»، وقياس أفقيّ على DXY
@@ -117,5 +158,6 @@ export function measureReadoutText(input: {
   const diffSign = Number(diffText) === 0 ? '' : stats.diff > 0 ? '+' : '−';
   const amount = pips ?? `${diffSign}${diffText}`;
   const pctText = formatPct(Number.isFinite(stats.pct) ? stats.pct : 0);
-  return `${barsCountText(stats.bars, barsWord, lang)} · ${amount} · ${pctText}`;
+  const bars = barsCountText(stats.bars, barsWord, lang);
+  return dur ? `${bars} · ${dur} · ${amount} · ${pctText}` : `${bars} · ${amount} · ${pctText}`;
 }

@@ -79,7 +79,12 @@ import { clipSegmentToBars, dragChangesDrawing, drawingEnd, samePoint } from './
 import { anchorDrawings, barTime, stampAtIndex } from './drawingAnchors';
 import { priceSpan } from './priceSpan';
 import { fibLevelPrice, planFibLabels } from './fibLabels';
-import { candleRangePipsText, measurePipsText, measureReadoutText } from './measureReadout';
+import {
+  candleRangePipsText,
+  measureDurationSec,
+  measurePipsText,
+  measureReadoutText,
+} from './measureReadout';
 import { thinByGap } from './levelLabels';
 import { formatPct } from './dailyChange';
 import { timeframeStepSec } from './dataSource';
@@ -3335,6 +3340,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       stats: measureStats(m.a, m.b),
       barsWord: tr.mcMeasureBarsWord,
       lang,
+      durationSec: measureDurationSec(m.a, m.b, timeframeStepSec(series.timeframe)),
     });
   const measureReadout = measureDone ? measureText(measureDone) : null;
 
@@ -5633,10 +5639,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const up = m.b.price >= m.a.price;
             const edge = up ? colors.bull : colors.bear;
             const top = Math.max(2, Math.min(chartPlotH - 22, y2 - 44 >= 2 ? y2 - 44 : y2 + 24));
+            // السطر صار أطول بخانة الزمن («12 bars · 2d 4h · +24.0 pip · +0.22%» ≈ 235px):
+            // يُقيَّد بعرض ما بقي حتى الحافة البعيدة ويُصغَّر الخطّ قليلاً بدل الخروج منها.
             const side =
               x2 < chartPlotW / 2
                 ? { left: Math.max(2, x2 - 12) }
                 : { right: Math.max(2, chartW - x2 - 12) };
+            const tagMaxW = chartW - 2 - ('left' in side ? side.left : side.right);
             return (
               <>
                 {liveMeasure ? null : (
@@ -5655,8 +5664,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     }}
                   />
                 )}
-                <View pointerEvents="none" style={[styles.measureLive, { top, borderColor: edge }, side]}>
-                  <Text style={styles.measureLiveText} numberOfLines={1}>
+                <View
+                  pointerEvents="none"
+                  style={[styles.measureLive, { top, borderColor: edge, maxWidth: tagMaxW }, side]}
+                >
+                  <Text
+                    style={styles.measureLiveText}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.75}
+                  >
                     {measureText(m)}
                   </Text>
                 </View>
