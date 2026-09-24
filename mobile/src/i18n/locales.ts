@@ -491,6 +491,8 @@ export type Dict = {
   journalLoadError: string;
   journalEmpty: string;
   journalOpenSuffix: string;
+  /** بدل سطر «المخاطرة (مفتوحة)» الغائب (`openRiskTotals` = null) حين السبب صفقة مفتوحة بلا وقف فقط — `{n}` عددها. العدد بعد النقطتين فلا صيغ جمع */
+  journalOpenRiskNoStop: string;
   journalClosedWord: string;
   journalCloseNeedsExit: string;
   journalDeleteConfirmTitle: string;
@@ -1516,6 +1518,7 @@ const ar: Dict = {
   journalEmpty:
     'لا صفقات مسجّلة بعد — سجّل كل صفقة (حتى على حساب تجريبي) لتعرف مع الوقت ما ينجح معك وما لا ينجح. اكتبها بالنموذج أعلاه («↓ السعر الحالي» يملأ الدخول لحظة فتحها)، أو احسبها في «المخاطرة» ثم اضغط «سجّل هذه الخطة بالدفتر».',
   journalOpenSuffix: '(مفتوحة)',
+  journalOpenRiskNoStop: 'صفقات مفتوحة بلا وقف: {n} — خسارتها بلا حدّ، فلا يُجمع خطر المفتوحة',
   journalClosedWord: 'مغلقة',
   journalCloseNeedsExit: 'اكتب سعر الخروج في خانة «خروج» أعلى النموذج، ثم اضغط «إغلاق بسعر خانة الخروج» تحت الصفقة.',
   journalDeleteConfirmTitle: 'حذف هذه الصفقة من الدفتر؟',
@@ -2550,6 +2553,7 @@ const enUS: Dict = {
   journalEmpty:
     'No trades logged yet — log every trade (even on a demo account) to learn over time what works for you and what doesn\'t. Fill in the form above (“↓ Current price” fills the entry as you open it), or size it under “Risk” and tap “Log this plan to the journal”.',
   journalOpenSuffix: '(open)',
+  journalOpenRiskNoStop: 'Open trades without a stop: {n} — their loss has no limit, so open risk is not totalled',
   journalClosedWord: 'Closed',
   journalCloseNeedsExit: 'Type the exit price in the “Exit” field at the top of the form, then tap “Close at exit field price” under the trade.',
   journalDeleteConfirmTitle: 'Delete this trade from the journal?',
@@ -3611,6 +3615,7 @@ const ku: Dict = {
   journalEmpty:
     'هێشتا هیچ مامەڵەیەک تۆمار نەکراوە — هەموو مامەڵەیەک تۆمار بکە (تەنانەت لەسەر هەژماری تاقیکردنەوە) بۆ ئەوەی بە تێپەڕبوونی کات بزانیت چی بۆت سەرکەوتووە و چی نا. لە فۆرمەکەی سەرەوە بینووسە («↓ نرخی ئێستا» چوونەژوورەوە لە کاتی کردنەوەدا پڕ دەکاتەوە)، یان لە «مەترسی» حیسابی بکە و «ئەم پلانە لە دەفتەر تۆمار بکە» دابگرە.',
   journalOpenSuffix: '(کراوەیە)',
+  journalOpenRiskNoStop: 'مامەڵە کراوەکانی بێ وەستان: {n} — زیانیان سنووری نییە، بۆیە مەترسیی کراوەکان کۆ ناکرێتەوە',
   journalClosedWord: 'داخراو',
   journalCloseNeedsExit: 'نرخی دەرچوون لە خانەی «دەرچوون» لە سەرەوەی فۆڕمەکە بنووسە، پاشان «داخستن بە نرخی خانەی دەرچوون» لە ژێر مامەڵەکە دابگرە.',
   journalDeleteConfirmTitle: 'ئەم مامەڵەیە لە دەفتەرەکە بسڕدرێتەوە؟',
