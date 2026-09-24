@@ -14,7 +14,8 @@
  * بالمسافة نفسها — فالسحب «الخاطئ» يعطي رسمة صحيحة بدل صندوق مقلوب يَعِد بعكس ما أراد.
  */
 import { formatPrice } from './indicators/utils';
-import { instrumentSpec, pipsBetween } from '../positionSize';
+import { pipsBetween } from '../positionSize';
+import { chartPipSpec } from './pipSpec';
 import { pipsNumber } from './measureReadout';
 
 export type PositionSide = 'long' | 'short';
@@ -40,7 +41,7 @@ export function clampRr(rr: number | null | undefined): number {
 export function positionStop(side: PositionSide, entry: number, rawStop: number, symbol: string): number {
   let risk = Math.abs(entry - rawStop);
   if (!(risk > 0) || !Number.isFinite(risk)) {
-    const spec = instrumentSpec(symbol);
+    const spec = chartPipSpec(symbol);
     risk = spec ? spec.pipSize * 20 : Math.abs(entry) * 0.002;
   }
   return side === 'long' ? entry - risk : entry + risk;
@@ -95,7 +96,7 @@ export function rrText(rr: number): string {
 
 /** المسافة بالنقاط («25.0 pip») أو بفرق السعر لأداة بلا مواصفة pip (DXY، مؤشرات). */
 function distanceText(symbol: string, a: number, b: number): string {
-  const spec = instrumentSpec(symbol);
+  const spec = chartPipSpec(symbol);
   const pips = spec ? pipsBetween(spec, a, b) : null;
   if (pips != null) return `${pipsNumber(pips)} pip`;
   return formatPrice(Math.abs(a - b), symbol);
@@ -199,7 +200,7 @@ export function positionOutcomeText(levels: PositionLevels, outcome: PositionOut
   if (outcome.state === 'pending') return `Entry ⌛ ${distanceText(symbol, outcome.exit, levels.entry)}`;
   const up = outcome.r >= 0;
   const sign = up ? '+' : '−';
-  const spec = instrumentSpec(symbol);
+  const spec = chartPipSpec(symbol);
   const pips = spec ? pipsBetween(spec, levels.entry, outcome.exit) : null;
   const dist = pips != null ? `${sign}${pipsNumber(pips)} pip` : `${sign}${formatPrice(Math.abs(outcome.exit - levels.entry), symbol)}`;
   const r = `${sign}${rrText(Math.abs(outcome.r))}R`;

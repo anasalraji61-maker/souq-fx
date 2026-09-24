@@ -11,7 +11,7 @@
  *    «0.50000» (والين ثلاث منازل)، وفرقُ 12.5 على الذهب «12.500» (والذهب منزلتان).
  *    الرقم الأصغر من 10 يأخذ خمس منازل مهما كانت الأداة، والفرق دائماً رقم صغير.
  *
- * حجم الـpip من `instrumentSpec` (الين 0.01، الذهب 0.1، الفضة 0.01، والبقية 0.0001)،
+ * حجم الـpip من `chartPipSpec` (`instrumentSpec` + رموز Exness Cent) (الين 0.01، الذهب 0.1، الفضة 0.01، والبقية 0.0001)،
  * والمسافة من `pipsBetween` — نفس الدالّة المبرهَنة التي تبني عليها الحاسبة والتنبيهات،
  * فالرقم الذي يقرؤه المتداول من الشارت هو الرقم الذي يكتبه بالحاسبة بالبناء لا بالمصادفة.
  * والإشارة من `b − a` لأن `pipsBetween` كمّية بلا اتجاه (والاتجاه هو نصف ما يقيسه).
@@ -20,12 +20,13 @@
  * بدفتر الصفقات والحاسبة ولوح الباك-تست، بالعربية والإنجليزية والكردية) — فلا مفتاح
  * ترجمة جديداً ولا مساس بـ`i18n/locales.ts` (ملك وكيل آخر).
  *
- * أداة خارج مواصفات الفوركس (DXY، مؤشر، رمز وسيط بلاحقة) ⇒ `instrumentSpec` تعيد
+ * أداة خارج مواصفات الفوركس (DXY، مؤشر، عقد CFD) ⇒ `chartPipSpec` تعيد
  * `null`، فيبقى فرق السعر مكان النقاط — لكن مصاغاً بالرمز لا بحجم الرقم.
  */
 import { formatPrice } from './indicators/utils';
 import { formatPct } from './dailyChange';
-import { instrumentSpec, pipsBetween } from '../positionSize';
+import { pipsBetween } from '../positionSize';
+import { chartPipSpec } from './pipSpec';
 
 export type MeasureStats = { bars: number; diff: number; pct: number };
 
@@ -40,7 +41,7 @@ export function pipsNumber(pips: number): string {
 }
 
 export function measurePipsText(symbol: string, a: number, b: number): string | null {
-  const spec = instrumentSpec(symbol);
+  const spec = chartPipSpec(symbol);
   if (!spec) return null;
   const pips = pipsBetween(spec, a, b);
   if (pips == null) return null;
@@ -57,7 +58,7 @@ export function measurePipsText(symbol: string, a: number, b: number): string | 
  */
 export function candleRangePipsText(symbol: string, high: number, low: number): string | null {
   if (!Number.isFinite(high) || !Number.isFinite(low) || high < low) return null;
-  const spec = instrumentSpec(symbol);
+  const spec = chartPipSpec(symbol);
   if (!spec) return null;
   const pips = pipsBetween(spec, low, high);
   if (pips == null) return null;

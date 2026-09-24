@@ -1,6 +1,6 @@
 /** أدوات عامة (تنسيق السعر، تحويل الشموع) — لا علاقة مباشرة بعائلة مؤشرات معينة. */
 import type { Candle } from '../../api';
-import { instrumentSpec } from '../../positionSize';
+import { chartPipSpec } from '../pipSpec';
 
 
 /**
@@ -9,7 +9,7 @@ import { instrumentSpec } from '../../positionSize';
  * (مؤشرات، عملات رقمية…) فيُستخدم التقدير من حجم الرقم. DXY ثلاث منازل.
  */
 export function symbolPriceDecimals(symbol: string): number | null {
-  const spec = instrumentSpec(symbol);
+  const spec = chartPipSpec(symbol);
   if (!spec) {
     // مؤشّر الدولار يُسعَّر بثلاث منازل (104.235) — وهو رمز افتراضي بالرباعي ومرجع أخبار الدولار.
     // التقدير من حجم الرقم (≥100 ⇒ منزلتان) كان يقصّ خانته الأخيرة بالرأس والمحور والتقاطع.

@@ -7,7 +7,8 @@ import type { Timeframe } from '../timeframes';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { formatPrice } from '../chart/math';
 import { formatPct } from '../chart/dailyChange';
-import { instrumentSpec, pipsBetween } from '../positionSize';
+import { pipsBetween } from '../positionSize';
+import { chartPipSpec } from '../chart/pipSpec';
 import {
   provenanceLabel,
   tickStatusKind,
@@ -219,7 +220,7 @@ export function ChartFrame({
   // السبريد كان سعرَين خامَين يطرحهما المتداول بذهنه — وهو يقرؤه بالـpip (كلفة دخوله الفعلية).
   // حجم الـpip من `instrumentSpec` (الين 0.01، الذهب 0.1…) و`pipsBetween` نفسها التي تبني
   // عليها الحاسبة وأداة القياس؛ أداة بلا مواصفة pip (مؤشر، رمز بلاحقة وسيط) تبقى بالسعرين وحدهما.
-  const spreadSpec = hasSpread ? instrumentSpec(series.symbol) : null;
+  const spreadSpec = hasSpread ? chartPipSpec(series.symbol) : null;
   const spreadPips =
     spreadSpec && hasSpread ? pipsBetween(spreadSpec, liveQuote!.bid!, liveQuote!.ask!) : null;
 
