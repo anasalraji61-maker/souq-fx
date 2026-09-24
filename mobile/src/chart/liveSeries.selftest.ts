@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/liveSeries.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { livePriceForChart, tickPlausibleForSeries, withLivePrice } from './liveSeries';
+import { livePriceForChart, livePriceForHeader, tickPlausibleForSeries, withLivePrice } from './liveSeries';
 import type { ChartSeries } from '../api';
 
 const now = 1_760_000_000;
@@ -44,5 +44,16 @@ const tick = (price: number) => ({ price, source: src });
 assert.equal(livePriceForChart(eur, tick(2650), { nowSec: now + 1 }), null);
 assert.equal(livePriceForChart(eur, tick(1.1709), { nowSec: now + 1 }), 1.1709);
 assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
+
+// نسبة الرأس: التيك بعد إغلاق الشمعة الأخيرة (قبل الجلب التالي) لا يُدمج بها لكنه سعر الرأس
+{
+  const late = { ...tick(1.1709), source: { ...src, as_of: now + 1800 } };
+  assert.equal(livePriceForChart(eur, late, { nowSec: now + 1800 }), null);
+  assert.equal(livePriceForHeader(eur, late), 1.1709);
+  assert.equal(livePriceForHeader(eur, tick(2650)), null); // تيك رمز آخر
+  assert.equal(livePriceForHeader(eur, tick(0)), null);
+  assert.equal(livePriceForHeader(eur, null), null);
+  assert.equal(livePriceForHeader({ ...eur, candles: [] }, tick(1.17)), null);
+}
 
 console.log('liveSeries selftest: OK');

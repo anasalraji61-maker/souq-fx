@@ -105,6 +105,21 @@ export function livePriceForChart(
   return tick.price;
 }
 
+/**
+ * السعر الذي تُحسب منه نسبة الرأس: التيك نفسه المطبوع بجانبها، ما دام سعراً لهذه السلسلة (المصدر
+ * متوافق والسعر معقول) — **بلا** شرط أن يقع بشمعتها الأخيرة. كانت النسبة من `livePriceForChart`
+ * التي ترفض التيك بعد إغلاق الشمعة الأخيرة حتى الجلب التالي (~90 ث): على 1m/5m بعد كل إغلاق يتحرّك
+ * السعر والنسبة واقفة، وقد تناقضه (سعر فوق الافتتاح ونسبة حمراء). المرجع (أوّل شمعة) لا يتعلّق
+ * بالشمعة الأخيرة، فالنسبة صحيحة. null ⇒ نسبة الخادم.
+ */
+export function livePriceForHeader(series: ChartSeries, tick: LiveTick | null | undefined): number | null {
+  if (!tick || !Number.isFinite(tick.price) || tick.price <= 0) return null;
+  if (!series.candles.length) return null;
+  if (!canMergeLiveIntoCandles(series.data_source, tick.source)) return null;
+  if (!tickPlausibleForSeries(series, tick.price)) return null;
+  return tick.price;
+}
+
 export function ensureSeriesProvenance(series: ChartSeries): ChartSeries {
   if (series.data_source?.kind) {
     return { ...series, data_source: normalizeProvenance(series.data_source) };

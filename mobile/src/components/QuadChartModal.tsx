@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api, type ChartSeries } from '../api';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
-import { liveChangePct, livePriceForChart } from '../chart/liveSeries';
+import { liveChangePct, livePriceForChart, livePriceForHeader } from '../chart/liveSeries';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
 import { TimeframeBar } from './TimeframeBar';
@@ -237,14 +237,16 @@ export function QuadChartModal({
             const s = series[i];
             const tp = ticks[sym]?.price;
             const px = tp != null && Number.isFinite(tp) && tp > 0 ? tp : (s?.last ?? NaN);
-            // النسبة تتبع التيك المدموج بالشمعة (لا نسبة الجلب الأخير بجانب سعر أحدث منه).
+            // النسبة تتبع التيك المطبوع بجانبها (لا نسبة الجلب الأخير بجانب سعر أحدث منه)، ولو بعد
+            // إغلاق الشمعة الأخيرة وقبل الجلب التالي.
+            const livePct = s ? liveChangePct(s, livePriceForHeader(s, ticks[sym] ?? null)) : NaN;
+            // الشمعة الحيّة تأخذ التيك الواقع بها وحده.
             const merged = s
               ? livePriceForChart(s, ticks[sym] ?? null, {
                   tickAsOf: ticks[sym]?.source.as_of ?? null,
                   timeframe: s.timeframe,
                 })
               : null;
-            const livePct = s ? liveChangePct(s, merged) : NaN;
             const pct = s && Number.isFinite(livePct) ? livePct : null;
             const pctR = pct == null ? 0 : Math.round(pct * 100) / 100;
             const pctColor = pctR > 0 ? colors.bull : pctR < 0 ? colors.bear : colors.textDim;

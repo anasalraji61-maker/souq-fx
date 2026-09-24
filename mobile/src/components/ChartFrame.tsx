@@ -14,7 +14,7 @@ import {
   tickStatusKind,
   normalizeProvenance,
 } from '../chart/dataSource';
-import { liveChangePct, livePriceForChart, tickPlausibleForSeries } from '../chart/liveSeries';
+import { liveChangePct, livePriceForChart, livePriceForHeader, tickPlausibleForSeries } from '../chart/liveSeries';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import { isForexMarketOpen } from '../chart/marketHours';
 
@@ -163,11 +163,11 @@ export function ChartFrame({
   // نسبة الرأس كانت تُطبع خاماً بشرط `>= 0`: الصفر يُكتب «+0.00%» بالأخضر، وسالبُ الصفر
   // (`round(chg, 2)` بالخادم يُخرج ‎-0.0‎ لهبوط دقيق) كذلك — فزوجٌ هابط يقرأ صاعداً.
   // الآن `formatPct` المعتمدة، واللون من **الرقم المطبوع** نفسه: ما يُقرّب إلى صفر مكتوم.
-  // والنسبة تتبع السعر الحيّ المدموج بالشمعة (`liveChangePct`) لا الجلب الأخير وحده.
+  // والنسبة تتبع السعر الحيّ المطبوع بجانبها (`livePriceForHeader`) لا الجلب الأخير وحده.
   // بالإعادة الرأس يقرأ شمعة الإعادة: كان يطبع سعر اليوم ونسبته و«حيّ» والسبريد فوق شموع الأسبوع
   // الماضي — الجواب مكشوف قبل أن يقرّر المتداول. النسبة من المرجع نفسه (أوّل شمعة بالسلسلة).
   const [replayPrice, setReplayPrice] = useState<number | null>(null);
-  const livePct = liveChangePct(series, replayPrice ?? mergePrice);
+  const livePct = liveChangePct(series, replayPrice ?? livePriceForHeader(series, resolvedTick));
   const chgPct = Number.isFinite(livePct) ? livePct : null;
   const chgRounded = chgPct == null ? 0 : Math.round(chgPct * 100) / 100;
   const chgColor = chgRounded > 0 ? colors.bull : chgRounded < 0 ? colors.bear : colors.textDim;
