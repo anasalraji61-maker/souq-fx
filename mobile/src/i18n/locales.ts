@@ -811,6 +811,10 @@ export type Dict = {
   mcHintNavigate: string;
   /** الويب بالفأرة: المعاينة بالمرور، النقر يثبّت، ←/→ و Esc بعد التثبيت. */
   mcHintNavigateWeb: string;
+  /** الويب بالفأرة وأداة رسم نشطة: Esc يلغي النقطة الأولى ثم يغادر الأداة، Ctrl/⌘+Z يتراجع. */
+  mcHintDrawWeb: string;
+  /** الويب ورسم محدَّد: Delete/Backspace يحذفه (قابل للتراجع)، Esc يلغي التحديد. */
+  mcHintSelectedWeb: string;
   mcZoomOutA11y: string;
   mcZoomInA11y: string;
   mcPanBackA11y: string;
@@ -1712,6 +1716,8 @@ const ar: Dict = {
   mcHintDraw: 'اسحب لرسم، أو المس نقطتين · يُحفظ تلقائياً',
   mcHintNavigate: 'اسحب للتنقل · المس شمعة لقراءتها، أو اضغط مطوّلاً ثم اسحب · باعد إصبعين أو اسحب المحورين للتكبير',
   mcHintNavigateWeb: 'مرّر الفأرة للقراءة · انقر للتثبيت · ←/→ شمعة شمعة · Esc للإلغاء',
+  mcHintDrawWeb: 'اسحب لرسم، أو انقر نقطتين · Esc للإلغاء · Ctrl+Z للتراجع · يُحفظ تلقائياً',
+  mcHintSelectedWeb: 'Delete لحذف الرسم المحدَّد · Esc لإلغاء التحديد · Ctrl+Z للتراجع',
   mcZoomOutA11y: 'تصغير',
   mcZoomInA11y: 'تكبير',
   mcPanBackA11y: 'تحريك للخلف',
@@ -2604,6 +2610,8 @@ const enUS: Dict = {
   mcHintDraw: 'Drag to draw, or tap two points · saved automatically',
   mcHintNavigate: 'Drag to pan · tap a candle to read it, or hold then drag · pinch or drag the axes to zoom',
   mcHintNavigateWeb: 'Hover to read · click to pin · ←/→ one candle · Esc to clear',
+  mcHintDrawWeb: 'Drag to draw, or click two points · Esc to cancel · Ctrl+Z to undo · saved automatically',
+  mcHintSelectedWeb: 'Delete removes the selected drawing · Esc deselects · Ctrl+Z to undo',
   mcZoomOutA11y: 'Zoom out',
   mcZoomInA11y: 'Zoom in',
   mcPanBackA11y: 'Pan back',
@@ -3523,6 +3531,8 @@ const ku: Dict = {
   mcHintDraw: 'ڕایبکێشە بۆ کێشان، یان دوو خاڵ دابگرە · خۆکار پاشەکەوت دەبێت',
   mcHintNavigate: 'ڕایبکێشە بۆ جوڵان · دەست لە مۆمێک بدە بۆ خوێندنەوە، یان دایگرە و ڕایبکێشە · دوو پەنجە لێک دوور بخەرەوە یان تەوەرەکان ڕایبکێشە بۆ زووم',
   mcHintNavigateWeb: 'ماوس ببە سەری بۆ خوێندنەوە · کلیک بکە بۆ جێگیرکردن · ←/→ مۆم بە مۆم · Esc بۆ لابردن',
+  mcHintDrawWeb: 'ڕایبکێشە بۆ کێشان، یان کلیک لە دوو خاڵ بکە · Esc بۆ هەڵوەشاندنەوە · Ctrl+Z بۆ گەڕانەوە · خۆکار پاشەکەوت دەبێت',
+  mcHintSelectedWeb: 'Delete بۆ سڕینەوەی کێشراوی دیاریکراو · Esc بۆ لابردنی دیاریکردن · Ctrl+Z بۆ گەڕانەوە',
   mcZoomOutA11y: 'بچووککردنەوە',
   mcZoomInA11y: 'گەورەکردن',
   mcPanBackA11y: 'جوڵان بۆ دواوە',
