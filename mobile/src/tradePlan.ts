@@ -11,6 +11,7 @@ import { knownSingleName } from './chart/newsRisk';
 import {
   centAccountSymbol,
   instrumentSpec,
+  smallContractPair,
   LOT_STEP,
   MAX_SANE_LOTS,
   pipsBetween,
@@ -31,7 +32,7 @@ export type TradeSide = 'buy' | 'sell';
  */
 export function journalPipSize(symbol: string | null | undefined): number | null {
   if (!symbol) return null;
-  const spec = instrumentSpec(symbol) ?? instrumentSpec(centAccountSymbol(symbol) ?? '');
+  const spec = instrumentSpec(symbol) ?? instrumentSpec(smallContractPair(symbol) ?? '');
   return spec?.pipSize ?? null;
 }
 
@@ -783,6 +784,9 @@ export function journalSymbol(raw: string): string | null {
   const spec = instrumentSpec(up);
   const pair = /^([A-Z]{3})[\s/_-]*([A-Z]{3})(.*)$/.exec(up);
   if (spec && pair && pair[1] + pair[2] === spec.symbol) return spec.symbol + pair[3];
+  // «EURUSD-cent»/«EURUSD_micro» تبقى بلاحقتها: حذف الفاصل كان يُخرج «EURUSDCENT» فتضيع النقاط وسعر السوق
+  const small = smallContractPair(up);
+  if (small && pair && pair[1] + pair[2] === small && pair[3].length <= 6) return small + pair[3];
   const known = knownSingleName(up);
   const suffixed = known ? /^(.*?)([.\-_#+][A-Z0-9]{0,5})$/.exec(up.replace(/[\s/]/g, '')) : null;
   if (known && suffixed && suffixed[1].replace(/[-_]/g, '') === known && (known + suffixed[2]).length <= 12)
@@ -806,7 +810,7 @@ export function journalSymbol(raw: string): string | null {
  * `null` = رمز لا يصلح للحفظ أصلاً.
  */
 export function quoteSymbol(raw: string): string | null {
-  return centAccountSymbol(raw.trim().toUpperCase()) ?? instrumentSymbol(raw);
+  return smallContractPair(raw.trim().toUpperCase()) ?? instrumentSymbol(raw);
 }
 
 /**
@@ -818,6 +822,8 @@ export function quoteSymbol(raw: string): string | null {
  * ومالها غير معروف، فدمجها مع «EURUSD» كان سيُسقط صافي EURUSD بالمال (`netByInstrument`).
  */
 function instrumentSymbol(raw: string): string | null {
+  // «GOLD.c»/«XAUUSD_cent» كانت تُدمج مع «XAUUSD» عبر `knownSingleName` (اسمٌ معروف قبل اللاحقة) فتُسقط صافيه بالمال
+  if (smallContractPair(raw)) return journalSymbol(raw);
   return instrumentSpec(raw)?.symbol ?? knownSingleName(raw) ?? journalSymbol(raw);
 }
 

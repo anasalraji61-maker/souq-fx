@@ -48,6 +48,7 @@ import {
   leverageOutOfRange,
   riskOverBalance,
   centAccountSymbol,
+  smallContractPair,
   MAX_LEVERAGE,
   planJournalNote,
   parseCommission,
@@ -1647,7 +1648,35 @@ console.log('positionSize riskOverBalance selftest OK');
     assert.equal(instrumentSpec(raw), null, raw);
   }
   // مقبولة أصلاً، أو ليست سنتاً، أو لا تُخمَّن
-  for (const raw of ['EURUSD', 'EURUSDm', 'EURUSD.c', 'XAUUSD.pro', 'EURUSDT', 'EURUSDmc', 'EURUSDcc', 'USDC', 'ABCDEFc', 'XAUXAGc', 'US30c', 'BTCUSDc', 'c', ''])
+  for (const raw of ['EURUSD', 'EURUSDm', 'EURUSD.micro', 'XAUUSD.pro', 'EURUSDT', 'EURUSDmc', 'EURUSDcc', 'USDC', 'ABCDEFc', 'XAUXAGc', 'US30c', 'BTCUSDc', 'c', ''])
     assert.equal(centAccountSymbol(raw), null, raw);
 }
 console.log('positionSize centAccountSymbol selftest OK');
+
+// لاحقة عقدٍ أصغر بمئة مرّة بفاصل («EURUSD.c»، «EURUSD-cent»، «EURUSD.micro») — لا يُحسب لها لوت الحساب العادي
+{
+  for (const [raw, pair] of [
+    ['EURUSD.c', 'EURUSD'], ['EURUSD.C', 'EURUSD'], ['EURUSD-cent', 'EURUSD'], ['XAUUSD_cent', 'XAUUSD'],
+    ['USDJPY#c', 'USDJPY'], ['GOLD.c', 'XAUUSD'], ['silver-cent', 'XAGUSD'], ['EUR/USD.cent', 'EURUSD'],
+  ] as const) {
+    assert.equal(instrumentSpec(raw), null, raw);
+    assert.equal(riskInQuoteCcy({ symbol: raw, entry: 1.085, sl: 1.0825, lots: 0.1 }), null, raw);
+    assert.equal(centAccountSymbol(raw), pair, raw);
+    assert.equal(smallContractPair(raw), pair, raw);
+  }
+  // micro: مرفوض بالحاسبة، وليس «سنتاً» (رسالة السنت لا تصفه) — لكن زوجه معروف لنقاط الدفتر وسعر السوق
+  for (const [raw, pair] of [['EURUSD.micro', 'EURUSD'], ['USDJPY-MICRO', 'USDJPY'], ['GOLD_micro', 'XAUUSD']] as const) {
+    assert.equal(instrumentSpec(raw), null, raw);
+    assert.equal(centAccountSymbol(raw), null, raw);
+    assert.equal(smallContractPair(raw), pair, raw);
+  }
+  // اللواحق العادية كما كانت: العقد عقد الحساب العادي
+  for (const raw of ['EURUSD.m', 'EURUSD.pro', 'EURUSD.ecn', 'EURUSD.cfd', 'EURUSD.c1', 'EURUSD#', 'GOLD.m', 'EURUSD.std'])
+    assert.ok(instrumentSpec(raw), raw);
+  for (const raw of ['EURUSD.m', 'EURUSD', 'US30.c', 'BTCUSD.cent', 'EURUSD.cents', 'EURUSDmicro'])
+    assert.equal(smallContractPair(raw), null, raw);
+  // الحاسبة: 1% من 1000 بوقف 25 pip = 0.04 لوت عادي — كان يُعرض هذا لـ«EURUSD.c» (حساب السنت يحتاج 4.00)
+  const std = instrumentSpec('EURUSD')!;
+  assert.equal(positionSize({ balance: 1000, riskPct: 1, slPips: 25, pipValuePerLot: pipValuePerLot(std, 1), contractSize: std.contractSize })!.lots, 0.04);
+}
+console.log('positionSize smallContractPair selftest OK');

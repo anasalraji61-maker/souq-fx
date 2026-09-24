@@ -74,7 +74,17 @@ const BROKER_SUFFIXED = /^([A-Z]{3})[/\s_-]?([A-Z]{3})(?:[.\-_#+][A-Z0-9]{0,5}|M
 const METAL_NAMES = /^(GOLD|SILVER)(?:[.\-_#+][A-Z0-9]{0,5})?$/;
 const METAL_NAME_SYMBOL: Record<string, string> = { GOLD: 'XAUUSD', SILVER: 'XAGUSD' };
 
+/**
+ * لاحقة **عقدٍ أصغر بمئة مرّة** بفاصل: «EURUSD.c»، «EURUSD-cent»، «XAUUSD_cent»، «GOLD.c» (حساب سنت)، و«EURUSD.micro»
+ * (حساب micro: اللوت 1,000 وحدة). كانت تمرّ بقاعدة `BROKER_SUFFIXED` كأي لاحقة («.pro»، «.m») فتحسب الحاسبة **لوت
+ * الحساب العادي**: 1% من 1000 بوقف 25 pip = 0.04 لوت، بينما حساب السنت يحتاج 4.00 — مخاطرة أصغر بمئة مرّة مما قيل
+ * (أو بالعكس لمن رصيده بالسنت: 100,000 سنت = 1,000 دولار تُحسب مئة ألف ⇒ لوت أكبر بمئة مرّة). والدفتر يحسب لها
+ * مالاً خاطئاً بمئة ضعف. «c» الملاصقة مرفوضة أصلاً (`centAccountSymbol`)؛ بالفاصل صارت مثلها.
+ */
+const SMALL_CONTRACT_SUFFIX = /[.\-_#+](C|CENT|MICRO)$/;
+
 export function instrumentSpec(raw: string): InstrumentSpec | null {
+  if (SMALL_CONTRACT_SUFFIX.test(raw.trim().toUpperCase())) return null;
   let symbol = normalizeSymbol(raw);
   const named = METAL_NAMES.exec(raw.trim().toUpperCase());
   if (named) symbol = METAL_NAME_SYMBOL[named[1]];
@@ -105,9 +115,22 @@ export function instrumentSpec(raw: string): InstrumentSpec | null {
 export function centAccountSymbol(raw: string): string | null {
   const s = raw.trim();
   if (instrumentSpec(s)) return null;
-  const m = /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER|gold|silver|Gold|Silver)[cC]$/.exec(s);
+  const m =
+    /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER|gold|silver|Gold|Silver)[cC]$/.exec(s) ??
+    /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER)[.\-_#+](?:C|CENT)$/i.exec(s);
   if (!m) return null;
   return instrumentSpec(m[1])?.symbol ?? null;
+}
+
+/**
+ * رمز حساب **بعقدٍ أصغر بمئة مرّة** — سنت (`centAccountSymbol`) أو micro بفاصل («EURUSD.micro») ⇒ الزوج العادي.
+ * السعر والـpip كالزوج العادي تماماً (لنقاط الدفتر وسعر السوق)، والمال وحده مجهول. null = ليس كذلك.
+ */
+export function smallContractPair(raw: string): string | null {
+  const cent = centAccountSymbol(raw);
+  if (cent) return cent;
+  const m = /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER)[.\-_#+]MICRO$/i.exec(raw.trim());
+  return m ? instrumentSpec(m[1])?.symbol ?? null : null;
 }
 
 /**

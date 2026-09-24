@@ -1496,3 +1496,32 @@ console.log('tradePlan journalSizeLooksLikeUnits selftest OK');
   assert.equal(netHasCentWithLots([c('GOLDC', 0.2)], ['XAUUSD']), false);
 }
 console.log('tradePlan netHasCentWithLots selftest OK');
+
+// لاحقة عقدٍ أصغر بمئة مرّة بفاصل («EURUSD-cent»، «XAUUSD_cent»، «GOLD.c»، «EURUSD.micro») بالدفتر: نقاط وسعر سوق بالزوج
+// العادي، **بلا مال** (كان يُحسب بعقد الحساب العادي ⇒ مبلغ أكبر بمئة مرّة)، ومفتاح أداة منفصل لا يُدمج بالعادي
+{
+  for (const [raw, saved, pair, pip] of [
+    ['EURUSD-cent', 'EURUSD-CENT', 'EURUSD', 0.0001],
+    ['eurusd.c', 'EURUSD.C', 'EURUSD', 0.0001],
+    ['XAUUSD_cent', 'XAUUSD_CENT', 'XAUUSD', 0.1],
+    ['GOLD.c', 'GOLD.C', 'XAUUSD', 0.1],
+    ['EURUSD.micro', 'EURUSD.MICRO', 'EURUSD', 0.0001],
+    ['USDJPY-micro', 'USDJPY-MICRO', 'USDJPY', 0.01],
+  ] as const) {
+    assert.equal(journalSymbol(raw), saved, raw);
+    assert.equal(quoteSymbol(saved), pair, raw);
+    assert.equal(journalPipSize(saved), pip, raw);
+    assert.equal(journalInstrumentKey(saved), saved, raw);
+    assert.equal(pnlInQuoteCcy({ symbol: saved, side: 'buy', entry: 1.085, exit: 1.0875, lots: 0.1 }), null, raw);
+  }
+  assert.equal(isCentJournalSymbol('EURUSD-CENT'), true);
+  assert.equal(isCentJournalSymbol('GOLD.C'), true);
+  assert.equal(isCentJournalSymbol('EURUSD.MICRO'), false);
+  // مسودّة سنت بفاصل: نقاط بلا مال
+  assert.deepEqual(draftRiskFigures({ symbol: 'EURUSD-CENT', side: 'buy', entry: 1.085, sl: 1.0825, lots: 1 }), { pips: 25, cash: null, cent: true });
+  // اللواحق العادية كما كانت
+  assert.equal(journalInstrumentKey('EURUSD.M'), 'EURUSD');
+  assert.equal(journalInstrumentKey('GOLD#'), 'XAUUSD');
+  assert.deepEqual(pnlInQuoteCcy({ symbol: 'EURUSD.PRO', side: 'buy', entry: 1.085, exit: 1.0875, lots: 0.1 }), { amount: 25, ccy: 'USD' });
+}
+console.log('tradePlan small-contract suffix selftest OK');
