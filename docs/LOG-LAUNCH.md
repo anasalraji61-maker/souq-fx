@@ -1908,3 +1908,31 @@
 
 **خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (أسماء البنوك و`"TradingCentral-like"`، `openrouter_ai.py:71`، السبريد المختلَق، `₴`، أطر الكردي و`selected` بـ`TimeframeBar`).
 **يحتاج جهازاً**: الخطوات 148–151؛ طول `journalInitialStopNote` (سطران تقريباً) و`journalCappedNote` على 360px حين يُربطان.
+
+## 2026-09-25 — التشغيلة الستّون
+
+أوّلاً `COORDINATION.md`: صفّان منفَّذهما «launch» (tools40، chart 09-25) — **كلاهما منجز**. `bash scripts/qa-build-check.sh` **أخضر بصفر أخطاء قبل كل
+commit**؛ صفر `U+FFFD` بـ`locales.ts`. كل ادّعاء بالوثائق مقروء من الكود. **لم يُشغَّل التطبيق.**
+
+1. **`locales.ts`** (`afbb0c2`) — صفّ **tools40**: مفتاح جديد `riskCalcSpreadPipsHint` ×ar/en/ku («اكتبه بالـpip لا بالـpoints: MT4/MT5 تعرض السبريد
+   بالـpoints غالباً، وكل 10 points = 1 pip — فـ12 بالمنصّة تُكتب هنا 1.2»). النسبة 10:1 مُتحقَّقة للخماسية والين والذهب (pip الذهب 0.1 بـ`tradePlan.ts:948`،
+   والـpoint 0.01). وعنوان الخانة نفسه كان «السبريد (بالنقاط، اختياري)» — وهو أصل الالتباس — صار «(pip، اختياري)» كالكردي، و`riskCalcSpreadNote`
+   «وقف 20 pip»، و`riskCalcSpreadTooWide` يسأل «سعراً أو points بدل الـpip؟» ×3. **صفّ جديد launch60 ← tools**: اربط `riskCalcSpreadPipsHint` تحت
+   خانة السبريد (`PositionSizePanel.tsx:1229`، قبل `riskCalcSpreadNote`).
+2. **`locales.ts`** (نفس الـcommit) — صفّ **chart 09-25**: `mcHintNoteSelected`/`…Web` ×ar/en/ku «بالخانة تحتها/below it» ⇒ «بالخانة المجاورة لها/next to
+   it/خانەی تەنیشتی» لأنّ الخانة تنقلب فوق الملاحظة حين لا يتّسع. لا ربط مطلوب (المفتاحان مربوطان `MatrixChart.tsx:5241`).
+3. **`RELEASE-MOBILE.md` / `FEATURE-INVENTORY.md`** (`42f5128`): خطوات جهاز **152–155** — سطرا الدفتر المربوطان (`0c34e61`)، تقادم تيك الشارت المكبَّر
+   لكل رمز (`d59afdc`؛ `useLiveTicks` يستعمله `FocusChartModal` وحده، وقائمة المتابعة لم تُصلح — chart2)، علامة منتصف الليل بالتاريخ وحده (`e40b2da`)،
+   عطلتا 25/12 و1/1 (العدّاد والإسقاط؛ تحتاج تغيير تاريخ الجهاز) مع ذكر خلل QA10 المعروف للذهب. صُحّحت الخطوة 147 («تحتها» ⇒ «بجانبها») و148 (الشرح
+   صار مربوطاً). سطر بالجرد §الشارات الحيّة.
+4. **`locales.ts`** (`570cb08`): البند 1 كشف أنّ «نقطة/نقاط» (والكردي «خاڵ») تعني pip بسبعة مفاتيح أخرى للحاسبة والدفتر — والمتداول العربي يقرأها points
+   (عُشر pip) كما بمنصّته: `riskCalcSlPips`، `riskCalcSlMismatch`، `riskCalcPipValue` («قيمة الـpip للوت»)، `riskCalcLogBlockedMismatch`،
+   `riskCalcSlMismatchNarrower`، `riskCalcStopInsideSpread`، `journalSlAtPipsA11y`. الآن «pip» لاتينية، اصطلاح التطبيق. تُركت «نقطة» حيث تعني فاصلة
+   عشرية أو نقطة رسم، و`cpp*` (نقاط العمولة، شيء آخر).
+
+### ردّ على COORDINATION
+- **tools40 `riskCalcSpreadPipsHint`**: **منجز** (البند 1)؛ الربط ⇒ **launch60 ← tools**.
+- **chart 09-25 `mcHintNoteSelected`/`…Web` ×3**: **منجز** (البند 2).
+
+**خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (أسماء البنوك و`"TradingCentral-like"`، `openrouter_ai.py:71`، السبريد المختلَق، `₴`، أطر الكردي و`selected` بـ`TimeframeBar`).
+**يحتاج جهازاً**: الخطوات 152–155؛ طول `riskCalcSpreadPipsHint` (سطران) على 360px حين يُربط؛ عنوان «السبريد (pip، اختياري)» بالعربية RTL (اتجاه «pip» اللاتينية).
