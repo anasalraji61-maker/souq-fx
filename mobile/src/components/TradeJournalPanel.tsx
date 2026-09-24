@@ -16,7 +16,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
-import { instrumentSpec, pipsBetween, riskInQuoteCcy } from '../positionSize';
+import { formatMoney, instrumentSpec, pipsBetween, riskInQuoteCcy } from '../positionSize';
 import {
   analyzePlan,
   floatingResult,
@@ -301,8 +301,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const spec = instrumentSpec(sym);
     const r = riskInQuoteCcy({ symbol: sym, entry: e, sl: s, lots: l });
     if (!spec || !r) return null;
-    const amount = r.amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    return { pips: pipsBetween(spec, e, s), money: `${amount} ${r.ccy}` };
+    return { pips: pipsBetween(spec, e, s), money: formatMoney(r.amount, r.ccy) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry, sl, size]);
 

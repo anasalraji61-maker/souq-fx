@@ -307,3 +307,29 @@ export function riskInQuoteCcy(input: {
   const amount = Math.abs(entry - sl) * spec.contractSize * lots;
   return { amount: Math.round(amount * 100 + 1e-7) / 100, ccy: spec.quote };
 }
+
+/**
+ * منازل المبلغ العشرية لعملة: الين بلا كسور (لا «سِن» يُتداول به)، وبقية عملات الحساب والتسعير
+ * المدعومة منزلتان.
+ */
+export function moneyDecimals(ccy: string): 0 | 2 {
+  return ccy.toUpperCase() === 'JPY' ? 0 : 2;
+}
+
+/**
+ * مبلغ بعملته للعرض: «1,234.50 USD»، «15,000 JPY». فاصل آلاف «,» وكسر «.» ثابتان (لا لغة الجهاز —
+ * راجع التعليق عند `money` بالحاسبة).
+ *
+ * لماذا: الحاسبة والدفتر كانا يكتبان كل مبلغ بمنزلتين، فحسابٌ بالين يقرأ «المخاطرة الفعلية
+ * 1,500.00 JPY» و«قيمة النقطة للوت 1,572.40 JPY» — كسورٌ لعملة لا كسور لها، تُقرأ بلمحة كأنها
+ * «1.5 ين» أو تُطيل السطر بلا معنى. والتقريب متماثل بعد تنظيف ضجيج الفاصلة العائمة: `toFixed(2)`
+ * وحده يكتب 1.005 «1.00» (قيمتها الثنائية 1.00499…).
+ */
+export function formatMoney(v: number, ccy: string): string {
+  if (!Number.isFinite(v)) return '—';
+  const d = moneyDecimals(ccy);
+  const scale = 10 ** d;
+  const r = Math.round(Math.round(Math.abs(v) * scale * 1e6) / 1e6) / scale;
+  const text = r.toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${v < 0 && r > 0 ? '−' : ''}${text} ${ccy}`;
+}

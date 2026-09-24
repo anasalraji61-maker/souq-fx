@@ -18,6 +18,7 @@ import {
   slPipsFromPrices,
   riskForLots,
   formatRiskPct,
+  formatMoney,
   LOT_STEP,
 } from '../positionSize';
 import { parseDecimal } from '../parseDecimal';
@@ -353,7 +354,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         tp: tPx,
         size: lots,
         // ملاحظة محايدة اللغة: الأرقام هي المقصودة، وتظهر كما هي بسطر الصفقة بالدفتر
-        note: `${lots.toFixed(2)} lot · risk ${result ? result.actualRisk.toFixed(2) : ''} ${account} · R:R ${formatRR(plan.rr)}`,
+        note: `${lots.toFixed(2)} lot · risk ${result ? formatMoney(result.actualRisk, account) : account} · R:R ${formatRR(plan.rr)}`,
       });
       if (!mountedRef.current) return;
       setLogMsg({ ok: true, text: t.riskCalcLoggedToJournal });
@@ -405,7 +406,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * التجميع بفاصلة والكسر بنقطة، ثابتاً: هذا ما كان يراه مستخدم الإنجليزية أصلاً، فلا تغيير له.
    */
   const group = (s: string) => s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  const money = (v: number) => `${group(v.toFixed(2))} ${account}`;
+  /** الين بلا كسور، والبقية منزلتان — راجع `formatMoney` */
+  const money = (v: number) => formatMoney(v, account);
   const pipLabel = spec ? String(spec.pipSize) : '';
   /**
    * سقف الـ100 كان يُسكِت التحذير **عند الطرف الأخطر بالضبط**: من يكتب «20» فيصير الرقم «200»

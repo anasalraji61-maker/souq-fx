@@ -19,6 +19,8 @@ import {
   riskForLots,
   riskInQuoteCcy,
   formatRiskPct,
+  formatMoney,
+  moneyDecimals,
   LOT_STEP,
   type InstrumentSpec,
 } from './positionSize';
@@ -470,3 +472,41 @@ console.log('positionSize riskInQuoteCcy selftest OK');
 }
 
 console.log('positionSize broker-suffix selftest OK');
+
+// formatMoney — الين بلا كسور، والبقية منزلتان، وتقريب متماثل منظَّف من ضجيج الفاصلة العائمة
+{
+  assert.equal(moneyDecimals('JPY'), 0);
+  assert.equal(moneyDecimals('jpy'), 0);
+  for (const c of ACCOUNT_CCYS.filter((c) => c !== 'JPY')) assert.equal(moneyDecimals(c), 2, c);
+  assert.equal(formatMoney(1500, 'JPY'), '1,500 JPY');
+  assert.equal(formatMoney(1572.4, 'JPY'), '1,572 JPY');
+  assert.equal(formatMoney(1572.5, 'JPY'), '1,573 JPY');
+  assert.equal(formatMoney(15.7, 'JPY'), '16 JPY');
+  assert.equal(formatMoney(1234.5, 'USD'), '1,234.50 USD');
+  assert.equal(formatMoney(1000000, 'EUR'), '1,000,000.00 EUR');
+  assert.equal(formatMoney(0, 'USD'), '0.00 USD');
+  assert.equal(formatMoney(1.005, 'USD'), '1.01 USD'); // toFixed(2) وحده: «1.00»
+  assert.equal(formatMoney(0.125, 'GBP'), '0.13 GBP');
+  assert.equal(formatMoney(-0.125, 'GBP'), '−0.13 GBP');
+  assert.equal(formatMoney(-0.001, 'USD'), '0.00 USD'); // لا «−0.00»
+  assert.equal(formatMoney(NaN, 'USD'), '—');
+  assert.equal(formatMoney(Infinity, 'USD'), '—');
+
+  // سيناريو الحاسبة بحساب بالين: EURUSD، USDJPY = 157.24، رصيد 1,000,000 ين، 1%، وقف 25 pip
+  const spec = instrumentSpec('EURUSD')!;
+  const conv = conversionPair(spec.quote, 'JPY')!;
+  const pv = pipValuePerLot(spec, quoteToAccountRate(conv, 157.24)!);
+  assert.equal(formatMoney(pv, 'JPY'), '1,572 JPY');
+  const r = positionSize({ balance: 1_000_000, riskPct: 1, slPips: 25, pipValuePerLot: pv, contractSize: spec.contractSize })!;
+  assert.equal(r.lots, 0.25); // 10,000 ÷ (25 × 1,572.4) = 0.254 ⇒ 0.25
+  assert.equal(formatMoney(r.actualRisk, 'JPY'), '9,828 JPY'); // 9,827.5 — لا «9,827.50 JPY»
+  assert.equal(formatMoney(r.pipValue, 'JPY'), '393 JPY'); // 0.25 × 1,572.4 = 393.1
+  assert.ok(r.actualRisk <= 10_000);
+  // ومبلغ الدفتر بعملة التسعير (USDJPY ⇒ ين): 20 pip × 0.5 لوت = 10,000 ين
+  const q = riskInQuoteCcy({ symbol: 'USDJPY', entry: 157.4, sl: 157.2, lots: 0.5 })!;
+  assert.equal(formatMoney(q.amount, q.ccy), '10,000 JPY');
+  const g = riskInQuoteCcy({ symbol: 'XAUUSD', entry: 2350.5, sl: 2340.5, lots: 0.25 })!;
+  assert.equal(formatMoney(g.amount, g.ccy), '250.00 USD');
+}
+
+console.log('positionSize formatMoney selftest OK');
