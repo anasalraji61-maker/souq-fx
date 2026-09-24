@@ -714,6 +714,23 @@ export function rewardBelowRisk(
 }
 
 /**
+ * **أيّ** تحذير «الربح أقل من المخاطرة» يُقال: `gross` = الإجمالية نفسها تحت 1:1 (`planLowRR` — «الربح
+ * المحتمل أقل من المخاطرة» يصف السطر الذي فوقه حرفياً)، `net` = الإجمالية ≥ 1:1 والتكاليف وحدها تُنزلها
+ * تحتها (`riskCalcLowNetRR` — «بعد التكاليف…»)، `null` = لا تحذير (القرار نفسه: `rewardBelowRisk`).
+ *
+ * لماذا: حين تُقرأ الصافية كان التحذير الوحيد «الربح المحتمل أقل من المخاطرة» يقع تحت سطرٍ يقول
+ * «R:R 1:1.1» — رقمٌ يقول ربحاً أكبر وتحذيرٌ يقول العكس، فيبدو أحدهما خطأً ويُتجاهل التحذير. السبب هو
+ * التكاليف، والجملة الآن تسمّيه.
+ */
+export function lowRewardWarning(
+  grossRR: number | null,
+  net: { net: number; rr: number | null } | null,
+): 'gross' | 'net' | null {
+  if (!rewardBelowRisk(grossRR, net)) return null;
+  return grossRR != null && Number.isFinite(grossRR) && grossRR < 1 ? 'gross' : 'net';
+}
+
+/**
  * خانة العمولة (لكل لوت، فتحاً وإغلاقاً، بعملة الحساب): فارغة = 0 (حسابات Standard بلا عمولة)، وإلا
  * مبلغ ≥ 0 بقاعدة الرصيد (`amount`: «7.000» مبهمة تُرفض بدل أن تُقرأ 7). `null` = غير مفهوم أو سالب.
  */

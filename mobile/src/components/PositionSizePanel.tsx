@@ -32,7 +32,7 @@ import {
   spreadRisk,
   costsLotsAdvice,
   profitAfterCosts,
-  rewardBelowRisk,
+  lowRewardWarning,
   spreadTooWide,
   planJournalNote,
   LOT_STEP,
@@ -502,6 +502,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         })
       : null;
 
+  const lowWarn = plan?.ok ? lowRewardWarning(plan.rr, netAfterCosts) : null;
+
   /**
    * **لا تسجيل بوقفين مختلفين.** مع `slMismatch` يُحسب اللوت من النقاط المكتوبة يدوياً بينما يُحفظ
    * بالدفتر سعر الوقف — فإن كانت النقاط أضيق من مسافة السعرين (15 مكتوبة، 25 بين السعرين) سُجِّلت صفقةٌ
@@ -900,8 +902,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
                   : t.riskCalcNetNegative.replace('{profit}', money(netAfterCosts.net))}
               </Text>
             ) : null}
-            {rewardBelowRisk(plan.rr, netAfterCosts) ? (
-              <Text style={[styles.warn, { textAlign: align }]}>{t.planLowRR}</Text>
+            {/* الإجمالية ≥ 1:1 والتكاليف وحدها تُنزلها: الجملة تسمّي التكاليف، لا «الربح أقل» تحت «1:1.1» — راجع `lowRewardWarning` */}
+            {lowWarn ? (
+              <Text style={[styles.warn, { textAlign: align }]}>{lowWarn === 'net' ? t.riskCalcLowNetRR : t.planLowRR}</Text>
             ) : null}
           </>
         ) : null}

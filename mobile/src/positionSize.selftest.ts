@@ -43,6 +43,7 @@ import {
   costsLotsAdvice,
   profitAfterCosts,
   rewardBelowRisk,
+  lowRewardWarning,
 } from './positionSize';
 import { formatRR } from './tradePlan';
 
@@ -1191,6 +1192,41 @@ console.log('positionSize profitAfterCosts selftest OK');
   }
 }
 console.log('positionSize rewardBelowRisk selftest OK');
+
+// ---- lowRewardWarning: التحذير يسمّي التكاليف حين تكون هي وحدها السبب ----
+{
+  const spec = instrumentSpec('EURUSD')!;
+  const pv = pipValuePerLot(spec, 1);
+  // مثال rewardBelowRisk أعلاه: الإجمالي 1:1.05 (يُطبع «1:1.1» فوق التحذير)، الصافي 1:0.8 ⇒ «بعد التكاليف»
+  const gross = profitAtTarget({ spec, entry: 1.085, target: 1.0871, lots: 0.5, quoteToAccount: 1 })!;
+  const w = spreadRisk({ lots: 0.5, slPips: 20, spreadPips: 1.5, pipValuePerLot: pv, balance: 10_000, riskPct: 1, contractSize: spec.contractSize, commissionPerLot: 7 })!;
+  const n = profitAfterCosts({ grossProfit: gross, lots: 0.5, spreadPips: 1.5, pipValuePerLot: pv, commissionPerLot: 7, riskWithCosts: w.risk })!;
+  assert.equal(formatRR(1.05), '1:1.1');
+  assert.equal(lowRewardWarning(1.05, n), 'net');
+  // الإجمالي نفسه دون 1:1 — الجملة العامة تصف السطر فوقها، بتكاليف أو بدونها
+  assert.equal(lowRewardWarning(0.9, null), 'gross');
+  assert.equal(lowRewardWarning(0.9, { net: 70, rr: 0.6 }), 'gross');
+  assert.equal(lowRewardWarning(0, null), 'gross');
+  // بالضبط 1:1 إجمالياً والصافي أقل ⇒ السبب التكاليف
+  assert.equal(lowRewardWarning(1, { net: 90, rr: 0.8 }), 'net');
+  // لا تحذير: كما `rewardBelowRisk`
+  assert.equal(lowRewardWarning(1, null), null);
+  assert.equal(lowRewardWarning(2, { net: 189, rr: 189 / 111 }), null);
+  assert.equal(lowRewardWarning(0.5, { net: -7, rr: null }), null);
+  assert.equal(lowRewardWarning(null, null), null);
+  assert.equal(lowRewardWarning(NaN, null), null);
+  // اتّساق كامل مع القرار: يحذّر ⇔ `rewardBelowRisk`، و`net` فقط حين الإجمالي ≥ 1
+  for (const g of [0.3, 0.9, 0.999, 1, 1.04, 1.2, 2]) {
+    for (const nr of [null, 0.4, 0.95, 1, 1.5]) {
+      const netObj = nr == null ? null : { net: 50, rr: nr };
+      const k = lowRewardWarning(g, netObj);
+      assert.equal(k != null, rewardBelowRisk(g, netObj));
+      if (k === 'net') assert.ok(g >= 1);
+      if (k === 'gross') assert.ok(g < 1);
+    }
+  }
+}
+console.log('positionSize lowRewardWarning selftest OK');
 
 // ---- planJournalNote: R:R الصافية بملاحظة الصفقة ----
 {
