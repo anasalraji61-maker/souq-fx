@@ -1137,16 +1137,23 @@ export function planJournalNote(input: {
    * يراجع المتداول صفقته بـ1:2 خطّط لها وهي 1:1.7. يُكتب حين يُعطى نصّاً غير فارغ فقط.
    */
   netRR?: string | null;
+  /**
+   * كلمات الملاحظة بلغة الواجهة (`planRiskWord`، `termSpreadWord`…) — كانت إنجليزية دائماً («risk · spread · commission»)
+   * فيقرأ المتداول العربي/الكردي دفتره بلغتين. فارغة/غائبة ⇒ الإنجليزية كما كانت. «lot» و«R:R» و«pip» تبقى كما هي:
+   * «1.00 lot» أول الملاحظة علامةٌ يقرؤها الدفتر (`knownLots`) ليعرف أن الحجم 1 كُتب لا افتُرض.
+   */
+  words?: { risk?: string | null; spread?: string | null; commission?: string | null; netRR?: string | null };
 }): string {
-  const { lots, risk, ccy, rr, spreadPips, commissionPerLot, netRR } = input;
+  const { lots, risk, ccy, rr, spreadPips, commissionPerLot, netRR, words } = input;
+  const w = (v: string | null | undefined, en: string) => (v && v.trim() ? v.trim() : en);
   const riskText = risk != null && Number.isFinite(risk) ? formatMoney(risk, ccy) : ccy;
-  const parts = [`${lots.toFixed(2)} lot`, `risk ${riskText}`, `R:R ${rr}`];
+  const parts = [`${lots.toFixed(2)} lot`, `${w(words?.risk, 'risk')} ${riskText}`, `R:R ${rr}`];
   if (spreadPips != null && Number.isFinite(spreadPips) && spreadPips > 0) {
-    parts.push(`spread ${Number(spreadPips.toFixed(2))} pip`);
+    parts.push(`${w(words?.spread, 'spread')} ${Number(spreadPips.toFixed(2))} pip`);
   }
   if (commissionPerLot != null && Number.isFinite(commissionPerLot) && commissionPerLot > 0) {
-    parts.push(`commission ${formatMoney(commissionPerLot, ccy)}/lot`);
+    parts.push(`${w(words?.commission, 'commission')} ${formatMoney(commissionPerLot, ccy)}/lot`);
   }
-  if (netRR) parts.push(`net R:R ${netRR}`);
+  if (netRR) parts.push(`${w(words?.netRR, 'net R:R')} ${netRR}`);
   return parts.join(' · ');
 }

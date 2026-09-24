@@ -978,6 +978,22 @@ console.log('positionSize spreadTooWide selftest OK');
     '0.50 lot · risk 100.00 USD · R:R 1:2 · spread 1.5 pip'
   );
 }
+// كلمات الملاحظة بلغة الواجهة؛ «lot»/«R:R»/«pip» ثابتة، وفارغة/مسافات ⇒ الإنجليزية
+{
+  const ar = { risk: 'المخاطرة', spread: 'سبريد' };
+  assert.equal(
+    planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2', spreadPips: 1.5, commissionPerLot: 7, netRR: '1:1.7', words: ar }),
+    '0.50 lot · المخاطرة 100.00 USD · R:R 1:2 · سبريد 1.5 pip · commission 7.00 USD/lot · net R:R 1:1.7'
+  );
+  assert.equal(
+    planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2', commissionPerLot: 7, netRR: '1:1.7', words: { risk: 'مەترسی', commission: 'کۆمیسیۆن', netRR: 'R:R ی خاوێن' } }),
+    '0.50 lot · مەترسی 100.00 USD · R:R 1:2 · کۆمیسیۆن 7.00 USD/lot · R:R ی خاوێن 1:1.7'
+  );
+  for (const words of [{}, { risk: '', spread: '  ' }, { risk: null }, undefined])
+    assert.equal(planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2', spreadPips: 1.5, words }), '0.50 lot · risk 100.00 USD · R:R 1:2 · spread 1.5 pip');
+  // «1.00 lot» أول الملاحظة بكل لغة — علامة `knownLots` بالدفتر
+  assert.ok(planJournalNote({ lots: 1, risk: 100, ccy: 'USD', rr: '1:2', words: ar }).startsWith('1.00 lot · '));
+}
 console.log('positionSize planJournalNote selftest OK');
 
 // العمولة — لكل لوت فتحاً وإغلاقاً بعملة الحساب، تُضاف × اللوت إلى المخاطرة وتُصغّر `lotsWithin`

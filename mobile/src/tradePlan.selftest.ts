@@ -1757,3 +1757,11 @@ console.log('tradePlan journalPnl cent/micro money selftest OK');
   assert.equal(formatJournalMoney({ amount: 0, ccy: 'USC' }, tpl, true), '0.00 USC (≈ 0.00 USD)');
 }
 console.log('tradePlan formatJournalMoney selftest OK');
+
+// knownLots يقرأ «1.00 lot» من ملاحظة الحاسبة بكلمات عربية/كردية
+{
+  const note = planJournalNote({ lots: 1, risk: 100, ccy: 'USD', rr: '1:2', spreadPips: 1.5, words: { risk: 'المخاطرة', spread: 'سبريد' } });
+  assert.equal(knownLots(1, note), 1);
+  assert.equal(knownLots(1, planJournalNote({ lots: 1, risk: null, ccy: 'USD', rr: '1:2', words: { risk: 'مەترسی' } })), 1);
+}
+console.log('tradePlan knownLots localized plan note selftest OK');

@@ -852,9 +852,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         sl: sPx,
         tp: tPx,
         size: lots,
-        // ملاحظة محايدة اللغة: الأرقام هي المقصودة، وتظهر كما هي بسطر الصفقة بالدفتر
+        // الأرقام هي المقصودة، والكلمات بلغة الواجهة حيث يوجد مفتاح (المخاطرة/السبريد) — «lot» علامةٌ يقرؤها الدفتر.
         // والسبريد إن كُتب — ليجده المتداول حين يراجع لماذا خسر أكثر من نقاط وقفه
         note: planJournalNote({
+          words: { risk: t.planRiskWord, spread: t.termSpreadWord },
           lots,
           risk: result ? result.actualRisk : null,
           ccy: moneyCcy,
