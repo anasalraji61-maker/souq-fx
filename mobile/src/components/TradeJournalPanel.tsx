@@ -66,6 +66,7 @@ import {
   noteWithTypedSize,
   noteWithInitialStop,
   trailedStopAllowed,
+  initialStop,
   planStop,
   QUICK_SYMBOLS,
 } from '../tradePlan';
@@ -125,6 +126,9 @@ type Props = {
 
 /** لقطة اقتباس أداة صفقة مفتوحة — Bid/Ask قد يغيبان (يُستعمل السعر المفرد حينها). */
 type QuoteSnap = { price: number; bid?: number | null; ask?: number | null };
+
+/** سقف قائمة الدفتر بالخادم (`db.list_trades` `LIMIT 200`). */
+const JOURNAL_LIST_LIMIT = 200;
 
 export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props = {}) {
   const { t, rtl } = useI18n();
@@ -407,6 +411,20 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     if (issue !== 'slWrongSide' || !trailedStopAllowed({ symbol: sym, side, entry: e, note: n })) return issue;
     return levelSideIssue({ side, entry: e, tp: p });
   };
+
+  /**
+   * الوقف الأصلي «1R @ …» الذي سيُحفظ مع الملاحظة (موجوداً أو يُلحق الآن بشدّ الوقف) — لسطر `journalInitialStopNote`
+   * تحت خانة الملاحظة: العلامة بلا شرح تُقرأ نصّاً غريباً فتُحذف ويعود الـR المتضخّم.
+   */
+  const noteStop = useMemo(() => {
+    const e = pnum(entry);
+    if (e == null) return null;
+    const n = editing
+      ? noteWithInitialStop({ symbol: symbol.trim(), note, before: editing, after: { side, entry: e, sl: pnum(sl) } })
+      : note;
+    return initialStop({ symbol: symbol.trim(), side, entry: e, note: n });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol, side, entry, sl, note, editing]);
 
   // معاينة حيّة أثناء الكتابة: خطأ جهة فوراً (حتى بوقف وحده)، والملخّص حين تكتمل الأرقام الثلاثة.
   const draft = useMemo(() => {
@@ -1649,6 +1667,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         selectionColor={colors.accent}
         accessibilityLabel={t.journalNoteA11y}
       />
+      {noteStop != null ? (
+        <Text style={[styles.planLine, { textAlign: align }]}>
+          {t.journalInitialStopNote.replace('{stop}', String(noteStop))}
+        </Text>
+      ) : null}
       <Pressable
         accessibilityRole="button"
         style={({ pressed }) => [
@@ -1673,6 +1696,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       {!loading && trades.length === 0 ? (
         <Text style={[styles.empty, { textAlign: align }]}>
           {listError ? t.journalLoadError : t.journalEmpty}
+        </Text>
+      ) : null}
+      {!loading && trades.length >= JOURNAL_LIST_LIMIT ? (
+        // الخادم يُرجع أحدث 200 فقط (`db.list_trades` LIMIT 200) والإحصاءات منها — الأقدم، ولو مفتوحة، لا تصل
+        <Text style={[styles.planWarn, { textAlign: align }]}>
+          {t.journalCappedNote.replace('{n}', String(JOURNAL_LIST_LIMIT))}
         </Text>
       ) : null}
       {/**
