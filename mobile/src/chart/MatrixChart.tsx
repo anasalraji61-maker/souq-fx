@@ -2994,6 +2994,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const index = hitIndex(x);
     const candle = source.plot[index];
     if (!candle) return;
+    webKeyChart = keyToken.current;
     setMeasureDone(null);
     placeCross(x, y);
     if (!interactive) return;
@@ -3038,6 +3039,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         onMoveShouldSetPanResponder: () => interactive && tool !== 'none' && tool !== 'select',
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: (evt) => {
+          webKeyChart = keyToken.current;
           const { locationX, locationY } = evt.nativeEvent;
           const p = pointFromXY(locationX, locationY);
           if (tool === 'hline' || tool === 'vline' || tool === 'note') return;
@@ -3095,6 +3097,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       onMoveShouldSetPanResponder: () => interactive && tool === 'select' && !!selectedId,
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (evt) => {
+        webKeyChart = keyToken.current;
         selDragEnd.current = null;
         selDragAt.current = null;
         selDragRr.current = null;
@@ -3184,6 +3187,44 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     xOf,
     yOf,
   ]);
+
+  // لوحة المفاتيح للرسم على الويب (كما بـTradingView): Delete/Backspace تحذف الرسم المحدَّد، وEsc
+  // تلغي رسماً بدأ (النقطة الأولى) ثم التحديد ثم الأداة، وCtrl/⌘+Z تتراجع. للشارت الذي لُمس
+  // أخيراً وحده (`webKeyChart`)، ولا تسرق المفاتيح من خانة كتابة (Backspace بخانة الملاحظة).
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !interactive) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (webKeyChart !== keyToken.current) return;
+      const target = event.target as { tagName?: string; isContentEditable?: boolean } | null;
+      if (target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '')) return;
+      const key = event.key;
+      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && key.toLowerCase() === 'z') {
+        if (!drawHistory.current.length) return;
+        event.preventDefault();
+        undoDrawing();
+        return;
+      }
+      if (key === 'Escape') {
+        if (pending) {
+          setPending(null);
+          setDragEnd(null);
+        } else if (selectedId) {
+          setSelectedId(null);
+        } else if (tool !== 'none') {
+          setTool('none');
+        }
+        return;
+      }
+      if ((key === 'Delete' || key === 'Backspace') && selectedId) {
+        event.preventDefault();
+        pushDrawHistory();
+        setDrawings((list) => list.filter((x) => x.id !== selectedId));
+        setSelectedId(null);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [interactive, pending, selectedId, tool, undoDrawing, pushDrawHistory]);
 
   const applyChartDrag = useCallback(
     (dx: number, dy: number) => {
