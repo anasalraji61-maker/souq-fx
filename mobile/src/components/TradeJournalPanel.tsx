@@ -26,6 +26,7 @@ import {
   journalSymbol,
   quoteSymbol,
   levelSideIssue,
+  netByInstrument,
   realizedMove,
   realizedR,
   roundR,
@@ -393,36 +394,35 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
      * EURUSD −50 كانتا تُقرآن «صفر» بينما هما بالمال شيئان مختلفان تماماً — وهذا سطرٌ يقيس به
      * متداول التجزئة أداءه. متوسط الـR بجانبه سليم كما هو: نسبة بلا وحدة تقارن الأدوات بحق.
      */
-    const byPips = new Map<string, { pips: number; n: number }>();
+    const ranked = netByInstrument(visibleTrades);
     let rSum = 0;
     let rN = 0;
     for (const tr of visibleTrades) {
       if (tr.status !== 'closed') continue;
       const side = tr.side === 'sell' ? 'sell' : 'buy';
-      const mv = realizedMove({ symbol: tr.symbol, side, entry: tr.entry, exit: tr.exit });
-      if (mv?.pips != null) {
-        const key = (tr.symbol || '').trim().toUpperCase() || '—';
-        const cur = byPips.get(key) ?? { pips: 0, n: 0 };
-        cur.pips += mv.pips;
-        cur.n += 1;
-        byPips.set(key, cur);
-      }
       const r = realizedR({ side, entry: tr.entry, sl: tr.sl, exit: tr.exit });
       if (r != null) {
         rSum += r;
         rN += 1;
       }
     }
-    /** الأكثر تداولاً أولاً — ثلاث أدوات بالسطر وما بعدها «+N» كي لا يطول سطر الإحصاءات. */
-    const ranked = [...byPips.entries()].sort((a, b) => b[1].n - a[1].n || a[0].localeCompare(b[0]));
+    /**
+     * ثلاث أدوات بالسطر وما بعدها «+N» كي لا يطول سطر الإحصاءات (الترتيب من `netByInstrument`). المال
+     * بعملة تسعير الأداة بجانب نقاطها حين يُعرف حجم كل صفقاتها — «EURUSD +25 (+125.00 USD)».
+     */
     const shown = ranked.slice(0, 3);
     const rest = ranked.length - shown.length;
-    const parts = shown.map(
-      ([sym, v]) => `${sym} ${formatSignedPips(Math.round(v.pips * 10) / 10)}`
-    );
+    const cashOf = (c: { amount: number; ccy: string } | null) =>
+      c ? `${c.amount > 0 ? '+' : ''}${formatMoney(c.amount, c.ccy)}` : null;
+    const parts = shown.map((v) => {
+      const cash = cashOf(v.cash);
+      return `${v.symbol} ${formatSignedPips(v.pips)}${cash ? ` (${cash})` : ''}`;
+    });
     return {
       /** أداة واحدة → السطر كما كان بالضبط؛ أكثر من أداة → مفصَّل لكل أداة. */
-      pips: ranked.length === 1 ? formatSignedPips(Math.round(ranked[0]![1].pips * 10) / 10) : null,
+      pips: ranked.length === 1 ? formatSignedPips(ranked[0]!.pips) : null,
+      /** صافي المال للأداة الواحدة — يُلحق بسطر النقاط نفسه */
+      cash: ranked.length === 1 ? cashOf(ranked[0]!.cash) : null,
       pipsBySymbol: ranked.length > 1 ? parts.join(' · ') + (rest > 0 ? ` +${rest}` : '') : null,
       avgR: rN ? formatR(roundR(rSum / rN)) : null,
       rN,
@@ -930,6 +930,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           {extraStats.pips != null ? (
             <Text style={[styles.stat, { textAlign: align }]}>
               {t.journalStatNetPips.replace('{pips}', extraStats.pips)}
+              {extraStats.cash ? ` · ${extraStats.cash}` : ''}
             </Text>
           ) : null}
           {extraStats.pipsBySymbol != null ? (

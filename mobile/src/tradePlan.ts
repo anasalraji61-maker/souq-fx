@@ -7,7 +7,7 @@
  * - R:R = المكسب المحتمل ÷ المخاطرة.
  * - وقف أقرب من 1 pip للدخول (أضيق من أي سبريد تجزئة) خطأ كتابة شبه مؤكد: كان يُعرض «0 pip · R:R 1:5000».
  */
-import { instrumentSpec } from './positionSize';
+import { instrumentSpec, pnlInQuoteCcy } from './positionSize';
 
 export type TradeSide = 'buy' | 'sell';
 
@@ -285,4 +285,60 @@ export function journalSymbol(raw: string): string | null {
  */
 export function quoteSymbol(raw: string): string | null {
   return instrumentSpec(raw)?.symbol ?? journalSymbol(raw);
+}
+
+/**
+ * صافي الصفقات المغلقة **لكل أداة**: النقاط، وعددها، والمال بعملة التسعير — لسطر «صافي النقاط» بالدفتر.
+ *
+ * النقاط تُجمع لكل أداة على حدة (pip الذهب ليس pip اليورو)، وكانت تُجمع داخل اللوحة بلا اختبار. والمال
+ * كان غائباً: سطر الإحصاءات يقول «EURUSD +25» ويسكت عن «+125.00 USD» بينما كل صفّ بالقائمة يقوله
+ * (`pnlInQuoteCcy`). بعملة التسعير لأنها واحدة للأداة الواحدة دائماً (EURUSD بالدولار، USDJPY بالين) فتُجمع
+ * بلا سعر تحويل، ولا تُجمع أداتان بعملتين مختلفتين أبداً.
+ *
+ * **المال كلّه أو لا شيء**: إن كانت بين صفقات الأداة صفقةٌ بلا حجم معروف (الحجم 1 قيمة الخادم الافتراضية —
+ * نفس قاعدة سطر الصفقة) فالمال `null` للأداة كلها — مجموعٌ جزئي يُقرأ كأنه الصافي كله فيضلّل أكثر من غيابه.
+ * المفتوحة والمغلقة بلا خروج صالح لا تُحسب؛ ورمزٌ بلا مواصفات (US30…) بلا نقاط فلا يدخل.
+ *
+ * المفتاح الرمز كما يُحفظ (كشرائح الفلتر نفسها)، والترتيب: الأكثر صفقاتٍ أولاً ثم أبجدياً. المجاميع مقرَّبة
+ * متماثلاً حول الصفر (النقاط لعُشر، والمال لسنت) بلا «−0».
+ */
+export function netByInstrument(
+  trades: readonly {
+    symbol: string;
+    side: string;
+    entry: number;
+    exit?: number | null;
+    size?: number | null;
+    status: string;
+  }[]
+): { symbol: string; n: number; pips: number; cash: { amount: number; ccy: string } | null }[] {
+  const acc = new Map<string, { n: number; pips: number; cash: number; ccy: string | null; cashOk: boolean }>();
+  for (const tr of trades) {
+    if (tr.status !== 'closed') continue;
+    const side: TradeSide = tr.side === 'sell' ? 'sell' : 'buy';
+    const mv = realizedMove({ symbol: tr.symbol, side, entry: tr.entry, exit: tr.exit });
+    if (mv?.pips == null) continue;
+    const key = (tr.symbol || '').trim().toUpperCase() || '—';
+    const cur = acc.get(key) ?? { n: 0, pips: 0, cash: 0, ccy: null, cashOk: true };
+    cur.n += 1;
+    cur.pips += mv.pips;
+    const lots = tr.size;
+    const cash =
+      typeof lots === 'number' && Number.isFinite(lots) && lots > 0 && lots !== 1 && tr.exit != null
+        ? pnlInQuoteCcy({ symbol: tr.symbol, side, entry: tr.entry, exit: tr.exit, lots })
+        : null;
+    if (cash && (cur.ccy == null || cur.ccy === cash.ccy)) {
+      cur.cash += cash.amount;
+      cur.ccy = cash.ccy;
+    } else cur.cashOk = false;
+    acc.set(key, cur);
+  }
+  return [...acc.entries()]
+    .sort((a, b) => b[1].n - a[1].n || a[0].localeCompare(b[0]))
+    .map(([symbol, v]) => ({
+      symbol,
+      n: v.n,
+      pips: roundAway(v.pips, 1),
+      cash: v.cashOk && v.ccy ? { amount: roundAway(v.cash, 2), ccy: v.ccy } : null,
+    }));
 }

@@ -12,6 +12,7 @@ import {
   journalSymbol,
   quoteSymbol,
   levelSideIssue,
+  netByInstrument,
   realizedMove,
   realizedR,
   roundR,
@@ -427,3 +428,47 @@ console.log('tradePlan quoteSymbol selftest OK');
 
 console.log('tradePlan journalSymbol suffix selftest OK');
 
+
+// —— netByInstrument: صافي النقاط والمال لكل أداة بإحصاءات الدفتر ——
+{
+  const c = (symbol: string, side: string, entry: number, exit: number | null, size = 0.5, status = 'closed') => ({
+    symbol, side, entry, exit, size, status,
+  });
+  const rows = netByInstrument([
+    c('EURUSD', 'buy', 1.085, 1.0875), // +25 pip · +125.00
+    c('EURUSD', 'sell', 1.09, 1.091), // −10 pip · −50.00
+    c('XAUUSD', 'buy', 2400, 2405, 0.1), // +50 pip · +50.00
+    c('USDJPY', 'buy', 150, 149.5, 1.2), // −50 pip · −60,000 JPY
+    c('EURUSD', 'buy', 1.08, null, 0.5, 'open'), // مفتوحة — لا تُحسب
+    c('US30', 'buy', 39000, 39100), // بلا مواصفات — بلا نقاط فلا تدخل
+  ]);
+  assert.deepEqual(rows, [
+    { symbol: 'EURUSD', n: 2, pips: 15, cash: { amount: 75, ccy: 'USD' } },
+    { symbol: 'USDJPY', n: 1, pips: -50, cash: { amount: -60000, ccy: 'JPY' } },
+    { symbol: 'XAUUSD', n: 1, pips: 50, cash: { amount: 50, ccy: 'USD' } },
+  ]);
+  // المال كلّه أو لا شيء: صفقة بحجم 1 (قيمة الخادم الافتراضية) تُسقط مال الأداة كلها لا جزءاً منه
+  const partial = netByInstrument([c('GBPUSD', 'buy', 1.27, 1.272, 0.3), c('GBPUSD', 'buy', 1.27, 1.271, 1)]);
+  assert.deepEqual(partial, [{ symbol: 'GBPUSD', n: 2, pips: 30, cash: null }]);
+  // جمعٌ بلا ضجيج فاصلة عائمة، ومتماثل حول الصفر، وبلا «−0»
+  const noise = netByInstrument([
+    c('EURUSD', 'buy', 1.1, 1.10001, 0.1), // +0.1 pip · +0.10
+    c('EURUSD', 'buy', 1.1, 1.10002, 0.1), // +0.2 pip · +0.20
+    c('EURUSD', 'sell', 1.1, 1.10003, 0.1), // −0.3 pip · −0.30
+  ]);
+  assert.equal(noise[0]!.pips, 0);
+  assert.ok(Object.is(noise[0]!.pips, 0), 'no −0 pips');
+  assert.ok(noise[0]!.cash && Object.is(noise[0]!.cash.amount, 0), 'no −0 cash');
+  const three = netByInstrument([c('EURUSD', 'buy', 1.1, 1.10001, 0.1), c('EURUSD', 'buy', 1.1, 1.10002, 0.1)]);
+  assert.equal(three[0]!.pips, 0.3);
+  assert.equal(three[0]!.cash!.amount, 0.3);
+  // المجموع = مجموع أسطر الصفقات نفسها حرفياً (سطر الإحصاءات لا يناقض القائمة تحته)
+  const trades = [c('EURUSD', 'buy', 1.08512, 1.08777, 0.37), c('EURUSD', 'sell', 1.0901, 1.09233, 0.21)];
+  const sumRows = trades.reduce((a, tr) => a + realizedMove({ ...tr, side: tr.side as 'buy' | 'sell' })!.pips!, 0);
+  assert.equal(netByInstrument(trades)[0]!.pips, Math.round(sumRows * 10) / 10);
+  // الترتيب: الأكثر صفقاتٍ ثم أبجدياً؛ والمفتاح كما يُحفظ (شرائح الفلتر نفسها)
+  const order = netByInstrument([c('GBPUSD', 'buy', 1.27, 1.271), c('AUDUSD', 'buy', 0.66, 0.661), c('xauusd.m', 'buy', 2400, 2401)]);
+  assert.deepEqual(order.map((r) => r.symbol), ['AUDUSD', 'GBPUSD', 'XAUUSD.M']);
+  assert.deepEqual(netByInstrument([]), []);
+}
+console.log('tradePlan netByInstrument selftest OK');
