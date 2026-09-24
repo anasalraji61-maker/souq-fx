@@ -525,6 +525,19 @@ console.log('tradePlan netByInstrument selftest OK');
     ['US30', 'US30'], // بلا مواصفات: الرمز كما يُحفظ
     ['nas100', 'NAS100'],
     ['EURUSDT', 'EURUSDT'], // ليس «EURUSD» بلاحقة — رمز آخر لا يُدمج
+    // مؤشرات/سلع بلاحقة وسيط: شريحة واحدة مع الاسم المجرد
+    ['US30.cash', 'US30'],
+    ['US30Cash', 'US30'],
+    ['us30-ecn', 'US30'],
+    ['NAS100.m', 'NAS100'],
+    ['GER40Cash', 'GER40'],
+    ['GOLD#', 'GOLD'],
+    ['usoil.pro', 'USOIL'],
+    ['US30M', 'US30M'], // حرف ملاصق غير Cash: لا تخمين
+    ['AAPL.US', 'AAPL.US'], // اسم غير معروف: كما يُحفظ
+    ['GER40', 'GER40'], // الأسماء البديلة لا تُدمج
+    ['DE40', 'DE40'],
+    ['CASH', 'CASH'],
     ['', ''],
     ['   ', ''],
   ] as const) {

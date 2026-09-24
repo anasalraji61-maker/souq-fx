@@ -88,6 +88,16 @@ const suffixFree = (raw: string): string =>
     .replace(/[.\-_#+][A-Z0-9]{0,5}$/, '')
     .replace(/(.)CASH$/, '$1');
 
+/**
+ * الاسم المعروف لرمز غير فوركس بلا لاحقة وسيطه («US30.cash»، «US30Cash»، «GOLD#»، «usoil.m» ⇒ US30،
+ * US30، GOLD، USOIL) — أو `null` إن لم يبقَ اسمٌ من `SINGLE_CCY`. لمفتاح الأداة بالدفتر: الإسقاط نفسه
+ * الذي يقرّر تحذير الأخبار، فلا يُدمج اسمٌ مجهول («US30M»، «AAPL.US») على التخمين.
+ */
+export function knownSingleName(raw: string): string | null {
+  const bare = suffixFree(raw).replace(/[\s/]/g, '');
+  return SINGLE_CCY[bare] ? bare : null;
+}
+
 export function symbolCurrencies(symbol: string): string[] {
   /**
    * الرمز القانوني أولاً (`instrumentSpec` يُسقط لاحقة الوسيط): الدفتر يمرّر الرمز كما كتبه المتداول،

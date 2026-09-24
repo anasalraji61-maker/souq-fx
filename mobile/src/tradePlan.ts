@@ -7,6 +7,7 @@
  * - R:R = المكسب المحتمل ÷ المخاطرة.
  * - وقف أقرب من 1 pip للدخول (أضيق من أي سبريد تجزئة) خطأ كتابة شبه مؤكد: كان يُعرض «0 pip · R:R 1:5000».
  */
+import { knownSingleName } from './chart/newsRisk';
 import { instrumentSpec, pnlInQuoteCcy } from './positionSize';
 
 export type TradeSide = 'buy' | 'sell';
@@ -307,11 +308,15 @@ export function quoteSymbol(raw: string): string | null {
  * **أداتين**: شريحتان، وصافيان منفصلان («XAUUSD +40 · XAUUSD.M −55») بدل صافٍ واحد «−15» هو ما يسأل عنه
  * — والفلتر على «XAUUSD» يُخفي نصف صفقات الذهب فتُحسب نسبة نجاحه ومتوسط R من نصفها. النقاط والمال
  * تُحسب أصلاً بمواصفات الرمز القانوني (`instrumentSpec` يُسقط اللاحقة)، فالجمع لا يخلط وحدتين.
+ *
+ * **المؤشرات والسلع بلاحقة وسيط** كذلك: «US30.cash» و«US30Cash» (XM) و«US30» كانت ثلاث شرائح لأداة
+ * واحدة. تُدمج فقط إن بقي بعد اللاحقة اسمٌ معروف (`knownSingleName` — القاعدة نفسها لتحذير الأخبار)؛
+ * «US30M» أو «AAPL.US» تبقى كما كُتبت. الأسماء البديلة (GER40/DE40) لا تُدمج: قد تكون عقدين مختلفين.
  */
 export function journalInstrumentKey(raw: string | null | undefined): string {
   const up = (raw || '').trim().toUpperCase();
   if (!up) return '';
-  return quoteSymbol(up) ?? up;
+  return instrumentSpec(up)?.symbol ?? knownSingleName(up) ?? quoteSymbol(up) ?? up;
 }
 
 /**
