@@ -360,29 +360,30 @@ export function computeTsi(
 }
 
 /**
- * PMO (Price Momentum Oscillator، ديسيجن بوينت/كارل سوينلين) — معدّل تغيّر مُضاعَف التنعيم: خطوة
- * أولى ROC لشمعة واحدة (لا فترة أطول) ×10 يدوياً (roc10[i]=((إغلاق[i]−إغلاق[i-1])/إغلاق[i-1])×1000
- * — الضرب ×100 لتحويل النسبة لنقاط مئوية ثم ×10 إضافية باتفاقية PMO القياسية تُدمَجان بثابت واحد
- * ×1000)، ثم طبقتا EMA متتاليتان (35 ثم 20) — **نفس أسلوب تعويض null بصفر بين الطبقات المستخدَم
- * بـdema()/tema() أعلاه وبـcomputeTsi مباشرة فوق هذه الدالة** (لا خط إشارة منفصل، بنفس تبسيط
- * KST/Coppock/TSI المجاورة بالملف: خط واحد فقط، pane هستوغرام bull/bear حول الصفر). **تحقّق
- * يدوي**: سعر ثابت تماماً بكل الشموع → roc10=0 لكل نقطة (بعد أول شمعة، القسمة على إغلاق سابق ثابت
- * وغير صفري) ⇒ كلا طبقتَي EMA=0 ⇒ PMO=0 بالضبط أينما كانت صالحة.
+ * PMO (Price Momentum Oscillator، DecisionPoint) كنصّ TradingView: ROC شمعة واحدة بالنسبة المئوية، ثم
+ * تنعيمان «مخصّصان» بعامل `2/length` (لا `2/(length+1)` كالـEMA) يبدآن من صفر (`nz(csf[1])`) — 35 ثم
+ * 20 على ×10 — وخطّ إشارة `ema(pmo, 10)`. الشموع الأولى (35+20−2) تُخفى: بدء التنعيم من صفر يجعلها
+ * مُخمَدة، والتاريخ الإضافي قبل النافذة المرئية (`indicatorBase`) يستهلكها عادة. سعر ثابت ⇒ PMO = 0.
  */
 export function computePmo(
   closes: number[],
   rocSmooth = 35,
-  pmoSmooth = 20
-): (number | null)[] {
-  const n = closes.length;
-  const roc10: number[] = new Array(n).fill(0);
-  for (let i = 1; i < n; i++) {
-    const prev = closes[i - 1];
-    roc10[i] = prev !== 0 ? ((closes[i] - prev) / prev) * 1000 : 0;
-  }
-  const smoothed1 = ema(roc10, rocSmooth);
-  const pmo = ema(smoothed1, pmoSmooth);
-  return closes.map((_, i) => (pmo[i] != null ? pmo[i] : null));
+  pmoSmooth = 20,
+  signalLen = 10
+): { pmo: (number | null)[]; signal: (number | null)[] } {
+  const smA = 2 / rocSmooth;
+  const smB = 2 / pmoSmooth;
+  const warm = rocSmooth + pmoSmooth - 2;
+  let csf1 = 0;
+  let csf2 = 0;
+  const pmo: (number | null)[] = closes.map((c, i) => {
+    const prev = i > 0 ? closes[i - 1] : c;
+    const roc = prev !== 0 ? (c / prev) * 100 - 100 : 0;
+    csf1 += (roc - csf1) * smA;
+    csf2 += (10 * csf1 - csf2) * smB;
+    return i < warm ? null : csf2;
+  });
+  return { pmo, signal: ema(pmo, signalLen) };
 }
 
 /**
