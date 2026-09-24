@@ -4362,8 +4362,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     TIME_LABEL_GAP,
     chartPlotW
   );
+  // الفجوة بين العلامات **المرسومة** وحدها: علامة مخفيّة بالتراكب كانت تقرّب جارتَيها فتُطبع الساعة
+  // على محور تفصل علاماته الظاهرة أيام.
   const timeAxisHours = axisShowsHours(
-    timeTickIndexes.map((i) => (source.plot[i] ? barTime(source.plot[i]) : Number.NaN)),
+    timeTickIndexes
+      .filter((_, k) => !timeTickBoxes[k]?.hidden)
+      .map((i) => (source.plot[i] ? barTime(source.plot[i]) : Number.NaN)),
     visibleTimeSpan,
     dayCandles
   );
