@@ -865,7 +865,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [replayPlaying, setReplayPlaying] = useState(false);
   const [logScale, setLogScale] = useState(false);
   const [magnet, setMagnet] = useState(true);
-  const [measureReadout, setMeasureReadout] = useState<string | null>(null);
+  // طرفا آخر قياس لا نصّه: النصّ المجمَّد كان **لا يُمسح أبداً** — بعد قياس واحد يحلّ محلّ
+  // سطر OHLC للتقاطع ويُخفي زرّ 🔔 للأبد، ويبقى pip اليورو مكتوباً فوق شارت الين بعد
+  // التبديل. الآن يُمسح بأول نقرة/قياس جديد وبتبديل الرمز/الفريم، ويُحسب نصّه عند الرسم.
+  const [measureDone, setMeasureDone] = useState<{ a: ChartPoint; b: ChartPoint } | null>(null);
+  useEffect(() => {
+    setMeasureDone(null);
+  }, [series.symbol, series.timeframe]);
   const [drawingsSaveError, setDrawingsSaveError] = useState<DrawingsSaveErrorCode | null>(null);
   const [chartW, setChartW] = useState(320);
   const panStartOffset = useRef(0);
@@ -2277,16 +2283,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         // بالنقاط (pip) بحجم pip الأداة — راجع `measureReadout.ts`. كان الفرق السعري
         // الخام وحده، ومصاغاً بلا رمز (فتُقدَّر منازله من حجم الرقم: خمس منازل لكل فرق
         // دون العشرة مهما كانت الأداة).
-        setMeasureReadout(
-          measureReadoutText({
-            symbol: series.symbol,
-            a,
-            b,
-            stats: measureStats(a, b),
-            barsWord: tr.mcMeasureBarsWord,
-            lang,
-          })
-        );
+        setMeasureDone({ a, b });
         setPending(null);
         setDragEnd(null);
         setTool('none');
@@ -2315,7 +2312,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       setDragEnd(null);
       setTool('none');
     },
-    [tool, accent, tr, lang, pushDrawHistory, series.symbol]
+    [tool, accent, tr, pushDrawHistory]
   );
 
   /**
@@ -2432,6 +2429,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const index = hitIndex(x);
     const candle = source.plot[index];
     if (!candle) return;
+    setMeasureDone(null);
     setCross({ time: candle.time });
     if (!interactive) return;
 
@@ -2477,6 +2475,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           const { locationX, locationY } = evt.nativeEvent;
           const p = pointFromXY(locationX, locationY);
           if (tool === 'hline' || tool === 'vline' || tool === 'note') return;
+          if (tool === 'measure') setMeasureDone(null);
           drawGestureHadPending.current = !!pending;
           drawAnchorRef.current = pending ?? p;
           if (!pending) setPending(p);
@@ -2970,6 +2969,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // candle after zoom buttons / live ticks.
   const crossX = crossIndex != null && crossCandle ? xOf(crossIndex) : 0;
   const crossY = crossCandle ? yOf(crossCandle.close) : 0;
+
+  // القياس الجاري (أثناء السحب) أو آخر قياس مكتمل — نصّ واحد لسطر القراءة ولوسم الشارت.
+  const liveMeasure = tool === 'measure' && pending && dragEnd ? { a: pending, b: dragEnd } : null;
+  const shownMeasure = liveMeasure ?? measureDone;
+  const measureText = (m: { a: ChartPoint; b: ChartPoint }) =>
+    measureReadoutText({
+      symbol: series.symbol,
+      a: m.a,
+      b: m.b,
+      stats: measureStats(m.a, m.b),
+      barsWord: tr.mcMeasureBarsWord,
+      lang,
+    });
+  const measureReadout = measureDone ? measureText(measureDone) : null;
 
   const visibleDrawings = drawings
     .map((d) => {
@@ -5165,6 +5178,53 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   transformOrigin: 'left center',
                 }}
               />
+            );
+          })()
+        ) : null}
+
+        {shownMeasure ? (
+          // القراءة **أثناء** السحب لا بعده: كان الرقم يظهر بسطر القراءة أسفل الشارت بعد رفع
+          // الإصبع فقط — فالمتداول يسحب أعمى ثم يعيد القياس حتى يصيب 30 pip. وبالوضع المدمج
+          // (`dense`، الهاتف) سطر القراءة مخفيّ أصلاً فلا رقم إطلاقاً. الوسم فوق الإصبع بـ44px
+          // (الإصبع يغطّي طرف الخطّ)، ويمتدّ بعيداً عن الحافة الأقرب فلا يُقصّ. وبعد الرفع يبقى
+          // الخطّ ووسمه حتى النقرة التالية (خطّ المعاينة يختفي مع `pending`).
+          (() => {
+            const m = shownMeasure;
+            const x1 = xOf(m.a.index - source.start);
+            const y1 = yOf(m.a.price);
+            const x2 = xOf(m.b.index - source.start);
+            const y2 = yOf(m.b.price);
+            const up = m.b.price >= m.a.price;
+            const edge = up ? colors.bull : colors.bear;
+            const top = Math.max(2, Math.min(chartPlotH - 22, y2 - 44 >= 2 ? y2 - 44 : y2 + 24));
+            const side =
+              x2 < chartPlotW / 2
+                ? { left: Math.max(2, x2 - 12) }
+                : { right: Math.max(2, chartW - x2 - 12) };
+            return (
+              <>
+                {liveMeasure ? null : (
+                  <View
+                    pointerEvents="none"
+                    style={{
+                      position: 'absolute',
+                      left: x1,
+                      top: y1,
+                      width: Math.hypot(x2 - x1, y2 - y1),
+                      height: 2,
+                      backgroundColor: edge,
+                      opacity: 0.7,
+                      transform: [{ rotate: `${(Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI}deg` }],
+                      transformOrigin: 'left center',
+                    }}
+                  />
+                )}
+                <View pointerEvents="none" style={[styles.measureLive, { top, borderColor: edge }, side]}>
+                  <Text style={styles.measureLiveText} numberOfLines={1}>
+                    {measureText(m)}
+                  </Text>
+                </View>
+              </>
             );
           })()
         ) : null}
@@ -9481,6 +9541,21 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 2,
     backgroundColor: '#0B1220',
+  },
+  measureLive: {
+    position: 'absolute',
+    zIndex: 45,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 7,
+    borderWidth: 1,
+    backgroundColor: colors.bgGlass,
+  },
+  measureLiveText: {
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
   },
   pending: {
     position: 'absolute',
