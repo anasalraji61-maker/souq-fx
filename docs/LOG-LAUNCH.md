@@ -1642,3 +1642,32 @@
 ورابط سياسة الخصوصية ⛔ ينتظران أنس.
 
 **يحتاج جهازاً**: البنود 132–137 — خاصةً 133 (إمساك مقبض القناة بإصبع) و135 (أرقام العتبات لم تُرسم قطّ قبل `6fddb99`).
+
+## 2026-09-24 — التشغيلة الحادية والخمسون
+
+بنود `COORDINATION.md` الموجّهة لي أولاً (كلها من QA2). التحقّق: `bash scripts/qa-build-check.sh` **أخضر بصفر أخطاء قبل كل commit**؛ صفر `U+FFFD`
+بـ`locales.ts`؛ النصوص المنقولة مقروءة سطراً سطراً من الملفات الأصلية. **لم يُشغَّل التطبيق.** كل المفاتيح أدناه **جاهزة غير موصولة** — الملفات المستهلكة خارج نطاقي.
+
+1. **`locales.ts`** (`8dfdaff`): `tfLabels` و`tfLabelsA11y` (`Record<Timeframe, string>`) ar/en/ku. العربية = `TIMEFRAME_LABELS` اليوم حرفياً؛
+   الإنجليزية والكردية بالرموز اللاتينية 1m/1H (لا اختصار كردي شائع للدقيقة/الساعة)؛ قارئ الشاشة يسمع كلمات كاملة («4 کاتژمێر»، «4 hours»). **صفّ «كردي يرى أطراً عربية» — منجز من جهتي.**
+2. **`locales.ts`** (`b8ec2f7`): `subPlans` (`SubPlansCopy`) يحلّ محلّ القاموس الداخلي `COPY` بـ`SubscriptionPlansPanel.tsx`. تحسين صياغة:
+   «الجارت» ← «الشارت»، سطر القاعة التفاعلية الكردي («پرسیاری ناوەڕاست» = «سؤال الوسط») أعيدت كتابته، الإنجليزية «remaining features» ← «everything else». **صفّ SubscriptionPlansPanel — منجز.**
+3. **`locales.ts`** (`541dcfb`): 51 مفتاحاً `cpp*` (CommissionPlanPanel)، `ntp*` (NetworkTreePanel)، `tds*` (TreeDiagramSketch)، `accNetLoadError` (`AccountScreen.tsx:248`).
+   الأدوار «مدرب/بروكر/وكيل/شركة» = `t.trainer`… الموجودة، «يسار/يمين» = `t.left`/`t.right`، «تحديث» = `t.refreshBtn` (مكتوب بتعليق الـDict).
+   خطأ الوضع وقارئ الشاشة لخانة الاسم يذكران الآن حدّ الـ3 أحرف الذي يفرضه الزرّ أصلاً (`draft.trim().length < 3`). **صفّ اللوحات الثلاث — منجز.**
+4. **وثائق** (`f1cf972`): صفّ ⛔ العمولات/الشبكة بـ`RELEASE-MOBILE.md` كان يقول «لم أترجمها عمداً» — صار يقول إنها مترجمة غير موصولة، وإنّ الترجمة لا تحلّ السؤال القانوني؛
+   `STORE-LISTING.md` يذكر أين يرى الكردي العربية بعد.
+
+### ردّ على COORDINATION
+- **chart ⇐ launch (`mcDeleteDrawingTitle/Body`)**: محذوفان سلفاً — `grep` بـ`mobile/` لا يجدهما (أُزيلا قبل `3299af2`). الصفّ يُسقَط.
+- الصفوف الثلاثة أعلاه منجزة من جهة المفاتيح؛ **الربط لمالكي الملفات** — انظر الطلبات.
+
+### طلب تنسيق — لوكيل الشارت
+- **جديد**: `TimeframeBar` ← `t.tfLabels[tf]` دائماً (ويُحذف `arabic`)، و`accessibilityLabel` ← `` `${t.termTimeframeA11yPrefix} ${t.tfLabelsA11y[tf]}` ``؛ ثم `TIMEFRAME_LABELS` بـ`timeframes.ts` بلا مستخدم.
+- **قائم**: `chartExtraLabels` ← `mcHideDrawings/mcShowDrawings`، `EXTRA_TOOL_LABELS` ← `ctlToolHray/ctlToolChannel`، حذف `dxyPrice`.
+
+### طلب تنسيق — لمالك AccountScreen/اللوحات (QA يحدّد)
+- `SubscriptionPlansPanel`: `const copy = t.subPlans` وحذف `COPY`/`EN_COPY`/`Copy`. `CommissionPlanPanel`/`NetworkTreePanel`/`TreeDiagramSketch`: `useI18n` والمفاتيح `cpp*`/`ntp*`/`tds*`
+  (`ntpLevelTitle`/`tdsLevel` بـ`{gen}`/`{n}`، `ntpLevelBranches` بـ`{gen}`، `cppBasisNote` بـ`{unit}`). `FALLBACK_COMMISSION` ← `cppType*`/`cppCond*`. `AccountScreen.tsx:248` ← `t.accNetLoadError`.
+
+**خارج نطاقي ويستحقّ عملاً**: قرار أنس بشأن العمولات/الشبكة (⛔) قبل الرفع — الترجمة لا تغيّره؛ `₴`، `backend/openrouter_ai.py`، السبريد المختلَق.
