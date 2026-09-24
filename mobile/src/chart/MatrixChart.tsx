@@ -938,6 +938,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [priceScale, setPriceScale] = useState(1);
   const [pricePan, setPricePan] = useState(0);
   const [xPan, setXPan] = useState(0);
+  // مقياس السعر ليس تلقائياً: مُطّ المحور، أو سُحب الشارت رأسياً أكثر من عُشر المدى — انحراف الإصبع
+  // الرأسي العابر أثناء سحب أفقي لا يُعدّ (وإلا أُبرز AUTO بعد كل سحب تقريباً).
+  const priceManual = Math.abs(Math.log(priceScale)) > 0.01 || Math.abs(pricePan) > 0.1;
   const [replayOn, setReplayOn] = useState(false);
   const [replayStep, setReplayStep] = useState(15);
   const [replayPlaying, setReplayPlaying] = useState(false);
@@ -6674,6 +6677,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             style={({ pressed }) => [
               styles.axisCorner,
               { width: PRICE_AXIS_WIDTH, height: timeAxisH },
+              // مقياس السعر يدوي (مطّ المحور أو سحب رأسي) ⇒ AUTO ممتلئ: السعر لم يعد يلحق الشموع
+              // تلقائياً، وشمعة جديدة خارج المدى قد تختفي — ضغطة تعيده.
+              priceManual && styles.axisCornerManual,
               pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
             ]}
             onPress={() => {
@@ -6693,7 +6699,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             }}
             hitSlop={8}
           >
-            <Text style={styles.axisCornerText}>AUTO</Text>
+            <Text style={[styles.axisCornerText, priceManual && styles.axisCornerTextManual]}>AUTO</Text>
           </Pressable>
         ) : null}
 
@@ -10821,6 +10827,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   axisCornerText: { color: colors.accent, fontSize: 8, fontWeight: '900' },
+  axisCornerManual: { backgroundColor: colors.accent, borderColor: colors.accent },
+  axisCornerTextManual: { color: '#041514' },
   toLatestBtn: {
     position: 'absolute',
     zIndex: 61,
