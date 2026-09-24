@@ -63,11 +63,9 @@ import {
   editExitValue,
   netLineIsWhole,
   noteWithTypedSize,
+  QUICK_SYMBOLS,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
-
-/** نفس أزواج الاختيار السريع بحاسبة المخاطرة — تسجيل صفقة بنقرة بدل كتابة الرمز بلوحة مفاتيح بيد واحدة. */
-const QUICK_SYMBOLS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'GBPJPY', 'EURGBP'];
 
 /**
  * سقف عدد الأدوات التي يُجلب لها سعر السوق للنتيجة العائمة. `/api/market/quote` **لا يُخزَّن**

@@ -55,6 +55,7 @@ import {
   journalRisk,
   formatJournalMoney,
   planSummaryText,
+  QUICK_SYMBOLS,
 } from './tradePlan';
 import { riskInQuoteCcy as cashRisk } from './positionSize';
 import { instrumentSpec, pipValuePerLot, planJournalNote, pnlInQuoteCcy, positionSize, slPipsFromPrices } from './positionSize';
@@ -1899,3 +1900,17 @@ console.log('tradePlan openRiskTotals selftest OK');
   assert.equal(openTradesWithoutStop([T({ sl: 1.09 })]), 0);
 }
 console.log('tradePlan openTradesWithoutStop selftest OK');
+
+// QUICK_SYMBOLS: ثابت واحد للوحات الأربع (QA6) — كل شريحة رمزٌ يُحفظ كما هو وله مواصفات (pip/عقد) بالحاسبة والدفتر
+{
+  assert.equal(QUICK_SYMBOLS.length, 6);
+  assert.equal(new Set(QUICK_SYMBOLS).size, QUICK_SYMBOLS.length);
+  for (const s of QUICK_SYMBOLS) {
+    assert.equal(journalSymbol(s), s, s);
+    assert.ok(instrumentSpec(s), s);
+    assert.ok(journalPipSize(s), s);
+  }
+  // الدفتر: بلا صفقات ⇒ الشرائح هي الافتراضية بترتيبها
+  assert.deepEqual(quickJournalSymbols([], QUICK_SYMBOLS), [...QUICK_SYMBOLS]);
+}
+console.log('tradePlan QUICK_SYMBOLS selftest OK');

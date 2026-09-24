@@ -74,6 +74,7 @@ import {
   targetAtRR,
   journalSymbol,
   type TradeSide,
+  QUICK_SYMBOLS,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
@@ -81,7 +82,6 @@ type Props = {
   defaultSymbol?: string;
 };
 
-const QUICK_SYMBOLS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'GBPJPY', 'EURGBP'];
 const QUICK_RISK = ['0.5', '1', '2'];
 const STORE_KEY = 'matrix.tools.riskCalc.v1';
 
