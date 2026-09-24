@@ -50,6 +50,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 الشارت
 • شموع يابانية، هايكن آشي، رينكو، كاجي، ونقطة ورقم.
 • حتى أربعة شارتات في شاشة واحدة، مع مزامنة الزمن بينها عند الحاجة — فتقرأ الشمعة نفسها على الأربعة معاً.
+• قارن زوجين على شارت واحد: في الشارت المكبَّر اضغط مطوّلاً على رمز من قائمتك فيُرسم فوق الأول بخطّ بنفسجي، كل شمعة مقابل نظيرتها في الوقت نفسه.
 • المس أي شمعة لترى افتتاحها وأعلاها وأدناها وإغلاقها ومداها بالنقاط، وكم نقطة يبعد المستوى عن السعر الحالي، ثم المس 🔔 لتضع تنبيه سعر عنده.
 • كبّر وصغّر بإصبعين، والشمعة الجارية تبقى أمامك. واسحب محور السعر لتطول الشموع أو تقصر. ارجع للخلف تدرس نموذجاً قديماً فتبقى الشموع ثابتة تحت إصبعك، ولمسة واحدة تعيدك لآخر شمعة دون أن تفقد التكبير.
 • عدّاد تحت السعر الحيّ يخبرك كم بقي على إغلاق الشمعة الجارية.
@@ -110,16 +111,16 @@ MATRIX is a technical-analysis workspace built for individual traders: fast char
 
 CHARTS
 • Candlesticks, Heikin-Ashi, Renko, Kagi and Point & Figure.
-• Up to four charts on one screen, with optional time sync.
+• Up to four charts on one screen with optional time sync — or overlay a second symbol on one chart, aligned bar by bar in time.
 • Tap any candle to see its open, high, low, close and range in pips, plus that level's distance from price, then tap 🔔 to set an alert there.
-• Pinch to zoom — the live candle stays in view. Drag the price axis to make candles taller or shorter. Scroll back to study an old pattern; one tap returns you to the latest candle, zoom intact.
+• Pinch to zoom — the live candle stays in view. Drag the price axis to make candles taller or shorter. Scroll back to study old patterns; one tap returns to the latest candle, zoom intact.
 • A countdown under the live price shows how long until the current candle closes.
-• The highest high and lowest low on screen carry their price and update as you scroll, and a faint line marks where each trading day starts on intraday charts.
-• The indicators traders use: SMA and EMA, Bollinger Bands, RSI, MACD, Volume and more, plus pivot levels (classic, Camarilla, Fibonacci) and yesterday's high and low, each with its price beside it, and Tokyo, London and New York session shading.
+• The on-screen high and low carry their price and update as you scroll, and a faint line marks where each trading day starts on intraday charts.
+• The indicators traders use: SMA and EMA, Bollinger Bands, RSI, MACD, Volume and more, plus pivot levels (classic, Camarilla, Fibonacci) and yesterday's high and low, and Tokyo, London and New York session shading.
 • One-tap "lenses" that add a ready set of indicators: Structure (moving averages), Momentum (RSI and MACD), Liquidity (volume, Bollinger and a CVD estimated from candles, not order flow).
 • Drawing tools: trend line, ray, horizontal and vertical lines, rectangle, Fibonacci, zones and notes, with undo. A horizontal line shows its distance from price in pips; a zone, its height. Drawings follow the symbol across timeframes.
 • Plan a buy or sell on the chart: drag from entry to stop to see the target, both distances in pips and the reward-to-risk ratio — drag the target to change it. On past candles it shows whether price hit the target or the stop.
-• A measure tool that shows pips, percent, bar count and how long the move took as you drag.
+• A measure tool showing pips, percent, bar count and how long the move took as you drag.
 • Candle replay to train your eye on price action.
 
 WATCHLIST & ALERTS
@@ -149,3 +150,7 @@ The first release of MATRIX: multi-chart layouts, indicators and drawing tools, 
 
 > **en-GB**: النص نفسه صالح بتعديلين للتهجئة البريطانية: «Analyze» بالنص الترويجي ← «Analyse»، و«colors» بالسطر قبل
 > الأخير من الوصف ← «colours». لا تغيير في حدود الأحرف (نفس العدد).
+
+> **2026-09-25 (launch 57)**: أُضيفت «المقارنة» (ar سطر مستقل؛ en مدموجة بسطر الشارتات الأربعة) — `FocusChartModal` ضغطة مطوّلة على رمز
+> بالقائمة، مطابقة بالزمن (`compareOverlay`، `3ac665b`). الإنجليزي كان 3979 حرفاً فاختُصرت أربع عبارات (الارتكاز، الرجوع للخلف، القمّة/القاع،
+> أداة القياس) بلا حذف ميزة. العدّ بسكربت: **ar 3649 / en 3993** من 4000.
