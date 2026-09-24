@@ -135,3 +135,23 @@ export function boxesTouch(
   const g = Number.isFinite(gap) ? Math.max(0, gap) : 0;
   return aStart < bStart + bSize + g && bStart < aStart + aSize + g;
 }
+
+/**
+ * هل تحمل علامات محور الزمن الساعة؟ كان القرار من زمن الساعة بين أوّل وآخر شمعة ظاهرة
+ * (`≤ 2 يوم`): 80 شمعة ساعة تمتدّ ≥ 79 ساعة، و15m عبر العطلة (جمعة → اثنين) ≥ 48 ساعة
+ * بشموع قليلة — فتُطبع تواريخ فقط، وعلامتان باليوم نفسه تقرآن «22 سبتمبر · 22 سبتمبر».
+ * القرار الآن من **أصغر فجوة بين علامتين متجاورتين**: أقلّ من يوم ⇒ الساعة لازمة لتمييزهما.
+ * علامة واحدة: من المدى كلّه (كما كان). الشموع اليومية فأكبر: بلا ساعة أبداً.
+ */
+export function axisShowsHours(
+  tickTimes: number[],
+  spanSeconds: number,
+  dayCandles: boolean
+): boolean {
+  if (dayCandles) return false;
+  const times = tickTimes.filter((t) => Number.isFinite(t));
+  if (times.length < 2) return spanSeconds <= 2 * 86400;
+  let minGap = Number.POSITIVE_INFINITY;
+  for (let i = 1; i < times.length; i++) minGap = Math.min(minGap, Math.abs(times[i] - times[i - 1]));
+  return minGap < 86400;
+}

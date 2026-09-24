@@ -9,6 +9,7 @@ import {
   layoutAxisLabels,
   boxesTouch,
   offAxisSide,
+  axisShowsHours,
 } from './axisTicks';
 
 const TIME_GAP = 6;
@@ -194,3 +195,21 @@ const minGap = (starts: number[], size: number) => {
 }
 
 console.log('axisTicks.selftest: PASS');
+
+// ===== ساعات محور الزمن من فجوة العلامات لا من المدى =====
+{
+  const H = 3600;
+  // 80 شمعة ساعة، 4 علامات كل ~26 شمعة: المدى 79 ساعة (كان ⇒ تواريخ فقط)، لكن الفجوة 26 ساعة ≥ يوم.
+  assert.equal(axisShowsHours([0, 26 * H, 53 * H, 79 * H], 79 * H, false), false);
+  // 5 علامات على 80 شمعة ساعة: فجوة ~20 ساعة ⇒ الساعة لازمة (علامتان باليوم نفسه).
+  assert.equal(axisShowsHours([0, 20 * H, 40 * H, 59 * H, 79 * H], 79 * H, false), true);
+  // 15m عبر العطلة: 60 شمعة، الجمعة 16:00 → الاثنين 02:00 (58 ساعة)؛ فجوة العطلة كبيرة والبقيّة ساعات.
+  const fri = 1_758_297_600; // جمعة
+  assert.equal(axisShowsHours([fri, fri + 5 * H, fri + 54 * H, fri + 58 * H], 58 * H, false), true);
+  // شموع يومية: لا ساعة أبداً.
+  assert.equal(axisShowsHours([0, H, 2 * H], 2 * H, true), false);
+  // علامة واحدة: القرار من المدى كما كان.
+  assert.equal(axisShowsHours([0], 30 * H, false), true);
+  assert.equal(axisShowsHours([0], 72 * H, false), false);
+  console.log('axisShowsHours PASS');
+}

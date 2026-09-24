@@ -58,6 +58,7 @@ import { indicatorBase, trimIndicator } from './indicatorWindow';
 import {
   axisTickCount,
   axisTickRatios,
+  axisShowsHours,
   layoutAxisLabels,
   boxesTouch,
   offAxisSide,
@@ -564,7 +565,8 @@ function formatAxisTime(
   spanSeconds: number,
   months: string[],
   compact = false,
-  dayCandles = false
+  dayCandles = false,
+  withHours = spanSeconds <= 2 * 86400
 ): string {
   const milliseconds = unixTime > 1e12 ? unixTime : unixTime * 1000;
   const date = new Date(milliseconds);
@@ -574,7 +576,7 @@ function formatAxisTime(
   const mm = String(p.minutes).padStart(2, '0');
   const mon = months[p.month] ?? '';
   const dayMonth = compact ? `${p.day}/${p.month + 1}` : `${p.day} ${mon}`;
-  if (spanSeconds <= 2 * 86400 && !dayCandles) {
+  if (withHours && !dayCandles) {
     return `${hh}:${mm}\n${dayMonth}`;
   }
   if (spanSeconds <= 120 * 86400) {
@@ -621,7 +623,9 @@ function formatCrossTime(
   if (Number.isNaN(date.getTime())) return '';
   const p = candleDateParts(date, dayCandles);
   const mon = months[p.month] ?? '';
-  if (spanSeconds > 120 * 86400 || dayCandles) return `${p.day} ${mon} ${p.year}`;
+  // شمعة داخل اليوم تحمل ساعتها دائماً: بمدى > 120 يوماً (4H أو 1H بعد تحميل تاريخ طويل) كان
+  // الوسم يطبع «12 سبتمبر 2026» لشمعة 4 ساعات — ست شموع بالوسم نفسه ولا يُعرف أيّها تحت الإصبع.
+  if (dayCandles) return `${p.day} ${mon} ${p.year}`;
   const hh = String(p.hours).padStart(2, '0');
   const mm = String(p.minutes).padStart(2, '0');
   return `${p.day} ${mon} ${hh}:${mm}`;
@@ -4358,6 +4362,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     TIME_LABEL_GAP,
     chartPlotW
   );
+  const timeAxisHours = axisShowsHours(
+    timeTickIndexes.map((i) => (source.plot[i] ? barTime(source.plot[i]) : Number.NaN)),
+    visibleTimeSpan,
+    dayCandles
+  );
   // بلا تيك حيّ (السوق مغلق، أو قبل أوّل تيك): إغلاق **آخر شمعة بالسلسلة** لا آخر شمعة ظاهرة —
   // بعد الرجوع 50 شمعة كان الوسم والخطّ المتقطّع يقفزان لإغلاق قديم والرأس يقول غيره، وبـHeikin
   // يعرضان إغلاقاً متوسَّطاً لا السعر. بالإعادة وحدها: شمعة الإعادة هي «الآن».
@@ -6958,7 +6967,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     visibleTimeSpan,
                     tr.mcMonths,
                     chartPlotW < 280,
-                    dayCandles
+                    dayCandles,
+                    timeAxisHours
                   )}
                 </Text>
               );
