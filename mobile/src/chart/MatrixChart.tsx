@@ -6423,6 +6423,35 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     borderColor: d.color,
                   }}
                 />
+                {/* ارتفاع المنطقة بالـpip («↕ 18.4 pip») — منطقة العرض/الطلب تُقاس بعرضها قبل
+                    أيّ شيء (وقف خلفها بقدرها). داخل الزاوية العليا إن اتّسعت، وإلّا فوق الحدّ. */}
+                {(() => {
+                  const txt =
+                    right - Math.max(left, 0) >= 64
+                      ? candleRangePipsText(
+                          series.symbol,
+                          Math.max(d.a.price, d.b.price),
+                          Math.min(d.a.price, d.b.price)
+                        )
+                      : null;
+                  if (!txt) return null;
+                  // حدّ علويّ فوق اللوح ⇒ الوسم عند أعلى الجزء المرئيّ من المنطقة.
+                  const topVis = Math.max(top, 0);
+                  const inside = bot - topVis >= 18;
+                  if (!inside && top < 13) return null;
+                  return (
+                    <Text
+                      pointerEvents="none"
+                      numberOfLines={1}
+                      style={[
+                        styles.zoneRangeLabel,
+                        { left: Math.max(left, 0) + 3, top: inside ? topVis + 2 : top - 14, color: d.color },
+                      ]}
+                    >
+                      {txt}
+                    </Text>
+                  );
+                })()}
                 {sel ? (
                   <>
                     <View
@@ -10998,6 +11027,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   levelPriceLabelSel: { backgroundColor: colors.bgPanel },
+  // ارتفاع المستطيل/المنطقة بالـpip: أخفّ من وسم الخطّ (ليس مستوى سعر بل مقاس).
+  zoneRangeLabel: {
+    position: 'absolute',
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: '700',
+    opacity: 0.9,
+  },
   levelPipText: { fontWeight: '600', opacity: 0.8 },
   // وسم مستوى فيبو: **يسار اللوح** لا يمينه. اليمين هو محور السعر ووسماه (الحيّ
   // والتقاطع) يُرسمان فوق كل شيء، ووسمٌ صار يحمل سعراً أعرض من أن يشاركهما الحافة.
