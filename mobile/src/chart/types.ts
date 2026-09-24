@@ -451,12 +451,29 @@ export const LENSES: { id: LensMode; label: string; hint: string }[] = [
   { id: 'liquidity', label: 'سيولة', hint: 'فوليوم + CVD' },
 ];
 
+/**
+ * فوليوم كل شمعة، وبديل تركيبي حين **لا تحمل السلسلة فوليوماً**. مصدر الفوركس يرسل `0` لا `null`
+ * (لا فوليوم مركزياً للفوركس)، فكان `??` لا يعوّض شيئاً: OBV خطّ مسطّح، وMFI/VWAP بلا قيمة، وCMF صفر.
+ * القرار على مستوى السلسلة لا الشمعة: سلسلة فيها فوليوم حقيقي تبقى شمعتها الصفرية صفراً (دقيقة بلا تيك).
+ */
+export function seriesHasVolume(candles: readonly Candle[]): boolean {
+  return candles.some((c) => {
+    const v = (c as Candle & { volume?: number }).volume;
+    return v != null && Number.isFinite(v) && v > 0;
+  });
+}
+
 export function withVolume(candles: Candle[]): (Candle & { volume: number })[] {
-  return candles.map((c, i) => ({
-    ...c,
-    volume:
-      (c as Candle & { volume?: number }).volume ??
-      Math.abs(c.close - c.open) * 1e6 * (0.6 + ((i * 17) % 40) / 40) +
-        1000,
-  }));
+  const vol = (c: Candle) => (c as Candle & { volume?: number }).volume;
+  const hasVolume = seriesHasVolume(candles);
+  return candles.map((c, i) => {
+    const v = vol(c);
+    return {
+      ...c,
+      volume:
+        hasVolume && v != null && Number.isFinite(v)
+          ? v
+          : Math.abs(c.close - c.open) * 1e6 * (0.6 + ((i * 17) % 40) / 40) + 1000,
+    };
+  });
 }

@@ -149,6 +149,7 @@ import {
   type IndicatorId,
   type LensMode,
   withVolume,
+  seriesHasVolume,
 } from './types';
 import {
   FIB_LEVELS,
@@ -7484,7 +7485,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           {/* بلا لون: أعمدة اللوحة ملوّنة باتجاه الشمعة (شراء/بيع)، فلونٌ ثانٍ على
               الرقم بمعنى ثالث (أعلى/أدنى من السابق) يجعل اللوحة تقول شيئين متنافسين. */}
-          <PaneValueHead name="VOL" values={volumeSeries ?? []} at={crossIndex} tone="none" />
+          {/* «≈»: السلسلة بلا فوليوم (الفوركس يُرسل 0) فالأعمدة تقدير من أجسام الشموع (`withVolume`) لا حجم تداول. */}
+          <PaneValueHead
+            name={seriesHasVolume(liveSeries.candles) ? 'VOL' : 'VOL ≈'}
+            values={volumeSeries ?? []}
+            at={crossIndex}
+            tone="none"
+          />
           <View style={styles.paneInner}>
             {(() => {
               // Max computed once per render (was recomputed per bar → O(n²) at 1000 bars).
