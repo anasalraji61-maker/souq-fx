@@ -38,7 +38,9 @@ import {
   roundR,
   targetAtRR,
   QUICK_RR,
+  journalPipSize,
 } from './tradePlan';
+import { riskInQuoteCcy as cashRisk } from './positionSize';
 import { instrumentSpec, pipValuePerLot, planJournalNote, pnlInQuoteCcy, positionSize, slPipsFromPrices } from './positionSize';
 
 // شراء EURUSD صحيح: وقف 25 pip، هدف 50 pip ⇒ 1:2
@@ -1348,3 +1350,34 @@ console.log('tradePlan netLineIsWhole selftest OK');
   assert.equal(cash.amount, 250);
 }
 console.log('tradePlan noteWithTypedSize selftest OK');
+
+// journalPipSize — صفقات حساب السنت (Exness «EURUSDc» تُحفظ «EURUSDC») بنقاطها لا بمالها
+{
+  assert.equal(journalPipSize('EURUSDC'), 0.0001);
+  assert.equal(journalPipSize('EURUSDc'), 0.0001);
+  assert.equal(journalPipSize('USDJPYC'), 0.01);
+  assert.equal(journalPipSize('XAUUSDC'), 0.1);
+  assert.equal(journalPipSize('GOLDC'), 0.1);
+  // العادي كما كان
+  assert.equal(journalPipSize('EURUSD'), 0.0001);
+  assert.equal(journalPipSize('XAUUSD.m'), 0.1);
+  // مجهول
+  for (const s of ['US30', 'US30C', 'EURUSDT', 'EURUSDCC', '', null, undefined]) assert.equal(journalPipSize(s), null, String(s));
+
+  const p = analyzePlan({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.0825, tp: 1.09 });
+  assert.equal(p.ok, true);
+  assert.equal(p.riskPips, 25);
+  assert.equal(p.rewardPips, 50);
+  assert.equal(analyzePlan({ symbol: 'USDJPYC', side: 'sell', entry: 150, sl: 150.3, tp: 149.4 }).riskPips, 30);
+  // وقف أضيق من pip يُكشف كالعادي
+  assert.equal(analyzePlan({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.08495, tp: 1.09 }).issue, 'slTooClose');
+  assert.equal(stopTooClose({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.08495 }), true);
+  assert.equal(realizedR({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.08495, exit: 1.09 }), null);
+  assert.equal(realizedR({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.0825, exit: 1.09 }), 2);
+  assert.deepEqual(realizedMove({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, exit: 1.0882 }), { pips: 32, pct: 0.29 });
+  assert.equal(realizedMove({ symbol: 'XAUUSDC', side: 'sell', entry: 2000, exit: 1997.5 })?.pips, 25);
+  // المال يبقى مجهولاً للسنت: عقده أصغر بمئة مرّة
+  assert.equal(cashRisk({ symbol: 'EURUSDC', entry: 1.085, sl: 1.0825, lots: 1 }), null);
+  assert.ok(cashRisk({ symbol: 'EURUSD', entry: 1.085, sl: 1.0825, lots: 1 }) != null);
+}
+console.log('tradePlan journalPipSize selftest OK');

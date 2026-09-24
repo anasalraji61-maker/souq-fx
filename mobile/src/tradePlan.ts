@@ -8,9 +8,22 @@
  * - وقف أقرب من 1 pip للدخول (أضيق من أي سبريد تجزئة) خطأ كتابة شبه مؤكد: كان يُعرض «0 pip · R:R 1:5000».
  */
 import { knownSingleName } from './chart/newsRisk';
-import { instrumentSpec, LOT_STEP, MAX_SANE_LOTS, pnlInQuoteCcy, priceAtPipOffset } from './positionSize';
+import { centAccountSymbol, instrumentSpec, LOT_STEP, MAX_SANE_LOTS, pnlInQuoteCcy, priceAtPipOffset } from './positionSize';
 
 export type TradeSide = 'buy' | 'sell';
+
+/**
+ * حجم الـpip لمسافات الدفتر (نقاط، R، حدّ «أقرب من 1 pip») — مواصفات الأداة، **ورمز حساب سنت** بحجم pip زوجه
+ * العادي («EURUSDC» ⇒ 0.0001، «USDJPYC» ⇒ 0.01). الدفتر يحفظ «EURUSDc» كما نسخها المتداول من Exness Cent
+ * («EURUSDC»)، و`instrumentSpec` يرفضها عمداً (العقد أصغر بمئة مرّة ⇒ لا مال منها) — فكانت صفقاته **بلا نقاط
+ * أصلاً**: لا «المخاطرة 25 pip»، ولا نتيجة «+32 pip» بعد الإغلاق، ولا تحذير وقفٍ أضيق من pip. السعر والـpip
+ * بالسنت كالعادي تماماً؛ المال وحده يختلف، فهو يبقى على `instrumentSpec` (مجهولاً للسنت) لا على هذه.
+ */
+export function journalPipSize(symbol: string | null | undefined): number | null {
+  if (!symbol) return null;
+  const spec = instrumentSpec(symbol) ?? instrumentSpec(centAccountSymbol(symbol) ?? '');
+  return spec?.pipSize ?? null;
+}
 
 export type PlanIssue = 'invalid' | 'slWrongSide' | 'tpWrongSide' | 'slTooClose';
 
@@ -81,7 +94,7 @@ export function analyzePlan(input: {
   const buy = side === 'buy';
   const riskDist = buy ? entry - sl : sl - entry;
   const rewardDist = buy ? tp - entry : entry - tp;
-  const pip = instrumentSpec(input.symbol)?.pipSize ?? null;
+  const pip = journalPipSize(input.symbol);
   const toPips = (d: number) => (pip ? Math.round((d / pip) * 10) / 10 : null);
   const base = {
     riskDist,
@@ -106,7 +119,7 @@ export function stopTooClose(input: { symbol: string; side: TradeSide; entry: nu
   const { side, entry, sl } = input;
   if (!finitePos(entry) || !finitePos(sl)) return false;
   const risk = side === 'buy' ? entry - sl : sl - entry;
-  const pip = instrumentSpec(input.symbol)?.pipSize ?? null;
+  const pip = journalPipSize(input.symbol);
   return pip != null && risk > 0 && risk < pip * (1 - 1e-6);
 }
 
@@ -196,7 +209,7 @@ function exactR(input: {
   const buy = side === 'buy';
   const risk = buy ? entry - sl : sl - entry;
   if (risk <= 0) return null;
-  const pip = input.symbol ? instrumentSpec(input.symbol)?.pipSize ?? null : null;
+  const pip = journalPipSize(input.symbol);
   if (pip && risk < pip * (1 - 1e-6)) return null;
   const move = buy ? exit - entry : entry - exit;
   return move / risk;
@@ -247,7 +260,7 @@ export function realizedMove(input: {
   const { side, entry, exit } = input;
   if (!finitePos(entry) || !finitePos(exit)) return null;
   const move = side === 'buy' ? exit - entry : entry - exit;
-  const pip = instrumentSpec(input.symbol)?.pipSize ?? null;
+  const pip = journalPipSize(input.symbol);
   // تقريب متماثل (`roundAway`) لا `Math.round`: هذا يرفع النصف نحو +∞ فتُكتب الخسارة أصغر من الربح
   // المماثل — ذهب 2000 → 1997.5 كان «−0.12%» ومقابله 2000 → 2002.5 «+0.13%»، ونصف pipette خاسر
   // (1.08500 → 1.084995) كان «−0» pip بينما الرابح المماثل «+0.1». وإحصاءات الدفتر تجمع هذه الأرقام.
