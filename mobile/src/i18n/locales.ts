@@ -365,6 +365,9 @@ export type Dict = {
   riskCalcLowNetRR: string;
   // الحجم فوق `MAX_SANE_LOTS` (100): رصيد كبير بوقف 1 pip يُخرج 200 lot بلا إشارة، وأغلب الوسطاء يرفضون أمراً فوق 50–100
   riskCalcOverOrderMax: string;
+  // الحجم فوق `MAX_SMALL_LOTS` (200) بوضع السنت/micro (`lotsOverOrderMax(result, true)`، 8713abf): النص العادي يقول «50–100 lot»
+  // فيبدو 150 لوت سنت تحذيراً كاذباً رغم أنّ الحدّ 200 — جاهز غير موصول
+  riskCalcOverOrderMaxSmall: string;
   riskCalcCostsBelowMin: string;
   riskCalcUseLivePrice: string;
   riskCalcUseLivePriceA11y: string;
@@ -1296,6 +1299,7 @@ const ar: Dict = {
   riskCalcNetNegative: 'التكاليف تأكل الهدف كلّه: الصافي {profit} — أبعِد الهدف أو اختر حساباً بتكاليف أقل',
   riskCalcLowNetRR: '⚠ بعد التكاليف يصير الربح أقل من المخاطرة',
   riskCalcOverOrderMax: '⚠ {lots} lot أكبر من أقصى أمر يقبله أغلب الوسطاء (50–100 lot) — قسّم الصفقة على أوامر أو راجع الوقف',
+  riskCalcOverOrderMaxSmall: '⚠ {lots} lot أكبر من أقصى أمر يقبله أغلب الوسطاء بحساب السنت أو micro (200 lot عادةً) — قسّم الصفقة على أوامر أو راجع الوقف',
   riskCalcCostsBelowMin: 'مع التكاليف، حتى أصغر لوت (0.01) يتجاوز {pct}% — ارفع النسبة أو قرّب الوقف',
   riskCalcUseLivePrice: '↓ الدخول = السعر الحالي',
   riskCalcUseLivePriceA11y: 'تعبئة خانة الدخول بسعر السوق الحالي (Ask للشراء وBid للبيع حسب موضع الوقف)',
@@ -2218,6 +2222,7 @@ const enUS: Dict = {
   riskCalcNetNegative: 'Costs eat the whole target: net {profit} — move the target further or use a cheaper account',
   riskCalcLowNetRR: '⚠ After costs, the reward is smaller than the risk',
   riskCalcOverOrderMax: "⚠ {lots} lot is above most brokers' largest order (50–100 lot) — split it into several orders or check the stop",
+  riskCalcOverOrderMaxSmall: "⚠ {lots} lot is above the largest order most brokers accept on a cent or micro account (usually 200 lot) — split it into several orders or check the stop",
   riskCalcCostsBelowMin: 'With costs, even the smallest lot (0.01) risks more than {pct}% — raise the % or tighten the stop',
   riskCalcUseLivePrice: '↓ Entry = current price',
   riskCalcUseLivePriceA11y: 'Fill the entry with the current market price (Ask for buy, Bid for sell, from where the stop sits)',
@@ -3162,6 +3167,7 @@ const ku: Dict = {
   riskCalcNetNegative: 'تێچووەکان هەموو ئامانجەکە دەخۆن: پوختە {profit} — ئامانجەکە دوورتر بخە یان هەژمارێکی کەمتێچووتر هەڵبژێرە',
   riskCalcLowNetRR: '⚠ دوای تێچووەکان، قازانج لە مەترسی کەمتر دەبێت',
   riskCalcOverOrderMax: '⚠ {lots} lot لە گەورەترین فەرمانێک زیاترە کە زۆربەی بڕۆکەرەکان وەریدەگرن (50–100 lot) — بیکە بە چەند فەرمانێک یان وەستانەکە بپشکنە',
+  riskCalcOverOrderMaxSmall: '⚠ {lots} lot لە گەورەترین فەرمانێک زیاترە کە زۆربەی بڕۆکەرەکان لە هەژماری cent یان micro وەریدەگرن (زۆرجار 200 lot) — بیکە بە چەند فەرمانێک یان وەستانەکە بپشکنە',
   riskCalcCostsBelowMin: 'لەگەڵ تێچووەکان، تەنانەت بچووکترین لۆت (0.01) لە {pct}% زیاتر دەخاتە مەترسییەوە — ڕێژەکە بەرز بکەرەوە یان وەستانەکە نزیک بکەرەوە',
   riskCalcUseLivePrice: '↓ چوونەژوورەوە = نرخی ئێستا',
   riskCalcUseLivePriceA11y: 'پڕکردنەوەی خانەی چوونەژوورەوە بە نرخی بازاڕی ئێستا (Ask بۆ کڕین و Bid بۆ فرۆشتن بەپێی شوێنی وەستان)',
