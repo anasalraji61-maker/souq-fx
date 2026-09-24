@@ -13,7 +13,7 @@ import {
   tickStatusKind,
   normalizeProvenance,
 } from '../chart/dataSource';
-import { liveChangePct, livePriceForChart } from '../chart/liveSeries';
+import { liveChangePct, livePriceForChart, tickPlausibleForSeries } from '../chart/liveSeries';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import { isForexMarketOpen } from '../chart/marketHours';
 
@@ -137,11 +137,20 @@ export function ChartFrame({
           ? t.cfSyncFollowBadge
           : null;
   const candleSrc = normalizeProvenance(series.data_source);
-  const resolvedTick: LiveTick | null =
+  const passedTick: LiveTick | null =
     liveTick ??
     (livePrice != null
       ? { price: livePrice, source: { kind: 'unknown', as_of: null, channel: null } }
       : null);
+  // بعد تبديل الرمز يصل تيك الرمز الجديد قبل شموعه: الرأس كان يطبع سعر الذهب بخانات اليورو
+  // («2650.35000») موسوماً «حيّ» فوق شموع اليورو حتى وصول الجلب. تيك لا يمتّ للسلسلة بصلة يُترك
+  // حتى تصل شموعه — إلا فوق شموع تجريبية (أساسها ثابت قديم)، فالسعر الحقيقي أنفع للمتداول.
+  const resolvedTick: LiveTick | null =
+    passedTick &&
+    normalizeProvenance(series.data_source).kind !== 'demo' &&
+    !tickPlausibleForSeries(series, passedTick.price)
+      ? null
+      : passedTick;
   const nowMs = useTickFreshnessClock(resolvedTick?.source.as_of ?? null);
   const nowSec = nowMs / 1000;
   const mergeOpts = {
