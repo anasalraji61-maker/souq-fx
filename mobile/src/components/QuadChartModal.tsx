@@ -19,7 +19,6 @@ import { mockSeries } from '../mock';
 import { normalizeProvenance } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
 import { formatPct } from '../chart/dailyChange';
-import { chartExtraLabels } from '../chart/typeLabels';
 import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
@@ -50,8 +49,7 @@ export function QuadChartModal({
   const symKey = symbolsProp.join(',');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const symbols = useMemo(() => symbolsProp, [symKey]);
-  const { t, rtl, lang } = useI18n();
-  const trx = chartExtraLabels(lang);
+  const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const { width, height } = useWindowDimensions();
   const phone = width < 700;
@@ -124,7 +122,7 @@ export function QuadChartModal({
           <Pressable
             accessibilityRole="switch"
             accessibilityState={{ checked: syncTime }}
-            accessibilityLabel={trx.syncToggleA11y}
+            accessibilityLabel={t.mcSyncToggleA11y}
             onPress={() => setSyncTime((v) => !v)}
             hitSlop={8}
             style={({ pressed }) => [
@@ -137,13 +135,13 @@ export function QuadChartModal({
             ]}
           >
             <Text style={[styles.syncToggleText, syncTime && styles.syncToggleTextOn]}>
-              {syncTime ? trx.syncTimeOn : trx.syncTimeOff}
+              {syncTime ? t.mcSyncTimeOn : t.mcSyncTimeOff}
             </Text>
           </Pressable>
         </View>
         {syncTime ? (
           <Text style={[styles.syncHint, { textAlign: align }]}>
-            {`${trx.syncLeadHint} — ${symbols[leader]}`}
+            {`${t.mcSyncLeadHint} — ${symbols[leader]}`}
           </Text>
         ) : null}
         <View style={[styles.grid, rtl && styles.gridRtl, phone && styles.gridPhone]}>

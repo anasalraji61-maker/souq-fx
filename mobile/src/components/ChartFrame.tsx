@@ -16,7 +16,6 @@ import {
 import { liveChangePct, livePriceForChart } from '../chart/liveSeries';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import { isForexMarketOpen } from '../chart/marketHours';
-import { chartExtraLabels } from '../chart/typeLabels';
 
 import { FRAME_CHART_H, FRAME_CHART_H_PHONE } from './FrameSizedGrid';
 import type { PanSpeedPercent } from '../chart/panSpeed';
@@ -98,8 +97,7 @@ export function ChartFrame({
   onSyncActivate,
   syncBadge = null,
 }: Props) {
-  const { t, lang, rtl } = useI18n();
-  const trx = useMemo(() => chartExtraLabels(lang), [lang]);
+  const { t, rtl } = useI18n();
   const [wheelOpen, setWheelOpen] = useState(false);
 
   // تبديل الفريم/الرمز يمرّ بجولة شبكة عند الشاشة المالكة: حتى تصل السلسلة الجديدة
@@ -283,8 +281,8 @@ export function ChartFrame({
             </Text>
           ) : null}
           {switching ? (
-            <Text style={styles.switchTag} accessibilityLabel={trx.switchingA11y}>
-              {trx.switching}
+            <Text style={styles.switchTag} accessibilityLabel={t.mcSwitchingA11y}>
+              {t.mcSwitching}
             </Text>
           ) : null}
           {badge ? (

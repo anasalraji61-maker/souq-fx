@@ -81,7 +81,6 @@ import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
 import {
-  chartExtraLabels,
   localizedChartKinds,
   localizedDrawTools,
   localizedIndicators,
@@ -808,7 +807,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   ref
 ) {
   const { t: tr, lang } = useI18n();
-  const trx = useMemo(() => chartExtraLabels(lang), [lang]);
   const canPan = syncFollow ? false : (panControls ?? interactive);
   const candleBull = mutedCandles ? 'rgba(34,197,94,0.34)' : colors.bull;
   const candleBear = mutedCandles ? 'rgba(244,63,94,0.34)' : colors.bear;
@@ -3212,7 +3210,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ) : null}
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={canUndo ? trx.undoA11y : trx.nothingToUndo}
+              accessibilityLabel={canUndo ? tr.mcUndoA11y : tr.mcNothingToUndo}
               accessibilityState={{ disabled: !canUndo }}
               disabled={!canUndo}
               style={({ pressed }) => [
@@ -3223,7 +3221,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               onPress={undoDrawing}
             >
               <Text style={styles.compactToolIcon}>↶</Text>
-              <Text style={styles.compactToolLabel}>{trx.undo}</Text>
+              <Text style={styles.compactToolLabel}>{tr.mcUndo}</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -9081,8 +9079,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         panePageCount > 1 ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={trx.panesCollapsedA11y}
-            accessibilityHint={trx.panesPageA11y}
+            accessibilityLabel={tr.mcPanesCollapsedA11y}
+            accessibilityHint={tr.mcPanesPageA11y}
             onPress={nextPanePage}
             hitSlop={6}
             style={({ pressed }) => [
@@ -9093,7 +9091,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ]}
           >
             <Text numberOfLines={1} style={styles.collapsedCount}>
-              {`${trx.panesCollapsed} ${collapsedPanes.length}`}
+              {`${tr.mcPanesCollapsed} ${collapsedPanes.length}`}
             </Text>
             <Text numberOfLines={1} style={styles.collapsedNames}>
               {collapsedBarText(collapsedPanes)}
@@ -9109,11 +9107,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         ) : (
           <View
             accessibilityRole="text"
-            accessibilityLabel={trx.panesCollapsedA11y}
+            accessibilityLabel={tr.mcPanesCollapsedA11y}
             style={[styles.collapsedBar, { height: collapsedBarH }]}
           >
             <Text numberOfLines={1} style={styles.collapsedCount}>
-              {`${trx.panesCollapsed} ${collapsedPanes.length}`}
+              {`${tr.mcPanesCollapsed} ${collapsedPanes.length}`}
             </Text>
             <Text numberOfLines={1} style={styles.collapsedNames}>
               {collapsedBarText(collapsedPanes)}
@@ -9145,7 +9143,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ))}
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={canUndo ? trx.undoA11y : trx.nothingToUndo}
+              accessibilityLabel={canUndo ? tr.mcUndoA11y : tr.mcNothingToUndo}
               accessibilityState={{ disabled: !canUndo }}
               disabled={!canUndo}
               style={({ pressed }) => [
@@ -9155,7 +9153,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               ]}
               onPress={undoDrawing}
             >
-              <Text style={styles.toolText}>↶ {trx.undo}</Text>
+              <Text style={styles.toolText}>↶ {tr.mcUndo}</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
