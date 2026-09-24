@@ -6172,6 +6172,33 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             <Text style={styles.axisCornerText}>AUTO</Text>
           </Pressable>
         ) : null}
+
+        {/* «»» العودة لآخر شمعة (كزرّ TradingView على محور الزمن): بعد السحب للخلف لا سبيل للحيّ
+            إلا بسحب مئات الشموع أو AUTO — والأخير يمحو التكبير أيضاً. هذا يُبقي التكبير
+            الأفقي والرأسي ويعيد النافذة وحدها للطرف الأيمن. لا يظهر بالإعادة ولا بالتابع المتزامن. */}
+        {canPan && !replayOn && offset > 0 ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={chartExtraLabels(lang).toLatest}
+            style={({ pressed }) => [
+              styles.toLatestBtn,
+              { right: PRICE_AXIS_WIDTH + 8, bottom: timeAxisH + 8 },
+              pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+            ]}
+            onPress={() => {
+              pricePanRef.current = 0;
+              xPanRef.current = 0;
+              offsetRef.current = 0;
+              setPricePan(0);
+              setXPan(0);
+              setOffset(0);
+              schedulePublishSync(false);
+            }}
+            hitSlop={10}
+          >
+            <Text style={styles.toLatestText}>»</Text>
+          </Pressable>
+        ) : null}
       </View>
 
       {/* panes */}
@@ -10270,6 +10297,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   axisCornerText: { color: colors.accent, fontSize: 8, fontWeight: '900' },
+  toLatestBtn: {
+    position: 'absolute',
+    zIndex: 61,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accent,
+    borderTopWidth: 1,
+    borderColor: 'rgba(255,255,255,0.35)',
+    shadowColor: '#000',
+    shadowOpacity: 0.35,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
+  toLatestText: { color: '#0B1220', fontSize: 18, lineHeight: 20, fontWeight: '900', marginTop: -2 },
   dot: { position: 'absolute', width: 3, height: 3, borderRadius: 2 },
   hLine: {
     position: 'absolute',

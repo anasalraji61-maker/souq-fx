@@ -86,10 +86,16 @@ export function localizedIndicators(t: Dict): typeof INDICATORS {
 /**
  * نصوص مؤقّتة بانتظار نقلها إلى `i18n/locales.ts` (خارج نطاق وكيل الشارت) — راجع «طلب
  * تنسيق» بـ`docs/LOG-CHART.md`. `clearAllBody`: الرسومات صارت للرمز على كل فريماته،
- * فـ`mcClearAllBody` («بهذا الرمز/الإطار الزمني») يَعِد بأقلّ ممّا يُمسح فعلاً.
+ * فـ`mcClearAllBody` («بهذا الرمز/الإطار الزمني») يَعِد بأقلّ ممّا يُمسح فعلاً. `toLatest`: وصف
+ * زرّ «»» (العودة لآخر شمعة) لقارئ الشاشة — الزرّ نفسه رمز بلا نصّ.
  */
-export function chartExtraLabels(lang: LangId): { clearAllBody: string } {
-  if (lang === 'ar') return { clearAllBody: 'سيتم حذف كل عناصر الرسم بهذا الرمز على كل الأطر الزمنية' };
-  if (lang === 'ku') return { clearAllBody: 'هەموو توخمەکانی کێشان بۆ ئەم هێمایە لە هەموو ماوە کاتییەکاندا دەسڕێنەوە' };
-  return { clearAllBody: 'Every drawing on this symbol will be deleted, on all timeframes' };
+export function chartExtraLabels(lang: LangId): { clearAllBody: string; toLatest: string } {
+  if (lang === 'ar')
+    return { clearAllBody: 'سيتم حذف كل عناصر الرسم بهذا الرمز على كل الأطر الزمنية', toLatest: 'العودة لآخر شمعة' };
+  if (lang === 'ku')
+    return {
+      clearAllBody: 'هەموو توخمەکانی کێشان بۆ ئەم هێمایە لە هەموو ماوە کاتییەکاندا دەسڕێنەوە',
+      toLatest: 'گەڕانەوە بۆ دوایین مۆم',
+    };
+  return { clearAllBody: 'Every drawing on this symbol will be deleted, on all timeframes', toLatest: 'Scroll to the latest candle' };
 }
