@@ -9654,33 +9654,53 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {kst ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="KST" values={kst} at={crossIndex} />
+          <PaneValueHead name="KST" values={kst.kst} at={crossIndex} />
           <View style={styles.paneInner}>
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
             {(() => {
-              const vals = kst.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxK = Math.max(...vals, 1e-9);
-              return kst.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxK, paneH);
-                return (
+              // خطّان كـTradingView — KST وإشارته `sma(9)` — بهندسة MACD (مقياس واحد متمركز على الصفر
+              // للخطّين). كانت أعمدة KST وحدها بلا إشارة، فتقاطعهما — ما يُقرأ من المؤشّر — لا يُرى.
+              const g = macdPaneGeom(kst.kst, kst.kst, kst.signal, paneH);
+              return (
+                <>
                   <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
+                    pointerEvents="none"
+                    style={[styles.paneZeroLine, { top: g.zeroY }]}
                   />
-                );
-              });
+                  {kst.kst.map((v, i) => {
+                    const sg = kst.signal[i];
+                    if (v == null && sg == null) return <View key={i} style={{ flex: 1 }} />;
+                    return (
+                      <View key={i} style={{ flex: 1, height: g.innerH, position: 'relative' }}>
+                        {sg != null ? (
+                          <View
+                            style={{
+                              position: 'absolute',
+                              left: 0,
+                              right: 0,
+                              top: g.y(sg),
+                              height: 2,
+                              backgroundColor: colors.warn,
+                              opacity: 0.9,
+                            }}
+                          />
+                        ) : null}
+                        {v != null ? (
+                          <View
+                            style={{
+                              position: 'absolute',
+                              left: 0,
+                              right: 0,
+                              top: g.y(v),
+                              height: 2,
+                              backgroundColor: v >= (sg ?? v) ? colors.bull : colors.bear,
+                            }}
+                          />
+                        ) : null}
+                      </View>
+                    );
+                  })}
+                </>
+              );
             })()}
           </View>
         </View>

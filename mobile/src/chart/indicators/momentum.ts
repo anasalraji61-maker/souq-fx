@@ -616,7 +616,7 @@ export function computeFisherTransform(candles: Candle[], period = 10): (number 
  * → تنعيم SMA لسلسلة كلها أصفار = صفر بالضبط → KST = 1×0+2×0+3×0+4×0 = 0 بالضبط، يطابق "لا زخم بسعر
  * ساكن على أي مدى زمني" بالتعريف.
  */
-export function computeKst(closes: number[]): (number | null)[] {
+export function computeKst(closes: number[]): { kst: (number | null)[]; signal: (number | null)[] } {
   const roc1 = computeRoc(closes, 10);
   const roc2 = computeRoc(closes, 15);
   const roc3 = computeRoc(closes, 20);
@@ -625,11 +625,14 @@ export function computeKst(closes: number[]): (number | null)[] {
   const s2 = sma(roc2, 10);
   const s3 = sma(roc3, 10);
   const s4 = sma(roc4, 15);
-  return closes.map((_, i) =>
+  const kst = closes.map((_, i) =>
     s1[i] != null && s2[i] != null && s3[i] != null && s4[i] != null
       ? s1[i]! + 2 * s2[i]! + 3 * s3[i]! + 4 * s4[i]!
       : null
   );
+  // خطّ الإشارة `sma(kst, 9)` كـTradingView: تقاطع KST معه هو إشارة Pring للدخول/الخروج، ولوحة بلا
+  // إشارة لا تُقرأ إلا بعبور الصفر — متأخّر بأسابيع على الفريم اليومي.
+  return { kst, signal: sma(kst, 9) };
 }
 
 /**
