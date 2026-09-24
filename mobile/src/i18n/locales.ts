@@ -880,6 +880,11 @@ export type Dict = {
   /** لواحق مدّة سطر القياس (`measureDurationText`): `{m}`/`{h}`/`{d}` تُلصق بالعدد كما هي — المسافة جزء منها بالعربية والكردية. */
   mcMeasureDurUnits: { m: string; h: string; d: string };
   mcNoteDefault: string;
+  /** خانة تحرير نصّ الملاحظة المحدَّدة على الشارت (`MatrixChart` `noteEdit-…`): اسمها لقارئ الشاشة — `mcNoteDefault` وحدها تُقرأ «ملاحظة» بلا ما يدلّ أنها خانة للكتابة. */
+  mcNoteTextA11y: string;
+  /** سطر التلميح حين المحدَّد ملاحظة: لا «مقبض طرف» لها (نقطة واحدة)، وخانة النصّ تحتها هي الجديد. `…Web` لسطح المكتب. */
+  mcHintNoteSelected: string;
+  mcHintNoteSelectedWeb: string;
   mcSnapshotSaved: string;
   mcSnapshotFailed: string;
   mcTemplateDefaultName: string;
@@ -1920,6 +1925,9 @@ const ar: Dict = {
   mcMeasureBarsWord: 'شموع',
   mcMeasureDurUnits: { m: ' د', h: ' س', d: ' يوم' },
   mcNoteDefault: 'ملاحظة',
+  mcNoteTextA11y: 'نصّ الملاحظة على الشارت — حتى 60 حرفاً',
+  mcHintNoteSelected: 'اكتب نصّ الملاحظة بالخانة تحتها · اسحبها لتحريكها · يُحفظ تلقائياً',
+  mcHintNoteSelectedWeb: 'اكتب نصّ الملاحظة بالخانة تحتها · اسحبها لتحريكها · Esc لإلغاء التحديد · Ctrl+Z للتراجع',
   mcSnapshotSaved: 'تم حفظ لقطة الشارت',
   mcSnapshotFailed: 'تعذّر تصدير الشارت — حاول مرة أخرى، أو خذ لقطة شاشة للشارت',
   mcTemplateDefaultName: 'افتراضي',
@@ -2958,6 +2966,9 @@ const enUS: Dict = {
   mcMeasureBarsWord: 'bars',
   mcMeasureDurUnits: { m: 'm', h: 'h', d: 'd' },
   mcNoteDefault: 'Note',
+  mcNoteTextA11y: 'Note text on the chart — up to 60 characters',
+  mcHintNoteSelected: 'Type the note in the box below it · drag the note to move it · saved automatically',
+  mcHintNoteSelectedWeb: 'Type the note in the box below it · drag the note to move it · Esc deselects · Ctrl+Z to undo',
   mcSnapshotSaved: 'Chart snapshot saved',
   mcSnapshotFailed: "Couldn't export the chart — try again, or take a screenshot of the chart",
   mcTemplateDefaultName: 'Default',
@@ -4023,6 +4034,9 @@ const ku: Dict = {
   mcMeasureBarsWord: 'مۆم',
   mcMeasureDurUnits: { m: ' خولەک', h: ' کاتژمێر', d: ' ڕۆژ' },
   mcNoteDefault: 'تێبینی',
+  mcNoteTextA11y: 'دەقی تێبینی لەسەر چارت — تا 60 پیت',
+  mcHintNoteSelected: 'دەقی تێبینییەکە لە خانەی ژێری بنووسە · ڕایبکێشە بۆ جوولاندنی · خۆکار پاشەکەوت دەبێت',
+  mcHintNoteSelectedWeb: 'دەقی تێبینییەکە لە خانەی ژێری بنووسە · ڕایبکێشە بۆ جوولاندنی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z بۆ گەڕانەوە',
   mcSnapshotSaved: 'وێنەی چارت پاشەکەوت کرا',
   mcSnapshotFailed: 'نەتوانرا چارت هەناردە بکرێت — دووبارە هەوڵ بدەرەوە، یان وێنەی شاشەی چارتەکە بگرە',
   mcTemplateDefaultName: 'بنەڕەت',
