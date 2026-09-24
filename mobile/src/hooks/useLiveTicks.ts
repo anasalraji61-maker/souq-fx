@@ -48,7 +48,8 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
               ts?: number;
             };
             const p = data.ticks?.[sym];
-            if (typeof p === 'number') {
+            // `typeof === 'number'` يمرّر الصفر والسالب (تيك مزوّد معطوب): الرأس كان يطبع «0.00000» سعراً حيّاً.
+            if (typeof p === 'number' && Number.isFinite(p) && p > 0) {
               setState({ sym, tick: { price: p, source: parseWsDataSource(data) } });
             }
           } catch {

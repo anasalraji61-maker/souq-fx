@@ -20,7 +20,10 @@ export function withLivePrice(
   tickSource?: DataProvenance | null,
   opts?: LiveMergeOpts
 ): ChartSeries {
-  if (livePrice == null || !series.candles.length) return series;
+  // سعر ≤ 0 أو NaN يمدّ ذيل الشمعة الحيّة إلى الصفر فيسحق مقياس السعر (انظر livePriceForChart).
+  if (livePrice == null || !Number.isFinite(livePrice) || livePrice <= 0 || !series.candles.length) {
+    return series;
+  }
   const candleSrc = series.data_source ?? { kind: 'unknown' as const };
   const tickSrc = tickSource ?? { kind: 'unknown' as const };
   if (!canMergeLiveIntoCandles(candleSrc, tickSrc)) {
@@ -53,6 +56,9 @@ export function livePriceForChart(
   opts?: LiveMergeOpts
 ): number | null {
   if (!tick) return null;
+  // تيك صفر/NaN (عطل مزوّد أو رسالة ناقصة) كان يُعاد سعراً حيّاً فيُدمج بالشمعة الأخيرة ويمدّ
+  // ذيلها إلى الصفر، فيسحق مقياس السعر كلّه لشمعة واحدة. لا سعر أداة ≤ 0.
+  if (!Number.isFinite(tick.price) || tick.price <= 0) return null;
   if (!canMergeLiveIntoCandles(series.data_source, tick.source)) return null;
   if (!series.candles.length) return null;
   const last = series.candles[series.candles.length - 1]!;

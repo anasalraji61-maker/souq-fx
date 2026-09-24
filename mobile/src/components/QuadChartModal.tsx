@@ -150,13 +150,14 @@ export function QuadChartModal({
             // الرباعي أصلاً — تتطلّب قراءة محور كل شارت. السعر الحيّ (أو آخر إغلاق) بخانات
             // الزوج، والنسبة بقاعدة رأس الإطار نفسها: اللون من الرقم المطبوع، وصفره مكتوم.
             const s = series[i];
-            const px = ticks[sym]?.price ?? s?.last ?? NaN;
+            const tp = ticks[sym]?.price;
+            const px = tp != null && Number.isFinite(tp) && tp > 0 ? tp : (s?.last ?? NaN);
             const pct = s && Number.isFinite(s.change_pct) ? s.change_pct : null;
             const pctR = pct == null ? 0 : Math.round(pct * 100) / 100;
             const pctColor = pctR > 0 ? colors.bull : pctR < 0 ? colors.bear : colors.textDim;
             return (
               <Pressable
-                key={sym}
+                key={`${i}:${sym}`}
                 accessibilityRole="button"
                 accessibilityLabel={
                   syncTime && !isLeader ? `${t.cfSyncActivateA11yPrefix}${sym}` : undefined

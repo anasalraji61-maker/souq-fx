@@ -123,6 +123,20 @@ const merged = withLivePrice(
   { tickAsOf: now, timeframe: '15m', nowSec: now }
 );
 check('forming candle merged', merged.candles[0]!.close === 1.12);
+const liveSrc = { kind: 'provider' as const, channel: 'twelvedata_ws', as_of: now };
+const liveOpts = { tickAsOf: now, timeframe: '15m', nowSec: now };
+check('livePriceForChart good tick in bucket', livePriceForChart(forming, { price: 1.12, source: liveSrc }, liveOpts) === 1.12);
+check(
+  'livePriceForChart rejects zero/negative/NaN tick',
+  livePriceForChart(forming, { price: 0, source: liveSrc }, liveOpts) === null &&
+    livePriceForChart(forming, { price: -1.1, source: liveSrc }, liveOpts) === null &&
+    livePriceForChart(forming, { price: NaN, source: liveSrc }, liveOpts) === null
+);
+check(
+  'withLivePrice ignores zero/NaN tick',
+  withLivePrice(forming, 0, liveSrc, liveOpts) === forming &&
+    withLivePrice(forming, NaN, liveSrc, liveOpts) === forming
+);
 
 // اقتباس حقيقي مقابل بذري تجريبي
 check('quote provider', isRealQuote({ price: 8.2, source: 'twelvedata', data_kind: 'provider' }));
