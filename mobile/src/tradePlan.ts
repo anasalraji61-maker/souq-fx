@@ -365,6 +365,39 @@ export function floatingResult(input: {
   return { ...mv, r: realizedR({ side, entry, sl, exit: current }) };
 }
 
+/**
+ * السعر الذي تُنفَّذ عليه الصفقة فعلاً من لقطة Bid/Ask: الفتح شراءً والإغلاق بيعاً على Ask، والعكس على Bid.
+ * Bid/Ask غائبٌ أو غير صالح ⇒ السعر المفرد (`price`)؛ و`null` إن لم يصلح هو أيضاً.
+ */
+export function executionPrice(
+  q: { price: number; bid?: number | null; ask?: number | null },
+  side: TradeSide,
+  action: 'open' | 'close' = 'open',
+): number | null {
+  const useAsk = (side === 'buy') === (action === 'open');
+  const px = useAsk ? q.ask : q.bid;
+  if (typeof px === 'number' && Number.isFinite(px) && px > 0) return px;
+  return Number.isFinite(q.price) && q.price > 0 ? q.price : null;
+}
+
+/**
+ * تبديل شراء⇄بيع بالدفتر **بعد** تعبئة «السعر الحالي»: الخانة تحمل Ask الشراء، والبيع يُنفَّذ على Bid —
+ * فرق السبريد كاملاً بالدخول (2–3 pip على الرئيسية، وأكثر بالذهب) يُحسب خطأً بالنقاط وR والمال.
+ * يعيد سعر الجهة الجديدة **من اللقطة نفسها** إن كانت الخانة ما زالت بنصّ التعبئة حرفياً وللأداة نفسها؛
+ * وإلا `null` (كتب المتداول سعره بنفسه، أو غيّر الأداة — لا نلمس ما كتب).
+ */
+export function entryAfterSideSwitch(input: {
+  entryText: string;
+  symbol: string | null;
+  side: TradeSide;
+  filled: { symbol: string; text: string; q: { price: number; bid?: number | null; ask?: number | null } } | null;
+}): number | null {
+  const { entryText, symbol, side, filled } = input;
+  if (!filled || symbol == null || filled.symbol !== symbol) return null;
+  if (entryText.trim() !== filled.text) return null;
+  return executionPrice(filled.q, side, 'open');
+}
+
 /** نسب الهدف السريعة بالحاسبة والدفتر: ما يخطّط عليه متداول التجزئة فعلاً (1:1 تعادل، 1:2 القاعدة الشائعة). */
 export const QUICK_RR = [1, 1.5, 2, 3] as const;
 

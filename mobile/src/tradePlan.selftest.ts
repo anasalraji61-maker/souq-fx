@@ -5,6 +5,8 @@
 import assert from 'node:assert/strict';
 import {
   analyzePlan,
+  entryAfterSideSwitch,
+  executionPrice,
   exitShortcuts,
   exitPreview,
   averageR,
@@ -1042,3 +1044,45 @@ console.log('tradePlan stopsForPips selftest OK');
   assert.deepEqual(net, [{ symbol: 'XAUUSD', n: 2, pips: 20, cash: { amount: 20, ccy: 'USD' } }]);
 }
 console.log('tradePlan GOLD/SILVER journal selftest OK');
+
+// ── سعر التنفيذ من Bid/Ask، وتبديل الجهة بعد تعبئة «السعر الحالي» بالدفتر ──
+{
+  const q = { price: 1.0851, bid: 1.085, ask: 1.0852 };
+  assert.equal(executionPrice(q, 'buy'), 1.0852); // فتح شراء = Ask
+  assert.equal(executionPrice(q, 'sell'), 1.085); // فتح بيع = Bid
+  assert.equal(executionPrice(q, 'buy', 'close'), 1.085); // إغلاق شراء = Bid
+  assert.equal(executionPrice(q, 'sell', 'close'), 1.0852); // إغلاق بيع = Ask
+  // Bid/Ask غائب أو صفر أو NaN ⇒ السعر المفرد
+  for (const bad of [null, undefined, 0, -1, NaN, Infinity]) {
+    assert.equal(executionPrice({ price: 1.0851, bid: bad, ask: bad }, 'buy'), 1.0851);
+    assert.equal(executionPrice({ price: 1.0851, bid: bad, ask: bad }, 'sell'), 1.0851);
+  }
+  assert.equal(executionPrice({ price: NaN }, 'buy'), null);
+  assert.equal(executionPrice({ price: 0, ask: null }, 'buy'), null);
+
+  // الخانة بنصّ التعبئة حرفياً ⇒ سعر الجهة الجديدة من اللقطة نفسها
+  const filled = { symbol: 'EURUSD', text: '1.08520', q };
+  assert.equal(entryAfterSideSwitch({ entryText: '1.08520', symbol: 'EURUSD', side: 'sell', filled }), 1.085);
+  assert.equal(entryAfterSideSwitch({ entryText: ' 1.08520 ', symbol: 'EURUSD', side: 'sell', filled }), 1.085);
+  // والعودة: بيع → شراء
+  const back = { symbol: 'EURUSD', text: '1.08500', q };
+  assert.equal(entryAfterSideSwitch({ entryText: '1.08500', symbol: 'EURUSD', side: 'buy', filled: back }), 1.0852);
+  // كتب المتداول سعره بنفسه (ولو رقماً مساوياً بصيغة أخرى) ⇒ لا نلمسه
+  assert.equal(entryAfterSideSwitch({ entryText: '1.0852', symbol: 'EURUSD', side: 'sell', filled }), null);
+  assert.equal(entryAfterSideSwitch({ entryText: '1.08530', symbol: 'EURUSD', side: 'sell', filled }), null);
+  assert.equal(entryAfterSideSwitch({ entryText: '', symbol: 'EURUSD', side: 'sell', filled }), null);
+  // أداة أخرى أو لا تعبئة أصلاً
+  assert.equal(entryAfterSideSwitch({ entryText: '1.08520', symbol: 'GBPUSD', side: 'sell', filled }), null);
+  assert.equal(entryAfterSideSwitch({ entryText: '1.08520', symbol: null, side: 'sell', filled }), null);
+  assert.equal(entryAfterSideSwitch({ entryText: '1.08520', symbol: 'EURUSD', side: 'sell', filled: null }), null);
+  // لقطة بلا Bid/Ask ⇒ السعر المفرد نفسه (بلا فرق — لا نخترع سبريداً)
+  const mid = { symbol: 'XAUUSD', text: '2350.50', q: { price: 2350.5 } };
+  assert.equal(entryAfterSideSwitch({ entryText: '2350.50', symbol: 'XAUUSD', side: 'sell', filled: mid }), 2350.5);
+
+  // ما يصنعه الفرق: بيع مسجَّل على Ask بدل Bid = 2 pip خطأ بالمخاطرة (وقف 1.0870)
+  const wrong = analyzePlan({ symbol: 'EURUSD', side: 'sell', entry: 1.0852, sl: 1.087, tp: 1.08 });
+  const right = analyzePlan({ symbol: 'EURUSD', side: 'sell', entry: 1.085, sl: 1.087, tp: 1.08 });
+  assert.equal(wrong.riskPips, 18);
+  assert.equal(right.riskPips, 20);
+}
+console.log('tradePlan executionPrice / side switch selftest OK');

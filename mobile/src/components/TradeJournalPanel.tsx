@@ -19,6 +19,8 @@ import { isRealQuote } from '../chart/dataSource';
 import { formatMoney, instrumentSpec, pipsBetween, pnlInQuoteCcy, riskInQuoteCcy, sizeLooksLikeUnits } from '../positionSize';
 import {
   analyzePlan,
+  entryAfterSideSwitch,
+  executionPrice,
   exitShortcuts,
   exitPreview,
   floatingResult,
@@ -231,6 +233,20 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
 
   /** سعر الدخول بنقرة: المتداول يسجّل الصفقة لحظة فتحها غالباً. Ask للشراء وBid للبيع إن توفّرا (ما ينفَّذ
    * عليه فعلاً)، وإلا السعر. اقتباس بذري تجريبي لا يُستخدم أبداً (isRealQuote) — لا دخول مختلَق. */
+  /** آخر تعبئة لـ«السعر الحالي» — تبديل الجهة بعدها يأخذ سعر الجهة الأخرى من اللقطة نفسها (`entryAfterSideSwitch`) */
+  const liveFillRef = useRef<{ symbol: string; text: string; q: { price: number; bid?: number | null; ask?: number | null } } | null>(null);
+  const pickSide = (next: 'buy' | 'sell') => {
+    if (next === side) return;
+    const sym = quoteSymbol(symbol);
+    const px = entryAfterSideSwitch({ entryText: entry, symbol: sym, side: next, filled: liveFillRef.current });
+    if (px != null && sym != null) {
+      const text = formatPrice(px, sym);
+      setEntry(text);
+      liveFillRef.current = liveFillRef.current && { ...liveFillRef.current, text };
+    }
+    setSide(next);
+  };
+
   const fillLivePrice = async () => {
     const sym = quoteSymbol(symbol);
     const key = `${sym}|${side}`;
@@ -246,9 +262,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         setFormError(t.journalNoLiveQuote);
         return;
       }
-      const sidePx = side === 'buy' ? q.ask : q.bid;
-      const px = typeof sidePx === 'number' && Number.isFinite(sidePx) && sidePx > 0 ? sidePx : q.price;
-      setEntry(formatPrice(px, sym));
+      const px = executionPrice(q, side, 'open');
+      if (px == null) {
+        setFormError(t.journalNoLiveQuote);
+        return;
+      }
+      const text = formatPrice(px, sym);
+      setEntry(text);
+      liveFillRef.current = { symbol: sym, text, q };
       playSoftClick();
     } catch {
       if (mountedRef.current) setFormError(t.journalNoLiveQuote);
@@ -525,6 +546,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     setEditing(tr);
     setSymbol(tr.symbol);
     setSide(tr.side === 'sell' ? 'sell' : 'buy');
+    liveFillRef.current = null;
     // String لا formatPrice: لا تقريب يغيّر السعر المسجَّل بمجرد فتح التعديل
     setEntry(String(tr.entry));
     setExit(tr.exit != null ? String(tr.exit) : '');
@@ -654,8 +676,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       const q = await api.marketQuote(quoteSymbol(tr.symbol) ?? tr.symbol);
       if (!mountedRef.current) return;
       if (isRealQuote(q)) {
-        const sidePx = tr.side === 'sell' ? q.ask : q.bid;
-        px = typeof sidePx === 'number' && Number.isFinite(sidePx) && sidePx > 0 ? sidePx : q.price;
+        px = executionPrice(q, tr.side === 'sell' ? 'sell' : 'buy', 'close');
       }
     } catch {
       px = null;
@@ -1044,7 +1065,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
               transform: [{ scale: buttons.pressedScale }],
             },
           ]}
-          onPress={() => setSide('buy')}
+          onPress={() => pickSide('buy')}
           accessibilityLabel={`${t.journalSideA11yPrefix}: ${t.dirBuy}`}
         >
           <Text style={[styles.chipText, side === 'buy' && styles.chipTextOn]}>{t.dirBuy}</Text>
@@ -1059,7 +1080,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
               transform: [{ scale: buttons.pressedScale }],
             },
           ]}
-          onPress={() => setSide('sell')}
+          onPress={() => pickSide('sell')}
           accessibilityLabel={`${t.journalSideA11yPrefix}: ${t.dirSell}`}
         >
           <Text style={[styles.chipText, side === 'sell' && styles.chipTextOn]}>{t.dirSell}</Text>
