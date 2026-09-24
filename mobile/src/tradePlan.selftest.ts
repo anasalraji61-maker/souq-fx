@@ -7,6 +7,7 @@ import {
   analyzePlan,
   entryAfterSideSwitch,
   executionPrice,
+  floatingExitPrice,
   liveEntryForStop,
   liveEntryQuote,
   liveEntryOrphaned,
@@ -1780,3 +1781,49 @@ console.log('tradePlan knownLots localized plan note selftest OK');
   assert.equal(planSummaryText(us30, w), 'Risk 100 · Reward 200 · R:R 1:2.0');
 }
 console.log('tradePlan planSummaryText selftest OK');
+
+// floatingExitPrice — الصفّ العائم على سعر الإغلاق الفعلي (Bid للشراء، Ask للبيع) كـ«أغلق بسعر السوق»
+{
+  const close = (a: number | null, b: number) => {
+    assert.ok(a != null && Math.abs(a - b) < 1e-9, `${a} ≠ ${b}`);
+  };
+  // المثال الذي كان خاطئاً: ذهب، وسطي 2650.00، Bid 2649.80 / Ask 2650.20، شراء 1 لوت من 2645.00
+  const snap = { price: 2650, bid: 2649.8, ask: 2650.2 };
+  close(floatingExitPrice({ side: 'buy', snap }), 2649.8);
+  close(floatingExitPrice({ side: 'sell', snap }), 2650.2);
+  // يطابق executionPrice(…, 'close') حرفياً بلا تيك
+  assert.equal(floatingExitPrice({ side: 'buy', snap }), executionPrice(snap, 'buy', 'close'));
+  assert.equal(floatingExitPrice({ side: 'sell', snap }), executionPrice(snap, 'sell', 'close'));
+  // المال: 5.00 × 100 أوقية = 500 بالوسطي، و480 على Bid
+  const midCash = journalPnl({ symbol: 'XAUUSD', side: 'buy', entry: 2645, exit: 2650, lots: 1 });
+  const bidCash = journalPnl({
+    symbol: 'XAUUSD', side: 'buy', entry: 2645, exit: floatingExitPrice({ side: 'buy', snap }) as number, lots: 1,
+  });
+  assert.ok(midCash && Math.abs(midCash.amount - 500) < 1e-6);
+  assert.ok(bidCash && Math.abs(bidCash.amount - 480) < 1e-6);
+  // تيكٌ حيّ تحرّك: إزاحة اللقطة (−0.20 شراء / +0.20 بيع) على التيك
+  close(floatingExitPrice({ side: 'buy', live: 2652, snap }), 2651.8);
+  close(floatingExitPrice({ side: 'sell', live: 2652, snap }), 2652.2);
+  // EURUSD: وسطي 1.08510، Bid 1.08500 / Ask 1.08520، تيك 1.08600
+  const eu = { price: 1.0851, bid: 1.085, ask: 1.0852 };
+  close(floatingExitPrice({ side: 'buy', live: 1.086, snap: eu }), 1.0859);
+  close(floatingExitPrice({ side: 'sell', live: 1.086, snap: eu }), 1.0861);
+  // بلا لقطة، أو لقطة بلا Bid/Ask ⇒ السعر المفرد كما كان
+  assert.equal(floatingExitPrice({ side: 'buy', live: 1.086 }), 1.086);
+  assert.equal(floatingExitPrice({ side: 'buy', live: 1.086, snap: null }), 1.086);
+  assert.equal(floatingExitPrice({ side: 'buy', live: 1.086, snap: { price: 1.0851 } }), 1.086);
+  assert.equal(floatingExitPrice({ side: 'sell', snap: { price: 1.0851, bid: null, ask: null } }), 1.0851);
+  // Bid وحده (بيع يحتاج Ask) ⇒ لا إزاحة
+  assert.equal(floatingExitPrice({ side: 'sell', live: 1.086, snap: { price: 1.0851, bid: 1.085 } }), 1.086);
+  // لقطة فاسدة: Bid فوق Ask، Bid فوق السعر، سبريد > 1% ⇒ لا إزاحة
+  assert.equal(floatingExitPrice({ side: 'buy', live: 1.086, snap: { price: 1.0851, bid: 1.0853, ask: 1.0852 } }), 1.086);
+  assert.equal(floatingExitPrice({ side: 'buy', live: 1.086, snap: { price: 1.0851, bid: 1.0852, ask: 1.0853 } }), 1.086);
+  assert.equal(floatingExitPrice({ side: 'buy', live: 1.086, snap: { price: 1.0851, bid: 1.07, ask: 1.1 } }), 1.086);
+  // تيك غير صالح ⇒ سعر اللقطة بجهة الإغلاق؛ لا شيء صالح ⇒ null
+  for (const bad of [null, undefined, 0, -1, NaN, Infinity]) {
+    close(floatingExitPrice({ side: 'buy', live: bad, snap: eu }), 1.085);
+    assert.equal(floatingExitPrice({ side: 'buy', live: bad }), null);
+    assert.equal(floatingExitPrice({ side: 'buy', live: bad, snap: { price: NaN, bid: 1.085, ask: 1.0852 } }), null);
+  }
+}
+console.log('tradePlan floatingExitPrice selftest OK');

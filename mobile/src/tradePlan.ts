@@ -679,6 +679,34 @@ export function executionPrice(
 }
 
 /**
+ * السعر الذي **يُغلَق عليه** صفّ الصفقة المفتوحة الآن — ليطابق الرقمُ العائم ما يسجّله «أغلق بسعر السوق» (`executionPrice(…, 'close')`):
+ * شراء الذهب 1 لوت كان يعرض +500 USD بالسعر الوسطي، والإغلاق على Bid يسجّل +480.
+ *
+ * `live` تيكٌ حيّ بسعرٍ مفرد (لا Bid/Ask)، و`snap` لقطة التحميل بـBid/Ask. الإزاحة من سعر اللقطة إلى جهة الإغلاق (نصف السبريد
+ * تقريباً) تُطبَّق على التيك: السبريد أبطأ حركةً من السعر، فهو من اللقطة والسعر من التيك.
+ * الإزاحة تُهمَل (0) إن كانت اللقطة بلا Bid/Ask، أو Bid فوق Ask، أو بعكس اتجاه الإغلاق (Bid فوق السعر)، أو أكبر من 1% من السعر
+ * (اقتباسٌ فاسد لا سبريد) — فيبقى السعر المفرد كما كان. `null` بلا أيّ سعر صالح.
+ */
+export function floatingExitPrice(input: {
+  side: TradeSide;
+  live?: number | null;
+  snap?: { price: number; bid?: number | null; ask?: number | null } | null;
+}): number | null {
+  const { side, live, snap } = input;
+  const ok = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n > 0;
+  const base = ok(live) ? live : snap && ok(snap.price) ? snap.price : null;
+  if (base == null) return null;
+  if (!snap || !ok(snap.price)) return base;
+  if (ok(snap.bid) && ok(snap.ask) && snap.bid > snap.ask) return base;
+  const exec = executionPrice(snap, side, 'close');
+  let off = exec == null ? 0 : exec - snap.price;
+  const wrongWay = side === 'buy' ? off > 0 : off < 0;
+  if (wrongWay || Math.abs(off) > snap.price * 0.01) off = 0;
+  const px = base + off;
+  return px > 0 ? px : base;
+}
+
+/**
  * تبديل شراء⇄بيع بالدفتر **بعد** تعبئة «السعر الحالي»: الخانة تحمل Ask الشراء، والبيع يُنفَّذ على Bid —
  * فرق السبريد كاملاً بالدخول (2–3 pip على الرئيسية، وأكثر بالذهب) يُحسب خطأً بالنقاط وR والمال.
  * يعيد سعر الجهة الجديدة **من اللقطة نفسها** إن كانت الخانة ما زالت بنصّ التعبئة حرفياً وللأداة نفسها؛

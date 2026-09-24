@@ -27,6 +27,7 @@ import {
   formatJournalMoney,
   planSummaryText,
   journalPnl,
+  floatingExitPrice,
   floatingResult,
   formatPips,
   formatR,
@@ -118,6 +119,9 @@ type Props = {
   ticks?: Record<string, number>;
 };
 
+/** لقطة اقتباس أداة صفقة مفتوحة — Bid/Ask قد يغيبان (يُستعمل السعر المفرد حينها). */
+type QuoteSnap = { price: number; bid?: number | null; ask?: number | null };
+
 export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props = {}) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
@@ -167,7 +171,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * كبيرة كما تُكتب بالمفتاح. رمزٌ غاب عن الكائن = لا سعر موثوق له (اقتباس بذري تجريبي، أو فشل
    * شبكة، أو تجاوَز السقف) فيبقى صفّه كما كان تماماً — لا رقم عائم من سعر لا نملكه.
    */
-  const [quotes, setQuotes] = useState<Record<string, number>>({});
+  const [quotes, setQuotes] = useState<Record<string, QuoteSnap>>({});
   const quoteGenRef = useRef(0);
 
   /**
@@ -202,7 +206,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         try {
           const q = await api.marketQuote(sym);
           // اقتباس بذري تجريبي (مزوّد غير مهيّأ/رمز مجهول) ليس سعر سوق — نتيجة عائمة منه رقمٌ مختلَق
-          return isRealQuote(q) ? ([sym, q.price] as const) : null;
+          // Bid/Ask مع السعر: الصفّ العائم يُحسب على سعر الإغلاق الفعلي (`floatingExitPrice`)
+          return isRealQuote(q) ? ([sym, { price: q.price, bid: q.bid, ask: q.ask }] as const) : null;
         } catch {
           return null;
         }
@@ -210,7 +215,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     );
     // تبديل قائمة الصفقات أثناء الطلب (إغلاق صفقة مثلاً) يُلغي هذه النتيجة — لا أسعار لقائمة سابقة
     if (!mountedRef.current || gen !== quoteGenRef.current) return;
-    const next: Record<string, number> = {};
+    const next: Record<string, QuoteSnap> = {};
     for (const pair of got) if (pair) next[pair[0]] = pair[1];
     setQuotes(next);
   }, []);
@@ -906,7 +911,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             // مفتاح التيكات واللقطة رمزُ الاقتباس (لاحقة الوسيط ساقطة) — راجع `quoteSymbol`
             const trSym = quoteSymbol(tr.symbol || '') ?? (tr.symbol || '').trim().toUpperCase();
             // التيك الحيّ أولاً (يتحرّك مع السوق)، ثم لقطة التحميل — والغياب التامّ يُبقي الصفّ كما كان
-            const live = closed ? null : ticks?.[trSym] ?? quotes[trSym] ?? null;
+            // على سعر **الإغلاق** (Bid للشراء، Ask للبيع؛ إزاحة اللقطة على التيك) كـ«أغلق بسعر السوق» تماماً —
+            // بالسعر الوسطي كان شراء ذهب 1 لوت يعرض +500 USD والإغلاق يسجّل +480
+            const live = closed
+              ? null
+              : floatingExitPrice({ side: trSide, live: ticks?.[trSym], snap: quotes[trSym] ?? null });
             const mv = closed
               ? realizedMove({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: tr.exit })
               : floatingResult({ symbol: tr.symbol, side: trSide, entry: tr.entry, sl: tr.sl, current: live });
