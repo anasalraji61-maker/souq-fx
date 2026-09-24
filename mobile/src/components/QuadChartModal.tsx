@@ -158,6 +158,36 @@ export function QuadChartModal({
     };
   }, [visible, symbols, tf]);
 
+  // الجلب أعلاه مرّة واحدة لكل فتح/تبديل: على 15m بعد ربع ساعة يقع التيك خارج آخر شمعة
+  // فيُرفض، ويقف الشارت بينما الرأس يطبع السعر الحيّ. تحديث صامت كل 90 ث كالطرفية:
+  // شموع حقيقية جديدة تستبدل القديمة، وفشل الجلب (أو رجوع بيانات وهمية) يُبقي ما هو معروض.
+  useEffect(() => {
+    if (!visible) return;
+    let alive = true;
+    const refresh = () => {
+      symbols.forEach((sym, i) => {
+        api
+          .chart(sym, tf)
+          .then((s) => {
+            if (!alive || normalizeProvenance(s.data_source).kind === 'demo') return;
+            quadSeriesCache.put(seriesCacheKey(sym, tf), s);
+            pendingAnchor.current[i] = false;
+            setSeries((prev) => {
+              const next = [...prev];
+              next[i] = s;
+              return next;
+            });
+          })
+          .catch(() => {});
+      });
+    };
+    const id = setInterval(refresh, 90_000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [visible, symbols, tf]);
+
   useEffect(() => {
     if (!pendingAnchor.current.some(Boolean)) return;
     symbols.forEach((sym, i) => {
