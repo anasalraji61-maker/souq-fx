@@ -530,3 +530,24 @@ console.log('newsRisk micro/cent suffix selftest OK');
   );
 }
 console.log('newsRisk banner text selftest OK');
+
+// أسماء OANDA بشرطة سفلية: عملة التسعير بعد «_» لا تُسقط كلاحقة وسيط
+{
+  assert.deepEqual(symbolCurrencies('JP225_USD'), ['JPY', 'USD']);
+  assert.deepEqual(symbolCurrencies('CN50_USD'), ['CNY', 'USD']);
+  assert.deepEqual(symbolCurrencies('HK33_HKD'), ['HKD']);
+  assert.deepEqual(symbolCurrencies('USB10Y_USD'), ['USD']);
+  assert.deepEqual(symbolCurrencies('NAS100_USD'), ['USD']);
+  assert.deepEqual(symbolCurrencies('de30_eur'), ['EUR']);
+  assert.deepEqual(symbolCurrencies('WTICO_USD'), ['USD']);
+  // الأزواج بشرطة سفلية كما كانت
+  assert.deepEqual(symbolCurrencies('EUR_USD'), ['EUR', 'USD']);
+  assert.deepEqual(symbolCurrencies('XAU_USD'), ['USD']);
+  assert.deepEqual(symbolCurrencies('XAU_EUR'), ['USD', 'EUR']);
+  assert.deepEqual(symbolCurrencies('BTC_USD'), ['USD']);
+  assert.deepEqual(symbolCurrencies('USD_CNH'), ['USD', 'CNY']);
+  // لاحقة ليست عملة تبقى لاحقة وسيط
+  assert.deepEqual(symbolCurrencies('US30_ECN'), ['USD']);
+  assert.deepEqual(symbolCurrencies('GER40_M'), ['EUR']);
+}
+console.log('newsRisk OANDA underscore selftest OK');

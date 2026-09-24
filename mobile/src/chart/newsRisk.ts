@@ -124,6 +124,20 @@ export function symbolCurrencies(symbol: string): string[] {
   const small = smallContractPair(symbol);
   if (small) return symbolCurrencies(small);
   /**
+   * **أسماء OANDA بشرطة سفلية** («JP225_USD»، «CN50_USD»، «HK33_HKD»، «USB10Y_USD»): المقطع الأخير عملة التسعير لا
+   * لاحقة وسيط، لكن `suffixFree` كان يُسقطه — فالنيكاي بالدولار يصير الين وحده، وسند الخزانة الأمريكي `[]`: صفقة
+   * قبل الرواتب الأمريكية بدقائق بلا تحذير. الآن: عملة الأداة نفسها (إن عُرفت) ثم عملة تسعيرها. الأزواج («EUR_USD»،
+   * «XAU_USD»، «BTC_USD» — مقطعٌ أوّل من 3 حروف) تبقى على مسارها أدناه كما كانت.
+   */
+  const oanda = /^([A-Z0-9]{2,})_([A-Z]{3})$/.exec(symbol.trim().toUpperCase());
+  if (oanda && !/^[A-Z]{3}$/.test(oanda[1])) {
+    const q = oanda[2] === 'CNH' ? 'CNY' : oanda[2];
+    if (FIAT.has(q)) {
+      const own = symbolCurrencies(oanda[1]);
+      return own.includes(q) ? own : [...own, q];
+    }
+  }
+  /**
    * الرمز القانوني أولاً (`instrumentSpec` يُسقط لاحقة الوسيط): الدفتر يمرّر الرمز كما كتبه المتداول،
    * و«XAUUSD.m» كان يصير «XAUUSDM» (7 أحرف) فيغيب تحذير الرواتب الأمريكية عن نموذج الصفقة قبل الدخول.
    */
