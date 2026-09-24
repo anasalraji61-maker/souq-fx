@@ -367,6 +367,24 @@ export function misplacedArabicThousandsSignInRisk(raw: string, balance: number,
 }
 
 /**
+ * المخاطرة المكتوبة **أكبر من الرصيد** (نسبة فوق 100%، أو مبلغ فوق الرصيد): `positionSize` يرفضها فلا لوت،
+ * وكان السطر الوحيد عند الخانة «أكثر من 2% مخاطرة عالية» — صحيح لكنه لا يقول إن الرقم مستحيل ولا لماذا
+ * اختفت النتيجة. يعيد المبلغين لرسالة `riskCalcRiskOverBalance`: المبلغ المكتوب كما هو، أو المحسوب من
+ * النسبة (200% من 5,000 = 10,000). المساواة (100%) ليست فوق الرصيد — يحسبها `positionSize`.
+ * `null` لخانة غير مفهومة، أو بلا رصيد صالح، أو ضمن الرصيد.
+ */
+export function riskOverBalance(
+  raw: string,
+  balance: number,
+  account: string
+): { risk: number; balance: number } | null {
+  const r = parseRiskInput(raw, balance, account);
+  if (!r || r.pct == null || !(Number.isFinite(balance) && balance > 0)) return null;
+  if (!(r.pct > 100)) return null;
+  return { risk: r.amount ?? (balance * r.pct) / 100, balance };
+}
+
+/**
  * زرّ عملة الحساب بجانب نسب المخاطرة السريعة: يقلب الخانة بين **النسبة والمبلغ** بالمخاطرة نفسها — «1»
  * برصيد 10,000 ⇒ «USD 100»، و«USD 100» ⇒ «1». لوحة الأرقام بالهاتف بلا «$» ولا حروف، فبلا هذا الزرّ لا
  * يُكتب المبلغ إلا لصقاً. الكود **قبل** المبلغ عمداً: الكتابة تُضاف بآخر الخانة فتبقى «USD 150» مفهومة.

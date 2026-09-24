@@ -46,6 +46,7 @@ import {
   stopInsideSpread,
   misplacedArabicThousandsSignInRisk,
   leverageOutOfRange,
+  riskOverBalance,
   MAX_LEVERAGE,
   planJournalNote,
   parseCommission,
@@ -1613,3 +1614,22 @@ console.log('positionSize misplacedArabicThousandsSignInRisk selftest OK');
   assert.equal(parseLeverage('0.5'), null);
 }
 console.log('positionSize leverageOutOfRange selftest OK');
+
+// riskOverBalance — مخاطرة أكبر من الرصيد تُسمّى بالمبلغين
+{
+  assert.deepEqual(riskOverBalance('200', 5_000, 'USD'), { risk: 10_000, balance: 5_000 });
+  assert.deepEqual(riskOverBalance('150%', 1_000, 'USD'), { risk: 1_500, balance: 1_000 });
+  // مبلغ فوق الرصيد: المبلغ المكتوب كما هو
+  assert.deepEqual(riskOverBalance('$600', 500, 'USD'), { risk: 600, balance: 500 });
+  assert.deepEqual(riskOverBalance('USD 5000', 500, 'USD'), { risk: 5000, balance: 500 });
+  assert.deepEqual(riskOverBalance('١٠١', 100, 'USD'), { risk: 101, balance: 100 });
+  // الحدّ: 100% بالضبط يحسبه positionSize ⇒ ليس فوق الرصيد
+  assert.equal(riskOverBalance('100', 5_000, 'USD'), null);
+  assert.equal(riskOverBalance('$500', 500, 'USD'), null);
+  assert.ok(positionSize({ balance: 500, riskPct: 100, slPips: 10, pipValuePerLot: 10, contractSize: 100_000 }) != null);
+  assert.equal(positionSize({ balance: 500, riskPct: 100.01, slPips: 10, pipValuePerLot: 10, contractSize: 100_000 }), null);
+  // ضمن الرصيد، غير مفهومة، عملة أخرى، بلا رصيد
+  for (const [r, b] of [['1', 10_000], ['50', 10_000], ['abc', 10_000], ['', 10_000], ['€600', 500], ['200', NaN], ['200', 0], ['$600', NaN]] as const)
+    assert.equal(riskOverBalance(r, b, 'USD'), null, `${r} @ ${b}`);
+}
+console.log('positionSize riskOverBalance selftest OK');

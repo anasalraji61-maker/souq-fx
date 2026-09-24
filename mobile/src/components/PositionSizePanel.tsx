@@ -24,6 +24,7 @@ import {
   profitAtTarget,
   parseLeverage,
   leverageOutOfRange,
+  riskOverBalance,
   MAX_LEVERAGE,
   requiredMargin,
   maxLotsForMargin,
@@ -752,6 +753,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * يُضاف سطر يناقضه.
    */
   const riskImpossible = Number.isFinite(riskNum) && riskNum > 100;
+  const riskOver = riskOverBalance(riskPct, balanceNum, account);
 
   const chip = (label: string, on: boolean, onPress: () => void, a11y: string, disabled = false) => (
     <Pressable
@@ -863,7 +865,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       {riskIn?.amount == null && toggleRiskUnit(riskPct, balanceNum, account) != null ? (
         <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcRiskMoneyHint.replace('{ccy}', account)}</Text>
       ) : null}
-      {riskHigh ? <Text style={[styles.warn, { textAlign: align }]}>{t.riskCalcHighRisk}</Text> : null}
+      {/* أكبر من الرصيد: لا لوت أصلاً، و«أكثر من 2% عالية» وحدها لا تقول لماذا — راجع `riskOverBalance` */}
+      {riskOver ? (
+        <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
+          {t.riskCalcRiskOverBalance.replace('{risk}', money(riskOver.risk)).replace('{balance}', money(riskOver.balance))}
+        </Text>
+      ) : riskHigh ? (
+        <Text style={[styles.warn, { textAlign: align }]}>{t.riskCalcHighRisk}</Text>
+      ) : null}
 
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcLeverage}</Text>
       {input(leverage, setLeverage, '100', t.riskCalcLeverage)}
