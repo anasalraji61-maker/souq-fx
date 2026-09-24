@@ -118,10 +118,12 @@ o = positionOutcome(PL, hi, 0, 3, 1)!;
 assert.equal(o.state, 'pending');
 assert.equal(o.r, 0);
 assert.equal(positionOutcomeText(PL, o, 'EURUSD'), 'Entry ⌛ 22.0 pip');
+assert.equal(positionOutcomeText(PL, o, 'EURUSD', 'دخول'), 'دخول ⌛ 22.0 pip');
 // الصندوق انتهى قبل بلوغه ⇒ فائت
 o = positionOutcome(PL, [...hi, bar(1.086, 1.088, 1.087)], 0, 1, 2)!;
 assert.equal(o.state, 'missed');
 assert.equal(positionOutcomeText(PL, o, 'EURUSD'), 'Entry ✕');
+assert.equal(positionOutcomeText(PL, o, 'EURUSD', 'دخول'), 'دخول ✕');
 // يُنفَّذ بالشمعة 2، والهدف يُحسب بعد التنفيذ لا قبله
 o = positionOutcome(PL, [...hi, bar(1.0845, 1.087, 1.086), bar(1.086, 1.0905, 1.09)], 0, 5, 3)!;
 assert.equal(o.state, 'target');

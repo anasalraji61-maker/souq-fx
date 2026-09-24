@@ -4,7 +4,8 @@ import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBloc
 import { api } from '../api';
 import { formatPrice } from '../chart/math';
 import { formatRR } from '../tradePlan';
-import { instrumentSpec, pipsBetween } from '../positionSize';
+import { pipsBetween } from '../positionSize';
+import { chartPipSpec } from '../chart/pipSpec';
 import { useI18n } from '../i18n/I18nContext';
 import type { Dict } from '../i18n/locales';
 
@@ -154,7 +155,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   const agreeing = votes.filter((v) => v.direction === direction).length;
   // الوقف والهدف كانا سعرَين فقط، والمتداول يزن الصفقة بالـpip (حجم لوته من مسافة وقفه).
   // `pipsBetween` نفسها التي تبني عليها الحاسبة؛ أداة بلا مواصفة pip تبقى بالأسعار وحدها.
-  const levelSpec = levels ? instrumentSpec(symbol) : null;
+  const levelSpec = levels ? chartPipSpec(symbol) : null;
   const pipsTag = (a: number, b: number) => {
     const p = levelSpec ? pipsBetween(levelSpec, a, b) : null;
     return p != null ? ` (${p.toFixed(1)} pip)` : '';

@@ -3302,7 +3302,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // لم يبلغ السعر الدخول بعد (أمر معلّق) ⇒ وسم محايد بلا شريط مسار: لا ربح ولا خسارة لصفقة لم تُفتح.
     const unfilled = outcome != null && (outcome.state === 'pending' || outcome.state === 'missed');
     const outcomeTone = unfilled ? colors.textMuted : outcomeUp ? colors.bull : colors.bear;
-    const outcomeText = outcome ? positionOutcomeText(box.lv, outcome, series.symbol) : '';
+    const outcomeText = outcome ? positionOutcomeText(box.lv, outcome, series.symbol, tr.entryLabel) : '';
     const xExit = outcome ? Math.min(box.right, xOf(outcome.exitIndex - source.start)) : 0;
     // المسار يبدأ من شمعة التنفيذ لا شمعة الرسم — دخول معلّق نُفّذ بعد عشر شمعات يُظلَّل منها.
     const xFill = outcome ? Math.max(box.xEntry, xOf(outcome.fillIndex - source.start)) : 0;

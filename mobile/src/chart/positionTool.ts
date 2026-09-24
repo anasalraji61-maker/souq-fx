@@ -194,10 +194,16 @@ export function positionOutcome(
  * وسم خطّ الدخول: «+12.3 pip · +0.49R» مفتوحة، «TP ✓ +50.0 pip · +2R» عند الهدف، «SL ✕ −25.0 pip · −1R»
  * عند الوقف. الإشارة دائماً ظاهرة (+/−) لأن اللون وحده لا يكفي لمن لا يميّز الأحمر من الأخضر.
  */
-export function positionOutcomeText(levels: PositionLevels, outcome: PositionOutcome, symbol: string): string {
+export function positionOutcomeText(
+  levels: PositionLevels,
+  outcome: PositionOutcome,
+  symbol: string,
+  entryWord = 'Entry'
+): string {
   // لم يُنفَّذ: كم يبعد السعر عن الدخول («Entry ⌛ 12.3 pip»)، أو «Entry ✕» إن انتهى الصندوق قبل بلوغه.
-  if (outcome.state === 'missed') return 'Entry ✕';
-  if (outcome.state === 'pending') return `Entry ⌛ ${distanceText(symbol, outcome.exit, levels.entry)}`;
+  // `entryWord` كلمة «دخول» بلغة الواجهة (`tr.entryLabel`) — كانت «Entry» إنجليزية ثابتة بالعربية والكردية.
+  if (outcome.state === 'missed') return `${entryWord} ✕`;
+  if (outcome.state === 'pending') return `${entryWord} ⌛ ${distanceText(symbol, outcome.exit, levels.entry)}`;
   const up = outcome.r >= 0;
   const sign = up ? '+' : '−';
   const spec = chartPipSpec(symbol);
