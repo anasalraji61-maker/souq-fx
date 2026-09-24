@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/newsRisk.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { nextHighImpact, symbolCurrencies, type NewsEvent } from './newsRisk';
+import { newsCountdown, nextHighImpact, symbolCurrencies, type NewsEvent } from './newsRisk';
 import { instrumentSpec } from '../positionSize';
 
 assert.deepEqual(symbolCurrencies('EURUSD'), ['EUR', 'USD']);
@@ -108,3 +108,34 @@ assert.equal(
 assert.equal(nextHighImpact([...list].reverse(), ['EUR', 'USD'], now)?.event.id, 'eur-high-45');
 
 console.log('newsRisk nearest selftest OK');
+
+// newsCountdown — العدّ لا يبالغ بالوقت الباقي قبل الخبر، و«0د» لا تُكتب بجانب ساعات
+{
+  const S = 1000;
+  const M = 60 * S;
+  assert.deepEqual(newsCountdown(0), { now: true });
+  assert.deepEqual(newsCountdown(60 * S), { now: true });
+  assert.deepEqual(newsCountdown(-14 * M), { now: true }); // جارٍ ضمن المهلة
+  assert.deepEqual(newsCountdown(-15 * M), { now: true });
+  assert.deepEqual(newsCountdown(NaN), { now: true }); // لا رقم مختلَق
+  assert.deepEqual(newsCountdown(61 * S), { now: false, h: 0, m: 1 });
+  assert.deepEqual(newsCountdown(91 * S), { now: false, h: 0, m: 1 }); // كان «2د» بـMath.round
+  assert.deepEqual(newsCountdown(119 * S), { now: false, h: 0, m: 1 });
+  assert.deepEqual(newsCountdown(2 * M), { now: false, h: 0, m: 2 });
+  assert.deepEqual(newsCountdown(59 * M + 50 * S), { now: false, h: 0, m: 59 }); // كان «1س 0د»
+  assert.deepEqual(newsCountdown(60 * M), { now: false, h: 1, m: 0 });
+  assert.deepEqual(newsCountdown(125 * M + 40 * S), { now: false, h: 2, m: 5 });
+  assert.deepEqual(newsCountdown(3 * 60 * M), { now: false, h: 3, m: 0 });
+  // لا يعطي أبداً وقتاً أبعد من الحقيقي، ولا يقلّ عنه بدقيقة كاملة
+  for (let s = 61; s <= 3 * 3600; s += 7) {
+    const c = newsCountdown(s * S);
+    assert.equal(c.now, false);
+    if (!c.now) {
+      const shown = (c.h * 60 + c.m) * 60;
+      assert.ok(shown <= s && s - shown < 60, `${s}s → ${c.h}h ${c.m}m`);
+      assert.ok(c.m >= 0 && c.m < 60);
+    }
+  }
+}
+
+console.log('newsRisk countdown selftest OK');

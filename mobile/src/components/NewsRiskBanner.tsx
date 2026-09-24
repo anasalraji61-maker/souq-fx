@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { colors, radii, spacing } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
-import { nextHighImpact, symbolCurrencies, NEWS_GRACE_MS, type NewsEvent } from '../chart/newsRisk';
+import { newsCountdown, nextHighImpact, symbolCurrencies, type NewsEvent } from '../chart/newsRisk';
 
 /**
  * سطر تحذير «خبر قوي قريب» فوق الشارت: أقرب حدث عالي التأثير لعملتي الزوج خلال 3 ساعات
@@ -67,14 +67,13 @@ export function NewsRiskBanner({ symbol }: Props) {
   if (!hit) return null;
 
   const { event, deltaMs } = hit;
-  let when: string;
-  if (Math.abs(deltaMs) <= NEWS_GRACE_MS && deltaMs <= 60_000) {
-    when = t.calNow;
-  } else {
-    const mins = Math.max(1, Math.round(deltaMs / 60_000));
-    const h = Math.floor(mins / 60);
-    when = `${t.calInPrefix} ${h ? `${h}${t.calHourShort} ` : ''}${mins % 60}${t.calMinShort}`;
-  }
+  // الدقائق مقرَّبة للأسفل و«0د» لا تُكتب بجانب ساعات — راجع `newsCountdown`
+  const cd = newsCountdown(deltaMs);
+  const when = cd.now
+    ? t.calNow
+    : `${t.calInPrefix} ${[cd.h ? `${cd.h}${t.calHourShort}` : '', cd.m || !cd.h ? `${cd.m}${t.calMinShort}` : '']
+        .filter(Boolean)
+        .join(' ')}`;
   const text = `⚠ ${t.newsRiskHigh} · ${event.currency} · ${event.title} · ${when}`;
 
   return (

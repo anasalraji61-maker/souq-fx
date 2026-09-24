@@ -91,3 +91,18 @@ export function nextHighImpact(
   }
   return best;
 }
+
+/**
+ * العدّ التنازلي لسطر التحذير: «الآن» حين يكون الخبر جارياً (مضى ≤ 15د) أو باقٍ عليه دقيقة أو أقل،
+ * وإلا ساعات ودقائق **مقرَّبة للأسفل**.
+ *
+ * كان `Math.round`: خبرٌ باقٍ عليه دقيقة و31 ثانية يُكتب «بعد 2د» — أي **أبعد** مما هو، والسطر لا
+ * يتجدّد إلا كل دقيقة فيبقى الرقم مبالَغاً حتى يصدر الخبر. قبل الخبر القوي الخطأ الوحيد المقبول هو
+ * جهة الحذر: «بعد 1د» لخبرٍ بعد 1:59 لا يضرّ، و«بعد 2د» لخبرٍ بعد 1:01 قد يُدخل صفقةً على القفزة.
+ * و`m` صفرٌ مع ساعات لا يُكتب («بعد 2س» لا «بعد 2س 0د») — المكوّن يقرّر ذلك من `m === 0`.
+ */
+export function newsCountdown(deltaMs: number): { now: true } | { now: false; h: number; m: number } {
+  if (!Number.isFinite(deltaMs) || (Math.abs(deltaMs) <= NEWS_GRACE_MS && deltaMs <= 60_000)) return { now: true };
+  const mins = Math.max(1, Math.floor(deltaMs / 60_000));
+  return { now: false, h: Math.floor(mins / 60), m: mins % 60 };
+}
