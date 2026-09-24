@@ -9,12 +9,14 @@
  */
 import { useEffect, useState } from 'react';
 import { api } from '../api';
-import { prevCloseFromDaily } from './dailyChange';
+import type { Candle } from '../api';
+import { prevSessionFromDaily, validSessionBar } from './dailyChange';
 
 const TTL_MS = 10 * 60 * 1000;
 const FAIL_TTL_MS = 2 * 60 * 1000;
 
-type Entry = { prevClose: number | null; at: number; ok: boolean };
+// `prevBar`: شمعة الجلسة السابقة كاملة — أساس نقاط الارتكاز بالشارت (`pivotBase.ts`).
+type Entry = { prevClose: number | null; prevBar: Candle | null; at: number; ok: boolean };
 
 const cache = new Map<string, Entry>();
 const inflight = new Set<string>();
@@ -45,10 +47,12 @@ async function drain() {
       try {
         const s = await api.chart(sym, 'D', 50);
         const demo = s?.data_source?.kind === 'demo';
-        const prev = demo ? null : prevCloseFromDaily(s?.candles ?? [], Date.now() / 1000);
-        cache.set(sym, { prevClose: prev, at: Date.now(), ok: true });
+        const bar = demo ? null : prevSessionFromDaily(s?.candles ?? [], Date.now() / 1000);
+        const c = bar?.close;
+        const prev = typeof c === 'number' && Number.isFinite(c) && c > 0 ? c : null;
+        cache.set(sym, { prevClose: prev, prevBar: validSessionBar(bar), at: Date.now(), ok: true });
       } catch {
-        cache.set(sym, { prevClose: null, at: Date.now(), ok: false });
+        cache.set(sym, { prevClose: null, prevBar: null, at: Date.now(), ok: false });
       } finally {
         inflight.delete(sym);
       }
@@ -100,4 +104,33 @@ export function useDailyRefs(symbols: readonly string[]): Record<string, number>
   }, [key]);
 
   return refs;
+}
+
+/**
+ * شمعة الجلسة السابقة لرمز واحد من شموع D1 (نفس المخزن والطلب المشترك مع قائمة المتابعة).
+ * `null` رمز ⇒ لا جلب (المؤشّر مطفأ). `undefined` = لم يصل بعد أو فشل أو بيانات تجريبية.
+ */
+export function useDailyPrevBar(symbol: string | null): Candle | undefined {
+  const sym = symbol ? symbol.toUpperCase() : '';
+  const [bar, setBar] = useState<Candle | undefined>(() =>
+    sym ? cache.get(sym)?.prevBar ?? undefined : undefined
+  );
+
+  useEffect(() => {
+    if (!sym) {
+      setBar(undefined);
+      return;
+    }
+    const update = () => setBar(cache.get(sym)?.prevBar ?? undefined);
+    listeners.add(update);
+    update();
+    request([sym]);
+    const timer = setInterval(() => request([sym]), TTL_MS);
+    return () => {
+      listeners.delete(update);
+      clearInterval(timer);
+    };
+  }, [sym]);
+
+  return bar;
 }

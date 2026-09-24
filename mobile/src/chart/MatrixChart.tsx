@@ -88,8 +88,10 @@ import {
 import { thinByGap } from './levelLabels';
 import { planHiLoLabels } from './hiLoLabels';
 import { planDayBreaks } from './dayBreaks';
-import { formatPct } from './dailyChange';
-import { timeframeStepSec } from './dataSource';
+import { formatPct, prevSessionFromDaily, validSessionBar } from './dailyChange';
+import { useDailyPrevBar } from './dailyRefStore';
+import { pivotInput, prevDayFromIntraday } from './pivotBase';
+import { candleTimeSec, normalizeProvenance, timeframeStepSec } from './dataSource';
 import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
@@ -391,6 +393,7 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
 };
 
 const PRICE_AXIS_WIDTH = 68;
+const PIVOT_IDS = new Set<string>(['pivots', 'fibPivots', 'camarilla', 'woodiePivots', 'demarkPivots', 'cpr']);
 const TIME_AXIS_HEIGHT = 48;
 const CROSS_TIME_TAG_W = 104;
 /** فجوة دنيا بين علامتي زمن متجاورتين، ومقاس علامة السعر وفجوتها — راجع `axisTicks.ts`. */
@@ -1264,29 +1267,46 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [source.plot, indicators]
   );
   const poc = useMemo(() => (volProfile ? pocPrice(volProfile) : null), [volProfile]);
+  // نقاط الارتكاز من **الجلسة السابقة** لا من آخر 20 شمعة بالفريم المعروض — `pivotBase.ts`.
+  // شموع D1 أوّلاً (المخزن المشترك مع قائمة المتابعة)؛ السلسلة التجريبية لا تُقابَل بمستويات
+  // حقيقية بعيدة عن أسعارها، فتُحسب من شموعها هي.
+  const anyPivot = indicators.some((id) => PIVOT_IDS.has(id));
+  const seriesDemo = normalizeProvenance(series.data_source).kind === 'demo';
+  const dailyPrevBar = useDailyPrevBar(anyPivot && !seriesDemo ? series.symbol : null);
+  const pivotBars = useMemo(() => {
+    if (!anyPivot) return null;
+    const fromDaily = seriesDemo ? null : validSessionBar(dailyPrevBar);
+    if (fromDaily) return pivotInput(fromDaily);
+    const candles = series.candles ?? [];
+    if (timeframeStepSec(series.timeframe) >= 86400) {
+      const secs = candles.map((c) => ({ ...c, time: candleTimeSec(c.time) }));
+      return pivotInput(validSessionBar(prevSessionFromDaily(secs, Date.now() / 1000)));
+    }
+    return pivotInput(validSessionBar(prevDayFromIntraday(candles, series.symbol)));
+  }, [anyPivot, seriesDemo, dailyPrevBar, series.candles, series.timeframe, series.symbol]);
   const pivots = useMemo(
-    () => (indicators.includes('pivots') ? computePivotPoints(source.plot, 20) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('pivots') && pivotBars ? computePivotPoints(pivotBars, 1) : null),
+    [pivotBars, indicators]
   );
   const fibPivots = useMemo(
-    () => (indicators.includes('fibPivots') ? computeFibPivotPoints(source.plot, 20) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('fibPivots') && pivotBars ? computeFibPivotPoints(pivotBars, 1) : null),
+    [pivotBars, indicators]
   );
   const camarilla = useMemo(
-    () => (indicators.includes('camarilla') ? computeCamarillaPivots(source.plot, 20) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('camarilla') && pivotBars ? computeCamarillaPivots(pivotBars, 1) : null),
+    [pivotBars, indicators]
   );
   const woodiePivots = useMemo(
-    () => (indicators.includes('woodiePivots') ? computeWoodiePivots(source.plot, 20) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('woodiePivots') && pivotBars ? computeWoodiePivots(pivotBars, 1) : null),
+    [pivotBars, indicators]
   );
   const demarkPivots = useMemo(
-    () => (indicators.includes('demarkPivots') ? computeDemarkPivots(source.plot, 20) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('demarkPivots') && pivotBars ? computeDemarkPivots(pivotBars, 1) : null),
+    [pivotBars, indicators]
   );
   const cpr = useMemo(
-    () => (indicators.includes('cpr') ? computeCpr(source.plot, 20) : null),
-    [source.plot, indicators]
+    () => (indicators.includes('cpr') && pivotBars ? computeCpr(pivotBars, 1) : null),
+    [pivotBars, indicators]
   );
   const tpo = useMemo(
     () => (indicators.includes('tpo') ? computeTpo(source.plot, 18) : null),
