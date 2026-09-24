@@ -37,8 +37,7 @@ export function computeMacd(closes: number[]) {
   const macdLine: (number | null)[] = closes.map((_, i) =>
     ema12[i] != null && ema26[i] != null ? ema12[i]! - ema26[i]! : null
   );
-  const valid = macdLine.map((v) => v ?? 0);
-  const signal = ema(valid, 9);
+  const signal = ema(macdLine, 9);
   const hist = macdLine.map((v, i) => (v != null && signal[i] != null ? v - signal[i]! : null));
   return { macdLine, signal, hist };
 }
@@ -270,8 +269,7 @@ export function computeAwesomeOsc(candles: Candle[]): (number | null)[] {
  */
 export function computeAcceleratorOsc(candles: Candle[]): (number | null)[] {
   const ao = computeAwesomeOsc(candles);
-  const aoFilled = ao.map((v) => v ?? 0);
-  const aoSma = sma(aoFilled, 5);
+  const aoSma = sma(ao, 5);
   return ao.map((v, i) => (v != null && aoSma[i] != null ? v - aoSma[i]! : null));
 }
 
@@ -332,11 +330,9 @@ export function computeTsi(closes: number[], r = 25, s = 13): (number | null)[] 
     absMomentum[i] = Math.abs(momentum[i]);
   }
   const ema1 = ema(momentum, r);
-  const ema1Filled = ema1.map((v) => v ?? 0);
-  const ema2 = ema(ema1Filled, s);
+  const ema2 = ema(ema1, s);
   const absEma1 = ema(absMomentum, r);
-  const absEma1Filled = absEma1.map((v) => v ?? 0);
-  const absEma2 = ema(absEma1Filled, s);
+  const absEma2 = ema(absEma1, s);
   return closes.map((_, i) =>
     ema2[i] != null && absEma2[i] != null ? (absEma2[i] === 0 ? 0 : (100 * ema2[i]!) / absEma2[i]!) : null
   );
@@ -364,8 +360,7 @@ export function computePmo(
     roc10[i] = prev !== 0 ? ((closes[i] - prev) / prev) * 1000 : 0;
   }
   const smoothed1 = ema(roc10, rocSmooth);
-  const smoothed1Filled = smoothed1.map((v) => v ?? 0);
-  const pmo = ema(smoothed1Filled, pmoSmooth);
+  const pmo = ema(smoothed1, pmoSmooth);
   return closes.map((_, i) => (pmo[i] != null ? pmo[i] : null));
 }
 
@@ -516,10 +511,8 @@ export function computeRvi(candles: Candle[], period = 10): (number | null)[] {
     const D = candles[i - 3].high - candles[i - 3].low;
     denom[i] = (A + 2 * B + 2 * C + D) / 6;
   }
-  const numFilled = num.map((v) => v ?? 0);
-  const denomFilled = denom.map((v) => v ?? 0);
-  const numSma = sma(numFilled, period);
-  const denomSma = sma(denomFilled, period);
+  const numSma = sma(num, period);
+  const denomSma = sma(denom, period);
   const out: (number | null)[] = [];
   for (let i = 0; i < n; i++) {
     if (i < 3 + period - 1 || numSma[i] == null || denomSma[i] == null) {
@@ -607,10 +600,10 @@ export function computeKst(closes: number[]): (number | null)[] {
   const roc2 = computeRoc(closes, 15);
   const roc3 = computeRoc(closes, 20);
   const roc4 = computeRoc(closes, 30);
-  const s1 = sma(roc1.map((v) => v ?? 0), 10);
-  const s2 = sma(roc2.map((v) => v ?? 0), 10);
-  const s3 = sma(roc3.map((v) => v ?? 0), 10);
-  const s4 = sma(roc4.map((v) => v ?? 0), 15);
+  const s1 = sma(roc1, 10);
+  const s2 = sma(roc2, 10);
+  const s3 = sma(roc3, 10);
+  const s4 = sma(roc4, 15);
   return closes.map((_, i) =>
     s1[i] != null && s2[i] != null && s3[i] != null && s4[i] != null
       ? s1[i]! + 2 * s2[i]! + 3 * s3[i]! + 4 * s4[i]!
@@ -656,15 +649,14 @@ export function computeSmi(
     range[i] = hh - ll;
     valid[i] = true;
   }
-  const avgDiff = ema(ema(diff, smoothPeriod1).map((v) => v ?? 0), smoothPeriod2);
-  const avgRange = ema(ema(range, smoothPeriod1).map((v) => v ?? 0), smoothPeriod2);
+  const avgDiff = ema(ema(diff, smoothPeriod1), smoothPeriod2);
+  const avgRange = ema(ema(range, smoothPeriod1), smoothPeriod2);
   const smi: (number | null)[] = candles.map((_, i) => {
     if (!valid[i] || avgDiff[i] == null || avgRange[i] == null) return null;
     const halfRange = avgRange[i]! / 2;
     return halfRange === 0 ? 0 : (100 * avgDiff[i]!) / halfRange;
   });
-  const smiFilled = smi.map((v) => v ?? 0);
-  const emaSignal = ema(smiFilled, signalPeriod);
+  const emaSignal = ema(smi, signalPeriod);
   const signal: (number | null)[] = smi.map((v, i) => (v != null ? emaSignal[i] : null));
   return { smi, signal };
 }
@@ -1041,8 +1033,7 @@ export function computeWaveTrend(
   const wt1Raw = ema(ciRaw, n2);
   const warm1 = n1 - 1;
   const wt1 = wt1Raw.map((v, i) => (i < warm1 || v == null ? null : v));
-  const wt1Filled = wt1.map((v) => v ?? 0);
-  const wt2Raw = sma(wt1Filled, 4);
+  const wt2Raw = sma(wt1, 4);
   const wt2 = wt2Raw.map((v, i) => (wt1[i] == null || v == null ? null : v));
   return { wt1, wt2 };
 }

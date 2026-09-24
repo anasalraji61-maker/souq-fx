@@ -524,7 +524,7 @@ export function computeKlinger(
   const kvo: (number | null)[] = candles.map((_, i) =>
     emaShort[i] != null && emaLong[i] != null ? emaShort[i]! - emaLong[i]! : null
   );
-  const emaSignal = ema(kvo.map((v) => v ?? 0), 13);
+  const emaSignal = ema(kvo, 13);
   const signal: (number | null)[] = kvo.map((v, i) => (v != null ? emaSignal[i] : null));
   return { kvo, signal };
 }
@@ -550,8 +550,7 @@ export function computeVwMacd(
   const macdLine: (number | null)[] = candles.map((_, i) =>
     vwmaFast[i] != null && vwmaSlow[i] != null ? vwmaFast[i]! - vwmaSlow[i]! : null
   );
-  const valid = macdLine.map((v) => v ?? 0);
-  const signal = ema(valid, signalPeriod);
+  const signal = ema(macdLine, signalPeriod);
   const hist = macdLine.map((v, i) => (v != null && signal[i] != null ? v - signal[i]! : null));
   return { macdLine, signal, hist };
 }
@@ -859,7 +858,7 @@ export function computeVfi(
     if (va == null || va === 0) continue;
     rawVfi[i] = sum / va;
   }
-  const smoothed = ema(rawVfi.map((v) => v ?? 0), 3);
+  const smoothed = ema(rawVfi, 3);
   const out: (number | null)[] = new Array(n).fill(null);
   for (let i = 0; i < n; i++) {
     out[i] = rawVfi[i] == null ? null : smoothed[i];

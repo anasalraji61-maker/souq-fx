@@ -299,10 +299,8 @@ export function computeSuperTrend(
  */
 export function computeTrix(closes: number[], period = 15): (number | null)[] {
   const e1 = ema(closes, period);
-  const e1Filled = e1.map((v) => v ?? 0);
-  const e2 = ema(e1Filled, period);
-  const e2Filled = e2.map((v) => v ?? 0);
-  const e3 = ema(e2Filled, period);
+  const e2 = ema(e1, period);
+  const e3 = ema(e2, period);
   const out: (number | null)[] = [];
   for (let i = 0; i < closes.length; i++) {
     if (i === 0 || e3[i] == null || e3[i - 1] == null) {
@@ -1286,16 +1284,11 @@ export function computeZigZag(closes: number[], deviationPct = 5): (number | nul
  */
 export function computeT3(closes: number[], period = 5, vFactor = 0.7): (number | null)[] {
   const e1 = ema(closes, period);
-  const e1Filled = e1.map((v) => v ?? 0);
-  const e2 = ema(e1Filled, period);
-  const e2Filled = e2.map((v) => v ?? 0);
-  const e3 = ema(e2Filled, period);
-  const e3Filled = e3.map((v) => v ?? 0);
-  const e4 = ema(e3Filled, period);
-  const e4Filled = e4.map((v) => v ?? 0);
-  const e5 = ema(e4Filled, period);
-  const e5Filled = e5.map((v) => v ?? 0);
-  const e6 = ema(e5Filled, period);
+  const e2 = ema(e1, period);
+  const e3 = ema(e2, period);
+  const e4 = ema(e3, period);
+  const e5 = ema(e4, period);
+  const e6 = ema(e5, period);
 
   const v2 = vFactor * vFactor;
   const v3 = v2 * vFactor;
@@ -1305,7 +1298,7 @@ export function computeT3(closes: number[], period = 5, vFactor = 0.7): (number 
   const c4 = 1 + 3 * vFactor + v3 + 3 * v2;
 
   return closes.map((_, i) =>
-    e1[i] != null ? c1 * e6[i]! + c2 * e5[i]! + c3 * e4[i]! + c4 * e3[i]! : null
+    e6[i] != null ? c1 * e6[i]! + c2 * e5[i]! + c3 * e4[i]! + c4 * e3[i]! : null
   );
 }
 
@@ -1920,8 +1913,7 @@ export function computePfe(closes: number[], period = 10, smoothing = 5): (numbe
     const numerator = Math.sqrt(diff * diff + period * period);
     raw[i] = denom === 0 ? 0 : (100 * sign * numerator) / denom;
   }
-  const filled = raw.map((v) => v ?? 0);
-  const smoothed = ema(filled, smoothing);
+  const smoothed = ema(raw, smoothing);
   return raw.map((v, i) => (v != null && smoothed[i] != null ? smoothed[i] : null));
 }
 

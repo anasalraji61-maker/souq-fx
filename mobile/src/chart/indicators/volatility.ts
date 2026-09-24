@@ -240,8 +240,7 @@ export function computeMassIndex(
   const n = candles.length;
   const range = candles.map((c) => c.high - c.low);
   const singleEma = ema(range, emaPeriod);
-  const singleFilled = singleEma.map((v) => v ?? 0);
-  const doubleEma = ema(singleFilled, emaPeriod);
+  const doubleEma = ema(singleEma, emaPeriod);
   const ratio: (number | null)[] = candles.map((_, i) =>
     singleEma[i] != null && doubleEma[i] != null
       ? doubleEma[i] === 0
