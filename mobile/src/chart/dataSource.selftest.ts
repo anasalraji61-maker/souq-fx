@@ -14,7 +14,7 @@ import {
   FRESH_TICK_SEC,
   CLOCK_SKEW_SEC,
 } from './dataSource';
-import { withLivePrice, livePriceForChart } from './liveSeries';
+import { withLivePrice, livePriceForChart, liveChangePct } from './liveSeries';
 import type { ChartSeries } from '../api';
 
 function series(partial: Partial<ChartSeries> & Pick<ChartSeries, 'candles' | 'data_source'>): ChartSeries {
@@ -137,6 +137,16 @@ check(
   withLivePrice(forming, 0, liveSrc, liveOpts) === forming &&
     withLivePrice(forming, NaN, liveSrc, liveOpts) === forming
 );
+
+// نسبة الرأس تتبع السعر الحيّ: من إغلاق أول شمعة (تعريف الخادم)، ونسبة الخادم بلا سعر مدموج.
+const twoBars: ChartSeries = {
+  ...forming,
+  change_pct: 0.5,
+  candles: [{ time: 0, open: 1, high: 1, low: 1, close: 1.0 }, ...forming.candles],
+};
+check('liveChangePct from first close', Math.abs(liveChangePct(twoBars, 1.01) - 1) < 1e-9);
+check('liveChangePct null ⇒ server pct', liveChangePct(twoBars, null) === 0.5);
+check('liveChangePct zero/NaN ⇒ server pct', liveChangePct(twoBars, 0) === 0.5 && liveChangePct(twoBars, NaN) === 0.5);
 
 // اقتباس حقيقي مقابل بذري تجريبي
 check('quote provider', isRealQuote({ price: 8.2, source: 'twelvedata', data_kind: 'provider' }));

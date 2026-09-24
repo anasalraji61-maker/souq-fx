@@ -13,7 +13,7 @@ import {
   tickStatusKind,
   normalizeProvenance,
 } from '../chart/dataSource';
-import { livePriceForChart } from '../chart/liveSeries';
+import { liveChangePct, livePriceForChart } from '../chart/liveSeries';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import { isForexMarketOpen } from '../chart/marketHours';
 import { chartExtraLabels } from '../chart/typeLabels';
@@ -125,12 +125,6 @@ export function ChartFrame({
   const baseH = (phone ? HEIGHT_PHONE : HEIGHT)[size] + (interactive ? 220 : 0);
   const [measuredH, setMeasuredH] = useState(baseH);
   const chartH = fill ? measuredH : baseH;
-  // نسبة الرأس كانت تُطبع خاماً بشرط `>= 0`: الصفر يُكتب «+0.00%» بالأخضر، وسالبُ الصفر
-  // (`round(chg, 2)` بالخادم يُخرج ‎-0.0‎ لهبوط دقيق) كذلك — فزوجٌ هابط يقرأ صاعداً.
-  // الآن `formatPct` المعتمدة، واللون من **الرقم المطبوع** نفسه: ما يُقرّب إلى صفر مكتوم.
-  const chgPct = Number.isFinite(series.change_pct) ? series.change_pct : null;
-  const chgRounded = chgPct == null ? 0 : Math.round(chgPct * 100) / 100;
-  const chgColor = chgRounded > 0 ? colors.bull : chgRounded < 0 ? colors.bear : colors.textDim;
   const partial = syncFollow && isPartialTimeCover(series, syncWindow);
   const badge =
     syncBadge === 'leader'
@@ -154,6 +148,14 @@ export function ChartFrame({
     nowSec,
   };
   const mergePrice = livePriceForChart(series, resolvedTick, mergeOpts);
+  // نسبة الرأس كانت تُطبع خاماً بشرط `>= 0`: الصفر يُكتب «+0.00%» بالأخضر، وسالبُ الصفر
+  // (`round(chg, 2)` بالخادم يُخرج ‎-0.0‎ لهبوط دقيق) كذلك — فزوجٌ هابط يقرأ صاعداً.
+  // الآن `formatPct` المعتمدة، واللون من **الرقم المطبوع** نفسه: ما يُقرّب إلى صفر مكتوم.
+  // والنسبة تتبع السعر الحيّ المدموج بالشمعة (`liveChangePct`) لا الجلب الأخير وحده.
+  const livePct = liveChangePct(series, mergePrice);
+  const chgPct = Number.isFinite(livePct) ? livePct : null;
+  const chgRounded = chgPct == null ? 0 : Math.round(chgPct * 100) / 100;
+  const chgColor = chgRounded > 0 ? colors.bull : chgRounded < 0 ? colors.bear : colors.textDim;
   const headerPrice = resolvedTick?.price ?? series.last;
   const tickKind = resolvedTick
     ? tickStatusKind(resolvedTick.source, resolvedTick.source.as_of, nowSec)

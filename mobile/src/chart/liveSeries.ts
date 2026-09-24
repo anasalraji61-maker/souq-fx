@@ -41,13 +41,25 @@ export function withLivePrice(
   next.high = Math.max(next.high, livePrice);
   next.low = Math.min(next.low, livePrice);
   candles[candles.length - 1] = next;
-  const first = candles[0]!.close;
   return {
     ...series,
     candles,
     last: livePrice,
-    change_pct: first ? ((livePrice - first) / first) * 100 : series.change_pct,
+    change_pct: liveChangePct(series, livePrice),
   };
+}
+
+/**
+ * نسبة التغيّر مع السعر الحيّ — بتعريف الخادم نفسه (`build_series`: من إغلاق أول شمعة
+ * بالسلسلة إلى آخر سعر). الرأس كان يطبع **سعر التيك** بجانب **نسبة الجلب الأخير**:
+ * السعر يتحرّك كل ثانية والنسبة واقفة حتى الجلب التالي، وقد تناقضه (سعر فوق الافتتاح
+ * ونسبة حمراء). `livePrice` = ما يُدمج فعلاً بالشمعة (`livePriceForChart`)؛ null ⇒ نسبة الخادم.
+ */
+export function liveChangePct(series: ChartSeries, livePrice: number | null | undefined): number {
+  if (livePrice == null || !Number.isFinite(livePrice) || livePrice <= 0) return series.change_pct;
+  const first = series.candles[0]?.close;
+  if (!first || !Number.isFinite(first)) return series.change_pct;
+  return ((livePrice - first) / first) * 100;
 }
 
 export function livePriceForChart(

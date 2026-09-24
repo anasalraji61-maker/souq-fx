@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api, type ChartSeries } from '../api';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
-import { livePriceForChart } from '../chart/liveSeries';
+import { liveChangePct, livePriceForChart } from '../chart/liveSeries';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
 import { mockSeries } from '../mock';
@@ -152,7 +152,15 @@ export function QuadChartModal({
             const s = series[i];
             const tp = ticks[sym]?.price;
             const px = tp != null && Number.isFinite(tp) && tp > 0 ? tp : (s?.last ?? NaN);
-            const pct = s && Number.isFinite(s.change_pct) ? s.change_pct : null;
+            // النسبة تتبع التيك المدموج بالشمعة (لا نسبة الجلب الأخير بجانب سعر أحدث منه).
+            const merged = s
+              ? livePriceForChart(s, ticks[sym] ?? null, {
+                  tickAsOf: ticks[sym]?.source.as_of ?? null,
+                  timeframe: s.timeframe,
+                })
+              : null;
+            const livePct = s ? liveChangePct(s, merged) : NaN;
+            const pct = s && Number.isFinite(livePct) ? livePct : null;
             const pctR = pct == null ? 0 : Math.round(pct * 100) / 100;
             const pctColor = pctR > 0 ? colors.bull : pctR < 0 ? colors.bear : colors.textDim;
             return (
@@ -198,10 +206,7 @@ export function QuadChartModal({
                     height={cellH}
                     interactive={false}
                     persistDrawings={false}
-                    livePrice={livePriceForChart(series[i]!, ticks[sym] ?? null, {
-                      tickAsOf: ticks[sym]?.source.as_of ?? null,
-                      timeframe: series[i]!.timeframe,
-                    })}
+                    livePrice={merged}
                     liveTickSource={ticks[sym]?.source ?? null}
                     accent={sym === 'DXY' ? colors.dxy : colors.accent}
                     initialLens="clean"
