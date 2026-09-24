@@ -10,6 +10,7 @@
 import { knownSingleName } from './chart/newsRisk';
 import {
   centAccountSymbol,
+  microAccountSymbol,
   instrumentSpec,
   type InstrumentSpec,
   smallContractPair,
@@ -54,6 +55,15 @@ export function isCentJournalSymbol(symbol: string | null | undefined): boolean 
 }
 
 /**
+ * رمز **حساب micro** بالدفتر («EURUSDMICRO»، «EURUSD.MICRO»)؟ — لسطر `journalMicroNoMoney`: كالسنت نقاطٌ بلا مال،
+ * لكن نصّ `journalCentNoMoney` يقول «حساب سنت» فلا يصلح لمتداول XM Micro.
+ */
+export function isMicroJournalSymbol(symbol: string | null | undefined): boolean {
+  const up = (symbol || '').trim().toUpperCase();
+  return !!up && !instrumentSpec(up) && microAccountSymbol(up) != null;
+}
+
+/**
  * حجمٌ بخانة الدفتر يبدو **وحداتٍ لا لوتات** (`sizeLooksLikeUnits`) — وبرمز حساب سنت أيضاً.
  *
  * التحذير كان على `instrumentSpec` وحده، فـ«EURUSDC» بحجم «10000» لا يُنبَّه عليها ولا يُمنع حفظها: صفقة بعشرة
@@ -83,23 +93,24 @@ export function draftRiskFigures(input: {
   entry: number;
   sl: number;
   lots: number;
-}): { pips: number | null; cash: { amount: number; ccy: string } | null; cent: boolean } | null {
+}): { pips: number | null; cash: { amount: number; ccy: string } | null; cent: boolean; micro: boolean } | null {
   const { side, entry, sl, lots } = input;
   if (![entry, sl, lots].every((v) => Number.isFinite(v) && v > 0) || entry === sl) return null;
   if (levelSideIssue({ side, entry, sl })) return null;
   const sym = input.symbol.trim().toUpperCase();
   const std = instrumentSpec(sym);
   const cent = !std && isCentJournalSymbol(sym);
-  // micro («EURUSD.MICRO») كالسنت: نقاط بلا مال — لكن بلا سطر `journalCentNoMoney` (نصّه عن حساب السنت)
+  // micro («EURUSD.MICRO») كالسنت: نقاط بلا مال — وسطرها `journalMicroNoMoney` (نصّ `journalCentNoMoney` عن السنت)
+  const micro = !std && isMicroJournalSymbol(sym);
   const small = std ? null : smallContractPair(sym);
   const spec = std ?? (small ? instrumentSpec(small) : null);
   if (!spec) return null;
   // مالٌ من حجمٍ يبدو وحداتٍ («125,000,000 USD») أسوأ من لا شيء — سطر التحذير يقول ما الخطأ
   if (journalSizeLooksLikeUnits(lots, sym)) return null;
-  if (small) return { pips: pipsBetween(spec, entry, sl), cash: null, cent };
+  if (small) return { pips: pipsBetween(spec, entry, sl), cash: null, cent, micro };
   const cash = riskInQuoteCcy({ symbol: sym, entry, sl, lots });
   if (!cash) return null;
-  return { pips: pipsBetween(spec, entry, sl), cash, cent: false };
+  return { pips: pipsBetween(spec, entry, sl), cash, cent: false, micro: false };
 }
 
 export type PlanIssue = 'invalid' | 'slWrongSide' | 'tpWrongSide' | 'slTooClose';
@@ -850,11 +861,27 @@ export function netHasCentWithLots(
   trades: readonly { symbol: string; status: string; size?: number | null; note?: string | null }[],
   symbols: readonly string[]
 ): boolean {
+  return netHasSmallContractWithLots(trades, symbols, isCentJournalSymbol);
+}
+
+/** كـ`netHasCentWithLots` لأداة **حساب micro** («EURUSDMICRO») — لسطر `journalMicroNoMoney` تحت الإحصاءات. */
+export function netHasMicroWithLots(
+  trades: readonly { symbol: string; status: string; size?: number | null; note?: string | null }[],
+  symbols: readonly string[]
+): boolean {
+  return netHasSmallContractWithLots(trades, symbols, isMicroJournalSymbol);
+}
+
+function netHasSmallContractWithLots(
+  trades: readonly { symbol: string; status: string; size?: number | null; note?: string | null }[],
+  symbols: readonly string[],
+  kind: (symbol: string) => boolean
+): boolean {
   const shown = new Set(symbols);
   return trades.some(
     (tr) =>
       tr.status === 'closed' &&
-      isCentJournalSymbol(tr.symbol) &&
+      kind(tr.symbol) &&
       shown.has(journalInstrumentKey(tr.symbol)) &&
       knownLots(tr.size, tr.note) != null
   );

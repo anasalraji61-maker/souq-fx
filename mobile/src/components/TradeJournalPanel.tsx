@@ -33,6 +33,7 @@ import {
   levelSideIssue,
   netByInstrument,
   netHasCentWithLots,
+  netHasMicroWithLots,
   knownLots,
   journalInstrumentKey,
   draftRiskFigures,
@@ -361,7 +362,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     // حساب السنت: النقاط بلا مال (`draftRiskFigures`) — سطر `journalCentNoMoney` يقول لماذا
     const r = draftRiskFigures({ symbol, side, entry: e, sl: s, lots: l });
     if (!r) return null;
-    return { pips: r.pips, money: r.cash ? formatMoney(r.cash.amount, r.cash.ccy) : null, cent: r.cent };
+    return { pips: r.pips, money: r.cash ? formatMoney(r.cash.amount, r.cash.ccy) : null, cent: r.cent, micro: r.micro };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry, sl, size]);
 
@@ -564,6 +565,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       rN: avg?.n ?? 0,
       /** أداة سنت بالسطر بحجم معروف: نقاطها بلا مبلغ — `journalCentNoMoney` يقول لماذا */
       cent: netHasCentWithLots(visibleTrades, whole ? [ranked[0]!.symbol] : shown.map((v) => v.symbol)),
+      /** كذلك لأداة micro — `journalMicroNoMoney` (نصّ السنت لا يصفها) */
+      micro: netHasMicroWithLots(visibleTrades, whole ? [ranked[0]!.symbol] : shown.map((v) => v.symbol)),
     };
   }, [visibleTrades]);
 
@@ -1096,6 +1099,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             </Text>
           ) : null}
           {extraStats.cent ? <Text style={[styles.stat, { textAlign: align }]}>{t.journalCentNoMoney}</Text> : null}
+          {extraStats.micro ? <Text style={[styles.stat, { textAlign: align }]}>{t.journalMicroNoMoney}</Text> : null}
           {extraStats.avgR != null ? (
             <Text style={[styles.stat, { textAlign: align }]}>
               {t.journalStatAvgR.replace('{r}', extraStats.avgR).replace('{n}', String(extraStats.rN))}
@@ -1514,6 +1518,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       {draftRisk?.cent && !(draft?.issue && draft.issue !== 'slTooClose') ? (
         // النقاط بلا مبلغ لحساب السنت: السطر يقول لماذا بدل أن يبدو الغياب عطلاً
         <Text style={[styles.planWarn, { textAlign: align }]}>{t.journalCentNoMoney}</Text>
+      ) : null}
+      {draftRisk?.micro && !(draft?.issue && draft.issue !== 'slTooClose') ? (
+        <Text style={[styles.planWarn, { textAlign: align }]}>{t.journalMicroNoMoney}</Text>
       ) : null}
       <TextInput
         style={[styles.input, { textAlign: align }]}
