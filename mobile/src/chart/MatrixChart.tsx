@@ -96,6 +96,7 @@ import {
   positionLabelLeft,
   positionLabels,
   positionLevels,
+  positionEndIndex,
   positionOutcome,
   positionOutcomeText,
   positionStop,
@@ -2698,6 +2699,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [hitIndex, priceAtY, magnet, series.timeframe]
   );
 
+  // طرف `b` لخطّة شراء/بيع: يمين الدخول دائماً (`positionEndIndex`)، مختوماً بزمنه الجديد — وإلا
+  // أعاده الإرساء لموضع الإصبع الأصلي يسار الدخول عند تبديل الفريم.
+  const positionEndPoint = useCallback(
+    (a: ChartPoint, b: ChartPoint): ChartPoint => {
+      const index = positionEndIndex(a.index, b.index);
+      if (index === b.index) return b;
+      const stamp = stampAtIndex(
+        sourceRef.current.all as { time: number }[],
+        index,
+        timeframeStepSec(series.timeframe)
+      );
+      return stamp == null ? { index, price: b.price } : { index, price: b.price, ...stamp };
+    },
+    [series.timeframe]
+  );
+
   const finalizeDrawing = useCallback(
     (a: ChartPoint, b?: ChartPoint) => {
       const t = tool;
@@ -2727,7 +2744,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       } else if (b) {
         pushDrawHistory();
         // شراء/بيع: `b` يُخزَّن عند الوقف بجهته الصحيحة (المقبض حيث يُرى الوقف) — `positionTool.ts`.
-        const end = isPositionTool(t) ? { ...b, price: positionStop(t, a.price, b.price, series.symbol) } : b;
+        const end = isPositionTool(t)
+          ? { ...positionEndPoint(a, b), price: positionStop(t, a.price, b.price, series.symbol) }
+          : b;
         setDrawings((d) => [
           ...d,
           { id: nextDrawingId(), tool: t, a, b: end, color: accent },
@@ -2737,7 +2756,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       setDragEnd(null);
       setTool('none');
     },
-    [tool, accent, tr, pushDrawHistory, series.symbol]
+    [tool, accent, tr, pushDrawHistory, series.symbol, positionEndPoint]
   );
 
   /**
@@ -2753,7 +2772,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         // وقف مركز شراء/بيع سُحب لجهة الهدف ⇒ يُعكس لجهته (المقبض يتبع ما يُرسم).
         const next =
           cur && end === 'b' && isPositionTool(cur.tool)
-            ? { ...point, price: positionStop(cur.tool, cur.a.price, point.price, series.symbol) }
+            ? {
+                ...positionEndPoint(cur.a, point),
+                price: positionStop(cur.tool, cur.a.price, point.price, series.symbol),
+              }
             : point;
         if (!dragChangesDrawing(cur, end, next)) return list;
         return list.map((d) =>
@@ -2761,7 +2783,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         );
       });
     },
-    [series.symbol]
+    [series.symbol, positionEndPoint]
   );
 
   /** مقبض الهدف لأداتَي شراء/بيع: يغيّر النسبة وحدها (الهدف مشتقّ من الدخول والوقف). */
@@ -6358,7 +6380,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
         {pending && dragEnd && isPositionTool(tool)
           ? // المعاينة هي الأداة نفسها: المتداول يرى الوقف والهدف ونقاطهما وهو يسحب، لا خطّاً يُخمّن منه.
-            renderPosition('positionPreview', tool, pending, dragEnd, undefined, accent, false, true)
+            renderPosition('positionPreview', tool, pending, positionEndPoint(pending, dragEnd), undefined, accent, false, true)
           : null}
 
         {pending && dragEnd && tool !== 'none' && tool !== 'select' && tool !== 'hline' && tool !== 'vline' && tool !== 'note' && !isPositionTool(tool) ? (

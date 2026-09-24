@@ -4,6 +4,7 @@ import {
   clampRr,
   isPositionTool,
   positionLabels,
+  positionEndIndex,
   positionLabelLeft,
   positionLevels,
   positionOutcome,
@@ -114,5 +115,12 @@ assert.equal(positionLabelLeft(40, t30, 400), 40);
 const shifted = positionLabelLeft(300, t30, 400);
 assert.ok(shifted < 300 && shifted + t30.length * 6.2 + 10 <= 398, `${shifted}`);
 assert.equal(positionLabelLeft(300, t30, 120), 2); // لوح أضيق من الوسم
+
+// نهاية الصندوق يمين الدخول دائماً: سحبة لليسار تُعكس بالمسافة نفسها
+assert.equal(positionEndIndex(100, 130), 130);
+assert.equal(positionEndIndex(100, 100), 100);
+assert.equal(positionEndIndex(100, 70), 130);
+assert.equal(positionEndIndex(5, 0), 10);
+assert.equal(positionEndIndex(NaN, 3), 3);
 
 console.log('positionTool.selftest: PASS');

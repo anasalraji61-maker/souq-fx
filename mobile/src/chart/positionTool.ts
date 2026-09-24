@@ -46,6 +46,16 @@ export function positionStop(side: PositionSide, entry: number, rawStop: number,
   return side === 'long' ? entry - risk : entry + risk;
 }
 
+/**
+ * نهاية الصندوق الزمنية (فهرس `b`): **يمين الدخول دائماً** كـTradingView — سحبة لليسار تُعكس بالمسافة
+ * نفسها كما يُعكس الوقف المرسوم بالجهة الخطأ. صندوق ممتدّ يسار الدخول كان يغطّي شموعاً **قبل** الصفقة،
+ * بينما نتيجتها تُحسب على ما بعدها حتى آخر شمعة — فيظهر «TP ✓» بلا أي شمعة داخل الصندوق تلمس الهدف.
+ */
+export function positionEndIndex(entryIndex: number, rawEndIndex: number): number {
+  if (!Number.isFinite(entryIndex) || !Number.isFinite(rawEndIndex)) return rawEndIndex;
+  return rawEndIndex >= entryIndex ? rawEndIndex : entryIndex + (entryIndex - rawEndIndex);
+}
+
 export type PositionLevels = {
   side: PositionSide;
   entry: number;
