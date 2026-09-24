@@ -77,20 +77,24 @@ export function QuadChartModal({
   useEffect(() => {
     if (!visible) return;
     let alive = true;
-    // الجلب تسلسليّ لأربعة رموز: حتى ينتهي كانت الخلايا تعرض شموع الفريم/الرموز السابقة
+    // حتى ينتهي جلب الرموز كانت الخلايا تعرض شموع الفريم/الرموز السابقة
     // (وسعرها بالرأس) بلا أي أثر. الآن مؤشّر تحميل صريح بدل بيانات قديمة تُقرأ كحالية.
+    // والجلب كان ينتظر الأربعة **واحداً بعد واحد** ثم يعرضها دفعة واحدة: أبطأ رمز يحجب
+    // الثلاثة الجاهزة، والانتظار مجموع أزمنتها. الآن متوازٍ، وكل خلية تُملأ لحظة وصول شموعها.
     setSeries([null, null, null, null]);
-    (async () => {
-      const out: ChartSeries[] = [];
-      for (const sym of symbols) {
-        try {
-          out.push(await api.chart(sym, timeframe));
-        } catch {
-          out.push(mockSeries(sym, BASES[sym] ?? 1, timeframe, 80));
-        }
-      }
-      if (alive) setSeries(out);
-    })();
+    symbols.forEach((sym, i) => {
+      api
+        .chart(sym, timeframe)
+        .catch(() => mockSeries(sym, BASES[sym] ?? 1, timeframe, 80))
+        .then((s) => {
+          if (!alive) return;
+          setSeries((prev) => {
+            const next = [...prev];
+            next[i] = s;
+            return next;
+          });
+        });
+    });
     return () => {
       alive = false;
     };
