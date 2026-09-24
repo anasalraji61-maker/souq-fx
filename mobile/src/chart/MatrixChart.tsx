@@ -884,6 +884,7 @@ function ZeroLineSeries({
   // أبعد مستوى تضمن اتّساع المقياس له دون أن تُرسم.
   const floor = useMemo(() => (reach == null ? values : values.map(() => reach)), [values, reach]);
   const g = macdPaneGeom(floor, values, values, paneH);
+  const [w, setW] = useState(0);
   const showLevels = levels && g.innerH >= GUIDES_MIN_INNER_H;
   const showLabels = g.innerH >= GUIDES_LABEL_MIN_INNER_H;
   return (
@@ -904,24 +905,34 @@ function ZeroLineSeries({
             </React.Fragment>
           ))
         : null}
-      {values.map((v, i) =>
-        v == null ? (
-          <View key={i} style={{ flex: 1 }} />
-        ) : (
-          <View key={i} style={{ flex: 1, height: g.innerH, position: 'relative' }}>
-            <View
-              style={{
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                top: Math.min(g.y(v), g.innerH - 2),
-                height: 2,
-                backgroundColor: v >= 0 ? colors.bull : colors.bear,
-              }}
-            />
-          </View>
-        )
-      )}
+      {/* قطع متّصلة بين الشموع (`planLineSegments`، كطبقات السعر) لا شرطة أفقية لكل عمود:
+          الشرطات تُقرأ خطّاً ما دامت الحركة بطيئة، وعند قفزة (خبر، أو تكبير لعشرين شمعة
+          فخطوة العمود ‎~16px‎) تصير درجات منفصلة بفراغات عمودية — بالضبط حيث يُقرأ الانعطاف.
+          الطبقة مطلقة بعرض صفّ الأعمدة (‎left/right: 2‎ = حشوة `paneInner`)، فالعمود `i`
+          مركزه ‎(i + ½) × w / n‎ كما كان عمود ‎flex: 1‎ تماماً. */}
+      <View
+        pointerEvents="none"
+        style={{ position: 'absolute', left: 2, right: 2, top: 0, height: g.innerH }}
+        onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)}
+      >
+        {w > 0
+          ? planLineSegments(values, (i) => ((i + 0.5) * w) / values.length, g.y).map((sg) => (
+              <View
+                key={sg.at}
+                style={{
+                  position: 'absolute',
+                  left: sg.left,
+                  top: sg.top - 1,
+                  width: sg.len,
+                  height: 2,
+                  backgroundColor: (values[sg.at] ?? 0) >= 0 ? colors.bull : colors.bear,
+                  transform: [{ rotate: `${sg.deg}deg` }],
+                  transformOrigin: 'left center',
+                }}
+              />
+            ))
+          : null}
+      </View>
     </>
   );
 }
