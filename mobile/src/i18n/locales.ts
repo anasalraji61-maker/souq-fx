@@ -1206,7 +1206,8 @@ const ar: Dict = {
   riskCalcTitle: 'حاسبة حجم المركز',
   riskCalcSub: 'كم لوت تفتح حتى لا تخسر أكثر من نسبة محددة من رصيدك',
   riskCalcSymbol: 'الأداة',
-  riskCalcBadSymbol: 'رمز غير مدعوم — استخدم زوجاً من 6 أحرف مثل EURUSD أو XAUUSD',
+  riskCalcBadSymbol:
+    'رمز غير مدعوم — الحاسبة تحسب أزواج الفوركس والذهب والفضة لحساب عادي، مثل EURUSD أو XAUUSD أو GOLD أو EURUSD.m',
   riskCalcCentSymbolHint:
     '«{symbol}» رمز حساب سنت — الحاسبة تحسب لوت الحساب العادي فقط، وعقد السنت أصغر بمئة مرّة. لحساب عادي اكتب {pair}',
   appCrashTitle: 'حدث خطأ غير متوقع',
@@ -2121,7 +2122,8 @@ const enUS: Dict = {
   riskCalcTitle: 'Position size calculator',
   riskCalcSub: 'How many lots to open so you never lose more than a set % of your balance',
   riskCalcSymbol: 'Instrument',
-  riskCalcBadSymbol: 'Unsupported symbol — use a 6-letter pair like EURUSD or XAUUSD',
+  riskCalcBadSymbol:
+    'Unsupported symbol — the calculator sizes forex pairs, gold and silver for a standard account, e.g. EURUSD, XAUUSD, GOLD or EURUSD.m',
   riskCalcCentSymbolHint:
     '“{symbol}” is a cent-account symbol — the calculator sizes standard-account lots only, and a cent lot is 100 times smaller. For a standard account type {pair}',
   appCrashTitle: 'Something went wrong',
@@ -3061,7 +3063,8 @@ const ku: Dict = {
   riskCalcTitle: 'ژمێرەری قەبارەی پۆزیشن',
   riskCalcSub: 'چەند لۆت بکەیتەوە بۆ ئەوەی زیاتر لە ڕێژەیەکی دیاریکراوی باڵانسەکەت لەدەست نەدەیت',
   riskCalcSymbol: 'ئامراز',
-  riskCalcBadSymbol: 'هێمای پشتگیری نەکراو — جووتێکی 6 پیتی وەک EURUSD یان XAUUSD بەکاربهێنە',
+  riskCalcBadSymbol:
+    'هێمای پشتگیری نەکراو — ژمێرەرەکە جووتەکانی فۆرێکس و زێڕ و زیو بۆ هەژماری ئاسایی دەژمێرێت، وەک EURUSD یان XAUUSD یان GOLD یان EURUSD.m',
   riskCalcCentSymbolHint:
     '«{symbol}» هێمای هەژماری سەنتە — ژمێرەرەکە تەنها لۆتی هەژماری ئاسایی دەژمێرێت، و لۆتی سەنت سەد جار بچووکترە. بۆ هەژماری ئاسایی {pair} بنووسە',
   appCrashTitle: 'هەڵەیەکی چاوەڕواننەکراو ڕوویدا',
