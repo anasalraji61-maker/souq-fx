@@ -7,14 +7,41 @@ import { parseWsDataSource } from '../chart/dataSource';
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 30000;
 
+/** لقطة البثّ الأخيرة أقدم من هذا ⇒ لا تُعرض فوراً عند تبديل الرمز (البثّ كل ثانية). */
+const SNAPSHOT_FRESH_MS = 5000;
+
+type Snapshot = { at: number; ticks: Record<string, number>; source: LiveTick['source'] };
+
+function tickFromSnapshot(snap: Snapshot | null, sym: string): LiveTick | null {
+  const p = snap?.ticks[sym];
+  // `typeof === 'number'` يمرّر الصفر والسالب (تيك مزوّد معطوب): الرأس كان يطبع «0.00000» سعراً حيّاً.
+  if (typeof p !== 'number' || !Number.isFinite(p) || p <= 0) return null;
+  return { price: p, source: snap!.source };
+}
+
 /** Live tick for one symbol with provenance.
  * التيك يُخزَّن مع رمزه ولا يُعاد إلا إن طابق الرمز الحالي: بعد التبديل XAUUSD → EURUSD كان يُعيد 2650 حتى
- * يصل أول تيك لليورو — فتنبيه من الشارت على 1.09 يُقارن بـ2650 ويصير «تحت» ويُطلق فوراً. */
+ * يصل أول تيك لليورو — فتنبيه من الشارت على 1.09 يُقارن بـ2650 ويصير «تحت» ويُطلق فوراً.
+ *
+ * المقبس واحد لكل الرموز (البثّ يحمل كل الأسعار بكل رسالة)، فلا يُعاد فتحه عند تبديل الرمز:
+ * كان كل تبديل زوج يغلق المقبس ويفتح غيره، فيبقى رأس الزوج الجديد بلا سعر حيّ طوال المصافحة
+ * ثم حتى البثّ التالي. الآن الرمز يُقرأ من ref، وسعر الزوج الجديد يظهر فوراً من آخر لقطة
+ * (إن كانت حديثة) ثم يتبع البثّ. */
 export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null {
   const sym = symbol.toUpperCase();
   const [state, setState] = useState<{ sym: string; tick: LiveTick } | null>(null);
   const tick = state && state.sym === sym ? state.tick : null;
   const wsRef = useRef<WebSocket | null>(null);
+  const symRef = useRef(sym);
+  const snapRef = useRef<Snapshot | null>(null);
+
+  useEffect(() => {
+    symRef.current = sym;
+    const snap = snapRef.current;
+    if (!enabled || !snap || Date.now() - snap.at > SNAPSHOT_FRESH_MS) return;
+    const t = tickFromSnapshot(snap, sym);
+    if (t) setState({ sym, tick: t });
+  }, [sym, enabled]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -48,11 +75,12 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
               data_source?: { kind?: string; as_of?: number; channel?: string };
               ts?: number;
             };
-            const p = data.ticks?.[sym];
-            // `typeof === 'number'` يمرّر الصفر والسالب (تيك مزوّد معطوب): الرأس كان يطبع «0.00000» سعراً حيّاً.
-            if (typeof p === 'number' && Number.isFinite(p) && p > 0) {
-              setState({ sym, tick: { price: p, source: parseWsDataSource(data) } });
-            }
+            if (!data.ticks || typeof data.ticks !== 'object') return;
+            const snap: Snapshot = { at: Date.now(), ticks: data.ticks, source: parseWsDataSource(data) };
+            snapRef.current = snap;
+            const cur = symRef.current;
+            const t = tickFromSnapshot(snap, cur);
+            if (t) setState({ sym: cur, tick: t });
           } catch {
             /* ignore */
           }
@@ -92,7 +120,7 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
       wsRef.current?.close();
       wsRef.current = null;
     };
-  }, [sym, enabled]);
+  }, [enabled]);
 
   return tick;
 }
