@@ -24,6 +24,9 @@ import {
   formatMoney,
   moneyDecimals,
   LOT_STEP,
+  parseLeverage,
+  requiredMargin,
+  maxLotsForMargin,
   type InstrumentSpec,
 } from './positionSize';
 
@@ -659,3 +662,84 @@ console.log('positionSize profitAtTarget selftest OK');
   }
 }
 console.log('positionSize journal plan gain selftest OK');
+
+// —— requiredMargin / parseLeverage: الهامش المحجوز بالحاسبة ——
+{
+  // الرافعة كما تُنسخ من المنصّة
+  assert.equal(parseLeverage('100'), 100);
+  assert.equal(parseLeverage('1:100'), 100);
+  assert.equal(parseLeverage(' 1 : 500 '), 500);
+  assert.equal(parseLeverage('1/30'), 30);
+  assert.equal(parseLeverage('١:٢٠٠'), 200);
+  assert.equal(parseLeverage('۱:۴۰۰'), 400);
+  assert.equal(parseLeverage('1'), 1); // بلا رافعة: الهامش = القيمة الاسمية كاملة
+  for (const bad of ['', '0', '0.5', '1:0', '10000', '100:1', '2:100', 'abc', '1:', ':100', '-100']) {
+    assert.equal(parseLeverage(bad), null, bad);
+  }
+
+  const m = (sym: string, lots: number, price: number, rate: number, lev: number) =>
+    requiredMargin({ spec: instrumentSpec(sym)!, lots, price, quoteToAccount: rate, leverage: lev });
+  // EURUSD بحساب دولار: 0.5 × 100,000 × 1.085 ÷ 100 = 542.50 USD
+  assert.equal(formatMoney(m('EURUSD', 0.5, 1.085, 1, 100)!, 'USD'), '542.50 USD');
+  // الذهب: 0.1 × 100 × 2400 ÷ 100 = 240.00 USD
+  assert.equal(formatMoney(m('XAUUSD', 0.1, 2400, 1, 100)!, 'USD'), '240.00 USD');
+  // USDJPY بحساب دولار: السعر يُلغي نفسه — 1 لوت ÷ 100 = 1,000 USD مهما كان سعر الين
+  const jpyRate = quoteToAccountRate(conversionPair('JPY', 'USD'), 150)!;
+  assert.ok(near(m('USDJPY', 1, 150, jpyRate, 100)!, 1000));
+  assert.ok(near(m('USDJPY', 1, 160, quoteToAccountRate(conversionPair('JPY', 'USD'), 160)!, 100)!, 1000));
+  // EURUSD بحساب يورو: 1 لوت ÷ 30 = 3,333.33 EUR (العملة الأساس = عملة الحساب)
+  const usdToEur = quoteToAccountRate(conversionPair('USD', 'EUR'), 1.085)!;
+  assert.equal(formatMoney(m('EURUSD', 1, 1.085, usdToEur, 30)!, 'EUR'), '3,333.33 EUR');
+  // حساب بالين على الذهب: 0.1 × 100 × 2400 × 150 ÷ 100 = 36,000 JPY
+  assert.equal(formatMoney(m('XAUUSD', 0.1, 2400, 150, 100)!, 'JPY'), '36,000 JPY');
+  // الهامش يتناسب مع اللوت وعكسياً مع الرافعة
+  assert.ok(near(m('GBPUSD', 0.4, 1.27, 1, 50)!, 2 * m('GBPUSD', 0.2, 1.27, 1, 50)!));
+  assert.ok(near(m('GBPUSD', 0.4, 1.27, 1, 50)!, 10 * m('GBPUSD', 0.4, 1.27, 1, 500)!));
+  // السيناريو الذي من أجله الخانة: حجم مخاطرة صحيح (1% من 500$ على وقف 1 pip) لا يتّسع له الهامش
+  const spec = instrumentSpec('EURUSD')!;
+  const size = positionSize({ balance: 500, riskPct: 1, slPips: 1, pipValuePerLot: pipValuePerLot(spec, 1), contractSize: spec.contractSize })!;
+  assert.equal(size.lots, 0.5);
+  assert.ok(m('EURUSD', size.lots, 1.085, 1, 30)! > 500);
+  // مدخل غير صالح
+  assert.equal(m('EURUSD', 0, 1.085, 1, 100), null);
+  assert.equal(m('EURUSD', 0.1, NaN, 1, 100), null);
+  assert.equal(m('EURUSD', 0.1, 1.085, 1, 0), null);
+  assert.equal(m('EURUSD', 0.1, 1.085, -1, 100), null);
+}
+console.log('positionSize margin selftest OK');
+
+// —— maxLotsForMargin: أكبر لوت يتّسع له الرصيد هامشاً ——
+{
+  const eu = instrumentSpec('EURUSD')!;
+  const mx = (sym: string, avail: number, price: number, rate: number, lev: number) =>
+    maxLotsForMargin({ spec: instrumentSpec(sym)!, available: avail, price, quoteToAccount: rate, leverage: lev });
+  // 500 USD × 30 ÷ (100,000 × 1.085) = 0.1382 ⇒ 0.13 (للأسفل)
+  assert.equal(mx('EURUSD', 500, 1.085, 1, 30), 0.13);
+  // الحدّ الدقيق: 1,000 USD برافعة 100 على EURUSD عند 1.0 = لوت واحد بالضبط (لا 0.99 من ضجيج عائم)
+  assert.equal(mx('EURUSD', 1000, 1.0, 1, 100), 1);
+  // 0.3 لوت تماماً: 325.5 × 100 ÷ 108,500 = 0.3 — ضجيج 0.29999 لا يُسقطها لـ0.29
+  assert.equal(mx('EURUSD', 325.5, 1.085, 1, 100), 0.3);
+  // الذهب: 1,000 × 100 ÷ (100 × 2400) = 0.4166 ⇒ 0.41
+  assert.equal(mx('XAUUSD', 1000, 2400, 1, 100), 0.41);
+  // USDJPY بحساب دولار: السعر يُلغي نفسه — 1,000 × 50 ÷ 100,000 = 0.5
+  assert.equal(mx('USDJPY', 1000, 150, quoteToAccountRate(conversionPair('JPY', 'USD'), 150)!, 50), 0.5);
+  // لا يتّسع حتى أصغر لوت
+  assert.equal(mx('XAUUSD', 10, 2400, 1, 10), 0);
+  // العكس لا يتجاوز المتاح أبداً، على شبكة من الحالات
+  for (const avail of [37, 500, 1234.56, 9999]) {
+    for (const lev of [1, 30, 100, 500]) {
+      for (const price of [0.66, 1.085, 1.27]) {
+        const l = maxLotsForMargin({ spec: eu, available: avail, price, quoteToAccount: 1, leverage: lev })!;
+        if (l > 0) {
+          assert.ok(requiredMargin({ spec: eu, lots: l, price, quoteToAccount: 1, leverage: lev })! <= avail + 1e-9);
+        }
+        // وخطوة واحدة فوقه تتجاوز المتاح (أي أنه الأكبر فعلاً)
+        const up = Math.round((l + LOT_STEP) * 100) / 100;
+        assert.ok(requiredMargin({ spec: eu, lots: up, price, quoteToAccount: 1, leverage: lev })! > avail - 1e-9);
+      }
+    }
+  }
+  assert.equal(mx('EURUSD', 0, 1.085, 1, 30), null);
+  assert.equal(mx('EURUSD', 500, 1.085, 1, NaN), null);
+}
+console.log('positionSize maxLotsForMargin selftest OK');

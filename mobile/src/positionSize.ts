@@ -391,3 +391,72 @@ export function formatMoney(v: number, ccy: string): string {
   const text = r.toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return `${v < 0 && r > 0 ? '−' : ''}${text} ${ccy}`;
 }
+
+/**
+ * الرافعة كما يكتبها المتداول: «100»، «1:100»، «1/500»، بأرقام عربية أيضاً («١:٢٠٠»). الرقم المعتمد هو
+ * المقام وحده — «1:100» تعني 100.
+ *
+ * لماذا دالّة لا `parseDecimal` مباشرة: المنصّات وصفحات الوسطاء تكتب الرافعة «1:100» دائماً، فينسخها
+ * المتداول كما هي — و`parseDecimal` يرفض النقطتين فتقف الخانة عند «رقم غير مفهوم» بلا خطأ فيها.
+ * والحدّ 1..3000: رافعة أقل من 1 ليست رافعة، وفوق 3000 لا يعرضها وسيط تجزئة — خطأ كتابة («10000»
+ * بدل «100») يُصغّر الهامش المعروض مئة ضعف فيطمئن المتداول لمركز لا يتّسع له حسابه.
+ *
+ * `null` لفارغ أو غير صالح أو خارج الحدّ.
+ */
+export function parseLeverage(raw: string): number | null {
+  const s = raw
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/\s/g, '');
+  const m = /^(?:1[:/])?(\d+(?:\.\d+)?)$/.exec(s);
+  if (!m) return null;
+  const v = Number(m[1]);
+  return Number.isFinite(v) && v >= 1 && v <= 3000 ? v : null;
+}
+
+/**
+ * الهامش الذي يحجزه الوسيط لمركز، **بعملة الحساب**: اللوت × حجم العقد × السعر × سعر التحويل ÷ الرافعة.
+ *
+ * اللوت × حجم العقد × السعر = القيمة الاسمية بعملة **التسعير** (0.5 لوت EURUSD عند 1.0850 = 54,250 USD؛
+ * 0.1 لوت ذهب عند 2400 = 24,000 USD؛ 1 لوت USDJPY عند 150 = 15,000,000 JPY)، ثم تُحوَّل لعملة الحساب
+ * بسعر التحويل نفسه الذي تُحسب به قيمة النقطة، ثم تُقسم على الرافعة. لـUSDJPY بحساب دولار يخرج
+ * 100,000 USD ÷ الرافعة — أي أن السعر يُلغي نفسه كما يجب حين تكون العملة الأساس عملةَ الحساب.
+ *
+ * لماذا بالحاسبة: متداول برصيد 500$ ورافعة 1:30 يُخرج له حساب المخاطرة «0.50 لوت» على وقف ضيّق —
+ * رقمٌ صحيح للمخاطرة لكنه يحجز ~1,800$ هامشاً فلا تُفتح الصفقة أصلاً، أو تُفتح بهامش حرّ صفريّ
+ * فيُغلقها الوسيط عند أول تذبذب قبل الوقف. الرقمان معاً قبل النقر لا بعده.
+ *
+ * تقديرٌ: الوسيط قد يحسب بسعر مختلف (Ask/Bid أو سعر اللحظة) ومتطلّبات هامش المعادن/التقاطعات تختلف.
+ * `null` لأي مدخل غير صالح أو غير موجب.
+ */
+export function requiredMargin(input: {
+  spec: InstrumentSpec;
+  lots: number;
+  price: number;
+  quoteToAccount: number;
+  leverage: number;
+}): number | null {
+  const { spec, lots, price, quoteToAccount, leverage } = input;
+  if (![lots, price, quoteToAccount, leverage].every((v) => Number.isFinite(v) && v > 0)) return null;
+  return (lots * spec.contractSize * price * quoteToAccount) / leverage;
+}
+
+/**
+ * أكبر لوت يتّسع له هامش `available` (بعملة الحساب) عند هذه الرافعة، مقرَّباً **للأسفل** لخطوة اللوت —
+ * عكس `requiredMargin` حرفياً: `requiredMargin(maxLotsForMargin(x)) ≤ x` دائماً.
+ *
+ * لماذا: حين يتجاوز الهامش الرصيد تقول الحاسبة «لا يتّسع» وتسكت عن السؤال التالي مباشرةً: «فكم أفتح؟»
+ * — فيجرّب المتداول أرقاماً بيده. `0` حين لا يتّسع حتى أصغر لوت؛ `null` لمدخل غير صالح.
+ */
+export function maxLotsForMargin(input: {
+  spec: InstrumentSpec;
+  available: number;
+  price: number;
+  quoteToAccount: number;
+  leverage: number;
+}): number | null {
+  const { spec, available, price, quoteToAccount, leverage } = input;
+  if (![available, price, quoteToAccount, leverage].every((v) => Number.isFinite(v) && v > 0)) return null;
+  const raw = (available * leverage) / (spec.contractSize * price * quoteToAccount);
+  return Math.round(Math.floor(raw / LOT_STEP + 1e-9) * LOT_STEP * 100) / 100;
+}

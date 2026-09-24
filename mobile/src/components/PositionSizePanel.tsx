@@ -20,6 +20,9 @@ import {
   formatRiskPct,
   formatMoney,
   profitAtTarget,
+  parseLeverage,
+  requiredMargin,
+  maxLotsForMargin,
   LOT_STEP,
 } from '../positionSize';
 import { parseDecimal } from '../parseDecimal';
@@ -46,6 +49,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const [account, setAccount] = useState<AccountCcy>('USD');
   const [balance, setBalance] = useState('');
   const [riskPct, setRiskPct] = useState('1');
+  /** رافعة الحساب — ثابتة للمتداول كرصيده، فتُحفظ معه. فارغة = لا سطر هامش */
+  const [leverage, setLeverage] = useState('');
   const [slPips, setSlPips] = useState('');
   /** بديل اختياري: سعرا الدخول والوقف كما يراهما المتداول على الشارت → تُملأ خانة النقاط تلقائياً */
   const [entryPx, setEntryPx] = useState('');
@@ -86,8 +91,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       try {
         const raw = await AsyncStorage.getItem(STORE_KEY);
         if (raw && mountedRef.current) {
-          const p = JSON.parse(raw) as { balance?: string; riskPct?: string; account?: string };
+          const p = JSON.parse(raw) as { balance?: string; riskPct?: string; account?: string; leverage?: string };
           if (typeof p.balance === 'string') setBalance(p.balance);
+          if (typeof p.leverage === 'string') setLeverage(p.leverage);
           if (typeof p.riskPct === 'string') setRiskPct(p.riskPct);
           if (p.account && (ACCOUNT_CCYS as string[]).includes(p.account)) setAccount(p.account as AccountCcy);
         }
@@ -101,10 +107,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
 
   useEffect(() => {
     if (!loadedRef.current) return;
-    AsyncStorage.setItem(STORE_KEY, JSON.stringify({ balance, riskPct, account })).catch(() => {
+    AsyncStorage.setItem(STORE_KEY, JSON.stringify({ balance, riskPct, account, leverage })).catch(() => {
       /* ignore */
     });
-  }, [balance, riskPct, account]);
+  }, [balance, riskPct, account, leverage]);
 
   /**
    * تبديل الزوج من شريط رموز شاشة الأدوات يصل هنا بـ`defaultSymbol` — وكان يُهمَل بعد أول تركيب،
@@ -196,7 +202,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const badNumber =
     (balance.trim() !== '' && parseDecimal(balance, { amount: true }) == null) ||
     (riskPct.trim() !== '' && parseDecimal(riskPct, { percent: true }) == null) ||
-    [slPips, entryPx, stopPx, targetPx, manualConv].some((v) => v.trim() !== '' && parseDecimal(v) == null);
+    [slPips, entryPx, stopPx, targetPx, manualConv].some((v) => v.trim() !== '' && parseDecimal(v) == null) ||
+    (leverage.trim() !== '' && parseLeverage(leverage) == null);
   /** الرصيد مبلغ: «10.000» أوروبية = عشرة آلاف فتُرفض كـ«10,000» بدل حساب لوت من 10 — راجع parseDecimal.ts */
   const balanceNum = parseDecimal(balance, { amount: true }) ?? NaN;
   /** «1%» / «0.5٪» كما يقولها المتداول — علامة النسبة تُقبل بهذه الخانة وحدها (راجع parseDecimal.ts) */
@@ -330,11 +337,38 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   useEffect(() => {
     setLivePxMsg(null);
   }, [symbol]);
+  /**
+   * الهامش المحجوز للّوت المحسوب — من سعر الدخول المكتوب (القيمة الاسمية تحتاج سعراً، ولا يُختلق من
+   * سعر التحويل). بنسبةٍ من الرصيد: «542.50 USD (54%)» يقول قبل النقر إن الصفقة تأكل نصف الحساب
+   * هامشاً، وفوق 100% لا تُفتح أصلاً. راجع `requiredMargin`.
+   */
+  const leverageNum = parseLeverage(leverage);
+  const margin =
+    spec && rate != null && lots != null && leverageNum != null
+      ? requiredMargin({ spec, lots, price: num(entryPx), quoteToAccount: rate, leverage: leverageNum })
+      : null;
+  const marginPct = margin != null && Number.isFinite(balanceNum) && balanceNum > 0 ? (margin / balanceNum) * 100 : null;
+  /** الهامش يتجاوز الرصيد: لا تتّسع له الصفقة (أو تُغلق بأول تذبذب) — يُكتب بلون التحذير */
+  const marginOver = marginPct != null && marginPct >= 100;
+  /** وحين يتجاوز: أكبر لوت يتّسع له الرصيد كلّه هامشاً — حدٌّ أعلى لا توصية (الهامش الحرّ صفر عنده) */
+  const marginMaxLots =
+    marginOver && spec && rate != null && leverageNum != null
+      ? maxLotsForMargin({ spec, available: balanceNum, price: num(entryPx), quoteToAccount: rate, leverage: leverageNum })
+      : null;
   /** الربح المحتمل من المسافة الخام للهدف لا من نقاطه المقرَّبة للعرض — راجع `profitAtTarget` */
   const potentialProfit =
     plan?.ok && spec && rate != null && lots != null
       ? profitAtTarget({ spec, entry: num(entryPx), target: num(targetPx), lots, quoteToAccount: rate })
       : null;
+
+  /**
+   * **لا تسجيل بوقفين مختلفين.** مع `slMismatch` يُحسب اللوت من النقاط المكتوبة يدوياً بينما يُحفظ
+   * بالدفتر سعر الوقف — فإن كانت النقاط أضيق من مسافة السعرين (15 مكتوبة، 25 بين السعرين) سُجِّلت صفقةٌ
+   * **بلوتٍ أكبر مما يحتمله وقفها المحفوظ**: 1% مكتوبة تصير 1.67% فعلاً، والدفتر يعرض بعدها «المخاطرة
+   * 25 pip (…)» بمال أكبر مما قالته الحاسبة. التحذير أعلاه كان يقول ذلك ثم يترك الزرّ يسجّل. الآن الزرّ
+   * معطَّل وسببه تحته، ويعود بمجرّد أن يتطابق الرقمان (تعديل النقاط أو أحد السعرين).
+   */
+  const logBlocked = slMismatch != null;
 
   /**
    * «سجّل الخطة بالدفتر»: الأرقام هنا (رمز/دخول/وقف/هدف) هي نفسها التي يطلبها الدفتر — إعادة كتابتها
@@ -345,7 +379,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     const e = num(entryPx);
     const sPx = num(stopPx);
     const tPx = num(targetPx);
-    if (!spec || !plan?.ok || planSide == null || lots == null || logBusy || logMsg?.ok) return;
+    if (!spec || !plan?.ok || planSide == null || lots == null || logBusy || logMsg?.ok || logBlocked) return;
     setLogBusy(true);
     setLogMsg(null);
     try {
@@ -501,6 +535,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       </View>
       {input(riskPct, setRiskPct, '1', t.riskCalcRiskPct)}
       {riskHigh ? <Text style={[styles.warn, { textAlign: align }]}>{t.riskCalcHighRisk}</Text> : null}
+
+      <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcLeverage}</Text>
+      {input(leverage, setLeverage, '100', t.riskCalcLeverage)}
 
       <Text style={[styles.label, { textAlign: align }]}>
         {t.riskCalcSlPips}
@@ -659,17 +696,31 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             {result && lots != null ? ` · ${lots.toFixed(2)} lot = ${money(result.pipValue)}` : ''}
           </Text>
         ) : null}
+        {margin != null ? (
+          <>
+            <Text
+              style={[marginOver ? styles.warn : styles.resultMeta, { textAlign: align }]}
+              accessibilityLiveRegion="polite"
+            >
+              {marginOver ? '⚠ ' : ''}
+              {t.riskCalcMargin} ({lots!.toFixed(2)} lot · 1:{leverageNum}): {money(margin)}
+              {marginPct != null ? ` (${formatRiskPct(marginPct)})` : ''}
+              {marginMaxLots != null ? ` · ≤ ${marginMaxLots.toFixed(2)} lot` : ''}
+            </Text>
+            <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcMarginNote}</Text>
+          </>
+        ) : null}
       </View>
       {plan?.ok && lots != null ? (
         <>
           <Pressable
             accessibilityRole="button"
-            accessibilityState={{ disabled: logBusy || logMsg?.ok === true, busy: logBusy }}
+            accessibilityState={{ disabled: logBusy || logMsg?.ok === true || logBlocked, busy: logBusy }}
             // بعد نجاح التسجيل يبقى معطَّلاً حتى يتغيّر رقم بالخطة — نقرة ثانية كانت تُنشئ صفقة مكرّرة
-            disabled={logBusy || logMsg?.ok === true}
+            disabled={logBusy || logMsg?.ok === true || logBlocked}
             style={({ pressed }) => [
               styles.logBtn,
-              (logBusy || logMsg?.ok === true) && { opacity: 0.5 },
+              (logBusy || logMsg?.ok === true || logBlocked) && { opacity: 0.5 },
               pressed && {
                 opacity: buttons.pressedOpacity,
                 transform: [{ scale: buttons.pressedScale }],
@@ -682,6 +733,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           >
             <Text style={styles.logBtnText}>{logBusy ? '...' : t.riskCalcLogToJournal}</Text>
           </Pressable>
+          {slMismatch ? (
+            <Text style={[styles.warn, { textAlign: align }]}>
+              {t.riskCalcSlMismatch.replace('{pips}', slMismatch.typed).replace('{derived}', String(slMismatch.derived))}
+            </Text>
+          ) : null}
           {logMsg ? (
             <Text
               style={[logMsg.ok ? styles.logOk : styles.warn, { textAlign: align }]}
