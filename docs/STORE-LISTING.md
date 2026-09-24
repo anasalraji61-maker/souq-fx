@@ -52,7 +52,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • سعر أعلى قمّة وأدنى قاع على الشاشة مكتوب عند ذيليهما ويتحدّث وأنت تسحب، وخطّ خافت يفصل كل يوم تداول عن الذي يليه على الفريمات الصغيرة.
 • المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، الفوليوم وغيرها، ومستويات الارتكاز (Pivot وCamarilla وفيبوناتشي) وأعلى الأمس وأدناه وبجانب كل مستوى سعره، وتظليل جلسات طوكيو ولندن ونيويورك.
 • «عدسات» تضع مجموعة مؤشرات جاهزة بلمسة: هيكل (المتوسطات)، زخم (RSI وMACD)، سيولة (الفوليوم وبولنجر).
-• أدوات رسم: خط اتجاه، شعاع، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات، مع زرّ تراجع. ما ترسمه على فريم يظهر على بقية فريمات الرمز نفسه.
+• أدوات رسم: خط اتجاه، شعاع، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات، مع زرّ تراجع. الخط الأفقي يكتب بُعده عن السعر بالنقاط، والمنطقة ارتفاعها. وما ترسمه على فريم يظهر على بقية فريمات الرمز نفسه.
 • خطّط صفقة شراء أو بيع على الشارت: اسحب من الدخول إلى الوقف فيظهر الهدف، والمسافتان بالنقاط، ونسبة العائد إلى المخاطرة — واسحب الهدف لتغيّر النسبة. وعلى الشموع السابقة ترى هل بلغ السعر الهدف أم الوقف.
 • أداة قياس تكتب المسافة بالنقاط والنسبة وعدد الشموع وكم استغرقت الحركة من وقت، وأنت تسحب.
 • إعادة تشغيل الشموع لتدريب عينك على قراءة الحركة.
@@ -107,13 +107,13 @@ MATRIX is a technical-analysis workspace built for individual traders: fast char
 CHARTS
 • Candlesticks, Heikin-Ashi, Renko, Kagi and Point & Figure.
 • Up to four charts on one screen, with optional time sync — read the same candle on all four at once.
-• Tap any candle to see its open, high, low, close and range in pips, plus that level's distance from the current price in pips, then tap 🔔 to set a price alert there.
+• Tap any candle to see its open, high, low, close and range in pips, plus that level's distance from price in pips, then tap 🔔 to set a price alert there.
 • Pinch to zoom — the live candle stays in view. Drag the price axis to make candles taller or shorter. Scroll back to study an old pattern; one tap brings you back to the latest candle without losing your zoom.
 • A countdown under the live price shows how long until the current candle closes.
 • The highest high and lowest low on screen carry their price and update as you scroll, and a faint line marks where each trading day starts on intraday charts.
 • The indicators traders actually use: SMA and EMA moving averages, Bollinger Bands, RSI, MACD, Volume and more, plus pivot levels (classic, Camarilla, Fibonacci) and yesterday's high and low, each with its price beside it, and Tokyo, London and New York session shading.
 • One-tap "lenses" that add a ready set of indicators: Structure (moving averages), Momentum (RSI and MACD), Liquidity (volume and Bollinger).
-• Drawing tools: trend line, ray, horizontal and vertical lines, rectangle, Fibonacci, zones and notes, with undo. What you draw on one timeframe shows on every timeframe of that symbol.
+• Drawing tools: trend line, ray, horizontal and vertical lines, rectangle, Fibonacci, zones and notes, with undo. A horizontal line shows its distance from price in pips; a zone, its height. Drawings follow the symbol across timeframes.
 • Plan a buy or sell on the chart: drag from entry to stop to see the target, both distances in pips and the reward-to-risk ratio — drag the target to change it. On past candles it shows whether price hit the target or the stop.
 • A measure tool that shows pips, percent, bar count and how long the move took as you drag.
 • Candle replay to train your eye on price action.
