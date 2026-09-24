@@ -93,8 +93,10 @@ export function useBlockedUsers() {
   useEffect(() => {
     let alive = true;
     listeners.add(setBlocked);
-    loadBlocked().then((list) => {
-      if (alive) setBlocked(list);
+    // `cache` لا قيمة الوعد: وعد القراءة يحمل القائمة **لحظة القراءة**، وحظرٌ من اللوحة الأخرى نُشر قبل أن يصل
+    // دور هذا الـthen كان يُكتب فوقه بالقائمة القديمة فيعود المحظور ظاهراً بهذه اللوحة (و«إلغاء الكل» كذلك يرتدّ)
+    loadBlocked().then(() => {
+      if (alive) setBlocked(cache ?? []);
     });
     return () => {
       alive = false;

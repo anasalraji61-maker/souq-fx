@@ -64,6 +64,22 @@ function freshModule(disk: Disk) {
   return { mod, release };
 }
 
+/** `useBlockedUsers` على React وهمي: التأثير يعمل فوراً، وكل قيمة تُعرض تُسجَّل بالترتيب. */
+function mountHook(mod: typeof import('./moderation')): string[][] {
+  const shown: string[][] = [];
+  // يُعدَّل الكائن نفسه لا يُستبدل: الوحدة المحمَّلة تمسك مرجعه
+  Object.assign(stubs.react as object, {
+    useState: (init: string[]) => {
+      shown.push(init);
+      return [init, (v: string[]) => shown.push(v)];
+    },
+    useEffect: (fn: () => void) => fn(),
+    useCallback: (fn: unknown) => fn,
+  });
+  mod.useBlockedUsers();
+  return shown;
+}
+
 (async () => {
   // حظران سريعان قبل انتهاء أول قراءة: الاثنان يبقيان (كان الثاني يمحو الأول)
   {
@@ -95,6 +111,22 @@ function freshModule(disk: Disk) {
     release();
     await mod.blockUser('x');
     assert.deepEqual(JSON.parse(disk.value!), ['x']);
+  }
+  // لوحةٌ تُركَّب بعد حظرٍ ينتظر القراءة الأولى: آخر ما تعرضه يشمل المحظور (كان وعد القراءة يعيد القائمة القديمة
+  // بعد نشر الحظر فيظهر المحظور ثانيةً بهذه اللوحة)
+  {
+    const disk: Disk = { value: JSON.stringify(['old']), writes: [] };
+    const { mod, release } = freshModule(disk);
+    const a = mod.blockUser('spammer');
+    const shown = mountHook(mod);
+    release();
+    await a;
+    await new Promise((r) => setTimeout(r, 0));
+    assert.deepEqual(shown[shown.length - 1], ['old', 'spammer']);
+    // لوحةٌ تُركَّب بعد اكتمال القراءة تبدأ بالقائمة الحالية
+    const again = mountHook(mod);
+    await new Promise((r) => setTimeout(r, 0));
+    assert.deepEqual(again[again.length - 1], ['old', 'spammer']);
   }
   console.log('moderation selftest: OK');
 })().catch((e) => {
