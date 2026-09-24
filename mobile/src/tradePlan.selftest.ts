@@ -9,6 +9,7 @@ import {
   formatPips,
   formatR,
   formatRR,
+  journalSymbol,
   levelSideIssue,
   realizedMove,
   realizedR,
@@ -317,6 +318,30 @@ console.log('tradePlan close-confirm R selftest OK');
     }
   }
   assert.ok(n > 10000);
+}
+
+// رمز الدفتر: تطبيع الفواصل والحالة، وطول الخادم 3–12
+assert.equal(journalSymbol('EURUSD'), 'EURUSD');
+assert.equal(journalSymbol(' eur/usd '), 'EURUSD');
+assert.equal(journalSymbol('Eur usd'), 'EURUSD');
+assert.equal(journalSymbol('XAU-USD'), 'XAUUSD');
+assert.equal(journalSymbol('gbp_jpy'), 'GBPJPY');
+assert.equal(journalSymbol('us30'), 'US30');
+assert.equal(journalSymbol('NAS100'), 'NAS100');
+assert.equal(journalSymbol('EURUSD.m'), 'EURUSD.M');
+assert.equal(journalSymbol('DXY'), 'DXY');
+assert.equal(journalSymbol('EU'), null);
+assert.equal(journalSymbol('E/U'), null);
+assert.equal(journalSymbol(''), null);
+assert.equal(journalSymbol('   '), null);
+assert.equal(journalSymbol('ABCDEFGHIJKLM'), null);
+assert.equal(journalSymbol('ABCDEFGHIJKL'), 'ABCDEFGHIJKL');
+assert.equal(journalSymbol('يورو'), null);
+assert.equal(journalSymbol('EUR$USD'), null);
+// كل ما يُقبل يوافق قيد الخادم (min_length=3, max_length=12) ولا يحوي مسافة/فاصلاً
+for (const raw of ['eur/usd', 'x a u / u s d', 'A-B', 'nas-100', 'a.b.c']) {
+  const v = journalSymbol(raw);
+  if (v != null) assert.ok(v.length >= 3 && v.length <= 12 && !/[\s/_-]/.test(v) && v === v.toUpperCase());
 }
 
 console.log('tradePlan targetAtRR selftest OK');

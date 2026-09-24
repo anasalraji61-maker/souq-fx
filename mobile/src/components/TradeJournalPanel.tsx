@@ -23,6 +23,7 @@ import {
   formatPips,
   formatR,
   formatRR,
+  journalSymbol,
   levelSideIssue,
   realizedMove,
   realizedR,
@@ -248,8 +249,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   /** سعر الدخول بنقرة: المتداول يسجّل الصفقة لحظة فتحها غالباً. Ask للشراء وBid للبيع إن توفّرا (ما ينفَّذ
    * عليه فعلاً)، وإلا السعر. اقتباس بذري تجريبي لا يُستخدم أبداً (isRealQuote) — لا دخول مختلَق. */
   const fillLivePrice = async () => {
-    const sym = symbol.trim().toUpperCase();
-    if (sym.length < 3 || quoteBusy) return;
+    const sym = journalSymbol(symbol);
+    if (sym == null || quoteBusy) return;
     setQuoteBusy(true);
     setFormError(null);
     try {
@@ -499,7 +500,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
 
   const add = async () => {
     const e = num(entry);
-    if (!symbol.trim() || e == null) {
+    // «EUR/USD» ⇒ EURUSD، و«EU» يُرفض هنا لا بالخادم برسالة عامة — راجع `journalSymbol`
+    const sym = journalSymbol(symbol);
+    if (sym == null || e == null) {
       setFormError(t.journalInvalidEntry);
       return;
     }
@@ -520,7 +523,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       try {
         // تعديل: خانة فارغة = مسح (وقف/هدف بلا قيمة، وخروج فارغ يعيد الصفقة مفتوحة) — لا «بلا تغيير» صامت
         await api.updateTrade(editing.id, {
-          symbol: symbol.trim().toUpperCase(),
+          symbol: sym,
           side,
           entry: e,
           exit: num(exit),
@@ -545,7 +548,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     try {
       const x = num(exit);
       await api.createTrade({
-        symbol: symbol.trim().toUpperCase(),
+        symbol: sym,
         side,
         entry: e,
         exit: x ?? undefined,
