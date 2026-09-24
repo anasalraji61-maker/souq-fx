@@ -3126,3 +3126,43 @@ EURUSDc 4 لوت +25 pip = «+1,000.00 USC (≈ +10.00 USD)» (`formatJournalMon
 ### ما يبدأ منه التشغيل القادم
 1. وصل `planNoteCommission`/`planNoteNetRR` حين يضيفهما وكيل الإطلاق (و`journalOpenRiskNoStop` إن أُضيف).
 2. تعرّض العملة الواحدة عبر الصفقات المفتوحة (شراء EURUSD + GBPUSD + بيع USDJPY = رهانٌ واحد ضد الدولار) — يحتاج مفتاح نصّ.
+
+---
+
+## 2026-09-25 (سابع وثلاثون) — التشغيل: مفاتيح ملاحظة الخطة، سبب غياب «المخاطرة (مفتوحة)»، مقبس التيكات خلف الشاشة، أذونات الإشعارات لا ترفض
+
+قرأتُ `docs/COORDINATION.md` أولاً. صفوفي:
+- **QA5 `AnalystsPanel.tsx:118`** (دخول/وقف/هدف متساوية حين محايد) و**QA5 `VotePanel.tsx:422-430`** (أسعار خام بلا `formatPrice`) — **خارج نطاقي**:
+  الملفّان ليسا بقائمة ملفاتي (نطاقي: positionSize/tradePlan/parseDecimal/newsRisk/dailyChange/notifications/moderation، واللوحات
+  PositionSize/TradeJournal/NewsRiskBanner/ModerationActions، وToolsScreen/TerminalScreen). لا أعارض المضمون — كلاهما صحيح — لكن لا أملك
+  الملفّين ⇒ يُعادان لأنس لتحديد المالك (كصفّ `dirColor` «بلا مالك»). إن أُضيفا لنطاقي فالإصلاح سطران لكلٍّ.
+- **launch52 `a11yBusy` بـ`AlertsPanel`** — كما بالتشغيل السابق: `AlertsPanel.tsx` ليس بنطاقي.
+
+### 1. ملاحظة الخطة بلغة الواجهة كاملة (`PositionSizePanel.tsx`) — `8495366`
+**يُغلق tools34 من جهتي.** `planJournalNote` صارت تأخذ `commission: t.planNoteCommission` و`netRR: t.planNoteNetRR`: «… · عمولة 7.00 USD/lot · R:R بعد التكاليف 1:1.7».
+«1.00 lot» أول الملاحظة باقية (علامة `knownLots`). **اختبارات**: ملاحظة عربية كاملة بقيم locales حرفياً، وقيم en «Commission»/«Net R:R».
+
+### 2. سبب غياب سطر «المخاطرة (مفتوحة)» (`tradePlan.ts` + `TradeJournalPanel.tsx`) — `02713e8`
+`openTradesWithoutStop(trades)` جديدة: عدد المفتوحة بلا وقف صالح (غائب/0/سالب/NaN/∞). حين `openRiskTotals` = null وبينها صفقة بلا وقف ⇒ السطر
+`journalOpenRiskNoStop` «صفقات مفتوحة بلا وقف: {n} — خسارتها بلا حدّ…» بدل الصمت. حجمٌ مجهول وحده يبقى بلا سطر (المفتاح لا يصفه).
+**اختبارات**: فارغة، 5 أشكال وقف فاسد + مغلقة لا تُعدّ، حقل غائب، **اتّساق**: كلّما عُدّت صفقة فالمجموع null (لا يظهر السطران معاً)، وقف بجهة الربح ليس «بلا وقف».
+
+### 3. مقبس التيكات يُغلق خلف `TerminalScreen` — `3d1bda8`
+**صفّ «tools ⇐ chart» (09-23 ★) — منفّذ من جهتي.** موضع الاستدعاء `useMultiLiveTicks(watchSymbols, true)` بملفّي، فلم يعد ينتظر وكيل الشارت:
+نقلتُ `screenFocused` (focus/blur الموجود) فوقه ومرّرته بدل `true`. الخطّاف نفسه (بملكية الشارت) لم يُمسّ. بالعودة يُعاد الاتصال، والتيكات السابقة
+تبقى معروضة بعمرها (`source.as_of` بشريط الحالة) حتى أول رسالة. **يحتاج جهازاً**: الانتقال لتبويب آخر ثم العودة — السعر يتجدّد خلال ثانية.
+**لـQA**: يمكن حذف الصفّ؛ إن رأى وكيل الشارت أن التيكات يجب أن تُمسح عند التعطيل فذلك بالخطّاف.
+
+### 4. أذونات الإشعارات لا ترفض أبداً (`notifications.ts`) — الالتزام السابق لهذا السجل
+**صفّ tools≈14:00 (`AccountScreen.tsx:111` `.then` بلا `catch`) — أُصلح من الجذر بملفّي.** `getNotificationPermissionState` كانت ترمي حين
+يرفض `getPermissionsAsync` (Expo Go، أندرويد بلا خدمات Google)؛ و`AccountScreen` يناديها داخل `finally` **قبل** `setNotifBusy(false)` ⇒ الزرّ على «…» للأبد.
+الآن رفضٌ = `'unsupported'` (الواجهة تقول «غير متاحة هنا» وتُخفي زرّاً لن يعمل)، و`ensureAlertNotifications` رفضٌ = `false`. ينفع `AlertsPanel`
+و`IndicatorAlertsPanel` أيضاً (`.then` بلا `catch` عندهما). `AccountScreen.tsx` لم يُمسّ. **اختبارات**: `notifications.selftest.ts` جديد (بدائل expo عبر
+`Module._load`): الحالات الثلاث، رفض ⇒ unsupported، الويب، ممنوح بلا سؤال ثانٍ، القناة قبل السؤال، رفض القراءة/السؤال ⇒ false.
+
+### التحقّق
+`bash scripts/qa-build-check.sh` **GREEN (0)** قبل كل التزام. كل الاختبارات الذاتية بالمستودع (60، منها `notifications.selftest.ts` الجديد) تمرّ.
+
+### ما يبدأ منه التشغيل القادم
+1. تعرّض العملة الواحدة عبر الصفقات المفتوحة (EURUSD + GBPUSD شراء + USDJPY بيع = رهانٌ واحد ضد الدولار) — دالّة صافية ممكنة الآن، والعرض يحتاج مفتاح نصّ.
+2. صفّا QA5 (Analysts/Vote) إن أُسندا لي.
