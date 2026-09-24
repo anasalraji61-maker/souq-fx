@@ -56,6 +56,7 @@ import {
   formatJournalMoney,
   planSummaryText,
   QUICK_SYMBOLS,
+  openCurrencyExposure,
 } from './tradePlan';
 import { riskInQuoteCcy as cashRisk } from './positionSize';
 import { instrumentSpec, pipValuePerLot, planJournalNote, pnlInQuoteCcy, positionSize, slPipsFromPrices } from './positionSize';
@@ -1914,3 +1915,63 @@ console.log('tradePlan openTradesWithoutStop selftest OK');
   assert.deepEqual(quickJournalSymbols([], QUICK_SYMBOLS), [...QUICK_SYMBOLS]);
 }
 console.log('tradePlan QUICK_SYMBOLS selftest OK');
+
+// openCurrencyExposure: صافي كل عملة بوحداتها — ثلاث صفقات «مختلفة» هي ثلاث مرّات بيع الدولار
+{
+  const O = (o: { symbol: string; side: string; entry: number; size?: number | null; note?: string | null; status?: string }) => ({
+    size: 1.5,
+    note: null,
+    status: 'open',
+    ...o,
+  });
+  assert.equal(openCurrencyExposure([]), null);
+  assert.equal(openCurrencyExposure([O({ symbol: 'EURUSD', side: 'buy', entry: 1.1, status: 'closed' })]), null);
+  const three = [
+    O({ symbol: 'EURUSD', side: 'buy', entry: 1.1, size: 1 , note: '1.00 lot · risk 1%' }),
+    O({ symbol: 'GBPUSD', side: 'buy', entry: 1.27, size: 0.5 }),
+    O({ symbol: 'USDJPY', side: 'sell', entry: 150, size: 2 }),
+  ];
+  assert.deepEqual(openCurrencyExposure(three), [
+    // −110,000 − 63,500 − 200,000
+    { ccy: 'USD', units: -373500, legs: 3, sameWay: true },
+    { ccy: 'EUR', units: 100000, legs: 1, sameWay: true },
+    { ccy: 'GBP', units: 50000, legs: 1, sameWay: true },
+    // بيع USDJPY 2 لوت على 150 = +30,000,000 JPY
+    { ccy: 'JPY', units: 30000000, legs: 1, sameWay: true },
+  ]);
+  // تحوّط: شراء EURUSD وشراء USDCHF — الدولار ساقان متعاكسان، ليس تراكماً
+  const hedge = openCurrencyExposure([
+    O({ symbol: 'EURUSD', side: 'buy', entry: 1.1, size: 1, note: '1.00 lot' }),
+    O({ symbol: 'USDCHF', side: 'buy', entry: 0.9, size: 1, note: '1.00 lot' }),
+  ])!;
+  assert.deepEqual(hedge[0], { ccy: 'USD', units: -10000, legs: 2, sameWay: false });
+  // شراء وبيع الزوج نفسه بالحجم نفسه: صافٍ صفريّ بلا «−0»
+  const flat = openCurrencyExposure([
+    O({ symbol: 'EURUSD', side: 'buy', entry: 1.1 }),
+    O({ symbol: 'EURUSD', side: 'sell', entry: 1.1 }),
+  ])!;
+  assert.deepEqual(flat, [
+    { ccy: 'EUR', units: 0, legs: 2, sameWay: false },
+    { ccy: 'USD', units: 0, legs: 2, sameWay: false },
+  ]);
+  assert.ok(Object.is(flat[0].units, 0));
+  // ذهب: XAU بالأونصة (100 للوت)؛ بيع 0.3 على 2600 = −30 XAU و+78,000 USD
+  assert.deepEqual(openCurrencyExposure([O({ symbol: 'XAUUSD', side: 'sell', entry: 2600, size: 0.3 })]), [
+    { ccy: 'USD', units: 78000, legs: 1, sameWay: true },
+    { ccy: 'XAU', units: -30, legs: 1, sameWay: true },
+  ]);
+  // سنت: EURUSDC 4 لوت = عقد ÷100 ⇒ 4,000 EUR (لا 400,000)
+  assert.deepEqual(openCurrencyExposure([O({ symbol: 'EURUSDc', side: 'buy', entry: 1.1, size: 4 })]), [
+    { ccy: 'EUR', units: 4000, legs: 1, sameWay: true },
+    { ccy: 'USD', units: -4400, legs: 1, sameWay: true },
+  ]);
+  // الكلّ أو لا شيء: حجم مجهول (1 بلا علامة) / أداة بلا مواصفات / دخول فاسد ⇒ null؛ المغلقة لا تُسقط شيئاً
+  assert.equal(openCurrencyExposure([...three, O({ symbol: 'EURUSD', side: 'buy', entry: 1.1, size: 1 })]), null);
+  assert.equal(openCurrencyExposure([...three, O({ symbol: 'US30', side: 'buy', entry: 42000 })]), null);
+  assert.equal(openCurrencyExposure([...three, O({ symbol: 'EURUSD', side: 'buy', entry: NaN })]), null);
+  assert.equal(openCurrencyExposure([...three, O({ symbol: 'EURUSD', side: 'buy', entry: 0 })]), null);
+  assert.equal(openCurrencyExposure([...three, O({ symbol: 'US30', side: 'buy', entry: 42000, status: 'closed' })])!.length, 4);
+  // ساق الأساس تطابق الحاسبة: لوت × حجم العقد
+  assert.equal(openCurrencyExposure([O({ symbol: 'GBPJPY', side: 'buy', entry: 190, size: 0.1 })])![0].units, 0.1 * instrumentSpec('GBPJPY')!.contractSize);
+}
+console.log('tradePlan openCurrencyExposure selftest OK');
