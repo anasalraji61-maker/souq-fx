@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, TextInput, Alert } from 'react-native';
+import { View, Text, Pressable, StyleSheet, TextInput, Alert, Platform } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import {
   loadLayouts,
@@ -103,6 +103,16 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
     setSavedMsg(`${t.layoutSavedMsg} ${layout.name} — ${describe(layout)}`);
   };
 
+  const removeLayout = async (l: TerminalLayout) => {
+    deletedRef.current.add(l.id);
+    await deleteLayout(l.id);
+    setLayouts((prev) => prev.filter((x) => x.id !== l.id));
+    // وإلا عاد التخطيط المحذوف من الخادم عند فتح اللوحة التالي
+    api.deleteLayout(l.id).catch(() => {
+      /* بلا خادم: الحذف المحلي تمّ */
+    });
+  };
+
   return (
     <View style={styles.wrap}>
       <Text style={[styles.title, { textAlign: align }]}>{t.layoutsTitle}</Text>
@@ -173,24 +183,26 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
           {l.id !== 'default' ? (
             <Pressable
               accessibilityRole="button"
-              onPress={() =>
-                Alert.alert(t.layoutDeleteConfirmTitle, `${l.name} — ${describe(l)}`, [
+              onPress={() => {
+                const body = `${l.name} — ${describe(l)}`;
+                // Alert.alert بأزرار لا تفعل شيئاً على react-native-web — فلا تأكيد ولا حذف على الويب/سطح المكتب.
+                if (Platform.OS === 'web') {
+                  const ok =
+                    typeof window !== 'undefined' && typeof window.confirm === 'function'
+                      ? window.confirm(`${t.layoutDeleteConfirmTitle}\n${body}`)
+                      : false;
+                  if (ok) void removeLayout(l);
+                  return;
+                }
+                Alert.alert(t.layoutDeleteConfirmTitle, body, [
                   { text: t.cancel, style: 'cancel' },
                   {
                     text: t.deleteWord,
                     style: 'destructive',
-                    onPress: async () => {
-                      deletedRef.current.add(l.id);
-                      await deleteLayout(l.id);
-                      setLayouts((prev) => prev.filter((x) => x.id !== l.id));
-                      // وإلا عاد التخطيط المحذوف من الخادم عند فتح اللوحة التالي
-                      api.deleteLayout(l.id).catch(() => {
-                        /* بلا خادم: الحذف المحلي تمّ */
-                      });
-                    },
+                    onPress: () => void removeLayout(l),
                   },
-                ])
-              }
+                ]);
+              }}
               style={({ pressed }) =>
                 pressed && {
                   opacity: buttons.pressedOpacity,
