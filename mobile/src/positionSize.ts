@@ -266,3 +266,28 @@ export function formatRiskPct(pct: number): string {
   if (!Number.isFinite(pct) || pct < 0) return '—';
   return `${pct.toFixed(pct < 10 ? 2 : 1)}%`;
 }
+
+/**
+ * المال المُعرَّض بين الدخول والوقف لحجم لوت معيّن، **بعملة التسعير** (الثانية بالزوج): EURUSD/الذهب
+ * بالدولار، USDJPY بالين، EURGBP بالإسترليني.
+ *
+ * لماذا بعملة التسعير لا بعملة الحساب: الدفتر لا يعرف عملة حساب المتداول ولا يملك سعر تحويل، لكن
+ * المسافة × حجم العقد × اللوت **رقمٌ دقيق بلا أي سعر خارجي** بعملة التسعير — فيُكتب كما هو مع رمز
+ * عملته صراحةً بدل تقديرٍ بعملة مفترضة. وهو لأزواج الدولار الثانية (أغلب ما يُتداول، والذهب) عملةُ
+ * الحساب نفسها لأغلب المتداولين. الدفتر كان يعرف الدخول والوقف والحجم ويسكت عن «كم خاطرتُ بهذه
+ * الصفقة» — السؤال الذي يُكتب الدفتر أصلاً ليجيب عنه.
+ *
+ * مقرَّب لمنزلتين (سنتات). `null` لأداة بلا مواصفات، أو مدخل غير صالح، أو دخول = وقف.
+ */
+export function riskInQuoteCcy(input: {
+  symbol: string;
+  entry: number;
+  sl: number;
+  lots: number;
+}): { amount: number; ccy: string } | null {
+  const spec = instrumentSpec(input.symbol);
+  const { entry, sl, lots } = input;
+  if (!spec || ![entry, sl, lots].every((v) => Number.isFinite(v) && v > 0) || entry === sl) return null;
+  const amount = Math.abs(entry - sl) * spec.contractSize * lots;
+  return { amount: Math.round(amount * 100 + 1e-7) / 100, ccy: spec.quote };
+}

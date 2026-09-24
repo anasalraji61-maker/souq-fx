@@ -16,7 +16,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
-import { instrumentSpec } from '../positionSize';
+import { instrumentSpec, pipsBetween, riskInQuoteCcy } from '../positionSize';
 import {
   analyzePlan,
   floatingResult,
@@ -285,13 +285,32 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     return null;
   };
 
-  /** "المخاطرة 25 pip · الربح المحتمل 50 pip · R:R 1:2.0" */
+  /**
+   * المال المعرَّض بين الدخول والوقف للحجم المكتوب، بعملة التسعير (`riskInQuoteCcy`): «كم خاطرتُ
+   * بهذه الصفقة» — الدفتر كان يعرف الأرقام الثلاثة ويسكت عنه. لا يظهر بلا حجم أو بوقف بالجهة الخطأ.
+   */
+  const draftRisk = useMemo(() => {
+    const e = num(entry);
+    const s = num(sl);
+    const l = num(size);
+    if (e == null || s == null || l == null || levelSideIssue({ side, entry: e, sl: s })) return null;
+    const sym = symbol.trim().toUpperCase();
+    const spec = instrumentSpec(sym);
+    const r = riskInQuoteCcy({ symbol: sym, entry: e, sl: s, lots: l });
+    if (!spec || !r) return null;
+    const amount = r.amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return { pips: pipsBetween(spec, e, s), money: `${amount} ${r.ccy}` };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol, side, entry, sl, size]);
+
+  /** "المخاطرة 25 pip (125.00 USD) · الربح المحتمل 50 pip · R:R 1:2.0" — المال حين يُكتب الحجم. */
   const planSummary = (plan: TradePlan): string => {
     const dist = (pips: number | null, d: number) => {
       const p = formatPips(pips);
       return p != null ? `${p} pip` : String(Math.round(d * 1e5) / 1e5);
     };
-    return `${t.planRiskWord} ${dist(plan.riskPips, plan.riskDist)} · ${t.planRewardWord} ${dist(plan.rewardPips, plan.rewardDist)} · R:R ${formatRR(plan.rr)}`;
+    const money = draftRisk ? ` (${draftRisk.money})` : '';
+    return `${t.planRiskWord} ${dist(plan.riskPips, plan.riskDist)}${money} · ${t.planRewardWord} ${dist(plan.rewardPips, plan.rewardDist)} · R:R ${formatRR(plan.rr)}`;
   };
 
   // معاينة حيّة أثناء الكتابة: خطأ جهة فوراً (حتى بوقف وحده)، والملخّص حين تكتمل الأرقام الثلاثة.
@@ -1164,6 +1183,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       ) : draft?.plan?.issue === 'slTooClose' ? (
         // تحذير لا يمنع الحفظ: اليومية تسجّل ما حدث فعلاً
         <Text style={[styles.planWarn, { textAlign: align }]}>⚠ {t.planSlTooClose}</Text>
+      ) : !draft && draftRisk ? (
+        // بلا هدف بعد: المخاطرة وحدها (الوقف والحجم مكتوبان) — لا تنتظر اكتمال الخطة
+        <Text style={[styles.planLine, { textAlign: align }]}>
+          {t.planRiskWord} {formatPips(draftRisk.pips) ?? '—'} pip ({draftRisk.money})
+        </Text>
       ) : null}
       <TextInput
         style={[styles.input, { textAlign: align }]}

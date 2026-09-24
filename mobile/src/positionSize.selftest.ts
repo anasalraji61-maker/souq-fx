@@ -17,6 +17,7 @@ import {
   pipsBetween,
   priceAtPipOffset,
   riskForLots,
+  riskInQuoteCcy,
   formatRiskPct,
   LOT_STEP,
   type InstrumentSpec,
@@ -407,3 +408,28 @@ console.log('positionSize pipValue-for-position selftest OK');
 }
 
 console.log('positionSize riskForLots selftest OK');
+
+// —— المال المعرَّض بعملة التسعير (سطر المخاطرة بالدفتر) ——
+{
+  // EURUSD: 25 pip × 0.5 لوت × 10$/pip/لوت = 125$
+  assert.deepEqual(riskInQuoteCcy({ symbol: 'EURUSD', entry: 1.085, sl: 1.0825, lots: 0.5 }), { amount: 125, ccy: 'USD' });
+  // USDJPY: 20 pip × 1 لوت × 1000¥ = 20000¥ (بيع: الوقف فوق — المسافة بلا إشارة)
+  assert.deepEqual(riskInQuoteCcy({ symbol: 'USDJPY', entry: 157.4, sl: 157.6, lots: 1 }), { amount: 20000, ccy: 'JPY' });
+  // الذهب: 5$ × 100 أونصة × 0.1 لوت = 50$
+  assert.deepEqual(riskInQuoteCcy({ symbol: 'XAUUSD', entry: 2650, sl: 2645, lots: 0.1 }), { amount: 50, ccy: 'USD' });
+  // الفضة: 0.3$ × 5000 × 0.01 = 15$
+  assert.deepEqual(riskInQuoteCcy({ symbol: 'XAGUSD', entry: 31.2, sl: 30.9, lots: 0.01 }), { amount: 15, ccy: 'USD' });
+  // EURGBP بالإسترليني، وضجيج الطرح (0.00015000000000009) لا يظهر: 1.5 pip × 0.03 × 10£ = 0.45£
+  assert.deepEqual(riskInQuoteCcy({ symbol: 'EURGBP', entry: 0.8431, sl: 0.84295, lots: 0.03 }), { amount: 0.45, ccy: 'GBP' });
+  // اتساق مع positionSize: بعملة حساب = عملة التسعير، المال المعرَّض للّوت المحسوب = actualRisk
+  const r = positionSize({ balance: 10000, riskPct: 1, slPips: 23, pipValuePerLot: 10, contractSize: 100_000 })!;
+  const q = riskInQuoteCcy({ symbol: 'EURUSD', entry: 1.085, sl: 1.0827, lots: r.lots })!;
+  assert.ok(Math.abs(q.amount - Math.round(r.actualRisk * 100) / 100) < 1e-9, `${q.amount} vs ${r.actualRisk}`);
+  // مرفوض
+  assert.equal(riskInQuoteCcy({ symbol: 'BTCUSD', entry: 60000, sl: 59000, lots: 1 }), null);
+  assert.equal(riskInQuoteCcy({ symbol: 'EURUSD', entry: 1.085, sl: 1.085, lots: 1 }), null);
+  assert.equal(riskInQuoteCcy({ symbol: 'EURUSD', entry: 1.085, sl: 1.08, lots: 0 }), null);
+  assert.equal(riskInQuoteCcy({ symbol: 'EURUSD', entry: NaN, sl: 1.08, lots: 1 }), null);
+}
+
+console.log('positionSize riskInQuoteCcy selftest OK');
