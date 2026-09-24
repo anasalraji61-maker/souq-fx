@@ -46,10 +46,11 @@ import {
   journalSpec,
   draftRiskFigures,
   journalSizeLooksLikeUnits,
-  netHasCentWithLots,
   isCentJournalSymbol,
   isMicroJournalSymbol,
-  netHasMicroWithLots,
+  journalPnl,
+  journalRisk,
+  formatJournalMoney,
 } from './tradePlan';
 import { riskInQuoteCcy as cashRisk } from './positionSize';
 import { instrumentSpec, pipValuePerLot, planJournalNote, pnlInQuoteCcy, positionSize, slPipsFromPrices } from './positionSize';
@@ -1443,7 +1444,7 @@ console.log('tradePlan journalPipSize selftest OK');
   const rows = netByInstrument([c('EURUSD', 1.102), c('EURUSDC', 1.101)]);
   const std = rows.find((r) => r.symbol === 'EURUSD')!;
   assert.deepEqual(std, { symbol: 'EURUSD', n: 1, pips: 20, cash: { amount: 100, ccy: 'USD' } });
-  assert.deepEqual(rows.find((r) => r.symbol === 'EURUSDC'), { symbol: 'EURUSDC', n: 1, pips: 10, cash: null });
+  assert.deepEqual(rows.find((r) => r.symbol === 'EURUSDC'), { symbol: 'EURUSDC', n: 1, pips: 10, cash: { amount: 50, ccy: 'USC' } });
   // النتيجة العائمة لسنت على سعر الزوج العادي: نقاط وR، والمال مجهول
   assert.deepEqual(floatingResult({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.0825, current: 1.0875 }), {
     pips: 25,
@@ -1462,11 +1463,11 @@ console.log('tradePlan cent quoteSymbol selftest OK');
   assert.deepEqual(d('EURUSD', 'buy', 1.085, 1.0825, 0.5), { pips: 25, cash: { amount: 125, ccy: 'USD' }, cent: false, micro: false });
   assert.deepEqual(d('xauusd.m', 'sell', 2400, 2405, 0.1), { pips: 50, cash: { amount: 50, ccy: 'USD' }, cent: false, micro: false });
   assert.deepEqual(d('USDJPY', 'buy', 150, 149.7, 1), { pips: 30, cash: { amount: 30000, ccy: 'JPY' }, cent: false, micro: false });
-  // السنت: نقاط بلا مال (كان null كلّه)
-  assert.deepEqual(d('EURUSDC', 'buy', 1.085, 1.0825, 0.5), { pips: 25, cash: null, cent: true, micro: false });
-  assert.deepEqual(d('EURUSDc', 'buy', 1.085, 1.0825, 0.5), { pips: 25, cash: null, cent: true, micro: false });
-  assert.deepEqual(d('USDJPYC', 'sell', 150, 150.3, 2), { pips: 30, cash: null, cent: true, micro: false });
-  assert.deepEqual(d('GOLDC', 'buy', 2400, 2397.5, 1), { pips: 25, cash: null, cent: true, micro: false });
+  // السنت: نقاطٌ ومالٌ بعقد ÷100 — USC لزوجٍ مسعَّر بالدولار (كما يعرضه حساب السنت)، وعملة التسعير لغيره (USDJPYC بالين)
+  assert.deepEqual(d('EURUSDC', 'buy', 1.085, 1.0825, 0.5), { pips: 25, cash: { amount: 125, ccy: 'USC' }, cent: true, micro: false });
+  assert.deepEqual(d('EURUSDc', 'buy', 1.085, 1.0825, 0.5), { pips: 25, cash: { amount: 125, ccy: 'USC' }, cent: true, micro: false });
+  assert.deepEqual(d('USDJPYC', 'sell', 150, 150.3, 2), { pips: 30, cash: { amount: 600, ccy: 'JPY' }, cent: true, micro: false });
+  assert.deepEqual(d('GOLDC', 'buy', 2400, 2397.5, 1), { pips: 25, cash: { amount: 250, ccy: 'USC' }, cent: true, micro: false });
   // لا سطر: جهة خطأ، وقف على الدخول، حجم يبدو وحدات، مجهول، أرقام غير صالحة
   assert.equal(d('EURUSD', 'buy', 1.085, 1.09, 0.5), null);
   assert.equal(d('EURUSDC', 'sell', 1.085, 1.08, 0.5), null);
@@ -1504,33 +1505,12 @@ console.log('tradePlan draftRiskFigures selftest OK');
   assert.equal(draftRiskFigures({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.0825, lots: 10000 }), null);
   assert.deepEqual(draftRiskFigures({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.0825, lots: 150 }), {
     pips: 25,
-    cash: null,
+    cash: { amount: 37500, ccy: 'USC' },
     cent: true,
     micro: false,
   });
 }
 console.log('tradePlan journalSizeLooksLikeUnits selftest OK');
-
-// netHasCentWithLots — سطر «حساب سنت: بالنقاط فقط» تحت صافي الأدوات
-{
-  const c = (symbol: string, size: number | null, status = 'closed', note: string | null = null) => ({ symbol, size, status, note });
-  const trades = [c('EURUSD', 0.5), c('EURUSDC', 0.5)];
-  const keys = netByInstrument(trades.map((t) => ({ ...t, side: 'buy', entry: 1.1, exit: 1.101 }))).map((r) => r.symbol);
-  assert.deepEqual(keys.sort(), ['EURUSD', 'EURUSDC']);
-  assert.equal(netHasCentWithLots(trades, keys), true);
-  // السنت خارج السطر المعروض (+N) أو بلا صفقات سنت: لا سطر
-  assert.equal(netHasCentWithLots(trades, ['EURUSD']), false);
-  assert.equal(netHasCentWithLots([c('EURUSD', 0.5)], ['EURUSD']), false);
-  // بلا حجم معروف (1 = افتراض الخادم) أو مفتوحة: لا سطر
-  assert.equal(netHasCentWithLots([c('EURUSDC', 1)], ['EURUSDC']), false);
-  assert.equal(netHasCentWithLots([c('EURUSDC', null)], ['EURUSDC']), false);
-  assert.equal(netHasCentWithLots([c('EURUSDC', 0.5, 'open')], ['EURUSDC']), false);
-  // 1.00 لوت مكتوبة بالملاحظة معروفة؛ «GOLDC» مفتاحها «GOLDC»
-  assert.equal(netHasCentWithLots([c('EURUSDC', 1, 'closed', '1.00 lot · risk 1.00 USD')], ['EURUSDC']), true);
-  assert.equal(netHasCentWithLots([c('GOLDC', 0.2)], ['XAUUSDC']), true);
-  assert.equal(netHasCentWithLots([c('GOLDC', 0.2)], ['XAUUSD']), false);
-}
-console.log('tradePlan netHasCentWithLots selftest OK');
 
 // journalMicroNoMoney — micro بمسودّة الدفتر وتحت الصافي (نصّ السنت لا يصفها)
 {
@@ -1538,8 +1518,8 @@ console.log('tradePlan netHasCentWithLots selftest OK');
   for (const s of ['EURUSD', 'EURUSDC', 'EURUSD-CENT', 'US30MICRO', 'EURUSDMICROS', '', null, undefined])
     assert.equal(isMicroJournalSymbol(s), false, String(s));
   const d = (symbol: string) => draftRiskFigures({ symbol, side: 'buy', entry: 1.085, sl: 1.0825, lots: 2 });
-  assert.deepEqual(d('EURUSD.MICRO'), { pips: 25, cash: null, cent: false, micro: true });
-  assert.deepEqual(d('EURUSDC'), { pips: 25, cash: null, cent: true, micro: false });
+  assert.deepEqual(d('EURUSD.MICRO'), { pips: 25, cash: { amount: 5, ccy: 'USD' }, cent: false, micro: true });
+  assert.deepEqual(d('EURUSDC'), { pips: 25, cash: { amount: 500, ccy: 'USC' }, cent: true, micro: false });
   assert.deepEqual(d('EURUSD'), { pips: 25, cash: { amount: 500, ccy: 'USD' }, cent: false, micro: false });
   // حجمٌ يبدو وحدات: لا سطر أصلاً
   assert.equal(draftRiskFigures({ symbol: 'EURUSDMICRO', side: 'buy', entry: 1.085, sl: 1.0825, lots: 10000 }), null);
@@ -1547,16 +1527,13 @@ console.log('tradePlan netHasCentWithLots selftest OK');
   const trades = [c('EURUSD', 0.5), c('EURUSDMICRO', 0.5), c('EURUSDC', 0.5)];
   const keys = netByInstrument(trades.map((t) => ({ ...t, side: 'buy', entry: 1.1, exit: 1.101 }))).map((r) => r.symbol);
   assert.deepEqual([...keys].sort(), ['EURUSD', 'EURUSDC', 'EURUSDMICRO']);
-  assert.equal(netHasMicroWithLots(trades, keys), true);
-  assert.equal(netHasCentWithLots(trades, keys), true);
-  // micro وحدها لا تُظهر سطر السنت، والعكس
-  assert.equal(netHasCentWithLots([c('EURUSDMICRO', 0.5)], ['EURUSDMICRO']), false);
-  assert.equal(netHasMicroWithLots([c('EURUSDC', 0.5)], ['EURUSDC']), false);
-  // خارج السطر، بلا حجم، مفتوحة: لا سطر
-  assert.equal(netHasMicroWithLots(trades, ['EURUSD']), false);
-  assert.equal(netHasMicroWithLots([c('EURUSDMICRO', null)], ['EURUSDMICRO']), false);
-  assert.equal(netHasMicroWithLots([c('EURUSDMICRO', 1)], ['EURUSDMICRO']), false);
-  assert.equal(netHasMicroWithLots([c('EURUSDMICRO', 0.5, 'open')], ['EURUSDMICRO']), false);
+  // المال لكل أداة بعقدها: +10 pip × 0.5 لوت — العادي 50 USD، micro (500 وحدة) 0.50 USD، السنت 50 USC
+  const rows = netByInstrument(trades.map((t) => ({ ...t, side: 'buy', entry: 1.1, exit: 1.101 })));
+  assert.deepEqual(rows.find((r) => r.symbol === 'EURUSD')!.cash, { amount: 50, ccy: 'USD' });
+  assert.deepEqual(rows.find((r) => r.symbol === 'EURUSDMICRO')!.cash, { amount: 0.5, ccy: 'USD' });
+  assert.deepEqual(rows.find((r) => r.symbol === 'EURUSDC')!.cash, { amount: 50, ccy: 'USC' });
+  // بلا حجم معروف (1 = افتراض الخادم) ⇒ بلا مال كالعادي
+  assert.equal(netByInstrument([{ ...c('EURUSDMICRO', 1), side: 'buy', entry: 1.1, exit: 1.101 }])[0]!.cash, null);
 }
 console.log('tradePlan journalMicroNoMoney selftest OK');
 
@@ -1584,7 +1561,7 @@ console.log('tradePlan journalMicroNoMoney selftest OK');
   assert.equal(isCentJournalSymbol('GOLD.C'), true);
   assert.equal(isCentJournalSymbol('EURUSD.MICRO'), false);
   // مسودّة سنت بفاصل: نقاط بلا مال
-  assert.deepEqual(draftRiskFigures({ symbol: 'EURUSD-CENT', side: 'buy', entry: 1.085, sl: 1.0825, lots: 1 }), { pips: 25, cash: null, cent: true, micro: false });
+  assert.deepEqual(draftRiskFigures({ symbol: 'EURUSD-CENT', side: 'buy', entry: 1.085, sl: 1.0825, lots: 1 }), { pips: 25, cash: { amount: 250, ccy: 'USC' }, cent: true, micro: false });
   // اللواحق العادية كما كانت
   assert.equal(journalInstrumentKey('EURUSD.M'), 'EURUSD');
   assert.equal(journalInstrumentKey('GOLD#'), 'XAUUSD');
@@ -1614,9 +1591,8 @@ console.log('tradePlan small-contract suffix selftest OK');
     );
   // 1:1.5 على وقف 24.9 pip = 37.35 pip: 1.08874 بمنزلة الـpipette بعيداً عن الدخول (كانت «1.088735» بست منازل)
   assert.equal(targetAtRR({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.08251, rr: 1.5 }), 1.08874);
-  // المال ما زال مجهولاً
-  assert.equal(draftRiskFigures({ symbol: 'EURUSDMICRO', side: 'buy', entry: 1.085, sl: 1.0825, lots: 1 })!.cash, null);
-  assert.deepEqual(draftRiskFigures({ symbol: 'EURUSDMICRO', side: 'buy', entry: 1.085, sl: 1.0825, lots: 1 }), { pips: 25, cash: null, cent: false, micro: true });
+  // المال بعقد micro (1,000 وحدة للوت): 25 pip × 1 لوت = 2.50 USD
+  assert.deepEqual(draftRiskFigures({ symbol: 'EURUSDMICRO', side: 'buy', entry: 1.085, sl: 1.0825, lots: 1 }), { pips: 25, cash: { amount: 2.5, ccy: 'USD' }, cent: false, micro: true });
   assert.deepEqual(journalSizeLooksLikeUnits(10000, 'EURUSDMICRO'), { lots: null });
   assert.equal(journalSizeLooksLikeUnits(150, 'EURUSD.MICRO'), null);
 }
@@ -1652,12 +1628,11 @@ console.log('tradePlan liveEntryOrphaned small-contract selftest OK');
   // صافٍ واحد: 10 + 15 pip لكتابتين، بلا مال؛ وEURUSD بماله كما كان
   const c = (symbol: string, exit: number) => ({ symbol, side: 'buy', entry: 1.1, exit, size: 0.5, status: 'closed' });
   const rows = netByInstrument([c('EURUSD.C', 1.101), c('EURUSDC', 1.1015), c('EURUSD', 1.102)]);
-  assert.deepEqual(rows.find((r) => r.symbol === 'EURUSDC'), { symbol: 'EURUSDC', n: 2, pips: 25, cash: null });
+  assert.deepEqual(rows.find((r) => r.symbol === 'EURUSDC'), { symbol: 'EURUSDC', n: 2, pips: 25, cash: { amount: 125, ccy: 'USC' } });
   assert.deepEqual(rows.find((r) => r.symbol === 'EURUSD'), { symbol: 'EURUSD', n: 1, pips: 20, cash: { amount: 100, ccy: 'USD' } });
   assert.equal(rows.length, 2);
   // شرائح الرمز: كتابة واحدة (الأحدث) للأداة
   assert.deepEqual(quickJournalSymbols([{ symbol: 'EURUSD.c' }, { symbol: 'EURUSDc' }], [], 6), ['EURUSD.C']);
-  assert.equal(netHasCentWithLots([{ symbol: 'EURUSD-CENT', status: 'closed', size: 0.5 }], ['EURUSDC']), true);
 }
 console.log('tradePlan small-contract instrument key selftest OK');
 
@@ -1727,3 +1702,58 @@ console.log('tradePlan journalStats python-sum selftest OK');
   for (const v of [0, -1, NaN, Infinity, null, undefined, 201]) assert.equal(journalSizeFromSmall(v, 'EURUSDc', 'EURUSD'), null, String(v));
 }
 console.log('tradePlan journal size from small contract selftest OK');
+
+// journalPnl / journalRisk — مال صفقات السنت/micro بالدفتر (USC لسنت الدولار، عقد ÷100 لغيره)؛ العادي كما كان حرفياً
+{
+  const p = (symbol: string, side: 'buy' | 'sell', entry: number, exit: number, lots: number) => journalPnl({ symbol, side, entry, exit, lots });
+  // عادي = pnlInQuoteCcy حرفياً
+  for (const [s, side, e, x, l] of [['EURUSD', 'buy', 1.085, 1.0875, 0.5], ['usdjpy', 'sell', 150, 149.2, 1.3], ['XAUUSD.m', 'buy', 2400, 2391.35, 0.07], ['GOLDm', 'sell', 2400, 2390, 0.2]] as const)
+    assert.deepEqual(p(s, side, e, x, l), pnlInQuoteCcy({ symbol: s, side, entry: e, exit: x, lots: l }), s);
+  // Exness Cent: EURUSDc 4 لوت (= 4,000 وحدة) +25 pip = 10 USD = 1,000 USC
+  assert.deepEqual(p('EURUSDc', 'buy', 1.085, 1.0875, 4), { amount: 1000, ccy: 'USC' });
+  assert.deepEqual(p('EURUSD.c', 'sell', 1.085, 1.0875, 4), { amount: -1000, ccy: 'USC' });
+  // ذهب سنت: 1 لوت = أونصة؛ +10 دولار سعراً = 10 USD = 1,000 USC
+  assert.deepEqual(p('XAUUSDc', 'buy', 2400, 2410, 1), { amount: 1000, ccy: 'USC' });
+  assert.deepEqual(p('GOLDC', 'buy', 2400, 2410, 1), { amount: 1000, ccy: 'USC' });
+  // سنت بالين: 2 لوت سنت = 2,000 وحدة × 0.8 = 1,600 JPY (لا USC: لا سعر تحويل هنا)
+  assert.deepEqual(p('USDJPYc', 'buy', 150, 150.8, 2), { amount: 1600, ccy: 'JPY' });
+  // micro بعملة التسعير بعقد 1,000: 4 لوت × 25 pip = 10 USD؛ EURGBP micro بالجنيه
+  assert.deepEqual(p('EURUSDmicro', 'buy', 1.085, 1.0875, 4), { amount: 10, ccy: 'USD' });
+  assert.deepEqual(p('EURGBP.micro', 'sell', 0.86, 0.855, 1), { amount: 5, ccy: 'GBP' });
+  // micro 0.01 لوت (10 وحدات) × 25 pip = 0.025 ⇒ 0.03 (تقريب pnlInQuoteCcy متماثل)
+  assert.deepEqual(p('EURUSDmicro', 'buy', 1.085, 1.0875, 0.01), pnlInQuoteCcy({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.0875, lots: 0.0001 }));
+  // مجهول/غير صالح
+  for (const s of ['US30', 'BTCUSDC', 'EURUSDT', '']) assert.equal(p(s, 'buy', 1.085, 1.0875, 1), null, s);
+  for (const l of [0, -1, NaN]) assert.equal(p('EURUSDc', 'buy', 1.085, 1.0875, l), null, String(l));
+  // المخاطرة بالطريقة نفسها وموجبة
+  assert.deepEqual(journalRisk({ symbol: 'EURUSDc', entry: 1.085, sl: 1.0825, lots: 4 }), { amount: 1000, ccy: 'USC' });
+  assert.deepEqual(journalRisk({ symbol: 'EURUSDmicro', entry: 1.085, sl: 1.0875, lots: 4 }), { amount: 10, ccy: 'USD' });
+  assert.deepEqual(journalRisk({ symbol: 'USDJPYC', entry: 150, sl: 149.7, lots: 2 }), { amount: 600, ccy: 'JPY' });
+  assert.equal(journalRisk({ symbol: 'EURUSDc', entry: 1.085, sl: 1.085, lots: 4 }), null);
+  // معاينة الخروج بالمسطرة نفسها
+  assert.deepEqual(exitPreview({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.0825, exit: 1.0875, lots: 4 })!.cash, { amount: 1000, ccy: 'USC' });
+  // الصافي لكل أداة: 50 + 75 = 125 USC لكتابتين للسنت
+  const c = (symbol: string, exit: number) => ({ symbol, side: 'buy', entry: 1.1, exit, size: 0.5, status: 'closed' });
+  assert.deepEqual(netByInstrument([c('EURUSD.C', 1.101), c('EURUSDc', 1.1015)])[0], { symbol: 'EURUSDC', n: 2, pips: 25, cash: { amount: 125, ccy: 'USC' } });
+  // إجمالي النسبة يعاكس المال: سنت الدولار يُجمع مع الدولار (÷100) — EURUSD +20 USD وEURUSDc −5,000 USC (−50 USD) ⇒ صافٍ خاسر
+  const mix = [
+    { symbol: 'EURUSD', side: 'buy', entry: 1.1, exit: 1.102, size: 0.1, status: 'closed' },
+    { symbol: 'EURUSDc', side: 'buy', entry: 1.1, exit: 1.095, size: 10, status: 'closed' },
+  ];
+  assert.equal(pnlPctContradictsCash(mix, 0.1), true);
+  assert.equal(pnlPctContradictsCash(mix, -0.1), false);
+}
+console.log('tradePlan journalPnl cent/micro money selftest OK');
+
+// formatJournalMoney — USC بقالب journalMoneyUsc، وغيره formatMoney كما كان
+{
+  const tpl = '{usc} USC (≈ {usd} USD)';
+  assert.equal(formatJournalMoney({ amount: 1000, ccy: 'USC' }, tpl), '1,000.00 USC (≈ 10.00 USD)');
+  assert.equal(formatJournalMoney({ amount: 1000, ccy: 'USC' }, tpl, true), '+1,000.00 USC (≈ +10.00 USD)');
+  assert.equal(formatJournalMoney({ amount: -250, ccy: 'USC' }, tpl, true), '−250.00 USC (≈ −2.50 USD)');
+  assert.equal(formatJournalMoney({ amount: 0.5, ccy: 'USC' }, tpl), '0.50 USC (≈ 0.01 USD)');
+  assert.equal(formatJournalMoney({ amount: 125, ccy: 'USD' }, tpl, true), '+125.00 USD');
+  assert.equal(formatJournalMoney({ amount: -1600, ccy: 'JPY' }, tpl, true), '−1,600 JPY');
+  assert.equal(formatJournalMoney({ amount: 0, ccy: 'USC' }, tpl, true), '0.00 USC (≈ 0.00 USD)');
+}
+console.log('tradePlan formatJournalMoney selftest OK');

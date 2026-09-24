@@ -16,7 +16,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
-import { ambiguousThousandsPrice, formatMoney, parsePriceFor, pnlInQuoteCcy, sizeLooksLikeUnits } from '../positionSize';
+import { ambiguousThousandsPrice, parsePriceFor, sizeLooksLikeUnits } from '../positionSize';
 import {
   analyzePlan,
   entryAfterSideSwitch,
@@ -24,6 +24,8 @@ import {
   executionPrice,
   exitShortcuts,
   exitPreview,
+  formatJournalMoney,
+  journalPnl,
   floatingResult,
   formatPips,
   formatR,
@@ -32,8 +34,6 @@ import {
   quoteSymbol,
   levelSideIssue,
   netByInstrument,
-  netHasCentWithLots,
-  netHasMicroWithLots,
   knownLots,
   journalInstrumentKey,
   draftRiskFigures,
@@ -363,12 +363,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const s = pnum(sl);
     const l = num(size);
     if (e == null || s == null || l == null) return null;
-    // حساب السنت: النقاط بلا مال (`draftRiskFigures`) — سطر `journalCentNoMoney` يقول لماذا
+    // حساب السنت بالـUSC (≈ USD) وmicro بعقده (`journalRisk`) — سطر `journalCentMoneyNote` تحت USC
     const r = draftRiskFigures({ symbol, side, entry: e, sl: s, lots: l });
     if (!r) return null;
-    return { pips: r.pips, money: r.cash ? formatMoney(r.cash.amount, r.cash.ccy) : null, cent: r.cent, micro: r.micro };
+    return { pips: r.pips, money: r.cash ? formatJournalMoney(r.cash, t.journalMoneyUsc) : null, usc: r.cash?.ccy === 'USC' };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, side, entry, sl, size]);
+  }, [symbol, side, entry, sl, size, t]);
 
   /** "المخاطرة 25 pip (125.00 USD) · الربح المحتمل 50 pip · R:R 1:2.0" — المال حين يُكتب الحجم. */
   const planSummary = (plan: TradePlan): string => {
@@ -380,16 +380,16 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     /**
      * الربح المحتمل بالمال بجانب المخاطرة بالمال: كان السطر يقول «المخاطرة 25 pip (125.00 USD) · الربح
      * المحتمل 50 pip» فيُترك المتداول ليضرب نصف المعادلة بنفسه. نتيجة الخروج عند الهدف بالدالّة نفسها
-     * التي تحسب نتيجة الصفقة بعد إغلاقها (`pnlInQuoteCcy`)، فالرقم هنا هو ما سيراه بالقائمة لو بلغ الهدف.
+     * التي تحسب نتيجة الصفقة بعد إغلاقها (`journalPnl` — سنت/micro بعقده)، فالرقم هنا هو ما سيراه بالقائمة لو بلغ الهدف.
      */
     const e = pnum(entry);
     const p = pnum(tp);
     const l = num(size);
     const gain =
       draftRisk && plan.ok && e != null && p != null && l != null
-        ? pnlInQuoteCcy({ symbol: symbol.trim().toUpperCase(), side, entry: e, exit: p, lots: l })
+        ? journalPnl({ symbol, side, entry: e, exit: p, lots: l })
         : null;
-    const gainText = gain && gain.amount > 0 ? ` (${formatMoney(gain.amount, gain.ccy)})` : '';
+    const gainText = gain && gain.amount > 0 ? ` (${formatJournalMoney(gain, t.journalMoneyUsc)})` : '';
     return `${t.planRiskWord} ${dist(plan.riskPips, plan.riskDist)}${money} · ${t.planRewardWord} ${dist(plan.rewardPips, plan.rewardDist)}${gainText} · R:R ${formatRR(plan.rr)}`;
   };
 
@@ -489,7 +489,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const r = formatR(p.r);
     const text = [
       pips != null ? `${sign(p.pips ?? 0)}${pips} pip` : null,
-      p.cash ? `${p.cash.amount > 0 ? '+' : ''}${formatMoney(p.cash.amount, p.cash.ccy)}` : null,
+      p.cash ? formatJournalMoney(p.cash, t.journalMoneyUsc, true) : null,
       `${sign(p.pct)}${Math.abs(p.pct).toFixed(2)}%`,
       r ? t.journalResultR.replace('{r}', r) : null,
     ]
@@ -553,7 +553,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const shown = ranked.slice(0, 3);
     const rest = ranked.length - shown.length;
     const cashOf = (c: { amount: number; ccy: string } | null) =>
-      c ? `${c.amount > 0 ? '+' : ''}${formatMoney(c.amount, c.ccy)}` : null;
+      c ? formatJournalMoney(c, t.journalMoneyUsc, true) : null;
     const parts = shown.map((v) => {
       const cash = cashOf(v.cash);
       return `${v.symbol} ${formatSignedPips(v.pips)}${cash ? ` (${cash})` : ''}`;
@@ -568,12 +568,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       pipsBySymbol: ranked.length > 0 && !whole ? parts.join(' · ') + (rest > 0 ? ` +${rest}` : '') : null,
       avgR: avg ? formatR(avg.r) : null,
       rN: avg?.n ?? 0,
-      /** أداة سنت بالسطر بحجم معروف: نقاطها بلا مبلغ — `journalCentNoMoney` يقول لماذا */
-      cent: netHasCentWithLots(visibleTrades, whole ? [ranked[0]!.symbol] : shown.map((v) => v.symbol)),
-      /** كذلك لأداة micro — `journalMicroNoMoney` (نصّ السنت لا يصفها) */
-      micro: netHasMicroWithLots(visibleTrades, whole ? [ranked[0]!.symbol] : shown.map((v) => v.symbol)),
+      /** مبلغٌ بالسنت الأمريكي بالسطر المعروض — `journalCentMoneyNote` يقول إن USC هي وحدة حساب السنت (100 = 1 USD) */
+      usc: (whole ? [ranked[0]!] : shown).some((v) => v.cash?.ccy === 'USC'),
     };
-  }, [visibleTrades]);
+  }, [visibleTrades, t]);
 
   /**
    * إحصاءات ما هو معروض. بلا فلتر: أرقام الخادم حرفياً كما كانت (لا تغيّر بتاتاً بالحالة الشائعة).
@@ -778,9 +776,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
      */
     const cash =
       mv && knownLots(tr.size, tr.note) != null
-        ? pnlInQuoteCcy({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: exitPx, lots: tr.size })
+        ? journalPnl({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: exitPx, lots: tr.size })
         : null;
-    const cashText = cash ? `${cash.amount > 0 ? '+' : ''}${formatMoney(cash.amount, cash.ccy)} · ` : '';
+    const cashText = cash ? `${formatJournalMoney(cash, t.journalMoneyUsc, true)} · ` : '';
     const result = mv
       ? `${mv.pips != null ? `${formatSignedPips(mv.pips)} pip · ` : ''}${cashText}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%${rText ? ` · ${rText}` : ''}`
       : '';
@@ -920,7 +918,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             const pips = mv ? formatPips(mv.pips == null ? null : Math.abs(mv.pips)) : null;
             const rText = !closed && mv && 'r' in mv ? formatR(mv.r as number | null) : null;
             /**
-             * **كم ربحتُ/خسرتُ بالمال** بعملة التسعير (`pnlInQuoteCcy`): النسبة بالسطر نسبة حركة السعر
+             * **كم ربحتُ/خسرتُ بالمال** بعملة التسعير (`journalPnl`؛ USC لسنت الدولار): النسبة بالسطر نسبة حركة السعر
              * لا الحساب، فـ«+0.23%» على لوتين هي 500$ — والمتداول كان يضرب بنفسه. الحجم 1 بلا معنى
              * (يضعه الخادم حين لا يُرسل حجم — راجع خانة الحجم) فلا يُحسب منه مال، كسطر الحجم أعلاه.
              */
@@ -928,9 +926,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             const px = closed ? tr.exit : live;
             const cash =
               mv && lotsKnown && px != null
-                ? pnlInQuoteCcy({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: px, lots: tr.size })
+                ? journalPnl({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: px, lots: tr.size })
                 : null;
-            const cashText = cash ? `${cash.amount > 0 ? '+' : ''}${formatMoney(cash.amount, cash.ccy)} · ` : '';
+            const cashText = cash ? `${formatJournalMoney(cash, t.journalMoneyUsc, true)} · ` : '';
             const result = mv
               ? `${pips != null ? `${sign(mv.pips ?? 0)}${pips} pip · ` : ''}${cashText}${sign(mv.pct)}${Math.abs(
                   mv.pct
@@ -1105,8 +1103,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
               {t.journalStatNetPipsBySymbol.replace('{parts}', extraStats.pipsBySymbol)}
             </Text>
           ) : null}
-          {extraStats.cent ? <Text style={[styles.stat, { textAlign: align }]}>{t.journalCentNoMoney}</Text> : null}
-          {extraStats.micro ? <Text style={[styles.stat, { textAlign: align }]}>{t.journalMicroNoMoney}</Text> : null}
+          {extraStats.usc ? <Text style={[styles.stat, { textAlign: align }]}>{t.journalCentMoneyNote}</Text> : null}
           {extraStats.avgR != null ? (
             <Text style={[styles.stat, { textAlign: align }]}>
               {t.journalStatAvgR.replace('{r}', extraStats.avgR).replace('{n}', String(extraStats.rN))}
@@ -1569,12 +1566,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           {t.planRiskWord} {formatPips(draftRisk.pips) ?? '—'} pip{draftRisk.money ? ` (${draftRisk.money})` : ''}
         </Text>
       ) : null}
-      {draftRisk?.cent && !(draft?.issue && draft.issue !== 'slTooClose') ? (
-        // النقاط بلا مبلغ لحساب السنت: السطر يقول لماذا بدل أن يبدو الغياب عطلاً
-        <Text style={[styles.planWarn, { textAlign: align }]}>{t.journalCentNoMoney}</Text>
-      ) : null}
-      {draftRisk?.micro && !(draft?.issue && draft.issue !== 'slTooClose') ? (
-        <Text style={[styles.planWarn, { textAlign: align }]}>{t.journalMicroNoMoney}</Text>
+      {draftRisk?.usc && !(draft?.issue && draft.issue !== 'slTooClose') ? (
+        // المخاطرة بالسنت الأمريكي لحساب السنت: السطر يقول ما USC كي لا تُقرأ دولاراتٍ بمئة ضعف
+        <Text style={[styles.planWarn, { textAlign: align }]}>{t.journalCentMoneyNote}</Text>
       ) : null}
       <TextInput
         style={[styles.input, { textAlign: align }]}

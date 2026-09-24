@@ -17,6 +17,7 @@ import {
   LOT_STEP,
   MAX_SANE_LOTS,
   MAX_SMALL_LOTS,
+  formatMoney,
   pipsBetween,
   pnlInQuoteCcy,
   priceAtPipOffset,
@@ -83,11 +84,78 @@ export function journalSizeLooksLikeUnits(size: number, symbol: string | null | 
 }
 
 /**
+ * مال صفقة بالدفتر (نتيجة بين دخول وخروج، بإشارتها) — `pnlInQuoteCcy` للرمز العادي، **وعقد السنت/micro** بدل «لا مال».
+ *
+ * لماذا: صفقات «EURUSDC»/«EURUSDMICRO» كانت نقاطاً فقط وسطر `journalCentNoMoney` يعتذر، مع أن العقد معروف (الزوج العادي ÷ 100،
+ * `smallContractSpec` — الحاسبة تحسب به منذ مدّة). المتداول بحساب سنت يرى رصيده بالسنت الأمريكي، فـ«EURUSDc» 4 لوت و+25 pip
+ * = **+1,000 USC** (= 10 USD) كما تكتبه منصّته، لا «+10.00 USD» يقارنه برصيدٍ مكتوب بالسنت فيقرؤه أصغر بمئة مرّة.
+ * - عادي ⇒ بعملة التسعير كما كان حرفياً.
+ * - سنت **مسعَّر بالدولار** (EURUSDC، GOLDC) ⇒ `USC`: عقد ÷100 × 100 سنت = اللوت نفسه على الزوج العادي ⇒ `pnlInQuoteCcy(الزوج، اللوت)` بالضبط.
+ * - سنت بعملة تسعير أخرى (USDJPYC) أو micro ⇒ بعملة التسعير بعقد ÷ 100 (لا نعرف سعر التحويل هنا — كالعادي تماماً).
+ * `null` = أداة مجهولة أو أرقام غير صالحة.
+ */
+export function journalPnl(input: {
+  symbol: string;
+  side: TradeSide;
+  entry: number;
+  exit: number;
+  lots: number;
+}): { amount: number; ccy: string } | null {
+  const sym = input.symbol.trim().toUpperCase();
+  if (instrumentSpec(sym)) return pnlInQuoteCcy({ ...input, symbol: sym });
+  const small = smallContractPair(sym);
+  const pair = small ? instrumentSpec(small) : null;
+  if (!pair || !finitePos(input.lots)) return null;
+  if (centAccountSymbol(sym) && pair.quote === 'USD') {
+    const c = pnlInQuoteCcy({ ...input, symbol: pair.symbol });
+    return c ? { amount: c.amount, ccy: 'USC' } : null;
+  }
+  return pnlInQuoteCcy({ ...input, symbol: pair.symbol, lots: input.lots / 100 });
+}
+
+/**
+ * المال المعرَّض بين الدخول والوقف لصفقة بالدفتر — كـ`journalPnl` (USC لسنت مسعَّر بالدولار، عقد ÷100 لغيره)، موجباً.
+ */
+export function journalRisk(input: {
+  symbol: string;
+  entry: number;
+  sl: number;
+  lots: number;
+}): { amount: number; ccy: string } | null {
+  const sym = input.symbol.trim().toUpperCase();
+  if (instrumentSpec(sym)) return riskInQuoteCcy({ ...input, symbol: sym });
+  const small = smallContractPair(sym);
+  const pair = small ? instrumentSpec(small) : null;
+  if (!pair || !finitePos(input.lots)) return null;
+  if (centAccountSymbol(sym) && pair.quote === 'USD') {
+    const c = riskInQuoteCcy({ ...input, symbol: pair.symbol });
+    return c ? { amount: c.amount, ccy: 'USC' } : null;
+  }
+  return riskInQuoteCcy({ ...input, symbol: pair.symbol, lots: input.lots / 100 });
+}
+
+/**
+ * مبلغ الدفتر للعرض: `formatMoney` كما كان، و**USC** بقالب `journalMoneyUsc` («{usc} USC (≈ {usd} USD)») — «+1,000.00 USC (≈ +10.00 USD)».
+ * `signed` = «+» للموجب (سطور النتيجة)؛ السالب «−» دائماً وعلى الرقمين معاً.
+ */
+export function formatJournalMoney(
+  cash: { amount: number; ccy: string },
+  uscTemplate: string,
+  signed = false
+): string {
+  const plus = signed && cash.amount > 0 ? '+' : '';
+  if (cash.ccy !== 'USC') return `${plus}${formatMoney(cash.amount, cash.ccy)}`;
+  const num = (v: number, ccy: string) => formatMoney(v, ccy).slice(0, -(ccy.length + 1));
+  return uscTemplate
+    .replace('{usc}', `${plus}${num(cash.amount, 'USC')}`)
+    .replace('{usd}', `${plus}${num(cash.amount / 100, 'USD')}`);
+}
+
+/**
  * «كم أخاطر» لمسودّة الدفتر: نقاط الوقف والمال بعملة التسعير للحجم المكتوب. `null` = لا سطر (بلا حجم، وقف
  * بالجهة الخطأ أو على الدخول، حجمٌ يبدو وحدات، أداة مجهولة).
  *
- * **حساب السنت** («EURUSDC») كان `null` كلّه لأن المال مجهول — فالمتداول الذي كتب الوقف والحجم بلا هدف بعد لا يرى
- * حتى «المخاطرة 25 pip» التي تراها خطته الكاملة. الآن النقاط بمواصفات الزوج العادي و`cash: null`، `cent: true`.
+ * **حساب السنت/micro**: النقاط بمواصفات الزوج العادي، والمال بعقده (`journalRisk`: USC لسنت الدولار، عقد ÷100 لغيره).
  */
 export function draftRiskFigures(input: {
   symbol: string;
@@ -109,10 +177,9 @@ export function draftRiskFigures(input: {
   if (!spec) return null;
   // مالٌ من حجمٍ يبدو وحداتٍ («125,000,000 USD») أسوأ من لا شيء — سطر التحذير يقول ما الخطأ
   if (journalSizeLooksLikeUnits(lots, sym)) return null;
-  if (small) return { pips: pipsBetween(spec, entry, sl), cash: null, cent, micro };
-  const cash = riskInQuoteCcy({ symbol: sym, entry, sl, lots });
+  const cash = journalRisk({ symbol: sym, entry, sl, lots });
   if (!cash) return null;
-  return { pips: pipsBetween(spec, entry, sl), cash, cent: false, micro: false };
+  return { pips: pipsBetween(spec, entry, sl), cash, cent, micro };
 }
 
 export type PlanIssue = 'invalid' | 'slWrongSide' | 'tpWrongSide' | 'slTooClose';
@@ -412,7 +479,7 @@ export function exitPreview(input: {
   if (!finitePos(entry) || !finitePos(exit)) return null;
   const mv = realizedMove({ symbol, side, entry, exit });
   if (!mv) return null;
-  const cash = finitePos(lots) ? pnlInQuoteCcy({ symbol, side, entry, exit, lots }) : null;
+  const cash = finitePos(lots) ? journalPnl({ symbol, side, entry, exit, lots }) : null;
   return { ...mv, r: realizedR({ symbol, side, entry, sl, exit }), cash };
 }
 
@@ -524,9 +591,11 @@ export function pnlPctContradictsCash(
     const lots = knownLots(tr.size, tr.note);
     if (lots == null || !finitePos(tr.exit)) return false;
     const side: TradeSide = tr.side === 'sell' ? 'sell' : 'buy';
-    const cash = pnlInQuoteCcy({ symbol: tr.symbol, side, entry: tr.entry, exit: tr.exit, lots });
+    const cash = journalPnl({ symbol: tr.symbol, side, entry: tr.entry, exit: tr.exit, lots });
     if (!cash) return false;
-    byCcy.set(cash.ccy, (byCcy.get(cash.ccy) ?? 0) + cash.amount);
+    // سنت الدولار دولارٌ ÷ 100: صفقة EURUSDC وصفقة EURUSD تُجمعان بعملة واحدة
+    const usc = cash.ccy === 'USC';
+    byCcy.set(usc ? 'USD' : cash.ccy, (byCcy.get(usc ? 'USD' : cash.ccy) ?? 0) + (usc ? cash.amount / 100 : cash.amount));
     n += 1;
   }
   if (n === 0) return false;
@@ -877,41 +946,6 @@ function instrumentSymbol(raw: string): string | null {
 }
 
 /**
- * هل بسطر صافي الأدوات المعروض (`symbols` — المفاتيح من `netByInstrument`) أداة **حساب سنت** لها صفقة مغلقة
- * بحجمٍ معروف؟ — لسطر `journalCentNoMoney` تحت الإحصاءات: «EURUSDC +10» بلا مبلغ بجانب «EURUSD +20 (+100.00 USD)»
- * يبدو عطلاً، والمتداول كتب الحجم. بلا حجم معروف لا سطر: غياب المال مفهومٌ حينها كأيّ صفقة بلا حجم.
- */
-export function netHasCentWithLots(
-  trades: readonly { symbol: string; status: string; size?: number | null; note?: string | null }[],
-  symbols: readonly string[]
-): boolean {
-  return netHasSmallContractWithLots(trades, symbols, isCentJournalSymbol);
-}
-
-/** كـ`netHasCentWithLots` لأداة **حساب micro** («EURUSDMICRO») — لسطر `journalMicroNoMoney` تحت الإحصاءات. */
-export function netHasMicroWithLots(
-  trades: readonly { symbol: string; status: string; size?: number | null; note?: string | null }[],
-  symbols: readonly string[]
-): boolean {
-  return netHasSmallContractWithLots(trades, symbols, isMicroJournalSymbol);
-}
-
-function netHasSmallContractWithLots(
-  trades: readonly { symbol: string; status: string; size?: number | null; note?: string | null }[],
-  symbols: readonly string[],
-  kind: (symbol: string) => boolean
-): boolean {
-  const shown = new Set(symbols);
-  return trades.some(
-    (tr) =>
-      tr.status === 'closed' &&
-      kind(tr.symbol) &&
-      shown.has(journalInstrumentKey(tr.symbol)) &&
-      knownLots(tr.size, tr.note) != null
-  );
-}
-
-/**
  * مفتاح **الأداة** لصفقة بالدفتر — لشرائح الفلتر وصافي كل أداة: الرمز القانوني حين تُعرف مواصفاته
  * (`quoteSymbol`: «XAUUSD.m»، «xauusd»، «XAUUSDm» ⇒ «XAUUSD»)، وإلا الرمز كما يُحفظ بحروف كبيرة
  * (US30، NAS100)، و«» لرمز فارغ.
@@ -1116,7 +1150,7 @@ export function netByInstrument(
     const lots = knownLots(tr.size, tr.note);
     const cash =
       lots != null && tr.exit != null
-        ? pnlInQuoteCcy({ symbol: tr.symbol, side, entry: tr.entry, exit: tr.exit, lots })
+        ? journalPnl({ symbol: tr.symbol, side, entry: tr.entry, exit: tr.exit, lots })
         : null;
     if (cash && (cur.ccy == null || cur.ccy === cash.ccy)) {
       cur.cash += cash.amount;
