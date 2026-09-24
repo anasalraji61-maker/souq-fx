@@ -2751,3 +2751,46 @@ Node 22 + tsx: **كل الاختبارات الذاتية الـ49 تمرّ**. `
 ### ما يبدأ منه التشغيل القادم
 1. تحذير الحجم بالحاسبة/الدفتر لسنت: هل 200 حدٌّ مناسب؟ — يحتاج رأي متداول سنت حقيقي.
 2. «حساب سنت» بمفتاح i18n (يطلبه وكيل الإطلاق) ثم دعم لوت السنت بالحاسبة.
+
+---
+
+## 2026-09-24 (ثامن وعشرون) — التشغيل: لاحقة السنت/micro بفاصل لا تُحسب لوتاً عادياً، XM Micro الملاصقة، شرائح الدفتر لحساب السنت، دخولٌ حيّ يتيم
+
+### 1. «EURUSD.c»، «EURUSD-cent»، «GOLD.c»، «EURUSD.micro» لا تُحسب بعقد الحساب العادي (`positionSize.ts` + `tradePlan.ts`) — `3459593`
+**خطأ مال حقيقي.** اللاحقة بفاصل كانت تمرّ بقاعدة `BROKER_SUFFIXED` كأي «.pro»/«.m»، فالحاسبة تعطي لوت الحساب العادي (1% من 1000
+بوقف 25 pip = 0.04 بدل 4.00 لحساب السنت) والدفتر يحسب مالاً بمئة ضعف. `SMALL_CONTRACT_SUFFIX` (C|CENT|MICRO بعد فاصل) ⇒ `instrumentSpec` null؛
+`centAccountSymbol` صار يقبل السنت بفاصل (فتظهر رسالة `riskCalcCentSymbolHint`)؛ و`smallContractPair` (سنت + micro) للنقاط وسعر السوق.
+الدفتر: الرمز يُحفظ بلاحقته («EURUSD-CENT» لا «EURUSDCENT»)، ومفتاح الأداة منفصل — «GOLD.C»/«XAUUSD_CENT» كانت تُدمج مع XAUUSD عبر
+`knownSingleName` فتُسقط صافيه بالمال. سجلّ سابق قال «EURUSD.c مقبولة أصلاً فليست سنتاً» — كانت مقبولة بالمصادفة لا بقرار.
+**اختبارات**: 8 سنت + 3 micro مرفوضة بالحاسبة وبلا مال، اللواحق العادية (.m/.pro/.ecn/.cfd/.c1/.std) كما كانت، الدفتر (رمز، سعر، pip، مفتاح، لا مال).
+
+### 2. XM Micro الملاصقة «EURUSDmicro»، «GOLDmicro» (`positionSize.ts` + `newsRisk.ts`) — `3e10667`
+كانت تُحفظ «EURUSDMICRO» بلا نقاط ولا نتيجة عائمة، و`symbolCurrencies` يعيد `[]` ⇒ لا تحذير رواتب. «micro» كلمة لا عملة فالملاصقة آمنة.
+**اختبارات**: micro الملاصقة (حالة الأحرف)، «EURUSDmicros»/«US30micro»/«BTCUSDmicro» null، عملات الأخبار لسبعة رموز.
+
+### 3. شرائح الوقف والهدف ومنازل السعر لسنت/micro بالدفتر (`tradePlan.ts` + `TradeJournalPanel.tsx` + `positionSize.ts`) — `4841b44`
+`journalSpec` (مواصفات الأسعار والنقاط، لا المال). «EURUSDC» كانت **بلا شرائح وقف** وأهداف 1:1…1:3 تُكتب «1.088735»؛ `targetAtRR`/`quickStopPips`/
+`stopAtPips` عليها الآن، والنصّ بمنازل الزوج العادي. micro تأخذ سطر مخاطرة المسودّة بالنقاط (بلا سطر `journalCentNoMoney` — نصّه عن السنت) وتحذير
+الحجم-وحدات بحدّ السنت. و«3.450» بدخول «XAUUSDc» كانت تُقرأ 3.45 — `ambiguousThousandsPrice` صار يعرف ذهب السنت/micro.
+**اختبارات**: شرائح = شرائح الزوج العادي، أسعار الوقف، الهدف بمنزلة الـpipette، «3.450» مبهمة لسبعة رموز ذهب، الين/الفضة كما كانت.
+
+### 4. دخولٌ حيّ يتيم عند شريحة زوج سنت آخر (`tradePlan.ts`) — `85ba31f`
+«السعر الحالي» على EURUSD ثم «GBPUSDc» ⇒ صفقة GBPUSDC بدخول 1.08515 (`liveEntryOrphaned` لا يعرف السنت فيعيد false). الآن بمفتاح `quoteSymbol`
+نفسه؛ «EURUSDc» بعد EURUSD يبقى (السعر نفسه). **اختبارات**: 8 حالات.
+
+### التحقّق
+Node 22 (`/tmp/node-v22.11.0-linux-x64`) + tsx: **كل الاختبارات الذاتية الـ51 تمرّ**. `tsc --strict` (typescript@5، `--skipLibCheck --target es2020
+--moduleResolution node --esModuleInterop`): `positionSize.ts`، `tradePlan.ts`، `newsRisk.ts` نظيفة؛ الدفتر 39 ⇒ 39 (بـ`--jsx react-native`، أنواع RN
+غير مثبّتة). **يحتاج جهازاً**: الحاسبة برمز «EURUSD.c» (رسالة السنت)، شرائح الوقف بالدفتر لـ«EURUSDc».
+
+### ملاحظة لوكيل الشارت (ليس بنطاقي)
+`chartPipSpec` (chart/pipSpec.ts) يبدأ بـ`instrumentSpec`، فشارت «EURUSD.c»/«EURUSD.micro» (إن وُجد رمزٌ كهذا بالشارت) فقد منازله وقراءة الـpip. الحلّ
+هناك: `instrumentSpec(s) ?? instrumentSpec(smallContractPair(s) ?? '')`. رموز الشارت من المزوّد قانونية غالباً، فالأثر محدود.
+
+### لم يُنفَّذ — ولماذا
+- رسالة خاصة لـmicro بالحاسبة («EURUSDmicro» ترى الرسالة العامة): تحتاج مفتاح i18n — `locales.ts` ليس بنطاقي.
+- سطر «لماذا بلا مال» لـmicro بالدفتر: `journalCentNoMoney` نصّه «حساب سنت» — يحتاج مفتاحاً عامّاً («عقد أصغر بمئة مرّة»).
+
+### ما يبدأ منه التشغيل القادم
+1. مفتاح i18n عامّ لحساب micro (الحاسبة والدفتر) — يُطلب من وكيل الإطلاق.
+2. `netHasCentWithLots` لـmicro بعد المفتاح.
