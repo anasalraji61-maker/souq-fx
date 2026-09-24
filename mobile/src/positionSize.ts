@@ -106,10 +106,9 @@ export function instrumentSpec(raw: string): InstrumentSpec | null {
 }
 
 /**
- * رمز **حساب سنت** (Exness Cent: «EURUSDc»، «USDJPYc»، «XAUUSDc»، «GOLDc») ⇒ الزوج العادي («EURUSD») لرسالة
- * `riskCalcCentSymbolHint`؛ null = ليس كذلك. الحاسبة ترفضه عمداً (`instrumentSpec` لا يقبل «c» الملاصقة): لوت السنت
- * أصغر بمئة مرّة، فحسابه بعقد الحساب العادي كان سيُعطي لوتاً خاطئاً بمئة ضعف — لكن «استخدم زوجاً من 6 أحرف» تحته
- * لا تقول لماذا، والمتداول نسخ الرمز من منصّته كما هو. «c» أو «C» ملاصقة لزوج صالح أو اسم معدن فقط، كالشارت
+ * رمز **حساب سنت** (Exness Cent: «EURUSDc»، «USDJPYc»، «XAUUSDc»، «GOLDc») ⇒ الزوج العادي («EURUSD»)؛ null = ليس كذلك.
+ * `instrumentSpec` لا يقبله (لوت السنت أصغر بمئة مرّة — عقد الحساب العادي يُعطي لوتاً خاطئاً بمئة ضعف)؛ الحاسبة تحسبه بعقد
+ * الزوج ÷ 100 ورصيد بالـUSC (`smallContractSpec`)، والدفتر نقاطاً بلا مال. «c» أو «C» ملاصقة لزوج صالح أو اسم معدن فقط، كالشارت
  * (`chartPipSpec`)؛ رمزٌ تقبله الحاسبة أصلاً ليس سنتاً، ولاحقة فوق لاحقة («EURUSDmc») لا تُخمَّن.
  */
 export function centAccountSymbol(raw: string): string | null {
@@ -135,9 +134,8 @@ export function smallContractPair(raw: string): string | null {
 }
 
 /**
- * رمز **حساب micro** («EURUSDmicro»، «EURUSD.micro»، «GOLD_micro») ⇒ الزوج العادي لرسالة `riskCalcMicroSymbolHint`؛
- * null = ليس كذلك (والسنت ليس micro: له `centAccountSymbol` ورسالته). الحاسبة ترفضه كالسنت، لكنها كانت تقول تحته
- * «استخدم زوجاً من 6 أحرف» — والمتداول نسخ الرمز من منصّة XM كما هو، فلا يعرف لماذا رُفض ولا ماذا يكتب.
+ * رمز **حساب micro** («EURUSDmicro»، «EURUSD.micro»، «GOLD_micro») ⇒ الزوج العادي؛ null = ليس كذلك (والسنت ليس micro:
+ * له `centAccountSymbol`). لسطر `journalMicroNoMoney` بالدفتر؛ الحاسبة تحسبه بلوت micro (`smallContractSpec`).
  */
 export function microAccountSymbol(raw: string): string | null {
   if (centAccountSymbol(raw)) return null;
