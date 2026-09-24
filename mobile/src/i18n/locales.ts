@@ -329,6 +329,7 @@ export type Dict = {
   riskCalcCommission: string;
   riskCalcCommissionNote: string;
   riskCalcRiskWithCosts: string;
+  riskCalcCostsLotsWithin: string;
   riskCalcUseLivePrice: string;
   riskCalcUseLivePriceA11y: string;
   riskCalcLiveFilled: string;
@@ -1195,9 +1196,10 @@ const ar: Dict = {
   riskCalcRiskWithSpread: 'المخاطرة شاملة السبريد',
   riskCalcSpreadLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة السبريد: {lots} lot',
   riskCalcSpreadTooWide: 'سبريد {n} نقطة غير واقعي — هل كتبتَ سعراً بدل النقاط؟ اكتب الفرق بين Ask وBid بالنقاط (مثل 1.5).',
-  riskCalcCommission: 'العمولة لكل لوت، فتحاً وإغلاقاً (اختياري)',
+  riskCalcCommission: 'عمولة اختيارية لكل لوت، فتحاً وإغلاقاً',
   riskCalcCommissionNote: 'حسابات Raw/ECN تأخذ عمولة عند الفتح وعند الإغلاق. اكتب مجموع الطرفين للوت الواحد بعملة حسابك (مثل 7)، واتركها فارغة إن كان حسابك بلا عمولة.',
-  riskCalcRiskWithCosts: 'المخاطرة شاملة التكاليف (سبريد + عمولة)',
+  riskCalcRiskWithCosts: 'المخاطرة شاملة التكاليف',
+  riskCalcCostsLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة التكاليف: {lots} lot',
   riskCalcUseLivePrice: '↓ الدخول = السعر الحالي',
   riskCalcUseLivePriceA11y: 'تعبئة خانة الدخول بسعر السوق الحالي (Ask للشراء وBid للبيع حسب موضع الوقف)',
   riskCalcLiveFilled: '✓ الدخول من السعر الحالي:',
@@ -2072,9 +2074,10 @@ const enUS: Dict = {
   riskCalcRiskWithSpread: 'Risk including spread',
   riskCalcSpreadLotsWithin: 'To keep your risk at {pct}% including spread: {lots} lot',
   riskCalcSpreadTooWide: 'A {n}-pip spread isn’t realistic — did you type a price instead of pips? Enter the gap between Ask and Bid in pips (e.g. 1.5).',
-  riskCalcCommission: 'Commission per lot, open + close (optional)',
+  riskCalcCommission: 'Optional commission per lot, open + close',
   riskCalcCommissionNote: 'Raw/ECN accounts charge commission when you open and again when you close. Enter both sides for one lot in your account currency (e.g. 7), or leave it empty if your account has no commission.',
-  riskCalcRiskWithCosts: 'Risk including costs (spread + commission)',
+  riskCalcRiskWithCosts: 'Risk including costs',
+  riskCalcCostsLotsWithin: 'To keep your risk at {pct}% including costs: {lots} lot',
   riskCalcUseLivePrice: '↓ Entry = current price',
   riskCalcUseLivePriceA11y: 'Fill the entry with the current market price (Ask for buy, Bid for sell, from where the stop sits)',
   riskCalcLiveFilled: '✓ Entry from the current price:',
@@ -2975,9 +2978,10 @@ const ku: Dict = {
   riskCalcRiskWithSpread: 'مەترسی لەگەڵ سپرێد',
   riskCalcSpreadLotsWithin: 'بۆ ئەوەی مەترسییەکەت لەگەڵ سپرێد لە {pct}% بمێنێتەوە: {lots} lot',
   riskCalcSpreadTooWide: 'سپرێدی {n} pip ئاسایی نییە — نرخت نووسیوە لە جیاتی pip؟ جیاوازی نێوان Ask و Bid بە pip بنووسە (وەک 1.5).',
-  riskCalcCommission: 'کۆمیسیۆن بۆ هەر lot، کردنەوە و داخستن (ئیختیاری)',
+  riskCalcCommission: 'کۆمیسیۆنی ئیختیاری بۆ هەر lot، کردنەوە و داخستن',
   riskCalcCommissionNote: 'هەژمارەکانی Raw/ECN لە کاتی کردنەوە و داخستندا کۆمیسیۆن وەردەگرن. کۆی هەردوو لا بۆ یەک lot بە دراوی هەژمارەکەت بنووسە (وەک 7)، یان بەتاڵی بهێڵەوە ئەگەر هەژمارەکەت بێ کۆمیسیۆنە.',
-  riskCalcRiskWithCosts: 'مەترسی لەگەڵ تێچووەکان (سپرێد + کۆمیسیۆن)',
+  riskCalcRiskWithCosts: 'مەترسی لەگەڵ تێچووەکان',
+  riskCalcCostsLotsWithin: 'بۆ ئەوەی مەترسییەکەت لەگەڵ تێچووەکان لە {pct}% بمێنێتەوە: {lots} lot',
   riskCalcUseLivePrice: '↓ چوونەژوورەوە = نرخی ئێستا',
   riskCalcUseLivePriceA11y: 'پڕکردنەوەی خانەی چوونەژوورەوە بە نرخی بازاڕی ئێستا (Ask بۆ کڕین و Bid بۆ فرۆشتن بەپێی شوێنی وەستان)',
   riskCalcLiveFilled: '✓ چوونەژوورەوە لە نرخی ئێستاوە:',
