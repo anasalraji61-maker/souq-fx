@@ -4896,7 +4896,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => {
-                Alert.alert(tr.mcClearAllTitle, chartExtraLabels(lang).clearAllBody, [
+                Alert.alert(tr.mcClearAllTitle, tr.mcClearAllBody, [
                   { text: tr.cancel, style: 'cancel' },
                   {
                     text: tr.mcClearWord,
@@ -4999,7 +4999,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         ) : (
           <Text style={styles.readoutMuted}>
             {replayOn
-              ? `Bar Replay · ${source.plot.length}/${source.windowLen}`
+              ? tr.mcReplayReadout
+                  .replace('{n}', String(source.plot.length))
+                  .replace('{total}', String(source.windowLen))
               : tool !== 'none'
                 ? tr.mcHintDraw
                 : tr.mcHintNavigate}
@@ -7443,6 +7445,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               schedulePublishSync(false);
             }}
             hitSlop={8}
+            accessibilityLabel={tr.mcAutoA11y}
           >
             <Text style={[styles.axisCornerText, priceManual && styles.axisCornerTextManual]}>AUTO</Text>
           </Pressable>
@@ -7454,7 +7457,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {canPan && !replayOn && offset > 0 ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={chartExtraLabels(lang).toLatest}
+            accessibilityLabel={tr.mcToLatestA11y}
             style={({ pressed }) => [
               styles.toLatestBtn,
               { right: PRICE_AXIS_WIDTH + 8, bottom: timeAxisH + 8 },
@@ -10232,7 +10235,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => {
-                Alert.alert(tr.mcClearAllTitle, chartExtraLabels(lang).clearAllBody, [
+                Alert.alert(tr.mcClearAllTitle, tr.mcClearAllBody, [
                   { text: tr.cancel, style: 'cancel' },
                   {
                     text: tr.mcClearWord,

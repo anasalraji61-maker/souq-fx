@@ -10,6 +10,7 @@ import { formatPct } from '../chart/dailyChange';
 import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from '../chart/pipSpec';
 import {
+  candleTimeSec,
   provenanceLabel,
   tickStatusKind,
   normalizeProvenance,
@@ -66,10 +67,6 @@ const HEIGHT_PHONE: Record<Size, number> = {
   medium: FRAME_CHART_H_PHONE - 20,
   small: FRAME_CHART_H_PHONE - 30,
 };
-
-function candleTimeSec(t: number): number {
-  return t > 1e12 ? t / 1000 : t;
-}
 
 function isPartialTimeCover(series: ChartSeries, win: SyncTimeWindow | null | undefined): boolean {
   if (!win || !(win.end > win.start) || !series.candles?.length) return false;
