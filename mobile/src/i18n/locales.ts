@@ -186,6 +186,7 @@ export type Dict = {
   chatTitle: string;
   chatLoadError: string;
   chatEmpty: string;
+  /** `GroupChatPanel` عند فشل الشبكة: الرسالة المحلية تبقى بالقائمة والخانة فُرّغت؛ إعادة التركيب تجلب قائمة الخادم فتختفي إن لم تصل. */
   chatSendError: string;
   chatYou: string;
   chatAnonTrader: string;
@@ -215,6 +216,7 @@ export type Dict = {
   voteApprovalLabel: string;
   voteAgreeWord: string;
   voteDisagreeWord: string;
+  /** `VotePanel` عند فشل الشبكة: العدّاد المتفائل لا يُرجَع؛ إعادة التركيب (`load`) تعرض العدّ الفعلي. */
   voteCastError: string;
   voteLoginRequired: string;
   chatLinksNotAllowed: string;
@@ -1239,7 +1241,7 @@ const ar: Dict = {
   chatTitle: 'دردشة جماعية',
   chatLoadError: 'تعذّر تحميل الرسائل — تحقّق من الاتصال، ثم غادر هذا القسم وارجع إليه لإعادة المحاولة',
   chatEmpty: 'لا توجد رسائل بعد — كن أول من يكتب',
-  chatSendError: 'تعذر إرسال رسالتك للمجموعة — قد لا تصل، حاول لاحقاً',
+  chatSendError: 'تعذّر التأكد من وصول رسالتك — تظهر عندك وقد لا يراها أحد. تحقّق من الاتصال، ثم غادر هذا القسم وارجع إليه: إن لم تجدها فاكتبها من جديد',
   chatYou: 'أنت',
   chatAnonTrader: 'متداول',
   chatLoginRequired: 'سجّل الدخول للمشاركة بمحادثة المجموعة — رسائلك تظهر باسم حسابك',
@@ -1269,7 +1271,7 @@ const ar: Dict = {
   voteApprovalLabel: 'موافقة',
   voteAgreeWord: 'موافق',
   voteDisagreeWord: 'رافض',
-  voteCastError: 'تعذر إرسال صوتك للخادم — قد لا يُحتسب، حاول لاحقاً',
+  voteCastError: 'تعذّر التأكد من احتساب صوتك — العدّاد أمامك قد يشمله وهو لم يصل. تحقّق من الاتصال، ثم غادر هذا القسم وارجع إليه لترى العدّ الفعلي وصوّت مجدداً إن لزم',
   voteLoginRequired: 'سجّل الدخول للتصويت — صوت واحد لكل حساب حتى تبقى نسبة الموافقة صادقة',
   chatLinksNotAllowed: 'الروابط غير مسموحة بالمجموعة — حماية من قنوات «التوصيات» الاحتيالية',
   votePublishLoginRequired: 'سجّل الدخول لنشر فكرة — تظهر باسم حسابك',
@@ -2279,7 +2281,7 @@ const enUS: Dict = {
   chatTitle: 'Group chat',
   chatLoadError: "Couldn't load messages — check your connection, then leave this section and come back to retry",
   chatEmpty: 'No messages yet — be the first to write',
-  chatSendError: 'Could not send your message to the group — it may not arrive, try later',
+  chatSendError: "Couldn't confirm your message was sent — you can see it, but others may not. Check your connection, then leave this section and come back: if it's gone, write it again",
   chatYou: 'You',
   chatAnonTrader: 'Trader',
   chatLoginRequired: 'Sign in to post in the group chat — your messages show under your account name',
@@ -2309,7 +2311,7 @@ const enUS: Dict = {
   voteApprovalLabel: 'Approval',
   voteAgreeWord: 'Agree',
   voteDisagreeWord: 'Disagree',
-  voteCastError: 'Could not send your vote to the server — it may not count, try later',
+  voteCastError: "Couldn't confirm your vote counted — the tally may include it even though it didn't arrive. Check your connection, then leave this section and come back to see the real count, and vote again if needed",
   voteLoginRequired: 'Sign in to vote — one vote per account keeps the approval rate honest',
   chatLinksNotAllowed: 'Links aren\'t allowed in the group — protection against scam "signal" channels',
   votePublishLoginRequired: 'Sign in to publish an idea — it shows under your account name',
@@ -3344,7 +3346,7 @@ const ku: Dict = {
   chatTitle: 'گفتوگۆی گروپی',
   chatLoadError: 'نەکرا نامەکان باربکرێن — پەیوەندییەکەت بپشکنە، پاشان ئەم بەشە جێبهێڵە و بگەڕێوە بۆی بۆ هەوڵدانەوە',
   chatEmpty: 'هێشتا هیچ نامەیەک نییە — یەکەم کەس بە بۆ نووسین',
-  chatSendError: 'نەکرا نامەکەت بۆ گروپ بنێردرێت — لەوانەیە نەگات، دواتر هەوڵبدەرەوە',
+  chatSendError: 'نەتوانرا دڵنیا ببینەوە کە نامەکەت گەیشت — تۆ دەیبینیت بەڵام لەوانەیە کەس نەیبینێت. پەیوەندی بپشکنە، پاشان ئەم بەشە جێبهێڵە و بگەڕێوە: ئەگەر نەمابوو دووبارە بینووسەوە',
   chatYou: 'تۆ',
   chatAnonTrader: 'بازرگان',
   chatLoginRequired: 'بۆ نووسین لە گفتوگۆی گروپ بچۆ ژوورەوە — نامەکانت بە ناوی هەژمارەکەت دەردەکەون',
@@ -3374,7 +3376,7 @@ const ku: Dict = {
   voteApprovalLabel: 'ڕەزامەندی',
   voteAgreeWord: 'ڕازیم',
   voteDisagreeWord: 'ڕازی نیم',
-  voteCastError: 'نەکرا دەنگت بۆ ڕاژە بنێردرێت — لەوانەیە نەژمێردرێت، دواتر هەوڵبدەرەوە',
+  voteCastError: 'نەتوانرا دڵنیا ببینەوە کە دەنگەکەت ژمێردرا — ژمارەکە لەوانەیە بیگرێتەوە بەبێ ئەوەی گەیشتبێت. پەیوەندی بپشکنە، پاشان ئەم بەشە جێبهێڵە و بگەڕێوە بۆ بینینی ژمارەی ڕاستەقینە، و ئەگەر پێویست بوو دووبارە دەنگ بدە',
   voteLoginRequired: 'بۆ دەنگدان بچۆ ژوورەوە — یەک دەنگ بۆ هەر هەژمارێک',
   chatLinksNotAllowed: 'بەستەر لە گروپدا ڕێگەپێدراو نییە — پاراستن لە کەناڵی «ئامۆژگاری» فێڵبازانە',
   votePublishLoginRequired: 'بۆ بڵاوکردنەوەی بیرۆکە بچۆ ژوورەوە — بە ناوی هەژمارەکەت دەردەکەوێت',
