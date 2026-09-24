@@ -1180,3 +1180,35 @@
 و`db.trade_stats` نفسه قد يحسب إجمالي المال بالحجم بدل النسب — للخادم.
 
 **يحتاج جهازاً**: البنود 68–69 — خاصةً 69 (هل يلاحظ المتداول غياب السطر أو يستغربه). وصف المتجر لم يُلمس.
+
+## 2026-09-24 — التشغيلة السادسة والثلاثون
+
+تتبع `e6f40ee`/`4f2e1f9`/`734ed08`/`d64f9da` (وكيل الأدوات يوصل مفاتيحي الثلاثة و«$0٬5») و`67dfdba`/`c1a172d`/`ea94f79`/`c95b8f1`/`7cc35a4`
+(الشارت). التحقّق بـNode 22 (`/tmp/node-v22.11.0-linux-x64`) و`tsc` من `/tmp/ts5` (`--strict --noEmit --skipLibCheck --target es2020`)
+على `locales.ts` نظيف، صفر `U+FFFD`؛ عدّ أحرف الوصف بسكربت Python. **لم يُشغَّل التطبيق.**
+
+1. **`locales.ts`** (`01ca835`): حُذف `journalStatTotalPnl` من النوع وar/en/ku — يتيم بعد `734ed08` (تحقّقت بـgrep على المستودع كلّه)؛ طلبه وكيل الأدوات.
+2. **`FEATURE-INVENTORY.md`** (`13868fc`) — تحقّقت بالكود: `indicatorBase`/`trimIndicator` (التاريخ المحمّل حتى آخر شمعة ظاهرة، والإعادة
+   مقطوعة؛ VP/TPO/Footprint/CVD للنافذة)؛ إحماء المتوسطات المكدّسة؛ منازل التنبيه/القياس/Bid-Ask؛ `timeAtIndex` للرسم بين الفريمات؛
+   `livePriceForHeader` بلا فحص الشمعة الأخيرة؛ `calendarUnavailable`؛ `stopInsideSpread` (المساواة مضروبة)؛ وأزلتُ «جاهز غير موصول» عن
+   `arabicThousandsSignHint` و`journalStatPriceMoveSum`.
+3. **`RELEASE-MOBILE.md` §5** (`0d81897`): البنود 70–74 (التقويم بلا شبكة، الوقف داخل السبريد، المؤشرات عند الحافة اليسرى، رسم 1H على D1،
+   النسبة بعد إغلاق الشمعة)؛ والبند 69 يذكر الاسم الجديد.
+4. **`STORE-LISTING.md`** (`0f24cf0`) ar/en: الحاسبة تنبّه حين يكون الوقف داخل السبريد، وتنبيه الأخبار يقول إن تعذّر تحميل التقويم —
+   كلاهما موصول ومختبَر. **الإنجليزي كان 3991/4000** فشددتُه (المزامنة، التنبيه، الرجوع، المؤشرات، السطر الختامي) — الآن 3996، والعربي 3424.
+   سطر en-GB («colors» ← «colours» بالسطر قبل الأخير) ما زال صحيحاً.
+
+### طلب تنسيق — لوكيل الأدوات — قائم بلا تغيير (تحقّقت بـgrep)
+- `riskCalcCentSymbolHint` (`PositionSizePanel.tsx` — «USDJPYc» ما زال يأخذ `riskCalcBadSymbol`).
+- **أُغلق**: `newsUnavailable`، `riskCalcStopInsideSpread`، `journalStatPriceMoveSum`، وحذف `journalStatTotalPnl`.
+
+### طلب تنسيق — لوكيل الشارت — قائم بلا تغيير (تحقّقت بـgrep)
+- `ChartFrame.tsx:337` ← `t.cfReplayPriceA11y` بدل `t.mcReplayModeA11y`؛ `FocusChartModal.tsx:279` ما زال `liveTick?.price ?? series.last`
+  بالإعادة؛ `` `Bar Replay · …` `` الحرفي بـ`MatrixChart.tsx:4606` ← `tr.mcReplayReadout` (`ip-legal-caution.mdc`)؛ `clearAllBody` ←
+  `tr.mcClearAllBody` (النصّ مطابق حرفياً بالثلاث — `chartExtraLabels(lang).clearAllBody` بـ`MatrixChart.tsx:4503`).
+
+**خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (`backend/openrouter_ai.py` «خبير تداول»، `lot` الثابتة، `₴`، `extra.apiUrl` المحلي
+ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
+
+**يحتاج جهازاً**: البنود 70–74 — خاصةً 70 (هل السطر العنبري مزعج بكل شارت بلا شبكة) و72 (مقارنة DEMA بمنصّة أخرى). الإنجليزي بالمتجر
+عند 3996/4000: أي إضافة تحتاج حذفاً مقابلاً.
