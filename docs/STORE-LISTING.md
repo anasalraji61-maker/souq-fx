@@ -56,7 +56,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • تقويم اقتصادي وأخبار السوق في مكان واحد.
 
 أدوات المتداول
-• حاسبة حجم المركز: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالنقاط أو بسعرَي الدخول والوقف) لتعرف حجم اللوت، مع أهداف جاهزة بنسبة 1:1 حتى 1:3.
+• حاسبة حجم المركز: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالنقاط أو بسعرَي الدخول والوقف) لتعرف حجم اللوت، مع أهداف جاهزة بنسبة 1:1 حتى 1:3، وتقدير للهامش الذي يحجزه الوسيط حسب رافعتك.
 • دفتر صفقات تسجّل فيه صفقاتك بنفسك: الربح المحتمل بالمال قبل الدخول، ونتيجة كل صفقة بالنقاط والمال بعد الخروج، ثم نسبة النجاح والصافي لكل أداة ومتوسط النتيجة بوحدة المخاطرة (R).
 • تنبيه قبل الصفقة إن اقترب خبر اقتصادي قوي على عملة الزوج أو المؤشر.
 • فلتر أسواق (Screener) بشروط المؤشرات الشائعة.
@@ -114,7 +114,7 @@ WATCHLIST & ALERTS
 • Economic calendar and market news in one place.
 
 TRADER TOOLS
-• Position size calculator: enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get your lot size, with one-tap targets from 1:1 to 1:3.
+• Position size calculator: enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get your lot size, with one-tap targets from 1:1 to 1:3 and an estimate of the margin your broker holds at your leverage.
 • A trade journal you fill in yourself: the potential profit in money before you enter, each trade's result in pips and money after you exit, then win rate, net result per instrument and average result in units of risk (R).
 • A heads-up before a trade when high-impact economic news is close for the pair's or index's currency.
 • Market screener using common indicator conditions.

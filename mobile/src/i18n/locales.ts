@@ -318,6 +318,8 @@ export type Dict = {
   riskCalcSideFromStop: string;
   riskCalcLoggedToJournal: string;
   riskCalcLogFailed: string;
+  riskCalcMarginMaxLots: string;
+  riskCalcLogBlockedMismatch: string;
   riskCalcUseLivePrice: string;
   riskCalcUseLivePriceA11y: string;
   riskCalcLiveFilled: string;
@@ -1173,6 +1175,9 @@ const ar: Dict = {
   riskCalcSideFromStop: 'مستنتَج من موضع الوقف',
   riskCalcLoggedToJournal: '✓ سُجِّلت صفقة مفتوحة بالدفتر — أغلقها من «الدفتر» عند الخروج',
   riskCalcLogFailed: 'تعذّر التسجيل بالدفتر — تحقّق من الاتصال وحاول مرة أخرى',
+  riskCalcMarginMaxLots: 'أكبر حجم يتّسع له رصيدك هامشاً: {lots} lot — وهو حدّ أقصى لا يُبقي هامشاً حرّاً لأي تذبذب',
+  riskCalcLogBlockedMismatch:
+    'لا تُسجَّل الخطة بوقفين مختلفين — اكتب {derived} بخانة النقاط، أو عدّل سعر الوقف ليطابق نقاطك',
   riskCalcUseLivePrice: '↓ الدخول = السعر الحالي',
   riskCalcUseLivePriceA11y: 'تعبئة خانة الدخول بسعر السوق الحالي (Ask للشراء وBid للبيع حسب موضع الوقف)',
   riskCalcLiveFilled: '✓ الدخول من السعر الحالي:',
@@ -2036,6 +2041,9 @@ const enUS: Dict = {
   riskCalcSideFromStop: 'inferred from the stop',
   riskCalcLoggedToJournal: '✓ Logged as an open trade — close it from «Journal» when you exit',
   riskCalcLogFailed: 'Could not log to the journal — check your connection and try again',
+  riskCalcMarginMaxLots: 'Largest size your balance can cover in margin: {lots} lot — a ceiling that leaves no free margin for any swing',
+  riskCalcLogBlockedMismatch:
+    'A plan with two different stops can\'t be logged — type {derived} in the pips box, or move your stop price to match your pips',
   riskCalcUseLivePrice: '↓ Entry = current price',
   riskCalcUseLivePriceA11y: 'Fill the entry with the current market price (Ask for buy, Bid for sell, from where the stop sits)',
   riskCalcLiveFilled: '✓ Entry from the current price:',
@@ -2925,6 +2933,9 @@ const ku: Dict = {
   riskCalcSideFromStop: 'لە شوێنی وەستان دەرهێنراوە',
   riskCalcLoggedToJournal: '✓ وەک مامەڵەیەکی کراوە تۆمارکرا — لە «دەفتەر» بیخە کاتی دەرچوون',
   riskCalcLogFailed: 'تۆمارکردن لە دەفتەر سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەوە',
+  riskCalcMarginMaxLots: 'گەورەترین قەبارە کە باڵانسەکەت مارجینەکەی دەگرێتە ئەستۆ: {lots} lot — سنووری سەرەوەیە و هیچ مارجینی ئازاد بۆ هیچ جووڵەیەک ناهێڵێتەوە',
+  riskCalcLogBlockedMismatch:
+    'پلانێک بە دوو وەستانی جیاواز تۆمار ناکرێت — {derived} لە خانەی خاڵەکان بنووسە، یان نرخی وەستان بگۆڕە تا لەگەڵ خاڵەکانت بگونجێت',
   riskCalcUseLivePrice: '↓ چوونەژوورەوە = نرخی ئێستا',
   riskCalcUseLivePriceA11y: 'پڕکردنەوەی خانەی چوونەژوورەوە بە نرخی بازاڕی ئێستا (Ask بۆ کڕین و Bid بۆ فرۆشتن بەپێی شوێنی وەستان)',
   riskCalcLiveFilled: '✓ چوونەژوورەوە لە نرخی ئێستاوە:',
