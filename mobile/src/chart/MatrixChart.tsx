@@ -925,6 +925,11 @@ function PaneLineLayer({
  * (‎top = (max − v) / (max − min) × innerH‎)، مقصوصاً داخل المساحة. اللون لكل قطعة بقيمة
  * طرفها الثاني — دلالة المنطقة كما كانت الشرطات.
  */
+/** مركز خطّ قيمته `v` بلوحة مداها ثابت ‎[min, max]‎ — معادلة `paneGuides`، مقصوصاً داخل المساحة. */
+function boundedPaneY(innerH: number, min: number, max: number) {
+  return (v: number) => Math.min(Math.max(((max - v) / (max - min)) * innerH, 1), Math.max(1, innerH - 1));
+}
+
 function BoundedLineSeries({
   values,
   paneH,
@@ -939,11 +944,10 @@ function BoundedLineSeries({
   max?: number;
 }) {
   const innerH = Math.max(0, paneH - 16);
-  const y = (v: number) => Math.min(Math.max(((max - v) / (max - min)) * innerH, 1), Math.max(1, innerH - 1));
   return (
     <PaneLineLayer
       innerH={innerH}
-      y={y}
+      y={boundedPaneY(innerH, min, max)}
       lines={[{ values, color: (i) => color(values[i] ?? min) }]}
     />
   );
@@ -9158,30 +9162,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneHead paneId="percentB" name="%B" values={percentB} at={crossIndex} />
           <View style={styles.paneInner}>
             <PaneGuideLines paneId="percentB" innerH={paneH - 16} />
-            {percentB.map((v, i) => {
-              if (v == null) return <View key={i} style={{ flex: 1 }} />;
-              const pct = v * 100;
-              const geomPct = Math.max(0, Math.min(100, pct));
-              return (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: ((100 - geomPct) / 100) * (paneH - 16),
-                    backgroundColor:
-                      pct > 100 || pct < 0
-                        ? colors.warn
-                        : pct > 80
-                        ? colors.bear
-                        : pct < 20
-                        ? colors.bull
-                        : accent,
-                    borderRadius: 2,
-                  }}
-                />
-              );
-            })}
+            {/* ‎%B‎ خارج 0..1 (السعر خارج البولنجر) يُقصّ على حافّة اللوحة بلون التحذير كما كان. */}
+            <BoundedLineSeries
+              values={percentB}
+              paneH={paneH}
+              max={1}
+              color={(v) => (v > 1 || v < 0 ? colors.warn : v > 0.8 ? colors.bear : v < 0.2 ? colors.bull : accent)}
+            />
           </View>
         </View>
       ) : null}
@@ -9599,46 +9586,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <Text style={styles.paneLabel}>Aroon Up/Down</Text>
           <View style={styles.paneInner}>
             {(() => {
-              const upVals = aroonUpDown.up.filter((x): x is number => x != null);
-              const downVals = aroonUpDown.down.filter((x): x is number => x != null);
-              const allVals = [...upVals, ...downVals, 0, 100];
-              const minV = Math.min(...allVals);
-              const maxV = Math.max(...allVals);
-              const span = maxV - minV || 1;
-              const innerH = paneH - 16;
-              return aroonUpDown.up.map((uv, i) => {
-                const dv = aroonUpDown.down[i];
-                return (
-                  <View key={i} style={{ flex: 1, height: innerH, position: 'relative' }}>
-                    {uv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - uv) / span) * innerH,
-                          backgroundColor: colors.bull,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                    {dv != null ? (
-                      <View
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          top: ((maxV - dv) / span) * innerH,
-                          backgroundColor: colors.bear,
-                          opacity: 0.85,
-                        }}
-                      />
-                    ) : null}
-                  </View>
-                );
-              });
+              // Aroon بين 0 و100 دائماً: خطّان متّصلان (تقاطع Up/Down هو القراءة) لا شرطة لكل عمود.
+              const innerH = Math.max(0, paneH - 16);
+              return (
+                <PaneLineLayer
+                  innerH={innerH}
+                  y={boundedPaneY(innerH, 0, 100)}
+                  lines={[
+                    { values: aroonUpDown.up, color: colors.bull, opacity: 0.85 },
+                    { values: aroonUpDown.down, color: colors.bear, opacity: 0.85 },
+                  ]}
+                />
+              );
             })()}
           </View>
         </View>
@@ -10172,21 +10131,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneHead paneId="willr" name="%R" values={willr} at={crossIndex} />
           <View style={styles.paneInner}>
             <PaneGuideLines paneId="willr" innerH={paneH - 16} />
-            {willr.map((v, i) =>
-              v == null ? (
-                <View key={i} style={{ flex: 1 }} />
-              ) : (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3,
-                    marginTop: (-v / 100) * (paneH - 16),
-                    backgroundColor: '#60A5FA',
-                  }}
-                />
-              )
-            )}
+            <BoundedLineSeries values={willr} paneH={paneH} min={-100} max={0} color={() => '#60A5FA'} />
           </View>
         </View>
       ) : null}
