@@ -419,3 +419,19 @@ console.log('newsRisk crypto selftest OK');
   assert.equal(nextHighImpact([nfp], symbolCurrencies('USTECm'), 1_800_000_000_000)?.event.id, 'nfp');
 }
 console.log('newsRisk glued-m selftest OK');
+
+// «c» الملاصقة (Exness Cent): الأزواج والمعادن والمؤشرات تحذّر؛ BTCUSDC عملة مستقرّة كما كانت
+{
+  for (const [c, want] of [
+    ['EURUSDc', ['EUR', 'USD']], ['XAUUSDc', ['USD']], ['XAGUSDc', ['USD']], ['GOLDc', ['USD']], ['US30c', ['USD']],
+    ['USDZARc', ['USD', 'ZAR']], ['GBPJPYc', ['GBP', 'JPY']], ['XAUEURc', ['USD', 'EUR']], ['XPDUSDm', ['USD']],
+    ['eurusdc', ['EUR', 'USD']], ['BTCUSDc', ['USD']], ['BTCUSDC', ['USD']], ['BTCEURC', ['USD', 'EUR']],
+  ] as [string, string[]][])
+    assert.deepEqual(symbolCurrencies(c), want, c);
+  // حرفٌ ملاصق آخر، أو c على اسمٍ مجهول/قصير/مضاعف، يبقى صامتاً؛ والحاسبة بلا تغيير
+  for (const c of ['EURUSDx', 'AAPLc', 'USDC', 'EURUSDcc', 'ETHBTCc', 'XXXYYYc'])
+    assert.deepEqual(symbolCurrencies(c), [], c);
+  assert.equal(instrumentSpec('EURUSDc'), null);
+  assert.equal(knownSingleName('US30c'), null);
+}
+console.log('newsRisk glued-c selftest OK');

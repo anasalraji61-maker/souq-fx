@@ -128,8 +128,12 @@ export function symbolCurrencies(symbol: string): string[] {
    * «USTECm»، «USOILm»، «BTCUSDm»): كانت كلها `[]` بلا تحذير، بينما «EURUSDm» و«XAUUSDm» بجانبها تحذّر
    * (`instrumentSpec`). تُقبل هنا **فقط** إن بقي بعدها اسمٌ معروف أو زوج رقميّ معروف — للتحذير وحده:
    * عقدٌ آخر باسم «US30M» يقفز بخبر الدولار كذلك، أما دمج مفتاح الأداة بالدفتر (`knownSingleName`) فيبقى بلا تخمين.
+   *
+   * **و«c» الملاصقة** (حساب Exness Cent: «EURUSDc»، «XAUUSDc»، «US30c») — كانت كلها `[]` حتى الأزواج، إذ لا
+   * تعرفها `instrumentSpec` (عمداً للحاسبة: حرفٌ ملاصق قد يكون أداةً أخرى). تحذيرٌ زائد لا يكلّف شيئاً، والغائب
+   * قبل الرواتب قد يكلّف. «BTCUSDC» تُقرأ عملةً مستقرّة قبل هذا (`CRYPTO`) فلا تتغيّر.
    */
-  const glued = /^[A-Z0-9]{3,}M$/.test(bare) ? bare.slice(0, -1) : null;
+  const glued = /^[A-Z0-9]{3,}[MC]$/.test(bare) ? bare.slice(0, -1) : null;
   const single =
     SINGLE_CCY[instrumentSpec(symbol)?.symbol ?? letters] ?? SINGLE_CCY[bare] ?? (glued ? SINGLE_CCY[glued] : undefined);
   if (single) return [single];
@@ -146,7 +150,7 @@ export function symbolCurrencies(symbol: string): string[] {
    */
   const s =
     instrumentSpec(symbol)?.symbol ??
-    (letters.length === 6 ? letters : /^[A-Z]{6}$/.test(bare) ? bare : letters);
+    (letters.length === 6 ? letters : /^[A-Z]{6}$/.test(bare) ? bare : glued && /^[A-Z]{6}$/.test(glued) ? glued : letters);
   if (s.length !== 6) return [];
   // CNH (يوان خارجي) يظهر بالتقويم كـCNY.
   const norm = (c: string) => (c === 'CNH' ? 'CNY' : c);
