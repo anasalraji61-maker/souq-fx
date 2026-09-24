@@ -164,3 +164,46 @@ assert.equal(floatingResult({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1
 assert.equal(floatingResult({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08, current: NaN }), null);
 
 console.log('tradePlan floatingResult selftest OK');
+
+// ضجيج الفاصلة العائمة بالـR:R — خطة 1:1 تماماً على USDJPY كانت تخرج 0.99999999999986 فتُحذِّر
+// «الربح المحتمل أقل من المخاطرة» (اللوحات تفحص `rr < 1`)
+const jpy11 = analyzePlan({ symbol: 'USDJPY', side: 'buy', entry: 157.4, sl: 157.2, tp: 157.6 });
+assert.equal(jpy11.rr, 1);
+assert.ok(!(jpy11.rr! < 1));
+assert.equal(analyzePlan({ symbol: 'USDJPY', side: 'sell', entry: 157.4, sl: 157.6, tp: 157.2 }).rr, 1);
+// 2.25 بالضبط (وقف 20، هدف 45) يُكتب واحداً بكل الأدوات — كان «1:2.2» على اليورو و«1:2.3» على الذهب
+for (const [sym, e, s, tp] of [
+  ['EURUSD', 1.085, 1.083, 1.0895],
+  ['GBPUSD', 1.27, 1.268, 1.2745],
+  ['USDJPY', 157.4, 157.2, 157.85],
+  ['AUDUSD', 0.66, 0.658, 0.6645],
+  ['XAUUSD', 2650, 2640, 2672.5],
+] as const) {
+  const p = analyzePlan({ symbol: sym, side: 'buy', entry: e, sl: s, tp });
+  assert.equal(p.rr, 2.25, sym);
+  assert.equal(formatRR(p.rr), '1:2.3', sym);
+}
+// ما دون 1 حقاً ما زال دون 1
+assert.ok(analyzePlan({ symbol: 'USDJPY', side: 'buy', entry: 157.4, sl: 157.2, tp: 157.59 }).rr! < 1);
+
+// الـR المحقّقة: ‎±1.25R‎ كانت تُقرأ حسب ضجيج الزوج (−1.2 على اليورو، −1.3 على 1.1000، +1.3 على
+// الذهب) و`Math.round` يرفع النصف نحو +∞ فتصغر الخسارة عن الربح المماثل. الآن متماثلة: ‎±1.3R‎
+for (const [e, s, lose, win] of [
+  [1.085, 1.083, 1.0825, 1.0875],
+  [1.1, 1.098, 1.0975, 1.1025],
+  [157.4, 157.2, 157.15, 157.65],
+  [2650, 2640, 2637.5, 2662.5],
+] as const) {
+  assert.equal(realizedR({ side: 'buy', entry: e, sl: s, exit: lose }), -1.3, `lose ${e}`);
+  assert.equal(realizedR({ side: 'buy', entry: e, sl: s, exit: win }), 1.3, `win ${e}`);
+  // البيع مرآة الشراء
+  const d = e - s;
+  assert.equal(realizedR({ side: 'sell', entry: e, sl: e + d, exit: e + (e - lose) }), -1.3, `sell lose ${e}`);
+}
+// خسارة ضئيلة تُقرَّب لصفر: صفر موجب لا «−0»
+assert.ok(Object.is(realizedR({ side: 'buy', entry: 1.085, sl: 1.075, exit: 1.08496 }), 0));
+// الحالات القائمة لم تتغيّر
+assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.0825, exit: 1.0825 }), -1);
+assert.equal(realizedR({ side: 'sell', entry: 150, sl: 150.3, exit: 150.15 }), -0.5);
+
+console.log('tradePlan float-noise selftest OK');

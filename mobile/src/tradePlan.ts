@@ -27,6 +27,25 @@ export type TradePlan = {
 
 const finitePos = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n > 0;
 
+/**
+ * نسبة مسافتين سعريتين **منظَّفةً من ضجيج الفاصلة العائمة** (دقّة 1e-9، أدقّ بكثير من أي نسبة
+ * تعني شيئاً). طرح الأسعار لا يُنتج المسافة الدقيقة: وقف 20 pip وهدف 20 pip على USDJPY
+ * (157.40/157.20/157.60) يعطي R:R = 0.99999999999986 — فتقول اللوحة «⚠ الربح المحتمل أقل من
+ * المخاطرة» عن خطة 1:1 تماماً. وهدف 45 pip لوقف 20 (2.25 بالضبط) كان يخرج «1:2.2» على EURUSD
+ * و«1:2.3» على الذهب: الضجيج هو الذي يختار جهة التقريب لا الرقم.
+ */
+const cleanRatio = (num: number, den: number): number => Math.round((num / den) * 1e9) / 1e9;
+
+/**
+ * تقريب لمنزلة واحدة **متماثل حول الصفر** (النصف يبتعد عن الصفر بالإشارتين). `Math.round` يرفع
+ * النصف نحو +∞: ‎+1.25R‎ تصير +1.3R و‎−1.25R‎ تصير −1.2R — فالخسارة تُكتب أصغر من الربح المماثل
+ * بالحجم، ويميل متوسط الـR بالدفتر لصالح المتداول بلا حق. ولا «−0» (يُطبع صفراً بلا إشارة).
+ */
+const round1Sym = (v: number): number => {
+  const r = Math.round(Math.abs(v) * 10) / 10;
+  return v < 0 ? -r || 0 : r;
+};
+
 export function analyzePlan(input: {
   symbol: string;
   side: TradeSide;
@@ -60,7 +79,7 @@ export function analyzePlan(input: {
   if (rewardDist <= 0) return { ...base, ok: false, issue: 'tpWrongSide', rr: null };
   // هامش نسبي صغير: 1.0851 − 1.0850 بالفاصلة العائمة = 0.0000999… ويجب أن يُعدّ 1 pip كاملاً
   if (pip && riskDist < pip * (1 - 1e-6)) return { ...base, ok: false, issue: 'slTooClose', rr: null };
-  return { ...base, ok: true, issue: null, rr: rewardDist / riskDist };
+  return { ...base, ok: true, issue: null, rr: cleanRatio(rewardDist, riskDist) };
 }
 
 /** "1:2.0" — منزلة عشرية واحدة تكفي للقرار، ونقرّب لا نقصّ. */
@@ -109,7 +128,7 @@ export function realizedR(input: {
   const risk = buy ? entry - sl : sl - entry;
   if (risk <= 0) return null;
   const move = buy ? exit - entry : entry - exit;
-  return Math.round((move / risk) * 10) / 10;
+  return round1Sym(cleanRatio(move, risk));
 }
 
 /**
