@@ -32,6 +32,7 @@ import {
   quoteSymbol,
   levelSideIssue,
   netByInstrument,
+  netHasCentWithLots,
   knownLots,
   journalInstrumentKey,
   draftRiskFigures,
@@ -559,6 +560,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       pipsBySymbol: ranked.length > 0 && !whole ? parts.join(' · ') + (rest > 0 ? ` +${rest}` : '') : null,
       avgR: avg ? formatR(avg.r) : null,
       rN: avg?.n ?? 0,
+      /** أداة سنت بالسطر بحجم معروف: نقاطها بلا مبلغ — `journalCentNoMoney` يقول لماذا */
+      cent: netHasCentWithLots(visibleTrades, whole ? [ranked[0]!.symbol] : shown.map((v) => v.symbol)),
     };
   }, [visibleTrades]);
 
@@ -1090,6 +1093,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
               {t.journalStatNetPipsBySymbol.replace('{parts}', extraStats.pipsBySymbol)}
             </Text>
           ) : null}
+          {extraStats.cent ? <Text style={[styles.stat, { textAlign: align }]}>{t.journalCentNoMoney}</Text> : null}
           {extraStats.avgR != null ? (
             <Text style={[styles.stat, { textAlign: align }]}>
               {t.journalStatAvgR.replace('{r}', extraStats.avgR).replace('{n}', String(extraStats.rN))}

@@ -822,6 +822,25 @@ function instrumentSymbol(raw: string): string | null {
 }
 
 /**
+ * هل بسطر صافي الأدوات المعروض (`symbols` — المفاتيح من `netByInstrument`) أداة **حساب سنت** لها صفقة مغلقة
+ * بحجمٍ معروف؟ — لسطر `journalCentNoMoney` تحت الإحصاءات: «EURUSDC +10» بلا مبلغ بجانب «EURUSD +20 (+100.00 USD)»
+ * يبدو عطلاً، والمتداول كتب الحجم. بلا حجم معروف لا سطر: غياب المال مفهومٌ حينها كأيّ صفقة بلا حجم.
+ */
+export function netHasCentWithLots(
+  trades: readonly { symbol: string; status: string; size?: number | null; note?: string | null }[],
+  symbols: readonly string[]
+): boolean {
+  const shown = new Set(symbols);
+  return trades.some(
+    (tr) =>
+      tr.status === 'closed' &&
+      isCentJournalSymbol(tr.symbol) &&
+      shown.has(journalInstrumentKey(tr.symbol)) &&
+      knownLots(tr.size, tr.note) != null
+  );
+}
+
+/**
  * مفتاح **الأداة** لصفقة بالدفتر — لشرائح الفلتر وصافي كل أداة: الرمز القانوني حين تُعرف مواصفاته
  * (`quoteSymbol`: «XAUUSD.m»، «xauusd»، «XAUUSDm» ⇒ «XAUUSD»)، وإلا الرمز كما يُحفظ بحروف كبيرة
  * (US30، NAS100)، و«» لرمز فارغ.

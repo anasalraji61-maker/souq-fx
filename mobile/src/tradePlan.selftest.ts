@@ -41,6 +41,7 @@ import {
   journalPipSize,
   draftRiskFigures,
   journalSizeLooksLikeUnits,
+  netHasCentWithLots,
   isCentJournalSymbol,
 } from './tradePlan';
 import { riskInQuoteCcy as cashRisk } from './positionSize';
@@ -1474,3 +1475,24 @@ console.log('tradePlan draftRiskFigures selftest OK');
   });
 }
 console.log('tradePlan journalSizeLooksLikeUnits selftest OK');
+
+// netHasCentWithLots — سطر «حساب سنت: بالنقاط فقط» تحت صافي الأدوات
+{
+  const c = (symbol: string, size: number | null, status = 'closed', note: string | null = null) => ({ symbol, size, status, note });
+  const trades = [c('EURUSD', 0.5), c('EURUSDC', 0.5)];
+  const keys = netByInstrument(trades.map((t) => ({ ...t, side: 'buy', entry: 1.1, exit: 1.101 }))).map((r) => r.symbol);
+  assert.deepEqual(keys.sort(), ['EURUSD', 'EURUSDC']);
+  assert.equal(netHasCentWithLots(trades, keys), true);
+  // السنت خارج السطر المعروض (+N) أو بلا صفقات سنت: لا سطر
+  assert.equal(netHasCentWithLots(trades, ['EURUSD']), false);
+  assert.equal(netHasCentWithLots([c('EURUSD', 0.5)], ['EURUSD']), false);
+  // بلا حجم معروف (1 = افتراض الخادم) أو مفتوحة: لا سطر
+  assert.equal(netHasCentWithLots([c('EURUSDC', 1)], ['EURUSDC']), false);
+  assert.equal(netHasCentWithLots([c('EURUSDC', null)], ['EURUSDC']), false);
+  assert.equal(netHasCentWithLots([c('EURUSDC', 0.5, 'open')], ['EURUSDC']), false);
+  // 1.00 لوت مكتوبة بالملاحظة معروفة؛ «GOLDC» مفتاحها «GOLDC»
+  assert.equal(netHasCentWithLots([c('EURUSDC', 1, 'closed', '1.00 lot · risk 1.00 USD')], ['EURUSDC']), true);
+  assert.equal(netHasCentWithLots([c('GOLDC', 0.2)], ['GOLDC']), true);
+  assert.equal(netHasCentWithLots([c('GOLDC', 0.2)], ['XAUUSD']), false);
+}
+console.log('tradePlan netHasCentWithLots selftest OK');
