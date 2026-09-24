@@ -1419,17 +1419,30 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const prev = hist[hist.length - 1]!;
     drawHistory.current = hist.slice(0, -1);
     setCanUndo(drawHistory.current.length > 0);
-    setDrawings(prev);
+    // اللقطة قد تكون من فريم آخر (التاريخ يبقى عبر تبديل الفريم): تُرسى على شموع هذا الفريم
+    // قبل العرض، لا إطاراً بمواضع ذلك الفريم.
+    const km = kindRef.current;
+    const synthetic = km === 'renko' || km === 'kagi' || km === 'pnf' || km === 'range';
+    setDrawings(
+      anchorDrawings(
+        prev,
+        sourceRef.current.all as { time: number }[],
+        timeframeStepSec(series.timeframe),
+        !synthetic
+      )
+    );
     setSelectedId(null);
     setPending(null);
     setDragEnd(null);
-  }, []);
+  }, [series.timeframe]);
 
-  // تبديل الرمز/الفريم يحمّل رسومات أخرى، فتاريخ الرسم السابق لم يعد يخصّها.
+  // تبديل الرمز يحمّل رسومات أخرى، فتاريخ الرسم السابق لم يعد يخصّها. تبديل **الفريم**
+  // لا يمسّه: الرسومات للرمز على كل فريماته (`drawingStore.ts`) — خطّ رُسم على 4H خطأً يُتراجع
+  // عنه بعد النزول للساعة.
   useEffect(() => {
     drawHistory.current = [];
     setCanUndo(false);
-  }, [series.symbol, series.timeframe]);
+  }, [series.symbol]);
 
   useEffect(() => {
     const unsub = subscribeDrawingsSaveError(setDrawingsSaveError);
