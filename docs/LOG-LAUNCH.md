@@ -1609,3 +1609,36 @@
 ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
 
 **يحتاج جهازاً**: البنود 128–131 — خاصةً 128 (سحب جسم الترند/الخطة، لم يُرَ يعمل قطّ) و130 (هل يطابق رقم Vortex/Klinger قراءة TradingView).
+
+## 2026-09-24 — التشغيلة الخمسون
+
+أوّل تشغيلة مع `docs/COORDINATION.md` — البنود الموجّهة لي أولاً. التحقّق: `bash scripts/qa-build-check.sh` **أخضر بصفر أخطاء قبل كل commit**؛
+صفر `U+FFFD` بـ`locales.ts`؛ ما كُتب بالوثائق مقروء من الكود (`drawingsHidden` = `useState` بـ`MatrixChart.tsx:1145`، `fitChannelWidth` بـ`channel.ts`،
+التنبيه من الخطّ لـ`hline`/`hray` فقط، `newsBannerText`، `marginBaseToAccount`، `GUIDES_*_MIN_INNER_H`). **لم يُشغَّل التطبيق.**
+
+1. **`locales.ts`** (`4c8e529`) ar/en/ku: `ctlToolHray` و`ctlToolChannel` (**طلب chart23 — منجز**)؛ `journalCentMoneyNote` (المبالغ بـUSC، 100 USC = 1 USD)،
+   `journalMicroMoneyNote` (بعملة الحساب، عقد 1,000 وحدة)، `journalMoneyUsc` (`{usc}`، `{usd}`) (**طلب tools30 — منجز**). جاهزة غير موصولة.
+2. **`locales.ts`** (`aa6f8be`): `mcHideDrawings`/`mcShowDrawings` لإنهاء `chartExtraLabels`؛ الكردية «هێڵکاری» (رسم) بدل «وێنە» (صورة) التي بالنسخة المؤقّتة.
+3. **`FEATURE-INVENTORY.md`** (`215d438`، سطر أدوات الرسم): الشعاع الأفقي، القناة المتوازية (بلا تنبيه منها)، إخفاء الرسوم (لا يُحفظ بين الفتحات).
+4. **`RELEASE-MOBILE.md` §5** (`93bd36a`): البنود 132–137.
+
+### ردّ على COORDINATION
+- **QA ⇐ launch (`TerminalScreen.tsx:868` `dxyPrice`)**: عرض DXY **ليس مفقوداً**. الثابت بقيّة شريحة «DXY · سعر ↑» حُذفت في `f874bda`؛ إطار البطل
+  (`TerminalScreen.tsx` ~1632) يرسم `series={dxy}` مع `liveTick={liveTicks[dxy.symbol]}` فيطبع السعر الحيّ برأسه. الثابت ميّت، وخاطئ أيضاً لو بقي:
+  يقرأ `liveTicks.DXY` حتى حين بدّل المستخدم رمز البطل (`heroSymbol`). **يُحذف** — الملف خارج نطاقي، فهو لوكيل الشارت/QA.
+- **chart23** و**tools30**: منجزان (البند 1) — ينتظران الربط: `EXTRA_TOOL_LABELS` بـ`typeLabels.ts` ← `t.ctlToolHray`/`t.ctlToolChannel`؛
+  والدفتر يستبدل `journalCentNoMoney`/`journalMicroNoMoney` بالمفتاحين الجديدين حين يُحسب المال.
+- **تحقّقتُ من `b9df343` (الشارت)**: `tr.mcAutoA11y` على زرّ AUTO، `tr.mcReplayReadout` بدل «Bar Replay» الحرفي، `tr.mcClearAllBody`/`tr.mcToLatestA11y`
+  مستعملة ⇒ صفوف launch27، launch7، chart15 قابلة للإسقاط بعد تحقّق QA. `docs/STATUS.md:48` ما زال يذكرها «عالقة» — ملف QA، لم أمسّه.
+
+### طلب تنسيق — لوكيل الشارت
+- **جديد**: `chartExtraLabels` ← `tr.mcHideDrawings`/`tr.mcShowDrawings` ثم حذف الدالة؛ `EXTRA_TOOL_LABELS` ← `t.ctlToolHray`/`t.ctlToolChannel`؛ حذف `dxyPrice` الميت.
+- **قائم**: `mcMeasureDurUnits`؛ `mcHintSelect`/`Selected`، `mcMeasureBarOne`/`Two`، `mcReplayEndedOnSwitch`، `cfReplayPriceA11y` بلا مستخدم.
+
+### طلب تنسيق — لوكيل الأدوات
+- **جديد**: مال السنت/micro بالدفتر بالمفاتيح الثلاثة أعلاه. **قائم**: `journalSizeFromSmallFix` موصول (`9ec1ff6`) — شكراً؛ `riskCalcCommissionNote*` موصولة (`b878127`).
+
+**خارج نطاقي ويستحقّ عملاً**: `₴` للدفتر، `backend/openrouter_ai.py` «خبير تداول»، السبريد المختلَق بـ`backend/twelve_data.py`، `extra.apiUrl` المحلي
+ورابط سياسة الخصوصية ⛔ ينتظران أنس.
+
+**يحتاج جهازاً**: البنود 132–137 — خاصةً 133 (إمساك مقبض القناة بإصبع) و135 (أرقام العتبات لم تُرسم قطّ قبل `6fddb99`).
