@@ -1,4 +1,4 @@
-import type { Dict } from '../i18n/locales';
+import type { Dict, LangId } from '../i18n/locales';
 import type { SessionId } from './sessions';
 import {
   CHART_KINDS,
@@ -101,4 +101,15 @@ const SESSION_KEYS: Record<SessionId, keyof Dict> = {
 /** اسم الجلسة فوق تظليل مؤشّر «Sessions» بلغة الواجهة. */
 export function sessionLabel(t: Dict, id: SessionId): string {
   return t[SESSION_KEYS[id]] as string;
+}
+
+/**
+ * تسميات زرّ لون الرسم المحدَّد — مؤقّتة هنا حتى تُنقل إلى `locales.ts` (`mcDrawColor`/`mcDrawColorA11y`،
+ * طلب تنسيق بسجلّ الشارت 2026-09-24) ثم تُحذف هذه الدالة.
+ */
+export function drawColorLabels(lang: LangId): { word: string; a11y: string } {
+  if (lang === 'en-US') return { word: 'Color', a11y: 'Drawing color — tap for the next color' };
+  if (lang === 'en-GB') return { word: 'Colour', a11y: 'Drawing colour — tap for the next colour' };
+  if (lang === 'ku') return { word: 'ڕەنگ', a11y: 'ڕەنگی وێنەکە — بۆ ڕەنگی دواتر لێبدە' };
+  return { word: 'لون', a11y: 'لون الرسم — انقر للّون التالي' };
 }

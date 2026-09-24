@@ -139,6 +139,7 @@ import {
   localizedDrawTools,
   localizedIndicators,
   localizedLenses,
+  drawColorLabels,
 } from './typeLabels';
 import { confirmDestructive, notify } from './confirmDestructive';
 import {
@@ -1982,6 +1983,30 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setPending(null);
     setDragEnd(null);
   }, [series.timeframe]);
+
+  // لون الرسم المحدَّد: كل رسم كان يُرسم بلون تمييز الشارت وحده، فالدعم والمقاومة وخطّ الترند وفيبو
+  // بلون واحد لا يُفرَّق بينها بنظرة (TradingView يلوّن كل رسم). النقر يدور على لوحة قصيرة؛ قابل للتراجع
+  // ويُحفظ مع الرسم (`color` جزء منه أصلاً). خطّتا شراء/بيع والقياس ألوانها دلالية (ربح/خسارة) فلا تُلوَّن.
+  const drawPalette = useMemo(
+    () => Array.from(new Set([accent, colors.bull, colors.bear, colors.warn, colors.dxy, colors.text])),
+    [accent]
+  );
+  const recolorTarget = selectedId ? drawings.find((x) => x.id === selectedId) ?? null : null;
+  const canRecolor =
+    !!recolorTarget &&
+    recolorTarget.tool !== 'long' &&
+    recolorTarget.tool !== 'short' &&
+    recolorTarget.tool !== 'measure';
+  const cycleSelectedColor = useCallback(() => {
+    if (!selectedId) return;
+    const d = drawingsRef.current.find((x) => x.id === selectedId);
+    if (!d) return;
+    const i = drawPalette.indexOf(d.color);
+    const color = drawPalette[(i + 1) % drawPalette.length]!;
+    pushDrawHistory();
+    setDrawings((list) => list.map((x) => (x.id === selectedId ? { ...x, color } : x)));
+  }, [selectedId, drawPalette, pushDrawHistory]);
+  const colorLabels = drawColorLabels(lang);
 
   // تبديل الرمز يحمّل رسومات أخرى، فتاريخ الرسم السابق لم يعد يخصّها. تبديل **الفريم**
   // لا يمسّه: الرسومات للرمز على كل فريماته (`drawingStore.ts`) — خطّ رُسم على 4H خطأً يُتراجع
@@ -4962,6 +4987,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={styles.compactToolLabel}>{tr.deleteWord}</Text>
               </Pressable>
             ) : null}
+            {canRecolor ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={colorLabels.a11y}
+                style={({ pressed }) => [
+                  styles.compactTool,
+                  pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                ]}
+                onPress={cycleSelectedColor}
+              >
+                <Text style={[styles.compactToolIcon, { color: recolorTarget!.color }]}>●</Text>
+                <Text style={styles.compactToolLabel}>{colorLabels.word}</Text>
+              </Pressable>
+            ) : null}
             {drawings.length ? (
               <Pressable
                 accessibilityRole="button"
@@ -7146,8 +7185,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     top,
                     width: Math.max(4, right - left),
                     height: Math.max(4, bot - top),
+                    // لون أعاد المتداول اختياره ⇒ التعبئة بصبغته (hex + شفافية)؛ وإلا الأصل كما كان.
                     backgroundColor:
-                      d.tool === 'zone' ? 'rgba(45,212,191,0.12)' : 'rgba(251,191,36,0.1)',
+                      d.color !== accent && /^#[0-9a-f]{6}$/i.test(d.color)
+                        ? `${d.color}${d.tool === 'zone' ? '1F' : '1A'}`
+                        : d.tool === 'zone'
+                          ? 'rgba(45,212,191,0.12)'
+                          : 'rgba(251,191,36,0.1)',
                     borderWidth: sel ? 2.5 : 1,
                     borderColor: d.color,
                   }}
@@ -10516,6 +10560,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 >
                   <Text style={styles.toolText}>{tr.deleteWord}</Text>
                 </Pressable>
+                {canRecolor ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={colorLabels.a11y}
+                    style={({ pressed }) => [
+                      styles.tool,
+                      pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                    ]}
+                    onPress={cycleSelectedColor}
+                  >
+                    <Text style={styles.toolText}>
+                      <Text style={{ color: recolorTarget!.color }}>● </Text>
+                      {colorLabels.word}
+                    </Text>
+                  </Pressable>
+                ) : null}
                 {(() => {
                   const d = drawings.find((x) => x.id === selectedId);
                   if ((d?.tool === 'hline' || d?.tool === 'hray') && onCreateAlert) {
