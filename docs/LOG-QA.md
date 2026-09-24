@@ -118,3 +118,16 @@ PDH/PDL بيوم 17:00 NY أوّلاً (:1641-1646)، Footprint «≈»/CVD «ت
 **جديد (QA9 → الخادم):** `db.py:1681` `LIMIT 200` يقصّ الدفتر و`trade_stats` بصمت؛ `days=30` معامل ميّت. 15ث «حيّ» مقابل 20ث إعادة اتصال — مقصود.
 **بعد 3 commits وصلت أثناء الدورة (1e2a4f1):** أخضر 0، اختباراتها الأربعة المعدَّلة ناجحة (marketHours، measureReadout، positionSize، tradePlan).
 **الدورة القادمة:** المراجعة (e) — ما قد يُحرجنا أمام متداول حقيقي.
+
+## 2026-09-25 — الدورة 10
+**البناء:** أخضر 0 (بعد 61da9e5، وأُعيد بعد e40b2da الوافد أثناء الدورة: أخضر 0) — لا إصلاح لازم.
+**Selftests:** 62/62 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — launch59 ×2 (`0c34e61`: `TradeJournalPanel.tsx:1672` `journalInitialStopNote`، `:1704` `journalCappedNote`،
+`JOURNAL_LIST_LIMIT` = 200 = `db.py:1681`). QA9 بقي للخادم (إحصاء SQL + ترقيم). **غير مُغلق (بلا تغيير):** 10 `Alert.alert`، «₴» ×2، `TimeframeBar` بلا
+`accessibilityState`، `QUICK_SYMBOLS` ×3، `RECONNECT_*` ×2، أسماء البنوك/«TradingCentral-like»، السبريد ×0.00008، «خبير تداول». QA4/QA5/QA6 صارت ★.
+**طلبات تنسيق جديدة:** tools40 → launch (`riskCalcSpreadPipsHint` — «بالنقاط» تُقرأ points)؛ chart → launch (تلميح الملاحظة «تحتها» والخانة قد تنقلب فوقها).
+**المراجعة (e — ما يُحرج أمام متداول)، وكيل فحص فروق 043683e..HEAD بتشغيل الدوال الحقيقية بـ`npx tsx`، ثم تحقّق يدوي:**
+- سليم: R من الوقف الأصلي، `formatRR` للأسفل، `targetAtRR` على JPY/XAU/US30، إسقاط العطلة لليورو صيفاً/شتاءً، علامات المحور، الهامش ≤120ث، الماسح.
+- **QA10 → chart:** `marketHours.ts:160` `projectBarTimeSec('XAUUSD', Fri 20:00Z, 3600, 1)` = الأحد 21:00Z (أعدتُ التشغيل) — الذهب يفتح 18:00 NY؛ وعلامة محور تجميلية.
+- **QA10 → tools:** `TerminalScreen.tsx:1575` السبريد سعراً خاماً مقابل `DomLitePanel.tsx:72` بالـpip.
+**الدورة القادمة:** المراجعة (a) — تكرار/كود ميت.
