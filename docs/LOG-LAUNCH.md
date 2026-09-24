@@ -1306,3 +1306,31 @@
 ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
 
 **يحتاج جهازاً**: البنود 84–89 — خاصةً 85 (Ichimoku مقابل TradingView) و86 (StochRSI: هل غياب التلوين والرأس بـ%K وحده مقبولان).
+
+## 2026-09-24 — التشغيلة الأربعون
+
+تتبع `2f52a99`/`545ea86`/`ab4ca84` (الأدوات) و`89aad79`/`06ea0bb`/`5e1ceb0`/`5a9c29f` (الشارت). التحقّق بـNode 22 و`tsc` من `/tmp/ts5`
+(`--strict --noEmit --skipLibCheck --target es2020`) على `locales.ts` نظيف، صفر `U+FFFD`؛ ما كُتب بالوثائق مقروء من فروقات الكود. **لم يُشغَّل التطبيق.**
+
+1. **`FEATURE-INVENTORY.md`** (`11b2d54`): الرباعي يُحدَّث كل 90 ث؛ محور الزمن يطبع الساعة من الفجوة بين الوسوم؛ PSAR بترتيب `ta.sar`
+   وSuperTrend يبدأ هابطاً؛ الحاسبة تسمّي زوج رمز السنت العادي؛ صفقات السنت بالدفتر بنقاطها بلا مال؛ وصحّحتُ «سعر الهامش يُجلب مرّة لكل
+   رمز» — صار يتجدّد كل 60 ث (`2f52a99`، فاتني بالتشغيلة السابقة).
+2. **`RELEASE-MOBILE.md` §5** (`3b38354`): البنود 90–96.
+3. **`locales.ts`** (`a5dabc4`) ar/en/ku: `journalCentNoMoney` — صفقة «EURUSDC» تُظهر نقاطاً وR بلا مبلغ ولا شيء يقول لماذا. **جاهز غير موصول.**
+4. **`locales.ts`** (`5fa5c97`): `riskCalcCentSymbolHint` يقول «أصغر بمئة مرّة» بدل «أصغر» وحدها، بالثلاث.
+
+وصف المتجر لا يذكر TradingView ولا PSAR/SuperTrend — لم يُلمس (الإنجليزي 3996/4000).
+
+### طلب تنسيق — لوكيل الأدوات
+- **جديد**: سطر صفقة سنت بالدفتر (`journalPipSize` ≠ null و`instrumentSpec` = null) ← `t.journalCentNoMoney` تحت النتيجة بدل غياب المال صامتاً.
+- **أُغلق**: `riskCalcCentSymbolHint` موصول (`545ea86`).
+
+### طلب تنسيق — لوكيل الشارت — قائم بلا تغيير (تحقّقت بـgrep)
+- `barsCountText` (`chart/measureReadout.ts:87`) ما زال `lang === 'en'` ⇒ «1 bars» بالإنجليزية؛ `mcMeasureBarOne`/`mcMeasureBarTwo` بلا مستخدم.
+- `mcReplayEndedOnSwitch` بلا مستخدم؛ `chartExtraLabels` (4 مواضع بـ`MatrixChart.tsx`)؛ `` `Bar Replay · …` `` الحرفي بـ`MatrixChart.tsx:4648`
+  ← `tr.mcReplayReadout` (`ip-legal-caution.mdc`)؛ `cfReplayPriceA11y` بلا مستخدم.
+
+**خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (`backend/openrouter_ai.py` «خبير تداول»، `lot` الثابتة، `₴`، `extra.apiUrl` المحلي
+ورابط سياسة الخصوصية ⛔ ينتظران أنس، إخفاء الباقات/العمولات/الشبكة ببناء المتجر، السبريد المختلَق بـ`backend/twelve_data.py`).
+
+**يحتاج جهازاً**: البنود 90–96 — خاصةً 95/96 (PSAR وSuperTrend مقابل TradingView) و92 (هل غياب المال لصفقة السنت مفهوم).
