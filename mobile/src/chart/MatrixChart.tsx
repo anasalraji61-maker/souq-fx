@@ -16,7 +16,6 @@ import {
   ScrollView,
   LayoutChangeEvent,
   PanResponder,
-  Alert,
   Platform,
 } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
@@ -141,6 +140,7 @@ import {
   localizedIndicators,
   localizedLenses,
 } from './typeLabels';
+import { confirmDestructive, notify } from './confirmDestructive';
 import {
   type ChartKind,
   type ChartPoint,
@@ -3466,14 +3466,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     try {
       const uri = await captureRef(plotRef, { format: 'png', quality: 0.95 });
       if (Platform.OS === 'web') {
-        Alert.alert('MATRIX', tr.mcSnapshotSaved);
+        notify('MATRIX', tr.mcSnapshotSaved);
         return;
       }
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: localLabels.shareDialogTitle });
       }
     } catch {
-      Alert.alert('MATRIX', tr.mcSnapshotFailed);
+      notify('MATRIX', tr.mcSnapshotFailed);
     }
   };
 
@@ -4510,7 +4510,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       magnet,
     }).then(() => {
       const err = getTemplatesSaveError();
-      Alert.alert('MATRIX', err ? tr[err] : tr.mcTemplateSaved);
+      notify('MATRIX', err ? tr[err] : tr.mcTemplateSaved);
     });
   };
 
@@ -4910,20 +4910,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => {
-                Alert.alert(tr.mcClearAllTitle, tr.mcClearAllBody, [
-                  { text: tr.cancel, style: 'cancel' },
-                  {
-                    text: tr.mcClearWord,
-                    style: 'destructive',
-                    onPress: () => {
-                      pushDrawHistory();
-                      setDrawings([]);
-                      setPending(null);
-                      setSelectedId(null);
-                      void clearDrawings(series.symbol, drawingsOwner);
-                    },
+                confirmDestructive({
+                  title: tr.mcClearAllTitle,
+                  body: tr.mcClearAllBody,
+                  cancelText: tr.cancel,
+                  confirmText: tr.mcClearWord,
+                  onConfirm: () => {
+                    pushDrawHistory();
+                    setDrawings([]);
+                    setPending(null);
+                    setSelectedId(null);
+                    void clearDrawings(series.symbol, drawingsOwner);
                   },
-                ]);
+                });
               }}
             >
               <Text style={styles.compactToolIcon}>⌫</Text>
@@ -10269,20 +10268,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => {
-                Alert.alert(tr.mcClearAllTitle, tr.mcClearAllBody, [
-                  { text: tr.cancel, style: 'cancel' },
-                  {
-                    text: tr.mcClearWord,
-                    style: 'destructive',
-                    onPress: () => {
-                      pushDrawHistory();
-                      setDrawings([]);
-                      setPending(null);
-                      setSelectedId(null);
-                      void clearDrawings(series.symbol, drawingsOwner);
-                    },
+                confirmDestructive({
+                  title: tr.mcClearAllTitle,
+                  body: tr.mcClearAllBody,
+                  cancelText: tr.cancel,
+                  confirmText: tr.mcClearWord,
+                  onConfirm: () => {
+                    pushDrawHistory();
+                    setDrawings([]);
+                    setPending(null);
+                    setSelectedId(null);
+                    void clearDrawings(series.symbol, drawingsOwner);
                   },
-                ]);
+                });
               }}
             >
               <Text style={styles.toolText}>{tr.mcClearWord}</Text>

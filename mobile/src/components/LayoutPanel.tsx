@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, TextInput, Alert, Platform } from 'react-native';
+import { View, Text, Pressable, StyleSheet, TextInput } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import {
   loadLayouts,
@@ -14,6 +14,7 @@ import {
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
+import { confirmDestructive } from '../chart/confirmDestructive';
 
 type Props = {
   frameTfs: [string, string, string] | string[];
@@ -196,24 +197,13 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
             <Pressable
               accessibilityRole="button"
               onPress={() => {
-                const body = `${l.name} — ${describe(l)}`;
-                // Alert.alert بأزرار لا تفعل شيئاً على react-native-web — فلا تأكيد ولا حذف على الويب/سطح المكتب.
-                if (Platform.OS === 'web') {
-                  const ok =
-                    typeof window !== 'undefined' && typeof window.confirm === 'function'
-                      ? window.confirm(`${t.layoutDeleteConfirmTitle}\n${body}`)
-                      : false;
-                  if (ok) void removeLayout(l);
-                  return;
-                }
-                Alert.alert(t.layoutDeleteConfirmTitle, body, [
-                  { text: t.cancel, style: 'cancel' },
-                  {
-                    text: t.deleteWord,
-                    style: 'destructive',
-                    onPress: () => void removeLayout(l),
-                  },
-                ]);
+                confirmDestructive({
+                  title: t.layoutDeleteConfirmTitle,
+                  body: `${l.name} — ${describe(l)}`,
+                  cancelText: t.cancel,
+                  confirmText: t.deleteWord,
+                  onConfirm: () => void removeLayout(l),
+                });
               }}
               style={({ pressed }) =>
                 pressed && {
