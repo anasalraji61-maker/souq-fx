@@ -18,6 +18,8 @@ import {
   slPipsFromPrices,
   riskForLots,
   formatRiskPct,
+  parseRiskInput,
+  toggleRiskUnit,
   formatMoney,
   profitAtTarget,
   parseLeverage,
@@ -222,13 +224,15 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
 
   /** أرقام عربية/فاصل آلاف/فاصلة عشرية — راجع parseDecimal.ts. NaN = فارغ أو غير صالح. */
   const num = (s: string) => parseDecimal(s) ?? NaN;
+  /** الرصيد مبلغ: «10.000» أوروبية = عشرة آلاف فتُرفض كـ«10,000» بدل حساب لوت من 10 — راجع parseDecimal.ts */
+  const balanceNum = parseDecimal(balance, { amount: true }) ?? NaN;
   /**
    * خانة فيها نص لكنه ليس رقماً مفهوماً («10,000» مبهم، «1.2.3») — نقول ذلك بدل «أدخل الرصيد…».
    * السبريد خارجها: خطؤه يُقال تحت خانته (راجع `spreadErr`) لأن اللوت يُحسب بدونه.
    */
   const badNumber =
     (balance.trim() !== '' && parseDecimal(balance, { amount: true }) == null) ||
-    (riskPct.trim() !== '' && parseDecimal(riskPct, { percent: true }) == null) ||
+    (riskPct.trim() !== '' && parseRiskInput(riskPct, balanceNum, account) == null) ||
     [slPips, entryPx, stopPx, targetPx, manualConv].some((v) => v.trim() !== '' && parseDecimal(v) == null) ||
     (leverage.trim() !== '' && parseLeverage(leverage) == null);
   /**
@@ -245,10 +249,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         : t.invalidNumberHint;
   /** خطأ خانة العمولة تحتها — للسبب نفسه: اللوت يُحسب بدونها فلا يصل `badNumber` إليها */
   const commissionErr = parseCommission(commission) != null ? null : t.invalidNumberHint;
-  /** الرصيد مبلغ: «10.000» أوروبية = عشرة آلاف فتُرفض كـ«10,000» بدل حساب لوت من 10 — راجع parseDecimal.ts */
-  const balanceNum = parseDecimal(balance, { amount: true }) ?? NaN;
-  /** «1%» / «0.5٪» كما يقولها المتداول — علامة النسبة تُقبل بهذه الخانة وحدها (راجع parseDecimal.ts) */
-  const riskNum = parseDecimal(riskPct, { percent: true }) ?? NaN;
+  /**
+   * «1%» / «0.5٪» كما يقولها المتداول، أو **مبلغ** بعلامة عملة الحساب («$50»، «50 USD») تُحسب نسبته من
+   * الرصيد — راجع `parseRiskInput`. الرقم وحده يبقى نسبة.
+   */
+  const riskIn = parseRiskInput(riskPct, balanceNum, account);
+  const riskNum = riskIn?.pct ?? NaN;
+  /** النسبة كما تُكتب بالنصوص («يتجاوز {pct}%»): المكتوبة كما هي، والمحسوبة من مبلغ لمنزلتين («0.5» لا «0.4999…») */
+  const riskPctText = riskIn?.amount != null ? String(Math.round(riskNum * 100) / 100) : String(riskNum);
   const derivedSl = spec ? slPipsFromPrices(spec, num(entryPx), num(stopPx)) : null;
 
   // الوقف من السعر يكتب قيمته بخانة النقاط (مصدر واحد للحساب)؛ تعديل النقاط يدوياً يبقى ممكناً بعده.
@@ -601,14 +609,16 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    */
   const riskImpossible = Number.isFinite(riskNum) && riskNum > 100;
 
-  const chip = (label: string, on: boolean, onPress: () => void, a11y: string) => (
+  const chip = (label: string, on: boolean, onPress: () => void, a11y: string, disabled = false) => (
     <Pressable
       key={label}
       accessibilityRole="button"
-      accessibilityState={{ selected: on }}
+      accessibilityState={{ selected: on, disabled }}
+      disabled={disabled}
       style={({ pressed }) => [
         styles.chip,
         on && styles.chipOn,
+        disabled && { opacity: 0.4 },
         pressed && {
           opacity: buttons.pressedOpacity,
           transform: [{ scale: buttons.pressedScale }],
@@ -668,7 +678,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             c,
             account === c,
             () => {
-              if (c !== account) setCommission('');
+              if (c !== account) {
+                setCommission('');
+                // «USD 50» لا تعني 50 يورو: المخاطرة بالمال تعود نسبةً (بالرصيد نفسه) قبل تبديل العملة،
+                // وبلا رصيد تُمسح بدل أن تبقى علامةً لعملة لم تعد عملة الحساب
+                if (riskIn?.amount != null) setRiskPct(toggleRiskUnit(riskPct, balanceNum, account) ?? '');
+              }
               setAccount(c);
             },
             `${t.riskCalcAccountCcy}: ${c}`
@@ -684,6 +699,20 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcRiskPct}</Text>
       <View style={[styles.chips, rtl && styles.chipsRtl]}>
         {QUICK_RISK.map((r) => chip(`${r}%`, riskPct === r, () => setRiskPct(r), `${t.riskCalcRiskPct}: ${r}%`))}
+        {/* المخاطرة بالمال: يقلب الخانة «1» ⇄ «USD 100» بالمخاطرة نفسها — لوحة الأرقام بلا «$» (راجع
+            `toggleRiskUnit`). معطَّل بلا رصيد: لا نسبة من مبلغ ولا مبلغ من نسبة */}
+        {(() => {
+          const flipped = toggleRiskUnit(riskPct, balanceNum, account);
+          return chip(
+            account,
+            riskIn?.amount != null,
+            () => {
+              if (flipped != null) setRiskPct(flipped);
+            },
+            `${t.riskCalcRiskPct}: ${account}`,
+            flipped == null
+          );
+        })()}
       </View>
       {input(riskPct, setRiskPct, '1', t.riskCalcRiskPct)}
       {riskHigh ? <Text style={[styles.warn, { textAlign: align }]}>{t.riskCalcHighRisk}</Text> : null}
@@ -890,12 +919,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             {costsAdvice?.kind === 'smaller' ? (
               <Text style={[styles.resultMeta, { textAlign: align }]}>
                 {(commissionPerLot ? t.riskCalcCostsLotsWithin : t.riskCalcSpreadLotsWithin)
-                  .replace('{pct}', String(riskNum))
+                  .replace('{pct}', riskPctText)
                   .replace('{lots}', costsAdvice.lots.toFixed(2))}
               </Text>
             ) : costsAdvice?.kind === 'none' ? (
               <Text style={[styles.warn, { textAlign: align }]}>
-                {t.riskCalcCostsBelowMin.replace('{pct}', String(riskNum))}
+                {t.riskCalcCostsBelowMin.replace('{pct}', riskPctText)}
               </Text>
             ) : null}
           </>

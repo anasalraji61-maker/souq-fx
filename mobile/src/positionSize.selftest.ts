@@ -4,6 +4,8 @@
  */
 import assert from 'node:assert/strict';
 import {
+  parseRiskInput,
+  toggleRiskUnit,
   ACCOUNT_CCYS,
   instrumentSpec,
   conversionPair,
@@ -1205,3 +1207,108 @@ console.log('positionSize rewardBelowRisk selftest OK');
   }
 }
 console.log('positionSize planJournalNote netRR selftest OK');
+
+// ── parseRiskInput: المخاطرة نسبةً (كما كانت) أو مبلغاً بعلامة عملة الحساب ──
+{
+  // النسبة بلا تغيير: الرقم وحده نسبة، و«%» تُقبل
+  assert.deepEqual(parseRiskInput('1', 10_000, 'USD'), { pct: 1, amount: null });
+  assert.deepEqual(parseRiskInput('0.5%', 10_000, 'USD'), { pct: 0.5, amount: null });
+  // «50» وحدها تبقى 50% (لا تخمين أنها مال) — تحذير المخاطرة العالية يبقى يعمل
+  assert.deepEqual(parseRiskInput('50', 10_000, 'USD'), { pct: 50, amount: null });
+  // المبلغ برمز أو كود عملة الحساب، بأيّ طرف وبأيّ حالة أحرف، بمسافة أو بدونها
+  for (const raw of ['$50', '50$', '50 USD', 'usd 50', ' $ 50 ', '50usd', '٥٠$']) {
+    assert.deepEqual(parseRiskInput(raw, 10_000, 'USD'), { pct: 0.5, amount: 50 }, raw);
+  }
+  assert.deepEqual(parseRiskInput('€40', 8_000, 'EUR'), { pct: 0.5, amount: 40 });
+  assert.deepEqual(parseRiskInput('£25', 5_000, 'GBP'), { pct: 0.5, amount: 25 });
+  assert.deepEqual(parseRiskInput('¥15,000', 1_500_000, 'JPY'), null); // «15,000» مبهمة بقاعدة المبلغ
+  assert.deepEqual(parseRiskInput('¥15000', 1_500_000, 'JPY'), { pct: 1, amount: 15_000 });
+  assert.deepEqual(parseRiskInput('$30', 3_000, 'AUD'), { pct: 1, amount: 30 });
+  assert.deepEqual(parseRiskInput('20 chf', 2_000, 'CHF'), { pct: 1, amount: 20 });
+  assert.deepEqual(parseRiskInput('$1,250.50', 125_050, 'CAD'), { pct: 1, amount: 1250.5 });
+  // علامة عملة ليست عملة الحساب: 40 يورو ليست 40 دولاراً — تُرفض لا تُعدّ دولاراً
+  assert.equal(parseRiskInput('€40', 10_000, 'USD'), null);
+  assert.equal(parseRiskInput('40 EUR', 10_000, 'USD'), null);
+  assert.equal(parseRiskInput('$40', 10_000, 'EUR'), null);
+  assert.equal(parseRiskInput('£40', 10_000, 'JPY'), null);
+  // علامتان، أو علامة بلا مبلغ، أو مبلغ صفر/سالب/غير مفهوم، أو حرف ملتبس
+  for (const raw of ['$50$', '$50 USD', '$', 'USD', '$0', '$-5', '$1.2.3', '5O$', '50 US', 'abc', '']) {
+    assert.equal(parseRiskInput(raw, 10_000, 'USD'), null, raw);
+  }
+  // «1.000$» مبهمة كالرصيد (ألف أم واحد؟) — تُرفض بدل أن تُقرأ 1
+  assert.equal(parseRiskInput('1.000$', 10_000, 'USD'), null);
+  // بلا رصيد صالح: المبلغ مفهوم لكن لا نسبة منه
+  assert.deepEqual(parseRiskInput('$50', NaN, 'USD'), { pct: null, amount: 50 });
+  assert.deepEqual(parseRiskInput('$50', 0, 'USD'), { pct: null, amount: 50 });
+  // مبلغ فوق الرصيد = فوق 100% فيرفضه positionSize كالنسبة المستحيلة
+  assert.equal(parseRiskInput('$200', 100, 'USD')!.pct, 200);
+  // من المبلغ إلى اللوت: 50$ من 10,000 على وقف 10 pip EURUSD = 0.50 لوت بالضبط، ومخاطرة 50 لا تزيد سنتاً
+  const pv = pipValuePerLot(instrumentSpec('EURUSD')!, 1);
+  for (const [amt, bal, sl, want] of [
+    [50, 10_000, 10, 0.5],
+    [33, 7_777, 13, 0.25],
+    [100, 3_333.33, 20, 0.5],
+    [7, 1_234.56, 7, 0.1],
+  ] as const) {
+    const pct = parseRiskInput(`$${amt}`, bal, 'USD')!.pct!;
+    const r = positionSize({ balance: bal, riskPct: pct, slPips: sl, pipValuePerLot: pv, contractSize: 100_000 })!;
+    assert.equal(r.lots, want, `${amt}/${bal}/${sl}`);
+    assert.ok(r.actualRisk <= amt + 1e-9, `${amt}/${bal}/${sl}`);
+  }
+  // شبكة: أي مبلغ صحيح × رصيد × وقف — اللوت من المبلغ = اللوت من المبلغ مباشرةً (floor(amt/(sl×pv)))
+  for (let amt = 1; amt <= 400; amt += 7) {
+    for (const bal of [500, 1_000, 2_345.67, 10_000, 99_999]) {
+      if (amt > bal) continue;
+      for (const sl of [5, 12.5, 20, 37.3]) {
+        const pct = parseRiskInput(`${amt} usd`, bal, 'USD')!.pct!;
+        const r = positionSize({ balance: bal, riskPct: pct, slPips: sl, pipValuePerLot: pv, contractSize: 100_000 })!;
+        const direct = Math.floor(Math.round((amt / (sl * pv)) * 100 * 1e6) / 1e6) / 100;
+        assert.equal(r.lots, direct, `${amt}/${bal}/${sl}`);
+        assert.ok(r.actualRisk <= amt + 1e-9);
+      }
+    }
+  }
+}
+console.log('positionSize parseRiskInput selftest OK');
+
+// ── toggleRiskUnit: قلب النسبة ↔ المبلغ بالمخاطرة نفسها، ولا يرفعها أبداً ──
+{
+  assert.equal(toggleRiskUnit('1', 10_000, 'USD'), 'USD 100');
+  assert.equal(toggleRiskUnit('USD 100', 10_000, 'USD'), '1');
+  assert.equal(toggleRiskUnit('$50', 10_000, 'USD'), '0.5');
+  assert.equal(toggleRiskUnit('0.5%', 10_000, 'EUR'), 'EUR 50');
+  // تقريب للأسفل: السنت والنسبة
+  assert.equal(toggleRiskUnit('1', 3_333.33, 'USD'), 'USD 33.33');
+  assert.equal(toggleRiskUnit('USD 33', 7_777, 'USD'), '0.42');
+  // الين بلا كسور
+  assert.equal(toggleRiskUnit('1', 1_234_567, 'JPY'), 'JPY 12345');
+  // الكتابة بآخر الخانة تبقى مفهومة: «USD 100» + «5» = «USD 1005»
+  assert.deepEqual(parseRiskInput('USD 1005', 100_000, 'USD'), { pct: 1.005, amount: 1005 });
+  // الناتج يُقرأ ثانيةً بالقاعدة نفسها (لا فاصل آلاف يصير مبهماً)
+  assert.deepEqual(parseRiskInput(toggleRiskUnit('2', 250_000, 'USD')!, 250_000, 'USD'), { pct: 2, amount: 5000 });
+  // لا قلب بلا رصيد، أو بخانة فارغة/غير مفهومة/صفر، أو بعلامة عملة أخرى
+  assert.equal(toggleRiskUnit('1', NaN, 'USD'), null);
+  assert.equal(toggleRiskUnit('$50', 0, 'USD'), null);
+  assert.equal(toggleRiskUnit('', 10_000, 'USD'), null);
+  assert.equal(toggleRiskUnit('abc', 10_000, 'USD'), null);
+  assert.equal(toggleRiskUnit('0', 10_000, 'USD'), null);
+  assert.equal(toggleRiskUnit('€50', 10_000, 'USD'), null);
+  // مبلغ تافه تحت 0.01% من الرصيد لا يُقلب إلى «0»
+  assert.equal(toggleRiskUnit('$0.5', 10_000, 'USD'), null);
+  // شبكة: القلب بأيّ اتجاه لا يرفع المخاطرة بالمال، ولا يُسقطها بأكثر من سنت (أو 0.01% للنسبة)
+  for (const bal of [123.45, 999.99, 3_333.33, 10_000, 54_321.98]) {
+    for (let pct = 0.1; pct <= 5; pct += 0.13) {
+      const p = Math.round(pct * 100) / 100;
+      const money = toggleRiskUnit(String(p), bal, 'USD');
+      if (money == null) continue;
+      const amt = parseRiskInput(money, bal, 'USD')!.amount!;
+      assert.ok(amt <= (bal * p) / 100 + 1e-9 && amt >= (bal * p) / 100 - 0.01 - 1e-9, `${bal}/${p}`);
+      const back = toggleRiskUnit(money, bal, 'USD');
+      if (back == null) continue;
+      const pBack = Number(back);
+      assert.ok((bal * pBack) / 100 <= amt + 1e-9, `${bal}/${p} back`);
+      assert.ok(pBack >= (amt / bal) * 100 - 0.01 - 1e-9, `${bal}/${p} back`);
+    }
+  }
+}
+console.log('positionSize toggleRiskUnit selftest OK');

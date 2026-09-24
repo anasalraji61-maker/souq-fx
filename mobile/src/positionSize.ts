@@ -262,6 +262,70 @@ export function positionSize(input: {
   };
 }
 
+/** رمز العملة كما يُكتب بجانب المبلغ → عملات الحساب التي قد يعنيها ($ يُكتب للدولار والأسترالي والنيوزيلندي والكندي). */
+const MONEY_SIGNS: Record<string, readonly string[]> = {
+  $: ['USD', 'AUD', 'NZD', 'CAD'],
+  '€': ['EUR'],
+  '£': ['GBP'],
+  '¥': ['JPY'],
+};
+
+/**
+ * خانة المخاطرة: **نسبة** («1»، «0.5%») كما كانت، أو **مبلغ** بعملة الحساب حين يُكتب برمزها أو كودها
+ * («$50»، «50$»، «50 USD»، «eur 40») — فتُحسب النسبة منه: 50 من رصيد 10,000 = 0.5%.
+ *
+ * لماذا: كثير من المتداولين يقرّر مخاطرته بالمال لا بالنسبة («لا أخسر أكثر من 50$ بالصفقة»)، فكان يقسم
+ * على الرصيد بيده ثم يكتب «0.5» — وهي بالضبط الخطوة التي تنزلق فيها منزلة («5» بدل «0.5» = مركز عشرة
+ * أضعاف). والمبلغ **لا يُفهم إلا بعلامة**: «50» وحدها تبقى 50% كما كانت (فيحذّر `riskHigh`/`riskImpossible`
+ * كما يفعلان)، لأن تخمين «50 تعني مالاً» يغيّر معنى خانة كتبها المتداول طوال عمره نسبةً.
+ *
+ * رمزٌ لعملة غير عملة الحساب («€40» بحساب دولار) يُرفض (`null`) بدل أن يُعدّ دولاراً: 40 يورو ليست 40
+ * دولاراً. المبلغ بقاعدة الرصيد (`amount`: «1.000$» مبهمة تُرفض). `pct` null حين لا رصيد صالح بعد —
+ * المبلغ مفهوم لكن لا نسبة منه (ليست خانة غير مفهومة). `amount` null = كُتبت نسبة.
+ */
+export function parseRiskInput(
+  raw: string,
+  balance: number,
+  account: string
+): { pct: number | null; amount: number | null } | null {
+  const pct = parseDecimal(raw, { percent: true });
+  if (pct != null) return { pct, amount: null };
+  const m = /^\s*(?:([$€£¥])|([A-Za-z]{3}))?\s*([^$€£¥A-Za-z]+?)\s*(?:([$€£¥])|([A-Za-z]{3}))?\s*$/.exec(raw);
+  if (!m) return null;
+  const markers = [m[1], m[2], m[4], m[5]].filter((x): x is string => x != null);
+  if (markers.length !== 1) return null;
+  const mk = markers[0];
+  const acc = account.toUpperCase();
+  const fits = /^[A-Za-z]{3}$/.test(mk) ? mk.toUpperCase() === acc : (MONEY_SIGNS[mk] ?? []).includes(acc);
+  if (!fits) return null;
+  const amount = parseDecimal(m[3], { amount: true });
+  if (amount == null || !(amount > 0)) return null;
+  const ok = Number.isFinite(balance) && balance > 0;
+  return { pct: ok ? (amount / balance) * 100 : null, amount };
+}
+
+/**
+ * زرّ عملة الحساب بجانب نسب المخاطرة السريعة: يقلب الخانة بين **النسبة والمبلغ** بالمخاطرة نفسها — «1»
+ * برصيد 10,000 ⇒ «USD 100»، و«USD 100» ⇒ «1». لوحة الأرقام بالهاتف بلا «$» ولا حروف، فبلا هذا الزرّ لا
+ * يُكتب المبلغ إلا لصقاً. الكود **قبل** المبلغ عمداً: الكتابة تُضاف بآخر الخانة فتبقى «USD 150» مفهومة.
+ *
+ * **التقريب للأسفل بالاتجاهين** (للسنت، والين بلا كسور — `moneyDecimals`؛ وللنسبة لمنزلتين): القلب لا
+ * يرفع المخاطرة ولو بسنت — 1% من 3,333.33 = 33.3333 ⇒ «USD 33.33»، و33 من 7,777 = 0.4243% ⇒ «0.42».
+ *
+ * `null` = لا قلب ممكن (بلا رصيد صالح لا تُعرف النسبة من المبلغ ولا العكس، أو الخانة غير مفهومة/فارغة/صفر).
+ */
+export function toggleRiskUnit(raw: string, balance: number, account: string): string | null {
+  const r = parseRiskInput(raw, balance, account);
+  if (!r || r.pct == null || !(r.pct > 0) || !(Number.isFinite(balance) && balance > 0)) return null;
+  if (r.amount != null) {
+    const pct = Math.floor(Math.round(r.pct * 100 * 1e6) / 1e6) / 100;
+    return pct > 0 ? String(pct) : null;
+  }
+  const scale = 10 ** moneyDecimals(account);
+  const amount = Math.floor(Math.round(((balance * r.pct) / 100) * scale * 1e6) / 1e6) / scale;
+  return amount > 0 ? `${account.toUpperCase()} ${amount}` : null;
+}
+
 /**
  * المخاطرة **الفعلية** لحجم لوت معيّن على وقفٍ معيّن: بعملة الحساب وبنسبةٍ من الرصيد.
  *
