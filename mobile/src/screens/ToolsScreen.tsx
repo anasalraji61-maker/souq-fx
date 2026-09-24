@@ -437,6 +437,9 @@ export function ToolsScreen() {
   /** نتائج فحص سابق لا تُعرض تحت فلاتر/فريم تغيّرت — كانت تبقى فتُقرأ كأنها نتيجة الاختيار الجديد. */
   const scanKey = `${tf}|${selected.join(',')}`;
   const lastScanKey = React.useRef<string | null>(null);
+  /** الاختيار **الحالي** لـ`run` بعد انتظار الفحص — الإغلاق يحمل اختيار لحظة النقر */
+  const scanKeyNow = React.useRef(scanKey);
+  scanKeyNow.current = scanKey;
   React.useEffect(() => {
     if (lastScanKey.current !== null && lastScanKey.current !== scanKey) {
       lastScanKey.current = null;
@@ -463,18 +466,26 @@ export function ToolsScreen() {
 
   const run = useCallback(async () => {
     setLoading(true);
+    const key = `${tf}|${selected.join(',')}`;
+    /**
+     * الفريم والفلاتر تبقى قابلة للتغيير أثناء «جارٍ الفحص…»: فحصٌ على 15m + «تقاطع متوسطات» يعود بعد التبديل إلى 1h
+     * كان يُعرض تحت 1h، ويحفظ مفتاحه القديم فلا يمسحه شيء — والبطاقات لا تذكر الفريم. نتيجةٌ لاختيارٍ لم يعد قائماً تُسقط.
+     */
+    const stale = () => scanKeyNow.current !== key;
     try {
       const res = await api.screenerRun({ timeframe: tf, filters: selected });
+      if (stale()) return;
       setResults(res.results);
       setScanInfo({ scanned: res.scanned, failed: res.failed ?? [], total: res.total, tf });
-      lastScanKey.current = `${tf}|${selected.join(',')}`;
+      lastScanKey.current = key;
       setProviderConfigured(res.provider_configured !== false);
       setScanDone(true);
       playSoftClick();
     } catch {
+      if (stale()) return;
       setResults([]);
       setScanInfo({ failed: [], tf });
-      lastScanKey.current = `${tf}|${selected.join(',')}`;
+      lastScanKey.current = key;
       setProviderConfigured(null);
       setScanDone(true);
     } finally {
