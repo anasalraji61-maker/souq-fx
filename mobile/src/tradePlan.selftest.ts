@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import {
   analyzePlan,
+  exitShortcuts,
   averageR,
   floatingResult,
   formatPips,
@@ -616,3 +617,30 @@ console.log('tradePlan knownLots selftest OK');
   assert.equal(realizedR({ side: 'buy', entry: 1.1, sl: 1.09, exit: 1.12 }), 2);
 }
 console.log('tradePlan averageR selftest OK');
+
+// ---- exitShortcuts: «الخروج = الوقف/الهدف» بالدفتر ----
+{
+  // شراء EURUSD: الخروج على الوقف = −1R بالضبط، وعلى الهدف = R:R الخطة
+  const sc = exitShortcuts({ side: 'buy', entry: 1.085, sl: 1.0825, tp: 1.09 });
+  assert.deepEqual(sc, [{ kind: 'sl', price: 1.0825 }, { kind: 'tp', price: 1.09 }]);
+  assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.0825, exit: sc[0].price }), -1);
+  assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.0825, exit: sc[1].price }), 2);
+  // بيع USDJPY كذلك
+  const sj = exitShortcuts({ side: 'sell', entry: 150, sl: 150.3, tp: 149.55 });
+  assert.deepEqual(sj.map((x) => x.kind), ['sl', 'tp']);
+  assert.equal(realizedR({ side: 'sell', entry: 150, sl: 150.3, exit: sj[0].price }), -1);
+  assert.equal(realizedR({ side: 'sell', entry: 150, sl: 150.3, exit: sj[1].price }), 1.5);
+  // واحد فقط مكتوب
+  assert.deepEqual(exitShortcuts({ side: 'buy', entry: 2400, sl: 2390 }), [{ kind: 'sl', price: 2390 }]);
+  assert.deepEqual(exitShortcuts({ side: 'buy', entry: 2400, tp: 2420, sl: null }), [{ kind: 'tp', price: 2420 }]);
+  // بالجهة الخطأ أو عند الدخول: لا شريحة (الحفظ يرفضها أصلاً)
+  assert.deepEqual(exitShortcuts({ side: 'buy', entry: 1.085, sl: 1.09, tp: 1.08 }), []);
+  assert.deepEqual(exitShortcuts({ side: 'sell', entry: 1.085, sl: 1.085, tp: 1.085 }), []);
+  assert.deepEqual(exitShortcuts({ side: 'sell', entry: 1.085, sl: 1.08, tp: 1.07 }), [{ kind: 'tp', price: 1.07 }]);
+  // بلا دخول صالح لا تُعرف الجهة
+  assert.deepEqual(exitShortcuts({ side: 'buy', entry: null, sl: 1.08, tp: 1.09 }), []);
+  assert.deepEqual(exitShortcuts({ side: 'buy', entry: NaN, sl: 1.08 }), []);
+  assert.deepEqual(exitShortcuts({ side: 'buy', entry: 1.085, sl: 0, tp: -1 }), []);
+  assert.deepEqual(exitShortcuts({ side: 'buy', entry: 1.085, sl: NaN, tp: Infinity }), []);
+}
+console.log('tradePlan exitShortcuts selftest OK');

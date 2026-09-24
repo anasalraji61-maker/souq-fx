@@ -208,6 +208,29 @@ export function realizedMove(input: {
   };
 }
 
+/**
+ * شرائح «الخروج = الوقف» و«الخروج = الهدف» بخانة الخروج بالدفتر: أغلب الصفقات تُغلق **على** وقفها أو
+ * هدفها بالضبط (أمرٌ معلّق نفّذه الوسيط)، والمتداول كان يعيد كتابة رقمٍ مكتوب أصلاً بخانة تحتها — وهي
+ * بالضبط الخطوة التي تنقلب فيها منزلة (1.0852 بدل 1.0825) فتُحفظ خسارةٌ كاملة كـ«+0.1R».
+ *
+ * تُرجَع المستويات الصالحة وحدها: موجبة، وبالجهة الصحيحة من الدخول (`levelSideIssue`) — وقفٌ بالجهة
+ * الخطأ يمنع الحفظ أصلاً فلا شريحة له، وبلا دخول صالح لا تُعرف الجهة فلا شيء. الوقف أولاً.
+ * `price` هي قيمة الخانة نفسها (لا تقريب)، فنتيجة الصفقة بعدها −1R و+R:R الخطة **حرفياً**.
+ */
+export function exitShortcuts(input: {
+  side: TradeSide;
+  entry: number | null;
+  sl?: number | null;
+  tp?: number | null;
+}): { kind: 'sl' | 'tp'; price: number }[] {
+  const { side, entry, sl, tp } = input;
+  if (!finitePos(entry)) return [];
+  const out: { kind: 'sl' | 'tp'; price: number }[] = [];
+  if (finitePos(sl) && levelSideIssue({ side, entry, sl }) == null) out.push({ kind: 'sl', price: sl });
+  if (finitePos(tp) && levelSideIssue({ side, entry, tp }) == null) out.push({ kind: 'tp', price: tp });
+  return out;
+}
+
 /** +1.8R / −1R / 0R */
 export function formatR(r: number | null): string | null {
   if (r == null || !Number.isFinite(r)) return null;

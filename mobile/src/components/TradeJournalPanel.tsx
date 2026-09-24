@@ -19,6 +19,7 @@ import { isRealQuote } from '../chart/dataSource';
 import { formatMoney, instrumentSpec, pipsBetween, pnlInQuoteCcy, riskInQuoteCcy, sizeLooksLikeUnits } from '../positionSize';
 import {
   analyzePlan,
+  exitShortcuts,
   floatingResult,
   formatPips,
   formatR,
@@ -382,6 +383,17 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry, sl]);
+
+  /** شرائح «الخروج = الوقف/الهدف» تحت خانة الخروج — راجع `exitShortcuts` */
+  const exitChips = useMemo(
+    () =>
+      exitShortcuts({ side, entry: num(entry), sl: num(sl), tp: num(tp) }).map((x) => ({
+        ...x,
+        text: x.kind === 'sl' ? sl.trim() : tp.trim(),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [side, entry, sl, tp]
+  );
 
   /**
    * أدوات الدفتر وعدد صفقات كلٍّ منها، الأكثر تداولاً أولاً. الشرائح لا تظهر إلا بأداتين فأكثر:
@@ -1188,6 +1200,43 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           ) : (
             <Text style={[styles.planWarn, { textAlign: align }]}>{sizeUnitsText()}</Text>
           )}
+        </View>
+      ) : null}
+      {/*
+        «الخروج = الوقف/الهدف»: أغلب الصفقات تُغلق على وقفها أو هدفها بالضبط، والرقم مكتوبٌ أصلاً تحت —
+        إعادة كتابته هي الخطوة التي تنقلب فيها منزلة فتُحفظ خسارةٌ كاملة ربحاً. تنسخ نصّ الخانة نفسه (لا
+        تقريب)، فالنتيجة −1R وR:R الخطة حرفياً. مستويات صالحة بجهتها وحدها — راجع `exitShortcuts`.
+      */}
+      {exitChips.length > 0 ? (
+        <View style={[styles.qChips, rtl && styles.rowRtl]}>
+          {exitChips.map((x) => {
+            const on = num(exit) === x.price;
+            const label = `${x.kind === 'sl' ? 'SL' : 'TP'} ${x.text}`;
+            return (
+              <Pressable
+                key={x.kind}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                style={({ pressed }) => [
+                  styles.qChip,
+                  on && styles.chipOn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={() => {
+                  setExit(x.kind === 'sl' ? sl.trim() : tp.trim());
+                  setFormError(null);
+                }}
+                accessibilityLabel={`${t.journalExitA11y} = ${label}`}
+              >
+                <Text style={[styles.qChipText, on ? styles.chipTextOn : { color: x.kind === 'sl' ? colors.bear : colors.bull }]}>
+                  {`= ${label}`}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       ) : null}
       <View style={[styles.row, rtl && styles.rowRtl]}>
