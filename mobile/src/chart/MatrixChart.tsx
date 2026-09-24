@@ -4183,6 +4183,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (i >= source.plot.length) pivotStartX = Infinity;
     else if (i > 0) pivotStartX = Math.max(0, (xOf(i - 1) + xOf(i)) / 2);
   }
+  const sessionRuns =
+    indicators.includes('sessions') && kind !== 'renko' && kind !== 'kagi' && kind !== 'pnf' && kind !== 'range'
+      ? planSessionRuns(
+          source.plot.map((b) => candleTimeSec(b.time)),
+          timeframeStepSec(series.timeframe),
+          chartPlotW
+        )
+      : [];
   // أقلّ من هذا بين بداية الخطّ وحافّة اللوح ⇒ الوسم يُثبَّت يمين اللوح لا يسار الخطّ.
   const pivotLabelAtEnd = pivotStartX != null && chartPlotW - pivotStartX < 120;
 
@@ -4724,34 +4732,28 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
         {/* جلسات طوكيو/لندن/نيويورك (مؤشّر «Sessions»): تظليل خافت بعرض الجلسة وشريط رفيع
             بلونها أسفل اللوح مع اسمها (أعلاه لمفتاح المؤشّرات) — راجع `sessions.ts`. داخل اليوم حتى 1H، وليس على
-            Renko/Kagi/P&F/Range (خانتها ليست زمناً). */}
-        {indicators.includes('sessions') && kind !== 'renko' && kind !== 'kagi' && kind !== 'pnf' && kind !== 'range'
-          ? planSessionRuns(
-              source.plot.map((b) => candleTimeSec(b.time)),
-              timeframeStepSec(series.timeframe),
-              chartPlotW
-            ).map((run) => {
-              const slot = chartPlotW / Math.max(1, source.plot.length);
-              const left = Math.max(0, xOf(run.from) - slot / 2);
-              const right = Math.min(chartPlotW, xOf(run.to) + slot / 2);
-              if (!(right - left >= 1)) return null;
-              const color = SESSION_COLOR[run.id];
-              return (
-                <View
-                  key={`ses${run.id}${run.from}`}
-                  pointerEvents="none"
-                  style={[styles.sessionBand, { left, width: right - left, height: chartPlotH, backgroundColor: `${color}0F` }]}
-                >
-                  <View style={[styles.sessionStrip, { backgroundColor: color }]} />
-                  {right - left >= 44 ? (
-                    <Text style={[styles.sessionLabel, { color }]} numberOfLines={1}>
-                      {SESSION_LABEL[run.id]}
-                    </Text>
-                  ) : null}
-                </View>
-              );
-            })
-          : null}
+            Renko/Kagi/P&F/Range (خانتها ليست زمناً). كل شريحة تحمل اسمها ⇒ لا مدخل بالمفتاح. */}
+        {sessionRuns.map((run) => {
+          const slot = chartPlotW / Math.max(1, source.plot.length);
+          const left = Math.max(0, xOf(run.from) - slot / 2);
+          const right = Math.min(chartPlotW, xOf(run.to) + slot / 2);
+          if (!(right - left >= 1)) return null;
+          const color = SESSION_COLOR[run.id];
+          return (
+            <View
+              key={`ses${run.id}${run.from}`}
+              pointerEvents="none"
+              style={[styles.sessionBand, { left, width: right - left, height: chartPlotH, backgroundColor: `${color}0F` }]}
+            >
+              <View style={[styles.sessionStrip, { backgroundColor: color }]} />
+              {right - left >= 44 ? (
+                <Text style={[styles.sessionLabel, { color }]} numberOfLines={1}>
+                  {SESSION_LABEL[run.id]}
+                </Text>
+              ) : null}
+            </View>
+          );
+        })}
 
         {/* area / line / baseline */}
         {(kind === 'line' || kind === 'area' || kind === 'baseline') &&
