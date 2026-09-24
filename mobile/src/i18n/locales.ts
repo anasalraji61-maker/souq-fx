@@ -824,6 +824,10 @@ export type Dict = {
   mcHintSelect: string;
   /** أداة «تحديد» ورسم محدَّد (الهاتف): جسمه يحرّكه كلّه (`translateDrawing`)، المقبض يحرّك طرفه. */
   mcHintSelected: string;
+  /** زرّ AUTO بزاوية المحورين لقارئ الشاشة: يعيد مقياس السعر وعدد الشموع ويرجع لآخر شمعة. */
+  mcAutoA11y: string;
+  /** AUTO ممتلئ حين مقياس السعر يدوي (مطّ المحور أو سحب رأسي) — يشرح لماذا قد تختفي شمعة جديدة. */
+  mcAutoManualA11y: string;
   mcZoomOutA11y: string;
   mcZoomInA11y: string;
   mcPanBackA11y: string;
@@ -1730,6 +1734,8 @@ const ar: Dict = {
   mcHintSelectedWeb: 'اسحب لتحريك الرسم · Delete لحذفه · Esc لإلغاء التحديد · Ctrl+Z للتراجع',
   mcHintSelect: 'المس رسماً لتحديده · المس مكاناً فارغاً لإلغاء التحديد',
   mcHintSelected: 'اسحب الرسم لتحريكه · اسحب مقبضاً لتعديل طرف · يُحفظ تلقائياً',
+  mcAutoA11y: 'تلقائي: ملاءمة الأسعار والعودة لآخر شمعة',
+  mcAutoManualA11y: 'مقياس السعر يدوي — قد تخرج الشموع الجديدة عن العرض. اضغط لإعادته تلقائياً والعودة لآخر شمعة',
   mcZoomOutA11y: 'تصغير',
   mcZoomInA11y: 'تكبير',
   mcPanBackA11y: 'تحريك للخلف',
@@ -2627,6 +2633,8 @@ const enUS: Dict = {
   mcHintSelectedWeb: 'Drag to move the drawing · Delete removes it · Esc deselects · Ctrl+Z to undo',
   mcHintSelect: 'Tap a drawing to select it · tap empty space to deselect',
   mcHintSelected: 'Drag the drawing to move it · drag a handle to adjust one end · saved automatically',
+  mcAutoA11y: 'Auto: fit prices and return to the latest candle',
+  mcAutoManualA11y: 'Price scale is manual — new candles may leave the view. Tap to restore auto and return to the latest candle',
   mcZoomOutA11y: 'Zoom out',
   mcZoomInA11y: 'Zoom in',
   mcPanBackA11y: 'Pan back',
@@ -3551,6 +3559,8 @@ const ku: Dict = {
   mcHintSelectedWeb: 'ڕایبکێشە بۆ جوولاندنی کێشراو · Delete بۆ سڕینەوەی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z بۆ گەڕانەوە',
   mcHintSelect: 'کێشراوێک دابگرە بۆ دیاریکردنی · شوێنێکی بەتاڵ دابگرە بۆ لابردنی دیاریکردن',
   mcHintSelected: 'کێشراوەکە ڕایبکێشە بۆ جوولاندنی · دەسکێک ڕایبکێشە بۆ گۆڕینی لایەکی · خۆکار پاشەکەوت دەبێت',
+  mcAutoA11y: 'خۆکار: گونجاندنی نرخەکان و گەڕانەوە بۆ دوایین مۆم',
+  mcAutoManualA11y: 'پێوەری نرخ دەستییە — لەوانەیە مۆمە نوێیەکان لە دیمەن دەربچن. دابگرە بۆ گەڕاندنەوەی خۆکار و گەڕانەوە بۆ دوایین مۆم',
   mcZoomOutA11y: 'بچووککردنەوە',
   mcZoomInA11y: 'گەورەکردن',
   mcPanBackA11y: 'جوڵان بۆ دواوە',
