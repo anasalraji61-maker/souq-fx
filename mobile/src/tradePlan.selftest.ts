@@ -416,6 +416,12 @@ console.log('tradePlan broker-suffix selftest OK');
   }
   // رموز بلا مواصفات تبقى كما يحفظها الدفتر (المزوّد قد يعرفها) — لا تُرمى
   assert.equal(quoteSymbol('US30'), 'US30');
+  // مؤشر/سلعة بلاحقة وسيط: يُطلب الاسم المعروف (المزوّد يعرف USOIL لا USOIL.M)
+  assert.equal(quoteSymbol('USOIL.m'), 'USOIL');
+  assert.equal(quoteSymbol(journalSymbol('usoil.m')!), 'USOIL');
+  assert.equal(quoteSymbol('US30Cash'), 'US30');
+  assert.equal(quoteSymbol('AAPL.US'), 'AAPL.US'); // اسم مجهول: كما يُحفظ
+  assert.equal(quoteSymbol('US30M'), 'US30M');
   assert.equal(quoteSymbol('nas100'), 'NAS100');
   assert.equal(quoteSymbol('BTCUSD'), 'BTCUSD');
   // «EURUSDT» ليس EURUSD (يورو/تيثر) — لا يُطلب له اقتباس اليورو/دولار

@@ -293,10 +293,13 @@ export function journalSymbol(raw: string): string | null {
  * سعر حيّ» عنها، و«الدخول = السعر الحالي» كذلك، بينما الصفقة نفسها بلا لاحقة بجانبها تعمل كاملة.
  * وتيكات الشاشة مفتاحها الرمز القانوني أيضاً، فالمفتاح نفسه يخدم الطبقتين.
  *
+ * والمؤشرات/السلع بلاحقة وسيط كذلك (`knownSingleName`): «USOIL.m» كانت تطلب «USOIL.M» فلا نتيجة عائمة
+ * ولا «أغلق بسعر السوق»، والمزوّد يعرف «USOIL». الاسم المجهول («AAPL.US») يبقى كما يُحفظ.
+ *
  * `null` = رمز لا يصلح للحفظ أصلاً.
  */
 export function quoteSymbol(raw: string): string | null {
-  return instrumentSpec(raw)?.symbol ?? journalSymbol(raw);
+  return instrumentSpec(raw)?.symbol ?? knownSingleName(raw) ?? journalSymbol(raw);
 }
 
 /**
@@ -316,7 +319,7 @@ export function quoteSymbol(raw: string): string | null {
 export function journalInstrumentKey(raw: string | null | undefined): string {
   const up = (raw || '').trim().toUpperCase();
   if (!up) return '';
-  return instrumentSpec(up)?.symbol ?? knownSingleName(up) ?? quoteSymbol(up) ?? up;
+  return quoteSymbol(up) ?? up;
 }
 
 /**
