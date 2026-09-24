@@ -73,6 +73,35 @@ assert.equal(analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1, sl: -1, tp: 
 assert.equal(formatRR(null), '—');
 assert.equal(formatRR(0.333), '1:0.3');
 assert.equal(formatRR(1.25), '1:1.3');
+// تحت 1 نقصّ لا تقريب: 0.96 لا تُطبع «1:1.0» فوق تحذير «الربح أقل من المخاطرة»
+assert.equal(formatRR(0.96), '1:0.9');
+assert.equal(formatRR(0.999999), '1:0.9');
+assert.equal(formatRR(0.5), '1:0.5');
+assert.equal(formatRR(0.1), '1:0.1');
+assert.equal(formatRR(0.3), '1:0.3'); // 0.3 × 10 بالفاصلة العائمة = 2.9999… لا يُقصّ إلى 0.2
+assert.equal(formatRR(0.7), '1:0.7');
+assert.equal(formatRR(1), '1:1.0');
+assert.equal(formatRR(0.999999999999), '1:0.9');
+// الصغيرة جداً (صافٍ بعد التكاليف يكاد يكون صفراً) لا تُطبع «1:0.0»
+assert.equal(formatRR(0.04), '1:0.04');
+assert.equal(formatRR(0.099), '1:0.09');
+assert.equal(formatRR(0.07), '1:0.07');
+assert.equal(formatRR(0.004), '1:<0.01');
+assert.equal(formatRR(1e-12), '1:<0.01');
+assert.equal(formatRR(0), '—');
+assert.equal(formatRR(-1), '—');
+assert.equal(formatRR(NaN), '—');
+// شبكة: كل R:R موجبة تحت 1 تُطبع «1:0.» أو «1:<0.01» ولا تتجاوز قيمتها؛ ومن 1 فما فوق لا تُطبع تحت «1:1.0»
+for (let i = 1; i <= 3000; i++) {
+  const rr = i / 1000;
+  const s = formatRR(rr);
+  if (rr < 1) {
+    assert.ok(s.startsWith('1:0.') || s === '1:<0.01', `${rr} ${s}`);
+    if (s !== '1:<0.01') assert.ok(Number(s.slice(2)) <= rr + 1e-12, `${rr} ${s}`);
+  } else {
+    assert.ok(Number(s.slice(2)) >= 1, `${rr} ${s}`);
+  }
+}
 assert.equal(formatPips(25), '25');
 assert.equal(formatPips(12.5), '12.5');
 assert.equal(formatPips(null), null);

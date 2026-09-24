@@ -40,7 +40,9 @@ import {
   parseCommission,
   costsLotsAdvice,
   profitAfterCosts,
+  rewardBelowRisk,
 } from './positionSize';
+import { formatRR } from './tradePlan';
 
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps;
 
@@ -1149,3 +1151,57 @@ console.log('positionSize costsLotsAdvice selftest OK');
   }
 }
 console.log('positionSize profitAfterCosts selftest OK');
+
+// ---- rewardBelowRisk: تحذير «الربح أقل من المخاطرة» يقرأ R:R بعد التكاليف حين تُكتب ----
+{
+  const spec = instrumentSpec('EURUSD')!;
+  const pv = pipValuePerLot(spec, 1);
+  // وقف 20، هدف 21 (1:1.05) على 0.5 لوت، سبريد 1.5، عمولة 7: الإجمالي 105، الصافي 94، المخاطرة 111 → 1:0.8
+  const gross = profitAtTarget({ spec, entry: 1.085, target: 1.0871, lots: 0.5, quoteToAccount: 1 })!;
+  assert.ok(Math.abs(gross - 105) < 1e-6);
+  const w = spreadRisk({ lots: 0.5, slPips: 20, spreadPips: 1.5, pipValuePerLot: pv, balance: 10_000, riskPct: 1, contractSize: spec.contractSize, commissionPerLot: 7 })!;
+  const n = profitAfterCosts({ grossProfit: gross, lots: 0.5, spreadPips: 1.5, pipValuePerLot: pv, commissionPerLot: 7, riskWithCosts: w.risk })!;
+  assert.ok(Math.abs(n.net - 94) < 1e-6);
+  assert.equal(formatRR(n.rr), '1:0.8');
+  assert.equal(rewardBelowRisk(1.05, null), false); // الإجمالي وحده كان يسكت
+  assert.equal(rewardBelowRisk(1.05, n), true);
+  // مثال الحاسبة 1:2 → 1:1.7 صافياً: لا تحذير
+  assert.equal(rewardBelowRisk(2, { net: 189, rr: 189 / 111 }), false);
+  // الصافي ≤ 0: سطر «التكاليف تأكل الهدف» وحده، لا تحذيران
+  assert.equal(rewardBelowRisk(0.5, { net: -7, rr: null }), false);
+  assert.equal(rewardBelowRisk(1.2, { net: 0, rr: null }), false);
+  // بلا تكاليف: الإجمالية كما كانت
+  assert.equal(rewardBelowRisk(0.9, null), true);
+  assert.equal(rewardBelowRisk(0, null), true);
+  assert.equal(rewardBelowRisk(1, null), false);
+  assert.equal(rewardBelowRisk(null, null), false);
+  assert.equal(rewardBelowRisk(NaN, null), false);
+  // اتّساق مع النصّ: حين يحذّر، R:R المطبوعة (الصافية إن وُجدت) تبدأ «1:0.» أبداً — لا «1:1.0» فوق تحذير
+  for (const g of [0.3, 0.9, 0.96, 0.999, 1, 1.04, 1.2, 1.5, 2, 3]) {
+    for (const costsFrac of [0, 0.02, 0.1, 0.3, 0.6]) {
+      const risk = 100;
+      const grossP = g * 100 * (1 - 0.01); // الإجمالي بمخاطرة الوقف وحده
+      const netObj = costsFrac === 0 ? null : { net: grossP - costsFrac * 100, rr: grossP - costsFrac * 100 > 0 ? (grossP - costsFrac * 100) / (risk * (1 + costsFrac)) : null };
+      const shown = formatRR(netObj ? netObj.rr : g);
+      if (rewardBelowRisk(g, netObj)) assert.ok(shown.startsWith('1:0.') || shown === '1:<0.01', `${g} ${costsFrac} ${shown}`);
+      else if (!(netObj && netObj.net <= 0)) assert.ok(!shown.startsWith('1:0.') && shown !== '1:<0.01', `${g} ${costsFrac} ${shown}`);
+    }
+  }
+}
+console.log('positionSize rewardBelowRisk selftest OK');
+
+// ---- planJournalNote: R:R الصافية بملاحظة الصفقة ----
+{
+  assert.equal(
+    planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2.0', spreadPips: 1.5, commissionPerLot: 7, netRR: formatRR(189 / 111) }),
+    '0.50 lot · risk 100.00 USD · R:R 1:2.0 · spread 1.5 pip · commission 7.00 USD/lot · net R:R 1:1.7',
+  );
+  assert.equal(
+    planJournalNote({ lots: 1, risk: 50, ccy: 'USD', rr: '1:0.2', spreadPips: 1, commissionPerLot: 7, netRR: formatRR(null) }),
+    '1.00 lot · risk 50.00 USD · R:R 1:0.2 · spread 1 pip · commission 7.00 USD/lot · net R:R —',
+  );
+  for (const netRR of [null, undefined, '']) {
+    assert.equal(planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2.0', netRR }), '0.50 lot · risk 100.00 USD · R:R 1:2.0');
+  }
+}
+console.log('positionSize planJournalNote netRR selftest OK');

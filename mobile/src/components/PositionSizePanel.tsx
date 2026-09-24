@@ -29,6 +29,8 @@ import {
   parseCommission,
   spreadRisk,
   costsLotsAdvice,
+  profitAfterCosts,
+  rewardBelowRisk,
   spreadTooWide,
   planJournalNote,
   LOT_STEP,
@@ -476,6 +478,21 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     plan?.ok && spec && rate != null && lots != null
       ? profitAtTarget({ spec, entry: num(entryPx), target: num(targetPx), lots, quoteToAccount: rate })
       : null;
+  /**
+   * الربح وR:R بعد السبريد والعمولة — الإجمالي فوقه يعد بـ1:2 والصفقة بتكاليفها 1:1.7، وسكالبينغ 5/5
+   * بعمولة 7 نصف ما يبدو. null = لا سبريد ولا عمولة (السطر الإجمالي يكفي). راجع `profitAfterCosts`.
+   */
+  const netAfterCosts =
+    potentialProfit != null && withSpread && lots != null && pv != null && spreadPips != null
+      ? profitAfterCosts({
+          grossProfit: potentialProfit,
+          lots,
+          spreadPips,
+          pipValuePerLot: pv,
+          commissionPerLot: commissionPerLot ?? 0,
+          riskWithCosts: withSpread.risk,
+        })
+      : null;
 
   /**
    * **لا تسجيل بوقفين مختلفين.** مع `slMismatch` يُحسب اللوت من النقاط المكتوبة يدوياً بينما يُحفظ
@@ -515,6 +532,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           rr: formatRR(plan.rr),
           spreadPips: parseSpreadPips(spread),
           commissionPerLot: parseCommission(commission),
+          netRR: netAfterCosts ? formatRR(netAfterCosts.rr) : null,
         }),
       });
       if (!mountedRef.current) return;
@@ -837,7 +855,19 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
               {t.planRewardWord} {formatPips(plan.rewardPips) ?? '—'} pip · R:R {formatRR(plan.rr)}
               {potentialProfit != null ? ` · ${t.riskCalcPotentialProfit} ≈ ${money(potentialProfit)}` : ''}
             </Text>
-            {plan.rr != null && plan.rr < 1 ? (
+            {netAfterCosts ? (
+              <Text
+                style={[netAfterCosts.net > 0 ? styles.resultMeta : styles.warn, { textAlign: align }]}
+                accessibilityLiveRegion="polite"
+              >
+                {netAfterCosts.net > 0
+                  ? t.riskCalcNetAfterCosts
+                      .replace('{profit}', money(netAfterCosts.net))
+                      .replace('{rr}', formatRR(netAfterCosts.rr))
+                  : t.riskCalcNetNegative.replace('{profit}', money(netAfterCosts.net))}
+              </Text>
+            ) : null}
+            {rewardBelowRisk(plan.rr, netAfterCosts) ? (
               <Text style={[styles.warn, { textAlign: align }]}>{t.planLowRR}</Text>
             ) : null}
           </>
@@ -864,7 +894,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
                   .replace('{lots}', costsAdvice.lots.toFixed(2))}
               </Text>
             ) : costsAdvice?.kind === 'none' ? (
-              <Text style={[styles.warn, { textAlign: align }]}>{t.riskCalcBelowMin}</Text>
+              <Text style={[styles.warn, { textAlign: align }]}>
+                {t.riskCalcCostsBelowMin.replace('{pct}', String(riskNum))}
+              </Text>
             ) : null}
           </>
         ) : null}

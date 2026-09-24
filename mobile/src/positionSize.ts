@@ -637,6 +637,19 @@ export function profitAfterCosts(input: {
 }
 
 /**
+ * تحذير «الربح المحتمل أقل من المخاطرة»: من R:R **بعد التكاليف** حين تُكتب (`net` من `profitAfterCosts`)،
+ * وإلا من الإجمالية. 1:1.05 إجمالياً بسبريد 1.5 وعمولة 7 تصير 1:0.9 صافياً — كان التحذير يسكت لأنه يقرأ
+ * الإجمالي وحده. صافٍ ≤ 0 = `false` (سطر «التكاليف تأكل الهدف» يقولها أقوى، ولا يتكرّر تحذيران).
+ */
+export function rewardBelowRisk(
+  grossRR: number | null,
+  net: { net: number; rr: number | null } | null,
+): boolean {
+  if (net) return net.net > 0 && net.rr != null && net.rr < 1;
+  return grossRR != null && Number.isFinite(grossRR) && grossRR < 1;
+}
+
+/**
  * خانة العمولة (لكل لوت، فتحاً وإغلاقاً، بعملة الحساب): فارغة = 0 (حسابات Standard بلا عمولة)، وإلا
  * مبلغ ≥ 0 بقاعدة الرصيد (`amount`: «7.000» مبهمة تُرفض بدل أن تُقرأ 7). `null` = غير مفهوم أو سالب.
  */
@@ -681,8 +694,13 @@ export function planJournalNote(input: {
   spreadPips?: number | null;
   /** لكل لوت فتحاً وإغلاقاً بعملة الحساب — يُكتب «commission 7.00 USD/lot» حين يكون موجباً */
   commissionPerLot?: number | null;
+  /**
+   * R:R بعد التكاليف (`formatRR(profitAfterCosts().rr)`) — «net R:R 1:1.7» بعد السبريد والعمولة، فلا
+   * يراجع المتداول صفقته بـ1:2 خطّط لها وهي 1:1.7. يُكتب حين يُعطى نصّاً غير فارغ فقط.
+   */
+  netRR?: string | null;
 }): string {
-  const { lots, risk, ccy, rr, spreadPips, commissionPerLot } = input;
+  const { lots, risk, ccy, rr, spreadPips, commissionPerLot, netRR } = input;
   const riskText = risk != null && Number.isFinite(risk) ? formatMoney(risk, ccy) : ccy;
   const parts = [`${lots.toFixed(2)} lot`, `risk ${riskText}`, `R:R ${rr}`];
   if (spreadPips != null && Number.isFinite(spreadPips) && spreadPips > 0) {
@@ -691,5 +709,6 @@ export function planJournalNote(input: {
   if (commissionPerLot != null && Number.isFinite(commissionPerLot) && commissionPerLot > 0) {
     parts.push(`commission ${formatMoney(commissionPerLot, ccy)}/lot`);
   }
+  if (netRR) parts.push(`net R:R ${netRR}`);
   return parts.join(' · ');
 }

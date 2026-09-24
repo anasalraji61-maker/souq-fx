@@ -95,10 +95,21 @@ export function analyzePlan(input: {
   return { ...base, ok: true, issue: null, rr: cleanRatio(rewardDist, riskDist) };
 }
 
-/** "1:2.0" — منزلة عشرية واحدة تكفي للقرار، ونقرّب لا نقصّ. */
+/**
+ * "1:2.0" — منزلة عشرية واحدة تكفي للقرار، ونقرّب لا نقصّ من 1 فما فوق.
+ *
+ * **تحت 1 نقصّ**: 0.96 كانت تُطبع «1:1.0» وتحتها «⚠ الربح أقل من المخاطرة» — رقمٌ يقول تعادلاً وتحذيرٌ
+ * يقول خسارة. والصغيرة جداً (R:R بعد التكاليف حين تكاد تبتلع الهدف) كانت «1:0.0» كأن لا ربح أصلاً:
+ * تحت 0.1 منزلتان («1:0.04»)، وتحت 0.01 «1:<0.01».
+ */
 export function formatRR(rr: number | null): string {
   if (rr == null || !Number.isFinite(rr) || rr <= 0) return '—';
-  return `1:${(Math.round(rr * 10) / 10).toFixed(1)}`;
+  if (rr >= 1) return `1:${(Math.round(rr * 10) / 10).toFixed(1)}`;
+  // هامش الفاصلة العائمة (0.3 × 10 = 2.999…) لا يرفع ما دون 1 إلى «1:1.0»
+  const tenths = Math.min(0.9, Math.floor(rr * 10 + 1e-9) / 10);
+  if (tenths > 0) return `1:${tenths.toFixed(1)}`;
+  const hundredths = Math.floor(rr * 100 + 1e-9) / 100;
+  return hundredths > 0 ? `1:${hundredths.toFixed(2)}` : '1:<0.01';
 }
 
 /** 25 → "25"، 12.5 → "12.5" (pip واحد عشري كحد أقصى). */
