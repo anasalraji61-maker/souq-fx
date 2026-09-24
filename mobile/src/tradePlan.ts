@@ -555,6 +555,48 @@ export function recentLotSizes(
 }
 
 /**
+ * شرائح الرمز بنموذج الدفتر: الأدوات التي يتداولها المتداول **فعلاً** أولاً (الأكثر صفقاتٍ، ثم الأحدث)
+ * بالكتابة التي سجّلها آخر مرّة، ثم تكملة من `defaults` حتى `max`.
+ *
+ * لماذا: الشرائح كانت قائمة ثابتة (EURUSD، GBPUSD، USDJPY، XAUUSD…) — فمن يتداول «XAUUSD.m» أو «US30» أو
+ * «AUDCAD» عند وسيطه يكتب الرمز بيده بكل صفقة، وهي الخانة التي تنقسم بها الأداة («XAUUSD» مرّة و«XAUUSD.m»
+ * مرّة) أو يُكتب فيها زوجٌ آخر. الرمز من صفقاته هو، فالشريحة لا تقترح أداةً لم يكتبها قط.
+ *
+ * الأداة الواحدة شريحة واحدة (`journalInstrumentKey`: «XAUUSD.m» تحلّ محلّ «XAUUSD» الافتراضية لا بجانبها)،
+ * بالكتابة **الأحدث** لها (`trades` بترتيب الخادم، الأحدث أولاً) — لو غيّر وسيطه تتبعه الشريحة. آخر
+ * `scan` صفقة فقط كي لا تحجز أداةٌ تُركت منذ شهور مكاناً. رمزٌ لا يصلح للحفظ (`journalSymbol`) يُتخطّى.
+ */
+export function quickJournalSymbols(
+  trades: readonly { symbol?: string | null }[],
+  defaults: readonly string[],
+  max = 6,
+  scan = 100
+): string[] {
+  const seen = new Map<string, { text: string; n: number; first: number }>();
+  trades.slice(0, scan).forEach((tr, i) => {
+    const text = journalSymbol(tr.symbol ?? '');
+    if (!text) return;
+    const key = journalInstrumentKey(text);
+    const cur = seen.get(key);
+    if (cur) cur.n += 1;
+    else seen.set(key, { text, n: 1, first: i });
+  });
+  const out = [...seen.values()]
+    .sort((a, b) => b.n - a.n || a.first - b.first)
+    .slice(0, max)
+    .map((x) => x.text);
+  const keys = new Set(out.map((x) => journalInstrumentKey(x)));
+  for (const d of defaults) {
+    if (out.length >= max) break;
+    const text = journalSymbol(d);
+    if (!text || keys.has(journalInstrumentKey(text))) continue;
+    keys.add(journalInstrumentKey(text));
+    out.push(text);
+  }
+  return out;
+}
+
+/**
  * صافي الصفقات المغلقة **لكل أداة**: النقاط، وعددها، والمال بعملة التسعير — لسطر «صافي النقاط» بالدفتر.
  *
  * النقاط تُجمع لكل أداة على حدة (pip الذهب ليس pip اليورو)، وكانت تُجمع داخل اللوحة بلا اختبار. والمال

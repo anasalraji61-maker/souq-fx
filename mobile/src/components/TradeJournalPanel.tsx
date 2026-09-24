@@ -34,6 +34,7 @@ import {
   realizedMove,
   realizedR,
   recentLotSizes,
+  quickJournalSymbols,
   quickStopPips,
   stopAtPips,
   averageR,
@@ -373,6 +374,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry]);
+
+  /** شرائح الرمز: أدوات المتداول نفسه أولاً («XAUUSD.m» كما يكتبها وسيطه)، ثم القائمة الثابتة — `quickJournalSymbols` */
+  const symbolChips = useMemo(() => quickJournalSymbols(trades, QUICK_SYMBOLS), [trades]);
 
   /** آخر أحجام اللوت المختلفة من صفقات المتداول نفسه — شرائح تحت خانة الحجم (`recentLotSizes`) */
   const lotChips = useMemo(() => recentLotSizes(trades), [trades]);
@@ -1056,7 +1060,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         </Pressable>
       </View>
       <View style={[styles.qChips, rtl && styles.rowRtl]}>
-        {QUICK_SYMBOLS.map((q) => {
+        {symbolChips.map((q: string) => {
           const on = symbol.trim().toUpperCase() === q;
           return (
             <Pressable

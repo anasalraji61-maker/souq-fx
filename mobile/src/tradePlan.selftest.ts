@@ -20,6 +20,7 @@ import {
   netByInstrument,
   knownLots,
   recentLotSizes,
+  quickJournalSymbols,
   quickStopPips,
   stopAtPips,
   journalInstrumentKey,
@@ -878,3 +879,49 @@ console.log('tradePlan recentLotSizes selftest OK');
   assert.ok(n > 300);
 }
 console.log('tradePlan stopAtPips selftest OK');
+
+// —— quickJournalSymbols: شرائح الرمز من أدوات المتداول نفسه ——
+{
+  const D = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'GBPJPY', 'EURGBP'];
+  // بلا صفقات: القائمة الافتراضية كما هي
+  assert.deepEqual(quickJournalSymbols([], D), D);
+  // «XAUUSD.m» تحلّ محلّ «XAUUSD» الافتراضية (أداة واحدة)، وتأتي أولاً؛ التكملة بترتيب الافتراضية
+  assert.deepEqual(quickJournalSymbols([{ symbol: 'XAUUSD.M' }], D), ['XAUUSD.M', 'EURUSD', 'GBPUSD', 'USDJPY', 'GBPJPY', 'EURGBP']);
+  // الأكثر صفقاتٍ أولاً، والتعادل للأحدث؛ الكتابة الأحدث للأداة هي المعروضة
+  assert.deepEqual(
+    quickJournalSymbols(
+      [
+        { symbol: 'US30' },
+        { symbol: 'XAUUSD.m' },
+        { symbol: 'AUDCAD' },
+        { symbol: 'xauusd' },
+        { symbol: 'AUDCAD' },
+        { symbol: 'XAUUSD' },
+      ],
+      D
+    ),
+    ['XAUUSD.M', 'AUDCAD', 'US30', 'EURUSD', 'GBPUSD', 'USDJPY']
+  );
+  // «EUR/USD» القديمة تُطبَّع ولا تُكرّر شريحة EURUSD
+  assert.deepEqual(quickJournalSymbols([{ symbol: 'eur/usd' }], D), D);
+  // رمز لا يُحفظ / فارغ / null يُتخطّى
+  assert.deepEqual(quickJournalSymbols([{ symbol: 'EU' }, { symbol: '' }, { symbol: null }, {}], D), D);
+  // السقف: أدوات المتداول وحدها تملأ الستّ، والزائدة (الأقل صفقاتٍ) تسقط
+  const many = ['AUDCAD', 'NZDJPY', 'US30', 'NAS100', 'USOIL', 'CADJPY', 'EURAUD'].flatMap((sym, i) =>
+    Array.from({ length: 7 - i }, () => ({ symbol: sym }))
+  );
+  assert.deepEqual(quickJournalSymbols(many, D), ['AUDCAD', 'NZDJPY', 'US30', 'NAS100', 'USOIL', 'CADJPY']);
+  assert.equal(quickJournalSymbols(many, D, 3).length, 3);
+  // `scan`: أداة بعد آخر 100 صفقة لا تحجز مكاناً
+  const old = [...Array.from({ length: 100 }, () => ({ symbol: 'EURUSD' })), { symbol: 'USDTRY' }];
+  assert.ok(!quickJournalSymbols(old, D).includes('USDTRY'));
+  assert.ok(quickJournalSymbols(old, D, 6, 101).includes('USDTRY'));
+  // كل شريحة رمزٌ يُحفظ كما هو، وأداة واحدة لكل شريحة
+  for (const list of [quickJournalSymbols(many, D), quickJournalSymbols([{ symbol: 'GBPJPY-ECN' }, { symbol: 'us30.cash' }], D)]) {
+    for (const x of list) assert.equal(journalSymbol(x), x);
+    assert.equal(new Set(list.map((x) => journalInstrumentKey(x))).size, list.length);
+  }
+  assert.deepEqual(quickJournalSymbols([{ symbol: 'GBPJPY-ECN' }], D).slice(0, 1), ['GBPJPY-ECN']);
+  assert.ok(!quickJournalSymbols([{ symbol: 'GBPJPY-ECN' }], D).includes('GBPJPY'));
+}
+console.log('tradePlan quickJournalSymbols selftest OK');
