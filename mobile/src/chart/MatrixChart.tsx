@@ -2198,7 +2198,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     syncWindow?.pricePan,
   ]);
 
-  rangeRef.current = range;
   sourceRef.current = source;
 
   const chartPlotW = Math.max(80, chartW - PRICE_AXIS_WIDTH);
@@ -2230,7 +2229,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const toScale = (price: number) => (logScale ? Math.log(Math.max(price, 1e-12)) : price);
   const fromScale = (scaled: number) => (logScale ? Math.exp(scaled) : scaled);
 
-  const yOf = (price: number) => ((range.max - toScale(price)) / range.span) * chartPlotH;
   const xOf = (i: number) =>
     ((i + 0.5) / Math.max(1, source.plot.length)) * chartPlotW + viewXPan;
   const colW = Math.min(
@@ -2314,6 +2312,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
     return { primaryLane, shadowLanes };
   }, [shadowLayers, chartPlotH, source.plot, range.min, range.max, range.span, logScale, tr]);
+
+  // إطار السعر الذي يقرأ به **كل شيء** (المحور، التقاطع و`priceAtY`، الرسومات، وسم السعر
+  // الحيّ، التنبيه): مع الظلال الشموع الأساسية تُرسم بمدى حارتها العليا (`yPrimary`)، بينما
+  // كان الباقي بالمدى الكامل مع الظلال — لمسة على ذيل تقرأ سعراً آخر، وتنبيه 🔔 يُضبط عليه،
+  // وخطّ أفقي يُرسم بعيداً عن القمّة التي وُضع عليها. الآن مدى الحارة ممدوداً لارتفاع اللوح
+  // (الحارة تبدأ من 0)، فتطابق `yOf` و`yPrimary` بالضبط. بلا ظلال: المدى كما كان.
+  const priceFrame = useMemo(() => {
+    if (!shadowStack) return range;
+    const lane = shadowStack.primaryLane;
+    const span = (lane.span * chartPlotH) / Math.max(1, lane.height);
+    return { min: lane.max - span, max: lane.max, span };
+  }, [shadowStack, range, chartPlotH]);
+  rangeRef.current = priceFrame;
+  const yOf = (price: number) =>
+    ((priceFrame.max - toScale(price)) / priceFrame.span) * chartPlotH;
 
   const hasShadows = !!shadowStack;
   const primaryColW = colW;
@@ -3271,7 +3284,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // مدى القصّ `chartPlotH − 2` كي يطابق `maxStart` ما كانت الشاشة تقصّ عنده بالضبط.
   const priceTicks = axisTickRatios(
     axisTickCount(chartPlotH - 2, PRICE_LABEL_H, PRICE_LABEL_GAP, 7)
-  ).map((ratio) => ({ ratio, price: fromScale(range.max - ratio * range.span) }));
+  )
+    // مع الظلال: علامات السعر بجوار الحارة الأساسية وحدها — ما تحتها حارات بمدى آخر.
+    .filter((ratio) => !shadowStack || ratio * chartPlotH <= shadowStack.primaryLane.height)
+    .map((ratio) => ({ ratio, price: fromScale(priceFrame.max - ratio * priceFrame.span) }));
   const priceTickBoxes = layoutAxisLabels(
     priceTicks.map((t) => t.ratio * chartPlotH),
     PRICE_LABEL_H,
