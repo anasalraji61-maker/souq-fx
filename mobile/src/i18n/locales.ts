@@ -1390,10 +1390,10 @@ const ar: Dict = {
   riskCalcRiskOverBalance:
     'المخاطرة ({risk}) أكبر من رصيد الحساب ({balance}) — ضربة وقف واحدة تمحو الحساب كلّه. راجع الخانتين: ربما كتبتَ مبلغاً مكان النسبة، أو نقص الرصيد صفراً.',
   riskCalcHighRisk: '⚠ أكثر من 2% للصفقة الواحدة مخاطرة عالية',
-  riskCalcSlPips: 'وقف الخسارة (بالنقاط pip)',
+  riskCalcSlPips: 'وقف الخسارة (pip)',
   riskCalcFromPrice: 'أو احسبه من السعر: الدخول والوقف كما تراهما على الشارت',
   riskCalcSlMismatch:
-    '⚠ النقاط المكتوبة ({pips}) لا تطابق سعرَي الدخول والوقف ({derived} pip) — حجم اللوت والمخاطرة محسوبان من النقاط، وR:R من السعرين',
+    '⚠ الـpip المكتوبة ({pips}) لا تطابق سعرَي الدخول والوقف ({derived} pip) — حجم اللوت والمخاطرة محسوبان من خانة الـpip، وR:R من السعرين',
   riskCalcEntry: 'سعر الدخول',
   riskCalcStop: 'سعر الوقف',
   riskCalcStopChip: '{side}: الوقف {price}',
@@ -1408,7 +1408,7 @@ const ar: Dict = {
   priceAmbiguousThousandsHint: 'السعر «{value}» مبهم — هل النقطة فاصل آلاف أم فاصلة عشرية؟ اكتب {whole} أو {small}',
   arabicThousandsSignHint: '«٬» فاصلة الآلاف لا الفاصلة العشرية — للكسر اكتب «٫» أو نقطة، مثل 0٫5',
   riskCalcBadFieldValue: '{field} «{value}»',
-  riskCalcPipValue: 'قيمة النقطة للوت',
+  riskCalcPipValue: 'قيمة الـpip للوت',
   riskCalcLeverage: 'الرافعة المالية (100 تعني 1:100)',
   riskCalcLeverageOutOfRange: 'رافعة «{value}» خارج ما تحسبه الحاسبة (من 1:1 حتى 1:{max}) — اكتب رافعة حسابك كما تظهر بمنصّتك، مثل 500.',
   riskCalcMargin: 'الهامش المحجوز',
@@ -1424,8 +1424,8 @@ const ar: Dict = {
   riskCalcLogFailed: 'تعذّر التسجيل بالدفتر — تحقّق من الاتصال وحاول مرة أخرى',
   riskCalcMarginMaxLots: 'أكبر حجم يتّسع له رصيدك هامشاً: {lots} lot — وهو حدّ أقصى لا يُبقي هامشاً حرّاً لأي تذبذب',
   riskCalcLogBlockedMismatch:
-    'لا تُسجَّل الخطة بوقفين مختلفين — اكتب {derived} بخانة النقاط، أو عدّل سعر الوقف ليطابق نقاطك',
-  riskCalcSlMismatchNarrower: '⚠ نقاطك ({pips}) أضيق من مسافة السعرين ({derived} pip) — اللوت المحسوب أكبر مما تحتمله مخاطرتك إن بقي الوقف عند سعره',
+    'لا تُسجَّل الخطة بوقفين مختلفين — اكتب {derived} بخانة الـpip، أو عدّل سعر الوقف ليطابق ما كتبته',
+  riskCalcSlMismatchNarrower: '⚠ وقفك ({pips} pip) أضيق من مسافة السعرين ({derived} pip) — اللوت المحسوب أكبر مما تحتمله مخاطرتك إن بقي الوقف عند سعره',
   riskCalcSpread: 'السبريد (pip، اختياري)',
   riskCalcSpreadPipsHint: 'اكتبه بالـpip لا بالـpoints: MT4/MT5 تعرض السبريد بالـpoints غالباً، وكل 10 points = 1 pip — فـ12 بالمنصّة تُكتب هنا 1.2.',
   riskCalcSpreadNote: 'السبريد يُضاف عادةً إلى مسافة الوقف: وقف 20 pip بسبريد 1.5 يخسر قرابة 21.5 عند ضربه. انظر السبريد الحالي بمنصّتك — يتّسع عند الأخبار وافتتاح الأسبوع.',
@@ -1433,7 +1433,7 @@ const ar: Dict = {
   riskCalcSpreadLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة السبريد: {lots} lot',
   riskCalcSpreadTooWide: 'سبريد {n} pip غير واقعي — هل كتبتَ سعراً أو points بدل الـpip؟ اكتب الفرق بين Ask وBid بالـpip (مثل 1.5).',
   riskCalcStopInsideSpread:
-    'الوقف ({sl} نقطة) ليس أبعد من السبريد ({spread} نقطة) — قد يُضرب فور فتح الصفقة. وسّع الوقف وقلّل اللوت، أو انتظر سبريداً أضيق.',
+    'الوقف ({sl} pip) ليس أبعد من السبريد ({spread} pip) — قد يُضرب فور فتح الصفقة. وسّع الوقف وقلّل اللوت، أو انتظر سبريداً أضيق.',
   riskCalcCommission: 'عمولة اختيارية لكل لوت، فتحاً وإغلاقاً',
   riskCalcCommissionNote: 'حسابات Raw/ECN تأخذ عمولة عند الفتح وعند الإغلاق. اكتب مجموع الطرفين للوت الواحد بعملة حسابك (مثل 7)، واتركها فارغة إن كان حسابك بلا عمولة.',
   riskCalcCommissionNoteMicro:
@@ -1525,7 +1525,7 @@ const ar: Dict = {
   journalExitAtSlA11y: 'الخروج عند وقف الخسارة {price}',
   journalExitAtBeA11y: 'الخروج عند سعر الدخول (تعادل) {price}',
   journalExitAtTpA11y: 'الخروج عند الهدف {price}',
-  journalSlAtPipsA11y: 'وقف الخسارة على بُعد {pips} نقطة من الدخول: {price}',
+  journalSlAtPipsA11y: 'وقف الخسارة على بُعد {pips} pip من الدخول: {price}',
   journalNotePlaceholder: 'ملاحظة',
   journalSlPlaceholder: 'وقف الخسارة (اختياري)',
   journalTpPlaceholder: 'الهدف (اختياري)',
@@ -3508,7 +3508,7 @@ const ku: Dict = {
   riskCalcSlPips: 'وەستانی زیان (pip)',
   riskCalcFromPrice: 'یان لە نرخەوە: چوونەژوورەوە و وەستان وەک لە چارتەکەدا دەیانبینیت',
   riskCalcSlMismatch:
-    '⚠ خاڵە نووسراوەکان ({pips}) لەگەڵ نرخی چوونەژوورەوە و وەستان ({derived} pip) ناگونجێن — قەبارەی لۆت و مەترسی لە خاڵەکانەوە دەردەچن، R:R لە نرخەکانەوە',
+    '⚠ pip ە نووسراوەکان ({pips}) لەگەڵ نرخی چوونەژوورەوە و وەستان ({derived} pip) ناگونجێن — قەبارەی لۆت و مەترسی لە خانەی pip ەوە دەردەچن، R:R لە نرخەکانەوە',
   riskCalcEntry: 'نرخی چوونەژوورەوە',
   riskCalcStop: 'نرخی وەستان',
   riskCalcStopChip: '{side}: وەستان {price}',
@@ -3539,8 +3539,8 @@ const ku: Dict = {
   riskCalcLogFailed: 'تۆمارکردن لە دەفتەر سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەوە',
   riskCalcMarginMaxLots: 'گەورەترین قەبارە کە باڵانسەکەت مارجینەکەی دەگرێتە ئەستۆ: {lots} lot — سنووری سەرەوەیە و هیچ مارجینی ئازاد بۆ هیچ جووڵەیەک ناهێڵێتەوە',
   riskCalcLogBlockedMismatch:
-    'پلانێک بە دوو وەستانی جیاواز تۆمار ناکرێت — {derived} لە خانەی خاڵەکان بنووسە، یان نرخی وەستان بگۆڕە تا لەگەڵ خاڵەکانت بگونجێت',
-  riskCalcSlMismatchNarrower: '⚠ خاڵەکانت ({pips}) تەسکترن لە دووری نێوان دوو نرخەکە ({derived} pip) — لۆتی حیسابکراو گەورەترە لەوەی مەترسییەکەت هەڵیدەگرێت ئەگەر وەستان لە نرخی خۆی بمێنێتەوە',
+    'پلانێک بە دوو وەستانی جیاواز تۆمار ناکرێت — {derived} لە خانەی pip بنووسە، یان نرخی وەستان بگۆڕە تا لەگەڵ ئەوەی نووسیوتە بگونجێت',
+  riskCalcSlMismatchNarrower: '⚠ وەستانەکەت ({pips} pip) تەسکترە لە دووری نێوان دوو نرخەکە ({derived} pip) — لۆتی حیسابکراو گەورەترە لەوەی مەترسییەکەت هەڵیدەگرێت ئەگەر وەستان لە نرخی خۆی بمێنێتەوە',
   riskCalcSpread: 'سپرێد (pip، ئیختیاری)',
   riskCalcSpreadPipsHint: 'بە pip بینووسە نەک points: MT4/MT5 زۆرجار سپرێد بە points پیشان دەدەن، و هەر 10 points = 1 pip — کەواتە 12 لە پلاتفۆرمەکەت لێرە دەبێتە 1.2.',
   riskCalcSpreadNote: 'سپرێد زۆرجار دەچێتە سەر دووری وەستان: وەستانی 20 pip بە سپرێدی 1.5 نزیکەی 21.5 لەدەست دەدات کاتێک لێی دەدرێت. سپرێدی ئێستا لە پلاتفۆرمەکەت ببینە — لە کاتی هەواڵ و کرانەوەی هەفتەدا فراوانتر دەبێت.',
