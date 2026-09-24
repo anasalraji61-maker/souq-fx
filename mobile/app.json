@@ -9,6 +9,32 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0B1220",
+    "locales": {
+      "ar": {
+        "ios": {
+          "CFBundleDisplayName": "MATRIX"
+        },
+        "android": {
+          "app_name": "MATRIX"
+        }
+      },
+      "en": {
+        "ios": {
+          "CFBundleDisplayName": "MATRIX"
+        },
+        "android": {
+          "app_name": "MATRIX"
+        }
+      },
+      "ckb": {
+        "ios": {
+          "CFBundleDisplayName": "MATRIX"
+        },
+        "android": {
+          "app_name": "MATRIX"
+        }
+      }
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.matrix.charts",
