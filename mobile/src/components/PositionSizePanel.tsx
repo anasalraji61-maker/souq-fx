@@ -46,6 +46,7 @@ import {
   formatPips,
   formatRR,
   liveEntryForStop,
+  liveEntryQuote,
   liveStopChip,
   QUICK_RR,
   stopsForPips,
@@ -627,15 +628,24 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   useEffect(() => {
     const f = liveFillRef.current;
     if (!f || f.symbol !== spec?.symbol || entryPx.trim() !== f.text) return;
-    const px = liveEntryForStop(f.q, num(stopPx));
-    if (px == null) return;
-    const text = formatPrice(px, f.symbol);
+    const lq = liveEntryQuote(f.q, num(stopPx));
+    if (lq == null) return;
+    const text = formatPrice(lq.price, f.symbol);
     if (text === f.text) return;
     liveFillRef.current = { ...f, text };
     setEntryPx(text);
-    setLivePxMsg({ ok: true, text: `${t.riskCalcLiveFilled} ${text}` });
+    setLivePxMsg({ ok: true, text: liveFillMsg(text, lq) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stopPx]);
+
+  // الرقم انتقل وحده بعد التعبئة (الوقف كشف الجهة): السطر يسمّي Ask/Bid والجهة بدل «من السعر الحالي» المكرّر
+  const liveFillMsg = (text: string, lq: { quote: 'ask' | 'bid' | null; side: 'buy' | 'sell' | null }) =>
+    lq.quote && lq.side
+      ? t.riskCalcLiveSideMoved
+          .replace('{quote}', lq.quote === 'ask' ? 'Ask' : 'Bid')
+          .replace('{side}', lq.side === 'buy' ? t.dirBuy : t.dirSell)
+          .replace('{price}', text)
+      : `${t.riskCalcLiveFilled} ${text}`;
 
   const fillEntryFromLive = async () => {
     if (!spec || livePxBusy) return;
@@ -854,9 +864,16 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
               () => {
                 const f = liveFillRef.current;
                 if (x.entryText != null && f) {
+                  const moved = x.entryText !== f.text;
                   liveFillRef.current = { ...f, text: x.entryText };
                   setEntryPx(x.entryText);
-                  setLivePxMsg({ ok: true, text: `${t.riskCalcLiveFilled} ${x.entryText}` });
+                  const lq = moved ? liveEntryQuote(f.q, num(x.text)) : null;
+                  setLivePxMsg({
+                    ok: true,
+                    text: lq && formatPrice(lq.price, f.symbol) === x.entryText
+                      ? liveFillMsg(x.entryText, lq)
+                      : `${t.riskCalcLiveFilled} ${x.entryText}`,
+                  });
                 }
                 setStopPx(x.text);
               },

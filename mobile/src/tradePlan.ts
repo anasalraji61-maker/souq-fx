@@ -406,9 +406,27 @@ export function liveEntryForStop(
   q: { price: number; bid?: number | null; ask?: number | null },
   stop: number | null | undefined,
 ): number | null {
+  return liveEntryQuote(q, stop)?.price ?? null;
+}
+
+/**
+ * `liveEntryForStop` مع **مصدر** السعر: `quote` = 'ask'/'bid' حين أُخذ فعلاً من Ask الشراء/Bid البيع، و`null` حين
+ * بقي الوسطي (بلا وقف، أو وقف عند السعر، أو Bid/Ask الجهة غائب فرجعنا للوسطي). `side` هي الجهة المستنتجة من الوقف.
+ *
+ * لماذا: حين يكشف الوقف المكتوب **بعد** التعبئة الجهةَ، ينتقل رقم الدخول وحده (1.0851 ⇒ 1.0852) وسطر «✓ الدخول من
+ * السعر الحالي» يبقى كما هو — فيرى المتداول رقماً تغيّر بيده بلا سبب. السطر يسمّي الآن ما حدث («نُقل الدخول إلى Ask
+ * (سعر شراء)»)، ولا يقوله إلا إن كان الرقم فعلاً من Ask/Bid — لا حين رجعنا للوسطي لغياب اللقطة.
+ */
+export function liveEntryQuote(
+  q: { price: number; bid?: number | null; ask?: number | null },
+  stop: number | null | undefined,
+): { price: number; quote: 'ask' | 'bid' | null; side: TradeSide | null } | null {
   if (!(Number.isFinite(q.price) && q.price > 0)) return null;
-  if (stop == null || !Number.isFinite(stop) || stop <= 0 || stop === q.price) return q.price;
-  return executionPrice(q, stop < q.price ? 'buy' : 'sell', 'open');
+  if (stop == null || !Number.isFinite(stop) || stop <= 0 || stop === q.price) return { price: q.price, quote: null, side: null };
+  const side: TradeSide = stop < q.price ? 'buy' : 'sell';
+  const px = side === 'buy' ? q.ask : q.bid;
+  if (typeof px === 'number' && Number.isFinite(px) && px > 0) return { price: px, quote: side === 'buy' ? 'ask' : 'bid', side };
+  return { price: q.price, quote: null, side };
 }
 
 /** نسب الهدف السريعة بالحاسبة والدفتر: ما يخطّط عليه متداول التجزئة فعلاً (1:1 تعادل، 1:2 القاعدة الشائعة). */

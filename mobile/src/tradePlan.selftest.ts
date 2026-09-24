@@ -8,6 +8,7 @@ import {
   entryAfterSideSwitch,
   executionPrice,
   liveEntryForStop,
+  liveEntryQuote,
   liveStopChip,
   exitShortcuts,
   exitPreview,
@@ -1112,6 +1113,25 @@ console.log('tradePlan executionPrice / side switch selftest OK');
   assert.equal(liveEntryForStop(q, 1.087), executionPrice(q, 'sell'));
 }
 console.log('tradePlan liveEntryForStop selftest OK');
+// ── مصدر الدخول الحيّ: يُسمّى Ask/Bid فقط حين أُخذ منهما فعلاً ──
+{
+  const q = { price: 1.0851, bid: 1.085, ask: 1.0852 };
+  assert.deepEqual(liveEntryQuote(q, 1.083), { price: 1.0852, quote: 'ask', side: 'buy' });
+  assert.deepEqual(liveEntryQuote(q, 1.087), { price: 1.085, quote: 'bid', side: 'sell' });
+  assert.deepEqual(liveEntryQuote(q, null), { price: 1.0851, quote: null, side: null });
+  assert.deepEqual(liveEntryQuote(q, 1.0851), { price: 1.0851, quote: null, side: null });
+  assert.deepEqual(liveEntryQuote(q, NaN), { price: 1.0851, quote: null, side: null });
+  // Bid/Ask الجهة غائب أو تالف ⇒ الوسطي، ولا يُدّعى Ask/Bid
+  assert.deepEqual(liveEntryQuote({ price: 1.0851, bid: 1.085 }, 1.083), { price: 1.0851, quote: null, side: 'buy' });
+  assert.deepEqual(liveEntryQuote({ price: 1.0851, ask: 0, bid: 1.085 }, 1.083), { price: 1.0851, quote: null, side: 'buy' });
+  assert.deepEqual(liveEntryQuote({ price: 1.0851, ask: 1.0852, bid: NaN }, 1.087), { price: 1.0851, quote: null, side: 'sell' });
+  assert.equal(liveEntryQuote({ price: 0, bid: 1, ask: 1 }, 1.083), null);
+  // السعر = liveEntryForStop دائماً (المصدر الواحد)
+  for (const st of [null, 1.083, 1.087, 1.0851, 0]) {
+    assert.equal(liveEntryQuote(q, st)!.price, liveEntryForStop(q, st));
+  }
+}
+console.log('tradePlan liveEntryQuote selftest OK');
 
 // ── شريحة الوقف والدخول ما زال السعر الحيّ الوسطي: الوقف يُقاس من سعر الجهة ──
 {
