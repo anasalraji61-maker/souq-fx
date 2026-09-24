@@ -4,6 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import { nextHighImpact, symbolCurrencies, type NewsEvent } from './newsRisk';
+import { instrumentSpec } from '../positionSize';
 
 assert.deepEqual(symbolCurrencies('EURUSD'), ['EUR', 'USD']);
 assert.deepEqual(symbolCurrencies('gbpjpy'), ['GBP', 'JPY']);
@@ -20,6 +21,21 @@ assert.deepEqual(symbolCurrencies('xag/aud'), ['USD', 'AUD']);
 assert.deepEqual(symbolCurrencies('XAUJPY'), ['USD', 'JPY']);
 assert.deepEqual(symbolCurrencies('XAUXAG'), []);
 assert.deepEqual(symbolCurrencies('XAUBTC'), []);
+// كل ما تقبله حاسبة المخاطرة له تحذير أخبار: الخليج وإسرائيل بساق الدولار أو اليورو
+assert.deepEqual(symbolCurrencies('USDSAR'), ['USD', 'SAR']);
+assert.deepEqual(symbolCurrencies('USDAED'), ['USD', 'AED']);
+assert.deepEqual(symbolCurrencies('usd/ils'), ['USD', 'ILS']);
+assert.deepEqual(symbolCurrencies('EURSAR'), ['EUR', 'SAR']);
+assert.equal(nextHighImpact([{ id: 'fomc', title: 'FOMC', currency: 'USD', impact: 'high', ts: 1_800_000_600 }], symbolCurrencies('USDSAR'), 1_800_000_000_000)?.event.id, 'fomc');
+{
+  // تطابق القائمتين بالبناء: أي زوج ورقي تقبله الحاسبة (من 21 عملة) له عملتان هنا
+  const ccys = ['EUR', 'GBP', 'AUD', 'NZD', 'USD', 'CAD', 'CHF', 'JPY', 'SEK', 'NOK', 'DKK', 'PLN', 'TRY', 'ZAR', 'MXN', 'SGD', 'HKD', 'CNH', 'ILS', 'SAR', 'AED'];
+  for (const a of ccys) for (const b of ccys) {
+    if (a === b) continue;
+    assert.ok(instrumentSpec(a + b), a + b);
+    assert.equal(symbolCurrencies(a + b).length, 2, a + b);
+  }
+}
 assert.equal(nextHighImpact([{ id: 'nfp', title: 'NFP', currency: 'USD', impact: 'high', ts: 1_800_000_600 }], symbolCurrencies('XAUEUR'), 1_800_000_000_000)?.event.id, 'nfp');
 
 const now = 1_800_000_000_000;

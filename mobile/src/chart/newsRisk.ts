@@ -19,9 +19,15 @@ export type NewsEvent = {
   sample?: boolean;
 };
 
+/**
+ * كل عملة تقبلها حاسبة المخاطرة (`FIAT` بـpositionSize.ts) يجب أن تكون هنا: USDSAR/USDAED/USDILS كانت
+ * تُرفض كـ«ليست فوركس» فيغيب تحذير الرواتب الأمريكية وقرار الفيدرالي كلياً عن زوجٍ تحسب له الحاسبة حجم
+ * مركز — والمخاطرة هنا ساقُ الدولار لا الريال. عملةٌ لا يغطّيها التقويم لا تضرّ: لا أحداث لها فحسب.
+ */
 const FIAT = new Set([
   'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'NZD', 'CAD', 'CHF', 'CNY',
   'SEK', 'NOK', 'DKK', 'PLN', 'TRY', 'ZAR', 'MXN', 'SGD', 'HKD',
+  'ILS', 'SAR', 'AED',
 ]);
 const METALS = new Set(['XAU', 'XAG']);
 /** رموز تُسعَّر بالدولار ويحرّكها خبر الدولار أولاً. */
