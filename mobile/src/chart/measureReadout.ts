@@ -76,15 +76,22 @@ export function candleRangePipsText(symbol: string, high: number, low: number): 
  * صيغ المفرد والمثنّى هنا لا بـ`i18n/locales.ts` لأنه ملك وكيل آخر (راجع «طلب تنسيق»
  * بـdocs/LOG-CHART.md).
  */
-export function barsCountText(n: number, word: string, lang?: string): string {
+export function barsCountText(
+  n: number,
+  word: string,
+  lang?: string,
+  /** صيغتا المفرد والمثنّى من القاموس (`tr.mcMeasureBarOne/Two`)؛ غائبتان ⇒ الثابتتان هنا. */
+  forms?: { one: string; two: string }
+): string {
   if (lang === 'ar') {
+    const one = forms?.one ?? 'شمعة';
     const tail = n % 100;
-    if (n === 1) return '1 شمعة';
-    if (n === 2) return '2 شمعتان';
+    if (n === 1) return `1 ${one}`;
+    if (n === 2) return `2 ${forms?.two ?? 'شمعتان'}`;
     if (n === 0 || (tail >= 3 && tail <= 10)) return `${n} ${word}`;
-    return `${n} شمعة`;
+    return `${n} ${one}`;
   }
-  if (lang === 'en' && n === 1) return '1 bar';
+  if (lang === 'en' && n === 1) return `1 ${forms?.one ?? 'bar'}`;
   return `${n} ${word}`;
 }
 
@@ -114,9 +121,14 @@ export function measureDurationSec(
  * الفريمات بالتطبيق نفسها («5 د»، «4 س»، `timeframes.ts`) و«يوم» كاملة (لا حرف لها هناك).
  * صفر (طرفان على شمعة واحدة) ⇒ `null`: «0m» ضجيج.
  */
-export function measureDurationText(sec: number | null, lang?: string): string | null {
+export function measureDurationText(
+  sec: number | null,
+  lang?: string,
+  /** وحدات القاموس (`tr.mcMeasureDurUnits`) — الكردية لها وحداتها؛ غائبة ⇒ الثابتة هنا. */
+  units?: { m: string; h: string; d: string }
+): string | null {
   if (sec == null || !Number.isFinite(sec) || sec < 60) return null;
-  const u = lang === 'ar' ? { m: ' د', h: ' س', d: ' يوم' } : { m: 'm', h: 'h', d: 'd' };
+  const u = units ?? (lang === 'ar' ? { m: ' د', h: ' س', d: ' يوم' } : { m: 'm', h: 'h', d: 'd' });
   const mins = Math.round(sec / 60);
   const d = Math.floor(mins / 1440);
   const h = Math.floor((mins % 1440) / 60);
@@ -143,11 +155,15 @@ export function measureReadoutText(input: {
   lang?: string;
   /** زمن القياس (`measureDurationSec`)؛ غائب ⇒ لا خانة زمن. */
   durationSec?: number | null;
+  /** وحدات الزمن من القاموس (`measureDurationText`). */
+  durationUnits?: { m: string; h: string; d: string };
+  /** صيغتا المفرد والمثنّى من القاموس (`barsCountText`). */
+  barForms?: { one: string; two: string };
   /** مرجع منازل السعر لأداة بلا منازل معروفة (سعرها الجاري، كمحور الشارت)؛ غائب ⇒ الطرف الأول. */
   priceRef?: number | null;
 }): string {
   const { symbol, a, b, stats, barsWord, lang } = input;
-  const dur = measureDurationText(input.durationSec ?? null, lang);
+  const dur = measureDurationText(input.durationSec ?? null, lang, input.durationUnits);
   const pips = measurePipsText(symbol, a.price, b.price);
   // الإشارة من الرقم **المطبوع** لا الخام (قاعدة `formatPct` برأس الإطار والتقاطع): قياس
   // 0.4 pip على اليورو نسبته 0.004% فكان يُكتب «+0.4 pip · +0.00%»، وقياس أفقيّ على DXY
@@ -159,6 +175,6 @@ export function measureReadoutText(input: {
   const diffSign = Number(diffText) === 0 ? '' : stats.diff > 0 ? '+' : '−';
   const amount = pips ?? `${diffSign}${diffText}`;
   const pctText = formatPct(Number.isFinite(stats.pct) ? stats.pct : 0);
-  const bars = barsCountText(stats.bars, barsWord, lang);
+  const bars = barsCountText(stats.bars, barsWord, lang, input.barForms);
   return dur ? `${bars} · ${dur} · ${amount} · ${pctText}` : `${bars} · ${amount} · ${pctText}`;
 }

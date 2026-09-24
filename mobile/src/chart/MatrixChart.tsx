@@ -4527,6 +4527,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       barsWord: tr.mcMeasureBarsWord,
       lang,
       durationSec: measureDurationSec(m.a, m.b, timeframeStepSec(series.timeframe)),
+      durationUnits: tr.mcMeasureDurUnits,
+      barForms: { one: tr.mcMeasureBarOne, two: tr.mcMeasureBarTwo },
       priceRef: priceDecimalsRef,
     });
   const measureReadout = measureDone ? measureText(measureDone) : null;
@@ -5003,9 +5005,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               ? tr.mcReplayReadout
                   .replace('{n}', String(source.plot.length))
                   .replace('{total}', String(source.windowLen))
-              : tool !== 'none'
-                ? tr.mcHintDraw
-                : tr.mcHintNavigate}
+              : tool === 'select'
+                ? selectedId
+                  ? Platform.OS === 'web'
+                    ? tr.mcHintSelectedWeb
+                    : tr.mcHintSelected
+                  : tr.mcHintSelect
+                : tool !== 'none'
+                  ? Platform.OS === 'web'
+                    ? tr.mcHintDrawWeb
+                    : tr.mcHintDraw
+                  : Platform.OS === 'web'
+                    ? tr.mcHintNavigateWeb
+                    : tr.mcHintNavigate}
           </Text>
         )}
         {onCreateAlert && crossPrice != null && !crossHover && !measureReadout && !replayOn ? (
