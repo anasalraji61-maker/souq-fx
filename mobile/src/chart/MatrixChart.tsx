@@ -90,7 +90,7 @@ import { planHiLoLabels } from './hiLoLabels';
 import { planDayBreaks } from './dayBreaks';
 import { formatPct, prevSessionFromDaily, validSessionBar } from './dailyChange';
 import { useDailyPrevBar } from './dailyRefStore';
-import { pivotInput, prevDayFromIntraday } from './pivotBase';
+import { pivotInput, pivotLabelRank, prevDayFromIntraday } from './pivotBase';
 import { candleTimeSec, normalizeProvenance, timeframeStepSec } from './dataSource';
 import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
@@ -1308,6 +1308,114 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('cpr') && pivotBars ? computeCpr(pivotBars, 1) : null),
     [pivotBars, indicators]
   );
+  /**
+   * خطوط الارتكاز الستّ بقائمة واحدة: كانت تُرسم بوسم اسم وحده («R1») يمين اللوح فوق آخر
+   * الشموع، بلا سعر — والمتداول يفتح Pivot ليقرأ الأرقام — وبلا أي تنقية، فتشغيل مجموعتين
+   * (Pivot + Camarilla) يكدّس وسوماً فوق بعضها. الآن «R1 1.08650» يسار اللوح بنمط وسم الخطّ
+   * الأفقي، والتزاحم يُحلّ بـ`thinByGap` بأهمية `pivotLabelRank`.
+   */
+  const pivotLevels = useMemo(() => {
+    const out: { key: string; label: string; price: number; color: string; opacity: number }[] = [];
+    const add = (
+      prefix: string,
+      rows: readonly (readonly [string, number])[],
+      color: (label: string) => string,
+      opacity: number
+    ) => {
+      for (const [label, price] of rows) {
+        if (Number.isFinite(price)) out.push({ key: `${prefix}${label}`, label, price, color: color(label), opacity });
+      }
+    };
+    if (pivots) {
+      add(
+        'pv',
+        [
+          ['R3', pivots.r3],
+          ['R2', pivots.r2],
+          ['R1', pivots.r1],
+          ['PP', pivots.pp],
+          ['S1', pivots.s1],
+          ['S2', pivots.s2],
+          ['S3', pivots.s3],
+        ],
+        (l) => (l === 'PP' ? colors.accent : l.startsWith('R') ? colors.bear : colors.bull),
+        0.75
+      );
+    }
+    if (fibPivots) {
+      add(
+        'fpv',
+        [
+          ['FR3', fibPivots.r3],
+          ['FR2', fibPivots.r2],
+          ['FR1', fibPivots.r1],
+          ['FPP', fibPivots.pp],
+          ['FS1', fibPivots.s1],
+          ['FS2', fibPivots.s2],
+          ['FS3', fibPivots.s3],
+        ],
+        () => colors.infoAccent,
+        0.6
+      );
+    }
+    if (camarilla) {
+      add(
+        'cam',
+        [
+          ['CR4', camarilla.r4],
+          ['CR3', camarilla.r3],
+          ['CR2', camarilla.r2],
+          ['CR1', camarilla.r1],
+          ['CS1', camarilla.s1],
+          ['CS2', camarilla.s2],
+          ['CS3', camarilla.s3],
+          ['CS4', camarilla.s4],
+        ],
+        () => colors.warn,
+        0.55
+      );
+    }
+    if (woodiePivots) {
+      add(
+        'wpv',
+        [
+          ['WR3', woodiePivots.r3],
+          ['WR2', woodiePivots.r2],
+          ['WR1', woodiePivots.r1],
+          ['WPP', woodiePivots.pp],
+          ['WS1', woodiePivots.s1],
+          ['WS2', woodiePivots.s2],
+          ['WS3', woodiePivots.s3],
+        ],
+        () => '#C4B5FD',
+        0.6
+      );
+    }
+    if (demarkPivots) {
+      add(
+        'dpv',
+        [
+          ['DR1', demarkPivots.r1],
+          ['DS1', demarkPivots.s1],
+        ],
+        () => '#FDA4AF',
+        0.6
+      );
+    }
+    if (cpr) {
+      add(
+        'cpr',
+        [
+          ['CPR-T', cpr.top],
+          ['CPR-P', cpr.pp],
+          ['CPR-B', cpr.bottom],
+        ],
+        () => '#FEF08A',
+        0.55
+      );
+    }
+    return out;
+  }, [pivots, fibPivots, camarilla, woodiePivots, demarkPivots, cpr]);
   const tpo = useMemo(
     () => (indicators.includes('tpo') ? computeTpo(source.plot, 18) : null),
     [source.plot, indicators]
@@ -3481,6 +3589,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     ).map(({ d }) => d.id)
   );
 
+  // وسوم الارتكاز: الظاهرة باللوح وحدها تتنافس على المكان (مستوى خارج اللوح لا يحجز وسماً).
+  const pivotLabelKeys = new Set(
+    thinByGap(
+      pivotLevels.filter((lv) => {
+        const y = yOf(lv.price);
+        return y >= 11 && y <= chartPlotH - 2;
+      }),
+      (lv) => yOf(lv.price),
+      (lv) => pivotLabelRank(lv.label),
+      HLINE_LABEL_GAP
+    ).map((lv) => lv.key)
+  );
+
   // عدد علامات السعر من ارتفاع اللوح لا رقماً ثابتاً: السبع الثابتة كانت تتباعد
   // 16.6px بلوح 100px (حدّه الأدنى عند فتح لوحات المؤشرات) وعلوّ النصّ 14px.
   // مدى القصّ `chartPlotH − 2` كي يطابق `maxStart` ما كانت الشاشة تقصّ عنده بالضبط.
@@ -5394,129 +5515,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           </View>
         ) : null}
 
-        {pivots
-          ? (
-              [
-                ['R3', pivots.r3, colors.bear],
-                ['R2', pivots.r2, colors.bear],
-                ['R1', pivots.r1, colors.bear],
-                ['PP', pivots.pp, colors.accent],
-                ['S1', pivots.s1, colors.bull],
-                ['S2', pivots.s2, colors.bull],
-                ['S3', pivots.s3, colors.bull],
-              ] as const
-            ).map(([label, price, color]) => (
-              <View
-                key={`pv${label}`}
-                style={[styles.hLine, { top: yOf(price), borderColor: color, opacity: 0.75 }]}
-              >
-                <Text style={styles.fibLabel}>{label}</Text>
-              </View>
-            ))
-          : null}
-
-        {fibPivots
-          ? (
-              [
-                ['FR3', fibPivots.r3],
-                ['FR2', fibPivots.r2],
-                ['FR1', fibPivots.r1],
-                ['FPP', fibPivots.pp],
-                ['FS1', fibPivots.s1],
-                ['FS2', fibPivots.s2],
-                ['FS3', fibPivots.s3],
-              ] as const
-            ).map(([label, price]) => (
-              <View
-                key={`fpv${label}`}
-                style={[
-                  styles.hLine,
-                  { top: yOf(price), borderColor: colors.infoAccent, opacity: 0.6 },
-                ]}
-              >
-                <Text style={styles.fibLabel}>{label}</Text>
-              </View>
-            ))
-          : null}
-
-        {camarilla
-          ? (
-              [
-                ['CR4', camarilla.r4],
-                ['CR3', camarilla.r3],
-                ['CR2', camarilla.r2],
-                ['CR1', camarilla.r1],
-                ['CS1', camarilla.s1],
-                ['CS2', camarilla.s2],
-                ['CS3', camarilla.s3],
-                ['CS4', camarilla.s4],
-              ] as const
-            ).map(([label, price]) => (
-              <View
-                key={`cam${label}`}
-                style={[
-                  styles.hLine,
-                  { top: yOf(price), borderColor: colors.warn, opacity: 0.55 },
-                ]}
-              >
-                <Text style={styles.fibLabel}>{label}</Text>
-              </View>
-            ))
-          : null}
-
-        {woodiePivots
-          ? (
-              [
-                ['WR3', woodiePivots.r3],
-                ['WR2', woodiePivots.r2],
-                ['WR1', woodiePivots.r1],
-                ['WPP', woodiePivots.pp],
-                ['WS1', woodiePivots.s1],
-                ['WS2', woodiePivots.s2],
-                ['WS3', woodiePivots.s3],
-              ] as const
-            ).map(([label, price]) => (
-              <View
-                key={`wpv${label}`}
-                style={[styles.hLine, { top: yOf(price), borderColor: '#C4B5FD', opacity: 0.6 }]}
-              >
-                <Text style={styles.fibLabel}>{label}</Text>
-              </View>
-            ))
-          : null}
-
-        {demarkPivots
-          ? (
-              [
-                ['DR1', demarkPivots.r1],
-                ['DS1', demarkPivots.s1],
-              ] as const
-            ).map(([label, price]) => (
-              <View
-                key={`dpv${label}`}
-                style={[styles.hLine, { top: yOf(price), borderColor: '#FDA4AF', opacity: 0.6 }]}
-              >
-                <Text style={styles.fibLabel}>{label}</Text>
-              </View>
-            ))
-          : null}
-
-        {cpr
-          ? (
-              [
-                ['CPR-T', cpr.top],
-                ['CPR-P', cpr.pp],
-                ['CPR-B', cpr.bottom],
-              ] as const
-            ).map(([label, price]) => (
-              <View
-                key={`cpr${label}`}
-                style={[styles.hLine, { top: yOf(price), borderColor: '#FEF08A', opacity: 0.55 }]}
-              >
-                <Text style={styles.fibLabel}>{label}</Text>
-              </View>
-            ))
-          : null}
+        {/* مستويات الارتكاز الستّ بقائمة واحدة (`pivotLevels`)، وكل وسم يحمل سعره. */}
+        {pivotLevels.map((lv) => {
+          const y = yOf(lv.price);
+          if (!Number.isFinite(y) || y < -1 || y > chartPlotH + 1) return null;
+          return (
+            <View
+              key={lv.key}
+              style={[styles.hLine, { top: y, borderColor: lv.color, opacity: lv.opacity }]}
+            >
+              {pivotLabelKeys.has(lv.key) ? (
+                <Text style={[styles.levelPriceLabel, { color: lv.color }]} numberOfLines={1}>
+                  {lv.label} {formatPrice(lv.price, series.symbol)}
+                </Text>
+              ) : null}
+            </View>
+          );
+        })}
 
         {volProfile
           ? (() => {

@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import type { Candle } from '../api';
-import { pivotInput, prevDayFromIntraday } from './pivotBase';
+import { pivotInput, pivotLabelRank, prevDayFromIntraday } from './pivotBase';
 import { tradingDayStartSec } from './marketHours';
 import { computePivotPoints } from './indicators/price-transform';
 
@@ -73,5 +73,19 @@ assert.equal(pivotInput(null), null);
 const pv = computePivotPoints(pivotInput(bar(0, 1.1, 1.2, 1.0, 1.15))!, 1)!;
 assert.ok(Math.abs(pv.pp - (1.2 + 1.0 + 1.15) / 3) < 1e-12);
 assert.ok(Math.abs(pv.r1 - (2 * pv.pp - 1.0)) < 1e-12);
+
+// أهمية الوسوم: المحور ثم الأقرب إليه؛ Camarilla R3/S3 ثم R4/S4
+assert.equal(pivotLabelRank('PP'), 0);
+assert.equal(pivotLabelRank('WPP'), 0);
+assert.equal(pivotLabelRank('CPR-P'), 0);
+assert.equal(pivotLabelRank('CPR-T'), 1);
+assert.equal(pivotLabelRank('R1'), 1);
+assert.equal(pivotLabelRank('FS2'), 2);
+assert.equal(pivotLabelRank('WR3'), 3);
+assert.equal(pivotLabelRank('DS1'), 1);
+assert.equal(pivotLabelRank('CS3'), 1);
+assert.equal(pivotLabelRank('CR4'), 2);
+assert.equal(pivotLabelRank('CR1'), 4);
+assert.equal(pivotLabelRank('??'), 5);
 
 console.log('pivotBase.selftest: PASS');

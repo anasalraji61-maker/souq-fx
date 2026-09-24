@@ -58,3 +58,16 @@ export function prevDayFromIntraday(candles: readonly Candle[], symbol: string):
 export function pivotInput(prev: Candle | null): Candle[] | null {
   return prev ? [prev, prev] : null;
 }
+
+/**
+ * أهمية وسم مستوى ارتكاز (الأصغر أهمّ) حين تتزاحم الوسوم رأسياً: المحور أوّلاً ثم المستويات
+ * بقربها منه (R1/S1 قبل R3/S3). Camarilla يُتداول على R3/S3 (ارتداد) وR4/S4 (اختراق) لا R1.
+ */
+export function pivotLabelRank(label: string): number {
+  if (/^(PP|FPP|WPP|CPR-P)$/.test(label)) return 0;
+  const cam = /^C[RS]([1-4])$/.exec(label);
+  if (cam) return ({ '3': 1, '4': 2, '2': 3, '1': 4 } as Record<string, number>)[cam[1]];
+  if (/^CPR-[TB]$/.test(label)) return 1;
+  const n = /[RS]([1-3])$/.exec(label);
+  return n ? Number(n[1]) : 5;
+}
