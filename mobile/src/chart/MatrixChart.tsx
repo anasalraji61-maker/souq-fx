@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -76,7 +77,8 @@ import {
 } from './paneGuides';
 import { DrawingsSaveQueue, drawingsKey, drawingsSignature } from './drawingsPersist';
 import { clipSegmentToBars, dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
-import { anchorDrawings, barTime, stampAtIndex } from './drawingAnchors';
+import { anchorDrawings, barTime, stampAtIndex, type TimeBar } from './drawingAnchors';
+import { appendedAfter } from './holdView';
 import { priceSpan } from './priceSpan';
 import { fibLevelPrice, planFibLabels, type FibLabelPlan } from './fibLabels';
 import {
@@ -1097,6 +1099,31 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     syncWindow?.start,
     syncWindow?.end,
   ]);
+
+  // نافذة مسحوبة للخلف تبقى على شموعها حين تصل شمعة جديدة (`holdView.ts`): الإزاحة تُقاس من
+  // الطرف الأيمن، فكانت كل شمعة جديدة تزحف بالنافذة شمعةً تحت إصبع المتداول. بـLayoutEffect كي
+  // لا يُرسم إطار زاحف قبل التصحيح. التابع المتزامن نافذته من القائد فلا يُمسّ.
+  const heldViewRef = useRef<{ key: string; lastSec: number | null; len: number }>({
+    key: '',
+    lastSec: null,
+    len: 0,
+  });
+  useLayoutEffect(() => {
+    const all = source.all as TimeBar[];
+    const key = `${series.symbol}|${series.timeframe}|${kind}`;
+    const last = all[all.length - 1];
+    const lastSec = last ? barTime(last) : null;
+    const prev = heldViewRef.current;
+    if (prev.key === key && prev.len === all.length && prev.lastSec === lastSec) return; // تيك بالشمعة نفسها
+    heldViewRef.current = { key, lastSec, len: all.length };
+    if (prev.key !== key || syncFollow || offsetRef.current <= 0) return;
+    const added = appendedAfter(prev.lastSec, all.map(barTime), prev.len);
+    if (added <= 0) return;
+    const next = Math.min(Math.max(0, all.length - 10), offsetRef.current + added);
+    if (next === offsetRef.current) return;
+    offsetRef.current = next;
+    setOffset(next);
+  }, [source.all, series.symbol, series.timeframe, kind, syncFollow]);
 
   // تقاطع مشترك بالرباعي: كانت قراءة الشمعة نفسها على الأزواج الأربعة (هل كسر اليورو
   // والذهب معاً عند خبر الدولار؟) تعني عيناً تقيس المحاور الزمنية الأربعة. القائد ينشر زمن
