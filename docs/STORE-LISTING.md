@@ -42,9 +42,10 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 الشارت
 • شموع يابانية، هايكن آشي، رينكو، كاجي، ونقطة ورقم.
 • حتى أربعة شارتات في شاشة واحدة، مع مزامنة الزمن بينها عند الحاجة — فتقرأ الشمعة نفسها على الأربعة معاً.
-• المس أي شمعة لترى افتتاحها وأعلاها وأدناها وإغلاقها، ثم المس 🔔 لتضع تنبيه سعر عند ذلك المستوى.
+• المس أي شمعة لترى افتتاحها وأعلاها وأدناها وإغلاقها ومداها بالنقاط، ثم المس 🔔 لتضع تنبيه سعر عند ذلك المستوى.
+• عدّاد تحت السعر الحيّ يخبرك كم بقي على إغلاق الشمعة الجارية.
 • المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، الفوليوم وغيرها.
-• «عدسات» جاهزة تبدّل طريقة قراءة الشارت بلمسة: نظيف، هيكل، زخم، سيولة.
+• «عدسات» تضع مجموعة مؤشرات جاهزة بلمسة: هيكل (المتوسطات)، زخم (RSI وMACD)، سيولة (الفوليوم وبولنجر).
 • أدوات رسم: خط اتجاه، شعاع، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات، مع زرّ تراجع.
 • أداة قياس تكتب المسافة بالنقاط والنسبة وعدد الشموع وأنت تسحب.
 • إعادة تشغيل الشموع لتدريب عينك على قراءة الحركة.
@@ -56,7 +57,8 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 
 أدوات المتداول
 • حاسبة حجم المركز: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالنقاط أو بسعرَي الدخول والوقف) لتعرف حجم اللوت، مع أهداف جاهزة بنسبة 1:1 حتى 1:3.
-• دفتر صفقات تسجّل فيه صفقاتك بنفسك: نسبة النجاح وصافي النقاط ومتوسط النتيجة بوحدة المخاطرة (R).
+• دفتر صفقات تسجّل فيه صفقاتك بنفسك: نتيجة كل صفقة بالنقاط والمال، ونسبة النجاح وصافي النقاط ومتوسط النتيجة بوحدة المخاطرة (R).
+• تنبيه قبل الصفقة إن اقترب خبر اقتصادي قوي على عملة الزوج أو المؤشر.
 • فلتر أسواق (Screener) بشروط المؤشرات الشائعة.
 • اختبار استراتيجيات بسيطة على البيانات التاريخية — لأغراض تعليمية.
 • مساعد ذكاء اصطناعي يجيب عن أسئلتك في التحليل الفني بلغتك، وتقرير أسبوعي مختصر.
@@ -98,9 +100,10 @@ MATRIX is a technical-analysis workspace built for individual traders: fast char
 CHARTS
 • Candlesticks, Heikin-Ashi, Renko, Kagi and Point & Figure.
 • Up to four charts on one screen, with optional time sync between them — read the same candle on all four at once.
-• Tap any candle to see its open, high, low and close, then tap 🔔 to set a price alert at that level.
+• Tap any candle to see its open, high, low, close and range in pips, then tap 🔔 to set a price alert at that level.
+• A countdown under the live price shows how long until the current candle closes.
 • The indicators traders actually use: SMA and EMA moving averages, Bollinger Bands, RSI, MACD, Volume and more.
-• One-tap "lenses" that change how you read the chart: Clean, Structure, Momentum, Liquidity.
+• One-tap "lenses" that add a ready set of indicators: Structure (moving averages), Momentum (RSI and MACD), Liquidity (volume and Bollinger).
 • Drawing tools: trend line, ray, horizontal and vertical lines, rectangle, Fibonacci, zones and notes, with undo.
 • A measure tool that shows pips, percent and bar count as you drag.
 • Candle replay to train your eye on price action.
@@ -112,7 +115,8 @@ WATCHLIST & ALERTS
 
 TRADER TOOLS
 • Position size calculator: enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get your lot size, with one-tap targets from 1:1 to 1:3.
-• A trade journal you fill in yourself: win rate, net pips and average result in units of risk (R).
+• A trade journal you fill in yourself: each trade's result in pips and money, plus win rate, net pips and average result in units of risk (R).
+• A heads-up before a trade when high-impact economic news is close for the pair's or index's currency.
 • Market screener using common indicator conditions.
 • Simple strategy backtesting on historical data — for learning purposes.
 • An AI assistant that answers your technical-analysis questions in your language, plus a short weekly report.

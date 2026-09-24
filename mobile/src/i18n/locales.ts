@@ -899,7 +899,7 @@ const ar: Dict = {
     'تبويب «رسم» بالشريط السفلي يفتح لك خطوط الترند وفيبوناتشي والمستطيلات وباقي أدوات التحليل الفني مباشرة على الشارت. أخطأت برسمة؟ زرّ «تراجع» بجانب الأدوات يلغي آخر تغيير.',
   onboardStep3Title: 'المؤشرات والعدسات',
   onboardStep3Body:
-    'اختر من عشرات المؤشرات الجاهزة (RSI, MACD, بولنجر وغيرها)، أو فعّل عدسة جاهزة تلخّص حالة السوق بنظرة واحدة.',
+    'اختر من عشرات المؤشرات الجاهزة (RSI وMACD وبولنجر وغيرها)، أو ابدأ بعدسة تضع لك مجموعة مؤشرات بلمسة واحدة: «هيكل» للمتوسطات المتحركة، «زخم» لـRSI وMACD، «سيولة» للفوليوم وبولنجر وCVD.',
   onboardStep4Title: 'التنبيهات',
   onboardStep4Body:
     'أسرع طريق: المس المستوى على الشارت ثم زرّ 🔔 — بلا كتابة أرقام. ويصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، فلا داعي لمراقبة الشارت طوال اليوم. تنبيهات المؤشرات وتفعيل الإشعارات من لوح التنبيهات.',
@@ -981,10 +981,11 @@ const ar: Dict = {
   screenerOpenChartA11y: 'فتح الشارت',
   newsTitle: 'أخبار مؤثرة على الفوركس',
   newsStale: 'تعذر تحديث الأخبار — تُعرض بيانات محفوظة',
-  newsEmpty: 'لا توجد أخبار حالياً',
+  newsEmpty: 'لا عناوين مؤثرة الآن — ومواعيد البيانات القادمة (الفائدة، الوظائف، التضخم) تجدها في «تقويم».',
   newsLoadError: 'تعذّر تحميل الأخبار — تحقق من الاتصال وافتح اللوحة لاحقاً',
   aiPanelTitle: 'مساعد ذكاء اصطناعي',
-  aiGreeting: 'أنا خبير تداول MATRIX. اسأل عن تحليل، سيناريو صفقة، إدارة مخاطر، أو علاقة الزوج بـ DXY.',
+  aiGreeting:
+    'أنا مساعد MATRIX الآلي. اسألني عن تحليل الزوج، سيناريو صفقة، إدارة المخاطرة، أو علاقته بـDXY. إجاباتي تحليل آلي تتعلّم منه، لا نصيحة مالية — راجع أي مستوى على الشارت قبل أن تعتمد عليه.',
   aiOfflineFallback:
     'تعذّر الاتصال بالخادم — تحقّق من اتصالك بالإنترنت وحاول بعد قليل.\n\nتحليل محلي سريع: راقب DXY قبل أي دخول على أزواج الدولار، واستخدم وقف واضح بنسبة مخاطرة ≤ 1%.',
   aiInputPlaceholder: 'مثال: تحليل {symbol} اليوم؟',
@@ -1545,11 +1546,11 @@ const ar: Dict = {
   ctlLensClean: 'نظيف',
   ctlLensCleanHint: 'سعر فقط',
   ctlLensStructure: 'هيكل',
-  ctlLensStructureHint: 'MA + مناطق',
+  ctlLensStructureHint: 'SMA + EMA',
   ctlLensMomentum: 'زخم',
   ctlLensMomentumHint: 'RSI + MACD',
   ctlLensLiquidity: 'سيولة',
-  ctlLensLiquidityHint: 'فوليوم + CVD',
+  ctlLensLiquidityHint: 'فوليوم + بولنجر + CVD',
   ctlIndBollinger: 'بولنجر',
   ctlIndVolume: 'فوليوم',
   backtestWord: 'اختبار',
@@ -1757,7 +1758,7 @@ const enUS: Dict = {
     'The Draw tab in the bottom bar opens trend lines, Fibonacci, rectangles, and more analysis tools right on the chart. Drew something wrong? The Undo button next to the tools reverses the last change.',
   onboardStep3Title: 'Indicators & lenses',
   onboardStep3Body:
-    'Choose from dozens of ready indicators (RSI, MACD, Bollinger, and more), or turn on a lens that summarizes market state at a glance.',
+    'Choose from dozens of ready indicators (RSI, MACD, Bollinger, and more), or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD.',
   onboardStep4Title: 'Alerts',
   onboardStep4Body:
     'Fastest way: tap a level on the chart, then 🔔 — no typing. You get a notification when price reaches it (checked about once a minute), so no need to watch the chart all day. Indicator alerts and notification settings are in the alerts panel.',
@@ -1839,11 +1840,11 @@ const enUS: Dict = {
   screenerOpenChartA11y: 'Open chart',
   newsTitle: 'News affecting forex',
   newsStale: 'Could not refresh news — showing saved data',
-  newsEmpty: 'No news right now',
+  newsEmpty: 'No market-moving headlines right now — upcoming releases (rates, jobs, inflation) are in Calendar.',
   newsLoadError: 'Couldn’t load news — check your connection and reopen the panel later',
   aiPanelTitle: 'AI assistant',
   aiGreeting:
-    "I'm the MATRIX trading expert. Ask about analysis, a trade scenario, risk management, or the pair's relation to DXY.",
+    "I'm MATRIX's AI assistant. Ask me about the pair's analysis, a trade scenario, risk management, or its relation to DXY. My answers are automated analysis to learn from, not financial advice — check any level on the chart before relying on it.",
   aiOfflineFallback:
     'Could not reach the server — check your internet connection and try again shortly.\n\nQuick local take: watch DXY before entering any dollar pair, and use a clear stop with risk ≤ 1%.',
   aiInputPlaceholder: 'e.g. analysis of {symbol} today?',
@@ -2406,11 +2407,11 @@ const enUS: Dict = {
   ctlLensClean: 'Clean',
   ctlLensCleanHint: 'Price only',
   ctlLensStructure: 'Structure',
-  ctlLensStructureHint: 'MA + zones',
+  ctlLensStructureHint: 'SMA + EMA',
   ctlLensMomentum: 'Momentum',
   ctlLensMomentumHint: 'RSI + MACD',
   ctlLensLiquidity: 'Liquidity',
-  ctlLensLiquidityHint: 'Volume + CVD',
+  ctlLensLiquidityHint: 'Volume + BB + CVD',
   ctlIndBollinger: 'Bollinger',
   ctlIndVolume: 'Volume',
   backtestWord: 'Backtest',
@@ -2577,9 +2578,7 @@ const enGB: Dict = {
   language: 'Language',
   commissionsReport: 'Commission report',
   networkTree: 'Network tree',
-  // التهجئة البريطانية لما يراه المتداول البريطاني أوّلاً (الجولة الترحيبية) وبقية ما افترق.
-  onboardStep3Body:
-    'Choose from dozens of ready indicators (RSI, MACD, Bollinger, and more), or turn on a lens that summarises market state at a glance.',
+  // التهجئة البريطانية لما افترق. (نصّ الجولة `onboardStep3Body` لم يعد فيه «summarize» فلا يحتاج نسخة هنا.)
   wlCatalogTitle: 'Add from catalogue',
   wlCatalogAllAdded: 'All catalogue symbols added',
   invalidNumberHint: 'Number not recognised — type it without thousands separators, e.g. 10000 or 1.0850',
@@ -2644,7 +2643,7 @@ const ku: Dict = {
     'تابی «وێنەکێشان» لە شریتی خوارەوە هێڵی ترێند و فیبۆناتچی و لاکێشەکان و ئامرازەکانی تری شیکردنەوەی تەکنیکی دەکاتەوە ڕاستەوخۆ لەسەر چارت. هەڵەت کرد؟ دوگمەی «گەڕاندنەوە» لە تەنیشت ئامرازەکان دوایین گۆڕانکاری هەڵدەوەشێنێتەوە.',
   onboardStep3Title: 'پێوەرەکان و لینزەکان',
   onboardStep3Body:
-    'لە دەیان پێوەری ئامادە هەڵبژێرە (RSI، MACD، بۆلینگەر و زیاتر)، یان لینزێک چالاک بکە کە بارودۆخی بازاڕ بە یەک تەماشاکردن کورت دەکاتەوە.',
+    'لە دەیان پێوەری ئامادە هەڵبژێرە (RSI، MACD، بۆلینجەر و زیاتر)، یان بە لینزێک دەست پێبکە کە بە یەک دەستدان کۆمەڵێک پێوەر زیاد دەکات: «پێکهاتە» بۆ ناوەندە جووڵاوەکان، «پاڵنە» بۆ RSI و MACD، «شلەیی» بۆ قەبارە و بۆلینجەر و CVD.',
   onboardStep4Title: 'ئاگادارکردنەوەکان',
   onboardStep4Body:
     'خێراترین ڕێگا: دەست لە ئاستەکە بدە لەسەر چارت پاشان 🔔 — بێ نووسینی ژمارە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت)، پێویست ناکات بە درێژایی ڕۆژ چاودێری چارت بکەیت. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
@@ -2726,11 +2725,11 @@ const ku: Dict = {
   screenerOpenChartA11y: 'کردنەوەی چارت',
   newsTitle: 'هەواڵی کاریگەر لەسەر فۆرێکس',
   newsStale: 'نەکرا هەواڵ نوێبکرێتەوە — زانیاری پاشەکەوتکراو پیشان دەدرێت',
-  newsEmpty: 'هیچ هەواڵێک لە ئێستادا نییە',
+  newsEmpty: 'ئێستا هیچ سەردێڕێکی کاریگەر نییە — کاتی داتا داهاتووەکان (سوود، کار، هەڵاوسان) لە «ڕۆژژمێر» دەبینیت.',
   newsLoadError: 'نەکرا هەواڵەکان باربکرێن — پەیوەندییەکەت بپشکنە و دواتر پانێڵەکە بکەرەوە',
   aiPanelTitle: 'یاریدەدەری زیرەکی دەستکرد',
   aiGreeting:
-    'من پسپۆڕی مامەڵەکردنی MATRIX ـم. پرسیار بکە دەربارەی شیکاری، دیمەنی مامەڵە، بەڕێوەبردنی مەترسی، یان پەیوەندی جووتەکە بە DXY.',
+    'من یاریدەدەری خۆکاری MATRIX ـم. پرسیارم لێ بکە دەربارەی شیکاری جووتەکە، دیمەنی مامەڵە، بەڕێوەبردنی مەترسی، یان پەیوەندی بە DXY. وەڵامەکانم شیکاری خۆکارن بۆ فێربوون، نەک ئامۆژگاری دارایی — پێش ئەوەی پشتی پێ ببەستیت هەر ئاستێک لەسەر چارتەکە بپشکنە.',
   aiOfflineFallback:
     'نەکرا پەیوەندی بە ڕاژەوە بکرێت — لە پەیوەندییەکەت بە ئینتەرنێت دڵنیابە و دوای کەمێک دووبارە هەوڵ بدەرەوە.\n\nشیکاری خێرای ناوخۆیی: چاودێری DXY بکە پێش هەر چوونەژوورەوەیەک بۆ جووتەکانی دۆلار، و وەستانێکی ڕوون بەکاربهێنە بە مەترسی ≤ 1%.',
   aiInputPlaceholder: 'نموونە: شیکاری {symbol} ئەمڕۆ؟',
@@ -3296,11 +3295,11 @@ const ku: Dict = {
   ctlLensClean: 'پاک',
   ctlLensCleanHint: 'تەنها نرخ',
   ctlLensStructure: 'پێکهاتە',
-  ctlLensStructureHint: 'MA + ناوچەکان',
+  ctlLensStructureHint: 'SMA + EMA',
   ctlLensMomentum: 'پاڵنە',
   ctlLensMomentumHint: 'RSI + MACD',
   ctlLensLiquidity: 'شلەیی',
-  ctlLensLiquidityHint: 'قەبارە + CVD',
+  ctlLensLiquidityHint: 'قەبارە + بۆلینجەر + CVD',
   ctlIndBollinger: 'بۆلینجەر',
   ctlIndVolume: 'قەبارە',
   backtestWord: 'تاقیکردنەوە',
