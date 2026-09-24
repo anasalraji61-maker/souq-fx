@@ -320,6 +320,10 @@ export type Dict = {
   riskCalcLogFailed: string;
   riskCalcMarginMaxLots: string;
   riskCalcLogBlockedMismatch: string;
+  riskCalcSlMismatchNarrower: string;
+  riskCalcSpread: string;
+  riskCalcSpreadNote: string;
+  riskCalcRiskWithSpread: string;
   riskCalcUseLivePrice: string;
   riskCalcUseLivePriceA11y: string;
   riskCalcLiveFilled: string;
@@ -384,6 +388,8 @@ export type Dict = {
   journalExitPlaceholder: string;
   journalSizePlaceholder: string;
   journalSizeA11y: string;
+  journalSizeUnitsFix: string;
+  journalSizeUnitsNoFix: string;
   journalExitA11y: string;
   journalNotePlaceholder: string;
   journalSlPlaceholder: string;
@@ -1178,6 +1184,10 @@ const ar: Dict = {
   riskCalcMarginMaxLots: 'أكبر حجم يتّسع له رصيدك هامشاً: {lots} lot — وهو حدّ أقصى لا يُبقي هامشاً حرّاً لأي تذبذب',
   riskCalcLogBlockedMismatch:
     'لا تُسجَّل الخطة بوقفين مختلفين — اكتب {derived} بخانة النقاط، أو عدّل سعر الوقف ليطابق نقاطك',
+  riskCalcSlMismatchNarrower: '⚠ نقاطك ({pips}) أضيق من مسافة السعرين ({derived} pip) — اللوت المحسوب أكبر مما تحتمله مخاطرتك إن بقي الوقف عند سعره',
+  riskCalcSpread: 'السبريد (بالنقاط، اختياري)',
+  riskCalcSpreadNote: 'السبريد يُضاف عادةً إلى مسافة الوقف: وقف 20 نقطة بسبريد 1.5 يخسر قرابة 21.5 عند ضربه. انظر السبريد الحالي بمنصّتك — يتّسع عند الأخبار وافتتاح الأسبوع.',
+  riskCalcRiskWithSpread: 'المخاطرة شاملة السبريد',
   riskCalcUseLivePrice: '↓ الدخول = السعر الحالي',
   riskCalcUseLivePriceA11y: 'تعبئة خانة الدخول بسعر السوق الحالي (Ask للشراء وBid للبيع حسب موضع الوقف)',
   riskCalcLiveFilled: '✓ الدخول من السعر الحالي:',
@@ -1243,6 +1253,8 @@ const ar: Dict = {
   journalExitPlaceholder: 'خروج (اختياري)',
   journalSizePlaceholder: 'الحجم لوت (اختياري)',
   journalSizeA11y: 'حجم الصفقة باللوت (اختياري)',
+  journalSizeUnitsFix: '⚠ {n} تبدو عدد وحدات لا لوتات — اضغط لتحويلها إلى {lots} lot',
+  journalSizeUnitsNoFix: '⚠ {n} lot حجم غير واقعي — يبدو عدد وحدات منسوخاً من منصّتك؛ اكتب الحجم باللوت (مثل 0.10)',
   journalExitA11y: 'سعر الخروج (اختياري)',
   journalNotePlaceholder: 'ملاحظة',
   journalSlPlaceholder: 'وقف الخسارة (اختياري)',
@@ -1257,7 +1269,7 @@ const ar: Dict = {
   journalCloseFailedBody: 'تعذّر تأكيد الإغلاق — تحقّق من الاتصال. إن بقيت الصفقة «مفتوحة» في القائمة فأغلقها مرة أخرى.',
   journalLoadError: 'تعذّر تحميل الدفتر — تحقّق من الاتصال. صفقاتك المسجّلة لم تُحذف.',
   journalEmpty:
-    'لا صفقات مسجّلة بعد — سجّل كل صفقة (حتى على حساب تجريبي) لتعرف مع الوقت ما ينجح معك وما لا ينجح.',
+    'لا صفقات مسجّلة بعد — سجّل كل صفقة (حتى على حساب تجريبي) لتعرف مع الوقت ما ينجح معك وما لا ينجح. اكتبها بالنموذج أعلاه، أو احسبها في «المخاطرة» ثم اضغط «سجّل هذه الخطة بالدفتر».',
   journalOpenSuffix: '(مفتوحة)',
   journalClosedWord: 'مغلقة',
   journalCloseNeedsExit: 'اكتب سعر الخروج في خانة «خروج» أعلى النموذج، ثم اضغط «إغلاق بسعر خانة الخروج» تحت الصفقة.',
@@ -2044,6 +2056,10 @@ const enUS: Dict = {
   riskCalcMarginMaxLots: 'Largest size your balance can cover in margin: {lots} lot — a ceiling that leaves no free margin for any swing',
   riskCalcLogBlockedMismatch:
     'A plan with two different stops can\'t be logged — type {derived} in the pips box, or move your stop price to match your pips',
+  riskCalcSlMismatchNarrower: '⚠ Your pips ({pips}) are tighter than the distance between your prices ({derived} pip) — the lot size is larger than your risk allows if the stop stays at its price',
+  riskCalcSpread: 'Spread (pips, optional)',
+  riskCalcSpreadNote: 'Spread usually adds to your stop distance: a 20-pip stop with a 1.5 spread loses about 21.5 when hit. Check the current spread on your platform — it widens around news and the weekly open.',
+  riskCalcRiskWithSpread: 'Risk including spread',
   riskCalcUseLivePrice: '↓ Entry = current price',
   riskCalcUseLivePriceA11y: 'Fill the entry with the current market price (Ask for buy, Bid for sell, from where the stop sits)',
   riskCalcLiveFilled: '✓ Entry from the current price:',
@@ -2110,6 +2126,8 @@ const enUS: Dict = {
   journalExitPlaceholder: 'Exit (optional)',
   journalSizePlaceholder: 'Size in lots (optional)',
   journalSizeA11y: 'Trade size in lots (optional)',
+  journalSizeUnitsFix: '⚠ {n} looks like units, not lots — tap to convert to {lots} lot',
+  journalSizeUnitsNoFix: '⚠ {n} lots is not a realistic size — it looks like a unit count copied from your platform; type the size in lots (e.g. 0.10)',
   journalExitA11y: 'Exit price (optional)',
   journalNotePlaceholder: 'Note',
   journalSlPlaceholder: 'Stop loss (optional)',
@@ -2124,7 +2142,7 @@ const enUS: Dict = {
   journalCloseFailedBody: 'Couldn’t confirm the close — check your connection. If the trade still shows as open, close it again.',
   journalLoadError: 'Couldn\'t load your journal — check your connection. Your logged trades haven\'t been deleted.',
   journalEmpty:
-    'No trades logged yet — log every trade (even on a demo account) to learn over time what works for you and what doesn\'t.',
+    'No trades logged yet — log every trade (even on a demo account) to learn over time what works for you and what doesn\'t. Fill in the form above, or size it under «Risk» and tap «Log this plan to the journal».',
   journalOpenSuffix: '(open)',
   journalClosedWord: 'Closed',
   journalCloseNeedsExit: 'Type the exit price in the “Exit” field at the top of the form, then tap “Close at exit field price” under the trade.',
@@ -2936,6 +2954,10 @@ const ku: Dict = {
   riskCalcMarginMaxLots: 'گەورەترین قەبارە کە باڵانسەکەت مارجینەکەی دەگرێتە ئەستۆ: {lots} lot — سنووری سەرەوەیە و هیچ مارجینی ئازاد بۆ هیچ جووڵەیەک ناهێڵێتەوە',
   riskCalcLogBlockedMismatch:
     'پلانێک بە دوو وەستانی جیاواز تۆمار ناکرێت — {derived} لە خانەی خاڵەکان بنووسە، یان نرخی وەستان بگۆڕە تا لەگەڵ خاڵەکانت بگونجێت',
+  riskCalcSlMismatchNarrower: '⚠ خاڵەکانت ({pips}) تەسکترن لە دووری نێوان دوو نرخەکە ({derived} pip) — لۆتی حیسابکراو گەورەترە لەوەی مەترسییەکەت هەڵیدەگرێت ئەگەر وەستان لە نرخی خۆی بمێنێتەوە',
+  riskCalcSpread: 'سپرێد (pip، ئیختیاری)',
+  riskCalcSpreadNote: 'سپرێد زۆرجار دەچێتە سەر دووری وەستان: وەستانی 20 pip بە سپرێدی 1.5 نزیکەی 21.5 لەدەست دەدات کاتێک لێی دەدرێت. سپرێدی ئێستا لە پلاتفۆرمەکەت ببینە — لە کاتی هەواڵ و کرانەوەی هەفتەدا فراوانتر دەبێت.',
+  riskCalcRiskWithSpread: 'مەترسی لەگەڵ سپرێد',
   riskCalcUseLivePrice: '↓ چوونەژوورەوە = نرخی ئێستا',
   riskCalcUseLivePriceA11y: 'پڕکردنەوەی خانەی چوونەژوورەوە بە نرخی بازاڕی ئێستا (Ask بۆ کڕین و Bid بۆ فرۆشتن بەپێی شوێنی وەستان)',
   riskCalcLiveFilled: '✓ چوونەژوورەوە لە نرخی ئێستاوە:',
@@ -3004,6 +3026,8 @@ const ku: Dict = {
   journalExitPlaceholder: 'دەرچوون (ئیختیاری)',
   journalSizePlaceholder: 'قەبارە بە لۆت (ئیختیاری)',
   journalSizeA11y: 'قەبارەی مامەڵە بە لۆت (ئیختیاری)',
+  journalSizeUnitsFix: '⚠ {n} وەک ژمارەی یەکە دەردەکەوێت نەک لۆت — دەست بنێ بۆ گۆڕینی بۆ {lots} lot',
+  journalSizeUnitsNoFix: '⚠ {n} lot قەبارەیەکی نائاساییە — وادیارە ژمارەی یەکەکانە لە پلاتفۆرمەکەتەوە کۆپی کراوە؛ قەبارە بە لۆت بنووسە (وەک 0.10)',
   journalExitA11y: 'نرخی دەرچوون (ئیختیاری)',
   journalNotePlaceholder: 'تێبینی',
   journalSlPlaceholder: 'وەستانی زیان (ئیختیاری)',
@@ -3018,7 +3042,7 @@ const ku: Dict = {
   journalCloseFailedBody: 'داخستنەکە پشتڕاست نەکرایەوە — پەیوەندییەکەت بپشکنە. ئەگەر مامەڵەکە هێشتا کراوە دیار بوو، دووبارە دایبخە.',
   journalLoadError: 'نەکرا تۆمارەکە باربکرێت — پەیوەندییەکەت بپشکنە. مامەڵە تۆمارکراوەکانت نەسڕاونەتەوە.',
   journalEmpty:
-    'هێشتا هیچ مامەڵەیەک تۆمار نەکراوە — هەموو مامەڵەیەک تۆمار بکە (تەنانەت لەسەر هەژماری تاقیکردنەوە) بۆ ئەوەی بزانیت چی بۆت سەرکەوتووە.',
+    'هێشتا هیچ مامەڵەیەک تۆمار نەکراوە — هەموو مامەڵەیەک تۆمار بکە (تەنانەت لەسەر هەژماری تاقیکردنەوە) بۆ ئەوەی بە تێپەڕبوونی کات بزانیت چی بۆت سەرکەوتووە و چی نا. لە فۆرمەکەی سەرەوە بینووسە، یان لە «مەترسی» حیسابی بکە و «ئەم پلانە لە دەفتەر تۆمار بکە» دابگرە.',
   journalOpenSuffix: '(کراوەیە)',
   journalClosedWord: 'داخراو',
   journalCloseNeedsExit: 'نرخی دەرچوون لە خانەی «دەرچوون» لە سەرەوەی فۆڕمەکە بنووسە، پاشان «داخستن بە نرخی خانەی دەرچوون» لە ژێر مامەڵەکە دابگرە.',
