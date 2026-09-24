@@ -27,6 +27,7 @@ import {
   riskOverBalance,
   MAX_LEVERAGE,
   requiredMargin,
+  marginBaseToAccount,
   maxLotsForMargin,
   marginPrice,
   smallContractSpec,
@@ -775,9 +776,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     quote: spec && mktQuote && mktQuote.sym === spec.symbol ? mktQuote : null,
     side: planSide,
   });
+  /** الأساس = عملة الحساب ⇒ الهامش بلا سعر (أمرٌ معلّق بعيد عن السوق كان ينحرف بنسبة الدخول/الحيّ) — `marginBaseToAccount` */
+  const marginBase = marginBaseToAccount(spec, convAccount, cent);
   const margin =
     spec && rate != null && lots != null && leverageNum != null && marginPx
-      ? requiredMargin({ spec, lots, price: marginPx.price, quoteToAccount: rate, leverage: leverageNum })
+      ? requiredMargin({ spec, lots, price: marginPx.price, quoteToAccount: rate, leverage: leverageNum, baseToAccount: marginBase })
       : null;
   const marginPct = margin != null && Number.isFinite(balanceNum) && balanceNum > 0 ? (margin / balanceNum) * 100 : null;
   /** الهامش يتجاوز الرصيد: لا تتّسع له الصفقة (أو تُغلق بأول تذبذب) — يُكتب بلون التحذير */
@@ -785,7 +788,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** وحين يتجاوز: أكبر لوت يتّسع له الرصيد كلّه هامشاً — حدٌّ أعلى لا توصية (الهامش الحرّ صفر عنده) */
   const marginMaxLots =
     marginOver && spec && rate != null && leverageNum != null
-      ? maxLotsForMargin({ spec, available: balanceNum, price: marginPx!.price, quoteToAccount: rate, leverage: leverageNum })
+      ? maxLotsForMargin({
+          spec,
+          available: balanceNum,
+          price: marginPx!.price,
+          quoteToAccount: rate,
+          leverage: leverageNum,
+          baseToAccount: marginBase,
+        })
       : null;
   /** الربح المحتمل من المسافة الخام للهدف لا من نقاطه المقرَّبة للعرض — راجع `profitAtTarget` */
   const potentialProfit =

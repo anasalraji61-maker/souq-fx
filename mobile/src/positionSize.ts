@@ -721,6 +721,10 @@ export function leverageOutOfRange(raw: string): boolean {
  *
  * تقديرٌ: الوسيط قد يحسب بسعر مختلف (Ask/Bid أو سعر اللحظة) ومتطلّبات هامش المعادن/التقاطعات تختلف.
  * `null` لأي مدخل غير صالح أو غير موجب.
+ *
+ * `baseToAccount` (`marginBaseToAccount`): العملة الأساس **هي** عملة الحساب ⇒ الهامش = اللوت × العقد ÷ الرافعة بلا سعر.
+ * «السعر يُلغي نفسه» أعلاه صحيحٌ فقط حين الدخول = السعر الحيّ: `quoteToAccount` = 1 ÷ **الحيّ**، والسعر = **الدخول المكتوب**،
+ * فأمرٌ معلّق USDJPY عند 140 والسوق 150 كان يُخرج 933.33 USD لا 1,000 (والتقاطع EURGBP بحساب يورو كذلك بنسبة الدخول/الحيّ).
  */
 export function requiredMargin(input: {
   spec: InstrumentSpec;
@@ -728,10 +732,26 @@ export function requiredMargin(input: {
   price: number;
   quoteToAccount: number;
   leverage: number;
+  baseToAccount?: number | null;
 }): number | null {
   const { spec, lots, price, quoteToAccount, leverage } = input;
   if (![lots, price, quoteToAccount, leverage].every((v) => Number.isFinite(v) && v > 0)) return null;
-  return (lots * spec.contractSize * price * quoteToAccount) / leverage;
+  return (lots * spec.contractSize * marginUnitValue(input)) / leverage;
+}
+
+/** قيمة وحدة واحدة من العقد بعملة الحساب للهامش: `baseToAccount` حين العملة الأساس = الحساب، وإلا السعر × التحويل. */
+function marginUnitValue(input: { price: number; quoteToAccount: number; baseToAccount?: number | null }): number {
+  const b = input.baseToAccount;
+  return b != null && Number.isFinite(b) && b > 0 ? b : input.price * input.quoteToAccount;
+}
+
+/**
+ * العملة الأساس = عملة حساب التحويل (`convAccount`: حساب السنت بالدولار) ⇒ قيمة الوحدة بعملة المال: 1، أو `CENTS_PER_USD`
+ * بالسنت (USDJPYc: الوحدة دولار = 100 USC). `null` = ليست كذلك (الهامش من السعر × التحويل). راجع `requiredMargin`.
+ */
+export function marginBaseToAccount(spec: InstrumentSpec | null, convAccount: string, cent = false): number | null {
+  if (!spec || spec.base !== convAccount) return null;
+  return cent ? CENTS_PER_USD : 1;
 }
 
 /**
@@ -747,10 +767,11 @@ export function maxLotsForMargin(input: {
   price: number;
   quoteToAccount: number;
   leverage: number;
+  baseToAccount?: number | null;
 }): number | null {
   const { spec, available, price, quoteToAccount, leverage } = input;
   if (![available, price, quoteToAccount, leverage].every((v) => Number.isFinite(v) && v > 0)) return null;
-  const raw = (available * leverage) / (spec.contractSize * price * quoteToAccount);
+  const raw = (available * leverage) / (spec.contractSize * marginUnitValue(input));
   return Math.round(Math.floor(raw / LOT_STEP + 1e-9) * LOT_STEP * 100) / 100;
 }
 

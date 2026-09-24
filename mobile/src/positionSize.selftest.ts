@@ -29,6 +29,7 @@ import {
   LOT_STEP,
   parseLeverage,
   requiredMargin,
+  marginBaseToAccount,
   maxLotsForMargin,
   stopPipsMismatch,
   marginPrice,
@@ -1994,3 +1995,43 @@ console.log('positionSize commissionNoteExample selftest OK');
   assert.ok('EUR/USDpro'.length <= SYMBOL_INPUT_MAX_LEN);
 }
 console.log('positionSize glued account-type suffix selftest OK');
+
+// الهامش حين العملة الأساس = عملة الحساب: بلا سعر، حتى لأمرٍ معلّق بعيد عن السوق
+{
+  const uj = instrumentSpec('USDJPY')!;
+  const live = quoteToAccountRate(conversionPair('JPY', 'USD'), 150)!; // 1/150 من السعر الحيّ
+  // الخطأ القديم: الدخول 140 × (1/150) ⇒ 933.33 USD
+  assert.ok(near(requiredMargin({ spec: uj, lots: 1, price: 140, quoteToAccount: live, leverage: 100 })!, 933.3333333333334));
+  const b = marginBaseToAccount(uj, 'USD');
+  assert.equal(b, 1);
+  assert.ok(near(requiredMargin({ spec: uj, lots: 1, price: 140, quoteToAccount: live, leverage: 100, baseToAccount: b })!, 1000));
+  // EURGBP بحساب يورو، دخول 0.84 والسوق 0.86، 1:30 ⇒ 3,333.33 EUR (كان 3,255.81)
+  const eg = instrumentSpec('EURGBP')!;
+  const gbpEur = quoteToAccountRate(conversionPair('GBP', 'EUR'), 0.86)!;
+  const be = marginBaseToAccount(eg, 'EUR');
+  assert.equal(formatMoney(requiredMargin({ spec: eg, lots: 1, price: 0.84, quoteToAccount: gbpEur, leverage: 30, baseToAccount: be })!, 'EUR'), '3,333.33 EUR');
+  // والدخول = الحيّ ⇒ الرقم نفسه كالطريق القديم (لا تغيير لمن يحسب من سعر السوق)
+  assert.ok(near(
+    requiredMargin({ spec: uj, lots: 0.3, price: 150, quoteToAccount: live, leverage: 500, baseToAccount: b })!,
+    requiredMargin({ spec: uj, lots: 0.3, price: 150, quoteToAccount: live, leverage: 500 })!,
+  ));
+  // السنت: USDJPYc لوت سنت (1,000 دولار) ÷ 100 = 10 USD = 1,000 USC
+  const ujc = smallContractSpec('USDJPYc')!;
+  const bc = marginBaseToAccount(ujc.spec, 'USD', true);
+  assert.equal(bc, CENTS_PER_USD);
+  assert.ok(near(requiredMargin({ spec: ujc.spec, lots: 1, price: 140, quoteToAccount: centQuoteToAccount(live)!, leverage: 100, baseToAccount: bc })!, 1000));
+  // micro: EURUSDmicro بحساب يورو — 1 لوت micro (1,000 يورو) ÷ 100 = 10 EUR
+  const eum = smallContractSpec('EURUSDmicro')!;
+  assert.ok(near(requiredMargin({ spec: eum.spec, lots: 1, price: 1.05, quoteToAccount: 1 / 1.1, leverage: 100, baseToAccount: marginBaseToAccount(eum.spec, 'EUR') })!, 10));
+  // maxLotsForMargin يعكسه: 1,000 USD برافعة 100 ⇒ 1.00 لوت USDJPY أياً كان الدخول
+  for (const px of [140, 150, 165])
+    assert.equal(maxLotsForMargin({ spec: uj, available: 1000, price: px, quoteToAccount: live, leverage: 100, baseToAccount: b }), 1);
+  // ليست الأساس ⇒ null (الطريق القديم): EURUSD بحساب دولار، الذهب بأي حساب، EURGBP بحساب دولار
+  assert.equal(marginBaseToAccount(instrumentSpec('EURUSD'), 'USD'), null);
+  assert.equal(marginBaseToAccount(instrumentSpec('XAUUSD'), 'USD'), null);
+  assert.equal(marginBaseToAccount(eg, 'USD'), null);
+  assert.equal(marginBaseToAccount(null, 'USD'), null);
+  // baseToAccount غير صالح ⇒ الطريق القديم
+  assert.ok(near(requiredMargin({ spec: uj, lots: 1, price: 150, quoteToAccount: live, leverage: 100, baseToAccount: NaN })!, 1000));
+}
+console.log('positionSize margin base-currency account selftest OK');
