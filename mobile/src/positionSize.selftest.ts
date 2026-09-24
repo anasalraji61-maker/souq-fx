@@ -992,6 +992,16 @@ console.log('positionSize spreadTooWide selftest OK');
     planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2', commissionPerLot: 7, netRR: '1:1.7', words: { risk: 'مەترسی', commission: 'کۆمیسیۆن', netRR: 'R:R ی خاوێن' } }),
     '0.50 lot · مەترسی 100.00 USD · R:R 1:2 · کۆمیسیۆن 7.00 USD/lot · R:R ی خاوێن 1:1.7'
   );
+  // المفاتيح الأربعة كما بـlocales (ar/en) — الملاحظة كاملة بلغة الواجهة، و«1.00 lot» أولها ما زالت علامة knownLots
+  const arFull = { risk: 'المخاطرة', spread: 'سبريد', commission: 'عمولة', netRR: 'R:R بعد التكاليف' };
+  assert.equal(
+    planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2', spreadPips: 1.5, commissionPerLot: 7, netRR: '1:1.7', words: arFull }),
+    '0.50 lot · المخاطرة 100.00 USD · R:R 1:2 · سبريد 1.5 pip · عمولة 7.00 USD/lot · R:R بعد التكاليف 1:1.7'
+  );
+  assert.equal(
+    planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2', commissionPerLot: 7, netRR: '1:1.7', words: { commission: 'Commission', netRR: 'Net R:R' } }),
+    '0.50 lot · risk 100.00 USD · R:R 1:2 · Commission 7.00 USD/lot · Net R:R 1:1.7'
+  );
   for (const words of [{}, { risk: '', spread: '  ' }, { risk: null }, undefined])
     assert.equal(planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2', spreadPips: 1.5, words }), '0.50 lot · risk 100.00 USD · R:R 1:2 · spread 1.5 pip');
   // «1.00 lot» أول الملاحظة بكل لغة — علامة `knownLots` بالدفتر
