@@ -1090,14 +1090,21 @@ export const MAX_SANE_LOTS = 100;
 export const MAX_SMALL_LOTS = 2 * MAX_SANE_LOTS;
 
 /**
- * الحجم المحسوب **فوق أكبر أمر** يقبله أغلب الوسطاء (`MAX_SANE_LOTS`): رصيد 100,000 بمخاطرة 2% ووقف
+ * حدّ **تحذير** الحاسبة للّوت العادي: الطرف الأدنى من «50–100 lot» الذي يذكره نصّ التحذير (`riskCalcOverOrderMax`).
+ * كان التحذير على `MAX_SANE_LOTS` (100) فيخرج 75 لوتاً بلا إشارة، والوسيط الذي يحدّ بـ50 يرفض الأمر.
+ * منفصلٌ عن `MAX_SANE_LOTS` عمداً: ذاك حدّ «الرقم وحداتٌ لا لوتات» بالدفتر، و60 لوتاً هناك حجمٌ حقيقي لا يُشكّ فيه.
+ */
+export const ORDER_WARN_LOTS = 50;
+
+/**
+ * الحجم المحسوب **فوق أكبر أمر** يقبله بعض الوسطاء (`ORDER_WARN_LOTS`): رصيد 100,000 بمخاطرة 2% ووقف
  * 1 pip يُخرج 200 لوت — رقمٌ صحيح حسابياً لكن الأمر يُرفض عند الوسيط (أو الوقف نفسه خطأ كتابة: «1»
  * بدل «10»). يُرجع اللوت المقرَّب ليُذكر بالتحذير، أو `null` (ضمن الحدّ، أو دون أصغر لوت، أو لا نتيجة).
- * `MAX_SANE_LOTS` بالضبط مقبول — الحدّ نفسه يُقبل عند الوسطاء الذين يحدّون بـ100.
+ * الحدّ بالضبط مقبول. السنت/micro: `MAX_SMALL_LOTS` (200) كالدفتر.
  */
 export function lotsOverOrderMax(result: SizeResult | null, small = false): number | null {
   if (!result || result.belowMinLot || !Number.isFinite(result.lots)) return null;
-  return result.lots > (small ? MAX_SMALL_LOTS : MAX_SANE_LOTS) ? result.lots : null;
+  return result.lots > (small ? MAX_SMALL_LOTS : ORDER_WARN_LOTS) ? result.lots : null;
 }
 
 /**
