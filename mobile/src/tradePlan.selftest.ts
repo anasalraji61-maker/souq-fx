@@ -855,6 +855,51 @@ console.log('tradePlan recentLotSizes selftest OK');
   assert.deepEqual(quickStopPips('EURUSD'), [10, 20, 30, 50]);
   assert.deepEqual(quickStopPips('XAGUSD'), [10, 20, 30, 50]);
   assert.deepEqual(quickStopPips('US30'), []);
+  // بسعر الدخول: الرئيسية والين والمعادن كما كانت حرفياً…
+  for (const [sym, px] of [
+    ['EURUSD', 1.085], ['AUDUSD', 0.65], ['NZDUSD', 0.59], ['EURGBP', 0.84], ['GBPUSD', 1.27], ['USDCAD', 1.37],
+    ['USDCHF', 0.88], ['GBPNZD', 2.15], ['GBPAUD', 1.95], ['USDJPY', 157.4], ['GBPJPY', 191.1], ['EURJPY', 170],
+    ['AUDJPY', 98.7], ['CHFJPY', 178], ['USDSGD', 1.35], ['XAGUSD', 30.1], ['XAGUSD', 22.3],
+  ] as const) {
+    assert.deepEqual(quickStopPips(sym, px), [10, 20, 30, 50], sym);
+  }
+  assert.deepEqual(quickStopPips('XAUUSD', 2400), [30, 50, 100, 200]);
+  assert.deepEqual(quickStopPips('EURUSD', null), [10, 20, 30, 50]);
+  assert.deepEqual(quickStopPips('USDZAR', 0), [10, 20, 30, 50]);
+  assert.deepEqual(quickStopPips('USDZAR', NaN), [10, 20, 30, 50]);
+  assert.deepEqual(quickStopPips('US30', 39000), []);
+  // …والبعيدة عنها تُقاس نسبةً للسعر، بأرقام مستديرة بلا ضجيج عائم
+  assert.deepEqual(quickStopPips('USDZAR', 18.2), [200, 400, 600, 1000]);
+  assert.deepEqual(quickStopPips('usdmxn.m', 19.5), [200, 400, 600, 1000]);
+  assert.deepEqual(quickStopPips('EURTRY', 38), [500, 1000, 1500, 2500]);
+  assert.deepEqual(quickStopPips('USDSEK', 10.5), [100, 200, 300, 500]);
+  assert.deepEqual(quickStopPips('EURNOK', 11.7), [100, 200, 300, 500]);
+  assert.deepEqual(quickStopPips('USDPLN', 4.0), [50, 100, 150, 250]);
+  assert.deepEqual(quickStopPips('ZARJPY', 8.5), [1, 2, 3, 5]);
+  assert.deepEqual(quickStopPips('MXNJPY', 7.9), [1, 2, 3, 5]);
+  assert.deepEqual(quickStopPips('NOKJPY', 14.2), [1, 2, 3, 5]);
+  // الشبكة: لكل زوج بسعره الواقعي، أوسع شريحة بين 0.2% و1.2% من السعر (EURUSD: 50 pip = 0.46%)، وأضيقها
+  // ليست أقل من 1 pip؛ والوقف منها بالجهة الصحيحة ومسافته تُقرأ كما كُتبت.
+  for (const [sym, px] of [
+    ['EURUSD', 1.085], ['USDZAR', 18.2], ['USDMXN', 19.5], ['EURTRY', 38], ['USDTRY', 34.2], ['USDSEK', 10.5],
+    ['USDNOK', 10.9], ['USDDKK', 6.8], ['USDPLN', 4.0], ['EURPLN', 4.3], ['USDCNH', 7.2], ['USDHKD', 7.8],
+    ['USDILS', 3.7], ['ZARJPY', 8.5], ['MXNJPY', 7.9], ['TRYJPY', 4.4], ['SEKJPY', 14.5], ['USDJPY', 157.4],
+    ['XAUUSD', 2400], ['EURSEK', 11.5], ['GBPZAR', 23.4], ['AUDNZD', 1.09], ['EURAUD', 1.65],
+  ] as const) {
+    const chips = quickStopPips(sym, px);
+    const spec = instrumentSpec(sym)!;
+    const widest = (chips[chips.length - 1] * spec.pipSize) / px;
+    assert.ok(widest >= 0.002 && widest <= 0.012, `${sym} ${widest}`);
+    assert.ok(chips[0] >= 1, sym);
+    for (const pips of chips) {
+      assert.equal(Number(pips.toFixed(1)), pips, `${sym} ${pips}`);
+      for (const side of ['buy', 'sell'] as const) {
+        const stop = stopAtPips({ symbol: sym, side, entry: px, pips })!;
+        assert.equal(levelSideIssue({ side, entry: px, sl: stop }), null, sym);
+        assert.equal(slPipsFromPrices(spec, px, stop), pips, `${sym} ${side} ${pips}`);
+      }
+    }
+  }
   // الشبكة: الوقف الناتج بالجهة الصحيحة، ومسافته تُقرأ `pips` بالضبط بمسطرة الخطة وبمسطرة حجم اللوت
   // (slPipsFromPrices تقرّب للأعلى — ضجيجٌ عائم كان سيُحسب 20.1 pip فيُصغَّر اللوت)، والنتيجة −1R عند الوقف.
   let n = 0;

@@ -368,7 +368,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const sym = symbol.trim().toUpperCase();
     const spec = instrumentSpec(sym);
     if (e == null || !spec) return [];
-    return quickStopPips(sym).flatMap((pips) => {
+    return quickStopPips(sym, e).flatMap((pips) => {
       const v = stopAtPips({ symbol: sym, side, entry: e, pips });
       return v != null ? [{ pips, v, tol: spec.pipSize / 20, text: formatPrice(v, sym) }] : [];
     });

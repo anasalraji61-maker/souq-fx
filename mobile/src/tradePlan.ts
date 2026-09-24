@@ -408,15 +408,33 @@ export function targetAtRR(input: {
   return out > 0 ? out : null;
 }
 
+/** مضاعفات «مستديرة» لمسافات الوقف بأزواج سعرُها بعيد عن الرئيسية — راجع `quickStopPips` */
+const STOP_SCALES = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100] as const;
+
 /**
  * مسافات الوقف السريعة بالـpip لشرائح خانة الوقف بالدفتر، بحسب الأداة: pip الذهب 0.1 (20 pip = دولاران
  * فقط، أضيق من ضجيج دقيقة واحدة) فمسافاته أكبر؛ الفوركس والفضة بالمسافات المعتادة لمتداول التجزئة.
  * `[]` لرمز بلا مواصفات (مؤشر/عملة رقمية) — لا pip يُقاس به.
+ *
+ * بسعر الدخول (`entry`) تُقاس المسافات **نسبةً للسعر** للأزواج البعيدة عن الرئيسية: pip الـ0.0001 على
+ * USDZAR (18.2) أو EURTRY (38) عُشرُ ما هو على EURUSD نسبةً للسعر، فـ«50 pip» هناك 0.03% — داخل السبريد
+ * نفسه، وقفٌ يُضرب لحظة الفتح؛ والعكس على ZARJPY/MXNJPY (8.5) حيث pip الـ0.01 أكبر بعشر مرات فـ«10 pip»
+ * وقفٌ أوسع من EURUSD بـ50 pip. المرجع EURUSD عند 1.10: `f = entry / pipSize / 11000`؛ الرئيسية والين
+ * (f بين 0.4 و2.5 — AUDUSD 0.59، GBPNZD 1.9، GBPJPY 1.7) كما كانت حرفياً، وخارجها تُضرب المسافات بأقرب
+ * مضاعف مستدير (لوغاريتمياً): USDZAR ×20 ⇒ 200/400/600/1000، ZARJPY ×0.1 ⇒ 1/2/3/5. المعادن كما هي
+ * (تذبذبها النسبي لا يتبع سعرها).
  */
-export function quickStopPips(symbol: string): readonly number[] {
+export function quickStopPips(symbol: string, entry?: number | null): readonly number[] {
   const spec = instrumentSpec(symbol);
   if (!spec) return [];
-  return spec.base === 'XAU' ? [30, 50, 100, 200] : [10, 20, 30, 50];
+  if (spec.base === 'XAU') return [30, 50, 100, 200];
+  const base = [10, 20, 30, 50];
+  if (spec.base === 'XAG' || !finitePos(entry)) return base;
+  const f = entry / spec.pipSize / 11000;
+  if (f > 0.4 && f < 2.5) return base;
+  let m: number = STOP_SCALES[0];
+  for (const c of STOP_SCALES) if (Math.abs(Math.log(c / f)) < Math.abs(Math.log(m / f))) m = c;
+  return base.map((p) => Number((p * m).toFixed(1)));
 }
 
 /**
