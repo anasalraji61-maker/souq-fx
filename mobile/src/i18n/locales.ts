@@ -798,6 +798,8 @@ export type Dict = {
   cfSyncActivateA11yPrefix: string;
   cfChangeSymbolA11y: string;
   cfMarketClosedA11y: string;
+  /** «⏪» بجانب سعر الرأس بالإعادة — `mcReplayModeA11y` («وضع الإعادة») لا يقول إن السعر المقروء ليس الحيّ */
+  cfReplayPriceA11y: string;
   cfMarketClosedTag: string;
   cfSpreadA11y: string;
   // Shared chart/dataSource.ts + chart/marketHours.ts labels (ChartFrame/TerminalScreen/FocusChartModal) — 2026-09-18
@@ -1707,6 +1709,7 @@ const ar: Dict = {
   cfSyncActivateA11yPrefix: 'تفعيل مزامنة شارت ',
   cfChangeSymbolA11y: 'تغيير الرمز',
   cfMarketClosedA11y: 'السوق مغلق حالياً',
+  cfReplayPriceA11y: 'إعادة الشموع — السعر إغلاق شمعة الإعادة لا السعر الحيّ',
   cfMarketClosedTag: 'مغلق',
   cfSpreadA11y: 'سبريد البيع والشراء',
   dsKindProvider: 'مزود',
@@ -2612,6 +2615,7 @@ const enUS: Dict = {
   cfSyncActivateA11yPrefix: 'Activate sync for chart ',
   cfChangeSymbolA11y: 'Change symbol',
   cfMarketClosedA11y: 'Market currently closed',
+  cfReplayPriceA11y: 'Candle replay — this is the replay candle’s close, not the live price',
   cfMarketClosedTag: 'Closed',
   cfSpreadA11y: 'Bid/ask spread',
   dsKindProvider: 'Provider',
@@ -3544,6 +3548,7 @@ const ku: Dict = {
   cfSyncActivateA11yPrefix: 'چالاککردنی هاوکاتکردنی چارتی ',
   cfChangeSymbolA11y: 'گۆڕینی هێما',
   cfMarketClosedA11y: 'بازاڕ ئێستا داخراوە',
+  cfReplayPriceA11y: 'دووبارەکردنەوەی مۆم — ئەم نرخە داخستنی مۆمی دووبارەکردنەوەیە، نەک نرخی زیندوو',
   cfMarketClosedTag: 'داخراو',
   cfSpreadA11y: 'جیاوازی نرخی کڕین و فرۆشتن',
   dsKindProvider: 'دابینکەر',
