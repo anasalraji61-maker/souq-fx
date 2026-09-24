@@ -387,6 +387,9 @@ const PRICE_LABEL_GAP = 4;
 const PRICE_TAG_H = 18;
 const TAG_CLEAR_GAP = 2;
 
+/** آخر شارت نُقر على الويب — أسهم لوحة المفاتيح وEsc له وحده لا لكل شارت بالصفحة. */
+let webKeyChart: object | null = null;
+
 function candleTimeSec(t: number): number {
   return t > 1e12 ? t / 1000 : t;
 }
@@ -873,6 +876,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const crossPinned = useRef(false);
   const hoverRaf = useRef<number | null>(null);
   const hoverPoint = useRef({ x: 0, y: 0 });
+  const keyToken = useRef({});
   const [windowCount, setWindowCount] = useState(80);
   const [offset, setOffset] = useState(0);
   const [priceScale, setPriceScale] = useState(1);
@@ -2912,6 +2916,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               pointerId: point.pointerId,
             };
             event.currentTarget?.setPointerCapture?.(point.pointerId);
+            webKeyChart = keyToken.current;
             beginDrag();
             // `clientX/Y` إحداثيات النافذة؛ `onChartPress` تريدها داخل اللوح.
             const rect = event.currentTarget?.getBoundingClientRect?.();
@@ -2976,13 +2981,31 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         } as const)
       : {};
 
-  // Esc على الويب يفكّ تثبيت التقاطع ويمسحه فتعود المعاينة مع حركة الفأرة.
+  // Esc على الويب يفكّ تثبيت التقاطع ويمسحه فتعود المعاينة مع حركة الفأرة. و←/→ تنقل
+  // التقاطع المثبَّت شمعةً شمعة (السعر المثبَّت كما هو) — قراءة شموع متتالية بدقّة لا تبلغها
+  // الفأرة على شموع بعرض 3px. داخل النافذة المرئيّة فقط، ولا تسرق الأسهم من خانة كتابة.
   useEffect(() => {
     if (Platform.OS !== 'web' || !canPan) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || !crossPinned.current) return;
-      crossPinned.current = false;
-      setCross(null);
+      if (!crossPinned.current || webKeyChart !== keyToken.current) return;
+      if (event.key === 'Escape') {
+        crossPinned.current = false;
+        setCross(null);
+        return;
+      }
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      const target = event.target as { tagName?: string; isContentEditable?: boolean } | null;
+      if (target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '')) return;
+      const plot = sourceRef.current.plot as { time: number }[];
+      const step = event.key === 'ArrowRight' ? 1 : -1;
+      event.preventDefault();
+      setCross((prev) => {
+        if (!prev) return prev;
+        const i = indexOfBarTime(plot, prev.time);
+        if (i == null) return prev;
+        const next = plot[Math.max(0, Math.min(plot.length - 1, i + step))];
+        return next && next.time !== prev.time ? { ...prev, time: next.time } : prev;
+      });
     };
     document.addEventListener('keydown', onKey);
     return () => {
