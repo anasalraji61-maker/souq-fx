@@ -1036,6 +1036,12 @@ export type Dict = {
   tdsRootBottom: string;
   tdsFootnote: string;
   accNetLoadError: string;
+  /**
+   * قارئ الشاشة لأي زرّ يعرض «...» أثناء الانتظار (10 مواضع: AccountScreen ×3، TradeJournalPanel ×2، AlertsPanel ×2،
+   * PositionSizePanel ×2، NetworkTreePanel «…»): `accessibilityLabel={busy ? t.a11yBusy : <النصّ>}` مع `accessibilityState={{ busy }}`.
+   * وسم رقائق AccountScreen يُركَّب من مفاتيح موجودة: `${t.language}: ${l.label}`، `${t.accountType}: ${r.label}`، `${t.underSponsor}: ${t.left}`.
+   */
+  a11yBusy: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -2074,6 +2080,7 @@ const ar: Dict = {
   tdsRootBottom: 'الجذر · أسفل',
   tdsFootnote: 'الترقيم يبدأ من 1 في كل جهة، واليسار منفصل عن اليمين · اكتب الاسم داخل المربع فقط',
   accNetLoadError: 'تعذّر تحميل بيانات الشبكة والإحالة — حاول لاحقاً',
+  a11yBusy: 'جارٍ التنفيذ، انتظر لحظة',
 };
 
 const enUS: Dict = {
@@ -3106,6 +3113,7 @@ const enUS: Dict = {
   tdsRootBottom: 'Root · bottom',
   tdsFootnote: 'Numbering starts at 1 on each side, and left is separate from right · type the name inside the box only',
   accNetLoadError: 'Couldn\'t load your network and referral data — try again later',
+  a11yBusy: 'Working, please wait',
 };
 
 const enGB: Dict = {
@@ -4163,6 +4171,7 @@ const ku: Dict = {
   tdsRootBottom: 'ڕەگ · خوارەوە',
   tdsFootnote: 'ژمارەکردن لە هەر لایەک لە 1ـەوە دەست پێ دەکات و چەپ لە ڕاست جیایە · ناوەکە تەنها لەناو خانەکەدا بنووسە',
   accNetLoadError: 'داتای تۆڕ و بانگهێشت بار نەبوو — دواتر هەوڵ بدەرەوە',
+  a11yBusy: 'خەریکە، تکایە کەمێک چاوەڕێ بکە',
 };
 
 export const DICTS: Record<LangId, Dict> = {
