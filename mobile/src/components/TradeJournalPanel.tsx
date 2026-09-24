@@ -572,8 +572,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const trSide = tr.side === 'sell' ? 'sell' : 'buy';
     const mv = realizedMove({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: exitPx });
     const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
+    /**
+     * والنتيجة بالـR حين للصفقة وقفٌ مسجَّل — الرقم الذي يقرّر به المتداول «هل أغلق الآن؟» (+0.4R
+     * إغلاقٌ مبكر، −0.9R قريبٌ من وقفه)، وسطر الصفقة يعرضه أصلاً فكان التأكيد وحده يُسقطه. المسطرة
+     * نفسها (`realizedR` على سعر الخروج نفسه)، فما يؤكّده هو ما يظهر بالسطر بعد الحفظ حرفياً.
+     */
+    const rText = formatR(realizedR({ side: trSide, entry: tr.entry, sl: tr.sl, exit: exitPx }));
     const result = mv
-      ? `${mv.pips != null ? `${formatSignedPips(mv.pips)} pip · ` : ''}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%`
+      ? `${mv.pips != null ? `${formatSignedPips(mv.pips)} pip · ` : ''}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%${rText ? ` · ${rText}` : ''}`
       : '';
     Alert.alert(
       t.journalCloseMarketConfirmTitle,

@@ -218,3 +218,25 @@ assert.equal(roundR(0.349999999999), 0.4); // فرق 1e-12 ضجيجٌ لا قي�
 assert.equal(roundR(-1.2499999999999722), -1.3);
 
 console.log('tradePlan roundR selftest OK');
+
+// تأكيد «أغلق بالسوق» بالدفتر يعرض الـR بالمسطرة نفسها التي يعرض بها السطرُ الصفقةَ مفتوحةً ثم
+// مغلقة: الرقم المؤكَّد = الرقم العائم = الرقم بعد الحفظ، على السعر نفسه.
+{
+  const cases = [
+    { symbol: 'EURUSD', side: 'buy' as const, entry: 1.085, sl: 1.083, px: 1.0858 },
+    { symbol: 'USDJPY', side: 'sell' as const, entry: 157.4, sl: 157.6, px: 157.55 },
+    { symbol: 'XAUUSD', side: 'buy' as const, entry: 2650, sl: 2640, px: 2662.5 },
+  ];
+  const want = [0.4, -0.8, 1.3];
+  cases.forEach((c, i) => {
+    const confirm = realizedR({ side: c.side, entry: c.entry, sl: c.sl, exit: c.px });
+    const floating = floatingResult({ symbol: c.symbol, side: c.side, entry: c.entry, sl: c.sl, current: c.px });
+    assert.equal(confirm, want[i], `${c.symbol} close-confirm R`);
+    assert.equal(floating?.r, confirm, `${c.symbol} floating R = confirm R`);
+  });
+  // صفقة بلا وقف: لا R بالتأكيد (formatR(null) = null فلا يُلحق شيء)
+  assert.equal(formatR(realizedR({ side: 'buy', entry: 1.085, sl: null, exit: 1.09 })), null);
+  assert.equal(formatR(realizedR({ side: 'buy', entry: 1.085, sl: 1.083, exit: 1.0858 })), '+0.4R');
+}
+
+console.log('tradePlan close-confirm R selftest OK');
