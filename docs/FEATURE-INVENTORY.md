@@ -30,7 +30,8 @@
 | قائمة متابعة شخصية | **implemented** (مهام 10–13، 19) | `watchlistStoreCore.ts`, `watchlistParse.ts`, `WatchlistPanel.tsx`, `TerminalScreen.tsx` | حفظ v2 موثوق؛ طابور؛ فشل حفظ/تحميل+إعادة؛ إدارة هاتف؛ قبول بصري (مهمة 13)؛ لمسة ضغط على إضافة/افتراضي/إضافة رمز (مهمة 19) |
 | فريمات 1–4 + بطل | implemented | `TerminalScreen.tsx`, `ChartFrame.tsx`, `FrameSizedGrid.tsx` | مربع/مستطيل؛ تعبئة سطح المكتب لـ 2×2+ |
 | فريم الظل | implemented | `TerminalScreen.tsx`, `shadowOverlay.ts` | مسارات عمودية s/m/b |
-| 2×2 / Focus | implemented | `QuadChartModal.tsx`, `FocusChartModal.tsx` | مزامنة زمن اختيارية بزرّ؛ الشارت المضغوط «يقود» والبقية تتبع وقته (`leader`)؛ الجلب متوازٍ وكل خلية تظهر لحظة وصولها |
+| 2×2 / Focus | implemented | `QuadChartModal.tsx`, `FocusChartModal.tsx` | مزامنة زمن اختيارية بزرّ؛ الشارت المضغوط «يقود» والبقية تتبع وقته (`leader`)؛ مع المزامنة يرسم كل تابع خطّ تقاطع القائد وسطر OHLC لشمعته السارية عند ذلك الزمن (`syncCrossTime`، `indexAtOrBeforeTime`)؛ الجلب متوازٍ وكل خلية تظهر لحظة وصولها |
+| تقاطع / قراءة الشمعة | implemented (الويب والرباعي بلا تجربة على جهاز بعد) | `MatrixChart.tsx`, `crossAnchor.ts` | الهاتف: لمسة تضعه عند الموضع، وإصبع ثابت 350ms ثم سحب يتتبّع الشموع؛ الويب: مرور الفأرة معاينة، النقرة تثبّت، ←/→ شمعة، Esc يفكّ؛ السعر تحت الإصبع (المغناطيس 🧲 — مفعَّل افتراضياً — يجذب لـO/H/L/C ضمن 14px)؛ زرّ 🔔 ينشئ تنبيه سعر من المثبَّت فقط (`createChartAlert`)؛ DXY بثلاث منازل |
 | مقارنة رمز | implemented | `compare.ts`, `FocusChartModal.tsx` | |
 | مزامنة نافذة بين شارتات | **implemented** (مُتحقق سلوكياً — مهمة 7) | `MatrixChart.tsx`, `ChartFrame.tsx`, `TerminalScreen.tsx` | OFF افتراضياً؛ سكون بلا حلقة نشر؛ OFF→ON يعيد النشر؛ بان/زوم يزيد النشر عند تغيّر النطاق؛ 2/4 فريمات؛ يختفي عند 1 فريم؛ زمن فقط؛ معطل في الظل |
 | DOM lite | جزئي / تقديري | `DomLitePanel.tsx`, `orderflow.ts` | ليس L2 حقيقي |

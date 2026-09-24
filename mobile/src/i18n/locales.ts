@@ -777,11 +777,15 @@ export type Dict = {
   mcClearWord: string;
   mcHintDraw: string;
   mcHintNavigate: string;
+  /** الويب بالفأرة: المعاينة بالمرور، النقر يثبّت، ←/→ و Esc بعد التثبيت. */
+  mcHintNavigateWeb: string;
   mcZoomOutA11y: string;
   mcZoomInA11y: string;
   mcPanBackA11y: string;
   mcPanForwardA11y: string;
   mcReplayModeA11y: string;
+  /** سطر القراءة أثناء الإعادة: `{n}` الشموع المعروضة من `{total}`. بديل «Bar Replay» الثابت (اسم ميزة منافس). */
+  mcReplayReadout: string;
   mcReplayStepBackA11y: string;
   mcReplayPauseA11y: string;
   mcReplayPlayA11y: string;
@@ -901,7 +905,7 @@ const ar: Dict = {
     'اختر من عشرات المؤشرات الجاهزة (RSI, MACD, بولنجر وغيرها)، أو فعّل عدسة جاهزة تلخّص حالة السوق بنظرة واحدة.',
   onboardStep4Title: 'التنبيهات',
   onboardStep4Body:
-    'أنشئ تنبيه سعر أو مؤشر، ويصلك إشعار على جهازك حين يتحقّق شرطه (يُفحص كل دقيقة تقريباً) — فلا داعي لمراقبة الشارت طوال اليوم. فعّل الإشعارات من لوح التنبيهات نفسه.',
+    'أسرع طريق: المس المستوى على الشارت ثم زرّ 🔔 — بلا كتابة أرقام. ويصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، فلا داعي لمراقبة الشارت طوال اليوم. تنبيهات المؤشرات وتفعيل الإشعارات من لوح التنبيهات.',
   onboardStep5Title: 'المخاطرة أولاً',
   onboardStep5Body:
     'قبل أي صفقة افتح «أدوات ← المخاطرة»: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالـpip أو بسعرَي الدخول والوقف) لتعرف حجم اللوت المناسب. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
@@ -1643,12 +1647,14 @@ const ar: Dict = {
   mcClearAllBody: 'سيتم حذف كل عناصر الرسم بهذا الرمز/الإطار الزمني',
   mcClearWord: 'مسح',
   mcHintDraw: 'اسحب لرسم، أو المس نقطتين · يُحفظ تلقائياً',
-  mcHintNavigate: 'اسحب الشموع للتنقل · واسحب محوري السعر والزمن للتكبير',
+  mcHintNavigate: 'اسحب للتنقل · المس شمعة لقراءتها، أو اضغط مطوّلاً ثم اسحب · اسحب المحورين للتكبير',
+  mcHintNavigateWeb: 'مرّر الفأرة للقراءة · انقر للتثبيت · ←/→ شمعة شمعة · Esc للإلغاء',
   mcZoomOutA11y: 'تصغير',
   mcZoomInA11y: 'تكبير',
   mcPanBackA11y: 'تحريك للخلف',
   mcPanForwardA11y: 'تحريك للأمام',
   mcReplayModeA11y: 'وضع الإعادة',
+  mcReplayReadout: 'إعادة الشموع · {n}/{total}',
   mcReplayStepBackA11y: 'خطوة إعادة للخلف',
   mcReplayPauseA11y: 'إيقاف الإعادة',
   mcReplayPlayA11y: 'تشغيل الإعادة',
@@ -1759,7 +1765,7 @@ const enUS: Dict = {
     'Choose from dozens of ready indicators (RSI, MACD, Bollinger, and more), or turn on a lens that summarizes market state at a glance.',
   onboardStep4Title: 'Alerts',
   onboardStep4Body:
-    'Set a price or indicator alert and your device gets a notification when it triggers (checked about once a minute) — no need to watch the chart all day. Turn on notifications from the alerts panel.',
+    'Fastest way: tap a level on the chart, then 🔔 — no typing. You get a notification when price reaches it (checked about once a minute), so no need to watch the chart all day. Indicator alerts and notification settings are in the alerts panel.',
   onboardStep5Title: 'Risk first',
   onboardStep5Body:
     'Before any trade, open Tools → Risk: enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get the right lot size. Many traders risk no more than 1–2% per trade.',
@@ -2504,12 +2510,14 @@ const enUS: Dict = {
   mcClearAllBody: 'Every drawing object on this symbol/timeframe will be deleted',
   mcClearWord: 'Clear',
   mcHintDraw: 'Drag to draw, or tap two points · saved automatically',
-  mcHintNavigate: 'Drag the candles to pan · drag the price and time axes to zoom',
+  mcHintNavigate: 'Drag to pan · tap a candle to read it, or hold then drag · drag the axes to zoom',
+  mcHintNavigateWeb: 'Hover to read · click to pin · ←/→ one candle · Esc to clear',
   mcZoomOutA11y: 'Zoom out',
   mcZoomInA11y: 'Zoom in',
   mcPanBackA11y: 'Pan back',
   mcPanForwardA11y: 'Pan forward',
   mcReplayModeA11y: 'Replay mode',
+  mcReplayReadout: 'Candle replay · {n}/{total}',
   mcReplayStepBackA11y: 'Replay step back',
   mcReplayPauseA11y: 'Pause replay',
   mcReplayPlayA11y: 'Play replay',
@@ -2646,7 +2654,7 @@ const ku: Dict = {
     'لە دەیان پێوەری ئامادە هەڵبژێرە (RSI، MACD، بۆلینگەر و زیاتر)، یان لینزێک چالاک بکە کە بارودۆخی بازاڕ بە یەک تەماشاکردن کورت دەکاتەوە.',
   onboardStep4Title: 'ئاگادارکردنەوەکان',
   onboardStep4Body:
-    'ئاگادارکردنەوەیەکی نرخ یان پێوەر دروست بکە و کاتێک مەرجەکەی هاتەدی ئاگاداری لەسەر ئامێرەکەت وەربگرە (نزیکەی هەر خولەکێک دەپشکنرێت) — پێویست ناکات بە درێژایی ڕۆژ چاودێری چارت بکەیت. ئاگادارکردنەوەکان لە پانێڵی ئاگادارکردنەوەکان خۆیەوە چالاک بکە.',
+    'خێراترین ڕێگا: دەست لە ئاستەکە بدە لەسەر چارت پاشان 🔔 — بێ نووسینی ژمارە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت)، پێویست ناکات بە درێژایی ڕۆژ چاودێری چارت بکەیت. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
   onboardStep5Title: 'سەرەتا مەترسی',
   onboardStep5Body:
     'پێش هەر مامەڵەیەک «ئامرازەکان ← مەترسی» بکەرەوە: باڵانس و ڕێژەی مەترسی و ستۆپ لۆس (بە pip یان بە نرخی چوونەژوورەوە و وەستان) بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
@@ -3394,12 +3402,14 @@ const ku: Dict = {
   mcClearAllBody: 'هەموو توخمەکانی کێشان بۆ ئەم هێما/ماوە کاتییە دەسڕێنەوە',
   mcClearWord: 'سڕینەوە',
   mcHintDraw: 'ڕایبکێشە بۆ کێشان، یان دوو خاڵ دابگرە · خۆکار پاشەکەوت دەبێت',
-  mcHintNavigate: 'مۆمەکان ڕایبکێشە بۆ جوڵان · تەوەرەی نرخ و کات ڕایبکێشە بۆ زووم',
+  mcHintNavigate: 'ڕایبکێشە بۆ جوڵان · دەست لە مۆمێک بدە بۆ خوێندنەوە، یان دایگرە و ڕایبکێشە · تەوەرەکان ڕایبکێشە بۆ زووم',
+  mcHintNavigateWeb: 'ماوس ببە سەری بۆ خوێندنەوە · کلیک بکە بۆ جێگیرکردن · ←/→ مۆم بە مۆم · Esc بۆ لابردن',
   mcZoomOutA11y: 'بچووککردنەوە',
   mcZoomInA11y: 'گەورەکردن',
   mcPanBackA11y: 'جوڵان بۆ دواوە',
   mcPanForwardA11y: 'جوڵان بۆ پێشەوە',
   mcReplayModeA11y: 'دۆخی دووبارەکردنەوە',
+  mcReplayReadout: 'دووبارەکردنەوەی مۆم · {n}/{total}',
   mcReplayStepBackA11y: 'هەنگاوی دووبارەکردنەوە بۆ دواوە',
   mcReplayPauseA11y: 'وەستاندنی دووبارەکردنەوە',
   mcReplayPlayA11y: 'پێکردنی دووبارەکردنەوە',
