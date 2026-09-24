@@ -779,7 +779,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         <View style={[styles.chips, rtl && styles.chipsRtl]}>
           {stopChoices.map((x) =>
             chip(
-              `${x.side === 'buy' ? '▲' : '▼'} ${x.side === 'buy' ? t.dirBuy : t.dirSell} ${x.text}`,
+              `${x.side === 'buy' ? '▲' : '▼'} ${t.riskCalcStopChip
+                .replace('{side}', x.side === 'buy' ? t.dirBuy : t.dirSell)
+                .replace('{price}', x.text)}`,
               false,
               () => setStopPx(x.text),
               `${x.side === 'buy' ? t.dirBuy : t.dirSell} — ${t.journalSlAtPipsA11y
