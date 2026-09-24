@@ -55,4 +55,11 @@ assert.equal(projectBarTimeSec('EURUSD', s(at(2025, 11, 31, 20)), 4 * H, 1), s(a
 assert.equal(projectBarTimeSec('EURUSD', s(at(2025, 11, 31, 0)), 86400, 1), s(at(2026, 0, 2, 0)));
 assert.equal(projectBarTimeSec('BTCUSD', s(at(2025, 11, 31, 21)), H, 1), s(at(2025, 11, 31, 22)));
 
+// المعادن تفتح الأحد 18:00 نيويورك (QA10): صيفاً 22:00Z لا 21:00Z؛ شتاءً 23:00Z
+assert.equal(projectBarTimeSec('XAUUSD', s(at(2026, 6, 17, 20)), H, 1), s(at(2026, 6, 19, 22)));
+assert.equal(projectBarTimeSec('XAUUSD', s(at(2026, 0, 16, 20)), H, 2), s(at(2026, 0, 18, 23)));
+assert.equal(projectBarTimeSec('XAUUSD', s(at(2026, 0, 16, 20)), H, 3), s(at(2026, 0, 19, 0)));
+assert.equal(projectBarTimeSec('GOLDm', s(at(2026, 6, 17, 20)), H, 1), s(at(2026, 6, 19, 22)));
+assert.equal(projectBarTimeSec('XAUUSD', s(at(2026, 0, 14, 10)), H, 3), s(at(2026, 0, 14, 13)));
+
 console.log('marketHours.selftest: PASS');

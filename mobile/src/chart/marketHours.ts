@@ -145,14 +145,26 @@ function inForexWeekend(sec: number): boolean {
   return false;
 }
 
-/** أوّل لحظة تداول عند `sec` أو بعده (يتخطّى عطلة نهاية الأسبوع وجلستَي 25/12 و1/1، ولو تتابعتا). */
-function nextForexOpenSec(sec: number): number {
+/** المعادن (ذهب/فضة/بلاتين/بلاديوم): افتتاح الأسبوع 18:00 نيويورك (جلسة CME) لا 17:00 كالعملات. */
+const LATE_OPEN_RE = /^(XAU|XAG|XPT|XPD|GOLD|SILVER)/i;
+
+/**
+ * أوّل لحظة تداول عند `sec` أو بعده (يتخطّى عطلة نهاية الأسبوع وجلستَي 25/12 و1/1، ولو تتابعتا).
+ * `lateOpen`: افتتاح الأحد بعد ساعة (المعادن).
+ */
+function nextForexOpenSec(sec: number, lateOpen = false): number {
   let t = sec;
   for (let guard = 0; guard < 4; guard++) {
     const dayStart = Math.floor(t / DAY_SEC) * DAY_SEC;
     if (inForexWeekend(t)) {
       const dow = new Date(dayStart * 1000).getUTCDay();
-      t = forexSundayOpenSec(dayStart + ((7 - dow) % 7) * DAY_SEC);
+      t = forexSundayOpenSec(dayStart + ((7 - dow) % 7) * DAY_SEC) + (lateOpen ? 3600 : 0);
+    } else if (
+      lateOpen &&
+      new Date(dayStart * 1000).getUTCDay() === 0 &&
+      t < forexSundayOpenSec(dayStart) + 3600
+    ) {
+      t = forexSundayOpenSec(dayStart) + 3600;
     } else if (isForexHolidaySession(t)) {
       // نهاية الجلسة: 17:00 نيويورك التالية
       const today = nyFivePmUtcSec(dayStart);
@@ -177,6 +189,7 @@ function forexDailyClosed(sec: number): boolean {
  * كان `lastSec + ahead × step`: تقاطع يمين شمعة الجمعة 16:00 على الساعة يقرأ «السبت 03:00» بينما
  * الشمعة الحقيقية التالية بتلك الخانة تُفتح مساء الأحد — والمتداول يخطّط على هذا الوسم لإصدار بيانات.
  * - دون اليوم: خطوة لا تبدأ داخل الإغلاق؛ ما يقع فيه يقفز لشمعة الافتتاح التالي (الشمعة المحتوية له).
+ *   المعادن تفتح الأحد 18:00 نيويورك: كانت الخانة شمعة 17:00 لا وجود لها بالذهب.
  * - اليومي: السبت والأحد و25/12 و1/1 بلا شموع (شموع 00:00 UTC). الأسبوعي فما فوق والكريبتو: كما كان.
  */
 export function projectBarTimeSec(symbol: string, lastSec: number, stepSec: number, ahead: number): number {
@@ -190,7 +203,7 @@ export function projectBarTimeSec(symbol: string, lastSec: number, stepSec: numb
       while (forexDailyClosed(t)) t += DAY_SEC;
       continue;
     }
-    const open = nextForexOpenSec(t);
+    const open = nextForexOpenSec(t, LATE_OPEN_RE.test(symbol.trim()));
     if (open === t) continue;
     // بداية الشمعة التي تحتوي الافتتاح على شبكة الفريم
     const bar = Math.floor(open / stepSec) * stepSec;
