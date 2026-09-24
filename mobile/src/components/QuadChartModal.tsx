@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Modal,
   View,
@@ -18,6 +18,7 @@ import { type Timeframe } from '../timeframes';
 import { TimeframeBar } from './TimeframeBar';
 import { mockSeries } from '../mock';
 import { normalizeProvenance } from '../chart/dataSource';
+import { anchorDemoSeries } from '../chart/demoAnchor';
 import { formatPrice } from '../chart/math';
 import { formatPct } from '../chart/dailyChange';
 import { useI18n } from '../i18n/I18nContext';
@@ -73,6 +74,12 @@ export function QuadChartModal({
   const cellH = phone ? phoneCellH : height * 0.32;
   const [series, setSeries] = useState<(ChartSeries | null)[]>([null, null, null, null]);
   const ticks = useMultiLiveTicks(symbols, visible);
+  // فشل الجلب ⇒ شموع تجريبية من أساس ثابت قديم (EURUSD 1.0854) بجانب تيك حيّ حقيقي بالرأس:
+  // السعر المطبوع بعيد عن كل الشموع، ودمجه بآخر شمعة يرسم شمعة عملاقة تسطّح الباقي. الآن تُرسى
+  // السلسلة التجريبية على التيك: فوراً إن وصل، وإلا عند أوّل تيك للخلية (مرّة واحدة).
+  const ticksRef = useRef(ticks);
+  ticksRef.current = ticks;
+  const pendingAnchor = useRef<boolean[]>([false, false, false, false]);
   // الفريم كان ثابتاً من الشاشة الأمّ: مقارنة الأزواج الأربعة على فريم آخر تعني إغلاق الرباعي،
   // وتغيير فريم الإطار الأول، ثم فتحه من جديد. الآن شريط فريمات داخله يبدّل الأربعة معاً.
   // الاختيار يخصّ هذه الجلسة وحدها: يُنسى عند الإغلاق (وعند تغيّر فريم الأمّ) فلا يُفتح
@@ -112,10 +119,17 @@ export function QuadChartModal({
     // والجلب كان ينتظر الأربعة **واحداً بعد واحد** ثم يعرضها دفعة واحدة: أبطأ رمز يحجب
     // الثلاثة الجاهزة، والانتظار مجموع أزمنتها. الآن متوازٍ، وكل خلية تُملأ لحظة وصول شموعها.
     setSeries([null, null, null, null]);
+    pendingAnchor.current = [false, false, false, false];
     symbols.forEach((sym, i) => {
       api
         .chart(sym, tf)
-        .catch(() => mockSeries(sym, BASES[sym] ?? 1, tf, 80))
+        .catch(() => {
+          const mock = mockSeries(sym, BASES[sym] ?? 1, tf, 80);
+          const tp = ticksRef.current[sym]?.price;
+          if (tp != null && Number.isFinite(tp) && tp > 0) return anchorDemoSeries(mock, tp);
+          if (alive) pendingAnchor.current[i] = true;
+          return mock;
+        })
         .then((s) => {
           if (!alive) return;
           setSeries((prev) => {
@@ -129,6 +143,23 @@ export function QuadChartModal({
       alive = false;
     };
   }, [visible, symbols, tf]);
+
+  useEffect(() => {
+    if (!pendingAnchor.current.some(Boolean)) return;
+    symbols.forEach((sym, i) => {
+      const tp = ticks[sym]?.price;
+      if (!pendingAnchor.current[i] || !series[i]) return;
+      if (tp == null || !Number.isFinite(tp) || tp <= 0) return;
+      pendingAnchor.current[i] = false;
+      setSeries((prev) => {
+        const cur = prev[i];
+        if (!cur) return prev;
+        const next = [...prev];
+        next[i] = anchorDemoSeries(cur, tp);
+        return next;
+      });
+    });
+  }, [ticks, series, symbols]);
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
