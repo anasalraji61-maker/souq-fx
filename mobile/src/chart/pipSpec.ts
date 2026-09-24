@@ -20,5 +20,9 @@ export function chartPipSpec(symbol: string): InstrumentSpec | null {
   // فيُقدَّر العدد من حجم الرقم (157.42 بدل 157.423، والتقاطع يلتصق بمنزلتين) ولا pip بأي قراءة. الصغيرة
   // وحدها: الملاصقة الكبيرة قد تكون أداةً أخرى («EURUSDT» يورو/تيثر). و«GOLDm»/«SILVERm» معها.
   const glued = /^([A-Z]{6}|GOLD|SILVER|Gold|Silver|gold|silver)[a-z]{1,5}[#+]?$/.exec(t);
-  return glued ? instrumentSpec(glued[1]!) : null;
+  if (glued) return instrumentSpec(glued[1]!);
+  // لاحقة بعد نقطة («EURUSD.c»، «XAUUSD.pro»، «GBPJPY.ECN»): النقطة لا تكون جزءاً من اسم أداة أبداً،
+  // فأيّ حالة أحرف بعدها لاحقة حساب لا أداة أخرى.
+  const dotted = /^([A-Za-z]{6}|GOLD|SILVER|Gold|Silver|gold|silver)\.[A-Za-z]{1,5}[#+]?$/.exec(t);
+  return dotted ? instrumentSpec(dotted[1]!.length === 6 ? dotted[1]!.toUpperCase() : dotted[1]!) : null;
 }

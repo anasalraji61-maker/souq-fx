@@ -43,6 +43,14 @@ eq('GOLDm pips', measurePipsText('GOLDm', 2650, 2652.5), '+25.0 pip');
 eq('EURUSDT tether', chartPipSpec('EURUSDT'), null);
 eq('BTCUSDpro', chartPipSpec('BTCUSDpro'), null);
 eq('EURUSDmicropro too long', chartPipSpec('EURUSDmicropro'), null);
+// لاحقة بعد نقطة
+eq('EURUSD.c', chartPipSpec('EURUSD.c')?.symbol, 'EURUSD');
+eq('USDJPY.pro pip', chartPipSpec('USDJPY.pro')?.pipSize, 0.01);
+eq('GBPJPY.ECN', chartPipSpec('GBPJPY.ECN')?.symbol, 'GBPJPY');
+eq('GOLD.m', chartPipSpec('GOLD.m')?.symbol, 'XAUUSD');
+eq('EURUSD.c 5 decimals', formatPrice(1.085123, 'EURUSD.c'), '1.08512');
+eq('BTCUSD.c', chartPipSpec('BTCUSD.c'), null);
+eq('EURUSD.toolong', chartPipSpec('EURUSD.toolong'), null);
 if (fail) {
   console.log(`pipSpec: ${fail} FAIL`);
   process.exit(1);

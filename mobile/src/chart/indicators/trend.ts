@@ -44,6 +44,11 @@ export function computeOverlays(closes: number[]) {
   };
 }
 
+/** ‎±DI‎ من مجموعَي Wilder — محروسة عند ‎sTr = 0‎ (لا حركة) فتُرجع 0. مشتركة بين ADX وDMI. */
+function diOf(s: number, sT: number): number {
+  return sT === 0 ? 0 : (s / sT) * 100;
+}
+
 /**
  * ADX (Average Directional Index، طريقة Wilder القياسية) — يقيس *قوة* الاتجاه بلا تحديد اتجاهه
  * (0..100، فوق 25 عادة = اتجاه واضح). +DM/−DM لكل شمعة من حركة القمة/القاع (الأكبر والموجب فقط
@@ -84,7 +89,6 @@ export function computeAdx(candles: Candle[], period = 14): (number | null)[] {
   }
 
   const dx: (number | null)[] = new Array(n).fill(null);
-  const diOf = (s: number, sT: number) => (sT === 0 ? 0 : (s / sT) * 100);
   let plusDI = diOf(sPlus, sTr);
   let minusDI = diOf(sMinus, sTr);
   dx[period] = plusDI + minusDI === 0 ? 0 : (Math.abs(plusDI - minusDI) / (plusDI + minusDI)) * 100;
@@ -1056,7 +1060,6 @@ export function computeDmi(
     sPlus += plusDM[i];
     sMinus += minusDM[i];
   }
-  const diOf = (s: number, sT: number) => (sT === 0 ? 0 : (s / sT) * 100);
   plusDI[period] = diOf(sPlus, sTr);
   minusDI[period] = diOf(sMinus, sTr);
 
