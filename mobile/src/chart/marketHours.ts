@@ -26,7 +26,7 @@ function nthSundayUtcSec(year: number, month: number, nth: number): number {
  * (07:00 UTC) وينتهي الأحد الأول من تشرين الثاني 02:00 EDT (06:00 UTC). حساب خالص بلا
  * `Intl` (دعم المناطق الزمنية بمحرّك الهاتف غير مضمون).
  */
-function nyDst(sec: number): boolean {
+export function nyDst(sec: number): boolean {
   const year = new Date(sec * 1000).getUTCFullYear();
   const start = nthSundayUtcSec(year, 2, 2) + 7 * 3600;
   const end = nthSundayUtcSec(year, 10, 1) + 6 * 3600;

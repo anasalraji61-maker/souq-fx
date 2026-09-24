@@ -179,7 +179,8 @@ export type IndicatorId =
   | 'vfi'
   | 'cpr'
   | 'laguerreRsi'
-  | 'pdhl';
+  | 'pdhl'
+  | 'sessions';
 
 export type DrawTool =
   | 'none'
@@ -418,6 +419,7 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'cpr', label: 'CPR' },
   { id: 'laguerreRsi', label: 'Laguerre RSI', pane: true },
   { id: 'pdhl', label: 'PDH / PDL' },
+  { id: 'sessions', label: 'Sessions' },
 ];
 
 export const DRAW_TOOLS: { id: DrawTool; label: string }[] = [

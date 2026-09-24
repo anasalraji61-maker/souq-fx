@@ -117,6 +117,7 @@ import {
 import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
 import { planHiLoLabels } from './hiLoLabels';
 import { planDayBreaks } from './dayBreaks';
+import { planSessionRuns, SESSION_LABEL, type SessionId } from './sessions';
 import { formatPct, prevSessionFromDaily, validSessionBar } from './dailyChange';
 import { useDailyPrevBar } from './dailyRefStore';
 import { pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
@@ -424,6 +425,12 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
 };
 
 const PRICE_AXIS_WIDTH = 68;
+/** ألوان الجلسات (مؤشّر «Sessions»): ثابتة المعنى داخله وحده — لا ربح/خسارة ولا تنبيه. */
+const SESSION_COLOR: Record<SessionId, string> = {
+  tokyo: '#A78BFA',
+  london: '#38BDF8',
+  ny: '#E8B86D',
+};
 const PIVOT_IDS = new Set<string>(['pivots', 'fibPivots', 'camarilla', 'woodiePivots', 'demarkPivots', 'cpr', 'pdhl']);
 const TIME_AXIS_HEIGHT = 48;
 const CROSS_TIME_TAG_W = 104;
@@ -4711,6 +4718,37 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   pointerEvents="none"
                   style={[styles.dayBreak, { left: x, height: chartPlotH }]}
                 />
+              );
+            })
+          : null}
+
+        {/* جلسات طوكيو/لندن/نيويورك (مؤشّر «Sessions»): تظليل خافت بعرض الجلسة وشريط رفيع
+            بلونها أسفل اللوح مع اسمها (أعلاه لمفتاح المؤشّرات) — راجع `sessions.ts`. داخل اليوم حتى 1H، وليس على
+            Renko/Kagi/P&F/Range (خانتها ليست زمناً). */}
+        {indicators.includes('sessions') && kind !== 'renko' && kind !== 'kagi' && kind !== 'pnf' && kind !== 'range'
+          ? planSessionRuns(
+              source.plot.map((b) => candleTimeSec(b.time)),
+              timeframeStepSec(series.timeframe),
+              chartPlotW
+            ).map((run) => {
+              const slot = chartPlotW / Math.max(1, source.plot.length);
+              const left = Math.max(0, xOf(run.from) - slot / 2);
+              const right = Math.min(chartPlotW, xOf(run.to) + slot / 2);
+              if (!(right - left >= 1)) return null;
+              const color = SESSION_COLOR[run.id];
+              return (
+                <View
+                  key={`ses${run.id}${run.from}`}
+                  pointerEvents="none"
+                  style={[styles.sessionBand, { left, width: right - left, height: chartPlotH, backgroundColor: `${color}0F` }]}
+                >
+                  <View style={[styles.sessionStrip, { backgroundColor: color }]} />
+                  {right - left >= 44 ? (
+                    <Text style={[styles.sessionLabel, { color }]} numberOfLines={1}>
+                      {SESSION_LABEL[run.id]}
+                    </Text>
+                  ) : null}
+                </View>
               );
             })
           : null}
@@ -10708,6 +10746,27 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     borderRadius: 0,
     backgroundColor: 'transparent',
+  },
+  sessionBand: {
+    position: 'absolute',
+    top: 0,
+    overflow: 'hidden',
+  },
+  sessionStrip: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 2,
+    opacity: 0.7,
+  },
+  sessionLabel: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    fontSize: 9,
+    fontWeight: '600',
+    opacity: 0.8,
   },
   dayBreak: {
     position: 'absolute',
