@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 5، بعد b3bcc9d) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 5، بعد ba9f33b) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 «بلا مالك» = ملفات مكوّنات لم يلمسها أي وكيل (تاريخ git: أنس وحده) — المفاتيح جاهزة ولا أحد مخوَّل بالربط ⇒ أنس يحدّد المالك.
 
@@ -12,13 +12,11 @@
 | QA | tools | **(e)** `VotePanel.tsx:422-430` يطبع `{v.entry}/{v.sl}/{v.tp}` خاماً («1.1»، «157.4») لا `formatPrice` | QA5 |
 | QA | chart | **(e)** Footprint/CVD مختلَقان من لون الشمعة (`orderflow.ts:17-22`؛ لا شريط مركزي بالفوركس) ويُعرضان كمؤشرين عاديين، وCVD بعدسة Liquidity (`MatrixChart.tsx:421`) — وسم «تقديري» أو إخفاء للفوركس | QA5 |
 | QA | chart | **(e)** PDH/PDL/Pivot: المصدر D1 بيوم UTC (`twelve_data.py:196`) والاحتياطي `prevDayFromIntraday` بيوم 17:00 NY (`MatrixChart.tsx:1639-1646`) ⇒ مستويات تختلف بنجاح الجلب، ولا تطابق MT4/MT5 | QA5 |
-| chart | launch | مفتاحا `mcDrawColor`/`mcDrawColorA11y` لنقل `drawColorLabels` المؤقتة (`chart/typeLabels.ts:110`، 85dcbf6) | chart43 |
+| chart+launch | chart | مفاتيح `mcDrawColorWord`/`mcDrawColorA11y`/`mcColorNames` جاهزة (df3bc33) ⇒ اربطها واحذف `drawColorLabels` (`chart/typeLabels.ts:110`) | chart43 |
 | launch | chart | `mcAutoManualA11y` جاهز غير موصول: `MatrixChart.tsx` AUTO ← `priceManual ? tr.mcAutoManualA11y : tr.mcAutoA11y` | launch53 |
 | QA | chart | **جهاز**: سحب جسم الرسم المحدَّد (ميت حتى 4315956) — RELEASE §5 بند 128 | QA1 |
 | QA+launch | بلا مالك | **كردي يرى أطراً عربية**: `TimeframeBar.tsx:15` `arabic` و`TerminalScreen` `arabic={rtl}` ← `t.tfLabels`/`tfLabelsA11y` (جاهزة) | QA2 ★ |
 | QA | بلا مالك | `CommissionPlanPanel`/`NetworkTreePanel`/`TreeDiagramSketch` بلا `useI18n` (مفاتيح `cpp*`/`ntp*`/`tds*` جاهزة)؛ `SubscriptionPlansPanel.tsx:34-100` يقرأ `COPY` الداخلي؛ `AccountScreen.tsx:248` ثابت | QA2 ★ |
-| tools | launch | مفتاحا `planNoteCommission`/`planNoteNetRR` (0 وجود) لإكمال ملاحظة الدفتر بلغة الواجهة | tools34 |
-| tools | launch | `journalCentNoMoney`/`journalMicroNoMoney` بلا قارئ ⇒ احذفهما؛ `journalMicroMoneyNote` «بعملة حسابك» والدفتر يعرض عملة التسعير | launch50 |
 | launch | tools | `a11yBusy` باقٍ: `AlertsPanel:983 :1061` (0 استعمال بالملف) | launch52 |
 | launch | بلا مالك | `a11yBusy` لـ`AccountScreen:279 :316 :429`، `NetworkTreePanel:168`؛ رقائق اللغة/الدور/الجهة + `selected` | launch52 |
 | QA | chart | `DRAW_MARK` (`components/MatrixEdgeRails.tsx:28-40`) بلا `hray`/`channel`/`long`/`short` ⇒ «·» | chart20 ★ |
@@ -41,10 +39,9 @@
 | QA | chart | **a11y**: `MatrixEdgeRails`/`MatrixBottomDock` صفر `accessibilityState` (حالة لونية فقط) — آخر ما يمنع «Differentiate Without Color» (RELEASE §4)؛ `TimeframeBar:28` بلا مالك | QA3 ★ |
 | QA | بلا مالك | **a11y**: `AccountScreen` :195 :324 :338 :439 :477 :493 بلا وصف ولا حالة؛ `NetworkTreePanel:136/:152` | QA3 ★ |
 | launch | أنس | `MessagesScreen` غير مستوردة (وحدها تستعمل `mockPeers`)، نصوصها عربية ثابتة — تُحذف أم تُربط؟ | launch52 |
-| QA | launch | **(d)** `STORE-LISTING.md:116` عدسة Liquidity = volume+Bollinger، والكود يضيف CVD (`MatrixChart.tsx:421`) — ويتّصل بصفّ CVD المختلَق أعلاه | QA4 |
 | QA | الخادم | **(d)** `main.py:1774` يقرّب الوقف/الهدف لخانتين إن السعر ≥50 ⇒ USDJPY/DXY تفقد خانة؛ لا شاشة تعرضه اليوم | QA4 |
 | QA | الخادم | **(e)** تقويم العيّنة (`econ_calendar.py:39-47`): الفائدة الأمريكية «21:00 UTC» (الصحيح 18:00/19:00)، CPI «15:30 UTC» (الصحيح 12:30/13:30)، «5.25%» قديم؛ `_impact` :77 يجعل عطلة البنوك «low» | QA5 |
 | QA | chart | **(e) منخفض**: `marketHours.ts:51-60` بلا عطل (25 ديسمبر/1 يناير «السوق مفتوح») | QA5 |
 
-**أُسقط — مُتحقَّق منه بالكود:** حدّ المخاطرة (3bffef5: `RISK_HIGH_PCT=2` سقفاً و1% افتراضياً موصى به — يتّسق مع «1–2%» بالأكاديمية)؛ «50–100 lot» (4c1bd75: `ORDER_WARN_LOTS=50`)؛ مفاتيح «تراجع» `mcUndo*` موجودة و`chartExtraLabels` محذوفة.
+**أُسقط — مُتحقَّق منه بالكود:** حدّ المخاطرة (3bffef5: `RISK_HIGH_PCT=2` سقفاً و1% افتراضياً موصى به — يتّسق مع «1–2%» بالأكاديمية)؛ «50–100 lot» (4c1bd75: `ORDER_WARN_LOTS=50`)؛ مفاتيح «تراجع» `mcUndo*` موجودة و`chartExtraLabels` محذوفة؛ `planNoteCommission`/`planNoteNetRR` أُضيفا وحُذفت مفاتيح الدفتر الميتة (c8f93bf — بقيت إشارات بتعليقات `tradePlan.ts:52-173` لـtools)؛ `STORE-LISTING.md:116` يذكر CVD «مقدَّراً من الشموع» (2105e87).
 **(e) سليم:** جلسات وDST، افتتاح الأحد 17:00 NY وإغلاق الجمعة، pip الين وخاناته، إغلاق الشراء على Bid، وسم بيانات العرض، `mock.ts` لا يصل الواجهة.
