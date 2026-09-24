@@ -993,7 +993,7 @@ const ar: Dict = {
     'أسرع طريق: المس المستوى على الشارت ثم زرّ 🔔 — بلا كتابة أرقام. ويصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، فلا داعي لمراقبة الشارت طوال اليوم. تنبيهات المؤشرات وتفعيل الإشعارات من لوح التنبيهات.',
   onboardStep5Title: 'المخاطرة أولاً',
   onboardStep5Body:
-    'قبل أي صفقة افتح «أدوات ← المخاطرة»: أدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالـpip أو بسعرَي الدخول والوقف) لتعرف حجم اللوت المناسب (وأضف السبريد والعمولة ليشملهما الرقم)، ثم «سجّل هذه الخطة بالدفتر» لتراجع نتيجتها لاحقاً. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
+    'قبل أي صفقة افتح «أدوات ← المخاطرة»: اختر الرمز كما يكتبه وسيطك (EURUSDc لحساب السنت)، وأدخل رصيدك ونسبة المخاطرة ووقف الخسارة (بالـpip أو بسعرَي الدخول والوقف) لتعرف حجم اللوت المناسب (وأضف السبريد والعمولة ليشملهما الرقم)، ثم «سجّل هذه الخطة بالدفتر» لتراجع نتيجتها لاحقاً. كثير من المتداولين لا يخاطرون بأكثر من 1–2% بالصفقة.',
   onboardRiskNote:
     'MATRIX أداة تحليل وتعليم، لا تنفّذ صفقات ولا تقدّم نصيحة مالية. التداول بالرافعة ينطوي على مخاطرة عالية بخسارة المال.',
   onboardStepCounterA11y: 'الخطوة {n} من {total}',
@@ -1915,7 +1915,7 @@ const enUS: Dict = {
     'Fastest way: tap a level on the chart, then 🔔 — no typing. You get a notification when price reaches it (checked about once a minute), so no need to watch the chart all day. Indicator alerts and notification settings are in the alerts panel.',
   onboardStep5Title: 'Risk first',
   onboardStep5Body:
-    'Before any trade, open Tools → Risk: enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get the right lot size (add spread and commission to include them), then “Log this plan to the journal” to review how it played out. Many traders risk no more than 1–2% per trade.',
+    'Before any trade, open Tools → Risk: pick the symbol as your broker writes it (EURUSDc for a cent account), enter your balance, risk % and stop loss (in pips, or as entry and stop prices) to get the right lot size (add spread and commission to include them), then “Log this plan to the journal” to review how it played out. Many traders risk no more than 1–2% per trade.',
   onboardRiskNote:
     'MATRIX is an analysis and learning tool. It does not place trades or give financial advice. Leveraged trading carries a high risk of losing money.',
   onboardStepCounterA11y: 'Step {n} of {total}',
@@ -2859,7 +2859,7 @@ const ku: Dict = {
     'خێراترین ڕێگا: دەست لە ئاستەکە بدە لەسەر چارت پاشان 🔔 — بێ نووسینی ژمارە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت)، پێویست ناکات بە درێژایی ڕۆژ چاودێری چارت بکەیت. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
   onboardStep5Title: 'سەرەتا مەترسی',
   onboardStep5Body:
-    'پێش هەر مامەڵەیەک «ئامرازەکان ← مەترسی» بکەرەوە: باڵانس و ڕێژەی مەترسی و ستۆپ لۆس (بە pip یان بە نرخی چوونەژوورەوە و وەستان) بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت (سپرێد و کۆمیسیۆن زیاد بکە بۆ ئەوەی ژمارەکە بیانگرێتەوە)، پاشان «ئەم پلانە لە دەفتەر تۆمار بکە» بۆ ئەوەی دواتر ئەنجامەکەی ببینیتەوە. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
+    'پێش هەر مامەڵەیەک «ئامرازەکان ← مەترسی» بکەرەوە: هێماکە هەڵبژێرە وەک بڕۆکەرەکەت دەینووسێت (EURUSDc بۆ هەژماری سەنت)، باڵانس و ڕێژەی مەترسی و ستۆپ لۆس (بە pip یان بە نرخی چوونەژوورەوە و وەستان) بنووسە بۆ ئەوەی قەبارەی لۆتی گونجاو بزانیت (سپرێد و کۆمیسیۆن زیاد بکە بۆ ئەوەی ژمارەکە بیانگرێتەوە)، پاشان «ئەم پلانە لە دەفتەر تۆمار بکە» بۆ ئەوەی دواتر ئەنجامەکەی ببینیتەوە. زۆر لە بازرگانان زیاتر لە 1–2% لە هەر مامەڵەیەکدا ناخەنە مەترسییەوە.',
   onboardRiskNote:
     'MATRIX ئامرازێکی شیکردنەوە و فێربوونە، مامەڵە ناکات و ئامۆژگاری دارایی نادات. بازرگانی بە لیڤەرێج مەترسیی بەرزی لەدەستدانی پارەی تێدایە.',
   onboardStepCounterA11y: 'هەنگاوی {n} لە {total}',
