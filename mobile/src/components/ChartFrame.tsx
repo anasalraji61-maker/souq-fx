@@ -163,12 +163,15 @@ export function ChartFrame({
   // (`round(chg, 2)` بالخادم يُخرج ‎-0.0‎ لهبوط دقيق) كذلك — فزوجٌ هابط يقرأ صاعداً.
   // الآن `formatPct` المعتمدة، واللون من **الرقم المطبوع** نفسه: ما يُقرّب إلى صفر مكتوم.
   // والنسبة تتبع السعر الحيّ المدموج بالشمعة (`liveChangePct`) لا الجلب الأخير وحده.
-  const livePct = liveChangePct(series, mergePrice);
+  // بالإعادة الرأس يقرأ شمعة الإعادة: كان يطبع سعر اليوم ونسبته و«حيّ» والسبريد فوق شموع الأسبوع
+  // الماضي — الجواب مكشوف قبل أن يقرّر المتداول. النسبة من المرجع نفسه (أوّل شمعة بالسلسلة).
+  const [replayPrice, setReplayPrice] = useState<number | null>(null);
+  const livePct = liveChangePct(series, replayPrice ?? mergePrice);
   const chgPct = Number.isFinite(livePct) ? livePct : null;
   const chgRounded = chgPct == null ? 0 : Math.round(chgPct * 100) / 100;
   const chgColor = chgRounded > 0 ? colors.bull : chgRounded < 0 ? colors.bear : colors.textDim;
-  const headerPrice = resolvedTick?.price ?? series.last;
-  const tickKind = resolvedTick
+  const headerPrice = replayPrice ?? resolvedTick?.price ?? series.last;
+  const tickKind = replayPrice == null && resolvedTick
     ? tickStatusKind(resolvedTick.source, resolvedTick.source.as_of, nowSec)
     : null;
   const tickTag =
@@ -211,6 +214,7 @@ export function ChartFrame({
   }, [series.symbol, series.last]);
   const liveQuote = quote && quote.forSymbol === series.symbol ? quote : null;
   const hasSpread =
+    replayPrice == null &&
     liveQuote?.bid != null && liveQuote?.ask != null && liveQuote.ask > liveQuote.bid;
   // السبريد كان سعرَين خامَين يطرحهما المتداول بذهنه — وهو يقرؤه بالـpip (كلفة دخوله الفعلية).
   // حجم الـpip من `instrumentSpec` (الين 0.01، الذهب 0.1…) و`pipsBetween` نفسها التي تبني
@@ -328,6 +332,11 @@ export function ChartFrame({
         </View>
         <View style={[styles.priceRow, switching && styles.stale]}>
           <Text style={styles.price}>{formatPrice(headerPrice, series.symbol)}</Text>
+          {replayPrice != null ? (
+            <Text style={[styles.liveTag, styles.liveTagMuted]} accessibilityLabel={t.mcReplayModeA11y}>
+              ⏪
+            </Text>
+          ) : null}
           {tickTag ? (
             <Text
               style={[
@@ -409,6 +418,7 @@ export function ChartFrame({
           onSyncWindow={onSyncWindow}
           syncFollow={syncFollow}
           syncTimeOnly
+          onReplayPrice={setReplayPrice}
         />
       </View>
     </Pressable>

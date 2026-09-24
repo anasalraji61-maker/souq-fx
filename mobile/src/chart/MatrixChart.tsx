@@ -379,6 +379,8 @@ type Props = {
   syncCrossTime?: number | null;
   /** تقاطع مشترك (القائد): يُنشر زمن شمعة التقاطع بالثواني، و`null` عند مسحه. */
   onCrossTime?: (timeSec: number | null) => void;
+  /** إغلاق شمعة الإعادة (`null` خارج الإعادة) — لرأس الإطار كي لا يطبع سعر اليوم فوق شموع الماضي. */
+  onReplayPrice?: (price: number | null) => void;
 };
 
 /** جذب التقاطع لـO/H/L/C: أقرب من هذا (px) فقط — وإلا يبقى على المستوى الملموس. */
@@ -875,6 +877,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   syncTimeOnly = false,
   syncCrossTime,
   onCrossTime,
+  onReplayPrice,
 }: Props,
   ref
 ) {
@@ -1349,6 +1352,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // شموع D1 من المخزن مستويات اليوم فتُترك، والأساس من شموع السلسلة حتى شمعة الإعادة (ناقصة ⇒ لا خطوط).
   const replayLast = replayOn ? source.plot[source.plot.length - 1] : undefined;
   const replayCutSec = replayLast ? candleTimeSec(barTime(replayLast)) : null;
+  const replayClose = replayLast && Number.isFinite(replayLast.close) ? replayLast.close : null;
+  const onReplayPriceRef = useRef(onReplayPrice);
+  onReplayPriceRef.current = onReplayPrice;
+  useEffect(() => {
+    onReplayPriceRef.current?.(replayClose);
+  }, [replayClose]);
+  useEffect(() => () => onReplayPriceRef.current?.(null), []);
   const pivotBars = useMemo(() => {
     if (!anyPivot) return null;
     const fromDaily = seriesDemo || replayCutSec != null ? null : validSessionBar(dailyPrevBar);
