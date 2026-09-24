@@ -30,8 +30,13 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
     onDone();
   };
 
+  // زرّ الرجوع بأندرويد يرجع خطوةً لا يُنهي الجولة: كان `onRequestClose={back}`، فضغطةٌ واحدة
+  // لمن اعتاد «الرجوع» لتصحيح نقرة «التالي» الزائدة تُغلق جولةً لا تُعرض إلا مرّة بالعمر
+  // (`matrix.onboarding.v1`). من الخطوة الأولى يبقى الرجوع خروجاً كما يتوقّع المتداول.
+  const back = () => (step > 0 ? setStep((s) => s - 1) : finish());
+
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={finish}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={back}>
       <View style={styles.backdrop}>
         <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
           <View style={styles.card}>

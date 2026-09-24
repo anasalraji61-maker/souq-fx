@@ -280,6 +280,7 @@ export type Dict = {
   riskCalcBadSymbol: string;
   appCrashTitle: string;
   appCrashBody: string;
+  appCrashRepeatBody: string;
   appCrashRetry: string;
   planSlWrongBuy: string;
   planSlWrongSell: string;
@@ -1113,6 +1114,8 @@ const ar: Dict = {
   riskCalcBadSymbol: 'رمز غير مدعوم — استخدم زوجاً من 6 أحرف مثل EURUSD أو XAUUSD',
   appCrashTitle: 'حدث خطأ غير متوقع',
   appCrashBody: 'تعذّر عرض هذه الشاشة. بياناتك ورسوماتك محفوظة — اضغط «إعادة المحاولة» للمتابعة.',
+  appCrashRepeatBody:
+    'ما زالت الشاشة تتعثّر. أغلق MATRIX كلياً (اسحبه من قائمة التطبيقات المفتوحة) ثم افتحه من جديد — رسوماتك محفوظة.',
   appCrashRetry: 'إعادة المحاولة',
   planSlWrongBuy: 'الوقف يجب أن يكون تحت سعر الدخول في صفقة الشراء',
   planSlWrongSell: 'الوقف يجب أن يكون فوق سعر الدخول في صفقة البيع',
@@ -1958,6 +1961,8 @@ const enUS: Dict = {
   riskCalcBadSymbol: 'Unsupported symbol — use a 6-letter pair like EURUSD or XAUUSD',
   appCrashTitle: 'Something went wrong',
   appCrashBody: 'This screen could not be displayed. Your data and drawings are safe — tap “Try again” to continue.',
+  appCrashRepeatBody:
+    'Still not working. Fully close MATRIX (swipe it away from your recent apps) and open it again — your drawings are safe.',
   appCrashRetry: 'Try again',
   planSlWrongBuy: 'For a buy, the stop must be below the entry',
   planSlWrongSell: 'For a sell, the stop must be above the entry',
@@ -2511,7 +2516,7 @@ const enUS: Dict = {
   domBidAskHint: 'You sell at the Bid and buy at the Ask — the spread is a cost on every trade.',
   domNoBidAsk: 'The provider has no Bid/Ask for this symbol — last price only.',
   domNoLiveQuote: 'No live price right now — nothing to show.',
-  domOtcNote: 'Forex is decentralised: there is no single market depth, and your real spread depends on your broker.',
+  domOtcNote: 'Forex is decentralized: there is no single market depth, and your real spread depends on your broker.',
   pdwPrevA11yPrefix: 'Previous pair: ',
   pdwCurrentA11yPrefix: 'Select current pair: ',
   pdwNextA11yPrefix: 'Next pair: ',
@@ -2526,13 +2531,20 @@ const enGB: Dict = {
   createAccount: 'Create an account',
   logout: 'Sign out',
   hello: 'Hello',
-  email: 'E-mail',
+  // «E-mail» بشرطة صار قديماً ببريطانيا نفسها (الحكومة وBBC تكتبان email).
+  email: 'Email',
   sponsorCode: 'Sponsor code (optional)',
-  loginError: 'Sign-in failed — check name/e-mail and password',
-  registerError: 'Registration failed — check e-mail, details, and sponsor code',
+  loginError: 'Sign-in failed — check name/email and password',
+  registerError: 'Registration failed — check email, details, and sponsor code',
   language: 'Language',
   commissionsReport: 'Commission report',
   networkTree: 'Network tree',
+  // التهجئة البريطانية لما يراه المتداول البريطاني أوّلاً (الجولة الترحيبية) وبقية ما افترق.
+  onboardStep3Body:
+    'Choose from dozens of ready indicators (RSI, MACD, Bollinger, and more), or turn on a lens that summarises market state at a glance.',
+  wlCatalogTitle: 'Add from catalogue',
+  wlCatalogAllAdded: 'All catalogue symbols added',
+  domOtcNote: 'Forex is decentralised: there is no single market depth, and your real spread depends on your broker.',
 };
 
 const ku: Dict = {
@@ -2823,6 +2835,8 @@ const ku: Dict = {
   riskCalcBadSymbol: 'هێمای پشتگیری نەکراو — جووتێکی 6 پیتی وەک EURUSD یان XAUUSD بەکاربهێنە',
   appCrashTitle: 'هەڵەیەکی چاوەڕواننەکراو ڕوویدا',
   appCrashBody: 'ئەم شاشەیە نیشان نەدرا. زانیاری و کێشانەکانت پارێزراون — «دووبارە هەوڵبدەرەوە» دابگرە.',
+  appCrashRepeatBody:
+    'هێشتا کار ناکات. MATRIX بە تەواوی دابخە (لە لیستی ئەپە کراوەکان لایبەرە) و دووبارە بیکەرەوە — کێشانەکانت پارێزراون.',
   appCrashRetry: 'دووبارە هەوڵبدەرەوە',
   planSlWrongBuy: 'بۆ کڕین، وەستان دەبێت لە خوار نرخی چوونەژوورەوە بێت',
   planSlWrongSell: 'بۆ فرۆشتن، وەستان دەبێت لە سەرووی نرخی چوونەژوورەوە بێت',
