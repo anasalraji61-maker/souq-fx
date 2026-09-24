@@ -131,4 +131,12 @@ const bar = (time: number) => ({ time });
   assert.deepEqual(stepCrossBar([0, 1, 2].map(bar), 0, 80, 0, 1), { time: 1, offset: 0 });
 }
 
+// أداة بلا منازل: من مرجع وسوم الشارت (سعرها الجاري) لا من الرقم الملموس — ما يُرسل = ما يُقرأ.
+{
+  assert.equal(crossPriceAt(99.8537, null, false, null, Infinity, 100.2), 99.85);
+  assert.equal(crossPriceAt(9.98537, null, false, null, Infinity, 10.02), 9.985);
+  assert.equal(crossPriceAt(99.8537, null, false, null), 99.854); // بلا مرجع كما كان
+  assert.equal(crossPriceAt(1.085237, null, false, 5, Infinity, 150), 1.08524); // منازل الأداة تغلب
+}
+
 console.log('crossAnchor.selftest: PASS');

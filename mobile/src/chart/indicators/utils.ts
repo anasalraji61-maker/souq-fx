@@ -37,10 +37,11 @@ export function formatPrice(n: number, symbol?: string, ref?: number | null) {
 /**
  * فرق سعرَين بمنازل **السعر** لا بحجم الفرق: لأداة بلا منازل معروفة (US30، BTCUSD، النفط) كان `formatPrice(diff)`
  * يقدّرها من الفرق نفسه — رقم صغير دائماً — فوقف 35 نقطة على US30 يُكتب «35.400» وحركة 0.8 «0.80000».
- * `ref` السعر المرجعي (أحد الطرفين). كمّية بلا إشارة.
+ * `ref` السعر المرجعي (أحد الطرفين). كمّية بلا إشارة. `priceRef` مرجع منازل الشارت (`formatPrice`) إن
+ * كان غير `ref`: قياس غاز من 9.985 والمحور بثلاث منازل (سعره 10.02) كان «+0.03000».
  */
-export function formatPriceDiff(diff: number, ref: number, symbol?: string): string {
-  const priceText = formatPrice(Math.abs(ref), symbol);
+export function formatPriceDiff(diff: number, ref: number, symbol?: string, priceRef?: number | null): string {
+  const priceText = formatPrice(Math.abs(ref), symbol, priceRef);
   const dp = priceText.includes('.') ? priceText.length - priceText.indexOf('.') - 1 : 0;
   return Math.abs(diff).toFixed(dp);
 }

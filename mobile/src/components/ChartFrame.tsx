@@ -332,7 +332,7 @@ export function ChartFrame({
           ) : null}
         </View>
         <View style={[styles.priceRow, switching && styles.stale]}>
-          <Text style={styles.price}>{formatPrice(headerPrice, series.symbol)}</Text>
+          <Text style={styles.price}>{formatPrice(headerPrice, series.symbol, series.last)}</Text>
           {replayPrice != null ? (
             <Text style={[styles.liveTag, styles.liveTagMuted]} accessibilityLabel={t.mcReplayModeA11y}>
               ⏪
@@ -351,7 +351,7 @@ export function ChartFrame({
           ) : null}
           {hasSpread ? (
             <Text style={styles.spreadTag} accessibilityLabel={t.cfSpreadA11y}>
-              {`B ${formatPrice(liveQuote!.bid!, series.symbol)} · A ${formatPrice(liveQuote!.ask!, series.symbol)}`}
+              {`B ${formatPrice(liveQuote!.bid!, series.symbol, series.last)} · A ${formatPrice(liveQuote!.ask!, series.symbol, series.last)}`}
               {spreadPips != null ? (
                 <Text style={styles.spreadPips}>{` · ${spreadPips.toFixed(1)} pip`}</Text>
               ) : null}

@@ -274,7 +274,7 @@ export function QuadChartModal({
                     </Text>
                   ) : null}
                   {s && Number.isFinite(px) ? (
-                    <Text style={styles.cellPrice}>{formatPrice(px, sym)}</Text>
+                    <Text style={styles.cellPrice}>{formatPrice(px, sym, s?.last)}</Text>
                   ) : null}
                   {s ? (
                     <Text style={[styles.cellPct, { color: pctColor }]}>

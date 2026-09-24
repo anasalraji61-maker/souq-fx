@@ -49,15 +49,17 @@ export type OhlcBar = { open: number; high: number; low: number; close: number }
  * - بدونه ⇒ السعر الخام مقرَّباً لمنازل الأداة، فما يُرسل للتنبيه هو **حرفياً** ما يُقرأ
  *   على الوسم (لا 1.0852371948 خلف «1.08524»).
  *
- * `decimals` من `symbolPriceDecimals`؛ `null` (DXY، رموز الوسيط) ⇒ التقدير من حجم الرقم
- * بنفس قاعدة `formatPrice`. سعر غير محدود (لوح بارتفاع صفر) ⇒ `null`: لا تقاطع أفقي.
+ * `decimals` من `symbolPriceDecimals`؛ `null` (DXY، رموز الوسيط) ⇒ التقدير بنفس قاعدة `formatPrice`
+ * ومن المرجع نفسه (`ref` = سعر الأداة الجاري، كوسوم الشارت): كان من حجم الرقم الملموس، فتقاطع عند
+ * 99.8537 على نفط يتداول عند 100.2 يُرسل للتنبيه 99.854 ووسمه «99.85». سعر غير محدود (لوح بارتفاع صفر) ⇒ `null`: لا تقاطع أفقي.
  */
 export function crossPriceAt(
   raw: number,
   bar: OhlcBar | null | undefined,
   magnet: boolean,
   decimals: number | null,
-  snapTol = Infinity
+  snapTol = Infinity,
+  ref?: number | null
 ): number | null {
   if (!Number.isFinite(raw)) return null;
   if (magnet && bar) {
@@ -72,7 +74,7 @@ export function crossPriceAt(
     }
     if (d <= snapTol) return best;
   }
-  const a = Math.abs(raw);
+  const a = ref != null && Number.isFinite(ref) && ref > 0 ? ref : Math.abs(raw);
   const dp = decimals ?? (a >= 100 ? 2 : a >= 10 ? 3 : 5);
   return Number(raw.toFixed(dp));
 }

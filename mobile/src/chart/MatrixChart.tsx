@@ -2754,7 +2754,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       // خارج الجذب: السعر مقرَّب لمنازل الأداة (1.08500 لا 1.0849973) كوسم التقاطع.
       const snapTol = Math.abs(priceAtY(y - CROSS_SNAP_PX) - raw);
       const price =
-        crossPriceAt(raw, candle, magnet, symbolPriceDecimals(series.symbol), snapTol) ?? raw;
+        crossPriceAt(raw, candle, magnet, symbolPriceDecimals(series.symbol), snapTol, priceDecimalsRef) ?? raw;
       const index = sourceRef.current.start + local;
       // مختومة بزمنها من الولادة: السحب لا يمرّ بتأثير الختم إطاراً إطاراً (رسمتان لكل حركة).
       const stamp = stampAtIndex(
@@ -2764,7 +2764,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       );
       return stamp == null ? { index, price } : { index, price, ...stamp };
     },
-    [hitIndex, priceAtY, magnet, series.timeframe, series.symbol]
+    [hitIndex, priceAtY, magnet, series.timeframe, series.symbol, priceDecimalsRef]
   );
 
   // طرف `b` لخطّة شراء/بيع: يمين الدخول دائماً (`positionEndIndex`)، مختوماً بزمنه الجديد — وإلا
@@ -3140,7 +3140,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const raw = priceAtY(y);
     // 14px حول الإصبع بوحدة السعر عند موضعه (يصحّ مع المقياس اللوغاريتمي كذلك).
     const snapTol = Math.abs(priceAtY(y - CROSS_SNAP_PX) - raw);
-    const price = crossPriceAt(raw, candle, magnet, symbolPriceDecimals(series.symbol), snapTol);
+    const price = crossPriceAt(raw, candle, magnet, symbolPriceDecimals(series.symbol), snapTol, priceDecimalsRef);
     crossPinned.current = !hover;
     crossFromSync.current = false;
     setCrossHover(hover);
@@ -4159,6 +4159,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       barsWord: tr.mcMeasureBarsWord,
       lang,
       durationSec: measureDurationSec(m.a, m.b, timeframeStepSec(series.timeframe)),
+      priceRef: priceDecimalsRef,
     });
   const measureReadout = measureDone ? measureText(measureDone) : null;
   // الرسم المحدَّد بطرفين يُقرأ كقياس بسطر القراءة («+24.0 pip · 12 شمعة · 3h») — كم قطع خطّ

@@ -143,6 +143,8 @@ export function measureReadoutText(input: {
   lang?: string;
   /** زمن القياس (`measureDurationSec`)؛ غائب ⇒ لا خانة زمن. */
   durationSec?: number | null;
+  /** مرجع منازل السعر لأداة بلا منازل معروفة (سعرها الجاري، كمحور الشارت)؛ غائب ⇒ الطرف الأول. */
+  priceRef?: number | null;
 }): string {
   const { symbol, a, b, stats, barsWord, lang } = input;
   const dur = measureDurationText(input.durationSec ?? null, lang);
@@ -153,7 +155,7 @@ export function measureReadoutText(input: {
   // منازل الفرق = منازل **السعر** لا حجم الفرق: لأداة بلا منازل معروفة (مؤشّر، عملة رقمية)
   // كان `formatPrice(diff)` يقدّرها من الفرق نفسه — والفرق رقم صغير دائماً — فقياس 5 دولارات
   // على BTCUSD يُكتب «+5.00000» بخمس منازل لا يحملها سعره (67420.00).
-  const diffText = formatPriceDiff(stats.diff, a.price, symbol);
+  const diffText = formatPriceDiff(stats.diff, a.price, symbol, input.priceRef);
   const diffSign = Number(diffText) === 0 ? '' : stats.diff > 0 ? '+' : '−';
   const amount = pips ?? `${diffSign}${diffText}`;
   const pctText = formatPct(Number.isFinite(stats.pct) ? stats.pct : 0);
