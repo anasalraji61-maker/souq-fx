@@ -1033,6 +1033,27 @@ export function commissionAcrossModes(raw: string, from: CommissionMode, to: Com
   return String(Number(((v * perStdLot(from)) / perStdLot(to)).toFixed(6)));
 }
 
+/**
+ * أرقام ملاحظة العمولة بوضع micro/السنت (`riskCalcCommissionNoteMicro` `{std}`/`{micro}`، `riskCalcCommissionNoteCent` `{usc}`).
+ * من خانة العمولة حين فيها مبلغ موجب مفهوم — فيرى المتداول ما تعنيه «0.05» التي كتبها (= 5 للوت العادي) — وإلا المثال 7 / 0.07.
+ * `std` = null (عقد عادي أو رمز مجهول) ⇒ `null`: الملاحظة العادية.
+ */
+export function commissionNoteExample(
+  raw: string,
+  kind: CommissionMode['kind'] | null,
+): { std: string; micro: string; usc: string } | null {
+  if (kind !== 'micro' && kind !== 'cent') return null;
+  const v = parseCommission(raw);
+  const typed = v != null && v > 0 ? v : null;
+  const fmt = (x: number) => String(Number(x.toFixed(6)));
+  if (kind === 'cent') {
+    const usc = fmt(typed ?? 7);
+    return { std: usc, micro: fmt((typed ?? 7) / 100), usc };
+  }
+  const micro = typed ?? 0.07;
+  return { std: fmt(micro * 100), micro: fmt(micro), usc: fmt(micro * 100) };
+}
+
 /** أكبر حجم باللوت يُعقل بخانة «الحجم لوت»: وسطاء التجزئة يحدّون الأمر الواحد بـ50–100 لوت عادةً. */
 export const MAX_SANE_LOTS = 100;
 /**

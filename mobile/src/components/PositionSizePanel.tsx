@@ -39,6 +39,7 @@ import {
   parseSpreadPips,
   parseCommission,
   commissionAcrossModes,
+  commissionNoteExample,
   conversionKey,
   SYMBOL_INPUT_MAX_LEN,
   type CommissionMode,
@@ -449,6 +450,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           ? t.arabicThousandsSignHint
           : t.invalidNumberHint;
   /** خطأ خانة العمولة تحتها — للسبب نفسه: اللوت يُحسب بدونها فلا يصل `badNumber` إليها */
+  /** الملاحظة بلوت الوضع: micro ⇒ «{std} للعادي = {micro} للوت micro» بأرقام الخانة، السنت ⇒ «بالـUSC، الرقم نفسه». */
+  const commissionEx = commissionNoteExample(commission, commissionKind);
+  const commissionNoteText = !commissionEx
+    ? t.riskCalcCommissionNote
+    : commissionKind === 'micro'
+      ? t.riskCalcCommissionNoteMicro.replace('{std}', commissionEx.std).replace('{micro}', commissionEx.micro)
+      : t.riskCalcCommissionNoteCent.split('{usc}').join(commissionEx.usc);
   const commissionErr =
     parseCommission(commission) != null
       ? null
@@ -1202,13 +1210,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       <Text style={[styles.label, { textAlign: align }]}>
         {t.riskCalcCommission} ({moneyCcy})
       </Text>
-      {input(commission, setCommission, '7', t.riskCalcCommission)}
+      {input(commission, setCommission, commissionKind === 'micro' ? '0.07' : '7', t.riskCalcCommission)}
       {commissionErr ? (
         <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
           {commissionErr}
         </Text>
       ) : null}
-      <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcCommissionNote}</Text>
+      <Text style={[styles.hint, { textAlign: align }]}>{commissionNoteText}</Text>
 
       {conv && convLoading ? <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.sm }} /> : null}
       {conv && convFailed ? (

@@ -44,6 +44,7 @@ import {
   smallLotsStdEquiv,
   smallContractSuffix,
   commissionAcrossModes,
+  commissionNoteExample,
   conversionKey,
   SYMBOL_INPUT_MAX_LEN,
   withSmallSuffix,
@@ -1943,3 +1944,27 @@ console.log('positionSize lotsOverOrderMax small selftest OK');
   assert.equal(conversionKey(conversionPair('USD', 'USD')), null);
 }
 console.log('positionSize conversionKey selftest OK');
+
+// commissionNoteExample — ملاحظة العمولة بوضع micro/السنت بأرقام الخانة
+{
+  // لا خانة ⇒ المثال: 7 للعادي = 0.07 للوت micro؛ السنت 7 USC
+  assert.deepEqual(commissionNoteExample('', 'micro'), { std: '7', micro: '0.07', usc: '7' });
+  assert.deepEqual(commissionNoteExample('', 'cent'), { std: '7', micro: '0.07', usc: '7' });
+  // ما كتبه المتداول: 0.05 لكل لوت micro = 5 للوت العادي
+  assert.deepEqual(commissionNoteExample('0.05', 'micro'), { std: '5', micro: '0.05', usc: '5' });
+  assert.deepEqual(commissionNoteExample('0.035', 'micro'), { std: '3.5', micro: '0.035', usc: '3.5' });
+  assert.deepEqual(commissionNoteExample('6', 'cent'), { std: '6', micro: '0.06', usc: '6' });
+  assert.deepEqual(commissionNoteExample('٠٫٠٦', 'micro'), { std: '6', micro: '0.06', usc: '6' });
+  // المعنى نفسه كـcommissionAcrossModes (الخانة بعد العبور إلى العادي)
+  const micro = { kind: 'micro', account: 'USD' } as const;
+  const std = { kind: 'std', account: 'USD' } as const;
+  for (const v of ['0.07', '0.05', '0.035', '0.01'])
+    assert.equal(commissionNoteExample(v, 'micro')!.std, commissionAcrossModes(v, micro, std), v);
+  // صفر / غير مفهومة / سالبة ⇒ المثال لا «0 = 0»
+  for (const v of ['0', 'abc', '-1', '7.000'])
+    assert.deepEqual(commissionNoteExample(v, 'micro'), { std: '7', micro: '0.07', usc: '7' }, v);
+  // عادي أو مجهول ⇒ الملاحظة العادية
+  assert.equal(commissionNoteExample('7', 'std'), null);
+  assert.equal(commissionNoteExample('7', null), null);
+}
+console.log('positionSize commissionNoteExample selftest OK');
