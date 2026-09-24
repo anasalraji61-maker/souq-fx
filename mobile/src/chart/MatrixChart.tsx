@@ -32,7 +32,7 @@ import {
   type DrawingsSaveErrorCode,
 } from './drawingStore';
 import { compareOverlayPrices } from './compare';
-import { tickPlausibleForSeries, withLivePrice } from './liveSeries';
+import { tickPlausibleForSeries, withLiveExtremes, withLivePrice, type LiveExtremes } from './liveSeries';
 import { computeVolumeProfile, pocPrice, computeTpo } from './volumeProfile';
 import { evalPineLite, INDICATOR_LIBRARY } from './pineLite';
 import { renko, measureStats } from './renko';
@@ -1069,14 +1069,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     return selectedInd.filter((id) => !off.has(id));
   }, [selectedInd, collapsedPanes]);
 
-  const liveSeries = useMemo(
-    () =>
-      withLivePrice(series, livePrice, liveTickSource, {
-        tickAsOf: liveTickSource?.as_of ?? null,
-        timeframe: series.timeframe,
-      }),
-    [series, livePrice, liveTickSource]
-  );
+  // أعلى/أدنى التيكات منذ فتح الشمعة الحيّة (`withLiveExtremes`): بدونه يقصر الذيل مع كل تيك يرتدّ.
+  const liveExtRef = useRef<LiveExtremes | null>(null);
+  const liveSeries = useMemo(() => {
+    const merged = withLivePrice(series, livePrice, liveTickSource, {
+      tickAsOf: liveTickSource?.as_of ?? null,
+      timeframe: series.timeframe,
+    });
+    const r = withLiveExtremes(series, merged, liveExtRef.current);
+    liveExtRef.current = r.ext;
+    return r.series;
+  }, [series, livePrice, liveTickSource]);
 
   useEffect(() => {
     setOffset(0);

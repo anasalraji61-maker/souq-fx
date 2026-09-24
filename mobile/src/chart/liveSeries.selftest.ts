@@ -3,7 +3,14 @@
  * Run: npx --yes tsx src/chart/liveSeries.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { livePriceForChart, livePriceForHeader, tickPlausibleForSeries, withLivePrice } from './liveSeries';
+import {
+  livePriceForChart,
+  livePriceForHeader,
+  tickPlausibleForSeries,
+  withLiveExtremes,
+  withLivePrice,
+  type LiveExtremes,
+} from './liveSeries';
 import type { ChartSeries } from '../api';
 
 const now = 1_760_000_000;
@@ -54,6 +61,39 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   assert.equal(livePriceForHeader(eur, tick(0)), null);
   assert.equal(livePriceForHeader(eur, null), null);
   assert.equal(livePriceForHeader({ ...eur, candles: [] }, tick(1.17)), null);
+}
+
+// أعلى/أدنى الشمعة الحيّة يبقيان ما بلغته التيكات: 1.1712 ثم ارتداد 1.1706 — الأعلى يبقى 1.1712
+{
+  let ext: LiveExtremes | null = null;
+  const feed = (p: number, base = eur) => {
+    const r = withLiveExtremes(base, withLivePrice(base, p, src, { nowSec: now + 1 }), ext);
+    ext = r.ext;
+    return r.series.candles[r.series.candles.length - 1]!;
+  };
+  assert.equal(feed(1.1712).high, 1.1712);
+  const back = feed(1.1706);
+  assert.equal(back.high, 1.1712, 'high kept after pullback');
+  assert.equal(back.close, 1.1706);
+  assert.equal(feed(1.169).low, 1.169);
+  const up = feed(1.1703);
+  assert.equal(up.low, 1.169, 'low kept after bounce');
+  assert.equal(up.high, 1.1712);
+  // تيك مرفوض: لا دمج ولا تغيير بالتتبّع
+  const before = ext;
+  assert.equal(withLiveExtremes(eur, withLivePrice(eur, 2650, src, { nowSec: now + 1 }), ext).series, eur);
+  assert.equal(ext, before);
+  // شمعة جديدة (الجلب التالي): التتبّع يبدأ من جديد لا يحمل أعلى الشمعة السابقة
+  const nextBar = { ...eur, candles: [...eur.candles, { ...eur.candles[29]!, time: eur.candles[29]!.time + 900 }] };
+  const r = withLiveExtremes(nextBar, withLivePrice(nextBar, 1.1704, src, { nowSec: now + 901, tickAsOf: now + 901 }), ext);
+  const nb = r.series.candles[r.series.candles.length - 1]!;
+  assert.equal(nb.close, 1.1704, 'tick merged into the new bar');
+  assert.equal(nb.high, 1.1705);
+  assert.equal(nb.low, 1.1697);
+  // رمز آخر بالزمن نفسه: لا يرث
+  const gbp = { ...eur, symbol: 'GBPUSD' };
+  const g = withLiveExtremes(gbp, withLivePrice(gbp, 1.1704, src, { nowSec: now + 1 }), ext).series;
+  assert.equal(g.candles[29]!.high, 1.1705);
 }
 
 console.log('liveSeries selftest: OK');

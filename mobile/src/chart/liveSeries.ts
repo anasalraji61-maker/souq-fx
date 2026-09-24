@@ -73,6 +73,35 @@ export function withLivePrice(
   };
 }
 
+/** أعلى/أدنى ما بلغته التيكات المدموجة في الشمعة الحيّة `key` (`رمز|فريم|زمن الشمعة`). */
+export type LiveExtremes = { key: string; high: number; low: number };
+
+/**
+ * يمدّ الشمعة الحيّة بأعلى/أدنى ما بلغته التيكات منذ فُتحت — `withLivePrice` يبني الشمعة من شمعة الجلب
+ * الأخيرة والتيك **الحالي** وحده، فذيل رسمه تيك عند 1.08600 فوق أعلى الجلب 1.08500 يعود إلى 1.08550 مع
+ * التيك التالي: الذيل يطول ويقصر ويضيع أعلى الشمعة الحقيقي حتى الجلب التالي (~90 ث).
+ * `merged` ناتج `withLivePrice`؛ إن لم يُدمج تيك (`merged === base`) لا تغيير ولا تتبّع. مفتاح مختلف
+ * (شمعة جديدة/رمز/فريم) يبدأ التتبّع من الشمعة المدموجة نفسها.
+ */
+export function withLiveExtremes(
+  base: ChartSeries,
+  merged: ChartSeries,
+  prev: LiveExtremes | null
+): { series: ChartSeries; ext: LiveExtremes | null } {
+  if (merged === base || !merged.candles.length) return { series: merged, ext: prev };
+  const i = merged.candles.length - 1;
+  const last = merged.candles[i]!;
+  const key = `${merged.symbol}|${merged.timeframe}|${last.time}`;
+  const same = prev != null && prev.key === key;
+  const high = same ? Math.max(prev.high, last.high) : last.high;
+  const low = same ? Math.min(prev.low, last.low) : last.low;
+  const ext = { key, high, low };
+  if (high === last.high && low === last.low) return { series: merged, ext };
+  const candles = [...merged.candles];
+  candles[i] = { ...last, high, low };
+  return { series: { ...merged, candles }, ext };
+}
+
 /**
  * نسبة التغيّر مع السعر الحيّ — بتعريف الخادم نفسه (`build_series`: من إغلاق أول شمعة
  * بالسلسلة إلى آخر سعر). الرأس كان يطبع **سعر التيك** بجانب **نسبة الجلب الأخير**:
