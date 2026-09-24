@@ -742,7 +742,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
      * إغلاقٌ مبكر، −0.9R قريبٌ من وقفه)، وسطر الصفقة يعرضه أصلاً فكان التأكيد وحده يُسقطه. المسطرة
      * نفسها (`realizedR` على سعر الخروج نفسه)، فما يؤكّده هو ما يظهر بالسطر بعد الحفظ حرفياً.
      */
-    const rText = formatR(realizedR({ side: trSide, entry: tr.entry, sl: tr.sl, exit: exitPx }));
+    const rText = formatR(realizedR({ symbol: tr.symbol, side: trSide, entry: tr.entry, sl: tr.sl, exit: exitPx }));
     /**
      * **والمال** بعملة التسعير كما يكتبه سطر الصفقة بعد الحفظ («+25 pip · +125.00 USD · +0.23%»): التأكيد
      * كان يُسقطه فيقرّر المتداول «أغلق الآن؟» على نقاطٍ ونسبة حركة سعر، ثم يظهر المبلغ بعد الإغلاق لا
@@ -852,7 +852,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
               })()}
               {(() => {
                 const r = formatR(
-                  realizedR({ side: tr.side === 'sell' ? 'sell' : 'buy', entry: tr.entry, sl: tr.sl, exit: tr.exit })
+                  realizedR({
+                    symbol: tr.symbol,
+                    side: tr.side === 'sell' ? 'sell' : 'buy',
+                    entry: tr.entry,
+                    sl: tr.sl,
+                    exit: tr.exit,
+                  })
                 );
                 return r ? ` · ${t.journalResultR.replace('{r}', r)}` : '';
               })()}

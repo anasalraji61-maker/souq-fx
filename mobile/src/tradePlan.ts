@@ -140,8 +140,14 @@ export function levelSideIssue(input: {
 /**
  * النتيجة بوحدات المخاطرة (R): +2 = ربحت ضعف ما خاطرت به، −1 = ضُرب الوقف كاملاً.
  * يحتاج وقفاً صالحاً بالجهة الصحيحة؛ وإلا null. تقريب لمنزلة عشرية واحدة.
+ *
+ * مع `symbol` معروف الـpip: وقفٌ **أضيق من 1 pip** ⇒ null، بحدّ `analyzePlan` نفسه (`slTooClose`). شراء
+ * 1.0850 بوقف 1.08499 (خطأ منزلة عن 1.0849) وخروج 1.0870 كان «+200R» بسطر الصفقة، ويرفع «متوسط R» لثلاث
+ * صفقات إلى +66R — الرقم الذي يقرّر به المتداول أيستمرّ على نظامه. الدفتر يحذّر من هذا الوقف أصلاً
+ * (`planSlTooClose`)، فلا يُبنى عليه R. بلا `symbol` (أو رمز مجهول) السلوك كما كان.
  */
 export function realizedR(input: {
+  symbol?: string;
   side: TradeSide;
   entry: number;
   sl?: number | null;
@@ -151,12 +157,20 @@ export function realizedR(input: {
   return r == null ? null : roundR(r);
 }
 
-function exactR(input: { side: TradeSide; entry: number; sl?: number | null; exit?: number | null }): number | null {
+function exactR(input: {
+  symbol?: string;
+  side: TradeSide;
+  entry: number;
+  sl?: number | null;
+  exit?: number | null;
+}): number | null {
   const { side, entry, sl, exit } = input;
   if (!finitePos(entry) || !finitePos(sl) || !finitePos(exit)) return null;
   const buy = side === 'buy';
   const risk = buy ? entry - sl : sl - entry;
   if (risk <= 0) return null;
+  const pip = input.symbol ? instrumentSpec(input.symbol)?.pipSize ?? null : null;
+  if (pip && risk < pip * (1 - 1e-6)) return null;
   const move = buy ? exit - entry : entry - exit;
   return move / risk;
 }
@@ -170,13 +184,21 @@ function exactR(input: { side: TradeSide; entry: number; sl?: number | null; exi
  * نظام بلا أفضلية يبدو رابحاً. وهذا السطر هو ما يقرّر به المتداول أيستمرّ على نظامه.
  */
 export function averageR(
-  trades: readonly { side: string; entry: number; sl?: number | null; exit?: number | null; status: string }[]
+  trades: readonly {
+    symbol?: string;
+    side: string;
+    entry: number;
+    sl?: number | null;
+    exit?: number | null;
+    status: string;
+  }[]
 ): { r: number; n: number } | null {
   let sum = 0;
   let n = 0;
   for (const tr of trades) {
     if (tr.status !== 'closed') continue;
-    const r = exactR({ side: tr.side === 'sell' ? 'sell' : 'buy', entry: tr.entry, sl: tr.sl, exit: tr.exit });
+    // وقفٌ أضيق من 1 pip لا يُحسب (راجع `realizedR`) — صفقة «+200R» واحدة كانت تبتلع المتوسط كلّه
+    const r = exactR({ symbol: tr.symbol, side: tr.side === 'sell' ? 'sell' : 'buy', entry: tr.entry, sl: tr.sl, exit: tr.exit });
     if (r == null) continue;
     sum += r;
     n += 1;
@@ -261,7 +283,7 @@ export function exitPreview(input: {
   const mv = realizedMove({ symbol, side, entry, exit });
   if (!mv) return null;
   const cash = finitePos(lots) ? pnlInQuoteCcy({ symbol, side, entry, exit, lots }) : null;
-  return { ...mv, r: realizedR({ side, entry, sl, exit }), cash };
+  return { ...mv, r: realizedR({ symbol, side, entry, sl, exit }), cash };
 }
 
 /**
@@ -362,7 +384,7 @@ export function floatingResult(input: {
   const { symbol, side, entry, sl, current } = input;
   const mv = realizedMove({ symbol, side, entry, exit: current });
   if (!mv) return null;
-  return { ...mv, r: realizedR({ side, entry, sl, exit: current }) };
+  return { ...mv, r: realizedR({ symbol, side, entry, sl, exit: current }) };
 }
 
 /**

@@ -1187,3 +1187,36 @@ console.log('tradePlan liveStopChip selftest OK');
   assert.equal(liveEntryOrphaned({ entryText: '1.27', symbol: 'GBPUSD', filled: null }), false);
 }
 console.log('tradePlan liveEntryOrphaned selftest OK');
+
+// وقفٌ أضيق من 1 pip: لا R بسطر الصفقة ولا بالمتوسط (كان +200R يرفع متوسط ثلاث صفقات إلى +66R)
+{
+  const t = (symbol: string | undefined, side: string, entry: number, sl: number, exit: number) => ({
+    symbol, side, entry, sl, exit, status: 'closed',
+  });
+  // الخطأ الذي يُصلحه: بلا رمز كما كان
+  assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.08499, exit: 1.087 }), 200);
+  assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08499, exit: 1.087 }), null);
+  const trades = [
+    t('EURUSD', 'buy', 1.085, 1.08499, 1.087),
+    t('EURUSD', 'buy', 1.1, 1.09, 1.12),
+    t('USDJPY', 'sell', 150, 151, 151),
+  ];
+  assert.deepEqual(averageR(trades.map((x) => ({ ...x, symbol: undefined }))), { r: 67, n: 3 });
+  assert.deepEqual(averageR(trades), { r: 0.5, n: 2 });
+  // 1 pip بالضبط يُحسب (هامش الفاصلة العائمة كـanalyzePlan): 1.0851 − 1.0850
+  assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.0851, sl: 1.085, exit: 1.0853 }), 2);
+  // ين: وقف 0.005 (نصف pip) ⇒ null؛ 0.01 ⇒ يُحسب
+  assert.equal(realizedR({ symbol: 'USDJPY', side: 'sell', entry: 150, sl: 150.005, exit: 149.9 }), null);
+  assert.equal(realizedR({ symbol: 'USDJPY', side: 'sell', entry: 150, sl: 150.01, exit: 149.9 }), 10);
+  // ذهب: pip 0.1 — وقف 0.05 ⇒ null
+  assert.equal(realizedR({ symbol: 'XAUUSD', side: 'buy', entry: 2350, sl: 2349.95, exit: 2351 }), null);
+  // رمز مجهول: لا حدّ pip، كما كان
+  assert.equal(realizedR({ symbol: 'ZZZ', side: 'buy', entry: 100, sl: 99.99999, exit: 100.00002 }), 2);
+  // exitPreview وfloatingResult بالمسطرة نفسها
+  assert.equal(exitPreview({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08499, exit: 1.087 })!.r, null);
+  assert.equal(floatingResult({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08499, current: 1.087 })!.r, null);
+  assert.equal(exitPreview({ symbol: 'EURUSD', side: 'buy', entry: 1.1, sl: 1.09, exit: 1.12 })!.r, 2);
+  // pips والنسبة باقية مع r null
+  assert.equal(exitPreview({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08499, exit: 1.087 })!.pips, 20);
+}
+console.log('tradePlan sub-pip stop R selftest OK');
