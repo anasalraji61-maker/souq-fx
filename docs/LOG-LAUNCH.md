@@ -1671,3 +1671,38 @@
   (`ntpLevelTitle`/`tdsLevel` بـ`{gen}`/`{n}`، `ntpLevelBranches` بـ`{gen}`، `cppBasisNote` بـ`{unit}`). `FALLBACK_COMMISSION` ← `cppType*`/`cppCond*`. `AccountScreen.tsx:248` ← `t.accNetLoadError`.
 
 **خارج نطاقي ويستحقّ عملاً**: قرار أنس بشأن العمولات/الشبكة (⛔) قبل الرفع — الترجمة لا تغيّره؛ `₴`، `backend/openrouter_ai.py`، السبريد المختلَق.
+
+## 2026-09-24 — التشغيلة الثانية والخمسون
+
+أوّلاً بنود `COORDINATION.md` الموجّهة لي. التحقّق: `bash scripts/qa-build-check.sh` **أخضر بصفر أخطاء قبل كل commit**؛ صفر `U+FFFD`
+بـ`locales.ts`؛ كل ادّعاء بالوثائق مقروء من الكود. **لم يُشغَّل التطبيق.**
+
+1. **`locales.ts`** (`48b5e23`) ar/en/ku: `mcLogScaleA11y`، `mcShareDialogTitle`، `mcSessTokyo`/`mcSessLondon`/`mcSessNewYork` — النصوص منقولة من
+   `chartLocalLabels` (`typeLabels.ts:100`) حرفياً عدا الإنجليزية «MATRIX chart» (حالة جملة كبقية العناوين). **صفّ chart41 — منجز من جهتي.**
+2. **`locales.ts`** (`9fefa9e`): `a11yBusy` («جارٍ التنفيذ، انتظر لحظة») لأزرار الانتظار العشرة التي تُقرأ «...» (AccountScreen ×3، TradeJournalPanel ×2،
+   AlertsPanel ×2، PositionSizePanel ×2، NetworkTreePanel «…»). رقائق AccountScreen لا تحتاج مفاتيح جديدة — الوسم يُركَّب من الموجود
+   (`${t.language}: ${l.label}`، `${t.accountType}: ${r.label}`، `${t.underSponsor}: ${t.left}`) مع `accessibilityState={{ selected }}` — مكتوب بتعليق الـDict.
+   **صفّ QA3 «AccountScreen» — ما يخصّ القاموس منجز**؛ الربط لمالك الملف.
+3. **`RELEASE-MOBILE.md` §4** (`0ab0dfc`): أجوبة صادقة لملصقات الإتاحة بـApp Store Connect — Dark Interface نعم (`userInterfaceStyle: "dark"`)؛
+   VoiceOver وDifferentiate Without Color لا (نتائج QA3)؛ Larger Text لا تُعلَن قبل فحص جهاز (لا `allowFontScaling={false}`، لكن 454 `fontSize` ثابتاً)؛ لا فيديو.
+4. **`locales.ts`** (`1ac0ade`): حالات فارغة تقول ماذا يفعل المستخدم — `screenerNoResults`/`screenerNoMatchOf` («جرّب فلتراً آخر أو أعد الفحص لاحقاً»؛
+   تحقّقت أن `backend/screener.py:109` يُدرج الرمز إن طابق **أيّ** فلتر، فإضافة فلتر توسّع النتائج)، و`domNoLiveQuote` (السوق مغلق/المزوّد لا يردّ، و«يُعاد
+   الطلب تلقائياً» — `DomLitePanel.tsx:58` `setInterval(load, REFRESH_MS)`).
+
+### ردّ على COORDINATION
+- **chart41**: المفاتيح جاهزة — `MatrixChart.tsx:3473` ← `tr.mcShareDialogTitle`، `:5165` ← `tr.mcLogScaleA11y`، `:5263` ← خريطة `{tokyo: tr.mcSessTokyo, london: tr.mcSessLondon, ny: tr.mcSessNewYork}`؛ ثم حذف `chartLocalLabels`.
+- **QA3 `MessagesScreen` «أوصاف عربية ثابتة»**: الشاشة **غير معروضة** — لا استيراد لها بأي ملف (`grep` يجد تعليقاً بـ`CoursesScreen.tsx:50` فقط، ولا `Tab.Screen` بـ`App.tsx`).
+  كل نصوصها عربية ثابتة (13 سطراً). لم أضف مفاتيح لشاشة ميّتة؛ القرار لأنس: تُحذف أو تُربط، وإن رُبطت أكتب مفاتيحها.
+- **تحقّق**: خطوة التنبيهات بالجولة («يُفحص نحو كل دقيقة») صحيحة — `backend/alert_worker.py:18` `interval: float = 60.0`.
+
+### طلب تنسيق — لوكيل الشارت
+- **جديد**: ربط `mcLogScaleA11y`/`mcShareDialogTitle`/`mcSess*` (أعلاه). **قائم**: `TimeframeBar` ← `t.tfLabels`، حذف `dxyPrice`.
+
+### طلب تنسيق — لوكيل الأدوات
+- `a11yBusy` لأزرار «...» بـ`TradeJournalPanel:1250 :1598`، `AlertsPanel:983 :1061`، `PositionSizePanel:1134 :1404`: `accessibilityLabel={busy ? t.a11yBusy : …}` و`accessibilityState={{ busy }}`.
+
+### طلب تنسيق — لمالك AccountScreen/اللوحات (QA يحدّد)
+- `AccountScreen:279 :316 :429` و`NetworkTreePanel:168` ← `a11yBusy`؛ رقائق اللغة/الدور/الجهة بالوسوم المركّبة أعلاه + `selected`.
+
+**خارج نطاقي ويستحقّ عملاً**: قرار أنس بشأن العمولات/الشبكة (⛔)، `MessagesScreen` الميّتة، `backend/openrouter_ai.py`، السبريد المختلَق، `₴`.
+**يحتاج جهازاً**: Larger Text عند 200% قبل إعلانها بالمتجر.
