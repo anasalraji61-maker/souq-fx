@@ -15,7 +15,9 @@ assert.equal(isForexMarketOpen('EURUSD', at(2025, 11, 25, 22, 0)), true);
 // رأس السنة الخميس 2026-01-01
 assert.equal(isForexMarketOpen('XAUUSD', at(2025, 11, 31, 23)), false);
 assert.equal(isForexMarketOpen('XAUUSD', at(2026, 0, 1, 21, 59)), false);
-assert.equal(isForexMarketOpen('XAUUSD', at(2026, 0, 1, 22, 0)), true);
+assert.equal(isForexMarketOpen('XAUUSD', at(2026, 0, 1, 22, 0)), false); // الذهب: بعد العطلة 18:00 نيويورك
+assert.equal(isForexMarketOpen('XAUUSD', at(2026, 0, 1, 23, 0)), true);
+assert.equal(isForexMarketOpen('EURUSD', at(2026, 0, 1, 22, 0)), true);
 // الكريبتو لا تُغلق
 assert.equal(isForexMarketOpen('BTCUSD', at(2025, 11, 25, 12)), true);
 // يوم عادي
@@ -63,3 +65,13 @@ assert.equal(projectBarTimeSec('GOLDm', s(at(2026, 6, 17, 20)), H, 1), s(at(2026
 assert.equal(projectBarTimeSec('XAUUSD', s(at(2026, 0, 14, 10)), H, 3), s(at(2026, 0, 14, 13)));
 
 console.log('marketHours.selftest: PASS');
+
+// المعادن: كسر 17:00–18:00 نيويورك يومياً وافتتاح الأحد 18:00 (صيفاً 21:00–22:00 UTC)
+assert.equal(isForexMarketOpen('XAUUSD', at(2026, 8, 20, 21, 30)), false); // الأحد 17:30 NY
+assert.equal(isForexMarketOpen('XAUUSD', at(2026, 8, 20, 22, 0)), true);
+assert.equal(isForexMarketOpen('EURUSD', at(2026, 8, 20, 21, 30)), true);
+assert.equal(isForexMarketOpen('XAUUSD.m', at(2026, 8, 22, 21, 15)), false); // الثلاثاء بالكسر
+assert.equal(isForexMarketOpen('XAGUSD', at(2026, 8, 22, 20, 59)), true);
+assert.equal(isForexMarketOpen('XAUUSD', at(2026, 8, 22, 22, 0)), true);
+assert.equal(isForexMarketOpen('XAUUSD', at(2026, 0, 13, 22, 30)), false); // شتاءً 22:00–23:00 UTC
+assert.equal(isForexMarketOpen('XAUUSD', at(2026, 0, 13, 23, 0)), true);

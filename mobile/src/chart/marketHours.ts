@@ -58,7 +58,16 @@ export function isForexMarketOpen(symbol: string, now: Date = new Date()): boole
   if (day === 0 && sec < nyFivePmUtcSec(dayStart)) return false; // الأحد قبل الافتتاح
   if (day === 5 && sec >= nyFivePmUtcSec(dayStart)) return false; // الجمعة بعد الإغلاق
   if (isForexHolidaySession(sec)) return false;
+  // المعادن: كسر CME اليومي 17:00–18:00 نيويورك (ومنه افتتاح الأحد 18:00) — كانت «مفتوح» بلا تسعير.
+  if (LATE_OPEN_RE.test(sym.trim()) && inMetalsDailyBreak(sec)) return false;
   return true;
+}
+
+/** داخل ساعة كسر المعادن اليومي (17:00–18:00 نيويورك)؟ */
+function inMetalsDailyBreak(sec: number): boolean {
+  const dayStart = Math.floor(sec / DAY_SEC) * DAY_SEC;
+  const today = nyFivePmUtcSec(dayStart);
+  return sec >= today && sec < today + 3600;
 }
 
 /**
