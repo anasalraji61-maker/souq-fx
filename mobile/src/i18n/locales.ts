@@ -934,6 +934,13 @@ export type Dict = {
   mcShowDrawings: string;
   /** قارئ الشاشة لزرّ «Log» (النصّ الظاهر يبقى «Log» اللاتيني) — كان `chartLocalLabels(lang).logScaleA11y` بـ`typeLabels.ts` */
   mcLogScaleA11y: string;
+  /**
+   * زرّ لون الرسم المحدَّد (`85dcbf6`، بدل `drawColorLabels` المؤقّتة بـ`typeLabels.ts`): الكلمة تحت الأيقونة، والوصف يسمّي اللون الحالي
+   * `{color}` ← `mcColorNames[i]` بترتيب `drawPalette` (تمييز الإطار، أخضر، أحمر، برتقالي، أزرق، أبيض) — فلا تبقى الحالة لونية فقط
+   */
+  mcDrawColorWord: string;
+  mcDrawColorA11y: string;
+  mcColorNames: [string, string, string, string, string, string];
   /** عنوان نافذة المشاركة (`Sharing.shareAsync` dialogTitle) — كان `chartLocalLabels(lang).shareDialogTitle` */
   mcShareDialogTitle: string;
   /** أسماء الجلسات فوق تظليل مؤشّر «Sessions» — كانت `chartLocalLabels(lang).sessions` */
@@ -1948,6 +1955,9 @@ const ar: Dict = {
   mcHideDrawings: 'إخفاء الرسوم',
   mcShowDrawings: 'إظهار الرسوم',
   mcLogScaleA11y: 'مقياس لوغاريتمي للسعر',
+  mcDrawColorWord: 'لون',
+  mcDrawColorA11y: 'لون الرسم: {color} — انقر للّون التالي',
+  mcColorNames: ['لون الإطار', 'أخضر', 'أحمر', 'برتقالي', 'أزرق', 'أبيض'],
   mcShareDialogTitle: 'شارت MATRIX',
   mcSessTokyo: 'طوكيو',
   mcSessLondon: 'لندن',
@@ -2980,6 +2990,9 @@ const enUS: Dict = {
   mcHideDrawings: 'Hide drawings',
   mcShowDrawings: 'Show drawings',
   mcLogScaleA11y: 'Logarithmic price scale',
+  mcDrawColorWord: 'Color',
+  mcDrawColorA11y: 'Drawing color: {color} — tap for the next color',
+  mcColorNames: ['Frame color', 'Green', 'Red', 'Amber', 'Blue', 'White'],
   mcShareDialogTitle: 'MATRIX chart',
   mcSessTokyo: 'Tokyo',
   mcSessLondon: 'London',
@@ -3128,6 +3141,9 @@ const enGB: Dict = {
   language: 'Language',
   // التهجئة البريطانية لما افترق. (نصّ الجولة `onboardStep3Body` لم يعد فيه «summarize» فلا يحتاج نسخة هنا.)
   wlCatalogTitle: 'Add from catalogue',
+  mcDrawColorWord: 'Colour',
+  mcDrawColorA11y: 'Drawing colour: {color} — tap for the next colour',
+  mcColorNames: ['Frame colour', 'Green', 'Red', 'Amber', 'Blue', 'White'],
   wlCatalogAllAdded: 'All catalogue symbols added',
   invalidNumberHint: 'Number not recognised — type it without thousands separators, e.g. 10000 or 1.0850',
   domOtcNote: 'Forex is decentralised: there is no single market depth, and your real spread depends on your broker.',
@@ -4036,6 +4052,9 @@ const ku: Dict = {
   mcHideDrawings: 'شاردنەوەی هێڵکارییەکان',
   mcShowDrawings: 'پیشاندانی هێڵکارییەکان',
   mcLogScaleA11y: 'پێوەری لۆگاریتمی بۆ نرخ',
+  mcDrawColorWord: 'ڕەنگ',
+  mcDrawColorA11y: 'ڕەنگی وێنەکە: {color} — بۆ ڕەنگی دواتر لێبدە',
+  mcColorNames: ['ڕەنگی چوارچێوە', 'سەوز', 'سوور', 'پرتەقاڵی', 'شین', 'سپی'],
   mcShareDialogTitle: 'چارتی MATRIX',
   mcSessTokyo: 'تۆکیۆ',
   mcSessLondon: 'لەندەن',
