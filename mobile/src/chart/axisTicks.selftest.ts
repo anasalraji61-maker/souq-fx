@@ -10,6 +10,7 @@ import {
   boxesTouch,
   offAxisSide,
   axisShowsHours,
+  nicePriceTicks,
 } from './axisTicks';
 
 const TIME_GAP = 6;
@@ -212,4 +213,26 @@ console.log('axisTicks.selftest: PASS');
   assert.equal(axisShowsHours([0], 30 * H, false), true);
   assert.equal(axisShowsHours([0], 72 * H, false), false);
   console.log('axisShowsHours PASS');
+
+// nicePriceTicks: خطوات مستديرة ثابتة مع التيك، بحدّ العدد وأصغر منزلة
+{
+  // EURUSD مدى ~60 pip، 5 علامات كحدّ ⇒ خطوة 20 pip (10 pip تعطي ستّاً)
+  const t = nicePriceTicks(1.08412, 1.09013, 5, 0.00001);
+  assert.deepEqual(t, [1.086, 1.088, 1.09]);
+  // تيك يمدّ المدى قليلاً ⇒ العلامات نفسها
+  assert.deepEqual(nicePriceTicks(1.08409, 1.09016, 5, 0.00001), t);
+  // الذهب
+  assert.deepEqual(nicePriceTicks(2331.4, 2348.9, 6, 0.01), [2335, 2340, 2345]);
+  // مدى أضيق من أصغر منزلة: خطوة لا تنزل تحت المنزلة
+  const tiny = nicePriceTicks(1.08500, 1.08503, 7, 0.00001);
+  assert.deepEqual(tiny, [1.085, 1.08501, 1.08502, 1.08503]);
+  assert.ok(nicePriceTicks(1.085, 1.08503, 2, 0.00001).length <= 2);
+  // JPY: لا كسور عائمة
+  for (const p of nicePriceTicks(151.2, 152.05, 7, 0.001)) assert.equal(String(p).length <= 6, true);
+  assert.deepEqual(nicePriceTicks(NaN, 1, 5, 0), []);
+  assert.deepEqual(nicePriceTicks(2, 1, 5, 0), []);
+  // حدّ العدد محترم دائماً
+  for (const cap of [1, 2, 3, 4, 5, 6, 7]) assert.ok(nicePriceTicks(0.6512, 0.6589, cap, 0.00001).length <= cap);
+}
+
 }

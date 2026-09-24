@@ -56,6 +56,35 @@ export function axisTickRatios(count: number): number[] {
 }
 
 /**
+ * أسعار علامات المحور بخطوات مستديرة (1/2/5 × 10^k) كما بـTradingView، لا نِسَب متساوية.
+ * النِّسَب الثابتة (0، ⅙، ⅓…) تقع على أسعار كيفيّة (1.08437) تتبدّل مع كل تيك يمدّ المدى، فلا
+ * يقرأ المتداول مسافة 10 pip من المحور ولا يطابق خطّ الشبكة سعراً. الخطوة أصغر مستديرة
+ * ≥ `minStep` (أصغر منزلة معروضة) لا تتجاوز علاماتها `maxCount` داخل `[lo, hi]`.
+ * الأسعار مقرَّبة لمنازل الخطوة (بلا 1.0850000000001). مدى فارغ/غير صالح ⇒ `[]`.
+ */
+export function nicePriceTicks(lo: number, hi: number, maxCount: number, minStep: number): number[] {
+  if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi <= lo) return [];
+  const cap = Math.max(1, Math.floor(Number.isFinite(maxCount) ? maxCount : 1));
+  const floorStep = Number.isFinite(minStep) && minStep > 0 ? minStep : 0;
+  const span = hi - lo;
+  let exp = Math.floor(Math.log10(span / cap));
+  for (let guard = 0; guard < 40; guard++, exp++) {
+    for (const m of [1, 2, 5]) {
+      const step = m * Math.pow(10, exp);
+      if (step < floorStep * (1 - 1e-9)) continue;
+      const k0 = Math.ceil(lo / step - 1e-9);
+      const k1 = Math.floor(hi / step + 1e-9);
+      if (k1 - k0 + 1 > cap) continue;
+      const places = Math.max(0, -exp);
+      const out: number[] = [];
+      for (let k = k0; k <= k1; k++) out.push(Number((k * step).toFixed(Math.min(20, places))));
+      return out;
+    }
+  }
+  return [];
+}
+
+/**
  * يقصّ العلب داخل `[0, extent]` ثم يُخفي ما بقي متلامساً.
  *
  * `axisTickCount` تكفي حين تكون المراكز موزَّعة بالتساوي، لكن مراكز محور الزمن تأتي من

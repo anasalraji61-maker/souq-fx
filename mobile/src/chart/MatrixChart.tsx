@@ -57,6 +57,7 @@ import { indicatorBase, trimIndicator } from './indicatorWindow';
 import {
   axisTickCount,
   axisTickRatios,
+  nicePriceTicks,
   axisShowsHours,
   layoutAxisLabels,
   boxesTouch,
@@ -4818,12 +4819,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // عدد علامات السعر من ارتفاع اللوح لا رقماً ثابتاً: السبع الثابتة كانت تتباعد
   // 16.6px بلوح 100px (حدّه الأدنى عند فتح لوحات المؤشرات) وعلوّ النصّ 14px.
   // مدى القصّ `chartPlotH − 2` كي يطابق `maxStart` ما كانت الشاشة تقصّ عنده بالضبط.
-  const priceTicks = axisTickRatios(
-    axisTickCount(chartPlotH - 2, PRICE_LABEL_H, PRICE_LABEL_GAP, 7)
+  // الأسعار نفسها بخطوات مستديرة (`nicePriceTicks`): 1.0860 / 1.0880 ثابتة مع التيك، وخطوط الشبكة
+  // عليها. أصغر خطوة = أصغر منزلة تُطبع. مدى أضيق منها ⇒ النِّسَب المتساوية القديمة احتياطاً.
+  const priceTickCap = axisTickCount(chartPlotH - 2, PRICE_LABEL_H, PRICE_LABEL_GAP, 7);
+  const priceTickHi = fromScale(priceFrame.max);
+  const priceTickLo = fromScale(priceFrame.max - priceFrame.span);
+  const priceTickDecimals = (fmtPrice(priceTickHi).split('.')[1] ?? '').replace(/\D/g, '').length;
+  const nicePrices = nicePriceTicks(priceTickLo, priceTickHi, priceTickCap, Math.pow(10, -priceTickDecimals));
+  const priceTicks = (
+    nicePrices.length
+      ? nicePrices.map((price) => ({ ratio: (priceFrame.max - toScale(price)) / priceFrame.span, price }))
+      : axisTickRatios(priceTickCap).map((ratio) => ({
+          ratio,
+          price: fromScale(priceFrame.max - ratio * priceFrame.span),
+        }))
   )
     // مع الظلال: علامات السعر بجوار الحارة الأساسية وحدها — ما تحتها حارات بمدى آخر.
-    .filter((ratio) => !shadowStack || ratio * chartPlotH <= shadowStack.primaryLane.height)
-    .map((ratio) => ({ ratio, price: fromScale(priceFrame.max - ratio * priceFrame.span) }));
+    .filter((t) => Number.isFinite(t.ratio) && (!shadowStack || t.ratio * chartPlotH <= shadowStack.primaryLane.height));
   const priceTickBoxes = layoutAxisLabels(
     priceTicks.map((t) => t.ratio * chartPlotH),
     PRICE_LABEL_H,
@@ -5401,12 +5413,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         ) : null}
         {/* grid */}
         {!hideGrid
-          ? [0.25, 0.5, 0.75].map((p) => (
-              <View
-                key={p}
-                style={[styles.gridLine, { top: chartPlotH * p, right: PRICE_AXIS_WIDTH }]}
-              />
-            ))
+          ? // على أسعار علامات المحور نفسها (كما بـTradingView)، لا على الأرباع — خطّ الشبكة يقرأ سعراً.
+            priceTicks
+              .filter((t) => t.ratio * chartPlotH > 2 && t.ratio * chartPlotH < chartPlotH - 2)
+              .map((t) => (
+                <View
+                  key={t.price}
+                  style={[styles.gridLine, { top: chartPlotH * t.ratio, right: PRICE_AXIS_WIDTH }]}
+                />
+              ))
           : null}
 
         {/* فواصل أيام التداول (17:00 نيويورك) على الفريمات داخل اليوم — راجع `dayBreaks.ts`.
@@ -7528,7 +7543,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           priceTickBoxes[i].hidden ||
           priceTickUnderTag(priceTickBoxes[i].start) ? null : (
             <Text
-              key={tick.ratio}
+              key={tick.price}
               pointerEvents="none"
               numberOfLines={1}
               adjustsFontSizeToFit
