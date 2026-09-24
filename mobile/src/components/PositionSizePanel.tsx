@@ -1129,7 +1129,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
               },
             ]}
             onPress={() => void fillEntryFromLive()}
-            accessibilityLabel={t.riskCalcUseLivePriceA11y}
+            accessibilityLabel={livePxBusy ? t.a11yBusy : t.riskCalcUseLivePriceA11y}
           >
             <Text style={styles.chipText}>{livePxBusy ? '...' : t.riskCalcUseLivePrice}</Text>
           </Pressable>
@@ -1398,7 +1398,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             ]}
             onPress={() => void logPlanToJournal()}
             // الاتجاه بنصّ الزر الصوتي أيضاً: هنا بالضبط يُكتب `side` بالدفتر بلا أن يختاره المتداول.
-            accessibilityLabel={`${t.riskCalcLogToJournal} — ${planSide === 'sell' ? t.dirSell : t.dirBuy}`}
+            accessibilityLabel={
+              logBusy ? t.a11yBusy : `${t.riskCalcLogToJournal} — ${planSide === 'sell' ? t.dirSell : t.dirBuy}`
+            }
             hitSlop={8}
           >
             <Text style={styles.logBtnText}>{logBusy ? '...' : t.riskCalcLogToJournal}</Text>

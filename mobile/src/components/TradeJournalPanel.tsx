@@ -1147,6 +1147,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           ]}
           onPress={() => pickSide('buy')}
           accessibilityLabel={`${t.journalSideA11yPrefix}: ${t.dirBuy}`}
+          accessibilityState={{ selected: side === 'buy' }}
         >
           <Text style={[styles.chipText, side === 'buy' && styles.chipTextOn]}>{t.dirBuy}</Text>
         </Pressable>
@@ -1162,6 +1163,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           ]}
           onPress={() => pickSide('sell')}
           accessibilityLabel={`${t.journalSideA11yPrefix}: ${t.dirSell}`}
+          accessibilityState={{ selected: side === 'sell' }}
         >
           <Text style={[styles.chipText, side === 'sell' && styles.chipTextOn]}>{t.dirSell}</Text>
         </Pressable>
@@ -1245,7 +1247,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             },
           ]}
           onPress={() => void fillLivePrice()}
-          accessibilityLabel={t.journalUseLivePriceA11y}
+          accessibilityLabel={quoteBusy ? t.a11yBusy : t.journalUseLivePriceA11y}
         >
           <Text style={styles.qChipText}>{quoteBusy ? '...' : t.journalUseLivePrice}</Text>
         </Pressable>
@@ -1464,7 +1466,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           underlineColorAndroid="transparent"
           keyboardAppearance="dark"
           selectionColor={colors.bear}
-          accessibilityLabel={t.journalSlPlaceholder}
+          accessibilityLabel={t.riskCalcStop}
+          accessibilityHint={t.journalSlPlaceholder}
         />
         <TextInput
           style={[styles.input, styles.inputHalf, { textAlign: align }]}
@@ -1481,7 +1484,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           underlineColorAndroid="transparent"
           keyboardAppearance="dark"
           selectionColor={colors.bull}
-          accessibilityLabel={t.journalTpPlaceholder}
+          accessibilityLabel={t.riskCalcTargetPlaceholder}
+          accessibilityHint={t.journalTpPlaceholder}
         />
       </View>
       {slTargets.length > 0 ? (
@@ -1591,8 +1595,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         ]}
         onPress={() => void add()}
         disabled={busy}
-        accessibilityState={{ disabled: busy }}
-        accessibilityLabel={editing ? t.journalSaveEditBtn : t.journalAddA11y}
+        accessibilityState={{ disabled: busy, busy }}
+        accessibilityLabel={busy ? t.a11yBusy : editing ? t.journalSaveEditBtn : t.journalAddA11y}
         hitSlop={8}
       >
         <Text style={styles.btnText}>{busy ? '...' : editing ? t.journalSaveEditBtn : t.journalAddBtn}</Text>

@@ -510,6 +510,7 @@ export function ToolsScreen() {
                 setTab(tItem.id);
               }}
               accessibilityLabel={`${t.a11yTabPrefix}: ${tItem.label}`}
+              accessibilityState={{ selected: tab === tItem.id }}
             >
               <Text style={[styles.tabMark, tab === tItem.id && styles.tabMarkOn]}>{tItem.mark}</Text>
               <Text style={[styles.tabText, tab === tItem.id && styles.tabTextOn]}>{tItem.label}</Text>
@@ -580,6 +581,7 @@ export function ToolsScreen() {
                 ]}
                 onPress={() => setHubSection(s.id)}
                 accessibilityLabel={`${t.a11yHubSectionPrefix}: ${s.label}`}
+                accessibilityState={{ selected: hubSection === s.id }}
               >
                 <Text style={[styles.hubSectionMark, hubSection === s.id && styles.hubSectionMarkOn]}>
                   {s.mark}
@@ -672,6 +674,7 @@ export function ToolsScreen() {
                 ]}
                 onPress={() => toggleFilter(f.id)}
                 accessibilityLabel={`${t.a11yFilterPrefix}: ${f.label} — ${f.hint}`}
+                accessibilityState={{ checked: selected.includes(f.id) }}
               >
                 <Text style={[styles.chipText, selected.includes(f.id) && styles.chipTextOn]}>
                   {f.label}
@@ -700,8 +703,10 @@ export function ToolsScreen() {
             ]}
             onPress={run}
             disabled={loading || !selected.length}
-            accessibilityState={{ disabled: loading || !selected.length }}
-            accessibilityLabel={!selected.length ? t.screenerRunNeedFilter : t.screenerRunBtn}
+            accessibilityState={{ disabled: loading || !selected.length, busy: loading }}
+            accessibilityLabel={
+              loading ? t.a11yBusy : !selected.length ? t.screenerRunNeedFilter : t.screenerRunBtn
+            }
             hitSlop={8}
           >
             <Text style={styles.runText}>{loading ? t.screenerRunning : t.screenerRunBtn}</Text>
