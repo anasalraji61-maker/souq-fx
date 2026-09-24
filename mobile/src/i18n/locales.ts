@@ -975,6 +975,59 @@ export type Dict = {
   tfLabelsA11y: Record<Timeframe, string>;
   /** باقات الاشتراك — يُقرأ كاملاً كـ`t.subPlans` بدل `COPY[lang]` بـ`SubscriptionPlansPanel.tsx` */
   subPlans: SubPlansCopy;
+  // CommissionPlanPanel (cpp) + NetworkTreePanel (ntp) + TreeDiagramSketch (tds) + AccountScreen — كانت عربية ثابتة بلا useI18n (طلب QA2).
+  // أدوار جدول المستويات: `t.trader`، و`[t.trainer, t.broker, t.agent, t.company].join('/')`؛ «يسار/يمين» = `t.left`/`t.right`؛ «تحديث» = `t.refreshBtn`.
+  cppOpenA11y: string;
+  cppCloseA11y: string;
+  cppTitle: string;
+  cppSubOpen: string;
+  cppSubClosed: string;
+  cppLiveError: string;
+  cppTableCommissions: string;
+  cppColType: string;
+  cppColCondition: string;
+  cppColPoints: string;
+  cppTableLevels: string;
+  cppColRole: string;
+  cppColLevels: string;
+  cppTableMonthly: string;
+  cppColMonth: string;
+  cppColDirect: string;
+  cppColBalance: string;
+  cppColTotal: string;
+  cppNoEarnings: string;
+  cppBasisNote: string;
+  cppTypeDirect: string;
+  cppTypeBalance: string;
+  cppTypeActiveBalanced: string;
+  cppTypeActiveUnbalanced: string;
+  cppCondNewMember: string;
+  cppCondBalanced: string;
+  cppCondUnbalanced: string;
+  ntpNamePlaceholder: string;
+  ntpNameA11y: string;
+  ntpConfirmA11y: string;
+  ntpLevelTitle: string;
+  ntpNewBranches: string;
+  ntpLoadError: string;
+  ntpPlaceError: string;
+  ntpOpenA11y: string;
+  ntpCloseA11y: string;
+  ntpTitle: string;
+  ntpSubLive: string;
+  ntpSubPreview: string;
+  ntpSubClosed: string;
+  ntpYou: string;
+  ntpGuestHint: string;
+  ntpLevelBranches: string;
+  ntpTrunkHint: string;
+  ntpYouRoot: string;
+  tdsCaption: string;
+  tdsLevel: string;
+  tdsLevelOne: string;
+  tdsRootBottom: string;
+  tdsFootnote: string;
+  accNetLoadError: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -1957,6 +2010,57 @@ const ar: Dict = {
     ],
     note: '10$ شهرياً للشارت والمجتمع، و5$ إضافية لمن يريد الدورات، ثم 5$ أخرى لكل ما تبقّى من أدوات.',
   },
+  cppOpenA11y: 'فتح تقرير العمولات',
+  cppCloseA11y: 'طي تقرير العمولات',
+  cppTitle: 'تقرير العمولات',
+  cppSubOpen: 'جداول العمولات · الأرباح الشهرية',
+  cppSubClosed: 'اضغط السهم لفتح التقرير',
+  cppLiveError: 'تعذّر تحميل العمولات من الخادم — الجداول أدناه أمثلة تقريبية، لا أرقامك الفعلية',
+  cppTableCommissions: 'جدول العمولات',
+  cppColType: 'النوع',
+  cppColCondition: 'الشرط',
+  cppColPoints: 'نقاط',
+  cppTableLevels: 'جدول المستويات',
+  cppColRole: 'الدور',
+  cppColLevels: 'المستويات',
+  cppTableMonthly: 'الأرباح الشهرية',
+  cppColMonth: 'الشهر',
+  cppColDirect: 'جلب',
+  cppColBalance: 'توازن',
+  cppColTotal: 'الإجمالي',
+  cppNoEarnings: 'لا أرباح مسجّلة بعد — تظهر هنا حين تضيف أعضاء من الشجرة',
+  cppBasisNote: 'أساس الحساب: {unit} نقطة لكل عضو × نسبة العمولة',
+  cppTypeDirect: 'جلب مباشر',
+  cppTypeBalance: 'مكافأة توازن',
+  cppTypeActiveBalanced: 'فعّالة متوازنة',
+  cppTypeActiveUnbalanced: 'فعّالة غير متوازنة',
+  cppCondNewMember: 'عند إضافة عضو جديد',
+  cppCondBalanced: 'يمين = يسار',
+  cppCondUnbalanced: 'يمين ≠ يسار',
+  ntpNamePlaceholder: 'اكتب الاسم',
+  ntpNameA11y: 'اسم العضو الجديد في هذا المربع — 3 أحرف على الأقل',
+  ntpConfirmA11y: 'تأكيد وضع العضو في المربع',
+  ntpLevelTitle: 'مستوى {gen} · كل جهة 1–{n}',
+  ntpNewBranches: ' · فروع جديدة',
+  ntpLoadError: 'تعذّر تحميل الشجرة — تحقّق من اتصالك واضغط «تحديث»',
+  ntpPlaceError: 'لم يُوضع العضو — الاسم مستخدم، أو المربع مشغول، أو الاسم أقصر من 3 أحرف',
+  ntpOpenA11y: 'فتح شجرة الشبكة',
+  ntpCloseA11y: 'طي شجرة الشبكة',
+  ntpTitle: 'شجرة الشبكة',
+  ntpSubLive: 'يسار | يمين · الترقيم من 1 في كل جهة',
+  ntpSubPreview: 'معاينة · سجّل الدخول لتفعيلها',
+  ntpSubClosed: 'اضغط السهم لفتح الشجرة',
+  ntpYou: 'أنت',
+  ntpGuestHint: 'سجّل الدخول، ثم اكتب اسم العضو داخل مربع مرقّم.',
+  ntpLevelBranches: '↓ فروع المستوى {gen}',
+  ntpTrunkHint: 'خط الجذر ↓',
+  ntpYouRoot: 'أنت · الجذر',
+  tdsCaption: 'كيف تنمو الشجرة · اليسار واليمين منفصلان',
+  tdsLevel: 'مستوى {gen} · كل جهة 1–{n}',
+  tdsLevelOne: 'مستوى 1 · مربع واحد في كل جهة',
+  tdsRootBottom: 'الجذر · أسفل',
+  tdsFootnote: 'الترقيم يبدأ من 1 في كل جهة، واليسار منفصل عن اليمين · اكتب الاسم داخل المربع فقط',
+  accNetLoadError: 'تعذّر تحميل بيانات الشبكة والإحالة — حاول لاحقاً',
 };
 
 const enUS: Dict = {
@@ -2933,6 +3037,57 @@ const enUS: Dict = {
     ],
     note: 'Core is $10 a month for charts and community. Add $5 for the academy, and $5 more for everything else.',
   },
+  cppOpenA11y: 'Open commission report',
+  cppCloseA11y: 'Collapse commission report',
+  cppTitle: 'Commission report',
+  cppSubOpen: 'Commission tables · monthly earnings',
+  cppSubClosed: 'Tap the arrow to open the report',
+  cppLiveError: 'Couldn\'t load commissions from the server — the tables below are rough examples, not your actual figures',
+  cppTableCommissions: 'Commissions',
+  cppColType: 'Type',
+  cppColCondition: 'Condition',
+  cppColPoints: 'Points',
+  cppTableLevels: 'Levels',
+  cppColRole: 'Role',
+  cppColLevels: 'Levels',
+  cppTableMonthly: 'Monthly earnings',
+  cppColMonth: 'Month',
+  cppColDirect: 'Direct',
+  cppColBalance: 'Balance',
+  cppColTotal: 'Total',
+  cppNoEarnings: 'No earnings recorded yet — they appear here once you add members from the tree',
+  cppBasisNote: 'Basis: {unit} points per member × commission rate',
+  cppTypeDirect: 'Direct referral',
+  cppTypeBalance: 'Balance bonus',
+  cppTypeActiveBalanced: 'Active, balanced',
+  cppTypeActiveUnbalanced: 'Active, unbalanced',
+  cppCondNewMember: 'When a new member joins',
+  cppCondBalanced: 'Right = Left',
+  cppCondUnbalanced: 'Right ≠ Left',
+  ntpNamePlaceholder: 'Type a name',
+  ntpNameA11y: 'New member name for this box — at least 3 characters',
+  ntpConfirmA11y: 'Place member in this box',
+  ntpLevelTitle: 'Level {gen} · 1–{n} per side',
+  ntpNewBranches: ' · new branches',
+  ntpLoadError: 'Couldn\'t load the tree — check your connection and tap Refresh',
+  ntpPlaceError: 'Member not placed — the name is taken, the box is filled, or the name is shorter than 3 characters',
+  ntpOpenA11y: 'Open network tree',
+  ntpCloseA11y: 'Collapse network tree',
+  ntpTitle: 'Network tree',
+  ntpSubLive: 'Left | Right · numbering starts at 1 on each side',
+  ntpSubPreview: 'Preview · sign in to activate',
+  ntpSubClosed: 'Tap the arrow to open the tree',
+  ntpYou: 'You',
+  ntpGuestHint: 'Sign in, then type a member name inside a numbered box.',
+  ntpLevelBranches: '↓ Level {gen} branches',
+  ntpTrunkHint: 'Root line ↓',
+  ntpYouRoot: 'You · root',
+  tdsCaption: 'How the tree grows · left and right are separate',
+  tdsLevel: 'Level {gen} · 1–{n} per side',
+  tdsLevelOne: 'Level 1 · one box per side',
+  tdsRootBottom: 'Root · bottom',
+  tdsFootnote: 'Numbering starts at 1 on each side, and left is separate from right · type the name inside the box only',
+  accNetLoadError: 'Couldn\'t load your network and referral data — try again later',
 };
 
 const enGB: Dict = {
@@ -3934,6 +4089,57 @@ const ku: Dict = {
     ],
     note: 'پلانی بنەڕەتی مانگانە 10$ ـە بۆ چارت و کۆمەڵگە. 5$ زیاد بکە بۆ خولەکان، و 5$ی تر بۆ هەموو ئامرازەکانی تر.',
   },
+  cppOpenA11y: 'کردنەوەی ڕاپۆرتی کۆمیسیۆن',
+  cppCloseA11y: 'داخستنی ڕاپۆرتی کۆمیسیۆن',
+  cppTitle: 'ڕاپۆرتی کۆمیسیۆن',
+  cppSubOpen: 'خشتەی کۆمیسیۆن · قازانجی مانگانە',
+  cppSubClosed: 'بۆ کردنەوەی ڕاپۆرتەکە تیرەکە دابگرە',
+  cppLiveError: 'کۆمیسیۆنەکان لە ڕاژەکار بار نەبوون — خشتەکانی خوارەوە نموونەی نزیکن، نەک ژمارە ڕاستەقینەکانی تۆ',
+  cppTableCommissions: 'خشتەی کۆمیسیۆن',
+  cppColType: 'جۆر',
+  cppColCondition: 'مەرج',
+  cppColPoints: 'خاڵ',
+  cppTableLevels: 'خشتەی ئاستەکان',
+  cppColRole: 'ڕۆڵ',
+  cppColLevels: 'ئاستەکان',
+  cppTableMonthly: 'قازانجی مانگانە',
+  cppColMonth: 'مانگ',
+  cppColDirect: 'هێنان',
+  cppColBalance: 'هاوسەنگی',
+  cppColTotal: 'کۆی گشتی',
+  cppNoEarnings: 'هێشتا هیچ قازانجێک تۆمار نەکراوە — کاتێک ئەندام لە دارەکەوە زیاد دەکەیت لێرە دەردەکەوێت',
+  cppBasisNote: 'بنەمای ژماردن: {unit} خاڵ بۆ هەر ئەندامێک × ڕێژەی کۆمیسیۆن',
+  cppTypeDirect: 'هێنانی ڕاستەوخۆ',
+  cppTypeBalance: 'پاداشتی هاوسەنگی',
+  cppTypeActiveBalanced: 'چالاک، هاوسەنگ',
+  cppTypeActiveUnbalanced: 'چالاک، ناهاوسەنگ',
+  cppCondNewMember: 'کاتێک ئەندامێکی نوێ زیاد دەکرێت',
+  cppCondBalanced: 'ڕاست = چەپ',
+  cppCondUnbalanced: 'ڕاست ≠ چەپ',
+  ntpNamePlaceholder: 'ناوەکە بنووسە',
+  ntpNameA11y: 'ناوی ئەندامی نوێ بۆ ئەم خانەیە — لانیکەم 3 پیت',
+  ntpConfirmA11y: 'دانانی ئەندام لەم خانەیەدا',
+  ntpLevelTitle: 'ئاستی {gen} · هەر لایەک 1–{n}',
+  ntpNewBranches: ' · لقی نوێ',
+  ntpLoadError: 'دارەکە بار نەبوو — پەیوەندییەکەت بپشکنە و «نوێکردنەوە» دابگرە',
+  ntpPlaceError: 'ئەندامەکە دانەنرا — ناوەکە بەکارهاتووە، یان خانەکە پڕە، یان ناوەکە لە 3 پیت کورتترە',
+  ntpOpenA11y: 'کردنەوەی داری تۆڕ',
+  ntpCloseA11y: 'داخستنی داری تۆڕ',
+  ntpTitle: 'داری تۆڕ',
+  ntpSubLive: 'چەپ | ڕاست · ژمارەکردن لە 1ـەوە لە هەر لایەک',
+  ntpSubPreview: 'پێشبینین · بۆ چالاککردن بچۆ ژوورەوە',
+  ntpSubClosed: 'بۆ کردنەوەی دارەکە تیرەکە دابگرە',
+  ntpYou: 'تۆ',
+  ntpGuestHint: 'بچۆ ژوورەوە، پاشان ناوی ئەندام لەناو خانەیەکی ژمارەدار بنووسە.',
+  ntpLevelBranches: '↓ لقەکانی ئاستی {gen}',
+  ntpTrunkHint: 'هێڵی ڕەگ ↓',
+  ntpYouRoot: 'تۆ · ڕەگ',
+  tdsCaption: 'دارەکە چۆن گەشە دەکات · چەپ و ڕاست جیان',
+  tdsLevel: 'ئاستی {gen} · هەر لایەک 1–{n}',
+  tdsLevelOne: 'ئاستی 1 · یەک خانە لە هەر لایەک',
+  tdsRootBottom: 'ڕەگ · خوارەوە',
+  tdsFootnote: 'ژمارەکردن لە هەر لایەک لە 1ـەوە دەست پێ دەکات و چەپ لە ڕاست جیایە · ناوەکە تەنها لەناو خانەکەدا بنووسە',
+  accNetLoadError: 'داتای تۆڕ و بانگهێشت بار نەبوو — دواتر هەوڵ بدەرەوە',
 };
 
 export const DICTS: Record<LangId, Dict> = {
