@@ -79,6 +79,7 @@ import { DrawingsSaveQueue, drawingsKey, drawingsSignature } from './drawingsPer
 import { clipSegmentToBars, dragChangesDrawing, drawingEnd, samePoint } from './drawEdit';
 import {
   isPositionTool,
+  positionLabelLeft,
   positionLabels,
   positionLevels,
   positionOutcome,
@@ -2814,6 +2815,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       source.start + source.plot.length - 1
     );
     const outcomeUp = outcome != null && outcome.r >= 0;
+    const outcomeText = outcome ? positionOutcomeText(box.lv, outcome, series.symbol) : '';
     const xExit = outcome ? Math.min(box.right, xOf(outcome.exitIndex - source.start)) : 0;
     const band = (y1: number, y2: number, fill: string, edge: string) => (
       <View
@@ -2835,10 +2837,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         style={[
           styles.positionLabel,
           {
-            left: box.left,
+            // يُزاح يساراً عند حافّة اللوح بدل قصّ النسبة.
+            left: positionLabelLeft(box.left, text, chartPlotW),
             // الحافّة العليا ⇒ الوسم فوقها، والسفلى ⇒ تحتها.
             top: beyondEntry ? y - 16 : y + 2,
-            maxWidth: Math.max(60, chartPlotW - box.left - 2),
+            maxWidth: Math.max(60, chartPlotW - positionLabelLeft(box.left, text, chartPlotW) - 2),
             color: tone,
             borderColor: tone,
           },
@@ -2882,16 +2885,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             style={[
               styles.positionLabel,
               {
-                // بعد مقبض الدخول لا فوقه.
-                left: box.left + 10,
+                // بعد مقبض الدخول لا فوقه (إلا إن لم يتّسع حتى حافّة اللوح).
+                left: positionLabelLeft(box.left + 10, outcomeText, chartPlotW),
                 top: box.yEntry - 7,
-                maxWidth: Math.max(60, chartPlotW - box.left - 12),
+                maxWidth: Math.max(60, chartPlotW - positionLabelLeft(box.left + 10, outcomeText, chartPlotW) - 2),
                 color: outcomeUp ? colors.bull : colors.bear,
                 borderColor: outcomeUp ? colors.bull : colors.bear,
               },
             ]}
           >
-            {positionOutcomeText(box.lv, outcome, series.symbol)}
+            {outcomeText}
           </Text>
         ) : null}
         {sel && !preview ? (

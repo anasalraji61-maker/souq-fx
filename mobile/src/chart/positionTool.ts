@@ -168,3 +168,17 @@ export function positionOutcomeText(levels: PositionLevels, outcome: PositionOut
   const head = outcome.state === 'target' ? 'TP ✓ ' : outcome.state === 'stop' ? 'SL ✕ ' : '';
   return `${head}${dist} · ${r}`;
 }
+
+/** تقدير متحفّظ لعرض محرف الوسم (`fontSize: 10`، وزن 800) وهوامشه (`paddingHorizontal: 4` + الحدّ). */
+export const POSITION_LABEL_CHAR_W = 6.2;
+export const POSITION_LABEL_PAD = 10;
+
+/**
+ * يسار وسم الصندوق: عند يسار الصندوق ما دام الوسم يتّسع حتى حافّة اللوح، وإلا يُزاح يساراً ليتّسع.
+ * المتداول يرسم الصفقة غالباً عند الشمعة الحيّة (يمين اللوح)، فكان «TP 1.09000 · 50.0 pip · R:R 2»
+ * يُقصّ إلى «TP 1.090…» — تضيع النسبة، وهي سبب رسم الأداة أصلاً. لوح أضيق من الوسم ⇒ 2px (ويُقصّ).
+ */
+export function positionLabelLeft(preferred: number, text: string, plotW: number): number {
+  const w = text.length * POSITION_LABEL_CHAR_W + POSITION_LABEL_PAD;
+  return Math.max(2, Math.min(preferred, plotW - w - 2));
+}

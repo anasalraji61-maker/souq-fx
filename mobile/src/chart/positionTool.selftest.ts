@@ -4,6 +4,7 @@ import {
   clampRr,
   isPositionTool,
   positionLabels,
+  positionLabelLeft,
   positionLevels,
   positionOutcome,
   positionOutcomeText,
@@ -106,5 +107,12 @@ o = positionOutcome(SG, [bar(2648, 2651, 2650), bar(2640, 2656, 2645)], 0, 1, 1)
 assert.equal(o.state, 'stop');
 o = positionOutcome(SG, [bar(2648, 2651, 2650), bar(2644, 2652, 2646)], 0, 1, 1)!;
 assert.equal(positionOutcomeText(SG, o, 'XAUUSD'), '+40.0 pip · +0.8R');
+
+// الوسم عند يمين اللوح يُزاح يساراً ليتّسع لا يُقصّ
+const t30 = 'TP 1.09000 · 50.0 pip · R:R 2'; // 29 محرفاً ≈ 190px
+assert.equal(positionLabelLeft(40, t30, 400), 40);
+const shifted = positionLabelLeft(300, t30, 400);
+assert.ok(shifted < 300 && shifted + t30.length * 6.2 + 10 <= 398, `${shifted}`);
+assert.equal(positionLabelLeft(300, t30, 120), 2); // لوح أضيق من الوسم
 
 console.log('positionTool.selftest: PASS');
