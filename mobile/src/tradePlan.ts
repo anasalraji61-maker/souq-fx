@@ -231,6 +231,32 @@ export function exitShortcuts(input: {
   return out;
 }
 
+/**
+ * نتيجة صفقة **قبل حفظها** من خانات نموذج الدفتر: النقاط ونسبة الحركة (`realizedMove`)، والـR حين
+ * يُكتب وقفٌ صالح (`realizedR`)، والمال بعملة التسعير حين يُكتب حجم (`pnlInQuoteCcy`).
+ *
+ * لماذا: الخروج يُكتب بالنموذج (أو يُنقر «= SL»/«= TP») ولا يرى المتداول ما سيُحفظ إلا بعد الحفظ بسطر
+ * الصفقة — ومنزلةٌ منقلبة (1.0852 بدل 1.0825) تُحفظ خسارةٌ كاملة كـ«+0.1R» بلا إشارة قبلها. **الدوالّ
+ * نفسها** التي يعرض بها سطر الصفقة المغلقة نتيجتها، فما يُرى هنا هو ما سيُرى بالقائمة حرفياً.
+ *
+ * `lots` null/غير موجب = بلا مال (لا حجم مفترض). `null` كلّه بلا دخول أو خروج صالحَين.
+ */
+export function exitPreview(input: {
+  symbol: string;
+  side: TradeSide;
+  entry: number | null;
+  sl?: number | null;
+  exit: number | null;
+  lots?: number | null;
+}): { pips: number | null; pct: number; r: number | null; cash: { amount: number; ccy: string } | null } | null {
+  const { symbol, side, entry, sl, exit, lots } = input;
+  if (!finitePos(entry) || !finitePos(exit)) return null;
+  const mv = realizedMove({ symbol, side, entry, exit });
+  if (!mv) return null;
+  const cash = finitePos(lots) ? pnlInQuoteCcy({ symbol, side, entry, exit, lots }) : null;
+  return { ...mv, r: realizedR({ side, entry, sl, exit }), cash };
+}
+
 /** +1.8R / −1R / 0R */
 export function formatR(r: number | null): string | null {
   if (r == null || !Number.isFinite(r)) return null;

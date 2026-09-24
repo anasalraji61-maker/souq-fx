@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import {
   analyzePlan,
   exitShortcuts,
+  exitPreview,
   averageR,
   floatingResult,
   formatPips,
@@ -23,7 +24,7 @@ import {
   targetAtRR,
   QUICK_RR,
 } from './tradePlan';
-import { instrumentSpec, pipValuePerLot, planJournalNote, positionSize } from './positionSize';
+import { instrumentSpec, pipValuePerLot, planJournalNote, pnlInQuoteCcy, positionSize } from './positionSize';
 
 // شراء EURUSD صحيح: وقف 25 pip، هدف 50 pip ⇒ 1:2
 const a = analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, tp: 1.09 });
@@ -644,3 +645,52 @@ console.log('tradePlan averageR selftest OK');
   assert.deepEqual(exitShortcuts({ side: 'buy', entry: 1.085, sl: NaN, tp: Infinity }), []);
 }
 console.log('tradePlan exitShortcuts selftest OK');
+
+// ---- exitPreview: نتيجة الصفقة بالنموذج قبل الحفظ = ما يعرضه سطرها بعد الحفظ ----
+{
+  // شراء EURUSD 0.5 لوت، خروج على الوقف: −25 pip، −125.00 USD، −1R
+  const a = exitPreview({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, exit: 1.0825, lots: 0.5 })!;
+  assert.equal(a.pips, -25);
+  assert.equal(a.r, -1);
+  assert.deepEqual(a.cash, { amount: -125, ccy: 'USD' });
+  assert.equal(a.pct, -0.23);
+  // المنزلة المنقلبة (1.0852 بدل 1.0825) تُرى ربحاً صغيراً قبل الحفظ — هذا ما يجب أن يلاحظه
+  const flip = exitPreview({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, exit: 1.0852, lots: 0.5 })!;
+  assert.equal(flip.pips, 2);
+  assert.equal(flip.r, 0.1);
+  assert.deepEqual(flip.cash, { amount: 10, ccy: 'USD' });
+  // بيع USDJPY بالين، بلا حجم ⇒ بلا مال؛ الذهب بلاحقة وسيط
+  const j = exitPreview({ symbol: 'usdjpy', side: 'sell', entry: 150, sl: 150.3, exit: 149.55, lots: null })!;
+  assert.equal(j.pips, 45);
+  assert.equal(j.r, 1.5);
+  assert.equal(j.cash, null);
+  const g = exitPreview({ symbol: 'XAUUSD.m', side: 'buy', entry: 2400, sl: 2390, exit: 2420, lots: 0.1 })!;
+  assert.equal(g.pips, 200);
+  assert.equal(g.r, 2);
+  assert.deepEqual(g.cash, { amount: 200, ccy: 'USD' });
+  // بلا وقف ⇒ بلا R؛ رمز بلا مواصفات ⇒ بلا نقاط ولا مال، والنسبة تبقى
+  const n = exitPreview({ symbol: 'US30', side: 'buy', entry: 40000, exit: 40400, lots: 1 })!;
+  assert.equal(n.pips, null);
+  assert.equal(n.r, null);
+  assert.equal(n.cash, null);
+  assert.equal(n.pct, 1);
+  // بلا دخول أو خروج صالح
+  assert.equal(exitPreview({ symbol: 'EURUSD', side: 'buy', entry: null, exit: 1.09 }), null);
+  assert.equal(exitPreview({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: null }), null);
+  assert.equal(exitPreview({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 0, lots: 1 }), null);
+  assert.equal(exitPreview({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.09, lots: 0 })!.cash, null);
+  // مطابقة حرفية لسطر الصفقة المحفوظة (realizedMove + realizedR + pnlInQuoteCcy) على شبكة
+  for (const side of ['buy', 'sell'] as const) {
+    for (const exit of [1.0801, 1.0825, 1.08499, 1.085, 1.08501, 1.0875, 1.0912]) {
+      for (const lots of [0.01, 0.37, 2]) {
+        const p = exitPreview({ symbol: 'EURUSD', side, entry: 1.085, sl: side === 'buy' ? 1.0825 : 1.0875, exit, lots })!;
+        const mv = realizedMove({ symbol: 'EURUSD', side, entry: 1.085, exit })!;
+        assert.equal(p.pips, mv.pips);
+        assert.equal(p.pct, mv.pct);
+        assert.equal(p.r, realizedR({ side, entry: 1.085, sl: side === 'buy' ? 1.0825 : 1.0875, exit }));
+        assert.deepEqual(p.cash, pnlInQuoteCcy({ symbol: 'EURUSD', side, entry: 1.085, exit, lots }));
+      }
+    }
+  }
+}
+console.log('tradePlan exitPreview selftest OK');

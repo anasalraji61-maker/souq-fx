@@ -20,6 +20,7 @@ import { formatMoney, instrumentSpec, pipsBetween, pnlInQuoteCcy, riskInQuoteCcy
 import {
   analyzePlan,
   exitShortcuts,
+  exitPreview,
   floatingResult,
   formatPips,
   formatR,
@@ -394,6 +395,38 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [side, entry, sl, tp]
   );
+
+  /**
+   * نتيجة الصفقة **قبل الحفظ** حين يُكتب الخروج: «−25 pip · −125.00 USD · −0.23% · النتيجة −1R» —
+   * بالشكل والدوالّ نفسها التي يعرضها سطر الصفقة بعد الحفظ (`exitPreview`)، فمنزلةٌ منقلبة تُرى ربحاً
+   * صغيراً هنا قبل أن تُحفظ. بلا مال من حجمٍ يبدو وحدات (سطر التحذير يقول ما الخطأ).
+   */
+  const exitResult = useMemo(() => {
+    if (unreadable(exit)) return null;
+    const l = num(size);
+    const p = exitPreview({
+      symbol: symbol.trim(),
+      side,
+      entry: num(entry),
+      sl: num(sl),
+      exit: num(exit),
+      lots: l != null && !sizeLooksLikeUnits(l, instrumentSpec(symbol.trim().toUpperCase())) ? l : null,
+    });
+    if (!p) return null;
+    const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
+    const pips = formatPips(p.pips == null ? null : Math.abs(p.pips));
+    const r = formatR(p.r);
+    const text = [
+      pips != null ? `${sign(p.pips ?? 0)}${pips} pip` : null,
+      p.cash ? `${p.cash.amount > 0 ? '+' : ''}${formatMoney(p.cash.amount, p.cash.ccy)}` : null,
+      `${sign(p.pct)}${Math.abs(p.pct).toFixed(2)}%`,
+      r ? t.journalResultR.replace('{r}', r) : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+    return { text, pct: p.pct };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol, side, entry, sl, exit, size, t]);
 
   /**
    * أدوات الدفتر وعدد صفقات كلٍّ منها، الأكثر تداولاً أولاً. الشرائح لا تظهر إلا بأداتين فأكثر:
@@ -1238,6 +1271,18 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             );
           })}
         </View>
+      ) : null}
+      {exitResult ? (
+        <Text
+          style={[
+            styles.planLine,
+            { textAlign: align },
+            exitResult.pct < 0 ? { color: colors.bear } : exitResult.pct > 0 ? { color: colors.bull } : null,
+          ]}
+          accessibilityLiveRegion="polite"
+        >
+          {exitResult.text}
+        </Text>
       ) : null}
       <View style={[styles.row, rtl && styles.rowRtl]}>
         <TextInput
