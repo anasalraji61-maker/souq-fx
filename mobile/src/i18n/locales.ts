@@ -2,6 +2,25 @@ import type { Timeframe } from '../timeframes';
 
 export type LangId = 'ar' | 'en-US' | 'en-GB' | 'ku';
 
+/** نصوص `SubscriptionPlansPanel` — كانت قاموساً داخلياً `COPY` بالملف نفسه (طلب QA2) */
+export type SubPlansCopy = {
+  title: string;
+  subtitle: string;
+  perMonth: string;
+  coreBadge: string;
+  academyBadge: string;
+  fullBadge: string;
+  coreName: string;
+  academyName: string;
+  fullName: string;
+  academyAddOn: string;
+  fullAddOn: string;
+  coreFeatures: string[];
+  academyFeatures: string[];
+  fullFeatures: string[];
+  note: string;
+};
+
 export type Dict = {
   accountTitle: string;
   accountSub: string;
@@ -954,6 +973,8 @@ export type Dict = {
   tfLabels: Record<Timeframe, string>;
   /** ما يقرؤه قارئ الشاشة بعد `termTimeframeA11yPrefix` — كلمات كاملة لا «1H» */
   tfLabelsA11y: Record<Timeframe, string>;
+  /** باقات الاشتراك — يُقرأ كاملاً كـ`t.subPlans` بدل `COPY[lang]` بـ`SubscriptionPlansPanel.tsx` */
+  subPlans: SubPlansCopy;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -1904,6 +1925,38 @@ const ar: Dict = {
     D: 'يومي',
     W: 'أسبوعي',
   },
+  subPlans: {
+    title: 'باقات MATRIX',
+    subtitle: 'ابدأ بالشارت والمجتمع، وأضف الأكاديمية وبقية الأدوات حين تحتاجها',
+    perMonth: '/ شهرياً',
+    coreBadge: 'البداية',
+    academyBadge: '+ الأكاديمية',
+    fullBadge: 'كل الميزات',
+    coreName: 'الأساسية',
+    academyName: 'الأكاديمية',
+    fullName: 'الكاملة',
+    academyAddOn: '+5$ للدورات',
+    fullAddOn: '+5$ لبقية الأدوات',
+    coreFeatures: [
+      'كل أنواع الشموع والشارت',
+      'كل الإطارات: المربّع والمستطيل والظلّ',
+      'الدردشة الجماعية والتصويت',
+      'الأخبار وقائمة المتابعة وأدوات الرسم',
+      'المؤشرات والأطر الزمنية',
+    ],
+    academyFeatures: [
+      'كل ما في الباقة الأساسية',
+      'الأكاديمية كاملة: مدارس ومستويات ومحاضرات',
+      'قاعة تفاعلية تقاطع فيها المدرّس بسؤالك',
+    ],
+    fullFeatures: [
+      'كل ما في باقة الأكاديمية',
+      'الرسائل الخاصة',
+      'مساعد AI والتنبيهات والفاحص والاختبار الرجعي',
+      'التوقعات والمحللون وبقية الأدوات',
+    ],
+    note: '10$ شهرياً للشارت والمجتمع، و5$ إضافية لمن يريد الدورات، ثم 5$ أخرى لكل ما تبقّى من أدوات.',
+  },
 };
 
 const enUS: Dict = {
@@ -2847,6 +2900,38 @@ const enUS: Dict = {
     '4H': '4 hours',
     D: 'Daily',
     W: 'Weekly',
+  },
+  subPlans: {
+    title: 'MATRIX plans',
+    subtitle: 'Start with charts and community; add the academy and the other tools when you need them',
+    perMonth: '/ month',
+    coreBadge: 'Start here',
+    academyBadge: '+ Academy',
+    fullBadge: 'Everything',
+    coreName: 'Core',
+    academyName: 'Academy',
+    fullName: 'Full',
+    academyAddOn: '+$5 for courses',
+    fullAddOn: '+$5 for everything else',
+    coreFeatures: [
+      'Every candle and chart type',
+      'Every frame: square, rectangle and shadow',
+      'Group chat and polls',
+      'News, watchlist and drawing tools',
+      'Indicators and timeframes',
+    ],
+    academyFeatures: [
+      'Everything in Core',
+      'The full academy: schools, levels and lectures',
+      'Interactive classroom — interrupt the teacher with a question',
+    ],
+    fullFeatures: [
+      'Everything in Academy',
+      'Private messages',
+      'AI assistant, alerts, screener and backtesting',
+      'Forecasts, analysts and the other tools',
+    ],
+    note: 'Core is $10 a month for charts and community. Add $5 for the academy, and $5 more for everything else.',
   },
 };
 
@@ -3816,6 +3901,38 @@ const ku: Dict = {
     '4H': '4 کاتژمێر',
     D: 'ڕۆژانە',
     W: 'هەفتانە',
+  },
+  subPlans: {
+    title: 'پلانەکانی MATRIX',
+    subtitle: 'بە چارت و کۆمەڵگە دەست پێ بکە؛ ئەکادیمیا و ئامرازەکانی تر کاتێک پێویستت بوو زیاد بکە',
+    perMonth: '/ مانگانە',
+    coreBadge: 'دەستپێک',
+    academyBadge: '+ ئەکادیمیا',
+    fullBadge: 'هەمووی',
+    coreName: 'بنەڕەتی',
+    academyName: 'ئەکادیمیا',
+    fullName: 'تەواو',
+    academyAddOn: '+5$ بۆ خولەکان',
+    fullAddOn: '+5$ بۆ ئامرازەکانی تر',
+    coreFeatures: [
+      'هەموو جۆرەکانی مۆم و چارت',
+      'هەموو چوارچێوەکان: چوارگۆشە، لاکێشە و سێبەر',
+      'گفتوگۆی گرووپ و دەنگدان',
+      'هەواڵ، لیستی چاودێری و ئامرازەکانی هێڵکاری',
+      'نیشاندەرەکان و چوارچێوە کاتییەکان',
+    ],
+    academyFeatures: [
+      'هەموو ئەوەی لە پلانی بنەڕەتیدایە',
+      'ئەکادیمیای تەواو: قوتابخانە، ئاست و وانە',
+      'پۆلی کارلێکەر — لە ناوەڕاستی وانەدا پرسیار لە مامۆستا بکە',
+    ],
+    fullFeatures: [
+      'هەموو ئەوەی لە پلانی ئەکادیمیادایە',
+      'نامەی تایبەت',
+      'یاریدەدەری AI، ئاگادارکردنەوە، پشکنەر و تاقیکردنەوەی پێشوو',
+      'پێشبینی، شیکەرەوەکان و ئامرازەکانی تر',
+    ],
+    note: 'پلانی بنەڕەتی مانگانە 10$ ـە بۆ چارت و کۆمەڵگە. 5$ زیاد بکە بۆ خولەکان، و 5$ی تر بۆ هەموو ئامرازەکانی تر.',
   },
 };
 
