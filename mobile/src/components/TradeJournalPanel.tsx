@@ -16,7 +16,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
-import { formatMoney, instrumentSpec, pipsBetween, pnlInQuoteCcy, riskInQuoteCcy, sizeLooksLikeUnits } from '../positionSize';
+import { formatMoney, instrumentSpec, parsePriceFor, pipsBetween, pnlInQuoteCcy, riskInQuoteCcy, sizeLooksLikeUnits } from '../positionSize';
 import {
   analyzePlan,
   entryAfterSideSwitch,
@@ -285,6 +285,15 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   };
   /** نص مكتوب لكنه غير مفهوم — كان الوقف/الهدف/الخروج يُحفظ فارغاً بصمت (صفقة مغلقة تُسجَّل مفتوحة). */
   const unreadable = (v: string) => v.trim() !== '' && num(v) == null;
+  /**
+   * خانات **الأسعار** (دخول/وقف/هدف/خروج) بأداة النموذج: «3.450» بخانة ذهب مبهمة (ثلاثة آلاف بكتابة أوروبية)
+   * فتُرفض بدل 3.45 — راجع `parsePriceFor`. الحجم يبقى على `num`.
+   */
+  const pnum = (v: string, sym: string = symbol): number | null => {
+    const n = parsePriceFor(v, sym);
+    return n != null && n > 0 ? n : null;
+  };
+  const unreadablePx = (v: string, sym: string = symbol) => v.trim() !== '' && pnum(v, sym) == null;
 
   /**
    * حجمٌ يبدو وحداتٍ منسوخة من المنصّة («10000» بدل «0.10») — راجع `sizeLooksLikeUnits`. يُعرض سطر
@@ -314,8 +323,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * بهذه الصفقة» — الدفتر كان يعرف الأرقام الثلاثة ويسكت عنه. لا يظهر بلا حجم أو بوقف بالجهة الخطأ.
    */
   const draftRisk = useMemo(() => {
-    const e = num(entry);
-    const s = num(sl);
+    const e = pnum(entry);
+    const s = pnum(sl);
     const l = num(size);
     if (e == null || s == null || l == null || levelSideIssue({ side, entry: e, sl: s })) return null;
     const sym = symbol.trim().toUpperCase();
@@ -340,8 +349,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
      * المحتمل 50 pip» فيُترك المتداول ليضرب نصف المعادلة بنفسه. نتيجة الخروج عند الهدف بالدالّة نفسها
      * التي تحسب نتيجة الصفقة بعد إغلاقها (`pnlInQuoteCcy`)، فالرقم هنا هو ما سيراه بالقائمة لو بلغ الهدف.
      */
-    const e = num(entry);
-    const p = num(tp);
+    const e = pnum(entry);
+    const p = pnum(tp);
     const l = num(size);
     const gain =
       draftRisk && plan.ok && e != null && p != null && l != null
@@ -353,10 +362,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
 
   // معاينة حيّة أثناء الكتابة: خطأ جهة فوراً (حتى بوقف وحده)، والملخّص حين تكتمل الأرقام الثلاثة.
   const draft = useMemo(() => {
-    const e = num(entry);
+    const e = pnum(entry);
     if (e == null) return null;
-    const s = num(sl);
-    const p = num(tp);
+    const s = pnum(sl);
+    const p = pnum(tp);
     const issue = levelSideIssue({ side, entry: e, sl: s, tp: p });
     if (issue) return { issue, plan: null as TradePlan | null };
     if (s == null || p == null) return null;
@@ -370,8 +379,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * لا تظهر بوقف بالجهة الخطأ (التحذير يقول ذلك أصلاً) ولا بوقف أضيق من pip (`slTooClose`).
    */
   const rrTargets = useMemo(() => {
-    const e = num(entry);
-    const s = num(sl);
+    const e = pnum(entry);
+    const s = pnum(sl);
     if (e == null || s == null || levelSideIssue({ side, entry: e, sl: s })) return [];
     const sym = symbol.trim().toUpperCase();
     const spec = instrumentSpec(sym);
@@ -391,7 +400,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * لأداة معروفة المواصفات فقط.
    */
   const slTargets = useMemo(() => {
-    const e = num(entry);
+    const e = pnum(entry);
     const sym = symbol.trim().toUpperCase();
     const spec = instrumentSpec(sym);
     if (e == null || !spec) return [];
@@ -411,12 +420,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   /** شرائح «الخروج = الوقف/الهدف» تحت خانة الخروج — راجع `exitShortcuts` */
   const exitChips = useMemo(
     () =>
-      exitShortcuts({ side, entry: num(entry), sl: num(sl), tp: num(tp) }).map((x) => ({
+      exitShortcuts({ side, entry: pnum(entry), sl: pnum(sl), tp: pnum(tp) }).map((x) => ({
         ...x,
         text: x.kind === 'sl' ? sl.trim() : x.kind === 'be' ? entry.trim() : tp.trim(),
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [side, entry, sl, tp]
+    [symbol, side, entry, sl, tp]
   );
 
   /**
@@ -425,14 +434,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * صغيراً هنا قبل أن تُحفظ. بلا مال من حجمٍ يبدو وحدات (سطر التحذير يقول ما الخطأ).
    */
   const exitResult = useMemo(() => {
-    if (unreadable(exit)) return null;
+    if (unreadablePx(exit)) return null;
     const l = num(size);
     const p = exitPreview({
       symbol: symbol.trim(),
       side,
-      entry: num(entry),
-      sl: num(sl),
-      exit: num(exit),
+      entry: pnum(entry),
+      sl: pnum(sl),
+      exit: pnum(exit),
       lots: l != null && !sizeLooksLikeUnits(l, instrumentSpec(symbol.trim().toUpperCase())) ? l : null,
     });
     if (!p) return null;
@@ -568,14 +577,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   };
 
   const add = async () => {
-    const e = num(entry);
+    const e = pnum(entry);
     // «EUR/USD» ⇒ EURUSD، و«EU» يُرفض هنا لا بالخادم برسالة عامة — راجع `journalSymbol`
     const sym = journalSymbol(symbol);
     if (sym == null || e == null) {
       setFormError(t.journalInvalidEntry);
       return;
     }
-    if ([sl, tp, exit, size].some(unreadable)) {
+    if ([sl, tp, exit].some((v) => unreadablePx(v)) || unreadable(size)) {
       setFormError(t.invalidNumberHint);
       return;
     }
@@ -583,8 +592,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       setFormError(sizeUnitsText());
       return;
     }
-    const s = num(sl);
-    const p = num(tp);
+    const s = pnum(sl);
+    const p = pnum(tp);
     const issue = levelSideIssue({ side, entry: e, sl: s, tp: p });
     if (issue) {
       setFormError(planIssueText(issue));
@@ -599,7 +608,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           symbol: sym,
           side,
           entry: e,
-          exit: num(exit),
+          exit: pnum(exit),
           sl: s,
           tp: p,
           // خانة الحجم الفارغة = «لا تغيير» لا مسحاً: الحقل إلزامي بالجدول (`main.py:1174` يُسقط null له)
@@ -619,7 +628,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       return;
     }
     try {
-      const x = num(exit);
+      const x = pnum(exit);
       await api.createTrade({
         symbol: sym,
         side,
@@ -643,15 +652,16 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   };
 
   const closeOpen = async (id: string) => {
-    const x = num(exit);
+    const tr = trades.find((it: Trade) => it.id === id);
+    if (!tr) return;
+    // الخانة تُقرأ بأداة **الصفقة المنقورة** لا أداة النموذج
+    const x = pnum(exit, tr.symbol);
     // خانة الخروج فارغة/غير مفهومة: كان الضغط لا يفعل شيئاً بصمت تام (المبتدئ لا يعرف أن الإغلاق يقرأ خانة
     // «خروج» بأعلى النموذج).
     if (x == null) {
-      Alert.alert(t.journalCloseFailedTitle, unreadable(exit) ? t.invalidNumberHint : t.journalCloseNeedsExit);
+      Alert.alert(t.journalCloseFailedTitle, unreadablePx(exit, tr.symbol) ? t.invalidNumberHint : t.journalCloseNeedsExit);
       return;
     }
-    const tr = trades.find((it: Trade) => it.id === id);
-    if (!tr) return;
     // تأكيدٌ بالنتيجة كالإغلاق بالسوق: الخانة واحدة للنموذج كلّه، فسعرٌ كُتب لصفقة ذهب (2651.30) ثم نُقر رابط
     // صفقة EURUSD كان يُحفظ فوراً «+26,502,150 pip · +244,259%» ويُفسد نسبة النجاح وأفضل صفقة ومتوسط الربح للأبد
     confirmClose(tr, x, 'field');
@@ -1277,7 +1287,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       {exitChips.length > 0 ? (
         <View style={[styles.qChips, rtl && styles.rowRtl]}>
           {exitChips.map((x) => {
-            const on = num(exit) === x.price;
+            const on = pnum(exit) === x.price;
             const label = `${x.kind === 'sl' ? 'SL' : x.kind === 'be' ? 'BE' : 'TP'} ${x.text}`;
             return (
               <Pressable
@@ -1363,7 +1373,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       {slTargets.length > 0 ? (
         <View style={[styles.qChips, rtl && styles.rowRtl]}>
           {slTargets.map((x: { pips: number; v: number; tol: number; text: string }) => {
-            const cur = num(sl);
+            const cur = pnum(sl);
             const on = cur != null && Math.abs(cur - x.v) <= x.tol;
             return (
               <Pressable
@@ -1393,7 +1403,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       {rrTargets.length > 0 ? (
         <View style={[styles.qChips, rtl && styles.rowRtl]}>
           {rrTargets.map((x) => {
-            const cur = num(tp);
+            const cur = pnum(tp);
             const on = cur != null && Math.abs(cur - x.v) <= x.tol;
             return (
               <Pressable

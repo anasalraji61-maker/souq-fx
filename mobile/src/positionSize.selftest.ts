@@ -36,6 +36,7 @@ import {
   MAX_SANE_LOTS,
   parseSpreadPips,
   spreadRisk,
+  parsePriceFor,
   spreadBeyondLiveEntry,
   MAX_SPREAD_PIPS,
   type InstrumentSpec,
@@ -1468,3 +1469,29 @@ console.log('positionSize metal broker names selftest OK');
   );
 }
 console.log('positionSize spreadBeyondLiveEntry selftest OK');
+
+// ── سعر ذهب بكتابة أوروبية «3.450» مبهم لا 3.45 ──
+{
+  assert.equal(parsePriceFor('3.450', 'XAUUSD'), null);
+  assert.equal(parsePriceFor('2.350', 'GOLD#'), null);
+  assert.equal(parsePriceFor('٣٫٤٥٠', 'XAUUSD.m'), null); // أرقام عربية وفاصل عربي
+  assert.equal(parsePriceFor(' 3.450 ', 'XAUUSD'), null);
+  // ما ليس مبهماً يبقى
+  assert.equal(parsePriceFor('3450', 'XAUUSD'), 3450);
+  assert.equal(parsePriceFor('3450.50', 'XAUUSD'), 3450.5);
+  assert.equal(parsePriceFor('3.450,50', 'XAUUSD'), 3450.5);
+  assert.equal(parsePriceFor('3,450.50', 'XAUUSD'), 3450.5);
+  assert.equal(parsePriceFor('3.45', 'XAUUSD'), 3.45);
+  assert.equal(parsePriceFor('0.450', 'XAUUSD'), 0.45);
+  // الأدوات بثلاث منازل فأكثر: بلا تغيير
+  assert.equal(parsePriceFor('157.250', 'USDJPY'), 157.25);
+  assert.equal(parsePriceFor('31.450', 'XAGUSD'), 31.45);
+  assert.equal(parsePriceFor('1.085', 'EURUSD'), 1.085);
+  assert.equal(parsePriceFor('1.08500', 'EURUSD'), 1.085);
+  // رمز غير معروف/فارغ ⇒ parseDecimal كما هو؛ نصّ غير مفهوم ⇒ null
+  assert.equal(parsePriceFor('3.450', 'US30'), 3.45);
+  assert.equal(parsePriceFor('3.450', null), 3.45);
+  assert.equal(parsePriceFor('abc', 'XAUUSD'), null);
+  assert.equal(parsePriceFor('3,450', 'XAUUSD'), null); // الفاصلة المبهمة مرفوضة أصلاً
+}
+console.log('positionSize parsePriceFor selftest OK');

@@ -96,6 +96,27 @@ export function instrumentSpec(raw: string): InstrumentSpec | null {
 }
 
 /**
+ * سعرٌ مكتوب بخانة أداةٍ معروفة: `parseDecimal`، مع رفض النقطة الوحيدة المتبوعة بثلاثة أرقام بالضبط («3.450»)
+ * حين لا يُسعَّر المعروض بثلاث منازل أصلاً (الذهب بمنزلتين).
+ *
+ * لماذا: «3.450» بالكتابة الأوروبية/التركية = ثلاثة آلاف وأربعمئة وخمسون — سعر ذهب — و`parseDecimal` يقرؤها
+ * 3.45 لأن الأسعار تحتاج «1.085» عشرية. بالدفتر: دخول ذهب «3.450» وخروج 3460 كان يُحفظ «+34,565.5 pip · +100,190%»
+ * بلا أي اعتراض (بلا وقف لا يُكشف بالجهة الخطأ) ويُفسد الإحصاءات. ذهبٌ بثلاث منازل لا وجود له، فالنصّ مبهمٌ
+ * لا عشري ⇒ `null` («رقم غير مفهوم») كالفاصلة المبهمة «3,450» تماماً. «0.450» ليست مبهمة وتبقى. الين
+ * (157.250) والفضة (31.450) بثلاث منازل فعلاً فلا يتغيّر لهما شيء، ولا لرمزٍ غير معروف.
+ */
+export function parsePriceFor(raw: string, symbol: string | null | undefined): number | null {
+  const v = parseDecimal(raw);
+  if (v == null) return null;
+  const spec = symbol ? instrumentSpec(symbol) : null;
+  if (!spec) return v;
+  const decimals = Math.round(-Math.log10(spec.pipSize)) + 1;
+  if (decimals >= 3) return v;
+  const s = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009٬']/g, '').replace(/[٫．]/g, '.');
+  return /^[1-9]\d{0,2}\.\d{3}$/.test(s) ? null : v;
+}
+
+/**
  * الزوج اللازم لتحويل عملة التسعير إلى عملة الحساب. `invert=false` يعني أن سعر الزوج نفسه هو
  * "كم وحدة من عملة الحساب لكل وحدة من عملة التسعير"؛ `invert=true` يعني أخذ مقلوب السعر.
  * null = لا حاجة لتحويل (عملة التسعير = عملة الحساب).
