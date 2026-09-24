@@ -51,6 +51,13 @@ const FIAT = new Set([
   'SEK', 'NOK', 'DKK', 'PLN', 'TRY', 'ZAR', 'MXN', 'SGD', 'HKD', 'CNH', 'ILS', 'SAR', 'AED',
 ]);
 
+/**
+ * أطول رمزٍ تقبله الحاسبة كما يُكتب: زوجٌ بفاصل («EUR/USD»، 7) + لاحقة وسيط بفاصل حتى 5 («.micro»، «.cent»، «.pro12») = 13.
+ * خانة الرمز كانت 10 أحرف فتنقطع «EURUSDmicro» عند «EURUSDmicr» (رمز مجهول) — حساب micro لا يُبلغ من الحاسبة أصلاً،
+ * و«EURUSD-cent»/«XAUUSD_cent» كذلك.
+ */
+export const SYMBOL_INPUT_MAX_LEN = 13;
+
 export function normalizeSymbol(raw: string): string {
   return raw.trim().toUpperCase().replace(/[^A-Z]/g, '');
 }

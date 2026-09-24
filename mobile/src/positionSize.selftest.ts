@@ -43,6 +43,7 @@ import {
   smallLotsStdEquiv,
   smallContractSuffix,
   commissionAcrossModes,
+  SYMBOL_INPUT_MAX_LEN,
   withSmallSuffix,
   CENTS_PER_USD,
   ambiguousThousandsPrice,
@@ -1876,3 +1877,25 @@ console.log('positionSize smallContractSuffix selftest OK');
   assert.equal(commissionAcrossModes('٧', std, micro), '0.07');
 }
 console.log('positionSize commissionAcrossModes selftest OK');
+
+// SYMBOL_INPUT_MAX_LEN — كل رمز سنت/micro/وسيط تقبله الحاسبة يُكتب كاملاً بخانة الرمز
+{
+  const accepted = [
+    'EURUSDmicro', 'EURUSD.micro', 'XAUUSD_MICRO', 'SILVER.micro', 'EURUSD-cent', 'XAUUSD_cent', 'GBPJPY.cent',
+    'EUR/USD.micro', 'EUR/USD-cent', 'SILVERmicro', 'EUR/USD.pro12', 'GBP_JPY.ecn',
+  ];
+  for (const s of accepted) {
+    assert.ok(s.length <= SYMBOL_INPUT_MAX_LEN, s);
+    assert.ok(instrumentSpec(s) || smallContractSpec(s), s);
+  }
+  // كل زوج جاهز بكل لاحقة معروفة يتّسع ويبقى سنتاً/micro للزوج نفسه
+  for (const pair of ['EURUSD', 'GBPJPY', 'XAUUSD', 'XAGUSD', 'USDCHF'])
+    for (const suf of ['c', '.c', '-cent', '_CENT', '.cent', 'micro', '.micro', '-micro', '_MICRO']) {
+      const s = withSmallSuffix(pair, suf);
+      assert.ok(s && s.length <= SYMBOL_INPUT_MAX_LEN, pair + suf);
+    }
+  // الحدّ القديم (10) كان يقطع «EURUSDmicro» إلى رمزٍ مجهول
+  assert.equal(smallContractSpec('EURUSDmicro'.slice(0, 10)), null);
+  assert.equal(smallContractSpec('EURUSDmicro')?.kind, 'micro');
+}
+console.log('positionSize SYMBOL_INPUT_MAX_LEN selftest OK');

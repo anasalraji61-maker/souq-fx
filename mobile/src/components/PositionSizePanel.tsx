@@ -39,6 +39,7 @@ import {
   parseSpreadPips,
   parseCommission,
   commissionAcrossModes,
+  SYMBOL_INPUT_MAX_LEN,
   type CommissionMode,
   spreadRisk,
   spreadBeyondLiveEntry,
@@ -976,7 +977,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       keyboardType={decimal ? 'decimal-pad' : 'default'}
       autoCapitalize={decimal ? 'none' : 'characters'}
       autoCorrect={false}
-      maxLength={decimal ? 12 : 10}
+      maxLength={decimal ? 12 : SYMBOL_INPUT_MAX_LEN}
       returnKeyType="done"
       underlineColorAndroid="transparent"
       clearButtonMode="while-editing"
