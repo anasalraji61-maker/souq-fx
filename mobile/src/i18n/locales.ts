@@ -294,6 +294,8 @@ export type Dict = {
   riskCalcBalance: string;
   riskCalcRiskPct: string;
   riskCalcRiskMoneyHint: string;
+  /** المخاطرة أكبر من الرصيد (طلب وكيل الأدوات)؛ `{risk}` و`{balance}` مبلغان بعملة الحساب كما تُعرض */
+  riskCalcRiskOverBalance: string;
   riskCalcHighRisk: string;
   riskCalcSlPips: string;
   riskCalcFromPrice: string;
@@ -1213,6 +1215,8 @@ const ar: Dict = {
   riskCalcBalance: 'رصيد الحساب',
   riskCalcRiskPct: 'المخاطرة (% أو مبلغ)',
   riskCalcRiskMoneyHint: 'اضغط {ccy} لتكتب المخاطرة مبلغاً بدل النسبة',
+  riskCalcRiskOverBalance:
+    'المخاطرة ({risk}) أكبر من رصيد الحساب ({balance}) — ضربة وقف واحدة تمحو الحساب كلّه. راجع الخانتين: ربما كتبتَ مبلغاً مكان النسبة، أو نقص الرصيد صفراً.',
   riskCalcHighRisk: '⚠ أكثر من 2% للصفقة الواحدة مخاطرة عالية',
   riskCalcSlPips: 'وقف الخسارة (بالنقاط pip)',
   riskCalcFromPrice: 'أو احسبه من السعر: الدخول والوقف كما تراهما على الشارت',
@@ -2121,6 +2125,8 @@ const enUS: Dict = {
   riskCalcBalance: 'Account balance',
   riskCalcRiskPct: 'Risk (% or amount)',
   riskCalcRiskMoneyHint: 'Tap {ccy} to enter the risk as an amount instead of a percent',
+  riskCalcRiskOverBalance:
+    'Your risk ({risk}) is larger than your account balance ({balance}) — one stop-out would wipe out the whole account. Check both fields: you may have typed an amount instead of a percent, or left a zero off the balance.',
   riskCalcHighRisk: '⚠ More than 2% per trade is high risk',
   riskCalcSlPips: 'Stop loss (pips)',
   riskCalcFromPrice: 'Or from price: entry and stop as you see them on the chart',
@@ -3054,6 +3060,8 @@ const ku: Dict = {
   riskCalcBalance: 'باڵانسی هەژمار',
   riskCalcRiskPct: 'مەترسی (% یان بڕی پارە)',
   riskCalcRiskMoneyHint: 'بۆ نووسینی مەترسی بە بڕی پارە لە جیاتی ڕێژە، {ccy} دابگرە',
+  riskCalcRiskOverBalance:
+    'مەترسی ({risk}) لە باڵانسی هەژمار ({balance}) زیاترە — یەک لێدانی وەستان هەموو هەژمارەکە دەسڕێتەوە. هەردوو خانەکە بپشکنە: لەوانەیە بڕی پارەت لە جیاتی ڕێژە نووسیبێت، یان سفرێک لە باڵانسەکە کەم بێت.',
   riskCalcHighRisk: '⚠ زیاتر لە 2% بۆ هەر مامەڵەیەک مەترسی زۆرە',
   riskCalcSlPips: 'وەستانی زیان (pip)',
   riskCalcFromPrice: 'یان لە نرخەوە: چوونەژوورەوە و وەستان وەک لە چارتەکەدا دەیانبینیت',
