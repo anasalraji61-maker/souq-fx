@@ -340,6 +340,7 @@ type PointerEventLike = {
   currentTarget?: {
     setPointerCapture?: (pointerId: number) => void;
     releasePointerCapture?: (pointerId: number) => void;
+    getBoundingClientRect?: () => { left: number; top: number };
   };
   preventDefault?: () => void;
   stopPropagation?: () => void;
@@ -2693,8 +2694,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           evt.nativeEvent.locationX < chartPlotW &&
           evt.nativeEvent.locationY < chartPlotH &&
           (Math.abs(g.dx) > 4 || Math.abs(g.dy) > 4),
-        onPanResponderGrant: () => {
+        onPanResponderGrant: (evt) => {
           beginDrag();
+          // موضع اللمسة داخل اللوح — النقرة بلا سحب تضع التقاطع **هنا**. لم يكن يُسجَّل
+          // إلا بمسار الويب، فكانت كل نقرة على الهاتف تضع التقاطع عند (0,0): أوّل شمعة
+          // ظاهرة، وسطر OHLC يقرأ شمعةً لم يلمسها المتداول. السطح نفسه يبدأ عند (0,0) اللوح.
+          panStartPoint.current = {
+            x: evt.nativeEvent.locationX,
+            y: evt.nativeEvent.locationY,
+          };
         },
         onPanResponderMove: (_, g) => {
           if (Math.abs(g.dx) > 4 || Math.abs(g.dy) > 4) panMoved.current = true;
@@ -2779,7 +2787,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             };
             event.currentTarget?.setPointerCapture?.(point.pointerId);
             beginDrag();
-            panStartPoint.current = { x: point.x, y: point.y };
+            // `clientX/Y` إحداثيات النافذة؛ `onChartPress` تريدها داخل اللوح.
+            const rect = event.currentTarget?.getBoundingClientRect?.();
+            panStartPoint.current = {
+              x: point.x - (rect?.left ?? 0),
+              y: point.y - (rect?.top ?? 0),
+            };
           },
           onPointerMove: (event: PointerEventLike) => {
             if (!webChartPointer.current.active) return;
@@ -2792,8 +2805,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           },
           onPointerUp: (event: PointerEventLike) => {
             const point = pointerXY(event);
+            const wasActive = webChartPointer.current.active;
             webChartPointer.current.active = false;
             event.currentTarget?.releasePointerCapture?.(point.pointerId);
+            // نقرة بلا سحب ⇒ تقاطع عند موضعها (كمسار الهاتف). كان الرفع يُنهي السحب
+            // فقط، فالنقر على شارت الويب لا يضع تقاطعاً أبداً.
+            if (
+              wasActive &&
+              Math.hypot(point.x - webChartPointer.current.x, point.y - webChartPointer.current.y) <= 4
+            ) {
+              chartPressRef.current(panStartPoint.current.x, panStartPoint.current.y);
+            }
             endDrag();
           },
           onPointerCancel: () => {
