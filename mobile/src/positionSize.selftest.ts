@@ -35,6 +35,8 @@ import {
   spreadRisk,
   MAX_SPREAD_PIPS,
   type InstrumentSpec,
+  spreadTooWide,
+  planJournalNote,
 } from './positionSize';
 
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps;
@@ -896,3 +898,46 @@ console.log('positionSize sizeLooksLikeUnits selftest OK');
   assert.ok(checked > 150, String(checked));
 }
 console.log('positionSize spread selftest OK');
+
+// spreadTooWide — رقمٌ مفهوم فوق الحدّ يُسمّى، وما عداه لا
+{
+  assert.equal(spreadTooWide('10851'), 10851);
+  assert.equal(spreadTooWide('501'), 501);
+  assert.equal(spreadTooWide('١٠٨٥١'), 10851); // أرقام عربية
+  assert.equal(spreadTooWide('1085,1'), 1085.1); // فاصلة عشرية
+  assert.equal(spreadTooWide(String(MAX_SPREAD_PIPS)), null); // الحدّ نفسه مقبول
+  for (const v of ['', '  ', '0', '1.5', '-1', '-900', 'abc', '1.2.3']) assert.equal(spreadTooWide(v), null, v);
+  // متّسق مع الخانة: كل ما يسمّيه «غير واقعي» ترفضه `parseSpreadPips`، وكل ما تقبله لا يسمّيه
+  for (const v of ['0', '0.5', '1.5', '499.9', '500', '500.1', '501', '10851', '-3', 'x', '']) {
+    if (spreadTooWide(v) != null) assert.equal(parseSpreadPips(v), null, v);
+    if (parseSpreadPips(v) != null) assert.equal(spreadTooWide(v), null, v);
+  }
+}
+console.log('positionSize spreadTooWide selftest OK');
+
+// planJournalNote — ملاحظة الصفقة المسجَّلة من الحاسبة تحمل السبريد الذي خُطّط به
+{
+  // بلا سبريد: النصّ السابق حرفياً
+  assert.equal(planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2' }), '0.50 lot · risk 100.00 USD · R:R 1:2');
+  assert.equal(planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2', spreadPips: 0 }), '0.50 lot · risk 100.00 USD · R:R 1:2');
+  assert.equal(planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2', spreadPips: null }), '0.50 lot · risk 100.00 USD · R:R 1:2');
+  assert.equal(planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2', spreadPips: NaN }), '0.50 lot · risk 100.00 USD · R:R 1:2');
+  // مع سبريد: بلا أصفار زائدة
+  assert.equal(
+    planJournalNote({ lots: 0.46, risk: 99.9, ccy: 'USD', rr: '1:2', spreadPips: 1.5 }),
+    '0.46 lot · risk 99.90 USD · R:R 1:2 · spread 1.5 pip'
+  );
+  assert.equal(planJournalNote({ lots: 1, risk: 1500, ccy: 'JPY', rr: '1:1.5', spreadPips: 2 }), '1.00 lot · risk 1,500 JPY · R:R 1:1.5 · spread 2 pip');
+  assert.equal(planJournalNote({ lots: 0.1, risk: 12, ccy: 'EUR', rr: '1:3', spreadPips: 0.1 + 0.2 }), '0.10 lot · risk 12.00 EUR · R:R 1:3 · spread 0.3 pip');
+  // بلا مبلغ مخاطرة: رمز العملة وحده كما كان
+  assert.equal(planJournalNote({ lots: 0.2, risk: null, ccy: 'GBP', rr: '1:2' }), '0.20 lot · risk GBP · R:R 1:2');
+  // الحاسبة نفسها: مثال مفتاح الترجمة (10,000 USD، 1%، وقف 20 EURUSD، سبريد 1.5)
+  const spec = instrumentSpec('EURUSD')!;
+  const pv = pipValuePerLot(spec, 1);
+  const r = positionSize({ balance: 10_000, riskPct: 1, slPips: 20, pipValuePerLot: pv, contractSize: spec.contractSize })!;
+  assert.equal(
+    planJournalNote({ lots: r.lots, risk: r.actualRisk, ccy: 'USD', rr: '1:2', spreadPips: parseSpreadPips('1,5') }),
+    '0.50 lot · risk 100.00 USD · R:R 1:2 · spread 1.5 pip'
+  );
+}
+console.log('positionSize planJournalNote selftest OK');

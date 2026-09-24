@@ -3,7 +3,13 @@ import { View, Text, StyleSheet } from 'react-native';
 import { colors, radii, spacing } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
-import { newsCountdown, nextHighImpact, symbolCurrencies, type NewsEvent } from '../chart/newsRisk';
+import {
+  calendarAfterFetch,
+  newsCountdown,
+  nextHighImpact,
+  symbolCurrencies,
+  type CalendarCache,
+} from '../chart/newsRisk';
 
 /**
  * سطر تحذير «خبر قوي قريب» فوق الشارت: أقرب حدث عالي التأثير لعملتي الزوج خلال 3 ساعات
@@ -14,7 +20,8 @@ import { newsCountdown, nextHighImpact, symbolCurrencies, type NewsEvent } from 
  */
 const TTL_MS = 10 * 60 * 1000;
 const FAIL_TTL_MS = 2 * 60 * 1000;
-let cache: { events: NewsEvent[]; at: number; ok: boolean } | null = null;
+/** فشل التحديث يُبقي آخر تقويم ناجح (حتى يوم) بدل محو تحذير قائم — راجع `calendarAfterFetch`. */
+let cache: CalendarCache | null = null;
 let inflight: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
@@ -24,10 +31,10 @@ function ensureFresh(now: number) {
   inflight = api
     .calendar({ impact: 'high' })
     .then((r) => {
-      cache = { events: Array.isArray(r.events) ? r.events : [], at: Date.now(), ok: true };
+      cache = calendarAfterFetch(cache, Array.isArray(r.events) ? r.events : [], Date.now());
     })
     .catch(() => {
-      cache = { events: [], at: Date.now(), ok: false };
+      cache = calendarAfterFetch(cache, null, Date.now());
     })
     .finally(() => {
       inflight = null;
@@ -75,13 +82,15 @@ export function NewsRiskBanner({ symbol }: Props) {
         .filter(Boolean)
         .join(' ')}`;
   const text = `⚠ ${t.newsRiskHigh} · ${event.currency} · ${event.title} · ${when}`;
+  // التحذير من تقويمٍ محفوظ بعد فشل التحديث: يُعرض (الوقت مطلق فيبقى صادقاً) مع قول ذلك
+  const stale = cache != null && !cache.ok;
 
   return (
     <View
       style={styles.wrap}
       accessible
       accessibilityRole="alert"
-      accessibilityLabel={`${text}. ${t.newsRiskHint}`}
+      accessibilityLabel={`${text}. ${t.newsRiskHint}${stale ? `. ${t.newsStale}` : ''}`}
     >
       <Text style={[styles.main, { textAlign: align }]} numberOfLines={1}>
         {text}
@@ -89,6 +98,11 @@ export function NewsRiskBanner({ symbol }: Props) {
       <Text style={[styles.hint, { textAlign: align }]} numberOfLines={1}>
         {t.newsRiskHint}
       </Text>
+      {stale ? (
+        <Text style={[styles.hint, { textAlign: align }]} numberOfLines={1}>
+          {t.newsStale}
+        </Text>
+      ) : null}
     </View>
   );
 }

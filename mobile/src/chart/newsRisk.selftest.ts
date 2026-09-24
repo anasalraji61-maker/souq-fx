@@ -3,7 +3,14 @@
  * Run: npx --yes tsx src/chart/newsRisk.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { newsCountdown, nextHighImpact, symbolCurrencies, type NewsEvent } from './newsRisk';
+import {
+  calendarAfterFetch,
+  newsCountdown,
+  nextHighImpact,
+  symbolCurrencies,
+  NEWS_STALE_MAX_MS,
+  type NewsEvent,
+} from './newsRisk';
 import { instrumentSpec } from '../positionSize';
 
 assert.deepEqual(symbolCurrencies('EURUSD'), ['EUR', 'USD']);
@@ -174,3 +181,37 @@ console.log('newsRisk nearest selftest OK');
 }
 
 console.log('newsRisk countdown selftest OK');
+
+// calendarAfterFetch — فشل التحديث لا يمحو خبراً معروفاً قادماً
+{
+  const H = 60 * 60 * 1000;
+  const t0 = 1_800_000_000_000;
+  const nfp: NewsEvent = { id: 'nfp', title: 'Non-Farm Payrolls', currency: 'USD', impact: 'High', ts: (t0 + 2 * H) / 1000 };
+  const ok = calendarAfterFetch(null, [nfp], t0);
+  assert.deepEqual(ok, { events: [nfp], at: t0, ok: true, fetchedAt: t0 });
+  // فشل بعد 10د: الحدث يبقى، والتحذير نفسه يظهر (كان المخزن يصير [] فيختفي الشريط)
+  const failed = calendarAfterFetch(ok, null, t0 + 10 * 60 * 1000);
+  assert.equal(failed.ok, false);
+  assert.equal(failed.fetchedAt, t0);
+  assert.equal(failed.at, t0 + 10 * 60 * 1000); // مهلة إعادة المحاولة من الفشل لا من آخر نجاح
+  assert.deepEqual(failed.events, [nfp]);
+  const hit = nextHighImpact(failed.events, symbolCurrencies('EURUSD'), t0 + 10 * 60 * 1000);
+  assert.equal(hit?.event.id, 'nfp');
+  // فشلان متتاليان: وقت آخر نجاح لا يتقدّم (وإلا بقي التقويم «حديثاً» للأبد)
+  const failed2 = calendarAfterFetch(failed, null, t0 + 3 * H);
+  assert.equal(failed2.fetchedAt, t0);
+  assert.deepEqual(failed2.events, [nfp]);
+  // الحدّ: يوم كامل يُحتفظ، وبعده يُسقط
+  assert.deepEqual(calendarAfterFetch(ok, null, t0 + NEWS_STALE_MAX_MS).events, [nfp]);
+  const tooOld = calendarAfterFetch(ok, null, t0 + NEWS_STALE_MAX_MS + 1);
+  assert.deepEqual(tooOld, { events: [], at: t0 + NEWS_STALE_MAX_MS + 1, ok: false, fetchedAt: null });
+  // فشل بلا أي نجاح سابق: فارغ، ولا يُختلق وقت جلب
+  assert.deepEqual(calendarAfterFetch(null, null, t0), { events: [], at: t0, ok: false, fetchedAt: null });
+  // نجاحٌ بقائمة فارغة **يمحو** فعلاً (الخادم قال لا أحداث — لا نحتفظ بقديم) وينسخ القائمة لا يشاركها
+  assert.deepEqual(calendarAfterFetch(failed, [], t0 + H).events, []);
+  const src = [nfp];
+  const c = calendarAfterFetch(null, src, t0);
+  src.pop();
+  assert.deepEqual(c.events, [nfp]);
+}
+console.log('newsRisk calendar cache selftest OK');

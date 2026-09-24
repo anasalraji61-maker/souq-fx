@@ -27,6 +27,8 @@ import {
   stopPipsMismatch,
   parseSpreadPips,
   spreadRisk,
+  spreadTooWide,
+  planJournalNote,
   LOT_STEP,
 } from '../positionSize';
 import { parseDecimal } from '../parseDecimal';
@@ -204,13 +206,27 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
 
   /** أرقام عربية/فاصل آلاف/فاصلة عشرية — راجع parseDecimal.ts. NaN = فارغ أو غير صالح. */
   const num = (s: string) => parseDecimal(s) ?? NaN;
-  /** خانة فيها نص لكنه ليس رقماً مفهوماً («10,000» مبهم، «1.2.3») — نقول ذلك بدل «أدخل الرصيد…» */
+  /**
+   * خانة فيها نص لكنه ليس رقماً مفهوماً («10,000» مبهم، «1.2.3») — نقول ذلك بدل «أدخل الرصيد…».
+   * السبريد خارجها: خطؤه يُقال تحت خانته (راجع `spreadErr`) لأن اللوت يُحسب بدونه.
+   */
   const badNumber =
     (balance.trim() !== '' && parseDecimal(balance, { amount: true }) == null) ||
     (riskPct.trim() !== '' && parseDecimal(riskPct, { percent: true }) == null) ||
     [slPips, entryPx, stopPx, targetPx, manualConv].some((v) => v.trim() !== '' && parseDecimal(v) == null) ||
-    (leverage.trim() !== '' && parseLeverage(leverage) == null) ||
-    parseSpreadPips(spread) == null;
+    (leverage.trim() !== '' && parseLeverage(leverage) == null);
+  /**
+   * خطأ خانة السبريد، تحتها مباشرةً. كان يُضمّ لـ`badNumber` الذي لا يظهر إلا **بلا نتيجة** — واللوت
+   * يُحسب من الوقف وحده، فسبريدٌ مرفوض كان يُسقط سطر «شاملة السبريد» بصمت واللوت معروض كأن لا خطأ.
+   * وفوق `MAX_SPREAD_PIPS` الرقم مفهوم: يُقال إنه غالباً سعر مكتوب بدل نقاط لا «رقم غير مفهوم».
+   */
+  const spreadWide = spreadTooWide(spread);
+  const spreadErr =
+    parseSpreadPips(spread) != null
+      ? null
+      : spreadWide != null
+        ? t.riskCalcSpreadTooWide.replace('{n}', String(spreadWide))
+        : t.invalidNumberHint;
   /** الرصيد مبلغ: «10.000» أوروبية = عشرة آلاف فتُرفض كـ«10,000» بدل حساب لوت من 10 — راجع parseDecimal.ts */
   const balanceNum = parseDecimal(balance, { amount: true }) ?? NaN;
   /** «1%» / «0.5٪» كما يقولها المتداول — علامة النسبة تُقبل بهذه الخانة وحدها (راجع parseDecimal.ts) */
@@ -459,7 +475,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         tp: tPx,
         size: lots,
         // ملاحظة محايدة اللغة: الأرقام هي المقصودة، وتظهر كما هي بسطر الصفقة بالدفتر
-        note: `${lots.toFixed(2)} lot · risk ${result ? formatMoney(result.actualRisk, account) : account} · R:R ${formatRR(plan.rr)}`,
+        // والسبريد إن كُتب — ليجده المتداول حين يراجع لماذا خسر أكثر من نقاط وقفه
+        note: planJournalNote({
+          lots,
+          risk: result ? result.actualRisk : null,
+          ccy: account,
+          rr: formatRR(plan.rr),
+          spreadPips: parseSpreadPips(spread),
+        }),
       });
       if (!mountedRef.current) return;
       setLogMsg({ ok: true, text: t.riskCalcLoggedToJournal });
@@ -687,6 +710,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
 
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcSpread}</Text>
       {input(spread, setSpread, '1.5', t.riskCalcSpread)}
+      {spreadErr ? (
+        <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
+          {spreadErr}
+        </Text>
+      ) : null}
       <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcSpreadNote}</Text>
 
       {conv && convLoading ? <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.sm }} /> : null}
@@ -768,14 +796,20 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             {result && lots != null ? ` · ${lots.toFixed(2)} lot = ${money(result.pipValue)}` : ''}
           </Text>
         ) : null}
-        {/* «1% → 0.46 lot»: النسبة المكتوبة نفسها واللوت الذي يحفظها شاملة السبريد — بلا جملة تُترجم */}
+        {/* المخاطرة شاملة السبريد، وتحتها جملة اللوت الذي يحفظ النسبة المكتوبة حين يكون أصغر */}
         {withSpread ? (
-          <Text style={[styles.resultMeta, { textAlign: align }]} accessibilityLiveRegion="polite">
-            {t.riskCalcRiskWithSpread} (+{spreadPips} pip): {money(withSpread.risk)} ({formatRiskPct(withSpread.pct)})
-            {withSpread.lotsWithin != null && withSpread.lotsWithin < lots!
-              ? ` · ${riskNum}% → ${withSpread.lotsWithin.toFixed(2)} lot`
-              : ''}
-          </Text>
+          <>
+            <Text style={[styles.resultMeta, { textAlign: align }]} accessibilityLiveRegion="polite">
+              {t.riskCalcRiskWithSpread} (+{spreadPips} pip): {money(withSpread.risk)} ({formatRiskPct(withSpread.pct)})
+            </Text>
+            {withSpread.lotsWithin != null && withSpread.lotsWithin < lots! ? (
+              <Text style={[styles.resultMeta, { textAlign: align }]}>
+                {t.riskCalcSpreadLotsWithin
+                  .replace('{pct}', String(riskNum))
+                  .replace('{lots}', withSpread.lotsWithin.toFixed(2))}
+              </Text>
+            ) : null}
+          </>
         ) : null}
         {margin != null ? (
           <>

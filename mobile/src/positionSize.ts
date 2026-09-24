@@ -521,6 +521,17 @@ export function parseSpreadPips(raw: string): number | null {
 }
 
 /**
+ * السبريد المكتوب **رقمٌ مفهوم لكنه فوق `MAX_SPREAD_PIPS`** — غالباً سعرٌ مكتوب بدل نقاط («10851»). يُرجع
+ * الرقم لتقول اللوحة «سبريد 10851 نقطة غير واقعي» بدل «رقم غير مفهوم» عن رقمٍ مفهوم تماماً؛ `null`
+ * لكل ما عداه (فارغ، مقبول، سالب، نصّ غير مفهوم — لهذه رسائلها).
+ */
+export function spreadTooWide(raw: string): number | null {
+  if (raw.trim() === '') return null;
+  const v = parseDecimal(raw);
+  return v != null && v > MAX_SPREAD_PIPS ? v : null;
+}
+
+/**
  * **المخاطرة شاملة السبريد.** الشراء يُفتح على Ask ويُغلق وقفه على Bid (والبيع عكسه)، فوقفٌ 20 نقطة
  * بسبريد 1.5 يخسر قرابة 21.5 نقطة حين يُضرب — والحاسبة كانت تحسب اللوت والمخاطرة على الـ20 وحدها،
  * فـ«1%» المكتوبة تصير 1.08% فعلاً، وأكثر بكثير على وقف ضيّق (وقف 5 بسبريد 2 = 1.4%).
@@ -563,4 +574,29 @@ export function sizeLooksLikeUnits(size: number, spec: InstrumentSpec | null): {
   const steps = Math.round(raw / LOT_STEP);
   const aligned = steps >= 1 && Math.abs(raw / LOT_STEP - steps) < 1e-6 && raw <= MAX_SANE_LOTS;
   return { lots: aligned ? Math.round(steps * LOT_STEP * 100) / 100 : null };
+}
+
+/**
+ * ملاحظة الصفقة حين تُسجَّل الخطة بالدفتر من الحاسبة — نصّ محايد اللغة (الأرقام هي المقصودة):
+ * «0.50 lot · risk 100.00 USD · R:R 1:2 · spread 1.5 pip».
+ *
+ * السبريد كان يُسقط: الحاسبة تقول «المخاطرة شاملة السبريد 1.08%» ثم تُحفظ الصفقة بلا أثر له، فحين
+ * يراجع المتداول لماذا خسر 21.5 نقطة على وقف 20 لا يجد بالدفتر السبريد الذي خطّط به. يُضاف حين يكون
+ * موجباً فقط (0/فارغ/غير صالح = لم يُكتب)، بلا أصفار زائدة («1.5» لا «1.50»). `risk` null = لا مبلغ
+ * (يُكتب رمز العملة وحده، كما كان).
+ */
+export function planJournalNote(input: {
+  lots: number;
+  risk: number | null;
+  ccy: string;
+  rr: string;
+  spreadPips?: number | null;
+}): string {
+  const { lots, risk, ccy, rr, spreadPips } = input;
+  const riskText = risk != null && Number.isFinite(risk) ? formatMoney(risk, ccy) : ccy;
+  const parts = [`${lots.toFixed(2)} lot`, `risk ${riskText}`, `R:R ${rr}`];
+  if (spreadPips != null && Number.isFinite(spreadPips) && spreadPips > 0) {
+    parts.push(`spread ${Number(spreadPips.toFixed(2))} pip`);
+  }
+  return parts.join(' · ');
 }

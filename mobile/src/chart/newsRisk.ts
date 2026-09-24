@@ -135,3 +135,36 @@ export function newsCountdown(deltaMs: number): { now: true } | { now: false; h:
   const mins = Math.max(1, Math.floor(deltaMs / 60_000));
   return { now: false, h: Math.floor(mins / 60), m: mins % 60 };
 }
+
+/** أقدم تقويم محفوظ يُستعمل بعد فشل التحديث: التقويم أسبوعي، لكن بعد يوم قد تُضاف أحداث أو تُعدَّل أوقاتها. */
+export const NEWS_STALE_MAX_MS = 24 * 60 * 60 * 1000;
+
+export type CalendarCache = {
+  events: NewsEvent[];
+  /** وقت آخر محاولة جلب (نجحت أو فشلت) — منه تُحسب مهلة إعادة المحاولة. */
+  at: number;
+  ok: boolean;
+  /** وقت آخر جلب **ناجح** للأحداث المحفوظة؛ null = لم ينجح أي جلب بعد. */
+  fetchedAt: number | null;
+};
+
+/**
+ * المخزن بعد محاولة جلب التقويم. `events` = نتيجة ناجحة، و`null` = فشل.
+ *
+ * كان الفشل يستبدل المخزن بـ`[]`: تحديثٌ واحد تعثّر بعد عشر دقائق (شبكة الهاتف، الخادم يعيد التشغيل)
+ * **يمحو** تحذير «الرواتب الأمريكية بعد 40د» الذي كان على الشاشة، فيختفي الشريط قبل الخبر بالضبط —
+ * والمتداول يقرأ الغياب «لا خبر». أوقات الأحداث مطلقة (`ts`) فالتقويم المحفوظ يبقى صادقاً عن
+ * الساعات القادمة؛ يُحتفظ به بعد الفشل (بعلَم `ok: false` لسطر «بيانات محفوظة») ما دام أحدث من
+ * `NEWS_STALE_MAX_MS`، وبعدها يُسقط بدل عرض تقويمٍ قد تغيّر.
+ */
+export function calendarAfterFetch(
+  prev: CalendarCache | null,
+  events: readonly NewsEvent[] | null,
+  nowMs: number
+): CalendarCache {
+  if (events) return { events: [...events], at: nowMs, ok: true, fetchedAt: nowMs };
+  const keep = prev && prev.fetchedAt != null && nowMs - prev.fetchedAt <= NEWS_STALE_MAX_MS;
+  return keep
+    ? { events: prev.events, at: nowMs, ok: false, fetchedAt: prev.fetchedAt }
+    : { events: [], at: nowMs, ok: false, fetchedAt: null };
+}
