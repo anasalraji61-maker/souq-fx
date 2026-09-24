@@ -63,7 +63,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • تقويم اقتصادي وأخبار السوق في مكان واحد.
 
 أدوات المتداول
-• حاسبة حجم المركز: أدخل رصيدك والمخاطرة (نسبةً أو مبلغاً بعملة حسابك) ووقف الخسارة (بالنقاط أو بسعرَي الدخول والوقف) لتعرف حجم اللوت، مع أهداف جاهزة بنسبة 1:1 حتى 1:3، وتقدير للهامش الذي يحجزه الوسيط حسب رافعتك، وخانتا سبريد وعمولة اختياريتان تُريانك مخاطرتك وربحك الصافي شاملَين التكاليف — وتنبّهك حين يكون وقفك أضيق من السبريد نفسه.
+• حاسبة حجم المركز: أدخل رصيدك والمخاطرة (نسبةً أو مبلغاً بعملة حسابك) ووقف الخسارة (بالنقاط أو بسعرَي الدخول والوقف) لتعرف حجم اللوت — لحساب عادي أو حساب سنت أو micro — مع أهداف جاهزة بنسبة 1:1 حتى 1:3، وتقدير للهامش الذي يحجزه الوسيط حسب رافعتك، وخانتا سبريد وعمولة اختياريتان تُريانك مخاطرتك وربحك الصافي شاملَين التكاليف — وتنبّهك حين يكون وقفك أضيق من السبريد نفسه.
 • دفتر صفقات تسجّل فيه صفقاتك بنفسك: الربح المحتمل بالمال قبل الدخول، ونتيجة كل صفقة بالنقاط والمال تراها قبل أن تحفظها — ولمسة واحدة تغلقها على وقفها أو نقطة التعادل أو هدفها بالضبط — ثم نسبة النجاح والصافي لكل أداة ومتوسط النتيجة بوحدة المخاطرة (R).
 • تنبيه قبل الصفقة إن اقترب خبر اقتصادي قوي على عملة الزوج أو المؤشر أو المعدن، وبأسماء الرموز كما يكتبها وسيطك. وإن تعذّر تحميل التقويم يقول لك ذلك صراحةً، فلا تظنّ أن لا خبر.
 • «فحص السوق»: فلترة الأزواج بشروط المؤشرات الشائعة.
@@ -124,7 +124,7 @@ WATCHLIST & ALERTS
 • Economic calendar and market news in one place.
 
 TRADER TOOLS
-• Position size calculator: enter your balance, your risk (as a percent or an amount in your account currency) and stop loss (in pips, or as entry and stop prices) to get your lot size, with one-tap targets from 1:1 to 1:3, an estimate of the margin your broker holds at your leverage, and optional spread and commission so your risk and net profit include costs — and warns when your stop sits inside the spread.
+• Position size calculator: enter your balance, risk (percent or amount) and stop loss (in pips, or as entry and stop prices) to get your lot size — standard, cent or micro accounts — with one-tap targets from 1:1 to 1:3, an estimate of the margin your broker holds at your leverage, and optional spread and commission so your risk and net profit include costs — and warns when your stop sits inside the spread.
 • A trade journal you fill in yourself: the potential profit in money before you enter, each trade's result in pips and money before you save it — with one tap to close it exactly at its stop, breakeven or target — then win rate, net result per instrument and average result in units of risk (R).
 • A heads-up before a trade when high-impact economic news is close for the pair's, index's or metal's currency — with symbols named the way your broker names them. If the calendar fails to load, it says so.
 • Market screener using common indicator conditions.
