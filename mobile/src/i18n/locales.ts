@@ -909,6 +909,10 @@ export type Dict = {
   mcNothingToUndo: string;
   /** قارئ الشاشة لزرّ «»» (العودة لآخر شمعة) — كان `chartExtraLabels(lang).toLatest` بـ`typeLabels.ts` */
   mcToLatestA11y: string;
+  /** زرّ إخفاء كل الرسومات (`drawingsHidden`) — كان `chartExtraLabels(lang).hideDrawings` بـ`typeLabels.ts` */
+  mcHideDrawings: string;
+  /** الزرّ نفسه والرسومات مخفيّة؛ المستدعي يضيف «(n)» */
+  mcShowDrawings: string;
   mcPanesCollapsed: string;
   mcPanesCollapsedA11y: string;
   mcPanesPageA11y: string;
@@ -1847,6 +1851,8 @@ const ar: Dict = {
   mcUndoA11y: 'تراجع عن آخر تغيير في الرسم',
   mcNothingToUndo: 'لا شيء للتراجع عنه',
   mcToLatestA11y: 'العودة لآخر شمعة',
+  mcHideDrawings: 'إخفاء الرسوم',
+  mcShowDrawings: 'إظهار الرسوم',
   mcPanesCollapsed: 'مطويّة',
   mcPanesCollapsedA11y: 'لوحات مؤشرات مطويّة: ارتفاع الشارت لا يتّسع لها',
   mcPanesPageA11y: 'اضغط لعرض اللوحات المطويّة بدل الظاهرة',
@@ -2778,6 +2784,8 @@ const enUS: Dict = {
   mcUndoA11y: 'Undo the last drawing change',
   mcNothingToUndo: 'Nothing to undo',
   mcToLatestA11y: 'Scroll to the latest candle',
+  mcHideDrawings: 'Hide drawings',
+  mcShowDrawings: 'Show drawings',
   mcPanesCollapsed: 'Hidden',
   mcPanesCollapsedA11y: 'Indicator panes hidden: the chart is too short to fit them',
   mcPanesPageA11y: 'Tap to show the hidden panes instead of the visible ones',
@@ -3733,6 +3741,8 @@ const ku: Dict = {
   mcUndoA11y: 'گەڕاندنەوەی دوایین گۆڕانکاری لە کێشان',
   mcNothingToUndo: 'هیچ شتێک نییە بۆ گەڕاندنەوە',
   mcToLatestA11y: 'گەڕانەوە بۆ دوایین مۆم',
+  mcHideDrawings: 'شاردنەوەی هێڵکارییەکان',
+  mcShowDrawings: 'پیشاندانی هێڵکارییەکان',
   mcPanesCollapsed: 'شاراوە',
   mcPanesCollapsedA11y: 'پانێڵی پێوەرەکان شاراونەتەوە: بەرزی چارتەکە بەشیان ناکات',
   mcPanesPageA11y: 'دەستی لێ بدە بۆ پیشاندانی پانێڵە شاراوەکان لە جیاتی ئەوانەی دیارن',
