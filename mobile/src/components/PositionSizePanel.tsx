@@ -715,6 +715,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         })()}
       </View>
       {input(riskPct, setRiskPct, '1', t.riskCalcRiskPct)}
+      {/* زرّ عملة الحساب وحده لا يقول ما يفعل — التلميح ما دامت الخانة نسبةً والقلب ممكناً */}
+      {riskIn?.amount == null && toggleRiskUnit(riskPct, balanceNum, account) != null ? (
+        <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcRiskMoneyHint.replace('{ccy}', account)}</Text>
+      ) : null}
       {riskHigh ? <Text style={[styles.warn, { textAlign: align }]}>{t.riskCalcHighRisk}</Text> : null}
 
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcLeverage}</Text>
