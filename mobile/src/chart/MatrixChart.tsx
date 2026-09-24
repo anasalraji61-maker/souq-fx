@@ -846,6 +846,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [pineOn, setPineOn] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [kind, setKind] = useState<ChartKind>(initialKind ?? 'candles');
+  // مفتاح الشمعة التي انتهى عدّادها (رمز|فريم|وقت) — يُقصَّر وسم السعر لسطر واحد حتى شمعة جديدة.
+  const [countdownEndedKey, setCountdownEndedKey] = useState<string | null>(null);
   const [lens, setLens] = useState<LensMode>(initialLens ?? 'clean');
   const [extraInd, setExtraInd] = useState<IndicatorId[]>(initialIndicators ?? []);
   const [tool, setTool] = useState<DrawTool>(initialTool ?? 'none');
@@ -3376,8 +3378,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const countdownStep = timeframeStepSec(series.timeframe);
   const countdownSynthetic =
     kind === 'renko' || kind === 'kagi' || kind === 'pnf' || kind === 'range';
+  const countdownKey = lastRawBar ? `${series.symbol}|${countdownStep}|${lastRawBar.time}` : null;
   const showCountdown =
     !hidePriceLabels &&
+    countdownKey !== countdownEndedKey &&
     !replayOn &&
     !countdownSynthetic &&
     lastRawBar != null &&
@@ -5684,6 +5688,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 stepSec={countdownStep}
                 symbol={series.symbol}
                 style={styles.currentPriceCountdown}
+                onEnd={() => setCountdownEndedKey(countdownKey)}
               />
             ) : null}
           </View>
