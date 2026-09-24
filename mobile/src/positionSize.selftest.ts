@@ -2,6 +2,7 @@
  * Self-test for positionSize (pure).
  * Run: npx --yes tsx src/positionSize.selftest.ts
  */
+import { parseDecimal } from './parseDecimal';
 import assert from 'node:assert/strict';
 import {
   parseRiskInput,
@@ -37,6 +38,7 @@ import {
   parseSpreadPips,
   spreadRisk,
   parsePriceFor,
+  ambiguousThousandsPrice,
   spreadBeyondLiveEntry,
   MAX_SPREAD_PIPS,
   type InstrumentSpec,
@@ -1495,3 +1497,26 @@ console.log('positionSize spreadBeyondLiveEntry selftest OK');
   assert.equal(parsePriceFor('3,450', 'XAUUSD'), null); // الفاصلة المبهمة مرفوضة أصلاً
 }
 console.log('positionSize parsePriceFor selftest OK');
+
+// ── سبب رفض «3.450» للذهب والقراءتان لرسالة priceAmbiguousThousandsHint ──
+{
+  assert.deepEqual(ambiguousThousandsPrice('3.450', 'XAUUSD'), { value: '3.450', whole: '3450', small: '3.45' });
+  assert.deepEqual(ambiguousThousandsPrice(' 2.351 ', 'GOLD#'), { value: '2.351', whole: '2351', small: '2.351' });
+  // أرقام عربية وفاصل عربي: value كما كُتب، والقراءتان لاتينيتان
+  assert.deepEqual(ambiguousThousandsPrice('٣٫٤٥٠', 'XAUUSD.m'), { value: '٣٫٤٥٠', whole: '3450', small: '3.45' });
+  assert.deepEqual(ambiguousThousandsPrice('3.000', 'XAUUSD'), { value: '3.000', whole: '3000', small: '3' });
+  // ليس مبهماً ⇒ null (مقبول أو مرفوض لسبب آخر)
+  for (const [raw, sym] of [
+    ['3450', 'XAUUSD'], ['3.45', 'XAUUSD'], ['0.450', 'XAUUSD'], ['3.450,50', 'XAUUSD'], ['3,450', 'XAUUSD'],
+    ['abc', 'XAUUSD'], ['', 'XAUUSD'], ['157.250', 'USDJPY'], ['1.085', 'EURUSD'], ['3.450', 'US30'], ['3.450', ''],
+  ] as const) {
+    assert.equal(ambiguousThousandsPrice(raw, sym), null, `${raw} ${sym}`);
+  }
+  // يتّفق مع parsePriceFor: مبهم ⇔ parseDecimal يقرؤه لكن parsePriceFor يرفضه
+  for (const raw of ['3.450', '2.350', '3450', '3.45', '0.450', '3.450,50', 'abc', '12.345', '1234.567']) {
+    const amb = ambiguousThousandsPrice(raw, 'XAUUSD') != null;
+    assert.equal(amb, parsePriceFor(raw, 'XAUUSD') == null && parseDecimal(raw) != null, raw);
+  }
+  assert.equal(parsePriceFor('3.450', null), 3.45);
+}
+console.log('positionSize ambiguousThousandsPrice selftest OK');

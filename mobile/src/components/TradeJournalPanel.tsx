@@ -16,7 +16,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
-import { formatMoney, instrumentSpec, parsePriceFor, pipsBetween, pnlInQuoteCcy, riskInQuoteCcy, sizeLooksLikeUnits } from '../positionSize';
+import { ambiguousThousandsPrice, formatMoney, instrumentSpec, parsePriceFor, pipsBetween, pnlInQuoteCcy, riskInQuoteCcy, sizeLooksLikeUnits } from '../positionSize';
 import {
   analyzePlan,
   entryAfterSideSwitch,
@@ -303,6 +303,16 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     return n != null && n > 0 ? n : null;
   };
   const unreadablePx = (v: string, sym: string = symbol) => v.trim() !== '' && pnum(v, sym) == null;
+  /**
+   * رسالة السعر غير المقروء: «3.450» بخانة ذهب تقول **لماذا** وتعرض القراءتين (3450 أو 3.45) — رسالة «اكتبه بلا
+   * فواصل آلاف، مثل 1.0850» كانت تحيّر: المتداول لا يرى فاصلاً، والمثال يشبه ما كتبه. غير ذلك الرسالة العامة.
+   */
+  const pxErrorText = (v: string, sym: string = symbol): string => {
+    const a = ambiguousThousandsPrice(v, sym);
+    return a
+      ? t.priceAmbiguousThousandsHint.replace('{value}', a.value).replace('{whole}', a.whole).replace('{small}', a.small)
+      : t.invalidNumberHint;
+  };
 
   /**
    * حجمٌ يبدو وحداتٍ منسوخة من المنصّة («10000» بدل «0.10») — راجع `sizeLooksLikeUnits`. يُعرض سطر
@@ -590,11 +600,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     // «EUR/USD» ⇒ EURUSD، و«EU» يُرفض هنا لا بالخادم برسالة عامة — راجع `journalSymbol`
     const sym = journalSymbol(symbol);
     if (sym == null || e == null) {
-      setFormError(t.journalInvalidEntry);
+      // دخول ذهب «3.450»: «أدخل رمزاً وسعر دخول صحيحين» لا يقول ما الخطأ بالسعر المكتوب
+      setFormError(sym != null && ambiguousThousandsPrice(entry, symbol) ? pxErrorText(entry) : t.journalInvalidEntry);
       return;
     }
-    if ([sl, tp, exit].some((v) => unreadablePx(v)) || unreadable(size)) {
-      setFormError(t.invalidNumberHint);
+    const badPx = [sl, tp, exit].find((v) => unreadablePx(v));
+    if (badPx != null || unreadable(size)) {
+      setFormError(badPx != null ? pxErrorText(badPx) : t.invalidNumberHint);
       return;
     }
     if (sizeUnits) {
@@ -668,7 +680,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     // خانة الخروج فارغة/غير مفهومة: كان الضغط لا يفعل شيئاً بصمت تام (المبتدئ لا يعرف أن الإغلاق يقرأ خانة
     // «خروج» بأعلى النموذج).
     if (x == null) {
-      Alert.alert(t.journalCloseFailedTitle, unreadablePx(exit, tr.symbol) ? t.invalidNumberHint : t.journalCloseNeedsExit);
+      Alert.alert(t.journalCloseFailedTitle, unreadablePx(exit, tr.symbol) ? pxErrorText(exit, tr.symbol) : t.journalCloseNeedsExit);
       return;
     }
     // تأكيدٌ بالنتيجة كالإغلاق بالسوق: الخانة واحدة للنموذج كلّه، فسعرٌ كُتب لصفقة ذهب (2651.30) ثم نُقر رابط

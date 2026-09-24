@@ -108,12 +108,26 @@ export function instrumentSpec(raw: string): InstrumentSpec | null {
 export function parsePriceFor(raw: string, symbol: string | null | undefined): number | null {
   const v = parseDecimal(raw);
   if (v == null) return null;
+  return ambiguousThousandsPrice(raw, symbol) ? null : v;
+}
+
+/**
+ * لماذا رفض `parsePriceFor` النصّ — والقراءتان الممكنتان لرسالة `priceAmbiguousThousandsHint` («اكتب 3450 أو 3.45»).
+ * رسالة «رقم غير مفهوم — اكتبه بلا فواصل آلاف، مثل 10000 أو 1.0850» تحت «3.450» محيّرة: المتداول لم يكتب فاصلاً
+ * (بظنّه)، ومثالها «1.0850» يشبه ما كتبه تماماً. `null` = ليس مبهماً (مقبول، أو مرفوض لسبب آخر).
+ * `value` كما كُتب (مقصوص الأطراف)، `whole` بلا النقطة، `small` كسراً بلا أصفار زائدة — أرقام لاتينية دائماً.
+ */
+export function ambiguousThousandsPrice(
+  raw: string,
+  symbol: string | null | undefined,
+): { value: string; whole: string; small: string } | null {
   const spec = symbol ? instrumentSpec(symbol) : null;
-  if (!spec) return v;
+  if (!spec) return null;
   const decimals = Math.round(-Math.log10(spec.pipSize)) + 1;
-  if (decimals >= 3) return v;
+  if (decimals >= 3) return null;
   const s = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009٬']/g, '').replace(/[٫．]/g, '.');
-  return /^[1-9]\d{0,2}\.\d{3}$/.test(s) ? null : v;
+  if (!/^[1-9]\d{0,2}\.\d{3}$/.test(s)) return null;
+  return { value: raw.trim(), whole: s.replace('.', ''), small: String(Number(s)) };
 }
 
 /**
