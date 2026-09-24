@@ -3061,7 +3061,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           const hi = Math.max(d.a.price, d.b.price);
           const lo = Math.min(d.a.price, d.b.price);
           for (const lv of FIB_LEVELS) {
-            bodyDist = Math.min(bodyDist, Math.abs(y - yOf(fibLevelPrice(hi, lo, lv))));
+            bodyDist = Math.min(bodyDist, Math.abs(y - yOf(fibLevelPrice(hi, lo, lv, d.a.price > d.b.price))));
           }
         }
         const dist = Math.min(endDist, bodyDist);
@@ -4178,6 +4178,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       levels: FIB_LEVELS,
       hi: Math.max(d.a.price, d.b.price),
       lo: Math.min(d.a.price, d.b.price),
+      down: d.a.price > d.b.price,
       yOf,
       format: (v) => formatPrice(v, series.symbol),
       minGapPx: FIB_LABEL_GAP,
@@ -6504,7 +6505,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             return (
               <View key={d.id}>
                 {FIB_LEVELS.map((lv) => {
-                  const price = fibLevelPrice(hi, lo, lv);
+                  const price = fibLevelPrice(hi, lo, lv, d.a.price > d.b.price);
                   const text = labelled.get(lv);
                   return (
                     <View

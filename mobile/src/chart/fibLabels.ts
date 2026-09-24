@@ -62,9 +62,13 @@ export type FibLabelPlan = {
  * المستويات على السعر نفسه — وهو الصادق. كان `hi - lo || 1` ينشر سبعة خطوط على مدى
  * **وحدة سعرية كاملة** عند ارتداد بلا ارتفاع: على اليورو ذلك عرض الشارت كلّه مرّات.
  */
-export function fibLevelPrice(hi: number, lo: number, level: number): number {
+export function fibLevelPrice(hi: number, lo: number, level: number, down = false): number {
   const span = hi - lo;
-  return hi - (span > 0 ? span : 0) * level;
+  const s = span > 0 ? span : 0;
+  // الارتداد يُقاس من **نهاية** الموجة كـTradingView: صاعدة (رُسمت من القاع للقمّة) ⇒ 0% عند القمّة؛
+  // هابطة (`down`، من القمّة للقاع) ⇒ 0% عند القاع و61.8% فوقه. كان 0% عند القمّة دائماً، فعلى موجة
+  // هابطة يقع وسم «61.8%» على سعر ارتداد 38.2% فعلياً — يضع المتداول أمر البيع عند المستوى الخطأ.
+  return down ? lo + s * level : hi - s * level;
 }
 
 /**
@@ -84,6 +88,8 @@ export function planFibLabels(input: {
   minGapPx?: number;
   /** مواضع وسوم أهمّ على الحافّة نفسها (وسوم الخطوط الأفقية، وفيبو مرسوم قبله). */
   taken?: readonly number[];
+  /** موجة هابطة (رُسمت من القمّة للقاع) ⇒ 0% عند القاع — راجع `fibLevelPrice`. */
+  down?: boolean;
 }): FibLabelPlan[] {
   const { levels, hi, lo, yOf, format } = input;
   const minGap = input.minGapPx ?? LEVEL_LABEL_GAP;
@@ -92,7 +98,7 @@ export function planFibLabels(input: {
   const candidates: FibLabelPlan[] = [];
   for (const level of levels) {
     if (!Number.isFinite(level)) continue;
-    const price = fibLevelPrice(hi, lo, level);
+    const price = fibLevelPrice(hi, lo, level, input.down);
     if (!Number.isFinite(price)) continue;
     const y = yOf(price);
     // موضع غير محسوب (مقياس لم يُهيّأ بعد) لا يُعرض بموضع مختلَق.
