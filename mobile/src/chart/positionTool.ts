@@ -108,8 +108,8 @@ function distanceText(symbol: string, a: number, b: number): string {
  */
 export function positionLabels(levels: PositionLevels, symbol: string): { target: string; stop: string } {
   return {
-    target: `TP ${formatPrice(levels.target, symbol)} · ${distanceText(symbol, levels.entry, levels.target)} · R:R ${rrText(levels.rr)}`,
-    stop: `SL ${formatPrice(levels.stop, symbol)} · ${distanceText(symbol, levels.entry, levels.stop)}`,
+    target: `TP ${formatPrice(levels.target, symbol, levels.entry)} · ${distanceText(symbol, levels.entry, levels.target)} · R:R ${rrText(levels.rr)}`,
+    stop: `SL ${formatPrice(levels.stop, symbol, levels.entry)} · ${distanceText(symbol, levels.entry, levels.stop)}`,
   };
 }
 

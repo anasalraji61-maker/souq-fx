@@ -18,13 +18,19 @@ export function symbolPriceDecimals(symbol: string): number | null {
   return Math.round(-Math.log10(spec.pipSize)) + 1;
 }
 
-/** `symbol` اختياري: بدونه تُقدَّر المنازل من حجم الرقم — وهذا كان يقصّ خانة الين (157.423 → 157.42). */
-export function formatPrice(n: number, symbol?: string) {
+/**
+ * `symbol` اختياري: بدونه تُقدَّر المنازل من حجم الرقم — وهذا كان يقصّ خانة الين (157.423 → 157.42).
+ *
+ * `ref` (سعر الأداة الجاري) لأداة بلا منازل معروفة (النفط، الغاز، المؤشرات): المنازل من حجم **السعر** لا
+ * حجم كل رقم، وإلا تقلّبت عند حدَّي 10 و100 — نفط حول 100 كان محوره «99.800» فوق «100.20» وقاعه «99.650»
+ * بجانب قمّة «100.45»، والغاز حول 10 «9.98500» بجانب «10.015». المنازل خاصيّة الأداة كـTradingView.
+ */
+export function formatPrice(n: number, symbol?: string, ref?: number | null) {
   const d = symbol ? symbolPriceDecimals(symbol) : null;
   if (d != null) return n.toFixed(d);
-  if (n >= 1000) return n.toFixed(2);
-  if (n >= 100) return n.toFixed(2);
-  if (n >= 10) return n.toFixed(3);
+  const m = ref != null && Number.isFinite(ref) && ref > 0 ? ref : n;
+  if (m >= 100) return n.toFixed(2);
+  if (m >= 10) return n.toFixed(3);
   return n.toFixed(5);
 }
 

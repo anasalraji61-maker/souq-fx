@@ -954,6 +954,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // مقياس السعر ليس تلقائياً: مُطّ المحور، أو سُحب الشارت رأسياً أكثر من عُشر المدى — انحراف الإصبع
   // الرأسي العابر أثناء سحب أفقي لا يُعدّ (وإلا أُبرز AUTO بعد كل سحب تقريباً).
   const priceManual = Math.abs(Math.log(priceScale)) > 0.01 || Math.abs(pricePan) > 0.1;
+  // كل سعر بالشارت (المحور، الوسوم، التقاطع، القمم، الرسومات) بمنازل واحدة للأداة: لرمز بلا منازل معروفة
+  // تُؤخذ من سعره الجاري لا من كل رقم على حدة (`formatPrice`، `ref`).
+  const priceDecimalsRef = series.last;
+  const fmtPrice = (v: number) => formatPrice(v, series.symbol, priceDecimalsRef);
   const [replayOn, setReplayOn] = useState(false);
   const [replayStep, setReplayStep] = useState(15);
   const [replayPlaying, setReplayPlaying] = useState(false);
@@ -4212,7 +4216,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       lo: Math.min(d.a.price, d.b.price),
       down: d.a.price > d.b.price,
       yOf,
-      format: (v) => formatPrice(v, series.symbol),
+      format: fmtPrice,
       minGapPx: FIB_LABEL_GAP,
       plotH: chartPlotH,
       taken: [...takenLabelYs],
@@ -4340,9 +4344,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // ويُقاس بُعده من سعر الإعادة (`currentPrice`) — رقم يخلط الماضي بالمستقبل.
   const nowIndex = replayOn ? source.start + source.plot.length - 1 : source.all.length - 1;
   const selectedLineNow = selectedSpan
-    ? lineNowText(selectedSpan, nowIndex, currentPrice, series.symbol, (v) =>
-        formatPrice(v, series.symbol)
-      )
+    ? lineNowText(selectedSpan, nowIndex, currentPrice, series.symbol, fmtPrice)
     : null;
   const selectedSpanText =
     selectedSpanReadout && selectedLineNow
@@ -4557,8 +4559,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <Text style={styles.readoutText}>{measureReadout}</Text>
         ) : crossCandle ? (
           <Text style={styles.readoutText}>
-            O {formatPrice(crossCandle.open, series.symbol)} H {formatPrice(crossCandle.high, series.symbol)} L{' '}
-            {formatPrice(crossCandle.low, series.symbol)} C {formatPrice(crossCandle.close, series.symbol)}
+            O {fmtPrice(crossCandle.open)} H {fmtPrice(crossCandle.high)} L{' '}
+            {fmtPrice(crossCandle.low)} C {fmtPrice(crossCandle.close)}
             {crossCandle.open > 0
               ? (() => {
                   // جسم الشمعة بالنسبة: شمعة دوجي كانت تُكتب «+0.00%» (الشرط `>=`)، وجسمٌ صاعد
@@ -4602,7 +4604,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           // الاتجاه (فوق/تحت) يحدّده المستدعي من السعر الحالي، والتأكيد «مُفعَّل» يظهر عنده.
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`${tr.mcAlertAtCrossA11y} ${formatPrice(crossPrice, series.symbol)}`}
+            accessibilityLabel={`${tr.mcAlertAtCrossA11y} ${fmtPrice(crossPrice)}`}
             hitSlop={6}
             style={({ pressed }) => [
               styles.crossAlertBtn,
@@ -4611,7 +4613,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ]}
             onPress={() => onCreateAlert(crossPrice, 'crosshair')}
           >
-            <Text style={[styles.crossAlertText, { color: accent }]}>🔔 {formatPrice(crossPrice, series.symbol)}</Text>
+            <Text style={[styles.crossAlertText, { color: accent }]}>🔔 {fmtPrice(crossPrice)}</Text>
           </Pressable>
         ) : null}
         {interactive && !compactUi ? (
@@ -5219,7 +5221,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 const m = plan[which];
                 const y = yP(m.price);
                 if (!(y >= 0 && y <= laneBot)) return null;
-                const text = formatPrice(m.price, series.symbol);
+                const text = fmtPrice(m.price);
                 const w = text.length * 5.6 + 12;
                 const x = xOf(m.index);
                 const top = Math.max(0, Math.min(laneBot - HILO_LABEL_H, y - HILO_LABEL_H / 2));
@@ -6282,7 +6284,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   ]}
                   numberOfLines={1}
                 >
-                  {lv.label} {formatPrice(lv.price, series.symbol)}
+                  {lv.label} {fmtPrice(lv.price)}
                   {/* أعلى/أدنى الأمس هدفا اليوم الأوّلان: كم بقي للسعر ليبلغهما بالـpip، كوسم الخطّ
                       الأفقي. لا لبقيّة الارتكاز — ستّة وسوم بأبعادها تزحم اللوح. */}
                   {(() => {
@@ -6400,7 +6402,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     style={[styles.levelPriceLabel, { color: d.color }, sel && styles.levelPriceLabelSel]}
                     numberOfLines={1}
                   >
-                    {formatPrice(d.a.price, series.symbol)}
+                    {fmtPrice(d.a.price)}
                     {/* كم يبعد المستوى عن السعر الجاري بالـpip (+ فوقه، − تحته) — المتداول يرسم
                         الدعم ليعرف كم بقي للوصول إليه؛ الرقم نفسه الذي تعطيه أداة القياس. */}
                     {(() => {
@@ -6787,7 +6789,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               pointerEvents="none"
               style={[styles.priceAxisLabel, { top: priceTickBoxes[i].start }]}
             >
-              {formatPrice(tick.price, series.symbol)}
+              {fmtPrice(tick.price)}
             </Text>
           )
         )}
@@ -6801,7 +6803,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           >
             <Text style={styles.currentPriceText}>
               {offMark(currentPriceOff)}
-              {formatPrice(currentPrice, series.symbol)}
+              {fmtPrice(currentPrice)}
             </Text>
             {showCountdown && lastRawBar ? (
               <BarCountdown
@@ -6827,7 +6829,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 ]}
               >
                 <Text style={[styles.crossTagText, { color: selectedDrawing?.color ?? accent }]}>
-                  {formatPrice(t.price, series.symbol)}
+                  {fmtPrice(t.price)}
                 </Text>
               </View>
             ) : (
@@ -6843,7 +6845,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   },
                 ]}
               >
-                <Text style={styles.crossTagText}>{formatPrice(t.price, series.symbol)}</Text>
+                <Text style={styles.crossTagText}>{fmtPrice(t.price)}</Text>
               </View>
             )
           )}
@@ -6851,7 +6853,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View pointerEvents="none" style={[styles.crossPriceTag, { top: crossTagTop }]}>
             <Text style={styles.crossTagText}>
               {offMark(crossPriceOff)}
-              {formatPrice(crossPrice, series.symbol)}
+              {fmtPrice(crossPrice)}
             </Text>
             {crossPipsText ? (
               <Text
