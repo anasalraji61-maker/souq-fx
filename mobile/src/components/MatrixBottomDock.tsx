@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
   drawWrap: { gap: 4 },
   drawSectionTitle: {
     color: colors.textMuted,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     letterSpacing: 0.3,
     marginTop: spacing.xs,
@@ -368,7 +368,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   drawChip: {
-    width: 66,
+    /** 72 لا 66: التسمية 11px (DESIGN-PRO §2) — الرقاقة تتّسع لا الخطّ يصغر (§7). */
+    width: 72,
     minHeight: 52,
     paddingVertical: spacing.sm,
     borderRadius: radii.sm,
@@ -393,7 +394,7 @@ const styles = StyleSheet.create({
   chipMarkerNeutral: { backgroundColor: colors.text },
   drawChipMark: { color: colors.textMuted, fontSize: 16, fontWeight: '500' },
   drawChipMarkOn: { color: colors.text },
-  drawChipLabel: { color: colors.textDim, fontSize: 10, fontWeight: '500' },
+  drawChipLabel: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
   drawChipLabelOn: { color: colors.text },
   tabs: {
     flexDirection: 'row',
@@ -422,6 +423,6 @@ const styles = StyleSheet.create({
   },
   tabMark: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   tabMarkOn: { color: colors.text },
-  tabLabel: { color: colors.textDim, fontSize: 10, fontWeight: '500' },
+  tabLabel: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
   tabLabelOn: { color: colors.text },
 });
