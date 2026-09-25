@@ -12,7 +12,7 @@
  */
 import type { Candle } from '../api';
 import { DAY_SEC, forexSundayOpenSec, isForexMarketOpen, isLateOpenSymbol } from './marketHours';
-import { isFreshTick } from './dataSource';
+import { isFreshTick, serverNowSec } from './dataSource';
 
 export type Direction = 'up' | 'down' | 'flat';
 
@@ -215,7 +215,7 @@ export function isVerifiedTickKind(kind: string | null | undefined): boolean {
  */
 export function freshTickRefPrice(
   tick: { price: number; source: { kind: string; as_of?: number | null } } | null | undefined,
-  nowSec = Date.now() / 1000
+  nowSec = serverNowSec()
 ): number | null {
   if (!tick || !isVerifiedTickKind(tick.source.kind)) return null;
   if (!isFreshTick(tick.source.as_of, nowSec)) return null;

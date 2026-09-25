@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Text, type StyleProp, type TextStyle } from 'react-native';
 import { barCloseCountdown } from './barCountdown';
+import { serverNowSec } from './dataSource';
 
 /**
  * عدّاد إغلاق الشمعة بمؤقّته الخاصّ: يعيد رسم نصّه وحده كل ثانية لا `MatrixChart` كلّه.
@@ -24,14 +25,16 @@ export function BarCountdown({
    */
   onEnd?: () => void;
 }) {
-  const [now, setNow] = useState(() => Date.now());
+  // بساعة الخادم (`serverNowSec`): جهاز متأخّر 30ث كان يعدّ لإغلاقٍ مضى عليه 30ث.
+  const serverMs = () => serverNowSec() * 1000;
+  const [now, setNow] = useState(serverMs);
   useEffect(() => {
     let id: ReturnType<typeof setTimeout>;
     const tick = () => {
-      setNow(Date.now());
-      id = setTimeout(tick, 1000 - (Date.now() % 1000) + 5);
+      setNow(serverMs());
+      id = setTimeout(tick, 1000 - (serverMs() % 1000) + 5);
     };
-    id = setTimeout(tick, 1000 - (Date.now() % 1000) + 5);
+    id = setTimeout(tick, 1000 - (serverMs() % 1000) + 5);
     return () => clearTimeout(id);
   }, []);
   const text = barCloseCountdown(lastBarTime, stepSec, now, symbol);

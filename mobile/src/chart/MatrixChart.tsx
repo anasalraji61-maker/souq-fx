@@ -162,7 +162,7 @@ import { planSessionRuns, type SessionId } from './sessions';
 import { formatPct, pctDirection, prevSessionFromDaily, validSessionBar } from './dailyChange';
 import { useDailyCurrOpen, useDailyPrevBar } from './dailyRefStore';
 import { candlesThrough, currentSessionOpen, currentSessionOpenAfter, pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
-import { candleTimeSec, isSyntheticProvenance, timeframeStepSec } from './dataSource';
+import { candleTimeSec, isSyntheticProvenance, serverNowSec, timeframeStepSec } from './dataSource';
 import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
@@ -2047,7 +2047,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (fromDaily) return pivotInput(fromDaily, intraday ? currOpen : dailyCurrOpen);
     if (!intraday) {
       const secs = candles.map((c) => ({ ...c, time: candleTimeSec(c.time) }));
-      const prev = validSessionBar(prevSessionFromDaily(secs, replayCutSec ?? Date.now() / 1000, series.symbol));
+      const prev = validSessionBar(prevSessionFromDaily(secs, replayCutSec ?? serverNowSec(), series.symbol));
       return pivotInput(prev, currentSessionOpenAfter(secs, prev));
     }
     return null;
@@ -5849,7 +5849,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     !countdownSynthetic &&
     lastRawBar != null &&
     offAxisSide(currentPriceY, chartPlotH) == null &&
-    barCloseCountdown(lastRawBar.time, countdownStep, Date.now(), series.symbol) != null;
+    barCloseCountdown(lastRawBar.time, countdownStep, serverNowSec() * 1000, series.symbol) != null;
   const currentTagH = showCountdown ? PRICE_TAG_H + COUNTDOWN_LINE_H : PRICE_TAG_H;
   const currentTagTop = Math.max(0, Math.min(chartPlotH - currentTagH - 2, currentPriceY - 9));
   // بُعد التقاطع عن السعر الحالي بالـpip تحت سعره: «أين أضع الوقف/الهدف» كان يعني فتح أداة

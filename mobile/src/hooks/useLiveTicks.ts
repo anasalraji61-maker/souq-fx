@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { API_URL, type LiveTick } from '../api';
-import { parseWsDataSource } from '../chart/dataSource';
+import { noteServerTime, parseWsDataSource } from '../chart/dataSource';
 import { acceptTick } from './tickAge';
 
 /** إعادة اتصال تدريجية (exponential backoff) عند انقطاع WS — 1s..30s */
@@ -107,6 +107,8 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
               ts?: number;
             };
             if (!data.ticks || typeof data.ticks !== 'object') return;
+            // ساعة الخادم لقرارات التيك (دمج الشمعة الحيّة، «حي»، العدّاد) — انظر `serverNowSec`.
+            noteServerTime(data.ts);
             const snap: Snapshot = {
               at: Date.now(),
               ticks: data.ticks,

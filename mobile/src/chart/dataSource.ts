@@ -32,6 +32,26 @@ export const FRESH_TICK_SEC = 15;
 /** سماحية ساعة مستقبلية صغيرة (ثوانٍ) — موثّقة ضد انحراف الساعة */
 export const CLOCK_SKEW_SEC = 2;
 
+/**
+ * فرق ساعة الخادم عن ساعة الجهاز (ثوانٍ، موجب = الجهاز متأخّر)، من `ts` بكل دفعة `/ws/ticks`
+ * (`noteServerTime`). أوقات التيكات بساعة الخادم: جهاز متأخّر 30ث كان يرى كل تيك «من المستقبل» فيرفضه
+ * (`isValidAsOf`) ⇒ الشارت متجمّد والشمعة الحيّة لا تتحرّك بينما الرأس يتحرّك؛ ومتقدّم 30ث ⇒ شارة «حي» لا تظهر أبداً.
+ */
+let serverOffsetSec = 0;
+/** فرق أكبر من يوم = `ts` معطوب لا ساعة منحرفة ⇒ يُتجاهل. */
+const MAX_SERVER_OFFSET_SEC = 86400;
+
+export function noteServerTime(serverSec: unknown, deviceMs = Date.now()): void {
+  if (typeof serverSec !== 'number' || !Number.isFinite(serverSec) || serverSec <= 0) return;
+  const off = serverSec - deviceMs / 1000;
+  if (Math.abs(off) <= MAX_SERVER_OFFSET_SEC) serverOffsetSec = off;
+}
+
+/** «الآن» بساعة الخادم (ساعة الجهاز + الفرق المقدَّر؛ بلا بثّ بعد = ساعة الجهاز). */
+export function serverNowSec(deviceMs = Date.now()): number {
+  return deviceMs / 1000 + serverOffsetSec;
+}
+
 export type SourceFamily = 'twelvedata' | 'demo' | 'unknown';
 
 export function normalizeProvenance(
@@ -133,7 +153,7 @@ export function canMergeLiveIntoCandles(
 
 export function isValidAsOf(
   asOf: number | null | undefined,
-  nowSec = Date.now() / 1000
+  nowSec = serverNowSec()
 ): asOf is number {
   return (
     typeof asOf === 'number' &&
@@ -146,7 +166,7 @@ export function isValidAsOf(
 /** حديث ضمن النافذة، مع رفض المستقبل الكبير وNaN */
 export function isFreshTick(
   asOf: number | null | undefined,
-  nowSec = Date.now() / 1000
+  nowSec = serverNowSec()
 ): boolean {
   if (!isValidAsOf(asOf, nowSec)) return false;
   const age = nowSec - asOf;
@@ -162,7 +182,7 @@ export type TickStatusKind = 'live' | 'demo' | 'lastPrice';
 export function tickStatusKind(
   tickSrc: DataProvenance | null | undefined,
   asOf: number | null | undefined,
-  nowSec = Date.now() / 1000
+  nowSec = serverNowSec()
 ): TickStatusKind | null {
   if (!tickSrc) return null;
   const kind = normalizeProvenance(tickSrc).kind;
@@ -177,7 +197,7 @@ export function tickStatusKind(
 export function tickStatusLabel(
   tickSrc: DataProvenance | null | undefined,
   asOf: number | null | undefined,
-  nowSec = Date.now() / 1000,
+  nowSec = serverNowSec(),
   labels: TickStatusLabels = TICK_STATUS_LABELS_AR
 ): string | null {
   const kind = tickStatusKind(tickSrc, asOf, nowSec);
@@ -214,7 +234,7 @@ export function tickBelongsToCandle(
   candleOpenTime: number,
   tickSec: number | null | undefined,
   stepSec: number,
-  nowSec = Date.now() / 1000
+  nowSec = serverNowSec()
 ): boolean {
   if (!isValidAsOf(tickSec, nowSec)) return false;
   if (!(stepSec > 0) || !Number.isFinite(stepSec)) return false;

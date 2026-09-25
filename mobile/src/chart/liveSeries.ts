@@ -4,6 +4,7 @@ import {
   candleTimeSec,
   isSyntheticProvenance,
   isValidAsOf,
+  serverNowSec,
   timeframeStepSec,
 } from './dataSource';
 import { candlesThrough, prevDayFromIntraday } from './pivotBase';
@@ -52,7 +53,7 @@ export function liveBarOpenSec(
   lastOpenTime: number,
   tickSec: number | null | undefined,
   stepSec: number,
-  nowSec = Date.now() / 1000
+  nowSec = serverNowSec()
 ): number | null {
   if (!isValidAsOf(tickSec, nowSec)) return null;
   if (!(stepSec > 0) || !Number.isFinite(stepSec)) return null;
