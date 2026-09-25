@@ -1357,6 +1357,7 @@ def market_quote(symbol: str):
             # بالشارت كـ«Bid/Ask/سبريد» للمتداول — العميل يُخفي السطر حين يكونان null.
             "bid": None,
             "ask": None,
+            "spread_source": None,
             "source": "ohlc_fallback",
             # provider/cache = آخر إغلاق حقيقي؛ demo = سلسلة بذرية (المزوّد غير مهيّأ أو لا يعرف الرمز) —
             # سعر غير حقيقي لا يصلح لحساب رقمي (حاسبة حجم المركز تتجاهله وتطلب السعر يدوياً).

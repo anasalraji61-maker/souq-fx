@@ -282,7 +282,7 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
                     p = float(r2.json().get("price"))
                 except (TypeError, ValueError):
                     p = None
-            return {"price": p, "bid": None, "ask": None, "symbol": matrix_symbol.upper()} if p else None
+            return {"price": p, "bid": None, "ask": None, "spread_source": None, "symbol": matrix_symbol.upper()} if p else None
         if r.status_code >= 400:
             r2 = client.get(f"{API_BASE}/price", params={"symbol": td_sym, "apikey": key})
             if r2.status_code != 200:
@@ -291,7 +291,7 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
                 p = float(r2.json()["price"])
             except (KeyError, TypeError, ValueError):
                 return None
-            return {"price": p, "bid": None, "ask": None, "symbol": matrix_symbol.upper()}
+            return {"price": p, "bid": None, "ask": None, "spread_source": None, "symbol": matrix_symbol.upper()}
         data = r.json()
     if data.get("status") == "error":
         return None
@@ -311,16 +311,18 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
         ask_f = float(ask) if ask is not None else None
     except (TypeError, ValueError):
         ask_f = None
-    if bid_f is None and ask_f is None:
-        # synthetic spread from typical FX pip when L2 absent
-        spread = price * 0.00008
-        bid_f = price - spread / 2
-        ask_f = price + spread / 2
+    # لا Bid/Ask إلا من المزوّد نفسه. كان هنا سبريد مختلَق (السعر × 0.00008) يُرسَل موسوماً
+    # `data_kind: provider` فيقرأه المتداول سبريداً حقيقياً ويُزيح أسعار الدفتر به. طرفٌ واحد
+    # أو قيمة غير موجبة أو bid > ask = لا دفتر صالح ⇒ كلاهما None والعميل يُخفي السطر.
+    if bid_f is None or ask_f is None or bid_f <= 0 or ask_f <= 0 or bid_f > ask_f:
+        bid_f = ask_f = None
     return {
         "symbol": matrix_symbol.upper(),
         "price": price,
         "bid": bid_f,
         "ask": ask_f,
+        # من أين جاء Bid/Ask: `provider` = من المزوّد، None = غير متاح (لا تقدير أبداً).
+        "spread_source": "provider" if bid_f is not None else None,
         "open": _f(data.get("open")),
         "high": _f(data.get("high")),
         "low": _f(data.get("low")),
