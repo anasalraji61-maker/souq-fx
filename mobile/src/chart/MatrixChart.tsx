@@ -356,6 +356,14 @@ import {
 } from './panSpeed';
 import { mapShadowCandles } from './shadowOverlay';
 import { visibleBarRange } from './visibleBars';
+import {
+  firstAfter,
+  lastAtOrBefore,
+  lastBefore,
+  replayFollowOffset,
+  replayMinOffset,
+  replayWindow,
+} from './replayCursor';
 import { clampXPan } from './panClamp';
 import { ProviderUnavailableNotice, seriesHasNoRealData } from '../components/ProviderUnavailableNotice';
 
@@ -1495,7 +1503,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const id = setTimeout(() => setReplayEndedNotice(false), 6000);
     return () => clearTimeout(id);
   }, [replayEndedNotice]);
-  const [replayStep, setReplayStep] = useState(15);
+  // زمن آخر شمعة مكشوفة بالإعادة (`replayCursor.ts`) — مرساة لا تتحرّك بالسحب ولا بوصول شموع جديدة.
+  const [replayAt, setReplayAt] = useState<number | null>(null);
   const [replayPlaying, setReplayPlaying] = useState(false);
   const [logScale, setLogScale] = useState(false);
   /** مقياس النسبة (كـTradingView «Percent»): المحور يقرأ التغيّر عن أول شمعة ظاهرة — يستبعد اللوغاريتمي. */
@@ -1720,17 +1729,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
     // الإزاحة مقصوصة بطول السلسلة الحالية: سحب 120 شمعة للخلف ثم Renko (~40 لبنة) كان يعطي نهاية
     // سالبة فـ`slice` فارغة — شارت فارغ حتى AUTO. الحدّ نفسه الذي تقف عنده `holdView` (آخر 10).
+    // Bar Replay: المكشوف حتى الشمعة المقطوعة بالزمن، والنافذة لا تتعدّاها نحو الحيّ (`replayWindow`).
+    // خانات اللوح = النافذة كلّها (كـTradingView) — المكشوف يملأ أوّلها ويبقى الباقي منطقة مستقبل فارغة.
+    // كان اللوح يُقسَم على المكشوف وحده ⇒ 3 شموع بعرض الشاشة ثم تضيق مع كل خطوة.
+    if (replayOn && replayAt != null && plot.length > 0) {
+      const times = plot.map((b) => candleTimeSec(barTime(b)));
+      const cut = Math.max(0, lastAtOrBefore(times, replayAt));
+      const w = replayWindow(plot.length, windowCount, offset, cut);
+      return {
+        plot: plot.slice(w.start, w.start + w.revealed),
+        start: w.start,
+        all: plot,
+        windowLen: Math.max(1, w.windowLen),
+        slots: Math.max(1, w.windowLen),
+      };
+    }
     const end = plot.length - Math.min(offset, Math.max(0, plot.length - 10));
     const start = Math.max(0, end - windowCount);
     const windowPlot = plot.slice(start, end);
     const windowLen = windowPlot.length;
-    const visiblePlot = replayOn
-      ? windowPlot.slice(0, Math.max(1, Math.min(replayStep, windowLen)))
-      : windowPlot;
-    // خانات اللوح: بـBar Replay نافذة البداية كلّها (كـTradingView) — المكشوف يملأ أوّلها ويبقى الباقي
-    // فارغاً. كان اللوح يُقسَم على المكشوف وحده ⇒ 3 شموع بعرض الشاشة ثم تضيق مع كل خطوة.
-    const slots = Math.max(1, replayOn ? windowLen : visiblePlot.length);
-    return { plot: visiblePlot, start, all: plot, windowLen, slots };
+    return { plot: windowPlot, start, all: plot, windowLen, slots: Math.max(1, windowLen) };
   }, [
     liveSeries.candles,
     kind,
@@ -1738,7 +1756,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     windowCount,
     offset,
     replayOn,
-    replayStep,
+    replayAt,
     syncFollow,
     syncWindow?.start,
     syncWindow?.end,
@@ -2276,14 +2294,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   useEffect(() => {
     if (!replayPlaying || !replayOn) return;
     const id = setInterval(() => {
-      setReplayStep((s) => {
-        const max = sourceRef.current.windowLen;
-        if (s >= max) {
-          setReplayPlaying(false);
-          return max;
-        }
-        return s + 1;
-      });
+      if (!stepReplayRef.current(1)) setReplayPlaying(false);
     }, 450);
     return () => clearInterval(id);
   }, [replayPlaying, replayOn]);
@@ -4746,7 +4757,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       // الإزاحة 8 شموع أبعد من المرسوم، فالسحبة التالية/› تمرّ بمنطقة ميتة لا يتحرّك فيها الشارت.
       const maxOffset = Math.max(0, source.all.length - 10);
       const nextOffset = Math.max(
-        0,
+        replayMinOffsetNow(),
         Math.min(maxOffset, panStartOffset.current + requestedBars)
       );
       const appliedBars = nextOffset - panStartOffset.current;
@@ -4775,10 +4786,43 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // (لبنات أقلّ بكثير من الشموع) يدفع ‹ الإزاحة أبعد من طول السلسلة فيفرغ الشارت كلّه ولا
   // يعيده إلا عدّة نقرات › عمياء. وسلسلة أقصر من 10 كانت تعطي إزاحة سالبة. ولم يكن الزرّ
   // ينشر نافذته بالتخطيط الرباعي كما يفعل السحب.
+  // أثناء الإعادة لا تتعدّى النافذة الشمعة المقطوعة نحو الحيّ — السحب و‹ › يقفان عندها (`replayMinOffset`).
+  const replayMinOffsetNow = useCallback(() => {
+    if (!replayOnRef.current) return 0;
+    const src = sourceRef.current;
+    return replayMinOffset(src.all.length, windowCountRef.current, src.start + src.plot.length - 1);
+  }, []);
+
+  /** خطوة إعادة ±1 شمعة؛ النافذة تتبع القطع حين يخرج منها. `false` = لا شمعة بعدها (الحيّة) أو قبلها. */
+  const stepReplay = useCallback(
+    (dir: 1 | -1): boolean => {
+      const src = sourceRef.current;
+      const bars = src.all as TimeBar[];
+      if (!replayOnRef.current || !bars.length) return false;
+      const times = bars.map((b) => candleTimeSec(barTime(b)));
+      const cut = src.start + src.plot.length - 1;
+      const t = times[Math.max(0, Math.min(times.length - 1, cut))]!;
+      // لبنات Renko بزمن واحد تُعبَر معاً (وإلا علقت الخطوة على لبنة زمنها زمن المقطوعة).
+      const target = dir > 0 ? firstAfter(times, t) : lastBefore(times, t);
+      if (target < 0 || target >= times.length) return false;
+      const newCut = lastAtOrBefore(times, times[target]!);
+      const nextOffset = replayFollowOffset(times.length, windowCountRef.current, offsetRef.current, newCut);
+      if (nextOffset !== offsetRef.current) {
+        offsetRef.current = nextOffset;
+        setOffset(nextOffset);
+      }
+      setReplayAt(times[target]!);
+      return true;
+    },
+    []
+  );
+  const stepReplayRef = useRef(stepReplay);
+  stepReplayRef.current = stepReplay;
+
   const panByButton = useCallback(
     (bars: number) => {
       const maxOffset = Math.max(0, sourceRef.current.all.length - 10);
-      const next = Math.max(0, Math.min(maxOffset, offsetRef.current + bars));
+      const next = Math.max(replayMinOffsetNow(), Math.min(maxOffset, offsetRef.current + bars));
       if (next === offsetRef.current) return;
       offsetRef.current = next;
       setOffset(next);
@@ -6398,8 +6442,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               ? tr.mcReplayEndedOnSwitch
               : replayOn
               ? tr.mcReplayReadout
-                  .replace('{n}', String(source.plot.length))
-                  .replace('{total}', String(source.windowLen))
+                  .replace('{n}', String(source.start + source.plot.length))
+                  .replace('{total}', String(source.all.length))
               : tool === 'select'
                 ? selectedId
                   ? selectedSpan?.tool === 'note'
@@ -6497,7 +6541,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 setReplayOn((on) => {
                   const next = !on;
                   if (next) {
-                    setReplayStep(12);
+                    // البداية: الشمعة 12 من النافذة الحالية كما كانت، مرساةً بزمنها.
+                    const src = sourceRef.current;
+                    const bars = src.all as TimeBar[];
+                    const at = bars[Math.min(bars.length - 1, src.start + 11)];
+                    setReplayAt(at ? candleTimeSec(barTime(at)) : null);
                     setReplayPlaying(false);
                   } else {
                     setReplayPlaying(false);
@@ -6517,7 +6565,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     styles.zoomBtn,
                     pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                   ]}
-                  onPress={() => setReplayStep((s) => Math.max(1, s - 1))}
+                  onPress={() => stepReplay(-1)}
                 >
                   <Text style={styles.zoomText}>-1</Text>
                 </Pressable>
@@ -6543,9 +6591,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     styles.zoomBtn,
                     pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                   ]}
-                  onPress={() =>
-                    setReplayStep((s) => Math.min(source.windowLen, s + 1))
-                  }
+                  onPress={() => stepReplay(1)}
                 >
                   <Text style={styles.zoomText}>+1</Text>
                 </Pressable>
