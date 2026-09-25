@@ -19,6 +19,7 @@ import {
   liveEntryForStop,
   liveEntryQuote,
   liveEntryOrphaned,
+  journalDraftTyped,
   liveFillStillValid,
   closedElsewhere,
   liveStopChip,
@@ -949,6 +950,16 @@ console.log('tradePlan exitPreview selftest OK');
 }
 console.log('tradePlan journalSymbol index-suffix selftest OK');
 
+// ---- journalDraftTyped: وقف/هدف/حجم مكتوب بلا دخول يمنع تبديل الرمز مع الشارت ----
+{
+  assert.equal(journalDraftTyped(['', '', '', '', '']), false);
+  assert.equal(journalDraftTyped(['  ', '', undefined, null, '']), false);
+  assert.equal(journalDraftTyped(['', '', '', '1.0820', '']), true); // وقف وحده
+  assert.equal(journalDraftTyped(['', '', '', '', '1.0900']), true); // هدف وحده
+  assert.equal(journalDraftTyped(['', '', '0.50', '', '']), true); // حجم وحده
+  assert.equal(journalDraftTyped(['', '1.09', '', '', '']), true); // خروج وحده
+  assert.equal(journalDraftTyped(['1.085', '', '', '', '']), true); // الدخول كما كان
+}
 // ---- journalStats: pnl نصّاً فارغاً ليس تعادلاً (Number('') = 0) ----
 {
   const st = journalStats([

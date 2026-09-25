@@ -96,6 +96,7 @@ import {
   plainStopText,
   openQuotesRefreshDue,
   computedPriceText,
+  journalDraftTyped,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
@@ -392,12 +393,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
     }
   }, [loadOpenQuotes]);
 
-  // تبديل زوج الشارت يُبدّل رمز التسجيل — لكن ليس وسط تسجيل صفقة مكتوبة (سعر دخول مكتوب لرمز آخر
-  // كان سيُسجَّل تحت الرمز الجديد).
+  // تبديل زوج الشارت يُبدّل رمز التسجيل — لكن ليس وسط تسجيل صفقة مكتوبة (دخول/خروج/حجم/وقف/هدف مكتوب لرمز آخر
+  // كان سيُسجَّل تحت الرمز الجديد) — `journalDraftTyped`.
   const entryRef = useRef(entry);
   entryRef.current = entry;
+  const draftRef = useRef<string[]>([]);
+  draftRef.current = [entry, exit, size, sl, tp];
   useEffect(() => {
-    if (defaultSymbol && entryRef.current.trim() === '') setSymbol(defaultSymbol);
+    if (defaultSymbol && !journalDraftTyped(draftRef.current)) setSymbol(defaultSymbol);
   }, [defaultSymbol]);
 
   /** سعر الدخول بنقرة: المتداول يسجّل الصفقة لحظة فتحها غالباً. Ask للشراء وBid للبيع إن توفّرا (ما ينفَّذ
