@@ -120,6 +120,8 @@ export type Vote = {
   ts: string;
   /** صوت المستخدم الحالي على الفكرة (null/غائب = لم يصوّت أو غير مسجّل؛ باك-إند أقدم لا يرسله) */
   my_choice?: 'agree' | 'disagree' | null;
+  /** فكرة المستخدم الحالي نفسه (backend-r4؛ المجهول دائماً false؛ باك-إند أقدم لا يرسله) */
+  mine?: boolean;
 };
 
 export type NewsItem = {

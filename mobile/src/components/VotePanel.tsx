@@ -23,7 +23,8 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
   /** شرط أبل 1.2: صف «إبلاغ/حظر» مفتوح لفكرة واحدة (زر ⋯)، وأفكار المحظورين محلياً تُخفى */
   const [actionFor, setActionFor] = useState<string | null>(null);
   const { blocked, isBlocked, unblockAll } = useBlockedUsers();
-  const visible = votes.filter((v) => !isBlocked(v.author));
+  /** فكرة المتداول نفسه لا تُخفى وإن حظر اسماً مطابقاً لاسمه (backend-r4 `mine`، كالدردشة) */
+  const visible = votes.filter((v) => v.mine === true || !isBlocked(v.author));
 
   /** نشر فكرة جديدة: نموذج قابل للطي — يستخدم POST /api/votes الموجود أصلاً بالباك-إند
    * (VoteCreate/db.create_vote) لكنه لم يكن مستخدَماً من أي واجهة — أكبر فجوة نمو موثَّقة
@@ -397,14 +398,16 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                   <View style={[styles.badge, { backgroundColor: buy ? colors.bull : colors.bear }]}>
                     <Text style={styles.badgeText}>{buy ? t.dirBuy : t.dirSell}</Text>
                   </View>
-                  <ModerationToggle
-                    open={actionFor === v.id}
-                    onPress={() => setActionFor((cur) => (cur === v.id ? null : v.id))}
-                    label={t.modIdeaOptionsA11y}
-                  />
+                  {v.mine !== true ? (
+                    <ModerationToggle
+                      open={actionFor === v.id}
+                      onPress={() => setActionFor((cur) => (cur === v.id ? null : v.id))}
+                      label={t.modIdeaOptionsA11y}
+                    />
+                  ) : null}
                 </View>
               </View>
-              {actionFor === v.id ? (
+              {actionFor === v.id && v.mine !== true ? (
                 <ModerationActions
                   kind="vote"
                   targetId={v.id}
