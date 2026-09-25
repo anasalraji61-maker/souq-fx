@@ -433,3 +433,11 @@
 بوابة البناء خضراء (tsc 0) قبل الـcommit.
 
 **إعادة تحقّق بنود المهمّة بالكود (بعد 2628416):** «₴» بتعليقين فقط (`ToolsScreen:88`، `MatrixEdgeRails:149`)؛ «درجة الاتفاق» بتعليقات فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده (`window.confirm`/`window.alert` بالويب، غيابه ⇒ لا تنفيذ)؛ `useMultiLiveTicks` يرفض المتجمّد (`acceptTick`، `TICK_STALE_MS`)؛ إعادة الجولة `AccountScreen:221-233`؛ `Math.random` خارج chart = `api.ts:45` (UUID). حالة الاختيار والكردية: لم يتغيّر ملف بنطاقي منذ مسح AST بتشغيل 34.
+
+**إضافة — backend-r37** (صفّ وصل بـpull أثناء التشغيل):
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| c0d198e | `levels_basis.unavailable` بسبب لا نعرفه (`atr_exceeds_price`) تحت «شراء/بيع»: `IndicatorForecastPanel` كان يطبع «لا اتجاه غالب»، و`AnalystsPanel`/`SocialConsensusPanel` «الآراء متضاربة أو محايدة» — الآن لا سطر (نصّ المحايد للمحايد فقط). اللوح يستعمل `levelsUnavailableText` المشترك بدل سلسلة الشروط المنسوخة. النصّ الخاص يحتاج مفتاحاً بـ`i18n` (نطاق launch) ⇒ صفّ ui35 → launch؛ الربط سطر `case` واحد بعده | backend-r37 |
+
+بوابة البناء خضراء (tsc 0) قبل الـcommit.
