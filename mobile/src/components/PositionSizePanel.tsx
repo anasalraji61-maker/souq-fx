@@ -468,7 +468,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const slPoints = slPipsInPoints(slPips);
   /**
    * «€40» بحساب دولار وحدها مرفوضة: المبلغ مفهوم والعملة ليست عملة الحساب (`moneyInOtherCurrency`) ⇒ «…: عملة الحساب USD» بدل
-   * «رقم غير مفهوم» (launch84). بالمفتاح القائم `riskCalcAccountCcy` — اسم الشريحة التي يغيّرها أو العملة التي يكتب بها.
+   * «رقم غير مفهوم» (launch84). `riskCalcOtherCcyHint` (launch) يقول ماذا يفعل: يكتبه بعملة الحساب أو يغيّر الشريحة.
    */
   const onlyRiskOtherCcy =
     moneyInOtherCurrency(riskPct, moneyCcy) &&
@@ -486,7 +486,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       : slPoints && onlySlBad
       ? t.riskCalcSlPointsHint.replace('{value}', () => slPoints.value).split('{pips}').join(slPoints.pips)
       : onlyRiskOtherCcy
-      ? `${badFieldsText}: ${t.riskCalcAccountCcy} ${moneyCcy}`
+      ? t.riskCalcOtherCcyHint
+          .replace('{field}', () => shortLabel(t.riskCalcRiskPct))
+          .replace('{value}', () => riskPct.trim())
+          .split('{ccy}')
+          .join(moneyCcy)
       : misplacedArabicThousandsSign(balanceText, { amount: true }) ||
         misplacedArabicThousandsSignInRisk(riskPct, balanceNum, moneyCcy) ||
         misplacedArabicThousandsSign(slPips, { unit: 'pip' }) ||
@@ -526,9 +530,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       ? null
       : moneyInOtherCurrency(commission, moneyCcy)
         ? // «€7» بحساب دولار: مبلغ مفهوم بعملة أخرى — تُقال عملة الحساب لا «رقم غير مفهوم» (كالمخاطرة، launch84)
-          `${t.riskCalcBadFieldValue
+          t.riskCalcOtherCcyHint
             .replace('{field}', () => shortLabel(t.riskCalcCommission).split(/[,،]/)[0])
-            .replace('{value}', () => commission.trim())}: ${t.riskCalcAccountCcy} ${moneyCcy}`
+            .replace('{value}', () => commission.trim())
+            .split('{ccy}')
+            .join(moneyCcy)
         : misplacedArabicThousandsSign(commission, { amount: true })
         ? t.arabicThousandsSignHint
         : t.invalidNumberHint;
