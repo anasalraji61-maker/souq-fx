@@ -25,6 +25,7 @@ import {
   parseLeverage,
   leverageOutOfRange,
   leverageAmbiguousThousands,
+  savedRiskMoney,
   riskOverBalance,
   MAX_LEVERAGE,
   requiredMargin,
@@ -172,6 +173,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             centBalance?: string;
             smallSuffix?: string;
             riskPct?: string;
+            riskCcy?: string;
             account?: string;
             leverage?: string;
             commission?: string;
@@ -193,6 +195,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             setCommission(commissionAcrossModes(p.commission, saved, now));
           }
           if (typeof p.riskPct === 'string') setRiskPct(p.riskPct);
+          // «USC 1000» محفوظة من «EURUSDc» واللوحة تفتح على زوجٍ عادي (الرمز لا يُحفظ): مؤثّر تبدّل العملة يقلبها نسبةً
+          // من عملتها ورصيدها المحفوظين — لا «رقم غير مفهوم» على ما كتبته الحاسبة (`savedRiskMoney`)
+          const riskMoney = savedRiskMoney(p);
+          if (riskMoney) prevMoneyRef.current = riskMoney;
           if (loadedAccount) setAccount(loadedAccount);
         }
       } catch {
@@ -256,6 +262,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         centBalance,
         smallSuffix,
         riskPct,
+        // عملة المبلغ إن كُتبت المخاطرة مالاً — `savedRiskMoney` عند الفتح
+        riskCcy: moneyCcy,
         account,
         leverage,
         commission,
@@ -264,7 +272,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     ).catch(() => {
       /* ignore */
     });
-  }, [balance, centBalance, smallSuffix, riskPct, account, leverage, commission, commissionKind]);
+  }, [balance, centBalance, smallSuffix, riskPct, account, leverage, commission, commissionKind, moneyCcy]);
   const balanceText = cent ? centBalance : balance;
   const setBalanceText = cent ? setCentBalance : setBalance;
   /** لاحقة الوضع الحالي (null = حساب عادي) */

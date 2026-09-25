@@ -549,6 +549,36 @@ export function toggleRiskUnit(raw: string, balance: number, account: string): s
 }
 
 /**
+ * عملة ورصيد **المبلغ** المحفوظ بخانة المخاطرة (`riskPct` = «USC 1000»/«USD 50»)، ليقلبه مؤثّر تبدّل العملة بالحاسبة
+ * (`toggleRiskUnit`) نسبةً حين تفتح اللوحة بوضعٍ آخر. `null` = نسبة (معناها واحد بكل وضع) أو غير مفهومة.
+ *
+ * لماذا: الرمز لا يُحفظ، فـ«USC 1000» من «EURUSDc» تعود تحت «EURUSD» بحساب دولار — و`parseRiskInput` بالدولار يرفضها
+ * فلا لوت و«رقم غير مفهوم» على ما كتبته الحاسبة نفسها (وشريحة العملة معطّلة). `riskCcy` يُحفظ معها منذ هذا الإصلاح.
+ */
+export function savedRiskMoney(saved: {
+  riskPct?: unknown;
+  riskCcy?: unknown;
+  balance?: unknown;
+  centBalance?: unknown;
+  account?: unknown;
+}): { ccy: string; balance: number } | null {
+  if (typeof saved.riskPct !== 'string') return null;
+  const bal = (v: unknown) => (typeof v === 'string' ? parseDecimal(v, { amount: true }) ?? NaN : NaN);
+  const ctx = (ccy: string) => ({ ccy, balance: bal(ccy === 'USC' ? saved.centBalance : saved.balance) });
+  const account = typeof saved.account === 'string' && (ACCOUNT_CCYS as string[]).includes(saved.account) ? saved.account : 'USD';
+  // `riskCcy` أولاً؛ ثم السنت فعملة الحساب — نسخة أقدم بلا `riskCcy`، أو حفظٌ جرى قبل أن يُقلب المبلغ (بلا رصيد) بعملة الوضع الجديد
+  const first =
+    typeof saved.riskCcy === 'string' && (saved.riskCcy === 'USC' || (ACCOUNT_CCYS as string[]).includes(saved.riskCcy))
+      ? [ctx(saved.riskCcy)]
+      : [];
+  const tries = [...first, ctx('USC'), ctx(account)];
+  for (const c of tries) {
+    if (parseRiskInput(saved.riskPct, c.balance, c.ccy)?.amount != null) return c;
+  }
+  return null;
+}
+
+/**
  * المخاطرة **الفعلية** لحجم لوت معيّن على وقفٍ معيّن: بعملة الحساب وبنسبةٍ من الرصيد.
  *
  * لماذا: حين تخرج الحاسبة «أقل من أصغر لوت» كانت تقول كم **أراد** المتداول أن يخاطر (0.50 USD)

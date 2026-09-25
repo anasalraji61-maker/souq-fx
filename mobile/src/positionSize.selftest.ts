@@ -63,6 +63,7 @@ import {
   misplacedArabicThousandsSignInRisk,
   leverageOutOfRange,
   leverageAmbiguousThousands,
+  savedRiskMoney,
   riskOverBalance,
   centAccountSymbol,
   smallContractPair,
@@ -2141,3 +2142,30 @@ console.log('positionSize riskIsHigh selftest OK');
   assert.equal(quoteSpreadPips('US30', 39000, 39002), null);
 }
 console.log('positionSize quoteSpreadPips selftest OK');
+
+// ---- مخاطرةٌ محفوظة مالاً تعود بوضعٍ آخر: عملتها ورصيدها لتُقلب نسبةً لا «رقم غير مفهوم» ----
+{
+  // «USC 1000» من EURUSDc (رصيد سنت 100,000) واللوحة تفتح على EURUSD بحساب دولار: الدولار يرفضها
+  assert.equal(parseRiskInput('USC 1000', 10000, 'USD'), null);
+  const usc = savedRiskMoney({ riskPct: 'USC 1000', riskCcy: 'USC', balance: '10000', centBalance: '100000', account: 'USD' });
+  assert.deepEqual(usc, { ccy: 'USC', balance: 100000 });
+  // ما يفعله مؤثّر تبدّل العملة بها: 1% — وبرصيد الدولار 10,000 وقف 20 pip EURUSD = 0.50 lot
+  assert.equal(toggleRiskUnit('USC 1000', usc!.balance, usc!.ccy), '1');
+  // نسخة قديمة بلا riskCcy: تُجرَّب بالسنت ثم بعملة الحساب
+  assert.deepEqual(savedRiskMoney({ riskPct: 'USC 1000', centBalance: '100000', account: 'USD' }), { ccy: 'USC', balance: 100000 });
+  assert.deepEqual(savedRiskMoney({ riskPct: 'EUR 50', balance: '5000', account: 'EUR' }), { ccy: 'EUR', balance: 5000 });
+  assert.deepEqual(savedRiskMoney({ riskPct: '$50', balance: '5000', account: 'USD' }), { ccy: 'USD', balance: 5000 });
+  // riskCcy حُفظ قبل القلب (بلا رصيد) بعملة الوضع الجديد: لا يضيع
+  assert.deepEqual(savedRiskMoney({ riskPct: 'USC 1000', riskCcy: 'USD', centBalance: '', account: 'USD' })!.ccy, 'USC');
+  // «USD 50» من حساب عادي واللوحة تفتح على رمز سنت ⇒ عملتها USD ورصيدها العادي
+  const usd = savedRiskMoney({ riskPct: 'USD 50', riskCcy: 'USD', balance: '5000', centBalance: '100000', account: 'USD' });
+  assert.deepEqual(usd, { ccy: 'USD', balance: 5000 });
+  assert.equal(toggleRiskUnit('USD 50', usd!.balance, usd!.ccy), '1');
+  // نسبة (معناها واحد بكل وضع)، فارغة، غير مفهومة، عملة غريبة، أو ليست نصاً ⇒ null (لا قلب)
+  for (const riskPct of ['1', '0.5%', '', 'abc', 'GBP 50', 5]) {
+    assert.equal(savedRiskMoney({ riskPct, riskCcy: 'USD', balance: '10000', account: 'USD' }), null, String(riskPct));
+  }
+  // حسابٌ محفوظ غير معروف ⇒ الدولار
+  assert.deepEqual(savedRiskMoney({ riskPct: 'USD 50', account: 'XXX', balance: '1000' }), { ccy: 'USD', balance: 1000 });
+}
+console.log('positionSize savedRiskMoney selftest OK');
