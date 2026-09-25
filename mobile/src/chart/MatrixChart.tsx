@@ -57,6 +57,7 @@ import {
   type AxisTap,
 } from './axisDrag';
 import { barCloseCountdown } from './barCountdown';
+import { axisTagFontSize } from './axisTagFont';
 import { BarCountdown } from './BarCountdown';
 import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime, stepCrossBar } from './crossAnchor';
 import { indicatorBase, indicatorRangeBase, trimIndicator, trimIndicatorRange } from './indicatorWindow';
@@ -542,6 +543,8 @@ const SESSION_COLOR: Record<SessionId, string> = {
 const PIVOT_IDS = new Set<string>(['pivots', 'fibPivots', 'camarilla', 'woodiePivots', 'demarkPivots', 'cpr', 'pdhl']);
 const TIME_AXIS_HEIGHT = 48;
 const CROSS_TIME_TAG_W = 104;
+// عرض نصّ وسم داخل محور السعر: المحور − هامشا الوسم (2+2) − حشوته (2+2).
+const AXIS_TAG_TEXT_W = PRICE_AXIS_WIDTH - 8;
 /** فجوة دنيا بين علامتي زمن متجاورتين، ومقاس علامة السعر وفجوتها — راجع `axisTicks.ts`. */
 const TIME_LABEL_GAP = 6;
 const PRICE_LABEL_H = 14;
@@ -6269,9 +6272,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       )
     : '';
   // العرض من طول النصّ: اسم اليوم («الأربعاء»، «چوارشەممە») وسنة شمعة قديمة يطيلان الوسم، وبالعرض
-  // الثابت كانت الساعة تُقصّ «…». ~5.8px للحرف بخطّ 9 + الحشوة، لا أضيق من القديم ولا أعرض من اللوح.
+  // الثابت كانت الساعة تُقصّ «…». ~6.6px للحرف بخطّ 11 + الحشوة، لا أضيق من القديم ولا أعرض من اللوح.
   const crossTimeTagW = Math.min(
-    Math.max(CROSS_TIME_TAG_W, Math.ceil(crossTimeText.length * 5.8) + 12),
+    Math.max(CROSS_TIME_TAG_W, Math.ceil(crossTimeText.length * 6.6) + 12),
     Math.max(CROSS_TIME_TAG_W, chartPlotW)
   );
   const crossTimeTagLeft = crossCandle
@@ -6284,6 +6287,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const crossPriceOff = crossPrice != null ? offAxisSide(crossY, chartPlotH) : null;
   const offMark = (side: 'above' | 'below' | null) =>
     side === 'above' ? '▲ ' : side === 'below' ? '▼ ' : '';
+  // وسما السعر الحيّ والتقاطع بحجم علامات المحور (11) — كانا 9، أصغر من الأرقام الخافتة حولهما.
+  const tagFont = (text: string) => {
+    const fontSize = axisTagFontSize(text, AXIS_TAG_TEXT_W);
+    return { fontSize, lineHeight: fontSize + 3 };
+  };
+  const currentTagLabel =
+    offMark(currentPriceOff) +
+    (percentBase != null && percentBase > 0
+      ? formatScalePercent((currentPrice / percentBase - 1) * 100)
+      : fmtPrice(currentPrice));
 
   // سلسلة بلا شموع (`candles: []` — DXY بعد backend-r19): المدى Infinity/−Infinity ⇒ المحور يطبع «NaN» مكرَّراً،
   // ووسم السعر 0.000، ونقرة أداة الخطّ الأفقي تحفظ رسماً بسعر null. لا شارت يُرسم: إشعار المزوّد إن كانت السلسلة
@@ -9426,11 +9439,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               { top: currentTagTop, minHeight: currentTagH, backgroundColor: currentDirColor },
             ]}
           >
-            <Text style={[styles.currentPriceText, { color: currentTagInk }]}>
-              {offMark(currentPriceOff)}
-              {percentBase != null && percentBase > 0
-                ? formatScalePercent((currentPrice / percentBase - 1) * 100)
-                : fmtPrice(currentPrice)}
+            <Text style={[styles.currentPriceText, { color: currentTagInk }, tagFont(currentTagLabel)]}>
+              {currentTagLabel}
             </Text>
             {showCountdown && lastRawBar ? (
               <BarCountdown
@@ -9449,7 +9459,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               pointerEvents="none"
               style={[styles.selectionPriceTag, styles.overlayPriceTag, { top: t.top, backgroundColor: t.color }]}
             >
-              <Text style={[styles.crossTagText, { color: tagTextColor(t.color) }]}>{fmtPrice(t.price)}</Text>
+              <Text style={[styles.crossTagText, { color: tagTextColor(t.color) }, tagFont(fmtPrice(t.price))]}>
+                {fmtPrice(t.price)}
+              </Text>
             </View>
           ))}
           {lockedHint && selectedLocked ? (
@@ -9469,7 +9481,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   { top: t.top, borderColor: selectedDrawing?.color ?? accent },
                 ]}
               >
-                <Text style={[styles.crossTagText, { color: selectedDrawing?.color ?? accent }]}>
+                <Text style={[styles.crossTagText, { color: selectedDrawing?.color ?? accent }, tagFont(fmtPrice(t.price))]}>
                   {fmtPrice(t.price)}
                 </Text>
               </View>
@@ -9486,13 +9498,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   },
                 ]}
               >
-                <Text style={styles.crossTagText}>{fmtPrice(t.price)}</Text>
+                <Text style={[styles.crossTagText, tagFont(fmtPrice(t.price))]}>{fmtPrice(t.price)}</Text>
               </View>
             )
           )}
           {!hidePriceLabels && crossPrice != null && crossTagTop != null ? (
           <View pointerEvents="none" style={[styles.crossPriceTag, { top: crossTagTop }]}>
-            <Text style={styles.crossTagText}>
+            <Text style={[styles.crossTagText, tagFont(offMark(crossPriceOff) + fmtPrice(crossPrice))]}>
               {offMark(crossPriceOff)}
               {fmtPrice(crossPrice)}
             </Text>
@@ -9581,7 +9593,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   { width: crossTimeTagW, left: crossTimeTagLeft ?? 0 },
                 ]}
               >
-                <Text style={styles.crossTagText} numberOfLines={1}>
+                <Text style={[styles.crossTagText, styles.crossTimeText]} numberOfLines={1}>
                   {crossTimeText}
                 </Text>
               </View>
@@ -13520,6 +13532,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'monospace',
   },
+  crossTimeText: { fontSize: 11, lineHeight: 14 },
   crossPipsText: {
     ...numeric,
     color: '#041514',
