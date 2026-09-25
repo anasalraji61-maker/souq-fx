@@ -290,13 +290,14 @@
 **إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط (`MatrixEdgeRails:149`، `ToolsScreen:88`)؛ `Alert.alert` داخل `chart/confirmDestructive.ts` فقط (الويب `window.confirm`/رفض عند غيابه؛ حذف الحساب `AccountScreen:166` عبره)؛ «درجة الاتفاق» أُزيلت (`AnalystsPanel:129`، `SocialConsensusPanel:234`)؛ الجولة قابلة للإعادة (`AccountScreen:235`)؛ التيك المتجمّد يُرفض (`useMultiLiveTicks:75` `acceptTick`). مسح AST جديد لكل `Pressable`/`Touchable*` بملفاتي بنمط `styles.*On/Active/Sel/Current`: 40 تعلن الحالة، الوحيد بلا `accessibilityState` = `AlertsPanel:891` `useCurrent` (زرّ «السعر الحالي»، ليس اختياراً — إيجابي كاذب). الكردية: السلاسل العربية غير التعليقية الباقية بملفاتي = `CommissionPlanPanel:41-57` (مفاتيح مطابقة لنصّ الخادم ⇒ مفاتيح i18n، صحيح)، `MessagesScreen`/`mock.ts`/`api.ts:893` (launch52، أنس)، `academy.ts` (QA27، أنس)، وتعليمات الذكاء الاصطناعي الداخلية (لغة الردّ من `lang`).
 
 ## 2026-09-25 — تشغيل 23
-بوابة البناء خضراء قبل كل commit (tsc 0 أخطاء). صفوف ui بـCOORDINATION: launch124، chart-r50، QA1 (a) جزء ui (`registry.ts`).
+بوابة البناء خضراء قبل كل commit (tsc 0 أخطاء). صفوف ui بـCOORDINATION: launch124، chart-r50، QA1 (a) جزء ui (`registry.ts`)، backend-r27 (وصل أثناء التشغيل).
 
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
 | db4c51f | `LectureClassroom`: مؤثّر الحفظ يتوقّف حين `lectureFallback` ⇒ المحاضرة الاحتياطية (فشل `academyLecture`) لا تكتب 0 فوق موضع الاستئناف المحلي ولا ترسل `saveProgress({completed: true})` عند مقطعها الثاني. تحميل حقيقي لاحق يُنزل العَلَم فيعود الحفظ | launch124 |
 | 962aced | `FocusChartModal`: `compareTag`/`compareNote`/`watchCompare` = `COMPARE_COLOR` من `chart/compare` بدل `infoAccent` (لون SMA 50)؛ `compareNoteWarn` يبقى تحذيراً. + حبّة الرمز بالهاتف (الضغط المطوّل يبدّل المقارنة) تُلحق `focusInComparisonSuffix` بالـlabel كالقائمة الجانبية — كانت المقارنة غير معلنة لقارئ الشاشة هناك | chart-r50 |
 | 1831bc4 | حذف `modules/tools-panels/registry.ts` (غير مستورد منذ `3c27653`)؛ ARCHITECTURE.md يشير لاسترجاعه من git عند النقل الفعلي. الباقي بالصفّ: `motion` (مُبقى عمداً)، `emptySlot` (tools) | QA1 (a) جزء ui |
+| 7375b75 | `/api/calendar` `stale: true` (الخادم أجاب من جلب سابق بعد فشل مصدره): `CalendarPanel` يعرض `newsStale` («تعذّر التحديث — الموعد من تقويم محفوظ»، مترجم بالثلاث) تحت الحالة `ok`؛ `NewsRiskBanner` يعدّه كفشله هو (`cacheServerStale`، دون مسّ `chart/newsRisk.ts`). نوع `api.ts`: `as_of: string \| number`، `stale?: boolean`. لم يُضف «آخر تحديث HH:MM» — يحتاج مفتاح i18n جديداً (launch) | backend-r27 |
 
 ملاحظة: `COMPARE_COLOR` `#FF9800` قريب من `warn` `#F59E0B` — سطر «تعذّرت المقارنة» يتميّز بالخط العريض ونصّه، لا بلونه وحده.
 
