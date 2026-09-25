@@ -56,9 +56,16 @@ function ensureFresh(now: number) {
  * الأقرب لعملاتها كلها، والسطر الثاني يسمّي الرموز التي يمسّها (`openPositionsNewsRisk`). بلا سطر «التقويم غير متاح» هنا —
  * يقوله شريط النموذج مرّة واحدة.
  */
-type Props = { symbol: string; openSymbols?: never } | { symbol?: never; openSymbols: readonly string[] };
+type Props =
+  | { symbol: string; openSymbols?: never; shownSymbol?: never }
+  | {
+      symbol?: never;
+      openSymbols: readonly string[];
+      /** رمز شريطٍ آخر ظاهر بالشاشة نفسها: اللحظة نفسها لا تُعلَن مرّتين — راجع `openPositionsNewsRisk` */
+      shownSymbol?: string;
+    };
 
-export function NewsRiskBanner({ symbol = '', openSymbols }: Props) {
+export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [now, setNow] = useState(() => Date.now());
@@ -103,7 +110,7 @@ export function NewsRiskBanner({ symbol = '', openSymbols }: Props) {
   useEffect(() => {
     setNow(Date.now());
   }, [currencyKey]);
-  const openHit = cache && openSymbols ? openPositionsNewsRisk(openSymbols, cache.events, now) : null;
+  const openHit = cache && openSymbols ? openPositionsNewsRisk(openSymbols, cache.events, now, shownSymbol) : null;
   const hit = openSymbols ? openHit : cache ? nextHighImpact(cache.events, currencies, now) : null;
   const hitDelta = hit ? hit.deltaMs : null;
   // تجديد العدّ **لحظة يتغيّر** لا بساعة من لحظة التركيب — وإلا بقي «بعد 3د» والخبر بعد 2:50، راجع `newsTickDelayMs`

@@ -313,11 +313,16 @@ export function nextHighImpact(
  * عملات كل الرموز معاً (`symbolCurrencies`)، وأقرب حدثٍ بها بقاعدة الشريط نفسها (`nextHighImpact`)، ثم **الرموز التي يمسّها**:
  * التي بين عملاتها عملة الحدث أو عملة خبرٍ قويّ آخر بالدقيقة نفسها (`sameMinuteCurrencyLabel`) — لا كل المفتوحة (USDJPY لا
  * تُذكر تحت خبر يورو). الرموز كما كُتبت (مقصوصة)، بلا تكرار بلا اعتبار لحالة الأحرف، بترتيبها. `null` = لا حدث.
+ *
+ * `shownSymbol` = رمز شريطٍ آخر ظاهر بالشاشة نفسها (نموذج الدفتر، أو الشارت بجانب الرصيف/اللوح): إن كان شريطه يعلن **اللحظة
+ * نفسها** (حدثه بالدقيقة نفسها) وعملاته تشمل كل عملة تحرّك المفتوحة ⇒ `null` — لا تحذيران متطابقان، ولا يُعلَن الخبر مرّتين
+ * لقارئ الشاشة (كلاهما `alert`). خبرٌ آخر، أو عملة تحرّك المفتوحة لا يذكرها ذلك الشريط (GDP إسترليني مع الرواتب ⇒ EURGBP) ⇒ يبقى.
  */
 export function openPositionsNewsRisk(
   symbols: readonly string[],
   events: readonly NewsEvent[],
-  nowMs: number
+  nowMs: number,
+  shownSymbol?: string
 ): { event: NewsEvent; deltaMs: number; currencies: string[]; symbols: string[] } | null {
   const seen = new Set<string>();
   const uniq: { sym: string; ccys: string[] }[] = [];
@@ -333,6 +338,13 @@ export function openPositionsNewsRisk(
   const hit = nextHighImpact(events, currencies, nowMs);
   if (!hit) return null;
   const moving = new Set(sameMinuteCurrencyLabel(events, currencies, hit.event).split('/'));
+  if (shownSymbol) {
+    const shownCcys = symbolCurrencies(shownSymbol);
+    const shown = nextHighImpact(events, shownCcys, nowMs);
+    const sameMoment =
+      shown != null && typeof shown.event.ts === 'number' && Math.abs(shown.event.ts - (hit.event.ts as number)) < 60;
+    if (sameMoment && [...moving].every((c) => shownCcys.includes(c))) return null;
+  }
   return {
     ...hit,
     currencies,

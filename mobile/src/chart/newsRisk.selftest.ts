@@ -723,3 +723,28 @@ console.log('newsRisk more coins selftest OK');
   assert.equal(openPositionsNewsRisk(open, [ev('ECB', 'EUR', 90), nfp], now)!.event.id, 'NFP');
 }
 console.log('newsRisk open positions selftest OK');
+// QA38: شريط المفتوحة لا يكرّر شريطاً ظاهراً يعلن اللحظة نفسها (shownSymbol)
+{
+  const now = 1_800_000_000_000;
+  const ev = (id: string, currency: string, minutes: number): NewsEvent => ({
+    id, title: id, currency, impact: 'High', ts: (now + minutes * 60_000) / 1000,
+  });
+  const nfp = ev('NFP', 'USD', 20);
+  const open = ['EURUSD', 'XAUUSD.m'];
+  // نموذج/شارت EURUSD يعلن الرواتب ⇒ لا شريط ثانٍ
+  assert.equal(openPositionsNewsRisk(open, [nfp], now, 'EURUSD'), null);
+  assert.equal(openPositionsNewsRisk(open, [nfp], now, ' usdjpy '), null);
+  // بلا رمز ظاهر، أو رمزه بلا خبر (EURGBP لا دولار)، أو غير معروف ⇒ يبقى
+  assert.equal(openPositionsNewsRisk(open, [nfp], now, '')!.event.id, 'NFP');
+  assert.equal(openPositionsNewsRisk(open, [nfp], now, 'EURGBP')!.event.id, 'NFP');
+  assert.equal(openPositionsNewsRisk(open, [nfp], now, 'AAPL')!.event.id, 'NFP');
+  // خبر آخر أقرب لعملات المفتوحة (ين قبل الرواتب) والشارت EURUSD يعلن الرواتب ⇒ يبقى
+  const jp = openPositionsNewsRisk(['GBPJPY', 'EURUSD'], [nfp, ev('BoJ', 'JPY', 10)], now, 'EURUSD')!;
+  assert.equal(jp.event.id, 'BoJ');
+  // GDP إسترليني مع الرواتب يحرّك EURGBP المفتوحة، وشريط EURUSD لا يذكر GBP ⇒ يبقى
+  const both = openPositionsNewsRisk(['EURUSD', 'EURGBP'], [nfp, ev('GDP', 'GBP', 20)], now, 'EURUSD')!;
+  assert.deepEqual(both.symbols, ['EURUSD', 'EURGBP']);
+  // وشريط GBPUSD يذكر العملتين ⇒ لا تكرار
+  assert.equal(openPositionsNewsRisk(['EURUSD', 'EURGBP'], [nfp, ev('GDP', 'GBP', 20)], now, 'GBPUSD'), null);
+}
+console.log('newsRisk open positions shownSymbol selftest OK');

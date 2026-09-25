@@ -1281,7 +1281,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         </ScrollView>
       ) : null}
 
-      {openSymbols.length > 0 ? <NewsRiskBanner openSymbols={openSymbols} /> : null}
+      {/* الرمز الذي يعلن شريطه خبره بالشاشة نفسها: بـ`flow` شريط النموذج (إلا عند التعديل — راجع أسفل)، وبالرصيف/اللوح
+          شريط الشارت لرمزه (`defaultSymbol`) — فلا تحذيران متطابقان ولا إعلانان لقارئ الشاشة (QA38) */}
+      {openSymbols.length > 0 ? (
+        <NewsRiskBanner openSymbols={openSymbols} shownSymbol={flow ? (editing ? undefined : symbol.trim()) : defaultSymbol} />
+      ) : null}
       {openRiskLine ? <Text style={[styles.stat, { textAlign: align }]}>{openRiskLine}</Text> : null}
       {stackedLines.map((line) => (
         <Text key={line} style={[styles.planWarn, { textAlign: align }]}>
