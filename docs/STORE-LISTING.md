@@ -70,7 +70,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 أدوات المتداول
 • حاسبة حجم المركز: أدخل رصيدك والمخاطرة (نسبةً أو مبلغاً بعملة حسابك) ووقف الخسارة (بالـpip أو بسعرَي الدخول والوقف) لتعرف حجم اللوت — لحساب عادي أو حساب سنت أو micro — مع أهداف جاهزة بنسبة 1:1 حتى 1:3، وتقدير للهامش الذي يحجزه الوسيط حسب رافعتك، وخانتا سبريد وعمولة اختياريتان تُريانك مخاطرتك وربحك الصافي شاملَين التكاليف — وتنبّهك حين يكون وقفك أضيق من السبريد نفسه.
 • دفتر صفقات تسجّل فيه صفقاتك بنفسك: الربح المحتمل بالمال قبل الدخول، ونتيجة كل صفقة بالـpip والمال تراها قبل أن تحفظها — ولمسة واحدة تغلقها على وقفها أو نقطة التعادل أو هدفها بالضبط — ثم نسبة النجاح والصافي لكل أداة ومتوسط النتيجة بوحدة المخاطرة (R) مقيسةً من الوقف الذي دخلت به ولو حرّكته بعدها.
-• تنبيه قبل الصفقة إن اقترب خبر اقتصادي قوي على عملة الزوج أو المؤشر أو المعدن، وبأسماء الرموز كما يكتبها وسيطك. وإن تعذّر تحميل التقويم يقول لك ذلك صراحةً، فلا تظنّ أن لا خبر.
+• تنبيه بخبر اقتصادي قوي قريب على عملة الزوج أو المؤشر أو المعدن — قبل الصفقة وعلى صفقاتك المفتوحة، بأسماء الرموز كما يكتبها وسيطك. وإن تعذّر تحميل التقويم يقول لك ذلك صراحةً، فلا تظنّ أن لا خبر.
 • «فحص السوق»: فلترة الأزواج بشروط المؤشرات الشائعة.
 • اختبار استراتيجيات بسيطة على البيانات التاريخية — لأغراض تعليمية.
 • مساعد ذكاء اصطناعي يجيب عن أسئلتك في التحليل الفني بلغتك، وتقرير أسبوعي مختصر.
@@ -131,7 +131,7 @@ WATCHLIST & ALERTS
 TRADER TOOLS
 • Position size calculator: enter your balance, risk (percent or amount) and stop loss (in pips, or entry and stop prices) to get your lot size — standard, cent or micro accounts — with one-tap targets from 1:1 to 1:3, an estimate of the margin your broker holds at your leverage, and optional spread and commission so your risk and net profit include costs — and warns when your stop sits inside the spread.
 • A trade journal you fill in yourself: the potential profit in money before you enter, each trade's result in pips and money before you save it — one tap closes it at its stop, breakeven or target — then win rate, net result per instrument and average R, from your entry stop even after trailing it.
-• A heads-up before a trade when high-impact news is close for the pair's, index's or metal's currency — using your broker's symbol names. If the calendar fails to load, it says so.
+• Heads-up when high-impact news nears the pair's, index's or metal's currency — before a trade and on open ones, in your broker's symbol names. If the calendar can't load, it says so.
 • A screener on common indicator conditions.
 • Simple strategy backtests on past data, for learning.
 • An AI assistant for chart questions, in your language, plus a short weekly report.
@@ -204,3 +204,7 @@ The first release of MATRIX, in English, Arabic and Kurdish: multi-chart layouts
 
 > **2026-09-25 (launch 85)**: «ما الجديد» يذكر اللغات الثلاث وحاسبة حجم المركز ودفتر الصفقات (أداتا المتداول الأساسيتان، كلتاهما بالوصف الكامل).
 > العدّ: **ar 187 / en 252** حرفاً — تحت حدّ Google Play لـ«ما الجديد» (500).
+
+> **2026-09-25 (launch 89)**: سطر تنبيه الخبر كان «قبل الصفقة» فقط؛ منذ `a318e43` يظهر أيضاً فوق صفقات الدفتر **المفتوحة** ويسمّي الرموز التي
+> يمسّها ⇒ «قبل الصفقة وعلى صفقاتك المفتوحة» / «before a trade and on open ones». للإنجليزي: «A heads-up» ← «Heads-up»، «with» ← «in»، «fails to load»
+> ← «can't load». العدّ بسكربت: **ar 3997 / en 4000** من 4000 — الإنجليزي على الحدّ بالضبط، فأي إضافة قادمة تحتاج اختصاراً مقابلاً.
