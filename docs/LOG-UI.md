@@ -441,3 +441,14 @@
 | 3b45502 | `levels_basis.unavailable` بسبب لا نعرفه (`atr_exceeds_price`) تحت «شراء/بيع»: `IndicatorForecastPanel` كان يطبع «لا اتجاه غالب»، و`AnalystsPanel`/`SocialConsensusPanel` «الآراء متضاربة أو محايدة» — الآن لا سطر (نصّ المحايد للمحايد فقط). اللوح يستعمل `levelsUnavailableText` المشترك بدل سلسلة الشروط المنسوخة. النصّ الخاص يحتاج مفتاحاً بـ`i18n` (نطاق launch) ⇒ صفّ ui35 → launch؛ الربط سطر `case` واحد بعده | backend-r37 |
 
 بوابة البناء خضراء (tsc 0) قبل الـcommit.
+
+## 2026-09-25 — تشغيل 36
+صفّ ui المفتوح بـCOORDINATION (دورة QA 75) = **ui35** — أُنجز:
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| 3d0784c | `signalDirection.ts:levelsUnavailableText` `case 'atr_exceeds_price'` ⇒ `t.sigLevelsUnavailableAtrWide` (مفتاح launch `3a1b533`) — كان لا سطر تحت «شراء/بيع» بلوح توقّع المؤشرات والمحلّلين والمجتمع (الثلاثة تستعمل الدالّة المشتركة)؛ تعليق `IndicatorForecastPanel` حُدّث | ui35 |
+
+بوابة البناء خضراء (tsc 0) قبل الـcommit. QA75 (`tradePlan.ts` «pip») صفّ tools — لم يُمسّ.
+
+**إعادة تحقّق بنود المهمّة بالكود:** لا `Pressable`/`onPress` جديد بنطاقي منذ مسح AST بتشغيل 34 (`git diff 96ca81c` بلا سطر مضاف منها)؛ الكردية: 1057 مفتاحاً، صفر ناقص، صفر حرف عربي غير سوراني، المطابق للعربي `listSep` («، » علامة مشتركة) فقط؛ «₴» بتعليقين؛ «درجة الاتفاق» بتعليقات؛ `Alert.alert` بتعليقات `AccountScreen:166`/`TradeJournalPanel:1183` واستدعاء `chart/confirmDestructive.ts` وحده؛ `useMultiLiveTicks` ⇐ `acceptTick`؛ إعادة الجولة `AccountScreen:221-233`.
