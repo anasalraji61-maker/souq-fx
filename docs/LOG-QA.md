@@ -684,3 +684,12 @@ QA1 (a) من 12 إلى 2 (`9909b91`؛ grep لكل اسم صفر) — باقٍ `g
 **المراجعة (c — بلا `accessibilityLabel`):** سكربت الدورة 53 على كل `.tsx`: 30 بلا وسم (29 سابقاً)؛ الـ11 في `MatrixChart.tsx` (الملف الوحيد المتغيّر منذ 57 بينها) كلّها بنصّ مرئي مترجم. **لا بند جديد.**
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة بين الملفات.
 **إلحاق:** وصل أثناء الدفع tools 75 (`1dc5ee0`): QA57 منفَّذ (`TradeJournalPanel.tsx:990` `t.journalEditConflict`) ⇒ أُغلق. صفّا tools75a → launch (`newsTimeTbd` grep صفر) وtools75b → ui (`ScreenerMini.tsx:198` `Math.round`) تحقّقتُ أنهما مفتوحان. البناء بعد الدمج أخضر 0.
+
+## 2026-09-25 — الدورة 59
+**البناء:** أخضر 0 (بعد beeb656) — لا إصلاح لازم. **Selftests:** 95/95 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود (5 صفوف):** backend-r14 ← ui (`75a7ba1`، `CalendarPanel.tsx:285 :310`)؛ tools75a ← launch (`2c68c59`) + tools (`4bc21ec`، `NewsRiskBanner.tsx:167`)؛
+tools75b ← ui (`6a58a2b`، `ScreenerMini.tsx:195`)؛ ui10 ← launch (`65700ad`)؛ launch113 ← tools (`4bc21ec`، `newsRisk.ts:365-387`). **مفتوح:** tools76a (`newsTimeTbdTomorrow` grep صفر).
+طلب chart القديم `mcEstimatedTag` (LOG-CHART:3618) منفَّذ. لا طلبات جديدة بسجلات chart/tools/launch/ui/backend غير ما سبق.
+**المراجعة (d — أرقام متناقضة):** `NEWS_HORIZON_MS` 3س = `ROW_SOON_MS`؛ `SOON_MS`/`UNANNOUNCED_SPAN_MS` 24س؛ حجم `None` بالخادم يطابق backend-r15.
+جديد QA59 (d) → ui: `backtest.py:91-92` يُرجع `null` لمتوسط بلا رابح/خاسر (`2b0d3ee`) و`BacktestPanel.tsx:276-280` يفحص `avg_win_pct` فقط ⇒ «/ null%». وتتمّة ui10: حذف `TIME_TBD_COPY` بـ`CalendarPanel.tsx:36`.
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول حقيقي.
