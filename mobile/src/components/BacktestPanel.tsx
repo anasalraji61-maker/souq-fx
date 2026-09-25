@@ -32,6 +32,8 @@ type Stats = {
   costs_included?: boolean;
   /** صفقات خرجت عند الدخول — لا ربح ولا خسارة، خارج `win_rate` (backend-r5)؛ غائب = باك-إند أقدم */
   breakeven_count?: number;
+  /** ربح/خسارة المركز المفتوح بآخر شمعة — خارج كل ما سبق (backend-r10 أ)؛ null = لا مركز، غائب = باك-إند أقدم */
+  open_pnl_pct?: number | null;
 };
 
 type Strategy = 'ma_cross' | 'rsi_reversal' | 'macd_cross' | 'bb_bounce';
@@ -67,7 +69,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<Stats | null>(null);
   const [trades, setTrades] = useState<
-    { side: string; entry: number; exit: number; pnl_pct: number }[]
+    { side: string; entry: number; exit: number; pnl_pct: number; open?: boolean }[]
   >([]);
   const [equity, setEquity] = useState<{ i: number; equity: number }[]>([]);
   /** وضوح الحالة: يعلم المستخدم إذا فشل تشغيل الاختبار الخلفي بدل صمت كامل (نتائج فارغة كأنه لا صفقات) */
@@ -130,6 +132,15 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
 
   const maxEq = Math.max(...equity.map((e) => e.equity), 100);
   const minEq = Math.min(...equity.map((e) => e.equity), 100);
+
+  // المركز المفتوح آخر صفّ بقائمة محدودة الارتفاع ⇒ قد لا يُرى؛ سطر بجانب الإحصاء (التي لا تشمله).
+  const openTrade = trades.find((x) => x.open);
+  const openLine =
+    stats && typeof stats.open_pnl_pct === 'number' && openTrade
+      ? `${openTrade.side === 'short' || openTrade.side === 'sell' ? t.dirSell : t.dirBuy} ${t.journalOpenSuffix}: ${
+          stats.open_pnl_pct >= 0 ? '+' : ''
+        }${stats.open_pnl_pct}%`
+      : null;
 
   return (
     <View style={styles.wrap}>
@@ -276,6 +287,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
               ) : null}
             </>
           ) : null}
+          {openLine ? <Text style={[styles.statLine, { textAlign: align }]}>{openLine}</Text> : null}
         </View>
       ) : null}
       {equity.length > 1 ? (
@@ -312,7 +324,10 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
               <Text style={{ color: isSell ? colors.bear : colors.bull, fontWeight: '700' }}>
                 {isSell ? t.dirSell : t.dirBuy}
               </Text>{' '}
-              {formatPrice(tr.entry, sym)} → {formatPrice(tr.exit, sym)} ·{' '}
+              {/* backend-r10 (أ): المركز الباقي بآخر شمعة لم يُغلق — `exit` آخر إغلاق لا خروج، والنسبة غير محقّقة
+                  وخارج الإحصاء أعلاه ⇒ «(مفتوحة)» كالدفتر بدل «→ سعر» يُقرأ صفقةً منتهية. */}
+              {formatPrice(tr.entry, sym)}
+              {tr.open ? ` ${t.journalOpenSuffix}` : ` → ${formatPrice(tr.exit, sym)}`} ·{' '}
               <Text style={{ color: tr.pnl_pct >= 0 ? colors.bull : colors.bear }}>
                 {tr.pnl_pct >= 0 ? '+' : ''}
                 {tr.pnl_pct}%
