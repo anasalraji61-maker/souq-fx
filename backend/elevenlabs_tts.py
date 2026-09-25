@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 from pathlib import Path
 
 import httpx
@@ -67,6 +68,8 @@ def synthesize(text: str, voice_id: str | None = None) -> Path:
         raise ValueError("empty text")
 
     vid = (voice_id or resolve_voice_id()).strip()
+    if not re.fullmatch(r"[A-Za-z0-9]{10,40}", vid):
+        raise ValueError("bad voice id")
     model = os.getenv("ELEVENLABS_MODEL_ID", "eleven_multilingual_v2")
     digest = hashlib.sha256(f"{vid}|{model}|{clean}".encode("utf-8")).hexdigest()[:32]
     out = CACHE_DIR / f"{digest}.mp3"

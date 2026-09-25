@@ -136,3 +136,38 @@ def test_course_cards_do_not_claim_zero_progress(client):
     cid = client.get("/api/courses").json()["courses"][0]["id"]
     assert client.get(f"/api/courses/{cid}").json()["progress"] is None
     assert all(s["progress"] is None for s in client.get("/api/academy/schools").json()["schools"])
+
+
+# ─── TTS: voice_id يُلصق بمسار ElevenLabs ───────────────────────────────────
+
+@pytest.mark.parametrize("vid", ["../voices/add", "abc/../../user", "x" * 5, "a b c d e f g h"])
+def test_tts_rejects_a_voice_id_that_is_not_a_plain_id(client, monkeypatch, vid):
+    """«../voices/add» كان يصير POST إلى /v1/voices/add بمفتاح الخادم."""
+    import elevenlabs_tts as tts
+
+    monkeypatch.setattr(tts, "configured", lambda: True)
+    sent = []
+    monkeypatch.setattr(tts.httpx, "Client", lambda *a, **k: sent.append(1))
+    r = client.post("/api/academy/tts", json={"text": "hi", "voice_id": vid})
+    assert r.status_code == 422 and not sent
+
+
+def test_synthesize_itself_refuses_a_path_voice_id(monkeypatch):
+    import elevenlabs_tts as tts
+
+    monkeypatch.setattr(tts, "_api_key", lambda: "k")
+    with pytest.raises(ValueError, match="bad voice id"):
+        tts.synthesize("hi", "../voices/add")
+
+
+def test_tts_does_not_echo_the_provider_error_text(client, monkeypatch):
+    import elevenlabs_tts as tts
+
+    monkeypatch.setattr(tts, "configured", lambda: True)
+
+    def boom(text, vid):
+        raise RuntimeError("ElevenLabs 401: account secret-details")
+
+    monkeypatch.setattr(tts, "synthesize", boom)
+    r = client.post("/api/academy/tts", json={"text": "hi"})
+    assert r.status_code == 502 and "secret" not in r.text

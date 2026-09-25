@@ -1639,7 +1639,8 @@ def academy_lecture(school_id: str, lecture_id: str):
 
 class AcademyTtsRequest(BaseModel):
     text: str = Field(min_length=1, max_length=5000)
-    voice_id: str | None = None
+    # يُلصق بمسار ElevenLabs: «../voices/add» كان يصل لنقاط أخرى بمفتاح الخادم (httpx يحلّ «..»)
+    voice_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9]{10,40}$")
 
 
 @app.get("/api/academy/voice/status")
@@ -1663,7 +1664,9 @@ def academy_tts(body: AcademyTtsRequest):
     try:
         path = tts.synthesize(body.text, body.voice_id)
     except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        # نصّ ردّ المزوّد لا يُعاد للعميل المجهول (قد يحمل تفاصيل الحساب) — يُسجَّل فقط
+        print(f"[tts] {exc}")
+        raise HTTPException(status_code=502, detail="tts provider error") from exc
     return {
         "ok": True,
         "audio_url": f"/api/academy/audio/{path.stem}",
