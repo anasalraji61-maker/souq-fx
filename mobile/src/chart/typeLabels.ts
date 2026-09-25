@@ -34,6 +34,7 @@ const KIND_KEYS: Partial<Record<ChartKind, LabelKey>> = {
   renko: 'ctlKindRenko',
   kagi: 'ctlKindKagi',
   pnf: 'ctlKindPnf',
+  lineBreak: 'ctlKindLineBreak',
 };
 
 const TOOL_KEYS: Partial<Record<DrawTool, LabelKey>> = {

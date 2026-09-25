@@ -11,7 +11,13 @@ export type ChartKind =
   | 'renko'
   | 'kagi'
   | 'pnf'
-  | 'range';
+  | 'range'
+  | 'lineBreak';
+
+/** أنواع خانتها ليست زمناً (لبنة/خطّ لا شمعة فريم): لا عدّاد، ولا فواصل أيام/جلسات، ولا تقاطع بالمستقبل. */
+export function isSyntheticKind(k: ChartKind): boolean {
+  return k === 'renko' || k === 'kagi' || k === 'pnf' || k === 'range' || k === 'lineBreak';
+}
 
 export type IndicatorId =
   | 'sma20'
@@ -260,6 +266,7 @@ export const CHART_KINDS: { id: ChartKind; label: string }[] = [
   { id: 'kagi', label: 'Kagi' },
   { id: 'pnf', label: 'P&F' },
   { id: 'range', label: 'نطاق' },
+  { id: 'lineBreak', label: 'Line Break' },
 ];
 
 export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = [

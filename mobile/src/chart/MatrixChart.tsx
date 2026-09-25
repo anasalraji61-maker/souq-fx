@@ -39,6 +39,7 @@ import { renko, measureStats } from './renko';
 import { kagi } from './kagi';
 import { pointFigure } from './pointFigure';
 import { rangeBars } from './range';
+import { lineBreak } from './lineBreak';
 import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
@@ -178,6 +179,7 @@ import {
   type SyntheticBar,
   withVolume,
   seriesHasVolume,
+  isSyntheticKind,
 } from './types';
 import {
   FIB_LEVELS,
@@ -1598,7 +1600,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               ? pointFigure(all)
               : kind === 'range'
                 ? rangeBars(all)
-                : all;
+                : kind === 'lineBreak'
+                  ? lineBreak(all)
+                  : all;
 
     // الظل التابع: اقطع مباشرة حسب نافذة زمن القائد
     if (syncFollow && syncWindow && syncWindow.end > syncWindow.start && plot.length >= 2) {
@@ -1729,7 +1733,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // المقارنة بالزمن الحقيقي (لبنات Renko بزمن شمعتها)، والمفتاح المحفوظ زمن الخانة نفسها.
     // اللبنة الأخيرة (والنافذة عند طرف السلسلة) سارية حتى نهاية الشموع المصدر — وإلا لا خطّ
     // عند تابع Renko والقائد على الشمعة الحيّة حتى تكتمل لبنة.
-    const synthetic = kind === 'renko' || kind === 'kagi' || kind === 'pnf' || kind === 'range';
+    const synthetic = isSyntheticKind(kind);
     const lastCandle = liveSeries.candles[liveSeries.candles.length - 1];
     const atSeriesEnd =
       source.plot.length > 0 && source.plot[source.plot.length - 1] === source.all[source.all.length - 1];
@@ -1775,7 +1779,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // حين لا تغيير فلا رسم ولا كتابة بكل تيك.
   useEffect(() => {
     if (drawings !== loadedDrawings) return;
-    const synthetic = kind === 'renko' || kind === 'kagi' || kind === 'pnf' || kind === 'range';
+    const synthetic = isSyntheticKind(kind);
     const next = anchorDrawings(
       loadedDrawings,
       source.all as { time: number }[],
@@ -2176,7 +2180,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // البصمة من القائمة كما وصلت: ختم نقاط بلا زمن تعديلٌ يستحقّ الكتابة.
     const anchorHere = (d: Drawing[]) => {
       const km = kindRef.current;
-      const synthetic = km === 'renko' || km === 'kagi' || km === 'pnf' || km === 'range';
+      const synthetic = isSyntheticKind(km);
       return anchorDrawings(
         d,
         sourceRef.current.all as { time: number }[],
@@ -2261,7 +2265,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // اللقطة قد تكون من فريم آخر (التاريخ يبقى عبر تبديل الفريم): تُرسى على شموع هذا الفريم
     // قبل العرض، لا إطاراً بمواضع ذلك الفريم.
     const km = kindRef.current;
-    const synthetic = km === 'renko' || km === 'kagi' || km === 'pnf' || km === 'range';
+    const synthetic = isSyntheticKind(km);
     setDrawings(
       anchorDrawings(
         prev,
@@ -4097,7 +4101,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (!candle) return;
     // يمين آخر شمعة (منطقة المستقبل بعد سحب الشارت): الخطّ يتبع الإصبع لا يلتصق بالشمعة الحيّة،
     // ووسم الزمن يُسقَط بخطوة الفريم. لا على Renko/Kagi/P&F/Range — خانتها ليست زمناً.
-    const syntheticX = kind === 'renko' || kind === 'kagi' || kind === 'pnf' || kind === 'range';
+    const syntheticX = isSyntheticKind(kind);
     const ahead = syntheticX ? 0 : Math.max(0, drawIndex(x) - local);
     const raw = priceAtY(y);
     // 14px حول الإصبع بوحدة السعر عند موضعه (يصحّ مع المقياس اللوغاريتمي كذلك).
@@ -4306,7 +4310,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             [from.d],
             sourceRef.current.all as { time: number }[],
             timeframeStepSec(series.timeframe),
-            km === 'renko' || km === 'kagi' || km === 'pnf' || km === 'range',
+            isSyntheticKind(km),
             sourceEndTime()
           );
           const next = translateDrawing(
@@ -5398,7 +5402,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     else if (i > 0) pivotStartX = Math.max(0, (xOf(i - 1) + xOf(i)) / 2);
   }
   const sessionRuns =
-    indicators.includes('sessions') && kind !== 'renko' && kind !== 'kagi' && kind !== 'pnf' && kind !== 'range'
+    indicators.includes('sessions') && !isSyntheticKind(kind)
       ? planSessionRuns(
           source.plot.map((b) => candleTimeSec(b.time)),
           timeframeStepSec(series.timeframe),
@@ -5566,7 +5570,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const lastRawBar = liveSeries.candles[liveSeries.candles.length - 1];
   const countdownStep = timeframeStepSec(series.timeframe);
   const countdownSynthetic =
-    kind === 'renko' || kind === 'kagi' || kind === 'pnf' || kind === 'range';
+    isSyntheticKind(kind);
   const countdownKey = lastRawBar ? `${series.symbol}|${countdownStep}|${lastRawBar.time}` : null;
   const showCountdown =
     !hidePriceLabels &&
@@ -6175,7 +6179,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
         {/* فواصل أيام التداول (17:00 نيويورك) على الفريمات داخل اليوم — راجع `dayBreaks.ts`.
             لا على Renko/Kagi/P&F/Range: خانتها ليست زمناً فالكثافة لا تُقدَّر بالفريم. */}
-        {!hideGrid && kind !== 'renko' && kind !== 'kagi' && kind !== 'pnf' && kind !== 'range'
+        {!hideGrid && !isSyntheticKind(kind)
           ? planDayBreaks(
               source.plot.map((b) => candleTimeSec(b.time)),
               timeframeStepSec(series.timeframe),
@@ -6517,7 +6521,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           kind === 'renko' ||
           kind === 'kagi' ||
           kind === 'pnf' ||
-          kind === 'range') &&
+          kind === 'range' ||
+          kind === 'lineBreak') &&
           source.plot.map((c, i) => {
             const bull = c.close >= c.open;
             const color = bull ? candleBull : candleBear;
