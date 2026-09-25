@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Literal, get_args
 
+import alert_worker
 import indicators as ind
 import twelve_data as market
 
@@ -99,6 +100,12 @@ def run_scan_detailed(
             failed.append(sym.upper())
             continue
         if not raw:
+            failed.append(sym.upper())
+            continue
+        if not alert_worker.series_fresh_enough(meta.get("as_of"), timeframe):
+            # كاش أقدم من شمعة من الفريم (يُخدَم حتى 15د عند 429): تقاطع MA/MACD على 1m «الآن» حدث قبل
+            # ربع ساعة، وRSI «تشبّع» قد زال — كانت النتيجة تُعرض كأنها الحالية. يُعدّ «لم يُفحص» كما
+            # تُتخطّى تنبيهات المؤشر على السلسلة نفسها (`211a419`)، والتطبيق يسمّي الرموز غير المقروءة.
             failed.append(sym.upper())
             continue
         snap = ind.snapshot(raw, fast=fast, slow=slow)

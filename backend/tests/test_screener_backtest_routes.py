@@ -17,6 +17,8 @@
 """
 from __future__ import annotations
 
+import time
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -59,13 +61,34 @@ def client(tmp_path, monkeypatch):
     )
     monkeypatch.setattr(
         market, "fetch_time_series_with_meta",
-        lambda sym, tf, outputsize=180: (_candles(), {"kind": "provider", "as_of": 1000.0}),
+        lambda sym, tf, outputsize=180: (_candles(), {"kind": "provider", "as_of": time.time()}),
     )
     # raise_server_exceptions=False: الـ500 يصل كردّ حقيقي بدل أن يُرمى — وهو ما يُرصد هنا.
     return TestClient(main.app, raise_server_exceptions=False)
 
 
 # ---------------------------------------------------------------- الفحص السريع
+
+
+@pytest.mark.parametrize("tf,age,fresh", [("1m", 600, False), ("15m", 600, True), ("15m", 1200, False), ("1H", 900, True)])
+def test_scan_stale_cache_counts_as_not_scanned(client, monkeypatch, tf, age, fresh):
+    """كاش أقدم من شمعة من الفريم (عند 429 يُخدَم حتى 15د) لا يُعرض تقاطعاً/RSI «الآن»: كان الرمز يُطابق
+    `ma_cross_up` على 1m من سلسلة عمرها 10 دقائق. الآن يُعدّ ضمن `failed` كرمز لم يُقرأ."""
+    as_of = time.time() - age
+    monkeypatch.setattr(
+        market, "fetch_time_series_with_meta",
+        lambda sym, tf_, outputsize=180: (_candles(), {"kind": "cache", "as_of": as_of}),
+    )
+    r = client.post(
+        "/api/screener/run",
+        json={"symbols": ["EURUSD"], "timeframe": tf, "filters": ["bullish", "bearish"]},
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    if fresh:
+        assert body["scanned"] == 1 and body["failed"] == [] and body["count"] == 1
+    else:
+        assert body["scanned"] == 0 and body["failed"] == ["EURUSD"] and body["results"] == []
 
 
 def test_scan_with_valid_body_still_works(client):
@@ -263,7 +286,7 @@ def test_filters_route_publishes_the_rule_the_scan_applies(client, monkeypatch):
 
     candles = [{"time": i, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0} for i in range(100)]
     monkeypatch.setattr(
-        screener_engine.market, "fetch_time_series_with_meta", lambda *a, **k: (candles, {"kind": "provider"})
+        screener_engine.market, "fetch_time_series_with_meta", lambda *a, **k: (candles, {"kind": "provider", "as_of": time.time()})
     )
     monkeypatch.setattr(
         screener_engine.ind, "snapshot",
@@ -276,10 +299,11 @@ def test_filters_route_publishes_the_rule_the_scan_applies(client, monkeypatch):
 def test_scan_hit_says_it_was_served_from_a_stale_cache(monkeypatch):
     """حدّ المزوّد: السلسلة من الكاش (حتى 15د). كانت النتيجة بلا وسم فيُقرأ RSI/التقاطع «الآن»."""
     candles = [{"time": i, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0} for i in range(100)]
+    as_of = time.time() - 300  # كاش عمره 5د على 15m: أحدث من شمعة ⇒ يُعرض موسوماً (الأقدم «لم يُفحص»)
     monkeypatch.setattr(
         screener_engine.market, "fetch_time_series_with_meta",
-        lambda *a, **k: (candles, {"kind": "cache", "as_of": 1234.0, "channel": "twelvedata"}),
+        lambda *a, **k: (candles, {"kind": "cache", "as_of": as_of, "channel": "twelvedata"}),
     )
     monkeypatch.setattr(screener_engine.ind, "snapshot", lambda raw, **k: {"rsi": 20.0, "last": 1.0})
     hit = screener_engine.run_scan_detailed("15m", ["rsi_oversold"], ["EURUSD"])["results"][0]
-    assert hit["data_kind"] == "cache" and hit["as_of"] == 1234.0
+    assert hit["data_kind"] == "cache" and hit["as_of"] == as_of
