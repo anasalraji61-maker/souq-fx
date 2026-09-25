@@ -10,6 +10,7 @@
  */
 import { api, type ChartSeries } from '../api';
 import { isRealQuote } from './dataSource';
+import { isNotOfferedSymbol } from '../providerSymbols';
 
 /** من أين جاء السعر: تقاطع الشارت أو أداة رسم (يغيّر ملاحظة التنبيه فقط). */
 export type ChartAlertOrigin = 'drawing' | 'crosshair';
@@ -36,6 +37,14 @@ export async function createChartAlert(input: {
   refPrice?: number | null;
   note?: string;
 }): Promise<{ condition: 'above' | 'below'; price: number }> {
+  // ui50: الخادم يرفضه بـ422 (backend-r50c) — لا طلب أصلاً. الخطأ بشكل رفض الخادم نفسه ⇒ `isSymbolUnavailableError`
+  // عند المستدعي يعرض `chartNotOfferedTitle` لا الخطأ العام.
+  if (isNotOfferedSymbol(input.symbol)) {
+    throw Object.assign(new Error('symbol unavailable at provider'), {
+      status: 422,
+      detail: 'symbol unavailable at provider',
+    });
+  }
   const price = positive(input.price);
   if (price == null) throw new Error('invalid alert price');
   let ref = positive(input.refPrice);

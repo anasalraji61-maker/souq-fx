@@ -163,6 +163,7 @@ import { nextZigzagDeviation, ZIGZAG_DEVIATION_PCT, zigzagLegendText } from './z
 import { loadZigzagDeviation, saveZigzagDeviation, subscribeZigzagDeviation } from './zigzagPrefs';
 import { paneInlineFits } from './paneHeadFit';
 import { noteBox } from './noteLabel';
+import { isNotOfferedSymbol } from '../providerSymbols';
 import { playSoftClick } from '../audio/playSoftClick';
 import { chartPipSpec } from './pipSpec';
 import { planHiLoLabels } from './hiLoLabels';
@@ -1419,7 +1420,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   persistDrawings = true,
   livePrice = null,
   liveTickSource = null,
-  onCreateAlert,
+  onCreateAlert: onCreateAlertProp,
   initialTool,
   onToolChange,
   onChartInteract,
@@ -1445,6 +1446,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   ref
 ) {
   const { t: tr, lang } = useI18n();
+  // ui50 / backend-r50c: الخادم يرفض التنبيه على رمز لا يقدّمه المزوّد (DXY) بـ422 ⇒ لا زرّ تنبيه أصلاً
+  // (التقاطع، الخطّ الأفقي، المنطقة، خطّ الاتجاه) بدل زرّ ينتهي بخطأ عام.
+  const onCreateAlert = isNotOfferedSymbol(series.symbol) ? undefined : onCreateAlertProp;
   const canPan = syncFollow ? false : (panControls ?? interactive);
   const candleBull = mutedCandles ? 'rgba(34,197,94,0.34)' : colors.bull;
   const candleBear = mutedCandles ? 'rgba(244,63,94,0.34)' : colors.bear;
