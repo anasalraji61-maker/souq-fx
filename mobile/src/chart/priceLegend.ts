@@ -139,12 +139,15 @@ export function activePriceOverlays(indicators: readonly string[]): LegendChip[]
 export const LEGEND_CHIP_PAD = 8;
 /** الفراغ بين شارتين (`marginRight: 6`). */
 export const LEGEND_CHIP_GAP = 6;
-/** عرض مربّع لون واحد بفراغه (`width: 6` + `marginRight: 3`). */
-export const LEGEND_SWATCH_W = 9;
-/** تقدير عرض المحرف بـ`fontSize: 9` ووزن 700 — تقدير متحفّظ (أعلى من المتوسط الفعلي). */
-export const LEGEND_CHAR_W = 5.2;
+/** عرض مربّع لون واحد بفراغه (`width: 8` + `marginRight: 4`). */
+export const LEGEND_SWATCH_W = 12;
+/**
+ * تقدير عرض المحرف بـ`fontSize: 11` ووزن 500/600 — تقدير متحفّظ (أعلى من المتوسط الفعلي). كان المفتاح 9px،
+ * أصغر من علامات المحور (11، DESIGN-PRO §2) وهو ما يقرأ به المتداول قيمة كل متوسط.
+ */
+export const LEGEND_CHAR_W = 6.4;
 /** ما تحجزه «+ن» من العرض حتى لا تُقصّ هي نفسها فيختفي العدد بصمت. */
-export const LEGEND_MORE_W = 24;
+export const LEGEND_MORE_W = 28;
 
 /**
  * عرض شارة بعينها — يعتمد طول اسمها وعدد مربّعات لونها، لا رقماً واحداً للجميع.

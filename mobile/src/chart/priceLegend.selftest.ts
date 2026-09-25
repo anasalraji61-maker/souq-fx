@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
+  LEGEND_CHAR_W,
   LEGEND_MAX_CHIPS,
   LEGEND_MORE_W,
   DIRECTIONAL_OVERLAYS,
@@ -301,7 +302,7 @@ const widthForFirst = (ids: readonly string[], n: number): number =>
   assert.equal(legendValueAt([NaN], 0), null);
   // القيمة تُعرّض الشارة: «SMA 20 1.08532» أعرض من «SMA 20» بسبعة محارف (القيمة + فراغ)
   const chip = { label: 'SMA 20', swatch: ['a'] };
-  assert.ok(Math.abs(legendChipWidth(chip, 7) - legendChipWidth(chip) - 8 * 5.2) < 1e-9);
+  assert.ok(Math.abs(legendChipWidth(chip, 7) - legendChipWidth(chip) - 8 * LEGEND_CHAR_W) < 1e-9);
   assert.equal(legendChipWidth(chip, 0), legendChipWidth(chip));
   // ثلاث طبقات تتّسع بأسمائها بـ200px، ومع قيمها لا ⇒ «+ن» لا قصّ صامت
   const ids = ['sma20', 'sma50', 'ema21'];
