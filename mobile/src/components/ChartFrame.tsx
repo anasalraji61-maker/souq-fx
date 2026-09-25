@@ -505,7 +505,11 @@ export function ChartFrame({
           <Text style={[styles.hint, !rtl && styles.hintLtr]}>{subtitle}</Text>
         ) : null}
         {noRealData ? (
-          <ProviderUnavailableNotice symbol={series.symbol} height={fill ? undefined : chartH} />
+          <ProviderUnavailableNotice
+            symbol={series.symbol}
+            height={fill ? undefined : chartH}
+            showSwitchHint={!!onSymbolChange}
+          />
         ) : (
           <MatrixChart
             series={series}

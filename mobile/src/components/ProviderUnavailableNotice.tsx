@@ -1,9 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import {
-  normalizeProvenance,
-  providerUnavailableReason,
-} from '../chart/dataSource';
-import type { Dict } from '../i18n/locales';
+import { normalizeProvenance, providerUnavailableReason } from '../chart/dataSource';
 import { useI18n } from '../i18n/I18nContext';
 import { colors, spacing } from '../theme';
 
@@ -14,35 +10,24 @@ import { colors, spacing } from '../theme';
  */
 export function seriesHasNoRealData(dataSource: unknown): boolean {
   if (providerUnavailableReason(dataSource) != null) return true;
-  return (
-    normalizeProvenance(dataSource as Parameters<typeof normalizeProvenance>[0])
-      .kind === 'unavailable'
-  );
+  return normalizeProvenance(dataSource as Parameters<typeof normalizeProvenance>[0]).kind === 'unavailable';
 }
 
-/**
- * «{symbol} غير متاح من مزوّد البيانات» — الشطر الأوّل من `originUnavailableProvider` (الثاني «الرسم مولَّد للعرض»
- * لم يعد صحيحاً إذ لا رسم). مؤقّت حتى يضيف launch مفتاحاً مستقلاً (طلب ui16 بـCOORDINATION).
- */
-export function providerUnavailableText(t: Dict, symbol: string): string {
-  return t.originUnavailableProvider
-    .replace('{symbol}', symbol)
-    .split(' — ')[0]
-    .trim();
-}
+type Props = {
+  symbol: string;
+  height?: number;
+  /** الإطار يعرض زرّ الرمز ▾ — نصّ `chartNotOfferedBody` يدلّ عليه، فبلا زرّ يُعرض العنوان وحده. */
+  showSwitchHint?: boolean;
+};
 
-type Props = { symbol: string; height?: number };
-
-export function ProviderUnavailableNotice({ symbol, height }: Props) {
+export function ProviderUnavailableNotice({ symbol, height, showSwitchHint }: Props) {
   const { t } = useI18n();
-  const text = providerUnavailableText(t, symbol);
+  const title = t.chartNotOfferedTitle.replace('{symbol}', symbol);
+  const label = showSwitchHint ? `${title}. ${t.chartNotOfferedBody}` : title;
   return (
-    <View
-      style={[styles.box, height != null && { height }]}
-      accessibilityRole='text'
-      accessibilityLabel={text}
-    >
-      <Text style={styles.text}>{text}</Text>
+    <View style={[styles.box, height != null && { height }]} accessible accessibilityRole="text" accessibilityLabel={label}>
+      <Text style={styles.title}>{title}</Text>
+      {showSwitchHint ? <Text style={styles.body}>{t.chartNotOfferedBody}</Text> : null}
     </View>
   );
 }
@@ -55,11 +40,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-  text: {
+  title: { color: colors.text, fontSize: 13, fontWeight: '700', textAlign: 'center', lineHeight: 19 },
+  body: {
     color: colors.textDim,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 12,
     textAlign: 'center',
-    lineHeight: 19,
+    lineHeight: 18,
+    marginTop: spacing.xs,
+    maxWidth: 320,
   },
 });
