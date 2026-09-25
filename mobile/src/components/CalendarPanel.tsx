@@ -102,7 +102,7 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
   /** لا نجلب قبل قراءة الفلتر المحفوظ — وإلا طلبان متتاليان (الكل ثم المحفوظ) ووميض قائمة خاطئة. */
   const [filtersReady, setFiltersReady] = useState(false);
   /** وضوح الحالة: تمييز "جاري التحميل" و"فشل الاتصال" عن "لا أحداث فعلاً بهذا الفلتر" */
-  const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'ok' | 'error' | 'unavailable'>('loading');
   /** ساعة داخلية للعدّ التنازلي ("بعد 2س 15د") — تُحدَّث كل دقيقة */
   const [now, setNow] = useState(() => Date.now());
 
@@ -165,6 +165,14 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
         })
         .then((r) => {
           if (!alive.on) return;
+          // الخادم يعيد `{events: [], status: 'unavailable'}` حين يفشل المصدر (backend-r1). كانت
+          // المصفوفة الفارغة تُقرأ نجاحاً ⇒ «لا أحداث بهذا الفلتر» يوم خبر قوي. بالتحديث الصامت
+          // نُبقي آخر أحداث معروفة (كفشل الشبكة) لكن السطر يقول إن التقويم غير متاح الآن.
+          if (r.status === 'unavailable') {
+            if (!silent) setEvents([]);
+            setStatus('unavailable');
+            return;
+          }
           setEvents(r.events);
           setStatus('ok');
         })
@@ -300,6 +308,8 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
       ) : visible.length === 0 ? (
         status === 'error' ? (
           <Text style={[styles.empty, { textAlign: align }]}>{t.calendarLoadError}</Text>
+        ) : status === 'unavailable' ? (
+          <Text style={[styles.empty, { textAlign: align }]}>{t.calendarUnavailable}</Text>
         ) : (
           <Text style={[styles.empty, { textAlign: align }]}>{t.calendarEmpty}</Text>
         )
@@ -350,6 +360,10 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
         </Text>
       ) : null}
       {isSample ? <Text style={[styles.sampleNote, { textAlign: align }]}>{t.calSampleBanner}</Text> : null}
+      {/* أحداث محفوظة من جلب سابق والمصدر لا يستجيب الآن — القائمة قد تكون ناقصة */}
+      {status === 'unavailable' && visible.length > 0 ? (
+        <Text style={[styles.sampleNote, { textAlign: align }]}>{t.calendarUnavailable}</Text>
+      ) : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={[styles.filters, rtl && styles.filtersRtl]}>
           {pairLabel ? (

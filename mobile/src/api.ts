@@ -684,6 +684,9 @@ export const api = {
         ts?: number | null;
         sample?: boolean;
       }[];
+      /** backend-r1: 'unavailable' مع `events: []` = المصدر لم يستجب — ليس «لا أحداث». */
+      status?: 'ok' | 'unavailable';
+      as_of?: string;
     }>(`/api/calendar${qs ? `?${qs}` : ''}`);
   },
   marketQuote: (symbol: string) =>
