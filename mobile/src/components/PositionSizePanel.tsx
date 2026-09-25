@@ -537,7 +537,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       : moneyInOtherCurrency(commission, moneyCcy)
         ? // «€7» بحساب دولار: مبلغ مفهوم بعملة أخرى — تُقال عملة الحساب لا «رقم غير مفهوم» (كالمخاطرة، launch84)
           t.riskCalcOtherCcyHint
-            .replace('{field}', () => shortLabel(t.riskCalcCommission).split(/[,،]/)[0])
+            // «Commission “€7”» لا «Optional commission per lot, open + close “€7”» — الوسم الكامل وصفٌ لا اسم (launch86)
+            .replace('{field}', () => t.planNoteCommission)
             .replace('{value}', () => commission.trim())
             .split('{ccy}')
             .join(moneyCcy)
