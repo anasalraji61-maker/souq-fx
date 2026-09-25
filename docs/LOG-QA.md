@@ -381,3 +381,13 @@ QA21 (`d8446d0`؛ `DIRECTIONAL_OVERLAYS` باقٍ عمداً — استثناء 
 **طلبات تنسيق جديدة (تحقّقتُ):** launch84 → tools (منخفض): «40 يورو» بحساب دولار ⇒ `parseRiskInput` `null` كالنصّ غير المقروء ⇒ رسالة عامة؛ lookbehind بـ`moneyWordsToMarks` خطوة جهاز 298.
 **المراجعة (c — a11y)، بسكربت على كل `.tsx` + diff منذ الدورة 28:** لا جديد — `MatrixSidePanel.tsx:83` فقط (QA3)؛ `TradeJournalPanel:1755` إيجابية كاذبة (`>` بتعليق). أزرار ▲▼◀▶ المطوّلة لها أسماء.
 **الدورة القادمة:** المراجعة (d) — أرقام/حدود متناقضة بين الملفات.
+
+## 2026-09-25 — الدورة 34
+**البناء:** أخضر 0 (بعد 5a1c967) — لا إصلاح لازم. **Selftests:** 78/78 ناجح (`npx tsx`؛ +`chandeKroll` +`tvWarmup`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — launch84 (`33b3566` `moneyInOtherCurrency`، 18 اختباراً). **غير مُغلق:** 10 `Alert.alert` بـ5 ملفات، «₴» ×2، `FocusChartModal:56` `BASES`،
+`AiPanel`/`LectureClassroom` بلا `maxLength`، `BRENT/USD`، QA32 `KIND_KEYS` بلا renko/kagi/pnf.
+**طلبات تنسيق جديدة (تحقّقتُ):** launch85 → tools: ربط `riskCalcSlPointsHint`/`riskCalcOtherCcyHint` (صفر استعمال خارج `locales.ts`). chart23 وtools55 بلا طلب.
+**المراجعة (d — أرقام/حدود متناقضة)، بوكيل فرعي على commits منذ 374d92e ثم تحقّقتُ بالكود:**
+**جديد QA34 → chart:** `resetChartView`/`axisTapped` (`MatrixChart.tsx:4459 :4513`) بلا `restXPan` بالـdeps ⇒ `canPan` قديم ⇒ AUTO بلا هامش يمين لشارت رُكّب تابعاً. منخفض جداً: تعليق
+`chandeKroll.selftest.ts:21` حسابه خاطئ (18≠17) ولا يفحص [17]؛ `price-transform.ts:412` «band». **أُسقط:** الدفتر `maxLength=10` مع «10.000 lots» (11) — المقصوص يُقرأ صحيحاً.
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
