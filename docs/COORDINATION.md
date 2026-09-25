@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 87، على d9024d1) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-26 (دورة QA 87، على 8820090) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen`/`ToolsScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
@@ -23,10 +23,6 @@
 | backend | أنس | **backend-r47** الإخفاء التلقائي بثلاثة بلاغات (`REPORT_HIDE_THRESHOLD`) والتسجيل بلا تحقّق بريد ⇒ شخص واحد بثلاثة حسابات يُخفي أي رسالة أو فكرة صفقة، ويضخّم أصوات موافق/معارض. تحقّق بريد، أم عتبة بعمر الحساب، أم كما هو؟ | backend-r47 |
 | backend | أنس | **backend-r51** المجتمع (لم يُغيَّر): (1) ناشر فكرة الصفقة يصوّت «موافق» عليها (`db.ballot` لا يقارن `user_id`) ⇒ عدّاد الموافقة يضمّ صاحبها — منعه؟ (2) «إبقاء» المشرف (`moderate dismiss`) يمحو البلاغات ⇒ الحسابات الثلاثة نفسها تُخفيه فوراً مجدداً — نحفظ قرار الإبقاء؟ (3) لا حدّ معدّل لنشر الرسائل/الأفكار (200 رسالة تُزيح المحادثة كلها) | backend-r51 |
 | launch | ui | **launch148** مقبض الفريم القابل للضبط (`FrameSizedGrid.tsx:341` `accessibilityValue={{ min: 1, max: displayed.length, now: index + 1 }}`) بلا `text` ⇒ iOS ينطقه نسبةً بالإنجليزية (`RCTView.m:393` ‏`now*100/(max-min)` ⇒ الفريم 1 من 4 «33 percent»، الرابع «133 percent»). أضيفوا `text: t.gridHandlePosA11y.replace('{n}', String(index + 1)).replace('{total}', String(displayed.length))` — المفتاح جاهز (ar/en/ku، `2836c3e`). التسمية والدور وأفعال التبديل منجزة (`d56828b`) — الناقص `text` وحده | launch148 |
-| QA | ui | **QA86a DESIGN-PRO §6**: الحركة الوحيدة المسموحة (وميض 180ms لخانة السعر عند تغيّرها، up/down بشفافية 12%) **غير منفَّذة** بأي ملفّ؛ و`motion.flash` (`theme.ts:128`) بلا مستعمل. نفّذوها بقائمة المتابعة/رأس الشارت أو احذفوا التوكن | QA86 |
-| QA | ui | **QA86b §5.5 «فاصل واحد — لا اثنان»**: 12 زرّاً ممتلئاً بخلفية + ظلّ `buttons.shadow*`: `GroupChatPanel:283`، `NetworkTreePanel:563`، `LectureClassroom:728,757`، `VotePanel:685`، `AiPanel`، `IndicatorAlertsPanel`، `BacktestPanel`، `CoursesScreen`، `AlertsPanel`، `MessagesScreen`، `AccountScreen` ⇒ أسقطوا الظلّ (الخلفية تكفي). (`LayoutPanel` ← chart `2a394b9` ✔؛ `FrameSizedGrid` أثناء السحب فقط — مقبول) | QA86 |
-| QA | ui | **QA86c §1 لون ثالث**: `colors.dxy` ‏#38BDF8 (سماوي) يُستعمل لون واجهة عامّاً: `VotePanel:627` اسم الكاتب، `NewsPanel:201` الأزواج، `AiPanel:208` خلفية، `LectureClassroom:659`، `SubscriptionPlansPanel:34` — tools أزالوه من الطرفية لهذا السبب (`05b59a2`) ⇒ `textMuted`/`accent` | QA86 |
-| QA | ui | **QA86d (منخفض، ميت)**: تعليق `providerSymbols.ts:4` «نسخة `TerminalScreen` (`NOT_OFFERED_SYMBOLS`) هي نفسها» — النسخة حُذفت (`2a90b0a`). (`panes.ts` ← chart `2a394b9` ✔) | QA86 |
 | QA | ui | **QA87a (عالٍ — الميزة لا تعمل)**: `AccountScreen.tsx:32-35` يقرأ `t.authSessionExpired` (اختيارياً)، وlaunch أضاف المفتاح باسم **`t.sessionExpired`** (`d9024d1`، `locales.ts:57`) ⇒ `sessionExpiredText(t)` دائماً `undefined` ⇒ سطر «انتهت جلستك» (backend-r52 / ui53) **لا يظهر أبداً** رغم أن `AuthContext` يمسح الجلسة. استبدلوا `sessionExpiredText(t)` بـ`t.sessionExpired` واحذفوا الدالّة | QA87 |
 | chart | ui | **chart-r70** منازل مختلطة لرمز بلا منازل معروفة: `AnalystsPanel.tsx:138-139` و`SocialConsensusPanel.tsx:242-243` تستدعيان `formatPrice(v, symbol)` بلا مرجع ⇒ USOIL «99.950 \| 99.500 \| 100.45» (المنازل من حجم كل رقم)؛ و`AlertsPanel.tsx:414-416` سعر التنبيه بجانب السعر الجاري كذلك. مرّروا مرجعاً واحداً (`levels.entry` / السعر الجاري) وسيطاً ثالثاً كما يفعل الشارت (`priceDecimalsRef`) | chart-r70 |
 
@@ -34,3 +30,6 @@
 **launch147** (الصفّان) ← ui `d56828b` (`FrameSizedGrid.tsx:338-340` label + `adjustable`)؛ **ui53** ← launch `d9024d1` باسم مختلف ⇒ QA87a؛ QA86b/QA86d حصّة chart ← `2a394b9`؛ ملاحظة chart «شارات `ind` حدّ+خلفية» ← `df19d4a`.
 **حكم لسؤال chart** (`drawingsSaveError` بـ`colors.bear`): مقبول كحكم tools «خطأ النموذج بالأحمر» — يظهر بعد فعل لا وقت السكون. لأنس نقضه بـDESIGN-PRO §1 «الأحمر للسعر وحده» على الاثنين معاً.
 **قائمة قبول DESIGN-PRO (السابع): 0 من 12 فشل** (diff منذ cd9f878، 10 ملفّات: لا زرّ جديد، لا وزن ≥700، الحشوة 8/4، لا ظلّ جديد، لا تأكيد جديد). **المراجعة (b):** لا نصّ ثابت بالملفّات المتغيّرة.
+
+**إضافة (سحب أثناء الدفع، 8820090، أخضر 0، selftests 110/110):** أُغلقت **QA86a** ← ui `abc6eca` (`PriceFlash.tsx:44` `motion.flash`)؛ **QA86b** ← `c6d97ec` (`buttons.shadowColor` بـ`FrameSizedGrid` وحده، مقبول)؛
+**QA86c** ← `c5ed090` (الباقي من `colors.dxy`: هوية DXY نفسها و`NetworkTreePanel`/`TreeDiagramSketch` ألوان مستويات تصنيفية — مقبول)؛ **QA86d** ← `3612351`. **QA87a قائم** (`AccountScreen.tsx:34` ما زال `authSessionExpired`).
