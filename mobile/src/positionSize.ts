@@ -600,6 +600,19 @@ export function typicalSlPipsExample(spec: InstrumentSpec | null | undefined): s
   return '20';
 }
 const PEGGED_QUOTES = new Set(['HKD', 'SAR', 'AED']);
+
+/**
+ * مثال خانة السبريد بحسب الأداة — كمثال الوقف أعلاه. «1.5» ثابتاً يوحي على USDZAR (سبريد ~100 pip) بكلفة أصغر ×60،
+ * وعلى الذهب بـ0.15$ (المعتاد ~0.30$). المثال دائماً أضيق بكثير من مثال الوقف (`stopInsideSpread` لا يُطلق بينهما).
+ */
+export function typicalSpreadPipsExample(spec: InstrumentSpec | null | undefined): string {
+  if (!spec) return '1.5';
+  if (METALS[spec.base]) return METAL_CARRY_QUOTES.has(spec.quote) ? '3' : '';
+  if (PEGGED_QUOTES.has(spec.quote)) return '5';
+  if (HIGH_VOL_EXOTIC_QUOTES.has(spec.quote)) return '100';
+  if (EXOTIC_PIP_QUOTES.has(spec.quote)) return '30';
+  return '1.5';
+}
 const HIGH_VOL_EXOTIC_QUOTES = new Set(['TRY', 'ZAR', 'MXN']);
 
 /** قيمة الـpip للوت قياسي واحد، بعملة الحساب. */

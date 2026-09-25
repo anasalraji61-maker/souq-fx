@@ -39,6 +39,7 @@ import {
   priceAtPipOffset,
   riskForLots,
   typicalSlPipsExample,
+  typicalSpreadPipsExample,
   riskInQuoteCcy,
   pnlInQuoteCcy,
   profitAtTarget,
@@ -3169,3 +3170,25 @@ console.log('positionSize exotic pairs (JPY conv inverted, carry-over, two-decim
   assert.ok(lots > 0.05 && lots < 0.3, String(lots));
 }
 console.log('positionSize typicalSlPipsExample selftest OK');
+
+{
+  // مثال السبريد بحسب الأداة — «1.5» على USDZAR كلفة أصغر ×60، وعلى الذهب 0.15$
+  const S = (x: string) => instrumentSpec(x)!;
+  const cases: [string, string][] = [
+    ['EURUSD', '1.5'], ['USDJPY', '1.5'], ['USDSGD', '1.5'], ['USDHKD', '5'], ['USDAED', '5'],
+    ['USDSEK', '30'], ['USDPLN', '30'], ['USDZAR', '100'], ['USDTRY', '100'], ['USDMXN', '100'],
+    ['XAUUSD', '3'], ['XAGUSD', '3'], ['XAUJPY', ''],
+  ];
+  for (const [sym, want] of cases) assert.equal(typicalSpreadPipsExample(S(sym)), want, sym);
+  assert.equal(typicalSpreadPipsExample(null), '1.5');
+  for (const [sym] of cases) {
+    const sp = typicalSpreadPipsExample(S(sym));
+    const sl = typicalSlPipsExample(S(sym));
+    if (sp === '') { assert.equal(sl, '', sym); continue; }
+    assert.equal(parseSpreadPips(sp), Number(sp), sym);
+    // مثال السبريد لا يتجاوز ربع مثال الوقف ⇒ الوقف المقترح ليس داخل السبريد المقترح
+    assert.ok(Number(sp) * 4 <= Number(sl), sym);
+    assert.equal(stopInsideSpread(Number(sl), Number(sp)), false, sym);
+  }
+}
+console.log('positionSize typicalSpreadPipsExample selftest OK');

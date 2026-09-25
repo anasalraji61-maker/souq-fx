@@ -89,6 +89,7 @@ import {
   restoredSmallSymbol,
   manualConvLooksInverted,
   typicalSlPipsExample,
+  typicalSpreadPipsExample,
 } from '../positionSize';
 import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
@@ -1529,7 +1530,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       ) : null}
 
       <Text style={[styles.label, { textAlign: align }]}>{t.riskCalcSpread}</Text>
-      {input(spread, setSpread, '1.5', t.riskCalcSpread)}
+      {input(spread, setSpread, typicalSpreadPipsExample(spec), t.riskCalcSpread)}
       {spreadErr ? (
         <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
           {spreadErr}
