@@ -108,7 +108,7 @@ Expo Push مزوّد خدمة بالمعنى الواضح (أنبوب توصيل
 - **التشفير أثناء النقل**: **نعم** — شرط مُلزم موثَّق بـ`docs/DEPLOYMENT.md` (الرابط العام
   https حصراً؛ ATS بـiOS وسياسة النصّ الصريح بأندرويد تمنعان http أصلاً بنسخة المتجر)
 - **حذف البيانات**: نعم، يُحذف الحساب من داخل التطبيق —
-  `DELETE /api/auth/account` (`backend/main.py:647`) → `db.delete_user_account`
+  `DELETE /api/auth/account` (`backend/main.py:704`) → `db.delete_user_account`
 - **Data collected is not shared for advertising**: لا مشارَكة إعلانية إطلاقاً
 
 ---

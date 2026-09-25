@@ -32,6 +32,7 @@ MATRIX تطبيق شارتات وتحليل فني وتعليم للمتداول
 
 **عن جهازك:** رمز إشعارات الجهاز مع رمز لغة الواجهة (لإيصال تنبيهاتك بلغتك)، ومعرّف تثبيت عشوائي يولّده التطبيق عند أول تشغيل. المعرّف ليس
 رقم الجهاز ولا المعرّف الإعلاني؛ وظيفته الوحيدة أن تبقى تنبيهاتك ودفترك منفصلة عن غيرك إن استعملت التطبيق بلا حساب.
+حين تسجّل الخروج وجهازك متصل ننهي جلسة هذا الجهاز ونفكّ رمز إشعاراته عن حسابك، فلا تصل تنبيهات حسابك إلى من يستعمل الهاتف بعدك.
 
 **على جهازك فقط (لا يصل خادمنا):** رسوماتك على الشارت، إعدادات العرض، إعدادات حاسبة المخاطرة، وقائمة
 المستخدمين الذين حظرتهم. (اختيار اللغة نفسه محفوظ على جهازك؛ يصلنا رمزها فقط مع رمز الإشعارات ومع كل سؤال للمساعد كي
@@ -97,6 +98,8 @@ text; we cannot read it).
 **About your device:** a push-notification token together with your app-language code (to deliver your alerts in your language) and a random install ID the app creates on first launch.
 The install ID is not your device's hardware ID or advertising ID; its only job is to keep your alerts and journal separate from
 other people's if you use the app without an account.
+When you log out while online, we end that device's session and unlink its notification token from your account, so your account's alerts
+stop reaching whoever uses the phone after you.
 
 **On your device only (never sent to us):** your chart drawings, display settings, risk-calculator settings, and the
 list of users you have blocked. (Your language choice itself is stored on your device; only its code reaches us, with the push
@@ -145,7 +148,8 @@ Questions or requests about your data: [privacy email].
 |---|---|
 | الجداول المخزَّنة | `backend/db.py` — `CREATE TABLE` (users, sessions, alerts, indicator_alerts, trades, layouts, watchlist, academy_progress, group_messages, dm_messages, votes, vote_ballots, content_reports, push_tokens, network_members, commission_ledger) |
 | كلمة المرور مُجزّأة | `backend/db.py` `_encode_password` (pbkdf2_sha256، ملح لكل حساب) |
-| الحذف وما يبقى | `backend/db.py:985` `delete_user_account`؛ المسار `DELETE /api/auth/account` (`backend/main.py:647`) |
+| الحذف وما يبقى | `backend/db.py:1064` `delete_user_account`؛ المسار `DELETE /api/auth/account` (`backend/main.py:704`) |
+| الخروج يُنهي الجلسة ويفكّ رمز الإشعارات | `backend/db.py` `logout_session` (DELETE من `sessions`، و`push_tokens.user_id=NULL` بمعرّف التثبيت أو الرمز)؛ `POST /api/auth/logout`؛ التطبيق يستدعيه قبل المسح المحلي (`mobile/src/context/AuthContext.tsx` `logout`، `5ff2713`) — بلا شبكة يكتمل الخروج محلياً والجلسة تبقى حتى انتهائها |
 | معرّف التثبيت العشوائي | `mobile/src/api.ts:30-70` (`matrix.install.v1`، ترويسة `X-Install-Id`) |
 | ما يبقى على الجهاز | مفاتيح AsyncStorage `matrix.drawings.v2`، `matrix.lang.v1`، `matrix.tools.riskCalc.v1`، `matrix.moderation.blockedUsers.v1` … |
 | Expo وOpenRouter وما يصلهما | `backend/expo_push.py` (المستدعي الوحيد `alert_worker.py:295`: عنوان ونصّ و`data` فارغة)، `backend/openrouter_ai.py` (رسالتا system/user وترويستا HTTP-Referer/X-Title — لا حقل مستخدم) (تفصيل بـ`STORE-PRIVACY.md` §2) |
