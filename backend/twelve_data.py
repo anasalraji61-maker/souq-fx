@@ -312,39 +312,22 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
             p = None
             r2 = client.get(f"{API_BASE}/price", params={"symbol": td_sym, "apikey": key})
             if r2.status_code == 200:
-                try:
-                    p = float(r2.json().get("price"))
-                except (TypeError, ValueError):
-                    p = None
+                p = _pos(r2.json().get("price"))
             return _price_only(matrix_symbol, p) if p else None
         if r.status_code >= 400:
             r2 = client.get(f"{API_BASE}/price", params={"symbol": td_sym, "apikey": key})
             if r2.status_code != 200:
                 return None
-            try:
-                p = float(r2.json()["price"])
-            except (KeyError, TypeError, ValueError):
-                return None
-            return _price_only(matrix_symbol, p)
+            p = _pos(r2.json().get("price"))
+            return _price_only(matrix_symbol, p) if p else None
         data = r.json()
     if data.get("status") == "error":
         return None
-    try:
-        price = float(data.get("close") or data.get("price") or 0)
-    except (TypeError, ValueError):
-        return None
+    price = _pos(data.get("close") or data.get("price"))
     if not price:
         return None
-    bid = data.get("bid")
-    ask = data.get("ask")
-    try:
-        bid_f = float(bid) if bid is not None else None
-    except (TypeError, ValueError):
-        bid_f = None
-    try:
-        ask_f = float(ask) if ask is not None else None
-    except (TypeError, ValueError):
-        ask_f = None
+    bid_f = _pos(data.get("bid"))
+    ask_f = _pos(data.get("ask"))
     # لا Bid/Ask إلا من المزوّد نفسه. كان هنا سبريد مختلَق (السعر × 0.00008) يُرسَل موسوماً
     # `data_kind: provider` فيقرأه المتداول سبريداً حقيقياً ويُزيح أسعار الدفتر به. طرفٌ واحد
     # أو قيمة غير موجبة أو bid > ask = لا دفتر صالح ⇒ كلاهما None والعميل يُخفي السطر.
@@ -378,10 +361,19 @@ def _quote_time(v: object) -> float | None:
 
 
 def _f(v: object) -> float | None:
+    """رقم منتهٍ أو None. `float("NaN")` كان يجتاز: bid/ask NaN يمرّ فحص `<= 0` و`bid > ask` (كلاهما
+    False) فيُرسَل سبريد NaN موسوماً `provider`، وJSON الردّ يرفض NaN ⇒ 500 بدل «لا سعر»."""
     try:
-        return float(v) if v is not None else None
+        f = float(v) if v is not None else None
     except (TypeError, ValueError):
         return None
+    return f if f is not None and math.isfinite(f) else None
+
+
+def _pos(v: object) -> float | None:
+    """سعر: موجب منتهٍ وإلا None."""
+    f = _f(v)
+    return f if f is not None and f > 0 else None
 
 
 # حدّا بحث الرموز — معلنان هنا لأنهما **حدّا المزوّد**: `limit` يُرسَل `outputsize` ويُستعمل

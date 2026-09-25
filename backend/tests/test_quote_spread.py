@@ -240,3 +240,31 @@ def test_untimed_price_fallback_still_serves_the_alert_worker(routes):
     routes["/quote"] = _Resp({}, 429)
     routes["/price"] = _Resp({"price": "1.1"})
     assert market.fetch_quote("EURUSD") == pytest.approx(1.1)
+
+
+@pytest.mark.parametrize("bid,ask", [("NaN", "1.10005"), ("1.09995", "NaN"), ("inf", "inf"), ("1.09995", "-inf")])
+def test_non_finite_book_is_no_book(routes, bid, ask):
+    """bid/ask «NaN» كان يجتاز `<= 0` و`bid > ask` (كلاهما False مع NaN) فيُرسَل سبريد NaN موسوماً provider."""
+    routes["/quote"] = _Resp({"close": "1.10000", "bid": bid, "ask": ask})
+    book = market.fetch_quote_book("EURUSD")
+    assert book["bid"] is None and book["ask"] is None and book["spread_source"] is None
+
+
+@pytest.mark.parametrize("bad", ["NaN", "inf", "-1.1", "0"])
+def test_non_finite_or_non_positive_price_is_no_quote(routes, bad):
+    routes["/quote"] = _Resp({"close": bad})
+    routes["/price"] = _Resp({"price": bad})
+    assert market.fetch_quote_book("EURUSD") is None
+
+
+@pytest.mark.parametrize("status", [429, 500])
+def test_non_finite_price_fallback_is_no_quote(routes, status):
+    routes["/quote"] = _Resp({}, status)
+    routes["/price"] = _Resp({"price": "NaN"})
+    assert market.fetch_quote_book("EURUSD") is None
+
+
+def test_non_finite_ohlc_fields_become_none(routes):
+    routes["/quote"] = _Resp({"close": "1.1", "open": "NaN", "high": "inf", "percent_change": "-0.12"})
+    book = market.fetch_quote_book("EURUSD")
+    assert book["open"] is None and book["high"] is None and book["percent_change"] == pytest.approx(-0.12)
