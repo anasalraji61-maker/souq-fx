@@ -11,7 +11,7 @@
  * وأداة تتداول بالعطلة (شمعة سبت بالسلسلة — عملات رقمية) تبقى على أيام UTC العادية.
  */
 import type { Candle } from '../api';
-import { DAY_SEC, forexSundayOpenSec } from './marketHours';
+import { DAY_SEC, forexSundayOpenSec, isLateOpenSymbol } from './marketHours';
 import { isFreshTick } from './dataSource';
 
 export type Direction = 'up' | 'down' | 'flat';
@@ -28,8 +28,9 @@ const weekdayOf = (day: number) => (((day + 4) % 7) + 7) % 7;
 /**
  * رقم الجلسة (يوم UTC) لطابع زمني بالثواني. `weekendMerge`: الأحد → الإثنين، والسبت → الجمعة.
  * `isNow`: لحظة حالية لا شمعة — صباح الأحد قبل الافتتاح ما زال جلسة الجمعة.
+ * `lateOpen`: رمز CME (ذهب/مؤشرات/نفط) يفتح بعد العملات بساعة.
  */
-function sessionOf(tSec: number, weekendMerge: boolean, isNow: boolean): number {
+function sessionOf(tSec: number, weekendMerge: boolean, isNow: boolean, lateOpen = false): number {
   const day = Math.floor(tSec / DAY_SEC);
   if (!weekendMerge) return day;
   const wd = weekdayOf(day);
@@ -37,7 +38,9 @@ function sessionOf(tSec: number, weekendMerge: boolean, isNow: boolean): number 
   if (wd === 0) {
     // قبل افتتاح الأسبوع (17:00 نيويورك: 21:00 UTC صيفاً، 22:00 شتاءً) جلسة «اليوم» ما زالت
     // الجمعة. كان الحدّ 20:00 ثابتاً: ساعة أو ساعتان من سوق مغلق تعرض «0.00%» بدل حركة الجمعة.
-    if (isNow && tSec < forexSundayOpenSec(day * DAY_SEC)) return day - 2;
+    // والذهب/المؤشرات/النفط تفتح 18:00 (CME): بالحدّ 17:00 كانت ساعة السوق المغلق جلسةً جديدة مرجعها
+    // إغلاق الجمعة نفسه ⇒ «0.00%» بدل حركة الجمعة.
+    if (isNow && tSec < forexSundayOpenSec(day * DAY_SEC) + (lateOpen ? 3600 : 0)) return day - 2;
     return day + 1;
   }
   return day;
@@ -52,8 +55,8 @@ export function weekendMergeOf(candles: readonly Pick<Candle, 'time'>[]): boolea
  * رقم الجلسة الجارية عند `nowSec` — مخزن المرجع (`dailyRefStore`) يقارنه بما حُسب عند الجلب:
  * تغيّره (منتصف ليل UTC، افتتاح الأحد) يعني أن «إغلاق الأمس» المخزَّن صار إغلاق ما قبل الأمس.
  */
-export function sessionKeyAt(nowSec: number, weekendMerge: boolean): number {
-  return sessionOf(nowSec, weekendMerge, true);
+export function sessionKeyAt(nowSec: number, weekendMerge: boolean, symbol?: string | null): number {
+  return sessionOf(nowSec, weekendMerge, true, isLateOpenSymbol(symbol));
 }
 
 /**
@@ -63,7 +66,8 @@ export function sessionKeyAt(nowSec: number, weekendMerge: boolean): number {
  */
 export function prevSessionFromDaily<T extends Pick<Candle, 'time'>>(
   candles: readonly T[],
-  nowSec?: number
+  nowSec?: number,
+  symbol?: string | null
 ): T | null {
   if (!Array.isArray(candles) || candles.length < 2) return null;
   const sorted = candles
@@ -73,7 +77,7 @@ export function prevSessionFromDaily<T extends Pick<Candle, 'time'>>(
   const weekendMerge = weekendMergeOf(sorted);
   const last = sorted[sorted.length - 1];
   const lastSession = sessionOf(last.time, weekendMerge, false);
-  if (typeof nowSec === 'number' && Number.isFinite(nowSec) && sessionOf(nowSec, weekendMerge, true) > lastSession) {
+  if (typeof nowSec === 'number' && Number.isFinite(nowSec) && sessionKeyAt(nowSec, weekendMerge, symbol) > lastSession) {
     return last;
   }
   for (let i = sorted.length - 2; i >= 0; i--) {
@@ -88,9 +92,10 @@ export function prevSessionFromDaily<T extends Pick<Candle, 'time'>>(
  */
 export function prevCloseFromDaily(
   candles: readonly Pick<Candle, 'time' | 'close'>[],
-  nowSec?: number
+  nowSec?: number,
+  symbol?: string | null
 ): number | null {
-  const c = prevSessionFromDaily(candles, nowSec)?.close;
+  const c = prevSessionFromDaily(candles, nowSec, symbol)?.close;
   return typeof c === 'number' && Number.isFinite(c) && c > 0 ? c : null;
 }
 

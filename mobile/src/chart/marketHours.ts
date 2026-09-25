@@ -162,6 +162,11 @@ function inForexWeekend(sec: number): boolean {
 const LATE_OPEN_RE =
   /^(XAU|XAG|XPT|XPD|GOLD|SILVER|US30|DJ30|DJI|WS30|NAS100|NAS1000|US100|USTEC|NDX|SPX|US500|SP500|USOIL|WTI|XTI|CL[-_.]?OIL)/i;
 
+/** رمز بجلسة CME (افتتاح الأحد 18:00 نيويورك) — لمن يحسب الجلسة خارج هذا الملف (`dailyChange`). */
+export function isLateOpenSymbol(symbol: string | null | undefined): boolean {
+  return !!symbol && LATE_OPEN_RE.test(symbol.trim());
+}
+
 /**
  * أوّل لحظة تداول عند `sec` أو بعده (يتخطّى عطلة نهاية الأسبوع وجلستَي 25/12 و1/1، ولو تتابعتا).
  * `lateOpen`: افتتاح الأحد بعد ساعة (المعادن).

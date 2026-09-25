@@ -40,7 +40,7 @@ let running = false;
 function fresh(sym: string, now: number): boolean {
   const e = cache.get(sym);
   if (!e) return false;
-  if (e.session != null && sessionKeyAt(now / 1000, e.weekendMerge) !== e.session) return false;
+  if (e.session != null && sessionKeyAt(now / 1000, e.weekendMerge, sym) !== e.session) return false;
   return now - e.at < (e.ok ? TTL_MS : FAIL_TTL_MS);
 }
 
@@ -63,7 +63,7 @@ async function drain() {
         const demo = s?.data_source?.kind === 'demo';
         const candles = s?.candles ?? [];
         const now = Date.now();
-        const bar = demo ? null : prevSessionFromDaily(candles, now / 1000);
+        const bar = demo ? null : prevSessionFromDaily(candles, now / 1000, sym);
         const c = bar?.close;
         const prev = typeof c === 'number' && Number.isFinite(c) && c > 0 ? c : null;
         const weekendMerge = weekendMergeOf(candles);
@@ -72,7 +72,7 @@ async function drain() {
           prevBar: validSessionBar(bar),
           at: now,
           ok: true,
-          session: sessionKeyAt(now / 1000, weekendMerge),
+          session: sessionKeyAt(now / 1000, weekendMerge, sym),
           weekendMerge,
         });
       } catch {

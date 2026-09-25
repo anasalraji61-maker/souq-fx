@@ -131,6 +131,16 @@ assert.equal(sessionKeyAt(D('2026-09-20') + 10 * H, true), sessionKeyAt(D('2026-
 assert.equal(sessionKeyAt(D('2026-09-20') + 23 * H, true), sessionKeyAt(D('2026-09-21') + 12 * H, true));
 // أداة تتداول بالعطلة: السبت جلسة مستقلة
 assert.notEqual(sessionKeyAt(D('2026-09-19') + 12 * H, false), sessionKeyAt(D('2026-09-18') + 12 * H, false));
+// الذهب/المؤشرات/النفط (CME) تفتح الأحد 18:00 NY (22:00Z صيفاً) لا 17:00: 21:30Z ما زالت جلسة الجمعة
+// ومرجعها الخميس ⇒ حركة الجمعة لا «0.00%». العملات عند 21:30Z في جلسة الإثنين (مرجعها الجمعة).
+const sun2130 = D('2026-09-20') + 21.5 * H;
+assert.equal(sessionKeyAt(sun2130, true, 'XAUUSD'), sessionKeyAt(D('2026-09-18') + 12 * H, true));
+assert.equal(sessionKeyAt(sun2130, true, 'US30'), sessionKeyAt(D('2026-09-18') + 12 * H, true));
+assert.equal(sessionKeyAt(sun2130, true, 'EURUSD'), sessionKeyAt(D('2026-09-21') + 12 * H, true));
+assert.equal(sessionKeyAt(D('2026-09-20') + 22.5 * H, true, 'XAUUSD'), sessionKeyAt(D('2026-09-21') + 12 * H, true));
+assert.equal(prevCloseFromDaily([wed, thu, fri], sun2130, 'XAUUSD'), 1.09);
+assert.equal(prevCloseFromDaily([wed, thu, fri], sun2130, 'EURUSD'), 1.1);
+assert.equal(prevCloseFromDaily([wed, thu, fri], sun2130), 1.1);
 assert.equal(weekendMergeOf([wed, thu]), true);
 assert.equal(weekendMergeOf([wed, { time: D('2026-09-19'), close: 1 }]), false);
 

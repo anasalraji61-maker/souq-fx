@@ -1672,7 +1672,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (fromDaily) return pivotInput(fromDaily);
     if (!intraday) {
       const secs = candles.map((c) => ({ ...c, time: candleTimeSec(c.time) }));
-      return pivotInput(validSessionBar(prevSessionFromDaily(secs, replayCutSec ?? Date.now() / 1000)));
+      return pivotInput(validSessionBar(prevSessionFromDaily(secs, replayCutSec ?? Date.now() / 1000, series.symbol)));
     }
     return null;
   }, [anyPivot, seriesDemo, dailyPrevBar, series.candles, series.timeframe, series.symbol, replayCutSec]);
