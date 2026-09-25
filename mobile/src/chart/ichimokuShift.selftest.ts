@@ -9,7 +9,7 @@ import { computeIchimoku } from './indicators/trend';
 // شمعة i: أعلى=أدنى=إغلاق=i ⇒ Tenkan/Kijun/SpanB الخام = منتصف نافذة منتهية عند i
 const candles: Candle[] = [];
 for (let i = 0; i < 120; i++) candles.push({ time: i * 3600, open: i, high: i, low: i, close: i } as Candle);
-const { tenkan, kijun, spanA, spanB, chikou } = computeIchimoku(candles);
+const { tenkan, kijun, spanA, spanB, chikou, lead } = computeIchimoku(candles);
 
 // الخام عند 74: Tenkan=(66+74)/2=70، Kijun=(49+74)/2=61.5 ⇒ SpanA=65.75؛ SpanB عند 74=(23+74)/2=48.5
 assert.equal(tenkan[74], 70);
@@ -25,5 +25,20 @@ assert.notEqual(spanB[76], null);
 assert.equal(chikou[74], 99);
 assert.equal(chikou[94], 119);
 assert.equal(chikou[95], null);
+
+// السحابة المُسقَطة: 25 خانة بعد آخر شمعة (119)، الخانة 120+k من الخام عند 95+k
+assert.equal(lead.spanA.length, 25);
+assert.equal(lead.spanB.length, 25);
+// الخام عند 95: Tenkan=(87+95)/2=91، Kijun=(70+95)/2=82.5 ⇒ 86.75؛ SpanB=(44+95)/2=69.5
+assert.equal(lead.spanA[0], 86.75, 'raw of bar 95 plotted on slot 120');
+assert.equal(lead.spanB[0], 69.5);
+// آخر خانة (144) = خام آخر شمعة 119: Tenkan=115، Kijun=106.5 ⇒ 110.75
+assert.equal(lead.spanA[24], 110.75);
+// الاستمرارية: الخانة 119 (آخر مرسومة) خام 94، والخانة 120 خام 95
+assert.equal(spanA[119], 85.75);
+// تاريخ قصير: الخام غير معرَّف ⇒ null لا استثناء
+const short = computeIchimoku(candles.slice(0, 30));
+assert.equal(short.lead.spanB.every((v) => v == null), true);
+assert.equal(short.lead.spanA[0], null);
 
 console.log('ichimokuShift selftest PASS');

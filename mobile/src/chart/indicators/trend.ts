@@ -703,7 +703,7 @@ export function computeVortex(
  * فالتصميم المعتمَد هنا يحافظ بدلاً من ذلك على **محاذاة السحابة الصحيحة فوق السعر التاريخي**: عند
  * كل نقطة i، تُحسَب Span A/B الخام من نافذة منتهية عند i−(displacement−1) (لا i نفسها؛ الشمعة الحالية أولى الـ26 كـTradingView) ثم تُرسَم عند i
  * — نفس الأثر البصري الذي يراه المتداول للسحابة الحالية فوق السعر الحالي فعلياً، فقط بلا امتداد
- * لمساحة مستقبلية غير موجودة أصلاً بهذا المخطط. Chikou Span (الخط المتأخر) = الإغلاق نفسه *مُزاح
+ * لمساحة مستقبلية غير موجودة أصلاً بهذا المخطط (صارت موجودة: `lead` أدناه يُرسم بمنطقة المستقبل). Chikou Span (الخط المتأخر) = الإغلاق نفسه *مُزاح
  * displacement شمعة للخلف* (Chikou[i]=إغلاق[i+displacement−1]، يبقى ضمن حدود المصفوفة الحالية بعكس
  * Span A/B، بلا حاجة لأي قرار تصميم خاص — غير معرَّف فقط لآخر displacement شمعة كما بالتعريف
  * الأصلي تماماً، لعدم وجود إغلاق مستقبلي بعد لتلك النقاط). **تحقّق يدوي**: سعر ثابت تماماً
@@ -724,6 +724,8 @@ export function computeIchimoku(
   spanA: (number | null)[];
   spanB: (number | null)[];
   chikou: (number | null)[];
+  /** السحابة المُسقَطة يمين آخر شمعة: `lead.spanA[k]` تُرسم عند الخانة ‎n+k‎ (k < displacement−1). */
+  lead: { spanA: (number | null)[]; spanB: (number | null)[] };
 } {
   const n = candles.length;
   const midpoint = (period: number): (number | null)[] => {
@@ -762,7 +764,14 @@ export function computeIchimoku(
       chikou[i] = candles[i + shift].close;
     }
   }
-  return { tenkan, kijun, spanA, spanB, chikou };
+  // ما بعد آخر شمعة: الخام من آخر `shift` شموع — TradingView يرسمه فوق منطقة المستقبل (السحابة القادمة).
+  const lead = { spanA: [] as (number | null)[], spanB: [] as (number | null)[] };
+  for (let k = 0; k < shift; k++) {
+    const src = n - shift + k;
+    lead.spanA.push(src >= 0 ? spanARaw[src] : null);
+    lead.spanB.push(src >= 0 ? spanBRaw[src] : null);
+  }
+  return { tenkan, kijun, spanA, spanB, chikou, lead };
 }
 
 /**

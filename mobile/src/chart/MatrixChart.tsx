@@ -3237,6 +3237,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
    * وشفافيّتها لا تتبدّل بتراكب الشرائح. `polyline.bandStripWidth` تشرح العطلين.
    */
   const bandW = bandStripWidth(chartPlotW, source.plot.length);
+  // سحابة Ichimoku ممتدّة لمنطقة المستقبل (25 خانة كـTradingView) حتى آخر خانة ظاهرة — كانت تنتهي
+  // عند الشمعة الحيّة فلا يرى المتداول انقلاب السحابة القادم (Kumo twist)، أهمّ ما يُقرأ منها.
+  const ichimokuCloud = ichimoku
+    ? {
+        spanA: [...ichimoku.spanA, ...ichimoku.lead.spanA.slice(0, lastDrawLocal + 1 - source.plot.length)],
+        spanB: [...ichimoku.spanB, ...ichimoku.lead.spanB.slice(0, lastDrawLocal + 1 - source.plot.length)],
+      }
+    : null;
 
   const viewPriceScale =
     syncFollow && syncWindow?.priceScale != null ? syncWindow.priceScale : priceScale;
@@ -7347,8 +7355,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             />
           ))}
         {indicators.includes('ichimoku') &&
-          ichimoku &&
-          planBandStrips(ichimoku.spanA, ichimoku.spanB, xOf, yOf, bandW).map((bnd) => (
+          ichimokuCloud &&
+          planBandStrips(ichimokuCloud.spanA, ichimokuCloud.spanB, xOf, yOf, bandW).map((bnd) => (
             <View
               key={`ichc${bnd.at}`}
               style={{
@@ -7358,10 +7366,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 width: bnd.width,
                 height: bnd.height,
                 // لون السحابة من اتجاهها: A فوق B صاعدة. `bnd.at` فهرس الشمعة نفسه.
+                // المُسقَطة يمين آخر شمعة أبهت قليلاً — تُقرأ «قادمة» لا سعراً مضى.
                 backgroundColor:
-                  (ichimoku.spanA[bnd.at] ?? 0) >= (ichimoku.spanB[bnd.at] ?? 0)
-                    ? 'rgba(34,197,94,0.14)'
-                    : 'rgba(244,63,94,0.14)',
+                  (ichimokuCloud.spanA[bnd.at] ?? 0) >= (ichimokuCloud.spanB[bnd.at] ?? 0)
+                    ? bnd.at >= source.plot.length ? 'rgba(34,197,94,0.09)' : 'rgba(34,197,94,0.14)'
+                    : bnd.at >= source.plot.length ? 'rgba(244,63,94,0.09)' : 'rgba(244,63,94,0.14)',
               }}
             />
           ))}
