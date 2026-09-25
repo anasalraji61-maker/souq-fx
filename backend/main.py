@@ -1808,11 +1808,12 @@ def ai_ask(body: AiAsk):
     chg = series.change_pct if series.change_pct is not None else 0.0
     atr_v = signal_hub._atr_last([c.model_dump() for c in series.candles]) if live else None
     # صافي الحركة على النافذة أصغر من مدى شمعة واحدة معتاد (ATR14) = ضجيج لا اتجاه: كان أي إشارة غير صفرية
-    # (+0.01% على ~45 ساعة بـ15m) ⇒ «صاعد» وسيناريو شراء كامل بدخول ووقف وهدف. الحركة من `change_pct`
-    # نفسه (الأخير − إغلاق أول السلسلة) لتطابق الرقم المعروض بالنصّ.
+    # (+0.01% على ~45 ساعة بـ15m) ⇒ «صاعد» وسيناريو شراء كامل بدخول ووقف وهدف. الحركة من الإغلاقين
+    # الحقيقيين (الأخير − أول السلسلة) لا من `change_pct`: تلك مقرَّبة لخانتين (0.005% ≈ 15% من ATR 15m
+    # لليورو) فكانت حركة +0.0251% تحت ATR تُقرأ +0.03% فوقه ⇒ سيناريو شراء كامل على ضجيج، والعكس.
     net_move = (
-        abs(series.last - series.last / (1 + chg / 100))
-        if series.last is not None and chg > -100 else 0.0
+        abs(series.last - series.candles[0].close)
+        if series.last is not None and series.candles else 0.0
     )
     # بلا ATR14 (أقلّ من 15 شمعة) لا مقياس للضجيج ⇒ لا اتجاه: كان المرشّح يُتخطّى فيصير +0.01% على 12 شمعة «شراء»
     few = live and atr_v is None

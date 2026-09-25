@@ -80,11 +80,7 @@ def test_answer_without_a_side_gets_no_direction_or_levels(monkeypatch):
 # ─── تغيّر صفريّ لا اتجاه له، والنصّ يسمّي نافذته ─────────────────────────────
 
 def _flat_series(change: float):
-    base = _provider_series(0.0030)
-
-    def build(sym, timeframe="15m", outputsize=180):
-        return base(sym, timeframe, outputsize).model_copy(update={"change_pct": change})
-    return build
+    return _provider_series(0.0030, change_pct=change)
 
 
 @pytest.mark.parametrize("lang", ["ar", "en"])
@@ -260,3 +256,35 @@ def test_too_few_candles_for_atr_give_no_direction(monkeypatch, lang):
     out = TestClient(main.app).post("/api/ai/ask", json={"question": "ما رأيك؟", "lang": lang}).json()
     assert out["setup"]["direction"] is None and out["setup"]["entry"] is None
     assert "ATR14" in out["answer"] and ("12" in out["answer"])
+
+
+def _closes_series(first: float, last: float, rng: float):
+    """سلسلة حقيقية الشكل: `change_pct` مقرَّب لخانتين كـ`build_series`، وATR14 = `rng`."""
+    def build(sym, timeframe="15m", outputsize=180):
+        cs = [main.Candle(time=1_700_000_000 + i * 900, open=last, high=last + rng / 2,
+                          low=last - rng / 2, close=last) for i in range(60)]
+        cs[0] = main.Candle(time=cs[0].time, open=first, high=first + rng / 2, low=first - rng / 2, close=first)
+        return main.ChartSeries(
+            symbol=sym.upper(), timeframe=timeframe, candles=cs,
+            change_pct=round((last - first) / first * 100, 2), last=last,
+            data_source=main.DataProvenance(kind="provider", as_of=1.0, channel="twelvedata"),
+        )
+    return build
+
+
+@pytest.mark.parametrize("first, last, want", [
+    # +0.0251% تُقرّب +0.03% (0.00033 > ATR) — الحركة الحقيقية 0.000276 تحت ATR ⇒ لا اتجاه (كان «شراء» كاملاً)
+    (1.10000, 1.100276, None),
+    # +0.0345% تُقرّب +0.03% (0.00033 < ATR 0.00035) — الحركة الحقيقية 0.00038 فوقه ⇒ اتجاه (كان يُخفى)
+    (1.10000, 1.10038, "buy"),
+])
+def test_noise_filter_uses_the_real_closes_not_the_rounded_percent(monkeypatch, first, last, want):
+    import signal_hub
+    build = _closes_series(first, last, 0.0003 if want is None else 0.00035)
+    atr = signal_hub._atr_last([c.model_dump() for c in build("EURUSD").candles])
+    move = abs(last - first)
+    assert (move > atr) == (want is not None)
+    monkeypatch.setattr(main, "build_series", build)
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    s = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()["setup"]
+    assert s["direction"] == want

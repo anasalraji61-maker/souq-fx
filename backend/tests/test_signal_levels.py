@@ -82,18 +82,28 @@ def test_demo_series_gives_no_levels_on_every_signal_route(client, monkeypatch):
     assert f["timeframe"] == "4H"
 
 
-def _provider_series(rng: float, symbol: str = "EURUSD", base: float = 1.1):
+def _consistent(candles: list[dict], change_pct: float) -> list[dict]:
+    """إغلاق أول شمعة = ما يعطي `change_pct` حتى الأخيرة — كالمسار الحقيقي بـ`build_series`. المساعد يقيس
+    الحركة من الإغلاقين لا من النسبة المقرَّبة؛ سلسلة مسطّحة بنسبة +0.3% كانت تناقض نفسها."""
+    first = dict(candles[0])
+    first["close"] = candles[-1]["close"] / (1 + change_pct / 100)
+    first["low"] = min(first["low"], first["close"])
+    first["high"] = max(first["high"], first["close"])
+    return [first, *candles[1:]]
+
+
+def _provider_series(rng: float, symbol: str = "EURUSD", base: float = 1.1, change_pct: float = 0.3):
     def build(sym, timeframe="15m", outputsize=180):
-        cs = [main.Candle(**c) for c in _candles(60, rng, base)]
+        cs = [main.Candle(**c) for c in _consistent(_candles(60, rng, base), change_pct)]
         return main.ChartSeries(
-            symbol=sym.upper(), timeframe=timeframe, candles=cs, change_pct=0.3, last=base,
+            symbol=sym.upper(), timeframe=timeframe, candles=cs, change_pct=change_pct, last=base,
             data_source=main.DataProvenance(kind="provider", as_of=1.0, channel="twelvedata"),
         )
     return build
 
 
 def test_real_series_levels_use_its_atr(client, monkeypatch):
-    monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
+    monkeypatch.setattr(main, "build_series", _provider_series(0.0030, change_pct=0.0))
     out = client.post("/api/signals/indicators/forecast", json={"symbol": "EURUSD", "timeframe": "D"}).json()
     assert out["data_kind"] == "provider"
     assert out["levels_basis"]["atr"] == pytest.approx(0.0030)
@@ -102,13 +112,17 @@ def test_real_series_levels_use_its_atr(client, monkeypatch):
 
 
 def test_ai_scenario_stop_is_one_atr_and_keeps_jpy_precision(client, monkeypatch):
-    monkeypatch.setattr(main, "build_series", _provider_series(0.137, "USDJPY", 157.25))
+    build = _provider_series(0.137, "USDJPY", 157.25)
+    monkeypatch.setattr(main, "build_series", build)
     monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
     setup = client.post("/api/ai/ask", json={"question": "ما رأيك؟", "symbol": "USDJPY"}).json()["setup"]
+    # ATR14 للسلسلة (≈0.137؛ فجوة أول شمعة ترفعه قليلاً)
+    atr = signal_hub._atr_last([c.model_dump() for c in build("USDJPY").candles])
+    assert atr == pytest.approx(0.137, rel=0.02)
     assert setup["entry"] == pytest.approx(157.25)
-    assert setup["sl"] == pytest.approx(157.25 - 0.137)
-    assert setup["tp"] == pytest.approx(157.25 + 2 * 0.137)
-    assert setup["sl"] == round(setup["sl"], 3) and round(setup["sl"], 2) != setup["sl"], "خانة الين الثالثة باقية"
+    assert setup["sl"] == pytest.approx(157.25 - atr, abs=1e-3)
+    assert setup["tp"] == pytest.approx(157.25 + 2 * atr, abs=1e-3)
+    assert round(setup["sl"], 2) != setup["sl"], "خانة الين الثالثة باقية"
 
 
 def test_indicator_snapshot_route_says_timeframe_and_window(client, monkeypatch):
