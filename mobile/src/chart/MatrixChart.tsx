@@ -4743,12 +4743,31 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const crossAhead =
     cross?.ahead && crossIndex != null && crossIndex === source.plot.length - 1 ? cross.ahead : 0;
   const crossX = crossIndex != null && crossCandle ? xOf(crossIndex + crossAhead) : 0;
+  // تغيّر شمعة التقاطع عن إغلاق السابقة (كـTradingView) لا جسمها — راجع `barChangeRef`. واحد لسطر
+  // القراءة ولسطر OHLC المدمج. اللون من الرقم المطبوع (`pctDirection`) فلا يخالف ما يُقرأ.
+  const crossChange = (() => {
+    if (!crossCandle) return null;
+    const prev = crossIndex != null ? source.all[source.start + crossIndex - 1] : null;
+    const ref = barChangeRef(crossCandle, prev);
+    if (ref == null) return null;
+    const pct = ((crossCandle.close - ref) / ref) * 100;
+    const dir = pctDirection(pct);
+    return {
+      ref,
+      pct,
+      pctText: formatPct(pct),
+      color: dir === 'up' ? colors.bull : dir === 'down' ? colors.bear : colors.textDim,
+    };
+  })();
   const denseOhlc = dense ? crossCandle : null;
-  // «O 1.08520  H 1.08545  L 1.08501  C 1.08532» ≈ 40 حرفاً × ~5.4px (9pt عريض) ≈ 216px؛ ومع
-  // «  ↕ 4.4 pip» ≈ 280px — فالمدى بالنقاط للوح العريض وحده، ولا يُقصّ الإغلاق بنقاط حذف.
+  // «O 1.08520  H 1.08545  L 1.08501  C 1.08532» ≈ 40 حرفاً × ~5.4px (9pt عريض) ≈ 216px؛ والتغيّر
+  // «  +0.32%» ≈ 45px آخر ⇒ من 270px؛ ومع «  ↕ 4.4 pip» ≈ 60px آخر ⇒ المدى من 360px — فلا يُقصّ شيء
+  // بنقاط حذف. خلية رباعي بسطرين (أضيق من 240px): التغيّر بالسطر الثاني متى اتّسع (150px).
   const denseOhlcWide = chartPlotW >= 240;
+  const denseOhlcPct =
+    denseOhlc && crossChange && chartPlotW >= (denseOhlcWide ? 270 : 150) ? crossChange : null;
   const denseOhlcRange =
-    denseOhlc && chartPlotW >= 320 ? candleRangePipsText(series.symbol, denseOhlc.high, denseOhlc.low, lang) : null;
+    denseOhlc && chartPlotW >= 360 ? candleRangePipsText(series.symbol, denseOhlc.high, denseOhlc.low, lang) : null;
   // السعر المحفوظ لا الإغلاق: الخطّ يبقى على المستوى الذي لُمس عبر التكبير والإزاحة.
   const crossPrice = crossCandle ? cross?.price ?? null : null;
   const crossY = crossPrice != null ? yOf(crossPrice) : 0;
@@ -5264,14 +5283,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             O {fmtPrice(crossCandle.open)} H {fmtPrice(crossCandle.high)} L{' '}
             {fmtPrice(crossCandle.low)} C {fmtPrice(crossCandle.close)}
             {(() => {
-              // التغيّر عن إغلاق الشمعة السابقة (كـTradingView) لا جسم الشمعة — راجع `barChangeRef`.
-              // بالنقاط أولاً لرموز الفوركس/المعادن «+35.0 pip (+0.32%)». `formatPct` كرأس الإطار،
-              // واللون من الرقم المطبوع نفسه (`pctDirection`) فلا يخالف ما يُقرأ.
-              const prev = crossIndex != null ? source.all[source.start + crossIndex - 1] : null;
-              const ref = barChangeRef(crossCandle, prev);
-              if (ref == null) return null;
-              const chgPct = ((crossCandle.close - ref) / ref) * 100;
-              const dir = pctDirection(chgPct);
+              // التغيّر عن إغلاق الشمعة السابقة (`crossChange`)، بالنقاط أولاً لرموز الفوركس/المعادن
+              // «+35.0 pips (+0.32%)».
+              if (!crossChange) return null;
+              const { ref } = crossChange;
               // بلا مواصفة pip (US30، BTC، DXY، النفط) ⇒ الفرق بمنازل السعر «+125.00 (+0.30%)» كـTradingView
               // لا النسبة وحدها — متداول المؤشرات يقيس الشمعة بالنقاط السعرية.
               const diff = crossCandle.close - ref;
@@ -5279,13 +5294,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 measurePipsText(series.symbol, ref, crossCandle.close, lang) ??
                 `${diff > 0 ? '+' : diff < 0 ? '−' : ''}${formatPriceDiff(diff, ref, series.symbol, priceDecimalsRef)}`;
               return (
-                <Text
-                  style={{
-                    color: dir === 'up' ? colors.bull : dir === 'down' ? colors.bear : colors.textDim,
-                    fontWeight: '800',
-                  }}
-                >
-                  {pips ? ` ${pips} (${formatPct(chgPct)})` : ` ${formatPct(chgPct)}`}
+                <Text style={{ color: crossChange.color, fontWeight: '800' }}>
+                  {pips ? ` ${pips} (${crossChange.pctText})` : ` ${crossChange.pctText}`}
                 </Text>
               );
             })()}
@@ -5788,6 +5798,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   <Text style={{ color: denseOhlc.close >= denseOhlc.open ? colors.bull : colors.bear }}>
                     {fmtPrice(denseOhlc.close)}
                   </Text>
+                  {denseOhlcPct ? (
+                    <Text style={{ color: denseOhlcPct.color }}>{`  ${denseOhlcPct.pctText}`}</Text>
+                  ) : null}
                   {denseOhlcRange ? `  ${denseOhlcRange}` : null}
                 </>
               ) : null}
@@ -5798,6 +5811,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={{ color: denseOhlc.close >= denseOhlc.open ? colors.bull : colors.bear }}>
                   {fmtPrice(denseOhlc.close)}
                 </Text>
+                {denseOhlcPct ? (
+                  <Text style={{ color: denseOhlcPct.color }}>{`  ${denseOhlcPct.pctText}`}</Text>
+                ) : null}
               </Text>
             ) : null}
           </View>
