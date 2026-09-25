@@ -1690,3 +1690,28 @@ export function convStaleMinutes(fetchedAt: number, now: number): number | null 
   if (age < CONV_STALE_AFTER_MS) return null;
   return Math.floor(age / 60_000);
 }
+
+/**
+ * `market_open` من `/api/market/quote` (backend `9f5cccd`): true/false كما أرسله، وغير ذلك (خادمٌ أقدم، null) ⇒ null.
+ * منذ صار `as_of` وقت السعر عند المزوّد، سعر إغلاق الجمعة «قديم» كل السبت والأحد — صحيح لكنه يوحي بعطل.
+ */
+export function quoteMarketOpen(q: unknown): boolean | null {
+  const v = q != null && typeof q === 'object' ? (q as { market_open?: unknown }).market_open : undefined;
+  return typeof v === 'boolean' ? v : null;
+}
+
+/** حالة سوق سعرٍ من ساقين (جسر الدولار): ساقٌ مغلقة ⇒ مغلق؛ كلتاهما مفتوحة ⇒ مفتوح؛ وإلا غير معروف. */
+export function combinedMarketOpen(a: boolean | null, b: boolean | null): boolean | null {
+  if (a === false || b === false) return false;
+  if (a === true && b === true) return true;
+  return null;
+}
+
+/**
+ * أيّ سطر تحت سعر التحويل المجلوب: السوق مغلق (`riskCalcConvMarketClosed`) حين قاله الخادم صراحةً — السعر لن يتجدّد
+ * حتى الافتتاح أيّاً كان عمره؛ وإلا «لم يتجدّد منذ {min} د» حين قديم؛ وإلا لا شيء. `null` ⇒ السلوك السابق حرفياً.
+ */
+export function convQuoteNotice(staleMin: number | null, marketOpen: boolean | null): 'closed' | 'stale' | null {
+  if (marketOpen === false) return 'closed';
+  return staleMin != null ? 'stale' : null;
+}

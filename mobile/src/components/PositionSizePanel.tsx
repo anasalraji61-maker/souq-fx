@@ -11,6 +11,9 @@ import {
   instrumentSpec,
   conversionPair,
   convStaleMinutes,
+  convQuoteNotice,
+  combinedMarketOpen,
+  quoteMarketOpen,
   miniAccountSymbol,
   costsForRisk,
   quoteAsOfMs,
@@ -175,7 +178,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * يُخزَّن **السعر المحسوب** لا (الزوج + `invert` + سعره الخام) لأن المصدر صار ثلاثة لا واحداً:
    * الزوج المتوقَّع، أو معكوسه، أو **ساقا جسر الدولار** معاً — وللأخير لا «زوج واحد وسعره» أصلاً.
    */
-  const [convQuote, setConvQuote] = useState<{ key: string; rate: number; at: number } | null>(null);
+  const [convQuote, setConvQuote] = useState<{ key: string; rate: number; at: number; marketOpen: boolean | null } | null>(null);
   const [convLoading, setConvLoading] = useState(false);
   const [convFailed, setConvFailed] = useState(false);
   /** إدخال يدوي لسعر التحويل عند تعذّر جلبه — لا تتوقف الحاسبة بسبب انقطاع مزوّد الأسعار */
@@ -392,7 +395,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       api.marketQuote(sym).then(
         (q) =>
           isRealQuote(q)
-            ? { price: q.price, at: quoteAsOfMs((q as { as_of?: unknown }).as_of, Date.now()) }
+            ? { price: q.price, at: quoteAsOfMs((q as { as_of?: unknown }).as_of, Date.now()), marketOpen: quoteMarketOpen(q) }
             : null,
         () => null
       );
@@ -404,7 +407,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           if (q != null) {
             const r = quoteToAccountRate(c, q.price);
             if (r != null) {
-              setConvQuote({ key: conversionKey({ symbol: convSymbol, invert: convInvert })!, rate: r, at: q.at });
+              setConvQuote({ key: conversionKey({ symbol: convSymbol, invert: convInvert })!, rate: r, at: q.at, marketOpen: q.marketOpen });
               setConvLoading(false);
               return;
             }
@@ -427,7 +430,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           if (viaUsd != null && p1 && p2) {
             // عمر الجسر = عمر أقدم ساقيه
             const at = Math.min(p1.at, p2.at);
-            setConvQuote({ key: conversionKey({ symbol: convSymbol, invert: convInvert })!, rate: viaUsd, at });
+            const marketOpen = combinedMarketOpen(p1.marketOpen, p2.marketOpen);
+            setConvQuote({ key: conversionKey({ symbol: convSymbol, invert: convInvert })!, rate: viaUsd, at, marketOpen });
             setConvLoading(false);
             return;
           }
@@ -657,6 +661,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const fetchedConv = convQuote && convQuote.key === convKey ? convQuote : null;
   // التجديد الفاشل يُبقي آخر سعر بصمت — بعد 5 د يُقال للمتداول (مؤقّت التجديد يعيد الرسم كل دقيقة فيتقدّم العدد)
   const convStaleMin = fetchedConv ? convStaleMinutes(fetchedConv.at, Date.now()) : null;
+  // بعطلة نهاية الأسبوع الخادم يقول `market_open: false` ⇒ «السوق مغلق» بدل «لم يتجدّد منذ ~2900 د» الذي يوحي بعطل (launch106)
+  const convNotice = convQuoteNotice(convStaleMin, fetchedConv ? fetchedConv.marketOpen : null);
   const manual = num(manualConv);
   // «0.0067» لـUSDJPY: مقلوبٌ قطعاً ⇒ لا لوت منه (كالوقف < 1 pip) — بحساب ين على EURUSD كان لوتاً أكبر ×22,000
   const manualInverted = fetchedConv ? null : manualConvLooksInverted(conv?.symbol, Number.isFinite(manual) ? manual : null);
@@ -1471,9 +1477,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       <Text style={[styles.hint, { textAlign: align }]}>{commissionNoteText}</Text>
 
       {conv && convLoading ? <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.sm }} /> : null}
-      {conv && convStaleMin != null ? (
+      {conv && convNotice ? (
         <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
-          {t.riskCalcConvStale.replace('{pair}', conv.symbol).replace('{min}', String(convStaleMin))}
+          {convNotice === 'closed'
+            ? t.riskCalcConvMarketClosed.replace('{pair}', conv.symbol)
+            : t.riskCalcConvStale.replace('{pair}', conv.symbol).replace('{min}', String(convStaleMin))}
         </Text>
       ) : null}
       {conv && convFailed ? (

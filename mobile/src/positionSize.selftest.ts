@@ -7,6 +7,9 @@ import assert from 'node:assert/strict';
 import {
   manualConvLooksInverted,
   convStaleMinutes,
+  convQuoteNotice,
+  combinedMarketOpen,
+  quoteMarketOpen,
   costsForRisk,
   quoteAsOfMs,
   parseSlPips,
@@ -2901,3 +2904,33 @@ console.log('positionSize slPipsCarryOver selftest OK');
   assert.ok(manualConvLooksInverted(conv.symbol, 1 / 149.5) != null);
 }
 console.log('positionSize manualConvLooksInverted selftest OK');
+
+// ---- market_open: عطلة نهاية الأسبوع «السوق مغلق» لا «لم يتجدّد منذ ~2900 د» (launch106) ----
+{
+  assert.equal(quoteMarketOpen({ price: 1.1, market_open: false }), false);
+  assert.equal(quoteMarketOpen({ price: 1.1, market_open: true }), true);
+  assert.equal(quoteMarketOpen({ price: 1.1, market_open: null }), null);
+  assert.equal(quoteMarketOpen({ price: 1.1 }), null); // خادمٌ أقدم
+  assert.equal(quoteMarketOpen({ price: 1.1, market_open: 'false' }), null);
+  assert.equal(quoteMarketOpen(null), null);
+  // الجسر: ساقٌ مغلقة تكفي
+  assert.equal(combinedMarketOpen(true, false), false);
+  assert.equal(combinedMarketOpen(null, false), false);
+  assert.equal(combinedMarketOpen(true, true), true);
+  assert.equal(combinedMarketOpen(true, null), null);
+  assert.equal(combinedMarketOpen(null, null), null);
+  // سعر الجمعة يوم الأحد: 2900 د قديم + مغلق ⇒ «مغلق»
+  const fri = Date.UTC(2026, 8, 25, 21, 0);
+  const sun = fri + 2900 * 60_000;
+  const stale = convStaleMinutes(fri, sun);
+  assert.equal(stale, 2900);
+  assert.equal(convQuoteNotice(stale, false), 'closed');
+  // مغلق لكن السعر حديث (دقائق بعد الإغلاق) ⇒ مغلق أيضاً: لن يتجدّد حتى الافتتاح
+  assert.equal(convQuoteNotice(convStaleMinutes(fri, fri + 60_000), false), 'closed');
+  // null/مفتوح ⇒ السلوك السابق حرفياً
+  assert.equal(convQuoteNotice(stale, null), 'stale');
+  assert.equal(convQuoteNotice(stale, true), 'stale');
+  assert.equal(convQuoteNotice(null, true), null);
+  assert.equal(convQuoteNotice(null, null), null);
+}
+console.log('positionSize market_open selftest OK');
