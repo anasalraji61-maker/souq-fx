@@ -85,6 +85,7 @@ import {
   stopsForPips,
   targetAtRR,
   journalSymbol,
+  levelLooksLikePips,
   type TradeSide,
   QUICK_SYMBOLS,
 } from '../tradePlan';
@@ -938,7 +939,35 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * 25 pip (…)» بمال أكبر مما قالته الحاسبة. التحذير أعلاه كان يقول ذلك ثم يترك الزرّ يسجّل. الآن الزرّ
    * معطَّل وسببه تحته، ويعود بمجرّد أن يتطابق الرقمان (تعديل النقاط أو أحد السعرين).
    */
-  const logBlocked = slMismatch != null;
+  /**
+   * «25» بخانة سعر الوقف أو «50» بخانة الهدف: نقاطٌ لا سعر (`levelLooksLikePips`). الوقف كان يملأ خانة النقاط بـ239,150 pip
+   * (لوت 0.00 بلا سبب مفهوم)؛ والهدف يعطي «R:R 1:1960» و«سجّل الخطة» تحفظ هدفاً عند 50.00. نقرة السطر: رقم الوقف ينتقل
+   * لخانة النقاط (رقمُ نقاطٍ لا يقول الاتجاه)، والهدف يُكتب سعراً على تلك المسافة بجهة الربح. التسجيل يُمنع حتى يُصحَّح.
+   */
+  const pipsInPx = ((): { msg: string; apply: () => void } | null => {
+    if (!spec) return null;
+    const e = priceNum(entryPx);
+    const fieldText = (label: string, v: string) =>
+      t.riskCalcBadFieldValue.replace('{field}', () => shortLabel(label)).replace('{value}', () => v.trim());
+    const stopAt = (side: TradeSide) =>
+      levelLooksLikePips({ symbol: spec.symbol, side, entry: e, level: priceNum(stopPx), kind: 'sl' });
+    const asStop = stopAt('buy') ?? stopAt('sell');
+    if (asStop) {
+      return {
+        msg: `${fieldText(t.riskCalcStop, stopPx)} → ${shortLabel(t.riskCalcSlPips)} ${asStop.pips}?`,
+        apply: () => {
+          setStopPx('');
+          onSlPipsChange(String(asStop.pips));
+        },
+      };
+    }
+    if (planSide == null) return null;
+    const asTarget = levelLooksLikePips({ symbol: spec.symbol, side: planSide, entry: e, level: priceNum(targetPx), kind: 'tp' });
+    if (!asTarget) return null;
+    const text = formatPrice(asTarget.price, spec.symbol);
+    return { msg: `${fieldText(t.riskCalcTarget, targetPx)} → ${asTarget.pips} pip = ${text}?`, apply: () => setTargetPx(text) };
+  })();
+  const logBlocked = slMismatch != null || pipsInPx != null;
 
   /**
    * «سجّل الخطة بالدفتر»: الأرقام هنا (رمز/دخول/وقف/هدف) هي نفسها التي يطلبها الدفتر — إعادة كتابتها
@@ -1313,6 +1342,17 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         <Text style={[styles.warn, { textAlign: align }]}>
           {priceNum(stopPx) < priceNum(entryPx) ? t.planTpWrongBuy : t.planTpWrongSell}
         </Text>
+      ) : null}
+      {pipsInPx ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={pipsInPx.apply}
+          style={({ pressed }) => pressed && { opacity: buttons.pressedOpacity }}
+        >
+          <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
+            {pipsInPx.msg}
+          </Text>
+        </Pressable>
       ) : null}
       {derivedSl != null ? (
         <Text style={[styles.hint, styles.hintOn, { textAlign: align }]} accessibilityLiveRegion="polite">

@@ -2640,3 +2640,24 @@ console.log('tradePlan parseJournalSize unit word selftest OK');
   assert.ok((bad.rr ?? 0) > 1000);
 }
 console.log('tradePlan levelLooksLikePips selftest OK');
+
+// الحاسبة: «25» بخانة سعر الوقف (اتجاه غير معروف ⇒ يُجرَّب الشراء ثم البيع) ينتقل لخانة النقاط
+{
+  const eu = instrumentSpec('EURUSD')!;
+  // ما كان: 239,150 pip تُكتب بخانة النقاط ⇒ لوت 0.00
+  assert.equal(slPipsFromPrices(eu, 1.085, 25), 239150);
+  const r = positionSize({ balance: 10_000, riskPct: 1, slPips: 239150, pipValuePerLot: pipValuePerLot(eu, 1), contractSize: eu.contractSize })!;
+  assert.equal(r.lots, 0);
+  const at = (side: 'buy' | 'sell') => levelLooksLikePips({ symbol: 'EURUSD', side, entry: 1.085, level: 25, kind: 'sl' });
+  assert.equal((at('buy') ?? at('sell'))?.pips, 25);
+  // وقف حقيقي بأيّ جهة لا يُمسّ
+  for (const lvl of [1.0825, 1.0875, 1.2, 0.95]) {
+    for (const side of ['buy', 'sell'] as const) {
+      assert.equal(levelLooksLikePips({ symbol: 'EURUSD', side, entry: 1.085, level: lvl, kind: 'sl' }), null, `${side} ${lvl}`);
+    }
+  }
+  // بعد النقل: 25 pip ⇒ 0.40 لوت كما قصد
+  const ok = positionSize({ balance: 10_000, riskPct: 1, slPips: 25, pipValuePerLot: pipValuePerLot(eu, 1), contractSize: eu.contractSize })!;
+  assert.equal(ok.lots, 0.4);
+}
+console.log('tradePlan calculator stop-price pips selftest OK');
