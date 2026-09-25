@@ -676,3 +676,22 @@ def test_a_large_real_typo_move_is_still_scored(client):
     """خطأ كتابة واقعي (دخول 0.00001 بدل 1.1) يبقى محسوباً — السقف للعبث العددي فقط."""
     t = _open_trade(client, entry=0.00001, exit=1.1)
     assert t["pnl"] == pytest.approx((1.1 - 0.00001) / 0.00001 * 100)
+
+
+@pytest.mark.parametrize("sym", ["   ", " \t a "])
+def test_a_blank_trade_symbol_is_refused_after_stripping(client, sym):
+    """«   » كان يجتاز `min_length=3` ثم يُحفظ رمزاً فارغاً."""
+    assert client.post("/api/trades", json={**_TRADE, "symbol": sym}, headers=_DEV1).status_code == 422
+    t = _open_trade(client)
+    assert client.patch(f"/api/trades/{t['id']}", json={"symbol": sym}, headers=_DEV1).status_code == 422
+
+
+def test_a_padded_symbol_is_stored_stripped(client):
+    assert _open_trade(client, symbol="  gbpusd ")["symbol"] == "GBPUSD"
+
+
+@pytest.mark.parametrize("when", ["0999-01-01", "0001-01-01T00:00:00+05:00", "1969-12-31 23:59"])
+def test_an_ancient_opened_at_is_refused_not_sorted_as_newest(client, when):
+    """«0999-01-01» كان يُحفظ «999-01-01 00:00» فيتصدّر الدفتر نصّياً؛ سنة 1 بإزاحة كانت 500."""
+    r = client.post("/api/trades", json={**_TRADE, "opened_at": when}, headers=_DEV1)
+    assert r.status_code == 422

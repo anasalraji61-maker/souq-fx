@@ -465,6 +465,11 @@ class IndicatorAlertCreate(BaseModel):
         return self
 
 
+def _strip_trade_symbol(v):
+    """قبل فحص الطول: «   » (3 فراغات) كان يجتاز `min_length=3` ويُحفظ رمزاً فارغاً."""
+    return v.strip() if isinstance(v, str) else v
+
+
 class TradeCreate(BaseModel):
     """صفقة جديدة بالدفتر. **الأسعار والحجم موجبة منتهية** — نفس قاعدة `TradeUpdate` المعلنة والتي
     كان مسار الإنشاء وحده خارجها:
@@ -490,6 +495,8 @@ class TradeCreate(BaseModel):
     sl: float | None = Field(default=None, gt=0, allow_inf_nan=False)
     tp: float | None = Field(default=None, gt=0, allow_inf_nan=False)
 
+    _sym = field_validator("symbol", mode="before")(_strip_trade_symbol)
+
     @field_validator("opened_at")
     @classmethod
     def _opened_at_as_journal_time(cls, v: str | None) -> str | None:
@@ -502,6 +509,10 @@ class TradeCreate(BaseModel):
             dt = datetime.fromisoformat(v.strip())
         except ValueError:
             raise ValueError("opened_at must be an ISO date/time") from None
+        # «0999-01-01» كان يُحفظ «999-01-01 00:00» (`%Y` بلا أصفار) فيُرتَّب نصّياً أحدث صفقة بالدفتر؛
+        # وسنة 1 بإزاحة موجبة تفيض بـ`astimezone` (OverflowError ⇒ 500)
+        if dt.year < 1970:
+            raise ValueError("opened_at is before 1970")
         if dt.tzinfo is not None:
             dt = dt.astimezone()  # لتوقيت الخادم كبقية أوقات الدفتر
         # وقت فتح بالمستقبل ⇒ 422: كان يُقبل فتُحفظ صفقة مغلقة `closed_at` (الآن) قبل `opened_at`، وتتصدّر
@@ -530,6 +541,8 @@ class TradeUpdate(BaseModel):
     note: str | None = Field(default=None, max_length=500)
     sl: float | None = Field(default=None, gt=0, allow_inf_nan=False)
     tp: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+
+    _sym = field_validator("symbol", mode="before")(_strip_trade_symbol)
 
 
 def _new_id(prefix: str) -> str:
