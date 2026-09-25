@@ -306,6 +306,41 @@ export function nextHighImpact(
 }
 
 /**
+ * **خبرٌ قوي قريب على صفقاتٍ مفتوحة** — لسطر فوق قائمة الدفتر. شريط الأخبار كان للرمز الذي يُكتب بالنموذج وحده: متداولٌ
+ * يحمل شراء EURUSD وGBPUSD مفتوحتين ولا يكتب صفقة جديدة لا يرى أن الرواتب الأمريكية بعد 20 دقيقة — وهي لحظة نقل الوقف أو
+ * تخفيف الحجم أو الإغلاق، لا لحظة الدخول.
+ *
+ * عملات كل الرموز معاً (`symbolCurrencies`)، وأقرب حدثٍ بها بقاعدة الشريط نفسها (`nextHighImpact`)، ثم **الرموز التي يمسّها**:
+ * التي بين عملاتها عملة الحدث أو عملة خبرٍ قويّ آخر بالدقيقة نفسها (`sameMinuteCurrencyLabel`) — لا كل المفتوحة (USDJPY لا
+ * تُذكر تحت خبر يورو). الرموز كما كُتبت (مقصوصة)، بلا تكرار بلا اعتبار لحالة الأحرف، بترتيبها. `null` = لا حدث.
+ */
+export function openPositionsNewsRisk(
+  symbols: readonly string[],
+  events: readonly NewsEvent[],
+  nowMs: number
+): { event: NewsEvent; deltaMs: number; currencies: string[]; symbols: string[] } | null {
+  const seen = new Set<string>();
+  const uniq: { sym: string; ccys: string[] }[] = [];
+  for (const raw of symbols) {
+    const sym = String(raw ?? '').trim();
+    const key = sym.toUpperCase();
+    if (!sym || seen.has(key)) continue;
+    seen.add(key);
+    const ccys = symbolCurrencies(sym);
+    if (ccys.length) uniq.push({ sym, ccys });
+  }
+  const currencies = [...new Set(uniq.flatMap((u) => u.ccys))];
+  const hit = nextHighImpact(events, currencies, nowMs);
+  if (!hit) return null;
+  const moving = new Set(sameMinuteCurrencyLabel(events, currencies, hit.event).split('/'));
+  return {
+    ...hit,
+    currencies,
+    symbols: uniq.filter((u) => u.ccys.some((c) => moving.has(c))).map((u) => u.sym),
+  };
+}
+
+/**
  * أحداثٌ قوية **أخرى** لعملات الزوج بالدقيقة نفسها لحدث الشريط — «+2» بجانبه. الرواتب الأمريكية تصدر مع البطالة ومتوسط
  * الأجور بثانية واحدة (والفائدة مع البيان)، والشريط يعرض واحداً منها — فيظنّ المتداول خبراً واحداً بينما القفزة من ثلاثة.
  * نفس مرشّحات `nextHighImpact` (لا أمثلة، عالي التأثير، وقت دقيق)، ونسخةٌ مكرّرة بالتقويم (العنوان والعملة والوقت) لا تُعدّ.

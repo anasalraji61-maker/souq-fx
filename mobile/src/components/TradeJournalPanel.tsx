@@ -739,6 +739,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   );
 
   /**
+   * رموز الصفقات المفتوحة (كلها لا المفلترة، كسطر التراكم) لشريط «خبر قوي» فوق القائمة — الشريط كان لرمز النموذج وحده،
+   * فمن يحمل EURUSD مفتوحة ولا يكتب صفقة لا يرى الرواتب الأمريكية بعد 20 دقيقة (`openPositionsNewsRisk`).
+   */
+  const openSymbols = useMemo(() => trades.filter((tr) => tr.status === 'open').map((tr) => tr.symbol), [trades]);
+
+  /**
    * إحصاءات ما هو معروض. بلا فلتر: أرقام الخادم حرفياً كما كانت (لا تغيّر بتاتاً بالحالة الشائعة).
    * وبفلتر أداة: تُحسب محليّاً **بمعادلة الخادم نفسها** (`db.trade_stats`: المغلقة ذات `pnl` فقط،
    * نسبة النجاح بخانة عشرية والبقيّة بخانتين). وهذا حسابٌ مطابق لا تقريب: `trade_stats` يقرأ
@@ -1260,6 +1266,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         </ScrollView>
       ) : null}
 
+      {openSymbols.length > 0 ? <NewsRiskBanner openSymbols={openSymbols} /> : null}
       {openRiskLine ? <Text style={[styles.stat, { textAlign: align }]}>{openRiskLine}</Text> : null}
       {stackedLines.map((line) => (
         <Text key={line} style={[styles.planWarn, { textAlign: align }]}>

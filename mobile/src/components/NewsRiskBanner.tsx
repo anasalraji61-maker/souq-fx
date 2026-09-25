@@ -11,6 +11,7 @@ import {
   newsBannerText,
   newsTickDelayMs,
   nextHighImpact,
+  openPositionsNewsRisk,
   sameMinuteCurrencyLabel,
   sameMinuteHighImpact,
   symbolCurrencies,
@@ -50,9 +51,14 @@ function ensureFresh(now: number) {
     });
 }
 
-type Props = { symbol: string };
+/**
+ * `symbol` = الرمز الذي يُكتب/يُعرض (الشارت، الحاسبة، نموذج الدفتر). `openSymbols` = رموز الصفقات **المفتوحة** بالدفتر: الحدث
+ * الأقرب لعملاتها كلها، والسطر الثاني يسمّي الرموز التي يمسّها (`openPositionsNewsRisk`). بلا سطر «التقويم غير متاح» هنا —
+ * يقوله شريط النموذج مرّة واحدة.
+ */
+type Props = { symbol: string; openSymbols?: never } | { symbol?: never; openSymbols: readonly string[] };
 
-export function NewsRiskBanner({ symbol }: Props) {
+export function NewsRiskBanner({ symbol = '', openSymbols }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [now, setNow] = useState(() => Date.now());
@@ -90,14 +96,15 @@ export function NewsRiskBanner({ symbol }: Props) {
     };
   }, []);
 
-  const currencies = symbolCurrencies(symbol);
+  const currencies = openSymbols ? [...new Set(openSymbols.flatMap((s) => symbolCurrencies(s)))] : symbolCurrencies(symbol);
   const currencyKey = currencies.join(',');
   // تبديل الرمز والشريط مركَّب (الطرفية، الحاسبة، كتابة رمز الدفتر): `now` كان آخر دقّة للساعة — حتى 60ث قديمة —
   // فخبر الزوج الجديد بعد 40ث يُكتب «بعد 1د» 35ث، ومؤقّت التجديد يُجدول من الفرق الخطأ نفسه
   useEffect(() => {
     setNow(Date.now());
   }, [currencyKey]);
-  const hit = cache ? nextHighImpact(cache.events, currencies, now) : null;
+  const openHit = cache && openSymbols ? openPositionsNewsRisk(openSymbols, cache.events, now) : null;
+  const hit = openSymbols ? openHit : cache ? nextHighImpact(cache.events, currencies, now) : null;
   const hitDelta = hit ? hit.deltaMs : null;
   // تجديد العدّ **لحظة يتغيّر** لا بساعة من لحظة التركيب — وإلا بقي «بعد 3د» والخبر بعد 2:50، راجع `newsTickDelayMs`
   useEffect(() => {
@@ -105,7 +112,7 @@ export function NewsRiskBanner({ symbol }: Props) {
     return () => clearTimeout(id);
   }, [now, hitDelta]);
   if (!hit) {
-    if (!calendarUnavailable(cache, symbol)) return null;
+    if (openSymbols || !calendarUnavailable(cache, symbol)) return null;
     // فشلٌ بلا محفوظ: الغياب كان يُقرأ «لا خطر» — سطرٌ هادئ (عنبري لا أحمر: لا نعرف بخبر، نعرف أننا لا نعرف)
     return (
       <View style={[styles.wrap, styles.wrapUnavailable]} accessible accessibilityRole="alert" accessibilityLabel={t.newsUnavailable}>
@@ -131,19 +138,21 @@ export function NewsRiskBanner({ symbol }: Props) {
   const text = newsBannerText({ head: t.newsRiskHigh, currency: ccyLabel, when, title: event.title, more });
   // التحذير من تقويمٍ محفوظ بعد فشل التحديث: يُعرض (الوقت مطلق فيبقى صادقاً) مع قول ذلك
   const stale = cache != null && !cache.ok;
+  // صفقات مفتوحة: الرموز التي يمسّها الخبر قبل النصيحة («EURUSD, XAUUSD.m: تقلّب حاد…») — سطران كي لا تُقصّ النصيحة
+  const hint = openHit?.symbols.length ? `${openHit.symbols.join(', ')}: ${t.newsRiskHint}` : t.newsRiskHint;
 
   return (
     <View
       style={styles.wrap}
       accessible
       accessibilityRole="alert"
-      accessibilityLabel={`${text}. ${t.newsRiskHint}${stale ? `. ${t.newsStale}` : ''}`}
+      accessibilityLabel={`${text}. ${hint}${stale ? `. ${t.newsStale}` : ''}`}
     >
       <Text style={[styles.main, { textAlign: align }]} numberOfLines={1}>
         {text}
       </Text>
-      <Text style={[styles.hint, { textAlign: align }]} numberOfLines={1}>
-        {t.newsRiskHint}
+      <Text style={[styles.hint, { textAlign: align }]} numberOfLines={openHit ? 2 : 1}>
+        {hint}
       </Text>
       {stale ? (
         <Text style={[styles.hint, { textAlign: align }]} numberOfLines={1}>

@@ -11,6 +11,7 @@ import {
   newsTickDelayMs,
   NEWS_GRACE_MS,
   nextHighImpact,
+  openPositionsNewsRisk,
   sameMinuteHighImpact,
   sameMinuteCurrencyLabel,
   newsBannerText,
@@ -690,3 +691,35 @@ console.log('newsRisk dollar basket / treasuries selftest OK');
   assert.deepEqual(symbolCurrencies('PEPEBTC'), []);
 }
 console.log('newsRisk more coins selftest OK');
+
+// صفقات مفتوحة: الرواتب الأمريكية بعد 20د تُذكر على EURUSD وXAUUSD.m لا على EURGBP (openPositionsNewsRisk)
+{
+  const now = 1_800_000_000_000;
+  const ev = (id: string, currency: string, minutes: number, impact = 'High'): NewsEvent => ({
+    id, title: id, currency, impact, ts: (now + minutes * 60_000) / 1000,
+  });
+  const nfp = ev('NFP', 'USD', 20);
+  const open = ['EURUSD', 'eurgbp', 'XAUUSD.m', 'eurusd ', 'NAS100'];
+  const r = openPositionsNewsRisk(open, [nfp], now)!;
+  assert.equal(r.event.id, 'NFP');
+  assert.equal(r.deltaMs, 20 * 60_000);
+  // مكرّر بحالة أحرف أخرى يُذكر مرّة؛ الرمز كما كُتب
+  assert.deepEqual(r.symbols, ['EURUSD', 'XAUUSD.m', 'NAS100']);
+  assert.deepEqual(r.currencies, ['EUR', 'USD', 'GBP']);
+  // خبر إسترليني: EURGBP وحدها
+  assert.deepEqual(openPositionsNewsRisk(open, [ev('BoE', 'GBP', 30)], now)!.symbols, ['eurgbp']);
+  // ما كان: الشريط يُحسب لرمز النموذج وحده — بلا رمز مكتوب لا شيء، وصفقات مفتوحة على الدولار قبل الرواتب بلا سطر
+  assert.equal(nextHighImpact([nfp], symbolCurrencies(''), now), null);
+  // خبرٌ آخر بالدقيقة نفسها لعملة الساق الأخرى يضمّ رموزه (USD + GBP ⇒ EURGBP أيضاً)
+  const both = openPositionsNewsRisk(open, [nfp, ev('GDP', 'GBP', 20)], now)!;
+  assert.deepEqual(both.symbols, ['EURUSD', 'eurgbp', 'XAUUSD.m', 'NAS100']);
+  // لا صفقات، رموز بلا عملات، حدث متوسّط التأثير، بعيد (>3س)، مثال ⇒ null
+  assert.equal(openPositionsNewsRisk([], [nfp], now), null);
+  assert.equal(openPositionsNewsRisk(['AAPL', '  '], [nfp], now), null);
+  assert.equal(openPositionsNewsRisk(open, [ev('x', 'USD', 20, 'Medium')], now), null);
+  assert.equal(openPositionsNewsRisk(open, [ev('far', 'USD', 4 * 60)], now), null);
+  assert.equal(openPositionsNewsRisk(open, [{ ...nfp, sample: true }], now), null);
+  // الأقرب بقاعدة الشريط نفسها
+  assert.equal(openPositionsNewsRisk(open, [ev('ECB', 'EUR', 90), nfp], now)!.event.id, 'NFP');
+}
+console.log('newsRisk open positions selftest OK');
