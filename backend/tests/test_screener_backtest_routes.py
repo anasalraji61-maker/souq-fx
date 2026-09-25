@@ -57,6 +57,10 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(
         market, "fetch_time_series", lambda sym, tf, outputsize=180: _candles()
     )
+    monkeypatch.setattr(
+        market, "fetch_time_series_with_meta",
+        lambda sym, tf, outputsize=180: (_candles(), {"kind": "provider", "as_of": 1000.0}),
+    )
     # raise_server_exceptions=False: الـ500 يصل كردّ حقيقي بدل أن يُرمى — وهو ما يُرصد هنا.
     return TestClient(main.app, raise_server_exceptions=False)
 
@@ -258,10 +262,24 @@ def test_filters_route_publishes_the_rule_the_scan_applies(client, monkeypatch):
     assert filters["bullish"]["rule"]["change_bars"] == screener_engine.CHANGE_WINDOW
 
     candles = [{"time": i, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0} for i in range(100)]
-    monkeypatch.setattr(screener_engine.market, "fetch_time_series", lambda *a, **k: candles)
+    monkeypatch.setattr(
+        screener_engine.market, "fetch_time_series_with_meta", lambda *a, **k: (candles, {"kind": "provider"})
+    )
     monkeypatch.setattr(
         screener_engine.ind, "snapshot",
         lambda raw, **k: {"rsi": over["value"], "last": 1.0},
     )
     scan = screener_engine.run_scan_detailed("15m", ["rsi_oversold"], ["EURUSD"])
     assert [h["filters_matched"] for h in scan["results"]] == [["rsi_oversold"]], scan
+
+
+def test_scan_hit_says_it_was_served_from_a_stale_cache(monkeypatch):
+    """حدّ المزوّد: السلسلة من الكاش (حتى 15د). كانت النتيجة بلا وسم فيُقرأ RSI/التقاطع «الآن»."""
+    candles = [{"time": i, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0} for i in range(100)]
+    monkeypatch.setattr(
+        screener_engine.market, "fetch_time_series_with_meta",
+        lambda *a, **k: (candles, {"kind": "cache", "as_of": 1234.0, "channel": "twelvedata"}),
+    )
+    monkeypatch.setattr(screener_engine.ind, "snapshot", lambda raw, **k: {"rsi": 20.0, "last": 1.0})
+    hit = screener_engine.run_scan_detailed("15m", ["rsi_oversold"], ["EURUSD"])["results"][0]
+    assert hit["data_kind"] == "cache" and hit["as_of"] == 1234.0

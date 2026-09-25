@@ -94,7 +94,7 @@ def run_scan_detailed(
         try:
             # نفس طول الشارت/التنبيهات → نفس مفتاح الكاش: رمز شوهد شارته أو يراقبه تنبيه لا يستهلك طلباً،
             # وإعادة الفحص بعد حدّ المزوّد تجلب الفاشلة فقط.
-            raw = market.fetch_time_series(sym, timeframe, outputsize=market.CHART_BARS)
+            raw, meta = market.fetch_time_series_with_meta(sym, timeframe, outputsize=market.CHART_BARS)
         except Exception:
             failed.append(sym.upper())
             continue
@@ -138,6 +138,10 @@ def run_scan_detailed(
                     "change_pct": round(chg, 2),
                     "rsi": round(rsi_v, 1),
                     "filters_matched": matched,
+                    # عند حدّ المزوّد (429) تُخدَم سلسلة مخزَّنة حتى 15د — كانت النتيجة لا تقول ذلك فيُقرأ
+                    # RSI/التقاطع «الآن». `cache` + وقت جلبها الحقيقي كما بمصدر الشارت (`DataProvenance`).
+                    "data_kind": meta.get("kind"),
+                    "as_of": meta.get("as_of"),
                 }
             )
 
