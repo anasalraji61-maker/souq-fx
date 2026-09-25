@@ -40,14 +40,20 @@ _STATUS = "unavailable"
 
 
 def _impact(raw: str | None) -> str:
-    if not raw:
-        return "low"
-    t = raw.strip().lower()
+    """كل قيمة غير معروفة كانت «low»: عطلة البنوك (ForexFactory «Holiday» — سيولة رقيقة وفجوات، لا
+    خبر ضعيف) تُعرض «تأثير منخفض» وتدخل فلتر «منخفض»، وحدث بلا تصنيف يُدّعى له تصنيف."""
+    t = (raw or "").strip().lower()
     if t in ("3", "high", "red"):
         return "high"
     if t in ("2", "medium", "orange"):
         return "medium"
-    return "low"
+    if t in ("1", "low", "yellow"):
+        return "low"
+    if t == "holiday":
+        return "holiday"
+    if t in ("non-economic", "none", "gray", "grey"):
+        return "none"
+    return "unknown"
 
 
 def _text(el: ET.Element | None) -> str:

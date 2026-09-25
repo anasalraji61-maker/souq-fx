@@ -145,3 +145,19 @@ def test_broken_xml_is_an_empty_list_not_a_crash():
 def test_titleless_rows_are_skipped_in_both_branches():
     assert cal._parse_ff(_rss("<item><description>d</description></item>")) == []
     assert cal._parse_ff(_events("<event><country>USD</country></event>")) == []
+
+
+# ------------------------------------------------ تصنيف التأثير (QA30)
+
+@pytest.mark.parametrize(
+    "raw,want",
+    [("High", "high"), ("Medium", "medium"), ("Low", "low"), ("Holiday", "holiday"),
+     ("Non-Economic", "none"), ("", "unknown"), (None, "unknown"), ("???", "unknown")],
+)
+def test_impact_is_never_guessed_low(raw, want):
+    assert cal._impact(raw) == want
+
+
+def test_ff_holiday_event_is_tagged_holiday():
+    out = cal._parse_ff(_events(_event("Bank Holiday", "JPY", impact="Holiday")))
+    assert out and out[0]["impact"] == "holiday"
