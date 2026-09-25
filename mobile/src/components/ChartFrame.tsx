@@ -297,8 +297,13 @@ export function ChartFrame({
       style={[styles.wrap, size === 'hero' && styles.heroWrap, fill && styles.wrapFill]}
       onPress={onSyncActivate}
       disabled={!onSyncActivate}
-      accessibilityState={{ disabled: !onSyncActivate }}
-      accessibilityLabel={onSyncActivate ? `${t.cfSyncActivateA11yPrefix}${(label || series.symbol).toUpperCase()}` : undefined}
+      // الشارة («قائد»/«تابع») داخل زرّ `accessible` لا يقرؤها VoiceOver — القائد كان يُعرف بلونه الأخضر فقط.
+      accessibilityState={{ disabled: !onSyncActivate, selected: !!onSyncActivate && syncBadge === 'leader' }}
+      accessibilityLabel={
+        onSyncActivate
+          ? `${t.cfSyncActivateA11yPrefix}${(label || series.symbol).toUpperCase()}${badge ? ` · ${badge}` : ''}`
+          : undefined
+      }
     >
       {showTimeframes && onTimeframeChange ? (
         <View style={styles.tfTopLeft}>
