@@ -914,18 +914,49 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * GBPJPY قديم والشارت على EURUSD ⇒ الصفقة التالية تبدأ «GBPJPY بيع»، ودخول EURUSD بلا وقف يُحفظ تحتها بإشارة
    * ربح معكوسة. زوج الشارت إن تبدّل أثناء التعديل (المؤثّر أعلاه لا يبدّل والخانة مملوءة) يغلب الرمز المحفوظ.
    */
-  const preEditRef = useRef<{ symbol: string; side: 'buy' | 'sell'; chart: string | undefined } | null>(null);
+  // والمسوّدة (دخول/خروج/حجم/وقف/هدف/ملاحظة) كذلك: صفقةٌ جديدة نصف مكتوبة ثم «تعديل» صفٍّ قديم لتصحيح خطأ ⇒ الحفظ أو
+  // الإلغاء كان يُفرغ كل الخانات بلا تحذير فيعيد المتداول كتابتها لحظة الدخول. تُعاد فقط إن عاد رمزها — أسعار EURUSD لا
+  // تُلصق تحت زوج شارتٍ تبدّل أثناء التعديل.
+  type Draft = {
+    entry: string;
+    exit: string;
+    size: string;
+    sizeFor: string;
+    sl: string;
+    tp: string;
+    note: string;
+    liveFill: typeof liveFillRef.current;
+  };
+  const preEditRef = useRef<{ symbol: string; side: 'buy' | 'sell'; chart: string | undefined; draft: Draft } | null>(null);
   const restorePreEdit = () => {
     const pre = preEditRef.current;
     preEditRef.current = null;
     if (!pre) return;
-    setSymbol(defaultSymbol && defaultSymbol !== pre.chart ? defaultSymbol : pre.symbol);
+    const chartMoved = !!defaultSymbol && defaultSymbol !== pre.chart;
+    setSymbol(chartMoved ? defaultSymbol : pre.symbol);
     setSide(pre.side);
+    if (chartMoved && defaultSymbol !== pre.symbol) return;
+    const d = pre.draft;
+    setEntry(d.entry);
+    setExit(d.exit);
+    setSize(d.size);
+    setSizeFor(d.sizeFor);
+    setSl(d.sl);
+    setTp(d.tp);
+    setNote(d.note);
+    liveFillRef.current = d.liveFill;
   };
 
   const startEdit = (tr: Trade) => {
     // تعديلٌ فوق تعديل: يبقى ما قبل الأوّل
-    if (!editing) preEditRef.current = { symbol, side, chart: defaultSymbol };
+    if (!editing) {
+      preEditRef.current = {
+        symbol,
+        side,
+        chart: defaultSymbol,
+        draft: { entry, exit, size, sizeFor, sl, tp, note, liveFill: liveFillRef.current },
+      };
+    }
     setEditing(tr);
     setSymbol(tr.symbol);
     setSide(tr.side === 'sell' ? 'sell' : 'buy');
