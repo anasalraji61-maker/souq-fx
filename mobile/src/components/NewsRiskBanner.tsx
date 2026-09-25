@@ -7,6 +7,7 @@ import {
   calendarAfterFetch,
   calendarFetchEvents,
   calendarUnavailable,
+  openCalendarUnavailable,
   newsCountdown,
   newsBannerText,
   newsTickDelayMs,
@@ -119,7 +120,8 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
     return () => clearTimeout(id);
   }, [now, hitDelta]);
   if (!hit) {
-    if (openSymbols || !calendarUnavailable(cache, symbol)) return null;
+    const down = openSymbols ? openCalendarUnavailable(cache, openSymbols, shownSymbol) : calendarUnavailable(cache, symbol);
+    if (!down) return null;
     // فشلٌ بلا محفوظ: الغياب كان يُقرأ «لا خطر» — سطرٌ هادئ (عنبري لا أحمر: لا نعرف بخبر، نعرف أننا لا نعرف)
     return (
       <View style={[styles.wrap, styles.wrapUnavailable]} accessible accessibilityRole="alert" accessibilityLabel={t.newsUnavailable}>

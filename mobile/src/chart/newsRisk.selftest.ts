@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import {
   calendarAfterFetch,
   calendarUnavailable,
+  openCalendarUnavailable,
   calendarFetchEvents,
   newsCountdown,
   newsTickDelayMs,
@@ -488,6 +489,24 @@ console.log('newsRisk glued-c selftest OK');
   assert.equal(calendarUnavailable(calendarAfterFetch(tooOld, [nfp], t0 + NEWS_STALE_MAX_MS + 5), 'EURUSD'), false);
 }
 console.log('newsRisk calendarUnavailable selftest OK');
+
+// openCalendarUnavailable — شريط الصفقات المفتوحة يقولها حين لا يقولها شريط النموذج
+{
+  const t0 = Date.UTC(2026, 8, 25, 10, 0);
+  const fail = calendarAfterFetch(null, null, t0);
+  // أثناء التعديل (لا شريط نموذج) ⇒ يقولها
+  assert.equal(openCalendarUnavailable(fail, ['EURUSD'], undefined), true);
+  // شريط النموذج على EURUSD يقولها ⇒ لا تكرار
+  assert.equal(openCalendarUnavailable(fail, ['GBPJPY'], 'EURUSD'), false);
+  // النموذج على رمزٍ بلا عملات ⇒ لا يقولها هناك ⇒ يقولها المفتوح
+  assert.equal(openCalendarUnavailable(fail, ['GBPJPY'], 'AAPL'), true);
+  // لا صفقة مغطّاة، أو التقويم سليم، أو قبل أول ردّ ⇒ لا شيء
+  assert.equal(openCalendarUnavailable(fail, ['AAPL'], undefined), false);
+  assert.equal(openCalendarUnavailable(fail, [], undefined), false);
+  assert.equal(openCalendarUnavailable(calendarAfterFetch(null, [], t0), ['EURUSD'], undefined), false);
+  assert.equal(openCalendarUnavailable(null, ['EURUSD'], undefined), false);
+}
+console.log('newsRisk openCalendarUnavailable selftest OK');
 
 // حساب micro بلاحقة ملاصقة (XM) أو سنت بفاصل: عملات الزوج العادي — كانت «EURUSDmicro» `[]` بلا تحذير
 {

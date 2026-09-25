@@ -524,3 +524,17 @@ export function calendarUnavailable(cache: CalendarCache | null, symbol: string)
   if (!cache || cache.ok || cache.fetchedAt != null) return false;
   return symbolCurrencies(symbol).length > 0;
 }
+
+/**
+ * شريط الصفقات المفتوحة والتقويم متعطّل: كان يُخفى دائماً (`openSymbols` ⇒ null) على افتراض أن شريط النموذج يقولها —
+ * لكن شريط النموذج يغيب أثناء تعديل صفقة، أو يخصّ رمزاً بلا عملات (AAPL)، فتبدو الصفقات المفتوحة بلا خبر.
+ * true حين يُغطّى رمزٌ مفتوح واحد على الأقل ولا شريط آخر ظاهر (`shownSymbol`) يقول الرسالة نفسها.
+ */
+export function openCalendarUnavailable(
+  cache: CalendarCache | null,
+  openSymbols: readonly string[],
+  shownSymbol?: string
+): boolean {
+  if (shownSymbol && calendarUnavailable(cache, shownSymbol)) return false;
+  return openSymbols.some((s) => calendarUnavailable(cache, s));
+}
