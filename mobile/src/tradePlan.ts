@@ -1271,7 +1271,16 @@ export function targetAtRR(input: {
   if (!(raw > 0)) return null;
   // سنت/micro («EURUSDC») بمنازل زوجه العادي — كانت شرائح 1:1…1:3 بالدفتر تُكتب بعشر خانات معنوية
   const spec = journalSpec(input.symbol);
-  if (!spec) return Number(raw.toPrecision(10));
+  if (!spec) {
+    // بعيداً عن الدخول هنا أيضاً: `toPrecision` لأقرب قيمة كان يُنزل الهدف دون النسبة — SOLUSDT بيع 216.4498972 وقف
+    // 216.7327937 «1:1.5» ⇒ 216.0255525 ⇒ النسبة 1.4999998 تُعرض «1:1.4» تحت الشريحة نفسها.
+    // ضرب بقوّة عشرة صحيحة لا قسمة على 1e-5: 62000 ÷ 1e-5 = 6200000000.000001 فيدفعه `ceil` إلى 62000.00001
+    const scale = 10 ** (9 - Math.floor(Math.log10(raw)));
+    const scaled = Math.round(raw * scale * 1e4) / 1e4;
+    const away = buy ? Math.ceil(scaled) : Math.floor(scaled);
+    const out = Number((away / scale).toPrecision(10));
+    return out > 0 ? out : null;
+  }
   const decimals = Math.round(-Math.log10(spec.pipSize)) + 1;
   const scale = 10 ** decimals;
   const scaled = Math.round(raw * scale * 1e6) / 1e6;

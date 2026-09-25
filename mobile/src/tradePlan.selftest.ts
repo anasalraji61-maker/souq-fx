@@ -412,6 +412,24 @@ console.log('tradePlan roundR selftest OK');
 
 console.log('tradePlan close-confirm R selftest OK');
 
+// —— رمز بلا مواصفات: هدف النسبة يُقرَّب بعيداً عن الدخول (عشر خانات معنوية) فلا تُعرض النسبة أقل من الشريحة ——
+{
+  const cases = [
+    { symbol: 'SOLUSDT', side: 'sell' as const, entry: 216.4498972, sl: 216.7327937, want: 216.0255524 }, // الدقيق 216.02555245؛ كان 216.0255525 ⇒ «1:1.4»
+    { symbol: 'BTCUSD', side: 'buy' as const, entry: 44599.4261, sl: 44568.59481, want: 44645.67304 }, // الدقيق 44645.673035؛ كان 44645.67303
+  ];
+  for (const c of cases) {
+    const tp = targetAtRR({ ...c, rr: 1.5 });
+    assert.equal(tp, c.want);
+    const p = analyzePlan({ symbol: c.symbol, side: c.side, entry: c.entry, sl: c.sl, tp: tp! });
+    assert.equal(formatRR(p.rr), '1:1.5');
+  }
+  // سعر دقيق لا يتحرّك: شراء 100 وقف 90 ⇒ 1:2 = 120 تماماً، وبيع 60000 وقف 60500 ⇒ 1:3 = 58500
+  assert.equal(targetAtRR({ symbol: 'US30', side: 'buy', entry: 100, sl: 90, rr: 2 }), 120);
+  assert.equal(targetAtRR({ symbol: 'BTCUSD', side: 'sell', entry: 60000, sl: 60500, rr: 3 }), 58500);
+}
+console.log('tradePlan targetAtRR no-spec away-rounding selftest OK');
+
 // —— سعر الهدف من نسبة R:R (شرائح 1:1/1:1.5/1:2/1:3 بالحاسبة والدفتر) ——
 {
   // القيم المرجعية: شراء EURUSD وقف 25 pip ⇒ 1:2 = +50 pip
