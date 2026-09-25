@@ -114,6 +114,11 @@ async def run_forever() -> None:
                     for item in data if isinstance(data, list) else [data]:
                         if isinstance(item, dict):
                             _store(item)
+            # إغلاق نظيف (1000/1001) ينهي `async for` بلا استثناء: كان `connected` يبقى true وإعادة
+            # الاتصال فورية بلا انتظار ⇒ خادم يقبل ثم يغلق (نفاد الرصيد) = «متصل» ولا شيء يصل، وحلقة بلا توقّف
+            _connected = False
+            _last_error = "closed by server"
+            await asyncio.sleep(8)
         except asyncio.CancelledError:
             _connected = False
             raise
