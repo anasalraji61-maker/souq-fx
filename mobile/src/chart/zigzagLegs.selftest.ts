@@ -36,4 +36,15 @@ assert.equal(live[1].y2, 115);
 const flat = computeZigZagLegs([1, 1.01, 1.02, 1.03]);
 assert.equal(flat.tail, null);
 assert.deepEqual(zigzagWindowSegments(flat.pivots, flat.tail, 0, 4), []);
+
+// شموع: القمّة على فتيل `high` والقاع على فتيل `low` (كـTradingView) — لا على الإغلاق.
+const candles = closes.map((c, i) => ({ high: c + (i === 10 ? 3 : 0.5), low: c - (i === 20 ? 4 : 0.5) }));
+const wick = computeZigZagLegs(candles);
+assert.equal(wick.pivots[10], 123, 'القمّة على الفتيل');
+assert.equal(wick.pivots[20], 96, 'القاع على الفتيل');
+// الانعكاس يُقاس بالمدى: قمّة 100 ثم شمعة low 94.9 (−5.1%) وإغلاقها 96 (−4%) ⇒ انعطاف بالشموع لا بالإغلاق.
+const bar = (c: number, h: number, l: number) => ({ c, h, l });
+const seq = [bar(99, 100, 98), bar(96, 97, 94.9), bar(97, 98, 96)];
+assert.equal(computeZigZagLegs(seq.map((b) => ({ high: b.h, low: b.l }))).pivots[0], 100);
+assert.equal(computeZigZagLegs(seq.map((b) => b.c)).pivots.every((v) => v == null), true);
 console.log('zigzagLegs selftest PASS');

@@ -2912,7 +2912,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => {
       if (!indicators.includes('zigzag')) return null;
       // على السلسلة كلّها: الساق الداخلة من يسار النافذة والخارجة من يمينها + الساق الجارية غير المؤكَّدة.
-      const legs = computeZigZagLegs(aheadBars.map((c) => c.close), zigzagDev);
+      const legs = computeZigZagLegs(aheadBars, zigzagDev);
       return zigzagWindowSegments(legs.pivots, legs.tail, aheadBase.from, aheadBase.to - aheadBase.from);
     },
     [aheadBars, aheadBase, indicators, zigzagDev]

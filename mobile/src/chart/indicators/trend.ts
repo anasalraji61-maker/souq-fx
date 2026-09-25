@@ -1289,57 +1289,67 @@ export function computeZigZag(closes: number[], deviationPct = 5): (number | nul
  * `tail` = null قبل أول انعطاف مؤكَّد (لا اتجاه بعد).
  */
 export function computeZigZagLegs(
-  closes: number[],
+  src: readonly number[] | readonly Pick<Candle, 'high' | 'low'>[],
   deviationPct = 5
 ): { pivots: (number | null)[]; tail: { i: number; v: number } | null } {
-  const n = closes.length;
+  // شموع ⇒ القمم من `high` والقيعان من `low` كـZig Zag المدمج بـTradingView: على الإغلاق كان كل انعطاف تحت
+  // فتيل شمعته (قمّة D1 بفتيل 50 pip تُرسم عند إغلاقها)، والعتبة تُقاس إغلاقاً-لإغلاق فتضيع ساقٌ بلغها المدى.
+  // أرقام ⇒ السلوك القديم (الإغلاق للجهتين).
+  const n = src.length;
+  const hi = (i: number) => {
+    const b = src[i]!;
+    return typeof b === 'number' ? b : b.high;
+  };
+  const lo = (i: number) => {
+    const b = src[i]!;
+    return typeof b === 'number' ? b : b.low;
+  };
   const result: (number | null)[] = new Array(n).fill(null);
   if (n < 2) return { pivots: result, tail: null };
 
   let direction: 0 | 1 | -1 = 0;
   let extremeIndex = 0;
-  let extremePrice = closes[0];
+  let extremePrice = hi(0);
 
   for (let i = 1; i < n; i++) {
-    const price = closes[i];
     if (direction === 0) {
-      if (price > extremePrice) {
-        extremePrice = price;
+      if (hi(i) > extremePrice) {
+        extremePrice = hi(i);
         extremeIndex = i;
         continue;
       }
-      const dropPct = ((extremePrice - price) / extremePrice) * 100;
+      const dropPct = ((extremePrice - lo(i)) / extremePrice) * 100;
       if (dropPct >= deviationPct) {
         result[extremeIndex] = extremePrice;
         direction = -1;
         extremeIndex = i;
-        extremePrice = price;
+        extremePrice = lo(i);
       }
     } else if (direction === 1) {
-      if (price >= extremePrice) {
-        extremePrice = price;
+      if (hi(i) >= extremePrice) {
+        extremePrice = hi(i);
         extremeIndex = i;
         continue;
       }
-      const dropPct = ((extremePrice - price) / extremePrice) * 100;
+      const dropPct = ((extremePrice - lo(i)) / extremePrice) * 100;
       if (dropPct >= deviationPct) {
         result[extremeIndex] = extremePrice;
         direction = -1;
         extremeIndex = i;
-        extremePrice = price;
+        extremePrice = lo(i);
       }
     } else {
-      if (price <= extremePrice) {
-        extremePrice = price;
+      if (lo(i) <= extremePrice) {
+        extremePrice = lo(i);
         extremeIndex = i;
         continue;
       }
-      const risePct = ((price - extremePrice) / extremePrice) * 100;
+      const risePct = ((hi(i) - extremePrice) / extremePrice) * 100;
       if (risePct >= deviationPct) {
         result[extremeIndex] = extremePrice;
         direction = 1;
         extremeIndex = i;
-        extremePrice = price;
+        extremePrice = hi(i);
       }
     }
   }
