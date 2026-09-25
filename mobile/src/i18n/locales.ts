@@ -899,6 +899,8 @@ export type Dict = {
   wlMoveUpA11y: string;
   wlMoveDownA11y: string;
   wlRemoveA11y: string;
+  /** DESIGN-PRO §5.2: row actions (reorder/remove) hidden until long-press */
+  wlRowActionsHint: string;
   wlRemoveConfirmTitle: string;
   wlRemoveConfirmBtn: string;
   wlCatalogTitle: string;
@@ -1011,6 +1013,9 @@ export type Dict = {
   dockHideA11yPrefix: string;
   dockPanelFallback: string;
   dockLibraryFallback: string;
+  /** DESIGN-PRO §5.4: the 5-entry dock's overflow entry */
+  dockMoreTab: string;
+  dockMoreA11y: string;
   dockDrawToolSectionTitle: string;
   dockTabA11yPrefix: string;
   railDrawSectionTitle: string;
@@ -2184,6 +2189,7 @@ const ar: Dict = {
   wlMoveUpA11y: 'تحريك لأعلى',
   wlMoveDownA11y: 'تحريك لأسفل',
   wlRemoveA11y: 'إزالة من المتابعة',
+  wlRowActionsHint: 'اضغط مطوّلاً للترتيب أو الإزالة',
   wlRemoveConfirmTitle: 'إزالة من المتابعة؟',
   wlRemoveConfirmBtn: 'إزالة',
   wlCatalogTitle: 'إضافة من الكتالوج',
@@ -2291,6 +2297,8 @@ const ar: Dict = {
   dockHideA11yPrefix: 'إخفاء ',
   dockPanelFallback: 'اللوحة',
   dockLibraryFallback: 'مكتبة',
+  dockMoreTab: 'المزيد',
+  dockMoreA11y: 'لوحات أخرى',
   dockDrawToolSectionTitle: 'أداة الرسم',
   dockTabA11yPrefix: 'تبويب: ',
   railDrawSectionTitle: 'رسم',
@@ -3379,6 +3387,7 @@ const enUS: Dict = {
   wlMoveUpA11y: 'Move up',
   wlMoveDownA11y: 'Move down',
   wlRemoveA11y: 'Remove from watchlist',
+  wlRowActionsHint: 'Long-press to reorder or remove',
   wlRemoveConfirmTitle: 'Remove from watchlist?',
   wlRemoveConfirmBtn: 'Remove',
   wlCatalogTitle: 'Add from catalog',
@@ -3486,6 +3495,8 @@ const enUS: Dict = {
   dockHideA11yPrefix: 'Hide ',
   dockPanelFallback: 'Panel',
   dockLibraryFallback: 'Library',
+  dockMoreTab: 'More',
+  dockMoreA11y: 'More panels',
   dockDrawToolSectionTitle: 'Draw tool',
   dockTabA11yPrefix: 'Tab: ',
   railDrawSectionTitle: 'Draw',
@@ -4606,6 +4617,7 @@ const ku: Dict = {
   wlMoveUpA11y: 'بۆ سەرەوە بگوازەرەوە',
   wlMoveDownA11y: 'بۆ خوارەوە بگوازەرەوە',
   wlRemoveA11y: 'لابردن لە چاودێری',
+  wlRowActionsHint: 'بۆ ڕیزکردن یان لابردن، دەستت ڕابگرە',
   wlRemoveConfirmTitle: 'لابردن لە چاودێری؟',
   wlRemoveConfirmBtn: 'لابردن',
   wlCatalogTitle: 'زیادکردن لە کاتالۆگەوە',
@@ -4713,6 +4725,8 @@ const ku: Dict = {
   dockHideA11yPrefix: 'شاردنەوەی ',
   dockPanelFallback: 'پانێڵ',
   dockLibraryFallback: 'کتێبخانە',
+  dockMoreTab: 'زیاتر',
+  dockMoreA11y: 'پانێڵی تر',
   dockDrawToolSectionTitle: 'ئامرازی وێنەکێشان',
   dockTabA11yPrefix: 'تابی: ',
   railDrawSectionTitle: 'وێنەکێشان',

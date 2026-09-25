@@ -28,6 +28,7 @@
 | QA | ui | **DP3 مُحدِّد التخطيط بمكانين**: الشريط العلوي `TerminalScreen.tsx:1100-1109` والشريط الجانبي `MatrixEdgeRails.tsx:185,222` ⇒ يُحذف من الجانبي (§5.1) | QA81 |
 | QA | ui | **DP6 تسميات تحت أيقونات الشريط**: `railTip` بـ`MatrixEdgeRails.tsx:78,106,126,297` ⇒ أيقونات فقط + تلميح بالضغط الطويل (§4) | QA81 |
 | QA | ui | **DP4 «حذف» ظاهر على كل صف** بقائمة المتابعة وقت السكون (`WatchlistPanel.tsx:494-515`) ⇒ يظهر بالضغط الطويل/السحب (§5.2) | QA81 |
+| launch | ui | **launch141** مفاتيح DESIGN-PRO جاهزة ar/en/ku لـDP5/DP4: `dockMoreTab` («المزيد»/More) و`dockMoreA11y` («لوحات أخرى»/More panels) للمدخل الخامس بـ`MatrixBottomDock.tsx`؛ و`wlRowActionsHint` («اضغط مطوّلاً للترتيب أو الإزالة») كـ`accessibilityHint` لصفّ المتابعة حين تُخفى أزرار ↑↓/حذف (`WatchlistPanel.tsx:481-518`) حتى الضغط الطويل | launch141 |
 | QA | ui | **DP5 الشريط السفلي 14 مدخلاً** (`MatrixBottomDock.tsx:70-83`) ⇒ 5 + «المزيد» (§5.4) | QA81 |
 | QA | ui | **DP2 ميزانية التأكيد**: شارة `armedTag` بلون التأكيد (`WatchlistPanel.tsx:671`، ممنوع على الشارات)؛ زرّ الشريط النشط تأكيد على الخلفية والحدّ والرمز والنصّ (`MatrixEdgeRails.tsx:377-385`) وقسما العدسة والرسم قد ينشطان معاً | QA81 |
 | QA | ui | **DP10 الرمز المختار بالمتابعة باللون وحده** (`WatchlistPanel.tsx:423` `symOn` = لون، الصفّ بلا خلفية/علامة ولا `accessibilityState`) | QA81 |
