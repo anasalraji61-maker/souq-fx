@@ -1,9 +1,14 @@
 import type { Candle } from '../api';
 
+/**
+ * متوسط مدى الشموع **المغلقة** — الشمعة الحيّة (الأخيرة) خارجه: مداها يكبر مع كل تيك فكان الصندوق يتغيّر
+ * ومعه كل شموع Range تُعاد تقسيماً تحت إصبع المتداول (كما أُصلح بـRenko).
+ */
 function avgRange(candles: Candle[]): number {
   if (candles.length < 2) return 1e-8;
-  const sum = candles.reduce((a, c) => a + (c.high - c.low), 0);
-  return Math.max(sum / candles.length, 1e-8);
+  const closed = candles.length >= 3 ? candles.slice(0, -1) : candles;
+  const sum = closed.reduce((a, c) => a + (c.high - c.low), 0);
+  return Math.max(sum / closed.length, 1e-8);
 }
 
 /**

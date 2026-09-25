@@ -31,6 +31,14 @@ ok('بلا شمعة فارغة', exact.length === 1 && exact[0]!.close === 2);
 const flat = [c(1, 1, 1.1, 1, 1.05), c(2, 1.05, 1.1, 1, 1.02)];
 ok('بلا صندوق ⇒ الأصل', rangeBars(flat, 1) === flat);
 
+// الصندوق التلقائي من الشموع المغلقة: تيك حيّ يوسّع مدى الشمعة الأخيرة لا يعيد تقسيم الشموع السابقة.
+const hist = Array.from({ length: 30 }, (_, i) =>
+  c(i, 1 + (i % 5) * 0.1, 1 + (i % 5) * 0.1 + 0.2, 1 + (i % 5) * 0.1 - 0.1, 1 + ((i + 1) % 5) * 0.1)
+);
+const before = rangeBars([...hist, c(30, 1.2, 1.25, 1.15, 1.2)]);
+const after = rangeBars([...hist, c(30, 1.2, 6, 1.15, 1.2)]);
+ok('الحيّة لا تغيّر الشموع المغلقة', before.slice(0, -1).map((b) => b.close).join() === after.slice(0, -1).map((b) => b.close).join());
+
 if (failures) {
   console.error(`range.selftest: ${failures} FAIL`);
   process.exit(1);
