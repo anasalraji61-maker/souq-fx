@@ -567,7 +567,7 @@ export type Dict = {
   journalOpenSuffix: string;
   /** بدل سطر «المخاطرة (مفتوحة)» الغائب (`openRiskTotals` = null) حين السبب صفقة مفتوحة بلا وقف فقط — `{n}` عددها. العدد بعد النقطتين فلا صيغ جمع */
   journalOpenRiskNoStop: string;
-  /** سطر تحذير بالدفتر من `openCurrencyExposure` حين `legs ≥ 2 && sameWay` — `{ccy}` العملة و`{n}` عدد الصفقات (مرّة واحدة لكلٍّ). العدد بعد النقطتين فلا صيغ جمع */
+  /** سطر تحذير بالدفتر من `stackedCurrencyExposure` (صفقتان مفتوحتان أو أكثر بالاتجاه نفسه، بلا ساق معاكسة) — `{ccy}` العملة و`{n}` عدد الصفقات (مرّة واحدة لكلٍّ). العدد بعد النقطتين فلا صيغ جمع */
   journalExposureStacked: string;
   /** قبل الحفظ (`draftStackedExposure`): الصفقة المكتوبة لم تُفتح بعد، فـ«صفقات مفتوحة…: 3 (+1)» يعدّها مفتوحة — `{ccy}` و`{after}` العدد بعدها و`{before}` المفتوحة الآن. الأعداد بعد اسم لا قبله فلا صيغ جمع */
   journalExposureStackedDraft: string;

@@ -2910,3 +2910,34 @@ ar/ku «5% ≈540.0 pip»، en «pips»، GER40 «≈925.00» بلا وحدة �
 
 **خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (راجع التشغيلة 83) + `matrix_advice` (93) + `npx expo install --fix` (96، أنس) + `as_of` مع السعر المخزَّن (الخادم — بدونه `a9d9fdb` بلا أثر).
 **يحتاج جهازاً**: الخطوات 322–361؛ أهمّها 357 (تجديد الدفتر عند العودة) و360 (رمز النموذج بعد التعديل).
+
+## 2026-09-25 — التشغيلة التاسعة والتسعون
+
+أوّلاً `COORDINATION.md` (دورة QA 46): صفّ **tools63** يطلب من launch مفتاحَي نصّ ⇒ **أُنجز أوّلاً** (البند 1). `bash scripts/qa-build-check.sh` **أخضر بصفر أخطاء قبل كل commit**.
+**لم يُشغَّل التطبيق.**
+
+1. **tools63 — مفتاحان** (`c7ee34c`، ar/en/ku): `journalMiniNoMoney` (سطر الدفتر لرمز mini: نقاط وأسعار بلا مبالغ لأن لوت mini يختلف بين الوسطاء،
+   «راجع الربح بمنصّتك» — لا يقول «اكتب الزوج العادي» الذي يناقض قبول الدفتر للرمز)، و`riskCalcSpreadPointsHint` («سبريد «{value}» بالنقاط — كل 10 points
+   = 1 pip، فاكتبه هنا {pips}»؛ الوسائط نفسها التي يعيدها `slPipsInPoints` فتصلح للخانة بلا دالّة جديدة). **الوصل لـtools** (`TradeJournalPanel` بجانب
+   `journalCentMoneyNote` حين `isMiniJournalSymbol`؛ `PositionSizePanel.tsx:543` فرع قبل `spreadTooWide`). **QA: الجزء النصّي من الصفّ أُنجز.**
+2. **`mcZigzagDevA11y`** (`bb50a51`، ar/en/ku): شريحة انحراف ZigZag (`2973909`) اسمها لقارئ الشاشة حرفياً `` `ZigZag ${dev}% → ${next}%` `` ⇒ يُقرأ «سهم لليمين»
+   وبالإنجليزية للعربي والكردي. المفتاح «انحراف ZigZag {pct}% — اضغط للتبديل إلى {next}%». **الوصل لـchart** (`MatrixChart.tsx`، `accessibilityLabel` للشريحة).
+3. **`RELEASE-MOBILE.md`** (`eed118b`، `5b4a07c`): خطوات جهاز **363–369**: شريحة ZigZag، مقياس «%»، Line Break، سطر «✓ الدخول من السعر الحالي» بعد دخول باليد،
+   شريط «التقويم غير متاح» للصفقات المفتوحة، لاحقة الوسيط لا تمسح سعر التحويل. **368 موسومة «لا يُختبر على الجهاز»**: `openCurrencyExposure` (`9eb513d`)
+   **بلا مستعمل بالواجهة** (grep: `tradePlan.ts` وحده) — الإصلاح صحيح بالاختبار الذاتي لكن لا أثر ظاهر.
+4. **`FEATURE-INVENTORY.md`** (`5a4a027`): صفوف المحرّك (Line Break، «%»)، المؤشرات (شريحة ZigZag، مع أن اسمها a11y غير موصول)، الخبر القوي، الحاسبة.
+
+**فحص بلا تغيير**: مفاتيح `ctlKindLineBreak` و`mcPercentScaleA11y` موجودة بثلاث لغات وموصولة (`typeLabels.ts:37`، `MatrixChart.tsx:6109`)؛ زرّ «%» له
+`accessibilityState` — جيّد. `README.md`/`app.json`/`eas.json`/`AppErrorBoundary.tsx` بلا تغيير. `STORE-LISTING.md` لم يُمسّ: ar 3997/en 3994 من 4000، لا مكان
+لـLine Break دون حذف سطر آخر.
+
+### ردّ على COORDINATION
+- **tools63**: مفتاحا launch أُنجزا (`c7ee34c`) — للوصل من tools، ثم يُغلق. جزء `formatPrice` لـchart، لم أمسّه.
+- **جديد لـQA (a)**: `openCurrencyExposure` بلا مستعمل خارج `tradePlan.ts` (تصدير ميّت؟). مفتاح `journalExposureStacked` **مستعمل** عبر `stackedCurrencyExposure`
+  (`TradeJournalPanel.tsx:767`)، لكن تعليقه بـ`locales.ts:570` كان ينسبه لـ`openCurrencyExposure` (`legs ≥ 2 && sameWay`) — **صُحّح التعليق** بهذا الـcommit.
+- **جديد لـchart**: وصل `mcZigzagDevA11y` (البند 2).
+- launch67 (إعادة الجولة) وlaunch73 (ترخيص البيانات) ← أنس، قائمان. صفوفي الأخرى (`a11yBusy`، «₴»، `matrix_advice`) بملفات بلا مالك، بلا تغيير.
+
+**خارج نطاقي ويستحقّ عملاً**: القائم بلا تغيير (راجع التشغيلة 83) + `matrix_advice` (93) + `npx expo install --fix` (96، أنس) + `as_of` مع السعر المخزَّن (الخادم).
+ويُستحسن أن يراجع متحدّث كردي نصَّي mini والسبريد.
+**يحتاج جهازاً**: الخطوات 322–369؛ أهمّها 364 (مقياس «%» مع السحب) و365 (Line Break مقابل TradingView).
