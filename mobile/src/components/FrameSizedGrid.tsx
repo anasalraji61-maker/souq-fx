@@ -331,7 +331,23 @@ export function FrameSizedGrid({
         ]}
       >
         {storageKey ? (
-          <View style={styles.handleBar} {...responders[item.id].panHandlers}>
+          <View
+            style={styles.handleBar}
+            {...responders[item.id].panHandlers}
+            // السحب وحده لا يصل لقارئ الشاشة: «قابل للضبط» ⇒ سحب لأعلى/لأسفل يبدّله مع جاره.
+            accessible
+            accessibilityRole="adjustable"
+            accessibilityLabel={t.gridHandleA11y}
+            accessibilityValue={{ min: 1, max: displayed.length, now: index + 1 }}
+            accessibilityActions={[
+              ...(index > 0 ? [{ name: 'decrement' as const, label: t.wlMoveUpA11y }] : []),
+              ...(index < displayed.length - 1 ? [{ name: 'increment' as const, label: t.wlMoveDownA11y }] : []),
+            ]}
+            onAccessibilityAction={(e) => {
+              const j = e.nativeEvent.actionName === 'decrement' ? index - 1 : e.nativeEvent.actionName === 'increment' ? index + 1 : -1;
+              if (displayed[j]) swap(item.id, displayed[j].id);
+            }}
+          >
             <View style={styles.handleInset}>
               <View style={styles.dotsGrid}>
                 {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
