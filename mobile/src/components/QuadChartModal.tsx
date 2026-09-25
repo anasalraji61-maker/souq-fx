@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api, type ChartSeries } from '../api';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { headerChangePct, livePriceForChart, livePriceForHeader } from '../chart/liveSeries';
@@ -447,8 +447,8 @@ const styles = StyleSheet.create({
   cellHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
   cellHeadRtl: { flexDirection: 'row-reverse' },
   sym: { color: colors.accent, fontWeight: '800' },
-  cellPrice: { color: colors.text, fontSize: 12, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  cellPct: { fontSize: 11, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  cellPrice: { ...numeric, color: colors.text, fontSize: 12, fontWeight: '700' },
+  cellPct: { ...numeric, fontSize: 11, fontWeight: '800' },
   demoTag: { color: colors.warn, fontSize: 10, fontWeight: '800' },
   closedTag: { color: colors.warn, fontSize: 9, fontWeight: '700', opacity: 0.9 },
   // القيادة والتبعية موسومتان بالرأس وبحدّ الخلية: المزامنة لا تعمل بصمت.

@@ -21,7 +21,7 @@ import {
 } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
-import { buttons, colors, radii, spacing } from '../theme';
+import { buttons, colors, numeric, radii, spacing } from '../theme';
 import { isTimeframe } from '../timeframes';
 import type { Candle, ChartSeries } from '../api';
 import {
@@ -12959,7 +12959,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  readoutText: { color: colors.text, fontSize: 11, fontFamily: 'monospace', flex: 1, textAlign: 'right' },
+  readoutText: { ...numeric, color: colors.text, fontSize: 11, fontFamily: 'monospace', flex: 1, textAlign: 'right' },
   readoutMuted: { color: colors.textDim, fontSize: 11, flex: 1, textAlign: 'right' },
   drawingsSaveError: {
     color: colors.bear,
@@ -12975,7 +12975,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     backgroundColor: colors.controlBg,
   },
-  crossAlertText: { fontWeight: '800', fontSize: 11, fontFamily: 'monospace' },
+  crossAlertText: { ...numeric, fontWeight: '800', fontSize: 11, fontFamily: 'monospace' },
   zoomBtn: {
     width: 28,
     height: 28,
@@ -13070,6 +13070,7 @@ const styles = StyleSheet.create({
     pointerEvents: 'none',
   },
   priceAxisLabel: {
+    ...numeric,
     position: 'absolute',
     left: 4,
     right: 3,
@@ -13088,6 +13089,7 @@ const styles = StyleSheet.create({
   },
   hiLoLeader: { width: 6, height: 1, backgroundColor: colors.textMuted, opacity: 0.8 },
   hiLoText: {
+    ...numeric,
     color: colors.textMuted,
     fontSize: 9,
     lineHeight: HILO_LABEL_H,
@@ -13114,6 +13116,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   currentPriceText: {
+    ...numeric,
     color: '#041514',
     fontSize: 9,
     lineHeight: 14,
@@ -13121,6 +13124,7 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
   },
   currentPriceCountdown: {
+    ...numeric,
     color: '#041514',
     opacity: 0.72,
     fontSize: 8,
@@ -13139,6 +13143,7 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   timeAxisLabel: {
+    ...numeric,
     position: 'absolute',
     top: 4,
     width: 88,
@@ -13212,6 +13217,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   fibLabel: {
+    ...numeric,
     position: 'absolute',
     right: 4,
     top: -10,
@@ -13221,6 +13227,7 @@ const styles = StyleSheet.create({
   // وسم سعر على خطٍّ أفقي (خطّ المتداول): بلون الخطّ نفسه ليُقرأ كتابعٍ له لا كوسم
   // محور. يسار اللوح لنفس سبب وسم فيبو أدناه.
   levelPriceLabel: {
+    ...numeric,
     position: 'absolute',
     left: 4,
     top: -11,
@@ -13246,6 +13253,7 @@ const styles = StyleSheet.create({
   },
   // ارتفاع المستطيل/المنطقة بالـpip: أخفّ من وسم الخطّ (ليس مستوى سعر بل مقاس).
   zoneRangeLabel: {
+    ...numeric,
     position: 'absolute',
     fontSize: 10,
     lineHeight: 12,
@@ -13263,6 +13271,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   fibLevelLabel: {
+    ...numeric,
     position: 'absolute',
     left: 4,
     top: -11,
@@ -13296,6 +13305,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(45,212,191,0.16)',
   },
   positionLabel: {
+    ...numeric,
     position: 'absolute',
     fontSize: 10,
     lineHeight: 13,
@@ -13326,10 +13336,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgGlass,
   },
   measureLiveText: {
+    ...numeric,
     color: colors.text,
     fontSize: 11,
     fontWeight: '800',
-    fontVariant: ['tabular-nums'],
   },
   pending: {
     position: 'absolute',
@@ -13405,6 +13415,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   crossTagText: {
+    ...numeric,
     color: '#041514',
     fontSize: 9,
     lineHeight: 14,
@@ -13412,6 +13423,7 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
   },
   crossPipsText: {
+    ...numeric,
     color: '#041514',
     opacity: 0.72,
     fontSize: 8,
@@ -13462,11 +13474,11 @@ const styles = StyleSheet.create({
   // سطر واحد (يُصغَّر حتى 75% ثم «…»): «Fractal Chaos Osc» كان يلتفّ لثلاثة أسطر فيدفع الرقم تحت قاع
   // لوحة بـ34px (`overflow: hidden`) — الاسم يُقرأ والرقم يختفي.
   paneHeadName: { color: colors.textDim, fontSize: 9, fontWeight: '800', textAlign: 'center' },
-  paneHeadValue: { color: colors.textMuted, fontSize: 9, fontWeight: '700', textAlign: 'center', marginTop: 1 },
+  paneHeadValue: { ...numeric, color: colors.textMuted, fontSize: 9, fontWeight: '700', textAlign: 'center', marginTop: 1 },
   // رقم طويل (مقياس دقيق كـMACD على زوج عملات) — 8 محارف لا تتّسع بـ36px عند حجم 9.
   paneHeadValueLong: { fontSize: 8 },
   paneHeadRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 1 },
-  paneHeadInline: { color: colors.textMuted, fontSize: 8, fontWeight: '700', marginHorizontal: 2.5 },
+  paneHeadInline: { ...numeric, color: colors.textMuted, fontSize: 8, fontWeight: '700', marginHorizontal: 2.5 },
   // خطّ عتبة داخل لوحة محصورة المدى. الرقم عند أقصى اليسار — أبعد موضع عن اسم اللوحة
   // (اللوحة row-reverse فاسمها يميناً) وأقلّها حجباً للشموع الأخيرة التي يقرؤها المتداول.
   paneGuideLine: {
@@ -13478,7 +13490,7 @@ const styles = StyleSheet.create({
   },
   paneGuideLineMid: { opacity: 0.45 },
   paneGuideLabelBox: { position: 'absolute', left: 3 },
-  paneGuideLabel: { color: colors.textDim, fontSize: 8, fontWeight: '700' },
+  paneGuideLabel: { ...numeric, color: colors.textDim, fontSize: 8, fontWeight: '700' },
   // مفتاح ألوان طبقات السعر: صفّ شارات أعلى يسار لوحة السعر، فوق الشموع بلا اعتراضها.
   priceLegend: {
     position: 'absolute',
@@ -13509,11 +13521,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   denseOhlcText: {
+    ...numeric,
     color: colors.text,
     fontSize: 9,
     lineHeight: DENSE_OHLC_LINE_H,
     fontWeight: '700',
-    fontVariant: ['tabular-nums'],
     paddingHorizontal: 4,
     borderRadius: 3,
     overflow: 'hidden',
@@ -13521,7 +13533,7 @@ const styles = StyleSheet.create({
   },
   priceLegendSwatch: { width: 6, height: 6, borderRadius: 1, marginRight: 3 },
   priceLegendText: { color: colors.text, fontSize: 9, fontWeight: '700' },
-  priceLegendValue: { color: colors.text, fontSize: 9, fontWeight: '700', marginLeft: 4, fontVariant: ['tabular-nums'] },
+  priceLegendValue: { ...numeric, color: colors.text, fontSize: 9, fontWeight: '700', marginLeft: 4 },
   priceLegendMore: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
   paneZeroLine: {
     position: 'absolute',
@@ -13544,6 +13556,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   collapsedCount: {
+    ...numeric,
     color: colors.accent,
     fontSize: 9,
     fontWeight: '800',
@@ -13569,6 +13582,7 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   collapsedPage: {
+    ...numeric,
     color: colors.accent,
     fontSize: 9,
     fontWeight: '800',
