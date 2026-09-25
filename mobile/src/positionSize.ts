@@ -547,14 +547,19 @@ export function typedExitQuoteToAccount(
 
 /**
  * نقاط وقفٍ مكتوبة يدوياً تبقى عند تبديل الأداة **ضمن الصنف نفسه** فقط: فوركس ⇄ فوركس (EURUSD ⇒ GBPUSD ⇒ USDJPY: «20 pip»
- * مسافةٌ بالمعنى نفسه)، أو المعدن نفسه بعملة أخرى (XAUUSD ⇒ XAUEUR). بين صنفين تُمسح: «20» لـEURUSD تصير على الذهب **2$**
+ * مسافةٌ بالمعنى نفسه)، أو المعدن نفسه بعملة أخرى قريبة السعر (XAUUSD ⇒ XAUEUR؛ لا XAUJPY). بين صنفين تُمسح: «20» لـEURUSD تصير على الذهب **2$**
  * (pip الذهب 0.1) — وقفٌ أضيق من سبريد الذهب نفسه أحياناً، واللوت يخرج أكبر بعشرات المرّات من مركزٍ بوقف ذهبٍ معتاد (150–300
  * pip)، برقم أنيق يبدو محسوباً. والعكس (300 pip ذهب ⇒ EURUSD) وقفٌ بعيد بلوت أصغر بلا سبب. الفضة ≠ الذهب (0.01 مقابل 0.1).
  */
 export function slPipsCarryOver(prev: InstrumentSpec, next: InstrumentSpec): boolean {
   const kind = (x: InstrumentSpec) => (METALS[x.base] ? x.base : 'FX');
-  return kind(prev) === kind(next);
+  if (kind(prev) !== kind(next)) return false;
+  if (kind(next) === 'FX' || prev.quote === next.quote) return true;
+  // المعدن نفسه بعملة **بسعرٍ مقارب** فقط: pip الذهب 0.1 بأي عملة تسعير، فـ«150» على XAUUSD وقف 15$ وعلى XAUJPY وقف 15 ين
+  // (~0.10$) ⇒ لوت أكبر ×160 بمخاطرة «1%» صحيحة الحساب (XAUTRY/XAUHKD/XAUCNH/XAUSEK كذلك). بين هذه العملات السعر ضمن ضعفين
+  return METAL_CARRY_QUOTES.has(prev.quote) && METAL_CARRY_QUOTES.has(next.quote);
 }
+const METAL_CARRY_QUOTES = new Set(['USD', 'EUR', 'GBP', 'CHF', 'AUD', 'CAD', 'NZD', 'SGD']);
 
 /** قيمة الـpip للوت قياسي واحد، بعملة الحساب. */
 export function pipValuePerLot(spec: InstrumentSpec, quoteToAccount: number): number {

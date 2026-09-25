@@ -2869,6 +2869,21 @@ console.log('positionSize Arabic comma price hint selftest OK');
   assert.equal(slPipsCarryOver(S('XAUUSD'), S('EURUSD')), false);
   assert.equal(slPipsCarryOver(S('XAUUSD'), S('XAGUSD')), false);
   assert.equal(slPipsCarryOver(S('USDJPY'), S('SILVER')), false);
+  // الذهب بالين/الليرة/…: pip 0.1 ين ⇒ «150» وقف 15 ين لا 15$ — كان يبقى فيخرج اللوت ×160 (10.00 بدل 0.06)
+  assert.equal(slPipsCarryOver(S('XAUUSD'), S('XAUJPY')), false);
+  assert.equal(slPipsCarryOver(S('XAUJPY'), S('XAUUSD')), false);
+  assert.equal(slPipsCarryOver(S('XAGUSD'), S('XAGJPY')), false);
+  assert.equal(slPipsCarryOver(S('XAUEUR'), S('XAUTRY')), false);
+  assert.equal(slPipsCarryOver(S('XAUGBP'), S('XAUHKD')), false);
+  assert.equal(slPipsCarryOver(S('XAUJPY'), S('XAUJPY.m')), true);
+  assert.equal(slPipsCarryOver(S('XAUAUD'), S('XAUCHF')), true);
+  {
+    const jpy = S('XAUJPY');
+    // حساب USD، USDJPY 150 ⇒ قيمة pip للوت = 0.1 × 100 ÷ 150 USD؛ «150» يخاطر بـ100$ بـ10.00 لوت، والوقف الصحيح 2250 ين = 22500 pip ⇒ 0.06
+    const pv = pipValuePerLot(jpy, 1 / 150);
+    assert.equal(positionSize({ balance: 10000, riskPct: 1, slPips: 150, pipValuePerLot: pv, contractSize: jpy.contractSize })!.lots, 10);
+    assert.equal(positionSize({ balance: 10000, riskPct: 1, slPips: 22500, pipValuePerLot: pv, contractSize: jpy.contractSize })!.lots, 0.06);
+  }
   // لماذا: 20 pip EURUSD على الذهب = 2$ ⇒ لوت أكبر بعشرة أضعاف من وقف ذهب 200 pip بالمخاطرة نفسها
   const g = S('XAUUSD');
   const at20 = positionSize({ balance: 10000, riskPct: 1, slPips: 20, pipValuePerLot: pipValuePerLot(g, 1), contractSize: g.contractSize })!;
