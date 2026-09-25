@@ -656,8 +656,13 @@ def place_under_sponsor(
     pwd = (password or "").strip()
     if len(username) < 3:
         raise ValueError("username too short")
-    if len(pwd) < 4:
+    if not pwd:
+        # فارغ = «ولّد لي كلمة مرور» — تُعاد بـ`temp_password` أدناه
         pwd = secrets.token_urlsafe(8)
+    elif len(pwd) < 4:
+        # كانت تُستبدل بعشوائية **لا تُعاد** (`temp_password` None لأن كلمة كُتبت): العضو يُنشأ ويُعدّ
+        # بساق الراعي ولا يستطيع أحد الدخول بحسابه أبداً. نفس حدّ التسجيل (`register_user`).
+        raise ValueError("password too short")
     if side_norm not in ("left", "right"):
         raise ValueError("side must be left or right")
     if role not in commissions_mod.ROLE_LABELS_AR:

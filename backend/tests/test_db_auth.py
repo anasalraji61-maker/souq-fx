@@ -280,3 +280,25 @@ def test_an_existing_case_collision_does_not_break_startup_or_guess_on_login(tmp
         db.login_user("ALI", "hunter2")
     with pytest.raises(ValueError, match="taken"):
         _register("aLI", email="z@example.com")
+
+
+# ── وضع عضو تحت راعٍ: كلمة مرور قصيرة ─────────────────────────────────────────────
+def _sponsor() -> int:
+    return db.register_user("sponsor1", "pass1234", email="s1@example.com")["user_id"]
+
+
+def test_place_member_short_password_is_rejected_not_silently_replaced(_db):
+    """«abc» كانت تُستبدل بعشوائية لا تُعاد (`temp_password` None) ⇒ حساب لا يدخله أحد أبداً."""
+    sid = _sponsor()
+    with pytest.raises(ValueError, match="password too short"):
+        db.place_under_sponsor(sid, "dave", "abc", "left")
+    # لم يُنشأ العضو ولم تُحجز الساق
+    assert db.place_under_sponsor(sid, "dave", "abcd", "left")["ok"]
+    assert db.login_user("dave", "abcd")
+
+
+def test_place_member_blank_password_returns_the_generated_one(_db):
+    sid = _sponsor()
+    out = db.place_under_sponsor(sid, "erin", "", "right")
+    assert out["temp_password"]
+    assert db.login_user("erin", out["temp_password"])
