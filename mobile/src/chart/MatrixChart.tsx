@@ -1564,9 +1564,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // هامش يمين افتراضي كـTradingView: آخر شمعة لا تلتصق بمحور السعر، وتظهر منطقة المستقبل (سحابة
   // Ichimoku المُسقَطة، Alligator، التقاطع بعد الشمعة الحيّة) بلا سحب. كان 0 ⇒ السحابة القادمة لا تُرى إلا
   // بسحب الشارت يساراً. بكسلات من عرض اللوح الحالي؛ `xPanAtRest` يعيد حسابه إن تغيّر العرض قبل أي سحب.
+  // بـBar Replay لا هامش: خانات النافذة غير المكشوفة هي منطقة المستقبل، والهامش كان يُخفي أوّل 8 خانات
+  // من 80 خلف الحافة اليسرى — أي 8 من 12 شمعة مكشوفة عند بدء الإعادة.
   const restXPan = useCallback(
-    () => (canPan ? -Math.round(chartPlotWRef.current * RIGHT_MARGIN_FRAC) : 0),
-    [canPan]
+    () => (canPan && !replayOn ? -Math.round(chartPlotWRef.current * RIGHT_MARGIN_FRAC) : 0),
+    [canPan, replayOn]
   );
   const xPanAtRest = useRef(true);
   const chartPlotHRef = useRef(200);
@@ -1574,6 +1576,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     plot: [] as { time: number; close: number; open: number; high: number; low: number }[],
     start: 0,
     windowLen: 80,
+    slots: 80,
     all: [] as unknown[],
   });
   // زمن آخر شمعة مصدر: على Renko/Range آخر لبنة قد تسبقه بساعات — نهاية السلسلة لإرساء الرسومات
@@ -1705,11 +1708,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const end = plot.length - applied.offset;
       const start = Math.max(0, end - applied.count);
       const windowPlot = plot.slice(start, end);
+      const shown = windowPlot.length ? windowPlot : plot.slice(-Math.min(40, plot.length));
       return {
-        plot: windowPlot.length ? windowPlot : plot.slice(-Math.min(40, plot.length)),
+        plot: shown,
         start,
         all: plot,
         windowLen: Math.max(1, windowPlot.length),
+        slots: Math.max(1, shown.length),
       };
     }
 
@@ -1722,7 +1727,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const visiblePlot = replayOn
       ? windowPlot.slice(0, Math.max(1, Math.min(replayStep, windowLen)))
       : windowPlot;
-    return { plot: visiblePlot, start, all: plot, windowLen };
+    // خانات اللوح: بـBar Replay نافذة البداية كلّها (كـTradingView) — المكشوف يملأ أوّلها ويبقى الباقي
+    // فارغاً. كان اللوح يُقسَم على المكشوف وحده ⇒ 3 شموع بعرض الشاشة ثم تضيق مع كل خطوة.
+    const slots = Math.max(1, replayOn ? windowLen : visiblePlot.length);
+    return { plot: visiblePlot, start, all: plot, windowLen, slots };
   }, [
     liveSeries.candles,
     kind,
@@ -3244,9 +3252,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // الإزاحة نفسها التي يرسم بها `xOf` (`viewXPan` أدناه)، والعرض نفسه (`chartPlotW`).
   const rangePlotW = Math.max(80, chartW - PRICE_AXIS_WIDTH);
   const { lo: visLo, hi: visHi } = visibleBarRange(
-    source.plot.length,
+    source.slots,
     rangePlotW,
-    syncFollow && syncWindow?.xPanNorm != null ? syncWindow.xPanNorm * rangePlotW : xPan
+    syncFollow && syncWindow?.xPanNorm != null ? syncWindow.xPanNorm * rangePlotW : xPan,
+    source.plot.length
   );
   // اللوحات (MACD/TSI/CCI…) تقيس المرئي نفسه — `macdPaneGeom(…, vis)` و`vis` بـTrend/ZeroLineSeries.
   const paneVis = useMemo(() => ({ lo: visLo, hi: visHi }), [visLo, visHi]);
@@ -3580,27 +3589,41 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       ? syncWindow.xPanNorm * chartPlotW
       : xPan;
   // أعمدة لوحات المؤشرات تُزاح أفقياً مع الشموع (السحب بين شمعتين، ومنطقة المستقبل) — `styles.paneHead`.
-  const paneShift = useMemo(() => ({ transform: [{ translateX: viewXPan }] }), [viewXPan]);
+  // بـBar Replay صفّ الأعمدة بعرض المكشوف وحده (`slotFill`) فعمود اللوحة `i` تحت الشمعة `i` — الأعمدة
+  // ‎flex: 1‎ وخطوطها بعرض الصفّ. الهامش يدفعه لليسار داخل `pane` المعكوس (‎row-reverse‎).
+  const slotFill = source.plot.length / Math.max(1, source.slots);
+  const paneShift = useMemo(
+    () =>
+      slotFill < 1
+        ? {
+            transform: [{ translateX: viewXPan }],
+            flex: 0,
+            width: chartPlotW * slotFill,
+            marginRight: chartPlotW * (1 - slotFill),
+          }
+        : { transform: [{ translateX: viewXPan }] },
+    [viewXPan, slotFill, chartPlotW]
+  );
   const toScale = (price: number) => (logScale ? Math.log(Math.max(price, 1e-12)) : price);
   const fromScale = (scaled: number) => (logScale ? Math.exp(scaled) : scaled);
 
   const xOf = (i: number) =>
-    ((i + 0.5) / Math.max(1, source.plot.length)) * chartPlotW + viewXPan;
+    ((i + 0.5) / Math.max(1, source.slots)) * chartPlotW + viewXPan;
   // آخر خانة يبلغها اللوح يميناً: آخر شمعة، أو أبعد منها حين يُسحب الشارت يساراً فتظهر منطقة المستقبل.
   // خطّ الترند يُقصّ عندها لا عند آخر شمعة — ترند رُسم نحو المستقبل كان ينقطع عند الشمعة الحيّة.
   const lastDrawLocal = Math.max(
     source.plot.length - 1,
-    Math.ceil(((chartPlotW - viewXPan) / chartPlotW) * Math.max(1, source.plot.length))
+    Math.ceil(((chartPlotW - viewXPan) / chartPlotW) * Math.max(1, source.slots))
   );
   const colW = Math.min(
     48,
-    Math.max(2, chartPlotW / Math.max(1, source.plot.length) - 1)
+    Math.max(2, chartPlotW / Math.max(1, source.slots) - 1)
   );
   /**
    * عرض شريحة النطاق (بولنجر/كلتنر/دونشيان…) = خطوة العمود، فالمساحة متّصلة بكل تكبير
    * وشفافيّتها لا تتبدّل بتراكب الشرائح. `polyline.bandStripWidth` تشرح العطلين.
    */
-  const bandW = bandStripWidth(chartPlotW, source.plot.length);
+  const bandW = bandStripWidth(chartPlotW, source.slots);
   // سحابة Ichimoku ممتدّة لمنطقة المستقبل (25 خانة كـTradingView) حتى آخر خانة ظاهرة — كانت تنتهي
   // عند الشمعة الحيّة فلا يرى المتداول انقلاب السحابة القادم (Kumo twist)، أهمّ ما يُقرأ منها.
   const ichimokuCloud = ichimoku
@@ -3762,11 +3785,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
   const hitIndex = useCallback((x: number) => {
     const len = sourceRef.current.plot.length || 1;
+    const slots = Math.max(len, sourceRef.current.slots || 1);
     const w = chartPlotW || 1;
     const pan = syncFollow && syncWindow?.xPanNorm != null
       ? syncWindow.xPanNorm * w
       : xPanRef.current;
-    const i = Math.floor(((x - pan) / w) * len);
+    const i = Math.floor(((x - pan) / w) * slots);
     return Math.max(0, Math.min(len - 1, i));
   }, [chartPlotW, syncFollow, syncWindow?.xPanNorm]);
 
@@ -3776,7 +3800,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const pan = syncFollow && syncWindow?.xPanNorm != null
       ? syncWindow.xPanNorm * w
       : xPanRef.current;
-    return drawSlotAt(x, pan, w, sourceRef.current.plot.length);
+    return drawSlotAt(x, pan, w, sourceRef.current.slots || sourceRef.current.plot.length);
   }, [chartPlotW, syncFollow, syncWindow?.xPanNorm]);
 
   const priceAtY = useCallback(
@@ -4321,7 +4345,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       }
       return best?.id ?? null;
     },
-    [drawings, drawingsHidden, source.start, source.plot.length, xOf, yOf, positionBox, chartPlotW, chartPlotH, lastDrawLocal]
+    [drawings, drawingsHidden, source.start, source.plot.length, source.slots, xOf, yOf, positionBox, chartPlotW, chartPlotH, lastDrawLocal]
   );
 
   const exportChart = async () => {
@@ -4768,7 +4792,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // مثبَّت طوال السحب: تغيّره إطاراً إطاراً عند أوّل التاريخ يجعل السحب غير خطّي.
     panStartBars.current = Math.min(
       windowCountRef.current,
-      sourceRef.current.plot.length || windowCountRef.current
+      sourceRef.current.slots || sourceRef.current.plot.length || windowCountRef.current
     );
     panStartX.current = xPanRef.current;
     panStartPrice.current = pricePanRef.current;
@@ -5763,7 +5787,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // (الأولى مضمونة) — فتاريخ الحافة لشمعة لا تُرى، يوماً قبل ما تحته بعد سحب إلى المستقبل. المرئية وحدها.
   // الاختيار نفسه من المرئي لا من السلسلة ثم القصّ: بالسقف (3 على هاتف) والتخفيف لكل يومين كانت علامة تقع
   // بالشريط الخفيّ خلف الحافة فتُقصّ بلا بديل ⇒ H1/H4 بتاريخ واحد على المحور كلّه (~1 من كل 5 مواضع تمرير).
-  const { lo: tickLo, hi: tickHi } = visibleBarRange(source.plot.length, chartPlotW, viewXPan);
+  const { lo: tickLo, hi: tickHi } = visibleBarRange(source.slots, chartPlotW, viewXPan, source.plot.length);
   const onPlot = (i: number) => {
     const x = xOf(i);
     return x >= 0 && x <= chartPlotW;
@@ -6468,6 +6492,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
               onPress={() => {
+                // الهامش يتبع الوضع (`restXPan`) — مؤثّر العرض يعيده حين يكون الشارت في موضع الراحة.
+                xPanAtRest.current = true;
                 setReplayOn((on) => {
                   const next = !on;
                   if (next) {
@@ -6661,7 +6687,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             بلونها أسفل اللوح مع اسمها (أعلاه لمفتاح المؤشّرات) — راجع `sessions.ts`. داخل اليوم حتى 1H، وليس على
             Renko/Kagi/P&F/Range (خانتها ليست زمناً). كل شريحة تحمل اسمها ⇒ لا مدخل بالمفتاح. */}
         {sessionRuns.map((run) => {
-          const slot = chartPlotW / Math.max(1, source.plot.length);
+          const slot = chartPlotW / Math.max(1, source.slots);
           const left = Math.max(0, xOf(run.from) - slot / 2);
           const right = Math.min(chartPlotW, xOf(run.to) + slot / 2);
           if (!(right - left >= 1)) return null;
@@ -6757,9 +6783,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 const color = bull ? candleBull : candleBear;
                 const colWShadow = Math.max(
                   1.5,
-                  Math.min(primaryColW * 0.72, c.widthRatio * chartPlotW)
+                  Math.min(primaryColW * 0.72, c.widthRatio * chartPlotW * slotFill)
                 );
-                const cx = c.xRatio * chartPlotW + viewXPan;
+                const cx = c.xRatio * chartPlotW * slotFill + viewXPan;
                 const left = cx - colWShadow / 2;
                 const wickTop = yShadowLane(c.high, lane);
                 const wickBot = yShadowLane(c.low, lane);
@@ -9309,7 +9335,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             الأفقي والرأسي ويعيد النافذة وحدها للطرف الأيمن. لا يظهر بالإعادة ولا بالتابع المتزامن. */}
         {canPan &&
         !replayOn &&
-        (offset > 0 || xPan < restXPan() - chartPlotW / Math.max(1, source.plot.length)) ? (
+        (offset > 0 || xPan < restXPan() - chartPlotW / Math.max(1, source.slots)) ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={tr.mcToLatestA11y}

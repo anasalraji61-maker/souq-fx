@@ -9,12 +9,20 @@
  * `useMemo` لا يُعاد حسابه بكل بكسل سحب (والإزاحة `offset` تغيّر النافذة بالإيقاع نفسه أصلاً).
  * أقلّ من شمعتين ظاهرتين (سحب لأقصى الطرف) ⇒ السلسلة كلها، كي لا ينهار المقياس على شمعة واحدة.
  */
-export function visibleBarRange(len: number, plotW: number, xPan: number): { lo: number; hi: number } {
-  const all = { lo: 0, hi: Math.max(0, len - 1) };
-  if (len <= 0 || !(plotW > 0) || !Number.isFinite(xPan)) return all;
+export function visibleBarRange(
+  len: number,
+  plotW: number,
+  xPan: number,
+  drawn: number = len
+): { lo: number; hi: number } {
+  // `drawn` < `len` = Bar Replay: اللوح مقسوم على خانات النافذة كلّها (`len`) والمكشوف أوّلها فقط —
+  // الخانات بعده فارغة فلا تدخل المقياس.
+  const n = Math.max(0, Math.min(len, drawn));
+  const all = { lo: 0, hi: Math.max(0, n - 1) };
+  if (len <= 0 || n <= 0 || !(plotW > 0) || !Number.isFinite(xPan)) return all;
   const step = plotW / len;
   // حافّتا الشمعة i: i·step + xPan و(i+1)·step + xPan ⇒ ظاهرة إن تقاطعتا مع (0, plotW)
   const lo = Math.max(0, Math.floor(-xPan / step));
-  const hi = Math.min(len - 1, Math.ceil((plotW - xPan) / step) - 1);
+  const hi = Math.min(n - 1, Math.ceil((plotW - xPan) / step) - 1);
   return hi - lo + 1 >= 2 ? { lo, hi } : all;
 }

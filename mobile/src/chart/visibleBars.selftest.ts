@@ -20,4 +20,10 @@ assert.deepEqual(visibleBarRange(80, 320, -318), { lo: 0, hi: 79 });
 assert.deepEqual(visibleBarRange(80, 320, 400), { lo: 0, hi: 79 });
 assert.deepEqual(visibleBarRange(0, 320, 0), { lo: 0, hi: 0 });
 
+// Bar Replay: 80 خانة و20 مكشوفة ⇒ المقياس على الـ20 فقط، والخانات الفارغة لا تُحسب
+assert.deepEqual(visibleBarRange(80, 320, 0, 20), { lo: 0, hi: 19 });
+assert.deepEqual(visibleBarRange(80, 320, -32, 20), { lo: 8, hi: 19 });
+// شمعة مكشوفة واحدة ⇒ هي وحدها (لا فهرس خارج السلسلة)
+assert.deepEqual(visibleBarRange(80, 320, 0, 1), { lo: 0, hi: 0 });
+
 console.log('visibleBars selftest: PASS');
