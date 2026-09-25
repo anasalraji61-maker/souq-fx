@@ -541,3 +541,15 @@
 **فُحص ولم يُغيَّر:** `db.trade_stats.total_pnl_pct` (مجموع نسب بلا وزن الحجم — فُحص بالتشغيل 39، التطبيق يحسب مرآته محلياً)؛ `alert_worker._price` يقبل `/price` بلا وقت (قرار موثّق بالدالة: يُستدعى فقط حين سلسلة 1m قديمة)؛ المساعد على 15m بوقف 1×/هدف 2×ATR (معلن بالنصّ والسياق بـ`tf=`، و`AiAsk` بلا فريم لأن التطبيق لا يرسله)؛ أوقات الدفتر بتوقيت الخادم (التطبيق لا يعرض `opened_at`/`closed_at`)؛ التنبيهات والماسح على الشمعة الجارية (سؤال مفتوح لأنس بـbackend-r6).
 
 **ما يحتاجه التطبيق:** لا شيء — شكل الردّ لم يتغيّر. قرارات أنس كما هي: launch9، QA24، launch77، backend-r6 (6)، backend-r33، backend-r35.
+
+## 2026-09-25 — التشغيل 41: مستويات توقّع ما دون السنت تُعرض رقماً واحداً
+
+**بداية التشغيل:** لا صفّ في COORDINATION منفّذه backend وحده (صفوف backend/أنس قرارات بشرية — لم تُمسّ). البنود 1–9 فحص سريع بالكود — ما تزال مغلقة (`XBR/USD`/`not_offered_by_provider` ‏`twelve_data.py:33,42`، سبريد من المزوّد وحده `twelve_data.py:336-347`، ‏409 `trade_already_closed` ‏`main.py:1414`، الحجم None ‏`db.py:1819`، إشارة MACD من قيم حقيقية `indicators.py:79-82`، `NOCASE` ‏`db.py:22,27`). 754 اختباراً ناجحاً قبل التغيير.
+
+| # | الإيداع | ما تغيّر |
+|---|---|---|
+| 100 | `b02a5f7` | **`price_decimals` تحت 0.1 يطابق `level_round`.** كان السقف 5 منازل ⇒ SHIB ‏0.0000123: الخادم يرسل الدخول/الوقف/الهدف بعشر منازل (`level_round`) مع `price_decimals: 5`، و`IndicatorForecastPanel` يعرضها بمنازل الخادم ⇒ الثلاثة «0.00001» — مستويات صفقة تبدو رقماً واحداً. الآن 6 أرقام معنوية تحت 0.1 (سقف 12 = ما يقبله التطبيق)؛ ≥0.1 كما كان. `tests/test_forecast_detail_lang.py` (+5، أربعة تفشل على الكود القديم). |
+
+**فُحص ولم يُغيَّر:** `db.trade_stats`/`add_trade` (لا `pnl`/`id` من العميل — `TradeCreate` لا يحملهما)؛ `backtest.py` (`_stats`، السبريد التقديري موسوم `costs_included`)؛ `indicators.py` (RSI/ATR Wilder، تقاطع كـ`ta.crossover`)؛ `screener.py`؛ `/api/market/quote` و`fetch_quote_book`؛ `/api/ai/ask` (اتجاه البطاقة من نصّ النموذج حين يخالف الخادم بلا مستويات — مقصود ومختبَر `test_no_buy_levels_under_a_sell_answer`)؛ `academy_data.py` (لا إحصاءات نجاح مخترَعة، التقدّم null)؛ تقريب الأسعار الثابت بباقي الملفات (لا غيره).
+
+**ما يحتاجه التطبيق:** لا شيء — `IndicatorForecastPanel.tsx:136` يقبل 0..12 أصلاً. قرارات أنس كما هي: launch9، QA24، launch77، backend-r6 (6)، backend-r33، backend-r35.
