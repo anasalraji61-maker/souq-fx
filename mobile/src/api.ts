@@ -128,7 +128,8 @@ export type Vote = {
 
 export type NewsItem = {
   id: string;
-  impact: 'high' | 'medium' | 'low';
+  /** `'unknown'` = عنوان بلا كلمة مفتاحية (backend-r18 `19acbae`) — كان يصل «low» فيُقرأ «منخفض» مؤكَّداً. */
+  impact: 'high' | 'medium' | 'low' | 'unknown';
   title: string;
   pair_effect: string;
   when: string;

@@ -16,10 +16,10 @@ import { useI18n } from '../i18n/I18nContext';
  * المنخفض عن ادّعاء إلحاحٍ ليس له. ونصّ الشارة يبقى `onWarnFill` الداكن بالدرجات الثلاث: تباينه
  * فوق `textDim` (‎#7B8DA8‎) يفوق 5:1، أعلى من الحدّ المطلوب لنصٍّ عريض صغير.
  *
- * المفتاح غير المعروف (باك-إند أحدث بدرجة رابعة) يسقط على «منخفض» — نفس ما يفعله نصّ الشارة
- * أسفله بالضبط، فلا يختلف اللون عن الكلمة أبداً.
+ * `unknown` (backend-r18: عنوان بلا كلمة مفتاحية) وأي قيمة أخرى ⇒ **بلا شارة**: كانت تسقط على «منخفض»،
+ * فخبرُ «BoE hikes by 50bp» يُعرض «≈ منخفض» — درجةٌ لم يقدّرها أحد.
  */
-const IMPACT_FILL: Record<NewsItem['impact'], string> = {
+const IMPACT_FILL: Record<Exclude<NewsItem['impact'], 'unknown'>, string> = {
   high: colors.highImpact,
   medium: colors.warn,
   low: colors.textDim,
@@ -85,18 +85,21 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
       ) : null}
       <ScrollView contentContainerStyle={{ gap: spacing.sm }}>
         {news.map((n) => {
-          const impactWord = n.impact === 'high' ? t.impactHigh : n.impact === 'medium' ? t.impactMedium : t.impactLow;
+          const impactWord =
+            n.impact === 'high' ? t.impactHigh : n.impact === 'medium' ? t.impactMedium : n.impact === 'low' ? t.impactLow : null;
           const estimated = n.impact_basis === 'headline_keywords';
           return (
           <View key={n.id} style={styles.card}>
             <View style={[styles.row, rtl && styles.rowRtl]}>
+              {/* فراغ مكان الشارة يُبقي الوقت بطرفه (`space-between`). */}
+              {impactWord == null || n.impact === 'unknown' ? <View /> : (
               <View
                 // launch107: بلا اسم يقرأ قارئ الشاشة «≈» حرفياً («يساوي تقريباً عالي») لا «تقدير».
                 accessible={estimated}
                 accessibilityLabel={estimated ? t.newsImpactEstimatedA11y.replace('{impact}', impactWord) : undefined}
                 style={[
                   styles.impact,
-                  { backgroundColor: IMPACT_FILL[n.impact] ?? IMPACT_FILL.low },
+                  { backgroundColor: IMPACT_FILL[n.impact] },
                 ]}
               >
                 <Text style={styles.impactText}>
@@ -104,6 +107,7 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
                   {impactWord}
                 </Text>
               </View>
+              )}
               <Text style={styles.when}>{n.when}</Text>
             </View>
             <Text style={[styles.headline, { textAlign: align }]}>{n.title}</Text>
