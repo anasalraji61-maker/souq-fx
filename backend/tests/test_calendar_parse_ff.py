@@ -209,3 +209,30 @@ def test_global_all_events_keep_all():
     assert out[0]["currency"] == "ALL"
     out = cal._parse_ff(_events(_event("Retail Sales", country="gbp")))
     assert out[0]["currency"] == "GBP"
+
+
+# ------------------------------------- «All Day»/«Tentative»: لا ساعة مخترَعة
+
+def test_json_tentative_at_ny_midnight_is_time_tbd_not_04_utc():
+    """نسخة JSON تؤرّخ «Tentative» (قرار بنك اليابان) و«All Day» بمنتصف ليل نيويورك. كان `when` «04:00 UTC»
+    وشريط «خبر قوي بعد…» يعدّ إليها — ساعة لم يعلنها أحد."""
+    out = cal._parse_ff_json(
+        '[{"title":"BOJ Policy Rate","country":"JPY","impact":"High","date":"2026-09-25T00:00:00-04:00"}]'
+    )
+    assert out[0]["time_tbd"] is True
+    assert out[0]["when"] == "2026-09-25"  # التاريخ وحده، لا «04:00 UTC»
+    assert out[0]["ts"] == 1790308800  # بداية اليوم بنيويورك — للتاريخ والترتيب
+
+
+def test_json_timed_event_is_not_time_tbd():
+    out = cal._parse_ff_json(
+        '[{"title":"NFP","country":"USD","impact":"High","date":"2026-09-25T08:30:00-04:00"},'
+        '{"title":"GDT","country":"NZD","impact":"Low","date":"2026-09-25T00:30:00-04:00"}]'
+    )
+    assert [e["time_tbd"] for e in out] == [False, False]
+
+
+@pytest.mark.parametrize("tm,want", [("All Day", True), ("Tentative", True), ("", True), ("8:30am", False)])
+def test_xml_event_branch_marks_unannounced_time(tm, want):
+    out = cal._parse_ff(_events(_event("BOJ Policy Rate", country="JPY", tm=tm)))
+    assert out[0]["time_tbd"] is want

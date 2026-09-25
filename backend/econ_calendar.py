@@ -141,6 +141,7 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
                 # الجهاز — فيقرؤه المتداول توقيتَه وهو ليس كذلك. العلامة صريحة كـ`sample`.
                 "ts": None,
                 "tz_unknown": True,
+                "time_tbd": tm.lower() in _UNANNOUNCED_TIMES,
             }
         )
     return out
@@ -173,8 +174,23 @@ def _figures(forecast: str, previous: str, actual: str) -> dict[str, str]:
     }
 
 
+# `<time>` بفرع XML لحدثٍ بلا ساعة: «All Day» (عطلة، قمّة) و«Tentative» (قرار بنك اليابان عادةً) — وفارغ.
+_UNANNOUNCED_TIMES = frozenset({"", "all day", "tentative", "day 1", "day 2", "day 3"})
+
+
+def _json_time_unannounced(dt: datetime) -> bool:
+    """نسخة JSON لا تحمل حقل وقت: «All Day» و«Tentative» تأتي **منتصف ليل نيويورك** (`T00:00:00-04:00`)،
+    فكانت تُحوَّل `ts` عادياً و`when` «04:00 UTC» — ساعة مخترَعة يعدّ إليها شريط «خبر قوي بعد 2س» وقرار
+    الفائدة يصدر بعد ساعة، أو بعد صدوره فعلاً. منتصف الليل بتوقيت المصدر = بلا ساعة معلنة (لا خبر قويّ
+    موقوت عندها عملياً؛ وإن وُجد فقول «اليوم، الساعة غير معلنة» أحذر من ساعة خاطئة)."""
+    return (dt.hour, dt.minute, dt.second, dt.microsecond) == (0, 0, 0, 0)
+
+
 def _parse_ff_json(text: str) -> list[dict[str, Any]]:
-    """كل حدث يحمل `ts` (ثوانٍ UTC) ليعرضه التطبيق بتوقيت المستخدم ويحسب "بعد كم ساعة"."""
+    """كل حدث يحمل `ts` (ثوانٍ UTC) ليعرضه التطبيق بتوقيت المستخدم ويحسب "بعد كم ساعة".
+
+    `time_tbd: true` ⇒ **الساعة غير معلنة**: `ts` بداية اليوم بتوقيت المصدر (للتاريخ والترتيب فقط، لا
+    للعدّ التنازلي ولا لعرض ساعة)، و`when` التاريخ وحده."""
     out: list[dict[str, Any]] = []
     try:
         data = json.loads(text)
@@ -190,13 +206,20 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
             continue
         ts: int | None = None
         when = "هذا الأسبوع"
+        time_tbd = False
         raw_date = str(ev.get("date") or "").strip()
         if raw_date:
             try:
                 dt = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
                 if dt.tzinfo is not None:
                     ts = int(dt.timestamp())
-                    when = dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+                    time_tbd = _json_time_unannounced(dt)
+                    # بلا ساعة معلنة: التاريخ وحده (بتقويم المصدر) — «04:00 UTC» كان ساعة لم يعلنها أحد
+                    when = (
+                        dt.strftime("%Y-%m-%d")
+                        if time_tbd
+                        else dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+                    )
             except ValueError:
                 pass
         country = str(ev.get("country") or "").strip()
@@ -213,6 +236,7 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
                 "forecast": forecast[:40],
                 **_figures(fc_raw, prev_raw, str(ev.get("actual") or "").strip()),
                 "ts": ts,
+                "time_tbd": time_tbd,
             }
         )
     out.sort(key=lambda e: (e["ts"] is None, e["ts"] or 0))
