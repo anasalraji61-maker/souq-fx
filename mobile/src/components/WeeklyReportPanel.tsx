@@ -101,7 +101,8 @@ export function WeeklyReportPanel({ grid = false }: Props) {
     let journalLine = '';
     let hasJournalData = false;
     try {
-      const tr = await api.trades();
+      // الإحصاء وحده مطلوب (`stats` على كل المغلقة بالخادم) — لا حاجة لصفحة 200 صفقة.
+      const tr = await api.trades({ limit: 1 });
       if (!mountedRef.current) return;
       const s = (tr.stats ?? {}) as Record<string, number>;
       const count = Number(s.trade_count);

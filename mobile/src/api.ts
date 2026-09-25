@@ -240,7 +240,18 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   const res = isSlowPostPath(path)
     ? await fetch(url, init)
     : await fetchWithTimeout(url, init, WRITE_TIMEOUT_MS);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    // `status` كـ`patchJson`، و`detail` من جسم الخطأ إن وُجد (409 `trade_already_closed` يحمل الصفّ
+    // بخروجه الأول) — الرسالة نفسها «HTTP n» كي لا يتغيّر شيء عند المستدعين القدامى.
+    const err = new Error(`HTTP ${res.status}`) as Error & { status?: number; detail?: unknown };
+    err.status = res.status;
+    try {
+      err.detail = ((await res.json()) as { detail?: unknown })?.detail;
+    } catch {
+      /* جسم ليس JSON */
+    }
+    throw err;
+  }
   return res.json() as Promise<T>;
 }
 
@@ -715,11 +726,21 @@ export const api = {
       /** provider/cache = سعر حقيقي؛ demo = سلسلة بذرية تجريبية (لا تصلح لحساب رقمي). */
       data_kind?: DataOriginKind;
     }>(`/api/market/quote/${encodeURIComponent(symbol)}`),
-  trades: () =>
-    getJson<{
+  /** صفحة من الدفتر، الأحدث أولاً (backend-r1). `total` لكل الصفقات و`stats` على كل المغلقة لا الصفحة؛
+   *  خادم أقدم يتجاهل المعاملين ولا يرسل `total`/`limit`/`offset`. */
+  trades: (opts?: { limit?: number; offset?: number }) => {
+    const q = new URLSearchParams();
+    if (opts?.limit != null) q.set('limit', String(opts.limit));
+    if (opts?.offset != null) q.set('offset', String(opts.offset));
+    const qs = q.toString();
+    return getJson<{
       trades: Record<string, unknown>[];
       stats: Record<string, number>;
-    }>('/api/trades'),
+      total?: number;
+      limit?: number;
+      offset?: number;
+    }>(`/api/trades${qs ? `?${qs}` : ''}`);
+  },
   createTrade: (body: {
     symbol: string;
     side: 'buy' | 'sell';
