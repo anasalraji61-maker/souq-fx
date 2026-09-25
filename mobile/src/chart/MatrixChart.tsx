@@ -3165,8 +3165,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const pfe = useMemo(
     () => {
       if (!indicators.includes('pfe')) return null;
+      // `last: null` (ui18) ⇒ `formatPrice(null)` يسقط بـ`toFixed` قبل حارس الشارت الفارغ.
+      const ref = series.last ?? closes[closes.length - 1];
+      if (ref == null || !Number.isFinite(ref)) return null;
       // بالـpip لا بالسعر الخام (انظر `computePfe`)؛ أداة بلا مواصفة: عشر خانات أخيرة كتحريك التنبيه.
-      const txt = formatPrice(series.last, series.symbol, series.last);
+      const txt = formatPrice(ref, series.symbol, ref);
       const dec = txt.includes('.') ? txt.length - txt.indexOf('.') - 1 : 0;
       const unit = chartPipSpec(series.symbol)?.pipSize ?? 10 ** (1 - dec);
       return ind(computePfe(closes, 10, 5, unit));
@@ -5769,7 +5772,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (replayOn
       ? replayClose ?? undefined
       : liveSeries.candles[liveSeries.candles.length - 1]?.close) ??
-    series.last;
+    series.last ??
+    // ui18: سلسلة فارغة و`last: null` ⇒ NaN (كل المستعملين يحرسون `Number.isFinite`، والشارت الفارغ يعود قبل الرسم).
+    NaN;
   const currentPriceY = yOf(currentPrice);
   // سحب خطّ التنبيه: السعر من موضع الإصبع مقصوصاً للوح ومدوَّراً لمنازل الأداة (1.09250 لا 1.0925031…).
   // الاتجاه يتبع موضعه من السعر الحيّ: خطّ سُحب من فوق السعر إلى تحته صار تنبيه نزول — كما يفهمه المتداول.

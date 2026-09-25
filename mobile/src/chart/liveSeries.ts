@@ -167,9 +167,11 @@ export function withLiveExtremes(
  * ونسبة حمراء). `livePrice` = ما يُدمج فعلاً بالشمعة (`livePriceForChart`)؛ null ⇒ نسبة الخادم.
  */
 export function liveChangePct(series: ChartSeries, livePrice: number | null | undefined): number {
-  if (livePrice == null || !Number.isFinite(livePrice) || livePrice <= 0) return series.change_pct;
+  // `change_pct: null` (backend-r19، ui18) ⇒ NaN: كل الرؤوس تحرس `Number.isFinite` فلا تُطبع نسبة.
+  const serverPct = series.change_pct ?? NaN;
+  if (livePrice == null || !Number.isFinite(livePrice) || livePrice <= 0) return serverPct;
   const first = series.candles[0]?.close;
-  if (!first || !Number.isFinite(first)) return series.change_pct;
+  if (!first || !Number.isFinite(first)) return serverPct;
   return ((livePrice - first) / first) * 100;
 }
 
@@ -185,7 +187,7 @@ export function headerChangePct(
   price: number | null | undefined,
   prevClose: number | null | undefined
 ): number {
-  const px = price != null && Number.isFinite(price) && price > 0 ? price : series.last;
+  const px = price != null && Number.isFinite(price) && price > 0 ? price : series.last ?? NaN;
   if (
     !isSyntheticProvenance(series.data_source) &&
     prevClose != null &&
