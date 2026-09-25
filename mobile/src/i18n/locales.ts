@@ -601,6 +601,11 @@ export type Dict = {
    */
   journalInitialStopNote: string;
   /**
+   * tools86: زرّ اختيار تحت الملاحظة حين يُعدَّل وقف صفقة مفتوحة وسيُلحق التعديل «1R @ …» (`stopTypoFixText` بـ`TradeJournalPanel`).
+   * عند اختياره لا تُلحق العلامة فيُقاس الـR من الوقف المصحَّح (1.0380 مكتوبة خطأً ⇒ 1.0830). قصير — وسم زرّ، بلا متغيّرات.
+   */
+  journalStopTypoFix: string;
+  /**
    * فوق قائمة الدفتر حين يصل من الخادم `{n}` صفقة = حدّ `db.list_trades` (`LIMIT 200`، مرتّبة بـ`opened_at`): الأقدم لا تصل
    * ولا تُحسب بالإحصاءات — ولو كانت مفتوحة. صفّ QA9.
    */
@@ -1873,6 +1878,7 @@ const ar: Dict = {
   noteCharsLeftReserved: 'الأحرف الباقية: {n} من {max} — و{reserved} محجوزة لعلامة «1.00 lot» أو «1R @ …» التي تُحفظ مع ملاحظتك',
   journalInitialStopNote:
     '«1R @ {stop}» بالملاحظة يحفظ وقفك الأصلي عند الدخول: منه تُقاس النتيجة بـR ونسبة R:R المخطَّطة مهما حرّكت الوقف بعده. احذفه فتُقاس من الوقف الحالي',
+  journalStopTypoFix: 'أصحّح خطأً كتابياً بالوقف — لا أحرّكه',
   journalCappedNote:
     'يظهر هنا أحدث {n} صفقة فقط، ومنها وحدها تُحسب الإحصاءات. صفقاتك الأقدم باقية على الخادم لكنها لا تظهر ولا تُحسب — حتى المفتوحة منها',
   journalAddA11y: 'إضافة صفقة جديدة',
@@ -3055,6 +3061,7 @@ const enUS: Dict = {
   noteCharsLeftReserved: '{n} of {max} characters left — {reserved} are kept for the «1.00 lot» or «1R @ …» mark saved with your note',
   journalInitialStopNote:
     '"1R @ {stop}" in the note keeps your stop from when you entered: your R result and planned R:R are measured from it, however you move the stop later. Delete it to measure from the current stop',
+  journalStopTypoFix: 'Fixing a stop typo — not moving the stop',
   journalCappedNote:
     'Only your latest {n} trades are shown, and the stats count only those. Older trades are still stored on the server but are not shown or counted, even if they are still open',
   journalAddA11y: 'Add a new trade',
@@ -4268,6 +4275,7 @@ const ku: Dict = {
   noteCharsLeftReserved: 'پیتی ماوە: {n} لە {max} — {reserved} پیت بۆ نیشانەی «1.00 lot» یان «1R @ …» پارێزراون کە لەگەڵ تێبینییەکەت پاشەکەوت دەکرێت',
   journalInitialStopNote:
     '«1R @ {stop}» لە تێبینییەکەدا وەستانی سەرەتاییت لە کاتی چوونەژوورەوە دەپارێزێت: ئەنجامی R و ڕێژەی R:R ی پلاندانراو لەوەوە دەپێورێن، هەرچەندە دواتر وەستانەکە بجوڵێنیت. بیسڕەوە بۆ ئەوەی لە وەستانی ئێستاوە بپێورێت',
+  journalStopTypoFix: 'هەڵەی نووسینی وەستان ڕاست دەکەمەوە — نایجوڵێنم',
   journalCappedNote:
     'تەنها نوێترین {n} مامەڵە لێرە دەردەکەون، و ئامارەکان تەنها لەوانە دەژمێردرێن. مامەڵە کۆنەکانت هێشتا لەسەر سێرڤەر پارێزراون بەڵام نە دەردەکەون و نە دەژمێردرێن — تەنانەت ئەوانەی هێشتا کراوەن',
   journalAddA11y: 'زیادکردنی مامەڵەیەکی نوێ',
