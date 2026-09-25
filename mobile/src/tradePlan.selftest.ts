@@ -2098,9 +2098,13 @@ console.log('tradePlan knownLots localized plan note selftest OK');
   assert.equal(planSummaryText(plan, w, '125.00 USD', '250.00 USD'), 'Risk 25 pip (125.00 USD) · Reward 50 pip (250.00 USD) · R:R 1:2.0');
   assert.equal(planSummaryText(plan, w, null, '250.00 USD'), 'Risk 25 pip · Reward 50 pip (250.00 USD) · R:R 1:2.0');
   assert.equal(planSummaryText(plan, w, '', ''), 'Risk 25 pip · Reward 50 pip · R:R 1:2.0');
+  // QA75: الوحدة باللغة — «pips» بالإنجليزية كبقية التطبيق، و«pip» بالعربية/الكردية
+  assert.equal(planSummaryText(plan, { ...w, unit: 'pips' }, '125.00 USD'), 'Risk 25 pips (125.00 USD) · Reward 50 pips · R:R 1:2.0');
+  assert.equal(planSummaryText(plan, { risk: 'المخاطرة', reward: 'الربح المحتمل', unit: 'pip' }), 'المخاطرة 25 pip · الربح المحتمل 50 pip · R:R 1:2.0');
   // بلا مواصفات pip: فرق السعر منظَّفاً لخمس منازل
   const us30 = analyzePlan({ symbol: 'US30', side: 'sell', entry: 39000, sl: 39100, tp: 38800 });
   assert.equal(planSummaryText(us30, w), 'Risk 100 · Reward 200 · R:R 1:2.0');
+  assert.equal(planSummaryText(us30, { ...w, unit: 'pips' }), 'Risk 100 · Reward 200 · R:R 1:2.0');
   // SHIB: المسافة دون 0.00001 كانت «Risk 0 · Reward 0» — الآن أربعة أرقام معنوية بلا صيغة أُسّية
   const shib = analyzePlan({ symbol: 'SHIBUSD', side: 'buy', entry: 0.00001234, sl: 0.000012, tp: 0.00001302 });
   assert.equal(planSummaryText(shib, w), 'Risk 0.00000034 · Reward 0.00000068 · R:R 1:2.0');

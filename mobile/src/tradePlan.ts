@@ -291,13 +291,15 @@ export function priceDistanceText(d: number): string {
  */
 export function planSummaryText(
   plan: TradePlan,
-  words: { risk: string; reward: string },
+  /** `unit`: وحدة الـpip باللغة (`pipUnit(lang)` — «pips» بالإنجليزية، QA75)؛ غائبة ⇒ «pip» كما كانت. */
+  words: { risk: string; reward: string; unit?: string },
   riskMoney?: string | null,
   gainMoney?: string | null
 ): string {
+  const unit = words.unit ?? 'pip';
   const dist = (pips: number | null, d: number) => {
     const p = formatPips(pips);
-    return p != null ? `${p} pip` : priceDistanceText(d);
+    return p != null ? `${p} ${unit}` : priceDistanceText(d);
   };
   const paren = (m: string | null | undefined) => (m ? ` (${m})` : '');
   return `${words.risk} ${dist(plan.riskPips, plan.riskDist)}${paren(riskMoney)} · ${words.reward} ${dist(plan.rewardPips, plan.rewardDist)}${paren(gainMoney)} · R:R ${formatRR(plan.rr)}`;

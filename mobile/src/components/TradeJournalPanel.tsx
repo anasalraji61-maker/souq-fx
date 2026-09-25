@@ -569,7 +569,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         ? journalPnl({ symbol, side, entry: e, exit: p, lots: l })
         : null;
     const gainText = gain && gain.amount > 0 ? formatJournalMoney(gain, t.journalMoneyUsc) : null;
-    return planSummaryText(plan, { risk: t.planRiskWord, reward: t.planRewardWord }, risk?.money, gainText);
+    return planSummaryText(plan, { risk: t.planRiskWord, reward: t.planRewardWord, unit: pipUnit(lang) }, risk?.money, gainText);
   };
 
   /**
