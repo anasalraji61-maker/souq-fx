@@ -1061,6 +1061,16 @@ def user_from_token(token: str | None) -> dict[str, Any] | None:
     }
 
 
+def session_user_id(token: str | None) -> int | None:
+    """مالك الجلسة **ولو انتهت** — للخروج وحده: توكن منتهٍ كان يجعل الخروج «ok» بلا فكّ رمز Push
+    فتبقى إشعارات تنبيهات الحساب تصل الهاتف لمن يستعمله بعده. التوكن نفسه (32 بايت عشوائية) هو الإثبات."""
+    if not token:
+        return None
+    with _conn() as c:
+        row = c.execute("SELECT user_id FROM sessions WHERE token=?", (token,)).fetchone()
+    return int(row["user_id"]) if row else None
+
+
 def delete_user_account(user_id: int) -> None:
     """حذف حساب — شرط إلزامي لأبل (App Store Review Guideline 5.1.1(v): يجب أن يقدر
     المستخدم يحذف حسابه وبياناته الشخصية من داخل التطبيق).

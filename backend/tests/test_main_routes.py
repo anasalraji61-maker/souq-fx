@@ -837,3 +837,33 @@ def test_logout_by_push_token_without_install_id_and_is_idempotent(client):
     assert r.json() == {"ok": True} and _push_owner("ExponentPushToken[ddd444]") is None
     assert client.post("/api/auth/logout", headers=_auth(tok)).json() == {"ok": True}
     assert client.post("/api/auth/logout").json() == {"ok": True}
+
+
+def _expire_sessions():
+    with db._conn() as c:
+        c.execute("UPDATE sessions SET expires_at=1")
+
+
+def test_push_register_with_an_expired_session_does_not_unbind_the_phone(client):
+    """بعد 30 يوماً كان التوكن المنتهي = مجهول ⇒ الرمز يُكتب بـuser_id=NULL فلا يصل أي تنبيه للحساب."""
+    tok = _register(client, "expiring1")
+    uid = _me(client, tok)
+    h = {**_auth(tok), **_DEV1}
+    client.post("/api/push/register", json={"token": "ExponentPushToken[exp111]"}, headers=h)
+    _expire_sessions()
+    assert client.post("/api/push/register", json={"token": "ExponentPushToken[exp111]"}, headers=h).status_code == 401
+    assert _push_owner("ExponentPushToken[exp111]") == uid
+    # بلا توكن أصلاً (مجهول) يبقى مقبولاً
+    assert client.post("/api/push/register", json={"token": "ExponentPushToken[anon11]"}, headers=_DEV2).status_code == 200
+
+
+def test_logout_with_an_expired_session_still_unbinds_this_device(client):
+    """كان `if user` يتخطّى الفكّ بتوكن منتهٍ ويعيد ok ⇒ الهاتف يتلقّى إشعارات الحساب بعد الخروج."""
+    tok = _register(client, "expiring2")
+    h = {**_auth(tok), **_DEV1}
+    client.post("/api/push/register", json={"token": "ExponentPushToken[exp222]"}, headers=h)
+    _expire_sessions()
+    assert client.post("/api/auth/logout", headers=h).json() == {"ok": True}
+    assert _push_owner("ExponentPushToken[exp222]") is None
+    # توكن مجهول تماماً لا يفكّ شيئاً
+    assert client.post("/api/auth/logout", headers={"Authorization": "Bearer nope", **_DEV1}).json() == {"ok": True}

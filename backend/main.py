@@ -681,10 +681,13 @@ def auth_logout(
     user: dict | None = Depends(_auth_user),
     key: str | None = Depends(_install_key),
 ):
-    # مُتساوي الأثر: توكن منتهٍ أو غائب ⇒ ok أيضاً (العميل يمسح حالته المحلية على أي حال)
-    if user and authorization:
+    # مُتساوي الأثر: توكن غائب أو مجهول ⇒ ok أيضاً (العميل يمسح حالته المحلية على أي حال). توكن **منتهٍ**
+    # يُفكّ به رمز الجهاز أيضاً (كان يُتخطّى ⇒ الهاتف يبقى يتلقّى إشعارات الحساب بعد «الخروج»).
+    if authorization:
         token = authorization.replace("Bearer ", "").strip()
-        db.logout_session(token, user["user_id"], owner_key=key, push_token=body.push_token if body else None)
+        uid = user["user_id"] if user else db.session_user_id(token)
+        if uid:
+            db.logout_session(token, uid, owner_key=key, push_token=body.push_token if body else None)
     return {"ok": True}
 
 
@@ -775,9 +778,15 @@ def commissions_report(user: dict | None = Depends(_auth_user)):
 @app.post("/api/push/register")
 def push_register(
     body: PushRegister,
+    authorization: str | None = Header(default=None),
     user: dict | None = Depends(_auth_user),
     key: str | None = Depends(_install_key),
 ):
+    # توكن مُرسَل غير صالح (جلسة انتهت بعد 30 يوماً والعميل ما زال يحمله) كان يُعامَل مجهولاً ⇒
+    # `INSERT OR REPLACE` بـuser_id=NULL يفكّ الهاتف من الحساب بصمت، فكل تنبيه بعدها لا يصل أحداً.
+    # 401 يُبقي الربط القائم كما هو.
+    if authorization and not user:
+        raise HTTPException(status_code=401, detail="not authenticated")
     uid = user["user_id"] if user else None
     db.save_push_token(body.token, body.platform, uid, body.lang, owner_key=key)
     return {"ok": True}
