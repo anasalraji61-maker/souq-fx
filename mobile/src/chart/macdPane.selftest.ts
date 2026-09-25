@@ -105,4 +105,13 @@ const ZERO = INNER / 2; // 22
   assert.equal(g.barH(Number.NaN), 0);
 }
 
+// `vis`: المقياس من الشموع الظاهرة وحدها؛ نافذة بلا فهرس صالح ⇒ السلسلة كلها
+{
+  const line = [5, 0.2, 0.1, 0.3];
+  assert.equal(macdPaneGeom(line, line, line, PANE_H).maxAbs, 5);
+  assert.equal(macdPaneGeom(line, line, line, PANE_H, { lo: 1, hi: 3 }).maxAbs, 0.3);
+  const lead = [null, null, 0.4, 0.2];
+  assert.equal(macdPaneGeom(lead, lead, lead, PANE_H, { lo: 0, hi: 1 }).maxAbs, 0.4);
+}
+
 console.log('macdPane.selftest: PASS');

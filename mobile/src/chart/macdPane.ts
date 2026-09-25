@@ -37,27 +37,36 @@ export interface MacdPaneGeom {
 /**
  * يبني هندسة اللوحة من السلاسل الثلاث وارتفاع اللوحة.
  * `paneH` الصغير جداً (أو السالب) يعطي `innerH = 0` وكل المواضع صفراً — بلا NaN.
+ * `vis` (فهرسا الشموع الظاهرة، `visibleBars.ts`): المقياس منها وحدها كمقياس السعر — شموع الهامش الأيمن خلف
+ * الحافة اليسرى كانت تمدّه بقيم لا تُرى فيبدو الهيستوغرام الظاهر مسطّحاً. بلا فهرس صالح داخله ⇒ السلسلة كلها.
  */
 export function macdPaneGeom(
   hist: readonly (number | null)[],
   macdLine: readonly (number | null)[],
   signal: readonly (number | null)[],
-  paneH: number
+  paneH: number,
+  vis?: { lo: number; hi: number }
 ): MacdPaneGeom {
   const innerH = Math.max(0, (Number.isFinite(paneH) ? paneH : 0) - PANE_PAD);
   const zeroY = innerH / 2;
   const half = innerH / 2;
 
-  let maxAbs = 0;
-  for (let i = 0; i < macdLine.length; i++) {
-    if (!finite(macdLine[i])) continue;
-    const m = macdLine[i] as number;
-    if (Math.abs(m) > maxAbs) maxAbs = Math.abs(m);
-    const h = hist[i];
-    if (finite(h) && Math.abs(h) > maxAbs) maxAbs = Math.abs(h);
-    const s = signal[i];
-    if (finite(s) && Math.abs(s) > maxAbs) maxAbs = Math.abs(s);
-  }
+  const reach = (lo: number, hi: number) => {
+    let r = 0;
+    let seen = false;
+    for (let i = Math.max(0, lo); i <= hi && i < macdLine.length; i++) {
+      if (!finite(macdLine[i])) continue;
+      seen = true;
+      const m = macdLine[i] as number;
+      if (Math.abs(m) > r) r = Math.abs(m);
+      const h = hist[i];
+      if (finite(h) && Math.abs(h) > r) r = Math.abs(h);
+      const s = signal[i];
+      if (finite(s) && Math.abs(s) > r) r = Math.abs(s);
+    }
+    return seen ? r : null;
+  };
+  let maxAbs = (vis ? reach(vis.lo, vis.hi) : null) ?? reach(0, macdLine.length - 1) ?? 0;
   if (!(maxAbs > 0)) maxAbs = 1e-9;
 
   return {

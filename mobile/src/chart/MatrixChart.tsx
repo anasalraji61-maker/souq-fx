@@ -1231,9 +1231,12 @@ function TrendLineSeries({
   values,
   paneH,
   levels,
+  vis,
 }: {
   values: readonly (number | null)[];
   paneH: number;
+  /** فهرسا الشموع الظاهرة — المقياس منها؛ بلا قيمة داخلهما ⇒ السلسلة كلها. */
+  vis?: { lo: number; hi: number };
   /**
    * عتبات ثابتة (Mass Index ‎27 / 26.5‎). تدخل المقياس كـCCI ‎±100‎: بلا ذلك تقصّها نافذة
    * هادئة (Mass Index بين 24 و26) على الحافّة العليا فيبدو كل ارتفاع عادي «انتفاخاً».
@@ -1241,7 +1244,9 @@ function TrendLineSeries({
   levels?: readonly number[];
 }) {
   const innerH = Math.max(0, paneH - 16);
-  const vals = values.filter((x): x is number => x != null);
+  const all = values.filter((x): x is number => x != null);
+  const seen = vis ? values.slice(Math.max(0, vis.lo), vis.hi + 1).filter((x): x is number => x != null) : [];
+  const vals = seen.length ? seen : all;
   const scaleVals = levels && vals.length ? [...vals, ...levels] : vals;
   const min = Math.min(...scaleVals);
   const max = Math.max(...scaleVals);
@@ -1296,9 +1301,12 @@ function ZeroLineSeries({
   values,
   paneH,
   levels,
+  vis,
 }: {
   values: readonly (number | null)[];
   paneH: number;
+  /** فهرسا الشموع الظاهرة — المقياس منها (`macdPaneGeom`). */
+  vis?: { lo: number; hi: number };
   /**
    * مستويات ثابتة متناظرة حول الصفر تُرسم خطوطاً (CCI ‎±100‎). تدخل **بالمقياس** نفسه:
    * لولا ذلك لقصّ نافذةٌ هادئة (CCI بين ‎±60‎) الخطّين على حافتَي اللوحة فيبدو كل
@@ -1310,7 +1318,7 @@ function ZeroLineSeries({
   // `hist` بـmacdPaneGeom يدخل المقياس عند الشموع الصالحة وحدها — فسلسلة ثابتة بقيمة
   // أبعد مستوى تضمن اتّساع المقياس له دون أن تُرسم.
   const floor = useMemo(() => (reach == null ? values : values.map(() => reach)), [values, reach]);
-  const g = macdPaneGeom(floor, values, values, paneH);
+  const g = macdPaneGeom(floor, values, values, paneH, vis);
   const showLevels = levels && g.innerH >= GUIDES_MIN_INNER_H;
   const showLabels = g.innerH >= GUIDES_LABEL_MIN_INNER_H;
   return (
@@ -3172,6 +3180,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     rangePlotW,
     syncFollow && syncWindow?.xPanNorm != null ? syncWindow.xPanNorm * rangePlotW : xPan
   );
+  // اللوحات (MACD/TSI/CCI…) تقيس المرئي نفسه — `macdPaneGeom(…, vis)` و`vis` بـTrend/ZeroLineSeries.
+  const paneVis = useMemo(() => ({ lo: visLo, hi: visHi }), [visLo, visHi]);
   const range = useMemo(() => {
     let min = Infinity;
     let max = -Infinity;
@@ -9224,7 +9234,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name={`CVD (${tr.mcEstimatedTag})`} values={cvd} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <TrendLineSeries values={cvd} paneH={paneH} />
+            <TrendLineSeries vis={paneVis} values={cvd} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -9236,7 +9246,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name={volName('OBV')} values={obv} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <TrendLineSeries values={obv} paneH={paneH} />
+            <TrendLineSeries vis={paneVis} values={obv} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -9246,7 +9256,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name={volName('NVI')} values={nvi} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <TrendLineSeries values={nvi} paneH={paneH} />
+            <TrendLineSeries vis={paneVis} values={nvi} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -9256,7 +9266,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name={volName('A/D')} values={adl} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <TrendLineSeries values={adl} paneH={paneH} />
+            <TrendLineSeries vis={paneVis} values={adl} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -9402,7 +9412,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name={volName('Net Vol')} values={netVolume} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <TrendLineSeries values={netVolume} paneH={paneH} levels={NET_VOLUME_LEVELS} />
+            <TrendLineSeries vis={paneVis} values={netVolume} paneH={paneH} levels={NET_VOLUME_LEVELS} />
           </View>
         </View>
       ) : null}
@@ -9520,7 +9530,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               // كان آخر موضع بقي فيه المقياس الثابت `Math.abs(v) * 8000` بعد إصلاح MACD —
               // ومخرجات هذه الدالة بنفس شكل computeMacd تماماً (macdLine/signal/hist)
               // وبنفس ثغرة signal المبنيّ على null معوَّضاً بصفر، فتنطبق macdPaneGeom حرفياً.
-              const g = macdPaneGeom(vwMacd.hist, vwMacd.macdLine, vwMacd.signal, paneH);
+              const g = macdPaneGeom(vwMacd.hist, vwMacd.macdLine, vwMacd.signal, paneH, paneVis);
               return (
                 <>
                   <View
@@ -10089,7 +10099,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {paneCrossLine}
             {/* على مدى النافذة لا من الصفر: Mass Index يدور حول 25–27، فأرضية 0 كانت تحشر «الانتفاخ»
                 (فوق 27 ثم تحت 26.5) — القراءة كلّها — بأعلى عُشر اللوحة. */}
-            <TrendLineSeries values={massIndex} paneH={paneH} levels={MASS_INDEX_LEVELS} />
+            <TrendLineSeries vis={paneVis} values={massIndex} paneH={paneH} levels={MASS_INDEX_LEVELS} />
           </View>
         </View>
       ) : null}
@@ -10154,7 +10164,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name="TRIX" values={trix} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <ZeroLineSeries values={trix} paneH={paneH} />
+            <ZeroLineSeries vis={paneVis} values={trix} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -10164,7 +10174,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name={volName('Force')} values={force} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <ZeroLineSeries values={force} paneH={paneH} />
+            <ZeroLineSeries vis={paneVis} values={force} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -10174,7 +10184,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name={volName('Chaikin')} values={chaikinOsc} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <ZeroLineSeries values={chaikinOsc} paneH={paneH} />
+            <ZeroLineSeries vis={paneVis} values={chaikinOsc} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -10184,7 +10194,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name="DPO" values={dpo} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <ZeroLineSeries values={dpo} paneH={paneH} />
+            <ZeroLineSeries vis={paneVis} values={dpo} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -10303,7 +10313,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name="BOP" values={bop} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <ZeroLineSeries values={bop} paneH={paneH} />
+            <ZeroLineSeries vis={paneVis} values={bop} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -10392,7 +10402,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {(() => {
               // خطّان كـTradingView — TSI وإشارته `ema(13)` — بهندسة MACD كلوحة KST. كانت أعمدة TSI
               // وحدها، فتقاطع الخطّين (إشارة الدخول المعتادة) لا يُرى إلا بعبور الصفر المتأخّر.
-              const g = macdPaneGeom(tsi.tsi, tsi.tsi, tsi.signal, paneH);
+              const g = macdPaneGeom(tsi.tsi, tsi.tsi, tsi.signal, paneH, paneVis);
               return (
                 <>
                   <View
@@ -10423,7 +10433,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name="Coppock" values={coppock} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <ZeroLineSeries values={coppock} paneH={paneH} />
+            <ZeroLineSeries vis={paneVis} values={coppock} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -10433,7 +10443,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name={volName('EOM')} values={eom} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <ZeroLineSeries values={eom} paneH={paneH} />
+            <ZeroLineSeries vis={paneVis} values={eom} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -10693,7 +10703,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name={volName('VPT')} values={vpt} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <TrendLineSeries values={vpt} paneH={paneH} />
+            <TrendLineSeries vis={paneVis} values={vpt} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -10941,7 +10951,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {(() => {
               // خطّان كـTradingView — RVI وإشارته `swma` — بهندسة MACD كلوحة KST. كانت أعمدة RVI وحدها
               // بلا إشارة، فتقاطعهما (إشارة الدخول التي يُستعمل لها Relative Vigor) لا يُرى.
-              const g = macdPaneGeom(rvi.rvi, rvi.rvi, rvi.signal, paneH);
+              const g = macdPaneGeom(rvi.rvi, rvi.rvi, rvi.signal, paneH, paneVis);
               return (
                 <>
                   <View
@@ -11079,7 +11089,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name="Momentum" values={momentum} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <ZeroLineSeries values={momentum} paneH={paneH} />
+            <ZeroLineSeries vis={paneVis} values={momentum} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -11105,7 +11115,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name={volName('PVI')} values={pvi} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <TrendLineSeries values={pvi} paneH={paneH} />
+            <TrendLineSeries vis={paneVis} values={pvi} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -11117,7 +11127,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {paneCrossLine}
             {/* على مدى النافذة لا من الصفر: مدى زوج فوركس أقلّ من 1 فلوغاريتم GAPO سالب غالباً، وأرضية
                 0 كانت تحشر الخطّ كلّه بأسفل اللوحة (‎−3.3..−2.8‎ على مقياس ‎−3.3..0‎ ⇒ سُدسها). */}
-            <TrendLineSeries values={gapo} paneH={paneH} />
+            <TrendLineSeries vis={paneVis} values={gapo} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -11202,7 +11212,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               // كانت أعمدة Fisher وحدها، فالتقاطع الذي يُقرأ منه الانعكاس لا يُرى.
               // مستويات TradingView ‎±1.5 / ±0.75‎ تدخل المقياس (كـCCI ‎±100‎) فلا تقصّها نافذة
               // هادئة؛ رقم 0.75 يُسقَط متى لاصق 1.5 بلوحة قصيرة (`placeScaledGuides`) والخطّ يبقى.
-              const g = macdPaneGeom(fisherFloor, fisher.fisher, fisher.trigger, paneH);
+              const g = macdPaneGeom(fisherFloor, fisher.fisher, fisher.trigger, paneH, paneVis);
               const guides = placeScaledGuides(FISHER_LEVELS, -g.maxAbs, g.maxAbs, g.innerH);
               return (
                 <>
@@ -11258,7 +11268,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {(() => {
               // خطّان كـTradingView — KST وإشارته `sma(9)` — بهندسة MACD (مقياس واحد متمركز على الصفر
               // للخطّين). كانت أعمدة KST وحدها بلا إشارة، فتقاطعهما — ما يُقرأ من المؤشّر — لا يُرى.
-              const g = macdPaneGeom(kst.kst, kst.kst, kst.signal, paneH);
+              const g = macdPaneGeom(kst.kst, kst.kst, kst.signal, paneH, paneVis);
               return (
                 <>
                   <View
@@ -11546,7 +11556,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {(() => {
               // خطّان كـTradingView — PMO وإشارته `ema(10)` — كلوحة TSI/KST. كانت أعمدة PMO وحدها، وتقاطع
               // الخطّين هو قراءة DecisionPoint الأساسية.
-              const g = macdPaneGeom(pmo.pmo, pmo.pmo, pmo.signal, paneH);
+              const g = macdPaneGeom(pmo.pmo, pmo.pmo, pmo.signal, paneH, paneVis);
               return (
                 <>
                   <View
@@ -11739,7 +11749,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name="Williams A/D" values={williamsAd} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <TrendLineSeries values={williamsAd} paneH={paneH} />
+            <TrendLineSeries vis={paneVis} values={williamsAd} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -11822,7 +11832,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {(() => {
               // المقياس من مدى البيانات بالنافذة، لا من الثابت 8000 الذي كان يجعل
               // الهيستوغرام كتلة مصمتة على الذهب والين وخيطاً غير مرئي على اليورو.
-              const g = macdPaneGeom(macd.hist, macd.macdLine, macd.signal, paneH);
+              const g = macdPaneGeom(macd.hist, macd.macdLine, macd.signal, paneH, paneVis);
               return (
                 <>
                   {/* خطّ الصفر: مرجع التقاطع الذي كان غائباً */}
@@ -11949,7 +11959,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name="CCI" values={cci} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <ZeroLineSeries values={cci} paneH={paneH} levels={CCI_LEVELS} />
+            <ZeroLineSeries vis={paneVis} values={cci} paneH={paneH} levels={CCI_LEVELS} />
           </View>
         </View>
       ) : null}
@@ -11959,7 +11969,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name="ROC" values={roc} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <ZeroLineSeries values={roc} paneH={paneH} />
+            <ZeroLineSeries vis={paneVis} values={roc} paneH={paneH} />
           </View>
         </View>
       ) : null}
@@ -12033,7 +12043,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name={volName('CMF')} values={cmf} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <ZeroLineSeries values={cmf} paneH={paneH} />
+            <ZeroLineSeries vis={paneVis} values={cmf} paneH={paneH} />
           </View>
         </View>
       ) : null}
