@@ -81,6 +81,7 @@ import {
   parsePriceFor,
   ambiguousThousandsPrice,
   liveEntryFillAllowed,
+  manualConvLooksInverted,
 } from '../positionSize';
 import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
@@ -116,8 +117,19 @@ const MKT_QUOTE_MAX_AGE_MS = 120_000;
 
 /** حاسبة حجم المركز: رصيد × نسبة مخاطرة ÷ (وقف بالنقاط × قيمة النقطة) — مع قيمة نقطة صحيحة لأزواج
  * الين والتقاطعات والذهب عبر سعر تحويل حيّ لعملة الحساب. الرياضيات كلها بـ`positionSize.ts`. */
+/**
+ * سعر تحويل يدوي مقلوب (`manualConvLooksInverted`). نصٌّ محلّي مؤقّتاً حتى مفتاح `riskCalcConvInverted` بـ`locales.ts`
+ * (طلب لـlaunch بـCOORDINATION) — الكردي بحاجة مراجعة.
+ */
+const CONV_INVERTED_COPY: Record<string, string> = {
+  ar: '«{typed}» لا يصلح سعراً لـ{pair} — يبدو مقلوباً (1 ÷ السعر). {pair} الآن قرب {likely} تقريباً؛ اكتبه كما تراه بمنصّتك.',
+  'en-US': '"{typed}" can\'t be the {pair} rate — it looks inverted (1 ÷ the price). {pair} is around {likely}; type it as your platform shows it.',
+  'en-GB': '"{typed}" can\'t be the {pair} rate — it looks inverted (1 ÷ the price). {pair} is around {likely}; type it as your platform shows it.',
+  ku: '«{typed}» ناتوانێت نرخی {pair} بێت — پێدەچێت پێچەوانە بێت (1 ÷ نرخ). {pair} نزیکەی {likely}ە؛ وەک لە پلاتفۆرمەکەتدا دەیبینیت بینووسە.',
+};
+
 export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   // رمز الشارت الحالي قد لا يكون زوجاً قابلاً للحساب (DXY مثلاً) — نبدأ بـEURUSD حينها
   const [symbol, setSymbol] = useState(() => (instrumentSpec(defaultSymbol) ? defaultSymbol : 'EURUSD'));
@@ -657,10 +669,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   // التجديد الفاشل يُبقي آخر سعر بصمت — بعد 5 د يُقال للمتداول (مؤقّت التجديد يعيد الرسم كل دقيقة فيتقدّم العدد)
   const convStaleMin = fetchedConv ? convStaleMinutes(fetchedConv.at, Date.now()) : null;
   const manual = num(manualConv);
+  // «0.0067» لـUSDJPY: مقلوبٌ قطعاً ⇒ لا لوت منه (كالوقف < 1 pip) — بحساب ين على EURUSD كان لوتاً أكبر ×22,000
+  const manualInverted = fetchedConv ? null : manualConvLooksInverted(conv?.symbol, Number.isFinite(manual) ? manual : null);
   // السعر المجلوب (زوجاً مباشراً كان أم معكوساً أم جسراً)، وإلا الإدخال اليدوي بترتيب الزوج المعروض
   const convRate = fetchedConv
     ? fetchedConv.rate
-    : quoteToAccountRate(conv, Number.isFinite(manual) && manual > 0 ? manual : null);
+    : quoteToAccountRate(conv, manualInverted == null && Number.isFinite(manual) && manual > 0 ? manual : null);
   // الأساس = عملة الحساب ⇒ الخسارة تُحوَّل بسعر الوقف لا الحيّ (أمرٌ معلّق بعيد كان يتجاوز المخاطرة) — `exitQuoteToAccount`
   const stopRate = exitQuoteToAccount(spec, convAccount, priceNum(stopPx), convRate, true);
   // بلا سعر وقف (النقاط وحدها): الاتجاه مجهول ⇒ أسوأ خروج (تحت الدخول/الحيّ) كي لا تتجاوز الخسارة المخاطرة — `pipsOnlyExitQuoteToAccount`
@@ -1482,6 +1496,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             </Text>
           ) : null}
           {input(manualConv, setManualConv, conv.symbol, `${t.riskCalcConvManual} ${conv.symbol}`)}
+          {manualInverted != null ? (
+            <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
+              {(CONV_INVERTED_COPY[lang] ?? CONV_INVERTED_COPY['en-US'])
+                .replace('{pair}', conv.symbol)
+                .replace('{typed}', manualConv.trim())
+                .replace('{likely}', formatPrice(manualInverted, conv.symbol))}
+            </Text>
+          ) : null}
         </>
       ) : null}
 

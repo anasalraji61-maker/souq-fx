@@ -389,6 +389,27 @@ export function conversionKey(conv: { symbol: string; invert: boolean } | null):
   return conv ? `${conv.symbol}|${conv.invert ? 'inv' : 'dir'}` : null;
 }
 
+/**
+ * عملات تسعيرٍ سعرُ الوحدة من أيّ عملة رئيسية (EUR/GBP/AUD/NZD/USD/CAD/CHF) بها **فوق 1 دائماً** — أدنى ما بلغته تاريخياً
+ * بعيدٌ عن 1: NZDJPY ~40، NZDPLN ~2.3، USDPLN ~3.6، NZDHKD ~4.5. الأساس عملة ناشئة (HUFJPY ~0.4) لا يُفحص.
+ */
+const ALWAYS_OVER_ONE_QUOTES = new Set(['JPY', 'SEK', 'NOK', 'DKK', 'ZAR', 'MXN', 'TRY', 'HUF', 'CZK', 'CNH', 'HKD', 'PLN']);
+const MAJOR_BASES = new Set(['EUR', 'GBP', 'AUD', 'NZD', 'USD', 'CAD', 'CHF']);
+
+/**
+ * سعر تحويل **مكتوب باليد** مقلوب: «0.0067» لـUSDJPY بدل «149.5» (المتداول قرأ JPY→USD بمنصّةٍ أو محوّل عملات).
+ * بحساب ين على EURUSD الزوج USDJPY غير معكوس ⇒ قيمة الـpip أصغر ×22,000 ⇒ **لوتٌ ضخم** يُعرض رقماً أنيقاً؛
+ * وبحساب دولار على EURJPY لوتٌ أصغر ×22,000. يُفحص فقط حيث الجواب قاطع (زوجٌ أساسه رئيسية وتسعيره من
+ * `ALWAYS_OVER_ONE_QUOTES` وسعرٌ < 1) — EURUSD 1.08 مقابل 0.92 كلاهما معقول فلا تخمين هناك.
+ * يعيد السعر الصحيح المرجَّح (1 ÷ المكتوب) أو null.
+ */
+export function manualConvLooksInverted(pair: string | null | undefined, rate: number | null | undefined): number | null {
+  if (typeof pair !== 'string' || pair.length !== 6) return null;
+  if (typeof rate !== 'number' || !Number.isFinite(rate) || rate <= 0 || rate >= 1) return null;
+  if (!MAJOR_BASES.has(pair.slice(0, 3)) || !ALWAYS_OVER_ONE_QUOTES.has(pair.slice(3))) return null;
+  return 1 / rate;
+}
+
 /** كم وحدة من عملة الحساب تساوي وحدة واحدة من عملة التسعير، من سعر زوج التحويل. */
 export function quoteToAccountRate(conv: { invert: boolean } | null, pairPrice: number | null): number | null {
   if (!conv) return 1;

@@ -5,6 +5,7 @@
 import { parseDecimal } from './parseDecimal';
 import assert from 'node:assert/strict';
 import {
+  manualConvLooksInverted,
   convStaleMinutes,
   costsForRisk,
   quoteAsOfMs,
@@ -2873,3 +2874,30 @@ console.log('positionSize Arabic comma price hint selftest OK');
   assert.equal(at200.lots, 0.05);
 }
 console.log('positionSize slPipsCarryOver selftest OK');
+
+{
+  // سعر تحويل يدوي مقلوب: USDJPY «0.0067» بدل 149.5
+  const inv = manualConvLooksInverted('USDJPY', 1 / 149.5)!;
+  assert.ok(Math.abs(inv - 149.5) < 1e-9);
+  assert.ok(manualConvLooksInverted('EURSEK', 0.087) != null);
+  assert.ok(manualConvLooksInverted('NZDPLN', 0.43) != null);
+  // المعقول لا يُعلَّم
+  for (const [pair, r] of [['USDJPY', 149.5], ['NZDJPY', 40], ['USDPLN', 3.6], ['NZDHKD', 4.5], ['CHFJPY', 170]] as const) {
+    assert.equal(manualConvLooksInverted(pair, r), null, pair);
+  }
+  // أزواج حول 1 (المقلوب معقول أيضاً) وأساس ناشئ (HUFJPY ~0.4) ⇒ لا تخمين
+  for (const [pair, r] of [['EURUSD', 0.92], ['USDCHF', 0.88], ['AUDUSD', 0.65], ['HUFJPY', 0.4], ['ZARJPY', 0.5]] as const) {
+    assert.equal(manualConvLooksInverted(pair, r), null, pair);
+  }
+  for (const bad of [null, undefined, 0, -1, NaN, 1]) assert.equal(manualConvLooksInverted('USDJPY', bad), null);
+  assert.equal(manualConvLooksInverted(null, 0.0067), null);
+  assert.equal(manualConvLooksInverted('USDJP', 0.0067), null);
+  // لماذا يهمّ: حساب ين على EURUSD بوقف 20 pip ومخاطرة 10,000 JPY — المقلوب يعطي لوتاً أكبر ×22,350
+  const eu = instrumentSpec('EURUSD')!;
+  const conv = conversionPair(eu.quote, 'JPY')!;
+  assert.deepEqual(conv, { symbol: 'USDJPY', invert: false });
+  const right = positionSize({ balance: 1_000_000, riskPct: 1, slPips: 20, pipValuePerLot: pipValuePerLot(eu, quoteToAccountRate(conv, 149.5)!), contractSize: eu.contractSize })!;
+  assert.equal(right.lots, 0.33); // 10,000 ÷ (20 × 1,495) = 0.334 ⇒ 0.33
+  assert.ok(manualConvLooksInverted(conv.symbol, 1 / 149.5) != null);
+}
+console.log('positionSize manualConvLooksInverted selftest OK');
