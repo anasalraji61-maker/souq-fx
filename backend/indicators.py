@@ -137,7 +137,9 @@ def snapshot(candles: list[dict[str, Any]], fast: int = 9, slow: int = 21) -> di
         # التغيّر على **كامل** السلسلة المُمرَّرة (180 شمعة: ~45 ساعة على 15m، ~6 أشهر على D) لا يومياً —
         # `change_bars` يقول النافذة كي لا يُعرض كتغيّر اليوم. إغلاق أوّل صفريّ ⇒ None لا 0 مخترَع.
         "change_pct": ((last - first) / first * 100) if first else None,
-        "change_bars": len(closes),
+        # عدد الشموع التي **تغطّيها** النسبة = الحركات من أوّل إغلاق إلى الأخير (N إغلاقاً = N−1 شمعة بعد
+        # الأولى)، كـ«آخر 10 شموع» بـ`signal_hub` (من إغلاق ما قبلها). كان `len(closes)` ⇒ شمعة زائدة.
+        "change_bars": len(closes) - 1,
         "rsi": r[-1],
         "sma_fast": f[-1],
         "sma_slow": s[-1],

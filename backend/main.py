@@ -1747,7 +1747,8 @@ def ai_ask(body: AiAsk):
     live = series.data_source.kind != "demo"
     # `change_pct` = التغيّر على **كامل السلسلة** (180 شمعة: ~45 ساعة على 15m) لا «لحظي» — والنصّ يقول
     # ذلك. تغيّر صفريّ لا اتجاه له: كان `>= 0` يجعله «صاعداً» بسيناريو شراء كامل.
-    bars = len(series.candles)
+    # الشموع التي تغطّيها النسبة: من إغلاق الأولى إلى إغلاق الأخيرة = N−1 (كـ`change_bars` بـ`indicators.snapshot`)
+    bars = max(len(series.candles) - 1, 0)
     # None = رمز بلا سعر أصلاً (DXY) ⇒ `live` False أعلاه، ولا اتجاه
     chg = series.change_pct if series.change_pct is not None else 0.0
     flat = chg == 0

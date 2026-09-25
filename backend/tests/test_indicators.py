@@ -131,9 +131,11 @@ def test_macd_short_series_is_all_none_not_zero():
 
 
 def test_snapshot_change_names_its_window():
-    """`change_pct` على كامل السلسلة لا يومياً — `change_bars` يقول كم شمعة."""
+    """`change_pct` على كامل السلسلة لا يومياً — `change_bars` يقول كم شمعة **تغطّي** النسبة:
+    4 إغلاقات = 3 حركات (من إغلاق الأولى). كان 4 ⇒ شمعة زائدة بالوصف."""
     out = ind.snapshot([{"close": c} for c in [1.0, 2.0, 3.0, 4.0]], fast=2, slow=3)
-    assert out["change_bars"] == 4
+    assert out["change_pct"] == 300.0
+    assert out["change_bars"] == 3
 
 
 def test_snapshot_change_is_none_not_zero_when_first_close_is_zero():

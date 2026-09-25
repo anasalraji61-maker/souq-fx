@@ -114,7 +114,7 @@ def test_ai_scenario_stop_is_one_atr_and_keeps_jpy_precision(client, monkeypatch
 def test_indicator_snapshot_route_says_timeframe_and_window(client, monkeypatch):
     monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
     out = client.get("/api/indicators/snapshot/EURUSD?timeframe=1H").json()
-    assert out["timeframe"] == "1H" and out["change_bars"] == 60
+    assert out["timeframe"] == "1H" and out["change_bars"] == 59
     assert out["data_kind"] == "provider"
 
 

@@ -330,3 +330,24 @@ def test_scan_price_as_of_never_later_than_the_fetch():
     # شمعة جارية (لم تُغلق) ⇒ نهايتها بعد الجلب ⇒ السعر «حتى لحظة الجلب»
     assert screener_engine._price_as_of([{"time": 1000}], "1H", 1500.0) == 1500.0
     assert screener_engine._price_as_of([], "1H", None) is None
+
+
+def test_scan_change_covers_exactly_the_last_change_window_candles(monkeypatch):
+    """«آخر 80 شمعة» = 80 حركة، من إغلاق ما قبلها. كان يُقاس من إغلاق أولاها ⇒ 79 حركة تحت وصف 80:
+    هنا السعر ثابت 1.0 ثم يقفز بالحركة الأولى من النافذة ويتذبذب حتى 1.1 — كان التغيّر يظهر ~0%."""
+    n = 180
+    w = screener_engine.CHANGE_WINDOW
+    # تذبذب صغير بعد القفزة يُبقي RSI قرب 50 (فلتر «زخم صاعد» يشترط RSI < 65)؛ آخر إغلاق 1.1 بالضبط
+    closes = [1.0] * (n - w) + [1.101 if i % 2 == 0 else 1.1 for i in range(w)]
+    now = int(time.time())
+    candles = [
+        {"time": now - (n - i) * 900, "open": c, "high": c, "low": c, "close": c, "volume": 0}
+        for i, c in enumerate(closes)
+    ]
+    monkeypatch.setattr(
+        market, "fetch_time_series_with_meta",
+        lambda sym, tf, outputsize=180: (candles, {"kind": "provider", "as_of": time.time()}),
+    )
+    out = screener_engine.run_scan_detailed("15m", ["bullish"], ["EURUSD"])
+    assert out["scanned"] == 1
+    assert out["results"][0]["change_pct"] == 10.0

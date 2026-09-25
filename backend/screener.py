@@ -127,7 +127,9 @@ def run_scan_detailed(
 
         matched: list[str] = []
         rsi_v = float(snap["rsi"])
-        window = raw[-CHANGE_WINDOW:]
+        # «آخر 80 شمعة» = من إغلاق ما **قبلها** (80 حركة، كـ`signal_hub` «آخر 10 شموع»): كان `raw[-80:]`
+        # يقيس من إغلاق أولاها ⇒ 79 حركة تحت وصف 80.
+        window = raw[-(CHANGE_WINDOW + 1):]
         first_close = float(window[0]["close"]) if window else 0.0
         chg = ((float(snap["last"]) - first_close) / first_close * 100) if first_close else 0.0
 

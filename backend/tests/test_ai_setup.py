@@ -81,9 +81,10 @@ def test_flat_series_attaches_no_levels_even_if_the_model_says_buy(monkeypatch):
     assert s["entry"] is None and s["sl"] is None and s["tp"] is None
 
 
-@pytest.mark.parametrize("lang, word", [("ar", "آخر 60 شمعة"), ("en", "last 60 candles")])
+@pytest.mark.parametrize("lang, word", [("ar", "آخر 59 شمعة"), ("en", "last 59 candles")])
 def test_local_answer_names_the_candle_window_not_an_instant_trend(monkeypatch, lang, word):
-    """التغيّر على كامل السلسلة كان يُسمّى «الاتجاه اللحظي» / «short-term trend»."""
+    """التغيّر على كامل السلسلة كان يُسمّى «الاتجاه اللحظي» / «short-term trend». 60 إغلاقاً = 59 شمعة
+    تغطّيها النسبة (من إغلاق الأولى) — كان «60»."""
     monkeypatch.setattr(main, "build_series", _flat_series(0.3))
     monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
     body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟", "lang": lang}).json()
