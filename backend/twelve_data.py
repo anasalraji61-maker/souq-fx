@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 import os
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import httpx
 
@@ -54,6 +54,45 @@ class SymbolUnavailable(RuntimeError):
 
 def unavailable_reason(matrix_symbol: str) -> str | None:
     return UNAVAILABLE_AT_PROVIDER.get((matrix_symbol or "").upper())
+
+
+# رموز تتداول بعطلة الأسبوع — لا إغلاق أسبوعي لها. الباقي بـ`SYMBOL_MAP` (فوركس، معادن، نفط) يُغلق
+# الجمعة 17:00 نيويورك. رمز خارج الخريطة (من البحث) مجهول الجلسة ⇒ لا قصّ (السلوك القديم).
+WEEKEND_TRADED = frozenset({"BTCUSD", "ETHUSD"})
+_DAY = 86400
+
+
+def _nth_sunday(year: int, month: int, n: int) -> int:
+    """يوم الشهر لأحد رقم n (1 = الأول)."""
+    first = datetime(year, month, 1, tzinfo=timezone.utc).weekday()  # الاثنين 0 … الأحد 6
+    return 1 + (6 - first) % 7 + 7 * (n - 1)
+
+
+def _weekly_close_utc(friday: datetime) -> int:
+    """الجمعة 17:00 نيويورك بثواني UTC — 21:00 بالتوقيت الصيفي الأمريكي (الأحد الثاني من مارس حتى
+    الأحد الأول من نوفمبر)، وإلا 22:00. الجمعة لا تقع يوم تحويل الساعة، فالتاريخ وحده يكفي."""
+    y = friday.year
+    dst = (3, _nth_sunday(y, 3, 2)) <= (friday.month, friday.day) < (11, _nth_sunday(y, 11, 1))
+    return int(friday.replace(hour=21 if dst else 22, minute=0, second=0, microsecond=0).timestamp())
+
+
+def bar_end(matrix_symbol: str, open_ts: float, step: int) -> float:
+    """نهاية شمعة فُتحت `open_ts` وطولها `step` ثانية: فتحها + طولها، **ولا تتجاوز إغلاق السوق الأسبوعي**.
+
+    كانت فتحاً + طولاً وحده: شمعة W لليورو دولار مؤرّخة الاثنين «تنتهي» الاثنين التالي، والسوق أُغلق
+    الجمعة 17:00 نيويورك ⇒ طوال العطلة تُعدّ جارية: تنبيه «تقاطع صاعد · W» أُنشئ السبت يُطلق فوراً على
+    تقاطع الأسبوع الماضي كأنه للتوّ، وإغلاق الجمعة يُرسَل `price_as_of` «الآن» (حتى 45 ساعة خطأ). ونفسه
+    لشمعة D/4H الجمعة بعد 21:00. العملات الرقمية تتداول بالعطلة فلا قصّ لها."""
+    end = float(open_ts) + step
+    sym = (matrix_symbol or "").upper()
+    if sym not in SYMBOL_MAP or sym in WEEKEND_TRADED:
+        return end
+    opened = datetime.fromtimestamp(float(open_ts), tz=timezone.utc)
+    friday = opened + timedelta(days=(4 - opened.weekday()) % 7)
+    close = _weekly_close_utc(friday)
+    if close <= open_ts:  # فُتحت بعد إغلاق هذه الجمعة (نادر) ⇒ إغلاق الجمعة التالية
+        close = _weekly_close_utc(friday + timedelta(days=7))
+    return float(min(end, close))
 
 TF_MAP: dict[str, str] = {
     "1m": "1min",

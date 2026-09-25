@@ -42,11 +42,14 @@ MOMENTUM_RSI_CAP = 65.0
 MOMENTUM_RSI_FLOOR = 35.0
 
 
-def _price_as_of(raw: list[dict[str, Any]], timeframe: str, fetched: float | None) -> float | None:
-    """إغلاق آخر شمعة (فتحها + طول الفريم) ولا يتجاوز لحظة الجلب — نفس `main._series_price_at`."""
+def _price_as_of(
+    raw: list[dict[str, Any]], timeframe: str, fetched: float | None, symbol: str = ""
+) -> float | None:
+    """إغلاق آخر شمعة (`market.bar_end`: فتحها + طول الفريم، لا بعد إغلاق الجمعة) ولا يتجاوز لحظة الجلب
+    — نفس `main._series_price_at`."""
     step = alert_worker._BAR_SECONDS.get(timeframe)
     try:
-        candle_end = float(raw[-1]["time"]) + step if raw and step else None
+        candle_end = market.bar_end(symbol, float(raw[-1]["time"]), step) if raw and step else None
     except (KeyError, TypeError, ValueError):
         candle_end = None
     known = [t for t in (fetched, candle_end) if t is not None]
@@ -167,7 +170,7 @@ def run_scan_detailed(
                     "as_of": meta.get("as_of"),
                     # وقت إغلاق آخر شمعة (كـ`price_as_of` بالتوقّع والمساعد): `as_of` وقت **الجلب**، فالسبت
                     # يُجلب طازجاً ويجتاز فحص القِدم وتقاطعه من إغلاق الجمعة — كان يُقرأ «الآن».
-                    "price_as_of": _price_as_of(raw, timeframe, meta.get("as_of")),
+                    "price_as_of": _price_as_of(raw, timeframe, meta.get("as_of"), sym),
                 }
             )
 

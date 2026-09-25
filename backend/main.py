@@ -1281,7 +1281,10 @@ def _series_price_at(series: ChartSeries) -> float | None:
     وحدها: السبت كانت شمعة الجمعة 21:45 تُرسَل «الآن» (نفس عيب الاقتباس المصحَّح بـ9f5cccd)."""
     fetched = series.data_source.as_of
     step = TF_SECONDS.get(series.timeframe)
-    candle_end = float(series.candles[-1].time + step) if series.candles and step else None
+    # `bar_end`: لا بعد إغلاق الجمعة — شمعة W الاثنين كانت تُعدّ جارية طوال العطلة فيُرسَل إغلاق الجمعة «الآن»
+    candle_end = (
+        market.bar_end(series.symbol, series.candles[-1].time, step) if series.candles and step else None
+    )
     known = [t for t in (fetched, candle_end) if t is not None]
     return min(known) if known else None
 

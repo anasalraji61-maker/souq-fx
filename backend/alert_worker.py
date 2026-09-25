@@ -140,7 +140,8 @@ def cross_predates_arming(a: dict, candles: list[dict]) -> bool:
     if armed is None or not step:
         return False
     try:
-        return int(candles[-1]["time"]) + step <= armed
+        # نهاية الشمعة لا تتجاوز إغلاق الجمعة: شمعة W الاثنين كانت «جارية» طوال العطلة ⇒ تقاطعها يُطلق السبت
+        return market.bar_end(str(a.get("symbol") or ""), int(candles[-1]["time"]), step) <= armed
     except (KeyError, TypeError, ValueError):
         return False
 
