@@ -16,8 +16,9 @@ import {
  *
  * `chart/types.ts` يحتفظ بالتسميات العربية كقيم افتراضية (مصدر المعرّفات الوحيد، ولا يستورد i18n)؛
  * هنا تُستبدَل التسمية من القاموس حسب المعرّف فقط. المعرّف غير الموجود بالخرائط يبقى على تسميته
- * الأصلية — عمداً للمصطلحات الدولية (Renko/Kagi/P&F، SMA/EMA/RSI/MACD…) التي يستخدمها المتداول كما هي
- * بكل اللغات. الخرائط مقيَّدة بمفاتيح `Dict` فأي مفتاح ناقص/خاطئ يكسر فحص الأنواع.
+ * الأصلية — عمداً للمصطلحات الدولية (SMA/EMA/RSI/MACD…) التي يستخدمها المتداول كما هي بكل اللغات.
+ * Renko/Kagi/P&F صارت مترجمة (رينكو/كاجي/نقطة ورقم) كي لا تظهر لاتينية بالعربي/الكردي ولا يقرأ
+ * قارئ الشاشة «P and F». الخرائط مقيَّدة بمفاتيح `Dict` فأي مفتاح ناقص/خاطئ يكسر فحص الأنواع.
  */
 type LabelKey = { [K in keyof Dict]: Dict[K] extends string ? K : never }[keyof Dict];
 
@@ -30,6 +31,9 @@ const KIND_KEYS: Partial<Record<ChartKind, LabelKey>> = {
   area: 'ctlKindArea',
   baseline: 'ctlKindBaseline',
   range: 'ctlKindRange',
+  renko: 'ctlKindRenko',
+  kagi: 'ctlKindKagi',
+  pnf: 'ctlKindPnf',
 };
 
 const TOOL_KEYS: Partial<Record<DrawTool, LabelKey>> = {
