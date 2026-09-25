@@ -521,7 +521,7 @@ def search_listings(query: str, limit: int = 20) -> tuple[list[dict], list[dict]
         raise ValueError(f"query must be at most {MAX_SEARCH_QUERY} characters")
     q = query.strip()
     if len(q) < 1:
-        return []
+        return [], []  # كان `[]` خلاف النوع المعلَن ⇒ `symbol_search("   ")` = IndexError
     with httpx.Client(timeout=20.0) as client:
         r = client.get(
             f"{API_BASE}/symbol_search",

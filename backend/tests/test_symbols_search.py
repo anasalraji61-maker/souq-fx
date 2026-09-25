@@ -276,3 +276,9 @@ def test_route_returns_ambiguous_listings_apart(client, monkeypatch):
 
 def test_blank_query_has_both_lists(client):
     assert client.get("/api/symbols/search?q=%20").json() == {"results": [], "ambiguous": []}
+
+
+def test_blank_query_returns_empty_results_not_index_error(monkeypatch):
+    monkeypatch.setattr(market, "_api_key", lambda: "test-key")
+    assert market.search_listings("   ") == ([], [])
+    assert market.symbol_search("   ") == []
