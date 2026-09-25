@@ -14,6 +14,7 @@ import {
   liveEntryForStop,
   liveEntryQuote,
   liveEntryOrphaned,
+  liveFillStillValid,
   liveStopChip,
   exitShortcuts,
   exitPreview,
@@ -2273,3 +2274,23 @@ console.log('tradePlan journal dotted-thousands size selftest OK');
   assert.equal(noteCharsLeft('abc', 50), 47);
 }
 console.log('tradePlan note chars-left selftest OK');
+
+// liveFillStillValid — ردّ «السعر الحالي» لا يُكتب فوق دخول صفقة فُتحت للتعديل أو سعرٍ كُتب باليد أثناء الطلب
+{
+  const tap = { key: 'EURUSD|buy', entryText: '', editId: null };
+  assert.equal(liveFillStillValid(tap, { ...tap }), true);
+  // «تعديل» صفقة قديمة (دخول 1.0820) قبل وصول الردّ: الرمز والجهة كما هما، لكن الدخول والصفقة تغيّرا
+  assert.equal(liveFillStillValid(tap, { key: 'EURUSD|buy', entryText: '1.0820', editId: 42 }), false);
+  // الصفقة نفسها بلا تغيير بالدخول — لكنها صارت قيد التعديل
+  assert.equal(liveFillStillValid(tap, { key: 'EURUSD|buy', entryText: '', editId: 42 }), false);
+  // سعرٌ كُتب باليد أثناء الطلب
+  assert.equal(liveFillStillValid(tap, { ...tap, entryText: '1.0851' }), false);
+  // الرمز أو الجهة (السلوك السابق)
+  assert.equal(liveFillStillValid(tap, { ...tap, key: 'GBPUSD|buy' }), false);
+  assert.equal(liveFillStillValid(tap, { ...tap, key: 'EURUSD|sell' }), false);
+  // أثناء التعديل: نقرة وردّ على الصفقة نفسها بلا كتابة ⇒ يُكتب
+  const editTap = { key: 'XAUUSD|sell', entryText: '2650.35', editId: 7 };
+  assert.equal(liveFillStillValid(editTap, { ...editTap }), true);
+  assert.equal(liveFillStillValid(editTap, { ...editTap, editId: 8 }), false);
+}
+console.log('tradePlan liveFillStillValid selftest OK');

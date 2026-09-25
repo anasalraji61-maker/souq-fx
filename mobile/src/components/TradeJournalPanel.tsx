@@ -21,6 +21,7 @@ import {
   analyzePlan,
   entryAfterSideSwitch,
   liveEntryOrphaned,
+  liveFillStillValid,
   executionPrice,
   exitShortcuts,
   exitPreview,
@@ -165,6 +166,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   /** صفقة قيد التعديل — النموذج نفسه يُملأ بها و«إضافة» يصبح «حفظ التعديل» (خطأ كتابة بالدخول كان يُفسد
    * الإحصاءات، والحلّ الوحيد كان الحذف وإعادة الكتابة). */
   const [editing, setEditing] = useState<Trade | null>(null);
+  const editingRef = useRef(editing);
+  editingRef.current = editing;
   /** عدسة المراجعة: الأداة المختارة بشرائح الفلتر — `null` = الكل. */
   const [filterSym, setFilterSym] = useState<string | null>(null);
 
@@ -231,23 +234,30 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     setQuotes(next);
   }, []);
 
+  /**
+   * رقم آخر طلب للقائمة: أول تحميل بطيء والنموذج يعمل تحته — تُضاف صفقة فيصل تحديثُ ما بعد الإضافة أولاً، ثم يصل
+   * الطلب الأول **بقائمة أقدم بلا الصفقة** فيستبدلها. المتداول يظنّ الحفظ فشل فيضيفها ثانيةً (نسبة الفوز والصافي
+   * يُحسبان مرتين). الردّ الأقدم من آخر طلب يُسقط، كأسعار الصفقات المفتوحة (`quoteGenRef`).
+   */
+  const listGenRef = useRef(0);
   const refresh = useCallback(async () => {
+    const gen = ++listGenRef.current;
     try {
       const res = await api.trades();
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || gen !== listGenRef.current) return;
       const list = res.trades as Trade[];
       setTrades(list);
       setStats(res.stats as Stats);
       setListError(false);
       void loadOpenQuotes(list);
     } catch {
-      if (mountedRef.current) {
+      if (mountedRef.current && gen === listGenRef.current) {
         setTrades([]);
         setStats(null);
         setListError(true);
       }
     } finally {
-      if (mountedRef.current) setLoading(false);
+      if (mountedRef.current && gen === listGenRef.current) setLoading(false);
     }
   }, [loadOpenQuotes]);
 
@@ -289,15 +299,16 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
 
   const fillLivePrice = async () => {
     const sym = quoteSymbol(symbol);
-    const key = `${sym}|${side}`;
+    const liveNow = () => ({ key: liveKeyRef.current, entryText: entryRef.current, editId: editingRef.current?.id ?? null });
+    const atTap = { ...liveNow(), key: `${sym}|${side}` };
     if (sym == null || quoteBusy) return;
     setQuoteBusy(true);
     setFormError(null);
     try {
       const q = await api.marketQuote(sym);
       if (!mountedRef.current) return;
-      // الرمز أو الجهة تغيّرا أثناء الطلب: سعر EURUSD تحت GBPUSD، أو Ask الشراء لصفقة صارت بيعاً — يُسقط
-      if (liveKeyRef.current !== key) return;
+      // الرمز أو الجهة أو الدخول المكتوب أو الصفقة قيد التعديل تغيّرت أثناء الطلب — يُسقط (`liveFillStillValid`)
+      if (!liveFillStillValid(atTap, liveNow())) return;
       if (!isRealQuote(q)) {
         setFormError(t.journalNoLiveQuote);
         return;
