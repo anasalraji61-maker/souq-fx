@@ -6147,6 +6147,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // عدّاد إغلاق الشمعة سطرٌ ثانٍ تحت السعر (`barCountdown.ts`) — للفريمات الزمنية وحدها،
   // لا بالإعادة (الشمعة «الجارية» هناك تاريخ مُغلق) ولا حين يكون السعر خارج المدى المرئيّ.
   const lastRawBar = liveSeries.candles[liveSeries.candles.length - 1];
+  // وسم السعر الحيّ وخطّه بلون اتجاه الشمعة الجارية (إغلاق/سعر حيّ مقابل افتتاحها) — DESIGN-PRO §1: الأخضر
+  // والأحمر للاتجاه وحده، والتأكيد لا يُصرف على وسم يتبدّل كل تيك. كان بلون `accent` (تيل، أو عنبري بإطار).
+  const currentBarOpen = replayOn ? replayLast?.open : lastRawBar?.open;
+  const currentDirColor =
+    currentBarOpen != null && Number.isFinite(currentBarOpen) && Number.isFinite(currentPrice)
+      ? currentPrice >= currentBarOpen
+        ? colors.bull
+        : colors.bear
+      : accent;
+  const currentTagInk = tagTextColor(currentDirColor);
   const countdownStep = timeframeStepSec(series.timeframe);
   const countdownSynthetic =
     isSyntheticKind(kind);
@@ -9371,7 +9381,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             pointerEvents="none"
             style={[
               styles.currentPriceLine,
-              { top: currentPriceY, right: PRICE_AXIS_WIDTH },
+              { top: currentPriceY, right: PRICE_AXIS_WIDTH, borderTopColor: currentDirColor },
             ]}
           />
         ) : null}
@@ -9412,10 +9422,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             pointerEvents="none"
             style={[
               styles.currentPriceTag,
-              { top: currentTagTop, minHeight: currentTagH, backgroundColor: accent },
+              { top: currentTagTop, minHeight: currentTagH, backgroundColor: currentDirColor },
             ]}
           >
-            <Text style={styles.currentPriceText}>
+            <Text style={[styles.currentPriceText, { color: currentTagInk }]}>
               {offMark(currentPriceOff)}
               {percentBase != null && percentBase > 0
                 ? formatScalePercent((currentPrice / percentBase - 1) * 100)
@@ -9426,7 +9436,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 lastBarTime={lastRawBar.time}
                 stepSec={countdownStep}
                 symbol={series.symbol}
-                style={styles.currentPriceCountdown}
+                style={[styles.currentPriceCountdown, { color: currentTagInk }]}
                 onEnd={() => setCountdownEndedKey(countdownKey)}
               />
             ) : null}
