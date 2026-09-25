@@ -17,10 +17,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radii, buttons } from '../theme';
 import { api, type ChartSeries } from '../api';
-import { MOCK_BASES, mockBase } from '../chart/mockBases';
-import { mockSeries } from '../mock';
+import { MOCK_BASES } from '../chart/mockBases';
 import { ChartFrame } from '../components/ChartFrame';
-import { ProviderUnavailableNotice, loadingSeries, seriesHasNoRealData } from '../components/ProviderUnavailableNotice';
+import {
+  ProviderUnavailableNotice,
+  loadingSeries,
+  serverUnreachableSeries,
+  seriesHasNoRealData,
+} from '../components/ProviderUnavailableNotice';
 import {
   FrameSizedGrid,
   type FrameLayoutCount,
@@ -755,11 +759,8 @@ export function TerminalScreen() {
       return;
     }
     const gen = ++shadowLoadGen.current;
-    const emptySlot = (secTf: Timeframe): ChartSeries => ({
-      ...mockSeries(symbol, mockBase(symbol), secTf, 2),
-      candles: [],
-      timeframe: secTf,
-    });
+    // QA1(a): كانت `mockSeries(...)` ثم `candles: []` ⇒ فارغة لكنها تحمل `last`/`change_pct` 2024. الآن بلا سعر إطلاقاً.
+    const emptySlot = (secTf: Timeframe): ChartSeries => serverUnreachableSeries(symbol, secTf);
 
     const loadShadows = async () => {
       const primaryBars = Math.max(80, series?.candles?.length ?? 180);
