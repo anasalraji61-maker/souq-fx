@@ -1155,7 +1155,9 @@ export function computeFractalChaosOsc(
   candles: Pick<Candle, 'high' | 'low'>[]
 ): (number | null)[] {
   const { top, bottom } = computeFractals(candles);
-  return candles.map((_, i) => (top[i] != null ? 1 : bottom[i] != null ? -1 : 0));
+  // ±1 على شمعة **التأكيد** (الثانية بعد القمّة/القاع، كـPine `high[2]`) لا على شمعة الفراكتل: هناك كانت
+  // الإشارة تسبق ما يمكن معرفته بشمعتين. أول شمعتين null (لا تأكيد ممكن بعد).
+  return candles.map((_, i) => (i < 2 ? null : top[i - 2] != null ? 1 : bottom[i - 2] != null ? -1 : 0));
 }
 
 /**

@@ -1124,9 +1124,11 @@ export function computeFractalChaosBands(
   const lower: (number | null)[] = new Array(n).fill(null);
   let lastTop: number | null = null;
   let lastBottom: number | null = null;
-  for (let i = 0; i < n; i++) {
-    if (top[i] != null) lastTop = top[i];
-    if (bottom[i] != null) lastBottom = bottom[i];
+  // الفراكتل يُعلَّم على شمعة القمّة لكنه لا يُعرف إلا بإغلاق الشمعة الثانية بعدها (كـPine: `high[2]` على الشمعة
+  // الحالية) — كان الحدّ يقفز للقمّة على شمعتها نفسها، قبل تأكيدها بشمعتين، فيبدو بالتاريخ وكأنه تنبّأ بها.
+  for (let i = 2; i < n; i++) {
+    if (top[i - 2] != null) lastTop = top[i - 2];
+    if (bottom[i - 2] != null) lastBottom = bottom[i - 2];
     upper[i] = lastTop;
     lower[i] = lastBottom;
   }
