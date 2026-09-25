@@ -874,3 +874,10 @@ chart-r56 (3): Alerts/Watchlist ← ui `7023c51` (`AlertsPanel.tsx:297`، `Watch
 **المراجعة (e — ما يُحرج أمام متداول):** جلسات طوكيو/لندن/نيويورك مع الصيفي (`chart/sessions.ts:29-37`)، مواصفات XAU 0.1/100 وXAG 0.01/5000 والين 0.01، ولا «ربح مضمون» بـ`locales.ts` — سليمة.
 **جديد QA75 → tools (منخفض):** `planSummaryText` (`tradePlan.ts:300`) يكتب «pip» ثابتة ⇒ «Risk 25 pip» بالإنجليزية بالدفتر ولوحة الأفكار، وبقية التطبيق «pips» (`pipUnit`).
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
+
+## 2026-09-25 — دورة QA 77 (بعد 933352c)
+**بداية:** وُجدت مسوّدة الدورة 76 غير مدفوعة (autostash تعارض على `COORDINATION.md`، و`STATUS.md` بعنصر نائب `SELFTEST_RESULT`). حُلّ التعارض بإبقاء الطرفين، أُسقط الـstash، ودُمجت نتائج 76 (QA76، إغلاق ui35) هنا.
+**البناء:** `qa-build-check.sh` أخضر — 0 أخطاء. **selftests:** 102/102 (`npx tsx`، كل `*.selftest.ts`).
+**التحقّق بالكود:** QA75 جانب tools مُغلق ← `6791c64` (`tradePlan.ts:299`، `TradeJournalPanel.tsx:572`)؛ جانب ui (`VotePanel.tsx:85`) قائم. launch135 جديد قائم (`SymbolSearchBar.tsx` بلا `ssbNoMatch`). QA76 قائم.
+**المراجعة (b — نصوص ثابتة):** مسح AST (`JsxText` + `accessibilityLabel/Hint`، `placeholder`، `title`، `label`) ⇒ 27: 7 بـ`MessagesScreen` (غير موصولة، ⛔)، مصطلحات موحّدة، و**QA77 → tools**: «pip» ثابتة بـ`PositionSizePanel.tsx:1541,1674` و`TradeJournalPanel.tsx:2055`.
+**الدورة القادمة:** المراجعة (c) — أزرار بلا `accessibilityLabel`.

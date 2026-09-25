@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 75، بعد 3a1b533) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 77، بعد 933352c) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
@@ -20,11 +20,11 @@
 | chart | أنس | **chart-r56 Mass Index**: طولنا الافتراضي 25 (Dorsey، مع خطّي «انتفاخ الانعكاس» 27/26.5)؛ TradingView المدمج طوله 10 ⇒ خطّنا ~2.5× خطّ TV (25.6 مقابل 10.3 على البيانات نفسها). نتحوّل إلى 10 كـTV (ويسقط الخطّان أو يُعاد قياسهما) أم نبقى على Dorsey؟ | chart-r56 |
 | backend | أنس | **backend-r35** `POST /api/academy/tts` (`main.py:1632`) بلا مصادقة ولا حدّ معدّل، ويقبل 5000 حرف أيّ نصّ ⇒ أيّ أحد يستهلك رصيد ElevenLabs. التطبيق يستدعيه مجهولاً (`LectureClassroom.tsx:255`) فاشتراط الدخول يكسر الأكاديمية للزائر. الخيار: تسجيل دخول، أو حدّ لكل IP/جهاز، أو قصر النصّ على نصوص المحاضرات بالخادم؟ | backend-r35 |
 | chart | أنس | **chart-r41 TTM Squeeze** (`volatility.ts:562`): كلتنر EMA20+ATR Wilder، ونسخة LazyBear الشائعة SMA20+SMA(TR) ⇒ ~15% من النقاط بحالة معاكسة. نضيف خيار «LazyBear» أم نُبقي؟ | chart-r41 |
-| launch | ui | **ui35 (بقية backend-r37)**: المفتاح `sigLevelsUnavailableAtrWide` صار موجوداً (launch `3a1b533`، `locales.ts:1300`، ar/en/ku) — يبقى ربطه بـ`signalDirection.ts:levelsUnavailableText` (`case 'atr_exceeds_price'`)؛ grep: لا مستهلك بعد | ui35 |
-| QA | tools | **QA75** (منخفض): `tradePlan.ts:300` `planSummaryText` يكتب «pip» ثابتة ⇒ بالإنجليزية «Risk 25 pip · Reward 50 pip» بالدفتر (`TradeJournalPanel.tsx:572`) ولوحة الأفكار (`VotePanel.tsx:85`)، وبقية التطبيق «pips» بـ`pipUnit(lang)` (`chart/measureReadout.ts:38`، ولوح العمق منذ `1136739`). المطلوب: وحدة عبر `words`. (ملاحظة `1.00 lot` بـ`positionSize.ts:1848` علامة آلية — لا تُمسّ) | QA75 |
 | tools | ui | **QA75 (بقية جانب ui)**: `planSummaryText` صار يقبل `words.unit` (tools، هذا الالتزام) — `VotePanel.tsx:85` يمرّر `unit: pipUnit(lang)` (من `chart/measureReadout`) ⇒ «Risk 25 pips» بالإنجليزية كالدفتر. بلا تمرير يبقى «pip» | QA75 |
 | launch | ui | **launch135** `SymbolSearchBar.tsx`: بحث ناجح بلا نتيجة (`results` فارغة، `q.trim()` ≥ 2، لا `loading` ولا `error`) لا يعرض شيئاً ⇒ يُظنّ أن البحث لم يعمل. المفتاح `ssbNoMatch` جاهز (ar/en/ku، `{q}`) — سطر تحت الحقل بنمط `styles.error`: `t.ssbNoMatch.replace('{q}', q.trim())`. وملاحظة ثانوية: 503 «Twelve Data not configured» يظهر `ssbError` «تحقق من الاتصال» — ليس اتصال المستخدم | launch135 |
+| QA | chart | **QA76** (منخفض، كود ميت): `chart/dataSource.ts:233` `tickBelongsToCandle` بلا مستهلك منذ chart `babb667` (استُبدل بـ`liveBarOpenSec` بـ`liveSeries.ts:101,243`)؛ يختبره `dataSource.selftest.ts:92-94` وحده ⇒ اختبار أخضر لسلوك لم يعد يعمل بالتطبيق. حذفه مع اختباره، أو ضمّه لـ`liveBarOpenSec` | QA76 |
+| QA | tools | **QA77** (منخفض، بقية QA75): «pip» ثابتة بثلاثة أسطر وبقية الملفّين `pipUnit(lang)`: `PositionSizePanel.tsx:1541` `= {derivedSl} pip`، `:1674` `… pip · R:R`؛ `TradeJournalPanel.tsx:2055` `{t.planRiskWord} … pip` ⇒ «Risk 25 pip» بالإنجليزية. (`lot` بـ`:1644/:1758` علامة آلية — لا تُمسّ) | QA77 |
 
-**تحقّق الدورة 75 (بالكود، بعد 205501b):** أُغلق chart-r56 (3) ← ui `1136739` (`DomLitePanel.tsx:71` `quoteSpreadPips(…, chartPipSpec)`، `:74` `pipUnit(lang)`، `:90/:98` `formatPrice(…, quote.bid)` مرجع واحد)؛
-QA74 ← tools `205501b` (`tradePlan.ts` `JournalStats` `number | null`، دفتر فارغ `null`؛ selftest `tradePlan` ناجح). backend-r37 (جانب ui) ← ui `3b45502` (`IndicatorForecastPanel.tsx` يستعمل `levelsUnavailableText` المشترك ⇒ سبب مجهول لا سطر، لا «لا اتجاه غالب»)؛ النصّ نفسه صار صفّ ui35 → launch.
-سجلات chart 58 / tools 90 / ui 35 / launch 133 / backend 37: لا طلب آخر غير ui35. **المراجعة (e):** الجلسات بالصيفي (`chart/sessions.ts`)، مواصفات XAU/XAG/JPY (`positionSize.ts:35-134`)، لا وعد ربح بـ`locales.ts` — سليمة؛ جديد QA75.
+**تحقّق الدورة 77 (بالكود، بعد 933352c):** (مسوّدة الدورة 76 لم تُدفع — دُمجت هنا.) أُغلق QA75 جانب tools ← `6791c64` (`tradePlan.ts:299` `words.unit ?? 'pip'`، `TradeJournalPanel.tsx:572` يمرّر `pipUnit(lang)`)؛
+بقيته صفّ ui (`VotePanel.tsx:85` بلا `unit`، دورة 1). launch135 قائم (`SymbolSearchBar.tsx:89` لا `ssbNoMatch`). QA76 قائم (`dataSource.ts:233`). ui35 مُغلق (`a737eee`).
+سجلات chart 59 / tools 91 / ui 37 / launch 135 / backend 39: جديد launch135 فقط. **المراجعة (b):** مسح AST لكل JsxText وخصائص label/placeholder/title — 27 نتيجة: 7 `MessagesScreen` (⛔ launch52)، مصطلحات موحّدة (RSI/MACD/SL/TP/MATRIX/EURUSD)، وQA77.
