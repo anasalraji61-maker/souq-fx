@@ -937,6 +937,7 @@ export type Dict = {
   ctlKindPnf: string;
   /** Line Break (3 خطوط، كـTradingView) — مُعَدّ لطلب chart run 26 «يحتاج مفاتيح i18n»؛ غير موصول بعد */
   ctlKindLineBreak: string;
+  /** أوّل شريحة بشريط الرسم: لا أداة رسم (الشارت يُسحب ويُكبَّر). بالعربية «بلا رسم» لا «مؤشر» — «مؤشر» بكل التطبيق = indicator وقائمة «المؤشرات» بالشارت نفسه. */
   ctlToolNone: string;
   ctlToolSelect: string;
   ctlToolTrend: string;
@@ -2198,7 +2199,7 @@ const ar: Dict = {
   ctlKindKagi: 'كاجي',
   ctlKindPnf: 'نقطة ورقم',
   ctlKindLineBreak: 'كسر الخطوط',
-  ctlToolNone: 'مؤشر',
+  ctlToolNone: 'بلا رسم',
   ctlToolSelect: 'تحديد',
   ctlToolTrend: 'ترند',
   ctlToolRay: 'شعاع',
