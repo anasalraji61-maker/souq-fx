@@ -31,6 +31,27 @@ const weekdayOf = (day: number) => (((day + 4) % 7) + 7) % 7;
  * `lateOpen`: رمز CME (ذهب/مؤشرات/نفط) يفتح بعد العملات بساعة.
  */
 function sessionOf(tSec: number, weekendMerge: boolean, isNow: boolean, lateOpen = false, symbol?: string | null): number {
+  let s = weekSessionOf(tSec, weekendMerge, isNow, lateOpen, symbol);
+  if (!isNow || !weekendMerge) return s;
+  /**
+   * 25 ديسمبر و1 يناير بلا شمعة يومية (`isForexHolidaySession`): جلسة العطلة كانت «جديدة» مرجعها آخر شمعة — أي السعر
+   * نفسه ⇒ «0.00%» طوال اليوم بدل حركة آخر يوم تداول، كعطلة نهاية الأسبوع. ما دام السوق مغلقاً (EURUSD مسباراً للتقويم
+   * وحده، بلا كسر CME/ICE اليومي) فالجلسة الجارية هي يوم التداول السابق: الجمعة 25 ⇒ السبت والأحد على الخميس 24، والإثنين
+   * 1 يناير ⇒ مساء الأحد على الجمعة. بعد إعادة الافتتاح (17:00 نيويورك يوم العطلة) لا تغيير: المرجع إغلاق ما قبل العطلة.
+   */
+  for (let i = 0; i < 2 && isHolidayDay(s) && !isForexMarketOpen('EURUSD', new Date(tSec * 1000)); i++) {
+    s -= weekdayOf(s) === 1 ? 3 : 1;
+  }
+  return s;
+}
+
+/** يوم UTC هو 25 ديسمبر أو 1 يناير (أيام `isForexHolidaySession`). */
+function isHolidayDay(day: number): boolean {
+  const d = new Date(day * DAY_SEC * 1000);
+  return (d.getUTCMonth() === 11 && d.getUTCDate() === 25) || (d.getUTCMonth() === 0 && d.getUTCDate() === 1);
+}
+
+function weekSessionOf(tSec: number, weekendMerge: boolean, isNow: boolean, lateOpen = false, symbol?: string | null): number {
   const day = Math.floor(tSec / DAY_SEC);
   if (!weekendMerge) return day;
   const wd = weekdayOf(day);

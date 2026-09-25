@@ -230,3 +230,44 @@ console.log('dailyChange selftest OK');
   assert.equal(freshTickRefPrice(undefined, now), null);
 }
 console.log('dailyChange freshTickRefPrice selftest OK');
+
+// 25 ديسمبر و1 يناير (بلا شمعة يومية): مرجع «الأمس» يوم التداول الذي قبل آخر شمعة لا آخر شمعة (كان «0.00%» طوال اليوم)
+{
+  const c = (iso: string, close: number) => ({ time: D(iso), close });
+  // 2025-12-25 خميس: الشموع حتى الأربعاء 24 ⇒ التغيّر = 24 مقابل 23
+  const xmas25 = [c('2025-12-22', 1.17), c('2025-12-23', 1.179), c('2025-12-24', 1.18)];
+  for (const sym of ['EURUSD', 'XAUUSD', 'DXY', null]) {
+    assert.equal(prevClose(xmas25, D('2025-12-25') + 12 * H, sym), 1.179, `xmas noon ${sym}`);
+    assert.equal(prevClose(xmas25, D('2025-12-25') + 1 * H, sym), 1.179, `xmas 01Z ${sym}`);
+  }
+  // ليلة 24 بعد إغلاق 17:00 نيويورك (22Z شتاءً): ما زالت جلسة 24 كما كانت
+  assert.equal(prevClose(xmas25, D('2025-12-24') + 23 * H, 'EURUSD'), 1.179);
+  // بعد إعادة الافتتاح 17:00 نيويورك يوم 25 (22:00Z): جلسة جديدة مرجعها إغلاق 24 — بلا تغيير
+  assert.equal(prevClose(xmas25, D('2025-12-25') + 22 * H + 60, 'EURUSD'), 1.18);
+  // 1 يناير 2026 خميس كذلك
+  const ny26 = [c('2025-12-30', 1.17), c('2025-12-31', 1.175)];
+  assert.equal(prevClose(ny26, D('2026-01-01') + 15 * H, 'GBPUSD'), 1.17);
+  assert.equal(prevClose(ny26, D('2026-01-01') + 22 * H + 60, 'GBPUSD'), 1.175);
+  // 2026-12-25 جمعة: الجمعة والسبت والأحد قبل الافتتاح على الخميس 24 (مقابل 23)
+  const xmas26 = [c('2026-12-22', 1.1), c('2026-12-23', 1.11), c('2026-12-24', 1.12)];
+  assert.equal(prevClose(xmas26, D('2026-12-25') + 10 * H, 'EURUSD'), 1.11);
+  assert.equal(prevClose(xmas26, D('2026-12-26') + 10 * H, 'EURUSD'), 1.11);
+  assert.equal(prevClose(xmas26, D('2026-12-27') + 10 * H, 'EURUSD'), 1.11);
+  // افتتاح الأحد 27 (22:00Z): جلسة الإثنين، مرجعها إغلاق الخميس 24
+  assert.equal(prevClose(xmas26, D('2026-12-27') + 22 * H + 60, 'EURUSD'), 1.12);
+  // 2029-01-01 إثنين: مساء الأحد 31 (بعد 22Z) والإثنين نفسه على الجمعة 29 (مقابل الخميس 28)
+  const ny29 = [c('2028-12-27', 1.2), c('2028-12-28', 1.21), c('2028-12-29', 1.22)];
+  assert.equal(prevClose(ny29, D('2028-12-31') + 23 * H, 'EURUSD'), 1.21);
+  assert.equal(prevClose(ny29, D('2029-01-01') + 12 * H, 'EURUSD'), 1.21);
+  // إعادة الافتتاح 17:00 نيويورك يوم 1 يناير: مرجعها إغلاق الجمعة 29
+  assert.equal(prevClose(ny29, D('2029-01-01') + 22 * H + 60, 'EURUSD'), 1.22);
+  // شمعة عطلة رقيقة من المزوّد (25 موجودة): المرجع إغلاق 24 كما كان
+  assert.equal(prevClose([...xmas25, c('2025-12-25', 1.181)], D('2025-12-25') + 12 * H, 'EURUSD'), 1.18);
+  // كريبتو (شمعة سبت بالسلسلة ⇒ بلا دمج): يوم 25 يوم تداول عادي
+  const btc = [c('2025-12-20', 90000), c('2025-12-23', 91000), c('2025-12-24', 92000)];
+  assert.equal(prevClose(btc, D('2025-12-25') + 12 * H, 'BTCUSD'), 92000);
+  // يوم عادي بلا عطلة: بلا تغيير
+  assert.equal(prevClose([wed, thu], thu.time + 12 * H, 'EURUSD'), 1.08);
+  assert.equal(sessionKeyAt(D('2025-12-25') + 12 * H, true, 'EURUSD'), D('2025-12-24') / 86400);
+}
+console.log('dailyChange holiday sessions selftest OK');
