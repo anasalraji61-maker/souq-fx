@@ -894,3 +894,27 @@ def test_watchlist_symbol_with_spaces_can_be_removed(client):
 
 def test_huge_trades_offset_is_422_not_500(client):
     assert client.get("/api/trades?offset=100000000000000000000", headers=_DEV1).status_code == 422
+
+
+# ─── NaN/Infinity لا تُحفظ فتكسر قائمة المالك ─────────────────────────────────
+
+def test_an_infinite_cross_alert_value_is_422_and_the_list_still_loads(client):
+    r = client.post(
+        "/api/indicator-alerts",
+        content='{"symbol":"EURUSD","alert_type":"ma_cross","condition":"cross_up","value":Infinity}',
+        headers={"Content-Type": "application/json", **_DEV1},
+    )
+    assert r.status_code == 422
+    assert client.get("/api/indicator-alerts", headers=_DEV1).status_code == 200
+
+
+def test_a_layout_with_a_nested_infinity_is_422_and_the_list_still_loads(client):
+    r = client.post(
+        "/api/layouts",
+        content='{"name":"x","payload":{"drawings":[{"price":NaN}]}}',
+        headers={"Content-Type": "application/json", **_DEV1},
+    )
+    assert r.status_code == 422
+    assert client.get("/api/layouts", headers=_DEV1).json()["layouts"] == []
+    ok = client.post("/api/layouts", json={"name": "x", "payload": {"a": 1.5}}, headers=_DEV1)
+    assert ok.status_code == 200

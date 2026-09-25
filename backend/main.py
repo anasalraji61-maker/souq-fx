@@ -6,6 +6,7 @@ MATRIX API — منصة تحليل فني للفوركس
 from __future__ import annotations
 
 import asyncio
+import json
 import math
 import os
 import re
@@ -274,6 +275,17 @@ class LayoutSave(BaseModel):
     name: str = Field(min_length=1, max_length=64)
     payload: dict
 
+    @field_validator("payload")
+    @classmethod
+    def _finite(cls, v: dict) -> dict:
+        """NaN/Infinity متداخلة (`{"a": Infinity}` من عميل غير متصفّح) كانت تُحفظ ثم يفشل ترميز الردّ ⇒ 500،
+        وكل `GET /api/layouts` للمالك 500 للأبد."""
+        try:
+            json.dumps(v, allow_nan=False)
+        except ValueError as exc:
+            raise ValueError("payload must not contain NaN or Infinity") from exc
+        return v
+
 
 class WatchlistAdd(BaseModel):
     symbol: str = Field(min_length=3, max_length=12)
@@ -444,7 +456,8 @@ class IndicatorAlertCreate(BaseModel):
     timeframe: str = "15m"
     alert_type: Literal["rsi", "ma_cross", "macd_cross"]
     condition: Literal["above", "below", "cross_up", "cross_down"]
-    value: float | None = None
+    # Infinity لتنبيه تقاطع كان يُحفظ (فحص المدى لـrsi فقط) ثم يفشل ترميز كل ردّ ⇒ قائمة المالك 500 للأبد
+    value: float | None = Field(default=None, allow_inf_nan=False)
     fast_period: int = 9
     slow_period: int = 21
     note: str = Field(default="", max_length=500)
