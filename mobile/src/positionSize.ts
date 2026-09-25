@@ -707,6 +707,9 @@ function readLeverage(raw: string): number | null {
     .replace(/\s/g, '');
   const m = /^(?:1[:/])?(\d+(?:\.\d+)?)$/.exec(s);
   if (!m) return null;
+  // «1.000»/«1:1.000» = 1:1000 بكتابة أوروبية (لوحة الأرقام العشرية بلا «:») — كانت تُقرأ رافعة 1 بلا تحذير
+  // فيُعرض هامشٌ أكبر ألف مرة و«أقصى لوت» أصغر ألف مرة. نقطة يتبعها ثلاث خانات بالضبط مبهمة كـ«1,000» ⇒ مرفوضة.
+  if (/^\d{1,3}\.\d{3}$/.test(m[1])) return null;
   const v = Number(m[1]);
   return Number.isFinite(v) ? v : null;
 }

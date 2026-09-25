@@ -724,7 +724,7 @@ console.log('positionSize journal plan gain selftest OK');
   assert.equal(parseLeverage('２００'), 200);
   assert.equal(parseLeverage('１０００００'), null); // الحدّ نفسه
   assert.equal(parseLeverage('1'), 1); // بلا رافعة: الهامش = القيمة الاسمية كاملة
-  for (const bad of ['', '0', '0.5', '1:0', '10000', '100:1', '2:100', 'abc', '1:', ':100', '-100']) {
+  for (const bad of ['', '0', '0.5', '1:0', '10000', '100:1', '2:100', 'abc', '1:', ':100', '-100', '1.000', '1:1.000', '1:2.000', '٢٫٠٠٠', '500.000']) {
     assert.equal(parseLeverage(bad), null, bad);
   }
 
@@ -1669,7 +1669,7 @@ console.log('positionSize misplacedArabicThousandsSignInRisk selftest OK');
   for (const r of ['1:5000', '5000', '١:٥٠٠٠', '1／5000', '1 : 10000', '0.5', '1:0', '0', '3000.5'])
     assert.equal(leverageOutOfRange(r), true, r);
   // مقبولة، فارغة، أو صيغة غير مفهومة (تبقى للرسالة العامة)
-  for (const r of ['', '1:1', '1', '500', '1:500', '3000', '1:3000', '100:1', 'abc', '1:1:500', '1,000', '-100'])
+  for (const r of ['', '1:1', '1', '500', '1:500', '3000', '1:3000', '100:1', 'abc', '1:1:500', '1,000', '-100', '1.000', '1:1.000'])
     assert.equal(leverageOutOfRange(r), false, r);
   assert.equal(MAX_LEVERAGE, 3000);
   // القراءة لم تتغيّر
@@ -1677,6 +1677,10 @@ console.log('positionSize misplacedArabicThousandsSignInRisk selftest OK');
   assert.equal(parseLeverage('1:3000'), 3000);
   assert.equal(parseLeverage('1:500'), 500);
   assert.equal(parseLeverage('0.5'), null);
+  // الكسور غير المبهمة ما زالت مقبولة كما كانت
+  assert.equal(parseLeverage('1:33.3'), 33.3);
+  assert.equal(parseLeverage('1.5'), 1.5);
+  assert.equal(parseLeverage('1:1000'), 1000);
 }
 console.log('positionSize leverageOutOfRange selftest OK');
 
