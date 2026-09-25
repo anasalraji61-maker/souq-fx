@@ -22,6 +22,7 @@ import { normalizeProvenance } from '../chart/dataSource';
 import { anchorDemoSeries } from '../chart/demoAnchor';
 import { formatPrice } from '../chart/math';
 import { formatPct } from '../chart/dailyChange';
+import { isForexMarketOpen } from '../chart/marketHours';
 import { createSeriesCache, seriesCacheKey } from '../chart/seriesCache';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -100,6 +101,22 @@ export function QuadChartModal({
     setTfOverride(null);
   }, [timeframe]);
   const tf = tfOverride ?? timeframe;
+
+  // «مغلق» لكل خلية كوسم ChartFrame: عطلة الأسبوع كان الرباعي يطبع أربعة أسعار بلا أثر أنها
+  // أسعار إغلاق الجمعة، والذهب/المؤشرات تُغلق وحدها بكسر 17:00 نيويورك بينما العملات مفتوحة.
+  // يُعاد الفحص كل 30ث: بالإغلاق تتوقّف التيكات فلا يُعاد الرسم.
+  const [closed, setClosed] = useState<boolean[]>(() => symbols.map((sym) => !isForexMarketOpen(sym)));
+  useEffect(() => {
+    if (!visible) return;
+    const check = () =>
+      setClosed((prev) => {
+        const next = symbols.map((sym) => !isForexMarketOpen(sym));
+        return next.every((c, i) => c === prev[i]) && next.length === prev.length ? prev : next;
+      });
+    check();
+    const id = setInterval(check, 30_000);
+    return () => clearInterval(id);
+  }, [visible, symbols]);
 
   // أربعة شارتات بنفس الفريم كانت تُرسم مستقلّة تماماً: لا شيء يربط نافذتها الزمنية
   // ولا يقول للمتداول إن ما يراه هو نفس المدى على الأزواج الأربعة. الآن شارت واحد
@@ -269,13 +286,13 @@ export function QuadChartModal({
             // الرباعي أصلاً — تتطلّب قراءة محور كل شارت. السعر الحيّ (أو آخر إغلاق) بخانات
             // الزوج، والنسبة بقاعدة رأس الإطار نفسها: اللون من الرقم المطبوع، وصفره مكتوم.
             const s = series[i];
-            const tp = ticks[sym]?.price;
-            const px = tp != null && Number.isFinite(tp) && tp > 0 ? tp : (s?.last ?? NaN);
+            // السعر والنسبة من الرقم نفسه: كان السعر المطبوع التيك الخام (ولو تيك بثّ تجريبي بجانب شموع
+            // حقيقية، أو سعراً بعيداً عن السلسلة) والنسبة بجانبه من سعر الخادم — فيتناقضان.
+            const headPx = s ? livePriceForHeader(s, ticks[sym] ?? null) : null;
+            const px = headPx ?? s?.last ?? NaN;
             // النسبة تتبع التيك المطبوع بجانبها (لا نسبة الجلب الأخير بجانب سعر أحدث منه)، ولو بعد
             // إغلاق الشمعة الأخيرة وقبل الجلب التالي.
-            const livePct = s
-              ? headerChangePct(s, livePriceForHeader(s, ticks[sym] ?? null), dailyRefs[sym.toUpperCase()])
-              : NaN;
+            const livePct = s ? headerChangePct(s, headPx, dailyRefs[sym.toUpperCase()]) : NaN;
             // الشمعة الحيّة تأخذ التيك الواقع بها وحده.
             const merged = s
               ? livePriceForChart(s, ticks[sym] ?? null, {
@@ -317,6 +334,11 @@ export function QuadChartModal({
                   {s ? (
                     <Text style={[styles.cellPct, { color: pctColor }]}>
                       {pct == null ? '—' : formatPct(pct)}
+                    </Text>
+                  ) : null}
+                  {closed[i] ? (
+                    <Text style={styles.closedTag} accessibilityLabel={t.cfMarketClosedA11y}>
+                      {t.cfMarketClosedTag}
                     </Text>
                   ) : null}
                   {series[i] && normalizeProvenance(series[i]!.data_source).kind === 'demo' ? (
@@ -396,6 +418,7 @@ const styles = StyleSheet.create({
   cellPrice: { color: colors.text, fontSize: 12, fontWeight: '700', fontVariant: ['tabular-nums'] },
   cellPct: { fontSize: 11, fontWeight: '800', fontVariant: ['tabular-nums'] },
   demoTag: { color: colors.warn, fontSize: 10, fontWeight: '800' },
+  closedTag: { color: colors.warn, fontSize: 9, fontWeight: '700', opacity: 0.9 },
   // القيادة والتبعية موسومتان بالرأس وبحدّ الخلية: المزامنة لا تعمل بصمت.
   syncBadge: {
     color: colors.textDim,
