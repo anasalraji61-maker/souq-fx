@@ -1439,7 +1439,18 @@ export function parseSpreadPips(raw: string, spec?: InstrumentSpec | null): numb
   if (raw.trim() === '') return 0;
   if (ambiguousSpreadPips(raw, spec)) return null;
   const v = parseDecimal(raw, { unit: 'pip' });
+  if (v != null && spreadPipsLookLikePrice(raw, v)) return null;
   return v != null && v >= 0 && v <= maxSpreadPipsFor(spec) ? v : null;
+}
+
+/**
+ * **سعرٌ بخانة السبريد**: «1.08512» (Bid منسوخ من المنصّة) كانت تُقرأ سبريد 1.08512 pip — تحت حدّ 500 فتمرّ بلا كلمة، وسطر
+ * «شاملة التكاليف» ونصيحة اللوت يُحسبان بسبريدٍ مختلَق (والسبريد الحقيقي 3 pip على زوجٍ ضيّق يُستبدل بـ1.09 ⇒ مخاطرة أصغر مما هي).
+ * السبريد من تسعيرتين بعُشر pip (pipette)، ومتوسّطات الوسطاء بمنزلتين («0.62») — ثلاث منازل ذوات قيمة، أو أربع مكتوبة بكسر، سعر.
+ * أضيق من قاعدة خانة الوقف (`pipsLookLikePrice`): «1.25» منزلتان تبقى سبريداً مقبولاً.
+ */
+function spreadPipsLookLikePrice(raw: string, v: number): boolean {
+  return pipsHaveMoreThanTwoDecimals(v) || (typedFractionDigits(raw) >= 4 && !Number.isInteger(v));
 }
 
 /**
@@ -1454,14 +1465,15 @@ export function ambiguousSpreadPips(raw: string, spec?: InstrumentSpec | null): 
 }
 
 /**
- * السبريد المكتوب **رقمٌ مفهوم لكنه فوق `MAX_SPREAD_PIPS`** — غالباً سعرٌ مكتوب بدل نقاط («10851»). يُرجع
+ * السبريد المكتوب **رقمٌ مفهوم لكنه فوق `MAX_SPREAD_PIPS`** — غالباً سعرٌ مكتوب بدل نقاط («10851») — أو سعرٌ بمنازله («1.08512»). يُرجع
  * الرقم لتقول اللوحة «سبريد 10851 نقطة غير واقعي» بدل «رقم غير مفهوم» عن رقمٍ مفهوم تماماً؛ `null`
  * لكل ما عداه (فارغ، مقبول، سالب، نصّ غير مفهوم — لهذه رسائلها).
  */
 export function spreadTooWide(raw: string, spec?: InstrumentSpec | null): number | null {
   if (raw.trim() === '') return null;
   const v = parseDecimal(raw, { unit: 'pip' });
-  return v != null && v > maxSpreadPipsFor(spec) ? v : null;
+  // وسعرٌ مكتوب بمنازله («1.08512») — الرسالة نفسها «هل كتبتَ سعراً…؟» (`spreadPipsLookLikePrice`)
+  return v != null && (v > maxSpreadPipsFor(spec) || (v > 0 && spreadPipsLookLikePrice(raw, v))) ? v : null;
 }
 
 /**

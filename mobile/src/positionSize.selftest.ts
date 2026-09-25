@@ -949,6 +949,20 @@ console.log('positionSize sizeLooksLikeUnits selftest OK');
   assert.equal(parseSpreadPips('0'), 0);
   assert.equal(parseSpreadPips(String(MAX_SPREAD_PIPS)), MAX_SPREAD_PIPS);
   for (const bad of ['-1', '501', '10851', 'abc', '1.2.3']) assert.equal(parseSpreadPips(bad), null, bad);
+  // سعرٌ بخانة السبريد («1.08512» Bid منسوخ): كان سبريد 1.08512 pip تحت الحدّ ⇒ كلفةٌ مختلَقة بلا كلمة. الآن مرفوض برسالة «سعر؟»
+  {
+    const eu = instrumentSpec('EURUSD')!;
+    for (const px of ['1.08512', '1.0851', '1,0851', '0.65432', '1.2700', '١٫٠٨٥١']) {
+      assert.equal(parseSpreadPips(px, eu), null, px);
+      assert.equal(spreadTooWide(px, eu), parseDecimal(px, { unit: 'pip' }), px);
+    }
+    // سبريد حقيقي بعُشر pip أو متوسّط وسيط بمنزلتين — يبقى مقبولاً، وأصفار زائدة لا تجعله سعراً
+    for (const [raw, v] of [['0.6', 0.6], ['1.25', 1.25], ['0.62', 0.62], ['1.500', 1.5], ['2.0000', 2], ['3.0', 3]] as const) {
+      assert.equal(parseSpreadPips(raw, eu), v, raw);
+      assert.equal(spreadTooWide(raw, eu), null, raw);
+    }
+    assert.equal(spreadTooWide('0.0000', eu), null);
+  }
   // «1.500» على USDTRY (حدّ 3000): 1.5 أم 1,500؟ كلاهما سبريد ممكن ⇒ مرفوض كـ«1,500» — كانت 1.5 ⇒ الكلفة أصغر ألف مرّة
   {
     const tr = instrumentSpec('USDTRY')!;
