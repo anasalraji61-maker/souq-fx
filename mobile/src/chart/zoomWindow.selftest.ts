@@ -26,6 +26,18 @@ assert.deepEqual(zoomWindow(180, 1000, 0, 0.8), { count: 144, offset: 0 });
 assert.deepEqual(zoomWindow(30, 80, 0, 0.8), { count: 24, offset: 0 });
 // سلسلة لم تُحمَّل بعد: الحدّ كما كان
 assert.deepEqual(zoomWindow(0, 80, 0, 1.25), { count: 100, offset: 0 });
+// مسحوباً لأقدم التاريخ (180 شمعة، إزاحة 170 ⇒ 10 معروضة من نافذة 80): التكبير من المعروض لا المخزَّن.
+// كان «+» ⇒ {64, 116} (64 معروضة) والقرص ×2 ⇒ {40, 140} — التكبير يزيد الشموع.
+{
+  const z = zoomWindow(180, 80, 170, 0.8);
+  assert.equal(z.count, 8);
+  assert.ok(180 - z.offset <= 10, `window end stays at the oldest bars: ${JSON.stringify(z)}`);
+  const p = pinchWindow(180, 80, 170, 100, 200, 0);
+  assert.equal(p.count, 5);
+  assert.ok(180 - p.offset <= 10, `pinch keeps the oldest bars: ${JSON.stringify(p)}`);
+  // والتصغير من المعروض كذلك: 10 ⇒ 13 لا 100
+  assert.equal(zoomWindow(180, 80, 170, 1.25).count, 13);
+}
 // عامل غير صالح لا يغيّر شيئاً
 assert.deepEqual(zoomWindow(500, 80, 7, NaN), { count: 80, offset: 7 });
 assert.deepEqual(zoomWindow(500, 80, 7, 1), { count: 80, offset: 7 });

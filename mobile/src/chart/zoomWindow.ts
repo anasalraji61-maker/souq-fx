@@ -15,6 +15,16 @@
  */
 export type ZoomWindow = { count: number; offset: number };
 
+/**
+ * العدد **المعروض** لا المخزَّن: مسحوباً لأقدم التاريخ (إزاحة 170 من 180) النافذة 80 تعرض 10 شموع فقط
+ * (الشارت يقسم اللوح على المعروض)، فكان «+» يحسب من 80 ⇒ 64 وتصير 64 شمعة ظاهرة — التكبير يُصغّر
+ * الشموع (10 ⇒ 64)، والقرص كذلك (10 ⇒ 40). الآن من المعروض: 10 ⇒ 8 كـTradingView.
+ */
+function shownCount(allLen: number, count: number, off: number, min: number, max: number): number {
+  const stored = Math.max(min, Math.min(max, Math.round(count)));
+  return off > 0 && allLen > 0 ? Math.max(min, Math.min(stored, allLen - off)) : stored;
+}
+
 export function zoomWindow(
   allLen: number,
   count: number,
@@ -24,8 +34,8 @@ export function zoomWindow(
   max = 1000
 ): ZoomWindow {
   if (allLen > 0) max = Math.max(min, Math.min(max, allLen));
-  const cur = Math.max(min, Math.min(max, Math.round(count)));
   const off = Math.max(0, Math.round(offset));
+  const cur = shownCount(allLen, count, off, min, max);
   if (!Number.isFinite(factor) || factor <= 0 || factor === 1) return { count: cur, offset: off };
   let next = Math.round(cur * factor);
   if (next === cur) next = factor > 1 ? cur + 1 : cur - 1;
@@ -68,8 +78,8 @@ export function pinchWindow(
   max = 1000
 ): ZoomWindow {
   if (allLen > 0) max = Math.max(min, Math.min(max, allLen));
-  const cur = Math.max(min, Math.min(max, Math.round(startCount)));
   const off = Math.max(0, Math.round(startOffset));
+  const cur = shownCount(allLen, startCount, off, min, max);
   if (!(startSpread > 0) || !(spread > 0)) return { count: cur, offset: off };
   const next = Math.max(min, Math.min(max, Math.round((cur * startSpread) / spread)));
   if (next === cur || off === 0 || allLen <= 0) return { count: next, offset: off };
