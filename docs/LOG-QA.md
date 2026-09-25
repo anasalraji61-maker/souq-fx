@@ -932,3 +932,11 @@ launch141 ← `5ec2eec`؛ backend-r46/launch142 ← ui `983adcd`؛ launch142b �
 المسح بسكربتات: أوزان ≥700 = 1، مسافات خارج 4 = 101 ثم 25 (chart، مقبولة)، نمط حدّ+خلفية+ظلّ = 0، أزرار بلا label = 30 كلها بابن `<Text>`.
 **المراجعة (b — نصوص ثابتة، ملفّات منذ 59337ff):** 19 مرشّحاً كلها مصطلحات (RSI/SL/TP/lot/MATRIX). **لا بند.**
 **الدورة القادمة:** المراجعة (c) — `accessibilityLabel`؛ وإعادة قائمة DESIGN-PRO.
+
+## 2026-09-26 — الدورة 83
+**البناء:** أخضر 0 (على 73544b3) — لا إصلاح لازم. **Selftests:** 105/105 ناجح (`npx tsx`، +`axisTagFont`، +`authErrors`).
+**التحقّق بالكود:** chart-r65b ← tools `f335037`؛ launch143 ← ui `918ae86` (`AccountScreen.tsx:138,146`)؛ launch143b ← tools `d981730` (`TradeJournalPanel.tsx:187-191,1257`)؛
+ui45 ← `ed917cd`؛ backend-r47→launch ← `65aeaea`. قائم: chart-r65 → tools (لا `onChartInteract` بـ`TerminalScreen`)، DP2 → tools. سجلات chart/tools/launch: بلا طلب تنسيق جديد.
+**قائمة قبول DESIGN-PRO (الثالث):** فشل 1/12 — البند 2 (الشريط العلوي بالطرفية). المسح: وزن ≥700 = 1 (X/O `MatrixChart.tsx:7423`، مقبول)، خارج 4 = 25 (chart، مقبولة)، حدّ+خلفية+ظلّ = 0.
+**المراجعة (c — `accessibilityLabel`):** مسح AST ⇒ 18 بلا label صريح، كلها بابن `<Text>` أو خلفية معتمة `accessible={false}` (`MatrixSidePanel.tsx:79`). **لا بند.**
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة؛ وإعادة قائمة DESIGN-PRO.
