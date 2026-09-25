@@ -372,7 +372,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
             ]}
             onPress={publish}
             disabled={pBusy}
-            accessibilityState={{ disabled: pBusy }}
+            accessibilityState={{ disabled: pBusy, busy: pBusy }}
             accessibilityLabel={t.votePublishBtn}
           >
             <Text style={styles.publishBtnText}>{pBusy ? '...' : t.votePublishBtn}</Text>
