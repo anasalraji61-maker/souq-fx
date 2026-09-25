@@ -1405,11 +1405,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [magnet, setMagnet] = useState(true);
   // طرفا آخر قياس لا نصّه: النصّ المجمَّد كان **لا يُمسح أبداً** — بعد قياس واحد يحلّ محلّ
   // سطر OHLC للتقاطع ويُخفي زرّ 🔔 للأبد، ويبقى pip اليورو مكتوباً فوق شارت الين بعد
-  // التبديل. الآن يُمسح بأول نقرة/قياس جديد وبتبديل الرمز/الفريم، ويُحسب نصّه عند الرسم.
+  // التبديل. الآن يُمسح بأول نقرة/قياس جديد وبتبديل الرمز/الفريم/نوع الشارت، ويُحسب نصّه عند الرسم.
+  // نوع الشارت أيضاً: طرفاه فهارس شموع، فعلى Renko/Range تقع فوق لبنات أخرى وعدد الشموع والمدّة كاذبان.
   const [measureDone, setMeasureDone] = useState<{ a: ChartPoint; b: ChartPoint } | null>(null);
   useEffect(() => {
     setMeasureDone(null);
-  }, [series.symbol, series.timeframe]);
+  }, [series.symbol, series.timeframe, kind]);
   const [drawingsSaveError, setDrawingsSaveError] = useState<DrawingsSaveErrorCode | null>(null);
   const [chartW, setChartW] = useState(320);
   const panStartOffset = useRef(0);
