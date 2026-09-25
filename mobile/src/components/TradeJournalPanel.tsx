@@ -675,6 +675,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
   const pipsLevel = useMemo(() => {
     const e = pnum(entry);
     const sym = symbol.trim().toUpperCase();
+    // launch140b: مؤشر/رقمية بلا `journalSpec` تُقاس بالنقاط لا pip («50 pip تعني 41,950» على US30 خطأ لغةً)
+    const points = !journalSpec(sym);
+    const hint = points ? t.levelLooksLikePointsHint : t.levelLooksLikePipsHint;
     for (const kind of ['sl', 'tp'] as const) {
       const raw = kind === 'sl' ? sl : tp;
       const hit = levelLooksLikePips({ symbol: sym, side, entry: e, level: pnum(raw), kind });
@@ -684,8 +687,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       return {
         kind,
         label,
+        points,
         raw: raw.trim(),
-        fixes: [{ text, msg: levelLooksLikePipsText(t.levelLooksLikePipsHint, label, raw, hit.pips, text) }],
+        fixes: [{ text, msg: levelLooksLikePipsText(hint, label, raw, hit.pips, text) }],
       };
     }
     // والخروج («25» من «أغلقتُ +25» كانت تُحفظ خروجاً عند 25.00 ⇒ +2,204%): بأيّ جهة، فسطرٌ لكلٍّ منهما بإشارته — `exitLooksLikePips`
@@ -701,9 +705,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       ).flatMap(([px, signed]) => {
         if (px == null) return [];
         const text = formatPrice(px, spec);
-        return [{ text, msg: levelLooksLikePipsText(t.levelLooksLikePipsHint, label, exit, signed, text) }];
+        return [{ text, msg: levelLooksLikePipsText(hint, label, exit, signed, text) }];
       });
-      return { kind: 'exit' as const, label, raw: exit.trim(), fixes };
+      return { kind: 'exit' as const, label, points, raw: exit.trim(), fixes };
     }
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1059,7 +1063,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       // بلا نقرة). الزرّ باسمه الظاهر.
       const button = editing ? t.journalSaveEditBtn : t.journalAddBtn;
       setFormError(
-        t.levelLooksLikePipsSaveBlocked.replace(/\{(field|value|button)\}/g, (_, k: string) =>
+        (pipsLevel.points ? t.levelLooksLikePointsSaveBlocked : t.levelLooksLikePipsSaveBlocked).replace(/\{(field|value|button)\}/g, (_, k: string) =>
           k === 'button' ? button : k === 'field' ? pipsLevel.label : pipsLevel.raw
         )
       );

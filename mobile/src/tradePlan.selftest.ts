@@ -3362,3 +3362,10 @@ console.log('tradePlan exitLooksLikePips selftest OK');
   assert.ok((bad.rr ?? 1) < 0.01);
 }
 console.log('tradePlan levelLooksLikePips index/crypto selftest OK');
+
+// launch140b: الدفتر يختار نصّ «نقاط» لا «pip» حين `journalSpec` = null — المؤشرات والرقمية وحدها، لا الفوركس ولا المعادن
+{
+  for (const s of ['US30', 'NAS100', 'BTCUSD', 'ETHUSDT', 'DE40']) assert.equal(journalSpec(s), null, s);
+  for (const s of ['EURUSD', 'USDJPY', 'XAUUSD', 'XAGUSD', 'ZARJPY', 'EURUSD.PRO']) assert.notEqual(journalSpec(s), null, s);
+}
+console.log('tradePlan points-vs-pips wording selftest OK');
