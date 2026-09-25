@@ -12,6 +12,7 @@ import {
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons } from '../theme';
 import { api, type ChatMsg } from '../api';
 import { useI18n } from '../i18n/I18nContext';
+import { formatLocalStamp } from '../localStamp';
 import { useBlockedUsers } from '../moderation';
 import { ModerationActions, ModerationToggle } from './ModerationActions';
 
@@ -65,12 +66,8 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
       id: `local-${Date.now()}`,
       user: t.chatYou,
       text: msg,
-      // `${lang}-u-nu-latn`: طابع الوقت يتبع لغة الواجهة المختارة فعلياً (ar/en-US/en-GB/ku) بدل
-      // 'ar' ثابتة كما كان سابقاً — امتداد Unicode 'nu-latn' يفرض أرقاماً غربية بكل اللغات صراحة
-      // ('ar'/'ku' وحدهما قد تُنتجان أرقاماً هندية شرقية [١٢:٣٠] بدل غربية على بعض أجهزة ICU)، غير
-      // متوقَّع لتاجر يقرأ طابع وقت رسالة بسرعة. مُتحقَّق: كل قيم lang الأربع تُنتج تنسيقاً سليماً
-      // (12/24 ساعة حسب عرف كل لغة، أرقام لاتينية دوماً).
-      ts: new Date().toLocaleTimeString(`${lang}-u-nu-latn`, { hour: '2-digit', minute: '2-digit' }),
+      ts: '',
+      created_at: Date.now() / 1000,
     };
     setMessages((m) => [...m, local]);
     try {
@@ -142,7 +139,12 @@ export function GroupChatPanel({ embedded }: { embedded?: boolean }) {
               ) : null}
             </View>
             <Text style={[styles.msg, { textAlign: align }]}>{m.text}</Text>
-            <Text style={styles.ts}>{m.ts}</Text>
+            {/* backend-r15: `ts` كان «HH:MM» بساعة الخادم (برلين) يُقرأ كتوقيت المتداول — متأخّر ساعة/ساعتين
+                ببغداد، ورسالة الأمس 22:00 تبدو من اليوم. الآن `created_at` بتوقيت الجهاز (مع اليوم إن لم يكن
+                اليوم)؛ رسالة قديمة بلا `created_at` بلا طابع — لا ساعة بمنطقة مجهولة. */}
+            {typeof m.created_at === 'number' && Number.isFinite(m.created_at) ? (
+              <Text style={styles.ts}>{formatLocalStamp(m.created_at, lang)}</Text>
+            ) : null}
             {actionFor === m.id ? (
               <ModerationActions
                 kind="group_message"

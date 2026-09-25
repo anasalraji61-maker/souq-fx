@@ -11,6 +11,7 @@ import {
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
+import { formatLocalStamp } from '../localStamp';
 
 /** لا «احتمال نجاح» بالفقاعة: كان رقماً مختلَقاً (hash بالخادم، 62 ثابت عند الانقطاع) يُعرض كتقدير.
  * وبالمبدأ نفسه: `offline` تميّز نصّ الانقطاع العام عن جواب فعليّ للمساعد — كان يُعرض بفقاعة المساعد
@@ -19,25 +20,7 @@ type Turn = { role: 'user' | 'ai'; text: string; offline?: boolean; priceAt?: st
 
 /** وقت السعر الذي بُني عليه الجواب (`price_as_of`، backend-r12): الدخول بنصّ النموذج كان يُقرأ سعراً حيّاً
  * وهو إغلاق شمعة قد يكون مخزَّناً 15د أو إغلاق الجمعة يوم السبت — يُعرض تحت الجواب بـ`t.aiPriceAsOf`. */
-const pad2 = (n: number) => String(n).padStart(2, '0');
-
-/** «21:45» لليوم نفسه، وإلا يوم الأسبوع قبل الوقت («Fri, Sep 25 21:45»/«الجمعة، 25 سبتمبر 21:45») — عطلة الأسبوع هي الحالة
- * الأخطر. الكردي بلا أسماء أيام موثوقة بـ`Intl` ⇒ «26/09 21:45». أرقام لاتينية كبقية الأسعار. */
-function formatPriceAt(sec: number, lang: string, now: Date = new Date()): string {
-  const d = new Date(sec * 1000);
-  const hm = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-  const sameDay =
-    d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
-  if (sameDay) return hm;
-  if (lang !== 'ku') {
-    try {
-      return `${d.toLocaleDateString(`${lang}-u-nu-latn`, { weekday: 'short', day: 'numeric', month: 'short' })} ${hm}`;
-    } catch {
-      /* بلا Intl ⇒ الصيغة الرقمية أدناه */
-    }
-  }
-  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)} ${hm}`;
-}
+const formatPriceAt = formatLocalStamp;
 
 type Props = { symbol?: string; embedded?: boolean };
 
