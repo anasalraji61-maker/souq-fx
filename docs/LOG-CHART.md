@@ -5974,3 +5974,33 @@ drawingAnchors، drawEdit، drawingsPersist، drawNudge، holdView.
 2. ما بقي تحت 11 بالشارت: `denseOhlcText`/`collapsed*` 9 (الرباعية والشريط المطويّ — ضيّقة، تحتاج قياساً)، `crossTagText`/
    `currentPriceText` تُحسب بـ`axisTagFontSize`، `lockBadgeText` 8، نصّ الفوتبرينت 8، و`paneLabel` 9 بعمود 36px.
 3. `currentPriceLine` بنمطه `borderTopColor: colors.accent` — تأكّد أنّ لون الاتجاه يُمرَّر دائماً فوقه.
+
+---
+
+# تشغيل 2026-09-26 (الثامن والستّون) — QA84b + وسوم الرسم ونصوص الشارت الباقية بـ11px
+
+## صفوف COORDINATION
+- **QA84b (موجَّه لـchart) — أُنجز** `961a6d2`: الأرقام الثلاثة لم تكن كلّها خطأً — وسما القمّة/القاع ووقت التقاطع **أحاديا
+  المسافة** (0.6em ثابتة لأيّ وزن ⇒ 6.6 بـ11px)، والمفتاح **تناسبي**. الآن `chart/textWidth.ts` مصدر واحد: `monoCharW(11)` للاثنين
+  (القمّة/القاع كانت 6.8)، و`propTextWidth` يقيس اسم المفتاح بفئة كل محرف (كبير 0.66em، M/W 0.86، صغير 0.56، رقم 0.58، ضيّق 0.3)
+  فتحجز «MACD» عرضها الحقيقي بدل 4×6.4. قيمة المفتاح بعرض الرقم (`tabular-nums`). selftest `textWidth` جديد. لـQA التحقّق والإغلاق.
+- QA1 (جهاز) بلا تغيير. Mass Index / TTM / DeMarker قرارات لأنس.
+- `currentPriceLine` بنمطه `accent`: فُحص — `borderTopColor: currentDirColor` يُمرَّر دائماً فوقه (`MatrixChart.tsx` عند `styles.currentPriceLine`) ⇒ لا تأكيد ظاهر. بلا تغيير.
+
+## ما أُنجز (مرئي للمتداول)
+1. **QA84b** `961a6d2` — أعلاه.
+2. **وسوم الرسومات 11px** `22a5a60`: مستويات فيبو، سعر الخطّ الأفقي وخطّ التنبيه (10→11، سطر 14)، ارتفاع المنطقة بالـpip (10→11)،
+   وسما POC/TPO (9→11). `LEVEL_LABEL_H` 13→14 يقود القلب تحت الخطّ عند الحافّة العليا وتخفيف الوسوم المتلاصقة (`FIB_LABEL_GAP`/`HLINE_LABEL_GAP` صارا منه).
+3. **OHLC التقاطع المدمج بالقياس** `6ad2cec`: كان 9px ثابتاً بعتبات 240/270/360px. `chart/denseOhlcFit.ts` (`planDenseOhlc`، selftest):
+   سطر واحد 11px متى اتّسع (ثم التغيّر ثم المدى بالـpip)، وإلا سطران بأكبر حجم يتّسع 11→10→9 (خلية الرباعية)، والتغيّر يسقط قبل
+   النزول تحت 9. الأرقام ثابتة العرض ⇒ لا يقفز الحجم أثناء السحب. موضع المفتاح تحته يتبع ارتفاع السطر الفعلي.
+4. **شريط اللوحات المطويّة 11px** `77852a0`: العدد والأسماء وشارة الصفحة كانت 9px/600 ⇒ 11/500. `COLLAPSED_BAR_H` 16→20.
+
+## التحقّق
+`qa-build-check.sh` أخضر (0) قبل كل كوميت. selftests PASS: textWidth، priceLegend، axisTagFont، hiLoLabels، levelLabels، fibLabels، denseOhlcFit، panes، paneHeadFit.
+**لم يُختبر على جهاز**: خلية رباعية على هاتف 360pt (المتوقَّع سطران 10px)؛ وسم فيبو 11px فوق خطّه دون تداخل مع الخطّ.
+
+## يبدأ التشغيل القادم من هنا
+1. QA1 على جهاز؛ قرارات أنس؛ إغلاق QA84b عند QA.
+2. ما بقي تحت 11 بالشارت: `paneLabel` 9 (عمود 36px — يلزمه `paneHeadFit`)، نصّ الفوتبرينت 8 (مقيَّد بعرض الشمعة)، `note` 10
+   (`NOTE_CHAR_W` 6.2 — يُنقل إلى `propTextWidth` مع رفعه لـ11)، `dockTitle`/`indText` 10، `mcPrimaryLane` 10. `lockBadgeText` 8 رمز 🔒 لا نصّ.
