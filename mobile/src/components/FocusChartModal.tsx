@@ -19,7 +19,10 @@ import { WATCHLIST } from '../chart/watchlist';
 import { loadWatchlistItems } from '../chart/watchlistStore';
 import { formatPrice } from '../chart/math';
 import { notify } from '../chart/confirmDestructive';
-import { livePriceForChart } from '../chart/liveSeries';
+import { headerChangePct, livePriceForChart, livePriceForHeader } from '../chart/liveSeries';
+import { useDailyRefs } from '../chart/dailyRefStore';
+import { formatPct, pctDirection } from '../chart/dailyChange';
+import { mockBase } from '../chart/mockBases';
 import { provenanceLabel, tickStatusLabel, normalizeProvenance } from '../chart/dataSource';
 import {
   armedText,
@@ -41,6 +44,8 @@ import { useI18n } from '../i18n/I18nContext';
 import { playSoftClick } from '../audio/playSoftClick';
 import type { ChartKind, DrawTool, IndicatorId, LensMode } from '../chart/types';
 
+const NO_SYMBOLS: string[] = [];
+
 type Props = {
   visible: boolean;
   symbol: string;
@@ -51,30 +56,6 @@ type Props = {
   initialLens?: LensMode;
   initialKind?: ChartKind;
   initialIndicators?: IndicatorId[];
-};
-
-const BASES: Record<string, number> = {
-  DXY: 104.25,
-  EURUSD: 1.0854,
-  GBPUSD: 1.2732,
-  USDJPY: 157.42,
-  AUDUSD: 0.662,
-  USDCAD: 1.364,
-  NZDUSD: 0.601,
-  USDCHF: 0.884,
-  EURJPY: 162.15,
-  GBPJPY: 200.4,
-  EURGBP: 0.852,
-  AUDJPY: 104.2,
-  EURAUD: 1.64,
-  EURCHF: 0.96,
-  CADJPY: 115.3,
-  XAUUSD: 2348.6,
-  XAGUSD: 28.4,
-  USOIL: 78.35,
-  UKOIL: 82.1,
-  BTCUSD: 67420,
-  ETHUSD: 3450,
 };
 
 export function FocusChartModal({
@@ -96,6 +77,8 @@ export function FocusChartModal({
   const [compareSym, setCompareSym] = useState<string | null>(null);
   const [tf, setTf] = useState<Timeframe>(initialTf);
   const [series, setSeries] = useState<ChartSeries | null>(null);
+  /** الرمز الذي طُلبت له `series` — الخادم قد يعيد اسماً مطبَّعاً، فلا يُقارن بـ`series.symbol`. */
+  const [seriesSym, setSeriesSym] = useState<string | null>(null);
   const [compareSeries, setCompareSeries] = useState<ChartSeries | null>(null);
   /** تعذّر تحميل رمز المقارنة (أو جاء تجريبياً فوق شارت حقيقي): لا خط بنفسجي مختلَق — ملاحظة صريحة. */
   const [compareFailed, setCompareFailed] = useState(false);
@@ -105,6 +88,7 @@ export function FocusChartModal({
     ...WATCHLIST,
   ]);
   const liveTick = useLiveTicks(sym, visible);
+  const dailyRefs = useDailyRefs(visible ? [sym] : NO_SYMBOLS);
   const nowMs = useTickFreshnessClock(liveTick?.source.as_of ?? null);
   const nowSec = nowMs / 1000;
 
@@ -127,7 +111,10 @@ export function FocusChartModal({
       setLoading(true);
       try {
         const s = await api.chart(sym, tf);
-        if (alive) setSeries(s);
+        if (alive) {
+          setSeries(s);
+          setSeriesSym(sym);
+        }
         if (compareSym && alive) {
           // كان الفشل يرسم `mockSeries` كخط مقارنة بنفسجي فوق الشارت الحقيقي — علاقة/تباعد مختلَق بين
           // زوجين يُبنى عليه قرار. الآن: لا خط + ملاحظة. وسلسلة demo من الخادم فوق شارت حقيقي = نفس الشيء.
@@ -152,7 +139,8 @@ export function FocusChartModal({
         }
       } catch {
         if (alive) {
-          setSeries(mockSeries(sym, BASES[sym] ?? 1, tf));
+          setSeries(mockSeries(sym, mockBase(sym), tf));
+          setSeriesSym(sym);
           // لا تُبقِ خط مقارنة الرمز السابق فوق الشارت البديل
           setCompareSeries(null);
           setCompareFailed(compareSym != null);
@@ -230,6 +218,22 @@ export function FocusChartModal({
     }
   };
 
+  /**
+   * رأس النافذة بقواعد رؤوس الإطارات والرباعي نفسها:
+   * - `series` يبقى سلسلة الرمز السابق طوال تحميل الجديد، فكان الرأس يطبع تيك الرمز الجديد فوق شموع
+   *   القديم (أو إغلاق القديم تحت اسم الجديد) ⇒ لا رأس حتى تصل سلسلة الرمز المعروض.
+   * - النسبة كانت `series.change_pct` (أول شمعة محمّلة ← آخرها): الزوج نفسه +0.1% على 15د و−1.8% على
+   *   4س. الآن `headerChangePct` (من إغلاق اليوم السابق) كباقي الرؤوس، والسعر `livePriceForHeader`
+   *   (تيك مقبول للسلسلة لا خام).
+   * - اللون من الرقم المطبوع: «+0.00%» كانت خضراء ⇒ صفرها مكتوم.
+   */
+  const headSeries = series && seriesSym === sym ? series : null;
+  const headPx = headSeries ? livePriceForHeader(headSeries, liveTick) : null;
+  const headPctRaw = headSeries ? headerChangePct(headSeries, headPx, dailyRefs[sym.toUpperCase()]) : NaN;
+  const headPct = Number.isFinite(headPctRaw) ? headPctRaw : null;
+  const headDir = pctDirection(headPct);
+  const headPctColor = headDir === 'up' ? colors.bull : headDir === 'down' ? colors.bear : colors.textDim;
+
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -273,19 +277,11 @@ export function FocusChartModal({
                 : t.focusDesktopSub}
             </Text>
           </Pressable>
-          {series ? (
+          {headSeries ? (
             <View style={styles.quote}>
-              <Text style={styles.price}>
-                {formatPrice(liveTick?.price ?? series.last, sym)}
-              </Text>
-              <Text
-                style={[
-                  styles.change,
-                  { color: series.change_pct >= 0 ? colors.bull : colors.bear },
-                ]}
-              >
-                {series.change_pct >= 0 ? '+' : ''}
-                {series.change_pct.toFixed(2)}%
+              <Text style={styles.price}>{formatPrice(headPx ?? headSeries.last, sym)}</Text>
+              <Text style={[styles.change, { color: headPctColor }]}>
+                {headPct == null ? '—' : formatPct(headPct)}
                 {liveTick
                   ? ` · ${
                       tickStatusLabel(liveTick.source, liveTick.source.as_of, nowSec, {
@@ -295,7 +291,7 @@ export function FocusChartModal({
                       }) ?? t.focusLastPriceWord
                     }`
                   : ''}
-                {` · ${provenanceLabel(normalizeProvenance(series.data_source), {
+                {` · ${provenanceLabel(normalizeProvenance(headSeries.data_source), {
                   provider: t.dsKindProvider,
                   demo: t.dsKindDemo,
                   cache: t.dsKindCache,
