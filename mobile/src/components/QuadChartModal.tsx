@@ -205,6 +205,7 @@ export function QuadChartModal({
             accessibilityRole="button"
             onPress={onClose}
             style={({ pressed }) => [
+              styles.closeHit,
               pressed && {
                 opacity: buttons.pressedOpacity,
                 transform: [{ scale: buttons.pressedScale }],
@@ -227,7 +228,7 @@ export function QuadChartModal({
             accessibilityState={{ checked: syncTime }}
             accessibilityLabel={t.mcSyncToggleA11y}
             onPress={() => setSyncTime((v) => !v)}
-            hitSlop={8}
+            hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
             style={({ pressed }) => [
               styles.syncToggle,
               syncTime && styles.syncToggleOn,
@@ -442,6 +443,8 @@ const styles = StyleSheet.create({
   },
   syncBadgeLeader: { color: colors.accent, backgroundColor: colors.accentSoft },
   cellLeader: { borderColor: colors.accent },
+  // المخرج الوحيد من النافذة على iOS: كان نصّاً ~33pt — الآن ≥44 كهدف لمس.
+  closeHit: { minHeight: 44, minWidth: 44, justifyContent: 'center' },
   syncToggle: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,

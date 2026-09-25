@@ -233,12 +233,13 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
                   onConfirm: () => void removeLayout(l),
                 });
               }}
-              style={({ pressed }) =>
+              style={({ pressed }) => [
+                styles.delHit,
                 pressed && {
                   opacity: buttons.pressedOpacity,
                   transform: [{ scale: buttons.pressedScale }],
-                }
-              }
+                },
+              ]}
               accessibilityLabel={`${t.layoutDeleteA11yPrefix}: ${l.name}`}
             >
               <Text style={styles.del}>{t.deleteWord}</Text>
@@ -293,7 +294,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
   },
   rowRtl: { flexDirection: 'row-reverse' },
-  apply: { flex: 1 },
+  // هدف لمس ≥44 (كان «حذف» نصّاً ~17pt بلا hitSlop بجوار صفّ التطبيق — الضغطة الخاطئة تطبّق التخطيط).
+  apply: { flex: 1, minHeight: 44, justifyContent: 'center' },
+  delHit: { minHeight: 44, minWidth: 44, paddingHorizontal: spacing.sm, alignItems: 'center', justifyContent: 'center' },
   rowName: { color: colors.text, fontWeight: '700', textAlign: 'right' },
   rowSub: { color: colors.textDim, fontSize: 10, textAlign: 'right' },
   del: { color: colors.bear, fontWeight: '700' },

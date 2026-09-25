@@ -377,7 +377,8 @@ export function ChartFrame({
             onAccessibilityAction={(e) => {
               if (e.nativeEvent.actionName === 'syncActivate') onSyncActivate?.();
             }}
-            hitSlop={8}
+            // رأس الإطار ضيّق فلا يُكبَّر الزرّ نفسه: المنطقة تمتدّ عمودياً إلى ~42pt (كانت ~32pt)؛ أسفلها 10 فقط كي لا تأكل أعلى الشارت.
+            hitSlop={{ top: 14, bottom: 10, left: 8, right: 8 }}
           >
             <Text
               style={styles.symbol}
