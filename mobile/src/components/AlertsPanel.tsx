@@ -748,10 +748,15 @@ export function AlertsPanel({
                   style={({ pressed }) => [{ flex: 1 }, pressed && { opacity: buttons.pressedOpacity }]}
                   onPress={() => startEdit(a)}
                   accessibilityRole="button"
+                  // الوسم يحلّ محلّ نصّ الأبناء عند قارئ الشاشة: الحالة (مُطلق/مُفعّل) والملاحظة كانتا تُقرآن
+                  // باللون وحده، والصفّ قيد التعديل بإطار ملوّن وحده ⇒ الحالة + `selected`
+                  accessibilityState={{ selected: editingId === a.id }}
                   accessibilityLabel={`${t.alertsEditA11yPrefix}: ${a.symbol} ${condMark(a.condition)} ${fmtPrice(
                     a.price,
                     a.symbol
-                  )}${distText(a) ? ` — ${distText(a)}` : ''}`}
+                  )} — ${a.triggered ? t.alertsStatusTriggered : t.alertsStatusArmed}${
+                    distText(a) ? ` — ${distText(a)}` : ''
+                  }${a.note ? ` — ${a.note}` : ''}`}
                 >
                   <Text style={[styles.itemSym, a.triggered && styles.itemSymDone, { textAlign: align }]}>
                     {a.symbol} {condMark(a.condition)} {fmtPrice(a.price, a.symbol)}

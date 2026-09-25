@@ -336,6 +336,7 @@ export function ChartFrame({
               if (onSymbolChange) setWheelOpen((v) => !v);
             }}
             accessibilityLabel={onSymbolChange ? t.cfChangeSymbolA11y : undefined}
+            accessibilityState={onSymbolChange ? { expanded: wheelOpen } : undefined}
             hitSlop={8}
           >
             <Text
