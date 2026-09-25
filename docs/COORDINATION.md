@@ -6,6 +6,7 @@
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
 |---|---|---|---|
 | launch | ui (`notifications.ts:39-40`، تعليق فقط) | **launch110**: تعليق `ensureAlertChannel` يقول «تغيير اللغة يظهر بإعدادات النظام عند الإقلاع التالي» — منذ `6d28f47` يستدعي `setLang` (`I18nContext.tsx`) `ensureAlertChannel(true)` و`registerPushToken()` فوراً. صحّح الجملة كي لا يُزال الاستدعاء ظنّاً أنه زائد | launch110 |
+| launch | ui (`ChartFrame.tsx:427`) | **launch111**: وسم السبريد برأس الإطار `accessibilityLabel={t.cfSpreadA11y}` ثابت يحلّ محلّ النصّ ⇒ VoiceOver يقول «سبريد البيع والشراء» **بلا أي رقم** (منذ `8aeaf13` يُقرأ منفرداً؛ وبعد `7697f96` الهاتف يعرض الـpip وحده). المفاتيح جاهزة: `cfSpreadBidAskA11y` (`{bid}` `{ask}`، حين يظهر B/A) + `cfSpreadPipsA11y` (`{pips}` = `spreadPips.toFixed(1)`) تُضمّ بـ«، » أو يُستعمل ما يظهر منهما | launch111 |
 | QA | chart | **جهاز**: سحب جسم الرسم المحدَّد، وسحب خطّ التنبيه (`AlertDragHandle`) على iOS/Android والويب — RELEASE §5 | QA1 |
 | QA | الجميع | **(a)** تصديرات بلا أي مستعمل حتى في ملفها (سكربت QA56 على كل `export` — لا تكرار تعريفات؛ 12): جديدان (chart) `WatchSymbol` (`watchlist.ts:26`)، `__resetWatchlistMemoryForTests` (`watchlistStore.ts:62`، ولا selftest يستدعيها)؛ والقديمة `deleteTemplate`، `subscribeTemplatesSaveError`، `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite`، `PINE_PRESETS`، `getToolPanel`، `__setWatchlistStorageForTests`، `motion` (ui: مُبقى عمداً) | QA1 ★ |
 | launch | backend/أنس | `openrouter_ai.py:71` «أنت خبير تداول فوركس» ويعطي دخول/وقف/هدف | launch9 ★ |
