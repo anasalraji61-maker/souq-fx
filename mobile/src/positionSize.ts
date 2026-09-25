@@ -85,6 +85,11 @@ const BROKER_SUFFIXED = /^([A-Z]{3})[/\s_-]?([A-Z]{3})(?:[.\-_#+][A-Z0-9]{0,5}|M
  */
 const METAL_NAMES = /^(GOLD|SILVER)(?:[.\-_#+][A-Z0-9]{0,5}|M|PRO|ECN|RAW|STD|STP|VIP)?$/;
 const METAL_NAME_SYMBOL: Record<string, string> = { GOLD: 'XAUUSD', SILVER: 'XAGUSD' };
+/**
+ * الاسم + عملة التسعير («GOLDUSD»، «GOLDEUR»، «SILVERUSD.m») = XAUUSD/XAUEUR/XAGUSD — كانت تُرفض: الحاسبة بلا لوت والدفتر بلا
+ * نقاط، بينما «GOLD» بجانبها تُحسب. يُجرَّب بعد `METAL_NAMES` («GOLDPRO»/«GOLDSTD» لواحق هناك لا عملات)، والعملة ورقية فقط.
+ */
+const METAL_NAME_QUOTED = /^(GOLD|SILVER)([A-Z]{3})(?:[.\-_#+][A-Z0-9]{0,5}|M|PRO|ECN|RAW|STD|STP|VIP)?$/;
 
 /**
  * لاحقة **عقدٍ أصغر بمئة مرّة** بفاصل: «EURUSD.c»، «EURUSD-cent»، «XAUUSD_cent»، «GOLD.c» (حساب سنت)، و«EURUSD.micro»
@@ -110,6 +115,8 @@ export function instrumentSpec(raw: string): InstrumentSpec | null {
   let symbol = normalizeSymbol(raw);
   const named = METAL_NAMES.exec(raw.trim().toUpperCase());
   if (named) symbol = METAL_NAME_SYMBOL[named[1]];
+  const quoted = named ? null : METAL_NAME_QUOTED.exec(raw.trim().toUpperCase());
+  if (quoted && FIAT.has(quoted[2])) symbol = METAL_NAME_SYMBOL[quoted[1]].slice(0, 3) + quoted[2];
   if (!/^[A-Z]{6}$/.test(symbol)) {
     const m = BROKER_SUFFIXED.exec(raw.trim().toUpperCase());
     if (!m) return null;

@@ -1527,8 +1527,17 @@ console.log('positionSize lotsOverOrderMax selftest OK');
   // العقد الأصغر يبقى أصغر: «GOLDc»/«GOLDmicro» ليست GOLD + M
   for (const raw of ['GOLDc', 'GOLDC', 'GOLDmicro', 'GOLDMICRO', 'SILVERc']) assert.equal(instrumentSpec(raw), null, raw);
   // حرفٌ آخر ملاصق، أو اسم آخر: مرفوضة كما كانت (لا تخمين)
-  for (const raw of ['GOLDMM', 'GOLDX', 'GOLDI', 'GOLDPROS', 'SILVERT', 'GOLDEUR', 'GOLD.TOOLONG', 'SILVERY', 'GOL', 'PLATINUM', 'GOLD SILVER'])
+  for (const raw of ['GOLDMM', 'GOLDX', 'GOLDI', 'GOLDPROS', 'SILVERT', 'GOLDXYZ', 'GOLDBTC', 'GOLDUSDc', 'GOLD.TOOLONG', 'SILVERY', 'GOL', 'PLATINUM', 'GOLD SILVER'])
     assert.equal(instrumentSpec(raw), null, raw);
+  // الاسم + عملة ورقية («GOLDUSD»، «GOLDEUR») = XAU + العملة — كانت null: الحاسبة بلا لوت
+  for (const raw of ['GOLDUSD', 'goldusd', 'GOLDUSD.m', 'GOLDUSDm', 'GOLDUSD#']) assert.deepEqual(instrumentSpec(raw), xau, raw);
+  assert.deepEqual(instrumentSpec('SILVERUSD'), xag);
+  assert.deepEqual(instrumentSpec('GOLDEUR'), instrumentSpec('XAUEUR'));
+  assert.deepEqual(instrumentSpec('GOLDJPY'), instrumentSpec('XAUJPY'));
+  {
+    const gu = instrumentSpec('GOLDUSD')!;
+    assert.equal(positionSize({ balance: 10_000, riskPct: 1, slPips: slPipsFromPrices(gu, 2350, 2345)!, pipValuePerLot: pipValuePerLot(gu, 1), contractSize: gu.contractSize })!.lots, 0.2);
+  }
   // الحساب نفسه: وقف 5 دولار على GOLD = 50 pip × 10 USD/pip/lot؛ 1% من 10,000 ⇒ 0.2 lot (كـXAUUSD تماماً)
   const g = instrumentSpec('GOLD#')!;
   assert.equal(slPipsFromPrices(g, 2350, 2345), 50);
