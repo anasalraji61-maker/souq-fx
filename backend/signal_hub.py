@@ -47,14 +47,20 @@ ATR_PERIOD = 14
 TREND_FULL_ATR = 3.0
 
 
-def _atr_last(candles: list[dict[str, Any]] | None) -> float | None:
+def _atr_raw(candles: list[dict[str, Any]] | None) -> float | None:
+    """ATR14 الأخير كما هو (0 لسلسلة بلا مدى)؛ None = شموع أقل من 15 أو قيمة غير صالحة."""
     if not candles:
         return None
     try:
         v = ind_engine.atr(candles, ATR_PERIOD)[-1]
     except (KeyError, TypeError, ValueError):
         return None
-    return v if v is not None and math.isfinite(v) and v > 0 else None
+    return v if v is not None and math.isfinite(v) and v >= 0 else None
+
+
+def _atr_last(candles: list[dict[str, Any]] | None) -> float | None:
+    v = _atr_raw(candles)
+    return v if v is not None and v > 0 else None
 
 
 def _trade_levels(
@@ -62,13 +68,15 @@ def _trade_levels(
 ) -> tuple[dict[str, float] | None, dict[str, Any]]:
     """(المستويات، أساسها). المستويات None — لا رقم مخترَع — حين: لا سعر حقيقي، أو شموع أقلّ من
     ATR14، أو الاتجاه محايد (دخول=وقف=هدف كان يُعرض كصفقة)."""
-    atr_v = _atr_last(candles)
+    atr_raw = _atr_raw(candles)
+    atr_v = atr_raw if atr_raw else None
     basis: dict[str, Any] = {"method": f"atr{ATR_PERIOD}", "atr": atr_v,
                              "sl_mult": SL_ATR_MULT, "tp_mult": TP_ATR_MULT}
     if last is None or not (last > 0):
         return None, {**basis, "unavailable": "no_live_price"}
     if atr_v is None:
-        return None, {**basis, "unavailable": "not_enough_candles"}
+        # شموع كافية بمدى صفري ⇒ «بلا مدى» لا «شموع قليلة» (كان يُقال للمتداول إن البيانات ناقصة)
+        return None, {**basis, "unavailable": "no_range" if atr_raw == 0 else "not_enough_candles"}
     if direction not in ("buy", "sell"):
         return None, {**basis, "unavailable": "neutral"}
     sgn = 1 if direction == "buy" else -1
@@ -160,6 +168,9 @@ _DISCLAIMER = {
     "en": "Technical-indicator consensus inside MATRIX — not a guarantee of profit.",
 }
 _NO_DATA = {"ar": "لا بيانات كافية للمؤشرات.", "en": "Not enough data for the indicators."}
+# شموع كافية لكن بلا أي حركة (سوق مغلق/رمز مجمّد): ليس «بيانات ناقصة»
+_NO_MOVE = {"ar": "لا حركة سعرية في النافذة: لا اتجاه للمؤشرات.",
+            "en": "No price movement in the window: the indicators show no direction."}
 
 
 def price_decimals(price: float | None) -> int:
@@ -225,14 +236,15 @@ def indicator_forecast(
 
     rsi_v = snap.get("rsi")
     if rsi_v is not None:
-        r = round(rsi_v, 1)
-        if rsi_v >= 70:
+        # التصنيف على الرقم المعروض: 69.96 كان «زخم إيجابي (70.0)» وصوت شراء بينما 70 «تشبّع شرائي»
+        r = round(rsi_v, 1) + 0.0
+        if r >= 70:
             add("rsi", "rsi", -0.7, "rsi_overbought", rsi=r)
-        elif rsi_v <= 30:
+        elif r <= 30:
             add("rsi", "rsi", 0.7, "rsi_oversold", rsi=r)
-        elif rsi_v >= 55:
+        elif r >= 55:
             add("rsi", "rsi", 0.25, "rsi_bullish", rsi=r)
-        elif rsi_v <= 45:
+        elif r <= 45:
             add("rsi", "rsi", -0.25, "rsi_bearish", rsi=r)
         else:
             add("rsi", "rsi", 0.0, "rsi_neutral", rsi=r)
@@ -270,7 +282,8 @@ def indicator_forecast(
         std = math.sqrt(var)
         upper, lower = mid + 2 * std, mid - 2 * std
         # نطاق بعرض صفر (20 إغلاقاً متطابقة) لا موقع فيه: كان `or 1e-9` يصنع حدّين حول السعر نفسه
-        if std == 0:
+        # و20 إغلاقاً متطابقة بسعر الذهب قد تعطي std≈1e-13 من ضجيج الجمع ⇒ صوت «موقع 25%» من لا حركة
+        if std <= abs(mid) * 1e-9:
             pass
         elif last >= upper:
             add("bb", "bb", -0.55, "bb_upper")
@@ -306,7 +319,12 @@ def indicator_forecast(
     if trend_atr is not None:
         move = closes[-1] - closes[-11]
         slope = move / (abs(closes[-11]) or 1)
-        add("trend", "trend", move / (TREND_FULL_ATR * trend_atr), "trend_slope", pct=round(slope * 100, 2))
+        # منازل تُظهر الحركة التي صوّتت: على 1m حركة 0.45 نقطة صوت شراء 0.46 كانت «0.0%» (و«-0.0%»)
+        pct = slope * 100
+        pdp = 2
+        while pdp < 6 and move != 0 and round(pct, pdp) == 0:
+            pdp += 1
+        add("trend", "trend", move / (TREND_FULL_ATR * trend_atr), "trend_slope", pct=round(pct, pdp) + 0.0)
 
     if not votes:
         # لا صوت واحد ⇒ لا اتجاه ولا درجة (كان «محايد» و0.0 — ادّعاء بأن المؤشّرات لا ترى اتجاهاً)
@@ -320,8 +338,9 @@ def indicator_forecast(
             "votes": [],
             "snapshot": snap,
             "price_decimals": dp,
-            "disclaimer": _NO_DATA[tl],
-            "disclaimer_code": "not_enough_data",
+            # شموع كافية بلا مدى ⇒ «بلا حركة» لا «بيانات ناقصة» (رمز مجهول ⇒ التطبيق يعرض نصّ الخادم)
+            **({"disclaimer": _NO_MOVE[tl], "disclaimer_code": "no_movement"} if _atr_raw(candles) == 0
+               else {"disclaimer": _NO_DATA[tl], "disclaimer_code": "not_enough_data"}),
         }
 
     avg = sum(v["score"] for v in votes) / len(votes)
