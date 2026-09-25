@@ -2854,8 +2854,8 @@ console.log('tradePlan parseJournalSize unit word selftest OK');
   assert.equal(L({ symbol: 'EURUSD', side: 'buy', entry: 1.085, level: 1.0825, kind: 'sl' }), null);
   assert.equal(L({ symbol: 'XAUUSD', side: 'buy', entry: 2650, level: 3650, kind: 'tp' }), null);
   assert.equal(L({ symbol: 'USDJPY', side: 'buy', entry: 157, level: 156.5, kind: 'sl' }), null);
-  // رمز بلا pip (BTC): نصف السعر ممكن ⇒ لا تخمين؛ ولا شيء بلا دخول/مستوى أو تحت 1 pip
-  assert.equal(L({ symbol: 'BTCUSD', side: 'buy', entry: 60000, level: 50, kind: 'sl' }), null);
+  // رمز بلا pip (BTC): نصف السعر ممكن ⇒ قاعدة الخُمس (راجع حالات المؤشرات أدناه)؛ ولا شيء بلا دخول/مستوى أو تحت 1 pip
+  assert.equal(L({ symbol: 'BTCUSD', side: 'buy', entry: 60000, level: 30000, kind: 'sl' }), null);
   assert.equal(L({ symbol: 'EURUSD', side: 'buy', entry: null, level: 50, kind: 'tp' }), null);
   assert.equal(L({ symbol: 'EURUSD', side: 'buy', entry: 1.085, level: null, kind: 'tp' }), null);
   assert.equal(L({ symbol: 'USDJPY', side: 'sell', entry: 157, level: 0.5, kind: 'tp' }), null);
@@ -3321,8 +3321,8 @@ console.log('tradePlan levelLooksLikePips metal ambiguity selftest OK');
   assert.equal(exitLooksLikePips({ symbol: 'XAUUSD', side: 'buy', entry: 2650, exit: 2700 }), null);
   // الذهب صعد: خروج 4000 لشراءٍ من 2650 سعرٌ (الضعف لا النصف فوق الدخول)
   assert.equal(exitLooksLikePips({ symbol: 'XAUUSD', side: 'buy', entry: 2650, exit: 4000 }), null);
-  // بلا pip (BTC) أو بلا دخول ⇒ null
-  assert.equal(exitLooksLikePips({ symbol: 'BTCUSD', side: 'buy', entry: 65000, exit: 25 }), null);
+  // بلا pip (BTC): قاعدة الخُمس، نقطة = 1.0 (ملحق المؤشرات أدناه)؛ بلا دخول ⇒ null
+  assert.deepEqual(exitLooksLikePips({ symbol: 'BTCUSD', side: 'buy', entry: 65000, exit: 25 }), { pips: 25, win: 65025, loss: 64975 });
   assert.equal(exitLooksLikePips({ symbol: 'EURUSD', side: 'buy', entry: null, exit: 25 }), null);
   assert.equal(
     levelLooksLikePipsText('{field} «{value}»: {pips} pip = {price}', 'Exit', ' 25 ', '−25', '1.0825'),
@@ -3330,3 +3330,29 @@ console.log('tradePlan levelLooksLikePips metal ambiguity selftest OK');
   );
 }
 console.log('tradePlan exitLooksLikePips selftest OK');
+
+// مؤشر/عملة رقمية بلا pip: US30 على 42000 بوقف «50» كان وقفاً عند 50.00 (R:R 1:<0.01)؛ BTCUSD بيعاً بهدف «500» ⇒ 1:129
+{
+  const L = levelLooksLikePips;
+  assert.deepEqual(L({ symbol: 'US30', side: 'buy', entry: 42000, level: 50, kind: 'sl' }), { pips: 50, price: 41950 });
+  assert.deepEqual(L({ symbol: 'US30', side: 'sell', entry: 42000, level: 50, kind: 'sl' }), { pips: 50, price: 42050 });
+  assert.deepEqual(L({ symbol: 'BTCUSD', side: 'sell', entry: 65000, level: 500, kind: 'tp' }), { pips: 500, price: 64500 });
+  assert.deepEqual(L({ symbol: 'BTCUSD', side: 'buy', entry: 60000, level: 50, kind: 'sl' }), { pips: 50, price: 59950 });
+  assert.deepEqual(L({ symbol: 'NAS100', side: 'buy', entry: 19850.5, level: 80.5, kind: 'tp' }), { pips: 80.5, price: 19931 });
+  // بلا ضجيج فاصلة عائمة
+  assert.deepEqual(L({ symbol: 'ETHUSD', side: 'buy', entry: 2345.67, level: 12.34, kind: 'tp' }), { pips: 12.34, price: 2358.01 });
+  // أسعار حقيقية لا تُمسّ: هبوط 50% لعملة رقمية، صعود ×3، وقف قريب، عملة رخيصة (الرقم فوق السعر)
+  assert.equal(L({ symbol: 'BTCUSD', side: 'sell', entry: 65000, level: 32000, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'SOLUSD', side: 'buy', entry: 20, level: 60, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'US30', side: 'buy', entry: 42000, level: 41900, kind: 'sl' }), null);
+  assert.equal(L({ symbol: 'DOGEUSD', side: 'buy', entry: 0.15, level: 1, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'US30', side: 'buy', entry: 42000, level: 0.5, kind: 'sl' }), null);
+  // الخروج: «120» من «أغلقتُ +120» على US30 ⇒ سطران ±120
+  const { exitLooksLikePips } = require('./tradePlan') as typeof import('./tradePlan');
+  assert.deepEqual(exitLooksLikePips({ symbol: 'US30', side: 'buy', entry: 42000, exit: 120 }), { pips: 120, win: 42120, loss: 41880 });
+  // الخطر الذي يُغلق
+  const bad = analyzePlan({ symbol: 'US30', side: 'buy', entry: 42000, sl: 50, tp: 42100 });
+  assert.equal(bad.ok, true);
+  assert.ok((bad.rr ?? 1) < 0.01);
+}
+console.log('tradePlan levelLooksLikePips index/crypto selftest OK');
