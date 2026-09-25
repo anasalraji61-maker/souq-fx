@@ -981,8 +981,17 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         resetForm();
         restorePreEdit();
         await refresh();
-      } catch {
-        if (mountedRef.current) setFormError(t.journalEditError);
+      } catch (err) {
+        if (!mountedRef.current) return;
+        // 409 من PATCH = `trade_changed_concurrently` وحده (backend run 13، `main.py` `trades_update`): أُغلقت/فُتحت الصفقة بجهاز
+        // آخر أثناء التعديل. كان «تعذّر الحفظ» العامّ فيعيد المتداول المحاولة على صفٍّ لا يراه — الآن القائمة تُحدَّث والسبب يُقال
+        // (QA57). النموذج يبقى مفتوحاً: يراجع الحالة الجديدة ثم يحفظ إن لزم
+        if (isAlreadyClosedError(err)) {
+          setFormError(t.journalEditConflict);
+          await refresh();
+        } else {
+          setFormError(t.journalEditError);
+        }
       } finally {
         if (mountedRef.current) setBusy(false);
       }
