@@ -652,7 +652,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       if (!hit) continue;
       const label = (kind === 'sl' ? t.journalSlPlaceholder : t.journalTpPlaceholder).split(' (')[0].trim();
       const text = formatPrice(hit.price, journalSpec(sym)?.symbol ?? sym);
-      return { kind, text, raw: raw.trim(), msg: levelLooksLikePipsText(t.levelLooksLikePipsHint, label, raw, hit.pips, text) };
+      return { kind, label, text, raw: raw.trim(), msg: levelLooksLikePipsText(t.levelLooksLikePipsHint, label, raw, hit.pips, text) };
     }
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -973,12 +973,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const pipsKey = pipsLevel ? `${pipsLevel.kind}\u0001${formKeyRef.current}` : null;
     if (pipsLevel && pipsOverrideRef.current !== pipsKey) {
       pipsOverrideRef.current = pipsKey;
-      // يقول المخرج صراحةً: «…، أو اضغط «إضافة صفقة» مرّة ثانية لإبقاء 85 سعراً» — الزرّ باسمه الظاهر
+      // launch123: السطر القابل للنقر أعلاه يحمل الاقتراح، فهنا «لم تُحفظ» + المخرج فقط (كانت الجملة نفسها تتكرّر تحت الزرّ
+      // بلا نقرة). الزرّ باسمه الظاهر.
       const button = editing ? t.journalSaveEditBtn : t.journalAddBtn;
-      const again = t.levelLooksLikePipsSaveAgain.replace(/\{(button|value)\}/g, (_, k: string) =>
-        k === 'button' ? button : pipsLevel.raw
+      setFormError(
+        t.levelLooksLikePipsSaveBlocked.replace(/\{(field|value|button)\}/g, (_, k: string) =>
+          k === 'button' ? button : k === 'field' ? pipsLevel.label : pipsLevel.raw
+        )
       );
-      setFormError(pipsLevel.msg + again);
       return;
     }
     const issue = trailedIssue(sym, e, s, p, savedNote);
