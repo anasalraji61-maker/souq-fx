@@ -19,11 +19,20 @@ function atrBox(candles: Candle[]): number {
  * كلّه: صندوق نصف حجم TradingView ⇒ ضعف اللبنات والانعكاسات للزوج نفسه. تاريخ أقصر من 15 ⇒ المتوسط.
  */
 export function renkoAtrBox(candles: Candle[], period = 14): number {
+  // أرضية نسبةً من السعر كـRange (`MIN_BOX_FRACTION`): تاريخ مسطّح (مزوّد متوقّف) يجعل ATR بتنعيم Wilder
+  // ~1e-16 ⇒ أوّل تيك حيّ بـ20 pip كان ملايين اللبنات (وملايين صناديق Kagi/P&F) ⇒ تجمّد الشارت.
+  const ref = candles.length ? Math.abs(candles[candles.length - 1].close) : 0;
+  const floor = ref * MIN_BOX_FRACTION;
   const closed = candles.length - 2;
-  if (closed < period) return atrBox(candles);
+  if (closed < period) return Math.max(atrBox(candles), floor);
   const atr = computeAtr(candles.slice(0, closed + 1), period)[closed];
-  return atr != null && Number.isFinite(atr) && atr > 0 ? atr : atrBox(candles);
+  return Math.max(atr != null && Number.isFinite(atr) && atr > 0 ? atr : atrBox(candles), floor);
 }
+
+/** أرضية الصندوق التلقائي نسبةً من السعر (0.005% ≈ نصف pip على EUR/USD) — كـ`range.ts`. */
+const MIN_BOX_FRACTION = 5e-5;
+/** سقف اللبنات — الأقدم يسقط (الشارت لا يعرض أكثر من بضع مئات). */
+export const RENKO_MAX_BRICKS = 5000;
 
 /**
  * Renko bricks — ATR box by default, optional fixed size. Traditional rules like TradingView:
@@ -64,6 +73,21 @@ export function renko(candles: Candle[], boxSize?: number): SyntheticBar[] {
     runLo = Math.min(runLo, c.low);
     const px = c.close;
     // صعود: فوق أعلى آخر لبنة بصندوق (استمرار، أو انعكاس بصندوقين من إغلاق لبنة هابطة = قمّتها + صندوق)
+    // قفزة بأكثر من السقف: ما قبل آخر `RENKO_MAX_BRICKS` لبنة سيسقط أصلاً ⇒ يُتخطّى بدل حلقة بالملايين
+    // (صندوق صريح صغير جداً أو فجوة ضخمة). اللبنات الباقية متّصلة وتنتهي عند آخر صندوق تحت السعر.
+    const n = px >= top + box ? Math.floor((px - top) / box + 1e-9) : px <= bottom - box ? Math.floor((bottom - px) / box + 1e-9) : 0;
+    if (n > RENKO_MAX_BRICKS) {
+      const skip = n - RENKO_MAX_BRICKS;
+      out.length = 0;
+      if (px > top) {
+        top += skip * box;
+        bottom = top - box;
+      } else {
+        bottom -= skip * box;
+        top = bottom + box;
+      }
+      t += 60 * skip;
+    }
     if (px >= top + box) {
       while (px >= top + box) {
         push(top, top + box, c);
@@ -77,7 +101,9 @@ export function renko(candles: Candle[], boxSize?: number): SyntheticBar[] {
         bottom -= box;
       }
     }
+    if (out.length > 2 * RENKO_MAX_BRICKS) out.splice(0, out.length - RENKO_MAX_BRICKS);
   }
+  if (out.length > RENKO_MAX_BRICKS) out.splice(0, out.length - RENKO_MAX_BRICKS);
   return out.length ? out : candles;
 }
 

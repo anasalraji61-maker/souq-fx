@@ -45,4 +45,23 @@ const spiked = hist.slice(0, 39).concat({ ...hist[39], high: 1.05 });
 assert.equal(renkoAtrBox(spiked), want, 'live candle spike leaves the box alone');
 assert.ok(renkoAtrBox(hist.slice(0, 5)) > 0, 'short history falls back to mean TR');
 
+// تجمّد: 20 شمعة عادية ثم 400 مسطّحة ⇒ ATR بتنعيم Wilder ~1e-16 ⇒ شمعة حيّة +20 pip كانت ملايين اللبنات.
+const flatHist: Candle[] = [];
+for (let i = 0; i < 20; i++) flatHist.push(bar(i, 1.1 + (i % 3) * 0.0004, 1.1 + (i % 3) * 0.0004 + 0.0005, 1.1 + (i % 3) * 0.0004 - 0.0005));
+for (let i = 20; i < 420; i++) flatHist.push(bar(i, 1.1));
+flatHist.push(bar(420, 1.1));
+const t0 = Date.now();
+const frozen = renko([...flatHist, bar(421, 1.102, 1.102, 1.1)]);
+assert.ok(Date.now() - t0 < 1000, 'flat flatHistory then a live move must not freeze');
+assert.ok(renkoAtrBox(flatHist) >= 1.1 * 5e-5 * 0.999, 'box floor relative to price');
+assert.ok(frozen.length <= 5000);
+// صندوق صريح صغير جداً: القفزة مسقوفة، واللبنات متّصلة وتنتهي عند آخر صندوق تحت السعر.
+const tiny = renko([bar(0, 1), bar(1, 2)], 1e-6);
+assert.equal(tiny.length, 5000);
+assert.ok(Math.abs(tiny[tiny.length - 1]!.close - 2) < 2e-6);
+assert.ok(tiny.every((x, i) => i === 0 || Math.abs(x.open - tiny[i - 1]!.close) < 1e-9));
+const tinyDn = renko([bar(0, 2), bar(1, 1)], 1e-6);
+assert.equal(tinyDn.length, 5000);
+assert.ok(tinyDn.every((x) => x.close < x.open));
+
 console.log('renko selftest PASS');
