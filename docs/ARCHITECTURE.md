@@ -30,7 +30,7 @@ mobile/src/
                         # NetworkTreePanel, CommissionPlanPanel, MessagesScreen
     account/            # AuthContext, AccountScreen (هوية فقط — لا شبكة/عمولات)
     academy/            # CoursesScreen, LectureClassroom, academyChart.ts, academy.ts
-    tools-panels/       # سجل ألواح ذاتي التسجيل (registry.ts) بدل TABS ثابتة
+    tools-panels/       # (حُذف 2026-09-25: registry.ts لم يستورده أحد قط — يُستعاد من 3c27653 عند النقل الفعلي)
                         # يحل تكرار المشكلة بين MatrixBottomDock.tsx وToolsScreen.tsx
   # يبقى مشتركاً خارج أي وحدة (طبقة أساس/منصّة يعتمد عليها الجميع):
   api.ts (النقل HTTP الخام فقط)، i18n/، theme.ts، notifications.ts
@@ -82,7 +82,7 @@ backend/
    **لم يُشغَّل tsc/بناء فعلي بعد** (لا صلاحية طرفية على الجهاز حالياً) — التحقّق الحالي نصّي/بنيوي
    فقط؛ أول تشغيل للتطبيق بعد هذا التغيير يستحق فحصاً بصرياً سريعاً للشارت والمؤشرات.
 4. الواجهة: إنشاء `modules/tools-panels/registry.ts` (كود إضافي جديد فقط، ميت حتى يُستخدَم) تمهيداً
-   لنقل الألواح الثمانية لاحقاً واحداً تلو الآخر.
+   لنقل الألواح الثمانية لاحقاً واحداً تلو الآخر. (حُذف 2026-09-25 بعد بقائه غير مستورد؛ `git show 3c27653` يعيده.)
 5. **اكتشاف جانبي أثناء التصميم يستحق إصلاحاً فورياً منفصلاً**: مدرسة "أساسيات التداول للمبتدئين"
    موجودة فعلاً بـ`backend/academy_data.py` (order: 0) لكن `mobile/src/academy.ts` (القائمة
    الاحتياطية عند فشل الشبكة) لا تتضمنها بعد — مزامنة القائمتين تسدّ فجوة "لا محتوى للمبتدئ المطلق"
