@@ -146,8 +146,13 @@ export function QuadChartModal({
       api
         .chart(sym, tf)
         .then((s) => {
-          if (!isSyntheticProvenance(s.data_source)) quadSeriesCache.put(key, s);
-          return s;
+          if (!isSyntheticProvenance(s.data_source)) {
+            quadSeriesCache.put(key, s);
+            return s;
+          }
+          // المزوّد معطّل والخادم ردّ بشموع تجريبية: شموع حقيقية حديثة بالذاكرة (معروضة للتوّ) تبقى — كانت تُستبدل
+          // بعد لحظة بسلسلة «تجريبي» مختلفة. كفشل الجلب أدناه وكالتحديث الدوري.
+          return quadSeriesCache.get(key) ?? s;
         })
         .catch(() => {
           // فشل التحديث وبالذاكرة شموع حقيقية حديثة ⇒ تبقى هي لا الوهمية.
