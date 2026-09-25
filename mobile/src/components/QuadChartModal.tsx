@@ -311,7 +311,9 @@ export function QuadChartModal({
             return (
               <Pressable
                 key={`${i}:${sym}`}
-                accessibilityRole="button"
+                // iOS: الخلية `accessible` تخفي ما بداخلها (أزرار تحريك شارت القائد) — زرّ فقط حين تُنقَر لتقود.
+                accessible={following}
+                accessibilityRole={following ? 'button' : undefined}
                 accessibilityLabel={
                   syncTime && !isLeader ? `${t.cfSyncActivateA11yPrefix}${sym}` : undefined
                 }

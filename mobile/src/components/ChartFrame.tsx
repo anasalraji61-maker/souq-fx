@@ -290,7 +290,10 @@ export function ChartFrame({
 
   return (
     <Pressable
-      accessibilityRole="button"
+      // iOS: عنصر `accessible` يخفي كل ما بداخله عن VoiceOver — كان الإطار كله زرّاً واحداً بلا وسم
+      // (معطَّلاً) فلا يُبلغ شريط الفريمات ولا زرّ الرمز ولا ملء الشاشة. زرّ فقط حين يفعل شيئاً (التزامن).
+      accessible={!!onSyncActivate}
+      accessibilityRole={onSyncActivate ? 'button' : undefined}
       style={[styles.wrap, size === 'hero' && styles.heroWrap, fill && styles.wrapFill]}
       onPress={onSyncActivate}
       disabled={!onSyncActivate}
@@ -316,7 +319,7 @@ export function ChartFrame({
         <View style={styles.titleRow}>
           <View style={[styles.dot, { backgroundColor: accent }]} />
           <Pressable
-            accessibilityRole="button"
+            accessibilityRole={onSymbolChange ? 'button' : 'text'}
             style={({ pressed }) => [
               styles.symbolHit,
               pressed && {
