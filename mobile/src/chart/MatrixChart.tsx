@@ -415,6 +415,8 @@ type Props = {
 
 /** جذب التقاطع لـO/H/L/C: أقرب من هذا (px) فقط — وإلا يبقى على المستوى الملموس. */
 const CROSS_SNAP_PX = 14;
+/** الهامش الأيمن الافتراضي من عرض اللوح (≈8 خانات من 80) — `restXPan`. */
+const RIGHT_MARGIN_FRAC = 0.1;
 
 type PointerEventLike = {
   nativeEvent?: {
@@ -1448,6 +1450,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const savedDrawingsSig = useRef<string | null>(null);
   const rangeRef = useRef({ min: 0, max: 1, span: 1 });
   const chartPlotWRef = useRef(320);
+  // هامش يمين افتراضي كـTradingView: آخر شمعة لا تلتصق بمحور السعر، وتظهر منطقة المستقبل (سحابة
+  // Ichimoku المُسقَطة، Alligator، التقاطع بعد الشمعة الحيّة) بلا سحب. كان 0 ⇒ السحابة القادمة لا تُرى إلا
+  // بسحب الشارت يساراً. بكسلات من عرض اللوح الحالي؛ `xPanAtRest` يعيد حسابه إن تغيّر العرض قبل أي سحب.
+  const restXPan = useCallback(
+    () => (canPan ? -Math.round(chartPlotWRef.current * RIGHT_MARGIN_FRAC) : 0),
+    [canPan]
+  );
+  const xPanAtRest = useRef(true);
   const chartPlotHRef = useRef(200);
   const sourceRef = useRef({
     plot: [] as { time: number; close: number; open: number; high: number; low: number }[],
@@ -1511,7 +1521,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setWindowCount(80);
     setPriceScale(1);
     setPricePan(0);
-    setXPan(0);
+    xPanRef.current = restXPan();
+    xPanAtRest.current = true;
+    setXPan(xPanRef.current);
     // التقاطع المثبَّت يخصّ الرمز السابق: بالفريم نفسه تُوجد شمعة بزمنه غالباً، فكان يبقى
     // على الزوج الجديد بسعر الزوج القديم (وسم «1.085» فوق محور الين) ما دام الشارت مركَّباً.
     setCross(null);
@@ -1522,6 +1534,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (replayOnRef.current) setReplayEndedNotice(true);
     setReplayOn(false);
     setReplayPlaying(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- restXPan تتبع canPan وعرض اللوح وحدهما
   }, [series.symbol, series.timeframe]);
 
   useEffect(() => {
@@ -3129,6 +3142,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // كانت تقع تحته كلّها، فلا يُرى من الطبقة إلا خطّ POC بلا اسم.
   const plotRightInset = hidePriceLabels ? 2 : PRICE_AXIS_WIDTH + 2;
   chartPlotWRef.current = chartPlotW;
+  // الهامش الافتراضي يُحسب من العرض الحقيقي بعد القياس (يبدأ 320) وبعد تدوير الشاشة — ما لم يُسحب الشارت.
+  useEffect(() => {
+    if (!xPanAtRest.current) return;
+    const rest = restXPan();
+    if (rest === xPanRef.current) return;
+    xPanRef.current = rest;
+    setXPan(rest);
+    schedulePublishSync(false);
+  }, [chartPlotW, restXPan, schedulePublishSync]);
   chartPlotHRef.current = chartPlotH;
 
   // مفتاح ألوان طبقات السعر. `legendTokens` يحلّ رموز السمة المكتوبة بجدول priceLegend
@@ -4308,6 +4330,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         (sdy / Math.max(1, chartPlotH)) * priceScaleRef.current;
       offsetRef.current = nextOffset;
       xPanRef.current = nextXPan;
+      xPanAtRest.current = false;
       pricePanRef.current = nextPricePan;
       setOffset(nextOffset);
       setXPan(nextXPan);
@@ -4421,12 +4444,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     priceScaleRef.current = 1;
     windowCountRef.current = 80;
     pricePanRef.current = 0;
-    xPanRef.current = 0;
+    xPanRef.current = restXPan();
+    xPanAtRest.current = true;
     offsetRef.current = 0;
     setPriceScale(1);
     setWindowCount(80);
     setPricePan(0);
-    setXPan(0);
+    setXPan(xPanRef.current);
     setOffset(0);
     schedulePublishSync(false);
   }, [schedulePublishSync]);
@@ -4477,9 +4501,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         setPricePan(0);
       } else {
         windowCountRef.current = 80;
-        xPanRef.current = 0;
+        xPanRef.current = restXPan();
+        xPanAtRest.current = true;
         setWindowCount(80);
-        setXPan(0);
+        setXPan(xPanRef.current);
       }
       schedulePublishSync(false);
     },
@@ -8434,10 +8459,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ]}
             onPress={() => {
               pricePanRef.current = 0;
-              xPanRef.current = 0;
+              xPanRef.current = restXPan();
+              xPanAtRest.current = true;
               offsetRef.current = 0;
               setPricePan(0);
-              setXPan(0);
+              setXPan(xPanRef.current);
               setOffset(0);
               schedulePublishSync(false);
             }}
