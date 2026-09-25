@@ -8,7 +8,7 @@
  * واحد بحساب السنت — ما يختلف حجم العقد، ولا يقرؤه الشارت. «BTCUSDC» (عملة مستقرّة) تبقى بلا مواصفة لأن
  * «BTCUSD» نفسها بلا مواصفة.
  */
-import { instrumentSpec, type InstrumentSpec } from '../positionSize';
+import { instrumentSpec, smallContractPair, type InstrumentSpec } from '../positionSize';
 
 export function chartPipSpec(symbol: string): InstrumentSpec | null {
   const direct = instrumentSpec(symbol);
@@ -24,5 +24,10 @@ export function chartPipSpec(symbol: string): InstrumentSpec | null {
   // لاحقة بعد نقطة («EURUSD.c»، «XAUUSD.pro»، «GBPJPY.ECN»): النقطة لا تكون جزءاً من اسم أداة أبداً،
   // فأيّ حالة أحرف بعدها لاحقة حساب لا أداة أخرى.
   const dotted = /^([A-Za-z]{6}|GOLD|SILVER|Gold|Silver|gold|silver)\.[A-Za-z]{1,5}[#+]?$/.exec(t);
-  return dotted ? instrumentSpec(dotted[1]!.length === 6 ? dotted[1]!.toUpperCase() : dotted[1]!) : null;
+  if (dotted) return instrumentSpec(dotted[1]!.length === 6 ? dotted[1]!.toUpperCase() : dotted[1]!);
+  // رموز الدفتر المحفوظة بالأحرف الكبيرة («USDJPYMICRO»، «USDJPY-CENT»، «GBPJPY_MICRO»): اللاحقة الكبيرة
+  // تُرفض أعلاه، لكن «MICRO»/«CENT» بفاصل أو بلا فاصل لا تكون اسم أداة أخرى — الحاسبة والدفتر يقرآنها كذلك
+  // (`smallContractPair`)، فكان صفّ الصفقة وتأكيد الإغلاق يطبعان 150.12 بدل 150.123.
+  const small = smallContractPair(t);
+  return small ? instrumentSpec(small) : null;
 }

@@ -51,6 +51,12 @@ eq('GOLD.m', chartPipSpec('GOLD.m')?.symbol, 'XAUUSD');
 eq('EURUSD.c 5 decimals', formatPrice(1.085123, 'EURUSD.c'), '1.08512');
 eq('BTCUSD.c', chartPipSpec('BTCUSD.c'), null);
 eq('EURUSD.toolong', chartPipSpec('EURUSD.toolong'), null);
+// رموز الدفتر بالأحرف الكبيرة (tools48)
+eq('USDJPYMICRO', chartPipSpec('USDJPYMICRO')?.pipSize, 0.01);
+eq('USDJPY-CENT', chartPipSpec('USDJPY-CENT')?.symbol, 'USDJPY');
+eq('GBPJPY_MICRO', chartPipSpec('GBPJPY_MICRO')?.symbol, 'GBPJPY');
+eq('USDJPYMICRO 3 decimals', formatPrice(150.1234, 'USDJPYMICRO'), '150.123');
+eq('BTCUSDMICRO', chartPipSpec('BTCUSDMICRO'), null);
 if (fail) {
   console.log(`pipSpec: ${fail} FAIL`);
   process.exit(1);
