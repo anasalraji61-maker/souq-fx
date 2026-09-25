@@ -145,10 +145,12 @@ Questions or requests about your data: [privacy email].
 |---|---|
 | الجداول المخزَّنة | `backend/db.py` — `CREATE TABLE` (users, sessions, alerts, indicator_alerts, trades, layouts, watchlist, academy_progress, group_messages, dm_messages, votes, vote_ballots, content_reports, push_tokens, network_members, commission_ledger) |
 | كلمة المرور مُجزّأة | `backend/db.py` `_encode_password` (pbkdf2_sha256، ملح لكل حساب) |
-| الحذف وما يبقى | `backend/db.py:915` `delete_user_account`؛ المسار `DELETE /api/auth/account` (`backend/main.py:781`) |
+| الحذف وما يبقى | `backend/db.py:985` `delete_user_account`؛ المسار `DELETE /api/auth/account` (`backend/main.py:647`) |
 | معرّف التثبيت العشوائي | `mobile/src/api.ts:30-70` (`matrix.install.v1`، ترويسة `X-Install-Id`) |
 | ما يبقى على الجهاز | مفاتيح AsyncStorage `matrix.drawings.v2`، `matrix.lang.v1`، `matrix.tools.riskCalc.v1`، `matrix.moderation.blockedUsers.v1` … |
-| Expo وOpenRouter وما يصلهما | `backend/expo_push.py`، `backend/openrouter_ai.py` (تفصيل بـ`STORE-PRIVACY.md` §2) |
+| Expo وOpenRouter وما يصلهما | `backend/expo_push.py` (المستدعي الوحيد `alert_worker.py:295`: عنوان ونصّ و`data` فارغة)، `backend/openrouter_ai.py` (رسالتا system/user وترويستا HTTP-Referer/X-Title — لا حقل مستخدم) (تفصيل بـ`STORE-PRIVACY.md` §2) |
 | لا SDK تحليلات/إعلانات، لا ميكروفون | `mobile/package.json`؛ `mobile/app.json` (`microphonePermission: false`، `RECORD_AUDIO` محظور) |
 | لا حذف تلقائي بمدّة | لا `DELETE` زمني بـ`backend/db.py` |
 | https | شرط النشر بـ`docs/DEPLOYMENT.md` — **اليوم `apiUrl` http محلي**؛ لا تُنشر السياسة قبل تحقّقه |
+
+> **أُعيد التحقّق 2026-09-25 (launch 129)**: الجداول الستّة عشر بـ`db.py` كما بالجدول (أعمدة `ALTER TABLE` المضافة: owner_key، user_id، created_at، lang، email، sl/tp — كلّها مغطّاة بنصّ القسم 1)، و`delete_user_account` يحذف/يُجهّل ما يقوله القسم 5 بالحرف، وزرّ «حذف الحساب» بـ`AccountScreen.tsx:168`. لا تغيير بالنصّ المنشور.
