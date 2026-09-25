@@ -630,6 +630,7 @@ function candleDateParts(date: Date, dayCandles: boolean) {
         year: date.getUTCFullYear(),
         month: date.getUTCMonth(),
         day: date.getUTCDate(),
+        weekday: date.getUTCDay(),
         hours: date.getUTCHours(),
         minutes: date.getUTCMinutes(),
       }
@@ -637,6 +638,7 @@ function candleDateParts(date: Date, dayCandles: boolean) {
         year: date.getFullYear(),
         month: date.getMonth(),
         day: date.getDate(),
+        weekday: date.getDay(),
         hours: date.getHours(),
         minutes: date.getMinutes(),
       };
@@ -647,22 +649,27 @@ function formatCrossTime(
   unixTime: number,
   spanSeconds: number,
   months: string[],
-  dayCandles = false
+  dayCandles = false,
+  weekdays: string[] = [],
+  weekCandles = false
 ): string {
   const milliseconds = unixTime > 1e12 ? unixTime : unixTime * 1000;
   const date = new Date(milliseconds);
   if (Number.isNaN(date.getTime())) return '';
   const p = candleDateParts(date, dayCandles);
   const mon = months[p.month] ?? '';
+  // اليوم بالاسم كما TradingView («Fri 25 Sep 14:00»): شمعة NFP أو إغلاق الجمعة تُقرأ بنظرة بلا حساب
+  // تقويم. الأسبوعي والشهري بلا يوم — شمعتهما تبدأ الإثنين/اليوم الأول دائماً فلا يقول الاسم شيئاً.
+  const wd = weekCandles ? '' : weekdays[p.weekday] ? `${weekdays[p.weekday]} ` : '';
   // شمعة داخل اليوم تحمل ساعتها دائماً: بمدى > 120 يوماً (4H أو 1H بعد تحميل تاريخ طويل) كان
   // الوسم يطبع «12 سبتمبر 2026» لشمعة 4 ساعات — ست شموع بالوسم نفسه ولا يُعرف أيّها تحت الإصبع.
-  if (dayCandles) return `${p.day} ${mon} ${p.year}`;
+  if (dayCandles) return `${wd}${p.day} ${mon} ${p.year}`;
   const hh = String(p.hours).padStart(2, '0');
   const mm = String(p.minutes).padStart(2, '0');
   // شمعة من سنة سابقة تحمل سنتها («3 Dec '25 14:00»): تاريخ 4H/1H الطويل يعبر رأس السنة، و«3 Dec»
   // وحدها لا تقول أيّ ديسمبر. شموع السنة الجارية تبقى بلا سنة (الوسم قصير على الهاتف).
   const yr = p.year !== new Date().getFullYear() ? ` '${String(p.year).slice(-2)}` : '';
-  return `${p.day} ${mon}${yr} ${hh}:${mm}`;
+  return `${wd}${p.day} ${mon}${yr} ${hh}:${mm}`;
 }
 
 function pointerXY(event: PointerEventLike): { x: number; y: number; pointerId: number } {
@@ -4997,17 +5004,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (crossTagTop != null &&
       boxesTouch(start, PRICE_LABEL_H, crossTagTop, crossTagH, TAG_CLEAR_GAP)) ||
     selectionTags.some((t) => boxesTouch(start, PRICE_LABEL_H, t.top, PRICE_TAG_H, TAG_CLEAR_GAP));
-  // الوسم يتّسع لسنة شمعة من سنة سابقة (`formatCrossTime`) — بالعرض الثابت كانت الساعة تُقصّ «…».
   const crossTimeText = crossCandle
     ? formatCrossTime(
         // منطقة المستقبل تتخطّى عطلة نهاية الأسبوع: يمين شمعة الجمعة يُقرأ افتتاح الأحد لا «السبت 03:00»
         projectBarTimeSec(series.symbol, barTime(crossCandle), timeframeStepSec(series.timeframe), crossAhead),
         visibleTimeSpan,
         tr.mcMonths,
-        dayCandles
+        dayCandles,
+        tr.mcWeekdays,
+        timeframeStepSec(series.timeframe) >= 7 * 86400
       )
     : '';
-  const crossTimeTagW = / '\d\d /.test(crossTimeText) ? CROSS_TIME_TAG_W + 22 : CROSS_TIME_TAG_W;
+  // العرض من طول النصّ: اسم اليوم («الأربعاء»، «چوارشەممە») وسنة شمعة قديمة يطيلان الوسم، وبالعرض
+  // الثابت كانت الساعة تُقصّ «…». ~5.8px للحرف بخطّ 9 + الحشوة، لا أضيق من القديم ولا أعرض من اللوح.
+  const crossTimeTagW = Math.min(
+    Math.max(CROSS_TIME_TAG_W, Math.ceil(crossTimeText.length * 5.8) + 12),
+    Math.max(CROSS_TIME_TAG_W, chartPlotW)
+  );
   const crossTimeTagLeft = crossCandle
     ? Math.max(0, Math.min(chartPlotW - crossTimeTagW, crossX - crossTimeTagW / 2))
     : null;
