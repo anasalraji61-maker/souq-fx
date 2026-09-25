@@ -734,3 +734,17 @@ ui11 ← ui (`a0f67d1`، `AS_OF_COPY` grep صفر)؛ QA60 ← launch (`99e365e`�
 لا طلبات تنسيق جديدة بسجلات chart 47 / tools 79 / launch 119 / ui 17 / backend 21.
 **المراجعة (c — `accessibilityLabel`):** سكربت على `Pressable/Touchable*/Switch/TextInput` بـ`mobile/src`: 35 بلا label صريح — 27 زرّاً بابن `<Text>` ظاهر (يُقرأ تلقائياً)، 6 مراجع `useRef<TextInput>`، و`TradeJournalPanel.tsx:1995` له `journalNoteA11y` (إيجابي كاذب من `>` بتعليق). **لا بند جديد.**
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة بين الملفات.
+
+## 2026-09-25 — الدورة 64
+**البناء:** أخضر 0 (بعد e1d8205) — لا إصلاح لازم. **Selftests:** 99/99 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** chart-r47 ← tools (`093e1b5`، `TerminalScreen.tsx:964 :1516-1521 :1674-1679` نصّ `chartFirstLoad` ظاهر + label)؛ ملاحظة launch119 ← tools
+(`e86abca`، `offlineFrame` `:110-118` ⇒ `candles: []` + `not_offered_by_provider`، البطل محروس `:962`). صفّ launch119 القديم (`04d9188`) حُذف. backend-r19/ui16 دُمج بـui18 (`api.ts:98-99` ما زال `number`).
+**مفتوح بعد التحقّق:** ui18 → chart؛ launch120 الإشعار → ui (`ProviderUnavailableNotice.tsx:25`)؛ launch120 الفريم الخام → tools/ui/chart (`TerminalScreen.tsx:964`، `QuadChartModal.tsx:398 :402`، `MatrixChart.tsx:5983`).
+لا طلبات تنسيق جديدة بسجلات chart 47 / tools 79 / launch 119 / ui 18 / backend 22.
+**المراجعة (d — أرقام متناقضة):** حدود `maxLength` بالتطبيق ↔ `Field(max_length)` بـ`main.py` (1000/2000/500/12/32) متطابقة؛ الفريمات الثمانية `timeframes.ts` ↔ `twelve_data.py:59-66` ↔ `alert_worker.py:111`؛
+`LIVE_ENTRY_MAX_AGE_MS` 3 د = `LIVE_MAX_AGE` 180 ث (`TICK_STALE_MS` 20 ث مفهوم آخر: انقطاع البثّ). **لا بند جديد.**
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
+**إلحاق (تعارض عند الدفع):** وصل chart `4874d20` (حُرّاس ui18) وbackend `8ff0a7c` (backend-r22) وlaunch 120. تحقّقتُ: قلبتُ `api.ts:98-99` إلى `number | null` مؤقتاً ⇒ tsc **0 أخطاء** ثم أعدته ⇒ ui18 صار سطرين لـui.
+backend-r22 حيّ ⇒ launch120 (الإشعار) صار **عاجلاً**: EURUSD وقت 429 يُعرض «غير متاح من مزوّد البيانات»؛ دُمج صفّ backend-r22 فيه. البناء بعد الدمج أخضر 0.
+**إلحاق 2 (تعارض ثانٍ):** وصل ui 19 (`20e7b46` الإشعار يفرّع `provider_unavailable`، `8025a34` قلب `api.ts`، `b8f1569` `{tf}` بالرباعي) وtools80 وchart `ff29997`. تحقّقتُ بالكود ⇒ أُغلق ui18 وlaunch120 (الإشعار، ضُمّ لـui19).
+مفتوح: ui19 **عاجل** → tools (`TerminalScreen.tsx:1510 :1668`) + chart (`MatrixChart.tsx:5998`) بلا `dataSource`؛ launch120 الفريم → tools/chart؛ tools80 → launch. البناء بعد الدمج أخضر 0.
