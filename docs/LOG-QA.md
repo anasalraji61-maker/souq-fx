@@ -499,3 +499,6 @@ tools61 وlaunch94 ردّ فقط.
 `USDJPY.mini`، `GER40.mini`، `.m`): `journalSpec`/`quoteSymbol`/`journalSymbol`/`isMiniJournalSymbol` متّسقة، `journalPnl` null لـmini، `.m` باقٍ عادياً. `recentLotSizes`
 يفصل mini بالاتجاهين. **جديد QA44 → tools (منخفض):** الحاسبة ترفض mini لكن تعرض `riskCalcBadSymbol` العامّ (مثاله «EURUSD.m») ⇒ نصّ خاصّ.
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
+**إلحاق (بعد e86bcf4):** وصلت `37eaee5`/`13b5b64` (tools) و`70e3ce9`/`5fc5dea`/`e86bcf4` (launch) — البناء أخضر 0 وselftests 86/86. tools62 (تحقّقتُ):
+`chartPipSpec` null لـ«EURUSD-MINI»/«_MINI» ⇒ دُمج بصفّ QA44 لـchart، ومفتاح نصّ mini لـlaunch؛ `main.py:1351-1363` احتياط `data_kind: "cache"` بلا `as_of` ⇒
+دُمج بصفّ كاش الخادم. launch: حزم Expo متأخّرة (RELEASE §0) ⇒ ⛔ 3 بـSTATUS.

@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 44، بعد 4578fcc) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 44، بعد e86bcf4) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -30,7 +30,7 @@
 | launch | chart | DeMarker 0..100 والمنصات 0..1 (قرار ⇒ أنس) | launch48 |
 | tools+launch+QA | الخادم | **spread مُختلَق** = السعر × 0.00008 (`twelve_data.py:316`) موسوم `provider`، يناقض `backtest.py:26-37`؛ يُزيح أسعار الدفتر (`tradePlan.ts:669 :741`) | tools13 ★ |
 | tools | الخادم | الحجم يُخزَّن 1 حين لا يُرسل (`backend/db.py:1704`) | 09-22 ★ |
-| tools | الخادم | كاش 30–60ث لـ`/api/market/quote` | 09-23 ★ |
+| tools | الخادم | كاش 30–60ث لـ`/api/market/quote`. **tools62 (تحقّقتُ)**: الاحتياط `main.py:1351-1363` يعيد `data_kind: "cache"` (حتى 15د) **بلا `as_of`** ⇒ الحاسبة تختمه «الآن» فلا يظهر تحذير «سعر التحويل قديم» ← إرجاع وقت الكاش | 09-23 ★ |
 | launch | الخادم/أنس | `openrouter_ai.py:71` «أنت خبير تداول» ويعطي دخول/وقف/هدف | launch9 ★ |
 | launch | أنس | `MessagesScreen` غير مستوردة (وحدها تستعمل `mockPeers`) — تُحذف أم تُربط؟ | launch52 |
 | QA | الخادم | **(d)** `main.py:1774` يقرّب الوقف/الهدف لخانتين إن السعر ≥50 ⇒ USDJPY/DXY تفقد خانة | QA4 ★ |
@@ -55,5 +55,5 @@
 | QA | tools | **(a) QA41، منخفض — القاعدة أُغلقت** (`a1fb55f`: `notifLang = resolveLang`). باقٍ الثابت `'matrix.lang.v1'` منسوخ (`notifications.ts:10`، `I18nContext.tsx:15`) ← تصدير واحد من `locales.ts` | QA41 |
 | chart | tools | **chart-r29 (تحقّقتُ)**: `TerminalScreen.tsx:762` `hit ?? { ...copy[index], timeframe: nextTf }` و`:790` (DXY) يُعيدان وسم شموع 15m بـ«1H» قبل وصول الجلب ⇒ `ChartFrame` يُنهي التعتيم فوراً والتيكات تُدمج بشمعة 15m مغلقة ← `hit ?? copy[index]` / `hit ?? prev` | chart-r29 |
 | launch | بلا مالك | **launch93 (e)**: `WeeklyReportPanel.tsx:46` تعليمة `matrix_advice` ما زالت «ما رأيك… 5 نصائح… مرتبطة بالدولار والذهب والأزواج» (تحقّقتُ) ⇒ النموذج قد يعطي اتجاه سوق تحت عنوان «ملاحظات للأسبوع القادم» ← «5 ملاحظات انضباط وإدارة مخاطر، بلا اتجاه ولا مستويات» | launch93 |
-| QA | tools | **(d) QA44، منخفض**: `aa19298` يرفض «EURUSD.mini» بالحاسبة (`MINI_SUFFIX`) لكن `PositionSizePanel.tsx:1195` يعرض `riskCalcBadSymbol` العامّ «رمز غير مدعوم… مثل EURUSD أو EURUSD.m» ⇒ المتداول يرى زوجه مرفوضاً ومثالاً شبه مطابق بلا سبب. ← نصّ خاصّ (مثل `riskCalcMicroModeNote`): «حجم لوت mini يختلف بين الوسطاء — اكتب الزوج العادي واقسم/اضرب بعقد حسابك» | QA44 |
+| QA+tools | launch (نصّ) + chart | **mini — بقايا `aa19298`**: (1) **(d) QA44، منخفض**: الحاسبة ترفض «EURUSD.mini» لكن `PositionSizePanel.tsx:1195` يعرض `riskCalcBadSymbol` العامّ «رمز غير مدعوم… مثل EURUSD.m» بلا سبب ⇒ مفتاح `locales.ts` خاصّ («حجم لوت mini يختلف بين الوسطاء — اكتب الزوج العادي») للحاسبة والدفتر (tools62: `locales.ts` ليس بنطاقه). (2) **tools62 → chart (تحقّقتُ بـ`tsx`)**: `chartPipSpec` (`chart/pipSpec.ts:13`) = null لـ«EURUSD-MINI»/«EURUSD_MINI» ويعمل لـ«.mini» ⇒ `?? instrumentSpec(miniAccountSymbol(t) ?? '')` | QA44 |
 **تحقّق الدورة 44 (بالكود):** مراجعة (d) لـ`aa19298`/`4578fcc` (mini) بـ`tsx`: `journalSpec`/`quoteSymbol`/`isMiniJournalSymbol` متّسقة لـ`.mini`/`mini`/`-MINI`/`GOLD_mini`، المال null، `GER40.mini` ⇒ سعر GER40 بلا نقاط كـGER40 — سليم؛ بند واحد (QA44). **بلا تغيير:** `Alert.alert` 10؛ «₴» ×2؛ `FocusChartModal:56` `BASES`؛ `TerminalScreen:762 :790`؛ `matrix.lang.v1` ×2؛ `BRENT/USD`؛ `TimeframeBar`؛ `WeeklyReportPanel:46`.
