@@ -947,6 +947,6 @@ ui45 ← `ed917cd`؛ backend-r47→launch ← `65aeaea`. قائم: chart-r65 →
 **التحقّق بالكود:** chart-r66 ← tools `f03b726` (`TerminalScreen.tsx:159-169` `fetchSeries` يعيد الحقيقي المخزَّن للردّ التجريبي، فيشمل كل المستدعين)؛ launch144 ← ui `578f60c` (`AccountScreen.tsx:146`).
 سجلات chart 66 / tools 98 / ui 49 / launch 144 / backend 49: بلا طلب جديد؛ حُوّل تكرار tools «مفتاح تحذير سبريد بمنزلتين» (منذ 93) إلى صفّ → launch.
 **قائمة قبول DESIGN-PRO (الرابع):** 0/12 فشل (diff منذ 0a88ab9: لا وزن ≥700 جديد، مسافتان خارج 4 بهندسة وسوم chart مقبولة، لا حدّ+خلفية+ظلّ جديد).
-خارج القائمة: **QA84a → ui/tools** §2: 131 `fontSize` < 11 في 34 ملفّاً (`TerminalScreen.tsx:2244` 7px، `WatchlistPanel.tsx:700` سعر 10px بدل 15).
+خارج القائمة: **QA84a → ui/tools** §2: 131 `fontSize` < 11 في 34 ملفّاً (124/32 بعد سحب 8a597d5؛ أُعيد البناء أخضر 0) (`TerminalScreen.tsx:2244` 7px، `WatchlistPanel.tsx:700` سعر 10px بدل 15).
 **المراجعة (d — أرقام متناقضة):** حدود Pydantic بـ`main.py` = `maxLength` ونصوص `regErr*Length`؛ حدّا القلب بموضع واحد. **QA84b → chart (منخفض):** عرض حرف 11px مقدَّر 6.4/6.6/6.8 بثلاثة مواضع.
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ وإعادة قائمة DESIGN-PRO.
