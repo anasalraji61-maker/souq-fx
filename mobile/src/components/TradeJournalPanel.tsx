@@ -2039,7 +2039,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
                 }}
                 accessibilityLabel={t.journalSlAtPipsA11y.replace('{pips}', String(x.pips)).replace('{price}', x.text)}
               >
-                <Text style={[styles.qChipText, on ? styles.chipTextOn : { color: colors.bear }]}>{`−${x.pips} ${pipUnit(lang)}`}</Text>
+                {/* DESIGN-PRO §1: مسافة الوقف ليست اتجاه سعر — صفّ الشرائح محايد وقت السكون (كان كلّه أحمر) */}
+                <Text style={[styles.qChipText, on && styles.chipTextOn]}>{`−${x.pips} ${pipUnit(lang)}`}</Text>
               </Pressable>
             );
           })}
