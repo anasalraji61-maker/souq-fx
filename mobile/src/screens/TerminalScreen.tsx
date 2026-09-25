@@ -170,7 +170,13 @@ export function TerminalScreen() {
 
   const [symbol, setSymbol] = useState('EURUSD');
   const [tf, setTf] = useState<Timeframe>('15m');
-  const [series, setSeries] = useState<ChartSeries | null>(null);
+  // الشموع موسومة بـ(الرمز|الفريم) الذي جُلبت له: ردٌّ متأخر لرمز سابق (↺/السحب بلا حارس، تبديل بلا ذاكرة) كان يُعرض
+  // تحت الرمز الجديد حتى الجلب التالي (90ث) — شموع EURUSD وسعرها ونسبتها تحت USDJPY. الآن ما لا يطابق = لا شموع.
+  const [chart, setChart] = useState<{ key: string; s: ChartSeries } | null>(null);
+  const chartKey = `${symbol}|${tf}`;
+  const chartKeyRef = useRef(chartKey);
+  chartKeyRef.current = chartKey;
+  const series = chart && chart.key === chartKey ? chart.s : null;
   const [refreshing, setRefreshing] = useState(false);
   const [online, setOnline] = useState(false);
   const [quote, setQuote] = useState<{ bid: number | null; ask: number | null } | null>(null);
@@ -632,14 +638,16 @@ export function TerminalScreen() {
 
   const loadChart = useCallback(
     async (sym: string, timeframe: Timeframe, isStale?: () => boolean) => {
+      const key = `${sym}|${timeframe}`;
+      const stale = () => isStale?.() === true || chartKeyRef.current !== key;
       try {
         const s = await fetchSeries(sym, timeframe);
-        if (isStale?.()) return;
-        setSeries(s);
+        if (stale()) return;
+        setChart({ key, s });
         setOnline(true);
       } catch {
-        if (isStale?.()) return;
-        setSeries(cachedSeries(sym, timeframe) ?? mockSeries(sym, BASES[sym] ?? 1, timeframe, 180));
+        if (stale()) return;
+        setChart({ key, s: cachedSeries(sym, timeframe) ?? mockSeries(sym, BASES[sym] ?? 1, timeframe, 180) });
         setOnline(false);
       }
     },
@@ -659,7 +667,7 @@ export function TerminalScreen() {
   useEffect(() => {
     let alive = true;
     const hit = cachedSeries(symbol, tf);
-    if (hit) setSeries(hit);
+    if (hit) setChart({ key: `${symbol}|${tf}`, s: hit });
     void loadChart(symbol, tf, () => !alive);
     const id = setInterval(() => void loadChart(symbol, tf, () => !alive), 90_000);
     return () => {
@@ -1552,7 +1560,7 @@ export function TerminalScreen() {
               </View>
               <View style={styles.desktopOhlc}>
                 <Text style={styles.desktopOhlcLabel}>{t.priceWord}</Text>
-                <Text style={styles.desktopOhlcValue}>{formatPrice(price, symbol)}</Text>
+                <Text style={styles.desktopOhlcValue}>{price > 0 ? formatPrice(price, symbol) : '—'}</Text>
                 {(() => {
                   // كان `(change_pct ?? 0) >= 0` يطبع «+0.00%» أخضر لسالب الصفر ولأي حركة دون 0.005%،
                   // و«+0.00%» أخضر كذلك **بلا بيانات أصلاً** (السلسلة لم تصل)، ويطبع نسبة السلسلة
