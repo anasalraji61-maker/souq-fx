@@ -1185,7 +1185,8 @@ export type Dict = {
    * `sigLevels*` — `levels: null` مع `levels_basis.unavailable` = `no_live_price` | `not_enough_candles` | `neutral`؛
    * `journalStatBreakeven` — `stats.breakeven_count` (التعادل ليس خسارة ولا يدخل نسبة النجاح)؛
    * `journalShownOfTotal`/`journalLoadOlder` — `/api/trades` `total`/`limit`/`offset` بدل `journalCappedNote`؛
-   * `journalSizeUnknown` — `size: null` (لم يُكتب حجم).
+   * `journalSizeUnknown` — `size: null` (لم يُكتب حجم)؛
+   * `journalLoadOlderError` — فشل «تحميل الأقدم» (tools69): الزرّ نفسه يعيد المحاولة والقائمة المعروضة سليمة، لذلك لا «غادر وارجع» كـ`journalLoadError`.
    */
   calendarUnavailable: string;
   originUnavailableProvider: string;
@@ -1196,6 +1197,7 @@ export type Dict = {
   journalShownOfTotal: string;
   journalLoadOlder: string;
   journalSizeUnknown: string;
+  journalLoadOlderError: string;
   /**
    * backend-r2: لا مصدر مرخَّص للمحلّلين ولا لقنوات التواصل — `/api/signals/analysts/*` و`/social/consensus` يعيدان
    * `status: "unavailable"`، `unavailable_reason: "no_licensed_feed"`، `direction`/`levels` = null. يُعرض النصّ بدل القائمة
@@ -2371,6 +2373,7 @@ const ar: Dict = {
   journalShownOfTotal: 'معروضة {shown} من {total} صفقة — الإحصاءات على الكل',
   journalLoadOlder: 'تحميل الأقدم',
   journalSizeUnknown: 'الحجم غير مسجَّل',
+  journalLoadOlderError: 'تعذّر تحميل الصفقات الأقدم — تحقّق من الاتصال واضغط «تحميل الأقدم» مجدداً. ما يظهر أمامك لم يتغيّر.',
   analystsUnavailable: 'لا مصدر مرخَّص لتوقعات المحللين بعد — لذلك لا نعرض اتجاهاً ولا أهدافاً بدل أن نخترعها',
   socialUnavailable: 'لا مصدر مرخَّص لتوصيات القنوات بعد — لذلك لا نعرض إجماعاً ولا صفقة مقترحة بدل أن نخترعهما',
   riskCalcConvInverted: '«{typed}» لا يصلح سعراً لـ{pair} — يبدو مقلوباً (1 ÷ السعر). على الأرجح قصدتَ {likely}؛ اكتبه كما تراه بمنصّتك.',
@@ -3518,6 +3521,7 @@ const enUS: Dict = {
   journalShownOfTotal: 'Showing {shown} of {total} trades — stats cover all of them',
   journalLoadOlder: 'Load older',
   journalSizeUnknown: 'Size not recorded',
+  journalLoadOlderError: 'Couldn\'t load older trades — check your connection and tap “Load older” again. The trades already shown are unchanged.',
   analystsUnavailable: "No licensed source for analyst forecasts yet — so we show no direction or targets rather than make them up",
   socialUnavailable: "No licensed source for channel tips yet — so we show no consensus or suggested trade rather than make them up",
   riskCalcConvInverted: '"{typed}" can\'t be the {pair} rate — it looks inverted (1 ÷ the price). You likely meant {likely}; type it as your platform shows it.',
@@ -4691,6 +4695,7 @@ const ku: Dict = {
   journalShownOfTotal: '{shown} لە {total} مامەڵە پیشان دراوە — ئامارەکان هەموویان دەگرنەوە',
   journalLoadOlder: 'بارکردنی کۆنترەکان',
   journalSizeUnknown: 'قەبارە تۆمار نەکراوە',
+  journalLoadOlderError: 'بارکردنی مامەڵە کۆنترەکان سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە «بارکردنی کۆنترەکان» دابگرە. ئەوەی لەبەردەمتە نەگۆڕاوە.',
   // بحاجة مراجعة ناطق كردي (الثلاثة أدناه)
   analystsUnavailable: 'هێشتا سەرچاوەیەکی مۆڵەتدار بۆ پێشبینییەکانی شیکەرەوان نییە — بۆیە ئاراستە و ئامانج پیشان نادەین لەجیاتی ئەوەی دایانبهێنین',
   socialUnavailable: 'هێشتا سەرچاوەیەکی مۆڵەتدار بۆ ڕاسپاردەکانی کەناڵەکان نییە — بۆیە کۆدەنگی و مامەڵەی پێشنیارکراو پیشان نادەین لەجیاتی ئەوەی دایانبهێنین',
