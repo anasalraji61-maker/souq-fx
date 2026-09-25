@@ -1,4 +1,5 @@
 import type { Candle } from '../api';
+import type { SyntheticBar } from './types';
 
 /**
  * متوسط مدى الشموع **المغلقة** — الشمعة الحيّة (الأخيرة) خارجه: مداها يكبر مع كل تيك فكان الصندوق يتغيّر
@@ -12,44 +13,53 @@ function avgRange(candles: Candle[]): number {
 }
 
 /**
- * Range bars — كل شمعة تمثّل مدى سعري ثابت وليس فترة زمنية ثابتة كباقي الأطر: تُغلق الشمعة
- * الحالية ويبدأ سطر جديد فور أن يتجاوز مدى (أعلى − أدنى) التراكمي منذ فتحها قيمة box، بعكس
- * Renko الذي يقفز بمسافة صندوق ثابتة من الفتح بلا فتيل حقيقي — Range يحافظ على أعلى/أدنى
- * فعليين (فتيل حقيقي) داخل كل شمعة، والفوليوم يتراكم من كل الشموع الأصلية داخل الشمعة الواحدة.
+ * Range bars كـTradingView: **كل شمعة مغلقة بمدى الصندوق بالضبط** (أعلى − أدنى = box) وتُغلق عند طرفها،
+ * والتالية تفتح من إغلاقها. كانت الشمعة تُغلق حين يتجاوز مداها التراكمي الصندوق فتحمل التجاوز كلّه:
+ * شمعة خبر بثلاثة صناديق = شمعة Range واحدة بثلاثة أضعاف الطول — وتساوي الأطوال هو ما يُقرأ في Range.
+ * مسار السعر داخل الشمعة الأصلية تقريبٌ معتاد: صاعدة فتح→أدنى→أعلى→إغلاق، هابطة فتح→أعلى→أدنى→إغلاق،
+ * فحركة بعدّة صناديق تولّد عدّة شموع. `time` مختلَق (+60 ث لكل شمعة، كـRenko) لأن شمعة أصلية واحدة قد
+ * تعطي عدّة شموع، و`srcTime` زمن الشمعة الأصلية التي فتحتها.
  */
 export function rangeBars(candles: Candle[], boxSize?: number): Candle[] {
   if (candles.length < 2) return candles;
   const box = boxSize ?? avgRange(candles) * 1.5;
-  const out: Candle[] = [];
+  const out: SyntheticBar[] = [];
   let open = candles[0].open;
-  let high = candles[0].high;
-  let low = candles[0].low;
-  let close = candles[0].close;
-  let vol = candles[0].volume ?? 0;
+  let high = open;
+  let low = open;
+  let cur = open;
+  let vol = 0;
   let t = candles[0].time;
-  /** شموع أصلية دخلت الشمعة الجارية منذ آخر إغلاق — غير صفر ⇒ شمعة تتكوّن. */
-  let pending = 1;
+  let src = candles[0].time;
 
-  for (let i = 1; i < candles.length; i++) {
-    const c = candles[i];
-    high = Math.max(high, c.high);
-    low = Math.min(low, c.low);
-    close = c.close;
-    vol += c.volume ?? 0;
-    pending += 1;
-    if (high - low >= box) {
-      out.push({ time: t, open, high, low, close, volume: vol });
-      open = close;
-      high = close;
-      low = close;
-      vol = 0;
-      t = c.time;
-      pending = 0;
+  const close = (at: number, c: Candle) => {
+    out.push({ time: t, open, high: Math.max(high, at), low: Math.min(low, at), close: at, volume: vol, srcTime: src });
+    t += 60;
+    src = c.time;
+    open = high = low = cur = at;
+    vol = 0;
+  };
+  // يحرّك السعر إلى `target` ويغلق شمعة كلما بلغ المدى الصندوق (هامش 1e-9 من الصندوق لخطأ الجمع العشري).
+  const moveTo = (target: number, c: Candle) => {
+    const eps = box * 1e-9;
+    for (let guard = 0; guard < 100000; guard++) {
+      if (target > cur && target >= low + box - eps) close(low + box, c);
+      else if (target < cur && target <= high - box + eps) close(high - box, c);
+      else break;
     }
+    high = Math.max(high, target);
+    low = Math.min(low, target);
+    cur = target;
+  };
+
+  for (const c of candles) {
+    const bull = c.close >= c.open;
+    for (const p of bull ? [c.open, c.low, c.high, c.close] : [c.open, c.high, c.low, c.close]) moveTo(p, c);
+    vol += c.volume ?? 0;
   }
-  // الشمعة التي تتكوّن (لم تبلغ الصندوق بعد) كـTradingView: كانت تُرمى فيقف الشارت عند آخر شمعة مغلقة
+  // الشمعة التي تتكوّن (تحرّك السعر منذ فتحها ولم يبلغ الصندوق) كـTradingView: كانت تُرمى فيقف الشارت عند آخر شمعة مغلقة
   // بينما وسم السعر الحيّ يطبع سعراً أبعد، والتقاطع وصندوق الشراء/البيع لا يريان الحركة الجارية.
-  if (out.length && pending > 0) out.push({ time: t, open, high, low, close, volume: vol });
+  if (out.length && high > low) out.push({ time: t, open, high, low, close: cur, volume: vol, srcTime: src });
 
   return out.length ? out : candles;
 }

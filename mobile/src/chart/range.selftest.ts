@@ -37,7 +37,21 @@ const hist = Array.from({ length: 30 }, (_, i) =>
 );
 const before = rangeBars([...hist, c(30, 1.2, 1.25, 1.15, 1.2)]);
 const after = rangeBars([...hist, c(30, 1.2, 6, 1.15, 1.2)]);
-ok('الحيّة لا تغيّر الشموع المغلقة', before.slice(0, -1).map((b) => b.close).join() === after.slice(0, -1).map((b) => b.close).join());
+// المقارنة على الشموع التي أُغلقت قبل الحيّة (التالية لها فُتحت قبلها) — الحيّة نفسها تولّد شموعاً الآن.
+const closedBefore = (bs: Candle[]) =>
+  bs.filter((_, i) => bs[i + 1] != null && (bs[i + 1] as { srcTime?: number }).srcTime! < 30).map((b) => b.close).join();
+ok('الحيّة لا تغيّر الشموع المغلقة', closedBefore(before) !== '' && closedBefore(before) === closedBefore(after));
+
+// كل شمعة مغلقة بمدى الصندوق بالضبط: شمعة أصلية من 1 إلى 4.5 (3.5 صندوق) ⇒ ثلاث شموع بطول 1 وتتكوّن بنصف.
+const big = rangeBars([c(1, 1, 1.2, 1, 1.1), c(2, 1.1, 4.5, 1.1, 4.5)], 1);
+ok('ثلاث مغلقة + تتكوّن', big.length === 4);
+ok('المغلقة بطول الصندوق', big.slice(0, 3).every((b) => Math.abs(b.high - b.low - 1) < 1e-9));
+ok('تُغلق عند طرفها', big.slice(0, 3).every((b) => b.close === b.high));
+ok('التالية تفتح من إغلاق السابقة', big[1]!.open === big[0]!.close && big[3]!.open === big[2]!.close);
+ok('الأزمنة متزايدة', big.every((b, i) => i === 0 || b.time > big[i - 1]!.time));
+// هابطة: فتح→أعلى→أدنى→إغلاق — الشمعة تُغلق عند أدنى طرفها.
+const down = rangeBars([c(1, 3, 3, 2.9, 2.95), c(2, 2.95, 2.95, 0.5, 0.5)], 1);
+ok('هابطة: تُغلق عند الأدنى', down[0]!.close === down[0]!.low && Math.abs(down[0]!.high - down[0]!.low - 1) < 1e-9);
 
 if (failures) {
   console.error(`range.selftest: ${failures} FAIL`);
