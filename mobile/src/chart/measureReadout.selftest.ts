@@ -215,6 +215,9 @@ ok('فجوة الإثنين بالنقاط', measurePipsText('EURUSD', barChange
 
 // ── وحدة النقاط بلغة الواجهة (QA15): الإنجليزية «pips» كنصوص الدفتر والحاسبة
 ok('pipUnit en', pipUnit('en') === 'pips');
+ok('pipUnit en-US/en-GB (LangId الفعلي)', pipUnit('en-US') === 'pips' && pipUnit('en-GB') === 'pips');
+ok('قياس en-GB', measurePipsText('EURUSD', 1.08, 1.0824, 'en-GB') === '+24.0 pips');
+ok('en-US 1 ⇒ bar', barsCountText(1, 'bars', 'en-US') === '1 bar');
 ok('pipUnit ar/ku/غائبة', pipUnit('ar') === 'pip' && pipUnit('ku') === 'pip' && pipUnit() === 'pip');
 ok('قياس إنجليزي', measurePipsText('EURUSD', 1.08, 1.0824, 'en') === '+24.0 pips');
 ok('قياس عربي', measurePipsText('EURUSD', 1.08, 1.0824, 'ar') === '+24.0 pip');

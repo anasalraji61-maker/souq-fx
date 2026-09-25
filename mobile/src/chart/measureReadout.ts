@@ -36,7 +36,15 @@ export type MeasureStats = { bars: number; diff: number; pct: number };
  * «+35.0 pip» بالإنجليزية بجوار «Net: 35.0 pips» بالدفتر (QA15). `lang` غائب ⇒ «pip» (السابق).
  */
 export function pipUnit(lang?: string): string {
-  return lang === 'en' ? 'pips' : 'pip';
+  return isEnglish(lang) ? 'pips' : 'pip';
+}
+
+/**
+ * لغة الواجهة إنجليزية؟ `LangId` هو «en-US»/«en-GB» لا «en» — المقارنة الحرفية بـ'en' لم تطابق أبداً،
+ * فالمتداول الإنجليزي كان يقرأ «+24.0 pip» و«1 bars».
+ */
+function isEnglish(lang?: string): boolean {
+  return lang === 'en' || !!lang?.startsWith('en-');
 }
 
 /** «+24.0 pip» أو `null` لأداة بلا مواصفة pip معروفة. */
@@ -138,7 +146,7 @@ export function barsCountText(
     if (n === 0 || (tail >= 3 && tail <= 10)) return `${n} ${word}`;
     return `${n} ${one}`;
   }
-  if (lang === 'en' && n === 1) return `1 ${forms?.one ?? 'bar'}`;
+  if (isEnglish(lang) && n === 1) return `1 ${forms?.one ?? 'bar'}`;
   return `${n} ${word}`;
 }
 
