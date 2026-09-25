@@ -176,3 +176,30 @@ def test_closed_candles_drops_only_an_unfinished_last_bar():
     assert backtest.closed_candles(cs, 900, 2000) == cs[:2]   # الأخيرة تنتهي 2700
     assert backtest.closed_candles(cs, 900, 2700) == cs       # انتهت بالضبط
     assert backtest.closed_candles([], 900, 0) == []
+
+
+def test_max_drawdown_measures_from_the_peak_inside_a_trade():
+    # صعدت +10% (إغلاق شمعة) ثم أُغلقت +1% بلا نزول تحت الدخول: كانت «أقصى هبوط 0%»
+    t = {"pnl_pct": 1.0, "mae_pct": 0.0, "entry": 1.0, "_path": [(0.0, 5.0), (4.0, 10.0), (1.0, 1.0)]}
+    st = backtest._stats([t])[0]
+    assert st["max_drawdown_pct"] == round((110 - 101) / 110 * 100, 2)  # 8.18
+    assert st["total_return_pct"] == 1.0
+
+
+def test_max_drawdown_includes_the_open_position():
+    # صفقتان رابحتان مغلقتان ثم مركز مفتوح −20%: كانت «أقصى هبوط 0%»
+    closed = [_t(1.0), _t(1.0)]
+    open_t = {**_t(-20.0), "open": True, "mae_pct": -20.0}
+    st = backtest._stats(closed + [open_t])[0]
+    assert st["max_drawdown_pct"] == 20.0
+    assert st["total_return_pct"] == round(101 * 1.01 - 100, 2)  # المفتوح خارج العائد كما كان
+    assert st["open_pnl_pct"] == -20.0
+
+
+def test_run_backtest_drawdown_is_bar_by_bar_and_path_is_not_returned():
+    c = _candles()
+    res = backtest.run_backtest(c, "ma_cross", spread=0.0001)
+    assert all("_path" not in t for t in res["trades"])
+    # على المنحنى المقوَّم شمعةً شمعة ≥ القاع/الإغلاق وحدهما
+    trades = [{k: v for k, v in t.items()} for t in res["trades"]]
+    assert res["stats"]["max_drawdown_pct"] >= backtest._stats(trades)[0]["max_drawdown_pct"]

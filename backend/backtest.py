@@ -68,8 +68,10 @@ def _stats(trades: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str,
     - **المركز المفتوح بآخر شمعة ليس صفقة منتهية**: كان يُقوَّم بآخر إغلاق ويدخل نسبة الفوز والعائد ورأس
       المال كأنه أُغلق — ربح/خسارة غير محقّقة بشكل نتيجة. الآن الإحصاء على المغلقة وحدها، والمفتوح
       بـ`open_pnl_pct` (None إن لا مركز) كـ«الربح المفتوح» بمختبر استراتيجيات TradingView.
-    - **`max_drawdown_pct` يشمل القاع داخل كل صفقة مغلقة** (`mae_pct`)، لا نقاط الإغلاق وحدها."""
-    open_pnl = next((t["pnl_pct"] for t in trades if t.get("open")), None)
+    - **`max_drawdown_pct` على منحنى مقوَّم بسعر السوق شمعةً شمعة** (قمم الإغلاق داخل الصفقات، وأسوأ نقطة بكل
+      شمعة، والمركز المفتوح) لا نقاط إغلاق الصفقات وحدها."""
+    open_t = next((t for t in trades if t.get("open")), None)
+    open_pnl = open_t["pnl_pct"] if open_t else None
     trades = [t for t in trades if not t.get("open")]
     wins = [t["pnl_pct"] for t in trades if t["pnl_pct"] > 0]
     losses = [t["pnl_pct"] for t in trades if t["pnl_pct"] < 0]
@@ -79,17 +81,29 @@ def _stats(trades: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str,
     curve = [{"i": 0, "equity": equity}]
     peak = equity
     max_dd = 0.0
+
+    def walk(t: dict[str, Any], base: float) -> None:
+        """يمرّ على مسار صفقة مقوَّمة بسعر السوق شمعةً شمعة (`_path` من `run_backtest`): القمّة تشمل إغلاقات
+        الشموع **داخل** الصفقة، والقاع أسوأ نقطة بكل شمعة. كان القمّة تُحدَّث عند الإغلاقات وحدها ⇒ صفقة صعدت
+        +10% ثم أُغلقت +1% تُعرض «أقصى هبوط 0%» والهبوط الفعلي من القمّة ~8%. (قمم الشموع لا تُعدّ قمّة: ترتيب
+        القمّة والقاع داخل الشمعة مجهول.) صفقة بلا مسار (نداء قديم) = `mae_pct` ثم الإغلاق."""
+        nonlocal peak, max_dd
+        path = t.get("_path") or [(min(t.get("mae_pct", t["pnl_pct"]), t["pnl_pct"]), t["pnl_pct"])]
+        for adverse, close in path:
+            max_dd = max(max_dd, (peak - base * (1 + adverse / 100)) / peak * 100)
+            mark = base * (1 + close / 100)
+            max_dd = max(max_dd, (peak - mark) / peak * 100)
+            peak = max(peak, mark)
+
     for j, t in enumerate(trades):
-        # القاع **داخل** الصفقة قبل إغلاقها: كان الهبوط يُقاس على الإغلاقات وحدها ⇒ خمس صفقات كلّ منها
-        # نزلت 8% ثم أُغلقت +1% تُعرض «أقصى هبوط 0%» — مخاطرة لم يرها المتداول. كـ«أقصى هبوط» بمختبر
-        # TradingView. صفقة بلا `mae_pct` (نداء قديم) = الإغلاق وحده.
-        trough = equity * (1 + min(t.get("mae_pct", t["pnl_pct"]), t["pnl_pct"]) / 100)
+        walk(t, equity)
         equity *= 1 + t["pnl_pct"] / 100
-        max_dd = max(max_dd, (peak - trough) / peak * 100 if peak else 0)
+        max_dd = max(max_dd, (peak - equity) / peak * 100)
         peak = max(peak, equity)
-        dd = (peak - equity) / peak * 100 if peak else 0
-        max_dd = max(max_dd, dd)
         curve.append({"i": j + 1, "equity": round(equity, 2)})
+    # المركز المفتوح يدخل أقصى هبوط (خسارته غير المحقّقة مخاطرة قائمة، كمختبر TradingView) لا العائد ولا نسبة الفوز
+    if open_t:
+        walk(open_t, equity)
 
     stats = {
         "trade_count": len(trades),
@@ -157,6 +171,12 @@ def run_backtest(
             (highs[k] for k in span), default=exit_price)
         pnl = sgn * (exit_price - entry_price) / entry_price * 100
         mae = min(pnl, sgn * (worst - entry_price) / entry_price * 100)
+        # مسار الصفقة شمعةً شمعة (أسوأ نقطة بالشمعة، الإغلاق) كنسب — لأقصى هبوط بـ`_stats` ثم يُحذف من الردّ
+        path = [
+            (sgn * ((lows[k] if sgn > 0 else highs[k]) - entry_price) / entry_price * 100,
+             sgn * (closes[k] - entry_price) / entry_price * 100)
+            for k in span
+        ]
         t: dict[str, Any] = {
             "side": position,
             "entry": entry_price,
@@ -165,6 +185,7 @@ def run_backtest(
             "mae_pct": round(mae, 3),
             "entry_time": times[entry_i],
             "exit_time": times[exit_i],
+            "_path": path,
         }
         if still_open:
             t["open"] = True
@@ -230,8 +251,11 @@ def run_backtest(
             cost = spread / t["entry"] * 100
             t["pnl_pct"] = round(t["pnl_pct"] - cost, 3)
             t["mae_pct"] = round(t["mae_pct"] - cost, 3)
+            t["_path"] = [(a - cost, c - cost) for a, c in t["_path"]]
 
     stats, curve = _stats(trades)
+    for t in trades:
+        t.pop("_path", None)
     return {
         "strategy": strategy,
         "trades": trades[-40:],
