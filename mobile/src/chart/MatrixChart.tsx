@@ -13770,14 +13770,14 @@ const styles = StyleSheet.create({
   collapsedCount: {
     ...numeric,
     color: colors.textMuted,
-    fontSize: 9,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '500',
   },
   collapsedNames: {
     flex: 1,
     color: colors.textDim,
-    fontSize: 9,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '500',
   },
   /** الشريط القابل للضغط: حدّ تيل خفيف يميّزه عن الشريط الإخباري الصامت. */
   collapsedBarTappable: {
@@ -13796,8 +13796,9 @@ const styles = StyleSheet.create({
   collapsedPage: {
     ...numeric,
     color: colors.text,
-    fontSize: 9,
-    fontWeight: '600',
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '500',
   },
   dock: {
     marginTop: 4,

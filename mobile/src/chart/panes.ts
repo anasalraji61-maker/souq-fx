@@ -271,8 +271,8 @@ export const PANE_PRIORITY: readonly string[] = [
 export const MIN_PANE_H = 34;
 /** أكبر ارتفاع للوحة — فوقه تهدر مساحةَ السعر بلا فائدة. */
 export const MAX_PANE_H = 48;
-/** ارتفاع شريط المطويّات. */
-export const COLLAPSED_BAR_H = 16;
+/** ارتفاع شريط المطويّات — سطر 11px (DESIGN-PRO §2) + شارة الصفحة بحشوتها وحدّ الشريط. */
+export const COLLAPSED_BAR_H = 20;
 
 /**
  * فجوة اللوحة = فجوة الجذر الفعلية: `styles.root` بـ`gap: 6` و`rootDense` بـ`gap: 0`.
