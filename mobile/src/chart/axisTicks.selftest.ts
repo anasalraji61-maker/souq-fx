@@ -13,6 +13,8 @@ import {
   nicePriceTicks,
   niceTimeTickIndexes,
   niceLogPriceTicks,
+  percentScaleTicks,
+  formatScalePercent,
 } from './axisTicks';
 
 const TIME_GAP = 6;
@@ -312,4 +314,22 @@ console.log('axisTicks.selftest: PASS');
   const small = niceLogPriceTicks(0.0001, 0.01, 5, 0.000001);
   assert.ok(small.length >= 3 && small.every((p) => p >= 0.0001 && p <= 0.01), `small: ${small}`);
   console.log('niceLogPriceTicks PASS');
+}
+
+// مقياس النسبة: EURUSD 1.0800..1.0854 (0..+0.5%) بحدّ 6 ⇒ خطوات 0.1% مستديرة بالنسبة، والسعر المقابل على الأساس.
+{
+  const t = percentScaleTicks(1.08, 1.0854, 1.08, 6);
+  assert.deepEqual(t.map((x) => x.label), ['0.00%', '+0.10%', '+0.20%', '+0.30%', '+0.40%', '+0.50%']);
+  assert.ok(Math.abs(t[1]!.price - 1.08108) < 1e-9);
+  // تحت الأساس ⇒ ناقص حقيقي.
+  const d = percentScaleTicks(1.0746, 1.08, 1.08, 6);
+  assert.equal(d[0]!.label, '−0.50%');
+  // مدى 5د ضيّق (0.012%) ⇒ ثلاث منازل لا علامات مكرّرة.
+  const n = percentScaleTicks(1.08, 1.08013, 1.08, 5);
+  assert.equal(new Set(n.map((x) => x.label)).size, n.length);
+  assert.ok(n.some((x) => x.label === '+0.005%'), JSON.stringify(n));
+  assert.deepEqual(percentScaleTicks(1, 2, 0, 5), []);
+  assert.equal(formatScalePercent(-0.0001), '0.00%');
+  assert.equal(formatScalePercent(1.234), '+1.23%');
+  console.log('percentScaleTicks OK');
 }

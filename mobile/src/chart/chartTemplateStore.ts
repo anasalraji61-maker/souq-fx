@@ -10,6 +10,8 @@ export type ChartTemplate = {
   indicators: IndicatorId[];
   pineFormula: string;
   logScale: boolean;
+  /** مقياس النسبة — اختياري: قوالب محفوظة قبله تُقرأ بلا نسبة. */
+  percentScale?: boolean;
   magnet: boolean;
 };
 

@@ -60,6 +60,8 @@ import {
   axisTickRatios,
   nicePriceTicks,
   niceLogPriceTicks,
+  percentScaleTicks,
+  formatScalePercent,
   niceTimeTickIndexes,
   axisShowsHours,
   layoutAxisLabels,
@@ -1408,6 +1410,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [replayStep, setReplayStep] = useState(15);
   const [replayPlaying, setReplayPlaying] = useState(false);
   const [logScale, setLogScale] = useState(false);
+  /** مقياس النسبة (كـTradingView «Percent»): المحور يقرأ التغيّر عن أول شمعة ظاهرة — يستبعد اللوغاريتمي. */
+  const [percentScale, setPercentScale] = useState(false);
   const [magnet, setMagnet] = useState(true);
   // طرفا آخر قياس لا نصّه: النصّ المجمَّد كان **لا يُمسح أبداً** — بعد قياس واحد يحلّ محلّ
   // سطر OHLC للتقاطع ويُخفي زرّ 🔔 للأبد، ويبقى pip اليورو مكتوباً فوق شارت الين بعد
@@ -2146,6 +2150,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       setPineFormula(tpl.pineFormula || '');
       setPineOn(false);
       setLogScale(tpl.logScale);
+      setPercentScale(!tpl.logScale && tpl.percentScale === true);
       setMagnet(tpl.magnet);
     });
     return () => {
@@ -5228,6 +5233,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       indicators: extraInd,
       pineFormula,
       logScale,
+      percentScale,
       magnet,
     }).then(() => {
       const err = getTemplatesSaveError();
@@ -5443,8 +5449,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     priceTickCap,
     Math.pow(10, -priceTickDecimals)
   );
-  const priceTicks = (
-    nicePrices.length
+  // مقياس النسبة: الأساس إغلاق أول شمعة ظاهرة، والعلامات مستديرة بالنسبة (`percentScaleTicks`).
+  const percentBase = percentScale && !logScale ? source.plot[0]?.close ?? null : null;
+  const percentTicks =
+    percentBase != null ? percentScaleTicks(priceTickLo, priceTickHi, percentBase, priceTickCap) : [];
+  const priceTicks: { ratio: number; price: number; label?: string }[] = (
+    percentTicks.length
+      ? percentTicks.map((t) => ({ ratio: (priceFrame.max - toScale(t.price)) / priceFrame.span, price: t.price, label: t.label }))
+      : nicePrices.length
       ? nicePrices.map((price) => ({ ratio: (priceFrame.max - toScale(price)) / priceFrame.span, price }))
       : axisTickRatios(priceTickCap).map((ratio) => ({
           ratio,
@@ -6081,9 +6093,28 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 logScale && styles.replayOn,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
               ]}
-              onPress={() => setLogScale((v) => !v)}
+              onPress={() => {
+                setLogScale((v) => !v);
+                setPercentScale(false);
+              }}
             >
               <Text style={[styles.zoomText, logScale && styles.replayTextOn]}>Log</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={tr.mcPercentScaleA11y}
+              accessibilityState={{ selected: percentScale }}
+              style={({ pressed }) => [
+                styles.zoomBtn,
+                percentScale && styles.replayOn,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
+              onPress={() => {
+                setPercentScale((v) => !v);
+                setLogScale(false);
+              }}
+            >
+              <Text style={[styles.zoomText, percentScale && styles.replayTextOn]}>%</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -8496,7 +8527,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               minimumFontScale={0.8}
               style={[styles.priceAxisLabel, { top: priceTickBoxes[i].start }]}
             >
-              {fmtPrice(tick.price)}
+              {tick.label ?? fmtPrice(tick.price)}
             </Text>
           )
         )}
@@ -8510,7 +8541,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           >
             <Text style={styles.currentPriceText}>
               {offMark(currentPriceOff)}
-              {fmtPrice(currentPrice)}
+              {percentBase != null && percentBase > 0
+                ? formatScalePercent((currentPrice / percentBase - 1) * 100)
+                : fmtPrice(currentPrice)}
             </Text>
             {showCountdown && lastRawBar ? (
               <BarCountdown

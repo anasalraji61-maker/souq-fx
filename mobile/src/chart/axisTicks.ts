@@ -306,3 +306,33 @@ export function niceTimeTickIndexes(
   }
   return finer ? thin(finer) : null;
 }
+
+/**
+ * مقياس النسبة المئوية (كـTradingView «Percent»): المحور يقرأ التغيّر عن إغلاق **أول شمعة ظاهرة** لا السعر،
+ * فيُقارَن مدى الحركة بين الأزواج والفريمات بلا حساب. الهندسة خطّية كما هي (النسبة تحويل خطّي للسعر) — ما
+ * يتغيّر العلامات ونصّها. الخطوات مستديرة **بالنسبة** (0.05%، 0.1%…) لا بالسعر، والمنازل من الخطوة نفسها
+ * (منزلتان على الأقلّ: شارت 5د لليورو يتحرّك 0.02%). أساس غير موجب ⇒ [] (يعود المستدعي لعلامات السعر).
+ */
+export function percentScaleTicks(
+  lo: number,
+  hi: number,
+  base: number,
+  maxCount: number
+): { price: number; label: string }[] {
+  if (!Number.isFinite(base) || base <= 0) return [];
+  const pLo = (lo / base - 1) * 100;
+  const pHi = (hi / base - 1) * 100;
+  const pcts = nicePriceTicks(pLo, pHi, maxCount, 0.001);
+  if (pcts.length === 0) return [];
+  const step = pcts.length > 1 ? pcts[1]! - pcts[0]! : 0.01;
+  const places = Math.min(3, Math.max(2, Math.ceil(-Math.log10(step) - 1e-9)));
+  return pcts.map((p) => ({ price: base * (1 + p / 100), label: formatScalePercent(p, places) }));
+}
+
+/** «+0.25%» / «−0.10%» / «0.00%» — علامة ناقص حقيقية كرأس الشارت (`formatPct`)، وصفر بلا إشارة. */
+export function formatScalePercent(pct: number, places = 2): string {
+  if (!Number.isFinite(pct)) return '—';
+  const r = Number(pct.toFixed(places));
+  if (r === 0) return `${(0).toFixed(places)}%`;
+  return `${r > 0 ? '+' : '−'}${Math.abs(r).toFixed(places)}%`;
+}
