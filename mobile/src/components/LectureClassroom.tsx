@@ -195,7 +195,8 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         if (alive) {
           setLoading(false);
           // يُرفع دائماً — ولو فشل التحميل وعُرضت المحاضرة الاحتياطية — وإلا توقّف
-          // حفظ التقدّم بصمت لبقية الجلسة.
+          // حفظ التقدّم بصمت لبقية الجلسة. (الاحتياطية نفسها لا تُحفظ: `lectureFallback`
+          // يحرس مؤثّر الحفظ.)
           setRestored(true);
         }
       }
@@ -216,7 +217,10 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   }, [segIndex, segments.length]);
 
   useEffect(() => {
-    if (!lecture || !restored) return;
+    // المحاضرة الاحتياطية (فشل التحميل) مقطعان عامّان تحت `lectureId` الحقيقي: حفظها كان
+    // يكتب 0 فوق موضع الاستئناف الحقيقي، ويعلّم المحاضرة «مكتملة» بالمقطع الثاني لمن لم
+    // يسمعها. لا تقدّم يُحفظ حتى تُحمَّل المحاضرة الحقيقية.
+    if (!lecture || !restored || lectureFallback) return;
     const key = `matrix.progress.${schoolId}.${lectureId}`;
     void AsyncStorage.setItem(key, String(segIndex));
     if (user) {
@@ -227,7 +231,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         completed: segIndex >= segments.length - 1,
       });
     }
-  }, [segIndex, schoolId, lectureId, lecture, restored, user, segments.length]);
+  }, [segIndex, schoolId, lectureId, lecture, restored, lectureFallback, user, segments.length]);
 
   useEffect(() => {
     let cancelled = false;
