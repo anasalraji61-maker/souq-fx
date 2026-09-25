@@ -692,8 +692,12 @@ export function computeVwapBands(
   const mid = computeVwap(candles, sessionOf);
   const upper: (number | null)[] = [];
   const lower: (number | null)[] = [];
-  let cumVolSqDiff = 0;
+  // الانحراف عن VWAP **الحالي** كـ`ta.vwap(src, anchor, 1)` بـTradingView: √(Σv·tp²/Σv − vwap²). كان كل شمعة
+  // تُقاس من VWAP لحظتها ⇒ بجلسة متّجهة نطاقات أضيق ~20% من TradingView. التربيع حول أوّل tp بالجلسة
+  // (`base`) لا حول الصفر كي لا يأكل الطرحُ المنازل (1.08² − 1.08²).
+  let cumV2 = 0;
   let cumVol = 0;
+  let base: number | null = null;
   let session: number | null = null;
   for (let i = 0; i < candles.length; i++) {
     const c = candles[i];
@@ -701,23 +705,24 @@ export function computeVwapBands(
     if (sessionOf) {
       const k = sessionOf(c);
       if (session != null && k !== session) {
-        cumVolSqDiff = 0;
+        cumV2 = 0;
         cumVol = 0;
+        base = null;
       }
       session = k;
     }
     const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
     const tp = (c.high + c.low + c.close) / 3;
+    if (base == null) base = tp;
+    cumV2 += vol * (tp - base) * (tp - base);
+    cumVol += vol;
     const v = mid[i];
-    if (v == null) {
+    if (v == null || cumVol === 0) {
       upper.push(null);
       lower.push(null);
-      cumVol += vol;
       continue;
     }
-    cumVolSqDiff += vol * (tp - v) * (tp - v);
-    cumVol += vol;
-    const variance = cumVol === 0 ? 0 : cumVolSqDiff / cumVol;
+    const variance = cumV2 / cumVol - (v - base) * (v - base);
     const sd = Math.sqrt(Math.max(0, variance));
     upper.push(v + multiplier * sd);
     lower.push(v - multiplier * sd);
