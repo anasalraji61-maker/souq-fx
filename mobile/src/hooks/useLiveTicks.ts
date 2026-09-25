@@ -86,6 +86,9 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
 
     function connect() {
       if (!alive) return;
+      // يبدأ عدّاد الصمت من المحاولة لا من الفتح: مصافحة معلّقة (شبكة خلوية ضعيفة، بوّابة Wi-Fi) تبقى
+      // CONNECTING حتى مهلة TCP بالنظام (دقيقة وأكثر) بلا `onclose` ⇒ لا سعر حيّ ولا محاولة أخرى طوالها.
+      lastHeardAt = Date.now();
       try {
         const ws = new WebSocket(url);
         wsRef.current = ws;
@@ -146,9 +149,11 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
       if (snap && Date.now() - snap.at <= TICK_STALE_MS) return;
       // مقبس «مفتوح» بلا رسالة منذ 20s (والخادم يبثّ كل ثانية): اتصال نصف ميت بعد تبديل
       // Wi-Fi↔خلوي — لا `onclose` حتى مهلة النظام (دقائق)، فالسعر الحيّ يبقى غائباً طوالها.
-      // يُترك ويُفتح غيره فوراً؛ وإن فشل الجديد تتولّى `onclose` التضاعف المعتاد.
+      // يُترك ويُفتح غيره فوراً؛ وإن فشل الجديد تتولّى `onclose` التضاعف المعتاد. ومثله مقبس عالق بالمصافحة
+      // (CONNECTING) منذ 20s.
       const cur = wsRef.current;
-      if (!cur || cur.readyState !== WebSocket.OPEN || Date.now() - lastHeardAt <= TICK_STALE_MS) return;
+      const pending = cur && (cur.readyState === WebSocket.OPEN || cur.readyState === WebSocket.CONNECTING);
+      if (!cur || !pending || Date.now() - lastHeardAt <= TICK_STALE_MS) return;
       wsRef.current = null;
       try {
         cur.close();
