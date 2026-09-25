@@ -4115,3 +4115,37 @@ seriesCache، إيقاف السوكت)، `hooks/useMultiLiveTicks.ts` (حدّ ا
    والطول 10 مقابل 9.
 3. RVI (Vol) (`volatility.ts:494`): stdev 14 بدل 10، والإغلاق الثابت لا يُعدّ بجانب الهبوط كـTradingView.
 4. أزرار ±pip للرسم المحدَّد (تنتظر مفاتيح i18n).
+
+---
+
+# تشغيل 2026-09-25 (السابع عشر)
+
+## صفوف COORDINATION الموجّهة لي — للتحقّق والإزالة من QA
+- **QA25 (e) `marketHours.ts:13` — أُنجز** `c4d17cb`. `ALWAYS_OPEN` الحرفي حُذف؛ `isCryptoSymbol` (مُصدَّرة من
+  `newsRisk.ts`، قاعدة `CRYPTO` نفسها التي تقرّر عملة التحذير ⇒ قائمة واحدة) بكل مسارات ساعات السوق الأربعة.
+  SOLUSD/XRPUSD/BTCUSDT/BTCUSDm/ETHUSD.c/«btc/usd» مفتوحة السبت، EURUSDm/XAUUSD/US30 مغلقة (selftest). **لم
+  يُعالَج**: الأسهم بساعات الفوركس، وDXY/UKOIL بلا استراحة ICE اليومية (مذكوران «محتمل» — يحتاجان جدول جلسات
+  لكل بورصة، ليس تغييراً صغيراً).
+- **QA26 (a) `BASES` — أُنجز جزئي** `8c483b7`. ثابت واحد `MOCK_BASES` + `mockBase(sym)` بـ`src/chart/mockBases.ts`
+  (لا `mock.ts`: خارج نطاق ملفاتي) بالـ21 رمزاً؛ `QuadChartModal` يستورده ⇒ AUDUSD/GBPJPY/XAGUSD/USOIL لم تعد حول 1.0.
+  **باقٍ لمالكيهما**: `TerminalScreen.tsx:99` (tools) و`FocusChartModal.tsx:56` (بلا مالك) ⇒ `import { mockBase }
+  from '../chart/mockBases'` وحذف نسختهما.
+- **chart15 مفاتيح `mcNudge*` — أُنجز** `51777fd`. أزرار ▲▼◀▶ للرسم المحدَّد بالشريط المدمج (الهاتف) وبالرصيف،
+  مع `accessibilityLabel` من `mcNudge*A11y` ووسم `mcNudgeWord`. pip واحد للأزواج والمعادن (بكسل واحد لغيرها) أو
+  شمعة واحدة؛ كل ضغطة قابلة للتراجع. الأسهم بلوحة المفاتيح تمرّ بالدالّة نفسها (`nudgeSelectedDrawing`).
+- QA1 (جهاز) وlaunch48 (أنس): لا تغيير.
+
+## ما أُنجز أيضاً (مرئي للمتداول)
+4. **SMI Ergodic Osc كـTradingView** — `8730c5b`. `tsi(close,5,20)/100 − ema(5)`؛ كان SMI بلاو الاستوكاستيكي ناقص
+   إشارته (عشرات بدل ±1، تقاطعات صفر بغير توقيت). `smiErgodic.selftest.ts` مقابل مرجع Pine مستقلّ.
+5. **Fisher Transform يخزّن القصّ ±0.999 وطوله 9** — `8451051`. القيمة المقصوصة تدخل تنعيم الشمعة التالية كـ`round_`؛
+   كانت القمم أقلّ بنحو 1 بموجة قوية. `fisherTv.selftest.ts`.
+
+## التحقّق
+`scripts/qa-build-check.sh` أخضر (0) قبل كل commit؛ كل `src/chart/*.selftest.ts` PASS (66/66). **لم يُختبر على جهاز**:
+أزرار الإزاحة بإصبع حقيقي (حجم 42×43 كباقي الشريط المدمج، والشريط يمرَّر أفقياً).
+
+## يبدأ التشغيل القادم من هنا
+1. RVI (Vol) (`volatility.ts:494`): stdev 14 بدل 10، والإغلاق الثابت لا يُعدّ بجانب الهبوط كـTradingView.
+2. Fisher: خطّ الزناد `fish1[1]` غير مرسوم (TradingView يرسمه برتقالياً) — تقاطعه هو الإشارة المعتادة.
+3. إزاحة بالضغط المطوَّل (تكرار) لأزرار ▲▼ — بتاريخ تراجع واحد للسلسلة كلّها لا خطوة لكل تكرار.
