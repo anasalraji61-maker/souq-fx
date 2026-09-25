@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 78، على 7d5a4d2) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 79، على a97dab9) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
@@ -20,11 +20,9 @@
 | chart | أنس | **chart-r56 Mass Index**: طولنا الافتراضي 25 (Dorsey، مع خطّي «انتفاخ الانعكاس» 27/26.5)؛ TradingView المدمج طوله 10 ⇒ خطّنا ~2.5× خطّ TV (25.6 مقابل 10.3 على البيانات نفسها). نتحوّل إلى 10 كـTV (ويسقط الخطّان أو يُعاد قياسهما) أم نبقى على Dorsey؟ | chart-r56 |
 | backend | أنس | **backend-r35** `POST /api/academy/tts` (`main.py:1632`) بلا مصادقة ولا حدّ معدّل، ويقبل 5000 حرف أيّ نصّ ⇒ أيّ أحد يستهلك رصيد ElevenLabs. التطبيق يستدعيه مجهولاً (`LectureClassroom.tsx:255`) فاشتراط الدخول يكسر الأكاديمية للزائر. الخيار: تسجيل دخول، أو حدّ لكل IP/جهاز، أو قصر النصّ على نصوص المحاضرات بالخادم؟ | backend-r35 |
 | chart | أنس | **chart-r41 TTM Squeeze** (`volatility.ts:562`): كلتنر EMA20+ATR Wilder، ونسخة LazyBear الشائعة SMA20+SMA(TR) ⇒ ~15% من النقاط بحالة معاكسة. نضيف خيار «LazyBear» أم نُبقي؟ | chart-r41 |
-| chart | chart | **chart-r60** زرّ «إعادة» للجوال بجانب «تراجع» بشريط الرسم: المفاتيح وصلت (launch `93a3177`: `mcRedo`/`mcRedoA11y`/`mcNothingToRedo`، ar/en/ku) ولا مستهلك بعد بـ`.tsx` — الإعادة بلوحة المفاتيح على الويب فقط حتى يُربط | chart-r60 |
-| tools | ui | **tools92** `MatrixBottomDock.tsx:210`: مرّر `chartBannerVisible` لـ`<TradeJournalPanel defaultSymbol={symbol} chartBannerVisible />` — الرصيف مدمج وشريط أخبار الشارت ظاهر بجانبه فيُحذف التحذير المكرَّر (QA38). بلاها يظهر تحذير «صفقاتك المفتوحة» مكرَّراً بالرصيف (آمن، مزعج فقط). **لا تمرّرها** بـ`MatrixSidePanel.tsx:198`: اللوح نافذة فوق الشارت تغطّي شريطه — كان هذا يُخفي تحذير NFP عن الصفقات المفتوحة كلياً | tools92 |
-| chart | ui | **chart-r61** `hooks/useMultiLiveTicks.ts:116,132` (يغذّي إطارات الشاشة الرئيسية الأربعة والرباعي): مقبس عالق بالمصافحة (`CONNECTING`، شبكة خلوية ضعيفة/بوّابة Wi-Fi) لا يُترك أبداً — `lastHeardAt` يُضبط بـ`onopen`/`onmessage` فقط، والفحص `readyState !== OPEN` يعود، والعودة للواجهة تعود أيضاً مع `CONNECTING` ⇒ لا سعر حيّ ولا إعادة محاولة حتى مهلة TCP بالنظام (دقيقة+). الإصلاح كـchart `42c0f3b` بـ`useLiveTicks.ts`: `lastHeardAt = Date.now()` أوّل `connect()`، ومعاملة `CONNECTING` كـ`OPEN` بفحص الصمت | chart-r61 |
+| QA | backend | **QA79 (منخفض)** `backtest.closed_candles` (`backtest.py:56`، يستدعيه `main.py:1163`) ما زال يحسب النهاية فتحاً + طولاً، والإشارات صارت بـ`twelve_data.bar_end` (`16d352a`، قصّ عند إغلاق الجمعة 17:00 نيويورك) ⇒ بالعطلة تُسقَط شمعة W المكتملة (مفتوحة الاثنين + 7 أيام > السبت) من الاختبار الخلفي كأنها جارية. اقتراح: `bar_end(symbol, time, step) > now` بدل `time + step > now` | QA79 |
 
-**تحقّق الدورة 78 (بالكود، على 7d5a4d2):** أُغلق QA77 ← tools `50d9fb5` (لا «pip» ثابتة بـ`.tsx` خارج التعليقات؛ `PositionSizePanel.tsx:1437` «1 pip = …» تعريف وحدة — مقبول).
-أُغلق QA76 ← chart `24ab767` (`tickBelongsToCandle` لا أثر لها). أُغلق chart-r60 (ui) ← `57d2053` (`TimeframeBar.tsx:31` `scrollTo`، `:49,62` `onLayout`). chart-r60 (launch) ← `93a3177`؛ الباقي على chart.
-سجلات chart 60 / tools 92 / ui 39 / launch 137 / backend 42: جديد tools92 (قائم: `MatrixBottomDock.tsx:210` بلا `chartBannerVisible`). **المراجعة (c — accessibilityLabel):** مسح AST لـ`Pressable/Touchable*/Switch/TextInput` ⇒ 28 بلا label،
-كلها بابن `<Text>` مترجم (يُقرأ بالقارئ) أو `MessagesScreen` (⛔ launch52)؛ والأزرار الرمزية فقط (✕ ↶ − + ⛶ ⋯) السبعة كلها بـlabel. **لا بند.**
+**تحقّق الدورة 79 (بالكود، على a97dab9):** أُغلق tools92 ← ui `b0c7b7d` (`MatrixBottomDock.tsx:212` `chartBannerVisible`؛ `MatrixSidePanel` بلا تمرير — صحيح). أُغلق chart-r61 ← ui `51089f9`
+(`useMultiLiveTicks.ts:52` `lastHeardAt` عند `connect()`، `:120` `CONNECTING` كـ`OPEN` بفحص الصمت). أُغلق chart-r60 ← chart `1478382` (`MatrixChart.tsx:6438-6446` زرّ الجوال بـ`mcRedo`/`mcRedoA11y`).
+سجلات chart 61 / tools 92 / ui 41 / launch 138 / backend 43: بلا طلب جديد. **المراجعة (d — أرقام متناقضة):** حدّ الصمت 20 ث مشترك (`TICK_STALE_MS` بالخطّافين)؛ إغلاق 17:00 نيويورك متطابق
+تطبيق (`marketHours.ts`) ↔ خادم (`bar_end`)؛ حجم الـpip للسبريد بالخادم (`backtest.py:37-43`: الذهب 0.1، الفضة 0.01، الين 0.01) = `instrumentSpec`. جديد: QA79 أعلاه.

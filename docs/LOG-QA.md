@@ -892,3 +892,11 @@ chart-r60 (ui) ← `57d2053` (`TimeframeBar.tsx:31` `scrollTo`). chart-r60 (laun
 الأزرار الرمزية فقط (✕ ↶ − + ⛶ ⋯): 7 كلها بـlabel (`MatrixChart.tsx:6306,6425,6613,6624`، `ChartFrame.tsx:319`، `ModerationActions.tsx:151`، `AlertsPanel.tsx:853`). **لا بند.**
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة.
 **إضافة (سحب أثناء الدفع):** tools `10f8b0c` أضاف صفّ tools92 → ui بـCOORDINATION (تعارض حُلّ بإبقائه) — تحقّقتُ: `MatrixBottomDock.tsx:210` بلا `chartBannerVisible` ⇒ قائم. launch 137 أغلق جانبه من chart-r60. إعادة البناء على 95ebc9b أخضر (0)، 102/102.
+
+## 2026-09-25 — الدورة 79
+**البناء:** أخضر 0 (على a97dab9) — لا إصلاح لازم. **Selftests:** 102/102 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** tools92 ← ui `b0c7b7d` (`MatrixBottomDock.tsx:212` `chartBannerVisible`؛ `MatrixSidePanel` بلا تمرير كما طُلب). chart-r61 ← ui `51089f9`
+(`useMultiLiveTicks.ts:52,120`). chart-r60 ← chart `1478382` (`MatrixChart.tsx:6438-6446`). سجلات chart 61 / tools 92 / ui 41 / launch 138 / backend 43: بلا طلب جديد.
+**المراجعة (d — أرقام متناقضة):** `TICK_STALE_MS` 20 ث مشترك بالخطّافين؛ إغلاق 17:00 نيويورك تطبيق (`marketHours.ts`) = خادم (`twelve_data.bar_end`)؛ pip السبريد بالخادم (`backtest.py:37-43`) = `positionSize.ts:36-37`.
+**جديد QA79 → backend (منخفض):** `backtest.closed_candles` (`backtest.py:56`) بقي على `time + step > now` بعد أن نقل `16d352a` الإشارات إلى `bar_end` ⇒ بالعطلة تُسقط شمعة W المكتملة من الاختبار الخلفي.
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
