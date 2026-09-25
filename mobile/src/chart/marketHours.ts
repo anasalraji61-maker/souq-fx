@@ -60,7 +60,7 @@ export function isForexMarketOpen(symbol: string, now: Date = new Date()): boole
   if (day === 5 && sec >= nyFivePmUtcSec(dayStart)) return false; // الجمعة بعد الإغلاق
   if (isForexHolidaySession(sec)) return false;
   // CME (معادن، مؤشرات أمريكا، WTI): كسر يومي 17:00–18:00 نيويورك (ومنه افتتاح الأحد 18:00) — كانت «مفتوح» بلا تسعير.
-  if (LATE_OPEN_RE.test(sym.trim()) && inMetalsDailyBreak(sec)) return false;
+  if (isLateOpenSymbol(sym) && inMetalsDailyBreak(sec)) return false;
   if (inIceDailyBreak(sym.trim(), sec)) return false;
   return true;
 }
@@ -240,11 +240,15 @@ function inForexWeekend(sec: number): boolean {
  * DAX بساعات أخرى — لا تُحسب هنا؛ برنت ومؤشر الدولار (ICE): `inIceDailyBreak`.
  */
 const LATE_OPEN_RE =
-  /^(XAU|XAG|XPT|XPD|GOLD|SILVER|US30|DJ30|DJI|WS30|NAS100|NAS1000|US100|USTEC|NDX|SPX|US500|SP500|USOIL|WTI|XTI|CL[-_.]?OIL)/i;
+  /^(XAU|XAG|XPT|XPD|GOLD|SILVER|US30|USA30|DJ30|DJI|WS30|NAS100|NAS1000|US100|USA100|NQ100|USTEC|NDX|SPX|US500|USA500|SP500|US2000|USOIL|WTI|XTI|CL[-_.]?OIL)/i;
 
-/** رمز بجلسة CME (افتتاح الأحد 18:00 نيويورك) — لمن يحسب الجلسة خارج هذا الملف (`dailyChange`). */
+/**
+ * رمز بجلسة CME (افتتاح الأحد 18:00 نيويورك) — لمن يحسب الجلسة خارج هذا الملف (`dailyChange`).
+ * أسماء الوسطاء الأخرى للمؤشرات نفسها (USA30/USA100/USA500/NQ100/US2000، وبادئة `#` أو `FX:`) كانت
+ * بساعات العملات: «مفتوح» وعدّاد يجري بكسر 17:00–18:00 نيويورك، وخانة شمعة وهمية بمنطقة المستقبل.
+ */
 export function isLateOpenSymbol(symbol: string | null | undefined): boolean {
-  return !!symbol && LATE_OPEN_RE.test(symbol.trim());
+  return !!symbol && LATE_OPEN_RE.test(symbol.trim().replace(/^#/, '').replace(/^[A-Z0-9_]+:/i, ''));
 }
 
 /**
@@ -255,7 +259,7 @@ export function isLateOpenSymbol(symbol: string | null | undefined): boolean {
  */
 function nextForexOpenSec(sec: number, symbol = ''): number {
   const sym = symbol.trim();
-  const lateOpen = LATE_OPEN_RE.test(sym);
+  const lateOpen = isLateOpenSymbol(sym);
   let t = sec;
   for (let guard = 0; guard < 6; guard++) {
     const dayStart = Math.floor(t / DAY_SEC) * DAY_SEC;

@@ -130,3 +130,11 @@ for (const s of ['SOLUSD', 'XRPUSD', 'BTCUSDT', 'BTCUSDm', 'ETHUSD.c', 'btc/usd'
   assert.equal(isForexMarketOpen(s, at(2026, 0, 17, 12)), true, s);
 }
 for (const s of ['EURUSD', 'EURUSDm', 'XAUUSD', 'US30']) assert.equal(isForexMarketOpen(s, at(2026, 0, 17, 12)), false, s);
+// أسماء وسطاء أخرى لمؤشرات CME: مغلقة بكسر 17:00–18:00 نيويورك (الخميس 2026-09-24 21:30 UTC صيفاً) وقبل افتتاح الأحد 18:00.
+for (const s of ['USA30', 'USA100', 'USA500', 'NQ100', 'US2000', '#NAS100', 'FX:US30', 'US30']) {
+  assert.equal(isForexMarketOpen(s, at(2026, 8, 24, 21, 30)), false, `${s} كسر يومي`);
+  assert.equal(isForexMarketOpen(s, at(2026, 8, 27, 21, 30)), false, `${s} قبل افتتاح الأحد`);
+  assert.equal(isForexMarketOpen(s, at(2026, 8, 24, 22, 30)), true, `${s} بعد الكسر`);
+}
+assert.equal(isForexMarketOpen('EURUSD', at(2026, 8, 24, 21, 30)), true);
+assert.equal(isForexMarketOpen('USDJPY', at(2026, 8, 27, 21, 30)), true);
