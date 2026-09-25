@@ -38,3 +38,14 @@ assert.equal(formatPrice(1.085054, 'EURUSD'), '1.08505');
 assert.equal(formatPrice(157.4234, 'USDJPY'), '157.423');
 
 console.log('cheapPrice selftest: PASS');
+
+// مؤشّر الدولار بأسماء الوسطاء — ثلاث منازل كـDXY (كانت 104.24)
+for (const s of ['DXY', 'USDX', 'USDINDEX', 'DXY.f', 'TVC:DXY', 'usdindex.cash']) {
+  assert.equal(formatPrice(104.2351, s), '104.235', s);
+}
+assert.equal(formatPrice(104.2351, 'USDCHF'), '104.23510');
+// سالب يُقرَّب لصفر بلا إشارة
+assert.equal(formatPrice(-0.000001, 'EURUSD'), '0.00000');
+assert.equal(formatPrice(-0.00012, 'EURUSD'), '-0.00012');
+assert.equal(formatPrice(-2.5, 'US30', 40000), '-2.50');
+console.log('cheapPrice DXY/negative-zero OK');

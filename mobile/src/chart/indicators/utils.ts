@@ -13,7 +13,10 @@ export function symbolPriceDecimals(symbol: string): number | null {
   if (!spec) {
     // مؤشّر الدولار يُسعَّر بثلاث منازل (104.235) — وهو رمز افتراضي بالرباعي ومرجع أخبار الدولار.
     // التقدير من حجم الرقم (≥100 ⇒ منزلتان) كان يقصّ خانته الأخيرة بالرأس والمحور والتقاطع.
-    return /^(DXY|USDX)$/.test(symbol.trim().toUpperCase().replace(/[^A-Z]/g, '')) ? 3 : null;
+    // أسماء الوسطاء كـ`marketHours` `DXY_RE`: USDINDEX (XM/Exness)، DXY.f، ولاحقة/بادئة منصّة (TVC:DXY) —
+    // المطابقة التامّة لـDXY/USDX وحدهما كانت تطبع 104.24 لهذه كلها.
+    const bare = symbol.trim().toUpperCase().replace(/^[A-Z0-9_]+:/, '').replace(/[^A-Z]/g, '');
+    return /^(DXY|USDX|USDINDEX)/.test(bare) ? 3 : null;
   }
   return Math.round(-Math.log10(spec.pipSize)) + 1;
 }
@@ -27,9 +30,10 @@ export function symbolPriceDecimals(symbol: string): number | null {
  */
 export function formatPrice(n: number, symbol?: string, ref?: number | null) {
   const d = symbol ? symbolPriceDecimals(symbol) : null;
-  if (d != null) return n.toFixed(d);
   const m = ref != null && Number.isFinite(ref) && ref > 0 ? ref : n;
-  return n.toFixed(magnitudeDecimals(m));
+  const text = n.toFixed(d ?? magnitudeDecimals(m));
+  // `toFixed` يُبقي الإشارة لسالب يُقرَّب لصفر: خطّ صفر مذبذب أو فرق ~−1e-17 كان «−0.00000».
+  return /^-[0.]+$/.test(text) ? text.slice(1) : text;
 }
 
 /**
