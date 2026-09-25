@@ -26,6 +26,7 @@ import {
   JOURNAL_NOTE_MAX,
   knownLots as knownLotsForMark,
   noteWithInitialStop,
+  plainStopText,
   planStop,
   trailedStopAllowed,
   pnlPctContradictsCash,
@@ -2561,3 +2562,23 @@ console.log('tradePlan journalMoneyLots selftest OK');
   );
 }
 console.log('tradePlan R floor without pip selftest OK');
+
+// ---- علامة «1R @» لعملات دون 0.000001: بلا صيغة أُسّية، وتُقرأ (كانت «1R @ 8e-7» فالـR من الوقف المشدود) ----
+{
+  assert.equal(plainStopText(8e-7), '0.0000008');
+  assert.equal(plainStopText(1.23e-7), '0.000000123');
+  assert.equal(plainStopText(0.0000012), '0.0000012');
+  assert.equal(plainStopText(1.083), '1.083');
+  assert.equal(plainStopText(60000), '60000');
+  const open = { side: 'buy', entry: 0.0000009, sl: 0.0000008, status: 'open' };
+  const n = noteWithInitialStop({ symbol: 'PEPEUSD', note: '', before: open, after: { side: 'buy', entry: 0.0000009, sl: 0.00000089 } });
+  assert.equal(n, '1R @ 0.0000008');
+  assert.equal(initialStop({ symbol: 'PEPEUSD', side: 'buy', entry: 0.0000009, note: n }), 0.0000008);
+  const r = realizedR({ symbol: 'PEPEUSD', side: 'buy', entry: 0.0000009, sl: 0.00000089, exit: 0.000001, note: n })!;
+  assert.ok(Math.abs(r - 1) < 1e-9, String(r));
+  // ملاحظة قديمة كُتبت أُسّياً تُقرأ أيضاً، ولا تُضاف فوقها علامة ثانية
+  assert.equal(initialStop({ symbol: 'PEPEUSD', side: 'buy', entry: 0.0000009, note: '1R @ 8e-7' }), 8e-7);
+  const again = noteWithInitialStop({ symbol: 'PEPEUSD', note: '1R @ 8e-7', before: { ...open, sl: 0.00000089 }, after: { side: 'buy', entry: 0.0000009, sl: 0.000000895 } });
+  assert.equal(again, '1R @ 8e-7');
+}
+console.log('tradePlan sub-micro initial stop selftest OK');
