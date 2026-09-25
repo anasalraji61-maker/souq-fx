@@ -609,8 +609,14 @@ export function noteWithInitialStop(input: {
   after: { side: TradeSide; entry: number; sl: number | null };
   /** حدّ الطول — `Infinity` لقياس العلامة وحدها (`journalNoteRoom`) */
   max?: number;
+  /**
+   * «تصحيح خطأ كتابة لا تحريك»: الوقف القديم كان خطأً (1.0380 بدل 1.0830) فلا يصير مسطرة الـR — وإلا ضُرب الـR بمسافةٍ
+   * لم يخاطر بها المتداول قطّ (+0.1R بدل +2R). الأرقام وحدها لا تفرّق التصحيح عن الشدّ (كلاهما تغيير خانة واحدة)، فالمتداول يقول.
+   */
+  typoFix?: boolean;
 }): string {
   const { note, before, after } = input;
+  if (input.typoFix) return note;
   if (before.status !== 'open' || before.side !== after.side) return note;
   if (!finitePos(before.entry) || Math.abs(before.entry - after.entry) > 1e-12 * Math.max(1, before.entry)) return note;
   if (initialStop({ symbol: input.symbol, side: after.side, entry: after.entry, note }) != null) return note;
@@ -1618,11 +1624,20 @@ export function journalNoteRoom(input: {
     before: { side: string; entry: number; sl?: number | null; status: string };
     after: { side: TradeSide; entry: number; sl: number | null };
   } | null;
+  /** `noteWithInitialStop` `typoFix` — لا علامة تُحجز لها أحرف */
+  typoFix?: boolean;
 }): number {
   const { note } = input;
   const typed = noteWithTypedSize(input.size, note, Infinity);
   const full = input.edit
-    ? noteWithInitialStop({ symbol: input.symbol, note: typed, before: input.edit.before, after: input.edit.after, max: Infinity })
+    ? noteWithInitialStop({
+        symbol: input.symbol,
+        note: typed,
+        before: input.edit.before,
+        after: input.edit.after,
+        max: Infinity,
+        typoFix: input.typoFix,
+      })
     : typed;
   return Math.max(0, JOURNAL_NOTE_MAX - (full.length - note.length));
 }

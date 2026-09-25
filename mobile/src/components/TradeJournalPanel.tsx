@@ -214,6 +214,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   /** صفقة قيد التعديل — النموذج نفسه يُملأ بها و«إضافة» يصبح «حفظ التعديل» (خطأ كتابة بالدخول كان يُفسد
    * الإحصاءات، والحلّ الوحيد كان الحذف وإعادة الكتابة). */
   const [editing, setEditing] = useState<Trade | null>(null);
+  /** «تصحيح خطأ كتابة لا تحريك» للوقف بهذا التعديل: لا علامة «1R @ …» من وقفٍ قديم كان خطأً (`noteWithInitialStop` `typoFix`) */
+  const [stopTypoFix, setStopTypoFix] = useState(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => setStopTypoFix(false), [editing?.id]);
   const editingRef = useRef(editing);
   editingRef.current = editing;
   /** عدسة المراجعة: الأداة المختارة بشرائح الفلتر — `null` = الكل. */
@@ -511,12 +515,26 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       note,
       size: num(size),
       edit: editing && e != null ? { before: editing, after: { side, entry: e, sl: pnum(sl) } } : null,
+      typoFix: stopTypoFix,
     });
   })();
   const noteLeft = noteCharsLeft(note, noteRoom);
   /** الملاحظة كما ستُحفظ: بعلامة «1R @ …» تُلحق حين يُحرَّك وقف صفقة مفتوحة (شدّ، توسيع، مسح) بهذا التعديل (`noteWithInitialStop`). */
-  const noteToSave = (e: number | null, s: number | null): string =>
-    editing && e != null ? noteWithInitialStop({ symbol: symbol.trim(), note, before: editing, after: { side, entry: e, sl: s } }) : note;
+  const noteToSave = (e: number | null, s: number | null, typoFix = stopTypoFix): string =>
+    editing && e != null
+      ? noteWithInitialStop({ symbol: symbol.trim(), note, before: editing, after: { side, entry: e, sl: s }, typoFix })
+      : note;
+  /**
+   * خيار «تصحيح لا تحريك» يظهر حين يُلحق هذا التعديل علامة «1R @ …» (أو حين اختير): 1.0380 مكتوبة خطأً ثم تصحيحها إلى
+   * 1.0830 كانت تُحفظ «1R @ 1.038» فيُقاس الربح بمسافةٍ لم يخاطر بها المتداول (+0.1R بدل +2R). النصّ من launch
+   * (`journalStopTypoFix`)؛ يُقرأ اختيارياً — بلا المفتاح لا خيار ولا نصّ مخترَع.
+   */
+  const stopTypoFixText = (t as unknown as Record<string, string | undefined>).journalStopTypoFix;
+  const stopTypoFixShown = (() => {
+    if (!stopTypoFixText || editing?.status !== 'open') return false;
+    if (stopTypoFix) return true;
+    return noteToSave(pnum(entry), pnum(sl), false) !== note;
+  })();
 
   const riskAt = (s: number | null) => {
     const e = pnum(entry);
@@ -570,7 +588,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     if (e == null) return null;
     return initialStop({ symbol: symbol.trim(), side, entry: e, note: noteToSave(e, pnum(sl)) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, side, entry, sl, note, editing]);
+  }, [symbol, side, entry, sl, note, editing, stopTypoFix]);
 
   // معاينة حيّة أثناء الكتابة: خطأ جهة فوراً (حتى بوقف وحده)، والملخّص حين تكتمل الأرقام الثلاثة.
   const draft = useMemo(() => {
@@ -596,7 +614,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     if (s == null || p == null) return null;
     return { issue: null, plan: analyzePlan({ symbol: symbol.trim(), side, entry: e, sl: s, tp: p }) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, side, entry, sl, tp, note, editing, noteStop]);
+  }, [symbol, side, entry, sl, tp, note, editing, stopTypoFix, noteStop]);
 
   /**
    * أهداف جاهزة بالنسبة (1:1 · 1:1.5 · 1:2 · 1:3) من الدخول والوقف المكتوبين — نفس شرائح الحاسبة:
@@ -685,7 +703,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         gain: x.kind === 'sl' && levelSideIssue({ side, entry: pnum(entry) ?? 0, sl: x.price }) != null,
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [symbol, side, entry, sl, tp, note, editing]
+    [symbol, side, entry, sl, tp, note, editing, stopTypoFix]
   );
 
   /**
@@ -720,7 +738,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     // اللون من جهة الحركة لا من النسبة المقرَّبة: «−50.00 USD · 0.00%» خسارة حمراء لا رمادية (`realizedMove` `dir`)
     return { text, dir: p.dir };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, side, entry, sl, exit, size, note, editing, t]);
+  }, [symbol, side, entry, sl, exit, size, note, editing, stopTypoFix, t]);
 
   /**
    * أدوات الدفتر وعدد صفقات كلٍّ منها، الأكثر تداولاً أولاً. الشرائح لا تظهر إلا بأداتين فأكثر:
@@ -966,7 +984,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     // وقفه الأصلي «1R @ …» فلا يتضخّم الـR بعد تحريكه (`noteWithInitialStop`)
     const typedNote = noteWithTypedSize(num(size), note);
     const savedNote = editing
-      ? noteWithInitialStop({ symbol: sym, note: typedNote, before: editing, after: { side, entry: e, sl: s } })
+      ? noteWithInitialStop({ symbol: sym, note: typedNote, before: editing, after: { side, entry: e, sl: s }, typoFix: stopTypoFix })
       : typedNote;
     // ضغطة حفظ ثانية على القيم نفسها = «السعر كما كتبته»: الفضة هبطت ~30% بيوم (يناير 2026) فهدف بيعٍ من 110 عند «85»
     // سعرٌ حقيقي لا 85 pip، ولا تمييز بالأرقام وحدها — المنع بلا مخرج كان يُجبر على كسرٍ وهمي أو السعر الخاطئ المقترح.
@@ -2038,6 +2056,29 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             .replace('{max}', String(noteRoom))
             .replace('{reserved}', String(JOURNAL_NOTE_MAX - noteRoom))}
         </Text>
+      ) : null}
+      {stopTypoFixShown ? (
+        <Pressable
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: stopTypoFix }}
+          accessibilityLabel={stopTypoFixText}
+          hitSlop={8}
+          style={({ pressed }) => [
+            styles.chip,
+            stopTypoFix && styles.chipOn,
+            { alignSelf: 'flex-start' },
+            pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+          ]}
+          onPress={() => {
+            playSoftClick();
+            setStopTypoFix((v: boolean) => !v);
+          }}
+        >
+          <Text style={[styles.chipText, stopTypoFix && styles.chipTextOn]}>
+            {stopTypoFix ? '✓ ' : ''}
+            {stopTypoFixText}
+          </Text>
+        </Pressable>
       ) : null}
       {noteStop != null ? (
         <Text style={[styles.planLine, { textAlign: align }]}>

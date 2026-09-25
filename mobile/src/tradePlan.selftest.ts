@@ -61,6 +61,7 @@ import {
   journalInstrumentKey,
   realizedMove,
   realizedR,
+  journalNoteRoom,
   roundR,
   targetAtRR,
   QUICK_RR,
@@ -2316,6 +2317,24 @@ console.log('tradePlan stackedCurrencyExposure selftest OK');
     noteWithInitialStop({ symbol: 'EURUSD', note: n1, before: { ...open, sl: 1.0845 }, after: { side: 'buy', entry: 1.085, sl: 1.086 } }),
     n1
   );
+  // «تصحيح لا تحريك»: وقف مكتوب خطأً 1.0380 يُصحَّح إلى 1.0830 ⇒ بلا علامة، فالخروج 1.089 = +2R لا +0.1R
+  {
+    const typo = { side: 'buy', entry: 1.085, sl: 1.038, status: 'open' };
+    const after = { side: 'buy' as const, entry: 1.085, sl: 1.083 };
+    const marked = noteWithInitialStop({ symbol: 'EURUSD', note: 'x', before: typo, after });
+    assert.equal(marked, 'x · 1R @ 1.038'); // بلا الخيار: الخطأ يصير المسطرة
+    assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083, exit: 1.089, note: marked }), 0.1);
+    const fixed = noteWithInitialStop({ symbol: 'EURUSD', note: 'x', before: typo, after, typoFix: true });
+    assert.equal(fixed, 'x');
+    assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083, exit: 1.089, note: fixed }), 2);
+    // علامة قديمة موجودة لا تُمسّ (الخيار لا يحذف ما حُفظ)
+    assert.equal(noteWithInitialStop({ symbol: 'EURUSD', note: n1, before: typo, after, typoFix: true }), n1);
+    // والأحرف المحجوزة للعلامة تعود للمتداول
+    const roomMarked = journalNoteRoom({ symbol: 'EURUSD', note: 'x', size: null, edit: { before: typo, after } });
+    const roomFixed = journalNoteRoom({ symbol: 'EURUSD', note: 'x', size: null, edit: { before: typo, after }, typoFix: true });
+    assert.equal(roomFixed - roomMarked, ' · 1R @ 1.038'.length);
+    assert.equal(roomFixed, 500);
+  }
   // لا علامة: مغلقة (تصحيح)، توسيع، بلا تغيير، بلا وقف قديم/جديد، اتجاه أو دخول تغيّر، وقف قديم بالجهة الخطأ أو أضيق من pip
   const nw = (before: object, after: object, symbol = 'EURUSD') =>
     noteWithInitialStop({ symbol, note: 'x', before: { ...open, ...before }, after: { side: 'buy', entry: 1.085, sl: 1.0845, ...after } as never });
