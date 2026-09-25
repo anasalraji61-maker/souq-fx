@@ -57,6 +57,8 @@ type Props = {
   syncFollow?: boolean;
   onSyncActivate?: () => void;
   syncBadge?: 'leader' | 'follow' | 'partial' | 'off' | null;
+  /** DESIGN-PRO §5.6 — يُمرَّر إلى `MatrixChart.onChartInteract`: مسك اللوح ⇒ true، الرفع ⇒ false. */
+  onChartInteract?: (active: boolean) => void;
 };
 
 // مصفوفة ثابتة لا `[]` بالسطر: الجديدة بكل رسم (كل تيك) تُطلق تأثير `initialIndicators`
@@ -107,6 +109,7 @@ export function ChartFrame({
   syncFollow = false,
   onSyncActivate,
   syncBadge = null,
+  onChartInteract,
 }: Props) {
   const { t, rtl, lang } = useI18n();
   const [wheelOpen, setWheelOpen] = useState(false);
@@ -569,6 +572,7 @@ export function ChartFrame({
             syncFollow={syncFollow}
             syncTimeOnly
             onReplayPrice={onReplayPrice}
+            onChartInteract={onChartInteract}
           />
         )}
       </View>

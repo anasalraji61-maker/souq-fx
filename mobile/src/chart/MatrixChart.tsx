@@ -420,6 +420,11 @@ type Props = {
    * يمرّر `initialTool` وحده كان يُبقي «ترند» مضاءً بعد إنهاء الخطّ، ونقرها ثانيةً لا تغيّر القيمة فلا يحدث شيء.
    */
   onToolChange?: (tool: DrawTool) => void;
+  /**
+   * DESIGN-PRO §5.6: `true` حين يمسك المستخدم اللوح (تقاطع/سحب/رسم) و`false` عند الرفع — لتُخفت الشاشة
+   * المضيفة واجهتها إلى 40% كما يخفت شريط الشارت نفسه.
+   */
+  onChartInteract?: (active: boolean) => void;
   initialLens?: LensMode;
   initialKind?: ChartKind;
   initialIndicators?: IndicatorId[];
@@ -513,6 +518,9 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
 function SelMark({ accent }: { accent?: boolean }) {
   return <View pointerEvents="none" style={[styles.selMark, !accent && styles.selMarkNeutral]} />;
 }
+
+/** §5.6: مسكة أطول من هذا على اللوح تُخفت الواجهة؛ الأقصر نقرة. */
+const CHROME_DIM_DELAY_MS = 150;
 
 const PRICE_AXIS_WIDTH = 68;
 /** ارتفاع وسم سعر الخطّ/فيبو فوق خطّه (`top: -11` + خطّ 13) — أقرب من ذلك للحافّة العليا يُقلب تحته. */
@@ -1400,6 +1408,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   onCreateAlert,
   initialTool,
   onToolChange,
+  onChartInteract,
   initialLens,
   initialKind,
   initialIndicators,
@@ -2323,6 +2332,37 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (initialTool) setTool(initialTool);
   }, [initialTool, series.symbol]);
 
+  // DESIGN-PRO §5.6 — الواجهة تخفت إلى 40% ما دام الإصبع/الزرّ على اللوح وتعود عند الرفع. بعد
+  // `CHROME_DIM_DELAY_MS` فقط: نقرة تقاطع قصيرة لا تُومض الشريط (§6 — لا حركة غير وميض السعر).
+  const [chromeDim, setChromeDim] = useState(false);
+  const chromeDimTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const chromeDimOn = useRef(false);
+  const onChartInteractRef = useRef(onChartInteract);
+  onChartInteractRef.current = onChartInteract;
+  const chartHoldStart = useCallback(() => {
+    if (chromeDimTimer.current != null || chromeDimOn.current) return;
+    // ويب: زرّ رُفع خارج اللوح (بلا التقاط مؤشّر) لا يصل اللوح ⇒ النافذة تعيد الواجهة.
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.addEventListener('pointerup', chartHoldEndRef.current, { once: true });
+    }
+    chromeDimTimer.current = setTimeout(() => {
+      chromeDimTimer.current = null;
+      chromeDimOn.current = true;
+      setChromeDim(true);
+      onChartInteractRef.current?.(true);
+    }, CHROME_DIM_DELAY_MS);
+  }, []);
+  const chartHoldEnd = useCallback(() => {
+    if (chromeDimTimer.current != null) clearTimeout(chromeDimTimer.current);
+    chromeDimTimer.current = null;
+    if (!chromeDimOn.current) return;
+    chromeDimOn.current = false;
+    setChromeDim(false);
+    onChartInteractRef.current?.(false);
+  }, []);
+  const chartHoldEndRef = useRef(chartHoldEnd);
+  chartHoldEndRef.current = chartHoldEnd;
+  useEffect(() => () => chartHoldEnd(), [chartHoldEnd]);
   const onToolChangeRef = useRef(onToolChange);
   onToolChangeRef.current = onToolChange;
   useEffect(() => {
@@ -6269,7 +6309,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   return (
     <View style={[styles.root, dense && styles.rootDense]}>
       {interactive && compactUi ? (
-        <View style={styles.compactToolbar}>
+        <View style={[styles.compactToolbar, chromeDim && styles.chromeDim]}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -6485,7 +6525,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           </ScrollView>
         </View>
       ) : interactive ? (
-        <View style={styles.toolbar}>
+        <View style={[styles.toolbar, chromeDim && styles.chromeDim]}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
             {localizedChartKinds(tr).flatMap((k) => [
               <Pressable
@@ -6633,7 +6673,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           </Pressable>
         ) : null}
         {interactive && !compactUi ? (
-          <View style={styles.zoomRow}>
+          <View style={[styles.zoomRow, chromeDim && styles.chromeDim]}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={tr.mcZoomOutA11y}
@@ -6822,6 +6862,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           canPan ? webAxisLockStyle : null,
         ]}
         onLayout={onLayout}
+        onTouchStart={chartHoldStart}
+        onTouchEnd={(e) => {
+          if (!e.nativeEvent.touches?.length) chartHoldEnd();
+        }}
+        onTouchCancel={chartHoldEnd}
+        {...(Platform.OS === 'web'
+          ? { onPointerDown: chartHoldStart, onPointerUp: chartHoldEnd, onPointerCancel: chartHoldEnd }
+          : {})}
         {...(interactive && tool !== 'none' && tool !== 'select' ? panResponder.panHandlers : {})}
         {...(interactive && tool === 'select' ? selectPan.panHandlers : {})}
       >
@@ -12520,7 +12568,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       ) : null}
 
       {interactive && !compactUi ? (
-        <View style={styles.dock}>
+        <View style={[styles.dock, chromeDim && styles.chromeDim]}>
           <Text style={styles.dockTitle}>{tr.mcDockTitle}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
             {localizedDrawTools(tr).map((t) => (
@@ -12989,6 +13037,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   zoomRow: { flexDirection: 'row', gap: 4 },
+  chromeDim: { opacity: 0.4 },
   crossAlertBtn: {
     borderWidth: 1,
     borderRadius: radii.sm,
