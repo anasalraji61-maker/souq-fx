@@ -6007,7 +6007,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // ويُقاس بُعده من سعر الإعادة (`currentPrice`) — رقم يخلط الماضي بالمستقبل.
   const nowIndex = source.cut;
   const selectedLineNow = selectedSpan
-    ? lineNowText(selectedSpan, nowIndex, currentPrice, series.symbol, fmtPrice, lang, logScale)
+    ? lineNowText(selectedSpan, nowIndex, currentPrice, series.symbol, fmtPrice, lang, logScale, priceDecimalsRef)
     : null;
   const selectedSpanText =
     selectedSpanReadout && selectedLineNow

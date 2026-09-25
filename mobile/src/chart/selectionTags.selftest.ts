@@ -89,7 +89,7 @@ console.log('selectionTags.selftest: PASS');
   assert.equal(lineNowText(d('hline', 1.08), 7, 1.0850, 'EURUSD', fmt), null);
   assert.equal(lineNowText(d('fib', 1.08, 1.083), 3, 1.0850, 'EURUSD', fmt), null);
   assert.equal(lineNowText(d('ray', 1.08, 1.083), 7, Number.NaN, 'EURUSD', fmt), null);
-  // أداة بلا مواصفة pip ⇒ لا نصّ.
-  assert.equal(lineNowText(d('ray', 100, 103), 7, 104, 'NOPE123', fmt), null);
+  // أداة بلا مواصفة pip ⇒ فرق السعر مكان النقاط (كان `null` فيختفي الخطّ وبُعده على US30/BTC).
+  assert.equal(lineNowText(d('ray', 100, 103), 7, 104, 'NOPE123', fmt, 'en', false, 104), `${fmt(106)} · +2.00`);
 }
 console.log('selectionTags lineNowText OK');

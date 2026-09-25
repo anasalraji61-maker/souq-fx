@@ -7,7 +7,7 @@
  */
 import { boxesTouch } from './axisTicks';
 import { channelLinePrices } from './channel';
-import { measurePipsText } from './measureReadout';
+import { signedDistanceText } from './measureReadout';
 import { positionLevels, isPositionTool } from './positionTool';
 import type { Drawing } from './types';
 
@@ -86,8 +86,9 @@ export function lineValueAt(
 /**
  * «1.08520 · −6.2 pip»: أين يقع الترند/الشعاع المحدَّد عند الشمعة الحيّة وكم يبعد السعر عنه — نصّ
  * وسم الهاتف وسطر القراءة. وسم المحور يعطي السعر وحده، والمتداول ينتظر الكسر/الارتداد فيسأل «كم
- * بقي؟». الإشارة كالخطّ الأفقي: من السعر إلى الخطّ (+ الخطّ فوقه، − تحته). `null` لغير الترند/الشعاع،
- * لخطّ لا يبلغ الشمعة الحيّة، أو لأداة بلا مواصفة pip.
+ * بقي؟». الإشارة كالخطّ الأفقي: من السعر إلى الخطّ (+ الخطّ فوقه، − تحته). `null` لغير الترند/الشعاع
+ * أو لخطّ لا يبلغ الشمعة الحيّة. أداة بلا مواصفة pip (US30، BTCUSD، DXY) ⇒ فرق السعر مكان النقاط
+ * («39100.00 · +100.00») كوسم الخطّ الأفقي — كان `null` فيختفي سعر الخطّ وبُعده معاً.
  */
 export function lineNowText(
   d: Drawing,
@@ -96,13 +97,15 @@ export function lineNowText(
   symbol: string,
   fmt: (price: number) => string,
   lang?: string,
-  log = false
+  log = false,
+  /** مرجع منازل الأداة بلا مواصفة (`formatPriceDiff`) — آخر سعر بالسلسلة كبقية وسوم البُعد. */
+  priceRef?: number | null
 ): string | null {
   if ((d.tool !== 'trend' && d.tool !== 'ray') || !d.b || !Number.isFinite(livePrice)) return null;
   const now = lineValueAt(d.a, d.b, nowIndex, d.tool === 'ray', log);
   if (now == null) return null;
-  const pips = measurePipsText(symbol, livePrice, now, lang);
-  return pips ? `${fmt(now)} · ${pips}` : null;
+  const dist = signedDistanceText(symbol, livePrice, now, lang, priceRef);
+  return dist ? `${fmt(now)} · ${dist}` : null;
 }
 
 /**
