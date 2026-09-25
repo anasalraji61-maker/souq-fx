@@ -632,12 +632,15 @@ export function TerminalScreen() {
     []
   );
 
+  // الاستطلاعات الدورية الأربعة هنا (الإطارات، الشارت، Bid/Ask، الظلّ) تقف ما دامت الشاشة خلف تبويبٍ آخر (`screenFocused`):
+  // الشاشة تبقى مُركَّبة، فكانت تجلب كل 90 ث بقيّة الجلسة لشارت لا يُرى — من حدّ المزوّد نفسه الذي إن نفد (429) أعاد
+  // الخادم أسعاراً مخزّنة قديمة لحاسبة اللوت والتنبيهات. بالعودة يُعاد تشغيل كل تأثير فيجلب فوراً.
   useEffect(() => {
-    if (!prefsReady || focus) return;
+    if (!prefsReady || focus || !screenFocused) return;
     void loadTerminal(frameTfs, dxyTf);
     const id = setInterval(() => void loadTerminal(frameTfs, dxyTf), 90_000);
     return () => clearInterval(id);
-  }, [prefsReady, frameTfs, dxyTf, loadTerminal, focus]);
+  }, [prefsReady, frameTfs, dxyTf, loadTerminal, focus, screenFocused]);
 
   // حارس سباق شبكة: تجاهل ردّ متأخر لرمز/فريم زمني سابق (نفس نمط `alive` المستخدَم بلوحة الاقتباس
   // أدناه وبـ`FocusChartModal`/`QuadChartModal`) — تبديل سريع بين رموز المراقبة كان يترك آخر رد وصل
@@ -646,19 +649,20 @@ export function TerminalScreen() {
     let alive = true;
     const hit = cachedSeries(symbol, tf);
     if (hit) setChart({ key: `${symbol}|${tf}`, s: hit });
+    if (!screenFocused) return;
     void loadChart(symbol, tf, () => !alive);
     const id = setInterval(() => void loadChart(symbol, tf, () => !alive), 90_000);
     return () => {
       alive = false;
       clearInterval(id);
     };
-  }, [symbol, tf, loadChart]);
+  }, [symbol, tf, loadChart, screenFocused]);
 
   // سبريد Bid/Ask للرمز الحالي — بند 2 من قائمة الإطلاق (أولوية طارئة، docs/ROADMAP.md)
   // السطر يُعرض بشريط سطح المكتب لشارت واحد فقط (`desktopQuoteBar`) — على الهاتف وبالتخطيطات المتعدّدة والظلّ
   // وتحت نافذة التركيز كان الاستطلاع يجري كل 90 ث بلا عرض، يستهلك حدّ المزوّد نفسه الذي إن نفد (429) أعاد
   // الخادم أسعاراً مخزّنة قديمة لحاسبة اللوت وللتنبيهات.
-  const showsSpread = !phone && layoutCount === 1 && layoutShape !== 'shadow' && !focus;
+  const showsSpread = screenFocused && !phone && layoutCount === 1 && layoutShape !== 'shadow' && !focus;
   useEffect(() => {
     let alive = true;
     // لا نُبقي Bid/Ask الرمز السابق تحت اسم الرمز الجديد حتى يصل الرد
@@ -683,7 +687,7 @@ export function TerminalScreen() {
   }, [symbol, showsSpread]);
 
   useEffect(() => {
-    if (!prefsReady || layoutShape !== 'shadow') {
+    if (!prefsReady || layoutShape !== 'shadow' || !screenFocused) {
       return;
     }
     const gen = ++shadowLoadGen.current;
@@ -740,6 +744,7 @@ export function TerminalScreen() {
     shadowSlots,
     shadowEnabled,
     series?.candles?.length,
+    screenFocused,
   ]);
 
   // عند مغادرة وضع الظل فقط نفرّغ الذاكرة
