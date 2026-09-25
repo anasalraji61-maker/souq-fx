@@ -22,7 +22,6 @@ import { notify } from '../chart/confirmDestructive';
 import { headerChangePct, livePriceForChart, livePriceForHeader } from '../chart/liveSeries';
 import { useDailyRefs } from '../chart/dailyRefStore';
 import { formatPct, pctDirection } from '../chart/dailyChange';
-import { mockBase } from '../chart/mockBases';
 import { provenanceLabel, tickStatusLabel, normalizeProvenance } from '../chart/dataSource';
 import {
   armedText,
@@ -32,8 +31,11 @@ import {
 } from '../chart/alertFromChart';
 import { marketStatusLabel } from '../chart/marketHours';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
-import { ProviderUnavailableNotice, seriesHasNoRealData } from './ProviderUnavailableNotice';
-import { mockSeries } from '../mock';
+import {
+  ProviderUnavailableNotice,
+  serverUnreachableSeries,
+  seriesHasNoRealData,
+} from './ProviderUnavailableNotice';
 import { SymbolSearchBar } from './SymbolSearchBar';
 import { AlertsPanel } from './AlertsPanel';
 import { NewsRiskBanner } from './NewsRiskBanner';
@@ -140,9 +142,10 @@ export function FocusChartModal({
         }
       } catch {
         if (alive) {
-          setSeries(mockSeries(sym, mockBase(sym), tf));
+          // launch122: كان الفشل يرسم `mockSeries` حول أسعار 2024 (EURUSD 1.0854). الآن سلسلة فارغة ⇒ إشعار «لا اتصال».
+          setSeries(serverUnreachableSeries(sym, tf));
           setSeriesSym(sym);
-          // لا تُبقِ خط مقارنة الرمز السابق فوق الشارت البديل
+          // لا تُبقِ خط مقارنة الرمز السابق فوق الإشعار
           setCompareSeries(null);
           setCompareFailed(compareSym != null);
         }
