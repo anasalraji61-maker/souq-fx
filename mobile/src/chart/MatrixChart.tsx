@@ -10310,19 +10310,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name="Rainbow Osc" values={rainbowOsc} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
+            {/* مذبذب بإشارة (السعر فوق/تحت قوس المتوسّطات) حول الصفر — كان عمود تأكيد أحادي الجانب. */}
+            <View
+              pointerEvents="none"
+              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
+            />
             {(() => {
-              const maxR = visibleMax(rainbowOsc, paneVis);
+              const maxR = visibleMax(rainbowOsc, paneVis, true);
               return rainbowOsc.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = Math.min(paneH - 16, (v / maxR) * (paneH - 8));
+                const h = centeredBarH(v, maxR, paneH);
                 return (
                   <View
                     key={i}
                     style={{
                       flex: 1,
                       height: Math.max(2, h),
-                      marginTop: paneH - 8 - h,
-                      backgroundColor: colors.accent,
+                      marginTop: centeredBarTop(v, h, paneH),
+                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
                       opacity: 0.7,
                     }}
                   />
