@@ -56,6 +56,8 @@ const IMPACT_COLOR: Record<string, string> = {
   high: colors.bear,
   medium: colors.warn,
   low: colors.textDim,
+  /** عطلة بنوك (backend-r3) — سيولة رقيقة: تنبيه لا خطر؛ `none`/`unknown` بلا لون ولا كلمة */
+  holiday: colors.warn,
 };
 
 const CURRENCIES = ['ALL', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'NZD', 'CHF'];
@@ -246,7 +248,11 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
   );
 
   const impactWord = (imp: string): string | null =>
-    imp === 'high' || imp === 'medium' || imp === 'low' ? IMPACT_LABEL[imp] : null;
+    imp === 'high' || imp === 'medium' || imp === 'low'
+      ? IMPACT_LABEL[imp]
+      : imp === 'holiday'
+        ? t.impactHoliday
+        : null;
 
   const hasTs = (e: Ev): e is Ev & { ts: number } => typeof e.ts === 'number' && Number.isFinite(e.ts);
   const timed = visible.filter(hasTs);
