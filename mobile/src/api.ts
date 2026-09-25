@@ -870,6 +870,9 @@ export const api = {
       };
       /** false = لا سعر حي (المزوّد متعذّر)؛ غيابه = خادم أقدم. */
       live_price?: boolean;
+      /** ثوانٍ UTC: إغلاق آخر شمعة التي بُني عليها الجواب (backend-r12) — قد يسبق «الآن» بـ15د عند حدّ
+       * المزوّد أو بأيام بعطلة الأسبوع؛ null بلا سعر حقيقي؛ غيابه = خادم أقدم. */
+      price_as_of?: number | null;
     }>('/api/ai/ask', { question, symbol, lang }),
   dmList: () =>
     getJson<{ peers: { user: string; last: string; ts: string }[] }>('/api/dm'),

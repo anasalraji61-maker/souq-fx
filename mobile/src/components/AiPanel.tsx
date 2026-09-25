@@ -15,12 +15,45 @@ import { useI18n } from '../i18n/I18nContext';
 /** لا «احتمال نجاح» بالفقاعة: كان رقماً مختلَقاً (hash بالخادم، 62 ثابت عند الانقطاع) يُعرض كتقدير.
  * وبالمبدأ نفسه: `offline` تميّز نصّ الانقطاع العام عن جواب فعليّ للمساعد — كان يُعرض بفقاعة المساعد
  * ذاتها فيبدو كتحليل لسؤال المتداول (نفس ما يفعله `reportAiFallbackNote` بالتقرير الأسبوعي). */
-type Turn = { role: 'user' | 'ai'; text: string; offline?: boolean };
+type Turn = { role: 'user' | 'ai'; text: string; offline?: boolean; priceAt?: string };
+
+/** وقت السعر الذي بُني عليه الجواب (`price_as_of`، backend-r12): الدخول بنصّ النموذج كان يُقرأ سعراً حيّاً
+ * وهو إغلاق شمعة قد يكون مخزَّناً 15د أو إغلاق الجمعة يوم السبت. النصّ محلّي حتى يضيف الإطلاق مفتاحاً
+ * بـ`locales.ts` (سابقة `REPLAY_TOUR_COPY`) — الكردي بحاجة مراجعة. */
+const PRICE_AT_COPY: Record<string, string> = {
+  ar: 'السعر بالجواب: إغلاق {time} بتوقيتك — ليس سعراً حيّاً',
+  en: 'Price in this answer: candle close at {time} your time — not a live price',
+  ku: 'نرخی ئەم وەڵامە: داخستنی مۆم لە {time} بە کاتی تۆ — نرخی ڕاستەوخۆ نییە',
+};
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/** «21:45» لليوم نفسه، وإلا يوم الأسبوع قبل الوقت («Fri, Sep 25 21:45»/«الجمعة، 25 سبتمبر 21:45») — عطلة الأسبوع هي الحالة
+ * الأخطر. الكردي بلا أسماء أيام موثوقة بـ`Intl` ⇒ «26/09 21:45». أرقام لاتينية كبقية الأسعار. */
+function formatPriceAt(sec: number, lang: string, now: Date = new Date()): string {
+  const d = new Date(sec * 1000);
+  const hm = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const sameDay =
+    d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  if (sameDay) return hm;
+  if (lang !== 'ku') {
+    try {
+      return `${d.toLocaleDateString(`${lang}-u-nu-latn`, { weekday: 'short', day: 'numeric', month: 'short' })} ${hm}`;
+    } catch {
+      /* بلا Intl ⇒ الصيغة الرقمية أدناه */
+    }
+  }
+  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)} ${hm}`;
+}
 
 type Props = { symbol?: string; embedded?: boolean };
 
 export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
   const { t, rtl, lang } = useI18n();
+  const priceAtCopy =
+    (t as Partial<Record<'aiPriceAsOf', string>>).aiPriceAsOf ??
+    PRICE_AT_COPY[lang.startsWith('en') ? 'en' : lang] ??
+    PRICE_AT_COPY.ar;
   const align = rtl ? ('right' as const) : ('left' as const);
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,6 +78,10 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
         {
           role: 'ai',
           text: res.answer.replace(/\*\*/g, ''),
+          priceAt:
+            typeof res.price_as_of === 'number' && Number.isFinite(res.price_as_of)
+              ? formatPriceAt(res.price_as_of, lang)
+              : undefined,
         },
       ]);
     } catch {
@@ -88,6 +125,11 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
             <Text style={[styles.text, turn.offline && styles.textOffline, { textAlign: align }]}>
               {turn.text}
             </Text>
+            {turn.priceAt ? (
+              <Text style={[styles.priceAt, { textAlign: align }]}>
+                {priceAtCopy.replace('{time}', turn.priceAt)}
+              </Text>
+            ) : null}
           </View>
         ))}
         {loading && <ActivityIndicator color={colors.accent} />}
@@ -171,6 +213,7 @@ const styles = StyleSheet.create({
     borderColor: colors.warn,
   },
   textOffline: { color: colors.textMuted },
+  priceAt: { color: colors.textDim, fontSize: 11, marginTop: 6 },
   text: {
     color: colors.text,
     fontSize: 12,
