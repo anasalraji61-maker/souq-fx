@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radii, buttons } from '../theme';
 import { api, type ChartSeries } from '../api';
+import { MOCK_BASES, mockBase } from '../chart/mockBases';
 import { mockSeries } from '../mock';
 import { ChartFrame } from '../components/ChartFrame';
 import {
@@ -96,32 +97,9 @@ type ShadowEnabled = [boolean, boolean, boolean];
 const DEFAULT_SHADOW_SLOTS: ShadowSlots = ['5m', '30m', '1H'];
 const DEFAULT_SHADOW_ENABLED: ShadowEnabled = [true, true, true];
 
-const BASES: Record<string, number> = {
-  DXY: 104.25,
-  EURUSD: 1.0854,
-  GBPUSD: 1.2732,
-  USDJPY: 157.42,
-  AUDUSD: 0.662,
-  USDCAD: 1.364,
-  NZDUSD: 0.601,
-  USDCHF: 0.884,
-  EURJPY: 162.15,
-  GBPJPY: 200.4,
-  EURGBP: 0.852,
-  AUDJPY: 104.2,
-  EURAUD: 1.64,
-  EURCHF: 0.96,
-  CADJPY: 115.3,
-  XAUUSD: 2348.6,
-  XAGUSD: 28.4,
-  USOIL: 78.35,
-  UKOIL: 82.1,
-  BTCUSD: 67420,
-  ETHUSD: 3450,
-};
 
 function offlineFrame(symbol: string, tf: Timeframe): ChartSeries {
-  return mockSeries(symbol, BASES[symbol] ?? 1, tf, 120);
+  return mockSeries(symbol, mockBase(symbol), tf, 120);
 }
 
 /**
@@ -647,7 +625,7 @@ export function TerminalScreen() {
         setOnline(true);
       } catch {
         if (stale()) return;
-        setChart({ key, s: cachedSeries(sym, timeframe) ?? mockSeries(sym, BASES[sym] ?? 1, timeframe, 180) });
+        setChart({ key, s: cachedSeries(sym, timeframe) ?? mockSeries(sym, mockBase(sym), timeframe, 180) });
         setOnline(false);
       }
     },
@@ -705,7 +683,7 @@ export function TerminalScreen() {
     }
     const gen = ++shadowLoadGen.current;
     const emptySlot = (secTf: Timeframe): ChartSeries => ({
-      ...mockSeries(symbol, BASES[symbol] ?? 1, secTf, 2),
+      ...mockSeries(symbol, mockBase(symbol), secTf, 2),
       candles: [],
       timeframe: secTf,
     });
@@ -734,9 +712,9 @@ export function TerminalScreen() {
           try {
             const loaded = await api.chart(symbol, secTf, need);
             if ((loaded.candles?.length ?? 0) > 0) return loaded;
-            return cacheHit ?? mockSeries(symbol, BASES[symbol] ?? 1, secTf, need);
+            return cacheHit ?? mockSeries(symbol, mockBase(symbol), secTf, need);
           } catch {
-            return cacheHit ?? mockSeries(symbol, BASES[symbol] ?? 1, secTf, need);
+            return cacheHit ?? mockSeries(symbol, mockBase(symbol), secTf, need);
           }
         })
       );
@@ -1812,7 +1790,7 @@ export function TerminalScreen() {
             <WatchlistPanel
               activeSymbol={symbol}
               ticks={tickPrices}
-              bases={BASES}
+              bases={MOCK_BASES}
               demoTicks={demoTickSymbols}
               onPick={(s) => pickSymbol(s)}
               compact={narrowWatch}
@@ -1915,7 +1893,7 @@ export function TerminalScreen() {
           <WatchlistPanel
             activeSymbol={symbol}
             ticks={tickPrices}
-            bases={BASES}
+            bases={MOCK_BASES}
             demoTicks={demoTickSymbols}
             onPick={(next) => {
               pickSymbol(next);
