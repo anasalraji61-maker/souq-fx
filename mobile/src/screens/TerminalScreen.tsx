@@ -197,7 +197,8 @@ export function TerminalScreen() {
   const chartKey = `${symbol}|${tf}`;
   const chartKeyRef = useRef(chartKey);
   chartKeyRef.current = chartKey;
-  const series = chart && chart.key === chartKey ? chart.s : null;
+  // chart-r56: الذاكرة تُقرأ أثناء الرسم لا بعد التأثير — وإلا إطارٌ واحد بلا شموع (مؤشّر التحميل) يهدم الشارت حتى مع الكاش.
+  const series = chart && chart.key === chartKey ? chart.s : cachedSeries(symbol, tf);
   const [refreshing, setRefreshing] = useState(false);
   const [online, setOnline] = useState(false);
   const [quote, setQuote] = useState<{ bid: number | null; ask: number | null } | null>(null);
@@ -662,22 +663,17 @@ export function TerminalScreen() {
         if (heroGen === dxyLoadGen.current) setDxy(hero);
         setFrames((prev) => prev.map((old, i) => (frameGens[i] === frameLoadGen.current[i] ? frs[i] : old)));
       };
-      try {
-        const [heroSeries, a, b, c] = await Promise.all([
-          fetchSeries(heroSymbol, dxyTimeframe),
-          fetchSeries(frameSymbols[0], tfs[0]),
-          fetchSeries(frameSymbols[1], tfs[1]),
-          fetchSeries(frameSymbols[2], tfs[2]),
-        ]);
-        apply(heroSeries, [a, b, c]);
-        setOnline(true);
-      } catch {
-        apply(
-          cachedSeries(heroSymbol, dxyTimeframe) ?? offlineFrame(heroSymbol, dxyTimeframe),
-          frameSymbols.map((s, i) => cachedSeries(s, tfs[i]) ?? offlineFrame(s, tfs[i]))
-        );
-        setOnline(false);
-      }
+      // chart-r56: كل خانة مستقلّة — `Promise.all` كان يجعل فشل طلبٍ واحد «لا اتصال» للأربعة حتى الاستطلاع التالي (90 ث).
+      const slots: [string, Timeframe][] = [
+        [heroSymbol, dxyTimeframe],
+        ...frameSymbols.map((s, i): [string, Timeframe] => [s, tfs[i]]),
+      ];
+      const results = await Promise.allSettled(slots.map(([s, t]) => fetchSeries(s, t)));
+      const got = results.map((r, i) =>
+        r.status === 'fulfilled' ? r.value : cachedSeries(slots[i][0], slots[i][1]) ?? offlineFrame(slots[i][0], slots[i][1])
+      );
+      apply(got[0], got.slice(1));
+      setOnline(results.some((r) => r.status === 'fulfilled'));
     },
     [frameSymbols, heroSymbol]
   );
@@ -1599,7 +1595,7 @@ export function TerminalScreen() {
               ) : (
                 <MatrixChart
                   onCreateAlert={alertFromChart}
-                  key={`shadow-overlay-${symbol}-${tf}`}
+                  key="shadow-overlay"
                   onToolChange={setTool}
                   series={series}
                   shadowSeries={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
@@ -1767,7 +1763,8 @@ export function TerminalScreen() {
                   onCreateAlert={alertFromChart}
                   // chart-r47: الأداة/النوع/العدسة/المؤشرات تُطبَّق بتأثيرات `MatrixChart` — بالمفتاح كانت تعيد بناءه فيضيع التكبير
                   // والتراجع ويقفز لآخر 80 شمعة. و`onToolChange` يُطفئ «ترند» بالشريط الأيسر حين ينتهي الرسم داخل الشارت.
-                  key={`${symbol}-${tf}`}
+                  // chart-r56: ولا الرمز/الفريم بالمفتاح — `MatrixChart` يعالج تبديلهما بنفسه (الإزاحة، رسومات المفتاح، السجلّ).
+                  key="single"
                   onToolChange={setTool}
                   series={series}
                   height={desktopChartHeight}
