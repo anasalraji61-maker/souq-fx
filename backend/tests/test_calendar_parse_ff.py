@@ -44,31 +44,30 @@ def _event(title: str, country: str = "USD", impact: str = "High", date: str = "
     )
 
 
-# ------------------------------------------------ فرع RSS: الإزاحة الزمنية
+# ------------------------------------------------ فرع RSS: وقت النشر ليس موعد الخبر
 
-def test_rss_keeps_the_timezone_offset():
-    """‎-0400‎ عند 14:30 تعني 18:30 UTC. القصّ عند 22 حرفاً كان يُلقي الإزاحة والوقت يبقى 14:30."""
+def test_rss_pubdate_is_not_the_event_time():
+    """tools81: `pubDate` = متى نُشر العنصر. كان يُرسَل `ts` فيعدّ التطبيق تنازلياً لوقت النشر
+    («خبر قوي بعد 20 د» خاطئ). لا حقل موعد بالعنصر ⇒ لا `ts` ولا ساعة."""
     out = cal._parse_ff(_rss(_item("NFP", "Tue, 23 Sep 2026 14:30:00 -0400")))
     assert len(out) == 1
-    assert out[0]["when"] == "2026-09-23 18:30 UTC"
-    assert out[0]["ts"] == 1790188200  # 18:30 UTC لا 14:30
+    assert out[0]["ts"] is None
+    assert out[0]["time_tbd"] is True
+    assert out[0]["when"] == "هذا الأسبوع"
+    assert "18:30" not in out[0]["when"] and "14:30" not in out[0]["when"]
 
 
-def test_rss_time_matches_the_json_path_format():
-    """اللوحتان تُقرآن بنفس العين: نفس صيغة `_parse_ff_json` حرفياً."""
-    out = cal._parse_ff(_rss(_item("CPI", "Fri, 25 Sep 2026 09:00:00 +0000")))
-    assert out[0]["when"] == "2026-09-25 09:00 UTC"
-
-
-def test_rss_feed_without_zone_is_read_utc_not_guessed():
-    out = cal._parse_ff(_rss(_item("PMI", "Fri, 25 Sep 2026 09:00:00")))
-    assert out[0]["when"] == "2026-09-25 09:00 UTC"
+def test_rss_publication_time_keeps_its_offset_in_its_own_field():
+    """وقت النشر ليس محذوفاً بل بحقله المسمّى، بالإزاحة الزمنية (‎-0400‎ عند 14:30 = 18:30 UTC)."""
+    out = cal._parse_ff(_rss(_item("NFP", "Tue, 23 Sep 2026 14:30:00 -0400")))
+    assert out[0]["published"] == "2026-09-23 18:30 UTC"
 
 
 def test_rss_unreadable_date_drops_neither_event_nor_invents_a_time():
     out = cal._parse_ff(_rss(_item("ECB", "not a date")))
     assert len(out) == 1, "الحدث لا يُسقَط لأجل تاريخ لا يُقرأ"
     assert out[0]["ts"] is None
+    assert out[0]["published"] is None
     assert "UTC" not in out[0]["when"]
 
 
@@ -76,6 +75,7 @@ def test_rss_missing_date_falls_back_to_the_week_wording():
     out = cal._parse_ff(_rss(_item("ECB", "")))
     assert out[0]["when"] == "هذا الأسبوع"
     assert out[0]["ts"] is None
+    assert out[0]["published"] is None
 
 
 # --------------------------------------- القصّ لا يسبق الفلاتر بأي فرع
@@ -116,6 +116,7 @@ def test_event_branch_declares_its_timezone_is_unknown():
 
 
 def test_rss_branch_is_not_marked_unknown_because_its_zone_is_real():
+    """لا ساعة تُعرض أصلاً (`when` «هذا الأسبوع») ⇒ لا وسم «منطقة مجهولة»؛ غيابها بـ`time_tbd`."""
     out = cal._parse_ff(_rss(_item("NFP", "Tue, 23 Sep 2026 14:30:00 -0400")))
     assert out[0].get("tz_unknown") is None
 

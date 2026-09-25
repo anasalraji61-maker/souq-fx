@@ -96,19 +96,21 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
                 continue
             desc = _text(item.find("description"))
             cur = _rss_currency(desc, title)
-            # `[:22]` كان **يقصّ الإزاحة الزمنية**: «Tue, 23 Sep 2026 14:30:00 -0400» تصير
-            # «Tue, 23 Sep 2026 14:30» — الوقت بلا منطقته، يقرؤه متداول ببغداد وآخر بلندن سواءً
-            # وهو في الحقيقة 18:30 UTC. نفس عيب `news_feed` المصحَّح بتشغيل سابق، وبقاعدته
-            # نفسها حرفياً فلا تنحرف نسختان — ومعه `ts` فيُعرض بتوقيت الجهاز ويُرتَّب كمسار JSON.
-            when, ts = when_and_ts(_text(item.find("pubDate")), default="هذا الأسبوع")
+            # `pubDate` = **وقت نشر** عنصر RSS لا موعد الخبر (tools81): كان يُرسَل `ts` فيعدّ التطبيق
+            # تنازلياً (`nextHighImpact`) لوقت النشر ⇒ «خبر قوي بعد 20 د» خاطئ، أو صمت قبل الخبر
+            # الحقيقي. العنصر لا يحمل حقل موعد ⇒ `ts` None والساعة غير معلنة؛ وقت النشر بحقله المسمّى
+            # `published` (بقاعدة `news_feed` نفسها، مع الإزاحة الزمنية) لا بخانة الموعد.
+            published, pub_ts = when_and_ts(_text(item.find("pubDate")), default="")
             out.append(
                 {
                     "id": _stable_id(title, desc or ""),
                     "title": title[:160],
                     "currency": cur,
                     "impact": _impact(_text(item.find("category"))),
-                    "when": when,
-                    "ts": ts,
+                    "when": "هذا الأسبوع",
+                    "ts": None,
+                    "time_tbd": True,
+                    "published": published if pub_ts is not None else None,
                     "forecast": "—",
                 }
             )
