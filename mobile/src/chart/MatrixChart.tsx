@@ -141,6 +141,7 @@ import {
 } from './measureReadout';
 import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
 import { zigzagWindowSegments } from './zigzagLegs';
+import { ZIGZAG_DEVIATION_PCT, zigzagLegendText } from './zigzagLegend';
 import { paneInlineFits } from './paneHeadFit';
 import { noteBox } from './noteLabel';
 import { playSoftClick } from '../audio/playSoftClick';
@@ -2775,7 +2776,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => {
       if (!indicators.includes('zigzag')) return null;
       // على السلسلة كلّها: الساق الداخلة من يسار النافذة والخارجة من يمينها + الساق الجارية غير المؤكَّدة.
-      const legs = computeZigZagLegs(aheadBars.map((c) => c.close));
+      const legs = computeZigZagLegs(aheadBars.map((c) => c.close), ZIGZAG_DEVIATION_PCT);
       return zigzagWindowSegments(legs.pivots, legs.tail, aheadBase.from, aheadBase.to - aheadBase.from);
     },
     [aheadBars, aheadBase, indicators]
@@ -3308,6 +3309,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     return vs ? vs.map((v, k) => ({ text: fmtPrice(v), color: m.colors[k]! })) : null;
   };
   const legendValueText = (id: string, index: number | null): string | null => {
+    // ZigZag: العتبة، و«≈540.0 pip» حين لا ساق على الشاشة — راجع `zigzagLegendText`.
+    if (id === 'zigzag') {
+      if (!zigzag || (dense && chartPlotW < 320)) return null;
+      return zigzagLegendText(series.symbol, source.plot[source.plot.length - 1]?.close, zigzag.length > 0, lang);
+    }
     const parts = legendMultiParts(id, index);
     if (parts) return parts.map((p) => p.text).join(' ');
     const band = legendBands[id];
