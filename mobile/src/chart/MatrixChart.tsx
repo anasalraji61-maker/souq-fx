@@ -2011,7 +2011,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // شموع D1 من المخزن مستويات اليوم فتُترك، والأساس من شموع السلسلة حتى شمعة الإعادة (ناقصة ⇒ لا خطوط).
   const replayLast = replayOn ? source.plot[source.plot.length - 1] : undefined;
   const replayCutSec = replayLast ? candleTimeSec(barTime(replayLast)) : null;
-  const replayClose = replayLast && Number.isFinite(replayLast.close) ? replayLast.close : null;
+  // «الآن» بالإعادة = إغلاق **الشمعة الحقيقية** حتى شمعة الإعادة: بـHeikin/Renko/Kagi/P&F/Range/Line Break كان إغلاق
+  // الشمعة المحوَّلة ((O+H+L+C)/4 بـHeikin) — سعراً لم يُتداول — فالوسم والخطّ المتقطّع ورأس الإطار ونسبته، وكل
+  // بُعد بالـpip من «الآن» (التقاطع، الخطوط الأفقية، PDH/PDL) تُقاس منه. خارج الإعادة يُقرأ الحقيقي أصلاً.
+  const replayClose = useMemo(() => {
+    if (replayCutSec == null) return null;
+    const cs = liveSeries.candles;
+    for (let i = cs.length - 1; i >= 0; i--) {
+      const c = cs[i];
+      if (c && Number.isFinite(c.time) && candleTimeSec(c.time) <= replayCutSec) {
+        return Number.isFinite(c.close) ? c.close : null;
+      }
+    }
+    return replayLast && Number.isFinite(replayLast.close) ? replayLast.close : null;
+  }, [liveSeries.candles, replayCutSec, replayLast]);
   const onReplayPriceRef = useRef(onReplayPrice);
   onReplayPriceRef.current = onReplayPrice;
   useEffect(() => {
@@ -5732,7 +5745,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const currentPrice =
     liveTagPrice ??
     (replayOn
-      ? source.plot[source.plot.length - 1]?.close
+      ? replayClose ?? undefined
       : liveSeries.candles[liveSeries.candles.length - 1]?.close) ??
     series.last;
   const currentPriceY = yOf(currentPrice);
