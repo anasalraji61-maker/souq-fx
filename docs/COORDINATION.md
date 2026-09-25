@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 16، بعد 8805813) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 17، بعد 5933093) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -17,7 +17,7 @@
 | launch | بلا مالك | «₴» للدفتر: `MatrixEdgeRails.tsx:142`، `MatrixBottomDock.tsx:85` ← «▤» كما `ToolsScreen:85` | launch4 ★ |
 | QA | بلا مالك | **a11y**: `MatrixEdgeRails`/`MatrixBottomDock`/`MatrixSidePanel` صفر `accessibilityState` (يمنع «Differentiate Without Color»)؛ خلفية `MatrixSidePanel.tsx:83` بلا اسم ولا `accessible={false}` | QA3 ★ |
 | QA | بلا مالك | **a11y (تصحيح QA13)**: `AccountScreen` :195 :324 :338 :439 :477 :493 لها نصّ ابن (الاسم مقروء) لكنها شرائح اختيار بلا `accessibilityState` (اللغة المختارة إلخ)؛ `MessagesScreen` :93 :144 :179 (ميّتة — ⛔ أنس 10) | QA3 ★ |
-| QA | chart + بلا مالك | **(c) جديد QA13**: 32 زرّاً تتلوّن حين تُختار بلا `accessibilityState={{ selected }}` ⇒ قارئ الشاشة لا يعرف المختار. (chart أنجز `IndicatorForecastPanel` d7c7fa7 ⇒ 31). بلا مالك: `AlertsPanel` :932 :950، `BacktestPanel` :175، `FocusChartModal` :322 :362، `FrameSizedGrid` :400 :414، `SocialConsensusPanel` :189، `VotePanel` :250 :265، `SymbolPairMenu` :49 :82 (`expanded`)، `PanSpeedSlider` :137 (+ Rails/Dock/SidePanel/TimeframeBar/Account أعلاه) | QA13 |
+| QA | chart + بلا مالك | **(c) جديد QA13**: 32 زرّاً تتلوّن حين تُختار بلا `accessibilityState={{ selected }}` ⇒ قارئ الشاشة لا يعرف المختار. (chart أنجز `IndicatorForecastPanel` d7c7fa7 ⇒ 31). بلا مالك: `AlertsPanel` :932 :950، `BacktestPanel` :175، `FocusChartModal` :322 :362، `FrameSizedGrid` :400 :414، `SocialConsensusPanel` :189، `VotePanel` :250 :265، `SymbolPairMenu` :49 :82 (`expanded`)، `PanSpeedSlider` :137 (+ Rails/Dock/SidePanel/TimeframeBar/Account أعلاه) | QA13 ★ |
 | chart+QA | بلا مالك | **`useMultiLiveTicks.ts` بلا حدّ تقادم ولا رفض ≤0** (`useLiveTicks` 20ث) ⇒ قائمة المتابعة قد تعرض سعراً متجمّداً. (مرجع التنبيه أُصلح عند المستهلك: `freshTickRefPrice` d68e485) | chart2 ★ |
 | chart | بلا مالك | `FocusChartModal`: الرأس يطبع تيك الرمز الجديد فوق شموع القديم؛ «+0.00%» أخضر | chart3 ★ |
 | chart | الجميع | 10 `Alert.alert` باقية بـ5 ملفات (Alerts ×4، IndicatorAlerts ×2، Watchlist ×2، FocusChart ×1، Account ×1) ← `confirmDestructive`/`notify` — دالّة فارغة على الويب. **أخطرها** `AccountScreen.tsx:162` تأكيد «حذف الحساب» ⇒ الحذف لا يعمل على الويب (launch61) | chart29 ★ |
@@ -33,13 +33,13 @@
 | launch | الخادم/أنس | `openrouter_ai.py:71` «أنت خبير تداول» ويعطي دخول/وقف/هدف | launch9 ★ |
 | launch | أنس | `MessagesScreen` غير مستوردة (وحدها تستعمل `mockPeers`) — تُحذف أم تُربط؟ | launch52 |
 | QA | الخادم | **(d)** `main.py:1774` يقرّب الوقف/الهدف لخانتين إن السعر ≥50 ⇒ USDJPY/DXY تفقد خانة | QA4 ★ |
-| QA | الخادم | **(d) الدفتر يقصّ بصمت عند 200 صفقة**: `db.py:1681` `LIMIT 200` (مفتوحة+مغلقة) و`trade_stats` :1836 يحسب منها ⇒ بعد 200 صفقة «الصفقات المغلقة: n»/نسبة الفوز/صافي الـpip تُحسب على الأحدث فقط وتختفي القديمة من القائمة بلا إشارة. والمعامل `days=30` :1673 لا يُستعمل (ميّت). نصّ «آخر 200» صار ظاهراً (0c34e61)؛ الباقي: إحصاء بـSQL على الكل + ترقيم | QA9 |
+| QA | الخادم | **(d) الدفتر يقصّ بصمت عند 200 صفقة**: `db.py:1681` `LIMIT 200` (مفتوحة+مغلقة) و`trade_stats` :1836 يحسب منها ⇒ بعد 200 صفقة «الصفقات المغلقة: n»/نسبة الفوز/صافي الـpip تُحسب على الأحدث فقط وتختفي القديمة من القائمة بلا إشارة. والمعامل `days=30` :1673 لا يُستعمل (ميّت). نصّ «آخر 200» صار ظاهراً (0c34e61)؛ الباقي: إحصاء بـSQL على الكل + ترقيم | QA9 ★ |
 | QA | الخادم | **(e)** تقويم العيّنة `econ_calendar.py:39-47` أوقات خاطئة و«5.25%» قديم؛ `_impact` :77. الواجهة تقول الآن «عيّنة لا تتداول عليها» (63c2ef6) | QA5 ★ |
-| QA | بلا مالك | **(a) جديد**: `DomLitePanel.tsx:67-73` يحسب السبريد بالـpip محلياً — نسخة `quoteSpreadPips` (`positionSize.ts:360`) الجديدة (tools: «ليس بنطاقي»)؛ والخاصية `last` ميتة (`void last` :75) والمستدعون ما زالوا يمرّرونها | QA11 |
-| QA | الخادم | **(d) جديد QA14**: ملاحظة التنبيه `main.py:199` (و:399 تنبيه المؤشر) `note: str = ""` بلا حدّ (ملاحظة الدفتر/التصويت 500) والخانة `AlertsPanel` بلا `maxLength` ⇒ نص غير محدود يُخزَّن ويُرسل بالإشعار | QA14 |
+| QA | بلا مالك | **(a) جديد**: `DomLitePanel.tsx:67-73` يحسب السبريد بالـpip محلياً — نسخة `quoteSpreadPips` (`positionSize.ts:360`) الجديدة (tools: «ليس بنطاقي»)؛ والخاصية `last` ميتة (`void last` :75) والمستدعون ما زالوا يمرّرونها | QA11 ★ |
+| QA | الخادم | **(d) جديد QA14**: ملاحظة التنبيه `main.py:199` (و:399 تنبيه المؤشر) `note: str = ""` بلا حدّ (ملاحظة الدفتر/التصويت 500) والخانة `AlertsPanel` بلا `maxLength` ⇒ نص غير محدود يُخزَّن ويُرسل بالإشعار | QA14 ★ |
 | QA+tools | أنس | **(e) جديد QA15**: صفقة التعادل (pnl = 0) تُحسب **خسارة** بنسبة الفوز (`journalStats` `pnl <= 0` = `backend/db.py:1848`) ⇒ متداول ينقل وقفه للتعادل يرى نسبة فوزه تهبط. قرار: تُستثنى أم تُحسب خسارة؟ | QA15 |
-| launch | chart | **(e) جديد launch65 (منخفض)**: `measureReadout.ts:52` يولّد «+35.0 pip» بكل اللغات (القياس، سطر التقاطع، التغيّر عن السابقة `b70f388`) — بالإنجليزية «pips» (القاموس صار «pips» بعد الرقم `758fc25`) ⇒ مفتاح وحدة بالقاموس أو فرع باللغة | launch65 |
+| tools | الخادم | **جديد tools45**: `close_trade` `backend/db.py:1761` `UPDATE … WHERE id=?` بلا `AND status='open'` ⇒ جهازان يُغلقان الصفقة نفسها بالثانية نفسها ⇒ الثاني يستبدل خروجها المسجَّل. الواجهة تجلب القائمة قبل الإغلاق (`2e4e8b4`) لكن الجذر بالخادم | tools45 |
 
-**أُسقط هذه الدورة (بالكود):** QA15 → launch — `riskCalcSlMismatch`/`…Narrower`/`journalStatNetPips` «pips» بالإنجليزية (`758fc25`، `locales.ts` :2466 :2499 :2578)؛ ما بقي (المولَّد بـ`measureReadout.ts`) صار صفّ launch65 → chart.
-**تحقّق بلا تغيير (بالكود):** `Alert.alert` 10 بـ5 ملفات؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `accNetLoadError` 0 مستعمل؛ `QUICK_SYMBOLS` ×2؛ `void last`؛ `RECONNECT_BASE_MS` ×2؛ قائمة التصديرات الميتة الـ11 كما هي.
-**(a) هذه الدورة — سليم:** التصديرات الجديدة (`savedRiskMoney`، `leverageAmbiguousThousands`، `barChangeRef`) كلّها مستوردة؛ لا تعريف مكرّر جديد.
+**أُسقط هذه الدورة (بالكود):** launch65 → chart — `pipUnit(lang)` `measureReadout.ts:38` (`f446081`): «pips» بالإنجليزية بالقياس/التقاطع/مدى الشمعة/صندوق المركز/وسوم الخطوط/السبريد؛ لا « pip» ثابتة باقية بـ`src/chart`.
+**تحقّق بلا تغيير (بالكود):** `Alert.alert` 10 بـ5 ملفات؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `accNetLoadError` 0 مستعمل؛ `close_trade` بلا شرط الحالة.
+**(b) هذه الدورة — سليم:** الجديد (20 commit) كلّه عبر `t.*` (`entryWord` ← `tr.entryLabel`)؛ العربية الثابتة بـ`.tsx` باقية بالملفات بلا مالك وحدها (صف QA2). القواميس: 954 مفتاحاً ×4، 0 فارغ، 0 عدم تطابق `{…}`.

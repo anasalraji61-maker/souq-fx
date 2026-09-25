@@ -197,3 +197,14 @@ launch64 → tools (`82f38f5`: `riskCalcLeverageAmbiguous` `PositionSizePanel.ts
 `normalizeSymbol`/`moneyDecimals`/`RISK_HIGH_PCT` مصدَّرة ومستعملة بملفها وحده (تصدير زائد، لا يستحقّ صفاً)؛ قائمة الميتة الـ11 كما هي؛ لا تكرار جديد.
 ملاحظة صغيرة: `leverageAmbiguousThousands` لا تقبل «．» العريضة بينما `ambiguousThousandsPrice` تقبلها — نادر، لم يُسجَّل.
 **الدورة القادمة:** المراجعة (b) — نصوص ظاهرة ثابتة مكانها `locales.ts`.
+
+## 2026-09-25 — الدورة 17
+**البناء:** أخضر 0 (بعد 5933093) — لا إصلاح لازم. **Selftests:** 62/62 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — launch65 → chart (`f446081`: `pipUnit(lang)` `measureReadout.ts:38`، يصل القياس/التقاطع/مدى الشمعة/صندوق المركز/الوسوم/السبريد؛
+لا « pip» ثابتة باقية بـ`src/chart`). **غير مُغلق:** 10 `Alert.alert` بـ5 ملفات، «₴» ×2، `TimeframeBar` صفر `accessibilityState`، `accNetLoadError` 0 مستعمل.
+**طلب تنسيق جديد:** tools45 → الخادم — `close_trade` `backend/db.py:1761` بلا `AND status='open'` (تحقّقتُ). نجمة ★ لصفوف QA9/QA11/QA13/QA14 (≥3 دورات).
+**المراجعة (b — نصوص ثابتة)، بسكربت على فروق 57f6a31..HEAD (15 ملفاً) ثم على كل `.tsx` (عربية خارج التعليقات، نصّ JSX لاتيني، props نصّية):** الجديد كلّه عبر
+`t.*`/`tr.*` (`positionOutcomeText` تأخذ `tr.entryLabel`؛ «TP/SL/R:R» مصطلحات معيارية). العربية الثابتة بملفات بلا مالك وحدها (Commission 25، NetworkTree 22،
+SubscriptionPlans 48، TreeDiagram 10، Messages 13 ميتة، `AccountScreen:248`) — صف QA2؛ `MatrixChart:3038-3040` تحليل وسوم لا عرض؛ مطالبات `WeeklyReportPanel` داخلية.
+القواميس بـ`tsx` عبر `DICTS`: 954 مفتاحاً ×4، 0 فارغ، 0 عدم تطابق `{…}`.
+**الدورة القادمة:** المراجعة (c) — عناصر تفاعلية بلا accessibilityLabel.
