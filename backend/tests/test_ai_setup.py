@@ -159,3 +159,18 @@ def test_system_prompt_no_longer_asks_the_model_for_its_own_levels(monkeypatch):
     openrouter_ai.trading_answer("q", "EURUSD", "ctx")
     assert "دخولاً تقريبياً" not in seen["sys"]
     assert "computed_levels" in seen["sys"]
+
+
+@pytest.mark.parametrize("lang", ["ar", "en"])
+@pytest.mark.parametrize("live", [True, False])
+def test_template_reply_does_not_send_the_trader_to_dxy(monkeypatch, lang, live):
+    # المزوّد لا يقدّم DXY وخانته بالتطبيق بذرة مولَّدة ⇒ الدعوة «راقب DXY» تُرسله لأرقام مخترعة (launch118)
+    if live:
+        monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
+    else:
+        base = _provider_series(0.0030)
+        monkeypatch.setattr(main, "build_series", lambda *a, **k: base(*a, **k).model_copy(update={"source": "demo"}))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    answer = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟", "lang": lang}).json()["answer"]
+    assert "DXY" not in answer
+    assert "USDJPY" in answer

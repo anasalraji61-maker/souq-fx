@@ -1889,7 +1889,8 @@ def ai_ask(body: AiAsk):
         answer = (
             f"**Quick read on {sym}**\n\n"
             f"{read}"
-            f"- Check the pair against **DXY** before entering.\n"
+            # لا «DXY»: المزوّد لا يقدّمه وخانته بالتطبيق بذرة مولَّدة (launch118)
+            f"- Check the dollar on more than one pair (EURUSD and USDJPY) before entering.\n"
             f"- Wait for a confirmed break or rejection at the nearest liquidity zone.\n"
             f"- Risk management: never risk more than 1% of your capital per trade.\n\n"
             f"{scenario}"
@@ -1918,7 +1919,7 @@ def ai_ask(body: AiAsk):
             f"**تحليل سريع لـ {sym}**\n\n"
             f"{read}"
             f"بالنسبة لسؤالك: «{q}»\n"
-            f"- راقب علاقة الزوج مع **DXY** قبل الدخول.\n"
+            f"- راقب الدولار على أكثر من زوج (EURUSD وUSDJPY) قبل الدخول.\n"
             f"- انتظر تأكيد كسر/رفض عند أقرب منطقة سيولة.\n"
             f"- إدارة المخاطر: لا تتجاوز 1% من رأس المال للصفقة.\n\n"
             f"{scenario}"
