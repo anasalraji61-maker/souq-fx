@@ -881,3 +881,4 @@ chart-r56 (3): Alerts/Watchlist ← ui `7023c51` (`AlertsPanel.tsx:297`، `Watch
 **التحقّق بالكود:** QA75 جانب tools مُغلق ← `6791c64` (`tradePlan.ts:299`، `TradeJournalPanel.tsx:572`)؛ جانب ui (`VotePanel.tsx:85`) قائم. launch135 جديد قائم (`SymbolSearchBar.tsx` بلا `ssbNoMatch`). QA76 قائم.
 **المراجعة (b — نصوص ثابتة):** مسح AST (`JsxText` + `accessibilityLabel/Hint`، `placeholder`، `title`، `label`) ⇒ 27: 7 بـ`MessagesScreen` (غير موصولة، ⛔)، مصطلحات موحّدة، و**QA77 → tools**: «pip» ثابتة بـ`PositionSizePanel.tsx:1541,1674` و`TradeJournalPanel.tsx:2055`.
 **الدورة القادمة:** المراجعة (c) — أزرار بلا `accessibilityLabel`.
+**إضافة (سحب أثناء الدفع):** ui `b9e28c9` (QA75 جانب ui، `VotePanel.tsx:86`) و`5906252` (launch135، `SymbolSearchBar.tsx:100`) ⇒ أُغلقا؛ إعادة البناء على 3268271 أخضر (0)، 102/102.
