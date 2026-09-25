@@ -275,3 +275,15 @@
 | 64 | `f88d36b` | **قالب الردّ المحلي (`/api/ai/ask` بلا OpenRouter)** كان يقول «Check the pair against **DXY**» / «راقب علاقة الزوج مع **DXY**» — المزوّد لا يقدّم DXY وخانته بالتطبيق بذرة مولَّدة ⇒ الدعوة تُرسل المتداول لأرقام مخترعة. الآن نصّ launch المقترح: «Check the dollar on more than one pair (EURUSD and USDJPY) before entering» / «راقب الدولار على أكثر من زوج (EURUSD وUSDJPY) قبل الدخول»، بالسعر الحي وبدونه. `tests/test_ai_setup.py` |
 
 **فُحص ولم يُغيَّر:** `academy_data.py` يذكر DXY مفهوماً تعليمياً (لا سعر) — يبقى. `db.py:333` «DXY يكسر 104.2» هو قائمة **حذف** البذر القديم لا بذر. صفّ ui16 (إرسال `candles: []` لـDXY) ينتظر tools للشارت الرئيسي كما طلب ui. قرارات أنس كما هي (launch9، QA24، launch77، backend-r6 (6)). صفّ launch118 جاهز لإغلاق QA.
+
+## 2026-09-25 — التشغيل 21: خانة DXY بلا شموع ولا سعر (backend-r19)
+
+**بداية التشغيل:** صفّ backend-r19 كان ينتظر tools — أُنجز (`b1d1adb` الشارت الرئيسي وسطر الحالة، و`da73ec6` chart: `MatrixChart` يتحمّل `candles: []`) ⇒ جزء الخادم أولاً. البنود 1–9 من STATUS أعدتُ فحصها بالكود — ما تزال منجزة (`0.00008` بتعليق فقط، 409 `trade_already_closed`، `XBR/USD`، كاش TTL، فهرس NOCASE…). 628 → **632** اختباراً ناجحاً؛ 3 من الجديدة تسقط على الكود القديم (تحقّقتُ بإرجاع `main.py` وحده)، والرابع حارس انحدار (`None > 0` بـ`/api/ai/ask` كان سيعطي 500).
+
+| # | الإيداع | ما تغيّر |
+|---|---|---|
+| 65 | `27fa8ba` | **DXY (`not_offered_by_provider`) = `candles: []` و`last`/`change_pct` = null** بـ`/api/charts` و`/api/terminal`: كانت بذرة عشوائية حول 104.25 (رقم مكتوب باليد بـ`SYMBOL_BASES`، حُذف) تُرسَل شموعاً وإغلاقاً ونسبة تحت وسم «غير متاح». `kind: demo` يبقى فيرفضها كل مسار حسابي كما قبل (تنبيهات، اقتباس، ماسح، مساعد)؛ `channel: null` لا «seed». `/api/ai/ask` على DXY يجيب بلا اتجاه ولا مستويات. الرموز المعروفة بلا مزوّد ما زالت بذرة موسومة (قرار سابق، لم يتغيّر). `tests/test_provider_symbols.py` |
+
+**فُحص ولم يُغيَّر:** قرأتُ مسارات التطبيق التي تقرأ `series.last` لسلسلة DXY (`ChartFrame`، `MatrixChart` الفارغ، `liveSeries.headerChangePct/livePriceForHeader`) — محروسة أو آمنة مع null. قرارات أنس كما هي (launch9، QA24، launch77، backend-r6 (6)).
+
+**ما يحتاجه التطبيق** ⇒ صفّ `backend-r19` بـ`docs/COORDINATION.md` (ui: نوع `ChartSeries.last`/`change_pct` بـ`api.ts` صار `number | null`).
