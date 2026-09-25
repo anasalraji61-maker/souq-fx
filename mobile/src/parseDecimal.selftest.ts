@@ -250,3 +250,12 @@ assert.equal(parseDecimal('١٠٬٠٠٠٫٥'), 10000.5);
 assert.ok(Object.is(parseDecimal('-0', { signed: true }), 0));
 assert.equal(parseDecimal('-0.5', { signed: true }), -0.5);
 console.log('parseDecimal arabic-decimal-then-comma / -0 selftest OK');
+
+// فاصلٌ أخير بلا أرقام بعد رقمٍ فيه الفاصل الآخر («150.125،» منسوخ من سطر توصية) ⇒ مرفوض — كان 150125 (×1000)
+for (const raw of ['150.125,', '150.125،', '1.085,', '١٥٠٫١٢٥،', '1,085.']) assert.equal(parseDecimal(raw), null, raw);
+assert.equal(parseDecimal('2.500,', { amount: true }), null); // كان 2500 — يتجاوز رفض «2.500» المبهمة
+assert.equal(parseDecimal('2.500,', { percent: true }), null);
+assert.equal(parseDecimal('150.125'), 150.125); // بلا الفاصلة كما كان
+assert.equal(parseDecimal('1.000,5'), 1000.5);
+assert.equal(parseDecimal('150,'), 150); // فاصلٌ واحد بلا آخر: لا لبس في المقدار (كما كان)
+console.log('parseDecimal trailing separator selftest OK');

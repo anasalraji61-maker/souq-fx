@@ -117,6 +117,9 @@ export function parseDecimal(
     const cut = s.lastIndexOf(decSep);
     const intPart = s.slice(0, cut);
     if (s.indexOf(decSep) !== cut) return null;
+    // فاصلٌ أخير بلا أرقام بعده ليس عشرية: «150.125،» (سعرٌ منسوخ من سطر توصية مع فاصلته) كانت 150125 — النقطة قبلها
+    // تمرّ فاصل آلاف فيكبر السعر ألف مرّة، و«2.500,» تتجاوز رفض «2.500» المبهمة بخانة المبلغ. يُرفض.
+    if (cut === s.length - 1) return null;
     if (!THOUSANDS_GROUPS(intPart, thouSep)) return null;
     s = `${intPart.split(thouSep).join('')}.${s.slice(cut + 1)}`;
   } else if (lastComma !== -1 || lastDot !== -1) {
