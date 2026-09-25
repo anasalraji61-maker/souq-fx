@@ -16,7 +16,6 @@ import { VotePanel } from './VotePanel';
 import { AnalystsPanel } from './AnalystsPanel';
 import { SocialConsensusPanel } from './SocialConsensusPanel';
 import { IndicatorForecastPanel } from './IndicatorForecastPanel';
-import type { Candle } from '../api';
 import type { Timeframe } from '../timeframes';
 import { type DrawTool } from '../chart/types';
 import { localizedDrawTools, localizedLenses } from '../chart/typeLabels';
@@ -47,10 +46,6 @@ type Props = {
   onTab: (tab: DockTabId) => void;
   symbol: string;
   timeframe: Timeframe;
-  /** @deprecated لم يعد مستخدَماً (لوح العمق يجلب اقتباسه) — يبقى حتى يكفّ المستدعي عن تمريره. */
-  lastPrice?: number;
-  /** @deprecated كذلك. */
-  candles?: Candle[];
   /** فتح لوحة جانبية إضافية إن لزم */
   onOpenEdge?: (panel: EdgePanelId) => void;
   /** أداة الرسم النشطة (تبويب "رسم") */

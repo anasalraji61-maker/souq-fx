@@ -12,7 +12,6 @@ import { BacktestPanel } from './BacktestPanel';
 import { NewsPanel } from './NewsPanel';
 import { DomLitePanel } from './DomLitePanel';
 import { TradeJournalPanel } from './TradeJournalPanel';
-import type { Candle } from '../api';
 import type { Timeframe } from '../timeframes';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -36,10 +35,6 @@ type Props = {
   onClose: () => void;
   symbol: string;
   timeframe: Timeframe;
-  /** @deprecated لم يعد مستخدَماً (لوح العمق يجلب اقتباسه) — يبقى حتى يكفّ المستدعي عن تمريره. */
-  lastPrice?: number;
-  /** @deprecated كذلك. */
-  candles?: Candle[];
   onPickDraw: (tool: DrawTool) => void;
   onToggleIndicator: (id: IndicatorId) => void;
   onPickKind: (kind: ChartKind) => void;
