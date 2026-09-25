@@ -178,7 +178,28 @@ def test_volume_is_optional_and_never_breaks_a_row(provider):
     provider["payload"] = {"values": rows}
     candles, _ = market.fetch_time_series_with_meta("EURUSD", "15m", 180)
     assert len(candles) == 3, "الحجم ليس سعراً — غيابه لا يُسقط شمعة"
-    assert [c["volume"] for c in candles] == [0.0, 0.0, 0.0]
+    # الفوركس بلا فوليوم مركزي: الغائب None لا 0.0 («لم يُتداول شيء» رقماً مخترَعاً)
+    assert [c["volume"] for c in candles] == [None, None, None]
+
+
+def test_real_zero_volume_stays_zero_and_negative_is_dropped(provider):
+    rows = _rows(3)
+    rows[0] = {**rows[0], "volume": "0"}
+    rows[1] = {**rows[1], "volume": "-3"}
+    rows[2] = {**rows[2], "volume": "12.5"}
+    provider["payload"] = {"values": rows}
+    candles, _ = market.fetch_time_series_with_meta("EURUSD", "15m", 180)
+    assert sorted(c["volume"] for c in candles if c["volume"] is not None) == [0.0, 12.5]
+    assert sum(c["volume"] is None for c in candles) == 1
+
+
+def test_chart_route_sends_null_volume_for_forex(provider):
+    from fastapi.testclient import TestClient
+    import main
+    rows = [{k: v for k, v in r.items() if k != "volume"} for r in _rows(60)]
+    provider["payload"] = {"values": rows}
+    body = TestClient(main.app).get("/api/charts/EURUSD?timeframe=15m").json()
+    assert body["candles"] and all(c["volume"] is None for c in body["candles"])
 
 
 @pytest.mark.parametrize("asked,sent", [(-5, "1"), (0, "1"), (180, "180"), (99_999, "5000")])

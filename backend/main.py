@@ -109,7 +109,8 @@ class Candle(BaseModel):
     high: float
     low: float
     close: float
-    volume: float = 0
+    # None = المصدر لا يعطي فوليوماً (الفوركس) — لا صفر مخترَع
+    volume: float | None = None
 
 
 class DataProvenance(BaseModel):

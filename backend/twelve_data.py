@@ -165,12 +165,14 @@ def _candle(row: object) -> dict | None:
         return None
     if not all(math.isfinite(v) for v in (o, h, l, c)):
         return None
+    # لا فوليوم مركزياً للفوركس: المزوّد لا يرسل الحقل، وكان يُملأ 0.0 ⇒ «لم يُتداول شيء» رقماً حقيقياً.
+    # الغائب/غير الصالح None؛ الصفر الذي يرسله المزوّد فعلاً (دقيقة بلا تيك) يبقى صفراً.
     try:
-        volume = float(row.get("volume") or 0)
+        volume: float | None = float(row["volume"]) if row.get("volume") not in (None, "") else None
     except (TypeError, ValueError):
-        volume = 0.0
-    if not math.isfinite(volume):
-        volume = 0.0
+        volume = None
+    if volume is not None and (not math.isfinite(volume) or volume < 0):
+        volume = None
     return {"time": ts, "open": o, "high": h, "low": l, "close": c, "volume": volume}
 
 
