@@ -2,18 +2,6 @@ export const TIMEFRAMES = ['1m', '5m', '15m', '30m', '1H', '4H', 'D', 'W'] as co
 
 export type Timeframe = (typeof TIMEFRAMES)[number];
 
-/** تسميات عربية مختصرة للعرض */
-export const TIMEFRAME_LABELS: Record<Timeframe, string> = {
-  '1m': 'دقيقة',
-  '5m': '5 د',
-  '15m': '15 د',
-  '30m': '30 د',
-  '1H': 'ساعة',
-  '4H': '4 س',
-  D: 'يومي',
-  W: 'أسبوعي',
-};
-
 export const TF_SECONDS: Record<Timeframe, number> = {
   '1m': 60,
   '5m': 300,

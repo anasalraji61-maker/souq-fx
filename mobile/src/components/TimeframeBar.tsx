@@ -1,14 +1,14 @@
 import React from 'react';
 import { Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
-import { TIMEFRAMES, TIMEFRAME_LABELS, type Timeframe } from '../timeframes';
+import { TIMEFRAMES, type Timeframe } from '../timeframes';
 import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
   value: string;
   onChange: (tf: Timeframe) => void;
   compact?: boolean;
-  /** عرض التسمية العربية بجانب الرمز */
+  /** التسمية المحلية (`t.tfLabels`: «ساعة» عربي، «1H» إنجليزي/كردي) بدل الرمز. كانت `TIMEFRAME_LABELS` العربية لكل اللغات ⇒ الكردي يرى أطراً عربية. */
   arabic?: boolean;
 };
 
@@ -23,14 +23,14 @@ export function TimeframeBar({ value, onChange, compact, arabic = false }: Props
     >
       {TIMEFRAMES.map((tf) => {
         const active = value === tf;
-        const label = arabic ? TIMEFRAME_LABELS[tf] : tf;
+        const label = arabic ? t.tfLabels[tf] : tf;
         return (
           <Pressable
             accessibilityState={{ selected: active }}
             accessibilityRole="button"
             key={tf}
             onPress={() => onChange(tf)}
-            accessibilityLabel={`${t.termTimeframeA11yPrefix} ${label}`}
+            accessibilityLabel={`${t.termTimeframeA11yPrefix} ${t.tfLabelsA11y[tf]}`}
             style={({ pressed }) => [
               styles.chip,
               active && styles.chipActive,
