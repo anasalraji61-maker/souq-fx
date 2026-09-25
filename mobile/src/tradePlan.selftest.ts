@@ -1428,6 +1428,17 @@ console.log('tradePlan liveStopChip selftest OK');
   assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'AAPL', filled }), false); // غير معروفة: لا تخمين
   // شريحة مؤشر معروف ⇒ نعم
   assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'US30', filled }), true);
+  // الرقمية: كانت `false` ⇒ دخول EURUSD تحت BTCUSD يُغلق 65000 «+5,989,855%»
+  assert.equal(liveEntryOrphaned({ entryText: '1.08515', symbol: 'BTCUSD', filled }), true);
+  const btc = { symbol: 'BTCUSD', text: '65000.00' };
+  assert.equal(liveEntryOrphaned({ entryText: '65000.00', symbol: 'ETHUSD', filled: btc }), true);
+  assert.equal(liveEntryOrphaned({ entryText: '65000.00', symbol: 'EURUSD', filled: btc }), true);
+  assert.equal(liveEntryOrphaned({ entryText: '65000.00', symbol: 'btc/usd', filled: btc }), false);
+  assert.equal(liveEntryOrphaned({ entryText: '65000.00', symbol: 'BTCUSD.m', filled: btc }), false);
+  assert.equal(liveEntryOrphaned({ entryText: '65000.00', symbol: 'BTCUSDT', filled: btc }), false); // مستقرّة ≈ الدولار
+  assert.equal(liveEntryOrphaned({ entryText: '65000.00', symbol: 'BTCUS', filled: btc }), false); // أثناء الكتابة
+  assert.equal(liveEntryOrphaned({ entryText: '65000.00', symbol: 'BTCEUR', filled: btc }), true);
+  assert.equal(liveEntryOrphaned({ entryText: '64000', symbol: 'ETHUSD', filled: btc }), false); // مكتوب باليد
   // كتبه المتداول بيده (أو عدّله) ⇒ لا يُمسّ
   assert.equal(liveEntryOrphaned({ entryText: '1.0852', symbol: 'GBPUSD', filled }), false);
   assert.equal(liveEntryOrphaned({ entryText: '1.27', symbol: 'GBPUSD', filled: null }), false);

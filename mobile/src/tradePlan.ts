@@ -1118,9 +1118,17 @@ export function liveEntryOrphaned(input: {
   // أداة **معروفة** فقط: `journalSymbol` يقبل «GBPUS» رمزاً حرّاً أثناء الكتابة
   // حساب سنت/micro («GBPUSDC») بسعر زوجه العادي كـ`quoteSymbol`: كان `null` فلا يُمسح دخول EURUSD تحت صفقة GBPUSDC
   // و mini («GBPUSD.MINI») كذلك — `quoteSymbol` يطلب زوجها العادي، فدخول EURUSD كان يبقى تحت صفقة GBPUSD.MINI
+  // والرقمية (`cryptoPairOf`، كـ`quoteSymbol`): كانت خارج السلسلة فدخول EURUSD 1.08515 يبقى تحت BTCUSD ⇒ إغلاق 65000 يُحفظ
+  // «+5,989,855%»، ودخول BTCUSD 65000 تحت ETHUSD ⇒ −96%، ولا pip للرقمية يلتقط الخطأ بعدها
   const now =
-    smallContractPair(symbol) ?? miniAccountSymbol(symbol) ?? instrumentSpec(symbol)?.symbol ?? knownSingleName(symbol);
-  return now != null && now !== filled.symbol;
+    smallContractPair(symbol) ??
+    miniAccountSymbol(symbol) ??
+    instrumentSpec(symbol)?.symbol ??
+    knownSingleName(symbol) ??
+    cryptoPairOf(symbol);
+  // BTCUSD ⇄ BTCUSDT/BTCUSDC السعر نفسه تقريباً — إكمال كتابة «T» لا يمسح الدخول
+  const stable = (x: string) => (cryptoPairOf(x) ? x.replace(/USD[TC]$/, 'USD') : x);
+  return now != null && stable(now) !== stable(filled.symbol);
 }
 
 /**
