@@ -184,6 +184,12 @@ type QuoteSnap = { price: number; bid?: number | null; ask?: number | null };
 /** خطأ `postJson` لردّ 409 (`trade_already_closed`، backend-r1): الصفقة أُغلقت بجهاز آخر بين الفحص والإغلاق. */
 const isAlreadyClosedError = (e: unknown) => e instanceof Error && /\bHTTP 409\b/.test(e.message);
 
+/** 409 على الإغلاق بـ`detail.error === 'trade_changed_concurrently'` (backend-r47): عُدِّلت الصفقة (دخول/اتجاه) بجهاز آخر
+ *  أثناء الإغلاق — ليست مغلقة، فلا يُقال «أُغلقت من جهاز آخر» (launch143b). */
+const isChangedConcurrentlyError = (e: unknown) =>
+  isAlreadyClosedError(e) &&
+  (e as { detail?: { error?: unknown } }).detail?.error === 'trade_changed_concurrently';
+
 export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBannerVisible = false }: Props = {}) {
   const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
@@ -1247,7 +1253,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
               if (!isAlreadyClosedError(e)) throw e;
               if (!mountedRef.current) return;
               await refresh();
-              if (mountedRef.current) notify(t.journalClosedElsewhereTitle, t.journalClosedElsewhereBody);
+              if (!mountedRef.current) return;
+              if (isChangedConcurrentlyError(e)) notify(t.journalCloseConflictTitle, t.journalCloseConflictBody);
+              else notify(t.journalClosedElsewhereTitle, t.journalClosedElsewhereBody);
               return;
             }
             if (!mountedRef.current) return;
