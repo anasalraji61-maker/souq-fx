@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api } from '../api';
+import { dirColor, dirLabel, levelsUnavailableText } from './signalDirection';
 import { formatPrice } from '../chart/math';
 import { useI18n } from '../i18n/I18nContext';
 import type { Dict } from '../i18n/locales';
@@ -34,18 +35,6 @@ function platformLabel(platform: string, t: Dict): string {
   return map[platform] ?? platform;
 }
 
-function dirColor(d: string) {
-  if (d === 'buy') return colors.bull;
-  if (d === 'sell') return colors.bear;
-  return colors.textMuted;
-}
-
-function dirLabel(d: string, t: Dict) {
-  if (d === 'buy') return t.dirBuy;
-  if (d === 'sell') return t.dirSell;
-  return t.dirNeutral;
-}
-
 export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
@@ -56,6 +45,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
   const [avg, setAvg] = useState(0);
   const [split, setSplit] = useState({ buy: 0, sell: 0, neutral: 0 });
   const [levels, setLevels] = useState<{ entry: number; sl: number; tp: number } | null>(null);
+  const [levelsWhy, setLevelsWhy] = useState<string | null>(null);
   const [votes, setVotes] = useState<Vote[]>([]);
   const [note, setNote] = useState('');
   const [ready, setReady] = useState(false);
@@ -129,6 +119,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
       setAvg(res.avg_score);
       setSplit(res.split);
       setLevels(res.levels);
+      setLevelsWhy(levelsUnavailableText(res.levels_basis, t));
       setVotes(res.votes);
       setNote(res.disclaimer);
     } catch {
@@ -139,7 +130,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [symbol, timeframe, selected, t.socialComputeError]);
+  }, [symbol, timeframe, selected, t]);
 
   useEffect(() => {
     if (!ready || !selected.length) return;
@@ -228,7 +219,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
             {formatPrice(levels.sl, symbol)} · {t.tpLabel} {formatPrice(levels.tp, symbol)}
           </Text>
         ) : (
-          <Text style={[styles.levels, { textAlign: align }]}>{t.socialNoClearTrade}</Text>
+          <Text style={[styles.levels, { textAlign: align }]}>{levelsWhy ?? t.socialNoClearTrade}</Text>
         )}
       </View>
 

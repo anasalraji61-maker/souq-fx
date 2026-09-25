@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api } from '../api';
+import { dirColor, dirLabel, levelsUnavailableText } from './signalDirection';
 import { formatPrice } from '../chart/math';
 import { useI18n } from '../i18n/I18nContext';
-import type { Dict } from '../i18n/locales';
 
 type Props = { symbol: string; timeframe?: string; embedded?: boolean };
 
@@ -14,22 +14,10 @@ type AnalystRow = {
   house: string;
   direction: string;
   score: number;
-  target: number;
+  target: number | null;
   horizon: string;
   summary: string;
 };
-
-function dirColor(d: string) {
-  if (d === 'buy') return colors.bull;
-  if (d === 'sell') return colors.bear;
-  return colors.textMuted;
-}
-
-function dirLabel(d: string, t: Dict) {
-  if (d === 'buy') return t.dirBuy;
-  if (d === 'sell') return t.dirSell;
-  return t.dirNeutral;
-}
 
 export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
   const { t, rtl } = useI18n();
@@ -40,6 +28,7 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
   const [levels, setLevels] = useState<{ entry: number; sl: number; tp: number } | null>(null);
   const [rows, setRows] = useState<AnalystRow[]>([]);
   const [note, setNote] = useState('');
+  const [levelsWhy, setLevelsWhy] = useState<string | null>(null);
 
   // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (تبديل قسم hub قبل
   // اكتمال الطلب) — نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود، بصيغة ref هنا لأن
@@ -59,6 +48,7 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
       setDirection(res.direction);
       setAvg(res.avg_score);
       setLevels(res.levels);
+      setLevelsWhy(levelsUnavailableText(res.levels_basis, t));
       setRows(res.analysts);
       setNote(res.disclaimer);
     } catch {
@@ -69,7 +59,7 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [symbol, timeframe, t.analystsLoadError]);
+  }, [symbol, timeframe, t]);
 
   useEffect(() => {
     void load();
@@ -130,7 +120,7 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
             · {t.tpLabel} {formatPrice(levels.tp, symbol)}
           </Text>
         ) : rows.length ? (
-          <Text style={[styles.levels, { textAlign: align }]}>{t.socialNoClearTrade}</Text>
+          <Text style={[styles.levels, { textAlign: align }]}>{levelsWhy ?? t.socialNoClearTrade}</Text>
         ) : null}
       </View>
 
@@ -145,9 +135,12 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
               <Text style={[styles.badge, { color: dirColor(a.direction) }]}>
                 {dirLabel(a.direction, t)}
               </Text>
-              <Text style={styles.target}>
-                {t.tpLabel} {formatPrice(a.target, symbol)}
-              </Text>
+              {/* backend-r1: `target` null حين لا مستويات — لا «هدف null» ولا رقم مصطنع */}
+              {typeof a.target === 'number' && Number.isFinite(a.target) ? (
+                <Text style={styles.target}>
+                  {t.tpLabel} {formatPrice(a.target, symbol)}
+                </Text>
+              ) : null}
               <Text style={styles.horizon}>{a.horizon}</Text>
             </View>
           </View>

@@ -616,7 +616,9 @@ export const api = {
       confidence: number;
       avg_score: number;
       split: { buy: number; sell: number; neutral: number };
-      levels: { entry: number; sl: number; tp: number };
+      /** backend-r1: null حين لا سعر حيّ/شموع قليلة/محايد — السبب بـ`levels_basis.unavailable`. */
+      levels: { entry: number; sl: number; tp: number } | null;
+      levels_basis?: { unavailable?: string | null } | null;
       votes: {
         id: string;
         name: string;
@@ -626,6 +628,8 @@ export const api = {
         note: string;
       }[];
       disclaimer: string;
+      data_kind?: string;
+      timeframe?: string;
     }>('/api/signals/social/consensus', body),
   analystsForecast: (symbol: string, timeframe = '15m') =>
     getJson<{
@@ -633,18 +637,22 @@ export const api = {
       direction: string;
       confidence: number;
       avg_score: number;
-      levels: { entry: number; sl: number; tp: number };
+      /** backend-r1: null حين لا سعر حيّ/شموع قليلة/محايد — السبب بـ`levels_basis.unavailable`. */
+      levels: { entry: number; sl: number; tp: number } | null;
+      levels_basis?: { unavailable?: string | null } | null;
       analysts: {
         id: string;
         name: string;
         house: string;
         direction: string;
         score: number;
-        target: number;
+        target: number | null;
         horizon: string;
         summary: string;
       }[];
       disclaimer: string;
+      data_kind?: string;
+      timeframe?: string;
     }>(
       `/api/signals/analysts/${encodeURIComponent(symbol)}?timeframe=${encodeURIComponent(timeframe)}`
     ),
@@ -658,7 +666,9 @@ export const api = {
       direction: string;
       confidence: number;
       avg_score: number;
-      levels: { entry: number; sl: number; tp: number };
+      /** backend-r1: null حين لا سعر حيّ/شموع قليلة/محايد — السبب بـ`levels_basis.unavailable`. */
+      levels: { entry: number; sl: number; tp: number } | null;
+      levels_basis?: { unavailable?: string | null } | null;
       votes: { id: string; name: string; direction: string; score: number; detail: string }[];
       snapshot?: { rsi?: number; change_pct?: number; last?: number };
       disclaimer: string;

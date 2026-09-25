@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api } from '../api';
+import { dirColor, dirLabel } from './signalDirection';
 import { formatPrice } from '../chart/math';
 import { formatRR } from '../tradePlan';
 import { pipsBetween } from '../positionSize';
@@ -31,12 +32,6 @@ type Vote = {
   detail: string;
 };
 
-function dirColor(d: string) {
-  if (d === 'buy') return colors.bull;
-  if (d === 'sell') return colors.bear;
-  return colors.textMuted;
-}
-
 /**
  * متوسط الدرجات كان `avg >= 0 ? '+' : ''` + `toFixed(2)`: الصفر يُكتب «+0.00» (إجماع محايد يُقرأ
  * ميلاً للشراء)، وسالب صغير يُقرَّب «-0.00»، وحقل غائب من الخادم يرمي عند `toFixed` فيسقط اللوح.
@@ -50,12 +45,6 @@ function formatScore(n: number): string {
   const r = (n < 0 ? -1 : 1) * (Math.round(c) / 100);
   if (r === 0) return '0.00';
   return `${r > 0 ? '+' : '−'}${Math.abs(r).toFixed(2)}`;
-}
-
-function dirLabel(d: string, t: Dict) {
-  if (d === 'buy') return t.dirBuy;
-  if (d === 'sell') return t.dirSell;
-  return t.dirNeutral;
 }
 
 export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: Props) {
@@ -143,7 +132,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
     } finally {
       if (mountedRef.current && req === reqRef.current) setLoading(false);
     }
-  }, [symbol, timeframe, enabled, t.forecastError, t.noLiveDataResult]);
+  }, [symbol, timeframe, enabled, t]);
 
   // تبديل الرمز/الفريم: اتجاه ومستويات الرمز السابق لا تبقى ظاهرة أثناء تحميل الجديد
   // (قد يُقرأ دخول/وقف EURUSD على الذهب). يسبق تأثير `run` بالترتيب.
