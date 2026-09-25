@@ -1308,7 +1308,7 @@ export type Dict = {
    * backend-r3 (launch104). لا شيء موصول بعد:
    * `impactHoliday` — `/api/calendar` `impact: "holiday"` (عطلة بنوك ForexFactory) بـ`CalendarPanel` (ui3)؛ `none`/`unknown` بلا كلمة.
    * `newsHolidayToday` — سطر شريط الأخبار (`NewsRiskBanner` `HOLIDAY_COPY`، tools): `{ccy}` العملات مفصولة «/»، `{title}` = « · عنوان» أو فارغ. كلٌّ مرة واحدة.
-   * `backtestBeforeCosts` — `stats.costs_included === false` (DXY، الرقمية): النتيجة قبل السبريد والعمولة (بدل الصمت).
+   * `backtestBeforeCosts` — `stats.costs_included === false` (DXY، الرقمية، والناشئة والمجهولة منذ `d18ff23`): النتيجة قبل السبريد والعمولة (بدل الصمت).
    * `forecastDetail` — `votes[].detail_code` ⇒ قالب، والقيم من `detail_values` بالأسماء نفسها (`{rsi}`، `{fast}`، `{slow}`، `{macd}`،
    *   `{signal}`، `{pos}`، `{k}`، `{pct}`)؛ القائمة = `signal_hub._DETAIL_TEXT`. رمز غير معروف ⇒ اعرض `detail` الخادم كما هو.
    * `forecastVoteNames` — مفاتيح `_VOTE_NAMES`. الخادم يرسل `votes[].id` لا مفتاح الاسم: `id` = المفتاح نفسه، إلا `ma` فهو
