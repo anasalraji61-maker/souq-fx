@@ -356,7 +356,7 @@ import {
   type PanSpeedPercent,
 } from './panSpeed';
 import { mapShadowCandles } from './shadowOverlay';
-import { visibleBarRange } from './visibleBars';
+import { visibleBarRange, visibleMax } from './visibleBars';
 import {
   firstAfter,
   lastAtOrBefore,
@@ -9592,8 +9592,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = cog.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxCog = Math.max(...vals, 1e-9);
+              const maxCog = visibleMax(cog, paneVis, true);
               return cog.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxCog, paneH);
@@ -9627,10 +9626,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = squeeze.momentum
-                .filter((x): x is number => x != null)
-                .map((v) => Math.abs(v));
-              const maxSq = Math.max(...vals, 1e-9);
+              const maxSq = visibleMax(squeeze.momentum, paneVis, true);
               return squeeze.momentum.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxSq, paneH);
@@ -9667,8 +9663,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = woodieCci.cci.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxWc = Math.max(...vals, 1e-9);
+              const maxWc = visibleMax(woodieCci.cci, paneVis, true);
               return woodieCci.cci.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxWc, paneH);
@@ -9710,8 +9705,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = donchianWidth.filter((x): x is number => x != null);
-              const maxDw = Math.max(...vals, 1e-9);
+              const maxDw = visibleMax(donchianWidth, paneVis);
               return donchianWidth.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -9750,8 +9744,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = keltnerWidth.filter((x): x is number => x != null);
-              const maxKw = Math.max(...vals, 1e-9);
+              const maxKw = visibleMax(keltnerWidth, paneVis);
               return keltnerWidth.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -9785,8 +9778,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = cfo.filter((x): x is number => x != null).map((x) => Math.abs(x));
-              const maxC = Math.max(...vals, 1e-9);
+              const maxC = visibleMax(cfo, paneVis, true);
               return cfo.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxC, paneH);
@@ -9873,8 +9865,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = disparityIndex.filter((x): x is number => x != null).map((x) => Math.abs(x));
-              const maxD = Math.max(...vals, 1e-9);
+              const maxD = visibleMax(disparityIndex, paneVis, true);
               return disparityIndex.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxD, paneH);
@@ -9952,8 +9943,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = pgo.filter((x): x is number => x != null).map((x) => Math.abs(x));
-              const maxP = Math.max(...vals, 1e-9);
+              const maxP = visibleMax(pgo, paneVis, true);
               return pgo.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxP, paneH);
@@ -9987,8 +9977,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = pfe.filter((x): x is number => x != null).map((x) => Math.abs(x));
-              const maxP = Math.max(...vals, 1e-9);
+              const maxP = visibleMax(pfe, paneVis, true);
               return pfe.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxP, paneH);
@@ -10016,8 +10005,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = rainbowOsc.filter((x): x is number => x != null);
-              const maxR = Math.max(...vals, 1e-9);
+              const maxR = visibleMax(rainbowOsc, paneVis);
               return rainbowOsc.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = Math.min(paneH - 16, (v / maxR) * (paneH - 8));
@@ -10076,8 +10064,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = vpci.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxV = Math.max(...vals, 1e-9);
+              const maxV = visibleMax(vpci, paneVis, true);
               return vpci.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxV, paneH);
@@ -10111,8 +10098,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = ttf.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxT = Math.max(...vals, 1e-9);
+              const maxT = visibleMax(ttf, paneVis, true);
               return ttf.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxT, paneH);
@@ -10176,8 +10162,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = vfi.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxV = Math.max(...vals, 1e-9);
+              const maxV = visibleMax(vfi, paneVis, true);
               return vfi.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxV, paneH);
@@ -10291,8 +10276,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = gmmaOsc.filter((x): x is number => x != null).map((x) => Math.abs(x));
-              const maxG = Math.max(...vals, 1e-9);
+              const maxG = visibleMax(gmmaOsc, paneVis, true);
               return gmmaOsc.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxG, paneH);
@@ -10498,8 +10482,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = ao.v.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxA = Math.max(...vals, 1e-9);
+              const maxA = visibleMax(ao.v, paneVis, true);
               return ao.v.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxA, paneH);
@@ -10534,8 +10517,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = ac.v.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxAc = Math.max(...vals, 1e-9);
+              const maxAc = visibleMax(ac.v, paneVis, true);
               return ac.v.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxAc, paneH);
@@ -10570,10 +10552,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = fractalChaosOsc
-                .filter((x): x is number => x != null)
-                .map((v) => Math.abs(v));
-              const maxF = Math.max(...vals, 1e-9);
+              const maxF = visibleMax(fractalChaosOsc, paneVis, true);
               return fractalChaosOsc.map((v, i) => {
                 if (v == null || v === 0) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxF, paneH);
@@ -10617,8 +10596,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = bullPower.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxBp = Math.max(...vals, 1e-9);
+              const maxBp = visibleMax(bullPower, paneVis, true);
               return bullPower.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxBp, paneH);
@@ -10652,8 +10630,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = bearPower.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxBe = Math.max(...vals, 1e-9);
+              const maxBe = visibleMax(bearPower, paneVis, true);
               return bearPower.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxBe, paneH);
@@ -10804,8 +10781,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = chaikinVol.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxCv = Math.max(...vals, 1e-9);
+              const maxCv = visibleMax(chaikinVol, paneVis, true);
               return chaikinVol.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxCv, paneH);
@@ -10839,8 +10815,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = qstick.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxQ = Math.max(...vals, 1e-9);
+              const maxQ = visibleMax(qstick, paneVis, true);
               return qstick.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxQ, paneH);
@@ -10879,8 +10854,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = bwmfi.filter((x): x is number => x != null);
-              const maxB = Math.max(...vals, 1e-9);
+              const maxB = visibleMax(bwmfi, paneVis);
               return bwmfi.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -10914,8 +10888,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = pvo.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxPv = Math.max(...vals, 1e-9);
+              const maxPv = visibleMax(pvo, paneVis, true);
               return pvo.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxPv, paneH);
@@ -10949,8 +10922,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = apo.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxA = Math.max(...vals, 1e-9);
+              const maxA = visibleMax(apo, paneVis, true);
               return apo.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxA, paneH);
@@ -10984,8 +10956,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = vo.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxVo = Math.max(...vals, 1e-9);
+              const maxVo = visibleMax(vo, paneVis, true);
               return vo.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxVo, paneH);
@@ -11023,8 +10994,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = hv.filter((x): x is number => x != null);
-              const maxH = Math.max(...vals, 1e-9);
+              const maxH = visibleMax(hv, paneVis);
               return hv.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -11052,8 +11022,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = atrp.filter((x): x is number => x != null);
-              const maxA = Math.max(...vals, 1e-9);
+              const maxA = visibleMax(atrp, paneVis);
               return atrp.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -11081,8 +11050,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = parkinsonVol.filter((x): x is number => x != null);
-              const maxV = Math.max(...vals, 1e-9);
+              const maxV = visibleMax(parkinsonVol, paneVis);
               return parkinsonVol.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -11110,8 +11078,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = garmanKlassVol.filter((x): x is number => x != null);
-              const maxV = Math.max(...vals, 1e-9);
+              const maxV = visibleMax(garmanKlassVol, paneVis);
               return garmanKlassVol.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -11139,8 +11106,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = rogersSatchellVol.filter((x): x is number => x != null);
-              const maxV = Math.max(...vals, 1e-9);
+              const maxV = visibleMax(rogersSatchellVol, paneVis);
               return rogersSatchellVol.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -11168,8 +11134,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = yangZhangVol.filter((x): x is number => x != null);
-              const maxV = Math.max(...vals, 1e-9);
+              const maxV = visibleMax(yangZhangVol, paneVis);
               return yangZhangVol.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -11297,10 +11262,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = linRegSlope
-                .filter((x): x is number => x != null)
-                .map((v) => Math.abs(v));
-              const maxL = Math.max(...vals, 1e-9);
+              const maxL = visibleMax(linRegSlope, paneVis, true);
               return linRegSlope.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxL, paneH);
@@ -11370,8 +11332,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = bbw.filter((x): x is number => x != null);
-              const maxBw = Math.max(...vals, 1e-9);
+              const maxBw = visibleMax(bbw, paneVis);
               return bbw.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -11453,8 +11414,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = ravi.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxR = Math.max(...vals, 1e-9);
+              const maxR = visibleMax(ravi, paneVis, true);
               return ravi.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxR, paneH);
@@ -11482,8 +11442,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = ulcer.filter((x): x is number => x != null);
-              const maxU = Math.max(...vals, 1e-9);
+              const maxU = visibleMax(ulcer, paneVis);
               return ulcer.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -11828,8 +11787,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = smiErgodic.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxM = Math.max(...vals, 1e-9);
+              const maxM = visibleMax(smiErgodic, paneVis, true);
               return smiErgodic.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxM, paneH);
@@ -11897,8 +11855,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = trueRange.filter((x): x is number => x != null);
-              const maxV = Math.max(...vals, 1e-9);
+              const maxV = visibleMax(trueRange, paneVis);
               return trueRange.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -11926,8 +11883,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = stdError.filter((x): x is number => x != null);
-              const maxV = Math.max(...vals, 1e-9);
+              const maxV = visibleMax(stdError, paneVis);
               return stdError.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -11955,8 +11911,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = ewmaVol.filter((x): x is number => x != null);
-              const maxV = Math.max(...vals, 1e-9);
+              const maxV = visibleMax(ewmaVol, paneVis);
               return ewmaVol.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -11990,8 +11945,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = volRoc.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxV = Math.max(...vals, 1e-9);
+              const maxV = visibleMax(volRoc, paneVis, true);
               return volRoc.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxV, paneH);
@@ -12030,8 +11984,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = volatilityRatio.filter((x): x is number => x != null);
-              const maxV = Math.max(...vals, 1e-9);
+              const maxV = visibleMax(volatilityRatio, paneVis);
               return volatilityRatio.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -12229,8 +12182,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = atr.filter((x): x is number => x != null);
-              const maxA = Math.max(...vals, 1e-9);
+              const maxA = visibleMax(atr, paneVis);
               return atr.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -12289,8 +12241,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const vals = stddev.filter((x): x is number => x != null);
-              const maxS = Math.max(...vals, 1e-9);
+              const maxS = visibleMax(stddev, paneVis);
               return stddev.map((v, i) =>
                 v == null ? (
                   <View key={i} style={{ flex: 1 }} />
@@ -12324,8 +12275,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
             />
             {(() => {
-              const vals = aroon.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxA = Math.max(...vals, 1e-9);
+              const maxA = visibleMax(aroon, paneVis, true);
               return aroon.map((v, i) => {
                 if (v == null) return <View key={i} style={{ flex: 1 }} />;
                 const h = centeredBarH(v, maxA, paneH);

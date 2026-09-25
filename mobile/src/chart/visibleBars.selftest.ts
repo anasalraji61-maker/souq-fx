@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/visibleBars.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { visibleBarRange } from './visibleBars';
+import { visibleBarRange, visibleMax } from './visibleBars';
 
 // بلا إزاحة: الكل
 assert.deepEqual(visibleBarRange(80, 320, 0), { lo: 0, hi: 79 });
@@ -25,5 +25,15 @@ assert.deepEqual(visibleBarRange(80, 320, 0, 20), { lo: 0, hi: 19 });
 assert.deepEqual(visibleBarRange(80, 320, -32, 20), { lo: 8, hi: 19 });
 // شمعة مكشوفة واحدة ⇒ هي وحدها (لا فهرس خارج السلسلة)
 assert.deepEqual(visibleBarRange(80, 320, 0, 1), { lo: 0, hi: 0 });
+
+// visibleMax: قفزة خارج الشاشة لا تدخل المقياس
+const spike = [50, -40, null, 1, -3, 2];
+assert.equal(visibleMax(spike, { lo: 3, hi: 5 }, true), 3);
+assert.equal(visibleMax(spike, { lo: 3, hi: 5 }), 2);
+assert.equal(visibleMax(spike, undefined, true), 50);
+// لا قيمة صالحة بالنافذة ⇒ السلسلة كلّها؛ سلسلة فارغة/أصفار ⇒ 1e-9
+assert.equal(visibleMax([null, 4, null], { lo: 2, hi: 2 }), 4);
+assert.equal(visibleMax([0, 0], { lo: 0, hi: 1 }), 1e-9);
+assert.equal(visibleMax([], { lo: 0, hi: 0 }), 1e-9);
 
 console.log('visibleBars selftest: PASS');

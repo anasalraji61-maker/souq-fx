@@ -26,3 +26,29 @@ export function visibleBarRange(
   const hi = Math.min(n - 1, Math.ceil((plotW - xPan) / step) - 1);
   return hi - lo + 1 >= 2 ? { lo, hi } : all;
 }
+
+/**
+ * أكبر قيمة (أو قيمة مطلقة، `abs`) للّوحة بين الشموع الظاهرة `vis` — مقياس لوحات الأعمدة كما تقيس
+ * MACD/TSI بـ`macdPaneGeom`. كان ~40 لوحة (AO، Bull/Bear Power، ATR، BBW، HV…) تأخذ أقصى التاريخ المحمَّل
+ * كلّه: قفزة خبر خارج الشاشة تُسطّح أعمدة المنطقة الهادئة المعروضة، والسحب لا يعيد المقياس كـTV.
+ * بلا قيمة صالحة داخل `vis` ⇒ السلسلة كلّها. الأدنى 1e-9 (لا قسمة على صفر).
+ */
+export function visibleMax(
+  values: readonly (number | null | undefined)[],
+  vis?: { lo: number; hi: number },
+  abs = false
+): number {
+  const scan = (lo: number, hi: number) => {
+    let m = -Infinity;
+    for (let i = Math.max(0, lo); i <= hi && i < values.length; i++) {
+      const v = values[i];
+      if (v == null || !Number.isFinite(v)) continue;
+      const x = abs ? Math.abs(v) : v;
+      if (x > m) m = x;
+    }
+    return m;
+  };
+  let m = vis ? scan(vis.lo, vis.hi) : -Infinity;
+  if (m === -Infinity) m = scan(0, values.length - 1);
+  return Math.max(m, 1e-9);
+}
