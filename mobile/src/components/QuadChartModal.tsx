@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   topRtl: { flexDirection: 'row-reverse' },
-  close: { color: colors.accent, fontWeight: '500' },
+  close: { color: colors.textMuted, fontWeight: '500' },
   tfRow: { flexDirection: 'row', paddingHorizontal: spacing.md, paddingTop: spacing.xs },
   tfRowRtl: { flexDirection: 'row-reverse' },
   title: { flex: 1, color: colors.text, fontWeight: '500', fontSize: 16 },
@@ -446,7 +446,9 @@ const styles = StyleSheet.create({
   cellShort: { minHeight: 0 },
   cellHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
   cellHeadRtl: { flexDirection: 'row-reverse' },
-  sym: { color: colors.accent, fontWeight: '500' },
+  // DESIGN-PRO §1: كان تأكيداً بكل خلية (أربعة عناصر تأكيد وقت السكون) ⇒ نصّ أساسي؛ التأكيد
+  // الوحيد بالشبكة حدّ الخلية القائدة، وبالشريط العلوي الفريم النشط.
+  sym: { color: colors.text, fontWeight: '500' },
   cellPrice: { ...numeric, color: colors.text, fontSize: 12, fontWeight: '600' },
   cellPct: { ...numeric, fontSize: 11, fontWeight: '600' },
   demoTag: { color: colors.warn, fontSize: 10, fontWeight: '500' },
@@ -461,7 +463,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     backgroundColor: colors.borderSoft,
   },
-  syncBadgeLeader: { color: colors.accent, backgroundColor: colors.accentSoft },
+  syncBadgeLeader: { color: colors.text, backgroundColor: colors.selectedFill },
   cellLeader: { borderColor: colors.accent },
   // المخرج الوحيد من النافذة على iOS: كان نصّاً ~33pt — الآن ≥44 كهدف لمس.
   closeHit: { minHeight: 44, minWidth: 44, justifyContent: 'center' },
@@ -472,9 +474,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  syncToggleOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  syncToggleOn: { borderColor: colors.textDim, backgroundColor: colors.selectedFill },
   syncToggleText: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
-  syncToggleTextOn: { color: colors.accent },
+  syncToggleTextOn: { color: colors.text },
   syncHint: {
     color: colors.textMuted,
     fontSize: 10,

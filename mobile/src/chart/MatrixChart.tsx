@@ -21,7 +21,7 @@ import {
 } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
-import { buttons, colors, numeric, radii, spacing } from '../theme';
+import { buttons, colors, numeric, radii, selectedMarkerWidth, spacing } from '../theme';
 import { isTimeframe } from '../timeframes';
 import type { Candle, ChartSeries } from '../api';
 import {
@@ -507,6 +507,12 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
   long: '⇡',
   short: '⇣',
 };
+
+/** DESIGN-PRO §4 — علامة الاختيار الداخلية 2px أسفل الزرّ: الاختيار لا يُقال باللون وحده.
+ * `accent` للاختيار الأساسي الوحيد بالمنطقة (§1)، وإلا محايدة. */
+function SelMark({ accent }: { accent?: boolean }) {
+  return <View pointerEvents="none" style={[styles.selMark, !accent && styles.selMarkNeutral]} />;
+}
 
 const PRICE_AXIS_WIDTH = 68;
 /** ارتفاع وسم سعر الخطّ/فيبو فوق خطّه (`top: -11` + خطّ 13) — أقرب من ذلك للحافّة العليا يُقلب تحته. */
@@ -6291,6 +6297,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={[styles.compactToolLabel, tool === t.id && styles.compactToolTextOn]}>
                   {t.label}
                 </Text>
+                {tool === t.id ? <SelMark accent /> : null}
               </Pressable>
             ))}
             {/* حذف العنصر المحدَّد كان بالرصيف الكامل وحده، فبالواجهة المدمجة (الهاتف)
@@ -6340,6 +6347,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 onPress={toggleSelectedArrow}
               >
                 <Text style={[styles.compactToolIcon, selectedArrow && styles.compactToolTextOn]}>➚</Text>
+                {selectedArrow ? <SelMark /> : null}
               </Pressable>
             ) : null}
             {selectedId ? (
@@ -6360,6 +6368,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={[styles.compactToolLabel, selectedLocked && styles.compactToolTextOn]}>
                   {selectedLocked ? tr.mcUnlockDrawing : tr.mcLockDrawing}
                 </Text>
+                {selectedLocked ? <SelMark /> : null}
               </Pressable>
             ) : null}
             {selectedId && !selectedLocked
@@ -6414,6 +6423,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={[styles.compactToolLabel, drawingsHidden && styles.compactToolTextOn]}>
                   {drawingsHidden ? `${tr.mcShowDrawings} (${drawings.length})` : tr.mcHideDrawings}
                 </Text>
+                {drawingsHidden ? <SelMark /> : null}
               </Pressable>
             ) : null}
             <Pressable
@@ -6490,6 +6500,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 onPress={() => setKind(k.id)}
               >
                 <Text style={[styles.chipText, kind === k.id && styles.chipTextOn]}>{k.label}</Text>
+                {kind === k.id ? <SelMark accent /> : null}
               </Pressable>,
               // Line Break مختار ⇒ عدد خطوط الانعكاس بجانبه يدور 2→3→4 (كشريحة انحراف ZigZag).
               ...(k.id === 'lineBreak' && kind === 'lineBreak'
@@ -6521,13 +6532,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 key={l.id}
                 style={({ pressed }) => [
                   styles.lens,
-                  lens === l.id && { borderColor: accent },
+                  lens === l.id && styles.lensOn,
                   pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                 ]}
                 onPress={() => setLens(l.id)}
               >
                 <Text style={styles.lensTitle}>{l.label}</Text>
                 <Text style={styles.lensHint}>{l.hint}</Text>
+                {lens === l.id ? <SelMark /> : null}
               </Pressable>
             ))}
           </ScrollView>
@@ -6695,6 +6707,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               }}
             >
               <Text style={[styles.zoomText, replayOn && styles.replayTextOn]}>⏪</Text>
+              {replayOn ? <SelMark /> : null}
             </Pressable>
             {replayOn ? (
               <>
@@ -6728,6 +6741,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   <Text style={[styles.zoomText, replayPlaying && styles.replayTextOn]}>
                     {replayPlaying ? '⏸' : '▶'}
                   </Text>
+                  {replayPlaying ? <SelMark /> : null}
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
@@ -6760,6 +6774,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               }}
             >
               <Text style={[styles.zoomText, logScale && styles.replayTextOn]}>Log</Text>
+              {logScale ? <SelMark /> : null}
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -6776,6 +6791,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               }}
             >
               <Text style={[styles.zoomText, percentScale && styles.replayTextOn]}>%</Text>
+              {percentScale ? <SelMark /> : null}
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -6789,6 +6805,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               onPress={() => setMagnet((v) => !v)}
             >
               <Text style={[styles.zoomText, magnet && styles.replayTextOn]}>🧲</Text>
+              {magnet ? <SelMark /> : null}
             </Pressable>
           </View>
         ) : null}
@@ -7084,10 +7101,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               borderRadius: 4,
               backgroundColor: 'rgba(7,16,24,0.78)',
               borderWidth: StyleSheet.hairlineWidth,
-              borderColor: 'rgba(45,212,191,0.45)',
+              borderColor: colors.border,
             }}
           >
-            <Text style={{ color: colors.accent, fontSize: 10, fontWeight: '500' }}>{tr.mcPrimaryLane}</Text>
+            {/* §1: لا تأكيد على الشارات — وسم محايد. */}
+            <Text style={{ color: colors.textMuted, fontSize: 10, fontWeight: '500' }}>{tr.mcPrimaryLane}</Text>
           </View>
         ) : null}
 
@@ -12522,6 +12540,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 }}
               >
                 <Text style={[styles.toolText, tool === t.id && styles.toolTextOn]}>{t.label}</Text>
+                {tool === t.id ? <SelMark accent /> : null}
               </Pressable>
             ))}
             {drawings.length ? (
@@ -12541,6 +12560,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     ? `◎ ${tr.mcShowDrawings} (${drawings.length})`
                     : `◉ ${tr.mcHideDrawings}`}
                 </Text>
+                {drawingsHidden ? <SelMark /> : null}
               </Pressable>
             ) : null}
             <Pressable
@@ -12612,6 +12632,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   onPress={() => toggleInd(ind.id)}
                 >
                   <Text style={[styles.indText, on && styles.indTextOn]}>{ind.label}</Text>
+                  {on ? <SelMark /> : null}
                 </Pressable>,
                 // ZigZag مفعَّل ⇒ شريحة انحرافه بجانبه تدور 1→2→3→5→10%: 5% على شارت 15د للفوركس لا تنعطف أبداً.
                 ...(ind.id === 'zigzag' && on
@@ -12649,6 +12670,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               onPress={() => setPineOn(false)}
             >
               <Text style={[styles.indText, !pineOn && styles.indTextOn]}>{tr.mcNoPineLine}</Text>
+              {!pineOn ? <SelMark /> : null}
             </Pressable>
             {INDICATOR_LIBRARY.map((p) => {
               const on = pineOn && pineFormula === p.formula;
@@ -12672,6 +12694,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   }}
                 >
                   <Text style={[styles.indText, on && styles.indTextOn]}>{p.name}</Text>
+                  {on ? <SelMark /> : null}
                 </Pressable>
               );
             })}
@@ -12737,6 +12760,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     onPress={toggleSelectedArrow}
                   >
                     <Text style={selectedArrow ? styles.toolTextOn : styles.toolText}>➚</Text>
+                    {selectedArrow ? <SelMark /> : null}
                   </Pressable>
                 ) : null}
                 <Pressable
@@ -12753,6 +12777,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   <Text style={selectedLocked ? styles.toolTextOn : styles.toolText}>
                     {selectedLocked ? `🔒 ${tr.mcUnlockDrawing}` : `🔓 ${tr.mcLockDrawing}`}
                   </Text>
+                  {selectedLocked ? <SelMark /> : null}
                 </Pressable>
                 {(selectedLocked ? [] : nudgeButtons).map((b) => (
                   <Pressable
@@ -12795,7 +12820,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                         accessibilityRole="button"
                         style={({ pressed }) => [
                           styles.tool,
-                          styles.toolOn,
                           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                         ]}
                         onPress={() => createAlert(d.a.price)}
@@ -12812,7 +12836,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                         accessibilityRole="button"
                         style={({ pressed }) => [
                           styles.tool,
-                          styles.toolOn,
                           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                         ]}
                         onPress={() => {
@@ -12849,7 +12872,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                         accessibilityRole="button"
                         style={({ pressed }) => [
                           styles.tool,
-                          styles.toolOn,
                           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                         ]}
                         onPress={() => createAlert(currentPrice)}
@@ -12897,7 +12919,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
-  compactToolOn: { backgroundColor: colors.accentSoft },
+  // DESIGN-PRO §1/§4 — الاختيار تعبئة محايدة + علامة 2px (`SelMark`)؛ التأكيد لعنصر واحد بكل منطقة
+  // (أداة الرسم بالشريط، نوع الشارت بالشريط الكامل) وباقي المفاتيح المختارة علامتها محايدة.
+  compactToolOn: { backgroundColor: colors.selectedFill },
   lockedHint: {
     position: 'absolute',
     top: 8,
@@ -12924,7 +12948,7 @@ const styles = StyleSheet.create({
   lockBadgeText: { fontSize: 8, lineHeight: 10 },
   compactToolIcon: { color: colors.text, fontSize: 16, fontWeight: '500', lineHeight: 18 },
   compactToolLabel: { color: colors.textDim, fontSize: 8, fontWeight: '500', marginTop: 1 },
-  compactToolTextOn: { color: colors.accent },
+  compactToolTextOn: { color: colors.text },
   toolbar: { gap: 8 },
   row: { flexDirection: 'row-reverse', gap: 8, paddingVertical: 4 },
   chip: {
@@ -12935,9 +12959,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  chipOn: { backgroundColor: colors.selectedFill },
   chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
-  chipTextOn: { color: colors.accent },
+  chipTextOn: { color: colors.text },
   lens: {
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -12947,6 +12971,7 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
     minWidth: 78,
   },
+  lensOn: { backgroundColor: colors.selectedFill },
   lensTitle: { color: colors.text, fontWeight: '500', fontSize: 11, textAlign: 'right' },
   lensHint: { color: colors.textDim, fontSize: 9, textAlign: 'right', marginTop: 4 },
   readout: {
@@ -12983,8 +13008,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   zoomText: { color: colors.text, fontWeight: '500', fontSize: 14 },
-  replayOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  replayTextOn: { color: colors.accent },
+  replayOn: { backgroundColor: colors.selectedFill },
+  replayTextOn: { color: colors.text },
+  selMark: {
+    position: 'absolute',
+    left: spacing.sm,
+    right: spacing.sm,
+    bottom: 0,
+    height: selectedMarkerWidth,
+    backgroundColor: colors.accent,
+  },
+  selMarkNeutral: { backgroundColor: colors.text },
   plot: {
     backgroundColor: '#071018',
     borderRadius: radii.md,
@@ -13166,10 +13200,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  axisCornerText: { color: colors.accent, fontSize: 8, fontWeight: '500' },
+  axisCornerText: { color: colors.textMuted, fontSize: 8, fontWeight: '500' },
   axisCornerTextScript: { fontSize: 10, fontWeight: '500' },
-  axisCornerManual: { backgroundColor: colors.accent, borderColor: colors.accent },
-  axisCornerTextManual: { color: '#041514' },
+  // يدوي ⇒ تعبئة محايدة ونصّ أفتح (كان تأكيداً ممتلئاً على المحور وقت السكون — §1).
+  axisCornerManual: { backgroundColor: colors.selectedFill },
+  axisCornerTextManual: { color: colors.text },
   toLatestBtn: {
     position: 'absolute',
     zIndex: 61,
@@ -13547,7 +13582,7 @@ const styles = StyleSheet.create({
   },
   collapsedCount: {
     ...numeric,
-    color: colors.accent,
+    color: colors.textMuted,
     fontSize: 9,
     fontWeight: '600',
   },
@@ -13559,21 +13594,21 @@ const styles = StyleSheet.create({
   },
   /** الشريط القابل للضغط: حدّ تيل خفيف يميّزه عن الشريط الإخباري الصامت. */
   collapsedBarTappable: {
-    borderColor: colors.accentBorderGlow,
+    borderColor: colors.border,
   },
   collapsedBarPressed: {
-    backgroundColor: colors.accentFaint,
+    backgroundColor: colors.selectedFill,
   },
   /** شارة «2/3»: خلفية تيل خفيفة تقول إن الشريط زرّ لا نصّ. */
   collapsedPageChip: {
-    backgroundColor: colors.accentSoft,
+    backgroundColor: colors.selectedFill,
     borderRadius: radii.sm,
     paddingHorizontal: 4,
     paddingVertical: 1,
   },
   collapsedPage: {
     ...numeric,
-    color: colors.accent,
+    color: colors.text,
     fontSize: 9,
     fontWeight: '600',
   },
@@ -13597,15 +13632,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,
+    overflow: 'hidden',
     backgroundColor: colors.bgPanel,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  toolOn: { backgroundColor: colors.warn, borderColor: colors.warn },
+  // كان تعبئة `warn` — والعنبري للبيانات المتدهورة وحدها (§1).
+  toolOn: { backgroundColor: colors.selectedFill },
   /** زرّ معطَّل (لا شيء للتراجع عنه) — باهت لا مخفيّ، فلا يقفز مكان الأزرار بالشريط. */
   toolDisabled: { opacity: 0.35 },
   toolText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
-  toolTextOn: { color: '#111' },
+  toolTextOn: { color: colors.text },
   ind: {
     paddingHorizontal: 8,
     paddingVertical: 8,
@@ -13614,7 +13651,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  indOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  indOn: { backgroundColor: colors.selectedFill },
   indText: { color: colors.textDim, fontSize: 10, fontWeight: '500' },
-  indTextOn: { color: colors.accent },
+  indTextOn: { color: colors.text },
 });
