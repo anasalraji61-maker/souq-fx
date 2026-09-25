@@ -539,3 +539,21 @@ launch99 (a): `openCurrencyExposure` (`tradePlan.ts:1707`) بلا مستعمل �
 «Log»/«%»/`label: 'Line Break'` (`types.ts:269`، يُترجم عبر `typeLabels`) مقبولة. الوحيد: اسم a11y لشريحة ZigZag حرفي — المفتاح جاهز (أعلاه). **لا بند إضافي.**
 **الدورة القادمة:** المراجعة (c) — a11y.
 **إلحاق (بعد f80d388):** وصلت `933d73a` (launch: `LANG_STORAGE_KEY` مُصدَّر) و`f80d388` (chart: وسم التقاطع بالنسبة). البناء أخضر 0. صفّ QA41 صار: `notifications.ts:10` يستورد الثابت (tools).
+
+## 2026-09-25 — الدورة 48
+**البناء:** أخضر 0 (بعد 5bf9b70) — لا إصلاح لازم. **Selftests:** 88/88 ناجح (`npx tsx`؛ `newsRisk`/`positionSize`/`tradePlan` بحالات جديدة).
+**السكربت:** أُثبت تعديل `qa-build-check.sh` المعلَّق (قفل `flock` مشترك `/tmp/matrix-tsc.lock` كي لا تتزاحم فحوص الوكلاء، ذاكرة 2048).
+**التحقّق من الإغلاقات بالكود:** tools63 — شقّ tools أُغلق (`PositionSizePanel.tsx:556` `riskCalcSpreadPointsHint`، `TradeJournalPanel.tsx:1870` `journalMiniNoMoney`)،
+و`formatPrice` لـchart أُغلق (`73aabd9`، `magnitudeDecimals(1e-30)=20` بالاختبار) ⇒ الصفّ صار chart وحده (`mcZigzagDevA11y`). QA41: tools65 يقول «`locales.ts` لا يصدّر»
+— خطأ، `locales.ts:4525` يصدّر `LANG_STORAGE_KEY` ⇒ الصفّ يوضّح ذلك لـtools. **غير مُغلق:** 10 `Alert.alert`، «₴» ×2، `FocusChartModal:56`، `notifications.ts:10`،
+`BRENT/USD`، `TimeframeBar`، `WeeklyReportPanel:46`.
+**طلبات تنسيق جديدة (تحقّقتُ):** tools65 → launch: `priceAmbiguousThousandsHint` «هل النقطة…» (ar/en/ku) يظهر الآن تحت «157,250» ⇒ صفّ جديد. launch100: قرار إرسال الأعطال ⇒ ⛔ 21.
+chart33 بنود ذاتية.
+**المراجعة (c — a11y)، diff منذ f80d388 + `9b1c2ba`:** `AppErrorBoundary` (زرّ «إعادة المحاولة» باسم، `alert`/`header`، سطر `selectable`) سليم.
+**جديد QA48 → launch+chart (منخفض):** شريحة عدد Line Break `accessibilityLabel={`${k.label} ${lineBreakCount} → …`}` حرفي كشريحة ZigZag ⇒ دُمج بصفّ tools63.
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة.
+**إلحاق (تعارض دمج مع 452960a):** وصلت أثناء الدورة `6fee41e` (launch: «الفاصل» ⇒ طلب tools65 مُنجز قبل أن أرفعه)، `aea854c` (chart: `mcZigzagDevA11y` موصول)،
+`b08a1da` (chart: `RECONNECT_*` مُصدَّران)، `0faf734` (launch: `mcLineBreakCountA11y` = بندي QA48 نفسه ⇒ صفّ launch101)، `d17d255` (tools: QA41 مُغلق)، و`452960a`
+(chart-r34 يسند صفوف «بلا مالك» إلى «ui» + يطلب مفاتيح قفل الرسم). تحقّقتُ بالكود وحذفتُ صفوف QA41/tools63 ولم أضف tools65. **«ui» بلا سجلّ في `docs/`** ⇒ ⛔ 1 لأنس.
+البناء بعد الدمج أخضر 0.
+**إلحاق 2:** `3a66ae1` (chart) وصل `mcLineBreakCountA11y` (`MatrixChart.tsx:5891`، لا `→ ${` حرفي باقٍ) ⇒ صفّ launch101 أُغلق. البناء أخضر 0.
