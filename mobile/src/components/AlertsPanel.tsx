@@ -22,6 +22,7 @@ import { playSoftClick } from '../audio/playSoftClick';
 import { hasCelebratedFirstAlert, markFirstAlertCelebrated } from '../achievements';
 import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
+import { isNotOfferedSymbol, isSymbolUnavailableError } from '../providerSymbols';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
 import { confirmDestructive, notify } from '../chart/confirmDestructive';
@@ -513,6 +514,11 @@ export function AlertsPanel({
       setFormError(t.indAlertsSymbolInvalid);
       return;
     }
+    // backend-r50c: الخادم يرفض (422) التنبيه على رمز لا يقدّمه المزوّد — كان يُحفظ «يراقب» ولا يُطلق أبداً.
+    if (isNotOfferedSymbol(sym)) {
+      setFormError(t.chartNotOfferedTitle.replace('{symbol}', sym));
+      return;
+    }
     setBusy(true);
     setFormError(null);
     const replacing = editingId;
@@ -563,8 +569,8 @@ export function AlertsPanel({
         if (firstBadgeTimerRef.current) clearTimeout(firstBadgeTimerRef.current);
         firstBadgeTimerRef.current = setTimeout(() => setShowFirstBadge(false), 2600);
       }
-    } catch {
-      setFormError(t.alertsAddError);
+    } catch (e) {
+      setFormError(isSymbolUnavailableError(e, sym) ? t.chartNotOfferedTitle.replace('{symbol}', sym) : t.alertsAddError);
     } finally {
       setBusy(false);
     }
@@ -612,8 +618,13 @@ export function AlertsPanel({
         )
       );
       await refresh();
-    } catch {
-      if (mountedRef.current) setFormError(t.alertsRearmFailed);
+    } catch (e) {
+      if (mountedRef.current)
+        setFormError(
+          isSymbolUnavailableError(e, a.symbol)
+            ? t.chartNotOfferedTitle.replace('{symbol}', a.symbol)
+            : t.alertsRearmFailed
+        );
     } finally {
       if (mountedRef.current) setBusy(false);
     }

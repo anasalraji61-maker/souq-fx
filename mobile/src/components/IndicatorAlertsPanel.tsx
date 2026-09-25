@@ -22,6 +22,7 @@ import {
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
+import { isNotOfferedSymbol, isSymbolUnavailableError } from '../providerSymbols';
 import type { Dict } from '../i18n/locales';
 import { QUICK_SYMBOLS } from '../tradePlan';
 
@@ -314,6 +315,11 @@ export function IndicatorAlertsPanel({
       setFormError(t.indAlertsSymbolInvalid);
       return;
     }
+    // backend-r50c: الخادم يرفض (422) التنبيه على رمز لا يقدّمه المزوّد — كان يُحفظ «يراقب» ولا يُطلق أبداً.
+    if (isNotOfferedSymbol(sym)) {
+      setFormError(t.chartNotOfferedTitle.replace('{symbol}', sym));
+      return;
+    }
     let rsiValue: number | undefined;
     if (type === 'rsi') {
       // كان رقم غير مفهوم يُرسَل NaN → JSON null → تنبيه RSI بلا عتبة لا يُطلق أبداً، بصمت.
@@ -351,8 +357,8 @@ export function IndicatorAlertsPanel({
         );
       }
       await refresh();
-    } catch {
-      if (mountedRef.current) setFormError(t.indAlertsAddError);
+    } catch (e) {
+      if (mountedRef.current) setFormError(isSymbolUnavailableError(e, sym) ? t.chartNotOfferedTitle.replace('{symbol}', sym) : t.indAlertsAddError);
     } finally {
       if (mountedRef.current) setBusy(false);
     }
