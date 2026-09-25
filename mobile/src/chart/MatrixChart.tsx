@@ -1458,7 +1458,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // **الفريم** (نفس السعر فنفس المقياس، فالخطوط تُرى بمواضع لا تعنيها).
   // بلا حفظ (شارت الرباعية `persistDrawings={false}`) لا تحميل غير متزامن أصلاً،
   // فالحالة هي الحقيقة ولا يصحّ حجبها — وإلا استحال الرسم على تلك الشاشات.
-  const drawingsPersisted = persistDrawings && interactive;
+  // ولا على سلسلة تجريبية/متعذّرة: القاعة بلا اتصال ترسم شموعاً وهمية للرمز الحقيقي (يورو حول 1.08)، وخطّ رُسم عليها
+  // كان يُحفظ تحت EURUSD فيظهر لاحقاً على الشارت الحقيقي عند مستوى لم يتداوله السوق.
+  const drawingsPersisted = persistDrawings && interactive && !isSyntheticProvenance(series.data_source);
   const loadedDrawingsKey = useRef<string | null>(null);
   const drawings =
     !drawingsPersisted ||
