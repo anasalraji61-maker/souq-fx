@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import type { Candle } from '../api';
-import { computeIchimoku } from './indicators/trend';
+import { computeAlligator, computeIchimoku } from './indicators/trend';
 
 // شمعة i: أعلى=أدنى=إغلاق=i ⇒ Tenkan/Kijun/SpanB الخام = منتصف نافذة منتهية عند i
 const candles: Candle[] = [];
@@ -40,5 +40,13 @@ assert.equal(spanA[119], 85.75);
 const short = computeIchimoku(candles.slice(0, 30));
 assert.equal(short.lead.spanB.every((v) => v == null), true);
 assert.equal(short.lead.spanA[0], null);
+
+// Alligator: الخطوط المُزاحة تكمل بعد آخر شمعة بلا فجوة — الخانة 120+k = الخام عند 120−shift+k
+const al = computeAlligator(candles);
+assert.deepEqual([al.lead.jaw.length, al.lead.teeth.length, al.lead.lips.length], [8, 5, 3]);
+const alFull = computeAlligator([...candles, ...Array.from({ length: 8 }, (_, k) => ({ ...candles[119], time: (120 + k) * 3600 }))]);
+// الخانات 120..127 بسلسلة أطول تعتمد على خام ≤119 فقط ⇒ تطابق الإسقاط
+for (let k = 0; k < 8; k++) assert.equal(al.lead.jaw[k], alFull.jaw[120 + k]);
+for (let k = 0; k < 3; k++) assert.equal(al.lead.lips[k], alFull.lips[120 + k]);
 
 console.log('ichimokuShift selftest PASS');

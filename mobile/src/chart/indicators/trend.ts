@@ -797,7 +797,13 @@ export function computeAlligator(
   jawShift = 8,
   teethShift = 5,
   lipsShift = 3
-): { jaw: (number | null)[]; teeth: (number | null)[]; lips: (number | null)[] } {
+): {
+  jaw: (number | null)[];
+  teeth: (number | null)[];
+  lips: (number | null)[];
+  /** الخطوط المُزاحة يمين آخر شمعة (8/5/3 خانات): `lead.jaw[k]` عند الخانة ‎n+k‎ — كـcomputeIchimoku. */
+  lead: { jaw: (number | null)[]; teeth: (number | null)[]; lips: (number | null)[] };
+} {
   const n = candles.length;
   const median = candles.map((c) => (c.high + c.low) / 2);
   const jawRaw = smma(median, jawPeriod);
@@ -810,10 +816,20 @@ export function computeAlligator(
     }
     return out;
   };
+  const leadSeries = (raw: (number | null)[], shift: number): (number | null)[] => {
+    const out: (number | null)[] = [];
+    for (let k = 0; k < shift; k++) out.push(n - shift + k >= 0 ? raw[n - shift + k] : null);
+    return out;
+  };
   return {
     jaw: shiftSeries(jawRaw, jawShift),
     teeth: shiftSeries(teethRaw, teethShift),
     lips: shiftSeries(lipsRaw, lipsShift),
+    lead: {
+      jaw: leadSeries(jawRaw, jawShift),
+      teeth: leadSeries(teethRaw, teethShift),
+      lips: leadSeries(lipsRaw, lipsShift),
+    },
   };
 }
 

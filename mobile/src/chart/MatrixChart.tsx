@@ -3245,6 +3245,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         spanB: [...ichimoku.spanB, ...ichimoku.lead.spanB.slice(0, lastDrawLocal + 1 - source.plot.length)],
       }
     : null;
+  // Alligator كذلك: الفك/الأسنان/الشفاه مُزاحة 8/5/3 للأمام — كانت تنتهي قبل الشمعة الحيّة بـ8/5/3 خانات
+  // فيبدو «الفم» مغلقاً أو مفتوحاً على شموع مضت لا على الحالية.
+  const futureSlots = lastDrawLocal + 1 - source.plot.length;
+  const alligatorLines = alligator
+    ? {
+        jaw: [...alligator.jaw, ...alligator.lead.jaw.slice(0, futureSlots)],
+        teeth: [...alligator.teeth, ...alligator.lead.teeth.slice(0, futureSlots)],
+        lips: [...alligator.lips, ...alligator.lead.lips.slice(0, futureSlots)],
+      }
+    : null;
 
   const viewPriceScale =
     syncFollow && syncWindow?.priceScale != null ? syncWindow.priceScale : priceScale;
@@ -7426,8 +7436,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             />
           ))}
         {indicators.includes('alligator') &&
-          alligator &&
-          planLineSegments(alligator.jaw, xOf, yOf).map((sg) => (
+          alligatorLines &&
+          planLineSegments(alligatorLines.jaw, xOf, yOf).map((sg) => (
             <View
               key={`agj${sg.at}`}
               style={{
@@ -7443,8 +7453,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             />
           ))}
         {indicators.includes('alligator') &&
-          alligator &&
-          planLineSegments(alligator.teeth, xOf, yOf).map((sg) => (
+          alligatorLines &&
+          planLineSegments(alligatorLines.teeth, xOf, yOf).map((sg) => (
             <View
               key={`agt${sg.at}`}
               style={{
@@ -7460,8 +7470,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             />
           ))}
         {indicators.includes('alligator') &&
-          alligator &&
-          planLineSegments(alligator.lips, xOf, yOf).map((sg) => (
+          alligatorLines &&
+          planLineSegments(alligatorLines.lips, xOf, yOf).map((sg) => (
             <View
               key={`agl${sg.at}`}
               style={{
