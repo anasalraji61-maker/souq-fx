@@ -164,7 +164,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
         ]}
         onPress={() => void run(k.id)}
         disabled={loading != null}
-        accessibilityState={{ disabled: loading != null }}
+        accessibilityState={{ disabled: loading != null, selected: active === k.id, busy: loading === k.id }}
         accessibilityLabel={k.title}
       >
         <Text style={[styles.tileTitle, { textAlign: align }]}>{k.title}</Text>
@@ -214,7 +214,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
           ]}
           onPress={() => void run(k.id)}
           disabled={loading != null}
-          accessibilityState={{ disabled: loading != null }}
+          accessibilityState={{ disabled: loading != null, selected: active === k.id, busy: loading === k.id }}
           accessibilityLabel={k.title}
         >
           <Text style={[styles.cardTitle, { textAlign: align }]}>{k.title}</Text>
