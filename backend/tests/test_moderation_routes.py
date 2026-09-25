@@ -164,6 +164,33 @@ def test_the_threshold_hides_a_trade_idea_for_everyone_too(client):
     assert vid not in _vote_ids(client, _register(client, "fresh5"))
 
 
+def test_a_hidden_trade_idea_cannot_be_voted_on_or_read_through_the_ballot(client):
+    """الإخفاء كان للقائمة فقط: التصويت على المعرّف يعيد نصّ الفكرة كاملاً ويزيد «الموافقة»."""
+    author = _register(client, "author06")
+    vid = _post_vote(client, author)
+    for i in range(db.REPORT_HIDE_THRESHOLD):
+        _report(client, _register(client, f"rep6{i}"), "vote", vid, reason="scam")
+    r = client.post("/api/votes/ballot", json={"vote_id": vid, "choice": "agree"},
+                    headers=_auth(_register(client, "fresh6"))).json()
+    assert r == {"ok": False, "error": "vote not found"}
+    with db._conn() as c:
+        assert c.execute("SELECT agree FROM votes WHERE id=?", (vid,)).fetchone()[0] == 0
+
+
+def test_an_invisible_only_chat_message_is_empty(client):
+    tok = _register(client, "author07")
+    for text in ["\u200b\u200b", "\ufeff", "\u200e \u200f"]:
+        assert client.post("/api/chat/group", json={"text": text}, headers=_auth(tok)).json() == {
+            "ok": False, "error": "empty"}
+
+
+@pytest.mark.parametrize("name", ["t.me/forexvip", "forexvip.com", "a@b.co", "www.signals"])
+def test_a_username_cannot_carry_a_link_or_at_sign(client, name):
+    """الاسم يظهر مؤلّفاً على كل رسالة — كان يتخطّى فلتر الروابط؛ و«@» يجعله لا يُدخَل بالاسم أبداً."""
+    r = client.post("/api/auth/register", json={"username": name, "email": "x@example.com", "password": "pass1234"})
+    assert r.status_code == 400 and r.json()["detail"] == "username has a link or @"
+
+
 # ─── قائمة المراجعة ─────────────────────────────────────────────────────────
 
 def test_the_review_list_shows_the_content_itself_not_just_an_id(client, moderator):

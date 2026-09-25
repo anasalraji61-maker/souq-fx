@@ -11,6 +11,7 @@ import os
 import re
 import secrets
 import time
+import unicodedata
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Literal
@@ -173,11 +174,12 @@ class ContentReport(BaseModel):
 # مجتمعات الفوركس للمتداول الفردي: روابط «قنوات توصيات» و«إدارة حسابات» تجرّه لتيليغرام/واتساب
 # أو مواقع احتيال. لا روابط في الرسائل والأفكار — النص فقط. متعمَّد أن يكون ضيقاً (لا قائمة شتائم
 # بأربع لغات تحجب كلاماً بريئاً)؛ الإساءة تُعالَج بالبلاغ + الحظر.
-_LINK_RE = re.compile(
-    r"(https?://|www\.|\bt\.me/|\bwa\.me/|\btelegram\.me/|\bchat\.whatsapp\.com/|"
-    r"\b[a-z0-9-]+\.(?:com|net|org|io|me|xyz|link|site|online|top|info|biz|co|app)\b)",
-    re.IGNORECASE,
-)
+_LINK_RE = db.LINK_RE  # نفس الفلتر يمنع الرابط باسم المستخدم (يظهر مؤلّفاً على كل رسالة)
+
+
+def _blank(text: str) -> bool:
+    """`strip()` لا يقطع محارف التنسيق (U+200B/FEFF/علامات الاتجاه) ⇒ رسالة «\u200b» فقاعة فارغة."""
+    return not "".join(ch for ch in (text or "") if not ch.isspace() and unicodedata.category(ch) != "Cf")
 
 
 def _has_link(text: str) -> bool:
@@ -1474,7 +1476,7 @@ def post_group(msg: ChatMessage, user: dict | None = Depends(_auth_user)):
     if not user:
         return {"ok": False, "error": "login_required"}
     text = msg.text.strip()
-    if not text:
+    if _blank(text):
         return {"ok": False, "error": "empty"}
     if _has_link(text):
         return {"ok": False, "error": "links_not_allowed"}

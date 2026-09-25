@@ -79,11 +79,22 @@ def _zwnj_ok(username: str, i: int) -> bool:
     return 0 < i < len(username) - 1 and _arabic_letter(username[i - 1]) and _arabic_letter(username[i + 1])
 
 
+LINK_RE = re.compile(
+    r"(https?://|www\.|\bt\.me/|\bwa\.me/|\btelegram\.me/|\bchat\.whatsapp\.com/|"
+    r"\b[a-z0-9-]+\.(?:com|net|org|io|me|xyz|link|site|online|top|info|biz|co|app)\b)",
+    re.IGNORECASE,
+)
+
+
 def _check_username(username: str) -> None:
     """ValueError لاسم محجوز أو يحمل محارف لا تُرى/تُطبَّع: «alice\u200b» (عرض صفري) و«ａｌｉｃｅ» (عرض
     كامل) كانا يُقبلان بجانب «alice» ويُعرضان مثله — انتحال لا يمنعه فهرس `NOCASE` (backend-r47)."""
     if _RESERVED_USERNAME.match(username) or username in _RESERVED_USERNAMES:
         raise ValueError("username reserved")
+    # الاسم يظهر مؤلّفاً على كل رسالة وفكرة: «t.me/forexvip» كان يتخطّى فلتر الروابط بالنصّ. و«@» يجعل
+    # الدخول بالاسم يُعامَل كبريد (`login_user`) فلا يُدخَل أبداً، ويشبه بريد شخص آخر.
+    if "@" in username or "/" in username or LINK_RE.search(username):
+        raise ValueError("username has a link or @")
     if unicodedata.normalize("NFKC", username) != username or any(
         unicodedata.category(ch)[0] in "CZ" and ch != " " and not (ch == _ZWNJ and _zwnj_ok(username, i))
         for i, ch in enumerate(username)
@@ -1444,6 +1455,9 @@ def ballot(vote_id: str, choice: str, user_id: int) -> dict | None:
     old_col = "disagree" if new_col == "agree" else "agree"
     with _conn() as c:
         if not c.execute("SELECT 1 FROM votes WHERE id=?", (vote_id,)).fetchone():
+            return None
+        if vote_id in _hidden_ids(c, "vote", user_id):
+            # فكرة مخفية بالبلاغات لا تُقرأ نصّها من ردّ التصويت ولا تنمو «موافقتها» خفيةً
             return None
         # العدّاد يتحرّك فقط حين **تُغيِّر** الكتابة نفسها صفّ الصوت. كان الخيار السابق يُقرأ بـSELECT
         # (بلا قفل كتابة) ثم يُنقل الصوت: ضغطتان متزامنتان على «أعارض» (أو جهازان) تقرآن «أوافق»
