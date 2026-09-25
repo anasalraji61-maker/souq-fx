@@ -13,7 +13,7 @@ import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { confirmDestructive, notify } from '../chart/confirmDestructive';
 import { useI18n } from '../i18n/I18nContext';
-import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
+import { misplacedArabicThousandsSign } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
 import { ambiguousThousandsPrice, parsePriceFor, sizeLooksLikeUnits } from '../positionSize';
@@ -46,6 +46,7 @@ import {
   draftRiskFigures,
   journalSizeLooksLikeUnits,
   journalMoneyLots,
+  parseJournalSize,
   journalSizeDottedThousands,
   journalSmallLotsStdEquiv,
   journalSizeFromSmall,
@@ -348,11 +349,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     }
   };
 
-  /** "1,0850" / «١٫٠٨٥٠» / «2,350.50» → رقم (راجع parseDecimal.ts)؛ خانة فارغة أو غير رقمية → null. */
-  const num = (v: string): number | null => {
-    const n = parseDecimal(v);
-    return n != null && n > 0 ? n : null;
-  };
+  /** خانة الحجم: «0,10» / «١٫٥» / «0.10 lots» → لوت (راجع `parseJournalSize`)؛ خانة فارغة أو غير رقمية → null. */
+  const num = (v: string): number | null => parseJournalSize(v);
   /** نص مكتوب لكنه غير مفهوم — كان الوقف/الهدف/الخروج يُحفظ فارغاً بصمت (صفقة مغلقة تُسجَّل مفتوحة). */
   const unreadable = (v: string) => v.trim() !== '' && num(v) == null;
   /**
@@ -785,7 +783,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       setFormError(
         badPx != null
           ? pxErrorText(badPx)
-          : misplacedArabicThousandsSign(size)
+          : misplacedArabicThousandsSign(size, { unit: 'lot' })
             ? t.arabicThousandsSignHint
             : t.invalidNumberHint
       );
@@ -1457,7 +1455,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           }}
           placeholder={t.journalSizePlaceholder}
           keyboardType="decimal-pad"
-          maxLength={8}
+          maxLength={10} // «0.10 lots» منسوخة (`parseJournalSize`)
           placeholderTextColor={colors.textDim}
           returnKeyType="done"
           underlineColorAndroid="transparent"

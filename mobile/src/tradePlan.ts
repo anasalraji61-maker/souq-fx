@@ -8,7 +8,7 @@
  * - وقف أقرب من 1 pip للدخول (أضيق من أي سبريد تجزئة) خطأ كتابة شبه مؤكد: كان يُعرض «0 pip · R:R 1:5000».
  */
 import { knownSingleName } from './chart/newsRisk';
-import { normalizeDigits, parseDecimal } from './parseDecimal';
+import { normalizeDigits, parseDecimal, stripUnitWord } from './parseDecimal';
 import {
   centAccountSymbol,
   microAccountSymbol,
@@ -92,10 +92,19 @@ export function journalSizeLooksLikeUnits(size: number, symbol: string | null | 
  * فتحسب **10 لوتات**: «المخاطرة 20 pip (2,000.00 USD)» بجانب سؤال «0.10 لوت أم 10؟» — مئة ضعف لمن قصد 0.10.
  */
 export function journalMoneyLots(raw: string, symbol: string | null | undefined): number | null {
-  const l = parseDecimal(raw);
+  const l = parseJournalSize(raw);
   if (l == null || !(l > 0)) return null;
   if (journalSizeDottedThousands(raw, symbol) || journalSizeLooksLikeUnits(l, symbol)) return null;
   return l;
+}
+
+/**
+ * خانة **الحجم** بالدفتر (لوت): «0.10 lots» منسوخة من تأكيد الصفقة («Buy 0.10 lots EURUSD») أو «١٫٥ لوت» كانت «رقم غير مفهوم»
+ * فيُمنع الحفظ. كلمة اللوت وحدها بالآخر مقبولة (`stripUnitWord`)، والباقي بقاعدة `parseDecimal` نفسها. `null` = فارغ/غير مفهوم/≤ 0.
+ */
+export function parseJournalSize(raw: string): number | null {
+  const n = parseDecimal(raw, { unit: 'lot' });
+  return n != null && n > 0 ? n : null;
 }
 
 /**
@@ -108,7 +117,7 @@ export function journalMoneyLots(raw: string, symbol: string | null | undefined)
  * التحذير بنقرة تحويل (كالوحدات «10000») ولا يُحفظ حتى يختار المتداول: «0.10» أو «10». `null` = لا لبس.
  */
 export function journalSizeDottedThousands(raw: string, symbol: string | null | undefined): { units: number; lots: number } | null {
-  const m = /^(\d{1,3})[.．]000$/.exec(normalizeDigits(raw).trim());
+  const m = /^(\d{1,3})[.．]000$/.exec(normalizeDigits(stripUnitWord(raw, 'lot')).trim());
   if (!m || Number(m[1]) < 1) return null;
   const spec = instrumentSpec((symbol || '').trim().toUpperCase());
   if (!spec) return null;

@@ -21,6 +21,7 @@ import {
   exitPreview,
   journalSizeDottedThousands,
   journalMoneyLots,
+  parseJournalSize,
   averageR,
   initialStop,
   JOURNAL_NOTE_MAX,
@@ -2582,3 +2583,25 @@ console.log('tradePlan R floor without pip selftest OK');
   assert.equal(again, '1R @ 8e-7');
 }
 console.log('tradePlan sub-micro initial stop selftest OK');
+
+// parseJournalSize — «0.10 lots» منسوخة من تأكيد الصفقة تُقرأ لوتاً؛ المال منها = المال من «0.10»
+{
+  assert.equal(parseJournalSize('0.10 lots'), 0.1);
+  assert.equal(parseJournalSize('0.1lot'), 0.1);
+  assert.equal(parseJournalSize('١٫٥ لوت'), 1.5);
+  assert.equal(parseJournalSize('0,5 lot'), 0.5);
+  assert.equal(parseJournalSize('0.1'), 0.1);
+  assert.equal(parseJournalSize(''), null);
+  assert.equal(parseJournalSize('0 lot'), null);
+  assert.equal(parseJournalSize('lots'), null);
+  assert.equal(parseJournalSize('0.1 pips'), null);
+  assert.equal(parseJournalSize('10000 units'), null);
+  assert.equal(journalMoneyLots('0.10 lots', 'EURUSD'), 0.1);
+  assert.equal(journalMoneyLots('0.10 lots', 'EURUSD'), journalMoneyLots('0.10', 'EURUSD'));
+  // «10.000 lots» مبهمة كـ«10.000» — سؤال «0.10 أم 10؟» لا 10 لوتات بصمت
+  assert.deepEqual(journalSizeDottedThousands('10.000 lots', 'EURUSD'), { units: 10000, lots: 0.1 });
+  assert.equal(journalMoneyLots('10.000 lots', 'EURUSD'), null);
+  // يبدو وحدات «10000 lot» ⇒ لا مال كالرقم وحده
+  assert.equal(journalMoneyLots('10000 lot', 'EURUSD'), null);
+}
+console.log('tradePlan parseJournalSize unit word selftest OK');
