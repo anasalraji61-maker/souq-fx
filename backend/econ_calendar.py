@@ -56,6 +56,25 @@ def _impact(raw: str | None) -> str:
     return "unknown"
 
 
+# عملات ForexFactory (و`ALL` لأحداث عالمية كاجتماعات G20). رمز خارجها ليس عملة: فرع RSS كان يأخذ
+# أوّل كلمة من 3 أحرف كبيرة ⇒ «CPI m/m» عملتها «CPI» و«ECB President Speaks» عملتها «ECB»؛ وحدث
+# بلا بلد كان يُوسَم «USD» فيظهر بفلتر الدولار كخبر أمريكي. المجهول الآن فارغ — لا عملة مخترَعة.
+CURRENCIES = frozenset({"USD", "EUR", "GBP", "JPY", "AUD", "NZD", "CAD", "CHF", "CNY", "ALL"})
+
+
+def _currency(raw: str | None) -> str:
+    code = (raw or "").strip()[:3].upper()
+    return code if code in CURRENCIES else ""
+
+
+def _rss_currency(desc: str, title: str) -> str:
+    for text in (desc, title):
+        for m in re.finditer(r"\b([A-Z]{3})\b", text or ""):
+            if m.group(1) in CURRENCIES and m.group(1) != "ALL":
+                return m.group(1)
+    return ""
+
+
 def _text(el: ET.Element | None) -> str:
     if el is None or el.text is None:
         return ""
@@ -76,10 +95,7 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
             if not title:
                 continue
             desc = _text(item.find("description"))
-            cur = "USD"
-            m = re.search(r"\b([A-Z]{3})\b", desc or title)
-            if m:
-                cur = m.group(1)
+            cur = _rss_currency(desc, title)
             # `[:22]` كان **يقصّ الإزاحة الزمنية**: «Tue, 23 Sep 2026 14:30:00 -0400» تصير
             # «Tue, 23 Sep 2026 14:30» — الوقت بلا منطقته، يقرؤه متداول ببغداد وآخر بلندن سواءً
             # وهو في الحقيقة 18:30 UTC. نفس عيب `news_feed` المصحَّح بتشغيل سابق، وبقاعدته
@@ -102,7 +118,7 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
         title = _text(ev.find("title"))
         if not title:
             continue
-        country = _text(ev.find("country")) or "USD"
+        country = _text(ev.find("country"))
         date = _text(ev.find("date"))
         tm = _text(ev.find("time"))
         when = f"{date} {tm}".strip() or "هذا الأسبوع"
@@ -115,7 +131,7 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
             {
                 "id": _stable_id(country, title, when),
                 "title": title[:160],
-                "currency": country[:3].upper() if country else "USD",
+                "currency": _currency(country),
                 "impact": _impact(_text(ev.find("impact"))),
                 "when": when[:32],
                 "forecast": forecast[:40],
@@ -183,7 +199,7 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
                     when = dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
             except ValueError:
                 pass
-        country = str(ev.get("country") or "USD").strip()
+        country = str(ev.get("country") or "").strip()
         fc_raw = str(ev.get("forecast") or "").strip()
         prev_raw = str(ev.get("previous") or "").strip()
         forecast = fc_raw or "—"  # لا يسقط للسابق — راجع `_parse_ff`
@@ -191,7 +207,7 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
             {
                 "id": _stable_id(country, title, raw_date),
                 "title": title[:160],
-                "currency": country[:3].upper() if country else "USD",
+                "currency": _currency(country),
                 "impact": _impact(str(ev.get("impact") or "")),
                 "when": when[:32],
                 "forecast": forecast[:40],

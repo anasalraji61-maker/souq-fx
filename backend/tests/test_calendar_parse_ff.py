@@ -179,3 +179,33 @@ def test_missing_forecast_is_a_dash_not_the_previous_release(branch):
     assert out[0]["forecast"] == "—"
     assert out[0]["forecast_value"] == ""
     assert out[0]["previous"] == "0.9"
+
+
+# ------------------------------------------------ العملة: لا رمز مخترَع
+
+def test_rss_currency_is_a_real_currency_not_the_first_acronym():
+    """«CPI m/m» كانت عملته «CPI» و«ECB President Speaks» عملته «ECB» (أوّل كلمة من 3 أحرف كبيرة)."""
+    out = cal._parse_ff(_rss(_item("CPI m/m", desc="CPI data for EUR")))
+    assert out[0]["currency"] == "EUR"
+    out = cal._parse_ff(_rss(_item("ECB President Speaks", desc="")))
+    assert out[0]["currency"] == ""
+
+
+def test_rss_without_any_currency_is_not_usd():
+    out = cal._parse_ff(_rss(_item("Bank Holiday", desc="Markets closed")))
+    assert out[0]["currency"] == ""
+
+
+def test_missing_country_is_unknown_not_usd_in_both_branches():
+    """حدث بلا بلد كان يُوسَم «USD» فيظهر بفلتر الدولار كخبر أمريكي."""
+    xml = _events("<event><title>Talks</title><impact>High</impact></event>")
+    assert cal._parse_ff(xml)[0]["currency"] == ""
+    out = cal._parse_ff_json('[{"title":"Talks","impact":"High","date":"2026-09-25T08:30:00-04:00"}]')
+    assert out[0]["currency"] == ""
+
+
+def test_global_all_events_keep_all():
+    out = cal._parse_ff_json('[{"title":"G20 Meetings","country":"All","impact":"Low","date":"2026-09-25T08:30:00-04:00"}]')
+    assert out[0]["currency"] == "ALL"
+    out = cal._parse_ff(_events(_event("Retail Sales", country="gbp")))
+    assert out[0]["currency"] == "GBP"
