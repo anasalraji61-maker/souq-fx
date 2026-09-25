@@ -278,6 +278,7 @@ import {
   computeRogersSatchellVolatility,
   computeRsi,
   computeRvi,
+  computeRviSignal,
   computeRwi,
   computeSmi,
   computeSmiErgodicOscillator,
@@ -2548,7 +2549,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [closes, indicators]
   );
   const rvi = useMemo(
-    () => (indicators.includes('rvi') ? ind(computeRvi(indBars)) : null),
+    () => {
+      if (!indicators.includes('rvi')) return null;
+      const line = computeRvi(indBars);
+      return ind({ rvi: line, signal: computeRviSignal(line) });
+    },
     [indBars, indicators]
   );
   const linRegSlope = useMemo(
@@ -10323,34 +10328,38 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {rvi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="RVI" values={rvi} at={crossIndex} />
+          <PaneValueHead
+            name="RVI"
+            values={rvi.rvi}
+            at={crossIndex}
+            signal={{ values: rvi.signal, color: colors.warn }}
+            compact={!paneSignalFits}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
             {(() => {
-              const vals = rvi.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxR = Math.max(...vals, 1e-9);
-              return rvi.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxR, paneH);
-                return (
+              // خطّان كـTradingView — RVI وإشارته `swma` — بهندسة MACD كلوحة KST. كانت أعمدة RVI وحدها
+              // بلا إشارة، فتقاطعهما (إشارة الدخول التي يُستعمل لها Relative Vigor) لا يُرى.
+              const g = macdPaneGeom(rvi.rvi, rvi.rvi, rvi.signal, paneH);
+              return (
+                <>
                   <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
+                    pointerEvents="none"
+                    style={[styles.paneZeroLine, { top: g.zeroY }]}
                   />
-                );
-              });
+                  <PaneLineLayer
+                    innerH={g.innerH}
+                    y={g.y}
+                    lines={[
+                      { values: rvi.signal, color: colors.warn, opacity: 0.9 },
+                      {
+                        values: rvi.rvi,
+                        color: (i) => ((rvi.rvi[i] ?? 0) >= (rvi.signal[i] ?? rvi.rvi[i] ?? 0) ? colors.bull : colors.bear),
+                      },
+                    ]}
+                  />
+                </>
+              );
             })()}
           </View>
         </View>

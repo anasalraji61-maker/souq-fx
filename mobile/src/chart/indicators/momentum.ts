@@ -561,6 +561,20 @@ export function computeRvi(candles: Candle[], period = 10): (number | null)[] {
 }
 
 /**
+ * خطّ إشارة RVI كـTradingView: ‎ta.swma(rvi)‎ — تنعيم [1,2,2,1]/6 على آخر أربع قيم (null حتى تصلح الأربع).
+ * تقاطع RVI وإشارته هو ما يُقرأ من المؤشّر؛ كانت اللوحة أعمدة RVI وحدها بلا إشارة.
+ */
+export function computeRviSignal(rvi: readonly (number | null)[]): (number | null)[] {
+  return rvi.map((v, i) => {
+    if (i < 3) return null;
+    const a = rvi[i - 1];
+    const b = rvi[i - 2];
+    const c = rvi[i - 3];
+    return v == null || a == null || b == null || c == null ? null : (v + 2 * a + 2 * b + c) / 6;
+  });
+}
+
+/**
  * Momentum (MOM، period=10 الافتراضي القياسي) — أبسط أوسيليتر زخم مطلق: فرق إغلاق مباشر بلا أي
  * تسوية % كـROC أعلاه (MOM[i] = إغلاق[i] − إغلاق[i-period])، غير محدود المدى، يتذبذب حول الصفر بنفس
  * نمط پين TRIX/DPO/LR Slope أعلاه (عمود ملوَّن أعلى/أسفل خط الصفر). **تحقّق يدوي**: سعر ثابت تماماً
