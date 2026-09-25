@@ -73,6 +73,7 @@ import {
   openCurrencyExposure,
   stackedCurrencyExposure,
   draftStackedExposure,
+  draftStackedExposureText,
   levelLooksLikePips,
   levelLooksLikePipsText,
 } from './tradePlan';
@@ -2713,3 +2714,15 @@ console.log('tradePlan levelLooksLikePipsText selftest OK');
   ]);
 }
 console.log('tradePlan draftStackedExposure selftest OK');
+
+// نصّ السطر قبل الدخول (journalExposureStackedDraft): كل المواضع، والقيم حرفية
+{
+  const x = { ccy: 'USD', before: 2, after: 3 };
+  assert.equal(
+    draftStackedExposureText('With this trade, {after} of your trades bet the same way on {ccy} ({before} already open)', x),
+    'With this trade, 3 of your trades bet the same way on USD (2 already open)'
+  );
+  assert.equal(draftStackedExposureText('{ccy} {ccy} $& {after}', x), 'USD USD $& 3');
+  assert.equal(draftStackedExposureText('{n}', x), '{n}');
+}
+console.log('tradePlan draftStackedExposureText selftest OK');

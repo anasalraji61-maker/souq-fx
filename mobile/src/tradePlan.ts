@@ -1740,7 +1740,7 @@ export function stackedCurrencyExposure(
 
 /**
  * **قبل الدخول**: هل تُضيف الصفقة التي تُكتب الآن رهاناً ثانياً (أو ثالثاً) بالاتجاه نفسه على عملةٍ تحملها صفقاتٌ مفتوحة؟ —
- * لسطر `journalExposureStacked` تحت نموذج الدفتر بـ«{before} → {after}». سطر التراكم (`stackedCurrencyExposure`) يظهر فوق
+ * لسطر `journalExposureStackedDraft` تحت نموذج الدفتر. سطر التراكم (`stackedCurrencyExposure`) يظهر فوق
  * القائمة **بعد** الحفظ؛ من يحمل شراء EURUSD وGBPUSD ويكتب شراء AUDUSD يُقال له بعدها إنها ثلاث مرّات بيع الدولار — والسؤال
  * كان قبلها.
  *
@@ -1759,4 +1759,16 @@ export function draftStackedExposure(
   return stackedCurrencyExposure([...open, { symbol: draft.symbol, side: draft.side, status: 'open' }])
     .filter((x) => (x.ccy === spec.base || x.ccy === spec.quote) && x.dir === dirOf(x.ccy))
     .map((x) => ({ ccy: x.ccy, before: x.n - 1, after: x.n, dir: x.dir }));
+}
+
+/**
+ * نصّ سطر التراكم قبل الدخول (`journalExposureStackedDraft`، launch): «بهذه الصفقة يصير … {after} (المفتوحة الآن: {before})».
+ * «3 (+1)» بالقالب القديم كان يسمّي الصفقة غير المحفوظة «مفتوحة». القيم بدالّة لا نصّ بديل (كـ`levelLooksLikePipsText`).
+ */
+export function draftStackedExposureText(
+  template: string,
+  x: { ccy: string; before: number; after: number }
+): string {
+  const vals: Record<string, string> = { ccy: x.ccy, before: String(x.before), after: String(x.after) };
+  return template.replace(/\{(ccy|before|after)\}/g, (_, k: string) => vals[k]);
 }

@@ -43,6 +43,7 @@ import {
   openRiskTotals,
   stackedCurrencyExposure,
   draftStackedExposure,
+  draftStackedExposureText,
   openTradesWithoutStop,
   knownLots,
   journalInstrumentKey,
@@ -740,16 +741,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   );
 
   /**
-   * قبل الحفظ: الصفقة التي تُكتب تُضيف رهاناً بالاتجاه نفسه على عملةٍ تحملها مفتوحة (`draftStackedExposure`) — سطر التراكم نفسه
-   * بالعدد **بعدها** و«(+1)» هي. «2 → 3» كان سيُقرأ مقلوباً بالعربية (سهمٌ بين أرقام بسطرٍ من اليمين). لا يظهر عند التعديل.
+   * قبل الحفظ: الصفقة التي تُكتب تُضيف رهاناً بالاتجاه نفسه على عملةٍ تحملها مفتوحة (`draftStackedExposure`) — «بهذه الصفقة
+   * يصير العدد 3 (المفتوحة الآن: 2)» (`journalExposureStackedDraft`)؛ لا تُسمّى المسودّة «مفتوحة». لا يظهر عند التعديل.
    */
   const draftStackedLines = useMemo(
     () =>
       editing
         ? []
-        : draftStackedExposure(trades, { symbol, side }).map((x) =>
-            t.journalExposureStacked.replace('{ccy}', x.ccy).replace('{n}', `${x.after} (+1)`)
-          ),
+        : draftStackedExposure(trades, { symbol, side }).map((x) => draftStackedExposureText(t.journalExposureStackedDraft, x)),
     [trades, symbol, side, editing, t]
   );
 
