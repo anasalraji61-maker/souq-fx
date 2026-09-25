@@ -218,3 +218,15 @@ SubscriptionPlans 48، TreeDiagram 10، Messages 13 ميتة، `AccountScreen:24
 (2) TextInput/Switch/Slider بلا وصف: 0 (مطابقة `TradeJournalPanel:1719` إيجابية كاذبة — «>500» داخل تعليق)؛ (3) اختيار باللون بلا `accessibilityState`: 31 كما هو.
 شرائح الخروج الجديدة (`3920848`) لها `selected` ووصف كامل بلغة المستخدم.
 **الدورة القادمة:** المراجعة (d) — أرقام/حدود متناقضة بين الملفات.
+
+## 2026-09-25 — الدورة 19
+**البناء:** أخضر 0 (بعد d9f53a9) — لا إصلاح لازم. **Selftests:** 62/62 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** لا صف مُغلق منذ QA18. **غير مُغلق:** 10 `Alert.alert` بـ5 ملفات، «₴» ×2، `TimeframeBar` صفر `accessibilityState`،
+`accNetLoadError`/`journalClosedElsewhere*` 0 مستعمل.
+**طلبات تنسيق جديدة (تحقّقتُ 0 مستعمل):** launch68 → tools — ربط `riskCalcConvStale` و`journalExitAtProfitStopA11y`.
+**المراجعة (d — أرقام/حدود متناقضة):** `Field(max_length)` بـ`main.py` مقابل `maxLength` الواجهة: الملاحظة 500=500، الدردشة 1000=1000؛ الرمز: الحاسبة
+`SYMBOL_INPUT_MAX_LEN` 13 لكن `journalSymbol` (المستعمل للتسجيل من الحاسبة `PositionSizePanel:889`) يُخرج ≤12 — فحصتُه بـ`tsx` على 9 رموز بلواحق
+(`EUR/USD.micro`⇒`EURUSD.MICRO`، `GBP/JPY-ECN12`، `XAU/USD_micro`…) كلها ≤12 ⇒ لا 422. عتبات التقادم (تيك 20ث، اقتباس الحاسبة 120ث، تحويل 60ث،
+تقويم 5د، عدّاد 24س، `MAX_SANE_LOTS` 100) تطابق نصوص `locales.ts`. **جديد QA19 (منخفض) → tools:** `CalendarPanel.tsx:37-38` ينسخ 3س/15د من
+`newsRisk.ts:224-225` بدل الاستيراد.
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.

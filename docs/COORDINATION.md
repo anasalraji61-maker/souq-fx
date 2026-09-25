@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 18، بعد 3920848) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 19، بعد d9f53a9) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -41,7 +41,10 @@
 | tools | الخادم | **جديد tools45**: `close_trade` `backend/db.py:1761` `UPDATE … WHERE id=?` بلا `AND status='open'` ⇒ جهازان يُغلقان الصفقة نفسها بالثانية نفسها ⇒ الثاني يستبدل خروجها المسجَّل. الواجهة تجلب القائمة قبل الإغلاق (`2e4e8b4`) لكن الجذر بالخادم | tools45 |
 | launch | tools | **جديد launch67**: `journalClosedElsewhereTitle`/`Body` (`9f899dc`) بلا مستعمل — فرع `closedElsewhere` (`TradeJournalPanel.tsx` ~:925) يحدّث القائمة بصمت ⇒ «إغلاق» لا يفعل شيئاً ظاهراً. ← `notify(t.journalClosedElsewhereTitle, t.journalClosedElsewhereBody)` | launch67 |
 | launch | أنس (`AccountScreen` بلا مالك) | **جديد launch67**: لا طريق لإعادة الجولة الترحيبية (`matrix.onboarding.v1`) — من تخطّاها خطأً فاتته. سطر «أعد الجولة» بالحساب + `App.tsx`؟ | launch67 |
+| launch | tools | **جديد launch68**: `riskCalcConvStale` (`39f080c`) بلا مستعمل (تحقّقتُ: 0) — تجديد سعر التحويل الفاشل صامت (`PositionSizePanel.tsx` `if (silent) return;` ~:333) ⇒ ختم آخر نجاح بـ`convQuote` + السطر حين ≥3 د | launch68 |
+| launch | tools | **جديد launch68**: `journalExitAtProfitStopA11y` (`97a3b1c`) بلا مستعمل — شريحة «= SL» الخضراء (`x.gain`) يقرؤها قارئ الشاشة «وقف الخسارة» ← `x.gain ? t.journalExitAtProfitStopA11y : t.journalExitAtSlA11y` (`TradeJournalPanel.tsx` ~:1572) | launch68 |
+| QA | tools | **(d) جديد QA19، منخفض**: `CalendarPanel.tsx:37-38` `ROW_SOON_MS = 3h`/`NOW_WINDOW_MS = 15m` أرقام منسوخة من `NEWS_HORIZON_MS`/`NEWS_GRACE_MS` (`chart/newsRisk.ts:224-225`) والتعليق يعد بأن «قريب» واحد بالشاشتين ⇒ `import` بدل النسخ كي لا ينحرفا | QA19 |
 
-**أُسقط هذه الدورة:** لا شيء (لا commit يغلق صفاً منذ QA17).
-**تحقّق بلا تغيير (بالكود):** `Alert.alert` 10 بـ5 ملفات (الـ11 بـ`TradeJournalPanel:908` تعليق)؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `accNetLoadError` 0 مستعمل؛ `journalClosedElsewhere*` 0 مستعمل.
-**(c) هذه الدورة:** بلا وصف ولا نصّ ابن: 1 (`MatrixSidePanel.tsx:83`، كما هو)؛ TextInput/Switch بلا وصف: 0؛ اختيار باللون بلا `accessibilityState`: 31 كما هو (صف QA13). الجديد (شرائح الخروج `3920848`) له `selected` ووصف كامل.
+**أُسقط هذه الدورة:** لا شيء (لا commit يغلق صفاً منذ QA18؛ launch67 `journalClosedElsewhere*` ما زال 0 مستعمل).
+**تحقّق بلا تغيير (بالكود):** `Alert.alert` 10 بـ5 ملفات (الـ11 تعليق `TradeJournalPanel:908`)؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `accNetLoadError` 0 مستعمل.
+**(d) هذه الدورة:** حدود الخادم (`main.py` Field) مقابل `maxLength` الواجهة: الملاحظة 500=500، الدردشة 1000=1000، الرمز: الحاسبة تقبل 13 حرفاً لكن `journalSymbol` يُخرج ≤12 (فحصتُه بـ`tsx` على 9 رموز بلواحق — كلها ≤12 ⇒ لا 422). عتبات التقادم (تيك 20ث، اقتباس 120ث، تحويل 60ث، تقويم 5د/24س) متّسقة مع النصوص. الوحيد: الصف QA19.
