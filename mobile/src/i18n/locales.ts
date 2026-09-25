@@ -1196,6 +1196,8 @@ export type Dict = {
   // (i18n طبقة أدوات شاشة الشارت، 2026-09-21)
   ssbPlaceholder: string;
   ssbError: string;
+  /** بحث نجح بلا نتيجة (`results` فارغة، `q` ≥ حرفين) — كان الشريط صامتاً فيُظنّ أنه لم يعمل. `{q}` نصّ البحث. */
+  ssbNoMatch: string;
   ssbPickA11yPrefix: string;
   smnTitle: string;
   smnFilterMomentum: string;
@@ -2422,6 +2424,7 @@ const ar: Dict = {
   // أدوات شاشة الشارت (i18n، 2026-09-21)
   ssbPlaceholder: 'بحث رمز... EUR, XAU, BTC',
   ssbError: 'تعذر البحث — تحقق من الاتصال وحاول مرة أخرى',
+  ssbNoMatch: 'لا رمز يطابق «{q}» لدى مزوّد البيانات — جرّب جزءاً أقصر مثل EUR أو XAU أو BTC',
   ssbPickA11yPrefix: 'اختيار الرمز: ',
   smnTitle: 'فحص سريع',
   smnFilterMomentum: 'زخم+',
@@ -3609,6 +3612,7 @@ const enUS: Dict = {
   // Chart-screen widget layer (i18n, 2026-09-21)
   ssbPlaceholder: 'Search symbol… EUR, XAU, BTC',
   ssbError: 'Search failed — check your connection and try again',
+  ssbNoMatch: 'No symbol matches “{q}” at our data provider — try a shorter part like EUR, XAU or BTC',
   ssbPickA11yPrefix: 'Select symbol: ',
   smnTitle: 'Quick scan',
   smnFilterMomentum: 'Mom+',
@@ -4826,6 +4830,7 @@ const ku: Dict = {
   // ئامرازەکانی شاشەی چارت (i18n، 2026-09-21)
   ssbPlaceholder: 'گەڕان بۆ هێما... EUR, XAU, BTC',
   ssbError: 'گەڕان سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
+  ssbNoMatch: 'هیچ هێمایەک لەگەڵ «{q}» ناگونجێت لای دابینکەری داتا — بەشێکی کورتتر تاقی بکەرەوە وەک EUR یان XAU یان BTC',
   ssbPickA11yPrefix: 'دیاریکردنی هێما: ',
   smnTitle: 'پشکنینی خێرا',
   smnFilterMomentum: 'پاڵنە+',
