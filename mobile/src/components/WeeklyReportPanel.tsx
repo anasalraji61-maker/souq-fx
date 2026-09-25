@@ -104,13 +104,19 @@ export function WeeklyReportPanel({ grid = false }: Props) {
       // الإحصاء وحده مطلوب (`stats` على كل المغلقة بالخادم) — لا حاجة لصفحة 200 صفقة.
       const tr = await api.trades({ limit: 1 });
       if (!mountedRef.current) return;
-      const s = (tr.stats ?? {}) as Record<string, number>;
+      const s = (tr.stats ?? {}) as Record<string, number | null>;
       const count = Number(s.trade_count);
       if (Number.isFinite(count) && count > 0) {
         hasJournalData = true;
+        // كل المغلقة تعادل (backend-r6 (5)) ⇒ الخادم يرسل `win_rate: 0` (أو null لاحقاً): «نجاح=0%» تُقرأ
+        // «خسر كل صفقاته». بلا صفقة حاسمة النسبة غير محدّدة ⇒ «—» بلا علامة %.
+        const decisive = Number(s.win_count ?? NaN) + Number(s.loss_count ?? NaN);
+        const winRate = s.win_rate;
+        const winRateText =
+          typeof winRate === 'number' && Number.isFinite(winRate) && decisive !== 0 ? `${winRate}%` : '—';
         journalLine = `\n${t.reportJournalDataLine
           .replace('{trades}', String(count))
-          .replace('{winRate}', String(s.win_rate))
+          .replace('{winRate}%', winRateText)
           .replace('{pnl}', String(s.total_pnl_pct))
           .replace('{best}', String(s.best))
           .replace('{worst}', String(s.worst))}`;
