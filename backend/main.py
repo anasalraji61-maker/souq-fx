@@ -23,7 +23,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from academy_data import get_lecture, get_school, get_schools_summary
 import elevenlabs_tts as tts
@@ -464,9 +464,25 @@ class TradeCreate(BaseModel):
     # غائب = «غير معروف» (null بالقاعدة) لا لوت واحد: الافتراض 1 كان يُخزَّن فيقرأه المتداول حجماً كتبه.
     size: float | None = Field(default=None, gt=0, allow_inf_nan=False)
     note: str = Field(default="", max_length=500)
-    opened_at: str | None = None
+    opened_at: str | None = Field(default=None, max_length=40)
     sl: float | None = Field(default=None, gt=0, allow_inf_nan=False)
     tp: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+
+    @field_validator("opened_at")
+    @classmethod
+    def _opened_at_as_journal_time(cls, v: str | None) -> str | None:
+        """بصيغة الخادم نفسها (`YYYY-MM-DD HH:MM` بتوقيته، كـ`db.add_trade` حين يغيب). كان نصّاً حرّاً يُحفظ
+        كما هو والدفتر يُرتَّب به نصّياً (`ORDER BY opened_at`): «2026-09-25T08:00:00Z» تُرتَّب أحدث من
+        «2026-09-25 10:00» (`T` بعد المسافة) فتنقلب الصفحات، و«أمس» يُقبل وقتاً. غير المقروء ⇒ 422."""
+        if v is None or not v.strip():
+            return None
+        try:
+            dt = datetime.fromisoformat(v.strip())
+        except ValueError:
+            raise ValueError("opened_at must be an ISO date/time") from None
+        if dt.tzinfo is not None:
+            dt = dt.astimezone()  # لتوقيت الخادم كبقية أوقات الدفتر
+        return dt.strftime("%Y-%m-%d %H:%M")
 
 
 class TradeClose(BaseModel):

@@ -496,3 +496,36 @@ def test_logged_in_client_without_install_id_sees_only_its_own_trades(client):
     assert client.patch(f"/api/trades/{stranger['id']}", json={"note": "x"}, headers=me).status_code == 404
     # والعميل القديم المجهول ما زال يرى صفّه
     assert [t["id"] for t in client.get("/api/trades").json()["trades"]] == [stranger["id"]]
+
+
+# ─── `opened_at` من العميل: بصيغة الدفتر أو 422 ─────────────────────────────
+
+@pytest.fixture()
+def utc_server(monkeypatch):
+    import time as _time
+
+    monkeypatch.setenv("TZ", "UTC")
+    _time.tzset()
+    yield
+    monkeypatch.undo()
+    _time.tzset()
+
+
+def test_client_opened_at_is_stored_in_the_journal_format(client, utc_server):
+    t = _open_trade(client, opened_at="2026-09-25T08:00:00Z")
+    assert t["opened_at"] == "2026-09-25 08:00"
+    assert _open_trade(client, opened_at="2026-09-25T11:30:00+03:00")["opened_at"] == "2026-09-25 08:30"
+    assert _open_trade(client, opened_at="2026-09-25 10:00")["opened_at"] == "2026-09-25 10:00"
+
+
+def test_iso_opened_at_sorts_by_time_not_by_text(client):
+    early = _open_trade(client, opened_at="2026-09-25T08:00:00")["id"]
+    late = _open_trade(client, opened_at="2026-09-25 10:00")["id"]
+    ids = [t["id"] for t in client.get("/api/trades", headers=_DEV1).json()["trades"]]
+    assert ids.index(late) < ids.index(early)
+
+
+@pytest.mark.parametrize("bad", ["yesterday", "25/09/2026", "2026-13-01"])
+def test_unreadable_opened_at_is_rejected(client, bad):
+    r = client.post("/api/trades", json={**_TRADE, "opened_at": bad}, headers=_DEV1)
+    assert r.status_code == 422, r.text
