@@ -894,7 +894,8 @@ export function journalStats(
   trades: readonly { status: string; pnl?: number | string | null }[]
 ): JournalStats {
   const pnls = trades
-    .filter((tr) => tr.status === 'closed' && tr.pnl != null && Number.isFinite(Number(tr.pnl)))
+    // نصّ فارغ/مسافات: `Number('')` = 0 ⇒ كان يُعدّ تعادلاً (الخادم `float('')` يرفضه) ⇒ يُستبعد كالقيمة المفقودة
+    .filter((tr) => tr.status === 'closed' && tr.pnl != null && String(tr.pnl).trim() !== '' && Number.isFinite(Number(tr.pnl)))
     .map((tr) => Number(tr.pnl));
   if (pnls.length === 0) {
     return {

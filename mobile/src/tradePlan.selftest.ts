@@ -949,6 +949,17 @@ console.log('tradePlan exitPreview selftest OK');
 }
 console.log('tradePlan journalSymbol index-suffix selftest OK');
 
+// ---- journalStats: pnl نصّاً فارغاً ليس تعادلاً (Number('') = 0) ----
+{
+  const st = journalStats([
+    { status: 'closed', pnl: 1.5 }, { status: 'closed', pnl: -1 }, { status: 'closed', pnl: 0 },
+    { status: 'closed', pnl: '' }, { status: 'closed', pnl: '  ' }, { status: 'closed', pnl: '2' }, { status: 'open', pnl: 3 },
+  ]);
+  assert.equal(st.trade_count, 4);
+  assert.equal(st.breakeven_count, 1);
+  assert.equal(st.win_count, 2);
+  assert.equal(st.loss_count, 1);
+}
 // ---- roundHalfEven + journalStats: إحصاءات الدفتر المفلتر = معادلة الخادم وتقريب بايثون حرفياً ----
 {
   // حالات يُخطئ فيها Math.round: النصف التامّ إلى الزوجي، و«19.925» الثنائية فوق النصف
