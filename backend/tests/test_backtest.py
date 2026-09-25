@@ -167,3 +167,10 @@ def test_no_winners_means_no_average_win():
     assert st["avg_win_pct"] is None and st["avg_loss_pct"] == -2.0
     st = backtest._stats([_t(2.0)])[0]
     assert st["avg_win_pct"] == 2.0 and st["avg_loss_pct"] is None
+
+
+def test_closed_candles_drops_only_an_unfinished_last_bar():
+    cs = [{"time": 0}, {"time": 900}, {"time": 1800}]
+    assert backtest.closed_candles(cs, 900, 2000) == cs[:2]   # الأخيرة تنتهي 2700
+    assert backtest.closed_candles(cs, 900, 2700) == cs       # انتهت بالضبط
+    assert backtest.closed_candles([], 900, 0) == []

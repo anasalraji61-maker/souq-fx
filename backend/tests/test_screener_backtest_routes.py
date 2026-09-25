@@ -372,3 +372,47 @@ def test_scan_short_series_has_no_80_candle_change(monkeypatch):
     assert out["scanned"] == 2
     assert [h["filters_matched"] for h in out["results"]] == [["rsi_oversold"], ["rsi_oversold"]]
     assert all(h["change_pct"] is None for h in out["results"])
+
+
+def _wave_ending_at(last_time: int, n: int = 200) -> list[dict]:
+    """موجة جيبية (دورة 60 شمعة) ⇒ تقاطعات MA منتظمة، آخر شمعة تبدأ عند `last_time`."""
+    import math as _m
+
+    out = []
+    for i in range(n):
+        p = 1.1 + 0.005 * _m.sin(i * 2 * _m.pi / 60)
+        out.append({"time": last_time - (n - 1 - i) * 900, "open": p, "high": p + 0.0003,
+                    "low": p - 0.0003, "close": p, "volume": 100})
+    return out
+
+
+def test_backtest_ignores_the_candle_still_forming(client, monkeypatch):
+    """الشمعة الجارية (بدأت قبل 5 د على 15m) لا تدخل الاختبار: إشارة عليها كانت تُسجَّل صفقة مغلقة بسعر
+    لم يُحسم. مع ma_cross (إيقاف وعكس) يبقى مركز مفتوح بالنهاية — يُقوَّم بآخر شمعة **مغلقة**."""
+    now = time.time()
+    cs = _wave_ending_at(int(now - 300))
+    monkeypatch.setattr(market, "configured", lambda: True)
+    monkeypatch.setattr(
+        market, "fetch_time_series_with_meta",
+        lambda sym, tf, outputsize=180: (cs, {"kind": "provider", "as_of": now}),
+    )
+    r = client.post("/api/backtest", json={"symbol": "EURUSD", "timeframe": "15m", "strategy": "ma_cross"}).json()
+    assert r["forming_bar_excluded"] is True, r
+    assert r["trades"], "fixture candles must produce trades"
+    times = {t["exit_time"] for t in r["trades"]} | {t["entry_time"] for t in r["trades"]}
+    assert cs[-1]["time"] not in times
+    assert r["trades"][-1]["exit_time"] == cs[-2]["time"]
+
+
+def test_backtest_keeps_a_finished_last_candle(client, monkeypatch):
+    """سوق مغلق (عطلة): آخر شمعة انتهت مدّتها ⇒ تبقى."""
+    now = time.time()
+    cs = _wave_ending_at(int(now - 3 * 86400))
+    monkeypatch.setattr(market, "configured", lambda: True)
+    monkeypatch.setattr(
+        market, "fetch_time_series_with_meta",
+        lambda sym, tf, outputsize=180: (cs, {"kind": "provider", "as_of": now}),
+    )
+    r = client.post("/api/backtest", json={"symbol": "EURUSD", "timeframe": "15m", "strategy": "ma_cross"}).json()
+    assert r["forming_bar_excluded"] is False
+    assert r["trades"][-1]["exit_time"] == cs[-1]["time"]

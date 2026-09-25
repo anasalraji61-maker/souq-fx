@@ -1132,7 +1132,10 @@ def backtest_run(body: BacktestRun):
             "symbol": body.symbol.upper(), "timeframe": body.timeframe, "data_kind": "demo",
             "unavailable_reason": series.data_source.unavailable_reason or "provider_unavailable",
         }
-    candles = [c.model_dump() for c in series.candles]
+    all_candles = [c.model_dump() for c in series.candles]
+    candles = backtest_engine.closed_candles(
+        all_candles, TF_SECONDS[series.timeframe], series.data_source.as_of or time.time()
+    )
     # بلا تكلفة كانت استراتيجية تنقلب كل بضع شموع تبدو رابحة وهي خاسرة بعد السبريد عند وسيط حقيقي.
     spread = backtest_engine.typical_spread(body.symbol)
     result = backtest_engine.run_backtest(
@@ -1150,6 +1153,8 @@ def backtest_run(body: BacktestRun):
         result["stats"]["costs_included"] = bool(spread)
     result["symbol"] = body.symbol.upper()
     result["timeframe"] = body.timeframe
+    # الشمعة الجارية لم تدخل الاختبار (المركز المفتوح يُقوَّم بآخر إغلاق **محسوم**)
+    result["forming_bar_excluded"] = len(candles) < len(all_candles)
     # demo = مسار عشوائي بذري (المزوّد متعذّر): نسبة ربح/عائد عليه ليست أداء استراتيجية — العميل يرفضها.
     result["data_kind"] = series.data_source.kind
     return result

@@ -46,6 +46,15 @@ def typical_spread(symbol: str) -> tuple[float, float] | None:
     return (15.0, pip)  # عملة ناشئة (TRY/ZAR/MXN…): سبريد واسع
 
 
+def closed_candles(candles: list[dict[str, Any]], bar_seconds: int, now: float) -> list[dict[str, Any]]:
+    """الشموع **المغلقة** وحدها: المزوّد يرسل الشمعة الجارية آخراً، وإشارة عليها (تقاطع/انعكاس) كانت تُسجَّل
+    صفقةً **مغلقة** بسعر لم يُحسم بعد — تدخل نسبة الفوز والعائد وقد تزول بإغلاق الشمعة. كمختبر TradingView
+    (الحساب عند إغلاق الشمعة افتراضياً). تُسقط الأخيرة إن لم تنتهِ مدّتها عند `now` (وقت جلب السلسلة)."""
+    if candles and int(candles[-1]["time"]) + bar_seconds > now:
+        return candles[:-1]
+    return candles
+
+
 def _stats(trades: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """إحصاء الصفقات ومنحنى رأس المال (يبدأ 100 ويتراكب).
 
