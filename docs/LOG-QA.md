@@ -372,3 +372,12 @@ QA21 (`d8446d0`؛ `DIRECTIONAL_OVERLAYS` باقٍ عمداً — استثناء 
 **جديد QA32 → chart + launch (منخفض):** `renko`/`kagi`/`pnf` بلا مفتاح بـ`KIND_KEYS` (`typeLabels.ts:24-33`) ⇒ لاتينية بالعربي/الكردي و«P&F» لقارئ الشاشة، والمتجر :51 يقول
 «رينكو، كاجي، نقطة ورقم»؛ ومعه المتجر :51 «منطقة» والتطبيق «مساحة» (`290e166`).
 **الدورة القادمة:** المراجعة (c) — a11y.
+
+## 2026-09-25 — الدورة 33
+**البناء:** أخضر 0 (بعد 374d92e) — لا إصلاح لازم. **Selftests:** 76/76 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — QA31 `ukDst` (`c1fd673`، نسخة واحدة `marketHours.ts:81` و`sessions.ts` يستوردها)؛ QA32 جانب launch (`2ff22c8` مفاتيح
+`ctlKindRenko/Kagi/Pnf` ×3 + `STORE-LISTING.md:51` «مساحة») ⇒ الصفّ صار لـchart وحده (ربط `KIND_KEYS`). **غير مُغلق:** 10 `Alert.alert` بـ5 ملفات، «₴» ×2،
+`FocusChartModal:56` `BASES`، `AiPanel`/`LectureClassroom` بلا `maxLength`، `BRENT/USD`.
+**طلبات تنسيق جديدة (تحقّقتُ):** launch84 → tools (منخفض): «40 يورو» بحساب دولار ⇒ `parseRiskInput` `null` كالنصّ غير المقروء ⇒ رسالة عامة؛ lookbehind بـ`moneyWordsToMarks` خطوة جهاز 298.
+**المراجعة (c — a11y)، بسكربت على كل `.tsx` + diff منذ الدورة 28:** لا جديد — `MatrixSidePanel.tsx:83` فقط (QA3)؛ `TradeJournalPanel:1755` إيجابية كاذبة (`>` بتعليق). أزرار ▲▼◀▶ المطوّلة لها أسماء.
+**الدورة القادمة:** المراجعة (d) — أرقام/حدود متناقضة بين الملفات.
