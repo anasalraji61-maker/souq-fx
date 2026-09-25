@@ -1852,7 +1852,7 @@ export function TerminalScreen() {
                     <ChartFrame
                       series={f}
                       size="large"
-                      accent={i === 2 ? colors.warn : colors.accent}
+                      accent={colors.accent}
                       label={f.symbol}
                       showTimeframes
                       panControls
@@ -1925,7 +1925,7 @@ export function TerminalScreen() {
                     <ChartFrame
                       series={f}
                       size="large"
-                      accent={i === 2 ? colors.warn : colors.accent}
+                      accent={colors.accent}
                       label={f.symbol}
                       showTimeframes
                       phone={phone}
