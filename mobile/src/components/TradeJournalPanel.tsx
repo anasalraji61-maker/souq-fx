@@ -173,6 +173,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   const [tp, setTp] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  /** النموذج **الآن** — صفقةٌ بدأت كتابتها أثناء طلب الإضافة لا يمسحها `resetForm` حين يصل الردّ */
+  const formKeyRef = useRef('');
+  formKeyRef.current = [symbol, side, entry, exit, size, sl, tp, note].join('\u0001');
   /** جلب «السعر الحالي» لخانة الدخول جارٍ */
   const [quoteBusy, setQuoteBusy] = useState(false);
   /** وضوح الحالة: يميّز "لا صفقات بعد" فعلياً عن فشل تحميل السجل */
@@ -807,6 +810,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     }
     setBusy(true);
     setFormError(null);
+    const submittedKey = formKeyRef.current;
     if (editing) {
       try {
         // تعديل: خانة فارغة = مسح (وقف/هدف بلا قيمة، وخروج فارغ يعيد صفقةً بدأ تعديلها مغلقة مفتوحةً) — لا «بلا تغيير» صامت.
@@ -849,7 +853,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       // الإضافة كالتعديل أعلاه: اللوحة قد تُغلق أثناء الطلب (تبديل التبويب) — لا تحديث حالة بعد الفكّ
       if (!mountedRef.current) return;
       playSoftClick();
-      resetForm();
+      // تغيّر النموذج أثناء الطلب = المتداول بدأ الصفقة التالية — تُحفظ كتابته لا تُمسح
+      if (formKeyRef.current === submittedKey) resetForm();
       await refresh();
     } catch {
       if (mountedRef.current) setFormError(t.journalAddError);
@@ -1295,11 +1300,16 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
                 transform: [{ scale: buttons.pressedScale }],
               },
             ]}
+            // «إلغاء» أثناء حفظ التعديل: الطلب يمضي، ثم يصل ردّه فيمسح (`resetForm`) صفقةً جديدة كُتبت بعد الإلغاء
             onPress={cancelEdit}
+            disabled={busy}
+            accessibilityState={{ disabled: busy }}
             accessibilityLabel={t.journalCancelEdit}
             hitSlop={8}
           >
-            <Text style={[styles.closeLink, { textAlign: align }]}>{t.journalCancelEdit}</Text>
+            <Text style={[styles.closeLink, busy && styles.closeLinkDisabled, { textAlign: align }]}>
+              {t.journalCancelEdit}
+            </Text>
           </Pressable>
         </View>
       ) : null}
