@@ -25,7 +25,7 @@ import {
 } from '../chart/liveSeries';
 import { useDailyRefs } from '../chart/dailyRefStore';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
-import { ProviderUnavailableNotice, seriesHasNoRealData } from './ProviderUnavailableNotice';
+import { isSeriesLoading, ProviderUnavailableNotice, seriesHasNoRealData } from './ProviderUnavailableNotice';
 import { isForexMarketOpen } from '../chart/marketHours';
 
 import { FRAME_CHART_H, FRAME_CHART_H_PHONE } from './FrameSizedGrid';
@@ -215,6 +215,8 @@ export function ChartFrame({
   // backend-r19: لا بيانات حقيقية أصلاً ⇒ لا شموع ولا سعر ولا نسبة ولا سبريد — الجملة مكان الشارت، والوسم
   // بالرأس «غير متاح» القصير (الطويلة كانت تقول «الرسم مولَّد للعرض» فوق شموع البذرة).
   const noRealData = seriesHasNoRealData(series.data_source);
+  // tools81: قبل أوّل ردّ لا مصدر بعد — وسم «غير متاح» سيكون كاذباً، والإشعار يعرض «جارٍ التحميل».
+  const seriesLoading = isSeriesLoading(series.data_source);
   const candleTag = noRealData
     ? t.dsKindUnavailable
     : provenanceLabel(candleSrc, {
@@ -415,16 +417,18 @@ export function ChartFrame({
               {badge}
             </Text>
           ) : null}
-          <Text
-            style={[
-              styles.sourceTag,
-              candleSrc.kind === 'demo' && styles.sourceTagDemo,
-              candleSrc.kind === 'unknown' && styles.sourceTagUnknown,
-            ]}
-            accessibilityLabel={candleTag}
-          >
-            {candleTag}
-          </Text>
+          {seriesLoading ? null : (
+            <Text
+              style={[
+                styles.sourceTag,
+                candleSrc.kind === 'demo' && styles.sourceTagDemo,
+                candleSrc.kind === 'unknown' && styles.sourceTagUnknown,
+              ]}
+              accessibilityLabel={candleTag}
+            >
+              {candleTag}
+            </Text>
+          )}
           {marketClosed ? (
             <Text style={styles.marketClosedTag} accessibilityLabel={t.cfMarketClosedA11y}>
               {t.cfMarketClosedTag}
@@ -532,6 +536,7 @@ export function ChartFrame({
         {noRealData ? (
           <ProviderUnavailableNotice
             symbol={series.symbol}
+            timeframe={series.timeframe}
             height={fill ? undefined : chartH}
             showSwitchHint={!!onSymbolChange}
             dataSource={series.data_source}

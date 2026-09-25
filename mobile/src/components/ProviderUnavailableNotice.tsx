@@ -1,8 +1,9 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import type { ChartSeries } from '../api';
 import { normalizeProvenance, providerUnavailableReason } from '../chart/dataSource';
 import { useI18n } from '../i18n/I18nContext';
 import { colors, spacing } from '../theme';
+import { isTimeframe } from '../timeframes';
 
 /**
  * backend-r19: DXY (`unavailable_reason: not_offered_by_provider`) يصل بسلسلة بذرة `demo` حول 104.25 دائماً — المزوّد
@@ -37,8 +38,26 @@ export function serverUnreachableSeries(symbol: string, timeframe: string): Char
   };
 }
 
+/** سبب تطبيقيّ: الطلب الأول لم يُجب بعد (tools81). */
+export const SERIES_LOADING = 'loading';
+
+/**
+ * tools81: الإطار قبل أوّل ردّ كان يُبذر بـ`mockSeries` «تجريبي» حول أسعار 2024 حتى يصل الردّ — وبلا شبكة حتى مهلة
+ * الطلب. هذه السلسلة فارغة بلا سعر ⇒ `seriesHasNoRealData` ⇒ الإشعار يعرض دوّاراً و`chartFirstLoad` بدل الشارت.
+ */
+export function loadingSeries(symbol: string, timeframe: string): ChartSeries {
+  const s = serverUnreachableSeries(symbol, timeframe);
+  return { ...s, data_source: { ...s.data_source, unavailable_reason: SERIES_LOADING } as ChartSeries['data_source'] };
+}
+
+export function isSeriesLoading(dataSource: unknown): boolean {
+  return providerUnavailableReason(dataSource) === SERIES_LOADING;
+}
+
 type Props = {
   symbol: string;
+  /** فريم السلسلة — لنصّ التحميل «على فريم {tf}» فقط. */
+  timeframe?: string;
   height?: number;
   /** الإطار يعرض زرّ الرمز ▾ — نصّ `chartNotOfferedBody` يدلّ عليه، فبلا زرّ يُعرض العنوان وحده. */
   showSwitchHint?: boolean;
@@ -50,9 +69,27 @@ type Props = {
   dataSource?: unknown;
 };
 
-export function ProviderUnavailableNotice({ symbol, height, showSwitchHint, dataSource }: Props) {
+export function ProviderUnavailableNotice({ symbol, timeframe, height, showSwitchHint, dataSource }: Props) {
   const { t } = useI18n();
   const reason = providerUnavailableReason(dataSource);
+  if (reason === SERIES_LOADING) {
+    const tf = timeframe ?? '';
+    const known = isTimeframe(tf);
+    const text = known ? t.tfLabels[tf] : tf;
+    const loadText = t.chartFirstLoad.replace('{symbol}', symbol);
+    return (
+      <View
+        style={[styles.box, height != null && { height }]}
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityState={{ busy: true }}
+        accessibilityLabel={loadText.replace('{tf}', known ? t.tfLabelsA11y[tf] : tf)}
+      >
+        <ActivityIndicator color={colors.accent} />
+        <Text style={[styles.body, styles.loading]}>{loadText.replace('{tf}', text)}</Text>
+      </View>
+    );
+  }
   const offline = reason === SERVER_UNREACHABLE;
   const down = reason === 'provider_unavailable';
   const title = (
@@ -92,4 +129,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     maxWidth: 320,
   },
+  loading: { marginTop: spacing.sm },
 });
