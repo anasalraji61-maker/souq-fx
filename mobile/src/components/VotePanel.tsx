@@ -100,7 +100,13 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
       setPError(t.voteFormError);
       return;
     }
-    const plan = analyzePlan({ symbol: pSymbol, side: pDirection, entry, sl, tp });
+    // كالخادم (`VoteCreate`): «/» تُزال ثم 3–12 حرفاً/رقماً — «EU» كانت تصل 422 فتظهر «تعذّر النشر» العامة.
+    const sym = pSymbol.trim().toUpperCase().replace(/\//g, '');
+    if (!/^[A-Z0-9]{3,12}$/.test(sym)) {
+      setPError(t.indAlertsSymbolInvalid);
+      return;
+    }
+    const plan = analyzePlan({ symbol: sym, side: pDirection, entry, sl, tp });
     if (!plan.ok) {
       setPError(planIssueText(plan.issue, pDirection) ?? t.voteFormError);
       return;
@@ -109,7 +115,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
     setPError(null);
     try {
       const r = await api.createVote({
-        symbol: pSymbol.trim().toUpperCase(),
+        symbol: sym,
         direction: pDirection,
         entry,
         sl,
@@ -135,8 +141,9 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
       setPNote('');
       setShowPublish(false);
       load();
-    } catch {
-      setPError(t.votePublishError);
+    } catch (e) {
+      // 422 = الخادم رفض الرمز/المستويات (backend-r3) — الفحوص أعلاه تمنعه عادةً؛ إن وصل فالنموذج لا الشبكة.
+      setPError((e as { status?: number })?.status === 422 ? t.voteFormError : t.votePublishError);
     } finally {
       setPBusy(false);
     }
@@ -232,6 +239,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               style={[styles.input, { flex: 1, textAlign: align }]}
               value={pSymbol}
               onChangeText={setPSymbol}
+              maxLength={12}
               placeholder={t.voteSymbolPlaceholder}
               placeholderTextColor={colors.textDim}
               autoCapitalize="characters"
