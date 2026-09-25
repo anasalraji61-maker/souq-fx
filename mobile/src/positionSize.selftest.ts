@@ -3059,3 +3059,28 @@ console.log('positionSize restoredSmallSymbol selftest OK');
   assert.equal(moneyRewardRisk(0, 1, 1), null);
 }
 console.log('positionSize moneyRewardRisk selftest OK');
+{
+  // سعرٌ بمنزلتين بخانة النقاط («SL 1.27» للإسترليني): كان 1.27 pip ⇒ 7.87 لوت بدل 0.40 لوقف 25 pip
+  const gbp = instrumentSpec('GBPUSD')!;
+  const aud = instrumentSpec('AUDUSD')!;
+  assert.equal(parseSlPips('1.27', gbp), null);
+  assert.equal(slPipsLooksLikePrice('1.27', gbp), true);
+  assert.equal(parseSlPips('0.65', aud), null);
+  assert.equal(slPipsLooksLikePrice('1.08', instrumentSpec('EURUSD')), true);
+  assert.equal(slPipsLooksLikePrice('1.35', instrumentSpec('USDCAD.m')), true);
+  // بلا أداة: كما كان
+  assert.equal(parseSlPips('1.27'), 1.27);
+  // المنزلة الواحدة (كل ما يكتبه الحساب من السعرين) والأصفار الزائدة والمسافات الأكبر تبقى نقاطاً
+  for (const [raw, v] of [['1.5', 1.5], ['1.20', 1.2], ['2.5', 2.5], ['12.25', 12.25], ['0.45', 0.45], ['25', 25]] as const) {
+    assert.equal(parseSlPips(raw, gbp), v, raw);
+    assert.equal(slPipsLooksLikePrice(raw, gbp), false, raw);
+  }
+  // الين والذهب (pip أكبر) خارج القاعدة — خطؤهما يُصغّر اللوت
+  assert.equal(parseSlPips('1.27', instrumentSpec('USDJPY')), 1.27);
+  assert.equal(parseSlPips('1.27', instrumentSpec('XAUUSD')), 1.27);
+  for (let tenths = 1; tenths <= 50000; tenths++) {
+    const p = Math.ceil(tenths) / 10;
+    assert.equal(parseSlPips(String(p), gbp), p, String(p));
+  }
+}
+console.log('positionSize two-decimal price in pips field selftest OK');

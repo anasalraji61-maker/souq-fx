@@ -647,9 +647,18 @@ export function priceAtPipOffset(spec: InstrumentSpec, price: number, offsetPips
  * بدل 0.06، بلا أي تحذير (تحت حدّ 50 لوت). مسافة الوقف لا تحمل ثلاث منازل أصلاً (`slPipsFromPrices` لعُشر pip)،
  * و«0.500» تبقى 0.5 (الصفر بالمقدّمة ليس مبهماً). `null` = فارغ أو غير مفهوم أو مبهم.
  */
-export function parseSlPips(raw: string): number | null {
+export function parseSlPips(raw: string, spec?: InstrumentSpec | null): number | null {
   const v = parseDecimal(raw, { amount: true, unit: 'pip' });
-  return v != null && pipsHaveMoreThanTwoDecimals(v) ? null : v;
+  return v != null && (pipsHaveMoreThanTwoDecimals(v) || pipsLookLikeTwoDecimalPrice(v, spec)) ? null : v;
+}
+
+/**
+ * **سعرٌ بمنزلتين** بخانة نقاط زوجٍ pip-ه 0.0001: «1.27» (الإسترليني من «SL 1.27»)، «0.65» (الأسترالي)، «1.08» — بين 0.5 و2.5
+ * وبجزء من مئة ذي قيمة. مسافةٌ بجزء من مئة pip لا تأتي من الأسعار (`slPipsFromPrices` تقرّب لعُشر pip) ولا يكتبها أحد، والوقف
+ * 1.27 pip يمرّ فوق حدّ «أضيق من 1 pip»: 1% من 10,000 = **7.87 لوت** بدل 0.40 لوقف 25 pip. الين والذهب (pip أكبر) خارجها.
+ */
+function pipsLookLikeTwoDecimalPrice(v: number, spec?: InstrumentSpec | null): boolean {
+  return spec?.pipSize === 0.0001 && v >= 0.5 && v < 2.5 && Math.abs(v * 10 - Math.round(v * 10)) > 1e-6;
 }
 
 /** أكثر من منزلتين عشريتين ذواتَي قيمة («1.082»، لا «1.0800» ولا «12.25») — مسافة بالـpip لا تحملها، السعر يحملها. */
@@ -664,9 +673,9 @@ function pipsHaveMoreThanTwoDecimals(v: number): boolean {
  * 0.6–2 بأربع أو خمس منازل). `parseSlPips` يرفضها، وهذه تقول لماذا (اسم خانة سعر الوقف). «157.42» (ين) أو «2650.5» (ذهب)
  * منزلتان أو أقل فتبقى نقاطاً — خطؤهما يُصغّر اللوت لا يكبّره. `false` لغير المفهوم أو المقبول.
  */
-export function slPipsLooksLikePrice(raw: string): boolean {
+export function slPipsLooksLikePrice(raw: string, spec?: InstrumentSpec | null): boolean {
   const v = parseDecimal(raw, { amount: true, unit: 'pip' });
-  return v != null && v > 0 && pipsHaveMoreThanTwoDecimals(v);
+  return v != null && v > 0 && (pipsHaveMoreThanTwoDecimals(v) || pipsLookLikeTwoDecimalPrice(v, spec));
 }
 
 /**
