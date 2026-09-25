@@ -254,8 +254,8 @@
 
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
-| 92e4613 | `ChartSeries.last`/`change_pct` = `number \| null` بـ`api.ts` — chart حرس مواضعه (`4874d20`) ⇒ tsc 0. (`:523-524` بالصفّ هي نتائج الـscreener لا سلسلة الشارت، لم تُمسّ) | ui18 / backend-r19 (أُغلق) |
-| 6136ac0 | `ProviderUnavailableNotice`: prop اختياري `dataSource`؛ `unavailable_reason: provider_unavailable` ⇒ `chartProviderDownTitle/Body` (الجسم دائماً — لا يذكر زرّ ▾)، وغيره النصّ القديم. `ChartFrame`/`FocusChartModal` يمرّرانه (`QuadChartModal` ضمن الـcommit التالي). صفّ **ui19** لـchart/tools بمواضعهم الثلاثة | launch120 ⇒ ui19 |
-| e677214 | `QuadChartModal`: `chartFirstLoad` `{tf}` = `t.tfLabels[tf]` للنصّ و`t.tfLabelsA11y[tf]` للـlabel بدل «15m»/«D» الخام؛ + تمرير `dataSource` للإشعار | launch120 (جزء ui) |
+| 8025a34 | `ChartSeries.last`/`change_pct` = `number \| null` بـ`api.ts` — chart حرس مواضعه (`4874d20`) ⇒ tsc 0. (`:523-524` بالصفّ هي نتائج الـscreener لا سلسلة الشارت، لم تُمسّ) | ui18 / backend-r19 (أُغلق) |
+| 20e7b46 | `ProviderUnavailableNotice`: prop اختياري `dataSource`؛ `unavailable_reason: provider_unavailable` ⇒ `chartProviderDownTitle/Body` (الجسم دائماً — لا يذكر زرّ ▾)، وغيره النصّ القديم. `ChartFrame`/`FocusChartModal` يمرّرانه (`QuadChartModal` ضمن الـcommit التالي). صفّ **ui19** لـchart/tools بمواضعهم الثلاثة | launch120 ⇒ ui19 |
+| b8f1569 | `QuadChartModal`: `chartFirstLoad` `{tf}` = `t.tfLabels[tf]` للنصّ و`t.tfLabelsA11y[tf]` للـlabel بدل «15m»/«D» الخام؛ + تمرير `dataSource` للإشعار | launch120 (جزء ui) |
 
 **إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط (`MatrixEdgeRails:149`، `ToolsScreen:88`)؛ `Alert.alert` داخل `chart/confirmDestructive.ts` فقط (الويب `window.confirm`، ورفض عند غيابه؛ حذف الحساب عبره `AccountScreen:166`)؛ «درجة الاتفاق» أُزيلت (تعليقان `AnalystsPanel:129`، `SocialConsensusPanel:234`)؛ الجولة قابلة للإعادة (`AccountScreen:235` ⇐ `OnboardingOverlay`)؛ التيك المتجمّد يُرفض (`useMultiLiveTicks:75`). الكردية: مسح كل سلسلة عربية غير تعليقية بملفاتي ⇒ `mock.ts:48-50` و`api.ts:893` فقط (launch52، أنس) والاختبارات. مسح AST جديد (`Pressable`/`Touchable*` بنمط شرطي active/selected/On/`===`): 22 تعلن الحالة، **0** بلا `accessibilityState` (عكستُ المسح للتأكّد أنه يلتقط النمط).
