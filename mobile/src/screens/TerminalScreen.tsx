@@ -1091,32 +1091,8 @@ export function TerminalScreen() {
           },
         ]
       : []),
-    {
-      id: 'q2',
-      mark: '▦',
-      tip: phone
-        ? '2×2'
-        : layoutShape === 'rect'
-          ? `${layoutCount}▭`
-          : `${layoutCount}□`,
-      run: () => {
-        if (phone) {
-          setQuadOpen(true);
-          return;
-        }
-        if (layoutShape === 'square') {
-          if (layoutCount < 4) {
-            void changeLayout((layoutCount + 1) as FrameLayoutCount, 'square');
-          } else {
-            void changeLayout(2, 'rect');
-          }
-        } else if (layoutCount < 4) {
-          void changeLayout((layoutCount + 1) as FrameLayoutCount, 'rect');
-        } else {
-          void changeLayout(1, 'square');
-        }
-      },
-    },
+    // DESIGN-PRO §5.1 (ui45): على الحاسوب المختار الكامل بالشريط العلوي هو مكان الإطارات الوحيد — «▦» للهاتف وحده
+    ...(phone ? [{ id: 'q2', mark: '▦', tip: '2×2', run: () => setQuadOpen(true) }] : []),
     { id: 'set', mark: '⚙', tip: t.termKindWord, run: () => setShowKinds((v) => !v) },
   ];
 
@@ -1986,9 +1962,6 @@ export function TerminalScreen() {
             <RightPanelRail
               activePanel={edgePanel}
               onOpenPanel={setEdgePanel}
-              layoutCount={layoutCount}
-              layoutShape={layoutShape}
-              onLayoutPick={(count, shape) => void changeLayout(count, shape)}
             />
           </>
         ) : null}
