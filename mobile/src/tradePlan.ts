@@ -367,7 +367,14 @@ export function analyzePlan(input: {
   if (rewardDist <= 0) return { ...base, ok: false, issue: 'tpWrongSide', rr: null };
   // 1 pip، أو 0.002% من الدخول بلا pip معروف (`minRiskForR`) — الحدّ الذي يُسقط R الصفقة بعد إغلاقها
   if (riskDist < minRiskForR(input.symbol, entry)) return { ...base, ok: false, issue: 'slTooClose', rr: null };
-  return { ...base, ok: true, issue: null, rr: cleanRatio(rewardDist, riskDist) };
+  /**
+   * **بالنقاط حين يُعرف الـpip**: ضجيج طرح سعرين يكبر مع السعر لا مع المسافة — XAUJPY على 337,255.84 بوقف 1 pip وهدف 1:1
+   * (`targetAtRR`) يعطي 0.999999999 فيُطبع «1:0.9» وتحته «الربح أقل من المخاطرة». المسافة بالنقاط مقرّبةً لجزء من مليون pip
+   * (أدقّ بكثير من أي سعرٍ يُكتب) تُسقط الضجيج أيّاً كان السعر.
+   */
+  const inPips = (d: number) => Math.round((d / (pip as number)) * 1e6) / 1e6;
+  const rr = pip ? cleanRatio(inPips(rewardDist), inPips(riskDist)) : cleanRatio(rewardDist, riskDist);
+  return { ...base, ok: true, issue: null, rr };
 }
 
 /**

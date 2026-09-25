@@ -2959,3 +2959,25 @@ console.log('tradePlan journal win rate selftest OK');
   assert.deepEqual(L({ symbol: 'EURUSD', side: 'buy', entry: 1.085, level: 50, kind: 'tp' }), { pips: 50, price: 1.09 });
 }
 console.log('tradePlan levelLooksLikePips metal above entry selftest OK');
+
+// R:R بالنقاط: ضجيج طرح أسعارٍ كبيرة (XAUJPY ~337,000) كان يُطبع «1:0.9» لخطة 1:1
+{
+  const sl = 337255.74, entry = 337255.84;
+  for (const rr of [1, 1.5, 2, 3]) {
+    const tp = targetAtRR({ symbol: 'XAUJPY', side: 'buy', entry, sl, rr })!;
+    const p = analyzePlan({ symbol: 'XAUJPY', side: 'buy', entry, sl, tp });
+    assert.ok((p.rr ?? 0) >= rr, `buy ${rr}: ${p.rr}`);
+    assert.equal(formatRR(p.rr), `1:${rr.toFixed(1)}`);
+    const stp = targetAtRR({ symbol: 'XAUJPY', side: 'sell', entry, sl: entry + 0.1, rr })!;
+    const sp = analyzePlan({ symbol: 'XAUJPY', side: 'sell', entry, sl: entry + 0.1, tp: stp });
+    assert.equal(formatRR(sp.rr), `1:${rr.toFixed(1)}`, `sell ${rr}`);
+  }
+  // ما كان صحيحاً يبقى: 1:1 على USDJPY، 2.25 على EURUSD والذهب، ونسبة غير مستديرة
+  assert.equal(analyzePlan({ symbol: 'USDJPY', side: 'buy', entry: 157.4, sl: 157.2, tp: 157.6 }).rr, 1);
+  assert.equal(analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083, tp: 1.0895 }).rr, 2.25);
+  assert.equal(analyzePlan({ symbol: 'XAUUSD', side: 'sell', entry: 2650, sl: 2652, tp: 2645.5 }).rr, 2.25);
+  assert.equal(analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0835, tp: 1.0879 }).rr, 1.933333333);
+  // بلا pip معروف: كما كان
+  assert.equal(analyzePlan({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59000, tp: 62000 }).rr, 2);
+}
+console.log('tradePlan analyzePlan large-price R:R selftest OK');
