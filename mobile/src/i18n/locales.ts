@@ -1788,7 +1788,7 @@ const ar: Dict = {
   riskCalcSpreadNote: 'السبريد يُضاف عادةً إلى مسافة الوقف: وقف 20 pip بسبريد 1.5 يخسر قرابة 21.5 عند ضربه. انظر السبريد الحالي بمنصّتك — يتّسع عند الأخبار وافتتاح الأسبوع.',
   riskCalcRiskWithSpread: 'المخاطرة شاملة السبريد',
   riskCalcSpreadLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة السبريد: {lots} lot',
-  riskCalcSpreadTooWide: 'سبريد {n} pip غير واقعي — هل كتبتَ سعراً أو points بدل الـpip؟ اكتب بالـpip الفرقَ بين Ask وBid كما تعرضه منصّتك الآن (مثل {example}).',
+  riskCalcSpreadTooWide: '«{n}» لا يبدو سبريداً بالـpip — هل كتبتَ سعراً أو points بدل الـpip؟ اكتب بالـpip الفرقَ بين Ask وBid كما تعرضه منصّتك الآن (مثل {example}).',
   riskCalcSpreadPointsHint: 'سبريد «{value}» بالنقاط (points) — كل 10 points = 1 pip، فاكتبه هنا {pips}',
   riskCalcStopInsideSpread:
     'الوقف ({sl} pip) ليس أبعد من السبريد ({spread} pip) — قد يُضرب فور فتح الصفقة. وسّع الوقف وقلّل اللوت، أو انتظر سبريداً أضيق.',
@@ -2977,7 +2977,7 @@ const enUS: Dict = {
   riskCalcSpreadNote: 'Spread usually adds to your stop distance: a 20-pip stop with a 1.5 spread loses about 21.5 when hit. Check the current spread on your platform — it widens around news and the weekly open.',
   riskCalcRiskWithSpread: 'Risk including spread',
   riskCalcSpreadLotsWithin: 'To keep your risk at {pct}% including spread: {lots} lot',
-  riskCalcSpreadTooWide: 'A {n}-pip spread isn’t realistic — did you type a price or points instead of pips? Enter the gap between Ask and Bid in pips, as your platform shows it now (e.g. {example}).',
+  riskCalcSpreadTooWide: '“{n}” doesn’t look like a spread in pips — did you type a price or points instead of pips? Enter the gap between Ask and Bid in pips, as your platform shows it now (e.g. {example}).',
   riskCalcSpreadPointsHint: 'A spread of “{value}” is in points — 10 points = 1 pip, so type {pips} here',
   riskCalcStopInsideSpread:
     'Your stop ({sl} pips) is no wider than the spread ({spread} pips) — it can be hit the moment the trade opens. Widen the stop and cut the lot, or wait for a tighter spread.',
@@ -4192,7 +4192,7 @@ const ku: Dict = {
   riskCalcSpreadNote: 'سپرێد زۆرجار دەچێتە سەر دووری وەستان: وەستانی 20 pip بە سپرێدی 1.5 نزیکەی 21.5 لەدەست دەدات کاتێک لێی دەدرێت. سپرێدی ئێستا لە پلاتفۆرمەکەت ببینە — لە کاتی هەواڵ و کرانەوەی هەفتەدا فراوانتر دەبێت.',
   riskCalcRiskWithSpread: 'مەترسی لەگەڵ سپرێد',
   riskCalcSpreadLotsWithin: 'بۆ ئەوەی مەترسییەکەت لەگەڵ سپرێد لە {pct}% بمێنێتەوە: {lots} lot',
-  riskCalcSpreadTooWide: 'سپرێدی {n} pip ئاسایی نییە — نرخ یان points ت نووسیوە لە جیاتی pip؟ جیاوازی نێوان Ask و Bid بە pip بنووسە، وەک ئێستا لە پلاتفۆرمەکەت دیارە (بۆ نموونە {example}).',
+  riskCalcSpreadTooWide: '«{n}» لە سپرێد بە pip ناچێت — نرخ یان points ت نووسیوە لە جیاتی pip؟ جیاوازی نێوان Ask و Bid بە pip بنووسە، وەک ئێستا لە پلاتفۆرمەکەت دیارە (بۆ نموونە {example}).',
   riskCalcSpreadPointsHint: 'سپرێدی «{value}» بە خاڵە (points) — هەر 10 points = 1 pip، بۆیە لێرە {pips} بنووسە',
   riskCalcStopInsideSpread:
     'وەستان ({sl} pip) لە سپرێد ({spread} pip) دوورتر نییە — لەوانەیە هەر کە مامەڵەکە کرایەوە لێی بدرێت. وەستان فراوانتر بکە و لۆت کەم بکەرەوە، یان چاوەڕێی سپرێدی تەسکتر بکە.',
