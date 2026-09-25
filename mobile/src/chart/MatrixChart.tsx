@@ -3065,6 +3065,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
   const chartPlotW = Math.max(80, chartW - PRICE_AXIS_WIDTH);
   const chartPlotH = Math.max(100, mainH - timeAxisH);
+  // حافّة اللوح اليمنى لما يُرسم ملاصقاً لها (أعمدة Volume Profile، وسما POC/TPO): محور السعر ابن
+  // اللوح بعرض 68px وخلفية مصمتة فوق كل شيء — أعمدة `right: 2` بعرض ≤ 16% (57px بهاتف 360px)
+  // كانت تقع تحته كلّها، فلا يُرى من الطبقة إلا خطّ POC بلا اسم.
+  const vpRight = hidePriceLabels ? 2 : PRICE_AXIS_WIDTH + 2;
   chartPlotWRef.current = chartPlotW;
   chartPlotHRef.current = chartPlotH;
 
@@ -7312,7 +7316,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
         {poc != null ? (
           <View style={[styles.hLine, { top: yOf(poc), borderColor: colors.warn, opacity: 0.75 }]}>
-            <Text style={styles.fibLabel}>POC</Text>
+            <Text style={[styles.fibLabel, { right: vpRight + 2 }]}>POC</Text>
           </View>
         ) : null}
 
@@ -7363,9 +7367,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   key={`vp${i}`}
                   style={{
                     position: 'absolute',
-                    right: 2,
+                    right: vpRight,
                     top: yOf(row.price),
-                    width: (row.volume / maxV) * Math.max(24, chartW * 0.16),
+                    width: (row.volume / maxV) * Math.max(24, chartPlotW * 0.16),
                     height: 2,
                     backgroundColor: 'rgba(56,189,248,0.45)',
                   }}
@@ -7396,7 +7400,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   )}
                   {tpo.poc != null ? (
                     <View style={[styles.hLine, { top: yOf(tpo.poc), borderColor: colors.infoAccent }]}>
-                      <Text style={styles.fibLabel}>TPO</Text>
+                      <Text style={[styles.fibLabel, { right: vpRight + 2 }]}>TPO</Text>
                     </View>
                   ) : null}
                   {tpo.vah != null ? (
