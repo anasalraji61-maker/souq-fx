@@ -1055,6 +1055,11 @@ export type Dict = {
   mcAutoA11y: string;
   /** AUTO ممتلئ حين مقياس السعر يدوي (مطّ المحور أو سحب رأسي) — يشرح لماذا قد تختفي شمعة جديدة. */
   mcAutoManualA11y: string;
+  /**
+   * نصّ زرّ AUTO الظاهر بزاوية المحورين (QA67): كان «AUTO» ثابتاً بالعربية والكردية. كلمة واحدة قصيرة لأن
+   * الزاوية بعرض محور السعر وخطّ 8 — لا جملة. الشرح الكامل بـ`mcAutoA11y`.
+   */
+  mcAutoShort: string;
   /** مفتاح (switch) «رأس السهم» على خطّ الترند المحدَّد (chart-r37، `4e53e39`): الحالة (مفعّل/لا) يقرؤها قارئ الشاشة من `accessibilityState` — فالنصّ اسمٌ لا فعل. */
   mcArrowHeadA11y: string;
   /** خطّ التنبيه المسلَّح على الشارت (`c34f991`، «🔔 ▲ السعر · pip») لقارئ الشاشة: {price} بمنازل الشارت، {dist} نصّ `signedDistanceText`
@@ -2304,6 +2309,7 @@ const ar: Dict = {
   mcHintSelected: 'اسحب الرسم لتحريكه · اسحب مقبضاً لتعديل طرف · يُحفظ تلقائياً',
   mcAutoA11y: 'تلقائي: ملاءمة الأسعار والعودة لآخر شمعة',
   mcAutoManualA11y: 'مقياس السعر يدوي — قد تخرج الشموع الجديدة عن العرض. اضغط لإعادته تلقائياً والعودة لآخر شمعة',
+  mcAutoShort: 'تلقائي',
   mcArrowHeadA11y: 'رأس سهم بنهاية خطّ الترند',
   mcArmedAlertAboveA11y: 'تنبيه مفعّل حين يصعد السعر إلى {price} — {dist}',
   mcArmedAlertBelowA11y: 'تنبيه مفعّل حين ينزل السعر إلى {price} — {dist}',
@@ -3484,6 +3490,7 @@ const enUS: Dict = {
   mcHintSelected: 'Drag the drawing to move it · drag a handle to adjust one end · saved automatically',
   mcAutoA11y: 'Auto: fit prices and return to the latest candle',
   mcAutoManualA11y: 'Price scale is manual — new candles may leave the view. Tap to restore auto and return to the latest candle',
+  mcAutoShort: 'AUTO',
   mcArrowHeadA11y: 'Arrowhead at the end of the trend line',
   mcArmedAlertAboveA11y: 'Alert set for price rising to {price} — {dist}',
   mcArmedAlertBelowA11y: 'Alert set for price falling to {price} — {dist}',
@@ -4694,6 +4701,7 @@ const ku: Dict = {
   mcHintSelected: 'کێشراوەکە ڕایبکێشە بۆ جوولاندنی · دەسکێک ڕایبکێشە بۆ گۆڕینی لایەکی · خۆکار پاشەکەوت دەبێت',
   mcAutoA11y: 'خۆکار: گونجاندنی نرخەکان و گەڕانەوە بۆ دوایین مۆم',
   mcAutoManualA11y: 'پێوەری نرخ دەستییە — لەوانەیە مۆمە نوێیەکان لە دیمەن دەربچن. دابگرە بۆ گەڕاندنەوەی خۆکار و گەڕانەوە بۆ دوایین مۆم',
+  mcAutoShort: 'خۆکار',
   mcArrowHeadA11y: 'سەری تیر لە کۆتایی هێڵی ترێند',
   mcArmedAlertAboveA11y: 'ئاگادارکردنەوە چالاکە کاتێک نرخ بەرز دەبێتەوە بۆ {price} — {dist}',
   mcArmedAlertBelowA11y: 'ئاگادارکردنەوە چالاکە کاتێک نرخ دادەبەزێت بۆ {price} — {dist}',
