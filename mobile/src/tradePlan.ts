@@ -820,11 +820,19 @@ export type JournalStats = {
   avg_loss: number;
   best: number;
   worst: number;
+  /** backend-r1: التعادل عدّادٌ مستقلّ لا خسارة. خادمٌ أقدم لا يرسل الثلاثة ⇒ اختيارية بالقراءة من الخادم. */
+  win_count: number;
+  loss_count: number;
+  breakeven_count: number;
 };
+
+/** `BREAKEVEN_EPS` بـ`backend/db.py`: |pnl| ≤ هذا = تعادل (ضجيج الفاصلة العائمة لا ربح ولا خسارة). */
+export const JOURNAL_BREAKEVEN_EPS = 1e-9;
 
 /**
  * إحصاءات الدفتر لقائمة صفقات (الدفتر مفلتراً على أداة) **بمعادلة الخادم نفسها** (`db.trade_stats`):
- * المغلقة ذات `pnl` منتهٍ فقط، الربح > 0 والتعادل يُعدّ خسارة (`<= 0`)، نسبة النجاح بخانة والبقيّة
+ * المغلقة ذات `pnl` منتهٍ فقط، الربح > ε والخسارة < −ε و**التعادل وحده** (backend-r1: كان `<= 0` خسارةً فمتداولٌ ينقل
+ * وقفه للتعادل يرى نسبة فوزه تهبط)؛ نسبة النجاح = رابحة ÷ (رابحة + خاسرة) بخانة والبقيّة
  * بخانتين بتقريب بايثون (`roundHalfEven`). كانت محسوبة داخل اللوحة بلا اختبار — ورقمٌ يخالف ما يقوله
  * الخادم لنفس الصفقات (6.3% هنا و6.2% بلا فلتر) يجعل المتداول يشكّ بالدفتر كلّه.
  */
@@ -835,19 +843,27 @@ export function journalStats(
     .filter((tr) => tr.status === 'closed' && tr.pnl != null && Number.isFinite(Number(tr.pnl)))
     .map((tr) => Number(tr.pnl));
   if (pnls.length === 0) {
-    return { trade_count: 0, win_rate: 0, total_pnl_pct: 0, avg_win: 0, avg_loss: 0, best: 0, worst: 0 };
+    return {
+      trade_count: 0, win_rate: 0, total_pnl_pct: 0, avg_win: 0, avg_loss: 0, best: 0, worst: 0,
+      win_count: 0, loss_count: 0, breakeven_count: 0,
+    };
   }
-  const wins = pnls.filter((v) => v > 0);
-  const losses = pnls.filter((v) => v <= 0);
+  const wins = pnls.filter((v) => v > JOURNAL_BREAKEVEN_EPS);
+  const losses = pnls.filter((v) => v < -JOURNAL_BREAKEVEN_EPS);
+  const decided = wins.length + losses.length;
   const r2 = (v: number) => roundHalfEven(v, 2);
   return {
     trade_count: pnls.length,
-    win_rate: roundHalfEven((wins.length / pnls.length) * 100, 1),
+    // كلّها تعادل ⇒ 0 كالخادم (لا نسبة فوز ذات معنى)، و`breakeven_count` يوضّح
+    win_rate: decided ? roundHalfEven((wins.length / decided) * 100, 1) : 0,
     total_pnl_pct: r2(pySum(pnls)),
     avg_win: wins.length ? r2(pySum(wins) / wins.length) : 0,
     avg_loss: losses.length ? r2(pySum(losses) / losses.length) : 0,
     best: r2(Math.max(...pnls)),
     worst: r2(Math.min(...pnls)),
+    win_count: wins.length,
+    loss_count: losses.length,
+    breakeven_count: pnls.length - decided,
   };
 }
 
