@@ -573,7 +573,9 @@ export function parseRiskInput(
 ): { pct: number | null; amount: number | null } | null {
   const pct = parseDecimal(raw, { percent: true });
   if (pct != null) return { pct, amount: null };
-  const m = /^\s*(?:([$€£¥＄￥￡])|([A-Za-z]{3}))?\s*([^$€£¥＄￥￡A-Za-z]+?)\s*(?:([$€£¥＄￥￡])|([A-Za-z]{3}))?\s*$/.exec(raw);
+  const m = /^\s*(?:([$€£¥＄￥￡])|([A-Za-z]{3}))?\s*([^$€£¥＄￥￡A-Za-z]+?)\s*(?:([$€£¥＄￥￡])|([A-Za-z]{3}))?\s*$/.exec(
+    moneyWordsToMarks(raw)
+  );
   if (!m) return null;
   const markers = [m[1], m[2], m[4], m[5]].filter((x): x is string => x != null);
   if (markers.length !== 1) return null;
@@ -585,6 +587,39 @@ export function parseRiskInput(
   if (amount == null || !(amount > 0)) return null;
   const ok = Number.isFinite(balance) && balance > 0;
   return { pct: ok ? (amount / balance) * 100 : null, amount };
+}
+
+/** حرف عربي/كردي (مع التشكيل) — حدّ الكلمة لـ`moneyWordsToMarks`؛ الأرقام العربية ليست منه فـ«٥٠دولار» تُقرأ */
+const AR_LETTER = '[\\u0621-\\u063A\\u0640-\\u065F\\u0670-\\u06D3\\u06D5\\u06EE\\u06EF\\u06FA-\\u06FF]';
+/**
+ * اسم العملة بالعربية/الكردية ⇒ علامتها أو كودها. «دولار» وحدها كـ«$» (الأمريكي والأسترالي والكندي والنيوزيلندي)،
+ * وبصفتها كالكود. «جنيه» = الإسترليني: لا حساب بالجنيه المصري بين عملات الحساب، والعلامة لا تُقبل إلا لعملة الحساب.
+ */
+const MONEY_WORDS: [string, string][] = [
+  ['(?:دولار|دۆلار)(?:ات|اً|ا)?\\s*(?:أمريكي|امريكي|أميركي|اميركي|أمريكية|ئەمریکی)', 'USD'],
+  ['(?:دولار|دۆلار)(?:ات|اً|ا)?\\s*(?:أسترالي|استرالي|ئوسترالی)', 'AUD'],
+  ['(?:دولار|دۆلار)(?:ات|اً|ا)?\\s*(?:كندي|کەنەدی)', 'CAD'],
+  ['(?:دولار|دۆلار)(?:ات|اً|ا)?\\s*(?:نيوزيلندي|نيوزلندي)', 'NZD'],
+  ['(?:دولار|دۆلار)(?:ات|اً|ا)?', '$'],
+  ['(?:يورو|یۆرۆ|یورۆ)', 'EUR'],
+  ['(?:(?:جنيه|جنيهات)\\s*(?:إسترليني|استرليني)|جنيه|جنيهات|إسترليني|استرليني|باوند|پاوەند)', 'GBP'],
+  ['(?:ين|ین)\\s*(?:ياباني|یابانی)?', 'JPY'],
+  ['(?:فرنك|فرنكات)\\s*(?:سويسري)?', 'CHF'],
+  ['(?:سنت|سنتات)', 'USC'],
+];
+const MONEY_WORD_RE = MONEY_WORDS.map(
+  ([w, mark]) => [new RegExp(`(?<!${AR_LETTER})${w}(?!${AR_LETTER})`), mark] as const
+);
+
+/**
+ * «50 دولار»، «٥٠ يورو»، «100 جنيه» بخانة المخاطرة: المتداول العربي يكتب المبلغ باسم عملته، وكانت الخانة «رقم غير مفهوم»
+ * — والحرف اللاتيني («USD») يحتاج تبديل لوحة المفاتيح. يُستبدل الاسم بعلامته فتطبّق `parseRiskInput` قاعدتها نفسها:
+ * علامةٌ واحدة، ولعملة الحساب وحدها («50 يورو» بحساب دولار مرفوضة).
+ */
+function moneyWordsToMarks(raw: string): string {
+  let s = raw;
+  for (const [re, mark] of MONEY_WORD_RE) s = s.replace(re, ` ${mark} `);
+  return s;
 }
 
 /**

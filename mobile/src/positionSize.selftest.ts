@@ -2440,3 +2440,45 @@ console.log('positionSize pipsOnlyExitQuoteToAccount selftest OK');
   assert.equal(parsePriceFor('950.250', 'XAGJPY'), null);
 }
 console.log('positionSize silver MXN/ZAR thousands selftest OK');
+
+// ---- المخاطرة باسم العملة بالعربية/الكردية: «50 دولار» كانت «رقم غير مفهوم» ----
+{
+  const risk = (raw: string, acc = 'USD', bal = 10000) => parseRiskInput(raw, bal, acc);
+  assert.deepEqual(risk('50 دولار'), { pct: 0.5, amount: 50 });
+  assert.deepEqual(risk('٥٠ دولار'), { pct: 0.5, amount: 50 });
+  assert.deepEqual(risk('٥٠دولار'), { pct: 0.5, amount: 50 });
+  assert.deepEqual(risk('دولار 50'), { pct: 0.5, amount: 50 });
+  assert.deepEqual(risk('50 دولارات'), { pct: 0.5, amount: 50 });
+  assert.deepEqual(risk('50 دولاراً'), { pct: 0.5, amount: 50 });
+  assert.deepEqual(risk('50 دۆلار'), { pct: 0.5, amount: 50 });
+  assert.deepEqual(risk('50 دولار أمريكي'), { pct: 0.5, amount: 50 });
+  assert.deepEqual(risk('40 يورو', 'EUR'), { pct: 0.4, amount: 40 });
+  assert.deepEqual(risk('40 یۆرۆ', 'EUR'), { pct: 0.4, amount: 40 });
+  assert.deepEqual(risk('30 جنيه', 'GBP'), { pct: 0.3, amount: 30 });
+  assert.deepEqual(risk('30 جنيه إسترليني', 'GBP'), { pct: 0.3, amount: 30 });
+  assert.deepEqual(risk('5000 ين', 'JPY', 1_000_000), { pct: 0.5, amount: 5000 });
+  assert.deepEqual(risk('20 فرنك', 'CHF'), { pct: 0.2, amount: 20 });
+  assert.deepEqual(risk('1000 سنت', 'USC', 100000), { pct: 1, amount: 1000 });
+  // «دولار» وحدها كـ«$»: الأسترالي والكندي والنيوزيلندي أيضاً؛ وبصفتها لعملتها فقط
+  assert.deepEqual(risk('50 دولار', 'AUD'), { pct: 0.5, amount: 50 });
+  assert.deepEqual(risk('50 دولار أسترالي', 'AUD'), { pct: 0.5, amount: 50 });
+  assert.equal(risk('50 دولار أسترالي', 'USD'), null);
+  assert.equal(risk('50 دولار أمريكي', 'CAD'), null);
+  // عملةٌ غير عملة الحساب مرفوضة كما «€40» بحساب دولار
+  assert.equal(risk('40 يورو', 'USD'), null);
+  assert.equal(risk('50 دولار', 'EUR'), null);
+  assert.equal(risk('5000 ين', 'USD'), null);
+  // علامتان، أو كلمة داخل كلمة، أو اسمٌ مجهول: مرفوضة
+  assert.equal(risk('$50 دولار'), null);
+  assert.equal(risk('50 دولار USD'), null);
+  assert.equal(risk('50 دينار'), null);
+  assert.equal(risk('50 عين'), null);
+  assert.equal(risk('دولار'), null);
+  // المبهم يبقى مبهماً (قاعدة `amount`)، والنسبة بلا اسم كما كانت
+  assert.equal(risk('1.000 دولار'), null);
+  assert.deepEqual(risk('1'), { pct: 1, amount: null });
+  // القلب بين النسبة والمبلغ يعمل من المكتوب بالعربية
+  assert.equal(toggleRiskUnit('50 دولار', 10000, 'USD'), '0.5');
+  assert.deepEqual(riskOverBalance('20000 دولار', 10000, 'USD'), { risk: 20000, balance: 10000 });
+}
+console.log('positionSize arabic money words risk selftest OK');
