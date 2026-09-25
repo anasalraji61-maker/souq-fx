@@ -92,29 +92,18 @@ def test_a_repeated_indicator_list_cannot_exceed_the_catalog(client):
 
 
 # --------------------------------------------------- معرّفات المصادر
+# لا فهرس مصادر بعد اليوم (الإجماع «غير متاح»): المعرّفات المحفوظة عند عميل قديم تُقبل وتُتجاهل،
+# لكن القائمة تبقى محدودة.
 
-def test_unknown_source_is_refused_not_replaced_by_five_defaults(client):
-    res = client.post(CONSENSUS, json={"source_ids": ["tg_fxpulse", "tg_ghost"]})
-    assert res.status_code == 422, res.text
-    assert "tg_ghost" in res.text
-
-
-def test_all_unknown_sources_no_longer_fall_back_to_the_catalog_head(client):
-    res = client.post(CONSENSUS, json={"source_ids": ["ghost1", "ghost2"]})
-    assert res.status_code == 422, res.text
-
-
-def test_every_catalog_source_is_accepted(client):
-    for sid in signal_hub.SOCIAL_SOURCE_IDS:
-        res = client.post(CONSENSUS, json={"source_ids": [sid]})
-        assert res.status_code == 200, f"{sid}: {res.text}"
-
-
-def test_an_empty_source_list_keeps_its_old_default(client):
-    """العميل يحرس `!selected.length` بنفسه ولا يرسل الفارغ؛ والسلوك القائم لم يُمسّ."""
-    res = client.post(CONSENSUS, json={"source_ids": []})
+def test_saved_source_ids_from_an_old_client_get_unavailable_not_422(client):
+    res = client.post(CONSENSUS, json={"source_ids": ["tg_fxpulse", "app_tradingcentral"]})
     assert res.status_code == 200, res.text
-    assert len(res.json()["votes"]) == 5
+    assert res.json()["status"] == "unavailable"
+
+
+def test_source_list_is_still_bounded(client):
+    assert client.post(CONSENSUS, json={"source_ids": ["x"] * 400}).status_code == 422
+    assert client.post(CONSENSUS, json={"source_ids": ["x" * 500]}).status_code == 422
 
 
 # ------------------------------------------------------------- الرمز

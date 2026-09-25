@@ -67,12 +67,6 @@ def test_no_hand_written_fallback_price_remains():
     assert not hasattr(signal_hub, "_fallback_price")
 
 
-def test_analysts_without_a_real_price_have_no_targets_or_levels():
-    out = signal_hub.analysts_forecast("EURUSD", last=None, candles=None)
-    assert out["levels"] is None
-    assert all(r["target"] is None for r in out["analysts"])
-
-
 # ─── المسارات: شموع demo لا تصنع مستويات ─────────────────────────────────────
 
 @pytest.fixture()
@@ -82,13 +76,10 @@ def client():
 
 def test_demo_series_gives_no_levels_on_every_signal_route(client, monkeypatch):
     monkeypatch.setattr(main.market, "configured", lambda: False)
-    a = client.get("/api/signals/analysts/EURUSD?timeframe=4H").json()
-    s = client.post("/api/signals/social/consensus", json={"symbol": "EURUSD", "timeframe": "4H"}).json()
     f = client.post("/api/signals/indicators/forecast", json={"symbol": "EURUSD", "timeframe": "4H"}).json()
-    for out in (a, s, f):
-        assert out["data_kind"] == "demo"
-        assert out["levels"] is None
-        assert out["timeframe"] == "4H"
+    assert f["data_kind"] == "demo"
+    assert f["levels"] is None
+    assert f["timeframe"] == "4H"
 
 
 def _provider_series(rng: float, symbol: str = "EURUSD", base: float = 1.1):
@@ -103,7 +94,7 @@ def _provider_series(rng: float, symbol: str = "EURUSD", base: float = 1.1):
 
 def test_real_series_levels_use_its_atr(client, monkeypatch):
     monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
-    out = client.get("/api/signals/analysts/EURUSD?timeframe=D").json()
+    out = client.post("/api/signals/indicators/forecast", json={"symbol": "EURUSD", "timeframe": "D"}).json()
     assert out["data_kind"] == "provider"
     assert out["levels_basis"]["atr"] == pytest.approx(0.0030)
     if out["levels"] is not None:

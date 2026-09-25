@@ -1,71 +1,26 @@
 """MATRIX signal hub — analysts, social consensus, multi-indicator forecasts.
 
-Social sources are a curated catalog (Telegram / Facebook / Instagram / X / …).
-Live scraping of private channels requires platform APIs/keys; here we aggregate
-deterministic, time-bucketed signal samples for selected sources into a consensus.
+Analysts and social consensus have no licensed data source and report themselves
+unavailable (they used to be hash-generated samples under real bank names).
 Indicator forecasts use real OHLC math from indicators.py.
 """
 from __future__ import annotations
 
-import hashlib
 import math
-import time
 from typing import Any
 
 import indicators as ind_engine
 
-SOCIAL_CATALOG: list[dict[str, Any]] = [
-    {"id": "tg_fxpulse", "name": "FX Pulse Signals", "platform": "telegram", "weight": 1.1},
-    {"id": "tg_golddesk", "name": "Gold Desk VIP", "platform": "telegram", "weight": 1.2},
-    {"id": "tg_eurlab", "name": "EUR Lab", "platform": "telegram", "weight": 1.0},
-    {"id": "fb_matrixroom", "name": "MATRIX Room", "platform": "facebook", "weight": 0.9},
-    {"id": "fb_forexarab", "name": "Forex Arab Desk", "platform": "facebook", "weight": 1.0},
-    {"id": "ig_chartlab", "name": "Chart Lab Daily", "platform": "instagram", "weight": 0.85},
-    {"id": "ig_pipstory", "name": "Pip Stories", "platform": "instagram", "weight": 0.8},
-    {"id": "x_macroflow", "name": "Macro Flow", "platform": "x", "weight": 1.05},
-    {"id": "x_dxylens", "name": "DXY Lens", "platform": "x", "weight": 1.0},
-    {"id": "yt_sessionlive", "name": "Session Live", "platform": "youtube", "weight": 0.95},
-    {"id": "dc_matrixedge", "name": "MATRIX Edge", "platform": "discord", "weight": 1.0},
-    {"id": "app_tradingcentral", "name": "TradingCentral-like", "platform": "app", "weight": 1.15},
-    {"id": "app_autochartist", "name": "Pattern Radar", "platform": "app", "weight": 1.1},
-    {"id": "app_investing", "name": "Investing Ideas", "platform": "app", "weight": 0.9},
-]
+# لا مصدر حقيقي للمحلّلين ولا لقنوات التواصل. كان هنا فهرس بأسماء بنوك حقيقية (HSBC، Citi، UBS،
+# Nomura، Commerzbank، ING) و14 «قناة» (منها اسم منافس «TradingCentral-like»)، واتجاه كل منها
+# وهدفه = SHA-256 لـ(المعرّف|الرمز|نافذة 4–6 ساعات) + ميل ثابت لكل رمز — ضجيج مُعرَض كتوصية بنك
+# حقيقي. أُزيل كلّه: الردّ يقول «غير متاح» بدل رقم مخترَع، والاسم الحقيقي لم يعد بجانب توصية
+# لم يصدرها. حين يُرخَّص مصدر حقيقي يُبنى من بياناته لا من هذا.
+UNAVAILABLE_REASON = "no_licensed_feed"
 
-ANALYSTS: list[dict[str, Any]] = [
-    {"id": "a_hsbc", "name": "HSBC FX Desk", "house": "بنك"},
-    {"id": "a_citi", "name": "Citi Research", "house": "بنك"},
-    {"id": "a_ubs", "name": "UBS Macro", "house": "بنك"},
-    {"id": "a_nomura", "name": "Nomura FX", "house": "بنك"},
-    {"id": "a_commerz", "name": "Commerzbank", "house": "بنك"},
-    {"id": "a_ing", "name": "ING Markets", "house": "بنك"},
-    {"id": "a_matrix", "name": "MATRIX Research", "house": "MATRIX"},
-    {"id": "a_techdesk", "name": "Tech Structure Desk", "house": "فني"},
-]
-
-
-SOCIAL_SOURCE_IDS: tuple[str, ...] = tuple(s["id"] for s in SOCIAL_CATALOG)
-
-
-def _bucket(hours: int = 4) -> int:
-    return int(time.time() // (hours * 3600))
-
-
-def _score(seed: str) -> float:
-    """Deterministic score in [-1, 1] from seed."""
-    h = hashlib.sha256(seed.encode("utf-8")).hexdigest()
-    n = int(h[:8], 16)
-    return (n / 0xFFFFFFFF) * 2.0 - 1.0
-
-
-def _bias_for_symbol(symbol: str) -> float:
-    s = symbol.upper()
-    if s == "DXY":
-        return 0.08
-    if s.startswith("XAU") or s.startswith("XAG"):
-        return -0.05
-    if s.startswith("EUR") or s.startswith("GBP"):
-        return -0.03
-    return 0.0
+# حدّ طول قائمة المصادر بالطلب — العميل القديم قد يرسل معرّفات محفوظة؛ تُقبل وتُتجاهل لأن الردّ
+# «غير متاح» أياً كانت، بدل 422 يعرضه التطبيق خطأً عاماً.
+MAX_SOURCE_IDS = 20
 
 
 def _direction(score: float) -> str:
@@ -74,12 +29,6 @@ def _direction(score: float) -> str:
     if score <= -0.12:
         return "sell"
     return "neutral"
-
-
-def _confidence(score: float, n: int) -> float:
-    base = min(0.92, abs(score) * 0.75 + 0.35)
-    crowd = min(0.08, n * 0.008)
-    return round(min(0.95, base + crowd), 3)
 
 
 # معرّفات مؤشّرات التوقّع ومصادر الإجماع — معلنة هنا (حيث تُستهلَك) ويقرأ منها `main` لتصديق
@@ -129,127 +78,36 @@ def _trade_levels(
 
 
 def list_social_sources() -> list[dict[str, Any]]:
-    return [
-        {
-            "id": s["id"],
-            "name": s["name"],
-            "platform": s["platform"],
-            "weight": s["weight"],
-        }
-        for s in SOCIAL_CATALOG
-    ]
+    return []
 
 
-def social_consensus(
-    symbol: str,
-    source_ids: list[str] | None,
-    last: float | None = None,
-    candles: list[dict[str, Any]] | None = None,
-) -> dict[str, Any]:
-    sym = symbol.upper()
-    catalog = {s["id"]: s for s in SOCIAL_CATALOG}
-    selected = [sid for sid in (source_ids or []) if sid in catalog]
-    if not selected:
-        # default: first 5 so UI always has a baseline
-        selected = [s["id"] for s in SOCIAL_CATALOG[:5]]
-
-    bucket = _bucket(3)
-    bias = _bias_for_symbol(sym)
-    votes: list[dict[str, Any]] = []
-    weighted = 0.0
-    wsum = 0.0
-
-    for sid in selected:
-        src = catalog[sid]
-        raw = _score(f"{sid}|{sym}|{bucket}") + bias * 0.4
-        raw = max(-1.0, min(1.0, raw))
-        w = float(src["weight"])
-        weighted += raw * w
-        wsum += w
-        direction = _direction(raw)
-        votes.append(
-            {
-                "id": sid,
-                "name": src["name"],
-                "platform": src["platform"],
-                "direction": direction,
-                "score": round(raw, 3),
-                "weight": w,
-                "note": _note_for(direction, src["platform"]),
-            }
-        )
-
-    avg = weighted / wsum if wsum else 0.0
-    direction = _direction(avg)
-    price = float(last) if last and last > 0 else None
-    levels, levels_basis = _trade_levels(price, direction, candles)
-
-    buy_n = sum(1 for v in votes if v["direction"] == "buy")
-    sell_n = sum(1 for v in votes if v["direction"] == "sell")
-    neu_n = len(votes) - buy_n - sell_n
-
+def _unavailable(sym: str, mode: str, timeframe: str) -> dict[str, Any]:
+    """ردّ صادق حين لا مصدر: لا اتجاه ولا درجة ولا ثقة ولا مستويات — كلّها null لا «محايد» ولا 0،
+    فالمحايد نفسه ادّعاء بأن المصادر لا ترى اتجاهاً."""
     return {
         "symbol": sym,
-        "mode": "social_consensus",
-        "selected_count": len(selected),
-        "avg_score": round(avg, 3),
-        "direction": direction,
-        "confidence": _confidence(avg, len(votes)),
-        "split": {"buy": buy_n, "sell": sell_n, "neutral": neu_n},
-        "levels": levels,
-        "levels_basis": levels_basis,
-        "votes": votes,
-        "disclaimer": "إجماع من مصادر اخترتها أنت. الربط الحي للقنوات الخاصة يحتاج مفاتيح API لكل منصة.",
-        "updated_bucket": bucket,
+        "mode": mode,
+        "status": "unavailable",
+        "unavailable_reason": UNAVAILABLE_REASON,
+        "data_kind": "unavailable",
+        "timeframe": timeframe,
+        "direction": None,
+        "avg_score": None,
+        "levels": None,
+        "levels_basis": {"unavailable": UNAVAILABLE_REASON},
     }
 
 
-def analysts_forecast(
-    symbol: str, last: float | None = None, candles: list[dict[str, Any]] | None = None
-) -> dict[str, Any]:
-    sym = symbol.upper()
-    bucket = _bucket(6)
-    bias = _bias_for_symbol(sym)
-    price = float(last) if last and last > 0 else None
-    rows: list[dict[str, Any]] = []
-    scores: list[float] = []
+def social_consensus(symbol: str, timeframe: str = "15m") -> dict[str, Any]:
+    out = _unavailable(symbol.upper(), "social_consensus", timeframe)
+    out.update({"selected_count": 0, "split": {"buy": 0, "sell": 0, "neutral": 0}, "votes": []})
+    return out
 
-    for a in ANALYSTS:
-        raw = _score(f"{a['id']}|{sym}|{bucket}") * 0.85 + bias
-        raw = max(-1.0, min(1.0, raw))
-        scores.append(raw)
-        direction = _direction(raw)
-        horizon = "قصير" if abs(raw) > 0.45 else "متوسط"
-        target = price * (1 + raw * 0.012) if price is not None else None
-        rows.append(
-            {
-                "id": a["id"],
-                "name": a["name"],
-                "house": a["house"],
-                "direction": direction,
-                "score": round(raw, 3),
-                "target": round(target, 5) if target is not None else None,
-                "horizon": horizon,
-                "summary": _analyst_summary(direction, sym, a["house"]),
-            }
-        )
 
-    avg = sum(scores) / len(scores) if scores else 0.0
-    direction = _direction(avg)
-    levels, levels_basis = _trade_levels(price, direction, candles)
-
-    return {
-        "symbol": sym,
-        "mode": "analysts",
-        "avg_score": round(avg, 3),
-        "direction": direction,
-        "confidence": _confidence(avg, len(rows)),
-        "levels": levels,
-        "levels_basis": levels_basis,
-        "analysts": rows,
-        "disclaimer": "توقعات تجميعية لأغراض التحليل — ليست نصيحة استثمارية.",
-        "updated_bucket": bucket,
-    }
+def analysts_forecast(symbol: str, timeframe: str = "15m") -> dict[str, Any]:
+    out = _unavailable(symbol.upper(), "analysts", timeframe)
+    out["analysts"] = []
+    return out
 
 
 def indicator_forecast(
@@ -355,7 +213,6 @@ def indicator_forecast(
             "mode": "indicators",
             "direction": "neutral",
             "avg_score": 0.0,
-            "confidence": 0.3,
             "levels": None,
             "levels_basis": _trade_levels(last, "neutral", candles)[1],
             "votes": [],
@@ -372,7 +229,6 @@ def indicator_forecast(
         "mode": "indicators",
         "avg_score": round(avg, 3),
         "direction": direction,
-        "confidence": _confidence(avg, len(votes)),
         "levels": levels,
         "levels_basis": levels_basis,
         "votes": votes,
@@ -383,28 +239,3 @@ def indicator_forecast(
         },
         "disclaimer": "إجماع مؤشرات فنية داخل MATRIX — ليس ضماناً للربح.",
     }
-
-
-def _note_for(direction: str, platform: str) -> str:
-    plat = {
-        "telegram": "تيليجرام",
-        "facebook": "فيسبوك",
-        "instagram": "إنستغرام",
-        "x": "X",
-        "youtube": "يوتيوب",
-        "discord": "ديسكورد",
-        "app": "تطبيق",
-    }.get(platform, platform)
-    if direction == "buy":
-        return f"توصية شراء من {plat}"
-    if direction == "sell":
-        return f"توصية بيع من {plat}"
-    return f"انتظار / محايد · {plat}"
-
-
-def _analyst_summary(direction: str, symbol: str, house: str) -> str:
-    if direction == "buy":
-        return f"{house}: ميل صاعد على {symbol}"
-    if direction == "sell":
-        return f"{house}: ميل هابط على {symbol}"
-    return f"{house}: ترقب حول {symbol}"

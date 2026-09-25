@@ -14,7 +14,7 @@ import secrets
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Literal
+from typing import Annotated, Literal
 
 from pathlib import Path
 
@@ -340,26 +340,20 @@ class BacktestRun(BaseModel):
 
 
 class SocialConsensusBody(BaseModel):
-    """إجماع المصادر. كان **الجسم الوحيد بالملف بلا قيد واحد** مع شقيقه أدناه، بينما كل جسم آخر
-    يعلن حدّ الرمز والفريم منذ تشغيلات سابقة:
-
-    - **معرّف مصدر مجهول كان يُهمَل بصمت**، وإن كانت المعرّفات كلّها مجهولة يسقط الطلب على
-      `SOCIAL_CATALOG[:5]` الافتراضية: أي أن المتداول الذي اختار مصادره يُعرض له إجماع **خمسة
-      مصادر لم يخترها** موسوماً باختياره — نفس عيب `filters or [...]` بالفحص السريع.
-    - `symbol` بلا حدّ طول يذهب لرابط المزوّد عبر `build_series`.
-    - فريم مجهول يُبدَّل بـ15m صامتاً داخل `build_series`.
-    """
+    """إجماع المصادر — لا مصدر مرخَّص، فالردّ «غير متاح» دائماً (كان ضجيج SHA-256 بأسماء قنوات
+    مخترَعة). الرمز والفريم يبقيان محدودَين كباقي الأجسام."""
 
     symbol: str = Field(default="EURUSD", min_length=3, max_length=12)
     timeframe: str = "15m"
-    source_ids: list[str] = Field(default_factory=list, max_length=len(signal_hub.SOCIAL_SOURCE_IDS))
+    # لا فهرس مصادر بعد اليوم (الردّ «غير متاح») ⇒ المعرّفات تُقبل محدودةً وتُتجاهل: عميل قديم يرسل
+    # اختياره المحفوظ يرى «غير متاح» لا 422 عامّاً.
+    source_ids: list[Annotated[str, Field(max_length=40)]] = Field(
+        default_factory=list, max_length=signal_hub.MAX_SOURCE_IDS
+    )
 
     @model_validator(mode="after")
     def _bounded(self) -> "SocialConsensusBody":
         _check_timeframe(self.timeframe)
-        unknown = sorted({s for s in self.source_ids if s not in signal_hub.SOCIAL_SOURCE_IDS})
-        if unknown:
-            raise ValueError(f"unknown source: {', '.join(unknown)}")
         return self
 
 
@@ -1322,31 +1316,19 @@ def social_sources():
     return {"sources": signal_hub.list_social_sources()}
 
 
-def _real_series(symbol: str, timeframe: str) -> tuple[ChartSeries, float | None, list[dict] | None]:
-    """(السلسلة، آخر سعر حقيقي، شموع حقيقية). سلسلة demo البذرية ⇒ None/None: مستويات الإشارة
-    (دخول/وقف/هدف) لا تُبنى على سعر أو تذبذب مخترَعَين."""
-    series = build_series(symbol.upper(), timeframe)
-    if series.data_source.kind == "demo":
-        return series, None, None
-    return series, series.last, [c.model_dump() for c in series.candles]
-
-
 @app.post("/api/signals/social/consensus")
 def social_consensus(body: SocialConsensusBody):
-    series, last, candles = _real_series(body.symbol, body.timeframe)
-    out = signal_hub.social_consensus(body.symbol, body.source_ids, last=last, candles=candles)
-    out["data_kind"] = series.data_source.kind
-    out["timeframe"] = series.timeframe
-    return out
+    # لا مصدر مرخَّص ⇒ «غير متاح» بلا طلب للمزوّد (لا حاجة لسعر يُبنى عليه شيء).
+    return signal_hub.social_consensus(body.symbol, body.timeframe)
 
 
 @app.get("/api/signals/analysts/{symbol}")
 def analysts_forecast(symbol: str, timeframe: str = "15m"):
-    series, last, candles = _real_series(symbol, timeframe)
-    out = signal_hub.analysts_forecast(symbol, last=last, candles=candles)
-    out["data_kind"] = series.data_source.kind
-    out["timeframe"] = series.timeframe
-    return out
+    if timeframe not in TF_SECONDS:
+        raise HTTPException(422, "unknown timeframe")
+    if not 3 <= len(symbol) <= 12:
+        raise HTTPException(422, "symbol must be 3-12 characters")
+    return signal_hub.analysts_forecast(symbol, timeframe)
 
 
 @app.post("/api/signals/indicators/forecast")
