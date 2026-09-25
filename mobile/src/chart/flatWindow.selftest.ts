@@ -6,6 +6,8 @@
 import assert from 'node:assert/strict';
 import { computeBop, computeCci, computeCmo, computeSmi, computeCutlerRsi, computeRsi, computeStoch, computeStochRsi, computeWilliamsR } from './indicators/momentum';
 import { computeCmf, computeMfi } from './indicators/volume';
+import { computePercentB } from './indicators/volatility';
+import { computeTrendIntensityIndex } from './indicators/trend';
 import { evalPineLite } from './pineLite';
 
 const flat = (n: number, p = 1.1, volume?: number) =>
@@ -66,6 +68,17 @@ assert.equal(computeSmi(flat(40, 1.1, 100)).smi[39], null, 'SMI flat');
   const smi = computeSmi(moving).smi;
   for (let i = 0; i < 13; i++) assert.equal(smi[i], null, `SMI warm-up ${i}`);
   assert.equal(typeof smi[13], 'number', 'SMI first value');
+}
+
+// %B وTII: بقايا مجموع `sma` الجاري بعد حركة سابقة (~1e-16) كانت تعطي %B = 0.75/0.25 وTII = 100 على سوق ميّت
+{
+  const wavy = Array.from({ length: 70 }, (_, i) => 1.08 + Math.sin(i / 3) * 0.003 + (i % 7) * 0.0001);
+  const pb = computePercentB([...wavy.slice(0, 10), ...Array(25).fill(1.08505)]);
+  assert.equal(pb[34], null, '%B flat');
+  assert.equal(typeof computePercentB(wavy)[40], 'number');
+  const tii = computeTrendIntensityIndex([...wavy, ...Array(100).fill(1.08505)]);
+  assert.equal(tii[169], 50, 'TII flat');
+  assert.ok(Math.abs(computeTrendIntensityIndex(wavy)[69]! - 50) > 1e-9, 'TII moving');
 }
 
 console.log('flatWindow selftest: PASS');

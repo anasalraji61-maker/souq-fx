@@ -1668,7 +1668,10 @@ export function computeTrendIntensityIndex(closes: number[], period = 60): (numb
     let sumDown = 0;
     for (let j = i - half + 1; j <= i; j++) {
       const b = base[j]!;
-      const dev = closes[j] - b;
+      // بقايا مجموع `sma` الجاري (~1e-15) على نافذة مسطّحة كانت كلها «فوق» ⇒ TII = 100 (اتجاه صاعد أقصى) على سوق
+      // ميّت. انحراف أصغر من 1e-10 من السعر = صفر.
+      const d = closes[j] - b;
+      const dev = Math.abs(d) <= Math.abs(b) * 1e-10 ? 0 : d;
       if (dev >= 0) sumUp += dev;
       else sumDown += -dev;
     }

@@ -377,10 +377,8 @@ export function computeHistoricalVolatility(
  * upper=mid+mult×الانحراف المعياري، lower=mid−mult×الانحراف المعياري (**نفس صيغة بولنجر المستخدَمة
  * بـcomputeOverlays أعلاه حرفياً، مُعاد حسابها هنا مستقلة لأن computeOverlays لا يُصدِّر %B نفسه**).
  * 0 = الإغلاق عند الحد الأدنى بالضبط، 1 = عند الحد الأعلى بالضبط، 0.5 = عند الوسط بالضبط، وقيمة خارج
- * 0..1 تعني كسر أحد النطاقين فعلياً. 0.5 عند عرض نطاق صفري (تقلّب صفري) بدل قسمة على صفر — قيمة الوسط
- * الحيادية بدل الانحياز لأي طرف تعسّفاً. **تحقّق يدوي**: سعر ثابت تماماً بكل شموع النافذة → الانحراف
- * المعياري=0 → upper=lower=mid=السعر الثابت نفسه → عرض النطاق صفري → %B=0.5 بالضبط (الحالة الحدّية
- * المُعالَجة صراحة أعلاه)، يطابق "لا معنى لموقع نسبي داخل نطاق منعدم العرض" بأكثر تفسير حيادي ممكن.
+ * 0..1 تعني كسر أحد النطاقين فعلياً. null عند عرض نطاق صفري (تقلّب صفري) بدل قسمة على صفر — na كـTradingView:
+ * لا موقع نسبي داخل نطاق منعدم العرض (`flatWindow.selftest.ts`).
  */
 export function computePercentB(closes: number[], period = 20, mult = 2): (number | null)[] {
   const mid = sma(closes, period);
@@ -397,7 +395,10 @@ export function computePercentB(closes: number[], period = 20, mult = 2): (numbe
     const upper = mean + mult * sd;
     const lower = mean - mult * sd;
     const span = upper - lower;
-    out.push(span === 0 ? 0.5 : (closes[i] - lower) / span);
+    // نافذة مسطّحة: `sma` بمجموع جارٍ فيبقى الوسط ~1e-16 عن السعر بعد أي حركة سابقة ⇒ sd ≈ 6.7e-16 لا صفر،
+    // و«span === 0» لا يتحقّق ⇒ %B = 0.75 أو 0.25 «ثقة» على سوق ميّت. انحراف أصغر من 1e-10 من السعر = لا نطاق
+    // ⇒ null (na كـTradingView، وكـCCI/%K بـ`flatWindow.selftest.ts`) لا 0.5.
+    out.push(sd <= Math.abs(mean) * 1e-10 ? null : (closes[i] - lower) / span);
   }
   return out;
 }
