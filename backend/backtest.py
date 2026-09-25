@@ -14,6 +14,13 @@ _ALIASES = {"GOLD": "XAUUSD", "SILVER": "XAGUSD"}
 _OIL = {"USOIL", "UKOIL", "WTI", "BRENT", "XTIUSD", "XBRUSD", "WTIUSD"}
 
 
+def _round(x: float, n: int) -> float:
+    """`round` بلا «−0.0»: صفقة بيع خرجت بسعر دخولها (أو عائد −0.001%) كانت تُرسَل `-0.0` فيعرضها
+    العميل «−0.00%» — خسارة لم تحدث."""
+    return round(x, n) + 0.0
+
+
+
 def typical_spread(symbol: str) -> tuple[float, float] | None:
     """سبريد تقديري لحساب تجزئة عادي: (عدد الـpip، حجم الـpip). None = ليس زوج فوركس/معدن (DXY مؤشر لا يُتداول).
 
@@ -100,21 +107,21 @@ def _stats(trades: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str,
         equity *= 1 + t["pnl_pct"] / 100
         max_dd = max(max_dd, (peak - equity) / peak * 100)
         peak = max(peak, equity)
-        curve.append({"i": j + 1, "equity": round(equity, 2)})
+        curve.append({"i": j + 1, "equity": _round(equity, 2)})
     # المركز المفتوح يدخل أقصى هبوط (خسارته غير المحقّقة مخاطرة قائمة، كمختبر TradingView) لا العائد ولا نسبة الفوز
     if open_t:
         walk(open_t, equity)
 
     stats = {
         "trade_count": len(trades),
-        "win_rate": round(len(wins) / decided * 100, 1) if decided else None,
+        "win_rate": _round(len(wins) / decided * 100, 1) if decided else None,
         "breakeven_count": len(trades) - decided,
-        "total_return_pct": round(equity - 100.0, 2),
-        "final_equity": round(equity, 2),
+        "total_return_pct": _round(equity - 100.0, 2),
+        "final_equity": _round(equity, 2),
         # بلا رابحة لا متوسّط ربح (None لا 0): «متوسّط الربح 0%» يُقرأ «ربحت صفقات بلا شيء». والخسارة كذلك.
-        "avg_win_pct": round(sum(wins) / len(wins), 2) if wins else None,
-        "avg_loss_pct": round(sum(losses) / len(losses), 2) if losses else None,
-        "max_drawdown_pct": round(max_dd, 2),
+        "avg_win_pct": _round(sum(wins) / len(wins), 2) if wins else None,
+        "avg_loss_pct": _round(sum(losses) / len(losses), 2) if losses else None,
+        "max_drawdown_pct": _round(max_dd, 2),
         "open_pnl_pct": open_pnl,
     }
     return stats, curve
@@ -181,8 +188,8 @@ def run_backtest(
             "side": position,
             "entry": entry_price,
             "exit": exit_price,
-            "pnl_pct": round(pnl, 3),
-            "mae_pct": round(mae, 3),
+            "pnl_pct": _round(pnl, 3),
+            "mae_pct": _round(mae, 3),
             "entry_time": times[entry_i],
             "exit_time": times[exit_i],
             "_path": path,
@@ -254,8 +261,8 @@ def run_backtest(
     if spread > 0:
         for t in trades:
             cost = spread / t["entry"] * 100
-            t["pnl_pct"] = round(t["pnl_pct"] - cost, 3)
-            t["mae_pct"] = round(t["mae_pct"] - cost, 3)
+            t["pnl_pct"] = _round(t["pnl_pct"] - cost, 3)
+            t["mae_pct"] = _round(t["mae_pct"] - cost, 3)
             t["_path"] = [(a - cost, c - cost) for a, c in t["_path"]]
 
     stats, curve = _stats(trades)

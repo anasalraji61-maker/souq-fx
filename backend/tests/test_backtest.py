@@ -228,3 +228,10 @@ def test_bb_bounce_same_side_touch_does_not_block_the_mid_band_exit():
     assert t["exit"] == 1.0030 and t["exit_time"] == c[42]["time"]
     assert t["pnl_pct"] == 0.33
     assert res["stats"]["trade_count"] == 1 and res["stats"]["open_pnl_pct"] is None
+
+
+def test_flat_short_trade_is_zero_not_negative_zero():
+    """بيع خرج بسعر دخوله: كان `pnl_pct` ‏−0.0 فيعرضه العميل «−0.00%»."""
+    assert str(backtest._round(-0.0, 3)) == "0.0"
+    assert str(backtest._round(-0.0004, 3)) == "0.0"
+    assert backtest._round(-0.0006, 3) == -0.001
