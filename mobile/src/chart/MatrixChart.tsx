@@ -354,6 +354,7 @@ import {
 } from './panSpeed';
 import { mapShadowCandles } from './shadowOverlay';
 import { visibleBarRange } from './visibleBars';
+import { ProviderUnavailableNotice, seriesHasNoRealData } from '../components/ProviderUnavailableNotice';
 
 export type SyncTimeWindow = {
   /** unix seconds */
@@ -5960,6 +5961,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const crossPriceOff = crossPrice != null ? offAxisSide(crossY, chartPlotH) : null;
   const offMark = (side: 'above' | 'below' | null) =>
     side === 'above' ? '▲ ' : side === 'below' ? '▼ ' : '';
+
+  // سلسلة بلا شموع (`candles: []` — DXY بعد backend-r19): المدى Infinity/−Infinity ⇒ المحور يطبع «NaN» مكرَّراً،
+  // ووسم السعر 0.000، ونقرة أداة الخطّ الأفقي تحفظ رسماً بسعر null. لا شارت يُرسم: إشعار المزوّد إن كانت السلسلة
+  // بلا بيانات حقيقية، وإلا لوح فارغ بالارتفاع نفسه (لا محور ولا سعر مخترع).
+  if ((series.candles?.length ?? 0) === 0) {
+    return (
+      <View style={[styles.root, dense && styles.rootDense, { height }]}>
+        {seriesHasNoRealData(series.data_source) ? (
+          <ProviderUnavailableNotice symbol={series.symbol} height={height} />
+        ) : null}
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.root, dense && styles.rootDense]}>
