@@ -670,6 +670,24 @@ def auth_login(body: AuthLogin):
         raise HTTPException(status_code=401, detail=str(exc)) from exc
 
 
+class AuthLogout(BaseModel):
+    push_token: str | None = Field(default=None, max_length=256)
+
+
+@app.post("/api/auth/logout")
+def auth_logout(
+    body: AuthLogout | None = None,
+    authorization: str | None = Header(default=None),
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+):
+    # مُتساوي الأثر: توكن منتهٍ أو غائب ⇒ ok أيضاً (العميل يمسح حالته المحلية على أي حال)
+    if user and authorization:
+        token = authorization.replace("Bearer ", "").strip()
+        db.logout_session(token, user["user_id"], owner_key=key, push_token=body.push_token if body else None)
+    return {"ok": True}
+
+
 @app.get("/api/auth/me")
 def auth_me(user: dict | None = Depends(_auth_user)):
     if not user:

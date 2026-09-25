@@ -1498,6 +1498,19 @@ def save_push_token(
         )
 
 
+def logout_session(
+    session_token: str, user_id: int, owner_key: str | None = None, push_token: str | None = None
+) -> None:
+    """خروج هذا الجهاز: تُلغى جلسته، ورمز Push الخاص به يُفكّ من الحساب. بلا هذا كان الخروج محلياً فقط
+    (مسح التخزين): الجهاز يبقى `user_id=A` بـ`push_tokens` فتصل إشعارات تنبيهات A لمن يستعمل الهاتف بعده،
+    والتوكن صالح حتى انتهائه. الجهاز يُعرَف بمعرّف التثبيت أو برمز Push نفسه."""
+    with _conn() as c:
+        c.execute("DELETE FROM sessions WHERE token=? AND user_id=?", (session_token, user_id))
+        for col, val in (("owner_key", owner_key), ("token", push_token)):
+            if val:
+                c.execute(f"UPDATE push_tokens SET user_id=NULL WHERE user_id=? AND {col}=?", (user_id, val))
+
+
 def all_push_tokens() -> list[str]:
     with _conn() as c:
         rows = c.execute("SELECT token FROM push_tokens").fetchall()

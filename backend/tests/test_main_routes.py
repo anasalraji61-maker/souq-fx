@@ -807,3 +807,33 @@ def test_alerts_on_a_symbol_the_provider_does_not_offer_are_refused(client, sym)
 def test_push_token_has_an_upper_bound(client):
     r = client.post("/api/push/register", json={"token": "ExponentPushToken[" + "x" * 2_000_000 + "]"})
     assert r.status_code == 422
+
+
+def _push_owner(token: str):
+    with db._conn() as c:
+        return c.execute("SELECT user_id FROM push_tokens WHERE token=?", (token,)).fetchone()[0]
+
+
+def test_logout_ends_the_session_and_stops_this_devices_pushes(client):
+    """الخروج كان محلياً فقط: إشعارات تنبيهات A تصل الهاتف بعد خروجه، والتوكن صالح حتى انتهائه."""
+    tok = _register(client, "logout1")
+    other = _register(client, "logout2")
+    here = {**_auth(tok), **_DEV1}
+    client.post("/api/push/register", json={"token": "ExponentPushToken[aaa111]"}, headers=here)
+    client.post("/api/push/register", json={"token": "ExponentPushToken[bbb222]"}, headers={**_auth(tok), **_DEV2})
+    client.post("/api/push/register", json={"token": "ExponentPushToken[ccc333]"}, headers={**_auth(other), **_DEV1})
+    uid = _me(client, tok)
+    assert client.post("/api/auth/logout", headers=here).json() == {"ok": True}
+    assert client.get("/api/auth/me", headers=_auth(tok)).status_code == 401
+    assert _push_owner("ExponentPushToken[aaa111]") is None
+    assert _push_owner("ExponentPushToken[bbb222]") == uid, "جهازه الآخر يبقى"
+    assert _push_owner("ExponentPushToken[ccc333]") == _me(client, other), "حساب آخر لا يُمسّ"
+
+
+def test_logout_by_push_token_without_install_id_and_is_idempotent(client):
+    tok = _register(client, "logout3")
+    client.post("/api/push/register", json={"token": "ExponentPushToken[ddd444]"}, headers=_auth(tok))
+    r = client.post("/api/auth/logout", json={"push_token": "ExponentPushToken[ddd444]"}, headers=_auth(tok))
+    assert r.json() == {"ok": True} and _push_owner("ExponentPushToken[ddd444]") is None
+    assert client.post("/api/auth/logout", headers=_auth(tok)).json() == {"ok": True}
+    assert client.post("/api/auth/logout").json() == {"ok": True}
