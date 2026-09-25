@@ -479,3 +479,15 @@
 **فُحص ولم يُغيَّر:** `indicators.py` (SMA/EMA/RSI Wilder/MACD/ATR/التقاطعات)، `signal_hub` (مستويات ATR، «غير متاح» بلا ATR/سعر/اتجاه)، `db.trade_stats` (والتطبيق يحرس best/worst بـ`trade_count > 0`). `POST /api/academy/tts` بلا مصادقة ويقبل 5000 حرف أيّ نصّ ⇒ أيّ أحد يستهلك رصيد ElevenLabs — لا يمسّ رقماً يراه المتداول، والتطبيق يستدعيه مجهولاً (`LectureClassroom.tsx:255`) فتقييده بتسجيل الدخول يكسر الأكاديمية للزائر ⇒ سؤال لأنس بـCOORDINATION.
 
 **ما يحتاجه التطبيق:** لا شيء (`fired_bar` حقل إضافي بصفّ تنبيه المؤشر لا يقرؤه التطبيق). قرارات أنس كما هي: launch9، QA24، launch77، backend-r6 (6)، مصدر الأخبار (backend-r33)؛ ومضاف: TTS بلا مصادقة (backend-r35).
+
+## 2026-09-25 — التشغيل 36: متوسّط الربح/الخسارة بالدفتر null بلا صفقات وراءه
+
+**بداية التشغيل:** لا صفّ في COORDINATION منفّذه backend وحده (صفوف backend/أنس قرارات بشرية — لم تُمسّ). البنود 1–9 فحص سريع بالكود — ما تزال مغلقة (`XBR/USD`/`not_offered_by_provider` بـ`twelve_data.py:33,42`، `trade_already_closed` ‏`main.py:1398`، `NOCASE` ‏`db.py:27`، إشارة MACD None حتى 9 قيم حقيقية `indicators.py:76-83`).
+
+| # | الإيداع | ما تغيّر |
+|---|---|---|
+| 93 | `de91b88` | **`db.trade_stats`: `avg_win`/`avg_loss` = None بلا رابحة/خاسرة، و`best`/`worst`/المتوسّطان None بدفتر فارغ** (كان 0). «متوسّط الخسارة 0%» لمتداول كل صفقاته رابحة رقمٌ لا صفقة وراءه؛ الاختبار الخلفي أصلحه سابقاً (`avg_win_pct` None) والدفتر بقي. اختبار جديد + تحديث اختبار الدفتر الفارغ. 736 ناجح. |
+
+**فُحص ولم يُغيَّر:** `backtest.py` (السبريد التقديري None للعملات الناشئة، الشموع المغلقة وحدها)، `screener.py` (القِدم ⇒ «لم يُفحص»، تغيّر 80 شمعة None إن قصرت السلسلة)، `signal_hub` (الدرجات من المؤشرات، `win_probability` null)، لا أرقام مكتوبة باليد بمسارات الإنتاج.
+
+**ما يحتاجه التطبيق:** لا شيء — التطبيق لا يقرأ `avg_win`/`avg_loss` من الخادم (مرآته `tradePlan.ts:journalStats` تحسب محلياً)، و`best`/`worst` محروسان بـ`trade_count > 0` (`WeeklyReportPanel.tsx:117`). قرارات أنس كما هي: launch9، QA24، launch77، backend-r6 (6)، backend-r33، backend-r35.
