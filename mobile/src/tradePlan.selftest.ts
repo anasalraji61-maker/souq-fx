@@ -2147,6 +2147,17 @@ console.log('tradePlan stackedCurrencyExposure selftest OK');
   assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, note: 'a · 1R @ 1.083 · b' }), 1.083);
   assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, note: 'x1R @ 1.083' }), null);
   assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, note: '1R @ 1.083x' }), null);
+  // نصٌّ كُتب بعد العلامة الملحقة بآخر الملاحظة: كان null ⇒ R من الوقف المشدود (+8R بدل +2R)
+  for (const note of ['1R @ 1.083 moved to reduce risk', '1R @ 1.083, NFP', '1R @ 1.083، خبر', '1R @ 1.083.', 'BE · 1R @ 1.083 then TP', 'x 1R @ 1.083;'])
+    assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, note }), 1.083, note);
+  assert.equal(
+    realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, exit: 1.089, note: '1R @ 1.083 moved to reduce risk' })!.toFixed(6),
+    '2.000000'
+  );
+  // رقمٌ ملتصق/أطول ليس العلامة: «1.0833» لا يُقرأ «1.083»، ولا «21R @»
+  assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, note: '1R @ 1.0833' }), 1.0833);
+  assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, note: '21R @ 1.083' }), null);
+  assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.085, note: '1R @ 1.083تم' }), null);
   assert.equal(initialStop({ symbol: 'EURUSD', side: 'sell', entry: 1.085, note: n1 }), null);
   assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.08, note: n1 }), null);
   assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.08305, note: n1 }), null); // أضيق من pip
