@@ -83,6 +83,8 @@ import {
   ambiguousThousandsPrice,
   spreadBeyondLiveEntry,
   MAX_SPREAD_PIPS,
+  MAX_SPREAD_PIPS_HIGH_VOL_EXOTIC,
+  maxSpreadPipsFor,
   type InstrumentSpec,
   spreadTooWide,
   stopInsideSpread,
@@ -3192,3 +3194,34 @@ console.log('positionSize typicalSlPipsExample selftest OK');
   }
 }
 console.log('positionSize typicalSpreadPipsExample selftest OK');
+
+{
+  // حدّ السبريد بحسب الأداة: سبريد USDTRY الليلي 0.05–0.2 ليرة (500–2000 pip) كان يُرفض «غير واقعي» ويُسقط سطر «شاملة السبريد»
+  const S = (x: string) => instrumentSpec(x)!;
+  for (const sym of ['USDTRY', 'USDZAR', 'USDMXN', 'EURTRY', 'EURZAR'])
+    assert.equal(maxSpreadPipsFor(S(sym)), MAX_SPREAD_PIPS_HIGH_VOL_EXOTIC, sym);
+  for (const sym of ['EURUSD', 'USDJPY', 'USDSEK', 'USDHKD', 'XAUUSD', 'XAGUSD'])
+    assert.equal(maxSpreadPipsFor(S(sym)), MAX_SPREAD_PIPS, sym);
+  assert.equal(maxSpreadPipsFor(null), MAX_SPREAD_PIPS);
+  // USDTRY: 1500 مقبول وليس «واسعاً»؛ على EURUSD يبقى مرفوضاً ومسمّى
+  assert.equal(parseSpreadPips('1500', S('USDTRY')), 1500);
+  assert.equal(spreadTooWide('1500', S('USDTRY')), null);
+  assert.equal(parseSpreadPips('1500', S('EURUSD')), null);
+  assert.equal(spreadTooWide('1500', S('EURUSD')), 1500);
+  // بلا أداة السلوك القديم حرفياً
+  assert.equal(parseSpreadPips('1500'), null);
+  assert.equal(spreadTooWide('501'), 501);
+  // الحدّ نفسه مقبول، وفوقه مسمّى
+  assert.equal(parseSpreadPips(String(MAX_SPREAD_PIPS_HIGH_VOL_EXOTIC), S('USDZAR')), MAX_SPREAD_PIPS_HIGH_VOL_EXOTIC);
+  assert.equal(spreadTooWide('3001', S('USDZAR')), 3001);
+  assert.equal(parseSpreadPips('3001', S('USDZAR')), null);
+  // سعرٌ كامل بلا فاصلة («182500» لـ18.2500) ما زال يُلتقط على الغريبة
+  assert.equal(spreadTooWide('182500', S('USDZAR')), 182500);
+  // الاتّساق: ما يقبله `parseSpreadPips` لا يسمّيه `spreadTooWide` لكل أداة
+  for (const sym of ['USDTRY', 'EURUSD', 'XAUUSD'])
+    for (const v of ['0', '499', '500', '501', '2999', '3000', '3001'])
+      assert.ok((parseSpreadPips(v, S(sym)) != null) !== (spreadTooWide(v, S(sym)) != null), `${sym} ${v}`);
+  // الرفع لا يكبّر اللوت: وقف 1500 وسبريد 2000 على USDTRY = وقفٌ داخل السبريد ⇒ تحذير
+  assert.equal(stopInsideSpread(1500, parseSpreadPips('2000', S('USDTRY'))), true);
+}
+console.log('positionSize maxSpreadPipsFor selftest OK');

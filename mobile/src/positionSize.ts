@@ -1393,15 +1393,25 @@ export function marginPrice(input: {
  * خطأ كتابة شبه مؤكّد: سعرٌ مكتوب بدل نقاط («1.0851»؟ لا — «10851») يُضخّم المخاطرة المعروضة ويُصغّر اللوت.
  */
 export const MAX_SPREAD_PIPS = 500;
+/**
+ * حدّ السبريد لـTRY/ZAR/MXN: سبريد USDTRY عند التبييت/الأخبار 0.05–0.2 ليرة = **500–2000 pip**، وUSDZAR/USDMXN عند الأخبار حتى
+ * ~1000 — حدّ 500 كان يرفض سبريداً حقيقياً «غير واقعي» ويُسقط سطر «شاملة السبريد». الرفض آمن (لا يكبّر اللوت) لكنه يمنع حساباً
+ * صحيحاً. خطأ «سعرٌ بخانة السبريد» على هذه الأزواج («18.25»، «4210») يقع تحت الحدّين كليهما، فالرفع لا يُفلت ما كان يُلتقط.
+ */
+export const MAX_SPREAD_PIPS_HIGH_VOL_EXOTIC = 3000;
+/** أوسع سبريد مقبول للأداة (بالنقاط) — `MAX_SPREAD_PIPS` لكل ما عدا TRY/ZAR/MXN؛ بلا أداة = الحدّ العام. */
+export function maxSpreadPipsFor(spec: InstrumentSpec | null | undefined): number {
+  return spec && !METALS[spec.base] && HIGH_VOL_EXOTIC_QUOTES.has(spec.quote) ? MAX_SPREAD_PIPS_HIGH_VOL_EXOTIC : MAX_SPREAD_PIPS;
+}
 
 /**
- * خانة السبريد: فارغة = 0 (اختيارية)، وإلا نقاط ≥ 0 حتى `MAX_SPREAD_PIPS`. أرقام عربية وفاصلة عشرية
+ * خانة السبريد: فارغة = 0 (اختيارية)، وإلا نقاط ≥ 0 حتى `maxSpreadPipsFor(spec)`. أرقام عربية وفاصلة عشرية
  * كبقية الخانات (`parseDecimal`). `null` = نصّ غير مفهوم أو سالب أو خارج الحدّ.
  */
-export function parseSpreadPips(raw: string): number | null {
+export function parseSpreadPips(raw: string, spec?: InstrumentSpec | null): number | null {
   if (raw.trim() === '') return 0;
   const v = parseDecimal(raw, { unit: 'pip' });
-  return v != null && v >= 0 && v <= MAX_SPREAD_PIPS ? v : null;
+  return v != null && v >= 0 && v <= maxSpreadPipsFor(spec) ? v : null;
 }
 
 /**
@@ -1409,10 +1419,10 @@ export function parseSpreadPips(raw: string): number | null {
  * الرقم لتقول اللوحة «سبريد 10851 نقطة غير واقعي» بدل «رقم غير مفهوم» عن رقمٍ مفهوم تماماً؛ `null`
  * لكل ما عداه (فارغ، مقبول، سالب، نصّ غير مفهوم — لهذه رسائلها).
  */
-export function spreadTooWide(raw: string): number | null {
+export function spreadTooWide(raw: string, spec?: InstrumentSpec | null): number | null {
   if (raw.trim() === '') return null;
   const v = parseDecimal(raw, { unit: 'pip' });
-  return v != null && v > MAX_SPREAD_PIPS ? v : null;
+  return v != null && v > maxSpreadPipsFor(spec) ? v : null;
 }
 
 /**

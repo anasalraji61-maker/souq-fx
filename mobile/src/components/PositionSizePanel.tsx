@@ -584,10 +584,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             // وحدها فقط: مع خانة أخرى مرفوضة تبقى الرسالة العامة كي لا تُسمّى الرافعة وحدها
             t.riskCalcLeverageOutOfRange.replace('{value}', leverage.trim()).replace('{max}', String(MAX_LEVERAGE))
           : `${badFieldsText}: ${t.invalidNumberHint}`;
-  const spreadWide = spreadTooWide(spread);
+  const spreadWide = spreadTooWide(spread, spec);
   const spreadPoints = slPipsInPoints(spread);
   const spreadErr =
-    parseSpreadPips(spread) != null
+    parseSpreadPips(spread, spec) != null
       ? null
       : spreadWide != null
         ? t.riskCalcSpreadTooWide.replace('{n}', String(spreadWide))
@@ -885,7 +885,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
    * المخاطرة شاملة السبريد للّوت المحسوب، وأكبر لوت يُبقيها ضمن النسبة — راجع `spreadRisk`. اللوت
    * الرئيسي يبقى من الوقف وحده (ما يكتبه كل مرجع وكل منصّة)، والسطر يقول الفرق وما العمل.
    */
-  const typedSpreadPips = parseSpreadPips(spread);
+  const typedSpreadPips = parseSpreadPips(spread, spec);
   /** وقفٌ ليس أبعد من السبريد المكتوب: يُضرب لحظة الفتح — راجع `stopInsideSpread` */
   const slInsideSpread = stopInsideSpread(slNum, typedSpreadPips);
   // الدخول ما زال Ask/Bid اللقطة الحيّة (نصّ التعبئة حرفياً وللأداة نفسها): السبريد داخل مسافة الوقف والهدف أصلاً،
@@ -1148,7 +1148,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
           risk: result ? result.actualRisk : null,
           ccy: moneyCcy,
           rr: formatRR(planRR),
-          spreadPips: parseSpreadPips(spread),
+          spreadPips: parseSpreadPips(spread, spec),
           commissionPerLot: parseCommission(commission, moneyCcy),
           netRR: netAfterCosts ? formatRR(netAfterCosts.rr) : null,
         }),
