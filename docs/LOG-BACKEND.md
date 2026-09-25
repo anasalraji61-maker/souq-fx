@@ -287,3 +287,14 @@
 **فُحص ولم يُغيَّر:** قرأتُ مسارات التطبيق التي تقرأ `series.last` لسلسلة DXY (`ChartFrame`، `MatrixChart` الفارغ، `liveSeries.headerChangePct/livePriceForHeader`) — محروسة أو آمنة مع null. قرارات أنس كما هي (launch9، QA24، launch77، backend-r6 (6)).
 
 **ما يحتاجه التطبيق** ⇒ صفّ `backend-r19` بـ`docs/COORDINATION.md` (ui: نوع `ChartSeries.last`/`change_pct` بـ`api.ts` صار `number | null`).
+
+## 2026-09-25 — التشغيل 22: تدقيق بلا عيب جديد؛ البذرة لكل الرموز مسجَّلة للإزالة (backend-r22)
+
+**بداية التشغيل:** لا صفّ في COORDINATION يحتاج عملاً من الخادم وحده (backend-r19 باقيه عند ui/chart — ui18؛ صفوف backend/أنس تنتظر قراره). البنود 1–9 من STATUS أعدتُ فحصها بالكود — ما تزال منجزة (`0.00008` بتعليق فقط، 409 `trade_already_closed`، الحجم None، إشارة MACD من أول قيمة حقيقية، وقف ATR14، `XBR/USD` وDXY `not_offered_by_provider`، كاش TTL، الإحصاء على كل الصفقات والتعادل مستثنى، فهرس NOCASE). **632 اختباراً ناجحاً، لا تغيير بالكود.**
+
+**دُقّق ولم يُغيَّر (لا عيب وجدتُه):** `indicators` (RSI Wilder، ATR، MACD، التقاطعات)، `backtest` (السبريد، الهبوط داخل الصفقة، المركز المفتوح)، `screener`، `signal_hub` (المستويات ATR والأصوات)، `econ_calendar`، `twelve_data` (الشموع، الكاش والقديم، الاقتباس بلا سبريد مختلَق)، `twelve_data_ws` و`/ws/ticks`، `alert_worker` ومسارا الفحص من التطبيق، `/api/market/quote`، `/api/ai/ask` و`openrouter_ai`، `db.trade_stats`/`close_trade`/`update_trade`.
+ملاحظة صغيرة: `db.trade_stats` يرسل `avg_win`/`avg_loss` = 0 حين لا رابحة/خاسرة (الاختبار الخلفي صار None) — التطبيق لا يعرضهما (grep: `TradeJournalPanel` يعرض best/worst فقط، وتحت `trade_count > 0`) فلا ضرر اليوم؛ لم أغيّر الشكل كي لا أكسر نوع `tradePlan.ts`.
+
+**ما يبقى مخترَعاً عمداً (مؤقّتاً):** `build_series` حين يتعذّر المزوّد لأي رمز معروف يرسل بذرة عشوائية حول `SYMBOL_BASES` (أسعار 2024) موسومة `demo`/`seed`. كل مسار حسابي بالخادم يرفضها (تنبيهات، اقتباس، ماسح، اختبار خلفي، توقّع، مساعد)، لكنها ما زالت ترسم شارتاً. إزالتها لكل الرموز (كـDXY `27fa8ba`) تحتاج أولاً ui18 (16 موضعاً بـ`src/chart` تقرأ `series.last` بلا حارس) وlaunch119 (نصّ اللوح الفارغ) — وإلا يسقط الشارت عند كل 429. ⇒ صفّ `backend-r22` بـ`docs/COORDINATION.md`؛ أنفّذه بالتشغيل الذي يلي إغلاقهما.
+
+قرارات أنس كما هي: `openrouter_ai.py:71` (launch9)، كلمة المرور ≥4 (QA24)، قوالب الكردية (launch77)، العمولات (backend-r6 (6)).
