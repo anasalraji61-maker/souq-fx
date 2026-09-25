@@ -474,7 +474,8 @@ def get_schools_summary() -> list[dict]:
                 "levels_count": len(s["levels"]),
                 "lectures_count": total_lectures,
                 "classroom": s["classroom"],
-                "progress": 0,
+                # الملخّص عام لا لمستخدم بعينه ⇒ null («غير معروف») لا 0 («لم تبدأ»). التقدّم الحقيقي بـ/api/academy/progress
+                "progress": None,
             }
         )
     return sorted(out, key=lambda x: x["order"])

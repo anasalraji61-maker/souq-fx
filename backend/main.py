@@ -1740,7 +1740,7 @@ def course_detail(course_id: str):
         "level": f"حتى مستوى {school['max_level']}",
         "lessons": sum(len(lv["lectures"]) for lv in school["levels"]),
         "ai_tutor": True,
-        "progress": 0,
+        "progress": None,  # لا مستخدم هنا ⇒ غير معروف لا «0%» (التقدّم الحقيقي بـ/api/academy/progress)
         "desc": school["summary"],
         "modules": [
             {

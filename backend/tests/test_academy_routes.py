@@ -127,3 +127,12 @@ def test_real_progress_save_still_works_and_completed_is_not_lowered(client):
     assert again.status_code == 200, again.text
     assert again.json()["progress"]["completed"] is True
     assert again.json()["progress"]["segment_index"] == 0
+
+
+def test_course_cards_do_not_claim_zero_progress(client):
+    # عامّة بلا مستخدم: كانت «progress: 0» لكل متعلّم حتى من أنهى كل المحاضرات
+    for c in client.get("/api/courses").json()["courses"]:
+        assert c["progress"] is None
+    cid = client.get("/api/courses").json()["courses"][0]["id"]
+    assert client.get(f"/api/courses/{cid}").json()["progress"] is None
+    assert all(s["progress"] is None for s in client.get("/api/academy/schools").json()["schools"])
