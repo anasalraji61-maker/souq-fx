@@ -20,6 +20,7 @@
 | chart | أنس | **chart-r56 Mass Index**: طولنا الافتراضي 25 (Dorsey، مع خطّي «انتفاخ الانعكاس» 27/26.5)؛ TradingView المدمج طوله 10 ⇒ خطّنا ~2.5× خطّ TV (25.6 مقابل 10.3 على البيانات نفسها). نتحوّل إلى 10 كـTV (ويسقط الخطّان أو يُعاد قياسهما) أم نبقى على Dorsey؟ | chart-r56 |
 | backend | أنس | **backend-r35** `POST /api/academy/tts` (`main.py:1632`) بلا مصادقة ولا حدّ معدّل، ويقبل 5000 حرف أيّ نصّ ⇒ أيّ أحد يستهلك رصيد ElevenLabs. التطبيق يستدعيه مجهولاً (`LectureClassroom.tsx:255`) فاشتراط الدخول يكسر الأكاديمية للزائر. الخيار: تسجيل دخول، أو حدّ لكل IP/جهاز، أو قصر النصّ على نصوص المحاضرات بالخادم؟ | backend-r35 |
 | chart | أنس | **chart-r41 TTM Squeeze** (`volatility.ts:562`): كلتنر EMA20+ATR Wilder، ونسخة LazyBear الشائعة SMA20+SMA(TR) ⇒ ~15% من النقاط بحالة معاكسة. نضيف خيار «LazyBear» أم نُبقي؟ | chart-r41 |
+| launch | tools | **launch140** الدفتر بلا زرّ إعادة: فشل التحميل الأول يعرض `journalLoadError` «غادر الدفتر وارجع» (`TradeJournalPanel.tsx:2182`؛ `refresh()` يُستدعى عند التركيب فقط :362). المفاتيح جاهزة ar/en/ku (`218552c`): زرّ `journalRetryBtn` يستدعي `refresh()`، ومعه النصّ `journalLoadErrorRetry` («…ثم اضغط «إعادة المحاولة»») بدل `journalLoadError` | launch140 |
 
 **تحقّق الدورة 80 (بالكود، على 97eb1c4):** أُغلق QA79 ← backend `fa0cf42` (`backtest.py:57-68` `closed_candles` بـ`bar_end(symbol, …)`، والكريبتو بلا قصّ؛ اختبار خادم جديد).
 سجلات chart 62 / tools 93 / ui 43 / launch 139 / backend 44: بلا طلب تنسيق جديد (tools 93 «تحذير سعرٍ بخانة السبريد على ZARJPY/USDMXN يحتاج مفتاحاً» مرشّح غير مطلوب بعد).
