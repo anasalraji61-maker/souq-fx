@@ -5685,6 +5685,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     Number(fmtPrice(priceAtY(Math.max(0, Math.min(chartPlotH, alertDragStartY.current + dy)))));
   const alertDirection = (price: number, fallback: 'above' | 'below'): 'above' | 'below' =>
     Number.isFinite(currentPrice) ? (price >= currentPrice ? 'above' : 'below') : fallback;
+  // وسما تنبيهين متقاربين (سقف وقاع منطقة، أو تنبيهان على المستوى نفسه تقريباً) يتراكبان فلا يُقرأ أيّهما.
+  // يبقى وسم الأقرب للسعر الحيّ (هو ما سيُطلق أوّلاً)، والمسحوب دائماً؛ الخطوط نفسها كلّها تُرسم.
+  const alertLabelIds = new Set(
+    thinByGap(
+      armedAlerts,
+      (al) => yOf(alertDrag?.id === al.id ? alertDrag.price : al.price),
+      (al) =>
+        alertDrag?.id === al.id
+          ? -Infinity
+          : Number.isFinite(currentPrice)
+            ? Math.abs(al.price - currentPrice)
+            : 0,
+      LEVEL_LABEL_H
+    ).map((al) => al.id)
+  );
   const dropAlert = (al: { id: string; price: number; condition: 'above' | 'below' }, dy: number) => {
     setAlertDrag(null);
     if (Math.abs(dy) < ALERT_DRAG_SLOP) return;
@@ -8100,7 +8115,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               accessibilityLabel={a11y}
               style={[styles.hLine, styles.alertLine, { top: y }]}
             >
-              {!hidePriceLabels ? (
+              {!hidePriceLabels && alertLabelIds.has(al.id) ? (
                 <Text
                   style={[
                     styles.levelPriceLabel,
