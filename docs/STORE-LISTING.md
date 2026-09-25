@@ -161,6 +161,8 @@ The first release of MATRIX, in English, Arabic and Kurdish: multi-chart layouts
 > **2026-09-25 (launch 102) ⚠ جملة غير صحيحة اليوم**: «وإن تعذّر تحميل التقويم يقول لك» / «If the calendar can't load, it says so» — منذ `88171f9`
 > (الخادم يرسل `events: []` مع `status: "unavailable"` بدل أحداث العيّنة) يصمت الشريط تماماً. **لا تُنشر الصفحة بهذه الجملة** قبل إصلاح chart
 > (صفّ launch102 بـCOORDINATION) — أو احذف الجملتين. أبقيتُها لأنّ الإصلاح سطر واحد.
+> **2026-09-25 (launch 104) ✓ الجملة صحيحة مجدداً بالكود**: `calendarFetchEvents` يقرأ `status: "unavailable"` (`chart/newsRisk.ts:547`) فيقول الشريط
+> «تعذّر تحميل التقويم»، و`CalendarPanel` يقول `calendarUnavailable`. تبقى تجربتها على جهاز (`RELEASE-MOBILE` خطوة 381) قبل النشر.
 > **2026-09-25 (launch 59)**: سطر الدفتر: متوسط R «من الوقف الذي دخلت به ولو حرّكته» — `noteWithInitialStop`/`initialStop` (`9798121`، مختبَر،
 > بلا جهاز). لإفساح الإنجليزي اختُصرت خمس عبارات (الدفتر، الحاسبة، الرجوع للخلف، تنبيه الخبر، سطر الألوان) بلا حذف ميزة. العدّ: **ar 3747 / en 3996** من 4000.
 
