@@ -3149,6 +3149,30 @@ console.log('positionSize restoredSmallSymbol selftest OK');
   assert.equal(moneyRewardRisk(2, 1, NaN), 2);
   assert.equal(moneyRewardRisk(null, 1, 1), null);
   assert.equal(moneyRewardRisk(0, 1, 1), null);
+  // شريحة «1:1» على USDJPY بحساب دولار: دخول 150.06، وقف 149.45 ⇒ الهدف 150.675، والمال متساوٍ تماماً
+  // (61,500 × 149.45 = 61,000 × 150.675 = 9,191,175 ⇒ 408.163265 USD للوت بالجهتين). الضرب ×targetRate ÷stopRate كان
+  // يعيد ضجيج الفاصلة (0.99999999969) فتطبع اللوحة «R:R 1:0.9» وتحذّر «الربح أقل من المخاطرة»، ويُحفظ «1:0.9» بملاحظة الدفتر.
+  {
+    const plan = analyzePlan({ symbol: 'USDJPY', side: 'buy', entry: 150.06, sl: 149.45, tp: 150.675 });
+    assert.ok(plan.ok);
+    const stopRate = exitQuoteToAccount(uj, 'USD', 149.45, 1 / 150.06, true)!;
+    const targetRate = targetQuoteToAccount(uj, 'USD', 150.675, 1 / 150.06)!;
+    const rr = moneyRewardRisk(plan.rr, stopRate, targetRate)!;
+    assert.equal(rr, 1);
+    assert.equal(formatRR(rr), '1:1.0');
+    assert.equal(lowRewardWarning(rr, null), null);
+  }
+  // EURUSD بحساب يورو، بيع 1.0620 وقف 1.0710 ⇒ هدف 1:1 = 1.05315 — المال 840.336134 EUR للوت بالجهتين
+  {
+    const eu = instrumentSpec('EURUSD')!;
+    const plan = analyzePlan({ symbol: 'EURUSD', side: 'sell', entry: 1.062, sl: 1.071, tp: 1.05315 });
+    assert.ok(plan.ok);
+    const stopRate = exitQuoteToAccount(eu, 'EUR', 1.071, 1 / 1.062, true)!;
+    const targetRate = targetQuoteToAccount(eu, 'EUR', 1.05315, 1 / 1.062)!;
+    const rr = moneyRewardRisk(plan.rr, stopRate, targetRate)!;
+    assert.equal(formatRR(rr), '1:1.0');
+    assert.equal(lowRewardWarning(rr, null), null);
+  }
 }
 console.log('positionSize moneyRewardRisk selftest OK');
 {

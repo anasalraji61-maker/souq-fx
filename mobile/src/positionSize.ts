@@ -1234,7 +1234,9 @@ export function moneyRewardRisk(pipRR: number | null, stopRate: number | null, t
   if (pipRR == null || !Number.isFinite(pipRR) || pipRR <= 0) return null;
   if (stopRate == null || targetRate == null || !(stopRate > 0) || !(targetRate > 0)) return pipRR;
   if (!Number.isFinite(stopRate) || !Number.isFinite(targetRate)) return pipRR;
-  return (pipRR * targetRate) / stopRate;
+  // منظَّفةً لـ1e-9 كـ`cleanRatio` (`tradePlan`): المال متساوٍ تماماً بشريحة «1:1» (USDJPY 150.06/149.45/150.675) لكن الضرب
+  // يعيد 0.99999999969 ⇒ «1:0.9» وتحذير «الربح أقل من المخاطرة» — `formatRR` يتسامح مع الضجيج فوق 1 فقط
+  return Math.round(((pipRR * targetRate) / stopRate) * 1e9) / 1e9;
 }
 
 /**
