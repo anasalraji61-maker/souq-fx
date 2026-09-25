@@ -555,6 +555,8 @@ export type Dict = {
   journalOpenRiskNoStop: string;
   /** سطر تحذير بالدفتر من `openCurrencyExposure` حين `legs ≥ 2 && sameWay` — `{ccy}` العملة و`{n}` عدد الصفقات (مرّة واحدة لكلٍّ). العدد بعد النقطتين فلا صيغ جمع */
   journalExposureStacked: string;
+  /** قبل الحفظ (`draftStackedExposure`): الصفقة المكتوبة لم تُفتح بعد، فـ«صفقات مفتوحة…: 3 (+1)» يعدّها مفتوحة — `{ccy}` و`{after}` العدد بعدها و`{before}` المفتوحة الآن. الأعداد بعد اسم لا قبله فلا صيغ جمع */
+  journalExposureStackedDraft: string;
   journalClosedWord: string;
   journalCloseNeedsExit: string;
   journalDeleteConfirmTitle: string;
@@ -1637,6 +1639,7 @@ const ar: Dict = {
   journalOpenSuffix: '(مفتوحة)',
   journalOpenRiskNoStop: 'صفقات مفتوحة بلا وقف: {n} — خسارتها بلا حدّ، فلا يُجمع خطر المفتوحة',
   journalExposureStacked: 'صفقات مفتوحة تراهن على {ccy} بالاتجاه نفسه: {n} — خبرٌ واحد يضربها معاً، فمخاطرتها تتجمّع لا تتوزّع',
+  journalExposureStackedDraft: 'بهذه الصفقة يصير عدد صفقاتك التي تراهن على {ccy} بالاتجاه نفسه {after} (المفتوحة الآن: {before}) — خبرٌ واحد يضربها معاً، فمخاطرتها تتجمّع لا تتوزّع',
   journalClosedWord: 'مغلقة',
   journalCloseNeedsExit: 'اكتب سعر الخروج في خانة «خروج» أعلى النموذج، ثم اضغط «إغلاق بسعر خانة الخروج» تحت الصفقة.',
   journalDeleteConfirmTitle: 'حذف هذه الصفقة من الدفتر؟',
@@ -2724,6 +2727,7 @@ const enUS: Dict = {
   journalOpenSuffix: '(open)',
   journalOpenRiskNoStop: 'Open trades without a stop: {n} — their loss has no limit, so open risk is not totalled',
   journalExposureStacked: 'Open trades betting the same way on {ccy}: {n} — one news release hits them all at once, so their risk stacks up instead of spreading out',
+  journalExposureStackedDraft: 'With this trade, {after} of your trades bet the same way on {ccy} ({before} already open) — one news release hits them all at once, so the risk stacks up instead of spreading out',
   journalClosedWord: 'Closed',
   journalCloseNeedsExit: 'Type the exit price in the “Exit” field at the top of the form, then tap “Close at exit field price” under the trade.',
   journalDeleteConfirmTitle: 'Delete this trade from the journal?',
@@ -3839,6 +3843,7 @@ const ku: Dict = {
   journalOpenSuffix: '(کراوەیە)',
   journalOpenRiskNoStop: 'مامەڵە کراوەکانی بێ وەستان: {n} — زیانیان سنووری نییە، بۆیە مەترسیی کراوەکان کۆ ناکرێتەوە',
   journalExposureStacked: 'مامەڵە کراوەکانی هەمان ئاراستە لەسەر {ccy}: {n} — یەک هەواڵ هەموویان پێکەوە دەپێکێت، بۆیە مەترسییان کەڵەکە دەبێت نەک دابەش',
+  journalExposureStackedDraft: 'بەم مامەڵەیە ژمارەی مامەڵەکانت کە بە هەمان ئاراستە لەسەر {ccy} دەوەستن دەبێتە {after} (ئێستا کراوە: {before}) — یەک هەواڵ هەموویان پێکەوە دەپێکێت، بۆیە مەترسییان کەڵەکە دەبێت نەک دابەش',
   journalClosedWord: 'داخراو',
   journalCloseNeedsExit: 'نرخی دەرچوون لە خانەی «دەرچوون» لە سەرەوەی فۆڕمەکە بنووسە، پاشان «داخستن بە نرخی خانەی دەرچوون» لە ژێر مامەڵەکە دابگرە.',
   journalDeleteConfirmTitle: 'ئەم مامەڵەیە لە دەفتەرەکە بسڕدرێتەوە؟',
