@@ -339,6 +339,8 @@ export type Dict = {
   riskCalcStopChip: string;
   riskCalcConvFailed: string;
   riskCalcConvManual: string;
+  /** سعر التحويل لم يتجدّد (التجديد الصامت كل دقيقة فشل): {pair} الزوج، {min} الدقائق منذ آخر سعر ناجح */
+  riskCalcConvStale: string;
   riskCalcLots: string;
   riskCalcRiskAmount: string;
   riskCalcUnits: string;
@@ -1414,6 +1416,7 @@ const ar: Dict = {
   riskCalcStopChip: '{side}: الوقف {price}',
   riskCalcConvFailed: 'تعذّر جلب سعر التحويل تلقائياً — اكتبه بالخانة أدناه كما تراه بمنصّتك ليظهر حجم اللوت. الزوج:',
   riskCalcConvManual: 'أدخل سعر',
+  riskCalcConvStale: 'سعر التحويل {pair} لم يتجدّد منذ {min} د — اللوت محسوب على آخر سعر وصلنا. قارنه بمنصّتك قبل الدخول.',
   riskCalcLots: 'حجم الصفقة (لوت)',
   riskCalcRiskAmount: 'المخاطرة الفعلية',
   riskCalcUnits: 'الوحدات',
@@ -2474,6 +2477,7 @@ const enUS: Dict = {
   riskCalcStopChip: '{side}: stop {price}',
   riskCalcConvFailed: "Couldn't fetch the conversion rate — type it below as your platform shows it to get the lot size. Pair:",
   riskCalcConvManual: 'Enter price of',
+  riskCalcConvStale: "The {pair} conversion rate hasn't updated for {min} min — the lot uses the last rate we received. Check it against your platform before you enter.",
   riskCalcLots: 'Position size (lots)',
   riskCalcRiskAmount: 'Actual risk',
   riskCalcUnits: 'Units',
@@ -3559,6 +3563,7 @@ const ku: Dict = {
   riskCalcStopChip: '{side}: وەستان {price}',
   riskCalcConvFailed: 'نرخی گۆڕینەوە وەرنەگیرا — لە خانەی خوارەوە بینووسە وەک لە پلاتفۆرمەکەتدا دەیبینیت بۆ ئەوەی قەبارەی لۆت دەربکەوێت. جووت:',
   riskCalcConvManual: 'نرخی ئەمە بنووسە',
+  riskCalcConvStale: 'نرخی گۆڕینەوەی {pair} {min} خولەکە نوێ نەبووەتەوە — لۆتەکە لەسەر دوایین نرخی وەرگیراو ژمێردراوە. پێش چوونەژوورەوە لەگەڵ پلاتفۆرمەکەتدا بەراوردی بکە.',
   riskCalcLots: 'قەبارەی مامەڵە (لۆت)',
   riskCalcRiskAmount: 'مەترسی ڕاستەقینە',
   riskCalcUnits: 'یەکەکان',
