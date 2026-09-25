@@ -355,7 +355,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
 
   /** «تحميل الأقدم» (backend-r1 `limit`/`offset`): صفحةٌ بعد المحمَّل بتداخلٍ يحمي من حذفٍ بجهاز آخر (`journalOlderPage`). */
   const loadOlder = useCallback(async () => {
-    const gen = ++listGenRef.current;
+    // يقرأ الرقم ولا يزيده: تحديثٌ بعد الحفظ جارٍ لا يُسقطه «الأقدم» — كان يُسقَط فتُدمج الصفحة الأقدم على قائمة ما قبل الحفظ
+    // فتختفي الصفقة المضافة (فيضيفها المتداول ثانيةً). تحديثٌ يبدأ بعده يُسقط الأقدم كما كان (القائمة الأحدث تغلب).
+    const gen = listGenRef.current;
     setOlderBusy(true);
     setOlderError(false);
     try {
