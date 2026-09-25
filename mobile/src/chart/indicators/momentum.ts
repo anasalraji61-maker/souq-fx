@@ -701,27 +701,26 @@ export function computeSmi(
 }
 
 /**
- * SMI Ergodic Oscillator (وليام بلاو — مؤشر TradingView مدمج مستقل رسمياً عن "SMI Ergodic Indicator"
- * أعلاه [نفس `computeSmi`] رغم الاسم المتشابه؛ كلا الأداتين من نفس المؤلف وتستخدمان نفس حساب
- * smi/signal الأساسي، لكن TradingView يفصلهما كأداتين مدمجتين مختلفتين: "Indicator" يعرض خطّي
- * smi/signal، و"Oscillator" يعرض **الفرق بينهما فقط** كهستوغرام) — **إعادة استخدام حرفية كاملة صفر
- * حساب رياضي جديد**: يستدعي `computeSmi` الموجودة أعلاه مباشرة بنفس المعاملات الافتراضية (kPeriod=10/
- * smoothPeriod1=3/smoothPeriod2=3/signalPeriod=3)، ثم oscillator[i]=smi[i]−signal[i] (null إذا كان
- * أيّ منهما null — نفس حارس فراغ الإحماء المشترك بين الخطّين). يُرسَم بإعادة استخدام كاملة لنمط
- * هستوغرام Momentum/DPO/TRIX الموجود (عمود ملوَّن bull/bear حسب الإشارة، محوَّر حول الصفر) بلا أي عنصر
- * رسم جديد. **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**: 300 شمعة عشوائية بذرة ثابتة
- * (mulberry32) → 291 نقطة صالحة تطابق تماماً smi[i]−signal[i] المحسوبة مستقلة عن الدالتين (فرق<10⁻¹²
- * لكل نقطة)، وصفر حالة يكون فيها smi/signal صالحاً والناتج null أو العكس (تطابق حراسة الفراغ تماماً).
+ * SMI Ergodic Oscillator كنصّ TradingView المدمج: `erg = ta.tsi(close, 5, 20)` (نطاق ±1 لا ±100)،
+ * `sig = ta.ema(erg, 5)`، والهستوغرام `erg − sig`. كان SMI بلاو الاستوكاستيكي (`computeSmi`، 10/3/3/3) ناقص
+ * إشارته — مؤشّر آخر تماماً (عشرات لا أجزاء من الواحد، وتقاطعات صفر بغير توقيت TradingView). تنعيم `ta.tsi`
+ * المزدوج: الطويل (20) أولاً ثم القصير (5) — كـ`computeTsi(closes, 20, 5)`، مقسوماً على 100.
  */
 export function computeSmiErgodicOscillator(
   candles: Candle[],
-  kPeriod = 10,
-  smoothPeriod1 = 3,
-  smoothPeriod2 = 3,
-  signalPeriod = 3
+  shortLen = 5,
+  longLen = 20,
+  signalLen = 5
 ): (number | null)[] {
-  const { smi, signal } = computeSmi(candles, kPeriod, smoothPeriod1, smoothPeriod2, signalPeriod);
-  return smi.map((v, i) => (v != null && signal[i] != null ? v - signal[i]! : null));
+  const { tsi } = computeTsi(
+    candles.map((c) => c.close),
+    longLen,
+    shortLen,
+    signalLen
+  );
+  const erg = tsi.map((v) => (v == null ? null : v / 100));
+  const sig = ema(erg, signalLen);
+  return erg.map((v, i) => (v != null && sig[i] != null ? v - sig[i]! : null));
 }
 
 /**
