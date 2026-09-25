@@ -207,3 +207,18 @@ def test_fallback_ws_tick_carries_its_receive_time(monkeypatch):
     monkeypatch.setattr(alert_worker.td_ws, "snapshot", lambda max_age=180: {"EURUSD": 1.0950})
     monkeypatch.setattr(alert_worker.td_ws, "received_at", lambda syms: {"EURUSD": 1234.0})
     assert alert_worker._price_at("EURUSD") == (pytest.approx(1.0950), 1234.0)
+
+
+def test_wick_window_covers_the_whole_stale_cache_gap(monkeypatch):
+    """5 شموع فقط ⇒ ذيل لمس المستوى أثناء 429 (كاش حتى 15د) يسقط من أول جلب حيّ بعده."""
+    asked = {}
+
+    def _series(sym, tf, outputsize):
+        asked["n"] = outputsize
+        return [], {}
+
+    monkeypatch.setattr(alert_worker.market, "configured", lambda: True)
+    monkeypatch.setattr(alert_worker.market, "fetch_time_series_with_meta", _series)
+    monkeypatch.setattr(alert_worker, "_price_at", lambda s: (None, None))
+    alert_worker._recent_minutes("BTCUSD")
+    assert asked["n"] * 60 > alert_worker.market.STALE_MAX_SEC

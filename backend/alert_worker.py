@@ -62,6 +62,12 @@ def _price_at(symbol: str) -> tuple[float | None, float | None]:
     return float(p), td_ws.received_at([symbol.upper()]).get(symbol.upper())
 
 
+# شموع 1m التي تُفحص ذيولها: كانت 5 ⇒ بعد 429 (كاش قديم حتى `STALE_MAX_SEC` = 15د) أو دورة أطول من 5د،
+# أول جلب حيّ يعيد آخر 5 دقائق فقط وذيل لمس المستوى قبلها لا يُرى أبداً. تغطّي الآن مدّة الكاش القديم كاملة
+# (+1 للشمعة الجارية) بنفس الطلب الواحد؛ ما قبل دقيقة التسليح يُستبعد بـ`_price_hit` كما كان.
+_WICK_BARS = market.STALE_MAX_SEC // 60 + 1
+
+
 def _recent_minutes(symbol: str) -> tuple[float | None, list[dict], float | None]:
     """(آخر سعر، شموع الدقيقة الأخيرة، لحظة جلب السعر أو None) بطلب واحد للمزوّد — نفس كلفة `fetch_quote` السابقة.
 
@@ -72,7 +78,7 @@ def _recent_minutes(symbol: str) -> tuple[float | None, list[dict], float | None
         q, q_at = _price_at(symbol)
         return q, [], q_at
     try:
-        candles, meta = market.fetch_time_series_with_meta(symbol, "1m", outputsize=5)
+        candles, meta = market.fetch_time_series_with_meta(symbol, "1m", outputsize=_WICK_BARS)
         if candles:
             last = float(candles[-1]["close"])
             # عند 429 قد تُخدَم سلسلة قديمة (حتى 15 دقيقة): إغلاقها ليس «السعر الحالي» — قد يسبق التسليح
