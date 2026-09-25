@@ -308,3 +308,14 @@ QA21 (`d8446d0`؛ `DIRECTIONAL_OVERLAYS` باقٍ عمداً — استثناء 
 **جديد QA26 → chart + tools + بلا مالك:** `BASES` ×3 (`TerminalScreen:99`، `FocusChartModal:56` 21 رمزاً، `QuadChartModal:48` 6 فقط ⇒ `?? 1` يرسم AUDUSD/USOIL حول 1.0 بالرباعي بلا اتصال).
 `PREFS_KEY` ×2 مفتاحان مختلفان، `NO_INDICATORS` ×2 ثابت فارغ، `TTL_MS`/`FAIL_TTL_MS` بغرضين — غير ضارّة.
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة خارج `locales.ts`.
+
+## 2026-09-25 — الدورة 27
+**البناء:** أخضر 0 (بعد 70787c1، وأُعيد بعد سحب 8730c5b) — لا إصلاح لازم. **Selftests:** 71/71 ناجح (`npx tsx`؛ +1 `smiErgodic`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — QA25 الكريبتو (`c4d17cb`، `isCryptoSymbol` بـ`marketHours.ts`)؛ QA26 الرباعي (`8c483b7`، `chart/mockBases.ts`)؛ chart15
+(`51777fd`، `mcNudge*` 5 بـ`.tsx`). **غير مُغلق:** `BASES` محلّي بـ`TerminalScreen:99`/`FocusChartModal:56`، `series.change_pct`، 10 `Alert.alert`، «₴» ×2، `accNetLoadError` 0.
+**طلبات تنسيق جديدة (تحقّقتُ):** launch76 ملاحظة √252 ⇒ **QA27 → chart**: Parkinson/GK/RS/YZ/EWMA √252 ثابت بلا فريم (`volatility.ts:871…1077`،
+`MatrixChart.tsx:2689-2703`) ⇒ W1 ~2.2× أعلى من HV، D1 أقلّ ~17%. tools (آخر تشغيل): `username` حسّاس للحالة (خادم/أنس ⛔ 19)، `VotePanel` `v.mine` (بلا مالك).
+**المراجعة (b — نصوص ثابتة)، بسكربتين (JSX + حرفيات عربية بكل `src`):** الجداول العربية بـ`types.ts`/`dataSource.ts`/`marketHours.ts` احتياط، كل مستهلك يمرّر `t.*`؛
+`DEFAULT_LAYOUT` ⇒ `t.layoutBuiltinName`؛ `DEFAULT_TEMPLATE.name` لا يُعرض. المعروف: `SubscriptionPlansPanel`/`CommissionPlan`/`NetworkTree`/`TreeDiagram`/`MessagesScreen` (QA2).
+**جديد QA27 → الخادم/أنس (⛔ 18):** `backend/academy_data.py` 45 محاضرة عربية فقط (عنوان، مخطّط، سرد يُرسل للصوت) ⇒ الإنجليزي/الكردي يرى المدرسة بلغته وما تحتها عربي.
+**الدورة القادمة:** المراجعة (c) — a11y.
