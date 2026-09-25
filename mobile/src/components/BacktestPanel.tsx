@@ -23,8 +23,9 @@ type Stats = {
   win_rate: number | null;
   total_return_pct: number;
   final_equity: number;
-  avg_win_pct?: number;
-  avg_loss_pct?: number;
+  /** null = لا صفقة رابحة/خاسرة (backend-r15a) — كان 0 فيُقرأ «متوسّط الربح 0%». */
+  avg_win_pct?: number | null;
+  avg_loss_pct?: number | null;
   max_drawdown_pct?: number;
   /** سبريد تقديري مخصوم من كل صفقة (باك-إند أحدث)؛ null = ليس زوجاً قابلاً للتداول (DXY). */
   spread_pips?: number | null;
@@ -141,6 +142,17 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
           stats.open_pnl_pct >= 0 ? '+' : ''
         }${stats.open_pnl_pct}%`
       : null;
+  // كل طرف يُعرض وحده حين الآخر null (launch114)؛ كلاهما null ⇒ لا سطر
+  const avgWin = typeof stats?.avg_win_pct === 'number' ? stats.avg_win_pct : null;
+  const avgLoss = typeof stats?.avg_loss_pct === 'number' ? stats.avg_loss_pct : null;
+  const avgWinLossLine =
+    avgWin != null && avgLoss != null
+      ? t.backtestStatAvgWinLoss.replace('{win}', String(avgWin)).replace('{loss}', String(avgLoss))
+      : avgWin != null
+        ? t.backtestStatAvgWin.replace('{win}', String(avgWin))
+        : avgLoss != null
+          ? t.backtestStatAvgLoss.replace('{loss}', String(avgLoss))
+          : null;
 
   return (
     <View style={styles.wrap}>
@@ -273,12 +285,8 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
                   {t.backtestStatDrawdown.replace('{pct}', String(stats.max_drawdown_pct))}
                 </Text>
               ) : null}
-              {stats.avg_win_pct != null ? (
-                <Text style={[styles.statLine, { textAlign: align }]}>
-                  {t.backtestStatAvgWinLoss
-                    .replace('{win}', String(stats.avg_win_pct))
-                    .replace('{loss}', String(stats.avg_loss_pct))}
-                </Text>
+              {avgWinLossLine ? (
+                <Text style={[styles.statLine, { textAlign: align }]}>{avgWinLossLine}</Text>
               ) : null}
               {typeof stats.spread_pips === 'number' && stats.spread_pips > 0 ? (
                 <Text style={[styles.ranFor, { textAlign: align }]}>
