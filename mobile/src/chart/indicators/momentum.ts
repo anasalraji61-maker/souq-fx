@@ -1060,13 +1060,12 @@ export function computeInverseFisherRsi(closes: number[], period = 14): (number 
  * [n1=10 الافتراضي]. d=EMA(|ap−esa|,n1) (متوسط الانحراف المطلق عن esa، بنفس فترة esa). ci=(ap−esa)
  * /(0.015×d) [عامل 0.015 ثابت قياسي بالصيغة الأصلية، مطابق فعلياً لعامل تطبيع CCI 0.015 نفسه أعلاه
  * بـcomputeCci]. wt1=EMA(ci,n2) [n2=21 الافتراضي]. wt2=SMA(wt1,4) (خط إشارة أبطأ، بنفس فكرة
- * %D لـStochastic أو خط الإشارة بـMACD/PPO/APO أعلاه). **معالجة null بنفس اتفاقية KST/DEMA/TEMA
- * الموثَّقة أعلاه حرفياً**: |ap−esa| يُعوَّض بصفر ما دام esa فارغاً (فترة تسخين n1)، وci يُعوَّض بصفر
- * ما دام esa أو d فارغين أو d=0 (حارس قسمة على صفر صريح)، ثم بوابة صلاحية نهائية صريحة تُطبَّق على
- * wt1 (null قبل الفهرس n1−1 بغضّ النظر عمّا ينتجه EMA داخلياً) وwt2 (null إن كان wt1 نفسه null).
+ * %D لـStochastic أو خط الإشارة بـMACD/PPO/APO أعلاه). **معالجة null كـPine**: |ap−esa| وci يبقيان null
+ * ما دام esa أو d فارغين (ema تبذر من أوّل قيمة حقيقية) ⇒ wt1 يبدأ عند 2·n1+n2−3؛ ci=0 عند d=0 (حارس
+ * قسمة على صفر صريح)؛ wt2 null إن كان wt1 نفسه null.
  * **تحقّق يدوي**: سعر/مدى ثابت تماماً (أعلى=أدنى=إغلاق ثابت لكل شمعة) → ap ثابت → esa=ap بالضبط بعد
- * التسخين (EMA لسلسلة ثابتة=نفس الثابت) → |ap−esa|=0 لكل نقطة صالحة وصفر أيضاً بفترة التسخين
- * (بالتعويض) → d=EMA(أصفار,n1)=0 بعد تسخينه الخاص → ci محروس بصفر صراحة عند d=0 لكل نقطة (بلا
+ * التسخين (EMA لسلسلة ثابتة=نفس الثابت) → |ap−esa|=0 لكل نقطة صالحة
+ * → d=EMA(أصفار,n1)=0 بعد تسخينه الخاص → ci محروس بصفر صراحة عند d=0 لكل نقطة (بلا
  * استثناء) → wt1=EMA(أصفار,n2)=0 بعد التسخين → wt2=SMA(أصفار,4)=0 — يطابق "لا انحراف زخمي بسعر
  * ساكن" بالتعريف تماماً لكلا الخطين معاً. تحقّق حسابي فعلي (Node.js): 300 شمعة عشوائية بذرة ثابتة
  * (صفر NaN/Infinity لكلا الخطين) + إعادة حساب brute-force مستقلة تماماً (حلقات EMA/SMA مُعاد كتابتها
@@ -1080,17 +1079,18 @@ export function computeWaveTrend(
 ): { wt1: (number | null)[]; wt2: (number | null)[] } {
   const ap = candles.map((c) => (c.high + c.low + c.close) / 3);
   const esa = ema(ap, n1);
-  const dRaw = ap.map((v, i) => (esa[i] == null ? 0 : Math.abs(v - esa[i]!)));
+  // فراغ الإحماء يبقى null (لا أصفار) كـPine: ta.ema تبذر SMA من أوّل قيمة حقيقية ⇒ d وwt1 لا يبدآن
+  // من صفر وهمي (كانت أوّل ~40 شمعة محمَّلة تنحرف بعيداً عن TradingView).
+  const dRaw = ap.map((v, i) => (esa[i] == null ? null : Math.abs(v - esa[i]!)));
   const d = ema(dRaw, n1);
   const ciRaw = ap.map((v, i) => {
     const e = esa[i];
     const dv = d[i];
-    if (e == null || dv == null || dv === 0) return 0;
+    if (e == null || dv == null) return null;
+    if (dv === 0) return 0;
     return (v - e) / (0.015 * dv);
   });
-  const wt1Raw = ema(ciRaw, n2);
-  const warm1 = n1 - 1;
-  const wt1 = wt1Raw.map((v, i) => (i < warm1 || v == null ? null : v));
+  const wt1 = ema(ciRaw, n2);
   const wt2Raw = sma(wt1, 4);
   const wt2 = wt2Raw.map((v, i) => (wt1[i] == null || v == null ? null : v));
   return { wt1, wt2 };
