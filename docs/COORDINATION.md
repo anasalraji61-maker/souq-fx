@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 15، بعد b70f388) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 16، بعد 8805813) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -38,8 +38,8 @@
 | QA | بلا مالك | **(a) جديد**: `DomLitePanel.tsx:67-73` يحسب السبريد بالـpip محلياً — نسخة `quoteSpreadPips` (`positionSize.ts:360`) الجديدة (tools: «ليس بنطاقي»)؛ والخاصية `last` ميتة (`void last` :75) والمستدعون ما زالوا يمرّرونها | QA11 |
 | QA | الخادم | **(d) جديد QA14**: ملاحظة التنبيه `main.py:199` (و:399 تنبيه المؤشر) `note: str = ""` بلا حدّ (ملاحظة الدفتر/التصويت 500) والخانة `AlertsPanel` بلا `maxLength` ⇒ نص غير محدود يُخزَّن ويُرسل بالإشعار | QA14 |
 | QA+tools | أنس | **(e) جديد QA15**: صفقة التعادل (pnl = 0) تُحسب **خسارة** بنسبة الفوز (`journalStats` `pnl <= 0` = `backend/db.py:1848`) ⇒ متداول ينقل وقفه للتعادل يرى نسبة فوزه تهبط. قرار: تُستثنى أم تُحسب خسارة؟ | QA15 |
-| QA | launch | **(e) جديد QA15 (منخفض)**: الإنجليزية تخلط «pip»/«pips» بعد الرقم: `locales.ts` :2466 :2499 «({derived} pip)» و:2578 «Net: {pips} pip» مقابل :2507 «({sl} pips)» و:2600 «{pips} pips» — والوحدة المولَّدة `measureReadout.ts:52` «+35.0 pip». وحِّد (المتداول الإنجليزي يقول «pips») | QA15 |
+| launch | chart | **(e) جديد launch65 (منخفض)**: `measureReadout.ts:52` يولّد «+35.0 pip» بكل اللغات (القياس، سطر التقاطع، التغيّر عن السابقة `b70f388`) — بالإنجليزية «pips» (القاموس صار «pips» بعد الرقم `758fc25`) ⇒ مفتاح وحدة بالقاموس أو فرع باللغة | launch65 |
 
-**أُسقط هذه الدورة (بالكود):** QA14 → tools — `maxLength={JOURNAL_NOTE_MAX}` `TradeJournalPanel.tsx:1690` + عدّاد `noteCharsLeft` :1705 (`15226bd`)؛ launch64 → tools — `riskCalcLeverageAmbiguous` مربوط `PositionSizePanel.tsx:447` (`82f38f5`).
-**تحقّق بلا تغيير (بالكود):** `Alert.alert` 10 (+1 تعليق)؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `accNetLoadError` 0 مستعمل.
-**(e) هذه الدورة — سليم:** تغيّر سطر التقاطع عن إغلاق السابقة (`b70f388`، يرجع للافتتاح بأول شمعة)؛ الجلسات طوكيو/لندن/نيويورك بالصيفي (`sessions.ts`)؛ الحاسبة ترفض HUF/CZK/KRW/THB بدل pip خاطئ؛ ذهب 0.1×100، فضة 0.01×5000.
+**أُسقط هذه الدورة (بالكود):** QA15 → launch — `riskCalcSlMismatch`/`…Narrower`/`journalStatNetPips` «pips» بالإنجليزية (`758fc25`، `locales.ts` :2466 :2499 :2578)؛ ما بقي (المولَّد بـ`measureReadout.ts`) صار صفّ launch65 → chart.
+**تحقّق بلا تغيير (بالكود):** `Alert.alert` 10 بـ5 ملفات؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `accNetLoadError` 0 مستعمل؛ `QUICK_SYMBOLS` ×2؛ `void last`؛ `RECONNECT_BASE_MS` ×2؛ قائمة التصديرات الميتة الـ11 كما هي.
+**(a) هذه الدورة — سليم:** التصديرات الجديدة (`savedRiskMoney`، `leverageAmbiguousThousands`، `barChangeRef`) كلّها مستوردة؛ لا تعريف مكرّر جديد.

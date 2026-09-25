@@ -187,3 +187,13 @@ launch64 → tools (`82f38f5`: `riskCalcLeverageAmbiguous` `PositionSizePanel.ts
 على 12 غريبة: HUF/CZK/KRW/THB/INR/IDR ⇒ null (مقصود)، MXN/ZAR/TRY/SEK/HKD/CNH ⇒ 0.0001. **جديد QA15:** التعادل خسارة بنسبة الفوز (`pnl <= 0` =
 `db.py:1848`) ⇒ أنس؛ الإنجليزية تخلط «N pip»/«N pips» (`locales.ts` :2466 :2499 :2578 مقابل :2507 :2600) ⇒ launch (منخفض).
 **الدورة القادمة:** المراجعة (a) — تكرار/كود ميت.
+
+## 2026-09-25 — الدورة 16
+**البناء:** أخضر 0 (بعد 8805813) — لا إصلاح لازم. **Selftests:** 62/62 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — QA15 → launch (`758fc25`: «({derived} pips)» `locales.ts` :2466 :2499، «Net: {pips} pips» :2578).
+**غير مُغلق:** 10 `Alert.alert` بـ5 ملفات، «₴» ×2، `TimeframeBar` صفر `accessibilityState`، `accNetLoadError` 0 مستعمل، `QUICK_SYMBOLS` ×2، `void last`، `RECONNECT_BASE_MS` ×2.
+**طلب تنسيق جديد:** launch65 → chart — `measureReadout.ts:52` يولّد «pip» مفرداً بالإنجليزية (منخفض).
+**المراجعة (a — تكرار/كود ميت)، بسكربت على تصديرات `measureReadout.ts`/`positionSize.ts` وفروق 1671724..HEAD:** التصديرات الجديدة الثلاثة مستوردة؛
+`normalizeSymbol`/`moneyDecimals`/`RISK_HIGH_PCT` مصدَّرة ومستعملة بملفها وحده (تصدير زائد، لا يستحقّ صفاً)؛ قائمة الميتة الـ11 كما هي؛ لا تكرار جديد.
+ملاحظة صغيرة: `leverageAmbiguousThousands` لا تقبل «．» العريضة بينما `ambiguousThousandsPrice` تقبلها — نادر، لم يُسجَّل.
+**الدورة القادمة:** المراجعة (b) — نصوص ظاهرة ثابتة مكانها `locales.ts`.
