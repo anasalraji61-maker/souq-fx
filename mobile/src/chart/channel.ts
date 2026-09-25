@@ -17,12 +17,15 @@ export type ChannelBar = { high: number; low: number };
  *
  * @param bars السلسلة كاملة (`a.index`/`b.index` فهارس فيها).
  * @param fallback عرض موجب يُستعمل حين لا تعطي الشموع عرضاً (مثلاً خُمس المدى الظاهر).
+ * @param log المقياس اللوغاريتمي: الأساس مستقيم باللوغاريتم (كما يُرسم) والموازي نسبة ثابتة منه
+ *   (`channelLinePrices`) ⇒ أبعد قمّة/قاع تُقاس بالنسبة لا بفرق السعر، وإلا مرّ الموازي فوق القمّة أو تحتها.
  */
 export function fitChannelWidth(
   bars: readonly ChannelBar[],
   a: ChannelPoint,
   b: ChannelPoint,
-  fallback: number
+  fallback: number,
+  log = false
 ): number {
   const left = a.index <= b.index ? a : b;
   const right = left === a ? b : a;
@@ -33,6 +36,23 @@ export function fitChannelWidth(
   if (!(span > 0)) return signed;
   const from = Math.max(0, Math.ceil(left.index));
   const to = Math.min(bars.length - 1, Math.floor(right.index));
+  if (log && left.price > 0 && right.price > 0) {
+    const la = Math.log(left.price);
+    const lb = Math.log(right.price);
+    let bestK = 0;
+    for (let i = from; i <= to; i++) {
+      const bar = bars[i];
+      if (!bar) continue;
+      const v = rising ? bar.high : bar.low;
+      if (!(v > 0)) continue;
+      const d = Math.log(v) - (la + ((lb - la) * (i - left.index)) / span);
+      if (!Number.isFinite(d)) continue;
+      if (rising ? d > bestK : d < bestK) bestK = d;
+    }
+    if (bestK === 0) return signed;
+    // العرض الذي يضع مقبضه (منتصف الموازي بالسعر الخطّي) على الموازي اللوغاريتمي عند منتصف الأساس.
+    return Math.exp((la + lb) / 2 + bestK) - (left.price + right.price) / 2;
+  }
   let best = 0;
   for (let i = from; i <= to; i++) {
     const bar = bars[i];

@@ -3438,7 +3438,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 sourceRef.current.all as { high: number; low: number }[],
                 a,
                 end,
-                Math.abs(priceAtY(0) - priceAtY(chartPlotH)) / 7
+                Math.abs(priceAtY(0) - priceAtY(chartPlotH)) / 7,
+                logScale
               )
             : undefined;
         setDrawings((d) => [
@@ -3452,7 +3453,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       setDragEnd(null);
       setTool('none');
     },
-    [tool, accent, tr, pushDrawHistory, series.symbol, positionEndPoint, priceAtY, chartPlotH]
+    [tool, accent, tr, pushDrawHistory, series.symbol, positionEndPoint, priceAtY, chartPlotH, logScale]
   );
 
   /**

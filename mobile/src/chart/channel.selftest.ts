@@ -56,6 +56,23 @@ close(channelWidthAt(a, b, channelHandlePrice(a, b, -0.0007)), -0.0007);
   close(Math.log(mid.a) - Math.log(ga.price), (Math.log(par.a) - Math.log(ga.price)) / 2);
   // سعر ≤0 ⇒ الخطّي
   close(channelLinePrices({ index: 0, price: 1 }, { index: 1, price: 2 }, -5, 1, true).a, -4);
+
+  // تقدير العرض باللوغاريتمي: الموازي المرسوم يمرّ بأبعد قمّة بالضبط (لا فوقها ولا تحتها).
+  const gold = Array.from({ length: 101 }, (_, i) => {
+    const line = Math.exp(Math.log(1800) + ((Math.log(2600) - Math.log(1800)) * i) / 100);
+    return { high: line * (i === 25 ? 1.06 : i === 80 ? 1.04 : 1.01), low: line };
+  });
+  const fw = fitChannelWidth(gold, ga, gb, 10, true);
+  const fp = channelLinePrices(ga, gb, fw, 1, true);
+  const at = (i: number) => Math.exp(Math.log(fp.a) + ((Math.log(fp.b) - Math.log(fp.a)) * i) / 100);
+  assert.ok(Math.abs(at(25) - gold[25].high) < 1e-6, `log fit ${at(25)} != ${gold[25].high}`);
+  assert.ok(at(80) >= gold[80].high, 'log fit: كل القمم تحت الموازي');
+  // الخطّي على البيانات نفسها يختار عرضاً آخر (القمّة الأبعد بفرق السعر هي 80) ⇒ الموازي اللوغاريتمي يقصّ القمّة 25.
+  const lw = fitChannelWidth(gold, ga, gb, 10, false);
+  assert.ok(Math.abs(lw - fw) > 1, 'الخطّي ≠ اللوغاريتمي');
+  // هابط باللوغاريتمي ⇒ عرض سالب؛ لا شيء يتجاوز ⇒ الاحتياطي.
+  assert.ok(fitChannelWidth([{ high: 2, low: 1.5 }, { high: 1.9, low: 1.9 }], { index: 0, price: 2 }, { index: 1, price: 1.9 }, 1, true) < 0);
+  close(fitChannelWidth(bars, { index: 0, price: 1.2 }, { index: 4, price: 1.21 }, 0.003, true), 0.003);
 }
 
 console.log('channel.selftest: PASS');
