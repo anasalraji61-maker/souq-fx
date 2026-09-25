@@ -204,3 +204,36 @@ def test_successful_refresh_clears_stale(monkeypatch):
     assert [e["title"] for e in cal.fetch_calendar()] == ["NFP"]
     st = cal.calendar_status()
     assert st["stale"] is False and time.time() - st["as_of"] < 5
+
+
+def test_a_timed_out_primary_source_still_tries_the_backup(monkeypatch):
+    """مهلة JSON كانت تقفز فوق XML الاحتياطي ⇒ «التقويم غير متاح» والاحتياطي سليم."""
+    _expired_week(monkeypatch, cal.TTL + 60)
+    monkeypatch.setattr(cal, "_FAIL_TS", 0.0)
+    monkeypatch.setattr(cal, "_parse_ff", lambda text: [dict(_EVENTS[1])])
+    asked: list[str] = []
+
+    class _Resp:
+        status_code = 200
+        text = "<xml/>"
+
+    class _PrimaryTimesOut:
+        def __init__(self, *a, **k):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def get(self, url, *a, **k):
+            asked.append(url)
+            if url == cal.FF_JSON_URL:
+                raise cal.httpx.ReadTimeout("slow")
+            return _Resp()
+
+    monkeypatch.setattr(cal.httpx, "Client", _PrimaryTimesOut)
+    assert [e["title"] for e in cal.fetch_calendar()] == ["ECB"]
+    assert asked == [cal.FF_JSON_URL, cal.FF_URL]
+    assert cal.calendar_status()["stale"] is False

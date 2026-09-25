@@ -285,13 +285,17 @@ def fetch_calendar(
         merged: list[dict] = []
         try:
             with httpx.Client(timeout=14.0, follow_redirects=True) as client:
-                r = client.get(FF_JSON_URL, headers={"User-Agent": "MATRIX/1.0"})
-                if r.status_code == 200 and r.text.strip():
-                    merged = _parse_ff_json(r.text)
-                if not merged:
-                    r = client.get(FF_URL, headers={"User-Agent": "MATRIX/1.0"})
-                    if r.status_code == 200 and r.text.strip():
-                        merged = _parse_ff(r.text)
+                # كلّ مصدر بمحاولته: كانا بـ`try` واحد ⇒ مهلة/انقطاع JSON يقفز إلى `except` ولا يُجرَّب XML
+                # الاحتياطي أصلاً (كان يُجرَّب فقط لردّ غير 200 أو غير قابل للتحليل)
+                for url, parse in ((FF_JSON_URL, _parse_ff_json), (FF_URL, _parse_ff)):
+                    try:
+                        r = client.get(url, headers={"User-Agent": "MATRIX/1.0"})
+                        if r.status_code == 200 and r.text.strip():
+                            merged = parse(r.text)
+                    except Exception:
+                        merged = []
+                    if merged:
+                        break
         except Exception:
             merged = []
         if merged:
