@@ -1452,7 +1452,12 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           {line}
         </Text>
       ))}
-      {shownStats && shownStats.trade_count === 0 && visibleTrades.length > 0 ? (
+      {/* «لا صفقات مغلقة بعد» كذبٌ بجانب صفقة مغلقة ظاهرة: صفوف قديمة بدخول ≤0 (قبل رفض الخادم له) مغلقة بـ`pnl` null
+          فلا تُعدّ بـ`journalStats` ⇒ `trade_count` 0 */}
+      {shownStats &&
+      shownStats.trade_count === 0 &&
+      visibleTrades.length > 0 &&
+      !visibleTrades.some((tr) => tr.status === 'closed') ? (
         <Text style={[styles.sub, { textAlign: align }]}>{t.journalStatsPending}</Text>
       ) : null}
       {shownStats && shownStats.trade_count > 0 ? (
