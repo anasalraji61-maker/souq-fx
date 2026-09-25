@@ -57,7 +57,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • سعر أعلى قمّة وأدنى قاع على الشاشة مكتوب عند ذيليهما ويتحدّث وأنت تسحب، وخطّ خافت يفصل كل يوم تداول عن الذي يليه على الفريمات الصغيرة.
 • المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، الفوليوم وغيرها وقيمة كل خطّ مكتوبة بجانب اسمه، ومستويات الارتكاز (Pivot وCamarilla وفيبوناتشي) وأعلى الأمس وأدناه وبجانب كل مستوى سعره، وتظليل جلسات طوكيو ولندن ونيويورك.
 • «عدسات» تضع مجموعة مؤشرات جاهزة بلمسة: هيكل (المتوسطات)، زخم (RSI وMACD)، سيولة (الفوليوم وبولنجر وCVD تقديري من الشموع، لا من تدفّق أوامر حقيقي).
-• أدوات رسم: خط اتجاه، شعاع، قناة موازية، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات تكتب نصّها، مع زرّ تراجع وزرّ «نسخة» يكرّر الرسم بلمسة — حتى في المساحة الفارغة يمين آخر شمعة. الخط الأفقي يكتب بُعده عن السعر بالـpip، والمنطقة ارتفاعها. وما ترسمه على فريم يظهر على بقية فريمات الرمز نفسه.
+• أدوات رسم: خط اتجاه، شعاع، قناة موازية، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات تكتب نصّها، مع زرّ تراجع وزرّ «نسخة» يكرّر الرسم بلمسة — حتى في المساحة الفارغة يمين آخر شمعة. أزرار ▲▼◀▶ تُزيح الرسم المحدَّد pip واحداً أو شمعة بكل لمسة. الخط الأفقي يكتب بُعده عن السعر بالـpip، والمنطقة ارتفاعها. وما ترسمه على فريم يظهر على بقية فريمات الرمز نفسه.
 • خطّط صفقة شراء أو بيع على الشارت: اسحب من الدخول إلى الوقف فيظهر الهدف، والمسافتان بالـpip، ونسبة العائد إلى المخاطرة — واسحب الهدف لتغيّر النسبة. وعلى الشموع السابقة ترى هل بلغ السعر الهدف أم الوقف.
 • أداة قياس تكتب المسافة بالـpip والنسبة وعدد الشموع وكم استغرقت الحركة من وقت، وأنت تسحب.
 • إعادة تشغيل الشموع لتدريب عينك على قراءة الحركة.
@@ -112,20 +112,20 @@ MATRIX is a technical-analysis workspace built for individual traders: fast char
 CHARTS
 • Candlesticks, Heikin-Ashi, Renko, Kagi and Point & Figure.
 • Up to four charts on one screen with optional time sync — or overlay a second symbol on one chart, aligned bar by bar in time.
-• Tap any candle for its OHLC, range and change from the previous close, plus that level's distance from price in pips, then tap 🔔 to set an alert there.
-• Pinch to zoom — the live candle stays in view. Drag the price axis to stretch candles. Scroll back through history; one tap returns to the live candle, zoom intact.
+• Tap any candle for its OHLC, range and change from the previous close, plus that level's distance from price in pips, then 🔔 sets an alert there.
+• Pinch to zoom — the live candle stays in view. Drag the price axis to stretch candles. Scroll back; one tap returns to the live candle, zoom intact.
 • A countdown under the live price to the current candle's close.
-• The on-screen high and low carry their price and update as you scroll, and a faint line marks where each trading day starts on intraday charts.
+• The on-screen high and low carry their price and update as you scroll, and a faint line marks each new trading day on intraday charts.
 • The indicators traders use: SMA and EMA, Bollinger Bands, RSI, MACD, Volume and more, each line's value in the legend, plus pivot levels (classic, Camarilla, Fibonacci) and yesterday's high and low, and Tokyo, London and New York session shading.
 • One-tap "lenses" that add a ready set of indicators: Structure (moving averages), Momentum (RSI and MACD), Liquidity (volume, Bollinger and a CVD estimated from candles, not order flow).
-• Drawing tools: trend line, ray, parallel channel, horizontal and vertical lines, rectangle, Fibonacci, zones and typed notes, with undo and one-tap cloning — also past the live candle. A horizontal line shows its distance from price in pips; a zone, its height. Drawings follow the symbol across timeframes.
+• Drawing tools: trend line, ray, parallel channel, horizontal and vertical lines, rectangle, Fibonacci, zones and typed notes, with undo and one-tap cloning — also past the live candle. ▲▼◀▶ buttons move a selected drawing one pip or one candle per tap. A horizontal line shows its distance from price in pips; a zone, its height. Drawings follow the symbol across timeframes.
 • Plan a buy or sell on the chart: drag from entry to stop to see the target, both distances in pips and the reward-to-risk ratio — drag the target to change it. On past candles it shows whether price hit the target or the stop.
 • A measure tool showing pips, percent, bar count and how long the move took as you drag.
 • Candle replay to train your eye.
 
 WATCHLIST & ALERTS
-• A personal watchlist of the pairs and symbols you follow.
-• Price alerts and indicator alerts (RSI, moving averages, MACD) delivered as notifications.
+• A watchlist of the symbols you follow.
+• Price and indicator alerts (RSI, moving averages, MACD) as notifications.
 • Economic calendar and market news.
 
 TRADER TOOLS
@@ -134,7 +134,7 @@ TRADER TOOLS
 • A heads-up before a trade when high-impact news is close for the pair's, index's or metal's currency — using your broker's symbol names. If the calendar fails to load, it says so.
 • A screener on common indicator conditions.
 • Simple strategy backtesting on past data, for learning.
-• An AI assistant for your technical-analysis questions, in your language, plus a short weekly report.
+• An AI assistant for technical-analysis questions, in your language, plus a short weekly report.
 • Share a chart image in one tap.
 
 ACADEMY
@@ -180,3 +180,8 @@ The first release of MATRIX: multi-chart layouts, indicators and drawing tools, 
 > عربية. الآن «Audio lessons in Arabic» والنص الترويجي «the Arabic audio academy» (اختُصر «Built for» ⇒ «For» ليبقى ≤170). شرح المدرّس أثناء
 > الدرس يُطلب بلغة الواجهة (`lang` بـ`LectureClassroom.tsx:304`) فلم أوسمه. إن تُرجم المحتوى (QA27 ← أنس) تُحذف «in Arabic».
 > العدّ بسكربت: **en 3997** من 4000، الترويجي **166** من 170.
+
+> **2026-09-25 (launch 79)**: سطر الرسم (ar/en) يذكر أزرار ▲▼◀▶ للرسم المحدَّد (`51777fd`؛ تحقّقتُ `MatrixChart.tsx` `nudgeButtons`، تظهر ما دام
+> رسمٌ محدَّداً بالهاتف والشاشة العريضة) — على الهاتف هي ما يجعل «أدوات رسم دقيقة» صادقة. «pip» دقيق للأزواج والمعادن؛ للمؤشرات والكريبتو
+> الخطوة بكسل من المحور (`nudgeSelectedDrawing`) — لم أفصّل ذلك بالوصف. لإفساح الإنجليزي اختُصرت ست عبارات بلا حذف ميزة (الرجوع للخلف،
+> خطّ بداية اليوم، التنبيهات، قائمة المتابعة، 🔔، المساعد). العدّ بسكربت: **ar 3907 / en 3993** من 4000.
