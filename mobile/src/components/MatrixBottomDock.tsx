@@ -207,7 +207,9 @@ export function MatrixBottomDock({
             ) : null}
             {tab === 'news' ? <NewsPanel /> : null}
             {tab === 'calendar' ? <CalendarPanel symbol={symbol} /> : null}
-            {tab === 'journal' ? <TradeJournalPanel defaultSymbol={symbol} /> : null}
+            {/* الرصيف مدمج تحت الشارت وشريط أخبار `symbol` ظاهر فوقه (`TerminalScreen` `<NewsRiskBanner symbol={symbol} />`)
+                ⇒ لا تكرار لتحذيره. **لا** تمرّرها بـ`MatrixSidePanel`: اللوح يغطّي الشريط */}
+            {tab === 'journal' ? <TradeJournalPanel defaultSymbol={symbol} chartBannerVisible /> : null}
             {tab === 'community' ? (
               <View style={styles.community}>
                 <GroupChatPanel />
