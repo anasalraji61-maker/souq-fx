@@ -210,11 +210,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
-    shadowColor: buttons.shadowColor,
-    shadowOpacity: buttons.shadowOpacity,
-    shadowRadius: buttons.shadowRadius,
-    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
-    elevation: buttons.elevation,
+    // §5.5: فاصل واحد — التعبئة وحدها (الظلّ كان ثانياً)، كزرّ الحفظ بالدفتر والماسح بالأدوات.
   },
   nextText: { color: colors.onAccent, fontWeight: '500', fontSize: 15 },
 });

@@ -108,8 +108,8 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontSize: 18, fontWeight: '500', textAlign: 'center' },
   body: { color: colors.textMuted, fontSize: 13, lineHeight: 20, textAlign: 'center' },
   detail: { color: colors.textDim, fontSize: 11, lineHeight: 16, textAlign: 'center' },
-  // الزر الوحيد بهذه الشاشة هو طريق الخروج منها: حبّة تيل ممتلئة بظل خفيف وضغطة تصغير، كزرّ
-  // «التالي» بالجولة الترحيبية — لا لوح مسطّح بزوايا 10 يبدو معطّلاً بشاشة خطأ أصلاً.
+  // الزر الوحيد بهذه الشاشة هو طريق الخروج منها: حبّة تيل ممتلئة وضغطة تصغير، كزرّ «التالي» بالجولة الترحيبية.
+  // بلا ظلّ (DESIGN-PRO §5.5 — فاصل واحد: التعبئة وحدها).
   btn: {
     marginTop: 8,
     minWidth: 180,
@@ -120,11 +120,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
     paddingVertical: 12,
-    shadowColor: buttons.shadowColor,
-    shadowOpacity: buttons.shadowOpacity,
-    shadowRadius: buttons.shadowRadius,
-    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
-    elevation: buttons.elevation,
   },
   btnText: { color: colors.onAccent, fontSize: 15, fontWeight: '500' },
 });
