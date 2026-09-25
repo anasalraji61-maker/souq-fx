@@ -141,6 +141,7 @@ import {
 import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
 import { paneInlineFits } from './paneHeadFit';
 import { noteBox } from './noteLabel';
+import { playSoftClick } from '../audio/playSoftClick';
 import { chartPipSpec } from './pipSpec';
 import { planHiLoLabels } from './hiLoLabels';
 import { planDayBreaks } from './dayBreaks';
@@ -3507,6 +3508,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (a: ChartPoint, b?: ChartPoint) => {
       const t = tool;
       if (t === 'none') return;
+      // نقرة خفيفة (اهتزاز 8ms بالهاتف) عند تثبيت رسم — كان الوضع صامتاً فلا يعرف الإصبع أن المستوى نزل
+      // حتى ينظر. التثبيت وحده لا كل لمسة (matrix-tactile-feel).
+      if (b || t === 'hline' || t === 'hray' || t === 'vline' || t === 'note') playSoftClick();
       if (t === 'measure' && b) {
         // بالنقاط (pip) بحجم pip الأداة — راجع `measureReadout.ts`. كان الفرق السعري
         // الخام وحده، ومصاغاً بلا رمز (فتُقدَّر منازله من حجم الرقم: خمس منازل لكل فرق
