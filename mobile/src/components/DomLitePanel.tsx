@@ -4,7 +4,9 @@ import { colors, radii, spacing } from '../theme';
 import { formatPrice } from '../chart/math';
 import { formatPriceDiff } from '../chart/indicators/utils';
 import { isRealQuote } from '../chart/dataSource';
-import { quoteSpreadPips } from '../positionSize';
+import { quoteBookValid, quoteSpreadPips } from '../positionSize';
+import { chartPipSpec } from '../chart/pipSpec';
+import { pipUnit } from '../chart/measureReadout';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -24,7 +26,7 @@ const REFRESH_MS = 15_000;
  * السعر الحي والسبريد بالـpip. لا أرقام إن لم يكن الاقتباس حقيقياً (`isRealQuote`).
  */
 export function DomLitePanel({ symbol = 'EURUSD' }: Props) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [state, setState] = useState<'loading' | 'ok' | 'none'>('loading');
@@ -60,15 +62,16 @@ export function DomLitePanel({ symbol = 'EURUSD' }: Props) {
     };
   }, [symbol]);
 
-  const hasBook =
-    quote != null && quote.bid != null && quote.ask != null && quote.ask >= quote.bid && quote.bid > 0;
+  // `quoteBookValid` كرأس الطرفية: يرفض أيضاً bid/ask غير المنتهيين (NaN كان يمرّ بلا مقارنة صريحة).
+  const hasBook = quote != null && quoteBookValid(quote.bid, quote.ask);
   let spreadText: string | null = null;
   if (hasBook) {
     // الحساب نفسه برأس الطرفية (`quoteSpreadPips`) — كان منسوخاً هنا فيتباعد التقريب بين اللوحين.
-    const pips = quoteSpreadPips(symbol, quote!.bid, quote!.ask);
+    // chart-r56: `chartPipSpec` — «USDJPYc»/«XAUUSDm»/«EURUSD.pro» كانت بلا مواصفة فتطبع الفرق خاماً «0.015».
+    const pips = quoteSpreadPips(symbol, quote!.bid, quote!.ask, chartPipSpec);
     // chart-r48: بلا مواصفة pip ⇒ منازل **السعر** لا حجم السبريد (BTCUSD كان «12.500» بجانب «67420.50»).
     spreadText =
-      pips != null ? `${pips.toFixed(1)} pip` : formatPriceDiff(quote!.ask! - quote!.bid!, quote!.bid!, symbol);
+      pips != null ? `${pips.toFixed(1)} ${pipUnit(lang)}` : formatPriceDiff(quote!.ask! - quote!.bid!, quote!.bid!, symbol);
   }
 
   return (
@@ -80,10 +83,11 @@ export function DomLitePanel({ symbol = 'EURUSD' }: Props) {
       ) : null}
       {state === 'ok' && hasBook ? (
         <>
+          {/* المرجع نفسه للطرفين (`quote.bid`) كرأس الطرفية: نفط حول 100 كان «99.950» بجانب «100.05» */}
           <View style={[styles.row, rtl && styles.rowRtl]}>
             <View style={styles.cell}>
               <Text style={styles.label}>{t.domBidLabel}</Text>
-              <Text style={[styles.value, styles.bid]}>{formatPrice(quote!.bid!, symbol)}</Text>
+              <Text style={[styles.value, styles.bid]}>{formatPrice(quote!.bid!, symbol, quote!.bid)}</Text>
             </View>
             <View style={styles.cell}>
               <Text style={styles.label}>{t.domSpreadLabel}</Text>
@@ -91,7 +95,7 @@ export function DomLitePanel({ symbol = 'EURUSD' }: Props) {
             </View>
             <View style={styles.cell}>
               <Text style={styles.label}>{t.domAskLabel}</Text>
-              <Text style={[styles.value, styles.ask]}>{formatPrice(quote!.ask!, symbol)}</Text>
+              <Text style={[styles.value, styles.ask]}>{formatPrice(quote!.ask!, symbol, quote!.bid)}</Text>
             </View>
           </View>
           <Text style={[styles.sub, { textAlign: align }]}>{t.domBidAskHint}</Text>
