@@ -336,6 +336,15 @@ export const NEWS_GRACE_MS = 15 * 60 * 1000;
  * الرواتب بدقائق. الآن كل قادمٍ خلال 15د يغلب كل ماضٍ (هو القرار القابل للفعل: لا تدخل الآن)، وما صدر للتوّ
  * يبقى غالباً لقادمٍ بعيد (قبل 1د ⇒ 16د، يغلب «بعد ساعتين»)، وبين ماضيَين الأحدث كما كان.
  */
+/**
+ * عملة الحدث من عملات الزوج؟ `ALL` (ForexFactory: اجتماعات G20 ونحوها، والخادم يمرّرها بـ`econ_calendar.CURRENCIES`) حدثٌ
+ * عالمي يحرّك كل الأزواج — كان لا يطابق أي زوج فيسكت الشريط عن حدثٍ قويّ. يطابق أي زوجٍ له عملة معروفة (مجموعة غير فارغة).
+ */
+export function newsCurrencyMatches(currency: string, want: ReadonlySet<string>): boolean {
+  const c = currency.trim().toUpperCase();
+  return want.has(c) || (c === 'ALL' && want.size > 0);
+}
+
 /** البُعد للمقارنة فقط: القادم بدقائقه، والماضي بدقائقه + مهلة ما بعد الصدور — راجع `nextHighImpact`. */
 const distance = (deltaMs: number, graceMs: number) => (deltaMs < 0 ? -deltaMs + graceMs : deltaMs);
 
@@ -354,7 +363,7 @@ export function nextHighImpact(
     if (String(e.impact).toLowerCase() !== 'high') continue;
     if (typeof e.ts !== 'number' || !Number.isFinite(e.ts)) continue;
     if (newsTimeUnannounced(e)) continue;
-    if (!want.has(String(e.currency).toUpperCase())) continue;
+    if (!newsCurrencyMatches(String(e.currency), want)) continue;
     const delta = e.ts * 1000 - nowMs;
     if (delta < -graceMs || delta > horizonMs) continue;
     const dist = distance(delta, graceMs);
@@ -409,7 +418,7 @@ export function unannouncedHighImpactToday(
     if (e.sample || String(e.impact).toLowerCase() !== 'high') continue;
     if (typeof e.ts !== 'number' || !Number.isFinite(e.ts) || !newsTimeUnannounced(e)) continue;
     const c = String(e.currency).toUpperCase();
-    if (!want.has(c)) continue;
+    if (!newsCurrencyMatches(c, want)) continue;
     const start = e.ts * 1000;
     if (nowMs < start - horizonMs || nowMs >= start + UNANNOUNCED_SPAN_MS) continue;
     hitCcys.add(c);
@@ -573,7 +582,7 @@ export function sameMinuteHighImpact(events: readonly NewsEvent[], currencies: r
     if (e === event || e.id === event.id || e.sample) continue;
     if (String(e.impact).toLowerCase() !== 'high') continue;
     if (typeof e.ts !== 'number' || !Number.isFinite(e.ts) || Math.abs(e.ts - event.ts) >= 60) continue;
-    if (!want.has(String(e.currency).toUpperCase())) continue;
+    if (!newsCurrencyMatches(String(e.currency), want)) continue;
     seen.add(key(e));
   }
   return seen.size - 1;
@@ -594,7 +603,7 @@ export function sameMinuteCurrencyLabel(events: readonly NewsEvent[], currencies
     if (String(e.impact).toLowerCase() !== 'high') continue;
     if (typeof e.ts !== 'number' || !Number.isFinite(e.ts) || Math.abs(e.ts - event.ts) >= 60) continue;
     const c = String(e.currency).toUpperCase();
-    if (want.has(c) && !out.includes(c)) out.push(c);
+    if (newsCurrencyMatches(c, want) && !out.includes(c)) out.push(c);
   }
   return out.join('/');
 }

@@ -14,6 +14,7 @@ import {
   newsTickDelayMs,
   NEWS_GRACE_MS,
   nextHighImpact,
+  newsCurrencyMatches,
   openPositionsNewsRisk,
   sameMinuteHighImpact,
   sameMinuteCurrencyLabel,
@@ -1045,3 +1046,26 @@ assert.deepEqual(symbolCurrencies('XAUUSDsb'), ['USD']);
 assert.deepEqual(symbolCurrencies('GBPJPYsb'), ['GBP', 'JPY']);
 assert.deepEqual(symbolCurrencies('AAPL'), []);
 console.log('newsRisk glued sb suffix selftest OK');
+
+{
+  // حدثٌ عالمي `ALL` (G20) كان لا يطابق أي زوج ⇒ صمت الشريط عن خبرٍ قويّ بعد 30 دقيقة
+  const g20: NewsEvent = { id: 'g20', title: 'G20 Meetings', currency: 'ALL', impact: 'high', ts: (now + 30 * 60_000) / 1000 };
+  assert.equal(nextHighImpact([g20], symbolCurrencies('EURUSD'), now)?.event.id, 'g20');
+  assert.equal(nextHighImpact([g20], symbolCurrencies('XAUUSD'), now)?.event.id, 'g20');
+  assert.equal(nextHighImpact([{ ...g20, currency: 'all' }], symbolCurrencies('USDZAR'), now)?.event.id, 'g20');
+  // أداة بلا عملة معروفة (سهم) تبقى بلا شريط
+  assert.equal(nextHighImpact([g20], symbolCurrencies('AAPL'), now), null);
+  // `ALL` منخفض التأثير لا يُطلق
+  assert.equal(nextHighImpact([{ ...g20, impact: 'low' }], symbolCurrencies('EURUSD'), now), null);
+  // الأقرب ما زال يغلب: رواتب بعد 10د قبل G20 بعد 30د
+  const nfp: NewsEvent = { id: 'nfp', title: 'NFP', currency: 'USD', impact: 'high', ts: (now + 10 * 60_000) / 1000 };
+  assert.equal(nextHighImpact([g20, nfp], symbolCurrencies('EURUSD'), now)?.event.id, 'nfp');
+  // بالدقيقة نفسها يُعدّ ويُسمّى
+  const same: NewsEvent = { ...nfp, id: 'g20b', title: 'G20', currency: 'ALL' };
+  assert.equal(sameMinuteHighImpact([nfp, same], symbolCurrencies('EURUSD'), nfp), 1);
+  assert.equal(sameMinuteCurrencyLabel([nfp, same], symbolCurrencies('EURUSD'), nfp), 'USD/ALL');
+  assert.equal(newsCurrencyMatches('ALL', new Set()), false);
+  assert.equal(newsCurrencyMatches(' usd ', new Set(['USD'])), true);
+  assert.equal(newsCurrencyMatches('GBP', new Set(['USD'])), false);
+}
+console.log('newsRisk ALL-currency selftest OK');
