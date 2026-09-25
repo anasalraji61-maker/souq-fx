@@ -104,16 +104,39 @@ const DEFAULT_SHADOW_ENABLED: ShadowEnabled = [true, true, true];
 const NOT_OFFERED_SYMBOLS = new Set(['DXY']);
 
 /**
- * إطار بلا خادم بعد: بذرة موسومة «تجريبي» — إلا رمزاً لا يقدّمه المزوّد (launch119): بذرة DXY حول 104.25 كانت
- * تُرسم بلا خادم مع أن الخادم نفسه لا يملك له شمعة. الآن السلسلة الفارغة نفسها التي يرسلها الخادم ⇒ الإشعار.
+ * إطار **قبل** أول ردّ (الحالة الابتدائية فقط): بذرة موسومة «تجريبي» — إلا رمزاً لا يقدّمه المزوّد (launch119) فسلسلته
+ * الفارغة نفسها التي يرسلها الخادم ⇒ الإشعار. `ChartFrame` لا يملك حالة «تحميل» بعد، فلا بديل أصدق هنا.
  */
-function offlineFrame(symbol: string, tf: Timeframe, bars = 120): ChartSeries {
+function bootFrame(symbol: string, tf: Timeframe, bars = 120): ChartSeries {
   const seed = mockSeries(symbol, mockBase(symbol), tf, bars);
   if (!NOT_OFFERED_SYMBOLS.has(symbol.trim().toUpperCase())) return seed;
   return {
     ...seed,
     candles: [],
     data_source: { ...seed.data_source, unavailable_reason: 'not_offered_by_provider' } as ChartSeries['data_source'],
+  };
+}
+
+/**
+ * launch121: فشل الطلب نفسه (بلا إنترنت/الخادم متوقّف) وليس في الذاكرة شيء — كان يرسم `mockSeries` حول أسعار 2024
+ * (EURUSD 1.0854) موسومة «تجريبي»، أوّل ما يراه مستخدم جديد بلا شبكة. الآن `candles: []` بسببٍ تطبيقيّ
+ * `server_unreachable` ⇒ `ProviderUnavailableNotice` (نصّ `chartServerUnreachable*`) لا شموع ولا سعر. DXY يبقى
+ * `not_offered_by_provider`: الخادم نفسه لا يملك له شمعة، فعودة الاتصال لا تغيّر شيئاً.
+ */
+function offlineFrame(symbol: string, tf: Timeframe): ChartSeries {
+  const notOffered = NOT_OFFERED_SYMBOLS.has(symbol.trim().toUpperCase());
+  return {
+    symbol,
+    timeframe: tf,
+    candles: [],
+    change_pct: null,
+    last: null,
+    data_source: {
+      kind: 'unavailable',
+      as_of: Date.now() / 1000,
+      channel: 'app',
+      unavailable_reason: notOffered ? 'not_offered_by_provider' : 'server_unreachable',
+    } as ChartSeries['data_source'],
   };
 }
 
@@ -147,10 +170,10 @@ export function TerminalScreen() {
   const narrowWatch = width < 1100;
   const desktopChartHeight = Math.max(320, Math.min(720, height - 330));
 
-  const [dxy, setDxy] = useState<ChartSeries>(() => offlineFrame('DXY', '15m'));
+  const [dxy, setDxy] = useState<ChartSeries>(() => bootFrame('DXY', '15m'));
   const [frames, setFrames] = useState<ChartSeries[]>(() =>
     DEFAULT_LAYOUT.frameSymbols.map((s, i) =>
-      offlineFrame(s, DEFAULT_FRAME_TIMEFRAMES[i])
+      bootFrame(s, DEFAULT_FRAME_TIMEFRAMES[i])
     )
   );
   const [frameSymbols, setFrameSymbols] = useState<[string, string, string]>(
@@ -638,7 +661,7 @@ export function TerminalScreen() {
         setOnline(true);
       } catch {
         if (stale()) return;
-        setChart({ key, s: cachedSeries(sym, timeframe) ?? offlineFrame(sym, timeframe, 180) });
+        setChart({ key, s: cachedSeries(sym, timeframe) ?? offlineFrame(sym, timeframe) });
         setOnline(false);
       }
     },
