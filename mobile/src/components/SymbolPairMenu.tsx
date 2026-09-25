@@ -122,8 +122,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: radii.sm,
     borderWidth: 1,
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft,
+    // الرمز والفريم بالشريط نفسه: التأكيد للفريم النشط وحده (DESIGN-PRO §1) ⇒ الزرّ محايد.
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   triggerLarge: {
     borderWidth: 0,
@@ -131,12 +131,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingVertical: 0,
   },
-  triggerOn: {
-    backgroundColor: 'rgba(45, 212, 191, 0.22)',
-  },
-  triggerText: { color: colors.accent, fontWeight: '900', fontSize: 13 },
+  triggerOn: { backgroundColor: colors.selectedFill },
+  triggerText: { color: colors.text, fontWeight: '900', fontSize: 13 },
   triggerTextLarge: { color: colors.text, fontSize: 14 },
-  caret: { color: colors.accent, fontWeight: '800', fontSize: 11, opacity: 0.85 },
+  caret: { color: colors.textMuted, fontWeight: '800', fontSize: 11 },
   caretLarge: { color: colors.textMuted },
   panel: {
     position: 'absolute',
@@ -173,9 +171,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 8,
   },
-  rowOn: {
-    backgroundColor: colors.accentSoft,
-  },
+  rowOn: { backgroundColor: colors.selectedFill },
   sym: {
     color: colors.textMuted,
     fontWeight: '800',

@@ -641,12 +641,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
     borderRadius: radii.sm,
-    backgroundColor: colors.accentSoft,
     borderWidth: 1,
     borderColor: colors.border,
   },
   toolBtnDisabled: { opacity: 0.4 },
-  toolBtnText: { color: colors.accent, fontSize: 10, fontWeight: '800' },
+  toolBtnText: { color: colors.textMuted, fontSize: 10, fontWeight: '800' },
   list: { gap: 3, paddingBottom: spacing.lg },
   emptyBox: { paddingVertical: spacing.lg, alignItems: 'center', gap: spacing.sm },
   empty: {
@@ -659,11 +658,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: 14,
     borderRadius: radii.sm,
-    backgroundColor: colors.accentSoft,
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: colors.border,
   },
-  addEmptyText: { color: colors.accent, fontWeight: '800', fontSize: 12 },
+  addEmptyText: { color: colors.text, fontWeight: '800', fontSize: 12 },
   rowWrap: {
     borderRadius: radii.sm,
     borderWidth: 1,
@@ -707,8 +705,8 @@ const styles = StyleSheet.create({
   right: { alignItems: 'flex-end' },
   rightRtl: { alignItems: 'flex-start' },
   chg: { ...numeric, color: colors.textDim, fontSize: 9, fontWeight: '800', marginTop: 1 },
-  /** الجرس بلون هوية التطبيق (teal) — لا أخضر/أحمر: المسافة كمّية ولا تقول ربحاً ولا خسارة. */
-  armedTag: { color: colors.accent, fontSize: 8, fontWeight: '800', marginTop: 1 },
+  /** الجرس محايد — لا أخضر/أحمر (المسافة كمّية لا ربح ولا خسارة) ولا تأكيد (شارة؛ DESIGN-PRO §1). */
+  armedTag: { color: colors.textMuted, fontSize: 8, fontWeight: '800', marginTop: 1 },
   chgUp: { color: colors.bull },
   chgDown: { color: colors.bear },
   ops: {
@@ -770,5 +768,5 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
   },
-  modalCloseText: { color: colors.accent, fontWeight: '800' },
+  modalCloseText: { color: colors.textMuted, fontWeight: '800' },
 });

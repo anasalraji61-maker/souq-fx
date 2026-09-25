@@ -96,12 +96,9 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   chip: {
-    paddingHorizontal: 9,
-    paddingVertical: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     borderRadius: radii.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bgPanel,
     minWidth: 36,
     alignItems: 'center',
   },
@@ -110,10 +107,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     minWidth: 30,
   },
-  chipActive: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft,
-  },
+  // DESIGN-PRO §1/§4: الفريم النشط هو عنصر التأكيد الوحيد بالشريط العلوي — تعبئة محايدة + نصّ بالتأكيد.
+  chipActive: { backgroundColor: colors.selectedFill },
   text: {
     color: colors.textMuted,
     fontSize: 11,

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, selectedMarkerWidth } from '../theme';
 import { type DrawTool, type LensMode } from '../chart/types';
 import { localizedDrawTools, localizedLenses } from '../chart/typeLabels';
 import type { EdgePanelId } from './MatrixSidePanel';
@@ -96,11 +96,13 @@ type RailButtonProps = {
   tip: string;
   a11yLabel: string;
   on?: boolean;
+  /** العدسة دائماً مختارة بجانب أداة رسم ⇒ علامتها محايدة كي يبقى تأكيدٌ واحد بالشريط (DESIGN-PRO §1). */
+  neutralMarker?: boolean;
   onPress: () => void;
   railTip: ReturnType<typeof useRailTip>;
 };
 
-function RailButton({ mark, tip, a11yLabel, on, onPress, railTip }: RailButtonProps) {
+function RailButton({ mark, tip, a11yLabel, on, neutralMarker, onPress, railTip }: RailButtonProps) {
   const ref = useRef<View>(null);
   return (
     <Pressable
@@ -123,6 +125,7 @@ function RailButton({ mark, tip, a11yLabel, on, onPress, railTip }: RailButtonPr
       delayLongPress={TIP_DELAY_MS}
       onPressOut={railTip.hide}
     >
+      {on ? <View style={[styles.railMarker, neutralMarker && styles.railMarkerNeutral]} /> : null}
       <Text style={[styles.railMark, on && styles.railMarkOn]}>{mark}</Text>
     </Pressable>
   );
@@ -155,6 +158,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
           tip={l.label}
           a11yLabel={`${t.lensA11yPrefix}${l.label}`}
           on={activeLens === l.id}
+          neutralMarker
           onPress={() => onLens(l.id)}
           railTip={railTip}
         />
@@ -273,13 +277,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  railBtnOn: {
-    backgroundColor: colors.accentSoft,
-    borderWidth: 1,
-    borderColor: colors.accent,
+  // DESIGN-PRO §4: الاختيار تعبئة محايدة + علامة 2px داخلية، لا حدّ ولا رمز بالتأكيد.
+  railBtnOn: { backgroundColor: colors.selectedFill },
+  railMarker: {
+    position: 'absolute',
+    left: 0,
+    top: spacing.xs,
+    bottom: spacing.xs,
+    width: selectedMarkerWidth,
+    borderRadius: 1,
+    backgroundColor: colors.accent,
   },
+  railMarkerNeutral: { backgroundColor: colors.text },
   railMark: { color: colors.textMuted, fontSize: 13, fontWeight: '800' },
-  railMarkOn: { color: colors.accent },
+  railMarkOn: { color: colors.text },
   tipBubble: {
     position: 'absolute',
     zIndex: 20,

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, selectedMarkerWidth } from '../theme';
 import type { EdgePanelId } from './MatrixSidePanel';
 import { AlertsPanel } from './AlertsPanel';
 import { IndicatorAlertsPanel } from './IndicatorAlertsPanel';
@@ -194,6 +194,7 @@ export function MatrixBottomDock({
                         onPress={() => onLens?.(l.id)}
                         accessibilityLabel={`${t.lensA11yPrefix}${l.label}`}
                       >
+                        {on ? <View style={[styles.chipMarker, styles.chipMarkerNeutral]} /> : null}
                         <Text style={[styles.drawChipMark, on && styles.drawChipMarkOn]}>
                           {LENS_MARK[l.id]}
                         </Text>
@@ -224,6 +225,7 @@ export function MatrixBottomDock({
                         onPress={() => onTool?.(tool.id)}
                         accessibilityLabel={`${t.drawToolA11yPrefix}${tool.label}`}
                       >
+                        {on ? <View style={styles.chipMarker} /> : null}
                         <Text style={[styles.drawChipMark, on && styles.drawChipMarkOn]}>
                           {DRAW_MARK[tool.id]}
                         </Text>
@@ -293,6 +295,7 @@ export function MatrixBottomDock({
               onPress={() => toggle(tb.id)}
               accessibilityLabel={`${t.dockTabA11yPrefix}${tb.label}`}
             >
+              {on ? <View style={styles.tabMarker} /> : null}
               <Text style={[styles.tabMark, on && styles.tabMarkOn]}>{tb.mark}</Text>
               <Text style={[styles.tabLabel, on && styles.tabLabelOn]} numberOfLines={1}>
                 {tb.label}
@@ -314,6 +317,7 @@ export function MatrixBottomDock({
           onPress={toggleMore}
           accessibilityLabel={`${t.dockTabA11yPrefix}${t.dockMoreTab}${!moreOpen && moreOn && activeLabel ? ` · ${activeLabel}` : ''}`}
         >
+          {moreOn ? <View style={styles.tabMarker} /> : null}
           <Text style={[styles.tabMark, moreOn && styles.tabMarkOn]}>⋯</Text>
           <Text style={[styles.tabLabel, moreOn && styles.tabLabelOn]} numberOfLines={1}>
             {t.dockMoreTab}
@@ -345,7 +349,7 @@ const styles = StyleSheet.create({
   },
   sheetHeadRtl: { flexDirection: 'row-reverse' },
   sheetTitle: { color: colors.text, fontWeight: '800', fontSize: 12 },
-  close: { color: colors.accent, fontWeight: '700', fontSize: 11 },
+  close: { color: colors.textMuted, fontWeight: '700', fontSize: 11 },
   sheetBody: { maxHeight: 280 },
   sheetContent: { paddingHorizontal: spacing.sm, paddingBottom: 10, gap: spacing.sm },
   community: { gap: spacing.sm },
@@ -369,19 +373,27 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.bgPanel,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,
+    overflow: 'hidden',
   },
-  drawChipOn: {
-    backgroundColor: colors.accentSoft,
-    borderColor: colors.accent,
+  // DESIGN-PRO §4: تعبئة محايدة + علامة 2px سفلية؛ العدسة (مختارة دائماً) علامتها محايدة كي
+  // يبقى التأكيد لأداة الرسم وحدها (§1).
+  drawChipOn: { backgroundColor: colors.selectedFill },
+  chipMarker: {
+    position: 'absolute',
+    left: spacing.sm,
+    right: spacing.sm,
+    bottom: 0,
+    height: selectedMarkerWidth,
+    backgroundColor: colors.accent,
   },
+  chipMarkerNeutral: { backgroundColor: colors.text },
   drawChipMark: { color: colors.textMuted, fontSize: 16, fontWeight: '800' },
-  drawChipMarkOn: { color: colors.accent },
+  drawChipMarkOn: { color: colors.text },
   drawChipLabel: { color: colors.textDim, fontSize: 10, fontWeight: '700' },
-  drawChipLabelOn: { color: colors.accent },
+  drawChipLabelOn: { color: colors.text },
   tabs: {
     flexDirection: 'row',
     gap: spacing.xs,
@@ -398,9 +410,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
     borderRadius: radii.sm,
   },
-  tabOn: { backgroundColor: colors.accentSoft },
+  tabOn: { backgroundColor: colors.selectedFill },
+  tabMarker: {
+    position: 'absolute',
+    top: 0,
+    left: spacing.md,
+    right: spacing.md,
+    height: selectedMarkerWidth,
+    backgroundColor: colors.accent,
+  },
   tabMark: { color: colors.textMuted, fontSize: 11, fontWeight: '800' },
-  tabMarkOn: { color: colors.accent },
+  tabMarkOn: { color: colors.text },
   tabLabel: { color: colors.textDim, fontSize: 10, fontWeight: '700' },
-  tabLabelOn: { color: colors.accent },
+  tabLabelOn: { color: colors.text },
 });
