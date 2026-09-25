@@ -360,6 +360,10 @@ export type Dict = {
   /** اسم الخانة المرفوضة وما كُتب فيها، يسبق `invalidNumberHint`/`arabicThousandsSignHint` («الهدف «3.5.0»: …» — `d28991b`)؛ {field} الاسم القصير، {value} كما كُتب. علامتا الاقتباس بحسب اللغة: «» للعربية والكردية، “” للإنجليزية */
   riskCalcBadFieldValue: string;
   riskCalcPipValue: string;
+  /** الأساس = عملة الحساب (USDJPY بحساب دولار…) ⇒ قيمة الـpip محسوبة بسعر الوقف لا الحيّ (`exitQuoteToAccount`) فتخالف المنصّة — {price} = الوقف */
+  riskCalcPipValueAtStop: string;
+  /** سطر صغير تحت السابق: لماذا يخالف رقم المنصّة */
+  riskCalcPipValueAtStopHint: string;
   /** حاسبة الهامش (طلب وكيل الأدوات): خانة الرافعة، سطر الهامش، وملاحظة أن الهامش ليس الخسارة */
   riskCalcLeverage: string;
   /** رافعة مفهومة لكن خارج مدى `parseLeverage` (كـ«1:5000») — بدل «رقم غير مفهوم… بلا فواصل آلاف» المضلِّل؛
@@ -1442,6 +1446,8 @@ const ar: Dict = {
   arabicThousandsSignHint: '«٬» فاصلة الآلاف لا الفاصلة العشرية — للكسر اكتب «٫» أو نقطة، مثل 0٫5',
   riskCalcBadFieldValue: '{field} «{value}»',
   riskCalcPipValue: 'قيمة الـpip للوت',
+  riskCalcPipValueAtStop: 'قيمة الـpip للوت عند وقفك {price}',
+  riskCalcPipValueAtStopHint: 'منصّتك تعرضها بالسعر الحالي فقد تختلف قليلاً — لكن خسارتك إن ضُرب الوقف تُحوَّل إلى عملة حسابك بسعر الوقف، فحسبناها به',
   riskCalcLeverage: 'الرافعة المالية (100 تعني 1:100)',
   riskCalcLeverageOutOfRange: 'رافعة «{value}» خارج ما تحسبه الحاسبة (من 1:1 حتى 1:{max}) — اكتب رافعة حسابك كما تظهر بمنصّتك، مثل 500.',
   riskCalcLeverageAmbiguous: 'رافعة «{value}» مبهمة — هل تقصد 1:{big}؟ اكتب {big} بلا نقطة، أو 1 إن كان حسابك بلا رافعة.',
@@ -2508,6 +2514,8 @@ const enUS: Dict = {
   arabicThousandsSignHint: '“٬” is the Arabic thousands sign, not the decimal comma — for a fraction type “٫” or a dot, e.g. 0.5',
   riskCalcBadFieldValue: '{field} “{value}”',
   riskCalcPipValue: 'Pip value per lot',
+  riskCalcPipValueAtStop: 'Pip value per lot at your stop {price}',
+  riskCalcPipValueAtStopHint: 'Your platform shows it at the current price, so it may differ a little — but if your stop is hit the loss converts to your account currency at the stop price, so we used that',
   riskCalcLeverage: 'Leverage (100 means 1:100)',
   riskCalcLeverageOutOfRange: 'Leverage “{value}” is outside what the calculator handles (1:1 to 1:{max}) — enter your account’s leverage as your platform shows it, e.g. 500.',
   riskCalcLeverageAmbiguous: 'Leverage “{value}” is ambiguous — did you mean 1:{big}? Type {big} without the dot, or 1 if your account has no leverage.',
@@ -3599,6 +3607,8 @@ const ku: Dict = {
   arabicThousandsSignHint: '«٬» جیاکەرەوەی هەزارانە نەک فاریزەی دەیی — بۆ کەرت «٫» یان خاڵ بنووسە، وەک 0٫5',
   riskCalcBadFieldValue: '{field} «{value}»',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
+  riskCalcPipValueAtStop: 'بەهای pip بۆ هەر لۆتێک لە ستۆپەکەت {price}',
+  riskCalcPipValueAtStopHint: 'پلاتفۆرمەکەت بە نرخی ئێستا پیشانی دەدات بۆیە لەوانەیە کەمێک جیاواز بێت — بەڵام ئەگەر ستۆپ لێدرا زەرەرەکە بە نرخی ستۆپ دەگۆڕدرێت بۆ دراوی هەژمارەکەت، بۆیە ئەومان بەکارهێنا',
   riskCalcLeverage: 'لێڤەرێج (100 واتە 1:100)',
   riskCalcLeverageOutOfRange: 'لێڤەرێجی «{value}» لە دەرەوەی ئەوەیە کە حاسیبەکە حیسابی دەکات (لە 1:1 تا 1:{max}) — لێڤەرێجی هەژمارەکەت وەک لە پلاتفۆرمەکەتدا دەردەکەوێت بنووسە، وەک 500.',
   riskCalcLeverageAmbiguous: 'لێڤەرێجی «{value}» ڕوون نییە — مەبەستت 1:{big}ە؟ {big} بەبێ خاڵ بنووسە، یان 1 ئەگەر هەژمارەکەت بێ لێڤەرێجە.',
