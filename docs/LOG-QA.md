@@ -489,3 +489,13 @@ tools61 وlaunch94 ردّ فقط.
 كلّها بـ`accessibilityLabel` أو نصّ ابن — **لا بند جديد**. الناقص `accessibilityState` فقط (QA3/QA13/QA2، بلا تغيير).
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة.
 **إلحاق بعد الدفع:** وصلت `49c42a5` (launch: البندان 4–5 الكرديان بـ`reportFallbackAdvice` يطابقان ar/en) ⇒ ملاحظة QA42 المنخفضة مُغلقة. البناء أخضر 0 بعدها.
+
+## 2026-09-25 — الدورة 44
+**البناء:** أخضر 0 (بعد 4578fcc) — لا إصلاح لازم. **Selftests:** 86/86 ناجح (`npx tsx`؛ جديدان `waveTrendTv`/`zigzagLegs`، و`positionSize`/`tradePlan` بحالات mini).
+**التحقّق من الإغلاقات بالكود:** لا صفّ أُغلق. **غير مُغلق:** 10 `Alert.alert`، «₴» ×2، `FocusChartModal:56` `BASES`، `TerminalScreen:762 :790`، `matrix.lang.v1` ×2،
+`AiPanel`/`LectureClassroom` بلا `maxLength`، `BRENT/USD`، `TimeframeBar`، `WeeklyReportPanel:46`.
+**طلبات تنسيق جديدة:** لا شيء (launch95 ردّ فقط؛ chart «خارج نطاق ملفاتي» = صفوف chart-r29/chart2/chart3 القائمة؛ tools: `.mini` نفّذه بنفسه `aa19298`).
+**المراجعة (d — أرقام متناقضة)، diff منذ 49c42a5:** `aa19298`/`4578fcc` بـ`tsx` على 8 رموز (`.mini`، `mini` ملاصقة، `-MINI`، `GOLD_mini`، `XAUUSD.mini`،
+`USDJPY.mini`، `GER40.mini`، `.m`): `journalSpec`/`quoteSymbol`/`journalSymbol`/`isMiniJournalSymbol` متّسقة، `journalPnl` null لـmini، `.m` باقٍ عادياً. `recentLotSizes`
+يفصل mini بالاتجاهين. **جديد QA44 → tools (منخفض):** الحاسبة ترفض mini لكن تعرض `riskCalcBadSymbol` العامّ (مثاله «EURUSD.m») ⇒ نصّ خاصّ.
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.

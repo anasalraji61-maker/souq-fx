@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 43، بعد a9e520e) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 44، بعد 4578fcc) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -55,4 +55,5 @@
 | QA | tools | **(a) QA41، منخفض — القاعدة أُغلقت** (`a1fb55f`: `notifLang = resolveLang`). باقٍ الثابت `'matrix.lang.v1'` منسوخ (`notifications.ts:10`، `I18nContext.tsx:15`) ← تصدير واحد من `locales.ts` | QA41 |
 | chart | tools | **chart-r29 (تحقّقتُ)**: `TerminalScreen.tsx:762` `hit ?? { ...copy[index], timeframe: nextTf }` و`:790` (DXY) يُعيدان وسم شموع 15m بـ«1H» قبل وصول الجلب ⇒ `ChartFrame` يُنهي التعتيم فوراً والتيكات تُدمج بشمعة 15m مغلقة ← `hit ?? copy[index]` / `hit ?? prev` | chart-r29 |
 | launch | بلا مالك | **launch93 (e)**: `WeeklyReportPanel.tsx:46` تعليمة `matrix_advice` ما زالت «ما رأيك… 5 نصائح… مرتبطة بالدولار والذهب والأزواج» (تحقّقتُ) ⇒ النموذج قد يعطي اتجاه سوق تحت عنوان «ملاحظات للأسبوع القادم» ← «5 ملاحظات انضباط وإدارة مخاطر، بلا اتجاه ولا مستويات» | launch93 |
-**تحقّق الدورة 43 (بالكود):** مسح (c) آلي لكل `Pressable`/`TouchableOpacity`/`TextInput`/`Switch` بـ`.tsx`: كلّها باسم أو نصّ ابن — لا بند جديد؛ الناقص `accessibilityState` فقط (صفوف QA3/QA13/QA2). **بلا تغيير:** `Alert.alert` 10؛ «₴» ×2؛ `FocusChartModal:56` `BASES`؛ `QUICK_SYMBOLS` ×2؛ `RECONNECT_*` ×2؛ `matrix.lang.v1` ×2؛ `AiPanel`/`LectureClassroom` بلا `maxLength`؛ `BRENT/USD`؛ `TimeframeBar`؛ `WeeklyReportPanel:46`.
+| QA | tools | **(d) QA44، منخفض**: `aa19298` يرفض «EURUSD.mini» بالحاسبة (`MINI_SUFFIX`) لكن `PositionSizePanel.tsx:1195` يعرض `riskCalcBadSymbol` العامّ «رمز غير مدعوم… مثل EURUSD أو EURUSD.m» ⇒ المتداول يرى زوجه مرفوضاً ومثالاً شبه مطابق بلا سبب. ← نصّ خاصّ (مثل `riskCalcMicroModeNote`): «حجم لوت mini يختلف بين الوسطاء — اكتب الزوج العادي واقسم/اضرب بعقد حسابك» | QA44 |
+**تحقّق الدورة 44 (بالكود):** مراجعة (d) لـ`aa19298`/`4578fcc` (mini) بـ`tsx`: `journalSpec`/`quoteSymbol`/`isMiniJournalSymbol` متّسقة لـ`.mini`/`mini`/`-MINI`/`GOLD_mini`، المال null، `GER40.mini` ⇒ سعر GER40 بلا نقاط كـGER40 — سليم؛ بند واحد (QA44). **بلا تغيير:** `Alert.alert` 10؛ «₴» ×2؛ `FocusChartModal:56` `BASES`؛ `TerminalScreen:762 :790`؛ `matrix.lang.v1` ×2؛ `BRENT/USD`؛ `TimeframeBar`؛ `WeeklyReportPanel:46`.
