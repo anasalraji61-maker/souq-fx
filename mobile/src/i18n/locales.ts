@@ -3263,7 +3263,7 @@ const enUS: Dict = {
   lectureHideChart: 'Hide',
   lectureHideChartA11y: 'Hide the interactive chart',
   lectureShowChart: 'Show the interactive chart',
-  lectureChartPracticeNote: 'No connection to the server: these are practice candles, not market prices. Practise freely — but what you draw here isn’t saved.',
+  lectureChartPracticeNote: 'No connection to the server: these are practice candles, not market prices. Practice freely — but what you draw here isn’t saved.',
   lectureVoiceStopped: 'Audio stopped',
   lectureGenerating: 'Generating…',
   lectureVoiceActive: 'Voice narration active',
@@ -3813,6 +3813,8 @@ const enGB: Dict = {
   mcColorNames: ['Frame colour', 'Green', 'Red', 'Amber', 'Blue', 'White'],
   wlCatalogAllAdded: 'All catalogue symbols added',
   invalidNumberHint: 'Number not recognised — type it without thousands separators, e.g. 10000 or 1.0850',
+  // الفعل «practise» بريطاني و«practice» أمريكي — كانت نسخة en-US بالتهجئة البريطانية.
+  lectureChartPracticeNote: 'No connection to the server: these are practice candles, not market prices. Practise freely — but what you draw here isn’t saved.',
   domOtcNote: 'Forex is decentralised: there is no single market depth, and your real spread depends on your broker.',
 };
 
