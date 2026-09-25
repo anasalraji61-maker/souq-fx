@@ -1316,6 +1316,12 @@ export type Dict = {
   journalSizeUnknown: string;
   journalLoadOlderError: string;
   /**
+   * زرّ «إعادة المحاولة» تحت `journalLoadError` (launch140 → tools): اليوم الدفتر يُحمَّل عند الفتح فقط فيقول النصّ «غادر وارجع».
+   * حين يُربط الزرّ (يستدعي `refresh()`) يُعرض `journalLoadErrorRetry` بدل `journalLoadError`.
+   */
+  journalRetryBtn: string;
+  journalLoadErrorRetry: string;
+  /**
    * backend-r2: لا مصدر مرخَّص للمحلّلين ولا لقنوات التواصل — `/api/signals/analysts/*` و`/social/consensus` يعيدان
    * `status: "unavailable"`، `unavailable_reason: "no_licensed_feed"`، `direction`/`levels` = null. يُعرض النصّ بدل القائمة
    * والاتجاه (لا «محايد»، لا «null»). `analystsSubSuffix`/`socialPickHint` صارا يقولان «لا مصدر مرخَّص بعد» (launch103) بدل «محاكاة للعرض».
@@ -2560,6 +2566,8 @@ const ar: Dict = {
   journalLoadOlder: 'تحميل الأقدم',
   journalSizeUnknown: 'الحجم غير مسجَّل',
   journalLoadOlderError: 'تعذّر تحميل الصفقات الأقدم — تحقّق من الاتصال واضغط «تحميل الأقدم» مجدداً. ما يظهر أمامك لم يتغيّر.',
+  journalRetryBtn: 'إعادة المحاولة',
+  journalLoadErrorRetry: 'تعذّر تحميل الدفتر — تحقّق من الاتصال ثم اضغط «إعادة المحاولة». صفقاتك المسجّلة لم تُحذف.',
   analystsUnavailable: 'لا مصدر مرخَّص لتوقعات المحللين بعد — لذلك لا نعرض اتجاهاً ولا أهدافاً بدل أن نخترعها',
   socialUnavailable: 'لا مصدر مرخَّص لآراء القنوات بعد — لذلك لا نعرض إجماعاً ولا صفقة مقترحة بدل أن نخترعهما',
   riskCalcConvInverted: '«{typed}» لا يصلح سعراً لـ{pair} — يبدو مقلوباً (1 ÷ السعر). على الأرجح قصدتَ {likely}؛ اكتبه كما تراه بمنصّتك.',
@@ -3751,6 +3759,8 @@ const enUS: Dict = {
   journalLoadOlder: 'Load older',
   journalSizeUnknown: 'Size not recorded',
   journalLoadOlderError: 'Couldn\'t load older trades — check your connection and tap “Load older” again. The trades already shown are unchanged.',
+  journalRetryBtn: 'Try again',
+  journalLoadErrorRetry: 'Couldn’t load your journal — check your connection, then tap “Try again”. Your logged trades haven’t been deleted.',
   analystsUnavailable: "No licensed source for analyst forecasts yet — so we show no direction or targets rather than make them up",
   socialUnavailable: "No licensed source for channel views yet — so we show no consensus or suggested trade rather than make them up",
   riskCalcConvInverted: '"{typed}" can\'t be the {pair} rate — it looks inverted (1 ÷ the price). You likely meant {likely}; type it as your platform shows it.',
@@ -4975,6 +4985,9 @@ const ku: Dict = {
   journalLoadOlder: 'بارکردنی کۆنترەکان',
   journalSizeUnknown: 'قەبارە تۆمار نەکراوە',
   journalLoadOlderError: 'بارکردنی مامەڵە کۆنترەکان سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە «بارکردنی کۆنترەکان» دابگرە. ئەوەی لەبەردەمتە نەگۆڕاوە.',
+  // بحاجة مراجعة ناطق كردي (الاثنان أدناه)
+  journalRetryBtn: 'دووبارە هەوڵبدەرەوە',
+  journalLoadErrorRetry: 'نەکرا تۆمارەکە باربکرێت — پەیوەندییەکەت بپشکنە، پاشان «دووبارە هەوڵبدەرەوە» دابگرە. مامەڵە تۆمارکراوەکانت نەسڕاونەتەوە.',
   // بحاجة مراجعة ناطق كردي (الثلاثة أدناه)
   analystsUnavailable: 'هێشتا سەرچاوەیەکی مۆڵەتدار بۆ پێشبینییەکانی شیکەرەوان نییە — بۆیە ئاراستە و ئامانج پیشان نادەین لەجیاتی ئەوەی دایانبهێنین',
   socialUnavailable: 'هێشتا سەرچاوەیەکی مۆڵەتدار بۆ بۆچوونی کەناڵەکان نییە — بۆیە کۆدەنگی و مامەڵەی پێشنیارکراو پیشان نادەین لەجیاتی ئەوەی دایانبهێنین',
