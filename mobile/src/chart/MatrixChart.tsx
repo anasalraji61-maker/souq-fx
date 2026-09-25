@@ -771,7 +771,9 @@ function PaneHead({
   const stxt = formatPaneValue(sv, paneBoundedDecimals(paneId));
   return (
     <View style={styles.paneHead}>
-      <Text style={styles.paneHeadName}>{name}</Text>
+      <Text style={styles.paneHeadName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+        {name}
+      </Text>
       {txt ? (
         <Text
           style={[
@@ -858,7 +860,9 @@ function PaneValueHead({
   const stxt = signal ? formatPaneValueScaled(values, sv) : null;
   return (
     <View style={styles.paneHead}>
-      <Text style={styles.paneHeadName}>{name}</Text>
+      <Text style={styles.paneHeadName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+        {name}
+      </Text>
       {txt ? (
         <Text
           style={[
@@ -932,7 +936,9 @@ function PaneSpreadHead({
     if (u && l) {
       return (
         <View style={styles.paneHead}>
-          <Text style={styles.paneHeadName}>{name}</Text>
+          <Text style={styles.paneHeadName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+            {name}
+          </Text>
           <PaneSignalValue text={u} color={lineColors[0]} />
           <PaneSignalValue text={l} color={lineColors[1]} />
         </View>
@@ -941,7 +947,9 @@ function PaneSpreadHead({
   }
   return (
     <View style={styles.paneHead}>
-      <Text style={styles.paneHeadName}>{name}</Text>
+      <Text style={styles.paneHeadName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+        {name}
+      </Text>
       {txt ? (
         <Text
           style={[
@@ -11735,6 +11743,8 @@ const styles = StyleSheet.create({
     zIndex: 1,
     backgroundColor: '#070F18',
   },
+  // سطر واحد (يُصغَّر حتى 75% ثم «…»): «Fractal Chaos Osc» كان يلتفّ لثلاثة أسطر فيدفع الرقم تحت قاع
+  // لوحة بـ34px (`overflow: hidden`) — الاسم يُقرأ والرقم يختفي.
   paneHeadName: { color: colors.textDim, fontSize: 9, fontWeight: '800', textAlign: 'center' },
   paneHeadValue: { color: colors.textMuted, fontSize: 9, fontWeight: '700', textAlign: 'center', marginTop: 1 },
   // رقم طويل (مقياس دقيق كـMACD على زوج عملات) — 8 محارف لا تتّسع بـ36px عند حجم 9.
