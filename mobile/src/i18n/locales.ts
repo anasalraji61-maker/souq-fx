@@ -1121,7 +1121,7 @@ const ar: Dict = {
   deleteAccountConfirmBody:
     'سيُحذف اسم المستخدم والإيميل وكلمة المرور نهائياً ولن تقدر تسجّل الدخول بهذا الحساب مرة أخرى. هذا الإجراء لا يمكن التراجع عنه.',
   deleteAccountConfirmBtn: 'حذف نهائياً',
-  deleteAccountError: 'تعذر حذف الحساب — حاول لاحقاً',
+  deleteAccountError: 'تعذّر تأكيد حذف الحساب — تحقّق من الاتصال ثم اضغط «حذف الحساب» مرة أخرى.',
   cancel: 'إلغاء',
   notifications: 'الإشعارات',
   notifStatusGranted: 'مفعّلة',
@@ -2176,7 +2176,7 @@ const enUS: Dict = {
   deleteAccountConfirmBody:
     'Your username, email, and password will be permanently erased and you will not be able to sign back into this account. This cannot be undone.',
   deleteAccountConfirmBtn: 'Delete permanently',
-  deleteAccountError: 'Could not delete account — try again later',
+  deleteAccountError: 'Couldn’t confirm your account was deleted — check your connection, then tap “Delete account” again.',
   cancel: 'Cancel',
   notifications: 'Notifications',
   notifStatusGranted: 'Enabled',
@@ -3256,7 +3256,7 @@ const ku: Dict = {
   deleteAccountConfirmBody:
     'ناوی بەکارهێنەر و ئیمەیڵ و وشەی نهێنی بە تەواوی دەسڕدرێنەوە و ئیتر ناتوانیت بچیتەژوورەوەی ئەم هەژمارە. ئەم کردارە ناگەڕێتەوە.',
   deleteAccountConfirmBtn: 'بە تەواوی بسڕەوە',
-  deleteAccountError: 'سڕینەوەی هەژمار سەرکەوتوو نەبوو — دواتر هەوڵبدەرەوە',
+  deleteAccountError: 'سڕینەوەی هەژمار پشتڕاست نەکرایەوە — پەیوەندییەکەت بپشکنە، پاشان دووبارە «سڕینەوەی هەژمار» دابگرە.',
   cancel: 'پاشگەزبوونەوە',
   notifications: 'ئاگادارکردنەوەکان',
   notifStatusGranted: 'چالاکە',
