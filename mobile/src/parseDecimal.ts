@@ -30,7 +30,7 @@ export function normalizeDigits(s: string): string {
 
 const THOUSANDS_GROUPS = (body: string, sep: string) => {
   const parts = body.split(sep);
-  return parts.length > 1 && /^\d{1,3}$/.test(parts[0]) && parts.slice(1).every((p) => /^\d{3}$/.test(p));
+  return parts.length > 1 && /^[1-9]\d{0,2}$/.test(parts[0]) && parts.slice(1).every((p) => /^\d{3}$/.test(p));
 };
 
 /**
@@ -39,12 +39,15 @@ const THOUSANDS_GROUPS = (body: string, sep: string) => {
  * المخاطرة (٬ تكاد لا تُميَّز عن ٫ العشرية على لوحة المفاتيح العربية) = **5%** بدل 0.5% ⇒ لوت أكبر عشر مرات،
  * و«2 50» = 250. الفاصلة والنقطة تمرّان أصلاً بـ`THOUSANDS_GROUPS`؛ الآن كل فواصل الآلاف بالقاعدة نفسها.
  * «1 234,5»، «١٬٠٠٠»، «1'234.50»، «10 000» تبقى؛ مسافة قبل «%» أو بعد الرقم لا تُفحص (ليست بين رقمين).
+ *
+ * مجموعة آلاف أولى **لا تبدأ بصفر** (هنا وبـ`THOUSANDS_GROUPS`): «0٬500» كانت 500 — المتداول قصد «0٫500» (نصف) فخرجت
+ * مخاطرة «USD 0٬500» = 500$ = 5% بدل 0.5$، وسعر «0٬850» لـEURGBP = 850. و«0.500.000» = 500,000. لا رقم آلاف يبدأ بصفر.
  */
 function groupsBetweenDigitsOk(s: string): boolean {
   const marked = s.replace(/(\d)[\s   ٬']+(?=\d)/g, '$1\u0000');
   if (!marked.includes('\u0000')) return true;
   const parts = marked.split('\u0000');
-  if (!/^[^\d.,]*\d{1,3}$/.test(parts[0])) return false;
+  if (!/^[^\d.,]*[1-9]\d{0,2}$/.test(parts[0])) return false;
   return parts.slice(1).every((p, i, rest) => (i === rest.length - 1 ? /^\d{3}(?!\d)/.test(p) : /^\d{3}$/.test(p)));
 }
 

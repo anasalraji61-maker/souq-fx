@@ -132,3 +132,25 @@ console.log('parseDecimal group separators selftest OK');
   assert.equal(misplacedArabicThousandsSign('−0٬5', { signed: true }), true);
 }
 console.log('parseDecimal arabic thousands sign hint selftest OK');
+
+// مجموعة آلاف أولى تبدأ بصفر ⇒ مرفوضة (كانت «0٬500» = 500: مخاطرة 500$ بدل 0.5$)
+{
+  for (const raw of ['0٬500', '٠٬٥٠٠', '0 500', "0'500", '0.500.000', '0,500,000', '0,500.5', '00٬500', '0 500 000']) {
+    assert.equal(parseDecimal(raw), null, raw);
+    assert.equal(parseDecimal(raw, { amount: true }), null, raw);
+  }
+  // الإشارة الصحيحة: «٬» بدل «٫» ⇒ التلميح
+  assert.equal(misplacedArabicThousandsSign('0٬500'), true);
+  // ما زال مقبولاً
+  assert.equal(parseDecimal('1٬500'), 1500);
+  assert.equal(parseDecimal('10 000'), 10000);
+  assert.equal(parseDecimal('1,000,000'), 1000000);
+  assert.equal(parseDecimal('1.000.000'), 1000000);
+  assert.equal(parseDecimal('1,085.50'), 1085.5);
+  assert.equal(parseDecimal('0,500'), 0.5);
+  assert.equal(parseDecimal('0.500'), 0.5);
+  assert.equal(parseDecimal('0٫500'), 0.5);
+  assert.equal(parseDecimal('0'), 0);
+  assert.equal(parseDecimal('100 000'), 100000);
+}
+console.log('parseDecimal leading-zero group selftest OK');
