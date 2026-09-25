@@ -636,7 +636,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   notifBtnText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
-  tagWatching: { color: colors.accent, fontWeight: '500' },
+  // DESIGN-PRO §1: «يراقب» على كل صفّ بالتأكيد كانت شارة ملوّنة مكرّرة — الحالة مسمّاة نصّاً.
+  tagWatching: { color: colors.textMuted, fontWeight: '500' },
   tagFired: { color: colors.textDim, fontWeight: '500' },
   chip: {
     paddingHorizontal: 12,

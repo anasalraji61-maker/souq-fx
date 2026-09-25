@@ -1227,7 +1227,8 @@ const styles = StyleSheet.create({
   itemSym: { ...numeric, color: colors.text, fontWeight: '600', fontSize: 13 },
   itemSymDone: { color: colors.textMuted },
   itemStatus: { ...numeric, fontSize: 11, marginTop: 0 },
-  itemStatusLive: { color: colors.accent, fontWeight: '500' },
+  // DESIGN-PRO §1: حالة «مفعّل» على كل صفّ كانت بالتأكيد ⇒ n عناصر تأكيد بالقائمة. الحالة نصّ مسمّى، فاللون لا يضيف معلومة.
+  itemStatusLive: { color: colors.textMuted, fontWeight: '500' },
   itemStatusDone: { color: colors.textDim },
   itemEditing: { backgroundColor: colors.accentSoft, borderRadius: radii.sm },
   listHead: { ...numeric, color: colors.textDim, fontSize: 11, marginTop: spacing.sm, fontWeight: '500' },
