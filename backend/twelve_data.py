@@ -35,6 +35,8 @@ SYMBOL_MAP: dict[str, str] = {
     "ETHUSD": "ETH/USD",
 }
 
+_TD_TO_MATRIX: dict[str, str] = {v.upper(): k for k, v in SYMBOL_MAP.items() if v.replace("/", "") != k}
+
 # رموز يعرضها التطبيق لكن **لا يقدّمها المزوّد**. DXY كان مُسنداً لـ`DX-Y.NYB` (رمز Yahoo) ولا
 # مؤشر دولار بقائمة Twelve Data (/indices) ⇒ كل طلب يفشل ويُستهلك من الحدّ المشترك ثم تُعرض
 # سلسلة مختلَقة. الآن لا طلب أصلاً، والسبب يُعاد صراحةً للعميل.
@@ -540,7 +542,9 @@ def search_listings(query: str, limit: int = 20) -> tuple[list[dict], list[dict]
             continue
         out.append(
             {
-                "symbol": sym.replace("/", "").upper(),
+                # رمز للمزوّد له اسم بالخريطة (WTI/USD ⇒ USOIL، XBR/USD ⇒ UKOIL) يُعاد بذلك الاسم: «WTIUSD»
+                # خارج الخريطة كان يُطلب بلا «/» ولا يُقصّ عند إغلاق الجمعة (شمعة W «جارية» طوال العطلة)
+                "symbol": _TD_TO_MATRIX.get(sym.upper()) or sym.replace("/", "").upper(),
                 "td_symbol": sym,
                 "name": row.get("instrument_name") or row.get("name") or sym,
                 "exchange": row.get("exchange") or row.get("mic_code") or "",

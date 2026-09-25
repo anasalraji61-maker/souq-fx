@@ -282,3 +282,15 @@ def test_blank_query_returns_empty_results_not_index_error(monkeypatch):
     monkeypatch.setattr(market, "_api_key", lambda: "test-key")
     assert market.search_listings("   ") == ([], [])
     assert market.symbol_search("   ") == []
+
+
+def test_provider_commodity_returns_under_its_mapped_name(monkeypatch):
+    """«WTI/USD» كان يُعاد «WTIUSD» خارج الخريطة ⇒ يُطلب بلا «/» وشمعة W لا تُقصّ عند إغلاق الجمعة (run 54)."""
+    rows = [_row("WTI/USD", "Commodity", "Commodity", name="Crude Oil WTI"),
+            _row("XBR/USD", "Commodity", "Commodity", name="Brent Crude Oil")]
+    ok, ambiguous = _search(monkeypatch, rows)
+    assert ambiguous == []
+    assert [(r["symbol"], r["td_symbol"]) for r in ok] == [("USOIL", "WTI/USD"), ("UKOIL", "XBR/USD")]
+    assert market.td_symbol(ok[0]["symbol"]) == "WTI/USD"
+    monday_w = 1789344000  # 2026-09-14 00:00 UTC (اثنين)
+    assert market.bar_end(ok[0]["symbol"], monday_w, 7 * 86400) < monday_w + 7 * 86400
