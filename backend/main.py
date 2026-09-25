@@ -1753,7 +1753,15 @@ def ai_ask(body: AiAsk):
     bars = max(len(series.candles) - 1, 0)
     # None = رمز بلا سعر أصلاً (DXY) ⇒ `live` False أعلاه، ولا اتجاه
     chg = series.change_pct if series.change_pct is not None else 0.0
-    flat = chg == 0
+    atr_v = signal_hub._atr_last([c.model_dump() for c in series.candles]) if live else None
+    # صافي الحركة على النافذة أصغر من مدى شمعة واحدة معتاد (ATR14) = ضجيج لا اتجاه: كان أي إشارة غير صفرية
+    # (+0.01% على ~45 ساعة بـ15m) ⇒ «صاعد» وسيناريو شراء كامل بدخول ووقف وهدف. الحركة من `change_pct`
+    # نفسه (الأخير − إغلاق أول السلسلة) لتطابق الرقم المعروض بالنصّ.
+    net_move = (
+        abs(series.last - series.last / (1 + chg / 100))
+        if series.last is not None and chg > -100 else 0.0
+    )
+    flat = chg == 0 or (atr_v is not None and net_move < atr_v)
     bias = "صاعد" if chg > 0 else "هابط"
     direction: str | None = None if flat else ("شراء" if chg > 0 else "بيع")
     entry: float | None = None
@@ -1762,7 +1770,6 @@ def ai_ask(body: AiAsk):
     if live and direction is not None:
         # وقف 1×ATR14 وهدف 2×ATR14 على فريم السلسلة (العائد/المخاطرة 1:2 كما يقول النص). كان 0.4%/0.8%
         # ثابتين لكل فريم، ومقرَّبين لخانتين حين السعر ≥50 ⇒ USDJPY تفقد خانة.
-        atr_v = signal_hub._atr_last([c.model_dump() for c in series.candles])
         if atr_v is not None:
             sgn = 1 if direction == "شراء" else -1
             entry = series.last
@@ -1781,7 +1788,8 @@ def ai_ask(body: AiAsk):
             f"last={series.last} (last candle close at {at}, source={series.data_source.kind}; "
             f"not a live tick — if it is not recent, say so and do not call it the current price), "
             f"change_pct_over_last_{bars}_candles={series.change_pct:+.2f}%, "
-            f"tf={series.timeframe}" + ("" if flat else f", bias={bias}")
+            f"tf={series.timeframe}"
+            + (", bias=none (net move smaller than one ATR14 — no clear direction)" if flat else f", bias={bias}")
         )
         # مستويات الخادم نفسها التي تُرفق ببطاقة `setup`. كان السياق بلا مستويات والتعليمات «اذكر دخولاً
         # ووقفاً وهدفاً» ⇒ النموذج يخترع وقفه وهدفه من `last` وحده، والبطاقة تحمل وقف ATR ⇒ رقمان
@@ -1817,7 +1825,8 @@ def ai_ask(body: AiAsk):
             bias_en = "bullish" if series.change_pct > 0 else "bearish"
             dir_en = "Buy" if direction == "شراء" else "Sell"
             read = (
-                f"Over the last {bars} candles ({series.timeframe}) the price is flat (0.00%) — no direction.\n\n"
+                f"Over the last {bars} candles ({series.timeframe}) the net move ({series.change_pct:+.2f}%) is "
+                f"smaller than one average candle range (ATR14) — no clear direction.\n\n"
                 if flat else
                 f"Over the last {bars} candles ({series.timeframe}) the move looks **{bias_en}** "
                 f"(change {series.change_pct:+.2f}%).\n\n"
@@ -1846,7 +1855,8 @@ def ai_ask(body: AiAsk):
     else:
         if live:
             read = (
-                f"على آخر {bars} شمعة ({series.timeframe}) السعر ثابت (0.00%) — لا اتجاه.\n\n"
+                f"على آخر {bars} شمعة ({series.timeframe}) صافي الحركة ({series.change_pct:+.2f}%) أصغر من "
+                f"مدى شمعة واحدة معتاد (ATR14) — لا اتجاه واضح.\n\n"
                 if flat else
                 f"على آخر {bars} شمعة ({series.timeframe}) الحركة تبدو **{bias}** "
                 f"(تغيّر {series.change_pct:+.2f}%).\n\n"

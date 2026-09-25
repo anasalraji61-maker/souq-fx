@@ -184,3 +184,36 @@ def test_template_reply_does_not_send_the_trader_to_dxy(monkeypatch, lang, live)
     answer = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟", "lang": lang}).json()["answer"]
     assert "DXY" not in answer
     assert "USDJPY" in answer
+
+
+@pytest.mark.parametrize("lang, word", [("ar", "لا اتجاه واضح"), ("en", "no clear direction")])
+def test_move_smaller_than_one_atr_is_no_direction(monkeypatch, lang, word):
+    """+0.01% على 1.1 = 0.00011 وATR14 = 0.0030 ⇒ ضجيج: كان أي تغيّر غير صفري «صاعداً» بسيناريو شراء كامل."""
+    monkeypatch.setattr(main, "build_series", _flat_series(0.01))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟", "lang": lang}).json()
+    s = body["setup"]
+    assert s["direction"] is None and s["entry"] is None and s["sl"] is None and s["tp"] is None
+    assert word in body["answer"] and "+0.01%" in body["answer"]
+    assert "شراء" not in body["answer"] and "Buy" not in body["answer"]
+
+
+def test_move_smaller_than_one_atr_tells_the_model_no_bias(monkeypatch):
+    seen: dict = {}
+    monkeypatch.setattr(main, "build_series", _flat_series(0.01))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
+    monkeypatch.setattr(
+        main.openrouter_ai, "trading_answer",
+        lambda q, sym, context, lang="ar": seen.setdefault("ctx", context) and "سيناريو شراء",
+    )
+    s = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()["setup"]
+    assert "bias=none" in seen["ctx"] and "computed_levels: none" in seen["ctx"]
+    assert s["entry"] is None
+
+
+def test_move_larger_than_one_atr_keeps_its_direction(monkeypatch):
+    # 0.3% على 1.1 ≈ 0.0033 > ATR 0.0030 ⇒ اتجاه وسيناريو كما كان
+    monkeypatch.setattr(main, "build_series", _flat_series(0.3))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    s = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()["setup"]
+    assert s["direction"] == "buy" and s["entry"] is not None
