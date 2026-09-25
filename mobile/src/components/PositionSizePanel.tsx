@@ -7,6 +7,7 @@ import { useI18n } from '../i18n/I18nContext';
 import {
   ACCOUNT_CCYS,
   type AccountCcy,
+  type InstrumentSpec,
   instrumentSpec,
   conversionPair,
   convStaleMinutes,
@@ -17,6 +18,7 @@ import {
   usdBridge,
   bridgedRate,
   quoteToAccountRate,
+  slPipsCarryOver,
   typedExitQuoteToAccount,
   pipValuePerLot,
   positionSize,
@@ -805,20 +807,22 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   // 0.2 pip بحجم نقطة الين (لوت هائل)، وGBPUSD تحسب «20 pip» من سعرين لا يخصّانها وتسجّلهما بالدفتر. تُمسح
   // عند الانتقال من أداة **معروفة** إلى أخرى فقط — مرور الخانة برمز ناقص أثناء الكتابة («EURUS») لا يمسح شيئاً،
   // ولاحقة الوسيط («EURUSD.m») الأداة نفسها. النقاط المكتوبة يدوياً تبقى (مسافة لا سعر)؛ المشتقّة من السعرين
-  // تُمسح معهما (`derivedSl` ⇒ null).
-  const lastSpecSymRef = useRef<string | null>(spec?.symbol ?? null);
+  // تُمسح معهما (`derivedSl` ⇒ null) — والمكتوبة يدوياً تُمسح بين صنفين (فوركس ⇄ ذهب ⇄ فضة، `slPipsCarryOver`).
+  const lastSpecRef = useRef<InstrumentSpec | null>(spec ?? null);
   useEffect(() => {
-    const now = spec?.symbol ?? null;
-    if (now == null) return;
-    const prev = lastSpecSymRef.current;
-    lastSpecSymRef.current = now;
-    if (prev == null || prev === now) return;
+    if (spec == null) return;
+    const prev = lastSpecRef.current;
+    lastSpecRef.current = spec;
+    if (prev == null || prev.symbol === spec.symbol) return;
+    if (!slFromPrices.current && !slPipsCarryOver(prev, spec)) setSlPips('');
     // والسبريد: سبريد EURUSD (0.8) على GBPJPY أو الذهب رقمٌ لا يخصّها. هنا لا بمؤثّر مستقلّ — ذاك كان يمسحه
     // حين تمرّ الخانة برمز ناقص («EURUS» ثم «EURUSD») فيختفي سطر التكاليف والأسعار باقية.
     setSpread('');
     setEntryPx('');
     setStopPx('');
     setTargetPx('');
+    // `spec` يُقرأ لحظة تبدّل الرمز فقط: لاحقة الوسيط تنشئ كائناً جديداً للأداة نفسها
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spec?.symbol]);
   /**
    * المخاطرة شاملة السبريد للّوت المحسوب، وأكبر لوت يُبقيها ضمن النسبة — راجع `spreadRisk`. اللوت

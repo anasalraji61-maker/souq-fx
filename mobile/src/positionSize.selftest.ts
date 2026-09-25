@@ -39,6 +39,7 @@ import {
   profitAtTarget,
   exitQuoteToAccount,
   typedExitQuoteToAccount,
+  slPipsCarryOver,
   pipsOnlyExitQuoteToAccount,
   pipsOnlyExitPrice,
   formatRiskPct,
@@ -2851,3 +2852,24 @@ console.log('positionSize typedExitQuoteToAccount selftest OK');
   assert.equal(parsePriceFor('2’650.50', 'XAUUSD'), 2650.5);
 }
 console.log('positionSize Arabic comma price hint selftest OK');
+
+// نقاط الوقف اليدوية عند تبديل الأداة: تبقى بالصنف نفسه، تُمسح بين فوركس/ذهب/فضة
+{
+  const S = (x: string) => instrumentSpec(x)!;
+  assert.equal(slPipsCarryOver(S('EURUSD'), S('GBPUSD')), true);
+  assert.equal(slPipsCarryOver(S('EURUSD'), S('USDJPY')), true);
+  assert.equal(slPipsCarryOver(S('GBPJPY'), S('USDTRY')), true);
+  assert.equal(slPipsCarryOver(S('XAUUSD'), S('XAUEUR')), true);
+  assert.equal(slPipsCarryOver(S('GOLD'), S('XAUUSD.m')), true);
+  assert.equal(slPipsCarryOver(S('EURUSD'), S('XAUUSD')), false);
+  assert.equal(slPipsCarryOver(S('XAUUSD'), S('EURUSD')), false);
+  assert.equal(slPipsCarryOver(S('XAUUSD'), S('XAGUSD')), false);
+  assert.equal(slPipsCarryOver(S('USDJPY'), S('SILVER')), false);
+  // لماذا: 20 pip EURUSD على الذهب = 2$ ⇒ لوت أكبر بعشرة أضعاف من وقف ذهب 200 pip بالمخاطرة نفسها
+  const g = S('XAUUSD');
+  const at20 = positionSize({ balance: 10000, riskPct: 1, slPips: 20, pipValuePerLot: pipValuePerLot(g, 1), contractSize: g.contractSize })!;
+  const at200 = positionSize({ balance: 10000, riskPct: 1, slPips: 200, pipValuePerLot: pipValuePerLot(g, 1), contractSize: g.contractSize })!;
+  assert.equal(at20.lots, 0.5);
+  assert.equal(at200.lots, 0.05);
+}
+console.log('positionSize slPipsCarryOver selftest OK');

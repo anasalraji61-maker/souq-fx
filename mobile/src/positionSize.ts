@@ -510,6 +510,17 @@ export function typedExitQuoteToAccount(
   return exit > 0 ? { rate: 1 / exit, price: exit, fromStop: false } : null;
 }
 
+/**
+ * نقاط وقفٍ مكتوبة يدوياً تبقى عند تبديل الأداة **ضمن الصنف نفسه** فقط: فوركس ⇄ فوركس (EURUSD ⇒ GBPUSD ⇒ USDJPY: «20 pip»
+ * مسافةٌ بالمعنى نفسه)، أو المعدن نفسه بعملة أخرى (XAUUSD ⇒ XAUEUR). بين صنفين تُمسح: «20» لـEURUSD تصير على الذهب **2$**
+ * (pip الذهب 0.1) — وقفٌ أضيق من سبريد الذهب نفسه أحياناً، واللوت يخرج أكبر بعشرات المرّات من مركزٍ بوقف ذهبٍ معتاد (150–300
+ * pip)، برقم أنيق يبدو محسوباً. والعكس (300 pip ذهب ⇒ EURUSD) وقفٌ بعيد بلوت أصغر بلا سبب. الفضة ≠ الذهب (0.01 مقابل 0.1).
+ */
+export function slPipsCarryOver(prev: InstrumentSpec, next: InstrumentSpec): boolean {
+  const kind = (x: InstrumentSpec) => (METALS[x.base] ? x.base : 'FX');
+  return kind(prev) === kind(next);
+}
+
 /** قيمة الـpip للوت قياسي واحد، بعملة الحساب. */
 export function pipValuePerLot(spec: InstrumentSpec, quoteToAccount: number): number {
   return spec.contractSize * spec.pipSize * quoteToAccount;
