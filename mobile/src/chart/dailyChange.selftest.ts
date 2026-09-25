@@ -7,6 +7,7 @@ import {
   dailyChange,
   formatPct,
   freshTickRefPrice,
+  isVerifiedTickKind,
   pctDirection,
   prevSessionFromDaily,
   sessionKeyAt,
@@ -222,6 +223,10 @@ console.log('dailyChange selftest OK');
   assert.equal(freshTickRefPrice(T(1.085, 'provider', -3600), now), null);
   // البثّ التجريبي ليس سعراً — حتى لو حديثاً
   assert.equal(freshTickRefPrice(T(1.085, 'demo', 1), now), null);
+  // ui4: `unknown` (خادمٌ أقدم بلا مصدر) و`unavailable` — لا يُعرف أنه سعر مزوّد، حتى لو حديثاً
+  assert.equal(freshTickRefPrice(T(1.085, 'unknown', 1), now), null);
+  assert.equal(freshTickRefPrice(T(1.085, 'unavailable', 1), now), null);
+  assert.equal(freshTickRefPrice(T(1.085, 'Provider', 1), now), null);
   // سعر فاسد
   assert.equal(freshTickRefPrice(T(0, 'provider', 1), now), null);
   assert.equal(freshTickRefPrice(T(-1, 'provider', 1), now), null);
@@ -271,3 +276,13 @@ console.log('dailyChange freshTickRefPrice selftest OK');
   assert.equal(sessionKeyAt(D('2025-12-25') + 12 * H, true, 'EURUSD'), D('2025-12-24') / 86400);
 }
 console.log('dailyChange holiday sessions selftest OK');
+
+// isVerifiedTickKind (ui4): provider/cache فقط سعرٌ حيّ يُلوَّن وتُحسب نسبته
+{
+  assert.equal(isVerifiedTickKind('provider'), true);
+  assert.equal(isVerifiedTickKind('cache'), true);
+  for (const k of ['demo', 'unknown', 'unavailable', '', 'twelvedata_ws', null, undefined]) {
+    assert.equal(isVerifiedTickKind(k), false, String(k));
+  }
+  console.log('isVerifiedTickKind selftest OK');
+}

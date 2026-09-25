@@ -187,18 +187,27 @@ export function tickDirection(prev: number | null | undefined, next: number | nu
 }
 
 /**
+ * تيك البثّ سعرُ سوقٍ **مؤكَّد المصدر**؟ `provider`/`cache` فقط. `demo` (البثّ العشوائي) و`unavailable` ليسا سعراً،
+ * و`unknown` (خادمٌ أقدم بلا `data_source` ولا `source` معروف، `parseWsDataSource`) لا يُعرف إن كان عشوائياً —
+ * فلا لون اتجاه ولا نسبة يوم ولا مرجع قرار منه (ui4: قائمة المتابعة كانت تلوّنه وتحسب نسبته كسعرٍ حيّ).
+ */
+export function isVerifiedTickKind(kind: string | null | undefined): boolean {
+  return kind === 'provider' || kind === 'cache';
+}
+
+/**
  * سعر التيك الحيّ **صالحاً مرجعاً** لقرار — اتجاه تنبيهٍ من الشارت («فوق/تحت السعر الحالي») — أو `null`.
  *
  * المقبس يحتفظ بآخر تيك لكل رمز بلا حدّ عمر (`useMultiLiveTicks`)، والشاشة تُبقي تيكات ما قبل الخلفية معروضة حتى
  * أول رسالة — فتيكٌ عمره دقائق كان يقرّر الاتجاه: السوق صعد 30 pip، والتنبيه تحت السعر الحالي يُحفظ «≥» فيطلق فوراً
- * (أو «≤» فوقه فلا يطلق أبداً). يُرفض: تيك البثّ التجريبي (سعر عشوائي — كـ`seriesRefPrice` للسلسلة)، وعمرٌ خارج
+ * (أو «≤» فوقه فلا يطلق أبداً). يُرفض: تيكٌ غير مؤكَّد المصدر (`isVerifiedTickKind` — التجريبي سعر عشوائي، كـ`seriesRefPrice` للسلسلة)، وعمرٌ خارج
  * نافذة «حيّ» (`isFreshTick`، نفس شارة الحداثة بالشاشة)، وسعر غير موجب. المستدعي يسقط بعدها لمرجعٍ آخر.
  */
 export function freshTickRefPrice(
   tick: { price: number; source: { kind: string; as_of?: number | null } } | null | undefined,
   nowSec = Date.now() / 1000
 ): number | null {
-  if (!tick || tick.source.kind === 'demo') return null;
+  if (!tick || !isVerifiedTickKind(tick.source.kind)) return null;
   if (!isFreshTick(tick.source.as_of, nowSec)) return null;
   const p = tick.price;
   return typeof p === 'number' && Number.isFinite(p) && p > 0 ? p : null;

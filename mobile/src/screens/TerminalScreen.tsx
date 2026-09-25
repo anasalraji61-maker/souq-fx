@@ -39,7 +39,7 @@ import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { WATCHLIST } from '../chart/watchlist';
 import { ensureWatchlistLoaded, subscribeWatchlist } from '../chart/watchlistStore';
 import { useDailyRefs } from '../chart/dailyRefStore';
-import { dailyChange, formatPct, freshTickRefPrice, pctDirection } from '../chart/dailyChange';
+import { dailyChange, formatPct, freshTickRefPrice, isVerifiedTickKind, pctDirection } from '../chart/dailyChange';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import { formatPrice } from '../chart/math';
 import { quoteSpreadPips } from '../positionSize';
@@ -858,7 +858,10 @@ export function TerminalScreen() {
   const headTick = (() => {
     const tk = liveTicks[symbol];
     if (!tk) return null;
-    return tk.source.kind !== 'demo' || normalizeProvenance(series?.data_source).kind === 'demo' ? tk : null;
+    // غير مؤكَّد (`unknown` من خادمٍ أقدم) يُقبل كذلك حين السلسلة نفسها غير مؤكَّدة (الرأس موسوم بمصدرها)
+    return isVerifiedTickKind(tk.source.kind) || !isVerifiedTickKind(normalizeProvenance(series?.data_source).kind)
+      ? tk
+      : null;
   })();
   const price = headTick?.price ?? series?.last ?? 0;
 
@@ -903,11 +906,12 @@ export function TerminalScreen() {
     }
     return out;
   }, [liveTicks]);
-  // رموز تيكها من البثّ التجريبي (fallback عشوائي) — لا تلوين اتجاه ولا نسبة تغيّر لها.
+  // رموز تيكها ليس سعر مزوّد مؤكَّداً — البثّ التجريبي (fallback عشوائي) و`unknown` (خادمٌ أقدم بلا مصدر، ui4):
+  // لا تلوين اتجاه ولا نسبة تغيّر ولا مسافة تنبيه، ويُوسم «تجريبي» بدل أن يبدو سعراً حيّاً.
   const demoTickSymbols = useMemo(
     () =>
       Object.entries(liveTicks)
-        .filter(([, tick]) => tick.source.kind === 'demo')
+        .filter(([, tick]) => !isVerifiedTickKind(tick.source.kind))
         .map(([sym]) => sym),
     [liveTicks]
   );
@@ -1255,10 +1259,10 @@ export function TerminalScreen() {
           style={styles.phoneWatch}
         >
           {phoneStripSymbols.map((sym) => {
-            // تغيّر اليوم بنظرة: فقط مع تيك حيّ حقيقي (لا من البثّ التجريبي) ومرجع إغلاق أمس.
+            // تغيّر اليوم بنظرة: فقط مع تيك مزوّد مؤكَّد (لا البثّ التجريبي ولا `unknown`) ومرجع إغلاق أمس.
             const tick = liveTicks[sym];
             const chg =
-              tick && tick.source.kind !== 'demo' ? dailyChange(tick.price, stripDailyRefs[sym]) : null;
+              tick && isVerifiedTickKind(tick.source.kind) ? dailyChange(tick.price, stripDailyRefs[sym]) : null;
             const pctText = chg ? formatPct(chg.pct) : null;
             return (
               <Pressable
