@@ -119,11 +119,38 @@ _SELL_RE = re.compile(
 )
 
 
+# نفيٌ قبل كلمة الاتجاه بنفس الجملة (حتى 4 كلمات): «Avoid shorting here» و«لا أنصح بالبيع» كانت
+# «sell» فتُرفق مستويات بيع ووقف وهدف تحت ردّ يقول «لا تبع». كلمة اتجاه منفيّة ⇒ الردّ كله بلا اتجاه
+# (لا نعكسه: «لا تبع» ليست «اشترِ»). النافذة لا تتجاوز حدّ الجملة ⇒ «ليست نصيحة مالية.» لا تُسقط البطاقة.
+_NEGATION = frozenset({
+    "not", "no", "never", "avoid", "avoiding", "against", "without", "dont", "don't", "cannot",
+    "لا", "لن", "لم", "ليس", "ليست", "عدم", "تجنب", "بدون", "دون", "غير",
+})
+_CLAUSE_END = re.compile(r"[.!?؟؛;:,،\n]")
+_TASHKEEL = re.compile(r"[\u064B-\u0652]")
+
+
+def _negated(text: str, start: int) -> bool:
+    before = _CLAUSE_END.split(text[:start])[-1]
+    for w in before.split()[-4:]:
+        w = _TASHKEEL.sub("", w.strip("\"'()«»").lower()).replace("\u2019", "'")
+        if w in _NEGATION or w.endswith("n't"):
+            return True
+        # «ولا»/«فلا»/«ولن»… بحرف عطف ملتصق
+        if len(w) > 2 and w[0] in "وف" and w[1:] in _NEGATION:
+            return True
+    return False
+
+
 def parse_setup_hint(text: str) -> dict[str, Any]:
     """اتجاه الردّ إن كان جانباً واحداً بلا لبس، وإلا None. كان «buy» إن وُجدت كلمة شراء وإلا
     **«sell»** — ردّ بلا اتجاه (أو «انتظر») يصير توصية بيع؛ والمستويات 0.0 أرقام بشكل أسعار."""
-    buy = bool(_BUY_RE.search(text or ""))
-    sell = bool(_SELL_RE.search(text or ""))
+    text = text or ""
+    hits = [(m, side) for side, rx in (("buy", _BUY_RE), ("sell", _SELL_RE)) for m in rx.finditer(text)]
+    if any(_negated(text, m.start()) for m, _ in hits):
+        hits = []
+    buy = any(side == "buy" for _, side in hits)
+    sell = any(side == "sell" for _, side in hits)
     return {
         "direction": "buy" if buy and not sell else "sell" if sell and not buy else None,
         "entry": None,

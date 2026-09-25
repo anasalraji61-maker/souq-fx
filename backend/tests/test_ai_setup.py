@@ -28,6 +28,18 @@ from tests.test_signal_levels import _provider_series
     ("اتجاه هبوطي واضح", "sell"),
     ("فرصة للبيع تحت المقاومة", "sell"),
     ("Shorting below 1.08", "sell"),
+    # كلمة اتجاه منفيّة ⇒ بلا اتجاه: كانت الخمسة الأولى «sell»/«sell»/«buy»/«sell»/«buy» — بطاقة
+    # بمستويات لصفقة ينهى عنها الردّ نفسه
+    ("Avoid shorting here; wait for confirmation.", None),
+    ("Do not sell into support.", None),
+    ("I would not buy at this level, wait.", None),
+    ("لا أنصح بالبيع الآن", None),
+    ("I wouldn’t buy here", None),
+    ("تجنّب الشراء قبل الإغلاق", None),
+    ("ولا أرى فرصة شراء", None),
+    # النفي بجملة أخرى لا يُسقط الاتجاه
+    ("This is not financial advice. Bias bullish.", "buy"),
+    ("ليست نصيحة مالية. سيناريو شراء عند الدعم", "buy"),
 ])
 def test_direction_only_when_unambiguous(text, want):
     out = openrouter_ai.parse_setup_hint(text)
@@ -53,6 +65,11 @@ def test_no_buy_levels_under_a_sell_answer(monkeypatch):
     s = _ask(monkeypatch, "سيناريو بيع")
     assert s["direction"] == "sell"
     assert s["entry"] is None and s["sl"] is None and s["tp"] is None
+
+
+def test_no_buy_card_under_an_answer_that_says_do_not_buy(monkeypatch):
+    s = _ask(monkeypatch, "Avoid buying here; wait for confirmation.")
+    assert s["direction"] is None and s["entry"] is None and s["sl"] is None and s["tp"] is None
 
 
 def test_answer_without_a_side_gets_no_direction_or_levels(monkeypatch):
