@@ -693,3 +693,5 @@ tools75b ← ui (`6a58a2b`، `ScreenerMini.tsx:195`)؛ ui10 ← launch (`65700ad
 **المراجعة (d — أرقام متناقضة):** `NEWS_HORIZON_MS` 3س = `ROW_SOON_MS`؛ `SOON_MS`/`UNANNOUNCED_SPAN_MS` 24س؛ حجم `None` بالخادم يطابق backend-r15.
 جديد QA59 (d) → ui: `backtest.py:91-92` يُرجع `null` لمتوسط بلا رابح/خاسر (`2b0d3ee`) و`BacktestPanel.tsx:276-280` يفحص `avg_win_pct` فقط ⇒ «/ null%». وتتمّة ui10: حذف `TIME_TBD_COPY` بـ`CalendarPanel.tsx:36`.
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول حقيقي.
+**إلحاق:** وصل أثناء الدفع chart 43 / tools / launch / ui 12 / backend 15. تحقّقتُ: ui10 تتمّة (`c24c7aa`)، backend-r15b (`6b1875a`؛ `VotePanel` بلا وقت) ⇒ أُغلقا؛ tools76a منفَّذ من launch (`1f619da`) وبقي حذف
+`TIME_TBD_TOMORROW_COPY` (tools). QA59 مكرّر لـbackend-r15a (مفتوح، `BacktestPanel.tsx:276-280`) ⇒ دُمج. البناء بعد الدمج أخضر 0، الـselftests 96/96.
