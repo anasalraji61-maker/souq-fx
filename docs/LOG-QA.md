@@ -882,3 +882,12 @@ chart-r56 (3): Alerts/Watchlist ← ui `7023c51` (`AlertsPanel.tsx:297`، `Watch
 **المراجعة (b — نصوص ثابتة):** مسح AST (`JsxText` + `accessibilityLabel/Hint`، `placeholder`، `title`، `label`) ⇒ 27: 7 بـ`MessagesScreen` (غير موصولة، ⛔)، مصطلحات موحّدة، و**QA77 → tools**: «pip» ثابتة بـ`PositionSizePanel.tsx:1541,1674` و`TradeJournalPanel.tsx:2055`.
 **الدورة القادمة:** المراجعة (c) — أزرار بلا `accessibilityLabel`.
 **إضافة (سحب أثناء الدفع):** ui `b9e28c9` (QA75 جانب ui، `VotePanel.tsx:86`) و`5906252` (launch135، `SymbolSearchBar.tsx:100`) ⇒ أُغلقا؛ إعادة البناء على 3268271 أخضر (0)، 102/102.
+
+## 2026-09-25 — الدورة 78
+**البناء:** أخضر 0 (على 42c0f3b، ثم 7d5a4d2 بعد السحب) — لا إصلاح لازم. **Selftests:** 102/102 ناجح (`npx tsx`، أُعيد على 7d5a4d2).
+**التحقّق بالكود:** QA77 ← tools `50d9fb5` (لا «pip» ثابتة بـ`.tsx` خارج التعليقات؛ `PositionSizePanel.tsx:1437` «1 pip = …» تعريف وحدة). QA76 ← chart `24ab767` (لا `tickBelongsToCandle`).
+chart-r60 (ui) ← `57d2053` (`TimeframeBar.tsx:31` `scrollTo`). chart-r60 (launch) ← `93a3177` (`locales.ts:1140-1141`) ⇒ حُوّل الصفّ إلى chart لربط الزرّ (لا مستهلك `.tsx` بعد).
+سجلات chart 60 / tools 91 / ui 39 / launch 136 / backend 41: بلا طلب جديد.
+**المراجعة (c — `accessibilityLabel`):** مسح AST (`Pressable/Touchable*/Switch/TextInput`، `placeholder` كوصف) ⇒ 28 بلا label: كلها بابن `<Text>` مترجم (MatrixChart ×11، Account ×10، Commission/NetworkTree «تحديث»، PositionSize `:1529`، Journal `:2029`) أو `MessagesScreen` ×3 (launch52).
+الأزرار الرمزية فقط (✕ ↶ − + ⛶ ⋯): 7 كلها بـlabel (`MatrixChart.tsx:6306,6425,6613,6624`، `ChartFrame.tsx:319`، `ModerationActions.tsx:151`، `AlertsPanel.tsx:853`). **لا بند.**
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة.
