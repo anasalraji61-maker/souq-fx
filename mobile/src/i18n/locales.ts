@@ -401,7 +401,7 @@ export type Dict = {
   arabicThousandsSignHint: string;
   /** اسم الخانة المرفوضة وما كُتب فيها، يسبق `invalidNumberHint`/`arabicThousandsSignHint` («الهدف «3.5.0»: …» — `d28991b`)؛ {field} الاسم القصير، {value} كما كُتب. علامتا الاقتباس بحسب اللغة: «» للعربية والكردية، “” للإنجليزية */
   riskCalcBadFieldValue: string;
-  /** «1.0820» بخانة الوقف بالـpip: سعرٌ لا مسافة (`slPipsLooksLikePrice`) — `{value}` */
+  /** «1.0820» بخانة الوقف بالـpip: سعرٌ لا مسافة (`slPipsLooksLikePrice`) — `{value}`. بلا رقم مثال: «25» وقفٌ معقول على EURUSD وداخل السبريد على USDZAR/USDTRY (وقفها بالمئات، `7caf5c5`) */
   riskCalcSlLooksLikePrice: string;
   /** «25» بخانة سعر الوقف: نقاطٌ لا سعر، النقرة تنقلها لخانة النقاط (`levelLooksLikePips`) — `{value}` */
   riskCalcStopPxLooksLikePips: string;
@@ -1700,7 +1700,7 @@ const ar: Dict = {
   riskCalcOtherCcyHint: '{field} «{value}» بغير عملة الحساب ({ccy}) — اكتب المبلغ بالـ{ccy}، أو غيّر عملة الحساب',
   arabicThousandsSignHint: '«٬» فاصلة الآلاف لا الفاصلة العشرية — للكسر اكتب «٫» أو نقطة، مثل 0٫5',
   riskCalcBadFieldValue: '{field} «{value}»',
-  riskCalcSlLooksLikePrice: '⚠ «{value}» سعرٌ على الأرجح لا مسافة — اكتبه بخانة «سعر الوقف»، أو اكتب مسافة الوقف بالـpip (مثل 25)',
+  riskCalcSlLooksLikePrice: '⚠ «{value}» سعرٌ على الأرجح لا مسافة — اكتبه بخانة «سعر الوقف»، أو اكتب بالـpip المسافةَ بين سعر الدخول وسعر الوقف',
   riskCalcStopPxLooksLikePips: '⚠ «{value}» بخانة سعر الوقف عددُ pip على الأرجح لا سعر — اضغط لنقله إلى خانة الوقف بالـpip',
   levelLooksLikePipsHint: '⚠ {field} «{value}» عددُ pip على الأرجح لا سعر: {pips} pip تعني {price}. اضغط لكتابة {price}',
   levelLooksLikePipsSaveBlocked: 'لم تُحفظ الصفقة: {field} «{value}» يبدو عدد pip لا سعراً — التصحيح في السطر أعلاه. لإبقاء {value} سعراً كما كتبته اضغط «{button}» مرّة ثانية.',
@@ -2877,7 +2877,7 @@ const enUS: Dict = {
   riskCalcOtherCcyHint: '{field} “{value}” is not in the account currency ({ccy}) — enter the amount in {ccy}, or change the account currency',
   arabicThousandsSignHint: '“٬” is the Arabic thousands sign, not the decimal comma — for a fraction type “٫” or a dot, e.g. 0.5',
   riskCalcBadFieldValue: '{field} “{value}”',
-  riskCalcSlLooksLikePrice: '⚠ “{value}” looks like a price, not a distance — enter it under Stop price, or type the stop distance in pips (e.g. 25)',
+  riskCalcSlLooksLikePrice: '⚠ “{value}” looks like a price, not a distance — enter it under Stop price, or type the distance from entry to stop in pips',
   riskCalcStopPxLooksLikePips: '⚠ “{value}” in Stop price looks like pips, not a price — tap to move it to the pips box',
   levelLooksLikePipsHint: '⚠ {field} “{value}” looks like pips, not a price: {pips} pips is {price}. Tap to use {price}',
   levelLooksLikePipsSaveBlocked: 'Not saved: {field} “{value}” looks like pips, not a price — the fix is in the line above. To keep {value} as a price, press “{button}” again.',
@@ -4080,7 +4080,7 @@ const ku: Dict = {
   riskCalcOtherCcyHint: '{field} «{value}» بە دراوی هەژمار نییە ({ccy}) — بڕەکە بە {ccy} بنووسە، یان دراوی هەژمار بگۆڕە',
   arabicThousandsSignHint: '«٬» جیاکەرەوەی هەزارانە نەک فاریزەی دەیی — بۆ کەرت «٫» یان خاڵ بنووسە، وەک 0٫5',
   riskCalcBadFieldValue: '{field} «{value}»',
-  riskCalcSlLooksLikePrice: '⚠ «{value}» زۆرجار نرخە نەک دووری — لە خانەی «نرخی وەستان» بینووسە، یان دووری وەستان بە pip بنووسە (بۆ نموونە 25)',
+  riskCalcSlLooksLikePrice: '⚠ «{value}» زۆرجار نرخە نەک دووری — لە خانەی «نرخی وەستان» بینووسە، یان دووری نێوان نرخی چوونەژوورەوە و نرخی وەستان بە pip بنووسە',
   riskCalcStopPxLooksLikePips: '⚠ «{value}» لە خانەی نرخی وەستان زۆرجار ژمارەی pipە نەک نرخ — دەست بنێ بۆ گواستنەوەی بۆ خانەی وەستان بە pip',
   levelLooksLikePipsHint: '⚠ {field} «{value}» زۆرجار ژمارەی pipە نەک نرخ: {pips} pip واتە {price}. دەست بنێ بۆ نووسینی {price}',
   levelLooksLikePipsSaveBlocked: 'مامەڵەکە پاشەکەوت نەکرا: {field} «{value}» وەک ژمارەی pip دەردەکەوێت نەک نرخ — ڕاستکردنەوەکە لە دێڕی سەرەوەیە. بۆ هێشتنەوەی {value} وەک نرخ، جارێکی تر «{button}» دابگرە.',
