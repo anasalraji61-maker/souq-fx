@@ -110,6 +110,7 @@ import {
 import { DrawingsSaveQueue, drawingsKey, drawingsSignature } from './drawingsPersist';
 import {
   arrowNudge,
+  shortcutLetter,
   clipSegmentToBars,
   raySegment,
   dragChangesDrawing,
@@ -4780,7 +4781,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const target = event.target as { tagName?: string; isContentEditable?: boolean } | null;
       if (target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '')) return;
       const key = event.key;
-      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && key.toLowerCase() === 'z') {
+      const letter = event.ctrlKey || event.metaKey ? shortcutLetter(key, event.code) : '';
+      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && letter === 'z') {
         if (!drawHistory.current.length) return;
         event.preventDefault();
         undoDrawing();
@@ -4790,7 +4792,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (
         (event.ctrlKey || event.metaKey) &&
         !event.altKey &&
-        ((event.shiftKey && key.toLowerCase() === 'z') || (!event.shiftKey && key.toLowerCase() === 'y'))
+        ((event.shiftKey && letter === 'z') || (!event.shiftKey && letter === 'y'))
       ) {
         if (!redoHistory.current.length) return;
         event.preventDefault();

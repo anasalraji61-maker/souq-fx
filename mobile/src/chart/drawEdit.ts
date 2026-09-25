@@ -187,6 +187,18 @@ export function arrowNudge(key: string, shift: boolean): { bars: number; steps: 
 }
 
 /**
+ * الحرف اللاتيني لاختصار Ctrl/⌘ (Z تراجع، Y إعادة) أيّاً كان تخطيط لوحة المفاتيح. `event.key` بلوحة عربية أو
+ * كردية حرفٌ عربي (Ctrl+Z ⇒ «ئ») فكان التراجع لا يعمل أصلاً لمتداولينا الأساسيين؛ الموضع الفيزيائي
+ * (`event.code` «KeyZ») هو الثابت. لكن الحرف اللاتيني يُقدَّم إن وُجد: بـAZERTY الـZ بموضع «KeyW» — فالمتداول
+ * يضغط الحرف المكتوب على مفتاحه.
+ */
+export function shortcutLetter(key: string, code: string | undefined): string {
+  if (/^[a-z]$/i.test(key)) return key.toLowerCase();
+  const m = /^Key([A-Z])$/.exec(code ?? '');
+  return m ? m[1]!.toLowerCase() : '';
+}
+
+/**
  * قفل الرسم أو فكّه. الفكّ يحذف المفتاح لا يكتب `false` — فرسمٌ لم يُقفل قطّ ورسمٌ فُكّ قفله متطابقان بالحفظ
  * (ولا يكبر JSON كل الرسوم بحقل ميت).
  */

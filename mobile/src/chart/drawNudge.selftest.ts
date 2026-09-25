@@ -1,6 +1,7 @@
 /** فحص ذاتي لـ`arrowNudge`/`nudgePipPrice` (`drawEdit.ts`) — يُشغَّل بـNode بلا شجرة مكوّنات. */
 import {
   arrowNudge,
+  shortcutLetter,
   nudgePipPrice,
   nudgeRepeatMultiplier,
   NUDGE_REPEAT_FAST_STEP,
@@ -44,6 +45,13 @@ ok('trend: يتوقّف عند 0', t3.a.index === 0 && t3.b!.index === 6);
 ok('تكرار 1 ⇒ خطوة', nudgeRepeatMultiplier(1) === 1);
 ok('تكرار 10 ⇒ خطوة', nudgeRepeatMultiplier(NUDGE_REPEAT_SLOW_TICKS) === 1);
 ok('تكرار 11 ⇒ سريع', nudgeRepeatMultiplier(NUDGE_REPEAT_SLOW_TICKS + 1) === NUDGE_REPEAT_FAST_STEP);
+
+ok('Ctrl+Z لاتيني', shortcutLetter('z', 'KeyZ') === 'z');
+ok('Ctrl+Shift+Z ⇒ z', shortcutLetter('Z', 'KeyZ') === 'z');
+ok('Ctrl+Z بلوحة عربية («ئ»)', shortcutLetter('ئ', 'KeyZ') === 'z');
+ok('Ctrl+Y بلوحة عربية («غ»)', shortcutLetter('غ', 'KeyY') === 'y');
+ok('AZERTY: الحرف المكتوب يغلب الموضع', shortcutLetter('z', 'KeyW') === 'z');
+ok('مفتاح غير حرف ⇒ فارغ', shortcutLetter('Delete', 'Delete') === '');
 
 if (failures) {
   console.error(`drawNudge selftest: ${failures} failure(s)`);
