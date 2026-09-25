@@ -155,6 +155,12 @@ export type Dict = {
   newsStale: string;
   newsEmpty: string;
   newsLoadError: string;
+  /** سطر واحد تحت عنوان الأخبار حين خبرٌ فيها `impact_basis === 'headline_keywords'` (backend `9a05735`): شارة «قوي/متوسط/ضعيف»
+   * مخمَّنة من كلمات العنوان لا تصنيفاً من المصدر كتأثير التقويم. */
+  newsImpactFromHeadline: string;
+  /** شريحة تغيّر اللقطة (`SymbolSnapshot`) بعد backend `5324d55`: `change_pct` على كامل السلسلة المحمّلة لا يومياً — {pct} بـ`formatPct`،
+   * {bars} = `change_bars`. بلا `change_bars` (خادم أقدم) ⇒ النسبة وحدها كما اليوم. */
+  snapChangeOverBars: string;
   aiPanelTitle: string;
   aiGreeting: string;
   aiOfflineFallback: string;
@@ -1406,6 +1412,8 @@ const ar: Dict = {
   newsStale: 'تعذّر التحديث — الموعد من تقويم محفوظ',
   newsEmpty: 'لا عناوين مؤثرة الآن — ومواعيد البيانات القادمة (الفائدة، الوظائف، التضخم) تجدها في «تقويم».',
   newsLoadError: 'تعذّر تحميل الأخبار — تحقّق من الاتصال، ثم غادر هذا القسم وارجع إليه لإعادة المحاولة',
+  newsImpactFromHeadline: 'شارة التأثير تقدير من كلمات العنوان، لا تصنيف من مصدر الخبر — مواعيد البيانات المؤكَّدة في «تقويم».',
+  snapChangeOverBars: '{pct} خلال آخر {bars} شمعة',
   aiPanelTitle: 'مساعد ذكاء اصطناعي',
   aiGreeting:
     'أنا مساعد MATRIX الآلي. اسألني عن تحليل الزوج، سيناريو صفقة، إدارة المخاطرة، أو علاقته بـDXY. إجاباتي تحليل آلي تتعلّم منه، لا نصيحة مالية — راجع أي مستوى على الشارت قبل أن تعتمد عليه.',
@@ -2557,6 +2565,8 @@ const enUS: Dict = {
   newsStale: 'Not refreshed — time from saved calendar',
   newsEmpty: 'No market-moving headlines right now — upcoming releases (rates, jobs, inflation) are in Calendar.',
   newsLoadError: "Couldn't load news — check your connection, then leave this section and come back to retry",
+  newsImpactFromHeadline: 'The impact badge is estimated from headline keywords, not rated by the source — confirmed release times are in Calendar.',
+  snapChangeOverBars: '{pct} over the last {bars} candles',
   aiPanelTitle: 'AI assistant',
   aiGreeting:
     "I'm MATRIX's AI assistant. Ask me about the pair's analysis, a trade scenario, risk management, or its relation to DXY. My answers are automated analysis to learn from, not financial advice — check any level on the chart before relying on it.",
@@ -3733,6 +3743,8 @@ const ku: Dict = {
   newsStale: 'نوێ نەکرایەوە — کات لە ڕۆژژمێری پاشەکەوتکراوە',
   newsEmpty: 'ئێستا هیچ سەردێڕێکی کاریگەر نییە — کاتی داتا داهاتووەکان (سوود، کار، هەڵاوسان) لە «ڕۆژژمێر» دەبینیت.',
   newsLoadError: 'نەکرا هەواڵەکان باربکرێن — پەیوەندییەکەت بپشکنە، پاشان ئەم بەشە جێبهێڵە و بگەڕێوە بۆی بۆ هەوڵدانەوە',
+  newsImpactFromHeadline: 'نیشانەی کاریگەری خەمڵاندنە لە وشەکانی سەردێڕ، نەک پۆلێنکردنی سەرچاوە — کاتە دڵنیاکانی داتا لە «ڕۆژژمێر»دان.',
+  snapChangeOverBars: '{pct} لە دوایین {bars} مۆمدا',
   aiPanelTitle: 'یاریدەدەری زیرەکی دەستکرد',
   aiGreeting:
     'من یاریدەدەری خۆکاری MATRIX ـم. پرسیارم لێ بکە دەربارەی شیکاری جووتەکە، دیمەنی مامەڵە، بەڕێوەبردنی مەترسی، یان پەیوەندی بە DXY. وەڵامەکانم شیکاری خۆکارن بۆ فێربوون، نەک ئامۆژگاری دارایی — پێش ئەوەی پشتی پێ ببەستیت هەر ئاستێک لەسەر چارتەکە بپشکنە.',
