@@ -34,5 +34,10 @@ export function chartPipSpec(symbol: string): InstrumentSpec | null {
   // (لوت mini يختلف بين الوسطاء) والنقطة وحدها كانت تُقبل أعلاه ⇒ «USDJPY-MINI» تُطبع 150.12 وبلا pip. السعر والـpip
   // كالزوج العادي، والمال لا يقرؤه الشارت.
   const mini = miniAccountSymbol(t);
-  return mini ? instrumentSpec(mini) : null;
+  if (mini) return instrumentSpec(mini);
+  // بادئة منصّة أو وسيط منسوخة من TradingView («OANDA:USDJPY»، «FX:GBPJPY»، «#XAUUSD»)، كما تُسقطها
+  // `marketHours` (`isLateOpenSymbol`): كانت تُرفض فيُقدَّر العدد من حجم الرقم — «157.42» بدل «157.424»
+  // ولا pip بأيّ قراءة، بينما «EURUSD» المسبوقة تبدو سليمة بالمصادفة (التقدير 5 منازل).
+  const bare = t.replace(/^#/, '').replace(/^[A-Z0-9_]+:/i, '');
+  return bare !== t && bare ? chartPipSpec(bare) : null;
 }

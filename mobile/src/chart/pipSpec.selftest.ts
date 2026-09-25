@@ -64,6 +64,13 @@ eq('GOLD_MINI', chartPipSpec('GOLD_MINI')?.symbol, 'XAUUSD');
 eq('EURUSD.mini', chartPipSpec('EURUSD.mini')?.symbol, 'EURUSD');
 eq('USDJPY-MINI 3 decimals', formatPrice(150.1234, 'USDJPY-MINI'), '150.123');
 eq('BTCUSD-MINI', chartPipSpec('BTCUSD-MINI'), null);
+// بادئة منصّة/وسيط منسوخة من TradingView
+eq('OANDA:USDJPY 3 decimals', formatPrice(157.4236, 'OANDA:USDJPY'), '157.424');
+eq('FX:GBPJPY', chartPipSpec('FX:GBPJPY')?.symbol, 'GBPJPY');
+eq('#XAUUSD', chartPipSpec('#XAUUSD')?.symbol, 'XAUUSD');
+eq('OANDA:XAUUSD.pro', chartPipSpec('OANDA:XAUUSD.pro')?.symbol, 'XAUUSD');
+eq('BINANCE:BTCUSD', chartPipSpec('BINANCE:BTCUSD'), null);
+eq('bare prefix', chartPipSpec('FX:'), null);
 if (fail) {
   console.log(`pipSpec: ${fail} FAIL`);
   process.exit(1);
