@@ -75,6 +75,25 @@ def macd(values: list[float]) -> tuple[list[float | None], list[float | None]]:
     return line, signal
 
 
+def atr(candles: list[dict[str, Any]], period: int = 14) -> list[float | None]:
+    """Average True Range (Wilder). None حتى تتوفّر `period` مدى حقيقياً (الشمعة `period`)."""
+    n = len(candles)
+    out: list[float | None] = [None] * n
+    if n <= period:
+        return out
+    tr: list[float] = []
+    for i in range(1, n):
+        h, lo = float(candles[i]["high"]), float(candles[i]["low"])
+        pc = float(candles[i - 1]["close"])
+        tr.append(max(h - lo, abs(h - pc), abs(lo - pc)))
+    prev = sum(tr[:period]) / period
+    out[period] = prev
+    for i in range(period + 1, n):
+        prev = (prev * (period - 1) + tr[i - 1]) / period
+        out[i] = prev
+    return out
+
+
 def cross_up(fast: list[float | None], slow: list[float | None]) -> bool:
     if len(fast) < 2 or len(slow) < 2:
         return False

@@ -1313,20 +1313,31 @@ def social_sources():
     return {"sources": signal_hub.list_social_sources()}
 
 
+def _real_series(symbol: str, timeframe: str) -> tuple[ChartSeries, float | None, list[dict] | None]:
+    """(السلسلة، آخر سعر حقيقي، شموع حقيقية). سلسلة demo البذرية ⇒ None/None: مستويات الإشارة
+    (دخول/وقف/هدف) لا تُبنى على سعر أو تذبذب مخترَعَين."""
+    series = build_series(symbol.upper(), timeframe)
+    if series.data_source.kind == "demo":
+        return series, None, None
+    return series, series.last, [c.model_dump() for c in series.candles]
+
+
 @app.post("/api/signals/social/consensus")
 def social_consensus(body: SocialConsensusBody):
-    series = build_series(body.symbol.upper(), body.timeframe)
-    return signal_hub.social_consensus(
-        body.symbol,
-        body.source_ids,
-        last=series.last,
-    )
+    series, last, candles = _real_series(body.symbol, body.timeframe)
+    out = signal_hub.social_consensus(body.symbol, body.source_ids, last=last, candles=candles)
+    out["data_kind"] = series.data_source.kind
+    out["timeframe"] = series.timeframe
+    return out
 
 
 @app.get("/api/signals/analysts/{symbol}")
 def analysts_forecast(symbol: str, timeframe: str = "15m"):
-    series = build_series(symbol.upper(), timeframe)
-    return signal_hub.analysts_forecast(symbol, last=series.last)
+    series, last, candles = _real_series(symbol, timeframe)
+    out = signal_hub.analysts_forecast(symbol, last=last, candles=candles)
+    out["data_kind"] = series.data_source.kind
+    out["timeframe"] = series.timeframe
+    return out
 
 
 @app.post("/api/signals/indicators/forecast")
@@ -1335,6 +1346,11 @@ def indicators_forecast(body: IndicatorForecastBody):
     candles = [c.model_dump() for c in series.candles]
     out = signal_hub.indicator_forecast(body.symbol, candles, enabled=body.indicators)
     out["data_kind"] = series.data_source.kind  # demo = اتجاه ومستويات من شموع مختلَقة
+    out["timeframe"] = series.timeframe
+    if series.data_source.kind == "demo":
+        # الأصوات تبقى (موسومة demo) لكن لا دخول/وقف/هدف على شموع مختلَقة
+        out["levels"] = None
+        out["levels_basis"] = {**(out.get("levels_basis") or {}), "unavailable": "no_live_price"}
     return out
 
 
@@ -1776,9 +1792,14 @@ def ai_ask(body: AiAsk):
     sl: float | None = None
     tp: float | None = None
     if live:
-        entry = series.last
-        sl = round(entry * (0.996 if direction == "شراء" else 1.004), 5 if entry < 50 else 2)
-        tp = round(entry * (1.008 if direction == "شراء" else 0.992), 5 if entry < 50 else 2)
+        # وقف 1×ATR14 وهدف 2×ATR14 على فريم السلسلة (العائد/المخاطرة 1:2 كما يقول النص). كان 0.4%/0.8%
+        # ثابتين لكل فريم، ومقرَّبين لخانتين حين السعر ≥50 ⇒ USDJPY تفقد خانة.
+        atr_v = signal_hub._atr_last([c.model_dump() for c in series.candles])
+        if atr_v is not None:
+            sgn = 1 if direction == "شراء" else -1
+            entry = series.last
+            sl = round(entry - sgn * atr_v, 5)
+            tp = round(entry + sgn * 2 * atr_v, 5)
 
     if live:
         context = (
@@ -1818,7 +1839,7 @@ def ai_ask(body: AiAsk):
                 f"- Stop: {sl}\n"
                 f"- Target: {tp}\n"
                 f"- Risk/reward: 1:2\n\n"
-            )
+            ) if entry is not None else ""
         else:
             read = "No live price is available right now, so no trend read or price levels.\n\n"
             scenario = ""
@@ -1844,7 +1865,7 @@ def ai_ask(body: AiAsk):
                 f"- وقف: {sl}\n"
                 f"- هدف: {tp}\n"
                 f"- العائد/المخاطرة: 1:2\n\n"
-            )
+            ) if entry is not None else ""
         else:
             read = "لا يتوفر سعر حي الآن، لذلك لا قراءة اتجاه ولا مستويات سعرية.\n\n"
             scenario = ""

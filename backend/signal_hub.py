@@ -88,21 +88,44 @@ def _confidence(score: float, n: int) -> float:
 FORECAST_INDICATOR_IDS: tuple[str, ...] = ("rsi", "ma", "macd", "bb", "stoch", "trend")
 
 
-def _trade_levels(last: float, direction: str, atr_pct: float = 0.0018) -> dict[str, float]:
-    step = max(last * atr_pct, last * 0.0004)
-    if direction == "buy":
-        return {
-            "entry": round(last, 5),
-            "sl": round(last - 1.4 * step, 5),
-            "tp": round(last + 2.2 * step, 5),
-        }
-    if direction == "sell":
-        return {
-            "entry": round(last, 5),
-            "sl": round(last + 1.4 * step, 5),
-            "tp": round(last - 2.2 * step, 5),
-        }
-    return {"entry": round(last, 5), "sl": round(last, 5), "tp": round(last, 5)}
+# مضاعِفا ATR14 للوقف والهدف — نفس نسبة العائد/المخاطرة السابقة (1:1.57)، لكن المسافة من تذبذب
+# الفريم الفعلي. كانت 0.18% من السعر ثابتة لكل فريم (~29 نقطة على EURUSD سواء 1د أو يومي): ضيّقة
+# بلا معنى على اليومي وواسعة جداً على الدقيقة.
+SL_ATR_MULT = 1.4
+TP_ATR_MULT = 2.2
+ATR_PERIOD = 14
+
+
+def _atr_last(candles: list[dict[str, Any]] | None) -> float | None:
+    if not candles:
+        return None
+    try:
+        v = ind_engine.atr(candles, ATR_PERIOD)[-1]
+    except (KeyError, TypeError, ValueError):
+        return None
+    return v if v is not None and math.isfinite(v) and v > 0 else None
+
+
+def _trade_levels(
+    last: float | None, direction: str, candles: list[dict[str, Any]] | None
+) -> tuple[dict[str, float] | None, dict[str, Any]]:
+    """(المستويات، أساسها). المستويات None — لا رقم مخترَع — حين: لا سعر حقيقي، أو شموع أقلّ من
+    ATR14، أو الاتجاه محايد (دخول=وقف=هدف كان يُعرض كصفقة)."""
+    atr_v = _atr_last(candles)
+    basis: dict[str, Any] = {"method": f"atr{ATR_PERIOD}", "atr": atr_v,
+                             "sl_mult": SL_ATR_MULT, "tp_mult": TP_ATR_MULT}
+    if last is None or not (last > 0):
+        return None, {**basis, "unavailable": "no_live_price"}
+    if atr_v is None:
+        return None, {**basis, "unavailable": "not_enough_candles"}
+    if direction not in ("buy", "sell"):
+        return None, {**basis, "unavailable": "neutral"}
+    sgn = 1 if direction == "buy" else -1
+    return {
+        "entry": round(last, 5),
+        "sl": round(last - sgn * SL_ATR_MULT * atr_v, 5),
+        "tp": round(last + sgn * TP_ATR_MULT * atr_v, 5),
+    }, basis
 
 
 def list_social_sources() -> list[dict[str, Any]]:
@@ -121,6 +144,7 @@ def social_consensus(
     symbol: str,
     source_ids: list[str] | None,
     last: float | None = None,
+    candles: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     sym = symbol.upper()
     catalog = {s["id"]: s for s in SOCIAL_CATALOG}
@@ -157,8 +181,8 @@ def social_consensus(
 
     avg = weighted / wsum if wsum else 0.0
     direction = _direction(avg)
-    price = float(last) if last and last > 0 else _fallback_price(sym)
-    levels = _trade_levels(price, direction)
+    price = float(last) if last and last > 0 else None
+    levels, levels_basis = _trade_levels(price, direction, candles)
 
     buy_n = sum(1 for v in votes if v["direction"] == "buy")
     sell_n = sum(1 for v in votes if v["direction"] == "sell")
@@ -173,17 +197,20 @@ def social_consensus(
         "confidence": _confidence(avg, len(votes)),
         "split": {"buy": buy_n, "sell": sell_n, "neutral": neu_n},
         "levels": levels,
+        "levels_basis": levels_basis,
         "votes": votes,
         "disclaimer": "إجماع من مصادر اخترتها أنت. الربط الحي للقنوات الخاصة يحتاج مفاتيح API لكل منصة.",
         "updated_bucket": bucket,
     }
 
 
-def analysts_forecast(symbol: str, last: float | None = None) -> dict[str, Any]:
+def analysts_forecast(
+    symbol: str, last: float | None = None, candles: list[dict[str, Any]] | None = None
+) -> dict[str, Any]:
     sym = symbol.upper()
     bucket = _bucket(6)
     bias = _bias_for_symbol(sym)
-    price = float(last) if last and last > 0 else _fallback_price(sym)
+    price = float(last) if last and last > 0 else None
     rows: list[dict[str, Any]] = []
     scores: list[float] = []
 
@@ -193,7 +220,7 @@ def analysts_forecast(symbol: str, last: float | None = None) -> dict[str, Any]:
         scores.append(raw)
         direction = _direction(raw)
         horizon = "قصير" if abs(raw) > 0.45 else "متوسط"
-        target = price * (1 + raw * 0.012)
+        target = price * (1 + raw * 0.012) if price is not None else None
         rows.append(
             {
                 "id": a["id"],
@@ -201,7 +228,7 @@ def analysts_forecast(symbol: str, last: float | None = None) -> dict[str, Any]:
                 "house": a["house"],
                 "direction": direction,
                 "score": round(raw, 3),
-                "target": round(target, 5),
+                "target": round(target, 5) if target is not None else None,
                 "horizon": horizon,
                 "summary": _analyst_summary(direction, sym, a["house"]),
             }
@@ -209,7 +236,7 @@ def analysts_forecast(symbol: str, last: float | None = None) -> dict[str, Any]:
 
     avg = sum(scores) / len(scores) if scores else 0.0
     direction = _direction(avg)
-    levels = _trade_levels(price, direction, atr_pct=0.0022)
+    levels, levels_basis = _trade_levels(price, direction, candles)
 
     return {
         "symbol": sym,
@@ -218,6 +245,7 @@ def analysts_forecast(symbol: str, last: float | None = None) -> dict[str, Any]:
         "direction": direction,
         "confidence": _confidence(avg, len(rows)),
         "levels": levels,
+        "levels_basis": levels_basis,
         "analysts": rows,
         "disclaimer": "توقعات تجميعية لأغراض التحليل — ليست نصيحة استثمارية.",
         "updated_bucket": bucket,
@@ -232,7 +260,7 @@ def indicator_forecast(
     sym = symbol.upper()
     snap = ind_engine.snapshot(candles) if candles else {}
     closes = [float(c["close"]) for c in candles] if candles else []
-    last = float(snap.get("last") or (closes[-1] if closes else _fallback_price(sym)))
+    last = float(snap.get("last") or closes[-1]) if closes else None
 
     want = set(enabled or FORECAST_INDICATOR_IDS)
     votes: list[dict[str, Any]] = []
@@ -328,7 +356,8 @@ def indicator_forecast(
             "direction": "neutral",
             "avg_score": 0.0,
             "confidence": 0.3,
-            "levels": _trade_levels(last, "neutral"),
+            "levels": None,
+            "levels_basis": _trade_levels(last, "neutral", candles)[1],
             "votes": [],
             "snapshot": snap,
             "disclaimer": "لا بيانات كافية للمؤشرات.",
@@ -336,7 +365,7 @@ def indicator_forecast(
 
     avg = sum(v["score"] for v in votes) / len(votes)
     direction = _direction(avg)
-    levels = _trade_levels(last, direction)
+    levels, levels_basis = _trade_levels(last, direction, candles)
 
     return {
         "symbol": sym,
@@ -345,6 +374,7 @@ def indicator_forecast(
         "direction": direction,
         "confidence": _confidence(avg, len(votes)),
         "levels": levels,
+        "levels_basis": levels_basis,
         "votes": votes,
         "snapshot": {
             "rsi": snap.get("rsi"),
@@ -353,19 +383,6 @@ def indicator_forecast(
         },
         "disclaimer": "إجماع مؤشرات فنية داخل MATRIX — ليس ضماناً للربح.",
     }
-
-
-def _fallback_price(symbol: str) -> float:
-    bases = {
-        "DXY": 104.25,
-        "EURUSD": 1.0854,
-        "GBPUSD": 1.2732,
-        "USDJPY": 157.42,
-        "XAUUSD": 2348.6,
-        "XAGUSD": 28.4,
-        "BTCUSD": 67420.0,
-    }
-    return bases.get(symbol.upper(), 1.0)
 
 
 def _note_for(direction: str, platform: str) -> str:
