@@ -508,3 +508,10 @@
 - **الكردية:** مقارنة عميقة `ku`/`ar` (1061 مفتاحاً، `tsx` على `locales.ts`): صفر ناقص، صفر حرف غير سوراني، المطابق `listSep` وحده. فروع `lang`/`rtl` بنطاقي محاذاة فقط (و«، » تستعملها السورانية).
 - «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده (9 مستهلكين منهم `AccountScreen` حذف الحساب)؛ `useMultiLiveTicks:75` ⇐ `acceptTick`؛ إعادة الجولة `AccountScreen:221-235` (`accReplayTour`).
 - ملفّات نطاقي التي عدّلها chart منذ تشغيل 40 (`QuadChartModal` `4be7ba1`/`bcc8f36`، `useLiveTicks` `42c0f3b`): سليمة.
+
+## 2026-09-25 — تشغيل 42
+صفوف ui بـCOORDINATION (دورة QA 78): **tools92** و**chart-r61** — كلاهما منجز بالكود (`MatrixBottomDock.tsx:212` `chartBannerVisible`؛ `useMultiLiveTicks.ts:120,137` معاملة `CONNECTING` كـ`OPEN` بفحص الصمت) من تشغيل 41، جاهزان للإغلاق. **لا تغيير بالكود هذا التشغيل.**
+- لم يتغيّر أيّ ملف بنطاقي منذ تشغيل 41 (`git diff e8d67fc..a97dab9 -- mobile/src` ⇒ `chart/MatrixChart.tsx` و`i18n/locales.ts` فقط).
+- **الكردية** (locales تغيّر): مقارنة عميقة `ku`/`ar` بـ`tsx` ⇒ 1114 مفتاحاً، صفر ناقص، صفر حرف غير سوراني، المطابق `listSep` وحده.
+- «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده (10 ملفات تستعمله منها حذف الحساب)؛ `useMultiLiveTicks` ⇐ `acceptTick`/`TICK_STALE_MS`؛ إعادة الجولة `AccountScreen:221-233`.
+- بوابة البناء خضراء (tsc 0).
