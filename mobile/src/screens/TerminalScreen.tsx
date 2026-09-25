@@ -940,6 +940,7 @@ export function TerminalScreen() {
     demo: t.dsKindDemo,
     cache: t.dsKindCache,
     unknown: t.dsKindUnknown,
+    unavailable: t.dsKindUnavailable,
   };
   const dsTickLabels = { live: t.dsTickLive, demoTick: t.dsTickDemo, lastPrice: t.dsLastPriceWord };
   const heroStatusBits = [
