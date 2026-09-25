@@ -3065,10 +3065,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
   const chartPlotW = Math.max(80, chartW - PRICE_AXIS_WIDTH);
   const chartPlotH = Math.max(100, mainH - timeAxisH);
-  // حافّة اللوح اليمنى لما يُرسم ملاصقاً لها (أعمدة Volume Profile، وسما POC/TPO): محور السعر ابن
+  // حافّة اللوح اليمنى لما يُرسم ملاصقاً لها (أعمدة Volume Profile، وسما POC/TPO، وسم القياس): محور السعر ابن
   // اللوح بعرض 68px وخلفية مصمتة فوق كل شيء — أعمدة `right: 2` بعرض ≤ 16% (57px بهاتف 360px)
   // كانت تقع تحته كلّها، فلا يُرى من الطبقة إلا خطّ POC بلا اسم.
-  const vpRight = hidePriceLabels ? 2 : PRICE_AXIS_WIDTH + 2;
+  const plotRightInset = hidePriceLabels ? 2 : PRICE_AXIS_WIDTH + 2;
   chartPlotWRef.current = chartPlotW;
   chartPlotHRef.current = chartPlotH;
 
@@ -7316,7 +7316,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
         {poc != null ? (
           <View style={[styles.hLine, { top: yOf(poc), borderColor: colors.warn, opacity: 0.75 }]}>
-            <Text style={[styles.fibLabel, { right: vpRight + 2 }]}>POC</Text>
+            <Text style={[styles.fibLabel, { right: plotRightInset + 2 }]}>POC</Text>
           </View>
         ) : null}
 
@@ -7367,7 +7367,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   key={`vp${i}`}
                   style={{
                     position: 'absolute',
-                    right: vpRight,
+                    right: plotRightInset,
                     top: yOf(row.price),
                     width: (row.volume / maxV) * Math.max(24, chartPlotW * 0.16),
                     height: 2,
@@ -7400,7 +7400,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   )}
                   {tpo.poc != null ? (
                     <View style={[styles.hLine, { top: yOf(tpo.poc), borderColor: colors.infoAccent }]}>
-                      <Text style={[styles.fibLabel, { right: vpRight + 2 }]}>TPO</Text>
+                      <Text style={[styles.fibLabel, { right: plotRightInset + 2 }]}>TPO</Text>
                     </View>
                   ) : null}
                   {tpo.vah != null ? (
@@ -7854,8 +7854,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const side =
               x2 < chartPlotW / 2
                 ? { left: Math.max(2, x2 - 12) }
-                : { right: Math.max(2, chartW - x2 - 12) };
-            const tagMaxW = chartW - 2 - (side.left ?? side.right ?? 0);
+                : { right: Math.max(plotRightInset, chartW - x2 - 12) };
+            // اليسار يُقاس حتى المحور لا حتى حافّة الشارت: كان الوسم عند شمعة الحيّة أو من منتصف اللوح
+            // يمرّ تحت المحور (68px مصمتة) فتُقصّ «%» آخر السطر.
+            const tagMaxW =
+              side.left != null ? chartW - plotRightInset - side.left : chartW - 2 - (side.right ?? 0);
             return (
               <>
                 {liveMeasure ? null : (
@@ -7904,9 +7907,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               if (bi < 0 || bi > source.plot.length - 1 || !(y2 >= 0 && y2 <= chartPlotH)) return null;
               const tagH = selectedLineNow ? 38 : 22;
               const top = Math.max(2, Math.min(chartPlotH - tagH, y2 - 44 >= 2 ? y2 - 44 : y2 + 24));
-              const inset = x2 < chartPlotW / 2 ? Math.max(2, x2 - 12) : Math.max(2, chartW - x2 - 12);
-              const side = x2 < chartPlotW / 2 ? { left: inset } : { right: inset };
-              const tagMaxW = chartW - 2 - inset;
+              const onLeft = x2 < chartPlotW / 2;
+              const inset = onLeft ? Math.max(2, x2 - 12) : Math.max(plotRightInset, chartW - x2 - 12);
+              const side = onLeft ? { left: inset } : { right: inset };
+              const tagMaxW = onLeft ? chartW - plotRightInset - inset : chartW - 2 - inset;
               return (
                 <View
                   pointerEvents="none"
