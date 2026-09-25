@@ -323,6 +323,38 @@ export function nextHighImpact(
   return best;
 }
 
+/** مدّة «يوم العطلة» من وقت حدثها: ForexFactory يضع العطلة «طوال اليوم» عند منتصف ليل يومها. */
+export const HOLIDAY_SPAN_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * **عطلة بنوك اليوم** لعملات الزوج — للشريط حين لا خبر قوي. الخادم كان يسمّي عطلة ForexFactory «منخفض التأثير» (QA30) وصار
+ * يرسلها `impact: "holiday"` (backend-r3): عطلة طوكيو أو عيد الشكر الأمريكي ليست خبراً ضعيفاً بل سيولة رقيقة — سبريد أوسع،
+ * وقف ينزلق، فجوات — وهي لحظة يدخل فيها المتداول مطمئناً لأن «لا أخبار اليوم».
+ *
+ * ما يُعدّ: `impact` = `holiday`، لا أمثلة، وقت دقيق، عملة من عملات الزوج، و`ts ≤ الآن < ts + 24س`. العملات بترتيب الزوج
+ * بلا تكرار، والعنوان الأول لكل عملة (عطلتان باليوم نفسه لعملة = سطرٌ واحد). `null` = لا عطلة اليوم.
+ */
+export function bankHolidayToday(
+  events: readonly NewsEvent[],
+  currencies: readonly string[],
+  nowMs: number
+): { currencies: string[]; titles: string[] } | null {
+  const byCcy = new Map<string, string>();
+  for (const e of events) {
+    if (!e || e.sample) continue;
+    if (String(e.impact).toLowerCase() !== 'holiday') continue;
+    if (typeof e.ts !== 'number' || !Number.isFinite(e.ts)) continue;
+    const c = String(e.currency).toUpperCase();
+    if (!currencies.includes(c) || byCcy.has(c)) continue;
+    const start = e.ts * 1000;
+    if (nowMs < start || nowMs >= start + HOLIDAY_SPAN_MS) continue;
+    byCcy.set(c, String(e.title ?? '').trim());
+  }
+  const ccys = currencies.filter((c) => byCcy.has(c));
+  if (!ccys.length) return null;
+  return { currencies: ccys, titles: ccys.map((c) => byCcy.get(c) as string).filter(Boolean) };
+}
+
 /**
  * **خبرٌ قوي قريب على صفقاتٍ مفتوحة** — لسطر فوق قائمة الدفتر. شريط الأخبار كان للرمز الذي يُكتب بالنموذج وحده: متداولٌ
  * يحمل شراء EURUSD وGBPUSD مفتوحتين ولا يكتب صفقة جديدة لا يرى أن الرواتب الأمريكية بعد 20 دقيقة — وهي لحظة نقل الوقف أو

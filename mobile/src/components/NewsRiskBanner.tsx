@@ -4,9 +4,11 @@ import { colors, radii, spacing } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import {
+  bankHolidayToday,
   calendarAfterFetch,
   calendarFetchEvents,
   calendarUnavailable,
+  isCryptoSymbol,
   openCalendarUnavailable,
   newsCountdown,
   newsBannerText,
@@ -34,7 +36,43 @@ let cache: CalendarCache | null = null;
 let inflight: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
+/**
+ * عطل البنوك (`impact=holiday`، backend-r3) بطلبٍ منفصل لا `impact=high,holiday`: خادمٌ أقدم يطابق القيمة حرفياً فيُرجع
+ * قائمة فارغة = «لا خبر قوي» صامتة. هنا فشله يُسقط سطر العطلة وحده؛ تحذير الخبر القوي لا يتأثّر.
+ */
+let holidayCache: CalendarCache | null = null;
+let holidayInflight: Promise<void> | null = null;
+
+function ensureHolidaysFresh(now: number) {
+  if (holidayInflight || (holidayCache && now - holidayCache.at < (holidayCache.ok ? TTL_MS : FAIL_TTL_MS))) return;
+  holidayInflight = api
+    .calendar({ impact: 'holiday' })
+    .then((r) => {
+      holidayCache = calendarAfterFetch(holidayCache, calendarFetchEvents(r), Date.now());
+    })
+    .catch(() => {
+      holidayCache = calendarAfterFetch(holidayCache, null, Date.now());
+    })
+    .finally(() => {
+      holidayInflight = null;
+      for (const l of listeners) l();
+    });
+}
+
+/**
+ * سطر «عطلة بنوك اليوم» — نصٌّ محلّي مؤقّتاً حتى مفتاح `newsHolidayToday` بـ`locales.ts` (طلب لـlaunch بـCOORDINATION)؛
+ * الكردي بحاجة مراجعة. `{ccy}` و`{title}` مرّة واحدة لكلٍّ.
+ */
+const HOLIDAY_COPY: Record<string, string> = {
+  ar: 'عطلة بنوك اليوم · {ccy}{title} — سيولة أقل: سبريد أوسع، وانزلاق وفجوات محتملة',
+  'en-US': 'Bank holiday today · {ccy}{title} — thin liquidity: wider spreads, slippage and gaps are likely',
+  'en-GB': 'Bank holiday today · {ccy}{title} — thin liquidity: wider spreads, slippage and gaps are likely',
+  ku: 'پشووی بانکەکان ئەمڕۆ · {ccy}{title} — شلەیی کەمتر: سپرێدی فراوانتر، خزان و بۆشایی لەوانەیە',
+};
+
 function ensureFresh(now: number) {
+  // سطر العطلة للرمز المكتوب/المعروض فقط (المستدعي يقرّر)؛ الجلب مشترك بمهلته
+  ensureHolidaysFresh(now);
   if (cache && now - cache.at < (cache.ok ? TTL_MS : FAIL_TTL_MS)) return;
   if (inflight) return;
   inflight = api
@@ -67,7 +105,7 @@ type Props =
     };
 
 export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [now, setNow] = useState(() => Date.now());
   const [, setVersion] = useState(0);
@@ -119,6 +157,23 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
     const id = setTimeout(() => setNow(Date.now()), newsTickDelayMs(hitDelta));
     return () => clearTimeout(id);
   }, [now, hitDelta]);
+  // عطلة بنوك اليوم لعملتَي الرمز — حين لا خبر قوي فقط (الخبر أخطر ويشغل الشريط). لا للصفقات المفتوحة ولا للرقمية (سوقٌ بلا عطلة)
+  const holiday =
+    !hit && !openSymbols && holidayCache && !isCryptoSymbol(symbol) ? bankHolidayToday(holidayCache.events, currencies, now) : null;
+  if (holiday) {
+    const text = `🏦 ${(HOLIDAY_COPY[lang] ?? HOLIDAY_COPY['en-US'])
+      .split('{ccy}')
+      .join(holiday.currencies.join('/'))
+      .split('{title}')
+      .join(holiday.titles.length ? ` · ${holiday.titles.join(t.listSep)}` : '')}`;
+    return (
+      <View style={[styles.wrap, styles.wrapUnavailable]} accessible accessibilityRole="alert" accessibilityLabel={text}>
+        <Text style={[styles.hint, styles.unavailable, { textAlign: align }]} numberOfLines={2}>
+          {text}
+        </Text>
+      </View>
+    );
+  }
   if (!hit) {
     const down = openSymbols ? openCalendarUnavailable(cache, openSymbols, shownSymbol) : calendarUnavailable(cache, symbol);
     if (!down) return null;

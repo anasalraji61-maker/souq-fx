@@ -4,6 +4,8 @@
  */
 import assert from 'node:assert/strict';
 import {
+  bankHolidayToday,
+  HOLIDAY_SPAN_MS,
   calendarAfterFetch,
   calendarUnavailable,
   openCalendarUnavailable,
@@ -793,3 +795,31 @@ console.log('newsRisk open positions shownSymbol selftest OK');
     assert.equal(cryptoPairOf(s), null, s);
 }
 console.log('newsRisk cryptoPairOf selftest OK');
+
+{
+  // عطلة بنوك (backend-r3: impact "holiday") — عيد الشكر 2026-11-26 00:00 نيويورك = 05:00 UTC
+  const ts = Date.UTC(2026, 10, 26, 5) / 1000;
+  const ev = (o: Partial<NewsEvent>): NewsEvent => ({ id: 'h', title: 'Bank Holiday', currency: 'USD', impact: 'holiday', ts, ...o });
+  const at = (h: number) => ts * 1000 + h * 3_600_000;
+  const usd = [ev({ title: 'Thanksgiving' })];
+  assert.deepEqual(bankHolidayToday(usd, ['EUR', 'USD'], at(10)), { currencies: ['USD'], titles: ['Thanksgiving'] });
+  // الحدّان: من منتصف الليل حتى ما قبل التالي
+  assert.ok(bankHolidayToday(usd, ['USD'], at(0)));
+  assert.equal(bankHolidayToday(usd, ['USD'], ts * 1000 + HOLIDAY_SPAN_MS - 1) != null, true);
+  assert.equal(bankHolidayToday(usd, ['USD'], ts * 1000 + HOLIDAY_SPAN_MS), null);
+  assert.equal(bankHolidayToday(usd, ['USD'], at(-0.01)), null);
+  // عملة خارج الزوج، أمثلة، بلا وقت، تأثير آخر (low القديم) ⇒ لا شيء
+  assert.equal(bankHolidayToday(usd, ['EUR', 'GBP'], at(3)), null);
+  assert.equal(bankHolidayToday([ev({ sample: true })], ['USD'], at(3)), null);
+  assert.equal(bankHolidayToday([ev({ ts: null })], ['USD'], at(3)), null);
+  assert.equal(bankHolidayToday([ev({ impact: 'low' })], ['USD'], at(3)), null);
+  assert.equal(bankHolidayToday([ev({ impact: 'high' })], ['USD'], at(3)), null);
+  assert.ok(bankHolidayToday([ev({ impact: 'Holiday', currency: 'usd' })], ['USD'], at(3)));
+  // عملتان بترتيب الزوج، وعطلتان لعملة واحدة = سطرٌ واحد
+  const both = [ev({ currency: 'JPY', title: 'Culture Day' }), ev({ title: 'Thanksgiving' }), ev({ currency: 'JPY', title: 'Bank Holiday' })];
+  assert.deepEqual(bankHolidayToday(both, ['USD', 'JPY'], at(2)), { currencies: ['USD', 'JPY'], titles: ['Thanksgiving', 'Culture Day'] });
+  // بلا عنوان: العملة تبقى
+  assert.deepEqual(bankHolidayToday([ev({ title: '' })], ['USD'], at(2)), { currencies: ['USD'], titles: [] });
+  assert.equal(bankHolidayToday(usd, [], at(2)), null);
+}
+console.log('newsRisk bankHolidayToday selftest OK');
