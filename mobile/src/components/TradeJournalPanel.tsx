@@ -361,6 +361,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const l = num(size) ?? 0;
     // المبهم يُقتبس كما كُتب («10.000») — «10» لا تبدو وحدات
     const n = sizeDotted ? size.trim() : String(l).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    // «10.000» يُسأل عنه بقراءتيه (10,000 وحدة أم 10 lot؟) — «تبدو وحدات» وحدها تُقرأ خطأً على من قصد 10 لوتات
+    if (sizeDotted) {
+      return t.journalSizeDottedFix
+        .split('{n}').join(n)
+        .split('{units}').join(String(sizeDotted.units).replace(/\B(?=(\d{3})+(?!\d))/g, ','))
+        .split('{whole}').join(String(sizeDotted.units / 1000))
+        .split('{lots}').join(sizeDotted.lots.toFixed(2));
+    }
     return sizeUnits?.lots != null
       ? t.journalSizeUnitsFix.replace('{n}', n).replace('{lots}', sizeUnits.lots.toFixed(2))
       : t.journalSizeUnitsNoFix.replace('{n}', n);
