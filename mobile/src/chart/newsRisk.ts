@@ -87,6 +87,15 @@ const SINGLE_CCY: Record<string, string> = {
    * ⇒ `[]` — لا تحذير قبل الرواتب/EIA ولا سطر «التقويم غير متاح». يُطابَق بالحروف كلها («CLOIL»).
    */
   CLOIL: 'USD',
+  /**
+   * أسماء مؤشرات أخرى شائعة لدى وسطاء التجزئة (IG/Pepperstone/FxPro/Admirals) كانت `[]` بلا تحذير: إيطاليا «ITA40»، يورو ستوكس
+   * «STOXX50E»، هولندا «NL25»/«AEX»، سويسرا «SUI20»/«CH20»/«SWISS20»، النيكاي «N225»/«NI225»/«NIK225»، هونغ كونغ «HK33»،
+   * كندا «CAN60»/«CA60»، جنوب أفريقيا «SA40»، السويد «SWE30»، النرويج «NOR25» — بعملة تسعير كلٍّ (قاعدة الجدول نفسها).
+   */
+  ITA40: 'EUR', STOXX50E: 'EUR', NL25: 'EUR', AEX: 'EUR',
+  SUI20: 'CHF', CH20: 'CHF', SWISS20: 'CHF',
+  N225: 'JPY', NI225: 'JPY', NIK225: 'JPY',
+  HK33: 'HKD', CAN60: 'CAD', CA60: 'CAD', SA40: 'ZAR', SWE30: 'SEK', NOR25: 'NOK',
 };
 
 /**

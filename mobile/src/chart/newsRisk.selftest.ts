@@ -636,3 +636,23 @@ console.log('newsRisk glued letter selftest OK');
   assert.deepEqual(symbolCurrencies('CL'), []);
 }
 console.log('newsRisk CL-OIL selftest OK');
+
+// مؤشرات بأسماء وسطاء أخرى كانت بلا تحذير — بعملة تسعيرها، ومع لواحق الوسيط
+{
+  const want: Record<string, string> = {
+    ITA40: 'EUR', STOXX50E: 'EUR', NL25: 'EUR', AEX: 'EUR',
+    SUI20: 'CHF', CH20: 'CHF', SWISS20: 'CHF',
+    N225: 'JPY', NI225: 'JPY', NIK225: 'JPY',
+    HK33: 'HKD', CAN60: 'CAD', CA60: 'CAD', SA40: 'ZAR', SWE30: 'SEK', NOR25: 'NOK',
+  };
+  for (const [sym, ccy] of Object.entries(want)) {
+    assert.deepEqual(symbolCurrencies(sym), [ccy], sym);
+    assert.deepEqual(symbolCurrencies(`${sym}.cash`), [ccy], `${sym}.cash`);
+    assert.deepEqual(symbolCurrencies(sym.toLowerCase()), [ccy], sym.toLowerCase());
+  }
+  // الأسهم المفردة والأسماء المجهولة كما كانت
+  assert.deepEqual(symbolCurrencies('TSLA'), []);
+  assert.deepEqual(symbolCurrencies('HUN50'), []);
+  assert.deepEqual(symbolCurrencies('N22'), []);
+}
+console.log('newsRisk more index names selftest OK');
