@@ -65,6 +65,8 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   const [voiceBusy, setVoiceBusy] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [chartSeries, setChartSeries] = useState<ChartSeries | null>(null);
+  /** الشموع من `mockSeries` لأن الطلب فشل — لا سلسلة `demo` أرسلها الخادم (نصّ الملاحظة يقول «بلا اتصال»). */
+  const [chartOffline, setChartOffline] = useState(false);
   const [showChart, setShowChart] = useState(true);
   const [showComplete, setShowComplete] = useState(false);
   const soundRef = useRef<ExpoAudioNS.Sound | null>(null);
@@ -84,10 +86,14 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
     (async () => {
       try {
         const s = await api.chart(chartMeta.symbol, chartMeta.tf);
-        if (alive) setChartSeries(s);
+        if (!alive) return;
+        setChartSeries(s);
+        setChartOffline(false);
       } catch {
         // `mockBase` لا 1.08 ثابتة: مدرستا غان وSK تعرضان XAUUSD — كان الذهب يُرسم حول 1.08 بلا اتصال.
-        if (alive) setChartSeries(mockSeries(chartMeta.symbol, mockBase(chartMeta.symbol), chartMeta.tf, 80));
+        if (!alive) return;
+        setChartSeries(mockSeries(chartMeta.symbol, mockBase(chartMeta.symbol), chartMeta.tf, 80));
+        setChartOffline(true);
       }
     })();
     return () => {
@@ -425,6 +431,10 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
             persistDrawings
             accent={colors.accent}
           />
+          {/* منذ chart `22ff26c` الرسم على سلسلة تجريبية لا يُحفظ — كان يضيع بصمت عند إغلاق الدرس (launch130). */}
+          {chartOffline && chartKind === 'demo' ? (
+            <Text style={[styles.chartPracticeNote, { textAlign: align }]}>{t.lectureChartPracticeNote}</Text>
+          ) : null}
         </View>
       ) : !showChart ? (
         <Pressable
@@ -616,6 +626,7 @@ const styles = StyleSheet.create({
   chartLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   chartHide: { color: colors.accent, fontSize: 11, fontWeight: '700' },
   chartDemoTag: { color: colors.warn, fontWeight: '800' },
+  chartPracticeNote: { color: colors.warn, fontSize: 11, marginTop: spacing.xs },
   showChart: {
     color: colors.accent,
     marginBottom: spacing.sm,
