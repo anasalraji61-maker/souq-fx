@@ -1486,6 +1486,23 @@ console.log('tradePlan netLineIsWhole selftest OK');
   assert.equal(noteWithTypedSize(1, '1 lot test'), '1.00 lot · 1 lot test');
   // غير 1 أو بلا حجم: كما هي
   assert.equal(noteWithTypedSize(0.5, 'x'), 'x');
+  // تعديل الحجم من 1 إلى غيره: العلامة تسقط، والملاحظة الباقية كما هي
+  assert.equal(noteWithTypedSize(0.5, '1.00 lot · x'), 'x');
+  assert.equal(noteWithTypedSize(2, '1.00 lot'), '');
+  assert.equal(noteWithTypedSize(0.5, ' 1.00 lot · breakout'), ' 1.00 lot · breakout'); // ليست العلامة حرفياً (كـknownLots)
+  assert.equal(noteWithTypedSize(0.5, '1.00 lots x'), '1.00 lots x'); // ليست العلامة
+  assert.equal(noteWithTypedSize(0.5, 'x 1.00 lot · y'), 'x 1.00 lot · y');
+  assert.equal(knownLots(1, noteWithTypedSize(0.5, '1.00 lot · x')), null);
+  // عدّاد الملاحظة: العلامة الساقطة تُعيد مكانها (الحفظ يطابق ما يُعدّ)
+  {
+    const { journalNoteRoom, JOURNAL_NOTE_MAX } = require('./tradePlan') as typeof import('./tradePlan');
+    assert.equal(journalNoteRoom({ symbol: 'EURUSD', note: '1.00 lot · x', size: 0.5 }), JOURNAL_NOTE_MAX + 11);
+    assert.equal(journalNoteRoom({ symbol: 'EURUSD', note: 'x', size: 1 }), JOURNAL_NOTE_MAX - 11);
+  }
+  // بلا حجم ⇒ كما هي
+  assert.equal(noteWithTypedSize(null, '1.00 lot · x'), '1.00 lot · x');
+  assert.equal(knownLots(1, 'x'), null);
+  assert.equal(knownLots(0.5, '1.00 lot'), 0.5);
   assert.equal(noteWithTypedSize(null, ''), '');
   assert.equal(noteWithTypedSize(undefined, 'y'), 'y');
   assert.equal(noteWithTypedSize(10, ''), '');

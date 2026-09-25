@@ -1399,6 +1399,11 @@ export function knownLots(size: number | null | undefined, note?: string | null)
  * بلا «1 lot» ولا «+250.00 USD»، ويسقط صافي EURUSD بالمال كلّه، ولا تُقترح 1.00 شريحةً، وتفتح بالتعديل بخانة حجم فارغة.
  */
 export function noteWithTypedSize(size: number | null | undefined, note: string, max: number = JOURNAL_NOTE_MAX): string {
+  // حجمٌ آخر **مكتوب** (تعديل 1 ⇒ 0.5): العلامة القديمة تسقط — كان السطر يقول «0.5 lot … 1.00 lot · x» فيناقض نفسه،
+  // ولو أُعيد الحجم 1 لاحقاً لقُرئ معروفاً من علامةٍ لم تعد صحيحة. بلا حجم ⇒ كما هي (الخادم يخزّن 1، والعلامة قد تكون صادقة)
+  if (typeof size === 'number' && Number.isFinite(size) && size > 0 && size !== 1) {
+    return knownLots(1, note) === 1 ? note.replace(/^1\.00 lot(?: · |$)/, '').trimStart() : note;
+  }
   if (size !== 1 || knownLots(1, note) === 1) return note;
   const n = note.trim();
   const out = n ? `1.00 lot · ${n}` : '1.00 lot';
