@@ -210,9 +210,11 @@ def _compose(ev: dict, lang: str) -> tuple[str, str]:
     if ev["kind"] == "price":
         up = ev["condition"] == "above"
         p = _fmt_price(ev["price"])
+        # الشرط ≥/≤ لا «عبور» (التطبيق يسلّح «≥» ويحذّر حين يكون محقّقاً عند الإنشاء): تنبيه «فوق 1.1000»
+        # يُسلَّح والسعر 1.1050 يُطلق بالدورة التالية — كان النصّ «rose above/تجاوز» يروي حركة لم تحدث.
         if lang == "en":
-            return "MATRIX · Price alert", f"{sym} {'▲ rose above' if up else '▼ fell below'} {p}"
-        return "MATRIX · تنبيه سعر", f"{sym} {'▲ تجاوز' if up else '▼ نزل تحت'} {p}"
+            return "MATRIX · Price alert", f"{sym} {'▲ at or above' if up else '▼ at or below'} {p}"
+        return "MATRIX · تنبيه سعر", f"{sym} {'▲ عند أو فوق' if up else '▼ عند أو تحت'} {p}"
     name = _IND_NAMES[lang].get(ev["alert_type"], str(ev["alert_type"]).upper())
     cond = _COND_WORDS[lang].get(ev["condition"], ev["condition"])
     val = f" {_fmt_price(ev['value'])}" if ev.get("value") is not None and ev["alert_type"] == "rsi" else ""

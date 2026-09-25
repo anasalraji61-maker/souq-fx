@@ -141,3 +141,14 @@ def test_worker_fresh_or_untimed_quote_is_still_used(monkeypatch, age):
     monkeypatch.setattr(alert_worker.market, "fetch_quote_book", lambda s: _book(1.1050, age))
     monkeypatch.setattr(alert_worker.td_ws, "snapshot", lambda max_age=180: {})
     assert alert_worker._price("EURUSD") == pytest.approx(1.1050)
+
+
+@pytest.mark.parametrize("lang, cond, words", [
+    ("en", "above", "▲ at or above 1.1"), ("en", "below", "▼ at or below 1.1"),
+    ("ar", "above", "▲ عند أو فوق 1.1"), ("ar", "below", "▼ عند أو تحت 1.1"),
+])
+def test_price_push_states_the_condition_not_a_crossing(lang, cond, words):
+    """الشرط ≥/≤: تنبيه يُسلَّح والسعر وراء مستواه يُطلق فوراً — «rose above/تجاوز» كانت تروي حركة لم تحدث."""
+    _, body = alert_worker._compose({"kind": "price", "symbol": "EURUSD", "condition": cond, "price": 1.1}, lang)
+    assert body == f"EURUSD {words}"
+    assert "rose" not in body and "fell" not in body and "تجاوز" not in body and "نزل" not in body
