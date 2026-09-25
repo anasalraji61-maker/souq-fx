@@ -1538,7 +1538,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       ) : null}
       {derivedSl != null ? (
         <Text style={[styles.hint, styles.hintOn, { textAlign: align }]} accessibilityLiveRegion="polite">
-          = {derivedSl} pip
+          = {derivedSl} {pipUnit(lang)}
         </Text>
       ) : null}
       {slMismatch ? (
@@ -1671,7 +1671,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         {plan?.ok ? (
           <>
             <Text style={[styles.resultMeta, { textAlign: align }]}>
-              {t.planRewardWord} {formatPips(plan.rewardPips) ?? '—'} pip · R:R {formatRR(planRR)}
+              {t.planRewardWord} {formatPips(plan.rewardPips) ?? '—'} {pipUnit(lang)} · R:R {formatRR(planRR)}
               {potentialProfit != null ? ` · ${t.riskCalcPotentialProfit} ≈ ${money(potentialProfit)}` : ''}
             </Text>
             {netAfterCosts ? (

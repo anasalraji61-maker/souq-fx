@@ -1177,7 +1177,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         : null;
     const cashText = cash ? `${formatJournalMoney(cash, t.journalMoneyUsc, true)} · ` : '';
     const result = mv
-      ? `${mv.pips != null ? `${formatSignedPips(mv.pips)} pip · ` : ''}${cashText}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%${rText ? ` · ${rText}` : ''}`
+      ? `${mv.pips != null ? `${formatSignedPips(mv.pips)} ${pipUnit(lang)} · ` : ''}${cashText}${sign(mv.pct)}${Math.abs(mv.pct).toFixed(2)}%${rText ? ` · ${rText}` : ''}`
       : '';
     const body = source === 'market' ? t.journalCloseMarketConfirmBody : t.journalCloseMarketConfirmBody.split('\n\n')[0];
     // `confirmDestructive` لا `Alert.alert`: الأخيرة دالّة فارغة بـreact-native-web ⇒ «أغلق بالسوق»/«أغلق» كانا
@@ -1352,7 +1352,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
                 : null;
             const cashText = cash ? `${formatJournalMoney(cash, t.journalMoneyUsc, true)} · ` : '';
             const result = mv
-              ? `${pips != null ? `${sign(mv.pips ?? 0)}${pips} pip · ` : ''}${cashText}${sign(mv.pct)}${Math.abs(
+              ? `${pips != null ? `${sign(mv.pips ?? 0)}${pips} ${pipUnit(lang)} · ` : ''}${cashText}${sign(mv.pct)}${Math.abs(
                   mv.pct
                 ).toFixed(2)}%${rText ? ` · ${rText}` : ''}`
               : '';
@@ -2052,7 +2052,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       ) : !draft && draftRisk ? (
         // بلا هدف بعد: المخاطرة وحدها (الوقف والحجم مكتوبان) — لا تنتظر اكتمال الخطة
         <Text style={[styles.planLine, { textAlign: align }]}>
-          {t.planRiskWord} {formatPips(draftRisk.pips) ?? '—'} pip{draftRisk.money ? ` (${draftRisk.money})` : ''}
+          {t.planRiskWord} {formatPips(draftRisk.pips) ?? '—'} {pipUnit(lang)}{draftRisk.money ? ` (${draftRisk.money})` : ''}
         </Text>
       ) : null}
       {draftRisk?.usc && !(draft?.issue && draft.issue !== 'slTooClose') ? (
