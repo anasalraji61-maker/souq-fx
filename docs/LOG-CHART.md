@@ -5229,3 +5229,50 @@ PASS بـtsx. **لم يُختبر على جهاز**: لوحة الفوليوم �
 1. التحقّق من chart-r47 بعد tools.
 2. PPO: مقارنة بشارت TradingView.
 3. TTM Squeeze: «LazyBear» أم إبقاء؟ (قرار).
+
+---
+
+# تشغيل 2026-09-25 (الثامن والأربعون)
+
+## صفوف COORDINATION
+- **launch119 أُنجز** `04d9188` (`MatrixChart` كتلة `candles.length === 0`): سلسلة فارغة بلا وسم «غير متاح» ⇒ `chartNoCandlesTitle`
+  + `chartNoCandlesBody` بأسلوب `ProviderUnavailableNotice` (العنوان وحده في `dense`، والجسم بالـlabel دائماً).
+- **ui18 أُنجز من جهة chart** `4874d20`: حُرّاس `series.last`/`change_pct` = null — PFE (كان `formatPrice(null)` يسقط **قبل** حارس
+  الشارت الفارغ ⇒ الشارت ينهار بـDXY مع PFE)، `currentPrice` ⇒ NaN (كل مستعمليه يحرسون `Number.isFinite`)، و`liveSeries`
+  (`liveChangePct`/`headerChangePct` ⇒ NaN لا نسبة). قلبتُ النوع مؤقّتاً بـ`api.ts` محلياً ⇒ tsc 0 ثم أعدته (ui قلبه `8025a34`).
+- **chart-r47 نصّ `chartFirstLoad`** بخلايا الرباعي `3179b1b` (ui عدّل `{tf}` بعدها لـ`tfLabels` `b8f1569`).
+- **launch120 + ui19 أُنجزا بـ`MatrixChart`** `e73d518`: `{tf}` = `tr.tfLabels`/`tr.tfLabelsA11y` (`isTimeframe` وإلا النصّ الخام)،
+  و`dataSource={series.data_source}` للإشعار ⇒ وقت انقطاع المزوّد (backend-r22) «تعذّر الجلب» لا «غير متاح من المزوّد».
+- **صفّ جديد chart-r48 لـui** (`DomLitePanel.tsx:68`): سبريد رمز بلا مواصفة pip بمنازل السبريد نفسه («12.500» لـBTCUSD).
+- QA1 (جهاز)، launch48 (DeMarker)، chart-r41 (TTM): بلا تغيير — قرار أنس / لا جهاز.
+
+## ما أُنجز (مرئي للمتداول)
+1. **LR R² وRVI على نافذة مسطّحة** `6e6ab72` (`trend.ts`، `momentum.ts`): بقايا التقريب (~1e-32 / ~1e-18) ⇒ R² = **−6.07** (العمود يُرسم
+   سبعة ألواح تحت لوحه) وRVI ثابت −0.34/1.9 (المقياس التلقائي يسحق الخطّ الحقيقي ±0.2). الآن R² = 1 مسطّحاً ومقصوص [0،1]، وRVI = null.
+   selftest `flatWindow` +حالات (تفشل على الكود القديم).
+2. **4H عشية الميلاد/رأس السنة** `7ac77ed` (`marketHours.ts` `barTradingDaySec`): شمعة 24/31 ديسمبر 20:00 (ساعتان لكلّ جانب شتاءً)
+   كانت تُنسب بالتعادل لجلسة العطلة المغلقة ⇒ فاصل يوم مزدوج، و«اليوم السابق» يوم 26 شمعة واحدة ⇒ PDH/PDL والارتكاز وVWAP خاطئة.
+   جلسة العطلة تُعامَل الآن كعطلة الأسبوع. selftest `dayBreaks` +3.
+3. **صفر بإشارة بوسم أداة المركز** `ace8208` (`positionTool.ts`): خروج عند الدخول «+0.0 pip · +0R» / «−0.0 pip · −0R». الإشارة الآن
+   من الرقم المطبوع (كـ`measureReadout`). selftest `positionTool` +3.
+4. **تقاطع Renko/Range/Kagi/P&F المثبَّت** `9fe6542` (`MatrixChart`): الجلب الدوري يُسقط أقدم شمعة ⇒ تُعاد اللبنات وتنزاح أزمنتها التركيبية
+   ⇒ التقاطع يقفز بلا لمس إلى لبنة بعيدة (مثال التدقيق: 3 أيام و160 نقطة). يُزال الآن حين تتغيّر أول شمعة مصدر (تقاطع المزامنة مستثنى).
+5. **تابع الرباعي بعد عطلة الأسبوع** `ff29997` (`MatrixChart` → `indexAtOrBeforeTime` `endSec`): حدّ صلاحية آخر شمعة = خطوة فريم لا فرق آخر
+   شمعتين (~48س بعد الأحد). أثره الفعلي محدود: عند طرف السلسلة منطق `ahead` كان يغطّي أغلب الحالات؛ يفيد النافذة المزاحة.
+
+## فُحص ولم يُغيَّر
+- تدقيق منازل ~70 رمزاً (JPY 3، XAU 2، XAG 3، لواحق الوسيط، الشرطة المائلة، الإكزوتيك): سليمة. USDHUF/USDCZK بلا مواصفة (مقصود؛ غير متاحة بالمزوّد).
+- RSI/MACD/Stoch/BB/EMA/WMA/HMA/DEMA/TEMA/ATR/SuperTrend/AO/UO/Fisher/Chop/KST/Coppock/DPO/TRIX/TSI/SMI/Keltner/RVI-vol/Connors/VWAP:
+  مطابقة لصيغ TV على 300 شمعة (1e-9). مسح NaN/Infinity لكل `compute*` على مسطّح/فوليوم صفر: لا تسرّب.
+- محاذاة 4H: الخادم يطلب `timezone: UTC` والتطبيق يفترض شبكة 00/04/…/20 UTC بكل مكان — متّسق.
+- لم يُغيَّر: RSI على سلسلة تبدأ مسطّحة 50 (TV 100، أوّل التاريخ فقط)؛ Connors streak أوّل شمعة 0 (TV −1، يتلاشى)؛ TWAP hlc3 (غير متأكّد من افتراض TV).
+
+## التحقّق
+`scripts/qa-build-check.sh` أخضر (0) قبل كل commit. selftests `flatWindow`، `dayBreaks`، `marketHours`، `sessions`، `barCountdown`،
+`pivotBase`، `camarilla`، `vwapSession`، `positionTool`، `crossAnchor`، `linRegChannel`، `rviSignal`، `rviVolTv` PASS بـtsx.
+**لم يُختبر على جهاز**: اللوح الفارغ بنصّه، تقاطع Renko بعد تحديث 90ث.
+
+## يبدأ التشغيل القادم من هنا
+1. التحقّق من chart-r48 بعد ui.
+2. PPO: مقارنة بشارت TradingView (ما زال مؤجَّلاً)، وTWAP المصدر.
+3. TTM Squeeze: «LazyBear» أم إبقاء؟ (قرار).
