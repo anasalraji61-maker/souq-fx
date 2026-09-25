@@ -485,6 +485,8 @@ export type Dict = {
   newsUnavailable: string;
   /** موعد خبرٍ قويّ اليوم **بلا ساعة معلنة** بسطر شريط الأخبار مكان «بعد 2س» (`NewsRiskBanner`، tools75a). */
   newsTimeTbd: string;
+  /** مثل `newsTimeTbd` لكن يومُ الخبر **غداً** بتقويم الجهاز (`unannouncedHighImpactToday().tomorrow`، launch113/tools76a). */
+  newsTimeTbdTomorrow: string;
   calToday: string;
   calTomorrow: string;
   /** يلي تاريخ حدث التقويم **بلا ساعة معلنة** («اليوم · الساعة غير معلنة»، `CalendarPanel`، ui10). */
@@ -1712,6 +1714,7 @@ const ar: Dict = {
   listSep: '، ',
   newsUnavailable: 'تعذّر تحميل تقويم الأخبار — لا نعرف إن كان خبر قوي قريباً؛ تحقّق قبل الدخول',
   newsTimeTbd: 'اليوم، الساعة غير معلنة',
+  newsTimeTbdTomorrow: 'غداً، الساعة غير معلنة',
   calToday: 'اليوم',
   calTomorrow: 'غداً',
   calTimeTbd: 'الساعة غير معلنة',
@@ -2873,6 +2876,7 @@ const enUS: Dict = {
   listSep: ', ',
   newsUnavailable: 'Couldn’t load the news calendar — we can’t tell if a big release is close; check before you enter',
   newsTimeTbd: 'today, time not announced',
+  newsTimeTbdTomorrow: 'tomorrow, time not announced',
   calToday: 'Today',
   calTomorrow: 'Tomorrow',
   calTimeTbd: 'time not announced',
@@ -4062,6 +4066,8 @@ const ku: Dict = {
   newsUnavailable: 'نەکرا ڕۆژژمێری هەواڵ باربکرێت — نازانین هەواڵێکی بەهێز نزیکە یان نا؛ پێش چوونەژوورەوە بپشکنە',
   // بحاجة مراجعة ناطق
   newsTimeTbd: 'ئەمڕۆ، کاتەکەی ڕانەگەیەندراوە',
+  // بحاجة مراجعة ناطق
+  newsTimeTbdTomorrow: 'سبەینێ، کاتەکەی ڕانەگەیەندراوە',
   calToday: 'ئەمڕۆ',
   calTomorrow: 'سبەینێ',
   // بحاجة مراجعة ناطق
