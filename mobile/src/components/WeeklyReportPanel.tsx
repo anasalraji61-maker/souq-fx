@@ -250,7 +250,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
 
 const styles = StyleSheet.create({
   wrap: { gap: 10 },
-  title: { color: colors.text, fontWeight: '900', fontSize: 18, textAlign: 'right' },
+  title: { color: colors.text, fontWeight: '500', fontSize: 18, textAlign: 'right' },
   sub: { color: colors.textDim, textAlign: 'right', fontSize: 12, marginBottom: spacing.xs },
   tile: {
     flex: 1,
@@ -268,9 +268,9 @@ const styles = StyleSheet.create({
   },
   tileOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   tileDisabled: { opacity: 0.4 },
-  tileTitle: { color: colors.text, fontWeight: '900', textAlign: 'right', fontSize: 15 },
+  tileTitle: { color: colors.text, fontWeight: '500', textAlign: 'right', fontSize: 15 },
   tileHint: { color: colors.textDim, textAlign: 'right', fontSize: 12 },
-  tileOpen: { color: colors.accent, fontWeight: '800', textAlign: 'right', fontSize: 11 },
+  tileOpen: { color: colors.accent, fontWeight: '500', textAlign: 'right', fontSize: 11 },
   card: {
     backgroundColor: colors.bgElevated,
     borderRadius: radii.md,
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   },
   cardDisabled: { opacity: 0.4 },
   cardOn: { borderColor: colors.accent },
-  cardTitle: { color: colors.text, fontWeight: '800', textAlign: 'right', fontSize: 14 },
+  cardTitle: { color: colors.text, fontWeight: '500', textAlign: 'right', fontSize: 14 },
   cardHint: { color: colors.textDim, textAlign: 'right', fontSize: 11 },
   out: {
     maxHeight: 320,
@@ -291,5 +291,5 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
   },
   outText: { color: colors.text, textAlign: 'right', lineHeight: 22, fontSize: 13 },
-  aiFallbackNote: { color: colors.warn, fontWeight: '700', textAlign: 'right', fontSize: 12 },
+  aiFallbackNote: { color: colors.warn, fontWeight: '500', textAlign: 'right', fontSize: 12 },
 });

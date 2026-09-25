@@ -212,12 +212,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
   },
-  brand: { color: colors.text, fontSize: 24, fontWeight: '800', textAlign: 'right' },
+  brand: { color: colors.text, fontSize: 24, fontWeight: '500', textAlign: 'right' },
   sub: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs, textAlign: 'right' },
   notice: {
     color: colors.warn,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     textAlign: 'right',
     paddingHorizontal: spacing.lg,
     paddingTop: 6,
@@ -249,8 +249,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.accent,
   },
-  avatarText: { color: colors.accent, fontWeight: '800', fontSize: 18 },
-  peerTitle: { color: colors.text, fontWeight: '700', fontSize: 15, textAlign: 'right' },
+  avatarText: { color: colors.accent, fontWeight: '500', fontSize: 18 },
+  peerTitle: { color: colors.text, fontWeight: '500', fontSize: 15, textAlign: 'right' },
   preview: { color: colors.textMuted, fontSize: 12, marginTop: 3, textAlign: 'right' },
   time: { color: colors.textDim, fontSize: 11 },
   chatHeader: {
@@ -262,8 +262,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
   },
-  back: { color: colors.accent, fontWeight: '700' },
-  peerName: { color: colors.text, fontWeight: '800', fontSize: 18 },
+  back: { color: colors.accent, fontWeight: '500' },
+  peerName: { color: colors.text, fontWeight: '500', fontSize: 18 },
   thread: { padding: spacing.md, gap: spacing.sm },
   bubble: {
     maxWidth: '80%',
@@ -312,5 +312,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  sendText: { color: colors.onAccent, fontWeight: '800' },
+  sendText: { color: colors.onAccent, fontWeight: '500' },
 });

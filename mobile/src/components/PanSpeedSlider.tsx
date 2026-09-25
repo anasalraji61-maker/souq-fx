@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     ...numeric,
     color: colors.text,
     fontSize: 9,
-    fontWeight: '900',
+    fontWeight: '500',
     minWidth: 16,
   },
   markBox: {

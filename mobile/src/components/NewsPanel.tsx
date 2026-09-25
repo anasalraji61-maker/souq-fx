@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontWeight: '700',
+    fontWeight: '500',
     fontSize: 13,
     marginBottom: spacing.sm,
   },
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     ...numeric,
     color: colors.warn,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     marginBottom: spacing.xs,
   },
   basisNote: { color: colors.textDim, fontSize: 10, marginBottom: spacing.xs },
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   },
   rowRtl: { flexDirection: 'row-reverse' },
   impact: { borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 2 },
-  impactText: { color: colors.onWarnFill, fontWeight: '800', fontSize: 10 },
+  impactText: { color: colors.onWarnFill, fontWeight: '500', fontSize: 10 },
   when: { ...numeric, color: colors.textDim, fontSize: 11 },
   headline: {
     color: colors.text,

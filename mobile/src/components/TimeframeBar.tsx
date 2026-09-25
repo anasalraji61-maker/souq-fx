@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   text: {
     color: colors.textMuted,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '500',
     letterSpacing: 0.2,
   },
   textCompact: { fontSize: 10 },

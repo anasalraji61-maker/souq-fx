@@ -329,7 +329,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
           const sym = ranSymbol ?? undefined;
           return (
             <Text key={i} style={[styles.trade, { textAlign: align }]}>
-              <Text style={{ color: isSell ? colors.bear : colors.bull, fontWeight: '700' }}>
+              <Text style={{ color: isSell ? colors.bear : colors.bull, fontWeight: '500' }}>
                 {isSell ? t.dirSell : t.dirBuy}
               </Text>{' '}
               {/* backend-r10 (أ): المركز الباقي بآخر شمعة لم يُغلق — `exit` آخر إغلاق لا خروج، والنسبة غير محقّقة
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
   },
-  title: { color: colors.text, fontWeight: '800', textAlign: 'right', fontSize: 16 },
+  title: { color: colors.text, fontWeight: '500', textAlign: 'right', fontSize: 16 },
   sub: { color: colors.textDim, textAlign: 'right', fontSize: 11 },
   input: {
     backgroundColor: colors.bgPanel,
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  chipText: { color: colors.textMuted, fontWeight: '700', fontSize: 11 },
+  chipText: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
   chipTextOn: { color: colors.accent },
   btn: {
     backgroundColor: colors.accent,
@@ -392,21 +392,21 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  btnText: { color: colors.onAccent, fontWeight: '800' },
+  btnText: { color: colors.onAccent, fontWeight: '500' },
   btnDisabled: { opacity: 0.4 },
   error: {
     color: colors.bear,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     textAlign: 'right',
     marginTop: spacing.xs,
   },
   stats: { gap: spacing.xs, marginTop: spacing.sm },
   statLine: { ...numeric, color: colors.text, textAlign: 'right', fontWeight: '600' },
-  ranFor: { ...numeric, color: colors.textMuted, fontSize: 11, fontWeight: '700' },
-  sampleWarn: { ...numeric, color: colors.warn, fontSize: 11, fontWeight: '700' },
+  ranFor: { ...numeric, color: colors.textMuted, fontSize: 11, fontWeight: '500' },
+  sampleWarn: { ...numeric, color: colors.warn, fontSize: 11, fontWeight: '500' },
   curve: { marginTop: 6, gap: spacing.xs },
-  curveTitle: { color: colors.textMuted, fontSize: 11, fontWeight: '700', textAlign: 'right' },
+  curveTitle: { color: colors.textMuted, fontSize: 11, fontWeight: '500', textAlign: 'right' },
   curveRow: { flexDirection: 'row', height: 48, alignItems: 'flex-end' },
   trade: { ...numeric, color: colors.textDim, textAlign: 'right', fontSize: 11, marginTop: spacing.xs },
 });

@@ -228,8 +228,8 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   headRtl: { flexDirection: 'row-reverse' },
-  title: { color: colors.text, fontWeight: '900', fontSize: 14, flex: 1 },
-  close: { color: colors.accent, fontWeight: '800', fontSize: 13 },
+  title: { color: colors.text, fontWeight: '500', fontSize: 14, flex: 1 },
+  close: { color: colors.accent, fontWeight: '500', fontSize: 13 },
   body: { padding: spacing.md, gap: 10, paddingBottom: 40 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   gridRtl: { flexDirection: 'row-reverse' },
@@ -242,6 +242,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgElevated,
   },
   cellOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  cellText: { color: colors.textMuted, fontWeight: '700', fontSize: 12 },
+  cellText: { color: colors.textMuted, fontWeight: '500', fontSize: 12 },
   cellTextOn: { color: colors.accent },
 });

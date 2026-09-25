@@ -386,7 +386,7 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
                 <Text style={[styles.meta, { textAlign: align }]}>
                   {e.currency.trim().toUpperCase() === 'ALL' ? t.newsAllCurrencies : e.currency}
                   {impactWord(e.impact) ? (
-                    <Text style={{ color: IMPACT_COLOR[e.impact] ?? colors.textDim, fontWeight: '700' }}>
+                    <Text style={{ color: IMPACT_COLOR[e.impact] ?? colors.textDim, fontWeight: '500' }}>
                       {` · ${impactWord(e.impact)}`}
                     </Text>
                   ) : null}
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: 6,
   },
-  title: { color: colors.text, fontWeight: '800', textAlign: 'right', fontSize: 14 },
+  title: { color: colors.text, fontWeight: '500', textAlign: 'right', fontSize: 14 },
   filters: { flexDirection: 'row', gap: 6, paddingVertical: spacing.xs },
   filtersRtl: { flexDirection: 'row-reverse' },
   chip: {
@@ -531,17 +531,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgPanel,
   },
   chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  chipText: { color: colors.textMuted, fontSize: 10, fontWeight: '700' },
+  chipText: { color: colors.textMuted, fontSize: 10, fontWeight: '500' },
   chipTextOn: { color: colors.accent },
   empty: { color: colors.textDim, textAlign: 'right', fontSize: 11, paddingVertical: spacing.sm },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, paddingVertical: 6 },
   rowRtl: { flexDirection: 'row-reverse' },
   rowSoon: { backgroundColor: colors.accentFaint, borderRadius: radii.sm, paddingHorizontal: spacing.xs },
   rowDone: { opacity: 0.45 },
-  rel: { color: colors.textDim, fontSize: 10, fontWeight: '700', marginTop: 2 },
+  rel: { color: colors.textDim, fontSize: 10, fontWeight: '500', marginTop: 2 },
   relSoon: { color: colors.accent },
   tzNote: { ...numeric, color: colors.textDim, fontSize: 10 },
-  sampleNote: { ...numeric, color: colors.warn, fontSize: 10, fontWeight: '700' },
+  sampleNote: { ...numeric, color: colors.warn, fontSize: 10, fontWeight: '500' },
   dot: { width: 8, height: 8, borderRadius: 4, marginTop: spacing.xs },
   evTitle: { color: colors.text, textAlign: 'right', fontSize: 12, fontWeight: '600' },
   meta: { ...numeric, color: colors.textDim, textAlign: 'right', fontSize: 10, marginTop: 2 },

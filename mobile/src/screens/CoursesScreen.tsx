@@ -307,12 +307,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
   },
-  brand: { color: colors.text, fontSize: 24, fontWeight: '800' },
+  brand: { color: colors.text, fontSize: 24, fontWeight: '500' },
   sub: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs },
   staleNote: {
     color: colors.warn,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     marginTop: 6,
   },
   list: { padding: spacing.md, gap: spacing.md, paddingBottom: 40 },
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     borderColor: colors.warn,
     padding: spacing.md,
   },
-  noteTitle: { color: colors.warn, fontWeight: '800' },
+  noteTitle: { color: colors.warn, fontWeight: '500' },
   noteText: { color: colors.text, marginTop: 6, lineHeight: 20, fontSize: 13 },
   card: {
     backgroundColor: colors.bgElevated,
@@ -338,8 +338,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cardTopRtl: { flexDirection: 'row-reverse' },
-  order: { color: colors.textDim, fontWeight: '700' },
-  school: { color: colors.accent, fontWeight: '800', fontSize: 16 },
+  order: { color: colors.textDim, fontWeight: '500' },
+  school: { color: colors.accent, fontWeight: '500', fontSize: 16 },
   desc: {
     color: colors.textMuted,
     fontSize: 13,
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
   metaText: { ...numeric, color: colors.textDim, fontSize: 12 },
   aiTag: {
     color: colors.dxy,
-    fontWeight: '800',
+    fontWeight: '500',
     fontSize: 11,
     backgroundColor: 'rgba(56,189,248,0.12)',
     paddingHorizontal: spacing.sm,
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     maxHeight: '88%',
   },
-  modalSchool: { color: colors.accent, fontWeight: '800', fontSize: 18 },
+  modalSchool: { color: colors.accent, fontWeight: '500', fontSize: 18 },
   modalDesc: {
     color: colors.textMuted,
     marginTop: spacing.sm,
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
   },
-  levelTitle: { color: colors.text, fontWeight: '800' },
+  levelTitle: { color: colors.text, fontWeight: '500' },
   lecRow: {
     backgroundColor: colors.bgElevated,
     borderRadius: radii.sm,
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  lecTitle: { color: colors.text, fontWeight: '700' },
+  lecTitle: { color: colors.text, fontWeight: '500' },
   lecMeta: { ...numeric, color: colors.textDim, fontSize: 11, marginTop: spacing.xs },
   close: {
     marginTop: spacing.lg,
@@ -417,5 +417,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  closeText: { color: colors.onAccent, fontWeight: '800', fontSize: 15 },
+  closeText: { color: colors.onAccent, fontWeight: '500', fontSize: 15 },
 });

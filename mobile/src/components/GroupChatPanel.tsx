@@ -230,14 +230,14 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontWeight: '700',
+    fontWeight: '500',
     fontSize: 13,
   },
   titleInHead: { marginBottom: 0 },
   notice: {
     color: colors.warn,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     marginTop: spacing.xs,
   },
   empty: {
@@ -255,11 +255,11 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
   },
   mine: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  user: { color: colors.accent, fontSize: 11, fontWeight: '700' },
+  user: { color: colors.accent, fontSize: 11, fontWeight: '500' },
   userFlex: { flex: 1 },
   head: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   headRtl: { flexDirection: 'row-reverse' },
-  blockedLine: { ...numeric, color: colors.textDim, fontSize: 10, fontWeight: '700', marginTop: spacing.xs },
+  blockedLine: { ...numeric, color: colors.textDim, fontSize: 10, fontWeight: '500', marginTop: spacing.xs },
   msg: { color: colors.text, fontSize: 12, marginTop: 2, lineHeight: 18 },
   ts: { ...numeric, color: colors.textDim, fontSize: 10, marginTop: spacing.xs, textAlign: 'left' },
   row: { flexDirection: 'row', gap: 6, marginTop: spacing.sm },
@@ -286,5 +286,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  sendText: { color: colors.onAccent, fontWeight: '800', fontSize: 12 },
+  sendText: { color: colors.onAccent, fontWeight: '500', fontSize: 12 },
 });

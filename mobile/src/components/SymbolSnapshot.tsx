@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
     color: colors.textMuted,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   bull: { color: colors.bull, borderColor: colors.bull },
   bear: { color: colors.bear, borderColor: colors.bear },

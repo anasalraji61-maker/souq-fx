@@ -554,7 +554,7 @@ export function AccountScreen() {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   wrap: { padding: spacing.lg, gap: spacing.md, backgroundColor: colors.bg, minHeight: '100%' },
-  title: { color: colors.text, fontSize: 22, fontWeight: '900' },
+  title: { color: colors.text, fontSize: 22, fontWeight: '500' },
   sub: { color: colors.textDim, fontSize: 12 },
   langBox: {
     backgroundColor: colors.bgElevated,
@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgPanel,
   },
   langChipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  langText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  langText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   langTextOn: { color: colors.accent },
   tourBtn: { alignSelf: 'flex-start' },
   tourBtnRtl: { alignSelf: 'flex-end' },
@@ -587,8 +587,8 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: 10,
   },
-  label: { color: colors.textMuted, fontSize: 12, fontWeight: '700' },
-  user: { color: colors.accent, fontWeight: '800', fontSize: 18 },
+  label: { color: colors.textMuted, fontSize: 12, fontWeight: '500' },
+  user: { color: colors.accent, fontWeight: '500', fontSize: 18 },
   emailLine: { color: colors.textMuted, fontSize: 12, marginTop: -4 },
   tabs: { flexDirection: 'row', gap: spacing.sm },
   tabsRtl: { flexDirection: 'row-reverse' },
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  tabText: { color: colors.textMuted, fontWeight: '700' },
+  tabText: { color: colors.textMuted, fontWeight: '500' },
   tabTextOn: { color: colors.accent },
   input: {
     backgroundColor: colors.bgPanel,
@@ -621,7 +621,7 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     color: colors.accent,
-    fontWeight: '900',
+    fontWeight: '500',
     fontSize: 12,
   },
   inputInBox: {
@@ -645,7 +645,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  btnText: { color: colors.onAccent, fontWeight: '800' },
+  btnText: { color: colors.onAccent, fontWeight: '500' },
   dangerBtn: {
     borderRadius: radii.sm,
     borderWidth: 1,
@@ -654,7 +654,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'transparent',
   },
-  dangerBtnText: { color: colors.bear, fontWeight: '800' },
+  dangerBtnText: { color: colors.bear, fontWeight: '500' },
   roleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   roleRowRtl: { flexDirection: 'row-reverse' },
   roleChip: {
@@ -666,7 +666,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgPanel,
   },
   roleChipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  roleText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  roleText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   roleTextOn: { color: colors.accent },
   netBox: {
     backgroundColor: colors.bgPanel,
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     backgroundColor: 'transparent',
   },
-  notifBtnText: { color: colors.accent, fontWeight: '800', fontSize: 12 },
+  notifBtnText: { color: colors.accent, fontWeight: '500', fontSize: 12 },
   legs: { flexDirection: 'row', gap: spacing.sm },
   legsRtl: { flexDirection: 'row-reverse' },
   leg: {
@@ -698,6 +698,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  legTitle: { color: colors.textDim, fontSize: 11, fontWeight: '700' },
-  legNum: { ...numeric, color: colors.accent, fontSize: 22, fontWeight: '900' },
+  legTitle: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
+  legNum: { ...numeric, color: colors.accent, fontSize: 22, fontWeight: '500' },
 });

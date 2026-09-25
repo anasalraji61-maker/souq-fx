@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-  title: { color: colors.text, fontSize: 13, fontWeight: '700', textAlign: 'center', lineHeight: 19 },
+  title: { color: colors.text, fontSize: 13, fontWeight: '500', textAlign: 'center', lineHeight: 19 },
   body: {
     color: colors.textDim,
     fontSize: 12,

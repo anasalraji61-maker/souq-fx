@@ -132,9 +132,9 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   triggerOn: { backgroundColor: colors.selectedFill },
-  triggerText: { color: colors.text, fontWeight: '900', fontSize: 13 },
+  triggerText: { color: colors.text, fontWeight: '500', fontSize: 13 },
   triggerTextLarge: { color: colors.text, fontSize: 14 },
-  caret: { color: colors.textMuted, fontWeight: '800', fontSize: 11 },
+  caret: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
   caretLarge: { color: colors.textMuted },
   panel: {
     position: 'absolute',
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   panelTitle: {
     color: colors.textDim,
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '500',
     paddingHorizontal: spacing.sm,
     marginBottom: spacing.xs,
   },
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   rowOn: { backgroundColor: colors.selectedFill },
   sym: {
     color: colors.textMuted,
-    fontWeight: '800',
+    fontWeight: '500',
     fontSize: 13,
   },
   symOn: {
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   group: {
     color: colors.textDim,
     fontSize: 9,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   groupOn: {
     color: colors.accent,

@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   sideText: {
     color: colors.textMuted,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     opacity: 0.45,
     textAlign: 'center',
   },
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   midText: {
     color: colors.accent,
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '500',
     textAlign: 'center',
   },
 });

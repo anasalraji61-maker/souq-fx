@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
   },
-  title: { color: colors.textMuted, fontWeight: '800', fontSize: 12 },
+  title: { color: colors.textMuted, fontWeight: '500', fontSize: 12 },
   errorNote: { color: colors.warn, fontSize: 11 },
   moreNote: { ...numeric, color: colors.textDim, fontSize: 10 },
   row: { flexDirection: 'row', gap: 6 },
@@ -271,8 +271,8 @@ const styles = StyleSheet.create({
   // نفس رقاقة «مختارة» المؤسَّسة بالتطبيق (PositionSizePanel/CalendarPanel): حدٌّ ملوّن وخلفية
   // شفيفة، لا قلبٌ كامل للألوان — matrix-tactile-feel.mdc.
   chipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
-  chipText: { color: colors.accent, fontWeight: '700', fontSize: 11 },
-  chipTextOn: { color: colors.accent, fontWeight: '800' },
+  chipText: { color: colors.accent, fontWeight: '500', fontSize: 11 },
+  chipTextOn: { color: colors.accent, fontWeight: '500' },
   chipDisabled: { opacity: 0.4 },
   hit: {
     paddingHorizontal: 10,
@@ -282,11 +282,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  sym: { color: colors.text, fontWeight: '800', fontSize: 12 },
+  sym: { color: colors.text, fontWeight: '500', fontSize: 12 },
   meta: { color: colors.textDim, fontSize: 10 },
-  cacheTag: { color: colors.warn, fontWeight: '700', fontSize: 10 },
+  cacheTag: { color: colors.warn, fontWeight: '500', fontSize: 10 },
   /** لون النسبة يأتي من الاتجاه وحده — بلا اتجاه تبقى بلون `meta` المكتوم. */
-  metaPct: { ...numeric, fontWeight: '800' },
+  metaPct: { ...numeric, fontWeight: '500' },
   metaPctUp: { color: colors.bull },
   metaPctDown: { color: colors.bear },
 });

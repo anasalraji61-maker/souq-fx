@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
   phoneModeTagText: {
     color: colors.accent,
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: '500',
   },
   phoneModeBtn: {
     height: 32,
@@ -591,12 +591,12 @@ const styles = StyleSheet.create({
   },
   phoneModeText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '500',
     color: colors.textMuted,
   },
   phoneModeTextActive: {
     color: colors.accent,
-    fontWeight: '900',
+    fontWeight: '500',
   },
   cellHover: {
     borderColor: colors.accent,

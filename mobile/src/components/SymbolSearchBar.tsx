@@ -147,19 +147,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  sym: { color: colors.accent, fontWeight: '800' },
+  sym: { color: colors.accent, fontWeight: '500' },
   name: { color: colors.textDim, fontSize: 11 },
   error: {
     color: colors.bear,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     marginTop: spacing.xs,
   },
   /** كسطر الخطأ لكن بلون هادئ — «لا نتيجة» ليست فشلاً. */
   noMatch: {
     color: colors.textDim,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     marginTop: spacing.xs,
   },
 });

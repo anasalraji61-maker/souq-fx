@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontWeight: '700',
+    fontWeight: '500',
     fontSize: 13,
   },
   titleInHead: { marginBottom: 0 },
@@ -215,6 +215,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  sendText: { color: colors.bg, fontWeight: '800', fontSize: 12 },
+  sendText: { color: colors.bg, fontWeight: '500', fontSize: 12 },
   sendDisabled: { opacity: 0.4 },
 });

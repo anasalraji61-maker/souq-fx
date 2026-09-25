@@ -298,17 +298,17 @@ const styles = StyleSheet.create({
   chev: {
     color: colors.accent,
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '500',
     width: 22,
     textAlign: 'center',
   },
-  title: { color: colors.text, fontWeight: '900', fontSize: 13, textAlign: 'right' },
+  title: { color: colors.text, fontWeight: '500', fontSize: 13, textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 9, textAlign: 'right', marginTop: 1 },
-  refresh: { color: colors.accent, fontWeight: '800', fontSize: 11 },
+  refresh: { color: colors.accent, fontWeight: '500', fontSize: 11 },
   body: { paddingHorizontal: spacing.md, paddingBottom: spacing.md, gap: spacing.sm },
   section: {
     color: colors.text,
-    fontWeight: '800',
+    fontWeight: '500',
     fontSize: 12,
     textAlign: 'right',
     marginTop: spacing.xs,
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   th: {
     color: colors.textMuted,
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '500',
     textAlign: 'center',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.xs,
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     paddingHorizontal: spacing.xs,
   },
-  accent: { color: colors.accent, fontWeight: '800' },
+  accent: { color: colors.accent, fontWeight: '500' },
   colType: { flex: 1.4, textAlign: 'right' },
   colRate: { width: 42 },
   colCond: { flex: 1.6, textAlign: 'right' },
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   errorNote: {
     color: colors.warn,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     textAlign: 'right',
   },
 });

@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   railTitle: {
     color: colors.textMuted,
     fontSize: 9,
-    fontWeight: '900',
+    fontWeight: '500',
     letterSpacing: 0.3,
     textAlign: 'center',
     marginBottom: spacing.xs,
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
   },
   railMarkerNeutral: { backgroundColor: colors.text },
-  railMark: { color: colors.textMuted, fontSize: 13, fontWeight: '800' },
+  railMark: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
   railMarkOn: { color: colors.text },
   tipBubble: {
     position: 'absolute',
