@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 12، بعد 4af5d4c) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 13، بعد 447ab3e) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -16,7 +16,8 @@
 | QA | بلا مالك | `DRAW_MARK` (`MatrixEdgeRails.tsx:28-40`) بلا `hray`/`channel`/`long`/`short` ⇒ «·» — chart: خارج نطاقه | chart20 ★ |
 | launch | بلا مالك | «₴» للدفتر: `MatrixEdgeRails.tsx:142`، `MatrixBottomDock.tsx:85` ← «▤» كما `ToolsScreen:85` | launch4 ★ |
 | QA | بلا مالك | **a11y**: `MatrixEdgeRails`/`MatrixBottomDock`/`MatrixSidePanel` صفر `accessibilityState` (يمنع «Differentiate Without Color»)؛ خلفية `MatrixSidePanel.tsx:83` بلا اسم ولا `accessible={false}` | QA3 ★ |
-| QA | بلا مالك | **a11y**: `AccountScreen` :195 :324 :338 :439 :477 :493 بلا وصف ولا نصّ ابن (أيقونات)؛ `MessagesScreen` :93 :144 :179 (ميّتة — ⛔ أنس 10) | QA3 ★ |
+| QA | بلا مالك | **a11y (تصحيح QA13)**: `AccountScreen` :195 :324 :338 :439 :477 :493 لها نصّ ابن (الاسم مقروء) لكنها شرائح اختيار بلا `accessibilityState` (اللغة المختارة إلخ)؛ `MessagesScreen` :93 :144 :179 (ميّتة — ⛔ أنس 10) | QA3 ★ |
+| QA | chart + بلا مالك | **(c) جديد QA13**: 32 زرّاً تتلوّن حين تُختار بلا `accessibilityState={{ selected }}` ⇒ قارئ الشاشة لا يعرف المختار. لـchart: `IndicatorForecastPanel.tsx:204`. بلا مالك: `AlertsPanel` :932 :950، `BacktestPanel` :175، `FocusChartModal` :322 :362، `FrameSizedGrid` :400 :414، `SocialConsensusPanel` :189، `VotePanel` :250 :265، `SymbolPairMenu` :49 :82 (`expanded`)، `PanSpeedSlider` :137 (+ Rails/Dock/SidePanel/TimeframeBar/Account أعلاه) | QA13 |
 | chart+QA | بلا مالك | **`useMultiLiveTicks.ts` بلا حدّ تقادم ولا رفض ≤0** (`useLiveTicks` 20ث) ⇒ قائمة المتابعة قد تعرض سعراً متجمّداً. (مرجع التنبيه أُصلح عند المستهلك: `freshTickRefPrice` d68e485) | chart2 ★ |
 | chart | بلا مالك | `FocusChartModal`: الرأس يطبع تيك الرمز الجديد فوق شموع القديم؛ «+0.00%» أخضر | chart3 ★ |
 | chart | الجميع | 10 `Alert.alert` باقية بـ5 ملفات (Alerts ×4، IndicatorAlerts ×2، Watchlist ×2، FocusChart ×1، Account ×1) ← `confirmDestructive`/`notify` — دالّة فارغة على الويب. **أخطرها** `AccountScreen.tsx:162` تأكيد «حذف الحساب» ⇒ الحذف لا يعمل على الويب (launch61) | chart29 ★ |
@@ -34,11 +35,11 @@
 | QA | الخادم | **(d)** `main.py:1774` يقرّب الوقف/الهدف لخانتين إن السعر ≥50 ⇒ USDJPY/DXY تفقد خانة | QA4 ★ |
 | QA | الخادم | **(d) الدفتر يقصّ بصمت عند 200 صفقة**: `db.py:1681` `LIMIT 200` (مفتوحة+مغلقة) و`trade_stats` :1836 يحسب منها ⇒ بعد 200 صفقة «الصفقات المغلقة: n»/نسبة الفوز/صافي الـpip تُحسب على الأحدث فقط وتختفي القديمة من القائمة بلا إشارة. والمعامل `days=30` :1673 لا يُستعمل (ميّت). نصّ «آخر 200» صار ظاهراً (0c34e61)؛ الباقي: إحصاء بـSQL على الكل + ترقيم | QA9 |
 | QA | الخادم | **(e)** تقويم العيّنة `econ_calendar.py:39-47` أوقات خاطئة و«5.25%» قديم؛ `_impact` :77. الواجهة تقول الآن «عيّنة لا تتداول عليها» (63c2ef6) | QA5 ★ |
-| QA | chart | **QA10 (بقيّة)**: المعادن أُصلحت (`83dd284`، شغّلتُه: XAUUSD ⇒ الأحد 22:00Z صيفاً/23:00Z شتاءً) — لكن **المؤشرات** ما زالت 17:00 NY: أعدتُ التشغيل بعد 4af5d4c — `projectBarTimeSec('US30', الجمعة 20:00Z, H1, 1)` = الأحد 21:00Z، وUS30/NAS100/SPX تفتح 18:00 NY (جلسة CME) كالذهب ⇒ `LATE_OPEN_RE` `marketHours.ts:158` يُضاف لها (حالة السوق :62 أيضاً — لا كسر يومي للمؤشرات بها). حالة الذهب بالكسر اليومي أُصلحت (`b77315c`)؛ **الإسقاط لم يتخطّه**: `XAUUSD` الثلاثاء 20:00Z +H1 = 21:00Z (داخل الكسر) — بخطة chart التالية | QA11 |
 | QA | بلا مالك | **(a) جديد**: `DomLitePanel.tsx:67-73` يحسب السبريد بالـpip محلياً — نسخة `quoteSpreadPips` (`positionSize.ts:360`) الجديدة (tools: «ليس بنطاقي»)؛ والخاصية `last` ميتة (`void last` :75) والمستدعون ما زالوا يمرّرونها | QA11 |
-| chart | launch | مفتاح `mcWeekdays` (7 أسماء قصيرة ×ar/en/ku) لوسم زمن التقاطع «الجمعة 25 سبتمبر 14:00» — غير موجود بـ`locales.ts` (تحقّقتُ: 0) | chart 09-25 (6) |
-| QA | chart | **(a) جديد، منخفض**: `PANE_PAD = 16` و`clamp` و`finite` منسوخة ×3 (`centeredPane.ts:32` مُصدَّر، `macdPane.ts:21`، `stochPane.ts:18`) — تعليق `centeredPane.ts:9` يعتمد على تطابقها ⇒ استيراد واحد يمنع انحرافاً صامتاً | QA11 |
+| chart→launch→chart | chart | **اربط `mcWeekdays`**: المفتاح صار بـ`locales.ts` ×ar/en/ku (`348efee`، تحقّقتُ) — لا مستعمل له خارج القاموس بعد (0) | chart 09-25 (6) |
+| launch | tools | اربط `journalSizeDottedFix` (`1f8c7d8`) بفرع `sizeDotted` في `sizeUnitsText` (`TradeJournalPanel.tsx` ~:360) — تحقّقتُ: 0 استعمال بـ`.tsx` | launch62 |
+| tools | chart (+مالك قائمة المتابعة) | `dailyChange.ts:32` `sessionOf` يقلب الجلسة عند افتتاح الفوركس (`forexSundayOpenSec`) بلا رمز ⇒ الذهب/المؤشرات/النفط (CME 18:00) تعرض «0.00%» ساعةً مساء الأحد 17:00–18:00 NY. يحتاج تمرير الرمز من المستدعين (`WatchlistPanel`، `ChartFrame`، `QuadChartModal`، `ScreenerMini`) | tools42 |
 
-**أُسقط هذه الدورة:** لا شيء — ردّ launch61 عن tools40/تلميح الملاحظة سبق إسقاطه بالدورة 11.
-**تحقّق بلا تغيير (بالكود):** `Alert.alert` 10؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `QUICK_SYMBOLS` ×3 تعريفات؛ US30 الأحد 21:00Z.
-**(b) هذه الدورة:** الكود الجديد منذ الدورة 7 (24 ملفاً) بلا نصّ ظاهر ثابت؛ القواميس 950 مفتاحاً بلا فارغ ولا قيمة إنجليزية منسوخة ولا عدم تطابق `{…}` بين اللغات.
+**أُسقط هذه الدورة (بالكود):** QA11 — شغّلتُ `projectBarTimeSec`: US30/NAS100/WTI الجمعة 20:00Z +H1 ⇒ الأحد 22:00Z (شتاءً 23:00Z)، الذهب الثلاثاء 20:00Z +H1 ⇒ 22:00Z (يتخطّى الكسر)؛ `isForexMarketOpen` US30 الأحد 21:30Z مغلق، 22:30Z مفتوح (`b32c26b`). `PANE_PAD`/`clamp`/`finite` مستوردة من `centeredPane.ts` (`5a20d8b`). طلب `mcWeekdays` لـlaunch منجز ⇒ صار «chart: اربط».
+**تحقّق بلا تغيير (بالكود):** `Alert.alert` 10 خارج `confirmDestructive`؛ «₴» ×2 (الثالث تعليق)؛ `TimeframeBar` صفر `accessibilityState`؛ `QUICK_SYMBOLS` ×3؛ `DomLitePanel` `void last`؛ `LIMIT 200`؛ `TradingCentral-like`.
+**(c) هذه الدورة:** كل `Pressable`/`Touchable*`/`TextInput`/`Switch` له اسم (وصف أو نصّ ابن) عدا خلفية `MatrixSidePanel.tsx:83` (مسجّلة)؛ 0 زرّ برمز وحده بلا وصف. الفجوة الحقيقية: حالة الاختيار (صفّ QA13).

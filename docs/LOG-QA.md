@@ -153,3 +153,14 @@ PDH/PDL بيوم 17:00 NY أوّلاً (:1641-1646)، Footprint «≈»/CVD «ت
 المتبقية مصطلحات معيارية (Log/POC/TPO/AUTO/pip، placeholder «EURUSD») أو بملفات بلا مالك. فحص القواميس بـ`tsx`: 950 مفتاحاً، 0 فارغ، 0 قيمة
 إنجليزية منسوخة بالعربي/الكردي، 0 عدم تطابق `{…}`.
 **الدورة القادمة:** المراجعة (c) — عناصر تفاعلية بلا accessibilityLabel.
+
+## 2026-09-25 — الدورة 13
+**البناء:** أخضر 0 (بعد 447ab3e) — لا إصلاح لازم. **Selftests:** 62/62 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — QA11 (`b32c26b`): شغّلتُ `projectBarTimeSec` — US30/NAS100/WTI الجمعة 20:00Z +H1 ⇒ الأحد 22:00Z (شتاءً 21:00Z ⇒ 23:00Z)،
+XAUUSD الثلاثاء 20:00Z +H1 ⇒ 22:00Z و19:00Z +3 ⇒ 23:00Z (يتخطّى الكسر)، EURUSD بلا تغيير 21:00Z؛ `isForexMarketOpen` US30/WTI/XAG 21:30Z مغلق. QA11 (a) `PANE_PAD`
+(`5a20d8b`). `mcWeekdays` أُضيف (`348efee`) ⇒ الصف صار «chart: اربط» (0 مستعمل). **غير مُغلق:** 10 `Alert.alert` (+2 داخل `confirmDestructive` نفسها)، «₴» ×2 (+تعليق)،
+`QUICK_SYMBOLS` ×3، `DomLitePanel` `void last`، `LIMIT 200`، `TradingCentral-like`.
+**طلبات تنسيق جديدة:** launch62 → tools (`journalSizeDottedFix`، 0 ربط)؛ tools42 → chart (`dailyChange.ts:32` `sessionOf` بلا رمز ⇒ «0.00%» للمعادن/CME ساعةً مساء الأحد — تأكّدتُ أن `sessionOf` يستعمل `forexSundayOpenSec` وحده).
+**المراجعة (c — a11y)، بسكربتين على كل `.tsx`:** (1) عناصر تفاعلية بلا `accessibilityLabel` ولا نصّ ابن: 1 فقط (`MatrixSidePanel.tsx:83`، مسجّل)؛ أزرار برمز وحده بلا وصف: 0.
+(2) أزرار نمطها `&& styles.*On/Active/Selected` بلا `accessibilityState`: **32** بـ14 ملفاً (صف QA13) — منها `AccountScreen` ×6 التي وُصفت خطأً بصفّ QA3 «بلا وصف» (لها نصّ ابن) ⇒ صُحّح الصف.
+**الدورة القادمة:** المراجعة (d) — أرقام/حدود متناقضة بين الملفات.
