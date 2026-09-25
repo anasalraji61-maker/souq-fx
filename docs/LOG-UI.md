@@ -492,3 +492,19 @@
 - «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط (`AnalystsPanel:129`، `SocialConsensusPanel:234`)؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده (`window.confirm`/`window.alert` على الويب؛ 9 مستهلكين منهم حذف الحساب).
 - **السعر المتجمّد:** `useMultiLiveTicks:75` ⇐ `acceptTick` (يرفض ما عمره عند الخادم > `TICK_STALE_MS`) + مؤقّت إسقاط + ترك المقبس الصامت؛ غياب التيك ⇒ `WatchlistPanel:368` سعر أساس موسوم «تجريبي» بصرياً (`wlDemoTag`) ولقارئ الشاشة (`wlDemoPriceA11ySuffix`) ولا نسبة يوم ولا مسافة تنبيه منه.
 - **إعادة الجولة:** `AccountScreen:219-241` زرّ `accReplayTour` خارج أي فرع تسجيل دخول (متاح للزائر) ⇒ `OnboardingOverlay visible`.
+
+## 2026-09-25 — تشغيل 41
+صفوف ui بـCOORDINATION (دورة QA 77): **tools92** (جديد) و**chart-r60** (أُنجز `57d2053`، جاهز للإغلاق).
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| 603b9cd | `MatrixBottomDock` تبويب الدفتر: `<TradeJournalPanel defaultSymbol={symbol} chartBannerVisible />` — الرصيف بالتدفّق تحت الشارت و`TerminalScreen` يعرض `<NewsRiskBanner symbol={symbol} />` للرمز نفسه فوقه ⇒ لا تحذير «صفقاتك المفتوحة» مكرَّر. `MatrixSidePanel` **لم يُمسّ** (اللوح يغطّي الشريط؛ تعليق بالرصيف ينبّه) | tools92 |
+| c74ef8e | `useMultiLiveTicks` (قائمة المتابعة والرباعي): عدّاد الصمت يبدأ من المحاولة، ومقبس عالق بـ`CONNECTING` > `TICK_STALE_MS` يُترك ويُعاد — نظير إصلاح chart `42c0f3b` بـ`useLiveTicks` الذي لم يصل النسخة المتعدّدة؛ كانت القائمة تنتظر مهلة TCP بالنظام بلا سعر حيّ | — (وُجد بالمراجعة) |
+
+بوابة البناء خضراء (tsc 0) قبل كل commit.
+
+**إعادة تحقّق بنود المهمّة بالكود (بعد 2e8e279):**
+- **حالة الاختيار:** مسح لكل `Pressable`/`Touchable*`/`Text`/`View` بـ`onPress` بنطاقي بنمط اختيار بصري — 36 مرشّحاً كلّها بـ`accessibilityState`/aria (تحقّقتُ أن المسح يلتقطها بإزالة الشرط) ⇒ صفر بلا حالة.
+- **الكردية:** مقارنة عميقة `ku`/`ar` (1061 مفتاحاً، `tsx` على `locales.ts`): صفر ناقص، صفر حرف غير سوراني، المطابق `listSep` وحده. فروع `lang`/`rtl` بنطاقي محاذاة فقط (و«، » تستعملها السورانية).
+- «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده (9 مستهلكين منهم `AccountScreen` حذف الحساب)؛ `useMultiLiveTicks:75` ⇐ `acceptTick`؛ إعادة الجولة `AccountScreen:221-235` (`accReplayTour`).
+- ملفّات نطاقي التي عدّلها chart منذ تشغيل 40 (`QuadChartModal` `4be7ba1`/`bcc8f36`، `useLiveTicks` `42c0f3b`): سليمة.
