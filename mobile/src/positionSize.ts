@@ -1440,6 +1440,25 @@ export function stopInsideSpread(slPips: number, spreadPips: number | null): boo
 }
 
 /**
+ * **الوقف داخل السبريد المعتاد للأداة** وخانة السبريد فارغة — `stopInsideSpread` لا يُطلق بلا سبريد مكتوب، وخانته اختيارية.
+ * «50» على USDZAR (سبريد ~100 pip) أو «80» على USDTRY وقفٌ يُضرب لحظة الفتح، واللوت منه أكبر ×20–30 من وقفٍ معتاد (1,500) بمخاطرة
+ * «1%» صحيحة الحساب. يُرجع السبريد المعتاد (`typicalSpreadPipsExample`) لتقوله الرسالة، أو `null`: خانة مكتوبة (لها `stopInsideSpread`)،
+ * أداة بلا مثال (XAUJPY)، وقف غير صالح، أو أوسع من المعتاد. على الرئيسيات (1.5) لا يُطلق عملياً إلا لوقفٍ 1–1.5 pip.
+ */
+export function stopInsideTypicalSpread(
+  slPips: number,
+  spec: InstrumentSpec | null | undefined,
+  spreadRaw: string
+): number | null {
+  if (!spec || spreadRaw.trim() !== '') return null;
+  if (!Number.isFinite(slPips) || !(slPips > 0)) return null;
+  const ex = typicalSpreadPipsExample(spec);
+  if (ex === '') return null;
+  const typical = Number(ex);
+  return stopInsideSpread(slPips, typical) ? typical : null;
+}
+
+/**
  * مدخلا سطر «المخاطرة شاملة التكاليف»: خانةٌ غير مفهومة تُحسب صفراً ولا تُسقط الأخرى. كان السطر يشترط الاثنين
  * صالحين ⇒ سبريد «1.2 pts» مرفوض يُخفي عمولة 7 صحيحة (EURUSD وقف 5 نقاط، 2 لوت: 114 USD = 1.14% تصير «100 USD»
  * بلا أي كلفة) وبالعكس. الخانة المرفوضة تعرض رسالتها تحتها، فالمتداول يعرف أنها لم تُحسب.

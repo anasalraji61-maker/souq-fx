@@ -79,6 +79,7 @@ import {
   riskIsHigh,
   spreadTooWide,
   stopInsideSpread,
+  stopInsideTypicalSpread,
   misplacedArabicThousandsSignInRisk,
   planJournalNote,
   LOT_STEP,
@@ -888,6 +889,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const typedSpreadPips = parseSpreadPips(spread, spec);
   /** وقفٌ ليس أبعد من السبريد المكتوب: يُضرب لحظة الفتح — راجع `stopInsideSpread` */
   const slInsideSpread = stopInsideSpread(slNum, typedSpreadPips);
+  /**
+   * ولخانة السبريد الفارغة: وقفٌ داخل السبريد **المعتاد** للأداة («50» على USDZAR) — راجع `stopInsideTypicalSpread`. النصّ
+   * `riskCalcStopInsideTypicalSpread` طُلب من launch (tools85)؛ يُقرأ اختيارياً فيظهر التحذير حين يُضاف المفتاح، بلا نصّ مخترَع قبله.
+   */
+  const typicalSpreadText = (t as unknown as Record<string, string | undefined>).riskCalcStopInsideTypicalSpread;
+  const slInsideTypical = typicalSpreadText ? stopInsideTypicalSpread(slNum, spec, spread) : null;
   // الدخول ما زال Ask/Bid اللقطة الحيّة (نصّ التعبئة حرفياً وللأداة نفسها): السبريد داخل مسافة الوقف والهدف أصلاً،
   // فلا يُضاف إلا ما يزيد به سبريد الوسيط المكتوب على سبريد اللقطة — راجع `spreadBeyondLiveEntry`
   const liveFill = liveFillRef.current;
@@ -1695,6 +1702,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         {slInsideSpread ? (
           <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
             {t.riskCalcStopInsideSpread.replace('{sl}', String(slNum)).replace('{spread}', String(typedSpreadPips))}
+          </Text>
+        ) : null}
+        {!slInsideSpread && slInsideTypical != null && typicalSpreadText && spec ? (
+          <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
+            {typicalSpreadText
+              .replace('{sl}', String(slNum))
+              .replace('{spread}', String(slInsideTypical))
+              .replace('{symbol}', () => spec.symbol)}
           </Text>
         ) : null}
         {/* المخاطرة شاملة السبريد (والعمولة إن كُتبت)، وتحتها جملة اللوت الذي يحفظ النسبة المكتوبة حين يكون أصغر */}

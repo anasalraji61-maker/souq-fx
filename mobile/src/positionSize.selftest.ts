@@ -88,6 +88,7 @@ import {
   type InstrumentSpec,
   spreadTooWide,
   stopInsideSpread,
+  stopInsideTypicalSpread,
   misplacedArabicThousandsSignInRisk,
   leverageOutOfRange,
   leverageAmbiguousThousands,
@@ -3225,3 +3226,30 @@ console.log('positionSize typicalSpreadPipsExample selftest OK');
   assert.equal(stopInsideSpread(1500, parseSpreadPips('2000', S('USDTRY'))), true);
 }
 console.log('positionSize maxSpreadPipsFor selftest OK');
+
+{
+  // وقفٌ داخل السبريد المعتاد وخانة السبريد فارغة: «50» على USDZAR كان بلا أي تحذير
+  const S = (x: string) => instrumentSpec(x)!;
+  assert.equal(stopInsideTypicalSpread(50, S('USDZAR'), ''), 100);
+  assert.equal(stopInsideTypicalSpread(100, S('USDTRY'), '  '), 100); // المساواة = داخل
+  assert.equal(stopInsideTypicalSpread(101, S('USDTRY'), ''), null);
+  assert.equal(stopInsideTypicalSpread(1500, S('USDZAR'), ''), null); // المثال المقترح نفسه لا يُطلق
+  assert.equal(stopInsideTypicalSpread(20, S('USDSEK'), ''), 30);
+  assert.equal(stopInsideTypicalSpread(3, S('USDHKD'), ''), 5);
+  assert.equal(stopInsideTypicalSpread(2, S('XAUUSD'), ''), 3);
+  assert.equal(stopInsideTypicalSpread(1.5, S('EURUSD'), ''), 1.5);
+  assert.equal(stopInsideTypicalSpread(20, S('EURUSD'), ''), null);
+  // خانة مكتوبة ⇒ `stopInsideSpread` بالرقم المكتوب هو الحكم، لا المعتاد
+  assert.equal(stopInsideTypicalSpread(50, S('USDZAR'), '40'), null);
+  assert.equal(stopInsideTypicalSpread(50, S('USDZAR'), '0'), null);
+  // بلا أداة، أداة بلا مثال، وقف غير صالح
+  assert.equal(stopInsideTypicalSpread(50, null, ''), null);
+  assert.equal(stopInsideTypicalSpread(1, S('XAUJPY'), ''), null);
+  for (const bad of [0, -5, NaN, Infinity]) assert.equal(stopInsideTypicalSpread(bad, S('USDZAR'), ''), null, String(bad));
+  // مثال الوقف لكل أداة لا يُطلق التحذير (المثالان متّسقان)
+  for (const sym of ['EURUSD', 'USDJPY', 'USDSGD', 'USDHKD', 'USDSEK', 'USDZAR', 'USDTRY', 'USDMXN', 'XAUUSD', 'XAGUSD']) {
+    const sl = Number(typicalSlPipsExample(S(sym)));
+    assert.equal(stopInsideTypicalSpread(sl, S(sym), ''), null, sym);
+  }
+}
+console.log('positionSize stopInsideTypicalSpread selftest OK');
