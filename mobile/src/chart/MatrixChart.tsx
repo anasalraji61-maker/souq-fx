@@ -1478,6 +1478,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const selectedIdRef = useRef<string | null>(null);
   selectedIdRef.current = selectedId;
   const drawHistory = useRef<Drawing[][]>([]);
+  /** ما تُرُوجع عنه (لإعادته بـCtrl+Shift+Z / Ctrl+Y على الويب)؛ أيّ تعديل جديد يُفرغه كأيّ محرّر. */
+  const redoHistory = useRef<Drawing[][]>([]);
   const [canUndo, setCanUndo] = useState(false);
   const [pending, setPending] = useState<ChartPoint | null>(null);
   const [dragEnd, setDragEnd] = useState<ChartPoint | null>(null);
@@ -2417,6 +2419,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       saveQueue.cancel();
       savedDrawingsSig.current = drawingsSignature(d);
       drawHistory.current = [];
+      redoHistory.current = [];
       setCanUndo(false);
       setSelectedId(null);
       setDragEnd(null);
@@ -2456,6 +2459,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const pushDrawHistory = useCallback(() => {
     const next = [...drawHistory.current, drawingsRef.current];
     drawHistory.current = next.length > DRAW_HISTORY_MAX ? next.slice(-DRAW_HISTORY_MAX) : next;
+    redoHistory.current = [];
     setCanUndo(true);
   }, []);
 
@@ -2467,12 +2471,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setTool('none');
   }, []);
 
-  const undoDrawing = useCallback(() => {
-    const hist = drawHistory.current;
-    if (!hist.length) return;
-    const prev = hist[hist.length - 1]!;
-    drawHistory.current = hist.slice(0, -1);
-    setCanUndo(drawHistory.current.length > 0);
+  /** يعرض لقطة من التاريخ (تراجع أو إعادة). */
+  const restoreDrawings = useCallback((prev: Drawing[]) => {
     setDrawingsHidden(false); // لا تراجع عن رسم لا يُرى
     // اللقطة قد تكون من فريم آخر (التاريخ يبقى عبر تبديل الفريم): تُرسى على شموع هذا الفريم
     // قبل العرض، لا إطاراً بمواضع ذلك الفريم.
@@ -2491,6 +2491,27 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setPending(null);
     setDragEnd(null);
   }, [series.timeframe]);
+
+  const undoDrawing = useCallback(() => {
+    const hist = drawHistory.current;
+    if (!hist.length) return;
+    const prev = hist[hist.length - 1]!;
+    drawHistory.current = hist.slice(0, -1);
+    redoHistory.current = [...redoHistory.current, drawingsRef.current].slice(-DRAW_HISTORY_MAX);
+    setCanUndo(drawHistory.current.length > 0);
+    restoreDrawings(prev);
+  }, [restoreDrawings]);
+
+  /** عكس التراجع: خطّ حُذف بتراجع زائد كان يُرسم من جديد يدوياً. */
+  const redoDrawing = useCallback(() => {
+    const redo = redoHistory.current;
+    if (!redo.length) return;
+    const next = redo[redo.length - 1]!;
+    redoHistory.current = redo.slice(0, -1);
+    drawHistory.current = [...drawHistory.current, drawingsRef.current].slice(-DRAW_HISTORY_MAX);
+    setCanUndo(true);
+    restoreDrawings(next);
+  }, [restoreDrawings]);
 
   // لون الرسم المحدَّد: كل رسم كان يُرسم بلون تمييز الشارت وحده، فالدعم والمقاومة وخطّ الترند وفيبو
   // بلون واحد لا يُفرَّق بينها بنظرة (TradingView يلوّن كل رسم). النقر يدور على لوحة قصيرة؛ قابل للتراجع
@@ -2540,6 +2561,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // عنه بعد النزول للساعة.
   useEffect(() => {
     drawHistory.current = [];
+    redoHistory.current = [];
     setCanUndo(false);
   }, [series.symbol]);
 
@@ -4764,6 +4786,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         undoDrawing();
         return;
       }
+      // الإعادة: Ctrl/⌘+Shift+Z (ماك وأغلب المحرّرات) وCtrl+Y (ويندوز).
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        !event.altKey &&
+        ((event.shiftKey && key.toLowerCase() === 'z') || (!event.shiftKey && key.toLowerCase() === 'y'))
+      ) {
+        if (!redoHistory.current.length) return;
+        event.preventDefault();
+        redoDrawing();
+        return;
+      }
       if (key === 'Escape') {
         if (pending) {
           setPending(null);
@@ -4792,7 +4825,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- toScale/fromScale تتبع logScale
-  }, [interactive, pending, selectedId, tool, undoDrawing, pushDrawHistory, series.symbol, series.timeframe, priceAtY, logScale]);
+  }, [interactive, pending, selectedId, tool, undoDrawing, redoDrawing, pushDrawHistory, series.symbol, series.timeframe, priceAtY, logScale]);
 
   const applyChartDrag = useCallback(
     (dx: number, dy: number) => {
