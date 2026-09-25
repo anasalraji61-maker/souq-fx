@@ -46,4 +46,13 @@ near(tw[9], 1.2, 'twap reset at rollover');
 near(tw[23], 1.2);
 near(computeTwap(candles)[9]!, (1.1 * 9 + 1.2) / 10, 'twap continuous unchanged');
 
+// اليومي (Anchor = Session كـTradingView): كل شمعة جلستها ⇒ VWAP = (H+L+C)/3 لا تراكم يتغيّر مع التاريخ المحمَّل
+const d1: (Candle & { volume: number })[] = [
+  { time: 0, open: 1.1, high: 1.3, low: 1.0, close: 1.2, volume: 500 },
+  { time: 86400, open: 1.2, high: 1.5, low: 1.2, close: 1.5, volume: 10 },
+] as (Candle & { volume: number })[];
+const d1v = computeVwap(d1, (c) => c.time);
+near(d1v[0], (1.3 + 1.0 + 1.2) / 3, 'd1 bar0 = hlc3');
+near(d1v[1], (1.5 + 1.2 + 1.5) / 3, 'd1 bar1 = hlc3, not weighted by bar0');
+
 console.log('vwapSession selftest PASS');

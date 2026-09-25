@@ -2304,13 +2304,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   );
   // VWAP يُصفَّر كل يوم تداول (17:00 نيويورك) على الفريمات داخل اليوم كـTradingView — كان تراكماً من أوّل شمعة
   // محمَّلة: على 15m بعد أيام يصير متوسطاً شبه ثابت بعيداً عن السعر، ويتغيّر مع كل تحميل تاريخ إضافي.
-  // اليومي فأكبر: كل شمعة جلسة، فيبقى التراكم المستمر. `barTime` ⇒ زمن الشمعة المصدر للّبنات.
+  // اليومي فأكبر: كل شمعة جلسة (Anchor = Session كـTradingView) ⇒ VWAP = (H+L+C)/3 للشمعة — كان تراكماً
+  // مستمراً من أوّل شمعة محمَّلة يتغيّر مع تحميل تاريخ إضافي. `barTime` ⇒ زمن الشمعة المصدر للّبنات.
+  const vwapIntraday = timeframeStepSec(series.timeframe) < 86400;
   const vwapSessionOf = useMemo(
     () =>
-      timeframeStepSec(series.timeframe) < 86400
+      vwapIntraday
         ? (c: Candle) => tradingDayStartSec(series.symbol, candleTimeSec(barTime(c)))
-        : undefined,
-    [series.symbol, series.timeframe]
+        : (c: Candle) => candleTimeSec(barTime(c)),
+    [series.symbol, vwapIntraday]
   );
   const vwap = useMemo(
     () => (indicators.includes('vwap') ? ind(computeVwap(indBars, vwapSessionOf)) : null),
@@ -2328,12 +2330,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // انقطاع خطَّي VWAP وTWAP بين آخر شمعة من يوم وأوّل شمعة من التالي — لا قطعة مائلة بين قيمتَي جلستين
   const vwapSessionBreak = useCallback(
     (i: number) =>
-      vwapSessionOf != null &&
+      // على اليومي كل شمعة جلسة ⇒ خطّ متّصل بين قيمها (لا قطع عند كل شمعة فيختفي الخطّ)
+      vwapIntraday &&
       i > 0 &&
       source.plot[i] != null &&
       source.plot[i - 1] != null &&
       vwapSessionOf(source.plot[i]) !== vwapSessionOf(source.plot[i - 1]),
-    [source.plot, vwapSessionOf]
+    [source.plot, vwapSessionOf, vwapIntraday]
   );
   const obv = useMemo(
     () => (indicators.includes('obv') ? ind(computeObv(indBars)) : null),
