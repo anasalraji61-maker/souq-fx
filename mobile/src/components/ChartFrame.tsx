@@ -180,18 +180,28 @@ export function ChartFrame({
   );
   // خارج الإعادة: تغيّر اليوم من إغلاق الجلسة السابقة (`headerChangePct`) — الرقم نفسه بقائمة المتابعة.
   const dailyRefs = useDailyRefs([series.symbol]);
+  // تيك أقدم من آخر شمعة جلبها التحديث (رمز غاب عن البثّ ~20ث) لا يُطبع — كالرباعي (`QuadChartModal`):
+  // كان سعر ما قبل الجلب يبقى بالرأس والشارت تحته على الإغلاق الأحدث.
+  const lastBar = series.candles[series.candles.length - 1];
+  const tickOlder =
+    resolvedTick?.source.as_of != null && lastBar != null && resolvedTick.source.as_of < candleTimeSec(lastBar.time);
+  const headTick = tickOlder ? null : resolvedTick;
+  const headPx = livePriceForHeader(series, headTick);
   const livePct =
     replayPrice != null
       ? headerChangePct(series, replayPrice, replayPrevClose(series, replay?.time))
-      : headerChangePct(series, livePriceForHeader(series, resolvedTick), dailyRefs[series.symbol.toUpperCase()]);
-  const chgPct = Number.isFinite(livePct) ? livePct : null;
+      : headerChangePct(series, headPx, dailyRefs[series.symbol.toUpperCase()]);
+  // تيك يُطبع ولا تُحسب منه النسبة (حقيقي فوق شموع تجريبية، أو تجريبي فوق حقيقية): النسبة كانت من
+  // `series.last` بجانب سعر آخر — «1.09000 +0.00%» وهي لـ1.08500. سعر بلا نسبة أصدق من نسبة لسعر غيره.
+  const pctMismatch = replayPrice == null && headTick != null && headPx == null;
+  const chgPct = !pctMismatch && Number.isFinite(livePct) ? livePct : null;
   // اللون من الرقم المطبوع (`pctDirection` = تقريب `formatPct`): `Math.round` يرفع النصف نحو +∞ فكان
   // ‎−0.005%‎ يُطبع «−0.01%» بالرمادي.
   const chgDir = pctDirection(chgPct);
   const chgColor = chgDir === 'up' ? colors.bull : chgDir === 'down' ? colors.bear : colors.textDim;
-  const headerPrice = replayPrice ?? resolvedTick?.price ?? series.last;
-  const tickKind = replayPrice == null && resolvedTick
-    ? tickStatusKind(resolvedTick.source, resolvedTick.source.as_of, nowSec)
+  const headerPrice = replayPrice ?? headTick?.price ?? series.last;
+  const tickKind = replayPrice == null && headTick
+    ? tickStatusKind(headTick.source, headTick.source.as_of, nowSec)
     : null;
   const tickTag =
     tickKind === 'live'
@@ -259,7 +269,7 @@ export function ChartFrame({
   // يخرج السعر الحيّ عن [bid − 3×spread، ask + 3×spread] يُخفى السعران ويبقى السبريد بالـpip وحده.
   const quoteStale =
     hasSpread &&
-    resolvedTick != null &&
+    headTick != null &&
     (() => {
       const sp = liveQuote!.ask! - liveQuote!.bid!;
       return headerPrice < liveQuote!.bid! - 3 * sp || headerPrice > liveQuote!.ask! + 3 * sp;
