@@ -2301,7 +2301,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [indBars, indicators]
   );
   const roc = useMemo(
-    () => (indicators.includes('roc') ? ind(computeRoc(closes)) : null),
+    // الطول 9 = افتراضي TradingView («Rate Of Change») — كان 10 فتختلف كل قيمة وكل عبور للصفر عنه
+    () => (indicators.includes('roc') ? ind(computeRoc(closes, 9)) : null),
     [closes, indicators]
   );
   // VWAP يُصفَّر كل يوم تداول (17:00 نيويورك) على الفريمات داخل اليوم كـTradingView — كان تراكماً من أوّل شمعة
@@ -2405,7 +2406,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [indBars, indicators]
   );
   const cmo = useMemo(
-    () => (indicators.includes('cmo') ? ind(computeCmo(closes)) : null),
+    // الطول 9 = افتراضي TradingView («Chande Momentum Oscillator») — كان 14
+    () => (indicators.includes('cmo') ? ind(computeCmo(closes, 9)) : null),
     [closes, indicators]
   );
   const trix = useMemo(
