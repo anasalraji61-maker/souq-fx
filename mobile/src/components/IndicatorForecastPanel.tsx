@@ -4,6 +4,8 @@ import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBloc
 import { api } from '../api';
 import { dirColor, dirLabel, formatScore } from './signalDirection';
 import { formatPrice } from '../chart/math';
+import { symbolPriceDecimals } from '../chart/indicators/utils';
+import { forecastDisclaimer, forecastVoteDetail, forecastVoteName } from '../chart/forecastText';
 import { formatRR } from '../tradePlan';
 import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from '../chart/pipSpec';
@@ -30,6 +32,8 @@ type Vote = {
   direction: string;
   score: number;
   detail: string;
+  detail_code?: string;
+  detail_values?: Record<string, number>;
 };
 
 export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: Props) {
@@ -48,6 +52,10 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   const [votes, setVotes] = useState<Vote[]>([]);
   const [rsi, setRsi] = useState<number | null>(null);
   const [note, setNote] = useState('');
+  // تنبيه الخادم برمزه (backend-r3) — يُترجم عند العرض فيتبع تبديل اللغة دون طلب جديد.
+  const [disclaimer, setDisclaimer] = useState<{ code: string | null; text: string } | null>(null);
+  // منازل الخادم (`price_decimals`) لأداة لا نعرف منازلها (الرموز المعروفة تبقى بمواصفتها).
+  const [serverDecimals, setServerDecimals] = useState<number | null>(null);
 
   const toggle = (id: string) => {
     setEnabled((prev) => {
@@ -77,6 +85,8 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
     setLevelsGap(null);
     setVotes([]);
     setRsi(null);
+    setDisclaimer(null);
+    setServerDecimals(null);
   };
 
   // رقم الطلب: ردّ طلب أقدم (رمز سابق/مؤشرات سابقة) يصل بعد الأحدث لا يكتب فوقه.
@@ -90,6 +100,8 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
         symbol,
         timeframe,
         indicators: enabled,
+        // backend-r3: الأسماء والتفاصيل بالإنجليزية لـ`en*`؛ الكردي تُبنى جمله من `detail_code` هنا.
+        lang,
       });
       if (!mountedRef.current || req !== reqRef.current) return;
       // demo = اتجاه ومستويات دخول/وقف/هدف من شموع مختلَقة (المزوّد متعذّر) — لا تُعرض كإشارة.
@@ -107,7 +119,10 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
       setLevelsGap(typeof gap === 'string' ? gap : null);
       setVotes(Array.isArray(res.votes) ? res.votes : []);
       setRsi(typeof res.snapshot?.rsi === 'number' ? res.snapshot.rsi : null);
-      setNote(res.disclaimer);
+      setNote('');
+      setDisclaimer({ code: res.disclaimer_code ?? null, text: res.disclaimer ?? '' });
+      const pd = res.price_decimals;
+      setServerDecimals(typeof pd === 'number' && Number.isInteger(pd) && pd >= 0 && pd <= 12 ? pd : null);
     } catch {
       if (mountedRef.current && req === reqRef.current) {
         // كان يُبقي اتجاه/مستويات الطلب السابق (رمز آخر أحياناً) ظاهرة تحت رسالة الخطأ.
@@ -117,7 +132,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
     } finally {
       if (mountedRef.current && req === reqRef.current) setLoading(false);
     }
-  }, [symbol, timeframe, enabled, t]);
+  }, [symbol, timeframe, enabled, t, lang]);
 
   // تبديل الرمز/الفريم: اتجاه ومستويات الرمز السابق لا تبقى ظاهرة أثناء تحميل الجديد
   // (قد يُقرأ دخول/وقف EURUSD على الذهب). يسبق تأثير `run` بالترتيب.
@@ -142,6 +157,9 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
     // «pips» بالإنجليزية كسطر السبريد والقياس بالشارت (كانت «12.0 pip» ثابتة)، وبلا عُشر من 1000.
     return p != null ? ` (${pipsNumber(p)} ${pipUnit(lang)})` : '';
   };
+  const px = (n: number, ref: number) =>
+    serverDecimals != null && symbolPriceDecimals(symbol) == null ? n.toFixed(serverDecimals) : formatPrice(n, symbol, ref);
+  const noteText = disclaimer ? forecastDisclaimer(disclaimer.code, disclaimer.text, t) : note;
   const rr =
     levels && direction !== 'neutral' && Math.abs(levels.entry - levels.sl) > 0
       ? Math.abs(levels.tp - levels.entry) / Math.abs(levels.entry - levels.sl)
@@ -218,9 +236,9 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           {levels && direction !== 'neutral' ? (
             <Text style={[styles.levels, { textAlign: align }]}>
               {/* منازل واحدة للثلاثة من الدخول (أداة بلا مواصفة كـUSOIL): كانت كلٌّ من حجمه ⇒ «99.850 · 100.45» */}
-              {t.forecastTradeLabel}: {t.entryLabel} {formatPrice(levels.entry, symbol, levels.entry)} · {t.slLabel}{' '}
-              {formatPrice(levels.sl, symbol, levels.entry)}
-              {pipsTag(levels.entry, levels.sl)} · {t.tpLabel} {formatPrice(levels.tp, symbol, levels.entry)}
+              {t.forecastTradeLabel}: {t.entryLabel} {px(levels.entry, levels.entry)} · {t.slLabel}{' '}
+              {px(levels.sl, levels.entry)}
+              {pipsTag(levels.entry, levels.sl)} · {t.tpLabel} {px(levels.tp, levels.entry)}
               {pipsTag(levels.entry, levels.tp)}
               {rr != null ? ` · R:R ${formatRR(rr)}` : ''}
             </Text>
@@ -242,8 +260,8 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
         {votes.map((v) => (
           <View key={v.id} style={[styles.row, rtl && styles.rowRtl]}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.name, { textAlign: align }]}>{v.name}</Text>
-              <Text style={[styles.summary, { textAlign: align }]}>{v.detail}</Text>
+              <Text style={[styles.name, { textAlign: align }]}>{forecastVoteName(v, t)}</Text>
+              <Text style={[styles.summary, { textAlign: align }]}>{forecastVoteDetail(v, t)}</Text>
             </View>
             <Text style={[styles.badge, { color: dirColor(v.direction) }]}>
               {dirLabel(v.direction, t)}
@@ -251,7 +269,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           </View>
         ))}
       </ScrollView>
-      {note ? <Text style={[styles.note, { textAlign: align }]}>{note}</Text> : null}
+      {noteText ? <Text style={[styles.note, { textAlign: align }]}>{noteText}</Text> : null}
     </View>
   );
 }
