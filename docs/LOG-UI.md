@@ -230,3 +230,12 @@
 | 992b7ea | `useTickFreshnessClock` بساعة الخادم (`serverNowSec`): `remainMs` والإرجاع (`serverNowSec() * 1000`) — شارة «حي» بـ`ChartFrame`/`FocusChartModal`/رأس `TerminalScreen` لا تغيب مبكراً على جهاز متقدّم ولا تبقى بعد تجمّد التيك على متأخّر. كل المستهلكين يقارنون بطوابع الخادم | chart-r46 (أُنجز) |
 | fc4ee7b | سلسلة بلا بيانات حقيقية (`unavailable_reason`، أو `kind: unavailable`) — DXY اليوم: `ChartFrame` (خانة DXY) و`QuadChartModal` و`FocusChartModal` بلا شموع بذرة ولا سعر ولا نسبة ولا سبريد؛ إشعار «{symbol} غير متاح من مزوّد البيانات» مكان الشارت (`ProviderUnavailableNotice.tsx` جديد)، والوسم «غير متاح» القصير. تحقّقتُ بـ`main.py:605-621` أن `unavailable_reason` لا يُضبط إلا على بذرة رمز لا يقدّمه المزوّد | backend-r19 (جزء ui) ⇒ ui16b (tools: البطل؛ backend: `candles: []`) |
 | 86a1992 | الإشعار يقرأ `t.chartNotOfferedTitle`/`chartNotOfferedBody` (launch `954fcc4`، وصل أثناء التشغيل) بدل اقتطاع `originUnavailableProvider`؛ النصّ الثاني («اضغط اسم الرمز ▾») حين الإطار يعرض زرّ الرمز فقط (`ChartFrame` بـ`onSymbolChange`) — الرباعي والتركيز بلا ذلك الزرّ ⇒ العنوان وحده. صفّ ui16a حُذف قبل أن يُقرأ | backend-r19 |
+
+## 2026-09-25 — تشغيل 17
+بوابة البناء خضراء قبل كل commit (tsc 0 أخطاء). لا صفّ بـCOORDINATION موجّه لـui وحده: QA1 (a) `motion` مُبقى عمداً؛ ui16b أنجزه tools (`b1d1adb`).
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| 5472869 | a11y: `PanSpeedSlider` — `adjustable` كان على الغلاف (يحوي زرّاً) بلا `increment/decrement` ولا `accessibilityValue` ⇒ قارئ الشاشة يعلن «قابل للضبط» والتمرير لا يفعل شيئاً (السحب وحده يضبط). نُقل للمسار: `accessible` + القيمة 1..100 + إجراءا الزيادة/الإنقاص بخطوة 5؛ الرقم المرئي مخفيّ عن القارئ (لا يُقرأ مرّتين) | مهمّة: الحالة باللون وحده / a11y |
+
+**إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط؛ `Alert.alert` داخل `chart/confirmDestructive.ts` فقط (حذف الحساب عبر `confirmDestructive`)؛ «درجة الاتفاق» أُزيلت (تعليقان)؛ الجولة قابلة للإعادة (`AccountScreen` ⇐ `OnboardingOverlay`)؛ التيك المتجمّد يُرفض (`acceptTick` + `TICK_STALE_MS`، و`at` بساعة الجهاز مطروحاً منها العمر عند الخادم ⇒ المقارنة بـ`Date.now()` متّسقة). مسح AST جديد: كل عنصر بدور tab/radio/switch/checkbox/togglebutton/menuitem بلا `accessibilityState`/`aria-*` ⇒ صفر (المرشّح الوحيد `adjustable`، أُصلح أعلاه). عناصر السحب الأخرى: `PairDrumWheel` له أزرار سابق/حالي/تالٍ، ومقابض `FrameSizedGrid` تخطيط فقط.
