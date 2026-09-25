@@ -2637,6 +2637,13 @@ console.log('positionSize moneyInOtherCurrency selftest OK');
   assert.equal(slPipsInPoints('abc points'), null);
   assert.equal(slPipsInPoints('1.500 points'), null);
   assert.equal(slPipsInPoints(''), null);
+  // خانة السبريد (مفتاح riskCalcSpreadPointsHint): «12 points» من MT4/MT5 مرفوضة ⇒ «اكتبه 1.2»؛ ليست «واسعة جداً»
+  assert.deepEqual(slPipsInPoints('12 points'), { value: '12 points', pips: '1.2' });
+  assert.deepEqual(slPipsInPoints('١٢ نقطة'), { value: '١٢ نقطة', pips: '1.2' });
+  assert.deepEqual(slPipsInPoints('15pts'), { value: '15pts', pips: '1.5' });
+  assert.equal(parseSpreadPips('12 points'), null);
+  assert.equal(spreadTooWide('12 points'), null);
+  assert.equal(parseSpreadPips('1.2'), 1.2);
 }
 console.log('positionSize slPipsInPoints selftest OK');
 

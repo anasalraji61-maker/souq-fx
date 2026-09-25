@@ -543,6 +543,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             t.riskCalcLeverageOutOfRange.replace('{value}', leverage.trim()).replace('{max}', String(MAX_LEVERAGE))
           : `${badFieldsText}: ${t.invalidNumberHint}`;
   const spreadWide = spreadTooWide(spread);
+  const spreadPoints = slPipsInPoints(spread);
   const spreadErr =
     parseSpreadPips(spread) != null
       ? null
@@ -550,7 +551,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         ? t.riskCalcSpreadTooWide.replace('{n}', String(spreadWide))
         : misplacedArabicThousandsSign(spread, { unit: 'pip' })
           ? t.arabicThousandsSignHint
-          : t.invalidNumberHint;
+          : spreadPoints
+            ? // «12 points» كما تعرضها MT4/MT5 ⇒ «اكتبه هنا 1.2» بدل «رقم غير مفهوم» (tools63، مفتاح launch)
+              t.riskCalcSpreadPointsHint.replace('{value}', () => spreadPoints.value).split('{pips}').join(spreadPoints.pips)
+            : t.invalidNumberHint;
   /** خطأ خانة العمولة تحتها — للسبب نفسه: اللوت يُحسب بدونها فلا يصل `badNumber` إليها */
   /** الملاحظة بلوت الوضع: micro ⇒ «{std} للعادي = {micro} للوت micro» بأرقام الخانة، السنت ⇒ «بالـUSC، الرقم نفسه». */
   const commissionEx = commissionNoteExample(commission, commissionKind, moneyCcy);
