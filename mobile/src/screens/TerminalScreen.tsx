@@ -19,6 +19,7 @@ import { api, type ChartSeries } from '../api';
 import { MOCK_BASES, mockBase } from '../chart/mockBases';
 import { mockSeries } from '../mock';
 import { ChartFrame } from '../components/ChartFrame';
+import { ProviderUnavailableNotice, seriesHasNoRealData } from '../components/ProviderUnavailableNotice';
 import {
   FrameSizedGrid,
   type FrameLayoutCount,
@@ -940,6 +941,11 @@ export function TerminalScreen() {
     phoneStripRef.current?.scrollTo({ x: Math.max(0, x - 48), animated: true });
   }, [phone, symbol]);
   const heroSeries = series ?? offlineFrame(symbol, tf);
+  /**
+   * ui16b/backend-r19: رمز لا يقدّمه المزوّد (DXY) يصل بسلسلة بذرة حول 104.25 — كان الشارت الرئيسي يرسمها وسعرها برأس
+   * الشاشة العريضة كأنها سوق. الآن الإشعار مكان الشارت، والسعر والسبريد «—» كـ`ChartFrame`/`FocusChartModal`.
+   */
+  const heroNoRealData = seriesHasNoRealData(heroSeries.data_source);
   const heroTick = liveTicks[symbol] ?? null;
   const heroNowMs = useTickFreshnessClock(heroTick?.source.as_of ?? null);
   const heroNowSec = heroNowMs / 1000;
@@ -953,12 +959,13 @@ export function TerminalScreen() {
   const dsTickLabels = { live: t.dsTickLive, demoTick: t.dsTickDemo, lastPrice: t.dsLastPriceWord };
   const heroStatusBits = [
     online ? t.termServerOnline : t.termServerOffline,
-    // backend-r1: DXY لا يقدّمه المزوّد أصلاً (`unavailable_reason: not_offered_by_provider`) — «تجريبي» العامة توحي بعطلٍ
-    // مؤقت سيعود، والحقيقة أن لا سعر حقيقياً له بهذا التطبيق. `normalizeProvenance` يُسقط الحقل فيُقرأ من المصدر الخام.
-    (heroSeries.data_source as { unavailable_reason?: unknown } | undefined)?.unavailable_reason === 'not_offered_by_provider'
-      ? t.originUnavailableProvider.replace('{symbol}', symbol)
+    // backend-r1/ui16b: DXY لا يقدّمه المزوّد أصلاً — «تجريبي» العامة توحي بعطلٍ مؤقت. الشارت نفسه صار الإشعار
+    // (`chartNotOfferedTitle/Body`)، فالوسم القصير يكفي؛ و`originUnavailableProvider` («الرسم مولَّد للعرض») لم تعد صادقة.
+    // ولا وسم تيك: «تيك تجريبي» بجانب «غير متاح» يوحي بسعرٍ ما.
+    heroNoRealData
+      ? t.dsKindUnavailable
       : provenanceLabel(normalizeProvenance(heroSeries.data_source), dsKindLabels),
-    heroTick
+    heroTick && !heroNoRealData
       ? tickStatusLabel(heroTick.source, heroTick.source.as_of, heroNowSec, dsTickLabels) ??
         t.termLastPriceWord
       : null,
@@ -1481,42 +1488,46 @@ export function TerminalScreen() {
               </Text>
             ) : null}
             <View style={styles.desktopChart}>
-              <MatrixChart
-                onCreateAlert={alertFromChart}
-                key={`shadow-overlay-${symbol}-${tf}-${kind}`}
-                series={series ?? offlineFrame(symbol, tf)}
-                shadowSeries={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
-                  if (!shadowEnabled[i] || shadowSlots[i] === tf) return [];
-                  const sec = shadowSeries[i];
-                  if (!sec || (sec.candles?.length ?? 0) < 1) return [];
-                  return [sec];
-                })}
-                shadowTags={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
-                  if (!shadowEnabled[i] || shadowSlots[i] === tf) return [];
-                  const sec = shadowSeries[i];
-                  if (!sec || (sec.candles?.length ?? 0) < 1) return [];
-                  return [tag];
-                })}
-                height={desktopChartHeight}
-                interactive
-                compactUi
-                persistDrawings
-                panSpeed={panSpeed}
-                accent={symbol === 'DXY' ? colors.dxy : colors.accent}
-                livePrice={livePriceForChart(
-                  series ?? offlineFrame(symbol, tf),
-                  liveTicks[symbol] ?? null,
-                  {
-                    tickAsOf: liveTicks[symbol]?.source.as_of ?? null,
-                    timeframe: (series ?? offlineFrame(symbol, tf)).timeframe,
-                  }
-                )}
-                liveTickSource={liveTicks[symbol]?.source ?? null}
-                initialTool={tool}
-                initialLens={lens}
-                initialKind={kind}
-                initialIndicators={indicators}
-              />
+              {heroNoRealData ? (
+                <ProviderUnavailableNotice symbol={symbol} height={desktopChartHeight} showSwitchHint />
+              ) : (
+                <MatrixChart
+                  onCreateAlert={alertFromChart}
+                  key={`shadow-overlay-${symbol}-${tf}-${kind}`}
+                  series={series ?? offlineFrame(symbol, tf)}
+                  shadowSeries={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
+                    if (!shadowEnabled[i] || shadowSlots[i] === tf) return [];
+                    const sec = shadowSeries[i];
+                    if (!sec || (sec.candles?.length ?? 0) < 1) return [];
+                    return [sec];
+                  })}
+                  shadowTags={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
+                    if (!shadowEnabled[i] || shadowSlots[i] === tf) return [];
+                    const sec = shadowSeries[i];
+                    if (!sec || (sec.candles?.length ?? 0) < 1) return [];
+                    return [tag];
+                  })}
+                  height={desktopChartHeight}
+                  interactive
+                  compactUi
+                  persistDrawings
+                  panSpeed={panSpeed}
+                  accent={symbol === 'DXY' ? colors.dxy : colors.accent}
+                  livePrice={livePriceForChart(
+                    series ?? offlineFrame(symbol, tf),
+                    liveTicks[symbol] ?? null,
+                    {
+                      tickAsOf: liveTicks[symbol]?.source.as_of ?? null,
+                      timeframe: (series ?? offlineFrame(symbol, tf)).timeframe,
+                    }
+                  )}
+                  liveTickSource={liveTicks[symbol]?.source ?? null}
+                  initialTool={tool}
+                  initialLens={lens}
+                  initialKind={kind}
+                  initialIndicators={indicators}
+                />
+              )}
             </View>
 
             <View style={styles.rangeBar}>
@@ -1569,7 +1580,7 @@ export function TerminalScreen() {
               </View>
               <View style={styles.desktopOhlc}>
                 <Text style={styles.desktopOhlcLabel}>{t.priceWord}</Text>
-                <Text style={styles.desktopOhlcValue}>{price > 0 ? formatPrice(price, symbol) : '—'}</Text>
+                <Text style={styles.desktopOhlcValue}>{price > 0 && !heroNoRealData ? formatPrice(price, symbol) : '—'}</Text>
                 {(() => {
                   // كان `(change_pct ?? 0) >= 0` يطبع «+0.00%» أخضر لسالب الصفر ولأي حركة دون 0.005%،
                   // و«+0.00%» أخضر كذلك **بلا بيانات أصلاً** (السلسلة لم تصل)، ويطبع نسبة السلسلة
@@ -1596,7 +1607,7 @@ export function TerminalScreen() {
                     </Text>
                   );
                 })()}
-                {quote && quote.bid != null && quote.ask != null ? (
+                {!heroNoRealData && quote && quote.bid != null && quote.ask != null ? (
                   <Text style={styles.desktopSpread}>
                     {t.termSpreadWord}{' '}
                     {(() => {
@@ -1621,30 +1632,34 @@ export function TerminalScreen() {
               </Text>
             ) : null}
             <View style={styles.desktopChart}>
-              <MatrixChart
-                onCreateAlert={alertFromChart}
-                key={`${symbol}-${tf}-${tool}-${kind}-${lens}-${indicators.join(',')}`}
-                series={series ?? offlineFrame(symbol, tf)}
-                height={desktopChartHeight}
-                interactive
-                compactUi
-                persistDrawings
-                panSpeed={panSpeed}
-                accent={symbol === 'DXY' ? colors.dxy : colors.accent}
-                livePrice={livePriceForChart(
-                  series ?? offlineFrame(symbol, tf),
-                  liveTicks[symbol] ?? null,
-                  {
-                    tickAsOf: liveTicks[symbol]?.source.as_of ?? null,
-                    timeframe: (series ?? offlineFrame(symbol, tf)).timeframe,
-                  }
-                )}
-                liveTickSource={liveTicks[symbol]?.source ?? null}
-                initialTool={tool}
-                initialLens={lens}
-                initialKind={kind}
-                initialIndicators={indicators}
-              />
+              {heroNoRealData ? (
+                <ProviderUnavailableNotice symbol={symbol} height={desktopChartHeight} showSwitchHint />
+              ) : (
+                <MatrixChart
+                  onCreateAlert={alertFromChart}
+                  key={`${symbol}-${tf}-${tool}-${kind}-${lens}-${indicators.join(',')}`}
+                  series={series ?? offlineFrame(symbol, tf)}
+                  height={desktopChartHeight}
+                  interactive
+                  compactUi
+                  persistDrawings
+                  panSpeed={panSpeed}
+                  accent={symbol === 'DXY' ? colors.dxy : colors.accent}
+                  livePrice={livePriceForChart(
+                    series ?? offlineFrame(symbol, tf),
+                    liveTicks[symbol] ?? null,
+                    {
+                      tickAsOf: liveTicks[symbol]?.source.as_of ?? null,
+                      timeframe: (series ?? offlineFrame(symbol, tf)).timeframe,
+                    }
+                  )}
+                  liveTickSource={liveTicks[symbol]?.source ?? null}
+                  initialTool={tool}
+                  initialLens={lens}
+                  initialKind={kind}
+                  initialIndicators={indicators}
+                />
+              )}
             </View>
 
             <View style={styles.rangeBar}>
