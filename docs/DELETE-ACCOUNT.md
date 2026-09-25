@@ -29,7 +29,7 @@
 محادثاتك الخاصة (بطرفيها)، أصواتك على أفكار الصفقات، وبلاغاتك.
 
 **ما يبقى بلا اسمك:** أفكار الصفقات التي نشرتها تبقى بلا اسم ناشر (عليها أصوات مستخدمين آخرين)، وسجلّات العمولات
-التي تخصّ أعضاء آخرين في شجرة الإحالة تبقى بلا اسمك لأنها سجلّهم المالي.
+التي تخصّ أعضاء آخرين في شجرة الإحالة تبقى بلا اسمك لأنها سجلّهم المالي، وموضعك بشجرة الإحالة برمز جديد لا يحمل اسمك ولا يُسجَّل به أحد بعدها.
 
 **ما على جهازك** (الرسومات والإعدادات وقائمة الحظر) يُمحى بحذف التطبيق.
 
@@ -50,6 +50,6 @@ messages, your private conversations (both sides), your votes on trade ideas, an
 
 **What stays, without your name:** trade ideas you posted remain with no author (other users have voted on them), and
 commission records belonging to other members of the referral tree remain without your name, because they are those
-members' financial record.
+members' financial record, and your place in the tree under a new referral code that no longer carries your name and accepts no new sign-ups.
 
 **What is on your device** (drawings, settings, block list) is erased when you uninstall the app.

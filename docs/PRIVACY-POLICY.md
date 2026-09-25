@@ -60,7 +60,7 @@ MATRIX تطبيق شارتات وتحليل فني وتعليم للمتداول
 الدخول به)، جلساتك، تنبيهاتك، دفترك، تخطيطاتك وقائمة متابعتك، تقدّمك بالأكاديمية، رمز إشعاراتك، رسائلك العامة،
 محادثاتك الخاصة (بطرفيها)، أصواتك، وبلاغاتك.
 **ما يبقى بلا اسمك:** أفكار الصفقات التي نشرتها (يصوّت عليها آخرون) تبقى بلا اسم ناشر، وسجلّات العمولات التي تخصّ
-أعضاء آخرين في شجرة الإحالة تبقى بلا اسمك لأنها سجلّ مالي لهم.
+أعضاء آخرين في شجرة الإحالة تبقى بلا اسمك لأنها سجلّ مالي لهم، وموضعك بشجرة الإحالة برمز جديد لا يحمل اسمك ولا يُسجَّل به أحد بعدها.
 **بلا حساب:** احذف تنبيهاتك وصفقاتك من التطبيق مباشرة؛ ولحذف كل ما ارتبط بمعرّف تثبيتك راسلنا على [بريد الخصوصية].
 حذف التطبيق يمحو ما على جهازك فقط.
 لا نحذف البيانات تلقائياً بعد مدّة؛ تبقى ما دام حسابك قائماً أو حتى تحذفها.
@@ -125,7 +125,7 @@ Traffic between the app and our server is encrypted (https). Passwords are hashe
 with an anonymous ID that cannot sign in), your sessions, alerts, journal, layouts and watchlist, Academy progress, notification
 token, public messages, private conversations (both sides), votes, and reports.
 **What stays, without your name:** trade ideas you posted (others have voted on them) remain with no author, and commission
-records belonging to other members of the referral tree remain without your name, because they are those members' financial record.
+records belonging to other members of the referral tree remain without your name, because they are those members' financial record, and your place in the tree under a new referral code that no longer carries your name and accepts no new sign-ups.
 **Without an account:** delete your alerts and trades in the app directly; to remove everything tied to your install ID, email
 [privacy email]. Uninstalling the app erases only what is on your device.
 We do not delete data automatically after a set period; it stays while your account exists or until you delete it.
