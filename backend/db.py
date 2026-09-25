@@ -196,11 +196,14 @@ def _owner_clause(user_id: int | None, owner_key: str | None = None) -> tuple[st
     - مسجّل: صفوفه + صفوف المجهول التي أنشأها هذا الجهاز قبل الدخول (نفس `owner_key`).
     - مجهول بمعرّف تثبيت: صفوف جهازه فقط.
     - بلا ترويسة (عميل قديم): الصفوف القديمة بلا مفتاح فقط — لا يرى صفوف العملاء الجدد أبداً.
+    - **مسجّل بلا ترويسة: صفوف حسابه وحدها.** كان يرى معها دلو المجهولين القديم (`owner_key IS NULL`)
+      — صفوف **كل** متداول مجهول قبل معرّف التثبيت، لا صفوف جهازه — فيعدّلها ويغلقها ويحذفها،
+      و`trade_stats` تخلط صفقات الغرباء بنسبة فوز حسابه.
     """
     if user_id:
         if owner_key:
             return "(user_id=? OR (user_id IS NULL AND owner_key=?))", (user_id, owner_key)
-        return "(user_id=? OR (user_id IS NULL AND owner_key IS NULL))", (user_id,)
+        return "user_id=?", (user_id,)
     if owner_key:
         return "(user_id IS NULL AND owner_key=?)", (owner_key,)
     return "(user_id IS NULL AND owner_key IS NULL)", ()

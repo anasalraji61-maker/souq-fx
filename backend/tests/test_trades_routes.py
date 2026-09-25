@@ -472,3 +472,27 @@ def test_older_trades_are_reachable_by_paging(client):
 @pytest.mark.parametrize("q", ["limit=0", "limit=501", "offset=-1"])
 def test_page_bounds_are_enforced(client, q):
     assert client.get(f"/api/trades?{q}", headers=_DEV1).status_code == 422
+
+
+def test_logged_in_client_without_install_id_sees_only_its_own_trades(client):
+    """مسجّل بلا `X-Install-Id` كان يرى دلو المجهولين القديم (صفقات **كل** متداول مجهول قبل معرّف
+    التثبيت) فيعدّلها ويحذفها، وتدخل نسبة فوز حسابه."""
+    r = client.post("/api/trades", json={**_TRADE, "exit": 1.0900})  # صفّ مجهول قديم: خسارة لغريب
+    assert r.status_code == 200, r.text
+    stranger = r.json()["trade"]
+    r = client.post(
+        "/api/auth/register",
+        json={"username": "hana", "email": "hana@example.com", "password": "pass1234"},
+    )
+    assert r.status_code == 200, r.text
+    me = {"Authorization": f"Bearer {r.json()['token']}"}
+    mine = _open_trade(client, headers=me, exit=1.1100)
+
+    body = client.get("/api/trades", headers=me).json()
+    assert [t["id"] for t in body["trades"]] == [mine["id"]]
+    assert body["stats"]["trade_count"] == 1
+    assert body["stats"]["win_rate"] == 100.0
+    assert client.delete(f"/api/trades/{stranger['id']}", headers=me).status_code == 404
+    assert client.patch(f"/api/trades/{stranger['id']}", json={"note": "x"}, headers=me).status_code == 404
+    # والعميل القديم المجهول ما زال يرى صفّه
+    assert [t["id"] for t in client.get("/api/trades").json()["trades"]] == [stranger["id"]]
