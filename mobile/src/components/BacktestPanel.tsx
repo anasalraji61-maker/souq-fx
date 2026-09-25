@@ -15,6 +15,7 @@ import { TimeframeBar } from './TimeframeBar';
 import { type Timeframe } from '../timeframes';
 import { useI18n } from '../i18n/I18nContext';
 import { formatPrice } from '../chart/math';
+import { QUICK_SYMBOLS } from '../tradePlan';
 
 type Stats = {
   trade_count: number;
@@ -51,7 +52,6 @@ const STRATEGIES: { id: Strategy; labelKey: StrategyLabelKey }[] = [
 ];
 
 /** نفس قائمة الأزواج السريعة بحاسبة المخاطرة والدفتر — اختبار زوج شائع بنقرة بيد واحدة بدل الكتابة. */
-const QUICK_SYMBOLS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'GBPJPY', 'EURGBP'];
 
 export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15m' }: Props) {
   const { t, rtl } = useI18n();

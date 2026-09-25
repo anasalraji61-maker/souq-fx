@@ -23,6 +23,7 @@ import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import type { Dict } from '../i18n/locales';
+import { QUICK_SYMBOLS } from '../tradePlan';
 
 /** «EURUSD · RSI · تحت 30» / «GBPUSD · تقاطع المتوسطات · تقاطع صاعد ▲» بلغة الواجهة — القائمة وتأكيد
  * الحذف والإشعار كانت تعرض المعرّفات الخام (rsi · below / ma_cross · cross_up) بكل اللغات. */
@@ -58,7 +59,6 @@ function describeIndAlert(
 }
 
 /** نفس قائمة الحاسبة والدفتر والباك-تست — اختيار الزوج بنقرة بيد واحدة، والخانة تبقى للرموز الأخرى. */
-const QUICK_SYMBOLS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'GBPJPY', 'EURGBP'];
 /** فريمات التنبيه الشائعة للمتداول الفردي (معرّفات الخادم TF_SECONDS). كان 15m ثابتاً وغير ظاهر. */
 const ALERT_TFS = ['15m', '1H', '4H', 'D'] as const;
 type AlertTf = (typeof ALERT_TFS)[number];

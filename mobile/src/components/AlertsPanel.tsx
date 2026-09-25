@@ -504,6 +504,12 @@ export function AlertsPanel({
       setFormError(t.alertsInvalidInput);
       return;
     }
+    // الخادم يطلب 3–12 حرفاً (`main.py` PriceAlert): «EU» كانت تصل 422 فتظهر رسالة «تعذّر الإضافة» العامة.
+    // القاعدة نفسها بمؤشر التنبيه والدفتر.
+    if (!/^[A-Z0-9./]{3,12}$/.test(sym)) {
+      setFormError(t.indAlertsSymbolInvalid);
+      return;
+    }
     setBusy(true);
     setFormError(null);
     const replacing = editingId;
@@ -977,7 +983,7 @@ export function AlertsPanel({
             ]}
             onPress={add}
             disabled={busy}
-            accessibilityState={{ disabled: busy }}
+            accessibilityState={{ disabled: busy, busy }}
             accessibilityLabel={editingId ? t.alertsSaveEdit : t.alertsAddA11y}
           >
             <Text style={styles.addText}>{busy ? '...' : editingId ? t.alertsSaveEdit : t.addBtn}</Text>
@@ -987,6 +993,7 @@ export function AlertsPanel({
           style={[styles.input, { textAlign: align }]}
           value={note}
           onChangeText={setNote}
+          maxLength={500}
           placeholder={t.alertsNotePlaceholder}
           placeholderTextColor={colors.textDim}
           returnKeyType="done"

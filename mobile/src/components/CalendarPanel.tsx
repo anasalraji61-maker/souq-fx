@@ -5,6 +5,7 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import { instrumentSpec } from '../positionSize';
+import { NEWS_GRACE_MS, NEWS_HORIZON_MS } from '../chart/newsRisk';
 
 type Ev = {
   id: string;
@@ -34,8 +35,8 @@ const SOON_MS = 24 * 60 * 60 * 1000;
  * (`NEWS_HORIZON_MS` بـ`chart/newsRisk.ts`)، فـ«قريب» تعني الشيء نفسه بالشاشتين.
  * عدّاد الترويسة لم يُمسّ — نصّه يقول «24 ساعة» ويظلّ صادقاً.
  */
-const ROW_SOON_MS = 3 * 60 * 60 * 1000;
-const NOW_WINDOW_MS = 15 * 60 * 1000;
+const ROW_SOON_MS = NEWS_HORIZON_MS;
+const NOW_WINDOW_MS = NEWS_GRACE_MS;
 /** إعادة جلب صامتة للتقويم وهو مفتوح — الخادم يخزّن النتيجة 30 دقيقة (`econ_calendar.TTL`)
  * فالطلب لا يمسّ حدّ المزوّد، لكنه يلتقط «الفعلي» بعد صدور الرقم. */
 const RELOAD_MS = 5 * 60 * 1000;
