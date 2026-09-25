@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { I18nManager, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DICTS, Dict, LangId, LANGS, isRtl, resolveLang, deviceLocaleTag } from './locales';
+import { DICTS, Dict, LangId, LANGS, isRtl, resolveLang, deviceLocaleTag, LANG_STORAGE_KEY } from './locales';
 
 type I18nCtx = {
   lang: LangId;
@@ -12,7 +12,7 @@ type I18nCtx = {
 };
 
 const Ctx = createContext<I18nCtx | null>(null);
-const KEY = 'matrix.lang.v1';
+const KEY = LANG_STORAGE_KEY;
 
 /**
  * لغة أول فتح (قبل أن يختار المتداول شيئاً): كانت العربية دائماً، فمن يثبّت التطبيق من صفحة المتجر
