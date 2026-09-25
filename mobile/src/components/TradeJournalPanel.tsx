@@ -168,6 +168,13 @@ type Props = {
    * مجمَّد فات عمره). فالغياب هنا يعني «لا سعر حيّ موثوق» لا «لا سعر»: يعود الصفّ للّقطة.
    */
   ticks?: Record<string, number>;
+  /**
+   * شريط أخبار الشارت لرمز `defaultSymbol` **ظاهرٌ فعلاً** بجانب اللوحة (الرصيف السفلي المدمج) ⇒ يُحذف من سطر «صفقاتك
+   * المفتوحة» ما يعلنه ذلك الشريط (QA38). بلا هذه الخاصية لا يُفترض شريطٌ ظاهر: لوح الجانب (`MatrixSidePanel`) نافذةٌ
+   * فوق الشارت بخلفية معتمة، والشريط تحتها مغطّى ولا يبلغه قارئ الشاشة — فكان تحذير NFP لصفقات GBPUSD/XAUUSD المفتوحة
+   * يُحذف لأن شارت EURUSD «يعلنه»، ولا يرى المتداول أيّ تحذير. تكرار التحذير أهون من غيابه.
+   */
+  chartBannerVisible?: boolean;
 };
 
 /** لقطة اقتباس أداة صفقة مفتوحة — Bid/Ask قد يغيبان (يُستعمل السعر المفرد حينها). */
@@ -176,7 +183,7 @@ type QuoteSnap = { price: number; bid?: number | null; ask?: number | null };
 /** خطأ `postJson` لردّ 409 (`trade_already_closed`، backend-r1): الصفقة أُغلقت بجهاز آخر بين الفحص والإغلاق. */
 const isAlreadyClosedError = (e: unknown) => e instanceof Error && /\bHTTP 409\b/.test(e.message);
 
-export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props = {}) {
+export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBannerVisible = false }: Props = {}) {
   const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -1496,9 +1503,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       ) : null}
 
       {/* الرمز الذي يعلن شريطه خبره بالشاشة نفسها: بـ`flow` شريط النموذج (إلا عند التعديل — راجع أسفل)، وبالرصيف/اللوح
-          شريط الشارت لرمزه (`defaultSymbol`) — فلا تحذيران متطابقان ولا إعلانان لقارئ الشاشة (QA38) */}
+          شريط الشارت لرمزه (`defaultSymbol`) حين يكون ظاهراً (`chartBannerVisible`) — فلا تحذيران متطابقان ولا إعلانان
+          لقارئ الشاشة (QA38) */}
       {openSymbols.length > 0 ? (
-        <NewsRiskBanner openSymbols={openSymbols} shownSymbol={flow ? (editing ? undefined : symbol.trim()) : defaultSymbol} />
+        <NewsRiskBanner
+          openSymbols={openSymbols}
+          shownSymbol={flow ? (editing ? undefined : symbol.trim()) : chartBannerVisible ? defaultSymbol : undefined}
+        />
       ) : null}
       {openRiskLine ? <Text style={[styles.stat, { textAlign: align }]}>{openRiskLine}</Text> : null}
       {stackedLines.map((line) => (
