@@ -88,6 +88,7 @@ import {
   liveEntryQuoteState,
   restoredSmallSymbol,
   manualConvLooksInverted,
+  typicalSlPipsExample,
 } from '../positionSize';
 import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
@@ -1411,7 +1412,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         {t.riskCalcSlPips}
         {spec ? ` · 1 pip = ${pipLabel}` : ''}
       </Text>
-      {input(slPips, onSlPipsChange, '20', t.riskCalcSlPips)}
+      {input(slPips, onSlPipsChange, typicalSlPipsExample(spec), t.riskCalcSlPips)}
       <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcFromPrice}</Text>
       <View style={[styles.pxRow, rtl && styles.pxRowRtl]}>
         <View style={styles.pxCell}>

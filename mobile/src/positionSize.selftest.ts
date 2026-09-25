@@ -38,6 +38,7 @@ import {
   quoteSpreadPips,
   priceAtPipOffset,
   riskForLots,
+  typicalSlPipsExample,
   riskInQuoteCcy,
   pnlInQuoteCcy,
   profitAtTarget,
@@ -3143,3 +3144,28 @@ console.log('positionSize trailing-zero price in pips field selftest OK');
   assert.equal(parseSlPips('12.25', S('GBPUSD')), 12.25);
 }
 console.log('positionSize exotic pairs (JPY conv inverted, carry-over, two-decimal price) selftest OK');
+
+{
+  // launch125: مثال خانة الوقف بحسب الأداة — «20» على USDZAR = 0.0020 داخل السبريد
+  const S = (x: string) => instrumentSpec(x)!;
+  const cases: [string, string][] = [
+    ['EURUSD', '20'], ['USDJPY', '20'], ['GBPJPY', '20'], ['USDSGD', '20'],
+    ['USDZAR', '1500'], ['USDTRY', '1500'], ['USDMXN', '1500'], ['EURZAR', '1500'],
+    ['USDSEK', '500'], ['USDNOK', '500'], ['USDPLN', '500'], ['USDCNH', '500'],
+    ['USDHKD', '20'], ['USDSAR', '20'], ['USDAED', '20'],
+    ['XAUUSD', '150'], ['XAUEUR', '150'], ['XAGUSD', '30'], ['XAUJPY', ''], ['XAGTRY', ''],
+  ];
+  for (const [sym, want] of cases) assert.equal(typicalSlPipsExample(S(sym)), want, sym);
+  assert.equal(typicalSlPipsExample(null), '20');
+  // المثال على الغريبة وقفٌ مقبول لا «يشبه سعراً»، وعلى الرئيسية كذلك
+  for (const sym of ['USDZAR', 'USDSEK', 'EURUSD', 'XAUUSD', 'XAGUSD']) {
+    const ex = typicalSlPipsExample(S(sym));
+    assert.equal(parseSlPips(ex, S(sym)), Number(ex), sym);
+    assert.equal(slPipsLooksLikePrice(ex, S(sym)), false, sym);
+  }
+  // ولوت المثال على USDZAR (10,000$، 1%، ZAR/USD≈0.057) معقول: ~0.12 لا ~8.8
+  const zar = S('USDZAR');
+  const lots = positionSize({ balance: 10_000, riskPct: 1, slPips: Number(typicalSlPipsExample(zar)), pipValuePerLot: pipValuePerLot(zar, 1 / 17.5), contractSize: zar.contractSize })!.lots;
+  assert.ok(lots > 0.05 && lots < 0.3, String(lots));
+}
+console.log('positionSize typicalSlPipsExample selftest OK');

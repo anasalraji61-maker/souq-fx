@@ -584,6 +584,24 @@ const METAL_CARRY_QUOTES = new Set(['USD', 'EUR', 'GBP', 'CHF', 'AUD', 'CAD', 'N
  */
 const EXOTIC_PIP_QUOTES = new Set(['SEK', 'NOK', 'DKK', 'PLN', 'TRY', 'ZAR', 'MXN', 'HKD', 'CNH', 'ILS', 'SAR', 'AED']);
 
+/**
+ * launch125: مثال خانة «الوقف (pip)» بحسب الأداة. كان «20» ثابتاً: على USDZAR/USDTRY/USDMXN وقف 20 pip = 0.0020 — داخل
+ * السبريد — فيوحي المثال بوقف يخرج لوتاً أكبر ×50–75 من وقف معتاد (مئات النقاط). وعلى الذهب «20» = 2$ أضيق من حركة دقيقة.
+ * المثال ليس قيمة: الخانة تبقى فارغة، هو فقط لا يقترح رقماً خاطئ المنزلة. المرتبطة بالدولار (HKD/SAR/AED) تتحرّك قليلاً ⇒ «20»؛
+ * الإسكندنافية/PLN/CNH/ILS ⇒ «500»؛ TRY/ZAR/MXN ⇒ «1500»؛ الذهب 150 (15$) والفضة 30 (0.30$).
+ */
+export function typicalSlPipsExample(spec: InstrumentSpec | null | undefined): string {
+  if (!spec) return '20';
+  // pip المعدن 0.1/0.01 **بأيّ عملة تسعير**: «150» على XAUJPY = 15 ين (~0.10$). خارج العملات المقاربة للدولار لا مثال أصدق من لا شيء.
+  if (METALS[spec.base]) return METAL_CARRY_QUOTES.has(spec.quote) ? (spec.base === 'XAU' ? '150' : '30') : '';
+  if (PEGGED_QUOTES.has(spec.quote)) return '20';
+  if (HIGH_VOL_EXOTIC_QUOTES.has(spec.quote)) return '1500';
+  if (EXOTIC_PIP_QUOTES.has(spec.quote)) return '500';
+  return '20';
+}
+const PEGGED_QUOTES = new Set(['HKD', 'SAR', 'AED']);
+const HIGH_VOL_EXOTIC_QUOTES = new Set(['TRY', 'ZAR', 'MXN']);
+
 /** قيمة الـpip للوت قياسي واحد، بعملة الحساب. */
 export function pipValuePerLot(spec: InstrumentSpec, quoteToAccount: number): number {
   return spec.contractSize * spec.pipSize * quoteToAccount;
