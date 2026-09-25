@@ -244,7 +244,10 @@ export function ambiguousThousandsPrice(
   const spec = symbol ? instrumentSpec(symbol) ?? instrumentSpec(smallContractPair(symbol) ?? '') : null;
   if (!spec) return null;
   const decimals = Math.round(-Math.log10(spec.pipSize)) + 1;
-  if (decimals >= 3) return null;
+  // الفضة بالين (≈4,500–6,000) والليرة (≈1,300+) بثلاث منازل **وفوق الألف**: «5.123» = 5,123 ين لا 5.123 — كانت
+  // تُقرأ 5.123 ⇒ وقف 10 pip بدل 10,000 ⇒ 30 لوتاً بدل 0.03 وخسارة ≈100,000$ بحساب 10,000 «يخاطر بـ100»
+  const silverOverThousand = spec.base === 'XAG' && (spec.quote === 'JPY' || spec.quote === 'TRY');
+  if (decimals >= 3 && !silverOverThousand) return null;
   const s = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009٬']/g, '').replace(/[٫．]/g, '.');
   if (!/^[1-9]\d{0,2}\.\d{3}$/.test(s)) return null;
   return { value: raw.trim(), whole: s.replace('.', ''), small: String(Number(s)) };

@@ -1617,6 +1617,20 @@ console.log('positionSize parsePriceFor selftest OK');
     assert.equal(amb, parsePriceFor(raw, 'XAUUSD') == null && parseDecimal(raw) != null, raw);
   }
   assert.equal(parsePriceFor('3.450', null), 3.45);
+
+  // الفضة بالين/الليرة فوق الألف بثلاث منازل: «5.123» = 5,123 ين (كانت تُقبل 5.123 ⇒ وقف 10 pip ⇒ 30 لوتاً بدل 0.03)
+  assert.deepEqual(ambiguousThousandsPrice('5.123', 'XAGJPY'), { value: '5.123', whole: '5123', small: '5.123' });
+  assert.deepEqual(ambiguousThousandsPrice('1.350', 'XAGTRY.m'), { value: '1.350', whole: '1350', small: '1.35' });
+  assert.equal(parsePriceFor('5.123', 'XAGJPY'), null);
+  assert.equal(parsePriceFor('5.023', 'XAGJPYc'), null);
+  assert.equal(parsePriceFor('5123', 'XAGJPY'), 5123);
+  assert.equal(parsePriceFor('5123.45', 'XAGJPY'), 5123.45);
+  assert.equal(parsePriceFor('5,123.450', 'XAGJPY'), 5123.45);
+  // الفضة تحت الألف بثلاث منازل فعلاً: لا تغيير
+  for (const [raw, sym] of [['31.450', 'XAGUSD'], ['29.125', 'XAGEUR'], ['550.123', 'XAGMXN'], ['47.250', 'XAGAUD'], ['157.250', 'USDJPY']] as const) {
+    assert.equal(ambiguousThousandsPrice(raw, sym), null, `${raw} ${sym}`);
+    assert.equal(parsePriceFor(raw, sym), Number(raw), `${raw} ${sym}`);
+  }
 }
 console.log('positionSize ambiguousThousandsPrice selftest OK');
 
