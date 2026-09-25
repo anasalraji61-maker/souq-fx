@@ -22,6 +22,7 @@
 | launch | أنس | `MessagesScreen` غير مستوردة (وحدها تستعمل `mockPeers`) — حذف أم ربط؟ | launch52 |
 | launch | أنس | ترخيص مصادر البيانات (ForexFactory/DailyFX/Twelve Data) قبل الرفع (`RELEASE-MOBILE.md` §0) | launch73 |
 | backend | أنس | **قرارات اتخذها backend (لأنس عكسها)**: التعادل مستثنى من نسبة الفوز؛ DXY «غير متاح» بدل حسابه من السلّة؛ حذف ميزة «البنوك» | backend-r1 |
+| tools | **launch** | **tools69 — مفتاح `journalLoadOlderError`** بثلاث لغات لفشل زرّ «تحميل الأقدم» بالدفتر (`TradeJournalPanel.tsx` `OLDER_ERROR_COPY` محلّي الآن؛ `journalLoadError` يقول «غادر الدفتر وارجع» وهنا الزرّ نفسه يعيد المحاولة): «تعذّر تحميل الصفقات الأقدم — تحقّق من الاتصال واضغط «تحميل الأقدم» مجدداً» / en «Could not load older trades — check your connection and tap “Load older” again». **الكردي بحاجة مراجعة.** tools يستبدل النسخة المحلية حين يصل. (للتحقّق: «تحميل الأقدم» وُصل `94f71e6`) | tools69 |
 
 **تحقّق الدورة 51 (بالكود):** أُغلق — tools67 (`api.trades` بمعاملات + `postJson` يرفق `status`، `api.ts:744`)؛ chart-r35 (2) و`disclaimer_code` (`signal_hub.py:280 :302`)؛
 backend-r3 توقّع المؤشرات + launch104 (1) (`38ccb87`: `IndicatorForecastPanel.tsx:104` `lang`، `chart/forecastText.ts` من `detail_code`/`disclaimer_code`)؛ backend-r3 422 التصويت (`VotePanel.tsx:146`)؛
