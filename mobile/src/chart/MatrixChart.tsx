@@ -1830,9 +1830,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const lastCandle = liveSeries.candles[liveSeries.candles.length - 1];
     const atSeriesEnd =
       source.plot.length > 0 && source.plot[source.plot.length - 1] === source.all[source.all.length - 1];
-    const endSec =
-      synthetic && atSeriesEnd && lastCandle
+    // الشموع العادية: آخر شمعة سارية خطوة فريم واحدة لا «الفرق بين آخر شمعتين» — أول شمعة بعد عطلة الأسبوع
+    // فرقها ~48س، فتابع لم يُحدَّث (آخر شمعته الأحد 21:00) كان يعرضها عند تقاطع القائد الاثنين 10:00 كأنها الحالية.
+    const lastPlot = source.plot[source.plot.length - 1];
+    const endSec = synthetic
+      ? atSeriesEnd && lastCandle
         ? candleTimeSec(lastCandle.time) + timeframeStepSec(series.timeframe)
+        : undefined
+      : lastPlot
+        ? candleTimeSec(lastPlot.time) + timeframeStepSec(series.timeframe)
         : undefined;
     const i = indexAtOrBeforeTime(
       source.plot.map((b) => ({ time: barTime(b) })),
