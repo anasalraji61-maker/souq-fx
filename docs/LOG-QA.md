@@ -538,3 +538,4 @@ launch99 (a): `openCurrencyExposure` (`tradePlan.ts:1707`) بلا مستعمل �
 **المراجعة (b — نصوص ثابتة)، diff منذ 25f2dc0 (18 ملفاً):** `mcPercentScaleA11y` (`MatrixChart.tsx:6109`) و`ctlKindLineBreak` (`typeLabels.ts:37`) موصولان.
 «Log»/«%»/`label: 'Line Break'` (`types.ts:269`، يُترجم عبر `typeLabels`) مقبولة. الوحيد: اسم a11y لشريحة ZigZag حرفي — المفتاح جاهز (أعلاه). **لا بند إضافي.**
 **الدورة القادمة:** المراجعة (c) — a11y.
+**إلحاق (بعد f80d388):** وصلت `933d73a` (launch: `LANG_STORAGE_KEY` مُصدَّر) و`f80d388` (chart: وسم التقاطع بالنسبة). البناء أخضر 0. صفّ QA41 صار: `notifications.ts:10` يستورد الثابت (tools).
