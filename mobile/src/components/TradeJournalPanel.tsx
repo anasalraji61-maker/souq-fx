@@ -269,7 +269,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           const q = await api.marketQuote(sym);
           // اقتباس بذري تجريبي (مزوّد غير مهيّأ/رمز مجهول) ليس سعر سوق — نتيجة عائمة منه رقمٌ مختلَق
           // Bid/Ask مع السعر: الصفّ العائم يُحسب على سعر الإغلاق الفعلي (`floatingExitPrice`)
-          return isRealQuote(q) ? ([sym, { price: q.price, bid: q.bid, ask: q.ask }] as const) : null;
+          // وسعرٌ أقدم من 3 دقائق والسوق مفتوح (المزوّد يردّ 429 ⇒ إغلاق شمعة 15د مخزّنة، حتى ساعات) لا يُحسب عليه العائم: «+50 pip»
+          // أخضر من سعر قبل ساعتين، و«أغلق بالسعر الحالي» يرفضه نفسه. يُعامَل كغياب السعر؛ والسوق المغلق (العطلة) يبقى بسعر الإغلاق
+          return isRealQuote(q) && liveEntryQuoteState(q, Date.now()) !== 'stale'
+            ? ([sym, { price: q.price, bid: q.bid, ask: q.ask }] as const)
+            : null;
         } catch {
           return null;
         }
