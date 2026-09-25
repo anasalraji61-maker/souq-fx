@@ -2105,14 +2105,14 @@ const styles = StyleSheet.create({
   layoutSwitcherTagTop: {
     color: colors.accent,
     fontSize: 8,
-    fontWeight: '900',
+    fontWeight: '500',
     lineHeight: 10,
     textAlign: 'center',
   },
   layoutSwitcherTagBottom: {
     color: colors.textMuted,
     fontSize: 8,
-    fontWeight: '800',
+    fontWeight: '500',
     lineHeight: 10,
     textAlign: 'center',
   },
@@ -2131,7 +2131,7 @@ const styles = StyleSheet.create({
   timeSyncText: {
     color: colors.textMuted,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '500',
   },
   timeSyncTextOn: {
     color: colors.accent,
@@ -2139,7 +2139,7 @@ const styles = StyleSheet.create({
   timeSyncHint: {
     color: colors.textDim,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     maxWidth: 140,
   },
   layoutSwitchBtn: {
@@ -2206,7 +2206,7 @@ const styles = StyleSheet.create({
     height: 8,
   },
   layoutSwitchCellOn: { backgroundColor: colors.accent },
-  layoutSwitchNum: { ...numeric, color: colors.textMuted, fontSize: 9, fontWeight: '900' },
+  layoutSwitchNum: { ...numeric, color: colors.textMuted, fontSize: 9, fontWeight: '500' },
   layoutSwitchNumOn: { color: colors.accent },
   layoutSwitchSep: {
     width: 1,
@@ -2229,8 +2229,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.bgPanel,
   },
-  topMark: { color: colors.textMuted, fontSize: 11, fontWeight: '800' },
-  topTip: { ...numeric, color: colors.textDim, fontSize: 7, fontWeight: '700' },
+  topMark: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
+  topTip: { ...numeric, color: colors.textDim, fontSize: 7, fontWeight: '500' },
   kindRow: { gap: 6, padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },  kindChip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -2240,7 +2240,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgPanel,
   },
   kindChipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  kindText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  kindText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   kindTextOn: { color: colors.accent },
   workspace: { flex: 1, flexDirection: 'row' },
   desktopMain: {
@@ -2268,21 +2268,21 @@ const styles = StyleSheet.create({
   desktopAssetDot: { width: 9, height: 9, borderRadius: 5 },
   desktopMarket: { color: colors.textDim, fontSize: 9, marginTop: 1 },
   desktopOhlc: { flexDirection: 'row', alignItems: 'baseline', gap: 7 },
-  desktopOhlcLabel: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
-  desktopOhlcValue: { ...numeric, color: colors.text, fontSize: 13, fontWeight: '800' },
-  desktopChange: { ...numeric, fontSize: 11, fontWeight: '900' },
-  desktopSpread: { ...numeric, color: colors.textDim, fontSize: 9, fontWeight: '700' },
+  desktopOhlcLabel: { color: colors.textDim, fontSize: 9, fontWeight: '500' },
+  desktopOhlcValue: { ...numeric, color: colors.text, fontSize: 13, fontWeight: '600' },
+  desktopChange: { ...numeric, fontSize: 11, fontWeight: '500' },
+  desktopSpread: { ...numeric, color: colors.textDim, fontSize: 9, fontWeight: '500' },
   desktopStatus: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 5 },
   statusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.warn },
   statusDotOnline: { backgroundColor: colors.bull },
-  statusText: { ...numeric, color: colors.textDim, fontSize: 9, fontWeight: '700' },
+  statusText: { ...numeric, color: colors.textDim, fontSize: 9, fontWeight: '500' },
   desktopChart: { flex: 1, paddingHorizontal: 7, paddingTop: 6 },
   heroLoading: { alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
   heroLoadingText: { color: colors.textMuted, fontSize: 13, textAlign: 'center', paddingHorizontal: spacing.md },
   chartArmed: {
     color: colors.bull,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '500',
     paddingHorizontal: 9,
     paddingTop: 4,
   },
@@ -2290,7 +2290,7 @@ const styles = StyleSheet.create({
   shadowHintText: {
     color: colors.textDim,
     fontSize: 9,
-    fontWeight: '700',
+    fontWeight: '500',
     textAlign: 'right',
   },
   shadowTfBarScroll: {
@@ -2340,7 +2340,7 @@ const styles = StyleSheet.create({
   shadowToggleText: {
     color: colors.textDim,
     fontSize: 8,
-    fontWeight: '900',
+    fontWeight: '500',
   },
   shadowToggleTextOn: {
     color: colors.accent,
@@ -2348,7 +2348,7 @@ const styles = StyleSheet.create({
   shadowTfLabel: {
     color: colors.accent,
     fontSize: 8,
-    fontWeight: '900',
+    fontWeight: '500',
     minWidth: 44,
     textAlign: 'center',
     marginLeft: 2,
@@ -2367,7 +2367,7 @@ const styles = StyleSheet.create({
   shadowFooterNote: {
     color: colors.textDim,
     fontSize: 9,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   rangeBar: {
     height: 34,
@@ -2381,7 +2381,7 @@ const styles = StyleSheet.create({
   },
   rangeBtn: { paddingHorizontal: 7, paddingVertical: 5, borderRadius: 5 },
   rangeBtnOn: { backgroundColor: colors.accentSoft },
-  rangeText: { color: colors.textDim, fontSize: 9, fontWeight: '800' },
+  rangeText: { color: colors.textDim, fontSize: 9, fontWeight: '500' },
   rangeSpacer: { flex: 1 },
   fullscreenBtn: {
     paddingHorizontal: 9,
@@ -2391,7 +2391,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.bgPanel,
   },
-  fullscreenText: { color: colors.textMuted, fontSize: 9, fontWeight: '800' },
+  fullscreenText: { color: colors.textMuted, fontSize: 9, fontWeight: '500' },
   mainScroll: { flex: 1 },
   rectWorkspace: {
     flex: 1,
@@ -2408,7 +2408,7 @@ const styles = StyleSheet.create({
   section: {
     color: colors.textMuted,
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '500',
     textAlign: 'right',
     marginTop: 2,
   },
@@ -2431,9 +2431,9 @@ const styles = StyleSheet.create({
   phoneWatchModal: { flex: 1, backgroundColor: colors.bg },
   phoneWatchModalBar: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
   phoneWatchModalBarLtr: { flexDirection: 'row' },
-  phoneWatchModalTitle: { color: colors.text, fontWeight: '800' },
+  phoneWatchModalTitle: { color: colors.text, fontWeight: '500' },
   phoneWatchClose: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: radii.sm, backgroundColor: colors.accentSoft },
-  phoneWatchCloseText: { color: colors.accent, fontWeight: '800', fontSize: 12 },
+  phoneWatchCloseText: { color: colors.accent, fontWeight: '500', fontSize: 12 },
   pill: {
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -2443,10 +2443,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgPanel,
   },
   pillOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  pillText: { color: colors.textMuted, fontWeight: '700', fontSize: 11 },
+  pillText: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
   pillTextOn: { color: colors.accent },
   pillRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  pillChg: { ...numeric, color: colors.textDim, fontWeight: '800', fontSize: 10 },
+  pillChg: { ...numeric, color: colors.textDim, fontWeight: '500', fontSize: 10 },
   pillChgUp: { color: colors.bull },
   pillChgDown: { color: colors.bear },
 });

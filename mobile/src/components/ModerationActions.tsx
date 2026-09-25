@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   rowRtl: { flexDirection: 'row-reverse' },
-  label: { color: colors.textDim, fontSize: 10, fontWeight: '700' },
+  label: { color: colors.textDim, fontSize: 10, fontWeight: '500' },
   chip: {
     borderRadius: radii.sm,
     borderWidth: 1,
@@ -173,11 +173,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   chipDisabled: { opacity: 0.4 },
-  chipText: { color: colors.text, fontSize: 11, fontWeight: '700' },
+  chipText: { color: colors.text, fontSize: 11, fontWeight: '500' },
   blockChip: { borderColor: colors.bear, backgroundColor: colors.bearSoft, maxWidth: 200 },
   blockText: { color: colors.text },
   cancelText: { color: colors.textMuted },
   toggle: { paddingHorizontal: 4 },
-  toggleText: { color: colors.textDim, fontSize: 16, fontWeight: '800', lineHeight: 16 },
+  toggleText: { color: colors.textDim, fontSize: 16, fontWeight: '500', lineHeight: 16 },
   toggleTextOn: { color: colors.accent },
 });

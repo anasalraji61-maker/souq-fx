@@ -1398,7 +1398,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
               <Text style={[styles.tradeMeta, { textAlign: align }]}>
                 {head}
                 {result ? (
-                  <Text style={{ color: mv && mv.dir < 0 ? colors.bear : mv && mv.dir > 0 ? colors.bull : colors.textDim, fontWeight: '700' }}>
+                  <Text style={{ color: mv && mv.dir < 0 ? colors.bear : mv && mv.dir > 0 ? colors.bull : colors.textDim, fontWeight: '500' }}>
                     {`${head ? ' · ' : ''}${result}`}
                   </Text>
                 ) : null}
@@ -2259,7 +2259,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
 
 const styles = StyleSheet.create({
   wrap: { gap: spacing.sm },
-  title: { color: colors.text, fontWeight: '900', fontSize: 16, textAlign: 'right' },
+  title: { color: colors.text, fontWeight: '500', fontSize: 16, textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
   stats: {
     backgroundColor: colors.bgElevated,
@@ -2281,7 +2281,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  chipText: { ...numeric, color: colors.textMuted, fontWeight: '700' },
+  chipText: { ...numeric, color: colors.textMuted, fontWeight: '500' },
   chipTextOn: { color: colors.accent },
   qChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   qChip: {
@@ -2291,7 +2291,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  qChipText: { ...numeric, color: colors.textMuted, fontWeight: '700', fontSize: 12 },
+  qChipText: { ...numeric, color: colors.textMuted, fontWeight: '500', fontSize: 12 },
   input: {
     ...numeric,
     backgroundColor: colors.bgPanel,
@@ -2313,13 +2313,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  btnText: { color: colors.onAccent, fontWeight: '800' },
+  btnText: { color: colors.onAccent, fontWeight: '500' },
   btnDisabled: { opacity: 0.4 },
   formError: {
     ...numeric,
     color: colors.bear,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     textAlign: 'right',
     marginTop: spacing.xs,
   },
@@ -2330,12 +2330,12 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.borderSoft,
     gap: 2,
   },
-  tradeMain: { ...numeric, color: colors.text, textAlign: 'right', fontWeight: '700', fontSize: 12 },
+  tradeMain: { ...numeric, color: colors.text, textAlign: 'right', fontWeight: '500', fontSize: 12 },
   tradeMeta: { ...numeric, color: colors.textDim, textAlign: 'right', fontSize: 11 },
   inputHalf: { flex: 1 },
-  planLine: { ...numeric, color: colors.textMuted, fontSize: 11, fontWeight: '700' },
-  planWarn: { ...numeric, color: colors.warn, fontSize: 11, fontWeight: '700' },
-  closeLink: { color: colors.accent, textAlign: 'right', fontSize: 11, fontWeight: '700' },
+  planLine: { ...numeric, color: colors.textMuted, fontSize: 11, fontWeight: '500' },
+  planWarn: { ...numeric, color: colors.warn, fontSize: 11, fontWeight: '500' },
+  closeLink: { color: colors.accent, textAlign: 'right', fontSize: 11, fontWeight: '500' },
   closeLinkDisabled: { opacity: 0.4 },
   tradeActions: {
     flexDirection: 'row',
@@ -2344,7 +2344,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
   },
-  delLink: { color: colors.bear, fontSize: 11, fontWeight: '700' },
+  delLink: { color: colors.bear, fontSize: 11, fontWeight: '500' },
   editBanner: {
     backgroundColor: colors.accentSoft,
     borderRadius: radii.sm,
@@ -2353,5 +2353,5 @@ const styles = StyleSheet.create({
     padding: 8,
     gap: 4,
   },
-  editBannerText: { ...numeric, color: colors.text, fontSize: 11, fontWeight: '700' },
+  editBannerText: { ...numeric, color: colors.text, fontSize: 11, fontWeight: '500' },
 });
