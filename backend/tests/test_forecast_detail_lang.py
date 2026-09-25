@@ -26,6 +26,23 @@ def test_price_decimals_follow_market_convention(price, dp):
     assert signal_hub.price_decimals(price) == dp
 
 
+@pytest.mark.parametrize("price,dp", [(0.0000123, 10), (0.05, 7), (0.12, 5), (1e-9, 12)])
+def test_price_decimals_below_a_tenth_match_level_round(price, dp):
+    """كان السقف 5 ⇒ SHIB ‏0.0000123 يُعرض دخوله ووقفه وهدفه «0.00001» بينما `level_round` يرسلها بعشر منازل."""
+    assert signal_hub.price_decimals(price) == dp
+
+
+def test_sub_cent_forecast_levels_stay_distinct_at_the_advertised_decimals():
+    # هبوط ثابت ⇒ اتجاه بيع بمستويات (الاتجاه نفسه ليس موضوع الاختبار)
+    closes = [0.0000123 * (1 - 0.004 * i) for i in range(80)]
+    candles = [{"open": c, "high": c * 1.002, "low": c * 0.998, "close": c} for c in closes]
+    out = signal_hub.indicator_forecast("SHIBUSD", candles, enabled=["ma", "trend"])
+    lv, dp = out["levels"], out["price_decimals"]
+    assert lv is not None and dp >= 10
+    shown = {round(lv[k], dp) for k in ("entry", "sl", "tp")}
+    assert len(shown) == 3
+
+
 def test_english_request_gets_no_arabic_text():
     out = signal_hub.indicator_forecast("EURUSD", _candles(1.08), lang="en")
     assert out["votes"]

@@ -162,10 +162,14 @@ _NO_DATA = {"ar": "لا بيانات كافية للمؤشرات.", "en": "Not e
 
 
 def price_decimals(price: float | None) -> int:
-    """منازل عرض السعر كما تعرضها المنصّات: ~6 أرقام معنوية (EURUSD 5، USDJPY 3، الذهب 2)."""
+    """منازل عرض السعر كما تعرضها المنصّات: ~6 أرقام معنوية (EURUSD 5، USDJPY 3، الذهب 2).
+
+    تحت 0.1 تزيد المنازل كـ`level_round` (6 أرقام معنوية، حتى 12 يقبلها التطبيق): كان السقف 5 ⇒ SHIB
+    ‏0.0000123 يُرسَل مستوياتٍ بعشر منازل مع `price_decimals: 5` فيعرض التطبيق الدخول والوقف والهدف كلّها «0.00001»."""
     if price is None or not math.isfinite(price) or price == 0:
         return 5
-    return max(0, min(5, 5 - int(math.floor(math.log10(abs(price))))))
+    mag = int(math.floor(math.log10(abs(price))))
+    return max(0, min(12 if mag < -1 else 5, 5 - mag))
 
 
 def _same_level(a: float, b: float, last: float | None) -> bool:
