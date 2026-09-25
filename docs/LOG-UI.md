@@ -402,3 +402,14 @@
 - «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليق فقط (`AnalystsPanel:129`)؛ `Math.random` خارج chart = `api.ts:45` (UUID).
 - **السعر المتجمّد:** `acceptTick` يرفض ما عمره عند الخادم > `TICK_STALE_MS`؛ `WatchlistPanel` لا يحسب نسبة/مسافة إلا من تيك حيّ غير تجريبي، والسعر البديل موسوم للقارئ (`wlDemoPriceA11ySuffix`).
 - **الجولة:** `AccountScreen:221-239` ⇐ `OnboardingOverlay`.
+
+## 2026-09-25 — تشغيل 33
+صفّ ui المفتوح بـCOORDINATION (دورة QA 73) = **chart-r56 (3)** (نصيب ui؛ نصيب tools أُنجز بـ`327a73d`):
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| 1b51cce | `AlertsPanel` مسافة صفّ التنبيه و`WatchlistPanel` مسافة الجرس: `chartPipSpec` بدل `instrumentSpec` ⇒ «USDJPYc»/«XAUUSDm»/«EURUSD.pro» (وبالأحرف الكبيرة كما تُحفظ) تنال مسافة pip (تحقّقتُ: 0.01/0.1/0.0001؛ DXY وBTCUSD تبقى `null`). الوحدة `pipUnit(lang)` (الإنجليزية «pips») بنصّ المسافة وشرائح الإزاحة وقارئ الشاشة. مواصفة النموذج (مفتاح التيكات) باقية `instrumentSpec` | chart-r56 (3) |
+
+بوابة البناء خضراء (tsc 0) قبل الـcommit.
+
+**إعادة تحقّق بنود المهمّة بالكود:** مسح أجسام `Pressable`/`Touchable*`/`*Chip|Pill|Button` بنطاقي بشرط اختيار بلا `accessibilityState`/aria/دور = **صفر**؛ «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده (`window.confirm` بالويب)؛ إعادة الجولة `AccountScreen:235` ⇐ `OnboardingOverlay`.
