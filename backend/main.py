@@ -970,7 +970,7 @@ def check_alerts(user: dict | None = Depends(_auth_user), key: str | None = Depe
 
 
 def _check_indicator_alert(alert: dict, candles: list[dict]) -> bool:
-    if alert_worker.cross_predates_arming(alert, candles):
+    if alert_worker.cross_is_stale(alert, candles):
         return False
     snap = ind_engine.snapshot(
         [{"close": c["close"], "open": c["open"], "high": c["high"], "low": c["low"]} for c in candles],
@@ -1085,7 +1085,9 @@ def check_indicator_alerts(
         candles = cache[ck]
         if candles is None:
             continue
-        if _check_indicator_alert(a, candles) and db.mark_indicator_alert_triggered(a["id"]):
+        if _check_indicator_alert(a, candles) and db.mark_indicator_alert_triggered(
+            a["id"], alert_worker.last_bar_time(candles)
+        ):
             # الصفّ كما استقرّ بالقاعدة لا كما قُرئ قبل القلب: `a` لُقّط قبل
             # `mark_indicator_alert_triggered` فيحمل `triggered: false` — أي أن المسار كان
             # يسلّم تنبيهاً **أُطلق للتوّ** موسوماً «يراقب». العميل الحالي يستعمل هذه القائمة

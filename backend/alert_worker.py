@@ -145,6 +145,36 @@ def cross_predates_arming(a: dict, candles: list[dict]) -> bool:
         return False
 
 
+def cross_already_fired(a: dict, candles: list[dict]) -> bool:
+    """تقاطع MA/MACD على الشمعة نفسها التي أُطلق عليها التنبيه قبل إعادة تسليحه = الحدث نفسه.
+
+    `cross_up`/`cross_down` تقرأ آخر قيمتين فقط والشمعة الجارية مؤهّلة ⇒ تنبيه «تقاطع صاعد · 1h» أُطلق
+    10:20 وأُعيد تسليحه 10:25 كان يُطلق ثانيةً بالفحص التالي على تقاطع شمعة 10:00 نفسه (إشعار ثانٍ
+    لحدث سبق إعادة التسليح)، وعلى D/W طوال اليوم/الأسبوع. الشمعة التالية مؤهّلة كالمعتاد."""
+    if a.get("alert_type") not in ("ma_cross", "macd_cross") or not candles:
+        return False
+    fired = a.get("fired_bar")
+    if fired is None:
+        return False
+    try:
+        return int(candles[-1]["time"]) <= int(fired)
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
+def cross_is_stale(a: dict, candles: list[dict]) -> bool:
+    """تقاطع لا يُطلق: شمعته انتهت قبل التسليح، أو أُطلق عليها التنبيه من قبل."""
+    return cross_predates_arming(a, candles) or cross_already_fired(a, candles)
+
+
+def last_bar_time(candles: list[dict] | None) -> int | None:
+    """وقت فتح آخر شمعة (يُحفظ `fired_bar` عند الإطلاق)؛ None إن لم يُقرأ."""
+    try:
+        return int(candles[-1]["time"]) if candles else None
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
 def _indicator_series(a: dict, cache: dict | None = None) -> list[dict] | None:
     """سلسلة `CHART_BARS` شمعة (نفس طول الشارت و/api/indicator-alerts/check — نفس الكاش ونفس القيم) لرمز/فريم التنبيه — **طلب واحد لكل (رمز، فريم) بالدورة** عبر `cache`.
     كانت كل تنبيهات المؤشر تجلب سلسلتها منفردة (5 تنبيهات RSI/تقاطع على EURUSD 1h = 5 طلبات للمزوّد
@@ -184,7 +214,7 @@ def _check_indicator(a: dict, cache: dict | None = None) -> bool:
             a.get("alert_type"),
         )
         return False
-    if cross_predates_arming(a, raw):
+    if cross_is_stale(a, raw):
         return False
     snap = ind_engine.snapshot(raw, int(a.get("fast_period") or 9), int(a.get("slow_period") or 21))
     at = a["alert_type"]
@@ -281,7 +311,9 @@ def _check_once() -> None:
         try:
             if not a.get("active") or a.get("triggered"):
                 continue
-            if _check_indicator(a, series) and db.mark_indicator_alert_triggered(a["id"]):
+            if _check_indicator(a, series) and db.mark_indicator_alert_triggered(
+                a["id"], last_bar_time(series.get((str(a["symbol"]).upper(), str(a["timeframe"]))))
+            ):
                 triggered_msgs.append((
                     a.get("user_id"),
                     a.get("owner_key"),

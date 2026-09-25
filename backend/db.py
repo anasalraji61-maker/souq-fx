@@ -7,6 +7,7 @@ import json
 import secrets
 import sqlite3
 import time
+from datetime import datetime, timezone
 from typing import Any
 
 from core.db_conn import DB_PATH, _conn
@@ -326,6 +327,10 @@ def _migrate_indicator_alerts(c: sqlite3.Connection) -> None:
             ts TEXT NOT NULL
         )"""
     )
+    # وقت فتح الشمعة التي أُطلق عليها تقاطع MA/MACD — إعادة التسليح لا تُطلق على الشمعة نفسها ثانيةً
+    cols = {r[1] for r in c.execute("PRAGMA table_info(indicator_alerts)").fetchall()}
+    if "fired_bar" not in cols:
+        c.execute("ALTER TABLE indicator_alerts ADD COLUMN fired_bar INTEGER")
 
 
 # كانت قاعدة البيانات تُبذَر عند أول تشغيل برسائل مجموعة من «أحمد/سارة/كريم» وفكرتَي صفقة بأصوات
@@ -1654,6 +1659,7 @@ def _ind_alert_row(r: sqlite3.Row) -> dict:
         "active": bool(r["active"]),
         "triggered": bool(r["triggered"]),
         "ts": r["ts"],
+        "fired_bar": r["fired_bar"],
     }
 
 
@@ -1686,11 +1692,16 @@ def create_indicator_alert(
 def rearm_indicator_alert(
     alert_id: str, user_id: int | None = None, owner_key: str | None = None
 ) -> dict | None:
-    """يعيد تنبيه مؤشر أُطلق إلى «يراقب» (triggered=0, active=1) — لمالكه فقط (`_owner_clause`)."""
+    """يعيد تنبيه مؤشر أُطلق إلى «يراقب» (triggered=0, active=1) — لمالكه فقط (`_owner_clause`).
+
+    `ts` = لحظة إعادة التسليح (كـ`update_alert` للسعر): كان يبقى وقت الإنشاء، فتقاطع شمعة D انتهت
+    قبل إعادة التسليح يمرّ من `cross_predates_arming` ويُطلق ثانيةً. و`fired_bar` يبقى ⇒ الشمعة التي
+    أُطلق عليها لا تُطلقه مرّة أخرى وهي ما تزال جارية (`alert_worker.cross_is_stale`)."""
     sql, args = _owner_clause(user_id, owner_key)
     with _conn() as c:
         cur = c.execute(
-            f"UPDATE indicator_alerts SET triggered=0, active=1 WHERE id=? AND {sql}", (alert_id, *args)
+            f"UPDATE indicator_alerts SET triggered=0, active=1, ts=? WHERE id=? AND {sql}",
+            (datetime.now(timezone.utc).isoformat(), alert_id, *args),
         )
         if cur.rowcount == 0:
             return None
@@ -2035,8 +2046,13 @@ def trade_stats(user_id: int | None = None, owner_key: str | None = None) -> dic
     }
 
 
-def mark_indicator_alert_triggered(alert_id: str) -> bool:
-    """مثل mark_alert_triggered: True لأول من يُطلقه فقط (لا إشعار مكرّر)."""
+def mark_indicator_alert_triggered(alert_id: str, bar_time: int | None = None) -> bool:
+    """مثل mark_alert_triggered: True لأول من يُطلقه فقط (لا إشعار مكرّر).
+    `bar_time` = وقت فتح آخر شمعة وقت الإطلاق (يُحفظ `fired_bar`)."""
     with _conn() as c:
-        cur = c.execute("UPDATE indicator_alerts SET triggered=1 WHERE id=? AND triggered=0", (alert_id,))
+        cur = c.execute(
+            "UPDATE indicator_alerts SET triggered=1, fired_bar=COALESCE(?, fired_bar) "
+            "WHERE id=? AND triggered=0",
+            (bar_time, alert_id),
+        )
     return cur.rowcount == 1
