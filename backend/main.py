@@ -1391,7 +1391,11 @@ def trades_close(
     key: str | None = Depends(_install_key),
 ):
     uid = user["user_id"] if user else None
-    row = db.close_trade(trade_id, body.exit, uid, owner_key=key)
+    try:
+        row = db.close_trade(trade_id, body.exit, uid, owner_key=key)
+    except db.TradeAlreadyClosed as e:
+        # 409 لا 200: الخروج المسجَّل أولاً يبقى، والعميل يعرض الصفّ كما هو مخزَّن
+        raise HTTPException(409, {"error": "trade_already_closed", "trade": e.trade})
     if not row:
         raise HTTPException(404, "trade not found")
     return {"ok": True, "trade": row, "stats": db.trade_stats(uid, owner_key=key)}

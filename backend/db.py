@@ -1742,9 +1742,21 @@ def add_trade(data: dict, user_id: int | None = None, owner_key: str | None = No
     return row
 
 
+class TradeAlreadyClosed(Exception):
+    """إغلاق صفقة مغلقة أصلاً. `trade` = الصفّ كما هو مخزَّن (بخروجه الأول)."""
+
+    def __init__(self, trade: dict):
+        super().__init__("trade already closed")
+        self.trade = trade
+
+
 def close_trade(
     trade_id: str, exit_price: float, user_id: int | None = None, owner_key: str | None = None
 ) -> dict | None:
+    """يغلق صفقة **مفتوحة** فقط. كان `UPDATE … WHERE id=?` بلا شرط الحالة: جهازان يُغلقان الصفقة
+    نفسها معاً ⇒ الثاني يمحو خروج الأول المسجَّل ونتيجته. الآن الشرط `status='open'` داخل
+    التحديث نفسه (ذرّي بـSQLite) ⇒ الثاني يتلقّى `TradeAlreadyClosed` بالخروج الأول كما هو.
+    تصحيح خروج مسجَّل عمداً يبقى عبر PATCH (`update_trade`)."""
     owner_sql, owner_args = _trade_owner_clause(user_id, owner_key)
     with _conn() as c:
         r = c.execute(
@@ -1754,13 +1766,22 @@ def close_trade(
             return None
         row = dict(r)
         row.pop("owner_key", None)
+        if row.get("status") != "open":
+            raise TradeAlreadyClosed(row)
         # نسبة حركة السعر فقط — راجع add_trade. None لصفّ قديم بدخول غير موجب (بدل 500 دائم).
         pnl = _pnl_pct(row["side"], float(row["entry"]), exit_price)
         closed_at = time.strftime("%Y-%m-%d %H:%M")
-        c.execute(
-            "UPDATE trades SET exit=?, pnl=?, closed_at=?, status='closed' WHERE id=?",
-            (exit_price, pnl, closed_at, trade_id),
+        cur = c.execute(
+            f"UPDATE trades SET exit=?, pnl=?, closed_at=?, status='closed' "
+            f"WHERE id=? AND status='open' AND {owner_sql}",
+            (exit_price, pnl, closed_at, trade_id, *owner_args),
         )
+        if cur.rowcount != 1:
+            # سبقنا جهاز آخر بين القراءة والتحديث
+            now = c.execute("SELECT * FROM trades WHERE id=?", (trade_id,)).fetchone()
+            won = dict(now) if now else row
+            won.pop("owner_key", None)
+            raise TradeAlreadyClosed(won)
         row.update({"exit": exit_price, "pnl": pnl, "closed_at": closed_at, "status": "closed"})
         return row
 

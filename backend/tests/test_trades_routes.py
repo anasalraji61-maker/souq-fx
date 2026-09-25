@@ -253,3 +253,63 @@ def test_the_owner_deletes_their_own_trade(client):
     assert client.delete(f"/api/trades/{trade['id']}", headers=_DEV1).status_code == 200
     assert client.get("/api/trades", headers=_DEV1).json()["trades"] == []
     assert client.delete(f"/api/trades/{trade['id']}", headers=_DEV1).status_code == 404, "والحذف مرّتين 404"
+
+
+# ─── إغلاق صفقة مغلقة: الخروج الأول لا يُمحى ──────────────────────────────────
+
+def test_closing_an_already_closed_trade_is_409_and_keeps_the_first_exit(client):
+    """جهازان يُغلقان الصفقة نفسها: كان الثاني يستبدل خروج الأول ونتيجته بصمت."""
+    trade = _open_trade(client, sl=None, tp=None)
+    first = client.post(f"/api/trades/{trade['id']}/close", json={"exit": 1.1100}, headers=_DEV1)
+    assert first.status_code == 200
+    second = client.post(f"/api/trades/{trade['id']}/close", json={"exit": 1.0900}, headers=_DEV1)
+    assert second.status_code == 409
+    detail = second.json()["detail"]
+    assert detail["error"] == "trade_already_closed"
+    assert detail["trade"]["exit"] == pytest.approx(1.1100), "الردّ يحمل الخروج المسجَّل"
+    assert "owner_key" not in detail["trade"]
+    row = client.get("/api/trades", headers=_DEV1).json()["trades"][0]
+    assert row["exit"] == pytest.approx(1.1100)
+    assert row["pnl"] > 0
+
+
+def test_the_close_update_itself_requires_an_open_trade(client, monkeypatch):
+    """السباق بين القراءة والتحديث: جهاز آخر يُغلق الصفقة **بعد** قراءتنا وقبل تحديثنا ⇒
+    الشرط داخل `UPDATE` نفسه يمنع المحو، لا الفحص الذي سبقه."""
+    trade = _open_trade(client, sl=None, tp=None)
+    real_conn = db._conn
+
+    class _Proxy:
+        def __init__(self, inner):
+            self._i = inner
+
+        def __enter__(self):
+            self._i.__enter__()
+            return self
+
+        def __exit__(self, *a):
+            return self._i.__exit__(*a)
+
+        def execute(self, sql, args=()):
+            if sql.lstrip().startswith("UPDATE trades SET exit"):
+                other = real_conn()
+                with other:
+                    other.execute(
+                        "UPDATE trades SET exit=1.2, pnl=9.09, status='closed' WHERE id=?", (trade["id"],)
+                    )
+                other.close()
+            return self._i.execute(sql, args)
+
+    monkeypatch.setattr(db, "_conn", lambda: _Proxy(real_conn()))
+    with pytest.raises(db.TradeAlreadyClosed) as e:
+        db.close_trade(trade["id"], 1.05, owner_key=_DEV1["X-Install-Id"])
+    assert e.value.trade["exit"] == pytest.approx(1.2)
+    monkeypatch.setattr(db, "_conn", real_conn)
+    row = client.get("/api/trades", headers=_DEV1).json()["trades"][0]
+    assert row["exit"] == pytest.approx(1.2), "خروج الجهاز الأول باقٍ"
+
+
+def test_a_closed_trade_can_still_be_corrected_on_purpose_via_patch(client):
+    trade = _open_trade(client, exit=1.1100)
+    r = client.patch(f"/api/trades/{trade['id']}", json={"exit": 1.1050}, headers=_DEV1)
+    assert r.status_code == 200 and r.json()["trade"]["exit"] == pytest.approx(1.1050)
