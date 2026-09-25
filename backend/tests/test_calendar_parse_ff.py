@@ -234,6 +234,20 @@ def test_json_timed_event_is_not_time_tbd():
     assert [e["time_tbd"] for e in out] == [False, False]
 
 
+@pytest.mark.parametrize("date, want_when", [
+    ("2026-09-20T19:00:00-04:00", "2026-09-21"),  # كما بالخلاصة الحيّة لعطلة اليابان (الاثنين 21/9)
+    ("2026-09-20T19:01:00-04:00", "2026-09-21"),
+    ("2026-09-21T00:00:00-04:00", "2026-09-21"),
+])
+def test_json_holiday_has_no_clock_time_whatever_the_feed_hour(date, want_when):
+    """كانت «Bank Holiday» بـ`T19:00-04:00` ⇒ `time_tbd` false و«2026-09-20 23:00 UTC»: عدّ تنازلي لساعة
+    لا وجود لها، وباليوم السابق للعطلة."""
+    out = cal._parse_ff_json(f'[{{"title":"Bank Holiday","country":"JPY","impact":"Holiday","date":"{date}"}}]')
+    assert out[0]["impact"] == "holiday"
+    assert out[0]["time_tbd"] is True
+    assert out[0]["when"] == want_when
+
+
 @pytest.mark.parametrize("tm,want", [("All Day", True), ("Tentative", True), ("", True), ("8:30am", False)])
 def test_xml_event_branch_marks_unannounced_time(tm, want):
     out = cal._parse_ff(_events(_event("BOJ Policy Rate", country="JPY", tm=tm)))

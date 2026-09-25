@@ -6,7 +6,7 @@ import json
 import re
 import time
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import httpx
@@ -221,10 +221,13 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
                 dt = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
                 if dt.tzinfo is not None:
                     ts = int(dt.timestamp())
-                    time_tbd = _json_time_unannounced(dt)
-                    # بلا ساعة معلنة: التاريخ وحده (بتقويم المصدر) — «04:00 UTC» كان ساعة لم يعلنها أحد
+                    # العطلة يوم كامل بلا ساعة مهما كان وقت الخلاصة: الخلاصة الحيّة تؤرّخها `T19:00:00-04:00`
+                    # (عطلة اليابان 21/9 ⇒ «2026-09-20 23:00 UTC» بعدّ تنازلي لساعة لا وجود لها، واليوم السابق)
+                    time_tbd = _json_time_unannounced(dt) or _impact(str(ev.get("impact") or "")) == "holiday"
+                    # بلا ساعة معلنة: التاريخ وحده — «04:00 UTC» كان ساعة لم يعلنها أحد. اليوم = تاريخ UTC لـ`ts`+12س
+                    # (قاعدة `CalendarPanel.fmtTbd` نفسها): منتصف ليل نيويورك ⇒ اليوم نفسه، و19:00 نيويورك ⇒ التالي
                     when = (
-                        dt.strftime("%Y-%m-%d")
+                        (dt.astimezone(timezone.utc) + timedelta(hours=12)).strftime("%Y-%m-%d")
                         if time_tbd
                         else dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
                     )
