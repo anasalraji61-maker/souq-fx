@@ -66,7 +66,8 @@ export function parseDecimal(
   raw: string,
   opts: { signed?: boolean; amount?: boolean; percent?: boolean } = {}
 ): number | null {
-  const digits = normalizeDigits(raw).trim();
+  // علامات الاتجاه الخفية (LRM/RLM/ALM وعزل bidi) تأتي مع النسخ من محادثة/منصّة عربية: «‏1.0850» كانت «رقم غير مفهوم» بلا سبب يُرى
+  const digits = normalizeDigits(raw.replace(/[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/g, '')).trim();
   if (!groupsBetweenDigitsOk(digits)) return null;
   let s = digits
     .replace(/[\s   ٬']/g, '')

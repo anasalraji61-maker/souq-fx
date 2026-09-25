@@ -154,3 +154,15 @@ console.log('parseDecimal arabic thousands sign hint selftest OK');
   assert.equal(parseDecimal('100 000'), 100000);
 }
 console.log('parseDecimal leading-zero group selftest OK');
+
+// علامات الاتجاه الخفية من النسخ (RLM/LRM/ALM/عزل bidi) لا تُفشل الرقم
+{
+  assert.equal(parseDecimal('‏1.0850'), 1.085);
+  assert.equal(parseDecimal('1.0850‎'), 1.085);
+  assert.equal(parseDecimal('⁦1.0850⁩'), 1.085);
+  assert.equal(parseDecimal('؜١٫٠٨٥٠'), 1.085);
+  assert.equal(parseDecimal('‫-0.5‬', { signed: true }), -0.5);
+  assert.equal(parseDecimal('‏'), null);
+  assert.equal(parseDecimal('1‏,000'), null); // المبهم يبقى مبهماً
+}
+console.log('parseDecimal bidi marks selftest OK');
