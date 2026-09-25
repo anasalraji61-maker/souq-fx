@@ -891,3 +891,4 @@ chart-r60 (ui) ← `57d2053` (`TimeframeBar.tsx:31` `scrollTo`). chart-r60 (laun
 **المراجعة (c — `accessibilityLabel`):** مسح AST (`Pressable/Touchable*/Switch/TextInput`، `placeholder` كوصف) ⇒ 28 بلا label: كلها بابن `<Text>` مترجم (MatrixChart ×11، Account ×10، Commission/NetworkTree «تحديث»، PositionSize `:1529`، Journal `:2029`) أو `MessagesScreen` ×3 (launch52).
 الأزرار الرمزية فقط (✕ ↶ − + ⛶ ⋯): 7 كلها بـlabel (`MatrixChart.tsx:6306,6425,6613,6624`، `ChartFrame.tsx:319`، `ModerationActions.tsx:151`، `AlertsPanel.tsx:853`). **لا بند.**
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة.
+**إضافة (سحب أثناء الدفع):** tools `10f8b0c` أضاف صفّ tools92 → ui بـCOORDINATION (تعارض حُلّ بإبقائه) — تحقّقتُ: `MatrixBottomDock.tsx:210` بلا `chartBannerVisible` ⇒ قائم. launch 137 أغلق جانبه من chart-r60. إعادة البناء على 95ebc9b أخضر (0)، 102/102.
