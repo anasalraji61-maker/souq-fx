@@ -307,6 +307,18 @@ function currenciesOnce(symbol: string): string[] {
   return base === quote ? [base] : [base, quote];
 }
 
+/**
+ * عملات **تحذير الخبر** للرمز: `symbolCurrencies`، ولمؤشرٍ بعملة غير الدولار وحدها (GER40 ⇒ EUR، JP225 ⇒ JPY، UK100 ⇒ GBP،
+ * HK50 ⇒ HKD) **والدولار معها**. الرواتب والتضخّم والفدرالي الأمريكي تحرّك الداكس والنيكاي بعنف (الأسهم العالمية تُسعَّر
+ * على العائد الأمريكي، والنيكاي على USDJPY) — ومتداول الداكس كان يدخل قبل الرواتب بدقائق بلا سطر. التحذير الزائد رخيص،
+ * والغائب قد يكلّف. العطل (`bankHolidayToday`) تبقى على `symbolCurrencies`: عطلة أمريكية لا تغلق بورصة فرانكفورت.
+ * الوحيدة غير الدولارية لا تأتي إلا من جدول المؤشرات (`SINGLE_CCY` — كل قيمه غير الدولارية مؤشرات أسهم).
+ */
+export function newsCurrencies(symbol: string): string[] {
+  const own = symbolCurrencies(symbol);
+  return own.length === 1 && own[0] !== 'USD' ? [own[0], 'USD'] : own;
+}
+
 export const NEWS_HORIZON_MS = 3 * 60 * 60 * 1000;
 export const NEWS_GRACE_MS = 15 * 60 * 1000;
 
@@ -525,7 +537,7 @@ export function openPositionsNewsRisk(
     const key = sym.toUpperCase();
     if (!sym || seen.has(key)) continue;
     seen.add(key);
-    const ccys = symbolCurrencies(sym);
+    const ccys = newsCurrencies(sym);
     if (ccys.length) uniq.push({ sym, ccys });
   }
   const currencies = [...new Set(uniq.flatMap((u) => u.ccys))];
@@ -533,7 +545,7 @@ export function openPositionsNewsRisk(
   if (!hit) return null;
   const moving = new Set(sameMinuteCurrencyLabel(events, currencies, hit.event).split('/'));
   if (shownSymbol) {
-    const shownCcys = symbolCurrencies(shownSymbol);
+    const shownCcys = newsCurrencies(shownSymbol);
     const shown = nextHighImpact(events, shownCcys, nowMs);
     const sameMoment =
       shown != null && typeof shown.event.ts === 'number' && Math.abs(shown.event.ts - (hit.event.ts as number)) < 60;

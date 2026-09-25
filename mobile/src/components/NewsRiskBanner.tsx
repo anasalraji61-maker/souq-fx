@@ -12,6 +12,7 @@ import {
   openCalendarUnavailable,
   newsCountdown,
   newsBannerText,
+  newsCurrencies,
   newsTickDelayMs,
   nextHighImpact,
   openPositionsNewsRisk,
@@ -132,7 +133,8 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
     };
   }, []);
 
-  const currencies = openSymbols ? [...new Set(openSymbols.flatMap((s) => symbolCurrencies(s)))] : symbolCurrencies(symbol);
+  // الخبر: مؤشر غير دولاري (GER40) يُحذَّر له بخبر الدولار كذلك — `newsCurrencies`؛ العطلة بعملته وحدها
+  const currencies = openSymbols ? [...new Set(openSymbols.flatMap((s) => newsCurrencies(s)))] : newsCurrencies(symbol);
   const currencyKey = currencies.join(',');
   // تبديل الرمز والشريط مركَّب (الطرفية، الحاسبة، كتابة رمز الدفتر): `now` كان آخر دقّة للساعة — حتى 60ث قديمة —
   // فخبر الزوج الجديد بعد 40ث يُكتب «بعد 1د» 35ث، ومؤقّت التجديد يُجدول من الفرق الخطأ نفسه
@@ -184,7 +186,7 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
   }
   // عطلة بنوك اليوم لعملتَي الرمز — حين لا خبر قوي فقط (الخبر أخطر ويشغل الشريط). لا للصفقات المفتوحة ولا للرقمية (سوقٌ بلا عطلة)
   const holiday =
-    !hit && !openSymbols && holidayCache && !isCryptoSymbol(symbol) ? bankHolidayToday(holidayCache.events, currencies, now) : null;
+    !hit && !openSymbols && holidayCache && !isCryptoSymbol(symbol) ? bankHolidayToday(holidayCache.events, symbolCurrencies(symbol), now) : null;
   if (holiday) {
     const text = `🏦 ${t.newsHolidayToday
       .split('{ccy}')

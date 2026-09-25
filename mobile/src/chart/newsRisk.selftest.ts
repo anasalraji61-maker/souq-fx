@@ -19,6 +19,7 @@ import {
   sameMinuteCurrencyLabel,
   newsBannerText,
   symbolCurrencies,
+  newsCurrencies,
   knownSingleName,
   isCryptoSymbol,
   NEWS_STALE_MAX_MS,
@@ -1008,3 +1009,31 @@ console.log('newsRisk metal-name and index spelling selftest OK');
   assert.deepEqual(sc('ABCFX'), []);
 }
 console.log('newsRisk oil/gold aliases and fx suffix selftest OK');
+
+// مؤشر غير دولاري: خبر الدولار يُحذَّر له كذلك (الرواتب تحرّك الداكس والنيكاي)، والعطلة الأمريكية لا
+{
+  assert.deepEqual(newsCurrencies('GER40'), ['EUR', 'USD']);
+  assert.deepEqual(newsCurrencies('JP225Cash'), ['JPY', 'USD']);
+  assert.deepEqual(newsCurrencies('UK100m'), ['GBP', 'USD']);
+  assert.deepEqual(newsCurrencies('JP225_USD'), ['JPY', 'USD']);
+  assert.deepEqual(newsCurrencies('DE30_EUR'), ['EUR', 'USD']);
+  // ما عداها كما كان
+  for (const sym of ['EURUSD', 'XAUUSD', 'XAUEUR', 'NAS100', 'USOIL', 'BTCUSD', 'EURGBP', 'AAPL', '']) {
+    assert.deepEqual(newsCurrencies(sym), symbolCurrencies(sym), sym);
+  }
+  const now = 1_800_000_000_000;
+  const nfp = { id: 'nfp', title: 'NFP', currency: 'USD', impact: 'high', ts: 1_800_000_600 };
+  assert.equal(nextHighImpact([nfp], symbolCurrencies('GER40'), now), null);
+  assert.equal(nextHighImpact([nfp], newsCurrencies('GER40'), now)?.event.id, 'nfp');
+  // صفقة داكس مفتوحة: الرواتب تُذكر لها، وUSDJPY بجانبها
+  assert.deepEqual(openPositionsNewsRisk(['GER40', 'USDJPY'], [nfp], now)!.symbols, ['GER40', 'USDJPY']);
+  assert.deepEqual(openPositionsNewsRisk(['GER40'], [nfp], now)!.symbols, ['GER40']);
+  // والمركزي الأوروبي لا يذكر USDJPY
+  const ecb = { id: 'ecb', title: 'ECB', currency: 'EUR', impact: 'high', ts: 1_800_000_300 };
+  assert.deepEqual(openPositionsNewsRisk(['GER40', 'USDJPY'], [ecb], now)!.symbols, ['GER40']);
+  // عطلة أمريكية: عملات العطلة للداكس اليورو وحده (الشريط يمرّر `symbolCurrencies`)
+  const july4 = Date.UTC(2027, 6, 5, 12);
+  const hol = { id: 'h', title: 'Independence Day', currency: 'USD', impact: 'holiday', ts: Date.UTC(2027, 6, 5, 4) / 1000 };
+  assert.equal(bankHolidayToday([hol], symbolCurrencies('GER40'), july4), null);
+}
+console.log('newsRisk newsCurrencies selftest OK');
