@@ -124,7 +124,7 @@ import {
   barChangeRef,
   candleRangePipsText,
   measureDurationSec,
-  measurePipsText,
+  signedDistanceText,
   measureReadoutText,
 } from './measureReadout';
 import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
@@ -313,7 +313,6 @@ import {
   computeZigZag,
   computeZlema,
   formatPrice,
-  formatPriceDiff,
   heikinAshi,
   symbolPriceDecimals,
 } from './math';
@@ -5040,10 +5039,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const currentTagTop = Math.max(0, Math.min(chartPlotH - currentTagH - 2, currentPriceY - 9));
   // بُعد التقاطع عن السعر الحالي بالـpip تحت سعره: «أين أضع الوقف/الهدف» كان يعني فتح أداة
   // القياس وسحبها من السعر إلى المستوى. الإشارة من السعر الحالي إلى التقاطع (+ فوقه، − تحته)،
-  // وأداة بلا مواصفة pip (DXY، مؤشرات) تبقى بسطر السعر وحده.
+  // وأداة بلا مواصفة pip (DXY، مؤشرات، كريبتو) بفرق السعر «+125.50» (`signedDistanceText`).
   const crossPipsText =
     crossPrice != null && Number.isFinite(currentPrice)
-      ? measurePipsText(series.symbol, currentPrice, crossPrice, lang)
+      ? signedDistanceText(series.symbol, currentPrice, crossPrice, lang, priceDecimalsRef)
       : null;
   const crossTagH = crossPipsText ? PRICE_TAG_H + COUNTDOWN_LINE_H : PRICE_TAG_H;
   const crossTagTop = crossPrice != null
@@ -5289,10 +5288,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const { ref } = crossChange;
               // بلا مواصفة pip (US30، BTC، DXY، النفط) ⇒ الفرق بمنازل السعر «+125.00 (+0.30%)» كـTradingView
               // لا النسبة وحدها — متداول المؤشرات يقيس الشمعة بالنقاط السعرية.
-              const diff = crossCandle.close - ref;
-              const pips =
-                measurePipsText(series.symbol, ref, crossCandle.close, lang) ??
-                `${diff > 0 ? '+' : diff < 0 ? '−' : ''}${formatPriceDiff(diff, ref, series.symbol, priceDecimalsRef)}`;
+              const pips = signedDistanceText(series.symbol, ref, crossCandle.close, lang, priceDecimalsRef);
               return (
                 <Text style={{ color: crossChange.color, fontWeight: '800' }}>
                   {pips ? ` ${pips} (${crossChange.pctText})` : ` ${crossChange.pctText}`}
@@ -7113,7 +7109,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   {(() => {
                     const pips =
                       (lv.label === 'PDH' || lv.label === 'PDL') && Number.isFinite(currentPrice)
-                        ? measurePipsText(series.symbol, currentPrice, lv.price, lang)
+                        ? signedDistanceText(series.symbol, currentPrice, lv.price, lang, priceDecimalsRef)
                         : null;
                     return pips ? <Text style={styles.levelPipText}>{` · ${pips}`}</Text> : null;
                   })()}
@@ -7245,7 +7241,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                         الدعم ليعرف كم بقي للوصول إليه؛ الرقم نفسه الذي تعطيه أداة القياس. */}
                     {(() => {
                       const pips = Number.isFinite(currentPrice)
-                        ? measurePipsText(series.symbol, currentPrice, d.a.price, lang)
+                        ? signedDistanceText(series.symbol, currentPrice, d.a.price, lang, priceDecimalsRef)
                         : null;
                       return pips ? <Text style={styles.levelPipText}>{` · ${pips}`}</Text> : null;
                     })()}

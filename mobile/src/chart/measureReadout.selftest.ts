@@ -8,6 +8,7 @@ import {
   measurePipsText,
   measureReadoutText,
   pipUnit,
+  signedDistanceText,
   type MeasureStats,
 } from './measureReadout';
 
@@ -218,6 +219,13 @@ ok('pipUnit ar/ku/غائبة', pipUnit('ar') === 'pip' && pipUnit('ku') === 'pip
 ok('قياس إنجليزي', measurePipsText('EURUSD', 1.08, 1.0824, 'en') === '+24.0 pips');
 ok('قياس عربي', measurePipsText('EURUSD', 1.08, 1.0824, 'ar') === '+24.0 pip');
 ok('مدى إنجليزي', candleRangePipsText('EURUSD', 1.08612, 1.0845, 'en') === '↕ 16.2 pips');
+
+// ── المسافة بإشارتها: نقاط، وإلا فرق السعر بمنازل الرمز
+ok('مسافة فوركس بالنقاط', signedDistanceText('EURUSD', 1.08, 1.0824, 'en') === '+24.0 pips');
+ok('مسافة مؤشر بفرق السعر', signedDistanceText('US30', 42000, 42125.5, 'en', 42000) === '+125.50');
+ok('مسافة مؤشر هبوطاً', signedDistanceText('US30', 42125.5, 42000, 'ar', 42000) === '−125.50');
+ok('مسافة صفرية بلا إشارة', signedDistanceText('US30', 42000, 42000, 'ar', 42000) === '0.00');
+ok('مسافة بسعر فاسد ⇒ null', signedDistanceText('US30', NaN, 42000) === null);
 
 if (failures) {
   console.error(`measureReadout.selftest: ${failures} FAILED`);

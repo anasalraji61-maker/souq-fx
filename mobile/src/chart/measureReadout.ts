@@ -61,6 +61,28 @@ export function measurePipsText(symbol: string, a: number, b: number, lang?: str
 }
 
 /**
+ * المسافة من `a` إلى `b` بإشارتها: بالنقاط لرموز الفوركس/المعادن («+24.0 pips»)، وإلا بفرق السعر
+ * بمنازل الرمز («+125.50» لـUS30، «−0.215» لـDXY) كسطر التقاطع. كان وسم التقاطع ووسوم PDH/PDL
+ * والخطّ الأفقي تسقط المسافة كلّها لأداة بلا مواصفة pip، فمتداول المؤشرات لا يعرف كم بقي للمستوى.
+ * الصفر المطبوع بلا إشارة. `priceRef` مرجع المنازل لأداة بلا منازل معروفة (سعرها الجاري).
+ */
+export function signedDistanceText(
+  symbol: string,
+  a: number,
+  b: number,
+  lang?: string,
+  priceRef?: number | null
+): string | null {
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+  const pips = measurePipsText(symbol, a, b, lang);
+  if (pips) return pips;
+  const diff = b - a;
+  const text = formatPriceDiff(diff, a, symbol, priceRef);
+  const sign = Number(text) === 0 ? '' : diff > 0 ? '+' : '−';
+  return `${sign}${text}`;
+}
+
+/**
  * مدى الشمعة (أعلى − أدنى) بالنقاط لسطر التقاطع: «↕ 16.2 pip». متداول الفوركس يقيس الشمعة
  * بالنقاط لا بالنسبة (شمعة خبر 40 pip مقابل شمعة آسيا 6 pip) — والنسبة وحدها كانت بالسطر.
  * `null` لأداة بلا مواصفة pip (DXY، مؤشرات) فلا يُكتب شيء بدل رقم بوحدة خاطئة.
