@@ -23,13 +23,14 @@ import {
 } from '../chart/newsRisk';
 
 /**
- * موعد خبرٍ قويّ **بلا ساعة معلنة** (`unannouncedHighImpactToday`) مكان «بعد 2س» بالسطر. نسخة محلية حتى يضيف launch
- * `newsTimeTbd` (ar/en/ku) — تُقرأ من القاموس إن وُجدت. الكردي بحاجة مراجعة.
+ * موعد خبرٍ قويّ بلا ساعة معلنة يومُه **غداً** بتقويم المستخدم (`unannouncedHighImpactToday().tomorrow`، launch113) مكان
+ * `t.newsTimeTbd` «اليوم، …». نسخة محلية حتى يضيف launch `newsTimeTbdTomorrow` (ar/en/ku) — تُقرأ من القاموس إن وُجدت.
+ * الكردي بحاجة مراجعة.
  */
-const TIME_TBD_COPY: Record<string, string> = {
-  ar: 'اليوم، الساعة غير معلنة',
-  en: 'today, time not announced',
-  ku: 'ئەمڕۆ، کاتەکەی ڕانەگەیەندراوە',
+const TIME_TBD_TOMORROW_COPY: Record<string, string> = {
+  ar: 'غداً، الساعة غير معلنة',
+  en: 'tomorrow, time not announced',
+  ku: 'سبەینێ، کاتەکەی ڕانەگەیەندراوە',
 };
 
 /**
@@ -161,7 +162,9 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
   // أحمر كالخبر الموقوت بلا عدّ. للرمز المعروض فقط (الصفقات المفتوحة تبقى على الموقوت)، وحين لا خبر موقوت يشغل الشريط
   const tbd = !hit && !openSymbols && cache ? unannouncedHighImpactToday(cache.events, currencies, now) : null;
   if (tbd) {
-    const when = (t as { newsTimeTbd?: string }).newsTimeTbd ?? TIME_TBD_COPY[lang] ?? TIME_TBD_COPY.en;
+    const when = tbd.tomorrow
+      ? (t as { newsTimeTbdTomorrow?: string }).newsTimeTbdTomorrow ?? TIME_TBD_TOMORROW_COPY[lang] ?? TIME_TBD_TOMORROW_COPY.en
+      : t.newsTimeTbd;
     const text = newsBannerText({
       head: t.newsRiskHigh,
       currency: tbd.currencies.join('/'),

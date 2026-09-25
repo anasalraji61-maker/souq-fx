@@ -351,17 +351,24 @@ export const UNANNOUNCED_SPAN_MS = 24 * 60 * 60 * 1000;
  * أخبار قوية **بلا ساعة معلنة** لعملات الزوج اليوم (`newsTimeUnannounced`): من `ts − أفق الأخبار` حتى نهاية يومها بنيويورك.
  * للشريط حين لا خبر موقوت — «خبر قوي · JPY · اليوم، الساعة غير معلنة · BOJ Policy Rate» بدل عدٍّ كاذب أو صمت. العملات
  * بترتيب الزوج بلا تكرار، والعناوين بلا تكرار. `null` = لا شيء.
+ *
+ * `tomorrow` (launch113): الشريط يبدأ قبل منتصف ليل نيويورك بـ3س، فمن 21:00 إلى 24:00 نيويورك كان يقول «اليوم» عن حدثٍ يومُه
+ * **غداً** بتقويم المستخدم بالأمريكتين. يُقارَن تاريخ الحدث (تاريخ نيويورك) بتاريخ «الآن» **بساعة الجهاز** (`localOffsetMin`
+ * دقائق شرق UTC، افتراضياً من الجهاز): أقدم ⇒ `tomorrow`؛ لمستخدم آسيا/أوروبا هو اليوم نفسه فيبقى «اليوم».
  */
 export function unannouncedHighImpactToday(
   events: readonly NewsEvent[],
   currencies: readonly string[],
   nowMs: number,
-  horizonMs: number = NEWS_HORIZON_MS
-): { currencies: string[]; titles: string[] } | null {
+  horizonMs: number = NEWS_HORIZON_MS,
+  localOffsetMin: number = -new Date(nowMs).getTimezoneOffset()
+): { currencies: string[]; titles: string[]; tomorrow: boolean } | null {
   if (!currencies.length) return null;
   const want = new Set(currencies);
   const hitCcys = new Set<string>();
   const titles: string[] = [];
+  const localDay = Math.floor((nowMs + localOffsetMin * 60_000) / 86_400_000);
+  let today = false;
   for (const e of events) {
     if (e.sample || String(e.impact).toLowerCase() !== 'high') continue;
     if (typeof e.ts !== 'number' || !Number.isFinite(e.ts) || !newsTimeUnannounced(e)) continue;
@@ -370,11 +377,14 @@ export function unannouncedHighImpactToday(
     const start = e.ts * 1000;
     if (nowMs < start - horizonMs || nowMs >= start + UNANNOUNCED_SPAN_MS) continue;
     hitCcys.add(c);
+    // تاريخ الحدث = تاريخ UTC لمنتصف ليل نيويورك (04:00/05:00 UTC من اليوم نفسه)
+    if (Math.floor(start / 86_400_000) <= localDay) today = true;
     const title = String(e.title ?? '').trim();
     if (title && !titles.includes(title)) titles.push(title);
   }
   if (!hitCcys.size) return null;
-  return { currencies: currencies.filter((c) => hitCcys.has(c)), titles };
+  // حدثٌ اليوم وآخر غداً ⇒ «اليوم» (الأقرب والأحذر)
+  return { currencies: currencies.filter((c) => hitCcys.has(c)), titles, tomorrow: !today };
 }
 
 /** مدّة «يوم العطلة» من بدايته: ForexFactory يضع العطلة «طوال اليوم» عند منتصف ليل يومها. */

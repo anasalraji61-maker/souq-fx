@@ -916,7 +916,11 @@ console.log('newsRisk long/spot/roll suffix selftest OK');
   for (const h of [2, 3.08, 4.1]) assert.equal(nextHighImpact([boj], ['USD', 'JPY'], Date.UTC(2026, 8, 25, 0) + h * 3_600_000), null);
   // بل سطر «اليوم، الساعة غير معلنة» من ts − الأفق حتى نهاية يوم نيويورك
   const t0 = edt * 1000;
-  assert.deepEqual(unannouncedHighImpactToday([boj], ['USD', 'JPY'], t0 - 2 * 3_600_000), { currencies: ['JPY'], titles: ['BOJ Policy Rate'] });
+  assert.deepEqual(unannouncedHighImpactToday([boj], ['USD', 'JPY'], t0 - 2 * 3_600_000, NEWS_HORIZON_MS, 0), {
+    currencies: ['JPY'],
+    titles: ['BOJ Policy Rate'],
+    tomorrow: false,
+  });
   assert.ok(unannouncedHighImpactToday([boj], ['USD', 'JPY'], t0 - NEWS_HORIZON_MS));
   assert.equal(unannouncedHighImpactToday([boj], ['USD', 'JPY'], t0 - NEWS_HORIZON_MS - 1), null);
   assert.ok(unannouncedHighImpactToday([boj], ['JPY'], t0 + UNANNOUNCED_SPAN_MS - 1));
@@ -929,7 +933,38 @@ console.log('newsRisk long/spot/roll suffix selftest OK');
   assert.equal(unannouncedHighImpactToday([boj], [], t0), null);
   // عملتان بترتيب الزوج، عنوان مكرّر مرّة واحدة
   const two = [boj, { ...boj, id: 'b2' }, { id: 'u', title: 'Bank Stress Test', currency: 'USD', impact: 'high', ts: edt }];
-  assert.deepEqual(unannouncedHighImpactToday(two, ['USD', 'JPY'], t0), { currencies: ['USD', 'JPY'], titles: ['BOJ Policy Rate', 'Bank Stress Test'] });
+  assert.deepEqual(unannouncedHighImpactToday(two, ['USD', 'JPY'], t0, NEWS_HORIZON_MS, 0), {
+    currencies: ['USD', 'JPY'],
+    titles: ['BOJ Policy Rate', 'Bank Stress Test'],
+    tomorrow: false,
+  });
+  // launch113: 3س قبل منتصف ليل نيويورك (01:00–04:00 UTC) — «غداً» بنيويورك (−240د) وسان فرانسيسكو (−420د)،
+  // و«اليوم» بطوكيو (+540) ولندن (+60) والقاهرة (+180) حيث التاريخ صار 25 سبتمبر
+  const pre = t0 - 2 * 3_600_000; // 02:00 UTC = 22:00 نيويورك 24 سبتمبر
+  const tm = (off: number, at = pre) => unannouncedHighImpactToday([boj], ['JPY'], at, NEWS_HORIZON_MS, off)?.tomorrow;
+  assert.equal(tm(-240), true);
+  assert.equal(tm(-420), true);
+  assert.equal(tm(540), false);
+  assert.equal(tm(60), false);
+  assert.equal(tm(180), false);
+  // منتصف ليل نيويورك بالضبط ⇒ اليوم؛ قبله بدقيقة ⇒ غداً
+  assert.equal(tm(-240, t0), false);
+  assert.equal(tm(-240, t0 - 60_000), true);
+  // بعد بدء اليوم الحدث «اليوم» بكل مكان حتى نهاية الشريط (بطوكيو صار 26 سبتمبر — ليس «غداً»)
+  assert.equal(tm(540, t0 + UNANNOUNCED_SPAN_MS - 1), false);
+  // سان فرانسيسكو عند 01:00 نيويورك ما زالت 22:00 يوم 24 ⇒ غداً؛ عند منتصف ليلها ⇒ اليوم
+  assert.equal(tm(-420, t0 + 3_600_000), true);
+  assert.equal(tm(-420, t0 + 3 * 3_600_000), false);
+  // حدث اليوم وحدث الغد معاً ⇒ «اليوم»
+  const nextDay = { ...boj, id: 'b3', title: 'BOJ Outlook', ts: edt + 86_400 };
+  assert.equal(
+    unannouncedHighImpactToday([boj, nextDay], ['JPY'], t0 + UNANNOUNCED_SPAN_MS - 3_600_000, NEWS_HORIZON_MS, -240)?.tomorrow,
+    false
+  );
+  assert.equal(
+    unannouncedHighImpactToday([nextDay], ['JPY'], t0 + UNANNOUNCED_SPAN_MS - 3_600_000, NEWS_HORIZON_MS, -240)?.tomorrow,
+    true
+  );
   // الخبر الموقوت لا يتأثّر: رواتب 12:30 UTC بجانب حدث بلا ساعة
   const nfp: NewsEvent = { id: 'n', title: 'NFP', currency: 'USD', impact: 'High', ts: Date.UTC(2026, 8, 25, 12, 30) / 1000 };
   assert.equal(nextHighImpact([boj, nfp], ['USD', 'JPY'], Date.UTC(2026, 8, 25, 11))?.event.id, 'n');
