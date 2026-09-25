@@ -366,7 +366,7 @@ QA21 (`d8446d0`؛ `DIRECTIONAL_OVERLAYS` باقٍ عمداً — استثناء 
 **البناء:** أخضر 0 (بعد 699d06d) — لا إصلاح لازم. **Selftests:** 76/76 ناجح (`npx tsx`؛ +1 `renko`).
 **التحقّق من الإغلاقات بالكود:** لا commit منذ 6dd7a29 يلمس صفّاً مفتوحاً. **غير مُغلق:** 10 `Alert.alert` بـ5 ملفات (الـ11 بـgrep تعليق `TradeJournalPanel:939`)،
 «₴» ×2، `FocusChartModal:56` `BASES` و:284-288 `series.change_pct`، `AiPanel`/`LectureClassroom` بلا `maxLength`، `BRENT/USD`، `ukDst` `marketHours.ts:78`.
-**طلبات تنسيق جديدة:** لا شيء (chart22 وlaunch83 ردّ/ملاحظات فقط؛ tools لم يكتب سجلاً لـ`d31ce62`…`699d06d`). ملاحظة launch83 `MatrixSidePanel.tsx:162` بلا `selected` مشمولة بصفّ QA3.
+**طلبات تنسيق جديدة:** لا شيء (chart22 وlaunch83 ردّ/ملاحظات فقط؛ tools54 وصل بعد الكتابة: Screener أُسقط بالدورة 31 أصلاً، بلا طلب جديد). ملاحظة launch83 `MatrixSidePanel.tsx:162` بلا `selected` مشمولة بصفّ QA3.
 **المراجعة (b — نصوص ثابتة)، بسكربتين (حرفيات عربية بكل `.tsx` + label/placeholder/a11y حرفية):** لا جديد خارج QA2. `CHART_KINDS` احتياط قديم يستبدله `localizedChartKinds`.
 قوائم العملات العربية/الكردية بـ`positionSize.ts` (`fdf405b`) للقراءة فقط.
 **جديد QA32 → chart + launch (منخفض):** `renko`/`kagi`/`pnf` بلا مفتاح بـ`KIND_KEYS` (`typeLabels.ts:24-33`) ⇒ لاتينية بالعربي/الكردي و«P&F» لقارئ الشاشة، والمتجر :51 يقول
