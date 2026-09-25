@@ -108,7 +108,9 @@ def _parse_ff(xml_text: str) -> list[dict[str, Any]]:
         when = f"{date} {tm}".strip() or "هذا الأسبوع"
         fc_raw = _text(ev.find("forecast"))
         prev_raw = _text(ev.find("previous"))
-        forecast = fc_raw or prev_raw or "—"
+        # «السابق» ليس توقّعاً: كان `fc_raw or prev_raw` فيُعرض رقم الإصدار الماضي بخانة «التوقّع» للعملاء
+        # القدامى (يقرؤون `forecast` وحده). بلا توقّع ⇒ «—»، والسابق بحقله `previous`.
+        forecast = fc_raw or "—"
         out.append(
             {
                 "id": _stable_id(country, title, when),
@@ -147,8 +149,7 @@ def _unique_ids(events: list[dict]) -> list[dict]:
 
 
 def _figures(forecast: str, previous: str, actual: str) -> dict[str, str]:
-    """أرقام الحدث منفصلة ومسمّاة. `forecast` القديم يسقط للقيمة السابقة عند غياب التوقّع (فيظهر
-    «السابق» كأنه توقّع) — يبقى كما هو لتوافق العملاء القدامى، والعميل الجديد يقرأ هذه الحقول."""
+    """أرقام الحدث منفصلة ومسمّاة (العميل الجديد يقرأ هذه الحقول؛ `forecast` القديم = التوقّع أو «—»)."""
     return {
         "forecast_value": forecast[:40],
         "previous": previous[:40],
@@ -185,7 +186,7 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
         country = str(ev.get("country") or "USD").strip()
         fc_raw = str(ev.get("forecast") or "").strip()
         prev_raw = str(ev.get("previous") or "").strip()
-        forecast = fc_raw or prev_raw or "—"
+        forecast = fc_raw or "—"  # لا يسقط للسابق — راجع `_parse_ff`
         out.append(
             {
                 "id": _stable_id(country, title, raw_date),

@@ -161,3 +161,21 @@ def test_impact_is_never_guessed_low(raw, want):
 def test_ff_holiday_event_is_tagged_holiday():
     out = cal._parse_ff(_events(_event("Bank Holiday", "JPY", impact="Holiday")))
     assert out and out[0]["impact"] == "holiday"
+
+
+# ------------------------------------------------------- «السابق» ليس توقّعاً
+
+@pytest.mark.parametrize("branch", ["xml", "json"])
+def test_missing_forecast_is_a_dash_not_the_previous_release(branch):
+    """كان `forecast` = التوقّع أو **السابق**: حدث بلا توقّع يُعرض «توقّع 0.9» للعملاء القدامى وهو رقم
+    الشهر الماضي. الآن «—»، والسابق بحقله."""
+    if branch == "xml":
+        rows = ('<event><title>CPI</title><country>USD</country><date>09-25-2026</date>'
+                '<time>8:30am</time><impact>High</impact><previous>0.9</previous></event>')
+        out = cal._parse_ff(_events(rows))
+    else:
+        out = cal._parse_ff_json('[{"title":"CPI","country":"USD","impact":"High",'
+                                 '"date":"2026-09-25T08:30:00-04:00","previous":"0.9"}]')
+    assert out[0]["forecast"] == "—"
+    assert out[0]["forecast_value"] == ""
+    assert out[0]["previous"] == "0.9"
