@@ -59,17 +59,6 @@ function ensureHolidaysFresh(now: number) {
     });
 }
 
-/**
- * سطر «عطلة بنوك اليوم» — نصٌّ محلّي مؤقّتاً حتى مفتاح `newsHolidayToday` بـ`locales.ts` (طلب لـlaunch بـCOORDINATION)؛
- * الكردي بحاجة مراجعة. `{ccy}` و`{title}` مرّة واحدة لكلٍّ.
- */
-const HOLIDAY_COPY: Record<string, string> = {
-  ar: 'عطلة بنوك اليوم · {ccy}{title} — سيولة أقل: سبريد أوسع، وانزلاق وفجوات محتملة',
-  'en-US': 'Bank holiday today · {ccy}{title} — thin liquidity: wider spreads, slippage and gaps are likely',
-  'en-GB': 'Bank holiday today · {ccy}{title} — thin liquidity: wider spreads, slippage and gaps are likely',
-  ku: 'پشووی بانکەکان ئەمڕۆ · {ccy}{title} — شلەیی کەمتر: سپرێدی فراوانتر، خزان و بۆشایی لەوانەیە',
-};
-
 function ensureFresh(now: number) {
   // سطر العطلة للرمز المكتوب/المعروض فقط (المستدعي يقرّر)؛ الجلب مشترك بمهلته
   ensureHolidaysFresh(now);
@@ -105,7 +94,7 @@ type Props =
     };
 
 export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props) {
-  const { t, rtl, lang } = useI18n();
+  const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [now, setNow] = useState(() => Date.now());
   const [, setVersion] = useState(0);
@@ -161,7 +150,7 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
   const holiday =
     !hit && !openSymbols && holidayCache && !isCryptoSymbol(symbol) ? bankHolidayToday(holidayCache.events, currencies, now) : null;
   if (holiday) {
-    const text = `🏦 ${(HOLIDAY_COPY[lang] ?? HOLIDAY_COPY['en-US'])
+    const text = `🏦 ${t.newsHolidayToday
       .split('{ccy}')
       .join(holiday.currencies.join('/'))
       .split('{title}')
