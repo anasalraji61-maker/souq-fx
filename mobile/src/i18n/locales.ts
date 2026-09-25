@@ -2790,7 +2790,8 @@ const enUS: Dict = {
   layoutBuiltinName: 'Default',
   layoutDeleteA11yPrefix: 'Delete layout',
   coursesTitle: 'Academy',
-  coursesSub: 'Full screen · voice narration · pause and ask about any part',
+  // المحاضرات نفسها عربية فقط (`backend/academy_data.py`، QA27) — تُقال هنا قبل أن يفتح المستخدم درساً. سؤالك يُجاب بلغتك.
+  coursesSub: 'Lessons in Arabic · voice narration · pause and ask about any part in English',
   coursesStaleNote: "Couldn't refresh the school list — showing saved data",
   coursesNoteTitle: 'Important classification',
   coursesNoteText:
@@ -3892,7 +3893,7 @@ const ku: Dict = {
   layoutBuiltinName: 'بنەڕەت',
   layoutDeleteA11yPrefix: 'سڕینەوەی نەخشەسازی',
   coursesTitle: 'ئەکادیمی',
-  coursesSub: 'شاشەی تەواو · ڕوونکردنەوەی دەنگی · ڕاوەستە و پرسیار بکە دەربارەی هەر بەشێک',
+  coursesSub: 'وانەکان بە عەرەبین · ڕوونکردنەوەی دەنگی · ڕاوەستە و بە کوردی پرسیار بکە دەربارەی هەر بەشێک',
   coursesStaleNote: 'نەکرا لیستی قوتابخانەکان نوێبکرێتەوە — زانیاری پاشەکەوتکراو پیشان دەدرێت',
   coursesNoteTitle: 'پۆلێنبەندییەکی گرنگ',
   coursesNoteText:
