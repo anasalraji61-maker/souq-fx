@@ -1234,7 +1234,6 @@ export type Dict = {
   /**
    * عقود الخادم الجديدة (backend-r1، COORDINATION). لا شيء منها موصول بعد:
    * `calendarUnavailable` — `/api/calendar` `status: "unavailable"` مع `events: []` (بدل `calendarEmpty` الذي يلوم الفلتر)؛
-   * `originUnavailableProvider` — `unavailable_reason: "not_offered_by_provider"` (DXY) بدل شارة «تجريبي» العامة؛
    * `sigLevels*` — `levels: null` مع `levels_basis.unavailable` = `no_live_price` | `not_enough_candles` | `neutral`؛
    * `journalStatBreakeven` — `stats.breakeven_count` (التعادل ليس خسارة ولا يدخل نسبة النجاح)؛
    * `journalShownOfTotal`/`journalLoadOlder` — `/api/trades` `total`/`limit`/`offset` بدل `journalCappedNote`؛
@@ -1242,7 +1241,6 @@ export type Dict = {
    * `journalLoadOlderError` — فشل «تحميل الأقدم» (tools69): الزرّ نفسه يعيد المحاولة والقائمة المعروضة سليمة، لذلك لا «غادر وارجع» كـ`journalLoadError`.
    */
   calendarUnavailable: string;
-  originUnavailableProvider: string;
   sigLevelsUnavailableNoPrice: string;
   sigLevelsUnavailableFewCandles: string;
   sigLevelsUnavailableNeutral: string;
@@ -1273,7 +1271,7 @@ export type Dict = {
    * `forecastVoteNames` — مفاتيح `_VOTE_NAMES`. الخادم يرسل `votes[].id` لا مفتاح الاسم: `id` = المفتاح نفسه، إلا `ma` فهو
    *   `ma_cross` حين `detail_code` يبدأ بـ`ma_cross_` وإلا `ma_trend`.
    * `forecastDisclaimer*` — `disclaimer_code`: `indicator_consensus` | `not_enough_data` (chart-r35).
-   * `dsKindUnavailable` — `DataOriginKind` `'unavailable'` (ui3/chart-r35) للوسم القصير؛ الجملة الطويلة لـDXY تبقى `originUnavailableProvider`.
+   * `dsKindUnavailable` — `DataOriginKind` `'unavailable'` (ui3/chart-r35) للوسم القصير (ووسم حالة الشارت الرئيسي لـDXY، `b1d1adb`).
    */
   impactHoliday: string;
   newsHolidayToday: string;
@@ -1304,8 +1302,9 @@ export type Dict = {
   dsKindUnavailable: string;
   /**
    * backend-r19: خانة شارت لرمز لا يقدّمه المزوّد (`unavailable_reason: "not_offered_by_provider"`، DXY) — مكان الشارت
-   * بدل شموع البذرة. `{symbol}` = الرمز. الجسم يقول ما العمل: اسم الرمز ▾ برأس الإطار يفتح عجلة الرموز (`ChartFrame` `onSymbolChange`).
-   * (`originUnavailableProvider` يقول «الرسم مولَّد للعرض» — يصحّ ما دامت الشموع تُرسم فقط.)
+   * بدل شموع البذرة. `{symbol}` = الرمز. الجسم يقول ما العمل: اسم الرمز ▾ فوق الشارت — برأس الإطار بالشبكة (`ChartFrame`
+   * `onSymbolChange`) وبالشريط العلوي للشارت الرئيسي (`SymbolPairMenu`، `TerminalScreen`). launch119: حُذف `originUnavailableProvider`
+   * («الرسم مولَّد للعرض») — آخر مستعمل له أُزيل بـ`b1d1adb`.
    */
   chartNotOfferedTitle: string;
   chartNotOfferedBody: string;
@@ -2447,7 +2446,6 @@ const ar: Dict = {
   accReplayTourA11y: 'أعد عرض الجولة الترحيبية من أولها',
   a11yBusy: 'جارٍ التنفيذ، انتظر لحظة',
   calendarUnavailable: 'التقويم غير متاح الآن — مصدر الأحداث لم يستجب، وهذا لا يعني أنه لا أخبار اليوم. يعيد المحاولة وحده كل 5 دقائق',
-  originUnavailableProvider: '{symbol} غير متاح من مزوّد البيانات — الرسم مولَّد للعرض، لا أسعار حقيقية',
   sigLevelsUnavailableNoPrice: 'لا مستويات دخول ووقف وهدف — لا سعر حيّ الآن',
   sigLevelsUnavailableFewCandles: 'لا مستويات دخول ووقف وهدف — الشموع قليلة لحساب المدى (ATR)',
   sigLevelsUnavailableNeutral: 'لا مستويات دخول ووقف وهدف — الاتجاه محايد',
@@ -2487,7 +2485,7 @@ const ar: Dict = {
   forecastDisclaimerNoData: 'لا بيانات كافية لحساب المؤشرات المختارة.',
   dsKindUnavailable: 'غير متاح',
   chartNotOfferedTitle: '{symbol} غير متاح من مزوّد البيانات',
-  chartNotOfferedBody: 'لا نرسم له شموعاً ولا سعراً كي لا تقرأ أرقاماً مولَّدة. اضغط اسم الرمز ▾ أعلى الإطار لتختار زوجاً آخر.',
+  chartNotOfferedBody: 'لا نرسم له شموعاً ولا سعراً كي لا تقرأ أرقاماً مولَّدة. اضغط اسم الرمز ▾ فوق الشارت لتختار زوجاً آخر.',
 };
 
 const enUS: Dict = {
@@ -3619,7 +3617,6 @@ const enUS: Dict = {
   accReplayTourA11y: 'Show the welcome tour again from the start',
   a11yBusy: 'Working, please wait',
   calendarUnavailable: "Calendar unavailable right now — the events source didn't respond. That doesn't mean there's no news today. Retries on its own every 5 minutes",
-  originUnavailableProvider: '{symbol} is not offered by the data provider — the chart is generated for display, not real prices',
   sigLevelsUnavailableNoPrice: 'No entry, stop or target — no live price right now',
   sigLevelsUnavailableFewCandles: 'No entry, stop or target — not enough candles to measure the range (ATR)',
   sigLevelsUnavailableNeutral: 'No entry, stop or target — direction is neutral',
@@ -3659,7 +3656,7 @@ const enUS: Dict = {
   forecastDisclaimerNoData: 'Not enough data to compute the selected indicators.',
   dsKindUnavailable: 'Unavailable',
   chartNotOfferedTitle: '{symbol} isn’t offered by our data provider',
-  chartNotOfferedBody: 'We draw no candles or price for it, so you never read made-up numbers. Tap the symbol name ▾ at the top of the frame to pick another pair.',
+  chartNotOfferedBody: 'We draw no candles or price for it, so you never read made-up numbers. Tap the symbol name ▾ above the chart to pick another pair.',
 };
 
 const enGB: Dict = {
@@ -4822,7 +4819,6 @@ const ku: Dict = {
   accReplayTourA11y: 'گەشتی ناساندن لە سەرەتاوە دووبارە پیشان بدەوە',
   a11yBusy: 'خەریکە، تکایە کەمێک چاوەڕێ بکە',
   calendarUnavailable: 'ڕۆژژمێر ئێستا بەردەست نییە — سەرچاوەی ڕووداوەکان وەڵامی نەدایەوە، ئەمەش مانای ئەوە نییە کە ئەمڕۆ هیچ هەواڵێک نییە. خۆی هەر 5 خولەک جارێک هەوڵ دەداتەوە',
-  originUnavailableProvider: '{symbol} لەلایەن دابینکەری داتاوە پێشکەش ناکرێت — نەخشەکە بۆ پیشاندان دروستکراوە، نرخی ڕاستەقینە نییە',
   sigLevelsUnavailableNoPrice: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — ئێستا نرخی ڕاستەوخۆ نییە',
   sigLevelsUnavailableFewCandles: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — مۆمەکان کەمن بۆ پێوانی مەودا (ATR)',
   sigLevelsUnavailableNeutral: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — ئاڕاستە بێلایەنە',
@@ -4863,7 +4859,7 @@ const ku: Dict = {
   forecastDisclaimerNoData: 'داتای پێویست نییە بۆ ژماردنی پێوەرە هەڵبژێردراوەکان.',
   dsKindUnavailable: 'بەردەست نییە',
   chartNotOfferedTitle: '{symbol} لەلایەن دابینکەری داتاوە پێشکەش ناکرێت',
-  chartNotOfferedBody: 'هیچ مۆم و نرخێکی بۆ ناکێشین تا ژمارەی دروستکراو نەخوێنیتەوە. ناوی هێماکە ▾ لە سەرەوەی چوارچێوەکە دابگرە بۆ هەڵبژاردنی جووتێکی تر.',
+  chartNotOfferedBody: 'هیچ مۆم و نرخێکی بۆ ناکێشین تا ژمارەی دروستکراو نەخوێنیتەوە. ناوی هێماکە ▾ لە سەرووی نەخشەکە دابگرە بۆ هەڵبژاردنی جووتێکی تر.',
 };
 
 export const DICTS: Record<LangId, Dict> = {
