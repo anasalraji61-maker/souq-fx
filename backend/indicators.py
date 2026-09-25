@@ -34,6 +34,14 @@ def ema(values: list[float], period: int) -> list[float | None]:
     return out
 
 
+def _rsi_value(avg_gain: float, avg_loss: float) -> float:
+    """بلا حركة إطلاقاً (لا ربح ولا خسارة) = 50 كـMT5 لا 100: كان `avg_loss == 0` وحده يعطي 100
+    لسلسلة مسطّحة ⇒ «تشبّع شراء» يُطلق تنبيه RSI «فوق 70» ويطابق فلتر الماسح وصوت بيع — من لا حركة."""
+    if avg_loss == 0:
+        return 50.0 if avg_gain == 0 else 100.0
+    return 100 - 100 / (1 + avg_gain / avg_loss)
+
+
 def rsi(values: list[float], period: int = 14) -> list[float | None]:
     out: list[float | None] = [None] * len(values)
     if len(values) <= period:
@@ -48,14 +56,14 @@ def rsi(values: list[float], period: int = 14) -> list[float | None]:
             losses -= d
     avg_gain = gains / period
     avg_loss = losses / period
-    out[period] = 100.0 if avg_loss == 0 else 100 - 100 / (1 + avg_gain / avg_loss)
+    out[period] = _rsi_value(avg_gain, avg_loss)
     for i in range(period + 1, len(values)):
         d = values[i] - values[i - 1]
         gain = d if d > 0 else 0.0
         loss = -d if d < 0 else 0.0
         avg_gain = (avg_gain * (period - 1) + gain) / period
         avg_loss = (avg_loss * (period - 1) + loss) / period
-        out[i] = 100.0 if avg_loss == 0 else 100 - 100 / (1 + avg_gain / avg_loss)
+        out[i] = _rsi_value(avg_gain, avg_loss)
     return out
 
 

@@ -140,3 +140,20 @@ def test_snapshot_change_is_none_not_zero_when_first_close_is_zero():
     """إغلاق أوّل صفريّ ⇒ القسمة مستحيلة: كان «0%» (لا تغيّر) رقماً مخترَعاً."""
     out = ind.snapshot([{"close": c} for c in [0.0, 2.0, 3.0]], fast=2, slow=3)
     assert out["change_pct"] is None
+
+
+def test_rsi_flat_series_is_neutral_50_not_overbought():
+    # لا ربح ولا خسارة: كان 100 ⇒ «تشبّع شراء» (تنبيه RSI فوق 70، فلتر الماسح، صوت بيع) من لا حركة. كـMT5: 50
+    out = ind.rsi([1.1] * 30, period=14)
+    assert all(v == 50.0 for v in out[14:])
+
+
+def test_rsi_flat_then_one_move_leaves_neutral():
+    out = ind.rsi([1.1] * 20 + [1.2], period=14)
+    assert out[19] == 50.0
+    assert out[20] == 100.0  # ربح بلا أيّ خسارة ⇒ 100 كما كان
+
+
+def test_snapshot_rsi_on_flat_candles_is_50():
+    candles = [{"close": 1.1, "open": 1.1, "high": 1.1, "low": 1.1} for _ in range(40)]
+    assert ind.snapshot(candles)["rsi"] == 50.0
