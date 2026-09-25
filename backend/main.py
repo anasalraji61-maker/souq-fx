@@ -1114,7 +1114,7 @@ def check_indicator_alerts(
         if candles is None:
             continue
         if _check_indicator_alert(a, candles) and db.mark_indicator_alert_triggered(
-            a["id"], alert_worker.last_bar_time(candles)
+            a["id"], alert_worker.last_bar_time(candles), seen=a
         ):
             # الصفّ كما استقرّ بالقاعدة لا كما قُرئ قبل القلب: `a` لُقّط قبل
             # `mark_indicator_alert_triggered` فيحمل `triggered: false` — أي أن المسار كان

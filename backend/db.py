@@ -2166,13 +2166,20 @@ def trade_stats(user_id: int | None = None, owner_key: str | None = None) -> dic
     }
 
 
-def mark_indicator_alert_triggered(alert_id: str, bar_time: int | None = None) -> bool:
+def mark_indicator_alert_triggered(
+    alert_id: str, bar_time: int | None = None, seen: dict | None = None
+) -> bool:
     """مثل mark_alert_triggered: True لأول من يُطلقه فقط (لا إشعار مكرّر).
-    `bar_time` = وقت فتح آخر شمعة وقت الإطلاق (يُحفظ `fired_bar`)."""
+    `bar_time` = وقت فتح آخر شمعة وقت الإطلاق (يُحفظ `fired_bar`).
+
+    `seen` = الصفّ كما قُرئ قبل جلب السلسلة: بدونه، الـworker يقرأ التنبيه، ثم يُطلقه فحص التطبيق على
+    الشمعة X ويعيد المتداول تسليحه (triggered=0، `ts` جديد) — فيقلبه الـworker من نسخته القديمة ويدفع
+    إشعاراً ثانياً لنفس تقاطع الشمعة X."""
+    sql = "UPDATE indicator_alerts SET triggered=1, fired_bar=COALESCE(?, fired_bar) WHERE id=? AND triggered=0"
+    args: tuple = (bar_time, alert_id)
+    if seen is not None:
+        sql += " AND ts IS ? AND fired_bar IS ?"
+        args += (seen.get("ts"), seen.get("fired_bar"))
     with _conn() as c:
-        cur = c.execute(
-            "UPDATE indicator_alerts SET triggered=1, fired_bar=COALESCE(?, fired_bar) "
-            "WHERE id=? AND triggered=0",
-            (bar_time, alert_id),
-        )
+        cur = c.execute(sql, args)
     return cur.rowcount == 1

@@ -132,6 +132,21 @@ def test_rearm_resets_arming_time_and_keeps_the_fired_bar(fresh_db):
     assert alert_worker.cross_is_stale(row, _candles(FRI, step=3600)) is True
 
 
+def test_a_stale_read_cannot_fire_a_rearmed_alert_again(fresh_db):
+    """الـworker قرأ التنبيه، ثم أطلقه فحص التطبيق وأعاد المتداول تسليحه — نسخة الـworker القديمة لا تُطلقه
+    ثانيةً على نفس الشمعة (إشعار مكرّر)."""
+    db = fresh_db
+    db.create_indicator_alert(
+        {"id": "ia-s", "symbol": "EURUSD", "timeframe": "1h", "alert_type": "ma_cross",
+         "condition": "cross_up", "ts": "2026-09-20T09:00:00+00:00"}, owner_key="dev-1")
+    worker_copy = next(a for a in db.list_indicator_alerts(all_users=True) if a["id"] == "ia-s")
+    assert db.mark_indicator_alert_triggered("ia-s", FRI, seen=worker_copy) is True  # فحص التطبيق
+    db.rearm_indicator_alert("ia-s", owner_key="dev-1")
+    assert db.mark_indicator_alert_triggered("ia-s", FRI, seen=worker_copy) is False
+    fresh = next(a for a in db.list_indicator_alerts(all_users=True) if a["id"] == "ia-s")
+    assert db.mark_indicator_alert_triggered("ia-s", FRI + 3600, seen=fresh) is True
+
+
 def test_worker_fire_rearm_same_bar_then_next_bar(monkeypatch, fresh_db):
     """الدورة كاملة بـ`_check_once`: يُطلق، يُعاد تسليحه، لا يُطلق على الشمعة نفسها، يُطلق على التالية."""
     db = fresh_db

@@ -336,7 +336,7 @@ def _check_once() -> None:
             if not a.get("active") or a.get("triggered"):
                 continue
             if _check_indicator(a, series) and db.mark_indicator_alert_triggered(
-                a["id"], last_bar_time(series.get((str(a["symbol"]).upper(), str(a["timeframe"]))))
+                a["id"], last_bar_time(series.get((str(a["symbol"]).upper(), str(a["timeframe"])))), seen=a
             ):
                 triggered_msgs.append((
                     a.get("user_id"),
