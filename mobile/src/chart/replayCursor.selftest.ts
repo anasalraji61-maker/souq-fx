@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import { firstAfter, lastAtOrBefore, lastBefore, replayFollowOffset, replayMinOffset,
-  replayZoomOffset, replayWindow } from './replayCursor';
+  replayRestOffset, replayZoomOffset, replayWindow } from './replayCursor';
 
 const times = [10, 20, 30, 30, 40, 50];
 assert.equal(lastAtOrBefore(times, 5), -1);
@@ -53,5 +53,13 @@ assert.equal(replayZoomOffset(1000, 80, 990, 5, 20), 980);
 assert.equal(replayWindow(1000, 20, 980, 5).start, 0);
 // مقطوعة بآخر النافذة (مسحوبة) تبقى آخرها بعد التكبير
 assert.equal(replayWindow(1000, 40, replayZoomOffset(1000, 80, 29, 970, 40), 970).revealed, 40);
+
+// موضع الراحة: المقطوعة 700 الخانة 72 من 80 (8 خانات مستقبل)، لا أوّل خانة
+assert.equal(replayRestOffset(1000, 80, 700), 291);
+assert.deepEqual(replayWindow(1000, 80, 291, 700), { start: 629, end: 709, windowLen: 80, revealed: 72 });
+// قرب الحيّ: النافذة تنتهي عند الحيّ
+assert.equal(replayRestOffset(1000, 80, 995), 0);
+// نافذة صغيرة: هامش خانتان على الأقلّ
+assert.equal(replayRestOffset(1000, 10, 500), 497);
 
 console.log('replayCursor selftest: PASS');

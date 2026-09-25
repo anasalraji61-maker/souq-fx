@@ -104,3 +104,16 @@ export function replayZoomOffset(
   const end = Math.max(Math.min(len, 10), Math.min(len, start + next));
   return Math.max(0, len - end);
 }
+
+/**
+ * موضع الراحة بالإعادة (AUTO و«»»): الشمعة المقطوعة قرب الطرف الأيمن وبعدها ~10% خانات مستقبل فارغة كـTradingView.
+ * كان AUTO يضع الإزاحة صفراً (الحيّ) فيقصّها `replayWindow` عند القطع ⇒ بعد سحب بعيد للخلف تبدأ النافذة بالمقطوعة:
+ * شمعة واحدة يسار اللوح و79 خانة فارغة.
+ */
+export function replayRestOffset(len: number, windowCount: number, cut: number): number {
+  if (len <= 0 || cut < 0) return 0;
+  const wc = Math.max(1, windowCount);
+  const margin = Math.max(2, Math.round(wc * 0.1));
+  const end = Math.max(Math.min(len, 10), Math.min(len, cut + 1 + margin));
+  return Math.max(0, len - end);
+}

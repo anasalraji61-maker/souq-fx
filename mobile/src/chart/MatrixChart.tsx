@@ -362,6 +362,7 @@ import {
   lastBefore,
   replayFollowOffset,
   replayMinOffset,
+  replayRestOffset,
   replayZoomOffset,
   replayWindow,
 } from './replayCursor';
@@ -1588,6 +1589,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     windowLen: 80,
     slots: 80,
     all: [] as unknown[],
+    cut: -1,
   });
   // زمن آخر شمعة مصدر: على Renko/Range آخر لبنة قد تسبقه بساعات — نهاية السلسلة لإرساء الرسومات
   // (`drawingAnchors.ts` `endTime`)، وإلا وقع طرف المستقبل المرسوم على Renko بالماضي على الشموع.
@@ -1725,6 +1727,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         all: plot,
         windowLen: Math.max(1, windowPlot.length),
         slots: Math.max(1, shown.length),
+        cut: plot.length - 1,
       };
     }
 
@@ -1743,13 +1746,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         all: plot,
         windowLen: Math.max(1, w.windowLen),
         slots: Math.max(1, w.windowLen),
+        // «الآن» المُعاد بفهرس السلسلة — لا آخر مكشوفة بالنافذة: بعد السحب للخلف تنتهي النافذة قبله، فكان +1/▶
+        // يرجع الإعادة إلى حافّة النافذة، وأداة المركز وقراءة الخطّ وتنبيهه تُقاس من شمعة ماضية.
+        cut,
       };
     }
     const end = plot.length - Math.min(offset, Math.max(0, plot.length - 10));
     const start = Math.max(0, end - windowCount);
     const windowPlot = plot.slice(start, end);
     const windowLen = windowPlot.length;
-    return { plot: windowPlot, start, all: plot, windowLen, slots: Math.max(1, windowLen) };
+    return { plot: windowPlot, start, all: plot, windowLen, slots: Math.max(1, windowLen), cut: plot.length - 1 };
   }, [
     liveSeries.candles,
     kind,
@@ -4140,7 +4146,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       kind === 'heikin' ? liveSeries.candles : source.all,
       a.index,
       b.index,
-      replayOn ? source.start + source.plot.length - 1 : source.all.length - 1
+      source.cut
     );
     const outcomeUp = outcome != null && outcome.r >= 0;
     // لم يبلغ السعر الدخول بعد (أمر معلّق) ⇒ وسم محايد بلا شريط مسار: لا ربح ولا خسارة لصفقة لم تُفتح.
@@ -4791,14 +4797,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const replayMinOffsetNow = useCallback(() => {
     if (!replayOnRef.current) return 0;
     const src = sourceRef.current;
-    return replayMinOffset(src.all.length, windowCountRef.current, src.start + src.plot.length - 1);
+    return replayMinOffset(src.all.length, windowCountRef.current, src.cut);
   }, []);
   // التكبير بالإعادة يُبقي الشمعة المقطوعة بنسبتها من اللوح (`replayZoomOffset`) بدل المركز/الطرف الحيّ.
   const replayZoomed = useCallback((z: { count: number; offset: number }, fromCount: number, fromOffset: number) => {
     if (!replayOnRef.current) return z;
     const src = sourceRef.current;
-    const cut = src.start + src.plot.length - 1;
-    return { count: z.count, offset: replayZoomOffset(src.all.length, fromCount, fromOffset, cut, z.count) };
+    return { count: z.count, offset: replayZoomOffset(src.all.length, fromCount, fromOffset, src.cut, z.count) };
   }, []);
 
   /** خطوة إعادة ±1 شمعة؛ النافذة تتبع القطع حين يخرج منها. `false` = لا شمعة بعدها (الحيّة) أو قبلها. */
@@ -4808,7 +4813,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const bars = src.all as TimeBar[];
       if (!replayOnRef.current || !bars.length) return false;
       const times = bars.map((b) => candleTimeSec(barTime(b)));
-      const cut = src.start + src.plot.length - 1;
+      const cut = src.cut;
       const t = times[Math.max(0, Math.min(times.length - 1, cut))]!;
       // لبنات Renko بزمن واحد تُعبَر معاً (وإلا علقت الخطوة على لبنة زمنها زمن المقطوعة).
       const target = dir > 0 ? firstAfter(times, t) : lastBefore(times, t);
@@ -4933,12 +4938,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     pricePanRef.current = 0;
     xPanRef.current = restXPan();
     xPanAtRest.current = true;
-    offsetRef.current = 0;
+    // بالإعادة «الحيّ» هو شمعة الإعادة: قرب الطرف الأيمن (`replayRestOffset`)، لا نافذة تبدأ بها.
+    const src = sourceRef.current;
+    const nextOffset = replayOnRef.current ? replayRestOffset(src.all.length, 80, src.cut) : 0;
+    offsetRef.current = nextOffset;
     setPriceScale(1);
     setWindowCount(80);
     setPricePan(0);
     setXPan(xPanRef.current);
-    setOffset(0);
+    setOffset(nextOffset);
     schedulePublishSync(false);
   }, [restXPan, schedulePublishSync]);
 
@@ -5742,7 +5750,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // بالإعادة الجلسة الجارية جلسة شمعة الإعادة.
   const lastAll = replayOn ? source.plot[source.plot.length - 1] : source.all[source.all.length - 1];
   // أزرار الإعادة عند الطرفين: ▶/+1 معطّلان عند الشمعة الحيّة (كانا يُضغطان بلا أثر)، و-1 عند أوّل التاريخ.
-  const replayCutIdx = source.start + source.plot.length - 1;
+  const replayCutIdx = source.cut;
   const replayCanFwd = replayOn && replayCutIdx < source.all.length - 1;
   const replayCanBack = replayOn && replayCutIdx > 0;
   if (pivotLevels.length && lastAll && timeframeStepSec(series.timeframe) < 86400) {
@@ -5982,7 +5990,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // بقراءته، فمنتظر الكسر يعرف كم بقي بلا جرّ التقاطع إلى الخطّ.
   // «الآن» بالإعادة خطوة الإعادة لا آخر شمعة بالسلسلة: وإلا يُقرأ الخطّ عند شمعة لم تُكشف بعد،
   // ويُقاس بُعده من سعر الإعادة (`currentPrice`) — رقم يخلط الماضي بالمستقبل.
-  const nowIndex = replayOn ? source.start + source.plot.length - 1 : source.all.length - 1;
+  const nowIndex = source.cut;
   const selectedLineNow = selectedSpan
     ? lineNowText(selectedSpan, nowIndex, currentPrice, series.symbol, fmtPrice, lang, logScale)
     : null;
@@ -9416,10 +9424,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
         {/* «»» العودة لآخر شمعة (كزرّ TradingView على محور الزمن): بعد السحب للخلف لا سبيل للحيّ
             إلا بسحب مئات الشموع أو AUTO — والأخير يمحو التكبير أيضاً. هذا يُبقي التكبير
-            الأفقي والرأسي ويعيد النافذة وحدها للطرف الأيمن. لا يظهر بالإعادة ولا بالتابع المتزامن. */}
+            الأفقي والرأسي ويعيد النافذة وحدها للطرف الأيمن. لا يظهر بالتابع المتزامن. بالإعادة يظهر حين تنتهي
+            النافذة قبل شمعة الإعادة (سُحبت للخلف) ويعيدها إليها (`replayRestOffset`) — كان لا سبيل إلا AUTO. */}
         {canPan &&
-        !replayOn &&
-        (offset > 0 || xPan < restXPan() - chartPlotW / Math.max(1, source.slots)) ? (
+        (replayOn
+          ? source.cut > source.start + source.windowLen - 1
+          : offset > 0 || xPan < restXPan() - chartPlotW / Math.max(1, source.slots)) ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={tr.mcToLatestA11y}
@@ -9432,10 +9442,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               pricePanRef.current = 0;
               xPanRef.current = restXPan();
               xPanAtRest.current = true;
-              offsetRef.current = 0;
+              const next = replayOn
+                ? replayRestOffset(source.all.length, windowCountRef.current, source.cut)
+                : 0;
+              offsetRef.current = next;
               setPricePan(0);
               setXPan(xPanRef.current);
-              setOffset(0);
+              setOffset(next);
               schedulePublishSync(false);
             }}
             hitSlop={10}
@@ -12676,9 +12689,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     // بالشارت كان التنبيه يُضبط على قيمة الخطّ عند حافّة الشاشة (بعيداً بنقاط
                     // عن مستواه الآن). بالإعادة الحالية هي شمعة الإعادة. ويُقرَّب لمنازل الزوج
                     // كسعر التقاطع، لا 1.0852347 بنموذج التنبيه.
-                    const lastGlobalIndex = replayOn
-                      ? source.start + source.plot.length - 1
-                      : source.all.length - 1;
+                    const lastGlobalIndex = source.cut;
                     // باللوغاريتمي استيفاء باللوغاريتم كالخطّ المرسوم (`lineValueAt`). خطّ هابط بلغ ≤ 0 ⇒ لا زرّ
                     // (كان يُنشئ تنبيهاً بسعر سالب لا يُبلغ أبداً).
                     const rawLinePrice = lineValueAt(d.a, d.b, lastGlobalIndex, true, logScale, true);
