@@ -9,7 +9,6 @@
 | QA | **ui** (`TerminalScreen`) | **QA52**: `dsKindLabels` (`TerminalScreen.tsx:934`) بلا `unavailable: t.dsKindUnavailable` ⇒ رأس الطرفية يقول «مصدر غير محدد» لسلسلة غير متاحة (عدا DXY المعالَج بسطر :945). `FocusChartModal.tsx:331` يضيفه — افعل مثله | QA52 |
 | ui | **tools** (`TerminalScreen`) | **ui4**: قائمة المتابعة تَسِم «تجريبي» فقط حين `tick.source.kind === 'demo'` (`TerminalScreen.tsx:910` — تحقّقتُ)؛ `'unknown'` (خادم أقدم) يُعرض كسعر حيّ. اقتراح: `isSyntheticProvenance` من `chart/dataSource.ts` | ui4 |
 | chart | **launch** (`locales.ts`) | **chart-r37 — مفتاح `mcArrowHeadA11y`** (ar/en/ku) لزرّ «➚» على خطّ الترند المحدَّد (`4e53e39`). اليوم قارئ الشاشة يقرأ `ctlToolTrend` + «➚» (`MatrixChart.tsx:3678`)؛ بعده يبدّله chart | chart-r37 |
-| QA | **ui** أو **launch** | **QA52 (b)**: `BacktestPanel.tsx:244` يستعمل `t.journalStatBreakeven` ⇒ مفتاح launch `backtestStatBreakeven` (`86680e0`، النصّ نفسه حرفياً ×3 لغات) بلا مستعمل. إمّا ui يبدّل إليه، أو launch يحذفه — لا تبقيا الاثنين | QA52 |
 | QA | chart | **جهاز**: سحب جسم الرسم المحدَّد — RELEASE §5 بند 128 | QA1 |
 | QA | الجميع | **(a)** تصديرات بلا مستخدم خارج ملفها (أُعيد فحصها QA52 — `1eb6075` حذف `FRAME_SYMBOLS` ونسخة `TF_SECONDS` ومعظم mock.ts ✔؛ الباقي): `deleteTemplate`، `subscribeTemplatesSaveError`، `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite`، `PINE_PRESETS`، `getToolPanel`، `__setWatchlistStorageForTests`/`__reset…`، `motion`؛ `openCurrencyExposure` (`tradePlan.ts`) لا يستعمله إلا selftest | QA1 ★ |
 | launch | backend/أنس | `openrouter_ai.py:71` «أنت خبير تداول فوركس» ويعطي دخول/وقف/هدف | launch9 ★ |
@@ -24,7 +23,7 @@
 
 **تحقّق الدورة 52 (بالكود) — أُغلق 9 صفوف، منها 3 عالقة ★:**
 `DataOriginKind` + `'unavailable'` ★ (`5968660`، `api.ts:84`)؛ «تحميل الأقدم» ★ (`94f71e6`، `loadOlder` + زرّ `t.journalLoadOlder`)؛ حظر الذات ★ (`7b56e40`، `api.ts:124` `mine`، `VotePanel.tsx:27 :401`)؛
-`costs_included` (`7fd8748`، `BacktestPanel.tsx:232`)؛ عطلة التقويم (`1bdd381`، `CalendarPanel.tsx:253`)؛ backend-r5 التعادل (`d663079`، `BacktestPanel.tsx:242` — لكن انظر QA52 (b))؛
-QA51 نوع `Vote` (`bf0ac4b`، مشتقّ)؛ tools69 المفتاح (`4849372`) والوصل (`2781d6f`، `OLDER_ERROR_COPY` حُذف — grep صفر).
+`costs_included` (`7fd8748`، `BacktestPanel.tsx:232`)؛ عطلة التقويم (`1bdd381`، `CalendarPanel.tsx:253`)؛ backend-r5 التعادل (`d663079`، `BacktestPanel.tsx:242`)؛
+QA51 نوع `Vote` (`bf0ac4b`، مشتقّ)؛ QA52 (b) أثناء الدورة (`6233533` حذف `backtestStatBreakeven` المكرَّر — grep صفر)؛ tools69 المفتاح (`4849372`) والوصل (`2781d6f`، `OLDER_ERROR_COPY` حُذف — grep صفر).
 **المراجعة (b) نصوص ثابتة:** لا نصّ عربي/إنجليزي ثابت يُعرض خارج `locales.ts` إلا: `academy.ts` (QA27)، `MessagesScreen` الميّتة (launch52)، واحتياطات عربية لا تُستدعى بلا ترجمة
 (`marketHours.ts:180`، `dataSource.ts:13` `KIND_LABEL_AR`، `types.ts:262` `CHART_KINDS` تُترجم عبر `typeLabels.ts`)، و`DEFAULT_TEMPLATE.name` «افتراضي نظيف» (`chartTemplateStore.ts:67` — لا يظهر بالواجهة اليوم).

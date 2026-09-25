@@ -616,3 +616,4 @@ QA1 (a): `1eb6075` حذف `FRAME_SYMBOLS`/نسخة `TF_SECONDS`/معظم mock.ts
 **المراجعة (b — نصوص ثابتة):** grep للعربي داخل علامات تنصيص خارج التعليقات و`locales.ts`، ولـ`label/title/placeholder="…"` ولـ`>Text<` إنجليزي: لا شيء يُعرض
 إلا `academy.ts` (QA27) و`MessagesScreen` (launch52). احتياطات عربية افتراضية (`marketHours.ts:180`، `KIND_LABEL_AR`، `CHART_KINDS`) كل مستدعٍ يمرّر الترجمة. `DEFAULT_TEMPLATE.name` لا يُعرض.
 **الدورة القادمة:** المراجعة (c) — أزرار بلا `accessibilityLabel`.
+**إلحاق:** `6233533` (launch) حذف `backtestStatBreakeven` (grep صفر) ⇒ QA52 (b) أُغلق. `149c711` (backend: الحجم null بلا مزوّد). البناء بعد الدمج أخضر 0.
