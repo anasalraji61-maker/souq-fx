@@ -3054,3 +3054,35 @@ commit**. **لم يُشغَّل التطبيق.**
 - launch102 (التقويم، ui) وlaunch73 (ترخيص البيانات، أنس) قائمان.
 
 **يحتاج جهازاً**: الخطوات 322–384؛ أهمّها 384 (بعد إصلاح ui) و381.
+
+## 2026-09-25 — التشغيلة 104
+
+أوّلاً `COORDINATION.md` (دورة QA 50): أربعة صفوف تطلب مفاتيح من launch — **أُنجزت كلها** (البند 1). `bash scripts/qa-build-check.sh` **أخضر بصفر أخطاء**
+قبل كل commit فيه كود (صفّ COORDINATION `603323a` توثيق فقط، والفحص أخضر بعده). **لم يُشغَّل التطبيق.**
+
+1. **مفاتيح backend-r3** (`4e0469a` + تعليق `43ec585`، ar/en/ku؛ en-GB يرث؛ الكردي بحاجة مراجعة ناطق):
+   - `impactHoliday` «عطلة — سيولة رقيقة» (ui3، backend-r3 التقويم).
+   - `newsHolidayToday` — نصّ `HOLIDAY_COPY` بـ`NewsRiskBanner` (tools68) حرفياً بالعربي والإنجليزي؛ الكردي صيغ «…و لەوانەیە خزان و بۆشایی هەبێت».
+   - `backtestBeforeCosts` (backend-r3 QA30): «النتائج قبل السبريد والعمولة — … فالنتيجة الفعلية أسوأ من المعروضة».
+   - `forecastDetail` — القوالب الـ18 لـ`detail_code` بأسماء متغيّرات `detail_values` نفسها (قرأتُ `signal_hub._DETAIL_TEXT`)؛ `forecastVoteNames` (`_VOTE_NAMES`؛
+     الخادم يرسل `id` لا مفتاح الاسم و`ma` يخدم اسمين — الطريقة بالتعليق)؛ `forecastDisclaimerConsensus`/`NoData` لـ`disclaimer_code` (chart-r35).
+     «لا بيانات كافية لحساب المؤشرات **المختارة**» لأنّ غياب الأصوات قد يكون من المؤشرات المفعّلة لا من الشموع وحدها.
+   - `dsKindUnavailable` «غير متاح» (ui3 اقترحه بديلاً لتغيير `provenanceLabel` — القرار بين chart وui، والمفتاح جاهز إن اختاروه).
+2. **RELEASE-MOBILE** (`01e8925`): الخطوتان 381 و384 كانتا ⛔ — **أُصلحتا بالكود** (قرأتُ `newsRisk.ts:547`، `CalendarPanel.tsx:311`، `AnalystsPanel.tsx:63/122`،
+   `SocialConsensusPanel.tsx:138/226`)؛ المانع صار «جرّب على جهاز». خطوات جديدة **385** عطلة البنوك، **386** الاختبار الخلفي على DXY/الرقمية بلا «قبل التكاليف»
+   (عيب معروف)، **387** توقع المؤشرات عربي بالإنجليزي/الكردي (`lang` لا يُرسل — عيب معروف)، **388** رمز فكرة قصير ⇒ رسالة النموذج. `STORE-LISTING`: جملة
+   «If the calendar can't load, it says so» صحيحة مجدداً بالكود.
+3. **FEATURE-INVENTORY** (`930077b`): المحللون/الإجماع (الانهيار أُصلح)، التقويم موصول + `holiday`/`none`/`unknown`، صفّ «عطلة بنوك اليوم» جديد، فجوة `lang`
+   بالتوقع، فجوة `costs_included` بالاختبار الخلفي.
+4. **COORDINATION** (`603323a`): صفّا **launch104** — لـ**ui** (وصل `lang`/`detail_code`/`disclaimer_code` بـ`IndicatorForecastPanel`، `backtestBeforeCosts`،
+   `impactHoliday`) ولـ**tools** (`HOLIDAY_COPY` ⇐ `newsHolidayToday`؛ الملف بـ`components/` فمالكه ui إن لم يأخذه tools).
+
+### ردّ على COORDINATION
+- **backend-r3 (مفاتيح `detail_code` بثلاث لغات + `disclaimer_code`)**: أُنجز شقّ launch (البند 1) — الوصل ui/chart (صفّ launch104).
+- **backend-r3 (`costs_included` — مفتاح)**: أُنجز (`backtestBeforeCosts`) — الوصل ui.
+- **backend-r3 / ui3 (`impactHoliday`)**: أُنجز — QA يتحقّق ويزيل صفّ ui3 ← launch.
+- **ui3 (`DataOriginKind` — `dsKindUnavailable`)**: شقّ launch أُنجز؛ الباقي chart/ui.
+- **tools68 (`newsHolidayToday`)**: أُنجز — صفّ launch104 للوصل.
+- launch73 (ترخيص البيانات، أنس) وlaunch9/77/48/52 قائمة بلا تغيير.
+
+**يحتاج جهازاً**: الخطوات 322–388؛ أهمّها 381 و384 (أُصلحا بالكود — بقي التأكيد) و385.
