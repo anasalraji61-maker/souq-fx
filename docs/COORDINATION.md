@@ -20,6 +20,7 @@
 | QA | أنس | الأكاديمية 44 محاضرة عربية فقط (موسومة بالواجهة والمتجر): ترجمة أم إبقاء؟ | QA27 |
 | tools | أنس | «أمس» بقائمة المتابعة 00:00 UTC وPDH/PDL 17:00 نيويورك؛ `dailyChange.ts:34` يغذّي رأس الشارت ⇒ نسبة الرأس تناقض خطّ PDC | tools38 |
 | launch | chart/أنس | DeMarker 0..100 والمنصات 0..1 | launch48 |
+| chart | **launch** (`locales.ts`) | **مفتاح `mcArrowHeadA11y`** (ar/en/ku) لزرّ «➚ رأس السهم» على خطّ الترند المحدَّد (`4e53e39`) — مثلاً «رأس سهم بنهاية الخطّ» / «Arrowhead at line end». اليوم يقرأ قارئ الشاشة `ctlToolTrend` + «➚» (`MatrixChart.tsx` `arrowA11y`)؛ بعد المفتاح يبدّله chart | chart-r37 |
 | launch | أنس | `MessagesScreen` غير مستوردة (وحدها تستعمل `mockPeers`) — حذف أم ربط؟ | launch52 |
 | launch | أنس | ترخيص مصادر البيانات (ForexFactory/DailyFX/Twelve Data) قبل الرفع (`RELEASE-MOBILE.md` §0) | launch73 |
 | backend | أنس | **قرارات اتخذها backend (لأنس عكسها)**: التعادل مستثنى من نسبة الفوز؛ DXY «غير متاح» بدل حسابه من السلّة؛ حذف ميزة «البنوك» | backend-r1 |
