@@ -413,3 +413,12 @@
 بوابة البناء خضراء (tsc 0) قبل الـcommit.
 
 **إعادة تحقّق بنود المهمّة بالكود:** مسح أجسام `Pressable`/`Touchable*`/`*Chip|Pill|Button` بنطاقي بشرط اختيار بلا `accessibilityState`/aria/دور = **صفر**؛ «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده (`window.confirm` بالويب)؛ إعادة الجولة `AccountScreen:235` ⇐ `OnboardingOverlay`.
+
+## 2026-09-25 — تشغيل 34
+صفّ ui الوحيد بـCOORDINATION (دورة QA 73) = **chart-r56 (3)** — أُنجز بتشغيل 33 (`7023c51`: `AlertsPanel`/`WatchlistPanel` بـ`chartPipSpec` و`pipUnit(lang)`)؛ الصفّ جاهز للإغلاق (نصيب tools `327a73d`). بوابة البناء خضراء (tsc 0). **لا تغيير بالكود هذا التشغيل** — كل بنود المهمّة مُصلَحة، وتحقّقتُ بفحوص جديدة بشجرة TypeScript (AST) لا بـgrep:
+- **حالة الاختيار:** كل عنصر JSX بـ`onPress`/`onValueChange` خارج chart/i18n (177؛ 117 بحالة): الستّون الباقية لا شرط اختيار بنمطها ولا بأبنائها سوى `pressed`/`rtl`/نصّ زرّ. `ModerationToggle` يمرّر `expanded` داخلياً (`ModerationActions.tsx:146`)؛ خلفية `MatrixSidePanel:79` `accessible={false}` (الإغلاق بزرّ مسمّى).
+- **الكردية:** `DICTS.ku` مقابل `DICTS.ar` (1057 مفتاحاً): صفر ناقص، صفر قيمة مطابقة، صفر حرف عربي لا تستعمله السورانية (ة ث ذ ض ظ). الحرفيات العربية بنطاقي خارج التعليقات = مفاتيح مطابقة لنصّ الخادم (`CommissionPlanPanel` → قاموس)، ونصوص أوامر الذكاء (`WeeklyReportPanel`، اللغة تُرسَل بـ`lang`)، و`MessagesScreen`/`mock.ts`/`api.ts:900` (launch52، أنس)، و`academy.ts` (QA27، أنس).
+- «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط (`AnalystsPanel`/`SocialConsensusPanel` تعرض عدّ الآراء و`avg_score` من الخادم)؛ `Math.random` خارج chart = UUID فقط.
+- **الحوارات بالويب:** `Alert.alert` بـ`chart/confirmDestructive.ts` وحده؛ `confirmDestructive`/`notify` بثمانية ملفات منها `AccountScreen` (حذف الحساب).
+- **السعر المتجمّد:** `acceptTick` (`hooks/tickAge.ts`) يرفض ما عمره عند الخادم > `TICK_STALE_MS`؛ `WatchlistPanel` يسِم السعر الاحتياطي/التجريبي (`wlDemoTag`، `wlDemoPriceA11ySuffix`) ولا يحسب منه نسبة ولا مسافة.
+- **الجولة:** زرّ `accReplayTour` (`AccountScreen:219-239`) خارج أي فرع دخول ⇐ `OnboardingOverlay`.
