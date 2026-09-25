@@ -4,6 +4,21 @@ import type { SyntheticBar } from './types';
 /** عدد الخطوط التي يجب كسر طرفها للانعكاس — افتراضي TradingView «Line Break» (3). */
 export const LINE_BREAK_COUNT = 3;
 
+/** الخطوات التي تدور عليها شريحة العدد بجانب «Line Break»: 2 أسرع انعكاساً (سكالبينغ)، 4 أبطأ وأنظف. */
+export const LINE_BREAK_STEPS = [2, 3, 4] as const;
+
+/** قيمة مخزَّنة غير معروفة ⇒ 3 (الشريحة لا تعرض إلا الخطوات). */
+export function clampLineBreakCount(v: unknown): number {
+  const n = Number(v);
+  return (LINE_BREAK_STEPS as readonly number[]).includes(n) ? n : LINE_BREAK_COUNT;
+}
+
+/** الخطوة التالية بدوران: 3 ⇒ 4 ⇒ 2. */
+export function nextLineBreakCount(cur: number): number {
+  const steps = LINE_BREAK_STEPS as readonly number[];
+  return steps[(steps.indexOf(clampLineBreakCount(cur)) + 1) % steps.length]!;
+}
+
 /**
  * Line Break (Three Line Break) من الإغلاقات كـTradingView:
  * - خطّ جديد بالاتجاه نفسه حين يتجاوز الإغلاق طرف آخر خطّ (أعلاه للصاعد، أدناه للهابط)، يبدأ من ذلك الطرف.

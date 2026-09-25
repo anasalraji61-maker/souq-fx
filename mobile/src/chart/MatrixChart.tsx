@@ -39,7 +39,8 @@ import { renko, measureStats } from './renko';
 import { kagi } from './kagi';
 import { pointFigure } from './pointFigure';
 import { rangeBars } from './range';
-import { lineBreak } from './lineBreak';
+import { LINE_BREAK_COUNT, lineBreak, nextLineBreakCount } from './lineBreak';
+import { loadLineBreakCount, saveLineBreakCount, subscribeLineBreakCount } from './lineBreakPrefs';
 import { computeCvd, computeFootprint } from './orderflow';
 import { collapsedBarText, planPanes } from './panes';
 import { macdPaneGeom } from './macdPane';
@@ -145,7 +146,7 @@ import {
 import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
 import { zigzagWindowSegments } from './zigzagLegs';
 import { nextZigzagDeviation, ZIGZAG_DEVIATION_PCT, zigzagLegendText } from './zigzagLegend';
-import { loadZigzagDeviation, saveZigzagDeviation } from './zigzagPrefs';
+import { loadZigzagDeviation, saveZigzagDeviation, subscribeZigzagDeviation } from './zigzagPrefs';
 import { paneInlineFits } from './paneHeadFit';
 import { noteBox } from './noteLabel';
 import { playSoftClick } from '../audio/playSoftClick';
@@ -1327,6 +1328,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const [storedPanSpeed, setStoredPanSpeed] = useState<PanSpeedPercent>(DEFAULT_PAN_SPEED);
   const panSpeed = panSpeedProp ?? storedPanSpeed;
   const [zigzagDev, setZigzagDev] = useState<number>(ZIGZAG_DEVIATION_PCT);
+  const [lineBreakCount, setLineBreakCount] = useState<number>(LINE_BREAK_COUNT);
   const panSpeedMulRef = useRef(panSpeedMultiplier(panSpeed));
   panSpeedMulRef.current = panSpeedMultiplier(panSpeed);
   const [pineFormula, setPineFormula] = useState('');
@@ -1582,8 +1584,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     void loadZigzagDeviation().then((pct) => {
       if (alive) setZigzagDev(pct);
     });
+    void loadLineBreakCount().then((n) => {
+      if (alive) setLineBreakCount(n);
+    });
+    // الشارتات المفتوحة معاً تتبع تغيير الشريحة بأيّها فوراً.
+    const offZz = subscribeZigzagDeviation(setZigzagDev);
+    const offLb = subscribeLineBreakCount(setLineBreakCount);
     return () => {
       alive = false;
+      offZz();
+      offLb();
     };
   }, []);
 
@@ -1601,7 +1611,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               : kind === 'range'
                 ? rangeBars(all)
                 : kind === 'lineBreak'
-                  ? lineBreak(all)
+                  ? lineBreak(all, lineBreakCount)
                   : all;
 
     // الظل التابع: اقطع مباشرة حسب نافذة زمن القائد
@@ -1631,6 +1641,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   }, [
     liveSeries.candles,
     kind,
+    lineBreakCount,
     windowCount,
     offset,
     replayOn,
@@ -5851,7 +5862,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       ) : interactive ? (
         <View style={styles.toolbar}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-            {localizedChartKinds(tr).map((k) => (
+            {localizedChartKinds(tr).flatMap((k) => [
               <Pressable
                 accessibilityRole="button"
                 accessibilityState={{ selected: kind === k.id }}
@@ -5864,8 +5875,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 onPress={() => setKind(k.id)}
               >
                 <Text style={[styles.chipText, kind === k.id && styles.chipTextOn]}>{k.label}</Text>
-              </Pressable>
-            ))}
+              </Pressable>,
+              // Line Break مختار ⇒ عدد خطوط الانعكاس بجانبه يدور 2→3→4 (كشريحة انحراف ZigZag).
+              ...(k.id === 'lineBreak' && kind === 'lineBreak'
+                ? [
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`${k.label} ${lineBreakCount} → ${nextLineBreakCount(lineBreakCount)}`}
+                      key="lineBreakCount"
+                      style={({ pressed }) => [
+                        styles.chip,
+                        pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                      ]}
+                      onPress={() => void saveLineBreakCount(nextLineBreakCount(lineBreakCount))}
+                    >
+                      <Text style={styles.chipText}>{`${lineBreakCount} ↻`}</Text>
+                    </Pressable>,
+                  ]
+                : []),
+            ])}
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
             {localizedLenses(tr).map((l) => (
@@ -11759,9 +11787,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                         ]}
                         onPress={() => {
-                          const next = nextZigzagDeviation(zigzagDev);
-                          setZigzagDev(next);
-                          void saveZigzagDeviation(next);
+                          void saveZigzagDeviation(nextZigzagDeviation(zigzagDev));
                         }}
                       >
                         <Text style={styles.indText}>{`${zigzagDev}% ↻`}</Text>

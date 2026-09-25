@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/lineBreak.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { lineBreak } from './lineBreak';
+import { clampLineBreakCount, lineBreak, nextLineBreakCount } from './lineBreak';
 import type { SyntheticBar } from './types';
 
 const bars = (closes: number[]) =>
@@ -23,6 +23,18 @@ const bars = (closes: number[]) =>
   // الفوليوم المتراكم للشمعة التي لم ترسم ينتقل للخطّ التالي.
   assert.equal(lb[3]!.volume, 2);
 }
+// عدد 2 (شريحة المتداول): 1.5 يكسر أدنى آخر خطّين (2) ⇒ انعكاس أبكر مما بـ3.
+{
+  const lb = lineBreak(bars([1, 2, 3, 4, 1.5]), 2);
+  assert.deepEqual(lb.map((b) => [b.open, b.close]), [[1, 2], [2, 3], [3, 4], [3, 1.5]]);
+  assert.equal(lineBreak(bars([1, 2, 3, 4, 1.5]), 3).length, 3);
+}
+// الشريحة: 3 ⇒ 4 ⇒ 2 ⇒ 3؛ قيمة مخزَّنة غريبة ⇒ 3.
+assert.equal(nextLineBreakCount(3), 4);
+assert.equal(nextLineBreakCount(4), 2);
+assert.equal(nextLineBreakCount(2), 3);
+assert.equal(clampLineBreakCount('7'), 3);
+assert.equal(clampLineBreakCount('2'), 2);
 // خطّان صاعدان فقط ⇒ الانعكاس يكسر أدنى الخطّين (1) لا ثلاثة.
 {
   const lb = lineBreak(bars([1, 2, 3, 1.2, 0.9]));

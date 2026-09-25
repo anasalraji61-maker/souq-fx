@@ -14,9 +14,24 @@ export async function loadZigzagDeviation(): Promise<number> {
   return ZIGZAG_DEVIATION_PCT;
 }
 
+/**
+ * الشارتات المركَّبة معاً (الرباعي، الطرفية) تسمع التغيير فوراً: كانت تقرأ القيمة عند التركيب فقط، فتغيير
+ * الانحراف بأحدها يترك الأخرى على القديم حتى تُفتح من جديد.
+ */
+const listeners = new Set<(pct: number) => void>();
+
+export function subscribeZigzagDeviation(fn: (pct: number) => void): () => void {
+  listeners.add(fn);
+  return () => {
+    listeners.delete(fn);
+  };
+}
+
 export async function saveZigzagDeviation(pct: number): Promise<void> {
+  const v = clampZigzagDeviation(pct);
+  listeners.forEach((fn) => fn(v));
   try {
-    await AsyncStorage.setItem(ZIGZAG_DEVIATION_KEY, String(clampZigzagDeviation(pct)));
+    await AsyncStorage.setItem(ZIGZAG_DEVIATION_KEY, String(v));
   } catch {
     /* ignore */
   }
