@@ -748,6 +748,7 @@ function PaneHead({
   at = null,
   highColor = colors.bear,
   lowColor = colors.bull,
+  signal,
 }: {
   paneId: string;
   name: string;
@@ -757,11 +758,15 @@ function PaneHead({
   highColor?: string;
   /** لون ما تحت العتبة السفلى — يُعكَس للوحات «فوق = قوّة صاعدة» (TII) كألوان خطّها. */
   lowColor?: string;
+  /** الخطّ الثاني (%D) — راجع `PaneSignalValue`. */
+  signal?: PaneSignalSpec;
 }) {
   const v = paneValueAt(values, at);
   // خانات الكسر من **مدى اللوحة** لا ثابتة: ‎%B‎ بين 0 و1 فخانة واحدة تطمس كل قراءاته.
   const txt = formatPaneValue(v, paneBoundedDecimals(paneId));
   const state = paneValueState(paneId, v);
+  const sv = signal ? paneValueAt(signal.values, at) : null;
+  const stxt = formatPaneValue(sv, paneBoundedDecimals(paneId));
   return (
     <View style={styles.paneHead}>
       <Text style={styles.paneHeadName}>{name}</Text>
@@ -776,7 +781,29 @@ function PaneHead({
           {txt}
         </Text>
       ) : null}
+      {signal && stxt ? <PaneSignalValue text={stxt} color={signal.color} /> : null}
     </View>
+  );
+}
+
+/**
+ * خطّ الإشارة للوحات ذات الخطّين (MACD، Stoch/StochRSI ‎%D‎، KST، TSI، PMO): كان الرأس يطبع الخطّ الأول وحده
+ * — و«MACD» كان يطبع **الهيستوغرام** تحت اسم MACD — بينما التقاطع بين الخطّين هو ما يُقرأ. كـTradingView:
+ * القيمتان، كلّ واحدة بلون خطّها. تُمرَّر فقط حين يتّسع ارتفاع اللوحة لسطر ثالث (`PANE_SIGNAL_MIN_H`)،
+ * فلا يُقصّ نصف رقم بلوحة مضغوطة.
+ */
+interface PaneSignalSpec {
+  values: readonly (number | null | undefined)[];
+  color: string;
+}
+/** أقلّ ارتفاع لوحة يتّسع فيه رأسها لثلاثة أسطر (الاسم، الخطّ، الإشارة) بلا قصّ. */
+const PANE_SIGNAL_MIN_H = 42;
+
+function PaneSignalValue({ text, color }: { text: string; color: string }) {
+  return (
+    <Text style={[styles.paneHeadValue, text.length >= 7 && styles.paneHeadValueLong, { color }]}>
+      {text}
+    </Text>
   );
 }
 
@@ -796,6 +823,7 @@ function PaneValueHead({
   at = null,
   tone = 'sign',
   center = 0,
+  signal,
 }: {
   name: string;
   values: readonly (number | null | undefined)[];
@@ -814,6 +842,8 @@ function PaneValueHead({
   tone?: 'sign' | 'trend' | 'none';
   /** مركز `'sign'`: الجانب نسبةً إليه لا إلى الصفر (RVI (Vol) حول 50). */
   center?: number;
+  /** خطّ الإشارة بلونه — راجع `PaneSignalValue`. */
+  signal?: PaneSignalSpec;
 }) {
   const v = paneValueAt(values, at);
   // المقياس من السلسلة كاملةً لا من الشمعة المقروءة — فلا يتبدّل شكل الرقم
@@ -821,6 +851,9 @@ function PaneValueHead({
   const txt = formatPaneValueScaled(values, v);
   // الاتّجاه محدود بشمعة التقاطع كالقيمة نفسها — فاللون والرقم يصفان شمعة واحدة.
   const trend = tone === 'trend' ? paneValueTrend(values, at) : null;
+  // مقياس السلسلة الأولى نفسه ⇒ الرقمان بالخانات واللاحقة ذاتها فيُقارَنان بنظرة.
+  const sv = signal ? paneValueAt(signal.values, at) : null;
+  const stxt = signal ? formatPaneValueScaled(values, sv) : null;
   return (
     <View style={styles.paneHead}>
       <Text style={styles.paneHeadName}>{name}</Text>
@@ -838,6 +871,7 @@ function PaneValueHead({
           {txt}
         </Text>
       ) : null}
+      {signal && stxt ? <PaneSignalValue text={stxt} color={signal.color} /> : null}
     </View>
   );
 }
@@ -1345,6 +1379,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     page: panePageShown,
     pageCount: panePageCount,
   } = panePlan;
+  const paneSignalFits = paneH >= PANE_SIGNAL_MIN_H;
   const nextPanePage = useCallback(
     () => setPaneNav({ key: paneSelKey, page: panePageShown + 1 }),
     [paneSelKey, panePageShown]
@@ -9157,7 +9192,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {tsi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="TSI" values={tsi.tsi} at={crossIndex} />
+          <PaneValueHead
+            name="TSI"
+            values={tsi.tsi}
+            at={crossIndex}
+            signal={paneSignalFits ? { values: tsi.signal, color: colors.warn } : undefined}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -9645,7 +9685,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {stochRsi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneHead paneId="stochRsi" name="StochRSI" values={stochRsi.k} at={crossIndex} />
+          <PaneHead
+            paneId="stochRsi"
+            name="StochRSI"
+            values={stochRsi.k}
+            at={crossIndex}
+            signal={paneSignalFits ? { values: stochRsi.d, color: colors.warn } : undefined}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <PaneGuideLines paneId="stochRsi" innerH={paneH - 16} />
@@ -9983,7 +10029,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {kst ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="KST" values={kst.kst} at={crossIndex} />
+          <PaneValueHead
+            name="KST"
+            values={kst.kst}
+            at={crossIndex}
+            signal={paneSignalFits ? { values: kst.signal, color: colors.warn } : undefined}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -10231,7 +10282,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {pmo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="PMO" values={pmo.pmo} at={crossIndex} />
+          <PaneValueHead
+            name="PMO"
+            values={pmo.pmo}
+            at={crossIndex}
+            signal={paneSignalFits ? { values: pmo.signal, color: colors.warn } : undefined}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -10501,7 +10557,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {macd ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="MACD" values={macd.hist} at={crossIndex} />
+          <PaneValueHead
+            name="MACD"
+            values={macd.macdLine}
+            at={crossIndex}
+            signal={paneSignalFits ? { values: macd.signal, color: colors.warn } : undefined}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -10556,7 +10617,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {stoch ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneHead paneId="stoch" name="STO" values={stoch.k} at={crossIndex} />
+          <PaneHead
+            paneId="stoch"
+            name="STO"
+            values={stoch.k}
+            at={crossIndex}
+            signal={paneSignalFits ? { values: stoch.d, color: colors.warn } : undefined}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <PaneGuideLines paneId="stoch" innerH={paneH - 16} />
