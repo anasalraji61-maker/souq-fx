@@ -116,3 +116,13 @@ def test_indicator_snapshot_route_says_timeframe_and_window(client, monkeypatch)
     out = client.get("/api/indicators/snapshot/EURUSD?timeframe=1H").json()
     assert out["timeframe"] == "1H" and out["change_bars"] == 60
     assert out["data_kind"] == "provider"
+
+
+def test_forecast_and_snapshot_say_when_the_entry_price_is_from(client, monkeypatch):
+    """مستويات التوقّع بلا وقت: السبت إغلاق الجمعة يُعرض دخولاً بلا ما يقول إنه ليس السعر الحالي."""
+    monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
+    series = main.build_series("EURUSD", "D")
+    f = client.post("/api/signals/indicators/forecast", json={"symbol": "EURUSD", "timeframe": "D"}).json()
+    assert f["price_as_of"] == main._series_price_at(series) == 1.0  # وقت الجلب يسبق نهاية الشمعة
+    s = client.get("/api/indicators/snapshot/EURUSD?timeframe=D").json()
+    assert s["price_as_of"] == 1.0

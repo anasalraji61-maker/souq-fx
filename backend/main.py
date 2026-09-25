@@ -1228,6 +1228,7 @@ def indicator_snapshot(symbol: str, timeframe: str = "15m"):
     snap = ind_engine.snapshot(candles)
     snap["timeframe"] = series.timeframe
     snap["data_kind"] = series.data_source.kind
+    snap["price_as_of"] = _series_price_at(series)  # وقت `last` — راجع مسار التوقّع
     return snap
 
 
@@ -1267,6 +1268,9 @@ def indicators_forecast(body: IndicatorForecastBody):
     out = signal_hub.indicator_forecast(body.symbol, candles, enabled=body.indicators, lang=body.lang)
     out["data_kind"] = series.data_source.kind
     out["timeframe"] = series.timeframe
+    # وقت سعر الدخول (إغلاق آخر شمعة، ثوانٍ UTC) كالمساعد: بلاه مستويات السبت مبنيّة على إغلاق الجمعة، أو على
+    # كاش حتى 15د عند حدّ المزوّد، وتُعرض بلا ما يقول إنها ليست السعر الحالي.
+    out["price_as_of"] = _series_price_at(series)
     return out
 
 
