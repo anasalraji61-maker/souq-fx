@@ -466,3 +466,14 @@ Kagi/P&F بلا حلقة لكل صندوق ولا حجم من الواجهة. **
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة.
 **إلحاق بعد الدفع:** وصلت `47dc67c` (`resolveLang`/`deviceLocaleTag` بـ`locales.ts`، يستعملها `I18nContext`) و`e03df4c`/`edc54a1` وتعديلات `drawingAnchors`/`positionSize` —
 البناء أخضر 0 وselftests الثلاثة المعدَّلة ناجحة. QA41 **نصف منجز**: `notifications.ts:20` `notifLang` ما زال نسخة، والمفتاح منسوخ ⇒ الصفّ باقٍ بصيغة محدّثة.
+
+## 2026-09-25 — الدورة 42
+**البناء:** أخضر 0 (بعد a1fb55f) — لا إصلاح لازم. **Selftests:** 84/84 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** QA41 القاعدة مُغلقة (`a1fb55f`: `notifications.ts:17` `notifLang = resolveLang`، الاختبار يفرض الهوية). **باقٍ:** `'matrix.lang.v1'`
+منسوخ (`notifications.ts:10`، `I18nContext.tsx:15`) ⇒ الصفّ صار تنظيف الثابت وحده. **غير مُغلق:** 10 `Alert.alert`، «₴» ×2، `FocusChartModal:56` `BASES`،
+`AiPanel`/`LectureClassroom` بلا `maxLength`، `BRENT/USD`، `TimeframeBar`.
+**طلبات تنسيق جديدة (تحقّقتُ):** launch93 → بلا مالك: `WeeklyReportPanel.tsx:46` تعليمة `matrix_advice` «ما رأيك… 5 نصائح مرتبطة بالدولار والذهب» ⇒ صفّ + ⛔ 20.
+tools60 (لمالك `I18nContext` يستورد `notifLang`) أُنجز بالعكس في `47dc67c`/`a1fb55f`. chart28 بنود ذاتية.
+**المراجعة (b — نصوص ثابتة)، diff منذ 5b2a25e (10 ملفات):** كل الحرفيات الجديدة بـ`locales.ts`. ملاحظة منخفضة لـlaunch: `reportFallbackAdvice` الكردي
+البند 4 بلا «افتح التقويم» والبند 5 بلا «التي تعرف حركتها» مقارنةً بـar/en. تعليمات `WeeklyReportPanel` العربية للنموذج مقصودة (الخادم يُجيب بـ`lang`).
+**الدورة القادمة:** المراجعة (c) — a11y.
