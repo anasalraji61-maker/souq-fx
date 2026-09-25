@@ -458,6 +458,11 @@ export type Dict = {
   riskCalcSpreadPointsHint: string;
   /** الوقف ليس أبعد من السبريد — يُضرب لحظة الفتح تقريباً (طلب وكيل الأدوات)؛ `{sl}` و`{spread}` بالنقاط كما تُعرض */
   riskCalcStopInsideSpread: string;
+  /**
+   * خانة السبريد فارغة والوقف ليس أبعد من السبريد **المعتاد** للأداة (`stopInsideTypicalSpread`) — طلب tools85.
+   * `{sl}` الوقف بالـpip، `{spread}` المعتاد (`typicalSpreadPipsExample`)، `{symbol}` الرمز. تقدير لا قراءة حيّة ⇒ «~» و«المعتاد».
+   */
+  riskCalcStopInsideTypicalSpread: string;
   riskCalcCommission: string;
   riskCalcCommissionNote: string;
   /** بدل `riskCalcCommissionNote` بوضع micro: العمولة لكل لوت micro، وتُحوَّل تلقائياً (`commissionAcrossModes`). {std} = مثال العادي، {micro} = مكافئه */
@@ -1744,10 +1749,12 @@ const ar: Dict = {
   riskCalcSpreadNote: 'السبريد يُضاف عادةً إلى مسافة الوقف: وقف 20 pip بسبريد 1.5 يخسر قرابة 21.5 عند ضربه. انظر السبريد الحالي بمنصّتك — يتّسع عند الأخبار وافتتاح الأسبوع.',
   riskCalcRiskWithSpread: 'المخاطرة شاملة السبريد',
   riskCalcSpreadLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة السبريد: {lots} lot',
-  riskCalcSpreadTooWide: 'سبريد {n} pip غير واقعي — هل كتبتَ سعراً أو points بدل الـpip؟ اكتب بالـpip الفرقَ بين Ask وBid كما تعرضه منصّتك الآن.',
+  riskCalcSpreadTooWide: 'سبريد {n} pip غير واقعي — هل كتبتَ سعراً أو points بدل الـpip؟ اكتب بالـpip الفرقَ بين Ask وBid كما تعرضه منصّتك الآن (مثل {example}).',
   riskCalcSpreadPointsHint: 'سبريد «{value}» بالنقاط (points) — كل 10 points = 1 pip، فاكتبه هنا {pips}',
   riskCalcStopInsideSpread:
     'الوقف ({sl} pip) ليس أبعد من السبريد ({spread} pip) — قد يُضرب فور فتح الصفقة. وسّع الوقف وقلّل اللوت، أو انتظر سبريداً أضيق.',
+  riskCalcStopInsideTypicalSpread:
+    'الوقف ({sl} pip) ليس أبعد من السبريد المعتاد لـ{symbol} (~{spread} pip) — قد يُضرب فور فتح الصفقة. اكتب سبريد وسيطك بخانته، أو وسّع الوقف وقلّل اللوت.',
   riskCalcCommission: 'عمولة اختيارية لكل لوت، فتحاً وإغلاقاً',
   riskCalcCommissionNote: 'حسابات Raw/ECN تأخذ عمولة عند الفتح وعند الإغلاق. اكتب مجموع الطرفين للوت الواحد بعملة حسابك (مثل 7 بحساب دولار؛ بحساب ين نحو 1000)، واتركها فارغة إن كان حسابك بلا عمولة.',
   riskCalcCommissionNoteMicro:
@@ -2923,10 +2930,12 @@ const enUS: Dict = {
   riskCalcSpreadNote: 'Spread usually adds to your stop distance: a 20-pip stop with a 1.5 spread loses about 21.5 when hit. Check the current spread on your platform — it widens around news and the weekly open.',
   riskCalcRiskWithSpread: 'Risk including spread',
   riskCalcSpreadLotsWithin: 'To keep your risk at {pct}% including spread: {lots} lot',
-  riskCalcSpreadTooWide: 'A {n}-pip spread isn’t realistic — did you type a price or points instead of pips? Enter the gap between Ask and Bid in pips, as your platform shows it now.',
+  riskCalcSpreadTooWide: 'A {n}-pip spread isn’t realistic — did you type a price or points instead of pips? Enter the gap between Ask and Bid in pips, as your platform shows it now (e.g. {example}).',
   riskCalcSpreadPointsHint: 'A spread of “{value}” is in points — 10 points = 1 pip, so type {pips} here',
   riskCalcStopInsideSpread:
     'Your stop ({sl} pips) is no wider than the spread ({spread} pips) — it can be hit the moment the trade opens. Widen the stop and cut the lot, or wait for a tighter spread.',
+  riskCalcStopInsideTypicalSpread:
+    'Your stop ({sl} pips) is no wider than the usual {symbol} spread (~{spread} pips) — it can be hit the moment the trade opens. Enter your broker’s spread in its field, or widen the stop and cut the lot.',
   riskCalcCommission: 'Optional commission per lot, open + close',
   riskCalcCommissionNote: 'Raw/ECN accounts charge commission when you open and again when you close. Enter both sides for one lot in your account currency (e.g. 7 on a USD account; around 1000 on a JPY account), or leave it empty if your account has no commission.',
   riskCalcCommissionNoteMicro:
@@ -4128,10 +4137,12 @@ const ku: Dict = {
   riskCalcSpreadNote: 'سپرێد زۆرجار دەچێتە سەر دووری وەستان: وەستانی 20 pip بە سپرێدی 1.5 نزیکەی 21.5 لەدەست دەدات کاتێک لێی دەدرێت. سپرێدی ئێستا لە پلاتفۆرمەکەت ببینە — لە کاتی هەواڵ و کرانەوەی هەفتەدا فراوانتر دەبێت.',
   riskCalcRiskWithSpread: 'مەترسی لەگەڵ سپرێد',
   riskCalcSpreadLotsWithin: 'بۆ ئەوەی مەترسییەکەت لەگەڵ سپرێد لە {pct}% بمێنێتەوە: {lots} lot',
-  riskCalcSpreadTooWide: 'سپرێدی {n} pip ئاسایی نییە — نرخ یان points ت نووسیوە لە جیاتی pip؟ جیاوازی نێوان Ask و Bid بە pip بنووسە، وەک ئێستا لە پلاتفۆرمەکەت دیارە.',
+  riskCalcSpreadTooWide: 'سپرێدی {n} pip ئاسایی نییە — نرخ یان points ت نووسیوە لە جیاتی pip؟ جیاوازی نێوان Ask و Bid بە pip بنووسە، وەک ئێستا لە پلاتفۆرمەکەت دیارە (بۆ نموونە {example}).',
   riskCalcSpreadPointsHint: 'سپرێدی «{value}» بە خاڵە (points) — هەر 10 points = 1 pip، بۆیە لێرە {pips} بنووسە',
   riskCalcStopInsideSpread:
     'وەستان ({sl} pip) لە سپرێد ({spread} pip) دوورتر نییە — لەوانەیە هەر کە مامەڵەکە کرایەوە لێی بدرێت. وەستان فراوانتر بکە و لۆت کەم بکەرەوە، یان چاوەڕێی سپرێدی تەسکتر بکە.',
+  riskCalcStopInsideTypicalSpread:
+    'وەستان ({sl} pip) لە سپرێدی ئاسایی {symbol} (~{spread} pip) دوورتر نییە — لەوانەیە هەر کە مامەڵەکە کرایەوە لێی بدرێت. سپرێدی بڕۆکەرەکەت لە خانەکەیدا بنووسە، یان وەستان فراوانتر بکە و لۆت کەم بکەرەوە.',
   riskCalcCommission: 'کۆمیسیۆنی ئیختیاری بۆ هەر lot، کردنەوە و داخستن',
   riskCalcCommissionNote: 'هەژمارەکانی Raw/ECN لە کاتی کردنەوە و داخستندا کۆمیسیۆن وەردەگرن. کۆی هەردوو لا بۆ یەک lot بە دراوی هەژمارەکەت بنووسە (وەک 7 لە هەژماری دۆلار؛ لە هەژماری یەن نزیکەی 1000)، یان بەتاڵی بهێڵەوە ئەگەر هەژمارەکەت بێ کۆمیسیۆنە.',
   riskCalcCommissionNoteMicro:
