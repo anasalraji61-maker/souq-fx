@@ -30,11 +30,12 @@ MATRIX تطبيق شارتات وتحليل فني وتعليم للمتداول
 - أسئلتك للمساعد الذكي.
 - إن انضممت لبرنامج الإحالة: موقعك في شجرة الإحالة وسجلّ العمولات المرتبط به.
 
-**عن جهازك:** رمز إشعارات الجهاز (لإيصال تنبيهاتك)، ومعرّف تثبيت عشوائي يولّده التطبيق عند أول تشغيل. المعرّف ليس
+**عن جهازك:** رمز إشعارات الجهاز مع رمز لغة الواجهة (لإيصال تنبيهاتك بلغتك)، ومعرّف تثبيت عشوائي يولّده التطبيق عند أول تشغيل. المعرّف ليس
 رقم الجهاز ولا المعرّف الإعلاني؛ وظيفته الوحيدة أن تبقى تنبيهاتك ودفترك منفصلة عن غيرك إن استعملت التطبيق بلا حساب.
 
-**على جهازك فقط (لا يصل خادمنا):** رسوماتك على الشارت، إعدادات العرض واللغة، إعدادات حاسبة المخاطرة، وقائمة
-المستخدمين الذين حظرتهم.
+**على جهازك فقط (لا يصل خادمنا):** رسوماتك على الشارت، إعدادات العرض، إعدادات حاسبة المخاطرة، وقائمة
+المستخدمين الذين حظرتهم. (اختيار اللغة نفسه محفوظ على جهازك؛ يصلنا رمزها فقط مع رمز الإشعارات ومع كل سؤال للمساعد كي
+نردّ بلغتك.)
 
 ### 2. ما لا نجمعه
 لا موقع جغرافي، لا جهات اتصال، لا صور ولا كاميرا ولا ميكروفون، لا بيانات دفع، لا بيانات حسابك لدى الوسيط.
@@ -93,12 +94,13 @@ text; we cannot read it).
 - Questions you ask the AI assistant.
 - If you join the referral program: your place in the referral tree and the related commission record.
 
-**About your device:** a push-notification token (to deliver your alerts) and a random install ID the app creates on first launch.
+**About your device:** a push-notification token together with your app-language code (to deliver your alerts in your language) and a random install ID the app creates on first launch.
 The install ID is not your device's hardware ID or advertising ID; its only job is to keep your alerts and journal separate from
 other people's if you use the app without an account.
 
-**On your device only (never sent to us):** your chart drawings, display and language settings, risk-calculator settings, and the
-list of users you have blocked.
+**On your device only (never sent to us):** your chart drawings, display settings, risk-calculator settings, and the
+list of users you have blocked. (Your language choice itself is stored on your device; only its code reaches us, with the push
+token and with each question to the assistant, so we can reply in your language.)
 
 ### 2. What we don't collect
 No location, contacts, photos, camera, microphone, payment details, or broker account data.
