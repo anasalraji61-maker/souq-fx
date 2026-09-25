@@ -188,6 +188,7 @@ export function AccountScreen() {
             <Pressable
               accessibilityState={{ selected: lang === l.id }}
               accessibilityRole="button"
+              accessibilityLabel={l.label}
               key={l.id}
               style={({ pressed }) => [
                 styles.langChip,
@@ -280,6 +281,7 @@ export function AccountScreen() {
             {notifState !== 'granted' && notifState !== 'unsupported' ? (
               <Pressable
                 accessibilityRole="button"
+                accessibilityLabel={notifState === 'denied' ? t.notifOpenSettingsBtn : t.notifEnableBtn}
                 style={({ pressed }) => [
                   styles.notifBtn,
                   pressed && {
@@ -304,6 +306,7 @@ export function AccountScreen() {
 
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel={t.logout}
             style={({ pressed }) => [
               styles.btn,
               pressed && {
@@ -324,6 +327,7 @@ export function AccountScreen() {
           {err ? <Text style={[styles.err, { textAlign: align }]}>{err}</Text> : null}
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel={t.deleteAccount}
             style={({ pressed }) => [
               styles.dangerBtn,
               pressed && {
@@ -346,6 +350,7 @@ export function AccountScreen() {
             <Pressable
               accessibilityState={{ selected: mode === 'login' }}
               accessibilityRole="button"
+              accessibilityLabel={t.login}
               style={({ pressed }) => [
                 styles.tab,
                 mode === 'login' && styles.tabOn,
@@ -361,6 +366,7 @@ export function AccountScreen() {
             <Pressable
               accessibilityState={{ selected: mode === 'register' }}
               accessibilityRole="button"
+              accessibilityLabel={t.register}
               style={({ pressed }) => [
                 styles.tab,
                 mode === 'register' && styles.tabOn,
@@ -439,6 +445,7 @@ export function AccountScreen() {
             {err ? <Text style={[styles.err, { textAlign: align }]}>{err}</Text> : null}
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel={mode === 'login' ? t.enter : t.createAccount}
               style={({ pressed }) => [
                 styles.btn,
                 pressed && {
@@ -480,6 +487,7 @@ export function AccountScreen() {
                     <Pressable
                       accessibilityState={{ selected: side === 'left' }}
                       accessibilityRole="button"
+                      accessibilityLabel={t.left}
                       style={({ pressed }) => [
                         styles.tab,
                         side === 'left' && styles.tabOn,
@@ -497,6 +505,7 @@ export function AccountScreen() {
                     <Pressable
                       accessibilityState={{ selected: side === 'right' }}
                       accessibilityRole="button"
+                      accessibilityLabel={t.right}
                       style={({ pressed }) => [
                         styles.tab,
                         side === 'right' && styles.tabOn,

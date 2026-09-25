@@ -355,6 +355,7 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
         {open && enabled ? (
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel={t.refreshBtn}
             onPress={() => void load()}
             accessibilityState={{ busy: loading }}
             hitSlop={8}

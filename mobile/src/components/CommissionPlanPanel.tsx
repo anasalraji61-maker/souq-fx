@@ -177,6 +177,7 @@ export function CommissionPlanPanel() {
         {open ? (
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel={t.refreshBtn}
             onPress={() => void load()}
             accessibilityState={{ busy: loading }}
             hitSlop={8}
