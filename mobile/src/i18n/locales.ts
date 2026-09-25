@@ -87,7 +87,6 @@ export type Dict = {
   dirBuy: string;
   dirSell: string;
   dirNeutral: string;
-  confidenceLabel: string;
   avgLabel: string;
   entryLabel: string;
   slLabel: string;
@@ -1045,6 +1044,12 @@ export type Dict = {
   mcZigzagDevA11y: string;
   /** شريحة عدد خطوط الانعكاس بـLine Break (`9b1c2ba`، تدور 2→3→4) — بدل «Line break 3 → 4» الحرفي؛ `{count}` الحالي و`{next}` التالي */
   mcLineBreakCountA11y: string;
+  /** قفل الرسم المحدَّد (كقفل TradingView): المقفول لا يُسحب ولا تتحرّك مقابضه بلمسة عابرة على الهاتف. */
+  mcLockDrawing: string;
+  mcUnlockDrawing: string;
+  mcLockDrawingA11y: string;
+  /** يظهر حين يحاول المستخدم سحب رسم مقفول. */
+  mcDrawingLockedHint: string;
   /**
    * زرّ لون الرسم المحدَّد (`85dcbf6`، بدل `drawColorLabels` المؤقّتة بـ`typeLabels.ts`): الكلمة تحت الأيقونة، والوصف يسمّي اللون الحالي
    * `{color}` ← `mcColorNames[i]` بترتيب `drawPalette` (تمييز الإطار، أخضر، أحمر، برتقالي، أزرق، أبيض) — فلا تبقى الحالة لونية فقط
@@ -1164,6 +1169,9 @@ export type Dict = {
   tdsRootBottom: string;
   tdsFootnote: string;
   accNetLoadError: string;
+  /** سطر بالحساب يعيد الجولة الترحيبية (`matrix.onboarding.v1`) لمن تخطّاها. */
+  accReplayTour: string;
+  accReplayTourA11y: string;
   /**
    * قارئ الشاشة لأي زرّ يعرض «...» أثناء الانتظار (10 مواضع: AccountScreen ×3، TradeJournalPanel ×2، AlertsPanel ×2،
    * PositionSizePanel ×2، NetworkTreePanel «…»): `accessibilityLabel={busy ? t.a11yBusy : <النصّ>}` مع `accessibilityState={{ busy }}`.
@@ -1250,8 +1258,6 @@ const ar: Dict = {
   dirBuy: 'شراء',
   dirSell: 'بيع',
   dirNeutral: 'محايد',
-  // ليست احتمال نجاح: `signal_hub._confidence` = |المعدّل|×0.75+0.35 (+ عدد المصادر) — مقدار ميل المعدّل لجهة واحدة (QA20).
-  confidenceLabel: 'درجة الاتفاق',
   avgLabel: 'معدل',
   entryLabel: 'دخول',
   slLabel: 'وقف',
@@ -2141,6 +2147,10 @@ const ar: Dict = {
   mcPercentScaleA11y: 'مقياس النسبة المئوية: التغيّر من أول شمعة ظاهرة',
   mcZigzagDevA11y: 'انحراف ZigZag {pct}% — اضغط للتبديل إلى {next}%',
   mcLineBreakCountA11y: 'كسر الخطوط: عدد خطوط الانعكاس {count} — اضغط للتبديل إلى {next}',
+  mcLockDrawing: 'قفل',
+  mcUnlockDrawing: 'فكّ القفل',
+  mcLockDrawingA11y: 'قفل الرسم المحدَّد كي لا يتحرّك بلمسة عابرة',
+  mcDrawingLockedHint: 'الرسم مقفول — فكّ القفل لتحريكه',
   mcDrawColorWord: 'لون',
   mcDrawColorA11y: 'لون الرسم: {color} — انقر للّون التالي',
   mcCloneDrawing: 'نسخة',
@@ -2280,6 +2290,8 @@ const ar: Dict = {
   tdsRootBottom: 'الجذر · أسفل',
   tdsFootnote: 'الترقيم يبدأ من 1 في كل جهة، واليسار منفصل عن اليمين · اكتب الاسم داخل المربع فقط',
   accNetLoadError: 'تعذّر تحميل بيانات الشبكة والإحالة — حاول لاحقاً',
+  accReplayTour: '↺ أعد الجولة الترحيبية',
+  accReplayTourA11y: 'أعد عرض الجولة الترحيبية من أولها',
   a11yBusy: 'جارٍ التنفيذ، انتظر لحظة',
 };
 
@@ -2354,7 +2366,6 @@ const enUS: Dict = {
   dirBuy: 'Buy',
   dirSell: 'Sell',
   dirNeutral: 'Neutral',
-  confidenceLabel: 'Agreement score',
   avgLabel: 'Avg',
   entryLabel: 'Entry',
   slLabel: 'Stop',
@@ -3244,6 +3255,10 @@ const enUS: Dict = {
   mcPercentScaleA11y: 'Percentage scale: change from the first visible candle',
   mcZigzagDevA11y: 'ZigZag deviation {pct}% — tap to switch to {next}%',
   mcLineBreakCountA11y: 'Line break: reverses after {count} lines — tap to switch to {next}',
+  mcLockDrawing: 'Lock',
+  mcUnlockDrawing: 'Unlock',
+  mcLockDrawingA11y: "Lock the selected drawing so a stray touch can't move it",
+  mcDrawingLockedHint: 'Drawing is locked — unlock it to move it',
   mcDrawColorWord: 'Color',
   mcDrawColorA11y: 'Drawing color: {color} — tap for the next color',
   mcCloneDrawing: 'Clone',
@@ -3383,6 +3398,8 @@ const enUS: Dict = {
   tdsRootBottom: 'Root · bottom',
   tdsFootnote: 'Numbering starts at 1 on each side, and left is separate from right · type the name inside the box only',
   accNetLoadError: 'Couldn\'t load your network and referral data — try again later',
+  accReplayTour: '↺ Replay welcome tour',
+  accReplayTourA11y: 'Show the welcome tour again from the start',
   a11yBusy: 'Working, please wait',
 };
 
@@ -3481,7 +3498,6 @@ const ku: Dict = {
   dirBuy: 'کڕین',
   dirSell: 'فرۆشتن',
   dirNeutral: 'بێلایەن',
-  confidenceLabel: 'ئاستی ڕێکەوتن',
   avgLabel: 'ناوەند',
   entryLabel: 'چوونەژوورەوە',
   slLabel: 'وەستان',
@@ -4372,6 +4388,10 @@ const ku: Dict = {
   mcPercentScaleA11y: 'پێوەری سەدی: گۆڕان لە یەکەم مۆمی دیار',
   mcZigzagDevA11y: 'لادانی ZigZag {pct}% — دایبگرە بۆ گۆڕین بۆ {next}%',
   mcLineBreakCountA11y: 'شکانی هێڵ: ژمارەی هێڵەکانی پێچەوانەبوونەوە {count} — دایبگرە بۆ گۆڕین بۆ {next}',
+  mcLockDrawing: 'قوفڵ',
+  mcUnlockDrawing: 'کردنەوەی قوفڵ',
+  mcLockDrawingA11y: 'کێشراوی دیاریکراو قوفڵ بکە بۆ ئەوەی بە دەستلێدانێکی هەڵە نەجووڵێت',
+  mcDrawingLockedHint: 'کێشراوەکە قوفڵە — بۆ جوولاندنی قوفڵەکەی بکەرەوە',
   mcDrawColorWord: 'ڕەنگ',
   mcDrawColorA11y: 'ڕەنگی وێنەکە: {color} — بۆ ڕەنگی دواتر لێبدە',
   mcCloneDrawing: 'کۆپی',
@@ -4512,6 +4532,8 @@ const ku: Dict = {
   tdsRootBottom: 'ڕەگ · خوارەوە',
   tdsFootnote: 'ژمارەکردن لە هەر لایەک لە 1ـەوە دەست پێ دەکات و چەپ لە ڕاست جیایە · ناوەکە تەنها لەناو خانەکەدا بنووسە',
   accNetLoadError: 'داتای تۆڕ و بانگهێشت بار نەبوو — دواتر هەوڵ بدەرەوە',
+  accReplayTour: '↺ گەشتی ناساندن دووبارە ببینەوە',
+  accReplayTourA11y: 'گەشتی ناساندن لە سەرەتاوە دووبارە پیشان بدەوە',
   a11yBusy: 'خەریکە، تکایە کەمێک چاوەڕێ بکە',
 };
 
