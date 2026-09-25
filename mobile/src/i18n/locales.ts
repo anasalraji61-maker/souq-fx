@@ -984,6 +984,9 @@ export type Dict = {
    */
   mcDrawColorWord: string;
   mcDrawColorA11y: string;
+  /** زرّ «نسخ الرسم» (Clone) بشريط الرسم المحدَّد — طلب chart12: الكلمة تحت الأيقونة + وصف قارئ الشاشة */
+  mcCloneDrawing: string;
+  mcCloneDrawingA11y: string;
   mcColorNames: [string, string, string, string, string, string];
   /** عنوان نافذة المشاركة (`Sharing.shareAsync` dialogTitle) — كان `chartLocalLabels(lang).shareDialogTitle` */
   mcShareDialogTitle: string;
@@ -2032,6 +2035,8 @@ const ar: Dict = {
   mcLogScaleA11y: 'مقياس لوغاريتمي للسعر',
   mcDrawColorWord: 'لون',
   mcDrawColorA11y: 'لون الرسم: {color} — انقر للّون التالي',
+  mcCloneDrawing: 'نسخة',
+  mcCloneDrawingA11y: 'أنشئ نسخة من هذا الرسم تحرّكها وتعدّلها وحدها',
   mcColorNames: ['لون الإطار', 'أخضر', 'أحمر', 'برتقالي', 'أزرق', 'أبيض'],
   mcShareDialogTitle: 'شارت MATRIX',
   mcSessTokyo: 'طوكيو',
@@ -3096,6 +3101,8 @@ const enUS: Dict = {
   mcLogScaleA11y: 'Logarithmic price scale',
   mcDrawColorWord: 'Color',
   mcDrawColorA11y: 'Drawing color: {color} — tap for the next color',
+  mcCloneDrawing: 'Clone',
+  mcCloneDrawingA11y: 'Make a copy of this drawing that you can move and edit on its own',
   mcColorNames: ['Frame color', 'Green', 'Red', 'Amber', 'Blue', 'White'],
   mcShareDialogTitle: 'MATRIX chart',
   mcSessTokyo: 'Tokyo',
@@ -4186,6 +4193,8 @@ const ku: Dict = {
   mcLogScaleA11y: 'پێوەری لۆگاریتمی بۆ نرخ',
   mcDrawColorWord: 'ڕەنگ',
   mcDrawColorA11y: 'ڕەنگی وێنەکە: {color} — بۆ ڕەنگی دواتر لێبدە',
+  mcCloneDrawing: 'کۆپی',
+  mcCloneDrawingA11y: 'کۆپییەکی ئەم وێنەیە دروست بکە کە بە جیا بیجووڵێنیت و دەستکاری بکەیت',
   mcColorNames: ['ڕەنگی چوارچێوە', 'سەوز', 'سوور', 'پرتەقاڵی', 'شین', 'سپی'],
   mcShareDialogTitle: 'چارتی MATRIX',
   mcSessTokyo: 'تۆکیۆ',
