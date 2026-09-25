@@ -449,6 +449,7 @@ export function WatchlistPanel({
                   accessibilityLabel={`${sym}${price != null ? ` ${formatPrice(price, sym)}` : ''}${pctText ? ` ${pctText}` : ''}${isDemoPrice ? t.wlDemoPriceA11ySuffix : ''}${
                     armedText ? ` · ${t.alertsStatusArmed}${armedLevels!.length > 1 ? ` ${armedLevels!.length}` : ''}${armedDist != null ? ` ${armedDist} ${pipUnit(lang)}` : ''}` : ''
                   }`}
+                  accessibilityHint={t.wlRowActionsHint}
                   accessibilityState={{ selected: on }}
                 >
                   {/* DESIGN-PRO §4: الاختيار تعبئة محايدة + علامة 2px على حافة الرمز — لا لون وحده. */}

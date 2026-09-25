@@ -316,6 +316,7 @@ export function MatrixBottomDock({
           ]}
           onPress={toggleMore}
           accessibilityLabel={`${t.dockTabA11yPrefix}${t.dockMoreTab}${!moreOpen && moreOn && activeLabel ? ` · ${activeLabel}` : ''}`}
+          accessibilityHint={t.dockMoreA11y}
         >
           {moreOn ? <View style={styles.tabMarker} /> : null}
           <Text style={[styles.tabMark, moreOn && styles.tabMarkOn]}>⋯</Text>
