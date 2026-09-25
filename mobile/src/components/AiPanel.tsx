@@ -33,7 +33,8 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
 
   const ask = async () => {
     const question = q.trim();
-    if (!question || loading) return;
+    // الخادم يطلب 2–2000 حرف (`AiAsk`): حرف واحد كان يُرسَل فيُرفض 422 ويُمسح السؤال ويظهر «الذكاء غير متاح».
+    if (question.length < 2 || loading) return;
     setQ('');
     setTurns((prev) => [...prev, { role: 'user', text: question }]);
     setLoading(true);
@@ -96,6 +97,7 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
           style={[styles.input, { textAlign: align }]}
           value={q}
           onChangeText={setQ}
+          maxLength={2000}
           placeholder={t.aiInputPlaceholder.replace('{symbol}', symbol)}
           placeholderTextColor={colors.textDim}
           onSubmitEditing={ask}

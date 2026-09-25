@@ -291,7 +291,8 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
 
   const interrupt = async () => {
     const q = question.trim();
-    if (!q || !lecture || asking) return;
+    // الخادم يطلب 2–2000 حرف: أقصر يُرفض 422.
+    if (q.length < 2 || !lecture || asking) return;
     setAsking(true);
     setPaused(true);
     await stopVoice();
@@ -518,6 +519,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
               style={[styles.input, { textAlign: align }]}
               value={question}
               onChangeText={setQuestion}
+              maxLength={2000}
               placeholder={t.lectureQuestionPlaceholder}
               placeholderTextColor={colors.textDim}
               editable={!asking}
