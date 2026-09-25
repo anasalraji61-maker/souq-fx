@@ -5734,6 +5734,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   let pivotStartX: number | null = null;
   // بالإعادة الجلسة الجارية جلسة شمعة الإعادة.
   const lastAll = replayOn ? source.plot[source.plot.length - 1] : source.all[source.all.length - 1];
+  // أزرار الإعادة عند الطرفين: ▶/+1 معطّلان عند الشمعة الحيّة (كانا يُضغطان بلا أثر)، و-1 عند أوّل التاريخ.
+  const replayCutIdx = source.start + source.plot.length - 1;
+  const replayCanFwd = replayOn && replayCutIdx < source.all.length - 1;
+  const replayCanBack = replayOn && replayCutIdx > 0;
   if (pivotLevels.length && lastAll && timeframeStepSec(series.timeframe) < 86400) {
     const i = pivotSessionStartIndex(
       source.plot.map((b) => candleTimeSec(barTime(b))),
@@ -6568,8 +6572,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={tr.mcReplayStepBackA11y}
+                  accessibilityState={{ disabled: !replayCanBack }}
+                  disabled={!replayCanBack}
                   style={({ pressed }) => [
                     styles.zoomBtn,
+                    !replayCanBack && styles.toolDisabled,
                     pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                   ]}
                   onPress={() => stepReplay(-1)}
@@ -6579,10 +6586,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={replayPlaying ? tr.mcReplayPauseA11y : tr.mcReplayPlayA11y}
-                  accessibilityState={{ selected: replayPlaying }}
+                  accessibilityState={{ selected: replayPlaying, disabled: !replayPlaying && !replayCanFwd }}
+                  disabled={!replayPlaying && !replayCanFwd}
                   style={({ pressed }) => [
                     styles.zoomBtn,
                     replayPlaying && styles.replayOn,
+                    !replayPlaying && !replayCanFwd && styles.toolDisabled,
                     pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                   ]}
                   onPress={() => setReplayPlaying((p) => !p)}
@@ -6594,8 +6603,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={tr.mcReplayStepFwdA11y}
+                  accessibilityState={{ disabled: !replayCanFwd }}
+                  disabled={!replayCanFwd}
                   style={({ pressed }) => [
                     styles.zoomBtn,
+                    !replayCanFwd && styles.toolDisabled,
                     pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                   ]}
                   onPress={() => stepReplay(1)}
