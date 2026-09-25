@@ -567,10 +567,15 @@ export function realizedMove(input: {
   side: TradeSide;
   entry: number;
   exit?: number | null;
-}): { pips: number | null; pct: number } | null {
+}): { pips: number | null; pct: number; dir: -1 | 0 | 1 } | null {
   const { side, entry, exit } = input;
   if (!finitePos(entry) || !finitePos(exit)) return null;
   const move = side === 'buy' ? exit - entry : entry - exit;
+  /**
+   * جهة النتيجة من الحركة **قبل التقريب** — للون (أخضر/أحمر). `pct` مقرَّبة لمنزلتين: ذهب 5 لوت 4000.0 → 4000.1 بيعاً
+   * = −50$ و«0.00%»، ولون السطر كان يُؤخذ منها فيُطبع الخسارة رمادية كالتعادل. ضجيج الفاصلة العائمة (≤ 1e-10 من الدخول) صفر.
+   */
+  const dir = Math.abs(move) <= entry * 1e-10 ? 0 : move > 0 ? 1 : -1;
   const pip = journalPipSize(input.symbol);
   // تقريب متماثل (`roundAway`) لا `Math.round`: هذا يرفع النصف نحو +∞ فتُكتب الخسارة أصغر من الربح
   // المماثل — ذهب 2000 → 1997.5 كان «−0.12%» ومقابله 2000 → 2002.5 «+0.13%»، ونصف pipette خاسر
@@ -578,6 +583,7 @@ export function realizedMove(input: {
   return {
     pips: pip ? roundAway(move / pip, 1) : null,
     pct: roundAway((move / entry) * 100, 2),
+    dir,
   };
 }
 
@@ -642,7 +648,7 @@ export function exitPreview(input: {
   lots?: number | null;
   /** الملاحظة التي ستُحفظ — علامة «1R @ …» بعد تحريك الوقف تجعل الـR من الوقف الأصلي كسطر الصفقة بعد الحفظ */
   note?: string | null;
-}): { pips: number | null; pct: number; r: number | null; cash: { amount: number; ccy: string } | null } | null {
+}): { pips: number | null; pct: number; dir: -1 | 0 | 1; r: number | null; cash: { amount: number; ccy: string } | null } | null {
   const { symbol, side, entry, sl, exit, lots, note } = input;
   if (!finitePos(entry) || !finitePos(exit)) return null;
   const mv = realizedMove({ symbol, side, entry, exit });
@@ -810,7 +816,7 @@ export function floatingResult(input: {
    * يعرض «+8R» ثم «+2R» لحظة الإغلاق (والتعادل بلا R أصلاً) — القفزة التي يَعِد هذا التعليق بمنعها.
    */
   note?: string | null;
-}): { pips: number | null; pct: number; r: number | null } | null {
+}): { pips: number | null; pct: number; dir: -1 | 0 | 1; r: number | null } | null {
   const { symbol, side, entry, sl, current, note } = input;
   const mv = realizedMove({ symbol, side, entry, exit: current });
   if (!mv) return null;

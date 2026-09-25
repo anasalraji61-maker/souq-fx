@@ -229,15 +229,15 @@ console.log('tradePlan slTooClose selftest OK');
 
 
 // نتيجة الصفقة بالـpip ونسبة الحركة (دفتر الصفقات)
-assert.deepEqual(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.0875 }), { pips: 25, pct: 0.23 });
-assert.deepEqual(realizedMove({ symbol: 'USDJPY', side: 'sell', entry: 150, exit: 150.3 }), { pips: -30, pct: -0.2 });
-assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2350, exit: 2355.5 }), { pips: 55, pct: 0.23 });
+assert.deepEqual(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.0875 }), { pips: 25, pct: 0.23, dir: 1 });
+assert.deepEqual(realizedMove({ symbol: 'USDJPY', side: 'sell', entry: 150, exit: 150.3 }), { pips: -30, pct: -0.2, dir: -1 });
+assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2350, exit: 2355.5 }), { pips: 55, pct: 0.23, dir: 1 });
 assert.equal(realizedMove({ symbol: 'BTCUSD', side: 'buy', entry: 60000, exit: 60600 })?.pips, null);
 assert.equal(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: null }), null);
 // تقريب متماثل حول الصفر: الخسارة لا تُكتب أصغر من الربح المماثل
-assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2000, exit: 2002.5 }), { pips: 25, pct: 0.13 });
-assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2000, exit: 1997.5 }), { pips: -25, pct: -0.13 });
-assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'sell', entry: 2000, exit: 2002.5 }), { pips: -25, pct: -0.13 });
+assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2000, exit: 2002.5 }), { pips: 25, pct: 0.13, dir: 1 });
+assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2000, exit: 1997.5 }), { pips: -25, pct: -0.13, dir: -1 });
+assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'sell', entry: 2000, exit: 2002.5 }), { pips: -25, pct: -0.13, dir: -1 });
 assert.equal(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.085005 })?.pips, 0.1);
 assert.equal(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.084995 })?.pips, -0.1);
 assert.equal(realizedMove({ symbol: 'EURUSD', side: 'sell', entry: 1.085, exit: 1.085005 })?.pips, -0.1);
@@ -260,24 +260,28 @@ for (const [sym, entry, step] of [['EURUSD', 1.085, 0.00001], ['USDJPY', 157.4, 
 assert.deepEqual(floatingResult({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, current: 1.0875 }), {
   pips: 25,
   pct: 0.23,
+  dir: 1,
   r: 1,
 });
 // بيع بالين: السوق فوق الدخول ⇒ عائم سالب، والـR سالبة بالنسبة نفسها
 assert.deepEqual(floatingResult({ symbol: 'USDJPY', side: 'sell', entry: 150, sl: 150.3, current: 150.15 }), {
   pips: -15,
   pct: -0.1,
+  dir: -1,
   r: -0.5,
 });
 // الذهب: pip = 0.1 (لا 0.0001) — الرقم الذي يفسد أكثر من غيره لو حُسب بحجم pip عام
 assert.deepEqual(floatingResult({ symbol: 'XAUUSD', side: 'buy', entry: 2350, sl: 2345, current: 2355.5 }), {
   pips: 55,
   pct: 0.23,
+  dir: 1,
   r: 1.1,
 });
 // صفقة بلا وقف مسجَّل: نقاط ونسبة نعم، R لا (لا مخاطرة معلومة تُقاس بها النتيجة)
 assert.deepEqual(floatingResult({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: null, current: 1.0875 }), {
   pips: 25,
   pct: 0.23,
+  dir: 1,
   r: null,
 });
 // وقف بالجهة الخطأ بسجلّ قديم: R تسقط وحدها، والنقاط تبقى صادقة
@@ -286,6 +290,7 @@ assert.equal(floatingResult({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1
 assert.deepEqual(floatingResult({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, current: 1.085 }), {
   pips: 0,
   pct: 0,
+  dir: 0,
   r: 0,
 });
 // رمز بلا حجم pip معروف: النسبة تبقى، والنقاط null (لا رقم نقاط مختلَق)
@@ -1141,7 +1146,7 @@ console.log('tradePlan stopsForPips selftest OK');
   assert.equal(quoteSymbol('GOLD'), 'XAUUSD');
   assert.equal(quoteSymbol('SILVER.M'), 'XAGUSD');
   assert.equal(journalInstrumentKey('GOLD'), 'XAUUSD');
-  assert.deepEqual(realizedMove({ symbol: 'GOLD', side: 'buy', entry: 2350, exit: 2355.5 }), { pips: 55, pct: 0.23 });
+  assert.deepEqual(realizedMove({ symbol: 'GOLD', side: 'buy', entry: 2350, exit: 2355.5 }), { pips: 55, pct: 0.23, dir: 1 });
   assert.deepEqual(
     realizedMove({ symbol: 'GOLD#', side: 'sell', entry: 2000, exit: 2002.5 }),
     realizedMove({ symbol: 'XAUUSD', side: 'sell', entry: 2000, exit: 2002.5 })
@@ -1489,7 +1494,7 @@ console.log('tradePlan noteWithTypedSize selftest OK');
   assert.equal(stopTooClose({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.08495 }), true);
   assert.equal(realizedR({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.08495, exit: 1.09 }), null);
   assert.equal(realizedR({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.0825, exit: 1.09 }), 2);
-  assert.deepEqual(realizedMove({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, exit: 1.0882 }), { pips: 32, pct: 0.29 });
+  assert.deepEqual(realizedMove({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, exit: 1.0882 }), { pips: 32, pct: 0.29, dir: 1 });
   assert.equal(realizedMove({ symbol: 'XAUUSDC', side: 'sell', entry: 2000, exit: 1997.5 })?.pips, 25);
   // المال يبقى مجهولاً للسنت: عقده أصغر بمئة مرّة
   assert.equal(cashRisk({ symbol: 'EURUSDC', entry: 1.085, sl: 1.0825, lots: 1 }), null);
@@ -1525,6 +1530,7 @@ console.log('tradePlan journalPipSize selftest OK');
   assert.deepEqual(floatingResult({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, sl: 1.0825, current: 1.0875 }), {
     pips: 25,
     pct: 0.23,
+    dir: 1,
     r: 1,
   });
   assert.equal(pnlInQuoteCcy({ symbol: 'EURUSDC', side: 'buy', entry: 1.085, exit: 1.0875, lots: 1 }), null);
@@ -2368,3 +2374,20 @@ console.log('tradePlan closedElsewhere selftest OK');
   assert.equal(noteWithTypedSize(1, 'a'.repeat(495)), 'a'.repeat(495));
 }
 console.log('tradePlan journalNoteRoom selftest OK');
+
+{
+  // جهة النتيجة للون من الحركة لا من النسبة المقرَّبة: ذهب 4000.0 → 4000.1 بيعاً = «0.00%» لكنها خسارة
+  const g = realizedMove({ symbol: 'XAUUSD', side: 'sell', entry: 4000, exit: 4000.1 })!;
+  assert.equal(g.pct, 0);
+  assert.equal(g.dir, -1);
+  const e = realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.08504 })!;
+  assert.equal(e.pct, 0);
+  assert.equal(e.dir, 1);
+  // تعادل حقيقي ⇒ 0؛ ضجيج الفاصلة العائمة لا يلوّن
+  assert.equal(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.085 })!.dir, 0);
+  assert.equal(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 0.1 + 0.2, exit: 0.3 })!.dir, 0);
+  // المعاينة والعائمة تحملانها
+  assert.equal(exitPreview({ symbol: 'XAUUSD', side: 'sell', entry: 4000, exit: 4000.1, lots: 5 })!.dir, -1);
+  assert.equal(floatingResult({ symbol: 'EURUSD', side: 'buy', entry: 1.085, current: 1.08504 })!.dir, 1);
+}
+console.log('tradePlan realizedMove dir selftest OK');

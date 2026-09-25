@@ -596,7 +596,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     ]
       .filter(Boolean)
       .join(' · ');
-    return { text, pct: p.pct };
+    // اللون من جهة الحركة لا من النسبة المقرَّبة: «−50.00 USD · 0.00%» خسارة حمراء لا رمادية (`realizedMove` `dir`)
+    return { text, dir: p.dir };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry, sl, exit, size, note, editing, t]);
 
@@ -1091,7 +1092,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
               <Text style={[styles.tradeMeta, { textAlign: align }]}>
                 {head}
                 {result ? (
-                  <Text style={{ color: mv && mv.pct < 0 ? colors.bear : mv && mv.pct > 0 ? colors.bull : colors.textDim, fontWeight: '700' }}>
+                  <Text style={{ color: mv && mv.dir < 0 ? colors.bear : mv && mv.dir > 0 ? colors.bull : colors.textDim, fontWeight: '700' }}>
                     {`${head ? ' · ' : ''}${result}`}
                   </Text>
                 ) : null}
@@ -1605,7 +1606,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           style={[
             styles.planLine,
             { textAlign: align },
-            exitResult.pct < 0 ? { color: colors.bear } : exitResult.pct > 0 ? { color: colors.bull } : null,
+            exitResult.dir < 0 ? { color: colors.bear } : exitResult.dir > 0 ? { color: colors.bull } : null,
           ]}
           accessibilityLiveRegion="polite"
         >
