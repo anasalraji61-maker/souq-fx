@@ -1555,7 +1555,8 @@ const ar: Dict = {
   journalCentMoneyNote: 'حساب سنت: المبالغ بالسنت الأمريكي (USC) كما تظهر في حسابك — كل 100 USC = 1 USD',
   journalMoneyUsc: '{usc} USC (≈ {usd} USD)',
   journalStatBestWorst: 'أفضل/أسوأ: {best}% / {worst}%',
-  journalStatsPending: 'لا صفقات مغلقة بعد — نسبة النجاح والـPnL تظهر بعد إغلاق أول صفقة.',
+  journalStatsPending:
+    'لا صفقات مغلقة بعد — نسبة النجاح وصافي الـpip تظهر بعد إغلاق أول صفقة، والنتيجة بالمال حين تكتب حجم اللوت.',
   journalStatNetPips: 'الصافي: {pips} pip',
   journalStatNetPipsBySymbol: 'الصافي لكل أداة: {parts}',
   journalStatAvgR: 'متوسط النتيجة: {r} لكل صفقة ({n} بوقف مسجَّل)',
@@ -2629,7 +2630,8 @@ const enUS: Dict = {
   journalCentMoneyNote: 'Cent account: amounts are in US cents (USC), as your account shows them — 100 USC = 1 USD',
   journalMoneyUsc: '{usc} USC (≈ {usd} USD)',
   journalStatBestWorst: 'Best/Worst: {best}% / {worst}%',
-  journalStatsPending: 'No closed trades yet — win rate and PnL appear once you close your first trade.',
+  journalStatsPending:
+    'No closed trades yet — win rate and net pips appear once you close your first trade, and the money result when you enter the lot size.',
   journalStatNetPips: 'Net: {pips} pips',
   journalStatNetPipsBySymbol: 'Net per instrument: {parts}',
   journalStatAvgR: 'Average result: {r} per trade ({n} with a stop)',
@@ -3730,7 +3732,8 @@ const ku: Dict = {
   journalCentMoneyNote: 'هەژماری سەنت: بڕەکان بە سەنتی ئەمریکین (USC)، وەک لە هەژمارەکەتدا دەردەکەون — هەر 100 USC = 1 USD',
   journalMoneyUsc: '{usc} USC (≈ {usd} USD)',
   journalStatBestWorst: 'باشترین/خراپترین: {best}% / {worst}%',
-  journalStatsPending: 'هێشتا هیچ مامەڵەیەکی داخراو نییە — ڕێژەی سەرکەوتن و PnL دوای داخستنی یەکەم مامەڵە دەردەکەون.',
+  journalStatsPending:
+    'هێشتا هیچ مامەڵەیەکی داخراو نییە — ڕێژەی سەرکەوتن و پوختەی pip دوای داخستنی یەکەم مامەڵە دەردەکەون، و ئەنجام بە پارە کاتێک قەبارەی لۆت بنووسیت.',
   journalStatNetPips: 'کۆی گشتی: {pips} pip',
   journalStatNetPipsBySymbol: 'کۆی گشتی بۆ هەر ئامرازێک: {parts}',
   journalStatAvgR: 'ناوەندی ئەنجام: {r} بۆ هەر مامەڵەیەک ({n} بە وەستان)',
