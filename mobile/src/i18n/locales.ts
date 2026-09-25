@@ -1654,7 +1654,7 @@ const ar: Dict = {
   alertsFirstBadge: '🎉 أول تنبيه مضبوط — سنُعلمك حين يبلغ السعر مستواك (الفحص كل دقيقة تقريباً)',
   alertsLoadError: 'تعذّر تحميل التنبيهات — تحقّق من الاتصال. تنبيهاتك المحفوظة لم تُحذف.',
   alertsEmpty:
-    'لا تنبيهات بعد — اكتب سعراً بالأعلى (أو اضغط «استخدمه» للسعر الحالي) واختر فوق/تحت، وسيصلك إشعار حين يصل السعر إليه.',
+    'لا تنبيهات بعد — اكتب سعراً بالأعلى (أو اضغط «استخدمه» للسعر الحالي) واختر فوق/تحت، وسيصلك إشعار حين يصل السعر إليه. أو من الشارت: المس المستوى ثم 🔔.',
   alertsDeleteConfirmTitle: 'حذف التنبيه؟',
   alertsDeleteFailedTitle: 'تعذر الحذف',
   alertsDeleteFailedBody: 'لم نتأكّد من الحذف — تحقّق من الاتصال. إن بقي التنبيه بالقائمة فاحذفه مرة أخرى.',
@@ -2839,7 +2839,7 @@ const enUS: Dict = {
   alertsFirstBadge: "🎉 First alert set — we'll notify you when the price reaches your level (checked about once a minute)",
   alertsLoadError: 'Couldn\'t load your alerts — check your connection. Your saved alerts haven\'t been deleted.',
   alertsEmpty:
-    'No alerts yet — enter a price above (or tap “Use it” for the current price), pick above/below, and you\'ll be notified when price gets there.',
+    'No alerts yet — enter a price above (or tap “Use it” for the current price), pick above/below, and you\'ll be notified when price gets there. Or from the chart: tap a level, then 🔔.',
   alertsDeleteConfirmTitle: 'Delete the alert?',
   alertsDeleteFailedTitle: 'Could not delete',
   alertsDeleteFailedBody: 'We couldn’t confirm the delete — check your connection. If the alert is still in the list, delete it again.',
@@ -4049,7 +4049,7 @@ const ku: Dict = {
   alertsFirstBadge: '🎉 یەکەم ئاگادارکردنەوەت دانرا — کاتێک نرخ بگاتە ئاستەکە ئاگادارت دەکەینەوە',
   alertsLoadError: 'نەکرا ئاگادارکردنەوەکان باربکرێن — پەیوەندییەکەت بپشکنە. ئاگادارکردنەوە پاشەکەوتکراوەکانت نەسڕاونەتەوە.',
   alertsEmpty:
-    'هێشتا هیچ ئاگادارکردنەوەیەک نییە — نرخێک لە سەرەوە بنووسە و سەرەوە/خوارەوە هەڵبژێرە، کاتێک نرخ گەیشتە ئەوێ ئاگادار دەکرێیتەوە.',
+    'هێشتا هیچ ئاگادارکردنەوەیەک نییە — نرخێک لە سەرەوە بنووسە (یان «بەکاری بهێنە» بۆ نرخی ئێستا دابگرە) و سەرەوە/خوارەوە هەڵبژێرە، کاتێک نرخ گەیشتە ئەوێ ئاگادار دەکرێیتەوە. یان لە چارتەوە: دەست لە ئاستەکە بدە پاشان 🔔.',
   alertsDeleteConfirmTitle: 'ئاگادارکردنەوەکە بسڕدرێتەوە؟',
   alertsDeleteFailedTitle: 'سڕینەوە سەرکەوتوو نەبوو',
   alertsDeleteFailedBody: 'دڵنیا نەبووینەوە لە سڕینەوە — پەیوەندییەکەت بپشکنە. ئەگەر ئاگادارکردنەوەکە هێشتا لە لیستەکەدایە، دووبارە بیسڕەوە.',
