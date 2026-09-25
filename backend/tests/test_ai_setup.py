@@ -49,3 +49,44 @@ def test_no_buy_levels_under_a_sell_answer(monkeypatch):
 def test_answer_without_a_side_gets_no_direction_or_levels(monkeypatch):
     s = _ask(monkeypatch, "انتظر حتى يتضح السوق")
     assert s["direction"] is None and s["entry"] is None
+
+
+# ─── تغيّر صفريّ لا اتجاه له، والنصّ يسمّي نافذته ─────────────────────────────
+
+def _flat_series(change: float):
+    base = _provider_series(0.0030)
+
+    def build(sym, timeframe="15m", outputsize=180):
+        return base(sym, timeframe, outputsize).model_copy(update={"change_pct": change})
+    return build
+
+
+@pytest.mark.parametrize("lang", ["ar", "en"])
+def test_flat_series_gives_no_direction_or_buy_scenario(monkeypatch, lang):
+    """كان `change_pct >= 0` ⇒ 0.00% «صاعد» بسيناريو شراء كامل (دخول/وقف/هدف)."""
+    monkeypatch.setattr(main, "build_series", _flat_series(0.0))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟", "lang": lang}).json()
+    s = body["setup"]
+    assert s["direction"] is None and s["entry"] is None and s["sl"] is None and s["tp"] is None
+    assert "0.00%" in body["answer"]
+    assert "شراء" not in body["answer"] and "Buy" not in body["answer"]
+
+
+def test_flat_series_attaches_no_levels_even_if_the_model_says_buy(monkeypatch):
+    monkeypatch.setattr(main, "build_series", _flat_series(0.0))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
+    monkeypatch.setattr(main.openrouter_ai, "trading_answer", lambda *a, **k: "سيناريو شراء")
+    s = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()["setup"]
+    assert s["entry"] is None and s["sl"] is None and s["tp"] is None
+
+
+@pytest.mark.parametrize("lang, word", [("ar", "آخر 60 شمعة"), ("en", "last 60 candles")])
+def test_local_answer_names_the_candle_window_not_an_instant_trend(monkeypatch, lang, word):
+    """التغيّر على كامل السلسلة كان يُسمّى «الاتجاه اللحظي» / «short-term trend»."""
+    monkeypatch.setattr(main, "build_series", _flat_series(0.3))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟", "lang": lang}).json()
+    assert word in body["answer"]
+    assert "اللحظي" not in body["answer"] and "short-term" not in body["answer"]
+    assert body["setup"]["direction"] == "buy" and body["setup"]["entry"] is not None

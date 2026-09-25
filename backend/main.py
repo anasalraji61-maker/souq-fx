@@ -1766,12 +1766,16 @@ def ai_ask(body: AiAsk):
     lang = openrouter_ai.normalize_lang(body.lang)
     series = build_series(sym)
     live = series.data_source.kind != "demo"
-    bias = "صاعد" if series.change_pct >= 0 else "هابط"
-    direction = "شراء" if series.change_pct >= 0 else "بيع"
+    # `change_pct` = التغيّر على **كامل السلسلة** (180 شمعة: ~45 ساعة على 15m) لا «لحظي» — والنصّ يقول
+    # ذلك. تغيّر صفريّ لا اتجاه له: كان `>= 0` يجعله «صاعداً» بسيناريو شراء كامل.
+    bars = len(series.candles)
+    flat = series.change_pct == 0
+    bias = "صاعد" if series.change_pct > 0 else "هابط"
+    direction: str | None = None if flat else ("شراء" if series.change_pct > 0 else "بيع")
     entry: float | None = None
     sl: float | None = None
     tp: float | None = None
-    if live:
+    if live and direction is not None:
         # وقف 1×ATR14 وهدف 2×ATR14 على فريم السلسلة (العائد/المخاطرة 1:2 كما يقول النص). كان 0.4%/0.8%
         # ثابتين لكل فريم، ومقرَّبين لخانتين حين السعر ≥50 ⇒ USDJPY تفقد خانة.
         atr_v = signal_hub._atr_last([c.model_dump() for c in series.candles])
@@ -1783,8 +1787,8 @@ def ai_ask(body: AiAsk):
 
     if live:
         context = (
-            f"last={series.last}, change_pct={series.change_pct:+.2f}%, "
-            f"tf={series.timeframe}, bias={bias}"
+            f"last={series.last}, change_pct_over_last_{bars}_candles={series.change_pct:+.2f}%, "
+            f"tf={series.timeframe}" + ("" if flat else f", bias={bias}")
         )
     else:
         context = "no live price available (data provider unreachable) — do not quote price levels"
@@ -1794,7 +1798,7 @@ def ai_ask(body: AiAsk):
             setup = openrouter_ai.parse_setup_hint(answer)
             # المستويات مبنيّة على اتجاه الخادم (إشارة التغيّر)؛ تُرفق فقط إن طابقه اتجاه الردّ —
             # كانت تُرفق دائماً فيظهر «بيع» بوقف تحت الدخول (مستويات شراء).
-            if live and setup["direction"] == ("buy" if direction == "شراء" else "sell"):
+            if entry is not None and setup["direction"] == ("buy" if direction == "شراء" else "sell"):
                 setup.update(entry=entry, sl=sl, tp=tp)
             if not live:
                 setup["direction"] = None
@@ -1806,11 +1810,13 @@ def ai_ask(body: AiAsk):
         # نفس القالب التعليمي بالإنجليزية لمستخدمي en-US/en-GB (بلا اقتباس السؤال: بعض الأسئلة
         # قوالب داخلية عربية). الكردية تبقى على القالب العربي (نفس الأبجدية) لغياب مراجعة لغوية.
         if live:
-            bias_en = "bullish" if series.change_pct >= 0 else "bearish"
+            bias_en = "bullish" if series.change_pct > 0 else "bearish"
             dir_en = "Buy" if direction == "شراء" else "Sell"
             read = (
-                f"The short-term trend on the current timeframe looks **{bias_en}** "
-                f"(approx. change {series.change_pct:+.2f}%).\n\n"
+                f"Over the last {bars} candles ({series.timeframe}) the price is flat (0.00%) — no direction.\n\n"
+                if flat else
+                f"Over the last {bars} candles ({series.timeframe}) the move looks **{bias_en}** "
+                f"(change {series.change_pct:+.2f}%).\n\n"
             )
             scenario = (
                 f"**Suggested scenario (educational, not financial advice):**\n"
@@ -1835,8 +1841,10 @@ def ai_ask(body: AiAsk):
     else:
         if live:
             read = (
-                f"الاتجاه اللحظي على الإطار الحالي يبدو **{bias}** "
-                f"(تغيّر تقريبي {series.change_pct:+.2f}%).\n\n"
+                f"على آخر {bars} شمعة ({series.timeframe}) السعر ثابت (0.00%) — لا اتجاه.\n\n"
+                if flat else
+                f"على آخر {bars} شمعة ({series.timeframe}) الحركة تبدو **{bias}** "
+                f"(تغيّر {series.change_pct:+.2f}%).\n\n"
             )
             scenario = (
                 f"**سيناريو مقترح (تعليمي وليس نصيحة مالية):**\n"
@@ -1863,7 +1871,7 @@ def ai_ask(body: AiAsk):
         "answer": answer,
         "symbol": sym,
         "setup": {
-            "direction": ("buy" if direction == "شراء" else "sell") if live else None,
+            "direction": ("buy" if direction == "شراء" else "sell") if live and direction else None,
             "entry": entry,
             "sl": sl,
             "tp": tp,
