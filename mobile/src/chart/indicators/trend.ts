@@ -1966,14 +1966,20 @@ export function computeElderImpulse(
  * لحدّي [−100,100]؛ **إعادة حساب مستقلة منفصلة تماماً عن الدالة** (حلقتا raw وema يدويتان بمعزل تام
  * عن الكود الفعلي) → صفر اختلاف واحد (فرق<10⁻⁹) عند مقارنة السلسلة الكاملة.
  */
-export function computePfe(closes: number[], period = 10, smoothing = 5): (number | null)[] {
+/*
+ * `unit` = حجم وحدة السعر (الـpip للفوركس). الصيغة تجمع فرق السعر مع «1» (خطوة زمنية واحدة) فتفترض سعراً
+ * تتحرّك شمعته بوحدات كاملة (سهم بالدولار). بالسعر الخام للفوركس (0.0005) يختفي الفرق أمام «+1» و«period²»
+ * فيلتصق PFE عند ±100 على كل شمعة تقريباً ولا يقرأ شيئاً. بالـpip يعود مقياساً للكفاءة. الافتراضي 1 = الصيغة الأصلية.
+ */
+export function computePfe(closes: number[], period = 10, smoothing = 5, unit = 1): (number | null)[] {
   const n = closes.length;
   const raw: (number | null)[] = new Array(n).fill(null);
+  const u = unit > 0 && Number.isFinite(unit) ? unit : 1;
   for (let i = period; i < n; i++) {
-    const diff = closes[i] - closes[i - period];
+    const diff = (closes[i] - closes[i - period]) / u;
     let denom = 0;
     for (let j = i - period + 1; j <= i; j++) {
-      const d = closes[j] - closes[j - 1];
+      const d = (closes[j] - closes[j - 1]) / u;
       denom += Math.sqrt(d * d + 1);
     }
     const sign = diff > 0 ? 1 : diff < 0 ? -1 : 0;

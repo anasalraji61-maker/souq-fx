@@ -3150,8 +3150,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [indBars, indicators]
   );
   const pfe = useMemo(
-    () => (indicators.includes('pfe') ? ind(computePfe(closes)) : null),
-    [closes, indicators]
+    () => {
+      if (!indicators.includes('pfe')) return null;
+      // بالـpip لا بالسعر الخام (انظر `computePfe`)؛ أداة بلا مواصفة: عشر خانات أخيرة كتحريك التنبيه.
+      const txt = formatPrice(series.last, series.symbol, series.last);
+      const dec = txt.includes('.') ? txt.length - txt.indexOf('.') - 1 : 0;
+      const unit = chartPipSpec(series.symbol)?.pipSize ?? 10 ** (1 - dec);
+      return ind(computePfe(closes, 10, 5, unit));
+    },
+    [closes, indicators, series.symbol, series.last]
   );
   const dma = useMemo(
     () => (indicators.includes('dma') ? ind(computeDma(closes)) : null),
