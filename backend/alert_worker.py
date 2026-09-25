@@ -30,7 +30,15 @@ _QUOTE_MAX_AGE = 180
 
 
 def _price(symbol: str) -> float | None:
-    """آخر سعر للتنبيه: الاقتباس إن لم يكن أقدم من 3 دقائق بوقته المعلن، وإلا تيك الـWS الحديث.
+    return _price_at(symbol)[0]
+
+
+def _price_at(symbol: str) -> tuple[float | None, float | None]:
+    """(السعر، وقته عند المزوّد أو None) — الوقت يُمرَّر `q_at` لـ`_price_hit`: كان يُفحص عمره (3د) ثم يُرمى،
+    فاقتباس 1.1003 بوقت 09:59 يُطلق «فوق 1.1000» سُلِّح 10:00:30 والسعر 1.0995 — سعر قبل التسليح (كإغلاق
+    1m المخزَّن، run 47). `/price` بلا وقت ⇒ None كما كان (مقبول).
+
+    آخر سعر للتنبيه: الاقتباس إن لم يكن أقدم من 3 دقائق بوقته المعلن، وإلا تيك الـWS الحديث.
 
     هذا المسار يُستدعى حين سلسلة 1m **قديمة** (429/انقطاع) — وكان يقبل `/quote` دون `quoted_at`:
     اقتباس بوقت قبل ساعة (السعر 1.1050 ثم هبط لـ1.0950 وسلّح المتداول «فوق 1.1000») يُطلق التنبيه
@@ -40,7 +48,7 @@ def _price(symbol: str) -> float | None:
         q = book.get("price") if book else None
         at = book.get("quoted_at") if book else None
         if q is not None and (at is None or time.time() - float(at) <= _QUOTE_MAX_AGE):
-            return float(q)
+            return float(q), (float(at) if at is not None else None)
         if q is not None:
             log.info("quote for %s is %.0fs old — not used for alerts", symbol, time.time() - float(at))
     except Exception:
@@ -49,7 +57,9 @@ def _price(symbol: str) -> float | None:
     # تنبيهاً سُلِّح بعده على سعر لم يعد قائماً.
     snap = td_ws.snapshot(max_age=180)
     p = snap.get(symbol.upper())
-    return float(p) if p is not None else None
+    if p is None:
+        return None, None
+    return float(p), td_ws.received_at([symbol.upper()]).get(symbol.upper())
 
 
 def _recent_minutes(symbol: str) -> tuple[float | None, list[dict], float | None]:
@@ -57,9 +67,10 @@ def _recent_minutes(symbol: str) -> tuple[float | None, list[dict], float | None
 
     الفحص كل 60 ثانية بآخر سعر فقط كان يفوّت ذيل شمعة يلمس المستوى ثم يرتدّ بين فحصين — بالضبط
     ما يضعه متداول التجزئة تنبيهاً عليه (قمة/قاع سابق). شموع 1m تعطي high/low ما بين الفحصين.
-    فشل السلسلة → السعر اللحظي القديم (`_price`) بلا شموع ولا لحظة جلب."""
+    فشل السلسلة → الاقتباس/التيك (`_price_at`) بوقته عند المزوّد، بلا شموع."""
     if not market.configured():  # بلا مفتاح: لا سجلّ تحذير كل دقيقة — السعر من الـWebSocket كما كان
-        return _price(symbol), [], None
+        q, q_at = _price_at(symbol)
+        return q, [], q_at
     try:
         candles, meta = market.fetch_time_series_with_meta(symbol, "1m", outputsize=5)
         if candles:
@@ -69,10 +80,12 @@ def _recent_minutes(symbol: str) -> tuple[float | None, list[dict], float | None
             if last > 0 and time.time() - int(candles[-1]["time"]) <= 180:
                 at = meta.get("as_of") if isinstance(meta, dict) else None
                 return last, candles, float(at) if at is not None else None
-            return _price(symbol), candles, None
+            q, q_at = _price_at(symbol)
+            return q, candles, q_at
     except Exception:
         log.warning("1m series fetch failed for %s — falling back to quote", symbol, exc_info=True)
-    return _price(symbol), [], None
+    q, q_at = _price_at(symbol)
+    return q, [], q_at
 
 
 def _armed_at(ts: object) -> float | None:

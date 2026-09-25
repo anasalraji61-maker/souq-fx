@@ -178,3 +178,32 @@ def test_recent_minutes_reports_when_its_close_was_fetched(monkeypatch):
     monkeypatch.setattr(alert_worker.market, "fetch_time_series_with_meta",
                         lambda *a, **k: (candles, {"kind": "cache", "as_of": now - 40}))
     assert alert_worker._recent_minutes("BTCUSD") == (1.1, candles, now - 40)
+
+
+def test_fallback_quote_carries_its_provider_time_so_a_pre_arming_quote_does_not_fire(monkeypatch):
+    """1m متعذّرة ⇒ اقتباس بعمر 90ث (مقبول ≤3د) كان يُعاد بلا وقته ⇒ «فوق 1.1000» سُلِّح قبل 30ث يُطلق عليه."""
+    import time as _time
+    from datetime import datetime, timezone
+
+    monkeypatch.setattr(alert_worker.market, "configured", lambda: True)
+
+    def _boom(*a, **k):
+        raise RuntimeError("series down")
+
+    monkeypatch.setattr(alert_worker.market, "fetch_time_series_with_meta", _boom)
+    monkeypatch.setattr(alert_worker.market, "fetch_quote_book", lambda s: _book(1.1003, 90))
+    monkeypatch.setattr(alert_worker.td_ws, "snapshot", lambda max_age=180: {})
+    q, candles, q_at = alert_worker._recent_minutes("BTCUSD")
+    assert q == pytest.approx(1.1003) and q_at == pytest.approx(_time.time() - 90, abs=2)
+    armed = datetime.fromtimestamp(_time.time() - 30, timezone.utc).isoformat()
+    alert = {"price": 1.1, "condition": "above", "ts": armed}
+    assert alert_worker._price_hit(alert, q, candles, q_at) is False
+    older = datetime.fromtimestamp(_time.time() - 600, timezone.utc).isoformat()
+    assert alert_worker._price_hit({**alert, "ts": older}, q, candles, q_at) is True
+
+
+def test_fallback_ws_tick_carries_its_receive_time(monkeypatch):
+    monkeypatch.setattr(alert_worker.market, "fetch_quote_book", lambda s: None)
+    monkeypatch.setattr(alert_worker.td_ws, "snapshot", lambda max_age=180: {"EURUSD": 1.0950})
+    monkeypatch.setattr(alert_worker.td_ws, "received_at", lambda syms: {"EURUSD": 1234.0})
+    assert alert_worker._price_at("EURUSD") == (pytest.approx(1.0950), 1234.0)
