@@ -2928,3 +2928,52 @@ console.log('tradePlan computedPriceText selftest OK');
   assert.equal(tp.quoteSymbol('AAPL.US'), 'AAPL.US');
 }
 console.log('tradePlan crypto suffix quote selftest OK');
+
+// ---- صفحات الدفتر: «تحميل الأقدم» والتحديث لا يُسقطان ولا يتخطّيان صفقات ----
+{
+  const tp = require('./tradePlan') as typeof import('./tradePlan');
+  // أول «أقدم» بعد 200: من 195 بطول 205 (5 تداخل + 200 جديدة)
+  assert.deepEqual(tp.journalOlderPage(200), { limit: 205, offset: 195 });
+  assert.deepEqual(tp.journalOlderPage(3), { limit: 203, offset: 0 });
+  assert.deepEqual(tp.journalOlderPage(0), { limit: 200, offset: 0 });
+  assert.deepEqual(tp.journalOlderPage(NaN), { limit: 200, offset: 0 });
+  // حذفُ 3 بجهاز آخر: الخادم أزاح الصفوف ⇒ أول صفّ لم يُرَ عند 197 ≥ 195 ⇒ لا تخطٍّ
+  {
+    const server = Array.from({ length: 450 }, (_, i) => ({ id: `t${i}` }));
+    const loaded = server.slice(0, 200);
+    const after = server.filter((x) => !['t10', 't50', 't90'].includes(x.id));
+    const { limit, offset } = tp.journalOlderPage(loaded.length);
+    const merged = tp.mergeJournalPage(loaded, after.slice(offset, offset + limit));
+    const ids = new Set(merged.map((x) => x.id));
+    for (let i = 200; i < 400; i++) assert.ok(ids.has(`t${i}`), `skipped t${i}`);
+    assert.equal(merged.length, new Set(merged.map((x) => x.id)).size);
+  }
+  // إضافة 2 بجهاز آخر: الصفوف تُزاح للأسفل ⇒ مكرَّرات تُسقط، لا تخطٍّ
+  {
+    const server = Array.from({ length: 450 }, (_, i) => ({ id: `t${i}` }));
+    const loaded = server.slice(0, 200);
+    const after = [{ id: 'n1' }, { id: 'n2' }, ...server];
+    const { limit, offset } = tp.journalOlderPage(loaded.length);
+    const merged = tp.mergeJournalPage(loaded, after.slice(offset, offset + limit));
+    assert.equal(merged.length, 398);
+    assert.equal(merged[200].id, 't200');
+    assert.equal(merged[397].id, 't397');
+  }
+  // الحدّ الأعلى للخادم 500 لا يُتجاوز
+  assert.ok(tp.journalOlderPage(1e6).limit <= tp.JOURNAL_PAGE_MAX);
+  // التحديث: صفحة واحدة حتى 500، ثم صفحات 500
+  assert.deepEqual(tp.journalRefreshPages(0), [{ limit: 200, offset: 0 }]);
+  assert.deepEqual(tp.journalRefreshPages(150), [{ limit: 200, offset: 0 }]);
+  assert.deepEqual(tp.journalRefreshPages(405), [{ limit: 405, offset: 0 }]);
+  assert.deepEqual(tp.journalRefreshPages(1101), [
+    { limit: 500, offset: 0 },
+    { limit: 500, offset: 500 },
+    { limit: 101, offset: 1000 },
+  ]);
+  // الترتيب والأول يبقيان
+  assert.deepEqual(
+    tp.mergeJournalPage([{ id: 'a', v: 1 }], [{ id: 'a', v: 2 }, { id: 'b', v: 3 }, { id: 'b', v: 4 }]),
+    [{ id: 'a', v: 1 }, { id: 'b', v: 3 }],
+  );
+}
+console.log('tradePlan journal paging selftest OK');

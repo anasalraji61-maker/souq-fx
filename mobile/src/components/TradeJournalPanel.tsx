@@ -24,6 +24,10 @@ import {
   liveEntryOrphaned,
   liveFillStillValid,
   closedElsewhere,
+  journalOlderPage,
+  JOURNAL_PAGE,
+  journalRefreshPages,
+  mergeJournalPage,
   executionPrice,
   exitShortcuts,
   exitPreview,
@@ -164,14 +168,22 @@ type Props = {
 /** لقطة اقتباس أداة صفقة مفتوحة — Bid/Ask قد يغيبان (يُستعمل السعر المفرد حينها). */
 type QuoteSnap = { price: number; bid?: number | null; ask?: number | null };
 
-/** سقف قائمة الدفتر بالخادم (`db.list_trades` `LIMIT 200`). */
-const JOURNAL_LIST_LIMIT = 200;
-
 /** خطأ `postJson` لردّ 409 (`trade_already_closed`، backend-r1): الصفقة أُغلقت بجهاز آخر بين الفحص والإغلاق. */
 const isAlreadyClosedError = (e: unknown) => e instanceof Error && /\bHTTP 409\b/.test(e.message);
 
+/**
+ * فشل «تحميل الأقدم» — نصٌّ محلّي مؤقّتاً حتى مفتاح `journalLoadOlderError` (طلب لـlaunch بـCOORDINATION، tools69)؛
+ * `journalLoadError` يقول «غادر الدفتر وارجع» وهنا الزرّ نفسه يعيد المحاولة والقائمة المعروضة سليمة. الكردي بحاجة مراجعة.
+ */
+const OLDER_ERROR_COPY: Record<string, string> = {
+  ar: 'تعذّر تحميل الصفقات الأقدم — تحقّق من الاتصال واضغط «تحميل الأقدم» مجدداً',
+  'en-US': 'Could not load older trades — check your connection and tap “Load older” again',
+  'en-GB': 'Could not load older trades — check your connection and tap “Load older” again',
+  ku: 'بارکردنی مامەڵە کۆنترەکان سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە «بارکردنی کۆنترەکان» دابگرە',
+};
+
 export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props = {}) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -301,9 +313,15 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   const refresh = useCallback(async () => {
     const gen = ++listGenRef.current;
     try {
-      const res = await api.trades();
+      // ما حُمّل بـ«تحميل الأقدم» يبقى بعد إضافة/إغلاق/حذف (`journalRefreshPages`) — صفحاتٌ متتالية، الأولى تحمل الإجمالي والإحصاءات
+      const pages = journalRefreshPages(tradesRef.current.length);
+      const res = await api.trades(pages[0]);
+      let list = res.trades as Trade[];
+      for (let i = 1; i < pages.length && list.length >= pages[i].offset; i++) {
+        if (!mountedRef.current || gen !== listGenRef.current) return;
+        list = mergeJournalPage(list, (await api.trades(pages[i])).trades as Trade[]);
+      }
       if (!mountedRef.current || gen !== listGenRef.current) return;
-      const list = res.trades as Trade[];
       tradesRef.current = list;
       setTrades(list);
       setStats(res.stats as Stats);
@@ -327,6 +345,30 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  /** «تحميل الأقدم» (backend-r1 `limit`/`offset`): صفحةٌ بعد المحمَّل بتداخلٍ يحمي من حذفٍ بجهاز آخر (`journalOlderPage`). */
+  const [olderBusy, setOlderBusy] = useState(false);
+  const [olderError, setOlderError] = useState(false);
+  const loadOlder = useCallback(async () => {
+    const gen = ++listGenRef.current;
+    setOlderBusy(true);
+    setOlderError(false);
+    try {
+      const res = await api.trades(journalOlderPage(tradesRef.current.length));
+      if (!mountedRef.current || gen !== listGenRef.current) return;
+      const list = mergeJournalPage(tradesRef.current, res.trades as Trade[]);
+      tradesRef.current = list;
+      setTrades(list);
+      setStats(res.stats as Stats);
+      const tot = (res as { total?: unknown }).total;
+      setTotal(typeof tot === 'number' && Number.isFinite(tot) && tot >= 0 ? tot : null);
+      void loadOpenQuotes(list);
+    } catch {
+      if (mountedRef.current && gen === listGenRef.current) setOlderError(true);
+    } finally {
+      if (mountedRef.current) setOlderBusy(false);
+    }
+  }, [loadOpenQuotes]);
 
   // تبديل زوج الشارت يُبدّل رمز التسجيل — لكن ليس وسط تسجيل صفقة مكتوبة (سعر دخول مكتوب لرمز آخر
   // كان سيُسجَّل تحت الرمز الجديد).
@@ -816,7 +858,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   const pageOnly = total != null && total > trades.length;
   const statsMixScopes = pageOnly && activeSym == null;
   const cappedNote =
-    loading || (total == null ? trades.length < JOURNAL_LIST_LIMIT : !pageOnly)
+    loading || (total == null ? trades.length < JOURNAL_PAGE : !pageOnly)
       ? null
       : statsMixScopes
         ? t.journalShownOfTotal.replace('{shown}', String(trades.length)).replace('{total}', String(total))
@@ -1971,8 +2013,32 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         </Text>
       ) : null}
       {cappedNote ? (
-        // الخادم يُرجع صفحة (أحدث 200، `db.list_trades`) — الأقدم، ولو مفتوحة، لا تصل حتى «تحميل الأقدم» (api بلا limit/offset بعد)
+        // الخادم يُرجع صفحة (أحدث 200، `db.list_trades`) — الأقدم، ولو مفتوحة، لا تصل حتى «تحميل الأقدم»
         <Text style={[styles.planWarn, { textAlign: align }]}>{cappedNote}</Text>
+      ) : null}
+      {!loading && pageOnly ? (
+        // خادمٌ أقدم بلا `total` لا يُعرض له الزرّ: يتجاهل `offset` فيعيد الصفحة الأولى نفسها
+        <Pressable
+          accessibilityRole="button"
+          disabled={olderBusy}
+          style={({ pressed }) => [
+            styles.chip,
+            { alignSelf: rtl ? 'flex-end' : 'flex-start' },
+            pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+          ]}
+          onPress={() => {
+            playSoftClick();
+            void loadOlder();
+          }}
+          accessibilityLabel={olderBusy ? t.a11yBusy : t.journalLoadOlder}
+          accessibilityState={{ busy: olderBusy }}
+          hitSlop={8}
+        >
+          <Text style={styles.chipText}>{olderBusy ? '...' : t.journalLoadOlder}</Text>
+        </Pressable>
+      ) : null}
+      {olderError ? (
+        <Text style={[styles.formError, { textAlign: align }]}>{OLDER_ERROR_COPY[lang] ?? OLDER_ERROR_COPY['en-US']}</Text>
       ) : null}
       {/**
         * الصفقات المفتوحة أولاً. الباك-إند يُرجع الأحدث فالأقدم (`db.list_trades`: ORDER BY opened_at

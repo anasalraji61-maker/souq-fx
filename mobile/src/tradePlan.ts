@@ -1050,6 +1050,47 @@ export function closedElsewhere(fresh: readonly { id: string; status: string }[]
   return tr != null && tr.status !== 'open';
 }
 
+/** صفحة الدفتر الافتراضية بالخادم (`db.TRADES_PAGE`) وسقف `limit` (`db.TRADES_PAGE_MAX`) — أكبر منه يُرفض 422. */
+export const JOURNAL_PAGE = 200;
+export const JOURNAL_PAGE_MAX = 500;
+/**
+ * «تحميل الأقدم» يبدأ قبل آخر ما وصل بهذا العدد: الترتيب بالخادم إزاحةٌ (`OFFSET`)، فصفقةٌ حُذفت بجهاز آخر بعد تحميل
+ * الصفحة تُزيح كل ما بعدها صفّاً للأعلى ⇒ `offset = المحمَّل` يتخطّى صفقةً لا تظهر أبداً (ولو مفتوحة). التداخل يغطّي حتى
+ * هذا العدد من الحذف، والمكرَّر (إضافةٌ بجهاز آخر تُزيح للأسفل) يُسقط بالمعرّف (`mergeJournalPage`).
+ */
+export const JOURNAL_OLDER_OVERLAP = 5;
+
+/** طلب «تحميل الأقدم» بعد `loaded` صفقة: صفحة كاملة جديدة + التداخل، ضمن سقف الخادم. */
+export function journalOlderPage(loaded: number): { limit: number; offset: number } {
+  const n = Number.isFinite(loaded) ? Math.max(0, Math.floor(loaded)) : 0;
+  const offset = Math.max(0, n - JOURNAL_OLDER_OVERLAP);
+  return { limit: Math.min(JOURNAL_PAGE_MAX, JOURNAL_PAGE + (n - offset)), offset };
+}
+
+/**
+ * طلبات التحديث (بعد إضافة/إغلاق/حذف) حين حُمّل `loaded` صفقة: التحديث كان يطلب الصفحة الأولى وحدها فيُسقط كل ما
+ * حُمّل بـ«الأقدم» — المتداول يضيف صفقة فتختفي 300 صفقة قديمة كان يراجعها. صفحاتٌ متتالية بسقف الخادم تغطّي
+ * `max(صفحة، المحمَّل)`.
+ */
+export function journalRefreshPages(loaded: number): { limit: number; offset: number }[] {
+  const n = Number.isFinite(loaded) ? Math.max(JOURNAL_PAGE, Math.floor(loaded)) : JOURNAL_PAGE;
+  const out: { limit: number; offset: number }[] = [];
+  for (let offset = 0; offset < n; offset += JOURNAL_PAGE_MAX) out.push({ limit: Math.min(JOURNAL_PAGE_MAX, n - offset), offset });
+  return out;
+}
+
+/** يُلحق صفحةً أقدم بالقائمة بلا تكرار (بالمعرّف، أول ظهور يبقى) — التداخل وإزاحة الإضافات يعيدان صفوفاً وصلت. */
+export function mergeJournalPage<T extends { id: string }>(list: readonly T[], page: readonly T[]): T[] {
+  const seen = new Set(list.map((x) => x.id));
+  const out = list.slice();
+  for (const x of page) {
+    if (seen.has(x.id)) continue;
+    seen.add(x.id);
+    out.push(x);
+  }
+  return out;
+}
+
 /**
  * هل تُكتب تسعيرة «السعر الحالي» بخانة دخول الدفتر حين يصل الردّ؟ الطلب يستغرق ثوانيَ والنموذج حيّ تحته، فتُكتب
  * فقط إن بقي كل ما يحدّد معناها كما كان لحظة النقرة: الرمز والجهة (`key`)، **ونصّ الدخول نفسه، والصفقة المفتوحة
