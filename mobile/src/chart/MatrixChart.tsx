@@ -6368,27 +6368,50 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const inLane = (y: number) => y >= laneTop && y + 2 <= laneBot;
             const left = xOf(i) - primaryColW / 2;
             if (kind === 'kagi') {
-              const x1 = i === 0 ? xOf(0) : xOf(i - 1);
-              const y1 = i === 0 ? yP(c.open) : yP(source.plot[i - 1].close);
-              const x2 = xOf(i);
-              const y2 = yP(c.close);
-              const len = Math.hypot(x2 - x1, y2 - y1);
-              const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+              // خطّ عمودي لكل انعكاس (`kagi.ts`) + وصلة أفقية من الخطّ السابق عند `open`. السميك (yang) بلون
+              // الصعود والرفيع (yin) بلون الهبوط، ويتبدّل وسط الخطّ عند `flipAt` (كسر كتف/خصر).
+              const k = (c as SyntheticBar).kagi;
+              const thickOpen = k ? k.thickAtOpen : bull;
+              const w = (thick: boolean) => (thick ? 3.5 : 1.5);
+              const tint = (thick: boolean) => (thick ? candleBull : candleBear);
+              const x = xOf(i);
+              const vSeg = (from: number, to: number, thick: boolean, key: string) => {
+                const y1 = Math.max(laneTop, Math.min(yP(from), yP(to)));
+                const y2 = Math.min(laneBot, Math.max(yP(from), yP(to)));
+                return y2 > y1 ? (
+                  <View
+                    key={key}
+                    style={{
+                      position: 'absolute',
+                      left: x - w(thick) / 2,
+                      top: y1 - w(thick) / 2,
+                      width: w(thick),
+                      height: y2 - y1 + w(thick),
+                      backgroundColor: tint(thick),
+                    }}
+                  />
+                ) : null;
+              };
+              const yOpen = yP(c.open);
+              const xPrev = i > 0 ? xOf(i - 1) : x;
               return (
-                <View
-                  key={i}
-                  style={{
-                    position: 'absolute',
-                    left: x1,
-                    top: y1,
-                    width: len,
-                    height: bull ? 3.5 : 1.5,
-                    backgroundColor: color,
-                    opacity: 0.95,
-                    transform: [{ rotate: `${angle}deg` }],
-                    transformOrigin: 'left center',
-                  }}
-                />
+                <View key={i} pointerEvents="none" style={StyleSheet.absoluteFill}>
+                  {i > 0 && inLane(yOpen) ? (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        left: xPrev,
+                        top: yOpen - w(thickOpen) / 2,
+                        width: x - xPrev,
+                        height: w(thickOpen),
+                        backgroundColor: tint(thickOpen),
+                      }}
+                    />
+                  ) : null}
+                  {k?.flipAt != null
+                    ? [vSeg(c.open, k.flipAt, thickOpen, 'a'), vSeg(k.flipAt, c.close, !thickOpen, 'b')]
+                    : vSeg(c.open, c.close, thickOpen, 'a')}
+                </View>
               );
             }
             if (kind === 'pnf') {

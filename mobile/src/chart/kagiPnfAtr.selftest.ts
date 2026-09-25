@@ -32,6 +32,18 @@ assert.ok(big[big.length - 1].close < big[big.length - 1].open, 'reversal past A
 
 // مبلغ صريح ما زال يعمل.
 assert.equal(kagi([...rising, bar(40, last - 0.0025)], 0.005).at(-1)!.close, last);
+
+// Kagi: خطّ واحد لكل اتجاه، والسُّمك يتبدّل عند كسر الخصر/تجاوز الكتف لا مع كل خطّ صاعد.
+const kpath = [1.1, 1.104, 1.11, 1.105, 1.108, 1.103, 1.112];
+const kl = kagi(kpath.map((p, i) => bar(i, p)), 0.002);
+assert.equal(kl.length, 5, `kagi lines ${kl.length}`);
+assert.ok(Math.abs(kl[0].open - 1.1) < 1e-12 && Math.abs(kl[0].close - 1.11) < 1e-12, 'one up line 1.100→1.110');
+assert.deepEqual(kl[0].kagi, { thickAtOpen: true });
+assert.deepEqual(kl[1].kagi, { thickAtOpen: true }, 'no waist yet ⇒ stays thick');
+assert.deepEqual(kl[2].kagi, { thickAtOpen: true }, '1.108 under shoulder 1.110 ⇒ thick unchanged');
+assert.deepEqual(kl[3].kagi, { thickAtOpen: true, flipAt: 1.105 }, 'breaks waist 1.105 ⇒ thin');
+assert.deepEqual(kl[4].kagi, { thickAtOpen: false, flipAt: 1.108 }, 'clears shoulder 1.108 ⇒ thick');
+assert.equal(kl[3].open, kl[2].close, 'lines join at the reversal price');
 console.log('kagiPnfAtr selftest PASS');
 
 // P&F على شبكة مضاعفات الصندوق: الإغلاق الأول 1.10037 وصندوق 0.001 ⇒ أوّل صندوق يبدأ 1.100 لا 1.10037.

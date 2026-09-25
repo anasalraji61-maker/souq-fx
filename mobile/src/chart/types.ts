@@ -229,6 +229,8 @@ export type SyntheticBar = Candle & {
   srcTime?: number;
   /** P&F فقط: حجم الصندوق — العمود شمعة واحدة و‎|close − open| / box‎ عدد رموز X/O فيه. */
   box?: number;
+  /** Kagi فقط: الخطّ سميك (yang) عند فتحه؟ و`flipAt` السعر الذي يتبدّل عنده السُّمك داخل الخطّ نفسه. */
+  kagi?: { thickAtOpen: boolean; flipAt?: number };
 };
 
 export type Drawing = {
