@@ -184,3 +184,16 @@ def test_all_sources_down_returns_empty_and_retries_soon(feed):
     feed({})
     assert nf.fetch_news() == []
     assert nf.EMPTY_TTL < nf.TTL
+
+
+def test_undated_item_is_not_labelled_today(feed):
+    """بلا `pubDate` كان «اليوم» — لخبر قد يكون عمره أيام، وبالعربية حتى لمستخدم إنجليزي."""
+    feed({nf.FEEDS[0]: "<rss><channel><item><title>Fed holds rates</title></item></channel></rss>"})
+    items = nf.fetch_news()
+    assert items[0]["when"] == "—" and items[0]["ts"] is None
+
+
+def test_news_impact_says_it_is_a_headline_estimate(feed):
+    feed({nf.FEEDS[0]: _rss(("Fed holds rates steady", "Tue, 23 Sep 2026 14:30:00 +0000"))})
+    item = nf.fetch_news()[0]
+    assert item["impact"] == "high" and item["impact_basis"] == "headline_keywords"

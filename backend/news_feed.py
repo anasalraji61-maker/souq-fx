@@ -88,11 +88,14 @@ def _parse_rss(xml_text: str, source: str) -> list[dict]:
             continue
         title = re.sub(r"\s+", " ", title_el.text.strip())[:180]
         pub = item.find("pubDate")
-        when, ts = when_and_ts(pub.text if pub is not None else None)
+        # خبر بلا تاريخ ⇒ «—» لا «اليوم»: كان يُعرض «اليوم» (وبالعربية لكل اللغات) لخبر قد يكون عمره أيام
+        when, ts = when_and_ts(pub.text if pub is not None else None, default="—")
         out.append(
             {
                 "id": _stable_id(title),
                 "impact": _impact_from_title(title),
+                # التأثير **تقديرٌ من كلمات العنوان** لا تصنيف مصدر (كتأثير التقويم) — يُقال صراحةً
+                "impact_basis": "headline_keywords",
                 "title": title,
                 "pair_effect": "Forex",
                 "when": when,
