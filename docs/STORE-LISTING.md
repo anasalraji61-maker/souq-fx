@@ -7,7 +7,7 @@
 > **قواعد كتابة هذه النصوص (لا تُكسَر عند التعديل)**:
 > 1. لا اسم منافس ولا علامة تجارية لطرف آخر بأي حقل (Apple ترفض أسماء تطبيقات أخرى بالكلمات المفتاحية، و`ip-legal-caution.mdc`).
 > 2. لا وعد بربح ولا «إشارات مضمونة» ولا كلمة «توصيات» — تطبيق تحليل وتعليم فقط؛ لا تنفيذ صفقات ولا ربط وسيط.
-> 3. لا ادعاء «بيانات لحظية/حية» مطلق — مصدر البيانات يعتمد على المزوّد وقد يظهر كتجريبي (`data_source`).
+> 3. لا ادعاء «بيانات لحظية/حية» مطلق — مصدر البيانات يعتمد على المزوّد (`data_source`). منذ launch122 لا شموع تجريبية بالتداول: تعذّر المزوّد أو الخادم ⇒ إشعار بلا شموع؛ التجريبي باقٍ لشارت الدرس وحده (`LectureClassroom.tsx`) — لذلك «illustrative» لا «demo» بالتنبيه.
 > 4. لا نذكر ميزات بيانات تجريبية (الإجماع الاجتماعي، توقعات المحللين) كميزة حقيقية.
 > 5. حدود الأحرف أدناه **مُتحقَّق منها بسكربت** (عدّ أحرف Unicode). أي تعديل → أعد العدّ.
 >
@@ -84,7 +84,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 
 مصمّم ليبقى واضحاً: ألوان هادئة مريحة للعين في الجلسات الطويلة، ولمسات تفاعلية حيث تلمس فقط.
 
-تنبيه مهم: MATRIX تطبيق تحليل وتعليم فقط. لا ينفّذ صفقات، ولا يرتبط بأي وسيط، ولا يقدّم نصيحة استثمارية. التداول بالعملات والأسواق المالية ينطوي على مخاطر عالية وقد يؤدي إلى خسارة رأس المال. البيانات المعروضة قد تكون متأخرة أو تجريبية حسب المصدر.
+تنبيه مهم: MATRIX تطبيق تحليل وتعليم فقط. لا ينفّذ صفقات، ولا يرتبط بأي وسيط، ولا يقدّم نصيحة استثمارية. التداول بالعملات والأسواق المالية ينطوي على مخاطر عالية وقد يؤدي إلى خسارة رأس المال. الأسعار المعروضة قد تكون متأخرة حسب المصدر، وحين لا تتوفّر بيانات يقول التطبيق ذلك صراحةً بدل عرض أسعار. شارت الدرس في الأكاديمية قد يستعمل بيانات توضيحية.
 
 **ما الجديد (الإصدار الأول)**
 الإصدار الأول من MATRIX بالعربية والإنجليزية والكردية: شارتات متعددة، مؤشرات وأدوات رسم، تنبيهات أسعار ومؤشرات، حاسبة حجم المركز ودفتر صفقات، تقويم اقتصادي، وأكاديمية صوتية للتحليل الفني.
@@ -145,7 +145,7 @@ ACADEMY
 
 Calm colors for long sessions, with tactile feedback only where you touch.
 
-Important: MATRIX is an analysis and education app only. It does not execute trades, does not connect to any broker, and does not provide investment advice. Trading currencies and financial markets involves a high level of risk and may result in the loss of capital. Market data shown may be delayed or demo data depending on the source.
+Important: MATRIX is an analysis and education app only. It does not execute trades, does not connect to any broker, and does not provide investment advice. Trading currencies and financial markets involves a high level of risk and may result in the loss of capital. Prices shown may be delayed depending on the source; when data is unavailable the app says so instead of showing prices. Lesson charts in the academy may use illustrative data.
 
 **What's New (first release)**
 The first release of MATRIX, in English, Arabic and Kurdish: multi-chart layouts, indicators and drawing tools, price and indicator alerts, a position size calculator and trade journal, an economic calendar, and an audio academy for technical analysis.
