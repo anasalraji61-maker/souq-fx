@@ -1362,24 +1362,24 @@ def ballot(vote_id: str, choice: str, user_id: int) -> dict | None:
     الآن: أول صوت يُحتسب، نفس الخيار مجدداً لا يغيّر شيئاً، وتغيير الرأي ينقل الصوت (−1 من القديم،
     +1 للجديد) ضمن معاملة واحدة."""
     new_col = "agree" if choice == "agree" else "disagree"
+    old_col = "disagree" if new_col == "agree" else "agree"
     with _conn() as c:
         if not c.execute("SELECT 1 FROM votes WHERE id=?", (vote_id,)).fetchone():
             return None
-        prev = c.execute(
-            "SELECT choice FROM vote_ballots WHERE vote_id=? AND user_id=?", (vote_id, user_id)
-        ).fetchone()
-        if prev is None:
-            c.execute(
-                "INSERT INTO vote_ballots(vote_id,user_id,choice) VALUES(?,?,?)",
-                (vote_id, user_id, new_col),
-            )
+        # العدّاد يتحرّك فقط حين **تُغيِّر** الكتابة نفسها صفّ الصوت. كان الخيار السابق يُقرأ بـSELECT
+        # (بلا قفل كتابة) ثم يُنقل الصوت: ضغطتان متزامنتان على «أعارض» (أو جهازان) تقرآن «أوافق»
+        # كلتاهما فتنقلانه مرتين (موافقة −2، معارضة +2 ⇒ صوت متداول آخر يُمحى)، وأول صوتين متزامنين
+        # يصطدم ثانيهما بالمفتاح الأساسي ⇒ 500. الكتابة الأولى تأخذ قفل SQLite فتنتظر الثانية حتى
+        # تُثبَّت ثم لا تجد ما تغيّره (rowcount 0).
+        if c.execute(
+            "INSERT OR IGNORE INTO vote_ballots(vote_id,user_id,choice) VALUES(?,?,?)",
+            (vote_id, user_id, new_col),
+        ).rowcount == 1:
             c.execute(f"UPDATE votes SET {new_col}={new_col}+1 WHERE id=?", (vote_id,))
-        elif prev["choice"] != new_col:
-            old_col = "agree" if prev["choice"] == "agree" else "disagree"
-            c.execute(
-                "UPDATE vote_ballots SET choice=? WHERE vote_id=? AND user_id=?",
-                (new_col, vote_id, user_id),
-            )
+        elif c.execute(
+            "UPDATE vote_ballots SET choice=? WHERE vote_id=? AND user_id=? AND choice=?",
+            (new_col, vote_id, user_id, old_col),
+        ).rowcount == 1:
             c.execute(
                 f"UPDATE votes SET {old_col}=MAX({old_col}-1,0), {new_col}={new_col}+1 WHERE id=?",
                 (vote_id,),
