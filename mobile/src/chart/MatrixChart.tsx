@@ -104,6 +104,9 @@ import {
   dragChangesDrawing,
   drawingEnd,
   nudgePipPrice,
+  nudgeRepeatMultiplier,
+  NUDGE_HOLD_DELAY_MS,
+  NUDGE_REPEAT_MS,
   rayReach,
   sameDrawingPlace,
   samePoint,
@@ -3410,9 +3413,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   /**
    * إزاحة الرسم المحدَّد `bars` شمعة و`steps` خطوة سعر (pip للأزواج والمعادن، وإلا بكسل رأسي واحد) — لأسهم
    * لوحة المفاتيح ولأزرار ▲▼◀▶ بالهاتف (chart15): الإصبع لا يضع مستوى على pip بعينه، والسحب يقفز بكسلات.
-   * `false` إن لا رسم محدَّد. قابلة للتراجع كل خطوة.
+   * `false` إن لا رسم محدَّد، `'same'` إن لم يتحرّك (حافّة البيانات)، وإلا `'moved'`. قابلة للتراجع كل خطوة،
+   * إلا `record = false` (تكرار الضغط المطوَّل بعد لقطته الأولى) فالسلسلة كلّها تراجع واحد.
    */
-  const nudgeSelectedDrawing = (bars: number, steps: number): boolean => {
+  const nudgeSelectedDrawing = (bars: number, steps: number, record = true): false | 'same' | 'moved' => {
     const d = selectedId ? drawingsRef.current.find((x) => x.id === selectedId) : null;
     if (!d) return false;
     const pip = chartPipSpec(series.symbol)?.pipSize ?? null;
@@ -3425,10 +3429,37 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       (index) =>
         stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe))
     );
-    if (sameDrawingPlace(d, next)) return true;
-    pushDrawHistory();
+    if (sameDrawingPlace(d, next)) return 'same';
+    if (record) pushDrawHistory();
+    // المرجع يُحدَّث فوراً: تكرار الضغط المطوَّل قد يسبق الرسم التالي فيُزيح النسخة القديمة من جديد.
+    drawingsRef.current = drawingsRef.current.map((x) => (x.id === next.id ? next : x));
     setDrawings((list) => list.map((x) => (x.id === next.id ? next : x)));
-    return true;
+    return 'moved';
+  };
+  const nudgeRef = useRef(nudgeSelectedDrawing);
+  nudgeRef.current = nudgeSelectedDrawing;
+  const nudgeHoldTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stopNudgeHold = useCallback(() => {
+    if (nudgeHoldTimer.current) clearInterval(nudgeHoldTimer.current);
+    nudgeHoldTimer.current = null;
+  }, []);
+  useEffect(() => stopNudgeHold, [stopNudgeHold]);
+  /**
+   * ضغط مطوَّل على ▲▼◀▶: تكرار حتى رفع الإصبع (`onPressOut`)، أسرع بعد `NUDGE_REPEAT_SLOW_TICKS`
+   * (`nudgeRepeatMultiplier`). لقطة تراجع واحدة عند أوّل خطوة تحرّك فعلاً — لا عشرات خطوات بالتاريخ
+   * ولا تراجع يمحو قبل الضغطة. يتوقّف إن أُلغي التحديد أثناءه.
+   */
+  const startNudgeHold = (bars: number, steps: number) => {
+    stopNudgeHold();
+    let recorded = nudgeRef.current(bars, steps, true) === 'moved';
+    let tick = 0;
+    nudgeHoldTimer.current = setInterval(() => {
+      tick += 1;
+      const k = nudgeRepeatMultiplier(tick);
+      const r = nudgeRef.current(bars * k, steps * k, !recorded);
+      if (r === false) stopNudgeHold();
+      else if (r === 'moved') recorded = true;
+    }, NUDGE_REPEAT_MS);
   };
 
   const pointFromXY = useCallback(
@@ -5501,6 +5532,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                     ]}
                     onPress={() => nudgeSelectedDrawing(b.bars, b.steps)}
+                    delayLongPress={NUDGE_HOLD_DELAY_MS}
+                    onLongPress={() => startNudgeHold(b.bars, b.steps)}
+                    onPressOut={stopNudgeHold}
                   >
                     <Text style={styles.compactToolIcon}>{b.icon}</Text>
                     <Text style={styles.compactToolLabel}>{tr.mcNudgeWord}</Text>
@@ -11474,6 +11508,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                     ]}
                     onPress={() => nudgeSelectedDrawing(b.bars, b.steps)}
+                    delayLongPress={NUDGE_HOLD_DELAY_MS}
+                    onLongPress={() => startNudgeHold(b.bars, b.steps)}
+                    onPressOut={stopNudgeHold}
                   >
                     <Text style={styles.toolText}>{b.icon}</Text>
                   </Pressable>

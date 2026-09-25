@@ -1,5 +1,12 @@
 /** فحص ذاتي لـ`arrowNudge`/`nudgePipPrice` (`drawEdit.ts`) — يُشغَّل بـNode بلا شجرة مكوّنات. */
-import { arrowNudge, nudgePipPrice, translateDrawing } from './drawEdit';
+import {
+  arrowNudge,
+  nudgePipPrice,
+  nudgeRepeatMultiplier,
+  NUDGE_REPEAT_FAST_STEP,
+  NUDGE_REPEAT_SLOW_TICKS,
+  translateDrawing,
+} from './drawEdit';
 import type { Drawing } from './types';
 
 let failures = 0;
@@ -32,6 +39,11 @@ ok('trend: شمعة يساراً', t2.a.index === 1 && t2.b!.index === 7 && t2.b
 // لا خانة قبل الأولى.
 const t3 = translateDrawing(t, -10, (p) => p, stamp);
 ok('trend: يتوقّف عند 0', t3.a.index === 0 && t3.b!.index === 6);
+
+// الضغط المطوَّل: خطوة واحدة أوّل 10 تكرارات ثم 5.
+ok('تكرار 1 ⇒ خطوة', nudgeRepeatMultiplier(1) === 1);
+ok('تكرار 10 ⇒ خطوة', nudgeRepeatMultiplier(NUDGE_REPEAT_SLOW_TICKS) === 1);
+ok('تكرار 11 ⇒ سريع', nudgeRepeatMultiplier(NUDGE_REPEAT_SLOW_TICKS + 1) === NUDGE_REPEAT_FAST_STEP);
 
 if (failures) {
   console.error(`drawNudge selftest: ${failures} failure(s)`);

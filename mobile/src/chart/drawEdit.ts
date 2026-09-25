@@ -190,6 +190,21 @@ export function cloneShift(tool: Drawing['tool'], inLowerHalf: boolean): { bars:
   return { bars: 0, px: inLowerHalf ? -CLONE_SHIFT_PX : CLONE_SHIFT_PX };
 }
 
+/**
+ * الضغط المطوَّل على ▲▼◀▶ (chart15): تكرار كل `NUDGE_REPEAT_MS` بعد `NUDGE_HOLD_DELAY_MS`. أوّل
+ * `NUDGE_REPEAT_SLOW_TICKS` تكراراً خطوة واحدة (ضبط دقيق)، ثم خمس خطوات لكل تكرار — وقف على بعد 40 pip
+ * يُنقل بثانيتين بدل 40 نقرة. السلسلة كلّها تراجع واحد.
+ */
+export const NUDGE_HOLD_DELAY_MS = 350;
+export const NUDGE_REPEAT_MS = 90;
+export const NUDGE_REPEAT_SLOW_TICKS = 10;
+export const NUDGE_REPEAT_FAST_STEP = 5;
+
+/** مُضاعِف الخطوة للتكرار رقم `tick` (1 أوّل تكرار بعد الخطوة الأولى). */
+export function nudgeRepeatMultiplier(tick: number): number {
+  return tick > NUDGE_REPEAT_SLOW_TICKS ? NUDGE_REPEAT_FAST_STEP : 1;
+}
+
 /** سعر مُزاح بـ`steps` pip، مُقرَّب لمنازل الـpip +1 (منازل عرض الزوج) فلا يتراكم ضجيج الفاصلة العائمة. */
 export function nudgePipPrice(price: number, steps: number, pipSize: number): number {
   const decimals = Math.max(0, Math.round(-Math.log10(pipSize)) + 1);
