@@ -1367,7 +1367,16 @@ def indicators_forecast(body: IndicatorForecastBody):
 def economic_calendar(currency: str | None = None, impact: str | None = None):
     """`currency` و`impact` يقبلان عدّة قيم مفصولة بفواصل (`EUR,USD` و`high,medium`): المتداول
     على زوج واحد يهمّه عملتاه معاً، و«متوسط فما فوق» شرطان لا شرط. القيمة الواحدة تبقى كما كانت."""
-    return {"events": econ_calendar.fetch_calendar(currency=currency, impact=impact)}
+    events = econ_calendar.fetch_calendar(currency=currency, impact=impact)
+    # `status: unavailable` = المصدر متعذّر (القائمة الفارغة ليست «لا أخبار»)
+    return {"events": events, **econ_calendar.calendar_status()}
+
+
+# كاش الاقتباس: الدفتر وحاسبة المخاطرة وقائمة المتابعة تطلب الرمز نفسه مرّات بالدقيقة، وكل طلب
+# كان يصرف من حدّ المزوّد المشترك (~8/دقيقة بالخطة المجانية) ⇒ 429 ثم أسعار احتياطية للجميع.
+# المُخزَّن يُعاد `data_kind: cache` مع `as_of` = وقت جلبه الحقيقي، لا «الآن».
+QUOTE_TTL = 30.0
+_QUOTE_CACHE: dict[str, tuple[float, dict]] = {}
 
 
 @app.get("/api/market/quote/{symbol}")
@@ -1385,9 +1394,14 @@ def market_quote(symbol: str):
             "data_kind": "unavailable",
             "unavailable_reason": why,
         }
-    book = market.fetch_quote_book(symbol.upper())
+    sym = symbol.upper()
+    hit = _QUOTE_CACHE.get(sym)
+    now = time.time()
+    if hit and now - hit[0] < QUOTE_TTL:
+        return {**hit[1], "data_kind": "cache", "as_of": hit[0]}
+    book = market.fetch_quote_book(sym)
     if not book:
-        series = build_series(symbol.upper(), "15m")
+        series = build_series(sym, "15m")
         last = series.last
         return {
             "symbol": symbol.upper(),
@@ -1401,9 +1415,13 @@ def market_quote(symbol: str):
             # provider/cache = آخر إغلاق حقيقي؛ demo = سلسلة بذرية (المزوّد غير مهيّأ أو لا يعرف الرمز) —
             # سعر غير حقيقي لا يصلح لحساب رقمي (حاسبة حجم المركز تتجاهله وتطلب السعر يدوياً).
             "data_kind": series.data_source.kind,
+            # وقت آخر شمعة جُلبت (قد يصل 15د مع `cache`) — كان يغيب فيقرأ العميل السعر «الآن»
+            "as_of": series.data_source.as_of,
         }
     book["source"] = "twelvedata"
     book["data_kind"] = "provider"
+    book["as_of"] = now
+    _QUOTE_CACHE[sym] = (now, dict(book))
     return book
 
 

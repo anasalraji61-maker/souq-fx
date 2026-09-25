@@ -16,9 +16,9 @@ from news_feed import when_and_ts
 _CACHE: list[dict] = []
 _CACHE_TS = 0.0
 TTL = 1800
-# الاحتياطي (أمثلة `sample`) يُعاد فحصه بعد دقيقتين: كان يُخزَّن 30 دقيقة كالحقيقي، فعطل عابر لـForexFactory
+# المصدر المتعذّر يُعاد فحصه بعد دقيقتين: كان الاحتياطي يُخزَّن 30 دقيقة كالحقيقي، فعطل عابر لـForexFactory
 # يُبقي المتداول على أمثلة توضيحية بدل التقويم الفعلي نصف ساعة (وقد يفوته خبر عالي التأثير).
-SAMPLE_TTL = 120
+FAILURE_TTL = 120
 # حدّ الأحداث المُعادة **بعد** فلترة العملة/التأثير (أسبوع ForexFactory نادراً ما يتجاوز ~200 حدث).
 # القصّ بـ`fetch_calendar` وحده: كان `_parse_ff` يقصّ هنا أيضاً **قبل** الفلاتر — نفس ما أُزيل من
 # `_parse_ff_json` بتشغيل سابق (راجع تعليقه) وبقي شقيقه خارجه: بأسبوع مزدحم يُسقط أحداث آخره
@@ -30,48 +30,13 @@ FF_URL = "https://www.forexfactory.com/ffcal_week_this.xml"
 # منطقة زمنية (XML أعلاه يعطي تاريخاً ووقتاً بلا منطقة، فيبقى احتياطياً بلا `ts`).
 FF_JSON_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
 
-FALLBACK = [
-    {
-        "id": "e1",
-        "title": "قرار الفائدة الفيدرالي",
-        "currency": "USD",
-        "impact": "high",
-        "when": "اليوم 21:00 UTC",
-        "forecast": "5.25%",
-    },
-    {
-        "id": "e2",
-        "title": "CPI الأمريكي",
-        "currency": "USD",
-        "impact": "high",
-        "when": "غداً 15:30 UTC",
-        "forecast": "0.3% m/m",
-    },
-    {
-        "id": "e3",
-        "title": "مبيعات التجزئة — GBP",
-        "currency": "GBP",
-        "impact": "medium",
-        "when": "الجمعة 09:00 UTC",
-        "forecast": "0.1%",
-    },
-    {
-        "id": "e4",
-        "title": "PMI التصنيع — EUR",
-        "currency": "EUR",
-        "impact": "medium",
-        "when": "الاثنين 10:00 UTC",
-        "forecast": "47.5",
-    },
-    {
-        "id": "e5",
-        "title": "حديث مسؤول فيدرالي",
-        "currency": "USD",
-        "impact": "low",
-        "when": "اليوم 18:00 UTC",
-        "forecast": "—",
-    },
-]
+# (كان هنا `FALLBACK`: خمسة أحداث مكتوبة باليد — «قرار الفائدة الفيدرالي اليوم 21:00 UTC، 5.25%»،
+# «CPI غداً 15:30» — تُعرض كلّما تعذّر المصدر. أوقاتها نسبية بلا تاريخ فهي خاطئة كل يوم تقريباً،
+# وتوقّعها قديم؛ متداول يرى «خبر فائدة الليلة» يغلق مراكزه أو ينتظره وهو غير موجود. أُزيلت:
+# المصدر المتعذّر يُعاد «غير متاح» بقائمة فارغة، والتطبيق يقول ذلك.)
+
+# هل آخر جلب نجح؟ `ok` = أحداث ForexFactory، `unavailable` = المصدر متعذّر/فارغ.
+_STATUS = "unavailable"
 
 
 def _impact(raw: str | None) -> str:
@@ -253,9 +218,10 @@ def fetch_calendar(
     currency: str | None = None,
     impact: str | None = None,
 ) -> list[dict]:
-    global _CACHE, _CACHE_TS
-    ttl = SAMPLE_TTL if _CACHE and _CACHE[0].get("sample") else TTL
-    if not _CACHE or time.time() - _CACHE_TS >= ttl:
+    global _CACHE, _CACHE_TS, _STATUS
+    # فشلٌ يُعاد فحصه بعد دقيقتين لا نصف ساعة، ولا بكل طلب (كي لا يُقصف المصدر وهو معطّل)
+    ttl = TTL if _CACHE else FAILURE_TTL
+    if (not _CACHE and _CACHE_TS == 0.0) or time.time() - _CACHE_TS >= ttl:
         merged: list[dict] = []
         try:
             with httpx.Client(timeout=14.0, follow_redirects=True) as client:
@@ -268,8 +234,9 @@ def fetch_calendar(
                         merged = _parse_ff(r.text)
         except Exception:
             merged = []
-        # الاحتياطي الثابت أمثلة توضيحية لا أحداث حقيقية — يُعلَّم `sample` ليعرض التطبيق ذلك صراحة
-        _CACHE = merged if merged else [{**e, "ts": None, "sample": True} for e in FALLBACK]
+        # لا أحداث مخترَعة عند التعذّر: قائمة فارغة + `_STATUS` (يقرؤه المسار ويعيده للعميل)
+        _CACHE = merged
+        _STATUS = "ok" if merged else "unavailable"
         _CACHE_TS = time.time()
 
     events = list(_CACHE)
@@ -280,3 +247,8 @@ def fetch_calendar(
     if imps:
         events = [e for e in events if str(e.get("impact", "")).lower() in imps]
     return _unique_ids(events[:MAX_EVENTS])
+
+
+def calendar_status() -> dict[str, Any]:
+    """حالة آخر جلب: `status` ok/unavailable و`as_of` (epoch) وقت الجلب — None قبل أي جلب."""
+    return {"status": "ok" if _CACHE else _STATUS, "as_of": _CACHE_TS or None}

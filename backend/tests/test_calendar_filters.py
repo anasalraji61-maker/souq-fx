@@ -72,3 +72,44 @@ def test_filtering_does_not_mutate_the_cache(seeded):
     seeded.fetch_calendar(currency="USD", impact="high")
     assert len(seeded._CACHE) == 4
     assert len(seeded.fetch_calendar()) == 4
+
+
+# ─── المصدر المتعذّر: لا أحداث مخترَعة ────────────────────────────────────────
+
+def test_failed_source_returns_no_invented_events_and_says_unavailable(monkeypatch):
+    class _Boom:
+        def __init__(self, *a, **k):
+            raise RuntimeError("offline")
+
+    monkeypatch.setattr(cal.httpx, "Client", _Boom)
+    monkeypatch.setattr(cal, "_CACHE", [])
+    monkeypatch.setattr(cal, "_CACHE_TS", 0.0)
+    assert cal.fetch_calendar() == []
+    st = cal.calendar_status()
+    assert st["status"] == "unavailable" and st["as_of"]
+    assert not hasattr(cal, "FALLBACK")
+
+
+def test_failed_source_is_not_hammered_on_every_request(monkeypatch):
+    calls = {"n": 0}
+
+    class _Boom:
+        def __init__(self, *a, **k):
+            calls["n"] += 1
+            raise RuntimeError("offline")
+
+    monkeypatch.setattr(cal.httpx, "Client", _Boom)
+    monkeypatch.setattr(cal, "_CACHE", [])
+    monkeypatch.setattr(cal, "_CACHE_TS", 0.0)
+    cal.fetch_calendar()
+    cal.fetch_calendar()
+    assert calls["n"] == 1
+
+
+def test_calendar_route_reports_status(seeded):
+    from fastapi.testclient import TestClient
+
+    import main
+
+    body = TestClient(main.app).get("/api/calendar").json()
+    assert body["status"] == "ok" and len(body["events"]) == 4

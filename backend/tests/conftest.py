@@ -12,3 +12,16 @@ import sys
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _BACKEND_DIR not in sys.path:
     sys.path.insert(0, _BACKEND_DIR)
+
+
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _fresh_quote_cache():
+    """كاش `/api/market/quote` على مستوى الوحدة — يُفرَّغ لكل اختبار كي لا يتسرّب سعر بين الاختبارات."""
+    import main
+
+    main._QUOTE_CACHE.clear()
+    yield
+    main._QUOTE_CACHE.clear()

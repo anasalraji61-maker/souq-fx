@@ -90,3 +90,50 @@ def test_quote_route_never_labels_an_invented_spread_as_provider(routes):
     assert body["data_kind"] == "provider"
     assert body["bid"] is None and body["ask"] is None
     assert body["spread_source"] is None
+
+
+# ─── كاش الاقتباس و`as_of` ───────────────────────────────────────────────────
+
+def test_second_quote_within_ttl_is_served_from_cache_with_its_real_time(routes, monkeypatch):
+    calls = {"n": 0}
+    real = market.fetch_quote_book
+
+    def counting(sym):
+        calls["n"] += 1
+        return real(sym)
+
+    monkeypatch.setattr(main.market, "fetch_quote_book", counting)
+    routes["/quote"] = _Resp({"close": "1.10000"})
+    client = TestClient(main.app)
+    first = client.get("/api/market/quote/EURUSD").json()
+    second = client.get("/api/market/quote/EURUSD").json()
+    assert calls["n"] == 1, "الطلب الثاني لا يصرف من حدّ المزوّد"
+    assert first["data_kind"] == "provider" and second["data_kind"] == "cache"
+    assert second["as_of"] == first["as_of"], "وقت الجلب الحقيقي لا «الآن»"
+    assert second["price"] == first["price"]
+
+
+def test_expired_cache_fetches_again(routes, monkeypatch):
+    routes["/quote"] = _Resp({"close": "1.10000"})
+    client = TestClient(main.app)
+    client.get("/api/market/quote/EURUSD")
+    ts, book = main._QUOTE_CACHE["EURUSD"]
+    main._QUOTE_CACHE["EURUSD"] = (ts - main.QUOTE_TTL - 1, book)
+    routes["/quote"] = _Resp({"close": "1.20000"})
+    body = client.get("/api/market/quote/EURUSD").json()
+    assert body["data_kind"] == "provider" and body["price"] == pytest.approx(1.2)
+
+
+def test_candle_fallback_carries_the_candle_time(monkeypatch):
+    monkeypatch.setattr(main.market, "fetch_quote_book", lambda s: None)
+
+    def build(sym, timeframe="15m", outputsize=180):
+        c = main.Candle(time=1, open=1.1, high=1.1, low=1.1, close=1.1)
+        return main.ChartSeries(
+            symbol=sym, timeframe=timeframe, candles=[c], change_pct=0, last=1.1,
+            data_source=main.DataProvenance(kind="cache", as_of=1234.0, channel="twelvedata"),
+        )
+
+    monkeypatch.setattr(main, "build_series", build)
+    body = TestClient(main.app).get("/api/market/quote/EURUSD").json()
+    assert body["data_kind"] == "cache" and body["as_of"] == 1234.0
