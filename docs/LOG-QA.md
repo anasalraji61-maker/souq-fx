@@ -695,3 +695,4 @@ tools75b ← ui (`6a58a2b`، `ScreenerMini.tsx:195`)؛ ui10 ← launch (`65700ad
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول حقيقي.
 **إلحاق:** وصل أثناء الدفع chart 43 / tools / launch / ui 12 / backend 15. تحقّقتُ: ui10 تتمّة (`c24c7aa`)، backend-r15b (`6b1875a`؛ `VotePanel` بلا وقت) ⇒ أُغلقا؛ tools76a منفَّذ من launch (`1f619da`) وبقي حذف
 `TIME_TBD_TOMORROW_COPY` (tools). QA59 مكرّر لـbackend-r15a (مفتوح، `BacktestPanel.tsx:276-280`) ⇒ دُمج. البناء بعد الدمج أخضر 0، الـselftests 96/96.
+**إلحاق 2:** tools `2254a8d` حذف `TIME_TBD_TOMORROW_COPY` (grep صفر) ⇒ tools76a أُغلق كلياً. launch114 → ui (مفتاحا `backtestStatAvgWin`/`AvgLoss` موجودان ×3، `BacktestPanel.tsx:278` ما زال `backtestStatAvgWinLoss`) مفتوح.
