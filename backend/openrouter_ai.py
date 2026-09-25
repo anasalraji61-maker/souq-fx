@@ -107,14 +107,22 @@ def interrupt_answer(
 # ردّ يذكر الجانبين (صاعد ثم «قد يؤدي إلى الهبوط») يبقى بلا اتجاه — أسلم من جانب خاطئ.
 _AR_PRE = r"(?<!\w)(?:[وف])?(?:[بلك])?(?:ال|لل)?"
 _AR_SUF = r"(?:ي|ية|يا|اً|ا|ً|ٍ|ٌ)?(?!\w)"
+# تعابير لا اتجاه فيها: «as long as» (= «طالما») كانت «buy» ⇒ «ابقَ خارج السوق طالما السعر بالنطاق» بطاقة شراء
+# بدخول ووقف وهدف؛ و«fell short (of)»/«in short»/«short-lived» كانت «sell»، و«short squeeze»/«short covering»
+# (صعود!) كانت «sell» على سلسلة هابطة. الـlookbehind ثابت الطول ⇒ بديل لكل صيغة.
+_SHORT_IDIOM_PRE = "".join(
+    rf"(?<!\b{w} )" for w in ("in", "fell", "fall", "falls", "falling", "fallen", "come", "comes", "came", "coming")
+)
 _BUY_RE = re.compile(
     _AR_PRE + r"(?:شراء|صعود|صاعد)" + _AR_SUF
-    + r"|\b(?:buy|buying|bullish|uptrend)\b|\blong\b(?![- ](?:term|while|time|run|way|period))",
+    + r"|\b(?:buy|buying|bullish|uptrend)\b"
+    + r"|(?<!\bas )(?<!\bso )\blong\b(?! as\b)(?![- ](?:term|while|time|run|way|period))",
     re.IGNORECASE,
 )
 _SELL_RE = re.compile(
     _AR_PRE + r"(?:بيع|هبوط|هابط)" + _AR_SUF
-    + r"|\b(?:sell|selling|shorting|bearish|downtrend)\b|\bshort\b(?![- ](?:term|while|time|run|period))",
+    + r"|\b(?:sell|selling|shorting|bearish|downtrend)\b|" + _SHORT_IDIOM_PRE
+    + r"\bshort\b(?![- ](?:term|while|time|run|period|lived|squeeze|covering|of\b))",
     re.IGNORECASE,
 )
 

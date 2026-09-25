@@ -37,6 +37,18 @@ from tests.test_signal_levels import _provider_series
     ("I wouldn’t buy here", None),
     ("تجنّب الشراء قبل الإغلاق", None),
     ("ولا أرى فرصة شراء", None),
+    # تعابير بلا اتجاه (كانت «buy»/«buy»/«sell»×5): بطاقة بمستويات لصفقة لم يقترحها الردّ
+    ("No clear direction. Stay flat as long as price remains inside the range.", None),
+    ("Wait on the sidelines so long as the range holds.", None),
+    ("Price fell short of the 1.10 target; momentum is fading.", None),
+    ("The rally may fall short.", None),
+    ("A short squeeze is possible.", None),
+    ("The move was short-lived.", None),
+    ("In short, wait for the close.", None),
+    # الكلمة بمعناها التداولي باقية
+    ("Go long above 1.09", "buy"),
+    ("Look to short the retest", "sell"),
+    ("Long above 1.09 as long as support holds", "buy"),
     # النفي بجملة أخرى لا يُسقط الاتجاه
     ("This is not financial advice. Bias bullish.", "buy"),
     ("ليست نصيحة مالية. سيناريو شراء عند الدعم", "buy"),
