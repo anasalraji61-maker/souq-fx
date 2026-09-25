@@ -1613,9 +1613,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     return r.series;
   }, [series, livePrice, liveTickSource]);
 
+  // تبديل الرمز/الفريم: العودة للطرف الحيّ ومقياس سعر تلقائي، مع **إبقاء التكبير** (عدد الشموع) كـTradingView —
+  // كان يعود إلى 80 فمن كبّر إلى 30 شمعة ليقرأ الشموع يفقد ذلك بكل ضغطة فريم. AUTO/نقرتا محور الزمن تعيدان 80.
   useEffect(() => {
     setOffset(0);
-    setWindowCount(80);
     setPriceScale(1);
     setPricePan(0);
     xPanRef.current = restXPan();
