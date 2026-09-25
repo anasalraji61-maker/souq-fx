@@ -140,6 +140,24 @@ def test_login_without_identifier_is_400(client):
     assert r.status_code == 400
 
 
+@pytest.mark.parametrize("role", ["company", "broker", "agent", "trainer"])
+def test_self_registration_cannot_pick_a_commission_role(client, role):
+    """كان `role: "company"` يُقبل من أي عميل ⇒ 8 مستويات توازن بخطة العمولات بلا تحقّق."""
+    r = client.post(
+        "/api/auth/register",
+        json={"username": f"x{role}", "email": f"x{role}@example.com", "password": "pass1234", "role": role},
+    )
+    assert r.status_code == 422
+
+
+def test_self_registration_as_trader_still_works(client):
+    r = client.post(
+        "/api/auth/register",
+        json={"username": "plain1", "email": "plain1@example.com", "password": "pass1234", "role": "trader"},
+    )
+    assert r.status_code == 200, r.text
+
+
 def test_duplicate_email_is_400_not_500(client):
     _register(client, "dup1")
     r = client.post(

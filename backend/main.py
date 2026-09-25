@@ -223,7 +223,9 @@ class AuthRegister(BaseModel):
     username: str = Field(min_length=3, max_length=32)
     email: str = Field(min_length=5, max_length=120)
     password: str = Field(min_length=4, max_length=128)
-    role: Literal["trader", "trainer", "broker", "agent", "company"] = "trader"
+    # التسجيل الذاتي «متداول» فقط: كان أي عميل يرسل `role: "company"` فيمنح نفسه 8 مستويات توازن
+    # بخطة العمولات (`commissions.levels_for_role`) بلا أي تحقّق. التطبيق يرسل `trader` دائماً (`api.ts`).
+    role: Literal["trader"] = "trader"
     sponsor_code: str | None = None
     side: Literal["left", "right"] | None = None
 
