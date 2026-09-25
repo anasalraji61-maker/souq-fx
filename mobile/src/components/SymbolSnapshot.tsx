@@ -20,10 +20,11 @@ type Props = {
 };
 
 export function SymbolSnapshot({ symbol, timeframe = '15m' }: Props) {
-  const { rtl } = useI18n();
+  const { t, rtl } = useI18n();
   const [snap, setSnap] = useState<{
     rsi?: number;
-    change_pct?: number;
+    change_pct?: number | null;
+    change_bars?: number;
     ma_cross_up?: boolean;
     ma_cross_down?: boolean;
     macd_cross_up?: boolean;
@@ -66,6 +67,15 @@ export function SymbolSnapshot({ symbol, timeframe = '15m' }: Props) {
   const pct =
     typeof snap.change_pct === 'number' && Number.isFinite(snap.change_pct) ? snap.change_pct : null;
   const pctDir = pct == null || Math.abs(pct) < FLAT_PCT ? 'flat' : pct > 0 ? 'up' : 'down';
+  // النسبة على كامل السلسلة (~45 ساعة على 15m، ~6 أشهر على D — backend `5324d55`) لا «تغيّر اليوم» كما
+  // توحي شريحة ± بلا اسم ⇒ تُسمّى بعدد شموعها. خادم أقدم بلا `change_bars` ⇒ النسبة وحدها.
+  const bars = snap.change_bars;
+  const pctText =
+    pct == null
+      ? '—'
+      : typeof bars === 'number' && Number.isFinite(bars) && bars > 0
+        ? t.snapChangeOverBars.replace('{pct}', formatPct(pct)).replace('{bars}', String(bars))
+        : formatPct(pct);
 
   return (
     <View style={[styles.wrap, rtl && styles.wrapRtl]}>
@@ -73,7 +83,7 @@ export function SymbolSnapshot({ symbol, timeframe = '15m' }: Props) {
       <Text
         style={[styles.chip, pctDir === 'up' && styles.bull, pctDir === 'down' && styles.bear]}
       >
-        {pct != null ? formatPct(pct) : '—'}
+        {pctText}
       </Text>
       {snap.ma_cross_up ? <Text style={[styles.chip, styles.bull]}>MA ↑</Text> : null}
       {snap.ma_cross_down ? <Text style={[styles.chip, styles.bear]}>MA ↓</Text> : null}

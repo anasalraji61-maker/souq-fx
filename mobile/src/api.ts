@@ -610,7 +610,10 @@ export const api = {
   indicatorSnapshot: (symbol: string, timeframe = '15m') =>
     getJson<{
       rsi?: number;
-      change_pct?: number;
+      /** تغيّر على كامل السلسلة المحمَّلة (`change_bars` شمعة على `timeframe`) لا «اليوم»؛ null إن أول إغلاق 0. */
+      change_pct?: number | null;
+      change_bars?: number;
+      timeframe?: string;
       ma_cross_up?: boolean;
       ma_cross_down?: boolean;
       macd_cross_up?: boolean;
