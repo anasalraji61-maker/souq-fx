@@ -222,3 +222,23 @@ def test_wick_window_covers_the_whole_stale_cache_gap(monkeypatch):
     monkeypatch.setattr(alert_worker, "_price_at", lambda s: (None, None))
     alert_worker._recent_minutes("BTCUSD")
     assert asked["n"] * 60 > alert_worker.market.STALE_MAX_SEC
+
+
+# ------------------------- فحص أحد الأجهزة يدفع إشعار بقية أجهزة المالك
+
+def test_alert_fired_by_one_devices_check_is_pushed_to_the_owners_other_devices(client, monkeypatch):
+    """كان `/check` يَسِم التنبيه مُطلَقاً (فيتخطّاه الـworker) بلا دفع ⇒ تنبيه أطلقه فحص نسخة سطح
+    المكتب (ويب) لا يصل الهاتف أبداً. الجهاز الفاحص نفسه يُظهره محلياً فلا يُدفع إليه."""
+    r = client.post("/api/auth/register", json={"username": "twodev", "email": "twodev@x.co", "password": "pass1234"})
+    auth = {"Authorization": f"Bearer {r.json()['token']}"}
+    phone, desk = {**auth, **_DEVICE}, {**auth, **_OTHER_DEVICE}
+    for h, tok in ((phone, "ExponentPushToken[phone]"), (desk, "ExponentPushToken[desk]")):
+        assert client.post("/api/push/register", json={"token": tok, "platform": "ios"}, headers=h).status_code == 200
+    assert client.post("/api/alerts", json={"symbol": "EURUSD", "condition": "above", "price": 1.1},
+                       headers=phone).status_code == 200
+    sent: list = []
+    monkeypatch.setattr(alert_worker.expo_push, "send_push", lambda t, ti, b, d: sent.append((list(t), b)) or {})
+    assert len(client.post("/api/alerts/check", headers=desk).json()["triggered"]) == 1
+    assert sent == [(["ExponentPushToken[phone]"], sent[0][1])] and "EURUSD" in sent[0][1]
+    alert_worker._check_once()  # والـworker لا يكرّره
+    assert len(sent) == 1

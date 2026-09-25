@@ -81,7 +81,7 @@ def test_one_owners_db_error_does_not_drop_the_others(worker):
     """`push_targets_for` خارج أي try: «database is locked» عند مالك واحد أسقط إشعارات كل من بعده."""
     calls: list = []
 
-    def targets(owner, key):
+    def targets(owner, key, **_):
         calls.append(owner)
         if owner == 1:
             raise RuntimeError("database is locked")

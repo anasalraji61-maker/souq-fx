@@ -1540,9 +1540,14 @@ def push_tokens_for(user_id: int | None, owner_key: str | None = None) -> list[s
     return [r["token"] for r in rows]
 
 
-def push_targets_for(user_id: int | None, owner_key: str | None = None) -> list[tuple[str, str | None]]:
-    """مثل `push_tokens_for` لكن مع لغة واجهة كل جهاز: [(token, lang)]."""
+def push_targets_for(
+    user_id: int | None, owner_key: str | None = None, *, exclude_key: str | None = None
+) -> list[tuple[str, str | None]]:
+    """مثل `push_tokens_for` لكن مع لغة واجهة كل جهاز: [(token, lang)]. `exclude_key` = جهاز يُستثنى
+    (الجهاز الذي فحص التنبيه بنفسه وأظهر إشعاره محلياً)."""
     sql, args = _push_owner_sql(user_id, owner_key)
+    if exclude_key:
+        sql, args = f"({sql}) AND owner_key IS NOT ?", (*args, exclude_key)
     with _conn() as c:
         rows = c.execute(f"SELECT token, lang FROM push_tokens WHERE {sql}", args).fetchall()
     return [(r["token"], r["lang"]) for r in rows]

@@ -299,6 +299,29 @@ def _compose(ev: dict, lang: str) -> tuple[str, str]:
     return title, f"{sym} · {name} {cond}{val}{tf}"
 
 
+def price_event(a: dict) -> tuple[int | None, str | None, dict]:
+    return (
+        a.get("user_id"),
+        a.get("owner_key"),
+        {"kind": "price", "symbol": a["symbol"], "condition": a["condition"], "price": a["price"]},
+    )
+
+
+def indicator_event(a: dict) -> tuple[int | None, str | None, dict]:
+    return (
+        a.get("user_id"),
+        a.get("owner_key"),
+        {
+            "kind": "indicator",
+            "symbol": a["symbol"],
+            "alert_type": a["alert_type"],
+            "condition": a["condition"],
+            "value": a.get("value"),
+            "timeframe": a.get("timeframe"),
+        },
+    )
+
+
 def _check_once() -> None:
     # (owner user_id, owner install key, event) — each push goes only to the alert owner's devices
     # (it used to go to every registered device, leaking one trader's alerts to all the others).
@@ -318,11 +341,7 @@ def _check_once() -> None:
                 log.warning("no price available for alert id=%s symbol=%s", a.get("id"), a.get("symbol"))
                 continue
             if _price_hit(a, q, candles, q_at) and db.mark_alert_triggered(a["id"], a):
-                triggered_msgs.append((
-                    a.get("user_id"),
-                    a.get("owner_key"),
-                    {"kind": "price", "symbol": a["symbol"], "condition": a["condition"], "price": a["price"]},
-                ))
+                triggered_msgs.append(price_event(a))
         except Exception:
             log.exception(
                 "price alert processing failed id=%s symbol=%s",
@@ -338,18 +357,7 @@ def _check_once() -> None:
             if _check_indicator(a, series) and db.mark_indicator_alert_triggered(
                 a["id"], last_bar_time(series.get((str(a["symbol"]).upper(), str(a["timeframe"])))), seen=a
             ):
-                triggered_msgs.append((
-                    a.get("user_id"),
-                    a.get("owner_key"),
-                    {
-                        "kind": "indicator",
-                        "symbol": a["symbol"],
-                        "alert_type": a["alert_type"],
-                        "condition": a["condition"],
-                        "value": a.get("value"),
-                        "timeframe": a.get("timeframe"),
-                    },
-                ))
+                triggered_msgs.append(indicator_event(a))
         except Exception:
             log.exception(
                 "indicator alert processing failed id=%s symbol=%s",
@@ -358,11 +366,18 @@ def _check_once() -> None:
             )
 
     _retry_pending_pushes()
+    dispatch(triggered_msgs)
+
+
+def dispatch(triggered_msgs: list[tuple[int | None, str | None, dict]], exclude_key: str | None = None) -> None:
+    """يدفع إشعار كل تنبيه أُطلق لأجهزة مالكه. يستدعيه الـworker، ومسارا `/check` بالتطبيق أيضاً: كانا
+    يَسِمان التنبيه مُطلَقاً (فيتخطّاه الـworker) بلا أي دفع ⇒ تنبيه أطلقه فحص نسخة سطح المكتب (ويب، بلا
+    إشعار) لا يصل هاتف المالك أبداً. الجهاز الفاحص نفسه (`exclude_key`) يُظهر إشعاره محلياً فيُستثنى."""
     for owner, owner_key, ev in triggered_msgs:
         # كل رسالة بمعزل: قراءة الرموز كانت خارج أي try ⇒ «database is locked» عند مالك واحد يُسقط
         # إشعارات كل من بعده بالدورة، وتنبيهاتهم موسومة مُطلَقة فلا تُعاد أبداً.
         try:
-            targets = db.push_targets_for(owner, owner_key)
+            targets = db.push_targets_for(owner, owner_key, exclude_key=exclude_key)
             by_lang: dict[str, list[str]] = {}
             for tok, lang in targets:
                 by_lang.setdefault(_push_lang(lang), []).append(tok)

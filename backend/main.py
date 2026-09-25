@@ -19,7 +19,7 @@ from typing import Annotated, Literal
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
+from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -1019,7 +1019,11 @@ def delete_alert(
 
 
 @app.post("/api/alerts/check")
-def check_alerts(user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)):
+def check_alerts(
+    background: BackgroundTasks,
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+):
     """يفحص تنبيهات المستدعي فقط ويعيدها (كان يعيد تنبيهات كل المستخدمين فتستبدل قائمة العميل،
     وجهاز مجهول كان يُطلق تنبيهات كل المجهولين — الآن تنبيهات جهازه فقط عبر `X-Install-Id`)."""
     uid = user["user_id"] if user else None
@@ -1044,6 +1048,12 @@ def check_alerts(user: dict | None = Depends(_auth_user), key: str | None = Depe
             # قائمته من `alerts` ويستعمل `triggered` للوميض والإشعار وحدهما فلا يظهر الأثر
             # اليوم — **يُقال كما هو**: هذا إغلاق فخّ لا إصلاح عطب ظاهر.
             triggered.append({**a, "triggered": True, "current": q})
+    # الوسم أعلاه يجعل الـworker يتخطّاه ⇒ دفع إشعار بقية أجهزة المالك من هنا (لا لهذا الجهاز). صفوف
+    # القائمة العامة بلا `user_id`/`owner_key` ⇒ المالك = المستدعي (القائمة قائمته وحده).
+    if triggered:
+        background.add_task(
+            alert_worker.dispatch, [alert_worker.price_event({**a, "user_id": uid, "owner_key": key}) for a in triggered], key
+        )
     return {"triggered": triggered, "alerts": db.list_alerts(uid, owner_key=key)}
 
 
@@ -1133,7 +1143,9 @@ def rearm_indicator_alert(
 
 @app.post("/api/indicator-alerts/check")
 def check_indicator_alerts(
-    user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)
+    background: BackgroundTasks,
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
 ):
     """تنبيهات المستدعي فقط (نفس قاعدة الرؤية في /api/indicator-alerts).
 
@@ -1172,6 +1184,12 @@ def check_indicator_alerts(
             # للإشعار وحده فلم يظهر الأثر، لكنه فخّ لأي عرض يبني على الوسم (نفس قاعدة
             # `/api/academy/progress`: يُعاد ما بالقاعدة لا ما وصل بالطلب).
             triggered.append({**a, "triggered": True})
+    if triggered:
+        background.add_task(
+            alert_worker.dispatch,
+            [alert_worker.indicator_event({**a, "user_id": uid, "owner_key": key}) for a in triggered],
+            key,
+        )
     return {"triggered": triggered, "alerts": db.list_indicator_alerts(uid, owner_key=key)}
 
 
