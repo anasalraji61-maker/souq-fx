@@ -14,7 +14,6 @@ import {
   providerUnavailableReason,
   isValidAsOf,
   sourceFamily,
-  tickBelongsToCandle,
   tickStatusLabel,
   FRESH_TICK_SEC,
   CLOCK_SKEW_SEC,
@@ -85,13 +84,6 @@ check('future beyond skew', !isValidAsOf(now + CLOCK_SKEW_SEC + 5, now));
 check('NaN rejected', !isValidAsOf(Number.NaN, now));
 check('label stale provider', tickStatusLabel({ kind: 'provider', channel: 'twelvedata_ws' }, now - 20, now) === 'آخر سعر');
 check('label fresh provider', tickStatusLabel({ kind: 'provider', channel: 'twelvedata_ws' }, now - 2, now) === 'حي');
-
-// Candle bucket
-const open = now - 100; // candle opened 100s ago, 15m step
-const step = 900;
-check('tick in bucket', tickBelongsToCandle(open, open + 50, step, now));
-check('tick after bucket', !tickBelongsToCandle(open, open + step + 1, step, now));
-check('tick before open', !tickBelongsToCandle(open, open - 1, step, now));
 
 // withLivePrice must not rewrite historical candle
 const histOpen = now - 3600;

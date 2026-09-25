@@ -226,23 +226,6 @@ export function timeframeStepSec(tf: string | null | undefined): number {
   return map[tf || ''] ?? 900;
 }
 
-/**
- * التيك ينتمي لحاوية الشمعة [open, open+step).
- * لا يسمح بتيك خارج الحاوية (تاريخية أو فجوة) — ولا نخترع شموعاً.
- */
-export function tickBelongsToCandle(
-  candleOpenTime: number,
-  tickSec: number | null | undefined,
-  stepSec: number,
-  nowSec = serverNowSec()
-): boolean {
-  if (!isValidAsOf(tickSec, nowSec)) return false;
-  if (!(stepSec > 0) || !Number.isFinite(stepSec)) return false;
-  const open = candleTimeSec(candleOpenTime);
-  if (!Number.isFinite(open)) return false;
-  return tickSec >= open && tickSec < open + stepSec;
-}
-
 export function parseWsDataSource(payload: {
   source?: string;
   data_source?: { kind?: string; as_of?: number; channel?: string } | null;
