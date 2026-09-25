@@ -1,5 +1,6 @@
 /** مؤشرات الحجم (Volume family). */
 import type { Candle } from '../../api';
+import { estimatedVolume } from '../types';
 import { ema, sma } from './moving-averages';
 import { computeLinRegChannel, computeVwma } from './trend';
 import { computeMacd, computePpo, computeRoc } from './momentum';
@@ -29,7 +30,7 @@ export function computeVwap(
       }
       session = k;
     }
-    const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
+    const vol = c.volume ?? estimatedVolume(c);
     const tp = (c.high + c.low + c.close) / 3;
     cumPV += tp * vol;
     cumVol += vol;
@@ -46,7 +47,7 @@ export function computeObv(candles: (Candle & { volume?: number })[]): number[] 
   const out: number[] = [];
   let cum = 0;
   for (let i = 0; i < candles.length; i++) {
-    const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
+    const vol = candles[i].volume ?? estimatedVolume(candles[i]);
     if (i > 0) {
       if (candles[i].close > candles[i - 1].close) cum += vol;
       else if (candles[i].close < candles[i - 1].close) cum -= vol;
@@ -68,7 +69,7 @@ export function computeMfi(candles: (Candle & { volume?: number })[], period = 1
   const posFlow: number[] = new Array(n).fill(0);
   const negFlow: number[] = new Array(n).fill(0);
   for (let i = 1; i < n; i++) {
-    const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
+    const vol = candles[i].volume ?? estimatedVolume(candles[i]);
     const rawFlow = tp[i] * vol;
     if (tp[i] > tp[i - 1]) posFlow[i] = rawFlow;
     else if (tp[i] < tp[i - 1]) negFlow[i] = rawFlow;
@@ -105,7 +106,7 @@ export function computeCmf(candles: (Candle & { volume?: number })[], period = 2
   for (let i = 0; i < n; i++) {
     const c = candles[i];
     const span = c.high - c.low;
-    const v = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
+    const v = c.volume ?? estimatedVolume(c);
     const mfm = span === 0 ? 0 : (c.close - c.low - (c.high - c.close)) / span;
     mfv[i] = mfm * v;
     vol[i] = v;
@@ -146,7 +147,7 @@ export function computeForceIndex(
   // المتوسّط فيُزيح أوّل القيم ويُظهر المؤشّر شمعة أبكر من TradingView.
   const raw: (number | null)[] = new Array(n).fill(null);
   for (let i = 1; i < n; i++) {
-    const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
+    const vol = candles[i].volume ?? estimatedVolume(candles[i]);
     raw[i] = (candles[i].close - candles[i - 1].close) * vol;
   }
   return ema(raw, period);
@@ -171,7 +172,7 @@ export function computeAccumDist(candles: (Candle & { volume?: number })[]): num
   for (let i = 0; i < candles.length; i++) {
     const c = candles[i];
     const span = c.high - c.low;
-    const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
+    const vol = c.volume ?? estimatedVolume(c);
     const mfm = span === 0 ? 0 : (c.close - c.low - (c.high - c.close)) / span;
     cum += mfm * vol;
     out.push(cum);
@@ -241,7 +242,7 @@ export function computeChaikinOsc(
   for (let i = 0; i < n; i++) {
     const c = candles[i];
     const span = c.high - c.low;
-    const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
+    const vol = c.volume ?? estimatedVolume(c);
     const mfm = span === 0 ? 0 : (c.close - c.low - (c.high - c.close)) / span;
     cum += mfm * vol;
     adl[i] = cum;
@@ -274,7 +275,7 @@ export function computeEom(candles: (Candle & { volume?: number })[], period = 1
     const prevMid = (candles[i - 1].high + candles[i - 1].low) / 2;
     const distance = mid - prevMid;
     const span = candles[i].high - candles[i].low;
-    const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
+    const vol = candles[i].volume ?? estimatedVolume(candles[i]);
     const boxRatio = span === 0 ? 0 : vol / 1e8 / span;
     raw[i] = boxRatio === 0 ? 0 : distance / boxRatio;
   }
@@ -299,8 +300,8 @@ export function computeNvi(candles: (Candle & { volume?: number })[]): number[] 
   const out: number[] = new Array(n).fill(1000);
   for (let i = 1; i < n; i++) {
     const prevVol =
-      candles[i - 1].volume ?? Math.abs(candles[i - 1].close - candles[i - 1].open) * 1e6 + 1000;
-    const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
+      candles[i - 1].volume ?? estimatedVolume(candles[i - 1]);
+    const vol = candles[i].volume ?? estimatedVolume(candles[i]);
     const prevClose = candles[i - 1].close;
     if (vol < prevVol) {
       out[i] = out[i - 1] * (1 + (prevClose === 0 ? 0 : (candles[i].close - prevClose) / prevClose));
@@ -325,7 +326,7 @@ export function computeNvi(candles: (Candle & { volume?: number })[]): number[] 
  */
 export function computeBwMfi(candles: (Candle & { volume?: number })[]): (number | null)[] {
   return candles.map((c) => {
-    const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
+    const vol = c.volume ?? estimatedVolume(c);
     return vol === 0 ? 0 : (c.high - c.low) / vol;
   });
 }
@@ -347,7 +348,7 @@ export function computePvo(
   fast = 12,
   slow = 26
 ): (number | null)[] {
-  const vol = candles.map((c) => c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000);
+  const vol = candles.map((c) => c.volume ?? estimatedVolume(c));
   const emaFast = ema(vol, fast);
   const emaSlow = ema(vol, slow);
   return vol.map((_, i) =>
@@ -374,7 +375,7 @@ export function computeVolumeOscillator(
   shortPeriod = 5,
   longPeriod = 10
 ): (number | null)[] {
-  const vol = candles.map((c) => c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000);
+  const vol = candles.map((c) => c.volume ?? estimatedVolume(c));
   const smaShort = sma(vol, shortPeriod);
   const smaLong = sma(vol, longPeriod);
   return vol.map((_, i) =>
@@ -403,7 +404,7 @@ export function computeVolumeRoc(
   candles: (Candle & { volume?: number })[],
   period = 10
 ): (number | null)[] {
-  const vol = candles.map((c) => c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000);
+  const vol = candles.map((c) => c.volume ?? estimatedVolume(c));
   const out: (number | null)[] = [];
   for (let i = 0; i < vol.length; i++) {
     if (i < period) {
@@ -431,7 +432,7 @@ export function computeVpt(candles: (Candle & { volume?: number })[]): number[] 
   const out: number[] = [];
   let cum = 0;
   for (let i = 0; i < candles.length; i++) {
-    const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
+    const vol = candles[i].volume ?? estimatedVolume(candles[i]);
     if (i > 0) {
       const prevClose = candles[i - 1].close;
       const pctChange = prevClose === 0 ? 0 : (candles[i].close - prevClose) / prevClose;
@@ -459,7 +460,7 @@ export function computeNetVolume(candles: (Candle & { volume?: number })[]): num
   const out: number[] = [];
   let cum = 0;
   for (let i = 0; i < candles.length; i++) {
-    const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
+    const vol = candles[i].volume ?? estimatedVolume(candles[i]);
     if (candles[i].close > candles[i].open) cum += vol;
     else if (candles[i].close < candles[i].open) cum -= vol;
     out.push(cum);
@@ -483,8 +484,8 @@ export function computePvi(candles: (Candle & { volume?: number })[]): number[] 
   const out: number[] = new Array(n).fill(1000);
   for (let i = 1; i < n; i++) {
     const prevVol =
-      candles[i - 1].volume ?? Math.abs(candles[i - 1].close - candles[i - 1].open) * 1e6 + 1000;
-    const vol = candles[i].volume ?? Math.abs(candles[i].close - candles[i].open) * 1e6 + 1000;
+      candles[i - 1].volume ?? estimatedVolume(candles[i - 1]);
+    const vol = candles[i].volume ?? estimatedVolume(candles[i]);
     const prevClose = candles[i - 1].close;
     if (vol > prevVol) {
       out[i] = out[i - 1] * (1 + (prevClose === 0 ? 0 : (candles[i].close - prevClose) / prevClose));
@@ -508,7 +509,7 @@ export function computeKlinger(
 ): { kvo: (number | null)[]; signal: (number | null)[] } {
   const n = candles.length;
   if (n === 0) return { kvo: [], signal: [] };
-  const vol = candles.map((c) => c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000);
+  const vol = candles.map((c) => c.volume ?? estimatedVolume(c));
   const typical = candles.map((c) => (c.high + c.low + c.close) / 3);
   const sv = candles.map((_, i) => (i > 0 && typical[i] >= typical[i - 1] ? vol[i] : -vol[i]));
   const emaShort = ema(sv, 34);
@@ -690,7 +691,7 @@ export function computeVwapBands(
       }
       session = k;
     }
-    const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
+    const vol = c.volume ?? estimatedVolume(c);
     const tp = (c.high + c.low + c.close) / 3;
     if (base == null) base = tp;
     cumV2 += vol * (tp - base) * (tp - base);
@@ -741,7 +742,7 @@ export function computeVpci(
 ): (number | null)[] {
   const n = candles.length;
   const closes = candles.map((c) => c.close);
-  const vol = candles.map((c) => c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000);
+  const vol = candles.map((c) => c.volume ?? estimatedVolume(c));
   const smaLong = sma(closes, longPeriod);
   const smaShort = sma(closes, shortPeriod);
   const smaVolLong = sma(vol, longPeriod);
@@ -797,7 +798,7 @@ export function computeVpci(
  * فيصبح صالحاً من i=period، والمجموع المتدحرج على period نقطة من الحجم الموجَّه يحتاج period نقطة
  * إضافية فوق ذلك). **حارس القسمة**: VAve=0 (لا يقع فعلياً إلا بحجم صفري تماماً بكل النافذة) يُرجِع
  * null بدل 0/0=NaN. **حجم مفقود يُعوَّض بصفر** هنا (بعكس بقية مؤشرات الحجم بالملف [VPT/Klinger/VPCI]
- * التي تُعوِّض بصيغة `|إغلاق−فتح|×1e6+1000`) — قرار متعمَّد: VFI مصمَّم أصلاً ليحدّ من تأثير الحجم
+ * التي تُعوِّض بـ`estimatedVolume`) — قرار متعمَّد: VFI مصمَّم أصلاً ليحدّ من تأثير الحجم
  * الشاذّ عبر VMax، فتعويض بصيغة تخلق حجماً مصطنعاً كبيراً يخالف فلسفة "تنقية الحجم" التي يقوم عليها
  * المؤشر بالتعريف؛ صفر أكثر اتساقاً مع الغياب الحقيقي للبيانة هنا تحديداً.
  * **تحقّق حسابي فعلي (Node.js، بيئة الجلسة السحابية، قبل الكتابة)**: سوق مسطّح تماماً (300 شمعة،

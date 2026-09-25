@@ -1,4 +1,5 @@
 import type { Candle } from '../api';
+import { estimatedVolume } from './types';
 
 export type VolumeProfileRow = { price: number; volume: number };
 
@@ -25,7 +26,7 @@ export function computeVolumeProfile(
   const step = span / bins;
   const acc = new Array(bins).fill(0);
   for (const c of candles) {
-    const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6;
+    const vol = c.volume ?? estimatedVolume(c);
     const i0 = Math.max(0, Math.min(bins - 1, Math.floor((c.low - lo) / step)));
     const i1 = Math.max(0, Math.min(bins - 1, Math.floor((c.high - lo) / step)));
     const n = Math.max(1, i1 - i0 + 1);
@@ -65,7 +66,7 @@ export function computeTpo(
     const letter = LETTERS[i % LETTERS.length];
     const i0 = Math.max(0, Math.min(bins - 1, Math.floor((c.low - lo) / step)));
     const i1 = Math.max(0, Math.min(bins - 1, Math.floor((c.high - lo) / step)));
-    const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6;
+    const vol = c.volume ?? estimatedVolume(c);
     const n = Math.max(1, i1 - i0 + 1);
     for (let b = i0; b <= i1; b++) {
       letters[b].push(letter);

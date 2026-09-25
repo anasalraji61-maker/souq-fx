@@ -1,5 +1,6 @@
 /** مؤشرات الاتجاه والمتوسطات المتحركة المتقدمة (Trend / Moving-Average family). */
 import type { Candle } from '../../api';
+import { estimatedVolume } from '../types';
 import { dema, ema, hma, sma, smma, tema, wma } from './moving-averages';
 import { computeCmo, computeMacd, computeRsi, computeSmi } from './momentum';
 import { computeAtr, computeKeltner } from './volatility';
@@ -929,7 +930,7 @@ export function computeVwma(
   period = 20
 ): (number | null)[] {
   const n = candles.length;
-  const vol = candles.map((c) => c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000);
+  const vol = candles.map((c) => c.volume ?? estimatedVolume(c));
   const out: (number | null)[] = new Array(n).fill(null);
   for (let i = period - 1; i < n; i++) {
     let sumPv = 0;

@@ -1,4 +1,5 @@
 import type { Candle } from '../api';
+import { estimatedVolume } from './types';
 
 export type FootprintBar = {
   buyVol: number;
@@ -18,7 +19,7 @@ export type DomLevel = {
 export function computeCvd(candles: (Candle & { volume?: number })[]): number[] {
   let cum = 0;
   return candles.map((c) => {
-    const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
+    const vol = c.volume ?? estimatedVolume(c);
     const signed = c.close >= c.open ? vol : -vol;
     cum += signed;
     return cum;
@@ -28,7 +29,7 @@ export function computeCvd(candles: (Candle & { volume?: number })[]): number[] 
 /** Footprint with intra-bar price buckets. */
 export function computeFootprint(candles: (Candle & { volume?: number })[]): FootprintBar[] {
   return candles.map((c) => {
-    const vol = c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000;
+    const vol = c.volume ?? estimatedVolume(c);
     const range = c.high - c.low || 1e-9;
     const body = Math.abs(c.close - c.open);
     const bodyShare = Math.min(1, body / range);
