@@ -426,7 +426,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     });
   })();
   const noteLeft = noteCharsLeft(note, noteRoom);
-  /** الملاحظة كما ستُحفظ: بعلامة «1R @ …» تُلحق حين يُشدّ وقف صفقة مفتوحة بهذا التعديل (`noteWithInitialStop`). */
+  /** الملاحظة كما ستُحفظ: بعلامة «1R @ …» تُلحق حين يُحرَّك وقف صفقة مفتوحة (شدّ، توسيع، مسح) بهذا التعديل (`noteWithInitialStop`). */
   const noteToSave = (e: number | null, s: number | null): string =>
     editing && e != null ? noteWithInitialStop({ symbol: symbol.trim(), note, before: editing, after: { side, entry: e, sl: s } }) : note;
 

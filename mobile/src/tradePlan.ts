@@ -497,8 +497,10 @@ export function planStop(input: {
  * لماذا: الخادم يحفظ `sl` واحداً. شراء EURUSD 1.0850 بوقف 1.0830 وخروج 1.0890 = +2R؛ حرّك الوقف إلى 1.0845 قبل
  * الإغلاق فصارت «+8R»، ومع صفقة −1R صار «متوسط R» +3.5R بدل +0.5R — الرقم الذي يقرّر به أيستمرّ على نظامه.
  *
+ * وكذلك حين يُوسَّع الوقف أو يُمسح: المخاطرة التي دخل بها تبقى 1R، فالخسارة بعدها تُقاس بها (−2R لا −1R، ولا تختفي).
+ *
  * لا علامة حين: الصفقة مغلقة (تعديلها تصحيحٌ لا تحريك)، أو الاتجاه/الدخول تغيّرا (تصحيح خطأ كتابة)، أو الوقف القديم
- * غير صالح أو غائب (لا مخاطرة أصلية معروفة)، أو الجديد أوسع/غائب/مساوٍ، أو بالملاحظة علامة صالحة أصلاً.
+ * غير صالح أو غائب (لا مخاطرة أصلية معروفة)، أو الجديد مساوٍ، أو بالملاحظة علامة صالحة أصلاً.
  */
 export function noteWithInitialStop(input: {
   symbol: string;
@@ -513,12 +515,13 @@ export function noteWithInitialStop(input: {
   if (!finitePos(before.entry) || Math.abs(before.entry - after.entry) > 1e-12 * Math.max(1, before.entry)) return note;
   if (initialStop({ symbol: input.symbol, side: after.side, entry: after.entry, note }) != null) return note;
   const old = before.sl;
-  if (!finitePos(old) || !finitePos(after.sl)) return note;
+  if (!finitePos(old)) return note;
   const risk = after.side === 'buy' ? after.entry - old : old - after.entry;
   const pip = journalPipSize(input.symbol);
   if (!(risk > 0) || (pip && risk < pip * (1 - 1e-6))) return note;
-  const tighter = after.side === 'buy' ? after.sl > old : after.sl < old;
-  if (!tighter) return note;
+  // الوقف لم يتغيّر ⇒ لا علامة. **مُسح أو وُسِّع** ⇒ علامة كالشدّ: خسارةٌ بعد مسح الوقف كانت تسقط من «متوسط R»
+  // (R = null)، وتوسيع 1.0830 ⇒ 1.0810 ثم ضربه كان يُسجَّل −1R نظيفاً بدل −2R — أسوأ صفقات النظام تختفي من رقمه.
+  if (finitePos(after.sl) && Math.abs(after.sl - old) <= 1e-12 * Math.max(1, old)) return note;
   const n = note.trim();
   const mark = `1R @ ${old}`;
   const out = n ? `${n} · ${mark}` : mark;
