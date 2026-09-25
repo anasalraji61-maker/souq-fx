@@ -116,7 +116,8 @@ type Trade = {
   side: string;
   entry: number;
   exit?: number | null;
-  size: number;
+  /** backend-r1: `null` = لم يُكتب حجم (كان الخادم يخزّن 1). صفوفٌ أقدم قد تحمل 1 مجهولاً — `knownLots` يفرّق. */
+  size: number | null;
   pnl?: number | null;
   /** وقف/هدف اختياريان (غائبان بسجلات قديمة أو باك-إند قديم). */
   sl?: number | null;
@@ -166,11 +167,16 @@ type QuoteSnap = { price: number; bid?: number | null; ask?: number | null };
 /** سقف قائمة الدفتر بالخادم (`db.list_trades` `LIMIT 200`). */
 const JOURNAL_LIST_LIMIT = 200;
 
+/** خطأ `postJson` لردّ 409 (`trade_already_closed`، backend-r1): الصفقة أُغلقت بجهاز آخر بين الفحص والإغلاق. */
+const isAlreadyClosedError = (e: unknown) => e instanceof Error && /\bHTTP 409\b/.test(e.message);
+
 export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props = {}) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
+  /** `/api/trades` `total` (backend-r1) — كل صفقات المتداول لا الصفحة. `null` بخادمٍ أقدم لا يرسله. */
+  const [total, setTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [symbol, setSymbol] = useState(defaultSymbol || 'EURUSD');
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
@@ -301,6 +307,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       tradesRef.current = list;
       setTrades(list);
       setStats(res.stats as Stats);
+      const tot = (res as { total?: unknown }).total;
+      setTotal(typeof tot === 'number' && Number.isFinite(tot) && tot >= 0 ? tot : null);
       setListError(false);
       void loadOpenQuotes(list);
     } catch {
@@ -308,6 +316,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         tradesRef.current = [];
         setTrades([]);
         setStats(null);
+        setTotal(null);
         setListError(true);
       }
     } finally {
@@ -791,14 +800,27 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   /**
    * إحصاءات ما هو معروض. بلا فلتر: أرقام الخادم حرفياً كما كانت (لا تغيّر بتاتاً بالحالة الشائعة).
    * وبفلتر أداة: تُحسب محليّاً **بمعادلة الخادم نفسها** (`db.trade_stats`: المغلقة ذات `pnl` فقط،
-   * نسبة النجاح بخانة عشرية والبقيّة بخانتين). وهذا حسابٌ مطابق لا تقريب: `trade_stats` يقرأ
-   * **نفس** قائمة `list_trades` التي تصل اللوحة — الحدّ 200 نفسه وشرط الملكية نفسه — فلا صفقات
-   * عند الخادم خارج ما بيد اللوحة. هذا بالضبط ما كان يمنع الفلترة قبل اليوم.
+   * نسبة النجاح بخانة عشرية والبقيّة بخانتين، والتعادل عدّاد مستقلّ). مطابقٌ للخادم ما دامت كل الصفقات بالصفحة؛
+   * بعد backend-r1 الخادم يحسب على الكل والقائمة صفحة، فبفلترٍ ودفترٍ أكبر من الصفحة الرقم للصفحة (سطر «أحدث N» يقول ذلك).
    */
   const shownStats = useMemo<Stats | null>(() => {
     if (activeSym == null) return stats;
     return journalStats(visibleTrades);
   }, [activeSym, stats, visibleTrades]);
+  /**
+   * backend-r1: `stats` صارت على **كل** الصفقات والقائمة صفحةٌ (أحدث 200). بلا فلتر وعند الخادم أكثر ممّا وصل ⇒ أرقام
+   * الخادم (العدد، النجاح، الأفضل/الأسوأ) على الكل، والأسطر المحسوبة من القائمة (الصافي بالـpip، متوسط R) على الصفحة —
+   * نطاقان مختلفان تحت سطر «الإحصاءات على الكل» ⇒ تُخفى هذه حتى تُحمَّل الصفحات الأقدم. بفلتر أداة كل شيء من الصفحة
+   * كما قبل، وسطر «أحدث 200 فقط» القديم يبقى صادقاً له.
+   */
+  const pageOnly = total != null && total > trades.length;
+  const statsMixScopes = pageOnly && activeSym == null;
+  const cappedNote =
+    loading || (total == null ? trades.length < JOURNAL_LIST_LIMIT : !pageOnly)
+      ? null
+      : statsMixScopes
+        ? t.journalShownOfTotal.replace('{shown}', String(trades.length)).replace('{total}', String(total))
+        : t.journalCappedNote.replace('{n}', String(trades.length));
 
   const resetForm = () => {
     setEntry('');
@@ -1019,9 +1041,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
      * كان يُسقطه فيقرّر المتداول «أغلق الآن؟» على نقاطٍ ونسبة حركة سعر، ثم يظهر المبلغ بعد الإغلاق لا
      * قبله. نفس الشرط (حجمٌ معروف — `knownLots`) ونفس الدالّة، فالرقمان حرفياً واحد.
      */
+    const closeLots = knownLots(tr.size, tr.note);
     const cash =
-      mv && knownLots(tr.size, tr.note) != null
-        ? journalPnl({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: exitPx, lots: tr.size })
+      mv && closeLots != null
+        ? journalPnl({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: exitPx, lots: closeLots })
         : null;
     const cashText = cash ? `${formatJournalMoney(cash, t.journalMoneyUsc, true)} · ` : '';
     const result = mv
@@ -1053,7 +1076,17 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
               if (mountedRef.current) notify(t.journalClosedElsewhereTitle, t.journalClosedElsewhereBody);
               return;
             }
-            await api.closeTrade(tr.id, exitPx);
+            try {
+              await api.closeTrade(tr.id, exitPx);
+            } catch (e) {
+              // الفحص أعلاه يقرأ صفحة الدفتر الأولى وحدها، وجهازان قد يُغلقان بالثانية نفسها: الخادم يرفض الخروج الثاني
+              // (409) ويُبقي الأول ⇒ نفس معاملة «أُغلقت من قبل» لا «فشل الإغلاق، حاول ثانية» (إعادة المحاولة 409 دائماً)
+              if (!isAlreadyClosedError(e)) throw e;
+              if (!mountedRef.current) return;
+              await refresh();
+              if (mountedRef.current) notify(t.journalClosedElsewhereTitle, t.journalClosedElsewhereBody);
+              return;
+            }
             if (!mountedRef.current) return;
             // خانة الخروج تُفرَغ بعد إغلاقٍ منها (إن لم تُكتب بعد النقرة): كانت تبقى «1.0900» فتُحفظ الصفقة الجديدة
             // التالية **مغلقة** فوراً بذلك السعر — ربحٌ لم يقع بنسبة الفوز ومتوسط R. الإضافة والتعديل يُفرغانها أصلاً.
@@ -1107,10 +1140,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
               {tr.side === 'sell' ? `▼ ${t.dirSell}` : `▲ ${t.dirBuy}`}
             </Text>{' '}
             {tr.symbol}
-            {/* 1 هو افتراض الباك-إند لصفقة بلا حجم مسجَّل — لا يُميَّز عن حجم كتبه المتداول، فلا يُعرض
+            {/* 1 بصفوفٍ قديمة هو افتراض الباك-إند لصفقة بلا حجم مسجَّل — لا يُميَّز عن حجم كتبه المتداول، فلا يُعرض
                 كأنه رقمه. ما عداه حجم سجّله فعلاً (يدوياً أو عبر «سجّل الخطة» من الحاسبة)، و1.00 من «سجّل الخطة»
-                تشهد بها ملاحظتها — راجع `knownLots`. */}
-            {knownLots(tr.size, tr.note) != null ? ` · ${formatJournalLots(tr.size)} lot` : ''}{' '}
+                تشهد بها ملاحظتها — راجع `knownLots`. و`null` (backend-r1) يقول صراحةً إنه لم يُكتب: لماذا لا مال بالسطر. */}
+            {(() => {
+              const kl = knownLots(tr.size, tr.note);
+              if (kl != null) return ` · ${formatJournalLots(kl)} lot`;
+              return tr.size === null ? ` · ${t.journalSizeUnknown}` : '';
+            })()}{' '}
             · {formatPrice(tr.entry, tr.symbol)}
             {tr.exit != null ? ` → ${formatPrice(tr.exit, tr.symbol)}` : ` ${t.journalOpenSuffix}`}
           </Text>
@@ -1178,11 +1215,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
              * لا الحساب، فـ«+0.23%» على لوتين هي 500$ — والمتداول كان يضرب بنفسه. الحجم 1 بلا معنى
              * (يضعه الخادم حين لا يُرسل حجم — راجع خانة الحجم) فلا يُحسب منه مال، كسطر الحجم أعلاه.
              */
-            const lotsKnown = knownLots(tr.size, tr.note) != null;
+            const rowLots = knownLots(tr.size, tr.note);
             const px = closed ? tr.exit : live;
             const cash =
-              mv && lotsKnown && px != null
-                ? journalPnl({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: px, lots: tr.size })
+              mv && rowLots != null && px != null
+                ? journalPnl({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: px, lots: rowLots })
                 : null;
             const cashText = cash ? `${formatJournalMoney(cash, t.journalMoneyUsc, true)} · ` : '';
             const result = mv
@@ -1354,24 +1391,29 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           {/* «+1.5%» والمال −1,058 USD: النسبة تجمع حركة السعر بلا حجم (`db.trade_stats`) — فتُسمّى بما هي
               («مجموع حركة السعر (بلا حجم الصفقة)») لا «إجمالي PnL» الذي يُقرأ ربح الحساب، وتُخفى حين يناقضها
               مالٌ معروف لكل صفقة */}
-          {pnlPctContradictsCash(visibleTrades, shownStats.total_pnl_pct) ? null : (
+          {shownStats.breakeven_count > 0 ? (
+            <Text style={[styles.stat, { textAlign: align }]}>
+              {t.journalStatBreakeven.replace('{n}', String(shownStats.breakeven_count))}
+            </Text>
+          ) : null}
+          {!statsMixScopes && pnlPctContradictsCash(visibleTrades, shownStats.total_pnl_pct) ? null : (
             <Text style={[styles.stat, { textAlign: align }]}>
               {t.journalStatPriceMoveSum.replace('{pct}', String(shownStats.total_pnl_pct))}
             </Text>
           )}
-          {extraStats.pips != null ? (
+          {!statsMixScopes && extraStats.pips != null ? (
             <Text style={[styles.stat, { textAlign: align }]}>
               {t.journalStatNetPips.replace('{pips}', extraStats.pips)}
               {extraStats.cash ? ` · ${extraStats.cash}` : ''}
             </Text>
           ) : null}
-          {extraStats.pipsBySymbol != null ? (
+          {!statsMixScopes && extraStats.pipsBySymbol != null ? (
             <Text style={[styles.stat, { textAlign: align }]}>
               {t.journalStatNetPipsBySymbol.replace('{parts}', extraStats.pipsBySymbol)}
             </Text>
           ) : null}
-          {extraStats.usc ? <Text style={[styles.stat, { textAlign: align }]}>{t.journalCentMoneyNote}</Text> : null}
-          {extraStats.avgR != null ? (
+          {!statsMixScopes && extraStats.usc ? <Text style={[styles.stat, { textAlign: align }]}>{t.journalCentMoneyNote}</Text> : null}
+          {!statsMixScopes && extraStats.avgR != null ? (
             <Text style={[styles.stat, { textAlign: align }]}>
               {t.journalStatAvgR.replace('{r}', extraStats.avgR).replace('{n}', String(extraStats.rN))}
             </Text>
@@ -1928,11 +1970,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           {listError ? t.journalLoadError : t.journalEmpty}
         </Text>
       ) : null}
-      {!loading && trades.length >= JOURNAL_LIST_LIMIT ? (
-        // الخادم يُرجع أحدث 200 فقط (`db.list_trades` LIMIT 200) والإحصاءات منها — الأقدم، ولو مفتوحة، لا تصل
-        <Text style={[styles.planWarn, { textAlign: align }]}>
-          {t.journalCappedNote.replace('{n}', String(JOURNAL_LIST_LIMIT))}
-        </Text>
+      {cappedNote ? (
+        // الخادم يُرجع صفحة (أحدث 200، `db.list_trades`) — الأقدم، ولو مفتوحة، لا تصل حتى «تحميل الأقدم» (api بلا limit/offset بعد)
+        <Text style={[styles.planWarn, { textAlign: align }]}>{cappedNote}</Text>
       ) : null}
       {/**
         * الصفقات المفتوحة أولاً. الباك-إند يُرجع الأحدث فالأقدم (`db.list_trades`: ORDER BY opened_at
