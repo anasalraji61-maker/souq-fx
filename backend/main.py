@@ -1608,7 +1608,9 @@ def create_vote(body: VoteCreate, user: dict | None = Depends(_auth_user)):
         "author": user["username"] if user else None,
         "ts": datetime.now().strftime("%H:%M"),
     }
-    db.create_vote(item)
+    db.create_vote(item, user["user_id"])
+    item["my_choice"] = None
+    item["mine"] = True
     return {"ok": True, "vote": item}
 
 

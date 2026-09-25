@@ -171,6 +171,7 @@ def init_db() -> None:
         _migrate_username_nocase(c)
         _migrate_push_lang(c)
         _migrate_group_user(c)
+        _migrate_vote_user(c)
         _migrate_content_reports(c)
         _migrate_owner_key(c)
 
@@ -225,6 +226,21 @@ def _migrate_group_user(c: sqlite3.Connection) -> None:
     cols = {r[1] for r in c.execute("PRAGMA table_info(group_messages)").fetchall()}
     if "user_id" not in cols:
         c.execute("ALTER TABLE group_messages ADD COLUMN user_id INTEGER")
+
+
+def _migrate_vote_user(c: sqlite3.Connection) -> None:
+    """ناشر فكرة التصويت — لـ`mine` (ui2: الواجهة تستثني فكرة المتداول نفسه من فلتر الحظر؛ `my_choice`
+    صوتُه لا ملكيّته). كان الاسم نصاً فقط. الصفوف القديمة تُملأ من اسم الناشر (الأسماء فريدة بلا حالة
+    أحرف)، ولا يُملأ المؤلّف القديم الثابت «أنت» ولا المجهول."""
+    cols = {r[1] for r in c.execute("PRAGMA table_info(votes)").fetchall()}
+    if "user_id" not in cols:
+        c.execute("ALTER TABLE votes ADD COLUMN user_id INTEGER")
+        c.execute(
+            """UPDATE votes SET user_id=(SELECT u.id FROM users u
+                   WHERE u.username = votes.author COLLATE NOCASE LIMIT 1)
+               WHERE user_id IS NULL AND author IS NOT NULL AND author != ?""",
+            (_LEGACY_VOTE_AUTHOR,),
+        )
 
 
 def _migrate_push_lang(c: sqlite3.Connection) -> None:
@@ -1248,7 +1264,7 @@ def _vote_author(a: str | None) -> str | None:
     return None if not a or a == _LEGACY_VOTE_AUTHOR else a
 
 
-def _vote_row(r, my_choice: str | None = None) -> dict:
+def _vote_row(r, my_choice: str | None = None, viewer_id: int | None = None) -> dict:
     return {
         "id": r["id"],
         "symbol": r["symbol"],
@@ -1263,6 +1279,8 @@ def _vote_row(r, my_choice: str | None = None) -> dict:
         "ts": r["ts"],
         # صوت المستدعي على هذه الفكرة ('agree' | 'disagree') أو None (لم يصوّت / مجهول)
         "my_choice": my_choice,
+        # فكرة المستدعي نفسه (ui2) — كرسائل المجموعة؛ المجهول لا يملك شيئاً
+        "mine": viewer_id is not None and r["user_id"] == viewer_id,
     }
 
 
@@ -1279,14 +1297,14 @@ def list_votes(user_id: int | None = None) -> list[dict]:
                     "SELECT vote_id, choice FROM vote_ballots WHERE user_id=?", (user_id,)
                 ).fetchall()
             }
-    return [_vote_row(r, mine.get(r["id"])) for r in rows]
+    return [_vote_row(r, mine.get(r["id"]), user_id) for r in rows]
 
 
-def create_vote(item: dict) -> dict:
+def create_vote(item: dict, user_id: int | None = None) -> dict:
     with _conn() as c:
         c.execute(
-            """INSERT INTO votes(id,symbol,direction,entry,sl,tp,note,agree,disagree,author,ts)
-               VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+            """INSERT INTO votes(id,symbol,direction,entry,sl,tp,note,agree,disagree,author,ts,user_id)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 item["id"],
                 item["symbol"],
@@ -1299,6 +1317,7 @@ def create_vote(item: dict) -> dict:
                 item["disagree"],
                 item["author"],
                 item["ts"],
+                user_id,
             ),
         )
     return item
@@ -1333,7 +1352,7 @@ def ballot(vote_id: str, choice: str, user_id: int) -> dict | None:
                 (vote_id,),
             )
         row = c.execute("SELECT * FROM votes WHERE id=?", (vote_id,)).fetchone()
-    return _vote_row(row, new_col)
+    return _vote_row(row, new_col, user_id)
 
 
 # ─── Push / layouts / watchlist / progress ────────────────────────────────────
