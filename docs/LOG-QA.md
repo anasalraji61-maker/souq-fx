@@ -477,3 +477,14 @@ tools60 (لمالك `I18nContext` يستورد `notifLang`) أُنجز بالع�
 **المراجعة (b — نصوص ثابتة)، diff منذ 5b2a25e (10 ملفات):** كل الحرفيات الجديدة بـ`locales.ts`. ملاحظة منخفضة لـlaunch: `reportFallbackAdvice` الكردي
 البند 4 بلا «افتح التقويم» والبند 5 بلا «التي تعرف حركتها» مقارنةً بـar/en. تعليمات `WeeklyReportPanel` العربية للنموذج مقصودة (الخادم يُجيب بـ`lang`).
 **الدورة القادمة:** المراجعة (c) — a11y.
+
+## 2026-09-25 — الدورة 43
+**البناء:** أخضر 0 (بعد a9e520e) — لا إصلاح لازم. **Selftests:** 84/84 ناجح (`npx tsx`؛ `indicatorWindow.selftest` بحالاته الجديدة).
+**التحقّق من الإغلاقات بالكود:** لا صفّ أُغلق. QA20 نصفه النصّي أُنجز (`4609ed4` «درجة الاتفاق»)، الرقم ما زال يُعرض ⇒ الصفّ باقٍ. **غير مُغلق:** 10 `Alert.alert`،
+«₴» ×2، `FocusChartModal:56` `BASES`، `matrix.lang.v1` ×2، `AiPanel`/`LectureClassroom` بلا `maxLength`، `BRENT/USD`، `TimeframeBar`، `WeeklyReportPanel:46`.
+**طلبات تنسيق جديدة (تحقّقتُ):** chart-r29 → tools: `TerminalScreen.tsx:762 :790` `{ ...copy[index], timeframe: nextTf }` يوسم شموع الفريم القديم بالجديد ⇒ صفّ جديد.
+chart-r29 عن `FocusChartModal` (بلا تحديث 90ث، `:400` يفكّ الشارت) و`useMultiLiveTicks` (بلا كشف مقبس صامت/إعادة اتصال) ⇒ دُمجت بصفّي chart3/chart2.
+tools61 وlaunch94 ردّ فقط.
+**المراجعة (c — a11y):** diff منذ 106341a بلا عناصر تفاعلية جديدة. مسح آلي لكل `Pressable`/`TouchableOpacity`/`TextInput`/`Switch` (تحليل الوسم بعمق الأقواس):
+كلّها بـ`accessibilityLabel` أو نصّ ابن — **لا بند جديد**. الناقص `accessibilityState` فقط (QA3/QA13/QA2، بلا تغيير).
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة.
