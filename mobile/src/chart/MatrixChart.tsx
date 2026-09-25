@@ -491,6 +491,7 @@ const ALERT_HANDLE_W = 150;
 const ALERT_HANDLE_H = 28;
 /** أقلّ من هذا (بكسل) رأسياً ⇒ لمسة لا سحب — لا يُعدَّل التنبيه. */
 const ALERT_DRAG_SLOP = 4;
+const ALERT_NUDGE_ACTIONS = [{ name: 'increment' }, { name: 'decrement' }] as const;
 /** أضيق شعاع أفقي يتّسع لوسمه («150.123 · +123.4 pip») داخله؛ أضيق ⇒ الوسم يُقلب يسار بدايته. */
 const HRAY_LABEL_ROOM = 150;
 /** ألوان الجلسات (مؤشّر «Sessions»): ثابتة المعنى داخله وحده — لا ربح/خسارة ولا تنبيه. */
@@ -1980,6 +1981,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // سحب خطّ تنبيه: السعر المعاين أثناء السحب (الخطّ والوسم يتبعان الإصبع)، والحفظ عند الإفلات.
   const [alertDrag, setAlertDrag] = useState<{ id: string; price: number } | null>(null);
   const alertDragStartY = useRef(0);
+  // ضبط التنبيه بقارئ الشاشة (سحبة أعلى/أسفل): المعاين كالسحب، والحفظ بعد توقّف قصير — `nudgeAlert`.
+  const alertNudge = useRef<{ al: { id: string; price: number; condition: 'above' | 'below' }; price: number } | null>(null);
+  const alertNudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (alertNudgeTimer.current) clearTimeout(alertNudgeTimer.current);
+  }, []);
   const createAlert = (price: number, origin?: 'drawing' | 'crosshair') => {
     if (!onCreateAlert) return;
     onCreateAlert(price, origin);
@@ -5700,16 +5707,43 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       LEVEL_LABEL_H
     ).map((al) => al.id)
   );
-  const dropAlert = (al: { id: string; price: number; condition: 'above' | 'below' }, dy: number) => {
-    setAlertDrag(null);
-    if (Math.abs(dy) < ALERT_DRAG_SLOP) return;
-    const price = alertDragPrice(dy);
+  const commitAlertMove = (al: { id: string; price: number; condition: 'above' | 'below' }, price: number) => {
     if (!(price > 0) || price === al.price) return;
     // الفشل (خادم أقدم بلا PATCH، تنبيه حُذف، انقطاع) يعيد الخطّ لمكانه — فنقول ذلك بدل قفزة صامتة.
     const was = fmtPrice(al.price);
     void moveArmedAlert(al.id, price, alertDirection(price, al.condition)).then((ok) => {
       if (!ok) notify('MATRIX', tr.mcAlertMoveFailed.replace('{price}', was));
     });
+  };
+  const dropAlert = (al: { id: string; price: number; condition: 'above' | 'below' }, dy: number) => {
+    setAlertDrag(null);
+    if (Math.abs(dy) < ALERT_DRAG_SLOP) return;
+    commitAlertMove(al, alertDragPrice(dy));
+  };
+  const flushAlertNudge = () => {
+    if (alertNudgeTimer.current) clearTimeout(alertNudgeTimer.current);
+    alertNudgeTimer.current = null;
+    const n = alertNudge.current;
+    alertNudge.current = null;
+    if (!n) return;
+    setAlertDrag(null);
+    commitAlertMove(n.al, n.price);
+  };
+  // قارئ الشاشة لا يسحب المقبض: الخطّ «قابل للضبط» (VoiceOver/TalkBack: سحبة أعلى/أسفل) — كل سحبة pip واحد
+  // (أداة بلا مواصفة: عشر خانات أخيرة). سحبات متتالية تتراكم معاينةً ثم PATCH واحد بعد توقّف 900ms — لا طلب
+  // لكل سحبة تتسابق نتائجه فيستقرّ التنبيه على سحبة أقدم.
+  const nudgeAlert = (al: { id: string; price: number; condition: 'above' | 'below' }, dir: 1 | -1) => {
+    if (alertNudge.current && alertNudge.current.al.id !== al.id) flushAlertNudge();
+    const from = alertNudge.current?.price ?? al.price;
+    const txt = fmtPrice(from);
+    const dec = txt.includes('.') ? txt.length - txt.indexOf('.') - 1 : 0;
+    const step = chartPipSpec(series.symbol)?.pipSize ?? 10 ** (1 - dec);
+    const price = Number(fmtPrice(from + dir * step));
+    if (!(price > 0)) return;
+    alertNudge.current = { al, price };
+    setAlertDrag({ id: al.id, price });
+    if (alertNudgeTimer.current) clearTimeout(alertNudgeTimer.current);
+    alertNudgeTimer.current = setTimeout(flushAlertNudge, 900);
   };
   // الترند/الشعاع المحدَّد: سعره عند الشمعة الحيّة وبُعد السعر عنه («1.08520 · −6.2 pip») — يُلحق
   // بقراءته، فمنتظر الكسر يعرف كم بقي بلا جرّ التقاطع إلى الخطّ.
@@ -8119,6 +8153,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               pointerEvents="none"
               accessible
               accessibilityLabel={a11y}
+              accessibilityRole="adjustable"
+              accessibilityValue={{ text: fmtPrice(price) }}
+              accessibilityActions={ALERT_NUDGE_ACTIONS}
+              onAccessibilityAction={(e) => {
+                const act = e.nativeEvent.actionName;
+                if (act === 'increment' || act === 'decrement') nudgeAlert(al, act === 'increment' ? 1 : -1);
+              }}
               style={[styles.hLine, styles.alertLine, { top: y }]}
             >
               {!hidePriceLabels && alertLabelIds.has(al.id) ? (
