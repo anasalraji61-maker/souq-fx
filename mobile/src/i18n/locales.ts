@@ -1136,6 +1136,10 @@ export type Dict = {
   mcUndo: string;
   mcUndoA11y: string;
   mcNothingToUndo: string;
+  /** زرّ «إعادة» بجانب «تراجع» (طلب chart-r60) — ومعه نصّ قارئ الشاشة، و`mcNothingToRedo` للحالة المعطّلة كنظير `mcNothingToUndo` */
+  mcRedo: string;
+  mcRedoA11y: string;
+  mcNothingToRedo: string;
   /** قارئ الشاشة لزرّ «»» (العودة لآخر شمعة) — كان `chartExtraLabels(lang).toLatest` بـ`typeLabels.ts` */
   mcToLatestA11y: string;
   /** زرّ إخفاء كل الرسومات (`drawingsHidden`) — كان `chartExtraLabels(lang).hideDrawings` بـ`typeLabels.ts` */
@@ -2389,6 +2393,9 @@ const ar: Dict = {
   mcUndo: 'تراجع',
   mcUndoA11y: 'تراجع عن آخر تغيير في الرسم',
   mcNothingToUndo: 'لا شيء للتراجع عنه',
+  mcRedo: 'إعادة',
+  mcRedoA11y: 'إعادة آخر تغيير تراجعتَ عنه في الرسم',
+  mcNothingToRedo: 'لا شيء لإعادته',
   mcToLatestA11y: 'العودة لآخر شمعة',
   mcHideDrawings: 'إخفاء الرسوم',
   mcShowDrawings: 'إظهار الرسوم',
@@ -3577,6 +3584,9 @@ const enUS: Dict = {
   mcUndo: 'Undo',
   mcUndoA11y: 'Undo the last drawing change',
   mcNothingToUndo: 'Nothing to undo',
+  mcRedo: 'Redo',
+  mcRedoA11y: 'Redo the last drawing change you undid',
+  mcNothingToRedo: 'Nothing to redo',
   mcToLatestA11y: 'Scroll to the latest candle',
   mcHideDrawings: 'Hide drawings',
   mcShowDrawings: 'Show drawings',
@@ -4795,6 +4805,9 @@ const ku: Dict = {
   mcUndo: 'گەڕاندنەوە',
   mcUndoA11y: 'گەڕاندنەوەی دوایین گۆڕانکاری لە کێشان',
   mcNothingToUndo: 'هیچ شتێک نییە بۆ گەڕاندنەوە',
+  mcRedo: 'دووبارەکردنەوە',
+  mcRedoA11y: 'دووبارەکردنەوەی دوایین گۆڕانکاری کە گەڕاندتەوە لە کێشان',
+  mcNothingToRedo: 'هیچ شتێک نییە بۆ دووبارەکردنەوە',
   mcToLatestA11y: 'گەڕانەوە بۆ دوایین مۆم',
   mcHideDrawings: 'شاردنەوەی هێڵکارییەکان',
   mcShowDrawings: 'پیشاندانی هێڵکارییەکان',
