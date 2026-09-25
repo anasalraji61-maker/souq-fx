@@ -195,7 +195,14 @@ const MONTH_STEPS = [1, 3, 6, 12];
  * فلا يُقرأ المحور. الفاصل أصغر مستدير > خطوة الفريم لا تتجاوز حدوده `maxCount`؛ العلامة أوّل شمعة بعد كل
  * حدّ (الشمعة التي تبدأ عنده أو تعبره — العطلة لا تُسقط حدّ الاثنين). `tzOffsetSec(t)` إزاحة التوقيت الذي
  * تُطبع به العلامة (المحلّي دون اليوم، 0 للشموع اليومية المطبوعة UTC) كي تقع الحدود على ساعات مستديرة
- * بالعرض نفسه. أقلّ من علامتين ⇒ `null` (المستدعي يعود للنِّسَب).
+ * بالعرض نفسه.
+ *
+ * فاصلٌ يزيد عن `maxCount` يليه أخشن منه بأقلّ من حدّين (80 شمعة ساعة على هاتف بحدّ 3: أربعة أيام ثم
+ * لا أسبوع كامل؛ اليومي: أربعة أشهر ثم ربع واحد؛ الشهري: سبع سنوات ولا أخشن من السنة) ⇒ تُرقَّق حدود
+ * الفاصل الأدقّ بإيقاع تقويمي (كل يومين، كل شهرين، كل سنتين…) بدل التخلّي عنها: كان المستدعي يعود للنِّسَب
+ * فتظهر «13:00» و«12 يونيو» بمواضع كيفيّة تقفز مع كل شمعة. الإيقاع من رقم الحدّ نفسه (اليوم/الشهر منذ
+ * 1970) لا من ترتيبه بالنافذة، فلا تتبدّل العلامات المختارة مع التمرير. أقلّ من علامتين ⇒ `null`
+ * (المستدعي يعود للنِّسَب).
  */
 export function niceTimeTickIndexes(
   times: readonly number[],
@@ -206,30 +213,59 @@ export function niceTimeTickIndexes(
   const cap = Math.max(1, Math.floor(Number.isFinite(maxCount) ? maxCount : 1));
   if (times.length < 3 || cap < 2) return null;
   const local = times.map((t) => (Number.isFinite(t) ? t + tzOffsetSec(t) : Number.NaN));
-  const boundaries = (bucket: (t: number) => number): number[] => {
-    const out: number[] = [];
+  type Bounds = { idx: number[]; key: number[] };
+  const boundaries = (bucket: (t: number) => number): Bounds => {
+    const idx: number[] = [];
+    const key: number[] = [];
     for (let i = 1; i < local.length; i++) {
       const a = local[i - 1]!;
       const b = local[i]!;
-      if (Number.isFinite(a) && Number.isFinite(b) && bucket(b) !== bucket(a)) out.push(i);
-      if (out.length > cap) break;
+      if (!Number.isFinite(a) || !Number.isFinite(b)) continue;
+      const kb = bucket(b);
+      if (kb !== bucket(a)) {
+        idx.push(i);
+        key.push(kb);
+      }
     }
-    return out;
+    return { idx, key };
   };
+  /** حدود فاصلٍ زادت عن الحدّ ⇒ كل n-ـه تقويمياً، أصغر n يلائم. */
+  const thin = (b: Bounds): number[] | null => {
+    for (let n = 2; n <= b.idx.length; n++) {
+      const kept = b.idx.filter((_, k) => ((b.key[k]! % n) + n) % n === 0);
+      if (kept.length <= cap) {
+        if (kept.length >= 2) return kept;
+        break;
+      }
+    }
+    // لا إيقاع تقويمي يعطي علامتين ⇒ تباعد متساوٍ بترتيب الحدود (يبقى على حدود مستديرة)
+    const every = Math.ceil(b.idx.length / cap);
+    const kept = b.idx.filter((_, k) => k % every === 0);
+    return kept.length >= 2 ? kept : null;
+  };
+  const buckets: ((t: number) => number)[] = [];
   const step = Number.isFinite(stepSec) && stepSec > 0 ? stepSec : 0;
   for (const s of TIME_STEPS) {
     if (s <= step) continue;
     // الأسبوع يبدأ الاثنين (1970-01-01 خميس ⇒ +3 أيام)
     const off = s === 604800 ? 3 * 86400 : 0;
-    const idx = boundaries((t) => Math.floor((t + off) / s));
-    if (idx.length <= cap) return idx.length >= 2 ? idx : null;
+    buckets.push((t) => Math.floor((t + off) / s));
   }
   for (const months of MONTH_STEPS) {
-    const idx = boundaries((t) => {
+    buckets.push((t) => {
       const d = new Date(t * 1000);
       return Math.floor((d.getUTCFullYear() * 12 + d.getUTCMonth()) / months);
     });
-    if (idx.length <= cap) return idx.length >= 2 ? idx : null;
   }
-  return null;
+  let finer: Bounds | null = null;
+  for (const bucket of buckets) {
+    const b = boundaries(bucket);
+    if (b.idx.length > cap) {
+      finer = b;
+      continue;
+    }
+    if (b.idx.length >= 2) return b.idx;
+    return finer ? thin(finer) : null;
+  }
+  return finer ? thin(finer) : null;
 }

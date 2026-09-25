@@ -267,5 +267,25 @@ console.log('axisTicks.selftest: PASS');
   // حدّ العدد محترم، وقليل الشموع ⇒ null
   for (const cap of [2, 3, 4]) assert.ok((niceTimeTickIndexes(m15, 900, cap) ?? []).length <= cap);
   assert.equal(niceTimeTickIndexes(m15.slice(0, 2), 900, 4), null);
+  // الهاتف (حدّ 3، 80 شمعة): الفاصل الأدقّ يزيد والأخشن أقلّ من حدّين ⇒ ترقيق تقويمي لا `null` (النِّسَب الكيفيّة)
+  const h0 = Date.UTC(2026, 1, 2, 23) / 1000; // الاثنين 23:00 ⇒ أربعة منتصفات ليل بالنافذة
+  const h1 = Array.from({ length: 80 }, (_, i) => h0 + i * H);
+  const ih = niceTimeTickIndexes(h1, H, 3);
+  assert.ok(ih && ih.length >= 2 && ih.length <= 3, `H1 phone: ${ih}`);
+  for (const i of ih!) assert.equal(h1[i]! % 86400, 0, 'H1 ticks on midnight');
+  // ثابتة مع التمرير: إزاحة النافذة يوماً (والترقيق نفسه لازم) تُبقي الأزمنة المختارة نفسها — الإيقاع تقويمي لا ترتيبي
+  const h1b = h1.slice(24).concat(Array.from({ length: 24 }, (_, i) => h0 + (80 + i) * H));
+  const ihb = niceTimeTickIndexes(h1b, H, 3)!;
+  const shown = new Set(ih!.map((i) => h1[i]));
+  for (const i of ihb) if (h1b[i]! <= h1[79]!) assert.ok(shown.has(h1b[i]!), 'stable while panning');
+  const dd0 = Date.UTC(2025, 10, 20) / 1000;
+  const d1 = Array.from({ length: 80 }, (_, i) => dd0 + i * 86400);
+  const idd = niceTimeTickIndexes(d1, 86400, 3);
+  assert.ok(idd && idd.length >= 2 && idd.length <= 3, `D1 phone: ${idd}`);
+  for (const i of idd!) assert.equal(new Date(d1[i]! * 1000).getUTCDate(), 1, 'D1 ticks on month start');
+  const mn = Array.from({ length: 80 }, (_, i) => Date.UTC(2019, 3 + i, 1) / 1000);
+  const imn = niceTimeTickIndexes(mn, 30 * 86400, 3);
+  assert.ok(imn && imn.length >= 2 && imn.length <= 3, `MN phone: ${imn}`);
+  for (const i of imn!) assert.equal(new Date(mn[i]! * 1000).getUTCMonth(), 0, 'MN ticks on January');
 }
 
