@@ -310,6 +310,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * يُحسبان مرتين). الردّ الأقدم من آخر طلب يُسقط، كأسعار الصفقات المفتوحة (`quoteGenRef`).
    */
   const listGenRef = useRef(0);
+  /** «تحميل الأقدم» جارٍ / فشل آخرُه — التحديث الناجح يمسح الفشل (القائمة كلّها وصلت من جديد). */
+  const [olderBusy, setOlderBusy] = useState(false);
+  const [olderError, setOlderError] = useState(false);
   const refresh = useCallback(async () => {
     const gen = ++listGenRef.current;
     try {
@@ -328,6 +331,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       const tot = (res as { total?: unknown }).total;
       setTotal(typeof tot === 'number' && Number.isFinite(tot) && tot >= 0 ? tot : null);
       setListError(false);
+      setOlderError(false);
       void loadOpenQuotes(list);
     } catch {
       if (mountedRef.current && gen === listGenRef.current) {
@@ -347,8 +351,6 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   }, [refresh]);
 
   /** «تحميل الأقدم» (backend-r1 `limit`/`offset`): صفحةٌ بعد المحمَّل بتداخلٍ يحمي من حذفٍ بجهاز آخر (`journalOlderPage`). */
-  const [olderBusy, setOlderBusy] = useState(false);
-  const [olderError, setOlderError] = useState(false);
   const loadOlder = useCallback(async () => {
     const gen = ++listGenRef.current;
     setOlderBusy(true);
