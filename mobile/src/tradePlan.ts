@@ -1144,6 +1144,31 @@ export function stopAtPips(input: { symbol: string; side: TradeSide; entry: numb
 }
 
 /**
+ * **نقاطٌ بخانة سعر** بالدفتر: «50» بخانة الهدف لشراء EURUSD على 1.0850 (من رسالة «TP 50 pips») كانت تُحفظ هدفاً عند **50.00**
+ * — بالجهة الصحيحة فلا تحذير، و«R:R 1:1960» بالملخّص، وبعد الإغلاق R لا يعني شيئاً. والوقف «25» لبيعٍ كذلك (فوق الدخول).
+ * مستوى يبعد عن الدخول **أكثر من نصف السعر** ليس وقفاً ولا هدفاً لأداة لها pip معروف (فوركس/معادن، سنت/micro بزوجها)؛
+ * يُقرأ الرقم نقاطاً فيُرجع **السعر المقصود** على تلك المسافة بجهة الخانة (الوقف: جهة الخسارة، الهدف: جهة الربح) لتقترحه
+ * اللوحة. يُفحص **قبل** جهة الخطأ: «25» وقفاً لشراء تقول «25 pip؟» لا «الوقف فوق الدخول». `null` لما عداه: رمز بلا pip
+ * (BTC — نصف السعر ممكن)، أو رقم دون 1 pip، أو سعر مقترح لا يقع هو نفسه ضمن نصف السعر.
+ */
+export function levelLooksLikePips(input: {
+  symbol: string;
+  side: TradeSide;
+  entry: number | null;
+  level: number | null;
+  kind: 'sl' | 'tp';
+}): { pips: number; price: number } | null {
+  const { side, entry, level, kind } = input;
+  const spec = journalSpec(input.symbol);
+  if (!spec || !finitePos(entry) || !finitePos(level) || level < 1) return null;
+  const far = (v: number) => Math.abs(v - entry) > entry * 0.5;
+  if (!far(level)) return null;
+  const down = (side === 'buy') === (kind === 'sl');
+  const price = priceAtPipOffset(spec, entry, down ? -level : level);
+  return price != null && !far(price) ? { pips: level, price } : null;
+}
+
+/**
  * سعرا الوقف **للاتجاهين** من دخولٍ ومسافةٍ بالنقاط: تحت الدخول للشراء، فوقه للبيع (`stopAtPips`).
  *
  * لماذا: بالحاسبة يكتب المتداول وقفه بالنقاط («20») والدخول، ثم يضع الأمر بمنصّته — وهي تطلب **سعر**

@@ -72,6 +72,7 @@ import {
   QUICK_SYMBOLS,
   openCurrencyExposure,
   stackedCurrencyExposure,
+  levelLooksLikePips,
 } from './tradePlan';
 import { riskInQuoteCcy as cashRisk } from './positionSize';
 import { instrumentSpec, pipValuePerLot, planJournalNote, pnlInQuoteCcy, positionSize, slPipsFromPrices } from './positionSize';
@@ -2605,3 +2606,37 @@ console.log('tradePlan sub-micro initial stop selftest OK');
   assert.equal(journalMoneyLots('10000 lot', 'EURUSD'), null);
 }
 console.log('tradePlan parseJournalSize unit word selftest OK');
+
+// نقاطٌ بخانة سعر بالدفتر: «50» هدفاً لشراء EURUSD على 1.0850 كانت هدفاً عند 50.00 بالجهة الصحيحة (levelLooksLikePips)
+{
+  const L = levelLooksLikePips;
+  // الهدف «50» لشراء ⇒ 50 pip فوق الدخول
+  assert.deepEqual(L({ symbol: 'EURUSD', side: 'buy', entry: 1.085, level: 50, kind: 'tp' }), { pips: 50, price: 1.09 });
+  // الوقف «25» لبيع (فوق الدخول، الجهة «الصحيحة») ⇒ 25 pip فوق
+  assert.deepEqual(L({ symbol: 'EURUSD', side: 'sell', entry: 1.085, level: 25, kind: 'sl' }), { pips: 25, price: 1.0875 });
+  // الوقف «25» لشراء (الجهة الخطأ أيضاً) ⇒ يُقال «25 pip؟» قبل «الوقف فوق الدخول»
+  assert.deepEqual(L({ symbol: 'EURUSD', side: 'buy', entry: 1.085, level: 25, kind: 'sl' }), { pips: 25, price: 1.0825 });
+  // الين: الهدف «40» لبيع USDJPY على 157.00 ⇒ 156.60
+  assert.deepEqual(L({ symbol: 'USDJPY', side: 'sell', entry: 157, level: 40, kind: 'tp' }), { pips: 40, price: 156.6 });
+  // الذهب: الوقف «300» لشراء على 2650 ⇒ 300 pip = 30$ ⇒ 2620
+  assert.deepEqual(L({ symbol: 'XAUUSD', side: 'buy', entry: 2650, level: 300, kind: 'sl' }), { pips: 300, price: 2620 });
+  // سنت بزوجه العادي
+  assert.deepEqual(L({ symbol: 'EURUSDc', side: 'buy', entry: 1.085, level: 50, kind: 'tp' }), { pips: 50, price: 1.09 });
+  // مستويات حقيقية لا تُمسّ: أسعار قريبة، ذهب بعيد 1000$ (أقل من النصف)، الين
+  assert.equal(L({ symbol: 'EURUSD', side: 'buy', entry: 1.085, level: 1.09, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'EURUSD', side: 'buy', entry: 1.085, level: 1.0825, kind: 'sl' }), null);
+  assert.equal(L({ symbol: 'XAUUSD', side: 'buy', entry: 2650, level: 3650, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'USDJPY', side: 'buy', entry: 157, level: 156.5, kind: 'sl' }), null);
+  // رمز بلا pip (BTC): نصف السعر ممكن ⇒ لا تخمين؛ ولا شيء بلا دخول/مستوى أو تحت 1 pip
+  assert.equal(L({ symbol: 'BTCUSD', side: 'buy', entry: 60000, level: 50, kind: 'sl' }), null);
+  assert.equal(L({ symbol: 'EURUSD', side: 'buy', entry: null, level: 50, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'EURUSD', side: 'buy', entry: 1.085, level: null, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'USDJPY', side: 'sell', entry: 157, level: 0.5, kind: 'tp' }), null);
+  // المقترح نفسه غير معقول (50,000 pip على EURUSD تحت الصفر) ⇒ null لا اقتراحٌ سالب
+  assert.equal(L({ symbol: 'EURUSD', side: 'sell', entry: 1.085, level: 50000, kind: 'tp' }), null);
+  // الخطر الذي يُغلق: الملخّص كان «R:R 1:1960» من هدف 50.00
+  const bad = analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, tp: 50 });
+  assert.equal(bad.ok, true);
+  assert.ok((bad.rr ?? 0) > 1000);
+}
+console.log('tradePlan levelLooksLikePips selftest OK');

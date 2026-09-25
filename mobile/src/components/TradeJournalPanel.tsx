@@ -37,6 +37,7 @@ import {
   journalSymbol,
   quoteSymbol,
   levelSideIssue,
+  levelLooksLikePips,
   netByInstrument,
   openRiskTotals,
   stackedCurrencyExposure,
@@ -552,6 +553,26 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry]);
 
+  /**
+   * «50» بخانة الهدف (من «TP 50 pips») أو «25» بخانة الوقف: نقاطٌ لا سعر (`levelLooksLikePips`) — كانت تُحفظ هدفاً عند 50.00
+   * و«R:R 1:1960». الوقف أولاً؛ السطر يقترح السعر على تلك المسافة وتكتبه نقرته، والحفظ يُمنع حتى يُصحَّح.
+   */
+  const pipsLevel = useMemo(() => {
+    const e = pnum(entry);
+    const sym = symbol.trim().toUpperCase();
+    for (const kind of ['sl', 'tp'] as const) {
+      const raw = kind === 'sl' ? sl : tp;
+      const hit = levelLooksLikePips({ symbol: sym, side, entry: e, level: pnum(raw), kind });
+      if (!hit) continue;
+      const label = (kind === 'sl' ? t.journalSlPlaceholder : t.journalTpPlaceholder).split(' (')[0].trim();
+      const text = formatPrice(hit.price, journalSpec(sym)?.symbol ?? sym);
+      const field = t.riskCalcBadFieldValue.replace('{field}', () => label).replace('{value}', () => raw.trim());
+      return { kind, text, msg: `${field} → ${hit.pips} pip = ${text}?` };
+    }
+    return null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol, side, entry, sl, tp, t]);
+
   /** شرائح الرمز: أدوات المتداول نفسه أولاً («XAUUSD.m» كما يكتبها وسيطه)، ثم القائمة الثابتة — `quickJournalSymbols` */
   const symbolChips = useMemo(() => quickJournalSymbols(trades, QUICK_SYMBOLS), [trades]);
 
@@ -801,6 +822,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const savedNote = editing
       ? noteWithInitialStop({ symbol: sym, note: typedNote, before: editing, after: { side, entry: e, sl: s } })
       : typedNote;
+    if (pipsLevel) {
+      setFormError(pipsLevel.msg);
+      return;
+    }
     const issue = trailedIssue(sym, e, s, p, savedNote);
     if (issue) {
       setFormError(planIssueText(issue));
@@ -1728,7 +1753,19 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           })}
         </View>
       ) : null}
-      {draft?.issue && draft.issue !== 'slTooClose' ? (
+      {pipsLevel ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            playSoftClick();
+            (pipsLevel.kind === 'sl' ? setSl : setTp)(pipsLevel.text);
+            setFormError(null);
+          }}
+          style={({ pressed }) => pressed && { opacity: buttons.pressedOpacity }}
+        >
+          <Text style={[styles.formError, { textAlign: align }]}>{pipsLevel.msg}</Text>
+        </Pressable>
+      ) : draft?.issue && draft.issue !== 'slTooClose' ? (
         <Text style={[styles.formError, { textAlign: align }]}>{planIssueText(draft.issue)}</Text>
       ) : draft?.plan?.ok ? (
         <>
