@@ -205,7 +205,7 @@ def _check_once() -> None:
             if q is None:
                 log.warning("no price available for alert id=%s symbol=%s", a.get("id"), a.get("symbol"))
                 continue
-            if _price_hit(a, q, candles) and db.mark_alert_triggered(a["id"]):
+            if _price_hit(a, q, candles) and db.mark_alert_triggered(a["id"], a):
                 triggered_msgs.append((
                     a.get("user_id"),
                     a.get("owner_key"),

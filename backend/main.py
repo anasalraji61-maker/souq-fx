@@ -997,7 +997,7 @@ def check_alerts(user: dict | None = Depends(_auth_user), key: str | None = Depe
         q, candles = quotes[sym]
         if q is None:
             continue
-        if alert_worker._price_hit(a, q, candles) and db.mark_alert_triggered(a["id"]):
+        if alert_worker._price_hit(a, q, candles) and db.mark_alert_triggered(a["id"], a):
             # الصفّ كما استقرّ بالقاعدة لا كما قُرئ قبل القلب: `a` لُقّط قبل
             # `mark_alert_triggered` فيحمل `triggered: false` — أي أن المسار كان يسلّم تنبيهاً
             # **أُطلق للتوّ** موسوماً «يراقب». نفس التصحيح المطبَّق على تنبيهات المؤشر

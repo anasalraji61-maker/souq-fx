@@ -78,3 +78,38 @@ def test_another_device_alert_is_not_checked_or_returned(client):
     assert res["triggered"] == [] and res["alerts"] == []
     mine = client.get("/api/alerts", headers=_DEVICE).json()["alerts"]
     assert [a for a in mine if a["id"] == other][0]["triggered"] is False
+
+
+def test_alert_edited_during_the_price_fetch_is_not_fired_at_the_old_level(client, monkeypatch):
+    """القائمة تُقرأ قبل طلب المزوّد؛ تعديل بينهما (1.1000 ⇒ 1.3000) كان يُوسِم التنبيه **الجديد**
+    مُطلَقاً بالمستوى القديم — فلا يُطلق عند 1.3000 أبداً."""
+    aid = _create(client, 1.1000)
+
+    def fetch_while_user_edits(sym):
+        r = client.patch(f"/api/alerts/{aid}", json={"symbol": "EURUSD", "condition": "above",
+                                                      "price": 1.3000}, headers=_DEVICE)
+        assert r.status_code == 200, r.text
+        return 1.2000, []
+
+    monkeypatch.setattr(alert_worker, "_recent_minutes", fetch_while_user_edits)
+    res = client.post("/api/alerts/check", headers=_DEVICE).json()
+    assert res["triggered"] == []
+    row = [a for a in res["alerts"] if a["id"] == aid][0]
+    assert row["price"] == 1.3000 and row["triggered"] is False
+
+
+def test_worker_does_not_fire_an_alert_edited_during_its_fetch(client, monkeypatch):
+    aid = _create(client, 1.1000)
+    pushed: list = []
+    monkeypatch.setattr(alert_worker.expo_push, "send_push", lambda t, ti, b, d: pushed.append(b) or {})
+
+    def fetch_while_user_edits(sym):
+        client.patch(f"/api/alerts/{aid}", json={"symbol": "EURUSD", "condition": "above",
+                                                  "price": 1.3000}, headers=_DEVICE)
+        return 1.2000, []
+
+    monkeypatch.setattr(alert_worker, "_recent_minutes", fetch_while_user_edits)
+    alert_worker._check_once()
+    row = [a for a in db.list_alerts(all_users=True) if a["id"] == aid][0]
+    assert row["triggered"] is False and row["price"] == 1.3000
+    assert pushed == []

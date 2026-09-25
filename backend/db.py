@@ -1097,11 +1097,21 @@ def delete_alert(alert_id: str, user_id: int | None = None, owner_key: str | Non
     return cur.rowcount > 0
 
 
-def mark_alert_triggered(alert_id: str) -> bool:
+def mark_alert_triggered(alert_id: str, seen: dict | None = None) -> bool:
     """True فقط لمن نقله فعلاً من مُسلَّح إلى مُطلَق — الـworker ولوحة التنبيهات (فحص كل دقيقة من كل جهاز
-    مفتوح) يقرآن triggered=0 بنفس اللحظة، فكان كلٌّ منهما يُرسل إشعاره (إشعارات مكرّرة لنفس التنبيه)."""
+    مفتوح) يقرآن triggered=0 بنفس اللحظة، فكان كلٌّ منهما يُرسل إشعاره (إشعارات مكرّرة لنفس التنبيه).
+
+    `seen` = الصفّ كما قُرئ وفُحص: القلب يشترط أن الرمز/الشرط/السعر/وقت التسليح لم تتغيّر منذئذٍ.
+    القائمة تُقرأ قبل طلبات المزوّد (حتى 25ث لكل رمز)، ومتداول يعدّل تنبيهه بينهما (1.1000 ⇒ 1.1200،
+    `update_alert` يعيد تسليحه) كان تنبيهه **الجديد** يُوسَم مُطلَقاً بمستوى قديم لم يعد يريده ويُدفَع
+    «تجاوز 1.1» — ولا يُطلق عند 1.1200 أبداً."""
+    sql = "UPDATE alerts SET triggered=1 WHERE id=? AND triggered=0"
+    args: tuple = (alert_id,)
+    if seen is not None:
+        sql += " AND symbol=? AND condition=? AND price=? AND ts IS ?"
+        args += (seen["symbol"], seen["condition"], seen["price"], seen.get("ts"))
     with _conn() as c:
-        cur = c.execute("UPDATE alerts SET triggered=1 WHERE id=? AND triggered=0", (alert_id,))
+        cur = c.execute(sql, args)
     return cur.rowcount == 1
 
 
