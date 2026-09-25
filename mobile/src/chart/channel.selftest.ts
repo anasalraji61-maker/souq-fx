@@ -1,6 +1,6 @@
 /** فحص ذاتي لـ`channel.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
 import assert from 'node:assert/strict';
-import { channelHandlePrice, channelWidthAt, fitChannelWidth } from './channel';
+import { channelHandlePrice, channelLinePrices, channelWidthAt, fitChannelWidth } from './channel';
 
 const close = (x: number, y: number) => assert.ok(Math.abs(x - y) < 1e-9, `${x} != ${y}`);
 
@@ -36,5 +36,26 @@ const a = { index: 0, price: 1.1 };
 const b = { index: 4, price: 1.102 };
 close(channelHandlePrice(a, b, 0.002), 1.103);
 close(channelWidthAt(a, b, channelHandlePrice(a, b, -0.0007)), -0.0007);
+
+// خطوط القناة كما تُرسم: خطّياً إزاحة ثابتة بالسعر (كما كانت)
+{
+  const lin = channelLinePrices(a, b, 0.002);
+  close(lin.a, 1.102);
+  close(lin.b, 1.104);
+  close(channelLinePrices(a, b, 0.002, 0.5).a, 1.101);
+}
+// باللوغاريتمي: متوازية بالبكسل (نسبة ثابتة لطرفَي الأساس) والموازي يمرّ بمقبض العرض عند المنتصف
+{
+  const ga = { index: 0, price: 1800 };
+  const gb = { index: 100, price: 2600 };
+  const w = 150;
+  const par = channelLinePrices(ga, gb, w, 1, true);
+  close(Math.log(par.a) - Math.log(ga.price), Math.log(par.b) - Math.log(gb.price));
+  close((Math.log(par.a) + Math.log(par.b)) / 2, Math.log(channelHandlePrice(ga, gb, w)));
+  const mid = channelLinePrices(ga, gb, w, 0.5, true);
+  close(Math.log(mid.a) - Math.log(ga.price), (Math.log(par.a) - Math.log(ga.price)) / 2);
+  // سعر ≤0 ⇒ الخطّي
+  close(channelLinePrices({ index: 0, price: 1 }, { index: 1, price: 2 }, -5, 1, true).a, -4);
+}
 
 console.log('channel.selftest: PASS');

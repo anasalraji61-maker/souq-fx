@@ -50,6 +50,30 @@ export function channelHandlePrice(a: ChannelPoint, b: ChannelPoint, width: numb
   return (a.price + b.price) / 2 + width;
 }
 
+/**
+ * سعرا طرفَي خطّ موازٍ للأساس عند `frac` من العرض (1 = الموازي، ½ = الوسط) كما يُرسم.
+ *
+ * خطّياً: الطرفان + `width × frac`. **باللوغاريتمي** كانت الإزاحة نفسها بالسعر تُرسم أقلّ بكسلاً عند الطرف الأعلى
+ * سعراً ⇒ الموازي والوسط غير موازيين للأساس (واضح بالذهب واليومي). المتوازي بالبكسل = نسبة ثابتة بالسعر، فالإزاحة
+ * باللوغاريتم ثابتة ومختارة ليمرّ الموازي بمقبض العرض (`channelHandlePrice`) عند منتصف الأساس — فيبقى `width`
+ * المحفوظ ومقبضه وعكسه (`channelWidthAt`) كما هي، ولا يتغيّر شيء بالمقياس الخطّي. سعر ≤0 ⇒ الخطّي احتياطاً.
+ */
+export function channelLinePrices(
+  a: ChannelPoint,
+  b: ChannelPoint,
+  width: number,
+  frac = 1,
+  log = false
+): { a: number; b: number } {
+  const handle = channelHandlePrice(a, b, width);
+  if (log && a.price > 0 && b.price > 0 && handle > 0) {
+    const k = (Math.log(handle) - (Math.log(a.price) + Math.log(b.price)) / 2) * frac;
+    const m = Math.exp(k);
+    return { a: a.price * m, b: b.price * m };
+  }
+  return { a: a.price + width * frac, b: b.price + width * frac };
+}
+
 /** العرض الذي يضع مقبض العرض عند `price` (عكس `channelHandlePrice`). */
 export function channelWidthAt(a: ChannelPoint, b: ChannelPoint, price: number): number {
   return price - (a.price + b.price) / 2;

@@ -122,7 +122,7 @@ import {
   rrFromTarget,
   type PositionSide,
 } from './positionTool';
-import { channelHandlePrice, channelWidthAt, fitChannelWidth } from './channel';
+import { channelHandlePrice, channelLinePrices, channelWidthAt, fitChannelWidth } from './channel';
 import { anchorDrawings, barTime, drawSlotAt, stampAtIndex, type TimeBar } from './drawingAnchors';
 import { lineNowText, lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
 import { appendedAfter } from './holdView';
@@ -3736,7 +3736,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           // خطّا القناة كما يُرسمان (مقصوصان على النافذة)، ومقبض العرض بمنتصف الموازي هدفٌ كالطرفين.
           const w = d.width ?? 0;
           const base = clipSegmentToBars(aLocal, ay, bLocal, by, lastDrawLocal);
-          const par = clipSegmentToBars(aLocal, yOf(d.a.price + w), bLocal, yOf(d.b.price + w), lastDrawLocal);
+          const pp = channelLinePrices(d.a, d.b, w, 1, logScale);
+          const par = clipSegmentToBars(aLocal, yOf(pp.a), bLocal, yOf(pp.b), lastDrawLocal);
           bodyDist = Math.min(
             segmentDistance(x, y, xOf(base.ai), base.ay, xOf(base.bi), base.by, 1),
             segmentDistance(x, y, xOf(par.ai), par.ay, xOf(par.bi), par.by, 1)
@@ -7638,11 +7639,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               );
             };
             const solid = { height: sel ? 3.5 : 2, backgroundColor: d.color };
+            // متوازية بالبكسل بالمقياس اللوغاريتمي أيضاً (`channelLinePrices`).
+            const par = channelLinePrices(d.a, d.b, w, 1, logScale);
+            const mid = channelLinePrices(d.a, d.b, w, 0.5, logScale);
             return (
               <React.Fragment key={d.id}>
                 {line('base', yA, yB, solid)}
-                {line('par', yOf(d.a.price + w), yOf(d.b.price + w), solid)}
-                {line('mid', yOf(d.a.price + w / 2), yOf(d.b.price + w / 2), [
+                {line('par', yOf(par.a), yOf(par.b), solid)}
+                {line('mid', yOf(mid.a), yOf(mid.b), [
                   styles.channelMid,
                   { borderColor: d.color },
                 ])}

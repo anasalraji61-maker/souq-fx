@@ -6,6 +6,7 @@
  * React، فتُفحص بـ`selectionTags.selftest.ts`.
  */
 import { boxesTouch } from './axisTicks';
+import { channelLinePrices } from './channel';
 import { measurePipsText } from './measureReadout';
 import { positionLevels, isPositionTool } from './positionTool';
 import type { Drawing } from './types';
@@ -40,7 +41,8 @@ export function selectionPrices(
   if (d.b.price !== d.a.price) out.push({ price: d.b.price, tone: 'line' });
   // القناة: طرفا الموازي أيضاً — حدّها الآخر هو ما يُقرأ للهدف/الوقف.
   if (d.tool === 'channel' && d.width) {
-    for (const price of [d.a.price + d.width, d.b.price + d.width]) {
+    const par = channelLinePrices(d.a, d.b, d.width, 1, log);
+    for (const price of [par.a, par.b]) {
       if (!out.some((o) => o.price === price)) out.push({ price, tone: 'line' });
     }
   }
