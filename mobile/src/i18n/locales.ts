@@ -1227,8 +1227,6 @@ export type Dict = {
   impactHoliday: string;
   newsHolidayToday: string;
   backtestBeforeCosts: string;
-  /** backend-r5 (`a8f495d`): `stats.breakeven_count` — التعادل خارج `win_rate` كالدفتر (`journalStatBreakeven`). */
-  backtestStatBreakeven: string;
   forecastDetail: {
     rsi_overbought: string;
     rsi_oversold: string;
@@ -2385,7 +2383,6 @@ const ar: Dict = {
   impactHoliday: 'عطلة — سيولة رقيقة',
   newsHolidayToday: 'عطلة بنوك اليوم · {ccy}{title} — سيولة أقل: سبريد أوسع، وانزلاق وفجوات محتملة',
   backtestBeforeCosts: 'النتائج قبل السبريد والعمولة — لا تقدير سبريد لهذا الرمز، فالنتيجة الفعلية أسوأ من المعروضة.',
-  backtestStatBreakeven: 'تعادل: {n} (لا يدخل نسبة النجاح)',
   forecastDetail: {
     rsi_overbought: 'تشبّع شراء ({rsi})',
     rsi_oversold: 'تشبّع بيع ({rsi})',
@@ -3535,7 +3532,6 @@ const enUS: Dict = {
   impactHoliday: 'Bank holiday — thin liquidity',
   newsHolidayToday: 'Bank holiday today · {ccy}{title} — thin liquidity: wider spreads, slippage and gaps are likely',
   backtestBeforeCosts: "Results are before spread and commission — there's no spread estimate for this symbol, so real results would be worse.",
-  backtestStatBreakeven: 'Breakeven: {n} (not counted in win rate)',
   forecastDetail: {
     rsi_overbought: 'Overbought ({rsi})',
     rsi_oversold: 'Oversold ({rsi})',
@@ -4712,7 +4708,6 @@ const ku: Dict = {
   impactHoliday: 'پشوو — شلەیی کەم',
   newsHolidayToday: 'پشووی بانکەکان ئەمڕۆ · {ccy}{title} — شلەیی کەمتر: سپرێدی فراوانتر، و لەوانەیە خزان و بۆشایی هەبێت',
   backtestBeforeCosts: 'ئەنجامەکان پێش سپرێد و کۆمیسیۆنن — هیچ خەمڵاندنێکی سپرێد بۆ ئەم هێمایە نییە، بۆیە ئەنجامی ڕاستەقینە خراپتر دەبێت.',
-  backtestStatBreakeven: 'بێ قازانج و زیان: {n} (لە ڕێژەی سەرکەوتندا ناژمێردرێت)',
   forecastDetail: {
     rsi_overbought: 'زۆر کڕدراو ({rsi})',
     rsi_oversold: 'زۆر فرۆشراو ({rsi})',
