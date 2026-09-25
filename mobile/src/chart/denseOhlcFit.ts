@@ -4,13 +4,16 @@
  * كان ثابتاً 9px بعتبات عرض مكتوبة باليد (240/270/360px) — أصغر من علامات المحور (11، DESIGN-PRO §2)
  * وهو الرقم الذي يقرأ به المتداول الشمعة تحت إصبعه. هنا: أكبر خطّ ≤11 يتّسع فيه النصّ فعلاً، بقياس
  * النصوص نفسها (`propTextWidth`) لا عتبات: سطر واحد بـ11 متى اتّسع (مع التغيّر ثم المدى إن اتّسعا)،
- * وإلا سطران بأكبر حجم يتّسع (11 ثم 10 ثم 9)، والتغيّر يسقط قبل أن يُصغِّر الخطّ تحت 9.
- * الأرقام `tabular-nums` فالطول وحده يحدّد العرض ⇒ لا يقفز الحجم أثناء السحب على الزوج نفسه.
+ * وإلا سطران (O H / L C). الخطّ **11 دائماً** (QA84a، §7: «لا تصغّر الخطّ» — كان ينزل 10 ثم 9): ما لا
+ * يتّسع يُسقَط حقلاً حقلاً — المدى ثم التغيّر ثم O/H/L، ويبقى الإغلاق (الرقم تحت الإصبع) سطراً واحداً.
+ * الأرقام `tabular-nums` فالطول وحده يحدّد الخطة ⇒ لا تقفز أثناء السحب على الزوج نفسه.
  */
 import { propTextWidth } from './textWidth';
 
 /** `paddingHorizontal: 4` × 2. */
 export const DENSE_OHLC_PAD_W = 8;
+/** DESIGN-PRO §2: أصغر خطّ بالواجهة. */
+export const DENSE_OHLC_FONT = 11;
 const SEP = '  ';
 
 export interface DenseOhlcPlan {
@@ -18,6 +21,10 @@ export interface DenseOhlcPlan {
   lineH: number;
   /** سطر واحد (O H L C) أم سطران (O H / L C). */
   wide: boolean;
+  /** لا O/H/L: الإغلاق وحده (وتغيّره إن اتّسع) — لوح أضيق من «L 1.08501  C 1.08532». */
+  closeOnly: boolean;
+  /** أسطر الكتلة (1 أو 2) — المفتاح تحتها يُزاح بـ`lines × lineH`. */
+  lines: 1 | 2;
   showPct: boolean;
   showRange: boolean;
 }
@@ -32,27 +39,33 @@ export function planDenseOhlc(
   pct: string | null,
   range: string | null,
   plotW: number,
-  max = 11,
-  min = 9
+  /** «C 1.08532» — سطر الإغلاق وحده (الملاذ الأخير). */
+  closeLine: string
 ): DenseOhlcPlan {
   const avail = Math.max(0, plotW - DENSE_OHLC_PAD_W);
-  const fits = (t: string, f: number) => propTextWidth(t, f) <= avail;
-  const make = (fontSize: number, wide: boolean, showPct: boolean, showRange: boolean): DenseOhlcPlan => ({
-    fontSize,
-    lineH: denseLineH(fontSize),
+  const fits = (t: string) => propTextWidth(t, DENSE_OHLC_FONT) <= avail;
+  const make = (
+    wide: boolean,
+    showPct: boolean,
+    showRange: boolean,
+    closeOnly = false
+  ): DenseOhlcPlan => ({
+    fontSize: DENSE_OHLC_FONT,
+    lineH: denseLineH(DENSE_OHLC_FONT),
     wide,
+    closeOnly,
+    lines: wide || closeOnly ? 1 : 2,
     showPct,
     showRange,
   });
   const full = line1 + SEP + line2;
   const withPct = pct ? full + SEP + pct : null;
-  if (withPct && range && fits(withPct + SEP + range, max)) return make(max, true, true, true);
-  if (withPct && fits(withPct, max)) return make(max, true, true, false);
-  if (fits(full, max)) return make(max, true, false, false);
-  const second = pct ? line2 + SEP + pct : null;
-  for (let f = max; f >= min; f--) {
-    if (fits(line1, f) && second && fits(second, f)) return make(f, false, true, false);
-    if (fits(line1, f) && fits(line2, f)) return make(f, false, false, false);
-  }
-  return make(min, false, false, false);
+  if (withPct && range && fits(withPct + SEP + range)) return make(true, true, true);
+  if (withPct && fits(withPct)) return make(true, true, false);
+  if (fits(full)) return make(true, false, false);
+  if (fits(line1) && pct && fits(line2 + SEP + pct)) return make(false, true, false);
+  if (fits(line1) && fits(line2)) return make(false, false, false);
+  // أضيق من سطري O H / L C بـ11px ⇒ الإغلاق وحده بدل تصغير الخطّ.
+  if (pct && fits(closeLine + SEP + pct)) return make(false, true, false, true);
+  return make(false, false, false, true);
 }

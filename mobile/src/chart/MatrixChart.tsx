@@ -567,7 +567,7 @@ const HILO_LABEL_H = 14;
 /** عرض محرف وسم القمّة/القاع (`hiLoText` 11px أحادي المسافة) — الثابت نفسه لوقت التقاطع (`textWidth.ts`). */
 const HILO_CHAR_W = monoCharW(11);
 /** سطر OHLC التقاطع أعلى اللوح بالوضع المدمج (`denseOhlc`). */
-const DENSE_OHLC_LINE_H = 12;
+const DENSE_OHLC_LINE_H = 14;
 /** سطر عدّاد إغلاق الشمعة تحت سعر الوسم الحيّ. */
 const COUNTDOWN_LINE_H = 13;
 
@@ -5844,7 +5844,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const crossReadCandle = crossAhead > 0 ? null : crossCandle;
   const denseOhlc = dense ? crossReadCandle : null;
   // الحجم والسطور بقياس النصوص نفسها (`planDenseOhlc`): سطر واحد 11px متى اتّسع (ثم التغيّر ثم المدى)،
-  // وإلا سطران بأكبر حجم ≤11 يتّسع (خلية الرباعية) — فلا يُقصّ شيء بنقاط حذف ولا يُفرض 9px على لوح عريض.
+  // وإلا سطران، وأضيق من ذلك الإغلاق وحده — الخطّ 11 دائماً، يسقط حقل لا يصغر الخطّ.
   const denseOhlcRangeText = denseOhlc
     ? candleRangePipsText(series.symbol, denseOhlc.high, denseOhlc.low, lang, priceDecimalsRef)
     : null;
@@ -5854,10 +5854,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         `L ${fmtPrice(denseOhlc.low)}  C ${fmtPrice(denseOhlc.close)}`,
         crossChange?.pctText ?? null,
         denseOhlcRangeText,
-        chartPlotW
+        chartPlotW,
+        `C ${fmtPrice(denseOhlc.close)}`
       )
     : null;
   const denseOhlcWide = denseOhlcPlan?.wide ?? true;
+  const denseOhlcCloseOnly = denseOhlcPlan?.closeOnly ?? false;
   const denseOhlcPct = denseOhlcPlan?.showPct && crossChange ? crossChange : null;
   const denseOhlcRange = denseOhlcPlan?.showRange ? denseOhlcRangeText : null;
   const denseOhlcFont = denseOhlcPlan
@@ -7274,23 +7276,35 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             pointerEvents="none"
             style={[styles.denseOhlc, { top: shadowStack ? 24 : 4 }]}
           >
-            <Text style={[styles.denseOhlcText, denseOhlcFont]} numberOfLines={1}>
-              {`O ${fmtPrice(denseOhlc.open)}  H ${fmtPrice(denseOhlc.high)}`}
-              {denseOhlcWide ? '  ' : null}
-              {denseOhlcWide ? (
-                <>
-                  {`L ${fmtPrice(denseOhlc.low)}  C `}
-                  <Text style={{ color: denseOhlc.close >= denseOhlc.open ? colors.bull : colors.bear }}>
-                    {fmtPrice(denseOhlc.close)}
-                  </Text>
-                  {denseOhlcPct ? (
-                    <Text style={{ color: denseOhlcPct.color }}>{`  ${denseOhlcPct.pctText}`}</Text>
-                  ) : null}
-                  {denseOhlcRange ? `  ${denseOhlcRange}` : null}
-                </>
-              ) : null}
-            </Text>
-            {!denseOhlcWide ? (
+            {denseOhlcCloseOnly ? (
+              <Text style={[styles.denseOhlcText, denseOhlcFont]} numberOfLines={1}>
+                {'C '}
+                <Text style={{ color: denseOhlc.close >= denseOhlc.open ? colors.bull : colors.bear }}>
+                  {fmtPrice(denseOhlc.close)}
+                </Text>
+                {denseOhlcPct ? (
+                  <Text style={{ color: denseOhlcPct.color }}>{`  ${denseOhlcPct.pctText}`}</Text>
+                ) : null}
+              </Text>
+            ) : (
+              <Text style={[styles.denseOhlcText, denseOhlcFont]} numberOfLines={1}>
+                {`O ${fmtPrice(denseOhlc.open)}  H ${fmtPrice(denseOhlc.high)}`}
+                {denseOhlcWide ? '  ' : null}
+                {denseOhlcWide ? (
+                  <>
+                    {`L ${fmtPrice(denseOhlc.low)}  C `}
+                    <Text style={{ color: denseOhlc.close >= denseOhlc.open ? colors.bull : colors.bear }}>
+                      {fmtPrice(denseOhlc.close)}
+                    </Text>
+                    {denseOhlcPct ? (
+                      <Text style={{ color: denseOhlcPct.color }}>{`  ${denseOhlcPct.pctText}`}</Text>
+                    ) : null}
+                    {denseOhlcRange ? `  ${denseOhlcRange}` : null}
+                  </>
+                ) : null}
+              </Text>
+            )}
+            {!denseOhlcWide && !denseOhlcCloseOnly ? (
               <Text style={[styles.denseOhlcText, denseOhlcFont]} numberOfLines={1}>
                 {`L ${fmtPrice(denseOhlc.low)}  C `}
                 <Text style={{ color: denseOhlc.close >= denseOhlc.open ? colors.bull : colors.bear }}>
@@ -7312,7 +7326,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               {
                 top:
                   (shadowStack ? 24 : 4) +
-                  (denseOhlcPlan ? (denseOhlcWide ? denseOhlcPlan.lineH : denseOhlcPlan.lineH * 2) + 6 : 0),
+                  (denseOhlcPlan ? denseOhlcPlan.lines * denseOhlcPlan.lineH + 6 : 0),
               },
             ]}
           >
@@ -13726,7 +13740,7 @@ const styles = StyleSheet.create({
   denseOhlcText: {
     ...numeric,
     color: colors.text,
-    fontSize: 9,
+    fontSize: 11,
     lineHeight: DENSE_OHLC_LINE_H,
     fontWeight: '600',
     paddingHorizontal: 4,
