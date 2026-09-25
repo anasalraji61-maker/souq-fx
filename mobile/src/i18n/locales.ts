@@ -371,6 +371,12 @@ export type Dict = {
   arabicThousandsSignHint: string;
   /** اسم الخانة المرفوضة وما كُتب فيها، يسبق `invalidNumberHint`/`arabicThousandsSignHint` («الهدف «3.5.0»: …» — `d28991b`)؛ {field} الاسم القصير، {value} كما كُتب. علامتا الاقتباس بحسب اللغة: «» للعربية والكردية، “” للإنجليزية */
   riskCalcBadFieldValue: string;
+  /** «1.0820» بخانة الوقف بالـpip: سعرٌ لا مسافة (`slPipsLooksLikePrice`) — `{value}` */
+  riskCalcSlLooksLikePrice: string;
+  /** «25» بخانة سعر الوقف: نقاطٌ لا سعر، النقرة تنقلها لخانة النقاط (`levelLooksLikePips`) — `{value}` */
+  riskCalcStopPxLooksLikePips: string;
+  /** «50» بخانة الهدف (الحاسبة/الدفتر) أو الوقف (الدفتر): نقاطٌ لا سعر، النقرة تكتب السعر — `{field}` `{value}` `{pips}` `{price}` */
+  levelLooksLikePipsHint: string;
   riskCalcPipValue: string;
   /** الأساس = عملة الحساب (USDJPY بحساب دولار…) ⇒ قيمة الـpip محسوبة بسعر الوقف لا الحيّ (`exitQuoteToAccount`) فتخالف المنصّة — {price} = الوقف */
   riskCalcPipValueAtStop: string;
@@ -1475,6 +1481,9 @@ const ar: Dict = {
   riskCalcOtherCcyHint: '{field} «{value}» بغير عملة الحساب ({ccy}) — اكتب المبلغ بالـ{ccy}، أو غيّر عملة الحساب',
   arabicThousandsSignHint: '«٬» فاصلة الآلاف لا الفاصلة العشرية — للكسر اكتب «٫» أو نقطة، مثل 0٫5',
   riskCalcBadFieldValue: '{field} «{value}»',
+  riskCalcSlLooksLikePrice: '⚠ «{value}» سعرٌ على الأرجح لا مسافة — اكتبه بخانة «سعر الوقف»، أو اكتب مسافة الوقف بالـpip (مثل 25)',
+  riskCalcStopPxLooksLikePips: '⚠ «{value}» بخانة سعر الوقف عددُ pip على الأرجح لا سعر — اضغط لنقله إلى خانة الوقف بالـpip',
+  levelLooksLikePipsHint: '⚠ {field} «{value}» عددُ pip على الأرجح لا سعر: {pips} pip تعني {price}. اضغط لكتابة {price}',
   riskCalcPipValue: 'قيمة الـpip للوت',
   riskCalcPipValueAtStop: 'قيمة الـpip للوت عند وقفك {price}',
   riskCalcPipValueAtStopHint: 'منصّتك تعرضها بالسعر الحالي فقد تختلف قليلاً — لكن خسارتك إن ضُرب الوقف تُحوَّل إلى عملة حسابك بسعر الوقف، فحسبناها به',
@@ -2557,6 +2566,9 @@ const enUS: Dict = {
   riskCalcOtherCcyHint: '{field} “{value}” is not in the account currency ({ccy}) — enter the amount in {ccy}, or change the account currency',
   arabicThousandsSignHint: '“٬” is the Arabic thousands sign, not the decimal comma — for a fraction type “٫” or a dot, e.g. 0.5',
   riskCalcBadFieldValue: '{field} “{value}”',
+  riskCalcSlLooksLikePrice: '⚠ “{value}” looks like a price, not a distance — enter it under Stop price, or type the stop distance in pips (e.g. 25)',
+  riskCalcStopPxLooksLikePips: '⚠ “{value}” in Stop price looks like pips, not a price — tap to move it to the pips box',
+  levelLooksLikePipsHint: '⚠ {field} “{value}” looks like pips, not a price: {pips} pips is {price}. Tap to use {price}',
   riskCalcPipValue: 'Pip value per lot',
   riskCalcPipValueAtStop: 'Pip value per lot at your stop {price}',
   riskCalcPipValueAtStopHint: 'Your platform shows it at the current price, so it may differ a little — but if your stop is hit the loss converts to your account currency at the stop price, so we used that',
@@ -3665,6 +3677,9 @@ const ku: Dict = {
   riskCalcOtherCcyHint: '{field} «{value}» بە دراوی هەژمار نییە ({ccy}) — بڕەکە بە {ccy} بنووسە، یان دراوی هەژمار بگۆڕە',
   arabicThousandsSignHint: '«٬» جیاکەرەوەی هەزارانە نەک فاریزەی دەیی — بۆ کەرت «٫» یان خاڵ بنووسە، وەک 0٫5',
   riskCalcBadFieldValue: '{field} «{value}»',
+  riskCalcSlLooksLikePrice: '⚠ «{value}» زۆرجار نرخە نەک دووری — لە خانەی «نرخی وەستان» بینووسە، یان دووری وەستان بە pip بنووسە (بۆ نموونە 25)',
+  riskCalcStopPxLooksLikePips: '⚠ «{value}» لە خانەی نرخی وەستان زۆرجار ژمارەی pipە نەک نرخ — دەست بنێ بۆ گواستنەوەی بۆ خانەی وەستان بە pip',
+  levelLooksLikePipsHint: '⚠ {field} «{value}» زۆرجار ژمارەی pipە نەک نرخ: {pips} pip واتە {price}. دەست بنێ بۆ نووسینی {price}',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
   riskCalcPipValueAtStop: 'بەهای pip بۆ هەر لۆتێک لە وەستانەکەت {price}',
   riskCalcPipValueAtStopHint: 'پلاتفۆرمەکەت بە نرخی ئێستا پیشانی دەدات بۆیە لەوانەیە کەمێک جیاواز بێت — بەڵام ئەگەر وەستانەکە لێدرا زیانەکە بە نرخی وەستان دەگۆڕدرێت بۆ دراوی هەژمارەکەت، بۆیە ئەومان بەکارهێنا',
@@ -3674,7 +3689,7 @@ const ku: Dict = {
   riskCalcMargin: 'مارجینی گیراو',
   riskCalcMarginNote:
     'مارجین ئەو بڕەیە کە بڕۆکەر تا مامەڵەکە کراوە بێت دەیگرێت، نەک ئەوەی لەوانەیە لەدەستی بدەیت — زیانەکەت وەستانەکە دیاری دەکات. لێڤەرێجی بەردەست بەپێی بڕۆکەر و ئامراز جیاوازە.',
-  riskCalcTarget: 'ئامانج (ئارەزوومەندانە) — بۆ R:R و قازانجی چاوەڕوانکراو',
+  riskCalcTarget: 'ئامانج (ئیختیاری) — بۆ R:R و قازانجی چاوەڕوانکراو',
   riskCalcTargetPlaceholder: 'نرخی ئامانج',
   riskCalcPotentialProfit: 'قازانجی چاوەڕوانکراو',
   riskCalcLogToJournal: 'ئەم پلانە لە دەفتەر تۆمار بکە',
