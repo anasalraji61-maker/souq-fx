@@ -33,12 +33,19 @@ export function SymbolSearchBar({ onPick, placeholder }: Props) {
   const [loading, setLoading] = useState(false);
   /** وضوح الحالة: يميّز فشل البحث فعلياً عن "لا نتائج مطابقة" حتى لا يظن المستخدم أن الرمز غير موجود */
   const [error, setError] = useState(false);
+  /**
+   * النصّ الذي عادت له `results` فعلاً — «لا نتيجة» تُعرض فقط حين يكون البحث عن النصّ الحالي قد اكتمل
+   * فارغاً، لا أثناء مهلة الكتابة (350ms) ولا بنتائج نصّ سابق. بلاه كان البحث الناجح بلا نتيجة لا يعرض
+   * شيئاً فيُظنّ أن البحث لم يعمل (launch135).
+   */
+  const [searchedQ, setSearchedQ] = useState('');
 
   useEffect(() => {
     const query = q.trim();
     if (query.length < 2) {
       setResults([]);
       setError(false);
+      setSearchedQ('');
       return;
     }
     // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب الشريط أو تغيّر نص البحث لاحقاً — يشمل
@@ -52,6 +59,7 @@ export function SymbolSearchBar({ onPick, placeholder }: Props) {
         if (alive) {
           setResults(res.results);
           setError(false);
+          setSearchedQ(query);
         }
       } catch {
         if (alive) {
@@ -87,6 +95,11 @@ export function SymbolSearchBar({ onPick, placeholder }: Props) {
       />
       {loading ? <ActivityIndicator color={colors.accent} style={{ marginTop: 6 }} /> : null}
       {!loading && error ? <Text style={[styles.error, { textAlign: align }]}>{t.ssbError}</Text> : null}
+      {!loading && !error && results.length === 0 && searchedQ !== '' && searchedQ === q.trim() ? (
+        <Text style={[styles.noMatch, { textAlign: align }]} accessibilityLiveRegion="polite">
+          {t.ssbNoMatch.replace('{q}', searchedQ)}
+        </Text>
+      ) : null}
       {results.slice(0, 8).map((r) => (
         <Pressable
           accessibilityRole="button"
@@ -138,6 +151,13 @@ const styles = StyleSheet.create({
   name: { color: colors.textDim, fontSize: 11 },
   error: {
     color: colors.bear,
+    fontSize: 10,
+    fontWeight: '700',
+    marginTop: spacing.xs,
+  },
+  /** كسطر الخطأ لكن بلون هادئ — «لا نتيجة» ليست فشلاً. */
+  noMatch: {
+    color: colors.textDim,
     fontSize: 10,
     fontWeight: '700',
     marginTop: spacing.xs,
