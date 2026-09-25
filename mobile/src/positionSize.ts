@@ -782,6 +782,46 @@ export function savedRiskMoney(saved: {
   return null;
 }
 
+/** أرصدة عملات الحساب **غير الظاهرة** (المكتوبة بخانة الرصيد وهي عملة الحساب) — `balanceOnAccountSwitch` */
+export type AccountBalances = Partial<Record<AccountCcy, string>>;
+
+/**
+ * تبديل عملة الحساب بالحاسبة: رصيد العملة السابقة يُحفظ باسمها، والخانة تأخذ رصيد العملة الجديدة المحفوظ أو فارغة.
+ *
+ * لماذا: الخانة كانت تُبقي الرقم نفسه ⇒ «1500000» (حساب ين) تُقرأ 1,500,000 **دولار** بعد نقر «USD»: EURUSD بوقف 20
+ * pip ومخاطرة 1% ⇒ **75 لوت** بدل 0.50 (×150)، يُحفظ ويعود بالجلسة التالية ويُرسل للدفتر. خانة السنت منفصلة لهذا السبب
+ * نفسه (`centBalance`). لا تحويل بسعر الصرف: الرصيد رقمٌ بحساب المتداول لا تقدير — التخمين أسوأ من خانة فارغة.
+ * الرصيد نفسه للعملة نفسها (نقرة على الشريحة المفعّلة) يبقى كما هو.
+ */
+export function balanceOnAccountSwitch(
+  balances: AccountBalances,
+  from: AccountCcy,
+  to: AccountCcy,
+  current: string
+): { balances: AccountBalances; balance: string } {
+  if (from === to) return { balances, balance: current };
+  const next: AccountBalances = { ...balances };
+  if (current.trim() !== '') next[from] = current;
+  else delete next[from];
+  const balance = next[to] ?? '';
+  delete next[to];
+  return { balances: next, balance };
+}
+
+/**
+ * الأرصدة المحفوظة للعملات الأخرى (`balances` بالتخزين)، بلا عملة الحساب الظاهرة (رصيدها بـ`balance`). قيمٌ غير نصّية
+ * أو عملات لا تدعمها الحاسبة تُسقط. نسخة أقدم بلا `balances` ⇒ `{}` — رصيدها الوحيد لعملة حسابها المحفوظة كما كان.
+ */
+export function savedAccountBalances(raw: unknown, account: AccountCcy): AccountBalances {
+  const out: AccountBalances = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  for (const c of ACCOUNT_CCYS) {
+    const v = (raw as Record<string, unknown>)[c];
+    if (c !== account && typeof v === 'string' && v.trim() !== '') out[c] = v;
+  }
+  return out;
+}
+
 /**
  * المخاطرة **الفعلية** لحجم لوت معيّن على وقفٍ معيّن: بعملة الحساب وبنسبةٍ من الرصيد.
  *

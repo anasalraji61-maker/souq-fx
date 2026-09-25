@@ -78,6 +78,8 @@ import {
   leverageOutOfRange,
   leverageAmbiguousThousands,
   savedRiskMoney,
+  balanceOnAccountSwitch,
+  savedAccountBalances,
   riskOverBalance,
   centAccountSymbol,
   smallContractPair,
@@ -2639,3 +2641,27 @@ console.log('positionSize slPipsInPoints selftest OK');
   assert.equal(big.lots, 9.24);
 }
 console.log('positionSize slPipsLooksLikePrice selftest OK');
+
+// balanceOnAccountSwitch — رصيد الين لا يُقرأ دولاراً بعد تبديل الشريحة (كان 75 لوت بدل 0.50)
+{
+  // حساب ين 1,500,000 ⇒ USD: الخانة فارغة (لا رصيد دولار محفوظ)، والين محفوظ باسمه
+  let st = balanceOnAccountSwitch({}, 'JPY', 'USD', '1500000');
+  assert.deepEqual(st, { balances: { JPY: '1500000' }, balance: '' });
+  // كتب 10000 دولاراً ثم عاد للين ⇒ يعود 1500000 ويُحفظ الدولار
+  st = balanceOnAccountSwitch(st.balances, 'USD', 'JPY', '10000');
+  assert.deepEqual(st, { balances: { USD: '10000' }, balance: '1500000' });
+  // والعودة للدولار ⇒ 10000
+  st = balanceOnAccountSwitch(st.balances, 'JPY', 'USD', st.balance);
+  assert.deepEqual(st, { balances: { JPY: '1500000' }, balance: '10000' });
+  // الشريحة المفعّلة نفسها ⇒ لا تغيير
+  assert.deepEqual(balanceOnAccountSwitch({ EUR: '5000' }, 'USD', 'USD', '10000'), { balances: { EUR: '5000' }, balance: '10000' });
+  // خانة فارغة تمسح المحفوظ القديم لتلك العملة (مسحها المتداول قصداً)
+  assert.deepEqual(balanceOnAccountSwitch({ USD: '9', EUR: '5000' }, 'USD', 'EUR', '  '), { balances: {}, balance: '5000' });
+  // الأثر على اللوت: الرصيد الذي يصل الحساب بعد التبديل ليس 1500000
+  assert.equal(parseDecimal(balanceOnAccountSwitch({}, 'JPY', 'USD', '1500000').balance, { amount: true }), null);
+}
+// savedAccountBalances — عملات مدعومة ونصوص فقط، بلا عملة الحساب الظاهرة
+assert.deepEqual(savedAccountBalances({ USD: '10000', JPY: '1500000', XYZ: '5', EUR: 7, GBP: '' }, 'USD'), { JPY: '1500000' });
+assert.deepEqual(savedAccountBalances(undefined, 'USD'), {});
+assert.deepEqual(savedAccountBalances(['1'], 'USD'), {});
+console.log('positionSize account balance switch selftest OK');

@@ -30,6 +30,9 @@ import {
   leverageOutOfRange,
   leverageAmbiguousThousands,
   savedRiskMoney,
+  balanceOnAccountSwitch,
+  savedAccountBalances,
+  type AccountBalances,
   riskOverBalance,
   MAX_LEVERAGE,
   requiredMargin,
@@ -119,6 +122,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    */
   const [centBalance, setCentBalance] = useState('');
   /**
+   * رصيد كل عملة حساب **غير ظاهرة** — تبديل الشريحة يحفظ الرصيد باسم عملته ويُظهر رصيد الجديدة (`balanceOnAccountSwitch`).
+   * كانت الخانة تُبقي «1500000» (ين) فتُقرأ دولاراً ⇒ لوتٌ بـ150 ضعفاً.
+   */
+  const [otherBalances, setOtherBalances] = useState<AccountBalances>({});
+  /**
    * آخر لاحقة سنت/micro استعملها («c»، «.c»، «micro») — محفوظة: شريحةٌ واحدة «EURUSDc» بجانب الأزواج بدل كتابة الرمز كل
    * جلسة، وشرائح الأزواج وشريط رموز الأدوات تبقى بوضعه ما دام فيه. راجع `smallContractSuffix`.
    */
@@ -185,6 +193,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           const p = JSON.parse(raw) as {
             balance?: string;
             centBalance?: string;
+            balances?: unknown;
             smallSuffix?: string;
             riskPct?: string;
             riskCcy?: string;
@@ -214,6 +223,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           const riskMoney = savedRiskMoney(p);
           if (riskMoney) prevMoneyRef.current = riskMoney;
           if (loadedAccount) setAccount(loadedAccount);
+          setOtherBalances(savedAccountBalances(p.balances, loadedAccount ?? 'USD'));
         }
       } catch {
         /* ignore */
@@ -274,6 +284,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       JSON.stringify({
         balance,
         centBalance,
+        balances: otherBalances,
         smallSuffix,
         riskPct,
         // عملة المبلغ إن كُتبت المخاطرة مالاً — `savedRiskMoney` عند الفتح
@@ -286,7 +297,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     ).catch(() => {
       /* ignore */
     });
-  }, [balance, centBalance, smallSuffix, riskPct, account, leverage, commission, commissionKind, moneyCcy]);
+  }, [balance, centBalance, otherBalances, smallSuffix, riskPct, account, leverage, commission, commissionKind, moneyCcy]);
   const balanceText = cent ? centBalance : balance;
   const setBalanceText = cent ? setCentBalance : setBalance;
   /** لاحقة الوضع الحالي (null = حساب عادي) */
@@ -1204,6 +1215,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
                     // «USD 50» لا تعني 50 يورو: المخاطرة بالمال تعود نسبةً (بالرصيد نفسه) قبل تبديل العملة،
                     // وبلا رصيد تُمسح بدل أن تبقى علامةً لعملة لم تعد عملة الحساب
                     if (riskIn?.amount != null) setRiskPct(toggleRiskUnit(riskPct, balanceNum, account) ?? '');
+                    // الرصيد نفسه لا يصلح بعملةٍ أخرى (1500000 ين ≠ 1500000 دولار): يُحفظ باسم عملته ويظهر رصيد الجديدة
+                    const sw = balanceOnAccountSwitch(otherBalances, account, c, balance);
+                    setOtherBalances(sw.balances);
+                    setBalance(sw.balance);
                   }
                   setAccount(c);
                 },
