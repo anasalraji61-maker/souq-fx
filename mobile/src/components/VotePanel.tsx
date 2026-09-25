@@ -6,7 +6,7 @@ import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
-import { analyzePlan, formatPips, formatRR, type PlanIssue, type TradePlan } from '../tradePlan';
+import { analyzePlan, planSummaryText, type PlanIssue, type TradePlan } from '../tradePlan';
 import { useBlockedUsers } from '../moderation';
 import { ModerationActions, ModerationToggle } from './ModerationActions';
 
@@ -79,14 +79,9 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
     return null;
   };
 
-  /** "المخاطرة 25 pip · الربح المحتمل 50 pip · R:R 1:2.0" — بفرق السعر حين لا يُعرف الـpip. */
-  const planSummary = (plan: TradePlan): string => {
-    const dist = (pips: number | null, d: number) => {
-      const p = formatPips(pips);
-      return p != null ? `${p} pip` : String(Math.round(d * 1e5) / 1e5);
-    };
-    return `${t.planRiskWord} ${dist(plan.riskPips, plan.riskDist)} · ${t.planRewardWord} ${dist(plan.rewardPips, plan.rewardDist)} · R:R ${formatRR(plan.rr)}`;
-  };
+  /** "المخاطرة 25 pip · الربح المحتمل 50 pip · R:R 1:2" — السطر المشترك مع الدفتر (`planSummaryText`). */
+  const planSummary = (plan: TradePlan): string =>
+    planSummaryText(plan, { risk: t.planRiskWord, reward: t.planRewardWord });
 
   // معاينة حيّة للخطة أثناء الكتابة (لا تُعرض قبل اكتمال الأرقام الثلاثة).
   const draftPlan = useMemo(() => {
