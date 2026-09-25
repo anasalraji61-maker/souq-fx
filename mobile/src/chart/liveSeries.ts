@@ -1,8 +1,9 @@
 import type { ChartSeries, DataProvenance, LiveTick } from '../api';
 import {
   canMergeLiveIntoCandles,
+  candleTimeSec,
   isSyntheticProvenance,
-  tickBelongsToCandle,
+  isValidAsOf,
   timeframeStepSec,
 } from './dataSource';
 import { candlesThrough, prevDayFromIntraday } from './pivotBase';
@@ -37,7 +38,37 @@ export function tickPlausibleForSeries(series: ChartSeries, price: number): bool
   return Math.abs(price - ref) <= Math.max(ref * 0.03, med * 20);
 }
 
-/** Merge live tick into last candle only when provenance + time bucket agree. */
+/** أقصى فريم تُفتح له شمعة حيّة محلياً: ≤1H محاذاته لرأس الدقيقة/الساعة معروفة؛ 4H/D/W تختلف بين المزوّدين. */
+const ROLL_MAX_STEP_SEC = 3600;
+/** تيك بعد أكثر من شمعتين فارغتين من آخر شمعة ⇒ فجوة (عطلة/انقطاع) ينتظر فيها الشارت الجلب لا يخمّنها. */
+const ROLL_MAX_BARS = 3;
+
+/**
+ * افتتاح الشمعة التي يقع فيها التيك نسبةً لآخر شمعة بالسلسلة: افتتاحها نفسه إن وقع فيها، أو افتتاح شمعة
+ * تالية (≤1H، حتى `ROLL_MAX_BARS`) — null خارج ذلك. كانت التيكات بعد إغلاق الشمعة الأخيرة تُرمى حتى الجلب
+ * التالي (~90 ث): على 1m/5m يتجمّد الشارت عند كل إغلاق ويرتدّ وسم السعر لإغلاق الجلب بينما الرأس يتحرّك.
+ */
+export function liveBarOpenSec(
+  lastOpenTime: number,
+  tickSec: number | null | undefined,
+  stepSec: number,
+  nowSec = Date.now() / 1000
+): number | null {
+  if (!isValidAsOf(tickSec, nowSec)) return null;
+  if (!(stepSec > 0) || !Number.isFinite(stepSec)) return null;
+  const open = candleTimeSec(lastOpenTime);
+  if (!Number.isFinite(open)) return null;
+  const k = Math.floor((tickSec - open) / stepSec);
+  if (k === 0) return open;
+  if (k < 0 || k >= ROLL_MAX_BARS || stepSec > ROLL_MAX_STEP_SEC) return null;
+  return open + k * stepSec;
+}
+
+/**
+ * Merge live tick into last candle only when provenance + time bucket agree — أو يفتح الشمعة التالية حين يقع
+ * التيك بعدها (`liveBarOpenSec`): افتتاحها = التيك الأول (يثبّته `withLiveExtremes` للتيكات التالية)، والجلب
+ * التالي يستبدلها بشمعة المزوّد.
+ */
 export function withLivePrice(
   series: ChartSeries,
   livePrice: number | null | undefined,
@@ -57,8 +88,17 @@ export function withLivePrice(
   const last = series.candles[series.candles.length - 1]!;
   const step = timeframeStepSec(opts?.timeframe ?? series.timeframe);
   const tickAsOf = opts?.tickAsOf ?? tickSrc.as_of ?? null;
-  if (!tickBelongsToCandle(last.time, tickAsOf, step, opts?.nowSec)) {
-    return series;
+  const barOpen = liveBarOpenSec(last.time, tickAsOf, step, opts?.nowSec);
+  if (barOpen == null) return series;
+  if (barOpen !== candleTimeSec(last.time)) {
+    // بوحدة أزمنة السلسلة نفسها (ms أو ث) كي يطابق مفتاح التتبّع شمعة المزوّد حين تصل.
+    const time = last.time > 1e12 ? barOpen * 1000 : barOpen;
+    return {
+      ...series,
+      candles: [...series.candles, { time, open: livePrice, high: livePrice, low: livePrice, close: livePrice }],
+      last: livePrice,
+      change_pct: liveChangePct(series, livePrice),
+    };
   }
   const candles = [...series.candles];
   const next = { ...last };
@@ -74,8 +114,10 @@ export function withLivePrice(
   };
 }
 
-/** أعلى/أدنى ما بلغته التيكات المدموجة في الشمعة الحيّة `key` (`رمز|فريم|زمن الشمعة`). */
-export type LiveExtremes = { key: string; high: number; low: number };
+/** أعلى/أدنى ما بلغته التيكات المدموجة في الشمعة الحيّة `key` (`رمز|فريم|زمن الشمعة`)، وافتتاحها وآخر إغلاق.
+ * `closed` = الشمعة التي أُغلقت بالتيكات ولم يصل جلبها بعد — تبقى على آخر ما بلغته. */
+export type LiveBarState = { key: string; open: number; high: number; low: number; close: number };
+export type LiveExtremes = LiveBarState & { closed?: LiveBarState | null };
 
 /**
  * يمدّ الشمعة الحيّة بأعلى/أدنى ما بلغته التيكات منذ فُتحت — `withLivePrice` يبني الشمعة من شمعة الجلب
@@ -90,16 +132,30 @@ export function withLiveExtremes(
   prev: LiveExtremes | null
 ): { series: ChartSeries; ext: LiveExtremes | null } {
   if (merged === base || !merged.candles.length) return { series: merged, ext: prev };
+  const keyOf = (t: number) => `${merged.symbol}|${merged.timeframe}|${t}`;
   const i = merged.candles.length - 1;
   const last = merged.candles[i]!;
-  const key = `${merged.symbol}|${merged.timeframe}|${last.time}`;
+  const key = keyOf(last.time);
   const same = prev != null && prev.key === key;
+  // شمعة فُتحت محلياً (`withLivePrice`): افتتاحها أوّل تيك فيها لا التيك الحالي.
+  const rolled = merged.candles.length === base.candles.length + 1;
+  const open = rolled && same ? prev.open : last.open;
   const high = same ? Math.max(prev.high, last.high) : last.high;
   const low = same ? Math.min(prev.low, last.low) : last.low;
-  const ext = { key, high, low };
-  if (high === last.high && low === last.low) return { series: merged, ext };
+  // الشمعة التي أُغلقت للتوّ تبقى على آخر تيكاتها: كانت تُبنى من جلبها الأخير فيرتدّ إغلاقها ويختفي ذيلها.
+  let closed: LiveBarState | null = null;
+  if (rolled) {
+    const bk = keyOf(base.candles[base.candles.length - 1]!.time);
+    closed = prev?.key === bk ? { key: bk, open: prev.open, high: prev.high, low: prev.low, close: prev.close } : prev?.closed?.key === bk ? prev.closed : null;
+  }
+  const ext: LiveExtremes = { key, open, high, low, close: last.close, closed };
+  if (open === last.open && high === last.high && low === last.low && !closed) return { series: merged, ext };
   const candles = [...merged.candles];
-  candles[i] = { ...last, high, low };
+  candles[i] = { ...last, open, high: Math.max(high, open), low: Math.min(low, open) };
+  if (closed) {
+    const c = candles[i - 1]!;
+    candles[i - 1] = { ...c, high: Math.max(c.high, closed.high), low: Math.min(c.low, closed.low), close: closed.close };
+  }
   return { series: { ...merged, candles }, ext };
 }
 
@@ -172,7 +228,7 @@ export function livePriceForChart(
   const last = series.candles[series.candles.length - 1]!;
   const step = timeframeStepSec(opts?.timeframe ?? series.timeframe);
   const tickAsOf = opts?.tickAsOf ?? tick.source.as_of ?? null;
-  if (!tickBelongsToCandle(last.time, tickAsOf, step, opts?.nowSec)) return null;
+  if (liveBarOpenSec(last.time, tickAsOf, step, opts?.nowSec) == null) return null;
   return tick.price;
 }
 

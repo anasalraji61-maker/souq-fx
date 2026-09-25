@@ -56,8 +56,9 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
 
 // نسبة الرأس: التيك بعد إغلاق الشمعة الأخيرة (قبل الجلب التالي) لا يُدمج بها لكنه سعر الرأس
 {
-  const late = { ...tick(1.1709), source: { ...src, as_of: now + 1800 } };
-  assert.equal(livePriceForChart(eur, late, { nowSec: now + 1800 }), null);
+  // (بعد ثلاث شمعات أو أكثر من آخر شمعة — ضمن شمعتين يفتح الشارت الشمعة التالية، أدناه)
+  const late = { ...tick(1.1709), source: { ...src, as_of: now + 3600 } };
+  assert.equal(livePriceForChart(eur, late, { nowSec: now + 3600 }), null);
   assert.equal(livePriceForHeader(eur, late), 1.1709);
   assert.equal(livePriceForHeader(eur, tick(2650)), null); // تيك رمز آخر
   assert.equal(livePriceForHeader(eur, tick(0)), null);
@@ -96,6 +97,47 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   const gbp = { ...eur, symbol: 'GBPUSD' };
   const g = withLiveExtremes(gbp, withLivePrice(gbp, 1.1704, src, { nowSec: now + 1 }), ext).series;
   assert.equal(g.candles[29]!.high, 1.1705);
+}
+
+// إغلاق الشمعة الحيّة قبل الجلب التالي: التيك يفتح الشمعة التالية، والمغلقة تبقى على آخر تيكاتها
+{
+  let ext: LiveExtremes | null = null;
+  const lastOpen = eur.candles[29]!.time; // now − 60
+  const feed = (p: number, at: number) => {
+    const r = withLiveExtremes(eur, withLivePrice(eur, p, src, { nowSec: at, tickAsOf: at }), ext);
+    ext = r.ext;
+    return r.series.candles;
+  };
+  let cs = feed(1.1712, now); // داخل الشمعة: أعلى جديد
+  assert.equal(cs.length, 30);
+  cs = feed(1.1709, now + 830); // آخر تيك قبل الإغلاق (lastOpen + 890)
+  assert.equal(cs[29]!.close, 1.1709);
+  cs = feed(1.1715, lastOpen + 900 + 5); // أوّل تيك بالشمعة التالية
+  assert.equal(cs.length, 31, 'next bar opened');
+  assert.equal(cs[30]!.time, lastOpen + 900);
+  assert.deepEqual([cs[30]!.open, cs[30]!.high, cs[30]!.low, cs[30]!.close], [1.1715, 1.1715, 1.1715, 1.1715]);
+  assert.equal(cs[29]!.close, 1.1709, 'closed bar keeps its last tick, not the fetched 1.1702');
+  assert.equal(cs[29]!.high, 1.1712, 'closed bar keeps its ticked wick');
+  cs = feed(1.1701, lastOpen + 960);
+  assert.equal(cs[30]!.open, 1.1715, 'open = first tick of the bar, not the current one');
+  assert.equal(cs[30]!.low, 1.1701);
+  assert.equal(cs[30]!.high, 1.1715);
+  assert.equal(cs[29]!.close, 1.1709, 'closed bar still held on the next tick');
+  assert.equal(livePriceForChart(eur, { price: 1.1701, source: { ...src, as_of: lastOpen + 960 } }, { nowSec: lastOpen + 960 }), 1.1701);
+  // الجلب يصل بالشمعة الجديدة: شموع المزوّد تغلب (افتتاحها وإغلاق المغلقة)
+  const fetched = {
+    ...eur,
+    candles: [...eur.candles, { time: lastOpen + 900, open: 1.171, high: 1.1716, low: 1.17, close: 1.1703 }],
+  };
+  const r = withLiveExtremes(fetched, withLivePrice(fetched, 1.1704, src, { nowSec: lastOpen + 970, tickAsOf: lastOpen + 970 }), ext);
+  const fl = r.series.candles;
+  assert.equal(fl.length, 31);
+  assert.equal(fl[30]!.open, 1.171, 'provider open wins once fetched');
+  assert.equal(fl[30]!.close, 1.1704);
+  assert.equal(fl[29]!.close, 1.1702, 'fetched closed bar is authoritative');
+  // 4H: لا فتح محلي (محاذاة المزوّد غير معروفة) — كالسابق
+  const h4 = { ...eur, timeframe: '4h' };
+  assert.equal(withLivePrice(h4, 1.17, src, { nowSec: lastOpen + 4 * 3600 + 5, tickAsOf: lastOpen + 4 * 3600 + 5 }), h4);
 }
 
 // نسبة الرأس = تغيّر اليوم من إغلاق الأمس، لا من أول شمعة محمّلة
