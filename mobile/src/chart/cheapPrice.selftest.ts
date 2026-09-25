@@ -49,3 +49,7 @@ assert.equal(formatPrice(-0.000001, 'EURUSD'), '0.00000');
 assert.equal(formatPrice(-0.00012, 'EURUSD'), '-0.00012');
 assert.equal(formatPrice(-2.5, 'US30', 40000), '-2.50');
 console.log('cheapPrice DXY/negative-zero OK');
+// الفورنت ثلاث منازل كوسطاء MT5 (كانت 350.12)؛ HUF أساساً لا مقاماً ⇒ بلا تغيير.
+for (const s of ['USDHUF', 'EURHUF.m', 'USDHUFc', 'TVC:USDHUF']) assert.equal(formatPrice(350.1234, s), '350.123');
+assert.equal(formatPrice(350.1234, 'HUFJPY'), '350.12');
+console.log('cheapPrice HUF OK');

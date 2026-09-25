@@ -16,7 +16,10 @@ export function symbolPriceDecimals(symbol: string): number | null {
     // أسماء الوسطاء كـ`marketHours` `DXY_RE`: USDINDEX (XM/Exness)، DXY.f، ولاحقة/بادئة منصّة (TVC:DXY) —
     // المطابقة التامّة لـDXY/USDX وحدهما كانت تطبع 104.24 لهذه كلها.
     const bare = symbol.trim().toUpperCase().replace(/^[A-Z0-9_]+:/, '').replace(/[^A-Z]/g, '');
-    return /^(DXY|USDX|USDINDEX)/.test(bare) ? 3 : null;
+    if (/^(DXY|USDX|USDINDEX)/.test(bare)) return 3;
+    // الفورنت مسعَّر بثلاث منازل عند وسطاء MT4/MT5 (USDHUF 350.123، EURHUF 395.456). بلا مواصفة pip
+    // (الحاسبة لا تدعم HUF عمداً) فكان التقدير من الحجم (≥100 ⇒ منزلتان) يقصّ خانته بالمحور والتقاطع والرأس.
+    return /^[A-Z]{3}HUF/.test(bare) ? 3 : null;
   }
   return Math.round(-Math.log10(spec.pipSize)) + 1;
 }
