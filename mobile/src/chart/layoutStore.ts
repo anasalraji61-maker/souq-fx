@@ -25,7 +25,6 @@ const saveError = createSaveErrorSignal<LayoutsSaveErrorCode>();
 const setSaveError = saveError.set;
 
 export const subscribeLayoutsSaveError = saveError.subscribe;
-export const getLayoutsSaveError = saveError.get;
 
 /**
  * كل كتابة (حفظ/حذف/دمج الخادم) قراءةٌ ثم كتابة للقائمة كاملة — فتُنفَّذ بالتسلسل. كان حفظ

@@ -2,7 +2,6 @@ import type { ChartSeries, DataProvenance, LiveTick } from '../api';
 import {
   canMergeLiveIntoCandles,
   isSyntheticProvenance,
-  normalizeProvenance,
   tickBelongsToCandle,
   timeframeStepSec,
 } from './dataSource';
@@ -189,11 +188,4 @@ export function livePriceForHeader(series: ChartSeries, tick: LiveTick | null | 
   if (!canMergeLiveIntoCandles(series.data_source, tick.source)) return null;
   if (!tickPlausibleForSeries(series, tick.price)) return null;
   return tick.price;
-}
-
-export function ensureSeriesProvenance(series: ChartSeries): ChartSeries {
-  if (series.data_source?.kind) {
-    return { ...series, data_source: normalizeProvenance(series.data_source) };
-  }
-  return { ...series, data_source: { kind: 'unknown', as_of: null, channel: null } };
 }

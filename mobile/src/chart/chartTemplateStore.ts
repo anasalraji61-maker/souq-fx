@@ -20,12 +20,11 @@ const KEY = 'matrix.chartTemplates.v1';
 /** رمز حالة ثابت لا نص معروض — الترجمة بطبقة العرض عبر `t[code]` (نفس المبدأ الموثَّق
  *  بـchart/dataSource.ts: لا تقارن الواجهة نصاً حرفياً). أسماء الرموز مطابقة لمفاتيح
  *  Dict بـi18n/locales.ts. */
-export type TemplatesSaveErrorCode = 'chartTemplateSaveFailed' | 'chartTemplateDeleteFailed';
+export type TemplatesSaveErrorCode = 'chartTemplateSaveFailed';
 
 const saveError = createSaveErrorSignal<TemplatesSaveErrorCode>();
 const setSaveError = saveError.set;
 
-export const subscribeTemplatesSaveError = saveError.subscribe;
 export const getTemplatesSaveError = saveError.get;
 
 export async function loadTemplates(): Promise<ChartTemplate[]> {
@@ -49,16 +48,6 @@ export async function saveTemplate(t: ChartTemplate): Promise<void> {
     setSaveError(null);
   } catch {
     setSaveError('chartTemplateSaveFailed');
-  }
-}
-
-export async function deleteTemplate(id: string): Promise<void> {
-  try {
-    const all = (await loadTemplates()).filter((x) => x.id !== id);
-    await AsyncStorage.setItem(KEY, JSON.stringify(all));
-    setSaveError(null);
-  } catch {
-    setSaveError('chartTemplateDeleteFailed');
   }
 }
 

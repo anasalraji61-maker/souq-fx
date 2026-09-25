@@ -246,5 +246,3 @@ export const INDICATOR_LIBRARY: PinePreset[] = [
   { id: 'hlc3', name: 'HLC3', formula: 'hlc3', group: 'Price' },
   { id: 'close', name: 'Close', formula: 'close', group: 'Price' },
 ];
-
-export const PINE_PRESETS = INDICATOR_LIBRARY.slice(0, 10);

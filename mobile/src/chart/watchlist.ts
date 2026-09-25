@@ -22,5 +22,3 @@ export const WATCHLIST = [
   { symbol: 'BTCUSD', label: 'BTCUSD', group: 'Crypto' },
   { symbol: 'ETHUSD', label: 'ETHUSD', group: 'Crypto' },
 ] as const;
-
-export type WatchSymbol = (typeof WATCHLIST)[number]['symbol'];

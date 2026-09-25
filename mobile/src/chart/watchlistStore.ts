@@ -53,12 +53,3 @@ export async function addCustomSymbol(symbol: string): Promise<string[]> {
   }
   return next;
 }
-
-/** اختبارات فقط */
-export function __setWatchlistStorageForTests(next: WatchlistStorage | null) {
-  setWatchlistStorage(next ?? AsyncStorage);
-}
-
-export function __resetWatchlistMemoryForTests() {
-  resetWatchlistMemory();
-}

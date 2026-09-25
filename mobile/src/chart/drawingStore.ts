@@ -14,7 +14,6 @@ const saveError = createSaveErrorSignal<DrawingsSaveErrorCode>();
 const setSaveError = saveError.set;
 
 export const subscribeDrawingsSaveError = saveError.subscribe;
-export const getDrawingsSaveError = saveError.get;
 
 /**
  * **الرسومات للرمز لا للفريم.** كانت تُحفظ تحت `v1.<رمز>.<فريم>`: خطّ دعم رُسم على 4H
