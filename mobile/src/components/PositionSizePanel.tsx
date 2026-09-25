@@ -38,6 +38,7 @@ import {
   requiredMargin,
   marginBaseToAccount,
   exitQuoteToAccount,
+  targetQuoteToAccount,
   pipsOnlyExitQuoteToAccount,
   pipsOnlyExitPrice,
   maxLotsForMargin,
@@ -921,7 +922,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         })
       : null;
   /** الربح المحتمل من المسافة الخام للهدف لا من نقاطه المقرَّبة للعرض — راجع `profitAtTarget` */
-  const targetUsdRate = exitQuoteToAccount(spec, convAccount, priceNum(targetPx), convRate);
+  const targetUsdRate = targetQuoteToAccount(spec, convAccount, priceNum(targetPx), convRate);
   /** الأساس = عملة الحساب ⇒ الربح يُحوَّل بسعر الهدف كما الخسارة بسعر الوقف */
   const targetRate = targetUsdRate != null && cent ? centQuoteToAccount(targetUsdRate) : targetUsdRate;
   const potentialProfit =

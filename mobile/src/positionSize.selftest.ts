@@ -2717,3 +2717,28 @@ console.log('positionSize account balance switch selftest OK');
   }
 }
 console.log('positionSize mini account selftest OK');
+
+// الربح عند هدفٍ بعيد (> 20% عن الحيّ) بأساسٍ = عملة الحساب: يُحوَّل بسعر الهدف لا بسعر الوقف
+{
+  const { targetQuoteToAccount, exitQuoteToAccount: xq, profitAtTarget: pat } = require('./positionSize') as typeof import('./positionSize');
+  const tr = instrumentSpec('USDTRY')!;
+  assert.ok(tr);
+  const live = 1 / 34;
+  // المسار القديم: الهدف مرفوض ⇒ سعر الوقف
+  assert.equal(xq(tr, 'USD', 43, live), null);
+  const r = targetQuoteToAccount(tr, 'USD', 43, live)!;
+  assert.equal(r, 1 / 43);
+  const p = pat({ spec: tr, entry: 34, target: 43, lots: 1, quoteToAccount: r })!;
+  assert.ok(Math.abs(p - 20930.232558) < 0.01, String(p));
+  const old = pat({ spec: tr, entry: 34, target: 43, lots: 1, quoteToAccount: 1 / 33.5 })!;
+  assert.ok(old > p * 1.28, 'the stop-rate fallback overstated profit by ~28%');
+  // هدفٌ تحت (بيع) بعيد كذلك، وقريب كما كان
+  assert.equal(targetQuoteToAccount(instrumentSpec('USDJPY')!, 'USD', 110, 1 / 150), 1 / 110);
+  assert.equal(targetQuoteToAccount(instrumentSpec('USDJPY')!, 'USD', 148.5, 1 / 150), 1 / 148.5);
+  // أساسٌ ليس عملة الحساب / مدخل غير صالح ⇒ null (الحيّ)
+  assert.equal(targetQuoteToAccount(instrumentSpec('EURUSD')!, 'USD', 1.2, 1), null);
+  assert.equal(targetQuoteToAccount(tr, 'USD', 0, live), null);
+  assert.equal(targetQuoteToAccount(tr, 'USD', 43, null), null);
+  assert.equal(targetQuoteToAccount(null, 'USD', 43, live), null);
+}
+console.log('positionSize targetQuoteToAccount selftest OK');
