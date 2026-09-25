@@ -351,6 +351,9 @@ export type Dict = {
   riskCalcConvManual: string;
   /** سعر التحويل لم يتجدّد (التجديد الصامت كل دقيقة فشل): {pair} الزوج، {min} الدقائق منذ آخر سعر ناجح */
   riskCalcConvStale: string;
+  /** بديل `riskCalcConvStale` حين `market_open === false` من `/api/market/quote` (backend `9f5cccd`): بعطلة نهاية الأسبوع
+   * `as_of` صار وقت إغلاق الجمعة فالتحذير يقول «لم يتجدّد منذ 2900 د» — صحيح لكنه يوحي بعطل. {pair} الزوج؛ بلا دقائق. */
+  riskCalcConvMarketClosed: string;
   riskCalcLots: string;
   riskCalcRiskAmount: string;
   riskCalcUnits: string;
@@ -1002,6 +1005,10 @@ export type Dict = {
   mcAutoManualA11y: string;
   /** مفتاح (switch) «رأس السهم» على خطّ الترند المحدَّد (chart-r37، `4e53e39`): الحالة (مفعّل/لا) يقرؤها قارئ الشاشة من `accessibilityState` — فالنصّ اسمٌ لا فعل. */
   mcArrowHeadA11y: string;
+  /** خطّ التنبيه المسلَّح على الشارت (`c34f991`، «🔔 ▲ السعر · pip») لقارئ الشاشة: {price} بمنازل الشارت، {dist} نصّ `signedDistanceText`
+   * أو يُحذف مع « — » قبله حين لا سعر حالي. Above = `condition: 'above'`. */
+  mcArmedAlertAboveA11y: string;
+  mcArmedAlertBelowA11y: string;
   /** وسم بين قوسين بعد اسم لوحة مشتقّة من شكل الشمعة لا من تدفّق أوامر حقيقي — «CVD (تقديري)». قصير: يُطبع برأس اللوحة. */
   mcEstimatedTag: string;
   /** شرح «≈»/«تقديري» بلوحات الحجم حين السلسلة بلا فوليوم (الفوركس، `seriesHasVolume` = false): الأعمدة من مدى كل شمعة نسبةً لسعرها (`estimatedVolume`) ⇒ OBV/MFI/VWAP/Klinger/CMF من التقدير نفسه ولا تطابق حجم التيك بمنصّة أخرى. */
@@ -1585,6 +1592,7 @@ const ar: Dict = {
   riskCalcConvFailed: 'تعذّر جلب سعر التحويل تلقائياً — اكتبه بالخانة أدناه كما تراه بمنصّتك ليظهر حجم اللوت. الزوج:',
   riskCalcConvManual: 'أدخل سعر',
   riskCalcConvStale: 'سعر التحويل {pair} لم يتجدّد منذ {min} د — اللوت محسوب على آخر سعر وصلنا. قارنه بمنصّتك قبل الدخول.',
+  riskCalcConvMarketClosed: 'السوق مغلق — سعر التحويل {pair} هو آخر سعر قبل الإغلاق، وقد يفتح السوق على سعر مختلف. أعد الحساب بعد الافتتاح.',
   riskCalcLots: 'حجم الصفقة (لوت)',
   riskCalcRiskAmount: 'المخاطرة الفعلية',
   riskCalcUnits: 'الوحدات',
@@ -2188,6 +2196,8 @@ const ar: Dict = {
   mcAutoA11y: 'تلقائي: ملاءمة الأسعار والعودة لآخر شمعة',
   mcAutoManualA11y: 'مقياس السعر يدوي — قد تخرج الشموع الجديدة عن العرض. اضغط لإعادته تلقائياً والعودة لآخر شمعة',
   mcArrowHeadA11y: 'رأس سهم بنهاية خطّ الترند',
+  mcArmedAlertAboveA11y: 'تنبيه مفعّل حين يصعد السعر إلى {price} — {dist}',
+  mcArmedAlertBelowA11y: 'تنبيه مفعّل حين ينزل السعر إلى {price} — {dist}',
   mcEstimatedTag: 'تقديري',
   mcVolEstimatedHint:
     'مزوّدنا لا يرسل حجم تداول لهذا الرمز (الفوركس بلا حجم مركزي) — هذه الأعمدة تقدير من مدى كل شمعة (من أعلاها إلى أدناها). مؤشرات الحجم (OBV وMFI وVWAP وKlinger…) محسوبة من التقدير نفسه، فلا تطابق أرقامها منصّة تعرض حجم التيك من وسيطها.',
@@ -2732,6 +2742,7 @@ const enUS: Dict = {
   riskCalcConvFailed: "Couldn't fetch the conversion rate — type it below as your platform shows it to get the lot size. Pair:",
   riskCalcConvManual: 'Enter price of',
   riskCalcConvStale: "The {pair} conversion rate hasn't updated for {min} min — the lot uses the last rate we received. Check it against your platform before you enter.",
+  riskCalcConvMarketClosed: 'Market closed — the {pair} conversion rate is the last price before the close, and the market may open at a different price. Recalculate after the open.',
   riskCalcLots: 'Position size (lots)',
   riskCalcRiskAmount: 'Actual risk',
   riskCalcUnits: 'Units',
@@ -3337,6 +3348,8 @@ const enUS: Dict = {
   mcAutoA11y: 'Auto: fit prices and return to the latest candle',
   mcAutoManualA11y: 'Price scale is manual — new candles may leave the view. Tap to restore auto and return to the latest candle',
   mcArrowHeadA11y: 'Arrowhead at the end of the trend line',
+  mcArmedAlertAboveA11y: 'Alert set for price rising to {price} — {dist}',
+  mcArmedAlertBelowA11y: 'Alert set for price falling to {price} — {dist}',
   mcEstimatedTag: 'est.',
   mcVolEstimatedHint:
     'Our data provider sends no traded volume for this symbol (forex has no central volume) — these bars are estimated from each candle\'s high-to-low range. Volume indicators (OBV, MFI, VWAP, Klinger…) are built from the same estimate, so their values won\'t match a platform that shows your broker\'s tick volume.',
@@ -3905,6 +3918,7 @@ const ku: Dict = {
   riskCalcConvFailed: 'نرخی گۆڕینەوە وەرنەگیرا — لە خانەی خوارەوە بینووسە وەک لە پلاتفۆرمەکەتدا دەیبینیت بۆ ئەوەی قەبارەی لۆت دەربکەوێت. جووت:',
   riskCalcConvManual: 'نرخی ئەمە بنووسە',
   riskCalcConvStale: 'نرخی گۆڕینەوەی {pair} {min} خولەکە نوێ نەبووەتەوە — لۆتەکە لەسەر دوایین نرخی وەرگیراو ژمێردراوە. پێش چوونەژوورەوە لەگەڵ پلاتفۆرمەکەتدا بەراوردی بکە.',
+  riskCalcConvMarketClosed: 'بازاڕ داخراوە — نرخی گۆڕینەوەی {pair} دوایین نرخی پێش داخستنە، و لەوانەیە بازاڕ بە نرخێکی جیاواز بکرێتەوە. دوای کردنەوە دووبارە بیژمێرە.',
   riskCalcLots: 'قەبارەی مامەڵە (لۆت)',
   riskCalcRiskAmount: 'مەترسی ڕاستەقینە',
   riskCalcUnits: 'یەکەکان',
@@ -4511,6 +4525,8 @@ const ku: Dict = {
   mcAutoA11y: 'خۆکار: گونجاندنی نرخەکان و گەڕانەوە بۆ دوایین مۆم',
   mcAutoManualA11y: 'پێوەری نرخ دەستییە — لەوانەیە مۆمە نوێیەکان لە دیمەن دەربچن. دابگرە بۆ گەڕاندنەوەی خۆکار و گەڕانەوە بۆ دوایین مۆم',
   mcArrowHeadA11y: 'سەری تیر لە کۆتایی هێڵی ترێند',
+  mcArmedAlertAboveA11y: 'ئاگادارکردنەوە چالاکە کاتێک نرخ بەرز دەبێتەوە بۆ {price} — {dist}',
+  mcArmedAlertBelowA11y: 'ئاگادارکردنەوە چالاکە کاتێک نرخ دادەبەزێت بۆ {price} — {dist}',
   mcEstimatedTag: 'خەمڵێنراو',
   mcVolEstimatedHint:
     'دابینکەرەکەمان قەبارەی بازرگانی بۆ ئەم هێمایە نانێرێت (فۆرێکس قەبارەی ناوەندیی نییە) — ئەم ستوونانە خەمڵاندنن لە مەودای هەر مۆمێک (لە بەرزترینەوە بۆ نزمترین). پێوەرەکانی قەبارە (OBV، MFI، VWAP، Klinger…) لە هەمان خەمڵاندن حیساب دەکرێن، بۆیە ژمارەکانیان لەگەڵ پلاتفۆرمێک کە قەبارەی تیکی بڕۆکەرەکەت پیشان دەدات یەک ناگرنەوە.',

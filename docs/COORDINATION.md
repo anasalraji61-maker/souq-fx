@@ -20,6 +20,8 @@
 | launch | أنس | `MessagesScreen` غير مستوردة (وحدها تستعمل `mockPeers`؛ و`api.ts:871` يرسل `from_user: 'أنت'` ثابتاً) — حذف أم ربط؟ | launch52 |
 | launch | أنس | ترخيص مصادر البيانات (ForexFactory/DailyFX/Twelve Data) قبل الرفع (`RELEASE-MOBILE.md` §0) | launch73 |
 | backend | أنس | **قرارات اتخذها backend (لأنس عكسها)**: التعادل مستثنى من نسبة الفوز؛ DXY «غير متاح» بدل حسابه من السلّة؛ حذف ميزة «البنوك» | backend-r1 |
+| launch+backend | **tools** (`PositionSizePanel.tsx:395 :1474`، `api.ts` `marketQuote`) | **launch106 — الحاسبة بعطلة نهاية الأسبوع**: بعد backend `9f5cccd` صار `as_of` وقت السعر عند المزوّد (إغلاق الجمعة) ⇒ `quoteAsOfMs` يعطيه عمراً حقيقياً فيظهر كل السبت والأحد «سعر التحويل … لم يتجدّد منذ ~2900 د» (`riskCalcConvStale`) — صحيح لكن يوحي بعطل. الخادم يرسل `market_open` (true/false/null). المطلوب: أضف `market_open?: boolean | null` لنوع `marketQuote` واحفظه مع السعر، وحين `=== false` اعرض `t.riskCalcConvMarketClosed` (`{pair}` فقط، جاهز ar/en/ku) بدل `riskCalcConvStale`؛ `null` ⇒ السلوك الحالي | launch106 |
+| launch | **chart** (`MatrixChart.tsx` خطوط التنبيه `c34f991`) | **launch106 — خطّ التنبيه المسلَّح بلا قارئ شاشة**: `View` بـ`pointerEvents="none"` ووسم «🔔 ▲ السعر · pip» بلا `accessibilityLabel` ⇒ المكفوف لا يعرف أنّ تنبيهاً على الشارت. **المفتاحان جاهزان**: `t.mcArmedAlertAboveA11y`/`mcArmedAlertBelowA11y` (`{price}` بـ`fmtPrice`، `{dist}` = `pips`؛ بلا `pips` احذف « — {dist}») ⇒ `accessible accessibilityLabel=…` على الوسم | launch106 |
 
 **تحقّق الدورة 52 (بالكود) — أُغلق 9 صفوف، منها 3 عالقة ★:**
 `DataOriginKind` + `'unavailable'` ★ (`5968660`، `api.ts:84`)؛ «تحميل الأقدم» ★ (`94f71e6`، `loadOlder` + زرّ `t.journalLoadOlder`)؛ حظر الذات ★ (`7b56e40`، `api.ts:124` `mine`، `VotePanel.tsx:27 :401`)؛
