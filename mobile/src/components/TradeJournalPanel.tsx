@@ -1326,9 +1326,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
               ونافذة الإغلاق تقول «+2R» بينما صفّها بلا R — الرقم بالإحصاء بلا مصدر ظاهر */}
           {tr.sl != null || tr.tp != null || rowR(tr) ? (
             <Text style={[styles.tradeMeta, { textAlign: align }]}>
-              {tr.sl != null ? <Text style={{ color: colors.bear }}>SL {formatPrice(tr.sl, tr.symbol)}</Text> : null}
+              {/* DESIGN-PRO §1: SL/TP وسمان لا اتجاه سعر — بلون السطر نفسه على كل صفّ، الأحمر/الأخضر للنتيجة وحدها */}
+              {tr.sl != null ? `SL ${formatPrice(tr.sl, tr.symbol)}` : null}
               {tr.sl != null && tr.tp != null ? ' · ' : ''}
-              {tr.tp != null ? <Text style={{ color: colors.bull }}>TP {formatPrice(tr.tp, tr.symbol)}</Text> : null}
+              {tr.tp != null ? `TP ${formatPrice(tr.tp, tr.symbol)}` : null}
               {(() => {
                 if (tr.sl == null || tr.tp == null) return '';
                 const trSide = tr.side === 'sell' ? 'sell' : 'buy';

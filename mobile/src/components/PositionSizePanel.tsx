@@ -1877,5 +1877,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logBtnText: { color: colors.text, fontWeight: '500', fontSize: 12 },
-  logOk: { color: colors.bull, fontSize: 11, fontWeight: '500' },
+  // §1: «سُجِّل بالدفتر» تأكيد لا اتجاه سعر — نصّ أساسي
+  logOk: { color: colors.text, fontSize: 11, fontWeight: '500' },
 });

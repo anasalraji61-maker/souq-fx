@@ -174,7 +174,8 @@ const styles = StyleSheet.create({
   },
   chipDisabled: { opacity: 0.4 },
   chipText: { color: colors.text, fontSize: 11, fontWeight: '500' },
-  blockChip: { borderColor: colors.bear, backgroundColor: colors.bearSoft, maxWidth: 200 },
+  // DESIGN-PRO §1/§5.5: الحظر ليس اتجاه سعر — حدّ أقوى فقط بلا تعبئة حمراء (يظهر بعد فتح القائمة، §5.2)
+  blockChip: { borderColor: colors.textDim, maxWidth: 200 },
   blockText: { color: colors.text },
   cancelText: { color: colors.textMuted },
   toggle: { paddingHorizontal: 4 },

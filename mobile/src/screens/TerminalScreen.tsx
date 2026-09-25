@@ -2302,13 +2302,15 @@ const styles = StyleSheet.create({
   desktopSpread: { ...numeric, color: colors.textDim, fontSize: 11, fontWeight: '500' },
   desktopStatus: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 4 },
   statusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.warn },
-  statusDotOnline: { backgroundColor: colors.bull },
+  // DESIGN-PRO §1/§5.3: الأخضر للاتجاه فقط — الاتصال السليم نقطة خافتة، والمتدهور وحده `warn`
+  statusDotOnline: { backgroundColor: colors.textDim },
   statusText: { ...numeric, color: colors.textDim, fontSize: 11, fontWeight: '500' },
   desktopChart: { flex: 1, paddingHorizontal: 8, paddingTop: 8 },
   heroLoading: { alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
   heroLoadingText: { color: colors.textMuted, fontSize: 13, textAlign: 'center', paddingHorizontal: spacing.md },
+  // §1: تأكيد تسليح التنبيه ليس اتجاه سعر — نصّ أساسي (العلامة ✓ تحمل المعنى)
   chartArmed: {
-    color: colors.bull,
+    color: colors.text,
     fontSize: 11,
     fontWeight: '500',
     paddingHorizontal: 8,

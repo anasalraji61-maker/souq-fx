@@ -283,12 +283,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: radii.sm,
+    // DESIGN-PRO §1/§5.5: خطر الخبر ليس اتجاه سعر ⇒ لا أحمر؛ حدّ أقوى وحده (فاصل واحد) والنصّ الأساسي يحمل الرسالة
     borderWidth: 1,
-    borderColor: colors.bear,
-    backgroundColor: colors.bearSoft,
+    borderColor: colors.textDim,
   },
   main: { ...numeric, color: colors.text, fontSize: 12, fontWeight: '500' },
   hint: { ...numeric, color: colors.textMuted, fontSize: 11, marginTop: 0 },
-  wrapUnavailable: { borderColor: colors.warn, backgroundColor: colors.warnSoft },
+  wrapUnavailable: { borderColor: colors.warn },
   unavailable: { color: colors.text, fontSize: 11, marginTop: 0 },
 });
