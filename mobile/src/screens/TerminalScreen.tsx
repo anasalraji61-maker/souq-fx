@@ -228,6 +228,8 @@ export function TerminalScreen() {
   const [chartTouch, setChartTouch] = useState(false);
   const chromeDim = chartTouch ? styles.chromeDim : null;
   const [showKinds, setShowKinds] = useState(false);
+  /** DESIGN-PRO §4: اسم أداة الشريط العلوي يظهر بالمسك فقط ويختفي عند الرفع */
+  const [topTipId, setTopTipId] = useState<string | null>(null);
   const [phoneWatchOpen, setPhoneWatchOpen] = useState(false);
   const [phoneWatchSymbols, setPhoneWatchSymbols] = useState<string[] | null>(null);
   const [layoutCount, setLayoutCount] = useState<FrameLayoutCount>(1);
@@ -1300,6 +1302,9 @@ export function TerminalScreen() {
                 },
               ]}
               onPress={a.run}
+              onLongPress={() => setTopTipId(a.id)}
+              onPressOut={() => setTopTipId(null)}
+              delayLongPress={400}
               accessibilityLabel={`${t.termToolA11yPrefix}: ${a.tip}`}
             >
               {a.mark === 'cruise' ? (
@@ -1307,7 +1312,11 @@ export function TerminalScreen() {
               ) : (
                 <Text style={styles.topMark}>{a.mark}</Text>
               )}
-              <Text style={styles.topTip}>{a.tip}</Text>
+              {topTipId === a.id ? (
+                <Text style={styles.topTip} numberOfLines={1}>
+                  {a.tip}
+                </Text>
+              ) : null}
             </Pressable>
           ))}
         </ScrollView>
@@ -2101,9 +2110,11 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.controlBg,
   },
+  // DESIGN-PRO §2/§7: وسما السطرين 11px — الحاوية تتّسع («Rectangle»/«چوارچێوە») لا الخطّ يصغر
   layoutSwitcherTag: {
-    width: 46,
-    height: 34,
+    minWidth: 48,
+    minHeight: 36,
+    paddingVertical: 4,
     borderRadius: 7,
     borderWidth: 1,
     borderColor: colors.borderSoft,
@@ -2114,16 +2125,16 @@ const styles = StyleSheet.create({
   },
   layoutSwitcherTagTop: {
     color: colors.textMuted,
-    fontSize: 8,
+    fontSize: 11,
     fontWeight: '500',
-    lineHeight: 10,
+    lineHeight: 13,
     textAlign: 'center',
   },
   layoutSwitcherTagBottom: {
     color: colors.textMuted,
-    fontSize: 8,
+    fontSize: 11,
     fontWeight: '500',
-    lineHeight: 10,
+    lineHeight: 13,
     textAlign: 'center',
   },
   timeSyncBtn: {
@@ -2231,17 +2242,21 @@ const styles = StyleSheet.create({
   },
   topDockScroll: { flexGrow: 1, flexShrink: 1 },
   topDock: { flexDirection: 'row', gap: spacing.xs, paddingHorizontal: 4 },
+  // DESIGN-PRO §4: أيقونة فقط (سقط الوسم 7px تحتها) — الاسم في accessibilityLabel؛ 32 ارتفاع الشريط العلوي (§3)
   topBtn: {
-    width: 42,
+    minWidth: 42,
+    paddingHorizontal: 4,
+    minHeight: 32,
     paddingVertical: spacing.xs,
     borderRadius: radii.sm,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.bgPanel,
   },
   topMark: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
-  topTip: { ...numeric, color: colors.textDim, fontSize: 7, fontWeight: '500' },
+  topTip: { color: colors.text, fontSize: 11, fontWeight: '500' },
   kindRow: { gap: 4, padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },  kindChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -2354,7 +2369,7 @@ const styles = StyleSheet.create({
   },
   shadowToggleText: {
     color: colors.textDim,
-    fontSize: 8,
+    fontSize: 11,
     fontWeight: '500',
   },
   shadowToggleTextOn: {
@@ -2362,7 +2377,7 @@ const styles = StyleSheet.create({
   },
   shadowTfLabel: {
     color: colors.textMuted,
-    fontSize: 8,
+    fontSize: 11,
     fontWeight: '500',
     minWidth: 44,
     textAlign: 'center',
