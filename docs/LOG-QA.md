@@ -592,3 +592,4 @@ tsc أخضر لأن `api.ts:617 :639` `avg_score: number`. ليس خطأ بنا�
 بلا مصادر؛ `confidence` أُزيل من `api.ts`)، `0d6c443` (tools: `riskCalcConvInverted` بـ`.split('{pair}').join`، النسخة المحلية حُذفت)، backend-r3 (`c06e5c9` QA5 `lang`/`detail_code`/منازل الرمز،
 `7941d54` QA29، `ee2d153`/`27f5f8d` QA30) وchart-r35. تحقّقتُ بالكود ⇒ أُغلقت launch103، tools67 (المفتاح)، backend-r2 شقّ ui، QA5 ★، QA29 ★، QA30؛ صفوف chart-r35/backend-r3 الجديدة
 أُدرجت، و`DataOriginKind` باقٍ بصفّ chart-r35 (1). STATUS: الانهيار صار «أُصلح أثناء الدورة».
+**إلحاق 2:** `6119b24` (tools) كفّ عن تمرير `lastPrice`/`candles` ⇒ صفّ ui2 صار ui وحده (حذف الخاصيتين). البناء أخضر 0.
