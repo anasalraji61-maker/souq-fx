@@ -59,6 +59,7 @@ import {
   axisTickCount,
   axisTickRatios,
   nicePriceTicks,
+  niceLogPriceTicks,
   niceTimeTickIndexes,
   axisShowsHours,
   layoutAxisLabels,
@@ -5316,7 +5317,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const priceTickHi = fromScale(priceFrame.max);
   const priceTickLo = fromScale(priceFrame.max - priceFrame.span);
   const priceTickDecimals = (fmtPrice(priceTickHi).split('.')[1] ?? '').replace(/\D/g, '').length;
-  const nicePrices = nicePriceTicks(priceTickLo, priceTickHi, priceTickCap, Math.pow(10, -priceTickDecimals));
+  // المقياس اللوغاريتمي: مواضع متساوية بالسجلّ لا بالسعر (وإلا تتكدّس العلامات بأعلى المحور).
+  const nicePrices = (logScale ? niceLogPriceTicks : nicePriceTicks)(
+    priceTickLo,
+    priceTickHi,
+    priceTickCap,
+    Math.pow(10, -priceTickDecimals)
+  );
   const priceTicks = (
     nicePrices.length
       ? nicePrices.map((price) => ({ ratio: (priceFrame.max - toScale(price)) / priceFrame.span, price }))

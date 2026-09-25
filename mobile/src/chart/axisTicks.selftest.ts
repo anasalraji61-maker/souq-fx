@@ -12,6 +12,7 @@ import {
   axisShowsHours,
   nicePriceTicks,
   niceTimeTickIndexes,
+  niceLogPriceTicks,
 } from './axisTicks';
 
 const TIME_GAP = 6;
@@ -289,3 +290,26 @@ console.log('axisTicks.selftest: PASS');
   for (const i of imn!) assert.equal(new Date(mn[i]! * 1000).getUTCMonth(), 0, 'MN ticks on January');
 }
 
+// المقياس اللوغاريتمي: الذهب الشهري 250..4000 — علامات موزّعة على الارتفاع كلّه لا مكدّسة بأعلاه
+{
+  const lo = 250;
+  const hi = 4000;
+  const ticks = niceLogPriceTicks(lo, hi, 7, 0.01);
+  assert.ok(ticks.length >= 5 && ticks.length <= 7, `log ticks: ${ticks}`);
+  const pos = ticks.map((p) => (Math.log(p) - Math.log(lo)) / (Math.log(hi) - Math.log(lo)));
+  assert.ok(pos[0]! < 0.2, `lowest log tick near bottom: ${pos[0]}`);
+  assert.ok(pos.filter((q) => q < 0.5).length >= 2, 'lower half has labels');
+  for (const p of ticks) assert.ok(p >= lo && p <= hi);
+  for (let i = 1; i < ticks.length; i++) assert.ok(ticks[i]! > ticks[i - 1]!, 'strictly rising');
+  // مانتيسا مستديرة
+  for (const p of ticks) {
+    const m = p / Math.pow(10, Math.floor(Math.log10(p)));
+    assert.ok([1, 1.5, 2, 2.5, 3, 4, 5, 6, 8].some((x) => Math.abs(x - m) < 1e-9), `round mantissa ${p}`);
+  }
+  // المدى الخطّي (أقلّ من ضعفين) = nicePriceTicks نفسها
+  assert.deepEqual(niceLogPriceTicks(1.08, 1.1, 6, 0.00001), nicePriceTicks(1.08, 1.1, 6, 0.00001));
+  // أسعار صغيرة (عملة رقمية رخيصة): منازل الخطوة الدنيا محترمة
+  const small = niceLogPriceTicks(0.0001, 0.01, 5, 0.000001);
+  assert.ok(small.length >= 3 && small.every((p) => p >= 0.0001 && p <= 0.01), `small: ${small}`);
+  console.log('niceLogPriceTicks PASS');
+}

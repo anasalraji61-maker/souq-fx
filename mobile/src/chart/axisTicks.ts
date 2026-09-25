@@ -84,6 +84,43 @@ export function nicePriceTicks(lo: number, hi: number, maxCount: number, minStep
   return [];
 }
 
+/** مانتيسات «مستديرة» لعلامات المقياس اللوغاريتمي (1، 1.5، 2، 2.5، 3، 4، 5، 6، 8 × 10^k). */
+const LOG_MANTISSAS = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+
+/**
+ * علامات السعر على المقياس **اللوغاريتمي**: `nicePriceTicks` تعطي أسعاراً متساوية الخطوة، وعلى محور لوغاريتمي
+ * تتكدّس بأعلاه — الذهب الشهري 250..4000 كان 1000/2000/3000/4000 عند ~50/75/90/100% من الارتفاع، ونصف
+ * المحور السفلي بلا سعر. هنا المواضع متساوية **بالسجلّ** (منتصف كل خانة من `maxCount`) وكل سعر يُلتقط لأقرب
+ * مانتيسا مستديرة (250، 400، 600، 1000، 1500، 2500…) كـTradingView. مدى أضيق من ضعفين ⇒ `nicePriceTicks`
+ * (اللوغاريتمي شبه خطّي هناك وخطواته أنظف). مدى غير موجب ⇒ `nicePriceTicks` أيضاً.
+ */
+export function niceLogPriceTicks(lo: number, hi: number, maxCount: number, minStep: number): number[] {
+  if (!(lo > 0) || !Number.isFinite(hi) || hi / lo < 2) return nicePriceTicks(lo, hi, maxCount, minStep);
+  const cap = Math.max(1, Math.floor(Number.isFinite(maxCount) ? maxCount : 1));
+  const floorStep = Number.isFinite(minStep) && minStep > 0 ? minStep : 0;
+  const places = floorStep > 0 ? Math.max(0, Math.round(-Math.log10(floorStep))) : 10;
+  const a = Math.log(lo);
+  const b = Math.log(hi);
+  const out: number[] = [];
+  for (let i = 0; i < cap; i++) {
+    const target = a + ((i + 0.5) / cap) * (b - a);
+    const k = Math.floor(target / Math.LN10);
+    let best = Number.NaN;
+    let bestD = Number.POSITIVE_INFINITY;
+    for (const m of LOG_MANTISSAS) {
+      const v = Number((m * Math.pow(10, k)).toFixed(Math.min(20, places)));
+      if (!(v > 0)) continue;
+      const d = Math.abs(Math.log(v) - target);
+      if (d < bestD) {
+        bestD = d;
+        best = v;
+      }
+    }
+    if (Number.isFinite(best) && best >= lo && best <= hi && out[out.length - 1] !== best) out.push(best);
+  }
+  return out;
+}
+
 /**
  * يقصّ العلب داخل `[0, extent]` ثم يُخفي ما بقي متلامساً.
  *
