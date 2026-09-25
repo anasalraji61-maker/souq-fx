@@ -160,7 +160,17 @@ def test_levels_keep_precision_below_one_hundred_thousandth():
 
 def test_normal_prices_keep_five_decimals():
     assert signal_hub.level_round(1.084234567, 1.08) == 1.08423
-    assert signal_hub.level_round(157.4234567, 157.4) == 157.42346
+
+
+@pytest.mark.parametrize("x,ref,want", [
+    (157.4234567, 157.4, 157.423),   # USDJPY: 3 منازل لا 157.42346
+    (2651.432187, 2650.0, 2651.43),  # الذهب
+    (42123.4567, 42000.0, 42123.5),  # مؤشر/BTC: منزلة واحدة
+])
+def test_levels_above_ten_use_the_price_decimals_not_five(x, ref, want):
+    """كانت 5 منازل فوق 10 ⇒ وقف USDJPY «157.88916» مع `price_decimals: 3` — دقّة دون تسعيرة المزوّد."""
+    assert signal_hub.level_round(x, ref) == want
+    assert signal_hub.level_round(x, ref) == round(x, signal_hub.price_decimals(ref))
 
 
 @pytest.mark.parametrize("ref", [0.6512, 0.1, 0.9999])
