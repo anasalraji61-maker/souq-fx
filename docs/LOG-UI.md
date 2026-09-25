@@ -294,8 +294,8 @@
 
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
-| 7e1136b | `LectureClassroom`: مؤثّر الحفظ يتوقّف حين `lectureFallback` ⇒ المحاضرة الاحتياطية (فشل `academyLecture`) لا تكتب 0 فوق موضع الاستئناف المحلي ولا ترسل `saveProgress({completed: true})` عند مقطعها الثاني. تحميل حقيقي لاحق يُنزل العَلَم فيعود الحفظ | launch124 |
-| bf5b806 | `FocusChartModal`: `compareTag`/`compareNote`/`watchCompare` = `COMPARE_COLOR` من `chart/compare` بدل `infoAccent` (لون SMA 50)؛ `compareNoteWarn` يبقى تحذيراً. + حبّة الرمز بالهاتف (الضغط المطوّل يبدّل المقارنة) تُلحق `focusInComparisonSuffix` بالـlabel كالقائمة الجانبية — كانت المقارنة غير معلنة لقارئ الشاشة هناك | chart-r50 |
+| db4c51f | `LectureClassroom`: مؤثّر الحفظ يتوقّف حين `lectureFallback` ⇒ المحاضرة الاحتياطية (فشل `academyLecture`) لا تكتب 0 فوق موضع الاستئناف المحلي ولا ترسل `saveProgress({completed: true})` عند مقطعها الثاني. تحميل حقيقي لاحق يُنزل العَلَم فيعود الحفظ | launch124 |
+| 962aced | `FocusChartModal`: `compareTag`/`compareNote`/`watchCompare` = `COMPARE_COLOR` من `chart/compare` بدل `infoAccent` (لون SMA 50)؛ `compareNoteWarn` يبقى تحذيراً. + حبّة الرمز بالهاتف (الضغط المطوّل يبدّل المقارنة) تُلحق `focusInComparisonSuffix` بالـlabel كالقائمة الجانبية — كانت المقارنة غير معلنة لقارئ الشاشة هناك | chart-r50 |
 | 1831bc4 | حذف `modules/tools-panels/registry.ts` (غير مستورد منذ `3c27653`)؛ ARCHITECTURE.md يشير لاسترجاعه من git عند النقل الفعلي. الباقي بالصفّ: `motion` (مُبقى عمداً)، `emptySlot` (tools) | QA1 (a) جزء ui |
 
 ملاحظة: `COMPARE_COLOR` `#FF9800` قريب من `warn` `#F59E0B` — سطر «تعذّرت المقارنة» يتميّز بالخط العريض ونصّه، لا بلونه وحده.

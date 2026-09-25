@@ -750,7 +750,10 @@ export const api = {
       }[];
       /** backend-r1: 'unavailable' مع `events: []` = المصدر لم يستجب — ليس «لا أحداث». */
       status?: 'ok' | 'unavailable';
-      as_of?: string;
+      /** backend-r27: ثوانٍ UTC لوقت الجلب الذي جاءت منه الأحداث (كان نصّاً بخوادم أقدم). */
+      as_of?: string | number;
+      /** backend-r27: آخر تحديث من المصدر فشل والأحداث من جلب ناجح سابق (حتى 6 س) — حقيقية لكن قد تنقص. */
+      stale?: boolean;
     }>(`/api/calendar${qs ? `?${qs}` : ''}`);
   },
   marketQuote: (symbol: string) =>

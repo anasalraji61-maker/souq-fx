@@ -108,6 +108,8 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
   const [filtersReady, setFiltersReady] = useState(false);
   /** وضوح الحالة: تمييز "جاري التحميل" و"فشل الاتصال" عن "لا أحداث فعلاً بهذا الفلتر" */
   const [status, setStatus] = useState<'loading' | 'ok' | 'error' | 'unavailable'>('loading');
+  /** الخادم أجاب من تقويمه المحفوظ لأن آخر تحديث من المصدر فشل (backend-r27) */
+  const [serverStale, setServerStale] = useState(false);
   /** ساعة داخلية للعدّ التنازلي ("بعد 2س 15د") — تُحدَّث كل دقيقة */
   const [now, setNow] = useState(() => Date.now());
 
@@ -179,6 +181,7 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
             return;
           }
           setEvents(r.events);
+          setServerStale(r.stale === true);
           setStatus('ok');
         })
         .catch(() => {
@@ -393,6 +396,10 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
       {/* أحداث محفوظة من جلب سابق والمصدر لا يستجيب الآن — القائمة قد تكون ناقصة */}
       {status === 'unavailable' && visible.length > 0 ? (
         <Text style={[styles.sampleNote, { textAlign: align }]}>{t.calendarUnavailable}</Text>
+      ) : null}
+      {/* الخادم نفسه لم يحدّث من المصدر (backend-r27): الأحداث حقيقية لكن قد يفوتها تعديل أو حدث جديد */}
+      {status === 'ok' && serverStale && visible.length > 0 ? (
+        <Text style={[styles.sampleNote, { textAlign: align }]}>{t.newsStale}</Text>
       ) : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={[styles.filters, rtl && styles.filtersRtl]}>

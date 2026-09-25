@@ -35,6 +35,11 @@ const TTL_MS = 10 * 60 * 1000;
 const FAIL_TTL_MS = 2 * 60 * 1000;
 /** فشل التحديث يُبقي آخر تقويم ناجح (حتى يوم) بدل محو تحذير قائم — راجع `calendarAfterFetch`. */
 let cache: CalendarCache | null = null;
+/**
+ * آخر جلب ناجح جاء من تقويم **الخادم** المحفوظ (`stale: true`، backend-r27 — مصدره فشل، حتى 6 س): الأحداث
+ * حقيقية فتبقى `ok`، لكن السطر يقول «من تقويم محفوظ» كفشلنا نحن.
+ */
+let cacheServerStale = false;
 let inflight: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
@@ -70,7 +75,9 @@ function ensureFresh(now: number) {
     .calendar({ impact: 'high' })
     .then((r) => {
       // ردّ الأمثلة (الخادم لم يبلغ مصدره) فشلٌ لا نجاح — لا يمحو تقويماً محفوظاً، راجع `calendarFetchEvents`
-      cache = calendarAfterFetch(cache, calendarFetchEvents(r), Date.now());
+      const events = calendarFetchEvents(r);
+      cache = calendarAfterFetch(cache, events, Date.now());
+      if (events) cacheServerStale = r.stale === true;
     })
     .catch(() => {
       cache = calendarAfterFetch(cache, null, Date.now());
@@ -162,7 +169,7 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
       title: tbd.titles[0] ?? '',
       more: Math.max(0, tbd.titles.length - 1),
     });
-    const stale = cache != null && !cache.ok;
+    const stale = cache != null && (!cache.ok || cacheServerStale);
     return (
       <View
         style={styles.wrap}
@@ -228,7 +235,7 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
   const ccyLabel = cache ? sameMinuteCurrencyLabel(cache.events, currencies, event) : event.currency;
   const text = newsBannerText({ head: t.newsRiskHigh, currency: ccyLabel, when, title: event.title, more });
   // التحذير من تقويمٍ محفوظ بعد فشل التحديث: يُعرض (الوقت مطلق فيبقى صادقاً) مع قول ذلك
-  const stale = cache != null && !cache.ok;
+  const stale = cache != null && (!cache.ok || cacheServerStale);
   // صفقات مفتوحة: الرموز التي يمسّها الخبر، والخطر الفعلي انزلاق الوقف لا «حجم الصفقة» (launch89) — سطران كي لا تُقصّ النصيحة
   const hint = openHit?.symbols.length
     ? t.newsRiskOpenHint.replace('{symbols}', () => openHit.symbols.join(t.listSep))
