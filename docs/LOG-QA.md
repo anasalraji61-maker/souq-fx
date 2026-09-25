@@ -491,6 +491,9 @@ chart-r29 عن `FocusChartModal` (بلا تحديث 90ث، `:400` يفكّ ال�
 tools61 وlaunch94 ردّ فقط.
 **المراجعة (c — a11y):** diff منذ 106341a بلا عناصر تفاعلية جديدة. مسح آلي لكل `Pressable`/`TouchableOpacity`/`TextInput`/`Switch` (تحليل الوسم بعمق الأقواس):
 كلّها بـ`accessibilityLabel` أو نصّ ابن — **لا بند جديد**. الناقص `accessibilityState` فقط (QA3/QA13/QA2، بلا تغيير).
+**إلحاق (تعارض دمج على COORDINATION):** وصل chart 56 (`e216316`) بثلاثة صفوف chart-r56، وtools `6ef8432` بإصلاح (1)(2). تحقّقتُ بالكود:
+(1)(2) أُغلقا (`TerminalScreen.tsx` `key="single"`، `:201` `cachedSeries`، `:671` `allSettled`)؛ (3) مفتوح لـui+tools (`AlertsPanel.tsx:294`، `WatchlistPanel.tsx:385`
+`instrumentSpec`)؛ Mass Index ← أنس (⛔17). أعدتُ البناء والـselftests على 6ef8432: أخضر 0، 101/101.
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة.
 **إلحاق بعد الدفع:** وصلت `49c42a5` (launch: البندان 4–5 الكرديان بـ`reportFallbackAdvice` يطابقان ar/en) ⇒ ملاحظة QA42 المنخفضة مُغلقة. البناء أخضر 0 بعدها.
 
