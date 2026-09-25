@@ -5,7 +5,7 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import { instrumentSpec } from '../positionSize';
-import { NEWS_GRACE_MS, NEWS_HORIZON_MS } from '../chart/newsRisk';
+import { NEWS_GRACE_MS, NEWS_HORIZON_MS, UNANNOUNCED_SPAN_MS, newsTimeUnannounced } from '../chart/newsRisk';
 
 type Ev = {
   id: string;
@@ -24,6 +24,19 @@ type Ev = {
   ts?: number | null;
   /** بيانات مثال احتياطية من الباك-إند عند تعذّر جلب التقويم الحي */
   sample?: boolean;
+  /** backend-r14: **الساعة غير معلنة** («طوال اليوم»/«Tentative») — `ts` بداية اليوم بنيويورك للتاريخ
+   * والترتيب فقط. راجع `newsTimeUnannounced`. */
+  time_tbd?: boolean;
+};
+
+/**
+ * «الساعة غير معلنة» بجانب تاريخ حدثٍ بلا ساعة. نسخة محلية حتى يضيف launch `calTimeTbd` (ar/en/ku) —
+ * تُقرأ من القاموس إن وُجدت. الكردي بحاجة مراجعة.
+ */
+const TIME_TBD_COPY: Record<string, string> = {
+  ar: 'الساعة غير معلنة',
+  en: 'time not announced',
+  ku: 'کاتەکەی ڕانەگەیەندراوە',
 };
 
 /** أفق عدّاد الترويسة «القادم خلال 24 ساعة» — يوم التداول القادم كما يخطّط له المتداول مساءً. */
@@ -96,7 +109,7 @@ type Props = {
 };
 
 export function CalendarPanel({ compact = false, flow = false, symbol, onPickCurrency, active = true }: Props) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [events, setEvents] = useState<Ev[]>([]);
   const [currency, setCurrency] = useState('ALL');
@@ -255,26 +268,46 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
         : null;
 
   const hasTs = (e: Ev): e is Ev & { ts: number } => typeof e.ts === 'number' && Number.isFinite(e.ts);
+  /**
+   * backend-r14: حدث **بلا ساعة معلنة** كان يُعرض بـ`fmtLocal(ts)` ⇒ «07:00» ساعة مخترَعة (منتصف ليل نيويورك
+   * بتوقيت الجهاز) مع عدّ تنازلي إليها، ويُحسب ضمن «القادم خلال 24 ساعة». الآن: التاريخ وحده + «الساعة غير
+   * معلنة»، بلا عدّ ولا تلوين «قريب»، خارج العدّاد؛ ويبقى «قادماً» حتى نهاية يومه (نفس قاعدة شريط الأخبار).
+   */
+  const tbd = (e: Ev): boolean => hasTs(e) && newsTimeUnannounced(e);
+  /** لحظة انتهاء الحدث: الموقوت بعد نافذة «الآن»، وما بلا ساعة بنهاية يومه */
+  const endMs = (e: Ev & { ts: number }) => e.ts * 1000 + (tbd(e) ? UNANNOUNCED_SPAN_MS : NOW_WINDOW_MS);
   const timed = visible.filter(hasTs);
-  const upcoming = timed.filter((e) => e.ts * 1000 >= now - NOW_WINDOW_MS).sort((a, b) => a.ts - b.ts);
-  const past = timed.filter((e) => e.ts * 1000 < now - NOW_WINDOW_MS).sort((a, b) => b.ts - a.ts);
+  const upcoming = timed.filter((e) => endMs(e) >= now).sort((a, b) => a.ts - b.ts);
+  const past = timed.filter((e) => endMs(e) < now).sort((a, b) => b.ts - a.ts);
   const untimed = visible.filter((e) => !hasTs(e));
   /** الأحداث القادمة أولاً (الأقرب فالأبعد)، ثم ما بلا وقت دقيق، ثم المنتهية (باهتة) */
   const ordered: Ev[] = [...upcoming, ...untimed, ...past];
-  const soonCount = upcoming.filter((e) => e.ts * 1000 <= now + SOON_MS).length;
+  const soonCount = upcoming.filter((e) => !tbd(e) && e.ts * 1000 <= now + SOON_MS).length;
+  const timeTbdWord = (t as { calTimeTbd?: string }).calTimeTbd ?? TIME_TBD_COPY[lang] ?? TIME_TBD_COPY.en;
   const isSample = events.some((e) => e.sample);
 
-  const fmtLocal = (ts: number) => {
-    const d = new Date(ts * 1000);
+  const dayWord = (d: Date) => {
     // «غداً» بالتقويم المحلي لا «بعد 24 ساعة»: يوم تغيير التوقيت الصيفي 25 ساعة فكان now+24h يقع باليوم نفسه
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const day = sameDay(d, new Date(now))
+    return sameDay(d, new Date(now))
       ? t.calToday
       : sameDay(d, tomorrow)
         ? t.calTomorrow
         : `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}`;
-    return `${day} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  };
+  const fmtLocal = (ts: number) => {
+    const d = new Date(ts * 1000);
+    return `${dayWord(d)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  };
+  /**
+   * تاريخ حدثٍ بلا ساعة = **يومه بنيويورك** (المصدر)، لا يوم منتصف ليله بتوقيت الجهاز (غرب نيويورك كان
+   * سيقع باليوم السابق). ظهر نيويورك (+12س) يقع بالتاريخ نفسه UTC على مدار السنة.
+   */
+  const fmtTbd = (ts: number) => {
+    const noon = new Date(ts * 1000 + 12 * 3_600_000);
+    const d = new Date(noon.getUTCFullYear(), noon.getUTCMonth(), noon.getUTCDate());
+    return `${dayWord(d)} · ${timeTbdWord}`;
   };
 
   /** «فعلي 0.4% · توقّع 0.3% · سابق 0.2%» — الفارغ يُحذف؛ باك-إند أقدم → نص `forecast` كما كان. */
@@ -322,8 +355,9 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
       ) : (
         ordered.map((e) => {
           const ts = hasTs(e) ? e.ts : null;
-          const soon = ts != null && ts * 1000 >= now - NOW_WINDOW_MS && ts * 1000 <= now + ROW_SOON_MS;
-          const done = ts != null && ts * 1000 < now - NOW_WINDOW_MS;
+          const noHour = tbd(e);
+          const soon = ts != null && !noHour && ts * 1000 >= now - NOW_WINDOW_MS && ts * 1000 <= now + ROW_SOON_MS;
+          const done = ts != null && endMs(e as Ev & { ts: number }) < now;
           const figures = figuresLine(e);
           return (
             <View key={e.id} style={[styles.row, rtl && styles.rowRtl, soon && styles.rowSoon, done && styles.rowDone]}>
@@ -341,13 +375,13 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
                       {` · ${impactWord(e.impact)}`}
                     </Text>
                   ) : null}
-                  {` · ${ts != null ? fmtLocal(ts) : e.when}`}
+                  {` · ${ts == null ? e.when : noHour ? fmtTbd(ts) : fmtLocal(ts)}`}
                 </Text>
                 {figures ? (
                   <Text style={[styles.figures, { textAlign: align }]}>{figures}</Text>
                 ) : null}
               </View>
-              {ts != null && !done ? (
+              {ts != null && !done && !noHour ? (
                 <Text style={[styles.rel, soon && styles.relSoon]}>{relLabel(ts)}</Text>
               ) : null}
             </View>
