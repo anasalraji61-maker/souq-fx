@@ -382,6 +382,10 @@ export type Dict = {
   riskCalcPipValueAtStop: string;
   /** سطر صغير تحت السابق: لماذا يخالف رقم المنصّة */
   riskCalcPipValueAtStopHint: string;
+  /** النقاط وحدها بلا سعر وقف (`pipsOnlyExitPrice`): الاتجاه مجهول ⇒ حُسبت بالخروج **تحت** السعر؛ «عند وقفك» يكذب على البائع — `{price}` الخروج المفترض، `{pips}` النقاط */
+  riskCalcPipValueAtPipsExit: string;
+  /** تحت السابق بدل `riskCalcPipValueAtStopHint`: لماذا تحت السعر ولماذا تخالف المنصّة */
+  riskCalcPipValueAtPipsExitHint: string;
   /** حاسبة الهامش (طلب وكيل الأدوات): خانة الرافعة، سطر الهامش، وملاحظة أن الهامش ليس الخسارة */
   riskCalcLeverage: string;
   /** رافعة مفهومة لكن خارج مدى `parseLeverage` (كـ«1:5000») — بدل «رقم غير مفهوم… بلا فواصل آلاف» المضلِّل؛
@@ -1493,6 +1497,9 @@ const ar: Dict = {
   riskCalcPipValue: 'قيمة الـpip للوت',
   riskCalcPipValueAtStop: 'قيمة الـpip للوت عند وقفك {price}',
   riskCalcPipValueAtStopHint: 'منصّتك تعرضها بالسعر الحالي فقد تختلف قليلاً — لكن خسارتك إن ضُرب الوقف تُحوَّل إلى عملة حسابك بسعر الوقف، فحسبناها به',
+  riskCalcPipValueAtPipsExit: 'قيمة الـpip للوت عند {price} ({pips} pip تحت السعر)',
+  riskCalcPipValueAtPipsExitHint:
+    'لم تكتب سعر وقف فلا نعرف أتشتري أم تبيع، فحسبناها بالخروج تحت السعر لأنه الأغلى بعملة حسابك — هكذا لا تتجاوز خسارتك المخاطرة التي اخترتها في الاتجاهين. منصّتك تعرضها بالسعر الحالي فقد تختلف قليلاً',
   riskCalcLeverage: 'الرافعة المالية (100 تعني 1:100)',
   riskCalcLeverageOutOfRange: 'رافعة «{value}» خارج ما تحسبه الحاسبة (من 1:1 حتى 1:{max}) — اكتب رافعة حسابك كما تظهر بمنصّتك، مثل 500.',
   riskCalcLeverageAmbiguous: 'رافعة «{value}» مبهمة — هل تقصد 1:{big}؟ اكتب {big} بلا نقطة، أو 1 إن كان حسابك بلا رافعة.',
@@ -2581,6 +2588,9 @@ const enUS: Dict = {
   riskCalcPipValue: 'Pip value per lot',
   riskCalcPipValueAtStop: 'Pip value per lot at your stop {price}',
   riskCalcPipValueAtStopHint: 'Your platform shows it at the current price, so it may differ a little — but if your stop is hit the loss converts to your account currency at the stop price, so we used that',
+  riskCalcPipValueAtPipsExit: 'Pip value per lot at {price} ({pips} pips below the price)',
+  riskCalcPipValueAtPipsExitHint:
+    "You didn't type a stop price, so we can't tell whether you're buying or selling — we used the exit below the price because it costs more in your account currency, so your loss can't exceed the risk you chose either way. Your platform shows it at the current price, so it may differ a little",
   riskCalcLeverage: 'Leverage (100 means 1:100)',
   riskCalcLeverageOutOfRange: 'Leverage “{value}” is outside what the calculator handles (1:1 to 1:{max}) — enter your account’s leverage as your platform shows it, e.g. 500.',
   riskCalcLeverageAmbiguous: 'Leverage “{value}” is ambiguous — did you mean 1:{big}? Type {big} without the dot, or 1 if your account has no leverage.',
@@ -3695,6 +3705,9 @@ const ku: Dict = {
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
   riskCalcPipValueAtStop: 'بەهای pip بۆ هەر لۆتێک لە وەستانەکەت {price}',
   riskCalcPipValueAtStopHint: 'پلاتفۆرمەکەت بە نرخی ئێستا پیشانی دەدات بۆیە لەوانەیە کەمێک جیاواز بێت — بەڵام ئەگەر وەستانەکە لێدرا زیانەکە بە نرخی وەستان دەگۆڕدرێت بۆ دراوی هەژمارەکەت، بۆیە ئەومان بەکارهێنا',
+  riskCalcPipValueAtPipsExit: 'بەهای pip بۆ هەر لۆتێک لە {price} ({pips} pip لە خوار نرخەکە)',
+  riskCalcPipValueAtPipsExitHint:
+    'نرخی وەستانت نەنووسیوە بۆیە نازانین دەکڕیت یان دەفرۆشیت — بە دەرچوون لە خوار نرخەکە ژماردمان چونکە بە دراوی هەژمارەکەت گرانترە، بەم شێوەیە زیانەکەت لە هەردوو ئاراستەدا لە ئەو مەترسییەی هەڵتبژاردووە تێناپەڕێت. پلاتفۆرمەکەت بە نرخی ئێستا پیشانی دەدات بۆیە لەوانەیە کەمێک جیاواز بێت',
   riskCalcLeverage: 'لێڤەرێج (100 واتە 1:100)',
   riskCalcLeverageOutOfRange: 'لێڤەرێجی «{value}» لە دەرەوەی ئەوەیە کە حاسیبەکە حیسابی دەکات (لە 1:1 تا 1:{max}) — لێڤەرێجی هەژمارەکەت وەک لە پلاتفۆرمەکەتدا دەردەکەوێت بنووسە، وەک 500.',
   riskCalcLeverageAmbiguous: 'لێڤەرێجی «{value}» ڕوون نییە — مەبەستت 1:{big}ە؟ {big} بەبێ خاڵ بنووسە، یان 1 ئەگەر هەژمارەکەت بێ لێڤەرێجە.',
