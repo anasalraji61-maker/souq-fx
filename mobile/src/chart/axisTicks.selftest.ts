@@ -238,6 +238,12 @@ console.log('axisTicks.selftest: PASS');
   assert.deepEqual(nicePriceTicks(2, 1, 5, 0), []);
   // حدّ العدد محترم دائماً
   for (const cap of [1, 2, 3, 4, 5, 6, 7]) assert.ok(nicePriceTicks(0.6512, 0.6589, cap, 0.00001).length <= cap);
+  // أقصر لوح (4 علامات) ومدى 8 pip: خطوة 2 تعطي خمساً و5 تعطي واحدة ⇒ 2.5 (كان سعراً واحداً على المحور)
+  assert.deepEqual(nicePriceTicks(1.0806, 1.0814, 4, 0.00001), [1.08075, 1.081, 1.08125]);
+  assert.deepEqual(nicePriceTicks(157.06, 157.14, 4, 0.001), [157.075, 157.1, 157.125]);
+  assert.deepEqual(nicePriceTicks(2646, 2654, 4, 0.01), [2647.5, 2650, 2652.5]);
+  // 2.5 لا تنزل تحت أصغر منزلة معروضة (0.000025 على 5 منازل لا تُطبع)
+  for (const p of nicePriceTicks(1.08, 1.0801, 7, 0.00001)) assert.equal(Math.round(p * 1e5) / 1e5, p);
 }
 
 }

@@ -73,7 +73,7 @@ export function dedupeTickLabels<T>(ticks: readonly T[], label: (t: T) => string
 }
 
 /**
- * أسعار علامات المحور بخطوات مستديرة (1/2/5 × 10^k) كما بـTradingView، لا نِسَب متساوية.
+ * أسعار علامات المحور بخطوات مستديرة (1/2/2.5/5 × 10^k) كما بـTradingView، لا نِسَب متساوية.
  * النِّسَب الثابتة (0، ⅙، ⅓…) تقع على أسعار كيفيّة (1.08437) تتبدّل مع كل تيك يمدّ المدى، فلا
  * يقرأ المتداول مسافة 10 pip من المحور ولا يطابق خطّ الشبكة سعراً. الخطوة أصغر مستديرة
  * ≥ `minStep` (أصغر منزلة معروضة) لا تتجاوز علاماتها `maxCount` داخل `[lo, hi]`.
@@ -86,13 +86,16 @@ export function nicePriceTicks(lo: number, hi: number, maxCount: number, minStep
   const span = hi - lo;
   let exp = Math.floor(Math.log10(span / cap));
   for (let guard = 0; guard < 40; guard++, exp++) {
-    for (const m of [1, 2, 5]) {
+    for (const m of [1, 2, 2.5, 5]) {
       const step = m * Math.pow(10, exp);
       if (step < floorStep * (1 - 1e-9)) continue;
+      // 2.5 تحتاج منزلة إضافية: تُقبل فقط إن بقيت مضاعفاً لأصغر منزلة معروضة (0.00025 على EURUSD نعم،
+      // 0.000025 لا — كانت تُطبع 1.08003 لـ1.080025).
+      if (m === 2.5 && floorStep > 0 && Math.abs(step / floorStep - Math.round(step / floorStep)) > 1e-6) continue;
       const k0 = Math.ceil(lo / step - 1e-9);
       const k1 = Math.floor(hi / step + 1e-9);
       if (k1 - k0 + 1 > cap) continue;
-      const places = Math.max(0, -exp);
+      const places = Math.max(0, -exp + (m === 2.5 ? 1 : 0));
       const out: number[] = [];
       for (let k = k0; k <= k1; k++) out.push(Number((k * step).toFixed(Math.min(20, places))));
       return out;
