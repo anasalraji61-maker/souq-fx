@@ -333,3 +333,12 @@
 - **الكردية (برمجياً):** مقارنة `DICTS.ar`↔`DICTS.ku` بـtsx: صفر مفتاح ناقص، صفر قيمة مطابقة للعربية. الحرفيات العربية غير التعليقية بنطاقي: `CommissionPlanPanel:41-57` (مفاتيح لنصّ الخادم — تحقّقت أنها تطابق `commissions.py`/`db.py:854` حرفاً بحرف، و`plan.rules`/`title` العربيان لا يُعرضان)، تعليمات `WeeklyReportPanel` الداخلية (الردّ بـ`lang`)، `MessagesScreen`/`mock.ts`/`api.ts:896` (launch52، أنس)، `academy.ts` (QA27، أنس). الخطط من `t.subPlans`؛ الشبكة من القاموس.
 - **الحوارات بالويب:** 11 استدعاء `confirmDestructive` بسبعة ملفات (منها `AccountScreen` حذف الحساب)؛ `Alert.alert` داخل `chart/confirmDestructive.ts` وحده (`window.confirm`/`window.alert` بالويب).
 - «₴» بتعليقين فقط؛ «درجة الاتفاق» أُزيلت، و`signal_hub.analysts_forecast`/`social_consensus` يعيدان `unavailable` دائماً ⇒ لا متوسّط يُعرض؛ التيك المتجمّد يُرفض (`tickAge.acceptTick` بـ`ticks_at`، والرمز الغائب يُسقَط بعد `TICK_STALE_MS`)، وسعر الإغلاق البديل موسوم «تجريبي»؛ الجولة تُعاد من `AccountScreen` (ظاهر بلا تسجيل دخول) وزرّ رجوع أندرويد يرجع خطوة.
+
+**وصل أثناء التشغيل — launch128 (صفّ ui):**
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| 8dd9f09 | حدث `ALL` (G20): الشريط `NewsRiskBanner` يطبع `t.newsAllCurrencies` بدل «ALL» (وداخل «USD/ALL» من `sameMinuteCurrencyLabel` — تُقسَم بـ`/`)؛ شارة الصفّ `CalendarPanel` كذلك. فلتر «الزوج» صار `newsCurrencyMatches` (دالّة الشريط نفسها) بدل `pairCcys.includes` ⇒ لا يُخفي حدثاً يحذّر منه الشريط للزوج نفسه | launch128 |
+
+**طلب → backend:** فلتر عملة واحدة (رقاقة USD مثلاً) يُرسَل للخادم `currency=USD`، و`econ_calendar.py:305` يطابق حرفياً ⇒ حدث `ALL` يسقط من القائمة بينما الشريط يحذّر منه لأزواج USD. المقترح: `... in curs or cur == "all"` حين يُطلب فلتر عملة.
+
