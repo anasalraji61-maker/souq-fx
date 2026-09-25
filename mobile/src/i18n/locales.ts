@@ -970,6 +970,8 @@ export type Dict = {
   mcAutoManualA11y: string;
   /** وسم بين قوسين بعد اسم لوحة مشتقّة من شكل الشمعة لا من تدفّق أوامر حقيقي — «CVD (تقديري)». قصير: يُطبع برأس اللوحة. */
   mcEstimatedTag: string;
+  /** شرح «≈»/«تقديري» بلوحات الحجم حين السلسلة بلا فوليوم (الفوركس، `seriesHasVolume` = false): الأعمدة من أجسام الشموع (`withVolume`) ⇒ OBV/MFI/VWAP/Klinger/CMF من التقدير نفسه ولا تطابق حجم التيك بمنصّة أخرى. */
+  mcVolEstimatedHint: string;
   mcZoomOutA11y: string;
   mcZoomInA11y: string;
   mcPanBackA11y: string;
@@ -1192,7 +1194,7 @@ const ar: Dict = {
     'تبويب «رسم» بالشريط السفلي يفتح خطوط الترند وفيبوناتشي وباقي الأدوات على الشارت، وما ترسمه على 4H يبقى حين تنزل إلى الساعة. ولتخطيط صفقة استعمل «خطة شراء» أو «خطة بيع»: اسحب من الدخول إلى الوقف فيظهر الهدف وبُعده بالـpip ونسبة العائد إلى المخاطرة. المس رسماً لتحدّده: اسحبه لتحريكه أو أزِحه بأزرار ▲▼◀▶ (pip واحد أو شمعة واحدة بكل لمسة، واضغط مطوّلاً ليتكرّر ثم يُسرع)، أو اضغط «نسخة» لتضع المستوى نفسه في مكان آخر. أخطأت؟ زرّ «تراجع» يلغي آخر تغيير.',
   onboardStep3Title: 'المؤشرات والعدسات',
   onboardStep3Body:
-    'اختر من عشرات المؤشرات (RSI وMACD وبولنجر…) أو ابدأ بعدسة تضيف مجموعة بلمسة: «هيكل» للمتوسطات المتحركة، «زخم» لـRSI وMACD، «سيولة» للفوليوم وبولنجر وCVD (تقديري من اتجاه الشموع، لا تدفّق أوامر حقيقي). قيم المتوسطات وحدود بولنجر تظهر على محور السعر بلون خطوطها. وللفوركس: «Sessions» يظلّل جلسات طوكيو ولندن ونيويورك بأوقاتها صيفاً وشتاءً، و«PDH / PDL» يرسم أعلى وأدنى جلسة الأمس.',
+    'اختر من عشرات المؤشرات (RSI وMACD وبولنجر…) أو ابدأ بعدسة تضيف مجموعة بلمسة: «هيكل» للمتوسطات المتحركة، «زخم» لـRSI وMACD، «سيولة» للفوليوم وبولنجر وCVD (بالفوركس كلاهما تقدير من الشموع، لا حجم ولا تدفّق أوامر حقيقي). قيم المتوسطات وحدود بولنجر تظهر على محور السعر بلون خطوطها. وللفوركس: «Sessions» يظلّل جلسات طوكيو ولندن ونيويورك بأوقاتها صيفاً وشتاءً، و«PDH / PDL» يرسم أعلى وأدنى جلسة الأمس.',
   onboardStep4Title: 'التنبيهات',
   onboardStep4Body:
     'أسرع طريق: المس المستوى على الشارت ثم زرّ 🔔 — بلا كتابة أرقام. ويصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، فلا داعي لمراقبة الشارت طوال اليوم. تنبيهات المؤشرات وتفعيل الإشعارات من لوح التنبيهات.',
@@ -2051,6 +2053,8 @@ const ar: Dict = {
   mcAutoA11y: 'تلقائي: ملاءمة الأسعار والعودة لآخر شمعة',
   mcAutoManualA11y: 'مقياس السعر يدوي — قد تخرج الشموع الجديدة عن العرض. اضغط لإعادته تلقائياً والعودة لآخر شمعة',
   mcEstimatedTag: 'تقديري',
+  mcVolEstimatedHint:
+    'مزوّدنا لا يرسل حجم تداول لهذا الرمز (الفوركس بلا حجم مركزي) — هذه الأعمدة تقدير من حجم أجسام الشموع. مؤشرات الحجم (OBV وMFI وVWAP وKlinger…) محسوبة من التقدير نفسه، فلا تطابق أرقامها منصّة تعرض حجم التيك من وسيطها.',
   mcZoomOutA11y: 'تصغير',
   mcZoomInA11y: 'تكبير',
   mcPanBackA11y: 'تحريك للخلف',
@@ -2274,7 +2278,7 @@ const enUS: Dict = {
     'The Draw tab in the bottom bar opens trend lines, Fibonacci and more tools right on the chart — a line drawn on 4H stays when you drop to 1H. To plan a trade, use Buy plan or Sell plan: drag from entry to stop to see the target, pips and reward-to-risk. Tap a drawing to select it: drag to move it or nudge it with ▲▼◀▶ (one pip or one candle per tap; hold to repeat, faster after a moment), or press Clone to reuse the same level somewhere else. Drew something wrong? Undo reverses the last change.',
   onboardStep3Title: 'Indicators & lenses',
   onboardStep3Body:
-    'Pick from dozens of indicators (RSI, MACD, Bollinger…) or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD (estimated from candles, not real order flow). Moving averages and Bollinger bands show their values on the price axis in tags that match their lines. For forex: Sessions shades Tokyo, London and New York at their correct hours through daylight saving, and PDH / PDL marks yesterday\'s session high and low.',
+    'Pick from dozens of indicators (RSI, MACD, Bollinger…) or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD (on forex both are estimated from candles, not real volume or order flow). Moving averages and Bollinger bands show their values on the price axis in tags that match their lines. For forex: Sessions shades Tokyo, London and New York at their correct hours through daylight saving, and PDH / PDL marks yesterday\'s session high and low.',
   onboardStep4Title: 'Alerts',
   onboardStep4Body:
     'Fastest way: tap a level on the chart, then 🔔 — no typing. You get a notification when price reaches it (checked about once a minute), so no need to watch the chart all day. Indicator alerts and notification settings are in the alerts panel.',
@@ -3133,6 +3137,8 @@ const enUS: Dict = {
   mcAutoA11y: 'Auto: fit prices and return to the latest candle',
   mcAutoManualA11y: 'Price scale is manual — new candles may leave the view. Tap to restore auto and return to the latest candle',
   mcEstimatedTag: 'est.',
+  mcVolEstimatedHint:
+    'Our data provider sends no traded volume for this symbol (forex has no central volume) — these bars are estimated from candle body size. Volume indicators (OBV, MFI, VWAP, Klinger…) are built from the same estimate, so their values won\'t match a platform that shows your broker\'s tick volume.',
   mcZoomOutA11y: 'Zoom out',
   mcZoomInA11y: 'Zoom in',
   mcPanBackA11y: 'Pan back',
@@ -3380,7 +3386,7 @@ const ku: Dict = {
     'تابی «وێنەکێشان» لە شریتی خوارەوە هێڵی ترێند و فیبۆناتچی و ئامرازەکانی تر ڕاستەوخۆ لەسەر چارت دەکاتەوە، و ئەوەی لەسەر 4H دەیکێشیت دەمێنێتەوە کاتێک دادەبەزیت بۆ کاتژمێرێک. بۆ پلاندانانی مامەڵەیەک «پلانی کڕین» یان «پلانی فرۆشتن» بەکاربهێنە: لە چوونەژوورەوە بۆ وەستان ڕایبکێشە و ئامانج و pip و ڕێژەی قازانج بۆ مەترسی دەبینیت. دەست لە وێنەیەک بدە بۆ هەڵبژاردنی: ڕایبکێشە بۆ جوولاندنی یان بە دوگمەکانی ▲▼◀▶ بیجووڵێنە (یەک pip یان یەک مۆم بە هەر دەستدانێک؛ پەنجەت ڕابگرە بۆ دووبارەبوونەوە، دواتر خێراتر)، یان «کۆپی» دابگرە بۆ دانانی هەمان ئاست لە شوێنێکی تر. هەڵەت کرد؟ «گەڕاندنەوە» دوایین گۆڕانکاری هەڵدەوەشێنێتەوە.',
   onboardStep3Title: 'پێوەرەکان و لینزەکان',
   onboardStep3Body:
-    'لە دەیان پێوەر هەڵبژێرە (RSI، MACD، بۆلینجەر…)، یان بە لینزێک دەست پێبکە کە بە یەک دەستدان کۆمەڵێک زیاد دەکات: «پێکهاتە» بۆ ناوەندە جووڵاوەکان، «پاڵنە» بۆ RSI و MACD، «شلەیی» بۆ قەبارە و بۆلینجەر و CVD (خەمڵێنراو لە ئاراستەی مۆمەکان، نەک ڕەوتی ڕاستەقینەی فەرمانەکان). بەهای ناوەندە جووڵاوەکان و سنوورەکانی بۆلینجەر لەسەر تەوەرەی نرخ بە ڕەنگی هێڵەکانیان دەردەکەوێت. بۆ فۆرێکس: «Sessions» دانیشتنەکانی تۆکیۆ و لەندەن و نیویۆرک بە کاتی دروستیان ڕەنگ دەکات هاوین و زستان، و «PDH / PDL» بەرزترین و نزمترینی دانیشتنی دوێنێ دەکێشێت.',
+    'لە دەیان پێوەر هەڵبژێرە (RSI، MACD، بۆلینجەر…)، یان بە لینزێک دەست پێبکە کە بە یەک دەستدان کۆمەڵێک زیاد دەکات: «پێکهاتە» بۆ ناوەندە جووڵاوەکان، «پاڵنە» بۆ RSI و MACD، «شلەیی» بۆ قەبارە و بۆلینجەر و CVD (لە فۆرێکس هەردووکیان خەمڵێنراون لە مۆمەکان، نەک قەبارە یان ڕەوتی ڕاستەقینەی فەرمانەکان). بەهای ناوەندە جووڵاوەکان و سنوورەکانی بۆلینجەر لەسەر تەوەرەی نرخ بە ڕەنگی هێڵەکانیان دەردەکەوێت. بۆ فۆرێکس: «Sessions» دانیشتنەکانی تۆکیۆ و لەندەن و نیویۆرک بە کاتی دروستیان ڕەنگ دەکات هاوین و زستان، و «PDH / PDL» بەرزترین و نزمترینی دانیشتنی دوێنێ دەکێشێت.',
   onboardStep4Title: 'ئاگادارکردنەوەکان',
   onboardStep4Body:
     'خێراترین ڕێگا: دەست لە ئاستەکە بدە لەسەر چارت پاشان 🔔 — بێ نووسینی ژمارە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت)، پێویست ناکات بە درێژایی ڕۆژ چاودێری چارت بکەیت. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
@@ -4240,6 +4246,8 @@ const ku: Dict = {
   mcAutoA11y: 'خۆکار: گونجاندنی نرخەکان و گەڕانەوە بۆ دوایین مۆم',
   mcAutoManualA11y: 'پێوەری نرخ دەستییە — لەوانەیە مۆمە نوێیەکان لە دیمەن دەربچن. دابگرە بۆ گەڕاندنەوەی خۆکار و گەڕانەوە بۆ دوایین مۆم',
   mcEstimatedTag: 'خەمڵێنراو',
+  mcVolEstimatedHint:
+    'دابینکەرەکەمان قەبارەی بازرگانی بۆ ئەم هێمایە نانێرێت (فۆرێکس قەبارەی ناوەندیی نییە) — ئەم ستوونانە خەمڵاندنن لە قەبارەی لاشەی مۆمەکان. پێوەرەکانی قەبارە (OBV، MFI، VWAP، Klinger…) لە هەمان خەمڵاندن حیساب دەکرێن، بۆیە ژمارەکانیان لەگەڵ پلاتفۆرمێک کە قەبارەی تیکی بڕۆکەرەکەت پیشان دەدات یەک ناگرنەوە.',
   mcZoomOutA11y: 'بچووککردنەوە',
   mcZoomInA11y: 'گەورەکردن',
   mcPanBackA11y: 'جوڵان بۆ دواوە',
