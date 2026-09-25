@@ -6,12 +6,13 @@ import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
+import { pipUnit } from '../chart/measureReadout';
 import { analyzePlan, planSummaryText, type PlanIssue, type TradePlan } from '../tradePlan';
 import { useBlockedUsers } from '../moderation';
 import { ModerationActions, ModerationToggle } from './ModerationActions';
 
 export function VotePanel({ embedded }: { embedded?: boolean }) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   /** تبدأ فارغة: كانت تُبذَر بـ`mockVotes` — أفكار صفقات «أحمد/سارة» بأصوات مختلَقة (18/5) وأسعار قديمة
    * (ذهب 2348.5) تظهر كتوصيات مجتمع حقيقية قبل التحميل وتبقى عند فشله. */
@@ -80,9 +81,9 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
     return null;
   };
 
-  /** "المخاطرة 25 pip · الربح المحتمل 50 pip · R:R 1:2" — السطر المشترك مع الدفتر (`planSummaryText`). */
+  /** "المخاطرة 25 pip · الربح المحتمل 50 pip · R:R 1:2" — السطر المشترك مع الدفتر (`planSummaryText`)؛ بالإنجليزية «pips». */
   const planSummary = (plan: TradePlan): string =>
-    planSummaryText(plan, { risk: t.planRiskWord, reward: t.planRewardWord });
+    planSummaryText(plan, { risk: t.planRiskWord, reward: t.planRewardWord, unit: pipUnit(lang) });
 
   // معاينة حيّة للخطة أثناء الكتابة (لا تُعرض قبل اكتمال الأرقام الثلاثة).
   const draftPlan = useMemo(() => {
