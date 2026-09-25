@@ -2577,10 +2577,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('ulcer') ? ind(computeUlcerIndex(closes)) : null),
     [closes, indicators]
   );
-  const fisher = useMemo(
-    () => (indicators.includes('fisher') ? ind(computeFisherTransform(indBars)) : null),
-    [indBars, indicators]
-  );
+  // الزناد كـTradingView = `fish1[1]` (القيمة نفسها متأخّرة شمعة) — تقاطعهما هو الإشارة المعتادة.
+  const fisher = useMemo(() => {
+    if (!indicators.includes('fisher')) return null;
+    const f = computeFisherTransform(indBars);
+    return ind({ fisher: f, trigger: [null, ...f.slice(0, -1)] });
+  }, [indBars, indicators]);
   const kst = useMemo(
     () => (indicators.includes('kst') ? ind(computeKst(closes)) : null),
     [closes, indicators]
@@ -10367,34 +10369,41 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {fisher ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Fisher Transform" values={fisher} at={crossIndex} />
+          <PaneValueHead
+            name="Fisher Transform"
+            values={fisher.fisher}
+            at={crossIndex}
+            signal={{ values: fisher.trigger, color: colors.warn }}
+            compact={!paneSignalFits}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
             {(() => {
-              const vals = fisher.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxF = Math.max(...vals, 1e-9);
-              return fisher.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxF, paneH);
-                return (
+              // خطّان كـTradingView — Fisher وزناده — بهندسة KST/MACD (مقياس واحد متمركز على الصفر).
+              // كانت أعمدة Fisher وحدها، فالتقاطع الذي يُقرأ منه الانعكاس لا يُرى.
+              const g = macdPaneGeom(fisher.fisher, fisher.fisher, fisher.trigger, paneH);
+              return (
+                <>
                   <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
+                    pointerEvents="none"
+                    style={[styles.paneZeroLine, { top: g.zeroY }]}
                   />
-                );
-              });
+                  <PaneLineLayer
+                    innerH={g.innerH}
+                    y={g.y}
+                    lines={[
+                      { values: fisher.trigger, color: colors.warn, opacity: 0.9 },
+                      {
+                        values: fisher.fisher,
+                        color: (i) =>
+                          (fisher.fisher[i] ?? 0) >= (fisher.trigger[i] ?? fisher.fisher[i] ?? 0)
+                            ? colors.bull
+                            : colors.bear,
+                      },
+                    ]}
+                  />
+                </>
+              );
             })()}
           </View>
         </View>
