@@ -358,7 +358,10 @@ export type Dict = {
   riskCalcBelowMin: string;
   riskCalcFillHint: string;
   invalidNumberHint: string;
-  /** سعر «3.450» مرفوض لأنه مبهم لأداة منازلها أقلّ من ثلاث (`parsePriceFor`) — {value} كما كُتب، {whole} بلا النقطة (3450)، {small} كسراً (3.45) */
+  /**
+   * سعر «3.450» مرفوض لأنه مبهم لأداة منازلها أقلّ من ثلاث (`parsePriceFor`)، أو «157,250» بفاصلة قبل ثلاثة أرقام لأي رمز (`25dc815`) —
+   * {value} كما كُتب، {whole} بلا الفاصل (3450)، {small} كسراً (3.45). النصّ لا يقول «النقطة» لأن الفاصل قد يكون فاصلة.
+   */
   priceAmbiguousThousandsHint: string;
   /**
    * نقاط وقف «1.500» مرفوضة لأنها مبهمة (`parseSlPips`، `ffa6b92`) — الرسالة العامة «اكتبه بلا فواصل آلاف، مثل 1.0850» تدعوه لكتابة ما كتبه.
@@ -1507,7 +1510,7 @@ const ar: Dict = {
   riskCalcBelowMin: 'لا حجم يناسب هذه المخاطرة: أصغر لوت (0.01) يتجاوز ما حدّدتَه',
   riskCalcFillHint: 'أدخل الرصيد ونسبة المخاطرة ووقف الخسارة',
   invalidNumberHint: 'رقم غير مفهوم — اكتبه بلا فواصل آلاف، مثل 10000 أو 1.0850',
-  priceAmbiguousThousandsHint: 'السعر «{value}» مبهم — هل النقطة فاصل آلاف أم فاصلة عشرية؟ اكتب {whole} أو {small}',
+  priceAmbiguousThousandsHint: 'السعر «{value}» مبهم — هل الفاصل للآلاف أم للكسر العشري؟ اكتب {whole} أو {small}',
   riskCalcSlPipsAmbiguous: 'وقف «{value}» pip مبهم — هل الفاصل للآلاف أم للكسر العشري؟ اكتب {whole} أو {small}',
   riskCalcSlPointsHint: 'وقف «{value}» بالنقاط (points) — النقطة بمنصّة MT4/MT5 عادةً عُشر pip، فاكتب {pips} pip',
   riskCalcOtherCcyHint: '{field} «{value}» بغير عملة الحساب ({ccy}) — اكتب المبلغ بالـ{ccy}، أو غيّر عملة الحساب',
@@ -2607,7 +2610,7 @@ const enUS: Dict = {
   riskCalcBelowMin: 'No size fits this risk: the smallest lot (0.01) risks more than you set',
   riskCalcFillHint: 'Enter balance, risk % and stop loss',
   invalidNumberHint: 'Number not recognized — type it without thousands separators, e.g. 10000 or 1.0850',
-  priceAmbiguousThousandsHint: 'Price “{value}” is ambiguous — is the dot a thousands separator or a decimal point? Type {whole} or {small}',
+  priceAmbiguousThousandsHint: 'Price “{value}” is ambiguous — is that separator for thousands or for decimals? Type {whole} or {small}',
   riskCalcSlPipsAmbiguous: 'A stop of “{value}” pips is ambiguous — is that separator for thousands or for decimals? Type {whole} or {small}',
   riskCalcSlPointsHint: 'A stop of “{value}” is in points — on MT4/MT5 a point is usually a tenth of a pip, so type {pips} pips',
   riskCalcOtherCcyHint: '{field} “{value}” is not in the account currency ({ccy}) — enter the amount in {ccy}, or change the account currency',
@@ -3733,7 +3736,7 @@ const ku: Dict = {
   riskCalcBelowMin: 'هیچ قەبارەیەک لەگەڵ ئەم مەترسییە ناگونجێت: بچووکترین لۆت (0.01) زیاتر لەوەی دیاریت کردووە دەخاتە مەترسییەوە',
   riskCalcFillHint: 'باڵانس، ڕێژەی مەترسی و وەستانی زیان بنووسە',
   invalidNumberHint: 'ژمارەکە ناناسرێتەوە — بەبێ جیاکەرەوەی هەزاران بنووسە، وەک 10000 یان 1.0850',
-  priceAmbiguousThousandsHint: 'نرخی «{value}» ڕوون نییە — خاڵەکە جیاکەرەوەی هەزارانە یان خاڵی دەیی؟ {whole} یان {small} بنووسە',
+  priceAmbiguousThousandsHint: 'نرخی «{value}» ڕوون نییە — جیاکەرەوەکە بۆ هەزارانە یان بۆ دەیی؟ {whole} یان {small} بنووسە',
   riskCalcSlPipsAmbiguous: 'وەستانی «{value}» pip ڕوون نییە — جیاکەرەوەکە بۆ هەزارانە یان بۆ دەیی؟ {whole} یان {small} بنووسە',
   riskCalcSlPointsHint: 'وەستانی «{value}» بە خاڵە (points) — لە MT4/MT5 هەر خاڵێک زۆرجار دەیەکی pipە، بۆیە {pips} pip بنووسە',
   riskCalcOtherCcyHint: '{field} «{value}» بە دراوی هەژمار نییە ({ccy}) — بڕەکە بە {ccy} بنووسە، یان دراوی هەژمار بگۆڕە',
