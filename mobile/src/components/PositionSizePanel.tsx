@@ -592,7 +592,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     ? fetchedConv.rate
     : quoteToAccountRate(conv, Number.isFinite(manual) && manual > 0 ? manual : null);
   // الأساس = عملة الحساب ⇒ الخسارة تُحوَّل بسعر الوقف لا الحيّ (أمرٌ معلّق بعيد كان يتجاوز المخاطرة) — `exitQuoteToAccount`
-  const riskRate = exitQuoteToAccount(spec, convAccount, priceNum(stopPx), convRate) ?? convRate;
+  const stopRate = exitQuoteToAccount(spec, convAccount, priceNum(stopPx), convRate);
+  const riskRate = stopRate ?? convRate;
+  /** قيمة النقطة المعروضة محسوبة بسعر الوقف لا الحيّ ⇒ لا تطابق رقم المنصّة؛ السطر يسمّي السعر ويشرح (launch72) */
+  const pipAtStop = stopRate != null && stopRate !== convRate;
   // السنت: عملة التسعير ⇒ USD ثم × 100 ⇒ USC، فيخرج كل مبلغ (pip، مخاطرة، هامش، ربح) بالسنت كرصيده
   const rate = cent ? centQuoteToAccount(riskRate) : riskRate;
   const pv = spec && rate != null ? pipValuePerLot(spec, rate) : null;
@@ -1417,10 +1420,18 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         {/* قيمة النقطة **للمركز المحسوب** بجانب قيمتها للوت القياسي: «كل نقطة عليّ 3.50» هو ما يراقبه
             المتداول وهو بالصفقة، وكان يُترك ليضربه بنفسه. من اللوت المقرَّب نفسه (`result.pipValue`). */}
         {pv != null ? (
-          <Text style={[styles.resultMeta, { textAlign: align }]}>
-            {t.riskCalcPipValue}: {formatPipValue(pv, moneyCcy)}
-            {result && lots != null ? ` · ${lots.toFixed(2)} lot = ${formatPipValue(result.pipValue, moneyCcy)}` : ''}
-          </Text>
+          <>
+            <Text style={[styles.resultMeta, { textAlign: align }]}>
+              {pipAtStop && spec
+                ? t.riskCalcPipValueAtStop.replace('{price}', formatPrice(priceNum(stopPx), spec.symbol))
+                : t.riskCalcPipValue}
+              : {formatPipValue(pv, moneyCcy)}
+              {result && lots != null ? ` · ${lots.toFixed(2)} lot = ${formatPipValue(result.pipValue, moneyCcy)}` : ''}
+            </Text>
+            {pipAtStop ? (
+              <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcPipValueAtStopHint}</Text>
+            ) : null}
+          </>
         ) : null}
         {slInsideSpread ? (
           <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
