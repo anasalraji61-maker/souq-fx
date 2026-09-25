@@ -1111,7 +1111,10 @@ def check_indicator_alerts(
                 series = build_series(a["symbol"], a["timeframe"])
                 # سلسلة بذرية (المزوّد متعذّر) = شموع مختلَقة: كان تقاطع/RSI عليها يُطلق التنبيه ويعلّمه
                 # «مُطلَق» نهائياً بلا حدث سوقي حقيقي. نتخطّاها كفشل (يُعاد الفحص بالطلب التالي).
-                if series.data_source.kind == "demo":
+                # وكاش قديم (حتى 15د عند 429) أقدم من شمعة من الفريم: تقاطع حدث قبل ربع ساعة يُطلق «الآن».
+                if series.data_source.kind == "demo" or not alert_worker.series_fresh_enough(
+                    series.data_source.as_of, str(a["timeframe"])
+                ):
                     cache[ck] = None
                 else:
                     cache[ck] = [c.model_dump() for c in series.candles]

@@ -17,11 +17,13 @@
 """
 from __future__ import annotations
 
+import time
 from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
 
+import alert_worker
 import db
 import indicators as ind_engine
 import main
@@ -325,7 +327,7 @@ _IND_RSI = {
 }
 
 
-def _fake_series(kind: str, closes: list[float]):
+def _fake_series(kind: str, closes: list[float], as_of: float | None = None):
     """بديل `build_series` بالاختبار — الحقول التي يقرأها المسار وحدها.
 
     المسار الحقيقي يطلب سلسلة شموع من المزوّد عبر الشبكة؛ هنا تُحقَن سلسلة معلومة
@@ -335,7 +337,9 @@ def _fake_series(kind: str, closes: list[float]):
         SimpleNamespace(model_dump=lambda v=v: {"close": v, "open": v, "high": v, "low": v})
         for v in closes
     ]
-    return SimpleNamespace(data_source=SimpleNamespace(kind=kind), candles=candles)
+    return SimpleNamespace(
+        data_source=SimpleNamespace(kind=kind, as_of=time.time() if as_of is None else as_of), candles=candles
+    )
 
 
 _RISING = [1.0 + i * 0.01 for i in range(60)]   # صعود خالص → RSI = 100
@@ -427,6 +431,28 @@ def test_rearming_a_fired_indicator_alert_puts_it_back_to_watching(client, serie
     assert back["triggered"] is False and back["active"] is True
     again = client.post("/api/indicator-alerts/check", headers=_auth(token)).json()
     assert len(again["triggered"]) == 1, "بعد إعادة التسليح يُطلق ثانيةً"
+
+
+def test_stale_cached_series_does_not_fire_an_indicator_alert(client, monkeypatch):
+    """عند 429 يُخدَم كاش حتى 15د: تقاطع/RSI عليه حدث قبل ربع ساعة (على 15m أقدم من شمعة) —
+    كان يُطلق «الآن» ويُحرق التنبيه. يُتخطّى ويبقى مُسلَّحاً للفحص التالي."""
+    token = _register(client, "indstale")
+    client.post("/api/indicator-alerts", json=_IND_RSI, headers=_auth(token))
+    tf_sec = alert_worker._BAR_SECONDS[_IND_RSI.get("timeframe", "15m")]
+    monkeypatch.setattr(main, "build_series", lambda s, timeframe="15m", outputsize=180: _fake_series(
+        "cache", _RISING, as_of=time.time() - tf_sec - 60))
+    res = client.post("/api/indicator-alerts/check", headers=_auth(token)).json()
+    assert res["triggered"] == [] and res["alerts"][0]["triggered"] is False
+    monkeypatch.setattr(main, "build_series", lambda s, timeframe="15m", outputsize=180: _fake_series(
+        "cache", _RISING, as_of=time.time() - 30))
+    assert len(client.post("/api/indicator-alerts/check", headers=_auth(token)).json()["triggered"]) == 1
+
+
+def test_worker_skips_stale_indicator_series():
+    assert alert_worker.series_fresh_enough(1000.0, "1m", now=1100.0)
+    assert not alert_worker.series_fresh_enough(1000.0, "1m", now=1000.0 + 181)
+    assert alert_worker.series_fresh_enough(1000.0, "1H", now=1000.0 + 3000)
+    assert not alert_worker.series_fresh_enough(None, "1H")
 
 
 def test_a_seeded_demo_series_never_fires_an_indicator_alert(client, monkeypatch):
@@ -724,3 +750,13 @@ def test_demo_series_has_no_invented_volume():
     import main as m
     candles = m._seed_walk("EURUSD", 1.1, n=50)
     assert candles and all(c.volume is None for c in candles)
+
+
+def test_worker_indicator_series_drops_stale_cache(monkeypatch):
+    candles = [{"time": 1, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0}]
+    monkeypatch.setattr(alert_worker.market, "fetch_time_series_with_meta",
+                        lambda s, tf, outputsize=180: (candles, {"kind": "cache", "as_of": time.time() - 900}))
+    assert alert_worker._indicator_series({"symbol": "EURUSD", "timeframe": "5m"}) is None
+    monkeypatch.setattr(alert_worker.market, "fetch_time_series_with_meta",
+                        lambda s, tf, outputsize=180: (candles, {"kind": "provider", "as_of": time.time()}))
+    assert alert_worker._indicator_series({"symbol": "EURUSD", "timeframe": "5m"}) == candles

@@ -96,6 +96,24 @@ def _price_hit(a: dict, q: float, candles: list[dict]) -> bool:
     return False
 
 
+_BAR_SECONDS = {"1m": 60, "5m": 300, "15m": 900, "30m": 1800, "1H": 3600, "4H": 14400, "D": 86400, "W": 604800}
+# أقلّ عمر مقبول لسلسلة تنبيه المؤشر مهما قصر الفريم — دورة الـworker 60ث وكاش 1m قد يقاربها.
+_MIN_SERIES_AGE_OK = 180
+
+
+def series_fresh_enough(as_of: float | None, timeframe: str, now: float | None = None) -> bool:
+    """سلسلة تنبيه المؤشر أحدث من شمعة واحدة من فريمها (وأقلّه 3 دقائق)؟
+
+    عند 429 يُخدَم كاش حتى 15 دقيقة (`STALE_MAX_SEC`) موسوماً `cache`: تقاطع MA/MACD على 1m بتلك
+    السلسلة حدث قبل ربع ساعة — كان يُطلق التنبيه الآن ويُعلَّم «مُطلَق» نهائياً ويُدفع كأنه للتوّ،
+    والسعر قد عاد. تنبيه السعر يرفض أصلاً إغلاق 1m أقدم من 3 دقائق؛ هذا شقيقه للمؤشر. القديمة
+    تُتخطّى (لا تُطلق ولا تُعلَّم) ويُعاد الفحص بالدورة التالية."""
+    if as_of is None:
+        return False
+    limit = max(_BAR_SECONDS.get(timeframe, 900), _MIN_SERIES_AGE_OK)
+    return (time.time() if now is None else now) - float(as_of) <= limit
+
+
 def _indicator_series(a: dict, cache: dict | None = None) -> list[dict] | None:
     """سلسلة `CHART_BARS` شمعة (نفس طول الشارت و/api/indicator-alerts/check — نفس الكاش ونفس القيم) لرمز/فريم التنبيه — **طلب واحد لكل (رمز، فريم) بالدورة** عبر `cache`.
     كانت كل تنبيهات المؤشر تجلب سلسلتها منفردة (5 تنبيهات RSI/تقاطع على EURUSD 1h = 5 طلبات للمزوّد
@@ -106,7 +124,11 @@ def _indicator_series(a: dict, cache: dict | None = None) -> list[dict] | None:
         return cache[key]
     raw: list[dict] | None
     try:
-        raw = market.fetch_time_series(a["symbol"], a["timeframe"], outputsize=market.CHART_BARS)
+        raw, meta = market.fetch_time_series_with_meta(a["symbol"], a["timeframe"], outputsize=market.CHART_BARS)
+        if raw and not series_fresh_enough(meta.get("as_of"), str(a["timeframe"])):
+            log.info("indicator series for %s (%s) is stale cache — skipped this cycle",
+                     a.get("symbol"), a.get("timeframe"))
+            raw = None
     except Exception:
         log.warning(
             "indicator series fetch failed for %s (%s)",
