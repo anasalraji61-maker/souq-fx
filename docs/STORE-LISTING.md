@@ -39,7 +39,7 @@ MATRIX Charts
 شارتات احترافية، مؤشرات، تنبيهات أسعار، تقويم اقتصادي وأكاديمية تداول بالعربية
 
 **النص الترويجي (App Store)**
-حلّل الفوركس والأسواق بشارتات سريعة وواضحة، وتعلّم التحليل الفني خطوة بخطوة في الأكاديمية الصوتية — واجهة عربية كاملة مصممة للمتداول الفردي.
+حلّل الفوركس والأسواق بشارتات سريعة وواضحة، وتعلّم التحليل الفني خطوة بخطوة في الأكاديمية الصوتية — واجهة عربية كاملة مصممة للمتداول الفردي، وبالإنجليزية والكردية أيضاً.
 
 **الكلمات المفتاحية (App Store)**
 فوركس,شارت,تحليل فني,مؤشرات,تداول,شموع,تنبيهات,تقويم اقتصادي,ذهب,عملات,RSI,MACD,فيبوناتشي,تعليم
@@ -101,7 +101,7 @@ Charts & Technical Analysis
 Clean charts, indicators, price alerts, economic calendar and a trading academy
 
 **Promotional text (App Store)**
-Analyze forex and markets on fast, clean charts, and learn technical analysis step by step in the Arabic audio academy. For individual traders, in English and Arabic.
+Analyze forex and markets on fast, clean charts and learn chart reading step by step in the Arabic audio academy. For individual traders, in English, Arabic and Kurdish.
 
 **Keywords (App Store)**
 forex,charts,technical analysis,indicators,candlestick,alerts,economic calendar,gold,fx,rsi,macd
@@ -185,3 +185,7 @@ The first release of MATRIX: multi-chart layouts, indicators and drawing tools, 
 > رسمٌ محدَّداً بالهاتف والشاشة العريضة) — على الهاتف هي ما يجعل «أدوات رسم دقيقة» صادقة. «pip» دقيق للأزواج والمعادن؛ للمؤشرات والكريبتو
 > الخطوة بكسل من المحور (`nudgeSelectedDrawing`) — لم أفصّل ذلك بالوصف. لإفساح الإنجليزي اختُصرت ست عبارات بلا حذف ميزة (الرجوع للخلف،
 > خطّ بداية اليوم، التنبيهات، قائمة المتابعة، 🔔، المساعد). العدّ بسكربت: **ar 3907 / en 3993** من 4000.
+
+> **2026-09-25 (launch 82)**: النص الترويجي ar/en يذكر الكردية — مدعومة بالتطبيق (`locales.ts` `ku`، 970 مفتاحاً كالعربي) وبالوصف الكامل،
+> وكان الترويجي الإنجليزي يقول «English and Arabic» وحدهما. لإفساحه «technical analysis» ⇒ «chart reading» (النص الترويجي لا يدخل بحث App Store،
+> والعبارة باقية بالعنوان الفرعي والكلمات المفتاحية). العدّ بسكربت: **ar 169 / en 169** من 170. تنبيه الكردية بالأعلى (شرائح الإطار) ما زال قائماً.
