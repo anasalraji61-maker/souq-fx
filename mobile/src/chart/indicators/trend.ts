@@ -1556,27 +1556,12 @@ export function computeZlema(closes: number[], period = 20): (number | null)[] {
   return ema(deLagged, period);
 }
 
-/**
- * Linear Regression Channel (period=100 القيمة القياسية الشائعة لهذه الأداة تحديداً — أطول من نافذة
- * LSMA/LinRegSlope/LinRegR2 أعلاه [period=25/14/14] لأن الغرض هنا قناة اتجاه بعيدة المدى لا مؤشر
- * زخم قصير) — يعيد استخدام *نفس* صيغة الانحدار الخطي (sumX/sumX2/denom الثابتة حسابياً بمحاور
- * x=0..period-1، meanY/meanX/intercept) المستخدَمة حرفياً بـcomputeLsma أعلاه لحساب خط الوسط (mid،
- * القيمة المتوقَّعة عند نهاية النافذة x=period-1 — مطابقة لـLSMA تماماً لو استُدعيت بنفس period)، ثم
- * يضيف حدّين علوي/سفلي بعرض mult×الانحراف المعياري *لبواقي الانحدار* (residuals، الفرق بين كل سعر
- * فعلي بالنافذة وقيمته المتوقَّعة على خط الانحدار عند نفس x — بعكس بولنجر الذي يقيس انحراف السعر عن
- * SMA أفقي، هنا القياس عن الخط المائل نفسه). نفس روح Keltner (قناة حول خط مركزي بعرض متغيّر) لكن
- * الخط المركزي هنا مائل لا أفقي، والعرض من تشتت البواقي لا من ATR. mult=2 (نفس القيمة القياسية
- * الشائعة لبولنجر/كلتنر أعلاه). يُرسَم بإعادة استخدام كاملة لنمط الشريط العمودي شبه الشفاف
- * (upper→lower) المستخدَم أصلاً لـKeltner/Envelopes/Donchian حرفياً — بلا أي نمط رسم جديد.
- * **تحقّق يدوي**: سعر ثابت تماماً بكل شموع النافذة → ميل=0 (كما بـLSMA)، كل بقايا=صفر (السعر الثابت
- * يقع تماماً على الخط الأفقي المتوقَّع) → الانحراف المعياري=0 → upper=lower=mid=السعر الثابت بالضبط؛
- * مسار خطي بحت (ميل ثابت تماماً) → كل نقطة تقع تماماً على خط الانحدار المُقدَّر (ملاءمة مثالية لأن
- * البيانات خطية فعلاً) → بواقٍ=صفر لكل نقطة → upper=lower=mid=قيمة الخط الفعلية بالضبط (نفس حالة
- * R²=1 الحدّية بـcomputeLinRegR2 أعلاه). **تحقّق Node.js فعلي (قبل الكتابة)**: سعر ثابت/مسار خطي بحت
- * (كلاهما period=20 صغير للاختبار) → upper=lower=mid مطابق تماماً كما بالتحليل اليدوي أعلاه؛ 300
- * نقطة عشوائية بذرة ثابتة (period=100 القيمة الفعلية) → 201 نقطة صالحة بالضبط (300−period+1)، صفر
- * NaN/Infinity، upper≥mid≥lower محقَّق بنيوياً بكل نقطة صالحة؛ إعادة حساب مستقلة منفصلة عن الدالة
- * لنقطة عشوائية واحدة (period=20) طابقت الدالة تماماً (mid/upper/lower الثلاثة، فرق<10⁻⁹).
+/** Linear Regression Channel (100، ±2σ للبواقي).
+ * **قناة واحدة مستقيمة على آخر `period` شمعة كـTradingView** — لا نافذة متدحرجة. كانت كل شمعة تُلائم خطّها
+ * الخاص على المئة المنتهية عندها وتُرسم نهايته ± الانحراف ⇒ شريط متموّج لا قناة: صعود 150 شمعة ثم هبوط 50
+ * أعطى وسطاً عند الشمعة 170 أبعد ~150 pip عن خطّ TradingView وعرضاً شبه صفري. الآن خطّ الانحدار نفسه مُسقَط
+ * على كل شمعة بالنافذة (upper∥mid∥lower)، وما قبلها null. الانحراف بقسمة n−1 كمؤشّر TradingView المدمج.
+ * التيك الحيّ يعيد الملاءمة كلّها (القناة تميل قليلاً) كما بـTradingView.
  */
 export function computeLinRegChannel(
   closes: number[],
@@ -1584,41 +1569,33 @@ export function computeLinRegChannel(
   mult = 2
 ): { mid: (number | null)[]; upper: (number | null)[]; lower: (number | null)[] } {
   const n = period;
+  const len = closes.length;
+  const mid: (number | null)[] = new Array(len).fill(null);
+  const upper: (number | null)[] = new Array(len).fill(null);
+  const lower: (number | null)[] = new Array(len).fill(null);
+  if (n < 2 || len < n) return { mid, upper, lower };
+  const start = len - n;
   const sumX = (n * (n - 1)) / 2;
   const sumX2 = ((n - 1) * n * (2 * n - 1)) / 6;
   const denom = n * sumX2 - sumX * sumX;
-  const mid: (number | null)[] = [];
-  const upper: (number | null)[] = [];
-  const lower: (number | null)[] = [];
-  for (let i = 0; i < closes.length; i++) {
-    if (i < period - 1) {
-      mid.push(null);
-      upper.push(null);
-      lower.push(null);
-      continue;
-    }
-    let sumY = 0;
-    let sumXY = 0;
-    for (let x = 0; x < n; x++) {
-      const y = closes[i - n + 1 + x];
-      sumY += y;
-      sumXY += x * y;
-    }
-    const slope = denom === 0 ? 0 : (n * sumXY - sumX * sumY) / denom;
-    const meanY = sumY / n;
-    const meanX = sumX / n;
-    const intercept = meanY - slope * meanX;
-    let ssRes = 0;
-    for (let x = 0; x < n; x++) {
-      const y = closes[i - n + 1 + x];
-      const yHat = slope * x + intercept;
-      ssRes += (y - yHat) ** 2;
-    }
-    const sd = Math.sqrt(ssRes / n);
-    const m = slope * (n - 1) + intercept;
-    mid.push(m);
-    upper.push(m + mult * sd);
-    lower.push(m - mult * sd);
+  let sumY = 0;
+  let sumXY = 0;
+  for (let x = 0; x < n; x++) {
+    const y = closes[start + x];
+    sumY += y;
+    sumXY += x * y;
+  }
+  if (!Number.isFinite(sumY) || !Number.isFinite(sumXY)) return { mid, upper, lower };
+  const slope = denom === 0 ? 0 : (n * sumXY - sumX * sumY) / denom;
+  const intercept = sumY / n - slope * (sumX / n);
+  let ssRes = 0;
+  for (let x = 0; x < n; x++) ssRes += (closes[start + x] - (slope * x + intercept)) ** 2;
+  const band = mult * Math.sqrt(ssRes / (n - 1));
+  for (let x = 0; x < n; x++) {
+    const m = slope * x + intercept;
+    mid[start + x] = m;
+    upper[start + x] = m + band;
+    lower[start + x] = m - band;
   }
   return { mid, upper, lower };
 }

@@ -2790,9 +2790,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('tsf') ? ind(computeTsf(closes)) : null),
     [closes, indicators]
   );
+  // قناة واحدة على آخر 100 شمعة **من السلسلة** (كـTradingView) لا من آخر معروضة: التمرير للخلف لا يحرّكها.
+  // بالإعادة `aheadBars` تنتهي بشمعة الإعادة فلا تكشف المستقبل.
   const linRegChannel = useMemo(
-    () => (indicators.includes('linRegChannel') ? ind(computeLinRegChannel(closes)) : null),
-    [closes, indicators]
+    () =>
+      indicators.includes('linRegChannel')
+        ? indAhead(computeLinRegChannel(aheadBars.map((c) => c.close)))
+        : null,
+    [aheadBars, aheadBase, indicators]
   );
   const momentum = useMemo(
     () => (indicators.includes('momentum') ? ind(computeMomentum(closes)) : null),
