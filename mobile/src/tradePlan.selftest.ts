@@ -2551,6 +2551,13 @@ console.log('tradePlan floating/exit preview R from initial stop selftest OK');
   assert.deepEqual(journalSizeDottedThousands('100.000', 'EURUSD'), { units: 100000, lots: 1 });
   assert.deepEqual(journalSizeDottedThousands(' 1.000 ', 'USDJPY'), { units: 1000, lots: 0.01 });
   assert.deepEqual(journalSizeDottedThousands('١٠.٠٠٠', 'EURUSD.m'), { units: 10000, lots: 0.1 });
+  // الفاصلة العشرية العربية ٫ (لوحة ar/ku): كانت null فتُقرأ «١٫٠٠٠» 1 لوت ومخاطرةٌ ×100 بلا تحذير
+  assert.deepEqual(journalSizeDottedThousands('١٫٠٠٠', 'EURUSD'), { units: 1000, lots: 0.01 });
+  assert.deepEqual(journalSizeDottedThousands('1٫000', 'EURUSD'), { units: 1000, lots: 0.01 });
+  assert.deepEqual(journalSizeDottedThousands('۱٫۰۰۰', 'EURUSD'), { units: 1000, lots: 0.01 });
+  assert.deepEqual(journalSizeDottedThousands('10٫000 lot', 'EURUSD'), { units: 10000, lots: 0.1 });
+  assert.equal(journalMoneyLots('١٫٠٠٠', 'EURUSD'), null); // لا مال من حجمٍ مبهم — كاللاتيني
+  assert.equal(journalSizeDottedThousands('١٫٥٠٠', 'EURUSD'), null); // 1.5 لوت، لا لبس
   // فضة: 10,000 أونصة = 2 لوت (أصغر من 10) ⇒ يُنبَّه
   assert.deepEqual(journalSizeDottedThousands('10.000', 'XAGUSD'), { units: 10000, lots: 2 });
   // غير مبهم: ذيلٌ غير صفري، أقلّ/أكثر من ثلاث منازل، فاصلة، بلا فاصل، صفر، أداة مجهولة/سنت

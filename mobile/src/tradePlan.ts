@@ -129,7 +129,8 @@ export function parseJournalSize(raw: string): number | null {
  * التحذير بنقرة تحويل (كالوحدات «10000») ولا يُحفظ حتى يختار المتداول: «0.10» أو «10». `null` = لا لبس.
  */
 export function journalSizeDottedThousands(raw: string, symbol: string | null | undefined): { units: number; lots: number } | null {
-  const m = /^(\d{1,3})[.．]000$/.exec(normalizeDigits(stripUnitWord(raw, 'lot')).trim());
+  // «١٫٠٠٠» بلوحة عربية/كردية: `normalizeDigits` لا يمسّ الفاصلة العشرية العربية ٫ — كانت تُقرأ 1 لوت بلا تحذير
+  const m = /^(\d{1,3})[.．٫]000$/.exec(normalizeDigits(stripUnitWord(raw, 'lot')).trim());
   if (!m || Number(m[1]) < 1) return null;
   const spec = instrumentSpec((symbol || '').trim().toUpperCase());
   if (!spec) return null;
