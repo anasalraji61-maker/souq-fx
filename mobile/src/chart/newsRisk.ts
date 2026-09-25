@@ -691,13 +691,47 @@ export type CalendarCache = {
 export function calendarAfterFetch(
   prev: CalendarCache | null,
   events: readonly NewsEvent[] | null,
-  nowMs: number
+  nowMs: number,
+  /** وقت جلب الأحداث **عند المصدر** — `calendarSourceMs` لتقويم الخادم المحفوظ؛ افتراضاً لحظة الردّ */
+  sourceMs: number = nowMs
 ): CalendarCache {
-  if (events) return { events: [...events], at: nowMs, ok: true, fetchedAt: nowMs };
+  if (events) {
+    const fetchedAt = Math.min(nowMs, sourceMs);
+    // تقويم الخادم المحفوظ أقدم من حدّنا نفسه: فشلٌ لا نجاح (المحفوظ عندنا، إن صلح، أحدث منه)
+    if (nowMs - fetchedAt <= NEWS_STALE_MAX_MS) return { events: [...events], at: nowMs, ok: true, fetchedAt };
+    events = null;
+  }
   const keep = prev && prev.fetchedAt != null && nowMs - prev.fetchedAt <= NEWS_STALE_MAX_MS;
   return keep
     ? { events: prev.events, at: nowMs, ok: false, fetchedAt: prev.fetchedAt }
     : { events: [], at: nowMs, ok: false, fetchedAt: null };
+}
+
+/**
+ * وقت جلب الأحداث بردّ الخادم (مللي ثانية). ردّ `stale: true` (backend-r27) أحداثُه من جلبٍ ناجح سابق **حتى 6 س** (`as_of`
+ * بالثواني) — كان يُختم بلحظة الردّ فيُعدّ تقويمٌ عمره 6 س طازجاً ليومٍ آخر (حتى ~30 س) ويعبر أحد تبديل الأسبوع بأحداث
+ * الأسبوع الماضي. غير ذلك (أو `as_of` غير مفهوم أو بالمستقبل) = `nowMs`.
+ */
+export function calendarSourceMs(raw: unknown, nowMs: number): number {
+  if (!raw || typeof raw !== 'object' || (raw as { stale?: unknown }).stale !== true) return nowMs;
+  const a = Number((raw as { as_of?: unknown }).as_of);
+  return Number.isFinite(a) && a > 0 && a * 1000 <= nowMs ? a * 1000 : nowMs;
+}
+
+/** بعد هذا العمر بلا تحديث ناجح يقول الشريط «تعذّر التحميل» حتى بلا خبرٍ يعرضه — راجع `calendarStaleSilent` */
+export const NEWS_STALE_SILENT_MS = 60 * 60 * 1000;
+
+/**
+ * **تقويمٌ قديم بلا خبرٍ فيه = لا شيء على الشاشة**: بعد فشل التحديث (أو تقويم الخادم المحفوظ) كان سطر «بيانات محفوظة» لا
+ * يظهر إلا تحت تحذير خبر، و`calendarUnavailable` false ما دام محفوظٌ يُستعمل — فتقويمٌ عمره 20 ساعة بلا خبر قوي لـEURUSD
+ * خلال 3 ساعات يبدو تماماً «لا خبر»، والأحداث التي أُضيفت (أو أسبوعٌ جديد كلّه) غائبة. true حين: آخر جلب فشل أو جاء من محفوظ
+ * الخادم، وعمر الأحداث فوق `NEWS_STALE_SILENT_MS` (عثرة شبكة لدقائق لا تُنذر)، وللرمز عملات يغطّيها التقويم. المستدعي يعرضه
+ * حين لا خبر فقط.
+ */
+export function calendarStaleSilent(cache: CalendarCache | null, serverStale: boolean, symbol: string, nowMs: number): boolean {
+  if (!cache || cache.fetchedAt == null || (cache.ok && !serverStale)) return false;
+  if (nowMs - cache.fetchedAt <= NEWS_STALE_SILENT_MS) return false;
+  return symbolCurrencies(symbol).length > 0;
 }
 
 /**

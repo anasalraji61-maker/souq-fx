@@ -7,6 +7,8 @@ import {
   bankHolidayToday,
   calendarAfterFetch,
   calendarFetchEvents,
+  calendarSourceMs,
+  calendarStaleSilent,
   calendarUnavailable,
   isCryptoSymbol,
   openCalendarUnavailable,
@@ -76,8 +78,10 @@ function ensureFresh(now: number) {
     .then((r) => {
       // ردّ الأمثلة (الخادم لم يبلغ مصدره) فشلٌ لا نجاح — لا يمحو تقويماً محفوظاً، راجع `calendarFetchEvents`
       const events = calendarFetchEvents(r);
-      cache = calendarAfterFetch(cache, events, Date.now());
-      if (events) cacheServerStale = r.stale === true;
+      const n = Date.now();
+      // تقويم الخادم المحفوظ يُؤرَّخ بوقت جلبه عند المصدر لا بلحظة الردّ — راجع `calendarSourceMs`
+      cache = calendarAfterFetch(cache, events, n, calendarSourceMs(r, n));
+      if (events && cache.ok) cacheServerStale = r.stale === true;
     })
     .catch(() => {
       cache = calendarAfterFetch(cache, null, Date.now());
@@ -210,7 +214,11 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
     );
   }
   if (!hit) {
-    const down = openSymbols ? openCalendarUnavailable(cache, openSymbols, shownSymbol) : calendarUnavailable(cache, symbol);
+    // وتقويمٌ محفوظ قديم بلا خبرٍ فيه يُقال كذلك — كان يبدو «لا خبر» والأحداث الجديدة غائبة (`calendarStaleSilent`).
+    // للرمز المعروض فقط: شريط الصفقات المفتوحة يسكت عن التعطّل حين يقوله شريطٌ آخر، كـ`openCalendarUnavailable`
+    const down = openSymbols
+      ? openCalendarUnavailable(cache, openSymbols, shownSymbol)
+      : calendarUnavailable(cache, symbol) || calendarStaleSilent(cache, cacheServerStale, symbol, now);
     if (!down) return null;
     // فشلٌ بلا محفوظ: الغياب كان يُقرأ «لا خطر» — سطرٌ هادئ (عنبري لا أحمر: لا نعرف بخبر، نعرف أننا لا نعرف)
     return (

@@ -1107,3 +1107,45 @@ console.log('newsRisk ALL off the timed path selftest OK');
   assert.equal(holidayDayStartMs('AUD', Date.UTC(2026, 0, 26, 0) / 1000), Date.UTC(2026, 0, 25, 13));
 }
 console.log('newsRisk holiday live-feed 19:00 NY selftest OK');
+
+// تقويم الخادم المحفوظ يُؤرَّخ بوقت جلبه (`as_of`) لا بلحظة الردّ، وتقويمٌ قديم بلا خبرٍ فيه يُقال «تعذّر» لا يبدو «لا خبر»
+{
+  const { calendarSourceMs, calendarStaleSilent, NEWS_STALE_SILENT_MS } = require('./newsRisk') as typeof import('./newsRisk');
+  const H = 60 * 60 * 1000;
+  const src = Date.parse('2026-09-27T03:30:00Z'); // آخر جلب ناجح عند الخادم (ملف الأسبوع الماضي)
+  const t1 = Date.parse('2026-09-27T09:29:00Z'); // ردّ `stale: true`
+  const old: NewsEvent = { id: 'x', title: 'Old', currency: 'USD', impact: 'High', ts: (src - 30 * H) / 1000 };
+  assert.equal(calendarSourceMs({ stale: true, as_of: src / 1000, events: [old] }, t1), src);
+  assert.equal(calendarSourceMs({ stale: true, as_of: String(src / 1000) }, t1), src); // نصّ بخادمٍ أقدم
+  assert.equal(calendarSourceMs({ stale: false, as_of: src / 1000 }, t1), t1); // طازج: لحظة الردّ
+  assert.equal(calendarSourceMs({ stale: true, as_of: (t1 + H) / 1000 }, t1), t1); // مستقبلٌ = غير موثوق
+  assert.equal(calendarSourceMs({ stale: true }, t1), t1);
+  // قبل الإصلاح: fetchedAt = t1 فيعيش التقويم حتى t1 + 24س
+  const c1 = calendarAfterFetch(null, [old], t1, calendarSourceMs({ stale: true, as_of: src / 1000 }, t1));
+  assert.equal(c1.fetchedAt, src);
+  assert.equal(c1.ok, true);
+  // فشلٌ صريح بعدها: الحدّ يُحسب من وقت المصدر ⇒ يُسقط بعد src + 24س لا t1 + 24س
+  const monday = Date.parse('2026-09-28T07:45:00Z');
+  assert.equal(calendarAfterFetch(c1, null, monday).fetchedAt, null);
+  assert.equal(calendarUnavailable(calendarAfterFetch(c1, null, monday), 'EURUSD'), true);
+  // محفوظ الخادم أقدم من الحدّ نفسه: فشلٌ لا نجاح، والمحفوظ عندنا (إن صلح) يبقى
+  const mine = calendarAfterFetch(null, [old], monday - 2 * H);
+  const tooOld = calendarAfterFetch(mine, [old], monday, monday - NEWS_STALE_MAX_MS - 1);
+  assert.equal(tooOld.ok, false);
+  assert.equal(tooOld.fetchedAt, monday - 2 * H);
+  // calendarStaleSilent: فشلٌ بعد ساعة بلا نجاح ⇒ true؛ عثرةٌ لدقائق لا
+  const ok = calendarAfterFetch(null, [], t1);
+  assert.equal(calendarStaleSilent(ok, false, 'EURUSD', t1 + 5 * H), false); // نجاحٌ طازج (الجلب نفسه يتجدّد)
+  const f = calendarAfterFetch(ok, null, t1 + 10 * 60 * 1000);
+  assert.equal(calendarStaleSilent(f, false, 'EURUSD', t1 + 10 * 60 * 1000), false);
+  assert.equal(calendarStaleSilent(f, false, 'EURUSD', t1 + NEWS_STALE_SILENT_MS), false);
+  assert.equal(calendarStaleSilent(f, false, 'EURUSD', t1 + NEWS_STALE_SILENT_MS + 1), true);
+  assert.equal(calendarStaleSilent(f, false, 'AAPL', t1 + 2 * H), false); // رمزٌ لا يحذّر عنه التقويم
+  // محفوظ الخادم (`ok` لكن `stale`) عمره فوق الساعة ⇒ true حتى بنجاح الجلب
+  assert.equal(calendarStaleSilent(c1, true, 'EURUSD', t1), true);
+  assert.equal(calendarStaleSilent(c1, false, 'EURUSD', t1), false);
+  assert.equal(calendarStaleSilent(null, true, 'EURUSD', t1), false);
+  // فشلٌ بلا محفوظ يبقى لـ`calendarUnavailable` وحده (لا يُقال السطر مرّتين)
+  assert.equal(calendarStaleSilent(calendarAfterFetch(null, null, t1), false, 'EURUSD', t1 + 2 * H), false);
+}
+console.log('newsRisk stale calendar with no event selftest OK');
