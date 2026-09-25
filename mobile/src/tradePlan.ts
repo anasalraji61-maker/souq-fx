@@ -8,7 +8,7 @@
  * - وقف أقرب من 1 pip للدخول (أضيق من أي سبريد تجزئة) خطأ كتابة شبه مؤكد: كان يُعرض «0 pip · R:R 1:5000».
  */
 import { knownSingleName } from './chart/newsRisk';
-import { normalizeDigits } from './parseDecimal';
+import { normalizeDigits, parseDecimal } from './parseDecimal';
 import {
   centAccountSymbol,
   microAccountSymbol,
@@ -82,6 +82,20 @@ export function journalSizeLooksLikeUnits(size: number, symbol: string | null | 
   // micro («EURUSDMICRO») كالسنت: لوتها أصغر بمئة مرّة فأرقامها أكبر، وعشرة آلاف لوت خطأ كتابة بها أيضاً
   if (!smallContractPair(up)) return null;
   return Number.isFinite(size) && size > MAX_SMALL_LOTS ? { lots: null } : null;
+}
+
+/**
+ * الحجم الذي **يُحسب به مال** سطور مسودّة الدفتر (المخاطرة، الربح المحتمل، معاينة الخروج) من نصّ الخانة كما كُتب:
+ * `null` حين لا حجم، أو يبدو وحدات (`journalSizeLooksLikeUnits`)، أو «10.000» المبهم (`journalSizeDottedThousands`).
+ *
+ * كان المبهم يُسأل عنه بسطر تحذير ويُمنع حفظه، لكن السطور الثلاثة تحت الخانة تفحص «يبدو وحدات» وحدها (10 لا تبدو)
+ * فتحسب **10 لوتات**: «المخاطرة 20 pip (2,000.00 USD)» بجانب سؤال «0.10 لوت أم 10؟» — مئة ضعف لمن قصد 0.10.
+ */
+export function journalMoneyLots(raw: string, symbol: string | null | undefined): number | null {
+  const l = parseDecimal(raw);
+  if (l == null || !(l > 0)) return null;
+  if (journalSizeDottedThousands(raw, symbol) || journalSizeLooksLikeUnits(l, symbol)) return null;
+  return l;
 }
 
 /**

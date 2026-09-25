@@ -45,6 +45,7 @@ import {
   journalInstrumentKey,
   draftRiskFigures,
   journalSizeLooksLikeUnits,
+  journalMoneyLots,
   journalSizeDottedThousands,
   journalSmallLotsStdEquiv,
   journalSizeFromSmall,
@@ -418,7 +419,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
 
   const riskAt = (s: number | null) => {
     const e = pnum(entry);
-    const l = num(size);
+    // لا مال من حجمٍ مبهم («10.000») أو يبدو وحدات — سطر التحذير يسأل عنه (`journalMoneyLots`)
+    const l = journalMoneyLots(size, symbol);
     if (e == null || s == null || l == null) return null;
     // حساب السنت بالـUSC (≈ USD) وmicro بعقده (`journalRisk`) — سطر `journalCentMoneyNote` تحت USC
     const r = draftRiskFigures({ symbol, side, entry: e, sl: s, lots: l });
@@ -437,7 +439,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
      */
     const e = pnum(entry);
     const p = pnum(tp);
-    const l = num(size);
+    const l = journalMoneyLots(size, symbol);
     // المال بين قوسين من وقف الخطة نفسه (الأصلي «1R @ …» بعد الشدّ) لا من الوقف الحالي — السطر يصف خطة واحدة
     const risk = noteStop != null ? riskAt(noteStop) : draftRisk;
     const gain =
@@ -573,14 +575,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    */
   const exitResult = useMemo(() => {
     if (unreadablePx(exit)) return null;
-    const l = num(size);
     const p = exitPreview({
       symbol: symbol.trim(),
       side,
       entry: pnum(entry),
       sl: pnum(sl),
       exit: pnum(exit),
-      lots: l != null && !journalSizeLooksLikeUnits(l, symbol) ? l : null,
+      lots: journalMoneyLots(size, symbol),
       // الملاحظة التي ستُحفظ (بعلامة «1R @ …» إن شُدّ الوقف الآن) — الـR نفسه الذي يعرضه السطر بعد الحفظ
       note: noteToSave(pnum(entry), pnum(sl)),
     });

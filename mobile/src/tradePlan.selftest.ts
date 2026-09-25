@@ -20,6 +20,7 @@ import {
   exitShortcuts,
   exitPreview,
   journalSizeDottedThousands,
+  journalMoneyLots,
   averageR,
   initialStop,
   JOURNAL_NOTE_MAX,
@@ -2391,3 +2392,26 @@ console.log('tradePlan journalNoteRoom selftest OK');
   assert.equal(floatingResult({ symbol: 'EURUSD', side: 'buy', entry: 1.085, current: 1.08504 })!.dir, 1);
 }
 console.log('tradePlan realizedMove dir selftest OK');
+
+// ---- الحجم الذي يُحسب به مال مسودّة الدفتر: لا مال من «10.000» المبهم ولا من حجمٍ يبدو وحدات ----
+{
+  // كانت سطور المخاطرة/الخروج تحسب 10 لوتات: وقف 20 pip EURUSD = 2,000 USD بجانب سؤال «0.10 أم 10؟»
+  assert.equal(journalMoneyLots('10.000', 'EURUSD'), null);
+  assert.equal(journalMoneyLots('١٠.٠٠٠', 'EURUSD'), null);
+  assert.equal(journalMoneyLots('50.000', 'GBPJPY'), null);
+  assert.equal(journalMoneyLots('10000', 'EURUSD'), null); // يبدو وحدات
+  assert.equal(journalMoneyLots('', 'EURUSD'), null);
+  assert.equal(journalMoneyLots('0', 'EURUSD'), null);
+  assert.equal(journalMoneyLots('abc', 'EURUSD'), null);
+  // حجم عادي كما كان
+  assert.equal(journalMoneyLots('0.10', 'EURUSD'), 0.1);
+  assert.equal(journalMoneyLots('1.500', 'EURUSD'), 1.5);
+  assert.equal(journalMoneyLots('10', 'EURUSD'), 10);
+  assert.equal(journalMoneyLots('0,5', 'EURUSD'), 0.5);
+  // ذهب «1.000» ليس مبهماً (قراءة الوحدات أكبر) ⇒ 1 لوت
+  assert.equal(journalMoneyLots('1.000', 'XAUUSD'), 1);
+  // بعد الاختيار (0.10) يعود المال: 20 pip × 10$ × 0.1 = 20
+  const r = draftRiskFigures({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083, lots: journalMoneyLots('0.10', 'EURUSD')! })!;
+  assert.ok(Math.abs(r.cash!.amount - 20) < 1e-9);
+}
+console.log('tradePlan journalMoneyLots selftest OK');
