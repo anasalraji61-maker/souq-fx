@@ -239,3 +239,12 @@
 | efea789 | a11y: `PanSpeedSlider` — `adjustable` كان على الغلاف (يحوي زرّاً) بلا `increment/decrement` ولا `accessibilityValue` ⇒ قارئ الشاشة يعلن «قابل للضبط» والتمرير لا يفعل شيئاً (السحب وحده يضبط). نُقل للمسار: `accessible` + القيمة 1..100 + إجراءا الزيادة/الإنقاص بخطوة 5؛ الرقم المرئي مخفيّ عن القارئ (لا يُقرأ مرّتين) | مهمّة: الحالة باللون وحده / a11y |
 
 **إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط؛ `Alert.alert` داخل `chart/confirmDestructive.ts` فقط (حذف الحساب عبر `confirmDestructive`)؛ «درجة الاتفاق» أُزيلت (تعليقان)؛ الجولة قابلة للإعادة (`AccountScreen` ⇐ `OnboardingOverlay`)؛ التيك المتجمّد يُرفض (`acceptTick` + `TICK_STALE_MS`، و`at` بساعة الجهاز مطروحاً منها العمر عند الخادم ⇒ المقارنة بـ`Date.now()` متّسقة). مسح AST جديد: كل عنصر بدور tab/radio/switch/checkbox/togglebutton/menuitem بلا `accessibilityState`/`aria-*` ⇒ صفر (المرشّح الوحيد `adjustable`، أُصلح أعلاه). عناصر السحب الأخرى: `PairDrumWheel` له أزرار سابق/حالي/تالٍ، ومقابض `FrameSizedGrid` تخطيط فقط.
+
+## 2026-09-25 — تشغيل 18
+بوابة البناء خضراء قبل كل commit (tsc 0 أخطاء). صفّ ui بـCOORDINATION: backend-r19/ui16 (نوع `ChartSeries.last`).
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| c51c651 | `ChartFrame`: صفّ السعر يُخفى حين `headerPrice` null (`last: null` بلا تيك) و`quoteStale` يحرس null؛ `FocusChartModal`: `headPrice = headPx ?? last ?? null` ⇒ لا سعر يُطبع. قلب النوع بـ`api.ts` إلى `number \| null` جُرِّب: 16 خطأ tsc كلها بـ`src/chart/` (`MatrixChart`، `liveSeries`) ⇒ أُعيد النوع (لا commit أحمر) وفُتح صفّ **ui18** لـchart بالمواضع كلها وإذن بقلب السطرين بعد الحراسة. وقت التشغيل آمن اليوم: كل المستهلكين خلف `seriesHasNoRealData` | backend-r19/ui16 ⇒ ui18 (chart) |
+
+**إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط (`ToolsScreen:88`، `MatrixEdgeRails:149`)؛ `Alert.alert` داخل `chart/confirmDestructive.ts` فقط (الويب `window.confirm`، ورفض عند غيابه؛ حذف الحساب عبره)؛ «درجة الاتفاق» أُزيلت (تعليقان)؛ الجولة قابلة للإعادة (`AccountScreen:235` ⇐ `OnboardingOverlay`)؛ التيك المتجمّد يُرفض (`useMultiLiveTicks:75` `acceptTick` + `TICK_STALE_MS`). الكردية: تفرّعات `lang === 'ar'` الباقية بملفاتي (`CoursesScreen`، `LectureClassroom`) تُعطي `name_en`/`summary_en`/`school_name_en` لغير العربية وكلها موجودة (8/8 مدارس، والخادم يرسل `school_name_en`). مسحان جديدان لـ134 `Pressable`/`Touchable*` بملفاتي (شرط `===`/active/selected/on، وأي نمط `*On/*Active/*Sel` شرطي) بلا `accessibilityState` ⇒ صفر؛ عيّنة يدوية (`WatchlistPanel`، `VotePanel`) تؤكّد أن المسح يلتقط النمط وأن الحالة معلنة.
