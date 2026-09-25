@@ -264,6 +264,8 @@ export function FocusChartModal({
   // backend-r19: رمز بلا بيانات حقيقية أصلاً (DXY) ⇒ لا سعر ولا نسبة بالرأس ولا شموع بذرة مكان الشارت.
   const noReal = headSeries != null && seriesHasNoRealData(headSeries.data_source);
   const headPx = headSeries ? livePriceForHeader(headSeries, liveTick) : null;
+  // `last: null` (backend-r19) بلا تيك ⇒ لا سعر يُطبع.
+  const headPrice = headPx ?? headSeries?.last ?? null;
   const headPctRaw = headSeries ? headerChangePct(headSeries, headPx, dailyRefs[sym.toUpperCase()]) : NaN;
   const headPct = Number.isFinite(headPctRaw) ? headPctRaw : null;
   const headDir = pctDirection(headPct);
@@ -333,9 +335,9 @@ export function FocusChartModal({
                 : t.focusDesktopSub}
             </Text>
           </Pressable>
-          {headSeries && !noReal ? (
+          {headSeries && !noReal && headPrice != null ? (
             <View style={styles.quote}>
-              <Text style={styles.price}>{formatPrice(headPx ?? headSeries.last, sym)}</Text>
+              <Text style={styles.price}>{formatPrice(headPrice, sym)}</Text>
               <Text
                 style={[styles.change, { color: headPctColor }]}
                 // النسبة وحدها «+0.12%» بلا سياق و«—» علامة ترقيم لقارئ الشاشة (launch109)؛ الذيل كما يُرى.

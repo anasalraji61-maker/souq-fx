@@ -274,7 +274,10 @@ export function ChartFrame({
     headTick != null &&
     (() => {
       const sp = liveQuote!.ask! - liveQuote!.bid!;
-      return headerPrice < liveQuote!.bid! - 3 * sp || headerPrice > liveQuote!.ask! + 3 * sp;
+      return (
+        headerPrice != null &&
+        (headerPrice < liveQuote!.bid! - 3 * sp || headerPrice > liveQuote!.ask! + 3 * sp)
+      );
     })();
 
   const subtitle = useMemo(() => {
@@ -394,7 +397,8 @@ export function ChartFrame({
             </Text>
           ) : null}
         </View>
-        {noRealData ? null : (
+        {/* `headerPrice` null = `last: null` بلا تيك (backend-r19) — لا «null» ولا سقوط `toFixed` */}
+        {noRealData || headerPrice == null ? null : (
           <View style={[styles.priceRow, switching && styles.stale]}>
             <Text
               style={styles.price}
