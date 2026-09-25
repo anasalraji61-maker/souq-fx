@@ -446,6 +446,8 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
 };
 
 const PRICE_AXIS_WIDTH = 68;
+/** ارتفاع وسم سعر الخطّ/فيبو فوق خطّه (`top: -11` + خطّ 13) — أقرب من ذلك للحافّة العليا يُقلب تحته. */
+const LEVEL_LABEL_H = 13;
 /** ألوان الجلسات (مؤشّر «Sessions»): ثابتة المعنى داخله وحده — لا ربح/خسارة ولا تنبيه. */
 const SESSION_COLOR: Record<SessionId, string> = {
   tokyo: '#A78BFA',
@@ -7304,6 +7306,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       { color: d.color },
                       d.tool === 'hray' && styles.hRayLabel,
                       sel && styles.levelPriceLabelSel,
+                      yOf(d.a.price) < LEVEL_LABEL_H && styles.levelLabelBelow,
                     ]}
                     numberOfLines={1}
                   >
@@ -7539,10 +7542,45 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                         ext ? styles.fibExtLine : null,
                       ]}
                     >
-                      {text ? <Text style={styles.fibLevelLabel}>{text}</Text> : null}
+                      {text ? (
+                        <Text style={[styles.fibLevelLabel, yOf(price) < LEVEL_LABEL_H && styles.levelLabelBelow]}>
+                          {text}
+                        </Text>
+                      ) : null}
                     </View>
                   );
                 })}
+                {/* قطر التأرجح A→B متقطّعاً (كـTradingView): المستويات أفقية بعرض اللوح، فبلا القطر لا يُرى
+                    على أيّ قمّة وقاع رُسم فيبو — ولا أين طرفاه اللذان يُسحبان لتعديله (مقبضان عند التحديد). */}
+                {(() => {
+                  const seg = clipSegmentToBars(aLocal, yOf(d.a.price), bLocal, yOf(d.b.price), lastDrawLocal);
+                  const x1 = xOf(seg.ai);
+                  const x2 = xOf(seg.bi);
+                  const len = Math.hypot(x2 - x1, seg.by - seg.ay);
+                  if (!(len > 0)) return null;
+                  const angle = (Math.atan2(seg.by - seg.ay, x2 - x1) * 180) / Math.PI;
+                  return (
+                    <View
+                      pointerEvents="none"
+                      style={[
+                        styles.fibSwingLine,
+                        {
+                          left: x1,
+                          top: seg.ay,
+                          width: len,
+                          borderColor: d.color,
+                          transform: [{ rotate: `${angle}deg` }],
+                        },
+                      ]}
+                    />
+                  );
+                })()}
+                {sel ? (
+                  <>
+                    <View style={[styles.grabHandle, { left: xOf(aLocal), top: yOf(d.a.price), borderColor: d.color }]} />
+                    <View style={[styles.grabHandle, { left: xOf(bLocal), top: yOf(d.b.price), borderColor: d.color }]} />
+                  </>
+                ) : null}
               </View>
             );
           }
@@ -11424,6 +11462,17 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   levelPriceLabelSel: { backgroundColor: colors.bgPanel },
+  // خطّ على بُعد أقلّ من ارتفاع الوسم من حافّة اللوح العليا: الوسم تحته لا فوقه — فوقه يُقصّ
+  // (`overflow: hidden`) فيضيع سعر المقاومة المرسومة عند قمّة الشاشة (كـTradingView).
+  levelLabelBelow: { top: 3 },
+  fibSwingLine: {
+    position: 'absolute',
+    height: 0,
+    borderTopWidth: 1,
+    borderStyle: 'dashed',
+    opacity: 0.6,
+    transformOrigin: 'left center',
+  },
   // ارتفاع المستطيل/المنطقة بالـpip: أخفّ من وسم الخطّ (ليس مستوى سعر بل مقاس).
   zoneRangeLabel: {
     position: 'absolute',
