@@ -976,7 +976,7 @@ export type Dict = {
   mcAutoManualA11y: string;
   /** وسم بين قوسين بعد اسم لوحة مشتقّة من شكل الشمعة لا من تدفّق أوامر حقيقي — «CVD (تقديري)». قصير: يُطبع برأس اللوحة. */
   mcEstimatedTag: string;
-  /** شرح «≈»/«تقديري» بلوحات الحجم حين السلسلة بلا فوليوم (الفوركس، `seriesHasVolume` = false): الأعمدة من أجسام الشموع (`withVolume`) ⇒ OBV/MFI/VWAP/Klinger/CMF من التقدير نفسه ولا تطابق حجم التيك بمنصّة أخرى. */
+  /** شرح «≈»/«تقديري» بلوحات الحجم حين السلسلة بلا فوليوم (الفوركس، `seriesHasVolume` = false): الأعمدة من مدى كل شمعة نسبةً لسعرها (`estimatedVolume`) ⇒ OBV/MFI/VWAP/Klinger/CMF من التقدير نفسه ولا تطابق حجم التيك بمنصّة أخرى. */
   mcVolEstimatedHint: string;
   mcZoomOutA11y: string;
   mcZoomInA11y: string;
@@ -2063,7 +2063,7 @@ const ar: Dict = {
   mcAutoManualA11y: 'مقياس السعر يدوي — قد تخرج الشموع الجديدة عن العرض. اضغط لإعادته تلقائياً والعودة لآخر شمعة',
   mcEstimatedTag: 'تقديري',
   mcVolEstimatedHint:
-    'مزوّدنا لا يرسل حجم تداول لهذا الرمز (الفوركس بلا حجم مركزي) — هذه الأعمدة تقدير من حجم أجسام الشموع. مؤشرات الحجم (OBV وMFI وVWAP وKlinger…) محسوبة من التقدير نفسه، فلا تطابق أرقامها منصّة تعرض حجم التيك من وسيطها.',
+    'مزوّدنا لا يرسل حجم تداول لهذا الرمز (الفوركس بلا حجم مركزي) — هذه الأعمدة تقدير من مدى كل شمعة (من أعلاها إلى أدناها). مؤشرات الحجم (OBV وMFI وVWAP وKlinger…) محسوبة من التقدير نفسه، فلا تطابق أرقامها منصّة تعرض حجم التيك من وسيطها.',
   mcZoomOutA11y: 'تصغير',
   mcZoomInA11y: 'تكبير',
   mcPanBackA11y: 'تحريك للخلف',
@@ -3150,7 +3150,7 @@ const enUS: Dict = {
   mcAutoManualA11y: 'Price scale is manual — new candles may leave the view. Tap to restore auto and return to the latest candle',
   mcEstimatedTag: 'est.',
   mcVolEstimatedHint:
-    'Our data provider sends no traded volume for this symbol (forex has no central volume) — these bars are estimated from candle body size. Volume indicators (OBV, MFI, VWAP, Klinger…) are built from the same estimate, so their values won\'t match a platform that shows your broker\'s tick volume.',
+    'Our data provider sends no traded volume for this symbol (forex has no central volume) — these bars are estimated from each candle\'s high-to-low range. Volume indicators (OBV, MFI, VWAP, Klinger…) are built from the same estimate, so their values won\'t match a platform that shows your broker\'s tick volume.',
   mcZoomOutA11y: 'Zoom out',
   mcZoomInA11y: 'Zoom in',
   mcPanBackA11y: 'Pan back',
@@ -4262,7 +4262,7 @@ const ku: Dict = {
   mcAutoManualA11y: 'پێوەری نرخ دەستییە — لەوانەیە مۆمە نوێیەکان لە دیمەن دەربچن. دابگرە بۆ گەڕاندنەوەی خۆکار و گەڕانەوە بۆ دوایین مۆم',
   mcEstimatedTag: 'خەمڵێنراو',
   mcVolEstimatedHint:
-    'دابینکەرەکەمان قەبارەی بازرگانی بۆ ئەم هێمایە نانێرێت (فۆرێکس قەبارەی ناوەندیی نییە) — ئەم ستوونانە خەمڵاندنن لە قەبارەی لاشەی مۆمەکان. پێوەرەکانی قەبارە (OBV، MFI، VWAP، Klinger…) لە هەمان خەمڵاندن حیساب دەکرێن، بۆیە ژمارەکانیان لەگەڵ پلاتفۆرمێک کە قەبارەی تیکی بڕۆکەرەکەت پیشان دەدات یەک ناگرنەوە.',
+    'دابینکەرەکەمان قەبارەی بازرگانی بۆ ئەم هێمایە نانێرێت (فۆرێکس قەبارەی ناوەندیی نییە) — ئەم ستوونانە خەمڵاندنن لە مەودای هەر مۆمێک (لە بەرزترینەوە بۆ نزمترین). پێوەرەکانی قەبارە (OBV، MFI، VWAP، Klinger…) لە هەمان خەمڵاندن حیساب دەکرێن، بۆیە ژمارەکانیان لەگەڵ پلاتفۆرمێک کە قەبارەی تیکی بڕۆکەرەکەت پیشان دەدات یەک ناگرنەوە.',
   mcZoomOutA11y: 'بچووککردنەوە',
   mcZoomInA11y: 'گەورەکردن',
   mcPanBackA11y: 'جوڵان بۆ دواوە',
