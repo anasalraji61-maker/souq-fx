@@ -656,3 +656,16 @@
 - بقي `colors.dxy` عمداً حيث هو هوية بيانات لا لون واجهة: رمز DXY بالمتابعة، خطّ DXY بـ`FocusChartModal`/`QuadChartModal`، تمييز الساق اليسرى بـ`NetworkTreePanel`/`TreeDiagramSketch`. إن عدّها QA لوناً ثالثاً فبند مستقل.
 - بنود المهمّة الأصلية (تحقّق بالكود): «₴» بتعليقين فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده؛ «درجة الاتفاق» بتعليقات فقط.
 - **لم يُتحقَّق بصرياً ولا على جهاز** (لا متصفّح) — tsc وحده. أولى ما يُفحص: الوميض على الويب (`useNativeDriver` يسقط لـJS هناك)، وسلوك 401 بتوكن منتهٍ فعلاً.
+
+## 2026-09-26 — تشغيل 54
+صفوف ui بـCOORDINATION (دورة QA 87): **launch148**، **QA87a**، **chart-r70**. كلٌّ بـcommit مستقل، بوابة البناء خضراء (tsc 0) قبل كل واحد:
+
+| commit | ماذا | صفّ |
+|---|---|---|
+| d0c0900 | مقبض الفريم (`FrameSizedGrid`): `accessibilityValue.text` = `t.gridHandlePosA11y` («الفريم n من m») ⇒ iOS لا ينطقها نسبةً «33 percent» | launch148 |
+| 4a84586 | `AccountScreen` يقرأ `t.sessionExpired` مباشرة؛ حُذف `sessionExpiredText` والقراءة الاختيارية لـ`authSessionExpired`. **launch**: النسخة `authSessionExpired` (`locales.ts:58-59` والقيم الأربع) بلا قارئ الآن — احذفوها | QA87a |
+| 7819263 | مرجع منازل واحد: `AnalystsPanel` (الدخول، وإلا أول هدف) للمستويات وأهداف كل محلّل؛ `SocialConsensusPanel` `levels.entry`؛ `AlertsPanel` نصّ التنبيه المُطلَق بمرجع السعر الجاري (وإلا المستوى) ⇒ لا «99.950 \| 100.45» على النفط | chart-r70 |
+| cc14fe4 | عدّاد امتلاء الساق (`NetworkTreePanel` «n/m») بـ`numeric` (tabular-nums) | DESIGN-PRO §2 |
+
+- بنود المهمّة الأصلية (تحقّق بالكود): «₴» بتعليقين فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده؛ «درجة الاتفاق» بتعليقات فقط؛ إعادة الجولة `AccountScreen:211-223`؛ لا وزن 700 بنطاقي.
+- **لم يُتحقَّق بصرياً ولا بقارئ شاشة على جهاز** — tsc وحده. أولى ما يُفحص: VoiceOver على مقبض الفريم.
