@@ -333,3 +333,18 @@ console.log('axisTicks.selftest: PASS');
   assert.equal(formatScalePercent(1.234), '+1.23%');
   console.log('percentScaleTicks OK');
 }
+
+// محور السعر: مراكز تنازلية (EURUSD 1.080..1.090 على لوح 300px ⇒ y = 300..0) — كانت تُخفي كل العلامات
+// إلا الأعلى. الآن الست ظاهرة، والفهارس بترتيب المدخلات.
+{
+  const ys = [300, 240, 180, 120, 60, 0];
+  const b = layoutAxisLabels(ys, 16, 4, 298);
+  assert.deepEqual(b.map((x) => x.hidden), [false, false, false, false, false, false]);
+  assert.deepEqual(b.map((x) => x.i), [0, 1, 2, 3, 4, 5]);
+  assert.equal(b[0]!.start, 282);
+  assert.equal(b[5]!.start, 0);
+  // متلاصقة تنازلياً: يُخفى بعضها لا كلّها.
+  const tight = layoutAxisLabels([100, 90, 80, 70, 60], 16, 4, 298);
+  assert.ok(tight.filter((x) => !x.hidden).length >= 2, JSON.stringify(tight));
+  console.log('layoutAxisLabels descending PASS');
+}

@@ -139,6 +139,22 @@ export function layoutAxisLabels(
   gap: number,
   extent: number
 ): AxisLabelBox[] {
+  // مراكز تنازلية (محور السعر: العلامات من الأدنى للأعلى ⇒ y يتناقص): الخوارزمية تفترض التصاعد، فكانت
+  // تُخفي كل الوسطى ثم الأولى — المحور يطبع سعراً واحداً (الأعلى) والشبكة بلا أرقام. تُعكس ثم تُعاد بفهارسها.
+  const n0 = centers.length;
+  if (n0 > 1 && centers[0]! > centers[n0 - 1]!) {
+    const rev = layoutAscending([...centers].reverse(), size, gap, extent);
+    return rev.map((b) => ({ ...b, i: n0 - 1 - b.i })).reverse();
+  }
+  return layoutAscending(centers, size, gap, extent);
+}
+
+function layoutAscending(
+  centers: readonly number[],
+  size: number,
+  gap: number,
+  extent: number
+): AxisLabelBox[] {
   const n = centers.length;
   if (n === 0) return [];
   const g = Number.isFinite(gap) ? Math.max(0, gap) : 0;
