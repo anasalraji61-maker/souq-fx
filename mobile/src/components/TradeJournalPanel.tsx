@@ -833,7 +833,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     }
     // تأكيدٌ بالنتيجة كالإغلاق بالسوق: الخانة واحدة للنموذج كلّه، فسعرٌ كُتب لصفقة ذهب (2651.30) ثم نُقر رابط
     // صفقة EURUSD كان يُحفظ فوراً «+26,502,150 pip · +244,259%» ويُفسد نسبة النجاح وأفضل صفقة ومتوسط الربح للأبد
-    confirmClose(tr, x, 'field');
+    confirmClose(tr, x, 'field', exit);
   };
 
   /**
@@ -869,7 +869,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * تأكيد الإغلاق بسعر الخروج والنتيجة (نقاط · مال · نسبة · R) قبل الحفظ — للإغلاق بالسوق وبسعر خانة الخروج.
    * `field`: العنوان سؤال «إغلاق بسعر خانة الخروج؟» (لا اسم الزرّ) والنصّ بلا سطر «السعر من مزوّد البيانات» (لا يخصّه).
    */
-  const confirmClose = (tr: Trade, exitPx: number, source: 'market' | 'field') => {
+  const confirmClose = (tr: Trade, exitPx: number, source: 'market' | 'field', fieldText?: string) => {
     const trSide = tr.side === 'sell' ? 'sell' : 'buy';
     const mv = realizedMove({ symbol: tr.symbol, side: trSide, entry: tr.entry, exit: exitPx });
     const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
@@ -918,6 +918,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             }
             await api.closeTrade(tr.id, exitPx);
             if (!mountedRef.current) return;
+            // خانة الخروج تُفرَغ بعد إغلاقٍ منها (إن لم تُكتب بعد النقرة): كانت تبقى «1.0900» فتُحفظ الصفقة الجديدة
+            // التالية **مغلقة** فوراً بذلك السعر — ربحٌ لم يقع بنسبة الفوز ومتوسط R. الإضافة والتعديل يُفرغانها أصلاً.
+            if (source === 'field') setExit((cur) => (cur === fieldText ? '' : cur));
             playSoftClick();
             await refresh();
           } catch {
