@@ -759,3 +759,15 @@ tools80 ← tools `1d028e8` (`TradeJournalPanel.tsx:977-981`، `{button}` = `jou
 لمسار الفشل فقط، ضُمّت ملاحظتي إليه؛ (2) صفّ QA65 → tools: سبريد رأس الطرفية `TerminalScreen.tsx:1678` `formatPrice(ask-bid)` — نسخة chart-r48 التي لم تُصلَح.
 **إلحاق (تعارضان عند الدفع):** وصل ui 20 وtools 81 (`6005b59` الظلّ — يشمل ملاحظتي) وchart `f975167` وlaunch 122 أثناء الدورة ⇒ أعدتُ بناء COORDINATION على الرأس وأعدتُ التحقّق بالكود؛ البناء أخضر 0.
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات (`anchorDemoSeries` صار بلا مستعمل).
+
+## 2026-09-25 — الدورة 66
+**البناء:** أخضر 0 (بعد a1277b5) — لا إصلاح لازم. **Selftests:** 100/100 ناجح (`npx tsx`؛ +1 منذ 65، و`anchorDemoSeries.selftest` حُذف مع دالّته).
+**التحقّق من الإغلاقات بالكود (4 صفوف):** QA65 ← tools `df43700` (`TerminalScreen.tsx:1723`)؛ tools81 التحميل ← ui `ce58542` + tools `df43700` (`bootFrame` `:112-113`)؛
+launch123 ← tools `a9aa402` (`TradeJournalPanel.tsx:980`) + launch `a1277b5` (grep `levelLooksLikePipsSaveAgain` صفر)؛ launch122 ← ui `345b676` + chart `11ebb3e` (grep `anchorDemoSeries` صفر).
+**إلحاق (تعارض عند الدفع):** وصل chart `45b053a` (chart-r49) وbackend `eb8435e` (tools81 RSS) وui 22 وlaunch 124 أثناء الدورة ⇒ أعدتُ بناء COORDINATION على 86ea4a3 وتحقّقتُ بالكود:
+chart-r49 أُغلق (`LayoutPanel.tsx:27 :60 :70 :123`)، tools81 RSS أُغلق (`econ_calendar.py:103-112` `ts: None`) ⇒ **6 صفوف أُغلقت**. launch124 → ui مفتوح (تحقّقتُ `LectureClassroom.tsx:170-199` ثم الحفظ `:220-229`).
+**إلحاق 2:** وصل chart 50 (`chart-r50` → ui، تحقّقتُ `FocusChartModal.tsx:566 :569-570` `infoAccent`) وtools `8492e9a` (props مسمّاة لـ`LayoutPanel`، `ToolsScreen.tsx:900`). البناء أُعيد على الرأس.
+**المراجعة (a — تكرار/ميت/تصديرات):** سكربت على كل `export` بـ`mobile/src` (بلا selftest) + كل ملف غير مستورد + أسماء معرّفة بأكثر من ملف: لا تكرار؛ غير المستورد
+`modules/tools-panels/registry.ts` (الملف **كلّه**، منذ `3c27653`، كان الصفّ يذكر `getToolPanel` وحده) و`MessagesScreen` (launch52)؛ و`emptySlot` بالطرفية `:759` ما زال
+يبني من `mockSeries` (غير معروض، `:1607` يُسقط الفارغ) ⇒ أُلحق بصفّ QA1 ★. 110 تصديراً يُستعمل داخل ملفه/اختباره فقط — ليس ميتاً، لا بند.
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة.
