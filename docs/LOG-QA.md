@@ -791,3 +791,13 @@ launch126 ← backend `a58fed3` (`alert_worker.py:218`). طلب chart `mcEstimat
 خلفية `MatrixSidePanel.tsx:79` (`accessible={false}`)، `TradeJournalPanel.tsx:2013` (label `:2028`)، `MessagesScreen` (launch52). **لا بند جديد.**
 أضفتُ لـSTATUS ⛔16 سؤال backend-r6 (تقاطعات على الشمعة غير المغلقة) — كان بـCOORDINATION وحده.
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة (مرشّح: `MAX_SPREAD_PIPS = 500` واحد لكل الأدوات، ذكره tools 85).
+
+## 2026-09-25 — الدورة 69
+**البناء:** أخضر 0 (على 9f7be25) — لا إصلاح لازم. **Selftests:** 101/101 ناجح (`npx tsx`؛ `stopInsideTypicalSpread` أُضيف لـ`positionSize.selftest` القائم).
+**التحقّق بالكود:** لا صفّ أُغلق. launch127 مفتوح (`PositionSizePanel.tsx:1553` `'7'`/`'0.07'` لا يتبع `moneyCcy`). **جديد tools85 → launch:** مفتاح
+`riskCalcStopInsideTypicalSpread` — الكود يقرأه اختيارياً (`:896 :1707-1713`) وgrep بـ`locales.ts` صفر ⇒ التحذير غير ظاهر. «تصحيح لا تحريك» فكرة بقائمة tools لا طلب.
+لا طلبات جديدة بسجلات chart 52 / tools 84 / launch 126 / ui 26 / backend.
+**المراجعة (d — أرقام متناقضة):** `MAX_SPREAD_PIPS` 500 و`MAX_SPREAD_PIPS_HIGH_VOL_EXOTIC` 3000 ↔ نصّ الخطأ (بلا رقم منذ `aa640ed`)؛ `MAX_LEVERAGE` 3000 ↔ `{max}`؛
+`RISK_HIGH_PCT` 2 ↔ `riskCalcHighRisk` و«1–2%» بالنصوص الثلاثة؛ `ORDER_WARN_LOTS` 50 / `MAX_SMALL_LOTS` 200 ↔ «50–100 lot»؛ `typicalSpreadPipsExample` ↔ `stopInsideTypicalSpread`؛
+RSI 14/30/70 بالماسح، والتطبيق لا يرسل `symbols` (سقف `MAX_SCAN_SYMBOLS` 30 لا يُمسّ). **لا بند** — تعليق مطوّر قديم فقط `locales.ts:473` يذكر `MAX_SANE_LOTS` (100) والحدّ الفعلي 50.
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
