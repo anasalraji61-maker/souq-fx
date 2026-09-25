@@ -223,8 +223,12 @@ assert.equal(one.riskPips, 1);
 assert.equal(analyzePlan({ symbol: 'USDJPY', side: 'buy', entry: 150, sl: 149.995, tp: 151 }).issue, 'slTooClose');
 // الجهة الخطأ تسبق «قريب جداً»
 assert.equal(analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08501, tp: 1.09 }).issue, 'slWrongSide');
-// رمز بلا pip معروف: لا حكم «قريب جداً»
-assert.equal(analyzePlan({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59999.99, tp: 61000 }).ok, true);
+// رمز بلا pip معروف: «قريب جداً» دون 0.002% من الدخول (`minRiskForR`) — BTC 60000 ⇒ 1.2$؛ وقفٌ حقيقي كما كان
+assert.equal(analyzePlan({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59999.99, tp: 61000 }).issue, 'slTooClose');
+assert.equal(analyzePlan({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59999, tp: 61000 }).issue, 'slTooClose');
+assert.equal(analyzePlan({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59998, tp: 61000 }).ok, true);
+assert.equal(analyzePlan({ symbol: 'US30', side: 'sell', entry: 44000, sl: 44000.5, tp: 43900 }).issue, 'slTooClose');
+assert.equal(analyzePlan({ symbol: 'US30', side: 'sell', entry: 44000, sl: 44020, tp: 43900 }).ok, true);
 
 console.log('tradePlan slTooClose selftest OK');
 
@@ -1321,15 +1325,15 @@ console.log('tradePlan liveEntryOrphaned selftest OK');
   const t = (symbol: string | undefined, side: string, entry: number, sl: number, exit: number) => ({
     symbol, side, entry, sl, exit, status: 'closed',
   });
-  // الخطأ الذي يُصلحه: بلا رمز كما كان
-  assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.08499, exit: 1.087 }), 200);
+  // بلا رمز كان +200R؛ الآن يُسقطه الحدّ النسبي 0.002% من الدخول (`minRiskForR`) أيضاً
+  assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.08499, exit: 1.087 }), null);
   assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08499, exit: 1.087 }), null);
   const trades = [
     t('EURUSD', 'buy', 1.085, 1.08499, 1.087),
     t('EURUSD', 'buy', 1.1, 1.09, 1.12),
     t('USDJPY', 'sell', 150, 151, 151),
   ];
-  assert.deepEqual(averageR(trades.map((x) => ({ ...x, symbol: undefined }))), { r: 67, n: 3 });
+  assert.deepEqual(averageR(trades.map((x) => ({ ...x, symbol: undefined }))), { r: 0.5, n: 2 });
   assert.deepEqual(averageR(trades), { r: 0.5, n: 2 });
   // 1 pip بالضبط يُحسب (هامش الفاصلة العائمة كـanalyzePlan): 1.0851 − 1.0850
   assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.0851, sl: 1.085, exit: 1.0853 }), 2);
@@ -1338,8 +1342,9 @@ console.log('tradePlan liveEntryOrphaned selftest OK');
   assert.equal(realizedR({ symbol: 'USDJPY', side: 'sell', entry: 150, sl: 150.01, exit: 149.9 }), 10);
   // ذهب: pip 0.1 — وقف 0.05 ⇒ null
   assert.equal(realizedR({ symbol: 'XAUUSD', side: 'buy', entry: 2350, sl: 2349.95, exit: 2351 }), null);
-  // رمز مجهول: لا حدّ pip، كما كان
-  assert.equal(realizedR({ symbol: 'ZZZ', side: 'buy', entry: 100, sl: 99.99999, exit: 100.00002 }), 2);
+  // رمز مجهول: لا حدّ pip، بل 0.002% من الدخول (100 ⇒ 0.002) — كان وقف 0.00001 يُحسب
+  assert.equal(realizedR({ symbol: 'ZZZ', side: 'buy', entry: 100, sl: 99.99999, exit: 100.00002 }), null);
+  assert.equal(realizedR({ symbol: 'ZZZ', side: 'buy', entry: 100, sl: 99.99, exit: 100.02 }), 2);
   // exitPreview وfloatingResult بالمسطرة نفسها
   assert.equal(exitPreview({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08499, exit: 1.087 })!.r, null);
   assert.equal(floatingResult({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.08499, current: 1.087 })!.r, null);
@@ -1398,8 +1403,17 @@ console.log('tradePlan pnlPctContradictsCash selftest OK');
   assert.equal(stopTooClose({ symbol: 'USDJPY', side: 'buy', entry: 150, sl: 149.99 }), false);
   assert.equal(stopTooClose({ symbol: 'XAUUSD', side: 'sell', entry: 2350, sl: 2350.05 }), true);
   assert.equal(stopTooClose({ symbol: 'XAUUSD', side: 'sell', entry: 2350, sl: 2350.1 }), false);
-  // رمز مجهول أو أسعار غير صالحة: لا
-  assert.equal(stopTooClose({ symbol: 'ZZZ', side: 'buy', entry: 1, sl: 0.99999 }), false);
+  // رمز مجهول: 0.002% من الدخول (1 ⇒ 0.00002) — كان «لا» دائماً فيُسقط R بعد الإغلاق بلا تحذير
+  assert.equal(stopTooClose({ symbol: 'ZZZ', side: 'buy', entry: 1, sl: 0.99999 }), true);
+  assert.equal(stopTooClose({ symbol: 'ZZZ', side: 'buy', entry: 1, sl: 0.9999 }), false);
+  assert.equal(stopTooClose({ symbol: 'BTCUSD', side: 'sell', entry: 60000, sl: 60000.01 }), true);
+  assert.equal(stopTooClose({ symbol: 'BTCUSD', side: 'sell', entry: 60000, sl: 60300 }), false);
+  // التحذير والـR متّفقان بلا pip أيضاً: ما يُحذَّر منه لا R له، وما لا يُحذَّر منه له R
+  for (const sl of [59999.99, 59999, 59998.8, 59998.79, 59998, 59400]) {
+    const close = stopTooClose({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl });
+    assert.equal(realizedR({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl, exit: 61200 }) == null, close, `BTC ${sl}`);
+  }
+  // أسعار غير صالحة: لا
   assert.equal(stopTooClose({ symbol: 'EURUSD', side: 'buy', entry: null, sl: 1.08 }), false);
   assert.equal(stopTooClose({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: null }), false);
   // يتّفق مع analyzePlan حين يُكتب الهدف، ومع realizedR الذي لا يعطي R لهذا الوقف
@@ -2496,3 +2510,41 @@ console.log('tradePlan realizedMove dir selftest OK');
   assert.ok(Math.abs(r.cash!.amount - 20) < 1e-9);
 }
 console.log('tradePlan journalMoneyLots selftest OK');
+
+// ── R بلا pip معروف (كريبتو/مؤشرات/أسهم): وقفٌ أضيق من 0.002% من الدخول لا يُبنى عليه R ──────────────
+{
+  // BTC 60000 بوقف 59999.99 (خطأ كتابة 59999) وخروج 61000 كانت +100000R
+  assert.equal(realizedR({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59999.99, exit: 61000 }), null);
+  // الحدّ: 0.002% × 60000 = 1.2$ — وقف 1$ يسقط، 1.2$ و2$ يُحسبان
+  assert.equal(realizedR({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59999, exit: 60010 }), null);
+  assert.equal(realizedR({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59998, exit: 60010 }), 5);
+  // وقفٌ حقيقي على الكريبتو والمؤشرات بلا تغيير
+  assert.equal(realizedR({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59400, exit: 61200 }), 2);
+  assert.equal(realizedR({ symbol: 'US30', side: 'sell', entry: 44000, sl: 44050, exit: 43900 }), 2);
+  assert.equal(realizedR({ symbol: 'US30', side: 'sell', entry: 44000, sl: 44000.5, exit: 43900 }), null);
+  assert.equal(realizedR({ symbol: 'SPX500', side: 'buy', entry: 6000, sl: 5998, exit: 6003 }), 1.5);
+  assert.equal(realizedR({ symbol: 'DOGEUSD', side: 'buy', entry: 0.2, sl: 0.199, exit: 0.203 }), 3);
+  // بلا رمز: الحدّ النسبي نفسه، والوقف العادي كما كان
+  assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.08499, exit: 1.087 }), null);
+  assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.0825, exit: 1.09 }), 2);
+  // pip معروف: القاعدة القديمة وحدها (الذهب 0.1 = 0.0029% عند 3500 ⇒ يبقى صالحاً فوق الحدّ النسبي أصلاً)
+  assert.equal(realizedR({ symbol: 'XAUUSD', side: 'buy', entry: 3500, sl: 3499.9, exit: 3500.2 }), 2);
+  assert.equal(realizedR({ symbol: 'XAUUSD', side: 'buy', entry: 3500, sl: 3499.95, exit: 3500.2 }), null);
+  // «متوسط R» لا يبتلعه الخطأ: +2R و−1R وصفقة الوقف 0.01 ⇒ +0.5R على صفقتين
+  const avg = averageR([
+    { symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59400, exit: 61200, status: 'closed' },
+    { symbol: 'BTCUSD', side: 'sell', entry: 60000, sl: 60600, exit: 60600, status: 'closed' },
+    { symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59999.99, exit: 61000, status: 'closed' },
+  ]);
+  assert.deepEqual(avg, { r: 0.5, n: 2 });
+  // علامة الوقف الأصلي بمسافة دون الحدّ لا تصلح ⇒ R من `sl` الحالي
+  assert.equal(
+    realizedR({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59400, exit: 61200, note: '1R @ 59999.99' }),
+    2
+  );
+  assert.equal(
+    realizedR({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59900, exit: 61200, note: '1R @ 59400' }),
+    2
+  );
+}
+console.log('tradePlan R floor without pip selftest OK');

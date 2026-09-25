@@ -317,23 +317,22 @@ export function analyzePlan(input: {
   };
   if (riskDist <= 0) return { ...base, ok: false, issue: 'slWrongSide', rr: null };
   if (rewardDist <= 0) return { ...base, ok: false, issue: 'tpWrongSide', rr: null };
-  // هامش نسبي صغير: 1.0851 − 1.0850 بالفاصلة العائمة = 0.0000999… ويجب أن يُعدّ 1 pip كاملاً
-  if (pip && riskDist < pip * (1 - 1e-6)) return { ...base, ok: false, issue: 'slTooClose', rr: null };
+  // 1 pip، أو 0.002% من الدخول بلا pip معروف (`minRiskForR`) — الحدّ الذي يُسقط R الصفقة بعد إغلاقها
+  if (riskDist < minRiskForR(input.symbol, entry)) return { ...base, ok: false, issue: 'slTooClose', rr: null };
   return { ...base, ok: true, issue: null, rr: cleanRatio(rewardDist, riskDist) };
 }
 
 /**
  * الوقف بالجهة الصحيحة لكنه **أقرب من 1 pip** للدخول — حدّ `analyzePlan` (`slTooClose`) نفسه بلا حاجة لهدف.
  * الدفتر كان يحذّر منه فقط حين يُكتب الهدف أيضاً؛ بوقفٍ وحده كان يعرض «المخاطرة 0.1 pip (1.00 USD)» كخطة
- * عادية، ثم لا R للصفقة بعد إغلاقها (`realizedR`) بلا سبب مرئي. false لرمزٍ مجهول الـpip أو وقفٍ بالجهة الخطأ
- * (لذاك تحذيره) أو أسعار غير صالحة.
+ * عادية، ثم لا R للصفقة بعد إغلاقها (`realizedR`) بلا سبب مرئي. رمزٌ مجهول الـpip (BTC، US30): أضيق من 0.002% من
+ * الدخول (`minRiskForR`) — الحدّ نفسه الذي يُسقط R. false لوقفٍ بالجهة الخطأ (لذاك تحذيره) أو أسعار غير صالحة.
  */
 export function stopTooClose(input: { symbol: string; side: TradeSide; entry: number | null; sl: number | null }): boolean {
   const { side, entry, sl } = input;
   if (!finitePos(entry) || !finitePos(sl)) return false;
   const risk = side === 'buy' ? entry - sl : sl - entry;
-  const pip = journalPipSize(input.symbol);
-  return pip != null && risk > 0 && risk < pip * (1 - 1e-6);
+  return risk > 0 && risk < minRiskForR(input.symbol, entry);
 }
 
 /**
@@ -402,7 +401,7 @@ export function editExitValue(startedClosed: boolean, exit: number | null): numb
  * مع `symbol` معروف الـpip: وقفٌ **أضيق من 1 pip** ⇒ null، بحدّ `analyzePlan` نفسه (`slTooClose`). شراء
  * 1.0850 بوقف 1.08499 (خطأ منزلة عن 1.0849) وخروج 1.0870 كان «+200R» بسطر الصفقة، ويرفع «متوسط R» لثلاث
  * صفقات إلى +66R — الرقم الذي يقرّر به المتداول أيستمرّ على نظامه. الدفتر يحذّر من هذا الوقف أصلاً
- * (`planSlTooClose`)، فلا يُبنى عليه R. بلا `symbol` (أو رمز مجهول) السلوك كما كان.
+ * (`planSlTooClose`)، فلا يُبنى عليه R. بلا pip معروف: الحدّ 0.002% من الدخول (`minRiskForR`).
  */
 export function realizedR(input: {
   symbol?: string;
@@ -415,6 +414,19 @@ export function realizedR(input: {
 }): number | null {
   const r = exactR(input);
   return r == null ? null : roundR(r);
+}
+
+/**
+ * أضيق مسافة وقف يُبنى عليها R: 1 pip حين يُعرف، وإلا **0.002% من الدخول** (`R_MIN_RISK_FRACTION`). الكريبتو والمؤشرات
+ * والأسهم بلا pip بالدفتر (`journalPipSize` null) فلم يكن لها حدّ: BTC 60000 بوقف 59999.99 (خطأ كتابة 59999) وخروج 61000
+ * كانت «+100000R» تبتلع «متوسط R» كلّه. 0.002% = BTC 1.2$، US30 0.9 نقطة، SPX 0.12 — دون سبريد أيّ منها؛ وأضيق pip
+ * فوركس نسبياً (الذهب 0.1 عند 3500 = 0.0029%) فوقه، فلا وقف حقيقي يسقط.
+ */
+const R_MIN_RISK_FRACTION = 2e-5;
+function minRiskForR(symbol: string | undefined, entry: number): number {
+  const pip = journalPipSize(symbol);
+  // هامش نسبي صغير: 1.0851 − 1.0850 بالفاصلة العائمة = 0.0000999… ويجب أن يُعدّ 1 pip كاملاً
+  return pip ? pip * (1 - 1e-6) : entry * R_MIN_RISK_FRACTION;
 }
 
 function exactR(input: {
@@ -432,9 +444,7 @@ function exactR(input: {
   if (!finitePos(sl)) return null;
   const buy = side === 'buy';
   const risk = buy ? entry - sl : sl - entry;
-  if (risk <= 0) return null;
-  const pip = journalPipSize(input.symbol);
-  if (pip && risk < pip * (1 - 1e-6)) return null;
+  if (risk <= 0 || risk < minRiskForR(input.symbol, entry)) return null;
   const move = buy ? exit - entry : entry - exit;
   return move / risk;
 }
@@ -459,7 +469,7 @@ export function initialStop(input: {
   note?: string | null;
 }): number | null {
   if (typeof input.note !== 'string' || !finitePos(input.entry)) return null;
-  const pip = journalPipSize(input.symbol);
+  const minRisk = minRiskForR(input.symbol, input.entry);
   // آخر علامة **صالحة** لا الأولى: علامةٌ بطلت بتصحيح الدخول ثم شدٌّ جديد ⇒ «1R @ 1.095 · 1R @ 1.09» — كانت الأولى
   // وحدها تُفحص ⇒ لا وقف أصلي ⇒ R من المشدود (5R بدل 1.25R) ونقل الوقف للتعادل يُرفض «بالجهة الخطأ»
   let found: number | null = null;
@@ -469,7 +479,7 @@ export function initialStop(input: {
     const v = Number(m[1]);
     if (!finitePos(v)) continue;
     const risk = input.side === 'buy' ? input.entry - v : v - input.entry;
-    if (!(risk > 0) || (pip && risk < pip * (1 - 1e-6))) continue;
+    if (!(risk > 0) || risk < minRisk) continue;
     found = v;
   }
   return found;
