@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { type DrawTool, type LensMode } from '../chart/types';
@@ -55,81 +55,132 @@ export const LENS_MARK: Record<LensMode, string> = {
   liquidity: '◎',
 };
 
+/** DESIGN-PRO §4: الشريطان أيقونات فقط؛ اسم الأداة تلميحٌ بعد 400ms من المرور (ويب) أو بالضغط
+ * الطويل (لمس). يُرسَم التلميح على مستوى الشريط لا داخل `ScrollView` كي لا يُقصّ. */
+const TIP_DELAY_MS = 400;
+
+type RailTip = { text: string; top: number } | null;
+
+function useRailTip() {
+  const railRef = useRef<View>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [tip, setTip] = useState<RailTip>(null);
+  const clear = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+  }, []);
+  useEffect(() => clear, [clear]);
+  const show = useCallback((text: string, btn: View | null) => {
+    const rail = railRef.current;
+    if (!btn || !rail) return;
+    btn.measureInWindow((_bx, by, _bw, bh) => {
+      rail.measureInWindow((_rx, ry) => setTip({ text, top: by - ry + bh / 2 - 12 }));
+    });
+  }, []);
+  const hoverIn = useCallback(
+    (text: string, btn: View | null) => {
+      clear();
+      timer.current = setTimeout(() => show(text, btn), TIP_DELAY_MS);
+    },
+    [clear, show],
+  );
+  const hide = useCallback(() => {
+    clear();
+    setTip(null);
+  }, [clear]);
+  return { railRef, tip, show, hoverIn, hide };
+}
+
+type RailButtonProps = {
+  mark: string;
+  tip: string;
+  a11yLabel: string;
+  on?: boolean;
+  onPress: () => void;
+  railTip: ReturnType<typeof useRailTip>;
+};
+
+function RailButton({ mark, tip, a11yLabel, on, onPress, railTip }: RailButtonProps) {
+  const ref = useRef<View>(null);
+  return (
+    <Pressable
+      ref={ref}
+      accessibilityState={on === undefined ? undefined : { selected: on }}
+      accessibilityRole="button"
+      accessibilityLabel={a11yLabel}
+      style={({ pressed }) => [
+        styles.railBtn,
+        on && styles.railBtnOn,
+        pressed && {
+          opacity: buttons.pressedOpacity,
+          transform: [{ scale: buttons.pressedScale }],
+        },
+      ]}
+      onPress={onPress}
+      onHoverIn={() => railTip.hoverIn(tip, ref.current)}
+      onHoverOut={railTip.hide}
+      onLongPress={() => railTip.show(tip, ref.current)}
+      delayLongPress={TIP_DELAY_MS}
+      onPressOut={railTip.hide}
+    >
+      <Text style={[styles.railMark, on && styles.railMarkOn]}>{mark}</Text>
+    </Pressable>
+  );
+}
+
+function RailTipBubble({ tip, side }: { tip: RailTip; side: 'left' | 'right' }) {
+  if (!tip) return null;
+  return (
+    <View
+      pointerEvents="none"
+      style={[styles.tipBubble, side === 'left' ? styles.tipBubbleLeftRail : styles.tipBubbleRightRail, { top: tip.top }]}
+    >
+      <Text style={styles.tipText} numberOfLines={1}>
+        {tip.text}
+      </Text>
+    </View>
+  );
+}
+
 export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }: LeftProps) {
   const { t } = useI18n();
+  const railTip = useRailTip();
   return (
-    <View style={styles.leftRail}>
+    <View ref={railTip.railRef} style={styles.leftRail}>
       <Text style={styles.railTitle}>{t.lensSectionTitle}</Text>
-      {localizedLenses(t).map((l) => {
-        const on = activeLens === l.id;
-        return (
-          <Pressable
-            accessibilityState={{ selected: on }}
-            accessibilityRole="button"
-            key={l.id}
-            style={({ pressed }) => [
-              styles.railBtn,
-              on && styles.railBtnOn,
-              pressed && {
-                opacity: buttons.pressedOpacity,
-                transform: [{ scale: buttons.pressedScale }],
-              },
-            ]}
-            onPress={() => onLens(l.id)}
-            accessibilityLabel={`${t.lensA11yPrefix}${l.label}`}
-          >
-            <Text style={[styles.railMark, on && styles.railMarkOn]}>{LENS_MARK[l.id]}</Text>
-            <Text style={[styles.railTip, on && styles.railTipOn]}>{l.label}</Text>
-          </Pressable>
-        );
-      })}
+      {localizedLenses(t).map((l) => (
+        <RailButton
+          key={l.id}
+          mark={LENS_MARK[l.id]}
+          tip={l.label}
+          a11yLabel={`${t.lensA11yPrefix}${l.label}`}
+          on={activeLens === l.id}
+          onPress={() => onLens(l.id)}
+          railTip={railTip}
+        />
+      ))}
       <View style={styles.railSep} />
       <Text style={styles.railTitle}>{t.railDrawSectionTitle}</Text>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {localizedDrawTools(t).map((tool) => {
-          const on = activeTool === tool.id;
-          return (
-            <Pressable
-              accessibilityState={{ selected: on }}
-              accessibilityRole="button"
-              key={tool.id}
-              style={({ pressed }) => [
-                styles.railBtn,
-                on && styles.railBtnOn,
-                pressed && {
-                  opacity: buttons.pressedOpacity,
-                  transform: [{ scale: buttons.pressedScale }],
-                },
-              ]}
-              onPress={() => onTool(tool.id)}
-              accessibilityLabel={`${t.drawToolA11yPrefix}${tool.label}`}
-            >
-              <Text style={[styles.railMark, on && styles.railMarkOn]}>
-                {DRAW_MARK[tool.id]}
-              </Text>
-              <Text style={[styles.railTip, on && styles.railTipOn]} numberOfLines={1}>
-                {tool.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+        onScrollBeginDrag={railTip.hide}
+      >
+        {localizedDrawTools(t).map((tool) => (
+          <RailButton
+            key={tool.id}
+            mark={DRAW_MARK[tool.id]}
+            tip={tool.label}
+            a11yLabel={`${t.drawToolA11yPrefix}${tool.label}`}
+            on={activeTool === tool.id}
+            onPress={() => onTool(tool.id)}
+            railTip={railTip}
+          />
+        ))}
         <View style={styles.railSep} />
-        <Pressable
-          accessibilityRole="button"
-          style={({ pressed }) => [
-            styles.railBtn,
-            pressed && {
-              opacity: buttons.pressedOpacity,
-              transform: [{ scale: buttons.pressedScale }],
-            },
-          ]}
-          onPress={onQuad}
-          accessibilityLabel={t.railOpenQuadA11y}
-        >
-          <Text style={styles.railMark}>▦</Text>
-          <Text style={styles.railTip}>2×2</Text>
-        </Pressable>
+        <RailButton mark="▦" tip="2×2" a11yLabel={t.railOpenQuadA11y} onPress={onQuad} railTip={railTip} />
       </ScrollView>
+      <RailTipBubble tip={railTip.tip} side="left" />
     </View>
   );
 }
@@ -149,34 +200,28 @@ export function RightPanelRail({ activePanel, onOpenPanel }: RightProps) {
     { id: 'backtest', mark: '↺', tip: t.backtestWord },
   ];
 
+  const railTip = useRailTip();
   return (
-    <View style={styles.rightRail}>
+    <View ref={railTip.railRef} style={styles.rightRail}>
       <Text style={styles.railTitle}>{t.railPanelsSectionTitle}</Text>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {RIGHT_ICONS.map((x) => {
-          const on = activePanel === x.id;
-          return (
-            <Pressable
-              accessibilityState={{ selected: on }}
-              accessibilityRole="button"
-              key={x.id}
-              style={({ pressed }) => [
-                styles.railBtn,
-                on && styles.railBtnOn,
-                pressed && {
-                  opacity: buttons.pressedOpacity,
-                  transform: [{ scale: buttons.pressedScale }],
-                },
-              ]}
-              onPress={() => onOpenPanel(activePanel === x.id ? null : x.id)}
-              accessibilityLabel={`${t.railPanelA11yPrefix}${x.tip}`}
-            >
-              <Text style={[styles.railMark, on && styles.railMarkOn]}>{x.mark}</Text>
-              <Text style={[styles.railTip, on && styles.railTipOn]}>{x.tip}</Text>
-            </Pressable>
-          );
-        })}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+        onScrollBeginDrag={railTip.hide}
+      >
+        {RIGHT_ICONS.map((x) => (
+          <RailButton
+            key={x.id}
+            mark={x.mark}
+            tip={x.tip}
+            a11yLabel={`${t.railPanelA11yPrefix}${x.tip}`}
+            on={activePanel === x.id}
+            onPress={() => onOpenPanel(activePanel === x.id ? null : x.id)}
+            railTip={railTip}
+          />
+        ))}
       </ScrollView>
+      <RailTipBubble tip={railTip.tip} side="right" />
     </View>
   );
 }
@@ -194,6 +239,7 @@ export function MatrixEdgeRails(props: LeftProps & RightProps & { visible?: bool
 
 const styles = StyleSheet.create({
   leftRail: {
+    zIndex: 10,
     width: 52,
     backgroundColor: colors.bgElevated,
     borderRightWidth: 1,
@@ -202,6 +248,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rightRail: {
+    zIndex: 10,
     width: 48,
     backgroundColor: colors.bgElevated,
     borderLeftWidth: 1,
@@ -219,12 +266,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   railBtn: {
-    width: 44,
-    minHeight: 40,
-    paddingVertical: 6,
+    width: 36,
+    minHeight: 28,
+    paddingVertical: spacing.xs,
     borderRadius: radii.sm,
     alignItems: 'center',
-    gap: 2,
+    justifyContent: 'center',
   },
   railBtnOn: {
     backgroundColor: colors.accentSoft,
@@ -233,8 +280,19 @@ const styles = StyleSheet.create({
   },
   railMark: { color: colors.textMuted, fontSize: 13, fontWeight: '800' },
   railMarkOn: { color: colors.accent },
-  railTip: { color: colors.textDim, fontSize: 8, fontWeight: '700' },
-  railTipOn: { color: colors.accent },
+  tipBubble: {
+    position: 'absolute',
+    zIndex: 20,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: 6,
+    backgroundColor: colors.bgElevated,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  tipBubbleLeftRail: { left: '100%', marginLeft: spacing.xs },
+  tipBubbleRightRail: { right: '100%', marginRight: spacing.xs },
+  tipText: { color: colors.text, fontSize: 12, fontWeight: '500' },
   railSep: {
     width: 28,
     height: 1,
