@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Platform, LayoutChangeEvent } from 'react-native';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api, type ChartSeries, type LiveTick } from '../api';
 import { TimeframeBar } from './TimeframeBar';
 import { isTimeframe, type Timeframe } from '../timeframes';
@@ -659,12 +659,12 @@ const styles = StyleSheet.create({
   tf: { color: colors.textDim, fontSize: 11, marginLeft: spacing.xs },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 0 },
   priceRowPhone: { flexWrap: 'wrap', flexShrink: 1, columnGap: 6, rowGap: 2 },
-  price: { color: colors.text, fontWeight: '600', fontSize: 13 },
+  price: { ...numeric, color: colors.text, fontWeight: '600', fontSize: 13 },
   liveTag: { color: colors.bull, fontSize: 9, fontWeight: '800' },
   liveTagMuted: { color: colors.textMuted, fontWeight: '700' },
-  spreadTag: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
+  spreadTag: { ...numeric, color: colors.textDim, fontSize: 9, fontWeight: '700' },
   /** السبريد بالـpip هو الرقم الذي يُقرأ؛ أبرز قليلاً من السعرين بجانبه. */
-  spreadPips: { color: colors.text, fontWeight: '800' },
+  spreadPips: { ...numeric, color: colors.text, fontWeight: '800' },
   sourceTag: {
     color: colors.accent,
     fontSize: 9,
@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
     marginInlineStart: 4,
     opacity: 0.9,
   },
-  chg: { fontSize: 12, fontWeight: '700' },
+  chg: { ...numeric, fontSize: 12, fontWeight: '700' },
   focusBtn: {
     width: 28,
     height: 28,

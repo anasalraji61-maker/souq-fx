@@ -8,7 +8,7 @@ import {
   Platform,
   Modal,
 } from 'react-native';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api, type PriceAlert } from '../api';
 import { formatPrice } from '../chart/math';
 import { confirmDestructive } from '../chart/confirmDestructive';
@@ -659,14 +659,14 @@ const styles = StyleSheet.create({
   symOn: { color: colors.accent },
   symDxy: { color: colors.dxy },
   demoTag: { color: colors.warn, fontSize: 8, fontWeight: '700', marginTop: 1 },
-  price: { color: colors.textMuted, fontSize: 10, fontWeight: '700', marginLeft: 6 },
+  price: { ...numeric, color: colors.textMuted, fontSize: 10, fontWeight: '700', marginLeft: 6 },
   priceOn: { color: colors.text },
   priceDemo: { color: colors.textDim, fontWeight: '600' },
   priceUp: { color: colors.bull },
   priceDown: { color: colors.bear },
   right: { alignItems: 'flex-end' },
   rightRtl: { alignItems: 'flex-start' },
-  chg: { color: colors.textDim, fontSize: 9, fontWeight: '800', marginTop: 1 },
+  chg: { ...numeric, color: colors.textDim, fontSize: 9, fontWeight: '800', marginTop: 1 },
   /** الجرس بلون هوية التطبيق (teal) — لا أخضر/أحمر: المسافة كمّية ولا تقول ربحاً ولا خسارة. */
   armedTag: { color: colors.accent, fontSize: 8, fontWeight: '800', marginTop: 1 },
   chgUp: { color: colors.bull },

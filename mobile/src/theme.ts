@@ -115,6 +115,13 @@ export const radii = {
   pill: 999,
 };
 
+/** DESIGN-PRO §2 — أرقام بعرض ثابت: كل سعر/نسبة/كمية/وقت يتغيّر يُفرَد بهذا داخل أسلوبه
+ * (`...numeric`) كي لا تتحرّك الخانة مع كل تيك. `fontVariant` يصير `font-variant-numeric`
+ * على الويب. */
+export const numeric = {
+  fontVariant: ['tabular-nums'] as ['tabular-nums'],
+};
+
 /** مدد حركة قصيرة للأفعال المهمة فقط */
 export const motion = {
   snap: 160,

@@ -9,7 +9,7 @@ import {
   ScrollView,
   Linking,
 } from 'react-native';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/I18nContext';
 import {
@@ -699,5 +699,5 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   legTitle: { color: colors.textDim, fontSize: 11, fontWeight: '700' },
-  legNum: { color: colors.accent, fontSize: 22, fontWeight: '900' },
+  legNum: { ...numeric, color: colors.accent, fontSize: 22, fontWeight: '900' },
 });

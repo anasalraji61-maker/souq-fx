@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, ActivityIndicator } from 'react-native';
-import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons, numeric } from '../theme';
 import { api, type Vote } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
   },
   headRtl: { flexDirection: 'row-reverse' },
   headEnd: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  blockedLine: { color: colors.textDim, fontSize: 10, fontWeight: '700', marginTop: spacing.xs },
+  blockedLine: { ...numeric, color: colors.textDim, fontSize: 10, fontWeight: '700', marginTop: spacing.xs },
   symbol: { color: colors.text, fontWeight: '800', fontSize: 14 },
   badge: { borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 2 },
   badgeText: { color: colors.white, fontWeight: '800', fontSize: 11 },
@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   levelLabel: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
-  levelVal: { color: colors.text, fontSize: 12, fontWeight: '800', marginTop: 1 },
+  levelVal: { ...numeric, color: colors.text, fontSize: 12, fontWeight: '800', marginTop: 1 },
   levelSl: { color: colors.bear },
   levelTp: { color: colors.bull },
   planBox: {
@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   barFill: { height: 6, backgroundColor: colors.accent },
-  pct: { color: colors.textDim, fontSize: 11, marginTop: spacing.xs },
+  pct: { ...numeric, color: colors.textDim, fontSize: 11, marginTop: spacing.xs },
   actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
   actionsRtl: { flexDirection: 'row-reverse' },
   btn: {

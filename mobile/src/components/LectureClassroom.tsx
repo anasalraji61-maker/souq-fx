@@ -15,7 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // هذه الشاشة). لذلك نحمّلها ديناميكياً فقط عند الاستخدام الفعلي، داخل
 // try/catch، حتى يستمر التطبيق بدون صوت إن لم تكن الوحدة متاحة.
 import type { Audio as ExpoAudioNS } from 'expo-av';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { playSoftClick } from '../audio/playSoftClick';
 import { API_URL, api, type ChartSeries } from '../api';
 import type { AcademyLecture, ScriptSegment } from '../academy';
@@ -676,7 +676,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   progressFill: { height: 5, backgroundColor: colors.accent },
-  progressText: { color: colors.textDim, fontSize: 11, marginTop: spacing.xs },
+  progressText: { ...numeric, color: colors.textDim, fontSize: 11, marginTop: spacing.xs },
   completeBadge: {
     marginTop: spacing.sm,
     alignSelf: 'flex-end',

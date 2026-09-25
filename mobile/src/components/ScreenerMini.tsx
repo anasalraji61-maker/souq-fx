@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import { formatPct, pctDirection } from '../chart/dailyChange';
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   },
   title: { color: colors.textMuted, fontWeight: '800', fontSize: 12 },
   errorNote: { color: colors.warn, fontSize: 11 },
-  moreNote: { color: colors.textDim, fontSize: 10 },
+  moreNote: { ...numeric, color: colors.textDim, fontSize: 10 },
   row: { flexDirection: 'row', gap: 6 },
   rowRtl: { flexDirection: 'row-reverse' },
   hits: { flexDirection: 'row', gap: spacing.sm },
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   meta: { color: colors.textDim, fontSize: 10 },
   cacheTag: { color: colors.warn, fontWeight: '700', fontSize: 10 },
   /** لون النسبة يأتي من الاتجاه وحده — بلا اتجاه تبقى بلون `meta` المكتوم. */
-  metaPct: { fontWeight: '800' },
+  metaPct: { ...numeric, fontWeight: '800' },
   metaPctUp: { color: colors.bull },
   metaPctDown: { color: colors.bear },
 });

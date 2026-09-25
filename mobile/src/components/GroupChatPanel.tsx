@@ -9,7 +9,7 @@ import {
   I18nManager,
   ActivityIndicator,
 } from 'react-native';
-import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons, numeric } from '../theme';
 import { api, type ChatMsg } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import { formatLocalStamp } from '../localStamp';
@@ -259,9 +259,9 @@ const styles = StyleSheet.create({
   userFlex: { flex: 1 },
   head: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   headRtl: { flexDirection: 'row-reverse' },
-  blockedLine: { color: colors.textDim, fontSize: 10, fontWeight: '700', marginTop: spacing.xs },
+  blockedLine: { ...numeric, color: colors.textDim, fontSize: 10, fontWeight: '700', marginTop: spacing.xs },
   msg: { color: colors.text, fontSize: 12, marginTop: 2, lineHeight: 18 },
-  ts: { color: colors.textDim, fontSize: 10, marginTop: spacing.xs, textAlign: 'left' },
+  ts: { ...numeric, color: colors.textDim, fontSize: 10, marginTop: spacing.xs, textAlign: 'left' },
   row: { flexDirection: 'row', gap: 6, marginTop: spacing.sm },
   rowRtl: { flexDirection: 'row-reverse' },
   input: {

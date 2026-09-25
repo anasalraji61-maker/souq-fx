@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, numeric } from '../theme';
 import { formatPrice } from '../chart/math';
 import { formatPriceDiff } from '../chart/indicators/utils';
 import { isRealQuote } from '../chart/dataSource';
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   rowRtl: { flexDirection: 'row-reverse' },
   cell: { flex: 1, alignItems: 'center', gap: 2 },
   label: { color: colors.textMuted, fontSize: 10, fontWeight: '700' },
-  value: { fontSize: 16, fontWeight: '900' },
+  value: { ...numeric, fontSize: 16, fontWeight: '900' },
   bid: { color: colors.bear },
   ask: { color: colors.bull },
   spread: { color: colors.text },

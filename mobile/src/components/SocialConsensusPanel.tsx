@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons, numeric } from '../theme';
 import { api } from '../api';
 import { dirColor, dirLabel, formatScore, levelsUnavailableText } from './signalDirection';
 import { formatPrice } from '../chart/math';
@@ -325,8 +325,8 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   dir: { fontWeight: '900', fontSize: 18 },
-  meta: { color: colors.textMuted, fontSize: 11 },
-  levels: { color: colors.text, fontSize: 11, fontWeight: '700', marginTop: 2 },
+  meta: { ...numeric, color: colors.textMuted, fontSize: 11 },
+  levels: { ...numeric, color: colors.text, fontSize: 11, fontWeight: '700', marginTop: 2 },
   list: { maxHeight: 110 },
   row: {
     flexDirection: 'row',

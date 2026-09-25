@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api, type ChartSeries } from '../api';
 import { MatrixChart } from '../chart/MatrixChart';
 import { TimeframeBar } from './TimeframeBar';
@@ -537,9 +537,9 @@ const styles = StyleSheet.create({
   symbolHeading: { flex: 1 },
   title: { color: colors.text, fontSize: 18, fontWeight: '900' },
   sub: { color: colors.textDim, fontSize: 11 },
-  price: { color: colors.text, fontWeight: '700', fontSize: 14 },
+  price: { ...numeric, color: colors.text, fontWeight: '700', fontSize: 14 },
   quote: { alignItems: 'flex-start' },
-  change: { fontWeight: '800', fontSize: 10, marginTop: 2 },
+  change: { ...numeric, fontWeight: '800', fontSize: 10, marginTop: 2 },
   body: { flex: 1, flexDirection: 'row' },
   bodyRtl: { flexDirection: 'row-reverse' },
   bodyPhone: { flexDirection: 'column' },

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, numeric } from '../theme';
 import { api, type NewsItem } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import { formatLocalStamp } from '../localStamp';
@@ -162,6 +162,7 @@ const styles = StyleSheet.create({
   },
   titleInHead: { marginBottom: 0 },
   staleNote: {
+    ...numeric,
     color: colors.warn,
     fontSize: 10,
     fontWeight: '700',
@@ -189,7 +190,7 @@ const styles = StyleSheet.create({
   rowRtl: { flexDirection: 'row-reverse' },
   impact: { borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 2 },
   impactText: { color: colors.onWarnFill, fontWeight: '800', fontSize: 10 },
-  when: { color: colors.textDim, fontSize: 11 },
+  when: { ...numeric, color: colors.textDim, fontSize: 11 },
   headline: {
     color: colors.text,
     fontSize: 13,

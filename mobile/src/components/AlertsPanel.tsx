@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Linking,
 } from 'react-native';
-import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons, numeric } from '../theme';
 import { api, type PriceAlert } from '../api';
 import {
   ensureAlertNotifications,
@@ -1213,19 +1213,19 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.borderSoft,
   },
   itemRtl: { flexDirection: 'row-reverse' },
-  itemSym: { color: colors.text, fontWeight: '700', fontSize: 13 },
+  itemSym: { ...numeric, color: colors.text, fontWeight: '700', fontSize: 13 },
   itemSymDone: { color: colors.textMuted },
-  itemStatus: { fontSize: 11, marginTop: 1 },
+  itemStatus: { ...numeric, fontSize: 11, marginTop: 1 },
   itemStatusLive: { color: colors.accent, fontWeight: '700' },
   itemStatusDone: { color: colors.textDim },
   itemEditing: { backgroundColor: colors.accentSoft, borderRadius: radii.sm },
-  listHead: { color: colors.textDim, fontSize: 10, marginTop: spacing.sm, fontWeight: '700' },
+  listHead: { ...numeric, color: colors.textDim, fontSize: 10, marginTop: spacing.sm, fontWeight: '700' },
   clearFired: { alignSelf: 'flex-start', marginTop: spacing.xs, paddingVertical: 2 },
   clearFiredRtl: { alignSelf: 'flex-end' },
   clearFiredText: { color: colors.bear, fontSize: 10, fontWeight: '700' },
   currentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
   currentText: { color: colors.textDim, fontSize: 11, flex: 1 },
-  currentVal: { color: colors.text, fontWeight: '800' },
+  currentVal: { ...numeric, color: colors.text, fontWeight: '800' },
   useCurrent: {
     borderWidth: 1,
     borderColor: colors.accent,

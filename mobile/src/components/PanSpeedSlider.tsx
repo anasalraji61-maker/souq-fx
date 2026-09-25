@@ -8,7 +8,7 @@ import {
   type LayoutChangeEvent,
   type GestureResponderEvent,
 } from 'react-native';
-import { colors, spacing, buttons } from '../theme';
+import { colors, spacing, buttons, numeric } from '../theme';
 import { clampPanSpeed } from '../chart/panSpeed';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -281,6 +281,7 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
   },
   percent: {
+    ...numeric,
     color: colors.text,
     fontSize: 9,
     fontWeight: '900',

@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { TimeframeBar } from './TimeframeBar';
@@ -402,11 +402,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   stats: { gap: spacing.xs, marginTop: spacing.sm },
-  statLine: { color: colors.text, textAlign: 'right', fontWeight: '600' },
-  ranFor: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
-  sampleWarn: { color: colors.warn, fontSize: 11, fontWeight: '700' },
+  statLine: { ...numeric, color: colors.text, textAlign: 'right', fontWeight: '600' },
+  ranFor: { ...numeric, color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  sampleWarn: { ...numeric, color: colors.warn, fontSize: 11, fontWeight: '700' },
   curve: { marginTop: 6, gap: spacing.xs },
   curveTitle: { color: colors.textMuted, fontSize: 11, fontWeight: '700', textAlign: 'right' },
   curveRow: { flexDirection: 'row', height: 48, alignItems: 'flex-end' },
-  trade: { color: colors.textDim, textAlign: 'right', fontSize: 11, marginTop: spacing.xs },
+  trade: { ...numeric, color: colors.textDim, textAlign: 'right', fontSize: 11, marginTop: spacing.xs },
 });

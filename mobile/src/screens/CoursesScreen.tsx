@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api } from '../api';
 import {
   mockAcademySchools,
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   metaRtl: { flexDirection: 'row-reverse' },
-  metaText: { color: colors.textDim, fontSize: 12 },
+  metaText: { ...numeric, color: colors.textDim, fontSize: 12 },
   aiTag: {
     color: colors.dxy,
     fontWeight: '800',
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   lecTitle: { color: colors.text, fontWeight: '700' },
-  lecMeta: { color: colors.textDim, fontSize: 11, marginTop: spacing.xs },
+  lecMeta: { ...numeric, color: colors.textDim, fontSize: 11, marginTop: spacing.xs },
   close: {
     marginTop: spacing.lg,
     backgroundColor: colors.accent,

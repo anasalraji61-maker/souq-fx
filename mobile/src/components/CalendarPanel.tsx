@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import { instrumentSpec } from '../positionSize';
@@ -540,10 +540,10 @@ const styles = StyleSheet.create({
   rowDone: { opacity: 0.45 },
   rel: { color: colors.textDim, fontSize: 10, fontWeight: '700', marginTop: 2 },
   relSoon: { color: colors.accent },
-  tzNote: { color: colors.textDim, fontSize: 10 },
-  sampleNote: { color: colors.warn, fontSize: 10, fontWeight: '700' },
+  tzNote: { ...numeric, color: colors.textDim, fontSize: 10 },
+  sampleNote: { ...numeric, color: colors.warn, fontSize: 10, fontWeight: '700' },
   dot: { width: 8, height: 8, borderRadius: 4, marginTop: spacing.xs },
   evTitle: { color: colors.text, textAlign: 'right', fontSize: 12, fontWeight: '600' },
-  meta: { color: colors.textDim, textAlign: 'right', fontSize: 10, marginTop: 2 },
+  meta: { ...numeric, color: colors.textDim, textAlign: 'right', fontSize: 10, marginTop: 2 },
   figures: { color: colors.textMuted, textAlign: 'right', fontSize: 10, marginTop: 1 },
 });

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import type { Dict } from '../i18n/locales';
@@ -337,6 +337,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
   },
   td: {
+    ...numeric,
     color: colors.text,
     fontSize: 10,
     textAlign: 'center',

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, numeric } from '../theme';
 import { useI18n } from '../i18n/I18nContext';
 
 type Plan = {
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   planBadge: { borderRadius: radii.pill, paddingHorizontal: 9, paddingVertical: 5 },
   planBadgeText: { fontSize: 10, fontWeight: '900' },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 5 },
-  price: { fontSize: 27, fontWeight: '900' },
+  price: { ...numeric, fontSize: 27, fontWeight: '900' },
   perMonth: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   addOn: { fontSize: 11, fontWeight: '800' },
   divider: { height: 1, backgroundColor: colors.borderSoft },

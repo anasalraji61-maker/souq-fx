@@ -8,7 +8,7 @@ import {
   Pressable,
   ActivityIndicator,
 } from 'react-native';
-import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, buttons, numeric } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import { formatLocalStamp } from '../localStamp';
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     borderColor: colors.warn,
   },
   textOffline: { color: colors.textMuted },
-  priceAt: { color: colors.textDim, fontSize: 11, marginTop: 6 },
+  priceAt: { ...numeric, color: colors.textDim, fontSize: 11, marginTop: 6 },
   text: {
     color: colors.text,
     fontSize: 12,

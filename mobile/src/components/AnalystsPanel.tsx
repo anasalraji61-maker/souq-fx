@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
-import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons, numeric } from '../theme';
 import { api } from '../api';
 import { dirColor, dirLabel, formatScore, levelsUnavailableText } from './signalDirection';
 import { formatPrice } from '../chart/math';
@@ -213,8 +213,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   dir: { fontWeight: '900', fontSize: 18 },
-  meta: { color: colors.textMuted, fontSize: 11 },
-  levels: { color: colors.text, fontSize: 11, fontWeight: '700' },
+  meta: { ...numeric, color: colors.textMuted, fontSize: 11 },
+  levels: { ...numeric, color: colors.text, fontSize: 11, fontWeight: '700' },
   list: { maxHeight: 120, flexGrow: 0 },
   row: {
     flexDirection: 'row',
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   summary: { color: colors.textDim, fontSize: 10, marginTop: 2 },
   right: { alignItems: 'flex-start', minWidth: 72 },
   badge: { fontWeight: '900', fontSize: 12 },
-  target: { color: colors.textMuted, fontSize: 10 },
+  target: { ...numeric, color: colors.textMuted, fontSize: 10 },
   horizon: { color: colors.textDim, fontSize: 9 },
   note: { color: colors.textDim, fontSize: 9, marginTop: spacing.xs },
 });
