@@ -214,7 +214,12 @@ class DmSend(BaseModel):
 
 
 def _alertable_symbol(v: str) -> str:
-    """DXY لا يقدّمه المزوّد: تنبيه عليه يُحفظ «يراقب» ولا يُطلق أبداً (الـworker يسجّل «لا سعر» كل دقيقة)."""
+    """DXY لا يقدّمه المزوّد: تنبيه عليه يُحفظ «يراقب» ولا يُطلق أبداً (الـworker يسجّل «لا سعر» كل دقيقة).
+    ويُقصّ ويُكبَّر أولاً: «EURUSD » كان يُحفظ بمسافته فلا يعرفه المزوّد ويبقى «يراقب» إلى الأبد، و« dxy»
+    كان يتخطّى فحص DXY."""
+    v = v.strip().upper()
+    if len(v) < 3:
+        raise ValueError("symbol too short")
     if market.unavailable_reason(v):
         raise ValueError("symbol unavailable at provider")
     return v
@@ -272,6 +277,14 @@ class LayoutSave(BaseModel):
 
 class WatchlistAdd(BaseModel):
     symbol: str = Field(min_length=3, max_length=12)
+
+    @field_validator("symbol")
+    @classmethod
+    def _strip(cls, v: str) -> str:
+        v = v.strip().upper()
+        if len(v) < 3:
+            raise ValueError("symbol too short")
+        return v
 
 
 class ProgressSave(BaseModel):
@@ -1460,7 +1473,8 @@ def market_quote(symbol: str):
 @app.get("/api/trades")
 def trades_list(
     limit: int = Query(default=db.TRADES_PAGE, ge=1, le=db.TRADES_PAGE_MAX),
-    offset: int = Query(default=0, ge=0),
+    # بلا حدّ أعلى: 10**20 = OverflowError عند ربط SQLite ⇒ 500
+    offset: int = Query(default=0, ge=0, le=10_000_000),
     user: dict | None = Depends(_auth_user),
     key: str | None = Depends(_install_key),
 ):

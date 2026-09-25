@@ -867,3 +867,28 @@ def test_logout_with_an_expired_session_still_unbinds_this_device(client):
     assert _push_owner("ExponentPushToken[exp222]") is None
     # توكن مجهول تماماً لا يفكّ شيئاً
     assert client.post("/api/auth/logout", headers={"Authorization": "Bearer nope", **_DEV1}).json() == {"ok": True}
+
+
+@pytest.mark.parametrize("path, extra", [
+    ("/api/alerts", {"condition": "above", "price": 1.1}),
+    ("/api/indicator-alerts", {"alert_type": "rsi", "condition": "above", "value": 70, "timeframe": "1H"}),
+])
+def test_alert_symbol_is_trimmed_and_dxy_with_a_space_is_still_refused(client, path, extra):
+    # «EURUSD » كان يُحفظ بمسافته (المزوّد لا يعرفه ⇒ «يراقب» للأبد)، و« dxy» يتخطّى فحص DXY
+    r = client.post(path, json={"symbol": "eurusd ", **extra}, headers=_DEV1)
+    assert r.status_code == 200, r.text
+    assert r.json()["alert"]["symbol"] == "EURUSD"
+    assert client.post(path, json={"symbol": " dxy", **extra}, headers=_DEV1).status_code == 422
+    assert client.post(path, json={"symbol": "  e ", **extra}, headers=_DEV1).status_code == 422
+
+
+def test_watchlist_symbol_with_spaces_can_be_removed(client):
+    # « gbpusd» كان يُحفظ بمسافته والحذف يقصّ ⇒ لا يُزال أبداً
+    assert client.post("/api/watchlist/custom", json={"symbol": " gbpusd"}, headers=_DEV1).status_code == 200
+    assert "GBPUSD" in client.get("/api/watchlist/custom", headers=_DEV1).json()["symbols"]
+    client.delete("/api/watchlist/custom/GBPUSD", headers=_DEV1)
+    assert "GBPUSD" not in client.get("/api/watchlist/custom", headers=_DEV1).json()["symbols"]
+
+
+def test_huge_trades_offset_is_422_not_500(client):
+    assert client.get("/api/trades?offset=100000000000000000000", headers=_DEV1).status_code == 422

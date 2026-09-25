@@ -1667,8 +1667,9 @@ def add_watchlist_symbol(
     symbol: str, user_id: int | None = None, owner_key: str | None = None
 ) -> list[str]:
     """يضيف رمزاً لقائمة المستدعي. التكرار يُفحص صراحةً: المفتاح الأساسي (user_id, symbol) لا يمنعه
-    لصفوف المجهول لأن NULL لا يتساوى بـSQLite (كان كل ضغط «أضف» يُكرّر الرمز)."""
-    sym = symbol.upper()
+    لصفوف المجهول لأن NULL لا يتساوى بـSQLite (كان كل ضغط «أضف» يُكرّر الرمز). يُقصّ كالحذف: « gbpusd»
+    كان يُحفظ بمسافته والحذف يقصّ ⇒ `removed: 0` دائماً فلا يُزال أبداً."""
+    sym = symbol.strip().upper()
     sql, args = _owner_clause(user_id, owner_key)
     with _conn() as c:
         exists = c.execute(
