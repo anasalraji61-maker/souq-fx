@@ -16,6 +16,9 @@ import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
 import { confirmDestructive } from '../chart/confirmDestructive';
 
+/** حدّ الخادم (`LayoutSave.name` max_length=64) — اسم أطول كان يُحفظ محلياً «✓ حُفظ» ويُرفض بالخادم بصمت. */
+const LAYOUT_NAME_MAX = 64;
+
 type Props = {
   frameTfs: [string, string, string] | string[];
   frameSymbols: [string, string, string];
@@ -89,7 +92,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
   };
 
   const saveNow = async () => {
-    const layoutName = name.trim() || t.layoutFallbackName;
+    const layoutName = name.trim().slice(0, LAYOUT_NAME_MAX).trim() || t.layoutFallbackName;
     // نفس الاسم = تحديث ذلك التخطيط لا نسخة مكرّرة (الاسم الافتراضي «تخطيطي» كان يُكدّس نسخاً متطابقة الاسم).
     const existing = layouts.find((x) => x.id !== 'default' && x.name === layoutName);
     const layout: TerminalLayout = {
@@ -143,6 +146,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
         placeholder={t.layoutNamePlaceholder}
         placeholderTextColor={colors.textDim}
         returnKeyType="done"
+        maxLength={LAYOUT_NAME_MAX}
         underlineColorAndroid="transparent"
         clearButtonMode="while-editing"
         keyboardAppearance="dark"
