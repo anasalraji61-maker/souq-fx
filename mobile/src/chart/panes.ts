@@ -126,7 +126,7 @@ export const PANE_IDS: readonly string[] = [
   'cmf'
 ];
 
-/** اسم اللوحة كما يظهر بـ`styles.paneLabel` — يُستعمل بشريط المطويّات. */
+/** اسم اللوحة المختصر — يُستعمل بنصّ شريط اللوحات المطويّة (`collapsedBarText`). */
 export const PANE_LABELS: Readonly<Record<string, string>> = {
   volume: 'VOL',
   cvd: 'CVD',

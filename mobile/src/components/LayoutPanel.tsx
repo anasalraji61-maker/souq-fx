@@ -281,11 +281,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingVertical: 12,
     alignItems: 'center',
-    shadowColor: buttons.shadowColor,
-    shadowOpacity: buttons.shadowOpacity,
-    shadowRadius: buttons.shadowRadius,
-    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
-    elevation: buttons.elevation,
   },
   btnText: { color: colors.onAccent, fontWeight: '500' },
   row: {
