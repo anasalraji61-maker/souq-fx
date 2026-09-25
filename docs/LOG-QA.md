@@ -297,3 +297,14 @@ QA21 (`d8446d0`؛ `DIRECTIONAL_OVERLAYS` باقٍ عمداً — استثناء 
 (3) `reportJournalDataLine` «PnL=x%» = مجموع حركة السعر (→ launch + tools)؛ (4) `dailyChange.ts:34` يوم UTC يغذّي رأس الشارت ⇒ يناقض خطّ PDC — أُلحق بـtools38 (أنس).
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
 **إلحاق بعد سحب launch74:** QA24 شقّ الرسالة مُغلق (`aff9f14`، `locales.ts:1148 :2219`)؛ `maxLength` بالشاشة وحدّ كلمة المرور باقيان. البناء أُعيد: أخضر 0.
+
+## 2026-09-25 — الدورة 26
+**البناء:** أخضر 0 (بعد 8473457) — لا إصلاح لازم. **Selftests:** 70/70 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — QA25 سطر التقرير الأسبوعي (`e8bf12a`، `locales.ts:1541 :2614`، «مجموع حركة السعر»)؛ chart15 مفاتيح `mcNudge*` (`f72bee3`، 20 بـ`locales.ts`)
+⇒ الصفّ صار chart ← chart للربط (0 بـ`.tsx`). **غير مُغلق:** `FocusChartModal:283-288` `series.change_pct`، `marketHours.ts:13` حرفي، 10 `Alert.alert` بـ5 ملفات، «₴» ×2، `accNetLoadError` 0.
+**طلبات تنسيق جديدة:** لا شيء من السجلات الثلاثة (launch75 ردّ فقط).
+**المراجعة (a — تكرار/ميت/تصديرات)، بسكربتين على كل `src`:** (1) التصديرات التي لا يذكرها ملف آخر ولا تُستعمل بملفها = القائمة المعروفة (QA1) +
+`DIRECTIONAL_OVERLAYS` (مقصود)؛ `OnboardingOverlay`/`CoursesScreen`/`onboarding.ts` إيجابيات كاذبة (يستوردها `App.tsx` خارج `src`). (2) أسماء مكرّرة بأكثر من ملف:
+**جديد QA26 → chart + tools + بلا مالك:** `BASES` ×3 (`TerminalScreen:99`، `FocusChartModal:56` 21 رمزاً، `QuadChartModal:48` 6 فقط ⇒ `?? 1` يرسم AUDUSD/USOIL حول 1.0 بالرباعي بلا اتصال).
+`PREFS_KEY` ×2 مفتاحان مختلفان، `NO_INDICATORS` ×2 ثابت فارغ، `TTL_MS`/`FAIL_TTL_MS` بغرضين — غير ضارّة.
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة خارج `locales.ts`.
