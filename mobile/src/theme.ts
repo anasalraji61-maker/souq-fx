@@ -152,11 +152,12 @@ export const buttons = {
   pressedOpacity: 0.9,
 };
 
-/** حشوة اللوحات داخل فريم الشبكة — بجانب مقبض النقاط التسع */
+/** حشوة اللوحات داخل فريم الشبكة — بجانب مقبض النقاط التسع. DESIGN-PRO §3 (شبكة 4px): المقبض
+ * ينتهي عند 44 (`FrameSizedGrid` `handleBar` left 8 + 36) ⇒ 48 يترك 4 فراغاً؛ كانت 10/50/10. */
 export const frameEmbed = {
-  padTop: 10,
-  padLeft: 50,
-  padRight: 10,
+  padTop: 12,
+  padLeft: 48,
+  padRight: 12,
   padBottom: 8,
 };
 
@@ -165,7 +166,7 @@ export const frameEmbedHead = {
   flexDirection: 'row-reverse' as const,
   justifyContent: 'space-between' as const,
   alignItems: 'flex-start' as const,
-  gap: 10,
+  gap: spacing.md,
   marginBottom: spacing.sm,
 };
 
