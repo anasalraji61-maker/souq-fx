@@ -1208,6 +1208,44 @@ export type Dict = {
    * كل موضع مرة واحدة فقط — يكفي `.replace` لكل منها (لا `replaceAll`).
    */
   riskCalcConvInverted: string;
+  /**
+   * backend-r3 (launch104). لا شيء موصول بعد:
+   * `impactHoliday` — `/api/calendar` `impact: "holiday"` (عطلة بنوك ForexFactory) بـ`CalendarPanel` (ui3)؛ `none`/`unknown` بلا كلمة.
+   * `newsHolidayToday` — سطر شريط الأخبار (`NewsRiskBanner` `HOLIDAY_COPY`، tools): `{ccy}` العملات مفصولة «/»، `{title}` = « · عنوان» أو فارغ. كلٌّ مرة واحدة.
+   * `backtestBeforeCosts` — `stats.costs_included === false` (DXY، الرقمية): النتيجة قبل السبريد والعمولة (بدل الصمت).
+   * `forecastDetail` — `votes[].detail_code` ⇒ قالب، والقيم من `detail_values` بالأسماء نفسها (`{rsi}`، `{fast}`، `{slow}`، `{macd}`،
+   *   `{signal}`، `{pos}`، `{k}`، `{pct}`)؛ القائمة = `signal_hub._DETAIL_TEXT`. رمز غير معروف ⇒ اعرض `detail` الخادم كما هو.
+   * `forecastVoteNames` — مفاتيح `_VOTE_NAMES` (الخادم لا يرسل مفتاح الاسم بعد؛ يُطابَق بـ`votes[].key`).
+   * `forecastDisclaimer*` — `disclaimer_code`: `indicator_consensus` | `not_enough_data` (chart-r35).
+   * `dsKindUnavailable` — `DataOriginKind` `'unavailable'` (ui3/chart-r35) للوسم القصير؛ الجملة الطويلة لـDXY تبقى `originUnavailableProvider`.
+   */
+  impactHoliday: string;
+  newsHolidayToday: string;
+  backtestBeforeCosts: string;
+  forecastDetail: {
+    rsi_overbought: string;
+    rsi_oversold: string;
+    rsi_bullish: string;
+    rsi_bearish: string;
+    rsi_neutral: string;
+    ma_cross_up: string;
+    ma_cross_down: string;
+    ma_above: string;
+    ma_below: string;
+    macd_cross_up: string;
+    macd_cross_down: string;
+    macd_above: string;
+    macd_below: string;
+    bb_upper: string;
+    bb_lower: string;
+    bb_position: string;
+    stoch_k: string;
+    trend_slope: string;
+  };
+  forecastVoteNames: { rsi: string; ma_cross: string; ma_trend: string; macd: string; bb: string; stoch: string; trend: string };
+  forecastDisclaimerConsensus: string;
+  forecastDisclaimerNoData: string;
+  dsKindUnavailable: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -2335,6 +2373,33 @@ const ar: Dict = {
   analystsUnavailable: 'لا مصدر مرخَّص لتوقعات المحللين بعد — لذلك لا نعرض اتجاهاً ولا أهدافاً بدل أن نخترعها',
   socialUnavailable: 'لا مصدر مرخَّص لتوصيات القنوات بعد — لذلك لا نعرض إجماعاً ولا صفقة مقترحة بدل أن نخترعهما',
   riskCalcConvInverted: '«{typed}» لا يصلح سعراً لـ{pair} — يبدو مقلوباً (1 ÷ السعر). على الأرجح قصدتَ {likely}؛ اكتبه كما تراه بمنصّتك.',
+  impactHoliday: 'عطلة — سيولة رقيقة',
+  newsHolidayToday: 'عطلة بنوك اليوم · {ccy}{title} — سيولة أقل: سبريد أوسع، وانزلاق وفجوات محتملة',
+  backtestBeforeCosts: 'النتائج قبل السبريد والعمولة — لا تقدير سبريد لهذا الرمز، فالنتيجة الفعلية أسوأ من المعروضة.',
+  forecastDetail: {
+    rsi_overbought: 'تشبّع شراء ({rsi})',
+    rsi_oversold: 'تشبّع بيع ({rsi})',
+    rsi_bullish: 'زخم إيجابي ({rsi})',
+    rsi_bearish: 'زخم سلبي ({rsi})',
+    rsi_neutral: 'محايد ({rsi})',
+    ma_cross_up: 'المتوسط السريع قطع البطيء صعوداً',
+    ma_cross_down: 'المتوسط السريع قطع البطيء هبوطاً',
+    ma_above: 'السريع {fast} فوق البطيء {slow}',
+    ma_below: 'السريع {fast} تحت البطيء {slow}',
+    macd_cross_up: 'قطع خط الإشارة صعوداً',
+    macd_cross_down: 'قطع خط الإشارة هبوطاً',
+    macd_above: 'الخط {macd} فوق الإشارة {signal}',
+    macd_below: 'الخط {macd} تحت الإشارة {signal}',
+    bb_upper: 'قرب الحد العلوي',
+    bb_lower: 'قرب الحد السفلي',
+    bb_position: 'موقعه داخل النطاق {pos}%',
+    stoch_k: '%K≈{k}',
+    trend_slope: 'آخر 10 شموع · {pct}%',
+  },
+  forecastVoteNames: { rsi: 'RSI 14', ma_cross: 'تقاطع MA', ma_trend: 'اتجاه MA', macd: 'MACD', bb: 'بولنجر', stoch: 'Stochastic', trend: 'ميل السعر' },
+  forecastDisclaimerConsensus: 'إجماع مؤشرات فنية داخل MATRIX — ليس ضماناً للربح.',
+  forecastDisclaimerNoData: 'لا بيانات كافية لحساب المؤشرات المختارة.',
+  dsKindUnavailable: 'غير متاح',
 };
 
 const enUS: Dict = {
@@ -3455,6 +3520,33 @@ const enUS: Dict = {
   analystsUnavailable: "No licensed source for analyst forecasts yet — so we show no direction or targets rather than make them up",
   socialUnavailable: "No licensed source for channel tips yet — so we show no consensus or suggested trade rather than make them up",
   riskCalcConvInverted: '"{typed}" can\'t be the {pair} rate — it looks inverted (1 ÷ the price). You likely meant {likely}; type it as your platform shows it.',
+  impactHoliday: 'Bank holiday — thin liquidity',
+  newsHolidayToday: 'Bank holiday today · {ccy}{title} — thin liquidity: wider spreads, slippage and gaps are likely',
+  backtestBeforeCosts: "Results are before spread and commission — there's no spread estimate for this symbol, so real results would be worse.",
+  forecastDetail: {
+    rsi_overbought: 'Overbought ({rsi})',
+    rsi_oversold: 'Oversold ({rsi})',
+    rsi_bullish: 'Positive momentum ({rsi})',
+    rsi_bearish: 'Negative momentum ({rsi})',
+    rsi_neutral: 'Neutral ({rsi})',
+    ma_cross_up: 'Fast MA crossed above slow',
+    ma_cross_down: 'Fast MA crossed below slow',
+    ma_above: 'Fast {fast} above slow {slow}',
+    ma_below: 'Fast {fast} below slow {slow}',
+    macd_cross_up: 'Crossed above the signal line',
+    macd_cross_down: 'Crossed below the signal line',
+    macd_above: 'Line {macd} above signal {signal}',
+    macd_below: 'Line {macd} below signal {signal}',
+    bb_upper: 'Near the upper band',
+    bb_lower: 'Near the lower band',
+    bb_position: '{pos}% up the band',
+    stoch_k: '%K≈{k}',
+    trend_slope: 'Last 10 candles · {pct}%',
+  },
+  forecastVoteNames: { rsi: 'RSI 14', ma_cross: 'MA cross', ma_trend: 'MA trend', macd: 'MACD', bb: 'Bollinger', stoch: 'Stochastic', trend: 'Price slope' },
+  forecastDisclaimerConsensus: 'Technical-indicator consensus inside MATRIX — not a guarantee of profit.',
+  forecastDisclaimerNoData: 'Not enough data to compute the selected indicators.',
+  dsKindUnavailable: 'Unavailable',
 };
 
 const enGB: Dict = {
@@ -4602,6 +4694,33 @@ const ku: Dict = {
   analystsUnavailable: 'هێشتا سەرچاوەیەکی مۆڵەتدار بۆ پێشبینییەکانی شیکەرەوان نییە — بۆیە ئاراستە و ئامانج پیشان نادەین لەجیاتی ئەوەی دایانبهێنین',
   socialUnavailable: 'هێشتا سەرچاوەیەکی مۆڵەتدار بۆ ڕاسپاردەکانی کەناڵەکان نییە — بۆیە کۆدەنگی و مامەڵەی پێشنیارکراو پیشان نادەین لەجیاتی ئەوەی دایانبهێنین',
   riskCalcConvInverted: '«{typed}» ناتوانێت نرخی {pair} بێت — پێدەچێت پێچەوانە بێت (1 ÷ نرخ). لەوانەیە مەبەستت {likely} بێت؛ وەک لە پلاتفۆرمەکەتدا دەیبینیت بینووسە.',
+  impactHoliday: 'پشوو — شلەیی کەم',
+  newsHolidayToday: 'پشووی بانکەکان ئەمڕۆ · {ccy}{title} — شلەیی کەمتر: سپرێدی فراوانتر، و لەوانەیە خزان و بۆشایی هەبێت',
+  backtestBeforeCosts: 'ئەنجامەکان پێش سپرێد و کۆمیسیۆنن — هیچ خەمڵاندنێکی سپرێد بۆ ئەم هێمایە نییە، بۆیە ئەنجامی ڕاستەقینە خراپتر دەبێت.',
+  forecastDetail: {
+    rsi_overbought: 'زۆر کڕدراو ({rsi})',
+    rsi_oversold: 'زۆر فرۆشراو ({rsi})',
+    rsi_bullish: 'تەوژمی ئەرێنی ({rsi})',
+    rsi_bearish: 'تەوژمی نەرێنی ({rsi})',
+    rsi_neutral: 'بێلایەن ({rsi})',
+    ma_cross_up: 'MAی خێرا MAی هێواشی بەرەو سەرەوە بڕی',
+    ma_cross_down: 'MAی خێرا MAی هێواشی بەرەو خوارەوە بڕی',
+    ma_above: 'خێرا {fast} لە سەرووی هێواش {slow}',
+    ma_below: 'خێرا {fast} لە خوارووی هێواش {slow}',
+    macd_cross_up: 'هێڵی ئاماژەی بەرەو سەرەوە بڕی',
+    macd_cross_down: 'هێڵی ئاماژەی بەرەو خوارەوە بڕی',
+    macd_above: 'هێڵ {macd} لە سەرووی ئاماژە {signal}',
+    macd_below: 'هێڵ {macd} لە خوارووی ئاماژە {signal}',
+    bb_upper: 'نزیک سنووری سەرەوە',
+    bb_lower: 'نزیک سنووری خوارەوە',
+    bb_position: 'شوێنی لەناو باندەکەدا {pos}%',
+    stoch_k: '%K≈{k}',
+    trend_slope: 'دوایین 10 مۆم · {pct}%',
+  },
+  forecastVoteNames: { rsi: 'RSI 14', ma_cross: 'بڕینی MA', ma_trend: 'ئاراستەی MA', macd: 'MACD', bb: 'بۆلینجەر', stoch: 'Stochastic', trend: 'لاری نرخ' },
+  forecastDisclaimerConsensus: 'کۆدەنگی پێوەرە تەکنیکییەکان لەناو MATRIX — گەرەنتی قازانج نییە.',
+  forecastDisclaimerNoData: 'داتای پێویست نییە بۆ ژماردنی پێوەرە هەڵبژێردراوەکان.',
+  dsKindUnavailable: 'بەردەست نییە',
 };
 
 export const DICTS: Record<LangId, Dict> = {
