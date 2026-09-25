@@ -198,9 +198,26 @@ export function positionOutcome(
   const above = first != null && levels.entry > first.high;
   let fill = below || above ? -1 : entryIndex;
   if (entryInside && fill === entryIndex && first && (hitsStop(first) || hitsTarget(first))) return null;
+  // الدخول داخل مدى الشمعة الحاوية وطرفه داخلها (أمر رُسم على H1 الساعة 18:00، معروض على D1): مدى اليوم يشمل ما قبل
+  // الرسم، فلمسُه لا يعني تنفيذاً — كان يُعدّ منفَّذاً ⇒ «TP ✓ +2R» لأمر لم يبلغه السعر بعد رسمه (و«Entry ✕» على H1).
+  // ننتظر شمعة لاحقة تلمس الدخول (بعدها يتّفق الاحتمالان)؛ وقفٌ أو هدفٌ قبلها، أو لا لمس أبداً ⇒ لا حكم.
+  const unsure = entryInside && fill === entryIndex;
+  if (unsure) fill = -1;
   for (let i = entryIndex + 1; i <= to; i++) {
     const b = bars[i];
     if (!b) continue;
+    if (fill < 0 && unsure) {
+      if (b.low > levels.entry || b.high < levels.entry) {
+        if (hitsStop(b) || hitsTarget(b)) return null;
+        continue;
+      }
+      if (endInside && i === to) return null;
+      fill = i;
+      if (hitsStop(b)) return { state: 'stop', exit: levels.stop, exitIndex: i, fillIndex: i, r: -1 };
+      // الهدف بشمعة اللمس: يُحسب لو نُفِّذ قبلها ولا يُحسب لو نُفِّذ فيها ⇒ لا حكم.
+      if (hitsTarget(b)) return null;
+      continue;
+    }
     if (fill < 0) {
       if (below ? b.low > levels.entry : b.high < levels.entry) continue;
       if (endInside && i === to) return null;
@@ -215,6 +232,7 @@ export function positionOutcome(
   const exit = bars[to]?.close;
   if (exit == null || !Number.isFinite(exit)) return null;
   const running = to >= last && boxEnd >= last;
+  if (fill < 0 && unsure) return null;
   if (fill < 0) return { state: running ? 'pending' : 'missed', exit, exitIndex: to, fillIndex: to, r: 0 };
   return { state: running ? 'open' : 'ended', exit, exitIndex: to, fillIndex: fill, r: rOf(exit) };
 }

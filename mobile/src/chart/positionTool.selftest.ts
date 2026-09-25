@@ -116,6 +116,18 @@ assert.equal(positionOutcome(PL, bars, 0.25, 2.75, 3), null);
   // الطرف على بداية الشمعة (رسمٌ على هذا الفريم) ⇒ لمس شمعة الدخول قبل الدخول لا يُحسب كالسابق
   assert.equal(positionOutcome(PL, d1, 0, 2, 2)!.state, 'target');
 }
+// أمر رُسم على H1 داخل يوم مداه يشمل الدخول (القاع قبل الرسم) ولم يعد السعر إليه: كان «TP ✓ +2R» على D1
+// و«Entry ✕» على H1 — لمس مدى الشمعة الحاوية ليس تنفيذاً.
+{
+  const L = positionLevels('long', 1.098, 1.0955, 2, 'EURUSD');
+  const d1 = [bar(1.096, 1.1, 1.099), bar(1.096, 1.102, 1.101), bar(1.1, 1.104, 1.103), bar(1.1005, 1.1045, 1.102)];
+  assert.equal(positionOutcome(L, d1, 1.75, 3.5, 3), null);
+  // شمعة لاحقة تلمس الدخول ثم الهدف بعدها ⇒ الحكم مؤكَّد أيّاً كان وقت التنفيذ
+  const d1b = [bar(1.096, 1.1, 1.099), bar(1.096, 1.102, 1.101), bar(1.0975, 1.1, 1.099), bar(1.099, 1.104, 1.103)];
+  const o2 = positionOutcome(L, d1b, 1.75, 5, 3)!;
+  assert.equal(o2.state, 'target');
+  assert.equal(o2.fillIndex, 2);
+}
 // صندوق داخل شمعة واحدة من هذا الفريم (M15 10:15→10:45 على H1) ⇒ لا حكم، لا «انتهى» بإغلاق H1
 assert.equal(positionOutcome(PL, bars, 1.25, 1.75, 3), null);
 assert.equal(positionOutcome(PL, bars, 1, 1.75, 3), null);
