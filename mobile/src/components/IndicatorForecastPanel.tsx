@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
-import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons, numeric } from '../theme';
+import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons, numeric, selectedMarkerWidth } from '../theme';
 import { api } from '../api';
 import { dirColor, dirLabel, formatScore, levelsUnavailableText } from './signalDirection';
 import { formatPrice } from '../chart/math';
@@ -252,6 +252,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
               accessibilityState={{ selected: on }}
             >
               <Text style={[styles.chipText, on && styles.chipTextOn]}>{opt.label}</Text>
+              {on ? <View pointerEvents="none" style={styles.chipMark} /> : null}
             </Pressable>
           );
         })}
@@ -355,11 +356,20 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.bgPanel,
   },
-  chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  // DESIGN-PRO §1/§4: عدّة مؤشّرات مفعَّلة معاً ⇒ كانت كلّها حدّاً وتعبئة ونصّاً بلون التأكيد وقت السكون.
+  // الآن كالشارت: تعبئة محايدة + علامة 2px محايدة بالأسفل + نصّ أساسي — الاختيار لا يُقال باللون وحده.
+  chipOn: { backgroundColor: colors.selectedFill },
+  chipMark: {
+    position: 'absolute',
+    left: 8,
+    right: 8,
+    bottom: 0,
+    height: selectedMarkerWidth,
+    backgroundColor: colors.text,
+  },
   chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
-  chipTextOn: { color: colors.accent },
+  chipTextOn: { color: colors.text },
   consensus: {
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
