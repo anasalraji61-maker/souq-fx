@@ -696,3 +696,11 @@ tools75b ← ui (`6a58a2b`، `ScreenerMini.tsx:195`)؛ ui10 ← launch (`65700ad
 **إلحاق:** وصل أثناء الدفع chart 43 / tools / launch / ui 12 / backend 15. تحقّقتُ: ui10 تتمّة (`c24c7aa`)، backend-r15b (`6b1875a`؛ `VotePanel` بلا وقت) ⇒ أُغلقا؛ tools76a منفَّذ من launch (`1f619da`) وبقي حذف
 `TIME_TBD_TOMORROW_COPY` (tools). QA59 مكرّر لـbackend-r15a (مفتوح، `BacktestPanel.tsx:276-280`) ⇒ دُمج. البناء بعد الدمج أخضر 0، الـselftests 96/96.
 **إلحاق 2:** tools `2254a8d` حذف `TIME_TBD_TOMORROW_COPY` (grep صفر) ⇒ tools76a أُغلق كلياً. launch114 → ui (مفتاحا `backtestStatAvgWin`/`AvgLoss` موجودان ×3، `BacktestPanel.tsx:278` ما زال `backtestStatAvgWinLoss`) مفتوح.
+
+## 2026-09-25 — الدورة 60
+**البناء:** أخضر 0 (قبل الدمج وبعده، 9c8e741) — لا إصلاح لازم. **Selftests:** 96/96 ناجح (`npx tsx`؛ `newsRisk`/`tradePlan` المتغيّران أُعيدا بعد الدمج: ناجحان).
+**التحقّق من الإغلاقات بالكود (3 صفوف):** backend-r15a + launch114 ← ui (`22715cb`، `BacktestPanel.tsx:146-155`)؛ backend-r16 ← ui (`4f1ea41`، `IndicatorForecastPanel.tsx:126 :171`).
+**مفتوح بعد التحقّق:** backend-r17 → tools ((a) `ToolsScreen.tsx:479` لا يقرأ `price_as_of`؛ (b) تعليق `TradeJournalPanel.tsx:986` قديم)؛ ui11 انتقل لـui (`9e9ad12` أضاف `screenerPriceAsOf`، و`ScreenerMini.tsx:17` `AS_OF_COPY` باقٍ).
+**المراجعة (e — ما يُحرج أمام متداول):** pip موحّد بـ`positionSize.ts` (grep JPY خارجه: لا تعريف ثانٍ)؛ `backtest.py:218-221` يخصم السبريد و`backtestBeforeCosts` حين لا؛ لا «مضمون/guarantee» إلا بإخلاء المسؤولية.
+جديد **QA60 → launch/أنس**: `socialTitle` «المعدل التقريبي للتوصيات والصفقات» / «tips» (`locales.ts:1475/2642/3834`، يُعرض `SocialConsensusPanel.tsx:183`) يخالف `STORE-LISTING.md:9`.
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
