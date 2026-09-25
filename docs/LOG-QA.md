@@ -704,3 +704,12 @@ tools75b ← ui (`6a58a2b`، `ScreenerMini.tsx:195`)؛ ui10 ← launch (`65700ad
 **المراجعة (e — ما يُحرج أمام متداول):** pip موحّد بـ`positionSize.ts` (grep JPY خارجه: لا تعريف ثانٍ)؛ `backtest.py:218-221` يخصم السبريد و`backtestBeforeCosts` حين لا؛ لا «مضمون/guarantee» إلا بإخلاء المسؤولية.
 جديد **QA60 → launch/أنس**: `socialTitle` «المعدل التقريبي للتوصيات والصفقات» / «tips» (`locales.ts:1475/2642/3834`، يُعرض `SocialConsensusPanel.tsx:183`) يخالف `STORE-LISTING.md:9`.
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
+
+## 2026-09-25 — الدورة 61
+**البناء:** أخضر 0 (بعد 99e365e) — لا إصلاح لازم. **Selftests:** 97/97 ناجح (`npx tsx`؛ +1 منذ الدورة 60).
+**التحقّق من الإغلاقات بالكود (6 صفوف):** backend-r17 (a) ← tools (`9ad2dfb`، `ToolsScreen.tsx:794-797`)؛ backend-r18 ← ui (`c90822c`، `NewsPanel.tsx:22 :95`، `api.ts:132`)؛
+ui11 ← ui (`a0f67d1`، `AS_OF_COPY` grep صفر)؛ QA60 ← launch (`99e365e`، `locales.ts:1481/2650/3844`)؛ tools77a ← launch (`5fda82c`)؛ tools77b ← ui (`d918a7f`، `api.ts:810`).
+**مفتوح بعد التحقّق:** صفّ جديد «تتمّة tools77» → tools (`TradeJournalPanel.tsx:141 :820` `OPEN_RISK_UNKNOWN_COPY` باقٍ؛ `:1003-1004` لا يرسل `size: null`). launch9 ضُيّق للصياغة (`openrouter_ai.py:71-74`).
+لا طلبات تنسيق جديدة بسجلات chart 45 / tools 77 / launch 116 / ui 15 / backend 18.
+**المراجعة (a — تكرار/ميت/تصديرات):** سكربت على كل `export` بـ`mobile/src` + `App.tsx`: 0 تعريف مكرّر؛ 109 تصدير زائد مستعمل داخل ملفه؛ ميت تماماً 2 فقط (`getToolPanel`، `motion` — QA1 (a)). **لا بند جديد.**
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة خارج `locales.ts`.
