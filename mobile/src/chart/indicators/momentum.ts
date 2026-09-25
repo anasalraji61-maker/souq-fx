@@ -301,7 +301,8 @@ export function computeAcceleratorOsc(candles: Candle[]): (number | null)[] {
 export function computeBop(candles: Candle[]): (number | null)[] {
   return candles.map((c) => {
     const span = c.high - c.low;
-    return span === 0 ? 0 : (c.close - c.open) / span;
+    // شمعة بلا مدى (أعلى = أدنى، M1 الهادئة وافتتاح الأسبوع) ⇒ null (na بـTradingView) لا عمود صفر.
+    return span > 0 ? (c.close - c.open) / span : null;
   });
 }
 

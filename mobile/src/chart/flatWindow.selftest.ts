@@ -4,8 +4,9 @@
  * Run: npx --yes tsx src/chart/flatWindow.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { computeCci, computeCmo, computeCutlerRsi, computeRsi, computeStoch, computeStochRsi, computeWilliamsR } from './indicators/momentum';
+import { computeBop, computeCci, computeCmo, computeCutlerRsi, computeRsi, computeStoch, computeStochRsi, computeWilliamsR } from './indicators/momentum';
 import { computeCmf, computeMfi } from './indicators/volume';
+import { evalPineLite } from './pineLite';
 
 const flat = (n: number, p = 1.1, volume?: number) =>
   Array.from({ length: n }, (_, i) => ({ time: i * 60, open: p, high: p, low: p, close: p, volume }));
@@ -54,5 +55,9 @@ const still = Array(30).fill(1.1);
 assert.equal(computeRsi(still)[29], 50, 'RSI flat');
 assert.equal(computeCutlerRsi(still)[29], 50, 'Cutler RSI flat');
 assert.equal(computeRsi(Array.from({ length: 30 }, (_, i) => 1.1 + i * 0.001))[29], 100, 'RSI all gains');
+assert.equal(evalPineLite('stoch(14)', bars)[last], null, 'Pine stoch flat');
+assert.equal(typeof evalPineLite('stoch(14)', bars)[20], 'number');
+assert.equal(computeBop(bars)[last], null, 'BOP zero-range bar');
+assert.equal(typeof computeBop(bars)[5], 'number');
 
 console.log('flatWindow selftest: PASS');

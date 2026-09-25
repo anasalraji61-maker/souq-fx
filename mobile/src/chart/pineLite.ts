@@ -53,7 +53,8 @@ function stochK(candles: Candle[], period: number): (number | null)[] {
       hi = Math.max(hi, candles[j].high);
       lo = Math.min(lo, candles[j].low);
     }
-    out[i] = ((candles[i].close - lo) / (hi - lo || 1e-9)) * 100;
+    // نافذة مسطّحة (أعلى = أدنى) ⇒ null كـ`ta.stoch` (na) و`computeStoch` — كانت 0 «تشبّع بيعي» وهمي.
+    out[i] = hi > lo ? ((candles[i].close - lo) / (hi - lo)) * 100 : null;
   }
   return out;
 }
