@@ -4,10 +4,10 @@
  * Run: npx --yes tsx src/chart/flatWindow.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { computeBop, computeCci, computeCmo, computeSmi, computeCutlerRsi, computeRsi, computeStoch, computeStochRsi, computeWilliamsR } from './indicators/momentum';
+import { computeBop, computeCci, computeCmo, computeSmi, computeCutlerRsi, computeRsi, computeRvi, computeStoch, computeStochRsi, computeWilliamsR } from './indicators/momentum';
 import { computeCmf, computeMfi } from './indicators/volume';
 import { computePercentB } from './indicators/volatility';
-import { computeTrendIntensityIndex } from './indicators/trend';
+import { computeLinRegR2, computeTrendIntensityIndex } from './indicators/trend';
 import { evalPineLite } from './pineLite';
 
 const flat = (n: number, p = 1.1, volume?: number) =>
@@ -79,6 +79,19 @@ assert.equal(computeSmi(flat(40, 1.1, 100)).smi[39], null, 'SMI flat');
   const tii = computeTrendIntensityIndex([...wavy, ...Array(100).fill(1.08505)]);
   assert.equal(tii[169], 50, 'TII flat');
   assert.ok(Math.abs(computeTrendIntensityIndex(wavy)[69]! - 50) > 1e-9, 'TII moving');
+}
+
+// LR R² وRVI: بقايا التقريب ~1e-32/1e-18 كانت تعطي R² = −6.07 وRVI = −0.34 ثابتة على سوق ميّت
+for (const p of [1.1, 1.23456, 145.123]) {
+  const r2 = computeLinRegR2(Array(30).fill(p));
+  for (let i = 13; i < 30; i++) assert.equal(r2[i], 1, `R² flat ${p}`);
+}
+{
+  const r2 = computeLinRegR2(bars.map((b) => b.close));
+  for (const v of r2) if (v != null) assert.ok(v >= 0 && v <= 1, 'R² in [0,1]');
+  const rvi = computeRvi(bars);
+  assert.equal(rvi[last], null, 'RVI flat');
+  assert.equal(typeof rvi[20], 'number', 'RVI moving');
 }
 
 console.log('flatWindow selftest: PASS');

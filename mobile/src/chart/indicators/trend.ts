@@ -468,7 +468,9 @@ export function computeLinRegR2(closes: number[], period = 14): (number | null)[
       ssTot += (y - meanY) ** 2;
       ssRes += (y - yHat) ** 2;
     }
-    out.push(ssTot === 0 ? 1 : 1 - ssRes / ssTot);
+    // نافذة مسطّحة: جمع الأسعار يترك ssTot وssRes ~1e-32 لا صفراً ⇒ نسبة خطأَي تقريب («−6.07» والعمود يُرسم سبعة
+    // ألواح تحت اللوح). انحراف أصغر من 1e-10 من السعر = مسطّح ⇒ 1 كما وُثِّق؛ وR² لا يخرج عن [0، 1].
+    out.push(ssTot <= n * meanY * meanY * 1e-20 ? 1 : Math.min(1, Math.max(0, 1 - ssRes / ssTot)));
   }
   return out;
 }

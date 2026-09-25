@@ -556,7 +556,10 @@ export function computeRvi(candles: Candle[], period = 10): (number | null)[] {
       out.push(null);
       continue;
     }
-    out.push(denomSma[i] === 0 ? 0 : numSma[i]! / denomSma[i]!);
+    // نافذة مسطّحة (H=L): `sma` بمجموع جارٍ يترك ~1e-18 بعد أي حركة ⇒ «=== 0» لا يتحقّق وRVI = بقايا/بقايا
+    // (−0.34 أو 1.9 ثابتة، والمقياس التلقائي يسحق الخطّ الحقيقي ±0.2). مدى أصغر من 1e-10 من السعر ⇒ null
+    // (0/0 = na بـTradingView).
+    out.push(Math.abs(denomSma[i]!) <= Math.abs(candles[i].close) * 1e-10 ? null : numSma[i]! / denomSma[i]!);
   }
   return out;
 }
