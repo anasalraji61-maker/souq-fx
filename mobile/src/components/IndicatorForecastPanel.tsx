@@ -339,10 +339,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: radii.sm,
     borderWidth: 1,
-    borderColor: colors.accent,
+    // DESIGN-PRO §1: زرّ غير نشِط بلا تأكيد — التأكيد للمختار وحده (الرقاقة/الرمز)، لا لحدّ زرّ بالسكون.
+    borderColor: colors.border,
   },
   refreshDisabled: { opacity: 0.4 },
-  refreshText: { color: colors.accent, fontWeight: '500', fontSize: 11 },
+  refreshText: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chipsRtl: { flexDirection: 'row-reverse' },
   // كانت ~28pt بفجوة 6 ⇒ تبديل الجار بالخطأ؛ 40pt + فجوة 8 (لا hitSlop: يتراكب بين الشرائح).

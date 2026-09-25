@@ -201,9 +201,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: radii.sm,
     borderWidth: 1,
-    borderColor: colors.accent,
+    // DESIGN-PRO §1: زرّ غير نشِط بلا تأكيد — التأكيد للمختار وحده (الرقاقة/الرمز)، لا لحدّ زرّ بالسكون.
+    borderColor: colors.border,
   },
-  refreshText: { color: colors.accent, fontWeight: '500', fontSize: 11 },
+  refreshText: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
   consensus: {
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
