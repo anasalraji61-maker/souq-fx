@@ -2207,6 +2207,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     word: tr.mcDrawColorWord,
     a11y: tr.mcDrawColorA11y.replace('{color}', drawPaletteNames[recolorIdx] ?? drawPaletteNames[0] ?? ''),
   };
+  // أزرار الإزاحة للرسم المحدَّد (`nudgeSelectedDrawing`) — الزمن يسار⇐يمين بالشارت بكل اللغات.
+  const nudgeButtons = [
+    { key: 'up', icon: '▲', bars: 0, steps: 1, a11y: tr.mcNudgeUpA11y },
+    { key: 'down', icon: '▼', bars: 0, steps: -1, a11y: tr.mcNudgeDownA11y },
+    { key: 'earlier', icon: '◀', bars: -1, steps: 0, a11y: tr.mcNudgeEarlierA11y },
+    { key: 'later', icon: '▶', bars: 1, steps: 0, a11y: tr.mcNudgeLaterA11y },
+  ];
 
   // تبديل الرمز يحمّل رسومات أخرى، فتاريخ الرسم السابق لم يعد يخصّها. تبديل **الفريم**
   // لا يمسّه: الرسومات للرمز على كل فريماته (`drawingStore.ts`) — خطّ رُسم على 4H خطأً يُتراجع
@@ -3389,6 +3396,30 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setSelectedId(next.id);
   };
 
+  /**
+   * إزاحة الرسم المحدَّد `bars` شمعة و`steps` خطوة سعر (pip للأزواج والمعادن، وإلا بكسل رأسي واحد) — لأسهم
+   * لوحة المفاتيح ولأزرار ▲▼◀▶ بالهاتف (chart15): الإصبع لا يضع مستوى على pip بعينه، والسحب يقفز بكسلات.
+   * `false` إن لا رسم محدَّد. قابلة للتراجع كل خطوة.
+   */
+  const nudgeSelectedDrawing = (bars: number, steps: number): boolean => {
+    const d = selectedId ? drawingsRef.current.find((x) => x.id === selectedId) : null;
+    if (!d) return false;
+    const pip = chartPipSpec(series.symbol)?.pipSize ?? null;
+    const pxScaled = toScale(priceAtY(0)) - toScale(priceAtY(1));
+    const next = translateDrawing(
+      d,
+      bars,
+      (price) =>
+        !steps ? price : pip ? nudgePipPrice(price, steps, pip) : fromScale(toScale(price) + steps * pxScaled),
+      (index) =>
+        stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe))
+    );
+    if (sameDrawingPlace(d, next)) return true;
+    pushDrawHistory();
+    setDrawings((list) => list.map((x) => (x.id === next.id ? next : x)));
+    return true;
+  };
+
   const pointFromXY = useCallback(
     (x: number, y: number): ChartPoint => {
       const raw = priceAtY(y);
@@ -4164,26 +4195,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           ? arrowNudge(key, event.shiftKey)
           : null;
       if (!nudge) return;
-      const d = drawingsRef.current.find((x) => x.id === selectedId);
-      if (!d) return;
-      event.preventDefault();
-      const pip = chartPipSpec(series.symbol)?.pipSize ?? null;
-      const pxScaled = toScale(priceAtY(0)) - toScale(priceAtY(1));
-      const next = translateDrawing(
-        d,
-        nudge.bars,
-        (price) =>
-          !nudge.steps
-            ? price
-            : pip
-              ? nudgePipPrice(price, nudge.steps, pip)
-              : fromScale(toScale(price) + nudge.steps * pxScaled),
-        (index) =>
-          stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe))
-      );
-      if (sameDrawingPlace(d, next)) return;
-      pushDrawHistory();
-      setDrawings((list) => list.map((x) => (x.id === next.id ? next : x)));
+      if (nudgeSelectedDrawing(nudge.bars, nudge.steps)) event.preventDefault();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
@@ -5467,6 +5479,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={styles.compactToolLabel}>{tr.mcCloneDrawing}</Text>
               </Pressable>
             ) : null}
+            {selectedId
+              ? nudgeButtons.map((b) => (
+                  <Pressable
+                    key={b.key}
+                    accessibilityRole="button"
+                    accessibilityLabel={b.a11y}
+                    style={({ pressed }) => [
+                      styles.compactTool,
+                      pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                    ]}
+                    onPress={() => nudgeSelectedDrawing(b.bars, b.steps)}
+                  >
+                    <Text style={styles.compactToolIcon}>{b.icon}</Text>
+                    <Text style={styles.compactToolLabel}>{tr.mcNudgeWord}</Text>
+                  </Pressable>
+                ))
+              : null}
             {canRecolor ? (
               <Pressable
                 accessibilityRole="button"
@@ -11401,6 +11430,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 >
                   <Text style={styles.toolText}>❐ {tr.mcCloneDrawing}</Text>
                 </Pressable>
+                {nudgeButtons.map((b) => (
+                  <Pressable
+                    key={b.key}
+                    accessibilityRole="button"
+                    accessibilityLabel={b.a11y}
+                    style={({ pressed }) => [
+                      styles.tool,
+                      pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                    ]}
+                    onPress={() => nudgeSelectedDrawing(b.bars, b.steps)}
+                  >
+                    <Text style={styles.toolText}>{b.icon}</Text>
+                  </Pressable>
+                ))}
                 {canRecolor ? (
                   <Pressable
                     accessibilityRole="button"
