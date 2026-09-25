@@ -168,6 +168,9 @@ export type Dict = {
   /** سطر خافت تحت جواب المساعد له `price_as_of` (backend-r12، ui9): الدخول بالنصّ إغلاق شمعة قد يكون مخزَّناً أو إغلاق الجمعة —
    * `{time}` من `AiPanel.formatPriceAt` («21:45» أو «الجمعة، 25 سبتمبر 21:45»؛ الكردي «26/09 21:45») */
   aiPriceAsOf: string;
+  /** سطر خافت تحت «دخول/وقف/هدف» بلوحة توقّع المؤشرات (`IndicatorForecastPanel`) حين `price_as_of` أقدم من دقائق (backend-r16، `e4d940e`):
+   * يوم السبت الدخول = إغلاق الجمعة، وعند حدّ المزوّد كاش حتى 15د. `{time}` من `formatLocalStamp` كما `aiPriceAsOf`؛ null ⇒ لا سطر. */
+  forecastPriceAsOf: string;
   aiOfflineFallback: string;
   aiInputPlaceholder: string;
   aiInputA11y: string;
@@ -1449,6 +1452,7 @@ const ar: Dict = {
   aiGreeting:
     'أنا مساعد MATRIX الآلي. اسألني عن تحليل الزوج، سيناريو صفقة، إدارة المخاطرة، أو علاقته بـDXY. إجاباتي تحليل آلي تتعلّم منه، لا نصيحة مالية — راجع أي مستوى على الشارت قبل أن تعتمد عليه.',
   aiPriceAsOf: 'الأسعار في هذا الجواب مبنيّة على إغلاق شمعة {time} بتوقيتك — وليست سعراً حيّاً',
+  forecastPriceAsOf: 'المستويات مبنيّة على إغلاق شمعة {time} بتوقيتك — وليست سعراً حيّاً',
   aiOfflineFallback:
     'تعذّر الاتصال بالخادم — تحقّق من اتصالك بالإنترنت وحاول بعد قليل.\n\nتحليل محلي سريع: راقب DXY قبل أي دخول على أزواج الدولار، واستخدم وقفاً واضحاً بمخاطرة 1% للصفقة (2% حدّاً أقصى).',
   aiInputPlaceholder: 'مثال: تحليل {symbol} اليوم؟',
@@ -2615,6 +2619,7 @@ const enUS: Dict = {
   aiGreeting:
     "I'm MATRIX's AI assistant. Ask me about the pair's analysis, a trade scenario, risk management, or its relation to DXY. My answers are automated analysis to learn from, not financial advice — check any level on the chart before relying on it.",
   aiPriceAsOf: 'Prices in this answer are based on the candle close at {time} your time — not a live price',
+  forecastPriceAsOf: 'Levels are based on the candle close at {time} your time — not a live price',
   aiOfflineFallback:
     'Could not reach the server — check your internet connection and try again shortly.\n\nQuick local take: watch DXY before entering any dollar pair, and use a clear stop, risking 1% per trade (2% at most).',
   aiInputPlaceholder: 'e.g. analysis of {symbol} today?',
@@ -3806,6 +3811,7 @@ const ku: Dict = {
   aiGreeting:
     'من یاریدەدەری خۆکاری MATRIX ـم. پرسیارم لێ بکە دەربارەی شیکاری جووتەکە، دیمەنی مامەڵە، بەڕێوەبردنی مەترسی، یان پەیوەندی بە DXY. وەڵامەکانم شیکاری خۆکارن بۆ فێربوون، نەک ئامۆژگاری دارایی — پێش ئەوەی پشتی پێ ببەستیت هەر ئاستێک لەسەر چارتەکە بپشکنە.',
   aiPriceAsOf: 'نرخەکانی ئەم وەڵامە لەسەر داخستنی مۆمی {time} بە کاتی تۆن — نرخی ڕاستەوخۆ نین',
+  forecastPriceAsOf: 'ئاستەکان لەسەر داخستنی مۆمی {time} بە کاتی تۆن — نرخی ڕاستەوخۆ نین',
   aiOfflineFallback:
     'نەکرا پەیوەندی بە ڕاژەوە بکرێت — لە پەیوەندییەکەت بە ئینتەرنێت دڵنیابە و دوای کەمێک دووبارە هەوڵ بدەرەوە.\n\nشیکاری خێرای ناوخۆیی: چاودێری DXY بکە پێش هەر چوونەژوورەوەیەک بۆ جووتەکانی دۆلار، و وەستانێکی ڕوون بەکاربهێنە بە مەترسی 1% بۆ هەر مامەڵەیەک (زۆرترین 2%).',
   aiInputPlaceholder: 'نموونە: شیکاری {symbol} ئەمڕۆ؟',
