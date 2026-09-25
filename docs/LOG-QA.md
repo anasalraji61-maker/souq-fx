@@ -714,3 +714,13 @@ ui11 ← ui (`a0f67d1`، `AS_OF_COPY` grep صفر)؛ QA60 ← launch (`99e365e`�
 **المراجعة (a — تكرار/ميت/تصديرات):** سكربت على كل `export` بـ`mobile/src` + `App.tsx`: 0 تعريف مكرّر؛ 109 تصدير زائد مستعمل داخل ملفه؛ ميت تماماً 2 فقط (`getToolPanel`، `motion` — QA1 (a)). **لا بند جديد.**
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة خارج `locales.ts`.
 **إلحاق:** وصل أثناء الدفع launch 117 (صفّ launch117 = نصف (b) من صفّي) ⇒ دُمجا صفّاً واحداً «tools + launch». RELEASE-MOBILE صار 475 خطوة. البناء بعد الدمج أخضر 0.
+
+## 2026-09-25 — الدورة 62
+**البناء:** أخضر 0 (بعد 283ba25) — لا إصلاح لازم. **Selftests:** 99/99 ناجح (`npx tsx`؛ +2 منذ الدورة 61).
+**التحقّق من الإغلاقات بالكود (3 صفوف):** chart-r46 ← ui (`a6e048d`، `useTickFreshnessClock.ts:17 :25` `serverNowSec()`)؛ تتمّة tools77 + launch117 ← tools
+(`3ab55bf`: `OPEN_RISK_UNKNOWN_COPY` grep صفر، `TradeJournalPanel.tsx:810`؛ `cbc8ce6`: `editSizeValue` `:993` + selftest)؛ backend-r19 دُمج مع ui16b (جزء ui `af3954f` منجز؛ باقٍ tools `TerminalScreen.tsx:958` ثم backend `candles: []`).
+**ui16a حُوِّل لـui:** طلب ui من launch مفتاحاً مستقلاً، لكن `chartNotOfferedTitle`/`Body` موجودان ×3 (`954fcc4`، سبق `af3954f`) ⇒ `ProviderUnavailableNotice.tsx:24-31` يقرؤهما بدل اقتطاع `originUnavailableProvider`.
+لا طلبات تنسيق جديدة بسجلات chart 46 / tools / launch 118 / ui 16 / backend 19 غير ما سبق.
+**المراجعة (b — نصوص ثابتة):** سكربت على كل `.ts/.tsx` بـ`src` (عربي بسلاسل خارج التعليقات، و`>Text<` إنجليزي، و`label/placeholder/title="…"`): 126 إصابة، كلّها
+معروفة (`academy.ts` QA27، `MessagesScreen`/`mock.ts`/`api.ts:893` launch52) أو غير معروضة (مفاتيح مطابقة نصّ الخادم بـ`CommissionPlanPanel`، regex الحاسبة، أوامر AI بـ`WeeklyReportPanel`، احتياطات تُستبدل بالمستدعي). **لا بند جديد.**
+**الدورة القادمة:** المراجعة (c) — أزرار بلا `accessibilityLabel`.
