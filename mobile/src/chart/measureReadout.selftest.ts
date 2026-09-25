@@ -169,7 +169,8 @@ ok('مدى EURUSD', candleRangePipsText('EURUSD', 1.08612, 1.08450) === '↕ 16.
 ok('مدى USDJPY بحجم pip الين', candleRangePipsText('USDJPY', 157.423, 157.1) === '↕ 32.3 pip');
 ok('مدى الذهب', candleRangePipsText('XAUUSD', 2662.5, 2650.0) === '↕ 125.0 pip');
 ok('دوجي بلا مدى', candleRangePipsText('EURUSD', 1.085, 1.085) === '↕ 0.0 pip');
-ok('DXY ⇒ null', candleRangePipsText('DXY', 104.3, 104.1) === null);
+ok('DXY ⇒ فرق سعر', candleRangePipsText('DXY', 104.3, 104.1, undefined, 104.2) === '↕ 0.200');
+ok('US30 ⇒ فرق سعر', candleRangePipsText('US30', 39150, 39000, undefined, 39100) === '↕ 150.00');
 ok('أعلى دون الأدنى ⇒ null', candleRangePipsText('EURUSD', 1.08, 1.09) === null);
 
 // ── زمن القياس ────────────────────────────────────────────────────────────

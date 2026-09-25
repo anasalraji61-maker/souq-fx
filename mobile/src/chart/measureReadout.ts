@@ -93,12 +93,19 @@ export function signedDistanceText(
 /**
  * مدى الشمعة (أعلى − أدنى) بالنقاط لسطر التقاطع: «↕ 16.2 pip». متداول الفوركس يقيس الشمعة
  * بالنقاط لا بالنسبة (شمعة خبر 40 pip مقابل شمعة آسيا 6 pip) — والنسبة وحدها كانت بالسطر.
- * `null` لأداة بلا مواصفة pip (DXY، مؤشرات) فلا يُكتب شيء بدل رقم بوحدة خاطئة.
+ * أداة بلا مواصفة pip (DXY، US30، BTCUSD) ⇒ المدى فرق سعر بمنازل الرمز («↕ 150.00») كما يفعل
+ * `signedDistanceText` — كان `null` فيغيب المدى عن سطر التقاطع وارتفاع المستطيل على هذه الأدوات وحدها.
  */
-export function candleRangePipsText(symbol: string, high: number, low: number, lang?: string): string | null {
+export function candleRangePipsText(
+  symbol: string,
+  high: number,
+  low: number,
+  lang?: string,
+  priceRef?: number | null
+): string | null {
   if (!Number.isFinite(high) || !Number.isFinite(low) || high < low) return null;
   const spec = chartPipSpec(symbol);
-  if (!spec) return null;
+  if (!spec) return `↕ ${formatPriceDiff(high - low, low, symbol, priceRef)}`;
   const pips = pipsBetween(spec, low, high);
   if (pips == null) return null;
   return `↕ ${pipsNumber(pips)} ${pipUnit(lang)}`;

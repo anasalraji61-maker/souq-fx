@@ -5658,7 +5658,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const denseOhlcPct =
     denseOhlc && crossChange && chartPlotW >= (denseOhlcWide ? 270 : 150) ? crossChange : null;
   const denseOhlcRange =
-    denseOhlc && chartPlotW >= 360 ? candleRangePipsText(series.symbol, denseOhlc.high, denseOhlc.low, lang) : null;
+    denseOhlc && chartPlotW >= 360 ? candleRangePipsText(series.symbol, denseOhlc.high, denseOhlc.low, lang, priceDecimalsRef) : null;
   // السعر المحفوظ لا الإغلاق: الخطّ يبقى على المستوى الذي لُمس عبر التكبير والإزاحة.
   const crossPrice = crossCandle ? cross?.price ?? null : null;
   const crossY = crossPrice != null ? yOf(crossPrice) : 0;
@@ -6462,7 +6462,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               );
             })()}
             {(() => {
-              const range = candleRangePipsText(series.symbol, crossReadCandle.high, crossReadCandle.low, lang);
+              const range = candleRangePipsText(series.symbol, crossReadCandle.high, crossReadCandle.low, lang, priceDecimalsRef);
               return range ? ` ${range}` : '';
             })()}
             {compareSeries
@@ -6809,7 +6809,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           hi = Math.max(hi, c.high);
                           lo = Math.min(lo, c.low);
                         }
-                        const range = candleRangePipsText(series.symbol, hi, lo, lang);
+                        const range = candleRangePipsText(series.symbol, hi, lo, lang, priceDecimalsRef);
                         return range ? ` ${range}` : null;
                       })()
                     : null}
@@ -8828,7 +8828,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           series.symbol,
                           Math.max(d.a.price, d.b.price),
                           Math.min(d.a.price, d.b.price),
-                          lang
+                          lang,
+                          priceDecimalsRef
                         )
                       : null;
                   if (!txt) return null;
