@@ -7226,7 +7226,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     <Text
                       style={{
                         color: 'rgba(226,232,240,0.92)',
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: '500',
                         fontFamily: 'monospace',
                         textTransform: 'lowercase',
@@ -7258,7 +7258,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             }}
           >
             {/* §1: لا تأكيد على الشارات — وسم محايد. */}
-            <Text style={{ color: colors.textMuted, fontSize: 10, fontWeight: '500' }}>{tr.mcPrimaryLane}</Text>
+            <Text style={{ color: colors.textMuted, fontSize: 11, fontWeight: '500' }}>{tr.mcPrimaryLane}</Text>
           </View>
         ) : null}
 
@@ -9591,7 +9591,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             </Text>
             {crossPipsText ? (
               <Text
-                style={[styles.crossPipsText, { fontSize: axisTagFontSize(crossPipsText, AXIS_TAG_TEXT_W, 10) }]}
+                style={[styles.crossPipsText, { fontSize: axisTagFontSize(crossPipsText, AXIS_TAG_TEXT_W) }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.75}
@@ -9601,7 +9601,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ) : null}
             {crossPctText ? (
               <Text
-                style={[styles.crossPipsText, { fontSize: axisTagFontSize(crossPctText, AXIS_TAG_TEXT_W, 10) }]}
+                style={[styles.crossPipsText, { fontSize: axisTagFontSize(crossPctText, AXIS_TAG_TEXT_W) }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.75}
@@ -9649,7 +9649,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   minimumFontScale={0.8}
                   style={[
                     styles.timeAxisLabel,
-                    chartPlotW < 280 && styles.timeAxisLabelCompact,
                     { width: timeLabelW, left: box.start },
                   ]}
                 >
@@ -13159,7 +13158,7 @@ const styles = StyleSheet.create({
   readoutMuted: { color: colors.textDim, fontSize: 11, flex: 1, textAlign: 'right' },
   drawingsSaveError: {
     color: colors.bear,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     textAlign: 'right',
   },
@@ -13327,7 +13326,7 @@ const styles = StyleSheet.create({
   currentPriceText: {
     ...numeric,
     color: '#041514',
-    fontSize: 9,
+    fontSize: 11,
     lineHeight: 14,
     fontWeight: '600',
     fontFamily: 'monospace',
@@ -13336,7 +13335,7 @@ const styles = StyleSheet.create({
     ...numeric,
     color: '#041514',
     opacity: 0.72,
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: COUNTDOWN_LINE_H,
     fontWeight: '600',
     fontFamily: 'monospace',
@@ -13361,11 +13360,6 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     fontWeight: '600',
     textAlign: 'center',
-  },
-  timeAxisLabelCompact: {
-    fontSize: 10,
-    lineHeight: 13,
-    top: 5,
   },
   axisCorner: {
     position: 'absolute',
@@ -13623,7 +13617,7 @@ const styles = StyleSheet.create({
   crossTagText: {
     ...numeric,
     color: '#041514',
-    fontSize: 9,
+    fontSize: 11,
     lineHeight: 14,
     fontWeight: '600',
     fontFamily: 'monospace',
@@ -13633,7 +13627,7 @@ const styles = StyleSheet.create({
     ...numeric,
     color: '#041514',
     opacity: 0.72,
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: COUNTDOWN_LINE_H,
     fontWeight: '600',
     fontFamily: 'monospace',
@@ -13817,7 +13811,7 @@ const styles = StyleSheet.create({
   },
   dockTitle: {
     color: colors.textMuted,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     textAlign: 'right',
     letterSpacing: 0.6,
@@ -13846,6 +13840,6 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
   },
   indOn: { backgroundColor: colors.selectedFill },
-  indText: { color: colors.textDim, fontSize: 10, fontWeight: '500' },
+  indText: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
   indTextOn: { color: colors.text },
 });
