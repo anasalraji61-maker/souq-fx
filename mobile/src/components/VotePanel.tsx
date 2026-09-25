@@ -630,11 +630,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
     borderRadius: radii.sm,
     borderWidth: 1,
-    borderColor: colors.accent,
+    // DESIGN-PRO §1: زرّ غير نشِط بلا تأكيد بالسكون.
+    borderColor: colors.border,
     paddingHorizontal: 12,
     paddingVertical: 4,
   },
-  publishToggleText: { color: colors.accent, fontWeight: '500', fontSize: 11 },
+  publishToggleText: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
   form: {
     marginTop: spacing.sm,
     marginBottom: spacing.sm,

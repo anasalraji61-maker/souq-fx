@@ -639,12 +639,13 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     borderRadius: radii.sm,
     borderWidth: 1,
-    borderColor: colors.accent,
+    // DESIGN-PRO §1: زرّ غير نشِط بلا تأكيد بالسكون.
+    borderColor: colors.border,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     backgroundColor: 'transparent',
   },
-  notifBtnText: { color: colors.accent, fontWeight: '500', fontSize: 12 },
+  notifBtnText: { color: colors.textMuted, fontWeight: '500', fontSize: 12 },
   legs: { flexDirection: 'row', gap: spacing.sm },
   legsRtl: { flexDirection: 'row-reverse' },
   leg: {

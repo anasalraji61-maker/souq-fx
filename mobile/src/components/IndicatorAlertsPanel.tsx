@@ -629,12 +629,13 @@ const styles = StyleSheet.create({
   notifWarn: { color: colors.warn, fontSize: 11, fontWeight: '500', flex: 1 },
   notifBtn: {
     borderWidth: 1,
-    borderColor: colors.accent,
+    // DESIGN-PRO §1: زرّ غير نشِط بلا تأكيد بالسكون.
+    borderColor: colors.border,
     borderRadius: radii.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
   },
-  notifBtnText: { color: colors.accent, fontSize: 11, fontWeight: '500' },
+  notifBtnText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   tagWatching: { color: colors.accent, fontWeight: '500' },
   tagFired: { color: colors.textDim, fontWeight: '500' },
   chip: {
