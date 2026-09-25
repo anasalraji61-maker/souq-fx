@@ -158,6 +158,8 @@ export type Dict = {
   /** سطر واحد تحت عنوان الأخبار حين خبرٌ فيها `impact_basis === 'headline_keywords'` (backend `9a05735`): شارة «قوي/متوسط/ضعيف»
    * مخمَّنة من كلمات العنوان لا تصنيفاً من المصدر كتأثير التقويم. */
   newsImpactFromHeadline: string;
+  /** قارئ الشاشة على شارة «≈ عالي» (`NewsPanel.tsx:96`، `8ca1226`): «≈» يُقرأ «يساوي تقريباً» — جملة بدلها. {impact} = `impactHigh/Medium/Low`. */
+  newsImpactEstimatedA11y: string;
   /** شريحة تغيّر اللقطة (`SymbolSnapshot`) بعد backend `5324d55`: `change_pct` على كامل السلسلة المحمّلة لا يومياً — {pct} بـ`formatPct`،
    * {bars} = `change_bars`. بلا `change_bars` (خادم أقدم) ⇒ النسبة وحدها كما اليوم. */
   snapChangeOverBars: string;
@@ -1416,6 +1418,7 @@ const ar: Dict = {
   newsEmpty: 'لا عناوين مؤثرة الآن — ومواعيد البيانات القادمة (الفائدة، الوظائف، التضخم) تجدها في «تقويم».',
   newsLoadError: 'تعذّر تحميل الأخبار — تحقّق من الاتصال، ثم غادر هذا القسم وارجع إليه لإعادة المحاولة',
   newsImpactFromHeadline: 'شارة التأثير تقدير من كلمات العنوان، لا تصنيف من مصدر الخبر — مواعيد البيانات المؤكَّدة في «تقويم».',
+  newsImpactEstimatedA11y: 'تأثير {impact} — تقدير من كلمات العنوان',
   snapChangeOverBars: '{pct} خلال آخر {bars} شمعة',
   aiPanelTitle: 'مساعد ذكاء اصطناعي',
   aiGreeting:
@@ -2570,6 +2573,7 @@ const enUS: Dict = {
   newsEmpty: 'No market-moving headlines right now — upcoming releases (rates, jobs, inflation) are in Calendar.',
   newsLoadError: "Couldn't load news — check your connection, then leave this section and come back to retry",
   newsImpactFromHeadline: 'The impact badge is estimated from headline keywords, not rated by the source — confirmed release times are in Calendar.',
+  newsImpactEstimatedA11y: '{impact} impact — estimated from headline keywords',
   snapChangeOverBars: '{pct} over the last {bars} candles',
   aiPanelTitle: 'AI assistant',
   aiGreeting:
@@ -3749,6 +3753,7 @@ const ku: Dict = {
   newsEmpty: 'ئێستا هیچ سەردێڕێکی کاریگەر نییە — کاتی داتا داهاتووەکان (سوود، کار، هەڵاوسان) لە «ڕۆژژمێر» دەبینیت.',
   newsLoadError: 'نەکرا هەواڵەکان باربکرێن — پەیوەندییەکەت بپشکنە، پاشان ئەم بەشە جێبهێڵە و بگەڕێوە بۆی بۆ هەوڵدانەوە',
   newsImpactFromHeadline: 'نیشانەی کاریگەری خەمڵاندنە لە وشەکانی سەردێڕ، نەک پۆلێنکردنی سەرچاوە — کاتە دڵنیاکانی داتا لە «ڕۆژژمێر»دان.',
+  newsImpactEstimatedA11y: 'کاریگەریی {impact} — خەمڵاندن لە وشەکانی سەردێڕ',
   snapChangeOverBars: '{pct} لە دوایین {bars} مۆمدا',
   aiPanelTitle: 'یاریدەدەری زیرەکی دەستکرد',
   aiGreeting:
