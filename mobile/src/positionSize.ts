@@ -715,6 +715,24 @@ function readLeverage(raw: string): number | null {
 }
 
 /**
+ * «1.000»/«1:1.000»/«٢٫٠٠٠» — رافعة مرفوضة لأنها مبهمة (`readLeverage`: 1:1000 بكتابة أوروبية أم 1:1؟) — بقراءة الآلاف
+ * لرسالة `riskCalcLeverageAmbiguous` («هل تقصد 1:1000؟») بدل «رقم غير مفهوم… مثل 1.0850» التي لا تقول ما المبهم.
+ * `value` كما كُتبت (مشذّبة)، `big` قراءة الآلاف. `null` = ليست هذه الحالة، أو قراءة الآلاف فوق `MAX_LEVERAGE`
+ * («500.000» ⇒ 1:500000 ليست اقتراحاً — تبقى الرسالة العامة). عرضٌ فقط: الخانة تبقى مرفوضة.
+ */
+export function leverageAmbiguousThousands(raw: string): { value: string; big: number } | null {
+  const s = normalizeDigits(raw)
+    .replace(/[：]/g, ':')
+    .replace(/[／]/g, '/')
+    .replace(/٫/g, '.') // الفاصلة العشرية العربية: «٢٫٠٠٠» على اللوحة العربية
+    .replace(/\s/g, '');
+  const m = /^(?:1[:/])?(\d{1,3})\.(\d{3})$/.exec(s);
+  if (!m) return null;
+  const big = Number(m[1] + m[2]);
+  return big >= 1 && big <= MAX_LEVERAGE ? { value: raw.trim(), big } : null;
+}
+
+/**
  * رافعة **مفهومة الصيغة لكنها خارج الحدّ** («1:5000»، «10000»، «0.5»): كانت ترفضها `parseLeverage` فتظهر
  * رسالة «رقم غير مفهوم — اكتبه بلا فواصل آلاف» — والرقم مفهوم وبلا فواصل، فيعيد المتداول كتابته كما هو.
  * true ⇒ رسالة `riskCalcLeverageOutOfRange` بالحدّ. الخانة تبقى مرفوضة (لا تغيير بالحساب).

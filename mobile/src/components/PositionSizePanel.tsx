@@ -24,6 +24,7 @@ import {
   profitAtTarget,
   parseLeverage,
   leverageOutOfRange,
+  leverageAmbiguousThousands,
   riskOverBalance,
   MAX_LEVERAGE,
   requiredMargin,
@@ -430,6 +431,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const ambiguousPx = [entryPx, stopPx, targetPx]
     .map((v) => ambiguousThousandsPrice(v, spec?.symbol))
     .find((a) => a != null);
+  const leverageAmbig = leverageAmbiguousThousands(leverage);
   const badNumberText = ambiguousPx
     ? t.priceAmbiguousThousandsHint
         .replace('{value}', ambiguousPx.value)
@@ -440,11 +442,17 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         [slPips, manualConv, entryPx, stopPx, targetPx].some((v) => misplacedArabicThousandsSign(v))
       ? // «0٬5» بخانة المخاطرة: «٬» بجانب «٫» على اللوحة العربية — يُقال أيّهما يُكتب للكسر
         `${badFieldsText}: ${t.arabicThousandsSignHint}`
-      : !badOtherThanLeverage && leverageOutOfRange(leverage)
-        ? // «1:5000» مفهومة وبلا فواصل — «رقم غير مفهوم، بلا فواصل آلاف» كانت تجعله يعيد كتابتها كما هي.
-          // وحدها فقط: مع خانة أخرى مرفوضة تبقى الرسالة العامة كي لا تُسمّى الرافعة وحدها
-          t.riskCalcLeverageOutOfRange.replace('{value}', leverage.trim()).replace('{max}', String(MAX_LEVERAGE))
-        : `${badFieldsText}: ${t.invalidNumberHint}`;
+      : !badOtherThanLeverage && leverageAmbig
+        ? // «1.000» = 1:1000 بكتابة أوروبية أم 1:1؟ — «مثل 1.0850» كانت تدعوه لكتابة ما كتبه بالضبط. وحدها فقط، كالتالية
+          t.riskCalcLeverageAmbiguous
+            .replace('{value}', () => leverageAmbig.value)
+            .split('{big}')
+            .join(String(leverageAmbig.big))
+        : !badOtherThanLeverage && leverageOutOfRange(leverage)
+          ? // «1:5000» مفهومة وبلا فواصل — «رقم غير مفهوم، بلا فواصل آلاف» كانت تجعله يعيد كتابتها كما هي.
+            // وحدها فقط: مع خانة أخرى مرفوضة تبقى الرسالة العامة كي لا تُسمّى الرافعة وحدها
+            t.riskCalcLeverageOutOfRange.replace('{value}', leverage.trim()).replace('{max}', String(MAX_LEVERAGE))
+          : `${badFieldsText}: ${t.invalidNumberHint}`;
   const spreadWide = spreadTooWide(spread);
   const spreadErr =
     parseSpreadPips(spread) != null

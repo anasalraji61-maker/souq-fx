@@ -62,6 +62,7 @@ import {
   stopInsideSpread,
   misplacedArabicThousandsSignInRisk,
   leverageOutOfRange,
+  leverageAmbiguousThousands,
   riskOverBalance,
   centAccountSymbol,
   smallContractPair,
@@ -727,6 +728,22 @@ console.log('positionSize journal plan gain selftest OK');
   for (const bad of ['', '0', '0.5', '1:0', '10000', '100:1', '2:100', 'abc', '1:', ':100', '-100', '1.000', '1:1.000', '1:2.000', '٢٫٠٠٠', '500.000']) {
     assert.equal(parseLeverage(bad), null, bad);
   }
+  // «1.000» مرفوضة لأنها مبهمة: الرسالة تسأل «1:1000؟» بقراءة الآلاف، لا «رقم غير مفهوم… مثل 1.0850»
+  assert.deepEqual(leverageAmbiguousThousands('1.000'), { value: '1.000', big: 1000 });
+  assert.deepEqual(leverageAmbiguousThousands(' 1:1.000 '), { value: '1:1.000', big: 1000 });
+  assert.deepEqual(leverageAmbiguousThousands('1/2.000'), { value: '1/2.000', big: 2000 });
+  assert.deepEqual(leverageAmbiguousThousands('٢٫٠٠٠'), { value: '٢٫٠٠٠', big: 2000 });
+  assert.deepEqual(leverageAmbiguousThousands('１.０００'), { value: '１.０００', big: 1000 });
+  assert.deepEqual(leverageAmbiguousThousands('3.000'), { value: '3.000', big: 3000 });
+  // قراءة الآلاف فوق الحدّ أو صفر: ليست اقتراحاً ⇒ الرسالة العامة
+  for (const raw of ['500.000', '4.000', '0.000', '1:5.000']) assert.equal(leverageAmbiguousThousands(raw), null, raw);
+  // غير مبهمة: مقبولة أو مرفوضة لسبب آخر
+  for (const raw of ['', '1000', '1:1000', '1.5', '1:33.3', '1.00', '1.0000', '1,000', '100:1', 'abc', '10.000.000']) {
+    assert.equal(leverageAmbiguousThousands(raw), null, raw);
+  }
+  // لا تُقبل بحسابها: المبهمة تبقى مرفوضة
+  assert.equal(parseLeverage('1.000'), null);
+  assert.equal(leverageOutOfRange('1.000'), false);
 
   const m = (sym: string, lots: number, price: number, rate: number, lev: number) =>
     requiredMargin({ spec: instrumentSpec(sym)!, lots, price, quoteToAccount: rate, leverage: lev });
