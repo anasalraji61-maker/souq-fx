@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/visibleBars.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { visibleBarRange, visibleMax } from './visibleBars';
+import { visibleBarRange, visibleMax, visibleValues } from './visibleBars';
 
 // بلا إزاحة: الكل
 assert.deepEqual(visibleBarRange(80, 320, 0), { lo: 0, hi: 79 });
@@ -35,5 +35,9 @@ assert.equal(visibleMax(spike, undefined, true), 50);
 assert.equal(visibleMax([null, 4, null], { lo: 2, hi: 2 }), 4);
 assert.equal(visibleMax([0, 0], { lo: 0, hi: 1 }), 1e-9);
 assert.equal(visibleMax([], { lo: 0, hi: 0 }), 1e-9);
+// visibleValues: الظاهر وحده، وإلا الكلّ
+assert.deepEqual(visibleValues(spike, { lo: 2, hi: 4 }), [1, -3]);
+assert.deepEqual(visibleValues([null, 7, null], { lo: 2, hi: 2 }), [7]);
+assert.deepEqual(visibleValues([NaN, 1], undefined), [1]);
 
 console.log('visibleBars selftest: PASS');

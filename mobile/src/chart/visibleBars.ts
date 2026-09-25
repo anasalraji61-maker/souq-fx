@@ -52,3 +52,23 @@ export function visibleMax(
   if (m === -Infinity) m = scan(0, values.length - 1);
   return Math.max(m, 1e-9);
 }
+
+/**
+ * القيم الصالحة بين الشموع الظاهرة `vis` (بلا قيمة صالحة فيها ⇒ السلسلة كلّها) — مقياس اللوحات ذات
+ * الخطّين (Vortex، DMI، Klinger، SMI، TDI، WaveTrend، RWI) كـ`visibleMax` للأعمدة.
+ */
+export function visibleValues(
+  values: readonly (number | null | undefined)[],
+  vis?: { lo: number; hi: number }
+): number[] {
+  const pick = (lo: number, hi: number) => {
+    const out: number[] = [];
+    for (let i = Math.max(0, lo); i <= hi && i < values.length; i++) {
+      const v = values[i];
+      if (v != null && Number.isFinite(v)) out.push(v);
+    }
+    return out;
+  };
+  const seen = vis ? pick(vis.lo, vis.hi) : [];
+  return seen.length ? seen : pick(0, values.length - 1);
+}

@@ -356,7 +356,7 @@ import {
   type PanSpeedPercent,
 } from './panSpeed';
 import { mapShadowCandles } from './shadowOverlay';
-import { visibleBarRange, visibleMax } from './visibleBars';
+import { visibleBarRange, visibleMax, visibleValues } from './visibleBars';
 import {
   firstAfter,
   lastAtOrBefore,
@@ -10126,8 +10126,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const tdiVals = tdi.tdi.filter((x): x is number => x != null);
-              const diVals = tdi.di.filter((x): x is number => x != null);
+              const tdiVals = visibleValues(tdi.tdi, paneVis);
+              const diVals = visibleValues(tdi.di, paneVis);
               const allVals = [...tdiVals, ...diVals, 0];
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
@@ -10339,8 +10339,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const wt1Vals = waveTrend.wt1.filter((x): x is number => x != null);
-              const wt2Vals = waveTrend.wt2.filter((x): x is number => x != null);
+              const wt1Vals = visibleValues(waveTrend.wt1, paneVis);
+              const wt2Vals = visibleValues(waveTrend.wt2, paneVis);
               const allVals = [...wt1Vals, ...wt2Vals, 0];
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
@@ -11576,8 +11576,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const plusVals = vortex.plus.filter((x): x is number => x != null);
-              const minusVals = vortex.minus.filter((x): x is number => x != null);
+              const plusVals = visibleValues(vortex.plus, paneVis);
+              const minusVals = visibleValues(vortex.minus, paneVis);
               const allVals = [...plusVals, ...minusVals, 0.5, 1.5];
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
@@ -11614,8 +11614,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const plusVals = dmi.plusDI.filter((x): x is number => x != null);
-              const minusVals = dmi.minusDI.filter((x): x is number => x != null);
+              const plusVals = visibleValues(dmi.plusDI, paneVis);
+              const minusVals = visibleValues(dmi.minusDI, paneVis);
               const allVals = [...plusVals, ...minusVals, 0];
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
@@ -11652,8 +11652,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const highVals = rwi.rwiHigh.filter((x): x is number => x != null);
-              const lowVals = rwi.rwiLow.filter((x): x is number => x != null);
+              const highVals = visibleValues(rwi.rwiHigh, paneVis);
+              const lowVals = visibleValues(rwi.rwiLow, paneVis);
               const allVals = [...highVals, ...lowVals, 0];
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
@@ -11721,8 +11721,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const kvoVals = klinger.kvo.filter((x): x is number => x != null);
-              const sigVals = klinger.signal.filter((x): x is number => x != null);
+              const kvoVals = visibleValues(klinger.kvo, paneVis);
+              const sigVals = visibleValues(klinger.signal, paneVis);
               const allVals = [...kvoVals, ...sigVals, 0];
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
@@ -11751,8 +11751,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              const smiVals = smi.smi.filter((x): x is number => x != null);
-              const sigVals = smi.signal.filter((x): x is number => x != null);
+              const smiVals = visibleValues(smi.smi, paneVis);
+              const sigVals = visibleValues(smi.signal, paneVis);
               const allVals = [...smiVals, ...sigVals, 0];
               const minV = Math.min(...allVals);
               const maxV = Math.max(...allVals);
