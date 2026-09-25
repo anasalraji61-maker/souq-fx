@@ -300,6 +300,8 @@ def indicator_forecast(
         "snapshot": {
             "rsi": snap.get("rsi"),
             "change_pct": snap.get("change_pct"),
+            # عدد الشموع التي تغطّيها النسبة (~179 = شهور على D): كانت تُرسَل وحدها فتُقرأ «تغيّر اليوم»
+            "change_bars": snap.get("change_bars"),
             "last": last,
         },
         "price_decimals": dp,

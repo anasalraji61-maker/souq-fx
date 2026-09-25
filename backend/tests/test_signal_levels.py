@@ -126,3 +126,10 @@ def test_forecast_and_snapshot_say_when_the_entry_price_is_from(client, monkeypa
     assert f["price_as_of"] == main._series_price_at(series) == 1.0  # وقت الجلب يسبق نهاية الشمعة
     s = client.get("/api/indicators/snapshot/EURUSD?timeframe=D").json()
     assert s["price_as_of"] == 1.0
+
+
+def test_forecast_snapshot_says_how_many_candles_its_change_covers(client, monkeypatch):
+    """`snapshot.change_pct` بالتوقّع = تغيّر كامل السلسلة (60 إغلاقاً = 59 شمعة) — كان بلا عدد شموعه."""
+    monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
+    f = client.post("/api/signals/indicators/forecast", json={"symbol": "EURUSD", "timeframe": "D"}).json()
+    assert f["snapshot"]["change_bars"] == 59
