@@ -575,3 +575,4 @@ backend `f54ba4e`…`46ce46f` — السبريد، 409، `size` null، MACD، AT
 `65a24a4` ملاحظة التنبيه 500) وtools (`52b15bd` التعادل ليس خسارة، `46d3a9f` 409/`size` null/«N من الكل») وlaunch102 (تراجع التقويم: `newsRisk.ts:514` لا يعرف `status: "unavailable"` — تحقّقتُ، مفتوح).
 ⇒ انهيار QA49 لم يعد قابلاً للحدوث من الخادم الحالي (`analysts: []`) فدُمج بصفّ backend-r2 مع `setDirection(null)` ⇒ «محايد» مضلّل. أُغلقت QA5 (بنوك/منافس)، QA20، QA14، وشقّ tools من backend-r1
 عدا «تحميل الأقدم». صفّ `CalendarPanel` دُمج بـlaunch102. ⛔ 2 صار: مصدر مرخَّص أم إخفاء اللوحتين.
+**إلحاق 2:** `449c12f` (chart) أغلق شقّ launch102 بالشارت (`newsRisk.ts:515`) ⇒ الصفّ صار ui وحده (`CalendarPanel`). `67ebd17` (tools: سطر DXY بالطرفية). البناء بعد الدمج أخضر 0.
