@@ -16,7 +16,7 @@ WS_URL = "wss://ws.twelvedata.com/v1/quotes/price"
 
 # MATRIX symbol -> latest price
 LATEST: dict[str, float] = {}
-# MATRIX symbol -> وقت استلام آخر سعر (epoch) — بلا هذا كان سعر مجمَّد (انقطاع الـWS أو عطلة السوق) يُبثّ
+# MATRIX symbol -> وقت آخر سعر عند المزوّد (epoch، `_quoted_at`؛ وقت الاستلام إن لم يُرسله) — بلا هذا كان سعر مجمَّد (انقطاع الـWS أو عطلة السوق) يُبثّ
 # للعميل كـ«حي» بوقت الآن، ويُطلق عليه الـworker تنبيهات كأنه السعر الحالي.
 LATEST_AT: dict[str, float] = {}
 _connected = False
@@ -62,6 +62,32 @@ def _parse_price(msg: dict[str, Any]) -> tuple[str, float] | None:
     return _matrix_from_td(str(sym)), p
 
 
+def _quoted_at(msg: dict[str, Any], received: float) -> float:
+    """وقت السعر **عند المزوّد** (`timestamp` بحدث price، ثوانٍ epoch)، لا وقت وصوله. كان `time.time()`
+    دائماً: سعر يُعاد إرساله عند الاشتراك/إعادة الاتصال (إغلاق الجمعة بعطلة الأسبوع) يُبثّ «حيّاً» بوقت الآن
+    ويقرؤه الـworker سعراً حالياً للتنبيهات. لا يتجاوز وقت الوصول (ساعة مزوّد متقدّمة لا تجعل سعراً «أحدث»)،
+    وبلا `timestamp` صالح ⇒ وقت الوصول كما كان."""
+    raw = msg.get("timestamp")
+    if isinstance(raw, bool):
+        return received
+    try:
+        ts = float(raw)
+    except (TypeError, ValueError):
+        return received
+    if not math.isfinite(ts) or ts <= 0:
+        return received
+    if ts > 1e12:  # ميلي ثانية
+        ts /= 1000.0
+    return min(ts, received)
+
+
+def _store(msg: dict[str, Any]) -> None:
+    parsed = _parse_price(msg)
+    if parsed:
+        LATEST[parsed[0]] = parsed[1]
+        LATEST_AT[parsed[0]] = _quoted_at(msg, time.time())
+
+
 async def run_forever() -> None:
     global _connected, _last_error
     key = _ws_key()
@@ -85,17 +111,9 @@ async def run_forever() -> None:
                         data = json.loads(raw)
                     except json.JSONDecodeError:
                         continue
-                    if isinstance(data, list):
-                        for item in data:
-                            parsed = _parse_price(item)
-                            if parsed:
-                                LATEST[parsed[0]] = parsed[1]
-                                LATEST_AT[parsed[0]] = time.time()
-                        continue
-                    parsed = _parse_price(data)
-                    if parsed:
-                        LATEST[parsed[0]] = parsed[1]
-                        LATEST_AT[parsed[0]] = time.time()
+                    for item in data if isinstance(data, list) else [data]:
+                        if isinstance(item, dict):
+                            _store(item)
         except asyncio.CancelledError:
             _connected = False
             raise

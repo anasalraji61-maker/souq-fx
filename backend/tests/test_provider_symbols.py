@@ -156,3 +156,26 @@ def test_ws_price_rejects_non_finite_and_non_positive(bad):
 
 def test_ws_price_keeps_a_real_price():
     assert td_ws._parse_price({"event": "price", "symbol": "EUR/USD", "price": "1.1734"}) == ("EURUSD", 1.1734)
+
+
+def test_ws_price_time_is_the_provider_timestamp_not_arrival(monkeypatch):
+    """سعر الجمعة يُعاد إرساله السبت (اشتراك/إعادة اتصال) كان يُخزَّن بوقت الوصول ⇒ «حيّ» بـ/ws/ticks
+    وسعر حالي لتنبيهات الـworker. الآن وقت المزوّد ⇒ خارج `LIVE_MAX_AGE`."""
+    now = 1_790_000_000.0
+    monkeypatch.setattr(td_ws.time, "time", lambda: now)
+    monkeypatch.setattr(td_ws, "LATEST", {})
+    monkeypatch.setattr(td_ws, "LATEST_AT", {})
+    td_ws._store({"event": "price", "symbol": "EUR/USD", "price": 1.17, "timestamp": int(now - 36 * 3600)})
+    assert td_ws.LATEST_AT["EURUSD"] == now - 36 * 3600
+    assert td_ws.snapshot(max_age=td_ws.LIVE_MAX_AGE) == {}
+    assert td_ws.status()["symbols_stale"] == ["EURUSD"]
+
+
+@pytest.mark.parametrize("raw, want_offset", [
+    (None, 0), ("abc", 0), (0, 0), (-5, 0), (True, 0), ("nan", 0),
+    (1_790_000_000 + 600, 0),  # ساعة مزوّد متقدّمة لا تجعل السعر «أحدث» من وصوله
+    ((1_790_000_000 - 30) * 1000, -30),  # ميلي ثانية
+    (1_790_000_000 - 30, -30),
+])
+def test_ws_quoted_at_falls_back_to_arrival_when_unusable(raw, want_offset):
+    assert td_ws._quoted_at({"timestamp": raw}, 1_790_000_000.0) == 1_790_000_000.0 + want_offset
