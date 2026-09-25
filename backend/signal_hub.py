@@ -43,6 +43,8 @@ FORECAST_INDICATOR_IDS: tuple[str, ...] = ("rsi", "ma", "macd", "bb", "stoch", "
 SL_ATR_MULT = 1.4
 TP_ATR_MULT = 2.2
 ATR_PERIOD = 14
+# صوت «اتجاه 10 شموع»: صافي الحركة بهذا العدد من ATR14 = أقصى صوت (±1)؛ عتبة الاتجاه (0.12) ≈ 0.36×ATR
+TREND_FULL_ATR = 3.0
 
 
 def _atr_last(candles: list[dict[str, Any]] | None) -> float | None:
@@ -291,9 +293,15 @@ def indicator_forecast(
 
     # Multi-bar trend
     # «آخر 10 شموع» = من إغلاق ما قبلها إلى الأخير (10 حركات) — كان `closes[-10]` أي 9 حركات فقط
-    if len(closes) >= 11:
-        slope = (closes[-1] - closes[-11]) / (abs(closes[-11]) or 1)
-        add("trend", "trend", max(-1.0, min(1.0, slope * 40)), "trend_slope", pct=round(slope * 100, 2))
+    # الدرجة بوحدات ATR14 للفريم نفسه (كالوقف والهدف): كانت `النسبة × 40` ثابتة لكل فريم ⇒ على 1m حركة
+    # 8 نقاط (+0.07%) «محايد» دائماً، وعلى D حركة 2.5% عادية أقصى صوت (1.0) ⇒ صوت الاتجاه ميّت على الفريمات
+    # الصغيرة ومُشبَع على الكبيرة. الآن 3×ATR صافية على 10 شموع = أقصى صوت. بلا ATR14 (شموع قليلة أو بلا
+    # مدى) لا مقياس ⇒ لا صوت، كالمساعد.
+    trend_atr = _atr_last(candles) if len(closes) >= 11 else None
+    if trend_atr is not None:
+        move = closes[-1] - closes[-11]
+        slope = move / (abs(closes[-11]) or 1)
+        add("trend", "trend", move / (TREND_FULL_ATR * trend_atr), "trend_slope", pct=round(slope * 100, 2))
 
     if not votes:
         # لا صوت واحد ⇒ لا اتجاه ولا درجة (كان «محايد» و0.0 — ادّعاء بأن المؤشّرات لا ترى اتجاهاً)

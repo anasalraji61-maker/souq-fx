@@ -117,3 +117,28 @@ def test_distinct_lines_never_display_as_equal_numbers():
     assert signal_hub._distinct_decimals(1.0842, 1.0831, 5) == 5
     assert signal_hub._same_level(1.1, 1.1 + 2e-16, 1.1)
     assert not signal_hub._same_level(1.1, 1.10001, 1.1)
+
+
+def _stepping(n: int, step: float, rng: float, base: float = 1.1):
+    """n شمعة، كل إغلاق يزيد `step`، مدى كل شمعة `rng` ⇒ ATR14 ≈ max(rng, step)."""
+    out = []
+    for i in range(n):
+        c = base + i * step
+        out.append({"time": i, "open": c - step, "high": c + rng / 2, "low": c - rng / 2, "close": c})
+    return out
+
+
+@pytest.mark.parametrize("step,rng", [(0.00008, 0.0003), (0.0025, 0.01)])
+def test_trend_vote_is_scaled_by_the_timeframe_atr(step, rng):
+    """نفس الحركة بوحدات ATR (10 شموع × ربع مدى الشمعة = 2.5×ATR) ⇒ نفس الصوت على 1m وD. كانت `النسبة × 40`:
+    1m (+0.07%) ⇒ 0.03 «محايد»، وD (+2.3%) ⇒ 0.9 شبه أقصى صوت."""
+    out = signal_hub.indicator_forecast("EURUSD", _stepping(60, step, rng), enabled=["trend"])
+    (v,) = out["votes"]
+    assert v["direction"] == "buy"
+    assert v["score"] == pytest.approx(10 * step / (3 * rng), rel=0.05)
+
+
+def test_no_trend_vote_without_atr():
+    """أقلّ من 15 شمعة ⇒ لا ATR14 ⇒ لا مقياس للحركة ⇒ لا صوت (كان صوتاً بنسبة ثابتة)."""
+    out = signal_hub.indicator_forecast("EURUSD", _stepping(12, 0.001, 0.002), enabled=["trend"])
+    assert out["votes"] == []
