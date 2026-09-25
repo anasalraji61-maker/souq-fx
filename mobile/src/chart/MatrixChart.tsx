@@ -5627,7 +5627,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // على حدود مستديرة (12:00، بداية اليوم/الشهر) بتوقيت العرض نفسه (`candleDateParts`: محلّي دون اليوم، UTC
   // لليومي) — كانت نِسَباً من النافذة تقع على 13:45 ثم 14:00 مع كل تمرير. النِّسَب احتياط لنافذة قصيرة.
   const timeTickCap = axisTickCount(chartPlotW, timeLabelW, TIME_LABEL_GAP, 4);
-  const timeTickIndexes =
+  // `source.plot` يشمل شموعاً خلف الحافة اليسرى (هامش اليمين 10% والتمرير): علامتها تُقصّ إلى x=0 وتبقى
+  // (الأولى مضمونة) — فتاريخ الحافة لشمعة لا تُرى، يوماً قبل ما تحته بعد سحب إلى المستقبل. المرئية وحدها.
+  const timeTickIndexes = (
     niceTimeTickIndexes(
       source.plot.map((c) => barTime(c)),
       timeframeStepSec(series.timeframe),
@@ -5638,7 +5640,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       new Set(
         axisTickRatios(timeTickCap).map((ratio) => Math.max(0, Math.round((source.plot.length - 1) * ratio)))
       )
-    );
+    )
+  ).filter((i) => {
+    const x = xOf(i);
+    return x >= 0 && x <= chartPlotW;
+  });
   // المواضع المرسومة نفسها: المراكز من `xOf` فتحمل إزاحة التمرير، والقصّ والإخفاء
   // من `layoutAxisLabels` — فلا يتباعد المفحوص عن المرسوم.
   const timeTickBoxes = layoutAxisLabels(
