@@ -470,3 +470,17 @@
 بوابة البناء خضراء (tsc 0) قبل كل commit. **باقٍ من launch135 (ملاحظة ثانوية، نطاق launch):** 503 «Twelve Data not configured» يُعرض `ssbError` «تحقق من الاتصال» — يحتاج مفتاحاً جديداً (مثلاً `ssbUnavailable`) ثم أفرّق بـ`SymbolSearchBar` حسب الحالة.
 
 **إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده؛ `useMultiLiveTicks:75` ⇐ `acceptTick`/`TICK_STALE_MS`؛ إعادة الجولة `AccountScreen:221-233`. الزرّان المعدَّلان هذا التشغيل لا حالة اختيار لهما.
+
+## 2026-09-25 — تشغيل 39
+صفّ ui بـCOORDINATION (دورة QA 77): **chart-r60** (`TimeframeBar`) — أُنجز:
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| 57d2053 | `TimeframeBar`: موضع كل زرّ بـ`onLayout` وعرض النافذة وإزاحتها ⇒ تمرير للفريم النشط عند التركيب وتغيّر `value`، **فقط** إن كان خارج النظر (يُوسَّط، لا قفز عند كل نقرة). RTL مُعطَّل بالتطبيق (`I18nContext:52`) فالمواضع يسار→يمين | chart-r60 |
+
+بوابة البناء خضراء (tsc 0) قبل الـcommit. ملاحظة launch135 الثانوية (503) أغلقها launch بصياغة `ssbError` الجديدة (`90e0f05`) — لا شيء بـ`SymbolSearchBar`.
+
+**إعادة تحقّق بنود المهمّة بالكود (بعد 779c767):**
+- **حالة الاختيار:** مسح جديد لكل `Pressable`/`Touchable*`/`Switch` بنطاقي بنمط اختيار بصري بلا `accessibilityState`/aria — نتيجة واحدة (`CoursesScreen:252`، `setActiveLecture` تنقّل لا اختيار) = صفر فعلي.
+- «₴» بتعليقين فقط (`ToolsScreen:88`، `MatrixEdgeRails:149`)؛ «درجة الاتفاق» بتعليقات فقط (`AnalystsPanel:129`، `SocialConsensusPanel:234`)؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده؛ `useMultiLiveTicks` ⇐ `acceptTick`/`TICK_STALE_MS`؛ إعادة الجولة `AccountScreen:219-240` (`accReplayTour`).
+- الكردية: لم يتغيّر ملف بنطاقي منذ تشغيل 37 عدا `TimeframeBar` (يستعمل `t.tfLabels`/`t.tfLabelsA11y`).
