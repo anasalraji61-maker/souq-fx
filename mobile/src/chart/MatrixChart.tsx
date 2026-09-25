@@ -129,6 +129,7 @@ import {
   measureReadoutText,
 } from './measureReadout';
 import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
+import { paneInlineFits } from './paneHeadFit';
 import { noteBox } from './noteLabel';
 import { planHiLoLabels } from './hiLoLabels';
 import { planDayBreaks } from './dayBreaks';
@@ -752,6 +753,7 @@ function PaneHead({
   highColor = colors.bear,
   lowColor = colors.bull,
   signal,
+  compact = false,
 }: {
   paneId: string;
   name: string;
@@ -763,6 +765,8 @@ function PaneHead({
   lowColor?: string;
   /** الخطّ الثاني (%D) — راجع `PaneSignalValue`. */
   signal?: PaneSignalSpec;
+  /** لوحة لا تتّسع لسطر ثالث: ‎%D‎ بجانب ‎%K‎ إن اتّسعا (`PaneInlinePair`)، وإلا ‎%K‎ وحده. */
+  compact?: boolean;
 }) {
   const v = paneValueAt(values, at);
   // خانات الكسر من **مدى اللوحة** لا ثابتة: ‎%B‎ بين 0 و1 فخانة واحدة تطمس كل قراءاته.
@@ -770,12 +774,19 @@ function PaneHead({
   const state = paneValueState(paneId, v);
   const sv = signal ? paneValueAt(signal.values, at) : null;
   const stxt = formatPaneValue(sv, paneBoundedDecimals(paneId));
+  const stateColor = state === 'high' ? highColor : state === 'low' ? lowColor : null;
+  const inline = compact && signal && txt && stxt && paneInlineFits(txt, stxt);
   return (
     <View style={styles.paneHead}>
       <Text style={styles.paneHeadName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
         {name}
       </Text>
-      {txt ? (
+      {inline ? (
+        <PaneInlinePair
+          first={{ text: txt, style: stateColor ? { color: stateColor } : null }}
+          second={{ text: stxt, color: signal.color }}
+        />
+      ) : txt ? (
         <Text
           style={[
             styles.paneHeadValue,
@@ -786,7 +797,7 @@ function PaneHead({
           {txt}
         </Text>
       ) : null}
-      {signal && stxt ? <PaneSignalValue text={stxt} color={signal.color} /> : null}
+      {!compact && signal && stxt ? <PaneSignalValue text={stxt} color={signal.color} /> : null}
     </View>
   );
 }
@@ -794,8 +805,8 @@ function PaneHead({
 /**
  * خطّ الإشارة للوحات ذات الخطّين (MACD، Stoch/StochRSI ‎%D‎، KST، TSI، PMO): كان الرأس يطبع الخطّ الأول وحده
  * — و«MACD» كان يطبع **الهيستوغرام** تحت اسم MACD — بينما التقاطع بين الخطّين هو ما يُقرأ. كـTradingView:
- * القيمتان، كلّ واحدة بلون خطّها. تُمرَّر فقط حين يتّسع ارتفاع اللوحة لسطر ثالث (`PANE_SIGNAL_MIN_H`)،
- * فلا يُقصّ نصف رقم بلوحة مضغوطة.
+ * القيمتان، كلّ واحدة بلون خطّها. بسطر ثالث حين يتّسع ارتفاع اللوحة (`PANE_SIGNAL_MIN_H`)، وإلا (`compact`)
+ * بجانب القيمة الأولى إن اتّسعتا بسطر واحد (`PaneInlinePair`)، فلا يُقصّ نصف رقم بلوحة مضغوطة.
  */
 interface PaneSignalSpec {
   values: readonly (number | null | undefined)[];
@@ -809,6 +820,25 @@ function PaneSignalValue({ text, color }: { text: string; color: string }) {
     <Text style={[styles.paneHeadValue, text.length >= 7 && styles.paneHeadValueLong, { color }]}>
       {text}
     </Text>
+  );
+}
+
+/**
+ * اللوحة المضغوطة (<`PANE_SIGNAL_MIN_H`): القيمتان جنباً لجنب بسطر واحد حين تتّسعان (`paneInlineFits`)
+ * — «82.4 71.0» لـStoch بلوحة 34px بدل ‎%K‎ وحده. الأولى يساراً كترتيب TradingView.
+ */
+function PaneInlinePair({
+  first,
+  second,
+}: {
+  first: { text: string; style?: object | false | null };
+  second: { text: string; color: string };
+}) {
+  return (
+    <View style={styles.paneHeadRow}>
+      <Text style={[styles.paneHeadInline, first.style]}>{first.text}</Text>
+      <Text style={[styles.paneHeadInline, { color: second.color }]}>{second.text}</Text>
+    </View>
   );
 }
 
@@ -829,6 +859,7 @@ function PaneValueHead({
   tone = 'sign',
   center = 0,
   signal,
+  compact = false,
 }: {
   name: string;
   values: readonly (number | null | undefined)[];
@@ -849,6 +880,8 @@ function PaneValueHead({
   center?: number;
   /** خطّ الإشارة بلونه — راجع `PaneSignalValue`. */
   signal?: PaneSignalSpec;
+  /** لوحة لا تتّسع لسطر ثالث: الإشارة بجانب القيمة إن اتّسعتا، وإلا القيمة وحدها. */
+  compact?: boolean;
 }) {
   const v = paneValueAt(values, at);
   // المقياس من السلسلة كاملةً لا من الشمعة المقروءة — فلا يتبدّل شكل الرقم
@@ -859,26 +892,35 @@ function PaneValueHead({
   // مقياس السلسلة الأولى نفسه ⇒ الرقمان بالخانات واللاحقة ذاتها فيُقارَنان بنظرة.
   const sv = signal ? paneValueAt(signal.values, at) : null;
   const stxt = signal ? formatPaneValueScaled(values, sv) : null;
+  const toneColor =
+    (tone === 'sign' && v != null && v > center) || trend === 'up'
+      ? colors.bull
+      : (tone === 'sign' && v != null && v < center) || trend === 'down'
+        ? colors.bear
+        : null;
+  const inline = compact && signal && txt && stxt && paneInlineFits(txt, stxt);
   return (
     <View style={styles.paneHead}>
       <Text style={styles.paneHeadName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
         {name}
       </Text>
-      {txt ? (
+      {inline ? (
+        <PaneInlinePair
+          first={{ text: txt, style: toneColor ? { color: toneColor } : null }}
+          second={{ text: stxt, color: signal.color }}
+        />
+      ) : txt ? (
         <Text
           style={[
             styles.paneHeadValue,
             txt.length >= 7 && styles.paneHeadValueLong,
-            tone === 'sign' && v != null && v > center && { color: colors.bull },
-            tone === 'sign' && v != null && v < center && { color: colors.bear },
-            trend === 'up' && { color: colors.bull },
-            trend === 'down' && { color: colors.bear },
+            toneColor ? { color: toneColor } : null,
           ]}
         >
           {txt}
         </Text>
       ) : null}
-      {signal && stxt ? <PaneSignalValue text={stxt} color={signal.color} /> : null}
+      {!compact && signal && stxt ? <PaneSignalValue text={stxt} color={signal.color} /> : null}
     </View>
   );
 }
@@ -903,6 +945,7 @@ function PaneSpreadHead({
   at = null,
   tone = 'trend',
   lineColors,
+  compact = false,
 }: {
   name: string;
   upper: readonly (number | null)[];
@@ -924,6 +967,8 @@ function PaneSpreadHead({
    * مستوى DI لا فارقه). يُمرَّر فقط حين تتّسع اللوحة لثلاثة أسطر (`PANE_SIGNAL_MIN_H`)، وإلا الفارق.
    */
   lineColors?: readonly [string, string];
+  /** لوحة لا تتّسع لسطر ثالث: القيمتان بسطر واحد إن اتّسعتا (`paneInlineFits`)، وإلا الفارق. */
+  compact?: boolean;
 }) {
   const spread = useMemo(() => paneSpreadSeries(upper, lower), [upper, lower]);
   // مقياس واحد للسلسلتين ⇒ الرقمان بالخانات واللاحقة ذاتها.
@@ -934,14 +979,20 @@ function PaneSpreadHead({
   if (lineColors) {
     const u = formatPaneValueScaled(both, paneValueAt(upper, at));
     const l = formatPaneValueScaled(both, paneValueAt(lower, at));
-    if (u && l) {
+    if (u && l && (!compact || paneInlineFits(u, l))) {
       return (
         <View style={styles.paneHead}>
           <Text style={styles.paneHeadName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
             {name}
           </Text>
-          <PaneSignalValue text={u} color={lineColors[0]} />
-          <PaneSignalValue text={l} color={lineColors[1]} />
+          {compact ? (
+            <PaneInlinePair first={{ text: u, style: { color: lineColors[0] } }} second={{ text: l, color: lineColors[1] }} />
+          ) : (
+            <>
+              <PaneSignalValue text={u} color={lineColors[0]} />
+              <PaneSignalValue text={l} color={lineColors[1]} />
+            </>
+          )}
         </View>
       );
     }
@@ -9276,7 +9327,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             name="TSI"
             values={tsi.tsi}
             at={crossIndex}
-            signal={paneSignalFits ? { values: tsi.signal, color: colors.warn } : undefined}
+            signal={{ values: tsi.signal, color: colors.warn }}
+            compact={!paneSignalFits}
           />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
@@ -9770,7 +9822,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             name="StochRSI"
             values={stochRsi.k}
             at={crossIndex}
-            signal={paneSignalFits ? { values: stochRsi.d, color: colors.warn } : undefined}
+            signal={{ values: stochRsi.d, color: colors.warn }}
+            compact={!paneSignalFits}
           />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
@@ -10113,7 +10166,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             name="KST"
             values={kst.kst}
             at={crossIndex}
-            signal={paneSignalFits ? { values: kst.signal, color: colors.warn } : undefined}
+            signal={{ values: kst.signal, color: colors.warn }}
+            compact={!paneSignalFits}
           />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
@@ -10154,7 +10208,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             lower={vortex.minus}
             at={crossIndex}
             tone="sign"
-            lineColors={paneSignalFits ? [colors.bull, colors.bear] : undefined}
+            lineColors={[colors.bull, colors.bear]}
+            compact={!paneSignalFits}
           />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
@@ -10191,7 +10246,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             lower={dmi.minusDI}
             at={crossIndex}
             tone="sign"
-            lineColors={paneSignalFits ? [colors.bull, colors.bear] : undefined}
+            lineColors={[colors.bull, colors.bear]}
+            compact={!paneSignalFits}
           />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
@@ -10228,7 +10284,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             lower={rwi.rwiLow}
             at={crossIndex}
             tone="sign"
-            lineColors={paneSignalFits ? [colors.bull, colors.bear] : undefined}
+            lineColors={[colors.bull, colors.bear]}
+            compact={!paneSignalFits}
           />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
@@ -10265,7 +10322,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             lower={aroonUpDown.down}
             at={crossIndex}
             tone="sign"
-            lineColors={paneSignalFits ? [colors.bull, colors.bear] : undefined}
+            lineColors={[colors.bull, colors.bear]}
+            compact={!paneSignalFits}
           />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
@@ -10295,7 +10353,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             lower={klinger.signal}
             at={crossIndex}
             tone="sign"
-            lineColors={paneSignalFits ? [colors.accent, colors.infoAccent] : undefined}
+            lineColors={[colors.accent, colors.infoAccent]}
+            compact={!paneSignalFits}
           />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
@@ -10395,7 +10454,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             name="PMO"
             values={pmo.pmo}
             at={crossIndex}
-            signal={paneSignalFits ? { values: pmo.signal, color: colors.warn } : undefined}
+            signal={{ values: pmo.signal, color: colors.warn }}
+            compact={!paneSignalFits}
           />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
@@ -10670,7 +10730,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             name="MACD"
             values={macd.macdLine}
             at={crossIndex}
-            signal={paneSignalFits ? { values: macd.signal, color: colors.warn } : undefined}
+            signal={{ values: macd.signal, color: colors.warn }}
+            compact={!paneSignalFits}
           />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
@@ -10731,7 +10792,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             name="STO"
             values={stoch.k}
             at={crossIndex}
-            signal={paneSignalFits ? { values: stoch.d, color: colors.warn } : undefined}
+            signal={{ values: stoch.d, color: colors.warn }}
+            compact={!paneSignalFits}
           />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
@@ -11761,6 +11823,8 @@ const styles = StyleSheet.create({
   paneHeadValue: { color: colors.textMuted, fontSize: 9, fontWeight: '700', textAlign: 'center', marginTop: 1 },
   // رقم طويل (مقياس دقيق كـMACD على زوج عملات) — 8 محارف لا تتّسع بـ36px عند حجم 9.
   paneHeadValueLong: { fontSize: 8 },
+  paneHeadRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 1 },
+  paneHeadInline: { color: colors.textMuted, fontSize: 8, fontWeight: '700', marginHorizontal: 2.5 },
   // خطّ عتبة داخل لوحة محصورة المدى. الرقم عند أقصى اليسار — أبعد موضع عن اسم اللوحة
   // (اللوحة row-reverse فاسمها يميناً) وأقلّها حجباً للشموع الأخيرة التي يقرؤها المتداول.
   paneGuideLine: {
