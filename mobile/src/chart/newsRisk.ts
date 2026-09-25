@@ -102,6 +102,11 @@ const SINGLE_CCY: Record<string, string> = {
    */
   USDOLLAR: 'USD', USOUSD: 'USD', UKOUSD: 'USD', NATURALGAS: 'USD',
   US10Y: 'USD', UST10Y: 'USD', US10YR: 'USD', US02Y: 'USD', US2Y: 'USD', UST02Y: 'USD', US30Y: 'USD', UST30Y: 'USD',
+  /**
+   * مؤشر الدولار «USDINDEX» (XM/Exness) وبرنت «UKBRENT»: `marketHours` يعرفهما (`DXY_RE`/`BRENT_RE`) فالشارت يعرض جلستهما،
+   * لكنهما كانا `[]` هنا ⇒ لا تحذير قبل الرواتب/CPI/الفدرالي ولا «التقويم غير متاح» — والدولار أول ما يقفز عليها.
+   */
+  USDINDEX: 'USD', UKBRENT: 'USD',
 };
 
 /**

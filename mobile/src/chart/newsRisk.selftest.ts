@@ -27,6 +27,8 @@ assert.deepEqual(symbolCurrencies('EURUSD'), ['EUR', 'USD']);
 assert.deepEqual(symbolCurrencies('gbpjpy'), ['GBP', 'JPY']);
 assert.deepEqual(symbolCurrencies('XAUUSD'), ['USD']);
 assert.deepEqual(symbolCurrencies('DXY'), ['USD']);
+// USDINDEX/UKBRENT: أسماء يعرفها marketHours (DXY_RE/BRENT_RE) وكانت [] هنا ⇒ بلا تحذير قبل خبر أمريكي
+for (const s of ['USDINDEX', 'USDIndex', 'USDINDEX.m', 'UKBRENT', 'UKBRENT.cash']) assert.deepEqual(symbolCurrencies(s), ['USD'], s);
 assert.deepEqual(symbolCurrencies('USDCNH'), ['USD', 'CNY']);
 assert.deepEqual(symbolCurrencies('EUR/USD'), ['EUR', 'USD']);
 assert.deepEqual(symbolCurrencies('BTCUSD'), ['USD']);
