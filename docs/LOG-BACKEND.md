@@ -517,3 +517,15 @@
 **فُحص ولم يُغيَّر:** `econ_calendar.py` (لا أحداث مختلَقة، `ts` None بلا منطقة زمنية، الساعة غير المعلنة)، `alert_worker.py` (حداثة السعر/السلسلة، تقاطع قبل التسليح)، `backtest.py`، `indicators.py` (تعريف التقاطع كـ`ta.crossover`)، `twelve_data_ws.py`، و`main.py`/`db.py` بوكيل تدقيق (لا أرقام مخترعة ولا أخطاء P&L/نسبة فوز).
 
 **ما يحتاجه التطبيق:** لا شيء — `api.ts` يرسل فريمات `TIMEFRAMES` وحدها (مطابقة لـ`TF_SECONDS`). قرارات أنس كما هي: launch9، QA24، launch77، backend-r6 (6)، backend-r33، backend-r35.
+
+## 2026-09-25 — التشغيل 39: صفقة «فُتحت» بالمستقبل كانت تُقبل
+
+**بداية التشغيل:** لا صفّ في COORDINATION منفّذه backend وحده (صفوف backend/أنس قرارات بشرية — لم تُمسّ). البنود 1–9 فحص سريع بالكود — ما تزال مغلقة (`XBR/USD`/`not_offered_by_provider` ‏`twelve_data.py:33,42`، ‏409 `trade_already_closed` ‏`main.py:1410`، `NOCASE` ‏`db.py:22`). تدقيق بوكيل فرعي (قراءة فقط) على `twelve_data_ws.py`، `commissions.py`، `db.py`، `alert_worker.py`، `screener.py`. الاختبارات 750 ⇒ **751** ناجحة، والاختبار الجديد يسقط على الكود القديم (`git stash`).
+
+| # | الإيداع | ما تغيّر |
+|---|---|---|
+| 98 | `1ea289b` | **`POST /api/trades`: `opened_at` بعد الآن بأكثر من 5 دقائق ⇒ 422.** كان «2027-01-01» يُقبل: مع `exit` تُحفظ صفقة مغلقة (`closed_at` = الآن) قبل أن تُفتح، وتتصدّر الدفتر (`ORDER BY opened_at DESC`) فوق كل صفقة حقيقية. السماح 5 دقائق لفرق ساعة الجهاز. `tests/test_trades_routes.py` (+1) |
+
+**فُحص ولم يُغيَّر:** `twelve_data_ws.status()` — `connected` يبقى true والمقبس مفتوح صامت (عطلة السوق)، وهذا صحيح: الحداثة بـ`symbols_live` (180 ث). `alert_worker.py` (رفض الأسعار القديمة)، `screener.py`، `/api/market/quote` (لا bid/ask مختلَق). `db.trade_stats.total_pnl_pct` = مجموع نسب حركة السعر بلا وزن للحجم — تعريف معلَن (وحدته «%» لكل صفقة)، والتطبيق يحسب مرآته محلياً؛ لم يُغيَّر. **ملاحظة لسؤال backend-r6 (6):** `commissions._next_level` من `min(يسار، يمين)` بينما `unlocked_balance_levels` لا يُفتح إلا بالتساوي ⇒ 3/3 = مستوى 2 مفتوح، و4/3 = لا مستوى مفتوح مع «التالي 4» — يتبع قرار أنس بقاعدة التوازن.
+
+**ما يحتاجه التطبيق:** لا شيء — التطبيق لا يرسل `opened_at` (`api.ts:createTrade`). قرارات أنس كما هي: launch9، QA24، launch77، backend-r6 (6)، backend-r33، backend-r35.
