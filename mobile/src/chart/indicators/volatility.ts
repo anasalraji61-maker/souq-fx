@@ -473,11 +473,10 @@ export function computeUlcerIndex(closes: number[], period = 14): (number | null
  * Relative Volatility Index (RVI-Volatility، Donald Dorsey) — **ليس** نفس computeRvi أعلاه
  * (تلك Relative Vigor Index لـJohn Ehlers، صيغة مختلفة تماماً؛ الاثنان يُختصران "RVI" بمصادر
  * السوق المرجعية بلا تمييز، لذا استُخدِم اسم دالة صريح مختلف هنا لمنع أي التباس مستقبلي بالكود).
- * period=14 موحَّد لكلا نافذتَي الانحراف المعياري والتنعيم الأسي (تبسيط شائع بمنصات كثيرة بدل معلمَتين
- * منفصلتين 10/14 بنسخة Dorsey الأصلية — **قرار تصميم موثَّق صراحة**). الفكرة: بدل قياس اتجاه *السعر*
- * كـRSI، يقيس اتجاه *التقلّب* — لكل شمعة: إن أغلقت أعلى من السابقة يُنسَب computeStdDev(closes,period)
- * الحالي بالكامل لـ"تقلّب صاعد"، وإن أغلقت أدنى يُنسَب بالكامل لـ"تقلّب هابط" (تعادل السعر = صفر
- * للاثنين)، ثم يُموَّه كل مسار بـema() منفصلة (period) قبل الحساب: RVI=100×صاعدMA/(صاعدMA+هابطMA).
+ * length=10 للانحراف المعياري وsmooth=14 للتنعيم الأسي (نسخة Dorsey وTradingView). الفكرة: بدل قياس
+ * اتجاه *السعر* كـRSI، يقيس اتجاه *التقلّب* — لكل شمعة: إن أغلقت أعلى من السابقة يُنسَب
+ * computeStdDev(closes,length) الحالي بالكامل لـ"تقلّب صاعد"، وإلا (أدنى أو مساوٍ) لـ"تقلّب هابط"، ثم
+ * يُموَّه كل مسار بـema(smooth) منفصلة: RVI=100×صاعدMA/(صاعدMA+هابطMA).
  * قيمة>50 = تقلّب الأيام الصاعدة أقوى مؤخراً (ميل صعودي)، <50 = العكس، =50 محايد — **قرار تصميم
  * موثَّق**: لون العرض bull/bear/accent حسب موقعها من 50 بالضبط (لا عتبات تشبّع 70/30 كـRSI، لأن
  * التفسير الشائع لهذا المؤشر تحديداً هو اتجاه لا تشبّع). حالة 0/0 (صاعدMA=هابطMA=0، سوق مسطّح
@@ -489,19 +488,23 @@ export function computeUlcerIndex(closes: number[], period = 14): (number | null
  */
 export function computeRelativeVolatilityIndex(
   closes: number[],
-  period = 14
+  length = 10,
+  smooth = 14
 ): (number | null)[] {
+  // كـTradingView: stdev(length=10) ثم ema(14)، والإغلاق المساوي للسابق يُنسَب للهابط (`change <= 0`).
+  // كان stdev 14 والتعادل صفراً للاثنين ⇒ الخطّ أبطأ ويميل للصعود بسوق راكد.
   const n = closes.length;
-  const stdev = computeStdDev(closes, period);
-  const upRaw: number[] = new Array(n).fill(0);
-  const downRaw: number[] = new Array(n).fill(0);
+  const stdev = computeStdDev(closes, length);
+  const upRaw: (number | null)[] = new Array(n).fill(null);
+  const downRaw: (number | null)[] = new Array(n).fill(null);
   for (let i = 1; i < n; i++) {
     if (stdev[i] == null) continue;
-    if (closes[i] > closes[i - 1]) upRaw[i] = stdev[i]!;
-    else if (closes[i] < closes[i - 1]) downRaw[i] = stdev[i]!;
+    const upBar = closes[i] > closes[i - 1];
+    upRaw[i] = upBar ? stdev[i]! : 0;
+    downRaw[i] = upBar ? 0 : stdev[i]!;
   }
-  const upEma = ema(upRaw, period);
-  const downEma = ema(downRaw, period);
+  const upEma = ema(upRaw, smooth);
+  const downEma = ema(downRaw, smooth);
   const out: (number | null)[] = new Array(n).fill(null);
   for (let i = 0; i < n; i++) {
     if (upEma[i] == null || downEma[i] == null) continue;
