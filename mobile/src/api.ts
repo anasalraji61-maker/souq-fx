@@ -722,6 +722,9 @@ export const api = {
       price_decimals?: number;
       /** 'demo' = اتجاه ومستويات من شموع مختلَقة — لا تُعرض. */
       data_kind?: string;
+      /** ثوانٍ UTC: وقت السعر الذي بُنيت عليه المستويات (backend-r16) — إغلاق شمعة الجمعة يوم السبت، أو كاش
+       * حتى 15د عند حدّ المزوّد؛ null بلا سعر حقيقي؛ غيابه = خادم أقدم. */
+      price_as_of?: number | null;
     }>('/api/signals/indicators/forecast', body),
   calendar: (opts?: { currency?: string; impact?: string }) => {
     const q = new URLSearchParams();

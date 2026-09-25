@@ -10,10 +10,15 @@ import { formatRR } from '../tradePlan';
 import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from '../chart/pipSpec';
 import { pipsNumber, pipUnit } from '../chart/measureReadout';
+import { formatLocalStamp } from '../localStamp';
 import { useI18n } from '../i18n/I18nContext';
 import type { Dict } from '../i18n/locales';
 
 type Props = { symbol: string; timeframe?: string; embedded?: boolean };
+
+/** سعر المستويات أقدم من هذا ⇒ يُطبع وقته تحتها (backend-r16): السبت دخول = إغلاق الجمعة، وكاش المزوّد حتى 15د
+ * — كانت تُقرأ أسعاراً حيّة. ما دونه = جلب طازج فلا ضجيج. */
+const PRICE_STALE_SEC = 5 * 60;
 
 function indicatorOpts(t: Dict) {
   return [
@@ -49,6 +54,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   const [disclaimer, setDisclaimer] = useState<{ code: string | null; text: string } | null>(null);
   // منازل الخادم (`price_decimals`) لأداة لا نعرف منازلها (الرموز المعروفة تبقى بمواصفتها).
   const [serverDecimals, setServerDecimals] = useState<number | null>(null);
+  const [priceAsOf, setPriceAsOf] = useState<number | null>(null);
 
   const toggle = (id: string) => {
     setEnabled((prev) => {
@@ -80,6 +86,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
     setRsi(null);
     setDisclaimer(null);
     setServerDecimals(null);
+    setPriceAsOf(null);
   };
 
   // رقم الطلب: ردّ طلب أقدم (رمز سابق/مؤشرات سابقة) يصل بعد الأحدث لا يكتب فوقه.
@@ -116,6 +123,8 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
       setDisclaimer({ code: res.disclaimer_code ?? null, text: res.disclaimer ?? '' });
       const pd = res.price_decimals;
       setServerDecimals(typeof pd === 'number' && Number.isInteger(pd) && pd >= 0 && pd <= 12 ? pd : null);
+      const pa = res.price_as_of;
+      setPriceAsOf(typeof pa === 'number' && Number.isFinite(pa) && pa > 0 ? pa : null);
     } catch {
       if (mountedRef.current && req === reqRef.current) {
         // كان يُبقي اتجاه/مستويات الطلب السابق (رمز آخر أحياناً) ظاهرة تحت رسالة الخطأ.
@@ -156,6 +165,10 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   const rr =
     levels && direction !== 'neutral' && Math.abs(levels.entry - levels.sl) > 0
       ? Math.abs(levels.tp - levels.entry) / Math.abs(levels.entry - levels.sl)
+      : null;
+  const staleAt =
+    priceAsOf != null && Date.now() / 1000 - priceAsOf > PRICE_STALE_SEC
+      ? t.forecastPriceAsOf.replace('{time}', formatLocalStamp(priceAsOf, lang))
       : null;
 
   return (
@@ -227,14 +240,17 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
             {t.forecastAvgLabel} {formatScore(avg)}
           </Text>
           {levels && direction !== 'neutral' ? (
-            <Text style={[styles.levels, { textAlign: align }]}>
-              {/* منازل واحدة للثلاثة من الدخول (أداة بلا مواصفة كـUSOIL): كانت كلٌّ من حجمه ⇒ «99.850 · 100.45» */}
-              {t.forecastTradeLabel}: {t.entryLabel} {px(levels.entry, levels.entry)} · {t.slLabel}{' '}
-              {px(levels.sl, levels.entry)}
-              {pipsTag(levels.entry, levels.sl)} · {t.tpLabel} {px(levels.tp, levels.entry)}
-              {pipsTag(levels.entry, levels.tp)}
-              {rr != null ? ` · R:R ${formatRR(rr)}` : ''}
-            </Text>
+            <>
+              <Text style={[styles.levels, { textAlign: align }]}>
+                {/* منازل واحدة للثلاثة من الدخول (أداة بلا مواصفة كـUSOIL): كانت كلٌّ من حجمه ⇒ «99.850 · 100.45» */}
+                {t.forecastTradeLabel}: {t.entryLabel} {px(levels.entry, levels.entry)} · {t.slLabel}{' '}
+                {px(levels.sl, levels.entry)}
+                {pipsTag(levels.entry, levels.sl)} · {t.tpLabel} {px(levels.tp, levels.entry)}
+                {pipsTag(levels.entry, levels.tp)}
+                {rr != null ? ` · R:R ${formatRR(rr)}` : ''}
+              </Text>
+              {staleAt ? <Text style={[styles.asOf, { textAlign: align }]}>{staleAt}</Text> : null}
+            </>
           ) : (
             // «لا اتجاه غالب» تحت «شراء» كانت تناقض نفسها حين غابت المستويات لسبب آخر (لا سعر حيّ، شموع أقلّ
             // من ATR14) — السبب كما قاله الخادم، و«لا اتجاه غالب» للمحايد فقط.
@@ -325,6 +341,7 @@ const styles = StyleSheet.create({
   dir: { fontWeight: '900', fontSize: 18 },
   meta: { color: colors.textMuted, fontSize: 11 },
   levels: { color: colors.text, fontSize: 11, fontWeight: '700', marginTop: 2 },
+  asOf: { color: colors.warn, fontSize: 10 },
   list: { maxHeight: 120 },
   row: {
     flexDirection: 'row',
