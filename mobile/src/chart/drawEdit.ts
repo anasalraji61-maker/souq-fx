@@ -136,7 +136,7 @@ export type StampAt = (index: number) => { time: number; ahead?: number; aheadSt
  *   سيجمع أخطاء التقريب، والعودة بالإصبع لمكانه الأوّل تعيد الرسم لمكانه حرفياً.
  * - `priceOf` تنقل السعر بإزاحة الشاشة (بمقياس السعر الجاري: خطّي أو لوغاريتمي) — بلا مغناطيس،
  *   فالجذب لأقرب O/H/L/C لكل طرف وحده كان سيشوّه الشكل الذي يريد المتداول نقله كما هو.
- * - لا خانة قبل أوّل السلسلة: الإزاحة يساراً تتوقّف حين يبلغ أقدم الطرفين الخانة 0.
+ * - لا خانة قبل أوّل السلسلة: الإزاحة يساراً تتوقّف حين يبلغ أقدم الطرفين الخانة 0 (وإن كان قبلها أصلاً: أحدثهما).
  * - كل نقطة تُختم من جديد (`stamp`): الزمن القديم لو بقي لأعاد الإرساء بين الفريمات الرسمَ لمكانه
  *   الأوّل عند أوّل تبديل فريم.
  * - إلا تحريكاً **رأسياً بحتاً** (0 شمعة): الختم يبقى كما هو والسعر وحده يتغيّر. على Renko/Range/Kagi/P&F
@@ -150,7 +150,11 @@ export function translateDrawing(
   stamp: StampAt
 ): Drawing {
   const minIndex = Math.min(orig.a.index, orig.b?.index ?? orig.a.index);
-  const di = Math.max(Math.round(dIndex), -Math.max(0, minIndex));
+  const maxIndex = Math.max(orig.a.index, orig.b?.index ?? orig.a.index);
+  // طرف قبل أوّل شمعة محمَّلة أصلاً (ترند قديم خرج طرفه من نافذة الجلب): الحدّ كان −0 فلا يتحرّك يساراً
+  // إطلاقاً. هناك الحدّ ألّا يعبر **أحدث** الطرفين الخانة 0 (الختم قبل السلسلة بزمنه صحيح).
+  const floor = minIndex >= 0 ? -minIndex : -Math.max(0, maxIndex);
+  const di = Math.max(Math.round(dIndex), floor);
   const move = (p: ChartPoint): ChartPoint => {
     // نقطة بلا ختم (رسم قديم) تُختم كالمعتاد كي تُرسى بين الفريمات.
     if (di === 0 && p.time != null) return { ...p, price: priceOf(p.price) };

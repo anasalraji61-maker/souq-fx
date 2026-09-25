@@ -87,6 +87,12 @@ ok('translate: restamped (old time dropped)', moved.a.time === 1300 && moved.b!.
 ok('translate: other fields kept', moved.id === 't1' && moved.tool === 'trend' && moved.color === '#fff');
 moved = translateDrawing(trend, -10, (p) => p, stamp);
 ok('translate: stops at index 0', moved.a.index === 0 && moved.b!.index === 3);
+{
+  const old: Drawing = { ...trend, a: { index: -4, price: 1.08, time: 1 }, b: { index: 60, price: 1.09, time: 2 } };
+  const left = translateDrawing(old, -3, (p) => p, (i) => ({ time: 1000 + i * 60 }));
+  ok('translate: oldest end before history still moves left', left.a.index === -7 && left.b!.index === 57 && left.a.time === 1000 - 7 * 60);
+  ok('translate: newest end stops at 0', translateDrawing(old, -100, (p) => p, stamp).b!.index === 0);
+}
 moved = translateDrawing(trend, 6, (p) => p, stamp);
 ok('translate: into the future gets ahead', moved.b!.index === 11 && moved.b!.ahead === 2);
 // رأسي بحت (▲▼ أو سحب بلا إزاحة شمعة): الختم الأصلي يبقى — على Renko كان يُستبدل بزمن اللبنة الأقدم
