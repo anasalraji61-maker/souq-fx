@@ -1,12 +1,12 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 54، بعد 3e69fe9) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 55، بعد b9711c9) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
 |---|---|---|---|
-| launch | **chart** (`MatrixChart.tsx:8156` خطّ التنبيه `adjustable`) | **launch108 — تلميح التمرير**: بعد `76a0834` يسمع قارئ الشاشة «قابل للتعديل» فقط — لا يعرف أنّ التمرير **ينقل التنبيه على الخادم** ولا حجم الخطوة ولا متى يُحفظ. **المفتاح جاهز**: `accessibilityHint={tr.mcArmedAlertAdjustHint}` (تحقّق QA54: غير موصول، grep بـ`.tsx` صفر). (اختياري: `{price}` يُقرأ مرّتين — بالوسم و`accessibilityValue`) | launch108 |
-| QA | backend (`main.py:1154`) | **QA54 (d)** `/api/screener/filters` يقول «RSI oversold (<30)»/«(>70)» والفحص `screener.py:94 :96` `<=`/`>=` (والتطبيق «30 أو أقل»)، والتسميات نصف عربية نصف إنجليزية. لا عميل يستدعيه (grep صفر) ⇒ صحّح «≤30/≥70» أو احذف المسار | QA54 |
+| QA | backend (`backtest.py:154-157`) | **QA55 (e) «BB Bounce» ينعكس عند الخط الأوسط**: خروج الشراء عند `mid` يُطلق `signal = "sell"` فيفتح المحرّك (:175-190، إيقاف-وعكس) **بيعاً عند الخط الأوسط** بلا لمس النطاق العلوي، يبقى بلا وقف حتى يعود السعر تحته. متداول يعرف الاستراتيجية يرى صفقات بيع لم تقلها قواعدها. خروج الوسط = إغلاق فقط (`position = None`) | QA55 |
+| QA | backend (`backtest.py:192-217`) + ui (`BacktestPanel.tsx:307-318`) | **QA55 (e) الصفقة المفتوحة تُحسب منتهية**: الأخيرة تُقيَّم بـ`closes[-1]` (الشمعة الجارية) وموسومة `"open": True`، لكن `_stats` (:58) يدخلها بالعدد ونسبة الفوز ومتوسط الربح/الخسارة، واللوحة لا تقرأ `open` (grep صفر) ⇒ الأرقام تتغيّر مع كل تحديث. استبعدها من الإحصاء (backend) ووسمها «مفتوحة» بالقائمة (ui) | QA55 |
 | QA | chart | **جهاز**: سحب جسم الرسم المحدَّد، وسحب خطّ التنبيه (`AlertDragHandle`) على iOS/Android والويب — RELEASE §5 | QA1 |
 | QA | الجميع | **(a)** تصديرات بلا مستخدم خارج ملفها (أُعيد فحصها QA53 بـgrep — `openCurrencyExposure` حُذف `b0c2d87` ✔؛ الباقي 10): `deleteTemplate`، `subscribeTemplatesSaveError`، `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite`، `PINE_PRESETS`، `getToolPanel`، `__setWatchlistStorageForTests`، `motion` (ui: مُبقى عمداً) | QA1 ★ |
 | launch | backend/أنس | `openrouter_ai.py:71` «أنت خبير تداول فوركس» ويعطي دخول/وقف/هدف | launch9 ★ |
@@ -23,10 +23,8 @@
 | backend | chart (`pineLite.ts:16 :23`، `momentum.ts:22 :29 :981 :988 :1133`) | **backend-r10 (ب)** `b911485`: RSI لنافذة بلا ربح ولا خسارة = **50** كـMT5 (كان 100 = «تشبّع شراء» من لا حركة). التطبيق ما يزال `avgLoss === 0 ? 100` ⇒ خطّ RSI بالشارت 100 وتنبيه الخادم يرى 50. وحّدوا: `avgLoss === 0 ? (avgGain === 0 ? 50 : 100) : …` | backend-r10 |
 | backend | ui (اختياري، `ScreenerMini`) | **backend-r10 (ج)** `c7c2d0a`: كل نتيجة ماسح تحمل `data_kind` (`provider`/`cache`) و`as_of` — عند حدّ المزوّد قد تكون السلسلة مخزَّنة حتى 15د. و`/api/market/quote` (`10d94ad`) فرع `ohlc_fallback`: `as_of` = إغلاق آخر شمعة 15د (كان لحظة الجلب) + `fetched_at` — `quoteAsOfMs` يقرؤه كما هو، لا تغيير مطلوب | backend-r10 |
 
-**تحقّق الدورة 54 (بالكود) — أُغلق 3 صفوف:** launch107 ← chart (`40b15f9`، `MatrixChart.tsx:5715` `if (!ok) notify(… mcAlertMoveFailed …)`)؛
-backend-r7 (`e4fe10d`، `backtest.py:75` `win_rate … if decided else None` + `tests/test_backtest.py:65`)؛ backend-r6 (1) (`e9df083`، `MatrixChart.tsx:8091` `volName('POC')`؛
-TPO يُحسب من عدد الشموع لا الحجم، الـfootprint موسوم «≈» — قبلتُ تعليل chart بعدم إضافتها لـ`VOLUME_PRICE_OVERLAYS`).
-**المراجعة (d) أرقام متناقضة:** متّسقة — حدود الخانات مقابل `main.py` (ملاحظة 500، اسم تخطيط 64، رمز 12، دردشة 1000، سؤال 2000، اسم 3–32، كلمة مرور 4 = نصّ `registerError`)؛
-`JOURNAL_PAGE_MAX` = `TRADES_PAGE_MAX` = 500؛ حجم pip (`positionSize.ts:36 :127` = `backtest.py:31-37`)؛ `MAX_SANE_LOTS`/`MAX_SMALL_LOTS` = نصّ «50–100»/«200»؛
-عيّنة الاختبار الخلفي 30 = النصّ؛ `CHANGE_WINDOW` 80 = «آخر 80 شمعة»؛ `SOON_MS` 24س = «خلال 24 ساعة»؛ عتبة RSI 1–99 ضمن 0–100 الخادم؛ جلسات `sessions.ts` و17:00 نيويورك موحّدة.
-المتناقض الوحيد QA54 أعلاه (مسار بلا مستعمل). `TICK_STALE_MS` 20ث مقابل `LIVE_MAX_AGE` 180ث مقصود (عرض حيّ مقابل نافذة التنبيهات) — ليس بنداً.
+**تحقّق الدورة 55 (بالكود) — أُغلق 3 صفوف:** launch109 ← ui (فُتح وأُغلق أثناء الدورة؛ `ChartFrame.tsx:438`، `QuadChartModal.tsx:346`، `FocusChartModal.tsx:340` `cfDayChange(None)A11y`)؛ launch108 ← chart (`def61c3`، `MatrixChart.tsx:8162` `accessibilityHint={tr.mcArmedAlertAdjustHint}`)؛
+QA54 (d) ← backend (`b7c2357`، `screener.py:37-54` ثوابت `RSI_OVERSOLD`/`RSI_OVERBOUGHT` مشتركة بين الفحص والمسار + `test_screener_backtest_routes.py:119`).
+**المراجعة (e) ما يُحرج أمام متداول:** سليم — pip (JPY 0.01، ذهب 0.1، فضة 0.01)، العقود 100k/100oz/5000oz، قيمة pip وتقريب اللوت للأسفل، نقاط MT4/5 ÷10،
+DST نيويورك/لندن/سيدني، إغلاق الجمعة وفتح الأحد 17:00 نيويورك، RSI/ATR بتنعيم Wilder، MACD 12/26/9، بولنجر بانحراف المجتمع، ستوكاستك، المحاور (كلاسيك/فيبو/وودي/كاماريلا/ديمارك)،
+مستويات فيبوناتشي، اتجاه bid/ask بالنصوص. المُحرج الوحيد: الصفّان QA55 أعلاه (الاختبار الخلفي).

@@ -640,3 +640,14 @@ backend-r6 (1) (`e9df083`، `MatrixChart.tsx:8091` `volName('POC')`؛ TPO من �
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول حقيقي.
 **إلحاق (تعارض دمج مع 6f24d85):** وصلت أثناء الدورة `e22efdd`/`e2551bb` (tools: عطلة بيوم العملة المحلي، لواحق الوسطاء بالأخبار)، `6f24d85` (launch108 ← chart: `mcArmedAlertAdjustHint` — تحقّقتُ: غير موصول، أُدرج الصفّ)،
 `acdaa66` كسر البناء (فاصلة عليا غير مهرَّبة بـ`onboardStep4Body`) وأصلحه launch نفسه `62caa5f` قبل أن أصل. البناء بعد الدمج أخضر 0؛ `newsRisk.selftest` ناجح.
+
+## 2026-09-25 — الدورة 55
+**البناء:** أخضر 0 (بعد b9711c9) — لا إصلاح لازم. **Selftests:** 92/92 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود (صفّان):** launch108 ← chart (`def61c3`، `MatrixChart.tsx:8162` `accessibilityHint={tr.mcArmedAlertAdjustHint}`)؛
+QA54 (d) ← backend (`b7c2357`، `screener.py:37-54` ثوابت مشتركة + `test_screener_backtest_routes.py:119`). طلب tools «`newsUnavailable`» (LOG-TOOLS:2531) قديم ومنفَّذ (`NewsRiskBanner.tsx:171`).
+launch109 → ui فُتح وأُغلق أثناء الدورة (`363f793`؛ تحقّقتُ: `ChartFrame.tsx:438`، `QuadChartModal.tsx:346`، `FocusChartModal.tsx:340`) — لم يُدرج.
+**المراجعة (e — ما يُحرج أمام متداول):** وكيل فرعي قرأ الحساب والأسواق والمؤشرات (قائمة السليم بـCOORDINATION). تحقّقتُ بنفسي من الاثنين:
+QA55 → backend: `backtest.py:154-157` خروج bb_bounce عند `mid` يُطلق `sell`/`buy` فيعكس المحرّك (:162-190) الصفقة بدل الإغلاق؛
+QA55 → backend+ui: الصفقة الأخيرة `"open": True` (:192-217) داخل `_stats` (:58)، و`BacktestPanel.tsx` لا يقرأ `open` (grep صفر).
+لم يُعدّا بنداً: التقلّب التاريخي بـ365 على الفريمات الصغيرة (كـTradingView)، وتقاطعات الماسح/التنبيهات على الشمعة الجارية.
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات بلا مستعمل.
