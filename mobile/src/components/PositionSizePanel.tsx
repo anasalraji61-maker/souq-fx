@@ -1418,7 +1418,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             المتداول وهو بالصفقة، وكان يُترك ليضربه بنفسه. من اللوت المقرَّب نفسه (`result.pipValue`). */}
         {pv != null ? (
           <Text style={[styles.resultMeta, { textAlign: align }]}>
-            {t.riskCalcPipValue}: {money(pv)}
+            {t.riskCalcPipValue}: {formatPipValue(pv, moneyCcy)}
             {result && lots != null ? ` · ${lots.toFixed(2)} lot = ${formatPipValue(result.pipValue, moneyCcy)}` : ''}
           </Text>
         ) : null}

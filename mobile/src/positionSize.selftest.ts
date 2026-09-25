@@ -2337,3 +2337,13 @@ console.log('positionSize formatPipValue selftest OK');
   assert.ok(Math.abs(p - 27000 / 143) < 1e-9);
 }
 console.log('positionSize exitQuoteToAccount selftest OK');
+
+// سطر «قيمة النقطة» للّوت الواحد (الحاسبة) بـformatPipValue: USDJPYmicro بحساب دولار 0.0667 كان «0.07 USD» (+5%)
+{
+  const uj = smallContractSpec('USDJPYmicro')!.spec;
+  const pv = pipValuePerLot(uj, 1 / 150);
+  assert.ok(Math.abs(pv - 1000 * 0.01 / 150) < 1e-12);
+  assert.equal(formatPipValue(pv, 'USD'), '0.067 USD');
+  assert.equal(formatPipValue(pipValuePerLot(smallContractSpec('USDCADmicro')!.spec, 1 / 1.36), 'USD'), '0.074 USD');
+}
+console.log('positionSize per-lot micro pip value selftest OK');
