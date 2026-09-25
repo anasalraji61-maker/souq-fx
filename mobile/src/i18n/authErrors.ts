@@ -37,7 +37,7 @@ export function registerErrorText(t: Dict, err: unknown): string {
 
 /**
  * نصّ رفض الدخول: 401 `invalid credentials` (`db.login_user`) ⇒ بيانات خاطئة؛ حقل فارغ (`Error('missing identity')` من
- * `AccountScreen.submit` أو 400 `email or username required`) ⇒ اكتب الاسم؛ غير ذلك (شبكة، 5xx) ⇒ `loginError` الجامع.
+ * `AccountScreen.submit` أو 400 `email or username required`) ⇒ اكتب الاسم؛ غير ذلك (شبكة، 5xx) ⇒ `loginError` «لم يصل الطلب».
  * كان كل رفض يقول «تحقّق من البيانات ومن اتصالك» فمن أخطأ كلمة المرور لا يعرف إن كان الخطأ منه أو من الشبكة.
  */
 export function loginErrorText(t: Dict, err: unknown): string {
