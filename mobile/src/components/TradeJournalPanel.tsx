@@ -926,6 +926,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             if (!mountedRef.current) return;
             if (closedElsewhere(fresh, tr.id)) {
               await refresh();
+              // بلا رسالة كان «إغلاق» يبدو كأنه لم يفعل شيئاً — يُقال للمتداول لماذا لم يُسجَّل خروجه (launch67)
+              if (mountedRef.current) notify(t.journalClosedElsewhereTitle, t.journalClosedElsewhereBody);
               return;
             }
             await api.closeTrade(tr.id, exitPx);
@@ -1569,8 +1571,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
                   setFormError(null);
                 }}
                 // «= SL 1.0820» يُقرأ حروفاً لقارئ الشاشة («إس إل») — الجملة الكاملة بلغة المستخدم بدلها
+                // وقفٌ نُقل للربح: «وقف الخسارة» خطأ للأذن كما الأحمر خطأ للعين — الجملة تقول «الوقف المنقول إلى الربح»
                 accessibilityLabel={(x.kind === 'sl'
-                  ? t.journalExitAtSlA11y
+                  ? x.gain
+                    ? t.journalExitAtProfitStopA11y
+                    : t.journalExitAtSlA11y
                   : x.kind === 'be'
                     ? t.journalExitAtBeA11y
                     : t.journalExitAtTpA11y
