@@ -252,7 +252,7 @@ export function smallLotsStdEquiv(lots: number): string {
  */
 export function parsePriceFor(raw: string, symbol: string | null | undefined): number | null {
   const v = parseDecimal(raw);
-  if (v == null) return null;
+  if (v == null) return commaThousandsOverThousand(raw, symbol);
   return ambiguousThousandsPrice(raw, symbol) ? null : v;
 }
 
@@ -284,6 +284,17 @@ export function priceAlwaysOverThousand(symbol: string): boolean {
   return BIG_CRYPTO.test(bare) || BIG_CRYPTO.test(bare.replace(/M$/, ''));
 }
 
+/**
+ * **«42,000» على US30، «65,000» على BTCUSD**: فاصلة الآلاف بلا كسر كانت مبهمة لكل رمز (`parseDecimal` يرفضها) فتُرفض مع سطر «اكتب
+ * 42000 أو 42» — والقراءة الثانية مستحيلة لأداةٍ سعرها فوق الألف دائماً (`priceAlwaysOverThousand`)، بينما «65,000.5» بجانبها
+ * مقبولة. للمؤشرات والعملات الرقمية الكبيرة وحدها: الفاصلة آلافٌ بلا لبس. «1,085» على EURUSD تبقى مبهمة.
+ */
+function commaThousandsOverThousand(raw: string, symbol: string | null | undefined): number | null {
+  if (!symbol || !priceAlwaysOverThousand(symbol)) return null;
+  const s = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009]/g, '').replace(/[，،]/g, ',');
+  return /^[1-9]\d{0,2}(,\d{3})+$/.test(s) ? Number(s.replace(/,/g, '')) : null;
+}
+
 export function ambiguousThousandsPrice(
   raw: string,
   symbol: string | null | undefined,
@@ -294,7 +305,7 @@ export function ambiguousThousandsPrice(
    * (التركية، الألمانية) بلا قول ماذا يكتب. رسالةٌ لا قراءة: السعر يبقى مرفوضاً، والقراءتان تُعرضان.
    */
   const comma = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009'’]/g, '').replace(/[，،]/g, ',');
-  if (symbol && /^[1-9]\d{0,2},\d{3}$/.test(comma) && parseDecimal(raw) == null) {
+  if (symbol && /^[1-9]\d{0,2},\d{3}$/.test(comma) && parseDecimal(raw) == null && !priceAlwaysOverThousand(symbol)) {
     return { value: raw.trim(), whole: comma.replace(',', ''), small: String(Number(comma.replace(',', '.'))) };
   }
   // ذهب حساب سنت/micro/mini («XAUUSDC»، «GOLDMICRO»، «GOLD.mini») بسعر الذهب نفسه: «3.450» بخانته كانت تُقرأ 3.45 بالدفتر —

@@ -1724,7 +1724,9 @@ console.log('positionSize parsePriceFor selftest OK');
   assert.deepEqual(ambiguousThousandsPrice('38,500', 'XAGUSD'), { value: '38,500', whole: '38500', small: '38.5' });
   assert.deepEqual(ambiguousThousandsPrice(' 1,085 ', 'EURUSD'), { value: '1,085', whole: '1085', small: '1.085' });
   assert.deepEqual(ambiguousThousandsPrice('١٥٧،٢٥٠'.replace('،', ','), 'USDJPY.m'), { value: '١٥٧,٢٥٠', whole: '157250', small: '157.25' });
-  assert.deepEqual(ambiguousThousandsPrice('18,500', 'GER40'), { value: '18,500', whole: '18500', small: '18.5' });
+  // داكس فوق الألف دائماً: «18,500» = 18,500 بلا لبس (ملحق «فاصلة الآلاف على المؤشرات» أدناه) — لا سطر قراءتين
+  assert.equal(ambiguousThousandsPrice('18,500', 'GER40'), null);
+  assert.equal(parsePriceFor('18,500', 'GER40'), 18500);
   assert.deepEqual(ambiguousThousandsPrice('150,250', 'AAPL.US'), { value: '150,250', whole: '150250', small: '150.25' });
   for (const [raw, sym] of [['157,250', 'USDJPY'], ['38,500', 'XAGUSD'], ['1,085', 'EURUSD']] as const)
     assert.equal(parsePriceFor(raw, sym), null, raw);
@@ -3445,3 +3447,25 @@ console.log('positionSize mini metal ambiguous price selftest OK');
   assert.equal(positionSize({ balance: 10_000, riskPct: 1, slPips: 15, pipValuePerLot: pv, contractSize: 100_000 })!.lots, 1);
 }
 console.log('positionSize EM-JPY cross stop price in pips field selftest OK');
+
+// «42,000» على US30: فاصلة الآلاف كانت مبهمة (رسالة «42000 أو 42») لأداةٍ سعرها فوق الألف دائماً، و«42,000.5» بجانبها مقبولة
+{
+  assert.equal(parsePriceFor('42,000', 'US30'), 42000);
+  assert.equal(parsePriceFor('65,000', 'BTCUSD'), 65000);
+  assert.equal(parsePriceFor(' 18,500 ', 'GER40.cash'), 18500);
+  assert.equal(parsePriceFor('٤٢،٠٠٠', 'US30'), 42000);
+  assert.equal(parsePriceFor('1,234,567', 'BTCUSD'), 1234567);
+  assert.equal(parsePriceFor('42,000.5', 'US30'), 42000.5);
+  assert.equal(ambiguousThousandsPrice('42,000', 'US30'), null);
+  // غيرها يبقى مبهماً: الين/الفضة/الفوركس، رمز مجهول أو بلا رمز، والعملات الرقمية الصغيرة (SOL 150,250؟)
+  assert.equal(parsePriceFor('157,250', 'USDJPY'), null);
+  assert.notEqual(ambiguousThousandsPrice('157,250', 'USDJPY'), null);
+  assert.equal(parsePriceFor('1,085', 'EURUSD'), null);
+  assert.equal(parsePriceFor('150,250', 'SOLUSD'), null);
+  assert.equal(parsePriceFor('42,000', null), null);
+  // نقطةٌ لا فاصلة («18.500» داكس) تبقى مبهمة بسطرها؛ وفاصلة بغير ثلاثة أرقام ليست آلافاً
+  assert.equal(parsePriceFor('18.500', 'GER40'), null);
+  assert.equal(parsePriceFor('42,00', 'US30'), 42);
+  assert.equal(parsePriceFor('4,20,000', 'US30'), null);
+}
+console.log('positionSize index comma thousands selftest OK');
