@@ -79,6 +79,7 @@ import {
   type PlanIssue,
   type TradePlan,
   editExitValue,
+  editSizeValue,
   netLineIsWhole,
   noteWithTypedSize,
   formatSignedPct,
@@ -1000,9 +1001,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           exit: editExitValue(editing.status !== 'open', pnum(exit)),
           sl: s,
           tp: p,
-          // خانة الحجم الفارغة = «لا تغيير» لا مسحاً. الخادم يقبل الآن `size: null` = «غير معروف» (backend-r17 (b)، `4f6356a`)، لكن
-          // نوع `api.updateTrade` (ملك ui) ما زال `size?: number` — طلب tools77b؛ بعده يُرسَل null كما يُمسح الوقف والهدف
-          size: num(size) ?? undefined,
+          // خانة حجم معروف مُسحت = null «غير معروف» (backend-r17 (b)) كما يُمسح الوقف والهدف؛ فُتحت فارغة ⇒ بلا تغيير (`editSizeValue`)
+          size: editSizeValue(editing, num(size)),
           note: savedNote,
         });
         if (!mountedRef.current) return;

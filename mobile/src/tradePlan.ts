@@ -450,6 +450,22 @@ export function editExitValue(startedClosed: boolean, exit: number | null): numb
 }
 
 /**
+ * قيمة `size` المُرسلة بحفظ التعديل: حجمٌ مكتوب يُرسل كما هو. خانةٌ فارغة ⇒ `null` («حجم غير معروف»، الخادم يمسح القيمة
+ * منذ backend-r17 (b)) **فقط** إن كان الحجم معروفاً قبل التعديل (`knownLots` — الخانة فُتحت مملوءة فمسحها المتداول).
+ * كان مجهولاً (1 افتراض الخادم بلا علامة) ⇒ `undefined` (بلا تغيير): الخانة فُتحت فارغة، فلا قصد يُرسل.
+ *
+ * لماذا: كان الفارغ «بلا تغيير» دائماً — صفقة سُجّلت 1.00 خطأً ومُسح حجمها بالتعديل تبقى 1 لوت، فمالُها وخطر المفتوحة
+ * يُحسبان بحجمٍ قال المتداول إنه لا يعرفه. الوقف والهدف يُمسحان بالطريقة نفسها.
+ */
+export function editSizeValue(
+  before: { size: number | null | undefined; note?: string | null },
+  typed: number | null
+): number | null | undefined {
+  if (typed != null) return typed;
+  return knownLots(before.size, before.note) != null ? null : undefined;
+}
+
+/**
  * النتيجة بوحدات المخاطرة (R): +2 = ربحت ضعف ما خاطرت به، −1 = ضُرب الوقف كاملاً.
  * يحتاج وقفاً صالحاً بالجهة الصحيحة؛ وإلا null. تقريب لمنزلة عشرية واحدة.
  *

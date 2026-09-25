@@ -1522,6 +1522,23 @@ console.log('tradePlan stopTooClose selftest OK');
 }
 console.log('tradePlan editExitValue selftest OK');
 
+// ——— editSizeValue: خانة حجم مُسحت بالتعديل ———
+{
+  const { editSizeValue } = require('./tradePlan') as typeof import('./tradePlan');
+  // حجمٌ معروف مُسح ⇒ null (غير معروف) — كان undefined فيبقى 0.50 محفوظاً
+  assert.equal(editSizeValue({ size: 0.5, note: '' }, null), null);
+  // 1.00 بعلامتها (مكتوبة أو من الحاسبة) معروفة ⇒ مسحها null
+  assert.equal(editSizeValue({ size: 1, note: '1.00 lot · breakout' }, null), null);
+  // 1 بلا علامة = افتراض الخادم (الخانة فُتحت فارغة) ⇒ بلا تغيير
+  assert.equal(editSizeValue({ size: 1, note: 'breakout' }, null), undefined);
+  // مجهول أصلاً ⇒ بلا تغيير
+  assert.equal(editSizeValue({ size: null, note: '' }, null), undefined);
+  // مكتوب ⇒ كما هو
+  assert.equal(editSizeValue({ size: 0.5, note: '' }, 0.3), 0.3);
+  assert.equal(editSizeValue({ size: null }, 1), 1);
+}
+console.log('tradePlan editSizeValue selftest OK');
+
 // ——— netLineIsWhole: «الصافي» بلا اسم فقط حين تدخل كل المغلقة ———
 {
   const { netLineIsWhole, netByInstrument } = require('./tradePlan') as typeof import('./tradePlan');
