@@ -39,3 +39,39 @@ def test_broker_aliases_and_oil_get_a_spread_estimate():
     assert backtest.typical_spread("silver") == backtest.typical_spread("XAGUSD")
     for s in ("USOIL", "UKOIL", "XTIUSD", "XBR/USD"):
         assert backtest.typical_spread(s) == (4.0, 0.01), s
+
+
+def _t(pnl: float) -> dict:
+    return {"pnl_pct": pnl, "entry": 1.0}
+
+
+def test_total_return_is_compounded_and_matches_final_equity():
+    """كان مجموع النسب: +50% ثم −50% ⇒ «العائد 0%» بجانب «رأس المال 75» باللوحة نفسها."""
+    stats, curve = backtest._stats([_t(50.0), _t(-50.0)])
+    assert stats["final_equity"] == 75.0
+    assert stats["total_return_pct"] == -25.0
+    assert curve[-1]["equity"] == 75.0
+
+
+def test_breakeven_backtest_trade_is_not_a_loss():
+    """كدفتر الصفقات: `pnl <= 0` كان يعدّ التعادل خسارةً فيُسقط نسبة الفوز ويخفّف متوسّط الخسارة."""
+    stats, _ = backtest._stats([_t(2.0), _t(0.0), _t(-1.0)])
+    assert stats["trade_count"] == 3
+    assert stats["breakeven_count"] == 1
+    assert stats["win_rate"] == 50.0
+    assert stats["avg_loss_pct"] == -1.0
+
+
+def test_all_breakeven_or_no_trades_have_zero_win_rate():
+    assert backtest._stats([_t(0.0)])[0]["win_rate"] == 0
+    assert backtest._stats([])[0] == {
+        "trade_count": 0, "win_rate": 0, "breakeven_count": 0, "total_return_pct": 0.0,
+        "final_equity": 100.0, "avg_win_pct": 0, "avg_loss_pct": 0, "max_drawdown_pct": 0.0,
+    }
+
+
+def test_run_backtest_reports_the_compounded_return():
+    res = backtest.run_backtest(_candles(), "ma_cross", spread=0.0001)
+    st = res["stats"]
+    assert st["trade_count"] > 0
+    assert st["total_return_pct"] == round(st["final_equity"] - 100, 2)

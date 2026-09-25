@@ -46,6 +46,41 @@ def typical_spread(symbol: str) -> tuple[float, float] | None:
     return (15.0, pip)  # عملة ناشئة (TRY/ZAR/MXN…): سبريد واسع
 
 
+def _stats(trades: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """إحصاء الصفقات ومنحنى رأس المال (يبدأ 100 ويتراكب).
+
+    - `total_return_pct` = العائد **المركّب** (`final_equity − 100`). كان مجموع نسب الصفقات، واللوحة تعرضه
+      بجانب `final_equity`: +50% ثم −50% ⇒ «العائد 0%» بجانب «رأس المال 75» — رقمان متناقضان.
+    - **التعادل ليس خسارة** (كدفتر الصفقات، `db.trade_stats`): `win_rate` = رابحة ÷ (رابحة + خاسرة)،
+      والتعادل يُعدّ وحده `breakeven_count` ويبقى ضمن `trade_count`، ولا يدخل `avg_loss_pct`."""
+    wins = [t["pnl_pct"] for t in trades if t["pnl_pct"] > 0]
+    losses = [t["pnl_pct"] for t in trades if t["pnl_pct"] < 0]
+    decided = len(wins) + len(losses)
+
+    equity = 100.0
+    curve = [{"i": 0, "equity": equity}]
+    peak = equity
+    max_dd = 0.0
+    for j, t in enumerate(trades):
+        equity *= 1 + t["pnl_pct"] / 100
+        peak = max(peak, equity)
+        dd = (peak - equity) / peak * 100 if peak else 0
+        max_dd = max(max_dd, dd)
+        curve.append({"i": j + 1, "equity": round(equity, 2)})
+
+    stats = {
+        "trade_count": len(trades),
+        "win_rate": round(len(wins) / decided * 100, 1) if decided else 0,
+        "breakeven_count": len(trades) - decided,
+        "total_return_pct": round(equity - 100.0, 2),
+        "final_equity": round(equity, 2),
+        "avg_win_pct": round(sum(wins) / len(wins), 2) if wins else 0,
+        "avg_loss_pct": round(sum(losses) / len(losses), 2) if losses else 0,
+        "max_drawdown_pct": round(max_dd, 2),
+    }
+    return stats, curve
+
+
 def run_backtest(
     candles: list[dict[str, Any]],
     strategy: StrategyId = "ma_cross",
@@ -183,35 +218,10 @@ def run_backtest(
         for t in trades:
             t["pnl_pct"] = round(t["pnl_pct"] - spread / t["entry"] * 100, 3)
 
-    wins = [t for t in trades if t["pnl_pct"] > 0]
-    total_pnl = sum(t["pnl_pct"] for t in trades)
-    win_rate = (len(wins) / len(trades) * 100) if trades else 0
-    avg_win = (sum(t["pnl_pct"] for t in wins) / len(wins)) if wins else 0
-    losses = [t for t in trades if t["pnl_pct"] <= 0]
-    avg_loss = (sum(t["pnl_pct"] for t in losses) / len(losses)) if losses else 0
-
-    equity = 100.0
-    curve = [{"i": 0, "equity": equity}]
-    peak = equity
-    max_dd = 0.0
-    for j, t in enumerate(trades):
-        equity *= 1 + t["pnl_pct"] / 100
-        peak = max(peak, equity)
-        dd = (peak - equity) / peak * 100 if peak else 0
-        max_dd = max(max_dd, dd)
-        curve.append({"i": j + 1, "equity": round(equity, 2)})
-
+    stats, curve = _stats(trades)
     return {
         "strategy": strategy,
         "trades": trades[-40:],
-        "stats": {
-            "trade_count": len(trades),
-            "win_rate": round(win_rate, 1),
-            "total_return_pct": round(total_pnl, 2),
-            "final_equity": round(equity, 2),
-            "avg_win_pct": round(avg_win, 2),
-            "avg_loss_pct": round(avg_loss, 2),
-            "max_drawdown_pct": round(max_dd, 2),
-        },
+        "stats": stats,
         "equity_curve": curve,
     }
