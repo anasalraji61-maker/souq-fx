@@ -757,9 +757,10 @@ export function TerminalScreen() {
           try {
             const loaded = await api.chart(symbol, secTf, need);
             if ((loaded.candles?.length ?? 0) > 0) return loaded;
-            return cacheHit ?? mockSeries(symbol, mockBase(symbol), secTf, need);
+            return cacheHit ?? emptySlot(secTf);
           } catch {
-            return cacheHit ?? mockSeries(symbol, mockBase(symbol), secTf, need);
+            // launch122: كانت `mockSeries` ⇒ ظلّ وهمي حول 1.0854 (2024) **فوق شارت حقيقي** حول 1.17. الفارغ يُسقَط من العرض.
+            return cacheHit ?? emptySlot(secTf);
           }
         })
       );
