@@ -110,6 +110,19 @@ type Trade = {
   opened_at: string;
 };
 
+/** «+2R» بصفّ الصفقة — المصدر نفسه لـ«متوسط R» (`realizedR`: الوقف الأصلي «1R @ …» ثم `sl`)؛ '' بلا R. */
+const rowR = (tr: Trade): string =>
+  formatR(
+    realizedR({
+      symbol: tr.symbol,
+      side: tr.side === 'sell' ? 'sell' : 'buy',
+      entry: tr.entry,
+      sl: tr.sl,
+      exit: tr.exit,
+      note: tr.note,
+    })
+  ) ?? '';
+
 type Stats = JournalStats;
 
 type Props = {
@@ -1004,7 +1017,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             · {formatPrice(tr.entry, tr.symbol)}
             {tr.exit != null ? ` → ${formatPrice(tr.exit, tr.symbol)}` : ` ${t.journalOpenSuffix}`}
           </Text>
-          {tr.sl != null || tr.tp != null ? (
+          {/* الـR يُعرض ولو بلا SL/TP (مُسحا بعد شدّ الوقف، والعلامة «1R @ …» باقية): «متوسط R» كان يعدّ الصفقة
+              ونافذة الإغلاق تقول «+2R» بينما صفّها بلا R — الرقم بالإحصاء بلا مصدر ظاهر */}
+          {tr.sl != null || tr.tp != null || rowR(tr) ? (
             <Text style={[styles.tradeMeta, { textAlign: align }]}>
               {tr.sl != null ? <Text style={{ color: colors.bear }}>SL {formatPrice(tr.sl, tr.symbol)}</Text> : null}
               {tr.sl != null && tr.tp != null ? ' · ' : ''}
@@ -1023,17 +1038,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
                 return plan.ok ? ` · R:R ${formatRR(plan.rr)}` : '';
               })()}
               {(() => {
-                const r = formatR(
-                  realizedR({
-                    symbol: tr.symbol,
-                    side: tr.side === 'sell' ? 'sell' : 'buy',
-                    entry: tr.entry,
-                    sl: tr.sl,
-                    exit: tr.exit,
-                    note: tr.note,
-                  })
-                );
-                return r ? ` · ${t.journalResultR.replace('{r}', r)}` : '';
+                const r = rowR(tr);
+                if (!r) return '';
+                const lead = tr.sl != null || tr.tp != null ? ' · ' : '';
+                return `${lead}${t.journalResultR.replace('{r}', r)}`;
               })()}
             </Text>
           ) : null}
