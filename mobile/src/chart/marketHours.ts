@@ -58,7 +58,7 @@ export function isForexMarketOpen(symbol: string, now: Date = new Date()): boole
   if (day === 0 && sec < nyFivePmUtcSec(dayStart)) return false; // الأحد قبل الافتتاح
   if (day === 5 && sec >= nyFivePmUtcSec(dayStart)) return false; // الجمعة بعد الإغلاق
   if (isForexHolidaySession(sec)) return false;
-  // المعادن: كسر CME اليومي 17:00–18:00 نيويورك (ومنه افتتاح الأحد 18:00) — كانت «مفتوح» بلا تسعير.
+  // CME (معادن، مؤشرات أمريكا، WTI): كسر يومي 17:00–18:00 نيويورك (ومنه افتتاح الأحد 18:00) — كانت «مفتوح» بلا تسعير.
   if (LATE_OPEN_RE.test(sym.trim()) && inMetalsDailyBreak(sec)) return false;
   return true;
 }
@@ -154,8 +154,13 @@ function inForexWeekend(sec: number): boolean {
   return false;
 }
 
-/** المعادن (ذهب/فضة/بلاتين/بلاديوم): افتتاح الأسبوع 18:00 نيويورك (جلسة CME) لا 17:00 كالعملات. */
-const LATE_OPEN_RE = /^(XAU|XAG|XPT|XPD|GOLD|SILVER)/i;
+/**
+ * جلسة CME Globex: افتتاح الأسبوع 18:00 نيويورك لا 17:00 كالعملات، وكسر يومي 17:00–18:00.
+ * المعادن (ذهب/فضة/بلاتين/بلاديوم)، مؤشرات أمريكا (داو/ناسداك/S&P) ونفط WTI.
+ * DAX وبرنت (ICE) بساعات أخرى — لا تُحسب هنا.
+ */
+const LATE_OPEN_RE =
+  /^(XAU|XAG|XPT|XPD|GOLD|SILVER|US30|DJ30|DJI|WS30|NAS100|NAS1000|US100|USTEC|NDX|SPX|US500|SP500|USOIL|WTI|XTI|CL[-_.]?OIL)/i;
 
 /**
  * أوّل لحظة تداول عند `sec` أو بعده (يتخطّى عطلة نهاية الأسبوع وجلستَي 25/12 و1/1، ولو تتابعتا).
@@ -174,6 +179,9 @@ function nextForexOpenSec(sec: number, lateOpen = false): number {
       t < forexSundayOpenSec(dayStart) + 3600
     ) {
       t = forexSundayOpenSec(dayStart) + 3600;
+    } else if (lateOpen && inMetalsDailyBreak(t)) {
+      // كسر CME اليومي: لا شمعة 17:00 نيويورك بالذهب/المؤشرات أيام الأسبوع
+      t = nyFivePmUtcSec(dayStart) + 3600;
     } else if (isForexHolidaySession(t)) {
       // نهاية الجلسة: 17:00 نيويورك التالية (المعادن 18:00 — `isForexMarketOpen`)
       const today = nyFivePmUtcSec(dayStart);
