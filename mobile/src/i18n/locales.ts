@@ -487,6 +487,8 @@ export type Dict = {
   newsTimeTbd: string;
   calToday: string;
   calTomorrow: string;
+  /** يلي تاريخ حدث التقويم **بلا ساعة معلنة** («اليوم · الساعة غير معلنة»، `CalendarPanel`، ui10). */
+  calTimeTbd: string;
   calSampleBanner: string;
   calForecast: string;
   calPrevious: string;
@@ -1712,6 +1714,7 @@ const ar: Dict = {
   newsTimeTbd: 'اليوم، الساعة غير معلنة',
   calToday: 'اليوم',
   calTomorrow: 'غداً',
+  calTimeTbd: 'الساعة غير معلنة',
   calSampleBanner: '⚠ أمثلة توضيحية لا أحداث هذا الأسبوع — مواعيدها وأرقامها ليست للتداول عليها. تعذّر جلب التقويم الحي الآن',
   calForecast: 'توقّع',
   calPrevious: 'سابق',
@@ -2872,6 +2875,7 @@ const enUS: Dict = {
   newsTimeTbd: 'today, time not announced',
   calToday: 'Today',
   calTomorrow: 'Tomorrow',
+  calTimeTbd: 'time not announced',
   calSampleBanner: '⚠ Sample events, not this week’s — don’t trade on their times or figures. Live calendar unavailable right now',
   calForecast: 'Fcst',
   calPrevious: 'Prev',
@@ -4060,6 +4064,8 @@ const ku: Dict = {
   newsTimeTbd: 'ئەمڕۆ، کاتەکەی ڕانەگەیەندراوە',
   calToday: 'ئەمڕۆ',
   calTomorrow: 'سبەینێ',
+  // بحاجة مراجعة ناطق
+  calTimeTbd: 'کاتەکەی ڕانەگەیەندراوە',
   calSampleBanner: '⚠ نموونەی ڕوونکردنەوەن، ڕووداوەکانی ئەم هەفتەیە نین — کات و ژمارەکانیان بۆ بازرگانی نین. ڕۆژژمێری ڕاستەوخۆ ئێستا بەردەست نییە',
   calForecast: 'پێشبینی',
   calPrevious: 'پێشوو',
