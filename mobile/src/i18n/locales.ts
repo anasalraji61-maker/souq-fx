@@ -600,6 +600,7 @@ export type Dict = {
   journalSaveEditBtn: string;
   journalCancelEdit: string;
   journalEditError: string;
+  journalEditConflict: string;
   journalCloseLinkA11y: string;
   journalCloseLinkBtn: string;
   journalCloseMarketBtn: string;
@@ -1806,6 +1807,7 @@ const ar: Dict = {
   journalSaveEditBtn: 'حفظ التعديل',
   journalCancelEdit: 'إلغاء التعديل',
   journalEditError: 'تعذّر حفظ التعديل — تحقّق من الاتصال وحاول مرة أخرى',
+  journalEditConflict: 'لم يُحفظ التعديل: أُغلقت هذه الصفقة أو أُعيد فتحها من جهاز آخر أثناء تعديلك. القائمة محدَّثة الآن — راجع حالتها ثم احفظ من جديد إن لزم.',
   journalCloseLinkA11y: 'إغلاق صفقة {symbol} بسعر خانة الخروج',
   journalCloseLinkBtn: 'إغلاق بسعر خانة الخروج',
   journalCloseMarketBtn: 'إغلاق بالسعر الحالي',
@@ -2966,6 +2968,7 @@ const enUS: Dict = {
   journalSaveEditBtn: 'Save changes',
   journalCancelEdit: 'Cancel edit',
   journalEditError: 'Couldn’t save the changes — check your connection and try again',
+  journalEditConflict: 'Changes not saved: this trade was closed or reopened on another device while you were editing. The list is up to date now — check its status, then save again if needed.',
   journalCloseLinkA11y: 'Close {symbol} trade at the exit field price',
   journalCloseLinkBtn: 'Close at exit field price',
   journalCloseMarketBtn: 'Close at market',
@@ -4154,6 +4157,7 @@ const ku: Dict = {
   journalSaveEditBtn: 'پاشەکەوتکردنی گۆڕانکاری',
   journalCancelEdit: 'هەڵوەشاندنەوەی دەستکاری',
   journalEditError: 'نەکرا گۆڕانکارییەکان پاشەکەوت بکرێن — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
+  journalEditConflict: 'گۆڕانکارییەکان پاشەکەوت نەکران: لە کاتی دەستکارییەکەتدا ئەم مامەڵەیە لە ئامێرێکی ترەوە داخرا یان دووبارە کرایەوە. لیستەکە ئێستا نوێکراوەتەوە — دۆخەکەی بپشکنە و ئەگەر پێویست بوو دووبارە پاشەکەوت بکە.',
   journalCloseLinkA11y: 'داخستنی مامەڵەی {symbol} بە نرخی خانەی دەرچوون',
   journalCloseLinkBtn: 'داخستن بە نرخی خانەی دەرچوون',
   journalCloseMarketBtn: 'داخستن بە نرخی ئێستا',
