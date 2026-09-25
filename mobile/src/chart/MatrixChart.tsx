@@ -5337,7 +5337,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   //
   // بلا تقاطع مثبَّت الأسهم تحرّك **العرض** كـTradingView: ←/→ شمعة (Shift: عشر شموع)، ↑/↓ تكبير/تصغير
   // حول المركز. كانت لا تفعل شيئاً فيضطرّ متداول الويب للسحب أو لأزرار ‹ › بخطوة 15 شمعة. لا يُعترَض
-  // Alt/Ctrl/⌘ مع الأسهم (Alt+← رجوع المتصفّح)، ولا يُمسّ العرض بالإعادة (نافذتها ليست ملكه).
+  // Alt/Ctrl/⌘ مع الأسهم (Alt+← رجوع المتصفّح). بالإعادة Shift+→/← خطوة شمعة (كـTradingView).
   useEffect(() => {
     if (Platform.OS !== 'web' || !canPan) return;
     const onKey = (event: KeyboardEvent) => {
@@ -5345,12 +5345,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       // رسم محدَّد: الأسهم له (معالج الرسم أعلاه)، لا للعرض ولا للتقاطع.
       if (selectedIdRef.current && event.key.startsWith('Arrow')) return;
       if (!crossPinned.current) {
-        if (event.altKey || event.ctrlKey || event.metaKey || replayOn) return;
+        if (event.altKey || event.ctrlKey || event.metaKey) return;
         const k = event.key;
         if (k !== 'ArrowLeft' && k !== 'ArrowRight' && k !== 'ArrowUp' && k !== 'ArrowDown') return;
+        // بالإعادة: التكبير ممنوع (كالقرص)، وShift+→/← خطوة إعادة، و←/→ سحب مقيَّد بالقطع (`replayMinOffsetNow`).
+        if (replayOn && (k === 'ArrowUp' || k === 'ArrowDown')) return;
         const target = event.target as { tagName?: string; isContentEditable?: boolean } | null;
         if (target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '')) return;
         event.preventDefault();
+        if (replayOn && event.shiftKey) {
+          setReplayPlaying(false);
+          stepReplay(k === 'ArrowRight' ? 1 : -1);
+          return;
+        }
         if (k === 'ArrowUp') zoomAroundCenter(0.8);
         else if (k === 'ArrowDown') zoomAroundCenter(1.25);
         else panByButton((k === 'ArrowLeft' ? 1 : -1) * (event.shiftKey ? 10 : 1));
@@ -5407,7 +5414,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       document.removeEventListener('keydown', onKey);
       if (hoverRaf.current != null) cancelAnimationFrame(hoverRaf.current);
     };
-  }, [canPan, replayOn, syncFollow, schedulePublishSync, zoomAroundCenter, panByButton]);
+  }, [canPan, replayOn, syncFollow, schedulePublishSync, zoomAroundCenter, panByButton, stepReplay]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const priceWheelHandlers: any =
