@@ -16,6 +16,7 @@ import {
   activePriceOverlays,
   legendCapacity,
   legendChipWidth,
+  legendValueAt,
   planPriceLegend,
   planPriceLegendForWidth,
   resolveColorExpr,
@@ -290,6 +291,29 @@ import {
   assert.deepEqual(unresolved, [], `رموز بلا قيمة بـlegendTokens: ${unresolved.join(', ')}`);
   const unused = [...provided].filter((t) => !needed.has(t)).sort();
   assert.deepEqual(unused, [], `رموز بـlegendTokens لا يستعملها الجدول: ${unused.join(', ')}`);
+}
+
+// ١٤) قيمة الخطّ بالمفتاح: عند الشمعة، بلا رقم مختلَق للإحماء، وعرضها محجوز بالتخطيط
+{
+  const line = [null, null, 1.0851, 1.08532];
+  assert.equal(legendValueAt(line, 3), 1.08532);
+  assert.equal(legendValueAt(line, 2), 1.0851);
+  assert.equal(legendValueAt(line, 0), null); // إحماء SMA
+  assert.equal(legendValueAt(line, 4), null);
+  assert.equal(legendValueAt(line, -1), null);
+  assert.equal(legendValueAt(line, null), null);
+  assert.equal(legendValueAt(null, 1), null);
+  assert.equal(legendValueAt([NaN], 0), null);
+  // القيمة تُعرّض الشارة: «SMA 20 1.08532» أعرض من «SMA 20» بسبعة محارف (القيمة + فراغ)
+  const chip = { label: 'SMA 20', swatch: ['a'] };
+  assert.ok(Math.abs(legendChipWidth(chip, 7) - legendChipWidth(chip) - 8 * 5.2) < 1e-9);
+  assert.equal(legendChipWidth(chip, 0), legendChipWidth(chip));
+  // ثلاث طبقات تتّسع بأسمائها بـ200px، ومع قيمها لا ⇒ «+ن» لا قصّ صامت
+  const ids = ['sma20', 'sma50', 'ema21'];
+  assert.equal(planPriceLegendForWidth(ids, 200).more, 0);
+  const withV = planPriceLegendForWidth(ids, 200, { sma20: 7, sma50: 7, ema21: 7 });
+  assert.ok(withV.more > 0);
+  assert.equal(withV.chips.length + withV.more, 3);
 }
 
 console.log('priceLegend.selftest: PASS');

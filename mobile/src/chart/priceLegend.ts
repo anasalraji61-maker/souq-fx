@@ -168,14 +168,32 @@ export const LEGEND_CHAR_W = 5.2;
 /** ما تحجزه «+ن» من العرض حتى لا تُقصّ هي نفسها فيختفي العدد بصمت. */
 export const LEGEND_MORE_W = 24;
 
-/** عرض شارة بعينها — يعتمد طول اسمها وعدد مربّعات لونها، لا رقماً واحداً للجميع. */
-export function legendChipWidth(chip: Pick<LegendChip, 'label' | 'swatch'>): number {
+/**
+ * عرض شارة بعينها — يعتمد طول اسمها وعدد مربّعات لونها، لا رقماً واحداً للجميع.
+ * `valueChars` طول قيمة الخطّ المطبوعة بعد الاسم («SMA 20 1.08532») مع فراغها؛ 0 ⇒ بلا قيمة.
+ */
+export function legendChipWidth(chip: Pick<LegendChip, 'label' | 'swatch'>, valueChars = 0): number {
+  const v = Number.isFinite(valueChars) && valueChars > 0 ? valueChars + 1 : 0;
   return (
     LEGEND_CHIP_PAD +
     chip.swatch.length * LEGEND_SWATCH_W +
-    chip.label.length * LEGEND_CHAR_W +
+    (chip.label.length + v) * LEGEND_CHAR_W +
     LEGEND_CHIP_GAP
   );
+}
+
+/**
+ * قيمة خطّ الطبقة عند شمعة (التقاطع، أو الأخيرة بلا تقاطع) — كمفتاح TradingView: «SMA 20 1.08532»
+ * لا الاسم وحده، فيُقرأ أين المتوسط من السعر بلا تتبّع الخطّ بالعين إلى المحور.
+ * `null` لخانة الإحماء (أول 19 شمعة لـSMA 20) أو خارج المصفوفة أو قيمة فاسدة — لا يُطبع رقم مُختلَق.
+ */
+export function legendValueAt(
+  line: readonly (number | null | undefined)[] | null | undefined,
+  index: number | null | undefined
+): number | null {
+  if (!line || index == null || !Number.isInteger(index) || index < 0 || index >= line.length) return null;
+  const v = line[index];
+  return typeof v === 'number' && Number.isFinite(v) ? v : null;
 }
 
 /**
@@ -190,8 +208,11 @@ export function legendChipWidth(chip: Pick<LegendChip, 'label' | 'swatch'>): num
  */
 export function planPriceLegendForWidth(
   indicators: readonly string[],
-  availableW: number
+  availableW: number,
+  /** طول قيمة كل طبقة تُطبع قيمتها (المعرّف ⇒ عدد المحارف) — تُحجز بالعرض فلا تُقصّ. */
+  valueChars?: Readonly<Record<string, number>>
 ): LegendPlan {
+  const widthOf = (c: LegendChip) => legendChipWidth(c, valueChars?.[c.id] ?? 0);
   const active = activePriceOverlays(indicators);
   if (active.length === 0) return { chips: [], more: 0 };
   const w = Number.isFinite(availableW) ? availableW : 0;
@@ -199,7 +220,7 @@ export function planPriceLegendForWidth(
 
   if (active.length <= LEGEND_MAX_CHIPS) {
     let total = 0;
-    for (const c of active) total += legendChipWidth(c);
+    for (const c of active) total += widthOf(c);
     if (total <= w) return { chips: active, more: 0 };
   }
 
@@ -208,7 +229,7 @@ export function planPriceLegendForWidth(
   let used = 0;
   for (const c of active) {
     if (chips.length >= LEGEND_MAX_CHIPS) break;
-    const cw = legendChipWidth(c);
+    const cw = widthOf(c);
     if (used + cw > budget) break;
     used += cw;
     chips.push(c);

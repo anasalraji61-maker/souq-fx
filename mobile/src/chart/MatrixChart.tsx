@@ -74,6 +74,7 @@ import {
 } from './centeredPane';
 import { STOCH_LINE_H, stochPaneGeom } from './stochPane';
 import {
+  legendValueAt,
   planPriceLegendForWidth,
   resolveColorExpr,
 } from './priceLegend';
@@ -2950,9 +2951,39 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     }),
     [accent]
   );
+  // خطوط الطبقات ذات الخطّ الواحد: قيمتها تُطبع بالمفتاح عند شمعة التقاطع (أو الأخيرة) — راجع
+  // `legendValueAt`. النطاقات ومتعدّدة الخطوط (BB، إيشيموكو، التمساح…) بالاسم وحده كما كانت.
+  // خلية رباعي ضيّقة ⇒ الأسماء وحدها: القيمة تُضاعف عرض الشارة فتنطوي الطبقات تحت «+ن».
+  const legendLines = useMemo((): Readonly<Record<string, readonly (number | null)[] | null | undefined>> => {
+    if (dense && chartPlotW < 320) return {};
+    return {
+      sma20: overlays.sma20, sma50: overlays.sma50, ema21: overlays.ema21, wma20: overlays.wma20,
+      dema20: overlays.dema20, tema20: overlays.tema20, hma20: overlays.hma20,
+      vwap, twap, psar, gannHiLo, medianPrice, typicalPrice, weightedClose, mcginley, lsma, tsf,
+      vwma, alma, t3, smma20, kama, frama, zlema, avgPrice, dma, trima, vidya,
+      supertrend: supertrend?.value,
+    };
+  }, [
+    dense, chartPlotW, overlays, vwap, twap, psar, gannHiLo, medianPrice, typicalPrice, weightedClose,
+    mcginley, lsma, tsf, vwma, alma, t3, smma20, kama, frama, zlema, avgPrice, dma, trima, vidya, supertrend,
+  ]);
+  const legendValueText = (id: string, index: number | null): string | null => {
+    const v = legendValueAt(legendLines[id], index);
+    return v == null ? null : fmtPrice(v);
+  };
+  // العرض يُحجز بطول قيمة الشمعة الأخيرة (منازل الرمز ثابتة ⇒ الطول نفسه تقريباً عند التقاطع)،
+  // فلا تتبدّل الشارات الظاهرة أثناء سحب التقاطع.
+  const legendLastIdx = source.plot.length - 1;
+  const legendValueChars: Record<string, number> = {};
+  for (const id of indicators) {
+    const t = legendValueText(id, legendLastIdx);
+    if (t) legendValueChars[id] = t.length;
+  }
+  const legendCharsKey = JSON.stringify(legendValueChars);
   const priceLegend = useMemo(
-    () => planPriceLegendForWidth(indicators, chartPlotW - 12),
-    [indicators, chartPlotW]
+    () => planPriceLegendForWidth(indicators, chartPlotW - 12, legendValueChars),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `legendCharsKey` يمثّل `legendValueChars`
+    [indicators, chartPlotW, legendCharsKey]
   );
   const viewXPan =
     syncFollow && syncWindow?.xPanNorm != null
@@ -5775,6 +5806,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   />
                 ))}
                 <Text style={styles.priceLegendText}>{chip.label}</Text>
+                {(() => {
+                  const v = legendValueText(chip.id, crossIndex ?? legendLastIdx);
+                  if (!v) return null;
+                  const single = chip.swatch.length === 1;
+                  return (
+                    <Text
+                      style={[
+                        styles.priceLegendValue,
+                        single ? { color: resolveColorExpr(chip.swatch[0]!, legendTokens) } : null,
+                      ]}
+                    >
+                      {v}
+                    </Text>
+                  );
+                })()}
               </View>
             ))}
             {priceLegend.more > 0 ? (
@@ -11381,6 +11427,7 @@ const styles = StyleSheet.create({
   },
   priceLegendSwatch: { width: 6, height: 6, borderRadius: 1, marginRight: 3 },
   priceLegendText: { color: colors.text, fontSize: 9, fontWeight: '700' },
+  priceLegendValue: { color: colors.text, fontSize: 9, fontWeight: '700', marginLeft: 4, fontVariant: ['tabular-nums'] },
   priceLegendMore: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
   paneZeroLine: {
     position: 'absolute',
