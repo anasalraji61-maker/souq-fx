@@ -41,7 +41,9 @@ import {
   riskInQuoteCcy,
   pnlInQuoteCcy,
   profitAtTarget,
+  moneyRewardRisk,
   exitQuoteToAccount,
+  targetQuoteToAccount,
   typedExitQuoteToAccount,
   slPipsCarryOver,
   pipsOnlyExitQuoteToAccount,
@@ -3018,3 +3020,33 @@ console.log('positionSize liveEntryQuoteState selftest OK');
   assert.equal(restoredSmallSymbol('DXY', { smallSuffix: 'c', smallActive: true }), 'DXY');
 }
 console.log('positionSize restoredSmallSymbol selftest OK');
+
+// R:R بالمال حين الأساس = عملة الحساب: الخسارة بسعر الوقف والربح بسعر الهدف
+{
+  const { analyzePlan, formatRR } = require('./tradePlan') as typeof import('./tradePlan');
+  const uj = instrumentSpec('USDJPY')!;
+  const rrOf = (tp: number) => {
+    const plan = analyzePlan({ symbol: 'USDJPY', side: 'buy', entry: 150, sl: 149, tp });
+    assert.ok(plan.ok);
+    const stopRate = exitQuoteToAccount(uj, 'USD', 149, 1 / 150, true)!;
+    const targetRate = targetQuoteToAccount(uj, 'USD', tp, 1 / 150)!;
+    const lots = 0.14;
+    const loss = 100 * uj.contractSize * lots * stopRate * 0.01;
+    const profit = profitAtTarget({ spec: uj, entry: 150, target: tp, lots, quoteToAccount: targetRate })!;
+    const rr = moneyRewardRisk(plan.rr, stopRate, targetRate)!;
+    // المال نفسه الذي يعرضه السطر
+    assert.ok(Math.abs(rr - profit / loss) < 1e-9);
+    return { pip: formatRR(plan.rr), money: formatRR(rr), rr };
+  };
+  // كان «1:2.0» والمال 184.21 ÷ 93.96 = 1.96
+  assert.deepEqual({ pip: rrOf(152).pip, money: rrOf(152).money }, { pip: '1:2.0', money: '1:1.9' });
+  // كان «1:1.0» بلا تحذير والربح 92.72 < المخاطرة 93.96
+  assert.ok(rrOf(151).rr < 1);
+  // سعران متطابقان (EURUSD بحساب دولار) ⇒ المسافة نفسها؛ مدخل ناقص ⇒ المسافة؛ R:R غير صالح ⇒ null
+  assert.equal(moneyRewardRisk(2, 1, 1), 2);
+  assert.equal(moneyRewardRisk(2, null, 0.5), 2);
+  assert.equal(moneyRewardRisk(2, 1, NaN), 2);
+  assert.equal(moneyRewardRisk(null, 1, 1), null);
+  assert.equal(moneyRewardRisk(0, 1, 1), null);
+}
+console.log('positionSize moneyRewardRisk selftest OK');

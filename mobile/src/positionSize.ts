@@ -1075,6 +1075,19 @@ export function profitAtTarget(input: {
 }
 
 /**
+ * R:R **بالمال** من R:R بالمسافة: الخسارة تُحوَّل بسعر الوقف والربح بسعر الهدف (`stopRate`/`targetRate`، عملة الحساب لكل
+ * وحدة تسعير). يختلفان حين الأساس = عملة الحساب (USDJPY بحساب دولار، EURUSD بحساب يورو): شراء USDJPY 150.00، وقف 149.00،
+ * هدف 152.00 ⇒ مسافةً 1:2.0 لكن مالاً 184.21 ÷ 93.96 = 1:1.96 — والسطر يطبع «1:2.0» بجانب المبلغين، ومن قاعدته «لا أقل من
+ * 1:2» يدخل. وهدف 151.00 «1:1.0» ربحه 92.72 أقل من مخاطرته 93.96 بلا تحذير. غير ذلك (السعران واحد) = المسافة نفسها.
+ */
+export function moneyRewardRisk(pipRR: number | null, stopRate: number | null, targetRate: number | null): number | null {
+  if (pipRR == null || !Number.isFinite(pipRR) || pipRR <= 0) return null;
+  if (stopRate == null || targetRate == null || !(stopRate > 0) || !(targetRate > 0)) return pipRR;
+  if (!Number.isFinite(stopRate) || !Number.isFinite(targetRate)) return pipRR;
+  return (pipRR * targetRate) / stopRate;
+}
+
+/**
  * منازل المبلغ العشرية لعملة: الين بلا كسور (لا «سِن» يُتداول به)، وبقية عملات الحساب والتسعير
  * المدعومة منزلتان.
  */

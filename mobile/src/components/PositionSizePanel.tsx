@@ -35,6 +35,7 @@ import {
   toggleRiskUnit,
   formatMoney,
   profitAtTarget,
+  moneyRewardRisk,
   parseLeverage,
   leverageOutOfRange,
   leverageAmbiguousThousands,
@@ -1029,7 +1030,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         })
       : null;
 
-  const lowWarn = plan?.ok ? lowRewardWarning(plan.rr, netAfterCosts) : null;
+  /** R:R بالمال: الأساس = عملة الحساب ⇒ الخسارة بسعر الوقف والربح بسعر الهدف (USDJPY 1:2.0 مسافةً = 1:1.96 مالاً) — `moneyRewardRisk` */
+  const planRR = plan?.ok ? moneyRewardRisk(plan.rr, rate, targetRate ?? rate) : null;
+  const lowWarn = plan?.ok ? lowRewardWarning(planRR, netAfterCosts) : null;
 
   /**
    * **لا تسجيل بوقفين مختلفين.** مع `slMismatch` يُحسب اللوت من النقاط المكتوبة يدوياً بينما يُحفظ
@@ -1105,7 +1108,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
           lots,
           risk: result ? result.actualRisk : null,
           ccy: moneyCcy,
-          rr: formatRR(plan.rr),
+          rr: formatRR(planRR),
           spreadPips: parseSpreadPips(spread),
           commissionPerLot: parseCommission(commission, moneyCcy),
           netRR: netAfterCosts ? formatRR(netAfterCosts.rr) : null,
@@ -1606,7 +1609,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
         {plan?.ok ? (
           <>
             <Text style={[styles.resultMeta, { textAlign: align }]}>
-              {t.planRewardWord} {formatPips(plan.rewardPips) ?? '—'} pip · R:R {formatRR(plan.rr)}
+              {t.planRewardWord} {formatPips(plan.rewardPips) ?? '—'} pip · R:R {formatRR(planRR)}
               {potentialProfit != null ? ` · ${t.riskCalcPotentialProfit} ≈ ${money(potentialProfit)}` : ''}
             </Text>
             {netAfterCosts ? (
