@@ -13834,7 +13834,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
     overflow: 'hidden',
-    backgroundColor: colors.bgPanel,
+    // §5.5 فاصل واحد: الحدّ وحده (كان خلفية bgPanel فوق bgElevated + حدّ).
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -13848,7 +13848,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: radii.sm,
-    backgroundColor: '#0A1524',
+    // §5.5 فاصل واحد: الحدّ وحده (كانت خلفية #0A1524 ثابتة + حدّ).
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
