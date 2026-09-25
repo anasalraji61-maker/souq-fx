@@ -504,6 +504,8 @@ export type Dict = {
   calTomorrow: string;
   /** يلي تاريخ حدث التقويم **بلا ساعة معلنة** («اليوم · الساعة غير معلنة»، `CalendarPanel`، ui10). */
   calTimeTbd: string;
+  /** `/api/calendar` بـ`stale: true` (backend-r27، `86fd24c`): فشل آخر تحديث والأحداث من جلب سابق — `{time}` = `as_of` (ثوانٍ UTC) بساعة المستخدم HH:MM. الأحداث حقيقية فليس تحذير عطل */
+  calStaleAsOf: string;
   calSampleBanner: string;
   calForecast: string;
   calPrevious: string;
@@ -1777,6 +1779,7 @@ const ar: Dict = {
   calToday: 'اليوم',
   calTomorrow: 'غداً',
   calTimeTbd: 'الساعة غير معلنة',
+  calStaleAsOf: 'آخر تحديث للتقويم {time} — تعذّر جلب نسخة أحدث. المواعيد صحيحة، لكن الأرقام الفعلية لما صدر بعدها قد لا تظهر',
   calSampleBanner: '⚠ أمثلة توضيحية لا أحداث هذا الأسبوع — مواعيدها وأرقامها ليست للتداول عليها. تعذّر جلب التقويم الحي الآن',
   calForecast: 'توقّع',
   calPrevious: 'سابق',
@@ -2953,6 +2956,7 @@ const enUS: Dict = {
   calToday: 'Today',
   calTomorrow: 'Tomorrow',
   calTimeTbd: 'time not announced',
+  calStaleAsOf: 'Calendar last updated {time} — couldn’t fetch a newer copy. Times are correct, but actual figures released since may be missing',
   calSampleBanner: '⚠ Sample events, not this week’s — don’t trade on their times or figures. Live calendar unavailable right now',
   calForecast: 'Fcst',
   calPrevious: 'Prev',
@@ -4159,6 +4163,7 @@ const ku: Dict = {
   calTomorrow: 'سبەینێ',
   // بحاجة مراجعة ناطق
   calTimeTbd: 'کاتەکەی ڕانەگەیەندراوە',
+  calStaleAsOf: 'دوایین نوێکردنەوەی ڕۆژژمێر {time} — نەتوانرا وەشانێکی نوێتر بهێنرێت. کاتەکان دروستن، بەڵام لەوانەیە ژمارە ڕاستەقینەکانی دوای ئەوە دەرچوون دیار نەبن',
   calSampleBanner: '⚠ نموونەی ڕوونکردنەوەن، ڕووداوەکانی ئەم هەفتەیە نین — کات و ژمارەکانیان بۆ بازرگانی نین. ڕۆژژمێری ڕاستەوخۆ ئێستا بەردەست نییە',
   calForecast: 'پێشبینی',
   calPrevious: 'پێشوو',
