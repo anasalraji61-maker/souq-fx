@@ -596,6 +596,16 @@ export function plainStopText(v: number): string {
   return `0.${'0'.repeat(Number(m[3]) - 1)}${m[1]}${m[2] ?? ''}`;
 }
 
+/**
+ * نصّ سعرٍ **محسوب** لأداة بلا مواصفات (عملة رقمية صغيرة غير معروفة): 10 أرقام معنوية تُسقط ضجيج الفاصلة العائمة
+ * (1.2e-9 + 2×0.2e-9 = 1.6000000000000003e-9) ثم بلا صيغة أُسّية (`plainStopText`). كانت شريحة «1:2» تكتب «1.6e-9»
+ * بخانة الهدف فيرفضه `parsePriceFor` ⇒ «رقم غير صالح» ولا حفظ.
+ */
+export function computedPriceText(v: number): string {
+  if (!Number.isFinite(v)) return String(v);
+  return plainStopText(Number(v.toPrecision(10)));
+}
+
 /** حدّ طول الملاحظة بالخادم (`backend/main.py` `note: max_length=500`). */
 export const JOURNAL_NOTE_MAX = 500;
 

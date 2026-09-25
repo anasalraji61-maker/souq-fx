@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { parseDecimal } from './parseDecimal';
 import {
   analyzePlan,
+  computedPriceText,
   openQuotesRefreshDue,
   OPEN_QUOTES_REFRESH_AFTER_MS,
   openRiskTotals,
@@ -2847,3 +2848,21 @@ console.log('tradePlan levelLooksLikePips JPY/silver selftest OK');
   assert.equal(openQuotesRefreshDue(NaN, t0), false);
 }
 console.log('tradePlan openQuotesRefreshDue selftest OK');
+
+// ---- computedPriceText: شريحة R:R لأداة بلا مواصفات تُكتب سعراً يُقرأ ----
+{
+  const v = 1.2e-9 + 2 * (1.2e-9 - 1.0e-9);
+  assert.equal(String(v).includes('e'), true);
+  assert.equal(computedPriceText(v), '0.0000000016');
+  assert.equal(parseDecimal(computedPriceText(v)), 1.6e-9);
+  assert.equal(computedPriceText(1.2345 + 2 * 0.0345), '1.3035');
+  assert.equal(computedPriceText(0.1 + 0.2), '0.3');
+  assert.equal(computedPriceText(123456.789), '123456.789');
+  assert.equal(computedPriceText(8e-7), '0.0000008');
+  for (const x of [1.23e-9, 4.5678e-12, 0.00012345, 3.5, 98765.4321]) {
+    const txt = computedPriceText(x);
+    assert.ok(!/e/i.test(txt) && txt.length <= 20, txt);
+    assert.ok(Math.abs(parseDecimal(txt)! - x) <= Math.abs(x) * 1e-9, txt);
+  }
+}
+console.log('tradePlan computedPriceText selftest OK');

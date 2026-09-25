@@ -85,6 +85,7 @@ import {
   QUICK_SYMBOLS,
   plainStopText,
   openQuotesRefreshDue,
+  computedPriceText,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
@@ -563,7 +564,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       const v = targetAtRR({ symbol: sym, side, entry: e, sl: s, rr });
       // `tol`: الشريحة «مختارة» حين تطابق الخانةُ سعرَها (نصف pipette، أو مطابقة شبه تامّة بلا مواصفات)
       const tol = spec ? spec.pipSize / 20 : Math.abs(v ?? 0) * 1e-9;
-      return v != null ? [{ rr, v, tol, text: spec ? formatPrice(v, spec.symbol) : String(v) }] : [];
+      return v != null ? [{ rr, v, tol, text: spec ? formatPrice(v, spec.symbol) : computedPriceText(v) }] : [];
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, side, entry, sl, noteStop]);
@@ -1895,7 +1896,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       ) : null}
       {noteStop != null ? (
         <Text style={[styles.planLine, { textAlign: align }]}>
-          {t.journalInitialStopNote.replace('{stop}', String(noteStop))}
+          {t.journalInitialStopNote.replace('{stop}', plainStopText(noteStop))}
         </Text>
       ) : null}
       <Pressable
