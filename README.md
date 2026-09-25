@@ -33,10 +33,12 @@ python run_api.py
 بهذا المنفذ، فاستعمل `run_api.py`.
 
 مفاتيح المزوّدين (Twelve Data، OpenRouter، ElevenLabs) تُقرأ من متغيّرات البيئة بأسماء
-`.env.example` بجذر المستودع (لا تُرفع `.env` أبداً). بدون مفتاح Twelve Data تُعرض شموع تجريبية،
-ويُعلَّم مصدرها بالواجهة على أنه «تجريبي» (`dsKindDemo`) — ما عدا DXY: المزوّد لا يقدّمه أصلاً، فالخادم يرسل له
-`candles: []` (`backend/main.py`، `not_offered_by_provider`) والتطبيق يعرض مكان الشارت «DXY غير متاح من مزوّد البيانات»
-حتى بلا خادم. (مخطَّط، صفّ backend-r22 بـ`docs/COORDINATION.md`: الشيء نفسه لكل رمز يتعذّر جلبه بدل البذرة.)
+`.env.example` بجذر المستودع (لا تُرفع `.env` أبداً). بدون مفتاح Twelve Data (أو حين يتعذّر المزوّد) **لا يرسل
+الخادم شموعاً**: `candles: []` و`last` null مع `unavailable_reason: provider_unavailable` (`backend/main.py` `build_series`،
+`8ff0a7c`)، والتطبيق يعرض مكان الشارت «تعذّر جلب شموع {الرمز} من مزوّد البيانات الآن». DXY لا يقدّمه المزوّد أصلاً
+(`not_offered_by_provider`) ⇒ «DXY غير متاح من مزوّد البيانات» حتى بلا خادم. فلتجربة الشارت محلياً تحتاج مفتاحاً.
+**استثناء باقٍ**: إن لم يصل التطبيقُ الخادمَ أصلاً يرسم شموعاً تجريبية موسومة «تجريبي» (`dsKindDemo`، `mobile/src/mock.ts`) —
+صفّ launch121 بـ`docs/COORDINATION.md` لإزالتها.
 
 ### 2) التطبيق
 ```bash
