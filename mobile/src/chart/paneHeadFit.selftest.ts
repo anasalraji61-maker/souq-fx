@@ -12,7 +12,8 @@ function ok(name: string, cond: boolean) {
 ok('DI قصيران', paneInlineFits('25.1', '20.8'));
 ok('Stoch عددان', paneInlineFits('82.4', '71.0'));
 ok('KST بعلامة', paneInlineFits('-12.3', '-8.40'));
-ok('أحد عشر محرفاً يتّسع', paneInlineFits('12345', '123456'));
+ok('عشرة محارف تتّسع', paneInlineFits('12345', '12345'));
+ok('أحد عشر محرفاً لا يتّسع بـ9px', !paneInlineFits('12345', '123456'));
 ok('MACD دقيق لا يتّسع', !paneInlineFits('0.00041', '0.00037'));
 ok('اثنا عشر محرفاً لا يتّسع', !paneInlineFits('123456', '123456'));
 ok('فارغ ⇒ لا', !paneInlineFits('', '1'));

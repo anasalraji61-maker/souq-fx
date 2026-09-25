@@ -961,7 +961,7 @@ interface PaneSignalSpec {
   color: string;
 }
 /** أقلّ ارتفاع لوحة يتّسع فيه رأسها لثلاثة أسطر (الاسم، الخطّ، الإشارة) بلا قصّ. */
-const PANE_SIGNAL_MIN_H = 42;
+const PANE_SIGNAL_MIN_H = 46;
 
 function PaneSignalValue({ text, color }: { text: string; color: string }) {
   return (
@@ -13656,12 +13656,22 @@ const styles = StyleSheet.create({
   },
   // سطر واحد (يُصغَّر حتى 75% ثم «…»): «Fractal Chaos Osc» كان يلتفّ لثلاثة أسطر فيدفع الرقم تحت قاع
   // لوحة بـ34px (`overflow: hidden`) — الاسم يُقرأ والرقم يختفي.
-  paneHeadName: { color: colors.textDim, fontSize: 9, fontWeight: '500', textAlign: 'center' },
-  paneHeadValue: { ...numeric, color: colors.textMuted, fontSize: 9, fontWeight: '600', textAlign: 'center', marginTop: 1 },
-  // رقم طويل (مقياس دقيق كـMACD على زوج عملات) — 8 محارف لا تتّسع بـ36px عند حجم 9.
-  paneHeadValueLong: { fontSize: 8 },
+  // DESIGN-PRO §2 — 11px (كانا 9، أصغر من علامات المحور بجانبهما). سطر 13 ⇒ سطران = 32px ≤ `MIN_PANE_H` 34،
+  // وثلاثة = 46 (`PANE_SIGNAL_MIN_H`).
+  paneHeadName: { color: colors.textDim, fontSize: 11, lineHeight: 13, fontWeight: '500', textAlign: 'center' },
+  paneHeadValue: {
+    ...numeric,
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 1,
+  },
+  // رقم طويل (مقياس دقيق كـMACD على زوج عملات): 7–9 محارف بـ10px ≈ 6px للمحرف ⇒ ≤ 54 من 62.
+  paneHeadValueLong: { fontSize: 10 },
   paneHeadRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 1 },
-  paneHeadInline: { ...numeric, color: colors.textMuted, fontSize: 8, fontWeight: '600', marginHorizontal: 2.5 },
+  paneHeadInline: { ...numeric, color: colors.textMuted, fontSize: 9, lineHeight: 12, fontWeight: '600', marginHorizontal: 2.5 },
   // خطّ عتبة داخل لوحة محصورة المدى. الرقم عند أقصى اليسار — أبعد موضع عن اسم اللوحة
   // (اللوحة row-reverse فاسمها يميناً) وأقلّها حجباً للشموع الأخيرة التي يقرؤها المتداول.
   paneGuideLine: {
@@ -13673,7 +13683,8 @@ const styles = StyleSheet.create({
   },
   paneGuideLineMid: { opacity: 0.45 },
   paneGuideLabelBox: { position: 'absolute', left: 3 },
-  paneGuideLabel: { ...numeric, color: colors.textDim, fontSize: 8, fontWeight: '600' },
+  // 10px بسطر 10 ⇒ الإزاحة `top − 5` تبقى تُوسّط الرقم على خطّه.
+  paneGuideLabel: { ...numeric, color: colors.textDim, fontSize: 10, lineHeight: 10, fontWeight: '600' },
   // مفتاح ألوان طبقات السعر: صفّ شارات أعلى يسار لوحة السعر، فوق الشموع بلا اعتراضها.
   priceLegend: {
     position: 'absolute',
