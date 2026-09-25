@@ -12,44 +12,57 @@ function atrBox(candles: Candle[]): number {
   return Math.max(sum / (candles.length - 1), 1e-8);
 }
 
-/** Renko bricks — ATR box by default, optional fixed size, with wick extremes. */
+/**
+ * Renko bricks — ATR box by default, optional fixed size. Traditional rules like TradingView:
+ * source = close, a trend brick needs one box beyond the last brick's close, a reversal needs two
+ * (one box beyond the last brick's *open*). The old single-box reversal from high/low stacked
+ * overlapping bricks on every wick and flipped direction on noise. Wicks show the extremes price
+ * reached since the previous brick (first brick of the batch only).
+ */
 export function renko(candles: Candle[], boxSize?: number): SyntheticBar[] {
   if (candles.length < 2) return candles;
   const box = boxSize ?? atrBox(candles) * 0.55;
   const out: SyntheticBar[] = [];
-  let brickOpen = candles[0].close;
+  const base = candles[0].close;
+  // حدود آخر لبنة (فتحها وإغلاقها): قبل أوّل لبنة كلاهما الأساس ⇒ أوّل لبنة بصندوق واحد بأيّ اتجاه.
+  // الانعكاس بصندوقين تلقائياً: بعد لبنة صاعدة `bottom` = فتحها، فالهبوط يلزمه ‎close − 2·box‎.
+  let top = base;
+  let bottom = base;
   let t = candles[0].time;
+  let runHi = -Infinity;
+  let runLo = Infinity;
+  const push = (open: number, close: number, c: Candle) => {
+    const up = close > open;
+    out.push({
+      time: t,
+      open,
+      high: up ? close : Math.max(open, runHi),
+      low: up ? Math.min(open, runLo) : close,
+      close,
+      volume: c.volume,
+      srcTime: c.time,
+    });
+    runHi = -Infinity;
+    runLo = Infinity;
+    t += 60;
+  };
   for (const c of candles) {
-    // use high/low for more bricks (classic renko uses close; hybrid uses extremes)
-    let hi = c.high;
-    let lo = c.low;
-    while (hi >= brickOpen + box) {
-      const close = brickOpen + box;
-      out.push({
-        time: t,
-        open: brickOpen,
-        high: Math.max(close, c.high),
-        low: brickOpen,
-        close,
-        volume: c.volume,
-        srcTime: c.time,
-      });
-      brickOpen = close;
-      t += 60;
-    }
-    while (lo <= brickOpen - box) {
-      const close = brickOpen - box;
-      out.push({
-        time: t,
-        open: brickOpen,
-        high: brickOpen,
-        low: Math.min(close, c.low),
-        close,
-        volume: c.volume,
-        srcTime: c.time,
-      });
-      brickOpen = close;
-      t += 60;
+    runHi = Math.max(runHi, c.high);
+    runLo = Math.min(runLo, c.low);
+    const px = c.close;
+    // صعود: فوق أعلى آخر لبنة بصندوق (استمرار، أو انعكاس بصندوقين من إغلاق لبنة هابطة = قمّتها + صندوق)
+    if (px >= top + box) {
+      while (px >= top + box) {
+        push(top, top + box, c);
+        bottom = top;
+        top += box;
+      }
+    } else if (px <= bottom - box) {
+      while (px <= bottom - box) {
+        push(bottom, bottom - box, c);
+        top = bottom;
+        bottom -= box;
+      }
     }
   }
   return out.length ? out : candles;

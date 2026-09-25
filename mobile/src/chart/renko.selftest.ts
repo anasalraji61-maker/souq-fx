@@ -1,0 +1,38 @@
+/**
+ * Self-test: Renko تقليدي كـTradingView — مصدر الإغلاق، انعكاس بصندوقين، فتائل من أطراف ما بين اللبنات.
+ * Run: npx --yes tsx src/chart/renko.selftest.ts
+ */
+import assert from 'node:assert/strict';
+import type { Candle } from '../api';
+import { renko } from './renko';
+
+const bar = (i: number, close: number, high = close, low = close): Candle =>
+  ({ time: i * 60, open: close, high, low, close, volume: 1 }) as Candle;
+
+// صندوق 1، أساس 10: صعود لـ13 ⇒ 3 لبنات صاعدة 10→11→12→13
+let b = renko([bar(0, 10), bar(1, 13)], 1);
+assert.deepEqual(b.map((x) => [x.open, x.close]), [[10, 11], [11, 12], [12, 13]]);
+
+// تراجع صندوق واحد (13→12) لا يعكس؛ صندوقان (→11) يعكس: لبنة هابطة من فتح آخر صاعدة 12→11
+b = renko([bar(0, 10), bar(1, 13), bar(2, 12)], 1);
+assert.equal(b.length, 3, 'one-box pullback is not a reversal');
+b = renko([bar(0, 10), bar(1, 13), bar(2, 11)], 1);
+assert.deepEqual(b.map((x) => [x.open, x.close]), [[10, 11], [11, 12], [12, 13], [12, 11]]);
+
+// فتيل ضخم بلا إغلاق خلفه لا يصنع لبنات (كان high/low يرسم لبنة صعود وهبوط متراكبتين)
+b = renko([bar(0, 10), bar(1, 10.5, 12.5, 8.2)], 1);
+assert.equal(b.length, 2, 'fallback: no bricks ⇒ source candles');
+assert.equal(b[0].close, 10);
+
+// الفتيل: أدنى ما بلغه السعر قبل اللبنة الصاعدة يظهر ذيلاً سفلياً لأوّلها فقط
+b = renko([bar(0, 10), bar(1, 10.2, 10.4, 9.4), bar(2, 12)], 1);
+assert.deepEqual(b.map((x) => [x.open, x.close]), [[10, 11], [11, 12]]);
+assert.equal(b[0].low, 9.4);
+assert.equal(b[1].low, 11);
+assert.equal(b[1].srcTime, 120);
+
+// هبوط ثم انعكاس صعود بصندوقين من إغلاق الهابطة
+b = renko([bar(0, 10), bar(1, 8), bar(2, 9), bar(3, 10)], 1);
+assert.deepEqual(b.map((x) => [x.open, x.close]), [[10, 9], [9, 8], [9, 10]]);
+
+console.log('renko selftest PASS');
