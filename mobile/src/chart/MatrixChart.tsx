@@ -7217,12 +7217,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       right: PRICE_AXIS_WIDTH + 6,
                       top: lane.top + 4,
                       zIndex: 7,
-                      paddingHorizontal: 6,
-                      paddingVertical: 2,
+                      // §5.5/§3: خلفية شبه معتمة وحدها (تُقرأ فوق الشموع) بلا حدّ ثانٍ؛ الحشو على شبكة 4.
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
                       borderRadius: 4,
                       backgroundColor: 'rgba(7,16,24,0.78)',
-                      borderWidth: StyleSheet.hairlineWidth,
-                      borderColor: 'rgba(148,163,184,0.4)',
                     }}
                   >
                     <Text
@@ -7251,12 +7250,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               left: 6,
               top: 4,
               zIndex: 7,
-              paddingHorizontal: 6,
-              paddingVertical: 2,
+              paddingHorizontal: 8,
+              paddingVertical: 4,
               borderRadius: 4,
               backgroundColor: 'rgba(7,16,24,0.78)',
-              borderWidth: StyleSheet.hairlineWidth,
-              borderColor: colors.border,
             }}
           >
             {/* §1: لا تأكيد على الشارات — وسم محايد. */}
