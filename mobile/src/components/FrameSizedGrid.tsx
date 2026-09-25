@@ -338,7 +338,13 @@ export function FrameSizedGrid({
             accessible
             accessibilityRole="adjustable"
             accessibilityLabel={t.gridHandleA11y}
-            accessibilityValue={{ min: 1, max: displayed.length, now: index + 1 }}
+            accessibilityValue={{
+              min: 1,
+              max: displayed.length,
+              now: index + 1,
+              // بلا `text` ينطق iOS القيمة نسبةً مئوية («33 percent») — launch148.
+              text: t.gridHandlePosA11y.replace('{n}', String(index + 1)).replace('{total}', String(displayed.length)),
+            }}
             accessibilityActions={[
               ...(index > 0 ? [{ name: 'decrement' as const, label: t.wlMoveUpA11y }] : []),
               ...(index < displayed.length - 1 ? [{ name: 'increment' as const, label: t.wlMoveDownA11y }] : []),
