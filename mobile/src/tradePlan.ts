@@ -1482,6 +1482,35 @@ export function knownLots(size: number | null | undefined, note?: string | null)
   return typeof note === 'string' && /^1\.00 lot( ·|$)/.test(note) ? 1 : null;
 }
 
+/** رأس ملاحظة «سجّل الخطة» (`planJournalNote`): «0.50 lot · {كلمة المخاطرة} 100.00 USD · R:R …» — المبلغ غائب لخطةٍ بلا مخاطرة («risk USD»). */
+const PLAN_NOTE_HEAD = /^(\d+\.\d{2}) lot · ([^·]*?) (?:(\d[\d,]*(?:\.\d+)?) )?([A-Z]{3})( · R:R [\s\S]*)$/;
+
+/**
+ * ملاحظة «سجّل الخطة» بعد **تعديل الحجم** بالدفتر: اللوت بأولها يصير الحجم المكتوب، ومبلغ المخاطرة يُضرب بنسبة الحجمين
+ * (المخاطرة = لوت × قيمة النقطة × الوقف، خطّية باللوت). `null` = ليست ملاحظة خطة، أو الحجم غير صالح/مطابق للعلامة.
+ *
+ * لماذا: الخطة تُسجَّل بـ0.50 والمتداول يُصحّح الحجم إلى 0.30 كما نُفّذ — كان الصف يقول «0.3 lot … 0.50 lot · المخاطرة
+ * 100.00 USD» (والحقيقة 60)؛ ومن 0.50 إلى 1 «1.00 lot · 0.50 lot · …» (لوتان بسطر واحد)؛ ومن 1 إلى 0.5 تسقط العلامة ويبقى
+ * «المخاطرة 100.00 USD» — ضعف الحقيقة. R:R والسبريد والعمولة للوت لا تتغيّر بالحجم فتبقى كما هي.
+ */
+function planNoteWithSize(size: number | null | undefined, note: string): string | null {
+  if (typeof size !== 'number' || !Number.isFinite(size) || size <= 0) return null;
+  const m = PLAN_NOTE_HEAD.exec(note);
+  if (!m) return null;
+  const was = Number(m[1]);
+  const cents = Math.round(size * 100);
+  const lotText = Math.abs(size * 100 - cents) < 1e-6 ? (cents / 100).toFixed(2) : String(size);
+  if (!(was > 0) || lotText === m[1]) return null;
+  const ccy = m[4]!;
+  let risk = ccy;
+  if (m[3] != null) {
+    const amount = Number(m[3].replace(/,/g, ''));
+    if (!Number.isFinite(amount)) return null;
+    risk = formatMoney((amount * size) / was, ccy);
+  }
+  return `${lotText} lot · ${m[2]} ${risk}${m[5]}`;
+}
+
 /**
  * الملاحظة المحفوظة حين **كتب** المتداول الحجم 1 بيده: تُسبق بـ«1.00 lot» (العلامة التي يقرؤها `knownLots`) إن
  * لم تكن فيها. غير 1 (أو بلا حجم) ⇒ الملاحظة كما هي.
@@ -1490,6 +1519,9 @@ export function knownLots(size: number | null | undefined, note?: string | null)
  * بلا «1 lot» ولا «+250.00 USD»، ويسقط صافي EURUSD بالمال كلّه، ولا تُقترح 1.00 شريحةً، وتفتح بالتعديل بخانة حجم فارغة.
  */
 export function noteWithTypedSize(size: number | null | undefined, note: string, max: number = JOURNAL_NOTE_MAX): string {
+  // ملاحظة خطة لا تتّسع بعد الإعادة (حدّ الخادم) ⇒ كما هي: إسقاط العلامة وحدها كان يُبقي مبلغ المخاطرة القديم بلا لوته
+  const plan = planNoteWithSize(size, note);
+  if (plan != null) return plan.length <= max ? plan : note;
   // حجمٌ آخر **مكتوب** (تعديل 1 ⇒ 0.5): العلامة القديمة تسقط — كان السطر يقول «0.5 lot … 1.00 lot · x» فيناقض نفسه،
   // ولو أُعيد الحجم 1 لاحقاً لقُرئ معروفاً من علامةٍ لم تعد صحيحة. بلا حجم ⇒ كما هي (الخادم يخزّن 1، والعلامة قد تكون صادقة)
   if (typeof size === 'number' && Number.isFinite(size) && size > 0 && size !== 1) {

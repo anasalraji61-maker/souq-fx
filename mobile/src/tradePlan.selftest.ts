@@ -1534,6 +1534,49 @@ console.log('tradePlan netLineIsWhole selftest OK');
 }
 console.log('tradePlan noteWithTypedSize selftest OK');
 
+// noteWithTypedSize — ملاحظة «سجّل الخطة» تتبع الحجم المعدَّل (اللوت والمخاطرة)
+{
+  const { noteWithTypedSize, knownLots, journalNoteRoom, JOURNAL_NOTE_MAX } = require('./tradePlan') as typeof import('./tradePlan');
+  const { planJournalNote } = require('./positionSize') as typeof import('./positionSize');
+  const n05 = planJournalNote({ lots: 0.5, risk: 100, ccy: 'USD', rr: '1:2', spreadPips: 1.2, commissionPerLot: 7, netRR: '1:1.8' });
+  assert.equal(n05, '0.50 lot · risk 100.00 USD · R:R 1:2 · spread 1.2 pip · commission 7.00 USD/lot · net R:R 1:1.8');
+  // 0.5 ⇒ 0.3: كان «0.50 lot · risk 100.00 USD» بجانب 0.3 (الحقيقة 60)
+  assert.equal(noteWithTypedSize(0.3, n05), '0.30 lot · risk 60.00 USD · R:R 1:2 · spread 1.2 pip · commission 7.00 USD/lot · net R:R 1:1.8');
+  // 0.5 ⇒ 1: كان «1.00 lot · 0.50 lot · …» — لوتان بسطر واحد
+  const to1 = noteWithTypedSize(1, n05);
+  assert.equal(to1, '1.00 lot · risk 200.00 USD · R:R 1:2 · spread 1.2 pip · commission 7.00 USD/lot · net R:R 1:1.8');
+  assert.equal(knownLots(1, to1), 1);
+  // 1 ⇒ 0.5: كانت العلامة تسقط ويبقى «risk 100.00 USD» — ضعف الحقيقة
+  const n1 = planJournalNote({ lots: 1, risk: 100, ccy: 'USD', rr: '1:2' });
+  assert.equal(noteWithTypedSize(0.5, n1), '0.50 lot · risk 50.00 USD · R:R 1:2');
+  // الحجم نفسه ⇒ كما هي (0.5 = «0.50»)
+  assert.equal(noteWithTypedSize(0.5, n05), n05);
+  assert.equal(noteWithTypedSize(1, n1), n1);
+  // كلمة المخاطرة بلغة الواجهة، والين بلا كسور، والآلاف بفاصلة
+  const ar = planJournalNote({ lots: 2, risk: 15000, ccy: 'JPY', rr: '1:1.5', words: { risk: 'المخاطرة' } });
+  assert.equal(noteWithTypedSize(3, ar), '3.00 lot · المخاطرة 22,500 JPY · R:R 1:1.5');
+  const ku = planJournalNote({ lots: 0.1, risk: 1234.5, ccy: 'EUR', rr: '1:3', words: { risk: 'مەترسی' } });
+  assert.equal(noteWithTypedSize(1.5, ku), '1.50 lot · مەترسی 18,517.50 EUR · R:R 1:3');
+  // خطة بلا مبلغ («risk USD»): اللوت وحده يتغيّر
+  assert.equal(noteWithTypedSize(0.2, planJournalNote({ lots: 0.1, risk: null, ccy: 'USD', rr: '1:2' })), '0.20 lot · risk USD · R:R 1:2');
+  // حجمٌ بأكثر من منزلتين يُكتب كما هو
+  assert.equal(noteWithTypedSize(0.125, n1), '0.125 lot · risk 12.50 USD · R:R 1:2');
+  // ليست ملاحظة خطة ⇒ السلوك السابق حرفياً
+  assert.equal(noteWithTypedSize(0.5, '1.00 lot · x'), 'x');
+  assert.equal(noteWithTypedSize(0.5, '0.50 lot · x'), '0.50 lot · x');
+  assert.equal(noteWithTypedSize(0.3, 'my 0.50 lot · risk 100.00 USD · R:R 1:2'), 'my 0.50 lot · risk 100.00 USD · R:R 1:2');
+  // بلا حجم ⇒ كما هي
+  assert.equal(noteWithTypedSize(null, n05), n05);
+  // حدّ الخادم: الإعادة تُطيل الملاحظة (0.50 ⇒ 10.00، 100 ⇒ 2,000) — فوق الحدّ ⇒ كما كانت
+  const long = `${n1} · ${'a'.repeat(JOURNAL_NOTE_MAX - n1.length - 3)}`;
+  assert.equal(long.length, JOURNAL_NOTE_MAX);
+  assert.equal(noteWithTypedSize(20, long), long);
+  assert.ok(noteWithTypedSize(0.5, long).startsWith('0.50 lot · risk 50.00 USD'));
+  // العدّاد يطابق ما يُحفظ
+  assert.equal(journalNoteRoom({ symbol: 'EURUSD', note: n1, size: 20 }), JOURNAL_NOTE_MAX - 3);
+}
+console.log('tradePlan plan note follows edited size selftest OK');
+
 // journalPipSize — صفقات حساب السنت (Exness «EURUSDc» تُحفظ «EURUSDC») بنقاطها لا بمالها
 {
   assert.equal(journalPipSize('EURUSDC'), 0.0001);
