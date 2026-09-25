@@ -2416,3 +2416,27 @@ console.log('positionSize per-lot micro pip value selftest OK');
   assert.equal(pipsOnlyExitQuoteToAccount(null, 'USD', 150, NaN, live), null);
 }
 console.log('positionSize pipsOnlyExitQuoteToAccount selftest OK');
+
+{
+  // الفضة بالبيزو/الراند قرب الألف: «1.050» = 1,050 لا 1.05 (وقف «1.030» كان 2 pip ⇒ لوت ×1000)
+  assert.deepEqual(ambiguousThousandsPrice('1.050', 'XAGMXN'), { value: '1.050', whole: '1050', small: '1.05' });
+  assert.equal(parsePriceFor('1.050', 'XAGMXN'), null);
+  assert.equal(parsePriceFor('1.030', 'XAGZAR'), null);
+  assert.equal(parsePriceFor('1.030', 'XAGZAR.m'), null);
+  assert.equal(parsePriceFor('4.120', 'XAGSEK'), null);
+  assert.equal(parsePriceFor('2.500', 'XAGCNH'), null);
+  // أسعار حقيقية بثلاث منازل تبقى مقبولة
+  assert.equal(parsePriceFor('950.250', 'XAGMXN'), 950.25);
+  assert.equal(parsePriceFor('98.500', 'XAGZAR'), 98.5);
+  assert.equal(parsePriceFor('1050', 'XAGMXN'), 1050);
+  assert.equal(parsePriceFor('1,050.125', 'XAGMXN'), 1050.125);
+  assert.equal(parsePriceFor('1.05', 'XAGMXN'), 1.05); // منزلتان — ليس نمط الآلاف
+  // الفضة بالدولار/اليورو/الإسترليني/الأسترالي بلا تغيير (فوق العشرة ودون الألف)
+  assert.equal(parsePriceFor('31.450', 'XAGUSD'), 31.45);
+  assert.equal(parsePriceFor('9.450', 'XAGUSD'), 9.45);
+  assert.equal(parsePriceFor('5.450', 'XAGEUR'), 5.45);
+  assert.equal(parsePriceFor('5.450', 'XAGAUD'), 5.45);
+  // الين/الليرة كما كانا (كل «NNN.NNN» مبهم)
+  assert.equal(parsePriceFor('950.250', 'XAGJPY'), null);
+}
+console.log('positionSize silver MXN/ZAR thousands selftest OK');

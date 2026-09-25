@@ -236,6 +236,9 @@ export function parsePriceFor(raw: string, symbol: string | null | undefined): n
  * (بظنّه)، ومثالها «1.0850» يشبه ما كتبه تماماً. `null` = ليس مبهماً (مقبول، أو مرفوض لسبب آخر).
  * `value` كما كُتب (مقصوص الأطراف)، `whole` بلا النقطة، `small` كسراً بلا أصفار زائدة — أرقام لاتينية دائماً.
  */
+/** عملات تسعيرٍ الدولارُ فيها ≥ 3.5 وحداتٍ — الفضة بها فوق العشرة دائماً (`ambiguousThousandsPrice`). */
+const SILVER_ABOVE_TEN_QUOTES = new Set(['SEK', 'NOK', 'DKK', 'PLN', 'ZAR', 'MXN', 'HKD', 'CNH', 'ILS', 'SAR', 'AED']);
+
 export function ambiguousThousandsPrice(
   raw: string,
   symbol: string | null | undefined,
@@ -247,9 +250,16 @@ export function ambiguousThousandsPrice(
   // الفضة بالين (≈4,500–6,000) والليرة (≈1,300+) بثلاث منازل **وفوق الألف**: «5.123» = 5,123 ين لا 5.123 — كانت
   // تُقرأ 5.123 ⇒ وقف 10 pip بدل 10,000 ⇒ 30 لوتاً بدل 0.03 وخسارة ≈100,000$ بحساب 10,000 «يخاطر بـ100»
   const silverOverThousand = spec.base === 'XAG' && (spec.quote === 'JPY' || spec.quote === 'TRY');
-  if (decimals >= 3 && !silverOverThousand) return null;
+  /**
+   * والفضة بعملةٍ الدولار فيها ≥ 3.5 (البيزو ≈18، الراند ≈17، الكرونة، اليوان، الشيكل، الريال…): سعرها الحقيقي
+   * لا يكون **دون العشرة** أبداً (فضة دون 3$)، أما فوق الألف فقريب — XAGMXN/XAGZAR ≈ 900–1,100 عند فضة 50–60$. «1.050»
+   * (= 1,050 بالكتابة الأوروبية) كانت تُقرأ 1.05 ⇒ وقف «1.030» = 2 pip ⇒ لوت أكبر بألف مرّة. رقمٌ واحد قبل النقطة فقط:
+   * «950.250» سعرٌ حقيقي بثلاث منازل يبقى مقبولاً.
+   */
+  const silverOverTen = spec.base === 'XAG' && SILVER_ABOVE_TEN_QUOTES.has(spec.quote);
+  if (decimals >= 3 && !silverOverThousand && !silverOverTen) return null;
   const s = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009٬']/g, '').replace(/[٫．]/g, '.');
-  if (!/^[1-9]\d{0,2}\.\d{3}$/.test(s)) return null;
+  if (!(silverOverTen && !silverOverThousand ? /^[1-9]\.\d{3}$/ : /^[1-9]\d{0,2}\.\d{3}$/).test(s)) return null;
   return { value: raw.trim(), whole: s.replace('.', ''), small: String(Number(s)) };
 }
 
