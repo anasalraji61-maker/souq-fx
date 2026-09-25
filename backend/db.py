@@ -172,6 +172,7 @@ def init_db() -> None:
         _migrate_push_lang(c)
         _migrate_group_user(c)
         _migrate_vote_user(c)
+        _migrate_created_at(c)
         _migrate_content_reports(c)
         _migrate_owner_key(c)
 
@@ -226,6 +227,17 @@ def _migrate_group_user(c: sqlite3.Connection) -> None:
     cols = {r[1] for r in c.execute("PRAGMA table_info(group_messages)").fetchall()}
     if "user_id" not in cols:
         c.execute("ALTER TABLE group_messages ADD COLUMN user_id INTEGER")
+
+
+def _migrate_created_at(c: sqlite3.Connection) -> None:
+    """`created_at` = ثوانٍ UTC للحظة النشر (رسائل المجموعة وأفكار التصويت). `ts` نصّ «HH:MM» بساعة
+    الخادم المحلية (برلين) بلا تاريخ ولا منطقة: متداول ببغداد يراه متأخّراً ساعة (ساعتين شتاءً)، ورسالة
+    الأمس 22:00 تبدو من اليوم، وفكرة صفقة «09:10» لا تُربط بسعر لحظتها. الصفوف القديمة `created_at`
+    NULL (لا تاريخ معروف لها — لا يُخترع)."""
+    for table in ("group_messages", "votes"):
+        cols = {r[1] for r in c.execute(f"PRAGMA table_info({table})").fetchall()}
+        if "created_at" not in cols:
+            c.execute(f"ALTER TABLE {table} ADD COLUMN created_at REAL")
 
 
 def _migrate_vote_user(c: sqlite3.Connection) -> None:
@@ -1202,7 +1214,7 @@ def _hidden_ids(c: sqlite3.Connection, kind: str, viewer_id: int | None) -> set[
 def group_messages(viewer_id: int | None = None, limit: int = 200) -> list[dict]:
     with _conn() as c:
         rows = c.execute(
-            "SELECT id,user_name,text,ts,user_id FROM group_messages ORDER BY rowid DESC LIMIT ?",
+            "SELECT id,user_name,text,ts,created_at,user_id FROM group_messages ORDER BY rowid DESC LIMIT ?",
             (limit,),
         ).fetchall()
         hidden = _hidden_ids(c, "group_message", viewer_id)
@@ -1213,6 +1225,7 @@ def group_messages(viewer_id: int | None = None, limit: int = 200) -> list[dict]
             "user": None if r["user_name"] in ("", _LEGACY_CHAT_USER) else r["user_name"],
             "text": r["text"],
             "ts": r["ts"],
+            "created_at": r["created_at"],
             "room": "group",
             "mine": viewer_id is not None and r["user_id"] == viewer_id,
         }
@@ -1223,8 +1236,8 @@ def group_messages(viewer_id: int | None = None, limit: int = 200) -> list[dict]
 def add_group_message(item: dict, user_id: int | None = None) -> dict:
     with _conn() as c:
         c.execute(
-            "INSERT INTO group_messages(id,user_name,text,ts,user_id) VALUES(?,?,?,?,?)",
-            (item["id"], item["user"], item["text"], item["ts"], user_id),
+            "INSERT INTO group_messages(id,user_name,text,ts,created_at,user_id) VALUES(?,?,?,?,?,?)",
+            (item["id"], item["user"], item["text"], item["ts"], item.get("created_at"), user_id),
         )
     return item
 
@@ -1287,6 +1300,7 @@ def _vote_row(r, my_choice: str | None = None, viewer_id: int | None = None) -> 
         "disagree": r["disagree"],
         "author": _vote_author(r["author"]),
         "ts": r["ts"],
+        "created_at": r["created_at"],
         # صوت المستدعي على هذه الفكرة ('agree' | 'disagree') أو None (لم يصوّت / مجهول)
         "my_choice": my_choice,
         # فكرة المستدعي نفسه (ui2) — كرسائل المجموعة؛ المجهول لا يملك شيئاً
@@ -1313,8 +1327,8 @@ def list_votes(user_id: int | None = None) -> list[dict]:
 def create_vote(item: dict, user_id: int | None = None) -> dict:
     with _conn() as c:
         c.execute(
-            """INSERT INTO votes(id,symbol,direction,entry,sl,tp,note,agree,disagree,author,ts,user_id)
-               VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
+            """INSERT INTO votes(id,symbol,direction,entry,sl,tp,note,agree,disagree,author,ts,created_at,user_id)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 item["id"],
                 item["symbol"],
@@ -1327,6 +1341,7 @@ def create_vote(item: dict, user_id: int | None = None) -> dict:
                 item["disagree"],
                 item["author"],
                 item["ts"],
+                item.get("created_at"),
                 user_id,
             ),
         )

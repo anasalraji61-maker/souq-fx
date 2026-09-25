@@ -1466,7 +1466,9 @@ def post_group(msg: ChatMessage, user: dict | None = Depends(_auth_user)):
         "id": _new_id("g"),
         "user": user["username"],
         "text": text,
+        # `ts` نصّ «HH:MM» بساعة الخادم المحلية — يبقى للعميل الحالي؛ `created_at` ثوانٍ UTC ليعرضها بتوقيت المتداول
         "ts": datetime.now().strftime("%H:%M"),
+        "created_at": time.time(),
         "room": "group",
     }
     db.add_group_message(item, user["user_id"])
@@ -1524,6 +1526,7 @@ def create_vote(body: VoteCreate, user: dict | None = Depends(_auth_user)):
         # إنجليزية). الآن اسم المستخدم للمسجّل، ولا مؤلّف للمجهول (الواجهة تُخفي السطر).
         "author": user["username"] if user else None,
         "ts": datetime.now().strftime("%H:%M"),
+        "created_at": time.time(),  # ثوانٍ UTC — كرسائل المجموعة
     }
     db.create_vote(item, user["user_id"])
     item["my_choice"] = None

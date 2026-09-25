@@ -73,3 +73,21 @@ def test_legacy_ideas_are_backfilled_from_the_author_name(client):
             )
     db.init_db()
     assert _mine(client, ali) == {"v_old": True, "v_legacy": False, "v_anon": False}
+
+
+def test_ideas_and_chat_carry_a_utc_timestamp(client):
+    """`ts` «HH:MM» بساعة الخادم (برلين) بلا تاريخ: بغداد تراه متأخّراً ساعة، ورسالة الأمس تبدو من اليوم.
+    `created_at` ثوانٍ UTC يحملها الردّ والقائمة؛ الصفوف القديمة None لا وقت مخترَع."""
+    import time as _t
+    ali = _register(client, "ali")
+    before = _t.time()
+    v = client.post("/api/votes", json=BODY, headers=ali).json()["vote"]
+    m = client.post("/api/chat/group", json={"text": "hi"}, headers=ali).json()["message"]
+    after = _t.time()
+    assert before <= v["created_at"] <= after and before <= m["created_at"] <= after
+    assert client.get("/api/votes").json()["votes"][0]["created_at"] == v["created_at"]
+    assert client.get("/api/chat/group").json()["messages"][-1]["created_at"] == m["created_at"]
+    with sqlite3.connect(db.DB_PATH) as c:
+        c.execute("INSERT INTO votes(id,symbol,direction,agree,disagree,ts) VALUES('old','EURUSD','buy',0,0,'09:10')")
+    old = [x for x in client.get("/api/votes").json()["votes"] if x["id"] == "old"][0]
+    assert old["created_at"] is None and old["ts"] == "09:10"
