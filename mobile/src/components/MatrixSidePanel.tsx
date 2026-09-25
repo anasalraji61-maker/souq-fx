@@ -36,7 +36,9 @@ type Props = {
   onClose: () => void;
   symbol: string;
   timeframe: Timeframe;
+  /** @deprecated لم يعد مستخدَماً (لوح العمق يجلب اقتباسه) — يبقى حتى يكفّ المستدعي عن تمريره. */
   lastPrice?: number;
+  /** @deprecated كذلك. */
   candles?: Candle[];
   onPickDraw: (tool: DrawTool) => void;
   onToggleIndicator: (id: IndicatorId) => void;
@@ -50,8 +52,6 @@ export function MatrixSidePanel({
   onClose,
   symbol,
   timeframe,
-  lastPrice = 0,
-  candles = [],
   onPickDraw,
   onToggleIndicator,
   onPickKind,
@@ -198,7 +198,7 @@ export function MatrixSidePanel({
             ) : null}
             {panel === 'news' ? <NewsPanel /> : null}
             {panel === 'dom' ? (
-              <DomLitePanel last={lastPrice} candles={candles} symbol={symbol} />
+              <DomLitePanel symbol={symbol} />
             ) : null}
             {panel === 'journal' ? <TradeJournalPanel defaultSymbol={symbol} /> : null}
           </ScrollView>

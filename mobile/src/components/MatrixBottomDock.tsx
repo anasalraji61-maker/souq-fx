@@ -47,7 +47,9 @@ type Props = {
   onTab: (tab: DockTabId) => void;
   symbol: string;
   timeframe: Timeframe;
-  lastPrice: number;
+  /** @deprecated لم يعد مستخدَماً (لوح العمق يجلب اقتباسه) — يبقى حتى يكفّ المستدعي عن تمريره. */
+  lastPrice?: number;
+  /** @deprecated كذلك. */
   candles?: Candle[];
   /** فتح لوحة جانبية إضافية إن لزم */
   onOpenEdge?: (panel: EdgePanelId) => void;
@@ -63,8 +65,6 @@ export function MatrixBottomDock({
   onTab,
   symbol,
   timeframe,
-  lastPrice,
-  candles = [],
   activeTool = 'none',
   onTool,
   activeLens = 'clean',
@@ -220,7 +220,7 @@ export function MatrixBottomDock({
               </View>
             ) : null}
             {tab === 'dom' ? (
-              <DomLitePanel last={lastPrice} candles={candles} symbol={symbol} />
+              <DomLitePanel symbol={symbol} />
             ) : null}
             {tab === 'reports' ? <WeeklyReportPanel /> : null}
           </ScrollView>

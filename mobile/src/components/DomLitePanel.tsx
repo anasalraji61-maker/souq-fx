@@ -3,14 +3,11 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors, radii, spacing } from '../theme';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
-import { instrumentSpec } from '../positionSize';
-import { api, type Candle } from '../api';
+import { quoteSpreadPips } from '../positionSize';
+import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
-  last: number;
-  /** لم يعد مستخدَماً (كان يغذّي «عمق» مختلَق من بصمة الشموع) — يبقى توافقاً مع المستدعين. */
-  candles?: Candle[];
   symbol?: string;
 };
 
@@ -25,7 +22,7 @@ const REFRESH_MS = 15_000;
  * حقيقية. الفوركس سوق لا مركزي (OTC): لا عمق موحَّد يمكن عرضه، والمفيد فعلاً للمتداول الفردي هو
  * السعر الحي والسبريد بالـpip. لا أرقام إن لم يكن الاقتباس حقيقياً (`isRealQuote`).
  */
-export function DomLitePanel({ last, symbol = 'EURUSD' }: Props) {
+export function DomLitePanel({ symbol = 'EURUSD' }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [quote, setQuote] = useState<Quote | null>(null);
@@ -64,15 +61,12 @@ export function DomLitePanel({ last, symbol = 'EURUSD' }: Props) {
 
   const hasBook =
     quote != null && quote.bid != null && quote.ask != null && quote.ask >= quote.bid && quote.bid > 0;
-  const spec = instrumentSpec(symbol);
   let spreadText: string | null = null;
   if (hasBook) {
-    const diff = quote!.ask! - quote!.bid!;
-    spreadText = spec
-      ? `${(Math.round((diff / spec.pipSize) * 10) / 10).toFixed(1)} pip`
-      : formatPrice(diff, symbol);
+    // الحساب نفسه برأس الطرفية (`quoteSpreadPips`) — كان منسوخاً هنا فيتباعد التقريب بين اللوحين.
+    const pips = quoteSpreadPips(symbol, quote!.bid, quote!.ask);
+    spreadText = pips != null ? `${pips.toFixed(1)} pip` : formatPrice(quote!.ask! - quote!.bid!, symbol);
   }
-  void last;
 
   return (
     <View style={styles.wrap}>
