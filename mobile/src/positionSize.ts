@@ -1516,6 +1516,26 @@ export function spreadTooWide(raw: string, spec?: InstrumentSpec | null): number
   return v != null && (v > maxSpreadPipsFor(spec) || (v > 0 && spreadPipsLookLikePrice(raw, v))) ? v : null;
 }
 
+/** أدنى سعر يُقارن به السبريد — تحته (EURUSD 1.08) سبريد «1.1» حقيقي شائع، فالتطابق مع السعر صدفة لا خطأ. */
+const SPREAD_MAYBE_PRICE_MIN_REF = 5;
+/** التطابق: ضمن 5% من سعر الزوج — سعرٌ منسوخ من المنصّة لا يبعد عن الدخول/الوقف المكتوب أكثر من ذلك. */
+const SPREAD_MAYBE_PRICE_TOL = 0.05;
+
+/**
+ * **سبريدٌ مقبول لكنه يطابق سعر الزوج** (launch146/tools93): «8.45» على ZARJPY، «18.25» على USDZAR، «150.12» على USDJPY — منزلتان
+ * لا تلتقطهما `spreadPipsLookLikePrice` (متوسّطات الوسطاء بمنزلتين) وتحت حدّ الأداة ⇒ تُقبل سبريداً. **تحذير لا رفض**: سبريد
+ * USDMXN 30–50 pip بمنزلتين حقيقي، والرفض يمنع حساباً صحيحاً. `true` حين: السبريد مفهوم ومقبول (`parseSpreadPips`)، كسريّ
+ * (العدد الصحيح «18» سبريد USDZAR عادي)، وسعر مرجعي ≥ 5 (الدخول، ثم الوقف، ثم الهدف المكتوب) يبعد عنه ≤ 5%. بلا سعر ⇒ false.
+ */
+export function spreadMaybePrice(raw: string, spec: InstrumentSpec | null | undefined, refPrices: readonly number[]): boolean {
+  if (!spec) return false;
+  const v = parseSpreadPips(raw, spec);
+  if (v == null || !(v > 0) || Number.isInteger(v)) return false;
+  const ref = refPrices.find((p) => Number.isFinite(p) && p > 0);
+  if (ref == null || ref < SPREAD_MAYBE_PRICE_MIN_REF) return false;
+  return Math.abs(v - ref) <= ref * SPREAD_MAYBE_PRICE_TOL;
+}
+
 /**
  * **الوقف ليس أبعد من السبريد** (`slPips ≤ spreadPips`، كلاهما موجب). الشراء يُفتح على Ask ووقفه يُضرب على Bid:
  * وقف 1 pip بسبريد 1.5 تحت Bid لحظة الفتح — يُضرب فوراً، والحاسبة كانت تعطيه لوتاً كبيراً (1% على 1 pip = 10 لوت

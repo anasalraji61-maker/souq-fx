@@ -94,6 +94,7 @@ import {
   maxSpreadPipsFor,
   type InstrumentSpec,
   spreadTooWide,
+  spreadMaybePrice,
   stopInsideSpread,
   stopInsideTypicalSpread,
   misplacedArabicThousandsSignInRisk,
@@ -3543,3 +3544,35 @@ console.log('positionSize EM-JPY cross stop price in pips field selftest OK');
   assert.equal(parsePriceFor('4,20,000', 'US30'), null);
 }
 console.log('positionSize index comma thousands selftest OK');
+
+// launch146/tools93: سعرٌ بمنزلتين بخانة السبريد يطابق سعر الزوج ⇒ تحذير (لا رفض — السبريد يبقى مقبولاً والحساب كما هو)
+{
+  const zj = instrumentSpec('ZARJPY')!;
+  const zar = instrumentSpec('USDZAR')!;
+  const mxn = instrumentSpec('USDMXN')!;
+  const try_ = instrumentSpec('USDTRY')!;
+  const uj = instrumentSpec('USDJPY')!;
+  assert.equal(spreadMaybePrice('8.45', zj, [8.47, 8.3]), true);
+  assert.equal(spreadMaybePrice('٨٫٤٥', zj, [8.47]), true);
+  assert.equal(spreadMaybePrice('18.25', zar, [18.3]), true);
+  assert.equal(spreadMaybePrice('17.12', mxn, [NaN, 17.2]), true); // بلا دخول ⇒ الوقف مرجعاً
+  assert.equal(spreadMaybePrice('41.20', try_, [41.35]), true);
+  assert.equal(spreadMaybePrice('150.12', uj, [150.06]), true);
+  // يبقى مقبولاً: التحذير لا يغيّر القراءة
+  assert.equal(parseSpreadPips('8.45', zj), 8.45);
+  assert.equal(parseSpreadPips('18.25', zar), 18.25);
+  // لا تحذير: سبريد حقيقي بعيد عن السعر، عدد صحيح، بلا سعر مرجعي، أو زوج سعره تحت 5 (EURUSD 1.08 وسبريد «1.1» شائع)
+  assert.equal(spreadMaybePrice('35.50', mxn, [17.2]), false);
+  assert.equal(spreadMaybePrice('18', zar, [18.3]), false);
+  assert.equal(spreadMaybePrice('18.25', zar, []), false);
+  assert.equal(spreadMaybePrice('18.25', zar, [NaN]), false);
+  assert.equal(spreadMaybePrice('1.08', instrumentSpec('EURUSD')!, [1.0851]), false);
+  assert.equal(spreadMaybePrice('', zar, [18.3]), false);
+  assert.equal(spreadMaybePrice('8.45', null, [8.47]), false);
+  // الحدّ 5%: 17.4 على 18.3 (4.9%) تحذير، 17.3 (5.5%) لا
+  assert.equal(spreadMaybePrice('17.4', zar, [18.3]), true);
+  assert.equal(spreadMaybePrice('17.3', zar, [18.3]), false);
+  // ما ترفضه الخانة أصلاً (سعر بمنازله «1.08512»، فوق الحدّ) له رسالته — لا تحذير فوقها
+  assert.equal(spreadMaybePrice('1.08512', instrumentSpec('EURUSD')!, [1.0851]), false);
+}
+console.log('positionSize spread-maybe-price warning selftest OK');
