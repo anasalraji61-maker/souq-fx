@@ -9392,7 +9392,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             hitSlop={8}
             accessibilityLabel={priceManual ? tr.mcAutoManualA11y : tr.mcAutoA11y}
           >
-            <Text style={[styles.axisCornerText, priceManual && styles.axisCornerTextManual]}>AUTO</Text>
+            {/* «AUTO» بالإنجليزية فقط؛ «تلقائي»/«خۆکار» بخطّ 8 تُقرأ نقاطاً على الهاتف ⇒ 10 للعربية والكردية. */}
+            <Text
+              style={[
+                styles.axisCornerText,
+                (lang === 'ar' || lang === 'ku') && styles.axisCornerTextScript,
+                priceManual && styles.axisCornerTextManual,
+              ]}
+              numberOfLines={1}
+            >
+              {tr.mcAutoShort}
+            </Text>
           </Pressable>
         ) : null}
 
@@ -12991,6 +13001,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   axisCornerText: { color: colors.accent, fontSize: 8, fontWeight: '900' },
+  axisCornerTextScript: { fontSize: 10, fontWeight: '800' },
   axisCornerManual: { backgroundColor: colors.accent, borderColor: colors.accent },
   axisCornerTextManual: { color: '#041514' },
   toLatestBtn: {
