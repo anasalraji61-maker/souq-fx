@@ -136,25 +136,33 @@ export async function getNotificationPermissionState(): Promise<NotificationPerm
  * الدخول/إنشاء الحساب) يسجّل التوكن إن كان الإذن ممنوحاً من قبل، وإلا لا يفعل شيئاً.
  */
 export async function registerPushToken(): Promise<void> {
-  if (Platform.OS === 'web') return;
-  // `getPermissionsAsync` قد يرفض بحالات أندرويد/Expo Go — لا إذن معروف = لا تسجيل، بلا استثناء طائر
-  let granted = false;
+  const token = await currentPushToken();
+  if (!token) return;
   try {
-    granted = (await Notifications.getPermissionsAsync()).status === 'granted';
+    await api.registerPush(token, Platform.OS, await savedLang());
   } catch {
-    return;
+    /* الخادم غير متاح — التنبيهات المحلية تعمل */
   }
-  if (!granted) return;
+}
+
+/**
+ * رمز Push لهذا الجهاز إن كان الإذن ممنوحاً سلفاً (لا يسأل عنه)، وإلا `null`. يُستعمل للتسجيل وللخروج
+ * (`api.logout` يفكّه من الحساب). `getPermissionsAsync` قد يرفض بحالات أندرويد/Expo Go، وExpo Go قد
+ * يفتقد `projectId` — كلاهما `null` بلا استثناء طائر.
+ */
+export async function currentPushToken(): Promise<string | null> {
+  if (Platform.OS === 'web') return null;
   try {
+    if ((await Notifications.getPermissionsAsync()).status !== 'granted') return null;
     const projectId =
       Constants.expoConfig?.extra?.eas?.projectId ??
       (Constants.expoConfig as { projectId?: string })?.projectId;
     const tokenData = await Notifications.getExpoPushTokenAsync(
       projectId ? { projectId } : undefined
     );
-    await api.registerPush(tokenData.data, Platform.OS, await savedLang());
+    return tokenData.data || null;
   } catch {
-    /* Expo Go may lack projectId — local alerts still work */
+    return null;
   }
 }
 

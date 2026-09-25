@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, setAuthToken } from '../api';
+import { currentPushToken } from '../notifications';
 
 type User = { user_id: number; username: string; email?: string | null; token: string };
 
@@ -22,6 +23,10 @@ type AuthCtx = {
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
+
+function withinMs<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([p, new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))]);
+}
 const KEY = 'matrix.auth.v1';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -87,8 +92,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logout = useCallback(async () => {
+    // الخادم أولاً (والتوكن ما زال مضبوطاً — `postJson` يقرأ الرؤوس لحظة الإرسال): يُلغي الجلسة ويفكّ رمز
+    // Push هذا الجهاز. كان الخروج محلياً فقط فتصل إشعارات تنبيهات الحساب لمن يستعمل الهاتف بعده
+    // (backend-r50a). فشله أو بطؤه لا يمنع الخروج: جلب الرمز بسقف 2ث (قد يعلق بلا شبكة؛ معرّف التثبيت
+    // يكفي الخادم حينها)، والطلب بسقف 4ث، ثم المسح المحلي دائماً.
+    if (user) {
+      const pt = await withinMs(currentPushToken(), 2000, null);
+      await withinMs(api.logout(pt).catch(() => undefined), 4000, undefined);
+    }
     await persist(null);
-  }, [persist]);
+  }, [persist, user]);
 
   const deleteAccount = useCallback(async () => {
     // الخادم يمحو الهوية الشخصية ويُلغي كل الجلسات فوراً (db.delete_user_account) —

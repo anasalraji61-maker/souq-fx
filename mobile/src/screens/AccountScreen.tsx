@@ -42,6 +42,8 @@ export function AccountScreen() {
   const [err, setErr] = useState<string | null>(null);
   const [netError, setNetError] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  /** الخروج ينادي الخادم أولاً (حتى 6ث بلا شبكة) — زرّ مشغول بدل ضغطات متكرّرة. */
+  const [logoutBusy, setLogoutBusy] = useState(false);
   const [notifState, setNotifState] = useState<NotificationPermissionState>('undetermined');
   const [notifBusy, setNotifBusy] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
@@ -309,9 +311,14 @@ export function AccountScreen() {
                 transform: [{ scale: buttons.pressedScale }],
               },
             ]}
-            onPress={() => logout()}
+            onPress={() => {
+              setLogoutBusy(true);
+              void logout().finally(() => setLogoutBusy(false));
+            }}
+            disabled={logoutBusy}
+            accessibilityState={{ disabled: logoutBusy, busy: logoutBusy }}
           >
-            <Text style={styles.btnText}>{t.logout}</Text>
+            <Text style={styles.btnText}>{logoutBusy ? '...' : t.logout}</Text>
           </Pressable>
 
           {err ? <Text style={[styles.err, { textAlign: align }]}>{err}</Text> : null}

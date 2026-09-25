@@ -333,6 +333,10 @@ export const api = {
       sponsor_code: opts?.sponsor_code,
       side: opts?.side,
     }),
+  /** خروج هذا الجهاز بالخادم: يُلغي الجلسة ويفكّ رمز Push (بمعرّف التثبيت، وبالرمز إن مُرِّر) من الحساب —
+   * بدونه تصل إشعارات تنبيهات الحساب لمن يستعمل الهاتف بعده. يُستدعى والتوكن ما زال مضبوطاً. */
+  logout: (pushToken?: string | null) =>
+    postJson<{ ok: boolean }>('/api/auth/logout', pushToken ? { push_token: pushToken } : {}),
   /** حذف الحساب — شرط إلزامي لأبل (App Store Review Guideline 5.1.1(v)) */
   deleteAccount: () => deleteJson<{ ok: boolean }>('/api/auth/account'),
   commissionPlan: () =>
