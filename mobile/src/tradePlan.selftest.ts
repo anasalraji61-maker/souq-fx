@@ -236,9 +236,16 @@ assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2350, exit
 assert.equal(realizedMove({ symbol: 'BTCUSD', side: 'buy', entry: 60000, exit: 60600 })?.pips, null);
 assert.equal(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: null }), null);
 // تقريب متماثل حول الصفر: الخسارة لا تُكتب أصغر من الربح المماثل
-assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2000, exit: 2002.5 }), { pips: 25, pct: 0.13, dir: 1 });
-assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2000, exit: 1997.5 }), { pips: -25, pct: -0.13, dir: -1 });
-assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'sell', entry: 2000, exit: 2002.5 }), { pips: -25, pct: -0.13, dir: -1 });
+assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2000, exit: 2002.5 }), { pips: 25, pct: 0.12, dir: 1 }); // = الخادم round(0.125, 2)
+assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2000, exit: 1997.5 }), { pips: -25, pct: -0.12, dir: -1 });
+assert.deepEqual(realizedMove({ symbol: 'XAUUSD', side: 'sell', entry: 2000, exit: 2002.5 }), { pips: -25, pct: -0.12, dir: -1 });
+// الصفّ = «أفضل/أسوأ صفقة» بالإحصاء لكل صفقة (نفس الحساب ونفس التقريب)
+for (let x = 1990; x <= 2010; x += 0.5) {
+  const raw = ((x - 2000) / 2000) * 100;
+  assert.equal(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 2000, exit: x })!.pct, roundHalfEven(raw, 2) || 0, `exit ${x}`);
+}
+assert.equal(realizedMove({ symbol: 'XAUUSD', side: 'buy', entry: 1920, exit: 1932 })!.pct, 0.62);
+assert.ok(!Object.is(realizedMove({ symbol: 'XAUUSD', side: 'sell', entry: 4000, exit: 4000.1 })!.pct, -0));
 assert.equal(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.085005 })?.pips, 0.1);
 assert.equal(realizedMove({ symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.084995 })?.pips, -0.1);
 assert.equal(realizedMove({ symbol: 'EURUSD', side: 'sell', entry: 1.085, exit: 1.085005 })?.pips, -0.1);
