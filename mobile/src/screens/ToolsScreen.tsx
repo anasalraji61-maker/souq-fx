@@ -445,9 +445,6 @@ export function ToolsScreen() {
     return unsub;
   }, [navigation]);
 
-  /** chart-r49: الرابعة الجارية لـ`LayoutPanel` (للحفظ و«الحالي»). بانتشارٍ لا props مسمّاة حتى يضيفها chart لنوع اللوحة. */
-  const heroLayoutProps = { dxySymbol: heroSymbol, dxyTf: heroTf };
-
   /** لا رمز قُرئ أصلاً (كل الطلبات فشلت) — «لا تطابق» هنا كاذبة. */
   const scanNone = scanInfo.scanned === 0 && scanInfo.failed.length > 0;
 
@@ -900,13 +897,14 @@ export function ToolsScreen() {
           <LayoutPanel
             frameTfs={frameTfs}
             frameSymbols={frameSymbols}
-            {...heroLayoutProps}
+            dxySymbol={heroSymbol}
+            dxyTf={heroTf}
             onApply={async (layout) => {
               setFrameSymbols(layout.frameSymbols);
               setFrameTfs(layout.frameTfs);
               // الرابعة تُستعاد فقط من تخطيط حفظها فعلاً (`dxySymbol` موجود): القديمة تحمل `dxyTf: '15m'` ثابتاً لا
               // اختيار المستخدم، فاستعادتها كانت ستعيد فريمه للـ15m دون أن يطلب.
-              const heroSym = (layout as { dxySymbol?: unknown }).dxySymbol;
+              const heroSym = layout.dxySymbol;
               const hero =
                 typeof heroSym === 'string' && heroSym.trim()
                   ? { symbol: heroSym.trim().toUpperCase(), tf: isTimeframe(layout.dxyTf) ? layout.dxyTf : heroTf }
