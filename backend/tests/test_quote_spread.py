@@ -268,3 +268,29 @@ def test_non_finite_ohlc_fields_become_none(routes):
     routes["/quote"] = _Resp({"close": "1.1", "open": "NaN", "high": "inf", "percent_change": "-0.12"})
     book = market.fetch_quote_book("EURUSD")
     assert book["open"] is None and book["high"] is None and book["percent_change"] == pytest.approx(-0.12)
+
+
+def test_quote_network_error_falls_back_to_the_real_candle_not_500(monkeypatch):
+    """`/quote` يرمي (مهلة/انقطاع/ردّ غير JSON): كان المسار يخرج 500 بدل آخر إغلاق حقيقي بوقته."""
+    import httpx
+
+    def boom(sym):
+        raise httpx.ConnectTimeout("provider down")
+
+    monkeypatch.setattr(main.market, "fetch_quote_book", boom)
+    now = time.time()
+
+    def build(sym, timeframe="15m", outputsize=180):
+        c = main.Candle(time=int(now) - 600, open=1.1, high=1.1, low=1.1, close=1.1)
+        return main.ChartSeries(
+            symbol=sym, timeframe=timeframe, candles=[c], change_pct=0, last=1.1,
+            data_source=main.DataProvenance(kind="cache", as_of=now - 60, channel="twelvedata"),
+        )
+
+    monkeypatch.setattr(main, "build_series", build)
+    r = TestClient(main.app).get("/api/market/quote/EURUSD")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["price"] == pytest.approx(1.1) and body["data_kind"] == "cache"
+    assert body["bid"] is None and body["spread_source"] is None
+    assert body["as_of"] == now - 60

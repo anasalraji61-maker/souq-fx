@@ -1320,7 +1320,12 @@ def market_quote(symbol: str):
     now = time.time()
     if hit and now - hit[0] < QUOTE_TTL:
         return {**hit[1], "data_kind": "cache"}
-    book = market.fetch_quote_book(sym)
+    try:
+        book = market.fetch_quote_book(sym)
+    except Exception:  # noqa: BLE001
+        # مهلة/انقطاع شبكة أو ردّ غير JSON من `/quote` كان يخرج **500** — التطبيق يعرض «خطأ» بدل آخر
+        # إغلاق حقيقي بوقته، مع أن فرع الشموع أدناه يخدم كاشاً حقيقياً (حتى 15د) موسوماً `cache`.
+        book = None
     if book and book.get("price_only"):
         # `/quote` متعذّر (429/خطأ) فجاء رقم `/price` بلا وقت: كان يُرسَل `as_of` = «الآن» ⇒ يوم السبت
         # إغلاق الجمعة «حيّ» وحاسبة الحجم تعبّئه دخولاً. فرع الشموع أدناه يحمل وقت آخر شمعة الحقيقي.
