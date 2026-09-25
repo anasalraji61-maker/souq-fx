@@ -127,6 +127,8 @@ export const numeric = {
  * بشفافية 12% يخفت). لا حركة غيرها: لا لوحات منزلقة ولا أشرطة تتلاشى. */
 export const motion = {
   flash: 180,
+  flashUp: 'rgba(34,197,94,0.12)',
+  flashDown: 'rgba(244,63,94,0.12)',
 };
 
 /**

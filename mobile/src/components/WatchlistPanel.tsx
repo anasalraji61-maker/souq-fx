@@ -31,6 +31,7 @@ import {
   type WatchlistSaveErrorCode,
 } from '../chart/watchlistStore';
 import { useDailyRefs } from '../chart/dailyRefStore';
+import { PriceFlash } from './PriceFlash';
 import { dailyChange, formatPct, tickDirection, type Direction } from '../chart/dailyChange';
 
 /** مدّة بقاء لون آخر تيك. عشرون ثانية: أطول كثيراً من تردّد تيكات زوجٍ نشط (فلا وميض بالسوق
@@ -468,18 +469,24 @@ export function WatchlistPanel({
                     {isDemoPrice ? <Text style={styles.demoTag}>{t.wlDemoTag}</Text> : null}
                   </View>
                   <View style={[styles.right, rtl && styles.rightRtl]}>
-                    <Text
-                      numberOfLines={1}
-                      style={[
-                        styles.price,
-                        on && styles.priceOn,
-                        isDemoPrice && styles.priceDemo,
-                        tickDir === 'up' && styles.priceUp,
-                        tickDir === 'down' && styles.priceDown,
-                      ]}
+                    <PriceFlash
+                      dir={tickDir}
+                      flashKey={tickDir ? tickDirs[sym]?.at : undefined}
+                      style={styles.priceCell}
                     >
-                      {price != null ? formatPrice(price, sym) : '—'}
-                    </Text>
+                      <Text
+                        numberOfLines={1}
+                        style={[
+                          styles.price,
+                          on && styles.priceOn,
+                          isDemoPrice && styles.priceDemo,
+                          tickDir === 'up' && styles.priceUp,
+                          tickDir === 'down' && styles.priceDown,
+                        ]}
+                      >
+                        {price != null ? formatPrice(price, sym) : '—'}
+                      </Text>
+                    </PriceFlash>
                     {chg && pctText ? (
                       <Text
                         style={[
@@ -703,6 +710,8 @@ const styles = StyleSheet.create({
   price: { ...numeric, color: colors.textMuted, fontSize: 15, fontWeight: '600', marginLeft: 4 },
   priceOn: { color: colors.text },
   priceDemo: { color: colors.textDim, fontWeight: '600' },
+  /** خانة وميض §6 — تلتفّ على نصّ السعر وحده */
+  priceCell: { borderRadius: radii.sm, overflow: 'hidden' },
   priceUp: { color: colors.bull },
   priceDown: { color: colors.bear },
   right: { alignItems: 'flex-end' },
