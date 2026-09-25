@@ -197,6 +197,27 @@ def test_alerts_of_one_account_are_invisible_to_another(client):
     assert client.get("/api/alerts", headers=_auth(b)).json()["alerts"] == []
 
 
+def test_alert_level_below_five_decimals_is_kept_as_typed(client):
+    """`round(price, 5)` كان يحفظ 0.0000123 ⇒ 0.00001، و0.000004 ⇒ **0** («فوق 0» يُطلق فوراً)."""
+    h = _auth(_register(client, "tinyalert"))
+    a = client.post("/api/alerts", json={**_ALERT, "symbol": "SHIBUSD", "price": 0.0000123}, headers=h).json()["alert"]
+    assert a["price"] == 0.0000123
+    b = client.patch(f"/api/alerts/{a['id']}", json={**_ALERT, "symbol": "SHIBUSD", "price": 0.000004}, headers=h)
+    assert b.json()["alert"]["price"] == 0.000004
+    stored = client.get("/api/alerts", headers=h).json()["alerts"]
+    assert [x["price"] for x in stored] == [0.000004]
+    assert client.post("/api/alerts", json={**_ALERT, "price": 1.1 + 1e-12}, headers=h).json()["alert"]["price"] == 1.1
+
+
+def test_infinite_alert_level_is_rejected_and_does_not_break_the_list(client):
+    """`Infinity` اجتاز `gt=0` فحُفظ، ثم كل GET لتنبيهات المالك 500 (JSON لا يقبل inf)."""
+    h = _auth(_register(client, "infalert"))
+    body = '{"symbol": "EURUSD", "condition": "above", "price": Infinity}'
+    r = client.post("/api/alerts", content=body, headers={**h, "Content-Type": "application/json"})
+    assert r.status_code == 422
+    assert client.get("/api/alerts", headers=h).status_code == 200
+
+
 def test_another_account_cannot_edit_or_delete_an_alert(client):
     a, b = _register(client, "carol"), _register(client, "dave")
     aid = client.post("/api/alerts", json=_ALERT, headers=_auth(a)).json()["alert"]["id"]

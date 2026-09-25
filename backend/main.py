@@ -214,9 +214,17 @@ class DmSend(BaseModel):
 class AlertCreate(BaseModel):
     symbol: str = Field(min_length=3, max_length=12)
     condition: Literal["above", "below"]
-    price: float = Field(gt=0)
+    # `inf` كان يجتاز `gt=0` فيُحفظ ثم يسقط تسلسل JSON ⇒ كل GET/check لتنبيهات المالك 500 بعده
+    price: float = Field(gt=0, allow_inf_nan=False)
     # كملاحظة الدفتر/التصويت: بلا حدّ كان نصّ غير محدود يُخزَّن ويُرسل بالإشعار
     note: str = Field(default="", max_length=500)
+
+
+def _alert_level(price: float) -> float:
+    """مستوى التنبيه كما كتبه المتداول (10 أرقام معنوية تزيل ضجيج الفاصلة العائمة فقط). كان
+    `round(price, 5)`: رمز تحت 0.00001 (SHIB/USD ‏0.0000123 بقائمة متابعة مخصّصة) يُحفظ 0.00001 أو **0**
+    ⇒ «فوق 0» يُطلق بأول فحص ويُعرض مستوى لم يكتبه أحد؛ و`gt=0` لا يحرس ما بعد التقريب."""
+    return float(f"{price:.10g}")
 
 
 class AuthRegister(BaseModel):
@@ -899,7 +907,7 @@ def create_alert(
         "id": _new_id("a"),
         "symbol": body.symbol.upper(),
         "condition": body.condition,
-        "price": round(body.price, 5),
+        "price": _alert_level(body.price),
         "note": body.note.strip(),
         "active": True,
         "triggered": False,
@@ -921,7 +929,7 @@ def update_alert(
     data = {
         "symbol": body.symbol.upper(),
         "condition": body.condition,
-        "price": round(body.price, 5),
+        "price": _alert_level(body.price),
         "note": body.note.strip(),
         "ts": datetime.now(timezone.utc).isoformat(),
     }
