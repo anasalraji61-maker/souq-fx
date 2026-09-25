@@ -81,12 +81,13 @@ export function lineNowText(
   nowIndex: number,
   livePrice: number,
   symbol: string,
-  fmt: (price: number) => string
+  fmt: (price: number) => string,
+  lang?: string
 ): string | null {
   if ((d.tool !== 'trend' && d.tool !== 'ray') || !d.b || !Number.isFinite(livePrice)) return null;
   const now = lineValueAt(d.a, d.b, nowIndex, d.tool === 'ray');
   if (now == null) return null;
-  const pips = measurePipsText(symbol, livePrice, now);
+  const pips = measurePipsText(symbol, livePrice, now, lang);
   return pips ? `${fmt(now)} · ${pips}` : null;
 }
 

@@ -62,6 +62,7 @@ assert.equal(rrText(1.3749), '1.37');
 let lab = positionLabels(positionLevels('long', 1.085, 1.0825, 2, 'EURUSD'), 'EURUSD');
 assert.equal(lab.target, 'TP 1.09000 · 50.0 pip · R:R 2');
 assert.equal(lab.stop, 'SL 1.08250 · 25.0 pip');
+assert.equal(positionLabels(positionLevels('long', 1.085, 1.0825, 2, 'EURUSD'), 'EURUSD', 'en').stop, 'SL 1.08250 · 25.0 pips');
 lab = positionLabels(positionLevels('short', 2650, 2655, 3, 'XAUUSD'), 'XAUUSD');
 assert.equal(lab.target, 'TP 2635.00 · 150.0 pip · R:R 3');
 assert.equal(lab.stop, 'SL 2655.00 · 50.0 pip');
@@ -119,6 +120,7 @@ assert.equal(o.state, 'pending');
 assert.equal(o.r, 0);
 assert.equal(positionOutcomeText(PL, o, 'EURUSD'), 'Entry ⌛ 22.0 pip');
 assert.equal(positionOutcomeText(PL, o, 'EURUSD', 'دخول'), 'دخول ⌛ 22.0 pip');
+assert.equal(positionOutcomeText(PL, o, 'EURUSD', 'Entry', 'en'), 'Entry ⌛ 22.0 pips');
 // الصندوق انتهى قبل بلوغه ⇒ فائت
 o = positionOutcome(PL, [...hi, bar(1.086, 1.088, 1.087)], 0, 1, 2)!;
 assert.equal(o.state, 'missed');

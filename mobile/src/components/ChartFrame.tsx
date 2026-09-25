@@ -9,6 +9,7 @@ import { formatPrice } from '../chart/math';
 import { formatPct, pctDirection } from '../chart/dailyChange';
 import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from '../chart/pipSpec';
+import { pipUnit } from '../chart/measureReadout';
 import {
   candleTimeSec,
   provenanceLabel,
@@ -106,7 +107,7 @@ export function ChartFrame({
   onSyncActivate,
   syncBadge = null,
 }: Props) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const [wheelOpen, setWheelOpen] = useState(false);
 
   // تبديل الفريم/الرمز يمرّ بجولة شبكة عند الشاشة المالكة: حتى تصل السلسلة الجديدة
@@ -393,7 +394,7 @@ export function ChartFrame({
                 ? ''
                 : `B ${formatPrice(liveQuote!.bid!, series.symbol, series.last)} · A ${formatPrice(liveQuote!.ask!, series.symbol, series.last)}`}
               {spreadPips != null ? (
-                <Text style={styles.spreadPips}>{`${quoteStale ? '' : ' · '}${spreadPips.toFixed(1)} pip`}</Text>
+                <Text style={styles.spreadPips}>{`${quoteStale ? '' : ' · '}${spreadPips.toFixed(1)} ${pipUnit(lang)}`}</Text>
               ) : null}
             </Text>
           ) : null}

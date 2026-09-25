@@ -16,9 +16,8 @@
  * فالرقم الذي يقرؤه المتداول من الشارت هو الرقم الذي يكتبه بالحاسبة بالبناء لا بالمصادفة.
  * والإشارة من `b − a` لأن `pipsBetween` كمّية بلا اتجاه (والاتجاه هو نصف ما يقيسه).
  *
- * `pip` تُكتب لاتينيةً بالثلاث اللغات — هكذا هي بكل نصوص التطبيق القائمة («{pips} pip»
- * بدفتر الصفقات والحاسبة ولوح الباك-تست، بالعربية والإنجليزية والكردية) — فلا مفتاح
- * ترجمة جديداً ولا مساس بـ`i18n/locales.ts` (ملك وكيل آخر).
+ * الوحدة لاتينية بالثلاث اللغات: «pip» بالعربية والكردية و«pips» بالإنجليزية (`pipUnit`) —
+ * كنصوص `i18n/locales.ts` (ملك وكيل آخر) فلا مفتاح ترجمة جديداً.
  *
  * أداة خارج مواصفات الفوركس (DXY، مؤشر، عقد CFD) ⇒ `chartPipSpec` تعيد
  * `null`، فيبقى فرق السعر مكان النقاط — لكن مصاغاً بالرمز لا بحجم الرقم.
@@ -31,6 +30,15 @@ import { projectBarTimeSec } from './marketHours';
 
 export type MeasureStats = { bars: number; diff: number; pct: number };
 
+/**
+ * وحدة النقاط بلغة الواجهة: الإنجليزية «pips» بعد الرقم (كما يقولها المتداول، وكما صارت نصوص
+ * `locales.ts` الإنجليزية: «Net: {pips} pips»)، والعربية والكردية «pip» كنصوصهما. كان الشارت يطبع
+ * «+35.0 pip» بالإنجليزية بجوار «Net: 35.0 pips» بالدفتر (QA15). `lang` غائب ⇒ «pip» (السابق).
+ */
+export function pipUnit(lang?: string): string {
+  return lang === 'en' ? 'pips' : 'pip';
+}
+
 /** «+24.0 pip» أو `null` لأداة بلا مواصفة pip معروفة. */
 /**
  * عدد النقاط بمنزلة عشرية واحدة — إلا من 1000 فصاعداً: عُشر النقطة على مسافة 2000 pip
@@ -41,7 +49,7 @@ export function pipsNumber(pips: number): string {
   return Math.abs(pips) >= 1000 ? pips.toFixed(0) : pips.toFixed(1);
 }
 
-export function measurePipsText(symbol: string, a: number, b: number): string | null {
+export function measurePipsText(symbol: string, a: number, b: number, lang?: string): string | null {
   const spec = chartPipSpec(symbol);
   if (!spec) return null;
   const pips = pipsBetween(spec, a, b);
@@ -49,7 +57,7 @@ export function measurePipsText(symbol: string, a: number, b: number): string | 
   // الإشارة من الاتجاه لا من `pips` (كمّية دائماً). الصفر بلا إشارة: «0.0 pip» قياسٌ
   // صادق (طرفان على السعر نفسه) و«+0.0» توحي باتجاه لا وجود له.
   const sign = pips === 0 ? '' : b - a > 0 ? '+' : '−';
-  return `${sign}${pipsNumber(pips)} pip`;
+  return `${sign}${pipsNumber(pips)} ${pipUnit(lang)}`;
 }
 
 /**
@@ -57,13 +65,13 @@ export function measurePipsText(symbol: string, a: number, b: number): string | 
  * بالنقاط لا بالنسبة (شمعة خبر 40 pip مقابل شمعة آسيا 6 pip) — والنسبة وحدها كانت بالسطر.
  * `null` لأداة بلا مواصفة pip (DXY، مؤشرات) فلا يُكتب شيء بدل رقم بوحدة خاطئة.
  */
-export function candleRangePipsText(symbol: string, high: number, low: number): string | null {
+export function candleRangePipsText(symbol: string, high: number, low: number, lang?: string): string | null {
   if (!Number.isFinite(high) || !Number.isFinite(low) || high < low) return null;
   const spec = chartPipSpec(symbol);
   if (!spec) return null;
   const pips = pipsBetween(spec, low, high);
   if (pips == null) return null;
-  return `↕ ${pipsNumber(pips)} pip`;
+  return `↕ ${pipsNumber(pips)} ${pipUnit(lang)}`;
 }
 
 /**
@@ -183,7 +191,7 @@ export function measureReadoutText(input: {
 }): string {
   const { symbol, a, b, stats, barsWord, lang } = input;
   const dur = measureDurationText(input.durationSec ?? null, lang, input.durationUnits);
-  const pips = measurePipsText(symbol, a.price, b.price);
+  const pips = measurePipsText(symbol, a.price, b.price, lang);
   // الإشارة من الرقم **المطبوع** لا الخام (قاعدة `formatPct` برأس الإطار والتقاطع): قياس
   // 0.4 pip على اليورو نسبته 0.004% فكان يُكتب «+0.4 pip · +0.00%»، وقياس أفقيّ على DXY
   // «+0.00000 · +0.00%» — صفرٌ بإشارة يوحي باتجاه لا وجود له. الصفر المطبوع بلا إشارة.

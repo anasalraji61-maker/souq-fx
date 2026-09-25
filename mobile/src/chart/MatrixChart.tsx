@@ -3351,7 +3351,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     preview: boolean
   ) => {
     const box = positionBox(side, a, b, rr, a.index - source.start, b.index - source.start);
-    const labels = positionLabels(box.lv, series.symbol);
+    const labels = positionLabels(box.lv, series.symbol, lang);
     const width = box.right - box.left;
     // النتيجة على الشموع الحقيقية (هايكن آشي أسعار مُركّبة بالفهارس نفسها)، حتى الشمعة الحيّة —
     // وبالإعادة حتى شمعة الإعادة فلا تُكشف قبل أوانها. كانت «آخر شمعة معروضة» دائماً: سحب الشارت
@@ -3367,7 +3367,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // لم يبلغ السعر الدخول بعد (أمر معلّق) ⇒ وسم محايد بلا شريط مسار: لا ربح ولا خسارة لصفقة لم تُفتح.
     const unfilled = outcome != null && (outcome.state === 'pending' || outcome.state === 'missed');
     const outcomeTone = unfilled ? colors.textMuted : outcomeUp ? colors.bull : colors.bear;
-    const outcomeText = outcome ? positionOutcomeText(box.lv, outcome, series.symbol, tr.entryLabel) : '';
+    const outcomeText = outcome ? positionOutcomeText(box.lv, outcome, series.symbol, tr.entryLabel, lang) : '';
     const xExit = outcome ? Math.min(box.right, xOf(outcome.exitIndex - source.start)) : 0;
     // المسار يبدأ من شمعة التنفيذ لا شمعة الرسم — دخول معلّق نُفّذ بعد عشر شمعات يُظلَّل منها.
     const xFill = outcome ? Math.max(box.xEntry, xOf(outcome.fillIndex - source.start)) : 0;
@@ -4733,7 +4733,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // «  ↕ 4.4 pip» ≈ 280px — فالمدى بالنقاط للوح العريض وحده، ولا يُقصّ الإغلاق بنقاط حذف.
   const denseOhlcWide = chartPlotW >= 240;
   const denseOhlcRange =
-    denseOhlc && chartPlotW >= 320 ? candleRangePipsText(series.symbol, denseOhlc.high, denseOhlc.low) : null;
+    denseOhlc && chartPlotW >= 320 ? candleRangePipsText(series.symbol, denseOhlc.high, denseOhlc.low, lang) : null;
   // السعر المحفوظ لا الإغلاق: الخطّ يبقى على المستوى الذي لُمس عبر التكبير والإزاحة.
   const crossPrice = crossCandle ? cross?.price ?? null : null;
   const crossY = crossPrice != null ? yOf(crossPrice) : 0;
@@ -4975,7 +4975,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // ويُقاس بُعده من سعر الإعادة (`currentPrice`) — رقم يخلط الماضي بالمستقبل.
   const nowIndex = replayOn ? source.start + source.plot.length - 1 : source.all.length - 1;
   const selectedLineNow = selectedSpan
-    ? lineNowText(selectedSpan, nowIndex, currentPrice, series.symbol, fmtPrice)
+    ? lineNowText(selectedSpan, nowIndex, currentPrice, series.symbol, fmtPrice, lang)
     : null;
   const selectedSpanText =
     selectedSpanReadout && selectedLineNow
@@ -5009,7 +5009,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // وأداة بلا مواصفة pip (DXY، مؤشرات) تبقى بسطر السعر وحده.
   const crossPipsText =
     crossPrice != null && Number.isFinite(currentPrice)
-      ? measurePipsText(series.symbol, currentPrice, crossPrice)
+      ? measurePipsText(series.symbol, currentPrice, crossPrice, lang)
       : null;
   const crossTagH = crossPipsText ? PRICE_TAG_H + COUNTDOWN_LINE_H : PRICE_TAG_H;
   const crossTagTop = crossPrice != null
@@ -5261,7 +5261,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               // لا النسبة وحدها — متداول المؤشرات يقيس الشمعة بالنقاط السعرية.
               const diff = crossCandle.close - ref;
               const pips =
-                measurePipsText(series.symbol, ref, crossCandle.close) ??
+                measurePipsText(series.symbol, ref, crossCandle.close, lang) ??
                 `${diff > 0 ? '+' : diff < 0 ? '−' : ''}${formatPriceDiff(diff, ref, series.symbol, priceDecimalsRef)}`;
               return (
                 <Text
@@ -5275,7 +5275,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               );
             })()}
             {(() => {
-              const range = candleRangePipsText(series.symbol, crossCandle.high, crossCandle.low);
+              const range = candleRangePipsText(series.symbol, crossCandle.high, crossCandle.low, lang);
               return range ? ` ${range}` : '';
             })()}
             {compareSeries
@@ -5569,7 +5569,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           hi = Math.max(hi, c.high);
                           lo = Math.min(lo, c.low);
                         }
-                        const range = candleRangePipsText(series.symbol, hi, lo);
+                        const range = candleRangePipsText(series.symbol, hi, lo, lang);
                         return range ? ` ${range}` : null;
                       })()
                     : null}
@@ -7082,7 +7082,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   {(() => {
                     const pips =
                       (lv.label === 'PDH' || lv.label === 'PDL') && Number.isFinite(currentPrice)
-                        ? measurePipsText(series.symbol, currentPrice, lv.price)
+                        ? measurePipsText(series.symbol, currentPrice, lv.price, lang)
                         : null;
                     return pips ? <Text style={styles.levelPipText}>{` · ${pips}`}</Text> : null;
                   })()}
@@ -7214,7 +7214,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                         الدعم ليعرف كم بقي للوصول إليه؛ الرقم نفسه الذي تعطيه أداة القياس. */}
                     {(() => {
                       const pips = Number.isFinite(currentPrice)
-                        ? measurePipsText(series.symbol, currentPrice, d.a.price)
+                        ? measurePipsText(series.symbol, currentPrice, d.a.price, lang)
                         : null;
                       return pips ? <Text style={styles.levelPipText}>{` · ${pips}`}</Text> : null;
                     })()}
@@ -7374,7 +7374,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       ? candleRangePipsText(
                           series.symbol,
                           Math.max(d.a.price, d.b.price),
-                          Math.min(d.a.price, d.b.price)
+                          Math.min(d.a.price, d.b.price),
+                          lang
                         )
                       : null;
                   if (!txt) return null;

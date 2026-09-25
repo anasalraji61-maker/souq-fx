@@ -16,7 +16,7 @@
 import { formatPrice, formatPriceDiff } from './indicators/utils';
 import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from './pipSpec';
-import { pipsNumber } from './measureReadout';
+import { pipsNumber, pipUnit } from './measureReadout';
 
 export type PositionSide = 'long' | 'short';
 
@@ -95,10 +95,10 @@ export function rrText(rr: number): string {
 }
 
 /** المسافة بالنقاط («25.0 pip») أو بفرق السعر لأداة بلا مواصفة pip (DXY، مؤشرات). */
-function distanceText(symbol: string, a: number, b: number): string {
+function distanceText(symbol: string, a: number, b: number, lang?: string): string {
   const spec = chartPipSpec(symbol);
   const pips = spec ? pipsBetween(spec, a, b) : null;
-  if (pips != null) return `${pipsNumber(pips)} pip`;
+  if (pips != null) return `${pipsNumber(pips)} ${pipUnit(lang)}`;
   return formatPriceDiff(a - b, a, symbol);
 }
 
@@ -106,10 +106,14 @@ function distanceText(symbol: string, a: number, b: number): string {
  * وسما الصندوقين. الهدف يحمل النسبة («TP 1.09350 · 50.0 pip · R:R 2») لأنها ما يقرّر به المتداول
  * الدخول من عدمه؛ الوقف سعره ومسافته. TP/SL/R:R/pip لاتينية بكل اللغات كبقية نصوص التطبيق.
  */
-export function positionLabels(levels: PositionLevels, symbol: string): { target: string; stop: string } {
+export function positionLabels(
+  levels: PositionLevels,
+  symbol: string,
+  lang?: string
+): { target: string; stop: string } {
   return {
-    target: `TP ${formatPrice(levels.target, symbol, levels.entry)} · ${distanceText(symbol, levels.entry, levels.target)} · R:R ${rrText(levels.rr)}`,
-    stop: `SL ${formatPrice(levels.stop, symbol, levels.entry)} · ${distanceText(symbol, levels.entry, levels.stop)}`,
+    target: `TP ${formatPrice(levels.target, symbol, levels.entry)} · ${distanceText(symbol, levels.entry, levels.target, lang)} · R:R ${rrText(levels.rr)}`,
+    stop: `SL ${formatPrice(levels.stop, symbol, levels.entry)} · ${distanceText(symbol, levels.entry, levels.stop, lang)}`,
   };
 }
 
@@ -198,17 +202,18 @@ export function positionOutcomeText(
   levels: PositionLevels,
   outcome: PositionOutcome,
   symbol: string,
-  entryWord = 'Entry'
+  entryWord = 'Entry',
+  lang?: string
 ): string {
   // لم يُنفَّذ: كم يبعد السعر عن الدخول («Entry ⌛ 12.3 pip»)، أو «Entry ✕» إن انتهى الصندوق قبل بلوغه.
   // `entryWord` كلمة «دخول» بلغة الواجهة (`tr.entryLabel`) — كانت «Entry» إنجليزية ثابتة بالعربية والكردية.
   if (outcome.state === 'missed') return `${entryWord} ✕`;
-  if (outcome.state === 'pending') return `${entryWord} ⌛ ${distanceText(symbol, outcome.exit, levels.entry)}`;
+  if (outcome.state === 'pending') return `${entryWord} ⌛ ${distanceText(symbol, outcome.exit, levels.entry, lang)}`;
   const up = outcome.r >= 0;
   const sign = up ? '+' : '−';
   const spec = chartPipSpec(symbol);
   const pips = spec ? pipsBetween(spec, levels.entry, outcome.exit) : null;
-  const dist = pips != null ? `${sign}${pipsNumber(pips)} pip` : `${sign}${formatPriceDiff(outcome.exit - levels.entry, levels.entry, symbol)}`;
+  const dist = pips != null ? `${sign}${pipsNumber(pips)} ${pipUnit(lang)}` : `${sign}${formatPriceDiff(outcome.exit - levels.entry, levels.entry, symbol)}`;
   const r = `${sign}${rrText(Math.abs(outcome.r))}R`;
   const head = outcome.state === 'target' ? 'TP ✓ ' : outcome.state === 'stop' ? 'SL ✕ ' : '';
   return `${head}${dist} · ${r}`;

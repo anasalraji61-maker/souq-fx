@@ -7,6 +7,7 @@ import {
   measureDurationText,
   measurePipsText,
   measureReadoutText,
+  pipUnit,
   type MeasureStats,
 } from './measureReadout';
 
@@ -195,7 +196,7 @@ ok('سطر بالزمن',
   measureReadoutText({
     symbol: 'EURUSD', a: { price: 1.08 }, b: { price: 1.0824 },
     stats: stats(12, 0.0024, 0.2222), barsWord: 'bars', lang: 'en', durationSec: 12 * H,
-  }) === '12 bars · 12h · +24.0 pip · +0.22%');
+  }) === '12 bars · 12h · +24.0 pips · +0.22%');
 ok('سطر بلا زمن كما كان',
   measureReadoutText({
     symbol: 'EURUSD', a: { price: 1.08 }, b: { price: 1.0824 },
@@ -210,6 +211,13 @@ ok('سابقة صفرية ⇒ الافتتاح', barChangeRef({ open: 1.0850 }, 
 ok('لا مرجع صالح ⇒ null', barChangeRef({ open: 0 }, undefined) === null);
 // فجوة الإثنين: افتتاح +40 pip ثم نزول 5 ⇒ +35 pip عن الجمعة لا −5
 ok('فجوة الإثنين بالنقاط', measurePipsText('EURUSD', barChangeRef({ open: 1.0850 }, { close: 1.0810 })!, 1.0845) === '+35.0 pip');
+
+// ── وحدة النقاط بلغة الواجهة (QA15): الإنجليزية «pips» كنصوص الدفتر والحاسبة
+ok('pipUnit en', pipUnit('en') === 'pips');
+ok('pipUnit ar/ku/غائبة', pipUnit('ar') === 'pip' && pipUnit('ku') === 'pip' && pipUnit() === 'pip');
+ok('قياس إنجليزي', measurePipsText('EURUSD', 1.08, 1.0824, 'en') === '+24.0 pips');
+ok('قياس عربي', measurePipsText('EURUSD', 1.08, 1.0824, 'ar') === '+24.0 pip');
+ok('مدى إنجليزي', candleRangePipsText('EURUSD', 1.08612, 1.0845, 'en') === '↕ 16.2 pips');
 
 if (failures) {
   console.error(`measureReadout.selftest: ${failures} FAILED`);
