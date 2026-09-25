@@ -119,6 +119,17 @@ export function knownSingleName(raw: string): string | null {
 const CRYPTO = /^(BTC|XBT|ETH|LTC|XRP|SOL|BCH|BNB|ADA|DOT|DOGE|AVAX|LINK|XLM|TRX)(USDT|USDC|[A-Z]{3})$/;
 
 /**
+ * زوج رقميّ معروف بأي كتابة وسيط («BTCUSD»، «SOLUSD»، «BTCUSDT»، «BTCUSDm»، «ETH/USD»، «XRPUSD.c») — لساعات السوق
+ * (`marketHours`): الكريبتو يتداول 24/7. القاعدة نفسها التي تقرّر عملة التحذير أعلاه، فلا تنحرف القائمتان.
+ */
+export function isCryptoSymbol(symbol: string): boolean {
+  const letters = symbol.toUpperCase().replace(/[^A-Z]/g, '');
+  const bare = suffixFree(symbol).replace(/[\s/_-]/g, '');
+  const glued = /^[A-Z0-9]{3,}[MC]$/.test(bare) ? bare.slice(0, -1) : null;
+  return CRYPTO.test(bare) || CRYPTO.test(letters) || (glued != null && CRYPTO.test(glued));
+}
+
+/**
  * كتابات الوسيط التي تبقى بعد القواعد أدناه بلا عملة — فلا تحذير، وسطر «التقويم غير متاح» لا يظهر أيضاً، فيُقرأ الصمت
  * «لا أخبار» قبل الرواتب. الدفتر يمرّر الرمز كما كُتب، فهذه تصل فعلاً:
  * - **لاحقتان بفاصل** («NAS100.cash.m»، «NAS100_USD.m»، «EURUSD.m.x»): `suffixFree` تُسقط واحدة، وقاعدة OANDA تريد

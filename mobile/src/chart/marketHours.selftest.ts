@@ -92,3 +92,9 @@ assert.equal(projectBarTimeSec('XAUUSD', s(at(2026, 8, 22, 20, 30)), 1800, 1), s
 assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 8, 22, 20)), H, 1), s(at(2026, 8, 22, 21)));
 assert.equal(projectBarTimeSec('XAUUSD', s(at(2026, 8, 22, 16)), 4 * H, 1), s(at(2026, 8, 22, 20))); // 4H يبدأ قبل الكسر
 console.log('marketHours.selftest: PASS');
+
+// QA25: الكريبتو بأي كتابة وسيط مفتوح السبت؛ السهم/الفوركس لا.
+for (const s of ['SOLUSD', 'XRPUSD', 'BTCUSDT', 'BTCUSDm', 'ETHUSD.c', 'btc/usd']) {
+  assert.equal(isForexMarketOpen(s, at(2026, 0, 17, 12)), true, s);
+}
+for (const s of ['EURUSD', 'EURUSDm', 'XAUUSD', 'US30']) assert.equal(isForexMarketOpen(s, at(2026, 0, 17, 12)), false, s);

@@ -3,14 +3,15 @@
  * الأحد حتى إغلاق نيويورك مساء الجمعة، والحدّان كلاهما **17:00 بتوقيت نيويورك** —
  * تبسيط قياسي تتبعه أغلب منصات التداول لعرض حالة "مفتوح/مغلق" بلا حاجة لخلاصة بيانات
  * إضافية أو تكلفة جديدة (بند 2 من قائمة الإطلاق، docs/ROADMAP.md).
- * الكريبتو (BTCUSD/ETHUSD) يتداول 24/7 فلا يُغلق أبداً.
+ * الكريبتو يتداول 24/7 فلا يُغلق أبداً — بأي كتابة وسيط («SOLUSD»، «BTCUSDT»، «BTCUSDm»؛ `isCryptoSymbol`).
+ * كانت مطابقة حرفية لـBTCUSD/ETHUSD فتُعرض البقية «السوق مغلق» السبت وعدّادها يعدّ لإغلاق الجمعة.
  *
  * كان الحدّ 22:00 UTC ثابتاً: صحيح شتاءً فقط. من آذار حتى تشرين الثاني (التوقيت الصيفي
  * الأمريكي) الحدّ 21:00 UTC، فكانت الحالة «مفتوح» ساعةً بعد إغلاق الجمعة و«مغلق» ساعةً
  * بعد افتتاح الأحد — ومعها عدّاد إغلاق الشمعة يعدّ لسوق مغلق.
  */
 
-const ALWAYS_OPEN = new Set(['BTCUSD', 'ETHUSD']);
+import { isCryptoSymbol } from './newsRisk';
 
 export const DAY_SEC = 86400;
 
@@ -50,7 +51,7 @@ export function forexSundayOpenSec(sundayStartSec: number): number {
 /** مفتوح الآن؟ بتوقيت UTC — 0=الأحد..6=السبت (نفس اصطلاح Date#getUTCDay). */
 export function isForexMarketOpen(symbol: string, now: Date = new Date()): boolean {
   const sym = symbol.toUpperCase();
-  if (ALWAYS_OPEN.has(sym)) return true;
+  if (isCryptoSymbol(sym)) return true;
   const day = now.getUTCDay();
   const sec = now.getTime() / 1000;
   const dayStart = Math.floor(sec / DAY_SEC) * DAY_SEC;
@@ -93,7 +94,7 @@ export function isForexHolidaySession(sec: number): boolean {
  * السبت، والسوق أغلق قبلها بساعتين أو ثلاث.
  */
 export function forexWeekCloseSec(symbol: string, nowMs: number): number | null {
-  if (ALWAYS_OPEN.has(symbol.toUpperCase())) return null;
+  if (isCryptoSymbol(symbol)) return null;
   const sec = nowMs / 1000;
   const dayStart = Math.floor(sec / DAY_SEC) * DAY_SEC;
   const day = new Date(dayStart * 1000).getUTCDay();
@@ -139,7 +140,7 @@ export function marketStatusLabel(
  */
 export function tradingDayStartSec(symbol: string, sec: number): number {
   const dayStart = Math.floor(sec / DAY_SEC) * DAY_SEC;
-  if (ALWAYS_OPEN.has(symbol.toUpperCase())) return dayStart;
+  if (isCryptoSymbol(symbol)) return dayStart;
   const today = nyFivePmUtcSec(dayStart);
   return sec >= today ? today : nyFivePmUtcSec(dayStart - DAY_SEC);
 }
@@ -217,7 +218,7 @@ function forexDailyClosed(sec: number): boolean {
 export function projectBarTimeSec(symbol: string, lastSec: number, stepSec: number, ahead: number): number {
   const n = Math.max(0, Math.floor(ahead));
   if (!(stepSec > 0) || !Number.isFinite(lastSec) || n === 0) return lastSec + n * (stepSec || 0);
-  if (ALWAYS_OPEN.has(symbol.toUpperCase()) || stepSec > DAY_SEC) return lastSec + n * stepSec;
+  if (isCryptoSymbol(symbol) || stepSec > DAY_SEC) return lastSec + n * stepSec;
   let t = lastSec;
   for (let i = 0; i < n; i++) {
     t += stepSec;
