@@ -56,7 +56,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • عدّاد تحت السعر الحيّ يخبرك كم بقي على إغلاق الشمعة الجارية.
 • سعر أعلى قمّة وأدنى قاع على الشاشة مكتوب عند ذيليهما ويتحدّث وأنت تسحب، وخطّ خافت يفصل كل يوم تداول عن الذي يليه على الفريمات الصغيرة.
 • المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، إيشيموكو، الفوليوم وغيرها وقيمة كل خطّ مكتوبة بجانب اسمه، ومستويات الارتكاز (Pivot وCamarilla وفيبوناتشي) وأعلى الأمس وأدناه وبجانب كل مستوى سعره، وتظليل جلسات طوكيو ولندن ونيويورك.
-• «عدسات» تضع مجموعة مؤشرات جاهزة بلمسة: هيكل (المتوسطات)، زخم (RSI وMACD)، سيولة (الفوليوم وبولنجر وCVD تقديري من الشموع، لا من تدفّق أوامر حقيقي).
+• «عدسات» تضع مجموعة مؤشرات جاهزة بلمسة: هيكل (المتوسطات)، زخم (RSI وMACD)، سيولة (الفوليوم وبولنجر وCVD؛ فوليوم الفوركس وCVD تقدير من الشموع).
 • أدوات رسم: خط اتجاه، شعاع، قناة موازية، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات تكتب نصّها، مع زرّ تراجع وزرّ «نسخة» يكرّر الرسم بلمسة — حتى في المساحة الفارغة يمين آخر شمعة. أزرار ▲▼◀▶ تُزيح الرسم المحدَّد pip واحداً أو شمعة بكل لمسة. الخط الأفقي يكتب بُعده عن السعر بالـpip، والمنطقة ارتفاعها. وما ترسمه على فريم يظهر على بقية فريمات الرمز نفسه.
 • خطّط صفقة شراء أو بيع على الشارت: اسحب من الدخول إلى الوقف فيظهر الهدف، والمسافتان بالـpip، ونسبة العائد إلى المخاطرة — واسحب الهدف لتغيّر النسبة. وعلى الشموع السابقة ترى هل بلغ السعر الهدف أم الوقف.
 • أداة قياس تكتب المسافة بالـpip والنسبة وعدد الشموع وكم استغرقت الحركة من وقت، وأنت تسحب.
@@ -116,8 +116,8 @@ CHARTS
 • Pinch to zoom — the live candle stays in view. Drag the price axis to stretch candles. Scroll back; one tap returns to the live candle, zoom intact.
 • A countdown under the live price to the current candle's close.
 • The on-screen high and low carry their price and update as you scroll, and a faint line marks each new trading day on intraday charts.
-• The indicators traders use: SMA and EMA, Bollinger Bands, RSI, MACD, Ichimoku, Volume and more, each line's value in the legend, plus pivot levels (classic, Camarilla, Fibonacci) and yesterday's high and low, and Tokyo, London and New York session shading.
-• One-tap "lenses" that add a ready set of indicators: Structure (moving averages), Momentum (RSI and MACD), Liquidity (volume, Bollinger and a CVD estimated from candles, not order flow).
+• Indicators traders use: SMA, EMA, Bollinger Bands, RSI, MACD, Ichimoku, Volume and more, each line's value in the legend, plus pivot levels (classic, Camarilla, Fibonacci) and yesterday's high and low, and Tokyo, London and New York session shading.
+• One-tap "lenses" that add a ready set of indicators: Structure (moving averages), Momentum (RSI and MACD), Liquidity (volume, Bollinger, CVD; forex volume and CVD are estimated from candles).
 • Drawing tools: trend line, ray, parallel channel, horizontal and vertical lines, rectangle, Fibonacci, zones and typed notes, with undo and one-tap cloning — also past the live candle. ▲▼◀▶ buttons move a selected drawing one pip or one candle per tap. A horizontal line shows its distance from price in pips; a zone, its height. Drawings follow the symbol across timeframes.
 • Plan a buy or sell on the chart: drag from entry to stop to see the target, both distances in pips and the reward-to-risk ratio — drag the target to change it. On past candles it shows whether price hit the target or the stop.
 • A measure tool showing pips, percent, bar count and how long the move took as you drag.
@@ -197,6 +197,10 @@ The first release of MATRIX, in English, Arabic and Kurdish: multi-chart layouts
 
 > **2026-09-25 (launch 84، QA32)**: سطر أنواع الشارت العربي «منطقة» ⇒ «مساحة» كما التطبيق منذ `290e166` (الطول نفسه، 5 أحرف ⇒ العدّ 3983 بلا تغيير).
 > ونصوص «رينكو/كاجي/نقطة ورقم» صارت مفاتيح بالقاموس (`ctlKindRenko/Kagi/Pnf`) — **ربطها chart** بـ`KIND_KEYS` (`44d0096`) ⇒ التطبيق والمتجر بالأسماء نفسها (بلا تجربة على جهاز، الخطوة 306).
+
+> **2026-09-25 (launch 87، QA35)**: عدسة «سيولة» كانت تقول إن CVD وحده تقديري، والفوليوم للفوركس نفسه مختلَق من أجسام الشموع (`withVolume`،
+> `chart/types.ts` — المزوّد يرسل 0) ⇒ «فوليوم الفوركس وCVD تقدير من الشموع» / «forex volume and CVD are estimated from candles». لإفساح الإنجليزي:
+> «SMA and EMA» ⇒ «SMA, EMA» و«The indicators» ⇒ «Indicators». العدّ: **ar 3978 / en 3997** من 4000.
 
 > **2026-09-25 (launch 85)**: «ما الجديد» يذكر اللغات الثلاث وحاسبة حجم المركز ودفتر الصفقات (أداتا المتداول الأساسيتان، كلتاهما بالوصف الكامل).
 > العدّ: **ar 187 / en 252** حرفاً — تحت حدّ Google Play لـ«ما الجديد» (500).
