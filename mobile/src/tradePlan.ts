@@ -1401,9 +1401,15 @@ export function levelLooksLikePips(input: {
    * أكثر من الخُمس بسنة، وهدف مراكز «41» على 34 سعرٌ حقيقي.
    */
   const upOk = metal || spec.quote === 'TRY';
+  /**
+   * **ونصف pip أو عُشره على الفوركس** («100.5» وقفاً لـUSDJPY على 157.40، من «SL 100.5 pips»): كان «كسراً = سعرٌ حقيقي» فيُحفظ
+   * وقفاً عند 100.50 ⇒ مخاطرة 5,690 pip. الخُمس نفسه لا يُعبر بزوج في صفقة، فالمنزلة الواحدة تكفي؛ السعر الحقيقي هناك يُكتب
+   * بمنزلتين أو ثلاث. المعادن تبقى على الرقم الصحيح (الفضة هبطت ~30% بيوم — هدف «85.5» من 110 سعرٌ ممكن).
+   */
+  const countLike = (v: number) => (metal ? Number.isInteger(v) : Math.abs(v * 10 - Math.round(v * 10)) < 1e-9);
   const looksPips = (v: number) =>
     far(v) ||
-    (Number.isInteger(v) && Math.abs(v - entry) > entry * 0.2 && (v < entry || !upOk));
+    (countLike(v) && Math.abs(v - entry) > entry * 0.2 && (v < entry || !upOk));
   if (!looksPips(level)) return null;
   const down = (side === 'buy') === (kind === 'sl');
   const price = priceAtPipOffset(spec, entry, down ? -level : level);

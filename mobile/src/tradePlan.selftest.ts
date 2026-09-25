@@ -3026,7 +3026,12 @@ console.log('tradePlan mini orphan/lot chips selftest OK');
   // مستويات حقيقية: كسور، أو سقوط دون الخُمس، أو فوق الدخول (دون النصف)
   assert.equal(L({ symbol: 'USDJPY', side: 'sell', entry: 157.4, level: 150.25, kind: 'tp' }), null);
   assert.equal(L({ symbol: 'USDJPY', side: 'sell', entry: 157.4, level: 150, kind: 'tp' }), null);
-  assert.equal(L({ symbol: 'USDJPY', side: 'sell', entry: 157.4, level: 99.5, kind: 'tp' }), null);
+  // منزلة واحدة على الفوركس = نصف/عُشر pip لا سعر (تحت الخُمس)؛ منزلتان سعرٌ
+  near(L({ symbol: 'USDJPY', side: 'sell', entry: 157.4, level: 99.5, kind: 'tp' }), 99.5, 156.405);
+  near(L({ symbol: 'USDJPY', side: 'buy', entry: 157.4, level: 100.5, kind: 'sl' }), 100.5, 156.395);
+  assert.equal(L({ symbol: 'USDJPY', side: 'sell', entry: 157.4, level: 99.25, kind: 'tp' }), null);
+  // الفضة: الرقم الصحيح وحده (هدف «85.5» من 110 سعرٌ ممكن بعد هبوط يناير 2026)
+  assert.equal(L({ symbol: 'XAGUSD', side: 'sell', entry: 110, level: 85.5, kind: 'tp' }), null);
   assert.equal(L({ symbol: 'GBPJPY', side: 'buy', entry: 199.5, level: 205, kind: 'tp' }), null);
   assert.equal(L({ symbol: 'XAGUSD', side: 'buy', entry: 45, level: 40, kind: 'sl' }), null);
   assert.equal(L({ symbol: 'XAUUSD', side: 'buy', entry: 2650, level: 2400, kind: 'sl' }), null);
@@ -3049,7 +3054,8 @@ console.log('tradePlan levelLooksLikePips JPY/silver selftest OK');
   near(L({ symbol: 'GBPJPY', side: 'buy', entry: 200.5, level: 250, kind: 'tp' }), 250, 203);
   near(L({ symbol: 'EURJPY', side: 'sell', entry: 162, level: 200, kind: 'sl' }), 200, 164);
   // حقيقية: كسور، أو دون الخُمس، أو الليرة (USDTRY 34 ⇒ 41)، أو المعادن (قاعدة الضعف)
-  assert.equal(L({ symbol: 'USDJPY', side: 'buy', entry: 157.4, level: 190.5, kind: 'tp' }), null);
+  near(L({ symbol: 'USDJPY', side: 'buy', entry: 157.4, level: 190.5, kind: 'tp' }), 190.5, 159.305);
+  assert.equal(L({ symbol: 'USDJPY', side: 'buy', entry: 157.4, level: 190.25, kind: 'tp' }), null);
   assert.equal(L({ symbol: 'USDJPY', side: 'buy', entry: 157.4, level: 185, kind: 'tp' }), null);
   assert.equal(L({ symbol: 'USDTRY', side: 'buy', entry: 34, level: 41, kind: 'tp' }), null);
   assert.equal(L({ symbol: 'XAGUSD', side: 'buy', entry: 30, level: 50, kind: 'tp' }), null);
