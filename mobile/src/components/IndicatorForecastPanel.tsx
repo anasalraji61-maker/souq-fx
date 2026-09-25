@@ -69,6 +69,8 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   const [direction, setDirection] = useState('neutral');
   const [avg, setAvg] = useState(0);
   const [levels, setLevels] = useState<{ entry: number; sl: number; tp: number } | null>(null);
+  // لماذا لا مستويات (`levels_basis.unavailable` من الخادم): no_live_price | not_enough_candles | neutral.
+  const [levelsGap, setLevelsGap] = useState<string | null>(null);
   const [votes, setVotes] = useState<Vote[]>([]);
   const [rsi, setRsi] = useState<number | null>(null);
   const [note, setNote] = useState('');
@@ -98,6 +100,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
     setDirection('neutral');
     setAvg(0);
     setLevels(null);
+    setLevelsGap(null);
     setVotes([]);
     setRsi(null);
   };
@@ -116,7 +119,8 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
       });
       if (!mountedRef.current || req !== reqRef.current) return;
       // demo = اتجاه ومستويات دخول/وقف/هدف من شموع مختلَقة (المزوّد متعذّر) — لا تُعرض كإشارة.
-      if (res.data_kind === 'demo') {
+      // و`unavailable`/اتجاه null (backend-r2): لا مصدر أصلاً — الحالة نفسها لا «محايد» محسوب.
+      if (res.data_kind === 'demo' || res.data_kind === 'unavailable' || res.direction == null) {
         clearResult();
         setNote(t.noLiveDataResult);
         return;
@@ -124,8 +128,10 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
       setHasResult(true);
       setDirection(res.direction);
       setAvg(res.avg_score);
-      setLevels(res.levels);
-      setVotes(res.votes);
+      setLevels(res.levels ?? null);
+      const gap = (res as { levels_basis?: { unavailable?: unknown } | null }).levels_basis?.unavailable;
+      setLevelsGap(typeof gap === 'string' ? gap : null);
+      setVotes(Array.isArray(res.votes) ? res.votes : []);
       setRsi(typeof res.snapshot?.rsi === 'number' ? res.snapshot.rsi : null);
       setNote(res.disclaimer);
     } catch {
@@ -245,7 +251,15 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
               {rr != null ? ` · R:R ${formatRR(rr)}` : ''}
             </Text>
           ) : (
-            <Text style={[styles.levels, { textAlign: align }]}>{t.forecastNoSignal}</Text>
+            // «لا اتجاه غالب» تحت «شراء» كانت تناقض نفسها حين غابت المستويات لسبب آخر (لا سعر حيّ، شموع أقلّ
+            // من ATR14) — السبب كما قاله الخادم، و«لا اتجاه غالب» للمحايد فقط.
+            <Text style={[styles.levels, { textAlign: align }]}>
+              {direction !== 'neutral' && levelsGap === 'no_live_price'
+                ? t.sigLevelsUnavailableNoPrice
+                : direction !== 'neutral' && levelsGap === 'not_enough_candles'
+                  ? t.sigLevelsUnavailableFewCandles
+                  : t.forecastNoSignal}
+            </Text>
           )}
         </View>
       ) : null}
