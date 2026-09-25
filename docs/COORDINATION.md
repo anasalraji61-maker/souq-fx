@@ -1,14 +1,13 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 56، بعد 3116ec9) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 57، بعد 59bb26b) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
 |---|---|---|---|
-| launch | ui (`notifications.ts:39-40`، تعليق فقط) | **launch110**: تعليق `ensureAlertChannel` يقول «تغيير اللغة يظهر بإعدادات النظام عند الإقلاع التالي» — منذ `6d28f47` يستدعي `setLang` (`I18nContext.tsx`) `ensureAlertChannel(true)` و`registerPushToken()` فوراً. صحّح الجملة كي لا يُزال الاستدعاء ظنّاً أنه زائد | launch110 |
 | launch | ui (`ChartFrame.tsx:427`) | **launch111**: وسم السبريد برأس الإطار `accessibilityLabel={t.cfSpreadA11y}` ثابت يحلّ محلّ النصّ ⇒ VoiceOver يقول «سبريد البيع والشراء» **بلا أي رقم** (منذ `8aeaf13` يُقرأ منفرداً؛ وبعد `7697f96` الهاتف يعرض الـpip وحده). المفاتيح جاهزة: `cfSpreadBidAskA11y` (`{bid}` `{ask}`، حين يظهر B/A) + `cfSpreadPipsA11y` (`{pips}` = `spreadPips.toFixed(1)`) تُضمّ بـ«، » أو يُستعمل ما يظهر منهما | launch111 |
 | QA | chart | **جهاز**: سحب جسم الرسم المحدَّد، وسحب خطّ التنبيه (`AlertDragHandle`) على iOS/Android والويب — RELEASE §5 | QA1 |
-| QA | الجميع | **(a)** تصديرات بلا أي مستعمل حتى في ملفها (سكربت QA56 على كل `export` — لا تكرار تعريفات؛ 12): جديدان (chart) `WatchSymbol` (`watchlist.ts:26`)، `__resetWatchlistMemoryForTests` (`watchlistStore.ts:62`، ولا selftest يستدعيها)؛ والقديمة `deleteTemplate`، `subscribeTemplatesSaveError`، `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite`، `PINE_PRESETS`، `getToolPanel`، `__setWatchlistStorageForTests`، `motion` (ui: مُبقى عمداً) | QA1 ★ |
+| QA | tools / ui | **(a)** تصديرات بلا أي مستعمل (سكربت QA56؛ `9909b91` حذف 10 من 12 — تحقّقتُ grep صفر): باقٍ `getToolPanel` (tools، `tools-panels/registry.ts:53`، لا مستدعٍ حتى بملفه)، و`motion` (`theme.ts:119`، ui: مُبقى عمداً) | QA1 ★ |
 | launch | backend/أنس | `openrouter_ai.py:71` «أنت خبير تداول فوركس» ويعطي دخول/وقف/هدف | launch9 ★ |
 | QA | backend/أنس | كلمة مرور ≥4 أحرف فقط (`main.py:224`) لحساب مالي | QA24 ★ |
 | launch | backend/أنس | قوالب الردّ بلا ذكاء اصطناعي `main.py` تفرّع `en` فقط ⇒ الكردي يُجاب بالعربية (مقصود لغياب مراجعة كردية) | launch77 |
@@ -19,10 +18,11 @@
 | launch | أنس | ترخيص مصادر البيانات (ForexFactory/DailyFX/Twelve Data) قبل الرفع (`RELEASE-MOBILE.md` §0) | launch73 |
 | backend | أنس | **قرارات اتخذها backend (لأنس عكسها)**: التعادل مستثنى من نسبة الفوز؛ DXY «غير متاح» بدل حسابه من السلّة؛ حذف ميزة «البنوك» | backend-r1 |
 | backend | أنس | **backend-r6 (6) العمولات** (لم يُغيَّر): `db.py` يدفع مكافأة التوازن 5% عند **أي** تساوٍ (1=1، 3=3) بينما نصّ الخطة (`commissions.py:84`) «عند مستوى مؤهل» (2،4،8…) — أيّهما القاعدة؟ والتسجيل بإحالة يزيد العدّاد بلا سطر عمولة؛ والشهر بتوقيت الخادم المحلي لا UTC | backend-r6 |
-| backend | ui (اختياري، `api.ts:872` وشاشة المساعد) | **backend-r12** `ee90f7d`: ردّ `/api/ai/ask` يحمل `price_as_of` (ثوانٍ UTC، إغلاق آخر شمعة؛ null بلا سعر حقيقي) — قد يسبق «الآن» بـ15د عند حدّ المزوّد أو أيام بعطلة الأسبوع. اعرضه بجانب «دخول» السيناريو (مثلاً «السعر عند 21:45 الجمعة») كي لا يُقرأ الدخول سعراً حيّاً. و`556c4bb`: `/quote` لم يعد يرسل `as_of` = الآن لسعر بلا وقت — لا تغيير مطلوب | backend-r12 |
-| ui | launch (`locales.ts` ×3) | **ui9**: أضف `aiPriceAsOf` (ar/en/ku، عنصر نائب `{time}`) — `AiPanel.tsx` يقرؤه إن وُجد وإلا نسخة محلية `PRICE_AT_COPY` (الكردي بحاجة مراجعة): «السعر بالجواب: إغلاق {time} بتوقيتك — ليس سعراً حيّاً» تحت كل جواب له `price_as_of` (backend-r12). بعد الإضافة يحذف ui النسخة المحلية. **launch: أُضيف (التشغيلة 111) — الآن على ui حذف `PRICE_AT_COPY` والقراءة المباشرة `t.aiPriceAsOf`** | ui9 |
+| ui | ui (`AiPanel.tsx:23 :54-56`) | **ui9**: `aiPriceAsOf` أُضيف ×3 (`2109fdc`، launch) و`AiPanel.tsx:54` يقرؤه ⇒ يعمل. باقٍ على ui: حذف النسخة المحلية `PRICE_AT_COPY` (:23) وتحويل `(t as Partial<…>).aiPriceAsOf ??` إلى `t.aiPriceAsOf` مباشرة | ui9 |
 
-**تحقّق الدورة 56 (بالكود) — أُغلق صفّان:** QA55 (e) ← backend (`bea2bb1`، `backtest.py:162-165` خروج الوسط `signal = "flat"` إغلاق فقط + `tests/test_backtest.py:103`)؛
-backend-r10 (ب) ← chart (`4cb92bf`، `pineLite.ts:16 :23` و`momentum.ts:22 :29 :981 :988 :1133` كلها `avgGain === 0 ? 50 : 100`). **إلحاق (وصل أثناء الدورة) — أُغلقت 4 أخرى:** tools73 ← launch (`6d28f47`، `I18nContext.tsx:71` `registerPushToken()` + `ensureAlertChannel(true)`)؛ backend-r10 (أ) ← ui (`6afb33b`، `BacktestPanel.tsx:137-141` `x.open` و`open_pnl_pct`)؛
-backend-r10 (ج) ← ui (`0350136`، وسم «مخزَّن»)؛ launch110 ← ui (فُتح وأُغلق: `3f7ea80`، `notifications.ts:39-40`). البناء بعده أخضر 0، 93/93.
-طلب chart القديم `mcEstimatedTag` منفَّذ (`locales.ts` ×4). **المراجعة (a):** 0 تعريفات مكرّرة بين الملفات؛ 120 تصديراً لا يستورده ملف آخر، 108 منها مستعملة داخل ملفها (تصدير زائد، غير ضارّ) ⇒ 12 ميتة فعلاً بالصفّ أعلاه.
+| chart | أنس | **chart-r41 TTM Squeeze** (`volatility.ts:562`): كلتنر EMA20+ATR Wilder، ونسخة LazyBear الشائعة SMA20+SMA(TR) ⇒ ~15% من النقاط بحالة معاكسة. نضيف خيار «LazyBear» أم نُبقي؟ | chart-r41 |
+
+**تحقّق الدورة 57 (بالكود) — أُغلق صفّان:** launch110 ← ui (`notifications.ts:40` التعليق يقول «فوراً» عبر `setLang` ⇒ `ensureAlertChannel(true)`)؛
+backend-r12 ← ui (`095954f`، `AiPanel.tsx:82-83` يقرأ `res.price_as_of`، `api.ts:875`). QA1 (a) ضُيِّق من 12 إلى 2 (`9909b91`، grep لكل اسم: صفر). باقٍ: launch111 (`ChartFrame.tsx:427` ما زال `t.cfSpreadA11y`).
+**المراجعة (b — نصوص ثابتة):** grep للعربي خارج التعليقات و`locales.ts`/selftests، ولـ`label/placeholder/title="…"` و`>Text<`: لا جديد يُعرض. المعروف: `academy.ts` (QA27)، `MessagesScreen`/`mock.ts`/`api.ts:882` (launch52)،
+`PRICE_AT_COPY` (ui9، مؤقّت). احتياطات `chart/types.ts` (`CHART_KINDS` إلخ) كل مستدعٍ يمرّر الترجمة؛ «Log» بزرّ المقياس و`placeholder="EURUSD"` مصطلحات عالمية؛ الـregex بـ`positionSize`/`parseDecimal` مدخلات لا عرض.
