@@ -1,12 +1,15 @@
 import type { Candle } from '../api';
 import type { SyntheticBar } from './types';
+import { renkoAtrBox } from './renko';
 
-/** Point & Figure columns as synthetic candles (X = bull brick, O = bear). */
+/**
+ * Point & Figure columns as synthetic candles (X = bull brick, O = bear).
+ * الصندوق الافتراضي كـTradingView: ATR(14) على آخر شمعة مغلقة، والانعكاس 3 صناديق. كان نصف متوسط مدى
+ * الشمعة للتاريخ كلّه ⇒ صندوق أصغر بكثير (ضجيج أعمدة) ويتغيّر مع كل تيك حيّ.
+ */
 export function pointFigure(candles: Candle[], boxSize?: number, reversal = 3): SyntheticBar[] {
   if (candles.length < 3) return candles;
-  const ranges = candles.map((c) => c.high - c.low);
-  const avg = ranges.reduce((a, b) => a + b, 0) / ranges.length;
-  const box = boxSize ?? Math.max(avg * 0.5, 1e-8);
+  const box = boxSize ?? renkoAtrBox(candles);
   const out: SyntheticBar[] = [];
   let colOpen = candles[0].close;
   let direction: 1 | -1 | 0 = 0;
