@@ -96,6 +96,7 @@ const suffixFree = (raw: string): string =>
   raw
     .trim()
     .toUpperCase()
+    .replace(/^[#.]+/, '')
     .replace(/[.\-_#+][A-Z0-9]{0,5}$/, '')
     .replace(/(.)CASH$/, '$1');
 
@@ -135,12 +136,16 @@ export function isCryptoSymbol(symbol: string): boolean {
  * - **لاحقتان بفاصل** («NAS100.cash.m»، «NAS100_USD.m»، «EURUSD.m.x»): `suffixFree` تُسقط واحدة، وقاعدة OANDA تريد
  *   `_XXX` آخر الرمز. تُقشَّر لاحقةٌ بفاصل وتُعاد المحاولة.
  * - **كلمة نوع حساب ملاصقة** («EURUSDmini»، «XAUUSDpro»، «GBPJPYecn»): كـ«micro» و«Cash» الملاصقتين.
+ * - **بادئة** «#»/«.» («#US30»، «.US30»، «#NAS100.cash»): تُقشَّر وتُعاد المحاولة.
  * تُقبل النتيجة فقط إن لم تكن فارغة — التحذير الزائد لا يكلّف شيئاً، والغائب قد يكلّف.
  */
 export function symbolCurrencies(symbol: string): string[] {
   const r = currenciesOnce(symbol);
   if (r.length) return r;
   const up = symbol.trim().toUpperCase();
+  // بادئة وسيط («#US30»، «.NAS100»، «#GOLD»): `suffixFree` كانت تعدّ «#US30» كلّها لاحقة فتُسقطها ⇒ `[]` قبل الرواتب
+  const unprefixed = up.replace(/^[#.]+/, '');
+  if (unprefixed !== up && unprefixed.length >= 2) return symbolCurrencies(unprefixed);
   const peeled = up.replace(/[.\-_#+][A-Z0-9]{0,5}$/, '');
   if (peeled !== up && peeled.length >= 2) {
     const p = symbolCurrencies(peeled);

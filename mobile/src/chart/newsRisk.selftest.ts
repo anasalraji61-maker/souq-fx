@@ -16,6 +16,7 @@ import {
   newsBannerText,
   symbolCurrencies,
   knownSingleName,
+  isCryptoSymbol,
   NEWS_STALE_MAX_MS,
   type NewsEvent,
 } from './newsRisk';
@@ -98,6 +99,16 @@ assert.deepEqual(symbolCurrencies('GER40Cash'), ['EUR']);
 assert.deepEqual(symbolCurrencies('UK100CASH'), ['GBP']);
 assert.deepEqual(symbolCurrencies('OILCash'), ['USD']);
 assert.deepEqual(symbolCurrencies('JP225Cash'), ['JPY']);
+// بادئة وسيط «#»/«.»: كانت «#US30» كلّها تُعدّ لاحقة ⇒ `[]` (لا تحذير ولا سطر «التقويم غير متاح») قبل الرواتب
+assert.deepEqual(symbolCurrencies('#US30'), ['USD']);
+assert.deepEqual(symbolCurrencies('.US30'), ['USD']);
+assert.deepEqual(symbolCurrencies('#NAS100.cash'), ['USD']);
+assert.deepEqual(symbolCurrencies('#GER40'), ['EUR']);
+assert.deepEqual(symbolCurrencies('#GOLD'), ['USD']);
+assert.deepEqual(symbolCurrencies('#EURUSD'), ['EUR', 'USD']);
+assert.deepEqual(symbolCurrencies('#'), []);
+assert.equal(knownSingleName('#US30'), 'US30');
+assert.equal(isCryptoSymbol('#BTCUSD'), true);
 // «Cash» لا تُسقَط إلا عن اسم معروف؛ وحدها أو عن رمز مجهول تبقى []
 assert.deepEqual(symbolCurrencies('CASH'), []);
 assert.deepEqual(symbolCurrencies('AAPLCash'), []);
