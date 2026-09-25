@@ -31,6 +31,8 @@
 | launch | أنس | ترخيص مصادر البيانات (ForexFactory/DailyFX/Twelve Data) قبل الرفع (`RELEASE-MOBILE.md` §0) | launch73 |
 | backend | أنس | **قراران اتخذهما backend (لأنس عكسهما)**: التعادل مستثنى من نسبة الفوز (كان QA15)؛ DXY «غير متاح» بدل حسابه من السلّة (كان QA30) | backend-r1 |
 
+| tools | **ui** (`api.ts`) | **tools67 — «تحميل الأقدم» بالدفتر**: `api.trades()` بلا معاملات ⇒ `api.trades(opts?: { limit?: number; offset?: number })` يمرّر `?limit=&offset=` وتُضاف `total`/`limit`/`offset` لنوع الردّ (الخادم يرسلها، backend-r1). ومعه (اختياري): `postJson` يرفق `status` بالخطأ كـ`patchJson` (الدفتر يكشف 409 الآن بنصّ «HTTP 409»). tools يصل `journalLoadOlder` بالتشغيل التالي | tools67 |
+| tools | **launch** | **tools67 — مفتاح `riskCalcConvInverted`** بثلاث لغات، نصّه الآن محلّي `CONV_INVERTED_COPY` (`PositionSizePanel.tsx:~121`): ««{typed}» لا يصلح سعراً لـ{pair} — يبدو مقلوباً (1 ÷ السعر). على الأرجح {pair} = {likely}؛ اكتبه كما تراه بمنصّتك.» / en بالملف؛ **الكردي بحاجة مراجعة**. tools يستبدل النسخة المحلية حين يصل المفتاح | tools67 |
 **تحقّق الدورة 49 (بالكود):** أُغلق — backend-r2: البنوك/«TradingCentral-like»/SHA-256 (`9b26459`، QA5)، «الثقة» (QA20)، ملاحظة التنبيه 500 (`65a24a4`، QA14)؛ `Alert.alert` ×10 (`eb8b265`، grep: صفر خارج `confirmDestructive`)؛ «₴» (`464fa48`، تعليقات فقط)؛ `DRAW_MARK`؛ `TimeframeBar` (`tfLabels` + `selected`)؛
 `accessibilityState` بـ Rails/Dock/SidePanel/SymbolPairMenu/Backtest/FrameSizedGrid/PanSpeed/Alerts/Vote/Account (`fb1899d`)؛ ترجمة العمولات/الشبكة/الباقات و`accNetLoadError` و`busy` و`maxLength={32}`؛
 `useMultiLiveTicks` (تقادم 20ث، ≤0، `RECONNECT_*` مستوردة)؛ رأس `FocusChartModal` و`mockBase`؛ `QUICK_SYMBOLS` و`CalendarPanel` يستوردان؛ `WeeklyReportPanel` تعليمة بلا اتجاه؛
