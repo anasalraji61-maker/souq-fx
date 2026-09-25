@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import math
 import re
 import secrets
 import sqlite3
@@ -1799,6 +1800,9 @@ def _opt_level(v) -> float | None:
     return f if f > 0 and f != float("inf") else None
 
 
+PNL_PCT_MAX = 1e15
+
+
 def _pnl_pct(side: str, entry: float, exit_price: float) -> float | None:
     """نسبة حركة السعر فقط — الحساب الوحيد بالملف (`add_trade`/`close_trade`/`update_trade` تستدعيه).
 
@@ -1809,8 +1813,16 @@ def _pnl_pct(side: str, entry: float, exit_price: float) -> float | None:
     if not entry or entry <= 0:
         return None
     if side == "buy":
-        return (exit_price - entry) / entry * 100
-    return (entry - exit_price) / entry * 100
+        pnl = (exit_price - entry) / entry * 100
+    else:
+        pnl = (entry - exit_price) / entry * 100
+    # **نتيجة خارج المدى تعيد None**: المُصادِق يقبل أيّ سعر موجب منتهٍ، فدخول 1e-300 وخروج 1e308 = `pnl=inf`
+    # ⇒ الردّ لا يُسلسَل JSON ‏(500) ولا يعرف التطبيق رقم الصفقة ليحذفها، وكل طلب دفتر بعدها 500 لأنه يعيد
+    # `trade_stats`. وصفقتان بـ1e306% منتهيتان لكن مجموعهما inf. سقف 1e15% (لا حركة سعر حقيقية تقاربه، وخطأ
+    # كتابة كدخول 0.00001 بدل 1.1 ≈ 1e7% يبقى محسوباً) يجعل أيّ مجموع للصفوف منتهياً.
+    if not math.isfinite(pnl) or abs(pnl) > PNL_PCT_MAX:
+        return None
+    return pnl
 
 
 # صفحة الدفتر الافتراضية وسقفها. القائمة وحدها تُرقَّم — الإحصاءات تُحسب على **كل** الصفقات.

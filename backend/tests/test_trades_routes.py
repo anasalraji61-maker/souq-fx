@@ -649,3 +649,30 @@ def test_two_concurrent_patches_do_not_erase_each_other(client, monkeypatch):
     row = client.get("/api/trades", headers=_DEV1).json()["trades"][0]
     assert row["side"] == "sell" and row["entry"] == pytest.approx(1.1)
     assert row["pnl"] == pytest.approx((1.1 - 1.15) / 1.1 * 100, abs=0.01)
+
+
+# ─── نتيجة خارج المدى: None بدل inf يكسر الدفتر كله ─────────────────────────
+
+def test_an_overflowing_pnl_is_not_scored_and_the_journal_stays_readable(client):
+    """دخول 1e-300 وخروج 1e308 مقبولان بالمُصادِق لكن `pnl=inf` ⇒ كان الإنشاء 500 وكل طلب دفتر بعده 500."""
+    r = client.post("/api/trades", json={**_TRADE, "entry": 1e-300, "exit": 1e308}, headers=_DEV1)
+    assert r.status_code == 200, r.text
+    assert r.json()["trade"]["pnl"] is None
+    r = client.get("/api/trades", headers=_DEV1)
+    assert r.status_code == 200, r.text
+    assert r.json()["stats"]["trade_count"] == 0
+
+
+def test_two_huge_but_finite_pnls_do_not_sum_to_infinity(client):
+    """1e306% لكل صفقة منتهٍ، ومجموعهما inf — السقف يخرجهما من الإحصاء بدل 500."""
+    for _ in range(2):
+        _open_trade(client, entry=1.0, exit=1e306)
+    r = client.get("/api/trades", headers=_DEV1)
+    assert r.status_code == 200, r.text
+    assert math.isfinite(r.json()["stats"]["total_pnl_pct"])
+
+
+def test_a_large_real_typo_move_is_still_scored(client):
+    """خطأ كتابة واقعي (دخول 0.00001 بدل 1.1) يبقى محسوباً — السقف للعبث العددي فقط."""
+    t = _open_trade(client, entry=0.00001, exit=1.1)
+    assert t["pnl"] == pytest.approx((1.1 - 0.00001) / 0.00001 * 100)
