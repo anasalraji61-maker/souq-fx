@@ -386,7 +386,7 @@
 
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
-| feb79ff | `api.news()` يحمل `status?`/`as_of?`/`stale?` (اختيارية — خادم أقدم = السلوك السابق). `NewsPanel`: `status === 'unavailable'` بلا عناوين ⇒ `t.newsSourceUnavailable` (بلون `staleNote`) بدل «لا توجد أخبار حالياً»؛ `stale: true` مع عناوين ⇒ `t.newsStaleAsOf` بـ`formatLocalStamp(as_of, lang)` فوق القائمة. فشل الطلب نفسه يبقى `t.newsLoadError` (عطل اتصال ≠ عطل المصدر) | backend-r33، launch132 |
+| 77e39f2 | `api.news()` يحمل `status?`/`as_of?`/`stale?` (اختيارية — خادم أقدم = السلوك السابق). `NewsPanel`: `status === 'unavailable'` بلا عناوين ⇒ `t.newsSourceUnavailable` (بلون `staleNote`) بدل «لا توجد أخبار حالياً»؛ `stale: true` مع عناوين ⇒ `t.newsStaleAsOf` بـ`formatLocalStamp(as_of, lang)` فوق القائمة. فشل الطلب نفسه يبقى `t.newsLoadError` (عطل اتصال ≠ عطل المصدر) | backend-r33، launch132 |
 
 بوابة البناء خضراء (tsc 0) قبل الـcommit. launch131 أُنجز بتشغيل 30 (`76b2256`) — الصفّ باقٍ حتى يغلقه QA.
 
