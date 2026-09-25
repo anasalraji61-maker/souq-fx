@@ -97,6 +97,7 @@ import {
 } from '../positionSize';
 import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
+import { pipUnit } from '../chart/measureReadout';
 import { formatPrice } from '../chart/math';
 import { playSoftClick } from '../audio/playSoftClick';
 import {
@@ -136,7 +137,7 @@ const MKT_QUOTE_MAX_AGE_MS = 120_000;
 /** حاسبة حجم المركز: رصيد × نسبة مخاطرة ÷ (وقف بالنقاط × قيمة النقطة) — مع قيمة نقطة صحيحة لأزواج
  * الين والتقاطعات والذهب عبر سعر تحويل حيّ لعملة الحساب. الرياضيات كلها بـ`positionSize.ts`. */
 export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: Props) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   // رمز الشارت الحالي قد لا يكون زوجاً قابلاً للحساب (DXY مثلاً) — نبدأ بـEURUSD حينها
   const [symbol, setSymbol] = useState(() => (instrumentSpec(defaultSymbol) ? defaultSymbol : 'EURUSD'));
@@ -943,7 +944,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const costsAdvice = costsLotsAdvice(lots, withSpread);
   /** «(+1.5 pip + 7.00 USD/lot)» — ما دخل السطر فعلاً، كي لا تُقرأ المخاطرة الأعلى بلا سبب ظاهر */
   const costParts = [
-    spreadPips ? `${spreadPips} pip` : null,
+    spreadPips ? `${spreadPips} ${pipUnit(lang)}` : null,
     commissionPerLot ? `${formatMoney(commissionPerLot, moneyCcy)}/lot` : null,
   ].filter(Boolean);
   /**

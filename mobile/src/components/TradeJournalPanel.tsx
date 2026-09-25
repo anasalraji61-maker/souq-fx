@@ -17,6 +17,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { misplacedArabicThousandsSign } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
+import { pipUnit } from '../chart/measureReadout';
 import { ambiguousThousandsPrice, miniAccountSymbol, parsePriceFor, liveEntryQuoteState, sizeLooksLikeUnits } from '../positionSize';
 import {
   analyzePlan,
@@ -730,7 +731,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const pips = formatPips(p.pips == null ? null : Math.abs(p.pips));
     const r = formatR(p.r);
     const text = [
-      pips != null ? `${sign(p.pips ?? 0)}${pips} pip` : null,
+      pips != null ? `${sign(p.pips ?? 0)}${pips} ${pipUnit(lang)}` : null,
       p.cash ? formatJournalMoney(p.cash, t.journalMoneyUsc, true) : null,
       `${sign(p.pct)}${Math.abs(p.pct).toFixed(2)}%`,
       r ? t.journalResultR.replace('{r}', r) : null,
@@ -1957,7 +1958,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
                 }}
                 accessibilityLabel={t.journalSlAtPipsA11y.replace('{pips}', String(x.pips)).replace('{price}', x.text)}
               >
-                <Text style={[styles.qChipText, on ? styles.chipTextOn : { color: colors.bear }]}>{`−${x.pips} pip`}</Text>
+                <Text style={[styles.qChipText, on ? styles.chipTextOn : { color: colors.bear }]}>{`−${x.pips} ${pipUnit(lang)}`}</Text>
               </Pressable>
             );
           })}
