@@ -499,7 +499,7 @@
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
 | b0c7b7d | `MatrixBottomDock` تبويب الدفتر: `<TradeJournalPanel defaultSymbol={symbol} chartBannerVisible />` — الرصيف بالتدفّق تحت الشارت و`TerminalScreen` يعرض `<NewsRiskBanner symbol={symbol} />` للرمز نفسه فوقه ⇒ لا تحذير «صفقاتك المفتوحة» مكرَّر. `MatrixSidePanel` **لم يُمسّ** (اللوح يغطّي الشريط؛ تعليق بالرصيف ينبّه) | tools92 |
-| 51089f9 | `useMultiLiveTicks` (قائمة المتابعة والرباعي): عدّاد الصمت يبدأ من المحاولة، ومقبس عالق بـ`CONNECTING` > `TICK_STALE_MS` يُترك ويُعاد — نظير إصلاح chart `42c0f3b` بـ`useLiveTicks` الذي لم يصل النسخة المتعدّدة؛ كانت القائمة تنتظر مهلة TCP بالنظام بلا سعر حيّ | — (وُجد بالمراجعة) |
+| 51089f9 | `useMultiLiveTicks` (قائمة المتابعة والرباعي): عدّاد الصمت يبدأ من المحاولة، ومقبس عالق بـ`CONNECTING` > `TICK_STALE_MS` يُترك ويُعاد — نظير إصلاح chart `42c0f3b` بـ`useLiveTicks` الذي لم يصل النسخة المتعدّدة؛ كانت القائمة تنتظر مهلة TCP بالنظام بلا سعر حيّ | chart-r61 (وصل بـpull بعد الإصلاح؛ مطابق حرفياً — العودة للواجهة مع `CONNECTING` يتولّاها مؤقّت الصمت بعد 20s كـ`useLiveTicks`) |
 
 بوابة البناء خضراء (tsc 0) قبل كل commit.
 
