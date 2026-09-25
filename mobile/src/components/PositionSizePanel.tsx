@@ -92,6 +92,7 @@ import {
   manualConvLooksInverted,
   typicalSlPipsExample,
   typicalSpreadPipsExample,
+  fillExampleOrDrop,
 } from '../positionSize';
 import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
@@ -593,9 +594,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       ? null
       : spreadWide != null
         ? // `{example}` بحسب الأداة: «مثل 1.5» على USDZAR كلفةٌ أصغر ×60 (tools85)
-          t.riskCalcSpreadTooWide
-            .replace('{n}', String(spreadWide))
-            .replace('{example}', typicalSpreadPipsExample(spec) || typicalSpreadPipsExample(null))
+          // بلا مثال صادق (XAUJPY) يُحذف «(مثل …)» كلّه — «1.5» العام كان يُقترح على ذهبٍ بالين (launch129)
+          fillExampleOrDrop(t.riskCalcSpreadTooWide.replace('{n}', String(spreadWide)), typicalSpreadPipsExample(spec))
         : misplacedArabicThousandsSign(spread, { unit: 'pip' })
           ? t.arabicThousandsSignHint
           : spreadPoints

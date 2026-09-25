@@ -615,6 +615,15 @@ export function typicalSpreadPipsExample(spec: InstrumentSpec | null | undefined
 }
 const HIGH_VOL_EXOTIC_QUOTES = new Set(['TRY', 'ZAR', 'MXN']);
 
+/**
+ * يملأ `{example}` برسالةٍ مترجمة، وبلا مثال (`''`، كـXAUJPY) يحذف القوس الذي يحويه كلّه مع الفراغ قبله —
+ * «(مثل 1.5)» على ذهبٍ بالين مثالٌ خاطئ ×20، و«(مثل )» فارغاً أسوأ (launch129). مستقلّ عن اللغة: يعمل بـ«مثل»/«e.g.»/«بۆ نموونە».
+ */
+export function fillExampleOrDrop(template: string, example: string): string {
+  if (example) return template.split('{example}').join(example);
+  return template.replace(/\s*[(（][^()（）]*\{example\}[^()（）]*[)）]/g, '').split('{example}').join('');
+}
+
 /** قيمة الـpip للوت قياسي واحد، بعملة الحساب. */
 export function pipValuePerLot(spec: InstrumentSpec, quoteToAccount: number): number {
   return spec.contractSize * spec.pipSize * quoteToAccount;

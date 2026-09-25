@@ -40,6 +40,7 @@ import {
   riskForLots,
   typicalSlPipsExample,
   typicalSpreadPipsExample,
+  fillExampleOrDrop,
   riskInQuoteCcy,
   pnlInQuoteCcy,
   profitAtTarget,
@@ -110,6 +111,7 @@ import {
   lowRewardWarning,
 } from './positionSize';
 import { formatRR } from './tradePlan';
+import { DICTS } from './i18n/locales';
 
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps;
 
@@ -3196,6 +3198,27 @@ console.log('positionSize typicalSlPipsExample selftest OK');
   }
 }
 console.log('positionSize typicalSpreadPipsExample selftest OK');
+
+{
+  // launch129: بلا مثال (XAUJPY) يُحذف «(مثل …)» كلّه بكل لغة، لا «مثل 1.5» العام ولا «مثل )» فارغاً
+  const xaujpy = typicalSpreadPipsExample(instrumentSpec('XAUJPY')!);
+  assert.equal(xaujpy, '');
+  for (const L of Object.values(DICTS)) {
+    const tpl = L.riskCalcSpreadTooWide.replace('{n}', '900');
+    const out = fillExampleOrDrop(tpl, xaujpy);
+    assert.ok(!out.includes('{example}') && !out.includes('1.5') && !out.includes('()'), out);
+    assert.ok(!/\(\s*\)|\s\./.test(out), out);
+    assert.ok(out.endsWith('.'), out);
+    assert.ok(out.length < tpl.length, out);
+    // بمثال: القوس يبقى والمثال فيه
+    const withEx = fillExampleOrDrop(tpl, '100');
+    assert.ok(withEx.includes('100)'), withEx);
+  }
+  assert.equal(fillExampleOrDrop('Too wide (e.g. {example}).', ''), 'Too wide.');
+  assert.equal(fillExampleOrDrop('Too wide (e.g. {example}).', '3'), 'Too wide (e.g. 3).');
+  assert.equal(fillExampleOrDrop('No parens {example}', ''), 'No parens ');
+}
+console.log('positionSize fillExampleOrDrop selftest OK');
 
 {
   // حدّ السبريد بحسب الأداة: سبريد USDTRY الليلي 0.05–0.2 ليرة (500–2000 pip) كان يُرفض «غير واقعي» ويُسقط سطر «شاملة السبريد»
