@@ -438,6 +438,24 @@ export function computePpo(closes: number[], fast = 12, slow = 26): (number | nu
 }
 
 /**
+ * PPO بلوحته القياسية 12/26/9 (تعريف StockCharts/MT كـMACD نسبيّ): الخطّ، وإشارته `ema(ppo, 9)`،
+ * والهستوغرام (الخطّ − الإشارة). كانت لوحة PPO أعمدة الخطّ وحده ⇒ الأعمدة تُقرأ هستوغراماً وهي الخطّ
+ * نفسه، وتقاطع الخطّ وإشارته لا يُرى. (PPO المدمج بـTradingView خطّ SMA 10/21 بلا إشارة — تعريف آخر؛
+ * فتراتنا EMA 12/26 فالإشارة جزء منه.) الإشارة من أوّل PPO صالح (`ema` تبذر بـSMA بعد فراغ الإحماء).
+ */
+export function computePpoLines(
+  closes: number[],
+  fast = 12,
+  slow = 26,
+  signalLen = 9
+): { ppo: (number | null)[]; signal: (number | null)[]; hist: (number | null)[] } {
+  const ppo = computePpo(closes, fast, slow);
+  const signal = ema(ppo, signalLen);
+  const hist = ppo.map((v, i) => (v != null && signal[i] != null ? v - signal[i]! : null));
+  return { ppo, signal, hist };
+}
+
+/**
  * Qstick (Tushar Chande، period=10 القيمة القياسية الشائعة) — أبسط مؤشر بهذا الملف حسابياً: يقيس
  * غلبة شموع الصعود (إغلاق > فتح) أو الهبوط (إغلاق < فتح) على مدى نافذة زمنية بدل الاعتماد على شمعة
  * واحدة: Qstick[i] = SMA(إغلاق−فتح, period) — متوسط بسيط مباشر لفارق إغلاق/فتح كل شمعة (**يبني على

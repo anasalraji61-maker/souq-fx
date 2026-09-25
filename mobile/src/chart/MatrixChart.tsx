@@ -281,7 +281,7 @@ import {
   computePivotPoints,
   computePivotsHighLow,
   computePmo,
-  computePpo,
+  computePpoLines,
   computePsar,
   computePvi,
   computePvo,
@@ -2784,7 +2784,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [indBars, indicators]
   );
   const ppo = useMemo(
-    () => (indicators.includes('ppo') ? ind(computePpo(closes)) : null),
+    () => {
+      if (!indicators.includes('ppo')) return null;
+      const r = computePpoLines(closes);
+      return ind({ ...r, histUp: risingBars(r.hist) });
+    },
     [closes, indicators]
   );
   const chaikinVol = useMemo(
@@ -10733,34 +10737,56 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {ppo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="PPO" values={ppo} at={crossIndex} />
+          <PaneValueHead
+            name="PPO"
+            values={ppo.ppo}
+            at={crossIndex}
+            signal={{ values: ppo.signal, color: colors.warn }}
+            compact={!paneSignalFits}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
-                اللوحات ثنائية الجانب تُظهر اللون وحده دون الخطّ الذي يُقاس عليه. */}
-            <View
-              pointerEvents="none"
-              style={[styles.paneZeroLine, { top: centeredPaneZeroY(paneH) }]}
-            />
             {(() => {
-              const vals = ppo.filter((x): x is number => x != null).map((v) => Math.abs(v));
-              const maxP = Math.max(...vals, 1e-9);
-              return ppo.map((v, i) => {
-                if (v == null) return <View key={i} style={{ flex: 1 }} />;
-                const h = centeredBarH(v, maxP, paneH);
-                return (
+              // كلوحة MACD (PPO نسخته النسبية): هستوغرام الخطّ − الإشارة وخطّان فوقه، والمقياس من الشموع
+              // الظاهرة. كانت أعمدة PPO نفسه بمقياس التاريخ كلّه — تُقرأ هستوغراماً وليست، ولا تقاطع يُرى.
+              const g = macdPaneGeom(ppo.hist, ppo.ppo, ppo.signal, paneH, paneVis);
+              return (
+                <>
                   <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: Math.max(2, h),
-                      marginTop: centeredBarTop(v, h, paneH),
-                      backgroundColor: v >= 0 ? colors.bull : colors.bear,
-                      opacity: 0.7,
-                    }}
+                    pointerEvents="none"
+                    style={[styles.paneZeroLine, { top: g.zeroY }]}
                   />
-                );
-              });
+                  {ppo.hist.map((v, i) => {
+                    if (!g.valid(i)) return <View key={i} style={{ flex: 1 }} />;
+                    const bh = v == null ? 0 : g.barH(v);
+                    return (
+                      <View key={i} style={{ flex: 1, height: g.innerH, position: 'relative' }}>
+                        {v != null ? (
+                          <View
+                            style={{
+                              position: 'absolute',
+                              left: 0,
+                              right: 0,
+                              top: v >= 0 ? g.zeroY - bh : g.zeroY,
+                              height: Math.max(1, bh),
+                              backgroundColor: v >= 0 ? colors.bull : colors.bear,
+                              opacity: (v >= 0) === ppo.histUp[i] ? 0.85 : 0.3,
+                            }}
+                          />
+                        ) : null}
+                      </View>
+                    );
+                  })}
+                  <PaneLineLayer
+                    innerH={g.innerH}
+                    y={g.y}
+                    lines={[
+                      { values: ppo.signal, color: colors.warn, opacity: 0.9 },
+                      { values: ppo.ppo, color: accent },
+                    ]}
+                  />
+                </>
+              );
             })()}
           </View>
         </View>
