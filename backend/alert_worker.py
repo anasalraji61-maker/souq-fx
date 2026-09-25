@@ -357,21 +357,68 @@ def _check_once() -> None:
                 a.get("symbol"),
             )
 
-    if not triggered_msgs:
-        return
+    _retry_pending_pushes()
     for owner, owner_key, ev in triggered_msgs:
-        targets = db.push_targets_for(owner, owner_key)
-        if not targets:
+        # كل رسالة بمعزل: قراءة الرموز كانت خارج أي try ⇒ «database is locked» عند مالك واحد يُسقط
+        # إشعارات كل من بعده بالدورة، وتنبيهاتهم موسومة مُطلَقة فلا تُعاد أبداً.
+        try:
+            targets = db.push_targets_for(owner, owner_key)
+            by_lang: dict[str, list[str]] = {}
+            for tok, lang in targets:
+                by_lang.setdefault(_push_lang(lang), []).append(tok)
+            for lang, tokens in by_lang.items():
+                title, body = _compose(ev, lang)
+                if not _deliver(tokens, title, body):
+                    _pending_pushes.append((tokens, title, body, time.time()))
+        except Exception:
+            log.exception("push dispatch failed for owner=%s event=%s", owner, ev)
+
+
+# دفعات فشل إرسالها لـExpo بخطأ عابر (انقطاع/مهلة/5xx/429). التنبيه يُوسَم مُطلَقاً **قبل** الإرسال
+# (هذا ما يمنع الإشعار المكرّر بين الـworker وفحص التطبيق)، فكان فشل الإرسال الواحد يُفقد الإشعار
+# نهائياً: لا يُعاد التنبيه ولا الدفعة، والمتداول لا يعلم أن السعر بلغ مستواه. تُعاد بكل دورة
+# حتى `_PUSH_RETRY_MAX_AGE` — بعدها يُسقَط (إشعار سعر بعد ربع ساعة يضلّل أكثر مما يفيد، والتنبيه
+# نفسه ظاهر «مُطلَق» بالتطبيق). بالذاكرة فقط: إعادة تشغيل الخادم تُسقطها (أفضل من لا شيء قبلها).
+_PUSH_RETRY_MAX_AGE = 15 * 60
+_PUSH_RETRY_MAX_PENDING = 1000
+_pending_pushes: list[tuple[list[str], str, str, float]] = []
+
+
+def _retryable(exc: Exception) -> bool:
+    if isinstance(exc, expo_push.httpx.HTTPStatusError):
+        code = exc.response.status_code
+        return code >= 500 or code == 429
+    return isinstance(exc, expo_push.httpx.TransportError)
+
+
+def _deliver(tokens: list[str], title: str, body: str) -> bool:
+    """يرسل دفعة واحدة. False = فشل عابر يستحق الإعادة؛ True = أُرسلت أو فشل دائم (لا إعادة)."""
+    try:
+        result = expo_push.send_push(tokens, title, body, {})
+    except Exception as exc:
+        log.exception("push send failed for message: %s", body)
+        return not _retryable(exc)
+    for tok in result.get("invalid_tokens") or []:
+        db.delete_push_token(tok)
+        log.info("removed invalid push token (%s…)", tok[:24])
+    return True
+
+
+def _retry_pending_pushes() -> None:
+    if not _pending_pushes:
+        return
+    now = time.time()
+    due = _pending_pushes[-_PUSH_RETRY_MAX_PENDING:]
+    _pending_pushes.clear()
+    for tokens, title, body, first_at in due:
+        if now - first_at > _PUSH_RETRY_MAX_AGE:
+            log.warning("dropping push after %.0fs of failed retries: %s", now - first_at, body)
             continue
-        by_lang: dict[str, list[str]] = {}
-        for tok, lang in targets:
-            by_lang.setdefault(_push_lang(lang), []).append(tok)
-        for lang, tokens in by_lang.items():
-            title, body = _compose(ev, lang)
-            try:
-                result = expo_push.send_push(tokens, title, body, {})
-                for tok in result.get("invalid_tokens") or []:
-                    db.delete_push_token(tok)
-                    log.info("removed invalid push token (%s…)", tok[:24])
-            except Exception:
-                log.exception("push send failed for message: %s", body)
+        # رمز حُذف أثناء الانتظار (خروج/حذف حساب/DeviceNotRegistered) لا يُرسل إليه
+        try:
+            live = db.existing_push_tokens(tokens)
+            if live and not _deliver(live, title, body):
+                _pending_pushes.append((live, title, body, first_at))
+        except Exception:
+            log.exception("push retry failed: %s", body)
+            _pending_pushes.append((tokens, title, body, first_at))
