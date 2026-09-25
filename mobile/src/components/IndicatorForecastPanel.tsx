@@ -11,7 +11,7 @@ import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from '../chart/pipSpec';
 import { pipsNumber, pipUnit } from '../chart/measureReadout';
 import { formatLocalStamp } from '../localStamp';
-import { serverNowSec } from '../chart/dataSource';
+import { providerUnavailableReason, serverNowSec } from '../chart/dataSource';
 import { useI18n } from '../i18n/I18nContext';
 import { isTimeframe } from '../timeframes';
 import type { Dict } from '../i18n/locales';
@@ -110,7 +110,16 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
       // و`unavailable`/اتجاه null (backend-r2): لا مصدر أصلاً — الحالة نفسها لا «محايد» محسوب.
       if (res.data_kind === 'demo' || res.data_kind === 'unavailable' || res.direction == null) {
         clearResult();
-        setNote(t.noLiveDataResult);
+        // كل غياب كان «لا بيانات حقيقية الآن — حاول لاحقاً»: DXY لا يقدّمه المزوّد أصلاً (المحاولة لن تنجح)،
+        // وشموع حقيقية بلا صوت مؤشّر واحد (MACD وحده على تاريخ قصير) ليست «أسعاراً تجريبية».
+        const real = res.data_kind !== 'demo' && res.data_kind !== 'unavailable';
+        setNote(
+          real && res.disclaimer_code === 'not_enough_data'
+            ? t.forecastDisclaimerNoData
+            : providerUnavailableReason(res) === 'not_offered_by_provider'
+              ? t.chartNotOfferedTitle.replace('{symbol}', symbol.toUpperCase())
+              : t.noLiveDataResult
+        );
         return;
       }
       setHasResult(true);
