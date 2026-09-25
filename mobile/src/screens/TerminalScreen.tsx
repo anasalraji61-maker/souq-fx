@@ -202,7 +202,12 @@ export function TerminalScreen() {
   // chart-r56: الذاكرة تُقرأ أثناء الرسم لا بعد التأثير — وإلا إطارٌ واحد بلا شموع (مؤشّر التحميل) يهدم الشارت حتى مع الكاش.
   const series = chart && chart.key === chartKey ? chart.s : cachedSeries(symbol, tf);
   const [refreshing, setRefreshing] = useState(false);
-  const [online, setOnline] = useState(false);
+  // launch133: حالة الخادم لكل خانة (hero/f0..f2/chart) — `false` البدائية كانت تُظهر «لا اتصال» طوال أوّل تحميل،
+  // وفشل خانة واحدة كان يُسقط الرأس رغم نجاح البقية. null = لا نتيجة بعد ⇒ لا وسم؛ متّصل إن نجحت خانة واحدة على الأقل.
+  const [slotOk, setSlotOk] = useState<Record<string, boolean>>({});
+  const markSlots = useCallback((next: Record<string, boolean>) => setSlotOk((prev) => ({ ...prev, ...next })), []);
+  const slotResults = Object.values(slotOk);
+  const online: boolean | null = slotResults.length === 0 ? null : slotResults.some(Boolean);
   const [quote, setQuote] = useState<{ bid: number | null; ask: number | null } | null>(null);
 
   const [lens, setLens] = useState<MatrixLensId>('clean');
@@ -421,7 +426,7 @@ export function TerminalScreen() {
           copy[index] = s;
           return copy;
         });
-        setOnline(true);
+        markSlots({ [`f${index}`]: true });
       } catch {
         if (gen !== frameLoadGen.current[index]) return;
         setFrames((prev) => {
@@ -429,10 +434,10 @@ export function TerminalScreen() {
           copy[index] = cachedSeries(nextSym, frameTfs[index]) ?? offlineFrame(nextSym, frameTfs[index]);
           return copy;
         });
-        setOnline(false);
+        markSlots({ [`f${index}`]: false });
       }
     },
-    [frameSymbols, frameTfs, persistFrameSymbols]
+    [frameSymbols, frameTfs, persistFrameSymbols, markSlots]
   );
 
   const changeHeroSymbol = useCallback(
@@ -451,14 +456,14 @@ export function TerminalScreen() {
         const s = await fetchSeries(nextSym, dxyTf);
         if (gen !== dxyLoadGen.current) return;
         setDxy(s);
-        setOnline(true);
+        markSlots({ hero: true });
       } catch {
         if (gen !== dxyLoadGen.current) return;
         setDxy(cachedSeries(nextSym, dxyTf) ?? offlineFrame(nextSym, dxyTf));
-        setOnline(false);
+        markSlots({ hero: false });
       }
     },
-    [dxyTf]
+    [dxyTf, markSlots]
   );
 
   /** chart-r49: تخطيط محفوظ يعيد رمز الشارت الرئيسي وفريمه معاً (التخزين كتبه تبويب الأدوات قبل الانتقال). */
@@ -479,11 +484,11 @@ export function TerminalScreen() {
       const s = await fetchSeries(nextSym, nextTf);
       if (gen !== dxyLoadGen.current) return;
       setDxy(s);
-      setOnline(true);
+      markSlots({ hero: true });
     } catch {
       if (gen !== dxyLoadGen.current) return;
       setDxy(cachedSeries(nextSym, nextTf) ?? offlineFrame(nextSym, nextTf));
-      setOnline(false);
+      markSlots({ hero: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -675,9 +680,11 @@ export function TerminalScreen() {
         r.status === 'fulfilled' ? r.value : cachedSeries(slots[i][0], slots[i][1]) ?? offlineFrame(slots[i][0], slots[i][1])
       );
       apply(got[0], got.slice(1));
-      setOnline(results.some((r) => r.status === 'fulfilled'));
+      markSlots(
+        Object.fromEntries(results.map((r, i) => [i === 0 ? 'hero' : `f${i - 1}`, r.status === 'fulfilled']))
+      );
     },
-    [frameSymbols, heroSymbol]
+    [frameSymbols, heroSymbol, markSlots]
   );
 
   const loadChart = useCallback(
@@ -688,14 +695,14 @@ export function TerminalScreen() {
         const s = await fetchSeries(sym, timeframe);
         if (stale()) return;
         setChart({ key, s });
-        setOnline(true);
+        markSlots({ chart: true });
       } catch {
         if (stale()) return;
         setChart({ key, s: cachedSeries(sym, timeframe) ?? offlineFrame(sym, timeframe) });
-        setOnline(false);
+        markSlots({ chart: false });
       }
     },
-    []
+    [markSlots]
   );
 
   // الاستطلاعات الدورية الأربعة هنا (الإطارات، الشارت، Bid/Ask، الظلّ) تقف ما دامت الشاشة خلف تبويبٍ آخر (`screenFocused`):
@@ -849,7 +856,7 @@ export function TerminalScreen() {
         copy[index] = s;
         return copy;
       });
-      setOnline(true);
+      markSlots({ [`f${index}`]: true });
     } catch {
       if (gen !== frameLoadGen.current[index]) return;
       setFrames((prev) => {
@@ -857,7 +864,7 @@ export function TerminalScreen() {
         copy[index] = cachedSeries(sym, nextTf) ?? offlineFrame(sym, nextTf);
         return copy;
       });
-      setOnline(false);
+      markSlots({ [`f${index}`]: false });
     }
   };
 
@@ -871,11 +878,11 @@ export function TerminalScreen() {
       const s = await fetchSeries(heroSymbol, nextTf);
       if (gen !== dxyLoadGen.current) return;
       setDxy(s);
-      setOnline(true);
+      markSlots({ hero: true });
     } catch {
       if (gen !== dxyLoadGen.current) return;
       setDxy(cachedSeries(heroSymbol, nextTf) ?? offlineFrame(heroSymbol, nextTf));
-      setOnline(false);
+      markSlots({ hero: false });
     }
   };
 
@@ -1041,7 +1048,7 @@ export function TerminalScreen() {
   };
   const dsTickLabels = { live: t.dsTickLive, demoTick: t.dsTickDemo, lastPrice: t.dsLastPriceWord };
   const heroStatusBits = [
-    online ? t.termServerOnline : t.termServerOffline,
+    online === null ? null : online ? t.termServerOnline : t.termServerOffline,
     // backend-r1/ui16b: DXY لا يقدّمه المزوّد أصلاً — «تجريبي» العامة توحي بعطلٍ مؤقت. الشارت نفسه صار الإشعار
     // (`chartNotOfferedTitle/Body`)، فالوسم القصير يكفي؛ و`originUnavailableProvider` («الرسم مولَّد للعرض») لم تعد صادقة.
     // ولا وسم تيك: «تيك تجريبي» بجانب «غير متاح» يوحي بسعرٍ ما.
