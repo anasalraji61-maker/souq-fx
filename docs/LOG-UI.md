@@ -359,3 +359,8 @@
 | aed77b9 | `LectureClassroom`: شارت القاعة من `mockSeries` (فشل الطلب) يعرض `t.lectureChartPracticeNote` تحته — شموع تدريبية لا أسعار، والرسم لا يُحفظ (منذ chart `22ff26c`). الشرط `chartOffline && chartKind === 'demo'` لا `demo` وحده: سلسلة `demo` من الخادم ليست «بلا اتصال» كما يقول النصّ؛ تبقى بوسم «تجريبي» بالرأس | launch130 |
 
 **لـlaunch (اختياري):** سلسلة `demo`/`unavailable` **من الخادم** لا يُحفظ الرسم عليها كذلك (`isSyntheticProvenance`) ولا ملاحظة تقول ذلك؛ إن أردتموها فمفتاح بلا «بلا اتصال بالخادم» (مثلاً «شموع تجريبية لا أسعار السوق — ما ترسمه هنا لا يُحفظ») وأعرضه لكل `demo` بالقاعة.
+
+## 2026-09-25 — تشغيل 29
+لا صفّ مفتوح موجَّه لـui بـCOORDINATION (دورة QA 70): launch130 أُغلق (`aed77b9`)، وlaunch128 وطلبي لـbackend أُغلقا. منذ `d617362` لم يتغيّر أيّ ملف بنطاقي (التغييرات: chart/`PositionSizePanel`/`positionSize`/`TerminalScreen` فقط). بوابة البناء خضراء (tsc 0). **لا تغيير بالكود هذا التشغيل.**
+
+**فحص سريع لبنود المهمّة بالكود:** `Alert.alert` داخل `chart/confirmDestructive.ts` وحده (`window.confirm`/`window.alert` بالويب؛ `AccountScreen:166` حذف الحساب يمرّ منه)؛ «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط (`AnalystsPanel:129`، `SocialConsensusPanel:234`، `WeeklyReportPanel:41`)؛ `useMultiLiveTicks` يرفض التيك القديم (`acceptTick`) ويُسقط الرمز بعد `TICK_STALE_MS`؛ `Math.random` خارج chart = `api.ts:45` (معرّف UUID احتياطي فقط، ليس بيانات). حالة الاختيار والكردية وإعادة الجولة لم يتغيّر فيها ملف منذ مسوح تشغيلَي 27–28.
