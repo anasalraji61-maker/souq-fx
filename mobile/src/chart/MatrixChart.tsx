@@ -355,6 +355,7 @@ import {
 } from './panSpeed';
 import { mapShadowCandles } from './shadowOverlay';
 import { visibleBarRange } from './visibleBars';
+import { clampXPan } from './panClamp';
 import { ProviderUnavailableNotice, seriesHasNoRealData } from '../components/ProviderUnavailableNotice';
 
 export type SyncTimeWindow = {
@@ -1803,6 +1804,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     : null;
   const crossTimeRef = useRef<number | null>(null);
   crossTimeRef.current = cross?.time ?? null;
+  const crossAheadRef = useRef(0);
+  crossAheadRef.current = cross?.ahead ?? 0;
   // تبديل نوع الشارت يُسقط التقاطع المثبَّت: زمنه زمن خانة النوع السابق، وخانات Renko/Range/Kagi/P&F أزمنة
   // تركيبية (أول شمعة + 60ث × الترتيب) ⇒ على 1m تطابق شمعةً حقيقية لا علاقة لها باللبنة، فيقفز الخطّ (ووسمه
   // وسطر OHLC) إلى الماضي بصمت. تقاطع التابع بالرباعي يعيد ربطه أثر المزامنة أدناه بالزمن الحقيقي.
@@ -4705,7 +4708,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         Math.min(maxOffset, panStartOffset.current + requestedBars)
       );
       const appliedBars = nextOffset - panStartOffset.current;
-      const nextXPan = panStartX.current + sdx - appliedBars * barWidth;
+      // عند طرفَي التاريخ تتوقّف `offset` فيأخذ `xPan` الحركة كلّها — بلا حدّ كانت الشموع تخرج كلّها من اللوح.
+      const nextXPan = clampXPan(
+        panStartX.current + sdx - appliedBars * barWidth,
+        Math.max(1, panStartBars.current || windowCountRef.current),
+        chartPlotW
+      );
       const nextPricePan =
         panStartPrice.current +
         (sdy / Math.max(1, chartPlotH)) * priceScaleRef.current;
@@ -5276,6 +5284,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       if (!replayOn && !syncFollow) {
         const time = crossTimeRef.current;
         if (time == null) return;
+        // تقاطع مثبَّت بمنطقة المستقبل (`ahead` خانات بعد الشمعة الحيّة): ← يقترب خانةً خانةً حتى الحيّة. كان
+        // `ahead` يبقى مع كل خطوة ⇒ ← يقفز لما قبل الحيّة، و→ يعيده للخانة المستقبلية — شمعة الحيّ لا تُبلغ بالمفاتيح.
+        if (crossAheadRef.current > 0 && step < 0) {
+          setCross((prev) =>
+            prev ? { time: prev.time, price: prev.price, ahead: Math.max(0, (prev.ahead ?? 0) - 1) || undefined } : prev
+          );
+          return;
+        }
         const moved = stepCrossBar(
           sourceRef.current.all as { time: number }[],
           offsetRef.current,
@@ -5289,7 +5305,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           setOffset(moved.offset);
           schedulePublishSync(false);
         }
-        setCross((prev) => (prev ? { ...prev, time: moved.time } : prev));
+        setCross((prev) => (prev ? { time: moved.time, price: prev.price } : prev));
         return;
       }
       setCross((prev) => {
@@ -9270,7 +9286,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {/* «»» العودة لآخر شمعة (كزرّ TradingView على محور الزمن): بعد السحب للخلف لا سبيل للحيّ
             إلا بسحب مئات الشموع أو AUTO — والأخير يمحو التكبير أيضاً. هذا يُبقي التكبير
             الأفقي والرأسي ويعيد النافذة وحدها للطرف الأيمن. لا يظهر بالإعادة ولا بالتابع المتزامن. */}
-        {canPan && !replayOn && offset > 0 ? (
+        {canPan &&
+        !replayOn &&
+        (offset > 0 || xPan < restXPan() - chartPlotW / Math.max(1, source.plot.length)) ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={tr.mcToLatestA11y}
