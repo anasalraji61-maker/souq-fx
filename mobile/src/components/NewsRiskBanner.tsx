@@ -60,7 +60,10 @@ export function NewsRiskBanner({ symbol }: Props) {
   useEffect(() => {
     let alive = true;
     const onUpdate = () => {
-      if (alive) setVersion((v) => v + 1);
+      if (!alive) return;
+      setVersion((v) => v + 1);
+      // تقويم جديد يُقاس بساعة اللحظة لا بآخر دقّة (حتى 60ث قديمة)
+      setNow(Date.now());
     };
     listeners.add(onUpdate);
     ensureFresh(Date.now());
@@ -87,6 +90,12 @@ export function NewsRiskBanner({ symbol }: Props) {
   }, []);
 
   const currencies = symbolCurrencies(symbol);
+  const currencyKey = currencies.join(',');
+  // تبديل الرمز والشريط مركَّب (الطرفية، الحاسبة، كتابة رمز الدفتر): `now` كان آخر دقّة للساعة — حتى 60ث قديمة —
+  // فخبر الزوج الجديد بعد 40ث يُكتب «بعد 1د» 35ث، ومؤقّت التجديد يُجدول من الفرق الخطأ نفسه
+  useEffect(() => {
+    setNow(Date.now());
+  }, [currencyKey]);
   const hit = cache ? nextHighImpact(cache.events, currencies, now) : null;
   const hitDelta = hit ? hit.deltaMs : null;
   // تجديد العدّ **لحظة يتغيّر** لا بساعة من لحظة التركيب — وإلا بقي «بعد 3د» والخبر بعد 2:50، راجع `newsTickDelayMs`
