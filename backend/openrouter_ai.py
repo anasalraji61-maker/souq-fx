@@ -113,16 +113,23 @@ _AR_SUF = r"(?:ي|ية|يا|اً|ا|ً|ٍ|ٌ)?(?!\w)"
 _SHORT_IDIOM_PRE = "".join(
     rf"(?<!\b{w} )" for w in ("in", "fell", "fall", "falls", "falling", "fallen", "come", "comes", "came", "coming")
 )
+# «long/short» وصفاً لشمعة أو حركة لا مركزاً: «a long upper wick at resistance» (نمط هبوطي!) كانت «buy» ⇒ بطاقة
+# شراء تحت ردّ يتوقّع الارتداد للأسفل، و«after a long rally … could correct lower» كذلك؛ و«short-sellers are
+# covering, price is rising» كانت «sell».
+_CANDLE_WORDS = (
+    r"(?:upper|lower|wicks?|shadows?|tails?|candles?|candlesticks?|bodies|body|bars?|legs?|rally|rallies|"
+    r"decline|declines|sell-?off|consolidation|range|streak|history)\b"
+)
 _BUY_RE = re.compile(
     _AR_PRE + r"(?:شراء|صعود|صاعد)" + _AR_SUF
     + r"|\b(?:buy|buying|bullish|uptrend)\b"
-    + r"|(?<!\bas )(?<!\bso )\blong\b(?! as\b)(?![- ](?:term|while|time|run|way|period))",
+    + r"|(?<!\bas )(?<!\bso )\blong\b(?! as\b)(?![- ](?:term|while|time|run|way|period|" + _CANDLE_WORDS + r"))",
     re.IGNORECASE,
 )
 _SELL_RE = re.compile(
     _AR_PRE + r"(?:بيع|هبوط|هابط)" + _AR_SUF
     + r"|\b(?:sell|selling|shorting|bearish|downtrend)\b|" + _SHORT_IDIOM_PRE
-    + r"\bshort\b(?![- ](?:term|while|time|run|period|lived|squeeze|covering|of\b))",
+    + r"\bshort\b(?![- ](?:term|while|time|run|period|lived|squeeze|covering|sellers?|of\b|" + _CANDLE_WORDS + r"))",
     re.IGNORECASE,
 )
 
@@ -138,16 +145,34 @@ _CLAUSE_END = re.compile(r"[.!?؟؛;:,،\n]")
 _TASHKEEL = re.compile(r"[\u064B-\u0652]")
 
 
-def _negated(text: str, start: int) -> bool:
+# حكمٌ **بعد** كلمة الاتجاه بنفس الجملة يرفضها: «Selling at these levels would be a mistake» و«A sell is premature
+# here» كانت «sell». مع النفي اللاحق («A buy is not justified yet»، «الشراء غير مستحسن الآن» كانت «buy»).
+_REJECT_AFTER = frozenset({
+    "mistake", "premature", "unwise", "inadvisable", "unjustified", "risky", "wrong", "dangerous",
+    "خطأ", "خاطئ", "خاطئة", "مبكر", "مبكرا", "مبكرة", "خطير", "خطيرة", "مخاطرة",
+})
+
+
+def _neg_word(raw: str) -> str | None:
+    w = _TASHKEEL.sub("", raw.strip("\"'()«»").lower()).replace("\u2019", "'")
+    if w in _NEGATION or w.endswith("n't"):
+        return w
+    # «ولا»/«فلا»/«ولن»… بحرف عطف ملتصق
+    if len(w) > 2 and w[0] in "وف" and w[1:] in _NEGATION:
+        return w
+    return None
+
+
+def _negated(text: str, start: int, end: int | None = None) -> bool:
     before = _CLAUSE_END.split(text[:start])[-1]
-    for w in before.split()[-4:]:
-        w = _TASHKEEL.sub("", w.strip("\"'()«»").lower()).replace("\u2019", "'")
-        if w in _NEGATION or w.endswith("n't"):
-            return True
-        # «ولا»/«فلا»/«ولن»… بحرف عطف ملتصق
-        if len(w) > 2 and w[0] in "وف" and w[1:] in _NEGATION:
-            return True
-    return False
+    if any(_neg_word(w) for w in before.split()[-4:]):
+        return True
+    if end is None:
+        return False
+    after = _CLAUSE_END.split(text[end:])[0].split()[:8]
+    return any(
+        _neg_word(w) or _TASHKEEL.sub("", w.strip("\"'()«»").lower()) in _REJECT_AFTER for w in after
+    )
 
 
 def parse_setup_hint(text: str) -> dict[str, Any]:
@@ -155,7 +180,7 @@ def parse_setup_hint(text: str) -> dict[str, Any]:
     **«sell»** — ردّ بلا اتجاه (أو «انتظر») يصير توصية بيع؛ والمستويات 0.0 أرقام بشكل أسعار."""
     text = text or ""
     hits = [(m, side) for side, rx in (("buy", _BUY_RE), ("sell", _SELL_RE)) for m in rx.finditer(text)]
-    if any(_negated(text, m.start()) for m, _ in hits):
+    if any(_negated(text, m.start(), m.end()) for m, _ in hits):
         hits = []
     buy = any(side == "buy" for _, side in hits)
     sell = any(side == "sell" for _, side in hits)

@@ -49,6 +49,19 @@ from tests.test_signal_levels import _provider_series
     ("Go long above 1.09", "buy"),
     ("Look to short the retest", "sell"),
     ("Long above 1.09 as long as support holds", "buy"),
+    # نفي/رفض **بعد** كلمة الاتجاه بنفس الجملة (كانت buy×3، sell×2)
+    ("I would wait. A buy is not justified yet.", None),
+    ("Buying here is not recommended; wait.", None),
+    ("الشراء غير مستحسن الآن", None),
+    ("Selling at these levels would be a mistake.", None),
+    ("A sell is premature here.", None),
+    # long/short وصفاً لشمعة أو حركة (كانت buy×3، sell)
+    ("Price printed a long upper wick at resistance, sellers stepped in. I expect a pullback.", None),
+    ("EURUSD looks weak: a long upper shadow rejected 1.0900.", None),
+    ("Buyers are exhausted after a long rally and could correct lower.", None),
+    ("Short-sellers are covering, price is rising strongly.", None),
+    ("Buy on a close above 1.0900 with a stop under the prior swing low.", "buy"),
+    ("I favor a long position toward 1.0950.", "buy"),
     # النفي بجملة أخرى لا يُسقط الاتجاه
     ("This is not financial advice. Bias bullish.", "buy"),
     ("ليست نصيحة مالية. سيناريو شراء عند الدعم", "buy"),
