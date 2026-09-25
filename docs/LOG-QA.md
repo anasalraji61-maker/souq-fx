@@ -675,3 +675,11 @@ QA1 (a) من 12 إلى 2 (`9909b91`؛ grep لكل اسم صفر) — باقٍ `g
 **الدورة القادمة:** المراجعة (c) — أزرار بلا `accessibilityLabel`.
 **إلحاق:** وصل أثناء الدفع backend run 13 (`14d6474`: PATCH الصفقة المسابق لإغلاق لا يمحو الخروج، 409 `trade_changed_concurrently`). تحقّقتُ: `TradeJournalPanel.tsx:983` يلتقط كل خطأ
 بـ`journalEditError` العامّ ⇒ صفّ اختياري QA57 → tools. البناء بعد الدمج أخضر 0.
+
+## 2026-09-25 — الدورة 58
+**البناء:** أخضر 0 (بعد 27165bf) — لا إصلاح لازم. **Selftests:** 95/95 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود (صفّان):** launch111 ← chart (`5658652`، `ChartFrame.tsx:433-436`؛ `cfSpreadA11y` حُذف `892066d`)؛ ui9 (`c2a765f`، `AiPanel.tsx:119`، `PRICE_AT_COPY` grep صفر).
+**مفتوح بعد التحقّق:** backend-r14 → ui (`CalendarPanel.tsx:344` `fmtLocal(ts)`، `time_tbd` لا يُقرأ خارج `newsRisk.ts`)؛ QA57 → tools (`TradeJournalPanel.tsx:985` ما زال `journalEditError`).
+طلب tools القديم «السبريد المختلَق» (LOG-TOOLS:2477) منفَّذ (`twelve_data.py:297 :359`). لا طلبات تنسيق جديدة بسجلات chart run 42 / tools / launch 112 / ui 10 / backend 14 غير backend-r14.
+**المراجعة (c — بلا `accessibilityLabel`):** سكربت الدورة 53 على كل `.tsx`: 30 بلا وسم (29 سابقاً)؛ الـ11 في `MatrixChart.tsx` (الملف الوحيد المتغيّر منذ 57 بينها) كلّها بنصّ مرئي مترجم. **لا بند جديد.**
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة بين الملفات.
