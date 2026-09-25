@@ -26,6 +26,8 @@ import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
 import { confirmDestructive, notify } from '../chart/confirmDestructive';
 import { instrumentSpec, pipsBetween, priceAtPipOffset } from '../positionSize';
+import { chartPipSpec } from '../chart/pipSpec';
+import { pipUnit } from '../chart/measureReadout';
 import { formatPips } from '../tradePlan';
 
 /** إيقاع تحديث «السعر الآن» بالنموذج — نفس إيقاع فحص التنبيهات بهذه اللوحة (60 ثانية). */
@@ -87,7 +89,7 @@ export function AlertsPanel({
   ticks,
   active = true,
 }: Props) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
   const [symbol, setSymbol] = useState(defaultSymbol);
@@ -289,17 +291,18 @@ export function AlertsPanel({
     // سعر رمز **هذا الصفّ** لا رمز النموذج؛ و`current` احتياطٌ لرمز النموذج وحده كما كان
     const px = ticks?.[sym] ?? (spec && sym === spec.symbol ? current : null);
     if (px == null) return null;
-    // مواصفة رمز الصفّ — بحث جدوليّ خالص (`instrumentSpec`)، و`null` لما لا حجم pip له (DXY،
-    // العملات الرقمية) فلا رقم مختلَق. مواصفة النموذج تُعاد استعمالاً حين يتطابق الرمز.
-    const rowSpec = spec && sym === spec.symbol ? spec : instrumentSpec(sym);
+    // مواصفة رمز الصفّ — `chartPipSpec` كالشارت (يقبل «USDJPYc»/«XAUUSDm»/«EURUSD.pro» التي يرفضها
+    // `instrumentSpec` عمداً للحاسبة، فكانت تنبيهاتها بلا مسافة — chart-r56 (3))، و`null` لما لا حجم pip
+    // له (DXY، العملات الرقمية) فلا رقم مختلَق. مواصفة النموذج تُعاد استعمالاً حين يتطابق الرمز.
+    const rowSpec = spec && sym === spec.symbol ? spec : chartPipSpec(sym);
     if (!rowSpec) return null;
     // الحساب بـ`positionSize.ts` حيث تعيش كل رياضيات الـpip ومغطّى بحالات selftest دائمة
     return pipsBetween(rowSpec, a.price, px);
   };
-  /** «24 pip» — «pip» كلمة لاتينية ثابتة بكل اللغات بهذا التطبيق (راجع `journalStatNetPips`). */
+  /** «24 pip» / «24 pips» — `pipUnit(lang)` كالشارت والدفتر (الإنجليزية «pips»). */
   const distText = (a: PriceAlert): string | null => {
     const d = formatPips(alertDistancePips(a));
-    return d == null ? null : `${d} pip`;
+    return d == null ? null : `${d} ${pipUnit(lang)}`;
   };
 
   /**
@@ -909,7 +912,7 @@ export function AlertsPanel({
             على لوحة مفاتيح هاتف. تظهر فقط بسعر حقيقي معروف وأداة معلومة حجم الـpip. */}
         {currentPx != null && spec ? (
           <View style={[styles.offsets, rtl && styles.rowRtl]}>
-            <Text style={styles.offsetUnit}>pip</Text>
+            <Text style={styles.offsetUnit}>{pipUnit(lang)}</Text>
             {PIP_OFFSETS.map((off) => {
               // الحساب بـ`positionSize.ts` حيث تعيش كل رياضيات الـpip ومغطّى بحالات selftest دائمة —
               // null لمسافة تتجاوز السعر نفسه (أداة سعرها أصغر من المسافة) فلا تُعرض الشريحة

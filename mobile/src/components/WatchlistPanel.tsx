@@ -12,7 +12,9 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { api, type PriceAlert } from '../api';
 import { formatPrice } from '../chart/math';
 import { confirmDestructive } from '../chart/confirmDestructive';
-import { instrumentSpec, pipsBetween } from '../positionSize';
+import { pipsBetween } from '../positionSize';
+import { chartPipSpec } from '../chart/pipSpec';
+import { pipUnit } from '../chart/measureReadout';
 import { formatPips } from '../tradePlan';
 import { playSoftClick } from '../audio/playSoftClick';
 import { SymbolSearchBar } from './SymbolSearchBar';
@@ -82,7 +84,7 @@ export function WatchlistPanel({
   fullWidth = false,
   active = true,
 }: Props) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [symbols, setSymbols] = useState<string[] | null>(null);
   const [saveError, setSaveError] = useState<WatchlistSaveErrorCode | null>(null);
@@ -382,7 +384,7 @@ export function WatchlistPanel({
              * التنبيه معلومةٌ مؤكّدة حتى حين تكون المسافة مجهولة.
              */
             const armedLevels = armedBySymbol[sym];
-            const armedSpec = armedLevels && armedLevels.length > 0 ? instrumentSpec(sym) : null;
+            const armedSpec = armedLevels && armedLevels.length > 0 ? chartPipSpec(sym) : null;
             const armedNearest =
               armedSpec && live != null && !tickIsDemo
                 ? armedLevels!.reduce<number | null>((best, lvl) => {
@@ -393,7 +395,7 @@ export function WatchlistPanel({
             const armedDist = armedNearest != null ? formatPips(armedNearest) : null;
             const armedText =
               armedLevels && armedLevels.length > 0
-                ? `🔔${armedLevels.length > 1 ? armedLevels.length : ''}${armedDist != null ? ` ${armedDist} pip` : ''}`
+                ? `🔔${armedLevels.length > 1 ? armedLevels.length : ''}${armedDist != null ? ` ${armedDist} ${pipUnit(lang)}` : ''}`
                 : null;
             return (
               <View
@@ -412,7 +414,7 @@ export function WatchlistPanel({
                   ]}
                   onPress={() => onPick(sym)}
                   accessibilityLabel={`${sym}${price != null ? ` ${formatPrice(price, sym)}` : ''}${pctText ? ` ${pctText}` : ''}${isDemoPrice ? t.wlDemoPriceA11ySuffix : ''}${
-                    armedText ? ` · ${t.alertsStatusArmed}${armedLevels!.length > 1 ? ` ${armedLevels!.length}` : ''}${armedDist != null ? ` ${armedDist} pip` : ''}` : ''
+                    armedText ? ` · ${t.alertsStatusArmed}${armedLevels!.length > 1 ? ` ${armedLevels!.length}` : ''}${armedDist != null ? ` ${armedDist} ${pipUnit(lang)}` : ''}` : ''
                   }`}
                   accessibilityState={{ selected: on }}
                 >
