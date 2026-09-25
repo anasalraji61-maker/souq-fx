@@ -17,7 +17,9 @@ def test_typical_spread():
     assert backtest.typical_spread("GBPUSD") == (1.5, 0.0001)
     assert backtest.typical_spread("EURJPY") == (2.5, 0.01)
     assert backtest.typical_spread("XAUUSD") == (3.0, 0.1)
-    assert backtest.typical_spread("USDTRY") == (15.0, 0.0001)
+    # ناشئة/مجهول: لا تقدير (كان 15×0.0001 ثابتاً = 0.004% على USDTRY و0.00015% على البلاتين)
+    for s in ("USDTRY", "USDHUF", "XPTUSD", "USDZAR", "EURPLN", "USD/HUF"):
+        assert backtest.typical_spread(s) is None, s
     assert backtest.typical_spread("DXY") is None
     assert backtest.typical_spread("BTCUSD") is None
 

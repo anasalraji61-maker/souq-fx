@@ -41,9 +41,10 @@ def typical_spread(symbol: str) -> tuple[float, float] | None:
         return (1.5, pip)
     if base in _MAJORS and quote in _MAJORS:
         return (2.5, pip)
-    if base in {"BTC", "ETH", "XRP", "SOL", "LTC"} or quote in {"BTC", "ETH"}:
-        return None
-    return (15.0, pip)  # عملة ناشئة (TRY/ZAR/MXN…): سبريد واسع
+    # عملة ناشئة أو رمز مجهول ⇒ None («قبل التكاليف» صراحةً). كان `(15.0, 0.0001)` ثابتاً لكل ما سبق: بلا
+    # مقياس سعر — USDTRY ≈ 40 ⇒ 0.004% للصفقة، USDHUF ≈ 360 ⇒ 0.0004%، XPTUSD ≈ 1000 ⇒ 0.00015% (سبريده
+    # الحقيقي دولارات) — ثم `costs_included: true`: تكلفة شبه صفرية موسومة «مشمولة» على أوسع الأسواق سبريداً.
+    return None
 
 
 def closed_candles(candles: list[dict[str, Any]], bar_seconds: int, now: float) -> list[dict[str, Any]]:
