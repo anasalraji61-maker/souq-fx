@@ -18,7 +18,8 @@ const flat = Array.from({ length: 40 }, (_, i) => ({
 const r = computeChandeKrollStop(flat);
 assert.ok(Math.abs(r.shortStop[39]! - 1.1) < 1e-9, `shortStop ${r.shortStop[39]}`);
 assert.ok(Math.abs(r.longStop[39]! - 1.101) < 1e-9, `longStop ${r.longStop[39]}`);
-// الإحماء: 10 (ATR/أعلى) + 9 (التدحرج) − 1 ⇒ أوّل قيمة عند 17 على الأبكر.
+// الإحماء: ATR(10) أوّل قيمة عند 9، والتدحرج 9 ⇒ ‎9 + 9 − 1 = 17‎ أوّل قيمة.
 assert.equal(r.shortStop[16], null);
+assert.ok(r.shortStop[17] != null && r.longStop[17] != null, 'first value at 17');
 
 console.log('chandeKroll.selftest: PASS');

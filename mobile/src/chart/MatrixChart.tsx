@@ -4456,7 +4456,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setXPan(xPanRef.current);
     setOffset(0);
     schedulePublishSync(false);
-  }, [schedulePublishSync]);
+  }, [restXPan, schedulePublishSync]);
 
   // اختصارات TradingView على الويب: Alt+T ترند، Alt+H أفقي، Alt+V عمودي، Alt+F فيبو، Alt+R إعادة
   // العرض (كـAUTO). بـ`event.code` لا `event.key`: Alt على ماك يُخرج «†»/«˙»، وبلوحة عربية أو كردية
@@ -4511,7 +4511,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       }
       schedulePublishSync(false);
     },
-    [schedulePublishSync]
+    [restXPan, schedulePublishSync]
   );
 
   useImperativeHandle(

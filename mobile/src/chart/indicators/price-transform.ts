@@ -409,7 +409,7 @@ export function computeAveragePrice(candles: Candle[]): number[] {
  * (mulberry32) عبر 280 نافذة متدحرجة متتالية → صفر NaN/Infinity، خاصية "PP=منتصف Top/Bottom" وترتيب
  * top≥pp≥bottom محقَّقان بكل نافذة بلا استثناء واحد، **إعادة حساب brute-force مستقلة تماماً** لـPP
  * (حلقة أعلى/أدنى معزولة) تطابق تام بكل نافذة؛ أقل من period+1 شمعة → null صراحةً (نفس حارس الأربعة
- * السابقة). يُرسَم كخط PP منقّط بمنتصف شريط شبه شفاف بين top/bottom بنمط donchian/chandeKroll حرفياً
+ * السابقة). يُرسَم كخط PP منقّط بمنتصف شريط شبه شفاف بين top/bottom بنمط donchian حرفياً
  * (لون جديد `#FEF08A` أصفر فاتح مميَّز عن كل ألوان Pivot Points الأخرى — تحقَّق بـgrep غير مكرَّر).
  */
 export function computeCpr(
