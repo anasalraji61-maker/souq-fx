@@ -1,7 +1,7 @@
 /** مؤشرات الحجم (Volume family). */
 import type { Candle } from '../../api';
 import { estimatedVolume } from '../types';
-import { ema, sma } from './moving-averages';
+import { ema, sma, smma } from './moving-averages';
 import { computeLinRegChannel, computeVwma } from './trend';
 import { computeMacd, computePpo, computeRoc } from './momentum';
 import { computeStdDev, computeTrueRange } from './volatility';
@@ -550,8 +550,7 @@ export function computeVwMacd(
  * Twiggs Money Flow (TMF، كولين تويجز) — تحسين لمنطق `computeCmf` الموجود أعلاه (نفس فكرة "ضغط
  * التدفق النقدي" الأساسية) لكن بفارقين موثَّقين بالمرجع القياسي [Colin Twiggs، incrediblecharts]:
  * (أ) نطاق أعلى/أدنى **معدَّل بالفجوة** (True Range High/Low: أعلى[i]/أدنى[i] مقارنةً بإغلاق[i-1]
- * أيضاً، لا أعلى/أدنى الشمعة وحدها كـCMF)، (ب) تنعيم **أسّي EMA** بدل SMA البسيطة لـCMF — **إعادة
- * استخدام حرفية كاملة لـ`ema()` المحلية** (لا حساب متوسط جديد). period=21 (القيمة القياسية لهذا
+ * أيضاً، لا أعلى/أدنى الشمعة وحدها كـCMF)، (ب) تنعيم **Wilder** (`smma`، RMA بـTradingView) بدل SMA البسيطة لـCMF. period=21 (القيمة القياسية لهذا
  * المؤشر تحديداً بمراجعه، بخلاف period=20 الشائع لـCMF). ADS[i]=فوليوم[i]×((إغلاق[i]−TRLow[i])−
  * (TRHigh[i]−إغلاق[i]))/(TRHigh[i]−TRLow[i]) [محصور رياضياً بنطاق ±فوليوم[i] لأن البسط بين
  * −range وrange]، TMF[i]=EMA(ADS,period)/EMA(فوليوم,period). **إثبات حدّي بنيوي**: بما أن EMA مرشِّح
@@ -588,8 +587,11 @@ export function computeTwiggsMoneyFlow(
     const v = vols[i];
     ads[i] = (v * (candles[i].close - trLow - (trHigh - candles[i].close))) / range;
   }
-  const emaAds = ema(ads, period);
-  const emaVol = ema(vols, period);
+  // تنعيم Wilder (1/period، `smma`) كتعريف تويجز ونسخة LazyBear الشائعة (`rma`) — كان EMA عادياً (2/(period+1))
+  // فيبتعد الخطّ حتى 0.085 على مقياس ±1 (وأضعافاً بالحجم عند نقاط) عمّا يراه المتداول بمراجعه. الحصر بـ[−1,1] باقٍ
+  // (مرشِّح خطّي بأوزان موجبة).
+  const emaAds = smma(ads, period);
+  const emaVol = smma(vols, period);
   const out: (number | null)[] = new Array(n).fill(null);
   for (let i = 0; i < n; i++) {
     const a = emaAds[i];
