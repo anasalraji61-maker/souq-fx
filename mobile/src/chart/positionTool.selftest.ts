@@ -107,6 +107,11 @@ assert.equal(positionOutcomeText(PL, o, 'EURUSD'), '+5.0 pip · +0.2R');
 o = positionOutcome(PL, bars, 0.25, 2.75, 3)!;
 assert.equal(o.state, 'target');
 assert.equal(o.exitIndex, 2);
+// صندوق داخل شمعة واحدة من هذا الفريم (M15 10:15→10:45 على H1) ⇒ لا حكم، لا «انتهى» بإغلاق H1
+assert.equal(positionOutcome(PL, bars, 1.25, 1.75, 3), null);
+assert.equal(positionOutcome(PL, bars, 1, 1.75, 3), null);
+// والطرفان على الشمعة نفسها بالضبط (رسمٌ على هذا الفريم) ⇒ مفتوح كالسابق
+assert.notEqual(positionOutcome(PL, bars, 1, 1, 3), null);
 // الصندوق ينتهي عند 1 والسلسلة أطول ⇒ انتهى بلا لمس
 assert.equal(positionOutcome(PL, bars, 0, 1, 3)!.state, 'ended');
 // شمعة تلمس الحدّين معاً ⇒ الوقف

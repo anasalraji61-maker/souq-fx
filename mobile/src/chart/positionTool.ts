@@ -171,6 +171,9 @@ export function positionOutcome(
   if (!(entryIndex >= 0) || entryIndex > last) return null;
   const risk = Math.abs(levels.entry - levels.stop);
   if (!(risk > 0)) return null;
+  // صندوق أضيق من شمعة هذا الفريم (دخول 10:15 ونهاية 10:45 رُسما على M15، معروضان على H1): لا شمعة بعد التنفيذ
+  // تُفحص، فكان «انتهى» بإغلاق H1 (بعد نهاية الصندوق) ولو ضُرب الوقف أو الهدف على M15 ⇒ ربحٌ مخترع. لا يُعرف ⇒ بلا حكم.
+  if (endIndex > entryIndex && Math.floor(endIndex) === entryIndex) return null;
   const boxEnd = endIndex > entryIndex ? endIndex : Infinity;
   const to = Math.floor(Math.min(boxEnd, last));
   const long = levels.side === 'long';
