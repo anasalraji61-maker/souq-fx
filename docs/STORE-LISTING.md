@@ -53,9 +53,9 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • قارن زوجين على شارت واحد: في الشارت المكبَّر اضغط مطوّلاً على رمز من قائمتك فيُرسم فوق الأول بخطّ بنفسجي، كل شمعة مقابل نظيرتها في الوقت نفسه.
 • المس أي شمعة لترى افتتاحها وأعلاها وأدناها وإغلاقها ومداها بالـpip وتغيّرها عن إغلاق السابقة، وكم pip يبعد المستوى عن السعر الحالي، ثم المس 🔔 لتضع تنبيه سعر عنده.
 • كبّر وصغّر بإصبعين، والشمعة الجارية تبقى أمامك. واسحب محور السعر لتطول الشموع أو تقصر. ارجع للخلف تدرس نموذجاً قديماً فتبقى الشموع ثابتة تحت إصبعك، ولمسة واحدة تعيدك لآخر شمعة دون أن تفقد التكبير.
-• عدّاد تحت السعر الحيّ يخبرك كم بقي على إغلاق الشمعة الجارية.
+• عدّاد تحت السعر الحيّ يخبرك كم بقي على إغلاق الشمعة.
 • سعر أعلى قمّة وأدنى قاع على الشاشة مكتوب عند ذيليهما ويتحدّث وأنت تسحب، وخطّ خافت يفصل كل يوم تداول عن الذي يليه على الفريمات الصغيرة.
-• المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، إيشيموكو، الفوليوم وغيرها وقيمة كل خطّ مكتوبة بجانب اسمه، ومستويات الارتكاز (Pivot وCamarilla وفيبوناتشي) وأعلى الأمس وأدناه وبجانب كل مستوى سعره، وتظليل جلسات طوكيو ولندن ونيويورك.
+• المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، إيشيموكو، الفوليوم وغيرها وقيمة كل خطّ مكتوبة بجانب اسمه، ومستويات الارتكاز (Pivot وCamarilla وفيبوناتشي وWoodie) وأعلى الأمس وأدناه وبجانب كل مستوى سعره، وتظليل جلسات طوكيو ولندن ونيويورك.
 • «عدسات» تضع مجموعة مؤشرات جاهزة بلمسة: هيكل (المتوسطات)، زخم (RSI وMACD)، سيولة (الفوليوم وبولنجر وCVD؛ فوليوم الفوركس وCVD تقدير من الشموع).
 • أدوات رسم: خط اتجاه، شعاع، قناة موازية، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات تكتب نصّها، مع زرّ تراجع وزرّ «نسخة» يكرّر الرسم بلمسة — حتى في المساحة الفارغة يمين آخر شمعة. أزرار ▲▼◀▶ تُزيح الرسم المحدَّد pip واحداً أو شمعة بكل لمسة. الخط الأفقي يكتب بُعده عن السعر بالـpip، والمنطقة ارتفاعها. وما ترسمه على فريم يظهر على بقية فريمات الرمز نفسه.
 • خطّط صفقة شراء أو بيع على الشارت: اسحب من الدخول إلى الوقف فيظهر الهدف، والمسافتان بالـpip، ونسبة العائد إلى المخاطرة — واسحب الهدف لتغيّر النسبة. وعلى الشموع السابقة ترى هل بلغ السعر الهدف أم الوقف.
@@ -114,9 +114,9 @@ CHARTS
 • Up to four charts on one screen with optional time sync — or overlay a second symbol on one chart, aligned in time.
 • Tap any candle for its OHLC, range and change from the previous close, plus that level's distance from price in pips, then 🔔 sets an alert there.
 • Pinch to zoom — the live candle stays in view. Drag the price axis to stretch candles. Scroll back; one tap returns to the live candle, zoom intact.
-• A countdown under the live price to the current candle's close.
+• A countdown under the live price to the candle's close.
 • The on-screen high and low carry their price and update as you scroll, and a faint line marks each new trading day on intraday charts.
-• Indicators traders use: SMA, EMA, Bollinger Bands, RSI, MACD, Ichimoku, Volume and more, each line's value in the legend, plus pivot levels (classic, Camarilla, Fibonacci) and yesterday's high and low, and Tokyo, London and New York session shading.
+• Indicators traders use: SMA, EMA, Bollinger Bands, RSI, MACD, Ichimoku, Volume and more, each line's value in the legend, plus pivots (classic, Camarilla, Fibonacci, Woodie) and yesterday's high and low, and Tokyo, London and New York session shading.
 • One-tap "lenses" that add a ready set of indicators: Structure (moving averages), Momentum (RSI and MACD), Liquidity (volume, Bollinger, CVD; forex volume and CVD are estimated from candles).
 • Drawing tools: trend line, ray, parallel channel, horizontal and vertical lines, rectangle, Fibonacci, zones and typed notes, with undo and one-tap cloning — also past the live candle. ▲▼◀▶ buttons move a selected drawing one pip or one candle per tap. A horizontal line shows its distance from price in pips; a zone, its height. Drawings follow the symbol across timeframes.
 • Plan a buy or sell on the chart: drag from entry to stop to see the target, both distances in pips and the reward-to-risk ratio — drag the target to change it. On past candles it shows whether price hit the target or the stop.
@@ -208,3 +208,6 @@ The first release of MATRIX, in English, Arabic and Kurdish: multi-chart layouts
 > **2026-09-25 (launch 89)**: سطر تنبيه الخبر كان «قبل الصفقة» فقط؛ منذ `a318e43` يظهر أيضاً فوق صفقات الدفتر **المفتوحة** ويسمّي الرموز التي
 > يمسّها ⇒ «قبل الصفقة وعلى صفقاتك المفتوحة» / «before a trade and on open ones». للإنجليزي: «A heads-up» ← «Heads-up»، «with» ← «in»، «fails to load»
 > ← «can't load». العدّ بسكربت: **ar 3997 / en 4000** من 4000 — الإنجليزي على الحدّ بالضبط، فأي إضافة قادمة تحتاج اختصاراً مقابلاً.
+> **2026-09-25 (launch 98)**: الارتكاز يذكر **Woodie** (`woodiePivots` بقائمة `INDICATORS`، `types.ts:370`) — صار بصيغة TradingView (افتتاح الجلسة الجارية،
+> `98e25a3` داخل اليوم و`2ff057f` على D/W، مختبَر). DeMark وCPR موجودان أيضاً ولم يُذكرا لضيق الحدّ. للإفساح: «pivot levels» ← «pivots»، «the current
+> candle's close» ← «the candle's close»، و«الشمعة الجارية» ← «الشمعة». العدّ بسكربت: **ar 3997 / en 3994** من 4000.
