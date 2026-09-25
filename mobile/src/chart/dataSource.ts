@@ -2,11 +2,20 @@ import type { DataProvenance, DataOriginKind } from '../api';
 import { TF_SECONDS, type Timeframe, isTimeframe } from '../timeframes';
 
 /** تسميات افتراضية بالعربية — تُستخدَم إن لم يُمرَّر كائن ترجمة من واجهة i18n (توافق خلفي مع dataSource.selftest.ts). */
-const KIND_LABEL_AR: Record<DataOriginKind, string> = {
+/**
+ * `'unavailable'` (backend-r2: `/ws/ticks` بلا مزوّد، اقتباس بلا سعر) — يُقبل هنا قبل أن يوسّع ui نوع
+ * `DataOriginKind` بـ`api.ts` (ui3)، فلا يكسر توسيعُه المستدعين. بعد التوسيع يصير هذا النوع = `DataOriginKind`.
+ */
+export type ProvenanceKind = DataOriginKind | 'unavailable';
+/** تسميات جزئية: نوع بلا تسمية ⇒ تسمية `unknown` الممرَّرة ثم العربية الافتراضية. */
+export type ProvenanceKindLabels = Partial<Record<ProvenanceKind, string>>;
+
+const KIND_LABEL_AR: Record<ProvenanceKind, string> = {
   provider: 'مزود',
   demo: 'تجريبي',
   cache: 'مخزن',
   unknown: 'مصدر غير محدد',
+  unavailable: 'غير متاح من المزوّد',
 };
 
 export type TickStatusLabels = {
@@ -31,10 +40,16 @@ export type SourceFamily = 'twelvedata' | 'demo' | 'unknown';
 export function normalizeProvenance(
   raw: Partial<DataProvenance> | null | undefined
 ): DataProvenance {
-  const kind = raw?.kind;
-  if (kind === 'provider' || kind === 'demo' || kind === 'cache' || kind === 'unknown') {
+  const kind = raw?.kind as string | undefined;
+  if (
+    kind === 'provider' ||
+    kind === 'demo' ||
+    kind === 'cache' ||
+    kind === 'unknown' ||
+    kind === 'unavailable'
+  ) {
     return {
-      kind,
+      kind: kind as DataOriginKind,
       as_of: typeof raw?.as_of === 'number' ? raw.as_of : null,
       channel: raw?.channel ?? null,
     };
@@ -44,9 +59,19 @@ export function normalizeProvenance(
 
 export function provenanceLabel(
   src: DataProvenance | null | undefined,
-  kindLabels: Record<DataOriginKind, string> = KIND_LABEL_AR
+  kindLabels: ProvenanceKindLabels = KIND_LABEL_AR
 ): string {
-  return kindLabels[normalizeProvenance(src).kind];
+  const kind = normalizeProvenance(src).kind as ProvenanceKind;
+  return kindLabels[kind] ?? kindLabels.unknown ?? KIND_LABEL_AR[kind];
+}
+
+/**
+ * سلسلة/تيك ليست أسعار مزوّد: `demo` (بذرية) أو `unavailable` (لا مزوّد لهذا الرمز/الآن). كلاهما لا يُقابَل
+ * بمراجع حقيقية (إغلاق أمس، نقاط الارتكاز) ولا يُخزَّن مكان سلسلة حقيقية.
+ */
+export function isSyntheticProvenance(src: Partial<DataProvenance> | null | undefined): boolean {
+  const kind = normalizeProvenance(src).kind as ProvenanceKind;
+  return kind === 'demo' || kind === 'unavailable';
 }
 
 /**
@@ -143,7 +168,9 @@ export function tickStatusKind(
   nowSec = Date.now() / 1000
 ): TickStatusKind | null {
   if (!tickSrc) return null;
-  const kind = normalizeProvenance(tickSrc).kind;
+  const kind = normalizeProvenance(tickSrc).kind as ProvenanceKind;
+  // لا تيك أصلاً (backend-r2 `ticks: {}`) — لا وسم «آخر سعر» لسعر لم يصل.
+  if (kind === 'unavailable') return null;
   if (kind === 'provider' && isFreshTick(asOf, nowSec)) return 'live';
   if (kind === 'demo') return 'demo';
   return 'lastPrice';

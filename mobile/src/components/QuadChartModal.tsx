@@ -18,7 +18,7 @@ import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
 import { TimeframeBar } from './TimeframeBar';
 import { mockSeries } from '../mock';
-import { candleTimeSec, normalizeProvenance, providerUnavailableReason } from '../chart/dataSource';
+import { candleTimeSec, isSyntheticProvenance, normalizeProvenance, providerUnavailableReason } from '../chart/dataSource';
 import { anchorDemoSeries } from '../chart/demoAnchor';
 import { formatPrice } from '../chart/math';
 import { formatPct, pctDirection } from '../chart/dailyChange';
@@ -145,7 +145,7 @@ export function QuadChartModal({
       api
         .chart(sym, tf)
         .then((s) => {
-          if (normalizeProvenance(s.data_source).kind !== 'demo') quadSeriesCache.put(key, s);
+          if (!isSyntheticProvenance(s.data_source)) quadSeriesCache.put(key, s);
           return s;
         })
         .catch(() => {
@@ -183,7 +183,7 @@ export function QuadChartModal({
         api
           .chart(sym, tf)
           .then((s) => {
-            if (!alive || normalizeProvenance(s.data_source).kind === 'demo') return;
+            if (!alive || isSyntheticProvenance(s.data_source)) return;
             quadSeriesCache.put(seriesCacheKey(sym, tf), s);
             pendingAnchor.current[i] = false;
             setSeries((prev) => {
@@ -340,7 +340,9 @@ export function QuadChartModal({
                       {t.cfMarketClosedTag}
                     </Text>
                   ) : null}
-                  {series[i] && providerUnavailableReason(series[i]!.data_source) ? (
+                  {series[i] &&
+                  (providerUnavailableReason(series[i]!.data_source) ||
+                    (normalizeProvenance(series[i]!.data_source).kind as string) === 'unavailable') ? (
                     // DXY: لا يقدّمه المزوّد أصلاً — الجملة كاملة لقارئ الشاشة، ومقصوصة بالخلية الضيّقة (أوّلها يكفي).
                     <Text
                       style={[styles.demoTag, { flexShrink: 1 }]}

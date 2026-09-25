@@ -1,6 +1,7 @@
 import type { ChartSeries, DataProvenance, LiveTick } from '../api';
 import {
   canMergeLiveIntoCandles,
+  isSyntheticProvenance,
   normalizeProvenance,
   tickBelongsToCandle,
   timeframeStepSec,
@@ -130,7 +131,7 @@ export function headerChangePct(
 ): number {
   const px = price != null && Number.isFinite(price) && price > 0 ? price : series.last;
   if (
-    normalizeProvenance(series.data_source).kind !== 'demo' &&
+    !isSyntheticProvenance(series.data_source) &&
     prevClose != null &&
     Number.isFinite(prevClose) &&
     prevClose > 0 &&

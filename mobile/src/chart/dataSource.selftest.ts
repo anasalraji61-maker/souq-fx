@@ -7,6 +7,10 @@ import {
   canMergeLiveIntoCandles,
   isFreshTick,
   isRealQuote,
+  isSyntheticProvenance,
+  normalizeProvenance,
+  provenanceLabel,
+  tickStatusKind,
   providerUnavailableReason,
   isValidAsOf,
   sourceFamily,
@@ -16,7 +20,7 @@ import {
   CLOCK_SKEW_SEC,
 } from './dataSource';
 import { withLivePrice, livePriceForChart, liveChangePct } from './liveSeries';
-import type { ChartSeries } from '../api';
+import type { ChartSeries, DataProvenance } from '../api';
 
 function series(partial: Partial<ChartSeries> & Pick<ChartSeries, 'candles' | 'data_source'>): ChartSeries {
   return {
@@ -161,6 +165,15 @@ check('bad price rejected', !isRealQuote({ price: 0, data_kind: 'provider' }) &&
 check('quote unavailable rejected', !isRealQuote({ price: null, data_kind: 'unavailable' }) && !isRealQuote({ price: 1.2, data_kind: 'unavailable' }));
 check('unavailable reason read raw', providerUnavailableReason({ kind: 'demo', unavailable_reason: 'not_offered_by_provider' }) === 'not_offered_by_provider');
 check('no reason ⇒ null', providerUnavailableReason({ kind: 'demo' }) === null && providerUnavailableReason(null) === null && providerUnavailableReason({ unavailable_reason: ' ' }) === null);
+
+// ui3/backend-r2: `'unavailable'` يمرّ قبل توسيع `DataOriginKind` وبعده
+const unav = { kind: 'unavailable', as_of: 5, channel: null } as unknown as DataProvenance;
+check('unavailable kind kept', (normalizeProvenance(unav).kind as string) === 'unavailable');
+check('unavailable is synthetic', isSyntheticProvenance(unav) && isSyntheticProvenance({ kind: 'demo' }) && !isSyntheticProvenance({ kind: 'provider' }) && !isSyntheticProvenance(null));
+check('unavailable tick ⇒ no status', tickStatusKind(unav, 5, 6) === null);
+check('partial labels ⇒ unknown fallback', provenanceLabel(unav, { unknown: 'U' }) === 'U' && provenanceLabel(unav, { unavailable: 'N/A', unknown: 'U' }) === 'N/A');
+check('default AR label for unavailable', provenanceLabel(unav) === 'غير متاح من المزوّد');
+check('never merges unavailable', !canMergeLiveIntoCandles(unav, { kind: 'provider', as_of: 1, channel: 'twelvedata' }));
 
 assert.equal(fails, 0);
 console.log(JSON.stringify({ ok: true, fails }));

@@ -159,7 +159,7 @@ import { planSessionRuns, type SessionId } from './sessions';
 import { formatPct, pctDirection, prevSessionFromDaily, validSessionBar } from './dailyChange';
 import { useDailyCurrOpen, useDailyPrevBar } from './dailyRefStore';
 import { candlesThrough, currentSessionOpen, currentSessionOpenAfter, pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
-import { candleTimeSec, normalizeProvenance, timeframeStepSec } from './dataSource';
+import { candleTimeSec, isSyntheticProvenance, timeframeStepSec } from './dataSource';
 import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
 import { useI18n } from '../i18n/I18nContext';
@@ -1913,7 +1913,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // شموع D1 أوّلاً (المخزن المشترك مع قائمة المتابعة)؛ السلسلة التجريبية لا تُقابَل بمستويات
   // حقيقية بعيدة عن أسعارها، فتُحسب من شموعها هي.
   const anyPivot = indicators.some((id) => PIVOT_IDS.has(id));
-  const seriesDemo = normalizeProvenance(series.data_source).kind === 'demo';
+  const seriesDemo = isSyntheticProvenance(series.data_source);
   const dailyPrevBar = useDailyPrevBar(anyPivot && !seriesDemo ? series.symbol : null);
   const dailyCurrOpen = useDailyCurrOpen(
     indicators.includes('woodiePivots') && !seriesDemo ? series.symbol : null

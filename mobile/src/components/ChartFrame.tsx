@@ -210,6 +210,7 @@ export function ChartFrame({
         demo: t.dsKindDemo,
         cache: t.dsKindCache,
         unknown: t.dsKindUnknown,
+        unavailable: t.originUnavailableProvider.replace('{symbol}', series.symbol),
       });
   // يُعاد فحصه كل 30ث: عند إغلاق الجمعة (أو كسر الذهب اليومي) تتوقّف التيكات فلا يُعاد الرسم،
   // وكان الوسم يبقى بلا «مغلق» حتى يلمس المتداول شيئاً.
