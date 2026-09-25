@@ -4,7 +4,8 @@
  */
 import assert from 'node:assert/strict';
 import type { Candle } from '../api';
-import { renko } from './renko';
+import { renko, renkoAtrBox } from './renko';
+import { computeAtr } from './indicators/volatility';
 
 const bar = (i: number, close: number, high = close, low = close): Candle =>
   ({ time: i * 60, open: close, high, low, close, volume: 1 }) as Candle;
@@ -34,5 +35,14 @@ assert.equal(b[1].srcTime, 120);
 // هبوط ثم انعكاس صعود بصندوقين من إغلاق الهابطة
 b = renko([bar(0, 10), bar(1, 8), bar(2, 9), bar(3, 10)], 1);
 assert.deepEqual(b.map((x) => [x.open, x.close]), [[10, 9], [9, 8], [9, 10]]);
+
+// الصندوق الافتراضي = ATR(14) Wilder على آخر شمعة مغلقة — تيك الحيّة لا يغيّره
+const hist: Candle[] = [];
+for (let i = 0; i < 40; i++) hist.push({ time: i * 60, open: 1, high: 1 + 0.001 * (1 + (i % 3)), low: 1, close: 1.0005 } as Candle);
+const want = computeAtr(hist.slice(0, 39))[38]!;
+assert.equal(renkoAtrBox(hist), want);
+const spiked = hist.slice(0, 39).concat({ ...hist[39], high: 1.05 });
+assert.equal(renkoAtrBox(spiked), want, 'live candle spike leaves the box alone');
+assert.ok(renkoAtrBox(hist.slice(0, 5)) > 0, 'short history falls back to mean TR');
 
 console.log('renko selftest PASS');

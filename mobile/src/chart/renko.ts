@@ -1,5 +1,6 @@
 import type { Candle } from '../api';
 import type { SyntheticBar } from './types';
+import { computeAtr } from './indicators/volatility';
 
 function atrBox(candles: Candle[]): number {
   if (candles.length < 2) return 1e-8;
@@ -13,6 +14,18 @@ function atrBox(candles: Candle[]): number {
 }
 
 /**
+ * صندوق Renko الافتراضي كـTradingView: ATR(14) بتنعيم Wilder على آخر شمعة **مغلقة** — الحيّة تتغيّر
+ * مع كل تيك فكانت كل اللبنات تُعاد رسماً تحت إصبع المتداول. كان ‎0.55 × متوسط المدى الحقيقي‎ للتاريخ
+ * كلّه: صندوق نصف حجم TradingView ⇒ ضعف اللبنات والانعكاسات للزوج نفسه. تاريخ أقصر من 15 ⇒ المتوسط.
+ */
+export function renkoAtrBox(candles: Candle[], period = 14): number {
+  const closed = candles.length - 2;
+  if (closed < period) return atrBox(candles);
+  const atr = computeAtr(candles.slice(0, closed + 1), period)[closed];
+  return atr != null && Number.isFinite(atr) && atr > 0 ? atr : atrBox(candles);
+}
+
+/**
  * Renko bricks — ATR box by default, optional fixed size. Traditional rules like TradingView:
  * source = close, a trend brick needs one box beyond the last brick's close, a reversal needs two
  * (one box beyond the last brick's *open*). The old single-box reversal from high/low stacked
@@ -21,7 +34,7 @@ function atrBox(candles: Candle[]): number {
  */
 export function renko(candles: Candle[], boxSize?: number): SyntheticBar[] {
   if (candles.length < 2) return candles;
-  const box = boxSize ?? atrBox(candles) * 0.55;
+  const box = boxSize ?? renkoAtrBox(candles);
   const out: SyntheticBar[] = [];
   const base = candles[0].close;
   // حدود آخر لبنة (فتحها وإغلاقها): قبل أوّل لبنة كلاهما الأساس ⇒ أوّل لبنة بصندوق واحد بأيّ اتجاه.
