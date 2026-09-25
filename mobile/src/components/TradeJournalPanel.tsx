@@ -17,7 +17,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { misplacedArabicThousandsSign } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
-import { ambiguousThousandsPrice, miniAccountSymbol, parsePriceFor, sizeLooksLikeUnits } from '../positionSize';
+import { ambiguousThousandsPrice, miniAccountSymbol, parsePriceFor, liveEntryQuoteState, sizeLooksLikeUnits } from '../positionSize';
 import {
   analyzePlan,
   entryAfterSideSwitch,
@@ -407,7 +407,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       if (!mountedRef.current) return;
       // الرمز أو الجهة أو الدخول المكتوب أو الصفقة قيد التعديل تغيّرت أثناء الطلب — يُسقط (`liveFillStillValid`)
       if (!liveFillStillValid(atTap, liveNow())) return;
-      if (!isRealQuote(q)) {
+      // سعرٌ مخزّن أقدم من 3 دقائق (المزوّد يردّ 429) ليس «السعر الحالي» — راجع `liveEntryQuoteState`
+      if (!isRealQuote(q) || liveEntryQuoteState(q, Date.now()) === 'stale') {
         setFormError(t.journalNoLiveQuote);
         return;
       }
@@ -1041,7 +1042,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     try {
       const q = await api.marketQuote(quoteSymbol(tr.symbol) ?? tr.symbol);
       if (!mountedRef.current) return;
-      if (isRealQuote(q)) {
+      // سعرٌ مخزّن قديم كان يُغلق الصفقة بنتيجةٍ من ربع ساعة مضت؛ السوق المغلق = آخر سعر قبل الإغلاق، يصلح
+      if (isRealQuote(q) && liveEntryQuoteState(q, Date.now()) !== 'stale') {
         px = executionPrice(q, tr.side === 'sell' ? 'sell' : 'buy', 'close');
       }
     } catch {
