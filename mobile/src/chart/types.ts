@@ -469,17 +469,22 @@ export function seriesHasVolume(candles: readonly Candle[]): boolean {
   });
 }
 
+/**
+ * البديل: **مدى الشمعة نسبةً لسعرها** (حجم التيك يتبع المدى لا الجسم — دوجي بذيلين طويلين نشاط كثيف)،
+ * من الشمعة وحدها. كان |إغلاق − فتح| × عاملاً دورياً بفهرس الشمعة (40 شمعة) ⇒ OBV/Klinger/MFI تطبع دورة
+ * وهمية، وتحميل تاريخ أقدم يزيح الفهرس فتتغيّر قيم الشموع القديمة نفسها (QA35).
+ */
+export function estimatedVolume(c: Candle): number {
+  const range = Math.max(0, c.high - c.low);
+  const ref = Math.abs(c.close) || 1;
+  return (range / ref) * 1e7 + 1;
+}
+
 export function withVolume(candles: Candle[]): (Candle & { volume: number })[] {
   const vol = (c: Candle) => (c as Candle & { volume?: number }).volume;
   const hasVolume = seriesHasVolume(candles);
-  return candles.map((c, i) => {
+  return candles.map((c) => {
     const v = vol(c);
-    return {
-      ...c,
-      volume:
-        hasVolume && v != null && Number.isFinite(v)
-          ? v
-          : Math.abs(c.close - c.open) * 1e6 * (0.6 + ((i * 17) % 40) / 40) + 1000,
-    };
+    return { ...c, volume: hasVolume && v != null && Number.isFinite(v) ? v : estimatedVolume(c) };
   });
 }

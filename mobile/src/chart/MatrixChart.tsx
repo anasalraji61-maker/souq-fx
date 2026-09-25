@@ -757,6 +757,9 @@ function PaneGuideLines({ paneId, innerH }: { paneId: string; innerH: number }) 
   );
 }
 
+/** طبقات سعر محسوبة من الحجم — «≈» بشارتها حين الحجم تقديري (`volName`). */
+const VOLUME_PRICE_OVERLAYS: ReadonlySet<string> = new Set(['vwap', 'vwma', 'vwapBands']);
+
 /**
  * رأس اللوحة: الاسم + **قيمة الشمعة الأخيرة**. اللوحات كانت تذكر الاسم وحده، فلا يفرّق
  * المتداول بين RSI عند 62 و68 وكلاهما «بين الخطين». الرقم وحده هو الملوَّن (لا الرسم):
@@ -877,9 +880,12 @@ function PaneValueHead({
   center = 0,
   signal,
   compact = false,
+  hint,
 }: {
   name: string;
   values: readonly (number | null | undefined)[];
+  /** شرح لقارئ الشاشة — الرأس يصير عنصراً واحداً (الاسم + القيمة) يحمله (حجم تقديري). */
+  hint?: string;
   /** شمعة التقاطع (فهرس داخل نافذة الرسم)، أو null فآخر شمعة. */
   at?: number | null;
   /**
@@ -917,7 +923,7 @@ function PaneValueHead({
         : null;
   const inline = compact && signal && txt && stxt && paneInlineFits(txt, stxt);
   return (
-    <View style={styles.paneHead}>
+    <View style={styles.paneHead} accessible={hint ? true : undefined} accessibilityHint={hint}>
       <Text style={styles.paneHeadName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
         {name}
       </Text>
@@ -2277,6 +2283,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [source.all, source.start, source.plot]
   );
   const indBars = indBase.bars;
+  // السلسلة بلا فوليوم (الفوركس يُرسل 0) ⇒ كل لوحة مشتقّة من الحجم تُحسب من تقدير `withVolume` ⇒ «≈» برأسها،
+  // كي لا يقارن المتداول OBV/Klinger/MFI هنا بأرقام منصّة تعرض حجم التيك من وسيطها (QA35).
+  const volEstimated = useMemo(() => !seriesHasVolume(liveSeries.candles), [liveSeries.candles]);
+  const volName = (name: string) => (volEstimated ? `${name} ≈` : name);
   const closes = useMemo(() => indBars.map((c) => c.close), [indBars]);
   const ind = <R,>(r: R): R => trimIndicator(r, indBars.length, indBase.cut);
   const overlays = useMemo(() => ind(computeOverlays(closes)), [closes]);
@@ -6298,7 +6308,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     ]}
                   />
                 ))}
-                <Text style={styles.priceLegendText}>{chip.label}</Text>
+                <Text style={styles.priceLegendText}>
+                  {VOLUME_PRICE_OVERLAYS.has(chip.id) ? volName(chip.label) : chip.label}
+                </Text>
                 {(() => {
                   const at = crossIndex ?? legendLastIdx;
                   const parts = legendMultiParts(chip.id, at);
@@ -8564,12 +8576,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           {/* بلا لون: أعمدة اللوحة ملوّنة باتجاه الشمعة (شراء/بيع)، فلونٌ ثانٍ على
               الرقم بمعنى ثالث (أعلى/أدنى من السابق) يجعل اللوحة تقول شيئين متنافسين. */}
-          {/* «≈»: السلسلة بلا فوليوم (الفوركس يُرسل 0) فالأعمدة تقدير من أجسام الشموع (`withVolume`) لا حجم تداول. */}
+          {/* «≈»: السلسلة بلا فوليوم (الفوركس يُرسل 0) فالأعمدة تقدير من مدى الشموع (`estimatedVolume`) لا حجم تداول. */}
           <PaneValueHead
-            name={seriesHasVolume(liveSeries.candles) ? 'VOL' : 'VOL ≈'}
+            name={volName('VOL')}
             values={volumeSeries ?? []}
             at={crossIndex}
             tone="none"
+            hint={volEstimated ? tr.mcVolEstimatedHint : undefined}
           />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
@@ -8614,7 +8627,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         <View style={[styles.pane, { height: paneH }]}>
           {/* اللون بالاتّجاه لا بالإشارة: OBV تراكمي فإشارته تعتمد على نقطة البدء
               (نافذة الرسم) لا على السوق، بينما ألوان أعمدته أصلاً `v >= obv[i-1]`. */}
-          <PaneValueHead name="OBV" values={obv} at={crossIndex} tone="trend" />
+          <PaneValueHead name={volName('OBV')} values={obv} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <TrendLineSeries values={obv} paneH={paneH} />
@@ -8624,7 +8637,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {nvi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="NVI" values={nvi} at={crossIndex} tone="trend" />
+          <PaneValueHead name={volName('NVI')} values={nvi} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <TrendLineSeries values={nvi} paneH={paneH} />
@@ -8634,7 +8647,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {adl ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="A/D" values={adl} at={crossIndex} tone="trend" />
+          <PaneValueHead name={volName('A/D')} values={adl} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <TrendLineSeries values={adl} paneH={paneH} />
@@ -8780,7 +8793,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {netVolume ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Net Vol" values={netVolume} at={crossIndex} tone="trend" />
+          <PaneValueHead name={volName('Net Vol')} values={netVolume} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <TrendLineSeries values={netVolume} paneH={paneH} />
@@ -8894,7 +8907,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vwMacd ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="VW-MACD" values={vwMacd.hist} at={crossIndex} />
+          <PaneValueHead name={volName('VW-MACD')} values={vwMacd.hist} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -9150,7 +9163,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vpci ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="VPCI" values={vpci} at={crossIndex} />
+          <PaneValueHead name={volName('VPCI')} values={vpci} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -9250,7 +9263,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vfi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="VFI" values={vfi} at={crossIndex} />
+          <PaneValueHead name={volName('VFI')} values={vfi} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -9303,7 +9316,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {twiggsMoneyFlow ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Twiggs MF" values={twiggsMoneyFlow} at={crossIndex} />
+          <PaneValueHead name={volName('Twiggs MF')} values={twiggsMoneyFlow} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -9334,7 +9347,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vzo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="VZO" values={vzo} at={crossIndex} />
+          <PaneValueHead name={volName('VZO')} values={vzo} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -9488,7 +9501,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {mfi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneHead paneId="mfi" name="MFI" values={mfi} at={crossIndex} />
+          <PaneHead paneId="mfi" name={volName('MFI')} values={mfi} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <PaneGuideLines paneId="mfi" innerH={paneH - 16} />
@@ -9542,7 +9555,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {force ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Force" values={force} at={crossIndex} />
+          <PaneValueHead name={volName('Force')} values={force} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <ZeroLineSeries values={force} paneH={paneH} />
@@ -9552,7 +9565,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {chaikinOsc ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Chaikin" values={chaikinOsc} at={crossIndex} />
+          <PaneValueHead name={volName('Chaikin')} values={chaikinOsc} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <ZeroLineSeries values={chaikinOsc} paneH={paneH} />
@@ -9811,7 +9824,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {eom ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="EOM" values={eom} at={crossIndex} />
+          <PaneValueHead name={volName('EOM')} values={eom} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <ZeroLineSeries values={eom} paneH={paneH} />
@@ -9937,7 +9950,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {bwmfi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="BW MFI" values={bwmfi} at={crossIndex} tone="trend" />
+          <PaneValueHead name={volName('BW MFI')} values={bwmfi} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -9966,7 +9979,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {pvo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="PVO" values={pvo} at={crossIndex} />
+          <PaneValueHead name={volName('PVO')} values={pvo} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -10036,7 +10049,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vo ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Volume Osc" values={vo} at={crossIndex} />
+          <PaneValueHead name={volName('Volume Osc')} values={vo} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -10071,7 +10084,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vpt ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="VPT" values={vpt} at={crossIndex} tone="trend" />
+          <PaneValueHead name={volName('VPT')} values={vpt} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <TrendLineSeries values={vpt} paneH={paneH} />
@@ -10479,7 +10492,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {pvi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="PVI" values={pvi} at={crossIndex} tone="trend" />
+          <PaneValueHead name={volName('PVI')} values={pvi} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <TrendLineSeries values={pvi} paneH={paneH} />
@@ -10809,7 +10822,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       {klinger ? (
         <View style={[styles.pane, { height: paneH }]}>
           <PaneSpreadHead
-            name="Klinger"
+            name={volName('Klinger')}
             upper={klinger.kvo}
             lower={klinger.signal}
             at={crossIndex}
@@ -11038,7 +11051,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {volRoc ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="Volume ROC" values={volRoc} at={crossIndex} />
+          <PaneValueHead name={volName('Volume ROC')} values={volRoc} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {/* خطّ الصفر: مرجع الجانبين. كان يُرسم بـMACD وVW-MACD وحدهما، فبقية
@@ -11407,7 +11420,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {cmf ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneValueHead name="CMF" values={cmf} at={crossIndex} />
+          <PaneValueHead name={volName('CMF')} values={cmf} at={crossIndex} />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <ZeroLineSeries values={cmf} paneH={paneH} />
