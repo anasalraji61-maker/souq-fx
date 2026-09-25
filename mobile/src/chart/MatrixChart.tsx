@@ -1482,6 +1482,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   /** ما تُرُوجع عنه (لإعادته بـCtrl+Shift+Z / Ctrl+Y على الويب)؛ أيّ تعديل جديد يُفرغه كأيّ محرّر. */
   const redoHistory = useRef<Drawing[][]>([]);
   const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
   const [pending, setPending] = useState<ChartPoint | null>(null);
   const [dragEnd, setDragEnd] = useState<ChartPoint | null>(null);
   // مرساة التقاطع **بزمن الشمعة** لا بفهرسها داخل النافذة — راجع `crossAnchor.ts`:
@@ -2422,6 +2423,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       drawHistory.current = [];
       redoHistory.current = [];
       setCanUndo(false);
+      setCanRedo(false);
       setSelectedId(null);
       setDragEnd(null);
       setDrawings(anchorHere(d));
@@ -2462,6 +2464,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     drawHistory.current = next.length > DRAW_HISTORY_MAX ? next.slice(-DRAW_HISTORY_MAX) : next;
     redoHistory.current = [];
     setCanUndo(true);
+    setCanRedo(false);
   }, []);
 
   const toggleDrawingsHidden = useCallback(() => {
@@ -2500,6 +2503,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     drawHistory.current = hist.slice(0, -1);
     redoHistory.current = [...redoHistory.current, drawingsRef.current].slice(-DRAW_HISTORY_MAX);
     setCanUndo(drawHistory.current.length > 0);
+    setCanRedo(true);
     restoreDrawings(prev);
   }, [restoreDrawings]);
 
@@ -2511,6 +2515,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     redoHistory.current = redo.slice(0, -1);
     drawHistory.current = [...drawHistory.current, drawingsRef.current].slice(-DRAW_HISTORY_MAX);
     setCanUndo(true);
+    setCanRedo(redoHistory.current.length > 0);
     restoreDrawings(next);
   }, [restoreDrawings]);
 
@@ -2564,6 +2569,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     drawHistory.current = [];
     redoHistory.current = [];
     setCanUndo(false);
+    setCanRedo(false);
   }, [series.symbol]);
 
   useEffect(() => {
@@ -6425,6 +6431,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Text style={styles.compactToolIcon}>↶</Text>
               <Text style={styles.compactToolLabel}>{tr.mcUndo}</Text>
             </Pressable>
+            {/* الإعادة تظهر فقط بعد تراجع: زرّ معطّل دائم يأخذ مكان أداة من شريط الهاتف الضيّق. */}
+            {canRedo ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={tr.mcRedoA11y}
+                style={({ pressed }) => [
+                  styles.compactTool,
+                  pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                ]}
+                onPress={redoDrawing}
+              >
+                <Text style={styles.compactToolIcon}>↷</Text>
+                <Text style={styles.compactToolLabel}>{tr.mcRedo}</Text>
+              </Pressable>
+            ) : null}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={tr.mcClearAllTitle}
@@ -12534,6 +12555,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               onPress={undoDrawing}
             >
               <Text style={styles.toolText}>↶ {tr.mcUndo}</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={canRedo ? tr.mcRedoA11y : tr.mcNothingToRedo}
+              accessibilityState={{ disabled: !canRedo }}
+              disabled={!canRedo}
+              style={({ pressed }) => [
+                styles.tool,
+                !canRedo && styles.toolDisabled,
+                pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+              ]}
+              onPress={redoDrawing}
+            >
+              <Text style={styles.toolText}>↷ {tr.mcRedo}</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
