@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { I18nManager, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DICTS, Dict, LangId, LANGS, isRtl } from './locales';
+import { DICTS, Dict, LangId, LANGS, isRtl, resolveLang, deviceLocaleTag } from './locales';
 
 type I18nCtx = {
   lang: LangId;
@@ -17,33 +17,22 @@ const KEY = 'matrix.lang.v1';
 /**
  * لغة أول فتح (قبل أن يختار المتداول شيئاً): كانت العربية دائماً، فمن يثبّت التطبيق من صفحة المتجر
  * الإنجليزية على جهاز إنجليزي تستقبله جولة ترحيب لا يقرؤها — وزرّ اللغة بتبويب الحساب لم يعرف بعد
- * أين هو. نقرأ لغة الجهاز من `Intl` (بلا تبعية جديدة) ونطابق ما ندعمه فقط؛ غير ذلك يبقى العربية،
- * جمهور MATRIX الأول. لا يُحفظ هذا التخمين — المحفوظ هو اختيار المتداول الصريح وحده.
+ * أين هو. القاعدة بـ`resolveLang` (`locales.ts`) كي تتّفق الواجهة ولغة الإشعارات. لا يُحفظ هذا
+ * التخمين — المحفوظ هو اختيار المتداول الصريح وحده.
  */
-function deviceLang(): LangId {
-  try {
-    const tag = Intl.DateTimeFormat().resolvedOptions().locale.toLowerCase();
-    if (tag.startsWith('ckb') || tag.startsWith('ku')) return 'ku';
-    if (tag === 'en-gb' || tag.startsWith('en-gb-')) return 'en-GB';
-    if (tag.startsWith('en')) return 'en-US';
-  } catch {
-    /* Intl غائب: الافتراضي */
-  }
-  return 'ar';
-}
-
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<LangId>('ar');
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     (async () => {
+      let saved: string | null = null;
       try {
-        const saved = await AsyncStorage.getItem(KEY);
-        setLangState(saved && saved in DICTS ? (saved as LangId) : deviceLang());
+        saved = await AsyncStorage.getItem(KEY);
       } catch {
-        /* ignore */
+        /* تخزين معطَّل: لغة الجهاز — كانت تبقى العربية هنا بينما الإشعارات تتبع الجهاز */
       } finally {
+        setLangState(resolveLang(saved, deviceLocaleTag()));
         setReady(true);
       }
     })();

@@ -4481,3 +4481,26 @@ export const DICTS: Record<LangId, Dict> = {
 export function isRtl(lang: LangId): boolean {
   return LANGS.find((l) => l.id === lang)?.rtl ?? true;
 }
+
+/**
+ * اللغة المعروضة: اختيار المتداول المحفوظ إن كان لغةً ندعمها، وإلا لغة الجهاز — ckb/ku ⇒ ku، en-GB ⇒ en-GB،
+ * en* ⇒ en-US، غيرها ⇒ ar (جمهور MATRIX الأول). مصدر واحد للقاعدة: الواجهة (`I18nContext`) وقناة الإشعارات
+ * وتوكن الـPush (`notifications.ts`) يجب أن تتّفق، وإلا رأى صاحب الهاتف الإنجليزي واجهةً إنجليزية وتنبيهاتٍ عربية.
+ */
+export function resolveLang(saved: string | null | undefined, deviceTag: string | undefined): LangId {
+  if (saved && saved in DICTS) return saved as LangId;
+  const tag = (deviceTag ?? '').toLowerCase();
+  if (tag.startsWith('ckb') || tag.startsWith('ku')) return 'ku';
+  if (tag === 'en-gb' || tag.startsWith('en-gb-')) return 'en-GB';
+  if (tag.startsWith('en')) return 'en-US';
+  return 'ar';
+}
+
+/** وسم لغة الجهاز من `Intl` (بلا تبعية جديدة)؛ `undefined` إن غاب `Intl`. */
+export function deviceLocaleTag(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().locale;
+  } catch {
+    return undefined;
+  }
+}
