@@ -264,14 +264,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.sm,
-    backgroundColor: colors.bgPanel,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  // نفس رقاقة «مختارة» المؤسَّسة بالتطبيق (PositionSizePanel/CalendarPanel): حدٌّ ملوّن وخلفية
-  // شفيفة، لا قلبٌ كامل للألوان — matrix-tactile-feel.mdc.
-  chipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
-  chipText: { color: colors.accent, fontWeight: '500', fontSize: 11 },
+  // DESIGN-PRO §1/§4/§5.5: الرقاقات بالسكون `textMuted` (كانت كلها بلون التأكيد ⇒ حتى 5 عناصر تأكيد بمنطقة واحدة)؛
+  // المختارة وحدها نصّ بالتأكيد + تعبئة محايدة (`selectedFill`) فلا يُعبَّر عن الاختيار باللون وحده؛ حدٌّ واحد بلا خلفية.
+  chipOn: { backgroundColor: colors.selectedFill },
+  chipText: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
   chipTextOn: { color: colors.accent, fontWeight: '500' },
   chipDisabled: { opacity: 0.4 },
   hit: {
