@@ -1758,68 +1758,10 @@ export function openRiskTotals(
 }
 
 /**
- * **تعرّض العملات** للصفقات المفتوحة: صافي كل عملة بوحداتها هي — لسؤال «هل صفقاتي الثلاث رهانٌ واحد؟».
- * شراء EURUSD + شراء GBPUSD + بيع USDJPY تبدو ثلاث أفكار، وهي ثلاث مرّات **بيع الدولار**: تقرير أمريكي واحد
- * يضرب الثلاث معاً، ومخاطرة 1% لكلٍّ هي عملياً 3% على خبرٍ واحد.
- *
- * كل صفقة ساقان: الأساس بـ`± lots × contractSize`، والتسعير بعكسه `∓ lots × contractSize × entry` (شراء EURUSD 1 لوت
- * على 1.1000 = +100,000 EUR و−110,000 USD). بوحدات العملة نفسها لأن جمع عملتين يحتاج سعر تحويل لا يملكه الدفتر.
- * الذهب/الفضة «عملة» XAU/XAG بالأونصة. سنت/micro بعقد ÷ 100 (`journalSpec` للزوج العادي).
- *
- * - `legs` عدد الصفقات التي تمسّ العملة، و`sameWay` = كلّها بالاتجاه نفسه (تراكم لا تحوّط) — ما يستحق التنبيه
- *   هو `legs ≥ 2 && sameWay`. صافٍ صفريّ تماماً (تحوّط كامل) يبقى عنصراً بـ`units: 0` و`sameWay: false`.
- * - **الكلّ أو لا شيء** (كـ`openRiskTotals`): مفتوحة بحجم مجهول أو أداة بلا مواصفات أو دخول غير صالح ⇒ `null`.
- *   تعرّضٌ جزئي يُقرأ «هذا كلّ ما عليّ من الدولار» وهو أقلّ منه.
- * - `null` حين لا صفقة مفتوحة. الترتيب: الأكثر سيقاناً أولاً ثم أبجدياً. الوحدات مقرَّبة لوحدة كاملة بلا «−0».
- */
-export function openCurrencyExposure(
-  trades: readonly {
-    symbol: string;
-    side: string;
-    entry: number;
-    size?: number | null;
-    note?: string | null;
-    status: string;
-  }[]
-): { ccy: string; units: number; legs: number; sameWay: boolean }[] | null {
-  const acc = new Map<string, { units: number; legs: number; long: number; short: number }>();
-  const add = (ccy: string, units: number) => {
-    const cur = acc.get(ccy) ?? { units: 0, legs: 0, long: 0, short: 0 };
-    cur.units += units;
-    cur.legs += 1;
-    if (units > 0) cur.long += 1;
-    else cur.short += 1;
-    acc.set(ccy, cur);
-  };
-  let n = 0;
-  for (const tr of trades) {
-    if (tr.status !== 'open') continue;
-    n += 1;
-    const lots = knownLots(tr.size, tr.note);
-    const spec = journalSpec(tr.symbol);
-    if (lots == null || !spec || !finitePos(tr.entry)) return null;
-    // mini: حجم لوتها يختلف بين الوسطاء (10,000 أو 100,000) — كـ`journalPnl` لا رقم أفضل من رقمٍ مخترع
-    if (isMiniJournalSymbol(tr.symbol)) return null;
-    const small = !instrumentSpec(tr.symbol.trim().toUpperCase());
-    const baseUnits = (lots * spec.contractSize) / (small ? 100 : 1);
-    const sign = tr.side === 'sell' ? -1 : 1;
-    add(spec.base, sign * baseUnits);
-    add(spec.quote, -sign * baseUnits * tr.entry);
-  }
-  if (n === 0) return null;
-  return [...acc.entries()]
-    .sort((a, b) => b[1].legs - a[1].legs || a[0].localeCompare(b[0]))
-    .map(([ccy, v]) => {
-      const units = Math.round(v.units) || 0;
-      return { ccy, units, legs: v.legs, sameWay: units !== 0 && (v.long === 0 || v.short === 0) };
-    });
-}
-
-/**
  * عملاتٌ تراهن عليها **صفقتان مفتوحتان أو أكثر بالاتجاه نفسه** — لسطر `journalExposureStacked` بالدفتر.
  * شراء EURUSD + شراء GBPUSD + بيع USDJPY = ثلاث صفقات «مختلفة» كلّها بيعٌ للدولار: خبرٌ أمريكي واحد يضربها معاً.
  *
- * اتجاهٌ فقط لا حجم (بخلاف `openCurrencyExposure`): الصفقة المسجَّلة بلا حجم (الخادم يخزّن 1) ما زالت تراهن
+ * اتجاهٌ فقط لا حجم: الصفقة المسجَّلة بلا حجم (الخادم يخزّن 1) ما زالت تراهن
  * بالاتجاه نفسه، فلا يُسكت حجمٌ مجهول التحذير. أداة بلا مواصفات (مؤشرات، نفط، كريبتو) تُتخطّى — لا ساق عملة
  * تُنسب لها، والعدّ «n صفقات بالاتجاه نفسه» يبقى صادقاً. أيّ ساقٍ معاكسة على العملة ⇒ تحوّط لا تراكم ⇒ لا سطر.
  * مجموعة الصفقات نفسها على عملتين (EURUSD ×2 ⇒ EUR وUSD) تُذكر مرّة واحدة — بالعملة التي هي أساسها.
