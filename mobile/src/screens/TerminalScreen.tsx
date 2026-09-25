@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Platform,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -940,12 +941,12 @@ export function TerminalScreen() {
     if (x == null) return;
     phoneStripRef.current?.scrollTo({ x: Math.max(0, x - 48), animated: true });
   }, [phone, symbol]);
-  const heroSeries = series ?? offlineFrame(symbol, tf);
   /**
    * ui16b/backend-r19: رمز لا يقدّمه المزوّد (DXY) يصل بسلسلة بذرة حول 104.25 — كان الشارت الرئيسي يرسمها وسعرها برأس
    * الشاشة العريضة كأنها سوق. الآن الإشعار مكان الشارت، والسعر والسبريد «—» كـ`ChartFrame`/`FocusChartModal`.
+   * و`series` null = الجلب لم يصل بعد (chart-r47 c): مؤشّر تحميل لا شموع بذرة، ولا وسم مصدر لها.
    */
-  const heroNoRealData = seriesHasNoRealData(heroSeries.data_source);
+  const heroNoRealData = series != null && seriesHasNoRealData(series.data_source);
   const heroTick = liveTicks[symbol] ?? null;
   const heroNowMs = useTickFreshnessClock(heroTick?.source.as_of ?? null);
   const heroNowSec = heroNowMs / 1000;
@@ -962,9 +963,11 @@ export function TerminalScreen() {
     // backend-r1/ui16b: DXY لا يقدّمه المزوّد أصلاً — «تجريبي» العامة توحي بعطلٍ مؤقت. الشارت نفسه صار الإشعار
     // (`chartNotOfferedTitle/Body`)، فالوسم القصير يكفي؛ و`originUnavailableProvider` («الرسم مولَّد للعرض») لم تعد صادقة.
     // ولا وسم تيك: «تيك تجريبي» بجانب «غير متاح» يوحي بسعرٍ ما.
-    heroNoRealData
-      ? t.dsKindUnavailable
-      : provenanceLabel(normalizeProvenance(heroSeries.data_source), dsKindLabels),
+    !series
+      ? null
+      : heroNoRealData
+        ? t.dsKindUnavailable
+        : provenanceLabel(normalizeProvenance(series.data_source), dsKindLabels),
     heroTick && !heroNoRealData
       ? tickStatusLabel(heroTick.source, heroTick.source.as_of, heroNowSec, dsTickLabels) ??
         t.termLastPriceWord
@@ -1490,11 +1493,21 @@ export function TerminalScreen() {
             <View style={styles.desktopChart}>
               {heroNoRealData ? (
                 <ProviderUnavailableNotice symbol={symbol} height={desktopChartHeight} showSwitchHint />
+              ) : !series ? (
+                <View
+                  style={[styles.heroLoading, { height: desktopChartHeight }]}
+                  accessible
+                  accessibilityLabel={t.a11yBusy}
+                  accessibilityState={{ busy: true }}
+                >
+                  <ActivityIndicator color={colors.accent} />
+                </View>
               ) : (
                 <MatrixChart
                   onCreateAlert={alertFromChart}
-                  key={`shadow-overlay-${symbol}-${tf}-${kind}`}
-                  series={series ?? offlineFrame(symbol, tf)}
+                  key={`shadow-overlay-${symbol}-${tf}`}
+                  onToolChange={setTool}
+                  series={series}
                   shadowSeries={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
                     if (!shadowEnabled[i] || shadowSlots[i] === tf) return [];
                     const sec = shadowSeries[i];
@@ -1514,11 +1527,11 @@ export function TerminalScreen() {
                   panSpeed={panSpeed}
                   accent={symbol === 'DXY' ? colors.dxy : colors.accent}
                   livePrice={livePriceForChart(
-                    series ?? offlineFrame(symbol, tf),
+                    series,
                     liveTicks[symbol] ?? null,
                     {
                       tickAsOf: liveTicks[symbol]?.source.as_of ?? null,
-                      timeframe: (series ?? offlineFrame(symbol, tf)).timeframe,
+                      timeframe: series.timeframe,
                     }
                   )}
                   liveTickSource={liveTicks[symbol]?.source ?? null}
@@ -1634,11 +1647,23 @@ export function TerminalScreen() {
             <View style={styles.desktopChart}>
               {heroNoRealData ? (
                 <ProviderUnavailableNotice symbol={symbol} height={desktopChartHeight} showSwitchHint />
+              ) : !series ? (
+                <View
+                  style={[styles.heroLoading, { height: desktopChartHeight }]}
+                  accessible
+                  accessibilityLabel={t.a11yBusy}
+                  accessibilityState={{ busy: true }}
+                >
+                  <ActivityIndicator color={colors.accent} />
+                </View>
               ) : (
                 <MatrixChart
                   onCreateAlert={alertFromChart}
-                  key={`${symbol}-${tf}-${tool}-${kind}-${lens}-${indicators.join(',')}`}
-                  series={series ?? offlineFrame(symbol, tf)}
+                  // chart-r47: الأداة/النوع/العدسة/المؤشرات تُطبَّق بتأثيرات `MatrixChart` — بالمفتاح كانت تعيد بناءه فيضيع التكبير
+                  // والتراجع ويقفز لآخر 80 شمعة. و`onToolChange` يُطفئ «ترند» بالشريط الأيسر حين ينتهي الرسم داخل الشارت.
+                  key={`${symbol}-${tf}`}
+                  onToolChange={setTool}
+                  series={series}
                   height={desktopChartHeight}
                   interactive
                   compactUi
@@ -1646,11 +1671,11 @@ export function TerminalScreen() {
                   panSpeed={panSpeed}
                   accent={symbol === 'DXY' ? colors.dxy : colors.accent}
                   livePrice={livePriceForChart(
-                    series ?? offlineFrame(symbol, tf),
+                    series,
                     liveTicks[symbol] ?? null,
                     {
                       tickAsOf: liveTicks[symbol]?.source.as_of ?? null,
-                      timeframe: (series ?? offlineFrame(symbol, tf)).timeframe,
+                      timeframe: series.timeframe,
                     }
                   )}
                   liveTickSource={liveTicks[symbol]?.source ?? null}
@@ -2163,6 +2188,7 @@ const styles = StyleSheet.create({
   statusDotOnline: { backgroundColor: colors.bull },
   statusText: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
   desktopChart: { flex: 1, paddingHorizontal: 7, paddingTop: 6 },
+  heroLoading: { alignItems: 'center', justifyContent: 'center' },
   chartArmed: {
     color: colors.bull,
     fontSize: 11,
