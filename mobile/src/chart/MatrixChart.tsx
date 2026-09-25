@@ -122,7 +122,7 @@ import {
 } from './positionTool';
 import { channelHandlePrice, channelWidthAt, fitChannelWidth } from './channel';
 import { anchorDrawings, barTime, drawSlotAt, stampAtIndex, type TimeBar } from './drawingAnchors';
-import { lineNowText, placeSelectionTags, selectionPrices } from './selectionTags';
+import { lineNowText, lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
 import { appendedAfter } from './holdView';
 import { priceSpan } from './priceSpan';
 import { FIB_EXTENSIONS, fibLevelPrice, isFibExtension, planFibLabels, type FibLabelPlan } from './fibLabels';
@@ -5199,7 +5199,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // ويُقاس بُعده من سعر الإعادة (`currentPrice`) — رقم يخلط الماضي بالمستقبل.
   const nowIndex = replayOn ? source.start + source.plot.length - 1 : source.all.length - 1;
   const selectedLineNow = selectedSpan
-    ? lineNowText(selectedSpan, nowIndex, currentPrice, series.symbol, fmtPrice, lang)
+    ? lineNowText(selectedSpan, nowIndex, currentPrice, series.symbol, fmtPrice, lang, logScale)
     : null;
   const selectedSpanText =
     selectedSpanReadout && selectedLineNow
@@ -5248,7 +5248,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const selectedDrawing = selectedId && !hidePriceLabels ? drawings.find((d) => d.id === selectedId) : undefined;
   const selectionTags = selectedDrawing
     ? placeSelectionTags(
-        selectionPrices(selectedDrawing, series.symbol, nowIndex),
+        selectionPrices(selectedDrawing, series.symbol, nowIndex, logScale),
         yOf,
         chartPlotH,
         PRICE_TAG_H,
@@ -11339,7 +11339,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     // مستمراً لمستوى الخط مستقبلاً (ذلك يحتاج منطق خادم/تقييم بكل تحديث، خارج نطاق
                     // نموذج التنبيه الثابت الحالي). مفيد عملياً لمن يريد تنبيهاً عند عودة السعر لمستوى
                     // الخط الحالي، لكنه لا يتحرّك مع الخط لاحقاً — الفرق موضَّح بنص الزر نفسه.
-                    const slope = (d.b.price - d.a.price) / (d.b.index - d.a.index);
                     // «الشمعة الحالية» = آخر شمعة بالسلسلة، لا آخر شمعة ظاهرة: بعد الرجوع
                     // بالشارت كان التنبيه يُضبط على قيمة الخطّ عند حافّة الشاشة (بعيداً بنقاط
                     // عن مستواه الآن). بالإعادة الحالية هي شمعة الإعادة. ويُقرَّب لمنازل الزوج
@@ -11347,7 +11346,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     const lastGlobalIndex = replayOn
                       ? source.start + source.plot.length - 1
                       : source.all.length - 1;
-                    const rawLinePrice = d.a.price + slope * (lastGlobalIndex - d.a.index);
+                    // باللوغاريتمي استيفاء باللوغاريتم كالخطّ المرسوم (`lineValueAt`). خطّ هابط بلغ ≤ 0 ⇒ لا زرّ
+                    // (كان يُنشئ تنبيهاً بسعر سالب لا يُبلغ أبداً).
+                    const rawLinePrice = lineValueAt(d.a, d.b, lastGlobalIndex, true, logScale, true);
+                    if (rawLinePrice == null) return null;
                     // بمنازل الشارت نفسها (`fmtPrice`): لأداة بلا منازل معروفة (US30، BTCUSD، النفط) كان
                     // المستوى المحفوظ 39123.4567891234 والمعروض 39123.46.
                     const currentPrice = Number(fmtPrice(rawLinePrice));

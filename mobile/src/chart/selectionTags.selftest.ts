@@ -36,6 +36,12 @@ assert.equal(lineValueAt(A, B, 0, true), null); // ولا يمتدّ خلف بد
 assert.equal(lineValueAt(B, A, 7, true), null); // شعاع نحو اليسار لا يبلغ الحيّة
 assert.equal(lineValueAt(A, { index: 1, price: 1.09 }, 1, true), null); // طرفان على شمعة واحدة
 assert.equal(lineValueAt(A, { index: 2, price: 0.5 }, 9, true), null); // شعاع هابط تحت الصفر
+// المقياس اللوغاريتمي: الاستيفاء هندسي (منتصف 100→400 = 200 لا 250)، والاستقراء خلف الطرف حين `back`.
+assert.ok(Math.abs(lineValueAt({ index: 0, price: 100 }, { index: 2, price: 400 }, 1, false, true)! - 200) < 1e-9);
+assert.equal(lineValueAt({ index: 0, price: 100 }, { index: 2, price: 400 }, 1, false), 250);
+assert.equal(lineValueAt(A, B, 0, true, false), null);
+assert.ok(Math.abs(lineValueAt(A, B, 0, true, false, true)! - 1.079) < 1e-12);
+assert.ok(Math.abs(lineValueAt({ index: 0, price: 100 }, { index: 1, price: 200 }, 3, true, true)! - 800) < 1e-9);
 const ray = selectionPrices({ ...d('ray', 1.08, 1.083) }, 'EURUSD', 7);
 assert.deepEqual(ray.map((p) => p.tone), ['line', 'line', 'now']);
 assert.ok(Math.abs(ray[2].price - 1.086) < 1e-12);

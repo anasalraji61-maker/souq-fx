@@ -22,7 +22,9 @@ export function selectionPrices(
   d: Drawing,
   symbol: string,
   /** فهرس الشمعة الحيّة (آخر شمعة بالسلسلة) — لسعر الترند/الشعاع عندها (`lineValueAt`). */
-  nowIndex?: number
+  nowIndex?: number,
+  /** المقياس اللوغاريتمي: الخطّ مستقيم بالبكسل = باللوغاريتم — راجع `lineValueAt`. */
+  log = false
 ): { price: number; tone: SelectionTagTone }[] {
   if (d.tool === 'vline' || d.tool === 'note') return [];
   if (d.tool === 'hline' || !d.b) return [{ price: d.a.price, tone: 'line' }];
@@ -43,7 +45,7 @@ export function selectionPrices(
     }
   }
   if ((d.tool === 'trend' || d.tool === 'ray') && nowIndex != null) {
-    const now = lineValueAt(d.a, d.b, nowIndex, d.tool === 'ray');
+    const now = lineValueAt(d.a, d.b, nowIndex, d.tool === 'ray', log);
     // عند طرفٍ بالضبط (رُسم على الشمعة الحيّة) ⇒ وسم الطرف يكفي.
     if (now != null && now !== d.a.price && now !== d.b.price) out.push({ price: now, tone: 'now' });
   }
@@ -55,18 +57,27 @@ export function selectionPrices(
  * الارتداد/الكسر أمره أو تنبيهه، وكان يقرؤه بالعين من ميل الخطّ إلى المحور. `null` حين لا يمرّ الخطّ
  * بتلك الشمعة: الترند بين طرفيه فقط، والشعاع من طرفه الأول باتّجاه الثاني بلا نهاية (شعاع رُسم نحو
  * اليسار لا يبلغ الشمعة الحيّة)؛ خطّ رأسي (طرفان على شمعة واحدة)؛ أو سعر ≤ 0 (شعاع هابط بعيد).
+ *
+ * `log`: بالمقياس اللوغاريتمي يُرسم الخطّ مستقيماً بالبكسل أي باللوغاريتم، فالاستيفاء باللوغاريتم أيضاً
+ * — الخطّي كان يطبع سعراً (ووسماً وبُعد pip) أعلى من الخطّ المرسوم بين طرفين متباعدين (الذهب، اليومي).
+ * لا يُرفض الاستقراء خلف الطرف الأوّل حين `back` (سعر تنبيه الترند يُستقرأ حيث وقعت الشمعة الحالية).
  */
 export function lineValueAt(
   a: { index: number; price: number },
   b: { index: number; price: number },
   index: number,
-  ray: boolean
+  ray: boolean,
+  log = false,
+  back = false
 ): number | null {
   const span = b.index - a.index;
   if (!Number.isFinite(index) || !Number.isFinite(span) || span === 0) return null;
   const t = (index - a.index) / span;
-  if (t < 0 || (!ray && t > 1)) return null;
-  const price = a.price + (b.price - a.price) * t;
+  if ((t < 0 && !back) || (!ray && t > 1)) return null;
+  const price =
+    log && a.price > 0 && b.price > 0
+      ? Math.exp(Math.log(a.price) + (Math.log(b.price) - Math.log(a.price)) * t)
+      : a.price + (b.price - a.price) * t;
   return Number.isFinite(price) && price > 0 ? price : null;
 }
 
@@ -82,10 +93,11 @@ export function lineNowText(
   livePrice: number,
   symbol: string,
   fmt: (price: number) => string,
-  lang?: string
+  lang?: string,
+  log = false
 ): string | null {
   if ((d.tool !== 'trend' && d.tool !== 'ray') || !d.b || !Number.isFinite(livePrice)) return null;
-  const now = lineValueAt(d.a, d.b, nowIndex, d.tool === 'ray');
+  const now = lineValueAt(d.a, d.b, nowIndex, d.tool === 'ray', log);
   if (now == null) return null;
   const pips = measurePipsText(symbol, livePrice, now, lang);
   return pips ? `${fmt(now)} · ${pips}` : null;
