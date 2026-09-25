@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import {
@@ -1834,9 +1834,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  chipText: { color: colors.textMuted, fontWeight: '700', fontSize: 12 },
+  chipText: { ...numeric, color: colors.textMuted, fontWeight: '700', fontSize: 12 },
   chipTextOn: { color: colors.accent },
   input: {
+    ...numeric,
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
     borderWidth: 1,
@@ -1846,8 +1847,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     fontSize: 13,
   },
-  warn: { color: colors.warn, fontSize: 11, fontWeight: '700' },
-  hint: { color: colors.textDim, fontSize: 10, marginTop: 2 },
+  warn: { ...numeric, color: colors.warn, fontSize: 11, fontWeight: '700' },
+  hint: { ...numeric, color: colors.textDim, fontSize: 10, marginTop: 2 },
   hintOn: { color: colors.accent, fontWeight: '700' },
   pxRow: { flexDirection: 'row', gap: 6 },
   pxRowRtl: { flexDirection: 'row-reverse' },
@@ -1862,10 +1863,10 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   resultLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
-  resultLots: { color: colors.accent, fontSize: 28, fontWeight: '800' },
-  resultMeta: { color: colors.textDim, fontSize: 11 },
-  sideLine: { fontSize: 13, fontWeight: '800' },
-  sideHint: { color: colors.textDim, fontSize: 10, fontWeight: '600' },
+  resultLots: { ...numeric, color: colors.accent, fontSize: 28, fontWeight: '800' },
+  resultMeta: { ...numeric, color: colors.textDim, fontSize: 11 },
+  sideLine: { ...numeric, fontSize: 13, fontWeight: '800' },
+  sideHint: { ...numeric, color: colors.textDim, fontSize: 10, fontWeight: '600' },
   disclaimer: { color: colors.textDim, fontSize: 10, marginTop: spacing.xs },
   logBtn: {
     marginTop: spacing.sm,

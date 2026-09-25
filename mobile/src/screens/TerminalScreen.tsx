@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing, radii, buttons } from '../theme';
+import { colors, spacing, radii, buttons, numeric } from '../theme';
 import { api, type ChartSeries } from '../api';
 import { MOCK_BASES } from '../chart/mockBases';
 import { ChartFrame } from '../components/ChartFrame';
@@ -2206,7 +2206,7 @@ const styles = StyleSheet.create({
     height: 8,
   },
   layoutSwitchCellOn: { backgroundColor: colors.accent },
-  layoutSwitchNum: { color: colors.textMuted, fontSize: 9, fontWeight: '900' },
+  layoutSwitchNum: { ...numeric, color: colors.textMuted, fontSize: 9, fontWeight: '900' },
   layoutSwitchNumOn: { color: colors.accent },
   layoutSwitchSep: {
     width: 1,
@@ -2230,7 +2230,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgPanel,
   },
   topMark: { color: colors.textMuted, fontSize: 11, fontWeight: '800' },
-  topTip: { color: colors.textDim, fontSize: 7, fontWeight: '700' },
+  topTip: { ...numeric, color: colors.textDim, fontSize: 7, fontWeight: '700' },
   kindRow: { gap: 6, padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },  kindChip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -2269,13 +2269,13 @@ const styles = StyleSheet.create({
   desktopMarket: { color: colors.textDim, fontSize: 9, marginTop: 1 },
   desktopOhlc: { flexDirection: 'row', alignItems: 'baseline', gap: 7 },
   desktopOhlcLabel: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
-  desktopOhlcValue: { color: colors.text, fontSize: 13, fontWeight: '800' },
-  desktopChange: { fontSize: 11, fontWeight: '900' },
-  desktopSpread: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
+  desktopOhlcValue: { ...numeric, color: colors.text, fontSize: 13, fontWeight: '800' },
+  desktopChange: { ...numeric, fontSize: 11, fontWeight: '900' },
+  desktopSpread: { ...numeric, color: colors.textDim, fontSize: 9, fontWeight: '700' },
   desktopStatus: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 5 },
   statusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.warn },
   statusDotOnline: { backgroundColor: colors.bull },
-  statusText: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
+  statusText: { ...numeric, color: colors.textDim, fontSize: 9, fontWeight: '700' },
   desktopChart: { flex: 1, paddingHorizontal: 7, paddingTop: 6 },
   heroLoading: { alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
   heroLoadingText: { color: colors.textMuted, fontSize: 13, textAlign: 'center', paddingHorizontal: spacing.md },
@@ -2446,7 +2446,7 @@ const styles = StyleSheet.create({
   pillText: { color: colors.textMuted, fontWeight: '700', fontSize: 11 },
   pillTextOn: { color: colors.accent },
   pillRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  pillChg: { color: colors.textDim, fontWeight: '800', fontSize: 10 },
+  pillChg: { ...numeric, color: colors.textDim, fontWeight: '800', fontSize: 10 },
   pillChgUp: { color: colors.bull },
   pillChgDown: { color: colors.bear },
 });

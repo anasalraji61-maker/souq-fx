@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AppState, type AppStateStatus, View, Text, StyleSheet } from 'react-native';
-import { colors, radii, spacing } from '../theme';
+import { colors, radii, spacing, numeric } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import {
@@ -287,8 +287,8 @@ const styles = StyleSheet.create({
     borderColor: colors.bear,
     backgroundColor: colors.bearSoft,
   },
-  main: { color: colors.text, fontSize: 12, fontWeight: '800' },
-  hint: { color: colors.textMuted, fontSize: 10, marginTop: 1 },
+  main: { ...numeric, color: colors.text, fontSize: 12, fontWeight: '800' },
+  hint: { ...numeric, color: colors.textMuted, fontSize: 10, marginTop: 1 },
   wrapUnavailable: { borderColor: colors.warn, backgroundColor: colors.warnSoft },
   unavailable: { color: colors.text, fontSize: 11, marginTop: 0 },
 });

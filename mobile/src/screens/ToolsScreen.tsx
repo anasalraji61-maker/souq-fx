@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { TimeframeBar } from '../components/TimeframeBar';
@@ -1050,10 +1050,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   sym: { color: colors.accent, fontWeight: '800', fontSize: 15 },
-  meta: { color: colors.text, fontSize: 13 },
+  meta: { ...numeric, color: colors.text, fontSize: 13 },
   /** لون النسبة يأتي من الاتجاه وحده — بلا اتجاه تبقى بلون `meta` كبقية السطر. */
-  hitPct: { fontWeight: '800' },
+  hitPct: { ...numeric, fontWeight: '800' },
   hitPctUp: { color: colors.bull },
   hitPctDown: { color: colors.bear },
-  match: { color: colors.textDim, fontSize: 11 },
+  match: { ...numeric, color: colors.textDim, fontSize: 11 },
 });

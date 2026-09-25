@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   AppState,
 } from 'react-native';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { confirmDestructive, notify } from '../chart/confirmDestructive';
@@ -2269,7 +2269,7 @@ const styles = StyleSheet.create({
     padding: 10,
     gap: 3,
   },
-  stat: { color: colors.text, textAlign: 'right', fontWeight: '600', fontSize: 12 },
+  stat: { ...numeric, color: colors.text, textAlign: 'right', fontWeight: '600', fontSize: 12 },
   row: { flexDirection: 'row', gap: spacing.sm },
   rowRtl: { flexDirection: 'row-reverse' },
   chip: {
@@ -2281,7 +2281,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  chipText: { color: colors.textMuted, fontWeight: '700' },
+  chipText: { ...numeric, color: colors.textMuted, fontWeight: '700' },
   chipTextOn: { color: colors.accent },
   qChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   qChip: {
@@ -2291,8 +2291,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  qChipText: { color: colors.textMuted, fontWeight: '700', fontSize: 12 },
+  qChipText: { ...numeric, color: colors.textMuted, fontWeight: '700', fontSize: 12 },
   input: {
+    ...numeric,
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
     borderWidth: 1,
@@ -2315,6 +2316,7 @@ const styles = StyleSheet.create({
   btnText: { color: colors.onAccent, fontWeight: '800' },
   btnDisabled: { opacity: 0.4 },
   formError: {
+    ...numeric,
     color: colors.bear,
     fontSize: 10,
     fontWeight: '700',
@@ -2328,11 +2330,11 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.borderSoft,
     gap: 2,
   },
-  tradeMain: { color: colors.text, textAlign: 'right', fontWeight: '700', fontSize: 12 },
-  tradeMeta: { color: colors.textDim, textAlign: 'right', fontSize: 11 },
+  tradeMain: { ...numeric, color: colors.text, textAlign: 'right', fontWeight: '700', fontSize: 12 },
+  tradeMeta: { ...numeric, color: colors.textDim, textAlign: 'right', fontSize: 11 },
   inputHalf: { flex: 1 },
-  planLine: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
-  planWarn: { color: colors.warn, fontSize: 11, fontWeight: '700' },
+  planLine: { ...numeric, color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  planWarn: { ...numeric, color: colors.warn, fontSize: 11, fontWeight: '700' },
   closeLink: { color: colors.accent, textAlign: 'right', fontSize: 11, fontWeight: '700' },
   closeLinkDisabled: { opacity: 0.4 },
   tradeActions: {
@@ -2351,5 +2353,5 @@ const styles = StyleSheet.create({
     padding: 8,
     gap: 4,
   },
-  editBannerText: { color: colors.text, fontSize: 11, fontWeight: '700' },
+  editBannerText: { ...numeric, color: colors.text, fontSize: 11, fontWeight: '700' },
 });
