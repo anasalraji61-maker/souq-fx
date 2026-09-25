@@ -65,8 +65,13 @@ def macd(values: list[float]) -> tuple[list[float | None], list[float | None]]:
     line: list[float | None] = []
     for a, b in zip(e12, e26):
         line.append(a - b if a is not None and b is not None else None)
-    valid = [x if x is not None else 0.0 for x in line]
-    signal = ema(valid, 9)
+    # الإشارة = EMA9 على قيم الخطّ **الحقيقية** فقط. كانت القيم المبكّرة (قبل EMA26) تُملأ أصفاراً
+    # فتبدأ الإشارة من 0 وتقطع الخطّ بتقاطع وهمي بأوّل الاختبار الخلفي والماسح. الآن None حتى
+    # تتوفّر 9 قيم خطّ حقيقية (الشمعة 34 لـ12/26/9)، بنفس فهارس الشموع.
+    start = next((i for i, x in enumerate(line) if x is not None), len(line))
+    real = [x for x in line[start:] if x is not None]
+    signal: list[float | None] = [None] * start + ema(real, 9)
+    signal += [None] * (len(line) - len(signal))
     return line, signal
 
 

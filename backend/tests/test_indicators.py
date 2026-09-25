@@ -87,3 +87,44 @@ def test_snapshot_has_expected_keys_for_nonempty_candles():
     assert out["last"] == 8.0
     # (8-1)/1*100 = 700.0 — قسمة صحيحة بلا أي خطأ عائم يستدعي المقارنة التقريبية
     assert out["change_pct"] == 700.0
+
+
+# ─── MACD: الإشارة لا تبدأ من صفر مختلَق ──────────────────────────────────────
+
+def _wave(n: int) -> list[float]:
+    import math
+    return [1.10 + 0.01 * math.sin(i / 5) + 0.0003 * i for i in range(n)]
+
+
+def test_macd_signal_is_none_until_nine_real_macd_values_exist():
+    values = _wave(80)
+    line, sig = ind.macd(values)
+    assert len(sig) == len(values)
+    assert all(x is None for x in line[:25]) and line[25] is not None
+    assert all(x is None for x in sig[:33]), "لا إشارة قبل 9 قيم خطّ حقيقية"
+    assert sig[33] is not None
+
+
+def test_macd_signal_seed_is_the_mean_of_the_first_nine_real_macd_values():
+    values = _wave(80)
+    line, sig = ind.macd(values)
+    assert abs(sig[33] - sum(line[25:34]) / 9) < 1e-12
+    k = 2 / 10
+    assert abs(sig[34] - (line[34] * k + sig[33] * (1 - k))) < 1e-12
+
+
+def test_macd_has_no_cross_on_an_accelerating_uptrend():
+    """صعود متسارع: الخطّ يرتفع باستمرار والإشارة تتأخّر تحته ⇒ لا تقاطع إطلاقاً، ولا يوجد
+    تقاطع قبل أن توجد الإشارة (كانت «موجودة» من الشمعة 9 بقيم مبنية على أصفار)."""
+    values = [1.0 + 0.00005 * i * i for i in range(80)]
+    line, sig = ind.macd(values)
+    crosses = [
+        i for i in range(1, len(values))
+        if ind.cross_up(line[: i + 1], sig[: i + 1]) or ind.cross_down(line[: i + 1], sig[: i + 1])
+    ]
+    assert crosses == []
+
+
+def test_macd_short_series_is_all_none_not_zero():
+    line, sig = ind.macd([1.0] * 20)
+    assert line == [None] * 20 and sig == [None] * 20
