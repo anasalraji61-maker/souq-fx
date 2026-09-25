@@ -538,7 +538,8 @@ export const api = {
       timeframe: string;
       strategy: string;
       trades: { side: string; entry: number; exit: number; pnl_pct: number }[];
-      stats: Record<string, number>;
+      /** أرقام الإحصاء + `spread_pips` (null) و`costs_included` (boolean، backend-r3) */
+      stats: Record<string, number | boolean | null>;
       equity_curve: { i: number; equity: number }[];
       error?: string;
       /** 'demo' = مسار بذري مختلَق (المزوّد متعذّر) — لا تُعرض النتيجة؛ غيابه = خادم أقدم. */

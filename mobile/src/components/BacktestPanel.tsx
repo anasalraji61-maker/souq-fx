@@ -27,6 +27,8 @@ type Stats = {
   max_drawdown_pct?: number;
   /** سبريد تقديري مخصوم من كل صفقة (باك-إند أحدث)؛ null = ليس زوجاً قابلاً للتداول (DXY). */
   spread_pips?: number | null;
+  /** false = لا تقدير سبريد للرمز (DXY، الرقمية) ⇒ النتيجة قبل التكاليف (backend-r3)؛ غائب = باك-إند أقدم */
+  costs_included?: boolean;
 };
 
 type Strategy = 'ma_cross' | 'rsi_reversal' | 'macd_cross' | 'bb_bounce';
@@ -226,6 +228,9 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
             <Text style={[styles.sampleWarn, { textAlign: align }]}>
               {t.backtestSmallSample.replace('{n}', String(stats.trade_count))}
             </Text>
+          ) : null}
+          {stats.trade_count > 0 && stats.costs_included === false ? (
+            <Text style={[styles.sampleWarn, { textAlign: align }]}>{t.backtestBeforeCosts}</Text>
           ) : null}
           {stats.trade_count > 0 ? (
             <>
