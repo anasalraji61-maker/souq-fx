@@ -55,6 +55,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
         const on = activeLens === l.id;
         return (
           <Pressable
+            accessibilityState={{ selected: on }}
             accessibilityRole="button"
             key={l.id}
             style={({ pressed }) => [
@@ -80,6 +81,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
           const on = activeTool === tool.id;
           return (
             <Pressable
+              accessibilityState={{ selected: on }}
               accessibilityRole="button"
               key={tool.id}
               style={({ pressed }) => [
@@ -160,6 +162,7 @@ export function RightPanelRail({
               const on = squareOn(count);
               return (
                 <Pressable
+                  accessibilityState={{ selected: on }}
                   accessibilityRole="button"
                   key={`sq-${count}`}
                   accessibilityLabel={`${count} ${t.railFrameWord} ${t.railSquareWord}`}
@@ -196,6 +199,7 @@ export function RightPanelRail({
               const on = rectOn(count);
               return (
                 <Pressable
+                  accessibilityState={{ selected: on }}
                   accessibilityRole="button"
                   key={`rect-${count}`}
                   accessibilityLabel={`${count} ${t.railFrameWord} ${t.railRectangleWord}`}
@@ -237,6 +241,7 @@ export function RightPanelRail({
           </View>
           <View style={styles.railSep} />
           <Pressable
+            accessibilityState={{ selected: layoutShape === 'shadow' }}
             accessibilityRole="button"
             style={({ pressed }) => [
               styles.railTag,
@@ -268,6 +273,7 @@ export function RightPanelRail({
           const on = activePanel === x.id;
           return (
             <Pressable
+              accessibilityState={{ selected: on }}
               accessibilityRole="button"
               key={x.id}
               style={({ pressed }) => [

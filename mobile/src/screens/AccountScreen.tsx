@@ -193,6 +193,7 @@ export function AccountScreen() {
         <View style={[styles.langRow, rtl && styles.langRowRtl]}>
           {langs.map((l) => (
             <Pressable
+              accessibilityState={{ selected: lang === l.id }}
               accessibilityRole="button"
               key={l.id}
               style={({ pressed }) => [
@@ -322,6 +323,7 @@ export function AccountScreen() {
         <View style={styles.card}>
           <View style={[styles.tabs, rtl && styles.tabsRtl]}>
             <Pressable
+              accessibilityState={{ selected: mode === 'login' }}
               accessibilityRole="button"
               style={({ pressed }) => [
                 styles.tab,
@@ -336,6 +338,7 @@ export function AccountScreen() {
               <Text style={[styles.tabText, mode === 'login' && styles.tabTextOn]}>{t.login}</Text>
             </Pressable>
             <Pressable
+              accessibilityState={{ selected: mode === 'register' }}
               accessibilityRole="button"
               style={({ pressed }) => [
                 styles.tab,
@@ -437,6 +440,7 @@ export function AccountScreen() {
               <View style={[styles.roleRow, rtl && styles.roleRowRtl]}>
                 {roles.map((r) => (
                   <Pressable
+                    accessibilityState={{ selected: role === r.id }}
                     accessibilityRole="button"
                     key={r.id}
                     style={({ pressed }) => [
@@ -475,6 +479,7 @@ export function AccountScreen() {
                   <Text style={[styles.label, { textAlign: align }]}>{t.underSponsor}</Text>
                   <View style={[styles.tabs, rtl && styles.tabsRtl]}>
                     <Pressable
+                      accessibilityState={{ selected: side === 'left' }}
                       accessibilityRole="button"
                       style={({ pressed }) => [
                         styles.tab,
@@ -491,6 +496,7 @@ export function AccountScreen() {
                       </Text>
                     </Pressable>
                     <Pressable
+                      accessibilityState={{ selected: side === 'right' }}
                       accessibilityRole="button"
                       style={({ pressed }) => [
                         styles.tab,

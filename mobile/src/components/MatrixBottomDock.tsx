@@ -135,6 +135,7 @@ export function MatrixBottomDock({
                     const on = activeLens === l.id;
                     return (
                       <Pressable
+                        accessibilityState={{ selected: on }}
                         accessibilityRole="button"
                         key={l.id}
                         style={({ pressed }) => [
@@ -164,6 +165,7 @@ export function MatrixBottomDock({
                     const on = activeTool === tool.id;
                     return (
                       <Pressable
+                        accessibilityState={{ selected: on }}
                         accessibilityRole="button"
                         key={tool.id}
                         style={({ pressed }) => [
@@ -235,6 +237,7 @@ export function MatrixBottomDock({
           const on = tab === tb.id;
           return (
             <Pressable
+              accessibilityState={{ selected: on }}
               accessibilityRole="button"
               key={tb.id}
               style={({ pressed }) => [

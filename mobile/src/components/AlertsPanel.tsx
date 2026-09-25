@@ -928,6 +928,7 @@ export function AlertsPanel({
         ) : null}
         <View style={[styles.row, rtl && styles.rowRtl]}>
           <Pressable
+            accessibilityState={{ selected: condition === 'above' }}
             accessibilityRole="button"
             style={({ pressed }) => [
               styles.cond,
@@ -946,6 +947,7 @@ export function AlertsPanel({
             <Text style={[styles.condText, condition === 'above' && styles.condTextOn]}>{t.aboveWord}</Text>
           </Pressable>
           <Pressable
+            accessibilityState={{ selected: condition === 'below' }}
             accessibilityRole="button"
             style={({ pressed }) => [
               styles.cond,

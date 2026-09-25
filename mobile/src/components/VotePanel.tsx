@@ -249,6 +249,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               accessibilityLabel={t.voteSymbolA11y}
             />
             <Pressable
+              accessibilityState={{ selected: pDirection === 'buy' }}
               accessibilityRole="button"
               style={({ pressed }) => [
                 styles.dirBtn,
@@ -264,6 +265,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               <Text style={[styles.dirText, pDirection === 'buy' && styles.dirTextOn]}>{t.dirBuy}</Text>
             </Pressable>
             <Pressable
+              accessibilityState={{ selected: pDirection === 'sell' }}
               accessibilityRole="button"
               style={({ pressed }) => [
                 styles.dirBtn,

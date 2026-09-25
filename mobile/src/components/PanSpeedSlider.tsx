@@ -135,6 +135,7 @@ export function PanSpeedSlider({ value, onChange }: Props) {
   if (!open) {
     return (
       <Pressable
+        accessibilityState={{ expanded: false }}
         style={({ pressed }) => [
           styles.square,
           pct >= 40 && styles.squareOn,

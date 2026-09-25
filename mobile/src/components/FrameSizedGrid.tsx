@@ -398,6 +398,7 @@ export function FrameSizedGrid({
         <Text style={styles.phoneModeTagText}>{t.gridFramesWord}</Text>
       </View>
       <Pressable
+        accessibilityState={{ selected: phoneMode === 'grid' }}
         accessibilityRole="button"
         onPress={() => choosePhoneMode('grid')}
         style={({ pressed }) => [
@@ -412,6 +413,7 @@ export function FrameSizedGrid({
         </Text>
       </Pressable>
       <Pressable
+        accessibilityState={{ selected: phoneMode === 'stack' }}
         accessibilityRole="button"
         onPress={() => choosePhoneMode('stack')}
         style={({ pressed }) => [

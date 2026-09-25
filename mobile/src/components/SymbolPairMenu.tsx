@@ -47,6 +47,7 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
   return (
     <View style={styles.wrap}>
       <Pressable
+        accessibilityState={{ expanded: open }}
         accessibilityRole="button"
         style={({ pressed }) => [
           styles.trigger,
@@ -80,6 +81,7 @@ export function SymbolPairMenu({ value, onPick, onLongPress, large = false }: Pr
               const on = item.symbol === value;
               return (
                 <Pressable
+                  accessibilityState={{ selected: on }}
                   accessibilityRole="button"
                   key={item.symbol}
                   style={({ pressed }) => [

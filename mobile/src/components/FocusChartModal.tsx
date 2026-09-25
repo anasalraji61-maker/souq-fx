@@ -320,6 +320,7 @@ export function FocusChartModal({
               <Text style={[styles.watchHint, { textAlign: align }]}>{t.focusCompareHint}</Text>
               {watchlist.map((w) => (
                 <Pressable
+                  accessibilityState={{ selected: sym === w.symbol }}
                   accessibilityRole="button"
                   key={w.symbol}
                   style={({ pressed }) => [
@@ -360,6 +361,7 @@ export function FocusChartModal({
                   <View style={{ flexDirection: rtl ? 'row-reverse' : 'row', gap: 6 }}>
                     {watchlist.map((w) => (
                       <Pressable
+                        accessibilityState={{ selected: sym === w.symbol }}
                         accessibilityRole="button"
                         key={w.symbol}
                         style={({ pressed }) => [

@@ -80,7 +80,8 @@ export function MatrixSidePanel({
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <Pressable style={styles.dim} onPress={onClose} />
+        {/* الخلفية المعتمة: نقرة للإغلاق باللمس فقط — قارئ الشاشة يغلق بزرّ الإغلاق المسمّى بالرأس، فلا عنصر بلا اسم. */}
+        <Pressable style={styles.dim} onPress={onClose} accessible={false} importantForAccessibility="no" />
         <View style={styles.sheet}>
           <View style={[styles.head, rtl && styles.headRtl]}>
             <Pressable
@@ -137,6 +138,7 @@ export function MatrixSidePanel({
                   const on = activeIndicators.includes(ind.id);
                   return (
                     <Pressable
+                      accessibilityState={{ selected: on }}
                       accessibilityRole="button"
                       key={ind.id}
                       style={({ pressed }) => [
@@ -161,6 +163,7 @@ export function MatrixSidePanel({
               <View style={[styles.grid, rtl && styles.gridRtl]}>
                 {localizedChartKinds(t).map((k) => (
                   <Pressable
+                    accessibilityState={{ selected: activeKind === k.id }}
                     accessibilityRole="button"
                     key={k.id}
                     style={({ pressed }) => [

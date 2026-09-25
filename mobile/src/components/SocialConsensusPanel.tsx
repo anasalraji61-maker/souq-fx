@@ -185,6 +185,7 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
             const on = selected.includes(s.id);
             return (
               <Pressable
+                accessibilityState={{ selected: on }}
                 accessibilityRole="button"
                 key={s.id}
                 style={({ pressed }) => [

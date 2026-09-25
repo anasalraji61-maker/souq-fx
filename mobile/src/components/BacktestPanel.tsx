@@ -173,6 +173,7 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
       <View style={[styles.row, rtl && styles.rowRtl]}>
         {STRATEGIES.map((s) => (
           <Pressable
+            accessibilityState={{ selected: strategy === s.id }}
             accessibilityRole="button"
             key={s.id}
             style={({ pressed }) => [
