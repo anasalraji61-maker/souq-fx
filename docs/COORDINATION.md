@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 28، بعد e4b2cd5) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 29، بعد 5ebbbc1) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -11,7 +11,7 @@
 | QA | بلا مالك | **(e)** `AnalystsPanel.tsx:118` دخول=وقف=هدف حين محايد؛ `VotePanel.tsx:422-430` `{v.entry}` خام لا `formatPrice` — tools: «خارج نطاقي» | QA5 ★ |
 | QA | chart | **جهاز**: سحب جسم الرسم المحدَّد — RELEASE §5 بند 128 | QA1 |
 | QA+launch | بلا مالك | **`TimeframeBar.tsx`** (يُستعمل بـ6 شاشات): الكردي يرى أطراً عربية (:15 `arabic` ← `t.tfLabels`/`tfLabelsA11y` جاهزة)؛ **جديد (c)**: الشريحة :28 بلا `accessibilityState={{ selected: active }}` ⇒ قارئ الشاشة لا يعرف الفريم الحالي | QA2 ★ |
-| QA | بلا مالك | `CommissionPlanPanel`/`NetworkTreePanel`/`TreeDiagramSketch` صفر `useI18n` (مفاتيح `cpp*`/`ntp*`/`tds*` جاهزة)؛ `SubscriptionPlansPanel.tsx:34-100` `COPY` داخلي؛ `AccountScreen.tsx:248` | QA2 ★ |
+| QA | بلا مالك | `CommissionPlanPanel`/`NetworkTreePanel`/`TreeDiagramSketch` صفر `useI18n` (مفاتيح `cpp*`/`ntp*`/`tds*` جاهزة)؛ `SubscriptionPlansPanel.tsx:34-100` `COPY` داخلي؛ `AccountScreen.tsx:248` نصّ عربي حرفي ← `{t.accNetLoadError}` (المفتاح جاهز بثلاث لغات، launch78) | QA2 ★ |
 | launch | بلا مالك | `a11yBusy`: `AlertsPanel:983 :1061` (tools: خارج نطاقه)، `AccountScreen:279 :316 :429`، `NetworkTreePanel:168` | launch52 ★ |
 | QA | بلا مالك | `DRAW_MARK` (`MatrixEdgeRails.tsx:28-40`) بلا `hray`/`channel`/`long`/`short` ⇒ «·» — chart: خارج نطاقه | chart20 ★ |
 | launch | بلا مالك | «₴» للدفتر: `MatrixEdgeRails.tsx:142`، `MatrixBottomDock.tsx:85` ← «▤» كما `ToolsScreen:85` | launch4 ★ |
@@ -25,7 +25,7 @@
 | QA+tools | بلا مالك | **(a)** `QUICK_SYMBOLS` ما زال منسوخاً في `BacktestPanel.tsx:54` و`IndicatorAlertsPanel.tsx:61` ← `import { QUICK_SYMBOLS } from '../tradePlan'` (الثابت جاهز db44382) | QA6 ★ |
 | QA | بلا مالك | **(a)** `RECONNECT_BASE_MS`/`MAX_MS` ×2 (`useLiveTicks.ts:7` و`useMultiLiveTicks.ts:6`) — chart: التوحيد لمالك `useMultiLiveTicks` | QA6 ★ |
 | tools | أنس | تغيّر اليوم بقائمة المتابعة يتدحرج 00:00 UTC، وPDH/PDL بالشارت 17:00 نيويورك ⇒ «أمس» مختلف بين الشاشتين 21:00–24:00 UTC — توحيد؟ **QA25**: `dailyChange.ts:34` (يوم UTC) يغذّي أيضاً الشريط العلوي ورأس الشارت ⇒ نسبة الرأس تناقض خطّ PDC على الشارت نفسه | tools38 |
-| QA | الجميع | **(a)** تصديرات بلا مستخدم خارج ملفها: `deleteTemplate`، `subscribeTemplatesSaveError`، `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite`، `PINE_PRESETS`، `getToolPanel`، `__setWatchlistStorageForTests`/`__reset…` (ولا اختبار)، `motion`، `FRAME_SYMBOLS`، mock.ts ×3 (+ `TF_SECONDS` منسوخ بـ`mock.ts:16` من `timeframes.ts:17`)؛ مفتاح `accNetLoadError` بلا مستعمل (launch63) | QA1 ★ |
+| QA | الجميع | **(a)** تصديرات بلا مستخدم خارج ملفها: `deleteTemplate`، `subscribeTemplatesSaveError`، `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite`، `PINE_PRESETS`، `getToolPanel`، `__setWatchlistStorageForTests`/`__reset…` (ولا اختبار)، `motion`، `FRAME_SYMBOLS`، mock.ts ×3 (+ `TF_SECONDS` منسوخ بـ`mock.ts:16` من `timeframes.ts:17`) | QA1 ★ |
 | QA | بلا مالك | **(a) QA26**: الرباعي (`8c483b7`) والطرفية (`48f582b`) صارا يستوردان `chart/mockBases.ts`. باقٍ `FocusChartModal.tsx:56` `BASES` محلّي ← `import { mockBase }` كي لا ينحرف | QA26 |
 | launch | chart | DeMarker 0..100 والمنصات 0..1 (قرار ⇒ أنس) | launch48 |
 | tools+launch+QA | الخادم | **spread مُختلَق** = السعر × 0.00008 (`twelve_data.py:316`) موسوم `provider`، يناقض `backtest.py:26-37`؛ يُزيح أسعار الدفتر (`tradePlan.ts:669 :741`) | tools13 ★ |
@@ -50,5 +50,8 @@
 | tools | بلا مالك (`VotePanel`) | `v.mine` من `my_choice` ليُستثنى المتداول من فلتر `isBlocked` | tools-last |
 | launch | الخادم/أنس | **launch77**: قوالب الردّ بلا ذكاء اصطناعي بـ`main.py:1671 :1798` تفرّع `en` فقط ⇒ الكردي يُجاب بالعربية (تحقّقتُ؛ التعليق :1800 يقول إنه مقصود لغياب مراجعة كردية) | launch77 |
 
-**أُسقط هذه الدورة:** QA27 التذبذب (`e4b2cd5`: الخمسة تأخذ `volAnnual` = HV، `MatrixChart.tsx:2696-2711 :2848`، ولا مستدعٍ آخر بـ`src`)؛ QA26 شقّ الطرفية (`48f582b`)؛ QA25 DXY/UKOIL (`cb168fd`، `inIceDailyBreak` + selftest يمرّ). **تحقّق بلا تغيير:** `Alert.alert` 10 بـ5 ملفات؛ «₴» ×2؛ `accNetLoadError` 0؛ Rails/Dock/SidePanel/`TimeframeBar` صفر `accessibilityState`.
-**مراجعة (c) a11y بسكربت على كل `.tsx`:** كل `Pressable`/`Touchable*`/`Switch`/`TextInput` له اسم أو `<Text>` ابن عدا `MatrixSidePanel.tsx:83` (مسجّل). أزرار ▲▼◀▶ الجديدة لها `mcNudge*A11y`. أسماء عربية حرفية: `NetworkTreePanel:150 :165`، `MessagesScreen:142` (مسجّلة QA2). لا جديد.
+| QA | بلا مالك | **(d) QA29**: الخادم يطلب السؤال 2–2000 حرف (`main.py:174` `AiAsk`، `:184` سؤال المحاضرة) و`AiPanel.tsx:35`/`LectureClassroom.tsx:293` يقبلان حرفاً واحداً بلا `maxLength` ⇒ «؟» أو نصّ طويل = 422 ⇒ `AiPanel` يعرض «الذكاء غير متاح» والسؤال مُسح (:36). ← `maxLength={2000}` + رفض <2 محلياً | QA29 |
+| QA | chart | **(d) QA29**: اسم التخطيط ≤64 بالخادم (`main.py:227`) و`LayoutPanel.tsx:136` بلا `maxLength`؛ الحفظ :106 `catch { /* local ok */ }` ⇒ اسم طويل يُحفظ محلياً «محفوظ» ولا يصل الخادم أبداً بصمت | QA29 |
+| QA | بلا مالك + الخادم | **(d) QA29**: رمز التنبيه 3–12 بالخادم (`main.py:196`) و`AlertsPanel.tsx:503` يفحص `!sym` فقط ⇒ «EU» = رسالة عامة `alertsAddError` (مؤشر التنبيه والدفتر يفرضان 3–12)؛ والتصويت `main.py:139` 1–20 وكل رمز آخر 3–12 (:196 :232 :320 …) ⇒ تصويت على رمز لا يُتابَع ولا يُنبَّه عليه. منخفض: الماسح «قبل 80 شمعة» (`locales.ts:2322`) و`screener.py:89-90` `raw[-80:][0]` = 79 | QA29 |
+**أُسقط هذه الدورة:** لا صفّ. نُقل `accNetLoadError` من صفّ «تصديرات بلا مستخدم» إلى صفّ QA2 (غير موصول لا ميت، launch78، تحقّقتُ `AccountScreen.tsx:248`). ⛔ أنس 15 (توسيع الوقف و1R) نفّذه tools `5ebbbc1` (علامة «1R @» عند التوسيع والمسح). **تحقّق بلا تغيير:** `Alert.alert` 10 بـ5 ملفات؛ «₴» ×2؛ `FocusChartModal:56` `BASES`.
+**مراجعة (d) أرقام متناقضة، بوكيل فرعي ثم تحقّقتُ:** سليم — أحجام الـpip (`positionSize.ts` = `backtest.py`)، افتراضيات SMA/RSI/MACD بالنصوص = الخادم، ملاحظة الدفتر/التصويت 500، الدردشة 1000، `outputsize` 50–5000، RSI 1–99 ⊂ 0–100. جديد: الصفوف الثلاثة QA29 أعلاه.
