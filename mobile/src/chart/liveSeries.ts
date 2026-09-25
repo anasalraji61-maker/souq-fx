@@ -127,7 +127,13 @@ export function withLivePrice(
 /** أعلى/أدنى ما بلغته التيكات المدموجة في الشمعة الحيّة `key` (`رمز|فريم|زمن الشمعة`)، وافتتاحها وآخر إغلاق.
  * `closed` = الشمعة التي أُغلقت بالتيكات ولم يصل جلبها بعد — تبقى على آخر ما بلغته. */
 export type LiveBarState = { key: string; open: number; high: number; low: number; close: number };
-export type LiveExtremes = LiveBarState & { closed?: LiveBarState | null };
+export type LiveExtremes = LiveBarState & {
+  closed?: LiveBarState | null;
+  /** زمن الشمعة الحيّة بوحدة السلسلة (ms أو ث). */
+  time?: number;
+  /** شموع فُتحت وأُغلقت محلياً بعد آخر شمعة جلب ولم يصل جلبها (شمعتان تُغلقان بين تحديثَين على 1m). */
+  between?: (LiveBarState & { time: number })[];
+};
 
 /**
  * يمدّ الشمعة الحيّة بأعلى/أدنى ما بلغته التيكات منذ فُتحت — `withLivePrice` يبني الشمعة من شمعة الجلب
@@ -154,17 +160,32 @@ export function withLiveExtremes(
   const low = same ? Math.min(prev.low, last.low) : last.low;
   // الشمعة التي أُغلقت للتوّ تبقى على آخر تيكاتها: كانت تُبنى من جلبها الأخير فيرتدّ إغلاقها ويختفي ذيلها.
   let closed: LiveBarState | null = null;
+  // `withLivePrice` يبني من الجلب الأخير ويضيف شمعة **واحدة** عند زمن التيك: على 1m تُغلق شمعتان بين تحديثَين
+  // (كل 90 ث) فالشمعة المحلية الأولى كانت تختفي مع قمّتها/قاعها — الشارت يقفز من 10:00 إلى 10:02 حتى الجلب.
+  // تُحفظ هنا (`between`) وتُعاد بين آخر شمعة جلب والحيّة؛ والجلب الذي يحملها يُسقطها (زمنها لم يعد بعده).
+  let between: (LiveBarState & { time: number })[] = [];
   if (rolled) {
-    const bk = keyOf(base.candles[base.candles.length - 1]!.time);
+    const baseLast = base.candles[base.candles.length - 1]!.time;
+    const bk = keyOf(baseLast);
     closed = prev?.key === bk ? { key: bk, open: prev.open, high: prev.high, low: prev.low, close: prev.close } : prev?.closed?.key === bk ? prev.closed : null;
+    const prefix = keyOf(0).slice(0, -1);
+    const inGap = (b: { key: string; time: number }) => b.key.startsWith(prefix) && b.time > baseLast && b.time < last.time;
+    between = (prev?.between ?? []).filter(inGap);
+    if (prev && !same && prev.time != null && inGap({ key: prev.key, time: prev.time })) {
+      between.push({ key: prev.key, time: prev.time, open: prev.open, high: prev.high, low: prev.low, close: prev.close });
+    }
   }
-  const ext: LiveExtremes = { key, open, high, low, close: last.close, closed };
-  if (open === last.open && high === last.high && low === last.low && !closed) return { series: merged, ext };
+  const ext: LiveExtremes = { key, open, high, low, close: last.close, closed, time: last.time, between };
+  if (open === last.open && high === last.high && low === last.low && !closed && !between.length) return { series: merged, ext };
   const candles = [...merged.candles];
   candles[i] = { ...last, open, high: Math.max(high, open), low: Math.min(low, open) };
   if (closed) {
     const c = candles[i - 1]!;
     candles[i - 1] = { ...c, high: Math.max(c.high, closed.high), low: Math.min(c.low, closed.low), close: closed.close };
+  }
+  if (between.length) {
+    const gap = between.map((b) => ({ time: b.time, open: b.open, high: b.high, low: b.low, close: b.close }));
+    candles.splice(i, 0, ...gap);
   }
   return { series: { ...merged, candles }, ext };
 }

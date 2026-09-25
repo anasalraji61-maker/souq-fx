@@ -140,6 +140,38 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   assert.equal(withLivePrice(h4, 1.17, src, { nowSec: lastOpen + 4 * 3600 + 5, tickAsOf: lastOpen + 4 * 3600 + 5 }), h4);
 }
 
+// شمعتان تُغلقان بين جلبَين (1m كل 90 ث): الشمعة المحلية الأولى تبقى بين الجلب والحيّة، بقمّتها وإغلاقها
+{
+  const m1: ChartSeries = { ...eur, timeframe: '1m', candles: eur.candles.map((c, i) => ({ ...c, time: now - (29 - i) * 60 })) };
+  const t0 = m1.candles[29]!.time;
+  let ext: LiveExtremes | null = null;
+  const feed = (base: ChartSeries, p: number, at: number) => {
+    const r = withLiveExtremes(base, withLivePrice(base, p, src, { nowSec: at, tickAsOf: at }), ext);
+    ext = r.ext;
+    return r.series.candles;
+  };
+  feed(m1, 1.1703, t0 + 30);
+  feed(m1, 1.171, t0 + 70); // 10:01 تُفتح
+  feed(m1, 1.1715, t0 + 100);
+  feed(m1, 1.1708, t0 + 119);
+  let cs = feed(m1, 1.1706, t0 + 125); // 10:02 تُفتح قبل الجلب
+  assert.equal(cs.length, 32, 'the 10:01 bar survives the 10:02 roll');
+  assert.equal(cs[30]!.time, t0 + 60);
+  assert.deepEqual([cs[30]!.open, cs[30]!.high, cs[30]!.close], [1.171, 1.1715, 1.1708]);
+  assert.equal(cs[31]!.time, t0 + 120);
+  assert.equal(cs[31]!.open, 1.1706);
+  assert.equal(cs[29]!.close, 1.1703, 'fetched-last bar keeps its ticks too');
+  cs = feed(m1, 1.1709, t0 + 130);
+  assert.equal(cs.length, 32, 'still held on the next tick');
+  assert.equal(cs[30]!.high, 1.1715);
+  // الجلب يحمل 10:01 ⇒ المزوّد يغلب، لا شمعة مكرّرة
+  const fetched = { ...m1, candles: [...m1.candles, { time: t0 + 60, open: 1.1711, high: 1.1716, low: 1.1705, close: 1.1707 }] };
+  cs = feed(fetched, 1.171, t0 + 140);
+  assert.equal(cs.length, 32);
+  assert.equal(cs[30]!.close, 1.1707, 'fetched 10:01 is authoritative');
+  assert.equal(cs[31]!.open, 1.1706, 'live 10:02 keeps its first tick');
+}
+
 // نسبة الرأس = تغيّر اليوم من إغلاق الأمس، لا من أول شمعة محمّلة
 {
   const s = { ...eur, candles: eur.candles.map((c, i) => (i === 0 ? { ...c, close: 1.16 } : c)) };
