@@ -225,7 +225,11 @@ export type ChartPoint = {
  * و`srcTime` زمن الشمعة **الحقيقية** التي أكملتها — هو ما تُرسى عليه الرسومات بين الأنواع
  * والفريمات (`drawingAnchors.ts`).
  */
-export type SyntheticBar = Candle & { srcTime?: number };
+export type SyntheticBar = Candle & {
+  srcTime?: number;
+  /** P&F فقط: حجم الصندوق — العمود شمعة واحدة و‎|close − open| / box‎ عدد رموز X/O فيه. */
+  box?: number;
+};
 
 export type Drawing = {
   id: string;

@@ -3,9 +3,13 @@ import type { SyntheticBar } from './types';
 import { renkoAtrBox } from './renko';
 
 /**
- * Point & Figure columns as synthetic candles (X = bull brick, O = bear).
- * الصندوق الافتراضي كـTradingView: ATR(14) على آخر شمعة مغلقة، والانعكاس 3 صناديق. كان نصف متوسط مدى
- * الشمعة للتاريخ كلّه ⇒ صندوق أصغر بكثير (ضجيج أعمدة) ويتغيّر مع كل تيك حيّ.
+ * Point & Figure: **شمعة واحدة لكل عمود** كـTradingView (عمود X صاعد، عمود O هابط)، `box` محمول عليها
+ * ليرسم الشارت رمزاً لكل صندوق فوق بعضه. كانت شمعة لكل صندوق بخانة زمنية خاصة ⇒ عمود من خمسة X يُرسم
+ * درجاً مائلاً من خمس خانات لا عموداً، فلا يُقرأ «كم صندوقاً صعد» ولا مستوى الانعكاس.
+ * `open` مستوى ما قبل أوّل صندوق و`close` مستوى آخره: الرموز على المستويات ‎open ± box … close‎ ⇒ عمود O
+ * يبدأ صندوقاً تحت قمّة X السابق (الاصطلاح الكلاسيكي) بلا ترتيب خاص. `srcTime` زمن الشمعة التي فتحت العمود
+ * (الإرساء «عند أو قبل» يضع وقتاً داخل العمود عليه لا على سابقه).
+ * الصندوق الافتراضي كـTradingView: ATR(14) على آخر شمعة مغلقة، والانعكاس 3 صناديق.
  */
 export function pointFigure(candles: Candle[], boxSize?: number, reversal = 3): SyntheticBar[] {
   if (candles.length < 3) return candles;
@@ -18,21 +22,23 @@ export function pointFigure(candles: Candle[], boxSize?: number, reversal = 3): 
   let direction: 1 | -1 | 0 = 0;
   let t = candles[0].time;
   let src = candles[0].time;
+  let col: SyntheticBar | null = null;
 
-  const pushBrick = (dir: 1 | -1) => {
-    const open = level * box;
-    level += dir;
+  // يمدّ العمود الحالي `n` صندوقاً باتجاهه، أو يفتح عموداً جديداً إن تغيّر الاتجاه.
+  const extend = (dir: 1 | -1, n: number) => {
+    if (n <= 0) return;
+    if (!col || direction !== dir) {
+      if (col) t += 60;
+      direction = dir;
+      col = { time: t, open: level * box, high: level * box, low: level * box, close: level * box, volume: 0, srcTime: src, box };
+      out.push(col);
+    }
+    level += dir * n;
     const close = level * box;
-    out.push({
-      time: t,
-      open,
-      high: Math.max(open, close),
-      low: Math.min(open, close),
-      close,
-      volume: 1,
-      srcTime: src,
-    });
-    t += 60;
+    col.close = close;
+    col.high = Math.max(col.open, close);
+    col.low = Math.min(col.open, close);
+    col.volume = (col.volume ?? 0) + n;
   };
   // عدد الصناديق التي يغطّيها الإغلاق فوق/تحت المستوى الحالي (هامش 1e-9 يمتصّ خطأ القسمة العشرية).
   const upBoxes = (px: number) => Math.floor(px / box + 1e-9) - level;
@@ -42,28 +48,14 @@ export function pointFigure(candles: Candle[], boxSize?: number, reversal = 3): 
     src = c.time;
     const px = c.close;
     if (direction === 0) {
-      if (upBoxes(px) >= 1) {
-        direction = 1;
-        for (let n = upBoxes(px); n > 0; n--) pushBrick(1);
-      } else if (downBoxes(px) >= 1) {
-        direction = -1;
-        for (let n = downBoxes(px); n > 0; n--) pushBrick(-1);
-      }
-      continue;
-    }
-
-    if (direction === 1) {
-      for (let n = upBoxes(px); n > 0; n--) pushBrick(1);
-      if (downBoxes(px) >= reversal) {
-        direction = -1;
-        for (let n = downBoxes(px); n > 0; n--) pushBrick(-1);
-      }
+      if (upBoxes(px) >= 1) extend(1, upBoxes(px));
+      else if (downBoxes(px) >= 1) extend(-1, downBoxes(px));
+    } else if (direction === 1) {
+      if (upBoxes(px) >= 1) extend(1, upBoxes(px));
+      else if (downBoxes(px) >= reversal) extend(-1, downBoxes(px));
     } else {
-      for (let n = downBoxes(px); n > 0; n--) pushBrick(-1);
-      if (upBoxes(px) >= reversal) {
-        direction = 1;
-        for (let n = upBoxes(px); n > 0; n--) pushBrick(1);
-      }
+      if (downBoxes(px) >= 1) extend(-1, downBoxes(px));
+      else if (upBoxes(px) >= reversal) extend(1, upBoxes(px));
     }
   }
 

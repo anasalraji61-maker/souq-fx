@@ -169,6 +169,7 @@ import {
   type Drawing,
   type IndicatorId,
   type LensMode,
+  type SyntheticBar,
   withVolume,
   seriesHasVolume,
 } from './types';
@@ -6391,22 +6392,66 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               );
             }
             if (kind === 'pnf') {
+              // عمود كامل بخانة واحدة (`pointFigure.ts`): رمز لكل صندوق متمركز على مستواه، ‎open ± box … close‎.
+              // الخلية أصغر من 6px (تصغير بعيد) ⇒ عمود مصمت/مفرّغ بدل رموز متراكبة لا تُقرأ.
+              const box = (c as SyntheticBar).box;
+              const n = box ? Math.max(1, Math.round(Math.abs(c.close - c.open) / box)) : 1;
+              const step = box ? (bull ? box : -box) : c.close - c.open;
+              const cellPx = box ? Math.abs(yP(c.open) - yP(c.open + box)) : bodyH;
+              const glyphW = Math.max(4, primaryBodyW);
+              if (cellPx < 6) {
+                const y1 = Math.max(laneTop, Math.min(yP(c.open + step), yP(c.close)) - cellPx / 2);
+                const y2 = Math.min(laneBot, Math.max(yP(c.open + step), yP(c.close)) + cellPx / 2);
+                return y2 > y1 ? (
+                  <View
+                    key={i}
+                    style={{
+                      position: 'absolute',
+                      left: xOf(i) - glyphW / 2,
+                      top: y1,
+                      width: glyphW,
+                      height: y2 - y1,
+                      backgroundColor: bull ? color : 'transparent',
+                      borderWidth: bull ? 0 : 1.5,
+                      borderColor: color,
+                    }}
+                  />
+                ) : null;
+              }
+              const font = Math.max(7, Math.min(16, cellPx * 0.95, glyphW * 1.1));
+              const glyphs = [];
+              for (let k = 1; k <= n; k++) {
+                const y = yP(c.open + step * k);
+                if (y - cellPx / 2 < laneTop || y + cellPx / 2 > laneBot) continue;
+                glyphs.push(
+                  <Text
+                    key={k}
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      right: 0,
+                      top: y - cellPx / 2,
+                      height: cellPx,
+                      lineHeight: cellPx,
+                      color,
+                      fontSize: font,
+                      fontWeight: '900',
+                      textAlign: 'center',
+                      includeFontPadding: false,
+                    }}
+                  >
+                    {bull ? 'X' : 'O'}
+                  </Text>
+                );
+              }
               return (
-                <Text
+                <View
                   key={i}
-                  style={{
-                    position: 'absolute',
-                    left: left,
-                    top: bodyTop - 4,
-                    width: Math.max(10, primaryColW),
-                    color,
-                    fontSize: Math.min(14, Math.max(8, primaryColW)),
-                    fontWeight: '900',
-                    textAlign: 'center',
-                  }}
+                  pointerEvents="none"
+                  style={{ position: 'absolute', left, top: 0, width: primaryColW, height: mainH }}
                 >
-                  {bull ? 'X' : 'O'}
-                </Text>
+                  {glyphs}
+                </View>
               );
             }
             if (kind === 'bars') {

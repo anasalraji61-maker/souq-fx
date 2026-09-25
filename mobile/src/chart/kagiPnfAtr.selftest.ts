@@ -19,7 +19,7 @@ const rising = Array.from({ length: 40 }, (_, i) => bar(i, 1.1 + i * 0.001));
 
 // P&F: صندوق = ATR = 0.0020 (كان نصف متوسط المدى = 0.0010).
 const pf = pointFigure(rising);
-const size = pf[pf.length - 1].close - pf[pf.length - 1].open;
+const size = pf[pf.length - 1].box!;
 assert.ok(Math.abs(size - 0.002) < 1e-9, `pnf box ${size}`);
 
 // Kagi: انعكاس = ATR (0.0020). تراجع 15 نقطة لا يعكس الخط، و25 نقطة تعكسه.
@@ -38,12 +38,25 @@ console.log('kagiPnfAtr selftest PASS');
 const offGrid = Array.from({ length: 20 }, (_, i) => bar(i, 1.10037 + i * 0.0005));
 const grid = pointFigure(offGrid, 0.001);
 for (const b of grid) {
-  const k = b.open / 0.001;
-  assert.ok(Math.abs(k - Math.round(k)) < 1e-6, `pnf off grid ${b.open}`);
+  for (const v of [b.open, b.close]) {
+    const k = v / 0.001;
+    assert.ok(Math.abs(k - Math.round(k)) < 1e-6, `pnf off grid ${v}`);
+  }
 }
 assert.ok(Math.abs(grid[0].open - 1.1) < 1e-9, `pnf first box ${grid[0].open}`);
 // 300 صندوق صاعد: آخر إغلاق بالضبط على الشبكة (لا انجراف من جمع متكرّر).
 const long = Array.from({ length: 301 }, (_, i) => bar(i, 1 + i * 0.001));
 const lp = pointFigure(long, 0.001).at(-1)!.close;
 assert.ok(Math.abs(lp - 1.3) < 1e-12, `pnf drift ${lp}`);
+
+// عمود واحد لكل اتجاه (لا شمعة لكل صندوق): صعود 10 صناديق، هبوط صندوقين (< انعكاس 3) لا يفتح عموداً،
+// ثم هبوط 5 صناديق ⇒ عمود O يبدأ من قمّة X (رموزه تحتها بصندوق) وينتهي عند المستوى.
+const path = [1.1, 1.101, 1.102, 1.103, 1.104, 1.105, 1.106, 1.107, 1.108, 1.109, 1.11, 1.108, 1.105, 1.106];
+const cols = pointFigure(path.map((p, i) => bar(i, p)), 0.001);
+assert.equal(cols.length, 2, `pnf columns ${cols.length}`);
+assert.ok(Math.abs(cols[0].open - 1.1) < 1e-9 && Math.abs(cols[0].close - 1.11) < 1e-9, 'X column 1.100→1.110');
+assert.ok(Math.abs(cols[1].open - 1.11) < 1e-9 && Math.abs(cols[1].close - 1.105) < 1e-9, 'O column 1.110→1.105');
+assert.equal(cols[0].volume, 10);
+assert.equal(cols[1].srcTime, 12 * 60, 'O column anchored to the candle that opened it');
+assert.ok(cols[1].time > cols[0].time);
 console.log('pnf grid selftest PASS');
