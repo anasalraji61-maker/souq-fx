@@ -2039,7 +2039,7 @@ export function TerminalScreen() {
       <QuadChartModal
         visible={quadOpen}
         onClose={() => setQuadOpen(false)}
-        symbols={[frameSymbols[0], frameSymbols[1], frameSymbols[2], 'DXY']}
+        symbols={[frameSymbols[0], frameSymbols[1], frameSymbols[2], heroSymbol]}
         timeframe={frameTfs[0]}
       />
 
