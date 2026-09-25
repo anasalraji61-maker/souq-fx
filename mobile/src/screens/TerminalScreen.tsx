@@ -940,7 +940,11 @@ export function TerminalScreen() {
   const dsTickLabels = { live: t.dsTickLive, demoTick: t.dsTickDemo, lastPrice: t.dsLastPriceWord };
   const heroStatusBits = [
     online ? t.termServerOnline : t.termServerOffline,
-    provenanceLabel(normalizeProvenance(heroSeries.data_source), dsKindLabels),
+    // backend-r1: DXY لا يقدّمه المزوّد أصلاً (`unavailable_reason: not_offered_by_provider`) — «تجريبي» العامة توحي بعطلٍ
+    // مؤقت سيعود، والحقيقة أن لا سعر حقيقياً له بهذا التطبيق. `normalizeProvenance` يُسقط الحقل فيُقرأ من المصدر الخام.
+    (heroSeries.data_source as { unavailable_reason?: unknown } | undefined)?.unavailable_reason === 'not_offered_by_provider'
+      ? t.originUnavailableProvider.replace('{symbol}', symbol)
+      : provenanceLabel(normalizeProvenance(heroSeries.data_source), dsKindLabels),
     heroTick
       ? tickStatusLabel(heroTick.source, heroTick.source.as_of, heroNowSec, dsTickLabels) ??
         t.termLastPriceWord
