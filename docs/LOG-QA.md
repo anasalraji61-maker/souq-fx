@@ -617,3 +617,15 @@ QA1 (a): `1eb6075` حذف `FRAME_SYMBOLS`/نسخة `TF_SECONDS`/معظم mock.ts
 إلا `academy.ts` (QA27) و`MessagesScreen` (launch52). احتياطات عربية افتراضية (`marketHours.ts:180`، `KIND_LABEL_AR`، `CHART_KINDS`) كل مستدعٍ يمرّر الترجمة. `DEFAULT_TEMPLATE.name` لا يُعرض.
 **الدورة القادمة:** المراجعة (c) — أزرار بلا `accessibilityLabel`.
 **إلحاق:** `6233533` (launch) حذف `backtestStatBreakeven` (grep صفر) ⇒ QA52 (b) أُغلق. `149c711` (backend: الحجم null بلا مزوّد). البناء بعد الدمج أخضر 0.
+
+## 2026-09-25 — الدورة 53
+**البناء:** أخضر 0 (بعد 6934941، ثم أُعيد بعد 3d42eef — 9 إيداعات وصلت أثناء الدورة) — لا إصلاح لازم. `@types/node` و`types: ["node"]` قائمان منذ دورات
+(مهمّة «الضجيج» منجزة). **Selftests:** 92/92 ناجح (`npx tsx`)؛ المتغيّرة أثناء الدورة (`positionSize`، `tradePlan`، `tickAge`) أُعيدت ونجحت.
+**التحقّق من الإغلاقات بالكود (11 صفّاً):** QA52 التحويلات (grep صفر)؛ QA52 `dsKindLabels` (`cb5f753`، `TerminalScreen.tsx:943` — ui نبّه أنه ملك tools فنفّذه tools)؛
+ui4 (`6c1aa59`)؛ chart-r37 (`MatrixChart.tsx:3731`)؛ launch106 ×3 (chart :8105، tools `cbf5266` `market_open`، ui `9c3a532`/`8ca1226`)؛ backend-r6 (2)(3)(4)(5).
+**ضُيِّق:** backend-r6 (1) → chart: معظم لوحات الحجم موسومة «≈» (`volName`)؛ الباقي `volumeProfile`/TPO/footprint خارج `VOLUME_PRICE_OVERLAYS` (:837).
+**صفوف جديدة من الوكلاء (تحقّقتُ):** launch107 → chart (`MatrixChart.tsx:5708` `void moveArmedAlert`)؛ tools71 → ui (`BacktestPanel.tsx:240`)؛ backend-r7 → ui (`:22` `number`).
+QA1 (a): `openCurrencyExposure` حُذف ⇒ 10 باقية (grep لكل اسم: صفر مستعمل خارج ملفه). QA1 (جهاز) ضمّ سحب `AlertDragHandle`.
+**المراجعة (c — بلا `accessibilityLabel`):** سكربت يقرأ وسم الفتح لكل `Pressable`/`Touchable*`/`Switch`/`TextInput`: 29 بلا وسم، كلّها بنصّ مرئي مترجم (زرّ `pipsInPx`
+نصّه يقول «اضغط لنقله»)؛ إنذار كاذب واحد (`>` داخل تعليق، `TradeJournalPanel.tsx:1947` له `placeholder`). لا `<Text onPress>`. وسم ثابت: `MessagesScreen.tsx:142` (launch52). **لا بند جديد.**
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة بين الملفات.
