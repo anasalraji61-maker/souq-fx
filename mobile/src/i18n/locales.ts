@@ -999,6 +999,15 @@ export type Dict = {
   /** زرّ «نسخ الرسم» (Clone) بشريط الرسم المحدَّد — طلب chart12: الكلمة تحت الأيقونة + وصف قارئ الشاشة */
   mcCloneDrawing: string;
   mcCloneDrawingA11y: string;
+  /**
+   * أزرار إزاحة الرسم المحدَّد بالهاتف (طلب chart15 — نظير أسهم لوحة المفاتيح `arrowNudge`/`nudgePipPrice` بـ`drawEdit.ts`):
+   * ↑/↓ خطوة سعر (pip للأزواج والمعادن)، ‹/› شمعة. «أبكر/أحدث» لا «يسار/يمين» كي لا يلتبس الاتجاه بالعربية والكردية (RTL).
+   */
+  mcNudgeWord: string;
+  mcNudgeUpA11y: string;
+  mcNudgeDownA11y: string;
+  mcNudgeEarlierA11y: string;
+  mcNudgeLaterA11y: string;
   mcColorNames: [string, string, string, string, string, string];
   /** عنوان نافذة المشاركة (`Sharing.shareAsync` dialogTitle) — كان `chartLocalLabels(lang).shareDialogTitle` */
   mcShareDialogTitle: string;
@@ -2053,6 +2062,11 @@ const ar: Dict = {
   mcDrawColorA11y: 'لون الرسم: {color} — انقر للّون التالي',
   mcCloneDrawing: 'نسخة',
   mcCloneDrawingA11y: 'انسخ هذا الرسم بجانبه — تصير النسخة هي المحدَّدة فتحرّكها وتعدّلها وحدها',
+  mcNudgeWord: 'إزاحة',
+  mcNudgeUpA11y: 'ارفع الرسم المحدَّد خطوة سعر واحدة (pip للأزواج والمعادن)',
+  mcNudgeDownA11y: 'اخفض الرسم المحدَّد خطوة سعر واحدة (pip للأزواج والمعادن)',
+  mcNudgeEarlierA11y: 'أزِح الرسم المحدَّد شمعة واحدة نحو الأقدم',
+  mcNudgeLaterA11y: 'أزِح الرسم المحدَّد شمعة واحدة نحو الأحدث',
   mcColorNames: ['لون الإطار', 'أخضر', 'أحمر', 'برتقالي', 'أزرق', 'أبيض'],
   mcShareDialogTitle: 'شارت MATRIX',
   mcSessTokyo: 'طوكيو',
@@ -3123,6 +3137,11 @@ const enUS: Dict = {
   mcDrawColorA11y: 'Drawing color: {color} — tap for the next color',
   mcCloneDrawing: 'Clone',
   mcCloneDrawingA11y: 'Copy this drawing beside it — the copy becomes the selected one, to move and edit on its own',
+  mcNudgeWord: 'Nudge',
+  mcNudgeUpA11y: 'Move the selected drawing up one price step (one pip on pairs and metals)',
+  mcNudgeDownA11y: 'Move the selected drawing down one price step (one pip on pairs and metals)',
+  mcNudgeEarlierA11y: 'Move the selected drawing one candle earlier',
+  mcNudgeLaterA11y: 'Move the selected drawing one candle later',
   mcColorNames: ['Frame color', 'Green', 'Red', 'Amber', 'Blue', 'White'],
   mcShareDialogTitle: 'MATRIX chart',
   mcSessTokyo: 'Tokyo',
@@ -4219,6 +4238,11 @@ const ku: Dict = {
   mcDrawColorA11y: 'ڕەنگی وێنەکە: {color} — بۆ ڕەنگی دواتر لێبدە',
   mcCloneDrawing: 'کۆپی',
   mcCloneDrawingA11y: 'ئەم وێنەیە لە تەنیشتیەوە کۆپی بکە — کۆپییەکە هەڵدەبژێردرێت تا بە جیا بیجووڵێنیت و دەستکاری بکەیت',
+  mcNudgeWord: 'جووڵاندن',
+  mcNudgeUpA11y: 'وێنە هەڵبژێردراوەکە یەک هەنگاوی نرخ بەرز بکەرەوە (یەک pip بۆ جووتەکان و کانزاکان)',
+  mcNudgeDownA11y: 'وێنە هەڵبژێردراوەکە یەک هەنگاوی نرخ نزم بکەرەوە (یەک pip بۆ جووتەکان و کانزاکان)',
+  mcNudgeEarlierA11y: 'وێنە هەڵبژێردراوەکە یەک مۆم بەرەو کۆنتر ببە',
+  mcNudgeLaterA11y: 'وێنە هەڵبژێردراوەکە یەک مۆم بەرەو نوێتر ببە',
   mcColorNames: ['ڕەنگی چوارچێوە', 'سەوز', 'سوور', 'پرتەقاڵی', 'شین', 'سپی'],
   mcShareDialogTitle: 'چارتی MATRIX',
   mcSessTokyo: 'تۆکیۆ',
