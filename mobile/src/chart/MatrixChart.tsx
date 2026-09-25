@@ -3674,8 +3674,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const selectedLocked = !!(selectedId && drawings.find((x) => x.id === selectedId)?.locked);
   const selectedTrend = selectedId ? drawings.find((x) => x.id === selectedId && x.tool === 'trend') : undefined;
   const selectedArrow = !!selectedTrend?.arrow;
-  // لا مفتاح ترجمة للسهم بعد (طُلب من launch): اسم أداة الترند + الرمز يكفي قارئ الشاشة.
-  const arrowA11y = `${tr.ctlToolTrend} ➚`;
+  const arrowA11y = tr.mcArrowHeadA11y;
 
   /**
    * إزاحة الرسم المحدَّد `bars` شمعة و`steps` خطوة سعر (pip للأزواج والمعادن، وإلا بكسل رأسي واحد) — لأسهم
@@ -8017,8 +8016,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           const pips = Number.isFinite(currentPrice)
             ? signedDistanceText(series.symbol, currentPrice, al.price, lang, priceDecimalsRef)
             : null;
+          // قارئ الشاشة: الوسم رموز («🔔 ▲») — جملة كاملة على الخطّ نفسه، فتُقرأ ولو أُخفيت وسوم الأسعار.
+          const a11yTpl = al.condition === 'above' ? tr.mcArmedAlertAboveA11y : tr.mcArmedAlertBelowA11y;
+          const a11y = (pips ? a11yTpl.replace('{dist}', pips) : a11yTpl.replace(/\s*—\s*\{dist\}/, '')).replace(
+            '{price}',
+            fmtPrice(al.price)
+          );
           return (
-            <View key={`alert${al.id}`} pointerEvents="none" style={[styles.hLine, styles.alertLine, { top: y }]}>
+            <View
+              key={`alert${al.id}`}
+              pointerEvents="none"
+              accessible
+              accessibilityLabel={a11y}
+              style={[styles.hLine, styles.alertLine, { top: y }]}
+            >
               {!hidePriceLabels ? (
                 <Text
                   style={[styles.levelPriceLabel, styles.alertLabel, y < LEVEL_LABEL_H && styles.levelLabelBelow, { right: plotRightInset + 2 }]}
