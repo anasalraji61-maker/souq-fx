@@ -1875,6 +1875,18 @@ def _migrate_trades(c: sqlite3.Connection) -> None:
         c.execute("ALTER TABLE trades ADD COLUMN sl REAL")
     if "tp" not in cols:
         c.execute("ALTER TABLE trades ADD COLUMN tp REAL")
+    # `pnl` مشتقّ كلياً من (side, entry, exit): صفقات أُغلقت قبل d2417d6 (2026-09-22) خُزّنت `نسبة × الحجم`
+    # ⇒ ربح 1% بـ10 لوت = «10%» يتصدّر أفضل صفقة ومتوسط الربح ومجموع النتائج إلى الأبد. يُعاد الحساب
+    # لكل صفقة مغلقة يختلف رقمها المخزَّن (عمليةٌ لا تغيّر صفاً صحيحاً، فتكرارها بكل إقلاع آمن).
+    fixes = []
+    for r in c.execute(
+        "SELECT id, side, entry, exit, pnl FROM trades WHERE status='closed' AND exit IS NOT NULL"
+    ).fetchall():
+        want = _pnl_pct(r[1], r[2], r[3])
+        if r[4] != want and not (want is not None and r[4] is not None and abs(r[4] - want) < 1e-9):
+            fixes.append((want, r[0]))
+    if fixes:
+        c.executemany("UPDATE trades SET pnl=? WHERE id=?", fixes)
 
 
 def _opt_level(v) -> float | None:

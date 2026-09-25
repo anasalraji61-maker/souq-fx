@@ -695,3 +695,18 @@ def test_an_ancient_opened_at_is_refused_not_sorted_as_newest(client, when):
     """«0999-01-01» كان يُحفظ «999-01-01 00:00» فيتصدّر الدفتر نصّياً؛ سنة 1 بإزاحة كانت 500."""
     r = client.post("/api/trades", json={**_TRADE, "opened_at": when}, headers=_DEV1)
     assert r.status_code == 422
+
+
+def test_old_rows_with_pnl_multiplied_by_size_are_recomputed_on_startup(client):
+    """قبل d2417d6 كان `pnl = نسبة × الحجم`: ربح 1% بـ10 لوت مخزَّن «10» يتصدّر أفضل صفقة ومتوسط الربح."""
+    big = _open_trade(client, side="buy", entry=1.0, size=10)
+    small = _open_trade(client, side="sell", entry=1.0, size=0.1)
+    for t, ex in ((big, 1.01), (small, 1.01)):
+        assert client.post(f"/api/trades/{t['id']}/close", json={"exit": ex}, headers=_DEV1).status_code == 200
+    with db._conn() as c:
+        c.execute("UPDATE trades SET pnl=10.0 WHERE id=?", (big["id"],))
+        c.execute("UPDATE trades SET pnl=-0.1 WHERE id=?", (small["id"],))
+    db.init_db()
+    rows = {t["id"]: t for t in client.get("/api/trades", headers=_DEV1).json()["trades"]}
+    assert rows[big["id"]]["pnl"] == pytest.approx(1.0)
+    assert rows[small["id"]]["pnl"] == pytest.approx(-1.0)
