@@ -2,7 +2,7 @@
 import type { Candle } from '../../api';
 import { dema, ema, hma, sma, tema, wma } from './moving-averages';
 import { computeFractals, computeLsma, computeTsf } from './trend';
-import { computeAtr, computeDonchianWidth } from './volatility';
+import { computeAtr, computeDonchianWidth, computeTrueRange } from './volatility';
 import { computeAccumDist, computeChaikinOsc } from './volume';
 import { computeMedianPrice, computeTwap, computeTypicalPrice } from './price-transform';
 
@@ -1052,27 +1052,20 @@ export function computeRmi(closes: number[], period = 14, momentum = 5): (number
 
 /**
  * Pretty Good Oscillator (PGO، Mark Johnson) — مذبذب غير محدود المدى متمركز حول الصفر، period=14.
- * PGO[i]=(إغلاق[i]−SMA(إغلاق,period)[i])/ATR(period)[i] — **إعادة استخدام حرفية كاملة لـ`sma()`
- * المحلية و`computeAtr` الموجودة أعلاه بلا أي حساب مدى جديد** (نفس قرار إعادة الاستخدام المتبَع
- * لـcomputeKeltnerWidth/computeDonchianWidth أعلاه). **قرار موثَّق**: المرجع القياسي (Mark Johnson
- * الأصلي وTradeStation) يستخدم أحياناً EMA للمدى الحقيقي، لكن هذا الملف يعتمد `computeAtr` الموجودة
- * (تنعيم Wilder للمدى الحقيقي) حصراً لأنها نفس الأساس المستخدَم فعلاً بكل مؤشرات ATR الأخرى بالملف (Keltner،
- * SuperTrend، Chandelier Exit، Chande Kroll) — تناسق داخلي بدل تعريف ATR ثانٍ غير متوافق. عتبتا ±3
- * شائعتان بمراجع PGO لتشبّع شرائي/بيعي، لكن المدى نظرياً غير محدود. **قرار حارس**: ATR=0 (سوق مسطّح
- * تماماً) يُرجِع 0 بالضبط بدل Infinity/NaN. **تحقّق حسابي فعلي (Node.js، بيئة سحابية، قبل الكتابة)**:
- * شموع مسطّحة تماماً (أعلى=أدنى=إغلاق ثابت، 40 شمعة) → ATR=0 → 0 بالضبط لكل نقطة صالحة؛ مسار صاعد
- * بمدى يومي ثابت (60 شمعة) → كل القيم موجبة ومنتهية (الإغلاق فوق متوسطه المتأخر بسوق صاعد ثابت)؛
- * 300 شمعة عشوائية بذرة ثابتة → صفر NaN/Infinity؛ **إعادة حساب brute-force مستقلة تماماً عن الدالة**
- * (SMA وATR مُعاد بناؤهما من الصفر بحلقتين منفصلتين) لنقطة عشوائية (idx=200) طابقت تماماً (فرق<10⁻⁹).
+ * PGO[i] = (إغلاق[i] − SMA(إغلاق, period)[i]) / EMA(TR, period)[i] — المقام **EMA** للمدى الحقيقي كتعريف
+ * جونسون ونسخة Pine الشائعة (`(src − sma(src,len)) / ema(tr,len)`). كان ATR بتنعيم Wilder (1/14 بدل 2/15)
+ * ⇒ مقام أبطأ فالقيمة تختلف ~1–3% عن المرجع، وعبور ±3 يقع على شمعة أخرى أحياناً. TR الشمعة الأولى
+ * أعلى−أدنى (لا إغلاق سابق). عتبتا ±3 للتشبّع شائعتان. مقام صفر (سوق مسطّح تماماً) ⇒ 0 لا Infinity.
+ * selftest `pgoTv`.
  */
 export function computePgo(candles: Candle[], period = 14): (number | null)[] {
   const closes = candles.map((c) => c.close);
   const base = sma(closes, period);
-  const atr = computeAtr(candles, period);
+  const den = ema(computeTrueRange(candles), period);
   const out: (number | null)[] = new Array(candles.length).fill(null);
   for (let i = 0; i < candles.length; i++) {
     const b = base[i];
-    const a = atr[i];
+    const a = den[i];
     if (b == null || a == null) continue;
     out[i] = a === 0 ? 0 : (closes[i] - b) / a;
   }
