@@ -1687,6 +1687,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     : null;
   const crossTimeRef = useRef<number | null>(null);
   crossTimeRef.current = cross?.time ?? null;
+  // تبديل نوع الشارت يُسقط التقاطع المثبَّت: زمنه زمن خانة النوع السابق، وخانات Renko/Range/Kagi/P&F أزمنة
+  // تركيبية (أول شمعة + 60ث × الترتيب) ⇒ على 1m تطابق شمعةً حقيقية لا علاقة لها باللبنة، فيقفز الخطّ (ووسمه
+  // وسطر OHLC) إلى الماضي بصمت. تقاطع التابع بالرباعي يعيد ربطه أثر المزامنة أدناه بالزمن الحقيقي.
+  useEffect(() => {
+    if (crossFromSync.current) return;
+    crossPinned.current = false;
+    setCross(null);
+  }, [kind]);
   const publishesCross = onCrossTime != null;
   useEffect(() => {
     if (!publishesCross) return;
