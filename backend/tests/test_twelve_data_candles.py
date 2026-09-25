@@ -206,3 +206,48 @@ def test_chart_route_sends_null_volume_for_forex(provider):
 def test_outputsize_never_leaves_as_a_non_positive_number(provider, asked, sent):
     market.fetch_time_series_with_meta("EURUSD", "15m", asked)
     assert provider["sink"]["params"]["outputsize"] == sent
+
+
+# ------------------------- سعر غير موجب أو شمعة مستحيلة ليست سوقاً
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        {"low": "0"},                        # قاع صفري: «انهيار −100%»
+        {"close": "-1.1"},
+        {"open": "0.0"},
+        {"high": "1.0900", "low": "1.1000"},  # القمّة تحت القاع
+        {"high": "1.1010"},                  # القمّة تحت الإغلاق 1.1020
+        {"low": "1.1010"},                   # القاع فوق الافتتاح 1.1000
+    ],
+)
+def test_non_positive_or_impossible_candle_is_dropped(provider, bad):
+    rows = _rows(6)
+    rows[3] = {**rows[3], **bad}
+    provider["payload"] = {"values": rows}
+    candles, meta = market.fetch_time_series_with_meta("EURUSD", "15m", 180)
+    assert len(candles) == 5, "الصفّ المستحيل وحده يُسقَط"
+    assert all(min(c["open"], c["high"], c["low"], c["close"]) > 0 for c in candles)
+    assert all(c["low"] <= min(c["open"], c["close"]) <= max(c["open"], c["close"]) <= c["high"]
+               for c in candles)
+    assert meta["kind"] == "provider"
+
+
+def test_a_zero_low_tail_does_not_fire_a_below_alert(provider, monkeypatch):
+    """الأثر عند المتداول: ذيل `low=0` بشمعة 1m بعد التسليح كان يُطلق تنبيه «تحت 1.09» فوراً."""
+    import time as _time
+
+    import alert_worker
+
+    now = int(_time.time())
+    rows = [
+        {"datetime": _time.strftime("%Y-%m-%d %H:%M:%S", _time.gmtime(now - 60 * (4 - i))),
+         "open": "1.1000", "high": "1.1050", "low": "1.0950", "close": "1.1020"}
+        for i in range(5)
+    ]
+    rows[3] = {**rows[3], "low": "0"}
+    provider["payload"] = {"values": rows}
+    q, candles = alert_worker._recent_minutes("EURUSD")
+    armed = _time.strftime("%Y-%m-%dT%H:%M:%S+00:00", _time.gmtime(now - 600))
+    alert = {"price": 1.09, "condition": "below", "ts": armed}
+    assert not alert_worker._price_hit(alert, q or 1.1020, candles)
