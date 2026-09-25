@@ -49,6 +49,7 @@ import {
   parseCommission,
   moneyInOtherCurrency,
   slPipsInPoints,
+  slPipsLooksLikePrice,
   commissionAcrossModes,
   commissionNoteExample,
   conversionKey,
@@ -483,6 +484,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           .replace('{value}', () => slAmbig.value)
           .replace('{whole}', slAmbig.whole)
           .replace('{small}', slAmbig.small)
+      : slPipsLooksLikePrice(slPips) && onlySlBad
+      ? // «1.0820» بخانة النقاط سعرٌ لا مسافة (كانت 1.08 pip ⇒ لوت أكبر بعشرين مرّة) — تُسمّى خانة سعر الوقف التي يقصدها
+        `${t.riskCalcBadFieldValue
+          .replace('{field}', () => shortLabel(t.riskCalcSlPips))
+          .replace('{value}', () => slPips.trim())} → ${t.riskCalcStop}?`
       : slPoints && onlySlBad
       ? t.riskCalcSlPointsHint.replace('{value}', () => slPoints.value).split('{pips}').join(slPoints.pips)
       : onlyRiskOtherCcy

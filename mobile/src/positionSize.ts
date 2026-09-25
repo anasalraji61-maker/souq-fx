@@ -480,7 +480,25 @@ export function priceAtPipOffset(spec: InstrumentSpec, price: number, offsetPips
  * و«0.500» تبقى 0.5 (الصفر بالمقدّمة ليس مبهماً). `null` = فارغ أو غير مفهوم أو مبهم.
  */
 export function parseSlPips(raw: string): number | null {
-  return parseDecimal(raw, { amount: true, unit: 'pip' });
+  const v = parseDecimal(raw, { amount: true, unit: 'pip' });
+  return v != null && pipsHaveMoreThanTwoDecimals(v) ? null : v;
+}
+
+/** أكثر من منزلتين عشريتين ذواتَي قيمة («1.082»، لا «1.0800» ولا «12.25») — مسافة بالـpip لا تحملها، السعر يحملها. */
+function pipsHaveMoreThanTwoDecimals(v: number): boolean {
+  return Math.abs(v * 100 - Math.round(v * 100)) > 1e-6;
+}
+
+/**
+ * **سعرٌ بخانة النقاط**: «1.0820» (سعر الوقف من رسالة توصية «SL 1.0820») كانت تُقرأ وقفاً **1.08 pip** — فوق حدّ «أضيق من
+ * 1 pip» (`slTooClose`) فتمرّ: 1% من 10,000 على 1.08 pip = **9.24 لوت** بدل 0.40 لوقف 25 pip، رقمٌ أنيق يبدو محسوباً.
+ * مسافة الوقف لا تحمل أكثر من عُشر pip (`slPipsFromPrices`)؛ ثلاث منازل ذوات قيمة فأكثر = سعر (يورو/إسترليني/فرنك
+ * 0.6–2 بأربع أو خمس منازل). `parseSlPips` يرفضها، وهذه تقول لماذا (اسم خانة سعر الوقف). «157.42» (ين) أو «2650.5» (ذهب)
+ * منزلتان أو أقل فتبقى نقاطاً — خطؤهما يُصغّر اللوت لا يكبّره. `false` لغير المفهوم أو المقبول.
+ */
+export function slPipsLooksLikePrice(raw: string): boolean {
+  const v = parseDecimal(raw, { amount: true, unit: 'pip' });
+  return v != null && v > 0 && pipsHaveMoreThanTwoDecimals(v);
 }
 
 /**

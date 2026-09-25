@@ -9,6 +9,7 @@ import {
   parseSlPips,
   ambiguousSlPips,
   slPipsInPoints,
+  slPipsLooksLikePrice,
   formatPipValue,
   instrumentSpec as specForSl,
   pipValuePerLot as pvForSl,
@@ -2591,3 +2592,33 @@ console.log('positionSize moneyInOtherCurrency selftest OK');
   assert.equal(slPipsInPoints(''), null);
 }
 console.log('positionSize slPipsInPoints selftest OK');
+
+// سعرٌ بخانة النقاط: «1.0820» كانت وقف 1.08 pip ⇒ 9.24 لوت بدل 0.40 — تُرفض ويُقال لماذا (slPipsLooksLikePrice)
+{
+  assert.equal(parseSlPips('1.0820'), null);
+  assert.equal(parseSlPips('1.08201'), null);
+  assert.equal(parseSlPips('0.85432'), null);
+  assert.equal(parseSlPips('1.2650 pips'), null);
+  assert.equal(slPipsLooksLikePrice('1.0820'), true);
+  assert.equal(slPipsLooksLikePrice('١٫٠٨٢٠'), true);
+  assert.equal(slPipsLooksLikePrice('0.85432'), true);
+  // ما كان مقبولاً يبقى: منزلة أو منزلتان، أصفار زائدة، أعداد صحيحة، ين/ذهب (خطؤهما يُصغّر اللوت)
+  assert.equal(parseSlPips('25'), 25);
+  assert.equal(parseSlPips('24.6'), 24.6);
+  assert.equal(parseSlPips('12.25'), 12.25);
+  assert.equal(parseSlPips('0.500'), 0.5);
+  assert.equal(parseSlPips('25.0000'), 25);
+  assert.equal(parseSlPips('157.42'), 157.42);
+  assert.equal(parseSlPips('25 pips'), 25);
+  for (const s of ['25', '24.6', '12.25', '0.500', '157.42', '', 'abc', '1.500']) assert.equal(slPipsLooksLikePrice(s), false, s);
+  // كل وقف يكتبه الحساب من السعرين (عُشر pip) يُقرأ كما كُتب
+  for (let tenths = 1; tenths <= 50000; tenths++) {
+    const p = Math.ceil(tenths) / 10;
+    assert.equal(parseSlPips(String(p)), p, String(p));
+  }
+  // الخطر الذي يُغلق: لوت 1.08 pip كان أكبر بعشرين مرّة من لوت 25 pip
+  const eu = instrumentSpec('EURUSD')!;
+  const big = sizeForSl({ balance: 10_000, riskPct: 1, slPips: 1.082, pipValuePerLot: pvForSl(eu, 1), contractSize: eu.contractSize })!;
+  assert.equal(big.lots, 9.24);
+}
+console.log('positionSize slPipsLooksLikePrice selftest OK');
