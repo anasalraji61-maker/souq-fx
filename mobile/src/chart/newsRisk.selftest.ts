@@ -402,7 +402,7 @@ console.log('newsRisk metals/aliases selftest OK');
   assert.deepEqual(symbolCurrencies('ETHJPY.pro'), ['USD', 'JPY']);
   assert.deepEqual(symbolCurrencies('BTCCNH'), ['USD', 'CNY']);
   // رقميّة مقابل رقميّة، مقلوبة، أو اسم غير مدرج: بلا ربط مخمَّن
-  for (const c of ['ETHBTC', 'BTCETH', 'USDBTC', 'USDTRX', 'SHIBUSD', 'PEPEUSD', 'BTCXYZ', 'BTC', 'BTCUSDTT', 'ETHBTCM', 'SHIBUSDM'])
+  for (const c of ['ETHBTC', 'BTCETH', 'USDBTC', 'USDTRX', 'QQQXUSD', 'ZZZUSD', 'BTCXYZ', 'BTC', 'BTCUSDTT', 'ETHBTCM', 'ZZZUSDM'])
     assert.deepEqual(symbolCurrencies(c), [], c);
   // الحاسبة والدفتر بلا تغيير: لا مواصفات pip، ولا اسمٌ «معروف» يُدمج به مفتاح الأداة
   assert.equal(instrumentSpec('BTCUSD'), null);
@@ -425,7 +425,7 @@ console.log('newsRisk crypto selftest OK');
   ] as [string, string[]][])
     assert.deepEqual(symbolCurrencies(c), want, c);
   // اسمٌ مجهول بـm يبقى صامتاً؛ حرف ملاصق غير m لا يُقبل؛ m وحدها أو اسم قصير لا يُقرأ
-  for (const c of ['AAPLm', 'US30x', 'NAS1000m', 'Mm', 'OIm', 'ETHBTCm', 'SHIBUSDm', 'US30mm'])
+  for (const c of ['AAPLm', 'US30x', 'NAS1000m', 'Mm', 'OIm', 'ETHBTCm', 'ZZZUSDm', 'US30mm'])
     assert.deepEqual(symbolCurrencies(c), [], c);
   // مفتاح الأداة بالدفتر كما كان: لا دمج «US30M» مع «US30»
   assert.equal(knownSingleName('US30m'), null);
@@ -669,3 +669,24 @@ console.log('newsRisk more index names selftest OK');
   assert.deepEqual(symbolCurrencies('COCOA'), []);
 }
 console.log('newsRisk dollar basket / treasuries selftest OK');
+
+// ---- عملات رقمية أخرى لدى وسطاء التجزئة: كانت [] بلا تحذير قبل CPI، وتُغلق السبت كأنها فوركس ----
+{
+  const { isForexMarketOpen } = require('./marketHours') as typeof import('./marketHours');
+  for (const s of ['PEPEUSD', 'SHIBUSD', 'TONUSD', 'NEARUSD', 'MATICUSD', 'XMRUSD', 'TRUMPUSD', 'BABYDOGEUSD', 'SHIBUSDm', 'PEPEUSD.c', 'TON/USDT', 'SUIUSDT']) {
+    assert.deepEqual(symbolCurrencies(s), ['USD'], s);
+    assert.equal(isCryptoSymbol(s), true, s);
+  }
+  assert.deepEqual(symbolCurrencies('SHIBEUR'), ['USD', 'EUR']);
+  // السبت 2026-09-26 12:00Z: الفوركس مغلق، الكريبتو مفتوح
+  const sat = new Date(Date.UTC(2026, 8, 26, 12));
+  assert.equal(isForexMarketOpen('PEPEUSD', sat), true);
+  assert.equal(isForexMarketOpen('EURUSD', sat), false);
+  // لا زوج فوركس/معدن ولا اسم مؤشر يُقرأ رقمياً بسبب القائمة الأطول
+  const F = 'USD EUR GBP JPY AUD NZD CAD CHF CNH SEK NOK DKK PLN TRY ZAR MXN SGD HKD HUF CZK THB XAU XAG XPT XPD'.split(' ');
+  for (const a of F) for (const b of F) if (a !== b) assert.equal(isCryptoSymbol(a + b), false, a + b);
+  for (const s of ['US30', 'NAS100', 'SUI20', 'UK100', 'USOIL', 'DXY', 'AAPL', 'COPPER', 'OPEC']) assert.equal(isCryptoSymbol(s), false, s);
+  // رقميّة مقابل رقميّة ما زالت []
+  assert.deepEqual(symbolCurrencies('PEPEBTC'), []);
+}
+console.log('newsRisk more coins selftest OK');

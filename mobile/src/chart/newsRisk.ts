@@ -137,7 +137,12 @@ export function knownSingleName(raw: string): string | null {
  * تحذير. العملة المستقرّة (USDT/USDC) = الدولار؛ بعملة غير الدولار الساقان معاً (كـXAUEUR)؛ رقميّة مقابل
  * رقميّة («ETHBTC») أو اسم غير مدرج يبقى `[]`.
  */
-const CRYPTO = /^(BTC|XBT|ETH|LTC|XRP|SOL|BCH|BNB|ADA|DOT|DOGE|AVAX|LINK|XLM|TRX)(USDT|USDC|[A-Z]{3})$/;
+/**
+ * وعملات وسطاء التجزئة الأخرى (Exness/XM/IC Markets تدرج عشراتٍ منها: «SHIBUSD»، «PEPEUSD»، «TONUSD»، «NEARUSD»…): كانت خارج
+ * القائمة ⇒ `[]` بلا تحذير قبل CPI، و`marketHours` يعدّها فوركس فيُغلقها السبت والأحد وهي تتداول. لا رمز منها عملة ورقية ISO.
+ */
+const CRYPTO =
+  /^(BTC|XBT|ETH|LTC|XRP|SOL|BCH|BNB|ADA|DOT|DOGE|AVAX|LINK|XLM|TRX|SHIB|PEPE|MATIC|POL|TON|NEAR|UNI|ATOM|ETC|FIL|APT|ARB|OP|SUI|XMR|DASH|ZEC|EOS|AAVE|ALGO|HBAR|ICP|XTZ|SAND|MANA|AXS|CRV|MKR|INJ|WIF|BONK|FLOKI|TRUMP|KAS|SEI|TIA|RENDER|FET|GRT|STX|VET|THETA|EGLD|KSM|NEO|QTUM|ZIL|ENJ|BAT|COMP|SNX|YFI|SUSHI|1INCH|CHZ|GALA|APE|LDO|JUP|ENA|WLD|STRK|BABYDOGE)(USDT|USDC|[A-Z]{3})$/;
 
 /**
  * زوج رقميّ معروف بأي كتابة وسيط («BTCUSD»، «SOLUSD»، «BTCUSDT»، «BTCUSDm»، «ETH/USD»، «XRPUSD.c») — لساعات السوق
