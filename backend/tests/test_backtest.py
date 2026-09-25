@@ -1,4 +1,5 @@
 import math
+import pytest
 
 import backtest
 
@@ -258,3 +259,16 @@ def test_a_fast_period_longer_than_the_series_is_not_enough_candles_not_zero_tra
     out = backtest.run_backtest(_candles(179), "ma_cross", fast=178, slow=10)
     assert out.get("error") == "not enough candles"
     assert backtest.run_backtest(_candles(179), "ma_cross", fast=10, slow=178).get("error") == "not enough candles"
+
+
+@pytest.mark.parametrize("sym", ["XAUJPY", "XAUCHF", "XAUEUR", "XAGJPY", "JPYUSD", "JPYEUR", "JPYGBP"])
+def test_no_usd_spread_for_non_usd_metals_or_jpy_base(sym):
+    """XAUJPY ≈ 520000 أخذ 0.30 «ين» (تكلفة ~0) وJPYUSD ≈ 0.0067 أخذ 2.5×0.0001 (3.7% لكل صفقة) — كلاهما
+    موسوم `costs_included: true`. بلا تقدير صادق ⇒ None («قبل التكاليف»)."""
+    assert backtest.typical_spread(sym) is None
+
+
+def test_usd_metals_keep_their_spread():
+    assert backtest.typical_spread("XAUUSD") == (3.0, 0.1)
+    assert backtest.typical_spread("XAG/USD") == (3.0, 0.01)
+    assert backtest.typical_spread("USDJPY") == (1.0, 0.01)

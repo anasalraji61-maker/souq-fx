@@ -35,11 +35,15 @@ def typical_spread(symbol: str) -> tuple[float, float] | None:
     if len(s) != 6:
         return None
     base, quote = s[:3], s[3:]
-    if base == "XAU":
-        return (3.0, 0.1)
-    if base == "XAG":
-        return (3.0, 0.01)
+    # المعدن بالدولار وحده: XAUJPY ≈ 520000 كان يأخذ 0.30 «ين» (0.00006% للصفقة) موسوماً «مشمولة»
+    if base in ("XAU", "XAG"):
+        if quote != "USD":
+            return None
+        return (3.0, 0.1) if base == "XAU" else (3.0, 0.01)
     if not (base.isalpha() and quote.isalpha()) or base == quote:
+        return None
+    # الين أساساً (JPYUSD ≈ 0.0067): pip 0.0001 = 1.5% من السعر ⇒ 2.5 pip كانت 3.7% تكلفة مختلَقة لكل صفقة
+    if base == "JPY":
         return None
     pip = 0.01 if quote == "JPY" else 0.0001
     if s in _TIGHTEST:
