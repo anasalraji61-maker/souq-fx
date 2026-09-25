@@ -357,6 +357,16 @@ export type Dict = {
    * {value} كما كُتب، {whole} بلا الفاصل (1500)، {small} كسراً (1.5) — «1.500» و«1,500» كلاهما، فالنصّ لا يقول «النقطة». موصول (`4133676`)
    */
   riskCalcSlPipsAmbiguous: string;
+  /**
+   * «250 points»/«250 نقاط» بخانة الوقف/السبريد — مرفوضة عمداً (`stripUnitWord`، `374d92e`): النقطة بمنصّة MT4/MT5 عُشر pip بأسعار الخمس خانات.
+   * الرسالة العامة «اكتبه بلا فواصل آلاف» لا تقول ذلك. {value} كما كُتب، {pips} الرقم ÷ 10. **غير موصول بعد** (tools: فرع قبل `invalidNumberHint`)
+   */
+  riskCalcSlPointsHint: string;
+  /**
+   * «€40» مخاطرةً أو «€7» عمولةً بحساب دولار (`moneyInOtherCurrency`، `33b3566`) — اليوم «المخاطرة «€40»: عملة الحساب USD» لا تقول ماذا يفعل.
+   * {field} الاسم القصير، {value} كما كُتب، {ccy} عملة الحساب. **غير موصول بعد** (tools)
+   */
+  riskCalcOtherCcyHint: string;
   /** رقم فيه «٬» (فاصل الآلاف العربي) بغير موضع آلاف — «0٬5» يُرفض (`parseDecimal`، `49db13b`)؛ الحرفان متشابهان على لوحة المفاتيح العربية فيُقال أيّهما يُكتب للكسر */
   arabicThousandsSignHint: string;
   /** اسم الخانة المرفوضة وما كُتب فيها، يسبق `invalidNumberHint`/`arabicThousandsSignHint` («الهدف «3.5.0»: …» — `d28991b`)؛ {field} الاسم القصير، {value} كما كُتب. علامتا الاقتباس بحسب اللغة: «» للعربية والكردية، “” للإنجليزية */
@@ -1459,6 +1469,8 @@ const ar: Dict = {
   invalidNumberHint: 'رقم غير مفهوم — اكتبه بلا فواصل آلاف، مثل 10000 أو 1.0850',
   priceAmbiguousThousandsHint: 'السعر «{value}» مبهم — هل النقطة فاصل آلاف أم فاصلة عشرية؟ اكتب {whole} أو {small}',
   riskCalcSlPipsAmbiguous: 'وقف «{value}» pip مبهم — هل الفاصل للآلاف أم للكسر العشري؟ اكتب {whole} أو {small}',
+  riskCalcSlPointsHint: 'وقف «{value}» بالنقاط (points) — النقطة بمنصّة MT4/MT5 عادةً عُشر pip، فاكتب {pips} pip',
+  riskCalcOtherCcyHint: '{field} «{value}» بغير عملة الحساب ({ccy}) — اكتب المبلغ بالـ{ccy}، أو غيّر عملة الحساب',
   arabicThousandsSignHint: '«٬» فاصلة الآلاف لا الفاصلة العشرية — للكسر اكتب «٫» أو نقطة، مثل 0٫5',
   riskCalcBadFieldValue: '{field} «{value}»',
   riskCalcPipValue: 'قيمة الـpip للوت',
@@ -2537,6 +2549,8 @@ const enUS: Dict = {
   invalidNumberHint: 'Number not recognized — type it without thousands separators, e.g. 10000 or 1.0850',
   priceAmbiguousThousandsHint: 'Price “{value}” is ambiguous — is the dot a thousands separator or a decimal point? Type {whole} or {small}',
   riskCalcSlPipsAmbiguous: 'A stop of “{value}” pips is ambiguous — is that separator for thousands or for decimals? Type {whole} or {small}',
+  riskCalcSlPointsHint: 'A stop of “{value}” is in points — on MT4/MT5 a point is usually a tenth of a pip, so type {pips} pips',
+  riskCalcOtherCcyHint: '{field} “{value}” is not in the account currency ({ccy}) — enter the amount in {ccy}, or change the account currency',
   arabicThousandsSignHint: '“٬” is the Arabic thousands sign, not the decimal comma — for a fraction type “٫” or a dot, e.g. 0.5',
   riskCalcBadFieldValue: '{field} “{value}”',
   riskCalcPipValue: 'Pip value per lot',
@@ -3641,6 +3655,8 @@ const ku: Dict = {
   invalidNumberHint: 'ژمارەکە ناناسرێتەوە — بەبێ جیاکەرەوەی هەزاران بنووسە، وەک 10000 یان 1.0850',
   priceAmbiguousThousandsHint: 'نرخی «{value}» ڕوون نییە — خاڵەکە جیاکەرەوەی هەزارانە یان خاڵی دەیی؟ {whole} یان {small} بنووسە',
   riskCalcSlPipsAmbiguous: 'وەستانی «{value}» pip ڕوون نییە — جیاکەرەوەکە بۆ هەزارانە یان بۆ دەیی؟ {whole} یان {small} بنووسە',
+  riskCalcSlPointsHint: 'وەستانی «{value}» بە خاڵە (points) — لە MT4/MT5 هەر خاڵێک زۆرجار دەیەکی pipە، بۆیە {pips} pip بنووسە',
+  riskCalcOtherCcyHint: '{field} «{value}» بە دراوی هەژمار نییە ({ccy}) — بڕەکە بە {ccy} بنووسە، یان دراوی هەژمار بگۆڕە',
   arabicThousandsSignHint: '«٬» جیاکەرەوەی هەزارانە نەک فاریزەی دەیی — بۆ کەرت «٫» یان خاڵ بنووسە، وەک 0٫5',
   riskCalcBadFieldValue: '{field} «{value}»',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
