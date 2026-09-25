@@ -771,3 +771,13 @@ chart-r49 أُغلق (`LayoutPanel.tsx:27 :60 :70 :123`)، tools81 RSS أُغل�
 `modules/tools-panels/registry.ts` (الملف **كلّه**، منذ `3c27653`، كان الصفّ يذكر `getToolPanel` وحده) و`MessagesScreen` (launch52)؛ و`emptySlot` بالطرفية `:759` ما زال
 يبني من `mockSeries` (غير معروض، `:1607` يُسقط الفارغ) ⇒ أُلحق بصفّ QA1 ★. 110 تصديراً يُستعمل داخل ملفه/اختباره فقط — ليس ميتاً، لا بند.
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة.
+
+## 2026-09-25 — الدورة 67
+**البناء:** أخضر 0 (على 2f4fc51 ثم 4b37c0e بعد السحب) — لا إصلاح لازم. **Selftests:** 100/100 ناجح (`npx tsx`؛ `visibleBars` أُعيد بعد `4b37c0e`: PASS).
+**التحقّق من الإغلاقات بالكود:** chart-r50 ← ui `962aced` (`FocusChartModal.tsx:22 :569 :572-573`)؛ launch124 ← ui `db4c51f` (`LectureClassroom.tsx:223 :234`)؛
+QA1 جزء ui ← `845546a` (`modules/tools-panels/` غير موجود) — الباقي بالصفّ `emptySlot`/`mockSeries` (tools، ★). backend-r27 جزئي: `newsStale` معروض (`755670f`)،
+و`calStaleAsOf` بلا مستعمل (grep) ⇒ الصفّ باقٍ لـui. launch125 مفتوح (`PositionSizePanel.tsx:1414` `'20'`). طلب tools القديم `newsUnavailable` موجود (`locales.ts:498`).
+**المراجعة (b — نصوص ثابتة):** grep لكل حرفية عربية وكل نصّ JSX/prop حرفي بـ`mobile/src` خارج `locales.ts`: الظاهر `MessagesScreen` (launch52) و`AUTO`
+(`MatrixChart.tsx:9303`) ⇒ صفّ **QA67 → chart**. الباقي احتياطيّ خلف القاموس (`typeLabels.ts`، `dataSource`/`marketHours`/`measureReadout`، `layoutBuiltinName`)
+أو مفاتيح نصّ الخادم (`CommissionPlanPanel`) أو موجّهات AI بـ`lang` (`WeeklyReportPanel`). `placeholder="EURUSD"` رمز لا نصّ.
+**الدورة القادمة:** المراجعة (c) — عناصر تفاعلية بلا `accessibilityLabel`.
