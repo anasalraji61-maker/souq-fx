@@ -551,3 +551,15 @@
 - **لم يُتحقَّق بصرياً**: لا متصفّح على هذا الجهاز (لا chromium/playwright) — tsc وحده. أولى ما يُفحص على جهاز: تلميح الشريط (موضعه وطبقته فوق الشارت)، طبقة ↑↓✕ بالمتابعة، وشبكة «المزيد».
 - مفاتيح `railFrameWord`/`railSquareWord`/`railRectangleWord`/`railShadowWord` صارت بلا مستعمل (launch يقرّر حذفها).
 - **بنود المهمّة الأصلية** (حالة الاختيار، الكردية، «₴»، السعر المتجمّد، إعادة الجولة، الحوارات على الويب، «درجة الاتفاق»): لم يتغيّر ملف بنطاقي منذ تشغيل 44 قبل هذه التعديلات؛ كل زرّ جديد هنا (`RailButton`، «المزيد»، طبقة الصفّ) بـ`accessibilityLabel` و`accessibilityState` حيث يوجد اختيار.
+
+## 2026-09-25 — تشغيل 46
+صفوف ui بـCOORDINATION (دورة QA 81): صفوف DP (DP2–DP6، DP10، DP11/12، `motion`) أُنجزت بتشغيل 45 (جاهزة للإغلاق)؛ ui45 نفّذه tools (`71d8066`). المفتوح فعلاً: **launch141** و**launch142/backend-r46**. كلٌّ بـcommit مستقل، بوابة البناء خضراء (tsc 0) قبل كل واحد:
+
+| commit | ماذا | صفّ |
+|---|---|---|
+| d6e559c | صفّ المتابعة `accessibilityHint={t.wlRowActionsHint}` (الترتيب/الإزالة بالضغط الطويل)؛ مدخل «المزيد» بالرصيف `accessibilityHint={t.dockMoreA11y}` (تلميح لا تسمية: «لوحات أخرى» لا تحوي النصّ الظاهر «المزيد» فتسميةً تكسر قاعدة التسمية-بالاسم) | launch141 |
+| 5dcb51d | `SymbolSearchBar`: `ambiguous` تُعرض صفوفاً غير قابلة للضغط (`accessibilityRole="text"`، `textDim`، بلا تأكيد/`warn`) بسطر `ssbAmbiguousTag`؛ و`ssbOnlyAmbiguous` بدل «لا رمز» الكاذبة حين النتائج فارغة (AAPL، SHEL)؛ سطر التفاصيل يُسقط الأجزاء الفارغة (لا «Bitcoin Euro · »)؛ `currency` (`GBp`) يُعرض حين يرسله الخادم؛ نوع `api.symbolSearch` يحمل `ambiguous`/`exchanges`/`currency` | launch142 + backend-r46 (1)(2)(3) |
+| f15fcbc | DESIGN-PRO §1: رموز نتائج البحث بـ`colors.text` لا التأكيد (حتى 8 عناصر تأكيد بمنطقة واحدة) | DP2 (ملفّ لم يشمله QA81) |
+
+- **لم يُتحقَّق بصرياً** (لا متصفّح على الجهاز) — tsc وحده.
+- بنود المهمّة الأصلية: «₴» بتعليقين فقط (`ToolsScreen:88`، `MatrixEdgeRails:202`)؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده؛ لم يتغيّر غير الملفّات أعلاه بنطاقي منذ تشغيل 45.
