@@ -146,6 +146,9 @@ export type Dict = {
   screenerFailed: string;
   screenerScanNone: string;
   screenerScanPartial: string;
+  /** ui11/backend-r17 (a): وسم نتيجة الماسح المبنيّة على شموع أقدم من شمعتين من الفريم (عطلة الأسبوع، كاش المزوّد).
+   * `{time}` = `formatLocalStamp(price_as_of)` = وقت إغلاق آخر شمعة بتوقيت الجهاز — لذا «إغلاق» لا «حتى» (التي تُقرأ «إلى أن»). */
+  screenerPriceAsOf: string;
   screenerNoMatchOf: string;
   screenerShowingOf: string;
   screenerChangeSpan: string;
@@ -1435,6 +1438,7 @@ const ar: Dict = {
   screenerFailed: 'تعذر تشغيل الفحص — تحقق من الاتصال وحاول مرة أخرى',
   screenerScanNone: 'تعذّر جلب أسعار أي رمز — غالباً حدّ طلبات مزوّد الأسعار؛ انتظر دقيقة وأعد الفحص',
   screenerScanPartial: 'فُحص {k} من {total} رمزاً فقط — تعذّرت قراءة: {list} (حدّ طلبات المزوّد غالباً). النتائج من المفحوصة فقط.',
+  screenerPriceAsOf: 'إغلاق {time}',
   screenerNoMatchOf: 'فُحص {k} رمزاً على فريم {tf} ولا أحد يحقّق الشرط الآن — جرّب فلتراً آخر أو أعد الفحص لاحقاً',
   // «من 9 نتيجة» خطأ: المعدود بعد 3–10 جمع — العدد بعد النقطتين لا يُصرَّف معه اسم
   screenerShowingOf: 'أقوى النتائج: {n} من {total} (الأكبر حركةً أولاً)',
@@ -2603,6 +2607,7 @@ const enUS: Dict = {
   screenerFailed: 'Could not run the scan — check your connection and try again',
   screenerScanNone: 'Could not load prices for any symbol — likely the data provider rate limit; wait a minute and scan again',
   screenerScanPartial: 'Only {k} of {total} symbols scanned — could not read: {list} (likely provider rate limit). Results cover scanned symbols only.',
+  screenerPriceAsOf: 'as of {time}',
   screenerNoMatchOf: 'Scanned {k} symbols on {tf} and none meet the condition right now — try another filter or scan again later',
   screenerShowingOf: 'Showing the top {n} of {total} results (biggest movers first)',
   screenerChangeSpan: '(last 80 candles)',
@@ -3795,6 +3800,7 @@ const ku: Dict = {
   screenerFailed: 'نەکرا پشکنین کارپێبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
   screenerScanNone: 'نرخی هیچ هێمایەک نەهێنرا — لەوانەیە سنووری داواکاری دابینکەری داتا بێت؛ خولەکێک چاوەڕێ بکە و دووبارە بپشکنە',
   screenerScanPartial: 'تەنها {k} لە {total} هێما پشکنران — نەخوێنرانەوە: {list} (لەوانەیە سنووری داواکاری دابینکەر). ئەنجامەکان تەنها بۆ پشکنراوەکانن.',
+  screenerPriceAsOf: 'داخستنی {time}',
   screenerNoMatchOf: '{k} هێما لە {tf} پشکنران و ئێستا هیچیان مەرجەکە پڕ ناکاتەوە — فلتەرێکی تر تاقی بکەرەوە یان دواتر دووبارە بپشکنە',
   screenerShowingOf: 'پیشاندانی بەهێزترین {n} لە {total} ئەنجام (زۆرترین جووڵە سەرەتا)',
   screenerChangeSpan: '(دوایین 80 مۆم)',
