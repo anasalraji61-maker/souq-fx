@@ -210,8 +210,6 @@ export function TerminalScreen() {
   // وفشل خانة واحدة كان يُسقط الرأس رغم نجاح البقية. null = لا نتيجة بعد ⇒ لا وسم؛ متّصل إن نجحت خانة واحدة على الأقل.
   const [slotOk, setSlotOk] = useState<Record<string, boolean>>({});
   const markSlots = useCallback((next: Record<string, boolean>) => setSlotOk((prev) => ({ ...prev, ...next })), []);
-  const slotResults = Object.values(slotOk);
-  const online: boolean | null = slotResults.length === 0 ? null : slotResults.some(Boolean);
   const [quote, setQuote] = useState<{ bid: number | null; ask: number | null } | null>(null);
 
   const [lens, setLens] = useState<MatrixLensId>('clean');
@@ -232,6 +230,13 @@ export function TerminalScreen() {
   const [phoneWatchSymbols, setPhoneWatchSymbols] = useState<string[] | null>(null);
   const [layoutCount, setLayoutCount] = useState<FrameLayoutCount>(1);
   const [layoutShape, setLayoutShape] = useState<FrameLayoutShape>('square');
+  // ما يُرسم فعلاً: الإطارات الأربعة (hero/f0..f2) بشبكة الهاتف والتخطيطات المتعدّدة، والشارت الرئيسي (chart) بشارت واحد
+  // والظلّ على الشاشة العريضة. الاستطلاع ووسم «متّصل» يتبعانه — خانة مخفية لا تجلب، ونتيجتها القديمة لا تقرّر الوسم.
+  const framesShown = phone || (layoutShape !== 'shadow' && layoutCount > 1);
+  const slotResults = Object.entries(slotOk)
+    .filter(([k]) => (k === 'chart') !== framesShown)
+    .map(([, ok]) => ok);
+  const online: boolean | null = slotResults.length === 0 ? null : slotResults.some(Boolean);
   const [timeSyncEnabled, setTimeSyncEnabled] = useState(false);
   const [syncLeaderId, setSyncLeaderId] = useState<string>('DXY');
   const [syncWindow, setSyncWindow] = useState<SyncTimeWindow | null>(null);
@@ -718,28 +723,31 @@ export function TerminalScreen() {
   // الاستطلاعات الدورية الأربعة هنا (الإطارات، الشارت، Bid/Ask، الظلّ) تقف ما دامت الشاشة خلف تبويبٍ آخر (`screenFocused`):
   // الشاشة تبقى مُركَّبة، فكانت تجلب كل 90 ث بقيّة الجلسة لشارت لا يُرى — من حدّ المزوّد نفسه الذي إن نفد (429) أعاد
   // الخادم أسعاراً مخزّنة قديمة لحاسبة اللوت والتنبيهات. بالعودة يُعاد تشغيل كل تأثير فيجلب فوراً.
+  // وتقف كذلك لما لا يُرسم: الإطارات الأربعة تُرسم بشبكة الهاتف وبالتخطيطات المتعدّدة فقط، والشارت الرئيسي بشارت
+  // واحد والظلّ على الشاشة العريضة فقط — كان كلاهما يجلب كل 90 ث بلا عرض (1–4 طلبات من حدّ المزوّد نفسه).
   useEffect(() => {
-    if (!prefsReady || focus || !screenFocused) return;
+    if (!prefsReady || focus || !screenFocused || !framesShown) return;
     void loadTerminal(frameTfs, dxyTf);
     const id = setInterval(() => void loadTerminal(frameTfs, dxyTf), 90_000);
     return () => clearInterval(id);
-  }, [prefsReady, frameTfs, dxyTf, loadTerminal, focus, screenFocused]);
+  }, [prefsReady, frameTfs, dxyTf, loadTerminal, focus, screenFocused, framesShown]);
 
   // حارس سباق شبكة: تجاهل ردّ متأخر لرمز/فريم زمني سابق (نفس نمط `alive` المستخدَم بلوحة الاقتباس
   // أدناه وبـ`FocusChartModal`/`QuadChartModal`) — تبديل سريع بين رموز المراقبة كان يترك آخر رد وصل
   // (لا آخر رمز مختار فعلياً) هو ما يُعرَض، بصرف النظر عن ترتيب وصول الشبكة الفعلي.
+  const mainShown = !phone && (layoutShape === 'shadow' || layoutCount === 1) && !focus;
   useEffect(() => {
     let alive = true;
     const hit = cachedSeries(symbol, tf);
     if (hit) setChart({ key: `${symbol}|${tf}`, s: hit });
-    if (!screenFocused) return;
+    if (!screenFocused || !mainShown) return;
     void loadChart(symbol, tf, () => !alive);
     const id = setInterval(() => void loadChart(symbol, tf, () => !alive), 90_000);
     return () => {
       alive = false;
       clearInterval(id);
     };
-  }, [symbol, tf, loadChart, screenFocused]);
+  }, [symbol, tf, loadChart, screenFocused, mainShown]);
 
   // سبريد Bid/Ask للرمز الحالي — بند 2 من قائمة الإطلاق (أولوية طارئة، docs/ROADMAP.md)
   // السطر يُعرض بشريط سطح المكتب لشارت واحد فقط (`desktopQuoteBar`) — على الهاتف وبالتخطيطات المتعدّدة والظلّ
@@ -837,7 +845,7 @@ export function TerminalScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([loadTerminal(frameTfs, dxyTf), loadChart(symbol, tf)]);
+    await Promise.all([framesShown ? loadTerminal(frameTfs, dxyTf) : null, mainShown ? loadChart(symbol, tf) : null]);
     setRefreshing(false);
   };
 
