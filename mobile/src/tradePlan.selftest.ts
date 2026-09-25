@@ -1549,6 +1549,12 @@ console.log('tradePlan noteWithTypedSize selftest OK');
   // 1 ⇒ 0.5: كانت العلامة تسقط ويبقى «risk 100.00 USD» — ضعف الحقيقة
   const n1 = planJournalNote({ lots: 1, risk: 100, ccy: 'USD', rr: '1:2' });
   assert.equal(noteWithTypedSize(0.5, n1), '0.50 lot · risk 50.00 USD · R:R 1:2');
+  // حجم دون السنت ثم تعديل ثانٍ: «0.015 lot» (يكتبها هذا المسار نفسه) كانت لا تُعرف فتبقى المخاطرة القديمة أو يتكرّر اللوت
+  const nMilli = noteWithTypedSize(0.015, n1);
+  assert.equal(nMilli, '0.015 lot · risk 1.50 USD · R:R 1:2');
+  assert.equal(noteWithTypedSize(0.02, nMilli!), '0.02 lot · risk 2.00 USD · R:R 1:2');
+  assert.equal(noteWithTypedSize(1, nMilli!), '1.00 lot · risk 100.00 USD · R:R 1:2');
+  assert.equal(noteWithTypedSize(0.015, nMilli!), nMilli);
   // الحجم نفسه ⇒ كما هي (0.5 = «0.50»)
   assert.equal(noteWithTypedSize(0.5, n05), n05);
   assert.equal(noteWithTypedSize(1, n1), n1);
