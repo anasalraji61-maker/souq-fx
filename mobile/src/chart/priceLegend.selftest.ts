@@ -17,6 +17,7 @@ import {
   legendCapacity,
   legendChipWidth,
   legendBandAt,
+  legendMultiAt,
   legendValueAt,
   planPriceLegend,
   planPriceLegendForWidth,
@@ -327,6 +328,18 @@ import {
   assert.equal(legendBandAt(up, lo, 5), null);
   assert.deepEqual(legendBandAt([1.0], [2.0], 0), [2.0, 1.0]);
   assert.equal(legendBandAt(null, lo, 1), null);
+}
+
+// قيم متعدّدة الخطوط (إيشيموكو/التمساح): بالترتيب المُمرَّر، وأيّ خطّ بالإحماء ⇒ لا شيء
+{
+  const tenkan = [null, 1.0851, 1.0852];
+  const kijun = [null, 1.0847, null];
+  assert.deepEqual(legendMultiAt([tenkan, kijun], 1), [1.0851, 1.0847]);
+  assert.equal(legendMultiAt([tenkan, kijun], 0), null);
+  assert.equal(legendMultiAt([tenkan, kijun], 2), null);
+  assert.equal(legendMultiAt([tenkan, null], 1), null);
+  assert.equal(legendMultiAt([], 1), null);
+  assert.deepEqual(legendMultiAt([[3], [1], [2]], 0), [3, 1, 2]);
 }
 
 console.log('priceLegend.selftest: PASS');

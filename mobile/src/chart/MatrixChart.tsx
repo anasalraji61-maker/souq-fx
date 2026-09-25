@@ -75,6 +75,7 @@ import {
 import { STOCH_LINE_H, stochPaneGeom } from './stochPane';
 import {
   legendBandAt,
+  legendMultiAt,
   legendValueAt,
   planPriceLegendForWidth,
   resolveColorExpr,
@@ -2977,7 +2978,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       donchian,
     };
   }, [dense, chartPlotW, overlays, keltner, donchian]);
+  // متعدّدة الخطوط: قيمة كل خطّ بلونه — إيشيموكو Tenkan/Kijun (المتأخر = إغلاق بعد 25 شمعة، فارغ عند
+  // الأخيرة فلا يُطبع) والتمساح الفكّ/الأسنان/الشفاه. الألوان حرفياً كمواضع رسمها.
+  const legendMulti = useMemo((): Readonly<Record<string, { lines: readonly (readonly (number | null)[])[]; colors: readonly string[] } | null>> => {
+    if (dense && chartPlotW < 320) return {};
+    return {
+      ichimoku: ichimoku ? { lines: [ichimoku.tenkan, ichimoku.kijun], colors: ['#60A5FA', '#F87171'] } : null,
+      alligator: alligator
+        ? { lines: [alligator.jaw, alligator.teeth, alligator.lips], colors: ['#3B82F6', '#EF4444', '#84CC16'] }
+        : null,
+    };
+  }, [dense, chartPlotW, ichimoku, alligator]);
+  const legendMultiParts = (id: string, index: number | null): { text: string; color: string }[] | null => {
+    const m = legendMulti[id];
+    if (!m) return null;
+    const vs = legendMultiAt(m.lines, index);
+    return vs ? vs.map((v, k) => ({ text: fmtPrice(v), color: m.colors[k]! })) : null;
+  };
   const legendValueText = (id: string, index: number | null): string | null => {
+    const parts = legendMultiParts(id, index);
+    if (parts) return parts.map((p) => p.text).join(' ');
     const band = legendBands[id];
     if (band) {
       const hl = legendBandAt(band.upper, band.lower, index);
@@ -5841,6 +5861,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={styles.priceLegendText}>{chip.label}</Text>
                 {(() => {
                   const at = crossIndex ?? legendLastIdx;
+                  const parts = legendMultiParts(chip.id, at);
+                  if (parts) {
+                    return parts.map((p, k) => (
+                      <Text key={k} style={[styles.priceLegendValue, { color: p.color }]}>
+                        {p.text}
+                      </Text>
+                    ));
+                  }
                   const v = legendValueText(chip.id, at);
                   if (!v) return null;
                   // Supertrend بلونين: القيمة بلون جانب الترند عند الشمعة (أخضر تحت السعر، أحمر فوقه).

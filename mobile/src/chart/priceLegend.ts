@@ -212,6 +212,26 @@ export function legendBandAt(
 }
 
 /**
+ * قيم طبقة متعدّدة الخطوط عند شمعة، بترتيب الخطوط المُمرَّر — إيشيموكو (Tenkan ثم Kijun) والتمساح
+ * (الفكّ ثم الأسنان ثم الشفاه): «Ichimoku 1.08512 1.08470» كل رقم بلون خطّه. كانت بالاسم وحده، فمتداول
+ * التقاطع (Tenkan فوق Kijun؟ الشفاه فوق الفكّ؟) يتتبّع ثلاثة خطوط متلاصقة بالعين إلى المحور.
+ * أحد الخطوط بالإحماء أو فاسد ⇒ `null` (لا نصف قراءة يبدو فيها رقم لخطّ غير خطّه).
+ */
+export function legendMultiAt(
+  lines: readonly (readonly (number | null | undefined)[] | null | undefined)[],
+  index: number | null | undefined
+): number[] | null {
+  if (lines.length === 0) return null;
+  const out: number[] = [];
+  for (const line of lines) {
+    const v = legendValueAt(line, index);
+    if (v == null) return null;
+    out.push(v);
+  }
+  return out;
+}
+
+/**
  * يخطّط المفتاح بعرض متاح فعليّ بدل عدّ شارات بعرض ثابت.
  *
  * السبب: الصفّ `nowrap` + `overflow: hidden`، فما لا يتّسع **يُقصّ** — و«+ن» آخر الصفّ
