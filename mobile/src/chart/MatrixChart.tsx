@@ -1810,6 +1810,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     crossPinned.current = false;
     setCross(null);
   }, [kind]);
+  // وللسبب نفسه: الجلب الدوري يُرجع آخر N شمعة فتسقط أقدمها ⇒ Renko/Range/Kagi/P&F تُعاد من أساس جديد وتنزاح
+  // أزمنتها التركيبية كلّها، فالتقاطع المثبَّت على لبنة 27 يونيو قفز بلا لمس إلى لبنة 24 يونيو (160 نقطة بعيداً).
+  // اللبنات نفسها تغيّرت ⇒ لا لبنة «نفسها» تُحفظ: يُزال التقاطع المحلي (تقاطع المزامنة يعيد ربطه بالزمن الحقيقي).
+  const syntheticFirstSec =
+    isSyntheticKind(kind) && liveSeries.candles.length > 0 ? candleTimeSec(liveSeries.candles[0]!.time) : null;
+  const prevSyntheticFirst = useRef(syntheticFirstSec);
+  useEffect(() => {
+    const was = prevSyntheticFirst.current;
+    prevSyntheticFirst.current = syntheticFirstSec;
+    if (was == null || syntheticFirstSec == null || was === syntheticFirstSec || crossFromSync.current) return;
+    crossPinned.current = false;
+    setCross(null);
+  }, [syntheticFirstSec]);
   const publishesCross = onCrossTime != null;
   useEffect(() => {
     if (!publishesCross) return;
