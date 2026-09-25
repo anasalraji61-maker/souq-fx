@@ -1511,13 +1511,20 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           <>
             <Text style={[styles.resultMeta, { textAlign: align }]}>
               {pipAtStop && spec && pipRatePx != null && Number.isFinite(pipRatePx)
-                ? t.riskCalcPipValueAtStop.replace('{price}', formatPrice(pipRatePx, spec.symbol))
+                ? stopRate != null
+                  ? t.riskCalcPipValueAtStop.replace('{price}', formatPrice(pipRatePx, spec.symbol))
+                  : // بالنقاط وحدها الخروج مفترَضٌ تحت السعر (`pipsOnlyExitPrice`) لا «وقفك»: بائعٌ وقفه فوق السعر كان يُقال له «عند وقفك 148.50»
+                    t.riskCalcPipValueAtPipsExit
+                      .replace('{price}', formatPrice(pipRatePx, spec.symbol))
+                      .replace('{pips}', String(slNum))
                 : t.riskCalcPipValue}
               : {formatPipValue(pv, moneyCcy)}
               {result && lots != null ? ` · ${lots.toFixed(2)} lot = ${formatPipValue(result.pipValue, moneyCcy)}` : ''}
             </Text>
             {pipAtStop ? (
-              <Text style={[styles.hint, { textAlign: align }]}>{t.riskCalcPipValueAtStopHint}</Text>
+              <Text style={[styles.hint, { textAlign: align }]}>
+                {stopRate != null ? t.riskCalcPipValueAtStopHint : t.riskCalcPipValueAtPipsExitHint}
+              </Text>
             ) : null}
           </>
         ) : null}
