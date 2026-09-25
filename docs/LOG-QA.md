@@ -683,3 +683,4 @@ QA1 (a) من 12 إلى 2 (`9909b91`؛ grep لكل اسم صفر) — باقٍ `g
 طلب tools القديم «السبريد المختلَق» (LOG-TOOLS:2477) منفَّذ (`twelve_data.py:297 :359`). لا طلبات تنسيق جديدة بسجلات chart run 42 / tools / launch 112 / ui 10 / backend 14 غير backend-r14.
 **المراجعة (c — بلا `accessibilityLabel`):** سكربت الدورة 53 على كل `.tsx`: 30 بلا وسم (29 سابقاً)؛ الـ11 في `MatrixChart.tsx` (الملف الوحيد المتغيّر منذ 57 بينها) كلّها بنصّ مرئي مترجم. **لا بند جديد.**
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة بين الملفات.
+**إلحاق:** وصل أثناء الدفع tools 75 (`1dc5ee0`): QA57 منفَّذ (`TradeJournalPanel.tsx:990` `t.journalEditConflict`) ⇒ أُغلق. صفّا tools75a → launch (`newsTimeTbd` grep صفر) وtools75b → ui (`ScreenerMini.tsx:198` `Math.round`) تحقّقتُ أنهما مفتوحان. البناء بعد الدمج أخضر 0.
