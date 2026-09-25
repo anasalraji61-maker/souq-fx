@@ -748,3 +748,14 @@ ui11 ← ui (`a0f67d1`، `AS_OF_COPY` grep صفر)؛ QA60 ← launch (`99e365e`�
 backend-r22 حيّ ⇒ launch120 (الإشعار) صار **عاجلاً**: EURUSD وقت 429 يُعرض «غير متاح من مزوّد البيانات»؛ دُمج صفّ backend-r22 فيه. البناء بعد الدمج أخضر 0.
 **إلحاق 2 (تعارض ثانٍ):** وصل ui 19 (`20e7b46` الإشعار يفرّع `provider_unavailable`، `8025a34` قلب `api.ts`، `b8f1569` `{tf}` بالرباعي) وtools80 وchart `ff29997`. تحقّقتُ بالكود ⇒ أُغلق ui18 وlaunch120 (الإشعار، ضُمّ لـui19).
 مفتوح: ui19 **عاجل** → tools (`TerminalScreen.tsx:1510 :1668`) + chart (`MatrixChart.tsx:5998`) بلا `dataSource`؛ launch120 الفريم → tools/chart؛ tools80 → launch. البناء بعد الدمج أخضر 0.
+
+## 2026-09-25 — الدورة 65
+**البناء:** أخضر 0 (بعد 479d309، أُعيد بعد تعارضَي دفع) — لا إصلاح لازم. **Selftests:** 99/99 ناجح (`npx tsx`، على cf99ac9).
+**التحقّق من الإغلاقات بالكود (5 صفوف):** ui19 ← tools `cf99ac9` (`TerminalScreen.tsx:1516 :1679`) + chart `e73d518`؛ launch120 الفريم ← tools (`:965-966`) + chart (`MatrixChart.tsx:6010-6011`)؛
+tools80 ← tools `1d028e8` (`TradeJournalPanel.tsx:977-981`، `{button}` = `journalSaveEditBtn`/`journalAddBtn`)؛ launch121 ← tools `11db392` + ui `5753fba`؛ chart-r48 ← ui `02d60f4` (`DomLitePanel.tsx:71`).
+**مفتوح:** launch122 (`FocusChartModal.tsx:143` ui، `anchorDemoSeries` chart؛ جزء tools أُنجز `6005b59`، `TerminalScreen.tsx:760-763`). tools81 ×2 (backend RSS `econ_calendar.py:103`، ui `bootFrame` حالة تحميل) — نُقلا كما هما.
+**المراجعة (e — ما يُحرج أمام متداول):** سكربت `instrumentSpec`/`pipValuePerLot` على 20 رمزاً + 12 لاحقة وسيط: EURUSD 10، JPY 1000 ¥، XAU 100 أونصة، XAG 5000؛ `.c`/`c` سنت (رفض مقصود بالمواصفة العادية)؛ المؤشرات/الكريبتو null (مقصود).
+«pip» الثابت بعدّة ملفات وحدة عالمية (لا بند). **جديد:** (1) مسار الظلّ `:760` يرسم `mockSeries` **والخادم متّصل** حين يعيد `candles: []` (DXY، أو 429 بعد backend-r22) — وجده launch122 بالتوازي
+لمسار الفشل فقط، ضُمّت ملاحظتي إليه؛ (2) صفّ QA65 → tools: سبريد رأس الطرفية `TerminalScreen.tsx:1678` `formatPrice(ask-bid)` — نسخة chart-r48 التي لم تُصلَح.
+**إلحاق (تعارضان عند الدفع):** وصل ui 20 وtools 81 (`6005b59` الظلّ — يشمل ملاحظتي) وchart `f975167` وlaunch 122 أثناء الدورة ⇒ أعدتُ بناء COORDINATION على الرأس وأعدتُ التحقّق بالكود؛ البناء أخضر 0.
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات (`anchorDemoSeries` صار بلا مستعمل).
