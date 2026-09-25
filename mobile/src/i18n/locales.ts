@@ -426,6 +426,12 @@ export type Dict = {
    * `{button}` نصّ الزرّ — بدالّة لا نصّ بديل
    */
   levelLooksLikePipsSaveBlocked: string;
+  /**
+   * كـ`levelLooksLikePips*` لرمز **بلا pip** (مؤشر/عملة رقمية، tools `fa1fda2`: US30 وقف «50» ⇒ 41,950): «pip» خطأ هناك — النقطة
+   * 1.0 من السعر. نفس المواضع `{field}`/`{value}`/`{pips}`/`{price}`/`{button}`؛ المستهلك يختارها حين `journalSpec(symbol)` = null (launch140).
+   */
+  levelLooksLikePointsHint: string;
+  levelLooksLikePointsSaveBlocked: string;
   riskCalcPipValue: string;
   /** الأساس = عملة الحساب (USDJPY بحساب دولار…) ⇒ قيمة الـpip محسوبة بسعر الوقف لا الحيّ (`exitQuoteToAccount`) فتخالف المنصّة — {price} = الوقف */
   riskCalcPipValueAtStop: string;
@@ -1766,6 +1772,8 @@ const ar: Dict = {
   riskCalcStopPxLooksLikePips: '⚠ «{value}» بخانة سعر الوقف عددُ pip على الأرجح لا سعر — اضغط لنقله إلى خانة الوقف بالـpip',
   levelLooksLikePipsHint: '⚠ {field} «{value}» عددُ pip على الأرجح لا سعر: {pips} pip تعني {price}. اضغط لكتابة {price}',
   levelLooksLikePipsSaveBlocked: 'لم تُحفظ الصفقة: {field} «{value}» يبدو عدد pip لا سعراً — التصحيح في السطر أعلاه. لإبقاء {value} سعراً كما كتبته اضغط «{button}» مرّة ثانية.',
+  levelLooksLikePointsHint: '⚠ {field} «{value}» عددُ نقاط على الأرجح لا سعر: {pips} نقطة تعني {price}. اضغط لكتابة {price}',
+  levelLooksLikePointsSaveBlocked: 'لم تُحفظ الصفقة: {field} «{value}» يبدو عدد نقاط لا سعراً — التصحيح في السطر أعلاه. لإبقاء {value} سعراً كما كتبته اضغط «{button}» مرّة ثانية.',
   riskCalcPipValue: 'قيمة الـpip للوت',
   riskCalcPipValueAtStop: 'قيمة الـpip للوت عند وقفك {price}',
   riskCalcPipValueAtStopHint: 'منصّتك تعرضها بالسعر الحالي فقد تختلف قليلاً — لكن خسارتك إن ضُرب الوقف تُحوَّل إلى عملة حسابك بسعر الوقف، فحسبناها به',
@@ -2957,6 +2965,8 @@ const enUS: Dict = {
   riskCalcStopPxLooksLikePips: '⚠ “{value}” in Stop price looks like pips, not a price — tap to move it to the pips box',
   levelLooksLikePipsHint: '⚠ {field} “{value}” looks like pips, not a price: {pips} pips is {price}. Tap to use {price}',
   levelLooksLikePipsSaveBlocked: 'Not saved: {field} “{value}” looks like pips, not a price — the fix is in the line above. To keep {value} as a price, press “{button}” again.',
+  levelLooksLikePointsHint: '⚠ {field} “{value}” looks like points, not a price: {pips} points is {price}. Tap to use {price}',
+  levelLooksLikePointsSaveBlocked: 'Not saved: {field} “{value}” looks like points, not a price — the fix is in the line above. To keep {value} as a price, press “{button}” again.',
   riskCalcPipValue: 'Pip value per lot',
   riskCalcPipValueAtStop: 'Pip value per lot at your stop {price}',
   riskCalcPipValueAtStopHint: 'Your platform shows it at the current price, so it may differ a little — but if your stop is hit the loss converts to your account currency at the stop price, so we used that',
@@ -4176,6 +4186,9 @@ const ku: Dict = {
   riskCalcStopPxLooksLikePips: '⚠ «{value}» لە خانەی نرخی وەستان زۆرجار ژمارەی pipە نەک نرخ — دەست بنێ بۆ گواستنەوەی بۆ خانەی وەستان بە pip',
   levelLooksLikePipsHint: '⚠ {field} «{value}» زۆرجار ژمارەی pipە نەک نرخ: {pips} pip واتە {price}. دەست بنێ بۆ نووسینی {price}',
   levelLooksLikePipsSaveBlocked: 'مامەڵەکە پاشەکەوت نەکرا: {field} «{value}» وەک ژمارەی pip دەردەکەوێت نەک نرخ — ڕاستکردنەوەکە لە دێڕی سەرەوەیە. بۆ هێشتنەوەی {value} وەک نرخ، جارێکی تر «{button}» دابگرە.',
+  // بحاجة مراجعة ناطق كردي (الاثنان أدناه)
+  levelLooksLikePointsHint: '⚠ {field} «{value}» زۆرجار ژمارەی خاڵە نەک نرخ: {pips} خاڵ واتە {price}. دەست بنێ بۆ نووسینی {price}',
+  levelLooksLikePointsSaveBlocked: 'مامەڵەکە پاشەکەوت نەکرا: {field} «{value}» وەک ژمارەی خاڵ دەردەکەوێت نەک نرخ — ڕاستکردنەوەکە لە دێڕی سەرەوەیە. بۆ هێشتنەوەی {value} وەک نرخ، جارێکی تر «{button}» دابگرە.',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
   riskCalcPipValueAtStop: 'بەهای pip بۆ هەر لۆتێک لە وەستانەکەت {price}',
   riskCalcPipValueAtStopHint: 'پلاتفۆرمەکەت بە نرخی ئێستا پیشانی دەدات بۆیە لەوانەیە کەمێک جیاواز بێت — بەڵام ئەگەر وەستانەکە لێدرا زیانەکە بە نرخی وەستان دەگۆڕدرێت بۆ دراوی هەژمارەکەت، بۆیە ئەومان بەکارهێنا',
