@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import type { EdgePanelId } from './MatrixSidePanel';
@@ -55,6 +55,8 @@ type Props = {
   onLens?: (lens: MatrixLensId) => void;
 };
 
+const PRIMARY_TABS: DockTabId[] = ['draw', 'alerts', 'calendar', 'journal'];
+
 export function MatrixBottomDock({
   tab,
   onTab,
@@ -83,18 +85,42 @@ export function MatrixBottomDock({
     { id: 'reports', label: t.toolsTabReports, mark: '≡' },
   ];
 
+  /** DESIGN-PRO §5.4: خمسة مداخل بالشريط — أربعة أساسية و«المزيد» يفتح بقية اللوحات شبكةً. */
+  const primary = TABS.filter((tb) => PRIMARY_TABS.includes(tb.id));
+  const secondary = TABS.filter((tb) => !PRIMARY_TABS.includes(tb.id));
+  const [moreOpen, setMoreOpen] = useState(false);
+  // لوحةٌ فُتحت من خارج الرصيف (الشاشة تضبط `tab`) تُغلق شبكة «المزيد» لا تُرسم فوقها.
+  useEffect(() => {
+    if (tab != null) setMoreOpen(false);
+  }, [tab]);
+  const moreOn = moreOpen || (tab != null && !PRIMARY_TABS.includes(tab));
+  const activeLabel = TABS.find((tb) => tb.id === tab)?.label;
+
   const toggle = (id: Exclude<DockTabId, null>) => {
+    setMoreOpen(false);
     onTab(tab === id ? null : id);
+  };
+  const toggleMore = () => {
+    if (moreOpen) {
+      setMoreOpen(false);
+      return;
+    }
+    onTab(null);
+    setMoreOpen(true);
+  };
+  const closeSheet = () => {
+    setMoreOpen(false);
+    onTab(null);
   };
 
   return (
     <View style={styles.wrap}>
-      {tab ? (
+      {tab || moreOpen ? (
         <View style={styles.sheet}>
           <View style={[styles.sheetHead, rtl && styles.sheetHeadRtl]}>
             <Pressable
               accessibilityRole="button"
-              onPress={() => onTab(null)}
+              onPress={closeSheet}
               style={({ pressed }) => [
                 pressed && {
                   opacity: buttons.pressedOpacity,
@@ -102,12 +128,12 @@ export function MatrixBottomDock({
                 },
               ]}
               hitSlop={8}
-              accessibilityLabel={`${t.dockHideA11yPrefix}${TABS.find((tb) => tb.id === tab)?.label ?? t.dockPanelFallback}`}
+              accessibilityLabel={`${t.dockHideA11yPrefix}${moreOpen ? t.dockMoreTab : (activeLabel ?? t.dockPanelFallback)}`}
             >
               <Text style={styles.close}>{t.dockHideBtn}</Text>
             </Pressable>
             <Text style={styles.sheetTitle}>
-              {TABS.find((tb) => tb.id === tab)?.label ?? t.dockLibraryFallback}
+              {moreOpen ? t.dockMoreTab : (activeLabel ?? t.dockLibraryFallback)}
             </Text>
           </View>
           {/* النماذج التي تعيش داخل هذه الورقة (سعر التنبيه، حدّ تنبيه المؤشر، صفقة الدفتر، الباكتست،
@@ -122,6 +148,30 @@ export function MatrixBottomDock({
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
+            {moreOpen ? (
+              <View style={styles.drawGrid}>
+                {secondary.map((tb) => (
+                  <Pressable
+                    accessibilityRole="button"
+                    key={tb.id}
+                    style={({ pressed }) => [
+                      styles.drawChip,
+                      pressed && {
+                        opacity: buttons.pressedOpacity,
+                        transform: [{ scale: buttons.pressedScale }],
+                      },
+                    ]}
+                    onPress={() => toggle(tb.id)}
+                    accessibilityLabel={`${t.dockTabA11yPrefix}${tb.label}`}
+                  >
+                    <Text style={styles.drawChipMark}>{tb.mark}</Text>
+                    <Text style={styles.drawChipLabel} numberOfLines={1}>
+                      {tb.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
             {tab === 'draw' ? (
               <View style={styles.drawWrap}>
                 <Text style={styles.drawSectionTitle}>{t.lensSectionTitle}</Text>
@@ -224,13 +274,8 @@ export function MatrixBottomDock({
         </View>
       ) : null}
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.tabs}
-        style={styles.tabBar}
-      >
-        {TABS.map((tb) => {
+      <View style={[styles.tabs, rtl && styles.tabsRtl]}>
+        {primary.map((tb) => {
           const on = tab === tb.id;
           return (
             <Pressable
@@ -249,11 +294,32 @@ export function MatrixBottomDock({
               accessibilityLabel={`${t.dockTabA11yPrefix}${tb.label}`}
             >
               <Text style={[styles.tabMark, on && styles.tabMarkOn]}>{tb.mark}</Text>
-              <Text style={[styles.tabLabel, on && styles.tabLabelOn]}>{tb.label}</Text>
+              <Text style={[styles.tabLabel, on && styles.tabLabelOn]} numberOfLines={1}>
+                {tb.label}
+              </Text>
             </Pressable>
           );
         })}
-      </ScrollView>
+        <Pressable
+          accessibilityState={{ selected: moreOn, expanded: moreOpen }}
+          accessibilityRole="button"
+          style={({ pressed }) => [
+            styles.tab,
+            moreOn && styles.tabOn,
+            pressed && {
+              opacity: buttons.pressedOpacity,
+              transform: [{ scale: buttons.pressedScale }],
+            },
+          ]}
+          onPress={toggleMore}
+          accessibilityLabel={`${t.dockTabA11yPrefix}${t.dockMoreTab}${!moreOpen && moreOn && activeLabel ? ` · ${activeLabel}` : ''}`}
+        >
+          <Text style={[styles.tabMark, moreOn && styles.tabMarkOn]}>⋯</Text>
+          <Text style={[styles.tabLabel, moreOn && styles.tabLabelOn]} numberOfLines={1}>
+            {t.dockMoreTab}
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -316,29 +382,23 @@ const styles = StyleSheet.create({
   drawChipMarkOn: { color: colors.accent },
   drawChipLabel: { color: colors.textDim, fontSize: 10, fontWeight: '700' },
   drawChipLabelOn: { color: colors.accent },
-  tabBar: { maxHeight: 44 },
   tabs: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: spacing.xs,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
+    paddingVertical: spacing.xs,
   },
+  tabsRtl: { flexDirection: 'row-reverse' },
   tab: {
-    flexDirection: 'row',
+    flex: 1,
+    minHeight: 44,
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    justifyContent: 'center',
+    gap: 2,
+    paddingHorizontal: spacing.xs,
     borderRadius: radii.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bgPanel,
   },
-  tabOn: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft,
-  },
+  tabOn: { backgroundColor: colors.accentSoft },
   tabMark: { color: colors.textMuted, fontSize: 11, fontWeight: '800' },
   tabMarkOn: { color: colors.accent },
   tabLabel: { color: colors.textDim, fontSize: 10, fontWeight: '700' },
