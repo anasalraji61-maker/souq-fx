@@ -224,7 +224,7 @@ def test_an_empty_journal_has_zeroed_statistics_not_an_error(client):
     stats = client.get("/api/trades", headers=_DEV1).json()["stats"]
     assert stats == {
         "trade_count": 0,
-        "win_rate": 0,
+        "win_rate": None,
         "total_pnl_pct": 0,
         "avg_win": 0,
         "avg_loss": 0,
@@ -358,7 +358,8 @@ def test_a_breakeven_trade_is_not_a_loss(client):
 def test_only_breakevens_give_no_win_rate_not_zero_percent_losses(client):
     _open_trade(client, exit=1.1000)
     stats = client.get("/api/trades", headers=_DEV1).json()["stats"]
-    assert stats["breakeven_count"] == 1 and stats["win_rate"] == 0 and stats["loss_count"] == 0
+    assert stats["breakeven_count"] == 1 and stats["loss_count"] == 0
+    assert stats["win_rate"] is None, "0 تُعرض «نسبة نجاح 0%» = خسر كل صفقاته (backend-r6 (5))"
 
 
 def _bulk_insert(n_open: int, n_won: int, key: str) -> None:

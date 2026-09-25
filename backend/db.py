@@ -1935,7 +1935,10 @@ def trade_stats(user_id: int | None = None, owner_key: str | None = None) -> dic
 
     **التعادل ليس خسارة**: `pnl <= 0` كان يعدّ صفقة أُغلقت على الدخول خسارةً، فمتداول ينقل وقفه
     للتعادل يرى نسبة فوزه تهبط. الآن `win_rate` = رابحة ÷ (رابحة + خاسرة)، والتعادل يُعدّ وحده
-    (`breakeven_count`) ويبقى ضمن `trade_count`."""
+    (`breakeven_count`) ويبقى ضمن `trade_count`.
+
+    **بلا صفقة حاسمة `win_rate` = None** (دفتر فارغ أو كلّه تعادل): 0 كانت تُعرض «نسبة نجاح 0%» = «خسر كل صفقاته»
+    (backend-r6 (5)). التطبيق يعرض «—» لـnull (`journalWinRateLine`، `WeeklyReportPanel`)."""
     sql, args = _owner_clause(user_id, owner_key)
     with _conn() as c:
         rows = c.execute(
@@ -1944,7 +1947,7 @@ def trade_stats(user_id: int | None = None, owner_key: str | None = None) -> dic
     pnls = [float(r[0]) for r in rows]
     empty = {
         "trade_count": 0,
-        "win_rate": 0,
+        "win_rate": None,
         "total_pnl_pct": 0,
         "avg_win": 0,
         "avg_loss": 0,
@@ -1961,8 +1964,8 @@ def trade_stats(user_id: int | None = None, owner_key: str | None = None) -> dic
     decided = len(wins) + len(losses)
     return {
         "trade_count": len(pnls),
-        # كلّها تعادل ⇒ لا نسبة فوز ذات معنى: 0 كما في الدفتر الفارغ، و`breakeven_count` يوضّح
-        "win_rate": round(len(wins) / decided * 100, 1) if decided else 0,
+        # كلّها تعادل ⇒ لا نسبة فوز ذات معنى: None كالدفتر الفارغ، و`breakeven_count` يوضّح
+        "win_rate": round(len(wins) / decided * 100, 1) if decided else None,
         "total_pnl_pct": round(sum(pnls), 2),
         "avg_win": round(sum(wins) / len(wins), 2) if wins else 0,
         "avg_loss": round(sum(losses) / len(losses), 2) if losses else 0,
