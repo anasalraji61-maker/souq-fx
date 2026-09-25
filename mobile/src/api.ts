@@ -95,8 +95,8 @@ export type ChartSeries = {
   symbol: string;
   timeframe: string;
   candles: Candle[];
-  change_pct: number;
-  last: number;
+  change_pct: number | null;
+  last: number | null;
   data_source?: DataProvenance;
 };
 
