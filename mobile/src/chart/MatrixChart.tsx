@@ -312,6 +312,7 @@ import {
   computeZigZag,
   computeZlema,
   formatPrice,
+  formatPriceDiff,
   heikinAshi,
   symbolPriceDecimals,
 } from './math';
@@ -5256,7 +5257,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               if (ref == null) return null;
               const chgPct = ((crossCandle.close - ref) / ref) * 100;
               const dir = pctDirection(chgPct);
-              const pips = measurePipsText(series.symbol, ref, crossCandle.close);
+              // بلا مواصفة pip (US30، BTC، DXY، النفط) ⇒ الفرق بمنازل السعر «+125.00 (+0.30%)» كـTradingView
+              // لا النسبة وحدها — متداول المؤشرات يقيس الشمعة بالنقاط السعرية.
+              const diff = crossCandle.close - ref;
+              const pips =
+                measurePipsText(series.symbol, ref, crossCandle.close) ??
+                `${diff > 0 ? '+' : diff < 0 ? '−' : ''}${formatPriceDiff(diff, ref, series.symbol, priceDecimalsRef)}`;
               return (
                 <Text
                   style={{
