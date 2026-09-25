@@ -426,3 +426,20 @@ def test_a_live_referral_code_still_sponsors(_db):
         "bob", "hunter2", email="bob@example.com", sponsor_code=alice["referral_code"], side="left"
     )
     assert bob["user_id"]
+
+
+def test_deleting_a_reporters_account_keeps_the_reported_message_hidden(_db):
+    """حذف حساب مُبلِّغ كان يمحو بلاغاته ⇒ العدّاد تحت العتبة فتعود رسالة الاحتيال ظاهرة للجميع."""
+    scammer = db.register_user("scammer", "hunter2", email="s@example.com")
+    db.add_group_message(
+        {"id": "m1", "user": "scammer", "text": "vip signals", "ts": "00:00"}, scammer["user_id"]
+    )
+    reporters = [
+        db.register_user(f"rep{i}", "hunter2", email=f"r{i}@example.com")
+        for i in range(db.REPORT_HIDE_THRESHOLD)
+    ]
+    for r in reporters:
+        assert db.report_content("group_message", "m1", r["user_id"], "scam") is True
+    db.delete_user_account(reporters[0]["user_id"])
+    assert all(m["id"] != "m1" for m in db.group_messages(viewer_id=None))
+    assert db.list_reports()[0]["reports"] == db.REPORT_HIDE_THRESHOLD
