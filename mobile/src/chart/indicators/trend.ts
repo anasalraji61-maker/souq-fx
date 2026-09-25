@@ -690,8 +690,9 @@ export function computeVortex(
       sMinus += minusVm[w];
       sTr += tr[w];
     }
-    plusOut[i] = sTr === 0 ? 0 : sPlus / sTr;
-    minusOut[i] = sTr === 0 ? 0 : sMinus / sTr;
+    // نافذة بلا مدى (سوق ساكن، M1 عطلة): 0/0 ⇒ na كـTradingView، لا غطسة الخطّين إلى 0 (VI يدور حول 1).
+    plusOut[i] = sTr === 0 ? null : sPlus / sTr;
+    minusOut[i] = sTr === 0 ? null : sMinus / sTr;
   }
   return { plus: plusOut, minus: minusOut };
 }
