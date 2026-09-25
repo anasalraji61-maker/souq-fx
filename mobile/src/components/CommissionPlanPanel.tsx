@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   title: { color: colors.text, fontWeight: '500', fontSize: 13, textAlign: 'right' },
-  sub: { color: colors.textDim, fontSize: 9, textAlign: 'right', marginTop: 0 },
+  sub: { color: colors.textDim, fontSize: 11, textAlign: 'right', marginTop: 0 },
   refresh: { color: colors.accent, fontWeight: '500', fontSize: 11 },
   body: { paddingHorizontal: spacing.md, paddingBottom: spacing.md, gap: spacing.sm },
   section: {
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   trHead: { backgroundColor: colors.tableHeadBg },
   th: {
     color: colors.textMuted,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     textAlign: 'center',
     paddingVertical: spacing.sm,
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   td: {
     ...numeric,
     color: colors.text,
-    fontSize: 10,
+    fontSize: 11,
     textAlign: 'center',
     paddingVertical: 8,
     paddingHorizontal: spacing.xs,
@@ -358,12 +358,12 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     textAlign: 'right',
     paddingHorizontal: 12,
-    fontSize: 10,
+    fontSize: 11,
   },
-  note: { color: colors.textDim, fontSize: 9, textAlign: 'right' },
+  note: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
   errorNote: {
     color: colors.warn,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     textAlign: 'right',
   },

@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   },
   planName: { color: colors.text, fontSize: 20, fontWeight: '500' },
   planBadge: { borderRadius: radii.pill, paddingHorizontal: 8, paddingVertical: 4 },
-  planBadgeText: { fontSize: 10, fontWeight: '500' },
+  planBadgeText: { fontSize: 11, fontWeight: '500' },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
   price: { ...numeric, fontSize: 27, fontWeight: '600' },
   perMonth: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   matrixNoteText: {
     flex: 1,
     color: colors.textMuted,
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: 16,
     textAlign: 'right',
   },

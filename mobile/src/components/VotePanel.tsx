@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
   titleInHead: { marginBottom: 0 },
   notice: {
     color: colors.warn,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     marginTop: spacing.xs,
   },
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
   },
   headRtl: { flexDirection: 'row-reverse' },
   headEnd: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  blockedLine: { ...numeric, color: colors.textDim, fontSize: 10, fontWeight: '500', marginTop: spacing.xs },
+  blockedLine: { ...numeric, color: colors.textDim, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
   symbol: { color: colors.text, fontWeight: '500', fontSize: 14 },
   badge: { borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 4 },
   badgeText: { color: colors.white, fontWeight: '500', fontSize: 11 },
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     alignItems: 'center',
   },
-  levelLabel: { color: colors.textDim, fontSize: 9, fontWeight: '500' },
+  levelLabel: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
   levelVal: { ...numeric, color: colors.text, fontSize: 12, fontWeight: '600', marginTop: 0 },
   levelSl: { color: colors.bear },
   levelTp: { color: colors.bull },
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
   },
   planText: { color: colors.accent, fontSize: 11, fontWeight: '500' },
-  planWarn: { color: colors.warn, fontSize: 10, fontWeight: '500', marginTop: 4 },
+  planWarn: { color: colors.warn, fontSize: 11, fontWeight: '500', marginTop: 4 },
   note: { color: colors.text, fontSize: 12, marginTop: spacing.xs, lineHeight: 18 },
   barBg: {
     height: 6,
@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
   no: { backgroundColor: colors.bearSoft, borderWidth: 1, borderColor: colors.bear },
   btnDisabled: { opacity: 0.4 },
   btnText: { color: colors.text, fontWeight: '500', fontSize: 12 },
-  author: { color: colors.dxy, fontSize: 10, fontWeight: '500', marginTop: 4 },
+  author: { color: colors.dxy, fontSize: 11, fontWeight: '500', marginTop: 4 },
   publishToggle: {
     alignSelf: 'flex-end',
     marginTop: 4,
@@ -672,7 +672,7 @@ const styles = StyleSheet.create({
   dirTextOn: { color: colors.text },
   formError: {
     color: colors.bear,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
   },
   publishBtn: {

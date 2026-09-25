@@ -1118,7 +1118,7 @@ const styles = StyleSheet.create({
   listCapped: { maxHeight: LIST_WINDOW_H },
   /** تحذيرٌ لا خطأ: بلون التحذير المؤسَّس (كـ`firesNow`) لا بالأحمر — التنبيه مُسلَّح فعلاً بالخادم،
    * والناقص هو طريق وصول الخبر للجهاز. */
-  notifWarn: { color: colors.warn, fontSize: 10, fontWeight: '500', flex: 1 },
+  notifWarn: { color: colors.warn, fontSize: 11, fontWeight: '500', flex: 1 },
   wrap: {
     flex: 1,
     height: '100%',
@@ -1150,7 +1150,7 @@ const styles = StyleSheet.create({
   flashClose: { color: colors.textDim, fontSize: 13, fontWeight: '500', marginTop: 4 },
   formError: {
     color: colors.bear,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     marginTop: spacing.xs,
   },
@@ -1219,10 +1219,10 @@ const styles = StyleSheet.create({
   itemStatusLive: { color: colors.accent, fontWeight: '500' },
   itemStatusDone: { color: colors.textDim },
   itemEditing: { backgroundColor: colors.accentSoft, borderRadius: radii.sm },
-  listHead: { ...numeric, color: colors.textDim, fontSize: 10, marginTop: spacing.sm, fontWeight: '500' },
+  listHead: { ...numeric, color: colors.textDim, fontSize: 11, marginTop: spacing.sm, fontWeight: '500' },
   clearFired: { alignSelf: 'flex-start', marginTop: spacing.xs, paddingVertical: 4 },
   clearFiredRtl: { alignSelf: 'flex-end' },
-  clearFiredText: { color: colors.bear, fontSize: 10, fontWeight: '500' },
+  clearFiredText: { color: colors.bear, fontSize: 11, fontWeight: '500' },
   currentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
   currentText: { color: colors.textDim, fontSize: 11, flex: 1 },
   currentVal: { ...numeric, color: colors.text, fontWeight: '600' },
@@ -1235,7 +1235,7 @@ const styles = StyleSheet.create({
   },
   useCurrentText: { color: colors.accent, fontSize: 11, fontWeight: '500' },
   offsets: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4 },
-  offsetUnit: { color: colors.textDim, fontSize: 9, fontWeight: '500' },
+  offsetUnit: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
   offsetChip: {
     borderWidth: 1,
     borderColor: colors.border,
@@ -1247,7 +1247,7 @@ const styles = StyleSheet.create({
   offsetChipText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   editingText: { color: colors.accent, fontSize: 11, fontWeight: '500', flex: 1, marginTop: spacing.xs },
   cancelEditText: { color: colors.textMuted, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
-  firesNow: { color: colors.warn, fontSize: 10, fontWeight: '500', marginTop: spacing.xs },
+  firesNow: { color: colors.warn, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
   armed: { color: colors.bull, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
   rearm: { color: colors.accent, fontWeight: '500', fontSize: 12 },
   del: { color: colors.bear, fontWeight: '500', fontSize: 12 },

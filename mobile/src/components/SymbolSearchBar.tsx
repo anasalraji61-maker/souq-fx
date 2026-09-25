@@ -190,14 +190,14 @@ const styles = StyleSheet.create({
   name: { color: colors.textDim, fontSize: 11 },
   error: {
     color: colors.bear,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     marginTop: spacing.xs,
   },
   /** كسطر الخطأ لكن بلون هادئ — «لا نتيجة» ليست فشلاً. */
   noMatch: {
     color: colors.textDim,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     marginTop: spacing.xs,
   },

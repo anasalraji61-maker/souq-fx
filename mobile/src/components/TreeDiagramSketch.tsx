@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   levelBand: { width: '100%', alignItems: 'center', gap: spacing.xs, marginVertical: 4 },
-  levelTag: { fontSize: 10, fontWeight: '500', textAlign: 'center' },
+  levelTag: { fontSize: 11, fontWeight: '500', textAlign: 'center' },
   splitRow: {
     flexDirection: 'row',
     width: '100%',
@@ -129,8 +129,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   sidePane: { flex: 1, alignItems: 'center', gap: 4 },
-  leftLbl: { color: colors.dxy, fontSize: 9, fontWeight: '500' },
-  rightLbl: { color: colors.treeRightTint, fontSize: 9, fontWeight: '500' },
+  leftLbl: { color: colors.dxy, fontSize: 11, fontWeight: '500' },
+  rightLbl: { color: colors.treeRightTint, fontSize: 11, fontWeight: '500' },
   midLine: { width: 2, alignSelf: 'stretch', minHeight: 36, opacity: 0.55 },
   railThin: { width: '85%', height: 2, opacity: 0.5, marginTop: spacing.xs },
   numRow: {
@@ -159,11 +159,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
     alignItems: 'center',
   },
-  youTag: { color: colors.accent, fontSize: 9, fontWeight: '500' },
+  youTag: { color: colors.accent, fontSize: 11, fontWeight: '500' },
   youName: { color: colors.accent, fontWeight: '500', fontSize: 15, marginTop: 4 },
   hint: {
     color: colors.textDim,
-    fontSize: 10,
+    fontSize: 11,
     textAlign: 'center',
     marginTop: spacing.xs,
     lineHeight: 15,

@@ -301,11 +301,11 @@ const styles = StyleSheet.create({
   apply: { flex: 1, minHeight: 44, justifyContent: 'center' },
   delHit: { minHeight: 44, minWidth: 44, paddingHorizontal: spacing.sm, alignItems: 'center', justifyContent: 'center' },
   rowName: { color: colors.text, fontWeight: '500', textAlign: 'right' },
-  rowSub: { color: colors.textDim, fontSize: 10, textAlign: 'right' },
+  rowSub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
   del: { color: colors.bear, fontWeight: '500' },
   saveError: {
     color: colors.bear,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     textAlign: 'right',
   },

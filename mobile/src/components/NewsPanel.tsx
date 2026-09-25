@@ -164,11 +164,11 @@ const styles = StyleSheet.create({
   staleNote: {
     ...numeric,
     color: colors.warn,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     marginBottom: spacing.xs,
   },
-  basisNote: { color: colors.textDim, fontSize: 10, marginBottom: spacing.xs },
+  basisNote: { color: colors.textDim, fontSize: 11, marginBottom: spacing.xs },
   empty: {
     color: colors.textDim,
     fontSize: 11,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   },
   rowRtl: { flexDirection: 'row-reverse' },
   impact: { borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 4 },
-  impactText: { color: colors.onWarnFill, fontWeight: '500', fontSize: 10 },
+  impactText: { color: colors.onWarnFill, fontWeight: '500', fontSize: 11 },
   when: { ...numeric, color: colors.textDim, fontSize: 11 },
   headline: {
     color: colors.text,

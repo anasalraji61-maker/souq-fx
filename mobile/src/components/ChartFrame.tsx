@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.selectedFill,
     flexShrink: 0,
   },
-  symbolCaret: { color: colors.textDim, fontSize: 10, fontWeight: '500' },
+  symbolCaret: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
   wheelLayer: {
     ...StyleSheet.absoluteFill, // RN 0.86 أزال absoluteFillObject وقت التشغيل (كان يُنشر undefined فتفقد الطبقة position:absolute)
     zIndex: 50,
@@ -703,7 +703,7 @@ const styles = StyleSheet.create({
   focusBtnText: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
   hint: {
     color: colors.textMuted,
-    fontSize: 10,
+    fontSize: 11,
     textAlign: 'right',
     paddingHorizontal: spacing.sm,
     marginBottom: 4,

@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
   },
   title: { color: colors.text, fontWeight: '500', textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
-  formError: { color: colors.bear, fontSize: 10, fontWeight: '500', textAlign: 'right' },
+  formError: { color: colors.bear, fontSize: 11, fontWeight: '500', textAlign: 'right' },
   input: {
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
@@ -617,10 +617,10 @@ const styles = StyleSheet.create({
   rowRtl: { flexDirection: 'row-reverse' },
   rowCenter: { alignItems: 'center' },
   rowLabel: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
-  hint: { color: colors.textDim, fontSize: 10, lineHeight: 15 },
+  hint: { color: colors.textDim, fontSize: 11, lineHeight: 15 },
   armed: { color: colors.bull, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
   notifRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
-  notifWarn: { color: colors.warn, fontSize: 10, fontWeight: '500', flex: 1 },
+  notifWarn: { color: colors.warn, fontSize: 11, fontWeight: '500', flex: 1 },
   notifBtn: {
     borderWidth: 1,
     borderColor: colors.accent,

@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSoft,
     color: colors.textMuted,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
   },
   bull: { color: colors.bull, borderColor: colors.bull },

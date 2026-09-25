@@ -77,7 +77,7 @@ export function TimeframeBar({ value, onChange, compact, arabic = false }: Props
             ]}
             hitSlop={4}
           >
-            <Text style={[styles.text, active && styles.textActive, compact && styles.textCompact]}>
+            <Text style={[styles.text, active && styles.textActive]}>
               {label}
             </Text>
           </Pressable>
@@ -115,7 +115,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     letterSpacing: 0.2,
   },
-  textCompact: { fontSize: 10 },
   textActive: {
     color: colors.accent,
   },

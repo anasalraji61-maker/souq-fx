@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   titleInHead: { marginBottom: 0 },
   notice: {
     color: colors.warn,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     marginTop: spacing.xs,
   },
@@ -259,9 +259,9 @@ const styles = StyleSheet.create({
   userFlex: { flex: 1 },
   head: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   headRtl: { flexDirection: 'row-reverse' },
-  blockedLine: { ...numeric, color: colors.textDim, fontSize: 10, fontWeight: '500', marginTop: spacing.xs },
+  blockedLine: { ...numeric, color: colors.textDim, fontSize: 11, fontWeight: '500', marginTop: spacing.xs },
   msg: { color: colors.text, fontSize: 12, marginTop: 4, lineHeight: 18 },
-  ts: { ...numeric, color: colors.textDim, fontSize: 10, marginTop: spacing.xs, textAlign: 'left' },
+  ts: { ...numeric, color: colors.textDim, fontSize: 11, marginTop: spacing.xs, textAlign: 'left' },
   row: { flexDirection: 'row', gap: 4, marginTop: spacing.sm },
   rowRtl: { flexDirection: 'row-reverse' },
   input: {

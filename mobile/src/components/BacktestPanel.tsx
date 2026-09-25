@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.4 },
   error: {
     color: colors.bear,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     textAlign: 'right',
     marginTop: spacing.xs,

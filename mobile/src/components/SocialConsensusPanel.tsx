@@ -289,9 +289,9 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   headRtl: { flexDirection: 'row-reverse' },
   title: { color: colors.text, fontWeight: '500', fontSize: 14 },
-  sub: { color: colors.textDim, fontSize: 10, marginTop: 4 },
-  pickHint: { color: colors.textMuted, fontSize: 10 },
-  sourcesError: { color: colors.bear, fontSize: 10, fontWeight: '500' },
+  sub: { color: colors.textDim, fontSize: 11, marginTop: 4 },
+  pickHint: { color: colors.textMuted, fontSize: 11 },
+  sourcesError: { color: colors.bear, fontSize: 11, fontWeight: '500' },
   refresh: {
     flexShrink: 0,
     paddingHorizontal: 12,
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     maxWidth: 200,
   },
   chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  chipText: { color: colors.textMuted, fontSize: 10, fontWeight: '500' },
+  chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   chipTextOn: { color: colors.accent },
   consensus: {
     backgroundColor: colors.bgPanel,
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   rowRtl: { flexDirection: 'row-reverse' },
   name: { color: colors.text, fontWeight: '500', fontSize: 12 },
-  summary: { color: colors.textDim, fontSize: 10, marginTop: 0 },
+  summary: { color: colors.textDim, fontSize: 11, marginTop: 0 },
   badge: { fontWeight: '500', fontSize: 12 },
-  note: { color: colors.textDim, fontSize: 9 },
+  note: { color: colors.textDim, fontSize: 11 },
 });

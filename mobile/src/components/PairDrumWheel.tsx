@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
   sideText: {
     color: colors.textMuted,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     opacity: 0.45,
     textAlign: 'center',

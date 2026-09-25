@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
   headBarLtr: { flexDirection: 'row' },
   chev: { color: colors.accent, fontSize: 18, fontWeight: '500', width: 22, textAlign: 'center' },
   title: { color: colors.text, fontWeight: '500', fontSize: 13, textAlign: 'right' },
-  sub: { color: colors.textDim, fontSize: 9, textAlign: 'right', marginTop: 0 },
+  sub: { color: colors.textDim, fontSize: 11, textAlign: 'right', marginTop: 0 },
   refresh: { color: colors.accent, fontWeight: '500', fontSize: 11 },
   body: { paddingHorizontal: spacing.md, paddingBottom: spacing.md, gap: spacing.sm },
   guestHint: { color: colors.textMuted, fontSize: 11, textAlign: 'right' },
@@ -479,10 +479,10 @@ const styles = StyleSheet.create({
   },
   sideLeft: {},
   sideRight: {},
-  sideTag: { fontSize: 10, fontWeight: '500' },
+  sideTag: { fontSize: 11, fontWeight: '500' },
   leftTag: { color: colors.dxy },
   rightTag: { color: colors.treeRightTint },
-  sideCount: { color: colors.textDim, fontSize: 9 },
+  sideCount: { color: colors.textDim, fontSize: 11 },
   sideGap: {
     width: 16,
     alignItems: 'center',
@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
   },
   connectStem: { width: 2, height: 14, opacity: 0.7 },
   connectRail: { width: '78%', height: 2, opacity: 0.55 },
-  connectLabel: { fontSize: 9, fontWeight: '500', marginTop: 0 },
+  connectLabel: { fontSize: 11, fontWeight: '500', marginTop: 0 },
   slot: {
     width: 148,
     minHeight: 64,
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
   trunk: { alignItems: 'center', height: 42, width: '100%', justifyContent: 'flex-start' },
   trunkH: { width: '70%', height: 2, backgroundColor: colors.networkTrunkLine },
   trunkV: { width: 2, height: 18, backgroundColor: colors.networkTrunkLine },
-  trunkHint: { color: colors.textDim, fontSize: 9, marginTop: 4 },
+  trunkHint: { color: colors.textDim, fontSize: 11, marginTop: 4 },
   youBox: {
     minWidth: 160,
     paddingVertical: spacing.md,
@@ -581,6 +581,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
     alignItems: 'center',
   },
-  youTag: { color: colors.accent, fontSize: 9, fontWeight: '500' },
+  youTag: { color: colors.accent, fontSize: 11, fontWeight: '500' },
   youName: { color: colors.accent, fontWeight: '500', fontSize: 15, marginTop: 4 },
 });

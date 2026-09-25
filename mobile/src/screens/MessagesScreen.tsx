@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   sub: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs, textAlign: 'right' },
   notice: {
     color: colors.warn,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     textAlign: 'right',
     paddingHorizontal: spacing.lg,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   msg: { color: colors.text, fontSize: 14, textAlign: 'right', lineHeight: 20 },
-  ts: { color: colors.textDim, fontSize: 10, marginTop: spacing.xs },
+  ts: { color: colors.textDim, fontSize: 11, marginTop: spacing.xs },
   composer: {
     flexDirection: 'row-reverse',
     gap: spacing.sm,

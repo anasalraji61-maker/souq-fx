@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   percent: {
     ...numeric,
     color: colors.text,
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '500',
     minWidth: 16,
   },

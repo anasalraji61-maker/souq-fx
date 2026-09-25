@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   scroll: { alignItems: 'center', gap: 4, paddingBottom: spacing.md },
   railTitle: {
     color: colors.textMuted,
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '500',
     letterSpacing: 0.3,
     textAlign: 'center',

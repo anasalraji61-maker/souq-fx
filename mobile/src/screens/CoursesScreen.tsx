@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
   sub: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs },
   staleNote: {
     color: colors.warn,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     marginTop: 4,
   },

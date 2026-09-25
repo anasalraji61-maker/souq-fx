@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
   },
   phoneModeTagText: {
     color: colors.accent,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
   },
   phoneModeBtn: {

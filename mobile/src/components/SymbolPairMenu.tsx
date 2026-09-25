@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   },
   panelTitle: {
     color: colors.textDim,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     paddingHorizontal: spacing.sm,
     marginBottom: spacing.xs,
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   },
   group: {
     color: colors.textDim,
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '500',
   },
   groupOn: {
