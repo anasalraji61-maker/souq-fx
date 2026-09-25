@@ -2427,6 +2427,29 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     };
   }, [interactive]);
 
+  // بلا حفظ (سلسلة تجريبية، الرباعية، القاعة) لا تحميل يستبدل القائمة، فكانت رسومات الرمز السابق تبقى: EURUSD
+  // الحقيقي بخطّ عند 1.0850 ثم GBPUSD يصل تجريبياً ⇒ خطّ اليورو على الإسترليني، يُحدَّد ويُبنى منه تنبيه للزوج
+  // الخطأ. وحين تنقلب السلسلة نفسها تجريبية (انقطاع المزوّد) تبقى الرسوم المحفوظة معروضة على شموع وهمية بلا حفظ
+  // لتعديلها. تبديل الفريم وحده يُبقيها: الرمز نفسه، والإرساء يعيد وضعها على شموع الفريم.
+  const unpersistedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (drawingsPersisted) {
+      unpersistedFor.current = null;
+      return;
+    }
+    const prev = unpersistedFor.current;
+    unpersistedFor.current = series.symbol;
+    if (prev === series.symbol) return;
+    drawHistory.current = [];
+    redoHistory.current = [];
+    setCanUndo(false);
+    setCanRedo(false);
+    setDrawings(NO_DRAWINGS);
+    setSelectedId(null);
+    setPending(null);
+    setDragEnd(null);
+  }, [drawingsPersisted, series.symbol]);
+
   useEffect(() => {
     if (!drawingsPersisted) return;
     const k = drawingsKey(series.symbol, series.timeframe);
