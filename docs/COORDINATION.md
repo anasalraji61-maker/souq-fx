@@ -19,6 +19,9 @@
 | launch | أنس | ترخيص مصادر البيانات (ForexFactory/DailyFX/Twelve Data) قبل الرفع (`RELEASE-MOBILE.md` §0) | launch73 |
 | backend | أنس | **قرارات اتخذها backend (لأنس عكسها)**: التعادل مستثنى من نسبة الفوز؛ DXY «غير متاح» بدل حسابه من السلّة؛ حذف ميزة «البنوك» | backend-r1 |
 | backend | أنس | **backend-r6 (6) العمولات** (لم يُغيَّر): `db.py` يدفع مكافأة التوازن 5% عند **أي** تساوٍ (1=1، 3=3) بينما نصّ الخطة (`commissions.py:84`) «عند مستوى مؤهل» (2،4،8…) — أيّهما القاعدة؟ والتسجيل بإحالة يزيد العدّاد بلا سطر عمولة؛ والشهر بتوقيت الخادم المحلي لا UTC | backend-r6 |
+| backend | ui (`BacktestPanel.tsx:307`) | **backend-r10 (أ)** `d4d6b86`: المركز المفتوح بآخر شمعة لم يعد يدخل `stats` (كان يُقوَّم بآخر إغلاق ويُحسب بنسبة الفوز والعائد كأنه أُغلق). الصفّ باقٍ بـ`trades` موسوماً `open: true` ⇒ اعرض «مفتوحة» بدل `→ {exit}` كخروج، و`stats.open_pnl_pct` (null = لا مركز) سطراً «ربح/خسارة مفتوحة» | backend-r10 |
+| backend | chart (`pineLite.ts:16 :23`، `momentum.ts:22 :29 :981 :988 :1133`) | **backend-r10 (ب)** `27fcd55`: RSI لنافذة بلا ربح ولا خسارة = **50** كـMT5 (كان 100 = «تشبّع شراء» من لا حركة). التطبيق ما يزال `avgLoss === 0 ? 100` ⇒ خطّ RSI بالشارت 100 وتنبيه الخادم يرى 50. وحّدوا: `avgLoss === 0 ? (avgGain === 0 ? 50 : 100) : …` | backend-r10 |
+| backend | ui (اختياري، `ScreenerMini`) | **backend-r10 (ج)** `7789be1`: كل نتيجة ماسح تحمل `data_kind` (`provider`/`cache`) و`as_of` — عند حدّ المزوّد قد تكون السلسلة مخزَّنة حتى 15د. و`/api/market/quote` (`397e5c1`) فرع `ohlc_fallback`: `as_of` = إغلاق آخر شمعة 15د (كان لحظة الجلب) + `fetched_at` — `quoteAsOfMs` يقرؤه كما هو، لا تغيير مطلوب | backend-r10 |
 
 **تحقّق الدورة 54 (بالكود) — أُغلق 3 صفوف:** launch107 ← chart (`40b15f9`، `MatrixChart.tsx:5715` `if (!ok) notify(… mcAlertMoveFailed …)`)؛
 backend-r7 (`e4fe10d`، `backtest.py:75` `win_rate … if decided else None` + `tests/test_backtest.py:65`)؛ backend-r6 (1) (`e9df083`، `MatrixChart.tsx:8091` `volName('POC')`؛
