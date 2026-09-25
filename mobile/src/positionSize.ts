@@ -658,8 +658,18 @@ export function quoteBookValid(bid: number | null | undefined, ask: number | nul
   return bid != null && ask != null && Number.isFinite(bid) && Number.isFinite(ask) && bid > 0 && ask >= bid;
 }
 
-export function quoteSpreadPips(symbol: string, bid: number | null | undefined, ask: number | null | undefined): number | null {
-  const spec = instrumentSpec(symbol);
+/**
+ * `specOf` (chart-r56): مواصفة الـpip للعرض. الافتراضي `instrumentSpec` (عقد الحاسبة) يرفض رموز السنت واللواحق
+ * («USDJPYc»، «XAUUSDm»، «EURUSD.pro») فكانت تطبع «0.015» خاماً بدل «1.5 pip»؛ الشاشات تمرّر `chartPipSpec`
+ * (`chart/pipSpec`) — تمريراً لا استيراداً لأن `pipSpec` يستورد هذا الملف.
+ */
+export function quoteSpreadPips(
+  symbol: string,
+  bid: number | null | undefined,
+  ask: number | null | undefined,
+  specOf: (symbol: string) => InstrumentSpec | null = instrumentSpec
+): number | null {
+  const spec = specOf(symbol);
   if (!spec || bid == null || ask == null) return null;
   if (!(ask >= bid)) return null;
   return pipsBetween(spec, ask, bid);

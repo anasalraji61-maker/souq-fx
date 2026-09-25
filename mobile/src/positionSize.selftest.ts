@@ -4,6 +4,7 @@
  */
 import { parseDecimal } from './parseDecimal';
 import assert from 'node:assert/strict';
+import { chartPipSpec } from './chart/pipSpec';
 import type { CommissionMode } from './positionSize';
 import {
   manualConvLooksInverted,
@@ -2248,6 +2249,13 @@ console.log('positionSize riskIsHigh selftest OK');
   assert.equal(quoteSpreadPips('EURUSD', NaN, 1.085), null);
   // رمزٌ بلا مواصفات ⇒ null فيعرض المستدعي الفرق سعراً
   assert.equal(quoteSpreadPips('BTCUSD', 60000, 60010), null);
+  // chart-r56: رموز السنت/اللواحق بمواصفة الشارت ⇒ pip لا فرقٌ خام «0.015»؛ والافتراضي (عقد الحاسبة) يبقى يرفضها
+  assert.equal(quoteSpreadPips('USDJPYc', 157.42, 157.435), null);
+  assert.equal(quoteSpreadPips('USDJPYc', 157.42, 157.435, chartPipSpec), 1.5);
+  assert.equal(quoteSpreadPips('XAUUSDm', 2400.1, 2400.45, chartPipSpec), 3.5);
+  assert.equal(quoteSpreadPips('EURUSD.pro', 1.08501, 1.0851, chartPipSpec), 0.9);
+  assert.equal(quoteSpreadPips('EURUSD', 1.08501, 1.0851, chartPipSpec), 0.9);
+  assert.equal(quoteSpreadPips('BTCUSDC', 60000, 60010, chartPipSpec), null);
   assert.equal(quoteSpreadPips('US30', 39000, 39002), null);
 }
 console.log('positionSize quoteSpreadPips selftest OK');

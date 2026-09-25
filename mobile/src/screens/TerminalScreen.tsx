@@ -48,6 +48,8 @@ import { useDailyRefs } from '../chart/dailyRefStore';
 import { dailyChange, formatPct, freshTickRefPrice, isVerifiedTickKind, pctDirection } from '../chart/dailyChange';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import { formatPrice } from '../chart/math';
+import { chartPipSpec } from '../chart/pipSpec';
+import { pipUnit } from '../chart/measureReadout';
 import { formatPriceDiff } from '../chart/indicators/utils';
 import { quoteBookValid, quoteSpreadPips } from '../positionSize';
 import {
@@ -161,7 +163,7 @@ async function fetchSeries(sym: string, tf: Timeframe): Promise<ChartSeries> {
 }
 
 export function TerminalScreen() {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const SHADOW_SLOT_LABELS = useMemo(
     () =>
@@ -1716,12 +1718,14 @@ export function TerminalScreen() {
                     {t.termSpreadWord}{' '}
                     {(() => {
                       // بالـpip كلوح العمق (`DomLitePanel`) — الفرق الخام «0.00009» لا يقارَن بسبريد الوسيط
-                      const sp = quoteSpreadPips(symbol, quote.bid, quote.ask);
+                      // chart-r56: `chartPipSpec` — «USDJPYc»/«XAUUSDm» كانت بلا مواصفة فتطبع الفرق خاماً «0.015»؛ و`pipUnit` كرأس الشارت
+                      const sp = quoteSpreadPips(symbol, quote.bid, quote.ask, chartPipSpec);
                       // QA65: بلا pip (BTCUSD/المؤشرات) بمنازل **السعر** — `formatPrice(الفرق)` كان «12.500» بجانب «67420.50»
-                      return sp != null ? `${sp.toFixed(1)} pip` : formatPriceDiff(quote.ask - quote.bid, quote.bid, symbol);
+                      return sp != null ? `${sp.toFixed(1)} ${pipUnit(lang)}` : formatPriceDiff(quote.ask - quote.bid, quote.bid, symbol);
                     })()}{' '}
                     · {t.termBidLabel}{' '}
-                    {formatPrice(quote.bid, symbol)} · {t.termAskLabel} {formatPrice(quote.ask, symbol)}
+                    {/* المرجع نفسه للطرفين: نفط حول 100 كان «99.950 / 100.05» */}
+                    {formatPrice(quote.bid, symbol, quote.bid)} · {t.termAskLabel} {formatPrice(quote.ask, symbol, quote.bid)}
                   </Text>
                 ) : null}
               </View>
