@@ -36,7 +36,7 @@ def _stable_id(title: str) -> str:
 # تجعل «rate» يتحقّق داخل corporate وmoderate وaccurate وseparate و**strategy** — كلمات تتكرّر
 # بعناوين الفوركس اليومية — فتُعرَض عناوين عادية بشارة «عالي التأثير» الحمراء. والصيغة الجمعية
 # مقصودة صراحةً (`rates`/`PMIs` بالعناوين أكثر من المفرد) فلا تسقط بحدّ الكلمة.
-_HIGH_WORDS = re.compile(r"\b(?:fed|fomc|cpi|nfp|rates?)\b", re.IGNORECASE)
+_HIGH_WORDS = re.compile(r"\b(?:fed|fomc|cpi|nfp|rates?|inflation|payrolls?)\b", re.IGNORECASE)
 _MEDIUM_WORDS = re.compile(r"\b(?:gdp|pmis?|employment)\b", re.IGNORECASE)
 # العربية تبقى مطابقةً جزئية عمداً: `\b` يمنع «الفائدة» و«التضخم» (أداة التعريف ملتصقة بالكلمة)،
 # وهذه كلمات تامّة لا تَرِد داخل كلمة أخرى فلا تنتج الالتباس الإنجليزي نفسه.
@@ -45,11 +45,13 @@ _MEDIUM_AR = ("بيانات",)
 
 
 def _impact_from_title(title: str) -> str:
+    """`unknown` حين لا كلمة مفتاحية: كان «low» لكل عنوان خارج القائمة القصيرة ⇒ «BoE hikes by 50bp» أو
+    «BoJ intervenes to prop up yen» تُعرض «تأثير منخفض» — تصنيفٌ لا أساس له (كـ`_impact` بالتقويم)."""
     if _HIGH_WORDS.search(title) or any(k in title for k in _HIGH_AR):
         return "high"
     if _MEDIUM_WORDS.search(title) or any(k in title for k in _MEDIUM_AR):
         return "medium"
-    return "low"
+    return "unknown"
 
 
 def when_and_ts(raw: str | None, *, default: str = "اليوم") -> tuple[str, int | None]:

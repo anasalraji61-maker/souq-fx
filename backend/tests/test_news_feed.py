@@ -24,7 +24,7 @@ import news_feed as nf
 )
 def test_ordinary_headline_is_not_high_impact(title):
     """كلّها كانت `high` بسبب «rate» داخل الكلمة — وهي شارة يتصرّف عليها المتداول."""
-    assert nf._impact_from_title(title) == "low"
+    assert nf._impact_from_title(title) == "unknown"
 
 
 @pytest.mark.parametrize(
@@ -52,7 +52,18 @@ def test_arabic_keywords_still_match_with_the_definite_article(title, expected):
 
 @pytest.mark.parametrize("title", ["FedEx shares jump", "Feed prices climb for cattle"])
 def test_word_that_merely_contains_an_acronym_is_not_high(title):
-    assert nf._impact_from_title(title) == "low"
+    assert nf._impact_from_title(title) == "unknown"
+
+
+@pytest.mark.parametrize("title", ["BoE hikes by 50bp", "BoJ intervenes to prop up yen"])
+def test_headline_without_a_keyword_is_unknown_not_low(title):
+    """كان «low»: بنك مركزي يرفع الفائدة يُعرض «تأثير منخفض» لأن العنوان لا يحوي `rate`."""
+    assert nf._impact_from_title(title) == "unknown"
+
+
+@pytest.mark.parametrize("title", ["UK inflation hits 4%", "US payrolls miss forecasts"])
+def test_inflation_and_payrolls_are_high_like_cpi_and_nfp(title):
+    assert nf._impact_from_title(title) == "high"
 
 
 # ------------------------------------------------- وقت الخبر وترتيبه (بلا شبكة)
