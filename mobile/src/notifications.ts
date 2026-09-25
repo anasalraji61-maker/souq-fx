@@ -3,11 +3,11 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
-import { DICTS, LangId, resolveLang, deviceLocaleTag } from './i18n/locales';
+import { DICTS, LangId, resolveLang, deviceLocaleTag, LANG_STORAGE_KEY } from './i18n/locales';
 
-/** مفتاح لغة الواجهة المحفوظ (نفس `KEY` بـ`i18n/I18nContext.tsx`) — يُرسل مع توكن الـPush ليصل
- * إشعار التنبيه من الخادم بلغة المتداول لا بنص إنجليزي خام. */
-const LANG_KEY = 'matrix.lang.v1';
+/** مفتاح لغة الواجهة المحفوظ — الثابت نفسه الذي يكتبه `i18n/I18nContext.tsx` لا نسخة حرفية منه، فتغيير
+ * المفتاح هناك لا يترك الإشعارات تقرأ مفتاحاً قديماً (لغة الجهاز بدل اختيار المتداول). */
+const LANG_KEY = LANG_STORAGE_KEY;
 
 /**
  * لغة الإشعارات = لغة الواجهة المعروضة: القاعدة نفسها `resolveLang` (`i18n/locales.ts`) لا نسخة منها —
