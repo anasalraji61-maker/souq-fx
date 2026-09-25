@@ -1319,6 +1319,13 @@ export type Dict = {
    * `mcSwitching*` يبقى للتبديل **مع** بيانات سابقة معروضة (نصّه القارئ يقول ذلك). `{symbol}` و`{tf}` كلٌّ مرة واحدة.
    */
   chartFirstLoad: string;
+  /**
+   * launch120 (قبل backend-r22): `unavailable_reason: "provider_unavailable"` — رمز يقدّمه المزوّد لكن الجلب تعذّر (429 بلا كاش،
+   * انقطاع، بلا مفتاح) فيصل `candles: []`. `chartNotOffered*` («غير متاح من المزوّد») كاذب هنا لـEURUSD. لا يَعِد بموعد عودة
+   * ولا بتحديث تلقائي (لم أجد إعادة محاولة مضمونة). `{symbol}` مرة واحدة. للـui (`ProviderUnavailableNotice` يفرّع على السبب).
+   */
+  chartProviderDownTitle: string;
+  chartProviderDownBody: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -2500,6 +2507,8 @@ const ar: Dict = {
   chartNoCandlesTitle: 'لا شموع لـ{symbol} على {tf} الآن',
   chartNoCandlesBody: 'لم يُرجع مزوّد البيانات شموعاً لهذا الفريم. جرّب فريماً آخر، أو ارجع بعد قليل.',
   chartFirstLoad: 'جارٍ تحميل شموع {symbol} على {tf}…',
+  chartProviderDownTitle: 'تعذّر جلب شموع {symbol} من مزوّد البيانات الآن',
+  chartProviderDownBody: 'المشكلة في الاتصال بمزوّد البيانات، وغالباً مؤقّتة. لا نرسم شموعاً تقديرية في الأثناء كي لا تقرأ أسعاراً غير حقيقية. جرّب مرة أخرى بعد دقائق.',
 };
 
 const enUS: Dict = {
@@ -3674,6 +3683,8 @@ const enUS: Dict = {
   chartNoCandlesTitle: 'No candles for {symbol} on {tf} right now',
   chartNoCandlesBody: 'The data provider returned no candles for this timeframe. Try another timeframe, or check back in a moment.',
   chartFirstLoad: 'Loading {symbol} candles on {tf}…',
+  chartProviderDownTitle: 'Can’t get {symbol} candles from the data provider right now',
+  chartProviderDownBody: 'The connection to our data provider failed — usually a temporary problem. We don’t draw estimated candles meanwhile, so you never read prices that aren’t real. Try again in a few minutes.',
 };
 
 const enGB: Dict = {
@@ -4880,6 +4891,8 @@ const ku: Dict = {
   chartNoCandlesTitle: 'ئێستا هیچ مۆمێک بۆ {symbol} لەسەر {tf} نییە',
   chartNoCandlesBody: 'دابینکەری داتا هیچ مۆمێکی بۆ ئەم کاتی چوارچێوەیە نەگەڕاندەوە. کاتی چوارچێوەیەکی تر تاقی بکەرەوە، یان کەمێکی تر بگەڕێوە.',
   chartFirstLoad: 'مۆمەکانی {symbol} لەسەر {tf} بار دەکرێن…',
+  chartProviderDownTitle: 'ئێستا ناتوانرێت مۆمەکانی {symbol} لە دابینکەری داتا وەربگیرێن',
+  chartProviderDownBody: 'پەیوەندی لەگەڵ دابینکەری داتا سەرکەوتوو نەبوو — زۆرجار کاتییە. لەم ماوەیەدا هیچ مۆمێکی خەمڵێنراو ناکێشین تا نرخی ناڕاستەقینە نەخوێنیتەوە. دوای چەند خولەکێک دووبارە هەوڵ بدەرەوە.',
 };
 
 export const DICTS: Record<LangId, Dict> = {
