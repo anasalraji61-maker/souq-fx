@@ -1733,3 +1733,17 @@ export function liveEntryQuoteState(q: unknown, now: number): 'live' | 'closed' 
   const asOf = q != null && typeof q === 'object' ? (q as { as_of?: unknown }).as_of : undefined;
   return now - quoteAsOfMs(asOf, now) > LIVE_ENTRY_MAX_AGE_MS ? 'stale' : 'live';
 }
+
+/**
+ * رمز الحاسبة عند **فتحها** مع الوضع المحفوظ: كانت آخر مرّة على حساب سنت/micro (`smallActive`) ⇒ الزوج الحالي بلاحقته
+ * المحفوظة («EURUSD» + «c» ⇒ «EURUSDc»)؛ وإلا — أو الرمز بوضعٍ صغير أصلاً، أو اللاحقة لا تصلح له — كما هو.
+ *
+ * لماذا: الرمز نفسه لا يُحفظ (يتبع الشارت)، فتبويبٌ آخر بشاشة الأدوات ثم العودة (اللوحة تُبنى من جديد) يفتحها على «EURUSD»
+ * العادي: الرصيد يتبدّل من رصيد السنت إلى رصيد الدولار واللوت يخرج بعقد الحساب العادي — مئة ضعف أصغر تحت عنوانٍ لا يلفت.
+ */
+export function restoredSmallSymbol(current: string, saved: { smallSuffix?: unknown; smallActive?: unknown }): string {
+  if (saved.smallActive !== true || typeof saved.smallSuffix !== 'string') return current;
+  if (smallContractSpec(current)) return current;
+  const std = instrumentSpec(current);
+  return (std && withSmallSuffix(std.symbol, saved.smallSuffix)) || current;
+}

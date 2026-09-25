@@ -85,6 +85,7 @@ import {
   ambiguousThousandsPrice,
   liveEntryFillAllowed,
   liveEntryQuoteState,
+  restoredSmallSymbol,
   manualConvLooksInverted,
 } from '../positionSize';
 import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
@@ -126,6 +127,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const align = rtl ? ('right' as const) : ('left' as const);
   // رمز الشارت الحالي قد لا يكون زوجاً قابلاً للحساب (DXY مثلاً) — نبدأ بـEURUSD حينها
   const [symbol, setSymbol] = useState(() => (instrumentSpec(defaultSymbol) ? defaultSymbol : 'EURUSD'));
+  /** الرمز لحظة البناء — الوضع المحفوظ يُطبَّق عليه وحده (`restoredSmallSymbol`) */
+  const initialSymbolRef = useRef(symbol);
   const [account, setAccount] = useState<AccountCcy>('USD');
   const [balance, setBalance] = useState('');
   /**
@@ -207,6 +210,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             centBalance?: string;
             balances?: unknown;
             smallSuffix?: string;
+            smallActive?: boolean;
             riskPct?: string;
             riskCcy?: string;
             account?: string;
@@ -218,6 +222,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           if (typeof p.centBalance === 'string') setCentBalance(p.centBalance);
           // لاحقة لا تصلح (نسخة قديمة أو محرَّرة) لا تُعرض شريحةً تقود لرمز مرفوض
           if (typeof p.smallSuffix === 'string' && withSmallSuffix('EURUSD', p.smallSuffix)) setSmallSuffix(p.smallSuffix);
+          // كانت آخر مرّة بوضع السنت/micro: تبويبٌ آخر ثم العودة كان يفتحها على الزوج العادي برصيدٍ آخر (`restoredSmallSymbol`).
+          // رمزٌ بدّله المتداول قبل وصول القراءة لا يُمسّ
+          if (!planTypedRef.current) {
+            setSymbol((cur: string) => (cur === initialSymbolRef.current ? restoredSmallSymbol(cur, p) : cur));
+          }
           if (typeof p.leverage === 'string') setLeverage(p.leverage);
           const loadedAccount =
             p.account && (ACCOUNT_CCYS as string[]).includes(p.account) ? (p.account as AccountCcy) : null;
@@ -290,6 +299,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     if (prev.kind !== next.kind) setCommission((c: string) => commissionAcrossModes(c, prev, next));
   }, [commissionKind, account]);
 
+  /** آخر وضعٍ معروف (سنت/micro أم عادي) — رمزٌ مجهول وسط الكتابة («EURUSDmi») لا يغيّره. يُحفظ لـ`restoredSmallSymbol` */
+  const smallActiveRef = useRef(false);
+  if (commissionKind != null) smallActiveRef.current = commissionKind !== 'std';
   // بعد تحويل العمولة (الترتيب مقصود): تُحفظ مع وضعها الجديد لا القديم
   useEffect(() => {
     if (!loadedRef.current) return;
@@ -300,6 +312,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         centBalance,
         balances: otherBalances,
         smallSuffix,
+        smallActive: smallActiveRef.current,
         riskPct,
         // عملة المبلغ إن كُتبت المخاطرة مالاً — `savedRiskMoney` عند الفتح
         riskCcy: moneyCcy,

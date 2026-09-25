@@ -2962,3 +2962,23 @@ console.log('positionSize market_open selftest OK');
   assert.equal(liveEntryQuoteState(null, now), 'live');
 }
 console.log('positionSize liveEntryQuoteState selftest OK');
+
+// ---- restoredSmallSymbol: وضع السنت/micro يعود مع الحاسبة ----
+{
+  const { restoredSmallSymbol, smallContractSpec: scs } = require('./positionSize') as typeof import('./positionSize');
+  assert.equal(restoredSmallSymbol('EURUSD', { smallSuffix: 'c', smallActive: true }), 'EURUSDc');
+  assert.equal(restoredSmallSymbol('GBPUSD', { smallSuffix: '.micro', smallActive: true }), 'GBPUSD.micro');
+  assert.equal(restoredSmallSymbol('XAUUSD', { smallSuffix: 'c', smallActive: true }), 'XAUUSDc');
+  assert.equal(scs(restoredSmallSymbol('EURUSD', { smallSuffix: 'c', smallActive: true }))!.kind, 'cent');
+  // آخر مرّة بالحساب العادي (الشريحة محفوظة لكن الوضع لا) ⇒ كما هو
+  assert.equal(restoredSmallSymbol('EURUSD', { smallSuffix: 'c', smallActive: false }), 'EURUSD');
+  assert.equal(restoredSmallSymbol('EURUSD', { smallSuffix: 'c' }), 'EURUSD'); // حفظٌ أقدم بلا العلَم
+  assert.equal(restoredSmallSymbol('EURUSD', {}), 'EURUSD');
+  // لاحقة لا تصلح/ليست نصّاً ⇒ كما هو
+  assert.equal(restoredSmallSymbol('EURUSD', { smallSuffix: 'xyz', smallActive: true }), 'EURUSD');
+  assert.equal(restoredSmallSymbol('EURUSD', { smallSuffix: 5, smallActive: true }), 'EURUSD');
+  // الرمز بوضع صغير أصلاً أو مجهول ⇒ لا يُمسّ
+  assert.equal(restoredSmallSymbol('USDJPYc', { smallSuffix: '.micro', smallActive: true }), 'USDJPYc');
+  assert.equal(restoredSmallSymbol('DXY', { smallSuffix: 'c', smallActive: true }), 'DXY');
+}
+console.log('positionSize restoredSmallSymbol selftest OK');
