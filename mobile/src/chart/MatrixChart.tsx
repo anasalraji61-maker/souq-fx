@@ -5660,22 +5660,29 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const timeTickCap = axisTickCount(chartPlotW, timeLabelW, TIME_LABEL_GAP, 4);
   // `source.plot` يشمل شموعاً خلف الحافة اليسرى (هامش اليمين 10% والتمرير): علامتها تُقصّ إلى x=0 وتبقى
   // (الأولى مضمونة) — فتاريخ الحافة لشمعة لا تُرى، يوماً قبل ما تحته بعد سحب إلى المستقبل. المرئية وحدها.
-  const timeTickIndexes = (
-    niceTimeTickIndexes(
-      source.plot.map((c) => barTime(c)),
-      timeframeStepSec(series.timeframe),
-      timeTickCap,
-      dayCandles ? undefined : (t) => -new Date(t * 1000).getTimezoneOffset() * 60
-    ) ??
-    Array.from(
-      new Set(
-        axisTickRatios(timeTickCap).map((ratio) => Math.max(0, Math.round((source.plot.length - 1) * ratio)))
-      )
-    )
-  ).filter((i) => {
+  // الاختيار نفسه من المرئي لا من السلسلة ثم القصّ: بالسقف (3 على هاتف) والتخفيف لكل يومين كانت علامة تقع
+  // بالشريط الخفيّ خلف الحافة فتُقصّ بلا بديل ⇒ H1/H4 بتاريخ واحد على المحور كلّه (~1 من كل 5 مواضع تمرير).
+  const { lo: tickLo, hi: tickHi } = visibleBarRange(source.plot.length, chartPlotW, viewXPan);
+  const onPlot = (i: number) => {
     const x = xOf(i);
     return x >= 0 && x <= chartPlotW;
-  });
+  };
+  const niceTicks = niceTimeTickIndexes(
+    source.plot.slice(tickLo, tickHi + 1).map((c) => barTime(c)),
+    timeframeStepSec(series.timeframe),
+    timeTickCap,
+    dayCandles ? undefined : (t) => -new Date(t * 1000).getTimezoneOffset() * 60
+  )
+    ?.map((i) => i + tickLo)
+    .filter(onPlot);
+  const timeTickIndexes =
+    niceTicks && niceTicks.length >= 2
+      ? niceTicks
+      : Array.from(
+          new Set(
+            axisTickRatios(timeTickCap).map((ratio) => Math.max(0, Math.round(tickLo + (tickHi - tickLo) * ratio)))
+          )
+        ).filter(onPlot);
   // المواضع المرسومة نفسها: المراكز من `xOf` فتحمل إزاحة التمرير، والقصّ والإخفاء
   // من `layoutAxisLabels` — فلا يتباعد المفحوص عن المرسوم.
   const timeTickBoxes = layoutAxisLabels(
