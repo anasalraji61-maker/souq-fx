@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   btn: {
     backgroundColor: colors.accent,
     borderRadius: radii.sm,
-    paddingVertical: 10,
+    paddingVertical: 12,
     alignItems: 'center',
     shadowColor: buttons.shadowColor,
     shadowOpacity: buttons.shadowOpacity,

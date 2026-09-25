@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '500',
     paddingHorizontal: 4,
-    paddingVertical: 1,
+    paddingVertical: 0,
     borderRadius: radii.sm,
     backgroundColor: colors.borderSoft,
   },

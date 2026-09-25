@@ -12870,7 +12870,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 });
 
 const styles = StyleSheet.create({
-  root: { gap: 6 },
+  root: { gap: 8 },
   rootDense: { gap: 0 },
   noCandlesBox: { minHeight: 120, alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
   noCandlesTitle: { color: colors.text, fontSize: 13, fontWeight: '500', textAlign: 'center', lineHeight: 19 },
@@ -12895,7 +12895,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 5,
+    paddingHorizontal: 4,
   },
   compactToolOn: { backgroundColor: colors.accentSoft },
   lockedHint: {
@@ -12903,7 +12903,7 @@ const styles = StyleSheet.create({
     top: 8,
     alignSelf: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 4,
     borderRadius: 999,
     backgroundColor: colors.bgPanel,
     borderWidth: 1,
@@ -12925,11 +12925,11 @@ const styles = StyleSheet.create({
   compactToolIcon: { color: colors.text, fontSize: 16, fontWeight: '500', lineHeight: 18 },
   compactToolLabel: { color: colors.textDim, fontSize: 8, fontWeight: '500', marginTop: 1 },
   compactToolTextOn: { color: colors.accent },
-  toolbar: { gap: 6 },
-  row: { flexDirection: 'row-reverse', gap: 6, paddingVertical: 2 },
+  toolbar: { gap: 8 },
+  row: { flexDirection: 'row-reverse', gap: 8, paddingVertical: 4 },
   chip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: radii.sm,
     backgroundColor: colors.bgPanel,
     borderWidth: 1,
@@ -12939,8 +12939,8 @@ const styles = StyleSheet.create({
   chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   chipTextOn: { color: colors.accent },
   lens: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: radii.sm,
     backgroundColor: '#0A1524',
     borderWidth: 1,
@@ -12948,7 +12948,7 @@ const styles = StyleSheet.create({
     minWidth: 78,
   },
   lensTitle: { color: colors.text, fontWeight: '500', fontSize: 11, textAlign: 'right' },
-  lensHint: { color: colors.textDim, fontSize: 9, textAlign: 'right', marginTop: 2 },
+  lensHint: { color: colors.textDim, fontSize: 9, textAlign: 'right', marginTop: 4 },
   readout: {
     flexDirection: 'row-reverse',
     justifyContent: 'space-between',
@@ -13278,7 +13278,7 @@ const styles = StyleSheet.create({
   noteEdit: {
     position: 'absolute',
     height: 28,
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     paddingVertical: 0,
     borderWidth: 1,
     borderRadius: radii.sm,
@@ -13319,9 +13319,9 @@ const styles = StyleSheet.create({
   measureLive: {
     position: 'absolute',
     zIndex: 45,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 7,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
     borderWidth: 1,
     backgroundColor: colors.bgGlass,
   },
@@ -13541,8 +13541,8 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    paddingHorizontal: 6,
-    gap: 6,
+    paddingHorizontal: 8,
+    gap: 8,
     overflow: 'hidden',
   },
   collapsedCount: {
@@ -13584,7 +13584,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.sm,
-    gap: 6,
+    gap: 8,
   },
   dockTitle: {
     color: colors.textMuted,
@@ -13594,8 +13594,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   tool: {
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 999,
     backgroundColor: colors.bgPanel,
     borderWidth: 1,
@@ -13608,7 +13608,7 @@ const styles = StyleSheet.create({
   toolTextOn: { color: '#111' },
   ind: {
     paddingHorizontal: 8,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: radii.sm,
     backgroundColor: '#0A1524',
     borderWidth: 1,
