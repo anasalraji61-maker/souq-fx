@@ -1061,7 +1061,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
    * (لوت 0.00 بلا سبب مفهوم)؛ والهدف يعطي «R:R 1:1960» و«سجّل الخطة» تحفظ هدفاً عند 50.00. نقرة السطر: رقم الوقف ينتقل
    * لخانة النقاط (رقمُ نقاطٍ لا يقول الاتجاه)، والهدف يُكتب سعراً على تلك المسافة بجهة الربح. التسجيل يُمنع حتى يُصحَّح.
    */
-  const pipsInPx = ((): { msg: string; apply: () => void } | null => {
+  const pipsInPx = ((): { msg: string; apply: () => void; field: string; value: string } | null => {
     if (!spec) return null;
     const e = priceNum(entryPx);
     const stopAt = (side: TradeSide) =>
@@ -1071,6 +1071,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       return {
         // نصّ launch88: يقول ما الخطأ وأن السطر يُلمس — بدل «سعر الوقف «25» → وقف الخسارة 25?»
         msg: t.riskCalcStopPxLooksLikePips.replace('{value}', () => stopPx.trim()),
+        field: shortLabel(t.riskCalcStop),
+        value: stopPx.trim(),
         apply: () => {
           playSoftClick();
           setStopPx('');
@@ -1084,13 +1086,23 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     const text = formatPrice(asTarget.price, spec.symbol);
     return {
       msg: levelLooksLikePipsText(t.levelLooksLikePipsHint, shortLabel(t.riskCalcTarget), targetPx, asTarget.pips, text),
+      field: shortLabel(t.riskCalcTarget),
+      value: targetPx.trim(),
       apply: () => {
         playSoftClick();
         setTargetPx(text);
       },
     };
   })();
-  const logBlocked = slMismatch != null || pipsInPx != null;
+  /**
+   * «نقاطٌ بخانة سعر» لا تُعطّل الزرّ: الضغطة الأولى تمنع التسجيل وتقول لماذا، والثانية **على القيم نفسها** تسجّل السعر كما كُتب —
+   * كالدفتر (`TradeJournalPanel` `pipsOverrideRef`). كان المنع بلا مخرج: بيع فضة من 110 بهدف «85» (سعرٌ حقيقي بعد هبوط يناير
+   * 2026) أو شراء ذهب من 4000 بوقف «3000» لا يُسجَّل إلا بالسعر الخاطئ المقترح — ونقرة سطر الوقف تنقل «85» لخانة النقاط
+   * (وقف 0.85$ بدل 25$ ⇒ لوت أكبر ×29).
+   */
+  const pipsOverrideRef = useRef<string | null>(null);
+  const pipsKey = pipsInPx ? `${symbol}\u0001${entryPx}\u0001${stopPx}\u0001${targetPx}` : null;
+  const logBlocked = slMismatch != null;
 
   /**
    * «سجّل الخطة بالدفتر»: الأرقام هنا (رمز/دخول/وقف/هدف) هي نفسها التي يطلبها الدفتر — إعادة كتابتها
@@ -1102,6 +1114,16 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     const sPx = priceNum(stopPx);
     const tPx = priceNum(targetPx);
     if (!spec || !plan?.ok || planSide == null || lots == null || logBusy || logMsg?.ok || logBlocked) return;
+    if (pipsInPx && pipsOverrideRef.current !== pipsKey) {
+      pipsOverrideRef.current = pipsKey;
+      setLogMsg({
+        ok: false,
+        text: t.levelLooksLikePipsSaveBlocked.replace(/\{(field|value|button)\}/g, (_, k: string) =>
+          k === 'button' ? t.riskCalcLogToJournal : k === 'field' ? pipsInPx.field : pipsInPx.value
+        ),
+      });
+      return;
+    }
     // لوت السنت/micro يُسجَّل **برمزه** («EURUSDC»): تحت «EURUSD» كان الدفتر سيحسب مالها بعقد الحساب العادي (×100)
     const logSymbol = small ? journalSymbol(symbol) : spec.symbol;
     if (!logSymbol) return;
