@@ -395,7 +395,9 @@ export function ChartFrame({
             </Text>
             {onSymbolChange ? <Text style={styles.symbolCaret}>▾</Text> : null}
           </Pressable>
-          {!showTimeframes ? (
+          {/* الهاتف: شريط الفريمات المضغوط (8 أزرار ≈ 272pt) يتمرّر داخل إطار ~139pt ⇒ 4H/D/W خارج النظر، فإطار
+              على 4H لا يقول فريمه أبداً. الفريم بجانب الزوج على الهاتف دائماً (مكان «مزوّد» المُخفاة). */}
+          {!showTimeframes || phone ? (
             <Text
               style={styles.tf}
               accessibilityLabel={isTimeframe(series.timeframe) ? t.tfLabelsA11y[series.timeframe] : undefined}
