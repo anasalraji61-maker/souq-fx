@@ -67,6 +67,22 @@ export function candleRangePipsText(symbol: string, high: number, low: number): 
 }
 
 /**
+ * مرجع تغيّر الشمعة بسطر التقاطع: **إغلاق الشمعة السابقة** كما TradingView (سطر OHLC هناك يقيس
+ * «C − إغلاق السابقة»). كان السطر يقيس الجسم (فتح→إغلاق) فيُخفي فجوة الافتتاح: شمعة الإثنين تفتح
+ * 40 pip فوق إغلاق الجمعة ثم تنزل 5 كانت «−0.05%» حمراء والأسبوع يبدأ صاعداً. وشمعة الخبر
+ * تُقرأ «كم تحرّك السعر من الشمعة الماضية» لا «كم من افتتاحها».
+ * بلا سابقة صالحة (أول شمعة بالتاريخ) ⇒ الافتتاح، أي السلوك القديم.
+ */
+export function barChangeRef(
+  bar: { open: number },
+  prev: { close: number } | null | undefined
+): number | null {
+  const ok = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v > 0;
+  if (prev && ok(prev.close)) return prev.close;
+  return ok(bar.open) ? bar.open : null;
+}
+
+/**
  * «عدد + كلمة الشموع» بصيغة العدد الصحيحة. كان `{n} {mcMeasureBarsWord}` بصيغة واحدة:
  * «1 شموع» و«2 شموع» و«15 شموع» بالعربية، و«1 bars» بالإنجليزية — وقياس شمعة واحدة
  * أو اثنتين هو أكثر قياس يُجرى (طول ذيل، فجوة افتتاح).

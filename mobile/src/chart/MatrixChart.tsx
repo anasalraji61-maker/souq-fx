@@ -119,6 +119,7 @@ import { appendedAfter } from './holdView';
 import { priceSpan } from './priceSpan';
 import { FIB_EXTENSIONS, fibLevelPrice, isFibExtension, planFibLabels, type FibLabelPlan } from './fibLabels';
 import {
+  barChangeRef,
   candleRangePipsText,
   measureDurationSec,
   measurePipsText,
@@ -5215,25 +5216,27 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <Text style={styles.readoutText}>
             O {fmtPrice(crossCandle.open)} H {fmtPrice(crossCandle.high)} L{' '}
             {fmtPrice(crossCandle.low)} C {fmtPrice(crossCandle.close)}
-            {crossCandle.open > 0
-              ? (() => {
-                  // جسم الشمعة بالنسبة: شمعة دوجي كانت تُكتب «+0.00%» (الشرط `>=`)، وجسمٌ صاعد
-                  // دون 0.005% يُكتب «+0.00%» **بالأخضر**. الآن `formatPct` كرأس الإطار، واللون
-                  // من الرقم المطبوع نفسه (`pctDirection`) فلا يخالف ما يُقرأ.
-                  const bodyPct = ((crossCandle.close - crossCandle.open) / crossCandle.open) * 100;
-                  const dir = pctDirection(bodyPct);
-                  return (
-                    <Text
-                      style={{
-                        color: dir === 'up' ? colors.bull : dir === 'down' ? colors.bear : colors.textDim,
-                        fontWeight: '800',
-                      }}
-                    >
-                      {` ${formatPct(bodyPct)}`}
-                    </Text>
-                  );
-                })()
-              : null}
+            {(() => {
+              // التغيّر عن إغلاق الشمعة السابقة (كـTradingView) لا جسم الشمعة — راجع `barChangeRef`.
+              // بالنقاط أولاً لرموز الفوركس/المعادن «+35.0 pip (+0.32%)». `formatPct` كرأس الإطار،
+              // واللون من الرقم المطبوع نفسه (`pctDirection`) فلا يخالف ما يُقرأ.
+              const prev = crossIndex != null ? source.all[source.start + crossIndex - 1] : null;
+              const ref = barChangeRef(crossCandle, prev);
+              if (ref == null) return null;
+              const chgPct = ((crossCandle.close - ref) / ref) * 100;
+              const dir = pctDirection(chgPct);
+              const pips = measurePipsText(series.symbol, ref, crossCandle.close);
+              return (
+                <Text
+                  style={{
+                    color: dir === 'up' ? colors.bull : dir === 'down' ? colors.bear : colors.textDim,
+                    fontWeight: '800',
+                  }}
+                >
+                  {pips ? ` ${pips} (${formatPct(chgPct)})` : ` ${formatPct(chgPct)}`}
+                </Text>
+              );
+            })()}
             {(() => {
               const range = candleRangePipsText(series.symbol, crossCandle.high, crossCandle.low);
               return range ? ` ${range}` : '';

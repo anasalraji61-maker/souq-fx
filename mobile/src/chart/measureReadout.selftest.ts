@@ -1,5 +1,6 @@
 /** فحص ذاتي لـ`measureReadout.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
 import {
+  barChangeRef,
   barsCountText,
   candleRangePipsText,
   measureDurationSec,
@@ -200,6 +201,15 @@ ok('سطر بلا زمن كما كان',
     symbol: 'EURUSD', a: { price: 1.08 }, b: { price: 1.0824 },
     stats: stats(12, 0.0024, 0.2222), barsWord: 'شموع', durationSec: null,
   }) === '12 شموع · +24.0 pip · +0.22%');
+
+// ── مرجع تغيّر الشمعة بسطر التقاطع: إغلاق السابقة، والافتتاح إن لم تكن
+ok('مرجع = إغلاق السابقة', barChangeRef({ open: 1.0850 }, { close: 1.0810 }) === 1.0810);
+ok('أول شمعة ⇒ الافتتاح', barChangeRef({ open: 1.0850 }, null) === 1.0850);
+ok('سابقة فاسدة ⇒ الافتتاح', barChangeRef({ open: 1.0850 }, { close: NaN }) === 1.0850);
+ok('سابقة صفرية ⇒ الافتتاح', barChangeRef({ open: 1.0850 }, { close: 0 }) === 1.0850);
+ok('لا مرجع صالح ⇒ null', barChangeRef({ open: 0 }, undefined) === null);
+// فجوة الإثنين: افتتاح +40 pip ثم نزول 5 ⇒ +35 pip عن الجمعة لا −5
+ok('فجوة الإثنين بالنقاط', measurePipsText('EURUSD', barChangeRef({ open: 1.0850 }, { close: 1.0810 })!, 1.0845) === '+35.0 pip');
 
 if (failures) {
   console.error(`measureReadout.selftest: ${failures} FAILED`);
