@@ -958,6 +958,12 @@ export type Dict = {
   cfSubtitleDefault: string;
   cfSyncActivateA11yPrefix: string;
   cfChangeSymbolA11y: string;
+  /**
+   * نسبة رأس الإطار (`ChartFrame`/`QuadChartModal`/`FocusChartModal`) — منذ `8aeaf13` يصلها VoiceOver منفردة، فيسمع «+0.12%»
+   * بلا سياق أو «—» كعلامة ترقيم. `{pct}` = `formatPct`. `…NoneA11y` حين تُطبع «—» (لا إغلاق أمس، أو سعر لا تُحسب منه النسبة `63c38f8`).
+   */
+  cfDayChangeA11y: string;
+  cfDayChangeNoneA11y: string;
   cfMarketClosedA11y: string;
   /** «⏪» بجانب سعر الرأس بالإعادة — `mcReplayModeA11y` («وضع الإعادة») لا يقول إن السعر المقروء ليس الحيّ */
   cfReplayPriceA11y: string;
@@ -2152,6 +2158,8 @@ const ar: Dict = {
   cfSubtitleDefault: 'اضغط للتحليل الكامل',
   cfSyncActivateA11yPrefix: 'تفعيل مزامنة شارت ',
   cfChangeSymbolA11y: 'تغيير الرمز',
+  cfDayChangeA11y: 'تغيّر اليوم {pct}',
+  cfDayChangeNoneA11y: 'تغيّر اليوم غير متاح لهذا السعر',
   cfMarketClosedA11y: 'السوق مغلق حالياً',
   cfReplayPriceA11y: 'إعادة الشموع — السعر إغلاق شمعة الإعادة لا السعر الحيّ',
   cfMarketClosedTag: 'مغلق',
@@ -3309,6 +3317,8 @@ const enUS: Dict = {
   cfSubtitleDefault: 'Tap for full analysis',
   cfSyncActivateA11yPrefix: 'Activate sync for chart ',
   cfChangeSymbolA11y: 'Change symbol',
+  cfDayChangeA11y: 'Today\'s change {pct}',
+  cfDayChangeNoneA11y: 'Today\'s change not available for this price',
   cfMarketClosedA11y: 'Market currently closed',
   cfReplayPriceA11y: 'Candle replay — this is the replay candle’s close, not the live price',
   cfMarketClosedTag: 'Closed',
@@ -4491,6 +4501,9 @@ const ku: Dict = {
   cfSubtitleDefault: 'دەستبدە بۆ شیکاری تەواو',
   cfSyncActivateA11yPrefix: 'چالاککردنی هاوکاتکردنی چارتی ',
   cfChangeSymbolA11y: 'گۆڕینی هێما',
+  // بحاجة مراجعة ناطق كردي (الاثنان أدناه)
+  cfDayChangeA11y: 'گۆڕانی ئەمڕۆ {pct}',
+  cfDayChangeNoneA11y: 'گۆڕانی ئەمڕۆ بۆ ئەم نرخە بەردەست نییە',
   cfMarketClosedA11y: 'بازاڕ ئێستا داخراوە',
   cfReplayPriceA11y: 'دووبارەکردنەوەی مۆم — ئەم نرخە داخستنی مۆمی دووبارەکردنەوەیە، نەک نرخی زیندوو',
   cfMarketClosedTag: 'داخراو',
