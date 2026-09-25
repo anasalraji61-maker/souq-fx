@@ -862,6 +862,13 @@ def academy_progress_save(body: ProgressSave, user: dict | None = Depends(_auth_
     للمجهول أصلاً — فالتباين كان بهذا المسار وحده."""
     if not user:
         raise HTTPException(status_code=401, detail="not authenticated")
+    # محاضرة غير موجودة كانت تُخزَّن وتُعاد بالقائمة (صفوف بلا حدّ لأي حساب)، وموضع بعد آخر مقطع
+    # (99 على محاضرة بمقطعين) يُستأنف منه فتُفتح القاعة بلا مقطع حالي؛ و2**63 = 500 من SQLite.
+    lec = get_lecture(body.school_id, body.lecture_id)
+    if not lec:
+        raise HTTPException(status_code=404, detail="lecture not found")
+    if body.segment_index >= max(len(lec.get("script_segments") or []), 1):
+        raise HTTPException(status_code=422, detail="segment_index beyond the lecture")
     item = db.save_progress(
         user["user_id"],
         body.school_id,
@@ -1713,7 +1720,8 @@ def academy_tts(body: AcademyTtsRequest):
     return {
         "ok": True,
         "audio_url": f"/api/academy/audio/{path.stem}",
-        "voice_id": tts.resolve_voice_id(),
+        # الصوت المستعمل فعلاً (كان الافتراضي دائماً ولو طُلب غيره؛ والافتراضي مخزَّن بعد `synthesize`)
+        "voice_id": body.voice_id or tts.resolve_voice_id(),
     }
 
 
@@ -1721,7 +1729,8 @@ def academy_tts(body: AcademyTtsRequest):
 def academy_interrupt(body: TeacherInterrupt):
     lec = get_lecture(body.school_id, body.lecture_id)
     if not lec:
-        return {"ok": False, "error": "lecture not found"}
+        # كان 200 بجسم خطأ — كبقية مسارات الأكاديمية الآن
+        raise HTTPException(status_code=404, detail="lecture not found")
 
     seg_title = "المقطع الحالي"
     seg_text = ""

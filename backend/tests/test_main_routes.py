@@ -79,9 +79,9 @@ def test_delete_account_requires_token(client):
 
 
 _PROGRESS_BODY = {
-    "school_id": "s1",
-    "lecture_id": "l1",
-    "segment_index": 3,
+    "school_id": "ict-smc",
+    "lecture_id": "smc-l2-03",
+    "segment_index": 1,
     "completed": False,
 }
 
@@ -110,11 +110,11 @@ def test_progress_get_for_anonymous_stays_an_empty_list(client):
 def test_progress_round_trip_and_no_duplicate_rows(client):
     token = _register(client, "learner")
     assert client.post("/api/academy/progress", json=_PROGRESS_BODY, headers=_auth(token)).status_code == 200
-    body2 = {**_PROGRESS_BODY, "segment_index": 7}
+    body2 = {**_PROGRESS_BODY, "segment_index": 2}
     assert client.post("/api/academy/progress", json=body2, headers=_auth(token)).status_code == 200
     rows = client.get("/api/academy/progress", headers=_auth(token)).json()["progress"]
     assert len(rows) == 1, "المفتاح الأساسي (user, school, lecture) يمنع تكرار الصف"
-    assert rows[0]["segment_index"] == 7
+    assert rows[0]["segment_index"] == 2
 
 
 # ─── التسجيل والدخول ────────────────────────────────────────────────────────
@@ -328,14 +328,14 @@ def test_finishing_a_lecture_survives_rewatching_it(client):
     فتحها لمراجعة المقدّمة تُكتب `completed=0` فوراً — إعادة المشاهدة تمحو الإنجاز.
     الموضع يتبع آخر مكان فعلاً (يصحّ رجوعه للخلف)، أما «أنهاها» فلا يُلغى."""
     token = _register(client, "finisher")
-    done = {"school_id": "s1", "lecture_id": "l1", "segment_index": 9, "completed": True}
+    done = {"school_id": "ict-smc", "lecture_id": "smc-l2-03", "segment_index": 3, "completed": True}
     assert client.post("/api/academy/progress", json=done, headers=_auth(token)).status_code == 200
-    again = {"school_id": "s1", "lecture_id": "l1", "segment_index": 0, "completed": False}
+    again = {"school_id": "ict-smc", "lecture_id": "smc-l2-03", "segment_index": 0, "completed": False}
     saved = client.post("/api/academy/progress", json=again, headers=_auth(token)).json()["progress"]
     assert saved["segment_index"] == 0, "الموضع يتبع إعادة المشاهدة"
     assert saved["completed"] is True, "«أنهاها» لا يُلغى بإعادة فتحها"
     rows = client.get("/api/academy/progress", headers=_auth(token)).json()["progress"]
-    assert rows == [{"school_id": "s1", "lecture_id": "l1", "segment_index": 0, "completed": True}]
+    assert rows == [{"school_id": "ict-smc", "lecture_id": "smc-l2-03", "segment_index": 0, "completed": True}]
 
 
 def test_progress_response_reports_what_the_database_holds(client):
@@ -343,12 +343,12 @@ def test_progress_response_reports_what_the_database_holds(client):
     token = _register(client, "reporter")
     client.post(
         "/api/academy/progress",
-        json={"school_id": "s2", "lecture_id": "l2", "segment_index": 4, "completed": True},
+        json={"school_id": "basics", "lecture_id": "basics-l1-01", "segment_index": 2, "completed": True},
         headers=_auth(token),
     )
     r = client.post(
         "/api/academy/progress",
-        json={"school_id": "s2", "lecture_id": "l2", "segment_index": 1, "completed": False},
+        json={"school_id": "basics", "lecture_id": "basics-l1-01", "segment_index": 1, "completed": False},
         headers=_auth(token),
     ).json()["progress"]
     got = client.get("/api/academy/progress", headers=_auth(token)).json()["progress"][0]

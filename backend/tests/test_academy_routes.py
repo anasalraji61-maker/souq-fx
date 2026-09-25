@@ -171,3 +171,21 @@ def test_tts_does_not_echo_the_provider_error_text(client, monkeypatch):
     monkeypatch.setattr(tts, "synthesize", boom)
     r = client.post("/api/academy/tts", json={"text": "hi"})
     assert r.status_code == 502 and "secret" not in r.text
+
+
+def test_progress_for_a_lecture_that_does_not_exist_or_past_its_end_is_refused(client):
+    # كانت تُخزَّن وتُعاد: محاضرة وهمية (صفوف بلا حدّ)، وموضع 99 على محاضرة بثلاثة مقاطع ⇒
+    # الاستئناف يفتح القاعة بلا مقطع حالي؛ و2**63 = 500 من SQLite
+    headers = _register(client, "student_bounds")
+    body = {"school_id": "basics", "lecture_id": "basics-l1-01", "segment_index": 0}
+    assert client.post("/api/academy/progress", json={**body, "lecture_id": "zzz"}, headers=headers).status_code == 404
+    assert client.post("/api/academy/progress", json={**body, "school_id": "no-such"}, headers=headers).status_code == 404
+    for bad in (3, 99, 2**63):
+        assert client.post("/api/academy/progress", json={**body, "segment_index": bad}, headers=headers).status_code == 422
+    assert client.post("/api/academy/progress", json={**body, "segment_index": 2}, headers=headers).status_code == 200
+    assert [p["lecture_id"] for p in client.get("/api/academy/progress", headers=headers).json()["progress"]] == ["basics-l1-01"]
+
+
+def test_interrupt_on_unknown_lecture_is_404(client):
+    r = client.post("/api/academy/interrupt", json={"school_id": "basics", "lecture_id": "zzz", "question": "why?"})
+    assert r.status_code == 404
