@@ -364,3 +364,19 @@
 لا صفّ مفتوح موجَّه لـui بـCOORDINATION (دورة QA 70): launch130 أُغلق (`aed77b9`)، وlaunch128 وطلبي لـbackend أُغلقا. منذ `d617362` لم يتغيّر أيّ ملف بنطاقي (التغييرات: chart/`PositionSizePanel`/`positionSize`/`TerminalScreen` فقط). بوابة البناء خضراء (tsc 0). **لا تغيير بالكود هذا التشغيل.**
 
 **فحص سريع لبنود المهمّة بالكود:** `Alert.alert` داخل `chart/confirmDestructive.ts` وحده (`window.confirm`/`window.alert` بالويب؛ `AccountScreen:166` حذف الحساب يمرّ منه)؛ «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط (`AnalystsPanel:129`، `SocialConsensusPanel:234`، `WeeklyReportPanel:41`)؛ `useMultiLiveTicks` يرفض التيك القديم (`acceptTick`) ويُسقط الرمز بعد `TICK_STALE_MS`؛ `Math.random` خارج chart = `api.ts:45` (معرّف UUID احتياطي فقط، ليس بيانات). حالة الاختيار والكردية وإعادة الجولة لم يتغيّر فيها ملف منذ مسوح تشغيلَي 27–28.
+
+## 2026-09-25 — تشغيل 30
+صفّ ui الوحيد بـCOORDINATION (دورة QA 71) = **launch131** — أُنجز:
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| 59b69a1 | `progress: number \| null` بـ`AcademySchoolSummary` (`academy.ts:13`) و`Course` (`api.ts:147`) — الخادم يرسل `null` منذ backend `2e55e5b`؛ بذور `academy.ts` الاحتياطية السبع `null` لا `0` (لا «0%» مختلَق ولا «null%» لاحقاً). لا مستهلك اليوم ⇒ tsc 0 | launch131 |
+
+بوابة البناء خضراء (tsc 0) قبل الـcommit.
+
+**إعادة تحقّق بنود المهمّة بالكود (بعد 5d03ebd pull):**
+- **حالة الاختيار:** مسح لكل عنصر JSX بحرف كبير فيه `onPress`/`onValueChange` (لا أسماء أنماط فقط — يشمل شرط المساواة `x === y && styles.*` و`? colors.*`) خارج chart/i18n/tools: المرشّحات بلا `accessibilityState`/aria = الثلاثة شرطها `rtl` (تخطيط لا حالة: `WatchlistPanel:530`، `CoursesScreen:167`، `AccountScreen:219`) — كما تشغيل 27.
+- **الكردية:** الحرفيات العربية غير التعليقية بنطاقي كما صنّفها تشغيل 28. `CommissionPlanPanel`: النصّ غير المعروف يُعرض كما وصل؛ الجدول الاحتياطي موسوم `t.cppLiveError` (ar/en/ku) عند الفشل؛ وتحقّقتُ أن `points_per_member: r.rate_pct` (مسار `/plan`) يطابق الخادم (`db.py:828` `COMMISSION_UNIT 100 × rate` = `rate_pct`) — ليس رقماً مختلَقاً.
+- **التيك المتجمّد:** `acceptTick` يرفض ما عمره عند الخادم > `TICK_STALE_MS`؛ قائمة المتابعة لا تحسب نسبة/مسافة تنبيه من سعر افتراضي أو بثّ تجريبي (`WatchlistPanel:365-392`) وتسِمه `t.wlDemoTag`.
+- **الحوارات بالويب:** `Alert.alert` بـ`chart/confirmDestructive.ts` وحده (`window.confirm`، وغيابه ⇒ لا تنفيذ).
+- **الجولة:** `AccountScreen:219` ⇐ `OnboardingOverlay` (ظاهر بلا تسجيل دخول). «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط.
