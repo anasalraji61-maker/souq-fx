@@ -138,8 +138,10 @@ export function NewsRiskBanner({ symbol = '', openSymbols }: Props) {
   const text = newsBannerText({ head: t.newsRiskHigh, currency: ccyLabel, when, title: event.title, more });
   // التحذير من تقويمٍ محفوظ بعد فشل التحديث: يُعرض (الوقت مطلق فيبقى صادقاً) مع قول ذلك
   const stale = cache != null && !cache.ok;
-  // صفقات مفتوحة: الرموز التي يمسّها الخبر قبل النصيحة («EURUSD, XAUUSD.m: تقلّب حاد…») — سطران كي لا تُقصّ النصيحة
-  const hint = openHit?.symbols.length ? `${openHit.symbols.join(', ')}: ${t.newsRiskHint}` : t.newsRiskHint;
+  // صفقات مفتوحة: الرموز التي يمسّها الخبر، والخطر الفعلي انزلاق الوقف لا «حجم الصفقة» (launch89) — سطران كي لا تُقصّ النصيحة
+  const hint = openHit?.symbols.length
+    ? t.newsRiskOpenHint.replace('{symbols}', () => openHit.symbols.join(t.listSep))
+    : t.newsRiskHint;
 
   return (
     <View
