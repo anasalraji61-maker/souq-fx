@@ -146,6 +146,9 @@ const TOOLS_SYMBOL_KEY = 'matrix.tools.symbol.v1';
  * التفضيل الوحيد الذي يُنسى.
  */
 const TOOLS_TAB_KEY = 'matrix.tools.tab.v1';
+/** الخانة الرابعة (الشارت الرئيسي) بالترمينال — نفس `DXY_SYMBOL_KEY`/`DXY_TF_KEY` في `TerminalScreen.tsx`. */
+const HERO_SYMBOL_KEY = 'matrix.home.dxySymbol.v1';
+const HERO_TF_KEY = 'matrix.home.dxyTf.v1';
 /**
  * التبويبات المعروفة — `Record<TabId, true>` عمداً لا مصفوفة: إضافة تبويب لـ`TabId` **تكسر البناء**
  * حتى يُذكر هنا، فلا يُستعاد يوماً معرّفٌ حُذف ولا يُنسى معرّفٌ أُضيف (قيمة محفوظة لا تطابق أياً من
@@ -223,6 +226,10 @@ export function ToolsScreen() {
   const [frameSymbols, setFrameSymbols] = useState<[string, string, string]>(
     DEFAULT_LAYOUT.frameSymbols
   );
+  /** chart-r49: الخانة الرابعة (الشارت الرئيسي بالترمينال، مفتاحا `DXY_SYMBOL_KEY`/`DXY_TF_KEY` هناك) — كان التخطيط يحفظ
+   * الثلاث فقط فتطبيق «A» لا يعيد XAUUSD 4H بالرابعة. */
+  const [heroSymbol, setHeroSymbol] = useState('DXY');
+  const [heroTf, setHeroTf] = useState('15m');
 
   useEffect(() => {
     let alive = true;
@@ -423,6 +430,10 @@ export function ToolsScreen() {
           const p = JSON.parse(sym) as string[];
           if (Array.isArray(p) && p.length === 3) setFrameSymbols([p[0], p[1], p[2]]);
         }
+        const heroSym = await AsyncStorage.getItem(HERO_SYMBOL_KEY);
+        if (heroSym && heroSym.trim()) setHeroSymbol(heroSym.trim().toUpperCase());
+        const heroTfRaw = await AsyncStorage.getItem(HERO_TF_KEY);
+        if (heroTfRaw && isTimeframe(heroTfRaw)) setHeroTf(heroTfRaw);
       } catch {
         /* ignore */
       }
@@ -433,6 +444,9 @@ export function ToolsScreen() {
     ).addListener('focus', load);
     return unsub;
   }, [navigation]);
+
+  /** chart-r49: الرابعة الجارية لـ`LayoutPanel` (للحفظ و«الحالي»). بانتشارٍ لا props مسمّاة حتى يضيفها chart لنوع اللوحة. */
+  const heroLayoutProps = { dxySymbol: heroSymbol, dxyTf: heroTf };
 
   /** لا رمز قُرئ أصلاً (كل الطلبات فشلت) — «لا تطابق» هنا كاذبة. */
   const scanNone = scanInfo.scanned === 0 && scanInfo.failed.length > 0;
@@ -886,9 +900,23 @@ export function ToolsScreen() {
           <LayoutPanel
             frameTfs={frameTfs}
             frameSymbols={frameSymbols}
+            {...heroLayoutProps}
             onApply={async (layout) => {
               setFrameSymbols(layout.frameSymbols);
               setFrameTfs(layout.frameTfs);
+              // الرابعة تُستعاد فقط من تخطيط حفظها فعلاً (`dxySymbol` موجود): القديمة تحمل `dxyTf: '15m'` ثابتاً لا
+              // اختيار المستخدم، فاستعادتها كانت ستعيد فريمه للـ15m دون أن يطلب.
+              const heroSym = (layout as { dxySymbol?: unknown }).dxySymbol;
+              const hero =
+                typeof heroSym === 'string' && heroSym.trim()
+                  ? { symbol: heroSym.trim().toUpperCase(), tf: isTimeframe(layout.dxyTf) ? layout.dxyTf : heroTf }
+                  : null;
+              if (hero) {
+                setHeroSymbol(hero.symbol);
+                setHeroTf(hero.tf);
+                await AsyncStorage.setItem(HERO_SYMBOL_KEY, hero.symbol);
+                await AsyncStorage.setItem(HERO_TF_KEY, hero.tf);
+              }
               await AsyncStorage.setItem(
                 'matrix.frameSymbols.v1',
                 JSON.stringify(layout.frameSymbols)
@@ -904,6 +932,8 @@ export function ToolsScreen() {
                 {
                   layoutSymbols: layout.frameSymbols,
                   layoutTfs: layout.frameTfs,
+                  layoutHeroSymbol: hero?.symbol,
+                  layoutHeroTf: hero?.tf,
                   layoutNonce: Date.now(),
                 }
               );

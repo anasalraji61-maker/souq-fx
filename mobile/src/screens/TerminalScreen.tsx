@@ -454,6 +454,33 @@ export function TerminalScreen() {
     [dxyTf]
   );
 
+  /** chart-r49: تخطيط محفوظ يعيد رمز الشارت الرئيسي وفريمه معاً (التخزين كتبه تبويب الأدوات قبل الانتقال). */
+  const applyHeroLayout = useCallback(async (nextSym: string, nextTf: Timeframe) => {
+    setHeroSymbol(nextSym);
+    setDxyTf(nextTf);
+    pickSymbol(nextSym, nextTf);
+    try {
+      await AsyncStorage.setItem(DXY_SYMBOL_KEY, nextSym);
+      await AsyncStorage.setItem(DXY_TF_KEY, nextTf);
+    } catch {
+      /* ignore */
+    }
+    const gen = ++dxyLoadGen.current;
+    const hit = cachedSeries(nextSym, nextTf);
+    if (hit) setDxy(hit);
+    try {
+      const s = await fetchSeries(nextSym, nextTf);
+      if (gen !== dxyLoadGen.current) return;
+      setDxy(s);
+      setOnline(true);
+    } catch {
+      if (gen !== dxyLoadGen.current) return;
+      setDxy(cachedSeries(nextSym, nextTf) ?? offlineFrame(nextSym, nextTf));
+      setOnline(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const changeLayout = useCallback(
     async (next: FrameLayoutCount, shape: FrameLayoutShape) => {
       const count: FrameLayoutCount = shape === 'shadow' ? 1 : next;
@@ -873,7 +900,14 @@ export function TerminalScreen() {
   /** تطبيق تخطيط محفوظ من تبويب الأدوات: { layoutSymbols, layoutTfs, layoutNonce } — كان التخطيط يُكتب
    * للتخزين فقط والشاشة (مركّبة مسبقاً) لا تقرؤه إلا عند التركيب، فلا يتغيّر شيء حتى إعادة التشغيل. */
   const layoutReq = route.params as
-    | { layoutSymbols?: string[]; layoutTfs?: string[]; layoutNonce?: number }
+    | {
+        layoutSymbols?: string[];
+        layoutTfs?: string[];
+        /** chart-r49: الخانة الرابعة (الشارت الرئيسي) — فقط من تخطيط حفظها. */
+        layoutHeroSymbol?: string;
+        layoutHeroTf?: string;
+        layoutNonce?: number;
+      }
     | undefined;
   useEffect(() => {
     const syms = layoutReq?.layoutSymbols;
@@ -885,9 +919,16 @@ export function TerminalScreen() {
     if (Array.isArray(tfs) && tfs.length === 3 && tfs.every(isTimeframe)) {
       setFrameTfs([...tfs]);
     }
+    const heroSym = layoutReq.layoutHeroSymbol;
+    if (typeof heroSym === 'string' && heroSym.trim()) {
+      const heroTf = layoutReq.layoutHeroTf;
+      void applyHeroLayout(heroSym.trim().toUpperCase(), heroTf && isTimeframe(heroTf) ? heroTf : dxyTf);
+    }
     navigation.setParams({
       layoutSymbols: undefined,
       layoutTfs: undefined,
+      layoutHeroSymbol: undefined,
+      layoutHeroTf: undefined,
       layoutNonce: undefined,
     } as never);
     // eslint-disable-next-line react-hooks/exhaustive-deps
