@@ -6,6 +6,7 @@ import { parseDecimal } from './parseDecimal';
 import assert from 'node:assert/strict';
 import {
   convStaleMinutes,
+  quoteAsOfMs,
   parseSlPips,
   ambiguousSlPips,
   slPipsInPoints,
@@ -2742,3 +2743,26 @@ console.log('positionSize mini account selftest OK');
   assert.equal(targetQuoteToAccount(null, 'USD', 43, live), null);
 }
 console.log('positionSize targetQuoteToAccount selftest OK');
+
+// ---- quoteAsOfMs: سعر مخزّن بالخادم يحمل عمره الحقيقي لا «الآن» ----
+{
+  const now = 1_758_800_000_000; // ms
+  // بلا as_of (مزوّد حيّ أو خادم قديم) ⇒ الآن
+  assert.equal(quoteAsOfMs(undefined, now), now);
+  assert.equal(quoteAsOfMs(null, now), now);
+  assert.equal(quoteAsOfMs('1758799100', now), now);
+  assert.equal(quoteAsOfMs(NaN, now), now);
+  assert.equal(quoteAsOfMs(0, now), now);
+  // كاش عمره 12 دقيقة بالثواني ⇒ وقته الحقيقي ⇒ التحذير يظهر «12»
+  const cached = now / 1000 - 12 * 60;
+  assert.equal(quoteAsOfMs(cached, now), now - 12 * 60_000);
+  assert.equal(convStaleMinutes(quoteAsOfMs(cached, now), now), 12);
+  // ثوانٍ بكسور (time.time()) وملّي ثانية
+  assert.equal(quoteAsOfMs(now / 1000 - 30.5, now), now - 30_500);
+  assert.equal(quoteAsOfMs(now - 7 * 60_000, now), now - 7 * 60_000);
+  // مستقبل (ساعة الجهاز متأخرة) ⇒ الآن، لا عمر سالب
+  assert.equal(quoteAsOfMs(now / 1000 + 90, now), now);
+  // رقم صغير غير معقول (عدّاد لا تاريخ) ⇒ الآن
+  assert.equal(quoteAsOfMs(12345, now), now);
+}
+console.log('positionSize quoteAsOfMs selftest OK');

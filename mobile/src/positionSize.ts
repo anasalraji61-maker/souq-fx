@@ -1590,6 +1590,18 @@ export function liveEntryFillAllowed(atTap: string, now: string): boolean {
 export const CONV_STALE_AFTER_MS = 5 * 60_000;
 
 /**
+ * وقت السعر الفعلي (ms) من `as_of` الخادم إن أرسله، وإلا `now`. الخادم يعيد سعراً مخزّناً حتى 15 دقيقة
+ * (`data_kind: "cache"`) عند تعثّر المزوّد، وختمه بـ«الآن» عند كل تجديد كان يُخفي تحذير «سعر التحويل قديم» للأبد.
+ * `as_of` بالثواني (unix) أو بالملّي؛ قيمة غير صالحة/قبل 2001 ⇒ `now`؛ في المستقبل (فرق ساعتَي الخادم والجهاز) ⇒ `now`.
+ */
+export function quoteAsOfMs(asOf: unknown, now: number): number {
+  if (typeof asOf !== 'number' || !Number.isFinite(asOf) || asOf <= 0) return now;
+  const ms = asOf < 1e11 ? asOf * 1000 : asOf;
+  if (ms < 1e12 || ms > now) return now;
+  return ms;
+}
+
+/**
  * دقائق عمر سعر التحويل المجلوب إن صار قديماً، وإلا null. فشل التجديد الصامت يُبقي آخر سعر (إسقاطه يُعطّل الحاسبة
  * بلا اتصال) — لكن بلا إشارة كان يبقى ساعاتٍ واللوت محسوب عليه. الدقائق مقرّبة للأسفل (لا تقول «6» بعد 5:10).
  * `fetchedAt` غير صالح أو في المستقبل (ساعة الجهاز عادت للخلف) ⇒ null: لا تحذير برقم سالب أو مختلَق.

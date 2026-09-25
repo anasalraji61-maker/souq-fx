@@ -10,6 +10,7 @@ import {
   instrumentSpec,
   conversionPair,
   convStaleMinutes,
+  quoteAsOfMs,
   reversedConversion,
   usdBridge,
   bridgedRate,
@@ -375,20 +376,24 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     ];
     // سعر تجريبي بذري (المزوّد غير متاح أو لا يعرف الزوج — كان يُعيد ~1.0 لزوج مجهول) يُعامَل كفشل:
     // حساب لوت من سعر تحويل مختلَق أخطر من طلب السعر يدوياً (راجع `isRealQuote`).
+    // `as_of` (إن أرسله الخادم مع سعرٍ مخزّن) يصير وقت السعر، لا لحظة الجلب — راجع `quoteAsOfMs`.
     const fetchPrice = (sym: string) =>
       api.marketQuote(sym).then(
-        (q) => (isRealQuote(q) ? q.price : null),
+        (q) =>
+          isRealQuote(q)
+            ? { price: q.price, at: quoteAsOfMs((q as { as_of?: unknown }).as_of, Date.now()) }
+            : null,
         () => null
       );
     const id = setTimeout(() => {
       (async () => {
         for (const c of tries) {
-          const price = await fetchPrice(c.symbol);
+          const q = await fetchPrice(c.symbol);
           if (!mountedRef.current || g !== gen.current) return;
-          if (price != null) {
-            const r = quoteToAccountRate(c, price);
+          if (q != null) {
+            const r = quoteToAccountRate(c, q.price);
             if (r != null) {
-              setConvQuote({ key: conversionKey({ symbol: convSymbol, invert: convInvert })!, rate: r, at: Date.now() });
+              setConvQuote({ key: conversionKey({ symbol: convSymbol, invert: convInvert })!, rate: r, at: q.at });
               setConvLoading(false);
               return;
             }
@@ -407,9 +412,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             fetchPrice(bridge.second.symbol),
           ]);
           if (!mountedRef.current || g !== gen.current) return;
-          const viaUsd = bridgedRate(bridge, p1, p2);
-          if (viaUsd != null) {
-            setConvQuote({ key: conversionKey({ symbol: convSymbol, invert: convInvert })!, rate: viaUsd, at: Date.now() });
+          const viaUsd = bridgedRate(bridge, p1?.price ?? null, p2?.price ?? null);
+          if (viaUsd != null && p1 && p2) {
+            // عمر الجسر = عمر أقدم ساقيه
+            const at = Math.min(p1.at, p2.at);
+            setConvQuote({ key: conversionKey({ symbol: convSymbol, invert: convInvert })!, rate: viaUsd, at });
             setConvLoading(false);
             return;
           }
