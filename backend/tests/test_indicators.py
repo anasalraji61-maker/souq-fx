@@ -128,3 +128,15 @@ def test_macd_has_no_cross_on_an_accelerating_uptrend():
 def test_macd_short_series_is_all_none_not_zero():
     line, sig = ind.macd([1.0] * 20)
     assert line == [None] * 20 and sig == [None] * 20
+
+
+def test_snapshot_change_names_its_window():
+    """`change_pct` على كامل السلسلة لا يومياً — `change_bars` يقول كم شمعة."""
+    out = ind.snapshot([{"close": c} for c in [1.0, 2.0, 3.0, 4.0]], fast=2, slow=3)
+    assert out["change_bars"] == 4
+
+
+def test_snapshot_change_is_none_not_zero_when_first_close_is_zero():
+    """إغلاق أوّل صفريّ ⇒ القسمة مستحيلة: كان «0%» (لا تغيّر) رقماً مخترَعاً."""
+    out = ind.snapshot([{"close": c} for c in [0.0, 2.0, 3.0]], fast=2, slow=3)
+    assert out["change_pct"] is None

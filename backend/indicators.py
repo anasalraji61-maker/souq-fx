@@ -126,7 +126,10 @@ def snapshot(candles: list[dict[str, Any]], fast: int = 9, slow: int = 21) -> di
     first = closes[0]
     return {
         "last": last,
-        "change_pct": ((last - first) / first * 100) if first else 0,
+        # التغيّر على **كامل** السلسلة المُمرَّرة (180 شمعة: ~45 ساعة على 15m، ~6 أشهر على D) لا يومياً —
+        # `change_bars` يقول النافذة كي لا يُعرض كتغيّر اليوم. إغلاق أوّل صفريّ ⇒ None لا 0 مخترَع.
+        "change_pct": ((last - first) / first * 100) if first else None,
+        "change_bars": len(closes),
         "rsi": r[-1],
         "sma_fast": f[-1],
         "sma_slow": s[-1],

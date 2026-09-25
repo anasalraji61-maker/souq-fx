@@ -1229,6 +1229,7 @@ def indicator_snapshot(symbol: str, timeframe: str = "15m"):
         }
     candles = [c.model_dump() for c in series.candles]
     snap = ind_engine.snapshot(candles)
+    snap["timeframe"] = series.timeframe
     snap["data_kind"] = series.data_source.kind
     return snap
 
