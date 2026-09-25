@@ -258,26 +258,31 @@ export function computeChaikinOsc(
  * Ease of Movement (EOM، period=14 القيمة القياسية الشائعة) — يقيس السهولة التي يتحرك بها السعر
  * لكل فوليوم مُتداوَل (كم عزّز فوليوم منخفض حركة سعرية كبيرة، أو العكس): لكل شمعة، المسافة
  * distance = نقطة_الوسط الحالية − نقطة_الوسط السابقة (نقطة الوسط = (أعلى+أدنى)/2)، نسبة الصندوق
- * boxRatio = (فوليوم/100,000,000) / (أعلى−أدنى) (صفر عند مدى صفري بدل قسمة على صفر — يجعل rawEMV
+ * boxRatio = (فوليوم/10,000) / (أعلى−أدنى) (صفر عند مدى صفري بدل قسمة على صفر — يجعل rawEMV
  * صفراً أيضاً بنفس الشمعة). rawEMV = distance/boxRatio (صفر عند boxRatio صفري). EOM = SMA(rawEMV,
  * period). موجب = السعر يتحرك صعوداً بسهولة (فوليوم منخفض نسبياً لحجم الحركة)، سالب = هبوط سهل،
- * قرب الصفر = حركة صعبة (فوليوم كبير لحركة سعرية صغيرة، أو لا حركة). ثابت التحجيم 100,000,000 قياسي
- * شائع لا يغيّر إشارة المؤشر (فقط مقياسه المطلق قبل التطبيع البصري بالپين). فوليوم مفقود يُعوَّض
+ * قرب الصفر = حركة صعبة (فوليوم كبير لحركة سعرية صغيرة، أو لا حركة). ثابت التحجيم 10,000 (مقسوم TradingView؛ Arms الأصلي 1e8)
+ * لا يغيّر إشارة المؤشر (فقط مقياسه المطلق قبل التطبيع البصري بالپين). فوليوم مفقود يُعوَّض
  * بنفس صيغة orderflow.ts للاتساق مع مؤشرات الفوليوم الأخرى أعلاه. **تحقّق يدوي**: سوق مسطّح تماماً
  * (أعلى/أدنى ثابتان بكل شمعة) → نقطة الوسط ثابتة → distance=0 لكل شمعة → rawEMV=0 بصرف النظر عن
  * الفوليوم → EOM=SMA(0s)=0، يطابق "لا سهولة حركة بسعر ساكن تماماً" بالتعريف.
  */
+/** مقسوم EOM بـTradingView (حقل «Divisor» الافتراضي). */
+const EOM_DIVISOR = 10000;
+
 export function computeEom(candles: (Candle & { volume?: number })[], period = 14): (number | null)[] {
   const n = candles.length;
-  const raw: number[] = new Array(n).fill(0);
+  // كـTradingView المدمج: ‎sma(10000 × change(hl2) × (high − low) / volume, 14)‎. كان المقسوم 1e8 (صيغة Arms
+  // الأصلية) ⇒ رقم رأس اللوحة أكبر بعشرة آلاف مرّة ممّا يراه المتداول على TradingView للزوج نفسه. والشمعة
+  // الأولى بلا سابقة ⇒ null (`ta.change` = na) لا صفر، فأوّل قيمة بعد 14 تغيّراً حقيقياً لا 13.
+  const raw: (number | null)[] = new Array(n).fill(0);
+  if (n) raw[0] = null;
   for (let i = 1; i < n; i++) {
     const mid = (candles[i].high + candles[i].low) / 2;
     const prevMid = (candles[i - 1].high + candles[i - 1].low) / 2;
-    const distance = mid - prevMid;
     const span = candles[i].high - candles[i].low;
     const vol = candles[i].volume ?? estimatedVolume(candles[i]);
-    const boxRatio = span === 0 ? 0 : vol / 1e8 / span;
-    raw[i] = boxRatio === 0 ? 0 : distance / boxRatio;
+    raw[i] = vol > 0 ? (EOM_DIVISOR * (mid - prevMid) * span) / vol : 0;
   }
   return sma(raw, period);
 }
