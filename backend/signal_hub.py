@@ -277,6 +277,7 @@ def indicator_forecast(
             "snapshot": snap,
             "price_decimals": dp,
             "disclaimer": _NO_DATA[tl],
+            "disclaimer_code": "not_enough_data",
         }
 
     avg = sum(v["score"] for v in votes) / len(votes)
@@ -298,4 +299,5 @@ def indicator_forecast(
         },
         "price_decimals": dp,
         "disclaimer": _DISCLAIMER[tl],
+        "disclaimer_code": "indicator_consensus",
     }

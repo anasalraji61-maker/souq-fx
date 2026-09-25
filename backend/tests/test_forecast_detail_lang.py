@@ -73,3 +73,9 @@ def test_route_returns_english_detail_for_lang_en(monkeypatch):
     ).json()
     assert out["votes"] and out["price_decimals"] == 3
     assert not any(ARABIC.search(v["detail"]) for v in out["votes"])
+
+
+def test_disclaimer_has_a_code_for_the_app_to_translate():
+    # chart-r35: الكردي لا نصّ له بالخادم ⇒ الرمز يكفي التطبيق
+    assert signal_hub.indicator_forecast("EURUSD", _candles(1.08))["disclaimer_code"] == "indicator_consensus"
+    assert signal_hub.indicator_forecast("EURUSD", [])["disclaimer_code"] == "not_enough_data"
