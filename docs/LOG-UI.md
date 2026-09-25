@@ -391,3 +391,14 @@
 بوابة البناء خضراء (tsc 0) قبل الـcommit. launch131 أُنجز بتشغيل 30 (`76b2256`) — الصفّ باقٍ حتى يغلقه QA.
 
 **إعادة تحقّق بنود المهمّة بالكود (بعد 2166ac4):** `Alert.alert` بـ`AccountScreen`/`TradeJournalPanel` = تعليقات فقط، والاستدعاء عبر `confirmDestructive` (`window.confirm` بالويب)؛ «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط؛ `useMultiLiveTicks` يرفض التيك المتجمّد (`acceptTick`) ويُسقطه بعد `TICK_STALE_MS`؛ إعادة الجولة `AccountScreen:221-233`. ملفات نطاقي المتغيّرة منذ تشغيل 30 (`ChartFrame`، `LayoutPanel`، `QuadChartModal`، `IndicatorForecastPanel`) = أهداف لمس ونصّ حفظ — لا عنصر اختيار جديد بلا `accessibilityState`.
+
+## 2026-09-25 — تشغيل 32
+صفّ ui الوحيد بـCOORDINATION (دورة QA 72) = **backend-r33 + launch132** (أخبار `status`/`stale`) — **أُنجز بتشغيل 31** (`77e39f2`)؛ تحقّقتُ بالكود: `NewsPanel.tsx:52-53` يقرأ `status === 'unavailable'` و`stale`/`as_of`، ويعرض `t.newsSourceUnavailable` (:86) و`t.newsStaleAsOf` (:90). جملة QA «grep `status`/`stale` صفر» سابقة لـ`77e39f2` — الصفّ جاهز للإغلاق. بوابة البناء خضراء (tsc 0). **لا تغيير بالكود هذا التشغيل.**
+
+**إعادة تحقّق بنود المهمّة بفحوص جديدة (بعد 6ff7144):**
+- **حالة الاختيار:** مسحان: (1) وسم الفتح لكل عنصر بحرف كبير فيه `onPress`/`onValueChange` بشرط اختيار (`styles.*On/Active/Sel…`، `colors.accent/bull/bear`، `x === y &&`)؛ (2) **جسم** كل `Pressable`/`Touchable*`/`*Button`/`*Chip`/`*Pill` حتى وسم الإغلاق (يلتقط لون الاختيار على `Text` الابن) بما فيه ألوان hex شرطية: **صفر** بلا `accessibilityState`/aria/دور switch-checkbox-radio.
+- **الكردية:** `ku` مقابل `ar` (1048 مفتاحاً لكلٍّ): صفر ناقص، صفر قيمة مطابقة (≥4 حروف عربية)، صفر حرف عربي لا تستعمله السورانية. العمولات: أنواع/شروط/أدوار الخادم العربية تُترجَم بـ`SERVER_TYPE_KEYS`/`SERVER_COND_KEYS`/`SERVER_ROLE_IDS`؛ `rules`/`title`/`example` من `plan_document()` لا تُعرض. `NetworkTreePanel`/`SubscriptionPlansPanel`: لا حرفية عربية خارج التعليقات.
+- **الحوارات بالويب:** `Alert.alert` بـ`chart/confirmDestructive.ts` وحده (`window.confirm`/`window.alert`)؛ `confirmDestructive` بتسعة ملفات منها `AccountScreen` (حذف الحساب).
+- «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليق فقط (`AnalystsPanel:129`)؛ `Math.random` خارج chart = `api.ts:45` (UUID).
+- **السعر المتجمّد:** `acceptTick` يرفض ما عمره عند الخادم > `TICK_STALE_MS`؛ `WatchlistPanel` لا يحسب نسبة/مسافة إلا من تيك حيّ غير تجريبي، والسعر البديل موسوم للقارئ (`wlDemoPriceA11ySuffix`).
+- **الجولة:** `AccountScreen:221-239` ⇐ `OnboardingOverlay`.
