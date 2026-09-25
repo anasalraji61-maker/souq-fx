@@ -141,7 +141,9 @@ async function migrateV1(symbol: string, timeframe: string): Promise<Drawing[]> 
       if (!d || typeof d.id !== 'string' || seen.has(d.id)) continue;
       if (!own && !timed(d)) continue;
       seen.add(d.id);
-      out.push(own ? d : withAheadStep(d, timeframeStepSec(tf)));
+      // الفريم المفتوح أيضاً: `ahead` بلا `aheadStep` كان يُعدّ بفريم **العرض** لاحقاً ⇒ ترند رُسم طرفه 5 شموع
+      // بعد آخر شمعة على 1H يصير 5 أيام على D1 بعد أوّل تبديل (الختم الجديد يحمل خطوته دائماً).
+      out.push(withAheadStep(d, timeframeStepSec(tf)));
     }
   }
   return out;
