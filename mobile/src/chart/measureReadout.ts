@@ -240,5 +240,11 @@ export function measureReadoutText(input: {
   const amount = pips ?? `${diffSign}${diffText}`;
   const pctText = formatPct(Number.isFinite(stats.pct) ? stats.pct : 0);
   const bars = barsCountText(stats.bars, barsWord, lang, input.barForms);
+  // سطر عربي/كردي يُخطَّط من اليمين: «−24.0 pip» و«−0.22%» كانا يتفكّكان بالعرض إلى «24.0−» و«%0.22−»
+  // والنسبة تدخل بين العدد ووحدته. LRM على طرفي كل قيمة يُبقيها كتلة يسار→يمين كما بالإنجليزية.
+  if (lang === 'ar' || lang === 'ku') {
+    const ltr = (x: string) => `\u200E${x}\u200E`;
+    return dur ? `${bars} · ${dur} · ${ltr(amount)} · ${ltr(pctText)}` : `${bars} · ${ltr(amount)} · ${ltr(pctText)}`;
+  }
   return dur ? `${bars} · ${dur} · ${amount} · ${pctText}` : `${bars} · ${amount} · ${pctText}`;
 }

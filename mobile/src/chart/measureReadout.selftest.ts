@@ -164,6 +164,25 @@ ok('السطر يمرّر اللغة',
     stats: stats(1, 0.0024, 0.22), barsWord: 'bars', lang: 'en',
   }).startsWith('1 bar · '));
 
+// عربي/كردي: القيمة والنسبة بين LRM كي لا يتفكّكا بسطر RTL («24.0−»، «%0.22−»)؛ الإنجليزي بلا علامات.
+{
+  const arLine = measureReadoutText({
+    symbol: 'EURUSD', a: { price: 1.085 }, b: { price: 1.0826 },
+    stats: stats(12, -0.0024, -0.2212), barsWord: 'شموع', lang: 'ar',
+  });
+  ok('ar LRM', arLine === '12 شمعة · \u200E−24.0 pip\u200E · \u200E−0.22%\u200E');
+  const kuLine = measureReadoutText({
+    symbol: 'US30', a: { price: 39000 }, b: { price: 39125.5 },
+    stats: stats(3, 125.5, 0.32), barsWord: 'مۆم', lang: 'ku',
+  });
+  ok('ku LRM بلا pip', kuLine.includes('\u200E+125.50\u200E') && kuLine.endsWith('\u200E+0.32%\u200E'));
+  const enLine = measureReadoutText({
+    symbol: 'EURUSD', a: { price: 1.085 }, b: { price: 1.0826 },
+    stats: stats(12, -0.0024, -0.2212), barsWord: 'bars', lang: 'en',
+  });
+  ok('en بلا LRM', !enLine.includes('\u200E'));
+}
+
 // ── مدى الشمعة بالنقاط لسطر التقاطع ─────────────────────────────────────────
 ok('مدى EURUSD', candleRangePipsText('EURUSD', 1.08612, 1.08450) === '↕ 16.2 pip');
 ok('مدى USDJPY بحجم pip الين', candleRangePipsText('USDJPY', 157.423, 157.1) === '↕ 32.3 pip');
