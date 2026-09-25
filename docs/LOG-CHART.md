@@ -4364,6 +4364,10 @@ pineScale (جديد)، liveSeries. **لم يُختبر على جهاز**: شري
 - **QA32 Renko/Kagi/P&F بلا مفتاح — أُنجز** `44d0096`: `KIND_KEYS` (`chart/typeLabels.ts`) تربط
   `ctlKindRenko/Kagi/Pnf` (أضافها launch `2ff22c8`) ⇒ «رينكو/كاجي/نقطة ورقم» بالعربي وما يقابلها بالكردي،
   وقارئ الشاشة لا يقول «P and F». التعليق :17-19 حُدِّث. الصفّ جاهز للإزالة بعد تحقّق QA.
+- **QA34 `restXPan` خارج deps — أُنجز** `ef40f4a` (وصل أثناء التشغيل): `resetChartView` و`axisTapped` يضعان
+  `restXPan` بقائمتيهما ⇒ تابع رباعي صار حرّاً يعود AUTO/النقر المزدوج فيه إلى هامش 10%. والمنخفض: تعليق
+  `chandeKroll.selftest` صُحِّح (‎9+9−1 = 17‎) ويفحص أن [17] له قيمة؛ `price-transform.ts:412` لم يعد يذكر
+  chandeKroll كشريط. الصفّ جاهز للإزالة بعد تحقّق QA.
 - QA1 (جهاز) لا يُختبر هنا؛ launch48 DeMarker قرار أنس؛ chart29 `Alert.alert` ملفاتها خارج نطاقي.
 
 ## ما أُنجز (مرئي للمتداول)
@@ -4378,7 +4382,7 @@ pineScale (جديد)، liveSeries. **لم يُختبر على جهاز**: شري
    (الحيّة كانت تكبّر المتوسط ⇒ كل الشموع تتبدّل تحت الإصبع). selftest `range` موسَّع (يفشل على القديم).
 
 ## التحقّق
-`scripts/qa-build-check.sh` أخضر (0) قبل كل commit. selftests PASS: klingerTv، kagiPnfAtr، range، renko.
+`scripts/qa-build-check.sh` أخضر (0) قبل كل commit. selftests PASS: klingerTv، kagiPnfAtr، range، renko، chandeKroll.
 **لم يُختبر على جهاز**: شكل Kagi/P&F الجديد على 1د واليومي، ومقياس لوحة Klinger.
 
 ## يبدأ التشغيل القادم من هنا
