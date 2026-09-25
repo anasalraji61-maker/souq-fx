@@ -370,7 +370,7 @@
 
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
-| 59b69a1 | `progress: number \| null` بـ`AcademySchoolSummary` (`academy.ts:13`) و`Course` (`api.ts:147`) — الخادم يرسل `null` منذ backend `2e55e5b`؛ بذور `academy.ts` الاحتياطية السبع `null` لا `0` (لا «0%» مختلَق ولا «null%» لاحقاً). لا مستهلك اليوم ⇒ tsc 0 | launch131 |
+| 76b2256 | `progress: number \| null` بـ`AcademySchoolSummary` (`academy.ts:13`) و`Course` (`api.ts:147`) — الخادم يرسل `null` منذ backend `2e55e5b`؛ بذور `academy.ts` الاحتياطية السبع `null` لا `0` (لا «0%» مختلَق ولا «null%» لاحقاً). لا مستهلك اليوم ⇒ tsc 0 | launch131 |
 
 بوابة البناء خضراء (tsc 0) قبل الـcommit.
 
