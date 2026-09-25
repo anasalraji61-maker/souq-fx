@@ -1733,7 +1733,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     let ahead = 0;
     const step = timeframeStepSec(series.timeframe);
     // قبل `i`: زمن = آخر شمعة + خطوة بالضبط (قائد +1 على الفريم نفسه) يقع بحدّ `indexAtOrBeforeTime` على الحيّة.
-    if (syncCrossTime != null && atSeriesEnd && lastCandle && step > 0) {
+    // Renko/Kagi/P&F/Range: خانة بعد آخر لبنة ليست خطوة فريم (لبنةٌ قد تستغرق ساعات أو ثوانٍ) — كان الخطّ يُرسم
+    // k لبنةً يمينها فيوحي بزمن لا يقابله شيء؛ لا خطّ بالمستقبل هنا (تقاطع المتداول نفسه لا يدخله كذلك).
+    if (!synthetic && syncCrossTime != null && atSeriesEnd && lastCandle && step > 0) {
       const k = Math.floor((syncCrossTime - candleTimeSec(lastCandle.time)) / step);
       if (k >= 1 && k <= CROSS_SYNC_MAX_AHEAD) {
         time = source.plot[source.plot.length - 1]!.time;
