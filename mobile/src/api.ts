@@ -518,6 +518,19 @@ export const api = {
         name: string;
         exchange: string;
         type: string;
+        /** زوج كريبتو بعدّة منصّات: `exchange` فارغ وهذه قائمتها (المزوّد يختار). */
+        exchanges?: string[];
+        /** عملة التسعير كما يعلنها المزوّد (`GBp` = بنس) — تغيب للعملات والكريبتو. */
+        currency?: string | null;
+      }[];
+      /** الرمز نفسه بعدّة بورصات: `symbol` المجرّد يرسم إدراجاً آخر ⇒ لا يُعرض للاختيار (backend-r46). */
+      ambiguous?: {
+        symbol: string;
+        td_symbol: string;
+        name: string;
+        exchange: string;
+        type: string;
+        currency?: string | null;
       }[];
     }>(`/api/symbols/search?q=${encodeURIComponent(q)}&limit=20`),
   screenerRun: (body: { timeframe: string; filters: string[]; symbols?: string[] }) =>

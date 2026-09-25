@@ -11,7 +11,14 @@ type Result = {
   name: string;
   exchange: string;
   type: string;
+  currency?: string | null;
 };
+
+/** «الاسم · البورصة · العملة» بلا فاصل معلّق: زوج كريبتو بعدّة منصّات يصل `exchange: ""` (backend-r46)
+ * فكان يُعرض «Bitcoin Euro · ». */
+function detailLine(r: Result): string {
+  return [r.name, r.exchange, r.currency].filter((x) => x && String(x).trim() !== '').join(' · ');
+}
 
 type Props = {
   onPick: (symbol: string) => void;
@@ -30,6 +37,8 @@ export function SymbolSearchBar({ onPick, placeholder }: Props) {
   const ph = placeholder ?? t.ssbPlaceholder;
   const [q, setQ] = useState('');
   const [results, setResults] = useState<Result[]>([]);
+  /** إدراجات بعدّة بورصات لا نرسمها بعد — تُعرض غير قابلة للضغط، وتمنع «لا رمز» الكاذبة (AAPL، SHEL). */
+  const [ambiguous, setAmbiguous] = useState<Result[]>([]);
   const [loading, setLoading] = useState(false);
   /** وضوح الحالة: يميّز فشل البحث فعلياً عن "لا نتائج مطابقة" حتى لا يظن المستخدم أن الرمز غير موجود */
   const [error, setError] = useState(false);
@@ -44,6 +53,7 @@ export function SymbolSearchBar({ onPick, placeholder }: Props) {
     const query = q.trim();
     if (query.length < 2) {
       setResults([]);
+      setAmbiguous([]);
       setError(false);
       setSearchedQ('');
       return;
@@ -58,12 +68,14 @@ export function SymbolSearchBar({ onPick, placeholder }: Props) {
         const res = await api.symbolSearch(query);
         if (alive) {
           setResults(res.results);
+          setAmbiguous(res.ambiguous ?? []);
           setError(false);
           setSearchedQ(query);
         }
       } catch {
         if (alive) {
           setResults([]);
+          setAmbiguous([]);
           setError(true);
         }
       } finally {
@@ -97,7 +109,7 @@ export function SymbolSearchBar({ onPick, placeholder }: Props) {
       {!loading && error ? <Text style={[styles.error, { textAlign: align }]}>{t.ssbError}</Text> : null}
       {!loading && !error && results.length === 0 && searchedQ !== '' && searchedQ === q.trim() ? (
         <Text style={[styles.noMatch, { textAlign: align }]} accessibilityLiveRegion="polite">
-          {t.ssbNoMatch.replace('{q}', searchedQ)}
+          {(ambiguous.length > 0 ? t.ssbOnlyAmbiguous : t.ssbNoMatch).replace('{q}', searchedQ)}
         </Text>
       ) : null}
       {results.slice(0, 8).map((r) => (
@@ -119,9 +131,26 @@ export function SymbolSearchBar({ onPick, placeholder }: Props) {
         >
           <Text style={[styles.sym, { textAlign: align }]}>{r.symbol}</Text>
           <Text style={[styles.name, { textAlign: align }]} numberOfLines={1}>
-            {r.name} · {r.exchange}
+            {detailLine(r)}
           </Text>
         </Pressable>
+      ))}
+      {ambiguous.slice(0, Math.max(0, 8 - Math.min(results.length, 8))).map((r) => (
+        <View
+          key={`amb-${r.symbol}-${r.exchange}-${r.td_symbol}`}
+          style={styles.rowAmbiguous}
+          accessible
+          accessibilityRole="text"
+          accessibilityLabel={`${r.symbol} · ${detailLine(r)} · ${t.ssbAmbiguousTag}`}
+        >
+          <Text style={[styles.symAmbiguous, { textAlign: align }]}>{r.symbol}</Text>
+          <Text style={[styles.name, { textAlign: align }]} numberOfLines={1}>
+            {detailLine(r)}
+          </Text>
+          <Text style={[styles.name, { textAlign: align }]} numberOfLines={1}>
+            {t.ssbAmbiguousTag}
+          </Text>
+        </View>
       ))}
     </View>
   );
@@ -148,6 +177,15 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
   },
   sym: { color: colors.accent, fontWeight: '500' },
+  /** غير قابل للضغط: لا خلفية مرتفعة ولا تأكيد ولا `warn` — نصّ هادئ فقط (launch142). */
+  rowAmbiguous: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  symAmbiguous: { color: colors.textDim, fontWeight: '500' },
   name: { color: colors.textDim, fontSize: 11 },
   error: {
     color: colors.bear,
