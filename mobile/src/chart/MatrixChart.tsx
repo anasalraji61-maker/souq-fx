@@ -458,6 +458,8 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
 const PRICE_AXIS_WIDTH = 68;
 /** ارتفاع وسم سعر الخطّ/فيبو فوق خطّه (`top: -11` + خطّ 13) — أقرب من ذلك للحافّة العليا يُقلب تحته. */
 const LEVEL_LABEL_H = 13;
+/** أضيق شعاع أفقي يتّسع لوسمه («150.123 · +123.4 pip») داخله؛ أضيق ⇒ الوسم يُقلب يسار بدايته. */
+const HRAY_LABEL_ROOM = 150;
 /** ألوان الجلسات (مؤشّر «Sessions»): ثابتة المعنى داخله وحده — لا ربح/خسارة ولا تنبيه. */
 const SESSION_COLOR: Record<SessionId, string> = {
   tokyo: '#A78BFA',
@@ -7515,14 +7517,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 {d.tool === 'hray' && sel ? (
                   <View style={[styles.grabHandle, { left: 0, top: -1.25, borderColor: d.color }]} />
                 ) : null}
-                {hlinePriceLabels.has(d.id) ? (
+                {hlinePriceLabels.has(d.id) ? (() => {
+                  // شعاع يبدأ قرب الشمعة الحيّة: الوسم داخل عرض الشعاع (أحياناً بضع بكسلات) فيُقصّ «1.0…»
+                  // (أو يمرّ تحت المحور على الويب). حينها يُقلب يسار بداية الشعاع ويُحاذى يميناً — كـ`noteBox`.
+                  // (خلية رباعي ضيّقة لا يتّسع يسارها للوسم ⇒ يبقى كما كان.)
+                  const flip =
+                    d.tool === 'hray' && chartPlotW - rayX < HRAY_LABEL_ROOM && rayX >= HRAY_LABEL_ROOM + 8;
+                  const below = yOf(d.a.price) < LEVEL_LABEL_H;
+                  const label = (
                   <Text
                     style={[
                       styles.levelPriceLabel,
                       { color: d.color },
                       d.tool === 'hray' && styles.hRayLabel,
                       sel && styles.levelPriceLabelSel,
-                      yOf(d.a.price) < LEVEL_LABEL_H && styles.levelLabelBelow,
+                      below && styles.levelLabelBelow,
+                      flip && styles.hRayLabelFlipped,
                     ]}
                     numberOfLines={1}
                   >
@@ -7536,7 +7546,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       return pips ? <Text style={styles.levelPipText}>{` · ${pips}`}</Text> : null;
                     })()}
                   </Text>
-                ) : null}
+                  );
+                  return flip ? (
+                    <View
+                      pointerEvents="none"
+                      style={[
+                        styles.hRayLabelBox,
+                        { left: -HRAY_LABEL_ROOM - 8 },
+                        below && styles.levelLabelBelow,
+                      ]}
+                    >
+                      {label}
+                    </View>
+                  ) : (
+                    label
+                  );
+                })() : null}
               </View>
             );
           }
@@ -11729,6 +11754,9 @@ const styles = StyleSheet.create({
   channelWidthHandle: { borderRadius: 3 },
   /** بعد مقبض البداية (نصف قطره 6) لا فوقه. */
   hRayLabel: { left: 10 },
+  /** وسم الشعاع المقلوب: صندوق بعرض ثابت ينتهي قبيل بداية الشعاع (بعد مقبضها) والنصّ محاذى يميناً داخله. */
+  hRayLabelBox: { position: 'absolute', top: -11, width: HRAY_LABEL_ROOM, alignItems: 'flex-end' },
+  hRayLabelFlipped: { position: 'relative', left: 0, top: 0 },
   vLine: {
     position: 'absolute',
     top: 0,
