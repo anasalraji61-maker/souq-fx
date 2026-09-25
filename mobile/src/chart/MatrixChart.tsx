@@ -3200,8 +3200,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       alligator: alligator
         ? { lines: [alligator.jaw, alligator.teeth, alligator.lips], colors: ['#3B82F6', '#EF4444', '#84CC16'] }
         : null,
+      chandeKroll: chandeKroll
+        ? { lines: [chandeKroll.longStop, chandeKroll.shortStop], colors: ['#99F6E4', '#F9A66C'] }
+        : null,
     };
-  }, [dense, chartPlotW, ichimoku, alligator]);
+  }, [dense, chartPlotW, ichimoku, alligator, chandeKroll]);
   const legendMultiParts = (id: string, index: number | null): { text: string; color: string }[] | null => {
     const m = legendMulti[id];
     if (!m) return null;
@@ -7347,24 +7350,38 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               }}
             />
           ))}
+        {/* Chande Kroll: خطّا الوقف كـTradingView (يتقاطعان) — وقف الشراء ثم وقف البيع. */}
         {indicators.includes('chandeKroll') &&
           chandeKroll &&
-          planBandStrips(
-            chandeKroll.shortStop,
-            chandeKroll.longStop,
-            xOf,
-            yOf,
-            bandW
-          ).map((bnd) => (
+          planLineSegments(chandeKroll.longStop, xOf, yOf).map((sg) => (
             <View
-              key={`ck${bnd.at}`}
+              key={`ckl${sg.at}`}
               style={{
                 position: 'absolute',
-                left: bnd.left,
-                top: bnd.top,
-                width: bnd.width,
-                height: bnd.height,
-                backgroundColor: 'rgba(153,246,228,0.16)',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#99F6E4',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
+        {indicators.includes('chandeKroll') &&
+          chandeKroll &&
+          planLineSegments(chandeKroll.shortStop, xOf, yOf).map((sg) => (
+            <View
+              key={`cks${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: '#F9A66C',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
               }}
             />
           ))}

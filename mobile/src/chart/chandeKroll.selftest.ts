@@ -1,0 +1,24 @@
+/**
+ * Self-test for Chande Kroll Stop (pure) — صيغة TradingView: الحدّ الأوّل داخل المدى.
+ * Run: npx --yes tsx src/chart/chandeKroll.selftest.ts
+ */
+import assert from 'node:assert/strict';
+import { computeChandeKrollStop } from './indicators/trend';
+
+// شموع متطابقة H=1.1010 L=1.1000 ⇒ ATR=0.0010: وقف البيع = أعلى − ATR = 1.1000، وقف الشراء = أدنى + ATR = 1.1010.
+// كان 1.1020 / 1.0990 (الإشارة معكوسة) ⇒ الوقفان أبعد بـ2×ATR ولا يتقاطعان أبداً.
+const flat = Array.from({ length: 40 }, (_, i) => ({
+  time: i * 60,
+  open: 1.1005,
+  high: 1.101,
+  low: 1.1,
+  close: 1.1005,
+  volume: 0,
+}));
+const r = computeChandeKrollStop(flat);
+assert.ok(Math.abs(r.shortStop[39]! - 1.1) < 1e-9, `shortStop ${r.shortStop[39]}`);
+assert.ok(Math.abs(r.longStop[39]! - 1.101) < 1e-9, `longStop ${r.longStop[39]}`);
+// الإحماء: 10 (ATR/أعلى) + 9 (التدحرج) − 1 ⇒ أوّل قيمة عند 17 على الأبكر.
+assert.equal(r.shortStop[16], null);
+
+console.log('chandeKroll.selftest: PASS');

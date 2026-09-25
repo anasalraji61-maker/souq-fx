@@ -983,16 +983,16 @@ export function computeAlma(
 /**
  * Chande Kroll Stop (period=10/atrMult=1/qPeriod=9 القيم القياسية) — نطاق وقف حماية ديناميكي
  * (بعكس Keltner/Donchian المصمَّمين كقنوات تداول لا مستويات وقف) يُبنى على مرحلتين: (1) أول حد
- * علوي=أعلى قمة خلال period شمعة + atrMult×computeAtr(candles, period) [إعادة استخدام مباشرة
- * لـcomputeAtr المُصدَّرة أعلاه]، أول حد سفلي=أدنى قاع خلال نفس النافذة − نفس المضاعف×ATR. (2) الحد
+ * علوي=أعلى قمة خلال period شمعة − atrMult×computeAtr(candles, period) [إعادة استخدام مباشرة
+ * لـcomputeAtr المُصدَّرة أعلاه]، أول حد سفلي=أدنى قاع خلال نفس النافذة + نفس المضاعف×ATR (صيغة TradingView). (2) الحد
  * النهائي العلوي (shortStop، مقاومة لصفقات البيع)=أعلى قيمة لأول حد علوي خلال آخر qPeriod شمعة،
  * والحد النهائي السفلي (longStop، دعم لصفقات الشراء)=أدنى قيمة لأول حد سفلي خلال نفس qPeriod —
  * نفس منطق أعلى/أدنى قمة/قاع متدحرج المستخدَم بـcomputeDonchian أعلاه، مطبَّق هنا على سلسلة
- * "الحد الأول" بدل السعر الخام مباشرة. يُرسَم بنمط الشريط العمودي شبه الشفاف الموجود مسبقاً
- * لـkeltner/envelopes/donchian حرفياً (لون تيل الهوية `rgba(45,212,191,0.16)` لتمييزه كمستوى وقف).
+ * "الحد الأول" بدل السعر الخام مباشرة. يُرسَم خطّين (وقف الشراء تيل فاتح، وقف البيع برتقالي فاتح) كـTradingView:
+ * يتقاطعان، والشريط بينهما كان يُخفي أيّهما فوق.
  * **تحقّق يدوي**: سعر ثابت تماماً P بكل الشموع (أعلى=أدنى=إغلاق=P) → computeAtr يُرجع 0 بعد التسخين
  * (TR=0 لكل شمعة بسعر ساكن، نفس منطق التحقّق اليدوي لـcomputeKeltner/computeChoppiness أعلاه) → أول
- * حد علوي=P+1×0=P، أول حد سفلي=P−0=P لكل نقطة صالحة → أعلى/أدنى قيمة متدحرجة لسلسلة ثابتة P=P →
+ * حد علوي=P−1×0=P، أول حد سفلي=P+0=P لكل نقطة صالحة → أعلى/أدنى قيمة متدحرجة لسلسلة ثابتة P=P →
  * shortStop=longStop=P بالضبط، يطابق "لا اتساع لمستوى الوقف بلا أي تقلّب فعلي" بالتعريف.
  */
 export function computeChandeKrollStop(
@@ -1013,8 +1013,10 @@ export function computeChandeKrollStop(
       hh = Math.max(hh, candles[w].high);
       ll = Math.min(ll, candles[w].low);
     }
-    firstHigh[i] = hh + atrMult * atr[i]!;
-    firstLow[i] = ll - atrMult * atr[i]!;
+    // كـTradingView: الحدّ الأوّل **داخل** المدى (أعلى − ATR، أدنى + ATR). كان بالعكس (أعلى + ATR، أدنى − ATR)
+    // ⇒ الوقفان أبعد عن السعر بـ2×ATR، ووقف الشراء تحت وقف البيع دائماً فلا يتقاطعان أبداً — والتقاطع هو الإشارة.
+    firstHigh[i] = hh - atrMult * atr[i]!;
+    firstLow[i] = ll + atrMult * atr[i]!;
   }
   const longStop: (number | null)[] = new Array(n).fill(null);
   const shortStop: (number | null)[] = new Array(n).fill(null);

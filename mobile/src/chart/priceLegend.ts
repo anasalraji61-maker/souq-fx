@@ -82,7 +82,7 @@ export const PRICE_OVERLAYS: Readonly<Record<string, PriceOverlaySpec>> = {
   accelBands: { label: 'Accel', swatch: ['#FED7AA'], drawn: ['rgba(254,215,170,0.14)'] },
   stdErrorBands: { label: 'Std Err', swatch: ['#BEF264'], drawn: ['rgba(190,242,100,0.14)'] },
   vwapBands: { label: 'VWAP Bnd', swatch: ['#EAB308'], drawn: ['rgba(234,179,8,0.14)'] },
-  chandeKroll: { label: 'ChandeKrl', swatch: ['#99F6E4'], drawn: ['rgba(153,246,228,0.16)'] },
+  chandeKroll: { label: 'ChandeKrl', swatch: ['#99F6E4', '#F9A66C'] },
   fractalChaosBands: {
     label: 'FCB',
     swatch: ['#F0ABFC'],
