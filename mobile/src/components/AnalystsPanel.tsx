@@ -138,9 +138,9 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
               {t.entryLabel} {formatPrice(levels.entry, symbol)} · {t.slLabel} {formatPrice(levels.sl, symbol)}{' '}
               · {t.tpLabel} {formatPrice(levels.tp, symbol)}
             </Text>
-          ) : (
+          ) : direction === 'neutral' || levelsWhy ? (
             <Text style={[styles.levels, { textAlign: align }]}>{levelsWhy ?? t.socialNoClearTrade}</Text>
-          )}
+          ) : null /* شراء/بيع بلا مستويات لسبب لا نعرفه: «الآراء متضاربة أو محايدة» كانت تناقض الاتجاه (backend-r37) */}
         </View>
       ) : null}
 

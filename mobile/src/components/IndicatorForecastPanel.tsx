@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api } from '../api';
-import { dirColor, dirLabel, formatScore } from './signalDirection';
+import { dirColor, dirLabel, formatScore, levelsUnavailableText } from './signalDirection';
 import { formatPrice } from '../chart/math';
 import { symbolPriceDecimals } from '../chart/indicators/utils';
 import { forecastDisclaimer, forecastVoteDetail, forecastVoteName } from '../chart/forecastText';
@@ -164,6 +164,8 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   // «ثقة 83%» كانت معادلة ثابتة (|المعدل|×0.75+0.35) تُقرأ كاحتمال نجاح — نعرض بدلها عدد المؤشرات
   // المتوافقة مع الاتجاه (قابل للتحقق من القائمة تحتها)، ونسبة الربح:المخاطرة للمستويات المقترحة.
   const agreeing = votes.filter((v) => v.direction === direction).length;
+  // النصّ نفسه بلوحتي المحلّلين والإجماع (`levelsUnavailableText`) — كانت سلسلة شروط منسوخة هنا.
+  const levelsWhy = levelsUnavailableText({ unavailable: levelsGap }, t);
   // الوقف والهدف كانا سعرَين فقط، والمتداول يزن الصفقة بالـpip (حجم لوته من مسافة وقفه).
   // `pipsBetween` نفسها التي تبني عليها الحاسبة؛ أداة بلا مواصفة pip تبقى بالأسعار وحدها.
   const levelSpec = levels ? chartPipSpec(symbol) : null;
@@ -269,17 +271,14 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
               </Text>
               {staleAt ? <Text style={[styles.asOf, { textAlign: align }]}>{staleAt}</Text> : null}
             </>
-          ) : (
+          ) : direction === 'neutral' ? (
+            <Text style={[styles.levels, { textAlign: align }]}>{t.forecastNoSignal}</Text>
+          ) : levelsWhy ? (
             // «لا اتجاه غالب» تحت «شراء» كانت تناقض نفسها حين غابت المستويات لسبب آخر (لا سعر حيّ، شموع أقلّ
-            // من ATR14) — السبب كما قاله الخادم، و«لا اتجاه غالب» للمحايد فقط.
-            <Text style={[styles.levels, { textAlign: align }]}>
-              {direction !== 'neutral' && levelsGap === 'no_live_price'
-                ? t.sigLevelsUnavailableNoPrice
-                : direction !== 'neutral' && levelsGap === 'not_enough_candles'
-                  ? t.sigLevelsUnavailableFewCandles
-                  : t.forecastNoSignal}
-            </Text>
-          )}
+            // من ATR14) — السبب كما قاله الخادم، و«لا اتجاه غالب» للمحايد فقط. سبب لا نعرفه (backend-r37
+            // `atr_exceeds_price` قبل نصّه) ⇒ لا سطر، لا «لا اتجاه غالب» تحت «بيع».
+            <Text style={[styles.levels, { textAlign: align }]}>{levelsWhy}</Text>
+          ) : null}
         </View>
       ) : null}
 
