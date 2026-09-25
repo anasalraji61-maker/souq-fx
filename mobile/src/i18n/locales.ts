@@ -55,6 +55,16 @@ export type Dict = {
   company: string;
   loginError: string;
   registerError: string;
+  /** سبب رفض التسجيل من `detail` الخادم — يختارها `registerErrorText` (i18n/authErrors.ts)؛ `{login}`/`{trader}` تُملأ هناك. */
+  regErrReserved: string;
+  regErrInvisible: string;
+  regErrUsernameTaken: string;
+  regErrEmailTaken: string;
+  regErrInvalidEmail: string;
+  regErrSponsorNotFound: string;
+  regErrUsernameLength: string;
+  regErrPasswordLength: string;
+  regErrRoleNotOpen: string;
   language: string;
   deleteAccount: string;
   deleteAccountConfirmTitle: string;
@@ -665,6 +675,9 @@ export type Dict = {
   /** «إغلاق بالسعر الحالي» على صفقة أُغلقت بجهاز آخر: القائمة تتحدّث بلا كتابة خروج (`closedElsewhere`) — هذا يشرح السبب. */
   journalClosedElsewhereTitle: string;
   journalClosedElsewhereBody: string;
+  /** 409 `trade_changed_concurrently` على الإغلاق: عُدِّلت (لا أُغلقت) من جهاز آخر أثناء الإغلاق. */
+  journalCloseConflictTitle: string;
+  journalCloseConflictBody: string;
   backtestSub: string;
   backtestSymbolA11y: string;
   backtestStrategyA11yPrefix: string;
@@ -1463,6 +1476,15 @@ const ar: Dict = {
   company: 'شركة',
   loginError: 'تعذّر الدخول — تحقّق من الاسم أو الإيميل وكلمة المرور، ومن اتصالك بالإنترنت',
   registerError: 'تعذّر التسجيل — الاسم من 3 إلى 32 حرفاً عادياً (بلا محارف مخفية قد تأتي مع النسخ واللصق)، وكلمة المرور 4 أحرف على الأقل، والاسم والإيميل غير مسجَّلَين من قبل، ورمز الدعوة صحيح إن كتبته. أو تحقّق من اتصالك',
+  regErrReserved: 'هذا الاسم محجوز — اختر اسماً آخر',
+  regErrInvisible: 'في الاسم محرف مخفي أو حرف بعرض كامل (يأتي غالباً مع النسخ واللصق) — اكتبه بنفسك من لوحة المفاتيح',
+  regErrUsernameTaken: 'هذا الاسم مسجَّل من قبل — اختر اسماً آخر، أو ادخل إن كان حسابك',
+  regErrEmailTaken: 'هذا الإيميل مسجَّل من قبل — ادخل به من «{login}» بدل إنشاء حساب جديد',
+  regErrInvalidEmail: 'الإيميل غير صحيح — شكله مثل name@example.com',
+  regErrSponsorNotFound: 'رمز الدعوة غير موجود — تأكّد منه مع من دعاك، أو اترك الخانة فارغة',
+  regErrUsernameLength: 'الاسم من 3 إلى 32 حرفاً',
+  regErrPasswordLength: 'كلمة المرور 4 أحرف على الأقل',
+  regErrRoleNotOpen: 'الحساب الجديد يُسجَّل «{trader}» فقط — الأدوار الأخرى يمنحها راعيك من شبكته. اختر «{trader}» ثم أعد المحاولة',
   language: 'اللغة',
   deleteAccount: 'حذف الحساب',
   deleteAccountConfirmTitle: 'حذف الحساب نهائياً؟',
@@ -1971,6 +1993,8 @@ const ar: Dict = {
   journalCloseMarketNoQuote: 'لا سعر حديث لهذا الرمز الآن (لم يصل سعر خلال آخر 3 دقائق) — اكتب سعر الخروج بخانة «خروج» ثم «إغلاق بسعر خانة الخروج»',
   journalClosedElsewhereTitle: 'الصفقة مغلقة من قبل',
   journalClosedElsewhereBody: 'أُغلقت هذه الصفقة من جهاز آخر، فلم نسجّل خروجاً ثانياً فوقها. القائمة محدَّثة الآن بسعر خروجها ونتيجتها المسجَّلين.',
+  journalCloseConflictTitle: 'لم يُسجَّل الإغلاق',
+  journalCloseConflictBody: 'عُدِّلت هذه الصفقة من جهاز آخر في اللحظة نفسها، فلم نسجّل خروجك فوق ذلك التعديل. القائمة محدَّثة الآن — راجع الصفقة ثم أغلقها من جديد إن لزم.',
   backtestSub: 'MA · RSI · MACD · BB · منحنى رأس المال',
   backtestSymbolA11y: 'رمز الأداة للاختبار الخلفي',
   backtestStrategyA11yPrefix: 'استراتيجية',
@@ -2662,6 +2686,15 @@ const enUS: Dict = {
   company: 'Company',
   loginError: 'Login failed — check your name or email, your password, and your connection',
   registerError: 'Sign-up failed — username 3 to 32 plain characters (no hidden characters, which copy and paste can bring along), password at least 4, username and email not already registered, invite code correct if you entered one. Or check your connection',
+  regErrReserved: 'That username is reserved — pick another one',
+  regErrInvisible: 'The username contains a hidden or full-width character (copy and paste often brings these along) — type it in from the keyboard',
+  regErrUsernameTaken: 'That username is already registered — pick another one, or log in if it’s yours',
+  regErrEmailTaken: 'That email is already registered — use “{login}” instead of creating a new account',
+  regErrInvalidEmail: 'That email doesn’t look right — it should look like name@example.com',
+  regErrSponsorNotFound: 'Invite code not found — check it with whoever invited you, or leave the field empty',
+  regErrUsernameLength: 'Username must be 3 to 32 characters',
+  regErrPasswordLength: 'Password must be at least 4 characters',
+  regErrRoleNotOpen: 'New accounts are created as “{trader}” only — other roles are given by your sponsor from their network. Choose “{trader}” and try again',
   language: 'Language',
   deleteAccount: 'Delete account',
   deleteAccountConfirmTitle: 'Delete account permanently?',
@@ -3168,6 +3201,8 @@ const enUS: Dict = {
   journalCloseMarketNoQuote: 'No up-to-date price for this symbol right now (none received in the last 3 minutes) — type the exit in the “Exit” field, then use “Close at exit field price”',
   journalClosedElsewhereTitle: 'Already closed',
   journalClosedElsewhereBody: 'This trade was closed on another device, so no second exit was recorded over it. The list now shows its recorded exit price and result.',
+  journalCloseConflictTitle: 'Close not recorded',
+  journalCloseConflictBody: 'This trade was edited on another device at the same moment, so your exit was not recorded over that change. The list is up to date now — check the trade, then close it again if needed.',
   backtestSub: 'MA · RSI · MACD · BB · Equity curve',
   backtestSymbolA11y: 'Instrument symbol for the backtest',
   backtestStrategyA11yPrefix: 'Strategy',
@@ -3832,6 +3867,7 @@ const enUS: Dict = {
 
 const enGB: Dict = {
   ...enUS,
+  regErrUsernameTaken: 'That username is already registered — pick another one, or sign in if it’s yours',
   login: 'Sign in',
   register: 'Register',
   enter: 'Sign in',
@@ -3887,6 +3923,15 @@ const ku: Dict = {
   company: 'کۆمپانیا',
   loginError: 'چوونەژوورەوە سەرکەوتوو نەبوو — ناو یان ئیمەیڵ و وشەی نهێنی بپشکنە، هەروەها پەیوەندیت بە ئینتەرنێتەوە',
   registerError: 'تۆمارکردن سەرکەوتوو نەبوو — ناو 3 تا 32 پیتی ئاسایی (بێ پیتی شاراوە کە لەوانەیە لەگەڵ کۆپی و پەیست بێت)، وشەی نهێنی لانیکەم 4 پیت، ناو و ئیمەیڵ پێشتر تۆمار نەکرابن، کۆدی بانگهێشت دروست بێت ئەگەر نووسیبێتت. یان پەیوەندیت بپشکنە',
+  regErrReserved: 'ئەم ناوە پارێزراوە — ناوێکی تر هەڵبژێرە',
+  regErrInvisible: 'ناوەکە پیتێکی شاراوە یان پانی تێدایە (زۆرجار لەگەڵ کۆپی و پەیست دێت) — خۆت بە کیبۆرد بینووسە',
+  regErrUsernameTaken: 'ئەم ناوە پێشتر تۆمار کراوە — ناوێکی تر هەڵبژێرە، یان ئەگەر هی خۆتە بچۆ ژوورەوە',
+  regErrEmailTaken: 'ئەم ئیمەیڵە پێشتر تۆمار کراوە — لە «{login}»ەوە پێی بچۆ ژوورەوە لە جیاتی دروستکردنی هەژمارێکی نوێ',
+  regErrInvalidEmail: 'ئیمەیڵەکە دروست نییە — دەبێت وەک name@example.com بێت',
+  regErrSponsorNotFound: 'کۆدی بانگهێشت نەدۆزرایەوە — لەگەڵ ئەو کەسەی بانگهێشتی کردوویت بیپشکنە، یان خانەکە بەتاڵ بهێڵەوە',
+  regErrUsernameLength: 'ناو دەبێت 3 تا 32 پیت بێت',
+  regErrPasswordLength: 'وشەی نهێنی دەبێت لانیکەم 4 پیت بێت',
+  regErrRoleNotOpen: 'هەژماری نوێ تەنها وەک «{trader}» تۆمار دەکرێت — ڕۆڵەکانی تر سپۆنسەرەکەت لە تۆڕەکەیەوە پێت دەدات. «{trader}» هەڵبژێرە و دووبارە هەوڵ بدەرەوە',
   language: 'زمان',
   deleteAccount: 'سڕینەوەی هەژمار',
   deleteAccountConfirmTitle: 'هەژمار بە تەواوی بسڕدرێتەوە؟',
@@ -4399,6 +4444,8 @@ const ku: Dict = {
   journalCloseMarketNoQuote: 'ئێستا نرخی نوێ بۆ ئەم هێمایە نییە (لە 3 خولەکی ڕابردوودا هیچ نرخێک نەگەیشتووە) — نرخی دەرچوون لە خانەی «دەرچوون» بنووسە و پاشان «داخستن بە نرخی خانەی دەرچوون»',
   journalClosedElsewhereTitle: 'مامەڵەکە پێشتر داخراوە',
   journalClosedElsewhereBody: 'ئەم مامەڵەیە لە ئامێرێکی ترەوە داخراوە، بۆیە دەرچوونی دووەممان لەسەری تۆمار نەکرد. لیستەکە ئێستا نرخی دەرچوون و ئەنجامە تۆمارکراوەکەی پیشان دەدات.',
+  journalCloseConflictTitle: 'داخستنەکە تۆمار نەکرا',
+  journalCloseConflictBody: 'ئەم مامەڵەیە لە هەمان کاتدا لە ئامێرێکی ترەوە دەستکاری کرا، بۆیە دەرچوونەکەت لەسەر ئەو گۆڕانکارییە تۆمار نەکرا. لیستەکە ئێستا نوێکراوەتەوە — مامەڵەکە بپشکنە و ئەگەر پێویست بوو دووبارە دایبخە.',
   backtestSub: 'MA · RSI · MACD · BB · کەوانەی سەرمایە',
   backtestSymbolA11y: 'هێمای ئامراز بۆ تاقیکردنەوەی دواوە',
   backtestStrategyA11yPrefix: 'ستراتیژی',
