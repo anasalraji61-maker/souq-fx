@@ -5,6 +5,8 @@
 """
 from __future__ import annotations
 
+import time
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -137,3 +139,34 @@ def test_candle_fallback_carries_the_candle_time(monkeypatch):
     monkeypatch.setattr(main, "build_series", build)
     body = TestClient(main.app).get("/api/market/quote/EURUSD").json()
     assert body["data_kind"] == "cache" and body["as_of"] == 1234.0
+
+
+# ─── `as_of` = وقت السعر لا لحظة الجلب ──────────────────────────────────────
+
+def test_weekend_quote_carries_the_provider_price_time_not_now(routes):
+    """السبت: المزوّد يعيد إغلاق الجمعة و`last_quote_at` الجمعة. كان `as_of` = لحظة الجلب ⇒ «سعر الآن»."""
+    friday = float(int(time.time()) - 86_400)
+    routes["/quote"] = _Resp({"close": "1.10000", "last_quote_at": friday, "is_market_open": False})
+    client = TestClient(main.app)
+    body = client.get("/api/market/quote/EURUSD").json()
+    assert body["as_of"] == friday
+    assert body["market_open"] is False
+    assert body["fetched_at"] > friday
+    assert "quoted_at" not in body
+    cached = client.get("/api/market/quote/EURUSD").json()
+    assert cached["data_kind"] == "cache" and cached["as_of"] == friday
+
+
+def test_no_provider_time_falls_back_to_fetch_time_and_unknown_market_state(routes):
+    routes["/quote"] = _Resp({"close": "1.10000"})
+    body = TestClient(main.app).get("/api/market/quote/EURUSD").json()
+    assert body["as_of"] == body["fetched_at"]
+    assert body["market_open"] is None
+
+
+@pytest.mark.parametrize("bad", ["x", -5, 0, 9e12, "1.5"])
+def test_invalid_provider_time_is_ignored(routes, bad):
+    routes["/quote"] = _Resp({"close": "1.10000", "last_quote_at": bad, "is_market_open": "yes"})
+    book = market.fetch_quote_book("EURUSD")
+    assert book["quoted_at"] is None
+    assert book["market_open"] is None

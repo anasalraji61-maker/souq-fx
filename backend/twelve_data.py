@@ -351,7 +351,20 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
         "high": _f(data.get("high")),
         "low": _f(data.get("low")),
         "percent_change": _f(data.get("percent_change")),
+        # وقت السعر نفسه من المزوّد (آخر شمعة دقيقة)، لا لحظة جلبه: بعطلة نهاية الأسبوع كان إغلاق الجمعة
+        # يُعاد `as_of` = «الآن» فتقرؤه الحاسبة/الدفتر سعراً حيّاً. None حين لا يرسله (المسار يقرّر).
+        "quoted_at": _quote_time(data.get("last_quote_at")),
+        # السوق مفتوح/مغلق كما يقوله المزوّد — None حين لا يقول (لا تخمين من الساعة)
+        "market_open": data.get("is_market_open") if isinstance(data.get("is_market_open"), bool) else None,
     }
+
+
+def _quote_time(v: object) -> float | None:
+    """ثوانٍ UTC موجبة ومنطقية (ليست بالمستقبل بأكثر من دقيقة) — وإلا None."""
+    t = _f(v)
+    if t is None or not math.isfinite(t) or t <= 1e9 or t > time.time() + 60:
+        return None
+    return t
 
 
 def _f(v: object) -> float | None:

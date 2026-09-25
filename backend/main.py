@@ -1306,7 +1306,7 @@ def market_quote(symbol: str):
     hit = _QUOTE_CACHE.get(sym)
     now = time.time()
     if hit and now - hit[0] < QUOTE_TTL:
-        return {**hit[1], "data_kind": "cache", "as_of": hit[0]}
+        return {**hit[1], "data_kind": "cache"}
     book = market.fetch_quote_book(sym)
     if not book:
         series = build_series(sym, "15m")
@@ -1341,7 +1341,11 @@ def market_quote(symbol: str):
         }
     book["source"] = "twelvedata"
     book["data_kind"] = "provider"
-    book["as_of"] = now
+    # `as_of` = وقت السعر (العميل يقرؤه كذلك — `quoteAsOfMs`): وقت المزوّد حين يرسله، وإلا لحظة الجلب.
+    # كان دائماً لحظة الجلب ⇒ إغلاق الجمعة يُعرض يوم السبت سعراً «الآن». `fetched_at` = لحظة الجلب.
+    quoted_at = book.pop("quoted_at", None)
+    book["as_of"] = quoted_at if quoted_at is not None else now
+    book["fetched_at"] = now
     _QUOTE_CACHE[sym] = (now, dict(book))
     return book
 
