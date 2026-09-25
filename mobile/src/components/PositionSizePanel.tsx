@@ -592,7 +592,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     parseSpreadPips(spread, spec) != null
       ? null
       : spreadWide != null
-        ? // `{example}` طُلب من launch (tools85): «مثل 1.5» على USDZAR كلفةٌ أصغر ×60 — بلا المفتاح لا يتغيّر شيء
+        ? // `{example}` بحسب الأداة: «مثل 1.5» على USDZAR كلفةٌ أصغر ×60 (tools85)
           t.riskCalcSpreadTooWide
             .replace('{n}', String(spreadWide))
             .replace('{example}', typicalSpreadPipsExample(spec) || typicalSpreadPipsExample(null))
@@ -895,10 +895,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const slInsideSpread = stopInsideSpread(slNum, typedSpreadPips);
   /**
    * ولخانة السبريد الفارغة: وقفٌ داخل السبريد **المعتاد** للأداة («50» على USDZAR) — راجع `stopInsideTypicalSpread`. النصّ
-   * `riskCalcStopInsideTypicalSpread` طُلب من launch (tools85)؛ يُقرأ اختيارياً فيظهر التحذير حين يُضاف المفتاح، بلا نصّ مخترَع قبله.
+   * `riskCalcStopInsideTypicalSpread` (launch، `3a1b36d`).
    */
-  const typicalSpreadText = (t as unknown as Record<string, string | undefined>).riskCalcStopInsideTypicalSpread;
-  const slInsideTypical = typicalSpreadText ? stopInsideTypicalSpread(slNum, spec, spread) : null;
+  const slInsideTypical = stopInsideTypicalSpread(slNum, spec, spread);
   // الدخول ما زال Ask/Bid اللقطة الحيّة (نصّ التعبئة حرفياً وللأداة نفسها): السبريد داخل مسافة الوقف والهدف أصلاً،
   // فلا يُضاف إلا ما يزيد به سبريد الوسيط المكتوب على سبريد اللقطة — راجع `spreadBeyondLiveEntry`
   const liveFill = liveFillRef.current;
@@ -1708,9 +1707,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             {t.riskCalcStopInsideSpread.replace('{sl}', String(slNum)).replace('{spread}', String(typedSpreadPips))}
           </Text>
         ) : null}
-        {!slInsideSpread && slInsideTypical != null && typicalSpreadText && spec ? (
+        {!slInsideSpread && slInsideTypical != null && spec ? (
           <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
-            {typicalSpreadText
+            {t.riskCalcStopInsideTypicalSpread
               .replace('{sl}', String(slNum))
               .replace('{spread}', String(slInsideTypical))
               .replace('{symbol}', () => spec.symbol)}
