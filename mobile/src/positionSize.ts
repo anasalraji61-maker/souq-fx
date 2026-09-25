@@ -753,8 +753,13 @@ function typedFractionDigits(raw: string): number {
  * 1.27 pip يمرّ فوق حدّ «أضيق من 1 pip»: 1% من 10,000 = **7.87 لوت** بدل 0.40 لوقف 25 pip. الين والذهب (pip أكبر) خارجها.
  */
 function pipsLookLikeTwoDecimalPrice(v: number, spec?: InstrumentSpec | null, typed = 0): boolean {
-  if (spec?.pipSize !== 0.0001 || v < 0.5) return false;
+  if (v < 0.5) return false;
   const hundredths = Math.abs(v * 10 - Math.round(v * 10)) > 1e-6;
+  // تقاطعات الين الناشئة (ZARJPY ~8.6، TRYJPY ~3.7، MXNJPY ~8، SEKJPY ~14): السعر **أصغر** من وقفٍ عادي بالنقاط، فالسعر بخانة
+  // النقاط يكبّر اللوت كـUSDZAR لا يصغّره كـUSDJPY — «8.45» (سعر وقف ZARJPY) كانت 8.45 pip ⇒ **1.77 لوت بدل 1.00** لوقف 15 pip،
+  // و«3.62» TRYJPY ⇒ 4.14 بدل 1.87. القاعدة نفسها: جزءٌ من مئة، أو منزلتان مكتوبتان، وتحت 100 (SGDJPY ~115 خارجها).
+  if (spec?.quote === 'JPY' && spec.base !== 'SGD' && EM_OVER_ONE_VS_JPY.has(spec.base)) return v < 100 && (hundredths || typed === 2);
+  if (spec?.pipSize !== 0.0001) return false;
   // وبعملة تسعير ناشئة السعر نفسه بين ~2.5 و~50: «18.25» (USDZAR) و«41.20» (USDTRY) كانت 18.25 pip ⇒ **10.08 لوت بدل 0.12**
   // لوقف 1,500 pip — عكس الرئيسيات، هنا السعر بخانة النقاط **يكبّر** اللوت. حتى 100 كي تبقى EURTRY وما فوقها داخلها. منزلتان
   // **مكتوبتان** تكفيان هنا («41.20» تُقرأ 41.2): أسعار هذه العملات تُعرض بمنزلتين فأكثر، والمسافة لا تُكتب بجزء من مئة pip.

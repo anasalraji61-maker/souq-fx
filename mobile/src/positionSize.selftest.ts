@@ -3415,3 +3415,24 @@ console.log('positionSize commissionKindOf restore selftest OK');
   assert.equal(parsePriceFor('31.450', 'XAGUSD.mini'), 31.45);
 }
 console.log('positionSize mini metal ambiguous price selftest OK');
+
+// ── سعر وقف تقاطع ين ناشئ بخانة النقاط: «8.45» ZARJPY كانت 8.45 pip ⇒ 1.77 لوت بدل 1.00 (يكبّر اللوت كـUSDZAR) ──
+{
+  const S = (x: string) => instrumentSpec(x)!;
+  for (const [raw, sym] of [['8.45', 'ZARJPY'], ['3.62', 'TRYJPY'], ['7.85', 'MXNJPY'], ['8.40', 'ZARJPY'], ['14.25', 'SEKJPY'], ['38.10', 'PLNJPY']] as const) {
+    assert.equal(parseSlPips(raw, S(sym)), null, raw);
+    assert.equal(slPipsLooksLikePrice(raw, S(sym)), true, raw);
+  }
+  // النقاط الحقيقية تبقى: أعداد صحيحة وأعشار ومئات
+  for (const [raw, v] of [['15', 15], ['8', 8], ['12.5', 12.5], ['150', 150], ['0.5', 0.5]] as const) {
+    assert.equal(parseSlPips(raw, S('ZARJPY')), v, raw);
+  }
+  // الين الرئيسي وSGDJPY (~115) كما كانت: خطأ السعر هناك يصغّر اللوت
+  assert.equal(parseSlPips('12.25', S('USDJPY')), 12.25);
+  assert.equal(parseSlPips('45.75', S('GBPJPY')), 45.75);
+  assert.equal(parseSlPips('12.25', S('SGDJPY')), 12.25);
+  // الأثر على اللوت: ZARJPY، وقف 15 pip، حساب 10,000 USD و1%، USDJPY 150
+  const pv = pipValuePerLot(S('ZARJPY'), 1 / 150);
+  assert.equal(positionSize({ balance: 10_000, riskPct: 1, slPips: 15, pipValuePerLot: pv, contractSize: 100_000 })!.lots, 1);
+}
+console.log('positionSize EM-JPY cross stop price in pips field selftest OK');
