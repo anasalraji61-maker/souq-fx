@@ -318,6 +318,8 @@ export type Dict = {
   appCrashBody: string;
   appCrashRepeatBody: string;
   appCrashRetry: string;
+  /** سطر تقني تحت نصّ التكرار (`AppErrorBoundary`)، يتبعه اسم الخطأ ورسالته بالإنجليزية كما هي. */
+  appCrashDetailLabel: string;
   planSlWrongBuy: string;
   planSlWrongSell: string;
   planTpWrongBuy: string;
@@ -1471,6 +1473,7 @@ const ar: Dict = {
   appCrashRepeatBody:
     'ما زالت الشاشة تتعثّر. أغلق MATRIX كلياً (اسحبه من قائمة التطبيقات المفتوحة) ثم افتحه من جديد — رسوماتك محفوظة.',
   appCrashRetry: 'إعادة المحاولة',
+  appCrashDetailLabel: 'تفصيل تقني (صوّره إن أبلغت عن المشكلة):',
   planSlWrongBuy: 'الوقف يجب أن يكون تحت سعر الدخول في صفقة الشراء',
   planSlWrongSell: 'الوقف يجب أن يكون فوق سعر الدخول في صفقة البيع',
   planTpWrongBuy: 'الهدف يجب أن يكون فوق سعر الدخول في صفقة الشراء',
@@ -2570,6 +2573,7 @@ const enUS: Dict = {
   appCrashRepeatBody:
     'Still not working. Fully close MATRIX (swipe it away from your recent apps) and open it again — your drawings are safe.',
   appCrashRetry: 'Try again',
+  appCrashDetailLabel: 'Technical detail (screenshot it if you report this):',
   planSlWrongBuy: 'For a buy, the stop must be below the entry',
   planSlWrongSell: 'For a sell, the stop must be above the entry',
   planTpWrongBuy: 'For a buy, the target must be above the entry',
@@ -3695,6 +3699,7 @@ const ku: Dict = {
   appCrashRepeatBody:
     'هێشتا کار ناکات. MATRIX بە تەواوی دابخە (لە لیستی ئەپە کراوەکان لایبەرە) و دووبارە بیکەرەوە — کێشانەکانت پارێزراون.',
   appCrashRetry: 'دووبارە هەوڵبدەرەوە',
+  appCrashDetailLabel: 'وردەکاری تەکنیکی (ئەگەر کێشەکەت ڕاگەیاند وێنەی بگرە):',
   planSlWrongBuy: 'بۆ کڕین، وەستان دەبێت لە خوار نرخی چوونەژوورەوە بێت',
   planSlWrongSell: 'بۆ فرۆشتن، وەستان دەبێت لە سەرووی نرخی چوونەژوورەوە بێت',
   planTpWrongBuy: 'بۆ کڕین، ئامانج دەبێت لە سەرووی نرخی چوونەژوورەوە بێت',

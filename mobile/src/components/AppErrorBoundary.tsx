@@ -4,11 +4,20 @@ import { buttons, colors, radii } from '../theme';
 import { useI18n } from '../i18n/I18nContext';
 
 type Props = { children: React.ReactNode };
-type InnerProps = Props & { title: string; body: string; repeatBody: string; retry: string };
+type InnerProps = Props & { title: string; body: string; repeatBody: string; retry: string; detailLabel: string };
 type State = { error: Error | null; repeated: boolean };
 
 /** خطأ يعود خلال هذه المدة بعد «إعادة المحاولة» يُعدّ تكراراً لا خطأً جديداً. */
 const REPEAT_WINDOW_MS = 10_000;
+
+/** رسالة الخطأ المعروضة تُقصّ هنا: سطر يُصوَّر لا تتبّع مكدّس. */
+const DETAIL_MAX = 160;
+
+/** «TypeError: x is undefined» مقصوصة — بلا مكدّس ولا بيانات المتداول، اسم الخطأ ونصّه فقط. */
+function errorDetail(error: Error): string {
+  const text = `${error?.name || 'Error'}: ${error?.message || '—'}`.replace(/\s+/g, ' ').trim();
+  return text.length > DETAIL_MAX ? `${text.slice(0, DETAIL_MAX - 1)}…` : text;
+}
 
 /**
  * شبكة أمان للإقلاع والتنقّل: أي استثناء أثناء العرض كان يُسقط التطبيق كاملاً (شاشة بيضاء/إغلاق
@@ -45,6 +54,14 @@ class ErrorBoundaryInner extends React.Component<InnerProps, State> {
           {this.props.title}
         </Text>
         <Text style={styles.body}>{this.state.repeated ? this.props.repeatBody : this.props.body}</Text>
+        {/* خطأ متكرّر لا يُصلحه إلا تحديث: كانت الشاشة لا تقول شيئاً يفرّق عطلاً عن آخر، فبلاغ المتداول
+            «الشاشة تقول حدث خطأ» لا يدلّ المطوّر على شيء. سطر صغير خافت قابل للنسخ، بالتكرار وحده كي لا
+            يُخيف من تعثّر مرّة واحدة. */}
+        {this.state.repeated ? (
+          <Text selectable style={styles.detail}>
+            {this.props.detailLabel} {errorDetail(this.state.error)}
+          </Text>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={this.props.retry}
@@ -69,6 +86,7 @@ export function AppErrorBoundary({ children }: Props) {
       body={t.appCrashBody}
       repeatBody={t.appCrashRepeatBody}
       retry={t.appCrashRetry}
+      detailLabel={t.appCrashDetailLabel}
     >
       {children}
     </ErrorBoundaryInner>
@@ -87,6 +105,7 @@ const styles = StyleSheet.create({
   brand: { color: colors.accent, fontSize: 13, fontWeight: '800', letterSpacing: 3 },
   title: { color: colors.text, fontSize: 18, fontWeight: '800', textAlign: 'center' },
   body: { color: colors.textMuted, fontSize: 14, lineHeight: 21, textAlign: 'center' },
+  detail: { color: colors.textDim, fontSize: 11, lineHeight: 16, textAlign: 'center' },
   // الزر الوحيد بهذه الشاشة هو طريق الخروج منها: حبّة تيل ممتلئة بظل خفيف وضغطة تصغير، كزرّ
   // «التالي» بالجولة الترحيبية — لا لوح مسطّح بزوايا 10 يبدو معطّلاً بشاشة خطأ أصلاً.
   btn: {
