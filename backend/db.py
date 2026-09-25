@@ -2018,10 +2018,11 @@ def trade_stats(user_id: int | None = None, owner_key: str | None = None) -> dic
         "trade_count": 0,
         "win_rate": None,
         "total_pnl_pct": 0,
-        "avg_win": 0,
-        "avg_loss": 0,
-        "best": 0,
-        "worst": 0,
+        # لا صفقة ⇒ لا متوسّط ولا أفضل/أسوأ (None لا 0)، كالاختبار الخلفي `avg_win_pct`
+        "avg_win": None,
+        "avg_loss": None,
+        "best": None,
+        "worst": None,
         "win_count": 0,
         "loss_count": 0,
         "breakeven_count": 0,
@@ -2036,8 +2037,9 @@ def trade_stats(user_id: int | None = None, owner_key: str | None = None) -> dic
         # كلّها تعادل ⇒ لا نسبة فوز ذات معنى: None كالدفتر الفارغ، و`breakeven_count` يوضّح
         "win_rate": round(len(wins) / decided * 100, 1) if decided else None,
         "total_pnl_pct": round(sum(pnls), 2),
-        "avg_win": round(sum(wins) / len(wins), 2) if wins else 0,
-        "avg_loss": round(sum(losses) / len(losses), 2) if losses else 0,
+        # بلا رابحة لا متوسّط ربح (None لا 0): «متوسّط الربح 0%» يُقرأ «ربحت صفقات بلا شيء» — كـ`backtest._stats`
+        "avg_win": round(sum(wins) / len(wins), 2) if wins else None,
+        "avg_loss": round(sum(losses) / len(losses), 2) if losses else None,
         "best": round(max(pnls), 2),
         "worst": round(min(pnls), 2),
         "win_count": len(wins),

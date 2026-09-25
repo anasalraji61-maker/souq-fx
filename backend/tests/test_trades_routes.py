@@ -219,6 +219,14 @@ def test_statistics_count_closed_trades_only(client):
     assert stats["total_pnl_pct"] == pytest.approx(round(won["pnl"] + lost["pnl"], 2), abs=0.01)
 
 
+def test_an_average_with_no_trades_behind_it_is_null_not_zero(client):
+    """كل الصفقات رابحة ⇒ لا متوسّط خسارة: 0 كان يُقرأ «خسرتُ صفقات بلا شيء»."""
+    _open_trade(client, exit=1.1100)
+    stats = client.get("/api/trades", headers=_DEV1).json()["stats"]
+    assert stats["avg_win"] is not None and stats["avg_win"] > 0
+    assert stats["avg_loss"] is None
+
+
 def test_an_empty_journal_has_zeroed_statistics_not_an_error(client):
     """أول ما يراه متداول جديد — لا قسمة على صفر ولا 500."""
     stats = client.get("/api/trades", headers=_DEV1).json()["stats"]
@@ -226,10 +234,10 @@ def test_an_empty_journal_has_zeroed_statistics_not_an_error(client):
         "trade_count": 0,
         "win_rate": None,
         "total_pnl_pct": 0,
-        "avg_win": 0,
-        "avg_loss": 0,
-        "best": 0,
-        "worst": 0,
+        "avg_win": None,
+        "avg_loss": None,
+        "best": None,
+        "worst": None,
         "win_count": 0,
         "loss_count": 0,
         "breakeven_count": 0,
