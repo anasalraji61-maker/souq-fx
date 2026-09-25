@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AccessibilityInfo, Modal, View, Text, StyleSheet, Pressable } from 'react-native';
+import { AccessibilityInfo, Modal, View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons } from '../theme';
 import { useI18n } from '../i18n/I18nContext';
@@ -99,10 +99,20 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
                 </Pressable>
               ))}
             </View>
-            <Text accessibilityRole="header" style={[styles.title, { textAlign: align }]}>
-              {steps[step]!.title}
-            </Text>
-            <Text style={[styles.body, { textAlign: align }]}>{steps[step]!.body}</Text>
+            {/* العنوان والنصّ وحدهما يتمرّران: البطاقة بلا حدّ ارتفاع، فنصٌّ طويل (الخطوة 1 بالكردية ~470
+                حرفاً) مع خطّ كبير كان يمدّها فوق أعلى الشاشة. النقاط وتنبيه المخاطرة والزرّان ثابتة دائماً
+                بالمشهد. `key` يعيد التمرير لأعلى مع كل خطوة. */}
+            <ScrollView
+              key={step}
+              style={styles.scroll}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <Text accessibilityRole="header" style={[styles.title, { textAlign: align }]}>
+                {steps[step]!.title}
+              </Text>
+              <Text style={[styles.body, { textAlign: align }]}>{steps[step]!.body}</Text>
+            </ScrollView>
             {/* تنبيه المخاطرة بكل خطوة لا بالأخيرة وحدها: زرّ «تخطي» ظاهر من الخطوة الأولى، فمن يضغطه
                 كان يغلق الجولة بلا أن يرى «تحليل وتعليم فقط، لا نصيحة مالية» إطلاقاً — وهو موضع
                 التطبيق المعلَن بالمتجر (`app.json` وdocs/STORE-LISTING.md). سطران صغيران لا يزاحمان. */}
@@ -150,8 +160,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(8, 14, 22, 0.72)',
     justifyContent: 'flex-end',
   },
-  safe: { width: '100%' },
+  safe: { width: '100%', maxHeight: '100%' },
   card: {
+    flexShrink: 1,
     margin: spacing.lg,
     padding: spacing.lg,
     borderRadius: radii.lg,
@@ -172,6 +183,8 @@ const styles = StyleSheet.create({
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.border },
   dotOn: { backgroundColor: colors.accent, width: 18 },
   dotDone: { width: 6, opacity: 0.55 },
+  scroll: { flexGrow: 0, flexShrink: 1 },
+  scrollContent: { gap: spacing.sm },
   title: { color: colors.text, fontWeight: '900', fontSize: 17 },
   body: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
   riskNote: {
