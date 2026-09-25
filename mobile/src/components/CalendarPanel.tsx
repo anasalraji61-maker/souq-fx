@@ -29,16 +29,6 @@ type Ev = {
   time_tbd?: boolean;
 };
 
-/**
- * «الساعة غير معلنة» بجانب تاريخ حدثٍ بلا ساعة. نسخة محلية حتى يضيف launch `calTimeTbd` (ar/en/ku) —
- * تُقرأ من القاموس إن وُجدت. الكردي بحاجة مراجعة.
- */
-const TIME_TBD_COPY: Record<string, string> = {
-  ar: 'الساعة غير معلنة',
-  en: 'time not announced',
-  ku: 'کاتەکەی ڕانەگەیەندراوە',
-};
-
 /** أفق عدّاد الترويسة «القادم خلال 24 ساعة» — يوم التداول القادم كما يخطّط له المتداول مساءً. */
 const SOON_MS = 24 * 60 * 60 * 1000;
 /**
@@ -109,7 +99,7 @@ type Props = {
 };
 
 export function CalendarPanel({ compact = false, flow = false, symbol, onPickCurrency, active = true }: Props) {
-  const { t, rtl, lang } = useI18n();
+  const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [events, setEvents] = useState<Ev[]>([]);
   const [currency, setCurrency] = useState('ALL');
@@ -283,7 +273,7 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
   /** الأحداث القادمة أولاً (الأقرب فالأبعد)، ثم ما بلا وقت دقيق، ثم المنتهية (باهتة) */
   const ordered: Ev[] = [...upcoming, ...untimed, ...past];
   const soonCount = upcoming.filter((e) => !tbd(e) && e.ts * 1000 <= now + SOON_MS).length;
-  const timeTbdWord = (t as { calTimeTbd?: string }).calTimeTbd ?? TIME_TBD_COPY[lang] ?? TIME_TBD_COPY.en;
+  const timeTbdWord = t.calTimeTbd;
   const isSample = events.some((e) => e.sample);
 
   const dayWord = (d: Date) => {
