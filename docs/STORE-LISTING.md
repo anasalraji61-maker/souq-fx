@@ -57,7 +57,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • سعر أعلى قمّة وأدنى قاع على الشاشة مكتوب عند ذيليهما ويتحدّث وأنت تسحب، وخطّ خافت يفصل كل يوم تداول عن الذي يليه على الفريمات الصغيرة.
 • المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، الفوليوم وغيرها وقيمة كل خطّ مكتوبة بجانب اسمه، ومستويات الارتكاز (Pivot وCamarilla وفيبوناتشي) وأعلى الأمس وأدناه وبجانب كل مستوى سعره، وتظليل جلسات طوكيو ولندن ونيويورك.
 • «عدسات» تضع مجموعة مؤشرات جاهزة بلمسة: هيكل (المتوسطات)، زخم (RSI وMACD)، سيولة (الفوليوم وبولنجر وCVD تقديري من الشموع، لا من تدفّق أوامر حقيقي).
-• أدوات رسم: خط اتجاه، شعاع، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات تكتب نصّها، مع زرّ تراجع — حتى في المساحة الفارغة يمين آخر شمعة. الخط الأفقي يكتب بُعده عن السعر بالـpip، والمنطقة ارتفاعها. وما ترسمه على فريم يظهر على بقية فريمات الرمز نفسه.
+• أدوات رسم: خط اتجاه، شعاع، قناة موازية، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات تكتب نصّها، مع زرّ تراجع وزرّ «نسخة» يكرّر الرسم بلمسة — حتى في المساحة الفارغة يمين آخر شمعة. الخط الأفقي يكتب بُعده عن السعر بالـpip، والمنطقة ارتفاعها. وما ترسمه على فريم يظهر على بقية فريمات الرمز نفسه.
 • خطّط صفقة شراء أو بيع على الشارت: اسحب من الدخول إلى الوقف فيظهر الهدف، والمسافتان بالـpip، ونسبة العائد إلى المخاطرة — واسحب الهدف لتغيّر النسبة. وعلى الشموع السابقة ترى هل بلغ السعر الهدف أم الوقف.
 • أداة قياس تكتب المسافة بالـpip والنسبة وعدد الشموع وكم استغرقت الحركة من وقت، وأنت تسحب.
 • إعادة تشغيل الشموع لتدريب عينك على قراءة الحركة.
@@ -118,15 +118,15 @@ CHARTS
 • The on-screen high and low carry their price and update as you scroll, and a faint line marks where each trading day starts on intraday charts.
 • The indicators traders use: SMA and EMA, Bollinger Bands, RSI, MACD, Volume and more, each line's value in the legend, plus pivot levels (classic, Camarilla, Fibonacci) and yesterday's high and low, and Tokyo, London and New York session shading.
 • One-tap "lenses" that add a ready set of indicators: Structure (moving averages), Momentum (RSI and MACD), Liquidity (volume, Bollinger and a CVD estimated from candles, not order flow).
-• Drawing tools: trend line, ray, horizontal and vertical lines, rectangle, Fibonacci, zones and typed notes, with undo — also past the live candle. A horizontal line shows its distance from price in pips; a zone, its height. Drawings follow the symbol across timeframes.
+• Drawing tools: trend line, ray, parallel channel, horizontal and vertical lines, rectangle, Fibonacci, zones and typed notes, with undo and one-tap cloning — also past the live candle. A horizontal line shows its distance from price in pips; a zone, its height. Drawings follow the symbol across timeframes.
 • Plan a buy or sell on the chart: drag from entry to stop to see the target, both distances in pips and the reward-to-risk ratio — drag the target to change it. On past candles it shows whether price hit the target or the stop.
 • A measure tool showing pips, percent, bar count and how long the move took as you drag.
 • Candle replay to train your eye.
 
 WATCHLIST & ALERTS
-• A personal watchlist for the currency pairs and symbols you follow.
+• A personal watchlist of the pairs and symbols you follow.
 • Price alerts and indicator alerts (RSI, moving averages, MACD) delivered as notifications.
-• Economic calendar and market news in one place.
+• Economic calendar and market news.
 
 TRADER TOOLS
 • Position size calculator: enter your balance, risk (percent or amount) and stop loss (in pips, or entry and stop prices) to get your lot size — standard, cent or micro accounts — with one-tap targets from 1:1 to 1:3, an estimate of the margin your broker holds at your leverage, and optional spread and commission so your risk and net profit include costs — and warns when your stop sits inside the spread.
@@ -134,11 +134,11 @@ TRADER TOOLS
 • A heads-up before a trade when high-impact news is close for the pair's, index's or metal's currency — using your broker's symbol names. If the calendar fails to load, it says so.
 • A screener on common indicator conditions.
 • Simple strategy backtesting on past data, for learning.
-• An AI assistant that answers your technical-analysis questions in your language, plus a short weekly report.
+• An AI assistant for your technical-analysis questions, in your language, plus a short weekly report.
 • Share a chart image in one tap.
 
 ACADEMY
-• Structured audio lessons in graded levels, starting from the basics.
+• Audio lessons in graded levels, starting from the basics.
 • Ask the teacher mid-lesson and get an instant explanation.
 
 Calm colors for long sessions, with tactile feedback only where you touch.
@@ -170,3 +170,7 @@ The first release of MATRIX: multi-chart layouts, indicators and drawing tools, 
 > **2026-09-25 (launch 65)**: سطر التقاطع يذكر التغيّر عن إغلاق الشمعة السابقة (`b70f388`، `5cdd75f`)، وسطر المؤشرات قيمة كل خطّ
 > بالمفتاح (`f0b7a43`). لإفساح الإنجليزي اختُصر سطرا العدّاد والماسح وعبارة محور السعر بلا حذف ميزة، و«open, high, low, close» ⇒ «OHLC».
 > العدّ: **ar 3803 / en 4000** من 4000 (بلا هامش — أي إضافة تحتاج اختصاراً).
+
+> **2026-09-25 (launch 73)**: سطر الرسم يذكر القناة الموازية (`DRAW_TOOLS` `channel`، `fitChannelWidth` مختبَر) وزرّ «نسخة» للرسم المحدَّد (`39e26a2`)
+> — كلاهما بلا تجربة على جهاز. لإفساح الإنجليزي اختُصرت أربع عبارات (قائمة المتابعة، التقويم، المساعد، الأكاديمية) بلا حذف ميزة.
+> العدّ بسكربت: **ar 3846 / en 3996** من 4000.
