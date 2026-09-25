@@ -1,5 +1,18 @@
 import type { Candle } from '../api';
 import { estimatedVolume } from './types';
+import { FLAT_SPAN_RATIO } from './priceSpan';
+
+/**
+ * حدود الصفوف. مدى صفري (كل الشموع high = low: مزوّد ساكن، أو شمعة إعادة واحدة) كان يأخذ مدى 1 كاملاً من `lo`
+ * ⇒ POC على EURUSD الساكن عند 1.08 يُرسم 1.1008 (~208 pip فوق السعر) وعلى USDJPY ~2 pip. الآن مدى
+ * `FLAT_SPAN_RATIO` من السعر وصفّ المنتصف مركزه السعر نفسه ⇒ POC/VAH/VAL عليه.
+ */
+function binFrame(lo: number, hi: number, bins: number): { lo: number; step: number } {
+  if (hi > lo) return { lo, step: (hi - lo) / bins };
+  const span = Math.abs(lo) * FLAT_SPAN_RATIO || 1e-8;
+  const step = span / bins;
+  return { lo: lo - (Math.floor(bins / 2) + 0.5) * step, step };
+}
 
 export type VolumeProfileRow = { price: number; volume: number };
 
@@ -22,8 +35,9 @@ export function computeVolumeProfile(
     lo = Math.min(lo, c.low);
     hi = Math.max(hi, c.high);
   }
-  const span = hi - lo || 1;
-  const step = span / bins;
+  const frame = binFrame(lo, hi, bins);
+  lo = frame.lo;
+  const step = frame.step;
   const acc = new Array(bins).fill(0);
   for (const c of candles) {
     const vol = c.volume ?? estimatedVolume(c);
@@ -57,8 +71,9 @@ export function computeTpo(
     lo = Math.min(lo, c.low);
     hi = Math.max(hi, c.high);
   }
-  const span = hi - lo || 1;
-  const step = span / bins;
+  const frame = binFrame(lo, hi, bins);
+  lo = frame.lo;
+  const step = frame.step;
   const letters: string[][] = Array.from({ length: bins }, () => []);
   const vols = new Array(bins).fill(0);
 
