@@ -338,3 +338,25 @@ def test_a_squatted_placeholder_no_longer_blocks_account_deletion(_db):
             "SELECT username, email FROM users WHERE id=?", (victim["user_id"],)
         ).fetchone()
     assert name.startswith(f"deleted_user_{victim['user_id']}_") and email is None
+
+
+def test_direction_marks_pasted_around_an_arabic_name_are_trimmed_not_rejected(_db):
+    """نسخ اسم عربي ولصقه يجلب LRM/RLM/ALM بالطرفين — كان يُرفض «محارف مخفية» (launch142b)."""
+    out = db.register_user("‏علي_الفوركس‎ ", "hunter2", email="a@example.com")
+    assert out["username"] == "علي_الفوركس"
+    assert db.login_user("؜علي_الفوركس", "hunter2")["username"] == "علي_الفوركس"
+
+
+def test_a_direction_mark_inside_the_name_is_still_rejected(_db):
+    with pytest.raises(ValueError, match="invisible"):
+        db.register_user("ali‏ce", "hunter2", email="a@example.com")
+
+
+def test_zwnj_between_arabic_letters_is_a_real_name(_db):
+    assert db.register_user("می‌خواهم", "hunter2", email="z@example.com")["username"] == "می‌خواهم"
+
+
+@pytest.mark.parametrize("name", ["alice‌", "ali‌ce", "‌علي", "علي‌"])
+def test_zwnj_elsewhere_is_still_invisible(_db, name):
+    with pytest.raises(ValueError, match="invisible"):
+        db.register_user(name, "hunter2", email="z@example.com")

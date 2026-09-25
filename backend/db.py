@@ -44,13 +44,32 @@ _RESERVED_USERNAME = re.compile(r"^deleted_user_", re.IGNORECASE)
 _RESERVED_USERNAMES = frozenset({"أنت"})
 
 
+# علامات الاتجاه (LRM/RLM/ALM) تأتي مع نسخ اسم عربي ولصقه ولا تُرى: تُقطع من الطرفين كالفراغ لا تُرفض (launch142b).
+_EDGE_JUNK = re.compile(r"^[\s\u200e\u200f\u061c]+|[\s\u200e\u200f\u061c]+$")
+_ZWNJ = "\u200c"
+
+
+def _clean_username(username: str) -> str:
+    return _EDGE_JUNK.sub("", username or "")
+
+
+def _arabic_letter(ch: str) -> bool:
+    return ("\u0600" <= ch <= "\u06ff" or "\u0750" <= ch <= "\u077f") and unicodedata.category(ch).startswith("L")
+
+
+def _zwnj_ok(username: str, i: int) -> bool:
+    """ZWNJ يُكتب بأسماء كردية/فارسية بين حرفين عربيين (يقطع الوصل فيُرى أثره)؛ خارج ذلك محرف مخفيّ."""
+    return 0 < i < len(username) - 1 and _arabic_letter(username[i - 1]) and _arabic_letter(username[i + 1])
+
+
 def _check_username(username: str) -> None:
     """ValueError لاسم محجوز أو يحمل محارف لا تُرى/تُطبَّع: «alice\u200b» (عرض صفري) و«ａｌｉｃｅ» (عرض
     كامل) كانا يُقبلان بجانب «alice» ويُعرضان مثله — انتحال لا يمنعه فهرس `NOCASE` (backend-r47)."""
     if _RESERVED_USERNAME.match(username) or username in _RESERVED_USERNAMES:
         raise ValueError("username reserved")
     if unicodedata.normalize("NFKC", username) != username or any(
-        unicodedata.category(ch)[0] in "CZ" and ch != " " for ch in username
+        unicodedata.category(ch)[0] in "CZ" and ch != " " and not (ch == _ZWNJ and _zwnj_ok(username, i))
+        for i, ch in enumerate(username)
     ):
         raise ValueError("username has invisible or look-alike characters")
 
@@ -453,7 +472,7 @@ def register_user(
     import commissions as commissions_mod
     import re
 
-    username = username.strip()
+    username = _clean_username(username)
     email_norm = (email or "").strip().lower()
     if len(username) < 3 or len(password) < 4:
         raise ValueError("username/password too short")
@@ -676,7 +695,7 @@ def place_under_sponsor(
     """Place a new member on left/right under sponsor (or under a downline node)."""
     import commissions as commissions_mod
 
-    username = username.strip()
+    username = _clean_username(username)
     side_norm = (side or "").strip().lower()
     role = (role or "trader").strip().lower()
     pwd = (password or "").strip()
@@ -930,7 +949,7 @@ def ensure_network_for_user(user_id: int, username: str) -> dict[str, Any]:
 
 
 def login_user(username_or_email: str, password: str) -> dict[str, Any]:
-    ident = username_or_email.strip()
+    ident = _clean_username(username_or_email)
     with _conn() as c:
         if "@" in ident:
             row = c.execute(
