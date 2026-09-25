@@ -721,6 +721,24 @@ export function formatMoney(v: number, ccy: string): string {
 }
 
 /**
+ * قيمة الـpip **لمركزٍ صغير** للعرض: كـ`formatMoney` لكن بمنازل إضافية (حتى 4) حين تُضيّع المنازل العادية الرقم —
+ * رقمان معنويان على الأقل، والأصفار الزائدة عن منازل العملة تُحذف. «0.04 lot = 0.00 USD» (EURUSDmicro: 0.004$ للنقطة)
+ * كان يُطبع تحت «المخاطرة الفعلية 0.20 USD» فيبدو المركز بلا خطر؛ و«0.10 lot = 2 JPY» (الحقيقة 1.5) × 20 نقطة = 40
+ * بجانب مخاطرة 30. مبلغٌ ≥ 10 وحدات عرض (0.10 دولار، 10 ين) يُكتب كـ`formatMoney` حرفياً.
+ */
+export function formatPipValue(v: number, ccy: string): string {
+  if (!Number.isFinite(v) || v <= 0) return formatMoney(v, ccy);
+  const base = moneyDecimals(ccy);
+  let d = base;
+  while (d < base + 4 && Math.round(v * 10 ** d * 1e6) / 1e6 < 10) d++;
+  if (d === base) return formatMoney(v, ccy);
+  const text = v.toFixed(d).replace(/0+$/, '');
+  const [int, frac = ''] = text.split('.');
+  const padded = frac.padEnd(base, '0');
+  return `${int.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}${padded ? `.${padded}` : ''} ${ccy}`;
+}
+
+/**
  * الرافعة كما يكتبها المتداول: «100»، «1:100»، «1/500»، بأرقام عربية أيضاً («١:٢٠٠») وعريضة («１：５００»). الرقم المعتمد هو
  * المقام وحده — «1:100» تعني 100.
  *

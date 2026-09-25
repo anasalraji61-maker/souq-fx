@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import {
   convStaleMinutes,
   parseSlPips,
+  formatPipValue,
   instrumentSpec as specForSl,
   pipValuePerLot as pvForSl,
   positionSize as sizeForSl,
@@ -2256,3 +2257,23 @@ console.log('positionSize liveEntryFillAllowed selftest OK');
   assert.equal(r.belowMinLot, true);
 }
 console.log('positionSize parseSlPips selftest OK');
+
+{
+  // مركز micro صغير: 0.04 لوت × 0.10$ = 0.004$ للنقطة — كان «0.00 USD» تحت مخاطرة 0.20
+  assert.equal(formatPipValue(0.004, 'USD'), '0.004 USD');
+  assert.equal(formatPipValue(0.004 * 50, 'USD'), '0.20 USD');
+  // حساب ين: 1.5 ين للنقطة كان «2 JPY» (× 20 = 40 بجانب مخاطرة 30)
+  assert.equal(formatPipValue(1.5, 'JPY'), '1.5 JPY');
+  // ≥ 10 وحدات عرض ⇒ كـformatMoney حرفياً
+  assert.equal(formatPipValue(3.5, 'USD'), '3.50 USD');
+  assert.equal(formatPipValue(0.1, 'USD'), '0.10 USD');
+  assert.equal(formatPipValue(1234.5, 'USD'), '1,234.50 USD');
+  assert.equal(formatPipValue(1572.4, 'JPY'), '1,572 JPY');
+  assert.equal(formatPipValue(0.35, 'USD'), '0.35 USD');
+  assert.equal(formatPipValue(0.099, 'USD'), '0.099 USD');
+  assert.equal(formatPipValue(9.99, 'JPY'), '10 JPY');
+  // لا يُطبع صفر لقيمة موجبة ضمن 4 منازل إضافية
+  assert.equal(formatPipValue(0.0000123, 'USD'), '0.000012 USD');
+  assert.equal(formatPipValue(NaN, 'USD'), '—');
+}
+console.log('positionSize formatPipValue selftest OK');

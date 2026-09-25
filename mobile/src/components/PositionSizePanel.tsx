@@ -18,6 +18,7 @@ import {
   positionSize,
   slPipsFromPrices,
   parseSlPips,
+  formatPipValue,
   riskForLots,
   formatRiskPct,
   parseRiskInput,
@@ -1403,7 +1404,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         {pv != null ? (
           <Text style={[styles.resultMeta, { textAlign: align }]}>
             {t.riskCalcPipValue}: {money(pv)}
-            {result && lots != null ? ` · ${lots.toFixed(2)} lot = ${money(result.pipValue)}` : ''}
+            {result && lots != null ? ` · ${lots.toFixed(2)} lot = ${formatPipValue(result.pipValue, moneyCcy)}` : ''}
           </Text>
         ) : null}
         {slInsideSpread ? (
