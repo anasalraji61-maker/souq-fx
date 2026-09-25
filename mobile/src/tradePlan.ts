@@ -1805,6 +1805,22 @@ export function openTradesWithoutStop(trades: readonly { sl?: number | null; sta
 }
 
 /**
+ * عدد الصفقات **المفتوحة بوقفٍ صالح** التي لا يُعرف مالُ مخاطرتها (حجمٌ مجهول — الخادم يخزّن 1 بلا «1.00 lot» — أو أداةٌ بلا
+ * عقد معروف: BTCUSD، US30، رمز mini) — لسطرٍ يقول لماذا غاب «المخاطرة (مفتوحة)» بدل الصمت. الشرط نفسه: الصفقة وحدها تُسقط
+ * `openRiskTotals`. المفتوحة بلا وقف تُعدّ في `openTradesWithoutStop` لا هنا، فلا تُعدّ صفقةٌ مرّتين.
+ */
+export function openTradesUnknownRisk(trades: Parameters<typeof openRiskTotals>[0]): number {
+  let n = 0;
+  for (const tr of trades) {
+    if (tr.status !== 'open') continue;
+    const sl = tr.sl;
+    if (typeof sl !== 'number' || !Number.isFinite(sl) || sl <= 0) continue;
+    if (openRiskTotals([tr]) == null) n += 1;
+  }
+  return n;
+}
+
+/**
  * **المخاطرة المفتوحة الآن**: مجموع المال بين الدخول والوقف لكل الصفقات المفتوحة المعروضة، لكل عملة تسعير — لسطر
  * «المخاطرة (مفتوحة): 150.00 USD · 12,000 JPY» بالدفتر. أربع صفقات بـ1% لكلٍّ هي 4% من الحساب معرَّضة معاً، والدفتر
  * كان يقول مخاطرة كل صفقة وحدها (`journalRisk`) ويسكت عن المجموع — الرقم الذي يُسأل قبل فتح الخامسة.

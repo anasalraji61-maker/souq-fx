@@ -11,6 +11,7 @@ import {
   OPEN_QUOTES_REFRESH_AFTER_MS,
   openRiskTotals,
   openTradesWithoutStop,
+  openTradesUnknownRisk,
   entryAfterSideSwitch,
   executionPrice,
   floatingExitPrice,
@@ -2182,6 +2183,31 @@ console.log('tradePlan openRiskTotals selftest OK');
   assert.equal(openTradesWithoutStop([T({ sl: 1.09 })]), 0);
 }
 console.log('tradePlan openTradesWithoutStop selftest OK');
+
+// —— openTradesUnknownRisk: حجمٌ مجهول أو أداةٌ بلا عقد ⇒ سببٌ لغياب السطر بدل الصمت
+{
+  const T = (o: Partial<{ symbol: string; side: string; entry: number; sl: number | null; size: number | null; note: string | null; status: string }>) => ({
+    symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.083 as number | null, size: 0.5, note: null as string | null, status: 'open', ...o,
+  });
+  assert.equal(openTradesUnknownRisk([]), 0);
+  assert.equal(openTradesUnknownRisk([T({})]), 0);
+  // أداة بلا عقد معروف، وحجمٌ غائب
+  const btc = T({ symbol: 'BTCUSD', entry: 60000, sl: 59000 });
+  const us30 = T({ symbol: 'US30', entry: 42000, sl: 42100, side: 'sell' });
+  const noSize = T({ size: null });
+  assert.equal(openTradesUnknownRisk([T({}), btc, us30, noSize]), 3);
+  // كان: السطر يختفي بلا سبب (المجموع null ولا صفقة بلا وقف)
+  assert.equal(openRiskTotals([T({}), btc]), null);
+  assert.equal(openTradesWithoutStop([T({}), btc]), 0);
+  assert.equal(openTradesUnknownRisk([T({}), btc]), 1);
+  // بلا وقف تُعدّ هناك لا هنا؛ المغلقة لا تُعدّ
+  assert.equal(openTradesUnknownRisk([T({ symbol: 'BTCUSD', sl: null }), T({ symbol: 'BTCUSD', entry: 60000, sl: 59000, status: 'closed' })]), 0);
+  // اتّساق: لا صفقة مجهولة ولا بلا وقف ⇒ المجموع موجود
+  const ok = [T({}), T({ symbol: 'USDJPY', entry: 150, sl: 149.5 }), T({ symbol: 'XAUUSD', entry: 2650, sl: 2660, side: 'sell', size: 0.1 })];
+  assert.equal(openTradesUnknownRisk(ok), 0);
+  assert.notEqual(openRiskTotals(ok), null);
+}
+console.log('tradePlan openTradesUnknownRisk selftest OK');
 
 // QUICK_SYMBOLS: ثابت واحد للوحات الأربع (QA6) — كل شريحة رمزٌ يُحفظ كما هو وله مواصفات (pip/عقد) بالحاسبة والدفتر
 {
