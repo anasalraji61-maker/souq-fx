@@ -87,19 +87,6 @@ export function prevSessionFromDaily<T extends Pick<Candle, 'time'>>(
 }
 
 /**
- * إغلاق الجلسة السابقة من شموع D1 (بالثواني، بأي ترتيب)؛ null إن لم تكفِ البيانات أو كانت فاسدة.
- * `nowSec` اختياري: راجع `prevSessionFromDaily`.
- */
-export function prevCloseFromDaily(
-  candles: readonly Pick<Candle, 'time' | 'close'>[],
-  nowSec?: number,
-  symbol?: string | null
-): number | null {
-  const c = prevSessionFromDaily(candles, nowSec, symbol)?.close;
-  return typeof c === 'number' && Number.isFinite(c) && c > 0 ? c : null;
-}
-
-/**
  * أعلى/أدنى/إغلاق/افتتاح جلسة سابقة صالحة لحساب نقاط الارتكاز؛ null لشمعة فاسدة.
  */
 export function validSessionBar(c: Candle | null | undefined): Candle | null {

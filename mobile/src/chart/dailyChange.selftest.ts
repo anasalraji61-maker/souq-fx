@@ -8,11 +8,16 @@ import {
   formatPct,
   freshTickRefPrice,
   pctDirection,
-  prevCloseFromDaily,
+  prevSessionFromDaily,
   sessionKeyAt,
   tickDirection,
+  validSessionBar,
   weekendMergeOf,
 } from './dailyChange';
+
+// إغلاق الجلسة السابقة كما يقرؤه المستهلكون (`dailyRefStore`، الشارت): `prevSessionFromDaily` ثم الإغلاق.
+const prevClose = (candles: { time: number; close: number }[], nowSec?: number, symbol?: string | null) =>
+  prevSessionFromDaily(candles, nowSec, symbol)?.close ?? null;
 
 // أيام UTC حقيقية (ثوانٍ): 2026-09-14 إثنين … 2026-09-20 أحد، 2026-09-21 إثنين
 const D = (iso: string) => Date.parse(`${iso}T00:00:00Z`) / 1000;
@@ -24,52 +29,58 @@ const sun = { time: D('2026-09-20'), close: 1.105 };
 const mon = { time: D('2026-09-21'), close: 1.12 };
 
 // إغلاق الأمس = الجلسة السابقة، حتى لو وصلت الشموع غير مرتّبة
-assert.equal(prevCloseFromDaily([wed, thu, fri]), 1.09);
-assert.equal(prevCloseFromDaily([fri, wed, thu]), 1.09);
-assert.equal(prevCloseFromDaily([wed]), null);
-assert.equal(prevCloseFromDaily([]), null);
-assert.equal(prevCloseFromDaily([{ ...thu, close: 0 }, fri]), null);
-assert.equal(prevCloseFromDaily([{ ...thu, close: NaN }, fri]), null);
+assert.equal(prevClose([wed, thu, fri]), 1.09);
+assert.equal(prevClose([fri, wed, thu]), 1.09);
+assert.equal(prevClose([wed]), null);
+assert.equal(prevClose([]), null);
+// شمعة سابقة فاسدة: الجلسة تُختار، و`validSessionBar` (بوابة المستهلكين) ترفضها
+const bar = (close: number) => ({ time: thu.time, open: 1.085, high: 1.095, low: 1.08, close, volume: 0 });
+assert.equal(prevSessionFromDaily([bar(0), fri])?.time, thu.time);
+assert.equal(validSessionBar(bar(0)), null);
+assert.equal(validSessionBar(bar(NaN)), null);
+assert.equal(validSessionBar({ ...bar(1.09), high: 1.07 }), null); // أعلى < أدنى
+assert.equal(validSessionBar(bar(1.09))?.close, 1.09);
+assert.equal(validSessionBar(null), null);
 // السبت/صباح الأحد (السوق مغلق): الجمعة مقابل الخميس كما تعرضه تطبيقات التداول
-assert.equal(prevCloseFromDaily([wed, thu, fri], D('2026-09-19') + 12 * H), 1.09);
-assert.equal(prevCloseFromDaily([wed, thu, fri], D('2026-09-20') + 10 * H), 1.09);
+assert.equal(prevClose([wed, thu, fri], D('2026-09-19') + 12 * H), 1.09);
+assert.equal(prevClose([wed, thu, fri], D('2026-09-20') + 10 * H), 1.09);
 // الأحد 20:30 UTC صيفاً (الافتتاح 21:00) ثم 21:30 شتاءً (الافتتاح 22:00): السوق مغلق بعد
-assert.equal(prevCloseFromDaily([wed, thu, fri], D('2026-09-20') + 20.5 * H), 1.09);
+assert.equal(prevClose([wed, thu, fri], D('2026-09-20') + 20.5 * H), 1.09);
 const friW = { time: D('2026-11-13'), close: 1.1 };
 const thuW = { time: D('2026-11-12'), close: 1.09 };
-assert.equal(prevCloseFromDaily([thuW, friW], D('2026-11-15') + 21.5 * H), 1.09);
-assert.equal(prevCloseFromDaily([thuW, friW], D('2026-11-15') + 22.5 * H), 1.1);
+assert.equal(prevClose([thuW, friW], D('2026-11-15') + 21.5 * H), 1.09);
+assert.equal(prevClose([thuW, friW], D('2026-11-15') + 22.5 * H), 1.1);
 // مساء الأحد بعد الافتتاح وقبل ظهور شمعة الأحد: المرجع إغلاق الجمعة (كان الخميس)
-assert.equal(prevCloseFromDaily([wed, thu, fri], D('2026-09-20') + 22 * H), 1.1);
+assert.equal(prevClose([wed, thu, fri], D('2026-09-20') + 22 * H), 1.1);
 // شمعة الأحد جزء من جلسة الإثنين: المرجع الجمعة مساء الأحد ويوم الإثنين (كان إغلاق شمعة الأحد)
-assert.equal(prevCloseFromDaily([thu, fri, sun], D('2026-09-20') + 23 * H), 1.1);
-assert.equal(prevCloseFromDaily([thu, fri, sun, mon], D('2026-09-21') + 9 * H), 1.1);
-assert.equal(prevCloseFromDaily([thu, fri, mon]), 1.1);
+assert.equal(prevClose([thu, fri, sun], D('2026-09-20') + 23 * H), 1.1);
+assert.equal(prevClose([thu, fri, sun, mon], D('2026-09-21') + 9 * H), 1.1);
+assert.equal(prevClose([thu, fri, mon]), 1.1);
 // الثلاثاء قبل ظهور شمعته (مزوّد متأخر): المرجع إغلاق الإثنين المكتمل
-assert.equal(prevCloseFromDaily([fri, sun, mon], D('2026-09-22') + 3 * H), 1.12);
+assert.equal(prevClose([fri, sun, mon], D('2026-09-22') + 3 * H), 1.12);
 // افتتاح CME المتأخر (الأحد 18:00 نيويورك = 22:00Z صيفاً، 23:00Z شتاءً) حين يُمرَّر الرمز
 {
   const sun2130 = D('2026-09-20') + 21.5 * H; // الفوركس فُتح 21:00Z، الذهب/US30/WTI لا
-  assert.equal(prevCloseFromDaily([wed, thu, fri], sun2130), 1.1); // بلا رمز: كما كان
-  assert.equal(prevCloseFromDaily([wed, thu, fri], sun2130, 'EURUSD'), 1.1);
+  assert.equal(prevClose([wed, thu, fri], sun2130), 1.1); // بلا رمز: كما كان
+  assert.equal(prevClose([wed, thu, fri], sun2130, 'EURUSD'), 1.1);
   for (const s of ['XAUUSD', 'xagusd', 'US30', 'NAS100', 'USOIL', 'GOLD']) {
-    assert.equal(prevCloseFromDaily([wed, thu, fri], sun2130, s), 1.09, s); // حركة الجمعة لا «0.00%»
+    assert.equal(prevClose([wed, thu, fri], sun2130, s), 1.09, s); // حركة الجمعة لا «0.00%»
     assert.equal(sessionKeyAt(sun2130, true, s), sessionKeyAt(D('2026-09-19') + 12 * H, true), s);
   }
   // بعد الافتتاح 22:00Z: جلسة الإثنين كالفوركس
-  assert.equal(prevCloseFromDaily([wed, thu, fri], D('2026-09-20') + 22.5 * H, 'XAUUSD'), 1.1);
+  assert.equal(prevClose([wed, thu, fri], D('2026-09-20') + 22.5 * H, 'XAUUSD'), 1.1);
   assert.equal(sessionKeyAt(D('2026-09-20') + 22.5 * H, true, 'XAUUSD'), sessionKeyAt(D('2026-09-20') + 22.5 * H, true));
   // شتاءً: 22:30Z مغلق للذهب (يفتح 23:00Z)، مفتوح للفوركس
-  assert.equal(prevCloseFromDaily([thuW, friW], D('2026-11-15') + 22.5 * H, 'XAUUSD'), 1.09);
-  assert.equal(prevCloseFromDaily([thuW, friW], D('2026-11-15') + 22.5 * H, 'EURUSD'), 1.1);
-  assert.equal(prevCloseFromDaily([thuW, friW], D('2026-11-15') + 23.5 * H, 'XAUUSD'), 1.1);
+  assert.equal(prevClose([thuW, friW], D('2026-11-15') + 22.5 * H, 'XAUUSD'), 1.09);
+  assert.equal(prevClose([thuW, friW], D('2026-11-15') + 22.5 * H, 'EURUSD'), 1.1);
+  assert.equal(prevClose([thuW, friW], D('2026-11-15') + 23.5 * H, 'XAUUSD'), 1.1);
   // كسر CME اليومي أيام الأسبوع لا يغيّر الجلسة (الأربعاء 21:30Z)
-  assert.equal(prevCloseFromDaily([wed, thu, fri, sun, mon, { time: D('2026-09-23'), close: 1.13 }], D('2026-09-23') + 21.5 * H, 'XAUUSD'), 1.12);
+  assert.equal(prevClose([wed, thu, fri, sun, mon, { time: D('2026-09-23'), close: 1.13 }], D('2026-09-23') + 21.5 * H, 'XAUUSD'), 1.12);
 }
 // أداة تتداول بالعطلة (شمعة سبت بالسلسلة): أيام UTC عادية — الأحد مقابل السبت
 const sat = { time: D('2026-09-19'), close: 64000 };
 assert.equal(
-  prevCloseFromDaily([{ time: D('2026-09-18'), close: 63000 }, sat, { time: D('2026-09-20'), close: 65000 }], D('2026-09-20') + 12 * H),
+  prevClose([{ time: D('2026-09-18'), close: 63000 }, sat, { time: D('2026-09-20'), close: 65000 }], D('2026-09-20') + 12 * H),
   64000
 );
 
@@ -157,9 +168,9 @@ assert.equal(sessionKeyAt(sun2130, true, 'XAUUSD'), sessionKeyAt(D('2026-09-18')
 assert.equal(sessionKeyAt(sun2130, true, 'US30'), sessionKeyAt(D('2026-09-18') + 12 * H, true));
 assert.equal(sessionKeyAt(sun2130, true, 'EURUSD'), sessionKeyAt(D('2026-09-21') + 12 * H, true));
 assert.equal(sessionKeyAt(D('2026-09-20') + 22.5 * H, true, 'XAUUSD'), sessionKeyAt(D('2026-09-21') + 12 * H, true));
-assert.equal(prevCloseFromDaily([wed, thu, fri], sun2130, 'XAUUSD'), 1.09);
-assert.equal(prevCloseFromDaily([wed, thu, fri], sun2130, 'EURUSD'), 1.1);
-assert.equal(prevCloseFromDaily([wed, thu, fri], sun2130), 1.1);
+assert.equal(prevClose([wed, thu, fri], sun2130, 'XAUUSD'), 1.09);
+assert.equal(prevClose([wed, thu, fri], sun2130, 'EURUSD'), 1.1);
+assert.equal(prevClose([wed, thu, fri], sun2130), 1.1);
 assert.equal(weekendMergeOf([wed, thu]), true);
 assert.equal(weekendMergeOf([wed, { time: D('2026-09-19'), close: 1 }]), false);
 
