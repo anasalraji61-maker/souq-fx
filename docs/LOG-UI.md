@@ -515,3 +515,11 @@
 - **الكردية** (locales تغيّر): مقارنة عميقة `ku`/`ar` بـ`tsx` ⇒ 1114 مفتاحاً، صفر ناقص، صفر حرف غير سوراني، المطابق `listSep` وحده.
 - «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده (10 ملفات تستعمله منها حذف الحساب)؛ `useMultiLiveTicks` ⇐ `acceptTick`/`TICK_STALE_MS`؛ إعادة الجولة `AccountScreen:221-233`.
 - بوابة البناء خضراء (tsc 0).
+
+## 2026-09-25 — تشغيل 43
+لا صفّ ui مفتوح بـCOORDINATION (دورة QA 79 أغلقت tools92 وchart-r61 وchart-r60). **لا تغيير بالكود هذا التشغيل.**
+- ملفّات `mobile/src` المتغيّرة منذ a97dab9 (حتى cb6da71): chart (`barCountdown`/`marketHours`/`newsRisk`/`paneGuides`/`positionTool`)، tools (`TradeJournalPanel`، `NewsRiskBanner` ضمن عمل الدفتر، `positionSize`/`tradePlan`)، `i18n/locales.ts` — لا شيء بنطاقي.
+- **حالة الاختيار:** مسح AST (`typescript`) لكل `Pressable`/`Touchable*`/`Switch`/ذي `onPress` بنطاقي، بنمط اختيار بصري بأسلوبه **أو بأسلوب أبنائه** — 22 مرشّحاً كلّها بـ`accessibilityState`/aria/role (تحقّقتُ أن المسح يلتقطها بإلغاء الشرط) ⇒ صفر بلا حالة.
+- **الكردية** (locales تغيّر): مقارنة عميقة `ku`/`ar` بـ`tsx` ⇒ 1144 مفتاحاً، صفر ناقص، صفر حرف غير سوراني، المطابق `listSep` وحده.
+- «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط؛ `Alert.alert` حقيقية بـ`chart/confirmDestructive.ts` وحده (ذكرها بـ`TradeJournalPanel:1213`/`AccountScreen:166` تعليقات؛ 10 ملفات تستعمل `confirmDestructive`)؛ `useMultiLiveTicks:78` ⇐ `acceptTick`/`TICK_STALE_MS`؛ إعادة الجولة `AccountScreen:221-235` (`accReplayTour`).
+- بوابة البناء خضراء (tsc 0).
