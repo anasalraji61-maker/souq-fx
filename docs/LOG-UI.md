@@ -452,3 +452,9 @@
 بوابة البناء خضراء (tsc 0) قبل الـcommit. QA75 (`tradePlan.ts` «pip») صفّ tools — لم يُمسّ.
 
 **إعادة تحقّق بنود المهمّة بالكود:** لا `Pressable`/`onPress` جديد بنطاقي منذ مسح AST بتشغيل 34 (`git diff 96ca81c` بلا سطر مضاف منها)؛ الكردية: 1057 مفتاحاً، صفر ناقص، صفر حرف عربي غير سوراني، المطابق للعربي `listSep` («، » علامة مشتركة) فقط؛ «₴» بتعليقين؛ «درجة الاتفاق» بتعليقات؛ `Alert.alert` بتعليقات `AccountScreen:166`/`TradeJournalPanel:1183` واستدعاء `chart/confirmDestructive.ts` وحده؛ `useMultiLiveTicks` ⇐ `acceptTick`؛ إعادة الجولة `AccountScreen:221-233`.
+
+## 2026-09-25 — تشغيل 37
+صفوف ui بـCOORDINATION (دورة QA 75): **ui35** وحده — أُنجز بتشغيل 36 (`a737eee`؛ `signalDirection.ts:44-45` `case 'atr_exceeds_price'` ⇒ `t.sigLevelsUnavailableAtrWide`)، الصفّ جاهز للإغلاق. QA75 صفّ tools. بوابة البناء خضراء (tsc 0). **لا تغيير بالكود هذا التشغيل** — أعدتُ تحقّق بنود المهمّة بالكود بعد 2d8d29a (ملفّا نطاقي المتغيّران منذ تشغيل 36: `IndicatorForecastPanel` `6604c22`، `LayoutPanel` `af936a2` — لا زرّ جديد):
+- **حالة الاختيار:** مسح AST جديد لكل عنصر JSX بـ`onPress`/`onValueChange` بلا `accessibilityState`/aria وبشرط نمط اختيار — مرشّح واحد (`MatrixBottomDock:95`، زرّ الإغلاق، شرطه `pressed` فقط) = صفر فعلي.
+- **الكردية:** مقارنة عميقة `DICTS.ku`/`DICTS.ar` بما فيها الكائنات المتداخلة (`subPlans`): صفر ناقص، صفر حرف غير سوراني، المطابق بحرف عربي `listSep` وحده؛ والمطابق الباقي (10) محايد لغوياً (`RSI`، `Bid / Ask`، البريد…). الحرفيات العربية المعروضة خارج التعليقات بنطاقي: لا شيء — الباقي أوامر ذكاء (`WeeklyReportPanel`، `lang` مرسَل)، ومفاتيح ترجمة نصّ الخادم (`CommissionPlanPanel`)، ومحلّلات إدخال (`parseDecimal`/`positionSize`)، و`api.ts:900` (launch52).
+- «₴» بتعليقين؛ «درجة الاتفاق» بتعليقات؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده (مستعمَل بعشرة ملفات منها `AccountScreen`)؛ `useMultiLiveTicks` ⇐ `acceptTick` + مؤقّت الإسقاط؛ إعادة الجولة `AccountScreen:221-233`.
