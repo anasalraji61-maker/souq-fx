@@ -843,16 +843,19 @@ def symbols_search(
       64 حرفاً يتجاوز أطول اسم أداة بالمزوّد بكثير (أطولها دون الخمسين).
 
     والقاعدة معلنة بـ`twelve_data` نفسه (حيث يقع حدّ المزوّد) ويُقرأ منه هنا، فلا تنحرف نسختان.
+
+    `ambiguous`: إدراجات لا يرسمها رمزها المجرّد (الرمز نفسه بعدّة بورصات — «AAPL · BMV» كان يرسم ناسداك)،
+    خارج `results` كي لا يختارها عميل قديم؛ كلٌّ بـ`unavailable_reason` (`twelve_data._listings`).
     """
     if not q.strip():
-        return {"results": []}
+        return {"results": [], "ambiguous": []}
     if not market.configured():
         raise HTTPException(status_code=503, detail="Twelve Data not configured")
     try:
-        results = market.symbol_search(q, limit=limit)
+        results, ambiguous = market.search_listings(q, limit=limit)
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=str(exc)) from exc
-    return {"results": results}
+    return {"results": results, "ambiguous": ambiguous}
 
 
 def _require_timeframe(*tfs: str) -> None:

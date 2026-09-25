@@ -34,10 +34,10 @@ def searchable(monkeypatch):
     def _fake(query: str, limit: int = 20):
         calls.append({"query": query, "limit": limit})
         return [{"symbol": f"SYM{i}", "td_symbol": f"SYM{i}", "name": "", "exchange": "", "type": ""}
-                for i in range(limit)]
+                for i in range(limit)], []
 
     monkeypatch.setattr(market, "configured", lambda: True)
-    monkeypatch.setattr(market, "symbol_search", _fake)
+    monkeypatch.setattr(market, "search_listings", _fake)
     return calls
 
 
@@ -94,7 +94,7 @@ def test_blank_query_spends_no_provider_credit(client, searchable, blank):
     """السلوك القائم كما هو: قائمة فارغة بلا أي طلب للمزوّد."""
     res = client.get(f"/api/symbols/search?q={blank}")
     assert res.status_code == 200, res.text
-    assert res.json() == {"results": []}
+    assert res.json() == {"results": [], "ambiguous": []}
     assert calls_empty(searchable)
 
 
@@ -164,14 +164,115 @@ def test_library_slice_keeps_the_head(provider):
     """جوهر العيب: الشريحة يجب أن تأخذ **الأوائل**. بالسالب كانت تحذف من الذيل."""
     out = market.symbol_search("s", limit=3)
     assert [r["symbol"] for r in out] == ["S0X", "S1X", "S2X"]
-    assert provider["params"]["outputsize"] == "3"
 
 
-def test_library_outputsize_is_the_asked_number(provider):
-    """`min(limit, 30)` كان يُرسل غير الموجب كما هو للمزوّد."""
-    market.symbol_search("s", limit=market.MAX_SEARCH_RESULTS)
-    assert provider["params"]["outputsize"] == str(market.MAX_SEARCH_RESULTS)
+@pytest.mark.parametrize("limit", [1, 3, 8])
+def test_library_fetches_every_listing_whatever_the_limit(provider, limit):
+    """`outputsize` ثابت بحدّ المزوّد لا `limit` (كان `min(limit, 30)` يُرسل غير الموجب كما هو): بصفحة `limit`
+    قد تقع بورصة SHEL الثانية خارجها فيبدو الرمز فريداً ويُرسم الإدراج الخطأ. الشريحة بعد التصنيف."""
+    out = market.symbol_search("s", limit=limit)
+    assert provider["params"]["outputsize"] == str(market._SEARCH_FETCH)
+    assert len(out) == limit
 
 
 def calls_empty(calls: list) -> bool:
     return len(calls) == 0
+
+
+# ------------------------------------------- إدراج واحد لكل رمز يرسمه التطبيق
+
+def _row(symbol: str, exchange: str, type_: str = "Common Stock", currency: str = "", name: str = "") -> dict:
+    return {"symbol": symbol, "instrument_name": name or symbol, "exchange": exchange,
+            "instrument_type": type_, "currency": currency}
+
+
+# ردود المزوّد الحقيقية (`symbol_search`، 2026-09-25) مختصرة
+SHEL = [
+    _row("SHEL", "LSE", currency="GBp", name="Shell plc"),
+    _row("SHEL", "NYSE", "American Depositary Receipt", "USD", "Shell plc ADS"),
+    _row("SHEL", "BCBA", "Depositary Receipt", "ARS", "Shell plc CEDear"),
+    _row("SHEL", "PSX", currency="PKR", name="Shell Pakistan Ltd."),
+    _row("SHELL", "Euronext", currency="EUR", name="Shell plc"),
+]
+BTC_EUR = [_row("BTC/EUR", ex, "Digital Currency", name="Bitcoin Euro")
+           for ex in ("Binance", "Coinbase Pro", "Kraken", "BitStamp")]
+
+
+def _search(monkeypatch, rows: list[dict], limit: int = 20):
+    sink: dict = {}
+    monkeypatch.setattr(market, "_api_key", lambda: "test-key")
+    monkeypatch.setattr(market.httpx, "Client", lambda **kw: _FakeClient(sink, {"data": rows}, **kw))
+    return market.search_listings("q", limit=limit)
+
+
+def test_ticker_on_several_exchanges_is_not_offered_as_a_chart(monkeypatch):
+    """«SHEL · PSX» (شركة أخرى بالروبية) و«SHEL · LSE» (بالبنس) كانا يرسمان كلاهما ما يجيب به المزوّد
+    لـ`SHEL` المجرّد — سعر أداة غير التي اختارها المتداول."""
+    ok, ambiguous = _search(monkeypatch, SHEL)
+    assert [(r["symbol"], r["exchange"]) for r in ok] == [("SHELL", "Euronext")]
+    assert {r["exchange"] for r in ambiguous} == {"LSE", "NYSE", "BCBA", "PSX"}
+    assert all(r["unavailable_reason"] == market.AMBIGUOUS_LISTING for r in ambiguous)
+
+
+def test_quote_currency_travels_with_the_listing(monkeypatch):
+    ok, ambiguous = _search(monkeypatch, SHEL)
+    assert ok[0]["currency"] == "EUR"
+    assert {r["currency"] for r in ambiguous if r["exchange"] == "LSE"} == {"GBp"}
+    ok, _ = _search(monkeypatch, BTC_EUR)
+    assert ok[0]["currency"] is None, "الكريبتو بلا عملة معلنة ⇒ None لا نصّ فارغ"
+
+
+def test_one_crypto_pair_on_several_venues_is_one_row_without_a_venue(monkeypatch):
+    """المزوّد يختار المنصّة لـ`BTCEUR` — «Kraken» على الصفّ كان ادّعاءً."""
+    ok, ambiguous = _search(monkeypatch, BTC_EUR)
+    assert ambiguous == []
+    assert len(ok) == 1
+    assert ok[0]["symbol"] == "BTCEUR" and ok[0]["exchange"] == ""
+    assert ok[0]["exchanges"] == ["Binance", "Coinbase Pro", "Kraken", "BitStamp"]
+
+
+def test_mapped_symbol_keeps_only_the_instrument_the_chart_draws(monkeypatch):
+    """`BTCUSD` مُسنَد لـ`BTC/USD`: سهمٌ اسمه «BTCUSD» يُرسم زوج البتكوين ⇒ ملتبس لا نتيجة."""
+    rows = [_row("BTC/USD", "Binance", "Digital Currency"), _row("BTC/USD", "Kraken", "Digital Currency"),
+            _row("BTCUSD", "OTC", "Common Stock", "USD", "Some BTCUSD stock")]
+    ok, ambiguous = _search(monkeypatch, rows)
+    assert [(r["symbol"], r["td_symbol"]) for r in ok] == [("BTCUSD", "BTC/USD")]
+    assert [r["td_symbol"] for r in ambiguous] == ["BTCUSD"]
+
+
+def test_single_listing_and_physical_currency_pass_unchanged(monkeypatch):
+    rows = [_row("USD/TRY", "PHYSICAL CURRENCY", "Physical Currency", name="US Dollar / Turkish Lira"),
+            _row("EUR/USD", "PHYSICAL CURRENCY", "Physical Currency")]
+    ok, ambiguous = _search(monkeypatch, rows)
+    assert ambiguous == []
+    assert [(r["symbol"], r["exchange"]) for r in ok] == [("USDTRY", "PHYSICAL CURRENCY"),
+                                                          ("EURUSD", "PHYSICAL CURRENCY")]
+    assert "exchanges" not in ok[0]
+
+
+def test_symbols_colliding_after_slash_removal_are_ambiguous(monkeypatch):
+    """«ETH/BTC» و«ETHBTC» يصيران الرمز نفسه للتطبيق — أيّهما يُرسم غير معروف."""
+    rows = [_row("ETH/BTC", "Binance", "Digital Currency"), _row("ETHBTC", "NYSE", "ETF", "USD")]
+    ok, ambiguous = _search(monkeypatch, rows)
+    assert ok == [] and len(ambiguous) == 2
+
+
+def test_limit_applies_after_grouping(monkeypatch):
+    """أربع منصّات BTC/EUR صفّ واحد ⇒ `limit=2` يعطي رمزين مختلفين لا البتكوين مرّتين."""
+    rows = BTC_EUR + [_row("EUR/USD", "PHYSICAL CURRENCY", "Physical Currency"),
+                      _row("GBP/USD", "PHYSICAL CURRENCY", "Physical Currency")]
+    ok, _ = _search(monkeypatch, rows, limit=2)
+    assert [r["symbol"] for r in ok] == ["BTCEUR", "EURUSD"]
+
+
+def test_route_returns_ambiguous_listings_apart(client, monkeypatch):
+    monkeypatch.setattr(market, "configured", lambda: True)
+    monkeypatch.setattr(market, "_api_key", lambda: "test-key")
+    monkeypatch.setattr(market.httpx, "Client", lambda **kw: _FakeClient({}, {"data": SHEL}, **kw))
+    body = client.get("/api/symbols/search?q=SHEL").json()
+    assert [r["symbol"] for r in body["results"]] == ["SHELL"]
+    assert len(body["ambiguous"]) == 4
+
+
+def test_blank_query_has_both_lists(client):
+    assert client.get("/api/symbols/search?q=%20").json() == {"results": [], "ambiguous": []}

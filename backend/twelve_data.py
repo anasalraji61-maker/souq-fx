@@ -429,6 +429,59 @@ MAX_SEARCH_QUERY = 64
 
 
 def symbol_search(query: str, limit: int = 20) -> list[dict]:
+    """النتائج القابلة للرسم وحدها — راجع `search_listings`."""
+    return search_listings(query, limit)[0]
+
+
+# صفوف يطلبها البحث من المزوّد (حدّه الأعلى لـ`symbol_search`) — لا يكلّف أكثر من طلب واحد، ويكشف كل
+# بورصات الرمز الواحد: بـ`limit` وحده قد تسقط قائمة SHEL الثانية خارج الصفحة فيبدو الرمز فريداً.
+_SEARCH_FETCH = 120
+_CRYPTO_TYPE = "digital currency"
+AMBIGUOUS_LISTING = "ambiguous_listing"
+
+
+def _listings(rows: list[dict]) -> tuple[list[dict], list[dict]]:
+    """(قابلة للرسم، ملتبسة). التطبيق يرسم **`symbol` وحده** (`/api/charts/{symbol}`) والمزوّد يجيبه بإدراجٍ
+    واحد يختاره هو — AAPL ⇒ ناسداك بالدولار. كانت كل بورصة صفّاً مستقلاً: «AAPL · BMV» (≈6,032 بيزو)
+    يرسم سهم ناسداك (≈341$)، و«SHEL · PSX» — **شركة أخرى** (Shell Pakistan، بالروبية) — يرسم إيصال
+    شل البريطانية بنيويورك. سعر حقيقي لأداة غير التي اختارها المتداول = رقم مخترَع بالنسبة إليه.
+
+    - رمز بإدراج واحد ⇒ كما هو.
+    - زوج عملة رقمية واحد على عدّة منصّات (BTC/EUR: Binance، Kraken…) ⇒ صفّ واحد بلا منصّة
+      (`exchange: ""`؛ المزوّد يختارها) ومعه `exchanges`. الفارق بين المنصّات أجزاء من المئة.
+    - رمز بـ`SYMBOL_MAP` ⇒ صفّ الأداة المُسنَدة وحدها؛ ما سواه باسمها المجرّد (سهم «BTCUSD») ملتبس.
+    - غير ذلك (سهم بعدّة بورصات/عملات، أو رمزان يتطابقان بعد حذف «/») ⇒ `ambiguous` بسببه، لا يُعرض
+      للاختيار حتى يحمل الرمز بورصته (طلب للتطبيق بـCOORDINATION)."""
+    groups: dict[str, list[dict]] = {}
+    for row in rows:
+        groups.setdefault(row["symbol"], []).append(row)
+    ok: list[dict] = []
+    ambiguous: list[dict] = []
+    for sym, group in groups.items():
+        mapped = SYMBOL_MAP.get(sym)
+        if mapped is not None:
+            mine = [r for r in group if r["td_symbol"].upper() == mapped]
+            others = [r for r in group if r["td_symbol"].upper() != mapped]
+            ambiguous += [{**r, "unavailable_reason": AMBIGUOUS_LISTING} for r in others]
+            group = mine
+            if not group:
+                continue
+        if len(group) == 1:
+            ok.append(group[0])
+        elif len({r["td_symbol"] for r in group}) == 1 and all(
+            r["type"].strip().lower() == _CRYPTO_TYPE for r in group
+        ):
+            ok.append({**group[0], "exchange": "", "exchanges": [r["exchange"] for r in group]})
+        elif mapped is not None and len({r["td_symbol"] for r in group}) == 1:
+            # أداة الخريطة نفسها مكرّرة (نادر) — ما يُرسَم هو المُسنَد، فصفّ واحد بلا بورصة
+            ok.append({**group[0], "exchange": "", "exchanges": [r["exchange"] for r in group]})
+        else:
+            ambiguous += [{**r, "unavailable_reason": AMBIGUOUS_LISTING} for r in group]
+    return ok, ambiguous
+
+
+def search_listings(query: str, limit: int = 20) -> tuple[list[dict], list[dict]]:
+    """(نتائج يرسمها `symbol` كما تُعرض، نتائج ملتبسة لا تُرسم) — كلٌّ حتى `limit`."""
     key = _api_key()
     if not key:
         raise RuntimeError("TWELVE_DATA_API_KEY missing")
@@ -446,7 +499,7 @@ def symbol_search(query: str, limit: int = 20) -> list[dict]:
     with httpx.Client(timeout=20.0) as client:
         r = client.get(
             f"{API_BASE}/symbol_search",
-            params={"symbol": q, "outputsize": str(limit), "apikey": key},
+            params={"symbol": q, "outputsize": str(_SEARCH_FETCH), "apikey": key},
         )
         r.raise_for_status()
         data = r.json()
@@ -454,17 +507,24 @@ def symbol_search(query: str, limit: int = 20) -> list[dict]:
         raise RuntimeError(data.get("message", "search failed"))
     out: list[dict] = []
     for row in data.get("data") or []:
-        sym = row.get("symbol") or ""
+        if not isinstance(row, dict):
+            continue
+        sym = str(row.get("symbol") or "").strip()
+        if not sym:
+            continue
         out.append(
             {
-                "symbol": sym.replace("/", ""),
+                "symbol": sym.replace("/", "").upper(),
                 "td_symbol": sym,
                 "name": row.get("instrument_name") or row.get("name") or sym,
                 "exchange": row.get("exchange") or row.get("mic_code") or "",
                 "type": row.get("instrument_type") or row.get("type") or "",
+                # عملة التسعير كما يعلنها المزوّد (LSE بالبنس `GBp`) — None حين لا يرسلها (العملات والكريبتو)
+                "currency": row.get("currency") or None,
             }
         )
-    return out[:limit]
+    ok, ambiguous = _listings(out)
+    return ok[:limit], ambiguous[:limit]
 
 
 def status() -> dict:
