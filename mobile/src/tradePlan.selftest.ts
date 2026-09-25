@@ -6,6 +6,8 @@ import assert from 'node:assert/strict';
 import { parseDecimal } from './parseDecimal';
 import {
   analyzePlan,
+  openQuotesRefreshDue,
+  OPEN_QUOTES_REFRESH_AFTER_MS,
   openRiskTotals,
   openTradesWithoutStop,
   entryAfterSideSwitch,
@@ -2832,3 +2834,16 @@ console.log('tradePlan mini orphan/lot chips selftest OK');
   assert.ok((analyzePlan({ symbol: 'USDJPY', side: 'sell', entry: 157.4, sl: 157.6, tp: 100 }).rr ?? 0) > 100);
 }
 console.log('tradePlan levelLooksLikePips JPY/silver selftest OK');
+
+// ---- openQuotesRefreshDue: لقطة أسعار الصفقات المفتوحة تتجدّد بعد العودة من الخلفية ----
+{
+  const t0 = 1_758_800_000_000;
+  assert.equal(openQuotesRefreshDue(null, t0), false);
+  assert.equal(openQuotesRefreshDue(t0, t0), false);
+  assert.equal(openQuotesRefreshDue(t0, t0 + OPEN_QUOTES_REFRESH_AFTER_MS - 1), false);
+  assert.equal(openQuotesRefreshDue(t0, t0 + OPEN_QUOTES_REFRESH_AFTER_MS), true);
+  assert.equal(openQuotesRefreshDue(t0, t0 + 3 * 3_600_000), true);
+  assert.equal(openQuotesRefreshDue(t0, t0 - 5_000), true);
+  assert.equal(openQuotesRefreshDue(NaN, t0), false);
+}
+console.log('tradePlan openQuotesRefreshDue selftest OK');

@@ -7,6 +7,7 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
+  AppState,
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
@@ -83,6 +84,7 @@ import {
   planStop,
   QUICK_SYMBOLS,
   plainStopText,
+  openQuotesRefreshDue,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
@@ -219,6 +221,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    */
   const [quotes, setQuotes] = useState<Record<string, QuoteSnap>>({});
   const quoteGenRef = useRef(0);
+  /** وقت آخر لقطة ناجحة وقائمتها — للتجديد عند العودة من الخلفية (`openQuotesRefreshDue`) */
+  const quotesAtRef = useRef<number | null>(null);
+  const tradesRef = useRef<Trade[]>([]);
 
   /**
    * **لماذا بلا مؤقّت**: `/api/market/quote` غير مخزَّن بالخادم، فاستطلاعٌ كل دقيقة لأربع أدوات =
@@ -243,6 +248,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     ].slice(0, MAX_LIVE_QUOTES);
     const gen = ++quoteGenRef.current;
     if (syms.length === 0) {
+      quotesAtRef.current = null;
       // لا صفقات مفتوحة ⇒ لا طلب أصلاً، ويُفرَّغ الكائن (بالمرجع نفسه إن كان فارغاً: لا تصيير زائد)
       if (mountedRef.current) setQuotes((cur) => (Object.keys(cur).length === 0 ? cur : {}));
       return;
@@ -263,8 +269,21 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     if (!mountedRef.current || gen !== quoteGenRef.current) return;
     const next: Record<string, QuoteSnap> = {};
     for (const pair of got) if (pair) next[pair[0]] = pair[1];
+    quotesAtRef.current = Date.now();
     setQuotes(next);
   }, []);
+
+  /**
+   * **العودة من الخلفية** تجدّد اللقطة إن مضت دقيقة: بلا مؤقّت (أعلاه) كانت أرقام الصفوف العائمة تبقى من
+   * لحظة فتح الدفتر ساعاتٍ والسوق تحرّك. طلبٌ واحد لكل عودة، لا استطلاع.
+   */
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (st) => {
+      if (st !== 'active' || !openQuotesRefreshDue(quotesAtRef.current, Date.now())) return;
+      void loadOpenQuotes(tradesRef.current);
+    });
+    return () => sub.remove();
+  }, [loadOpenQuotes]);
 
   /**
    * رقم آخر طلب للقائمة: أول تحميل بطيء والنموذج يعمل تحته — تُضاف صفقة فيصل تحديثُ ما بعد الإضافة أولاً، ثم يصل
@@ -278,12 +297,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       const res = await api.trades();
       if (!mountedRef.current || gen !== listGenRef.current) return;
       const list = res.trades as Trade[];
+      tradesRef.current = list;
       setTrades(list);
       setStats(res.stats as Stats);
       setListError(false);
       void loadOpenQuotes(list);
     } catch {
       if (mountedRef.current && gen === listGenRef.current) {
+        tradesRef.current = [];
         setTrades([]);
         setStats(null);
         setListError(true);

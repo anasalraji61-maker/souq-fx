@@ -1811,3 +1811,17 @@ export function draftStackedExposureText(
   const vals: Record<string, string> = { ccy: x.ccy, before: String(x.before), after: String(x.after) };
   return template.replace(/\{(ccy|before|after)\}/g, (_, k: string) => vals[k]);
 }
+
+/** عمر لقطة أسعار الصفقات المفتوحة الذي تُجدَّد بعده عند عودة التطبيق للواجهة. */
+export const OPEN_QUOTES_REFRESH_AFTER_MS = 60_000;
+
+/**
+ * هل تُجدَّد لقطة أسعار الصفقات المفتوحة عند عودة التطبيق للواجهة؟ اللقطة كانت تُؤخذ مع تحميل الدفتر فقط
+ * فتبقى ساعاتٍ بعد الرجوع من الخلفية: EURUSD شراء 1.0850 يبقى «+10 pip» والسوق نزل إلى 1.0800.
+ * لا لقطة سابقة (`lastAt` null) ⇒ لا — لا صفقات مفتوحة أو لم يكتمل التحميل الأول. ساعة رجعت للخلف ⇒ نعم.
+ */
+export function openQuotesRefreshDue(lastAt: number | null, now: number): boolean {
+  if (lastAt == null || !Number.isFinite(lastAt) || !Number.isFinite(now)) return false;
+  const age = now - lastAt;
+  return age < 0 || age >= OPEN_QUOTES_REFRESH_AFTER_MS;
+}
