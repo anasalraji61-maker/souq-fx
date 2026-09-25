@@ -777,6 +777,11 @@ export type Dict = {
   lectureHideChart: string;
   lectureHideChartA11y: string;
   lectureShowChart: string;
+  /**
+   * launch130: شارت القاعة بلا اتصال يرسم `mockSeries` (`LectureClassroom.tsx:90`) موسوماً «تجريبي» فقط. منذ `22ff26c` (chart) الرسم على
+   * سلسلة تجريبية لا يُحفظ — بلا سطر يرسم الطالب خطوط الدرس ثم تختفي. سطر تحت الشارت حين `chartKind === 'demo'`؛ لا يَعِد بعودة تلقائية.
+   */
+  lectureChartPracticeNote: string;
   lectureVoiceStopped: string;
   lectureGenerating: string;
   lectureVoiceActive: string;
@@ -2042,6 +2047,7 @@ const ar: Dict = {
   lectureHideChart: 'إخفاء',
   lectureHideChartA11y: 'إخفاء الشارت التفاعلي',
   lectureShowChart: 'إظهار الشارت التفاعلي',
+  lectureChartPracticeNote: 'بلا اتصال بالخادم: هذه شموع تدريبية لا أسعار السوق. تدرّب عليها كما تشاء، لكن ما ترسمه هنا لا يُحفظ.',
   lectureVoiceStopped: 'الصوت متوقف',
   lectureGenerating: 'جاري التوليد…',
   lectureVoiceActive: 'شرح صوتي نشط',
@@ -3227,6 +3233,7 @@ const enUS: Dict = {
   lectureHideChart: 'Hide',
   lectureHideChartA11y: 'Hide the interactive chart',
   lectureShowChart: 'Show the interactive chart',
+  lectureChartPracticeNote: 'No connection to the server: these are practice candles, not market prices. Practise freely — but what you draw here isn’t saved.',
   lectureVoiceStopped: 'Audio stopped',
   lectureGenerating: 'Generating…',
   lectureVoiceActive: 'Voice narration active',
@@ -4441,6 +4448,7 @@ const ku: Dict = {
   lectureHideChart: 'شاردنەوە',
   lectureHideChartA11y: 'شاردنەوەی چارتی کارلێککەرەوە',
   lectureShowChart: 'پیشاندانی چارتی کارلێککەرەوە',
+  lectureChartPracticeNote: 'پەیوەندی بە ڕاژەوە نییە: ئەمانە مۆمی ڕاهێنانن، نەک نرخی بازاڕ. چۆنت بوێت مەشقیان لەسەر بکە — بەڵام ئەوەی لێرە دەیکێشیت پاشەکەوت ناکرێت.',
   lectureVoiceStopped: 'دەنگ ڕاوەستا',
   lectureGenerating: 'دروست دەکرێت…',
   lectureVoiceActive: 'ڕوونکردنەوەی دەنگی چالاکە',
