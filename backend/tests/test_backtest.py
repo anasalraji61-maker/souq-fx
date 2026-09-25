@@ -203,3 +203,28 @@ def test_run_backtest_drawdown_is_bar_by_bar_and_path_is_not_returned():
     # على المنحنى المقوَّم شمعةً شمعة ≥ القاع/الإغلاق وحدهما
     trades = [{k: v for k, v in t.items()} for t in res["trades"]]
     assert res["stats"]["max_drawdown_pct"] >= backtest._stats(trades)[0]["max_drawdown_pct"]
+
+
+def test_bb_bounce_same_side_touch_does_not_block_the_mid_band_exit():
+    """شمعة بذيل يلمس السفلي وتُغلق فوق الوسط والمركز شراءٌ أصلاً: كانت تُقرأ «شراء» فيُتخطّى الخروج ⇒
+    ربح +0.33% عند الوسط يُعرض صفقةً مفتوحة بـ−0.97% (وعدد الصفقات 0)."""
+    def bar(i, o, h, lo, c):
+        return {"time": 1_700_000_000 + i * 900, "open": o, "high": h, "low": lo, "close": c}
+
+    def calm(i):
+        x = 1.0002 if i % 2 else 0.9998
+        return bar(i, x, x + 1e-5, x - 1e-5, x)
+
+    c = [calm(i) for i in range(40)]
+    c += [bar(40, 0.9998, 0.9998, 0.990, 0.9997),  # يلمس السفلي ويُغلق فوقه ⇒ شراء
+          bar(41, 0.9997, 0.9998, 0.9990, 0.9994),
+          bar(42, 0.9994, 1.0035, 0.980, 1.0030),  # يلمس السفلي مجدداً ويُغلق فوق الوسط ⇒ خروج
+          bar(43, 1.003, 1.003, 0.9895, 0.9900)]
+    c += [bar(44 + k, 0.99, 0.99, 0.99, 0.99) for k in range(3)]
+    res = backtest.run_backtest(c, "bb_bounce")
+    assert [t for t in res["trades"] if t.get("open")] == []
+    (t,) = res["trades"]
+    assert t["side"] == "long" and t["entry"] == 0.9997
+    assert t["exit"] == 1.0030 and t["exit_time"] == c[42]["time"]
+    assert t["pnl_pct"] == 0.33
+    assert res["stats"]["trade_count"] == 1 and res["stats"]["open_pnl_pct"] is None

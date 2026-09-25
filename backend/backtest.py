@@ -220,11 +220,16 @@ def run_backtest(
                 signal = "buy"
             elif hi is not None and highs[i] >= hi and price < hi:
                 signal = "sell"
+            # إشارة بجانب المركز المفتوح نفسه لا تفعل شيئاً ⇒ لا تحجب الخروج: كانت شمعة شراء بذيل يلمس
+            # السفلي ويُغلق فوق الوسط تُقرأ «شراء» فيُتخطّى الخروج ⇒ ربح القاعدة يُعرض صفقةً مفتوحة خاسرة
+            # لاحقاً أو خروجاً متأخّراً بسعر آخر.
+            if signal == {"long": "buy", "short": "sell"}.get(position):
+                signal = None
             # الخروج عند الخط الأوسط **إغلاق فقط** (QA55 (e)): كان يُطلق الإشارة المعاكسة فيفتح المحرّك
             # (إيقاف-وعكس) بيعاً عند الوسط بلا لمس النطاق العلوي — صفقات لا تقولها قواعد الاستراتيجية.
-            elif m is not None and position == "long" and price >= m:
+            if signal is None and m is not None and position == "long" and price >= m:
                 signal = "flat"
-            elif m is not None and position == "short" and price <= m:
+            elif signal is None and m is not None and position == "short" and price <= m:
                 signal = "flat"
 
         if signal == "flat" and position != "flat":
