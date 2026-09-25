@@ -2756,3 +2756,27 @@ console.log('tradePlan draftStackedExposure selftest OK');
   assert.equal(draftStackedExposureText('{n}', x), '{n}');
 }
 console.log('tradePlan draftStackedExposureText selftest OK');
+
+// حساب mini بالدفتر: نقاط وأسعار بالزوج العادي، بلا مال، ومفتاح أداة منفصل، وسعر السوق للزوج العادي
+{
+  const tp = require('./tradePlan') as typeof import('./tradePlan');
+  assert.equal(tp.journalPipSize('EURUSD.MINI'), 0.0001);
+  assert.equal(tp.journalPipSize('USDJPY-MINI'), 0.01);
+  assert.equal(tp.journalPipSize('GOLD.MINI'), 0.1);
+  assert.equal(tp.journalSpec('EURUSDMINI')?.symbol, 'EURUSD');
+  assert.equal(tp.journalPnl({ symbol: 'EURUSD.MINI', side: 'buy', entry: 1.1, exit: 1.102, lots: 1 }), null);
+  assert.equal(tp.journalRisk({ symbol: 'EURUSD.MINI', entry: 1.1, sl: 1.098, lots: 1 }), null);
+  assert.equal(tp.draftRiskFigures({ symbol: 'EURUSD.MINI', side: 'buy', entry: 1.1, sl: 1.098, lots: 1 }), null);
+  assert.equal(tp.quoteSymbol('EURUSD.mini'), 'EURUSD');
+  assert.equal(tp.quoteSymbol('GOLD_mini'), 'XAUUSD');
+  assert.equal(tp.journalInstrumentKey('EURUSD.MINI'), 'EURUSDMINI');
+  assert.equal(tp.journalInstrumentKey('EURUSDmini'), 'EURUSDMINI');
+  assert.notEqual(tp.journalInstrumentKey('EURUSD.MINI'), tp.journalInstrumentKey('EURUSD'));
+  assert.equal(tp.journalSymbol('eurusd.mini'), 'EURUSD.MINI');
+  assert.equal(tp.journalSymbol('EURUSD-mini'), 'EURUSD-MINI');
+  assert.equal(tp.journalContractKind('EURUSD.MINI'), 'std');
+  // العادي والـmicro كما كانا
+  assert.equal(tp.journalPnl({ symbol: 'EURUSD', side: 'buy', entry: 1.1, exit: 1.102, lots: 1 })?.amount, 200);
+  assert.ok(Math.abs(tp.journalPnl({ symbol: 'EURUSD.MICRO', side: 'buy', entry: 1.1, exit: 1.102, lots: 1 })!.amount - 2) < 1e-9);
+}
+console.log('tradePlan mini journal selftest OK');

@@ -2691,3 +2691,29 @@ assert.deepEqual(savedAccountBalances({ USD: '10000', JPY: '1500000', XYZ: '5', 
 assert.deepEqual(savedAccountBalances(undefined, 'USD'), {});
 assert.deepEqual(savedAccountBalances(['1'], 'USD'), {});
 console.log('positionSize account balance switch selftest OK');
+
+// حساب mini («EURUSD.mini»): كان عقداً عادياً 100,000 ⇒ لوت أصغر بعشر مرّات مما يحتاجه حساب mini. الآن لا لوت ولا مال
+{
+  const { miniAccountSymbol, smallContractSpec: scs, smallContractPair: scp } = require('./positionSize') as typeof import('./positionSize');
+  for (const s of ['EURUSD.mini', 'EURUSD.MINI', 'GBPJPY-mini', 'XAUUSD_MINI', 'GOLD.mini', 'SILVER#mini', 'EURUSDmini', 'eurusd.mini']) {
+    assert.equal(instrumentSpec(s), null, s);
+    assert.equal(scs(s), null, s);
+    assert.equal(scp(s), null, s);
+  }
+  assert.equal(miniAccountSymbol('EURUSD.mini'), 'EURUSD');
+  assert.equal(miniAccountSymbol('EURUSDmini'), 'EURUSD');
+  assert.equal(miniAccountSymbol('gbpjpy-MINI'), 'GBPJPY');
+  assert.equal(miniAccountSymbol('GOLD.mini'), 'XAUUSD');
+  assert.equal(miniAccountSymbol('SILVER_mini'), 'XAGUSD');
+  assert.equal(miniAccountSymbol('EUR/USD.mini'), 'EURUSD');
+  // ليست mini
+  for (const s of ['EURUSD', 'EURUSD.m', 'EURUSD.micro', 'EURUSDc', 'MINI', 'EURXYZ.mini', 'EURUSD.minis', 'EURUSDMINIX']) {
+    assert.equal(miniAccountSymbol(s), null, s);
+  }
+  // لواحق الوسيط الأخرى بفاصل حتى 5 أحرف ما زالت عقداً عادياً
+  for (const s of ['EURUSD.m', 'EURUSD.pro', 'EURUSD-ECN', 'EURUSD.min', 'EURUSD.minim', 'GOLD.m']) {
+    assert.ok(instrumentSpec(s), s);
+    assert.equal(instrumentSpec(s)!.contractSize, s.startsWith('GOLD') ? 100 : 100_000, s);
+  }
+}
+console.log('positionSize mini account selftest OK');

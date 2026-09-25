@@ -95,8 +95,18 @@ const METAL_NAME_SYMBOL: Record<string, string> = { GOLD: 'XAUUSD', SILVER: 'XAG
  */
 const SMALL_CONTRACT_SUFFIX = /[.\-_#+](C|CENT|MICRO)$/;
 
+/**
+ * لاحقة **حساب mini** بفاصل («EURUSD.mini»، «GBPJPY-MINI»، «GOLD_mini»): كانت تمرّ بقاعدة `BROKER_SUFFIXED` (حتى 5 أحرف
+ * بعد الفاصل) كعقدٍ عادي 100,000 ⇒ الحاسبة تقول 0.40 لوت حيث حساب mini (10,000 وحدة لدى وسطاء كُثر) يحتاج 4.00 — مخاطرة
+ * أصغر بعشر مرّات مما قيل — والدفتر يكتب مالاً أكبر بعشر مرّات. وحجم لوت «mini» يختلف بين الوسطاء (10,000 عند أكثرهم،
+ * وعقدٌ عادي باسمٍ تجاري عند غيرهم) فلا يُخمَّن: `instrumentSpec` يرفضه (لا لوت ولا مال)، والدفتر يحسب له النقاط والأسعار
+ * بالزوج العادي (`miniAccountSymbol`). «EURUSDmini» الملاصقة مرفوضة أصلاً.
+ */
+const MINI_SUFFIX = /[.\-_#+]MINI$/;
+
 export function instrumentSpec(raw: string): InstrumentSpec | null {
   if (SMALL_CONTRACT_SUFFIX.test(raw.trim().toUpperCase())) return null;
+  if (MINI_SUFFIX.test(raw.trim().toUpperCase())) return null;
   let symbol = normalizeSymbol(raw);
   const named = METAL_NAMES.exec(raw.trim().toUpperCase());
   if (named) symbol = METAL_NAME_SYMBOL[named[1]];
@@ -152,6 +162,15 @@ export function smallContractPair(raw: string): string | null {
 export function microAccountSymbol(raw: string): string | null {
   if (centAccountSymbol(raw)) return null;
   return smallContractPair(raw);
+}
+
+/**
+ * رمز **حساب mini** («EURUSDmini»، «EURUSD.mini»، «GOLD_MINI») ⇒ الزوج العادي؛ null = ليس كذلك. السعر والـpip كالزوج العادي
+ * (نقاط الدفتر وسعر السوق)، والمال **مجهول**: حجم لوت mini يختلف بين الوسطاء — راجع `MINI_SUFFIX`.
+ */
+export function miniAccountSymbol(raw: string): string | null {
+  const m = /^([A-Za-z]{3}[/\s_-]?[A-Za-z]{3}|GOLD|SILVER)[.\-_#+]?MINI$/i.exec(raw.trim());
+  return m ? instrumentSpec(m[1])?.symbol ?? null : null;
 }
 
 /** السنت بالدولار: 100 USC = 1 USD. عملة حساب السنت (`smallContractSpec`) = الدولار ÷ 100. */

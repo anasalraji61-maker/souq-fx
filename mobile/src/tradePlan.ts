@@ -12,6 +12,7 @@ import { normalizeDigits, parseDecimal, stripUnitWord } from './parseDecimal';
 import {
   centAccountSymbol,
   microAccountSymbol,
+  miniAccountSymbol,
   instrumentSpec,
   type InstrumentSpec,
   smallContractPair,
@@ -46,7 +47,12 @@ export function journalPipSize(symbol: string | null | undefined): number | null
  */
 export function journalSpec(symbol: string | null | undefined): InstrumentSpec | null {
   if (!symbol) return null;
-  return instrumentSpec(symbol) ?? instrumentSpec(smallContractPair(symbol) ?? '');
+  // mini («EURUSD.MINI») بأسعار الزوج العادي ونقاطه؛ ومالها null (`journalPnl`/`journalRisk` لا يعرفانها) — راجع `MINI_SUFFIX`
+  return (
+    instrumentSpec(symbol) ??
+    instrumentSpec(smallContractPair(symbol) ?? '') ??
+    instrumentSpec(miniAccountSymbol(symbol) ?? '')
+  );
 }
 
 /**
@@ -1268,7 +1274,7 @@ export function journalSymbol(raw: string): string | null {
   const pair = /^([A-Z]{3})[\s/_-]*([A-Z]{3})(.*)$/.exec(up);
   if (spec && pair && pair[1] + pair[2] === spec.symbol) return spec.symbol + pair[3];
   // «EURUSD-cent»/«EURUSD_micro» تبقى بلاحقتها: حذف الفاصل كان يُخرج «EURUSDCENT» فتضيع النقاط وسعر السوق
-  const small = smallContractPair(up);
+  const small = smallContractPair(up) ?? miniAccountSymbol(up);
   if (small && pair && pair[1] + pair[2] === small && pair[3].length <= 6) return small + pair[3];
   const known = knownSingleName(up);
   const suffixed = known ? /^(.*?)([.\-_#+][A-Z0-9]{0,5})$/.exec(up.replace(/[\s/]/g, '')) : null;
@@ -1293,7 +1299,8 @@ export function journalSymbol(raw: string): string | null {
  * `null` = رمز لا يصلح للحفظ أصلاً.
  */
 export function quoteSymbol(raw: string): string | null {
-  return smallContractPair(raw.trim().toUpperCase()) ?? instrumentSymbol(raw);
+  const up = raw.trim().toUpperCase();
+  return smallContractPair(up) ?? miniAccountSymbol(up) ?? instrumentSymbol(raw);
 }
 
 /**
@@ -1312,6 +1319,9 @@ function instrumentSymbol(raw: string): string | null {
   if (cent) return `${cent}C`;
   const micro = smallContractPair(raw);
   if (micro) return `${micro}MICRO`;
+  // mini منفصلة عن الزوج العادي كالسنت/micro: مالها مجهول فلا يُخلط بصافي «EURUSD»
+  const mini = miniAccountSymbol(raw);
+  if (mini) return `${mini}MINI`;
   return instrumentSpec(raw)?.symbol ?? knownSingleName(raw) ?? journalSymbol(raw);
 }
 
