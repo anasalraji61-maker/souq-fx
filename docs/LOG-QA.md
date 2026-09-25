@@ -803,3 +803,12 @@ RSI 14/30/70 بالماسح، والتطبيق لا يرسل `symbols` (سقف `
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
 **إلحاق:** وصل backend 30 (`d568eb3` `opened_at` مقروء أو 422، `b2e3c23` الاختبار الخلفي يستثني الشمعة الجارية) أثناء الدفع. تحقّقتُ: التطبيق لا يرسل `opened_at`
 (`api.ts:784-797` `createTrade`) ⇒ الـ422 الجديد لا يمسّه. لا طلب تنسيق جديد بسجلّه. البناء على ccec4b7 أخضر 0.
+
+## 2026-09-25 — الدورة 70
+**البناء:** أخضر 0 (على a3c5ec1 ثم 3f3987a بعد السحب) — لا إصلاح لازم. **Selftests:** 101/101 ناجح (`npx tsx`؛ `drawingAnchors` الجديد من chart 53: PASS).
+**التحقّق من الإغلاقات بالكود (5 صفوف):** tools85 ×2 ← launch `3a1b36d` (`locales.ts:1757 :1761`)؛ launch127 ← tools `42425e0` (`PositionSizePanel.tsx:1556` `commissionPlaceholder`)؛
+launch128 ← ui `ba57ae0` (`NewsRiskBanner.tsx:235-238`، `CalendarPanel.tsx:272-274 :387`)؛ طلب ui27 → backend ← `50189c3` (`econ_calendar.py` `curs | {"all"}`).
+**مفتوح:** tools86 → launch (`journalStopTypoFix` صفر بـ`locales.ts`)؛ launch129 → tools (tsx: XAUJPY مثاله `''` ⇒ «1.5»). chart 53 بلا طلب.
+**المراجعة (e — ما يُحرج أمام متداول):** `isForexMarketOpen` على 14 لحظة (DST أمريكي 8/3 قبل الأوروبي، 1/11، 24–25/12، 31/12–1/1، الذهب +1س، BTC 24/7) و`barCloseCountdown`
+D1/4H يوم الجمعة (يُقصّ لإغلاق 21:00 UTC) ⇒ كلها صحيحة، **لا بند**.
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
