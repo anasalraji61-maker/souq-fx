@@ -59,7 +59,8 @@ export function measureStats(
   a: { index: number; price: number },
   b: { index: number; price: number }
 ): { bars: number; diff: number; pct: number } {
-  const bars = Math.abs(b.index - a.index);
+  // رسمٌ من فريم أصغر يُرسى بفهرس كسري (H1 09:00→18:00 على D1 ⇒ 0.375): كانت القراءة «0.375 bars»
+  const bars = Math.round(Math.abs(b.index - a.index));
   const diff = b.price - a.price;
   const pct = a.price ? (diff / a.price) * 100 : 0;
   return { bars, diff, pct };

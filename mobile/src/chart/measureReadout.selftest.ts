@@ -11,6 +11,7 @@ import {
   signedDistanceText,
   type MeasureStats,
 } from './measureReadout';
+import { measureStats } from './renko';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -229,6 +230,9 @@ ok('مسافة مؤشر بفرق السعر', signedDistanceText('US30', 42000, 
 ok('مسافة مؤشر هبوطاً', signedDistanceText('US30', 42125.5, 42000, 'ar', 42000) === '−125.50');
 ok('مسافة صفرية بلا إشارة', signedDistanceText('US30', 42000, 42000, 'ar', 42000) === '0.00');
 ok('مسافة بسعر فاسد ⇒ null', signedDistanceText('US30', NaN, 42000) === null);
+
+// طرفا رسم مُرسَيان بفهرس كسري (من فريم أصغر) ⇒ عدد شموع صحيح لا «5.2916… شمعة»
+ok('measureStats integer bars', measureStats({ index: 10.375, price: 1 }, { index: 15.666, price: 1.1 }).bars === 5);
 
 if (failures) {
   console.error(`measureReadout.selftest: ${failures} FAILED`);
