@@ -990,3 +990,21 @@ console.log('newsRisk unannounced time selftest OK');
   assert.deepEqual(sc('ZZ99USD'), []);
 }
 console.log('newsRisk metal-name and index spelling selftest OK');
+
+// ——— النفط/الذهب بأسماء أخرى و«fx» الملاصقة: كانت `[]` فلا تحذير قبل الرواتب ———
+{
+  const { symbolCurrencies: sc, nextHighImpact: nhi } = require('./newsRisk') as typeof import('./newsRisk');
+  for (const s of ['WTIUSD', 'BRENTUSD', 'OILUSD', 'CRUDEOIL', 'USCRUDE', 'SPOTGOLD', 'SPOTSILVER', 'XAU', 'XAG', 'wtiusd.m', 'XAU#']) {
+    assert.deepEqual(sc(s), ['USD'], s);
+  }
+  assert.deepEqual(sc('EURUSDfx'), ['EUR', 'USD']);
+  assert.deepEqual(sc('GBPJPYfx'), ['GBP', 'JPY']);
+  // الرواتب بعد 30 دقيقة ⇒ WTIUSD يُحذَّر (كان null)
+  const at = Date.UTC(2026, 8, 4, 12, 30);
+  const nfp = { id: 'nfp', title: 'Non-Farm Payrolls', currency: 'USD', impact: 'High', ts: at / 1000 };
+  assert.notEqual(nhi([nfp], sc('WTIUSD'), at - 30 * 60_000), null);
+  // المجهول يبقى بلا تخمين
+  assert.deepEqual(sc('XAUXYZ'), []);
+  assert.deepEqual(sc('ABCFX'), []);
+}
+console.log('newsRisk oil/gold aliases and fx suffix selftest OK');

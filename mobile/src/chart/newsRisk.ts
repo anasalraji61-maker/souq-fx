@@ -109,6 +109,13 @@ const SINGLE_CCY: Record<string, string> = {
    * لكنهما كانا `[]` هنا ⇒ لا تحذير قبل الرواتب/CPI/الفدرالي ولا «التقويم غير متاح» — والدولار أول ما يقفز عليها.
    */
   USDINDEX: 'USD', UKBRENT: 'USD',
+  /**
+   * النفط باسمه + العملة («WTIUSD»، «BRENTUSD»، «OILUSD»)، وأسماء «CRUDEOIL»/«USCRUDE»/«SPOTGOLD»/«SPOTSILVER»، والمعدن بلا عملة
+   * (`symbolCurrencies`: «XAU»/«XAG» بمطابقة تامّة — بالجدول كانت «XAU_EUR» تفقد اليورو): `marketHours` يعرف بعضها والدفتر يقبلها، لكنها كانت `[]` ⇒
+   * نفطٌ قبل الرواتب بدقائق بلا تحذير ولا «التقويم غير متاح». «NAS1000» يبقى `[]` عمداً (خطأ كتابة لا اسم وسيط).
+   */
+  WTIUSD: 'USD', BRENTUSD: 'USD', OILUSD: 'USD', CRUDEOIL: 'USD', USCRUDE: 'USD',
+  SPOTGOLD: 'USD', SPOTSILVER: 'USD',
 };
 
 /**
@@ -210,9 +217,12 @@ export function symbolCurrencies(symbol: string): string[] {
     const own = FIAT.has(q) ? currenciesOnce(quoted[1]) : [];
     if (own.length) return own.includes(q) ? own : [...own, q];
   }
-  // و«spot»/«Roll» الملاصقتان («XAUUSDspot»، «GOLDspot»، «US30Roll»، «GER40Roll») — كانت `[]` بلا تحذير
-  const word = /^([A-Z0-9]{3,}?)[.\-_#+]?(MINI|PRO|ECN|RAW|STD|ZERO|PLUS|VIP|SPOT|ROLL)$/.exec(up);
-  return word ? currenciesOnce(word[1]) : [];
+  // و«spot»/«Roll»/«fx» الملاصقة («XAUUSDspot»، «GOLDspot»، «US30Roll»، «EURUSDfx») — كانت `[]` بلا تحذير
+  const word = /^([A-Z0-9]{3,}?)[.\-_#+]?(MINI|PRO|ECN|RAW|STD|ZERO|PLUS|VIP|SPOT|ROLL|FX)$/.exec(up);
+  if (word) return currenciesOnce(word[1]);
+  // المعدن وحده بلا عملة («XAU»، «XAG» — `marketHours` يعرفهما) = الذهب/الفضة بالدولار. مطابقة تامّة لا بالجدول: `suffixFree`
+  // تُبقي «XAU» من «XAU_EUR» فكان اليورو يسقط
+  return /^(XAU|XAG|XPT|XPD)$/.test(up) ? ['USD'] : [];
 }
 
 function currenciesOnce(symbol: string): string[] {
