@@ -2498,13 +2498,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   );
   // سنوياً كـTradingView: √(365/per)، per = 7 فوق اليومي (أسبوعي/شهري) و1 غيره — 252 ثابتاً كان يُظهر
   // الأسبوعي ضعف قيمته ~2.2 واليومي أقلّ بـ17%.
+  // المقدِّرات الخمسة (Parkinson/G-K/R-S/Y-Z/EWMA) تأخذ العامل نفسه كي لا تظهر بجانب HV بمقياس آخر.
   const hvStepSec = timeframeStepSec(series.timeframe);
+  const volAnnual = 365 / (hvStepSec > 86400 ? 7 : 1);
   const hv = useMemo(
-    () =>
-      indicators.includes('hv')
-        ? ind(computeHistoricalVolatility(closes, 10, 365 / (hvStepSec > 86400 ? 7 : 1)))
-        : null,
-    [closes, indicators, hvStepSec]
+    () => (indicators.includes('hv') ? ind(computeHistoricalVolatility(closes, 10, volAnnual)) : null),
+    [closes, indicators, volAnnual]
   );
   const stochRsi = useMemo(
     () => (indicators.includes('stochRsi') ? ind(computeStochRsi(closes)) : null),
@@ -2693,22 +2692,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [indBars, indicators]
   );
   const parkinsonVol = useMemo(
-    () => (indicators.includes('parkinsonVol') ? ind(computeParkinsonVolatility(indBars)) : null),
-    [indBars, indicators]
+    () =>
+      indicators.includes('parkinsonVol') ? ind(computeParkinsonVolatility(indBars, 10, volAnnual)) : null,
+    [indBars, indicators, volAnnual]
   );
   const garmanKlassVol = useMemo(
-    () => (indicators.includes('garmanKlassVol') ? ind(computeGarmanKlassVolatility(indBars)) : null),
-    [indBars, indicators]
+    () =>
+      indicators.includes('garmanKlassVol') ? ind(computeGarmanKlassVolatility(indBars, 10, volAnnual)) : null,
+    [indBars, indicators, volAnnual]
   );
   const rogersSatchellVol = useMemo(
     () =>
-      indicators.includes('rogersSatchellVol') ? ind(computeRogersSatchellVolatility(indBars)) : null,
-    [indBars, indicators]
+      indicators.includes('rogersSatchellVol') ? ind(computeRogersSatchellVolatility(indBars, 10, volAnnual)) : null,
+    [indBars, indicators, volAnnual]
   );
   const yangZhangVol = useMemo(
     () =>
-      indicators.includes('yangZhangVol') ? ind(computeYangZhangVolatility(indBars)) : null,
-    [indBars, indicators]
+      indicators.includes('yangZhangVol') ? ind(computeYangZhangVolatility(indBars, 10, volAnnual)) : null,
+    [indBars, indicators, volAnnual]
   );
   const stc = useMemo(
     () => (indicators.includes('stc') ? ind(computeStc(closes)) : null),
@@ -2844,8 +2845,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [closes, indicators]
   );
   const ewmaVol = useMemo(
-    () => (indicators.includes('ewmaVol') ? ind(computeEwmaVolatility(closes)) : null),
-    [closes, indicators]
+    () => (indicators.includes('ewmaVol') ? ind(computeEwmaVolatility(closes, 0.94, 20, volAnnual)) : null),
+    [closes, indicators, volAnnual]
   );
   const volRoc = useMemo(
     () => (indicators.includes('volRoc') ? ind(computeVolumeRoc(indBars)) : null),
