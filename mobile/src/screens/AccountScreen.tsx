@@ -28,16 +28,6 @@ import { confirmDestructive } from '../chart/confirmDestructive';
 
 type RoleId = 'trader' | 'trainer' | 'broker' | 'agent' | 'company';
 
-/**
- * «أعد الجولة الترحيبية». الجولة تُعرض مرّة بالعمر (`matrix.onboarding.v1`) ولم يكن لها طريق عودة:
- * من ضغط «تخطي» خطأً فاتته للأبد. النصّ محلّي مؤقتاً حتى يُضاف مفتاحه لـ`locales.ts` (ملف وكيل
- * الإطلاق — طلب بـCOORDINATION)؛ الكردي بانتظار مراجعته.
- */
-const REPLAY_TOUR_COPY: Record<string, { label: string; a11y: string }> = {
-  ar: { label: '↺ أعد الجولة الترحيبية', a11y: 'أعد عرض الجولة الترحيبية' },
-  en: { label: '↺ Replay welcome tour', a11y: 'Show the welcome tour again' },
-  ku: { label: '↺ دووبارە بینینی گەشتی ناساندن', a11y: 'گەشتی ناساندن دووبارە پیشان بدەوە' },
-};
 type SideId = 'left' | 'right';
 
 export function AccountScreen() {
@@ -228,7 +218,7 @@ export function AccountScreen() {
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={(REPLAY_TOUR_COPY[lang] ?? REPLAY_TOUR_COPY.en!).a11y}
+        accessibilityLabel={t.accReplayTourA11y}
         style={({ pressed }) => [
           styles.langChip,
           styles.tourBtn,
@@ -240,7 +230,7 @@ export function AccountScreen() {
         ]}
         onPress={() => setTourOpen(true)}
       >
-        <Text style={styles.langText}>{(REPLAY_TOUR_COPY[lang] ?? REPLAY_TOUR_COPY.en!).label}</Text>
+        <Text style={styles.langText}>{t.accReplayTour}</Text>
       </Pressable>
       <OnboardingOverlay
         visible={tourOpen}
