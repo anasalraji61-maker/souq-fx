@@ -528,6 +528,50 @@ def test_logged_in_client_without_install_id_sees_only_its_own_trades(client):
     assert [t["id"] for t in client.get("/api/trades").json()["trades"]] == [stranger["id"]]
 
 
+def _signup(client, name: str) -> dict:
+    r = client.post(
+        "/api/auth/register",
+        json={"username": name, "email": f"{name}@example.com", "password": "pass1234"},
+    )
+    assert r.status_code == 200, r.text
+    return {"Authorization": f"Bearer {r.json()['token']}", **_DEV1}
+
+
+def test_pre_signup_trades_leave_with_the_deleted_account_not_to_the_next_one(client):
+    """صفقة كُتبت مجهولةً ثم سُجّل الدخول كانت تبقى `user_id=NULL` (توسيع قراءة فقط) ⇒ حذف الحساب
+    يُبقيها، والحساب التالي على الهاتف نفسه يراها ويعدّلها وتدخل في نسبة فوزه."""
+    _open_trade(client, exit=1.0900)
+    alice = _signup(client, "alice")
+    assert client.get("/api/trades", headers=alice).json()["stats"]["trade_count"] == 1
+    assert client.delete("/api/auth/account", headers=alice).status_code == 200
+
+    assert client.get("/api/trades", headers=_DEV1).json()["trades"] == []
+    bob = _signup(client, "bob")
+    body = client.get("/api/trades", headers=bob).json()
+    assert body["trades"] == [] and body["stats"]["trade_count"] == 0
+
+
+def test_pre_signup_rows_follow_the_account_to_a_second_phone(client):
+    _open_trade(client)
+    alice = _signup(client, "alice")
+    client.get("/api/trades", headers=alice)
+    other_phone = {"Authorization": alice["Authorization"], **_DEV2}
+    assert len(client.get("/api/trades", headers=other_phone).json()["trades"]) == 1
+    # وبعد الخروج لا يراها من يستعمل الهاتف مجهولاً
+    client.post("/api/auth/logout", headers=alice)
+    assert client.get("/api/trades", headers=_DEV1).json()["trades"] == []
+
+
+def test_rows_written_under_an_expired_session_are_claimed_on_the_next_login(client):
+    alice = _signup(client, "alice")
+    client.get("/api/trades", headers=alice)
+    _open_trade(client, headers={"Authorization": "Bearer expired", **_DEV1})  # يُحفظ مجهولاً
+    r = client.post("/api/auth/login", json={"username": "alice", "password": "pass1234"})
+    again = {"Authorization": f"Bearer {r.json()['token']}", **_DEV2}
+    client.get("/api/trades", headers={**again, **_DEV1})
+    assert len(client.get("/api/trades", headers=again).json()["trades"]) == 1
+
+
 # ─── `opened_at` من العميل: بصيغة الدفتر أو 422 ─────────────────────────────
 
 @pytest.fixture()

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 
-from fastapi import Header
+from fastapi import Depends, Header
 
 import db
 
@@ -29,9 +29,29 @@ def _auth_user(authorization: str | None = Header(default=None)) -> dict | None:
 _INSTALL_ID_RE = re.compile(r"^[A-Za-z0-9_-]{16,64}$")
 
 
-def _install_key(x_install_id: str | None = Header(default=None)) -> str | None:
-    """قيمة `X-Install-Id` إن كانت بالشكل المتوقع، وإلا None (عميل قديم ← سلوك الصفوف القديمة)."""
+# (توكن الجلسة، معرّف التثبيت) نُقلت صفوفه مرة — لا كتابة بكل طلب. بالتوكن لا بالحساب: دخول جديد
+# (توكن جديد) بعد صفوف كُتبت مجهولةً بجلسة منتهية يَنقلها من جديد.
+_CLAIMED: set[tuple[str, str]] = set()
+
+
+def _install_key(
+    x_install_id: str | None = Header(default=None),
+    authorization: str | None = Header(default=None),
+    user: dict | None = Depends(_auth_user),
+) -> str | None:
+    """قيمة `X-Install-Id` إن كانت بالشكل المتوقع، وإلا None (عميل قديم ← سلوك الصفوف القديمة).
+
+    مسجّل + معرّف تثبيت ⇒ صفوف الجهاز المجهولة تُنقل لحسابه (`db.claim_device_rows`)."""
     if not x_install_id:
         return None
     v = x_install_id.strip()
-    return v if _INSTALL_ID_RE.fullmatch(v) else None
+    if not _INSTALL_ID_RE.fullmatch(v):
+        return None
+    if user and authorization:
+        memo = (authorization, v)
+        if memo not in _CLAIMED:
+            db.claim_device_rows(int(user["user_id"]), v)
+            if len(_CLAIMED) > 10000:
+                _CLAIMED.clear()
+            _CLAIMED.add(memo)
+    return v

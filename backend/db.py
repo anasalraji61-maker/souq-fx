@@ -277,6 +277,24 @@ def _owner_clause(user_id: int | None, owner_key: str | None = None) -> tuple[st
     return "(user_id IS NULL AND owner_key IS NULL)", ()
 
 
+def claim_device_rows(user_id: int, owner_key: str) -> int:
+    """صفوف هذا الجهاز المجهولة (قبل الدخول) تصير ملك الحساب فعلاً.
+
+    كان «التبنّي» توسيع قراءة فقط (`_owner_clause`: `user_id IS NULL AND owner_key=K`) والصفوف تبقى
+    بلا مالك ⇒ (1) حذف الحساب (`WHERE user_id=?`) يُبقي صفقاته وتنبيهاته قبل التسجيل، (2) حساب آخر
+    يدخل على الهاتف نفسه يراها ويعدّلها وتدخل في نسبة فوزه، (3) صاحبها لا يراها على هاتفه الثاني.
+    قائمة المتابعة: رمز موجود بالحساب يبقى صفّه المجهول (المفتاح `(user_id, symbol)`) — القراءة تزيل التكرار.
+    """
+    n = 0
+    with _conn() as c:
+        for table in ("alerts", "indicator_alerts", "trades", "layouts", "watchlist"):
+            n += c.execute(
+                f"UPDATE OR IGNORE {table} SET user_id=? WHERE user_id IS NULL AND owner_key=?",
+                (user_id, owner_key),
+            ).rowcount
+    return n
+
+
 def _migrate_content_reports(c: sqlite3.Connection) -> None:
     """بلاغات المحتوى الذي ينشئه المستخدمون (محادثة المجموعة + أفكار الصفقات) — شرط أبل 1.2
     وسياسة Google Play للمحتوى الاجتماعي: آلية إبلاغ + إخفاء المحتوى المسيء. بلاغ واحد لكل حساب

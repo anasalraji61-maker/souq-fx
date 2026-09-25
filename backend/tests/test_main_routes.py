@@ -284,7 +284,9 @@ def test_signing_in_adopts_the_rows_made_on_that_device_before_login(client):
     token = _register(client, "newbie")
     seen = client.get("/api/alerts", headers={**_auth(token), **_DEV1}).json()["alerts"]
     assert len(seen) == 1
-    assert client.get("/api/alerts", headers={**_auth(token), **_DEV2}).json()["alerts"] == []
+    # صارت صفوف الحساب (`claim_device_rows`) ⇒ تظهر على هاتفه الثاني، ولا يراها مجهول الجهاز الآخر
+    assert len(client.get("/api/alerts", headers={**_auth(token), **_DEV2}).json()["alerts"]) == 1
+    assert client.get("/api/alerts", headers=_DEV2).json()["alerts"] == []
 
 
 # ─── فلتر الروابط (شرط أبل 1.2) ─────────────────────────────────────────────
