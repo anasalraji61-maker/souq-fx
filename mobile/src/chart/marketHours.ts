@@ -215,8 +215,11 @@ export function barTradingDaySec(symbol: string, openSec: number, stepSec?: numb
   const end = openSec + stepSec;
   const next = tradingDayStartSec(symbol, end - 1);
   if (next <= openSec) return own;
-  const before = inForexWeekend(openSec) ? 0 : next - openSec;
-  const after = inForexWeekend(next) ? 0 : end - next;
+  // جلسة العطلة (25 ديسمبر، 1 يناير) مغلقة كعطلة الأسبوع: شمعة 4H 24 ديسمبر 20:00 (ساعتان لكلٍّ شتاءً) كانت
+  // تُنسب بالتعادل لجلسة العطلة ⇒ «يوم» من شمعة واحدة، وPDH/PDL والارتكاز يوم 26 من تلك الشمعة وحدها.
+  const closedAt = (sec: number) => inForexWeekend(sec) || isForexHolidaySession(sec);
+  const before = closedAt(openSec) ? 0 : next - openSec;
+  const after = closedAt(next) ? 0 : end - next;
   if (before === 0 && after === 0) return own;
   return after >= before ? next : own;
 }

@@ -61,6 +61,10 @@ assert.equal(tradingDayStartSec('btcusd', utc('2026-09-24T03:00:00Z')), utc('202
   assert.equal(barTradingDaySec('EURUSD', utc('2026-09-27T20:00:00Z'), H4), utc('2026-09-27T21:00:00Z'));
   // الكريبتو: منتصف ليل UTC، 4H محاذاة عليه
   assert.equal(barTradingDaySec('BTCUSD', utc('2026-09-23T20:00:00Z'), H4), utc('2026-09-23T00:00:00Z'));
+  // عشية العطلة: شمعة 4H 24 ديسمبر 20:00 (ساعتان مفتوحتان وساعتان بجلسة الميلاد المغلقة) تبقى لـ24 ديسمبر
+  assert.equal(barTradingDaySec('EURUSD', utc('2025-12-24T20:00:00Z'), H4), utc('2025-12-23T22:00:00Z'));
+  assert.equal(barTradingDaySec('EURUSD', utc('2025-12-31T20:00:00Z'), H4), utc('2025-12-30T22:00:00Z'));
+  assert.equal(barTradingDaySec('EURUSD', utc('2025-12-25T20:00:00Z'), H4), utc('2025-12-25T22:00:00Z'));
   // الفاصل صيفاً قبل شمعة 20:00 لا بعدها (كان عند 00:00)
   const h4 = Array.from({ length: 12 }, (_, k) => utc('2026-09-22T00:00:00Z') + k * H4);
   assert.deepEqual(planDayBreaks(h4, H4, 'EURUSD', 600), [5, 11]);
