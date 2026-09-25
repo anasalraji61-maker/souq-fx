@@ -1585,7 +1585,7 @@ export function TerminalScreen() {
                   accessibilityLabel={firstLoadA11y}
                   accessibilityState={{ busy: true }}
                 >
-                  <ActivityIndicator color={colors.accent} />
+                  <ActivityIndicator color={colors.textMuted} />
                   <Text style={styles.heroLoadingText} numberOfLines={2}>
                     {firstLoadText}
                   </Text>
@@ -1616,7 +1616,7 @@ export function TerminalScreen() {
                   compactUi
                   persistDrawings
                   panSpeed={panSpeed}
-                  accent={symbol === 'DXY' ? colors.dxy : colors.accent}
+                  accent={colors.accent}
                   livePrice={livePriceForChart(
                     series,
                     liveTicks[symbol] ?? null,
@@ -1750,7 +1750,7 @@ export function TerminalScreen() {
                   accessibilityLabel={firstLoadA11y}
                   accessibilityState={{ busy: true }}
                 >
-                  <ActivityIndicator color={colors.accent} />
+                  <ActivityIndicator color={colors.textMuted} />
                   <Text style={styles.heroLoadingText} numberOfLines={2}>
                     {firstLoadText}
                   </Text>
@@ -1770,7 +1770,7 @@ export function TerminalScreen() {
                   compactUi
                   persistDrawings
                   panSpeed={panSpeed}
-                  accent={symbol === 'DXY' ? colors.dxy : colors.accent}
+                  accent={colors.accent}
                   livePrice={livePriceForChart(
                     series,
                     liveTicks[symbol] ?? null,
@@ -1841,7 +1841,7 @@ export function TerminalScreen() {
                         onChartInteract={setChartTouch}
                         series={dxy}
                         size="large"
-                        accent={dxy.symbol === 'DXY' ? colors.dxy : colors.accent}
+                        accent={colors.accent}
                         label={dxy.symbol}
                         showTimeframes
                         onTimeframeChange={(nextTf) => void changeDxyTf(nextTf)}
@@ -1896,7 +1896,7 @@ export function TerminalScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                tintColor={colors.accent}
+                tintColor={colors.textMuted}
               />
             }
           >
@@ -1916,7 +1916,7 @@ export function TerminalScreen() {
                         onChartInteract={setChartTouch}
                         series={dxy}
                         size="large"
-                        accent={dxy.symbol === 'DXY' ? colors.dxy : colors.accent}
+                        accent={colors.accent}
                         label={dxy.symbol}
                         showTimeframes
                         onTimeframeChange={(nextTf) => void changeDxyTf(nextTf)}
@@ -2454,7 +2454,7 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: colors.dxy,
+    borderColor: colors.borderSoft,
     overflow: 'hidden',
   },
   phoneWatch: { maxHeight: 44, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },

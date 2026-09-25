@@ -1587,7 +1587,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       ) : null}
       <Text style={[styles.hint, { textAlign: align }]}>{commissionNoteText}</Text>
 
-      {conv && convLoading ? <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.sm }} /> : null}
+      {conv && convLoading ? <ActivityIndicator color={colors.textMuted} style={{ marginTop: spacing.sm }} /> : null}
       {conv && convNotice ? (
         <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
           {convNotice === 'closed'

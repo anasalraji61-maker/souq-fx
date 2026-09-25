@@ -2193,7 +2193,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       </Pressable>
       {formError ? <Text style={[styles.formError, { textAlign: align }]}>{formError}</Text> : null}
 
-      {loading ? <ActivityIndicator color={colors.accent} /> : null}
+      {loading ? <ActivityIndicator color={colors.textMuted} /> : null}
       {!loading && trades.length === 0 ? (
         <Text style={[styles.empty, { textAlign: align }]}>
           {listError ? t.journalLoadErrorRetry : t.journalEmpty}

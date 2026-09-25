@@ -740,7 +740,7 @@ export function ToolsScreen() {
           >
             <Text style={styles.runText}>{loading ? t.screenerRunning : t.screenerRunBtn}</Text>
           </Pressable>
-          {loading ? <ActivityIndicator color={colors.accent} /> : null}
+          {loading ? <ActivityIndicator color={colors.textMuted} /> : null}
           {!loading && scanDone && providerConfigured === false ? (
             <Text style={[styles.scanHint, { textAlign: align }]}>{t.screenerNeedApiKey}</Text>
           ) : null}
