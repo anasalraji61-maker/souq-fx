@@ -523,3 +523,11 @@
 - **الكردية** (locales تغيّر): مقارنة عميقة `ku`/`ar` بـ`tsx` ⇒ 1144 مفتاحاً، صفر ناقص، صفر حرف غير سوراني، المطابق `listSep` وحده.
 - «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط؛ `Alert.alert` حقيقية بـ`chart/confirmDestructive.ts` وحده (ذكرها بـ`TradeJournalPanel:1213`/`AccountScreen:166` تعليقات؛ 10 ملفات تستعمل `confirmDestructive`)؛ `useMultiLiveTicks:78` ⇐ `acceptTick`/`TICK_STALE_MS`؛ إعادة الجولة `AccountScreen:221-235` (`accReplayTour`).
 - بوابة البناء خضراء (tsc 0).
+
+## 2026-09-25 — تشغيل 44
+لا صفّ ui مفتوح بـCOORDINATION (دورة QA 80). **لا تغيير بالكود هذا التشغيل.**
+- ملفّات `mobile/src` المتغيّرة منذ 97eb1c4 (حتى fa1fda2): `chart/zoomWindow*` (chart) و`tradePlan*` (tools) — لا شيء بنطاقي.
+- **حالة الاختيار:** مسح AST لكل عنصر بـ`onPress`/`onValueChange` بنطاقي بنمط اختيار بصري (`active &&`/`styles.*On|Active|Selected`…) — 45 مرشّحاً كلّها بـ`accessibilityState`/aria ⇒ صفر بلا حالة. (تحقّقتُ أن المسح يلتقط ملفاً اختبارياً مزروعاً بلا حالة، ثم حذفته.)
+- **الكردية:** مقارنة عميقة `ku`/`ar` بـ`tsx` ⇒ 1144 مفتاحاً، صفر ناقص، صفر حرف غير سوراني، المطابق `listSep` وحده. الحرفيات العربية بالكود (مسح AST): مفاتيح ترجمة نصّ الخادم (`CommissionPlanPanel:40-57` ⇒ القاموس)، أوامر ذكاء (`WeeklyReportPanel`)، `academy.ts` (QA27 أنس)، `MessagesScreen`/`mock.ts`/`api.ts:900` (غير مستوردة، launch52 أنس)، محلّل أرقام، و«، » مشروطة بـ`rtl`.
+- «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط (`AnalystsPanel:129`، `SocialConsensusPanel:234`)؛ `Alert.alert` حقيقية بـ`chart/confirmDestructive.ts` وحده (`window.confirm`/`alert` على الويب؛ 9 ملفات تستعمله منها حذف الحساب)؛ `useMultiLiveTicks` ⇐ `acceptTick`/`TICK_STALE_MS`؛ إعادة الجولة `AccountScreen:219-241` (`accReplayTour`) خارج أي فرع دخول.
+- بوابة البناء خضراء (tsc 0).
