@@ -1,7 +1,7 @@
 /**
  * رموز لا يقدّمها مزوّد البيانات أبداً (backend-r19) — الخادم يرسل لها `candles: []` بـ`not_offered_by_provider`،
  * ويرفض التنبيه عليها بـ422 `symbol unavailable at provider` (backend-r50c، `be94525`): تنبيهٌ عليها كان يُحفظ
- * «يراقب» ولا يُطلق أبداً. نسخة `TerminalScreen` (`NOT_OFFERED_SYMBOLS`) هي نفسها — مصدر واحد هنا.
+ * «يراقب» ولا يُطلق أبداً. المصدر الوحيد — `TerminalScreen` والتنبيهات يستوردونه من هنا.
  */
 export const NOT_OFFERED_SYMBOLS: ReadonlySet<string> = new Set(['DXY']);
 
