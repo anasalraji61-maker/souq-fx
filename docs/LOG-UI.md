@@ -498,8 +498,8 @@
 
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
-| 603b9cd | `MatrixBottomDock` تبويب الدفتر: `<TradeJournalPanel defaultSymbol={symbol} chartBannerVisible />` — الرصيف بالتدفّق تحت الشارت و`TerminalScreen` يعرض `<NewsRiskBanner symbol={symbol} />` للرمز نفسه فوقه ⇒ لا تحذير «صفقاتك المفتوحة» مكرَّر. `MatrixSidePanel` **لم يُمسّ** (اللوح يغطّي الشريط؛ تعليق بالرصيف ينبّه) | tools92 |
-| c74ef8e | `useMultiLiveTicks` (قائمة المتابعة والرباعي): عدّاد الصمت يبدأ من المحاولة، ومقبس عالق بـ`CONNECTING` > `TICK_STALE_MS` يُترك ويُعاد — نظير إصلاح chart `42c0f3b` بـ`useLiveTicks` الذي لم يصل النسخة المتعدّدة؛ كانت القائمة تنتظر مهلة TCP بالنظام بلا سعر حيّ | — (وُجد بالمراجعة) |
+| b0c7b7d | `MatrixBottomDock` تبويب الدفتر: `<TradeJournalPanel defaultSymbol={symbol} chartBannerVisible />` — الرصيف بالتدفّق تحت الشارت و`TerminalScreen` يعرض `<NewsRiskBanner symbol={symbol} />` للرمز نفسه فوقه ⇒ لا تحذير «صفقاتك المفتوحة» مكرَّر. `MatrixSidePanel` **لم يُمسّ** (اللوح يغطّي الشريط؛ تعليق بالرصيف ينبّه) | tools92 |
+| 51089f9 | `useMultiLiveTicks` (قائمة المتابعة والرباعي): عدّاد الصمت يبدأ من المحاولة، ومقبس عالق بـ`CONNECTING` > `TICK_STALE_MS` يُترك ويُعاد — نظير إصلاح chart `42c0f3b` بـ`useLiveTicks` الذي لم يصل النسخة المتعدّدة؛ كانت القائمة تنتظر مهلة TCP بالنظام بلا سعر حيّ | — (وُجد بالمراجعة) |
 
 بوابة البناء خضراء (tsc 0) قبل كل commit.
 
