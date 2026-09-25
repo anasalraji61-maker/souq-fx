@@ -54,7 +54,7 @@ import { notify } from '../chart/confirmDestructive';
 import { createSeriesCache, seriesCacheKey } from '../chart/seriesCache';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { headerChangePct, livePriceForChart } from '../chart/liveSeries';
-import { provenanceLabel, tickStatusLabel, normalizeProvenance } from '../chart/dataSource';
+import { provenanceLabel, tickStatusLabel, normalizeProvenance, isSyntheticProvenance } from '../chart/dataSource';
 import { marketStatusLabel } from '../chart/marketHours';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
 import {
@@ -106,14 +106,14 @@ function offlineFrame(symbol: string, tf: Timeframe): ChartSeries {
  * ذاكرة جلسة لشموع (رمز، فريم) كالرباعي (`seriesCache`، 5 دقائق): تبديل فريم/رمز كان يُبقي شموع الفريم السابق
  * معروضة **تحت اسم الفريم الجديد** حتى يصل الجلب (15m موسومة 1H)، والرجوع لفريم فُتح قبل ثوانٍ = جولة انتظار كاملة.
  * الآن آخر سلسلة حقيقية لنفس (الرمز، الفريم) تُعرض فوراً والجلب يستبدلها؛ وفشل الجلب يُبقيها بدل شموع وهمية.
- * الإطارات والشارت الرئيسي والبطل تتشارك الذاكرة: فتح رمز/فريم ظاهر بإطار آخر فوري. لا تُخزَّن السلاسل التجريبية.
+ * الإطارات والشارت الرئيسي والبطل تتشارك الذاكرة: فتح رمز/فريم ظاهر بإطار آخر فوري. لا تُخزَّن السلاسل التجريبية ولا «غير المتاحة».
  */
 const terminalSeriesCache = createSeriesCache<ChartSeries>();
 const cachedSeries = (sym: string, tf: Timeframe): ChartSeries | null =>
   terminalSeriesCache.get(seriesCacheKey(sym, tf));
 async function fetchSeries(sym: string, tf: Timeframe): Promise<ChartSeries> {
   const s = await api.chart(sym, tf);
-  if (normalizeProvenance(s.data_source).kind !== 'demo') terminalSeriesCache.put(seriesCacheKey(sym, tf), s);
+  if (!isSyntheticProvenance(s.data_source)) terminalSeriesCache.put(seriesCacheKey(sym, tf), s);
   return s;
 }
 
@@ -1570,7 +1570,7 @@ export function TerminalScreen() {
                   // بجانب سعر حيّ: EURUSD 4H صاعد أسبوعاً وهابط اليوم كان «+3.33%» أخضر هنا و«−0.09%» بالإطار.
                   // الآن تغيّر اليوم من السعر المطبوع نفسه (`headerChangePct`).
                   const pct =
-                    series && series.data_source?.kind !== 'demo'
+                    series && !isSyntheticProvenance(series.data_source)
                       ? headerChangePct(series, headTick?.price ?? null, headDailyRefs[symbol.toUpperCase()])
                       : null;
                   const dir = pctDirection(pct);

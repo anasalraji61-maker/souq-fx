@@ -33,7 +33,7 @@ import { VotePanel } from '../components/VotePanel';
 import { FrameSizedGrid } from '../components/FrameSizedGrid';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import { formatPrice } from '../chart/math';
-import { formatPct } from '../chart/dailyChange';
+import { formatPct, isVerifiedTickKind } from '../chart/dailyChange';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { isFreshTick } from '../chart/dataSource';
 import { ensureWatchlistLoaded, subscribeWatchlist } from '../chart/watchlistStore';
@@ -360,9 +360,9 @@ export function ToolsScreen() {
 
   /**
    * الأسعار الصالحة لأن يُبنى عليها رقمٌ يُقرأ كقرار — **شرطان، وكلاهما موجود لسبب**:
-   * (أ) `kind !== 'demo'`: حين يتعذّر المزوّد يبثّ `/ws/ticks` سلسلة **عشوائية** حول أسعار
+   * (أ) `isVerifiedTickKind` (provider/cache): حين يتعذّر المزوّد يبثّ `/ws/ticks` سلسلة **عشوائية** حول أسعار
    * بذرية (`ws_seed`) — نتيجةٌ عائمة منها رقمٌ مختلَق تماماً، وهو الشرط نفسه الذي يفرضه
-   * `isRealQuote` على اقتباس REST بالدفتر. (ب) `isFreshTick`: سعرٌ مجمَّد (عطلة/انقطاع مزوّد)
+   * `isRealQuote` على اقتباس REST بالدفتر. و`unknown` (خادمٌ أقدم بلا مصدر) قد يكون ذلك البثّ نفسه (ui4). (ب) `isFreshTick`: سعرٌ مجمَّد (عطلة/انقطاع مزوّد)
    * ليس «أين هي الآن»؛ عند سقوطه يعود الدفتر للقطة REST كما كان تماماً — أي أن هذا البند
    * **يضيف الحركة ولا يسحب شيئاً**.
    */
@@ -375,7 +375,7 @@ export function ToolsScreen() {
     // إلى لقطة REST الخاصّة بها (تُعاد بالعودة فوراً) كما كانتا قبل وصول التيكات أصلاً.
     if (ticksLive) {
       for (const [sym, tick] of Object.entries(liveTicks)) {
-        if (tick.source.kind === 'demo') continue;
+        if (!isVerifiedTickKind(tick.source.kind)) continue;
         if (!isFreshTick(tick.source.as_of)) continue;
         if (typeof tick.price === 'number' && Number.isFinite(tick.price) && tick.price > 0) {
           out[sym.toUpperCase()] = tick.price;
