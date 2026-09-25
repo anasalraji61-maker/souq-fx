@@ -138,12 +138,28 @@ class ChatMessage(BaseModel):
 
 
 class VoteCreate(BaseModel):
-    symbol: str = Field(min_length=1, max_length=20)
+    """فكرة تصويت. كان الرمز 1–20 حرفاً حرّاً (كل رمز آخر بالخادم 3–12) والمستويات أيّ float:
+    رمز لا يُتابَع ولا يُنبَّه عليه، وأسعار سالبة، ووقف «شراء» فوق الدخول تُنشر للمجتمع كفكرة.
+    التطبيق يمنعها (`analyzePlan`) لكن الخادم هو مصدر الحقيقة لما يراه الآخرون."""
+
+    symbol: str = Field(min_length=3, max_length=12)
     direction: Literal["buy", "sell"]
-    entry: float
-    sl: float
-    tp: float
+    entry: float = Field(gt=0, allow_inf_nan=False)
+    sl: float = Field(gt=0, allow_inf_nan=False)
+    tp: float = Field(gt=0, allow_inf_nan=False)
     note: str = Field(default="", max_length=500)
+
+    @model_validator(mode="after")
+    def _consistent(self) -> "VoteCreate":
+        sym = self.symbol.strip().upper().replace("/", "")
+        if not (3 <= len(sym) <= 12 and sym.isascii() and sym.isalnum()):
+            raise ValueError("symbol must be 3-12 letters/digits")
+        self.symbol = sym
+        if self.direction == "buy" and not (self.sl < self.entry < self.tp):
+            raise ValueError("buy idea needs sl < entry < tp")
+        if self.direction == "sell" and not (self.tp < self.entry < self.sl):
+            raise ValueError("sell idea needs tp < entry < sl")
+        return self
 
 
 class ContentReport(BaseModel):
