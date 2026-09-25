@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { parseDecimal } from './parseDecimal';
 import {
   analyzePlan,
+  minStopPips,
   computedPriceText,
   openQuotesRefreshDue,
   OPEN_QUOTES_REFRESH_AFTER_MS,
@@ -3134,15 +3135,16 @@ console.log('tradePlan journal win rate selftest OK');
 console.log('tradePlan levelLooksLikePips metal above entry selftest OK');
 
 // R:R بالنقاط: ضجيج طرح أسعارٍ كبيرة (XAUJPY ~337,000) كان يُطبع «1:0.9» لخطة 1:1
+// (الوقف 7 ين لا 0.1: أضيق من 0.002% من السعر = 6.7 ين صار `slTooClose` — `minStopPips`)
 {
-  const sl = 337255.74, entry = 337255.84;
+  const sl = 337248.84, entry = 337255.84;
   for (const rr of [1, 1.5, 2, 3]) {
     const tp = targetAtRR({ symbol: 'XAUJPY', side: 'buy', entry, sl, rr })!;
     const p = analyzePlan({ symbol: 'XAUJPY', side: 'buy', entry, sl, tp });
     assert.ok((p.rr ?? 0) >= rr, `buy ${rr}: ${p.rr}`);
     assert.equal(formatRR(p.rr), `1:${rr.toFixed(1)}`);
-    const stp = targetAtRR({ symbol: 'XAUJPY', side: 'sell', entry, sl: entry + 0.1, rr })!;
-    const sp = analyzePlan({ symbol: 'XAUJPY', side: 'sell', entry, sl: entry + 0.1, tp: stp });
+    const stp = targetAtRR({ symbol: 'XAUJPY', side: 'sell', entry, sl: entry + 7, rr })!;
+    const sp = analyzePlan({ symbol: 'XAUJPY', side: 'sell', entry, sl: entry + 7, tp: stp });
     assert.equal(formatRR(sp.rr), `1:${rr.toFixed(1)}`, `sell ${rr}`);
   }
   // ما كان صحيحاً يبقى: 1:1 على USDJPY، 2.25 على EURUSD والذهب، ونسبة غير مستديرة
@@ -3176,3 +3178,27 @@ console.log('tradePlan analyzePlan large-price R:R selftest OK');
   }
 }
 console.log('tradePlan formatSignedPct selftest OK');
+
+// الحدّ الأدنى للوقف = الأكبر من 1 pip و0.002% من السعر. XAUJPY (~525,000 ين) pip-ه 0.1 ين = 0.00002% ⇒ وقف 0.5 ين كان
+// يمرّ فتقول الحاسبة 300 لوت. الأزواج المعتادة: 1 pip كما كان تماماً.
+{
+  assert.equal(minStopPips('XAUJPY', 525000), 105);
+  assert.equal(minStopPips('XAUJPY', null), 1);
+  assert.equal(minStopPips('BTCUSD', 60000), null);
+  for (const [sym, px] of [['EURUSD', 1.085], ['USDJPY', 150], ['XAUUSD', 3500], ['GBPJPY', 200], ['XAGUSD', 40], ['EURUSDc', 1.1]] as const) {
+    assert.equal(minStopPips(sym, px), 1, sym);
+  }
+  // الغريبة: فوق 1 pip بقليل، ودون سبريدها بكثير
+  assert.equal(minStopPips('USDTRY', 41), 8.2);
+  assert.equal(analyzePlan({ symbol: 'XAUJPY', side: 'buy', entry: 525000, sl: 524999.5, tp: 530000 }).issue, 'slTooClose');
+  assert.equal(analyzePlan({ symbol: 'XAUJPY', side: 'sell', entry: 525000, sl: 525010, tp: 520000 }).issue, 'slTooClose');
+  assert.equal(analyzePlan({ symbol: 'XAUJPY', side: 'buy', entry: 525000, sl: 524989.5, tp: 530000 }).ok, true);
+  assert.equal(analyzePlan({ symbol: 'XAUJPY', side: 'buy', entry: 525000, sl: 524000, tp: 530000 }).ok, true);
+  assert.equal(realizedR({ symbol: 'XAUJPY', side: 'buy', entry: 525000, sl: 524999.5, exit: 526000 }), null);
+  // الحدّ عند 1 pip للمعتاد لم يتحرّك: 1 pip تماماً يمرّ، ونصفه يُرفض
+  assert.equal(analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0849, tp: 1.09 }).ok, true);
+  assert.equal(analyzePlan({ symbol: 'XAUUSD', side: 'buy', entry: 3500, sl: 3499.9, tp: 3510 }).ok, true);
+  assert.equal(analyzePlan({ symbol: 'USDJPY', side: 'sell', entry: 150, sl: 150.01, tp: 149 }).ok, true);
+  assert.equal(analyzePlan({ symbol: 'XAUUSD', side: 'buy', entry: 3500, sl: 3499.95, tp: 3510 }).issue, 'slTooClose');
+}
+console.log('tradePlan minStopPips selftest OK');

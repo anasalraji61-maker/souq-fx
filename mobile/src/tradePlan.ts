@@ -494,10 +494,28 @@ export function realizedR(input: {
  * فوركس نسبياً (الذهب 0.1 عند 3500 = 0.0029%) فوقه، فلا وقف حقيقي يسقط.
  */
 const R_MIN_RISK_FRACTION = 2e-5;
+/**
+ * ومع pip معروف: **الأكبر** من 1 pip و0.002% من الدخول. pip المعدن 0.1 بأي عملة تسعير، فعلى XAUJPY (~525,000 ين)
+ * كان «1 pip» = 0.1 ين = 0.00002% — وقف 0.5 ين يمرّ فتقول الحاسبة **300 لوت** لـ1% من 10,000$. 0.002% = 10.5 ين هناك
+ * (≈ 1 pip الذهب بالدولار). على الأزواج المعتادة 1 pip أكبر أصلاً (EURUSD 0.0000216، USDJPY 0.003، XAUUSD 0.07)؛
+ * وعلى الغريبة (USDTRY ~41 ⇒ 8 pip، USDZAR ⇒ 3.6) يبقى دون سبريدها بكثير.
+ */
 function minRiskForR(symbol: string | undefined, entry: number): number {
   const pip = journalPipSize(symbol);
   // هامش نسبي صغير: 1.0851 − 1.0850 بالفاصلة العائمة = 0.0000999… ويجب أن يُعدّ 1 pip كاملاً
-  return pip ? pip * (1 - 1e-6) : entry * R_MIN_RISK_FRACTION;
+  return pip ? Math.max(pip, entry * R_MIN_RISK_FRACTION) * (1 - 1e-6) : entry * R_MIN_RISK_FRACTION;
+}
+
+/**
+ * أضيق وقف **بالنقاط** للحاسبة (`slTooClose` بـPositionSizePanel) — حدّ `analyzePlan` نفسه: 1 pip، أو 0.002% من `price`
+ * إن كان أكبر (XAUJPY). `price` غير معروف (النقاط وحدها بلا دخول ولا وقف) ⇒ 1 pip. null = رمز بلا pip.
+ * القيمة المقارَنة مقرَّبة لعُشر pip (`slPipsFromPrices`)، فالحدّ يُقرَّب لعُشر pip للأسفل كي لا يُرفض وقفٌ عند الحدّ تماماً.
+ */
+export function minStopPips(symbol: string | null | undefined, price?: number | null): number | null {
+  const pip = journalPipSize(symbol);
+  if (!pip) return null;
+  if (price == null || !Number.isFinite(price) || price <= 0) return 1;
+  return Math.max(1, Math.floor((price * R_MIN_RISK_FRACTION) / pip * 10) / 10);
 }
 
 function exactR(input: {

@@ -108,6 +108,7 @@ import {
   levelLooksLikePipsText,
   type TradeSide,
   QUICK_SYMBOLS,
+  minStopPips,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
 
@@ -687,8 +688,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
    * يُعامَل كنسبة فوق 100% (`riskOverBalance`) بالضبط: تحذيرٌ ظاهر عند خانته، وبلا حجم مركز — لا رقم من مدخل
    * مستحيل. والخانة واحدة سواء كُتبت النقاط يدوياً أو اشتُقّت من السعرين، فالفحص واحد يغطّيهما.
    * القيمة مقرَّبة لعُشر pip أصلاً (`slPipsFromPrices`) فلا حاجة لهامش عائم.
+   * والحدّ الأكبر من 1 pip و0.002% من السعر (`minStopPips`): XAUJPY بوقف 0.5 ين كان 300 لوت فوق «1 pip» = 0.1 ين.
    */
-  const slTooClose = spec != null && Number.isFinite(slTyped) && slTyped > 0 && slTyped < 1;
+  const slFloorPx = Number.isFinite(priceNum(entryPx)) ? priceNum(entryPx) : priceNum(stopPx);
+  const slFloor = spec ? minStopPips(spec.symbol, slFloorPx) ?? 1 : 1;
+  const slTooClose = spec != null && Number.isFinite(slTyped) && slTyped > 0 && slTyped < slFloor;
   const fetchedConv = convQuote && convQuote.key === convKey ? convQuote : null;
   // التجديد الفاشل يُبقي آخر سعر بصمت — بعد 5 د يُقال للمتداول (مؤقّت التجديد يعيد الرسم كل دقيقة فيتقدّم العدد)
   const convStaleMin = fetchedConv ? convStaleMinutes(fetchedConv.at, Date.now()) : null;
