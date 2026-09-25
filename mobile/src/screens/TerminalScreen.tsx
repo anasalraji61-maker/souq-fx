@@ -20,7 +20,7 @@ import { api, type ChartSeries } from '../api';
 import { MOCK_BASES, mockBase } from '../chart/mockBases';
 import { mockSeries } from '../mock';
 import { ChartFrame } from '../components/ChartFrame';
-import { ProviderUnavailableNotice, seriesHasNoRealData } from '../components/ProviderUnavailableNotice';
+import { ProviderUnavailableNotice, loadingSeries, seriesHasNoRealData } from '../components/ProviderUnavailableNotice';
 import {
   FrameSizedGrid,
   type FrameLayoutCount,
@@ -44,6 +44,7 @@ import { useDailyRefs } from '../chart/dailyRefStore';
 import { dailyChange, formatPct, freshTickRefPrice, isVerifiedTickKind, pctDirection } from '../chart/dailyChange';
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import { formatPrice } from '../chart/math';
+import { formatPriceDiff } from '../chart/indicators/utils';
 import { quoteSpreadPips } from '../positionSize';
 import {
   armedText,
@@ -104,16 +105,16 @@ const DEFAULT_SHADOW_ENABLED: ShadowEnabled = [true, true, true];
 const NOT_OFFERED_SYMBOLS = new Set(['DXY']);
 
 /**
- * إطار **قبل** أول ردّ (الحالة الابتدائية فقط): بذرة موسومة «تجريبي» — إلا رمزاً لا يقدّمه المزوّد (launch119) فسلسلته
- * الفارغة نفسها التي يرسلها الخادم ⇒ الإشعار. `ChartFrame` لا يملك حالة «تحميل» بعد، فلا بديل أصدق هنا.
+ * إطار **قبل** أول ردّ (الحالة الابتدائية فقط). tools81: كان بذرة `mockSeries` «تجريبي» حول أسعار 2024 حتى يصل الردّ —
+ * وبلا شبكة حتى مهلة الطلب. الآن `loadingSeries` (ui `ce58542`) ⇒ `ChartFrame` يعرض دوّاراً و«جارٍ التحميل». رمز لا يقدّمه
+ * المزوّد (launch119) يبقى سلسلته الفارغة نفسها التي يرسلها الخادم ⇒ الإشعار فوراً.
  */
-function bootFrame(symbol: string, tf: Timeframe, bars = 120): ChartSeries {
-  const seed = mockSeries(symbol, mockBase(symbol), tf, bars);
-  if (!NOT_OFFERED_SYMBOLS.has(symbol.trim().toUpperCase())) return seed;
+function bootFrame(symbol: string, tf: Timeframe): ChartSeries {
+  const loading = loadingSeries(symbol, tf);
+  if (!NOT_OFFERED_SYMBOLS.has(symbol.trim().toUpperCase())) return loading;
   return {
-    ...seed,
-    candles: [],
-    data_source: { ...seed.data_source, unavailable_reason: 'not_offered_by_provider' } as ChartSeries['data_source'],
+    ...loading,
+    data_source: { ...loading.data_source, unavailable_reason: 'not_offered_by_provider' } as ChartSeries['data_source'],
   };
 }
 
@@ -1538,6 +1539,7 @@ export function TerminalScreen() {
                   height={desktopChartHeight}
                   showSwitchHint
                   dataSource={series?.data_source}
+                  timeframe={series?.timeframe ?? tf}
                 />
               ) : !series ? (
                 <View
@@ -1676,7 +1678,8 @@ export function TerminalScreen() {
                     {(() => {
                       // بالـpip كلوح العمق (`DomLitePanel`) — الفرق الخام «0.00009» لا يقارَن بسبريد الوسيط
                       const sp = quoteSpreadPips(symbol, quote.bid, quote.ask);
-                      return sp != null ? `${sp.toFixed(1)} pip` : formatPrice(quote.ask - quote.bid, symbol);
+                      // QA65: بلا pip (BTCUSD/المؤشرات) بمنازل **السعر** — `formatPrice(الفرق)` كان «12.500» بجانب «67420.50»
+                      return sp != null ? `${sp.toFixed(1)} pip` : formatPriceDiff(quote.ask - quote.bid, quote.bid, symbol);
                     })()}{' '}
                     · {t.termBidLabel}{' '}
                     {formatPrice(quote.bid, symbol)} · {t.termAskLabel} {formatPrice(quote.ask, symbol)}
@@ -1701,6 +1704,7 @@ export function TerminalScreen() {
                   height={desktopChartHeight}
                   showSwitchHint
                   dataSource={series?.data_source}
+                  timeframe={series?.timeframe ?? tf}
                 />
               ) : !series ? (
                 <View
