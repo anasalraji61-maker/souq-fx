@@ -209,6 +209,6 @@
 |---|---|---|
 | a0f67d1 | `ScreenerMini`: طابع النتيجة القديمة يقرأ `t.screenerPriceAsOf` («إغلاق {time}»)؛ حُذفت `AS_OF_COPY` المحلية («حتى» تُقرأ «إلى أن») | ui11 (أُغلق من جهتي) |
 | d918a7f | `api.updateTrade`: `size?: number \| null` — null = حجم غير معروف يمسح المحفوظ (الخادم يقبله، `main.py` `4f6356a`)؛ صُحّح التعليق. إرسال null من الدفتر عند مسح الخانة لـtools | tools77b (أُنجز) |
-| 9b089ee | `NewsPanel`: `impact: "unknown"` (أو أي قيمة غير high/medium/low) ⇒ **بلا شارة** بدل السقوط على «≈ منخفض»؛ فراغ مكانها يُبقي الوقت بطرفه. النوع `NewsItem.impact` يضيف `'unknown'`. لا مفتاح جديد مطلوب من launch | backend-r18 (أُنجز، وصل أثناء التشغيل) |
+| c90822c | `NewsPanel`: `impact: "unknown"` (أو أي قيمة غير high/medium/low) ⇒ **بلا شارة** بدل السقوط على «≈ منخفض»؛ فراغ مكانها يُبقي الوقت بطرفه. النوع `NewsItem.impact` يضيف `'unknown'`. لا مفتاح جديد مطلوب من launch | backend-r18 (أُنجز، وصل أثناء التشغيل) |
 
 **إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط؛ `Alert.alert` داخل `chart/confirmDestructive.ts` فقط (الويب `window.confirm`/`alert`، منها حذف الحساب)؛ «درجة الاتفاق» أُزيلت (تعليقان)؛ الجولة قابلة للإعادة (`AccountScreen` ⇐ `OnboardingOverlay`)؛ التيك المتجمّد يُرفض (`acceptTick` + `TICK_STALE_MS`). الكردية: لا تفرّع يعطي `ku` نصّاً عربياً بملفاتي (المدارس ⇒ `name_en` لغير العربية)، والنصّ العربي الوحيد غير التعليقي `api.ts` `from_user: 'أنت'` (launch52، أنس). مسح حالة مشروطة بلا `accessibilityState` ⇒ المرشّحات الجديدة (`CoursesScreen`، `LectureClassroom`) كاذبة (`ref.current`).
