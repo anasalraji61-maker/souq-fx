@@ -484,6 +484,8 @@ export type Dict = {
   /** قارئ الشاشة لشرائح «= SL/= BE/= TP» تحت خانة الخروج — `{price}` نصّ الخانة المنسوخ؛ «SL»/«BE» تُقرأ حروفاً */
   journalExitAtSlA11y: string;
   journalExitAtBeA11y: string;
+  /** شريحة «= SL» حين نُقل الوقف إلى الربح (`x.gain`): «وقف الخسارة» خطأ لقارئ الشاشة — الخروج هنا ربح */
+  journalExitAtProfitStopA11y: string;
   journalExitAtTpA11y: string;
   /** قارئ الشاشة لشرائح الوقف بالمسافة («−20 pip») تحت خانة الوقف — `{pips}` العدد، `{price}` سعر الوقف المكتوب */
   journalSlAtPipsA11y: string;
@@ -1544,6 +1546,7 @@ const ar: Dict = {
   journalExitA11y: 'سعر الخروج (اختياري)',
   journalExitAtSlA11y: 'الخروج عند وقف الخسارة {price}',
   journalExitAtBeA11y: 'الخروج عند سعر الدخول (تعادل) {price}',
+  journalExitAtProfitStopA11y: 'الخروج عند الوقف المنقول إلى الربح {price}',
   journalExitAtTpA11y: 'الخروج عند الهدف {price}',
   journalSlAtPipsA11y: 'وقف الخسارة على بُعد {pips} pip من الدخول: {price}',
   journalNotePlaceholder: 'ملاحظة',
@@ -2605,6 +2608,7 @@ const enUS: Dict = {
   journalExitA11y: 'Exit price (optional)',
   journalExitAtSlA11y: 'Exit at stop loss {price}',
   journalExitAtBeA11y: 'Exit at entry (breakeven) {price}',
+  journalExitAtProfitStopA11y: 'Exit at the stop moved into profit {price}',
   journalExitAtTpA11y: 'Exit at take profit {price}',
   journalSlAtPipsA11y: 'Stop loss {pips} pips from entry: {price}',
   journalNotePlaceholder: 'Note',
@@ -3693,6 +3697,7 @@ const ku: Dict = {
   journalExitA11y: 'نرخی دەرچوون (ئیختیاری)',
   journalExitAtSlA11y: 'دەرچوون لەسەر وەستانی زیان {price}',
   journalExitAtBeA11y: 'دەرچوون لەسەر نرخی چوونەژوورەوە (بێ قازانج و زیان) {price}',
+  journalExitAtProfitStopA11y: 'دەرچوون لەسەر وەستانی گوازراوە بۆ ناو قازانج {price}',
   journalExitAtTpA11y: 'دەرچوون لەسەر ئامانج {price}',
   journalSlAtPipsA11y: 'وەستانی زیان {pips} pip دوور لە چوونەژوورەوە: {price}',
   journalNotePlaceholder: 'تێبینی',
