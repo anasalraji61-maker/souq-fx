@@ -293,20 +293,48 @@ export function ChartFrame({
     setMeasuredH((prev) => (Math.abs(prev - next) > 2 ? next : prev));
   };
 
+  const isWeb = Platform.OS === 'web';
+  const frameSymbol = (pendingSwitch?.symbol || label || series.symbol).toUpperCase();
+  // القائد لا يُفعَّل (هو المفعَّل) — إجراء بلا أثر يُربك القارئ. شارته («قائد») نصّ مقروء بجانب الرمز.
+  const syncA11yActions =
+    !isWeb && onSyncActivate && syncBadge !== 'leader'
+      ? [{ name: 'syncActivate', label: `${t.cfSyncActivateA11yPrefix}${frameSymbol}` }]
+      : undefined;
+  const focusButton = onFocus ? (
+    <Pressable
+      accessibilityRole="button"
+      style={({ pressed }) => [
+        styles.focusBtn,
+        pressed && {
+          opacity: buttons.pressedOpacity,
+          transform: [{ scale: buttons.pressedScale }],
+        },
+      ]}
+      onPress={onFocus}
+      accessibilityLabel={t.termOpenFullscreenA11y}
+      hitSlop={8}
+    >
+      <Text style={styles.focusBtnText}>⛶</Text>
+    </Pressable>
+  ) : null;
+
   return (
     <Pressable
-      // iOS: عنصر `accessible` يخفي كل ما بداخله عن VoiceOver — كان الإطار كله زرّاً واحداً بلا وسم
-      // (معطَّلاً) فلا يُبلغ شريط الفريمات ولا زرّ الرمز ولا ملء الشاشة. زرّ فقط حين يفعل شيئاً (التزامن).
-      accessible={!!onSyncActivate}
-      accessibilityRole={onSyncActivate ? 'button' : undefined}
+      // iOS/Android: عنصر `accessible` يخفي كل ما بداخله عن VoiceOver — والتزامن يمرّر `onSyncActivate` لكل
+      // الإطارات (القائد أيضاً) ⇒ كان كل إطار زرّاً واحداً «تفعيل مزامنة…» لا يُبلغ منه شريط الفريمات ولا الرمز
+      // ولا السعر ولا ملء الشاشة. الإطار لا يُجمَّع على الجوال؛ التفعيل إجراء مخصّص على زرّ الرمز (`syncA11yActions`).
+      // الويب: الحاوية لا تخفي أبناءها ⇒ يبقى زرّاً للوحة المفاتيح كما كان.
+      accessible={isWeb && !!onSyncActivate}
+      accessibilityRole={isWeb && onSyncActivate ? 'button' : undefined}
       style={[styles.wrap, size === 'hero' && styles.heroWrap, fill && styles.wrapFill]}
       onPress={onSyncActivate}
       disabled={!onSyncActivate}
-      // الشارة («قائد»/«تابع») داخل زرّ `accessible` لا يقرؤها VoiceOver — القائد كان يُعرف بلونه الأخضر فقط.
-      accessibilityState={{ disabled: !onSyncActivate, selected: !!onSyncActivate && syncBadge === 'leader' }}
+      accessibilityState={
+        isWeb ? { disabled: !onSyncActivate, selected: !!onSyncActivate && syncBadge === 'leader' } : undefined
+      }
       accessibilityLabel={
-        onSyncActivate
-          ? `${t.cfSyncActivateA11yPrefix}${(label || series.symbol).toUpperCase()}${badge ? ` · ${badge}` : ''}`
+        isWeb && onSyncActivate
+          ? `${t.cfSyncActivateA11yPrefix}${frameSymbol}${badge ? ` · ${badge}` : ''}`
           : undefined
       }
     >
@@ -340,8 +368,13 @@ export function ChartFrame({
             onPress={() => {
               if (onSymbolChange) setWheelOpen((v) => !v);
             }}
-            accessibilityLabel={onSymbolChange ? t.cfChangeSymbolA11y : undefined}
+            // الوسم يحلّ محلّ النصّ: «تغيير الرمز» وحده كان يُقرأ بكل إطارات الشبكة الأربعة — الزوج لا يُعرف.
+            accessibilityLabel={onSymbolChange ? `${frameSymbol} — ${t.cfChangeSymbolA11y}` : undefined}
             accessibilityState={onSymbolChange ? { expanded: wheelOpen } : undefined}
+            accessibilityActions={syncA11yActions}
+            onAccessibilityAction={(e) => {
+              if (e.nativeEvent.actionName === 'syncActivate') onSyncActivate?.();
+            }}
             hitSlop={8}
           >
             <Text
@@ -351,7 +384,7 @@ export function ChartFrame({
                 ? ({ translate: 'no', className: 'notranslate' } as object)
                 : {})}
             >
-              {(pendingSwitch?.symbol || label || series.symbol).toUpperCase()}
+              {frameSymbol}
             </Text>
             {onSymbolChange ? <Text style={styles.symbolCaret}>▾</Text> : null}
           </Pressable>
@@ -397,8 +430,11 @@ export function ChartFrame({
             </Text>
           ) : null}
         </View>
-        {/* `headerPrice` null = `last: null` بلا تيك (backend-r19) — لا «null» ولا سقوط `toFixed` */}
-        {noRealData || headerPrice == null ? null : (
+        {/* `headerPrice` null = `last: null` بلا تيك (backend-r19) — لا «null» ولا سقوط `toFixed`. زرّ ملء الشاشة
+            يبقى: منذ launch121 كل طلب فاشل (بلا شبكة/خادم) إطار بلا شموع، فكان يختفي معه المدخل الوحيد للشارت الكامل. */}
+        {noRealData || headerPrice == null ? (
+          focusButton ? <View style={styles.priceRow}>{focusButton}</View> : null
+        ) : (
           <View style={[styles.priceRow, switching && styles.stale]}>
             <Text
               style={styles.price}
@@ -460,23 +496,7 @@ export function ChartFrame({
             >
               {chgPct == null ? '—' : formatPct(chgPct)}
             </Text>
-            {onFocus ? (
-              <Pressable
-                accessibilityRole="button"
-                style={({ pressed }) => [
-                  styles.focusBtn,
-                  pressed && {
-                    opacity: buttons.pressedOpacity,
-                    transform: [{ scale: buttons.pressedScale }],
-                  },
-                ]}
-                onPress={onFocus}
-                accessibilityLabel={t.termOpenFullscreenA11y}
-                hitSlop={8}
-              >
-                <Text style={styles.focusBtnText}>⛶</Text>
-              </Pressable>
-            ) : null}
+            {focusButton}
           </View>
         )}
       </View>
