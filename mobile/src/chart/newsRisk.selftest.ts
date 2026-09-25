@@ -656,3 +656,16 @@ console.log('newsRisk CL-OIL selftest OK');
   assert.deepEqual(symbolCurrencies('N22'), []);
 }
 console.log('newsRisk more index names selftest OK');
+
+// سلّة الدولار (FXCM)، النفط بأسماء أخرى، الغاز، عوائد السندات الأمريكية — كانت `[]`
+{
+  for (const n of ['USDOLLAR', 'USOUSD', 'UKOUSD', 'NATURALGAS', 'US10Y', 'UST10Y', 'US10YR', 'US02Y', 'US2Y', 'UST02Y', 'US30Y', 'UST30Y']) {
+    assert.deepEqual(symbolCurrencies(n), ['USD'], n);
+    assert.deepEqual(symbolCurrencies(`${n}.cash`), ['USD'], `${n}.cash`);
+    assert.deepEqual(symbolCurrencies(`${n}m`), ['USD'], `${n}m`);
+    assert.deepEqual(symbolCurrencies(n.toLowerCase()), ['USD'], n.toLowerCase());
+  }
+  assert.deepEqual(symbolCurrencies('US10'), []);
+  assert.deepEqual(symbolCurrencies('COCOA'), []);
+}
+console.log('newsRisk dollar basket / treasuries selftest OK');

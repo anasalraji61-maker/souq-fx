@@ -96,6 +96,12 @@ const SINGLE_CCY: Record<string, string> = {
   SUI20: 'CHF', CH20: 'CHF', SWISS20: 'CHF',
   N225: 'JPY', NI225: 'JPY', NIK225: 'JPY',
   HK33: 'HKD', CAN60: 'CAD', CA60: 'CAD', SA40: 'ZAR', SWE30: 'SEK', NOR25: 'NOK',
+  /**
+   * سلّة الدولار باسم FXCM «USDOLLAR»، والنفط «USOUSD»/«UKOUSD» (وسطاء MT5 آخرون)، والغاز «NATURALGAS»، وعوائد سندات الخزانة
+   * («US10Y»، «UST10Y»، «US02Y»…) — أوّل ما يقفز على الرواتب والتضخّم الأمريكي. كانت كلها `[]`: لا تحذير ولا «التقويم غير متاح».
+   */
+  USDOLLAR: 'USD', USOUSD: 'USD', UKOUSD: 'USD', NATURALGAS: 'USD',
+  US10Y: 'USD', UST10Y: 'USD', US10YR: 'USD', US02Y: 'USD', US2Y: 'USD', UST02Y: 'USD', US30Y: 'USD', UST30Y: 'USD',
 };
 
 /**
