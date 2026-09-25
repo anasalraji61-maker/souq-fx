@@ -458,3 +458,15 @@
 - **حالة الاختيار:** مسح AST جديد لكل عنصر JSX بـ`onPress`/`onValueChange` بلا `accessibilityState`/aria وبشرط نمط اختيار — مرشّح واحد (`MatrixBottomDock:95`، زرّ الإغلاق، شرطه `pressed` فقط) = صفر فعلي.
 - **الكردية:** مقارنة عميقة `DICTS.ku`/`DICTS.ar` بما فيها الكائنات المتداخلة (`subPlans`): صفر ناقص، صفر حرف غير سوراني، المطابق بحرف عربي `listSep` وحده؛ والمطابق الباقي (10) محايد لغوياً (`RSI`، `Bid / Ask`، البريد…). الحرفيات العربية المعروضة خارج التعليقات بنطاقي: لا شيء — الباقي أوامر ذكاء (`WeeklyReportPanel`، `lang` مرسَل)، ومفاتيح ترجمة نصّ الخادم (`CommissionPlanPanel`)، ومحلّلات إدخال (`parseDecimal`/`positionSize`)، و`api.ts:900` (launch52).
 - «₴» بتعليقين؛ «درجة الاتفاق» بتعليقات؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده (مستعمَل بعشرة ملفات منها `AccountScreen`)؛ `useMultiLiveTicks` ⇐ `acceptTick` + مؤقّت الإسقاط؛ إعادة الجولة `AccountScreen:221-233`.
+
+## 2026-09-25 — تشغيل 38
+صفّا ui بـCOORDINATION (دورة QA 75): **QA75 (جانب ui)** و**launch135** — أُنجزا:
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| 25212d8 | `VotePanel` `planSummary` يمرّر `unit: pipUnit(lang)` ⇒ «Risk 25 pips · Reward 50 pips» بالإنجليزية كالدفتر (`TradeJournalPanel:572`)؛ العربية/الكردية «pip» كما هي | QA75 (ui) |
+| ec24807 | `SymbolSearchBar`: حالة `searchedQ` (النصّ الذي عادت له النتائج فعلاً) ⇒ سطر `t.ssbNoMatch` (`{q}`) يظهر فقط حين يكتمل بحث النصّ الحالي فارغاً بلا خطأ ولا تحميل — لا أثناء مهلة 350ms ولا بنتيجة نصّ سابق. لون هادئ (`textDim`) لا أحمر الخطأ، و`accessibilityLiveRegion="polite"` لقارئ الشاشة | launch135 |
+
+بوابة البناء خضراء (tsc 0) قبل كل commit. **باقٍ من launch135 (ملاحظة ثانوية، نطاق launch):** 503 «Twelve Data not configured» يُعرض `ssbError` «تحقق من الاتصال» — يحتاج مفتاحاً جديداً (مثلاً `ssbUnavailable`) ثم أفرّق بـ`SymbolSearchBar` حسب الحالة.
+
+**إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده؛ `useMultiLiveTicks:75` ⇐ `acceptTick`/`TICK_STALE_MS`؛ إعادة الجولة `AccountScreen:221-233`. الزرّان المعدَّلان هذا التشغيل لا حالة اختيار لهما.
