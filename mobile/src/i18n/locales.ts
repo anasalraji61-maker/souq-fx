@@ -972,8 +972,7 @@ export type Dict = {
   /** «⏪» بجانب سعر الرأس بالإعادة — `mcReplayModeA11y` («وضع الإعادة») لا يقول إن السعر المقروء ليس الحيّ */
   cfReplayPriceA11y: string;
   cfMarketClosedTag: string;
-  cfSpreadA11y: string;
-  /** قارئ الشاشة لوسم السبريد برأس الإطار: `cfSpreadA11y` ثابت ويحلّ محلّ النصّ فلا تُقرأ الأرقام (launch111) — `{bid}` `{ask}` */
+  /** قارئ الشاشة لوسم السبريد برأس الإطار (`ChartFrame`، launch111) — يُقرأ ما يظهر فقط — `{bid}` `{ask}` */
   cfSpreadBidAskA11y: string;
   /** `{pips}` بالصيغة المعروضة (`toFixed(1)`) — يُلحق بـ`cfSpreadBidAskA11y` بفاصلة، أو وحده (الهاتف/السعر القديم) */
   cfSpreadPipsA11y: string;
@@ -2173,7 +2172,6 @@ const ar: Dict = {
   cfMarketClosedA11y: 'السوق مغلق حالياً',
   cfReplayPriceA11y: 'إعادة الشموع — السعر إغلاق شمعة الإعادة لا السعر الحيّ',
   cfMarketClosedTag: 'مغلق',
-  cfSpreadA11y: 'سبريد البيع والشراء',
   cfSpreadBidAskA11y: 'Bid (بيع) {bid}، Ask (شراء) {ask}',
   cfSpreadPipsA11y: 'السبريد {pips} pip',
   dsKindProvider: 'مزود',
@@ -3336,7 +3334,6 @@ const enUS: Dict = {
   cfMarketClosedA11y: 'Market currently closed',
   cfReplayPriceA11y: 'Candle replay — this is the replay candle’s close, not the live price',
   cfMarketClosedTag: 'Closed',
-  cfSpreadA11y: 'Bid/ask spread',
   cfSpreadBidAskA11y: 'Bid {bid}, ask {ask}',
   cfSpreadPipsA11y: 'Spread {pips} pips',
   dsKindProvider: 'Provider',
@@ -4525,7 +4522,6 @@ const ku: Dict = {
   cfMarketClosedA11y: 'بازاڕ ئێستا داخراوە',
   cfReplayPriceA11y: 'دووبارەکردنەوەی مۆم — ئەم نرخە داخستنی مۆمی دووبارەکردنەوەیە، نەک نرخی زیندوو',
   cfMarketClosedTag: 'داخراو',
-  cfSpreadA11y: 'جیاوازی نرخی کڕین و فرۆشتن',
   cfSpreadBidAskA11y: 'Bid (فرۆشتن) {bid}، Ask (کڕین) {ask}',
   cfSpreadPipsA11y: 'سپرێد {pips} pip',
   dsKindProvider: 'دابینکەر',
