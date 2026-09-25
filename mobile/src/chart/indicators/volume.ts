@@ -496,23 +496,12 @@ export function computePvi(candles: (Candle & { volume?: number })[]): number[] 
 }
 
 /**
- * Klinger Volume Oscillator (KVO، مذبذب المعنويات الحجمية لستيفن كلينجر) — يقيس تدفق قوة الحجم
- * (Volume Force) مع مراعاة اتجاه السعر وحدّة تقلّبه معاً، لا الحجم الخام وحده كـOBV/VPT أعلاه. لكل
- * نقطة: السعر النموذجي HLC/3 (typical price) — اتجاه T[i]=+1 إن كان HLC/3 الحالي ≥ السابق، وإلا −1
- * (لا اتجاه سابق عند i=0 فيبقى +1 اصطلاحاً). dm[i]=أعلى[i]−أدنى[i] (مدى الشمعة الخام). cm (القياس
- * التراكمي، حالة تعتمد على الاتجاه): عند i=0، cm[0]=dm[0]؛ إن استمر نفس الاتجاه عن الشمعة السابقة
- * cm[i]=cm[i-1]+dm[i]، وإلا (انعكاس الاتجاه) cm[i]=dm[i-1]+dm[i] (إعادة ضبط من مدى الشمعتين
- * الأخيرتين فقط — الصيغة القياسية لكلينجر). VF (قوة الحجم)[i] = فوليوم[i] × |2×(dm[i]/cm[i])−1| ×
- * T[i] × 100 (حارس صفر صراحةً عند cm[i]=0 بدل قسمة على صفر). خط KVO = EMA(VF، 34) − EMA(VF، 55)؛ خط
- * الإشارة = EMA(KVO، 13) (نفس بنية computeMacd أعلاه حرفياً: فرق EMAوين قصير/طويل + EMA ثالث كإشارة،
- * لكن على VF بدل الإغلاق مباشرة). فوليوم مفقود يُعوَّض بنفس صيغة computeVpt/computeVolumeOscillator
- * أعلاه للاتساق. يُرسَم بنفس **نمط الپين ثنائي الخط المستقلّ** المُستحدَث لـcomputeVortex أعلاه (خطّان
- * متراكبان، لا هستوغرام كـMACD) — وهو بالضبط سبب اختيار Klinger كتالٍ منطقي بعد Vortex (راجع
- * ROADMAP.md، صف "التالي المرجَّح بعد Vortex"). **تحقّق يدوي**: سعر ثابت تماماً (أعلى=أدنى=إغلاق لكل
- * شمعة) → HLC/3 ثابت لكل نقطة → T يبقى ثابتاً على +1 (لا تغيّر اتجاه أبداً)، وdm=أعلى−أدنى=0 لكل شمعة
- * → cm=مجموع/تراكم أصفار=0 دائماً لكل i → VF محروس بصفر صراحة عند cm=0 لكل نقطة → EMA لسلسلة كلها
- * أصفار=0 بالضبط لكلا الطولين (34/55) → KVO=0−0=0 بالضبط بعد التسخين، والإشارة=EMA(0،13)=0 أيضاً،
- * يطابق "لا قوة حجمية بسعر ساكن" بالتعريف تماماً.
+ * Klinger Oscillator — **صيغة TradingView المدمجة** (لا صيغة كلينجر الكاملة dm/cm/×100 التي كانت هنا
+ * وتُعطي أرقاماً أكبر بمراتب ولا تطابق ما يراه المتداول على TradingView):
+ *   sv  = hlc3 تغيّر ≥ 0 ? volume : −volume   (الشمعة الأولى بلا تغيّر ⇒ −volume كـ`na >= 0` بالپين)
+ *   kvo = EMA(sv, 34) − EMA(sv, 55)،  signal = EMA(kvo, 13)
+ * `ema()` مبذورة بـSMA كـ`ta.ema`. فوليوم مفقود يُعوَّض بصيغة computeVpt للاتساق.
+ * تحقّق: سعر ثابت ⇒ sv = +volume ثابت ⇒ EMA34 = EMA55 ⇒ kvo = 0 والإشارة 0.
  */
 export function computeKlinger(
   candles: (Candle & { volume?: number })[]
@@ -521,19 +510,9 @@ export function computeKlinger(
   if (n === 0) return { kvo: [], signal: [] };
   const vol = candles.map((c) => c.volume ?? Math.abs(c.close - c.open) * 1e6 + 1000);
   const typical = candles.map((c) => (c.high + c.low + c.close) / 3);
-  const dm = candles.map((c) => c.high - c.low);
-  const trend: number[] = new Array(n).fill(1);
-  for (let i = 1; i < n; i++) {
-    trend[i] = typical[i] >= typical[i - 1] ? 1 : -1;
-  }
-  const cm: number[] = new Array(n).fill(0);
-  cm[0] = dm[0];
-  for (let i = 1; i < n; i++) {
-    cm[i] = trend[i] === trend[i - 1] ? cm[i - 1] + dm[i] : dm[i - 1] + dm[i];
-  }
-  const vf = candles.map((_, i) => (cm[i] === 0 ? 0 : vol[i] * Math.abs(2 * (dm[i] / cm[i]) - 1) * trend[i] * 100));
-  const emaShort = ema(vf, 34);
-  const emaLong = ema(vf, 55);
+  const sv = candles.map((_, i) => (i > 0 && typical[i] >= typical[i - 1] ? vol[i] : -vol[i]));
+  const emaShort = ema(sv, 34);
+  const emaLong = ema(sv, 55);
   const kvo: (number | null)[] = candles.map((_, i) =>
     emaShort[i] != null && emaLong[i] != null ? emaShort[i]! - emaLong[i]! : null
   );
