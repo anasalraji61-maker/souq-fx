@@ -1199,7 +1199,7 @@ export type Dict = {
   /**
    * backend-r2: لا مصدر مرخَّص للمحلّلين ولا لقنوات التواصل — `/api/signals/analysts/*` و`/social/consensus` يعيدان
    * `status: "unavailable"`، `unavailable_reason: "no_licensed_feed"`، `direction`/`levels` = null. يُعرض النصّ بدل القائمة
-   * والاتجاه (لا «محايد»، لا «null»). `analystsSubSuffix`/`socialPickHint` («محاكاة للعرض») لم يعودا صادقين حين يصل هذا الردّ.
+   * والاتجاه (لا «محايد»، لا «null»). `analystsSubSuffix`/`socialPickHint` صارا يقولان «لا مصدر مرخَّص بعد» (launch103) بدل «محاكاة للعرض».
    */
   analystsUnavailable: string;
   socialUnavailable: string;
@@ -1366,7 +1366,7 @@ const ar: Dict = {
   aiSendA11y: 'إرسال سؤال لمساعد الذكاء الاصطناعي',
   aiAskBtn: 'اسأل',
   analystsTitle: 'توقعات المحللين',
-  analystsSubSuffix: 'محاكاة للعرض — ليست آراء بنوك أو بيوت بحث حقيقية',
+  analystsSubSuffix: 'لا مصدر مرخَّص بعد — لا نعرض آراء مختلَقة',
   analystsRefreshA11y: 'تحديث توقعات المحللين',
   analystsLoadError: 'تعذّر تحميل توقعات المحللين — تحقّق من الاتصال ثم اضغط «تحديث»',
   socialPlatformTelegram: 'تيليجرام',
@@ -1380,7 +1380,7 @@ const ar: Dict = {
   socialComputeBtn: 'احسب',
   socialTitle: 'المعدل التقريبي للتوصيات والصفقات',
   socialSub: 'تيليجرام · فيسبوك · إنستغرام · X · تطبيقات',
-  socialPickHint: 'محاكاة للعرض: القنوات أمثلة، والتوصيات مولَّدة لا مجمّعة من منشورات حقيقية — اختر المصادر لترى كيف يُحسب المعدل',
+  socialPickHint: 'لا مصدر مرخَّص لتوصيات القنوات بعد، فقائمة المصادر فارغة — لا نولّد توصيات بدلها',
   socialSourcesError: 'تعذّر تحميل قائمة المصادر — تحقّق من الاتصال، ثم غادر هذا القسم وارجع إليه لإعادة المحاولة',
   a11ySourcePrefix: 'مصدر',
   sourcesCountLabel: 'مصادر',
@@ -2485,7 +2485,7 @@ const enUS: Dict = {
   aiSendA11y: 'Send question to the AI assistant',
   aiAskBtn: 'Ask',
   analystsTitle: 'Analyst forecasts',
-  analystsSubSuffix: 'Simulated demo — not the views of real banks or research houses',
+  analystsSubSuffix: 'No licensed source yet — we don\'t show made-up views',
   analystsRefreshA11y: 'Refresh analyst forecasts',
   analystsLoadError: 'Couldn\'t load analyst forecasts — check your connection, then tap “Refresh”',
   socialPlatformTelegram: 'Telegram',
@@ -2499,7 +2499,7 @@ const enUS: Dict = {
   socialComputeBtn: 'Compute',
   socialTitle: 'Approximate average of tips & trades',
   socialSub: 'Telegram · Facebook · Instagram · X · Apps',
-  socialPickHint: 'Simulated demo: the channels are examples and the calls are generated, not collected from real posts — pick sources to see how the average is worked out',
+  socialPickHint: 'No licensed source for channel tips yet, so the source list is empty — we don\'t generate tips to fill it',
   socialSourcesError: "Couldn't load the source list — check your connection, then leave this section and come back to retry",
   a11ySourcePrefix: 'Source',
   sourcesCountLabel: 'Sources',
@@ -3629,7 +3629,7 @@ const ku: Dict = {
   aiSendA11y: 'ناردنی پرسیار بۆ یاریدەدەری زیرەکی دەستکرد',
   aiAskBtn: 'بپرسە',
   analystsTitle: 'پێشبینیەکانی شیکارکاران',
-  analystsSubSuffix: 'نموونەی دەستکرد — بۆچوونی بانک یان ماڵی توێژینەوەی ڕاستەقینە نییە',
+  analystsSubSuffix: 'هێشتا سەرچاوەی مۆڵەتدار نییە — بۆچوونی دەستکرد پیشان نادەین',
   analystsRefreshA11y: 'نوێکردنەوەی پێشبینیەکانی شیکارکاران',
   analystsLoadError: 'نەکرا پێشبینیەکانی شیکارکاران باربکرێن — پەیوەندییەکەت بپشکنە و پاشان «نوێکردنەوە» دابگرە',
   socialPlatformTelegram: 'تێلێگرام',
@@ -3643,7 +3643,7 @@ const ku: Dict = {
   socialComputeBtn: 'بژمێرە',
   socialTitle: 'ناوەندی نزیکەی ڕاسپاردە و مامەڵەکان',
   socialSub: 'تێلێگرام · فەیسبووک · ئینستاگرام · X · ئەپەکان',
-  socialPickHint: 'نموونەی دەستکرد: کەناڵەکان نموونەن و ڕاسپاردەکان دروستکراون، لە پۆستی ڕاستەقینە کۆنەکراونەتەوە — سەرچاوە هەڵبژێرە بۆ بینینی چۆنیەتی ژماردنی ناوەند',
+  socialPickHint: 'هێشتا سەرچاوەی مۆڵەتدار بۆ ڕاسپاردەکانی کەناڵەکان نییە، بۆیە لیستی سەرچاوەکان بەتاڵە — ڕاسپاردە دروست ناکەین بۆ پڕکردنەوەی',
   socialSourcesError: 'نەکرا لیستی سەرچاوەکان باربکرێت — پەیوەندییەکەت بپشکنە، پاشان ئەم بەشە جێبهێڵە و بگەڕێوە بۆی بۆ هەوڵدانەوە',
   a11ySourcePrefix: 'سەرچاوە',
   sourcesCountLabel: 'سەرچاوەکان',
