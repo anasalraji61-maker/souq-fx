@@ -141,7 +141,8 @@ import {
 } from './measureReadout';
 import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
 import { zigzagWindowSegments } from './zigzagLegs';
-import { ZIGZAG_DEVIATION_PCT, zigzagLegendText } from './zigzagLegend';
+import { nextZigzagDeviation, ZIGZAG_DEVIATION_PCT, zigzagLegendText } from './zigzagLegend';
+import { loadZigzagDeviation, saveZigzagDeviation } from './zigzagPrefs';
 import { paneInlineFits } from './paneHeadFit';
 import { noteBox } from './noteLabel';
 import { playSoftClick } from '../audio/playSoftClick';
@@ -1321,6 +1322,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const timeAxisRef = useRef<View>(null);
   const [storedPanSpeed, setStoredPanSpeed] = useState<PanSpeedPercent>(DEFAULT_PAN_SPEED);
   const panSpeed = panSpeedProp ?? storedPanSpeed;
+  const [zigzagDev, setZigzagDev] = useState<number>(ZIGZAG_DEVIATION_PCT);
   const panSpeedMulRef = useRef(panSpeedMultiplier(panSpeed));
   panSpeedMulRef.current = panSpeedMultiplier(panSpeed);
   const [pineFormula, setPineFormula] = useState('');
@@ -1568,6 +1570,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       alive = false;
     };
   }, [panSpeedProp]);
+
+  useEffect(() => {
+    let alive = true;
+    void loadZigzagDeviation().then((pct) => {
+      if (alive) setZigzagDev(pct);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const source = useMemo(() => {
     const all = withVolume(liveSeries.candles);
@@ -2782,10 +2794,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => {
       if (!indicators.includes('zigzag')) return null;
       // على السلسلة كلّها: الساق الداخلة من يسار النافذة والخارجة من يمينها + الساق الجارية غير المؤكَّدة.
-      const legs = computeZigZagLegs(aheadBars.map((c) => c.close), ZIGZAG_DEVIATION_PCT);
+      const legs = computeZigZagLegs(aheadBars.map((c) => c.close), zigzagDev);
       return zigzagWindowSegments(legs.pivots, legs.tail, aheadBase.from, aheadBase.to - aheadBase.from);
     },
-    [aheadBars, aheadBase, indicators]
+    [aheadBars, aheadBase, indicators, zigzagDev]
   );
   const adl = useMemo(
     () => (indicators.includes('adl') ? ind(computeAccumDist(indBars)) : null),
@@ -3318,7 +3330,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // ZigZag: العتبة، و«≈540.0 pip» حين لا ساق على الشاشة — راجع `zigzagLegendText`.
     if (id === 'zigzag') {
       if (!zigzag || (dense && chartPlotW < 320)) return null;
-      return zigzagLegendText(series.symbol, source.plot[source.plot.length - 1]?.close, zigzag.length > 0, lang);
+      return zigzagLegendText(
+        series.symbol,
+        source.plot[source.plot.length - 1]?.close,
+        zigzag.length > 0,
+        lang,
+        zigzagDev
+      );
     }
     const parts = legendMultiParts(id, index);
     if (parts) return parts.map((p) => p.text).join(' ');
@@ -11677,7 +11695,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
             {localizedIndicators(tr).map((ind) => {
               const on = selectedInd.includes(ind.id);
-              return (
+              return [
                 <Pressable
                   accessibilityRole="button"
                   accessibilityState={{ selected: on }}
@@ -11690,8 +11708,29 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   onPress={() => toggleInd(ind.id)}
                 >
                   <Text style={[styles.indText, on && styles.indTextOn]}>{ind.label}</Text>
-                </Pressable>
-              );
+                </Pressable>,
+                // ZigZag مفعَّل ⇒ شريحة انحرافه بجانبه تدور 1→2→3→5→10%: 5% على شارت 15د للفوركس لا تنعطف أبداً.
+                ...(ind.id === 'zigzag' && on
+                  ? [
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`ZigZag ${zigzagDev}% → ${nextZigzagDeviation(zigzagDev)}%`}
+                        key="zigzagDev"
+                        style={({ pressed }) => [
+                          styles.ind,
+                          pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                        ]}
+                        onPress={() => {
+                          const next = nextZigzagDeviation(zigzagDev);
+                          setZigzagDev(next);
+                          void saveZigzagDeviation(next);
+                        }}
+                      >
+                        <Text style={styles.indText}>{`${zigzagDev}% ↻`}</Text>
+                      </Pressable>,
+                    ]
+                  : []),
+              ];
             })}
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
