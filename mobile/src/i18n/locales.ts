@@ -644,7 +644,6 @@ export type Dict = {
   journalAddError: string;
   journalCloseFailedTitle: string;
   journalCloseFailedBody: string;
-  journalLoadError: string;
   journalEmpty: string;
   journalOpenSuffix: string;
   /** بدل سطر «المخاطرة (مفتوحة)» الغائب (`openRiskTotals` = null) حين السبب صفقة مفتوحة بلا وقف فقط — `{n}` عددها. العدد بعد النقطتين فلا صيغ جمع */
@@ -1042,10 +1041,6 @@ export type Dict = {
   railTipReport: string;
   railTipNewsItem: string;
   railOpenQuadA11y: string;
-  railFrameWord: string;
-  railSquareWord: string;
-  railRectangleWord: string;
-  railShadowWord: string;
   cfSyncLeaderBadge: string;
   cfSyncPartialBadge: string;
   cfSyncFollowBadge: string;
@@ -1201,7 +1196,6 @@ export type Dict = {
    * أزرار إزاحة الرسم المحدَّد بالهاتف (طلب chart15 — نظير أسهم لوحة المفاتيح `arrowNudge`/`nudgePipPrice` بـ`drawEdit.ts`):
    * ↑/↓ خطوة سعر (pip للأزواج والمعادن)، ‹/› شمعة. «أبكر/أحدث» لا «يسار/يمين» كي لا يلتبس الاتجاه بالعربية والكردية (RTL).
    */
-  mcNudgeWord: string;
   mcNudgeUpA11y: string;
   mcNudgeDownA11y: string;
   mcNudgeEarlierA11y: string;
@@ -1336,7 +1330,7 @@ export type Dict = {
    * `journalStatBreakeven` — `stats.breakeven_count` (التعادل ليس خسارة ولا يدخل نسبة النجاح)؛
    * `journalShownOfTotal`/`journalLoadOlder` — `/api/trades` `total`/`limit`/`offset` بدل `journalCappedNote`؛
    * `journalSizeUnknown` — `size: null` (لم يُكتب حجم)؛
-   * `journalLoadOlderError` — فشل «تحميل الأقدم» (tools69): الزرّ نفسه يعيد المحاولة والقائمة المعروضة سليمة، لذلك لا «غادر وارجع» كـ`journalLoadError`.
+   * `journalLoadOlderError` — فشل «تحميل الأقدم» (tools69): الزرّ نفسه يعيد المحاولة والقائمة المعروضة سليمة، لذلك لا جملة إعادة المحاولة كـ`journalLoadErrorRetry`.
    */
   calendarUnavailable: string;
   sigLevelsUnavailableNoPrice: string;
@@ -1350,8 +1344,8 @@ export type Dict = {
   journalSizeUnknown: string;
   journalLoadOlderError: string;
   /**
-   * زرّ «إعادة المحاولة» تحت `journalLoadError` (launch140 → tools): اليوم الدفتر يُحمَّل عند الفتح فقط فيقول النصّ «غادر وارجع».
-   * حين يُربط الزرّ (يستدعي `refresh()`) يُعرض `journalLoadErrorRetry` بدل `journalLoadError`.
+   * فشل تحميل الدفتر مع زرّ «إعادة المحاولة» (launch140 → tools، موصول `TradeJournalPanel.tsx`). `journalLoadError`
+   * («غادر وارجع») حُذف: لم يعد يُعرض منذ رُبط الزرّ.
    */
   journalRetryBtn: string;
   journalLoadErrorRetry: string;
@@ -1969,7 +1963,6 @@ const ar: Dict = {
   journalAddError: 'تعذر إضافة الصفقة — تحقق من الاتصال وحاول مرة أخرى',
   journalCloseFailedTitle: 'تعذر الإغلاق',
   journalCloseFailedBody: 'تعذّر تأكيد الإغلاق — تحقّق من الاتصال. إن بقيت الصفقة «مفتوحة» في القائمة فأغلقها مرة أخرى.',
-  journalLoadError: 'تعذّر تحميل الدفتر — تحقّق من الاتصال، ثم غادر الدفتر وارجع إليه لإعادة المحاولة. صفقاتك المسجّلة لم تُحذف.',
   journalEmpty:
     'لا صفقات مسجّلة بعد — سجّل كل صفقة (حتى على حساب تجريبي) لتعرف مع الوقت ما ينجح معك وما لا ينجح. اكتبها بالنموذج أعلاه («↓ السعر الحالي» يملأ الدخول لحظة فتحها)، أو احسبها في «المخاطرة» ثم اضغط «سجّل هذه الخطة بالدفتر».',
   journalOpenSuffix: '(مفتوحة)',
@@ -2344,10 +2337,6 @@ const ar: Dict = {
   railTipReport: 'تقرير',
   railTipNewsItem: 'خبر',
   railOpenQuadA11y: 'فتح تخطيط 2×2',
-  railFrameWord: 'فريم',
-  railSquareWord: 'مربع',
-  railRectangleWord: 'مستطيل',
-  railShadowWord: 'الظل',
   cfSyncLeaderBadge: 'قائد الزمن',
   cfSyncPartialBadge: 'متزامن · جزئي',
   cfSyncFollowBadge: 'متزامن',
@@ -2469,7 +2458,6 @@ const ar: Dict = {
   mcDrawColorA11y: 'لون الرسم: {color} — انقر للّون التالي',
   mcCloneDrawing: 'نسخة',
   mcCloneDrawingA11y: 'انسخ هذا الرسم بجانبه — تصير النسخة هي المحدَّدة فتحرّكها وتعدّلها وحدها',
-  mcNudgeWord: 'إزاحة',
   mcNudgeUpA11y: 'ارفع الرسم المحدَّد خطوة سعر واحدة (pip للأزواج والمعادن). اضغط مطوّلاً للتكرار',
   mcNudgeDownA11y: 'اخفض الرسم المحدَّد خطوة سعر واحدة (pip للأزواج والمعادن). اضغط مطوّلاً للتكرار',
   mcNudgeEarlierA11y: 'أزِح الرسم المحدَّد شمعة واحدة نحو الأقدم. اضغط مطوّلاً للتكرار',
@@ -3179,7 +3167,6 @@ const enUS: Dict = {
   journalAddError: 'Could not add the trade — check your connection and try again',
   journalCloseFailedTitle: 'Could not close',
   journalCloseFailedBody: 'Couldn’t confirm the close — check your connection. If the trade still shows as open, close it again.',
-  journalLoadError: 'Couldn\'t load your journal — check your connection, then leave the journal and come back to retry. Your logged trades haven\'t been deleted.',
   journalEmpty:
     'No trades logged yet — log every trade (even on a demo account) to learn over time what works for you and what doesn\'t. Fill in the form above (“↓ Current price” fills the entry as you open it), or size it under “Risk” and tap “Log this plan to the journal”.',
   journalOpenSuffix: '(open)',
@@ -3556,10 +3543,6 @@ const enUS: Dict = {
   railTipReport: 'Report',
   railTipNewsItem: 'News',
   railOpenQuadA11y: 'Open 2×2 layout',
-  railFrameWord: 'Frame',
-  railSquareWord: 'Square',
-  railRectangleWord: 'Rectangle',
-  railShadowWord: 'Shadow',
   cfSyncLeaderBadge: 'Time leader',
   cfSyncPartialBadge: 'Synced · partial',
   cfSyncFollowBadge: 'Synced',
@@ -3681,7 +3664,6 @@ const enUS: Dict = {
   mcDrawColorA11y: 'Drawing color: {color} — tap for the next color',
   mcCloneDrawing: 'Clone',
   mcCloneDrawingA11y: 'Copy this drawing beside it — the copy becomes the selected one, to move and edit on its own',
-  mcNudgeWord: 'Nudge',
   mcNudgeUpA11y: 'Move the selected drawing up one price step (one pip on pairs and metals). Hold to repeat',
   mcNudgeDownA11y: 'Move the selected drawing down one price step (one pip on pairs and metals). Hold to repeat',
   mcNudgeEarlierA11y: 'Move the selected drawing one candle earlier. Hold to repeat',
@@ -4424,7 +4406,6 @@ const ku: Dict = {
   journalAddError: 'نەکرا مامەڵە زیادبکرێت — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
   journalCloseFailedTitle: 'داخستن سەرکەوتوو نەبوو',
   journalCloseFailedBody: 'داخستنەکە پشتڕاست نەکرایەوە — پەیوەندییەکەت بپشکنە. ئەگەر مامەڵەکە هێشتا کراوە دیار بوو، دووبارە دایبخە.',
-  journalLoadError: 'نەکرا تۆمارەکە باربکرێت — پەیوەندییەکەت بپشکنە، پاشان تۆمارەکە جێبهێڵە و بگەڕێوە بۆی بۆ هەوڵدانەوە. مامەڵە تۆمارکراوەکانت نەسڕاونەتەوە.',
   journalEmpty:
     'هێشتا هیچ مامەڵەیەک تۆمار نەکراوە — هەموو مامەڵەیەک تۆمار بکە (تەنانەت لەسەر هەژماری تاقیکردنەوە) بۆ ئەوەی بە تێپەڕبوونی کات بزانیت چی بۆت سەرکەوتووە و چی نا. لە فۆرمەکەی سەرەوە بینووسە («↓ نرخی ئێستا» چوونەژوورەوە لە کاتی کردنەوەدا پڕ دەکاتەوە)، یان لە «مەترسی» حیسابی بکە و «ئەم پلانە لە دەفتەر تۆمار بکە» دابگرە.',
   journalOpenSuffix: '(کراوەیە)',
@@ -4801,10 +4782,6 @@ const ku: Dict = {
   railTipReport: 'ڕاپۆرت',
   railTipNewsItem: 'هەواڵ',
   railOpenQuadA11y: 'کردنەوەی نەخشەی 2×2',
-  railFrameWord: 'چوارچێوە',
-  railSquareWord: 'چوارگۆشە',
-  railRectangleWord: 'لاکێشراو',
-  railShadowWord: 'سێبەر',
   cfSyncLeaderBadge: 'سەرکردەی کات',
   cfSyncPartialBadge: 'هاوکات · بەشی',
   cfSyncFollowBadge: 'هاوکات',
@@ -4927,7 +4904,6 @@ const ku: Dict = {
   mcDrawColorA11y: 'ڕەنگی وێنەکە: {color} — بۆ ڕەنگی دواتر لێبدە',
   mcCloneDrawing: 'کۆپی',
   mcCloneDrawingA11y: 'ئەم وێنەیە لە تەنیشتیەوە کۆپی بکە — کۆپییەکە هەڵدەبژێردرێت تا بە جیا بیجووڵێنیت و دەستکاری بکەیت',
-  mcNudgeWord: 'جووڵاندن',
   mcNudgeUpA11y: 'وێنە هەڵبژێردراوەکە یەک هەنگاوی نرخ بەرز بکەرەوە (یەک pip بۆ جووتەکان و کانزاکان). ڕایبگرە بۆ دووبارەکردنەوە',
   mcNudgeDownA11y: 'وێنە هەڵبژێردراوەکە یەک هەنگاوی نرخ نزم بکەرەوە (یەک pip بۆ جووتەکان و کانزاکان). ڕایبگرە بۆ دووبارەکردنەوە',
   mcNudgeEarlierA11y: 'وێنە هەڵبژێردراوەکە یەک مۆم بەرەو کۆنتر ببە. ڕایبگرە بۆ دووبارەکردنەوە',
