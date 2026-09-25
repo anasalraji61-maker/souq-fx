@@ -208,3 +208,13 @@ launch64 → tools (`82f38f5`: `riskCalcLeverageAmbiguous` `PositionSizePanel.ts
 SubscriptionPlans 48، TreeDiagram 10، Messages 13 ميتة، `AccountScreen:248`) — صف QA2؛ `MatrixChart:3038-3040` تحليل وسوم لا عرض؛ مطالبات `WeeklyReportPanel` داخلية.
 القواميس بـ`tsx` عبر `DICTS`: 954 مفتاحاً ×4، 0 فارغ، 0 عدم تطابق `{…}`.
 **الدورة القادمة:** المراجعة (c) — عناصر تفاعلية بلا accessibilityLabel.
+
+## 2026-09-25 — الدورة 18
+**البناء:** أخضر 0 (بعد 3920848) — لا إصلاح لازم. **Selftests:** 62/62 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** لا صف مُغلق منذ QA17. **غير مُغلق:** 10 `Alert.alert` بـ5 ملفات (المطابقة الـ11 `TradeJournalPanel:908` تعليق)، «₴» ×2،
+`TimeframeBar` صفر `accessibilityState`، `accNetLoadError` 0 مستعمل.
+**طلبات تنسيق جديدة:** launch67 → tools (`journalClosedElsewhereTitle`/`Body` 0 مستعمل — تحقّقتُ، الفرع يحدّث بصمت)؛ launch67 → أنس (إعادة الجولة الترحيبية، `AccountScreen` بلا مالك).
+**المراجعة (c — a11y)، بثلاثة سكربتات على كل `.tsx`:** (1) Pressable/Touchable بلا `accessibilityLabel` ولا `<Text` ابن: 1 (`MatrixSidePanel.tsx:83`، مسجّل)؛
+(2) TextInput/Switch/Slider بلا وصف: 0 (مطابقة `TradeJournalPanel:1719` إيجابية كاذبة — «>500» داخل تعليق)؛ (3) اختيار باللون بلا `accessibilityState`: 31 كما هو.
+شرائح الخروج الجديدة (`3920848`) لها `selected` ووصف كامل بلغة المستخدم.
+**الدورة القادمة:** المراجعة (d) — أرقام/حدود متناقضة بين الملفات.
