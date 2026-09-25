@@ -52,6 +52,9 @@ export function renko(candles: Candle[], boxSize?: number): SyntheticBar[] {
   let t = candles[0].time;
   let runHi = -Infinity;
   let runLo = Infinity;
+  // فوليوم ما بين اللبنات يُجمَع ويُقسَم على لبنات الدفعة (كـ`lineBreak`): كانت كل لبنة تأخذ فوليوم شمعتها
+  // وحدها ⇒ شموع بلا لبنة يضيع فوليومها، وشمعة بثلاث لبنات يُعدّ فوليومها ثلاث مرّات بلوحة الفوليوم.
+  let runVol = 0;
   const push = (open: number, close: number, c: Candle) => {
     const up = close > open;
     out.push({
@@ -60,7 +63,7 @@ export function renko(candles: Candle[], boxSize?: number): SyntheticBar[] {
       high: up ? close : Math.max(open, runHi),
       low: up ? Math.min(open, runLo) : close,
       close,
-      volume: c.volume,
+      volume: 0,
       srcTime: c.time,
     });
     runHi = -Infinity;
@@ -70,6 +73,7 @@ export function renko(candles: Candle[], boxSize?: number): SyntheticBar[] {
   for (const c of candles) {
     runHi = Math.max(runHi, c.high);
     runLo = Math.min(runLo, c.low);
+    runVol += c.volume != null && Number.isFinite(c.volume) ? c.volume : 0;
     const px = c.close;
     // صعود: فوق أعلى آخر لبنة بصندوق (استمرار، أو انعكاس بصندوقين من إغلاق لبنة هابطة = قمّتها + صندوق)
     // قفزة بأكثر من السقف: ما قبل آخر `RENKO_MAX_BRICKS` لبنة سيسقط أصلاً ⇒ يُتخطّى بدل حلقة بالملايين
@@ -87,6 +91,7 @@ export function renko(candles: Candle[], boxSize?: number): SyntheticBar[] {
       }
       t += 60 * skip;
     }
+    const start = out.length;
     if (px >= top + box) {
       while (px >= top + box) {
         push(top, top + box, c);
@@ -99,6 +104,11 @@ export function renko(candles: Candle[], boxSize?: number): SyntheticBar[] {
         top = bottom;
         bottom -= box;
       }
+    }
+    if (out.length > start) {
+      const each = runVol / (out.length - start);
+      for (let k = start; k < out.length; k++) out[k].volume = each;
+      runVol = 0;
     }
     if (out.length > 2 * RENKO_MAX_BRICKS) out.splice(0, out.length - RENKO_MAX_BRICKS);
   }

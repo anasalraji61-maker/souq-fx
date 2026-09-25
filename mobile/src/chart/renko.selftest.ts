@@ -65,3 +65,13 @@ assert.equal(tinyDn.length, 5000);
 assert.ok(tinyDn.every((x) => x.close < x.open));
 
 console.log('renko selftest PASS');
+
+// الفوليوم: ما بين اللبنات يُجمَع ويُقسَم على لبنات الدفعة — المجموع محفوظ (كان 1000×3 وضياع 500 و700)
+{
+  const v = (i: number, close: number, volume: number): Candle => ({ time: i * 60, open: close, high: close, low: close, close, volume }) as Candle;
+  const vb = renko([v(0, 1.1, 100), v(1, 1.1004, 500), v(2, 1.1008, 700), v(3, 1.103, 1000)], 0.001);
+  assert.equal(vb.length, 3);
+  const total = vb.reduce((s, x) => s + (x.volume ?? 0), 0);
+  assert.ok(Math.abs(total - 2300) < 1e-9, `renko volume conserved: ${total}`);
+  assert.ok(vb.every((x) => Math.abs((x.volume ?? 0) - 2300 / 3) < 1e-9));
+}
