@@ -156,6 +156,19 @@ export function arrowNudge(key: string, shift: boolean): { bars: number; steps: 
   return null;
 }
 
+/** إزاحة النسخة عن أصلها بالبكسل: تكفي ليُرى أنّ رسماً ثانياً ظهر، ولا تبعده عن منطقته. */
+export const CLONE_SHIFT_PX = 24;
+
+/**
+ * أين توضع **نسخة** الرسم المحدَّد (زرّ «نسخة»): نسخةٌ فوق أصلها حرفياً (كـTradingView) لا تُرى بالهاتف، فيظنّ
+ * المتداول أنّ الزرّ لم يعمل ثم يسحب الأصل. فتُزاح `CLONE_SHIFT_PX` رأسياً — لأسفل، أو لأعلى إن كان الرسم
+ * بالنصف السفلي كي لا تخرج من اللوح — والخطّ الرأسي (لا سعر له) ثلاث شموع يميناً. `px` موجب = لأسفل بالشاشة.
+ */
+export function cloneShift(tool: Drawing['tool'], inLowerHalf: boolean): { bars: number; px: number } {
+  if (tool === 'vline') return { bars: 3, px: 0 };
+  return { bars: 0, px: inLowerHalf ? -CLONE_SHIFT_PX : CLONE_SHIFT_PX };
+}
+
 /** سعر مُزاح بـ`steps` pip، مُقرَّب لمنازل الـpip +1 (منازل عرض الزوج) فلا يتراكم ضجيج الفاصلة العائمة. */
 export function nudgePipPrice(price: number, steps: number, pipSize: number): number {
   const decimals = Math.max(0, Math.round(-Math.log10(pipSize)) + 1);

@@ -3,7 +3,7 @@
  * الغرض: إثبات أن اللمسة التي لا تُغيّر شيئاً لا تدفع لقطة تراجع، وأن التغيّر الحقيقي يدفعها.
  */
 import type { ChartPoint, Drawing } from './types';
-import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace } from './drawEdit';
+import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace, cloneShift, CLONE_SHIFT_PX } from './drawEdit';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -107,6 +107,11 @@ ok('شعاع لليسار يبلغ x=0', rayReach(100, 50, 90, 50, 300, 200) ===
 ok('لا يقصر عن القطعة', rayReach(100, 50, 400, 50, 300, 200) === 1);
 ok('قطعة صفرية ⇒ 1', rayReach(100, 50, 100, 50, 300, 200) === 1);
 ok('رأسي لأسفل ⇒ الحافّة السفلى', rayReach(100, 50, 100, 60, 300, 200) === 15);
+
+// نسخة الرسم: لأسفل بالنصف العلوي، لأعلى بالسفلي، والرأسي يميناً بالشموع
+ok('نسخة بالنصف العلوي ⇒ لأسفل', cloneShift('trend', false).px === CLONE_SHIFT_PX && cloneShift('trend', false).bars === 0);
+ok('نسخة بالنصف السفلي ⇒ لأعلى', cloneShift('hline', true).px === -CLONE_SHIFT_PX);
+ok('نسخة خطّ رأسي ⇒ 3 شموع', cloneShift('vline', true).bars === 3 && cloneShift('vline', true).px === 0);
 
 if (failures) {
   console.error(`drawEdit.selftest: ${failures} FAILED`);

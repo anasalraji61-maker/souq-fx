@@ -107,6 +107,7 @@ import {
   sameDrawingPlace,
   samePoint,
   translateDrawing,
+  cloneShift,
 } from './drawEdit';
 import {
   isPositionTool,
@@ -3337,6 +3338,30 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [chartPlotH, logScale]
   );
 
+  // زرّ «نسخة» (chart12): نسخة مستقلّة من الرسم المحدَّد بجانبه (`cloneShift`) تصير هي المحدَّدة، فيسحبها
+  // المتداول ويعدّلها وحده — كنسخ مستوى دعم لقمّة أخرى أو مركز شراء بنفس المسافة. قابلة للتراجع.
+  const cloneSelectedDrawing = () => {
+    const d = selectedId ? drawingsRef.current.find((x) => x.id === selectedId) : null;
+    if (!d) return;
+    const shift = cloneShift(d.tool, yOf(d.a.price) > chartPlotH / 2);
+    const pip = chartPipSpec(series.symbol)?.pipSize ?? null;
+    const pxScaled = toScale(priceAtY(0)) - toScale(priceAtY(1));
+    const next = translateDrawing(
+      { ...d, id: nextDrawingId() },
+      shift.bars,
+      (price) => {
+        if (!shift.px) return price;
+        const moved = fromScale(toScale(price) - shift.px * pxScaled);
+        return pip ? nudgePipPrice(price, Math.round((moved - price) / pip), pip) : moved;
+      },
+      (index) =>
+        stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe))
+    );
+    pushDrawHistory();
+    setDrawings((list) => [...list, next]);
+    setSelectedId(next.id);
+  };
+
   const pointFromXY = useCallback(
     (x: number, y: number): ChartPoint => {
       const raw = priceAtY(y);
@@ -5381,6 +5406,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               >
                 <Text style={[styles.compactToolIcon, { color: colors.bear }]}>✕</Text>
                 <Text style={styles.compactToolLabel}>{tr.deleteWord}</Text>
+              </Pressable>
+            ) : null}
+            {selectedId ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={tr.mcCloneDrawingA11y}
+                style={({ pressed }) => [
+                  styles.compactTool,
+                  pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                ]}
+                onPress={cloneSelectedDrawing}
+              >
+                <Text style={styles.compactToolIcon}>❐</Text>
+                <Text style={styles.compactToolLabel}>{tr.mcCloneDrawing}</Text>
               </Pressable>
             ) : null}
             {canRecolor ? (
@@ -11277,6 +11316,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   }}
                 >
                   <Text style={styles.toolText}>{tr.deleteWord}</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={tr.mcCloneDrawingA11y}
+                  style={({ pressed }) => [
+                    styles.tool,
+                    pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                  ]}
+                  onPress={cloneSelectedDrawing}
+                >
+                  <Text style={styles.toolText}>❐ {tr.mcCloneDrawing}</Text>
                 </Pressable>
                 {canRecolor ? (
                   <Pressable
