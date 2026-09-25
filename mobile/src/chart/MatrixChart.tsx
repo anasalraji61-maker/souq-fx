@@ -353,6 +353,7 @@ import {
   type PanSpeedPercent,
 } from './panSpeed';
 import { mapShadowCandles } from './shadowOverlay';
+import { visibleBarRange } from './visibleBars';
 
 export type SyncTimeWindow = {
   /** unix seconds */
@@ -3162,19 +3163,29 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // كان هنا تعدادٌ يدويّ من 108 سطر يقسم الارتفاع بلا فرضٍ للحدّ الأدنى، فتفيض اللوحات
   // خارج صندوق الشارت بصمت عند 5 لوحات فأكثر أو داخل خلية التخطيط الرباعي.
 
+  // المقياس التلقائي على الشموع الظاهرة وحدها (`visibleBars.ts`): الهامش الأيمن يُخرج أوّلها خلف الحافة.
+  // الإزاحة نفسها التي يرسم بها `xOf` (`viewXPan` أدناه)، والعرض نفسه (`chartPlotW`).
+  const rangePlotW = Math.max(80, chartW - PRICE_AXIS_WIDTH);
+  const { lo: visLo, hi: visHi } = visibleBarRange(
+    source.plot.length,
+    rangePlotW,
+    syncFollow && syncWindow?.xPanNorm != null ? syncWindow.xPanNorm * rangePlotW : xPan
+  );
   const range = useMemo(() => {
     let min = Infinity;
     let max = -Infinity;
-    const push = (v: number | null | undefined) => {
+    // `forEach(push)` يمرّر الفهرس: قيم المؤشرات بفهرس الشمعة، فما خلف الحافة لا يمدّ المقياس.
+    const push = (v: number | null | undefined, i?: number) => {
       if (v == null || Number.isNaN(v)) return;
+      if (i != null && (i < visLo || i > visHi)) return;
       const p = logScale ? Math.log(Math.max(v, 1e-12)) : v;
       min = Math.min(min, p);
       max = Math.max(max, p);
     };
-    for (const c of source.plot) {
-      push(c.low);
-      push(c.high);
-    }
+    source.plot.forEach((c, i) => {
+      push(c.low, i);
+      push(c.high, i);
+    });
     if (indicators.includes('sma20')) overlays.sma20.forEach(push);
     if (indicators.includes('sma50')) overlays.sma50.forEach(push);
     if (indicators.includes('ema21')) overlays.ema21.forEach(push);
@@ -3270,8 +3281,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     }
     if (comparePrices) comparePrices.forEach(push);
     // أبقِ الظلال ضمن المدى حتى لا تُقصّ عند التقريب (overflow hidden)
+    const plotLen = Math.max(1, source.plot.length);
     for (const layer of shadowLayers) {
       for (const c of layer.candles) {
+        if (c.xRatio * plotLen < visLo || c.xRatio * plotLen > visHi + 1) continue;
         push(c.low);
         push(c.high);
       }
@@ -3298,6 +3311,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     };
   }, [
     source.plot,
+    visLo,
+    visHi,
     overlays,
     indicators,
     comparePrices,
