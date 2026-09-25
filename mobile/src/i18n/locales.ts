@@ -1308,6 +1308,12 @@ export type Dict = {
    */
   chartNotOfferedTitle: string;
   chartNotOfferedBody: string;
+  /**
+   * launch119: `MatrixChart` بسلسلة `candles: []` ليست «غير متاح» (`da73ec6`) يرسم لوحاً فارغاً صامتاً — هذا نصّه (للـchart).
+   * `{symbol}` و`{tf}` كلٌّ مرة واحدة. لا يَعِد بسبب محدَّد: قد يكون المزوّد لم يُرجع شيئاً أو الرمز جديداً.
+   */
+  chartNoCandlesTitle: string;
+  chartNoCandlesBody: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -2486,6 +2492,8 @@ const ar: Dict = {
   dsKindUnavailable: 'غير متاح',
   chartNotOfferedTitle: '{symbol} غير متاح من مزوّد البيانات',
   chartNotOfferedBody: 'لا نرسم له شموعاً ولا سعراً كي لا تقرأ أرقاماً مولَّدة. اضغط اسم الرمز ▾ فوق الشارت لتختار زوجاً آخر.',
+  chartNoCandlesTitle: 'لا شموع لـ{symbol} على {tf} الآن',
+  chartNoCandlesBody: 'لم يُرجع مزوّد البيانات شموعاً لهذا الفريم. جرّب فريماً آخر، أو ارجع بعد قليل.',
 };
 
 const enUS: Dict = {
@@ -3657,6 +3665,8 @@ const enUS: Dict = {
   dsKindUnavailable: 'Unavailable',
   chartNotOfferedTitle: '{symbol} isn’t offered by our data provider',
   chartNotOfferedBody: 'We draw no candles or price for it, so you never read made-up numbers. Tap the symbol name ▾ above the chart to pick another pair.',
+  chartNoCandlesTitle: 'No candles for {symbol} on {tf} right now',
+  chartNoCandlesBody: 'The data provider returned no candles for this timeframe. Try another timeframe, or check back in a moment.',
 };
 
 const enGB: Dict = {
@@ -4860,6 +4870,8 @@ const ku: Dict = {
   dsKindUnavailable: 'بەردەست نییە',
   chartNotOfferedTitle: '{symbol} لەلایەن دابینکەری داتاوە پێشکەش ناکرێت',
   chartNotOfferedBody: 'هیچ مۆم و نرخێکی بۆ ناکێشین تا ژمارەی دروستکراو نەخوێنیتەوە. ناوی هێماکە ▾ لە سەرووی نەخشەکە دابگرە بۆ هەڵبژاردنی جووتێکی تر.',
+  chartNoCandlesTitle: 'ئێستا هیچ مۆمێک بۆ {symbol} لەسەر {tf} نییە',
+  chartNoCandlesBody: 'دابینکەری داتا هیچ مۆمێکی بۆ ئەم کاتی چوارچێوەیە نەگەڕاندەوە. کاتی چوارچێوەیەکی تر تاقی بکەرەوە، یان کەمێکی تر بگەڕێوە.',
 };
 
 export const DICTS: Record<LangId, Dict> = {
