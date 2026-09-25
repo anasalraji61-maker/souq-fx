@@ -95,25 +95,30 @@ export function rrText(rr: number): string {
 }
 
 /** المسافة بالنقاط («25.0 pip») أو بفرق السعر لأداة بلا مواصفة pip (DXY، مؤشرات). */
-function distanceText(symbol: string, a: number, b: number, lang?: string): string {
+function distanceText(symbol: string, a: number, b: number, lang?: string, priceRef?: number | null): string {
   const spec = chartPipSpec(symbol);
   const pips = spec ? pipsBetween(spec, a, b) : null;
   if (pips != null) return `${pipsNumber(pips)} ${pipUnit(lang)}`;
-  return formatPriceDiff(a - b, a, symbol);
+  return formatPriceDiff(a - b, a, symbol, priceRef);
 }
 
 /**
+ * `priceRef` مرجع منازل الشارت (`series.last`) لأداة بلا منازل معروفة: كانت من سعر الدخول، فغاز عند 10.02
+ * (محور بثلاث منازل) ودخول 9.985 يُكتب «TP 10.08500 · 0.10000» بجوار محور «10.085».
+ *
  * وسما الصندوقين. الهدف يحمل النسبة («TP 1.09350 · 50.0 pip · R:R 2») لأنها ما يقرّر به المتداول
  * الدخول من عدمه؛ الوقف سعره ومسافته. TP/SL/R:R/pip لاتينية بكل اللغات كبقية نصوص التطبيق.
  */
 export function positionLabels(
   levels: PositionLevels,
   symbol: string,
-  lang?: string
+  lang?: string,
+  priceRef?: number | null
 ): { target: string; stop: string } {
+  const ref = priceRef ?? levels.entry;
   return {
-    target: `TP ${formatPrice(levels.target, symbol, levels.entry)} · ${distanceText(symbol, levels.entry, levels.target, lang)} · R:R ${rrText(levels.rr)}`,
-    stop: `SL ${formatPrice(levels.stop, symbol, levels.entry)} · ${distanceText(symbol, levels.entry, levels.stop, lang)}`,
+    target: `TP ${formatPrice(levels.target, symbol, ref)} · ${distanceText(symbol, levels.entry, levels.target, lang, ref)} · R:R ${rrText(levels.rr)}`,
+    stop: `SL ${formatPrice(levels.stop, symbol, ref)} · ${distanceText(symbol, levels.entry, levels.stop, lang, ref)}`,
   };
 }
 
@@ -203,17 +208,18 @@ export function positionOutcomeText(
   outcome: PositionOutcome,
   symbol: string,
   entryWord = 'Entry',
-  lang?: string
+  lang?: string,
+  priceRef?: number | null
 ): string {
   // لم يُنفَّذ: كم يبعد السعر عن الدخول («Entry ⌛ 12.3 pip»)، أو «Entry ✕» إن انتهى الصندوق قبل بلوغه.
   // `entryWord` كلمة «دخول» بلغة الواجهة (`tr.entryLabel`) — كانت «Entry» إنجليزية ثابتة بالعربية والكردية.
   if (outcome.state === 'missed') return `${entryWord} ✕`;
-  if (outcome.state === 'pending') return `${entryWord} ⌛ ${distanceText(symbol, outcome.exit, levels.entry, lang)}`;
+  if (outcome.state === 'pending') return `${entryWord} ⌛ ${distanceText(symbol, outcome.exit, levels.entry, lang, priceRef)}`;
   const up = outcome.r >= 0;
   const sign = up ? '+' : '−';
   const spec = chartPipSpec(symbol);
   const pips = spec ? pipsBetween(spec, levels.entry, outcome.exit) : null;
-  const dist = pips != null ? `${sign}${pipsNumber(pips)} ${pipUnit(lang)}` : `${sign}${formatPriceDiff(outcome.exit - levels.entry, levels.entry, symbol)}`;
+  const dist = pips != null ? `${sign}${pipsNumber(pips)} ${pipUnit(lang)}` : `${sign}${formatPriceDiff(outcome.exit - levels.entry, levels.entry, symbol, priceRef)}`;
   const r = `${sign}${rrText(Math.abs(outcome.r))}R`;
   const head = outcome.state === 'target' ? 'TP ✓ ' : outcome.state === 'stop' ? 'SL ✕ ' : '';
   return `${head}${dist} · ${r}`;

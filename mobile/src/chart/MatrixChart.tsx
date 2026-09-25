@@ -3649,7 +3649,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     preview: boolean
   ) => {
     const box = positionBox(side, a, b, rr, a.index - source.start, b.index - source.start);
-    const labels = positionLabels(box.lv, series.symbol, lang);
+    const labels = positionLabels(box.lv, series.symbol, lang, priceDecimalsRef);
     const width = box.right - box.left;
     // النتيجة على الشموع الحقيقية (هايكن آشي أسعار مُركّبة بالفهارس نفسها)، حتى الشمعة الحيّة —
     // وبالإعادة حتى شمعة الإعادة فلا تُكشف قبل أوانها. كانت «آخر شمعة معروضة» دائماً: سحب الشارت
@@ -3665,7 +3665,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // لم يبلغ السعر الدخول بعد (أمر معلّق) ⇒ وسم محايد بلا شريط مسار: لا ربح ولا خسارة لصفقة لم تُفتح.
     const unfilled = outcome != null && (outcome.state === 'pending' || outcome.state === 'missed');
     const outcomeTone = unfilled ? colors.textMuted : outcomeUp ? colors.bull : colors.bear;
-    const outcomeText = outcome ? positionOutcomeText(box.lv, outcome, series.symbol, tr.entryLabel, lang) : '';
+    const outcomeText = outcome ? positionOutcomeText(box.lv, outcome, series.symbol, tr.entryLabel, lang, priceDecimalsRef) : '';
     const xExit = outcome ? Math.min(box.right, xOf(outcome.exitIndex - source.start)) : 0;
     // المسار يبدأ من شمعة التنفيذ لا شمعة الرسم — دخول معلّق نُفّذ بعد عشر شمعات يُظلَّل منها.
     const xFill = outcome ? Math.max(box.xEntry, xOf(outcome.fillIndex - source.start)) : 0;

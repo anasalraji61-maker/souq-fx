@@ -79,6 +79,10 @@ assert.equal(lab.target, 'TP 63999.20 · 0.80 · R:R 1');
 lab = positionLabels(positionLevels('long', 100.05, 99.8, 1, 'USOIL'), 'USOIL');
 assert.equal(lab.stop, 'SL 99.80 · 0.25');
 assert.equal(lab.target, 'TP 100.30 · 0.25 · R:R 1');
+// غاز حول 10: منازل الشارت (`priceRef` = آخر سعر 10.02 ⇒ ثلاث) لا منازل الدخول 9.985 (خمس)
+lab = positionLabels(positionLevels('long', 9.985, 9.935, 2, 'NATGAS'), 'NATGAS', 'en-US', 10.02);
+assert.equal(lab.stop, 'SL 9.935 · 0.050');
+assert.equal(lab.target, 'TP 10.085 · 0.100 · R:R 2');
 
 // النتيجة على الشموع: شراء 1.08500، وقف 1.08250، هدف 1.09000
 const PL = positionLevels('long', 1.085, 1.0825, 2, 'EURUSD');
