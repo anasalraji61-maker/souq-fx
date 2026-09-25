@@ -5813,16 +5813,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 ))}
                 <Text style={styles.priceLegendText}>{chip.label}</Text>
                 {(() => {
-                  const v = legendValueText(chip.id, crossIndex ?? legendLastIdx);
+                  const at = crossIndex ?? legendLastIdx;
+                  const v = legendValueText(chip.id, at);
                   if (!v) return null;
-                  const single = chip.swatch.length === 1;
+                  // Supertrend بلونين: القيمة بلون جانب الترند عند الشمعة (أخضر تحت السعر، أحمر فوقه).
+                  const color =
+                    chip.id === 'supertrend' && supertrend
+                      ? supertrend.up[at] ? colors.bull : colors.bear
+                      : chip.swatch.length === 1
+                        ? resolveColorExpr(chip.swatch[0]!, legendTokens)
+                        : null;
                   return (
-                    <Text
-                      style={[
-                        styles.priceLegendValue,
-                        single ? { color: resolveColorExpr(chip.swatch[0]!, legendTokens) } : null,
-                      ]}
-                    >
+                    <Text style={[styles.priceLegendValue, color ? { color } : null]}>
                       {v}
                     </Text>
                   );
