@@ -1296,6 +1296,8 @@ export type Dict = {
   calendarUnavailable: string;
   sigLevelsUnavailableNoPrice: string;
   sigLevelsUnavailableFewCandles: string;
+  /** backend-r37 `atr_exceeds_price`: الوقف أو الهدف سيكون سعراً ≤ 0 */
+  sigLevelsUnavailableAtrWide: string;
   sigLevelsUnavailableNeutral: string;
   journalStatBreakeven: string;
   journalShownOfTotal: string;
@@ -2536,6 +2538,7 @@ const ar: Dict = {
   calendarUnavailable: 'التقويم غير متاح الآن — مصدر الأحداث لم يستجب، وهذا لا يعني أنه لا أخبار اليوم. يعيد المحاولة وحده كل 5 دقائق',
   sigLevelsUnavailableNoPrice: 'لا مستويات دخول ووقف وهدف — لا سعر حيّ الآن',
   sigLevelsUnavailableFewCandles: 'لا مستويات دخول ووقف وهدف — الشموع قليلة لحساب المدى (ATR)',
+  sigLevelsUnavailableAtrWide: 'لا مستويات دخول ووقف وهدف — المدى (ATR) أوسع من السعر نفسه',
   sigLevelsUnavailableNeutral: 'لا مستويات دخول ووقف وهدف — الاتجاه محايد',
   journalStatBreakeven: 'تعادل: {n} (لا يدخل نسبة النجاح)',
   journalShownOfTotal: 'معروضة {shown} من {total} صفقة — الإحصاءات على الكل',
@@ -3722,6 +3725,7 @@ const enUS: Dict = {
   calendarUnavailable: "Calendar unavailable right now — the events source didn't respond. That doesn't mean there's no news today. Retries on its own every 5 minutes",
   sigLevelsUnavailableNoPrice: 'No entry, stop or target — no live price right now',
   sigLevelsUnavailableFewCandles: 'No entry, stop or target — not enough candles to measure the range (ATR)',
+  sigLevelsUnavailableAtrWide: 'No entry, stop or target — the range (ATR) is wider than the price itself',
   sigLevelsUnavailableNeutral: 'No entry, stop or target — direction is neutral',
   journalStatBreakeven: 'Breakeven: {n} (not counted in win rate)',
   journalShownOfTotal: 'Showing {shown} of {total} trades — stats cover all of them',
@@ -4939,6 +4943,7 @@ const ku: Dict = {
   calendarUnavailable: 'ڕۆژژمێر ئێستا بەردەست نییە — سەرچاوەی ڕووداوەکان وەڵامی نەدایەوە، ئەمەش مانای ئەوە نییە کە ئەمڕۆ هیچ هەواڵێک نییە. خۆی هەر 5 خولەک جارێک هەوڵ دەداتەوە',
   sigLevelsUnavailableNoPrice: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — ئێستا نرخی ڕاستەوخۆ نییە',
   sigLevelsUnavailableFewCandles: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — مۆمەکان کەمن بۆ پێوانی مەودا (ATR)',
+  sigLevelsUnavailableAtrWide: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — مەودا (ATR) لە خودی نرخەکە فراوانترە',
   sigLevelsUnavailableNeutral: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — ئاڕاستە بێلایەنە',
   journalStatBreakeven: 'بێ قازانج و زیان: {n} (لە ڕێژەی سەرکەوتندا ناژمێردرێت)',
   journalShownOfTotal: '{shown} لە {total} مامەڵە پیشان دراوە — ئامارەکان هەموویان دەگرنەوە',
