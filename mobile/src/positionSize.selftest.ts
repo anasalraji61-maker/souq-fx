@@ -8,6 +8,7 @@ import {
   convStaleMinutes,
   parseSlPips,
   ambiguousSlPips,
+  slPipsInPoints,
   formatPipValue,
   instrumentSpec as specForSl,
   pipValuePerLot as pvForSl,
@@ -2565,3 +2566,28 @@ console.log('positionSize commission currency mark selftest OK');
   assert.equal(moneyInOtherCurrency('', 'USD'), false);
 }
 console.log('positionSize moneyInOtherCurrency selftest OK');
+
+// slPipsInPoints (مفتاح launch riskCalcSlPointsHint): «250 points» مرفوضة بخانة الوقف **ومعها** الرقم بالـpip (÷10)
+{
+  assert.deepEqual(slPipsInPoints('250 points'), { value: '250 points', pips: '25' });
+  assert.deepEqual(slPipsInPoints(' 250 pts '), { value: '250 pts', pips: '25' });
+  assert.deepEqual(slPipsInPoints('250 Point'), { value: '250 Point', pips: '25' });
+  assert.deepEqual(slPipsInPoints('٢٥٠ نقطة'), { value: '٢٥٠ نقطة', pips: '25' });
+  assert.deepEqual(slPipsInPoints('250 نقاط'), { value: '250 نقاط', pips: '25' });
+  assert.deepEqual(slPipsInPoints('250 خاڵ'), { value: '250 خاڵ', pips: '25' });
+  assert.deepEqual(slPipsInPoints('255 points'), { value: '255 points', pips: '25.5' });
+  assert.deepEqual(slPipsInPoints('7 pts'), { value: '7 pts', pips: '0.7' }); // لا 0.7000000001
+  assert.deepEqual(slPipsInPoints('1,500 points'), null); // مبهمة كالرقم وحده
+  // الخانة نفسها ما زالت ترفضها: تلميح لا تحويل (بعض الوسطاء يسمّون الـpip «نقطة»)
+  assert.equal(parseSlPips('250 points'), null);
+  assert.equal(parseSlPips('250 نقاط'), null);
+  // بلا كلمة نقاط، أو رقم غير صالح ⇒ null (لها رسائلها)
+  assert.equal(slPipsInPoints('250'), null);
+  assert.equal(slPipsInPoints('25 pips'), null);
+  assert.equal(slPipsInPoints('points'), null);
+  assert.equal(slPipsInPoints('0 points'), null);
+  assert.equal(slPipsInPoints('abc points'), null);
+  assert.equal(slPipsInPoints('1.500 points'), null);
+  assert.equal(slPipsInPoints(''), null);
+}
+console.log('positionSize slPipsInPoints selftest OK');

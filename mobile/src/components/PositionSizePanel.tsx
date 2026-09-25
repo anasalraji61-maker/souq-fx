@@ -48,6 +48,7 @@ import {
   parseSpreadPips,
   parseCommission,
   moneyInOtherCurrency,
+  slPipsInPoints,
   commissionAcrossModes,
   commissionNoteExample,
   conversionKey,
@@ -463,6 +464,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** «1.500» بخانة النقاط وحدها مرفوضة: 1500 أم 1.5؟ — القراءتان بدل «مثل 1.0850» (`ambiguousSlPips`) */
   const slAmbig = ambiguousSlPips(slPips);
   const onlySlBad = badFields.every(([label, v, bad]) => label === t.riskCalcSlPips || v.trim() === '' || !bad);
+  /** «250 points» بخانة الوقف: النقطة بـMT4/MT5 عُشر pip ⇒ «اكتب 25 pip» بدل «رقم غير مفهوم» (`slPipsInPoints`، مفتاح launch) */
+  const slPoints = slPipsInPoints(slPips);
   /**
    * «€40» بحساب دولار وحدها مرفوضة: المبلغ مفهوم والعملة ليست عملة الحساب (`moneyInOtherCurrency`) ⇒ «…: عملة الحساب USD» بدل
    * «رقم غير مفهوم» (launch84). بالمفتاح القائم `riskCalcAccountCcy` — اسم الشريحة التي يغيّرها أو العملة التي يكتب بها.
@@ -480,6 +483,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           .replace('{value}', () => slAmbig.value)
           .replace('{whole}', slAmbig.whole)
           .replace('{small}', slAmbig.small)
+      : slPoints && onlySlBad
+      ? t.riskCalcSlPointsHint.replace('{value}', () => slPoints.value).split('{pips}').join(slPoints.pips)
       : onlyRiskOtherCcy
       ? `${badFieldsText}: ${t.riskCalcAccountCcy} ${moneyCcy}`
       : misplacedArabicThousandsSign(balanceText, { amount: true }) ||

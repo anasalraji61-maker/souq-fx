@@ -495,6 +495,21 @@ export function ambiguousSlPips(raw: string): { value: string; whole: string; sm
   return { value: raw.trim(), whole: m[1] + m[2], small: String(Number(`${m[1]}.${m[2]}`)) };
 }
 
+/**
+ * وقفٌ مكتوب **بالنقاط (points)**: «250 points»، «250 pts»، «250 نقطة/نقاط»، «250 خاڵ» — مرفوض عمداً (`stripUnitWord`): النقطة
+ * بمنصّة MT4/MT5 عُشر pip بأسعار الخمس خانات، وقراءتها pip = لوت أصغر بعشر مرّات. يُرجع الرقم كما كُتب و`pips` = ÷10 لرسالة
+ * `riskCalcSlPointsHint` («اكتب 25 pip») بدل «رقم غير مفهوم» — **تلميح لا تحويل**: بعض الوسطاء يسمّون الـpip «نقطة»، فلا نخمّن.
+ * `null` = لا كلمة نقاط، أو الرقم قبلها غير مفهوم/مبهم/صفر.
+ */
+const POINT_WORDS = /^(.+?)\s*(?:points?|pts?|نقطة|نقاط|نقطه|خاڵ|خال)\.?$/i;
+export function slPipsInPoints(raw: string): { value: string; pips: string } | null {
+  const m = POINT_WORDS.exec(raw.replace(/[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/g, '').trim());
+  if (!m) return null;
+  const n = parseDecimal(m[1], { amount: true });
+  if (n == null || !(n > 0)) return null;
+  return { value: raw.trim(), pips: String(Number((n / 10).toFixed(4))) };
+}
+
 export const LOT_STEP = 0.01;
 
 export type SizeResult = {
