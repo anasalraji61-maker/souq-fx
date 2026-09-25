@@ -80,6 +80,8 @@ const SINGLE_CCY: Record<string, string> = {
   CN50: 'CNY', CHN50: 'CNY', CHINA50: 'CNY', CHI50: 'CNY', CHINAA50: 'CNY',
   HKG33: 'HKD', HSI: 'HKD', ASX200: 'AUD', AU200: 'AUD',
   SPOTCRUDE: 'USD', SPOTBRENT: 'USD', VIX: 'USD',
+  // وأسماء أخرى للناسداك/S&P/داو عند وسطاء المنطقة (Tickmill/FXTM/Admirals: «USTECH»، «NQ100»، «USA500»، «USA30») — كانت `[]`
+  NQ100: 'USD', USTECH: 'USD', USTECH100: 'USD', USA100: 'USD', USA500: 'USD', USA30: 'USD', US2000USD: 'USD',
 };
 
 /**
@@ -189,9 +191,21 @@ function currenciesOnce(symbol: string): string[] {
    * «XPDUSDM» (7 أحرف) فتُرفض. الحروف كلها أولاً («USD-HUF» ⇒ USDHUF — الشرطة هنا فاصل الزوج لا لاحقة)،
    * ثم الرمز بلا لاحقته.
    */
+  /**
+   * **وأيّ حرف ملاصق واحد بعد زوجٍ من 6** («EURUSDs»، «EURUSDb»، «EURUSDz»، «XAUUSDr» — لواحق حسابات Swap-free/Raw
+   * لوسطاء آخرين): كانت `[]` فلا تحذير ولا سطر «التقويم غير متاح». للزوج وحده (ساقاه عملتان/معدن معروفة أدناه) —
+   * لا لاسم مؤشر، حيث الحرف قد يغيّر الأداة.
+   */
+  const pair7 = /^[A-Z]{7}$/.test(bare) ? bare.slice(0, 6) : null;
   const s =
     instrumentSpec(symbol)?.symbol ??
-    (letters.length === 6 ? letters : /^[A-Z]{6}$/.test(bare) ? bare : glued && /^[A-Z]{6}$/.test(glued) ? glued : letters);
+    (letters.length === 6
+      ? letters
+      : /^[A-Z]{6}$/.test(bare)
+        ? bare
+        : glued && /^[A-Z]{6}$/.test(glued)
+          ? glued
+          : pair7 ?? letters);
   if (s.length !== 6) return [];
   // CNH (يوان خارجي) يظهر بالتقويم كـCNY.
   const norm = (c: string) => (c === 'CNH' ? 'CNY' : c);

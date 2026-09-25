@@ -431,8 +431,10 @@ console.log('newsRisk glued-m selftest OK');
     ['eurusdc', ['EUR', 'USD']], ['BTCUSDc', ['USD']], ['BTCUSDC', ['USD']], ['BTCEURC', ['USD', 'EUR']],
   ] as [string, string[]][])
     assert.deepEqual(symbolCurrencies(c), want, c);
-  // حرفٌ ملاصق آخر، أو c على اسمٍ مجهول/قصير/مضاعف، يبقى صامتاً؛ والحاسبة بلا تغيير
-  for (const c of ['EURUSDx', 'AAPLc', 'USDC', 'EURUSDcc', 'ETHBTCc', 'XXXYYYc'])
+  // c على اسمٍ مجهول/قصير/مضاعف يبقى صامتاً؛ والحاسبة بلا تغيير. (حرفٌ ملاصق آخر بعد زوجٍ — «EURUSDx» — صار
+  // يحذّر لعملتَي الزوج: لواحق Swap-free/Raw بحرفٍ واحد، والتحذير الزائد أهون من الغائب — راجع الكتلة الأخيرة)
+  assert.deepEqual(symbolCurrencies('EURUSDx'), ['EUR', 'USD']);
+  for (const c of ['AAPLc', 'USDC', 'EURUSDcc', 'ETHBTCc', 'XXXYYYc'])
     assert.deepEqual(symbolCurrencies(c), [], c);
   assert.equal(instrumentSpec('EURUSDc'), null);
   assert.equal(knownSingleName('US30c'), null);
@@ -581,3 +583,22 @@ console.log('newsRisk OANDA underscore selftest OK');
   assert.deepEqual(symbolCurrencies(''), []);
 }
 console.log('newsRisk broker spellings selftest OK');
+
+// ---- حرفٌ ملاصق واحد بعد الزوج، وأسماء ناسداك/S&P/داو أخرى ----
+{
+  assert.deepEqual(symbolCurrencies('EURUSDs'), ['EUR', 'USD']);
+  assert.deepEqual(symbolCurrencies('EURUSDb'), ['EUR', 'USD']);
+  assert.deepEqual(symbolCurrencies('GBPJPYz'), ['GBP', 'JPY']);
+  assert.deepEqual(symbolCurrencies('XAUUSDr'), ['USD']);
+  assert.deepEqual(symbolCurrencies('XAUUSDs'), ['USD']);
+  assert.deepEqual(symbolCurrencies('XAUEURs'), ['USD', 'EUR']);
+  for (const n of ['NQ100', 'USTECH', 'USA500', 'USA30', 'USA100', 'USTECH.cash', 'USTECHm']) {
+    assert.deepEqual(symbolCurrencies(n), ['USD'], n);
+  }
+  // ما لا يكون زوجاً معروفاً بعد إسقاط الحرف يبقى بلا عملة (لا تخمين)
+  assert.deepEqual(symbolCurrencies('ABCDEFG'), []);
+  assert.deepEqual(symbolCurrencies('BTCETHX'), []);
+  // اسم مؤشر بحرف ملاصق غير m/c يبقى مرفوضاً (قد يكون أداة أخرى)
+  assert.deepEqual(symbolCurrencies('US30X'), []);
+}
+console.log('newsRisk glued letter selftest OK');
