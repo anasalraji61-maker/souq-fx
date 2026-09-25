@@ -605,3 +605,14 @@ backend-r2 (2)(3)(4)؛ backend-r4 شقّ الخادم (`db.py:1207 :1283` `mine`
 جديد: `IndicatorForecastPanel.tsx:29` نوع `Vote` محلّي ينسخ `api.ts:692-700` (QA51)؛ `NewsRiskBanner.tsx:66` `HOLIDAY_COPY` ينسخ `newsHolidayToday` (صفّ tools68 قائم).
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة تنتمي لـ`locales.ts`.
 **إلحاق:** `686c90e` (tools) وصل `t.newsHolidayToday` وحذف `HOLIDAY_COPY` (grep: صفر) ⇒ صفّ launch104/tools68 أُغلق. البناء بعد الدمج أخضر 0.
+
+## 2026-09-25 — الدورة 52
+**البناء:** أخضر 0 (بعد 4e53e39، ثم أُعيد بعد 2781d6f — 9 إيداعات وصلت أثناء الدورة) — لا إصلاح لازم. **Selftests:** 91/91 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود (9 صفوف، 3 منها ★):** `DataOriginKind` ★ (`api.ts:84`)؛ «تحميل الأقدم» ★ (`94f71e6`)؛ حظر الذات ★ (`api.ts:124`، `VotePanel.tsx:27`)؛ `costs_included`
+(`BacktestPanel.tsx:232`)؛ عطلة التقويم (`CalendarPanel.tsx:253`)؛ backend-r5 (`BacktestPanel.tsx:242`)؛ QA51 `Vote` (`bf0ac4b`)؛ tools69 مفتاحاً ووصلاً (`2781d6f`، `OLDER_ERROR_COPY` grep صفر).
+QA1 (a): `1eb6075` حذف `FRAME_SYMBOLS`/نسخة `TF_SECONDS`/معظم mock.ts ⇒ القائمة 11.
+**صفوف جديدة:** QA52 → chart (حذف تحويلات `as ProvenanceKind` الآن)؛ QA52 → ui (`TerminalScreen.tsx:934` بلا `unavailable`)؛ QA52 (b) → ui/launch (`backtestStatBreakeven` بلا مستعمل،
+`BacktestPanel` يقرأ `journalStatBreakeven` بالنصّ نفسه). أبقيتُ ui4 (تحقّقتُ `TerminalScreen.tsx:910`) وchart-r37 (`MatrixChart.tsx:3678`) كما أضافهما الوكيلان.
+**المراجعة (b — نصوص ثابتة):** grep للعربي داخل علامات تنصيص خارج التعليقات و`locales.ts`، ولـ`label/title/placeholder="…"` ولـ`>Text<` إنجليزي: لا شيء يُعرض
+إلا `academy.ts` (QA27) و`MessagesScreen` (launch52). احتياطات عربية افتراضية (`marketHours.ts:180`، `KIND_LABEL_AR`، `CHART_KINDS`) كل مستدعٍ يمرّر الترجمة. `DEFAULT_TEMPLATE.name` لا يُعرض.
+**الدورة القادمة:** المراجعة (c) — أزرار بلا `accessibilityLabel`.
