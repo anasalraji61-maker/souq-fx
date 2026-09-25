@@ -5,6 +5,7 @@
 import { parseDecimal } from './parseDecimal';
 import assert from 'node:assert/strict';
 import {
+  liveEntryFillAllowed,
   parseRiskInput,
   toggleRiskUnit,
   ACCOUNT_CCYS,
@@ -2199,3 +2200,17 @@ console.log('positionSize savedRiskMoney selftest OK');
   assert.equal(at(150.5), 0.75);
 }
 console.log('positionSize conversion refresh lots selftest OK');
+
+// ---- liveEntryFillAllowed: السعر الحيّ لا يُكتب فوق دخولٍ كُتب باليد أثناء الطلب ----
+{
+  // خانة فارغة أو بالرقم نفسه لحظة الوصول ⇒ يُكتب
+  assert.equal(liveEntryFillAllowed('', ''), true);
+  assert.equal(liveEntryFillAllowed('1.0850', '1.0850'), true);
+  assert.equal(liveEntryFillAllowed('1.0850', ' 1.0850 '), true);
+  // كُتب 1.0850 أثناء الطلب ⇒ Ask 1.0863 لا يستبدله (وقف 1.0830: 20 pip تبقى 20، لا 33 ⇒ لوتٌ أصغر بصمت)
+  assert.equal(liveEntryFillAllowed('', '1.0850'), false);
+  assert.equal(liveEntryFillAllowed('1.0850', '1.085'), false);
+  assert.equal(liveEntryFillAllowed('1.0850', ''), false);
+  assert.equal(slPipsFromPrices(instrumentSpec('EURUSD')!, 1.085, 1.083), 20);
+}
+console.log('positionSize liveEntryFillAllowed selftest OK');

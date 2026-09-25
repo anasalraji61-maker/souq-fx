@@ -1240,3 +1240,12 @@ export function planJournalNote(input: {
   if (netRR) parts.push(`${w(words?.netRR, 'net R:R')} ${netRR}`);
   return parts.join(' · ');
 }
+
+/**
+ * «الدخول = السعر الحالي» يُكتب عند وصول السعر **فقط** إن بقيت خانة الدخول كما كانت لحظة النقرة (مسافاتٌ
+ * حولها لا تُحسب). رقمٌ كتبه المتداول باليد أثناء الطلب (1.0850) كان يُستبدل بـAsk الحيّ (1.0863) فيتغيّر
+ * الوقف بالنقاط واللوت بصمت — والحاسبة تُقرأ على أنها خطّته هو.
+ */
+export function liveEntryFillAllowed(atTap: string, now: string): boolean {
+  return atTap.trim() === now.trim();
+}

@@ -60,6 +60,7 @@ import {
   LOT_STEP,
   parsePriceFor,
   ambiguousThousandsPrice,
+  liveEntryFillAllowed,
 } from '../positionSize';
 import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
@@ -297,6 +298,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    *  أدناه جرى قبل التعبئة فلا يعود) ⇒ وقفٌ أضيق بنصف السبريد ولوتٌ أكبر — ~10% على ذهبٍ بوقف 15 pip */
   const stopPxRef = useRef('');
   stopPxRef.current = stopPx;
+  /** الدخول **عند وصول** السعر: رقمٌ كُتب باليد أثناء الطلب لا يُكتب فوقه (راجع `liveEntryFillAllowed`) */
+  const entryPxRef = useRef('');
+  entryPxRef.current = entryPx;
+  /** يزيد مع كل تغيير بالخطة (مؤثّر مسح رسالة التسجيل) — ردُّ تسجيلٍ لخطةٍ تغيّرت أثناء الطلب لا يقول «سُجِّلت» تحت الجديدة */
+  const planGenRef = useRef(0);
   const conv = useMemo(() => (spec ? conversionPair(spec.quote, convAccount) : null), [spec, convAccount]);
   const convSymbol = conv?.symbol ?? null;
   const convInvert = conv?.invert ?? false;
@@ -673,6 +679,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   // 20 pip: 150.00 ⇒ 0.75، والتجديد 149.99 ⇒ 0.74 — فكانت الشاشة تقول 0.74 تحت «سُجِّلت» والدفتر يحفظ 0.75. اللوت
   // لا السعر: تجديدٌ لا يغيّر اللوت لا يُعيد الزرّ (نقرة ثانية = صفقة مكرّرة).
   useEffect(() => {
+    planGenRef.current += 1;
     setLogMsg(null);
   }, [symbol, account, balance, centBalance, riskPct, slPips, entryPx, stopPx, targetPx, spread, commission, manualConv, lots]);
   // السعر المجلوب يخصّ رمزاً واحداً ولحظة واحدة: تبديل الأداة يُسقط الرسالة (وإلا بقي «الدخول = ‎1.0850»
@@ -883,6 +890,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     if (!logSymbol) return;
     setLogBusy(true);
     setLogMsg(null);
+    const gen = planGenRef.current;
     try {
       await api.createTrade({
         symbol: logSymbol,
@@ -905,6 +913,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         }),
       });
       if (!mountedRef.current) return;
+      // الخطة تغيّرت أثناء الطلب (هدفٌ عُدِّل قبل الردّ): المسجَّل هو الخطة القديمة — «سُجِّلت» والزرّ المعطَّل تحت
+      // الجديدة كانا يقولان إن هذه حُفظت، ولا تُسجَّل إلا بتغيير رقمٍ آخر. الزرّ يبقى متاحاً للجديدة.
+      if (planGenRef.current !== gen) return;
       setLogMsg({ ok: true, text: t.riskCalcLoggedToJournal });
     } catch {
       if (mountedRef.current) setLogMsg({ ok: false, text: t.riskCalcLogFailed });
@@ -947,11 +958,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const fillEntryFromLive = async () => {
     if (!spec || livePxBusy) return;
     const sym = spec.symbol;
+    const entryAtTap = entryPx;
     setLivePxBusy(true);
     setLivePxMsg(null);
     try {
       const q = await api.marketQuote(sym);
       if (!mountedRef.current) return;
+      // دخولٌ كُتب باليد أثناء الطلب: كان Ask الحيّ يُكتب فوقه فيتغيّر الوقف واللوت بلا انتباه. يُسقط بصمت.
+      if (!liveEntryFillAllowed(entryAtTap, entryPxRef.current)) return;
       // بُدّلت الأداة أثناء الطلب (نقرة GBPUSD قبل وصول سعر EURUSD): سعر EURUSD كان يُكتب دخولاً تحت
       // GBPUSD ومعه «عُبّئ» — فيُحسب الوقف واللوت ويُسجَّل بالدفتر من سعر أداة أخرى. يُسقط بصمت.
       if (liveSymRef.current !== sym) return;
