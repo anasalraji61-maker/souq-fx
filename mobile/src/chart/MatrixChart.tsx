@@ -32,6 +32,7 @@ import {
   type DrawingsSaveErrorCode,
 } from './drawingStore';
 import { compareOverlay } from './compare';
+import { watermarkFontSize, watermarkSymbol } from './watermark';
 import { tickPlausibleForSeries, withLiveExtremes, withLivePrice, type LiveExtremes } from './liveSeries';
 import { computeVolumeProfile, pocPrice, computeTpo } from './volumeProfile';
 import { evalPineLite, INDICATOR_LIBRARY, pineIsPriceScale } from './pineLite';
@@ -6275,6 +6276,28 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               ))
           : null}
 
+        {/* علامة الخلفية: الزوج والفريم خافتان وسط اللوح (قبل الشموع ⇒ خلفها) — راجع `watermark.ts`. */}
+        {!hideGrid
+          ? (() => {
+              const mark = watermarkSymbol(series.symbol);
+              const size = watermarkFontSize(chartPlotW, chartPlotH, mark);
+              if (size == null) return null;
+              return (
+                <View
+                  pointerEvents="none"
+                  style={[styles.watermark, { width: chartPlotW, height: chartPlotH }]}
+                >
+                  <Text style={[styles.watermarkSymbol, { fontSize: size, lineHeight: size * 1.15 }]} numberOfLines={1}>
+                    {mark}
+                  </Text>
+                  <Text style={[styles.watermarkTf, { fontSize: Math.round(size * 0.45) }]} numberOfLines={1}>
+                    {series.timeframe}
+                  </Text>
+                </View>
+              );
+            })()
+          : null}
+
         {/* فواصل أيام التداول (17:00 نيويورك) على الفريمات داخل اليوم — راجع `dayBreaks.ts`.
             لا على Renko/Kagi/P&F/Range: خانتها ليست زمناً فالكثافة لا تُقدَّر بالفريم. */}
         {!hideGrid && !isSyntheticKind(kind)
@@ -12242,6 +12265,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
+  watermark: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // تيل MATRIX (`colors.accent`) شبه شفّاف: يُقرأ بلقطة الشاشة ولا يُخلط بسعر أو شمعة.
+  watermarkSymbol: { color: 'rgba(45, 212, 191, 0.07)', fontWeight: '900', letterSpacing: 1 },
+  watermarkTf: { color: 'rgba(45, 212, 191, 0.08)', fontWeight: '800', marginTop: 2 },
   plotBare: {
     borderWidth: 0,
     borderRadius: 0,
