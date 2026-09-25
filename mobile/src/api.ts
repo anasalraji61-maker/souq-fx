@@ -337,6 +337,23 @@ export const api = {
    * بدونه تصل إشعارات تنبيهات الحساب لمن يستعمل الهاتف بعده. يُستدعى والتوكن ما زال مضبوطاً. */
   logout: (pushToken?: string | null) =>
     postJson<{ ok: boolean }>('/api/auth/logout', pushToken ? { push_token: pushToken } : {}),
+  /** backend-r52: هل ما زالت الجلسة حيّة؟ الخادم يعامل التوكن المنتهي (30 يوماً) كمجهول بمسارات القراءة
+   * بلا خطأ ⇒ الدفتر والتنبيهات «تختفي» بصمت. 401 وحده = `expired`؛ الشبكة/المهلة/5xx = `unknown`
+   * (لا نُخرج أحداً لأنّ الخادم لم يُجب). */
+  sessionCheck: async (): Promise<'valid' | 'expired' | 'unknown'> => {
+    try {
+      await installIdReady;
+      const res = await fetchWithTimeout(
+        `${API_URL}/api/auth/me`,
+        { headers: { ...authHeaders() } },
+        GET_TIMEOUT_MS
+      );
+      if (res.ok) return 'valid';
+      return res.status === 401 ? 'expired' : 'unknown';
+    } catch {
+      return 'unknown';
+    }
+  },
   /** حذف الحساب — شرط إلزامي لأبل (App Store Review Guideline 5.1.1(v)) */
   deleteAccount: () => deleteJson<{ ok: boolean }>('/api/auth/account'),
   commissionPlan: () =>

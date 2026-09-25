@@ -1,4 +1,5 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, setAuthToken } from '../api';
 import { currentPushToken } from '../notifications';
@@ -20,6 +21,8 @@ type AuthCtx = {
   logout: () => Promise<void>;
   /** حذف الحساب — شرط إلزامي لأبل (App Store Review Guideline 5.1.1(v)) */
   deleteAccount: () => Promise<void>;
+  /** الجلسة المحفوظة رفضها الخادم (401) فمُسحت — شاشة الحساب تدعو لإعادة الدخول. يُصفَّر عند دخول/تسجيل. */
+  sessionExpired: boolean;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
@@ -32,6 +35,9 @@ const KEY = 'matrix.auth.v1';
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const tokenRef = useRef<string | null>(null);
+  tokenRef.current = user?.token ?? null;
 
   useEffect(() => {
     (async () => {
@@ -65,9 +71,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // backend-r52: تحقّق عند الإقلاع وعند العودة للواجهة. 401 ⇒ مسح الجلسة المحلية ودعوة دخول (كانت الجلسة
+  // المنتهية تبقى «مسجّلاً» بالواجهة والخادم يعاملها مجهولاً ⇒ الدفتر والتنبيهات تختفي بلا تفسير).
+  // المقارنة بالتوكن بعد الردّ: دخول جديد أثناء الطلب لا يُمسح بردّ التوكن القديم.
+  const checkSession = useCallback(async () => {
+    const token = tokenRef.current;
+    if (!token) return;
+    const r = await api.sessionCheck();
+    if (r === 'expired' && tokenRef.current === token) {
+      // الخادم يفكّ رمز Push هذا الجهاز بالتوكن المنتهي أيضاً (`auth_logout`) — وإلا تبقى إشعارات الحساب تصل.
+      await withinMs(api.logout().catch(() => undefined), 4000, undefined);
+      if (tokenRef.current !== token) return;
+      setSessionExpired(true);
+      await persist(null);
+    }
+  }, [persist]);
+
+  const userToken = user?.token ?? null;
+  useEffect(() => {
+    if (loading || !userToken) return;
+    void checkSession();
+    const sub = AppState.addEventListener('change', (st) => {
+      if (st === 'active') void checkSession();
+    });
+    return () => sub.remove();
+  }, [loading, userToken, checkSession]);
+
   const login = useCallback(
     async (usernameOrEmail: string, password: string) => {
       const res = await api.login(usernameOrEmail, password);
+      setSessionExpired(false);
       await persist({
         user_id: res.user_id,
         username: res.username,
@@ -81,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = useCallback(
     async (username: string, password: string, opts: RegisterOpts) => {
       const res = await api.register(username, password, opts);
+      setSessionExpired(false);
       await persist({
         user_id: res.user_id,
         username: res.username,
@@ -111,8 +145,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [persist]);
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout, deleteAccount }),
-    [user, loading, login, register, logout, deleteAccount]
+    () => ({ user, loading, login, register, logout, deleteAccount, sessionExpired }),
+    [user, loading, login, register, logout, deleteAccount, sessionExpired]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

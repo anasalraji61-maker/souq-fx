@@ -29,8 +29,13 @@ import { confirmDestructive } from '../chart/confirmDestructive';
 
 type SideId = 'left' | 'right';
 
+/** `authSessionExpired` مطلوب من launch (COORDINATION ui53) — يُقرأ اختيارياً حتى يصل. */
+function sessionExpiredText(t: object): string | undefined {
+  return (t as { authSessionExpired?: string }).authSessionExpired;
+}
+
 export function AccountScreen() {
-  const { user, loading, login, register, logout, deleteAccount } = useAuth();
+  const { user, loading, login, register, logout, deleteAccount, sessionExpired } = useAuth();
   const { t, lang, setLang, langs, rtl } = useI18n();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [username, setUsername] = useState('');
@@ -346,6 +351,17 @@ export function AccountScreen() {
 
       {!user ? (
         <View style={styles.card}>
+          {/* backend-r52: الجلسة المحفوظة رفضها الخادم فمُسحت — سبب ظهور نموذج الدخول بدل الحساب.
+              النصّ من القاموس فقط (لا نصّ ثابت بلغة واحدة)؛ قبل وصول المفتاح لا يظهر السطر. */}
+          {sessionExpired && sessionExpiredText(t) ? (
+            <Text
+              style={[styles.expired, { textAlign: align }]}
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite"
+            >
+              {sessionExpiredText(t)}
+            </Text>
+          ) : null}
           <View style={[styles.tabs, rtl && styles.tabsRtl]}>
             <Pressable
               accessibilityState={{ selected: mode === 'login' }}
@@ -614,6 +630,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   err: { color: colors.bear, fontSize: 12 },
+  expired: { color: colors.warn, fontSize: 13, marginBottom: 12 },
   btn: {
     backgroundColor: colors.accent,
     borderRadius: radii.sm,
