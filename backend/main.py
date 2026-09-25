@@ -567,7 +567,7 @@ def build_series(symbol: str, timeframe: str = "15m", outputsize: int = 180) -> 
                     symbol=sym,
                     timeframe=tf,
                     candles=candles,
-                    change_pct=round(change, 2),
+                    change_pct=round(change, 2) + 0.0,  # لا «−0.00%» لتغيّر دون التقريب
                     last=last,
                     data_source=DataProvenance(
                         kind=kind,  # type: ignore[arg-type]

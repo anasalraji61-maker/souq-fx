@@ -251,3 +251,30 @@ def test_a_zero_low_tail_does_not_fire_a_below_alert(provider, monkeypatch):
     armed = _time.strftime("%Y-%m-%dT%H:%M:%S+00:00", _time.gmtime(now - 600))
     alert = {"price": 1.09, "condition": "below", "ts": armed}
     assert not alert_worker._price_hit(alert, q or 1.1020, candles)
+
+
+@pytest.mark.parametrize("body", ["html", [1, 2]])
+def test_a_non_json_200_serves_the_real_cache_instead_of_nothing(provider, monkeypatch, body):
+    """صفحة وسيط بـ200 (JSON لا يُقرأ) أو JSON ليس كائناً: كانت تتخطّى الكاش (حتى 15د) ⇒ شارت فارغ
+    «المزوّد متعذّر» رغم شموع حقيقية محفوظة."""
+    import time as _time
+
+    real = [market._candle(r) for r in _rows(4)]
+    monkeypatch.setattr(market, "_cache", {"EURUSD|15m|180": (_time.time() - 600, real)})
+
+    def _bad_json(self):
+        if body == "html":
+            raise ValueError("Expecting value: line 1 column 1")
+        return body
+
+    monkeypatch.setattr(_FakeResponse, "json", _bad_json)
+    candles, meta = market.fetch_time_series_with_meta("EURUSD", "15m", 180)
+    assert candles == real and meta["kind"] == "cache"
+
+
+def test_a_sub_rounding_change_is_zero_not_minus_zero(provider):
+    rows = _rows(2)
+    rows[0]["close"], rows[1]["close"] = "1.10000", "1.09999"
+    provider["payload"] = {"values": rows}
+    pct = main.build_series("EURUSD", "15m", 180).change_pct
+    assert pct == 0 and str(pct) == "0.0"

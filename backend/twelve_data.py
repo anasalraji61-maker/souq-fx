@@ -301,7 +301,11 @@ def fetch_time_series_with_meta(
                 raise RuntimeError("Twelve Data rate limit — robot may be using quota")
             r.raise_for_status()
             data = r.json()
-    except httpx.HTTPError as exc:
+            if not isinstance(data, dict):
+                raise ValueError("time_series body is not an object")
+    # ردّ 200 غير JSON (صفحة وسيط/صيانة) = `ValueError` لا `HTTPError`: كان يتخطّى الكاش الصالح (حتى 15د)
+    # فيُعرض «المزوّد متعذّر» بشارت فارغ رغم شموع حقيقية محفوظة.
+    except (httpx.HTTPError, ValueError) as exc:
         stale = _serve_stale(cache_key, now)
         if stale:
             candles, as_of = stale
