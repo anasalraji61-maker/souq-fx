@@ -1434,12 +1434,6 @@ export function TerminalScreen() {
           <View style={styles.desktopMain}>
             <View style={styles.desktopQuoteBar}>
               <View style={styles.desktopQuoteIdentity}>
-                <View
-                  style={[
-                    styles.desktopAssetDot,
-                    { backgroundColor: symbol === 'DXY' ? colors.dxy : colors.accent },
-                  ]}
-                />
                 <View>
                   <SymbolPairMenu
                     large
@@ -1663,12 +1657,6 @@ export function TerminalScreen() {
           <View style={styles.desktopMain}>
             <View style={styles.desktopQuoteBar}>
               <View style={styles.desktopQuoteIdentity}>
-                <View
-                  style={[
-                    styles.desktopAssetDot,
-                    { backgroundColor: symbol === 'DXY' ? colors.dxy : colors.accent },
-                  ]}
-                />
                 <View>
                   <SymbolPairMenu
                     large
@@ -2291,7 +2279,6 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   desktopQuoteIdentity: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, zIndex: 70 },
-  desktopAssetDot: { width: 9, height: 9, borderRadius: 5 },
   desktopMarket: { color: colors.textDim, fontSize: 9, marginTop: 0 },
   desktopOhlc: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   desktopOhlcLabel: { color: colors.textDim, fontSize: 9, fontWeight: '500' },
