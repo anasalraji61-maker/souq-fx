@@ -87,8 +87,9 @@ def _stats(trades: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str,
         "breakeven_count": len(trades) - decided,
         "total_return_pct": round(equity - 100.0, 2),
         "final_equity": round(equity, 2),
-        "avg_win_pct": round(sum(wins) / len(wins), 2) if wins else 0,
-        "avg_loss_pct": round(sum(losses) / len(losses), 2) if losses else 0,
+        # بلا رابحة لا متوسّط ربح (None لا 0): «متوسّط الربح 0%» يُقرأ «ربحت صفقات بلا شيء». والخسارة كذلك.
+        "avg_win_pct": round(sum(wins) / len(wins), 2) if wins else None,
+        "avg_loss_pct": round(sum(losses) / len(losses), 2) if losses else None,
         "max_drawdown_pct": round(max_dd, 2),
         "open_pnl_pct": open_pnl,
     }

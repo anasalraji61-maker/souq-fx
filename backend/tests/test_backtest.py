@@ -69,7 +69,7 @@ def test_all_breakeven_or_no_trades_have_no_win_rate():
     assert st["breakeven_count"] == 2
     assert backtest._stats([])[0] == {
         "trade_count": 0, "win_rate": None, "breakeven_count": 0, "total_return_pct": 0.0,
-        "final_equity": 100.0, "avg_win_pct": 0, "avg_loss_pct": 0, "max_drawdown_pct": 0.0,
+        "final_equity": 100.0, "avg_win_pct": None, "avg_loss_pct": None, "max_drawdown_pct": 0.0,
         "open_pnl_pct": None,
     }
 
@@ -159,3 +159,11 @@ def test_spread_also_deepens_the_trade_trough():
     cost = backtest.run_backtest(c, "ma_cross", spread=0.0001)["trades"]
     for a, b in zip(free, cost):
         assert abs((a["mae_pct"] - b["mae_pct"]) - 0.0001 / a["entry"] * 100) < 2e-3
+
+
+def test_no_winners_means_no_average_win():
+    """كان 0 ⇒ اللوحة «متوسّط الربح 0%» لاستراتيجية لم تربح صفقة واحدة."""
+    st = backtest._stats([_t(-1.0), _t(-3.0)])[0]
+    assert st["avg_win_pct"] is None and st["avg_loss_pct"] == -2.0
+    st = backtest._stats([_t(2.0)])[0]
+    assert st["avg_win_pct"] == 2.0 and st["avg_loss_pct"] is None
