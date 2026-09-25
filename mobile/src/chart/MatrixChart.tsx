@@ -32,7 +32,7 @@ import {
   subscribeDrawingsSaveError,
   type DrawingsSaveErrorCode,
 } from './drawingStore';
-import { compareOverlay } from './compare';
+import { compareOverlay, rebaseCompare } from './compare';
 import { watermarkFontSize, watermarkSymbol } from './watermark';
 import { moveArmedAlert, refreshArmedAlertsSoon, useArmedAlerts } from './useArmedAlerts';
 import { tickPlausibleForSeries, withLiveExtremes, withLivePrice, type LiveExtremes } from './liveSeries';
@@ -2494,7 +2494,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (!compareSeries?.candles?.length || source.plot.length < 2) return null;
     return compareOverlay(source.plot, compareSeries.candles, timeframeStepSec(series.timeframe));
   }, [compareSeries, source.plot, series.timeframe]);
-  const comparePrices = compareOv?.prices ?? null;
 
   const shadowLayers = useMemo(() => {
     if (!shadowSeries.length || !source.plot.length) return [];
@@ -3250,6 +3249,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   );
   // اللوحات (MACD/TSI/CCI…) تقيس المرئي نفسه — `macdPaneGeom(…, vis)` و`vis` بـTrend/ZeroLineSeries.
   const paneVis = useMemo(() => ({ lo: visLo, hi: visHi }), [visLo, visHi]);
+  // خطّ المقارنة يبدأ من إغلاق أوّل شمعة ظاهرة كـTV (كالنسبة وBaseline) — لا من `plot[0]` خلف الحافة.
+  const comparePrices = useMemo(
+    () => (compareOv ? rebaseCompare(source.plot, compareOv.closes, visLo) : null),
+    [compareOv, source.plot, visLo]
+  );
   const range = useMemo(() => {
     let min = Infinity;
     let max = -Infinity;

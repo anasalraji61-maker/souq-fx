@@ -32,12 +32,31 @@ export function compareOverlay(primary: readonly SyntheticBar[], compare: readon
     const ct = candleTimeSec(c.time);
     if (ct <= t && t - ct < tol && Number.isFinite(c.close) && c.close > 0) closes[i] = c.close;
   }
-  const base = closes.findIndex((v) => v != null);
-  const pBase = base >= 0 ? primary[base]!.close : NaN;
+  return { prices: rebaseCompare(primary, closes, 0), closes };
+}
+
+/**
+ * يعيد قياس إغلاقات المقارنة على مقياس الرمز الأساسي من أوّل زوج مطابق عند/بعد `from` — أوّل شمعة **ظاهرة**
+ * كـTradingView (كان الأساس `plot[0]` خلف الحافة اليسرى، فبعد السحب يبدأ الخطّان متباعدين على الشاشة ولا
+ * يُقرأ الأداء النسبي من طرف الرؤية). بلا مطابق بعد `from` ⇒ أوّل مطابق كلّياً.
+ */
+export function rebaseCompare(
+  primary: readonly SyntheticBar[],
+  closes: readonly (number | null)[],
+  from: number
+): (number | null)[] {
+  const start = Math.max(0, Math.min(Math.floor(from) || 0, closes.length - 1));
+  let base = -1;
+  for (let i = start; i < closes.length; i++) {
+    if (closes[i] != null) {
+      base = i;
+      break;
+    }
+  }
+  if (base < 0) base = closes.findIndex((v) => v != null);
+  const pBase = base >= 0 ? primary[base]?.close ?? NaN : NaN;
   const cBase = base >= 0 ? closes[base]! : NaN;
-  const prices =
-    base >= 0 && Number.isFinite(pBase) && pBase > 0
-      ? closes.map((v) => (v == null ? null : pBase * (v / cBase)))
-      : closes.map(() => null);
-  return { prices, closes };
+  return base >= 0 && Number.isFinite(pBase) && pBase > 0
+    ? closes.map((v) => (v == null ? null : pBase * (v / cBase)))
+    : closes.map(() => null);
 }

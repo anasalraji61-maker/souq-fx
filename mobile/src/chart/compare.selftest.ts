@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/compare.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { compareOverlay } from './compare';
+import { compareOverlay, rebaseCompare } from './compare';
 import type { Candle } from '../api';
 
 const bar = (time: number, close: number): Candle => ({ time, open: close, high: close, low: close, close });
@@ -43,5 +43,16 @@ assert.deepEqual(o.closes, [13, 14, 15]);
 // لا شيء مطابق ⇒ كلّها null
 o = compareOverlay(primary, [bar(T0 + 50 * step, 2)], step);
 assert.ok(o.prices.every((p) => p == null));
+
+// الأساس من أوّل شمعة ظاهرة: الخطّان يلتقيان عند `from` لا عند plot[0]
+o = compareOverlay(primary, compare, step);
+let r = rebaseCompare(primary, o.closes, 1);
+assert.equal(r[1], 1.11);
+assert.ok(Math.abs(r[2]! - 1.11 * (15 / 14)) < 1e-12);
+// لا مطابق عند/بعد `from` ⇒ أوّل مطابق كلّياً؛ و`from` خارج الحدود يُقصّ
+r = rebaseCompare(primary, [2, null, null], 1);
+assert.equal(r[0], 1.1);
+r = rebaseCompare(primary, o.closes, 99);
+assert.equal(r[2], 1.12);
 
 console.log('compare selftest: OK');
