@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import type { Candle } from '../api';
-import { candlesThrough, currentSessionOpen, pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
+import { candlesThrough, currentSessionOpen, currentSessionOpenAfter, pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
 import { tradingDayStartSec } from './marketHours';
 import { computePivotPoints, computeWoodiePivots } from './indicators/price-transform';
 
@@ -143,6 +143,19 @@ assert.equal(pivotLabelRank('??'), 5);
   assert.equal(currentSessionOpen(hs, 'EURUSD'), 1.3);
   assert.equal(currentSessionOpen(hs.filter((c) => c.time > s0), 'EURUSD'), null);
   assert.equal(currentSessionOpen(hs.filter((c) => c.time >= s0), 'EURUSD'), 1.3);
+}
+
+{
+  // D/W: افتتاح الجلسة الجارية = الشمعة التالية للسابقة (بأي ترتيب، والزمن بالملّي ثانية أيضاً).
+  const D = 86400;
+  const t0 = Date.UTC(2026, 0, 12) / 1000;
+  const days = [bar(t0 + 2 * D, 1.105, 1.11, 1.1, 1.108), bar(t0, 1.09, 1.1, 1.08, 1.095), bar(t0 + D, 1.095, 1.1, 1.09, 1.1)];
+  assert.equal(currentSessionOpenAfter(days, days[2]), 1.105);
+  assert.equal(currentSessionOpenAfter(days, days[1]), 1.095);
+  assert.equal(currentSessionOpenAfter(days, days[0]), null);
+  assert.equal(currentSessionOpenAfter(days, null), null);
+  const ms = days.map((c) => ({ ...c, time: c.time * 1000 }));
+  assert.equal(currentSessionOpenAfter(ms, ms[2]), 1.105);
 }
 
 console.log('pivotBase.selftest: PASS');

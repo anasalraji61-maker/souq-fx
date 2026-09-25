@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import type { Candle } from '../api';
 import { prevSessionFromDaily, sessionKeyAt, validSessionBar, weekendMergeOf } from './dailyChange';
+import { currentSessionOpenAfter } from './pivotBase';
 
 const TTL_MS = 10 * 60 * 1000;
 const FAIL_TTL_MS = 2 * 60 * 1000;
@@ -21,10 +22,12 @@ const FAIL_TTL_MS = 2 * 60 * 1000;
 const CHECK_MS = 60 * 1000;
 
 // `prevBar`: شمعة الجلسة السابقة كاملة — أساس نقاط الارتكاز بالشارت (`pivotBase.ts`).
+// `currOpen`: افتتاح الجلسة الجارية (شمعة D1 التالية لـ`prevBar`) — محور Woodie على فريم D/W.
 // `session`/`weekendMerge`: الجلسة الجارية وقت الجلب وقاعدة حسابها لهذا الرمز (`sessionKeyAt`).
 type Entry = {
   prevClose: number | null;
   prevBar: Candle | null;
+  currOpen: number | null;
   at: number;
   ok: boolean;
   session: number | null;
@@ -70,13 +73,14 @@ async function drain() {
         cache.set(sym, {
           prevClose: prev,
           prevBar: validSessionBar(bar),
+          currOpen: demo ? null : currentSessionOpenAfter(candles, bar),
           at: now,
           ok: true,
           session: sessionKeyAt(now / 1000, weekendMerge, sym),
           weekendMerge,
         });
       } catch {
-        cache.set(sym, { prevClose: null, prevBar: null, at: Date.now(), ok: false, session: null, weekendMerge: true });
+        cache.set(sym, { prevClose: null, prevBar: null, currOpen: null, at: Date.now(), ok: false, session: null, weekendMerge: true });
       } finally {
         inflight.delete(sym);
       }
@@ -157,4 +161,24 @@ export function useDailyPrevBar(symbol: string | null): Candle | undefined {
   }, [sym]);
 
   return bar;
+}
+
+/** افتتاح الجلسة الجارية من شموع D1 (نفس مخزن `useDailyPrevBar`)؛ null = غير معروف. */
+export function useDailyCurrOpen(symbol: string | null): number | null {
+  const sym = symbol ? symbol.toUpperCase() : '';
+  const [open, setOpen] = useState<number | null>(() => (sym ? cache.get(sym)?.currOpen ?? null : null));
+  useEffect(() => {
+    if (!sym) {
+      setOpen(null);
+      return;
+    }
+    const update = () => setOpen(cache.get(sym)?.currOpen ?? null);
+    listeners.add(update);
+    update();
+    request([sym]);
+    return () => {
+      listeners.delete(update);
+    };
+  }, [sym]);
+  return open;
 }

@@ -89,6 +89,27 @@ export function currentSessionOpen(candles: readonly Candle[], symbol: string): 
 }
 
 /**
+ * افتتاح الجلسة الجارية من شموع **يومية** (أو أسبوعية): الشمعة التالية لشمعة الجلسة السابقة `prev` (ما أعاده
+ * `prevSessionFromDaily`). على فريم D/W كان Woodie يأخذ إغلاق السابقة دائماً ⇒ فجوة افتتاح الاثنين تُزيح WPP
+ * وكل مستوياته بنصفها، وتختلف عن الفريمات داخل اليوم للرمز نفسه. null إن كانت `prev` آخر شمعة (الجارية لم تُجلب).
+ */
+export function currentSessionOpenAfter<T extends Pick<Candle, 'time' | 'open'>>(
+  candles: readonly T[],
+  prev: Pick<Candle, 'time'> | null | undefined
+): number | null {
+  if (!prev || !Array.isArray(candles)) return null;
+  const pt = candleTimeSec(prev.time);
+  let next: T | null = null;
+  for (const c of candles) {
+    if (!c || !Number.isFinite(c.time)) continue;
+    const t = candleTimeSec(c.time);
+    if (t > pt && (!next || t < candleTimeSec(next.time))) next = c;
+  }
+  const o = next?.open;
+  return typeof o === 'number' && Number.isFinite(o) && o > 0 ? o : null;
+}
+
+/**
  * أهمية وسم مستوى ارتكاز (الأصغر أهمّ) حين تتزاحم الوسوم رأسياً: المحور أوّلاً ثم المستويات
  * بقربها منه (R1/S1 قبل R3/S3). PDH/PDL بمرتبة المحور (يُتداول عليهما مباشرةً)، وPDC بعدهما. Camarilla يُتداول على R3/S3 (ارتداد) وR4/S4 (اختراق) لا R1.
  */

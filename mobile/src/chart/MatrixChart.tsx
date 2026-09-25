@@ -151,8 +151,8 @@ import { planDayBreaks } from './dayBreaks';
 import { projectBarTimeSec, tradingDayStartSec } from './marketHours';
 import { planSessionRuns, type SessionId } from './sessions';
 import { formatPct, pctDirection, prevSessionFromDaily, validSessionBar } from './dailyChange';
-import { useDailyPrevBar } from './dailyRefStore';
-import { candlesThrough, currentSessionOpen, pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
+import { useDailyCurrOpen, useDailyPrevBar } from './dailyRefStore';
+import { candlesThrough, currentSessionOpen, currentSessionOpenAfter, pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
 import { candleTimeSec, normalizeProvenance, timeframeStepSec } from './dataSource';
 import { planLineSegments, planBandStrips, bandStripWidth } from './polyline';
 import { loadTemplates, saveTemplate, getTemplatesSaveError, DEFAULT_TEMPLATE } from './chartTemplateStore';
@@ -1879,6 +1879,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const anyPivot = indicators.some((id) => PIVOT_IDS.has(id));
   const seriesDemo = normalizeProvenance(series.data_source).kind === 'demo';
   const dailyPrevBar = useDailyPrevBar(anyPivot && !seriesDemo ? series.symbol : null);
+  const dailyCurrOpen = useDailyCurrOpen(
+    indicators.includes('woodiePivots') && !seriesDemo ? series.symbol : null
+  );
   // بالإعادة: «الجلسة السابقة» لشمعة الإعادة لا لليوم — كانت PDH/PDL والارتكاز كلّها مستويات اليوم
   // مرسومةً فوق شموع الأسبوع الماضي، أي أهدافاً من المستقبل يرتدّ عندها السعر «بدقّة» في التمرين.
   // شموع D1 من المخزن مستويات اليوم فتُترك، والأساس من شموع السلسلة حتى شمعة الإعادة (ناقصة ⇒ لا خطوط).
@@ -1899,17 +1902,18 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // GMT+2/+3). شموع D1 من المزوّد بيوم UTC، فكانت PDH/PDL تقفز بين حدّين حسب نجاح جلبها؛ الآن D1
     // احتياط فقط حين لا تغطّي السلسلة الجلسة السابقة كاملة (مثلاً 1m بـ180 شمعة).
     const fromIntraday = intraday ? validSessionBar(prevDayFromIntraday(candles, series.symbol)) : null;
-    // افتتاح الجلسة الجارية لمحور Woodie (بلا فريم داخل اليوم ⇒ إغلاق السابقة).
+    // افتتاح الجلسة الجارية لمحور Woodie. D/W: شمعة D1 التالية للسابقة (مخزن D1) — كان إغلاق السابقة دائماً.
     const currOpen = intraday ? currentSessionOpen(candles, series.symbol) : null;
     if (fromIntraday) return pivotInput(fromIntraday, currOpen);
     const fromDaily = seriesDemo || replayCutSec != null ? null : validSessionBar(dailyPrevBar);
-    if (fromDaily) return pivotInput(fromDaily, currOpen);
+    if (fromDaily) return pivotInput(fromDaily, intraday ? currOpen : dailyCurrOpen);
     if (!intraday) {
       const secs = candles.map((c) => ({ ...c, time: candleTimeSec(c.time) }));
-      return pivotInput(validSessionBar(prevSessionFromDaily(secs, replayCutSec ?? Date.now() / 1000, series.symbol)));
+      const prev = validSessionBar(prevSessionFromDaily(secs, replayCutSec ?? Date.now() / 1000, series.symbol));
+      return pivotInput(prev, currentSessionOpenAfter(secs, prev));
     }
     return null;
-  }, [anyPivot, seriesDemo, dailyPrevBar, series.candles, series.timeframe, series.symbol, replayCutSec]);
+  }, [anyPivot, seriesDemo, dailyPrevBar, dailyCurrOpen, series.candles, series.timeframe, series.symbol, replayCutSec]);
   const pivots = useMemo(
     () => (indicators.includes('pivots') && pivotBars ? computePivotPoints(pivotBars, 1) : null),
     [pivotBars, indicators]
