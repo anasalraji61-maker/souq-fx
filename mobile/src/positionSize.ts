@@ -649,7 +649,23 @@ export function priceAtPipOffset(spec: InstrumentSpec, price: number, offsetPips
  */
 export function parseSlPips(raw: string, spec?: InstrumentSpec | null): number | null {
   const v = parseDecimal(raw, { amount: true, unit: 'pip' });
-  return v != null && (pipsHaveMoreThanTwoDecimals(v) || pipsLookLikeTwoDecimalPrice(v, spec)) ? null : v;
+  return v != null && pipsLookLikePrice(raw, v, spec) ? null : v;
+}
+
+function pipsLookLikePrice(raw: string, v: number, spec?: InstrumentSpec | null): boolean {
+  const typed = typedFractionDigits(raw);
+  return pipsHaveMoreThanTwoDecimals(v) || (typed >= 4 && !Number.isInteger(v)) || pipsLookLikeTwoDecimalPrice(v, spec);
+}
+
+/**
+ * عدد المنازل **كما كُتبت** بعد آخر فاصل — الأصفار الزائدة تسقط بالتحليل: «1.3000» تُقرأ 1.3 فتمرّ فحص المنازل الثلاث، و1.3 pip
+ * = **7.69 لوت** بدل 0.40 (1% من 10,000، GBPUSD). أربع منازل مكتوبة فأكثر بكسرٍ = سعر («SL 1.3000»، «USDZAR 18.2000»)؛
+ * «25.0000» عددٌ صحيح فتبقى 25 pip. ثلاث منازل خارجها: «1.500» مبهمة (`ambiguousSlPips`) و«0.500» نصف pip؛ و«1.20» تبقى 1.2 pip كما كانت.
+ */
+function typedFractionDigits(raw: string): number {
+  const s = normalizeDigits(stripUnitWord(raw, 'pip')).replace(/[\s\u00a0\u202f\u2009']/g, '').replace(/[٫．٬，]/g, '.');
+  const m = /[.,](\d+)$/.exec(s);
+  return m ? m[1].length : 0;
 }
 
 /**
@@ -675,7 +691,7 @@ function pipsHaveMoreThanTwoDecimals(v: number): boolean {
  */
 export function slPipsLooksLikePrice(raw: string, spec?: InstrumentSpec | null): boolean {
   const v = parseDecimal(raw, { amount: true, unit: 'pip' });
-  return v != null && v > 0 && (pipsHaveMoreThanTwoDecimals(v) || pipsLookLikeTwoDecimalPrice(v, spec));
+  return v != null && v > 0 && pipsLookLikePrice(raw, v, spec);
 }
 
 /**

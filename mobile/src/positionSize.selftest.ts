@@ -3084,3 +3084,25 @@ console.log('positionSize moneyRewardRisk selftest OK');
   }
 }
 console.log('positionSize two-decimal price in pips field selftest OK');
+{
+  // أصفار زائدة تُسقطها القراءة: «1.3000» (سعر وقف GBPUSD) كانت 1.3 pip ⇒ 7.69 لوت بدل 0.40 — المنازل المكتوبة تُعدّ
+  const gbp = instrumentSpec('GBPUSD')!;
+  for (const [raw, sym] of [
+    ['1.3000', 'GBPUSD'], ['1.30000', 'GBPUSD'], ['1.1000', 'EURUSD'], ['١٫٢٠٠٠', 'EURUSD'], ['1,5000', 'EURCAD'],
+    ['18.2000', 'USDZAR'], ['7.2500', 'USDCNH'], ['157.4200', 'USDJPY'], ['1.3000 pips', 'GBPUSD'],
+  ] as const) {
+    assert.equal(parseSlPips(raw, instrumentSpec(sym)), null, raw);
+    assert.equal(slPipsLooksLikePrice(raw, instrumentSpec(sym)), true, raw);
+  }
+  // الخسارة الحقيقية: ما كان يُحسب لوتاً من «1.3000» لم يعد يصل للحساب
+  assert.equal(parseSlPips('1.3000'), null);
+  // ما دون أربع منازل كما كان: نقاط، أو مبهم (1.500)
+  for (const [raw, v] of [['1.3', 1.3], ['1.20', 1.2], ['0.500', 0.5], ['25', 25], ['250.5', 250.5], ['12.25', 12.25]] as const) {
+    assert.equal(parseSlPips(raw, gbp), v, raw);
+    assert.equal(slPipsLooksLikePrice(raw, gbp), false, raw);
+  }
+  assert.equal(parseSlPips('1.500', gbp), null);
+  assert.equal(slPipsLooksLikePrice('1.500', gbp), false);
+  assert.equal(parseSlPips('25.0000', gbp), 25);
+}
+console.log('positionSize trailing-zero price in pips field selftest OK');
