@@ -10,7 +10,6 @@
 | tools+ui | **ui** (`api.ts:122`، `VotePanel.tsx:26`) | **حظر الذات بالتصويت**: الخادم يرسل `mine` للفكرة (`0bc463b`، `db.py:1207 :1283`) — نوع الفكرة بـ`api.ts` بلا `mine` (الموجود :164 للرسائل)، و`VotePanel.tsx:26` لا يزال `!isBlocked(v.author)` ⇒ أضف `mine?: boolean` و`&& !v.mine` | tools-last ★ |
 | launch+backend | **ui** (`BacktestPanel`) | `stats.costs_included === false` (DXY/الرقمية) ⇒ `t.backtestBeforeCosts` (المفتاح جاهز `4e0469a`). اليوم `BacktestPanel.tsx:253` يعرض `spread_pips` وحده ⇒ النتيجة تبدو صافية | backend-r3 |
 | launch+backend | **ui** (`CalendarPanel`) | `impact === 'holiday'` ⇒ `t.impactHoliday` (جاهز). اليوم نقطة رمادية بلا كلمة | backend-r3 |
-| launch+tools | **tools** (`NewsRiskBanner.tsx:66`) | `HOLIDAY_COPY` المحلّي ⇐ `t.newsHolidayToday` (المفتاح جاهز بثلاث لغات، `locales.ts:2378`) ثم احذف النسخة | tools68 |
 | QA | chart | **جهاز**: سحب جسم الرسم المحدَّد — RELEASE §5 بند 128 | QA1 |
 | QA | الجميع | **(a)** تصديرات بلا مستخدم خارج ملفها (أُعيد فحصها QA51 — كلّها باقية): `deleteTemplate`، `subscribeTemplatesSaveError`، `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite`، `PINE_PRESETS`، `getToolPanel`، `__setWatchlistStorageForTests`/`__reset…`، `motion`، `FRAME_SYMBOLS`، mock.ts ×3، `openCurrencyExposure` (`tradePlan.ts:1707`)؛ `TF_SECONDS` منسوخ `mock.ts:16` (الأصل `timeframes.ts:5`) | QA1 ★ |
 | QA | ui/chart (`IndicatorForecastPanel`) | **QA51 (a)**: نوع `Vote` محلّي (`IndicatorForecastPanel.tsx:29-37`) ينسخ نوع `votes[]` بـ`api.ts:692-700` — اشتقّه من `api.indicatorForecast` كي لا يتباعدا | QA51 |
@@ -26,5 +25,5 @@
 
 **تحقّق الدورة 51 (بالكود):** أُغلق — tools67 (`api.trades` بمعاملات + `postJson` يرفق `status`، `api.ts:744`)؛ chart-r35 (2) و`disclaimer_code` (`signal_hub.py:280 :302`)؛
 backend-r3 توقّع المؤشرات + launch104 (1) (`38ccb87`: `IndicatorForecastPanel.tsx:104` `lang`، `chart/forecastText.ts` من `detail_code`/`disclaimer_code`)؛ backend-r3 422 التصويت (`VotePanel.tsx:146`)؛
-ui3 → chart (`ec57a4a` `ProvenanceKind`) وui3 → launch (`impactHoliday`، `dsKindUnavailable`)؛ tools68 → launch (`newsHolidayToday`)؛ backend-r2 (2)(3)(4) (اللوحات تعالجها كما هي)؛ backend-r4 شقّ الخادم.
+ui3 → chart (`ec57a4a` `ProvenanceKind`) وui3 → launch (`impactHoliday`، `dsKindUnavailable`)؛ tools68 → launch (`newsHolidayToday`) وlaunch104 → tools (`686c90e`، `HOLIDAY_COPY` حُذف)؛ backend-r2 (2)(3)(4) (اللوحات تعالجها كما هي)؛ backend-r4 شقّ الخادم.
 دُمجت صفوف `DataOriginKind` الأربعة في صفّ واحد، وصفوف حظر الذات الثلاثة في صفّ واحد.

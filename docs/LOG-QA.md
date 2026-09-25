@@ -604,3 +604,4 @@ backend-r2 (2)(3)(4)؛ backend-r4 شقّ الخادم (`db.py:1207 :1283` `mine`
 **المراجعة (a — تكرار/ميت/تصديرات):** قائمة QA1 الـ14 كلّها باقية (grep). كل تصدير بالملفات المتغيّرة (`forecastText`، `dataSource`، `newsRisk`، `liveSeries`، `signalDirection`) مستعمل.
 جديد: `IndicatorForecastPanel.tsx:29` نوع `Vote` محلّي ينسخ `api.ts:692-700` (QA51)؛ `NewsRiskBanner.tsx:66` `HOLIDAY_COPY` ينسخ `newsHolidayToday` (صفّ tools68 قائم).
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة تنتمي لـ`locales.ts`.
+**إلحاق:** `686c90e` (tools) وصل `t.newsHolidayToday` وحذف `HOLIDAY_COPY` (grep: صفر) ⇒ صفّ launch104/tools68 أُغلق. البناء بعد الدمج أخضر 0.
