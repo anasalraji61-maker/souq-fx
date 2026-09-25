@@ -130,6 +130,6 @@
 
 | # | الإيداع | ما تغيّر |
 |---|---|---|
-| 35 | `5d9c94e` | **المسار أُبقي وصُحّح لا حُذف** (اختبار قائم يستعمله مرجعاً لمعرّفات الفلاتر المقبولة): لا `label` بشري بعد الآن، بل `rule` آلية مشتقّة من ثوابت يقرؤها الفحص نفسه (`RSI_OVERSOLD`/`RSI_OVERBOUGHT`/`MOMENTUM_RSI_CAP`/`MOMENTUM_RSI_FLOOR`/`CHANGE_WINDOW`) — `{"indicator":"rsi","period":14,"op":"<=","value":30}` إلخ. تحقّقتُ بالكود: تقاطع المتوسطين **SMA** لا EMA (`indicators.snapshot`)، وMACD 12/26/9. `tests/test_screener_backtest_routes.py` يشغّل الفحص على RSI = 30 بالضبط ويتأكّد أنه يطابق كما يقول الوصف |
+| 35 | `b7c2357` | **المسار أُبقي وصُحّح لا حُذف** (اختبار قائم يستعمله مرجعاً لمعرّفات الفلاتر المقبولة): لا `label` بشري بعد الآن، بل `rule` آلية مشتقّة من ثوابت يقرؤها الفحص نفسه (`RSI_OVERSOLD`/`RSI_OVERBOUGHT`/`MOMENTUM_RSI_CAP`/`MOMENTUM_RSI_FLOOR`/`CHANGE_WINDOW`) — `{"indicator":"rsi","period":14,"op":"<=","value":30}` إلخ. تحقّقتُ بالكود: تقاطع المتوسطين **SMA** لا EMA (`indicators.snapshot`)، وMACD 12/26/9. `tests/test_screener_backtest_routes.py` يشغّل الفحص على RSI = 30 بالضبط ويتأكّد أنه يطابق كما يقول الوصف |
 
 **لا يحتاج التطبيق شيئاً:** لا عميل يستدعي المسار (grep صفر بـ`mobile/src`). قرارات أنس كما هي: `openrouter_ai.py:71` (launch9)، كلمة المرور ≥4 (QA24)، قوالب الكردية (launch77)، العمولات (backend-r6 (6)).
