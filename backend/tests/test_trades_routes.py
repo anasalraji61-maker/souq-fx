@@ -573,3 +573,79 @@ def test_future_opened_at_is_rejected(client):
     # فرق ساعة الجهاز بدقيقة واحدة ما زال مقبولاً
     soon = (datetime.now() + timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M")
     assert _open_trade(client, opened_at=soon)["opened_at"] == soon
+
+
+# ─── إغلاق/تعديل متزامنان: النتيجة من الدخول القائم لا المقروء قبل التصحيح ───────────
+
+def _race_before(monkeypatch, prefix: str, other_sql: str, trade_id: str, times: int = 1):
+    """جهاز آخر ينفّذ `other_sql` بعد قراءتنا وقبل `UPDATE` يبدأ بـ`prefix` — `times` مرّات."""
+    real_conn = db._conn
+    left = {"n": times}
+
+    class _Proxy:
+        def __init__(self, inner):
+            self._i = inner
+
+        def __enter__(self):
+            self._i.__enter__()
+            return self
+
+        def __exit__(self, *a):
+            return self._i.__exit__(*a)
+
+        def execute(self, sql, args=()):
+            if sql.lstrip().startswith(prefix) and left["n"] > 0:
+                left["n"] -= 1
+                other = real_conn()
+                with other:
+                    other.execute(other_sql, (trade_id,))
+                other.close()
+            return self._i.execute(sql, args)
+
+    monkeypatch.setattr(db, "_conn", lambda: _Proxy(real_conn()))
+    return real_conn
+
+
+def test_a_close_racing_an_entry_fix_scores_against_the_fixed_entry(client, monkeypatch):
+    """شراء 1.2 صُحّح لـ1.1 من جهاز آخر أثناء الإغلاق عند 1.15: كان يُخزَّن −4.17% (من 1.2) بجانب
+    دخول 1.1 — رابحة تُعدّ خاسرة بنسبة الفوز."""
+    trade = _open_trade(client, entry=1.2, sl=None, tp=None)
+    real_conn = _race_before(
+        monkeypatch, "UPDATE trades SET exit", "UPDATE trades SET entry=1.1 WHERE id=?", trade["id"]
+    )
+    r = client.post(f"/api/trades/{trade['id']}/close", json={"exit": 1.15}, headers=_DEV1)
+    monkeypatch.setattr(db, "_conn", real_conn)
+    assert r.status_code == 200, r.text
+    row = client.get("/api/trades", headers=_DEV1).json()["trades"][0]
+    assert row["entry"] == pytest.approx(1.1)
+    assert row["pnl"] == pytest.approx((1.15 - 1.1) / 1.1 * 100, abs=0.01)
+    assert r.json()["trade"]["pnl"] == pytest.approx(row["pnl"])
+    assert r.json()["stats"]["win_rate"] == 100
+
+
+def test_a_close_that_keeps_losing_to_entry_edits_is_409(client, monkeypatch):
+    trade = _open_trade(client, entry=1.2, sl=None, tp=None)
+    real_conn = _race_before(
+        monkeypatch, "UPDATE trades SET exit", "UPDATE trades SET entry=entry+0.0001 WHERE id=?",
+        trade["id"], times=99,
+    )
+    r = client.post(f"/api/trades/{trade['id']}/close", json={"exit": 1.15}, headers=_DEV1)
+    monkeypatch.setattr(db, "_conn", real_conn)
+    assert r.status_code == 409 and r.json()["detail"]["error"] == "trade_changed_concurrently"
+    row = client.get("/api/trades", headers=_DEV1).json()["trades"][0]
+    assert row["status"] == "open" and row["pnl"] is None
+
+
+def test_two_concurrent_patches_do_not_erase_each_other(client, monkeypatch):
+    """PATCH الاتجاه يقرأ الصفّ، ثم PATCH الدخول من جهاز آخر يُكتب: كان الأول يعيد كتابة الدخول القديم
+    فيُمحى التصحيح بصمت. الآن يُعاد على الصفّ الجديد فيبقى التعديلان."""
+    trade = _open_trade(client, entry=1.2, exit=1.15, sl=None, tp=None)
+    real_conn = _race_before(
+        monkeypatch, "UPDATE trades SET symbol", "UPDATE trades SET entry=1.1 WHERE id=?", trade["id"]
+    )
+    r = client.patch(f"/api/trades/{trade['id']}", json={"side": "sell"}, headers=_DEV1)
+    monkeypatch.setattr(db, "_conn", real_conn)
+    assert r.status_code == 200, r.text
+    row = client.get("/api/trades", headers=_DEV1).json()["trades"][0]
+    assert row["side"] == "sell" and row["entry"] == pytest.approx(1.1)
+    assert row["pnl"] == pytest.approx((1.1 - 1.15) / 1.1 * 100, abs=0.01)

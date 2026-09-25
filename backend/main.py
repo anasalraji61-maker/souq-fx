@@ -1418,6 +1418,9 @@ def trades_close(
     except db.TradeAlreadyClosed as e:
         # 409 لا 200: الخروج المسجَّل أولاً يبقى، والعميل يعرض الصفّ كما هو مخزَّن
         raise HTTPException(409, {"error": "trade_already_closed", "trade": e.trade})
+    except db.TradeUpdateConflict:
+        # الدخول/الاتجاه يتغيّران باستمرار من جهاز آخر — لا نُغلق بنتيجة محسوبة من دخول لم يعد قائماً
+        raise HTTPException(409, {"error": "trade_changed_concurrently"})
     if not row:
         raise HTTPException(404, "trade not found")
     return {"ok": True, "trade": row, "stats": db.trade_stats(uid, owner_key=key)}

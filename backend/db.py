@@ -1874,6 +1874,17 @@ def close_trade(
     التحديث نفسه (ذرّي بـSQLite) ⇒ الثاني يتلقّى `TradeAlreadyClosed` بالخروج الأول كما هو.
     تصحيح خروج مسجَّل عمداً يبقى عبر PATCH (`update_trade`)."""
     owner_sql, owner_args = _trade_owner_clause(user_id, owner_key)
+    # النتيجة تُحسب من الدخول والاتجاه المقروءين: PATCH يصحّح الدخول من جهاز آخر بين القراءة والتحديث
+    # كان يُكتب بعده `pnl` من الدخول القديم (شراء 1.2 صُحّح لـ1.1 وأُغلق 1.15 ⇒ −4.17% مخزّنة بدل +4.55%،
+    # رابحة تُعدّ خاسرة بنسبة الفوز). التحديث مشروط بهما أيضاً؛ تغيّرا ⇒ تُعاد القراءة والحساب.
+    for _ in range(_UPDATE_TRADE_ATTEMPTS):
+        row = _try_close_trade(trade_id, exit_price, owner_sql, owner_args)
+        if row is not _STALE:
+            return row
+    raise TradeUpdateConflict(trade_id)
+
+
+def _try_close_trade(trade_id: str, exit_price: float, owner_sql: str, owner_args: tuple):
     with _conn() as c:
         r = c.execute(
             f"SELECT * FROM trades WHERE id=? AND {owner_sql}", (trade_id, *owner_args)
@@ -1889,15 +1900,18 @@ def close_trade(
         closed_at = time.strftime("%Y-%m-%d %H:%M")
         cur = c.execute(
             f"UPDATE trades SET exit=?, pnl=?, closed_at=?, status='closed' "
-            f"WHERE id=? AND status='open' AND {owner_sql}",
-            (exit_price, pnl, closed_at, trade_id, *owner_args),
+            f"WHERE id=? AND status='open' AND side IS ? AND entry IS ? AND {owner_sql}",
+            (exit_price, pnl, closed_at, trade_id, row["side"], row["entry"], *owner_args),
         )
         if cur.rowcount != 1:
-            # سبقنا جهاز آخر بين القراءة والتحديث
             now = c.execute("SELECT * FROM trades WHERE id=?", (trade_id,)).fetchone()
-            won = dict(now) if now else row
+            if now is None:
+                return None  # حُذفت بين القراءة والتحديث
+            won = dict(now)
             won.pop("owner_key", None)
-            raise TradeAlreadyClosed(won)
+            if won.get("status") != "open":
+                raise TradeAlreadyClosed(won)  # سبقنا جهاز آخر بالإغلاق
+            return _STALE  # ما تزال مفتوحة لكن دخولها/اتجاهها تغيّر ⇒ إعادة الحساب
         row.update({"exit": exit_price, "pnl": pnl, "closed_at": closed_at, "status": "closed"})
         return row
 
@@ -1921,6 +1935,10 @@ def update_trade(
 
 _UPDATE_TRADE_ATTEMPTS = 3
 _STALE = object()
+# كل عمود يعيد PATCH كتابته من الصفّ المقروء: كان الشرط الخروج والحالة وحدهما ⇒ تعديلان متزامنان (دخول
+# من جهاز واتجاه من آخر) يعيد الثاني فيهما دخول الأول القديم فيُمحى تصحيحه بصمت، و`pnl` من الخليط.
+_TRADE_WRITE_COLS = ("symbol", "side", "entry", "exit", "size", "pnl", "note", "sl", "tp", "closed_at", "status")
+_SEEN_SQL = " AND ".join(f"{k} IS ?" for k in _TRADE_WRITE_COLS)
 
 
 class TradeUpdateConflict(Exception):
@@ -1936,7 +1954,7 @@ def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: t
             return None
         row = dict(r)
         row.pop("owner_key", None)
-        seen_exit, seen_status = row.get("exit"), row.get("status")
+        seen = {k: row.get(k) for k in _TRADE_WRITE_COLS}
         if "symbol" in fields:
             row["symbol"] = str(fields["symbol"]).strip().upper()
         if "side" in fields and fields["side"] in ("buy", "sell"):
@@ -1963,7 +1981,7 @@ def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: t
             row["pnl"] = _pnl_pct(row["side"], float(row["entry"]), float(row["exit"]))
         cur = c.execute(
             f"""UPDATE trades SET symbol=?, side=?, entry=?, exit=?, size=?, pnl=?, note=?, sl=?, tp=?,
-                closed_at=?, status=? WHERE id=? AND exit IS ? AND status IS ? AND {owner_sql}""",
+                closed_at=?, status=? WHERE id=? AND {_SEEN_SQL} AND {owner_sql}""",
             (
                 row["symbol"],
                 row["side"],
@@ -1977,8 +1995,7 @@ def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: t
                 row["closed_at"],
                 row["status"],
                 trade_id,
-                seen_exit,
-                seen_status,
+                *(seen[k] for k in _TRADE_WRITE_COLS),
                 *owner_args,
             ),
         )
