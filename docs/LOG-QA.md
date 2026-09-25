@@ -838,3 +838,12 @@ launch130 ← ui `aed77b9` (`LectureClassroom.tsx:435-436`). لا طلب جدي�
 **المراجعة (b — نصوص ثابتة):** مسح `mobile/src` لنصوص JSX و`placeholder`/`accessibilityLabel` الحرفية والحرفيات العربية خارج التعليقات و`throw new Error`:
 لا جديد — `MessagesScreen`/`mock.ts` (launch52)، `academy.ts` (QA27)، مرادفات العملات `positionSize.ts:925-934` (محلّل إدخال)، ورسائل `Error` تُستبدل بنصّ مترجم (`AccountScreen.tsx:157-158`). **لا بند.**
 **الدورة القادمة:** المراجعة (c) — `accessibilityLabel` (مع أزرار chart الجديدة 44pt).
+
+## 2026-09-25 — الدورة 73
+**البناء:** أخضر 0 (على f94b576) — لا إصلاح لازم. **Selftests:** 101/101 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** backend-r33+launch132 ← ui `77e39f2` (`NewsPanel.tsx:52-53` `status`/`stale`/`as_of`، `:86` `newsSourceUnavailable`، `:90` `newsStaleAsOf`).
+سجلات chart 55 / tools 88 / ui 31 / launch 130 / backend 34: بلا طلب جديد؛ commits chart `dbb2d88`/`c028f5f`/`f94b576` بلا سجلّ بعد. **لا صفّ مفتوح على وكيل.**
+**المراجعة (c — `accessibilityLabel`):** سكربت على `Pressable/Touchable*/Switch/TextInput` (مع `placeholder` كوصف للخانة): 8 بقايا كلها كاذبة —
+6 `useRef<TextInput>`، `TradeJournalPanel.tsx:2033` (label `:2048`)، `MessagesScreen.tsx:179` (launch52). فحص ثانٍ: لا `Pressable` ابنه نصّ رمزي فقط (✕/↕) بلا label. **لا بند.**
+STATUS: ⛔6 حُدّث (مصدرا الأخبار ميّتان)، وأُضيفت 4 بنود جهاز (تبديل الرمز، ↕ على US30، عمولة السنت، لوحة الأخبار).
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة.
