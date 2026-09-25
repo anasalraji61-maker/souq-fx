@@ -4,7 +4,6 @@ import { colors, radii, spacing, buttons, selectedMarkerWidth } from '../theme';
 import { type DrawTool, type LensMode } from '../chart/types';
 import { localizedDrawTools, localizedLenses } from '../chart/typeLabels';
 import type { EdgePanelId } from './MatrixSidePanel';
-import type { FrameLayoutCount, FrameLayoutShape } from './FrameSizedGrid';
 import { useI18n } from '../i18n/I18nContext';
 
 export type MatrixLensId = LensMode;
@@ -20,13 +19,6 @@ type LeftProps = {
 type RightProps = {
   activePanel: EdgePanelId;
   onOpenPanel: (panel: EdgePanelId) => void;
-  /** @deprecated لا تُستعمل — مختار الإطارات بيته الشريط العلوي وحده (DESIGN-PRO §5.1)؛
-   * باقية حتى يكفّ `TerminalScreen` عن تمريرها (tools). */
-  layoutCount?: FrameLayoutCount;
-  /** @deprecated انظر `layoutCount`. */
-  layoutShape?: FrameLayoutShape;
-  /** @deprecated انظر `layoutCount`. */
-  onLayoutPick?: (count: FrameLayoutCount, shape: FrameLayoutShape) => void;
 };
 
 /** كامل لا `Partial`: القناة والشعاع الأفقي وأداتا الشراء/البيع كانت تظهر «·» بالشريط والرصيف — أداة بلا علامة. */
