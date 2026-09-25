@@ -45,6 +45,16 @@ const NOW_WINDOW_MS = NEWS_GRACE_MS;
 const RELOAD_MS = 5 * 60 * 1000;
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
+/** `as_of` من `/api/calendar`: ثوانٍ UTC رقماً (backend-r27)، أو نصّ تاريخ من نسخة أقدم؛ غير ذلك ⇒ null. */
+function asOfSeconds(v: string | number | null | undefined): number | null {
+  if (typeof v === 'number') return Number.isFinite(v) && v > 0 ? v : null;
+  if (typeof v === 'string' && v) {
+    const ms = Date.parse(v);
+    return Number.isFinite(ms) ? ms / 1000 : null;
+  }
+  return null;
+}
+
 function tzLabel(): string {
   const off = -new Date().getTimezoneOffset();
   const a = Math.abs(off);
@@ -110,6 +120,8 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
   const [status, setStatus] = useState<'loading' | 'ok' | 'error' | 'unavailable'>('loading');
   /** الخادم أجاب من تقويمه المحفوظ لأن آخر تحديث من المصدر فشل (backend-r27) */
   const [serverStale, setServerStale] = useState(false);
+  /** `as_of` للجلب الناجح السابق (ثوانٍ UTC) حين `stale` — null إن غاب أو لم يُقرأ ⇒ السطر العام بلا وقت. */
+  const [serverAsOf, setServerAsOf] = useState<number | null>(null);
   /** ساعة داخلية للعدّ التنازلي ("بعد 2س 15د") — تُحدَّث كل دقيقة */
   const [now, setNow] = useState(() => Date.now());
 
@@ -182,6 +194,7 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
           }
           setEvents(r.events);
           setServerStale(r.stale === true);
+          setServerAsOf(r.stale === true ? asOfSeconds(r.as_of) : null);
           setStatus('ok');
         })
         .catch(() => {
@@ -399,7 +412,9 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
       ) : null}
       {/* الخادم نفسه لم يحدّث من المصدر (backend-r27): الأحداث حقيقية لكن قد يفوتها تعديل أو حدث جديد */}
       {status === 'ok' && serverStale && visible.length > 0 ? (
-        <Text style={[styles.sampleNote, { textAlign: align }]}>{t.newsStale}</Text>
+        <Text style={[styles.sampleNote, { textAlign: align }]}>
+          {serverAsOf != null ? t.calStaleAsOf.replace('{time}', fmtLocal(serverAsOf)) : t.newsStale}
+        </Text>
       ) : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={[styles.filters, rtl && styles.filtersRtl]}>
