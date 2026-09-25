@@ -338,7 +338,7 @@
 
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
-| 8dd9f09 | حدث `ALL` (G20): الشريط `NewsRiskBanner` يطبع `t.newsAllCurrencies` بدل «ALL» (وداخل «USD/ALL» من `sameMinuteCurrencyLabel` — تُقسَم بـ`/`)؛ شارة الصفّ `CalendarPanel` كذلك. فلتر «الزوج» صار `newsCurrencyMatches` (دالّة الشريط نفسها) بدل `pairCcys.includes` ⇒ لا يُخفي حدثاً يحذّر منه الشريط للزوج نفسه | launch128 |
+| ba57ae0 | حدث `ALL` (G20): الشريط `NewsRiskBanner` يطبع `t.newsAllCurrencies` بدل «ALL» (وداخل «USD/ALL» من `sameMinuteCurrencyLabel` — تُقسَم بـ`/`)؛ شارة الصفّ `CalendarPanel` كذلك. فلتر «الزوج» صار `newsCurrencyMatches` (دالّة الشريط نفسها) بدل `pairCcys.includes` ⇒ لا يُخفي حدثاً يحذّر منه الشريط للزوج نفسه | launch128 |
 
 **طلب → backend:** فلتر عملة واحدة (رقاقة USD مثلاً) يُرسَل للخادم `currency=USD`، و`econ_calendar.py:305` يطابق حرفياً ⇒ حدث `ALL` يسقط من القائمة بينما الشريط يحذّر منه لأزواج USD. المقترح: `... in curs or cur == "all"` حين يُطلب فلتر عملة.
 
