@@ -1118,40 +1118,52 @@ export function computeDmi(
 }
 
 /**
- * Chandelier Exit (تشاندلير إكزيت، period=22/atrMult=3 القيم القياسية الشائعة بمعظم المنصات) —
- * نطاق وقف تتبّعي مبني مباشرة فوق computeAtr المُصدَّرة أعلاه (إعادة استخدام مباشرة، بلا مرحلتين
- * كـcomputeChandeKrollStop أعلاه — صيغة مباشرة أحادية المرحلة): longStop=أعلى قمة خلال period شمعة
- * −atrMult×computeAtr(candles, period)، shortStop=أدنى قاع خلال نفس النافذة +atrMult×نفس الـATR.
- * يُرسَم بنفس نمط الشريط العمودي شبه الشفاف المستخدَم لـkeltner/envelopes/donchian/chandeKroll أعلاه
- * (لون برتقالي فاتح غير مستخدَم سابقاً `rgba(253,186,116,0.16)` لتمييزه عن تيل Chande Kroll، ونفس
- * حراسة الترتيب top/bottom المستخدَمة أصلاً لـichimoku spanA/spanB أدناه بالملف الآخر لأن shortStop
- * وlongStop غير مضمونَين بالترتيب رياضياً هنا خلافاً لـChande Kroll ذي المرحلتين).
- * **تحقّق يدوي**: سعر ثابت تماماً P بكل الشموع → computeAtr=0 بعد التسخين (نفس منطق التحقّق اليدوي
- * لـcomputeChandeKrollStop/computeKeltner أعلاه) → أعلى قمة=أدنى قاع=P لأي نافذة → longStop=
- * P−atrMult×0=P، shortStop=P+0=P بالضبط لكل نقطة صالحة، يطابق "لا اتساع لوقف تتبّعي بلا أي تقلّب
- * فعلي" بالتعريف — تحقَّق بتشغيل Node.js فعلي (سعر ثابت + 300 شمعة عشوائية، صفر NaN/Infinity).
+ * Chandelier Exit (period=22، atrMult=3) — كسكربت everget الشائع بـTradingView (ليس مدمجاً هناك):
+ * longStop = أعلى **إغلاق** خلال period − atrMult×ATR(Wilder)، shortStop = أدنى إغلاق + atrMult×ATR، ولكلٍّ
+ * **سقّاطة**: الوقف الطويل لا ينزل ما دام الإغلاق السابق فوق وقفه السابق (والقصير لا يصعد ما دام تحته).
+ * الاتجاه يبدأ صاعداً وينقلب بإغلاق فوق الوقف القصير السابق (صاعد) أو تحت الطويل السابق (هابط).
+ * الناتج خطّ واحد كـSupertrend: الوقف الطويل بالاتجاه الصاعد والقصير بالهابط. كان هنا شريطاً بين
+ * الوقفين بلا سقّاطة ولا اتجاه (أعلى/أدنى الذيل) ⇒ لا «أين وقفي الآن» ولا لحظة خروج، والوقف يرتخي
+ * للخلف كلّما خرجت قمّة قديمة من النافذة — عكس «الوقف التتبّعي» الذي يقرؤه المتداول بـTV.
  */
 export function computeChandelierExit(
   candles: Candle[],
   period = 22,
   atrMult = 3
-): { longStop: (number | null)[]; shortStop: (number | null)[] } {
+): { value: (number | null)[]; up: (boolean | null)[] } {
   const n = candles.length;
   const atr = computeAtr(candles, period);
-  const longStop: (number | null)[] = new Array(n).fill(null);
-  const shortStop: (number | null)[] = new Array(n).fill(null);
+  const value: (number | null)[] = new Array(n).fill(null);
+  const up: (boolean | null)[] = new Array(n).fill(null);
+  let prevLong: number | null = null;
+  let prevShort: number | null = null;
+  let dirUp = true;
   for (let i = period - 1; i < n; i++) {
-    if (atr[i] == null) continue;
+    const a = atr[i];
+    if (a == null) continue;
     let hh = -Infinity;
     let ll = Infinity;
     for (let w = i - period + 1; w <= i; w++) {
-      hh = Math.max(hh, candles[w].high);
-      ll = Math.min(ll, candles[w].low);
+      hh = Math.max(hh, candles[w].close);
+      ll = Math.min(ll, candles[w].close);
     }
-    longStop[i] = hh - atrMult * atr[i]!;
-    shortStop[i] = ll + atrMult * atr[i]!;
+    let longStop = hh - atrMult * a;
+    let shortStop = ll + atrMult * a;
+    // `nz(longStop[1], longStop)`: أوّل نقطة صالحة تقارن بنفسها.
+    const lp = prevLong ?? longStop;
+    const sp = prevShort ?? shortStop;
+    const prevClose = i > 0 ? candles[i - 1].close : null;
+    if (prevClose != null && prevClose > lp) longStop = Math.max(longStop, lp);
+    if (prevClose != null && prevClose < sp) shortStop = Math.min(shortStop, sp);
+    const c = candles[i].close;
+    if (c > sp) dirUp = true;
+    else if (c < lp) dirUp = false;
+    value[i] = dirUp ? longStop : shortStop;
+    up[i] = dirUp;
+    prevLong = longStop;
+    prevShort = shortStop;
   }
-  return { longStop, shortStop };
+  return { value, up };
 }
 
 /**

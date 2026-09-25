@@ -72,11 +72,7 @@ export const PRICE_OVERLAYS: Readonly<Record<string, PriceOverlaySpec>> = {
   gannHiLo: { label: 'Gann HiLo', swatch: ['#FCD34D'] },
   envelopes: { label: 'Envelopes', swatch: ['#F59E0B'], drawn: ['rgba(245,158,11,0.14)'] },
   zigzag: { label: 'ZigZag', swatch: ['#D946EF'] },
-  chandelierExit: {
-    label: 'Chandelier',
-    swatch: ['#FDE047'],
-    drawn: ['rgba(253,224,71,0.16)'],
-  },
+  chandelierExit: { label: 'Chandelier', swatch: ['#BBF7D0', '#FECACA'] },
   linRegChannel: { label: 'LinReg', swatch: ['#BFDBFE'], drawn: ['rgba(191,219,254,0.14)'] },
   starcBands: { label: 'STARC', swatch: ['#F9A8D4'], drawn: ['rgba(249,168,212,0.14)'] },
   accelBands: { label: 'Accel', swatch: ['#FED7AA'], drawn: ['rgba(254,215,170,0.14)'] },

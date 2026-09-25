@@ -3424,10 +3424,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       chandeKroll.shortStop.forEach(push);
       chandeKroll.longStop.forEach(push);
     }
-    if (indicators.includes('chandelierExit') && chandelierExit) {
-      chandelierExit.shortStop.forEach(push);
-      chandelierExit.longStop.forEach(push);
-    }
+    if (indicators.includes('chandelierExit') && chandelierExit) chandelierExit.value.forEach(push);
     if (indicators.includes('fractalChaosBands') && fractalChaosBands) {
       fractalChaosBands.upper.forEach(push);
       fractalChaosBands.lower.forEach(push);
@@ -3564,11 +3561,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       dema20: overlays.dema20, tema20: overlays.tema20, hma20: overlays.hma20,
       vwap, twap, psar, gannHiLo, medianPrice, typicalPrice, weightedClose, mcginley, lsma, tsf,
       vwma, alma, t3, smma20, kama, frama, zlema, avgPrice, dma, trima, vidya,
-      supertrend: supertrend?.value,
+      supertrend: supertrend?.value, chandelierExit: chandelierExit?.value,
     };
   }, [
     dense, chartPlotW, overlays, vwap, twap, psar, gannHiLo, medianPrice, typicalPrice, weightedClose,
     mcginley, lsma, tsf, vwma, alma, t3, smma20, kama, frama, zlema, avgPrice, dma, trima, vidya, supertrend,
+    chandelierExit,
   ]);
   // النطاقات: الحدّان (أعلى ثم أدنى) بشارة واحدة «BB 1.08732 1.08332» — ما يقرؤه متداول النطاق.
   const legendBands = useMemo((): Readonly<Record<string, { upper: readonly (number | null)[]; lower: readonly (number | null)[] } | null | undefined>> => {
@@ -6141,7 +6139,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       items.push({
         key: id,
         price: v,
-        color: id === 'supertrend' && supertrend ? (supertrend.up[at] ? colors.bull : colors.bear) : color,
+        color:
+          id === 'supertrend' && supertrend
+            ? supertrend.up[at] ? colors.bull : colors.bear
+            : id === 'chandelierExit' && chandelierExit
+              ? chandelierExit.up[at] ? '#BBF7D0' : '#FECACA'
+              : color,
       });
     }
     return placeOverlayTags(items, yOf, chartPlotH, PRICE_TAG_H, [
@@ -7125,6 +7128,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   const color =
                     chip.id === 'supertrend' && supertrend
                       ? supertrend.up[at] ? colors.bull : colors.bear
+                      : chip.id === 'chandelierExit' && chandelierExit
+                        ? chandelierExit.up[at] ? '#BBF7D0' : '#FECACA'
                       : chip.swatch.length === 1
                         ? resolveColorExpr(chip.swatch[0]!, legendTokens)
                         : null;
@@ -8253,22 +8258,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           ))}
         {indicators.includes('chandelierExit') &&
           chandelierExit &&
-          planBandStrips(
-            chandelierExit.longStop,
-            chandelierExit.shortStop,
-            xOf,
-            yOf,
-            bandW
-          ).map((bnd) => (
+          planLineSegments(chandelierExit.value, xOf, yOf, {
+            // الانقلاب نهاية مقطع كـSupertrend: لا عمود يصل وقف الشراء بوقف البيع.
+            breakBetween: (i) => chandelierExit.up[i] !== chandelierExit.up[i - 1],
+          }).map((sg) => (
             <View
-              key={`ce${bnd.at}`}
+              key={`ce${sg.at}`}
               style={{
                 position: 'absolute',
-                left: bnd.left,
-                top: bnd.top,
-                width: bnd.width,
-                height: bnd.height,
-                backgroundColor: 'rgba(253,224,71,0.16)',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                // أفتح من أخضر/أحمر Supertrend ⇒ الخطّان معاً لا يختلطان.
+                backgroundColor: chandelierExit.up[sg.at] ? '#BBF7D0' : '#FECACA',
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
               }}
             />
           ))}
