@@ -22,6 +22,7 @@ import {
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { buttons, colors, radii, spacing } from '../theme';
+import { isTimeframe } from '../timeframes';
 import type { Candle, ChartSeries } from '../api';
 import {
   loadDrawings,
@@ -6002,13 +6003,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // ووسم السعر 0.000، ونقرة أداة الخطّ الأفقي تحفظ رسماً بسعر null. لا شارت يُرسم: إشعار المزوّد إن كانت السلسلة
   // بلا بيانات حقيقية، وإلا لوح فارغ بالارتفاع نفسه (لا محور ولا سعر مخترع).
   if ((series.candles?.length ?? 0) === 0) {
-    const noCandlesTitle = tr.chartNoCandlesTitle
-      .replace('{symbol}', series.symbol)
-      .replace('{tf}', series.timeframe);
+    // launch120: اسم الفريم المحلي («يومي» لا «D») للنصّ، والمنطوق («15 دقيقة») للقارئ — كشريط الفريمات.
+    const tfId = series.timeframe;
+    const noCandlesTitleFor = (tfText: string) =>
+      tr.chartNoCandlesTitle.replace('{symbol}', series.symbol).replace('{tf}', tfText);
+    const noCandlesTitle = noCandlesTitleFor(isTimeframe(tfId) ? tr.tfLabels[tfId] : tfId);
+    const noCandlesA11y = noCandlesTitleFor(isTimeframe(tfId) ? tr.tfLabelsA11y[tfId] : tfId);
     return (
       <View style={[styles.root, dense && styles.rootDense, { height }]}>
         {seriesHasNoRealData(series.data_source) ? (
-          <ProviderUnavailableNotice symbol={series.symbol} height={height} />
+          <ProviderUnavailableNotice symbol={series.symbol} height={height} dataSource={series.data_source} />
         ) : (
           // launch119: `candles: []` بلا وسم «غير متاح» كان لوحاً صامتاً — المتداول لا يعرف أهو تحميل أم عطل.
           // المدمج (الرباعي/الإطارات) يعرض العنوان وحده؛ النصّ الشارح بالقراءة الصوتية دائماً.
@@ -6016,7 +6020,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             style={[styles.noCandlesBox, { height }]}
             accessible
             accessibilityRole="text"
-            accessibilityLabel={`${noCandlesTitle}. ${tr.chartNoCandlesBody}`}
+            accessibilityLabel={`${noCandlesA11y}. ${tr.chartNoCandlesBody}`}
           >
             <Text style={styles.noCandlesTitle}>{noCandlesTitle}</Text>
             {!dense ? <Text style={styles.noCandlesBody}>{tr.chartNoCandlesBody}</Text> : null}
