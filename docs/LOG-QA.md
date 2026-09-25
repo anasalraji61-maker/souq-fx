@@ -454,3 +454,13 @@ Kagi/P&F بلا حلقة لكل صندوق ولا حجم من الواجهة. **
 كل لوحات الحجم (OBV/NVI/PVI/A/D/CMF/Klinger/Twiggs/MFI/…) بـ«≈». `ce86399` `niceLogPriceTicks` مانتيسات مستديرة وتعود لـ`nicePriceTicks` تحت ضعفين.
 `4d7c7b3` سليم؛ الحاسبة `lots.toFixed(2)` سليمة لأن `LOT_STEP` = 0.01. **لا بند جديد.**
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
+
+## 2026-09-25 — الدورة 41
+**البناء:** أخضر 0 (بعد 5b2a25e) — لا إصلاح لازم. **Selftests:** 84/84 ناجح (`npx tsx`؛ `notifications.selftest` و`newsRisk.selftest` بحالاتهما الجديدة).
+**التحقّق من الإغلاقات بالكود:** مُغلق — تنظيف QA39 (`19d7236`: `range.ts:20` `export MIN_BOX_FRACTION`، `renko.ts:4` يستورده، لا نسخة ثانية). `0c18f10`
+`USDINDEX`/`UKBRENT` ⇒ USD سليم. **غير مُغلق:** 10 `Alert.alert`، «₴» ×2، `FocusChartModal:56` `BASES`، `AiPanel`/`LectureClassroom` بلا `maxLength`، `BRENT/USD`، `TimeframeBar`.
+**طلبات تنسيق جديدة:** لا شيء (launch92 ردّ فقط؛ chart27 بنود «التشغيل القادم» ذاتية لا طلبات).
+**المراجعة (a — تكرار/ميت/تصديرات)، مسح آلي لـ923 تصديراً + أسماء الدوال المكرّرة:** التصديرات الميّتة = قائمة QA1 نفسها (+ النوع `WatchSymbol`)؛
+`dirColor`/`dirLabel` ×3، `QUICK_SYMBOLS` ×2، `RECONNECT_*` ×2 بلا تغيير. **جديد QA41 → tools (منخفض):** `notifLang` (`notifications.ts:21`، `5b2a25e`) نسخة
+حرفية من `deviceLang` (`I18nContext.tsx:23`) و`'matrix.lang.v1'` منسوخ ⇒ مصدر واحد كي لا تعود لغة الإشعار تخالف الواجهة.
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة.
