@@ -88,7 +88,7 @@ def test_known_or_unknown_symbol_gets_no_seed_when_provider_fails(monkeypatch, h
         _provider_fails(monkeypatch, how)
     body = TestClient(main.app).get(f"/api/charts/{symbol}?timeframe=1H").json()
     assert body["candles"] == []
-    assert body["last"] is None and body["change_pct"] is None
+    assert body["last"] is None and body["change_pct"] is None and body["change_bars"] is None
     assert body["data_source"]["kind"] == "demo"  # كل مسار حسابي يرفضها كما قبل
     assert body["data_source"]["unavailable_reason"] == "provider_unavailable"
     assert body["data_source"]["channel"] is None
@@ -227,3 +227,13 @@ def test_other_symbols_pass_through(sym):
 
 def test_mapped_symbols_still_win():
     assert market.td_symbol("EURUSD") == "EUR/USD" and market.td_symbol("UKOIL") == "XBR/USD"
+
+
+def test_chart_change_pct_says_how_many_bars_it_spans(monkeypatch):
+    """`change_pct` = أول إغلاق ← آخره على كامل السلسلة (180 يومية ≈ 6 أشهر) — بلا عدد الشموع يُقرأ «تغيّر اليوم»."""
+    monkeypatch.setattr(market, "_api_key", lambda: "k")
+    rows = [{"time": 1_700_000_000 + i * 86400, "open": 1.0, "high": 1.2, "low": 0.9, "close": 1.0 + i / 100}
+            for i in range(5)]
+    monkeypatch.setattr(market, "fetch_time_series_with_meta", lambda *a, **kw: (rows, {"kind": "provider"}))
+    body = TestClient(main.app).get("/api/charts/EURUSD?timeframe=D").json()
+    assert body["change_pct"] == 4.0 and body["change_bars"] == 4

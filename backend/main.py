@@ -130,6 +130,9 @@ class ChartSeries(BaseModel):
     candles: list[Candle]
     # None = لا سعر أصلاً (رمز لا يقدّمه المزوّد — DXY): لا شموع ولا إغلاق ولا نسبة، لا رقم مكتوب باليد
     change_pct: float | None
+    # الشموع التي تغطّيها `change_pct` (أول إغلاق ← آخره = N−1): 180 شمعة يومية ≈ 6 أشهر، لا «تغيّر اليوم».
+    # كـ`change_bars` بـ`/api/indicators/snapshot`. None حين لا نسبة.
+    change_bars: int | None = None
     last: float | None
     data_source: DataProvenance = Field(default_factory=DataProvenance)
 
@@ -621,6 +624,7 @@ def build_series(symbol: str, timeframe: str = "15m", outputsize: int = 180) -> 
                     timeframe=tf,
                     candles=candles,
                     change_pct=round(change, 2) + 0.0,  # لا «−0.00%» لتغيّر دون التقريب
+                    change_bars=len(candles) - 1,
                     last=last,
                     data_source=DataProvenance(
                         kind=kind,  # type: ignore[arg-type]
