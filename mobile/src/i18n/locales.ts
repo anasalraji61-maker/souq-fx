@@ -1077,7 +1077,7 @@ export type Dict = {
   /** الويب بالفأرة: المعاينة بالمرور، النقر يثبّت، ←/→ و Esc بعد التثبيت. واختصارات Alt (`WEB_TOOL_HOTKEYS` و`KeyR`
    * بـ`MatrixChart.tsx`) — لا تلميح غيره يذكرها، فبلا هذا السطر لا يعرف بها أحد. أسماء الأدوات = `ctlToolTrend/Hline/Vline/Fib`. */
   mcHintNavigateWeb: string;
-  /** الويب بالفأرة وأداة رسم نشطة: Esc يلغي النقطة الأولى ثم يغادر الأداة، Ctrl/⌘+Z يتراجع، Alt+حرف يبدّل الأداة. */
+  /** الويب بالفأرة وأداة رسم نشطة: Esc يلغي النقطة الأولى ثم يغادر الأداة، Ctrl/⌘+Z يتراجع وCtrl+Y أو Ctrl/⌘+Shift+Z يعيد (`c1fa634`)، Alt+حرف يبدّل الأداة. */
   mcHintDrawWeb: string;
   /** الويب ورسم محدَّد: Delete/Backspace يحذفه (قابل للتراجع)، Esc يلغي التحديد، والأسهم تُزيحه (↑/↓ pip، ←/→ شمعة، Shift ×10 — `b734ced`). */
   mcHintSelectedWeb: string;
@@ -2336,7 +2336,7 @@ const ar: Dict = {
   mcNoteDefault: 'ملاحظة',
   mcNoteTextA11y: 'نصّ الملاحظة على الشارت — حتى 60 حرفاً',
   mcHintNoteSelected: 'اكتب نصّ الملاحظة بالخانة المجاورة لها · اسحبها لتحريكها · يُحفظ تلقائياً',
-  mcHintNoteSelectedWeb: 'اكتب نصّ الملاحظة بالخانة المجاورة لها · اسحبها لتحريكها · Esc لإلغاء التحديد · Ctrl+Z للتراجع',
+  mcHintNoteSelectedWeb: 'اكتب نصّ الملاحظة بالخانة المجاورة لها · اسحبها لتحريكها · Esc لإلغاء التحديد · Ctrl+Z / Ctrl+Y للتراجع والإعادة',
   mcSnapshotSaved: 'تم حفظ لقطة الشارت',
   mcSnapshotFailed: 'تعذّر تصدير الشارت — حاول مرة أخرى، أو خذ لقطة شاشة للشارت',
   mcTemplateDefaultName: 'افتراضي',
@@ -2347,8 +2347,8 @@ const ar: Dict = {
   mcHintDraw: 'اسحب لرسم، أو المس نقطتين · يُحفظ تلقائياً',
   mcHintNavigate: 'اسحب للتنقل · المس شمعة لقراءتها، أو اضغط مطوّلاً ثم اسحب · باعد إصبعين أو اسحب المحورين للتكبير',
   mcHintNavigateWeb: 'مرّر الفأرة للقراءة · انقر للتثبيت · ←/→ شمعة شمعة · Esc للإلغاء · Alt+R لإعادة العرض · Alt+T ترند، H أفقي، V عمودي، F فيبو',
-  mcHintDrawWeb: 'اسحب لرسم، أو انقر نقطتين · Esc للإلغاء · Ctrl+Z للتراجع · Alt+T/H/V/F لأداة أخرى · يُحفظ تلقائياً',
-  mcHintSelectedWeb: 'اسحب أو استعمل الأسهم لتحريك الرسم (Shift ×10) · Delete لحذفه · Esc لإلغاء التحديد · Ctrl+Z للتراجع',
+  mcHintDrawWeb: 'اسحب لرسم، أو انقر نقطتين · Esc للإلغاء · Ctrl+Z / Ctrl+Y للتراجع والإعادة · Alt+T/H/V/F لأداة أخرى · يُحفظ تلقائياً',
+  mcHintSelectedWeb: 'اسحب أو استعمل الأسهم لتحريك الرسم (Shift ×10) · Delete لحذفه · Esc لإلغاء التحديد · Ctrl+Z / Ctrl+Y للتراجع والإعادة',
   mcHintSelect: 'المس رسماً لتحديده · المس مكاناً فارغاً لإلغاء التحديد',
   mcHintSelected: 'اسحب الرسم لتحريكه · اسحب مقبضاً لتعديل طرف · يُحفظ تلقائياً',
   mcAutoA11y: 'تلقائي: ملاءمة الأسعار والعودة لآخر شمعة',
@@ -3524,7 +3524,7 @@ const enUS: Dict = {
   mcNoteDefault: 'Note',
   mcNoteTextA11y: 'Note text on the chart — up to 60 characters',
   mcHintNoteSelected: 'Type the note in the box next to it · drag the note to move it · saved automatically',
-  mcHintNoteSelectedWeb: 'Type the note in the box next to it · drag the note to move it · Esc deselects · Ctrl+Z to undo',
+  mcHintNoteSelectedWeb: 'Type the note in the box next to it · drag the note to move it · Esc deselects · Ctrl+Z / Ctrl+Y to undo / redo',
   mcSnapshotSaved: 'Chart snapshot saved',
   mcSnapshotFailed: "Couldn't export the chart — try again, or take a screenshot of the chart",
   mcTemplateDefaultName: 'Default',
@@ -3535,8 +3535,8 @@ const enUS: Dict = {
   mcHintDraw: 'Drag to draw, or tap two points · saved automatically',
   mcHintNavigate: 'Drag to pan · tap a candle to read it, or hold then drag · pinch or drag the axes to zoom',
   mcHintNavigateWeb: 'Hover to read · click to pin · ←/→ one candle · Esc to clear · Alt+R resets the view · Alt+T trend, H H-line, V V-line, F Fib',
-  mcHintDrawWeb: 'Drag to draw, or click two points · Esc to cancel · Ctrl+Z to undo · Alt+T/H/V/F switches tool · saved automatically',
-  mcHintSelectedWeb: 'Drag or use the arrow keys to move the drawing (Shift ×10) · Delete removes it · Esc deselects · Ctrl+Z to undo',
+  mcHintDrawWeb: 'Drag to draw, or click two points · Esc to cancel · Ctrl+Z / Ctrl+Y to undo / redo · Alt+T/H/V/F switches tool · saved automatically',
+  mcHintSelectedWeb: 'Drag or use the arrow keys to move the drawing (Shift ×10) · Delete removes it · Esc deselects · Ctrl+Z / Ctrl+Y to undo / redo',
   mcHintSelect: 'Tap a drawing to select it · tap empty space to deselect',
   mcHintSelected: 'Drag the drawing to move it · drag a handle to adjust one end · saved automatically',
   mcAutoA11y: 'Auto: fit prices and return to the latest candle',
@@ -4742,7 +4742,7 @@ const ku: Dict = {
   mcNoteDefault: 'تێبینی',
   mcNoteTextA11y: 'دەقی تێبینی لەسەر چارت — تا 60 پیت',
   mcHintNoteSelected: 'دەقی تێبینییەکە لە خانەی تەنیشتی بنووسە · ڕایبکێشە بۆ جوولاندنی · خۆکار پاشەکەوت دەبێت',
-  mcHintNoteSelectedWeb: 'دەقی تێبینییەکە لە خانەی تەنیشتی بنووسە · ڕایبکێشە بۆ جوولاندنی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z بۆ گەڕانەوە',
+  mcHintNoteSelectedWeb: 'دەقی تێبینییەکە لە خانەی تەنیشتی بنووسە · ڕایبکێشە بۆ جوولاندنی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە',
   mcSnapshotSaved: 'وێنەی چارت پاشەکەوت کرا',
   mcSnapshotFailed: 'نەتوانرا چارت هەناردە بکرێت — دووبارە هەوڵ بدەرەوە، یان وێنەی شاشەی چارتەکە بگرە',
   mcTemplateDefaultName: 'بنەڕەت',
@@ -4753,8 +4753,8 @@ const ku: Dict = {
   mcHintDraw: 'ڕایبکێشە بۆ کێشان، یان دوو خاڵ دابگرە · خۆکار پاشەکەوت دەبێت',
   mcHintNavigate: 'ڕایبکێشە بۆ جوڵان · دەست لە مۆمێک بدە بۆ خوێندنەوە، یان دایگرە و ڕایبکێشە · دوو پەنجە لێک دوور بخەرەوە یان تەوەرەکان ڕایبکێشە بۆ زووم',
   mcHintNavigateWeb: 'ماوس ببە سەری بۆ خوێندنەوە · کلیک بکە بۆ جێگیرکردن · ←/→ مۆم بە مۆم · Esc بۆ لابردن · Alt+R بۆ ڕێکخستنەوەی پیشاندان · Alt+T ترێند، H ئاسۆیی، V ستوونی، F فیبۆ',
-  mcHintDrawWeb: 'ڕایبکێشە بۆ کێشان، یان کلیک لە دوو خاڵ بکە · Esc بۆ هەڵوەشاندنەوە · Ctrl+Z بۆ گەڕانەوە · Alt+T/H/V/F بۆ ئامرازێکی تر · خۆکار پاشەکەوت دەبێت',
-  mcHintSelectedWeb: 'ڕایبکێشە یان تیرەکان بەکاربهێنە بۆ جوولاندنی کێشراو (Shift ×10) · Delete بۆ سڕینەوەی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z بۆ گەڕانەوە',
+  mcHintDrawWeb: 'ڕایبکێشە بۆ کێشان، یان کلیک لە دوو خاڵ بکە · Esc بۆ هەڵوەشاندنەوە · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە · Alt+T/H/V/F بۆ ئامرازێکی تر · خۆکار پاشەکەوت دەبێت',
+  mcHintSelectedWeb: 'ڕایبکێشە یان تیرەکان بەکاربهێنە بۆ جوولاندنی کێشراو (Shift ×10) · Delete بۆ سڕینەوەی · Esc بۆ لابردنی دیاریکردن · Ctrl+Z / Ctrl+Y بۆ گەڕانەوە و دووبارەکردنەوە',
   mcHintSelect: 'کێشراوێک دابگرە بۆ دیاریکردنی · شوێنێکی بەتاڵ دابگرە بۆ لابردنی دیاریکردن',
   mcHintSelected: 'کێشراوەکە ڕایبکێشە بۆ جوولاندنی · دەسکێک ڕایبکێشە بۆ گۆڕینی لایەکی · خۆکار پاشەکەوت دەبێت',
   mcAutoA11y: 'خۆکار: گونجاندنی نرخەکان و گەڕانەوە بۆ دوایین مۆم',
