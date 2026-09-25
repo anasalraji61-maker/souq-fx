@@ -511,7 +511,7 @@ export type Dict = {
   newsRiskOpenHint: string;
   /** فاصل قائمة قصيرة داخل جملة: «, » بالإنجليزية، «، » بالعربية والكردية. */
   listSep: string;
-  /** شريط الخبر حين فشل التقويم ولا نسخة محفوظة — غياب التحذير هنا ليس «لا خطر» (طلب وكيل الأدوات) */
+  /** شريط الخبر حين فشل التقويم ولا نسخة محفوظة، أو المحفوظ أقدم من ساعة بلا خبر فيه (`calendarStaleSilent`، tools `8bdf23f`) — غياب التحذير هنا ليس «لا خطر». «تحديث» لا «تحميل»: يصحّ للحالتين */
   newsUnavailable: string;
   /** موعد خبرٍ قويّ اليوم **بلا ساعة معلنة** بسطر شريط الأخبار مكان «بعد 2س» (`NewsRiskBanner`، tools75a). */
   newsTimeTbd: string;
@@ -1829,7 +1829,7 @@ const ar: Dict = {
   newsRiskHint: 'تقلّب حاد وانزلاق محتمل — راجع وقف الخسارة وحجم الصفقة',
   newsRiskOpenHint: 'يمسّ صفقاتك المفتوحة على {symbols}: تقلّب حاد، وقد يُنفَّذ وقف الخسارة بسعر أسوأ من المكتوب',
   listSep: '، ',
-  newsUnavailable: 'تعذّر تحميل تقويم الأخبار — لا نعرف إن كان خبر قوي قريباً؛ تحقّق قبل الدخول',
+  newsUnavailable: 'تعذّر تحديث تقويم الأخبار — لا نعرف إن كان خبر قوي قريباً؛ تحقّق قبل الدخول',
   newsTimeTbd: 'اليوم، الساعة غير معلنة',
   newsTimeTbdTomorrow: 'غداً، الساعة غير معلنة',
   calToday: 'اليوم',
@@ -3017,7 +3017,7 @@ const enUS: Dict = {
   newsRiskHint: 'Expect sharp moves and slippage — check your stop and position size',
   newsRiskOpenHint: 'Affects your open {symbols} trades: expect sharp moves, and a stop may fill worse than its price',
   listSep: ', ',
-  newsUnavailable: 'Couldn’t load the news calendar — we can’t tell if a big release is close; check before you enter',
+  newsUnavailable: 'Couldn’t update the news calendar — we can’t tell if a big release is close; check before you enter',
   newsTimeTbd: 'today, time not announced',
   newsTimeTbdTomorrow: 'tomorrow, time not announced',
   calToday: 'Today',
@@ -4232,7 +4232,7 @@ const ku: Dict = {
   newsRiskHint: 'جووڵەی توند و خلیسکان چاوەڕوانکراوە — وەستان و قەبارەی مامەڵە بپشکنە',
   newsRiskOpenHint: 'کار دەکاتە سەر مامەڵە کراوەکانت لە {symbols}: جووڵەی توند، و لەوانەیە وەستان بە نرخێکی خراپتر لە نووسراوەکە جێبەجێ بێت',
   listSep: '، ',
-  newsUnavailable: 'نەکرا ڕۆژژمێری هەواڵ باربکرێت — نازانین هەواڵێکی بەهێز نزیکە یان نا؛ پێش چوونەژوورەوە بپشکنە',
+  newsUnavailable: 'نەکرا ڕۆژژمێری هەواڵ نوێ بکرێتەوە — نازانین هەواڵێکی بەهێز نزیکە یان نا؛ پێش چوونەژوورەوە بپشکنە',
   // بحاجة مراجعة ناطق
   newsTimeTbd: 'ئەمڕۆ، کاتەکەی ڕانەگەیەندراوە',
   // بحاجة مراجعة ناطق
