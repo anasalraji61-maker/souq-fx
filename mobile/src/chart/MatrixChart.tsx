@@ -96,6 +96,7 @@ import {
   formatPaneValue,
   paneBoundedDecimals,
   formatPaneValueScaled,
+  paneShownValue,
   paneSpreadSeries,
   paneValueAt,
   paneValueState,
@@ -1012,10 +1013,12 @@ function PaneValueHead({
   // مقياس السلسلة الأولى نفسه ⇒ الرقمان بالخانات واللاحقة ذاتها فيُقارَنان بنظرة.
   const sv = signal ? paneValueAt(signal.values, at) : null;
   const stxt = signal ? formatPaneValueScaled(values, sv) : null;
+  // الجانب من الرقم المطبوع لا الخام: «0» (أو «50» بمركز 50) بلا لون.
+  const shown = tone === 'sign' ? paneShownValue(txt) : null;
   const toneColor =
-    (tone === 'sign' && v != null && v > center) || trend === 'up'
+    (shown != null && shown > center) || trend === 'up'
       ? colors.bull
-      : (tone === 'sign' && v != null && v < center) || trend === 'down'
+      : (shown != null && shown < center) || trend === 'down'
         ? colors.bear
         : null;
   const inline = compact && signal && txt && stxt && paneInlineFits(txt, stxt);
@@ -1129,8 +1132,8 @@ function PaneSpreadHead({
             txt.length >= 7 && styles.paneHeadValueLong,
             trend === 'up' && { color: colors.bull },
             trend === 'down' && { color: colors.bear },
-            tone === 'sign' && v != null && v > 0 && { color: colors.bull },
-            tone === 'sign' && v != null && v < 0 && { color: colors.bear },
+            tone === 'sign' && (paneShownValue(txt) ?? 0) > 0 && { color: colors.bull },
+            tone === 'sign' && (paneShownValue(txt) ?? 0) < 0 && { color: colors.bear },
           ]}
         >
           {txt}

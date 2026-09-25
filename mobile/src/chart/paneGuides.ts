@@ -390,6 +390,18 @@ function trimZeros(s: string): string {
 }
 
 /**
+ * القيمة كما طُبعت (`formatPaneValueScaled`) رقماً — للّون: لون الجانب من الخام كان يلوّن «0» المطبوع
+ * (هستوغرام MACD ‎3e-7‎ على اليورو) أخضر، و«50» بمركز 50 أخضر/أحمر. اللون يتبع ما يقرؤه المتداول.
+ */
+export function paneShownValue(txt: string | null | undefined): number | null {
+  if (!txt) return null;
+  const m = /^(.*?)([KM]?)$/.exec(txt);
+  const n = Number(m![1]);
+  if (!Number.isFinite(n)) return null;
+  return n * (m![2] === 'M' ? 1e6 : m![2] === 'K' ? 1e3 : 1);
+}
+
+/**
  * صياغة قيمة بلوحة مقياسها ديناميكي (MACD والزخم والتدفّق… — 47 لوحة لا عتبات لها).
  * تُختار الصيغة **مرّة لكل لوحة** من مقياسها: عادية، أو بآلاف/ملايين للوحات الحجم
  * الضخمة، أو أسّية متى لم يتّسع أطول نصّ ممكن باللوحة — فالشكل واحد لكل قيمها.

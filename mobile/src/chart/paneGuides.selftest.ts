@@ -12,6 +12,7 @@ import {
   formatPaneValue,
   paneBoundedDecimals,
   formatPaneValueScaled,
+  paneShownValue,
   latestPaneValue,
   paneSeriesMaxAbs,
   paneSpreadSeries,
@@ -429,4 +430,18 @@ console.log('paneGuides.selftest: PASS');
   // العتبة على الحافّة تبقى داخل المساحة
   assert.equal(placeScaledGuides([28], 24, 28, 60)[0].top, 0);
   assert.equal(placeScaledGuides([24], 24, 28, 60)[0].top, 59);
+}
+
+// اللون من الرقم المطبوع: ‎3e-7‎ بمقياس MACD اليورو يُطبع «0» ⇒ لا جانب
+{
+  const macdEur = [0.00042, -0.00031, 0.0000003];
+  const txt = formatPaneValueScaled(macdEur, 0.0000003);
+  assert.equal(txt, '0');
+  assert.equal(paneShownValue(txt), 0);
+  assert.equal(paneShownValue('-0.00031'), -0.00031);
+  assert.equal(paneShownValue('1.5K'), 1500);
+  assert.equal(paneShownValue('-2.25M'), -2250000);
+  assert.equal(paneShownValue('3.0e-7'), 3e-7);
+  assert.equal(paneShownValue(null), null);
+  assert.equal(paneShownValue('50'), 50);
 }
