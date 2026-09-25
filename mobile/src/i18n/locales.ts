@@ -2907,7 +2907,7 @@ const enUS: Dict = {
   lectureNext: 'Next',
   lectureNextA11y: 'Next segment',
   lectureInterruptLabel: 'Pause the narration and ask about an unclear part',
-  lectureQuestionPlaceholder: "Example: I didn't understand CHOCH...",
+  lectureQuestionPlaceholder: 'e.g. I didn’t get the CHOCH part…',
   lectureQuestionA11y: 'Question while the narration is paused',
   lectureAskBtn: 'Ask',
   lectureAskA11y: 'Send the question',
