@@ -530,8 +530,8 @@ function SelMark({ accent }: { accent?: boolean }) {
 const CHROME_DIM_DELAY_MS = 150;
 
 const PRICE_AXIS_WIDTH = 68;
-/** ارتفاع وسم سعر الخطّ/فيبو فوق خطّه (`top: -11` + خطّ 13) — أقرب من ذلك للحافّة العليا يُقلب تحته. */
-const LEVEL_LABEL_H = 13;
+/** ارتفاع وسم سعر الخطّ/فيبو فوق خطّه (`top: -12` + سطر 14) — أقرب من ذلك للحافّة العليا يُقلب تحته. */
+const LEVEL_LABEL_H = 14;
 /** مقبض سحب خطّ التنبيه: بعرض وسمه («🔔 ▲ 1.09250 · +23.4 pip») وارتفاع إصبع حول الخطّ. */
 const ALERT_HANDLE_W = 150;
 const ALERT_HANDLE_H = 28;
@@ -591,10 +591,10 @@ const DRAW_HANDLE_R = 18;
 const DRAW_HISTORY_MAX = 25;
 /** مستويات فيبو المرسومة: الارتداد ثم أهداف الامتداد بعد نهاية الموجة (`FIB_EXTENSIONS`). */
 const FIB_DRAW_LEVELS: readonly number[] = [...FIB_LEVELS, ...FIB_EXTENSIONS];
-/** أقلّ تباعد رأسي بين وسمَي مستوى فيبو = علوّ سطر الوسم (`fibLevelLabel`: 13px). */
-const FIB_LABEL_GAP = 13;
+/** أقلّ تباعد رأسي بين وسمَي مستوى فيبو = علوّ سطر الوسم (`fibLevelLabel`: 14px). */
+const FIB_LABEL_GAP = LEVEL_LABEL_H;
 /** ومثله لوسم سعر الخطّ الأفقي (`levelPriceLabel`). */
-const HLINE_LABEL_GAP = 13;
+const HLINE_LABEL_GAP = LEVEL_LABEL_H;
 
 /** مرجع ثابت لـ«لا رسومات» — مصفوفة جديدة كل رسم تُبطل ذاكرة كل ما يعتمد عليها. */
 const NO_DRAWINGS: Drawing[] = [];
@@ -9090,14 +9090,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   // حدّ علويّ فوق اللوح ⇒ الوسم عند أعلى الجزء المرئيّ من المنطقة.
                   const topVis = Math.max(top, 0);
                   const inside = bot - topVis >= 18;
-                  if (!inside && top < 13) return null;
+                  if (!inside && top < 14) return null;
                   return (
                     <Text
                       pointerEvents="none"
                       numberOfLines={1}
                       style={[
                         styles.zoneRangeLabel,
-                        { left: Math.max(left, 0) + 3, top: inside ? topVis + 2 : top - 14, color: d.color },
+                        { left: Math.max(left, 0) + 3, top: inside ? topVis + 2 : top - 15, color: d.color },
                       ]}
                     >
                       {txt}
@@ -13406,9 +13406,10 @@ const styles = StyleSheet.create({
     ...numeric,
     position: 'absolute',
     right: 4,
-    top: -10,
+    top: -13,
     color: colors.textDim,
-    fontSize: 9,
+    fontSize: 11,
+    lineHeight: 13,
   },
   // وسم سعر على خطٍّ أفقي (خطّ المتداول): بلون الخطّ نفسه ليُقرأ كتابعٍ له لا كوسم
   // محور. يسار اللوح لنفس سبب وسم فيبو أدناه.
@@ -13416,9 +13417,9 @@ const styles = StyleSheet.create({
     ...numeric,
     position: 'absolute',
     left: 4,
-    top: -11,
-    fontSize: 10,
-    lineHeight: 13,
+    top: -12,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: '600',
     paddingHorizontal: 3,
     borderRadius: radii.sm,
@@ -13441,8 +13442,8 @@ const styles = StyleSheet.create({
   zoneRangeLabel: {
     ...numeric,
     position: 'absolute',
-    fontSize: 10,
-    lineHeight: 12,
+    fontSize: 11,
+    lineHeight: 13,
     fontWeight: '600',
     opacity: 0.9,
   },
@@ -13460,10 +13461,10 @@ const styles = StyleSheet.create({
     ...numeric,
     position: 'absolute',
     left: 4,
-    top: -11,
+    top: -12,
     color: colors.textMuted,
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: '600',
     paddingHorizontal: 3,
     borderRadius: radii.sm,
