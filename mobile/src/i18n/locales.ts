@@ -483,6 +483,8 @@ export type Dict = {
   listSep: string;
   /** شريط الخبر حين فشل التقويم ولا نسخة محفوظة — غياب التحذير هنا ليس «لا خطر» (طلب وكيل الأدوات) */
   newsUnavailable: string;
+  /** موعد خبرٍ قويّ اليوم **بلا ساعة معلنة** بسطر شريط الأخبار مكان «بعد 2س» (`NewsRiskBanner`، tools75a). */
+  newsTimeTbd: string;
   calToday: string;
   calTomorrow: string;
   calSampleBanner: string;
@@ -1707,6 +1709,7 @@ const ar: Dict = {
   newsRiskOpenHint: 'يمسّ صفقاتك المفتوحة على {symbols}: تقلّب حاد، وقد يُنفَّذ وقف الخسارة بسعر أسوأ من المكتوب',
   listSep: '، ',
   newsUnavailable: 'تعذّر تحميل تقويم الأخبار — لا نعرف إن كان خبر قوي قريباً؛ تحقّق قبل الدخول',
+  newsTimeTbd: 'اليوم، الساعة غير معلنة',
   calToday: 'اليوم',
   calTomorrow: 'غداً',
   calSampleBanner: '⚠ أمثلة توضيحية لا أحداث هذا الأسبوع — مواعيدها وأرقامها ليست للتداول عليها. تعذّر جلب التقويم الحي الآن',
@@ -2866,6 +2869,7 @@ const enUS: Dict = {
   newsRiskOpenHint: 'Affects your open {symbols} trades: expect sharp moves, and a stop may fill worse than its price',
   listSep: ', ',
   newsUnavailable: 'Couldn’t load the news calendar — we can’t tell if a big release is close; check before you enter',
+  newsTimeTbd: 'today, time not announced',
   calToday: 'Today',
   calTomorrow: 'Tomorrow',
   calSampleBanner: '⚠ Sample events, not this week’s — don’t trade on their times or figures. Live calendar unavailable right now',
@@ -4052,6 +4056,8 @@ const ku: Dict = {
   newsRiskOpenHint: 'کار دەکاتە سەر مامەڵە کراوەکانت لە {symbols}: جووڵەی توند، و لەوانەیە وەستان بە نرخێکی خراپتر لە نووسراوەکە جێبەجێ بێت',
   listSep: '، ',
   newsUnavailable: 'نەکرا ڕۆژژمێری هەواڵ باربکرێت — نازانین هەواڵێکی بەهێز نزیکە یان نا؛ پێش چوونەژوورەوە بپشکنە',
+  // بحاجة مراجعة ناطق
+  newsTimeTbd: 'ئەمڕۆ، کاتەکەی ڕانەگەیەندراوە',
   calToday: 'ئەمڕۆ',
   calTomorrow: 'سبەینێ',
   calSampleBanner: '⚠ نموونەی ڕوونکردنەوەن، ڕووداوەکانی ئەم هەفتەیە نین — کات و ژمارەکانیان بۆ بازرگانی نین. ڕۆژژمێری ڕاستەوخۆ ئێستا بەردەست نییە',
