@@ -117,3 +117,45 @@ def test_bb_bounce_mid_band_exit_only_closes_the_trade():
             assert c[i]["high"] >= mean + 2 * std, t
         else:
             assert c[i]["low"] <= mean - 2 * std, t
+
+
+def test_max_drawdown_counts_the_trough_inside_each_trade():
+    """كان الهبوط يُقاس على الإغلاقات وحدها: صفقات نزلت 8% ثم أُغلقت رابحة ⇒ «أقصى هبوط 0%»."""
+    trades = [{"pnl_pct": 1.0, "mae_pct": -8.0, "entry": 1.0} for _ in range(5)]
+    st = backtest._stats(trades)[0]
+    assert st["max_drawdown_pct"] == 8.0
+    # الثانية تنزل 8% من قمّة 101 (بعد الأولى)
+    st = backtest._stats([{"pnl_pct": 1.0, "mae_pct": 0.0, "entry": 1.0},
+                          {"pnl_pct": 1.0, "mae_pct": -8.0, "entry": 1.0}])[0]
+    assert st["max_drawdown_pct"] == 8.0
+    # بلا `mae_pct` = الإغلاقات وحدها كما كان
+    assert backtest._stats([_t(10.0), _t(-10.0)])[0]["max_drawdown_pct"] == 10.0
+
+
+def test_run_backtest_trade_mae_uses_lows_between_entry_and_exit():
+    c = _candles()
+    res = backtest.run_backtest(c, "ma_cross")
+    idx = {x["time"]: k for k, x in enumerate(c)}
+    for t in res["trades"]:
+        assert t["mae_pct"] <= t["pnl_pct"]
+        span = c[idx[t["entry_time"]] + 1: idx[t["exit_time"]] + 1]
+        if t["side"] == "long":
+            worst = min(x["low"] for x in span)
+            exp = (worst - t["entry"]) / t["entry"] * 100
+        else:
+            worst = max(x["high"] for x in span)
+            exp = (t["entry"] - worst) / t["entry"] * 100
+        assert abs(t["mae_pct"] - round(min(exp, t["pnl_pct"]), 3)) < 1e-9
+    assert res["stats"]["trade_count"] <= 40  # كل الصفقات بالردّ ⇒ المقارنة التالية على نفس المجموعة
+    # هبوط داخل الصفقات ≥ هبوط الإغلاقات وحدها
+    closes_only = backtest._stats([{k: v for k, v in t.items() if k != "mae_pct"} for t in res["trades"]
+                                   if not t.get("open")])[0]["max_drawdown_pct"]
+    assert res["stats"]["max_drawdown_pct"] > closes_only
+
+
+def test_spread_also_deepens_the_trade_trough():
+    c = _candles()
+    free = backtest.run_backtest(c, "ma_cross")["trades"]
+    cost = backtest.run_backtest(c, "ma_cross", spread=0.0001)["trades"]
+    for a, b in zip(free, cost):
+        assert abs((a["mae_pct"] - b["mae_pct"]) - 0.0001 / a["entry"] * 100) < 2e-3

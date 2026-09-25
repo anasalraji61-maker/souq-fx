@@ -57,7 +57,8 @@ def _stats(trades: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str,
       الاستراتيجية كل صفقاتها» (backend-r7، كالدفتر `2d0fb58`). `BacktestPanel` يعرض «—».
     - **المركز المفتوح بآخر شمعة ليس صفقة منتهية**: كان يُقوَّم بآخر إغلاق ويدخل نسبة الفوز والعائد ورأس
       المال كأنه أُغلق — ربح/خسارة غير محقّقة بشكل نتيجة. الآن الإحصاء على المغلقة وحدها، والمفتوح
-      بـ`open_pnl_pct` (None إن لا مركز) كـ«الربح المفتوح» بمختبر استراتيجيات TradingView."""
+      بـ`open_pnl_pct` (None إن لا مركز) كـ«الربح المفتوح» بمختبر استراتيجيات TradingView.
+    - **`max_drawdown_pct` يشمل القاع داخل كل صفقة مغلقة** (`mae_pct`)، لا نقاط الإغلاق وحدها."""
     open_pnl = next((t["pnl_pct"] for t in trades if t.get("open")), None)
     trades = [t for t in trades if not t.get("open")]
     wins = [t["pnl_pct"] for t in trades if t["pnl_pct"] > 0]
@@ -69,7 +70,12 @@ def _stats(trades: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str,
     peak = equity
     max_dd = 0.0
     for j, t in enumerate(trades):
+        # القاع **داخل** الصفقة قبل إغلاقها: كان الهبوط يُقاس على الإغلاقات وحدها ⇒ خمس صفقات كلّ منها
+        # نزلت 8% ثم أُغلقت +1% تُعرض «أقصى هبوط 0%» — مخاطرة لم يرها المتداول. كـ«أقصى هبوط» بمختبر
+        # TradingView. صفقة بلا `mae_pct` (نداء قديم) = الإغلاق وحده.
+        trough = equity * (1 + min(t.get("mae_pct", t["pnl_pct"]), t["pnl_pct"]) / 100)
         equity *= 1 + t["pnl_pct"] / 100
+        max_dd = max(max_dd, (peak - trough) / peak * 100 if peak else 0)
         peak = max(peak, equity)
         dd = (peak - equity) / peak * 100 if peak else 0
         max_dd = max(max_dd, dd)
@@ -125,8 +131,33 @@ def run_backtest(
     trades: list[dict[str, Any]] = []
     position: Literal["long", "short", "flat"] = "flat"
     entry_price = 0.0
-    entry_time = 0
+    entry_i = 0
     start_i = max(slow, 26) + 1
+
+    def close_trade(exit_i: int, still_open: bool = False) -> None:
+        """يسجّل صفقة المركز الحالي مغلقةً عند إغلاق الشمعة `exit_i`.
+
+        `mae_pct` = أسوأ ربح/خسارة **أثناء** الصفقة (أدنى قاع للشراء / أعلى قمّة للبيع) من الشمعة
+        التالية للدخول (الدخول عند إغلاق شمعته) حتى شمعة الخروج ضمناً — يغذّي أقصى هبوط بـ`_stats`."""
+        exit_price = closes[exit_i]
+        sgn = 1 if position == "long" else -1
+        span = range(entry_i + 1, exit_i + 1)
+        worst = min((lows[k] for k in span), default=exit_price) if sgn > 0 else max(
+            (highs[k] for k in span), default=exit_price)
+        pnl = sgn * (exit_price - entry_price) / entry_price * 100
+        mae = min(pnl, sgn * (worst - entry_price) / entry_price * 100)
+        t: dict[str, Any] = {
+            "side": position,
+            "entry": entry_price,
+            "exit": exit_price,
+            "pnl_pct": round(pnl, 3),
+            "mae_pct": round(mae, 3),
+            "entry_time": times[entry_i],
+            "exit_time": times[exit_i],
+        }
+        if still_open:
+            t["open"] = True
+        trades.append(t)
 
     for i in range(start_i, len(closes)):
         price = closes[i]
@@ -165,84 +196,29 @@ def run_backtest(
                 signal = "flat"
 
         if signal == "flat" and position != "flat":
-            if position == "long":
-                pnl = (price - entry_price) / entry_price * 100
-            else:
-                pnl = (entry_price - price) / entry_price * 100
-            trades.append(
-                {
-                    "side": position,
-                    "entry": entry_price,
-                    "exit": price,
-                    "pnl_pct": round(pnl, 3),
-                    "entry_time": entry_time,
-                    "exit_time": times[i],
-                }
-            )
+            close_trade(i)
             position = "flat"
         elif signal == "buy" and position != "long":
             if position == "short":
-                pnl = (entry_price - price) / entry_price * 100
-                trades.append(
-                    {
-                        "side": "short",
-                        "entry": entry_price,
-                        "exit": price,
-                        "pnl_pct": round(pnl, 3),
-                        "entry_time": entry_time,
-                        "exit_time": times[i],
-                    }
-                )
+                close_trade(i)
             position = "long"
             entry_price = price
-            entry_time = times[i]
+            entry_i = i
         elif signal == "sell" and position != "short":
             if position == "long":
-                pnl = (price - entry_price) / entry_price * 100
-                trades.append(
-                    {
-                        "side": "long",
-                        "entry": entry_price,
-                        "exit": price,
-                        "pnl_pct": round(pnl, 3),
-                        "entry_time": entry_time,
-                        "exit_time": times[i],
-                    }
-                )
+                close_trade(i)
             position = "short"
             entry_price = price
-            entry_time = times[i]
+            entry_i = i
 
-    if position == "long":
-        pnl = (closes[-1] - entry_price) / entry_price * 100
-        trades.append(
-            {
-                "side": "long",
-                "entry": entry_price,
-                "exit": closes[-1],
-                "pnl_pct": round(pnl, 3),
-                "entry_time": entry_time,
-                "exit_time": times[-1],
-                "open": True,
-            }
-        )
-    elif position == "short":
-        pnl = (entry_price - closes[-1]) / entry_price * 100
-        trades.append(
-            {
-                "side": "short",
-                "entry": entry_price,
-                "exit": closes[-1],
-                "pnl_pct": round(pnl, 3),
-                "entry_time": entry_time,
-                "exit_time": times[-1],
-                "open": True,
-            }
-        )
+    if position != "flat":
+        close_trade(len(closes) - 1, still_open=True)
 
     if spread > 0:
         for t in trades:
-            t["pnl_pct"] = round(t["pnl_pct"] - spread / t["entry"] * 100, 3)
+            cost = spread / t["entry"] * 100
+            t["pnl_pct"] = round(t["pnl_pct"] - cost, 3)
+            t["mae_pct"] = round(t["mae_pct"] - cost, 3)
 
     stats, curve = _stats(trades)
     return {
