@@ -160,6 +160,7 @@ import {
 import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
 import { zigzagWindowSegments } from './zigzagLegs';
 import { nextZigzagDeviation, ZIGZAG_DEVIATION_PCT, zigzagLegendText } from './zigzagLegend';
+import { isCryptoSymbol } from './newsRisk';
 import { loadZigzagDeviation, saveZigzagDeviation, subscribeZigzagDeviation } from './zigzagPrefs';
 import { paneInlineFits, paneValueTooWide } from './paneHeadFit';
 import { noteBox, NOTE_FONT } from './noteLabel';
@@ -1644,6 +1645,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // (`drawingAnchors.ts` `endTime`)، وإلا وقع طرف المستقبل المرسوم على Renko بالماضي على الشموع.
   const sourceEndRef = useRef<number | undefined>(undefined);
   const sourceEndTime = () => sourceEndRef.current;
+  // عطلة نهاية الأسبوع ليست زمن تداول (الفوركس/المعادن/المؤشرات) ⇒ رسم قبل أوّل شمعة محمَّلة يُعدّ بشموع تداول
+  // (`drawingAnchors.ts` `tradingStep`). الكريبتو 24/7 يبقى بالمتوسّط.
+  const weekendClosed = !isCryptoSymbol(series.symbol);
 
   // `selectedInd` = ما اختاره المتداول فعلاً (تُبنى عليه أزرار المؤشرات).
   // `indicators` = ما يُرسم بالفعل: نفسها ناقصَ اللوحات المطويّة لضيق الارتفاع، فيكفي
@@ -2003,10 +2007,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       source.all as { time: number }[],
       timeframeStepSec(series.timeframe),
       synthetic,
-      liveSeries.candles[liveSeries.candles.length - 1]?.time
+      liveSeries.candles[liveSeries.candles.length - 1]?.time,
+      weekendClosed
     );
     if (next !== loadedDrawings) setDrawings(next);
-  }, [drawings, loadedDrawings, source.all, kind, series.timeframe, liveSeries.candles]);
+  }, [drawings, loadedDrawings, source.all, kind, series.timeframe, liveSeries.candles, weekendClosed]);
 
   const publishSyncWindow = useCallback(() => {
     if (syncFollow) return;
@@ -2518,7 +2523,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         sourceRef.current.all as { time: number }[],
         timeframeStepSec(series.timeframe),
         synthetic,
-        sourceEndTime()
+        sourceEndTime(),
+        weekendClosed
       );
     };
     loadDrawings(series.symbol, series.timeframe).then((d) => {
@@ -2604,7 +2610,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         sourceRef.current.all as { time: number }[],
         timeframeStepSec(series.timeframe),
         synthetic,
-        sourceEndTime()
+        sourceEndTime(),
+        weekendClosed
       )
     );
     setSelectedId(null);
@@ -4036,7 +4043,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         return pip ? nudgePipPrice(price, Math.round((moved - price) / pip), pip) : moved;
       },
       (index) =>
-        stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe), sourceEndTime())
+        stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe), sourceEndTime(), weekendClosed)
     );
     pushDrawHistory();
     setDrawings((list) => [...list, next]);
@@ -4101,7 +4108,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       (price) =>
         !steps ? price : pip ? nudgePipPrice(price, steps, pip) : fromScale(toScale(price) + steps * pxScaled),
       (index) =>
-        stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe), sourceEndTime())
+        stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe), sourceEndTime(), weekendClosed)
     );
     if (sameDrawingPlace(d, next)) return 'same';
     if (record) pushDrawHistory();
@@ -4155,11 +4162,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         sourceRef.current.all as { time: number }[],
         index,
         timeframeStepSec(series.timeframe),
-        sourceEndTime()
+        sourceEndTime(),
+        weekendClosed
       );
       return stamp == null ? { index, price } : { index, price, ...stamp };
     },
-    [drawIndex, priceAtY, magnet, series.timeframe, series.symbol, priceDecimalsRef]
+    [drawIndex, priceAtY, magnet, series.timeframe, series.symbol, priceDecimalsRef, weekendClosed]
   );
 
   // طرف `b` لخطّة شراء/بيع: يمين الدخول دائماً (`positionEndIndex`)، مختوماً بزمنه الجديد — وإلا
@@ -4172,11 +4180,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         sourceRef.current.all as { time: number }[],
         index,
         timeframeStepSec(series.timeframe),
-        sourceEndTime()
+        sourceEndTime(),
+        weekendClosed
       );
       return stamp == null ? { index, price: b.price } : { index, price: b.price, ...stamp };
     },
-    [series.timeframe]
+    [series.timeframe, weekendClosed]
   );
 
   const finalizeDrawing = useCallback(
@@ -4792,7 +4801,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             sourceRef.current.all as { time: number }[],
             timeframeStepSec(series.timeframe),
             isSyntheticKind(km),
-            sourceEndTime()
+            sourceEndTime(),
+            weekendClosed
           );
           const next = translateDrawing(
             fromNow!,
@@ -4803,7 +4813,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 sourceRef.current.all as { time: number }[],
                 index,
                 timeframeStepSec(series.timeframe),
-                sourceEndTime()
+                sourceEndTime(),
+                weekendClosed
               )
           );
           if (sameDrawingPlace(selBodyLast.current, next)) return;

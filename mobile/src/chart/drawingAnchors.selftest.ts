@@ -269,4 +269,37 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   assert.equal(in2[0]!.a.index, 1.5);
 }
 
+// نافذة أقصر من أسبوع (M15 بـ180 شمعة) ونقطة قبلها عبر عطلة نهاية الأسبوع: تُعدّ بشموع تداول لا بساعات تقويم.
+{
+  const M15 = 900;
+  // فوركس صيفي: إغلاق الجمعة 21:00 UTC وافتتاح الأحد 21:00 UTC
+  const gen = (step: number, n: number, end: number) => {
+    const out: { time: number }[] = [];
+    for (let t = Math.floor(end / step) * step; out.length < n; t -= step) {
+      const d = new Date(t * 1000);
+      const wd = d.getUTCDay();
+      const h = d.getUTCHours();
+      if (!(wd === 6 || (wd === 5 && h >= 21) || (wd === 0 && h < 21))) out.push({ time: t });
+    }
+    return out.reverse();
+  };
+  const now = Date.UTC(2026, 8, 23, 14) / 1000; // الأربعاء
+  const m15 = gen(M15, 180, now);
+  const h1 = gen(H, 180, now);
+  const thu = Date.UTC(2026, 8, 17, 10) / 1000; // الخميس السابق 10:00
+  const tue = Date.UTC(2026, 8, 22, 10) / 1000;
+  // 35 ساعة حتى إغلاق الجمعة + 20.25 ساعة من افتتاح الأحد حتى أوّل شمعة (الإثنين 17:15) = 221 شمعة M15
+  assert.equal(indexAtTime(m15, thu, M15, undefined, true), -221);
+  assert.equal(indexAtTime(m15, thu, M15), -413, 'بلا الإشارة: السلوك القديم (الكريبتو 24/7)');
+  assert.equal(timeAtIndex(m15, -221, M15, undefined, true), thu);
+  assert.equal(stampAtIndex(m15, -221, M15, undefined, true)!.time, thu);
+  // الخطّ يقطع الشمعة الحيّة بالسعر نفسه على M15 وH1
+  const tl = [line(0, 0, { a: { index: 0, price: 1.1, time: thu }, b: { index: 0, price: 1.11, time: tue } })];
+  const at = (bs: { time: number }[], step: number) => {
+    const d = anchorDrawings(tl, bs, step, false, undefined, true)[0]!;
+    return d.a.price + ((d.b!.price - d.a.price) * (bs.length - 1 - d.a.index)) / (d.b!.index - d.a.index);
+  };
+  assert.ok(Math.abs(at(m15, M15) - at(h1, H)) < 1e-9, `${at(m15, M15)} ≠ ${at(h1, H)}`);
+}
+
 console.log('drawingAnchors.selftest: PASS');

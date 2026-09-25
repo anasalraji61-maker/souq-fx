@@ -39,6 +39,7 @@
  *
  * خالص بلا React: يُفحص بـ`drawingAnchors.selftest.ts`.
  */
+import { forexTimeBeforeTrading, forexTradingSecBetween } from './marketHours';
 import type { ChartPoint, Drawing } from './types';
 
 export type TimeBar = { time: number; srcTime?: number };
@@ -69,7 +70,8 @@ export function timeAtIndex(
   bars: readonly TimeBar[],
   index: number,
   stepSec: number,
-  endTime?: number
+  endTime?: number,
+  weekendClosed = false
 ): number | null {
   const n = bars.length;
   if (!n || !Number.isFinite(index)) return null;
@@ -80,6 +82,8 @@ export function timeAtIndex(
       const k = Math.ceil(-index / wk.bars - 1e-9);
       return timeAtIndex(bars, index + k * wk.bars, stepSec, endTime)! - k * WEEK_SEC;
     }
+    const ts = tradingStep(bars, weekendClosed);
+    if (ts != null) return forexTimeBeforeTrading(barTime(bars[0]), -index * ts);
     return barTime(bars[0]) + index * pastStep(bars, stepSec);
   }
   if (index >= n) return seriesEnd(bars, endTime) + (index - (n - 1)) * stepSec;
@@ -101,6 +105,20 @@ function pastStep(bars: readonly TimeBar[], stepSec: number): number {
   const span = n > 1 ? barTime(bars[n - 1]!) - barTime(bars[0]!) : 0;
   const avg = span / (n - 1);
   return Number.isFinite(avg) && avg > 0 ? avg : stepSec > 0 ? stepSec : 1;
+}
+
+/**
+ * خطوة الخانة قبل أوّل شمعة **بزمن التداول** (`weekendClosed`، الفوركس/المعادن/المؤشرات لا الكريبتو)، على سلسلة
+ * أقصر من أسبوع (M5/M15/M30 بـ180 شمعة) لا يصلها `weekPattern`: `pastStep` يعدّ عطلة نهاية الأسبوع قبل النافذة
+ * ساعاتِ تداول — طرف ترند من الخميس يُعرض على M15 يوم الثلاثاء عند −413 بدل −221 فيقطع الشمعة الحيّة بعيداً
+ * 15–30 pip عمّا يقطعه على H1. هنا متوسّط ثواني التداول للخانة المحمَّلة، والعدّ للخلف يتخطّى العطل.
+ * `null` ⇒ `pastStep` كما كان (لبنات اصطناعية، أو بلا إشارة).
+ */
+function tradingStep(bars: readonly TimeBar[], weekendClosed: boolean): number | null {
+  const n = bars.length;
+  if (!weekendClosed || n < 2 || bars[0]!.srcTime != null) return null;
+  const step = forexTradingSecBetween(barTime(bars[0]!), barTime(bars[n - 1]!)) / (n - 1);
+  return Number.isFinite(step) && step > 0 ? step : null;
 }
 
 const WEEK_SEC = 7 * 86400;
@@ -142,7 +160,8 @@ export function indexAtTime(
   bars: readonly TimeBar[],
   time: number,
   stepSec: number,
-  endTime?: number
+  endTime?: number,
+  weekendClosed = false
 ): number | null {
   const n = bars.length;
   if (!n || !Number.isFinite(time)) return null;
@@ -156,6 +175,8 @@ export function indexAtTime(
       const k = Math.ceil((first - time) / WEEK_SEC - 1e-9);
       return indexAtTime(bars, time + k * WEEK_SEC, stepSec, endTime)! - k * wk.bars;
     }
+    const ts = tradingStep(bars, weekendClosed);
+    if (ts != null) return -Math.round(forexTradingSecBetween(time, first) / ts);
     return Math.round((time - first) / pastStep(bars, stepSec));
   }
   // داخل الشمعة الحيّة (نقطة 10:45 من M15 وهي بدأت 10:00 على H1) ليس مستقبلاً: التقريب كان يرميها لخانة
@@ -197,13 +218,14 @@ export function stampAtIndex(
   bars: readonly TimeBar[],
   index: number,
   stepSec: number,
-  endTime?: number
+  endTime?: number,
+  weekendClosed = false
 ): { time: number; ahead?: number; aheadStep?: number; sub?: number } | null {
   const n = bars.length;
   if (n && Number.isFinite(index) && index > n - 1) {
     return { time: seriesEnd(bars, endTime), ahead: index - (n - 1), aheadStep: stepSec };
   }
-  const time = timeAtIndex(bars, index, stepSec, endTime);
+  const time = timeAtIndex(bars, index, stepSec, endTime, weekendClosed);
   if (time == null) return null;
   if (index >= 0 && bars[Math.floor(index)]?.srcTime != null) {
     const i = Math.floor(index);
@@ -218,13 +240,14 @@ function anchorPoint(
   bars: readonly TimeBar[],
   stepSec: number,
   synthetic: boolean,
-  endTime?: number
+  endTime?: number,
+  weekendClosed = false
 ): ChartPoint {
   if (p.time == null || !Number.isFinite(p.time)) {
-    const stamp = stampAtIndex(bars, p.index, stepSec, endTime);
+    const stamp = stampAtIndex(bars, p.index, stepSec, endTime, weekendClosed);
     return stamp == null ? p : { ...p, ...stamp };
   }
-  const base = indexAtTime(bars, p.time, stepSec, endTime);
+  const base = indexAtTime(bars, p.time, stepSec, endTime, weekendClosed);
   const ahead = p.ahead != null && Number.isFinite(p.ahead) ? p.ahead : 0;
   const aheadStep =
     p.aheadStep != null && Number.isFinite(p.aheadStep) && p.aheadStep > 0 ? p.aheadStep : stepSec;
@@ -270,13 +293,14 @@ export function anchorDrawings(
   bars: readonly TimeBar[],
   stepSec: number,
   synthetic: boolean,
-  endTime?: number
+  endTime?: number,
+  weekendClosed = false
 ): Drawing[] {
   if (!bars.length || !drawings.length) return drawings;
   let changed = false;
   const out = drawings.map((d) => {
-    const a = anchorPoint(d.a, bars, stepSec, synthetic, endTime);
-    const b = d.b ? anchorPoint(d.b, bars, stepSec, synthetic, endTime) : d.b;
+    const a = anchorPoint(d.a, bars, stepSec, synthetic, endTime, weekendClosed);
+    const b = d.b ? anchorPoint(d.b, bars, stepSec, synthetic, endTime, weekendClosed) : d.b;
     if (a === d.a && b === d.b) return d;
     changed = true;
     return b === undefined ? { ...d, a } : { ...d, a, b };

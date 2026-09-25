@@ -335,3 +335,48 @@ export function projectBarTimeSec(symbol: string, lastSec: number, stepSec: numb
   }
   return t;
 }
+
+/**
+ * افتتاح الأسبوع (الأحد 17:00 نيويورك) الأخير عند `sec` أو قبله، وإغلاق الجمعة الذي يليه. زمن داخل عطلة
+ * نهاية الأسبوع ⇒ الأسبوع المنتهي (`close ≤ sec`).
+ */
+function forexWeekAround(sec: number): { open: number; close: number } {
+  const dayStart = Math.floor(sec / DAY_SEC) * DAY_SEC;
+  let sunday = dayStart - new Date(dayStart * 1000).getUTCDay() * DAY_SEC;
+  if (forexSundayOpenSec(sunday) > sec) sunday -= 7 * DAY_SEC;
+  return { open: forexSundayOpenSec(sunday), close: nyFivePmUtcSec(sunday + 5 * DAY_SEC) };
+}
+
+/**
+ * ثواني **التداول** بين `a` و`b` (a ≤ b): المدى ناقص عطل نهاية الأسبوع (الجمعة 17:00 → الأحد 17:00 نيويورك).
+ * لإرساء الرسومات قبل أوّل شمعة محمَّلة (`drawingAnchors.ts`): على M15 (180 شمعة < أسبوع) كانت عطلة 48 ساعة
+ * تُعدّ 192 شمعة. الكريبتو لا يستعملها (يتداول 24/7).
+ */
+export function forexTradingSecBetween(a: number, b: number): number {
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b <= a) return 0;
+  let t = b;
+  let acc = 0;
+  for (let guard = 0; guard < 5000 && t > a; guard++) {
+    const wk = forexWeekAround(t);
+    if (t > wk.close) t = wk.close; // داخل العطلة ⇒ من إغلاق الجمعة
+    if (wk.open <= a) return acc + Math.max(0, t - a);
+    acc += t - wk.open;
+    t = forexWeekAround(wk.open - 1).close;
+  }
+  return acc;
+}
+
+/** الزمن الذي يسبق `from` بـ`sec` ثانية **تداول** (يتخطّى عطل نهاية الأسبوع) — عكس `forexTradingSecBetween`. */
+export function forexTimeBeforeTrading(from: number, sec: number): number {
+  if (!Number.isFinite(from) || !Number.isFinite(sec)) return from;
+  let t = from;
+  let left = Math.max(0, sec);
+  for (let guard = 0; guard < 5000; guard++) {
+    const wk = forexWeekAround(t);
+    if (t > wk.close) t = wk.close;
+    if (t - wk.open >= left) return t - left;
+    left -= t - wk.open;
+    t = forexWeekAround(wk.open - 1).close;
+  }
+  return t - left;
+}
