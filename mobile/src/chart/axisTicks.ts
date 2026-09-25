@@ -101,41 +101,49 @@ export function nicePriceTicks(lo: number, hi: number, maxCount: number, minStep
   return [];
 }
 
-/** مانتيسات «مستديرة» لعلامات المقياس اللوغاريتمي (1، 1.5، 2، 2.5، 3، 4، 5، 6، 8 × 10^k). */
-const LOG_MANTISSAS = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+/**
+ * مانتيسات علامات المقياس اللوغاريتمي بدرجات استدارة: الأعلى استدارةً يُوضع أولاً، والأدقّ يملأ الفراغ بعده.
+ */
+const LOG_LADDERS: readonly (readonly number[])[] = [
+  [1],
+  [2, 5],
+  [1.5, 2.5, 3, 4, 6, 8],
+  [1.2, 1.4, 1.6, 1.8, 2.2, 3.5, 4.5, 7, 9],
+];
 
 /**
  * علامات السعر على المقياس **اللوغاريتمي**: `nicePriceTicks` تعطي أسعاراً متساوية الخطوة، وعلى محور لوغاريتمي
  * تتكدّس بأعلاه — الذهب الشهري 250..4000 كان 1000/2000/3000/4000 عند ~50/75/90/100% من الارتفاع، ونصف
- * المحور السفلي بلا سعر. هنا المواضع متساوية **بالسجلّ** (منتصف كل خانة من `maxCount`) وكل سعر يُلتقط لأقرب
- * مانتيسا مستديرة (250، 400، 600، 1000، 1500، 2500…) كـTradingView. مدى أضيق من ضعفين ⇒ `nicePriceTicks`
- * (اللوغاريتمي شبه خطّي هناك وخطواته أنظف). مدى غير موجب ⇒ `nicePriceTicks` أيضاً.
+ * المحور السفلي بلا سعر. مدى أضيق من ضعفين ⇒ `nicePriceTicks` (اللوغاريتمي شبه خطّي هناك وخطواته أنظف).
+ * مدى غير موجب ⇒ `nicePriceTicks` أيضاً.
+ *
+ * الأسعار من سلّم مانتيسات (`LOG_LADDERS`): الأكثر استدارة أولاً (100، ثم 200/500، ثم 150/300…، ثم 120/140…)،
+ * وكل سعر يُقبل إن بعُد عن كل ما قُبل بـ70% من خانة (`(ln hi − ln lo) / maxCount`). كان كل موضع متساوٍ بالسجلّ
+ * يُلتقط لأقرب مانتيسا من سلّم واحد خشن فتنطبق خانات متجاورة على السعر نفسه: USDJPY الشهري 75.5..161.9 كان
+ * 80/100/150 فقط (نصف المحور بلا سعر) و1.05..2.4 «1.5، 2» — أقلّ من المحور الخطّي على المدى نفسه.
  */
 export function niceLogPriceTicks(lo: number, hi: number, maxCount: number, minStep: number): number[] {
   if (!(lo > 0) || !Number.isFinite(hi) || hi / lo < 2) return nicePriceTicks(lo, hi, maxCount, minStep);
   const cap = Math.max(1, Math.floor(Number.isFinite(maxCount) ? maxCount : 1));
   const floorStep = Number.isFinite(minStep) && minStep > 0 ? minStep : 0;
   const places = floorStep > 0 ? Math.max(0, Math.round(-Math.log10(floorStep))) : 10;
-  const a = Math.log(lo);
-  const b = Math.log(hi);
-  const out: number[] = [];
-  for (let i = 0; i < cap; i++) {
-    const target = a + ((i + 0.5) / cap) * (b - a);
-    const k = Math.floor(target / Math.LN10);
-    let best = Number.NaN;
-    let bestD = Number.POSITIVE_INFINITY;
-    for (const m of LOG_MANTISSAS) {
-      const v = Number((m * Math.pow(10, k)).toFixed(Math.min(20, places)));
-      if (!(v > 0)) continue;
-      const d = Math.abs(Math.log(v) - target);
-      if (d < bestD) {
-        bestD = d;
-        best = v;
+  const minGap = (0.7 * (Math.log(hi) - Math.log(lo))) / cap;
+  const k0 = Math.floor(Math.log10(lo)) - 1;
+  const k1 = Math.ceil(Math.log10(hi));
+  const kept: number[] = [];
+  for (const ladder of LOG_LADDERS) {
+    for (let k = k0; k <= k1 && kept.length < cap; k++) {
+      for (const m of ladder) {
+        if (kept.length >= cap) break;
+        const v = Number((m * Math.pow(10, k)).toFixed(Math.min(20, places)));
+        if (!(v > 0) || v < lo || v > hi) continue;
+        const lv = Math.log(v);
+        if (kept.some((x) => Math.abs(Math.log(x) - lv) < minGap)) continue;
+        kept.push(v);
       }
     }
-    if (Number.isFinite(best) && best >= lo && best <= hi && out[out.length - 1] !== best) out.push(best);
   }
-  return out;
+  return kept.sort((x, y) => x - y);
 }
 
 /**

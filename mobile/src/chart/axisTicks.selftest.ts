@@ -314,6 +314,10 @@ console.log('axisTicks.selftest: PASS');
   // أسعار صغيرة (عملة رقمية رخيصة): منازل الخطوة الدنيا محترمة
   const small = niceLogPriceTicks(0.0001, 0.01, 5, 0.000001);
   assert.ok(small.length >= 3 && small.every((p) => p >= 0.0001 && p <= 0.01), `small: ${small}`);
+  // مدى 2–3 أضعاف: خانات متجاورة كانت تنطبق على السعر نفسه ⇒ USDJPY الشهري 75.5..161.9 ثلاث علامات فقط
+  const jpy = niceLogPriceTicks(75.5, 161.9, 7, 0.001);
+  assert.ok(jpy.length >= nicePriceTicks(75.5, 161.9, 7, 0.001).length, `jpy log ≥ linear: ${jpy}`);
+  assert.ok(niceLogPriceTicks(1.05, 2.4, 7, 0.00001).length >= 4, 'narrow log range keeps labels');
   console.log('niceLogPriceTicks PASS');
 }
 
