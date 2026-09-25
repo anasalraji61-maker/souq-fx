@@ -99,10 +99,18 @@ async def run_forever() -> None:
             await asyncio.sleep(8)
 
 
+# عمر أقصى لسعر يُعدّ «حيّاً» بالحالة (نفس نافذة تنبيهات الـworker `snapshot(max_age=180)`)
+LIVE_MAX_AGE = 180.0
+
+
 def status() -> dict:
+    # كان `symbols_live` = كل رمز وصل سعره يوماً — حتى بعد انقطاع الـWS بساعات. الآن ما وصل خلال
+    # `LIVE_MAX_AGE` فقط، والباقي بـ`symbols_stale`.
+    live = snapshot(max_age=LIVE_MAX_AGE)
     return {
         "connected": _connected,
-        "symbols_live": list(LATEST.keys()),
+        "symbols_live": list(live.keys()),
+        "symbols_stale": [s for s in LATEST if s not in live],
         "last_error": _last_error,
         "has_key": bool(_ws_key()),
     }
@@ -124,3 +132,8 @@ def recent_snapshot(window: float = 120.0) -> tuple[dict[str, float], float | No
         return dict(LATEST), None
     newest = max(LATEST_AT.values())
     return {s: p for s, p in LATEST.items() if LATEST_AT.get(s, 0.0) >= newest - window}, newest
+
+
+def received_at(symbols: list[str] | dict[str, float]) -> dict[str, float | None]:
+    """وقت استلام كل رمز على حدة — `as_of` الدفعة وقت **أحدثها**، فسعرٌ أقدم منه بدقيقتين كان يحمل وقت غيره."""
+    return {s: LATEST_AT.get(s) for s in symbols}

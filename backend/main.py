@@ -1892,6 +1892,8 @@ async def ticks(ws: WebSocket):
                 payload = {
                     "ts": time.time(),
                     "ticks": live,
+                    # وقت استلام كل تيك (قد يسبق `as_of` بحتى دقيقتين) — لا يرث وقت أحدث رمز
+                    "ticks_at": td_ws.received_at(live),
                     "source": "twelvedata_ws",
                     # وقت الاستلام الحقيقي لا «الآن»: سعر مجمَّد (انقطاع/عطلة) كان يظهر بشارة «حي»
                     "data_source": {
