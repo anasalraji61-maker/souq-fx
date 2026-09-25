@@ -559,6 +559,8 @@ const PRICE_TAG_H = 18;
 const TAG_CLEAR_GAP = 2;
 /** ارتفاع وسمَي أعلى/أدنى سعر بالنافذة المرئيّة. */
 const HILO_LABEL_H = 14;
+/** عرض محرف وسم القمّة/القاع (`hiLoText` 11px أحادي المسافة). */
+const HILO_CHAR_W = 6.8;
 /** سطر OHLC التقاطع أعلى اللوح بالوضع المدمج (`denseOhlc`). */
 const DENSE_OHLC_LINE_H = 12;
 /** سطر عدّاد إغلاق الشمعة تحت سعر الوسم الحيّ. */
@@ -7593,7 +7595,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 const y = yP(m.price);
                 if (!(y >= 0 && y <= laneBot)) return null;
                 const text = fmtPrice(m.price);
-                const w = text.length * 5.6 + 12;
+                // 11px أحادي المسافة ≈ 0.62em = 6.8px للمحرف (كان 5.6 لخطّ 9px).
+                const w = text.length * HILO_CHAR_W + 12;
                 const x = xOf(m.index);
                 const top = Math.max(0, Math.min(laneBot - HILO_LABEL_H, y - HILO_LABEL_H / 2));
                 return (
@@ -9675,7 +9678,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             hitSlop={8}
             accessibilityLabel={priceManual ? tr.mcAutoManualA11y : tr.mcAutoA11y}
           >
-            {/* «AUTO» بالإنجليزية فقط؛ «تلقائي»/«خۆکار» بخطّ 8 تُقرأ نقاطاً على الهاتف ⇒ 10 للعربية والكردية. */}
+            {/* «AUTO» بالإنجليزية فقط؛ «تلقائي»/«خۆکار» بخطّ 8 كانت تُقرأ نقاطاً على الهاتف ⇒ 11 للجميع. */}
             <Text
               style={[
                 styles.axisCornerText,
@@ -13126,7 +13129,7 @@ const styles = StyleSheet.create({
   },
   lensOn: { backgroundColor: colors.selectedFill },
   lensTitle: { color: colors.text, fontWeight: '500', fontSize: 11, textAlign: 'right' },
-  lensHint: { color: colors.textDim, fontSize: 9, textAlign: 'right', marginTop: 4 },
+  lensHint: { color: colors.textDim, fontSize: 11, textAlign: 'right', marginTop: 4 },
   readout: {
     flexDirection: 'row-reverse',
     justifyContent: 'space-between',
@@ -13213,8 +13216,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 4,
     left: 4,
-    fontSize: 9,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '500',
     opacity: 0.8,
   },
   dayBreak: {
@@ -13278,7 +13281,7 @@ const styles = StyleSheet.create({
   hiLoText: {
     ...numeric,
     color: colors.textMuted,
-    fontSize: 9,
+    fontSize: 11,
     lineHeight: HILO_LABEL_H,
     fontWeight: '600',
     fontFamily: 'monospace',
@@ -13357,8 +13360,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  axisCornerText: { color: colors.textMuted, fontSize: 8, fontWeight: '500' },
-  axisCornerTextScript: { fontSize: 10, fontWeight: '500' },
+  // DESIGN-PRO §2 — 11px (كان 8 للاتينية و10 للعربية/الكردية)؛ الزاوية 68×48 تتّسع لـ«تلقائي».
+  axisCornerText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
+  axisCornerTextScript: { fontSize: 11, fontWeight: '500' },
   // يدوي ⇒ تعبئة محايدة ونصّ أفتح (كان تأكيداً ممتلئاً على المحور وقت السكون — §1).
   axisCornerManual: { backgroundColor: colors.selectedFill },
   axisCornerTextManual: { color: colors.text },
