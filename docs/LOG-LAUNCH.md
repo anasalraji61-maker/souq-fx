@@ -3984,7 +3984,7 @@ commit. **لم يُشغَّل التطبيق.** الكردي بالنصوص ال
    `priceAmbiguousThousandsHint` تصحّ لـ2650/2.65 على الذهب.
 2. **الجرد** (`3f337a2`): صفوف محرّك الشارت (محور Log، شمعة الفجوة)، الرباعي، الباكتست، الحاسبة، الدفتر (مع ذكر أنّ الرصيف المدمج ما زال يكرّر التحذير حتى tools92).
 3. **تسمية إجراء المزامنة** (`f06dba0`، ar/en/ku): `cfSyncActivateA11yPrefix` كان «تفعيل مزامنة شارت GBPUSD» — لكنّه لا يظهر إلا والمزامنة
-   مفعّلة (`TerminalScreen.tsx:598` يعيد `onSyncActivate: undefined` بلاها؛ `QuadChartModal.tsx:267` `following = syncTime && !isLeader`)
+   مفعّلة (`TerminalScreen.tsx:603` يعيد `onSyncActivate: undefined` بلاها؛ `QuadChartModal.tsx:267` `following = syncTime && !isLeader`)
    وأثره `setSyncLeaderId`/`setLeader` ⇒ الآن «اجعله قائد الزمن: GBPUSD» / «Make time leader: GBPUSD» / «بیکە بە سەرکردەی کات: GBPUSD»، بكلمة
    الشارة الظاهرة نفسها («قائد الزمن»). المستهلكون: `ChartFrame.tsx:303,339`، `QuadChartModal.tsx:306,325` — الاسم لم يتغيّر فلا عمل على chart/ui.
    حدّثتُ RELEASE 411 و617.
