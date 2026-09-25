@@ -214,6 +214,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
               ]}
               onPress={() => toggle(opt.id)}
               accessibilityLabel={`${opt.label} · ${on ? t.enabledWord : t.disabledWord}`}
+              accessibilityState={{ selected: on }}
             >
               <Text style={[styles.chipText, on && styles.chipTextOn]}>{opt.label}</Text>
             </Pressable>
