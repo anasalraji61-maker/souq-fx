@@ -71,6 +71,16 @@ assert.equal(projectBarTimeSec('BTCUSD', s(at(2026, 0, 16, 20)), H, 2), s(at(202
 assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 0, 12, 0)), 7 * 86400, 1), s(at(2026, 0, 19, 0)));
 assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 0, 16, 20)), H, 0), s(at(2026, 0, 16, 20)));
 
+// كسر ICE بمنطقة المستقبل: DXY صيفاً 21:00–00:00 UTC، برنت 22:00–00:00 UTC — لا خانات شموع فيه
+assert.equal(projectBarTimeSec('DXY', s(at(2026, 6, 15, 20)), H, 1), s(at(2026, 6, 16, 0)));
+assert.equal(projectBarTimeSec('DXY', s(at(2026, 6, 15, 20)), H, 2), s(at(2026, 6, 16, 1)));
+assert.equal(projectBarTimeSec('UKOIL', s(at(2026, 6, 15, 21)), H, 1), s(at(2026, 6, 16, 0)));
+// عطلة الأسبوع: DXY يفتح الأحد 20:00 نيويورك، برنت الأحد 23:00 لندن
+assert.equal(projectBarTimeSec('DXY', s(at(2026, 6, 17, 20)), H, 1), s(at(2026, 6, 20, 0)));
+assert.equal(projectBarTimeSec('UKOIL', s(at(2026, 6, 17, 20)), H, 1), s(at(2026, 6, 19, 22)));
+// اليورو دولار بالساعة نفسها لا يتأثّر
+assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 6, 15, 20)), H, 1), s(at(2026, 6, 15, 21)));
+
 // عطل الفوركس: 25/12/2026 خميس→جمعة ⇒ من مساء الخميس حتى افتتاح الأحد 27؛ 1/1/2026 خميس
 assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 11, 24, 21)), H, 1), s(at(2026, 11, 27, 22)));
 assert.equal(projectBarTimeSec('EURUSD', s(at(2026, 11, 24, 0)), 86400, 1), s(at(2026, 11, 28, 0)));

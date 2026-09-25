@@ -69,7 +69,7 @@ export function isForexMarketOpen(symbol: string, now: Date = new Date()): boole
  * عقود ICE (مرجع أسعار الوسطاء لهذين الرمزين): كانت «مفتوح» وقت كسرها اليومي بلا تسعير.
  * - مؤشر الدولار (DX): 20:00–17:00 نيويورك ⇒ كسر 17:00–20:00 (ومنه افتتاح الأحد 20:00).
  * - برنت (ICE Futures Europe): 01:00–23:00 لندن ⇒ كسر 23:00–01:00 (الاثنين–الخميس)؛ الأسبوع يفتح الأحد 23:00 لندن.
- * إغلاق الجمعة يبقى 17:00 نيويورك كبقية الرموز. خارج `nextForexOpenSec` (منطقة المستقبل) — تبسيط.
+ * إغلاق الجمعة يبقى 17:00 نيويورك كبقية الرموز. منطقة المستقبل تتخطّى الكسر أيضاً (`nextForexOpenSec`).
  */
 const DXY_RE = /^(DXY|USDX|USDINDEX)/i;
 const BRENT_RE = /^(UKOIL|UKBRENT|BRENT|XBR)/i;
@@ -92,20 +92,29 @@ function londonElevenPmUtcSec(dayStartSec: number): number {
 }
 
 function inIceDailyBreak(sym: string, sec: number): boolean {
+  return iceBreakEndSec(sym, sec) != null;
+}
+
+/** نهاية كسر ICE الذي يقع فيه `sec` (ثوانٍ UTC)، أو null خارج الكسر / لغير DXY وبرنت. */
+function iceBreakEndSec(sym: string, sec: number): number | null {
   const dayStart = Math.floor(sec / DAY_SEC) * DAY_SEC;
   // النافذة قد تعبر منتصف ليل UTC ⇒ يُفحص يوم UTC الحالي والسابق.
-  const inWindow = (startOf: (d: number) => number, len: number, skipSunday = false) =>
-    [dayStart, dayStart - DAY_SEC].some(
-      (d) =>
-        !(skipSunday && new Date(d * 1000).getUTCDay() === 0) && sec >= startOf(d) && sec < startOf(d) + len
-    );
-  if (DXY_RE.test(sym)) return inWindow(nyFivePmUtcSec, 3 * 3600);
+  const windowEnd = (startOf: (d: number) => number, len: number, skipSunday = false): number | null => {
+    for (const d of [dayStart, dayStart - DAY_SEC]) {
+      if (skipSunday && new Date(d * 1000).getUTCDay() === 0) continue;
+      if (sec >= startOf(d) && sec < startOf(d) + len) return startOf(d) + len;
+    }
+    return null;
+  };
+  if (DXY_RE.test(sym)) return windowEnd(nyFivePmUtcSec, 3 * 3600);
   if (BRENT_RE.test(sym)) {
     // جلسة الاثنين تبدأ الأحد 23:00 لندن: قبلها مغلق، وليلة الأحد ليست كسراً.
-    if (new Date(dayStart * 1000).getUTCDay() === 0 && sec < londonElevenPmUtcSec(dayStart)) return true;
-    return inWindow(londonElevenPmUtcSec, 2 * 3600, true);
+    if (new Date(dayStart * 1000).getUTCDay() === 0 && sec < londonElevenPmUtcSec(dayStart)) {
+      return londonElevenPmUtcSec(dayStart);
+    }
+    return windowEnd(londonElevenPmUtcSec, 2 * 3600, true);
   }
-  return false;
+  return null;
 }
 
 /** داخل ساعة كسر المعادن اليومي (17:00–18:00 نيويورك)؟ */
@@ -214,12 +223,17 @@ export function isLateOpenSymbol(symbol: string | null | undefined): boolean {
 
 /**
  * أوّل لحظة تداول عند `sec` أو بعده (يتخطّى عطلة نهاية الأسبوع وجلستَي 25/12 و1/1، ولو تتابعتا).
- * `lateOpen`: افتتاح الأحد بعد ساعة (المعادن).
+ * رمز CME (`LATE_OPEN_RE`): افتتاح الأحد بعد ساعة وكسر يومي ساعة. DXY/برنت: كسر ICE اليومي
+ * (`iceBreakEndSec`) — كانت منطقة المستقبل ترسم خانات شموع DXY 17:00–20:00 نيويورك ولا شموع لها،
+ * فيقرأ التقاطع يمين آخر شمعة وقتاً أبكر من الحقيقي بثلاث ساعات لكل ليلة.
  */
-function nextForexOpenSec(sec: number, lateOpen = false): number {
+function nextForexOpenSec(sec: number, symbol = ''): number {
+  const sym = symbol.trim();
+  const lateOpen = LATE_OPEN_RE.test(sym);
   let t = sec;
-  for (let guard = 0; guard < 4; guard++) {
+  for (let guard = 0; guard < 6; guard++) {
     const dayStart = Math.floor(t / DAY_SEC) * DAY_SEC;
+    const iceEnd = iceBreakEndSec(sym, t);
     if (inForexWeekend(t)) {
       const dow = new Date(dayStart * 1000).getUTCDay();
       t = forexSundayOpenSec(dayStart + ((7 - dow) % 7) * DAY_SEC) + (lateOpen ? 3600 : 0);
@@ -232,6 +246,8 @@ function nextForexOpenSec(sec: number, lateOpen = false): number {
     } else if (lateOpen && inMetalsDailyBreak(t)) {
       // كسر CME اليومي: لا شمعة 17:00 نيويورك بالذهب/المؤشرات أيام الأسبوع
       t = nyFivePmUtcSec(dayStart) + 3600;
+    } else if (iceEnd != null) {
+      t = iceEnd;
     } else if (isForexHolidaySession(t)) {
       // نهاية الجلسة: 17:00 نيويورك التالية (المعادن 18:00 — `isForexMarketOpen`)
       const today = nyFivePmUtcSec(dayStart);
@@ -270,7 +286,7 @@ export function projectBarTimeSec(symbol: string, lastSec: number, stepSec: numb
       while (forexDailyClosed(t)) t += DAY_SEC;
       continue;
     }
-    const open = nextForexOpenSec(t, LATE_OPEN_RE.test(symbol.trim()));
+    const open = nextForexOpenSec(t, symbol);
     if (open === t) continue;
     // بداية الشمعة التي تحتوي الافتتاح على شبكة الفريم
     const bar = Math.floor(open / stepSec) * stepSec;
