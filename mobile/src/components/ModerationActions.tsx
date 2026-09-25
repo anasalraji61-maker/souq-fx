@@ -76,7 +76,7 @@ export function ModerationActions({
     setBusy(true);
     try {
       await block(author);
-      onResult(t.modBlocked.replace('{user}', author), false);
+      onResult(t.modBlocked.replace('{user}', () => author), false);
     } finally {
       if (mountedRef.current) setBusy(false);
     }
@@ -114,13 +114,13 @@ export function ModerationActions({
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ disabled: busy }}
-            accessibilityLabel={t.modBlockUser.replace('{user}', author)}
+            accessibilityLabel={t.modBlockUser.replace('{user}', () => author)}
             disabled={busy}
             onPress={doBlock}
             style={(s) => [styles.chip, styles.blockChip, busy && styles.chipDisabled, pressed(s)]}
           >
             <Text style={[styles.chipText, styles.blockText]} numberOfLines={1}>
-              {t.modBlockUser.replace('{user}', author)}
+              {t.modBlockUser.replace('{user}', () => author)}
             </Text>
           </Pressable>
         ) : null}
