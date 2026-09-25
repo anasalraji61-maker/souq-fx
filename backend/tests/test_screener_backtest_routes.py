@@ -396,7 +396,7 @@ def test_backtest_ignores_the_candle_still_forming(client, monkeypatch):
         market, "fetch_time_series_with_meta",
         lambda sym, tf, outputsize=180: (cs, {"kind": "provider", "as_of": now}),
     )
-    r = client.post("/api/backtest", json={"symbol": "EURUSD", "timeframe": "15m", "strategy": "ma_cross"}).json()
+    r = client.post("/api/backtest", json={"symbol": "BTCUSD", "timeframe": "15m", "strategy": "ma_cross"}).json()  # 24/7: لا قصّ `bar_end` بعد إغلاق الجمعة
     assert r["forming_bar_excluded"] is True, r
     assert r["trades"], "fixture candles must produce trades"
     times = {t["exit_time"] for t in r["trades"]} | {t["entry_time"] for t in r["trades"]}

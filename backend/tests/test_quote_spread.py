@@ -154,7 +154,9 @@ def _fallback_series(monkeypatch, candle_time: int, fetched: float):
         )
 
     monkeypatch.setattr(main, "build_series", build)
-    return TestClient(main.app).get("/api/market/quote/GBPUSD").json()
+    # BTCUSD (24/7، بلا قصّ `bar_end` عند إغلاق الجمعة): موضوع هذه الاختبارات الشمعة الجارية/وقت الجلب لا العطلة —
+    # بزوج فوركس كانت تفشل بعد الجمعة 17:00 نيويورك (الشمعة «انتهت» فعلاً بالإغلاق). العطلة: `test_weekly_close.py`.
+    return TestClient(main.app).get("/api/market/quote/BTCUSD").json()
 
 
 def test_weekend_candle_fallback_is_dated_friday_not_now(monkeypatch):
@@ -288,7 +290,7 @@ def test_quote_network_error_falls_back_to_the_real_candle_not_500(monkeypatch):
         )
 
     monkeypatch.setattr(main, "build_series", build)
-    r = TestClient(main.app).get("/api/market/quote/EURUSD")
+    r = TestClient(main.app).get("/api/market/quote/BTCUSD")  # 24/7: راجع `_fallback_series`
     assert r.status_code == 200
     body = r.json()
     assert body["price"] == pytest.approx(1.1) and body["data_kind"] == "cache"
