@@ -2995,3 +2995,35 @@ ar/ku «5% ≈540.0 pip»، en «pips»، GER40 «≈925.00» بلا وحدة �
 
 **خارج نطاقي ويستحقّ عملاً**: القائم (التشغيلة 83) + `matrix_advice` (ui، 93) + `npx expo install --fix` (أنس) + `as_of` (backend) + إرسال الأعطال (أنس).
 **يحتاج جهازاً**: الخطوات 322–378؛ أهمّها 364/374 (مقياس «%» ووسم التقاطع ثلاثي الأسطر على 360px) و376 (BTCUSDm مع خادم حيّ).
+
+## 2026-09-25 — التشغيلة 102
+
+أوّلاً `COORDINATION.md` (دورة QA 48): صفّان منفَّذهما launch — **أُنجزا كلاهما** (البند 1). `bash scripts/qa-build-check.sh` **أخضر بصفر أخطاء قبل كل
+commit**. **لم يُشغَّل التطبيق.**
+
+1. **مفاتيح مطلوبة** (`b48ff08`، ar/en/ku؛ en-GB يرث):
+   - **chart-r34 ← launch**: `mcLockDrawing` «قفل»/«Lock»/«قوفڵ»، `mcUnlockDrawing`، `mcLockDrawingA11y`، `mcDrawingLockedHint` — بصياغة الطلب حرفياً؛
+     الكردي بـ«کێشراو» كباقي نصوص الرسم. **جاهزة لـchart**.
+   - **ui1 ← launch**: `accReplayTour` «↺ أعد الجولة الترحيبية» و`accReplayTourA11y`. الكردي صار «↺ گەشتی ناساندن دووبارە ببینەوە» (فعل أمر كزرّ، بدل
+     المصدر «دووبارە بینینی…»). **ui** يستبدل `REPLAY_TOUR_COPY` (`AccountScreen.tsx:36`) بها.
+   - `confidenceLabel` حُذف من الأربع (لا مستعمل بعد `e773a2b`، طلب ui1) مع تعليقه.
+2. **مفاتيح عقود backend-r1** (`b3a9ba4`، ar/en/ku، غير موصولة): `calendarUnavailable` (لا تلوم الفلتر، «لا يعني أنه لا أخبار اليوم»، 5 دقائق =
+   `RELOAD_MS` بـ`CalendarPanel`)، `originUnavailableProvider` `{symbol}` (DXY)، `sigLevelsUnavailableNoPrice`/`FewCandles`/`Neutral` (قيم
+   `levels_basis.unavailable` الثلاث، تحقّقتُ بـ`signal_hub.py:118-122`)، `journalStatBreakeven`، `journalShownOfTotal`، `journalLoadOlder`، `journalSizeUnknown`.
+3. **التوثيق بعد backend-r1** (`2477171`): `FEATURE-INVENTORY` — التقويم بلا عيّنة، الوقف/الهدف 1.4×/2.2× ATR14 (قرأتُ `SL_ATR_MULT`)، الإجماع/المحللون
+   بلا رقم معروض، الدفتر (409/`null`/التعادل/الترقيم — والواجهة لم تتبع)، برنت `XBR/USD`، DXY غير متاح. `RELEASE-MOBILE` خطوة 377 (الحجم `null` الآن)
+   و**379–383** (برنت حيّ، DXY بلا سعر — `isRealQuote` يرفض null فلا انهيار، تحقّقتُ بكل مستهلكي `marketQuote`؛ التقويم الفاشل؛ إغلاق من جهازين؛ التعادل
+   بفلتر الرمز يُحسب محلياً خسارة).
+4. **تراجع أمان وجدتُه** (`8dd5570`): بعد `88171f9` يرسل الخادم `{events: [], status: "unavailable"}` عند فشل المصدر، و`calendarFetchEvents`
+   (`chart/newsRisk.ts:509`) يعدّ المصفوفة الفارغة نجاحاً ⇒ **شريط «خبر قوي قريب» يصمت** بلا «تعذّر تحميل التقويم» ويمسح المحفوظ. **صفّ launch102 جديد
+   لـchart (عاجل، الإصلاح سطر) + ui** (`CalendarPanel`). ⛔ بـ`RELEASE-MOBILE` خطوة 381، وتنبيه بـ`STORE-LISTING.md`: جملة «If the calendar can't load,
+   it says so» غير صحيحة حتى الإصلاح.
+
+### ردّ على COORDINATION
+- **chart-r34 (مفاتيح القفل)**: أُنجز (البند 1) — QA يتحقّق ويزيل الصفّ.
+- **ui1 (`accReplayTour` + `confidenceLabel`)**: أُنجز (البند 1). ويُغلق معه طلبي القديم launch67 من جهتي (الزرّ موجود بـ`AccountScreen` الآن).
+- **جديد launch102 ← chart + ui**: البند 4.
+- **backend-r1 (عقود)**: المفاتيح جاهزة للوصل من tools (الدفتر) وchart/ui (DXY، الإشارات، التقويم).
+- صفوفي القائمة (`a11yBusy`، «₴»، `matrix_advice`/`WeeklyReportPanel`) ملفات **ui** بحسب قاعدة المالكين — بلا تغيير. launch73 (ترخيص البيانات) ← أنس.
+
+**يحتاج جهازاً**: الخطوات 322–383؛ أهمّها 381 (بعد إصلاح chart) و380 (DXY بلا سعر).
