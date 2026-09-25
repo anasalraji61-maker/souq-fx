@@ -7,22 +7,26 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
-  LEGEND_CHIP_W,
   LEGEND_MAX_CHIPS,
   LEGEND_MORE_W,
   DIRECTIONAL_OVERLAYS,
   PRICE_OVERLAYS,
   PRICE_OVERLAY_ORDER,
   activePriceOverlays,
-  legendCapacity,
   legendChipWidth,
   legendBandAt,
   legendMultiAt,
   legendValueAt,
-  planPriceLegend,
   planPriceLegendForWidth,
   resolveColorExpr,
 } from './priceLegend';
+
+// المخطِّط الحيّ `planPriceLegendForWidth`: عرض يكفي كل شيء، وعرض يكفي أوّل `n` شارات بالضبط (+«+ن»)
+const WIDE = 10_000;
+const widthForFirst = (ids: readonly string[], n: number): number =>
+  activePriceOverlays(ids)
+    .slice(0, n)
+    .reduce((w, c) => w + legendChipWidth(c), 0) + LEGEND_MORE_W;
 
 // ١) الترتيب هو الأولوية: الشائع أولاً، والقصّ يقع على النادر لا على الشائع
 {
@@ -30,63 +34,52 @@ import {
   assert.ok(PRICE_OVERLAY_ORDER.indexOf('bb') < PRICE_OVERLAY_ORDER.indexOf('vidya'));
   assert.ok(PRICE_OVERLAY_ORDER.indexOf('ema21') < PRICE_OVERLAY_ORDER.indexOf('trima'));
   // مفعَّل بترتيب مبعثر ← المعروض بترتيب الأولوية لا بترتيب الإدخال
-  const plan = planPriceLegend(['vidya', 'sma50', 'trima', 'ema21'], 2);
+  const ids = ['vidya', 'sma50', 'trima', 'ema21'];
+  const plan = planPriceLegendForWidth(ids, widthForFirst(ids, 2));
   assert.deepEqual(plan.chips.map((c) => c.id), ['sma50', 'ema21']);
   assert.equal(plan.more, 2);
 }
 
 // ٢) مؤشرات اللوحات المستقلّة لا تدخل مفتاح السعر ولا تُحسب ضمن «+ن»
 {
-  const plan = planPriceLegend(['rsi', 'macd', 'stoch', 'adx', 'sma20'], 6);
+  const plan = planPriceLegendForWidth(['rsi', 'macd', 'stoch', 'adx', 'sma20'], WIDE);
   assert.deepEqual(plan.chips.map((c) => c.id), ['sma20']);
   assert.equal(plan.more, 0);
 }
 
 // ٣) التكرار بقائمة المؤشرات لا يُنتج شارتين
 {
-  const plan = planPriceLegend(['sma20', 'sma20', 'sma20'], 6);
+  const plan = planPriceLegendForWidth(['sma20', 'sma20', 'sma20'], WIDE);
   assert.equal(plan.chips.length, 1);
   assert.equal(plan.more, 0);
 }
 
 // ٤) لا مؤشرات ← لا مفتاح أصلاً (لا صندوق فارغ فوق الشموع)
 {
-  const plan = planPriceLegend([], 6);
+  const plan = planPriceLegendForWidth([], WIDE);
   assert.equal(plan.chips.length, 0);
   assert.equal(plan.more, 0);
 }
 
-// ٥) «+ن» تحفظ كل ما لم يتّسع — لا إخفاء صامت بأيّ حال
+// ٥) «+ن» تحفظ كل ما لم يتّسع — لا إخفاء صامت بأيّ عرض، ولا أكثر من السقف مهما اتّسع
 {
   const active = ['sma20', 'sma50', 'ema21', 'bb', 'vwap', 'psar', 'wma20', 'hma20'];
-  for (const cap of [0, 1, 3, 5, 8, 20]) {
-    const plan = planPriceLegend(active, cap);
-    assert.equal(plan.chips.length + plan.more, active.length, `cap=${cap}`);
-    assert.ok(plan.chips.length <= cap || cap < 0, `cap=${cap}`);
+  for (const w of [0, -5, Number.NaN, 60, 150, 300, 600, WIDE]) {
+    const plan = planPriceLegendForWidth(active, w);
+    assert.equal(plan.chips.length + plan.more, active.length, `w=${w}`);
+    assert.ok(plan.chips.length <= LEGEND_MAX_CHIPS, `w=${w}`);
   }
-  // حدّ صفر: لا شارات، والعدد كامل بـ«+ن»
-  const zero = planPriceLegend(active, 0);
+  // عرض صفر: لا شارات، والعدد كامل بـ«+ن»
+  const zero = planPriceLegendForWidth(active, 0);
   assert.equal(zero.chips.length, 0);
   assert.equal(zero.more, active.length);
-}
-
-// ٦) سعة العرض: تتزايد مع العرض، محدودة بسقف ثابت، وصفر عند عرض فاسد
-{
-  assert.equal(legendCapacity(0), 0);
-  assert.equal(legendCapacity(-100), 0);
-  assert.equal(legendCapacity(Number.NaN), 0);
-  assert.equal(legendCapacity(LEGEND_CHIP_W - 1), 0);
-  assert.equal(legendCapacity(LEGEND_CHIP_W), 1);
-  assert.equal(legendCapacity(LEGEND_CHIP_W * 3), 3);
-  assert.equal(legendCapacity(LEGEND_CHIP_W * 100), LEGEND_MAX_CHIPS);
+  // يتزايد مع العرض
   let prev = -1;
   for (const w of [0, 60, 120, 200, 300, 400, 900]) {
-    const c = legendCapacity(w);
+    const c = planPriceLegendForWidth(active, w).chips.length;
     assert.ok(c >= prev, `w=${w}`);
     prev = c;
   }
-  // عرض هاتف ضيّق بخلية رباعية (~150px بعد محور السعر) ← شارتان، لا صفّ يغطّي الشموع
-  assert.ok(legendCapacity(150) >= 1 && legendCapacity(150) <= 3);
 }
 
 // ٧) حلّ اللون: الحرفي كما هو، والرمز من الجدول، والمجهول لون محايد لا undefined
@@ -205,7 +198,7 @@ import {
   const longOnes = planPriceLegendForWidth(['supertrend', 'chandelierExit', 'sma20'], 120);
   assert.equal(longOnes.chips.length + longOnes.more, 3);
   // التقدير الثابت السابق (58px) كان يَعِد بشارتين على الأقل بنفس العرض
-  assert.ok(legendChipWidth({ label: 'Supertrend', swatch: ['a', 'b'] }) > LEGEND_CHIP_W);
+  assert.ok(legendChipWidth({ label: 'Supertrend', swatch: ['a', 'b'] }) > 58);
   // لا شيء مفعَّل ← لا مفتاح ولا عدّاد
   assert.deepEqual(planPriceLegendForWidth([], 400), { chips: [], more: 0 });
   // مؤشرات اللوحات المستقلّة لا تدخل ولا تُحسب

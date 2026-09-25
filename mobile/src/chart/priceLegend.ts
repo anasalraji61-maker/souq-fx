@@ -125,26 +125,8 @@ export interface LegendPlan {
 }
 
 /**
- * يختار شارات المفتاح من المؤشرات المفعَّلة بترتيب الأولوية، بحدّ `maxChips`.
- * - المؤشرات التي لا تُرسم على لوحة السعر (لوحات مستقلّة كـRSI وMACD) غير موجودة
- *   بالجدول فتُتجاهَل تماماً ولا تُحسب ضمن «+ن».
- * - التكرار بقائمة المؤشرات لا يُنتج شارتين.
- * - `maxChips` صفر أو سالب أو غير صالح ← لا شارات، و«+ن» تساوي كل المفعَّل (فلا يختفي
- *   العدد بصمت عند عرض ضيّق جداً).
- */
-export function planPriceLegend(
-  indicators: readonly string[],
-  maxChips: number
-): LegendPlan {
-  const active = activePriceOverlays(indicators);
-  const cap = Number.isFinite(maxChips) ? Math.max(0, Math.floor(maxChips)) : 0;
-  if (cap >= active.length) return { chips: active, more: 0 };
-  return { chips: active.slice(0, cap), more: active.length - cap };
-}
-
-/**
- * الطبقات المفعَّلة بترتيب الأولوية، بلا حدّ. مصدر واحد للاختيار والترتيب يستعمله
- * كلا المخطِّطَين أدناه — فلا يتباعد ترتيبهما.
+ * الطبقات المفعَّلة بترتيب الأولوية، بلا حدّ — مصدر الاختيار والترتيب لـ`planPriceLegendForWidth`.
+ * مؤشرات اللوحات المستقلّة (RSI، MACD) ليست بالجدول فتُتجاهَل، والتكرار بالقائمة لا يُنتج شارتين.
  */
 export function activePriceOverlays(indicators: readonly string[]): LegendChip[] {
   const out: LegendChip[] = [];
@@ -272,16 +254,8 @@ export function planPriceLegendForWidth(
   return { chips, more: active.length - chips.length };
 }
 
-/** عرض الشارة الواحدة تقريباً (مربّع اللون + النصّ + الفراغ) — لحساب ما يتّسع. */
-export const LEGEND_CHIP_W = 58;
 /** أقصى عدد شارات مهما اتّسع العرض: أكثر من ذلك يحجب الشموع بدل أن يوضّحها. */
 export const LEGEND_MAX_CHIPS = 6;
-
-/** كم شارة تتّسع بعرض متاح (بعد خصم محور السعر والهوامش). */
-export function legendCapacity(availableW: number): number {
-  if (!Number.isFinite(availableW) || availableW <= 0) return 0;
-  return Math.min(LEGEND_MAX_CHIPS, Math.max(0, Math.floor(availableW / LEGEND_CHIP_W)));
-}
 
 /** يحلّ تعبير اللون: hex/rgba حرفي كما هو، أو رمز سمة من الجدول المُمرَّر. */
 export function resolveColorExpr(

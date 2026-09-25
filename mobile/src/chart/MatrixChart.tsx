@@ -11994,7 +11994,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 6,
     // لا يتجاوز محور السعر أبداً مهما طال اسم مؤشّر (McGinley أطول من تقدير
-    // LEGEND_CHIP_W)، وما زاد يُقصّ بدل أن يغطّي الأسعار على اليمين.
+    // `legendChipWidth`)، وما زاد يُقصّ بدل أن يغطّي الأسعار على اليمين.
     right: PRICE_AXIS_WIDTH + 6,
     overflow: 'hidden',
     zIndex: 8,
