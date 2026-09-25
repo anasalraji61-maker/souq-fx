@@ -112,13 +112,16 @@ def _stats(trades: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str,
 
     for j, t in enumerate(trades):
         walk(t, equity)
-        equity *= 1 + t["pnl_pct"] / 100
+        # خسارة صفقة واحدة فوق 100% (بيع على أصل تضاعف سعره — BTC/أسهم) كانت تجعل الرصيد **سالباً** (‎-848)
+        # وأقصى هبوط 1829%، ثم صفقة رابحة تضرب رصيداً سالباً فتُنزله أكثر. الحساب مُصفّى عند الصفر ويبقى صفراً.
+        equity = max(0.0, equity * (1 + t["pnl_pct"] / 100))
         max_dd = max(max_dd, (peak - equity) / peak * 100)
         peak = max(peak, equity)
         curve.append({"i": j + 1, "equity": _round(equity, 2)})
     # المركز المفتوح يدخل أقصى هبوط (خسارته غير المحقّقة مخاطرة قائمة، كمختبر TradingView) لا العائد ولا نسبة الفوز
     if open_t:
         walk(open_t, equity)
+    max_dd = min(max_dd, 100.0)
 
     stats = {
         "trade_count": len(trades),
@@ -173,7 +176,9 @@ def run_backtest(
     position: Literal["long", "short", "flat"] = "flat"
     entry_price = 0.0
     entry_i = 0
-    start_i = max(slow, 26) + 1
+    # فترة المتوسط البطيء لا تخصّ غير `ma_cross`: كانت `slow=150` تُسقط أول 150 شمعة من اختبار RSI/MACD/بولنجر
+    # بصمت (8 صفقات ⇒ 1) والنتيجة تُعرض أداءً على السلسلة كلها.
+    start_i = (max(slow, 26) if strategy == "ma_cross" else 26) + 1
 
     def close_trade(exit_i: int, still_open: bool = False) -> None:
         """يسجّل صفقة المركز الحالي مغلقةً عند إغلاق الشمعة `exit_i`.

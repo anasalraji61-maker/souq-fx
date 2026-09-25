@@ -272,3 +272,20 @@ def test_usd_metals_keep_their_spread():
     assert backtest.typical_spread("XAUUSD") == (3.0, 0.1)
     assert backtest.typical_spread("XAG/USD") == (3.0, 0.01)
     assert backtest.typical_spread("USDJPY") == (1.0, 0.01)
+
+
+def test_a_loss_over_100_percent_wipes_the_account_to_zero_not_below():
+    """كان 100 ⇒ ‎-50 ⇒ ‎-60: رصيد سالب، ثم صفقة +20% تُنزله أكثر، وأقصى هبوط فوق 100%."""
+    stats, curve = backtest._stats([_t(-150.0), _t(20.0)])
+    assert [p["equity"] for p in curve] == [100.0, 0.0, 0.0]
+    assert stats["final_equity"] == 0.0 and stats["total_return_pct"] == -100.0
+    assert stats["max_drawdown_pct"] == 100.0
+
+
+def test_slow_ma_period_does_not_shift_non_ma_strategies():
+    """كان `start_i = max(slow, 26) + 1` لكل استراتيجية ⇒ slow=150 يُسقط أول 150 شمعة من اختبار RSI."""
+    cs = _candles()
+    for strat in ("rsi_reversal", "macd_cross", "bb_bounce"):
+        a = backtest.run_backtest(cs, strat, slow=21)
+        b = backtest.run_backtest(cs, strat, slow=150)
+        assert a["trades"] == b["trades"] and a["stats"] == b["stats"], strat
