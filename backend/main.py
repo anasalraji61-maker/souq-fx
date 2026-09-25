@@ -12,7 +12,7 @@ import re
 import secrets
 import time
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Annotated, Literal
 
 from pathlib import Path
@@ -490,6 +490,10 @@ class TradeCreate(BaseModel):
             raise ValueError("opened_at must be an ISO date/time") from None
         if dt.tzinfo is not None:
             dt = dt.astimezone()  # لتوقيت الخادم كبقية أوقات الدفتر
+        # وقت فتح بالمستقبل ⇒ 422: كان يُقبل فتُحفظ صفقة مغلقة `closed_at` (الآن) قبل `opened_at`، وتتصدّر
+        # الدفتر (`ORDER BY opened_at DESC`) فوق كل صفقة حقيقية حتى يحين ذلك التاريخ. سماح 5 دقائق لفرق ساعة الجهاز.
+        if dt.replace(tzinfo=None) > datetime.now() + timedelta(minutes=5):
+            raise ValueError("opened_at is in the future")
         return dt.strftime("%Y-%m-%d %H:%M")
 
 

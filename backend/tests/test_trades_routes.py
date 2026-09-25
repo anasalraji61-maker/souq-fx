@@ -537,3 +537,17 @@ def test_iso_opened_at_sorts_by_time_not_by_text(client):
 def test_unreadable_opened_at_is_rejected(client, bad):
     r = client.post("/api/trades", json={**_TRADE, "opened_at": bad}, headers=_DEV1)
     assert r.status_code == 422, r.text
+
+
+def test_future_opened_at_is_rejected(client):
+    """صفقة «فُتحت» غداً كانت تُحفظ — ومع `exit` تُغلق (الآن) قبل أن تُفتح وتتصدّر الدفتر."""
+    from datetime import datetime, timedelta
+
+    tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M")
+    for extra in ({}, {"exit": 1.1}):
+        r = client.post("/api/trades", json={**_TRADE, "opened_at": tomorrow, **extra}, headers=_DEV1)
+        assert r.status_code == 422, r.text
+    assert client.get("/api/trades", headers=_DEV1).json()["trades"] == []
+    # فرق ساعة الجهاز بدقيقة واحدة ما زال مقبولاً
+    soon = (datetime.now() + timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M")
+    assert _open_trade(client, opened_at=soon)["opened_at"] == soon
