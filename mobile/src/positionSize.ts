@@ -650,6 +650,14 @@ export function pipsBetween(spec: InstrumentSpec, a: number, b: number): number 
  * `null` لرمزٍ بلا مواصفات (يعرض المستدعي الفرق سعراً)، أو تسعيرة غير صالحة: سعرٌ ≤ 0 أو دفترٌ مقلوب (Ask < Bid)
  * — لا يُطبع سبريد سالب.
  */
+/**
+ * تسعيرة Bid/Ask صالحة للعرض: كلاهما موجب ومنتهٍ وAsk ≥ Bid — شرط `DomLitePanel` نفسه. رأس الطرفية كان يطبع
+ * «Spread 0.00020» لتسعيرة مقلوبة (`Math.abs` بـ`formatPriceDiff`) و«150.120» لـbid = 0.
+ */
+export function quoteBookValid(bid: number | null | undefined, ask: number | null | undefined): boolean {
+  return bid != null && ask != null && Number.isFinite(bid) && Number.isFinite(ask) && bid > 0 && ask >= bid;
+}
+
 export function quoteSpreadPips(symbol: string, bid: number | null | undefined, ask: number | null | undefined): number | null {
   const spec = instrumentSpec(symbol);
   if (!spec || bid == null || ask == null) return null;

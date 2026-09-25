@@ -49,7 +49,7 @@ import { dailyChange, formatPct, freshTickRefPrice, isVerifiedTickKind, pctDirec
 import { DEFAULT_LAYOUT } from '../chart/layoutStore';
 import { formatPrice } from '../chart/math';
 import { formatPriceDiff } from '../chart/indicators/utils';
-import { quoteSpreadPips } from '../positionSize';
+import { quoteBookValid, quoteSpreadPips } from '../positionSize';
 import {
   armedText,
   createChartAlert,
@@ -1714,7 +1714,8 @@ export function TerminalScreen() {
                     </Text>
                   );
                 })()}
-                {!heroNoRealData && quote && quote.bid != null && quote.ask != null ? (
+                {/* تسعيرة مقلوبة أو bid = 0 لا تُعرض سبريداً موجباً (`quoteBookValid`) */}
+                {!heroNoRealData && quote && quote.bid != null && quote.ask != null && quoteBookValid(quote.bid, quote.ask) ? (
                   <Text style={styles.desktopSpread}>
                     {t.termSpreadWord}{' '}
                     {(() => {

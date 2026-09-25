@@ -41,6 +41,7 @@ import {
   typicalSlPipsExample,
   typicalSpreadPipsExample,
   fillExampleOrDrop,
+  quoteBookValid,
   riskInQuoteCcy,
   pnlInQuoteCcy,
   profitAtTarget,
@@ -3219,6 +3220,20 @@ console.log('positionSize typicalSpreadPipsExample selftest OK');
   assert.equal(fillExampleOrDrop('No parens {example}', ''), 'No parens ');
 }
 console.log('positionSize fillExampleOrDrop selftest OK');
+
+{
+  // رأس الطرفية: تسعيرة مقلوبة أو bid = 0 لا تُطبع سبريداً موجباً
+  assert.equal(quoteBookValid(1.085, 1.08509), true);
+  assert.equal(quoteBookValid(1.085, 1.085), true); // سبريد صفري صادق
+  assert.equal(quoteBookValid(1.0852, 1.085), false); // مقلوبة ⇒ كانت «0.00020»
+  assert.equal(quoteBookValid(0, 150.12), false); // كانت «150.120»
+  assert.equal(quoteBookValid(null, 1.085), false);
+  assert.equal(quoteBookValid(1.085, NaN), false);
+  assert.equal(quoteBookValid(-1, 1), false);
+  // كل تسعيرة صالحة لها سبريد pip غير سالب حيث للأداة pip
+  assert.equal(quoteSpreadPips('USDJPY', 150.12, 150.135), 1.5);
+}
+console.log('positionSize quoteBookValid selftest OK');
 
 {
   // حدّ السبريد بحسب الأداة: سبريد USDTRY الليلي 0.05–0.2 ليرة (500–2000 pip) كان يُرفض «غير واقعي» ويُسقط سطر «شاملة السبريد»
