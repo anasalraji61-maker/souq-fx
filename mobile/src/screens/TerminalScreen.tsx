@@ -100,8 +100,21 @@ const DEFAULT_SHADOW_SLOTS: ShadowSlots = ['5m', '30m', '1H'];
 const DEFAULT_SHADOW_ENABLED: ShadowEnabled = [true, true, true];
 
 
-function offlineFrame(symbol: string, tf: Timeframe): ChartSeries {
-  return mockSeries(symbol, mockBase(symbol), tf, 120);
+/** رموز لا يقدّمها المزوّد أبداً (backend-r19، `27fa8ba`) — الخادم يرسل لها `candles: []` بـ`not_offered_by_provider`. */
+const NOT_OFFERED_SYMBOLS = new Set(['DXY']);
+
+/**
+ * إطار بلا خادم بعد: بذرة موسومة «تجريبي» — إلا رمزاً لا يقدّمه المزوّد (launch119): بذرة DXY حول 104.25 كانت
+ * تُرسم بلا خادم مع أن الخادم نفسه لا يملك له شمعة. الآن السلسلة الفارغة نفسها التي يرسلها الخادم ⇒ الإشعار.
+ */
+function offlineFrame(symbol: string, tf: Timeframe, bars = 120): ChartSeries {
+  const seed = mockSeries(symbol, mockBase(symbol), tf, bars);
+  if (!NOT_OFFERED_SYMBOLS.has(symbol.trim().toUpperCase())) return seed;
+  return {
+    ...seed,
+    candles: [],
+    data_source: { ...seed.data_source, unavailable_reason: 'not_offered_by_provider' } as ChartSeries['data_source'],
+  };
 }
 
 /**
@@ -134,7 +147,7 @@ export function TerminalScreen() {
   const narrowWatch = width < 1100;
   const desktopChartHeight = Math.max(320, Math.min(720, height - 330));
 
-  const [dxy, setDxy] = useState<ChartSeries>(() => mockSeries('DXY', 104.25, '15m', 120));
+  const [dxy, setDxy] = useState<ChartSeries>(() => offlineFrame('DXY', '15m'));
   const [frames, setFrames] = useState<ChartSeries[]>(() =>
     DEFAULT_LAYOUT.frameSymbols.map((s, i) =>
       offlineFrame(s, DEFAULT_FRAME_TIMEFRAMES[i])
@@ -625,7 +638,7 @@ export function TerminalScreen() {
         setOnline(true);
       } catch {
         if (stale()) return;
-        setChart({ key, s: cachedSeries(sym, timeframe) ?? mockSeries(sym, mockBase(sym), timeframe, 180) });
+        setChart({ key, s: cachedSeries(sym, timeframe) ?? offlineFrame(sym, timeframe, 180) });
         setOnline(false);
       }
     },
