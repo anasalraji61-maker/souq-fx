@@ -4950,3 +4950,43 @@ pineScale (جديد)، liveSeries. **لم يُختبر على جهاز**: شري
 ## يبدأ التشغيل القادم من هنا
 1. المقياس التلقائي على الشموع المرئية فقط دون قفز أثناء السحب.
 2. جهاز: محور السعر بعد `7cb9daf` (عدد العلامات على هاتف صغير)، والرباعي بالعرض.
+
+---
+
+# تشغيل 2026-09-25 (الحادي والأربعون)
+
+## صفوف COORDINATION الموجّهة لي
+- **QA56 (a) التصديرات الميتة — حصّة chart أُنجزت ⇒ QA: احذف العشرة من الصفّ** `9909b91`: `WatchSymbol`،
+  `__resetWatchlistMemoryForTests`، `__setWatchlistStorageForTests`، `deleteTemplate` (ومعه رمز `chartTemplateDeleteFailed`
+  من اتحاد `TemplatesSaveErrorCode` — المفتاح بـ`locales.ts` باقٍ لـlaunch إن شاء حذفه)، `subscribeTemplatesSaveError`،
+  `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite` (+نوع `DomLevel`؛ كان يولّد
+  أحجام دفتر أوامر وهمية)، `PINE_PRESETS`. الباقيان بالصفّ ليسا لي: `getToolPanel` (**tools**، `modules/tools-panels/registry.ts`)
+  و`motion` (**ui**، مُبقى عمداً).
+- QA1 (سحب على جهاز) وlaunch48 (DeMarker، قرار أنس): بلا تغيير — لا جهاز هنا.
+
+## ما أُنجز (مرئي للمتداول)
+1. **الرباعي على هاتف قصير** `4d531e2`: حدّ أدنى 96pt للخلية ⇒ الأربع تحتاج 552pt؛ هاتف 360×640 (شبكة ≈524) وiPhone SE
+   الأول يقصّان خلية DXY تحت الشاشة بلا تمرير. الحدّ 64.
+2. **رأس إطار الهاتف بالشبكة** `7697f96`: «B … · A … · 0.9 pips» (~165pt) أعرض من الإطار (48%، ~135pt) والصفّ لا يلتفّ
+   ⇒ تُقصّ النسبة وزرّ ملء الشاشة. على الهاتف السبريد بالـpip وحده.
+3. **قناة الانحدار الخطي كـTradingView** `654cbbc` (الأوضح): كانت ملاءمة متدحرجة لكل شمعة ⇒ شريط متموّج (~150 pip عن
+   خطّ TV وسط الشارت، وعرض شبه صفري عند الانعطاف). الآن قناة مستقيمة واحدة على آخر 100 شمعة من **السلسلة** (التمرير
+   للخلف لا يحرّكها؛ بالإعادة تنتهي بشمعة الإعادة)، σ بقسمة n−1. selftest جديد `linRegChannel` PASS.
+4. **na بدل 0 وهمي** `0a5aac9`: `stoch()` بـPine-lite على نافذة مسطّحة (كان 0 «تشبّع بيعي») وBOP على شمعة بلا مدى.
+   +حالات بـ`flatWindow.selftest` PASS.
+5. **Williams Fractals** `9996308`: اليسار يقبل حتى 4 قمم/قيعان مساوية ملاصقة كمؤشّر TradingView المدمج (اليمين صارم) —
+   قمّتان متساويتان حتى الـpipette لم تُعلَّما إطلاقاً، ومعهما مستوى Fractal Chaos Bands/Oscillator. selftest `fractalsTv` PASS.
+
+## فُحص ولم يُغيَّر (مع السبب)
+- **TTM Squeeze** (`volatility.ts:562`): كلتنر EMA20+ATR Wilder، ونسخة LazyBear الشائعة SMA20+SMA(TR) ⇒ ~15% من النقاط
+  بحالة معاكسة. لم يُغيَّر: سكربت مجتمعي لا مؤشّر TradingView مدمج، وكلا التعريفين متداول — يستحق قراراً لا تصحيحاً صامتاً.
+- Mass Index (25 مقابل 10؟) وEnvelope 2.5%: لم أتحقّق من افتراضي TV بثقة.
+- مراجعة `useLiveTicks`/`IndicatorForecastPanel`/`LayoutPanel`: لا عطل (تيكات قديمة تُرفض بالرمز، الاشتراكات تُنظَّف).
+
+## التحقّق
+`scripts/qa-build-check.sh` أخضر (0) قبل كل commit. selftests `linRegChannel`، `flatWindow`، `fractalsTv`، `indicatorWindow`
+PASS بـtsx. **لم يُختبر على جهاز**: الرباعي على 360×640، ورأس الإطار بسبريد حقيقي.
+
+## يبدأ التشغيل القادم من هنا
+1. جهاز: الرباعي على هاتف قصير (خلية 64pt مقروءة؟) وقناة الانحدار مقابل TradingView على EURUSD H1.
+2. TTM Squeeze: خيار «LazyBear» أم إبقاء؟
