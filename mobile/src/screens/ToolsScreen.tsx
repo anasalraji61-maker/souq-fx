@@ -14,7 +14,8 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { TimeframeBar } from '../components/TimeframeBar';
-import { type Timeframe } from '../timeframes';
+import { isTimeframe, TF_SECONDS, type Timeframe } from '../timeframes';
+import { formatLocalStamp } from '../localStamp';
 import { BacktestPanel } from '../components/BacktestPanel';
 import { IndicatorAlertsPanel } from '../components/IndicatorAlertsPanel';
 import { CalendarPanel } from '../components/CalendarPanel';
@@ -61,6 +62,8 @@ type Hit = {
   change_pct: number;
   rsi: number;
   filters_matched: string[];
+  /** ثوانٍ UTC: إغلاق آخر شمعة بُنيت عليها النتيجة (backend-r17)؛ غائب = خادم أقدم أو نتيجة مخزَّنة قبله */
+  price_as_of?: number | null;
 };
 
 type TabId =
@@ -191,7 +194,7 @@ const HUB_COMMUNITY_ORDER = ['news', 'social', 'chat', 'votes'] as const;
 const HUB_ANALYSIS_ORDER = ['ai', 'analysts', 'forecast', 'alerts'] as const;
 
 export function ToolsScreen() {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const navigation = useNavigation();
   const align = rtl ? ('right' as const) : ('left' as const);
   const FILTERS = buildFilters(t);
@@ -782,10 +785,22 @@ export function ToolsScreen() {
               const pctDir = pctDirection(pct);
               const pctText = pct != null ? formatPct(pct) : '—';
               const filtersText = r.filters_matched.map(filterLabel).join(' · ');
+              /**
+               * backend-r17 (a): وقت إغلاق آخر شمعة حين يتأخّر أكثر من شمعتين من فريم الفحص (السبت = إغلاق الجمعة، أو كاش
+               * حدّ المزوّد) — كانت البطاقة تعرض سعر الجمعة وRSI كأنهما الآن. داخل شمعتين = لا شيء (شمعة 1H أُغلقت قبل 50د عادية).
+               */
+              const barSec = isTimeframe(scanInfo.tf) ? TF_SECONDS[scanInfo.tf] : 15 * 60;
+              const asOf =
+                typeof r.price_as_of === 'number' &&
+                Number.isFinite(r.price_as_of) &&
+                Date.now() / 1000 - r.price_as_of > 2 * barSec
+                  ? t.screenerPriceAsOf.replace('{time}', formatLocalStamp(r.price_as_of, lang))
+                  : null;
               // التسمية تحلّ محلّ نصوص البطاقة كلها: كانت «افتح الشارت: EURUSD 15m» — بلا السعر وRSI والنسبة والمرشّحات
               // التي وُجدت البطاقة لأجلها
               const cardA11y = [
                 `${t.screenerOpenChartA11y}: ${r.symbol} ${scanInfo.tf}`,
+                asOf,
                 formatPrice(r.last, r.symbol),
                 `RSI ${r.rsi}`,
                 `${pctText} ${t.screenerChangeSpan}`,
@@ -808,7 +823,10 @@ export function ToolsScreen() {
                     onPress={() => openOnChart(r.symbol)}
                     accessibilityLabel={cardA11y}
                   >
-                    <Text style={[styles.sym, { textAlign: align }]}>{r.symbol}</Text>
+                    <Text style={[styles.sym, { textAlign: align }]}>
+                      {r.symbol}
+                      {asOf ? <Text style={styles.match}> · {asOf}</Text> : null}
+                    </Text>
                     <Text style={[styles.meta, { textAlign: align }]}>
                       {/* منازل السعر حسب الأداة لا حجم الرقم: كان هذا آخر موضع بالتطبيق يطبع سعراً خاماً
                           من الباك-إند — «157.4» للين و«1.085» لليورو بالسطر الذي يفتح عليه المتداول الشارت. */}
