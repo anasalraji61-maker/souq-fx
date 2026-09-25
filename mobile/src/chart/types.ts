@@ -250,6 +250,8 @@ export type Drawing = {
   rr?: number;
   /** أداة `channel`: بُعد الخطّ الموازي عن خطّ الأساس بوحدة السعر (موجب = فوقه) — راجع `channel.ts`. */
   width?: number;
+  /** مقفول (كقفل TradingView): لا يُسحب جسمه ولا مقابضه ولا يُزاح بالأسهم — لمسة عابرة بالهاتف لا تحرّك مستوى مدروساً. */
+  locked?: boolean;
 };
 
 export type LensMode = 'clean' | 'structure' | 'momentum' | 'liquidity';

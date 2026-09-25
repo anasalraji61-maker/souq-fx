@@ -182,6 +182,16 @@ export function arrowNudge(key: string, shift: boolean): { bars: number; steps: 
   return null;
 }
 
+/**
+ * قفل الرسم أو فكّه. الفكّ يحذف المفتاح لا يكتب `false` — فرسمٌ لم يُقفل قطّ ورسمٌ فُكّ قفله متطابقان بالحفظ
+ * (ولا يكبر JSON كل الرسوم بحقل ميت).
+ */
+export function withDrawingLock(d: Drawing, locked: boolean): Drawing {
+  if (locked) return { ...d, locked: true };
+  const { locked: _drop, ...rest } = d;
+  return rest;
+}
+
 /** إزاحة النسخة عن أصلها بالبكسل: تكفي ليُرى أنّ رسماً ثانياً ظهر، ولا تبعده عن منطقته. */
 export const CLONE_SHIFT_PX = 24;
 

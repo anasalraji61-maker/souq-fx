@@ -117,6 +117,7 @@ import {
   samePoint,
   translateDrawing,
   cloneShift,
+  withDrawingLock,
 } from './drawEdit';
 import {
   isPositionTool,
@@ -426,6 +427,8 @@ type Props = {
 
 /** جذب التقاطع لـO/H/L/C: أقرب من هذا (px) فقط — وإلا يبقى على المستوى الملموس. */
 const CROSS_SNAP_PX = 14;
+/** مدّة سطر «الرسم مقفول» بعد محاولة سحبه — تكفي لقراءته ولا تبقى فوق الشموع. */
+const LOCKED_HINT_MS = 1800;
 /** أقصى شموع مستقبلية لتقاطع التابع بالرباعي — أبعد من ذلك (قائد يومي والتابع دقيقة) لا خطّ. */
 const CROSS_SYNC_MAX_AHEAD = 500;
 /** الهامش الأيمن الافتراضي من عرض اللوح (≈8 خانات من 80) — `restXPan`. */
@@ -3604,7 +3607,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const pip = chartPipSpec(series.symbol)?.pipSize ?? null;
     const pxScaled = toScale(priceAtY(0)) - toScale(priceAtY(1));
     const next = translateDrawing(
-      { ...d, id: nextDrawingId() },
+      // النسخة غير مقفولة وإن قُفل أصلها: تُنسخ لتُسحب إلى مكانها.
+      withDrawingLock({ ...d, id: nextDrawingId() }, false),
       shift.bars,
       (price) => {
         if (!shift.px) return price;
@@ -3619,6 +3623,30 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setSelectedId(next.id);
   };
 
+  // قفل الرسم المحدَّد (كقفل TradingView): المقفول لا يُسحب ولا تتحرّك مقابضه بلمسة عابرة — مستوى وقف مدروس
+  // لا يزحف لأنّ الإصبع مرّ عليه أثناء التمرير. التحديد والحذف واللون والتنبيه تبقى. قابل للتراجع كأيّ تعديل.
+  const toggleSelectedLock = () => {
+    const d = selectedId ? drawingsRef.current.find((x) => x.id === selectedId) : null;
+    if (!d) return;
+    pushDrawHistory();
+    const next = withDrawingLock(d, !d.locked);
+    drawingsRef.current = drawingsRef.current.map((x) => (x.id === next.id ? next : x));
+    setDrawings((list) => list.map((x) => (x.id === next.id ? next : x)));
+    setLockedHint(false);
+  };
+  // «الرسم مقفول — فكّ القفل لتحريكه» فوق اللوح لحظةَ محاولة سحبه، ثم يختفي.
+  const [lockedHint, setLockedHint] = useState(false);
+  const lockedHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flashLockedHint = () => {
+    setLockedHint(true);
+    if (lockedHintTimer.current) clearTimeout(lockedHintTimer.current);
+    lockedHintTimer.current = setTimeout(() => setLockedHint(false), LOCKED_HINT_MS);
+  };
+  useEffect(() => () => {
+    if (lockedHintTimer.current) clearTimeout(lockedHintTimer.current);
+  }, []);
+  const selectedLocked = !!(selectedId && drawings.find((x) => x.id === selectedId)?.locked);
+
   /**
    * إزاحة الرسم المحدَّد `bars` شمعة و`steps` خطوة سعر (pip للأزواج والمعادن، وإلا بكسل رأسي واحد) — لأسهم
    * لوحة المفاتيح ولأزرار ▲▼◀▶ بالهاتف (chart15): الإصبع لا يضع مستوى على pip بعينه، والسحب يقفز بكسلات.
@@ -3628,6 +3656,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const nudgeSelectedDrawing = (bars: number, steps: number, record = true): false | 'same' | 'moved' => {
     const d = selectedId ? drawingsRef.current.find((x) => x.id === selectedId) : null;
     if (!d) return false;
+    // مقفول ⇒ لا إزاحة (الأسهم بالويب؛ أزرار ▲▼◀▶ مخفيّة أصلاً) — وسطر «مقفول» يقول لماذا.
+    if (d.locked) {
+      flashLockedHint();
+      return 'same';
+    }
     const pip = chartPipSpec(series.symbol)?.pipSize ?? null;
     const pxScaled = toScale(priceAtY(0)) - toScale(priceAtY(1));
     const next = translateDrawing(
@@ -4250,6 +4283,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         const { locationX, locationY } = evt.nativeEvent;
         const d = drawings.find((x) => x.id === selectedId);
         if (!d) return;
+        // مقفول ⇒ لا جسم ولا مقابض؛ لمسةٌ عليه تُظهر لماذا لم يتحرّك بدل صمتٍ يبدو عطلاً.
+        if (d.locked) {
+          if (hitDrawing(locationX, locationY) === d.id) flashLockedHint();
+          return;
+        }
         // لمسة على جسم الرسم المحدَّد (لا على مقبض) ⇒ تحريكه كلّه بشكله.
         const grabBody = () => {
           if (hitDrawing(locationX, locationY) !== d.id) return;
@@ -5769,7 +5807,27 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={styles.compactToolLabel}>{tr.mcCloneDrawing}</Text>
               </Pressable>
             ) : null}
-            {selectedId
+            {selectedId ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={selectedLocked ? tr.mcUnlockDrawing : tr.mcLockDrawingA11y}
+                accessibilityState={{ checked: selectedLocked }}
+                style={({ pressed }) => [
+                  styles.compactTool,
+                  selectedLocked && styles.compactToolOn,
+                  pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                ]}
+                onPress={toggleSelectedLock}
+              >
+                <Text style={[styles.compactToolIcon, selectedLocked && styles.compactToolTextOn]}>
+                  {selectedLocked ? '🔒' : '🔓'}
+                </Text>
+                <Text style={[styles.compactToolLabel, selectedLocked && styles.compactToolTextOn]}>
+                  {selectedLocked ? tr.mcUnlockDrawing : tr.mcLockDrawing}
+                </Text>
+              </Pressable>
+            ) : null}
+            {selectedId && !selectedLocked
               ? nudgeButtons.map((b) => (
                   <Pressable
                     key={b.key}
@@ -8607,6 +8665,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Text style={[styles.crossTagText, { color: tagTextColor(t.color) }]}>{fmtPrice(t.price)}</Text>
             </View>
           ))}
+          {lockedHint && selectedLocked ? (
+            <View pointerEvents="none" style={styles.lockedHint}>
+              <Text style={styles.lockedHintText}>🔒 {tr.mcDrawingLockedHint}</Text>
+            </View>
+          ) : null}
           {selectionTags.map((t) =>
             t.tone === 'now' ? (
               // سعر الترند عند الشمعة الحيّة: مفرَّغ بلون الخطّ — مستوى يتحرّك مع كل شمعة، لا طرف مرسوم.
@@ -11905,7 +11968,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 >
                   <Text style={styles.toolText}>❐ {tr.mcCloneDrawing}</Text>
                 </Pressable>
-                {nudgeButtons.map((b) => (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={selectedLocked ? tr.mcUnlockDrawing : tr.mcLockDrawingA11y}
+                  accessibilityState={{ checked: selectedLocked }}
+                  style={({ pressed }) => [
+                    styles.tool,
+                    selectedLocked && styles.toolOn,
+                    pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                  ]}
+                  onPress={toggleSelectedLock}
+                >
+                  <Text style={selectedLocked ? styles.toolTextOn : styles.toolText}>
+                    {selectedLocked ? `🔒 ${tr.mcUnlockDrawing}` : `🔓 ${tr.mcLockDrawing}`}
+                  </Text>
+                </Pressable>
+                {(selectedLocked ? [] : nudgeButtons).map((b) => (
                   <Pressable
                     key={b.key}
                     accessibilityRole="button"
@@ -12046,6 +12124,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
   compactToolOn: { backgroundColor: colors.accentSoft },
+  lockedHint: {
+    position: 'absolute',
+    top: 8,
+    alignSelf: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: colors.bgPanel,
+    borderWidth: 1,
+    borderColor: colors.warn,
+  },
+  lockedHintText: { color: colors.warn, fontSize: 12, fontWeight: '700' },
   compactToolIcon: { color: colors.text, fontSize: 16, fontWeight: '800', lineHeight: 18 },
   compactToolLabel: { color: colors.textDim, fontSize: 8, fontWeight: '700', marginTop: 1 },
   compactToolTextOn: { color: colors.accent },

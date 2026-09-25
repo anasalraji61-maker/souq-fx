@@ -3,7 +3,7 @@
  * الغرض: إثبات أن اللمسة التي لا تُغيّر شيئاً لا تدفع لقطة تراجع، وأن التغيّر الحقيقي يدفعها.
  */
 import type { ChartPoint, Drawing } from './types';
-import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace, cloneShift, CLONE_SHIFT_PX, raySegment } from './drawEdit';
+import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace, cloneShift, CLONE_SHIFT_PX, raySegment, withDrawingLock } from './drawEdit';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -129,6 +129,16 @@ ok('نسخة خطّ رأسي ⇒ 3 شموع', cloneShift('vline', true).bars ===
   ok('شعاع متّجه يساراً يبقى مقصوصاً', !raySegment(-10, 90, -20, 100, 50).extended);
   const inView = raySegment(-5, 100, 10, 90, 50);
   ok('طرف ظاهر ⇒ القصّ العادي', !inView.extended && inView.ai === 0 && inView.bi === 10);
+}
+
+// القفل: يُكتب true، والفكّ يحذف المفتاح (رسمٌ فُكّ = رسمٌ لم يُقفل بالحفظ)، والإزاحة لا تفكّه
+{
+  const d = line(pt(5, 1.1), pt(9, 1.2));
+  const lk = withDrawingLock(d, true);
+  ok('قفل ⇒ locked', lk.locked === true && d.locked === undefined);
+  const un = withDrawingLock(lk, false);
+  ok('فكّ ⇒ بلا المفتاح', !('locked' in un) && JSON.stringify(un) === JSON.stringify(d));
+  ok('الإزاحة تُبقي القفل', translateDrawing(lk, 2, (p) => p, () => null).locked === true);
 }
 
 if (failures) {
