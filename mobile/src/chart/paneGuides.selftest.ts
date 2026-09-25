@@ -129,6 +129,10 @@ for (const id of ['cci', 'roc', 'atr', 'volume', '', 'nope']) {
 {
   assert.equal(formatPaneValue(62.34), '62.3');
   assert.equal(formatPaneValue(0), '0.0');
+  // %R/CMO/%B قرب الصفر من تحت: لا «-0.0»
+  assert.equal(formatPaneValue(-0.04), '0.0');
+  assert.equal(formatPaneValue(-0.003, 2), '0.00');
+  assert.equal(formatPaneValue(-0.06), '-0.1');
   assert.equal(formatPaneValue(-80.25), '-80.3');
   assert.equal(formatPaneValue(100), '100');
   // Math.round بجافاسكريبت يقرّب النصف نحو ‎+∞‎ (‎−1234.5 → −1234‎) — مثبَّت هنا عمداً
