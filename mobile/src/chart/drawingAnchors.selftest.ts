@@ -26,8 +26,21 @@ const bars = (from: number, n: number) =>
   assert.equal(indexAtTime(b, 4 * H, H), 2);
   assert.equal(indexAtTime(b, 5 * H, H), 3);
   assert.equal(indexAtTime(b, 9 * H, H), 7);
-  assert.equal(indexAtTime(b, -2 * H, H), -2);
+  // قبل أوّل شمعة بمتوسّط الشمعة المحمَّلة (6 ساعات / 4 = 1.5 ساعة) لا بساعة التقويم
+  assert.equal(indexAtTime(b, -3 * H, H), -2);
   for (const i of [-4, 0, 3, 4, 9]) assert.equal(indexAtTime(b, timeAtIndex(b, i, H)!, H), i);
+}
+
+// ترند طرفه الأقدم خرج من التاريخ المحمَّل بعد عطلة: يبقى بعدد الشموع لا بساعات التقويم
+{
+  // 120 شمعة تداول (5 أيام × 24) ثم عطلة 48 ساعة ثم 60 شمعة: 180 شمعة، الشمعة ≈ 1.27 ساعة
+  const times: number[] = [];
+  for (let i = 0; i < 120; i++) times.push(i * H);
+  for (let i = 0; i < 60; i++) times.push((120 + 48 + i) * H);
+  const b = times.map((time) => ({ time }));
+  const avg = (times[179]! - times[0]!) / 179;
+  const oldPoint = -110 * avg; // 110 شمعة قبل أوّل المحمَّل
+  assert.equal(indexAtTime(b, oldPoint, H), -110); // كان −(110×1.27)= −140 بساعات التقويم
 }
 
 const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => ({
@@ -38,6 +51,22 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   color: '#fff',
   ...extra,
 } as Drawing);
+
+// نقطة من فريم أصغر داخل الشمعة الحيّة: كسر داخلها، لا خانة المستقبل التالية
+{
+  const b = bars(1000 * H, 10);
+  const liveStart = 1009 * H;
+  assert.equal(indexAtTime(b, liveStart + 45 * 60, H), 9);
+  const d = anchorDrawings(
+    [{ ...line(0, 0), a: { index: 0, price: 1, time: liveStart + 45 * 60 }, b: { index: 0, price: 1, time: liveStart + 15 * 60 } }],
+    b,
+    H,
+    false
+  );
+  assert.equal(d[0].a.index, 9.75);
+  assert.equal(d[0].b!.index, 9.25);
+  assert.equal(indexAtTime(b, liveStart + H, H), 10); // خطوة كاملة بعدها ⇒ مستقبل كالسابق
+}
 
 // جوهر البند: رُسم أمس، واليوم النافذة زحفت 24 شمعة ⇒ الخطّ على الشموع نفسها
 {

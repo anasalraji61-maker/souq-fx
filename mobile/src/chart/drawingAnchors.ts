@@ -73,13 +73,26 @@ export function timeAtIndex(
 ): number | null {
   const n = bars.length;
   if (!n || !Number.isFinite(index)) return null;
-  if (index < 0) return barTime(bars[0]) + index * stepSec;
+  if (index < 0) return barTime(bars[0]) + index * pastStep(bars, stepSec);
   if (index >= n) return seriesEnd(bars, endTime) + (index - (n - 1)) * stepSec;
   const i = Math.floor(index);
   const bar = bars[i]!;
   const frac = index - i;
   if (frac > 0 && bar.srcTime == null && stepSec > 0) return bar.time + Math.round(frac * stepSec);
   return barTime(bar);
+}
+
+/**
+ * خطوة الخانة قبل أوّل شمعة: متوسّط زمن الشمعة **المحمَّلة** لا خطوة الفريم. الخانات داخل السلسلة شموع
+ * حقيقية تتخطّى العطل، وقبلها كانت ساعات تقويم ⇒ على H1 (180 شمعة) بعد أسبوع وعطلة 48 ساعة كان طرف
+ * الترند الأقدم عند −158 بدل −110 فيدور الخطّ ~23% ويخطئ امتداد الشعاع ~7 pip. `timeAtIndex` و`indexAtTime`
+ * بالخطوة نفسها فيبقيان متعاكسَين.
+ */
+function pastStep(bars: readonly TimeBar[], stepSec: number): number {
+  const n = bars.length;
+  const span = n > 1 ? barTime(bars[n - 1]!) - barTime(bars[0]!) : 0;
+  const avg = span / (n - 1);
+  return Number.isFinite(avg) && avg > 0 ? avg : stepSec > 0 ? stepSec : 1;
 }
 
 /** نهاية السلسلة بالزمن الحقيقي: آخر شمعة مصدر (`endTime`) إن كانت بعد آخر لبنة، وإلا زمن آخر خانة. */
@@ -104,8 +117,10 @@ export function indexAtTime(
   const step = stepSec > 0 ? stepSec : 1;
   const first = barTime(bars[0]);
   const last = seriesEnd(bars, endTime);
-  if (time < first) return Math.round((time - first) / step);
-  if (time > last) return n - 1 + Math.round((time - last) / step);
+  if (time < first) return Math.round((time - first) / pastStep(bars, stepSec));
+  // داخل الشمعة الحيّة (نقطة 10:45 من M15 وهي بدأت 10:00 على H1) ليس مستقبلاً: التقريب كان يرميها لخانة
+  // المستقبل التالية، وقمّتان 13:00 و15:00 على اليومي تنطبقان ⇒ ترند عمودي. يكمل للبحث ثم `withinBar`.
+  if (time > last && time - last >= step) return n - 1 + Math.round((time - last) / step);
   let lo = 0;
   let hi = n - 1;
   while (lo < hi) {
