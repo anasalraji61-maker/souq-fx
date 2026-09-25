@@ -342,3 +342,12 @@
 
 **طلب → backend:** فلتر عملة واحدة (رقاقة USD مثلاً) يُرسَل للخادم `currency=USD`، و`econ_calendar.py:305` يطابق حرفياً ⇒ حدث `ALL` يسقط من القائمة بينما الشريط يحذّر منه لأزواج USD. المقترح: `... in curs or cur == "all"` حين يُطلب فلتر عملة.
 
+
+## 2026-09-25 — تشغيل 28
+صفّ ui الوحيد بـCOORDINATION (launch128) **أُنجز بتشغيل 27** (`ba57ae0`) — الصفّ باقٍ لأن QA لم يُغلقه بعد؛ وطلبي لـbackend (فلتر عملة يُبقي أحداث `ALL`) أُنجز هناك (`50189c3`). بوابة البناء خضراء (tsc 0). **لا تغيير بالكود هذا التشغيل** — لم يظهر بالتحقّق عيب جديد بنطاقي.
+
+**إعادة تحقّق بنود المهمّة بالكود (بعد c5e3991)، بفحوص جديدة لا بنقل السجلّ:**
+- **حالة الاختيار:** مسح AST لكل عنصر JSX بـ`onPress`/`onValueChange` خارج chart/i18n/tools، شرطه نمط `styles.*On/Active/Sel/Selected/Current/Checked` أو لون `colors.accent/bull/bear` شرطي أو متغيّر اختيار بشرط: 47 مرشّحاً، **صفر** بلا `accessibilityState`/aria/دور switch-checkbox-radio-tab. خصائص `active` بالمكوّنات (`WatchlistPanel`، `CalendarPanel`، `AlertsPanel`، `IndicatorAlertsPanel`) = ظهور اللوحة لا حالة اختيار.
+- **الكردية:** `DICTS.ku` مقابل `DICTS.ar` مسطّحاً: صفر قيمة مطابقة (≥4 حروف عربية)، وصفر قيمة بحرف عربي لا تستعمله السورانية (ة ى ث ذ ض ظ). الحرفيات العربية بـtsx/ts خارج chart/i18n: مفاتيح نصّ الخادم (`CommissionPlanPanel`)، تعليمات الذكاء الداخلية (`WeeklyReportPanel`)، أنماط إدخال (`positionSize`/`parseDecimal`)، فاصلة «،» حين `rtl` فقط، و`api.ts:896`/`mock.ts`/`MessagesScreen` (launch52، أنس).
+- **الحوارات بالويب:** لا `Alert.alert`/`Alert.prompt`/`ActionSheetIOS` خارج `chart/confirmDestructive.ts` (`window.confirm`/`window.alert` بالويب)؛ لا حوار تأكيد مخصّص بـ`<Modal>`؛ `confirmDestructive` بتسعة ملفات منها `AccountScreen` (حذف الحساب).
+- «₴» بتعليقين فقط؛ «درجة الاتفاق» أُزيلت (`AnalystsPanel`، `SocialConsensusPanel`، `WeeklyReportPanel`)؛ التيك المتجمّد يُرفض (`tickAge.acceptTick` بـ`ticks_at`، والإسقاط بعد `TICK_STALE_MS`)، وسعر الإغلاق البديل بقائمة المتابعة موسوم «تجريبي» نصّاً وللقارئ؛ الجولة تُعاد من `AccountScreen` (`accReplayTour` ⇐ `OnboardingOverlay`).
