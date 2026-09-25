@@ -496,6 +496,11 @@ const LENS_PRESETS: Record<LensMode, IndicatorId[]> = {
   liquidity: ['volume', 'bb', 'cvd'],
 };
 
+/** DESIGN-PRO §4 — تلميح اسم أداة الشريط المدمج: بعد 400 مللي ث تمرير (ويب)، أو مسك مطوّل (هاتف). */
+const RAIL_HINT_HOVER_MS = 400;
+const RAIL_HINT_LONG_PRESS_MS = 400;
+const RAIL_HINT_SHOW_MS = 1400;
+
 const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
   none: '⌖',
   select: '↖',
@@ -2334,6 +2339,35 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   useEffect(() => {
     if (initialTool) setTool(initialTool);
   }, [initialTool, series.symbol]);
+
+  // DESIGN-PRO §4 — الشريط المدمج أيقونات فقط؛ اسم الأداة تلميح عابر: مسك مطوّل بالهاتف، وتمرير
+  // 400 مللي ث بالويب. كانت تسمية 8px تحت كل أيقونة تضاعف عرض الزرّ وتزاحم الشارت.
+  const [railHint, setRailHint] = useState<string | null>(null);
+  const railHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearRailHintTimer = () => {
+    if (railHintTimer.current != null) clearTimeout(railHintTimer.current);
+    railHintTimer.current = null;
+  };
+  useEffect(() => clearRailHintTimer, []);
+  const flashRailHint = useCallback((label: string) => {
+    clearRailHintTimer();
+    setRailHint(label);
+    railHintTimer.current = setTimeout(() => {
+      railHintTimer.current = null;
+      setRailHint(null);
+    }, RAIL_HINT_SHOW_MS);
+  }, []);
+  const railHintProps = (label: string, withLongPress = true) => ({
+    ...(withLongPress ? { onLongPress: () => flashRailHint(label), delayLongPress: RAIL_HINT_LONG_PRESS_MS } : null),
+    onHoverIn: () => {
+      clearRailHintTimer();
+      railHintTimer.current = setTimeout(() => flashRailHint(label), RAIL_HINT_HOVER_MS);
+    },
+    onHoverOut: () => {
+      clearRailHintTimer();
+      setRailHint(null);
+    },
+  });
 
   // DESIGN-PRO §5.6 — الواجهة تخفت إلى 40% ما دام الإصبع/الزرّ على اللوح وتعود عند الرفع. بعد
   // `CHROME_DIM_DELAY_MS` فقط: نقرة تقاطع قصيرة لا تُومض الشريط (§6 — لا حركة غير وميض السعر).
@@ -6365,6 +6399,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t.label}
+                {...railHintProps(t.label)}
                 accessibilityState={{ selected: tool === t.id }}
                 key={t.id}
                 style={({ pressed }) => [
@@ -6380,9 +6415,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={[styles.compactToolIcon, tool === t.id && styles.compactToolTextOn]}>
                   {COMPACT_TOOL_ICONS[t.id]}
                 </Text>
-                <Text style={[styles.compactToolLabel, tool === t.id && styles.compactToolTextOn]}>
-                  {t.label}
-                </Text>
                 {tool === t.id ? <SelMark accent /> : null}
               </Pressable>
             ))}
@@ -6392,6 +6424,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={tr.deleteWord}
+                {...railHintProps(tr.deleteWord)}
                 style={({ pressed }) => [
                   styles.compactTool,
                   pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -6402,14 +6435,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   setSelectedId(null);
                 }}
               >
-                <Text style={[styles.compactToolIcon, { color: colors.bear }]}>✕</Text>
-                <Text style={styles.compactToolLabel}>{tr.deleteWord}</Text>
+                <Text style={styles.compactToolIcon}>✕</Text>
               </Pressable>
             ) : null}
             {selectedId ? (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={tr.mcCloneDrawingA11y}
+                {...railHintProps(tr.mcCloneDrawingA11y)}
                 style={({ pressed }) => [
                   styles.compactTool,
                   pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -6417,13 +6450,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 onPress={cloneSelectedDrawing}
               >
                 <Text style={styles.compactToolIcon}>❐</Text>
-                <Text style={styles.compactToolLabel}>{tr.mcCloneDrawing}</Text>
               </Pressable>
             ) : null}
             {selectedTrend ? (
               <Pressable
                 accessibilityRole="switch"
                 accessibilityLabel={arrowA11y}
+                {...railHintProps(arrowA11y)}
                 accessibilityState={{ checked: selectedArrow }}
                 style={({ pressed }) => [
                   styles.compactTool,
@@ -6440,6 +6473,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={selectedLocked ? tr.mcUnlockDrawing : tr.mcLockDrawingA11y}
+                {...railHintProps(selectedLocked ? tr.mcUnlockDrawing : tr.mcLockDrawingA11y)}
                 accessibilityState={{ checked: selectedLocked }}
                 style={({ pressed }) => [
                   styles.compactTool,
@@ -6451,9 +6485,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={[styles.compactToolIcon, selectedLocked && styles.compactToolTextOn]}>
                   {selectedLocked ? '🔒' : '🔓'}
                 </Text>
-                <Text style={[styles.compactToolLabel, selectedLocked && styles.compactToolTextOn]}>
-                  {selectedLocked ? tr.mcUnlockDrawing : tr.mcLockDrawing}
-                </Text>
                 {selectedLocked ? <SelMark /> : null}
               </Pressable>
             ) : null}
@@ -6463,6 +6494,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     key={b.key}
                     accessibilityRole="button"
                     accessibilityLabel={b.a11y}
+                    {...railHintProps(b.a11y, false)}
                     style={({ pressed }) => [
                       styles.compactTool,
                       pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -6473,7 +6505,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     onPressOut={stopNudgeHold}
                   >
                     <Text style={styles.compactToolIcon}>{b.icon}</Text>
-                    <Text style={styles.compactToolLabel}>{tr.mcNudgeWord}</Text>
                   </Pressable>
                 ))
               : null}
@@ -6481,6 +6512,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={colorLabels.a11y}
+                {...railHintProps(colorLabels.a11y)}
                 style={({ pressed }) => [
                   styles.compactTool,
                   pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -6488,13 +6520,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 onPress={cycleSelectedColor}
               >
                 <Text style={[styles.compactToolIcon, { color: recolorTarget!.color }]}>●</Text>
-                <Text style={styles.compactToolLabel}>{colorLabels.word}</Text>
               </Pressable>
             ) : null}
             {drawings.length ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={drawingsHidden ? tr.mcShowDrawings : tr.mcHideDrawings}
+                accessibilityLabel={drawingsHidden ? `${tr.mcShowDrawings} (${drawings.length})` : tr.mcHideDrawings}
+                {...railHintProps(drawingsHidden ? `${tr.mcShowDrawings} (${drawings.length})` : tr.mcHideDrawings)}
                 accessibilityState={{ selected: drawingsHidden }}
                 style={({ pressed }) => [
                   styles.compactTool,
@@ -6506,15 +6538,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 <Text style={[styles.compactToolIcon, drawingsHidden && styles.compactToolTextOn]}>
                   {drawingsHidden ? '◎' : '◉'}
                 </Text>
-                <Text style={[styles.compactToolLabel, drawingsHidden && styles.compactToolTextOn]}>
-                  {drawingsHidden ? `${tr.mcShowDrawings} (${drawings.length})` : tr.mcHideDrawings}
-                </Text>
                 {drawingsHidden ? <SelMark /> : null}
               </Pressable>
             ) : null}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={canUndo ? tr.mcUndoA11y : tr.mcNothingToUndo}
+              {...railHintProps(canUndo ? tr.mcUndoA11y : tr.mcNothingToUndo)}
               accessibilityState={{ disabled: !canUndo }}
               disabled={!canUndo}
               style={({ pressed }) => [
@@ -6525,13 +6555,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               onPress={undoDrawing}
             >
               <Text style={styles.compactToolIcon}>↶</Text>
-              <Text style={styles.compactToolLabel}>{tr.mcUndo}</Text>
             </Pressable>
             {/* الإعادة تظهر فقط بعد تراجع: زرّ معطّل دائم يأخذ مكان أداة من شريط الهاتف الضيّق. */}
             {canRedo ? (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={tr.mcRedoA11y}
+                {...railHintProps(tr.mcRedoA11y)}
                 style={({ pressed }) => [
                   styles.compactTool,
                   pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -6539,12 +6569,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 onPress={redoDrawing}
               >
                 <Text style={styles.compactToolIcon}>↷</Text>
-                <Text style={styles.compactToolLabel}>{tr.mcRedo}</Text>
               </Pressable>
             ) : null}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={tr.mcClearAllTitle}
+              {...railHintProps(tr.mcClearAllTitle)}
               style={({ pressed }) => [
                 styles.compactTool,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -6566,9 +6596,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               }}
             >
               <Text style={styles.compactToolIcon}>⌫</Text>
-              <Text style={styles.compactToolLabel}>{tr.mcClearWord}</Text>
             </Pressable>
           </ScrollView>
+          {railHint ? (
+            <View pointerEvents="none" style={styles.railHint}>
+              <Text style={styles.railHintText} numberOfLines={1}>
+                {railHint}
+              </Text>
+            </View>
+          ) : null}
         </View>
       ) : interactive ? (
         <View style={[styles.toolbar, chromeDim && styles.chromeDim]}>
@@ -13016,8 +13052,8 @@ const styles = StyleSheet.create({
   },
   compactToolsRow: { flexDirection: 'row-reverse', padding: 4, gap: 3 },
   compactTool: {
-    minWidth: 42,
-    height: 43,
+    minWidth: 44,
+    height: 44,
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
@@ -13051,7 +13087,20 @@ const styles = StyleSheet.create({
   },
   lockBadgeText: { fontSize: 8, lineHeight: 10 },
   compactToolIcon: { color: colors.text, fontSize: 16, fontWeight: '500', lineHeight: 18 },
-  compactToolLabel: { color: colors.textDim, fontSize: 8, fontWeight: '500', marginTop: 1 },
+  // تلميح اسم الأداة: فاصل واحد (خلفية مرتفعة، بلا حدّ ولا ظلّ — §5.5)، 12px ثانوي.
+  railHint: {
+    position: 'absolute',
+    top: '100%',
+    alignSelf: 'center',
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    backgroundColor: colors.bgElevated,
+    zIndex: 20,
+    elevation: 0,
+  },
+  railHintText: { color: colors.text, fontSize: 12, fontWeight: '500' },
   compactToolTextOn: { color: colors.text },
   toolbar: { gap: 8 },
   row: { flexDirection: 'row-reverse', gap: 8, paddingVertical: 4 },
