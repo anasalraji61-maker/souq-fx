@@ -207,3 +207,23 @@ def test_known_timeframes_still_accepted(monkeypatch):
     for tf in main.TF_SECONDS:
         assert c.get(f"/api/charts/EURUSD?timeframe={tf}").status_code == 200
     assert c.get("/api/terminal").status_code == 200
+
+
+# ---------------------------------------------------------------- أزواج خارج الخريطة
+
+@pytest.mark.parametrize("sym, td", [
+    ("USDMXN", "USD/MXN"), ("zarjpy", "ZAR/JPY"), ("USDTRY", "USD/TRY"), ("XPTUSD", "XPT/USD"),
+])
+def test_unmapped_currency_pair_uses_the_provider_form(sym, td):
+    """البحث يعيد «USD/MXN» والتطبيق يرسل «USDMXN» — يُرسَل للمزوّد بصيغته هو."""
+    assert market.td_symbol(sym) == td
+
+
+@pytest.mark.parametrize("sym", ["AAPL", "BTCEUR", "SHELL", "USDUSD", "USDXYZ", "EURUSD1"])
+def test_other_symbols_pass_through(sym):
+    """سهم أو كريبتو (BTC ليس ISO) أو ما ليس زوجاً — كما هو."""
+    assert market.td_symbol(sym) == sym.upper()
+
+
+def test_mapped_symbols_still_win():
+    assert market.td_symbol("EURUSD") == "EUR/USD" and market.td_symbol("UKOIL") == "XBR/USD"

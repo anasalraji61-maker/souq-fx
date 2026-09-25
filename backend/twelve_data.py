@@ -160,8 +160,23 @@ def configured() -> bool:
     return bool(_api_key())
 
 
+# رموز ISO 4217 لعملات ومعادن يسعّرها المزوّد أزواجاً «AAA/BBB» (`Physical Currency`). البحث يعيد
+# «USD/MXN» والتطبيق يحفظ «USDMXN» (بلا «/») — كان يُرسَل كذلك، لا بصيغة المزوّد المعلنة.
+_ISO_CURRENCIES = frozenset(
+    "USD EUR GBP JPY CHF CAD AUD NZD SEK NOK DKK PLN CZK HUF RON BGN TRY ZAR MXN BRL CLP COP PEN ARS "
+    "CNY CNH HKD SGD TWD KRW INR IDR MYR PHP THB ILS SAR AED QAR KWD BHD OMR JOD EGP MAD KES NGN RUB "
+    "ISK XAU XAG XPT XPD".split()
+)
+
+
 def td_symbol(matrix_symbol: str) -> str:
-    return SYMBOL_MAP.get(matrix_symbol.upper(), matrix_symbol.upper())
+    sym = matrix_symbol.upper()
+    if sym in SYMBOL_MAP:
+        return SYMBOL_MAP[sym]
+    # زوج عملتين خارج الخريطة ⇒ صيغة المزوّد القانونية (كما يعيدها بحثه نفسه)
+    if len(sym) == 6 and sym[:3] in _ISO_CURRENCIES and sym[3:] in _ISO_CURRENCIES and sym[:3] != sym[3:]:
+        return f"{sym[:3]}/{sym[3:]}"
+    return sym
 
 
 def _parse_ts(dt_str: str) -> int | None:
