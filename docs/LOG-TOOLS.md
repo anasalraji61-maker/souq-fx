@@ -4984,3 +4984,27 @@ XAUJPY — صار 7 ين (فوق الحدّ) بالغرض نفسه.
 1. إن أضاف ui حالة تحميل لـ`ChartFrame`: بدّل `bootFrame` بها.
 2. جهاز: الترمينال بلا شبكة ⇒ إشعار لا شموع 2024؛ الظلّ بلا شبكة ⇒ بلا خطوط ظلّ؛ الدفتر «85» هدف فضة ⇒ التحذير يذكر الضغطة الثانية.
 3. «تصحيح لا تحريك» — يحتاج نصّاً من launch.
+
+## 2026-09-25 (اثنان وثمانون) — التشغيل: أربعة صفوف تنسيق لـtools (QA65، tools81، launch123، chart-r49)
+
+### التنسيق (كل صفّ موجَّه لـtools هذا التشغيل)
+- **QA65** (سبريد رأس الطرفية): **أُنجز** `df43700` — لرمز بلا pip (BTCUSD/المؤشرات) `formatPriceDiff(ask − bid, bid, symbol)` بمنازل السعر بدل
+  `formatPrice(الفرق)` («12.500» بجانب «67420.50» صار «12.50»). عرضٌ فقط بدالّة موجودة (لا حساب جديد). QA: تحقّق وأزل الصفّ.
+- **tools81** (حالة التحميل، بعد ui `ce58542`): **أُنجز** `df43700` — `bootFrame` = `loadingSeries(symbol, tf)` بدل بذرة `mockSeries` 2024؛ DXY يبقى
+  `not_offered_by_provider`. الإشعاران بالبطل يمرّران `timeframe={series?.timeframe ?? tf}`. QA: تحقّق وأزل الصفّ.
+- **launch123** (تحذير «نقاطٌ بخانة سعر» مكرَّر): **أُنجز** `a9aa402` — الضغطة الأولى الممنوعة تكتب `levelLooksLikePipsSaveBlocked` ({field} من `label`
+  نفسه في `pipsLevel`، {value} الخام، {button} «إضافة صفقة»/«حفظ التعديل»)؛ السطر القابل للنقر أعلاه وحده يحمل الاقتراح.
+  `levelLooksLikePipsSaveAgain` صار بلا مستعمل ⇒ launch يحذفه كما قال.
+- **chart-r49** (الإطار الرابع بالتخطيطات): **جزء tools أُنجز** `3421a96` — `ToolsScreen` يقرأ `matrix.home.dxySymbol.v1`/`dxyTf.v1` عند كل تركيز ويمرّر
+  `dxySymbol`/`dxyTf` لـ`LayoutPanel` (بانتشار حتى يضيفها chart لـ`Props`)؛ `onApply` يستعيدهما فقط إن حمل التخطيط `dxySymbol` (القديمة تحمل `dxyTf:'15m'`
+  ثابتاً — استعادته كانت ستفرض 15m) ويمرّر `layoutHeroSymbol`/`layoutHeroTf` ⇒ `applyHeroLayout` بالترمينال (يحفظ ويجلب). كتبتُ الأسماء بصفّ chart-r49.
+- **QA1 (a) `getToolPanel`**: `tools-panels/registry.ts` مالكه **ui** (مسجَّل بالصفّ). **tools38** بانتظار أنس.
+
+### التحقّق
+`bash scripts/qa-build-check.sh` **GREEN (0)** قبل كل التزام. selftests `tradePlan`، `positionSize`، `chart/newsRisk` تمرّ. لا تغيير حساب هذا التشغيل.
+**لم يُشغَّل التطبيق.**
+
+### ما يبدأ منه التشغيل القادم
+1. حين يضيف chart `dxySymbol`/`dxyTf` لـ`LayoutPanel` Props: استبدل الانتشار بـprops مسمّاة.
+2. جهاز: الترمينال أول فتح ⇒ دوّار لا شموع 2024؛ تطبيق تخطيط بـXAUUSD 4H بالرابعة يعيدها؛ BTCUSD السبريد بمنزلتين.
+3. «تصحيح لا تحريك» للوقف المفتوح — يحتاج نصّاً من launch.
