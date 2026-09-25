@@ -18,14 +18,7 @@ import { useI18n } from '../i18n/I18nContext';
 type Turn = { role: 'user' | 'ai'; text: string; offline?: boolean; priceAt?: string };
 
 /** وقت السعر الذي بُني عليه الجواب (`price_as_of`، backend-r12): الدخول بنصّ النموذج كان يُقرأ سعراً حيّاً
- * وهو إغلاق شمعة قد يكون مخزَّناً 15د أو إغلاق الجمعة يوم السبت. النصّ محلّي حتى يضيف الإطلاق مفتاحاً
- * بـ`locales.ts` (سابقة `REPLAY_TOUR_COPY`) — الكردي بحاجة مراجعة. */
-const PRICE_AT_COPY: Record<string, string> = {
-  ar: 'السعر بالجواب: إغلاق {time} بتوقيتك — ليس سعراً حيّاً',
-  en: 'Price in this answer: candle close at {time} your time — not a live price',
-  ku: 'نرخی ئەم وەڵامە: داخستنی مۆم لە {time} بە کاتی تۆ — نرخی ڕاستەوخۆ نییە',
-};
-
+ * وهو إغلاق شمعة قد يكون مخزَّناً 15د أو إغلاق الجمعة يوم السبت — يُعرض تحت الجواب بـ`t.aiPriceAsOf`. */
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
 /** «21:45» لليوم نفسه، وإلا يوم الأسبوع قبل الوقت («Fri, Sep 25 21:45»/«الجمعة، 25 سبتمبر 21:45») — عطلة الأسبوع هي الحالة
@@ -50,10 +43,6 @@ type Props = { symbol?: string; embedded?: boolean };
 
 export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
   const { t, rtl, lang } = useI18n();
-  const priceAtCopy =
-    (t as Partial<Record<'aiPriceAsOf', string>>).aiPriceAsOf ??
-    PRICE_AT_COPY[lang.startsWith('en') ? 'en' : lang] ??
-    PRICE_AT_COPY.ar;
   const align = rtl ? ('right' as const) : ('left' as const);
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
@@ -127,7 +116,7 @@ export function AiPanel({ symbol = 'EURUSD', embedded }: Props) {
             </Text>
             {turn.priceAt ? (
               <Text style={[styles.priceAt, { textAlign: align }]}>
-                {priceAtCopy.replace('{time}', turn.priceAt)}
+                {t.aiPriceAsOf.replace('{time}', turn.priceAt)}
               </Text>
             ) : null}
           </View>
