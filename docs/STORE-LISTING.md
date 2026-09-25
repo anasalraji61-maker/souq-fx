@@ -51,11 +51,11 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 • شموع يابانية، هايكن آشي، رينكو، كاجي، ونقطة ورقم.
 • حتى أربعة شارتات في شاشة واحدة، مع مزامنة الزمن بينها عند الحاجة — فتقرأ الشمعة نفسها على الأربعة معاً.
 • قارن زوجين على شارت واحد: في الشارت المكبَّر اضغط مطوّلاً على رمز من قائمتك فيُرسم فوق الأول بخطّ بنفسجي، كل شمعة مقابل نظيرتها في الوقت نفسه.
-• المس أي شمعة لترى افتتاحها وأعلاها وأدناها وإغلاقها ومداها بالـpip، وكم pip يبعد المستوى عن السعر الحالي، ثم المس 🔔 لتضع تنبيه سعر عنده.
+• المس أي شمعة لترى افتتاحها وأعلاها وأدناها وإغلاقها ومداها بالـpip وتغيّرها عن إغلاق السابقة، وكم pip يبعد المستوى عن السعر الحالي، ثم المس 🔔 لتضع تنبيه سعر عنده.
 • كبّر وصغّر بإصبعين، والشمعة الجارية تبقى أمامك. واسحب محور السعر لتطول الشموع أو تقصر. ارجع للخلف تدرس نموذجاً قديماً فتبقى الشموع ثابتة تحت إصبعك، ولمسة واحدة تعيدك لآخر شمعة دون أن تفقد التكبير.
 • عدّاد تحت السعر الحيّ يخبرك كم بقي على إغلاق الشمعة الجارية.
 • سعر أعلى قمّة وأدنى قاع على الشاشة مكتوب عند ذيليهما ويتحدّث وأنت تسحب، وخطّ خافت يفصل كل يوم تداول عن الذي يليه على الفريمات الصغيرة.
-• المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، الفوليوم وغيرها، ومستويات الارتكاز (Pivot وCamarilla وفيبوناتشي) وأعلى الأمس وأدناه وبجانب كل مستوى سعره، وتظليل جلسات طوكيو ولندن ونيويورك.
+• المؤشرات التي يستخدمها المتداول فعلاً: المتوسطات المتحركة SMA وEMA، بولنجر، RSI، MACD، الفوليوم وغيرها وقيمة كل خطّ مكتوبة بجانب اسمه، ومستويات الارتكاز (Pivot وCamarilla وفيبوناتشي) وأعلى الأمس وأدناه وبجانب كل مستوى سعره، وتظليل جلسات طوكيو ولندن ونيويورك.
 • «عدسات» تضع مجموعة مؤشرات جاهزة بلمسة: هيكل (المتوسطات)، زخم (RSI وMACD)، سيولة (الفوليوم وبولنجر وCVD تقديري من الشموع، لا من تدفّق أوامر حقيقي).
 • أدوات رسم: خط اتجاه، شعاع، خطوط أفقية ورأسية، مستطيل، فيبوناتشي، مناطق وملاحظات تكتب نصّها، مع زرّ تراجع — حتى في المساحة الفارغة يمين آخر شمعة. الخط الأفقي يكتب بُعده عن السعر بالـpip، والمنطقة ارتفاعها. وما ترسمه على فريم يظهر على بقية فريمات الرمز نفسه.
 • خطّط صفقة شراء أو بيع على الشارت: اسحب من الدخول إلى الوقف فيظهر الهدف، والمسافتان بالـpip، ونسبة العائد إلى المخاطرة — واسحب الهدف لتغيّر النسبة. وعلى الشموع السابقة ترى هل بلغ السعر الهدف أم الوقف.
@@ -112,11 +112,11 @@ MATRIX is a technical-analysis workspace built for individual traders: fast char
 CHARTS
 • Candlesticks, Heikin-Ashi, Renko, Kagi and Point & Figure.
 • Up to four charts on one screen with optional time sync — or overlay a second symbol on one chart, aligned bar by bar in time.
-• Tap any candle to see its open, high, low, close and range in pips, plus that level's distance from price, then tap 🔔 to set an alert there.
-• Pinch to zoom — the live candle stays in view. Drag the price axis to make candles taller or shorter. Scroll back through history; one tap returns to the live candle, zoom intact.
-• A countdown under the live price shows how long until the current candle closes.
+• Tap any candle for its OHLC, range and change from the previous close, plus that level's distance from price in pips, then tap 🔔 to set an alert there.
+• Pinch to zoom — the live candle stays in view. Drag the price axis to stretch candles. Scroll back through history; one tap returns to the live candle, zoom intact.
+• A countdown under the live price to the current candle's close.
 • The on-screen high and low carry their price and update as you scroll, and a faint line marks where each trading day starts on intraday charts.
-• The indicators traders use: SMA and EMA, Bollinger Bands, RSI, MACD, Volume and more, plus pivot levels (classic, Camarilla, Fibonacci) and yesterday's high and low, and Tokyo, London and New York session shading.
+• The indicators traders use: SMA and EMA, Bollinger Bands, RSI, MACD, Volume and more, each line's value in the legend, plus pivot levels (classic, Camarilla, Fibonacci) and yesterday's high and low, and Tokyo, London and New York session shading.
 • One-tap "lenses" that add a ready set of indicators: Structure (moving averages), Momentum (RSI and MACD), Liquidity (volume, Bollinger and a CVD estimated from candles, not order flow).
 • Drawing tools: trend line, ray, horizontal and vertical lines, rectangle, Fibonacci, zones and typed notes, with undo — also past the live candle. A horizontal line shows its distance from price in pips; a zone, its height. Drawings follow the symbol across timeframes.
 • Plan a buy or sell on the chart: drag from entry to stop to see the target, both distances in pips and the reward-to-risk ratio — drag the target to change it. On past candles it shows whether price hit the target or the stop.
@@ -132,7 +132,7 @@ TRADER TOOLS
 • Position size calculator: enter your balance, risk (percent or amount) and stop loss (in pips, or entry and stop prices) to get your lot size — standard, cent or micro accounts — with one-tap targets from 1:1 to 1:3, an estimate of the margin your broker holds at your leverage, and optional spread and commission so your risk and net profit include costs — and warns when your stop sits inside the spread.
 • A trade journal you fill in yourself: the potential profit in money before you enter, each trade's result in pips and money before you save it — one tap closes it exactly at its stop, breakeven or target — then win rate, net result per instrument and average result in units of risk (R), from your entry stop even after trailing it.
 • A heads-up before a trade when high-impact news is close for the pair's, index's or metal's currency — using your broker's symbol names. If the calendar fails to load, it says so.
-• Market screener using common indicator conditions.
+• A screener on common indicator conditions.
 • Simple strategy backtesting on past data, for learning.
 • An AI assistant that answers your technical-analysis questions in your language, plus a short weekly report.
 • Share a chart image in one tap.
@@ -165,3 +165,8 @@ The first release of MATRIX: multi-chart layouts, indicators and drawing tools, 
 > يقول «pip» بالعربية (`570cb08`، `afbb0c2`، `5c66653`) لأنّ متداول MT4/5 يقرأ «النقاط» points = عُشر pip — فيظنّ الوقف عُشر ما هو. استُبدلت
 > بـ«بالـpip» كنصوص الواجهة؛ «نقطة التعادل» باقية (breakeven، لا مسافة). الإنجليزي كان «pips» أصلاً. العدّ بسكربت (نصّ الوصف بين عنوانه و«ما
 > الجديد»): **ar 3746 / en 3996** من 4000.
+
+
+> **2026-09-25 (launch 65)**: سطر التقاطع يذكر التغيّر عن إغلاق الشمعة السابقة (`b70f388`، `5cdd75f`)، وسطر المؤشرات قيمة كل خطّ
+> بالمفتاح (`f0b7a43`). لإفساح الإنجليزي اختُصر سطرا العدّاد والماسح وعبارة محور السعر بلا حذف ميزة، و«open, high, low, close» ⇒ «OHLC».
+> العدّ: **ar 3803 / en 4000** من 4000 (بلا هامش — أي إضافة تحتاج اختصاراً).
