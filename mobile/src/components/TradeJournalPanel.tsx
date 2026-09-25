@@ -44,6 +44,7 @@ import {
   stackedCurrencyExposure,
   draftStackedExposure,
   draftStackedExposureText,
+  formatJournalLots,
   openTradesWithoutStop,
   knownLots,
   journalInstrumentKey,
@@ -1061,7 +1062,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             {/* 1 هو افتراض الباك-إند لصفقة بلا حجم مسجَّل — لا يُميَّز عن حجم كتبه المتداول، فلا يُعرض
                 كأنه رقمه. ما عداه حجم سجّله فعلاً (يدوياً أو عبر «سجّل الخطة» من الحاسبة)، و1.00 من «سجّل الخطة»
                 تشهد بها ملاحظتها — راجع `knownLots`. */}
-            {knownLots(tr.size, tr.note) != null ? ` · ${Number(tr.size.toFixed(2))} lot` : ''}{' '}
+            {knownLots(tr.size, tr.note) != null ? ` · ${formatJournalLots(tr.size)} lot` : ''}{' '}
             · {formatPrice(tr.entry, tr.symbol)}
             {tr.exit != null ? ` → ${formatPrice(tr.exit, tr.symbol)}` : ` ${t.journalOpenSuffix}`}
           </Text>

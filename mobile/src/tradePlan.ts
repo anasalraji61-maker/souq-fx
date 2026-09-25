@@ -189,12 +189,23 @@ export function formatJournalMoney(
   uscTemplate: string,
   signed = false
 ): string {
-  const plus = signed && cash.amount > 0 ? '+' : '';
-  if (cash.ccy !== 'USC') return `${plus}${formatMoney(cash.amount, cash.ccy)}`;
+  // «+» فقط لرقمٍ يُكتب غير صفر: `formatMoney` يُسقط «−» لما يُقرَّب صفراً، فكان ربح USDJPY.micro الصغير
+  // يُكتب «+0 JPY» والبيع المقابل «0 JPY»؛ وسنت 0.04 USC «(≈ +0.00 USD)» — الإشارة لكل رقمٍ بما يُعرض منه
+  const plus = (v: number, ccy: string) => (signed && v > 0 && /[1-9]/.test(formatMoney(v, ccy)) ? '+' : '');
+  if (cash.ccy !== 'USC') return `${plus(cash.amount, cash.ccy)}${formatMoney(cash.amount, cash.ccy)}`;
   const num = (v: number, ccy: string) => formatMoney(v, ccy).slice(0, -(ccy.length + 1));
+  const usd = cash.amount / 100;
   return uscTemplate
-    .replace('{usc}', `${plus}${num(cash.amount, 'USC')}`)
-    .replace('{usd}', `${plus}${num(cash.amount / 100, 'USD')}`);
+    .replace('{usc}', `${plus(cash.amount, 'USC')}${num(cash.amount, 'USC')}`)
+    .replace('{usd}', `${plus(usd, 'USD')}${num(usd, 'USD')}`);
+}
+
+/**
+ * حجم الصفقة بسطر الدفتر: «0.015 lot» لا «0.01» — المال بالسطر نفسه محسوبٌ من الحجم الكامل، والخادم والنموذج يقبلان أي
+ * حجم > 0 (وسطاء عقود الكريبتو يسمحون بـ0.001). كان `toFixed(2)` ⇒ «0 lot» لـ0.004. ستّ منازل معنوية تُسقط ضجيج العائم.
+ */
+export function formatJournalLots(size: number): string {
+  return String(Number(size.toPrecision(6)));
 }
 
 /**

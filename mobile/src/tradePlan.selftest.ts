@@ -67,6 +67,7 @@ import {
   journalPnl,
   journalRisk,
   formatJournalMoney,
+  formatJournalLots,
   planSummaryText,
   priceDistanceText,
   QUICK_SYMBOLS,
@@ -1867,7 +1868,30 @@ console.log('tradePlan journalPnl cent/micro money selftest OK');
   assert.equal(formatJournalMoney({ amount: -1600, ccy: 'JPY' }, tpl, true), '−1,600 JPY');
   assert.equal(formatJournalMoney({ amount: 0, ccy: 'USC' }, tpl, true), '0.00 USC (≈ 0.00 USD)');
 }
+// الإشارة تتبع الرقم المعروض: ربحٌ يُقرَّب صفراً بلا «+»، كالخسارة المقرَّبة صفراً بلا «−» (كانا «+0 JPY» مقابل «0 JPY»)
+{
+  const tpl = '{usc} USC (≈ {usd} USD)';
+  assert.equal(formatJournalMoney({ amount: 0.04, ccy: 'USC' }, tpl, true), '+0.04 USC (≈ 0.00 USD)');
+  assert.equal(formatJournalMoney({ amount: -0.04, ccy: 'USC' }, tpl, true), '−0.04 USC (≈ 0.00 USD)');
+  assert.equal(formatJournalMoney({ amount: 0.2, ccy: 'JPY' }, tpl, true), '0 JPY');
+  assert.equal(formatJournalMoney({ amount: -0.2, ccy: 'JPY' }, tpl, true), '0 JPY');
+  assert.equal(formatJournalMoney({ amount: 0.6, ccy: 'JPY' }, tpl, true), '+1 JPY');
+  assert.equal(formatJournalMoney({ amount: 0.004, ccy: 'USD' }, tpl, true), '0.00 USD');
+  assert.equal(formatJournalMoney({ amount: 0.005, ccy: 'USD' }, tpl, true), '+0.01 USD');
+  assert.equal(formatJournalMoney({ amount: 1.5, ccy: 'USC' }, tpl, true), '+1.50 USC (≈ +0.02 USD)');
+}
 console.log('tradePlan formatJournalMoney selftest OK');
+
+// حجم سطر الدفتر بمنازله الكاملة (كان toFixed(2): 0.004 ⇒ «0 lot»)
+{
+  assert.equal(formatJournalLots(0.004), '0.004');
+  assert.equal(formatJournalLots(0.015), '0.015');
+  assert.equal(formatJournalLots(0.1 + 0.2), '0.3');
+  assert.equal(formatJournalLots(1), '1');
+  assert.equal(formatJournalLots(2.5), '2.5');
+  assert.equal(formatJournalLots(0.01), '0.01');
+}
+console.log('tradePlan formatJournalLots selftest OK');
 
 // knownLots يقرأ «1.00 lot» من ملاحظة الحاسبة بكلمات عربية/كردية
 {
