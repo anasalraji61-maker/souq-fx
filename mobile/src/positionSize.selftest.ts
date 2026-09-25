@@ -2873,7 +2873,7 @@ console.log('positionSize Arabic comma price hint selftest OK');
   const S = (x: string) => instrumentSpec(x)!;
   assert.equal(slPipsCarryOver(S('EURUSD'), S('GBPUSD')), true);
   assert.equal(slPipsCarryOver(S('EURUSD'), S('USDJPY')), true);
-  assert.equal(slPipsCarryOver(S('GBPJPY'), S('USDTRY')), true);
+  assert.equal(slPipsCarryOver(S('GBPJPY'), S('USDSGD')), true);
   assert.equal(slPipsCarryOver(S('XAUUSD'), S('XAUEUR')), true);
   assert.equal(slPipsCarryOver(S('GOLD'), S('XAUUSD.m')), true);
   assert.equal(slPipsCarryOver(S('EURUSD'), S('XAUUSD')), false);
@@ -2914,8 +2914,8 @@ console.log('positionSize slPipsCarryOver selftest OK');
   for (const [pair, r] of [['USDJPY', 149.5], ['NZDJPY', 40], ['USDPLN', 3.6], ['NZDHKD', 4.5], ['CHFJPY', 170]] as const) {
     assert.equal(manualConvLooksInverted(pair, r), null, pair);
   }
-  // أزواج حول 1 (المقلوب معقول أيضاً) وأساس ناشئ (HUFJPY ~0.4) ⇒ لا تخمين
-  for (const [pair, r] of [['EURUSD', 0.92], ['USDCHF', 0.88], ['AUDUSD', 0.65], ['HUFJPY', 0.4], ['ZARJPY', 0.5]] as const) {
+  // أزواج حول 1 (المقلوب معقول أيضاً) وأساس ناشئ تحت 1 ين (HUFJPY ~0.4) ⇒ لا تخمين؛ ZARJPY (لم ينزل عن ~5) صار يُعلَّم (tools83)
+  for (const [pair, r] of [['EURUSD', 0.92], ['USDCHF', 0.88], ['AUDUSD', 0.65], ['HUFJPY', 0.4]] as const) {
     assert.equal(manualConvLooksInverted(pair, r), null, pair);
   }
   // تقاطعات فوق 1 دائماً بتسعير دولار/كندي/أسترالي… : «0.7874» لـGBPUSD كان يُقبل (EURGBP بحساب دولار ⇒ 0.63 لوت بدل 0.39)
@@ -3106,3 +3106,40 @@ console.log('positionSize two-decimal price in pips field selftest OK');
   assert.equal(parseSlPips('25.0000', gbp), 25);
 }
 console.log('positionSize trailing-zero price in pips field selftest OK');
+{
+  // tools83 (1): حساب ين على الغريبة — ZARJPY/SGDJPY فوق 1 دائماً، سعرٌ < 1 مكتوب يدوياً مقلوب
+  const S = (x: string) => instrumentSpec(x)!;
+  assert.deepEqual(conversionPair('ZAR', 'JPY'), { symbol: 'ZARJPY', invert: false });
+  assert.ok(Math.abs(manualConvLooksInverted('ZARJPY', 0.1215)! - 1 / 0.1215) < 1e-9);
+  assert.ok(Math.abs(manualConvLooksInverted('SGDJPY', 0.00893)! - 1 / 0.00893) < 1e-9);
+  for (const p of ['MXNJPY', 'TRYJPY', 'HKDJPY', 'PLNJPY', 'SEKJPY', 'NOKJPY', 'CNHJPY']) assert.ok(manualConvLooksInverted(p, 0.2) != null, p);
+  assert.equal(manualConvLooksInverted('ZARJPY', 8.23), null);
+  assert.equal(manualConvLooksInverted('HUFJPY', 0.41), null);
+  // المال: USDZAR بحساب ين 1,500,000، 1%، وقف 300 pip — المقلوب كان 41 لوتاً، الصحيح 0.60
+  const zar = S('USDZAR');
+  const size = (rate: number) => positionSize({ balance: 1_500_000, riskPct: 1, slPips: 300, pipValuePerLot: pipValuePerLot(zar, rate), contractSize: zar.contractSize })!.lots;
+  assert.equal(size(8.23), 0.6);
+  assert.equal(size(manualConvLooksInverted('ZARJPY', 1 / 8.23)!), 0.6);
+
+  // tools83 (2): نقاط الوقف لا تنتقل بين رئيسية وغريبة — «20» من EURUSD على USDTRY = 20.5 لوت ووقف داخل السبريد
+  assert.equal(slPipsCarryOver(S('EURUSD'), S('USDTRY')), false);
+  assert.equal(slPipsCarryOver(S('USDTRY'), S('EURUSD')), false);
+  assert.equal(slPipsCarryOver(S('GBPJPY'), S('USDZAR')), false);
+  assert.equal(slPipsCarryOver(S('USDZAR'), S('USDMXN')), false);
+  assert.equal(slPipsCarryOver(S('USDZAR'), S('EURZAR')), true);
+  assert.equal(slPipsCarryOver(S('EURUSD'), S('USDSGD')), true);
+  assert.equal(slPipsCarryOver(S('USDTRY'), S('XAUUSD')), false);
+
+  // tools83 (3): سعر غريبة بمنزلتين بخانة النقاط — «18.25» (USDZAR) كان 18.25 pip ⇒ 10.08 لوت بدل 0.12
+  for (const [raw, sym] of [['18.25', 'USDZAR'], ['41.20', 'USDTRY'], ['17.85', 'USDMXN'], ['7.83', 'USDHKD'], ['10.57', 'USDSEK'], ['3.67', 'USDILS'], ['45.35', 'EURTRY']] as const) {
+    assert.equal(parseSlPips(raw, S(sym)), null, raw);
+    assert.equal(slPipsLooksLikePrice(raw, S(sym)), true, raw);
+  }
+  // النقاط الحقيقية على الغريبة تبقى: أعداد صحيحة، أعشار، ومئات
+  for (const [raw, v] of [['1500', 1500], ['250.5', 250.5], ['18.5', 18.5], ['300', 300], ['150.25', 150.25]] as const) {
+    assert.equal(parseSlPips(raw, S('USDZAR')), v, raw);
+  }
+  // والرئيسيات كما كانت: «12.25» على GBPUSD نقاط
+  assert.equal(parseSlPips('12.25', S('GBPUSD')), 12.25);
+}
+console.log('positionSize exotic pairs (JPY conv inverted, carry-over, two-decimal price) selftest OK');

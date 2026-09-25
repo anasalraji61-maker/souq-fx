@@ -427,9 +427,16 @@ export function manualConvLooksInverted(pair: string | null | undefined, rate: n
   if (rate > 1) return ALWAYS_UNDER_ONE_PAIRS.has(pair) ? 1 / rate : null;
   if (rate === 1) return null;
   if (ALWAYS_OVER_ONE_PAIRS.has(pair)) return 1 / rate;
+  if (pair.slice(3) === 'JPY' && EM_OVER_ONE_VS_JPY.has(pair.slice(0, 3))) return 1 / rate;
   if (!MAJOR_BASES.has(pair.slice(0, 3)) || !ALWAYS_OVER_ONE_QUOTES.has(pair.slice(3))) return null;
   return 1 / rate;
 }
+/**
+ * عملات ناشئة/إسكندنافية **فوق 1 ين دائماً** (أدناها TRYJPY ~3.5 بعد انهيار الليرة، MXNJPY ~4.5، ZARJPY ~5.5، والبقية أعلى بكثير).
+ * حساب ين على USDZAR/USDSGD/… يحوّل عبر ZARJPY/SGDJPY (`conversionPair`)، وأساسها ليس رئيسية فلم يُفحص: «0.1215» (JPY ⇒ ZAR
+ * مقلوباً) بدل 8.23 كان يُقبل ⇒ **41 لوت بدل 0.60** (×68)، وSGDJPY «0.00893» بدل 112 ⇒ 560 لوت بدل 0.04. HUF خارجها (HUFJPY ~0.4).
+ */
+const EM_OVER_ONE_VS_JPY = new Set(['ZAR', 'MXN', 'TRY', 'SGD', 'HKD', 'PLN', 'SEK', 'NOK', 'DKK', 'ILS', 'CNH', 'SAR', 'AED']);
 
 /** كم وحدة من عملة الحساب تساوي وحدة واحدة من عملة التسعير، من سعر زوج التحويل. */
 export function quoteToAccountRate(conv: { invert: boolean } | null, pairPrice: number | null): number | null {
@@ -561,12 +568,21 @@ export function typedExitQuoteToAccount(
 export function slPipsCarryOver(prev: InstrumentSpec, next: InstrumentSpec): boolean {
   const kind = (x: InstrumentSpec) => (METALS[x.base] ? x.base : 'FX');
   if (kind(prev) !== kind(next)) return false;
-  if (kind(next) === 'FX' || prev.quote === next.quote) return true;
+  if (prev.quote === next.quote) return true;
+  // فوركس ⇄ فوركس ما دام الصنفان **رئيسيَّين** (pip قيمته 6–13$ للوت): «20» من EURUSD على USDTRY وقف 0.0020 ليرة — داخل
+  // السبريد، وقيمة الـpip 0.24$ ⇒ **20.5 لوت** بحساب 10,000 و1% (تحت حدّ 50 لوت، والسبريد يُمسح بالتبديل نفسه فلا تحذير).
+  // عملة تسعير ناشئة/إسكندنافية (`EXOTIC_PIP_QUOTES`) تحتفظ بالنقاط فقط مع العملة نفسها (USDZAR ⇄ EURZAR).
+  if (kind(next) === 'FX') return !EXOTIC_PIP_QUOTES.has(prev.quote) && !EXOTIC_PIP_QUOTES.has(next.quote);
   // المعدن نفسه بعملة **بسعرٍ مقارب** فقط: pip الذهب 0.1 بأي عملة تسعير، فـ«150» على XAUUSD وقف 15$ وعلى XAUJPY وقف 15 ين
   // (~0.10$) ⇒ لوت أكبر ×160 بمخاطرة «1%» صحيحة الحساب (XAUTRY/XAUHKD/XAUCNH/XAUSEK كذلك). بين هذه العملات السعر ضمن ضعفين
   return METAL_CARRY_QUOTES.has(prev.quote) && METAL_CARRY_QUOTES.has(next.quote);
 }
 const METAL_CARRY_QUOTES = new Set(['USD', 'EUR', 'GBP', 'CHF', 'AUD', 'CAD', 'NZD', 'SGD']);
+/**
+ * عملات تسعيرٍ سعرُ الدولار بها بين ~3.5 و~45 (pip 0.0001 ⇒ قيمة الـpip للوت 0.2–3$ لا 10$): وقفها بمئات النقاط، وسعرها
+ * بمنزلتين («18.25») يُكتب بخانة النقاط. SGD (1.35) ليست منها — pip قريب من الرئيسيات.
+ */
+const EXOTIC_PIP_QUOTES = new Set(['SEK', 'NOK', 'DKK', 'PLN', 'TRY', 'ZAR', 'MXN', 'HKD', 'CNH', 'ILS', 'SAR', 'AED']);
 
 /** قيمة الـpip للوت قياسي واحد، بعملة الحساب. */
 export function pipValuePerLot(spec: InstrumentSpec, quoteToAccount: number): number {
@@ -654,7 +670,7 @@ export function parseSlPips(raw: string, spec?: InstrumentSpec | null): number |
 
 function pipsLookLikePrice(raw: string, v: number, spec?: InstrumentSpec | null): boolean {
   const typed = typedFractionDigits(raw);
-  return pipsHaveMoreThanTwoDecimals(v) || (typed >= 4 && !Number.isInteger(v)) || pipsLookLikeTwoDecimalPrice(v, spec);
+  return pipsHaveMoreThanTwoDecimals(v) || (typed >= 4 && !Number.isInteger(v)) || pipsLookLikeTwoDecimalPrice(v, spec, typed);
 }
 
 /**
@@ -673,8 +689,14 @@ function typedFractionDigits(raw: string): number {
  * وبجزء من مئة ذي قيمة. مسافةٌ بجزء من مئة pip لا تأتي من الأسعار (`slPipsFromPrices` تقرّب لعُشر pip) ولا يكتبها أحد، والوقف
  * 1.27 pip يمرّ فوق حدّ «أضيق من 1 pip»: 1% من 10,000 = **7.87 لوت** بدل 0.40 لوقف 25 pip. الين والذهب (pip أكبر) خارجها.
  */
-function pipsLookLikeTwoDecimalPrice(v: number, spec?: InstrumentSpec | null): boolean {
-  return spec?.pipSize === 0.0001 && v >= 0.5 && v < 2.5 && Math.abs(v * 10 - Math.round(v * 10)) > 1e-6;
+function pipsLookLikeTwoDecimalPrice(v: number, spec?: InstrumentSpec | null, typed = 0): boolean {
+  if (spec?.pipSize !== 0.0001 || v < 0.5) return false;
+  const hundredths = Math.abs(v * 10 - Math.round(v * 10)) > 1e-6;
+  // وبعملة تسعير ناشئة السعر نفسه بين ~2.5 و~50: «18.25» (USDZAR) و«41.20» (USDTRY) كانت 18.25 pip ⇒ **10.08 لوت بدل 0.12**
+  // لوقف 1,500 pip — عكس الرئيسيات، هنا السعر بخانة النقاط **يكبّر** اللوت. حتى 100 كي تبقى EURTRY وما فوقها داخلها. منزلتان
+  // **مكتوبتان** تكفيان هنا («41.20» تُقرأ 41.2): أسعار هذه العملات تُعرض بمنزلتين فأكثر، والمسافة لا تُكتب بجزء من مئة pip.
+  if (EXOTIC_PIP_QUOTES.has(spec.quote)) return v < 100 && (hundredths || typed === 2);
+  return hundredths && v < 2.5;
 }
 
 /** أكثر من منزلتين عشريتين ذواتَي قيمة («1.082»، لا «1.0800» ولا «12.25») — مسافة بالـpip لا تحملها، السعر يحملها. */
