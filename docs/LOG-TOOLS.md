@@ -5407,3 +5407,28 @@ XAUJPY — صار 7 ين (فوق الحدّ) بالغرض نفسه.
 1. جهاز: دفتر US30 دخول 42000 وقف «50» ⇒ سطر «50 pip تعني 41950.00» قابل للنقر؛ ضغطة حفظ ثانية تُبقي 50.
 2. جهاز: دفتر US30 دخول «42,000» ⇒ يُقبل بلا سطر القراءتين.
 3. سبريد بمنزلتين على ZARJPY/USDMXN: تحذير لا رفض — يحتاج مفتاح نصّ من launch (باقٍ من التشغيل 93).
+
+## 2026-09-25 (خمسة وتسعون) — التشغيل: صفوف التنسيق الأربعة الموجَّهة لـtools + DESIGN-PRO DP1/DP12
+
+### التنسيق — أُغلقت (لـQA أن يتحقّق ويحذف)
+- **launch140 — منجز** `a7849c4`: زرّ `journalRetryBtn` تحت نصّ الفشل يستدعي `refresh()` (مع `setLoading(true)`)، والنصّ صار
+  `journalLoadErrorRetry` بدل `journalLoadError`. الزرّ يظهر ما دام `listError` (التحديث الناجح يمسحه).
+- **launch140b — منجز** `5fcea8f`: `pipsLevel` يحمل `points = !journalSpec(sym)` ⇒ `levelLooksLikePointsHint` لسطور الوقف/الهدف/الخروج
+  و`levelLooksLikePointsSaveBlocked` لرسالة منع الحفظ على المؤشرات والرقمية؛ الفوركس والمعادن على نصّ pip. selftest `tradePlan`
+  يثبّت أن `journalSpec` = null لـUS30/NAS100/BTCUSD/ETHUSDT/DE40 وغير null لـEURUSD/USDJPY/XAUUSD/XAGUSD/ZARJPY/EURUSD.PRO.
+- **ui45 — منجز** `71d8066`: (1) `TerminalScreen` لا يمرّر `layoutCount`/`layoutShape`/`onLayoutPick` إلى `RightPanelRail` — لـui حذفها
+  من النوع الآن. (2) زرّ `q2` «▦» صار للهاتف وحده (يفتح `setQuadOpen`)؛ على الحاسوب المختار الكامل بالشريط العلوي هو المكان الوحيد.
+- **DP1 (جانب tools) — منجز** `c390874`: `...numeric` من `theme.ts` على أنماط الأرقام في `PositionSizePanel` (اللوت، الشرائح، الخانات،
+  التلميحات)، `TradeJournalPanel` (الإحصاءات، الصفوف، الخانات، سطور الخطة)، `NewsRiskBanner` (العدّ التنازلي)، `TerminalScreen`
+  (OHLC، التغيّر، السبريد، الحالة، شرائح الهاتف)، `ToolsScreen` (نتائج الماسح). جانب chart باقٍ لـchart.
+- **DP12 (جانب tools) — منجز** `8c07b1b`: لا وزن 700/800/900 في ملفّاتي الستّة (65 نمطاً): 600 للّوت الناتج وسعر OHLC، 500 لما عداه.
+  DP11 (مسافات خارج شبكة 4، `TerminalScreen` 46) لم يُبدأ — التشغيل القادم.
+
+### التحقّق
+`bash scripts/qa-build-check.sh` **GREEN (0)** قبل كل التزام. selftest `tradePlan` يمرّ. تغييرات هذا التشغيل عرضٌ ونصّ فقط —
+لا حساب تغيّر. **لم يُشغَّل التطبيق.**
+
+### ما يبدأ منه التشغيل القادم
+1. DP11: مسافات خارج شبكة 4 في `TerminalScreen` (46) ثم بقية ملفّاتي — بند مستقلّ لكل ملفّ.
+2. DP2 ميزانية التأكيد في ملفّاتي: `resultLots` بلون التأكيد + `chipOn`/`hintOn`/`logBtnText` في اللوحة نفسها ⇒ أكثر من عنصر تأكيد بمنطقة.
+3. جهاز: دفتر بلا شبكة ⇒ «إعادة المحاولة» يعيد التحميل؛ US30 وقف «50» ⇒ «50 نقطة تعني 41950.00».
