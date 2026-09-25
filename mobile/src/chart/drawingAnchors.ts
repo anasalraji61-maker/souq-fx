@@ -73,7 +73,15 @@ export function timeAtIndex(
 ): number | null {
   const n = bars.length;
   if (!n || !Number.isFinite(index)) return null;
-  if (index < 0) return barTime(bars[0]) + index * pastStep(bars, stepSec);
+  if (index < 0) {
+    const wk = weekPattern(bars, stepSec);
+    if (wk) {
+      // الخانة نفسها بالأسبوع المحمَّل الأوّل، ثم تُرجَع أسابيع كاملة بالزمن
+      const k = Math.ceil(-index / wk.bars - 1e-9);
+      return timeAtIndex(bars, index + k * wk.bars, stepSec, endTime)! - k * WEEK_SEC;
+    }
+    return barTime(bars[0]) + index * pastStep(bars, stepSec);
+  }
   if (index >= n) return seriesEnd(bars, endTime) + (index - (n - 1)) * stepSec;
   const i = Math.floor(index);
   const bar = bars[i]!;
@@ -93,6 +101,30 @@ function pastStep(bars: readonly TimeBar[], stepSec: number): number {
   const span = n > 1 ? barTime(bars[n - 1]!) - barTime(bars[0]!) : 0;
   const avg = span / (n - 1);
   return Number.isFinite(avg) && avg > 0 ? avg : stepSec > 0 ? stepSec : 1;
+}
+
+const WEEK_SEC = 7 * 86400;
+
+/**
+ * قبل أوّل شمعة على سلسلة تغطّي أسبوعاً كاملاً (دون الأسبوعي، شموع لا لبنات): الأسبوع المحمَّل الأوّل
+ * نمطٌ يتكرّر للخلف — عطلة الفوركس بموضعها نفسه كل أسبوع — فالنقطة تُعدّ بشموع أسابيع كاملة لا بمتوسّط.
+ * المتوسّط (`pastStep`) يتبدّل مع كل شمعة جديدة حين تدخل عطلة النافذة أو تخرج منها: شعاع رُسم على اليومي
+ * ويُعرض على H1 كان يقفز طرفه 76 شمعة (~35 pip) لحظة افتتاح الأحد، و124 شمعة بمنتصف الأسبوع. الآن ثابت
+ * بالشموع كما بـTradingView. `bars` = شموع `[أوّل، أوّل + أسبوع)`.
+ */
+function weekPattern(bars: readonly TimeBar[], stepSec: number): { bars: number } | null {
+  const n = bars.length;
+  if (n < 2 || !(stepSec > 0) || stepSec >= WEEK_SEC || bars[0]!.srcTime != null) return null;
+  const first = barTime(bars[0]!);
+  if (!(barTime(bars[n - 1]!) - first >= WEEK_SEC)) return null;
+  let lo = 0;
+  let hi = n - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (barTime(bars[mid]!) < first + WEEK_SEC) lo = mid;
+    else hi = mid - 1;
+  }
+  return { bars: lo + 1 };
 }
 
 /** نهاية السلسلة بالزمن الحقيقي: آخر شمعة مصدر (`endTime`) إن كانت بعد آخر لبنة، وإلا زمن آخر خانة. */
@@ -117,7 +149,15 @@ export function indexAtTime(
   const step = stepSec > 0 ? stepSec : 1;
   const first = barTime(bars[0]);
   const last = seriesEnd(bars, endTime);
-  if (time < first) return Math.round((time - first) / pastStep(bars, stepSec));
+  if (time < first) {
+    const wk = weekPattern(bars, stepSec);
+    if (wk) {
+      // يُقدَّم الزمن أسابيع كاملة حتى يقع بالأسبوع المحمَّل الأوّل، فخانته هناك ناقص شموع تلك الأسابيع
+      const k = Math.ceil((first - time) / WEEK_SEC - 1e-9);
+      return indexAtTime(bars, time + k * WEEK_SEC, stepSec, endTime)! - k * wk.bars;
+    }
+    return Math.round((time - first) / pastStep(bars, stepSec));
+  }
   // داخل الشمعة الحيّة (نقطة 10:45 من M15 وهي بدأت 10:00 على H1) ليس مستقبلاً: التقريب كان يرميها لخانة
   // المستقبل التالية، وقمّتان 13:00 و15:00 على اليومي تنطبقان ⇒ ترند عمودي. يكمل للبحث ثم `withinBar`.
   if (time > last && time - last >= step) return n - 1 + Math.round((time - last) / step);

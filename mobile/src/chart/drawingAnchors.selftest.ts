@@ -38,9 +38,30 @@ const bars = (from: number, n: number) =>
   for (let i = 0; i < 120; i++) times.push(i * H);
   for (let i = 0; i < 60; i++) times.push((120 + 48 + i) * H);
   const b = times.map((time) => ({ time }));
-  const avg = (times[179]! - times[0]!) / 179;
-  const oldPoint = -110 * avg; // 110 شمعة قبل أوّل المحمَّل
-  assert.equal(indexAtTime(b, oldPoint, H), -110); // كان −(110×1.27)= −140 بساعات التقويم
+  // السلسلة تغطّي أسبوعاً ⇒ نمطها يتكرّر للخلف: 120 شمعة تداول ثم 48 ساعة عطلة. 140 ساعة قبل أوّل شمعة
+  // = 28 ساعة تداول بالأسبوع السابق قبل عطلته ⇒ −92 (كان −140 بساعات التقويم، ثم −110 بالمتوسّط المتقلّب)
+  assert.equal(indexAtTime(b, -140 * H, H), -92);
+  for (const i of [-1, -92, -120, -121, -400]) assert.equal(indexAtTime(b, timeAtIndex(b, i, H)!, H), i);
+}
+
+// شعاع اليومي على H1 بساعات الفوركس الحقيقية (الأحد 21:00 ← الجمعة 21:00 UTC): طرفاه قبل التاريخ المحمَّل،
+// وخانتهما ثابتة بالشموع مع كل شمعة جديدة — كانت تقفز 76 شمعة عند افتتاح الأحد (متوسّط النافذة يتبدّل).
+{
+  const open = (t: number) => {
+    const d = new Date(t * 1000);
+    const wd = d.getUTCDay();
+    const h = d.getUTCHours();
+    return !(wd === 6 || (wd === 5 && h >= 21) || (wd === 0 && h < 21));
+  };
+  const all: number[] = [];
+  const t0 = Date.UTC(2026, 6, 5, 21) / 1000; // الأحد 5 يوليو 21:00
+  for (let t = t0; all.length < 2000; t += H) if (open(t)) all.push(t);
+  const a = Date.UTC(2026, 7, 10) / 1000; // الاثنين 10 أغسطس (شمعة يومية)
+  const trueIdx = all.findIndex((t) => t >= a);
+  for (let end = 1500; end < 1700; end++) {
+    const win = all.slice(end - 180, end).map((time) => ({ time }));
+    assert.equal(indexAtTime(win, a, H), trueIdx - (end - 180), `window ending at bar ${end}`);
+  }
 }
 
 const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => ({
