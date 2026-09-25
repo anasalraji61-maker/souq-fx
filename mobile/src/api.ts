@@ -612,9 +612,11 @@ export const api = {
   socialConsensus: (body: { symbol: string; timeframe?: string; source_ids: string[] }) =>
     postJson<{
       symbol: string;
-      direction: string;
-      confidence: number;
-      avg_score: number;
+      /** backend-r2: null حين `status: 'unavailable'` (لا مصدر مرخَّص / لا بيانات) — لا يُقرأ «محايد». «الثقة» أُزيلت. */
+      direction: string | null;
+      avg_score: number | null;
+      status?: 'ok' | 'unavailable';
+      unavailable_reason?: string | null;
       split: { buy: number; sell: number; neutral: number };
       /** backend-r1: null حين لا سعر حيّ/شموع قليلة/محايد — السبب بـ`levels_basis.unavailable`. */
       levels: { entry: number; sl: number; tp: number } | null;
@@ -634,9 +636,11 @@ export const api = {
   analystsForecast: (symbol: string, timeframe = '15m') =>
     getJson<{
       symbol: string;
-      direction: string;
-      confidence: number;
-      avg_score: number;
+      /** backend-r2: null حين `status: 'unavailable'` (لا مصدر مرخَّص / لا بيانات) — لا يُقرأ «محايد». «الثقة» أُزيلت. */
+      direction: string | null;
+      avg_score: number | null;
+      status?: 'ok' | 'unavailable';
+      unavailable_reason?: string | null;
       /** backend-r1: null حين لا سعر حيّ/شموع قليلة/محايد — السبب بـ`levels_basis.unavailable`. */
       levels: { entry: number; sl: number; tp: number } | null;
       levels_basis?: { unavailable?: string | null } | null;
@@ -663,9 +667,11 @@ export const api = {
   }) =>
     postJson<{
       symbol: string;
-      direction: string;
-      confidence: number;
-      avg_score: number;
+      /** backend-r2: null حين `status: 'unavailable'` (لا مصدر مرخَّص / لا بيانات) — لا يُقرأ «محايد». «الثقة» أُزيلت. */
+      direction: string | null;
+      avg_score: number | null;
+      status?: 'ok' | 'unavailable';
+      unavailable_reason?: string | null;
       /** backend-r1: null حين لا سعر حيّ/شموع قليلة/محايد — السبب بـ`levels_basis.unavailable`. */
       levels: { entry: number; sl: number; tp: number } | null;
       levels_basis?: { unavailable?: string | null } | null;

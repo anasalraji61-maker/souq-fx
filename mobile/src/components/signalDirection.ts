@@ -16,6 +16,21 @@ export function dirLabel(d: string, t: Dict) {
   return t.dirNeutral;
 }
 
+/**
+ * متوسط الدرجات كان `avg >= 0 ? '+' : ''` + `toFixed(2)`: الصفر يُكتب «+0.00» (إجماع محايد يُقرأ
+ * ميلاً للشراء)، وسالب صغير يُقرَّب «-0.00»، وحقل غائب من الخادم يرمي عند `toFixed` فيسقط اللوح.
+ * الآن بقاعدة النسبة نفسها: الصفر المطبوع بلا علامة، وناقص طباعي، وشَرطة لما ليس رقماً.
+ */
+export function formatScore(n: number | null | undefined): string {
+  if (typeof n !== 'number' || !Number.isFinite(n)) return '—';
+  // تقريب متناظر حول الصفر كـ`round2` بـ`chart/dailyChange.ts`: `Math.round` يرفع النصف نحو +∞
+  // فكان ‎−0.125‎ «−0.12» و‎+0.125‎ «+0.13»، و‎1.005‎ بالفاصلة العائمة «+1.00».
+  const c = Math.round(Math.abs(n) * 100 * 1e6) / 1e6;
+  const r = (n < 0 ? -1 : 1) * (Math.round(c) / 100);
+  if (r === 0) return '0.00';
+  return `${r > 0 ? '+' : '−'}${Math.abs(r).toFixed(2)}`;
+}
+
 /** `levels_basis` من `/api/signals/*` (backend-r1): حين `levels: null` يقول الخادم لماذا. */
 export type LevelsBasis = { unavailable?: string | null } | null | undefined;
 

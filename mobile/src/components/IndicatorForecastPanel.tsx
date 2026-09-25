@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api } from '../api';
-import { dirColor, dirLabel } from './signalDirection';
+import { dirColor, dirLabel, formatScore } from './signalDirection';
 import { formatPrice } from '../chart/math';
 import { formatRR } from '../tradePlan';
 import { pipsBetween } from '../positionSize';
@@ -31,21 +31,6 @@ type Vote = {
   score: number;
   detail: string;
 };
-
-/**
- * متوسط الدرجات كان `avg >= 0 ? '+' : ''` + `toFixed(2)`: الصفر يُكتب «+0.00» (إجماع محايد يُقرأ
- * ميلاً للشراء)، وسالب صغير يُقرَّب «-0.00»، وحقل غائب من الخادم يرمي عند `toFixed` فيسقط اللوح.
- * الآن بقاعدة النسبة نفسها: الصفر المطبوع بلا علامة، وناقص طباعي، وشَرطة لما ليس رقماً.
- */
-function formatScore(n: number): string {
-  if (typeof n !== 'number' || !Number.isFinite(n)) return '—';
-  // تقريب متناظر حول الصفر كـ`round2` بـ`chart/dailyChange.ts`: `Math.round` يرفع النصف نحو +∞
-  // فكان ‎−0.125‎ «−0.12» و‎+0.125‎ «+0.13»، و‎1.005‎ بالفاصلة العائمة «+1.00».
-  const c = Math.round(Math.abs(n) * 100 * 1e6) / 1e6;
-  const r = (n < 0 ? -1 : 1) * (Math.round(c) / 100);
-  if (r === 0) return '0.00';
-  return `${r > 0 ? '+' : '−'}${Math.abs(r).toFixed(2)}`;
-}
 
 export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: Props) {
   const { t, rtl, lang } = useI18n();
@@ -116,7 +101,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
       }
       setHasResult(true);
       setDirection(res.direction);
-      setAvg(res.avg_score);
+      setAvg(res.avg_score ?? NaN);
       setLevels(res.levels ?? null);
       const gap = (res as { levels_basis?: { unavailable?: unknown } | null }).levels_basis?.unavailable;
       setLevelsGap(typeof gap === 'string' ? gap : null);

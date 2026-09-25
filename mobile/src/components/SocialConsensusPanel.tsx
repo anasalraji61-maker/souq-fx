@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api } from '../api';
-import { dirColor, dirLabel, levelsUnavailableText } from './signalDirection';
+import { dirColor, dirLabel, formatScore, levelsUnavailableText } from './signalDirection';
 import { formatPrice } from '../chart/math';
 import { useI18n } from '../i18n/I18nContext';
 import type { Dict } from '../i18n/locales';
@@ -47,6 +47,10 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
   const [levels, setLevels] = useState<{ entry: number; sl: number; tp: number } | null>(null);
   const [levelsWhy, setLevelsWhy] = useState<string | null>(null);
   const [votes, setVotes] = useState<Vote[]>([]);
+  /** نتيجة إجماع محسوبة فعلاً — قبلها لا يُعرض «محايد · +0.00» كأنه قراءة. */
+  const [hasResult, setHasResult] = useState(false);
+  /** backend-r2: لا مصدر مرخَّص ⇒ `status: 'unavailable'`، `direction`/`avg_score` null. */
+  const [unavailable, setUnavailable] = useState(false);
   const [note, setNote] = useState('');
   const [ready, setReady] = useState(false);
   /** وضوح الحالة: يميّز فشل تحميل كتالوج المصادر عن عدم توفّر مصادر فعلاً */
@@ -72,8 +76,11 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
         const raw = await AsyncStorage.getItem(PREFS_KEY);
         if (!mountedRef.current) return;
         if (raw) {
-          const ids = JSON.parse(raw) as string[];
-          if (Array.isArray(ids) && ids.length) {
+          // مصادر محفوظة لم تعد بالكتالوج (backend-r2 أفرغه) لا تُرسل — وإلا يُحسب «إجماع» على لا شيء.
+          const known = new Set(catalog.sources.map((x) => x.id));
+          const parsed = JSON.parse(raw) as unknown;
+          const ids = Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string' && known.has(x)) : [];
+          if (ids.length) {
             setSelected(ids);
             setReady(true);
             return;
@@ -115,15 +122,28 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
         source_ids: selected,
       });
       if (!mountedRef.current) return;
+      // كان `avg_score: null` يرمي عند `toFixed` فتسقط الشاشة كلّها إلى «حدث خطأ» (launch103).
+      if (res.status === 'unavailable' || res.data_kind === 'unavailable' || res.direction == null) {
+        setUnavailable(true);
+        setHasResult(false);
+        setLevels(null);
+        setLevelsWhy(null);
+        setVotes([]);
+        setNote('');
+        return;
+      }
+      setUnavailable(false);
+      setHasResult(true);
       setDirection(res.direction);
-      setAvg(res.avg_score);
-      setSplit(res.split);
+      setAvg(res.avg_score ?? NaN);
+      setSplit(res.split ?? { buy: 0, sell: 0, neutral: 0 });
       setLevels(res.levels);
       setLevelsWhy(levelsUnavailableText(res.levels_basis, t));
-      setVotes(res.votes);
+      setVotes(Array.isArray(res.votes) ? res.votes : []);
       setNote(res.disclaimer);
     } catch {
       if (mountedRef.current) {
+        setHasResult(false);
         setVotes([]);
         setNote(t.socialComputeError);
       }
@@ -144,15 +164,15 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.refresh,
-            loading && styles.refreshDisabled,
+            (loading || !selected.length) && styles.refreshDisabled,
             pressed && {
               opacity: buttons.pressedOpacity,
               transform: [{ scale: buttons.pressedScale }],
             },
           ]}
           onPress={() => void run()}
-          disabled={loading}
-          accessibilityState={{ disabled: loading }}
+          disabled={loading || !selected.length}
+          accessibilityState={{ disabled: loading || !selected.length }}
           accessibilityLabel={t.socialComputeA11y}
           hitSlop={8}
         >
@@ -201,27 +221,32 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
 
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
 
-      <View style={styles.consensus}>
-        <Text style={[styles.dir, { color: dirColor(direction), textAlign: align }]}>
-          {dirLabel(direction, t)}
-        </Text>
-        <Text style={[styles.meta, { textAlign: align }]}>
-          {/* «درجة الاتفاق n%» أُزيلت: معادلة ثابتة بالخادم تُقرأ كاحتمال نجاح؛ عدّ الآراء بالسطر التالي. */}
-          {t.avgLabel} {avg >= 0 ? '+' : ''}
-          {avg.toFixed(2)} · {t.sourcesCountLabel} {selected.length}
-        </Text>
-        <Text style={[styles.meta, { textAlign: align }]}>
-          {t.dirBuy} {split.buy} · {t.dirSell} {split.sell} · {t.dirNeutral} {split.neutral}
-        </Text>
-        {levels && direction !== 'neutral' ? (
-          <Text style={[styles.levels, { textAlign: align }]}>
-            {t.suggestedTradeLabel}: {t.entryLabel} {formatPrice(levels.entry, symbol)} · {t.slLabel}{' '}
-            {formatPrice(levels.sl, symbol)} · {t.tpLabel} {formatPrice(levels.tp, symbol)}
+      {unavailable || (ready && !sourcesError && sources.length === 0) ? (
+        <View style={styles.consensus}>
+          <Text style={[styles.meta, { textAlign: align }]}>{t.socialUnavailable}</Text>
+        </View>
+      ) : hasResult ? (
+        <View style={styles.consensus}>
+          <Text style={[styles.dir, { color: dirColor(direction), textAlign: align }]}>
+            {dirLabel(direction, t)}
           </Text>
-        ) : (
-          <Text style={[styles.levels, { textAlign: align }]}>{levelsWhy ?? t.socialNoClearTrade}</Text>
-        )}
-      </View>
+          <Text style={[styles.meta, { textAlign: align }]}>
+            {/* «درجة الاتفاق n%» أُزيلت: معادلة ثابتة بالخادم تُقرأ كاحتمال نجاح؛ عدّ الآراء بالسطر التالي. */}
+            {t.avgLabel} {formatScore(avg)} · {t.sourcesCountLabel} {selected.length}
+          </Text>
+          <Text style={[styles.meta, { textAlign: align }]}>
+            {t.dirBuy} {split.buy} · {t.dirSell} {split.sell} · {t.dirNeutral} {split.neutral}
+          </Text>
+          {levels && direction !== 'neutral' ? (
+            <Text style={[styles.levels, { textAlign: align }]}>
+              {t.suggestedTradeLabel}: {t.entryLabel} {formatPrice(levels.entry, symbol)} · {t.slLabel}{' '}
+              {formatPrice(levels.sl, symbol)} · {t.tpLabel} {formatPrice(levels.tp, symbol)}
+            </Text>
+          ) : (
+            <Text style={[styles.levels, { textAlign: align }]}>{levelsWhy ?? t.socialNoClearTrade}</Text>
+          )}
+        </View>
+      ) : null}
 
       <ScrollView style={styles.list} nestedScrollEnabled>
         {votes.map((v) => (

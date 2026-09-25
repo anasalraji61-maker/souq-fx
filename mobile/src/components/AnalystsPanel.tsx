@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
 import { api } from '../api';
-import { dirColor, dirLabel, levelsUnavailableText } from './signalDirection';
+import { dirColor, dirLabel, formatScore, levelsUnavailableText } from './signalDirection';
 import { formatPrice } from '../chart/math';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -29,6 +29,8 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
   const [rows, setRows] = useState<AnalystRow[]>([]);
   const [note, setNote] = useState('');
   const [levelsWhy, setLevelsWhy] = useState<string | null>(null);
+  /** backend-r2: لا مصدر مرخَّص ⇒ `status: 'unavailable'`، `direction`/`avg_score` null — لا يُعرض «محايد» كرأي. */
+  const [unavailable, setUnavailable] = useState(false);
 
   // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (تبديل قسم hub قبل
   // اكتمال الطلب) — نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود، بصيغة ref هنا لأن
@@ -45,14 +47,27 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
     try {
       const res = await api.analystsForecast(symbol, timeframe);
       if (!mountedRef.current) return;
+      // كان `avg_score: null` يرمي عند `toFixed` فتسقط الشاشة كلّها إلى «حدث خطأ» (launch103).
+      if (res.status === 'unavailable' || res.data_kind === 'unavailable' || res.direction == null) {
+        setUnavailable(true);
+        setDirection('neutral');
+        setAvg(0);
+        setLevels(null);
+        setLevelsWhy(null);
+        setRows([]);
+        setNote('');
+        return;
+      }
+      setUnavailable(false);
       setDirection(res.direction);
-      setAvg(res.avg_score);
+      setAvg(res.avg_score ?? NaN);
       setLevels(res.levels);
       setLevelsWhy(levelsUnavailableText(res.levels_basis, t));
-      setRows(res.analysts);
+      setRows(Array.isArray(res.analysts) ? res.analysts : []);
       setNote(res.disclaimer);
     } catch {
       if (mountedRef.current) {
+        setUnavailable(false);
         setRows([]);
         setNote(t.analystsLoadError);
       }
@@ -102,27 +117,32 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
 
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
 
-      <View style={styles.consensus}>
-        <Text style={[styles.dir, { color: dirColor(direction), textAlign: align }]}>
-          {dirLabel(direction, t)}
-        </Text>
-        {/* «درجة الاتفاق n%» أُزيلت: معادلة ثابتة بالخادم (|avg|×0.75+0.35، `signal_hub.py`) تُقرأ
-            كاحتمال نجاح — كما أزالها `IndicatorForecastPanel`. عدّ الآراء بدلها: رقم لا يُختلَق. */}
-        <Text style={[styles.meta, { textAlign: align }]}>
-          {t.dirBuy} {split.buy} · {t.dirSell} {split.sell} · {t.dirNeutral} {split.neutral} · {t.avgLabel}{' '}
-          {avg >= 0 ? '+' : ''}
-          {avg.toFixed(2)}
-        </Text>
-        {/* محايد ⇒ الخادم يعيد دخول = وقف = هدف: لا مستويات تُطبع لصفقة غير موجودة. */}
-        {levels && direction !== 'neutral' ? (
-          <Text style={[styles.levels, { textAlign: align }]}>
-            {t.entryLabel} {formatPrice(levels.entry, symbol)} · {t.slLabel} {formatPrice(levels.sl, symbol)}{' '}
-            · {t.tpLabel} {formatPrice(levels.tp, symbol)}
+      {unavailable ? (
+        <View style={styles.consensus}>
+          <Text style={[styles.meta, { textAlign: align }]}>{t.analystsUnavailable}</Text>
+        </View>
+      ) : rows.length ? (
+        <View style={styles.consensus}>
+          <Text style={[styles.dir, { color: dirColor(direction), textAlign: align }]}>
+            {dirLabel(direction, t)}
           </Text>
-        ) : rows.length ? (
-          <Text style={[styles.levels, { textAlign: align }]}>{levelsWhy ?? t.socialNoClearTrade}</Text>
-        ) : null}
-      </View>
+          {/* «درجة الاتفاق n%» أُزيلت: معادلة ثابتة بالخادم (|avg|×0.75+0.35، `signal_hub.py`) تُقرأ
+              كاحتمال نجاح — كما أزالها `IndicatorForecastPanel`. عدّ الآراء بدلها: رقم لا يُختلَق. */}
+          <Text style={[styles.meta, { textAlign: align }]}>
+            {t.dirBuy} {split.buy} · {t.dirSell} {split.sell} · {t.dirNeutral} {split.neutral} · {t.avgLabel}{' '}
+            {formatScore(avg)}
+          </Text>
+          {/* محايد ⇒ الخادم يعيد دخول = وقف = هدف: لا مستويات تُطبع لصفقة غير موجودة. */}
+          {levels && direction !== 'neutral' ? (
+            <Text style={[styles.levels, { textAlign: align }]}>
+              {t.entryLabel} {formatPrice(levels.entry, symbol)} · {t.slLabel} {formatPrice(levels.sl, symbol)}{' '}
+              · {t.tpLabel} {formatPrice(levels.tp, symbol)}
+            </Text>
+          ) : (
+            <Text style={[styles.levels, { textAlign: align }]}>{levelsWhy ?? t.socialNoClearTrade}</Text>
+          )}
+        </View>
+      ) : null}
 
       <ScrollView style={styles.list} nestedScrollEnabled>
         {rows.map((a) => (
