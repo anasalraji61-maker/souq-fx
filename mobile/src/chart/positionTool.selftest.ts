@@ -103,6 +103,10 @@ o = positionOutcome(PL, bars, 0, 3, 1)!;
 assert.equal(o.state, 'open');
 near(o.exit, 1.0855);
 assert.equal(positionOutcomeText(PL, o, 'EURUSD'), '+5.0 pip · +0.2R');
+// رسمٌ من فريم أصغر يُرسى بفهرس كسري (M15 على H1 ⇒ 0.25، النهاية 2.75): كانت كل الشموع تُتخطّى ⇒ null/«مفتوحة»
+o = positionOutcome(PL, bars, 0.25, 2.75, 3)!;
+assert.equal(o.state, 'target');
+assert.equal(o.exitIndex, 2);
 // الصندوق ينتهي عند 1 والسلسلة أطول ⇒ انتهى بلا لمس
 assert.equal(positionOutcome(PL, bars, 0, 1, 3)!.state, 'ended');
 // شمعة تلمس الحدّين معاً ⇒ الوقف

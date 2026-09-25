@@ -165,11 +165,14 @@ export function positionOutcome(
   lastIndex: number
 ): PositionOutcome | null {
   const last = Math.min(lastIndex, bars.length - 1);
+  // الرسوم مشتركة بين الفريمات وتُرسى بفهرس كسري (M15 10:15 على H1 ⇒ k+0.25): `bars[k.25]` غير معرَّف فكانت
+  // كل الشموع تُتخطّى ⇒ «مفتوحة» بإغلاق آخر شمعة رغم ضرب الوقف قبل ساعات. الشمعة الحاوية = الجزء الصحيح.
+  entryIndex = Math.floor(entryIndex);
   if (!(entryIndex >= 0) || entryIndex > last) return null;
   const risk = Math.abs(levels.entry - levels.stop);
   if (!(risk > 0)) return null;
   const boxEnd = endIndex > entryIndex ? endIndex : Infinity;
-  const to = Math.min(boxEnd, last);
+  const to = Math.floor(Math.min(boxEnd, last));
   const long = levels.side === 'long';
   const rOf = (exit: number) => ((long ? exit - levels.entry : levels.entry - exit) / risk);
   const hitsStop = (b: Bar) => (long ? b.low <= levels.stop : b.high >= levels.stop);
