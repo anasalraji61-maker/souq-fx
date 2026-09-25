@@ -321,3 +321,37 @@ def test_noise_filter_uses_the_real_closes_not_the_rounded_percent(monkeypatch, 
     monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
     s = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()["setup"]
     assert s["direction"] == want
+
+
+class _NullReply:
+    def __init__(self, content):
+        self._content = content
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+    def post(self, *a, **k):
+        content = self._content
+
+        class R:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {"choices": [{"message": {"content": content}, "finish_reason": "length"}]}
+        return R()
+
+
+@pytest.mark.parametrize("content", [None, "", "   "])
+def test_empty_model_reply_is_an_error_not_the_answer_none(monkeypatch, content):
+    # كان `str(None)` ⇒ الجواب «None» (أو فارغ) يُعرض للمتداول ولا يعمل الردّ الاحتياطي
+    monkeypatch.setenv("OPENROUTER_API_KEY", "x")
+    monkeypatch.setattr(openrouter_ai.httpx, "Client", lambda **k: _NullReply(content))
+    with pytest.raises(RuntimeError):
+        openrouter_ai.chat("s", "u")
+    monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
+    out = TestClient(main.app).post("/api/ai/ask", json={"question": "ما رأيك؟"}).json()
+    assert out["answer"] and out["answer"] not in ("None", "")

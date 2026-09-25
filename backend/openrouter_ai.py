@@ -45,7 +45,13 @@ def chat(system: str, user: str, max_tokens: int = 900) -> str:
         r = client.post(OPENROUTER_URL, headers=_headers(), json=payload)
         r.raise_for_status()
         data = r.json()
-    return str(data["choices"][0]["message"]["content"]).strip()
+    # محتوى null (نفاد max_tokens قبل أي نصّ، أو فلتر محتوى) كان يُعاد نصّاً «None» جواباً للمتداول، و""
+    # جواباً فارغاً — بلا استثناء فلا يعمل الردّ الاحتياطي. الآن خطأ ⇒ المسار الاحتياطي القائم.
+    content = data["choices"][0]["message"].get("content")
+    text = content.strip() if isinstance(content, str) else ""
+    if not text:
+        raise RuntimeError("OpenRouter returned no answer text")
+    return text
 
 
 # لغة ردّ المساعد تتبع لغة واجهة المتداول (يرسلها التطبيق بحقل `lang`)، لا لغة نص السؤال —
