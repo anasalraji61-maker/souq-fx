@@ -87,7 +87,7 @@ def test_rate_limited_fallback_has_no_spread(routes):
 
 
 def test_quote_route_never_labels_an_invented_spread_as_provider(routes):
-    routes["/quote"] = _Resp({"close": "157.250"})
+    routes["/quote"] = _Resp({"close": "157.250", "last_quote_at": time.time() - 5})
     body = TestClient(main.app).get("/api/market/quote/USDJPY").json()
     assert body["data_kind"] == "provider"
     assert body["bid"] is None and body["ask"] is None
@@ -105,7 +105,7 @@ def test_second_quote_within_ttl_is_served_from_cache_with_its_real_time(routes,
         return real(sym)
 
     monkeypatch.setattr(main.market, "fetch_quote_book", counting)
-    routes["/quote"] = _Resp({"close": "1.10000"})
+    routes["/quote"] = _Resp({"close": "1.10000", "last_quote_at": time.time() - 5})
     client = TestClient(main.app)
     first = client.get("/api/market/quote/EURUSD").json()
     second = client.get("/api/market/quote/EURUSD").json()
@@ -116,12 +116,12 @@ def test_second_quote_within_ttl_is_served_from_cache_with_its_real_time(routes,
 
 
 def test_expired_cache_fetches_again(routes, monkeypatch):
-    routes["/quote"] = _Resp({"close": "1.10000"})
+    routes["/quote"] = _Resp({"close": "1.10000", "last_quote_at": time.time() - 5})
     client = TestClient(main.app)
     client.get("/api/market/quote/EURUSD")
     ts, book = main._QUOTE_CACHE["EURUSD"]
     main._QUOTE_CACHE["EURUSD"] = (ts - main.QUOTE_TTL - 1, book)
-    routes["/quote"] = _Resp({"close": "1.20000"})
+    routes["/quote"] = _Resp({"close": "1.20000", "last_quote_at": time.time() - 5})
     body = client.get("/api/market/quote/EURUSD").json()
     assert body["data_kind"] == "provider" and body["price"] == pytest.approx(1.2)
 
@@ -189,11 +189,23 @@ def test_weekend_quote_carries_the_provider_price_time_not_now(routes):
     assert cached["data_kind"] == "cache" and cached["as_of"] == friday
 
 
-def test_no_provider_time_falls_back_to_fetch_time_and_unknown_market_state(routes):
+def test_quote_without_provider_time_is_not_dated_now(routes, monkeypatch):
+    """`/quote` بلا `last_quote_at`: كان `as_of` = لحظة الجلب موسوماً `provider` (إغلاق الجمعة «الآن»).
+    الآن فرع الشموع بوقت آخر شمعة الحقيقي، كـ`/price` بلا وقت."""
     routes["/quote"] = _Resp({"close": "1.10000"})
+    friday_close = 1_758_920_400
+
+    def build(sym, timeframe="15m", outputsize=180):
+        c = main.Candle(time=friday_close, open=1.1, high=1.1, low=1.1, close=1.1)
+        return main.ChartSeries(
+            symbol=sym, timeframe=timeframe, candles=[c], change_pct=0, last=1.1,
+            data_source=main.DataProvenance(kind="provider", as_of=time.time(), channel="twelvedata"),
+        )
+
+    monkeypatch.setattr(main, "build_series", build)
     body = TestClient(main.app).get("/api/market/quote/EURUSD").json()
-    assert body["as_of"] == body["fetched_at"]
-    assert body["market_open"] is None
+    assert body["source"] == "ohlc_fallback"
+    assert body["as_of"] == friday_close + 900
 
 
 @pytest.mark.parametrize("bad", ["x", -5, 0, 9e12, "1.5"])

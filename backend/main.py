@@ -1317,6 +1317,11 @@ def market_quote(symbol: str):
         # `/quote` متعذّر (429/خطأ) فجاء رقم `/price` بلا وقت: كان يُرسَل `as_of` = «الآن» ⇒ يوم السبت
         # إغلاق الجمعة «حيّ» وحاسبة الحجم تعبّئه دخولاً. فرع الشموع أدناه يحمل وقت آخر شمعة الحقيقي.
         book = None
+    elif book and book.get("quoted_at") is None:
+        # `/quote` نجح بلا `last_quote_at` صالح: كان `as_of` = لحظة الجلب موسوماً `provider` ⇒ نفس عيب
+        # `/price` أعلاه (إغلاق الجمعة «الآن» يوم السبت، ويُخزَّن 30ث بهذا الوقت). لا وقت للسعر ⇒ فرع
+        # الشموع بوقت آخر شمعة الحقيقي بدل وقت مخترَع.
+        book = None
     if not book:
         series = build_series(sym, "15m")
         if series.data_source.kind == "demo":
@@ -1353,10 +1358,9 @@ def market_quote(symbol: str):
         }
     book["source"] = "twelvedata"
     book["data_kind"] = "provider"
-    # `as_of` = وقت السعر (العميل يقرؤه كذلك — `quoteAsOfMs`): وقت المزوّد حين يرسله، وإلا لحظة الجلب.
+    # `as_of` = وقت السعر من المزوّد (العميل يقرؤه كذلك — `quoteAsOfMs`)؛ بلاه لا يصل هنا (فرع الشموع).
     # كان دائماً لحظة الجلب ⇒ إغلاق الجمعة يُعرض يوم السبت سعراً «الآن». `fetched_at` = لحظة الجلب.
-    quoted_at = book.pop("quoted_at", None)
-    book["as_of"] = quoted_at if quoted_at is not None else now
+    book["as_of"] = book.pop("quoted_at")
     book["fetched_at"] = now
     _QUOTE_CACHE[sym] = (now, dict(book))
     return book
