@@ -4,11 +4,17 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import { formatPct, pctDirection } from '../chart/dailyChange';
+import { formatLocalStamp } from '../localStamp';
 
 /** فريم الفحص السريع — موضعٌ واحد بدل تكراره بالنداء وبنصّ «لا تطابق». */
 const TF = '15m';
 /** أقصى ما يُعرض من نتائج بهذه اللوحة المصغّرة (شريط أفقي داخل لوحٍ جانبي/رصيف). */
 const MAX_HITS = 5;
+/** نتيجة من شموع أقدم من شمعتين بفريم الفحص ⇒ يُطبع وقتها (backend-r17): يوم السبت تقاطع/RSI من إغلاق
+ * الجمعة كان يُقرأ «الآن». */
+const STALE_SEC = 2 * 15 * 60;
+/** محلي حتى يضيف launch مفتاحاً (COORDINATION ui11) — ثم يُقرأ من `t` وتُحذف. */
+const AS_OF_COPY: Record<string, string> = { ar: 'حتى {time}', en: 'as of {time}', ku: 'تا {time}' };
 
 export function ScreenerMini() {
   /**
@@ -19,7 +25,7 @@ export function ScreenerMini() {
    * أمريكا وأوروبا سوقان مستهدفان صراحةً بـROADMAP، والماسح تبويب بشاشة الأدوات (ثانية بنطاق
    * الـMVP). سلوك العربية يبقى كما هو بالضبط — الشرط يضيف حالة LTR فقط.
    */
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   /** النص المرئي مختصر (رموز/اختصارات) بلا معنى واضح لقارئ الشاشة،
    * فيُستخدَم الوصف الكامل `a11y` بدلاً منه فقط لـaccessibilityLabel. */
@@ -32,7 +38,14 @@ export function ScreenerMini() {
     [t]
   );
   const [hits, setHits] = useState<
-    { symbol: string; rsi: number; change_pct: number; filters_matched: string[]; data_kind?: string | null }[]
+    {
+      symbol: string;
+      rsi: number;
+      change_pct: number;
+      filters_matched: string[];
+      data_kind?: string | null;
+      price_as_of?: number | null;
+    }[]
   >([]);
   const [loading, setLoading] = useState(false);
   /** وضوح الحالة: يميّز "لا نتائج مطابقة للفلتر" عن "فشل الاتصال بالفحص" بدل صمت كامل. */
@@ -193,12 +206,23 @@ export function ScreenerMini() {
              * ‎−0.005 → 0 (رمادي) بينما `formatPct` تقرّب بعيداً عن الصفر فتطبع «−0.01%» — tools75b.
              */
             const pctDir = pctDirection(pct);
+            const asOf =
+              typeof h.price_as_of === 'number' &&
+              Number.isFinite(h.price_as_of) &&
+              Date.now() / 1000 - h.price_as_of > STALE_SEC
+                ? (AS_OF_COPY[lang] ?? AS_OF_COPY.en).replace('{time}', formatLocalStamp(h.price_as_of, lang))
+                : null;
             return (
               <View key={h.symbol} style={styles.hit}>
                 <Text style={styles.sym}>
                   {h.symbol}
                   {/* backend-r10 (ج): عند حدّ المزوّد قد تكون السلسلة مخزَّنة حتى 15د — RSI/التقاطع ليسا «الآن». */}
-                  {h.data_kind === 'cache' ? <Text style={styles.cacheTag}> · {t.dsKindCache}</Text> : null}
+                  {/* backend-r17: شموع أقدم من شمعتين (عطلة الأسبوع) ⇒ وقتها بدل وسم الكاش العام. */}
+                  {asOf ? (
+                    <Text style={styles.cacheTag}> · {asOf}</Text>
+                  ) : h.data_kind === 'cache' ? (
+                    <Text style={styles.cacheTag}> · {t.dsKindCache}</Text>
+                  ) : null}
                 </Text>
                 <Text style={styles.meta}>
                   RSI {h.rsi} ·{' '}
