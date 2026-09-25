@@ -2510,7 +2510,7 @@ const enUS: Dict = {
   riskCalcRiskPct: 'Risk (% or amount)',
   riskCalcRiskMoneyHint: 'Tap {ccy} to enter the risk as an amount instead of a percent',
   riskCalcRiskOverBalance:
-    'Your risk ({risk}) is larger than your account balance ({balance}) — one stop-out would wipe out the whole account. Check both fields: you may have typed an amount instead of a percent, or left a zero off the balance.',
+    'Your risk ({risk}) is larger than your account balance ({balance}) — a single stop-loss hit would wipe out the whole account. Check both fields: you may have typed an amount instead of a percent, or left a zero off the balance.',
   riskCalcHighRisk: '⚠ More than 2% per trade is high risk',
   riskCalcSlPips: 'Stop loss (pips)',
   riskCalcFromPrice: 'Or from price: entry and stop as you see them on the chart',
