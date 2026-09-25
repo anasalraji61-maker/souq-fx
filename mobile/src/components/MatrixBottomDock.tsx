@@ -82,7 +82,7 @@ export function MatrixBottomDock({
     { id: 'alerts', label: t.dockAlertsTab, mark: '⚡' },
     { id: 'news', label: t.dockNewsTab, mark: '📰' },
     { id: 'calendar', label: t.toolsTabCalendar, mark: '◷' },
-    { id: 'journal', label: t.toolsTabJournal, mark: '₴' },
+    { id: 'journal', label: t.toolsTabJournal, mark: '▤' },
     { id: 'community', label: t.dockCommunityTab, mark: '◈' },
     { id: 'dom', label: t.depthWord, mark: '▥' },
     { id: 'reports', label: t.toolsTabReports, mark: '≡' },
@@ -180,7 +180,7 @@ export function MatrixBottomDock({
                         accessibilityLabel={`${t.drawToolA11yPrefix}${tool.label}`}
                       >
                         <Text style={[styles.drawChipMark, on && styles.drawChipMarkOn]}>
-                          {DRAW_MARK[tool.id] ?? '·'}
+                          {DRAW_MARK[tool.id]}
                         </Text>
                         <Text style={[styles.drawChipLabel, on && styles.drawChipLabelOn]}>
                           {tool.label}

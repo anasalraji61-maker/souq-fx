@@ -25,18 +25,23 @@ type RightProps = {
   onLayoutPick?: (count: FrameLayoutCount, shape: FrameLayoutShape) => void;
 };
 
-export const DRAW_MARK: Partial<Record<DrawTool, string>> = {
+/** كامل لا `Partial`: القناة والشعاع الأفقي وأداتا الشراء/البيع كانت تظهر «·» بالشريط والرصيف — أداة بلا علامة. */
+export const DRAW_MARK: Record<DrawTool, string> = {
   none: '✚',
   select: '⬚',
   trend: '╱',
   ray: '↗',
+  channel: '⫽',
   hline: '―',
+  hray: '↦',
   vline: '│',
   rect: '▭',
   fib: 'Ƒ',
   zone: '▦',
   note: 'T',
   measure: '⌖',
+  long: '⤒',
+  short: '⤓',
 };
 
 export const LENS_MARK: Record<LensMode, string> = {
@@ -96,7 +101,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
               accessibilityLabel={`${t.drawToolA11yPrefix}${tool.label}`}
             >
               <Text style={[styles.railMark, on && styles.railMarkOn]}>
-                {DRAW_MARK[tool.id] ?? '·'}
+                {DRAW_MARK[tool.id]}
               </Text>
               <Text style={[styles.railTip, on && styles.railTipOn]} numberOfLines={1}>
                 {tool.label}
@@ -141,7 +146,8 @@ export function RightPanelRail({
     { id: 'reports', mark: '≡', tip: t.railTipReport },
     { id: 'news', mark: '☰', tip: t.railTipNewsItem },
     { id: 'dom', mark: '▥', tip: t.depthWord },
-    { id: 'journal', mark: '₴', tip: t.toolsTabJournal },
+    // «₴» رمز الهريفنيا الأوكرانية لا دفتر؛ «▤» صفحةٌ مسطّرة كما `ToolsScreen` (launch4).
+    { id: 'journal', mark: '▤', tip: t.toolsTabJournal },
     { id: 'backtest', mark: '↺', tip: t.backtestWord },
   ];
   const squareOn = (count: FrameLayoutCount) =>
