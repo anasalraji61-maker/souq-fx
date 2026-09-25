@@ -133,3 +133,23 @@ def test_forecast_snapshot_says_how_many_candles_its_change_covers(client, monke
     monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
     f = client.post("/api/signals/indicators/forecast", json={"symbol": "EURUSD", "timeframe": "D"}).json()
     assert f["snapshot"]["change_bars"] == 59
+
+
+def test_levels_keep_precision_below_one_hundred_thousandth():
+    """SHIB ‏0.0000123: `round(x, 5)` جعل الدخول والوقف والهدف كلها 0.00001."""
+    levels, _ = signal_hub._trade_levels(0.0000123, "buy", _candles(40, 0.0000004, base=0.0000123))
+    assert levels["entry"] == pytest.approx(0.0000123)
+    assert levels["sl"] == pytest.approx(0.0000123 - 1.4 * 0.0000004)
+    assert levels["tp"] == pytest.approx(0.0000123 + 2.2 * 0.0000004)
+    assert len({levels["entry"], levels["sl"], levels["tp"]}) == 3
+
+
+def test_normal_prices_keep_five_decimals():
+    assert signal_hub.level_round(1.084234567, 1.08) == 1.08423
+    assert signal_hub.level_round(157.4234567, 157.4) == 157.42346
+
+
+def test_no_levels_when_the_target_would_be_a_negative_price():
+    """سعر 0.05 وATR 0.06 ⇒ هدف البيع 0.05 − 2.2×0.06 = −0.082: سعر مستحيل."""
+    levels, basis = signal_hub._trade_levels(0.05, "sell", _candles(40, 0.06, base=0.05))
+    assert levels is None and basis["unavailable"] == "atr_exceeds_price"

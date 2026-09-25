@@ -234,3 +234,14 @@ def test_move_larger_than_one_atr_keeps_its_direction(monkeypatch):
     monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
     s = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()["setup"]
     assert s["direction"] == "buy" and s["entry"] is not None
+
+
+def test_no_sell_card_with_a_negative_target(monkeypatch):
+    """سعر 0.05، ATR 0.03، هبوط 50% ⇒ هدف البيع 0.05 − 2×0.03 = −0.01: سعر مستحيل كان يُعرض هدفاً."""
+    base = _provider_series(0.03, "SHIBUSD", 0.05)
+    monkeypatch.setattr(main, "build_series",
+                        lambda *a, **k: base(*a, **k).model_copy(update={"change_pct": -50.0}))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
+    monkeypatch.setattr(main.openrouter_ai, "trading_answer", lambda *a, **k: "سيناريو بيع")
+    s = TestClient(main.app).post("/api/ai/ask", json={"question": "ما رأيك؟", "symbol": "SHIBUSD"}).json()["setup"]
+    assert s["entry"] is None and s["sl"] is None and s["tp"] is None

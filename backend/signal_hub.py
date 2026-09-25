@@ -70,11 +70,19 @@ def _trade_levels(
     if direction not in ("buy", "sell"):
         return None, {**basis, "unavailable": "neutral"}
     sgn = 1 if direction == "buy" else -1
-    return {
-        "entry": round(last, 5),
-        "sl": round(last - sgn * SL_ATR_MULT * atr_v, 5),
-        "tp": round(last + sgn * TP_ATR_MULT * atr_v, 5),
-    }, basis
+    sl = level_round(last - sgn * SL_ATR_MULT * atr_v, last)
+    tp = level_round(last + sgn * TP_ATR_MULT * atr_v, last)
+    # مدى أوسع من السعر (عملة منهارة على W) ⇒ هدف/وقف ≤ 0: سعر مستحيل كان يُعرض هدفاً
+    if not (sl > 0 and tp > 0):
+        return None, {**basis, "unavailable": "atr_exceeds_price"}
+    return {"entry": level_round(last, last), "sl": sl, "tp": tp}, basis
+
+
+def level_round(x: float, ref: float) -> float:
+    """مستوى سعري بمنازل تكفي لسعر المرجع `ref`: 5 منازل كما كانت، وأكثر تحت 0.1 (6 أرقام معنوية).
+    كان `round(x, 5)` ⇒ SHIB ‏0.0000123: دخول ووقف وهدف كلها 0.00001 (الوقف 19% تحت السعر الحقيقي)."""
+    mag = math.floor(math.log10(abs(ref))) if ref and math.isfinite(ref) else 0
+    return round(x, max(5, 5 - mag))
 
 
 def list_social_sources() -> list[dict[str, Any]]:
