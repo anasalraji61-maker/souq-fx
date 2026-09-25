@@ -899,8 +899,6 @@ export type Dict = {
   wlMoveUpA11y: string;
   wlMoveDownA11y: string;
   wlRemoveA11y: string;
-  /** DESIGN-PRO §5.2: row actions (reorder/remove) hidden until long-press */
-  wlRowActionsHint: string;
   wlRemoveConfirmTitle: string;
   wlRemoveConfirmBtn: string;
   wlCatalogTitle: string;
@@ -2196,7 +2194,6 @@ const ar: Dict = {
   wlMoveUpA11y: 'تحريك لأعلى',
   wlMoveDownA11y: 'تحريك لأسفل',
   wlRemoveA11y: 'إزالة من المتابعة',
-  wlRowActionsHint: 'اضغط مطوّلاً للترتيب أو الإزالة',
   wlRemoveConfirmTitle: 'إزالة من المتابعة؟',
   wlRemoveConfirmBtn: 'إزالة',
   wlCatalogTitle: 'إضافة من الكتالوج',
@@ -3396,7 +3393,6 @@ const enUS: Dict = {
   wlMoveUpA11y: 'Move up',
   wlMoveDownA11y: 'Move down',
   wlRemoveA11y: 'Remove from watchlist',
-  wlRowActionsHint: 'Long-press to reorder or remove',
   wlRemoveConfirmTitle: 'Remove from watchlist?',
   wlRemoveConfirmBtn: 'Remove',
   wlCatalogTitle: 'Add from catalog',
@@ -4628,7 +4624,6 @@ const ku: Dict = {
   wlMoveUpA11y: 'بۆ سەرەوە بگوازەرەوە',
   wlMoveDownA11y: 'بۆ خوارەوە بگوازەرەوە',
   wlRemoveA11y: 'لابردن لە چاودێری',
-  wlRowActionsHint: 'بۆ ڕیزکردن یان لابردن، دەستت ڕابگرە',
   wlRemoveConfirmTitle: 'لابردن لە چاودێری؟',
   wlRemoveConfirmBtn: 'لابردن',
   wlCatalogTitle: 'زیادکردن لە کاتالۆگەوە',
