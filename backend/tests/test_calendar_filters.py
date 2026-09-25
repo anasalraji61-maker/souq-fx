@@ -68,6 +68,15 @@ def test_an_unknown_currency_still_returns_nothing(seeded):
     assert seeded.fetch_calendar(currency="XAU") == []
 
 
+def test_an_all_currencies_event_survives_a_currency_filter(seeded, monkeypatch):
+    """حدث بعملة `ALL` يطابق كل الأزواج بالشريط — فلتر «USD» كان يُسقطه من القائمة وحدها."""
+    g20 = {"id": "g", "title": "G20", "currency": "ALL", "impact": "high", "when": "الأحد", "ts": 5}
+    monkeypatch.setattr(seeded, "_CACHE", seeded._CACHE + [g20])
+    assert _titles(seeded.fetch_calendar(currency="USD")) == ["NFP", "G20"]
+    assert _titles(seeded.fetch_calendar(currency="JPY", impact="high")) == ["G20"]
+    assert _titles(seeded.fetch_calendar(currency="XAU")) == ["G20"]
+
+
 def test_filtering_does_not_mutate_the_cache(seeded):
     """الذاكرة مشتركة بين كل الطلبات — طلبٌ مفلتر كان سيُفقر تقويم البقية لو عدّلها."""
     seeded.fetch_calendar(currency="USD", impact="high")

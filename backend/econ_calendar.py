@@ -302,7 +302,9 @@ def fetch_calendar(
     events = list(_CACHE)
     curs = _wanted(currency)
     if curs:
-        events = [e for e in events if str(e.get("currency", "")).lower() in curs]
+        # حدث `ALL` (G20، قمّة…) يخصّ كل العملات: الشريط يحذّر منه لكل زوج، فإسقاطه من فلتر
+        # «USD» كان يُخفي من القائمة الخبر نفسه الذي يحذّر منه الشريط (طلب ui run 27)
+        events = [e for e in events if str(e.get("currency", "")).lower() in curs | {"all"}]
     imps = _wanted(impact)
     if imps:
         events = [e for e in events if str(e.get("impact", "")).lower() in imps]
