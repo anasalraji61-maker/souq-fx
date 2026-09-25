@@ -491,11 +491,12 @@ def register_user(
     with _conn() as c:
         sponsor_id: int | None = None
         if sponsor_code:
+            code_norm = sponsor_code.strip().upper()
             sp = c.execute(
-                "SELECT user_id FROM network_members WHERE referral_code=?",
-                (sponsor_code.strip().upper(),),
+                "SELECT user_id FROM network_members WHERE referral_code=?", (code_norm,)
             ).fetchone()
-            if not sp:
+            # رمز حساب محذوف (`delete_user_account`) كرمز غير موجود — لا راعٍ يملكه
+            if not sp or code_norm.startswith(DELETED_CODE_PREFIX):
                 raise ValueError("sponsor code not found")
             sponsor_id = int(sp["user_id"])
             if not side_norm:
@@ -530,6 +531,10 @@ def register_user(
     session["referral_code"] = code
     session["role"] = role
     return session
+
+
+# رمز إحالة الحساب المحذوف. `_make_referral_code` يأخذ 6 محارف من الاسم أقصى ⇒ لا رمز حيّ يبدأ بـ7 محارف هذه
+DELETED_CODE_PREFIX = "DELETED"
 
 
 def _make_referral_code(c: sqlite3.Connection, username: str, uid: int) -> str:
@@ -1074,6 +1079,14 @@ def delete_user_account(user_id: int) -> None:
         c.execute(
             "UPDATE users SET username=?, email=NULL, password_hash=? WHERE id=?",
             (placeholder, dead_hash, user_id),
+        )
+        # رمز الإحالة مبنيّ من الاسم (`ALICE0001`) ويظهر بشجرة الراعي والفريق ⇒ كان يُبقي جزءاً من الاسم
+        # المحذوف، ويظلّ رمز راعٍ صالحاً: التسجيل به يضع عضواً تحت حساب لا يملكه أحد ويرفع عدّادات ساقَيه
+        # وأسلافه. يُستبدل برمز لا يحمل الاسم، والتسجيل يرفض بادئته (`DELETED_CODE_PREFIX`). الصفّ نفسه
+        # يبقى — موضعه بالشجرة جزء من سلسلة الآخرين.
+        c.execute(
+            "UPDATE network_members SET referral_code=? WHERE user_id=?",
+            (f"{DELETED_CODE_PREFIX}{user_id:04d}", user_id),
         )
         c.execute("DELETE FROM sessions WHERE user_id=?", (user_id,))
         c.execute("DELETE FROM alerts WHERE user_id=?", (user_id,))

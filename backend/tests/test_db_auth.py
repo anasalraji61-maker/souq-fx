@@ -360,3 +360,26 @@ def test_zwnj_between_arabic_letters_is_a_real_name(_db):
 def test_zwnj_elsewhere_is_still_invisible(_db, name):
     with pytest.raises(ValueError, match="invisible"):
         db.register_user(name, "hunter2", email="z@example.com")
+
+
+def test_a_deleted_accounts_referral_code_no_longer_carries_the_name_or_sponsors(_db):
+    """رمز «ALICE0001» كان يبقى بشجرة الآخرين (جزء من الاسم المحذوف) ويقبل تسجيلات تحت حساب لا يملكه أحد."""
+    alice = db.register_user("alice", "hunter2", email="alice@example.com")
+    old_code = alice["referral_code"]
+    db.delete_user_account(alice["user_id"])
+    with sqlite3.connect(_db) as c:
+        (code,) = c.execute(
+            "SELECT referral_code FROM network_members WHERE user_id=?", (alice["user_id"],)
+        ).fetchone()
+    assert "ALICE" not in code
+    for attempt in (old_code, code, code.lower()):
+        with pytest.raises(ValueError, match="sponsor code not found"):
+            db.register_user("bob", "hunter2", email="bob@example.com", sponsor_code=attempt, side="right")
+
+
+def test_a_live_referral_code_still_sponsors(_db):
+    alice = db.register_user("alice", "hunter2", email="alice@example.com")
+    bob = db.register_user(
+        "bob", "hunter2", email="bob@example.com", sponsor_code=alice["referral_code"], side="left"
+    )
+    assert bob["user_id"]
