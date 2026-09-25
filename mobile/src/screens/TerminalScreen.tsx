@@ -655,10 +655,15 @@ export function TerminalScreen() {
   }, [symbol, tf, loadChart]);
 
   // سبريد Bid/Ask للرمز الحالي — بند 2 من قائمة الإطلاق (أولوية طارئة، docs/ROADMAP.md)
+  // السطر يُعرض بشريط سطح المكتب لشارت واحد فقط (`desktopQuoteBar`) — على الهاتف وبالتخطيطات المتعدّدة والظلّ
+  // وتحت نافذة التركيز كان الاستطلاع يجري كل 90 ث بلا عرض، يستهلك حدّ المزوّد نفسه الذي إن نفد (429) أعاد
+  // الخادم أسعاراً مخزّنة قديمة لحاسبة اللوت وللتنبيهات.
+  const showsSpread = !phone && layoutCount === 1 && layoutShape !== 'shadow' && !focus;
   useEffect(() => {
     let alive = true;
     // لا نُبقي Bid/Ask الرمز السابق تحت اسم الرمز الجديد حتى يصل الرد
     setQuote(null);
+    if (!showsSpread) return;
     const loadQuote = () => {
       api
         .marketQuote(symbol)
@@ -675,7 +680,7 @@ export function TerminalScreen() {
       alive = false;
       clearInterval(id);
     };
-  }, [symbol]);
+  }, [symbol, showsSpread]);
 
   useEffect(() => {
     if (!prefsReady || layoutShape !== 'shadow') {
