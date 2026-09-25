@@ -616,11 +616,6 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
             ? // «12 points» كما تعرضها MT4/MT5 ⇒ «اكتبه هنا 1.2» بدل «رقم غير مفهوم» (tools63، مفتاح launch)
               t.riskCalcSpreadPointsHint.replace('{value}', () => spreadPoints.value).split('{pips}').join(spreadPoints.pips)
             : t.invalidNumberHint;
-  /** سبريد مقبول يطابق سعر الزوج («8.45» على ZARJPY) — سؤال لا رفض، والحساب كما هو (launch146) */
-  const spreadPriceWarn =
-    !spreadErr && spec && spreadMaybePrice(spread, spec, [priceNum(entryPx), priceNum(stopPx), priceNum(targetPx)])
-      ? t.riskCalcSpreadMaybePrice.replace('{n}', () => spread.trim()).split('{symbol}').join(spec.symbol)
-      : null;
   /** خطأ خانة العمولة تحتها — للسبب نفسه: اللوت يُحسب بدونها فلا يصل `badNumber` إليها */
   /** الملاحظة بلوت الوضع: micro ⇒ «{std} للعادي = {micro} للوت micro» بأرقام الخانة، السنت ⇒ «بالـUSC، الرقم نفسه». */
   const commissionEx = commissionNoteExample(commission, commissionKind, moneyCcy);
@@ -1020,6 +1015,21 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     };
     // haveMktSym خارج التبعيات عمداً: يتغيّر مع وصول السعر نفسه، ولا يغيّر إلا مهلة الطلب الأول
   }, [mktSym, haveMkt, mktRefresh]);
+  /**
+   * سبريد مقبول يطابق سعر الزوج («8.45» على ZARJPY) — سؤال لا رفض، والحساب كما هو (launch146). المرجع: الدخول/الوقف/الهدف
+   * المكتوب، وإلا سعر السوق المجلوب للهامش (أغلب الاستعمال بالنقاط وحدها) — تقادمه لا يهمّ بسماحية 5%.
+   */
+  const spreadPriceWarn =
+    !spreadErr &&
+    spec &&
+    spreadMaybePrice(spread, spec, [
+      priceNum(entryPx),
+      priceNum(stopPx),
+      priceNum(targetPx),
+      mktQuote && mktQuote.sym === spec.symbol ? mktQuote.price : NaN,
+    ])
+      ? t.riskCalcSpreadMaybePrice.replace('{n}', () => spread.trim()).split('{symbol}').join(spec.symbol)
+      : null;
   const marginPx = marginPrice({
     entry: priceNum(entryPx),
     // وأثناء إعادة الجلب لا يُستعمل سعرٌ أقدم من دقيقتين (فشلٌ متكرّر، أو عودة بعد فترة بلا حاجة)

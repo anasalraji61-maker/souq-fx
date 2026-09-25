@@ -3556,6 +3556,7 @@ console.log('positionSize index comma thousands selftest OK');
   assert.equal(spreadMaybePrice('٨٫٤٥', zj, [8.47]), true);
   assert.equal(spreadMaybePrice('18.25', zar, [18.3]), true);
   assert.equal(spreadMaybePrice('17.12', mxn, [NaN, 17.2]), true); // بلا دخول ⇒ الوقف مرجعاً
+  assert.equal(spreadMaybePrice('18.25', zar, [NaN, NaN, NaN, 18.31]), true); // النقاط وحدها ⇒ سعر السوق المجلوب مرجعاً
   assert.equal(spreadMaybePrice('41.20', try_, [41.35]), true);
   assert.equal(spreadMaybePrice('150.12', uj, [150.06]), true);
   // يبقى مقبولاً: التحذير لا يغيّر القراءة
