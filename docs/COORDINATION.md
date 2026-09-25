@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 75، بعد a0ee028) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 75، بعد 3a1b533) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
@@ -20,7 +20,7 @@
 | chart | أنس | **chart-r56 Mass Index**: طولنا الافتراضي 25 (Dorsey، مع خطّي «انتفاخ الانعكاس» 27/26.5)؛ TradingView المدمج طوله 10 ⇒ خطّنا ~2.5× خطّ TV (25.6 مقابل 10.3 على البيانات نفسها). نتحوّل إلى 10 كـTV (ويسقط الخطّان أو يُعاد قياسهما) أم نبقى على Dorsey؟ | chart-r56 |
 | backend | أنس | **backend-r35** `POST /api/academy/tts` (`main.py:1632`) بلا مصادقة ولا حدّ معدّل، ويقبل 5000 حرف أيّ نصّ ⇒ أيّ أحد يستهلك رصيد ElevenLabs. التطبيق يستدعيه مجهولاً (`LectureClassroom.tsx:255`) فاشتراط الدخول يكسر الأكاديمية للزائر. الخيار: تسجيل دخول، أو حدّ لكل IP/جهاز، أو قصر النصّ على نصوص المحاضرات بالخادم؟ | backend-r35 |
 | chart | أنس | **chart-r41 TTM Squeeze** (`volatility.ts:562`): كلتنر EMA20+ATR Wilder، ونسخة LazyBear الشائعة SMA20+SMA(TR) ⇒ ~15% من النقاط بحالة معاكسة. نضيف خيار «LazyBear» أم نُبقي؟ | chart-r41 |
-| ui | launch | **backend-r37 (نصّ)**: مفتاح `sigLevelsUnavailableAtrWide` (ar/en/ku) بجوار `sigLevelsUnavailableFewCandles` — مثلاً «لا مستويات دخول ووقف وهدف — التذبذب (ATR) أوسع من السعر نفسه». ui يربطه بـ`signalDirection.ts:levelsUnavailableText` (`case 'atr_exceeds_price'`) فور وجوده؛ حتى ذلك الحين اللوحات الثلاث لا تعرض سطراً مناقضاً (ui `3b45502`) | ui35 |
+| launch | ui | **ui35 (بقية backend-r37)**: المفتاح `sigLevelsUnavailableAtrWide` صار موجوداً (launch `3a1b533`، `locales.ts:1300`، ar/en/ku) — يبقى ربطه بـ`signalDirection.ts:levelsUnavailableText` (`case 'atr_exceeds_price'`)؛ grep: لا مستهلك بعد | ui35 |
 | QA | tools | **QA75** (منخفض): `tradePlan.ts:300` `planSummaryText` يكتب «pip» ثابتة ⇒ بالإنجليزية «Risk 25 pip · Reward 50 pip» بالدفتر (`TradeJournalPanel.tsx:572`) ولوحة الأفكار (`VotePanel.tsx:85`)، وبقية التطبيق «pips» بـ`pipUnit(lang)` (`chart/measureReadout.ts:38`، ولوح العمق منذ `1136739`). المطلوب: وحدة عبر `words`. (ملاحظة `1.00 lot` بـ`positionSize.ts:1848` علامة آلية — لا تُمسّ) | QA75 |
 
 **تحقّق الدورة 75 (بالكود، بعد 205501b):** أُغلق chart-r56 (3) ← ui `1136739` (`DomLitePanel.tsx:71` `quoteSpreadPips(…, chartPipSpec)`، `:74` `pipUnit(lang)`، `:90/:98` `formatPrice(…, quote.bid)` مرجع واحد)؛
