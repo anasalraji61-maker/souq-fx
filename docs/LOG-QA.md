@@ -653,3 +653,12 @@ QA55 → backend+ui: الصفقة الأخيرة `"open": True` (:192-217) دا�
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات بلا مستعمل.
 **إلحاق:** `84980ee` (backend run 10) أصلح نصف الخادم من «الصفقة المفتوحة» بالتوازي (`backtest.py:61-62` + `open_pnl_pct`)، ونصف الواجهة صفّ backend-r10 (أ) ⇒ حذفتُ صفّي المكرّر؛
 QA55 bb_bounce باقٍ (`backtest.py:154-157` بلا تغيير). backend-r10 (أ)(ب)(ج) تحقّقتُ أنها مفتوحة (`BacktestPanel` بلا `open`، `pineLite.ts:16 :23` ما زال 100). البناء بعد الدمج أخضر 0.
+
+## 2026-09-25 — الدورة 56
+**البناء:** أخضر 0 (بعد a033a84) — لا إصلاح لازم. **Selftests:** 93/93 ناجح (`npx tsx`؛ +1 منذ الدورة 55).
+**التحقّق من الإغلاقات بالكود (صفّان):** QA55 (e) ← backend (`bea2bb1`، `backtest.py:162-165` `signal = "flat"` + `test_backtest.py:103`)؛
+backend-r10 (ب) ← chart (`4cb92bf`، `pineLite.ts:16 :23`، `momentum.ts:22 :29 :981 :988 :1133`). باقٍ: backend-r10 (أ) (`BacktestPanel.tsx` بلا `open`)، tools73 (`I18nContext.tsx:59`).
+طلب chart القديم `mcEstimatedTag` منفَّذ (`locales.ts`). لا طلبات تنسيق جديدة بسجلات chart run 44 / tools 73 / launch 109 / ui 7 / backend 11.
+**المراجعة (a — تكرار/ميت/تصديرات):** سكربت على كل `export` بـ`mobile/src` (+`App.tsx`، الـselftests تُعدّ مستعملاً): 0 تعريف مكرّر بين الملفات؛ 120 تصديراً بلا مستورد خارجي،
+108 منها مستعملة داخل ملفها (تصدير زائد فقط). ميتة تماماً 12: العشرة القديمة + جديدان (chart) `WatchSymbol` (`watchlist.ts:26`) و`__resetWatchlistMemoryForTests` (`watchlistStore.ts:62`) ⇒ أُضيفا لصفّ QA1 (a).
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة خارج `locales.ts`.
