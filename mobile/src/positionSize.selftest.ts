@@ -2934,3 +2934,31 @@ console.log('positionSize manualConvLooksInverted selftest OK');
   assert.equal(convQuoteNotice(null, null), null);
 }
 console.log('positionSize market_open selftest OK');
+
+// ---- liveEntryQuoteState: «الدخول = السعر الحالي» لا يكتب سعراً مخزّناً قديماً ----
+{
+  const { liveEntryQuoteState, LIVE_ENTRY_MAX_AGE_MS } = require('./positionSize') as typeof import('./positionSize');
+  const now = 1_758_800_000_000;
+  const sec = now / 1000;
+  // اقتباس حيّ من المزوّد (ثوانٍ) أو من كاش الخادم (30 ث) ⇒ live
+  assert.equal(liveEntryQuoteState({ price: 1.085, as_of: sec - 5, market_open: true, data_kind: 'provider' }, now), 'live');
+  assert.equal(liveEntryQuoteState({ price: 1.085, as_of: sec - 30, data_kind: 'cache' }, now), 'live');
+  assert.equal(liveEntryQuoteState({ price: 1.085, as_of: now - LIVE_ENTRY_MAX_AGE_MS }, now), 'live'); // الحدّ نفسه، بالملّي
+  // المزوّد يردّ 429 ⇒ إغلاق سلسلة 15د مخزّنة عمرها 12 دقيقة: كان «✓ الدخول من السعر الحالي»
+  assert.equal(
+    liveEntryQuoteState({ price: 1.085, as_of: sec - 12 * 60, source: 'ohlc_fallback', data_kind: 'cache', bid: null, ask: null }, now),
+    'stale'
+  );
+  assert.equal(liveEntryQuoteState({ price: 1.085, as_of: now - LIVE_ENTRY_MAX_AGE_MS - 1 }, now), 'stale');
+  // السوق مغلق (السبت، سعر الجمعة): يُعبّأ موسوماً لا يُرفض — أيّاً كان عمره
+  assert.equal(liveEntryQuoteState({ price: 1.085, as_of: sec - 40 * 3600, market_open: false }, now), 'closed');
+  assert.equal(liveEntryQuoteState({ price: 1.085, as_of: sec - 5, market_open: false }, now), 'closed');
+  // مفتوح صراحةً لكن قديم ⇒ stale (مفتوح لا يُعفي من العمر)
+  assert.equal(liveEntryQuoteState({ price: 1.085, as_of: sec - 3600, market_open: true }, now), 'stale');
+  // خادمٌ أقدم بلا as_of، أو as_of غير صالح/بالمستقبل ⇒ live كما كان
+  assert.equal(liveEntryQuoteState({ price: 1.085 }, now), 'live');
+  assert.equal(liveEntryQuoteState({ price: 1.085, as_of: '1758799000' }, now), 'live');
+  assert.equal(liveEntryQuoteState({ price: 1.085, as_of: sec + 600 }, now), 'live');
+  assert.equal(liveEntryQuoteState(null, now), 'live');
+}
+console.log('positionSize liveEntryQuoteState selftest OK');

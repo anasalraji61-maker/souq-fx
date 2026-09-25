@@ -84,6 +84,7 @@ import {
   parsePriceFor,
   ambiguousThousandsPrice,
   liveEntryFillAllowed,
+  liveEntryQuoteState,
   manualConvLooksInverted,
 } from '../positionSize';
 import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
@@ -1111,7 +1112,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     if (text === f.text) return;
     liveFillRef.current = { ...f, text };
     setEntryPx(text);
-    setLivePxMsg({ ok: true, text: liveFillMsg(text, lq) });
+    setLivePxMsg({ ok: true, text: `${liveFillMsg(text, lq)}${quoteMarketOpen(f.q) === false ? ` · ${t.dsMarketClosed}` : ''}` });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stopPx]);
 
@@ -1138,7 +1139,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       // بُدّلت الأداة أثناء الطلب (نقرة GBPUSD قبل وصول سعر EURUSD): سعر EURUSD كان يُكتب دخولاً تحت
       // GBPUSD ومعه «عُبّئ» — فيُحسب الوقف واللوت ويُسجَّل بالدفتر من سعر أداة أخرى. يُسقط بصمت.
       if (liveSymRef.current !== sym) return;
-      if (!isRealQuote(q)) {
+      // سعرٌ مخزّن أقدم من 3 دقائق (المزوّد يردّ 429) ليس «السعر الحالي» — راجع `liveEntryQuoteState`
+      const qState = isRealQuote(q) ? liveEntryQuoteState(q, Date.now()) : 'stale';
+      if (qState === 'stale') {
         setLivePxMsg({ ok: false, text: t.riskCalcNoLiveQuote });
         return;
       }
@@ -1150,7 +1153,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       const text = formatPrice(px, sym);
       setEntryPx(text);
       liveFillRef.current = { symbol: sym, text, q };
-      setLivePxMsg({ ok: true, text: `${t.riskCalcLiveFilled} ${text}` });
+      // السوق مغلق: آخر سعر قبل الإغلاق يُعبّأ للتخطيط، موسوماً — لا «السعر الحالي» وحده
+      setLivePxMsg({ ok: true, text: `${t.riskCalcLiveFilled} ${text}${qState === 'closed' ? ` · ${t.dsMarketClosed}` : ''}` });
     } catch {
       if (mountedRef.current) setLivePxMsg({ ok: false, text: t.riskCalcNoLiveQuote });
     } finally {

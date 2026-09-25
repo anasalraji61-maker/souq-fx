@@ -1715,3 +1715,21 @@ export function convQuoteNotice(staleMin: number | null, marketOpen: boolean | n
   if (marketOpen === false) return 'closed';
   return staleMin != null ? 'stale' : null;
 }
+
+/** «الدخول = السعر الحالي» يرفض سعراً أقدم من هذا: الاقتباس المخزّن بالخادم 30 ث، ووقت المزوّد يتأخّر دقيقة على الأكثر */
+export const LIVE_ENTRY_MAX_AGE_MS = 3 * 60_000;
+
+/**
+ * هل يصلح اقتباس `/api/market/quote` **دخولاً الآن**؟ `closed`: الخادم قال السوق مغلق (`market_open: false`) — آخر سعر قبل
+ * الإغلاق، يُعبّأ ويُوسَم؛ `stale`: وقت السعر (`as_of`، `quoteAsOfMs`) أقدم من `LIVE_ENTRY_MAX_AGE_MS` والسوق غير مغلق —
+ * لا يُعبّأ؛ وإلا `live`. بلا `as_of` ⇒ `live` كما كان (خادمٌ أقدم).
+ *
+ * لماذا: المزوّد يردّ 429 فيعيد الخادم إغلاق سلسلة 15د المخزّنة (`ohlc_fallback`، `data_kind: cache`) بعمرٍ حتى ~15 دقيقة،
+ * والحاسبة كانت تكتبه «✓ الدخول من السعر الحالي» — وسعر تحويلها بالشاشة نفسها يقرأ `as_of` ويقول «قديم». المتداول يضع وقفه
+ * من الشارت الحيّ، فإن تحرّك السوق 10 نقاط ووقفه 20 حُسب اللوت على 10 أو 30 نقطة: المخاطرة الحقيقية 0.67–2 ضعف ما اختار.
+ */
+export function liveEntryQuoteState(q: unknown, now: number): 'live' | 'closed' | 'stale' {
+  if (quoteMarketOpen(q) === false) return 'closed';
+  const asOf = q != null && typeof q === 'object' ? (q as { as_of?: unknown }).as_of : undefined;
+  return now - quoteAsOfMs(asOf, now) > LIVE_ENTRY_MAX_AGE_MS ? 'stale' : 'live';
+}
