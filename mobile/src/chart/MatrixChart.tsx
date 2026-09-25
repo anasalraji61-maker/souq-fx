@@ -74,6 +74,7 @@ import {
 } from './centeredPane';
 import { STOCH_LINE_H, stochPaneGeom } from './stochPane';
 import {
+  legendBandAt,
   legendValueAt,
   planPriceLegendForWidth,
   resolveColorExpr,
@@ -2953,7 +2954,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [accent]
   );
   // خطوط الطبقات ذات الخطّ الواحد: قيمتها تُطبع بالمفتاح عند شمعة التقاطع (أو الأخيرة) — راجع
-  // `legendValueAt`. النطاقات ومتعدّدة الخطوط (BB، إيشيموكو، التمساح…) بالاسم وحده كما كانت.
+  // `legendValueAt`. متعدّدة الخطوط (إيشيموكو، التمساح…) بالاسم وحده؛ النطاقات بحدّيها أدناه.
   // خلية رباعي ضيّقة ⇒ الأسماء وحدها: القيمة تُضاعف عرض الشارة فتنطوي الطبقات تحت «+ن».
   const legendLines = useMemo((): Readonly<Record<string, readonly (number | null)[] | null | undefined>> => {
     if (dense && chartPlotW < 320) return {};
@@ -2968,7 +2969,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     dense, chartPlotW, overlays, vwap, twap, psar, gannHiLo, medianPrice, typicalPrice, weightedClose,
     mcginley, lsma, tsf, vwma, alma, t3, smma20, kama, frama, zlema, avgPrice, dma, trima, vidya, supertrend,
   ]);
+  // النطاقات: الحدّان (أعلى ثم أدنى) بشارة واحدة «BB 1.08732 1.08332» — ما يقرؤه متداول النطاق.
+  const legendBands = useMemo((): Readonly<Record<string, { upper: readonly (number | null)[]; lower: readonly (number | null)[] } | null | undefined>> => {
+    if (dense && chartPlotW < 320) return {};
+    return {
+      bb: { upper: overlays.bbUpper, lower: overlays.bbLower },
+      keltner,
+      donchian,
+    };
+  }, [dense, chartPlotW, overlays, keltner, donchian]);
   const legendValueText = (id: string, index: number | null): string | null => {
+    const band = legendBands[id];
+    if (band) {
+      const hl = legendBandAt(band.upper, band.lower, index);
+      return hl ? `${fmtPrice(hl[0])} ${fmtPrice(hl[1])}` : null;
+    }
     const v = legendValueAt(legendLines[id], index);
     return v == null ? null : fmtPrice(v);
   };

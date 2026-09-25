@@ -197,6 +197,21 @@ export function legendValueAt(
 }
 
 /**
+ * حدّا النطاق (أعلى ثم أدنى) عند شمعة — للنطاقات (BB، كلتنر، دونشيان) التي كانت بالاسم وحده:
+ * «BB 1.08732 1.08332». الأعلى أولاً كترتيبهما على الشارت. متداول النطاق يقرأ «كم بقي للحدّ»
+ * منهما مباشرة بلا تتبّع الخطّ الشفّاف إلى المحور. أحدهما بالإحماء أو فاسد ⇒ `null` (لا نصف نطاق).
+ */
+export function legendBandAt(
+  upper: readonly (number | null | undefined)[] | null | undefined,
+  lower: readonly (number | null | undefined)[] | null | undefined,
+  index: number | null | undefined
+): readonly [number, number] | null {
+  const hi = legendValueAt(upper, index);
+  const lo = legendValueAt(lower, index);
+  return hi == null || lo == null ? null : [Math.max(hi, lo), Math.min(hi, lo)];
+}
+
+/**
  * يخطّط المفتاح بعرض متاح فعليّ بدل عدّ شارات بعرض ثابت.
  *
  * السبب: الصفّ `nowrap` + `overflow: hidden`، فما لا يتّسع **يُقصّ** — و«+ن» آخر الصفّ

@@ -16,6 +16,7 @@ import {
   activePriceOverlays,
   legendCapacity,
   legendChipWidth,
+  legendBandAt,
   legendValueAt,
   planPriceLegend,
   planPriceLegendForWidth,
@@ -314,6 +315,18 @@ import {
   const withV = planPriceLegendForWidth(ids, 200, { sma20: 7, sma50: 7, ema21: 7 });
   assert.ok(withV.more > 0);
   assert.equal(withV.chips.length + withV.more, 3);
+}
+
+// حدّا النطاق: الأعلى أولاً، ولا نصف نطاق بالإحماء
+{
+  const up = [null, 1.0873, 1.0875];
+  const lo = [null, 1.0833, NaN];
+  assert.deepEqual(legendBandAt(up, lo, 1), [1.0873, 1.0833]);
+  assert.equal(legendBandAt(up, lo, 0), null);
+  assert.equal(legendBandAt(up, lo, 2), null);
+  assert.equal(legendBandAt(up, lo, 5), null);
+  assert.deepEqual(legendBandAt([1.0], [2.0], 0), [2.0, 1.0]);
+  assert.equal(legendBandAt(null, lo, 1), null);
 }
 
 console.log('priceLegend.selftest: PASS');
