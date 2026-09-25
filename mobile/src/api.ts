@@ -675,6 +675,8 @@ export const api = {
     symbol: string;
     timeframe?: string;
     indicators?: string[];
+    /** backend-r3: `en*` ⇒ أسماء/تفاصيل/تنبيه بالإنجليزية، غيره عربي (الكردي يبني الجملة من `detail_code`). */
+    lang?: string;
   }) =>
     postJson<{
       symbol: string;
@@ -686,9 +688,22 @@ export const api = {
       /** backend-r1: null حين لا سعر حيّ/شموع قليلة/محايد — السبب بـ`levels_basis.unavailable`. */
       levels: { entry: number; sl: number; tp: number } | null;
       levels_basis?: { unavailable?: string | null } | null;
-      votes: { id: string; name: string; direction: string; score: number; detail: string }[];
+      votes: {
+        id: string;
+        name: string;
+        direction: string;
+        score: number;
+        detail: string;
+        /** backend-r3: مفتاح الجملة (`rsi_overbought`، `ma_above`… — `signal_hub._DETAIL_TEXT`) وأرقامها مقرَّبة بمنازل الرمز. */
+        detail_code?: string;
+        detail_values?: Record<string, number>;
+      }[];
       snapshot?: { rsi?: number; change_pct?: number; last?: number };
       disclaimer: string;
+      /** backend-r3: `indicator_consensus` | `not_enough_data` — نصّ i18n بدل `disclaimer` العربي. */
+      disclaimer_code?: string;
+      /** backend-r3: منازل سعر الرمز (USDJPY 3). */
+      price_decimals?: number;
       /** 'demo' = اتجاه ومستويات من شموع مختلَقة — لا تُعرض. */
       data_kind?: string;
     }>('/api/signals/indicators/forecast', body),
