@@ -123,3 +123,39 @@ def test_series_price_at_is_the_candle_close_not_the_fetch_time():
         data_source=main.DataProvenance(kind="cache", as_of=2_000_000_000.0, channel="twelvedata"),
     )
     assert main._series_price_at(s) == 1_000_000_000 + 3600
+
+
+# ─── النموذج لا يخترع مستويات: يتلقّى مستويات الخادم نفسها التي تحملها البطاقة ─────────
+
+def _context_for(monkeypatch, build):
+    seen: dict = {}
+    monkeypatch.setattr(main, "build_series", build)
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
+    monkeypatch.setattr(
+        main.openrouter_ai, "trading_answer",
+        lambda q, sym, context, lang="ar": seen.setdefault("ctx", context) and "سيناريو شراء",
+    )
+    body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()
+    return seen["ctx"], body["setup"]
+
+
+def test_model_context_carries_the_card_levels(monkeypatch):
+    """كان السياق بلا مستويات والتعليمات «اذكر دخولاً ووقفاً وهدفاً» ⇒ وقف النصّ ≠ وقف البطاقة."""
+    ctx, s = _context_for(monkeypatch, _provider_series(0.0030))
+    assert s["sl"] is not None
+    assert f"entry={s['entry']}, stop={s['sl']}, target={s['tp']}" in ctx
+    assert "direction=buy" in ctx
+
+
+def test_model_context_forbids_levels_when_the_server_has_none(monkeypatch):
+    ctx, s = _context_for(monkeypatch, _flat_series(0.0))
+    assert s["sl"] is None
+    assert "computed_levels: none" in ctx
+
+
+def test_system_prompt_no_longer_asks_the_model_for_its_own_levels(monkeypatch):
+    seen: dict = {}
+    monkeypatch.setattr(openrouter_ai, "chat", lambda system, user, **k: seen.setdefault("sys", system))
+    openrouter_ai.trading_answer("q", "EURUSD", "ctx")
+    assert "دخولاً تقريبياً" not in seen["sys"]
+    assert "computed_levels" in seen["sys"]

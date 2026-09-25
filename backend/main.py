@@ -1829,6 +1829,17 @@ def ai_ask(body: AiAsk):
             f"change_pct_over_last_{bars}_candles={series.change_pct:+.2f}%, "
             f"tf={series.timeframe}" + ("" if flat else f", bias={bias}")
         )
+        # مستويات الخادم نفسها التي تُرفق ببطاقة `setup`. كان السياق بلا مستويات والتعليمات «اذكر دخولاً
+        # ووقفاً وهدفاً» ⇒ النموذج يخترع وقفه وهدفه من `last` وحده، والبطاقة تحمل وقف ATR ⇒ رقمان
+        # متناقضان لنفس الصفقة بنفس الشاشة، ورقم النصّ لا أصل له.
+        if entry is not None:
+            side_en = "buy" if direction == "شراء" else "sell"
+            context += (
+                f"\ncomputed_levels (the only price levels you may quote; stop 1×ATR14, target 2×ATR14 "
+                f"on tf={series.timeframe}): direction={side_en}, entry={entry}, stop={sl}, target={tp}"
+            )
+        else:
+            context += "\ncomputed_levels: none — do not quote any entry, stop or target price"
     else:
         context = "no live price available (data provider unreachable) — do not quote price levels"
     if openrouter_ai.configured():
