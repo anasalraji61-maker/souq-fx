@@ -408,7 +408,7 @@
 
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
-| 1b51cce | `AlertsPanel` مسافة صفّ التنبيه و`WatchlistPanel` مسافة الجرس: `chartPipSpec` بدل `instrumentSpec` ⇒ «USDJPYc»/«XAUUSDm»/«EURUSD.pro» (وبالأحرف الكبيرة كما تُحفظ) تنال مسافة pip (تحقّقتُ: 0.01/0.1/0.0001؛ DXY وBTCUSD تبقى `null`). الوحدة `pipUnit(lang)` (الإنجليزية «pips») بنصّ المسافة وشرائح الإزاحة وقارئ الشاشة. مواصفة النموذج (مفتاح التيكات) باقية `instrumentSpec` | chart-r56 (3) |
+| 7023c51 | `AlertsPanel` مسافة صفّ التنبيه و`WatchlistPanel` مسافة الجرس: `chartPipSpec` بدل `instrumentSpec` ⇒ «USDJPYc»/«XAUUSDm»/«EURUSD.pro» (وبالأحرف الكبيرة كما تُحفظ) تنال مسافة pip (تحقّقتُ: 0.01/0.1/0.0001؛ DXY وBTCUSD تبقى `null`). الوحدة `pipUnit(lang)` (الإنجليزية «pips») بنصّ المسافة وشرائح الإزاحة وقارئ الشاشة. مواصفة النموذج (مفتاح التيكات) باقية `instrumentSpec` | chart-r56 (3) |
 
 بوابة البناء خضراء (tsc 0) قبل الـcommit.
 
