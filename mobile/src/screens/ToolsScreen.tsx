@@ -666,7 +666,7 @@ export function ToolsScreen() {
 
       {tab === 'risk' ? (
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <PositionSizePanel defaultSymbol={signalSym} />
+          <PositionSizePanel defaultSymbol={signalSym} active={screenFocused} />
         </ScrollView>
       ) : null}
 

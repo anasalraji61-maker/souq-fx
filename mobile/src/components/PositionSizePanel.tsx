@@ -112,6 +112,11 @@ import { NewsRiskBanner } from './NewsRiskBanner';
 
 type Props = {
   defaultSymbol?: string;
+  /**
+   * الشاشة الحاضنة ظاهرة (`screenFocused` بشاشة الأدوات). الشاشات تبقى مُركَّبة خلف تبويبٍ آخر، فكان تحديث سعر
+   * التحويل وسعر السوق كل 60 ث يجري بقيّة الجلسة لحاسبةٍ لا تُرى. `false` يوقفهما؛ العودة تجدّدهما فوراً (صامتاً).
+   */
+  active?: boolean;
 };
 
 const QUICK_RISK = ['0.5', '1', '2'];
@@ -122,7 +127,7 @@ const MKT_QUOTE_MAX_AGE_MS = 120_000;
 
 /** حاسبة حجم المركز: رصيد × نسبة مخاطرة ÷ (وقف بالنقاط × قيمة النقطة) — مع قيمة نقطة صحيحة لأزواج
  * الين والتقاطعات والذهب عبر سعر تحويل حيّ لعملة الحساب. الرياضيات كلها بـ`positionSize.ts`. */
-export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
+export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   // رمز الشارت الحالي قد لا يكون زوجاً قابلاً للحساب (DXY مثلاً) — نبدأ بـEURUSD حينها
@@ -373,11 +378,22 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const [convRefresh, setConvRefresh] = useState(0);
   const convRunKey = useRef<{ key: string; refresh: number } | null>(null);
   useEffect(() => {
-    if (!convQuote) return;
+    if (!convQuote || !active) return;
     // يُعاد التسليح مع كل تحديث (`convRefresh`) لا مع النجاح وحده: تحديثٌ فاشل لا يوقف التالي
     const id = setTimeout(() => setConvRefresh((n: number) => n + 1), 60_000);
     return () => clearTimeout(id);
-  }, [convQuote, convRefresh]);
+  }, [convQuote, convRefresh, active]);
+  /** العودة إلى الشاشة بعد توقّفٍ (`active`): السعران قد يكونان بعمر الغياب كلّه ⇒ تحديثٌ صامت فوري لكليهما */
+  const wasActiveRef = useRef(active);
+  useEffect(() => {
+    const resumed = active && !wasActiveRef.current;
+    wasActiveRef.current = active;
+    if (!resumed) return;
+    // سعر تحويل كُتب يدوياً (`convQuote` فارغ) لا يُجدَّد — تحديثٌ ناجح كان سيحلّ محلّه بصمت
+    if (convQuote) setConvRefresh((n: number) => n + 1);
+    setMktRefresh((n: number) => n + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- لحظة العودة وحدها؛ `convQuote` يُقرأ كما هو عندها
+  }, [active]);
 
   useEffect(() => {
     const runKey = `${convSymbol}|${convInvert}|${bridge?.first.symbol ?? ''}|${bridge?.second.symbol ?? ''}`;
@@ -922,10 +938,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    */
   const [mktRefresh, setMktRefresh] = useState(0);
   useEffect(() => {
-    if (!mktSym) return;
+    if (!mktSym || !active) return;
     const id = setTimeout(() => setMktRefresh((n: number) => n + 1), 60_000);
     return () => clearTimeout(id);
-  }, [mktSym, mktRefresh]);
+  }, [mktSym, mktRefresh, active]);
   /**
    * المؤقّت يقف ما دام الدخول مكتوباً (لا حاجة لسعر السوق)، فالعدّاد يقف معه: مسحُ الدخول بعد ساعة كان يعيد
    * الهامش ونسبته و«أكبر لوت» فوراً من سعرٍ عمره ساعة موسوماً «@» كأنه حيّ، حتى التحديث التالي بعد 60 ث.
