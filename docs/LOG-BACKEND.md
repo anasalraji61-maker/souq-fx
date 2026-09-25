@@ -110,6 +110,6 @@
 
 | # | الإيداع | ما تغيّر |
 |---|---|---|
-| 33 | `9178bce` | **`trade_stats.win_rate` = `null`** حين لا صفقة حاسمة (دفتر فارغ أو كلّه تعادل)، لا 0 التي تُقرأ «خسر كل صفقاته». `tests/test_trades_routes.py` (يسقط على الكود القديم) |
+| 33 | `2d0fb58` | **`trade_stats.win_rate` = `null`** حين لا صفقة حاسمة (دفتر فارغ أو كلّه تعادل)، لا 0 التي تُقرأ «خسر كل صفقاته». `tests/test_trades_routes.py` (يسقط على الكود القديم) |
 
 **لم يُلمس عمداً:** `backtest._stats` ما يزال يرسل `win_rate: 0` بلا صفقة حاسمة — `BacktestPanel.tsx:240` يعرض `String(stats.win_rate)` فـnull تصير «null%» (صفّ tools71 لـui؛ وصفّ `backend-r7` يطلب إشعاري بعده). قرارات أنس كما هي: `openrouter_ai.py:71` (launch9)، كلمة المرور ≥4 (QA24)، قوالب الكردية (launch77)، العمولات (backend-r6 (6))، شارت demo البذري.
