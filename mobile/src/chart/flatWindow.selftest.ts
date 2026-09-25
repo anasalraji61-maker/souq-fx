@@ -4,7 +4,7 @@
  * Run: npx --yes tsx src/chart/flatWindow.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { computeCci, computeCmo, computeStoch, computeStochRsi, computeWilliamsR } from './indicators/momentum';
+import { computeCci, computeCmo, computeCutlerRsi, computeRsi, computeStoch, computeStochRsi, computeWilliamsR } from './indicators/momentum';
 import { computeCmf, computeMfi } from './indicators/volume';
 
 const flat = (n: number, p = 1.1, volume?: number) =>
@@ -48,5 +48,11 @@ for (let i = 13; i < moving.length; i++) assert.equal(typeof k[i], 'number', `k[
 // CMO: 14 شمعة بلا حركة ⇒ null (`ta.cmo` 0/0 = na)، لا 0 «محايد»؛ بيانات متحرّكة ⇒ رقم
 assert.equal(computeCmo(closes)[closes.length - 1], null, 'CMO flat');
 assert.equal(typeof computeCmo(moving.map((b) => b.close))[29], 'number', 'CMO moving');
+
+// RSI: نافذة بلا ربح ولا خسارة = 50 كـMT5 وتنبيه الخادم (backend-r10)، لا 100 «تشبّع شراء»؛ صعود صافٍ يبقى 100
+const still = Array(30).fill(1.1);
+assert.equal(computeRsi(still)[29], 50, 'RSI flat');
+assert.equal(computeCutlerRsi(still)[29], 50, 'Cutler RSI flat');
+assert.equal(computeRsi(Array.from({ length: 30 }, (_, i) => 1.1 + i * 0.001))[29], 100, 'RSI all gains');
 
 console.log('flatWindow selftest: PASS');

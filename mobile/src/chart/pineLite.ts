@@ -13,14 +13,14 @@ function rsi(values: number[], period: number): (number | null)[] {
   }
   let avgGain = gains / period;
   let avgLoss = losses / period;
-  out[period] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+  out[period] = avgLoss === 0 ? (avgGain === 0 ? 50 : 100) : 100 - 100 / (1 + avgGain / avgLoss);
   for (let i = period + 1; i < values.length; i++) {
     const d = values[i] - values[i - 1];
     const gain = d > 0 ? d : 0;
     const loss = d < 0 ? -d : 0;
     avgGain = (avgGain * (period - 1) + gain) / period;
     avgLoss = (avgLoss * (period - 1) + loss) / period;
-    out[i] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+    out[i] = avgLoss === 0 ? (avgGain === 0 ? 50 : 100) : 100 - 100 / (1 + avgGain / avgLoss);
   }
   return out;
 }

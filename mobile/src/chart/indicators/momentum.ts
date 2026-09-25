@@ -19,14 +19,14 @@ export function computeRsi(closes: number[], period = 14): (number | null)[] {
   }
   let avgGain = gains / period;
   let avgLoss = losses / period;
-  out[period] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+  out[period] = avgLoss === 0 ? (avgGain === 0 ? 50 : 100) : 100 - 100 / (1 + avgGain / avgLoss);
   for (let i = period + 1; i < closes.length; i++) {
     const d = closes[i] - closes[i - 1];
     const gain = d > 0 ? d : 0;
     const loss = d < 0 ? -d : 0;
     avgGain = (avgGain * (period - 1) + gain) / period;
     avgLoss = (avgLoss * (period - 1) + loss) / period;
-    out[i] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+    out[i] = avgLoss === 0 ? (avgGain === 0 ? 50 : 100) : 100 - 100 / (1 + avgGain / avgLoss);
   }
   return out;
 }
@@ -978,14 +978,14 @@ export function computeRmi(closes: number[], period = 14, momentum = 5): (number
   }
   let avgGain = gains / period;
   let avgLoss = losses / period;
-  out[firstIdx] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+  out[firstIdx] = avgLoss === 0 ? (avgGain === 0 ? 50 : 100) : 100 - 100 / (1 + avgGain / avgLoss);
   for (let i = firstIdx + 1; i < n; i++) {
     const d = closes[i] - closes[i - momentum];
     const gain = d > 0 ? d : 0;
     const loss = d < 0 ? -d : 0;
     avgGain = (avgGain * (period - 1) + gain) / period;
     avgLoss = (avgLoss * (period - 1) + loss) / period;
-    out[i] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+    out[i] = avgLoss === 0 ? (avgGain === 0 ? 50 : 100) : 100 - 100 / (1 + avgGain / avgLoss);
   }
   return out;
 }
@@ -1130,7 +1130,7 @@ export function computeCutlerRsi(closes: number[], period = 14): (number | null)
     }
     const avgGain = sumGain / period;
     const avgLoss = sumLoss / period;
-    out.push(avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss));
+    out.push(avgLoss === 0 ? (avgGain === 0 ? 50 : 100) : 100 - 100 / (1 + avgGain / avgLoss));
   }
   return out;
 }
