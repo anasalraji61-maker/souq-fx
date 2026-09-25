@@ -78,6 +78,11 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
       {loaded && !failed && news.length === 0 ? (
         <Text style={styles.empty}>{t.newsEmpty}</Text>
       ) : null}
+      {/* التأثير مخمَّن من كلمات العنوان (fed/cpi…) بألوان تأثير التقويم نفسها — يُقرأ تصنيفاً مؤكَّداً.
+          سطرٌ واحد فوق القائمة لا تحت كل خبر، و«≈» على الشارة نفسها. */}
+      {news.some((n) => n.impact_basis === 'headline_keywords') ? (
+        <Text style={[styles.basisNote, { textAlign: align }]}>{t.newsImpactFromHeadline}</Text>
+      ) : null}
       <ScrollView contentContainerStyle={{ gap: spacing.sm }}>
         {news.map((n) => (
           <View key={n.id} style={styles.card}>
@@ -89,6 +94,7 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
                 ]}
               >
                 <Text style={styles.impactText}>
+                  {n.impact_basis === 'headline_keywords' ? '≈ ' : ''}
                   {n.impact === 'high' ? t.impactHigh : n.impact === 'medium' ? t.impactMedium : t.impactLow}
                 </Text>
               </View>
@@ -135,6 +141,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: spacing.xs,
   },
+  basisNote: { color: colors.textDim, fontSize: 10, marginBottom: spacing.xs },
   empty: {
     color: colors.textDim,
     fontSize: 11,

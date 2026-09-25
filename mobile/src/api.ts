@@ -130,6 +130,8 @@ export type NewsItem = {
   title: string;
   pair_effect: string;
   when: string;
+  /** `'headline_keywords'` = شارة التأثير تقدير من كلمات العنوان (backend `9a05735`)، لا تصنيف مصدر. */
+  impact_basis?: string;
 };
 
 export type Course = {
