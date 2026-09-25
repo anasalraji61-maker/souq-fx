@@ -1334,6 +1334,13 @@ export type Dict = {
    */
   chartProviderDownTitle: string;
   chartProviderDownBody: string;
+  /**
+   * launch121: لا ردّ من خادم MATRIX أصلاً (بلا إنترنت، الخادم متوقّف) — غير `chartProviderDown*` (الخادم ردّ والمزوّد تعذّر).
+   * الخادم لم يعد يرسم بذرة لأي رمز (backend-r22 `8ff0a7c`) لكن التطبيق ما زال يرسم `mockSeries` حول أسعار 2024 عند فشل الطلب
+   * (`offlineFrame` بـ`TerminalScreen`، `QuadChartModal`) ⇒ نصّ يقول أين المشكلة وما العمل. لا يَعِد بتحديث تلقائي. `{symbol}` مرة.
+   */
+  chartServerUnreachableTitle: string;
+  chartServerUnreachableBody: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -2518,6 +2525,8 @@ const ar: Dict = {
   chartFirstLoad: 'جارٍ تحميل شموع {symbol} على فريم {tf}…',
   chartProviderDownTitle: 'تعذّر جلب شموع {symbol} من مزوّد البيانات الآن',
   chartProviderDownBody: 'المشكلة في الاتصال بمزوّد البيانات، وغالباً مؤقّتة. لا نرسم شموعاً تقديرية في الأثناء كي لا تقرأ أسعاراً غير حقيقية. جرّب مرة أخرى بعد دقائق.',
+  chartServerUnreachableTitle: 'تعذّر تحميل شموع {symbol}: لا اتصال بخادم MATRIX',
+  chartServerUnreachableBody: 'تأكّد من اتصالك بالإنترنت ثم جرّب مرة أخرى. لا نرسم شموعاً تقديرية في الأثناء كي لا تقرأ أسعاراً غير حقيقية.',
 };
 
 const enUS: Dict = {
@@ -3695,6 +3704,8 @@ const enUS: Dict = {
   chartFirstLoad: 'Loading {symbol} candles on the {tf} timeframe…',
   chartProviderDownTitle: 'Can’t get {symbol} candles from the data provider right now',
   chartProviderDownBody: 'The connection to our data provider failed — usually a temporary problem. We don’t draw estimated candles meanwhile, so you never read prices that aren’t real. Try again in a few minutes.',
+  chartServerUnreachableTitle: 'Can’t load {symbol} candles — no connection to the MATRIX server',
+  chartServerUnreachableBody: 'Check your internet connection, then try again. We don’t draw estimated candles meanwhile, so you never read prices that aren’t real.',
 };
 
 const enGB: Dict = {
@@ -4904,6 +4915,8 @@ const ku: Dict = {
   chartFirstLoad: 'مۆمەکانی {symbol} لەسەر کاتی چوارچێوەی {tf} بار دەکرێن…',
   chartProviderDownTitle: 'ئێستا ناتوانرێت مۆمەکانی {symbol} لە دابینکەری داتا وەربگیرێن',
   chartProviderDownBody: 'پەیوەندی لەگەڵ دابینکەری داتا سەرکەوتوو نەبوو — زۆرجار کاتییە. لەم ماوەیەدا هیچ مۆمێکی خەمڵێنراو ناکێشین تا نرخی ناڕاستەقینە نەخوێنیتەوە. دوای چەند خولەکێک دووبارە هەوڵ بدەرەوە.',
+  chartServerUnreachableTitle: 'مۆمەکانی {symbol} بار نەکران — پەیوەندی بە ڕاژەی MATRIX نییە',
+  chartServerUnreachableBody: 'پەیوەندی ئینتەرنێتەکەت بپشکنە، پاشان دووبارە هەوڵ بدەرەوە. لەم ماوەیەدا هیچ مۆمێکی خەمڵێنراو ناکێشین تا نرخی ناڕاستەقینە نەخوێنیتەوە.',
 };
 
 export const DICTS: Record<LangId, Dict> = {
