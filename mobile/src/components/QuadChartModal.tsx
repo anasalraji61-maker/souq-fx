@@ -340,7 +340,12 @@ export function QuadChartModal({
                     <Text style={styles.cellPrice}>{formatPrice(px, sym, s?.last)}</Text>
                   ) : null}
                   {s ? (
-                    <Text style={[styles.cellPct, { color: pctColor }]}>
+                    <Text
+                      style={[styles.cellPct, { color: pctColor }]}
+                      accessibilityLabel={
+                        pct == null ? t.cfDayChangeNoneA11y : t.cfDayChangeA11y.replace('{pct}', formatPct(pct))
+                      }
+                    >
                       {pct == null ? '—' : formatPct(pct)}
                     </Text>
                   ) : null}

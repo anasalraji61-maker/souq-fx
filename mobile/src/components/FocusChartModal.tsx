@@ -265,6 +265,27 @@ export function FocusChartModal({
   const headPct = Number.isFinite(headPctRaw) ? headPctRaw : null;
   const headDir = pctDirection(headPct);
   const headPctColor = headDir === 'up' ? colors.bull : headDir === 'down' ? colors.bear : colors.textDim;
+  // ذيل سطر النسبة (حالة التيك · المصدر · السوق · العرض/الطلب) — نصّاً ووسماً لقارئ الشاشة معاً.
+  const headTail = !headSeries
+    ? ''
+    : (liveTick
+      ? ` · ${
+          tickStatusLabel(liveTick.source, liveTick.source.as_of, nowSec, {
+            live: t.dsTickLive,
+            demoTick: t.dsTickDemo,
+            lastPrice: t.dsLastPriceWord,
+          }) ?? t.focusLastPriceWord
+        }`
+      : '') +
+    (` · ${provenanceLabel(normalizeProvenance(headSeries.data_source), {
+      provider: t.dsKindProvider,
+      demo: t.dsKindDemo,
+      cache: t.dsKindCache,
+      unknown: t.dsKindUnknown,
+      unavailable: t.dsKindUnavailable,
+    })}`) +
+    (` · ${marketStatusLabel(sym, { open: t.dsMarketOpen, closed: t.dsMarketClosed })}`) +
+    (hasSpread ? ` · B ${formatPrice(quote!.bid!, sym)}/A ${formatPrice(quote!.ask!, sym)}` : '');
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -312,26 +333,16 @@ export function FocusChartModal({
           {headSeries ? (
             <View style={styles.quote}>
               <Text style={styles.price}>{formatPrice(headPx ?? headSeries.last, sym)}</Text>
-              <Text style={[styles.change, { color: headPctColor }]}>
+              <Text
+                style={[styles.change, { color: headPctColor }]}
+                // النسبة وحدها «+0.12%» بلا سياق و«—» علامة ترقيم لقارئ الشاشة (launch109)؛ الذيل كما يُرى.
+                accessibilityLabel={
+                  (headPct == null ? t.cfDayChangeNoneA11y : t.cfDayChangeA11y.replace('{pct}', formatPct(headPct))) +
+                  headTail
+                }
+              >
                 {headPct == null ? '—' : formatPct(headPct)}
-                {liveTick
-                  ? ` · ${
-                      tickStatusLabel(liveTick.source, liveTick.source.as_of, nowSec, {
-                        live: t.dsTickLive,
-                        demoTick: t.dsTickDemo,
-                        lastPrice: t.dsLastPriceWord,
-                      }) ?? t.focusLastPriceWord
-                    }`
-                  : ''}
-                {` · ${provenanceLabel(normalizeProvenance(headSeries.data_source), {
-                  provider: t.dsKindProvider,
-                  demo: t.dsKindDemo,
-                  cache: t.dsKindCache,
-                  unknown: t.dsKindUnknown,
-                  unavailable: t.dsKindUnavailable,
-                })}`}
-                {` · ${marketStatusLabel(sym, { open: t.dsMarketOpen, closed: t.dsMarketClosed })}`}
-                {hasSpread ? ` · B ${formatPrice(quote!.bid!, sym)}/A ${formatPrice(quote!.ask!, sym)}` : ''}
+                {headTail}
               </Text>
             </View>
           ) : null}

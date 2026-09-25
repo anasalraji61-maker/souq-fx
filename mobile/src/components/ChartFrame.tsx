@@ -431,7 +431,13 @@ export function ChartFrame({
               ) : null}
             </Text>
           ) : null}
-          <Text style={[styles.chg, { color: chgColor }]}>
+          <Text
+            style={[styles.chg, { color: chgColor }]}
+            // منذ 8aeaf13 يصل VoiceOver لهذا النصّ منفرداً: «+0.12%» بلا سياق و«—» علامة ترقيم (launch109).
+            accessibilityLabel={
+              chgPct == null ? t.cfDayChangeNoneA11y : t.cfDayChangeA11y.replace('{pct}', formatPct(chgPct))
+            }
+          >
             {chgPct == null ? '—' : formatPct(chgPct)}
           </Text>
           {onFocus ? (
