@@ -240,3 +240,13 @@ console.log('parseDecimal unit word selftest OK');
     assert.equal(parseDecimal(a), parseDecimal(b), a);
 }
 console.log('parseDecimal smart apostrophe / Arabic comma selftest OK');
+
+// «٫» عشرية صريحة مع فاصلة بعدها ⇒ مبهم يُرفض (كان 1000.5)، و«-0» صفرٌ موجب
+assert.equal(parseDecimal('1٫000,5'), null);
+assert.equal(parseDecimal('١٫٠٠٠,٥'), null);
+assert.equal(parseDecimal('1．000,5'), 1000.5); // ．العريضة = النقطة (toWide أعلاه)
+assert.equal(parseDecimal('1.000,5'), 1000.5); // الأوروبي بنقطة ASCII كما كان
+assert.equal(parseDecimal('١٠٬٠٠٠٫٥'), 10000.5);
+assert.ok(Object.is(parseDecimal('-0', { signed: true }), 0));
+assert.equal(parseDecimal('-0.5', { signed: true }), -0.5);
+console.log('parseDecimal arabic-decimal-then-comma / -0 selftest OK');

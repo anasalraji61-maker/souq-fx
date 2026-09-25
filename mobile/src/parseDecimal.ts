@@ -111,6 +111,8 @@ export function parseDecimal(
   const lastDot = s.lastIndexOf('.');
   if (lastComma !== -1 && lastDot !== -1) {
     const decSep = lastComma > lastDot ? ',' : '.';
+    // «٫» عشرية صريحة لا فاصل آلاف: «1٫000,5» كانت 1000.5 والمتداول قد قصد 1.0005 ⇒ مبهم، يُرفض
+    if (decSep === ',' && digits.includes('٫')) return null;
     const thouSep = decSep === ',' ? '.' : ',';
     const cut = s.lastIndexOf(decSep);
     const intPart = s.slice(0, cut);
@@ -133,7 +135,8 @@ export function parseDecimal(
   if (!/^(\d+\.?\d*|\.\d+)$/.test(s)) return null;
   const n = Number(s);
   if (!Number.isFinite(n)) return null;
-  return neg ? -n : n;
+  // «-0» صفرٌ لا «-0» (`Object.is`/`toFixed` بلا إشارة، لكن `String(-0)` = «0» و`1/n` = -∞)
+  return neg ? -n || 0 : n;
 }
 
 /**
