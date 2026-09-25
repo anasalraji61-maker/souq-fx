@@ -252,7 +252,7 @@ export function parsePriceFor(raw: string, symbol: string | null | undefined): n
 /**
  * لماذا رفض `parsePriceFor` النصّ — والقراءتان الممكنتان لرسالة `priceAmbiguousThousandsHint` («اكتب 3450 أو 3.45»).
  * رسالة «رقم غير مفهوم — اكتبه بلا فواصل آلاف، مثل 10000 أو 1.0850» تحت «3.450» محيّرة: المتداول لم يكتب فاصلاً
- * (بظنّه)، ومثالها «1.0850» يشبه ما كتبه تماماً. `null` = ليس مبهماً (مقبول، أو مرفوض لسبب آخر).
+ * (بظنّه)، ومثالها «1.0850» يشبه ما كتبه تماماً. والفاصلة قبل ثلاثة أرقام («157,250») لأي رمز. `null` = ليس مبهماً (مقبول، أو مرفوض لسبب آخر).
  * `value` كما كُتب (مقصوص الأطراف)، `whole` بلا النقطة، `small` كسراً بلا أصفار زائدة — أرقام لاتينية دائماً.
  */
 /** عملات تسعيرٍ الدولارُ فيها ≥ 3.5 وحداتٍ — الفضة بها فوق العشرة دائماً (`ambiguousThousandsPrice`). */
@@ -281,6 +281,15 @@ export function ambiguousThousandsPrice(
   raw: string,
   symbol: string | null | undefined,
 ): { value: string; whole: string; small: string } | null {
+  /**
+   * **الفاصلة** قبل ثلاثة أرقام («157,250» USDJPY، «38,500» فضة، «1,085» EURUSD): `parseDecimal` يرفضها لأي رمز (آلاف أم كسر؟) — وكانت
+   * الرسالة العامة «اكتبه بلا فواصل آلاف، مثل 1.0850» فتُسدّ كل أسعار الين والفضة بثلاث منازل على لوحة الفاصلة العشرية
+   * (التركية، الألمانية) بلا قول ماذا يكتب. رسالةٌ لا قراءة: السعر يبقى مرفوضاً، والقراءتان تُعرضان.
+   */
+  const comma = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009']/g, '').replace(/，/g, ',');
+  if (symbol && /^[1-9]\d{0,2},\d{3}$/.test(comma) && parseDecimal(raw) == null) {
+    return { value: raw.trim(), whole: comma.replace(',', ''), small: String(Number(comma.replace(',', '.'))) };
+  }
   // ذهب حساب سنت/micro («XAUUSDC»، «GOLDMICRO») بسعر الذهب نفسه: «3.450» بخانته كانت تُقرأ 3.45 بالدفتر
   const spec = symbol ? instrumentSpec(symbol) ?? instrumentSpec(smallContractPair(symbol) ?? '') : null;
   if (!spec) {

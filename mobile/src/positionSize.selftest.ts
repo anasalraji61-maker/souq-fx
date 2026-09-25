@@ -1640,16 +1640,27 @@ console.log('positionSize parsePriceFor selftest OK');
   assert.deepEqual(ambiguousThousandsPrice('3.000', 'XAUUSD'), { value: '3.000', whole: '3000', small: '3' });
   // ليس مبهماً ⇒ null (مقبول أو مرفوض لسبب آخر)
   for (const [raw, sym] of [
-    ['3450', 'XAUUSD'], ['3.45', 'XAUUSD'], ['0.450', 'XAUUSD'], ['3.450,50', 'XAUUSD'], ['3,450', 'XAUUSD'],
+    ['3450', 'XAUUSD'], ['3.45', 'XAUUSD'], ['0.450', 'XAUUSD'], ['3.450,50', 'XAUUSD'],
+    ['3,450', ''], ['3,45', 'XAUUSD'], ['3,4500', 'XAUUSD'], ['1,234,567', 'XAUUSD'], ['0,450', 'XAUUSD'],
     ['abc', 'XAUUSD'], ['', 'XAUUSD'], ['157.250', 'USDJPY'], ['1.085', 'EURUSD'], ['3.450', 'AAPL'], ['3.450', ''],
   ] as const) {
     assert.equal(ambiguousThousandsPrice(raw, sym), null, `${raw} ${sym}`);
   }
-  // يتّفق مع parsePriceFor: مبهم ⇔ parseDecimal يقرؤه لكن parsePriceFor يرفضه
-  for (const raw of ['3.450', '2.350', '3450', '3.45', '0.450', '3.450,50', 'abc', '12.345', '1234.567']) {
+  // يتّفق مع parsePriceFor: مبهم ⇔ parsePriceFor يرفضه ومعه قراءتان (نقطةٌ يقرؤها parseDecimal، أو فاصلةٌ قبل ثلاثة أرقام يرفضها)
+  for (const raw of ['3.450', '2.350', '3450', '3.45', '0.450', '3.450,50', 'abc', '12.345', '1234.567', '3,450', '3,45']) {
     const amb = ambiguousThousandsPrice(raw, 'XAUUSD') != null;
-    assert.equal(amb, parsePriceFor(raw, 'XAUUSD') == null && parseDecimal(raw) != null, raw);
+    assert.equal(amb, parsePriceFor(raw, 'XAUUSD') == null && (parseDecimal(raw) != null || /^[1-9]\d{0,2},\d{3}$/.test(raw)), raw);
   }
+  // الفاصلة قبل ثلاثة أرقام: مرفوضة كما كانت (لا حساب يتغيّر)، والرسالة تعرض القراءتين بدل «بلا فواصل آلاف»
+  assert.deepEqual(ambiguousThousandsPrice('157,250', 'USDJPY'), { value: '157,250', whole: '157250', small: '157.25' });
+  assert.deepEqual(ambiguousThousandsPrice('38,500', 'XAGUSD'), { value: '38,500', whole: '38500', small: '38.5' });
+  assert.deepEqual(ambiguousThousandsPrice(' 1,085 ', 'EURUSD'), { value: '1,085', whole: '1085', small: '1.085' });
+  assert.deepEqual(ambiguousThousandsPrice('١٥٧،٢٥٠'.replace('،', ','), 'USDJPY.m'), { value: '١٥٧,٢٥٠', whole: '157250', small: '157.25' });
+  assert.deepEqual(ambiguousThousandsPrice('18,500', 'GER40'), { value: '18,500', whole: '18500', small: '18.5' });
+  assert.deepEqual(ambiguousThousandsPrice('150,250', 'AAPL.US'), { value: '150,250', whole: '150250', small: '150.25' });
+  for (const [raw, sym] of [['157,250', 'USDJPY'], ['38,500', 'XAGUSD'], ['1,085', 'EURUSD']] as const)
+    assert.equal(parsePriceFor(raw, sym), null, raw);
+  assert.equal(parsePriceFor('157,25', 'USDJPY'), 157.25);
   assert.equal(parsePriceFor('3.450', null), 3.45);
 
   // الفضة بالين/الليرة فوق الألف بثلاث منازل: «5.123» = 5,123 ين (كانت تُقبل 5.123 ⇒ وقف 10 pip ⇒ 30 لوتاً بدل 0.03)
