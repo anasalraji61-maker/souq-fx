@@ -757,11 +757,15 @@ export function TerminalScreen() {
     await persistTfs(next);
     const sym = frameSymbols[index];
     const hit = cachedSeries(sym, nextTf);
-    setFrames((prev) => {
-      const copy = [...prev];
-      copy[index] = hit ?? { ...copy[index], timeframe: nextTf };
-      return copy;
-    });
+    // بلا كاش: تبقى الشموع القديمة بوسمها الحقيقي حتى يصل الجلب — وسمها بالفريم الجديد يُنهي تعتيم
+    // ChartFrame فوراً ويدمج التيكات بشمعة من الفريم القديم.
+    if (hit) {
+      setFrames((prev) => {
+        const copy = [...prev];
+        copy[index] = hit;
+        return copy;
+      });
+    }
     const gen = ++frameLoadGen.current[index];
     try {
       const s = await fetchSeries(sym, nextTf);
@@ -787,7 +791,7 @@ export function TerminalScreen() {
     if (dxyTf === nextTf) return;
     await persistDxyTf(nextTf);
     const hit = cachedSeries(heroSymbol, nextTf);
-    setDxy((prev) => hit ?? { ...prev, timeframe: nextTf });
+    if (hit) setDxy(hit);
     const gen = ++dxyLoadGen.current;
     try {
       const s = await fetchSeries(heroSymbol, nextTf);
