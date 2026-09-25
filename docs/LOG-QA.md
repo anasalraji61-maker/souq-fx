@@ -443,3 +443,14 @@ Kagi/P&F بلا حلقة لكل صندوق ولا حجم من الواجهة. **
 لكن السطر يقول «عند **وقفك** {price}» ⇒ البائع يُسمّى له سعر ليس وقفه ← مفتاح منفصل لحالة النقاط وحدها. تنظيف: `MIN_BOX_FRACTION` منسوخ `range.ts:19`/`renko.ts:33`.
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
 **إلحاق بعد الدفع:** وصلت `731262b` (مفاتيح QA39 ×3 لغات، غير موصولة) و`ace75bf` — الصفّ صار لـtools وحده. البناء أخضر 0 بعدها.
+
+## 2026-09-25 — الدورة 40
+**البناء:** أخضر 0 (بعد f952b6f) — لا إصلاح لازم. **Selftests:** 84/84 ناجح (`npx tsx`؛ +`netVolumeTv`؛ `drawNudge` الذي أبلغ عنه tools59 فاشلاً صار ناجحاً بعد `00ede5f`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — QA38 (`6da30aa`، `TradeJournalPanel.tsx:1287` `shownSymbol` ⇒ `openPositionsNewsRisk` يُسقط اللحظة نفسها)؛ QA39 (`874fbd9`،
+`PositionSizePanel.tsx:1517 :1526` `riskCalcPipValueAtPipsExit`+`Hint` حين `stopRate == null`). launch91 → tools = QA39 نفسه، أُنجز. **غير مُغلق:** تنظيف QA39
+`MIN_BOX_FRACTION` ×2 (صار صفّاً لـchart وحده)، 10 `Alert.alert`، «₴» ×2، `FocusChartModal:56` `BASES`، `AiPanel`/`LectureClassroom` بلا `maxLength`، `BRENT/USD`، `TimeframeBar`.
+**طلبات تنسيق جديدة:** لا شيء (launch91 لـchart: `ctlKindLineBreak`/`mcPercentScaleA11y` جاهزان لميزة لم تُبنَ — إعلام لا طلب).
+**المراجعة (e — ما يُحرج أمام متداول)، على commits منذ b2d44e9:** `eecee47` Net Volume = ‎±volume حسب تغيّر الإغلاق‎ كصيغة TradingView، ولوحته بـ`volName` «≈»؛
+كل لوحات الحجم (OBV/NVI/PVI/A/D/CMF/Klinger/Twiggs/MFI/…) بـ«≈». `ce86399` `niceLogPriceTicks` مانتيسات مستديرة وتعود لـ`nicePriceTicks` تحت ضعفين.
+`4d7c7b3` سليم؛ الحاسبة `lots.toFixed(2)` سليمة لأن `LOT_STEP` = 0.01. **لا بند جديد.**
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
