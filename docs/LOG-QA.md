@@ -296,3 +296,4 @@ QA21 (`d8446d0`؛ `DIRECTIONAL_OVERLAYS` باقٍ عمداً — استثناء 
 (2) `marketHours.ts:13` `ALWAYS_OPEN` حرفي ⇒ SOLUSD/BTCUSDT «مغلق» السبت (→ chart)؛ DXY/UKOIL بلا استراحة ICE اليومية — محتمل، لم يُتحقّق من ساعات البورصة؛
 (3) `reportJournalDataLine` «PnL=x%» = مجموع حركة السعر (→ launch + tools)؛ (4) `dailyChange.ts:34` يوم UTC يغذّي رأس الشارت ⇒ يناقض خطّ PDC — أُلحق بـtools38 (أنس).
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
+**إلحاق بعد سحب launch74:** QA24 شقّ الرسالة مُغلق (`aff9f14`، `locales.ts:1148 :2219`)؛ `maxLength` بالشاشة وحدّ كلمة المرور باقيان. البناء أُعيد: أخضر 0.
