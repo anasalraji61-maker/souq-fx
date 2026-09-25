@@ -520,7 +520,8 @@ def _seed_walk(
                 high=round(h, 5 if base < 50 else 2),
                 low=round(l, 5 if base < 50 else 2),
                 close=round(c, 5 if base < 50 else 2),
-                volume=round(abs(c - o) * (1e6 if base < 50 else 80) * (0.5 + rng.random()) + rng.uniform(800, 5000), 2),
+                # لا حجم: كان رقماً عشوائياً (800–5000+ لكل شمعة) — نشاط مخترَع لأي لوحة حجم لا تفحص الوسم.
+                volume=None,
             )
         )
         price = c

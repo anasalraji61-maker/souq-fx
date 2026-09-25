@@ -717,3 +717,10 @@ def test_the_symbol_in_the_path_is_matched_case_insensitively(client):
     """الرموز تُحفظ بالحروف الكبيرة عند الإضافة — والعميل قد يرسلها كما كتبها المتداول."""
     client.post("/api/watchlist/custom", json={"symbol": "eurusd"}, headers=_DEV1)
     assert client.delete("/api/watchlist/custom/eurusd", headers=_DEV1).json()["removed"] == 1
+
+
+def test_demo_series_has_no_invented_volume():
+    """السلسلة البذرية كانت تحمل حجماً عشوائياً 800–5000+ لكل شمعة (الفوركس لا حجم له عند المزوّد)."""
+    import main as m
+    candles = m._seed_walk("EURUSD", 1.1, n=50)
+    assert candles and all(c.volume is None for c in candles)
