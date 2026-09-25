@@ -498,6 +498,9 @@ export type Dict = {
   /** عدّاد تحت خانة ملاحظة قريبة من حدّها (الدفتر `JOURNAL_NOTE_MAX` = 500 = الخادم `main.py:447`) — مع `maxLength` تتوقّف الكتابة بصمت
    *  بدونه (صفّ QA14). `{n}` الباقي، `{max}` الحدّ. صيغة «الباقية: n من max» كي لا يُصرَّف «حرف» بالعدد. يصلح لأي خانة ملاحظة */
   noteCharsLeft: string;
+  /** بدل `noteCharsLeft` بالدفتر حين `journalNoteRoom` < 500 (`695ad41`): بلا شرح يقرأ المتداول «0 من 489» ويسأل أين ذهبت 11 حرفاً.
+   *  `{n}` الباقي، `{max}` الحدّ بعد الحجز، `{reserved}` = 500 − `{max}`. العلامتان تُكتبان كما تظهران بالملاحظة المحفوظة */
+  noteCharsLeftReserved: string;
   /**
    * تحت خانة الملاحظة حين تحمل (أو ستحمل بالحفظ) علامة الوقف الأصلي «1R @ …» (`noteWithInitialStop`/`initialStop` بـ`tradePlan.ts`):
    * `{stop}` سعر الوقف الأصلي. يشرح لماذا ظهر النصّ بملاحظته وما يحدث إن حذفه.
@@ -1556,6 +1559,7 @@ const ar: Dict = {
   journalResultR: 'النتيجة {r}',
   journalNoteA11y: 'ملاحظة الصفقة (اختياري)',
   noteCharsLeft: 'الأحرف الباقية: {n} من {max}',
+  noteCharsLeftReserved: 'الأحرف الباقية: {n} من {max} — و{reserved} محجوزة لعلامة «1.00 lot» أو «1R @ …» التي تُحفظ مع ملاحظتك',
   journalInitialStopNote:
     '«1R @ {stop}» بالملاحظة يحفظ وقفك الأصلي عند الدخول: منه تُقاس النتيجة بـR ونسبة R:R المخطَّطة مهما حرّكت الوقف بعده. احذفه فتُقاس من الوقف الحالي',
   journalCappedNote:
@@ -2618,6 +2622,7 @@ const enUS: Dict = {
   journalResultR: 'Result {r}',
   journalNoteA11y: 'Trade note (optional)',
   noteCharsLeft: '{n} of {max} characters left',
+  noteCharsLeftReserved: '{n} of {max} characters left — {reserved} are kept for the «1.00 lot» or «1R @ …» mark saved with your note',
   journalInitialStopNote:
     '"1R @ {stop}" in the note keeps your stop from when you entered: your R result and planned R:R are measured from it, however you move the stop later. Delete it to measure from the current stop',
   journalCappedNote:
@@ -3707,6 +3712,7 @@ const ku: Dict = {
   journalResultR: 'ئەنجام {r}',
   journalNoteA11y: 'تێبینی مامەڵە (ئیختیاری)',
   noteCharsLeft: 'پیتی ماوە: {n} لە {max}',
+  noteCharsLeftReserved: 'پیتی ماوە: {n} لە {max} — {reserved} پیت بۆ نیشانەی «1.00 lot» یان «1R @ …» پارێزراون کە لەگەڵ تێبینییەکەت پاشەکەوت دەکرێت',
   journalInitialStopNote:
     '«1R @ {stop}» لە تێبینییەکەدا وەستانی سەرەتاییت لە کاتی چوونەژوورەوە دەپارێزێت: ئەنجامی R و ڕێژەی R:R ی پلاندانراو لەوەوە دەپێورێن، هەرچەندە دواتر وەستانەکە بجوڵێنیت. بیسڕەوە بۆ ئەوەی لە وەستانی ئێستاوە بپێورێت',
   journalCappedNote:
