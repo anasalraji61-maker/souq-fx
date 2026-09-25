@@ -823,3 +823,53 @@ console.log('newsRisk cryptoPairOf selftest OK');
   assert.equal(bankHolidayToday(usd, [], at(2)), null);
 }
 console.log('newsRisk bankHolidayToday selftest OK');
+
+{
+  // يوم العطلة بتوقيت بلد العملة — ForexFactory يؤرّخ كلها بمنتصف ليل نيويورك
+  const { holidayDayStartMs, holidayZoneOffsetH } = require('./newsRisk') as typeof import('./newsRisk');
+  const U = (m: number, d: number, h = 0, y = 2026) => Date.UTC(y, m, d, h);
+  // عيد الثقافة الياباني الثلاثاء 2026-11-03 = 05:00 UTC بالخادم؛ اليوم بطوكيو من 11-02 15:00 UTC
+  const culture: NewsEvent = { id: 'c', title: 'Culture Day', currency: 'JPY', impact: 'holiday', ts: U(10, 3, 5) / 1000 };
+  assert.equal(holidayDayStartMs('JPY', culture.ts as number), U(10, 2, 15));
+  assert.ok(bankHolidayToday([culture], ['USD', 'JPY'], U(10, 3, 1)), 'Tokyo 10:00 on the holiday');
+  assert.ok(bankHolidayToday([culture], ['USD', 'JPY'], U(10, 2, 15)), 'Tokyo midnight');
+  assert.equal(bankHolidayToday([culture], ['USD', 'JPY'], U(10, 2, 15) - 1), null);
+  assert.equal(bankHolidayToday([culture], ['USD', 'JPY'], U(10, 3, 15) - 1) != null, true);
+  assert.equal(bankHolidayToday([culture], ['USD', 'JPY'], U(10, 3, 15)), null, 'Tokyo Wednesday open again');
+  assert.equal(bankHolidayToday([culture], ['USD', 'JPY'], U(10, 4, 1)), null, 'no false line next morning');
+  // صيف نيويورك (4 يوليو يُحتفل 07-03 2026، 04:00 UTC) كما كان
+  assert.equal(holidayDayStartMs('USD', U(6, 3, 4) / 1000), U(6, 3, 4));
+  // الشكر شتاءً كما كان
+  assert.equal(holidayDayStartMs('USD', U(10, 26, 5) / 1000), U(10, 26, 5));
+  // سيدني صيفاً (+11): يوم أستراليا 01-26 ⇒ 01-25 13:00 UTC؛ شتاءً (+10): 06-08 ⇒ 06-07 14:00
+  assert.equal(holidayDayStartMs('AUD', U(0, 26, 5) / 1000), U(0, 25, 13));
+  assert.equal(holidayDayStartMs('AUD', U(5, 8, 4) / 1000), U(5, 7, 14));
+  // ويلنغتون صيفاً (+13): Waitangi 02-06 ⇒ 02-05 11:00
+  assert.equal(holidayDayStartMs('NZD', U(1, 6, 5) / 1000), U(1, 5, 11));
+  // لندن صيفاً (+1): 08-31 ⇒ 08-30 23:00؛ فرانكفورت شتاءً (+1): 12-25 ⇒ 12-24 23:00؛ زيورخ صيفاً (+2)
+  assert.equal(holidayDayStartMs('GBP', U(7, 31, 4) / 1000), U(7, 30, 23));
+  assert.equal(holidayDayStartMs('EUR', U(11, 25, 5) / 1000), U(11, 24, 23));
+  assert.equal(holidayDayStartMs('CHF', U(7, 1, 4) / 1000), U(6, 31, 22));
+  // عملة بلا منطقة معروفة ⇒ ts كما هو
+  assert.equal(holidayDayStartMs('ZAR', U(2, 21, 4) / 1000), U(2, 21, 4));
+  // أيام التحويل (2026): نيويورك 03-08 يبدأ شتوياً، 03-09 صيفياً؛ 11-01 يبدأ صيفياً، 11-02 شتوياً
+  assert.equal(holidayZoneOffsetH('USD', U(2, 8)), -5);
+  assert.equal(holidayZoneOffsetH('USD', U(2, 9)), -4);
+  assert.equal(holidayZoneOffsetH('USD', U(10, 1)), -4);
+  assert.equal(holidayZoneOffsetH('USD', U(10, 2)), -5);
+  // لندن: 03-29 شتوي، 03-30 صيفي؛ 10-25 صيفي، 10-26 شتوي
+  assert.equal(holidayZoneOffsetH('GBP', U(2, 29)), 0);
+  assert.equal(holidayZoneOffsetH('GBP', U(2, 30)), 1);
+  assert.equal(holidayZoneOffsetH('GBP', U(9, 25)), 1);
+  assert.equal(holidayZoneOffsetH('GBP', U(9, 26)), 0);
+  // سيدني: 04-05 صيفي (يبدأ قبل التحويل)، 04-06 شتوي؛ 10-04 شتوي، 10-05 صيفي
+  assert.equal(holidayZoneOffsetH('AUD', U(3, 5)), 11);
+  assert.equal(holidayZoneOffsetH('AUD', U(3, 6)), 10);
+  assert.equal(holidayZoneOffsetH('AUD', U(9, 4)), 10);
+  assert.equal(holidayZoneOffsetH('AUD', U(9, 5)), 11);
+  // ويلنغتون: 09-27 شتوي، 09-28 صيفي
+  assert.equal(holidayZoneOffsetH('NZD', U(8, 27)), 12);
+  assert.equal(holidayZoneOffsetH('NZD', U(8, 28)), 13);
+  assert.equal(holidayZoneOffsetH('SEK', U(0, 1)), null);
+}
+console.log('newsRisk holiday local day selftest OK');

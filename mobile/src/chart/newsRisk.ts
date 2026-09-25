@@ -323,15 +323,72 @@ export function nextHighImpact(
   return best;
 }
 
-/** مدّة «يوم العطلة» من وقت حدثها: ForexFactory يضع العطلة «طوال اليوم» عند منتصف ليل يومها. */
+/** مدّة «يوم العطلة» من بدايته: ForexFactory يضع العطلة «طوال اليوم» عند منتصف ليل يومها. */
 export const HOLIDAY_SPAN_MS = 24 * 60 * 60 * 1000;
+
+/** يوم الأحد رقم `nth` (1..) من الشهر (0..11)، أو الأخير حين `nth` = -1 — كتاريخ يومٍ بالتقويم (ms منتصف ليل UTC). */
+function sundayOf(year: number, month: number, nth: number): number {
+  if (nth < 0) {
+    const last = Date.UTC(year, month + 1, 0);
+    return last - new Date(last).getUTCDay() * 86_400_000;
+  }
+  const first = Date.UTC(year, month, 1);
+  return first + ((7 - new Date(first).getUTCDay()) % 7) * 86_400_000 + (nth - 1) * 7 * 86_400_000;
+}
+
+/**
+ * فرق التوقيت (ساعات) عند **منتصف ليل** اليوم `day` (ms منتصف ليل UTC لذلك التاريخ) بمدينة بنك العملة المركزي، أو `null` لعملة
+ * لا نعرف منطقتها. التوقيت الصيفي بالتاريخ: يوم التحويل يبدأ بالتوقيت السابق (التحويل فجراً) — `start < day ≤ end`.
+ * نيويورك/تورونتو: الأحد الثاني من مارس..الأول من نوفمبر؛ لندن/فرانكفورت/زيورخ: الأخير من مارس..الأخير من أكتوبر؛
+ * سيدني: الأول من أكتوبر..الأول من أبريل؛ ويلنغتون: الأخير من سبتمبر..الأول من أبريل (الصيف الجنوبي يعبر السنة).
+ */
+export function holidayZoneOffsetH(ccy: string, day: number): number | null {
+  const y = new Date(day).getUTCFullYear();
+  const north = (s: number, e: number) => day > s && day <= e;
+  const south = (e: number, s: number) => day <= e || day > s;
+  switch (ccy) {
+    case 'USD':
+    case 'CAD':
+      return north(sundayOf(y, 2, 2), sundayOf(y, 10, 1)) ? -4 : -5;
+    case 'GBP':
+      return north(sundayOf(y, 2, -1), sundayOf(y, 9, -1)) ? 1 : 0;
+    case 'EUR':
+    case 'CHF':
+      return north(sundayOf(y, 2, -1), sundayOf(y, 9, -1)) ? 2 : 1;
+    case 'JPY':
+      return 9;
+    case 'CNY':
+    case 'HKD':
+    case 'SGD':
+      return 8;
+    case 'AUD':
+      return south(sundayOf(y, 3, 1), sundayOf(y, 9, 1)) ? 11 : 10;
+    case 'NZD':
+      return south(sundayOf(y, 3, 1), sundayOf(y, 8, -1)) ? 13 : 12;
+    default:
+      return null;
+  }
+}
+
+/**
+ * بداية يوم العطلة (ms) **بتوقيت بلد العملة**. ForexFactory يؤرّخ كل عطلة بمنتصف ليل نيويورك (05:00 UTC شتاءً) أيّاً كانت
+ * العملة — فعطلة طوكيو كانت تُعدّ من 14:00 بتوقيت طوكيو حتى 14:00 من اليوم التالي: بلا تنبيه طوال جلسة آسيا بيوم العطلة،
+ * وتنبيهٌ كاذب صباح اليوم التالي وطوكيو تعمل (والأسترالي/النيوزيلندي بفارق يوم تقريباً). التاريخ = تاريخ UTC لـ`ts + 12س`
+ * (منتصف ليلٍ بأي منطقة من −12 إلى +12 يقع بيومه)، ثم منتصف ليله بمنطقة العملة. عملة بلا منطقة معروفة ⇒ `ts` كما كان.
+ */
+export function holidayDayStartMs(ccy: string, tsSec: number): number {
+  const d = new Date(tsSec * 1000 + 12 * 3_600_000);
+  const day = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  const off = holidayZoneOffsetH(ccy, day);
+  return off == null ? tsSec * 1000 : day - off * 3_600_000;
+}
 
 /**
  * **عطلة بنوك اليوم** لعملات الزوج — للشريط حين لا خبر قوي. الخادم كان يسمّي عطلة ForexFactory «منخفض التأثير» (QA30) وصار
  * يرسلها `impact: "holiday"` (backend-r3): عطلة طوكيو أو عيد الشكر الأمريكي ليست خبراً ضعيفاً بل سيولة رقيقة — سبريد أوسع،
  * وقف ينزلق، فجوات — وهي لحظة يدخل فيها المتداول مطمئناً لأن «لا أخبار اليوم».
  *
- * ما يُعدّ: `impact` = `holiday`، لا أمثلة، وقت دقيق، عملة من عملات الزوج، و`ts ≤ الآن < ts + 24س`. العملات بترتيب الزوج
+ * ما يُعدّ: `impact` = `holiday`، لا أمثلة، وقت دقيق، عملة من عملات الزوج، والآن داخل يوم العطلة **بتوقيت بلدها** (`holidayDayStartMs`). العملات بترتيب الزوج
  * بلا تكرار، والعنوان الأول لكل عملة (عطلتان باليوم نفسه لعملة = سطرٌ واحد). `null` = لا عطلة اليوم.
  */
 export function bankHolidayToday(
@@ -346,7 +403,7 @@ export function bankHolidayToday(
     if (typeof e.ts !== 'number' || !Number.isFinite(e.ts)) continue;
     const c = String(e.currency).toUpperCase();
     if (!currencies.includes(c) || byCcy.has(c)) continue;
-    const start = e.ts * 1000;
+    const start = holidayDayStartMs(c, e.ts);
     if (nowMs < start || nowMs >= start + HOLIDAY_SPAN_MS) continue;
     byCcy.set(c, String(e.title ?? '').trim());
   }
