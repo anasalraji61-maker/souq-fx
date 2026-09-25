@@ -16,6 +16,7 @@ import {
   nextHighImpact,
   newsCurrencyMatches,
   openPositionsNewsRisk,
+  unannouncedHighImpactToday,
   sameMinuteHighImpact,
   sameMinuteCurrencyLabel,
   newsBannerText,
@@ -1069,3 +1070,22 @@ console.log('newsRisk glued sb suffix selftest OK');
   assert.equal(newsCurrencyMatches('GBP', new Set(['USD'])), false);
 }
 console.log('newsRisk ALL-currency selftest OK');
+
+{
+  // `ALL` خارج `nextHighImpact`: G20 «All Day» بلا ساعة ⇒ العملة «ALL» لا فارغة (الشريط كان يطبع « ·  · »)
+  const t0 = Date.UTC(2026, 8, 25, 12);
+  const tbd: NewsEvent = { id: 'g', title: 'G20 Meetings', currency: 'ALL', impact: 'High', ts: Date.UTC(2026, 8, 25, 4) / 1000, time_tbd: true };
+  assert.deepEqual(unannouncedHighImpactToday([tbd], symbolCurrencies('EURUSD'), t0, undefined, 0)?.currencies, ['ALL']);
+  // مع خبر يورو بلا ساعة: EUR أولاً ثم ALL، بلا تكرار
+  const eurTbd: NewsEvent = { ...tbd, id: 'e', title: 'ECB', currency: 'EUR' };
+  assert.deepEqual(unannouncedHighImpactToday([tbd, eurTbd, { ...tbd, id: 'g2' }], symbolCurrencies('EURUSD'), t0, undefined, 0)?.currencies, ['EUR', 'ALL']);
+  // صفقات مفتوحة: G20 بعد 20د يمسّ كل مفتوحة لها عملة (كانت `[]`) لا السهم
+  const g20t: NewsEvent = { id: 'h', title: 'G20 Statement', currency: 'ALL', impact: 'High', ts: (t0 + 20 * 60_000) / 1000 };
+  assert.deepEqual(openPositionsNewsRisk(['EURUSD', 'USDJPY', 'AAPL'], [g20t], t0)!.symbols, ['EURUSD', 'USDJPY']);
+  // شريط EURUSD الظاهر يعلن G20 نفسه ⇒ لا تحذير ثانٍ (كان يتكرّر لقارئ الشاشة)
+  assert.equal(openPositionsNewsRisk(['EURUSD', 'GBPUSD'], [g20t], t0, 'EURUSD'), null);
+  // لكن خبر إسترليني بالدقيقة نفسها لا يعلنه شريط EURUSD ⇒ يبقى
+  const gbp: NewsEvent = { ...g20t, id: 'b', title: 'BoE', currency: 'GBP' };
+  assert.deepEqual(openPositionsNewsRisk(['EURUSD', 'GBPUSD'], [g20t, gbp], t0, 'EURUSD')!.symbols, ['EURUSD', 'GBPUSD']);
+}
+console.log('newsRisk ALL off the timed path selftest OK');

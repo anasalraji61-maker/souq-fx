@@ -164,7 +164,8 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
     const when = tbd.tomorrow ? t.newsTimeTbdTomorrow : t.newsTimeTbd;
     const text = newsBannerText({
       head: t.newsRiskHigh,
-      currency: tbd.currencies.join('/'),
+      // `ALL` (G20 «All Day») ⇒ «كل العملات» كالسطر الموقوت أدناه
+      currency: tbd.currencies.map((c) => (c === 'ALL' ? t.newsAllCurrencies : c)).join('/'),
       when,
       title: tbd.titles[0] ?? '',
       more: Math.max(0, tbd.titles.length - 1),

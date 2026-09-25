@@ -429,7 +429,10 @@ export function unannouncedHighImpactToday(
   }
   if (!hitCcys.size) return null;
   // حدثٌ اليوم وآخر غداً ⇒ «اليوم» (الأقرب والأحذر)
-  return { currencies: currencies.filter((c) => hitCcys.has(c)), titles, tomorrow: !today };
+  // `ALL` (G20 «All Day») لا يقع بين عملات الرمز ⇒ كان `currencies` فارغاً والشريط يطبع « ·  · » بلا عملة — يُلحق `ALL` ليُطبع «كل العملات»
+  const ccys = currencies.filter((c) => hitCcys.has(c));
+  if (hitCcys.has('ALL') && !ccys.includes('ALL')) ccys.push('ALL');
+  return { currencies: ccys, titles, tomorrow: !today };
 }
 
 /** مدّة «يوم العطلة» من بدايته: ForexFactory يضع العطلة «طوال اليوم» عند منتصف ليل يومها. */
@@ -559,12 +562,14 @@ export function openPositionsNewsRisk(
     const shown = nextHighImpact(events, shownCcys, nowMs);
     const sameMoment =
       shown != null && typeof shown.event.ts === 'number' && Math.abs(shown.event.ts - (hit.event.ts as number)) < 60;
-    if (sameMoment && [...moving].every((c) => shownCcys.includes(c))) return null;
+    // `ALL` يعلنه كل شريط رمزٍ له عملة (`newsCurrencyMatches`) ⇒ لا يمنع الدمج — كان تحذيران متطابقان لـG20
+    if (sameMoment && [...moving].every((c) => c === 'ALL' || shownCcys.includes(c))) return null;
   }
   return {
     ...hit,
     currencies,
-    symbols: uniq.filter((u) => u.ccys.some((c) => moving.has(c))).map((u) => u.sym),
+    // `ALL` يمسّ كل مفتوحة لها عملة — كانت القائمة فارغة فيسقط الشريط إلى نصيحة الدخول العامة
+    symbols: uniq.filter((u) => moving.has('ALL') || u.ccys.some((c) => moving.has(c))).map((u) => u.sym),
   };
 }
 
