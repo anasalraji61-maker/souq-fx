@@ -4728,3 +4728,40 @@ pineScale (جديد)، liveSeries. **لم يُختبر على جهاز**: شري
 1. بعد أن يضيف ui `'unavailable'` لـ`DataOriginKind`: `normalizeProvenance` + `KIND_LABEL_AR` + تسميات `ChartFrame`.
 2. علامة قفل صغيرة على الرسم المقفول نفسه (لا بالشريط فقط) إن طلبها QA.
 3. حفظ عدد Line Break وانحراف ZigZag بالقالب.
+
+---
+
+# تشغيل 2026-09-25 (السادس والثلاثون)
+
+## صفوف COORDINATION الموجّهة لي
+- **ui3 (`DataOriginKind` + `'unavailable'`) — شقّ chart أُنجز** `ec57a4a`: `provenanceLabel` يقبل تسميات جزئية
+  (`ProvenanceKindLabels = Partial<Record<DataOriginKind | 'unavailable', string>>`) مع احتياط `unknown` ثم العربية؛
+  `normalizeProvenance` يمرّر `'unavailable'` بدل إسقاطه لـ`unknown`. **جرّبتُ توسيع `api.ts:84` محلياً (وأرجعتُه): tsc = 0**
+  ⇒ ui يوسّع النوع وحده، و`FocusChartModal`/`TerminalScreen` تُكمَل بلا كسر (بلا مفتاح `unavailable` تعرض `dsKindUnknown`؛
+  الأفضل أن تضيف `unavailable: t.dsKindUnavailable` كما بـ`ChartFrame`). ⇒ QA: احذف شقّ chart من صفّي ui3 وchart-r35 (1).
+- **backend-r3 (توقّع المؤشرات بلغة المتداول) — شقّ chart أُنجز** `38ccb87`: الطلب يحمل `lang`؛ الاسم من `forecastVoteNames`
+  (`ma` ⇒ `ma_cross`/`ma_trend` حسب `detail_code`)، والتفاصيل من `forecastDetail[detail_code]` بقيم `detail_values`
+  (الكردي يُبنى هنا)؛ رمز مجهول/قيمة ناقصة ⇒ نصّ الخادم. `disclaimer_code` ⇒ `forecastDisclaimerConsensus/NoData` ويتبع
+  تبديل اللغة دون طلب. `price_decimals` للأدوات بلا مواصفة فقط. `chart/forecastText.ts` + selftest. ⇒ QA: احذف شقّ chart
+  من صفّ backend-r3، وصفّ chart-r35 لـbackend (`disclaimer_code` أُرسل) صار مكتملاً.
+- QA1 (سحب الجسم على جهاز) وlaunch48 (DeMarker، قرار أنس): بلا تغيير.
+
+## ما أُنجز (مرئي للمتداول)
+1. **وسم «غير متاح» بدل «مصدر غير محدد»** `ec57a4a` + `38ccb87`: سلسلة/تيك `unavailable` تُعامل كالتجريبي (لا نقاط ارتكاز حقيقية
+   فوقها، لا نسبة يومية مضلِّلة بالرأس، لا تخزين مكان سلسلة حقيقية بالرباعي — `isSyntheticProvenance`)، ولا وسم «آخر سعر» لتيك
+   لم يصل. الرأس يقول `dsKindUnavailable`، وخلية الرباعي الجملة الكاملة. selftest `dataSource` (+6).
+2. **توقّع المؤشرات بالإنجليزية والكردية** `38ccb87` — أعلاه (كان كل سطر صوت والتنبيه عربياً لكل اللغات).
+3. **علامة 🔒 على الرسم المقفول نفسه** `e197600`: مربّع صغير بلون الرسم عند مرساته، مقصوص لحدود اللوح (الأفقي
+   مرساته قد تكون خارج النافذة) — كان القفل يُرى بالشريط فقط بعد التحديد.
+
+## قرار
+- **لم أحفظ عدد Line Break وانحراف ZigZag بالقالب** (بند 3 من التشغيل السابق): القالب واحد (`default`) ويُطبَّق عند التركيب فقط،
+  والقيمتان تُحفظان للجهاز فور تغييرهما — حفظهما بالقالب كان سيعيد القديم عند كل فتح شارت. يُعاد النظر حين تتعدّد القوالب.
+
+## التحقّق
+`scripts/qa-build-check.sh` أخضر (0) قبل كل commit. selftest `dataSource` و`forecastText` PASS.
+**لم يُختبر على جهاز**: علامة 🔒 (حجم الإيموجي 8pt على Android)، وأسطر الكردي الطويلة بقائمة الأصوات.
+
+## يبدأ التشغيل القادم من هنا
+1. بعد توسيع ui لـ`DataOriginKind`: إزالة `as string`/`as ProvenanceKind` من `dataSource.ts` و`QuadChartModal`.
+2. تنسيق أرقام `detail_values` بأرقام اللغة إن طلب launch.
