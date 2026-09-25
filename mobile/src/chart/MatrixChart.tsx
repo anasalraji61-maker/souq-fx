@@ -5448,7 +5448,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       color: dir === 'up' ? colors.bull : dir === 'down' ? colors.bear : colors.textDim,
     };
   })();
-  const denseOhlc = dense ? crossCandle : null;
+  // التقاطع بمنطقة المستقبل: الشمعة المحلولة هي الحيّة، والعمودي ووسم الزمن بعدها بـ`crossAhead` خانة ⇒
+  // OHLC والتغيّر والمدى كانت تُقرأ أرقاماً لشمعة «الإثنين 01:00» غير الموجودة. هناك يكفي وسما المحورين.
+  const crossReadCandle = crossAhead > 0 ? null : crossCandle;
+  const denseOhlc = dense ? crossReadCandle : null;
   // «O 1.08520  H 1.08545  L 1.08501  C 1.08532» ≈ 40 حرفاً × ~5.4px (9pt عريض) ≈ 216px؛ والتغيّر
   // «  +0.32%» ≈ 45px آخر ⇒ من 270px؛ ومع «  ↕ 4.4 pip» ≈ 60px آخر ⇒ المدى من 360px — فلا يُقصّ شيء
   // بنقاط حذف. خلية رباعي بسطرين (أضيق من 240px): التغيّر بالسطر الثاني متى اتّسع (150px).
@@ -6200,10 +6203,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       <View style={styles.readout}>
         {measureReadout ? (
           <Text style={styles.readoutText}>{measureReadout}</Text>
-        ) : crossCandle ? (
+        ) : crossReadCandle ? (
           <Text style={styles.readoutText}>
-            O {fmtPrice(crossCandle.open)} H {fmtPrice(crossCandle.high)} L{' '}
-            {fmtPrice(crossCandle.low)} C {fmtPrice(crossCandle.close)}
+            O {fmtPrice(crossReadCandle.open)} H {fmtPrice(crossReadCandle.high)} L{' '}
+            {fmtPrice(crossReadCandle.low)} C {fmtPrice(crossReadCandle.close)}
             {(() => {
               // التغيّر عن إغلاق الشمعة السابقة (`crossChange`)، بالنقاط أولاً لرموز الفوركس/المعادن
               // «+35.0 pips (+0.32%)».
@@ -6211,7 +6214,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               const { ref } = crossChange;
               // بلا مواصفة pip (US30، BTC، DXY، النفط) ⇒ الفرق بمنازل السعر «+125.00 (+0.30%)» كـTradingView
               // لا النسبة وحدها — متداول المؤشرات يقيس الشمعة بالنقاط السعرية.
-              const pips = signedDistanceText(series.symbol, ref, crossCandle.close, lang, priceDecimalsRef);
+              const pips = signedDistanceText(series.symbol, ref, crossReadCandle.close, lang, priceDecimalsRef);
               return (
                 <Text style={{ color: crossChange.color, fontWeight: '800' }}>
                   {pips ? ` ${pips} (${crossChange.pctText})` : ` ${crossChange.pctText}`}
@@ -6219,7 +6222,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               );
             })()}
             {(() => {
-              const range = candleRangePipsText(series.symbol, crossCandle.high, crossCandle.low, lang);
+              const range = candleRangePipsText(series.symbol, crossReadCandle.high, crossReadCandle.low, lang);
               return range ? ` ${range}` : '';
             })()}
             {compareSeries
