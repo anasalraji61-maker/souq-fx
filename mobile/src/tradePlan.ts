@@ -1187,10 +1187,17 @@ export function levelLooksLikePips(input: {
   const spec = journalSpec(input.symbol);
   if (!spec || !finitePos(entry) || !finitePos(level) || level < 1) return null;
   const far = (v: number) => Math.abs(v - entry) > entry * 0.5;
-  if (!far(level)) return null;
+  /**
+   * **تحت الدخول بأكثر من الخُمس ورقمٌ صحيح** يكفي أيضاً: على الين والفضة تقع أعداد النقاط الشائعة داخل نصف السعر — بيع USDJPY
+   * على 157.40 بهدف «100» كان يُحفظ هدفاً عند 100.00 (الجهة الصحيحة) و«R:R 1:287»، وGBPJPY «150»، والفضة على 45 بهدف «30».
+   * سقوط الخُمس لوقفٍ أو هدف لا يحدث بزوج أو معدن، والرقم الصحيح شرطٌ ثانٍ: السعر الحقيقي يُكتب بكسوره («150.25»)، وعدد
+   * النقاط من رسالة «TP 100» صحيح. فوق الدخول يبقى النصف (ذهب 2650 بهدف 3650 حقيقي).
+   */
+  const looksPips = (v: number) => far(v) || (v < entry && entry - v > entry * 0.2 && Number.isInteger(v));
+  if (!looksPips(level)) return null;
   const down = (side === 'buy') === (kind === 'sl');
   const price = priceAtPipOffset(spec, entry, down ? -level : level);
-  return price != null && !far(price) ? { pips: level, price } : null;
+  return price != null && !looksPips(price) ? { pips: level, price } : null;
 }
 
 /**

@@ -2806,3 +2806,29 @@ console.log('tradePlan mini journal selftest OK');
   assert.equal(tp.isMiniJournalSymbol('EURUSD.MICRO'), false);
 }
 console.log('tradePlan mini orphan/lot chips selftest OK');
+
+// نقاطٌ بخانة سعر على الين والفضة: داخل نصف السعر لكن تحت الدخول بأكثر من الخُمس ورقمٌ صحيح
+{
+  const L = levelLooksLikePips;
+  const near = (a: { pips: number; price: number } | null, pips: number, price: number) => {
+    assert.ok(a, `${pips}`);
+    assert.equal(a!.pips, pips);
+    assert.ok(Math.abs(a!.price - price) < 1e-9, `${a!.price} vs ${price}`);
+  };
+  near(L({ symbol: 'USDJPY', side: 'sell', entry: 157.4, level: 100, kind: 'tp' }), 100, 156.4);
+  near(L({ symbol: 'GBPJPY', side: 'sell', entry: 199.5, level: 150, kind: 'tp' }), 150, 198);
+  near(L({ symbol: 'XAGUSD', side: 'sell', entry: 45, level: 30, kind: 'tp' }), 30, 44.7);
+  near(L({ symbol: 'USDJPY', side: 'buy', entry: 157.4, level: 100, kind: 'sl' }), 100, 156.4);
+  near(L({ symbol: 'XAGUSD', side: 'buy', entry: 45, level: 25, kind: 'sl' }), 25, 44.75);
+  // مستويات حقيقية: كسور، أو سقوط دون الخُمس، أو فوق الدخول (دون النصف)
+  assert.equal(L({ symbol: 'USDJPY', side: 'sell', entry: 157.4, level: 150.25, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'USDJPY', side: 'sell', entry: 157.4, level: 150, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'USDJPY', side: 'sell', entry: 157.4, level: 99.5, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'GBPJPY', side: 'buy', entry: 199.5, level: 205, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'XAGUSD', side: 'buy', entry: 45, level: 40, kind: 'sl' }), null);
+  assert.equal(L({ symbol: 'XAUUSD', side: 'buy', entry: 2650, level: 2400, kind: 'sl' }), null);
+  assert.equal(L({ symbol: 'XAUUSD', side: 'buy', entry: 2650, level: 3650, kind: 'tp' }), null);
+  // الخطر المُغلق: R:R 1:287 من هدف 100.00
+  assert.ok((analyzePlan({ symbol: 'USDJPY', side: 'sell', entry: 157.4, sl: 157.6, tp: 100 }).rr ?? 0) > 100);
+}
+console.log('tradePlan levelLooksLikePips JPY/silver selftest OK');
