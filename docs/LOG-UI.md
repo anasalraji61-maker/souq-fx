@@ -222,3 +222,10 @@
 | d458791 | a11y: زرّ إخفاء تفاصيل `PanSpeedSlider` (الحالة المفتوحة) يعلن `expanded: true` — توأمه المطويّ كان يعلن `false` وحده | مهمّة: الحالة باللون وحده |
 
 **إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط؛ `Alert.alert` داخل `chart/confirmDestructive.ts` فقط؛ «درجة الاتفاق» أُزيلت؛ الجولة قابلة للإعادة (`AccountScreen` ⇐ `OnboardingOverlay`)؛ التيك المتجمّد يُرفض (`acceptTick` + `TICK_STALE_MS`) وسعر بلا تيك حيّ موسوم (`wlDemoTag` + لاحقة a11y). الكردية: مسح AST لكل سلسلة/نصّ JSX عربي بملفاتي ⇒ مفاتيح مطابقة الخادم (`CommissionPlanPanel`)، موجّهات نموذج (`WeeklyReportPanel`)، الفاصلة «، » للـrtl، و`academy.ts` (QA27؛ `classroom.teacher` غير معروض) و`MessagesScreen`/`api.ts` (launch52) — لا شيء آخر. مسح AST لـ`Pressable`/`Touchable*` بنمط شرطي ولا `selected/checked/expanded` ⇒ 13 مرشّحاً كلها `disabled` معلَن؛ ومسح ثانٍ لعناصر `onPress` تذكر active/selected/current ⇒ `PairDrumWheel` (الوسم يقول «الحالي») و`PanSpeedSlider` (أُصلح).
+
+**تتمّة التشغيل 16 — صفّان وصلا أثناءه (chart-r46، backend-r19):**
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| 992b7ea | `useTickFreshnessClock` بساعة الخادم (`serverNowSec`): `remainMs` والإرجاع (`serverNowSec() * 1000`) — شارة «حي» بـ`ChartFrame`/`FocusChartModal`/رأس `TerminalScreen` لا تغيب مبكراً على جهاز متقدّم ولا تبقى بعد تجمّد التيك على متأخّر. كل المستهلكين يقارنون بطوابع الخادم | chart-r46 (أُنجز) |
+| fc4ee7b | سلسلة بلا بيانات حقيقية (`unavailable_reason`، أو `kind: unavailable`) — DXY اليوم: `ChartFrame` (خانة DXY) و`QuadChartModal` و`FocusChartModal` بلا شموع بذرة ولا سعر ولا نسبة ولا سبريد؛ إشعار «{symbol} غير متاح من مزوّد البيانات» مكان الشارت (`ProviderUnavailableNotice.tsx` جديد)، والوسم «غير متاح» القصير. تحقّقتُ بـ`main.py:605-621` أن `unavailable_reason` لا يُضبط إلا على بذرة رمز لا يقدّمه المزوّد | backend-r19 (جزء ui) ⇒ ui16a (launch، مفتاح) + ui16b (tools: البطل؛ backend: `candles: []`) |
