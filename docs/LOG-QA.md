@@ -557,3 +557,21 @@ chart33 بنود ذاتية.
 (chart-r34 يسند صفوف «بلا مالك» إلى «ui» + يطلب مفاتيح قفل الرسم). تحقّقتُ بالكود وحذفتُ صفوف QA41/tools63 ولم أضف tools65. **«ui» بلا سجلّ في `docs/`** ⇒ ⛔ 1 لأنس.
 البناء بعد الدمج أخضر 0.
 **إلحاق 2:** `3a66ae1` (chart) وصل `mcLineBreakCountA11y` (`MatrixChart.tsx:5891`، لا `→ ${` حرفي باقٍ) ⇒ صفّ launch101 أُغلق. البناء أخضر 0.
+
+## 2026-09-25 — الدورة 49
+**البناء:** أخضر 0 (بعد b3a9ba4) — لا إصلاح لازم. **Selftests:** 88/88 ناجح (`npx tsx`).
+**وكيلان جديدان:** `LOG-UI.md` (ui، المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n) و`LOG-BACKEND.md` (backend) ⇒ ⛔ «ui بلا سجلّ» أُزيل، و«بلا مالك»/«الخادم» صارا ui/backend.
+**التحقّق من الإغلاقات بالكود (grep/قراءة):** ui `eb8b265`…`dbb5781` — `Alert.alert` صفر خارج `confirmDestructive`، «₴» تعليقات فقط، `DRAW_MARK`، `TimeframeBar`، `accessibilityState` بالملفات
+المذكورة، `useMultiLiveTicks`، رأس `FocusChartModal`/`mockBase`، `QUICK_SYMBOLS`، `CalendarPanel`، `WeeklyReportPanel:48`، `maxLength` (32/12/500/2000)، ترجمة cpp/ntp/tds/subPlans.
+backend `f54ba4e`…`46ce46f` — السبريد، 409، `size` null، MACD، ATR، `XBR/USD`، كاش `as_of`، التقويم، إحصاء/ترقيم، NOCASE؛ `main.py` لم يعد يقرّب الوقف لخانتين (QA4). ~30 صفّاً أُغلق.
+**باقٍ:** FocusChartModal (90ث + فكّ الشارت)، dirColor ×3، DomLite، تصديرات ميتة، `VotePanel` حظر الذات، صفوف backend/أنس (البنوك، TradingCentral، «خبير»، ملاحظة التنبيه بلا حدّ، التصويت 1–20).
+**طلبات تنسيق جديدة:** backend-r1 ×3 (tools/chart+ui/ui) مع مفاتيح launch `b3a9ba4`؛ ui1 (المفاتيح جاهزة ⇒ ui يصل)؛ chart-r34 (مفاتيح القفل جاهزة ⇒ chart يصل).
+**المراجعة (d — أرقام متناقضة):**
+- **🔴 QA49 → ui:** `analysts[].target` صار null لكل سلسلة demo (`main.py:1329`، `signal_hub.py:223`) و`AnalystsPanel.tsx:149` `formatPrice(a.target)` ⇒ `TypeError: null.toFixed`
+  (جرّبتُ `formatPrice(null,'EURUSD')` بـ`tsx`). tsc أخضر لأن `api.ts:643` `target: number`. لم أُصلحه: ليس خطأ بناء، والعرض البديل («—» أم إخفاء) قرار ui.
+- tools: `tradePlan.ts:841` يعدّ التعادل خسارة والخادم لا ⇒ نسبتا فوز. backend: هدف المحلّل ±1.2% عشوائي بجانب مستويات ATR.
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول حقيقي.
+**إلحاق (تعارض دمج مع 46d3a9f):** وصلت أثناء الدورة backend-r2 (`9b26459` المحلّلون/التواصل `unavailable` بلا بنوك ولا `confidence`؛ `68788a8` البثّ؛ `f00081b` لا أرقام من demo؛
+`65a24a4` ملاحظة التنبيه 500) وtools (`52b15bd` التعادل ليس خسارة، `46d3a9f` 409/`size` null/«N من الكل») وlaunch102 (تراجع التقويم: `newsRisk.ts:514` لا يعرف `status: "unavailable"` — تحقّقتُ، مفتوح).
+⇒ انهيار QA49 لم يعد قابلاً للحدوث من الخادم الحالي (`analysts: []`) فدُمج بصفّ backend-r2 مع `setDirection(null)` ⇒ «محايد» مضلّل. أُغلقت QA5 (بنوك/منافس)، QA20، QA14، وشقّ tools من backend-r1
+عدا «تحميل الأقدم». صفّ `CalendarPanel` دُمج بـlaunch102. ⛔ 2 صار: مصدر مرخَّص أم إخفاء اللوحتين.
