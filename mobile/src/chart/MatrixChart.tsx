@@ -4832,7 +4832,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   );
 
   const beginDrag = useCallback(() => {
-    panStartOffset.current = offsetRef.current;
+    // بالإعادة قد تكون الإزاحة المخزّنة (بعد AUTO) دون حدّ القطع — النافذة المرسومة عند الحدّ، فالسحب يبدأ منه.
+    panStartOffset.current = Math.max(offsetRef.current, replayMinOffsetNow());
     // مثبَّت طوال السحب: تغيّره إطاراً إطاراً عند أوّل التاريخ يجعل السحب غير خطّي.
     panStartBars.current = Math.min(
       windowCountRef.current,
@@ -4844,7 +4845,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     crossPinned.current = false;
     crossFromSync.current = false;
     setCross(null);
-  }, []);
+  }, [replayMinOffsetNow]);
 
   const endDrag = useCallback(() => {
     schedulePublishSync(true);
