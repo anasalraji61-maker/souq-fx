@@ -656,7 +656,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
   },
   voiceDotPaused: { backgroundColor: colors.warn },
-  voiceBarText: { color: colors.dxy, fontSize: 11, fontWeight: '500' },
+  voiceBarText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   screenTitle: {
     color: colors.text,
     fontSize: 18,

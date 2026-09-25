@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
   no: { backgroundColor: colors.bearSoft, borderWidth: 1, borderColor: colors.bear },
   btnDisabled: { opacity: 0.4 },
   btnText: { color: colors.text, fontWeight: '500', fontSize: 12 },
-  author: { color: colors.dxy, fontSize: 11, fontWeight: '500', marginTop: 4 },
+  author: { color: colors.textMuted, fontSize: 11, fontWeight: '500', marginTop: 4 },
   publishToggle: {
     alignSelf: 'flex-end',
     marginTop: 4,

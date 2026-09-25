@@ -7,7 +7,6 @@ type Plan = {
   name: string;
   price: string;
   addOn?: string;
-  accent: string;
   badge: string;
   features: string[];
 };
@@ -23,7 +22,6 @@ export function SubscriptionPlansPanel() {
     {
       name: copy.coreName,
       price: '$10',
-      accent: colors.accent,
       badge: copy.coreBadge,
       features: copy.coreFeatures,
     },
@@ -31,7 +29,6 @@ export function SubscriptionPlansPanel() {
       name: copy.academyName,
       price: '$15',
       addOn: copy.academyAddOn,
-      accent: colors.dxy,
       badge: copy.academyBadge,
       features: copy.academyFeatures,
     },
@@ -39,7 +36,6 @@ export function SubscriptionPlansPanel() {
       name: copy.fullName,
       price: '$20',
       addOn: copy.fullAddOn,
-      accent: colors.infoAccent,
       badge: copy.fullBadge,
       features: copy.fullFeatures,
     },
@@ -59,22 +55,21 @@ export function SubscriptionPlansPanel() {
             style={[
               styles.card,
               stacked && styles.cardStacked,
-              { borderColor: `${plan.accent}88` },
             ]}
           >
             <View style={[styles.cardTop, rtl && styles.rowRtl]}>
-              <View style={[styles.planBadge, { backgroundColor: `${plan.accent}22` }]}>
-                <Text style={[styles.planBadgeText, { color: plan.accent }]}>{plan.badge}</Text>
+              <View style={styles.planBadge}>
+                <Text style={styles.planBadgeText}>{plan.badge}</Text>
               </View>
               <Text style={styles.planName}>{plan.name}</Text>
             </View>
 
             <View style={[styles.priceRow, rtl && styles.rowRtl]}>
-              <Text style={[styles.price, { color: plan.accent }]}>{plan.price}</Text>
+              <Text style={styles.price}>{plan.price}</Text>
               <Text style={styles.perMonth}>{copy.perMonth}</Text>
             </View>
             {plan.addOn ? (
-              <Text style={[styles.addOn, { textAlign: align, color: plan.accent }]}>
+              <Text style={[styles.addOn, { textAlign: align }]}>
                 {plan.addOn}
               </Text>
             ) : null}
@@ -83,7 +78,7 @@ export function SubscriptionPlansPanel() {
             {plan.features.map((feature) => (
               <View key={feature} style={[styles.featureRow, rtl && styles.rowRtl]}>
                 <Text style={[styles.feature, { textAlign: align }]}>{feature}</Text>
-                <Text style={[styles.check, { color: plan.accent }]}>✓</Text>
+                <Text style={styles.check}>✓</Text>
               </View>
             ))}
           </View>
@@ -118,6 +113,8 @@ const styles = StyleSheet.create({
     minWidth: 200,
     borderRadius: radii.md,
     borderWidth: 1,
+    // الخطط الثلاث محايدة (§1): كانت لكل خطة لون (تيل/سماوي/بنفسجي) على الحدّ والشارة والسعر والعلامات
+    borderColor: colors.border,
     backgroundColor: colors.planCardBg,
     padding: spacing.md,
     gap: 8,
@@ -129,12 +126,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   planName: { color: colors.text, fontSize: 20, fontWeight: '500' },
-  planBadge: { borderRadius: radii.pill, paddingHorizontal: 8, paddingVertical: 4 },
-  planBadgeText: { fontSize: 11, fontWeight: '500' },
+  planBadge: { borderRadius: radii.pill, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: colors.borderSoft },
+  planBadgeText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  price: { ...numeric, fontSize: 27, fontWeight: '600' },
+  price: { ...numeric, color: colors.text, fontSize: 27, fontWeight: '600' },
   perMonth: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
-  addOn: { fontSize: 11, fontWeight: '500' },
+  addOn: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   divider: { height: 1, backgroundColor: colors.borderSoft },
   featureRow: {
     flexDirection: 'row',
@@ -143,7 +140,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   feature: { flex: 1, color: colors.textMuted, fontSize: 12, lineHeight: 19, textAlign: 'right' },
-  check: { fontSize: 13, fontWeight: '500' },
+  check: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
   matrixNote: {
     flexDirection: 'row',
     alignItems: 'center',

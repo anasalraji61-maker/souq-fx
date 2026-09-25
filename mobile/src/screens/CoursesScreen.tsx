@@ -356,10 +356,10 @@ const styles = StyleSheet.create({
   metaRtl: { flexDirection: 'row-reverse' },
   metaText: { ...numeric, color: colors.textDim, fontSize: 12 },
   aiTag: {
-    color: colors.dxy,
+    color: colors.textMuted,
     fontWeight: '500',
     fontSize: 11,
-    backgroundColor: 'rgba(56,189,248,0.12)',
+    backgroundColor: colors.borderSoft,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: 6,

@@ -198,5 +198,5 @@ const styles = StyleSheet.create({
     marginTop: 4,
     lineHeight: 20,
   },
-  pairs: { color: colors.dxy, fontSize: 11, marginTop: spacing.xs },
+  pairs: { color: colors.textMuted, fontSize: 11, marginTop: spacing.xs },
 });

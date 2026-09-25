@@ -205,11 +205,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   send: {
-    backgroundColor: colors.dxy,
+    backgroundColor: colors.accent,
     borderRadius: radii.sm,
     paddingHorizontal: spacing.md,
     justifyContent: 'center',
   },
-  sendText: { color: colors.bg, fontWeight: '500', fontSize: 12 },
+  sendText: { color: colors.onAccent, fontWeight: '500', fontSize: 12 },
   sendDisabled: { opacity: 0.4 },
 });
