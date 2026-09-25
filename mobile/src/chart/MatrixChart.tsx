@@ -58,6 +58,7 @@ import {
 } from './axisDrag';
 import { barCloseCountdown } from './barCountdown';
 import { axisTagFontSize } from './axisTagFont';
+import { monoCharW, monoTextWidth } from './textWidth';
 import { BarCountdown } from './BarCountdown';
 import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime, stepCrossBar } from './crossAnchor';
 import { indicatorBase, indicatorRangeBase, trimIndicator, trimIndicatorRange } from './indicatorWindow';
@@ -559,8 +560,8 @@ const PRICE_TAG_H = 18;
 const TAG_CLEAR_GAP = 2;
 /** ارتفاع وسمَي أعلى/أدنى سعر بالنافذة المرئيّة. */
 const HILO_LABEL_H = 14;
-/** عرض محرف وسم القمّة/القاع (`hiLoText` 11px أحادي المسافة). */
-const HILO_CHAR_W = 6.8;
+/** عرض محرف وسم القمّة/القاع (`hiLoText` 11px أحادي المسافة) — الثابت نفسه لوقت التقاطع (`textWidth.ts`). */
+const HILO_CHAR_W = monoCharW(11);
 /** سطر OHLC التقاطع أعلى اللوح بالوضع المدمج (`denseOhlc`). */
 const DENSE_OHLC_LINE_H = 12;
 /** سطر عدّاد إغلاق الشمعة تحت سعر الوسم الحيّ. */
@@ -6331,9 +6332,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       )
     : '';
   // العرض من طول النصّ: اسم اليوم («الأربعاء»، «چوارشەممە») وسنة شمعة قديمة يطيلان الوسم، وبالعرض
-  // الثابت كانت الساعة تُقصّ «…». ~6.6px للحرف بخطّ 11 + الحشوة، لا أضيق من القديم ولا أعرض من اللوح.
+  // الثابت كانت الساعة تُقصّ «…». خطّ 11 أحادي المسافة + الحشوة، لا أضيق من القديم ولا أعرض من اللوح.
   const crossTimeTagW = Math.min(
-    Math.max(CROSS_TIME_TAG_W, Math.ceil(crossTimeText.length * 6.6) + 12),
+    Math.max(CROSS_TIME_TAG_W, Math.ceil(monoTextWidth(crossTimeText, 11)) + 12),
     Math.max(CROSS_TIME_TAG_W, chartPlotW)
   );
   const crossTimeTagLeft = crossCandle
@@ -7595,7 +7596,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 const y = yP(m.price);
                 if (!(y >= 0 && y <= laneBot)) return null;
                 const text = fmtPrice(m.price);
-                // 11px أحادي المسافة ≈ 0.62em = 6.8px للمحرف (كان 5.6 لخطّ 9px).
                 const w = text.length * HILO_CHAR_W + 12;
                 const x = xOf(m.index);
                 const top = Math.max(0, Math.min(laneBot - HILO_LABEL_H, y - HILO_LABEL_H / 2));

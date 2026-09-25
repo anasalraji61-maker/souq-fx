@@ -17,6 +17,8 @@
  * الشفافية غير مقروءة أصلاً، فتُعرض بنفس اللون مصمتاً.
  */
 
+import { propDigitW, propTextWidth } from './textWidth';
+
 /** تعبير لون كما هو مكتوب بالشيفرة: hex/rgba حرفي، أو رمز من السمة مثل `accent`. */
 export type ColorExpr = string;
 
@@ -141,11 +143,14 @@ export const LEGEND_CHIP_PAD = 8;
 export const LEGEND_CHIP_GAP = 6;
 /** عرض مربّع لون واحد بفراغه (`width: 8` + `marginRight: 4`). */
 export const LEGEND_SWATCH_W = 12;
+/** حجم خطّ المفتاح (`priceLegendText`)؛ كان 9px، أصغر من علامات المحور (11، DESIGN-PRO §2). */
+export const LEGEND_FONT = 11;
 /**
- * تقدير عرض المحرف بـ`fontSize: 11` ووزن 500/600 — تقدير متحفّظ (أعلى من المتوسط الفعلي). كان المفتاح 9px،
- * أصغر من علامات المحور (11، DESIGN-PRO §2) وهو ما يقرأ به المتداول قيمة كل متوسط.
+ * عرض محرف القيمة المطبوعة بعد الاسم («1.08532») — أرقام `tabular-nums` بعرض واحد. الاسم نفسه
+ * يُقاس بفئة كل محرف (`propTextWidth`): «MACD» أعرض من «SMA 20» بمحارف أقلّ، ورقم واحد للمحرف
+ * (كان 6.4) كان يقصّ الأسماء الكبيرة أولاً (QA84b).
  */
-export const LEGEND_CHAR_W = 6.4;
+export const LEGEND_CHAR_W = propDigitW(LEGEND_FONT);
 /** ما تحجزه «+ن» من العرض حتى لا تُقصّ هي نفسها فيختفي العدد بصمت. */
 export const LEGEND_MORE_W = 28;
 
@@ -158,7 +163,8 @@ export function legendChipWidth(chip: Pick<LegendChip, 'label' | 'swatch'>, valu
   return (
     LEGEND_CHIP_PAD +
     chip.swatch.length * LEGEND_SWATCH_W +
-    (chip.label.length + v) * LEGEND_CHAR_W +
+    propTextWidth(chip.label, LEGEND_FONT) +
+    v * LEGEND_CHAR_W +
     LEGEND_CHIP_GAP
   );
 }
