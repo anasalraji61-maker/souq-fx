@@ -84,18 +84,24 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
         <Text style={[styles.basisNote, { textAlign: align }]}>{t.newsImpactFromHeadline}</Text>
       ) : null}
       <ScrollView contentContainerStyle={{ gap: spacing.sm }}>
-        {news.map((n) => (
+        {news.map((n) => {
+          const impactWord = n.impact === 'high' ? t.impactHigh : n.impact === 'medium' ? t.impactMedium : t.impactLow;
+          const estimated = n.impact_basis === 'headline_keywords';
+          return (
           <View key={n.id} style={styles.card}>
             <View style={[styles.row, rtl && styles.rowRtl]}>
               <View
+                // launch107: بلا اسم يقرأ قارئ الشاشة «≈» حرفياً («يساوي تقريباً عالي») لا «تقدير».
+                accessible={estimated}
+                accessibilityLabel={estimated ? t.newsImpactEstimatedA11y.replace('{impact}', impactWord) : undefined}
                 style={[
                   styles.impact,
                   { backgroundColor: IMPACT_FILL[n.impact] ?? IMPACT_FILL.low },
                 ]}
               >
                 <Text style={styles.impactText}>
-                  {n.impact_basis === 'headline_keywords' ? '≈ ' : ''}
-                  {n.impact === 'high' ? t.impactHigh : n.impact === 'medium' ? t.impactMedium : t.impactLow}
+                  {estimated ? '≈ ' : ''}
+                  {impactWord}
                 </Text>
               </View>
               <Text style={styles.when}>{n.when}</Text>
@@ -103,7 +109,8 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
             <Text style={[styles.headline, { textAlign: align }]}>{n.title}</Text>
             <Text style={[styles.pairs, { textAlign: align }]}>{n.pair_effect}</Text>
           </View>
-        ))}
+          );
+        })}
       </ScrollView>
     </View>
   );
