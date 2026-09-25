@@ -1161,13 +1161,13 @@ const ar: Dict = {
   notifOpenSettingsBtn: 'فتح إعدادات الجهاز',
   onboardStep1Title: 'بدّل الزوج بلمسة',
   onboardStep1Body:
-    'اضغط على أي زوج بالشريط العلوي (EURUSD، GBPUSD، الذهب XAUUSD…) لينتقل الشارت إليه فوراً، مع تغيّر اليوم ▲▼ بجانبه. وعلى الشارت: اقرص بإصبعين للتكبير، واسحب محور السعر لتطول الشموع أو تقصر، وزرّ AUTO يعيد العرض لوضعه التلقائي. المس شمعة لتقرأ أسعارها (O H L C) وتغيّرها عن إغلاق السابقة، أو اضغط مطوّلاً ثم اسحب لتمرّ على الشموع واحدةً واحدة. ولاحقاً افتح حتى أربع شارتات معاً للمقارنة.',
+    'اضغط أي زوج بالشريط العلوي (EURUSD، GBPUSD، الذهب XAUUSD…) لينتقل إليه الشارت، وتغيّر اليوم ▲▼ بجانبه. اقرص بإصبعين للتكبير، واسحب محور السعر لتطول الشموع أو تقصر، وزرّ AUTO يعيد العرض. المس شمعة لتقرأ أسعارها (O H L C)، أو اضغط مطوّلاً ثم اسحب لتمرّ على الشموع واحدةً واحدة.',
   onboardStep2Title: 'أدوات الرسم',
   onboardStep2Body:
     'تبويب «رسم» بالشريط السفلي يفتح خطوط الترند وفيبوناتشي وباقي الأدوات على الشارت، وما ترسمه على 4H يبقى حين تنزل إلى الساعة. ولتخطيط صفقة استعمل «خطة شراء» أو «خطة بيع»: اسحب من الدخول إلى الوقف فيظهر الهدف وبُعده بالـpip ونسبة العائد إلى المخاطرة. المس رسماً لتحدّده: اسحبه لتحريكه، أو اضغط «نسخة» لتضع المستوى نفسه في مكان آخر. أخطأت؟ زرّ «تراجع» يلغي آخر تغيير.',
   onboardStep3Title: 'المؤشرات والعدسات',
   onboardStep3Body:
-    'اختر من عشرات المؤشرات الجاهزة (RSI وMACD وبولنجر وغيرها)، أو ابدأ بعدسة تضع لك مجموعة مؤشرات بلمسة واحدة: «هيكل» للمتوسطات المتحركة، «زخم» لـRSI وMACD، «سيولة» للفوليوم وبولنجر وCVD (تقديري من اتجاه الشموع، لا تدفّق أوامر حقيقي). وقيمة كل متوسط أو حدّ بولنجر تظهر على محور السعر بلون خطّه. وللفوركس خاصةً: «Sessions» يظلّل جلسات طوكيو ولندن ونيويورك بأوقاتها الصحيحة صيفاً وشتاءً، و«PDH / PDL» يرسم أعلى وأدنى جلسة الأمس.',
+    'اختر من عشرات المؤشرات (RSI وMACD وبولنجر…) أو ابدأ بعدسة تضيف مجموعة بلمسة: «هيكل» للمتوسطات المتحركة، «زخم» لـRSI وMACD، «سيولة» للفوليوم وبولنجر وCVD (تقديري من اتجاه الشموع، لا تدفّق أوامر حقيقي). قيم المتوسطات وحدود بولنجر تظهر على محور السعر بلون خطوطها. وللفوركس: «Sessions» يظلّل جلسات طوكيو ولندن ونيويورك بأوقاتها صيفاً وشتاءً، و«PDH / PDL» يرسم أعلى وأدنى جلسة الأمس.',
   onboardStep4Title: 'التنبيهات',
   onboardStep4Body:
     'أسرع طريق: المس المستوى على الشارت ثم زرّ 🔔 — بلا كتابة أرقام. ويصلك إشعار حين يبلغه السعر (يُفحص كل دقيقة تقريباً)، فلا داعي لمراقبة الشارت طوال اليوم. تنبيهات المؤشرات وتفعيل الإشعارات من لوح التنبيهات.',
@@ -2231,13 +2231,13 @@ const enUS: Dict = {
   notifOpenSettingsBtn: 'Open device settings',
   onboardStep1Title: 'Switch pairs in one tap',
   onboardStep1Body:
-    'Tap any pair in the top strip (EURUSD, GBPUSD, gold XAUUSD…) and the chart jumps to it, with today\'s change ▲▼ beside it. On the chart, pinch to zoom, drag the price axis to make candles taller or shorter, and AUTO puts the view back. Tap a candle to read its O H L C and change from the previous close, or press and hold, then drag to step through the candles. Later, open up to four charts side by side to compare.',
+    'Tap any pair in the top strip (EURUSD, GBPUSD, gold XAUUSD…) to switch the chart, with today\'s change ▲▼ beside it. Pinch to zoom, drag the price axis to make candles taller or shorter, and AUTO resets the view. Tap a candle to read its O H L C, or press and hold, then drag to step through the candles one by one.',
   onboardStep2Title: 'Drawing tools',
   onboardStep2Body:
     'The Draw tab in the bottom bar opens trend lines, Fibonacci and more tools right on the chart — a line drawn on 4H stays when you drop to 1H. To plan a trade, use Buy plan or Sell plan: drag from entry to stop to see the target, pips and reward-to-risk. Tap a drawing to select it: drag to move it, or press Clone to reuse the same level somewhere else. Drew something wrong? Undo reverses the last change.',
   onboardStep3Title: 'Indicators & lenses',
   onboardStep3Body:
-    'Choose from dozens of ready indicators (RSI, MACD, Bollinger, and more), or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD (estimated from candle direction, not real order flow). Each moving average or Bollinger band shows its value on the price axis in its own colour. For forex: Sessions shades the Tokyo, London and New York sessions at their correct hours through daylight saving, and PDH / PDL marks yesterday\'s session high and low.',
+    'Pick from dozens of indicators (RSI, MACD, Bollinger…) or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD (estimated from candles, not real order flow). Moving averages and Bollinger bands show their values on the price axis in tags that match their lines. For forex: Sessions shades Tokyo, London and New York at their correct hours through daylight saving, and PDH / PDL marks yesterday\'s session high and low.',
   onboardStep4Title: 'Alerts',
   onboardStep4Body:
     'Fastest way: tap a level on the chart, then 🔔 — no typing. You get a notification when price reaches it (checked about once a minute), so no need to watch the chart all day. Indicator alerts and notification settings are in the alerts panel.',
@@ -3324,13 +3324,13 @@ const ku: Dict = {
   notifOpenSettingsBtn: 'کردنەوەی ڕێکخستنی ئامێر',
   onboardStep1Title: 'گۆڕینی جووت بە یەک دەستدان',
   onboardStep1Body:
-    'دەست لە هەر جووتێک بدە لە شریتی سەرەوە (EURUSD، GBPUSD، زێڕ XAUUSD…) و چارتەکە یەکسەر دەچێتە سەری، لەگەڵ گۆڕانی ئەمڕۆ ▲▼ لە تەنیشتیەوە. لەسەر چارت: بە دوو پەنجە گەورەی بکە، تەوەری نرخ ڕابکێشە بۆ درێژکردن یان کورتکردنی مۆمەکان، و دوگمەی AUTO دیمەنەکە دەگەڕێنێتەوە بۆ خۆکار. دەست لە مۆمێک بدە بۆ خوێندنەوەی نرخەکانی (O H L C) و گۆڕانی لە داخستنی پێشوو، یان پەنجە ڕابگرە پاشان ڕایبکێشە بۆ تێپەڕین بە مۆمەکاندا یەک بە یەک. دواتر هەتا چوار چارت بەیەکەوە بکەرەوە بۆ بەراورد.',
+    'دەست لە هەر جووتێک بدە لە شریتی سەرەوە (EURUSD، GBPUSD، زێڕ XAUUSD…) و چارتەکە یەکسەر دەچێتە سەری، لەگەڵ گۆڕانی ئەمڕۆ ▲▼ لە تەنیشتیەوە. بە دوو پەنجە گەورەی بکە، تەوەری نرخ ڕابکێشە بۆ درێژکردن یان کورتکردنی مۆمەکان، و AUTO دیمەنەکە دەگەڕێنێتەوە. دەست لە مۆمێک بدە بۆ خوێندنەوەی نرخەکانی (O H L C)، یان پەنجە ڕابگرە پاشان ڕایبکێشە بۆ تێپەڕین بە مۆمەکاندا یەک بە یەک.',
   onboardStep2Title: 'ئامرازەکانی وێنەکێشان',
   onboardStep2Body:
     'تابی «وێنەکێشان» لە شریتی خوارەوە هێڵی ترێند و فیبۆناتچی و ئامرازەکانی تر ڕاستەوخۆ لەسەر چارت دەکاتەوە، و ئەوەی لەسەر 4H دەیکێشیت دەمێنێتەوە کاتێک دادەبەزیت بۆ کاتژمێرێک. بۆ پلاندانانی مامەڵەیەک «پلانی کڕین» یان «پلانی فرۆشتن» بەکاربهێنە: لە چوونەژوورەوە بۆ وەستان ڕایبکێشە و ئامانج و pip و ڕێژەی قازانج بۆ مەترسی دەبینیت. دەست لە وێنەیەک بدە بۆ هەڵبژاردنی: ڕایبکێشە بۆ جوولاندنی، یان «کۆپی» دابگرە بۆ دانانی هەمان ئاست لە شوێنێکی تر. هەڵەت کرد؟ «گەڕاندنەوە» دوایین گۆڕانکاری هەڵدەوەشێنێتەوە.',
   onboardStep3Title: 'پێوەرەکان و لینزەکان',
   onboardStep3Body:
-    'لە دەیان پێوەری ئامادە هەڵبژێرە (RSI، MACD، بۆلینجەر و زیاتر)، یان بە لینزێک دەست پێبکە کە بە یەک دەستدان کۆمەڵێک پێوەر زیاد دەکات: «پێکهاتە» بۆ ناوەندە جووڵاوەکان، «پاڵنە» بۆ RSI و MACD، «شلەیی» بۆ قەبارە و بۆلینجەر و CVD (خەمڵێنراو لە ئاراستەی مۆمەکان، نەک ڕەوتی ڕاستەقینەی فەرمانەکان). بەهای هەر ناوەندێکی جووڵاو یان سنوورێکی بۆلینجەر لەسەر تەوەرەی نرخ بە ڕەنگی هێڵەکەی دەردەکەوێت. بۆ فۆرێکس: «Sessions» دانیشتنەکانی تۆکیۆ و لەندەن و نیویۆرک بە کاتی دروستیان ڕەنگ دەکات هاوین و زستان، و «PDH / PDL» بەرزترین و نزمترینی دانیشتنی دوێنێ دەکێشێت.',
+    'لە دەیان پێوەر هەڵبژێرە (RSI، MACD، بۆلینجەر…)، یان بە لینزێک دەست پێبکە کە بە یەک دەستدان کۆمەڵێک زیاد دەکات: «پێکهاتە» بۆ ناوەندە جووڵاوەکان، «پاڵنە» بۆ RSI و MACD، «شلەیی» بۆ قەبارە و بۆلینجەر و CVD (خەمڵێنراو لە ئاراستەی مۆمەکان، نەک ڕەوتی ڕاستەقینەی فەرمانەکان). بەهای ناوەندە جووڵاوەکان و سنوورەکانی بۆلینجەر لەسەر تەوەرەی نرخ بە ڕەنگی هێڵەکانیان دەردەکەوێت. بۆ فۆرێکس: «Sessions» دانیشتنەکانی تۆکیۆ و لەندەن و نیویۆرک بە کاتی دروستیان ڕەنگ دەکات هاوین و زستان، و «PDH / PDL» بەرزترین و نزمترینی دانیشتنی دوێنێ دەکێشێت.',
   onboardStep4Title: 'ئاگادارکردنەوەکان',
   onboardStep4Body:
     'خێراترین ڕێگا: دەست لە ئاستەکە بدە لەسەر چارت پاشان 🔔 — بێ نووسینی ژمارە. کاتێک نرخ گەیشتە ئەوێ ئاگاداری وەردەگریت (نزیکەی هەر خولەکێک دەپشکنرێت)، پێویست ناکات بە درێژایی ڕۆژ چاودێری چارت بکەیت. ئاگادارکردنەوەی پێوەرەکان و چالاککردنی ئاگادارییەکان لە پانێڵی ئاگادارکردنەوەکاندایە.',
