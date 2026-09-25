@@ -5600,7 +5600,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     crossPrice != null && Number.isFinite(currentPrice)
       ? signedDistanceText(series.symbol, currentPrice, crossPrice, lang, priceDecimalsRef)
       : null;
-  const crossTagH = crossPipsText ? PRICE_TAG_H + COUNTDOWN_LINE_H : PRICE_TAG_H;
+  // مقياس النسبة: سطر ثالث بنسبة التقاطع عن أساس المحور نفسه (إغلاق أول شمعة ظاهرة) — المحور يقول «+0.40%»
+  // والوسم كان سعراً فقط، فالمتداول يطابق المستوى بعينه. السعر يبقى الأول: الوقف يوضع بسعر لا بنسبة.
+  const crossPctText =
+    crossPrice != null && percentBase != null && percentBase > 0
+      ? formatScalePercent((crossPrice / percentBase - 1) * 100)
+      : null;
+  const crossTagH =
+    PRICE_TAG_H + (crossPipsText ? COUNTDOWN_LINE_H : 0) + (crossPctText ? COUNTDOWN_LINE_H : 0);
   const crossTagTop = crossPrice != null
     ? Math.max(0, Math.min(chartPlotH - crossTagH - 2, crossY - 9))
     : null;
@@ -8645,6 +8652,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 minimumFontScale={0.75}
               >
                 {crossPipsText}
+              </Text>
+            ) : null}
+            {crossPctText ? (
+              <Text
+                style={styles.crossPipsText}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+              >
+                {crossPctText}
               </Text>
             ) : null}
           </View>
