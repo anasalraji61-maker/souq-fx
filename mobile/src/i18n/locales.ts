@@ -1302,6 +1302,13 @@ export type Dict = {
   forecastDisclaimerConsensus: string;
   forecastDisclaimerNoData: string;
   dsKindUnavailable: string;
+  /**
+   * backend-r19: خانة شارت لرمز لا يقدّمه المزوّد (`unavailable_reason: "not_offered_by_provider"`، DXY) — مكان الشارت
+   * بدل شموع البذرة. `{symbol}` = الرمز. الجسم يقول ما العمل: اسم الرمز ▾ برأس الإطار يفتح عجلة الرموز (`ChartFrame` `onSymbolChange`).
+   * (`originUnavailableProvider` يقول «الرسم مولَّد للعرض» — يصحّ ما دامت الشموع تُرسم فقط.)
+   */
+  chartNotOfferedTitle: string;
+  chartNotOfferedBody: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -2479,6 +2486,8 @@ const ar: Dict = {
   forecastDisclaimerConsensus: 'إجماع مؤشرات فنية داخل MATRIX — ليس ضماناً للربح.',
   forecastDisclaimerNoData: 'لا بيانات كافية لحساب المؤشرات المختارة.',
   dsKindUnavailable: 'غير متاح',
+  chartNotOfferedTitle: '{symbol} غير متاح من مزوّد البيانات',
+  chartNotOfferedBody: 'لا نرسم له شموعاً ولا سعراً كي لا تقرأ أرقاماً مولَّدة. اضغط اسم الرمز ▾ أعلى الإطار لتختار زوجاً آخر.',
 };
 
 const enUS: Dict = {
@@ -3649,6 +3658,8 @@ const enUS: Dict = {
   forecastDisclaimerConsensus: 'Technical-indicator consensus inside MATRIX — not a guarantee of profit.',
   forecastDisclaimerNoData: 'Not enough data to compute the selected indicators.',
   dsKindUnavailable: 'Unavailable',
+  chartNotOfferedTitle: '{symbol} isn’t offered by our data provider',
+  chartNotOfferedBody: 'We draw no candles or price for it, so you never read made-up numbers. Tap the symbol name ▾ at the top of the frame to pick another pair.',
 };
 
 const enGB: Dict = {
@@ -4851,6 +4862,8 @@ const ku: Dict = {
   forecastDisclaimerConsensus: 'کۆدەنگی پێوەرە تەکنیکییەکان لەناو MATRIX — گەرەنتی قازانج نییە.',
   forecastDisclaimerNoData: 'داتای پێویست نییە بۆ ژماردنی پێوەرە هەڵبژێردراوەکان.',
   dsKindUnavailable: 'بەردەست نییە',
+  chartNotOfferedTitle: '{symbol} لەلایەن دابینکەری داتاوە پێشکەش ناکرێت',
+  chartNotOfferedBody: 'هیچ مۆم و نرخێکی بۆ ناکێشین تا ژمارەی دروستکراو نەخوێنیتەوە. ناوی هێماکە ▾ لە سەرەوەی چوارچێوەکە دابگرە بۆ هەڵبژاردنی جووتێکی تر.',
 };
 
 export const DICTS: Record<LangId, Dict> = {
