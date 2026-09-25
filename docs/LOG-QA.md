@@ -176,3 +176,14 @@ XAUUSD الثلاثاء 20:00Z +H1 ⇒ 22:00Z و19:00Z +3 ⇒ 23:00Z (يتخطّ
 **جديد QA14 → tools:** ملاحظة الدفتر `TradeJournalPanel.tsx:1683` بلا `maxLength` والخادم يرفض >500 ⇒ 422 يُعرض «تحقق من الاتصال» (`JOURNAL_NOTE_MAX` جاهز).
 **جديد QA14 → الخادم:** ملاحظة التنبيه/تنبيه المؤشر `main.py:199 :399` بلا حدّ.
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
+
+## 2026-09-25 — الدورة 15
+**البناء:** أخضر 0 (بعد b70f388) — لا إصلاح لازم. **Selftests:** 62/62 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — QA14 → tools (`15226bd`: `maxLength={JOURNAL_NOTE_MAX}` `TradeJournalPanel.tsx:1690` + `noteCharsLeft` :1705)؛
+launch64 → tools (`82f38f5`: `riskCalcLeverageAmbiguous` `PositionSizePanel.tsx:447`). **غير مُغلق:** 10 `Alert.alert`، «₴» ×2، `TimeframeBar` صفر
+`accessibilityState`، `accNetLoadError` 0 مستعمل.
+**المراجعة (e — ما يُحرج أمام متداول):** `b70f388` سطر التقاطع عن إغلاق السابقة — `source.all[start+crossIndex-1]` صحيح بالنافذة والتابع، أول شمعة ⇒ الافتتاح،
+الأنواع المصطنعة تقيس عن لبنتها السابقة (كـTV)، الرموز بلا مواصفة ⇒ % فقط. `sessions.ts` طوكيو 00–09Z، لندن/نيويورك 08–17 محلياً بـDST. `instrumentSpec` بـ`tsx`
+على 12 غريبة: HUF/CZK/KRW/THB/INR/IDR ⇒ null (مقصود)، MXN/ZAR/TRY/SEK/HKD/CNH ⇒ 0.0001. **جديد QA15:** التعادل خسارة بنسبة الفوز (`pnl <= 0` =
+`db.py:1848`) ⇒ أنس؛ الإنجليزية تخلط «N pip»/«N pips» (`locales.ts` :2466 :2499 :2578 مقابل :2507 :2600) ⇒ launch (منخفض).
+**الدورة القادمة:** المراجعة (a) — تكرار/كود ميت.

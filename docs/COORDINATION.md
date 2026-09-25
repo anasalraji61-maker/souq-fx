@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 14، بعد b5c8955) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 15، بعد b70f388) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -36,9 +36,10 @@
 | QA | الخادم | **(d) الدفتر يقصّ بصمت عند 200 صفقة**: `db.py:1681` `LIMIT 200` (مفتوحة+مغلقة) و`trade_stats` :1836 يحسب منها ⇒ بعد 200 صفقة «الصفقات المغلقة: n»/نسبة الفوز/صافي الـpip تُحسب على الأحدث فقط وتختفي القديمة من القائمة بلا إشارة. والمعامل `days=30` :1673 لا يُستعمل (ميّت). نصّ «آخر 200» صار ظاهراً (0c34e61)؛ الباقي: إحصاء بـSQL على الكل + ترقيم | QA9 |
 | QA | الخادم | **(e)** تقويم العيّنة `econ_calendar.py:39-47` أوقات خاطئة و«5.25%» قديم؛ `_impact` :77. الواجهة تقول الآن «عيّنة لا تتداول عليها» (63c2ef6) | QA5 ★ |
 | QA | بلا مالك | **(a) جديد**: `DomLitePanel.tsx:67-73` يحسب السبريد بالـpip محلياً — نسخة `quoteSpreadPips` (`positionSize.ts:360`) الجديدة (tools: «ليس بنطاقي»)؛ والخاصية `last` ميتة (`void last` :75) والمستدعون ما زالوا يمرّرونها | QA11 |
-| QA | tools | **(d) جديد QA14**: خانة ملاحظة الدفتر (`TradeJournalPanel.tsx` :1683 `value={note}`) **بلا `maxLength`**، والخادم يرفض >500 (`main.py:447 :469`) والثابت `JOURNAL_NOTE_MAX = 500` (`tradePlan.ts:501`) جاهز ⇒ ملاحظة 501 حرف تُرفض 422 فتقول «تحقق من الاتصال وحاول مرة أخرى» (`journalAddError`) — المحاولة لا تنجح أبداً. الإصلاح: `maxLength={JOURNAL_NOTE_MAX}` | QA14 |
 | QA | الخادم | **(d) جديد QA14**: ملاحظة التنبيه `main.py:199` (و:399 تنبيه المؤشر) `note: str = ""` بلا حدّ (ملاحظة الدفتر/التصويت 500) والخانة `AlertsPanel` بلا `maxLength` ⇒ نص غير محدود يُخزَّن ويُرسل بالإشعار | QA14 |
+| QA+tools | أنس | **(e) جديد QA15**: صفقة التعادل (pnl = 0) تُحسب **خسارة** بنسبة الفوز (`journalStats` `pnl <= 0` = `backend/db.py:1848`) ⇒ متداول ينقل وقفه للتعادل يرى نسبة فوزه تهبط. قرار: تُستثنى أم تُحسب خسارة؟ | QA15 |
+| QA | launch | **(e) جديد QA15 (منخفض)**: الإنجليزية تخلط «pip»/«pips» بعد الرقم: `locales.ts` :2466 :2499 «({derived} pip)» و:2578 «Net: {pips} pip» مقابل :2507 «({sl} pips)» و:2600 «{pips} pips» — والوحدة المولَّدة `measureReadout.ts:52` «+35.0 pip». وحِّد (المتداول الإنجليزي يقول «pips») | QA15 |
 
-**أُسقط هذه الدورة (بالكود):** tools42 — `sessionKeyAt(…, symbol)` بـ`dailyRefStore.ts:43 :75` و`dailyChange.ts:80` (`77cce19`، selftest يمرّ)؛ `mcWeekdays` مربوط `MatrixChart.tsx:5014` (`8807554`)؛ `journalSizeDottedFix` مربوط `TradeJournalPanel.tsx:366` (`1989e3a`)؛ `IndicatorForecastPanel.tsx:217` `selected` (`d7c7fa7`).
-**تحقّق بلا تغيير (بالكود):** `Alert.alert` 10 (+1 تعليق)؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `QUICK_SYMBOLS` ×3؛ `DomLitePanel` `void last` :75؛ `LIMIT 200` `db.py:1681`؛ `TradingCentral-like` `signal_hub.py:29`.
-**(d) هذه الدورة — متّسق:** pip (`backtest.py:26-31` = `positionSize.ts` ذهب 0.1/فضة 0.01/ين 0.01)؛ شموع 50..5000 (`api.ts:431` = `main.py:676`)؛ رمز الدفتر ≤12 (`journalSymbol` بـ`tsx` على 8 لواحق) = الخادم 12؛ `JOURNAL_LIST_LIMIT` 200 = `LIMIT 200`؛ ملاحظة التصويت 500 = 500؛ الدردشة 1000 = 1000.
+**أُسقط هذه الدورة (بالكود):** QA14 → tools — `maxLength={JOURNAL_NOTE_MAX}` `TradeJournalPanel.tsx:1690` + عدّاد `noteCharsLeft` :1705 (`15226bd`)؛ launch64 → tools — `riskCalcLeverageAmbiguous` مربوط `PositionSizePanel.tsx:447` (`82f38f5`).
+**تحقّق بلا تغيير (بالكود):** `Alert.alert` 10 (+1 تعليق)؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `accNetLoadError` 0 مستعمل.
+**(e) هذه الدورة — سليم:** تغيّر سطر التقاطع عن إغلاق السابقة (`b70f388`، يرجع للافتتاح بأول شمعة)؛ الجلسات طوكيو/لندن/نيويورك بالصيفي (`sessions.ts`)؛ الحاسبة ترفض HUF/CZK/KRW/THB بدل pip خاطئ؛ ذهب 0.1×100، فضة 0.01×5000.
