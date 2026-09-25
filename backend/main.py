@@ -1219,9 +1219,16 @@ def indicators_library():
 @app.get("/api/indicators/snapshot/{symbol}")
 def indicator_snapshot(symbol: str, timeframe: str = "15m"):
     series = build_series(symbol.upper(), timeframe)
+    if series.data_source.kind == "demo":
+        # لا RSI ولا تقاطعات ولا «تغيّر %» على شموع مختلَقة (كانت تُحسب وتُعاد موسومة demo — رقم ينتظر
+        # عميلاً ينسى فحص الوسم). `SymbolSnapshot` بلا `rsi` لا يعرض شيئاً. الوسم باقٍ للعميل.
+        return {
+            "data_kind": "demo",
+            "unavailable_reason": series.data_source.unavailable_reason or "provider_unavailable",
+        }
     candles = [c.model_dump() for c in series.candles]
     snap = ind_engine.snapshot(candles)
-    snap["data_kind"] = series.data_source.kind  # demo = RSI/تقاطعات على شموع مختلَقة
+    snap["data_kind"] = series.data_source.kind
     return snap
 
 

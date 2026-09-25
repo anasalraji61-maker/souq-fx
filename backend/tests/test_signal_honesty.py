@@ -104,3 +104,11 @@ def test_forecast_on_demo_candles_has_no_votes_or_direction(client, no_provider)
     out = client.post("/api/signals/indicators/forecast", json={"symbol": "EURUSD"}).json()
     assert out["data_kind"] == "demo"
     assert out["votes"] == [] and out["direction"] is None and out["levels"] is None
+
+
+def test_indicator_snapshot_on_demo_candles_has_no_numbers(client, no_provider):
+    """كانت RSI/تقاطعات/تغيّر % تُحسب على الشموع البذرية وتُعاد موسومة demo فقط."""
+    out = client.get("/api/indicators/snapshot/EURUSD").json()
+    assert out["data_kind"] == "demo" and out["unavailable_reason"]
+    for k in ("rsi", "last", "change_pct", "macd", "ma_cross_up", "macd_cross_up"):
+        assert k not in out
