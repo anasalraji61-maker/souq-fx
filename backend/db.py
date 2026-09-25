@@ -16,25 +16,41 @@ from typing import Any
 from core.db_conn import DB_PATH, _conn
 
 
+def _username_key(username: str) -> str:
+    """مفتاح التفرّد: NFKC + casefold. `COLLATE NOCASE` بـSQLite يطوي a–z فقط ⇒ «Şêrko» و«şêrko»
+    و«Émile» و«émile» (وكل سيريلي/يوناني) كانا حسابين يُعرضان متطابقين — انتحال (البند 9)."""
+    return unicodedata.normalize("NFKC", username or "").casefold()
+
+
 def _migrate_username_nocase(c: sqlite3.Connection) -> None:
     """«Ali» و«ali» كانا حسابين (`UNIQUE` حسّاس لحالة الأحرف) ⇒ انتحال اسم متداول معروف بحرف
-    كبير، والحظر المحلي بالتطبيق يطبّع الاسم فيُخفي البريء مع المنتحل. فهرس فريد `NOCASE` يمنع
-    ذلك بالقاعدة نفسها. قاعدة قائمة فيها تصادم فعلاً لا يُنشأ عليها الفهرس (لا دمج حسابات آلياً)
-    ويبقى الفحص بـ`_username_taken` عند التسجيل مانعاً لكل تصادم جديد."""
-    dup = c.execute(
+    كبير، والحظر المحلي بالتطبيق يطبّع الاسم فيُخفي البريء مع المنتحل. عمود `username_key`
+    (`_username_key`) بفهرس فريد يمنع ذلك بالقاعدة نفسها لكل الأبجديات. قاعدة قائمة فيها تصادم فعلاً
+    لا يُنشأ عليها الفهرس (لا دمج حسابات آلياً) ويبقى الفحص بـ`_username_taken` عند التسجيل مانعاً
+    لكل تصادم جديد."""
+    cols = {r[1] for r in c.execute("PRAGMA table_info(users)").fetchall()}
+    if "username_key" not in cols:
+        c.execute("ALTER TABLE users ADD COLUMN username_key TEXT")
+    for r in c.execute("SELECT id, username FROM users WHERE username_key IS NULL").fetchall():
+        c.execute("UPDATE users SET username_key=? WHERE id=?", (_username_key(r[1]), r[0]))
+    if not c.execute(
         "SELECT 1 FROM users GROUP BY username COLLATE NOCASE HAVING COUNT(*) > 1 LIMIT 1"
-    ).fetchone()
-    if dup:
-        return
-    c.execute(
-        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_nocase ON users(username COLLATE NOCASE)"
-    )
+    ).fetchone():
+        # يبقى لإدراج خام لا يملأ `username_key` (ASCII وحده)
+        c.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_nocase ON users(username COLLATE NOCASE)"
+        )
+    if not c.execute(
+        "SELECT 1 FROM users GROUP BY username_key HAVING COUNT(*) > 1 LIMIT 1"
+    ).fetchone():
+        c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_key ON users(username_key)")
 
 
-def _username_taken(c: sqlite3.Connection, username: str) -> bool:
-    # NOCASE يطوي ASCII فقط — والعربية بلا حالة أحرف أصلاً
+def _username_taken(c: sqlite3.Connection, username: str, exclude_id: int | None = None) -> bool:
     return c.execute(
-        "SELECT 1 FROM users WHERE username=? COLLATE NOCASE", (username,)
+        # الشطر الثاني لصفّ أُدرج خاماً بلا مفتاح
+        "SELECT 1 FROM users WHERE (username_key=? OR username=? COLLATE NOCASE) AND id<>?",
+        (_username_key(username), username, exclude_id or -1),
     ).fetchone() is not None
 
 
@@ -510,8 +526,8 @@ def register_user(
             raise ValueError("username or email taken")
         try:
             c.execute(
-                "INSERT INTO users(username,password_hash,created_at,email) VALUES(?,?,?,?)",
-                (username, stored, time.time(), email_norm),
+                "INSERT INTO users(username,username_key,password_hash,created_at,email) VALUES(?,?,?,?,?)",
+                (username, _username_key(username), stored, time.time(), email_norm),
             )
             uid = int(c.execute("SELECT last_insert_rowid()").fetchone()[0])
         except sqlite3.IntegrityError as exc:
@@ -744,8 +760,8 @@ def place_under_sponsor(
 
         try:
             c.execute(
-                "INSERT INTO users(username,password_hash,created_at) VALUES(?,?,?)",
-                (username, stored, now),
+                "INSERT INTO users(username,username_key,password_hash,created_at) VALUES(?,?,?,?)",
+                (username, _username_key(username), stored, now),
             )
             uid = int(c.execute("SELECT last_insert_rowid()").fetchone()[0])
         except sqlite3.IntegrityError as exc:
@@ -970,8 +986,8 @@ def login_user(username_or_email: str, password: str) -> dict[str, Any]:
             if not row:
                 # «ali» يدخل حساب «Ali». إن وُجد تصادم قديم (قبل الفهرس) لا يُخمَّن أيّهما
                 rows = c.execute(
-                    "SELECT id, username, email, password_hash FROM users WHERE username=? COLLATE NOCASE",
-                    (ident,),
+                    "SELECT id, username, email, password_hash FROM users WHERE username_key=?",
+                    (_username_key(ident),),
                 ).fetchall()
                 row = rows[0] if len(rows) == 1 else None
     if not row:
@@ -1050,9 +1066,7 @@ def delete_user_account(user_id: int) -> None:
     placeholder = f"deleted_user_{user_id}"
     dead_hash = f"{secrets.token_hex(8)}${secrets.token_hex(32)}"
     with _conn() as c:
-        if c.execute(
-            "SELECT 1 FROM users WHERE username=? COLLATE NOCASE AND id<>?", (placeholder, user_id)
-        ).fetchone():
+        if _username_taken(c, placeholder, user_id):
             # اسم سُجِّل قبل حجز البادئة (`_check_username`): لا يمنع الحذف — لاحقة عشوائية بدل 500
             placeholder = f"{placeholder}_{secrets.token_hex(4)}"
         old = c.execute("SELECT username FROM users WHERE id=?", (user_id,)).fetchone()
@@ -1077,8 +1091,8 @@ def delete_user_account(user_id: int) -> None:
                 (old["username"],),
             )
         c.execute(
-            "UPDATE users SET username=?, email=NULL, password_hash=? WHERE id=?",
-            (placeholder, dead_hash, user_id),
+            "UPDATE users SET username=?, username_key=?, email=NULL, password_hash=? WHERE id=?",
+            (placeholder, _username_key(placeholder), dead_hash, user_id),
         )
         # رمز الإحالة مبنيّ من الاسم (`ALICE0001`) ويظهر بشجرة الراعي والفريق ⇒ كان يُبقي جزءاً من الاسم
         # المحذوف، ويظلّ رمز راعٍ صالحاً: التسجيل به يضع عضواً تحت حساب لا يملكه أحد ويرفع عدّادات ساقَيه

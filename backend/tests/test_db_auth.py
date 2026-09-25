@@ -282,6 +282,49 @@ def test_an_existing_case_collision_does_not_break_startup_or_guess_on_login(tmp
         _register("aLI", email="z@example.com")
 
 
+@pytest.mark.parametrize("first,twin", [("Şêrko", "şêrko"), ("Émile", "émile"), ("Олег", "олег"), ("Straße", "STRASSE")])
+def test_a_non_ascii_case_twin_is_taken(_db, first, twin):
+    """NOCASE يطوي a–z فقط: «Şêrko» و«şêrko» كانا حسابين يُعرضان متطابقين."""
+    _register(first, email="a@example.com")
+    with pytest.raises(ValueError, match="taken"):
+        _register(twin, email="b@example.com")
+    assert db.login_user(twin, "hunter2")["username"] == first
+
+
+def test_the_database_refuses_a_non_ascii_key_twin(_db):
+    import sqlite3
+
+    _register("Şêrko", email="a@example.com")
+    with db._conn() as c, pytest.raises(sqlite3.IntegrityError):
+        c.execute("INSERT INTO users(username,username_key,password_hash,created_at) VALUES('ŞÊRKO',?,'x',0)",
+                  (db._username_key("ŞÊRKO"),))
+
+
+def test_legacy_rows_get_their_key_backfilled(tmp_path, monkeypatch):
+    import sqlite3
+
+    path = tmp_path / "legacy.db"
+    monkeypatch.setattr(db_conn, "DB_PATH", path)
+    monkeypatch.setattr(db, "_PBKDF2_ITERATIONS", _FAST_ITERATIONS)
+    with sqlite3.connect(path) as c:
+        c.execute("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, "
+                  "password_hash TEXT NOT NULL, created_at REAL NOT NULL)")
+        c.execute("INSERT INTO users(username,password_hash,created_at) VALUES('Şêrko',?,0)",
+                  (db._encode_password("hunter2"),))
+    db.init_db()
+    with pytest.raises(ValueError, match="taken"):
+        _register("şêrko", email="z@example.com")
+    assert db.login_user("ŞÊRKO", "hunter2")["username"] == "Şêrko"
+
+
+def test_deleted_account_placeholder_keeps_a_key(_db):
+    uid = _register("Émile", email="a@example.com")["user_id"]
+    db.delete_user_account(uid)
+    _register("émile", email="b@example.com")  # الاسم تحرّر
+    with pytest.raises(ValueError, match="reserved|taken"):
+        _register(f"Deleted_User_{uid}", email="c@example.com")
+
+
 # ── وضع عضو تحت راعٍ: كلمة مرور قصيرة ─────────────────────────────────────────────
 def _sponsor() -> int:
     return db.register_user("sponsor1", "pass1234", email="s1@example.com")["user_id"]
