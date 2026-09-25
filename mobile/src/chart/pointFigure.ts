@@ -38,15 +38,18 @@ export function pointFigure(candles: Candle[], boxSize?: number, reversal = 3): 
     col.close = close;
     col.high = Math.max(col.open, close);
     col.low = Math.min(col.open, close);
-    col.volume = (col.volume ?? 0) + n;
   };
   // عدد الصناديق التي يغطّيها الإغلاق فوق/تحت المستوى الحالي (هامش 1e-9 يمتصّ خطأ القسمة العشرية).
   const upBoxes = (px: number) => Math.floor(px / box + 1e-9) - level;
   const downBoxes = (px: number) => level - Math.ceil(px / box - 1e-9);
 
+  // الفوليوم الحقيقي لشموع العمود (كـTradingView) — كان عدد الصناديق ⇒ لوحة الفوليوم ورأسها يطبعان «3»
+  // لعمود صعد 3 صناديق. الشمعة التي لا تمدّ ولا تعكس تُحسب للعمود القائم، وما قبل أوّل عمود لأوّله.
+  let pendingVol = 0;
   for (const c of candles) {
     src = c.time;
     const px = c.close;
+    pendingVol += c.volume != null && Number.isFinite(c.volume) ? c.volume : 0;
     if (direction === 0) {
       if (upBoxes(px) >= 1) extend(1, upBoxes(px));
       else if (downBoxes(px) >= 1) extend(-1, downBoxes(px));
@@ -56,6 +59,11 @@ export function pointFigure(candles: Candle[], boxSize?: number, reversal = 3): 
     } else {
       if (downBoxes(px) >= 1) extend(-1, downBoxes(px));
       else if (upBoxes(px) >= reversal) extend(1, upBoxes(px));
+    }
+    const cur = out[out.length - 1];
+    if (cur) {
+      cur.volume = (cur.volume ?? 0) + pendingVol;
+      pendingVol = 0;
     }
   }
 

@@ -68,7 +68,18 @@ const cols = pointFigure(path.map((p, i) => bar(i, p)), 0.001);
 assert.equal(cols.length, 2, `pnf columns ${cols.length}`);
 assert.ok(Math.abs(cols[0].open - 1.1) < 1e-9 && Math.abs(cols[0].close - 1.11) < 1e-9, 'X column 1.100→1.110');
 assert.ok(Math.abs(cols[1].open - 1.11) < 1e-9 && Math.abs(cols[1].close - 1.105) < 1e-9, 'O column 1.110→1.105');
-assert.equal(cols[0].volume, 10);
+// الفوليوم فوليوم الشموع لا عدد الصناديق: شموع 0..11 للعمود X (12، و11 تراجع دون الانعكاس) و12..13 للعمود O (2) — المجموع محفوظ.
+assert.equal(cols[0].volume, 12);
+assert.equal(cols[1].volume, 2);
 assert.equal(cols[1].srcTime, 12 * 60, 'O column anchored to the candle that opened it');
 assert.ok(cols[1].time > cols[0].time);
 console.log('pnf grid selftest PASS');
+
+// Kagi: شمعة التراجع بلا انعكاس وأوّل شمعة تُحسب بفوليوم الخطّ (كان 1500 من 2300).
+{
+  const v = (i: number, close: number, volume: number) => ({ time: i * 60, open: close, high: close, low: close, close, volume });
+  const k = kagi([v(0, 1.1, 100), v(1, 1.101, 500), v(2, 1.1005, 700), v(3, 1.102, 1000)], 0.003);
+  assert.equal(k.length, 1);
+  assert.equal(k[0].volume, 2300);
+  console.log('kagi volume selftest PASS');
+}

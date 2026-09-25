@@ -28,33 +28,42 @@ export function kagi(candles: Candle[], reversalAmount?: number): SyntheticBar[]
     line = { time: t, open: extreme, high: extreme, low: extreme, close: extreme, volume: 0, srcTime: c.time };
     out.push(line);
   };
-  const reach = (c: Candle, price: number) => {
+  const reach = (price: number) => {
     extreme = price;
     const l = line!;
     l.close = price;
     l.high = Math.max(l.open, price);
     l.low = Math.min(l.open, price);
-    l.volume = (l.volume ?? 0) + (c.volume ?? 0);
   };
 
+  // فوليوم **كل** شموع الخطّ: كان يُجمع عند قمّة/قاع جديد فقط ⇒ شمعة تراجع بلا انعكاس (وأوّل شمعة) يضيع
+  // فوليومها من لوحة الفوليوم. ما قبل أوّل خطّ يُحسب لأوّله.
+  const vol = (c: Candle) => (c.volume != null && Number.isFinite(c.volume) ? c.volume : 0);
+  let pendingVol = vol(candles[0]);
   for (let i = 1; i < candles.length; i++) {
     const c = candles[i];
     const price = c.close;
+    pendingVol += vol(c);
     if (direction === 0) {
       if (price !== extreme) {
         open(c, price > extreme ? 1 : -1);
-        reach(c, price);
+        reach(price);
       }
     } else if (direction === 1) {
-      if (price > extreme) reach(c, price);
+      if (price > extreme) reach(price);
       else if (price <= extreme - rev) {
         open(c, -1);
-        reach(c, price);
+        reach(price);
       }
-    } else if (price < extreme) reach(c, price);
+    } else if (price < extreme) reach(price);
     else if (price >= extreme + rev) {
       open(c, 1);
-      reach(c, price);
+      reach(price);
+    }
+    const cur = out[out.length - 1];
+    if (cur) {
+      cur.volume = (cur.volume ?? 0) + pendingVol;
+      pendingVol = 0;
     }
   }
   if (!out.length) return candles;
