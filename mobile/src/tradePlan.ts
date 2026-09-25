@@ -624,8 +624,9 @@ export function noteWithInitialStop(input: {
   const old = before.sl;
   if (!finitePos(old)) return note;
   const risk = after.side === 'buy' ? after.entry - old : old - after.entry;
-  const pip = journalPipSize(input.symbol);
-  if (!(risk > 0) || (pip && risk < pip * (1 - 1e-6))) return note;
+  // حدّ `initialStop` نفسه (`minRiskForR`: 1 pip أو 0.002% من الدخول): كان 1 pip وحده ⇒ على XAUJPY (حدّ ~10.5 ين) أو رمز
+  // بلا pip تُكتب علامةٌ يتجاهلها القارئ — أحرفٌ من حدّ الـ500 بلا أثر، ولا تُكتب علامة صالحة بعدها (القارئ لا يراها)
+  if (!(risk > 0) || risk < minRiskForR(input.symbol, after.entry)) return note;
   // الوقف لم يتغيّر ⇒ لا علامة. **مُسح أو وُسِّع** ⇒ علامة كالشدّ: خسارةٌ بعد مسح الوقف كانت تسقط من «متوسط R»
   // (R = null)، وتوسيع 1.0830 ⇒ 1.0810 ثم ضربه كان يُسجَّل −1R نظيفاً بدل −2R — أسوأ صفقات النظام تختفي من رقمه.
   if (finitePos(after.sl) && Math.abs(after.sl - old) <= 1e-12 * Math.max(1, old)) return note;

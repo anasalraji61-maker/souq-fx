@@ -3168,6 +3168,32 @@ console.log('tradePlan journal paging selftest OK');
 }
 console.log('tradePlan journal win rate selftest OK');
 
+// noteWithInitialStop لا يكتب علامة «1R @» يتجاهلها initialStop (حدّ minRiskForR لا 1 pip وحده)
+{
+  const openXj = { side: 'buy', entry: 525000, sl: 524995, status: 'open' };
+  // وقف أصلي 5 ين (50 pip ذهب، دون 0.002% = 10.5 ين): لا علامة
+  const tight = noteWithInitialStop({ symbol: 'XAUJPY', note: 'x', before: openXj, after: { side: 'buy', entry: 525000, sl: 524999 } });
+  assert.equal(tight, 'x');
+  // وقف أصلي 100 ين: علامة، ويقرؤها initialStop
+  const wide = noteWithInitialStop({
+    symbol: 'XAUJPY', note: 'x', before: { ...openXj, sl: 524900 }, after: { side: 'buy', entry: 525000, sl: 524990 },
+  });
+  assert.equal(wide, 'x · 1R @ 524900');
+  assert.equal(initialStop({ symbol: 'XAUJPY', side: 'buy', entry: 525000, note: wide }), 524900);
+  // كل علامة تُكتب يقرؤها initialStop (رموز بـpip وبلا pip)
+  for (const [symbol, entry, olds] of [
+    ['XAUJPY', 525000, [524999.9, 524995, 524989.6, 524989.4, 524900]],
+    ['EURUSD', 1.085, [1.08499, 1.0849, 1.0845]],
+    ['FOOBAR', 100, [99.9999, 99.999, 99.99]],
+  ] as [string, number, number[]][]) {
+    for (const o of olds) {
+      const out = noteWithInitialStop({ symbol, note: '', before: { side: 'buy', entry, sl: o, status: 'open' }, after: { side: 'buy', entry, sl: entry } });
+      if (out !== '') assert.equal(initialStop({ symbol, side: 'buy', entry, note: out }), o, `${symbol} ${o}`);
+    }
+  }
+}
+console.log('tradePlan initial stop mark readable selftest OK');
+
 // المعدن فوق الدخول: الضعف لا النصف — أهداف ذهب/فضة حقيقية بعد صعود 2023–2025 كانت تُقرأ نقاطاً ويُمنع حفظها
 {
   const L = levelLooksLikePips;
