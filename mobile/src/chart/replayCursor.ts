@@ -83,3 +83,24 @@ export function replayFollowOffset(len: number, windowCount: number, offset: num
   if (cut < end - wc) return replayMinOffset(len, wc, cut);
   return offset;
 }
+
+/**
+ * الإزاحة بعد تكبير/تصغير أثناء الإعادة: الشمعة المقطوعة («الآن» المُعاد) تبقى بنسبتها من عرض اللوح، كما
+ * تبقى الشمعة الحيّة بمكانها بالتكبير العادي. `zoomWindow` حول المركز أو الطرف الأيمن الحيّ كان يضع
+ * النافذة بعد القطع ⇒ يقصّها `replayWindow` فتقفز المقطوعة إلى أوّل خانة (شمعة واحدة مكشوفة) أو تخرج.
+ */
+export function replayZoomOffset(
+  len: number,
+  count: number,
+  offset: number,
+  cut: number,
+  nextCount: number
+): number {
+  if (len <= 0 || cut < 0) return Math.max(0, offset);
+  const w = replayWindow(len, count, offset, cut);
+  const ratio = (cut - w.start + 0.5) / Math.max(1, w.windowLen);
+  const next = Math.max(1, Math.round(nextCount));
+  const start = Math.max(0, Math.min(cut, Math.round(cut + 0.5 - ratio * next)));
+  const end = Math.max(Math.min(len, 10), Math.min(len, start + next));
+  return Math.max(0, len - end);
+}

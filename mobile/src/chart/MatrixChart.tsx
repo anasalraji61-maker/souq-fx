@@ -362,6 +362,7 @@ import {
   lastBefore,
   replayFollowOffset,
   replayMinOffset,
+  replayZoomOffset,
   replayWindow,
 } from './replayCursor';
 import { clampXPan } from './panClamp';
@@ -4792,6 +4793,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const src = sourceRef.current;
     return replayMinOffset(src.all.length, windowCountRef.current, src.start + src.plot.length - 1);
   }, []);
+  // التكبير بالإعادة يُبقي الشمعة المقطوعة بنسبتها من اللوح (`replayZoomOffset`) بدل المركز/الطرف الحيّ.
+  const replayZoomed = useCallback((z: { count: number; offset: number }, fromCount: number, fromOffset: number) => {
+    if (!replayOnRef.current) return z;
+    const src = sourceRef.current;
+    const cut = src.start + src.plot.length - 1;
+    return { count: z.count, offset: replayZoomOffset(src.all.length, fromCount, fromOffset, cut, z.count) };
+  }, []);
 
   /** خطوة إعادة ±1 شمعة؛ النافذة تتبع القطع حين يخرج منها. `false` = لا شمعة بعدها (الحيّة) أو قبلها. */
   const stepReplay = useCallback(
@@ -4855,7 +4863,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const zoomAroundCenter = useCallback(
     (factor: number) => {
       const current = windowCountRef.current;
-      const z = zoomWindow(sourceRef.current.all.length, current, offsetRef.current, factor);
+      const z = replayZoomed(
+        zoomWindow(sourceRef.current.all.length, current, offsetRef.current, factor),
+        current,
+        offsetRef.current
+      );
       if (z.count === current && z.offset === offsetRef.current) return;
       windowCountRef.current = z.count;
       offsetRef.current = z.offset;
@@ -4863,7 +4875,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       setOffset(z.offset);
       schedulePublishSync(false);
     },
-    [schedulePublishSync]
+    [schedulePublishSync, replayZoomed]
   );
 
   const zoomPrice = useCallback(
@@ -4897,11 +4909,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
   const zoomTimeByDrag = useCallback(
     (dx: number) => {
-      const z = timeAxisDragWindow(
-        sourceRef.current.all.length,
+      const z = replayZoomed(
+        timeAxisDragWindow(sourceRef.current.all.length, timeWindowStart.current, panStartOffset.current, dx),
         timeWindowStart.current,
-        panStartOffset.current,
-        dx
+        panStartOffset.current
       );
       if (z.count === windowCountRef.current && z.offset === offsetRef.current) return;
       windowCountRef.current = z.count;
@@ -4910,7 +4921,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       setOffset(z.offset);
       schedulePublishSync(false);
     },
-    [schedulePublishSync]
+    [schedulePublishSync, replayZoomed]
   );
 
   // AUTO (زاوية المحورين) وAlt+R على الويب: مقياس السعر تلقائي، 80 شمعة، والطرف الأيمن حيّ.
@@ -5026,13 +5037,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     (x1: number, x2: number) => {
       const st = pinchStart.current;
       if (!st) return;
-      const z = pinchWindow(
-        sourceRef.current.all.length,
+      const z = replayZoomed(
+        pinchWindow(sourceRef.current.all.length, st.count, st.offset, st.spread, pinchSpread(x1, x2), st.focus),
         st.count,
-        st.offset,
-        st.spread,
-        pinchSpread(x1, x2),
-        st.focus
+        st.offset
       );
       if (z.count === windowCountRef.current && z.offset === offsetRef.current) return;
       windowCountRef.current = z.count;
@@ -5041,7 +5049,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       setOffset(z.offset);
       schedulePublishSync(false);
     },
-    [schedulePublishSync]
+    [schedulePublishSync, replayZoomed]
   );
 
   const chartPan = useMemo(
@@ -5050,26 +5058,22 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         onStartShouldSetPanResponder: (evt) =>
           canPan &&
           tool === 'none' &&
-          !replayOn &&
           evt.nativeEvent.locationX < chartPlotW &&
           evt.nativeEvent.locationY < chartPlotH,
         onStartShouldSetPanResponderCapture: (evt) =>
           canPan &&
           tool === 'none' &&
-          !replayOn &&
           evt.nativeEvent.locationX < chartPlotW &&
           evt.nativeEvent.locationY < chartPlotH,
         onMoveShouldSetPanResponder: (evt, g) =>
           canPan &&
           tool === 'none' &&
-          !replayOn &&
           evt.nativeEvent.locationX < chartPlotW &&
           evt.nativeEvent.locationY < chartPlotH &&
           Math.abs(g.dx) > 12,
         onMoveShouldSetPanResponderCapture: (evt, g) =>
           canPan &&
           tool === 'none' &&
-          !replayOn &&
           evt.nativeEvent.locationX < chartPlotW &&
           evt.nativeEvent.locationY < chartPlotH &&
           (Math.abs(g.dx) > 4 || Math.abs(g.dy) > 4),
@@ -5349,8 +5353,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         if (event.altKey || event.ctrlKey || event.metaKey) return;
         const k = event.key;
         if (k !== 'ArrowLeft' && k !== 'ArrowRight' && k !== 'ArrowUp' && k !== 'ArrowDown') return;
-        // بالإعادة: التكبير ممنوع (كالقرص)، وShift+→/← خطوة إعادة، و←/→ سحب مقيَّد بالقطع (`replayMinOffsetNow`).
-        if (replayOn && (k === 'ArrowUp' || k === 'ArrowDown')) return;
+        // بالإعادة: ↑/↓ تكبير حول الشمعة المقطوعة (`replayZoomed`)، وShift+→/← خطوة إعادة، و←/→ سحب مقيَّد بالقطع.
         const target = event.target as { tagName?: string; isContentEditable?: boolean } | null;
         if (target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName ?? '')) return;
         event.preventDefault();
@@ -5527,7 +5530,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const lineMul = event.deltaMode === 1 ? 16 : 1;
       const dx = event.shiftKey && !event.deltaX ? event.deltaY : event.deltaX;
       if (overPlot && !overPrice && !overTime && (event.shiftKey || Math.abs(dx) > Math.abs(event.deltaY))) {
-        if (replayOnRef.current) return;
         const barW = chartPlotW / Math.max(2, windowCountRef.current);
         wheelPanCarry.current -= (dx * lineMul * panSpeedMulRef.current) / barW;
         const bars = Math.trunc(wheelPanCarry.current);
@@ -5548,6 +5550,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         // (شمعة على الأقلّ لكل حزّة، فلا تضيع حزّات العجلة الصغيرة بنافذة ضيّقة). كان يغيّر
         // `windowCount` وحده بلا `windowCountRef`، فالنشر للرباعي يرسل العدد القديم والتوابع تتأخّر حزّة.
         const current = windowCountRef.current;
+        if (replayOnRef.current) {
+          zoomAroundCenter(factor);
+          return;
+        }
         const z = zoomWindow(sourceRef.current.all.length, current, 0, factor);
         if (z.count === current) return;
         windowCountRef.current = z.count;
@@ -9126,7 +9132,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           </>
         ) : null}
 
-        {canPan && tool === 'none' && !replayOn ? (
+        {/* بالإعادة أيضاً: السحب مقيَّد بالقطع (`replayMinOffsetNow`) والقرص حول المقطوعة (`replayZoomed`) — كان
+            السطح مخفياً فلا سحب ولا قرص ولا تقاطع باللمس طوال الإعادة على الهاتف. */}
+        {canPan && tool === 'none' ? (
           <View
             style={[
               styles.chartGestureSurface,

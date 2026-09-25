@@ -3,7 +3,8 @@
  * تشغيل: npx tsx mobile/src/chart/replayCursor.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { firstAfter, lastAtOrBefore, lastBefore, replayFollowOffset, replayMinOffset, replayWindow } from './replayCursor';
+import { firstAfter, lastAtOrBefore, lastBefore, replayFollowOffset, replayMinOffset,
+  replayZoomOffset, replayWindow } from './replayCursor';
 
 const times = [10, 20, 30, 30, 40, 50];
 assert.equal(lastAtOrBefore(times, 5), -1);
@@ -40,5 +41,17 @@ assert.equal(replayWindow(1000, 80, 20, 900).start, 900);
 // حدّ السحب نحو الحيّ: أوّل النافذة عند القطع
 assert.equal(replayMinOffset(1000, 80, 700), 220);
 assert.equal(replayMinOffset(1000, 80, 990), 0);
+
+// التكبير بالإعادة: المقطوعة تبقى بنسبتها (11.5/80 ⇒ 5.5/40)، لا تقفز لأوّل خانة
+assert.equal(replayZoomOffset(1000, 80, 0, 931, 40), 34);
+assert.deepEqual(replayWindow(1000, 40, 34, 931), { start: 926, end: 966, windowLen: 40, revealed: 6 });
+// التصغير لا يتعدّى الحيّ: النافذة تنتهي عنده
+assert.equal(replayZoomOffset(1000, 80, 0, 931, 160), 0);
+assert.equal(replayWindow(1000, 160, 0, 931).revealed, 92);
+// قرب أوّل التاريخ: البداية لا تنزل عن صفر
+assert.equal(replayZoomOffset(1000, 80, 990, 5, 20), 980);
+assert.equal(replayWindow(1000, 20, 980, 5).start, 0);
+// مقطوعة بآخر النافذة (مسحوبة) تبقى آخرها بعد التكبير
+assert.equal(replayWindow(1000, 40, replayZoomOffset(1000, 80, 29, 970, 40), 970).revealed, 40);
 
 console.log('replayCursor selftest: PASS');
