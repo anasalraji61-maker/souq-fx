@@ -4,6 +4,7 @@
  */
 import { parseDecimal } from './parseDecimal';
 import assert from 'node:assert/strict';
+import type { CommissionMode } from './positionSize';
 import {
   manualConvLooksInverted,
   convStaleMinutes,
@@ -77,6 +78,7 @@ import {
   smallLotsStdEquiv,
   smallContractSuffix,
   commissionAcrossModes,
+  commissionKindOf,
   commissionNoteExample,
   commissionPlaceholder,
   conversionKey,
@@ -3331,3 +3333,24 @@ console.log('positionSize stopInsideTypicalSpread selftest OK');
   assert.deepEqual(commissionNoteExample('', 'micro'), { std: '7', micro: '0.07', usc: '7' });
 }
 console.log('positionSize commissionPlaceholder selftest OK');
+
+// ---- commissionKindOf: العمولة المحفوظة تُحوَّل إلى وضع الرمز المستعاد عند فتح اللوحة ----
+{
+  const { restoredSmallSymbol } = require('./positionSize') as typeof import('./positionSize');
+  assert.equal(commissionKindOf('EURUSD'), 'std');
+  assert.equal(commissionKindOf('EURUSDc'), 'cent');
+  assert.equal(commissionKindOf('EURUSDmicro'), 'micro');
+  assert.equal(commissionKindOf('EURUSDmi'), null);
+  // حساب يورو، «EURUSDc»، عمولة 7 USC ⇒ تبويبٌ آخر ثم العودة: اللوحة تبدأ «EURUSD» وتستعيد «EURUSDc»
+  const saved = { smallSuffix: 'c', smallActive: true };
+  const savedMode: CommissionMode = { kind: 'cent', account: 'EUR' };
+  const open = restoredSmallSymbol('EURUSD', saved);
+  const now: CommissionMode = { kind: commissionKindOf(open) ?? 'std', account: 'EUR' };
+  assert.equal(commissionAcrossModes('7', savedMode, now), '7');
+  // السلوك القديم (إلى العادي أولاً ثم إلى السنت) كان يمسحها — أساس USD ≠ EUR
+  assert.equal(commissionAcrossModes('7', savedMode, { kind: 'std', account: 'EUR' }), '');
+  // micro بحساب يورو يبقى 0.07، والعادي المحفوظ مع زوج عادي كما هو
+  assert.equal(commissionAcrossModes('0.07', { kind: 'micro', account: 'EUR' }, { kind: commissionKindOf(restoredSmallSymbol('EURUSD', { smallSuffix: 'micro', smallActive: true }))!, account: 'EUR' }), '0.07');
+  assert.equal(commissionAcrossModes('6', { kind: 'std', account: 'EUR' }, { kind: commissionKindOf(restoredSmallSymbol('EURUSD', { smallSuffix: 'c', smallActive: false }))!, account: 'EUR' }), '6');
+}
+console.log('positionSize commissionKindOf restore selftest OK');

@@ -66,6 +66,7 @@ import {
   slPipsInPoints,
   slPipsLooksLikePrice,
   commissionAcrossModes,
+  commissionKindOf,
   commissionNoteExample,
   commissionPlaceholder,
   conversionKey,
@@ -141,6 +142,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
   const [symbol, setSymbol] = useState(() => (instrumentSpec(defaultSymbol) ? defaultSymbol : 'EURUSD'));
   /** الرمز لحظة البناء — الوضع المحفوظ يُطبَّق عليه وحده (`restoredSmallSymbol`) */
   const initialSymbolRef = useRef(symbol);
+  /** الرمز الآن — لقراءة التخزين غير المتزامنة (`commissionKindOf` للرمز المستعاد) */
+  const symbolRef = useRef(symbol);
+  symbolRef.current = symbol;
   const [account, setAccount] = useState<AccountCcy>('USD');
   const [balance, setBalance] = useState('');
   /**
@@ -236,18 +240,26 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
           if (typeof p.smallSuffix === 'string' && withSmallSuffix('EURUSD', p.smallSuffix)) setSmallSuffix(p.smallSuffix);
           // كانت آخر مرّة بوضع السنت/micro: تبويبٌ آخر ثم العودة كان يفتحها على الزوج العادي برصيدٍ آخر (`restoredSmallSymbol`).
           // رمزٌ بدّله المتداول قبل وصول القراءة لا يُمسّ
+          const restoring = !planTypedRef.current && symbolRef.current === initialSymbolRef.current;
           if (!planTypedRef.current) {
             setSymbol((cur: string) => (cur === initialSymbolRef.current ? restoredSmallSymbol(cur, p) : cur));
           }
+          /** الرمز الذي ستفتح عليه اللوحة — العمولة تُحوَّل إلى وضعه (`commissionKindOf`)، لا إلى «EURUSD» الذي تبدأ به */
+          const openSymbol = restoring ? restoredSmallSymbol(symbolRef.current, p) : symbolRef.current;
           if (typeof p.leverage === 'string') setLeverage(p.leverage);
           const loadedAccount =
             p.account && (ACCOUNT_CCYS as string[]).includes(p.account) ? (p.account as AccountCcy) : null;
           if (typeof p.commission === 'string') {
             // «0.07» محفوظة من «EURUSDmicro» واللوحة تفتح على زوجٍ عادي ⇒ 7 (نسخة بلا وضع محفوظ تُقرأ كما هي)
             const m = p.commissionMode;
-            const now: CommissionMode = { kind: commissionModeRef.current.kind, account: loadedAccount ?? commissionModeRef.current.account };
+            const now: CommissionMode = {
+              kind: commissionKindOf(openSymbol) ?? commissionModeRef.current.kind,
+              account: loadedAccount ?? commissionModeRef.current.account,
+            };
             const saved =
               m && (m.kind === 'std' || m.kind === 'cent' || m.kind === 'micro') && typeof m.account === 'string' ? m : now;
+            // مؤثّر تبدّل الوضع يرى الوضع نفسه بعد استعادة الرمز فلا يحوّلها ثانيةً
+            commissionModeRef.current = now;
             setCommission(commissionAcrossModes(p.commission, saved, now));
           }
           if (typeof p.riskPct === 'string') setRiskPct(p.riskPct);
