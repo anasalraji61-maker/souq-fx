@@ -1195,6 +1195,9 @@ const MASS_INDEX_LEVELS = [27, 26.5] as const;
 /** CCI: ‎±100‎ حدّا «النطاق العادي» اللذان يُقرأ المؤشّر بتجاوزهما (خطّا TradingView الافتراضيّان). */
 const CCI_LEVELS = [100, -100] as const;
 
+/** Fisher Transform: خطوط TradingView الافتراضية — ‎±1.5‎ تطرّف و‎±0.75‎ منطقة الانعطاف. */
+const FISHER_LEVELS = [1.5, 0.75, -0.75, -1.5] as const;
+
 function ZeroLineSeries({
   values,
   paneH,
@@ -2583,6 +2586,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const f = computeFisherTransform(indBars);
     return ind({ fisher: f, trigger: [null, ...f.slice(0, -1)] });
   }, [indBars, indicators]);
+  // سلسلة ثابتة بأبعد مستوى تدخل `hist` بـmacdPaneGeom كي يتّسع المقياس لـ‎±1.5‎ دون أن تُرسم.
+  const fisherFloor = useMemo(
+    () => (fisher ? fisher.fisher.map(() => FISHER_LEVELS[0]) : []),
+    [fisher]
+  );
   const kst = useMemo(
     () => (indicators.includes('kst') ? ind(computeKst(closes)) : null),
     [closes, indicators]
@@ -10381,13 +10389,29 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {(() => {
               // خطّان كـTradingView — Fisher وزناده — بهندسة KST/MACD (مقياس واحد متمركز على الصفر).
               // كانت أعمدة Fisher وحدها، فالتقاطع الذي يُقرأ منه الانعكاس لا يُرى.
-              const g = macdPaneGeom(fisher.fisher, fisher.fisher, fisher.trigger, paneH);
+              // مستويات TradingView ‎±1.5 / ±0.75‎ تدخل المقياس (كـCCI ‎±100‎) فلا تقصّها نافذة
+              // هادئة؛ رقم 0.75 يُسقَط متى لاصق 1.5 بلوحة قصيرة (`placeScaledGuides`) والخطّ يبقى.
+              const g = macdPaneGeom(fisherFloor, fisher.fisher, fisher.trigger, paneH);
+              const guides = placeScaledGuides(FISHER_LEVELS, -g.maxAbs, g.maxAbs, g.innerH);
               return (
                 <>
                   <View
                     pointerEvents="none"
                     style={[styles.paneZeroLine, { top: g.zeroY }]}
                   />
+                  {guides.map((gd) => (
+                    <React.Fragment key={gd.v}>
+                      <View pointerEvents="none" style={[styles.paneGuideLine, { top: gd.top }]} />
+                      {gd.label ? (
+                        <View
+                          pointerEvents="none"
+                          style={[styles.paneGuideLabelBox, { top: Math.max(0, gd.top - 5) }]}
+                        >
+                          <Text style={styles.paneGuideLabel}>{gd.label}</Text>
+                        </View>
+                      ) : null}
+                    </React.Fragment>
+                  ))}
                   <PaneLineLayer
                     innerH={g.innerH}
                     y={g.y}
