@@ -236,6 +236,6 @@
 
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
-| 5472869 | a11y: `PanSpeedSlider` — `adjustable` كان على الغلاف (يحوي زرّاً) بلا `increment/decrement` ولا `accessibilityValue` ⇒ قارئ الشاشة يعلن «قابل للضبط» والتمرير لا يفعل شيئاً (السحب وحده يضبط). نُقل للمسار: `accessible` + القيمة 1..100 + إجراءا الزيادة/الإنقاص بخطوة 5؛ الرقم المرئي مخفيّ عن القارئ (لا يُقرأ مرّتين) | مهمّة: الحالة باللون وحده / a11y |
+| efea789 | a11y: `PanSpeedSlider` — `adjustable` كان على الغلاف (يحوي زرّاً) بلا `increment/decrement` ولا `accessibilityValue` ⇒ قارئ الشاشة يعلن «قابل للضبط» والتمرير لا يفعل شيئاً (السحب وحده يضبط). نُقل للمسار: `accessible` + القيمة 1..100 + إجراءا الزيادة/الإنقاص بخطوة 5؛ الرقم المرئي مخفيّ عن القارئ (لا يُقرأ مرّتين) | مهمّة: الحالة باللون وحده / a11y |
 
 **إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط؛ `Alert.alert` داخل `chart/confirmDestructive.ts` فقط (حذف الحساب عبر `confirmDestructive`)؛ «درجة الاتفاق» أُزيلت (تعليقان)؛ الجولة قابلة للإعادة (`AccountScreen` ⇐ `OnboardingOverlay`)؛ التيك المتجمّد يُرفض (`acceptTick` + `TICK_STALE_MS`، و`at` بساعة الجهاز مطروحاً منها العمر عند الخادم ⇒ المقارنة بـ`Date.now()` متّسقة). مسح AST جديد: كل عنصر بدور tab/radio/switch/checkbox/togglebutton/menuitem بلا `accessibilityState`/`aria-*` ⇒ صفر (المرشّح الوحيد `adjustable`، أُصلح أعلاه). عناصر السحب الأخرى: `PairDrumWheel` له أزرار سابق/حالي/تالٍ، ومقابض `FrameSizedGrid` تخطيط فقط.
