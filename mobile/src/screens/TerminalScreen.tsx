@@ -52,7 +52,7 @@ import { playSoftClick } from '../audio/playSoftClick';
 import { notify } from '../chart/confirmDestructive';
 import { createSeriesCache, seriesCacheKey } from '../chart/seriesCache';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
-import { livePriceForChart } from '../chart/liveSeries';
+import { headerChangePct, livePriceForChart } from '../chart/liveSeries';
 import { provenanceLabel, tickStatusLabel, normalizeProvenance } from '../chart/dataSource';
 import { marketStatusLabel } from '../chart/marketHours';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
@@ -916,6 +916,8 @@ export function TerminalScreen() {
     [phoneWatchSymbols]
   );
   const stripDailyRefs = useDailyRefs(phone ? phoneStripSymbols : []);
+  // رأس الشاشة العريضة: تغيّر اليوم كما بـ`ChartFrame`/قائمة المتابعة لا `series.change_pct` (من أول شمعة محمّلة).
+  const headDailyRefs = useDailyRefs(phone ? [] : [symbol]);
   // إبقاء الزوج النشط ظاهراً بشريط الهاتف حين يتبدّل من مكان آخر (عجلة الأزواج/البحث/التنبيه).
   const phoneStripRef = useRef<ScrollView | null>(null);
   const phoneStripX = useRef<Record<string, number>>({});
@@ -1556,7 +1558,13 @@ export function TerminalScreen() {
                   // و«+0.00%» أخضر كذلك **بلا بيانات أصلاً** (السلسلة لم تصل)، ويطبع نسبة السلسلة
                   // التجريبية (`mockSeries` بعد فشل الشبكة) كأنها تغيّر السوق. الآن `formatPct`
                   // المعتمدة، واللون من الرقم المطبوع، و«—» حين لا نسبة حقيقية.
-                  const pct = series && series.data_source?.kind !== 'demo' ? series.change_pct : null;
+                  // و`change_pct` نفسها من أول شمعة محمّلة (≈6 أشهر على D، شهر على 4H) ومجمّدة عند الجلب
+                  // بجانب سعر حيّ: EURUSD 4H صاعد أسبوعاً وهابط اليوم كان «+3.33%» أخضر هنا و«−0.09%» بالإطار.
+                  // الآن تغيّر اليوم من السعر المطبوع نفسه (`headerChangePct`).
+                  const pct =
+                    series && series.data_source?.kind !== 'demo'
+                      ? headerChangePct(series, liveTicks[symbol]?.price ?? null, headDailyRefs[symbol.toUpperCase()])
+                      : null;
                   const dir = pctDirection(pct);
                   return (
                     <Text

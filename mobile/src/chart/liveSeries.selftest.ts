@@ -111,4 +111,17 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   assert.ok(Math.abs(headerChangePct(demo, 1.1716, 1.17) - 1) < 1e-9);
 }
 
+// رأس TerminalScreen العريض: سلسلة 4H صاعدة أسبوعاً (change_pct +3.33%) واليوم هابط ⇒ السالب لا نسبة السلسلة
+{
+  const up: ChartSeries = {
+    ...eur,
+    timeframe: '4h',
+    candles: eur.candles.map((c, i) => ({ ...c, close: i === 0 ? 1.05 : 1.085 })),
+    change_pct: 3.33,
+    last: 1.085,
+  };
+  const pct = headerChangePct(up, 1.083, 1.084);
+  assert.ok(pct < 0 && Math.abs(pct - ((1.083 - 1.084) / 1.084) * 100) < 1e-9, `daily −0.09%, got ${pct}`);
+}
+
 console.log('liveSeries selftest: OK');
