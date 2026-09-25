@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 24، بعد c320213) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 25، بعد 541ac5d) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -19,12 +19,12 @@
 | QA | بلا مالك | **a11y (تصحيح QA13)**: `AccountScreen` :195 :324 :338 :439 :477 :493 لها نصّ ابن (الاسم مقروء) لكنها شرائح اختيار بلا `accessibilityState` (اللغة المختارة إلخ)؛ `MessagesScreen` :93 :144 :179 (ميّتة — ⛔ أنس 10) | QA3 ★ |
 | QA | chart + بلا مالك | **(c) جديد QA13**: 32 زرّاً تتلوّن حين تُختار بلا `accessibilityState={{ selected }}` ⇒ قارئ الشاشة لا يعرف المختار. (chart أنجز `IndicatorForecastPanel` d7c7fa7 ⇒ 31). بلا مالك: `AlertsPanel` :932 :950، `BacktestPanel` :175، `FocusChartModal` :322 :362، `FrameSizedGrid` :400 :414، `SocialConsensusPanel` :189، `VotePanel` :250 :265، `SymbolPairMenu` :49 :82 (`expanded`)، `PanSpeedSlider` :137 (+ Rails/Dock/SidePanel/TimeframeBar/Account أعلاه) | QA13 ★ |
 | chart+QA | بلا مالك | **`useMultiLiveTicks.ts` بلا حدّ تقادم ولا رفض ≤0** (`useLiveTicks` 20ث) ⇒ قائمة المتابعة قد تعرض سعراً متجمّداً. (مرجع التنبيه أُصلح عند المستهلك: `freshTickRefPrice` d68e485) | chart2 ★ |
-| chart | بلا مالك | `FocusChartModal`: الرأس يطبع تيك الرمز الجديد فوق شموع القديم؛ «+0.00%» أخضر | chart3 ★ |
+| chart+QA | بلا مالك | `FocusChartModal`: الرأس يطبع تيك الرمز الجديد فوق شموع القديم؛ «+0.00%» أخضر. **جديد QA25**: النسبة :283-288 = `series.change_pct` (أول شمعة محمّلة ← آخرها، `liveSeries.ts:105`) لا `headerChangePct` كباقي الرؤوس ⇒ الزوج نفسه +0.1% على 15د و−1.8% على 4س | chart3 ★ |
 | chart | الجميع | 10 `Alert.alert` باقية بـ5 ملفات (Alerts ×4، IndicatorAlerts ×2، Watchlist ×2، FocusChart ×1، Account ×1) ← `confirmDestructive`/`notify` — دالّة فارغة على الويب. **أخطرها** `AccountScreen.tsx:162` تأكيد «حذف الحساب» ⇒ الحذف لا يعمل على الويب (launch61) | chart29 ★ |
 | QA+tools | بلا مالك | **(a)** `dirColor`/`dirLabel` ×3 (Analysts/IndicatorForecast/SocialConsensus)؛ `VotePanel.tsx:82` نسخة `planSummaryText` | QA1 ★ |
 | QA+tools | بلا مالك | **(a)** `QUICK_SYMBOLS` ما زال منسوخاً في `BacktestPanel.tsx:54` و`IndicatorAlertsPanel.tsx:61` ← `import { QUICK_SYMBOLS } from '../tradePlan'` (الثابت جاهز db44382) | QA6 ★ |
 | QA | بلا مالك | **(a)** `RECONNECT_BASE_MS`/`MAX_MS` ×2 (`useLiveTicks.ts:7` و`useMultiLiveTicks.ts:6`) — chart: التوحيد لمالك `useMultiLiveTicks` | QA6 ★ |
-| tools | أنس | تغيّر اليوم بقائمة المتابعة يتدحرج 00:00 UTC، وPDH/PDL بالشارت 17:00 نيويورك ⇒ «أمس» مختلف بين الشاشتين 21:00–24:00 UTC — توحيد؟ | tools38 |
+| tools | أنس | تغيّر اليوم بقائمة المتابعة يتدحرج 00:00 UTC، وPDH/PDL بالشارت 17:00 نيويورك ⇒ «أمس» مختلف بين الشاشتين 21:00–24:00 UTC — توحيد؟ **QA25**: `dailyChange.ts:34` (يوم UTC) يغذّي أيضاً الشريط العلوي ورأس الشارت ⇒ نسبة الرأس تناقض خطّ PDC على الشارت نفسه | tools38 |
 | QA | الجميع | **(a)** تصديرات بلا مستخدم خارج ملفها: `deleteTemplate`، `subscribeTemplatesSaveError`، `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite`، `PINE_PRESETS`، `getToolPanel`، `__setWatchlistStorageForTests`/`__reset…` (ولا اختبار)، `motion`، `FRAME_SYMBOLS`، mock.ts ×3 (+ `TF_SECONDS` منسوخ بـ`mock.ts:16` من `timeframes.ts:17`)؛ مفتاح `accNetLoadError` بلا مستعمل (launch63) | QA1 ★ |
 | launch | chart | DeMarker 0..100 والمنصات 0..1 (قرار ⇒ أنس) | launch48 |
 | tools+launch+QA | الخادم | **spread مُختلَق** = السعر × 0.00008 (`twelve_data.py:316`) موسوم `provider`، يناقض `backtest.py:26-37`؛ يُزيح أسعار الدفتر (`tradePlan.ts:669 :741`) | tools13 ★ |
@@ -43,7 +43,10 @@
 | QA | بلا مالك | **(d) QA19، منخفض**: `CalendarPanel.tsx:37-38` `ROW_SOON_MS = 3h`/`NOW_WINDOW_MS = 15m` أرقام منسوخة من `NEWS_HORIZON_MS`/`NEWS_GRACE_MS` (`chart/newsRisk.ts:224-225`) والتعليق يعد بأن «قريب» واحد بالشاشتين ⇒ `import` بدل النسخ كي لا ينحرفا. tools: الملف ليس بنطاقه، الثابتان مُصدَّران جاهزان | QA19 ★ |
 | QA | بلا مالك / الخادم | **(e) QA20**: «Confidence 83%» ما زالت تُعرض بـ`AnalystsPanel.tsx:115` و`SocialConsensusPanel.tsx:219` من المعادلة الثابتة `signal_hub.py:79-82` (\|avg\|×0.75+0.35) — `IndicatorForecastPanel` أزالها لهذا السبب بالضبط (:153 «تُقرأ كاحتمال نجاح»). ← إخفاء السطر أو عدد الأصوات بدلها | QA20 ★ |
 | QA | بلا مالك (`AccountScreen`) + الخادم | **(d) جديد QA24**: التسجيل `main.py:203-205` يرفض اسماً <3 أو >32 حرفاً وكلمة مرور <4 بـ422، والشاشة `AccountScreen.tsx` بلا `maxLength` ولا تلميح بالحدود ⇒ المتداول يرى «تحقّق من الإيميل ورمز الدعوة والاتصال» (`registerError`) — سبب خاطئ. وحدّ 4 أحرف لكلمة المرور ضعيف لحساب مالي (أنس) | QA24 |
+| QA | chart | **(e) جديد QA25**: `marketHours.ts:13` `ALWAYS_OPEN` مطابقة حرفية `BTCUSD`/`ETHUSD` ⇒ `SOLUSD`/`XRPUSD`/`BTCUSDT`/`BTCUSDm` من البحث «السوق مغلق» السبت (جُرّب بـ`tsx`)، والأسهم تتبع ساعات الفوركس. ← regex الكريبتو بـ`newsRisk.ts:119`. **محتمل (غير مؤكَّد)**: DXY (عقد ICE) وUKOIL (برنت ICE) بلا استراحتهما اليومية ⇒ «مفتوح» بلا أسعار | QA25 |
+| QA | launch + tools | **(e) جديد QA25**: التقرير الأسبوعي `reportJournalDataLine` (`locales.ts:2596`) «PnL=0.46%» من `total_pnl_pct` (`WeeklyReportPanel.tsx:111`) = مجموع حركات السعر لا ربح الحساب — يُقرأ كـ0.46% من الحساب؛ الدفتر نفسه يسمّيه «مجموع حركة السعر (الحجم مُهمَل)» | QA25 |
+| chart | launch | مفاتيح `mcNudge*` (أزرار ±pip للرسم المحدَّد بالهاتف) — 0 بـ`locales.ts` | chart15 |
+| launch | أنس | **ترخيص مصادر البيانات** قبل الرفع: ForexFactory/DailyFX/Twelve Data بلا شرط استخدام مقروء ولا ذكر للمصدر بالواجهة (`RELEASE-MOBILE.md` §0) | launch73 |
 
-**أُسقط هذه الدورة (تحقّقتُ بالكود):** launch72 ← `riskCalcPipValueAtStop`/`Hint` مربوطان `PositionSizePanel.tsx:1431 :1437` (`d33f9ab`)؛ ملاحظة chart «`fitChannelWidth` باللوغاريتمي» أُصلحت (`55bb0f3`، selftest).
-**تحقّق بلا تغيير:** `Alert.alert` 10 بـ5 ملفات؛ «₴» ×2؛ `TimeframeBar`/Rails/Dock/SidePanel صفر `accessibilityState`؛ `accNetLoadError` 0؛ ملاحظة التنبيه `main.py:199 :399` بلا حدّ (QA14).
-**مراجعة (d) حدود بين الملفات:** كل `maxLength` بالتطبيق يطابق الخادم (رموز 12، ملاحظة الدفتر/التصويت 500، الدردشة 1000) عدا التسجيل (QA24 أعلاه). `VoteCreate.symbol` 20 مقابل 12 بغيره — غير ضارّ.
+**أُسقط هذه الدورة:** لا شيء (chart15/launch73 بلا صفّ منفَّذ). **تحقّق بلا تغيير:** `Alert.alert` 10 بـ5 ملفات؛ «₴» ×2؛ `TimeframeBar`/Rails/Dock/SidePanel صفر `accessibilityState`؛ `accNetLoadError` 0؛ `main.py:203-205` كما هي (QA24).
+**مراجعة (e) ما يُحرج أمام متداول:** سليم — ساعات الفوركس الأسبوعية وDST، الجلسات، منازل الأسعار، اللوت/الهامش، الإعدادات الافتراضية للمؤشرات (RSI 14، MACD 12/26/9، BB 20/2، إيشيموكو 9/26/52)، الإنجليزية. جديد: الصفّان QA25 أعلاه + إضافتان لـchart3/tools38.
