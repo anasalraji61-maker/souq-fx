@@ -299,6 +299,29 @@ console.log('dailyChange freshTickRefPrice selftest OK');
 }
 console.log('dailyChange holiday sessions selftest OK');
 
+// إعادة افتتاح العطلة متأخّرة لغير العملات: الذهب 18:00 نيويورك (23:00Z) ومؤشر الدولار 20:00 (01:00Z اليوم التالي) — ساعاتهما
+// المغلقة بعد افتتاح العملات (22:00Z) كانت «0.00%» (مرجعها إغلاق 24 = السعر الحيّ) بدل حركة آخر يوم تداول
+{
+  const c = (iso: string, close: number) => ({ time: D(iso), close });
+  const x = [c('2025-12-22', 100), c('2025-12-23', 101), c('2025-12-24', 102)];
+  assert.equal(prevClose(x, D('2025-12-25') + 22 * H + 30 * 60, 'XAUUSD'), 101, 'gold closed 22:30Z');
+  assert.equal(prevClose(x, D('2025-12-25') + 22 * H + 30 * 60, 'DXY'), 101, 'dxy closed 22:30Z');
+  assert.equal(prevClose(x, D('2025-12-25') + 23 * H + 30 * 60, 'DXY'), 101, 'dxy closed 23:30Z');
+  assert.equal(prevClose(x, D('2025-12-26') + 30 * 60, 'DXY'), 101, 'dxy closed 00:30Z next day');
+  // بعد افتتاح كلٍّ منهما: جلسة جديدة مرجعها إغلاق 24 (كالعملات)
+  assert.equal(prevClose(x, D('2025-12-25') + 23 * H + 30 * 60, 'XAUUSD'), 102, 'gold open 23:30Z');
+  assert.equal(prevClose(x, D('2025-12-26') + 1 * H + 30 * 60, 'DXY'), 102, 'dxy open 01:30Z');
+  assert.equal(prevClose(x, D('2025-12-25') + 22 * H + 30 * 60, 'EURUSD'), 102, 'eurusd open 22:30Z');
+  assert.equal(prevClose(x, D('2025-12-26') + 30 * 60, 'EURUSD'), 102, 'eurusd 00:30Z next day');
+  // رأس السنة 2026 (خميس)
+  const ny = [c('2025-12-30', 98), c('2025-12-31', 99)];
+  assert.equal(prevClose(ny, D('2026-01-01') + 22 * H + 30 * 60, 'XAUUSD'), 98);
+  assert.equal(prevClose(ny, D('2026-01-01') + 22 * H + 30 * 60, 'DXY'), 98);
+  assert.equal(prevClose(ny, D('2026-01-02') + 30 * 60, 'DXY'), 98);
+  assert.equal(prevClose(ny, D('2026-01-02') + 12 * H, 'DXY'), 99);
+}
+console.log('dailyChange late holiday reopen selftest OK');
+
 // isVerifiedTickKind (ui4): provider/cache فقط سعرٌ حيّ يُلوَّن وتُحسب نسبته
 {
   assert.equal(isVerifiedTickKind('provider'), true);
