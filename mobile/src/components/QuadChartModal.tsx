@@ -389,7 +389,19 @@ export function QuadChartModal({
                     onCrossTime={syncTime && isLeader ? setCrossTime : undefined}
                   />
                 ) : (
-                  <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
+                  // chart-r47: الدوّار وحده كان لا يقول ماذا يُحمَّل — والخلايا الأربع تبدو متطابقة أثناء التحميل.
+                  <View
+                    style={[styles.cellLoading, { height: cellH }]}
+                    accessible
+                    accessibilityRole="progressbar"
+                    accessibilityState={{ busy: true }}
+                    accessibilityLabel={t.chartFirstLoad.replace('{symbol}', sym).replace('{tf}', tf)}
+                  >
+                    <ActivityIndicator color={colors.accent} />
+                    <Text style={styles.cellLoadingText} numberOfLines={2}>
+                      {t.chartFirstLoad.replace('{symbol}', sym).replace('{tf}', tf)}
+                    </Text>
+                  </View>
                 )}
               </Pressable>
             );
@@ -402,6 +414,8 @@ export function QuadChartModal({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
+  cellLoading: { alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingHorizontal: spacing.sm },
+  cellLoadingText: { color: colors.textDim, fontSize: 11, textAlign: 'center' },
   top: {
     flexDirection: 'row',
     alignItems: 'center',
