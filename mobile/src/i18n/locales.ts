@@ -419,6 +419,8 @@ export type Dict = {
   riskCalcRiskWithSpread: string;
   riskCalcSpreadLotsWithin: string;
   riskCalcSpreadTooWide: string;
+  /** «12 points» بخانة السبريد ⇒ «اكتب 1.2» (`slPipsInPoints` يصلح للخانة نفسها) — طلب tools63؛ `{value}` كما كُتب و`{pips}` ÷10 */
+  riskCalcSpreadPointsHint: string;
   /** الوقف ليس أبعد من السبريد — يُضرب لحظة الفتح تقريباً (طلب وكيل الأدوات)؛ `{sl}` و`{spread}` بالنقاط كما تُعرض */
   riskCalcStopInsideSpread: string;
   riskCalcCommission: string;
@@ -498,6 +500,8 @@ export type Dict = {
   journalStatPriceMoveSum: string;
   /** سطر صفقات السنت (مالها بعقد ÷100، `smallContractSpec`): المبلغ بـUSC لا USD. micro لا يحتاج سطراً: مبلغه بعملة التسعير كالحساب العادي */
   journalCentMoneyNote: string;
+  /** سطر رمز حساب mini بالدفتر (`isMiniJournalSymbol`): نقاط وأسعار بلا مال — طلب tools63 */
+  journalMiniNoMoney: string;
   /** مبلغ صفقة سنت: `{usc}` بالسنت، `{usd}` = usc ÷ 100 — كلاهما منسّقان مع الإشارة */
   journalMoneyUsc: string;
   journalStatBestWorst: string;
@@ -1537,6 +1541,7 @@ const ar: Dict = {
   riskCalcRiskWithSpread: 'المخاطرة شاملة السبريد',
   riskCalcSpreadLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة السبريد: {lots} lot',
   riskCalcSpreadTooWide: 'سبريد {n} pip غير واقعي — هل كتبتَ سعراً أو points بدل الـpip؟ اكتب الفرق بين Ask وBid بالـpip (مثل 1.5).',
+  riskCalcSpreadPointsHint: 'سبريد «{value}» بالنقاط (points) — كل 10 points = 1 pip، فاكتبه هنا {pips}',
   riskCalcStopInsideSpread:
     'الوقف ({sl} pip) ليس أبعد من السبريد ({spread} pip) — قد يُضرب فور فتح الصفقة. وسّع الوقف وقلّل اللوت، أو انتظر سبريداً أضيق.',
   riskCalcCommission: 'عمولة اختيارية لكل لوت، فتحاً وإغلاقاً',
@@ -1608,6 +1613,8 @@ const ar: Dict = {
   journalStatWinRate: 'نسبة نجاح: {pct}%',
   journalStatPriceMoveSum: 'مجموع حركة السعر (بلا حجم الصفقة): {pct}%',
   journalCentMoneyNote: 'حساب سنت: المبالغ بالسنت الأمريكي (USC) كما تظهر في حسابك — كل 100 USC = 1 USD',
+  journalMiniNoMoney:
+    'حساب mini: الدفتر يحفظ النقاط والأسعار بلا مبالغ — حجم لوت mini يختلف بين الوسطاء (10,000 وحدة عند أكثرهم)، فلا نحسب مالاً قد يكون خاطئاً. راجع الربح بمنصّتك',
   journalMoneyUsc: '{usc} USC (≈ {usd} USD)',
   journalStatBestWorst: 'أفضل/أسوأ: {best}% / {worst}%',
   journalStatsPending:
@@ -2632,6 +2639,7 @@ const enUS: Dict = {
   riskCalcRiskWithSpread: 'Risk including spread',
   riskCalcSpreadLotsWithin: 'To keep your risk at {pct}% including spread: {lots} lot',
   riskCalcSpreadTooWide: 'A {n}-pip spread isn’t realistic — did you type a price or points instead of pips? Enter the gap between Ask and Bid in pips (e.g. 1.5).',
+  riskCalcSpreadPointsHint: 'A spread of “{value}” is in points — 10 points = 1 pip, so type {pips} here',
   riskCalcStopInsideSpread:
     'Your stop ({sl} pips) is no wider than the spread ({spread} pips) — it can be hit the moment the trade opens. Widen the stop and cut the lot, or wait for a tighter spread.',
   riskCalcCommission: 'Optional commission per lot, open + close',
@@ -2703,6 +2711,8 @@ const enUS: Dict = {
   journalStatWinRate: 'Win rate: {pct}%',
   journalStatPriceMoveSum: 'Sum of price moves (lot size ignored): {pct}%',
   journalCentMoneyNote: 'Cent account: amounts are in US cents (USC), as your account shows them — 100 USC = 1 USD',
+  journalMiniNoMoney:
+    'Mini account: the journal keeps pips and prices but no money amounts — a mini lot differs between brokers (10,000 units at most), so we don’t guess a figure that could be wrong. Check the profit on your platform',
   journalMoneyUsc: '{usc} USC (≈ {usd} USD)',
   journalStatBestWorst: 'Best/Worst: {best}% / {worst}%',
   journalStatsPending:
@@ -3753,6 +3763,7 @@ const ku: Dict = {
   riskCalcRiskWithSpread: 'مەترسی لەگەڵ سپرێد',
   riskCalcSpreadLotsWithin: 'بۆ ئەوەی مەترسییەکەت لەگەڵ سپرێد لە {pct}% بمێنێتەوە: {lots} lot',
   riskCalcSpreadTooWide: 'سپرێدی {n} pip ئاسایی نییە — نرخ یان points ت نووسیوە لە جیاتی pip؟ جیاوازی نێوان Ask و Bid بە pip بنووسە (وەک 1.5).',
+  riskCalcSpreadPointsHint: 'سپرێدی «{value}» بە خاڵە (points) — هەر 10 points = 1 pip، بۆیە لێرە {pips} بنووسە',
   riskCalcStopInsideSpread:
     'وەستان ({sl} pip) لە سپرێد ({spread} pip) دوورتر نییە — لەوانەیە هەر کە مامەڵەکە کرایەوە لێی بدرێت. وەستان فراوانتر بکە و لۆت کەم بکەرەوە، یان چاوەڕێی سپرێدی تەسکتر بکە.',
   riskCalcCommission: 'کۆمیسیۆنی ئیختیاری بۆ هەر lot، کردنەوە و داخستن',
@@ -3826,6 +3837,8 @@ const ku: Dict = {
   journalStatWinRate: 'ڕێژەی سەرکەوتن: {pct}%',
   journalStatPriceMoveSum: 'کۆی جووڵەی نرخ (بێ قەبارەی مامەڵە): {pct}%',
   journalCentMoneyNote: 'هەژماری سەنت: بڕەکان بە سەنتی ئەمریکین (USC)، وەک لە هەژمارەکەتدا دەردەکەون — هەر 100 USC = 1 USD',
+  journalMiniNoMoney:
+    'هەژماری mini: دەفتەرەکە pip و نرخەکان تۆمار دەکات بەبێ بڕی پارە — قەبارەی لۆتی mini لە بڕۆکەرێکەوە بۆ یەکێکی تر جیاوازە (لای زۆربەیان 10,000 یەکە)، بۆیە پارەیەک ناخەمڵێنین کە لەوانەیە هەڵە بێت. قازانج لە پلاتفۆرمەکەت ببینە',
   journalMoneyUsc: '{usc} USC (≈ {usd} USD)',
   journalStatBestWorst: 'باشترین/خراپترین: {best}% / {worst}%',
   journalStatsPending:
