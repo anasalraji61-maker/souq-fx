@@ -19,6 +19,7 @@ for (const lang of ['ar', 'en-US', 'en-GB', 'ku'] as const) {
   const t = DICTS[lang];
   check(`${lang} reserved`, registerErrorText(t, err(400, 'username reserved')) === t.regErrReserved);
   check(`${lang} invisible`, registerErrorText(t, err(400, 'username has invisible or look-alike characters')) === t.regErrInvisible);
+  check(`${lang} link or @`, registerErrorText(t, err(400, 'username has a link or @')) === t.regErrLink);
   check(`${lang} taken`, registerErrorText(t, err(400, 'username or email taken')) === t.regErrUsernameTaken);
   const emailTaken = registerErrorText(t, err(400, 'email taken'));
   check(`${lang} email taken fills {login}`, emailTaken.includes(t.login) && !emailTaken.includes('{login}'));

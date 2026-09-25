@@ -15,6 +15,7 @@ export function registerErrorText(t: Dict, err: unknown): string {
     const byDetail: Record<string, string> = {
       'username reserved': t.regErrReserved,
       'username has invisible or look-alike characters': t.regErrInvisible,
+      'username has a link or @': t.regErrLink,
       'username or email taken': t.regErrUsernameTaken,
       'username taken': t.regErrUsernameTaken,
       'email taken': t.regErrEmailTaken,

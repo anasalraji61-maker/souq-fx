@@ -57,6 +57,7 @@ export type Dict = {
   /** سبب رفض التسجيل من `detail` الخادم — يختارها `registerErrorText` (i18n/authErrors.ts)؛ `{login}`/`{trader}` تُملأ هناك. */
   regErrReserved: string;
   regErrInvisible: string;
+  regErrLink: string;
   regErrUsernameTaken: string;
   regErrEmailTaken: string;
   regErrInvalidEmail: string;
@@ -1476,6 +1477,7 @@ const ar: Dict = {
   registerError: 'تعذّر التسجيل — لم يصل الطلب إلى الخادم أو لم يكتمل. تحقّق من اتصالك بالإنترنت ثم حاول مرة أخرى',
   regErrReserved: 'هذا الاسم محجوز — اختر اسماً آخر',
   regErrInvisible: 'في الاسم محرف مخفي أو حرف بعرض كامل (يأتي غالباً مع النسخ واللصق) — اكتبه بنفسك من لوحة المفاتيح',
+  regErrLink: 'لا يقبل الاسم رابطاً ولا «@» ولا «/» — يظهر اسمك على كل رسالة، فاختر اسماً بلا عنوان موقع',
   regErrUsernameTaken: 'هذا الاسم مسجَّل من قبل — اختر اسماً آخر، أو ادخل إن كان حسابك',
   regErrEmailTaken: 'هذا الإيميل مسجَّل من قبل — ادخل به من «{login}» بدل إنشاء حساب جديد',
   regErrInvalidEmail: 'الإيميل غير صحيح — شكله مثل name@example.com',
@@ -2682,6 +2684,7 @@ const enUS: Dict = {
   registerError: "Sign-up didn't go through — the request didn't reach the server or didn't finish. Check your internet connection and try again",
   regErrReserved: 'That username is reserved — pick another one',
   regErrInvisible: 'The username contains a hidden or full-width character (copy and paste often brings these along) — type it in from the keyboard',
+  regErrLink: 'Usernames can’t contain a link, “@” or “/” — your name appears on every message, so pick one without a web address',
   regErrUsernameTaken: 'That username is already registered — pick another one, or log in if it’s yours',
   regErrEmailTaken: 'That email is already registered — use “{login}” instead of creating a new account',
   regErrInvalidEmail: 'That email doesn’t look right — it should look like name@example.com',
@@ -3915,6 +3918,7 @@ const ku: Dict = {
   registerError: 'تۆمارکردن سەرکەوتوو نەبوو — داواکارییەکە نەگەیشتە ڕاژەکار یان تەواو نەبوو. پەیوەندیت بە ئینتەرنێتەوە بپشکنە و دووبارە هەوڵ بدەرەوە',
   regErrReserved: 'ئەم ناوە پارێزراوە — ناوێکی تر هەڵبژێرە',
   regErrInvisible: 'ناوەکە پیتێکی شاراوە یان پانی تێدایە (زۆرجار لەگەڵ کۆپی و پەیست دێت) — خۆت بە کیبۆرد بینووسە',
+  regErrLink: 'ناو ناتوانێت بەستەر یان «@» یان «/»ـی تێدا بێت — ناوەکەت لەسەر هەموو نامەیەک دەردەکەوێت، ناوێک بێ ناونیشانی ماڵپەڕ هەڵبژێرە',
   regErrUsernameTaken: 'ئەم ناوە پێشتر تۆمار کراوە — ناوێکی تر هەڵبژێرە، یان ئەگەر هی خۆتە بچۆ ژوورەوە',
   regErrEmailTaken: 'ئەم ئیمەیڵە پێشتر تۆمار کراوە — لە «{login}»ەوە پێی بچۆ ژوورەوە لە جیاتی دروستکردنی هەژمارێکی نوێ',
   regErrInvalidEmail: 'ئیمەیڵەکە دروست نییە — دەبێت وەک name@example.com بێت',
