@@ -52,26 +52,27 @@ def _price(symbol: str) -> float | None:
     return float(p) if p is not None else None
 
 
-def _recent_minutes(symbol: str) -> tuple[float | None, list[dict]]:
-    """(آخر سعر، شموع الدقيقة الأخيرة) بطلب واحد للمزوّد — نفس كلفة `fetch_quote` السابقة.
+def _recent_minutes(symbol: str) -> tuple[float | None, list[dict], float | None]:
+    """(آخر سعر، شموع الدقيقة الأخيرة، لحظة جلب السعر أو None) بطلب واحد للمزوّد — نفس كلفة `fetch_quote` السابقة.
 
     الفحص كل 60 ثانية بآخر سعر فقط كان يفوّت ذيل شمعة يلمس المستوى ثم يرتدّ بين فحصين — بالضبط
     ما يضعه متداول التجزئة تنبيهاً عليه (قمة/قاع سابق). شموع 1m تعطي high/low ما بين الفحصين.
-    فشل السلسلة → السعر اللحظي القديم (`_price`) بلا شموع."""
+    فشل السلسلة → السعر اللحظي القديم (`_price`) بلا شموع ولا لحظة جلب."""
     if not market.configured():  # بلا مفتاح: لا سجلّ تحذير كل دقيقة — السعر من الـWebSocket كما كان
-        return _price(symbol), []
+        return _price(symbol), [], None
     try:
-        candles = market.fetch_time_series(symbol, "1m", outputsize=5)
+        candles, meta = market.fetch_time_series_with_meta(symbol, "1m", outputsize=5)
         if candles:
             last = float(candles[-1]["close"])
             # عند 429 قد تُخدَم سلسلة قديمة (حتى 15 دقيقة): إغلاقها ليس «السعر الحالي» — قد يسبق التسليح
             # فيُطلق تنبيهاً على سعر لم يعد قائماً. الذيول تبقى صالحة (تُفلتر بلحظة التسليح).
             if last > 0 and time.time() - int(candles[-1]["time"]) <= 180:
-                return last, candles
-            return _price(symbol), candles
+                at = meta.get("as_of") if isinstance(meta, dict) else None
+                return last, candles, float(at) if at is not None else None
+            return _price(symbol), candles, None
     except Exception:
         log.warning("1m series fetch failed for %s — falling back to quote", symbol, exc_info=True)
-    return _price(symbol), []
+    return _price(symbol), [], None
 
 
 def _armed_at(ts: object) -> float | None:
@@ -82,16 +83,19 @@ def _armed_at(ts: object) -> float | None:
         return None
 
 
-def _price_hit(a: dict, q: float, candles: list[dict]) -> bool:
+def _price_hit(a: dict, q: float, candles: list[dict], q_at: float | None = None) -> bool:
     """السعر الحالي عبر المستوى، أو ذيل شمعة 1m بدأت **بعد** دقيقة التسليح لمسه.
 
     دقيقة التسليح نفسها مستبعدة: قمّتها قد تسبق لحظة إنشاء التنبيه (تنبيه «فوق» يُطلق فوراً
-    على حركة حدثت قبله). تنبيه بلا `ts` مقروء → السعر الحالي فقط (السلوك القديم)."""
+    على حركة حدثت قبله). تنبيه بلا `ts` مقروء → السعر الحالي فقط (السلوك القديم).
+    `q_at` = لحظة جلب `q`: إغلاق 1m من كاش (45ث، وحتى 3د) جُلب **قبل** التسليح ليس سعراً بعده — كان
+    1.1005 مخزّناً يُطلق «فوق 1.1000» سُلِّح والسعر 1.0995، فوراً عبر `/api/alerts/check` بعد الإنشاء."""
     level = float(a["price"])
     above = a["condition"] == "above"
-    if (above and q >= level) or (not above and q <= level):
-        return True
     armed = _armed_at(a.get("ts"))
+    q_current = q_at is None or armed is None or q_at >= armed
+    if q_current and ((above and q >= level) or (not above and q <= level)):
+        return True
     if armed is None:
         return False
     first_ok = (int(armed) // 60) * 60 + 60
@@ -281,7 +285,7 @@ def _check_once() -> None:
     # (it used to go to every registered device, leaking one trader's alerts to all the others).
     triggered_msgs: list[tuple[int | None, str | None, dict]] = []
     # طلب واحد لكل رمز بالدورة: 30 تنبيهاً على EURUSD كانت 30 طلباً للمزوّد (تستنزف حد Twelve Data).
-    prices: dict[str, tuple[float | None, list[dict]]] = {}
+    prices: dict[str, tuple[float | None, list[dict], float | None]] = {}
 
     for a in db.list_alerts(all_users=True):
         try:
@@ -290,11 +294,11 @@ def _check_once() -> None:
             key = str(a["symbol"]).upper()
             if key not in prices:
                 prices[key] = _recent_minutes(a["symbol"])
-            q, candles = prices[key]
+            q, candles, q_at = prices[key]
             if q is None:
                 log.warning("no price available for alert id=%s symbol=%s", a.get("id"), a.get("symbol"))
                 continue
-            if _price_hit(a, q, candles) and db.mark_alert_triggered(a["id"], a):
+            if _price_hit(a, q, candles, q_at) and db.mark_alert_triggered(a["id"], a):
                 triggered_msgs.append((
                     a.get("user_id"),
                     a.get("owner_key"),

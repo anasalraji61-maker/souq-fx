@@ -21,7 +21,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(db, "DB_PATH", path)
     monkeypatch.setattr(db, "_PBKDF2_ITERATIONS", 1_000)
     db.init_db()
-    monkeypatch.setattr(alert_worker, "_recent_minutes", lambda sym: (1.2000, []))
+    monkeypatch.setattr(alert_worker, "_recent_minutes", lambda sym: (1.2000, [], None))
     return TestClient(main.app, raise_server_exceptions=False)
 
 
@@ -89,7 +89,7 @@ def test_alert_edited_during_the_price_fetch_is_not_fired_at_the_old_level(clien
         r = client.patch(f"/api/alerts/{aid}", json={"symbol": "EURUSD", "condition": "above",
                                                       "price": 1.3000}, headers=_DEVICE)
         assert r.status_code == 200, r.text
-        return 1.2000, []
+        return 1.2000, [], None
 
     monkeypatch.setattr(alert_worker, "_recent_minutes", fetch_while_user_edits)
     res = client.post("/api/alerts/check", headers=_DEVICE).json()
@@ -106,7 +106,7 @@ def test_worker_does_not_fire_an_alert_edited_during_its_fetch(client, monkeypat
     def fetch_while_user_edits(sym):
         client.patch(f"/api/alerts/{aid}", json={"symbol": "EURUSD", "condition": "above",
                                                   "price": 1.3000}, headers=_DEVICE)
-        return 1.2000, []
+        return 1.2000, [], None
 
     monkeypatch.setattr(alert_worker, "_recent_minutes", fetch_while_user_edits)
     alert_worker._check_once()
@@ -152,3 +152,29 @@ def test_price_push_states_the_condition_not_a_crossing(lang, cond, words):
     _, body = alert_worker._compose({"kind": "price", "symbol": "EURUSD", "condition": cond, "price": 1.1}, lang)
     assert body == f"EURUSD {words}"
     assert "rose" not in body and "fell" not in body and "تجاوز" not in body and "نزل" not in body
+
+
+def test_a_cached_close_fetched_before_arming_does_not_fire(client, monkeypatch):
+    """إغلاق 1m مخزّن (1.2000) جُلب قبل إنشاء «فوق 1.1000» ليس سعراً بعده: كان يُطلقه فوراً."""
+    import time as _time
+
+    fetched = _time.time() - 30
+    monkeypatch.setattr(alert_worker, "_recent_minutes", lambda sym: (1.2000, [], fetched))
+    aid = _create(client, 1.1000)
+    res = client.post("/api/alerts/check", headers=_DEVICE).json()
+    assert res["triggered"] == []
+    # الجلب التالي بعد التسليح يُطلقه كالمعتاد
+    monkeypatch.setattr(alert_worker, "_recent_minutes", lambda sym: (1.2000, [], _time.time() + 1))
+    res = client.post("/api/alerts/check", headers=_DEVICE).json()
+    assert [a["id"] for a in res["triggered"]] == [aid]
+
+
+def test_recent_minutes_reports_when_its_close_was_fetched(monkeypatch):
+    import time as _time
+
+    now = int(_time.time())
+    candles = [{"time": now - 60, "open": 1.1, "high": 1.1, "low": 1.1, "close": 1.1}]
+    monkeypatch.setattr(alert_worker.market, "configured", lambda: True)
+    monkeypatch.setattr(alert_worker.market, "fetch_time_series_with_meta",
+                        lambda *a, **k: (candles, {"kind": "cache", "as_of": now - 40}))
+    assert alert_worker._recent_minutes("BTCUSD") == (1.1, candles, now - 40)

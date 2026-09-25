@@ -247,7 +247,7 @@ def test_a_zero_low_tail_does_not_fire_a_below_alert(provider, monkeypatch):
     ]
     rows[3] = {**rows[3], "low": "0"}
     provider["payload"] = {"values": rows}
-    q, candles = alert_worker._recent_minutes("EURUSD")
+    q, candles, _ = alert_worker._recent_minutes("EURUSD")
     armed = _time.strftime("%Y-%m-%dT%H:%M:%S+00:00", _time.gmtime(now - 600))
     alert = {"price": 1.09, "condition": "below", "ts": armed}
     assert not alert_worker._price_hit(alert, q or 1.1020, candles)

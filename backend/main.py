@@ -974,17 +974,17 @@ def check_alerts(user: dict | None = Depends(_auth_user), key: str | None = Depe
     triggered: list[dict] = []
     # طلب واحد لكل رمز (كان طلب quote لكل تنبيه — 10 تنبيهات EURUSD × كل جهاز مفتوح كل دقيقة تستنزف حد
     # Twelve Data)، ونفس قاعدة الـworker: السعر الحالي أو ذيل شمعة 1m بعد دقيقة التسليح.
-    quotes: dict[str, tuple[float | None, list[dict]]] = {}
+    quotes: dict[str, tuple[float | None, list[dict], float | None]] = {}
     for a in db.list_alerts(uid, owner_key=key):
         if not a.get("active") or a.get("triggered"):
             continue
         sym = str(a["symbol"]).upper()
         if sym not in quotes:
             quotes[sym] = alert_worker._recent_minutes(sym)
-        q, candles = quotes[sym]
+        q, candles, q_at = quotes[sym]
         if q is None:
             continue
-        if alert_worker._price_hit(a, q, candles) and db.mark_alert_triggered(a["id"], a):
+        if alert_worker._price_hit(a, q, candles, q_at) and db.mark_alert_triggered(a["id"], a):
             # الصفّ كما استقرّ بالقاعدة لا كما قُرئ قبل القلب: `a` لُقّط قبل
             # `mark_alert_triggered` فيحمل `triggered: false` — أي أن المسار كان يسلّم تنبيهاً
             # **أُطلق للتوّ** موسوماً «يراقب». نفس التصحيح المطبَّق على تنبيهات المؤشر
