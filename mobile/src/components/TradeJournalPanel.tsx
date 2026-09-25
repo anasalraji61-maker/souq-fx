@@ -809,7 +809,23 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     setNote('');
   };
 
+  /**
+   * رمز النموذج وجهته قبل فتح التعديل — تُعادان بعد الحفظ أو الإلغاء. كانا يبقيان من الصفقة المعدَّلة: تعديل بيع
+   * GBPJPY قديم والشارت على EURUSD ⇒ الصفقة التالية تبدأ «GBPJPY بيع»، ودخول EURUSD بلا وقف يُحفظ تحتها بإشارة
+   * ربح معكوسة. زوج الشارت إن تبدّل أثناء التعديل (المؤثّر أعلاه لا يبدّل والخانة مملوءة) يغلب الرمز المحفوظ.
+   */
+  const preEditRef = useRef<{ symbol: string; side: 'buy' | 'sell'; chart: string | undefined } | null>(null);
+  const restorePreEdit = () => {
+    const pre = preEditRef.current;
+    preEditRef.current = null;
+    if (!pre) return;
+    setSymbol(defaultSymbol && defaultSymbol !== pre.chart ? defaultSymbol : pre.symbol);
+    setSide(pre.side);
+  };
+
   const startEdit = (tr: Trade) => {
+    // تعديلٌ فوق تعديل: يبقى ما قبل الأوّل
+    if (!editing) preEditRef.current = { symbol, side, chart: defaultSymbol };
     setEditing(tr);
     setSymbol(tr.symbol);
     setSide(tr.side === 'sell' ? 'sell' : 'buy');
@@ -833,6 +849,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   const cancelEdit = () => {
     setEditing(null);
     resetForm();
+    restorePreEdit();
     setFormError(null);
   };
 
@@ -903,6 +920,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         playSoftClick();
         setEditing(null);
         resetForm();
+        restorePreEdit();
         await refresh();
       } catch {
         if (mountedRef.current) setFormError(t.journalEditError);
