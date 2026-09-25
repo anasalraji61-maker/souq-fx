@@ -2495,7 +2495,7 @@ const enUS: Dict = {
     'Pick from dozens of indicators (RSI, MACD, Bollinger…) or start with a lens that adds a set in one tap: Structure for moving averages, Momentum for RSI and MACD, Liquidity for volume, Bollinger and CVD (on forex, volume and CVD are estimated from candles, not real volume or order flow). Moving averages and Bollinger bands show their values on the price axis in tags that match their lines. For forex: Sessions shades Tokyo, London and New York at their correct hours through daylight saving, and PDH / PDL marks yesterday\'s session high and low.',
   onboardStep4Title: 'Alerts',
   onboardStep4Body:
-    'Fastest way: tap a level on the chart, then 🔔 — no typing. You get a notification when price reaches it (checked about once a minute), so no need to watch the chart all day. To move it, drag its 🔔 label at the chart's edge to the new price. Indicator alerts and notification settings are in the alerts panel.',
+    'Fastest way: tap a level on the chart, then 🔔 — no typing. You get a notification when price reaches it (checked about once a minute), so no need to watch the chart all day. To move it, drag its 🔔 label at the edge of the chart to the new price. Indicator alerts and notification settings are in the alerts panel.',
   onboardStep5Title: 'Risk first',
   onboardStep5Body:
     'Before any trade, open Tools → Risk: pick the symbol as your broker writes it (EURUSDc for a cent account), enter your balance, risk % and stop loss (in pips, not MT4/MT5 points — 250 points is usually 25 pips — or as entry and stop prices) to get the right lot size (add spread and commission to include them), then “Log this plan to the journal” to review how it played out. Many traders risk no more than 1–2% per trade.',
