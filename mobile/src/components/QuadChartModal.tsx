@@ -367,7 +367,7 @@ export function QuadChartModal({
                   ) : null}
                 </View>
                 {noReal ? (
-                  <ProviderUnavailableNotice symbol={sym} height={cellH} />
+                  <ProviderUnavailableNotice symbol={sym} height={cellH} dataSource={s?.data_source} />
                 ) : series[i] ? (
                   <MatrixChart
                     series={series[i]!}
@@ -395,11 +395,11 @@ export function QuadChartModal({
                     accessible
                     accessibilityRole="progressbar"
                     accessibilityState={{ busy: true }}
-                    accessibilityLabel={t.chartFirstLoad.replace('{symbol}', sym).replace('{tf}', tf)}
+                    accessibilityLabel={t.chartFirstLoad.replace('{symbol}', sym).replace('{tf}', t.tfLabelsA11y[tf])}
                   >
                     <ActivityIndicator color={colors.accent} />
                     <Text style={styles.cellLoadingText} numberOfLines={2}>
-                      {t.chartFirstLoad.replace('{symbol}', sym).replace('{tf}', tf)}
+                      {t.chartFirstLoad.replace('{symbol}', sym).replace('{tf}', t.tfLabels[tf])}
                     </Text>
                   </View>
                 )}
