@@ -217,6 +217,10 @@ export function TerminalScreen() {
   const [edgePanel, setEdgePanel] = useState<EdgePanelId>(null);
   const [dockTab, setDockTab] = useState<DockTabId>(null);
   const [quadOpen, setQuadOpen] = useState(false);
+  // DESIGN-PRO §5.6 (chart-r65): مسك الشارت (تقاطع/سحب/رسم) ⇒ الشريط العلوي والحافّتان والرصيف 40%، بلا حركة (§6)؛
+  // الرفع يعيدها. الشارت يُخفت أزراره بنفسه.
+  const [chartTouch, setChartTouch] = useState(false);
+  const chromeDim = chartTouch ? styles.chromeDim : null;
   const [showKinds, setShowKinds] = useState(false);
   const [phoneWatchOpen, setPhoneWatchOpen] = useState(false);
   const [phoneWatchSymbols, setPhoneWatchSymbols] = useState<string[] | null>(null);
@@ -1100,7 +1104,7 @@ export function TerminalScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <StatusBar barStyle="light-content" />
 
-      <View style={[styles.topBar, phone && styles.topBarPhone]}>
+      <View style={[styles.topBar, phone && styles.topBarPhone, chromeDim]}>
         <SymbolPairMenu
           value={symbol}
           onPick={pickSymbol}
@@ -1407,15 +1411,17 @@ export function TerminalScreen() {
 
       <View style={styles.workspace}>
         {!phone ? (
-          <LeftDrawRail
-            activeLens={lens}
-            activeTool={tool}
-            onLens={setLens}
-            onTool={(nextTool) => {
-              setTool(nextTool);
-            }}
-            onQuad={() => setQuadOpen(true)}
-          />
+          <View style={[styles.railDimWrap, chromeDim]}>
+            <LeftDrawRail
+              activeLens={lens}
+              activeTool={tool}
+              onLens={setLens}
+              onTool={(nextTool) => {
+                setTool(nextTool);
+              }}
+              onQuad={() => setQuadOpen(true)}
+            />
+          </View>
         ) : null}
 
         {!phone && layoutShape === 'shadow' ? (
@@ -1579,6 +1585,7 @@ export function TerminalScreen() {
                 </View>
               ) : (
                 <MatrixChart
+                  onChartInteract={setChartTouch}
                   onCreateAlert={alertFromChart}
                   key="shadow-overlay"
                   onToolChange={setTool}
@@ -1749,6 +1756,7 @@ export function TerminalScreen() {
                 </View>
               ) : (
                 <MatrixChart
+                  onChartInteract={setChartTouch}
                   onCreateAlert={alertFromChart}
                   // chart-r47: الأداة/النوع/العدسة/المؤشرات تُطبَّق بتأثيرات `MatrixChart` — بالمفتاح كانت تعيد بناءه فيضيع التكبير
                   // والتراجع ويقفز لآخر 80 شمعة. و`onToolChange` يُطفئ «ترند» بالشريط الأيسر حين ينتهي الرسم داخل الشارت.
@@ -1829,6 +1837,7 @@ export function TerminalScreen() {
                   node: (
                     <View style={styles.dxySlotFill}>
                       <ChartFrame
+                        onChartInteract={setChartTouch}
                         series={dxy}
                         size="large"
                         accent={dxy.symbol === 'DXY' ? colors.dxy : colors.accent}
@@ -1850,6 +1859,7 @@ export function TerminalScreen() {
                   id: `pair-${i}`,
                   node: (
                     <ChartFrame
+                      onChartInteract={setChartTouch}
                       series={f}
                       size="large"
                       accent={colors.accent}
@@ -1902,6 +1912,7 @@ export function TerminalScreen() {
                   node: (
                     <View style={styles.dxySlotFill}>
                       <ChartFrame
+                        onChartInteract={setChartTouch}
                         series={dxy}
                         size="large"
                         accent={dxy.symbol === 'DXY' ? colors.dxy : colors.accent}
@@ -1923,6 +1934,7 @@ export function TerminalScreen() {
                   id: `pair-${i}`,
                   node: (
                     <ChartFrame
+                      onChartInteract={setChartTouch}
                       series={f}
                       size="large"
                       accent={colors.accent}
@@ -1959,31 +1971,35 @@ export function TerminalScreen() {
               compact={narrowWatch}
               active={screenFocused}
             />
-            <RightPanelRail
-              activePanel={edgePanel}
-              onOpenPanel={setEdgePanel}
-            />
+            <View style={[styles.railDimWrap, chromeDim]}>
+              <RightPanelRail
+                activePanel={edgePanel}
+                onOpenPanel={setEdgePanel}
+              />
+            </View>
           </>
         ) : null}
       </View>
 
-      <MatrixBottomDock
-        tab={dockTab}
-        onTab={setDockTab}
-        symbol={symbol}
-        timeframe={tf}
-        activeTool={tool}
-        onTool={(nextTool) => {
-          setTool(nextTool);
-          if (phone) {
-            // لا توجد لوحة رسم جانبية على الهاتف؛ افتح الشارت بملء الشاشة جاهزاً لهذه الأداة
-            setDockTab(null);
-            openFocus(symbol, tf, { tool: nextTool });
-          }
-        }}
-        activeLens={lens}
-        onLens={setLens}
-      />
+      <View style={chromeDim}>
+        <MatrixBottomDock
+          tab={dockTab}
+          onTab={setDockTab}
+          symbol={symbol}
+          timeframe={tf}
+          activeTool={tool}
+          onTool={(nextTool) => {
+            setTool(nextTool);
+            if (phone) {
+              // لا توجد لوحة رسم جانبية على الهاتف؛ افتح الشارت بملء الشاشة جاهزاً لهذه الأداة
+              setDockTab(null);
+              openFocus(symbol, tf, { tool: nextTool });
+            }
+          }}
+          activeLens={lens}
+          onLens={setLens}
+        />
+      </View>
 
       <MatrixSidePanel
         panel={edgePanel}
@@ -2243,6 +2259,9 @@ const styles = StyleSheet.create({
   kindText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   kindTextOn: { color: colors.accent },
   workspace: { flex: 1, flexDirection: 'row' },
+  // غلاف الحافّة لخفوت §5.6: صفّ كي تمتدّ الحافّة بطول مساحة العمل، و`zIndex` الحافّة نفسها كي تبقى تلميحاتها فوق الشارت
+  railDimWrap: { flexDirection: 'row', zIndex: 10 },
+  chromeDim: { opacity: 0.4 },
   desktopMain: {
     flex: 1,
     minWidth: 0,
