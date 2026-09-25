@@ -1,6 +1,6 @@
 /** فحص ذاتي لـ`holdView.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
 import assert from 'node:assert/strict';
-import { appendedAfter } from './holdView';
+import { appendedAfter, offsetAtTime } from './holdView';
 
 // تيك داخل الشمعة نفسها ⇒ لا إضافة
 assert.equal(appendedAfter(300, [0, 100, 200, 300]), 0);
@@ -24,4 +24,16 @@ assert.equal(appendedAfter(300, [100, 200, 300, 300, 300], 3), 2);
 assert.equal(appendedAfter(300, [200, 300, 400], 4), 1);
 assert.equal(appendedAfter(300, [200, 300, 400], 99), 1);
 
+// تبديل النوع: الطرف الأيمن على الزمن نفسه. 30 شمعة كل 100ث، الطرف عند 1500 ⇒ 14 خانة بعده.
+const candleTimes = Array.from({ length: 30 }, (_, i) => i * 100);
+assert.equal(offsetAtTime(candleTimes, 1500), 14);
+// Renko: لبنات أقلّ وأزمنة مكرّرة — آخر لبنة ≤ الطرف
+const bricks = [0, 300, 300, 700, 1200, 1600, 2100, 2500, 2900];
+assert.equal(offsetAtTime(bricks, 1500, 2), 4);
+assert.equal(offsetAtTime(bricks, 2900, 2), 0);
+// أقدم من السلسلة ⇒ أقصى إزاحة مسموحة؛ والقصّ يُبقي آخر `keep`
+assert.equal(offsetAtTime(bricks, -5, 2), 7);
+assert.equal(offsetAtTime(bricks, 300, 5), 4);
+assert.equal(offsetAtTime([], 100), 0);
+assert.equal(offsetAtTime(bricks, null), 0);
 console.log('holdView.selftest: PASS');

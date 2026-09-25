@@ -125,7 +125,7 @@ import {
 import { channelHandlePrice, channelLinePrices, channelWidthAt, fitChannelWidth } from './channel';
 import { anchorDrawings, barTime, drawSlotAt, stampAtIndex, type TimeBar } from './drawingAnchors';
 import { lineNowText, lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
-import { appendedAfter } from './holdView';
+import { appendedAfter, offsetAtTime } from './holdView';
 import { priceSpan } from './priceSpan';
 import { FIB_EXTENSIONS, fibLevelPrice, isFibExtension, planFibLabels, type FibLabelPlan } from './fibLabels';
 import {
@@ -1582,10 +1582,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // نافذة مسحوبة للخلف تبقى على شموعها حين تصل شمعة جديدة (`holdView.ts`): الإزاحة تُقاس من
   // الطرف الأيمن، فكانت كل شمعة جديدة تزحف بالنافذة شمعةً تحت إصبع المتداول. بـLayoutEffect كي
   // لا يُرسم إطار زاحف قبل التصحيح. التابع المتزامن نافذته من القائد فلا يُمسّ.
-  const heldViewRef = useRef<{ key: string; lastSec: number | null; len: number }>({
+  const heldViewRef = useRef<{ key: string; lastSec: number | null; len: number; all: TimeBar[] }>({
     key: '',
     lastSec: null,
     len: 0,
+    all: [],
   });
   useLayoutEffect(() => {
     const all = source.all as TimeBar[];
@@ -1594,7 +1595,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     const lastSec = last ? barTime(last) : null;
     const prev = heldViewRef.current;
     if (prev.key === key && prev.len === all.length && prev.lastSec === lastSec) return; // تيك بالشمعة نفسها
-    heldViewRef.current = { key, lastSec, len: all.length };
+    heldViewRef.current = { key, lastSec, len: all.length, all };
+    // تبديل نوع الشارت (الرمز/الفريم نفساهما): الإزاحة بالخانات لا تعني شيئاً بالنوع الجديد — تُنقل
+    // بالزمن (`offsetAtTime`) فيبقى الطرف الأيمن على الموضع الذي كان المتداول يدرسه.
+    if (
+      prev.key !== key &&
+      !syncFollow &&
+      offsetRef.current > 0 &&
+      prev.key.slice(0, prev.key.lastIndexOf('|')) === key.slice(0, key.lastIndexOf('|')) &&
+      prev.all.length > 0
+    ) {
+      const right = prev.all[prev.all.length - 1 - Math.min(offsetRef.current, Math.max(0, prev.all.length - 10))];
+      const next = offsetAtTime(all.map(barTime), right ? barTime(right) : null);
+      if (next !== offsetRef.current) {
+        offsetRef.current = next;
+        setOffset(next);
+      }
+      return;
+    }
     // بالإعادة تُمسك النافذة حتى عند الطرف الأيمن: شمعة جديدة كانت تزحف بها فتصير «شمعة الإعادة» التالية
     // غير المكشوفة — الإعادة تتقدّم وحدها وتكشف المستقبل بلا ضغط +1.
     if (prev.key !== key || syncFollow || (offsetRef.current <= 0 && !replayOn)) return;

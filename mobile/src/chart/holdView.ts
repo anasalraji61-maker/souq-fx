@@ -38,3 +38,21 @@ export function appendedAfter(
   }
   return 0;
 }
+
+/**
+ * الإزاحة التي تُبقي الطرف الأيمن على الزمن نفسه بعد تبديل نوع الشارت (شموع ⇔ Renko/Kagi/P&F/Range).
+ *
+ * الإزاحة بعدد الخانات، والخانات تتغيّر كلّياً بين الأنواع: 120 شمعة للخلف على الشموع كانت تصير 120
+ * لبنة Renko (~أقدم التاريخ كلّه) فيقفز المتداول لأسابيع قبل الموضع الذي كان يدرسه. هنا تُقاس بالزمن:
+ * آخر خانة زمنها الحقيقي ≤ `rightSec` تصير الطرف الأيمن. لا خانة قبله ⇒ أقدم ما يُسمح به.
+ * مقصوصة كـ`source` (آخر `keep` خانات تبقى مرئيّة).
+ */
+export function offsetAtTime(timesSec: readonly number[], rightSec: number | null, keep = 10): number {
+  const n = timesSec.length;
+  const max = Math.max(0, n - keep);
+  if (rightSec == null || !Number.isFinite(rightSec) || n === 0) return 0;
+  for (let i = n - 1; i >= 0; i--) {
+    if (timesSec[i]! <= rightSec) return Math.min(max, n - 1 - i);
+  }
+  return max;
+}
