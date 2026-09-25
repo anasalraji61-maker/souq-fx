@@ -2069,6 +2069,9 @@ console.log('tradePlan QUICK_SYMBOLS selftest OK');
     ...o,
   });
   assert.equal(openCurrencyExposure([]), null);
+  // mini: حجم اللوت مجهول ⇒ لا تعرّض مخترع (كان يعاملها كسنت: EUR +2,000 / USD −2,200 لـ2 لوت)
+  assert.equal(openCurrencyExposure([O({ symbol: 'EURUSD.MINI', side: 'buy', entry: 1.1, size: 2 })]), null);
+  assert.equal(openCurrencyExposure([O({ symbol: 'EURUSD', side: 'buy', entry: 1.1 }), O({ symbol: 'gbpusd-mini', side: 'buy', entry: 1.27 })]), null);
   assert.equal(openCurrencyExposure([O({ symbol: 'EURUSD', side: 'buy', entry: 1.1, status: 'closed' })]), null);
   const three = [
     O({ symbol: 'EURUSD', side: 'buy', entry: 1.1, size: 1 , note: '1.00 lot · risk 1%' }),

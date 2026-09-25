@@ -1730,6 +1730,8 @@ export function openCurrencyExposure(
     const lots = knownLots(tr.size, tr.note);
     const spec = journalSpec(tr.symbol);
     if (lots == null || !spec || !finitePos(tr.entry)) return null;
+    // mini: حجم لوتها يختلف بين الوسطاء (10,000 أو 100,000) — كـ`journalPnl` لا رقم أفضل من رقمٍ مخترع
+    if (isMiniJournalSymbol(tr.symbol)) return null;
     const small = !instrumentSpec(tr.symbol.trim().toUpperCase());
     const baseUnits = (lots * spec.contractSize) / (small ? 100 : 1);
     const sign = tr.side === 'sell' ? -1 : 1;
