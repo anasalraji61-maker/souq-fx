@@ -1043,6 +1043,8 @@ export type Dict = {
   mcPercentScaleA11y: string;
   /** شريحة انحراف ZigZag (`2973909`) — بدل «ZigZag 5% → 10%» الحرفي الذي يقرأ السهم؛ `{pct}` الحالي و`{next}` التالي بالدورة */
   mcZigzagDevA11y: string;
+  /** شريحة عدد خطوط الانعكاس بـLine Break (`9b1c2ba`، تدور 2→3→4) — بدل «Line break 3 → 4» الحرفي؛ `{count}` الحالي و`{next}` التالي */
+  mcLineBreakCountA11y: string;
   /**
    * زرّ لون الرسم المحدَّد (`85dcbf6`، بدل `drawColorLabels` المؤقّتة بـ`typeLabels.ts`): الكلمة تحت الأيقونة، والوصف يسمّي اللون الحالي
    * `{color}` ← `mcColorNames[i]` بترتيب `drawPalette` (تمييز الإطار، أخضر، أحمر، برتقالي، أزرق، أبيض) — فلا تبقى الحالة لونية فقط
@@ -2138,6 +2140,7 @@ const ar: Dict = {
   mcLogScaleA11y: 'مقياس لوغاريتمي للسعر',
   mcPercentScaleA11y: 'مقياس النسبة المئوية: التغيّر من أول شمعة ظاهرة',
   mcZigzagDevA11y: 'انحراف ZigZag {pct}% — اضغط للتبديل إلى {next}%',
+  mcLineBreakCountA11y: 'كسر الخطوط: عدد خطوط الانعكاس {count} — اضغط للتبديل إلى {next}',
   mcDrawColorWord: 'لون',
   mcDrawColorA11y: 'لون الرسم: {color} — انقر للّون التالي',
   mcCloneDrawing: 'نسخة',
@@ -3240,6 +3243,7 @@ const enUS: Dict = {
   mcLogScaleA11y: 'Logarithmic price scale',
   mcPercentScaleA11y: 'Percentage scale: change from the first visible candle',
   mcZigzagDevA11y: 'ZigZag deviation {pct}% — tap to switch to {next}%',
+  mcLineBreakCountA11y: 'Line break: reverses after {count} lines — tap to switch to {next}',
   mcDrawColorWord: 'Color',
   mcDrawColorA11y: 'Drawing color: {color} — tap for the next color',
   mcCloneDrawing: 'Clone',
@@ -4367,6 +4371,7 @@ const ku: Dict = {
   mcLogScaleA11y: 'پێوەری لۆگاریتمی بۆ نرخ',
   mcPercentScaleA11y: 'پێوەری سەدی: گۆڕان لە یەکەم مۆمی دیار',
   mcZigzagDevA11y: 'لادانی ZigZag {pct}% — دایبگرە بۆ گۆڕین بۆ {next}%',
+  mcLineBreakCountA11y: 'شکانی هێڵ: ژمارەی هێڵەکانی پێچەوانەبوونەوە {count} — دایبگرە بۆ گۆڕین بۆ {next}',
   mcDrawColorWord: 'ڕەنگ',
   mcDrawColorA11y: 'ڕەنگی وێنەکە: {color} — بۆ ڕەنگی دواتر لێبدە',
   mcCloneDrawing: 'کۆپی',
