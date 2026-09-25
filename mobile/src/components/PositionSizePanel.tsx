@@ -123,8 +123,8 @@ const MKT_QUOTE_MAX_AGE_MS = 120_000;
  */
 const CONV_INVERTED_COPY: Record<string, string> = {
   ar: '«{typed}» لا يصلح سعراً لـ{pair} — يبدو مقلوباً (1 ÷ السعر). على الأرجح {pair} = {likely}؛ اكتبه كما تراه بمنصّتك.',
-  'en-US': '"{typed}" can\'t be the {pair} rate — it looks inverted (1 ÷ the price). you likely meant {likely}; type it as your platform shows it.',
-  'en-GB': '"{typed}" can\'t be the {pair} rate — it looks inverted (1 ÷ the price). you likely meant {likely}; type it as your platform shows it.',
+  'en-US': '"{typed}" can\'t be the {pair} rate — it looks inverted (1 ÷ the price). You likely meant {likely}; type it as your platform shows it.',
+  'en-GB': '"{typed}" can\'t be the {pair} rate — it looks inverted (1 ÷ the price). You likely meant {likely}; type it as your platform shows it.',
   ku: '«{typed}» ناتوانێت نرخی {pair} بێت — پێدەچێت پێچەوانە بێت (1 ÷ نرخ). لەوانەیە مەبەستت {likely} بێت؛ وەک لە پلاتفۆرمەکەتدا دەیبینیت بینووسە.',
 };
 
