@@ -101,3 +101,19 @@ def test_trend_vote_spans_ten_candle_moves():
     out = signal_hub.indicator_forecast("EURUSD", candles, enabled=["trend"])
     (v,) = out["votes"]
     assert v["detail_values"]["pct"] == pytest.approx(20.0)
+
+
+def test_flat_candles_give_no_ma_or_macd_vote_and_no_direction():
+    """خطّان متساويان كانا «تحت» (`else`) ⇒ MA ‏−0.45 وMACD ‏−0.35 ⇒ توقّع «بيع» من سوق بلا حركة."""
+    out = signal_hub.indicator_forecast("EURUSD", _flat(60))
+    ids = {v["id"] for v in out["votes"]}
+    assert "ma" not in ids and "macd" not in ids
+    assert out["direction"] != "sell"
+
+
+def test_distinct_lines_never_display_as_equal_numbers():
+    """«الخط 0.00001 فوق الإشارة 0.00001»: منازل إضافية حتى يظهر الفرق."""
+    assert signal_hub._distinct_decimals(0.0000123, 0.0000081, 5) == 6
+    assert signal_hub._distinct_decimals(1.0842, 1.0831, 5) == 5
+    assert signal_hub._same_level(1.1, 1.1 + 2e-16, 1.1)
+    assert not signal_hub._same_level(1.1, 1.10001, 1.1)

@@ -158,6 +158,20 @@ def price_decimals(price: float | None) -> int:
     return max(0, min(5, 5 - int(math.floor(math.log10(abs(price))))))
 
 
+def _same_level(a: float, b: float, last: float | None) -> bool:
+    """خطّان متساويان بحدود ضجيج الفاصلة العائمة (نسبةً إلى السعر): متوسّطا 1.1 المتطابقة قد يختلفان بـ1e-16."""
+    scale = abs(last) if last else max(abs(a), abs(b), 1.0)
+    return abs(a - b) <= scale * 1e-9
+
+
+def _distinct_decimals(a: float, b: float, dp: int) -> int:
+    """منازل تُظهر الفرق بين رقمين مختلفين: «الخط 0.00001 فوق الإشارة 0.00001» نصّ يناقض نفسه."""
+    d = dp
+    while d < 10 and round(a, d) == round(b, d):
+        d += 1
+    return d
+
+
 def _text_lang(lang: str | None) -> str:
     return "en" if (lang or "").strip().lower().startswith("en") else "ar"
 
@@ -214,9 +228,12 @@ def indicator_forecast(
         add("ma", "ma_cross", -0.8, "ma_cross_down")
     else:
         sf, ss = snap.get("sma_fast"), snap.get("sma_slow")
-        if sf is not None and ss is not None:
+        # خطّان متساويان (سوق بلا حركة) لا اتجاه لهما: كان `else` يجعل التساوي «تحت» ⇒ صوت بيع −0.45 وفرق
+        # فاصلة عائمة يقرّر الصوت. التساوي بحدود ضجيج الحساب ⇒ لا صوت (كـBB/Stoch بمدى صفري).
+        if sf is not None and ss is not None and not _same_level(sf, ss, last):
+            fdp = _distinct_decimals(sf, ss, dp)
             add("ma", "ma_trend", 0.45 if sf > ss else -0.45,
-                "ma_above" if sf > ss else "ma_below", fast=round(sf, dp), slow=round(ss, dp))
+                "ma_above" if sf > ss else "ma_below", fast=round(sf, fdp), slow=round(ss, fdp))
 
     if snap.get("macd_cross_up"):
         add("macd", "macd", 0.75, "macd_cross_up")
@@ -224,10 +241,11 @@ def indicator_forecast(
         add("macd", "macd", -0.75, "macd_cross_down")
     else:
         m, ms = snap.get("macd"), snap.get("macd_signal")
-        if m is not None and ms is not None:
-            # MACD فرق بين سعرين ⇒ بمنازل السعر نفسها
+        if m is not None and ms is not None and not _same_level(m, ms, last):
+            # MACD فرق بين سعرين ⇒ بمنازل السعر نفسها (وأكثر إن تساوى الرقمان المعروضان)
+            mdp = _distinct_decimals(m, ms, dp)
             add("macd", "macd", 0.35 if m > ms else -0.35,
-                "macd_above" if m > ms else "macd_below", macd=round(m, dp), signal=round(ms, dp))
+                "macd_above" if m > ms else "macd_below", macd=round(m, mdp), signal=round(ms, mdp))
 
     # Bollinger-ish from recent std
     if len(closes) >= 20:
