@@ -19,15 +19,45 @@ export function indicatorBase<T>(all: readonly T[], start: number, plot: readonl
 }
 
 /**
+ * أساس المؤشرات **الناظرة للأمام** (Chikou = إغلاق بعد 25 شمعة، Fractals بشمعتين يمين، Pivots HL بعشر، ZigZag
+ * بآخر قمّة مؤكَّدة): تُحسب على السلسلة كلّها ثم تُقصّ للنافذة من الطرفين. على `indicatorBase` (حتى آخر شمعة
+ * معروضة) كان التمرير للخلف يُفرغ آخر 25 خانة من Chikou وآخر شمعتين من الفراكتلات وعشراً من Pivots HL رغم أن
+ * الشموع اللاحقة محمَّلة — وتظهر العلامات وتختفي عند الحافة اليمنى مع كل سحبة. TradingView يرسمها حيث توجد
+ * شموع لاحقة؛ الحافة الحيّة وحدها فارغة.
+ *
+ * `live = false` (الإعادة): السلسلة حتى آخر شمعة معروضة فقط كي لا تكشف المستقبل.
+ */
+export type IndicatorRange<T> = { bars: T[]; from: number; to: number };
+
+export function indicatorRangeBase<T>(
+  all: readonly T[],
+  start: number,
+  plot: readonly T[],
+  live: boolean
+): IndicatorRange<T> {
+  const b = indicatorBase(all, start, plot);
+  const aligned =
+    plot.length > 0 && start >= 0 && all[start] === plot[0] && all[start + plot.length - 1] === plot[plot.length - 1];
+  // غير محاذية (احتياط التابع) أو إعادة ⇒ كالأساس العادي.
+  if (!live || !aligned) return { bars: b.bars, from: b.cut, to: b.bars.length };
+  return { bars: all.slice(), from: start, to: start + plot.length };
+}
+
+/**
  * يقصّ ناتج مؤشر محسوب على `n` شمعة إلى ما بعد `cut`: كل مصفوفة بطول `n` (ومصفوفات المصفوفات
  * كخطوط GMMA، وحقول الكائنات) تُقصّ؛ ما سواها (أعداد، مصفوفات بطول آخر) يبقى كما هو.
  */
 export function trimIndicator<R>(result: R, n: number, cut: number): R {
-  if (cut <= 0) return result;
+  return trimIndicatorRange(result, n, cut, n);
+}
+
+/** كـ`trimIndicator` لكن إلى `[from, to)` — للمؤشرات المحسوبة على سلسلة تتجاوز يمين النافذة. */
+export function trimIndicatorRange<R>(result: R, n: number, from: number, to: number): R {
+  if (from <= 0 && to >= n) return result;
   const trim = (x: unknown): unknown => {
     if (Array.isArray(x)) {
-      if (x.length === n) return x.slice(cut);
-      if (x.length > 0 && x.every((l) => Array.isArray(l) && l.length === n)) return x.map((l) => l.slice(cut));
+      if (x.length === n) return x.slice(from, to);
+      if (x.length > 0 && x.every((l) => Array.isArray(l) && l.length === n)) return x.map((l) => l.slice(from, to));
       return x;
     }
     if (x && typeof x === 'object') {

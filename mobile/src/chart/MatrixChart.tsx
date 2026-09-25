@@ -54,7 +54,7 @@ import {
 import { barCloseCountdown } from './barCountdown';
 import { BarCountdown } from './BarCountdown';
 import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime, stepCrossBar } from './crossAnchor';
-import { indicatorBase, trimIndicator } from './indicatorWindow';
+import { indicatorBase, indicatorRangeBase, trimIndicator, trimIndicatorRange } from './indicatorWindow';
 import {
   axisTickCount,
   axisTickRatios,
@@ -2343,6 +2343,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const volName = (name: string) => (volEstimated ? `${name} ≈` : name);
   const closes = useMemo(() => indBars.map((c) => c.close), [indBars]);
   const ind = <R,>(r: R): R => trimIndicator(r, indBars.length, indBase.cut);
+  // الناظرة للأمام (Chikou/Fractals/Pivots HL/ZigZag) على السلسلة كلّها ثم تُقصّ من الطرفين — التمرير للخلف كان
+  // يُفرغ حافّتها اليمنى رغم تحميل الشموع اللاحقة (`indicatorRangeBase`). بالإعادة حتى شمعتها فقط.
+  const aheadBase = useMemo(
+    () => indicatorRangeBase(source.all, source.start, source.plot, !replayOn),
+    [source.all, source.start, source.plot, replayOn]
+  );
+  const aheadBars = aheadBase.bars;
+  const indAhead = <R,>(r: R): R => trimIndicatorRange(r, aheadBars.length, aheadBase.from, aheadBase.to);
   const overlays = useMemo(() => ind(computeOverlays(closes)), [closes]);
   // Pine-lite على التاريخ كباقي المؤشرات — كان على النافذة وحدها: EMA 50 فارغة لأوّل 49 شمعة وتتغيّر بالسحب.
   const pineLine = useMemo(
@@ -2696,10 +2704,20 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('klinger') ? ind(computeKlinger(indBars)) : null),
     [indBars, indicators]
   );
-  const ichimoku = useMemo(
-    () => (indicators.includes('ichimoku') ? ind(computeIchimoku(indBars)) : null),
-    [indBars, indicators]
-  );
+  const ichimoku = useMemo(() => {
+    if (!indicators.includes('ichimoku')) return null;
+    const full = computeIchimoku(aheadBars);
+    const r = indAhead(full);
+    // السحابة المُسقَطة يمين النافذة = Span A/B الحقيقيّتان بعدها (لا تنظران للأمام)، ثم إسقاط آخر السلسلة.
+    const k = full.lead.spanA.length;
+    return {
+      ...r,
+      lead: {
+        spanA: [...full.spanA.slice(aheadBase.to), ...full.lead.spanA].slice(0, k),
+        spanB: [...full.spanB.slice(aheadBase.to), ...full.lead.spanB].slice(0, k),
+      },
+    };
+  }, [aheadBars, aheadBase, indicators]);
   const alligator = useMemo(
     () => (indicators.includes('alligator') ? ind(computeAlligator(indBars)) : null),
     [indBars, indicators]
@@ -2751,24 +2769,24 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [indBars, indicators]
   );
   const zigzag = useMemo(
-    () => (indicators.includes('zigzag') ? ind(computeZigZag(closes)) : null),
-    [closes, indicators]
+    () => (indicators.includes('zigzag') ? indAhead(computeZigZag(aheadBars.map((c) => c.close))) : null),
+    [aheadBars, aheadBase, indicators]
   );
   const adl = useMemo(
     () => (indicators.includes('adl') ? ind(computeAccumDist(indBars)) : null),
     [indBars, indicators]
   );
   const fractals = useMemo(
-    () => (indicators.includes('fractals') ? ind(computeFractals(indBars)) : null),
-    [indBars, indicators]
+    () => (indicators.includes('fractals') ? indAhead(computeFractals(aheadBars)) : null),
+    [aheadBars, aheadBase, indicators]
   );
   const fractalChaosOsc = useMemo(
-    () => (indicators.includes('fractalChaosOsc') ? ind(computeFractalChaosOsc(indBars)) : null),
-    [indBars, indicators]
+    () => (indicators.includes('fractalChaosOsc') ? indAhead(computeFractalChaosOsc(aheadBars)) : null),
+    [aheadBars, aheadBase, indicators]
   );
   const fractalChaosBands = useMemo(
-    () => (indicators.includes('fractalChaosBands') ? ind(computeFractalChaosBands(indBars)) : null),
-    [indBars, indicators]
+    () => (indicators.includes('fractalChaosBands') ? indAhead(computeFractalChaosBands(aheadBars)) : null),
+    [aheadBars, aheadBase, indicators]
   );
   const elderImpulse = useMemo(
     () => (indicators.includes('elderImpulse') ? ind(computeElderImpulse(indBars)) : null),
@@ -2835,8 +2853,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [indBars, indicators]
   );
   const pivotsHL = useMemo(
-    () => (indicators.includes('pivotsHL') ? ind(computePivotsHighLow(indBars)) : null),
-    [indBars, indicators]
+    () => (indicators.includes('pivotsHL') ? indAhead(computePivotsHighLow(aheadBars)) : null),
+    [aheadBars, aheadBase, indicators]
   );
   const woodieCci = useMemo(
     () => (indicators.includes('woodieCci') ? ind(computeWoodieCci(indBars)) : null),
