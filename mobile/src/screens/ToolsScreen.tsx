@@ -464,14 +464,17 @@ export function ToolsScreen() {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
+  /** رقم آخر فحص بدأ — المؤشّر يُطفئه آخر فحص فقط (نقرتان قبل أن يُعطَّل الزرّ = فحصان متزامنان). */
+  const runSeq = React.useRef(0);
   const run = useCallback(async () => {
+    const seq = ++runSeq.current;
     setLoading(true);
     const key = `${tf}|${selected.join(',')}`;
     /**
      * الفريم والفلاتر تبقى قابلة للتغيير أثناء «جارٍ الفحص…»: فحصٌ على 15m + «تقاطع متوسطات» يعود بعد التبديل إلى 1h
      * كان يُعرض تحت 1h، ويحفظ مفتاحه القديم فلا يمسحه شيء — والبطاقات لا تذكر الفريم. نتيجةٌ لاختيارٍ لم يعد قائماً تُسقط.
      */
-    const stale = () => scanKeyNow.current !== key;
+    const stale = () => scanKeyNow.current !== key || runSeq.current !== seq;
     try {
       const res = await api.screenerRun({ timeframe: tf, filters: selected });
       if (stale()) return;
@@ -489,7 +492,8 @@ export function ToolsScreen() {
       setProviderConfigured(null);
       setScanDone(true);
     } finally {
-      setLoading(false);
+      /** لا `!stale()`: فحص أُسقط لتغيّر الفلاتر وهو الوحيد الجاري كان سيُبقي «جارٍ الفحص…» للأبد */
+      if (runSeq.current === seq) setLoading(false);
     }
   }, [tf, selected]);
 
