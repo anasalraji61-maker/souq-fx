@@ -1530,7 +1530,7 @@ const ar: Dict = {
   reportOpenWord: 'مفتوح ↓',
   reportAiFallbackNote: 'تعذر الاتصال بالذكاء الاصطناعي — هذا قالب عام بدل تحليل مخصَّص',
   reportJournalDataLine:
-    'بيانات دفتر الصفقات الفعلية (كل الصفقات المغلقة، لا هذا الأسبوع وحده): صفقات={trades} نجاح={winRate}% PnL={pnl}% أفضل={best}% أسوأ={worst}%. اعتمد عليها في التقرير.',
+    'بيانات دفتر الصفقات الفعلية (كل الصفقات المغلقة، لا هذا الأسبوع وحده): صفقات={trades}، نجاح={winRate}%، مجموع حركة السعر={pnl}%، أفضل صفقة={best}%، أسوأ صفقة={worst}%. النسب حركة سعر من الدخول للخروج بلا حجم الصفقة — ليست ربحاً أو خسارة من الحساب، فلا تسمّها كذلك. اعتمد عليها في التقرير.',
   reportJournalEmptyLine: '(لا توجد صفقات مغلقة في الدفتر بعد — لا أرقام أداء لعرضها).',
   reportJournalUnavailableLine: '(تعذّرت قراءة دفتر الصفقات الآن — التقرير بلا أرقامك).',
   reportFallbackWeekly: 'تقرير من دفتر الصفقات{journalLine}\nسجّل صفقاتك في تبويب «الدفتر» لبناء تقرير أدق.',
@@ -2598,7 +2598,7 @@ const enUS: Dict = {
   reportOpenWord: 'Open ↓',
   reportAiFallbackNote: 'Could not reach the AI — this is a general template, not a custom analysis',
   reportJournalDataLine:
-    'Actual trade journal data (all closed trades, not just this week): trades={trades} win rate={winRate}% PnL={pnl}% best={best}% worst={worst}%. Base the report on it.',
+    'Actual trade journal data (all closed trades, not just this week): trades={trades}, win rate={winRate}%, sum of price moves={pnl}%, best trade={best}%, worst trade={worst}%. The percentages are price moves from entry to exit with lot size ignored — not account profit or loss, so do not call them that. Base the report on it.',
   reportJournalEmptyLine: '(No closed trades in the journal yet — no performance numbers to show).',
   reportJournalUnavailableLine: '(Could not read the trade journal right now — this report has none of your numbers).',
   reportFallbackWeekly:
@@ -3693,7 +3693,7 @@ const ku: Dict = {
   reportAiFallbackNote:
     'نەکرا پەیوەندی بە زیرەکی دەستکردەوە بکرێت — ئەمە داڵدەیەکی گشتییە نەک شیکارییەکی تایبەت',
   reportJournalDataLine:
-    'زانیاری ڕاستەقینەی دەفتەری مامەڵە (هەموو مامەڵە داخراوەکان، نەک تەنها ئەم هەفتەیە): مامەڵە={trades} ڕێژەی سەرکەوتن={winRate}% PnL={pnl}% باشترین={best}% خراپترین={worst}%. پشت بەمە ببەستە لە ڕاپۆرتەکە.',
+    'زانیاری ڕاستەقینەی دەفتەری مامەڵە (هەموو مامەڵە داخراوەکان، نەک تەنها ئەم هەفتەیە): مامەڵە={trades}، ڕێژەی سەرکەوتن={winRate}%، کۆی جووڵەی نرخ={pnl}%، باشترین مامەڵە={best}%، خراپترین مامەڵە={worst}%. ڕێژەکان جووڵەی نرخن لە چوونەژوورەوە تا دەرچوون بێ قەبارەی مامەڵە — قازانج یان زیانی هەژمار نین، بەو ناوە ناویان مەبە. پشت بەمە ببەستە لە ڕاپۆرتەکە.',
   reportJournalEmptyLine: '(هێشتا هیچ مامەڵەیەکی داخراو لە دەفتەرەکەدا نییە — ژمارەی ئەدا نییە بۆ پیشاندان).',
   reportJournalUnavailableLine: '(ئێستا دەفتەری مامەڵە نەخوێندرایەوە — ئەم ڕاپۆرتە ژمارەکانی تۆی تێدا نییە).',
   reportFallbackWeekly:
