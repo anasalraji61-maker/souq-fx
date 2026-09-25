@@ -1025,6 +1025,7 @@ export type Dict = {
   cfSubtitleInteractive: string;
   cfSubtitleNavigate: string;
   cfSubtitleDefault: string;
+  /** يسبق اسم الرمز: إجراء مخصّص (جوال) أو زرّ (ويب) يجعل إطاراً تابعاً قائد الزمن — المزامنة مفعّلة أصلاً حين يظهر */
   cfSyncActivateA11yPrefix: string;
   cfChangeSymbolA11y: string;
   /**
@@ -2296,7 +2297,7 @@ const ar: Dict = {
   cfSubtitleInteractive: 'محرك MATRIX · عدسات وأدوات',
   cfSubtitleNavigate: 'اسحب الوسط · السعر · التواريخ',
   cfSubtitleDefault: 'اضغط للتحليل الكامل',
-  cfSyncActivateA11yPrefix: 'تفعيل مزامنة شارت ',
+  cfSyncActivateA11yPrefix: 'اجعله قائد الزمن: ',
   cfChangeSymbolA11y: 'تغيير الرمز',
   cfDayChangeA11y: 'تغيّر اليوم {pct}',
   cfDayChangeNoneA11y: 'تغيّر اليوم غير متاح لهذا السعر',
@@ -3487,7 +3488,7 @@ const enUS: Dict = {
   cfSubtitleInteractive: 'MATRIX engine · lenses & tools',
   cfSubtitleNavigate: 'Drag middle · price · dates',
   cfSubtitleDefault: 'Tap for full analysis',
-  cfSyncActivateA11yPrefix: 'Activate sync for chart ',
+  cfSyncActivateA11yPrefix: 'Make time leader: ',
   cfChangeSymbolA11y: 'Change symbol',
   cfDayChangeA11y: 'Today\'s change {pct}',
   cfDayChangeNoneA11y: 'Today\'s change not available for this price',
@@ -4707,7 +4708,7 @@ const ku: Dict = {
   cfSubtitleInteractive: 'ئەنجینی MATRIX · لینز و ئامرازەکان',
   cfSubtitleNavigate: 'ناوەڕاست ڕایبکێشە · نرخ · بەروار',
   cfSubtitleDefault: 'دەستبدە بۆ شیکاری تەواو',
-  cfSyncActivateA11yPrefix: 'چالاککردنی هاوکاتکردنی چارتی ',
+  cfSyncActivateA11yPrefix: 'بیکە بە سەرکردەی کات: ',
   cfChangeSymbolA11y: 'گۆڕینی هێما',
   // بحاجة مراجعة ناطق كردي (الاثنان أدناه)
   cfDayChangeA11y: 'گۆڕانی ئەمڕۆ {pct}',
