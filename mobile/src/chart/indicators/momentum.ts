@@ -593,8 +593,12 @@ export function computeMomentum(closes: number[], period = 10): (number | null)[
  * الجديدة كل مرة = 0.33×2×(0.5−0.5)+0.67×السابقة = 0.67×السابقة، تبدأ من القيمة الابتدائية 0 فتبقى
  * 0 بالضبط للأبد (0.67×0=0) → fisher[i]=0.5×ln((1+0)/(1−0))+0.5×fisher[i-1]=0.5×0+0.5×0=0 بالضبط
  * لكل نقطة بعد التسخين، يطابق "لا انحياز اتجاهي ولا إشارة بسعر ساكن تماماً" بالتعريف.
+ *
+ * **كنصّ TradingView** (`round_`): ما تجاوز ±0.99 يصير ±0.999 **ويُخزَّن** مقصوصاً فيدخل تنعيم الشمعة التالية؛
+ * كان القصّ عند اللوغاريتم وحده فتبقى `value1` غير مقصوصة وتتراكم فوق 1 ⇒ القمم أقلّ بنحو 1 من TradingView
+ * بموجة قوية. والطول الافتراضي 9 كـTradingView (كان 10).
  */
-export function computeFisherTransform(candles: Candle[], period = 10): (number | null)[] {
+export function computeFisherTransform(candles: Candle[], period = 9): (number | null)[] {
   const n = candles.length;
   const mp = candles.map((c) => (c.high + c.low) / 2);
   const out: (number | null)[] = [];
@@ -610,9 +614,9 @@ export function computeFisherTransform(candles: Candle[], period = 10): (number 
     const ll = Math.min(...slice);
     const span = hh - ll;
     const ratio = span === 0 ? 0.5 : (mp[i] - ll) / span;
-    value1 = 0.33 * 2 * (ratio - 0.5) + 0.67 * value1;
-    const clamped = Math.min(0.999, Math.max(-0.999, value1));
-    fisher = 0.5 * Math.log((1 + clamped) / (1 - clamped)) + 0.5 * fisher;
+    const raw = 0.33 * 2 * (ratio - 0.5) + 0.67 * value1;
+    value1 = raw > 0.99 ? 0.999 : raw < -0.99 ? -0.999 : raw;
+    fisher = 0.5 * Math.log((1 + value1) / (1 - value1)) + 0.5 * fisher;
     out.push(fisher);
   }
   return out;
