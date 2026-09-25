@@ -9490,12 +9490,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
-              // Max computed once per render (was recomputed per bar → O(n²) at 1000 bars).
-              let maxV = 1;
-              for (const x of source.plot) maxV = Math.max(maxV, x.volume ?? 0);
+              // Max computed once per render (was recomputed per bar → O(n²) at 1000 bars). من الشموع الظاهرة
+              // (`visibleMax`) كـTV: شمعة خبر خارج الشاشة كانت تُقزّم أعمدة المعروض.
+              const maxV = Math.max(1, visibleMax(volumeSeries ?? [], paneVis));
               return source.plot.map((c, i) => {
               const vol = c.volume ?? 0;
-              const h = (vol / maxV) * (paneH - 14);
+              const h = Math.min(1, vol / maxV) * (paneH - 14);
               return (
                 <View
                   key={i}
