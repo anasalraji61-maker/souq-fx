@@ -796,7 +796,7 @@ export const api = {
       `/api/trades/${encodeURIComponent(id)}/close`,
       { exit }
     ),
-  /** تعديل صفقة بالدفتر — الحقول الغائبة لا تتغيّر، و`null` لـexit/sl/tp يمسحها (مسح الخروج يعيدها مفتوحة).
+  /** تعديل صفقة بالدفتر — الحقول الغائبة لا تتغيّر، و`null` لـexit/size/sl/tp يمسحها (مسح الخروج يعيدها مفتوحة).
    * باك-إند قديم بلا المسار → خطأ بـ`status` 405. */
   updateTrade: (
     id: string,
@@ -805,8 +805,8 @@ export const api = {
       side?: 'buy' | 'sell';
       entry?: number;
       exit?: number | null;
-      /** حجم اللوت — الحقل إلزامي بالجدول، وnull له يُسقَط بالباك-إند (`main.py:1174`) فلا يُرسَل إلا برقم. */
-      size?: number;
+      /** حجم اللوت — `null` = حجم غير معروف (يمسح القيمة المحفوظة، backend-r17 b)؛ الغياب لا يغيّره. */
+      size?: number | null;
       sl?: number | null;
       tp?: number | null;
       note?: string;
