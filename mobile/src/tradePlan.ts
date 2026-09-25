@@ -1310,8 +1310,15 @@ export function levelLooksLikePips(input: {
    * على 157.40 بهدف «100» كان يُحفظ هدفاً عند 100.00 (الجهة الصحيحة) و«R:R 1:287»، وGBPJPY «150»، والفضة على 45 بهدف «30».
    * سقوط الخُمس لوقفٍ أو هدف لا يحدث بزوج أو معدن، والرقم الصحيح شرطٌ ثانٍ: السعر الحقيقي يُكتب بكسوره («150.25»)، وعدد
    * النقاط من رسالة «TP 100» صحيح. فوق الدخول يبقى النصف (ذهب 2650 بهدف 3650 حقيقي).
+   *
+   * **وفوق الدخول بأكثر من الخُمس ورقمٌ صحيح** كذلك للفوركس (لا المعادن — صعودها أعلاه): شراء USDJPY على 157.40 بهدف «200»
+   * (200 pip) كان يُحفظ هدفاً عند 200.00 و«R:R 1:142»، وبيعٌ بوقف «200» مخاطرةً بـ4260 pip. عدا الليرة التركية: USDTRY صعد
+   * أكثر من الخُمس بسنة، وهدف مراكز «41» على 34 سعرٌ حقيقي.
    */
-  const looksPips = (v: number) => far(v) || (v < entry && entry - v > entry * 0.2 && Number.isInteger(v));
+  const upOk = metal || spec.quote === 'TRY';
+  const looksPips = (v: number) =>
+    far(v) ||
+    (Number.isInteger(v) && Math.abs(v - entry) > entry * 0.2 && (v < entry || !upOk));
   if (!looksPips(level)) return null;
   const down = (side === 'buy') === (kind === 'sl');
   const price = priceAtPipOffset(spec, entry, down ? -level : level);

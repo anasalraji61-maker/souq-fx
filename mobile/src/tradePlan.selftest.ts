@@ -2864,6 +2864,29 @@ console.log('tradePlan mini orphan/lot chips selftest OK');
 }
 console.log('tradePlan levelLooksLikePips JPY/silver selftest OK');
 
+// نقاطٌ بخانة سعر **فوق** الدخول على الين: هدف شراء «200» كان يُحفظ عند 200.00 و«R:R 1:142»
+{
+  const L = levelLooksLikePips;
+  const near = (a: { pips: number; price: number } | null, pips: number, price: number) => {
+    assert.ok(a, `${pips}`);
+    assert.equal(a!.pips, pips);
+    assert.ok(Math.abs(a!.price - price) < 1e-9, `${a!.price} vs ${price}`);
+  };
+  near(L({ symbol: 'USDJPY', side: 'buy', entry: 157.4, level: 200, kind: 'tp' }), 200, 159.4);
+  near(L({ symbol: 'USDJPY', side: 'sell', entry: 157.4, level: 200, kind: 'sl' }), 200, 159.4);
+  near(L({ symbol: 'GBPJPY', side: 'buy', entry: 200.5, level: 250, kind: 'tp' }), 250, 203);
+  near(L({ symbol: 'EURJPY', side: 'sell', entry: 162, level: 200, kind: 'sl' }), 200, 164);
+  // حقيقية: كسور، أو دون الخُمس، أو الليرة (USDTRY 34 ⇒ 41)، أو المعادن (قاعدة الضعف)
+  assert.equal(L({ symbol: 'USDJPY', side: 'buy', entry: 157.4, level: 190.5, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'USDJPY', side: 'buy', entry: 157.4, level: 185, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'USDTRY', side: 'buy', entry: 34, level: 41, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'XAGUSD', side: 'buy', entry: 30, level: 50, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'XAUUSD', side: 'buy', entry: 2650, level: 4000, kind: 'tp' }), null);
+  // الخطر المُغلق: كان R:R 1:142
+  assert.ok((analyzePlan({ symbol: 'USDJPY', side: 'buy', entry: 157.4, sl: 157.1, tp: 200 }).rr ?? 0) > 100);
+}
+console.log('tradePlan levelLooksLikePips JPY above entry selftest OK');
+
 // ---- openQuotesRefreshDue: لقطة أسعار الصفقات المفتوحة تتجدّد بعد العودة من الخلفية ----
 {
   const t0 = 1_758_800_000_000;
