@@ -70,6 +70,7 @@ def test_all_breakeven_or_no_trades_have_no_win_rate():
     assert backtest._stats([])[0] == {
         "trade_count": 0, "win_rate": None, "breakeven_count": 0, "total_return_pct": 0.0,
         "final_equity": 100.0, "avg_win_pct": 0, "avg_loss_pct": 0, "max_drawdown_pct": 0.0,
+        "open_pnl_pct": None,
     }
 
 
@@ -78,3 +79,22 @@ def test_run_backtest_reports_the_compounded_return():
     st = res["stats"]
     assert st["trade_count"] > 0
     assert st["total_return_pct"] == round(st["final_equity"] - 100, 2)
+
+
+def test_position_open_at_the_last_candle_is_not_a_finished_trade():
+    """كان المركز المفتوح يُقوَّم بآخر إغلاق ويدخل نسبة الفوز والعائد كأنه أُغلق (ربح غير محقَّق)."""
+    st = backtest._stats([_t(1.0), _t(-0.5), {**_t(3.0), "open": True}])[0]
+    assert st["trade_count"] == 2
+    assert st["win_rate"] == 50.0
+    assert st["final_equity"] == round(100 * 1.01 * 0.995, 2)
+    assert st["open_pnl_pct"] == 3.0
+
+
+def test_run_backtest_keeps_the_open_position_out_of_the_stats():
+    res = backtest.run_backtest(_candles(), "ma_cross", spread=0.0001)
+    open_trades = [t for t in res["trades"] if t.get("open")]
+    assert len(open_trades) == 1, "المسار الجيبي ينتهي بمركز مفتوح دائماً (ma_cross يقلب ولا يُسطّح)"
+    closed = [t for t in res["trades"] if not t.get("open")]
+    assert res["stats"]["trade_count"] == len(closed)
+    assert res["stats"]["open_pnl_pct"] == open_trades[0]["pnl_pct"]
+    assert len(res["equity_curve"]) == len(closed) + 1

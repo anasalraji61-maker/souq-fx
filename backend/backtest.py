@@ -54,7 +54,12 @@ def _stats(trades: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str,
     - **التعادل ليس خسارة** (كدفتر الصفقات، `db.trade_stats`): `win_rate` = رابحة ÷ (رابحة + خاسرة)،
       والتعادل يُعدّ وحده `breakeven_count` ويبقى ضمن `trade_count`، ولا يدخل `avg_loss_pct`.
     - **بلا صفقة حاسمة `win_rate` = None** (لا صفقات، أو كلّها تعادل): 0 كانت تُعرض «نسبة نجاح 0%» = «خسرت
-      الاستراتيجية كل صفقاتها» (backend-r7، كالدفتر `2d0fb58`). `BacktestPanel` يعرض «—»."""
+      الاستراتيجية كل صفقاتها» (backend-r7، كالدفتر `2d0fb58`). `BacktestPanel` يعرض «—».
+    - **المركز المفتوح بآخر شمعة ليس صفقة منتهية**: كان يُقوَّم بآخر إغلاق ويدخل نسبة الفوز والعائد ورأس
+      المال كأنه أُغلق — ربح/خسارة غير محقّقة بشكل نتيجة. الآن الإحصاء على المغلقة وحدها، والمفتوح
+      بـ`open_pnl_pct` (None إن لا مركز) كـ«الربح المفتوح» بمختبر استراتيجيات TradingView."""
+    open_pnl = next((t["pnl_pct"] for t in trades if t.get("open")), None)
+    trades = [t for t in trades if not t.get("open")]
     wins = [t["pnl_pct"] for t in trades if t["pnl_pct"] > 0]
     losses = [t["pnl_pct"] for t in trades if t["pnl_pct"] < 0]
     decided = len(wins) + len(losses)
@@ -79,6 +84,7 @@ def _stats(trades: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str,
         "avg_win_pct": round(sum(wins) / len(wins), 2) if wins else 0,
         "avg_loss_pct": round(sum(losses) / len(losses), 2) if losses else 0,
         "max_drawdown_pct": round(max_dd, 2),
+        "open_pnl_pct": open_pnl,
     }
     return stats, curve
 
