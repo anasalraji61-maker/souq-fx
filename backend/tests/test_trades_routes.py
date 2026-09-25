@@ -170,7 +170,7 @@ def test_a_null_on_a_required_field_is_ignored_not_written(client):
     trade = _open_trade(client)
     r = client.patch(
         f"/api/trades/{trade['id']}",
-        json={"symbol": None, "side": None, "entry": None, "size": None, "note": None},
+        json={"symbol": None, "side": None, "entry": None, "note": None},
         headers=_DEV1,
     )
     assert r.status_code == 200, r.text
@@ -397,6 +397,22 @@ def test_a_sizeless_trade_can_be_given_a_size_later(client):
     trade = client.post("/api/trades", json=body, headers=_DEV1).json()["trade"]
     r = client.patch(f"/api/trades/{trade['id']}", json={"size": 0.2}, headers=_DEV1)
     assert r.json()["trade"]["size"] == pytest.approx(0.2)
+
+
+def test_an_explicit_null_size_clears_it_to_unknown(client):
+    """صفوف ما قبل a078946 حُفظت «1 لوت» لم يكتبه المتداول؛ null كان يُتجاهل فلا يُمحى أبداً."""
+    trade = _open_trade(client, size=1)
+    r = client.patch(f"/api/trades/{trade['id']}", json={"size": None}, headers=_DEV1)
+    assert r.status_code == 200, r.text
+    assert r.json()["trade"]["size"] is None
+    row = client.get("/api/trades", headers=_DEV1).json()["trades"][0]
+    assert row["size"] is None
+
+
+def test_an_absent_size_still_changes_nothing(client):
+    trade = _open_trade(client)
+    r = client.patch(f"/api/trades/{trade['id']}", json={"note": "x"}, headers=_DEV1)
+    assert r.json()["trade"]["size"] == 0.5
 
 
 # ─── الإحصاءات على كل الصفقات، والتعادل ليس خسارة ───────────────────────────

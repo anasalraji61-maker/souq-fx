@@ -1886,7 +1886,7 @@ def close_trade(
 def update_trade(
     trade_id: str, fields: dict, user_id: int | None = None, owner_key: str | None = None
 ) -> dict | None:
-    """تعديل صفقة يملكها المستدعي. `fields` يحوي ما أُرسل فقط؛ exit/sl/tp = None تعني مسحاً.
+    """تعديل صفقة يملكها المستدعي. `fields` يحوي ما أُرسل فقط؛ exit/sl/tp/size = None تعني مسحاً.
     النتيجة (`pnl`) والحالة تُعاد حسابهما من الدخول/الخروج/الاتجاه بعد التعديل: خطأ كتابة بسعر الدخول
     كان يُفسد نسبة النجاح وصافي النقاط للأبد (الحلّ الوحيد كان الحذف وإعادة الكتابة)."""
     owner_sql, owner_args = _trade_owner_clause(user_id, owner_key)
@@ -1925,7 +1925,8 @@ def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: t
         if "entry" in fields:
             row["entry"] = float(fields["entry"])
         if "size" in fields:
-            row["size"] = float(fields["size"])
+            # None = «حجم غير معروف» (كالإنشاء): صفوف قديمة حُفظت «1 لوت» افتراضياً لم يكتبه أحد، ولا طريق غيره لمسحه.
+            row["size"] = float(fields["size"]) if fields["size"] is not None else None
         if "note" in fields:
             row["note"] = fields["note"] or ""
         for k in ("sl", "tp"):

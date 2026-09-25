@@ -476,7 +476,7 @@ class TradeClose(BaseModel):
 
 class TradeUpdate(BaseModel):
     """تعديل صفقة بالدفتر (خطأ كتابة بالدخول/الوقف، ملاحظة لاحقة). الحقول الغائبة لا تتغيّر؛ `exit`/`sl`/`tp`
-    بقيمة null صريحة تُمسح (مسح `exit` يعيد الصفقة مفتوحة)."""
+    بقيمة null صريحة تُمسح (مسح `exit` يعيد الصفقة مفتوحة)، و`size` null = حجم غير معروف."""
 
     symbol: str | None = Field(default=None, min_length=3, max_length=12)
     side: Literal["buy", "sell"] | None = None
@@ -1429,9 +1429,11 @@ def trades_update(
     uid = user["user_id"] if user else None
     # model_fields_set يميّز «لم يُرسَل» (لا تغيير) عن null صريح (مسح الوقف/الهدف/الخروج)
     fields = {k: getattr(body, k) for k in body.model_fields_set}
-    for k in ("symbol", "side", "entry", "size", "note"):
+    for k in ("symbol", "side", "entry", "note"):
         if k in fields and fields[k] is None:
             fields.pop(k)  # حقول إلزامية بالجدول — null لها يُتجاهل بدل كسر الصف
+    # `size` ليس منها: null = «غير معروف» كالإنشاء (a078946). كان يُتجاهل ⇒ «1 لوت» الافتراضي القديم
+    # بصفوف ما قبل الإصلاح لا يُمحى أبداً ويبقى حجماً لم يكتبه المتداول.
     try:
         row = db.update_trade(trade_id, fields, uid, owner_key=key)
     except db.TradeUpdateConflict:
