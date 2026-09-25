@@ -856,3 +856,13 @@ STATUS: ⛔6 حُدّث (مصدرا الأخبار ميّتان)، وأُضيف�
 **إلحاق 2:** وصل backend 35 (`92d6edf`، `e4abf4d` — `backend/` فقط، لا أثر على tsc) بصفّ backend-r35 (TTS بلا مصادقة) — تحقّقتُ: `main.py:1633` `academy_tts(body)` بلا `Depends`،
 و`LectureClassroom.tsx:255` يستدعيه مجهولاً ⇒ ⛔18 بـSTATUS.
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة.
+
+## 2026-09-25 — الدورة 74
+**البناء:** أخضر 0 (على de91b88) — لا إصلاح لازم. **Selftests:** 101/101 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** launch133 ← tools `43176e5` (`TerminalScreen.tsx:210` `online: boolean | null` من `slotResults.some(Boolean)`، `:1051` بلا وسم عند null).
+chart-r56 (3): Alerts/Watchlist ← ui `7023c51` (`AlertsPanel.tsx:297`، `WatchlistPanel.tsx:387` `chartPipSpec` + `pipUnit(lang)`)؛ **ضُيّق الصفّ لـui على `DomLitePanel.tsx:68-71` وحده**
+(`quoteSpreadPips` بلا `chartPipSpec`، `' pip'` ثابتة، `formatPrice` بلا مرجع). سجلات chart 57 / launch 132 / ui 33 / backend 35: بلا طلب جديد.
+**المراجعة (d — أرقام متناقضة):** حدود الطول تطبيق↔خادم متطابقة (ملاحظة 500، دردشة 1000، AI/معلّم 2000، رمز 12، تخطيط 64، مستخدم 32).
+**جديد QA74 → tools (منخفض):** backend `de91b88` جعل `avg_win`/`avg_loss`/`best`/`worst` `null` بلا صفقة خلفها؛ `tradePlan.ts` `journalStats` («بمعادلة الخادم نفسها») يعيد `0`
+و`win_rate: 0` (الخادم `null`)، والنوع `JournalStats` `number`. لا أثر مرئي: المستهلكون يحرسون بـ`trade_count > 0` (`TradeJournalPanel.tsx:1486`، `WeeklyReportPanel.tsx:117`)، و`avg_*` لا يُعرض.
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
