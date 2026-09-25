@@ -3024,3 +3024,25 @@ console.log('tradePlan levelLooksLikePips metal above entry selftest OK');
   assert.equal(analyzePlan({ symbol: 'BTCUSD', side: 'buy', entry: 60000, sl: 59000, tp: 62000 }).rr, 2);
 }
 console.log('tradePlan analyzePlan large-price R:R selftest OK');
+
+// formatSignedPct — سطور الإحصاءات بإشارة سطر الصفقة
+{
+  const { formatSignedPct } = require('./tradePlan') as typeof import('./tradePlan');
+  assert.equal(formatSignedPct(1.5), '+1.50');
+  assert.equal(formatSignedPct(-0.5), '−0.50');
+  assert.equal(formatSignedPct(0.23), '+0.23');
+  assert.equal(formatSignedPct(0), '0.00');
+  assert.equal(formatSignedPct(-0), '0.00');
+  assert.equal(formatSignedPct(-0.004), '0.00'); // يُقرَّب صفراً ⇒ بلا «−»
+  assert.equal(formatSignedPct(0.005), '+0.01');
+  assert.equal(formatSignedPct(-1.005), '−1.01');
+  assert.equal(formatSignedPct(0.1 + 0.2), '+0.30');
+  assert.equal(formatSignedPct(-244259.1), '−244259.10');
+  assert.equal(formatSignedPct(null), '—');
+  assert.equal(formatSignedPct(NaN), '—');
+  // يطابق نسبة سطر الصفقة (`sign` + `toFixed(2)`) لقيمة غير صفرية
+  for (const v of [0.23, -0.23, 1.25, -3.5, 12.34]) {
+    assert.equal(formatSignedPct(v), `${v > 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}`);
+  }
+}
+console.log('tradePlan formatSignedPct selftest OK');

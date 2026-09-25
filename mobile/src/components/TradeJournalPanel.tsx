@@ -80,6 +80,7 @@ import {
   editExitValue,
   netLineIsWhole,
   noteWithTypedSize,
+  formatSignedPct,
   journalNoteRoom,
   noteWithInitialStop,
   noteCharsLeft,
@@ -1432,7 +1433,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           ) : null}
           {!statsMixScopes && pnlPctContradictsCash(visibleTrades, shownStats.total_pnl_pct) ? null : (
             <Text style={[styles.stat, { textAlign: align }]}>
-              {t.journalStatPriceMoveSum.replace('{pct}', String(shownStats.total_pnl_pct))}
+              {t.journalStatPriceMoveSum.replace('{pct}', formatSignedPct(shownStats.total_pnl_pct))}
             </Text>
           )}
           {!statsMixScopes && extraStats.pips != null ? (
@@ -1454,8 +1455,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           ) : null}
           <Text style={[styles.stat, { textAlign: align }]}>
             {t.journalStatBestWorst
-              .replace('{best}', String(shownStats.best))
-              .replace('{worst}', String(shownStats.worst))}
+              .replace('{best}', formatSignedPct(shownStats.best))
+              .replace('{worst}', formatSignedPct(shownStats.worst))}
           </Text>
         </View>
       ) : null}

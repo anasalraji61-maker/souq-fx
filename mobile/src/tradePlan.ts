@@ -940,6 +940,19 @@ export function pnlPctContradictsCash(
 }
 
 /** +1.8R / −1R / 0R */
+/**
+ * نسبة موقَّعة لسطور إحصاءات الدفتر: «+1.50»، «−0.50»، «0.00» (بلا «%» — القالب يضعها). منزلتان كسطر الصفقة، و«−» (U+2212)
+ * و«+» كـ`formatR`/`formatSignedPips` بالسطر المجاور؛ رقمٌ يُقرَّب صفراً بلا إشارة. غير منتهٍ ⇒ «—».
+ *
+ * لماذا: «مجموع حركة السعر» و«أفضل/أسوأ» كانت `String(v)`: «-0.5%» بشرطة ASCII و«0.23%» بلا «+» تحت «−25 pip» و«+1R»،
+ * وأفضل صفقة 0.1 + 0.2 من خادمٍ لا يقرّب كانت «0.30000000000000004%».
+ */
+export function formatSignedPct(v: number | null | undefined): string {
+  if (v == null || !Number.isFinite(v)) return '—';
+  const abs = (Math.round(Math.abs(v) * 100 + 1e-9) / 100).toFixed(2);
+  return `${abs === '0.00' ? '' : v > 0 ? '+' : '−'}${abs}`;
+}
+
 export function formatR(r: number | null): string | null {
   if (r == null || !Number.isFinite(r)) return null;
   const abs = Number.isInteger(r) ? String(Math.abs(r)) : Math.abs(r).toFixed(1);
