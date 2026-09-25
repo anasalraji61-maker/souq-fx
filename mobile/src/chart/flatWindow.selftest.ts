@@ -4,7 +4,7 @@
  * Run: npx --yes tsx src/chart/flatWindow.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { computeBop, computeCci, computeCmo, computeCutlerRsi, computeRsi, computeStoch, computeStochRsi, computeWilliamsR } from './indicators/momentum';
+import { computeBop, computeCci, computeCmo, computeSmi, computeCutlerRsi, computeRsi, computeStoch, computeStochRsi, computeWilliamsR } from './indicators/momentum';
 import { computeCmf, computeMfi } from './indicators/volume';
 import { evalPineLite } from './pineLite';
 
@@ -59,5 +59,13 @@ assert.equal(evalPineLite('stoch(14)', bars)[last], null, 'Pine stoch flat');
 assert.equal(typeof evalPineLite('stoch(14)', bars)[20], 'number');
 assert.equal(computeBop(bars)[last], null, 'BOP zero-range bar');
 assert.equal(typeof computeBop(bars)[5], 'number');
+
+// SMI: نافذة ساكنة ⇒ na؛ وأوّل قيمة بالفهرس 13 (10 + 3 + 3 − 3) كـPine — لا قيم من بذرة أصفار بالفهارس 9..12
+assert.equal(computeSmi(flat(40, 1.1, 100)).smi[39], null, 'SMI flat');
+{
+  const smi = computeSmi(moving).smi;
+  for (let i = 0; i < 13; i++) assert.equal(smi[i], null, `SMI warm-up ${i}`);
+  assert.equal(typeof smi[13], 'number', 'SMI first value');
+}
 
 console.log('flatWindow selftest: PASS');

@@ -677,12 +677,11 @@ export function computeKst(closes: number[]): { kst: (number | null)[]; signal: 
  * لـcomputeTsi أعلاه حرفياً، هنا على diff/range بدل momentum/absMomentum). لكل نقطة: منتصف=
  * (أعلى قمة+أدنى قاع)/2 خلال kPeriod، diff=إغلاق−منتصف، مدى=أعلى قمة−أدنى قاع؛ avgDiff=
  * ema(ema(diff، smoothPeriod1)، smoothPeriod2)، avgRange بنفس الطريقة تماماً؛ SMI=100×avgDiff/
- * (avgRange/2) (حارس صفر صراحةً عند avgRange=0)، خط الإشارة=ema(SMI، signalPeriod) — نفس بنية
+ * (avgRange/2) (na عند avgRange=0)، خط الإشارة=ema(SMI، signalPeriod) — نفس بنية
  * kvo/signal لـcomputeKlinger أعلاه حرفياً (خط رئيسي + إشارة مُنعَّمة)، يُرسَم بنفس نمط الپين
  * ثنائي الخط. **تحقّق يدوي**: سعر ثابت تماماً P بكل الشموع → أعلى قمة=أدنى قاع=P لأي نافذة →
  * منتصف=P → diff=P−P=0 ومدى=P−P=0 لكل نقطة صالحة → التنعيم المزدوج لسلسلة أصفار=0 لكليهما →
- * avgRange=0 محروس صراحةً → SMI=0 بالضبط، والإشارة=ema(0،signalPeriod)=0 أيضاً، يطابق "لا زخم/لا
- * مدى بسعر ساكن تماماً" بالتعريف.
+ * avgRange=0 محروس صراحةً → SMI=na (لا شيء يُرسم) كقسمة Pine على صفر.
  */
 export function computeSmi(
   candles: Candle[],
@@ -692,8 +691,10 @@ export function computeSmi(
   signalPeriod = 3
 ): { smi: (number | null)[]; signal: (number | null)[] } {
   const n = candles.length;
-  const diff: number[] = new Array(n).fill(0);
-  const range: number[] = new Array(n).fill(0);
+  // ما قبل اكتمال أوّل نافذة `na` كـPine لا صفر: الأصفار كانت تدخل بذرة التنعيم المزدوج ⇒ أربع قيم لا يرسمها
+  // TradingView (بالفهارس 9..12) وانحراف ~3 نقاط SMI بما بعدها حتى ~الشمعة 22. `ema` تتخطّى الفراغ وتبذر بعده.
+  const diff: (number | null)[] = new Array(n).fill(null);
+  const range: (number | null)[] = new Array(n).fill(null);
   const valid: boolean[] = new Array(n).fill(false);
   for (let i = kPeriod - 1; i < n; i++) {
     let hh = -Infinity;
@@ -712,7 +713,8 @@ export function computeSmi(
   const smi: (number | null)[] = candles.map((_, i) => {
     if (!valid[i] || avgDiff[i] == null || avgRange[i] == null) return null;
     const halfRange = avgRange[i]! / 2;
-    return halfRange === 0 ? 0 : (100 * avgDiff[i]!) / halfRange;
+    // مدى صفري (سعر ساكن بكل النافذة) ⇒ `na` كقسمة Pine على صفر، لا 0 «محايد» (نفس قاعدة Stoch/CMO).
+    return halfRange === 0 ? null : (100 * avgDiff[i]!) / halfRange;
   });
   const emaSignal = ema(smi, signalPeriod);
   const signal: (number | null)[] = smi.map((v, i) => (v != null ? emaSignal[i] : null));
