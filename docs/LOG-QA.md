@@ -253,3 +253,17 @@ chart12 شقّ launch (`3d12429`) ⇒ الصفّ صار chart ← chart للرب
 و`dailyChange.ts` `prevCloseFromDaily` — مستعملة بالـselftest وحده. (2) أسماء `const`/`function` معرَّفة بأكثر من ملف: `TF_SECONDS` بـ`mock.ts:16` نسخة `timeframes.ts:17`
 (أُلحقت بصفّ QA1)؛ `RECONNECT_*`/`dirColor`/`QUICK_SYMBOLS` مسجّلة؛ `FIAT`/`METALS` (`positionSize` مقابل `newsRisk`) بغرضين مختلفين — ليست تكراراً.
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة خارج `locales.ts`.
+
+## 2026-09-25 — الدورة 22
+**البناء:** أخضر 0 (بعد 6a727de) — لا إصلاح لازم. **Selftests:** 66/66 ناجح (`npx tsx`؛ +1 `overlayTags` من الشارت).
+**التحقّق من الإغلاقات بالكود:** مُغلق — launch70 `riskCalcSlPipsAmbiguous` (`PositionSizePanel.tsx:469`، `4133676`)؛ شقّ QA21 `prevCloseFromDaily` (`29c1d91`، 0 مطابقة).
+**غير مُغلق:** `priceLegend.ts` ×3 (QA21)، `mcCloneDrawing*` 0 بـ`.tsx` (chart12)، 10 `Alert.alert` بـ5 ملفات، «₴» ×2، `TimeframeBar` صفر `accessibilityState`، `accNetLoadError` 0.
+نجمة ★ لـchart12 وQA19 وQA20.
+**طلبات تنسيق جديدة (تحقّقتُ):** tools48 → chart (`pipSpec.ts`): `chartPipSpec('USDJPYMICRO'|'USDJPY-CENT'|'GBPJPY_MICRO')` = null بـ`tsx` بينما
+`smallContractPair` يقرؤها ⇒ منازل مخمَّنة بالدفتر. قرار أنس جديد من tools48: توسيع الوقف يعيد تعريف 1R (⛔ 15).
+**المراجعة (b — نصوص ثابتة خارج `locales.ts`)، بسكربتين:** (1) عربي خارج التعليقات بكل `.ts/.tsx` عدا `locales.ts`: كله بملفات مسجّلة
+(Subscription 48، Commission 25، NetworkTree 22، TreeDiagram 10، Messages 13، `timeframes.ts` 8، Account:248) أو افتراضيات توافق
+(`dataSource`/`marketHours`/`measureReadout`/`CHART_KINDS`/`DEFAULT_LAYOUT`) — تحقّقتُ أن كل مستدعٍ بالإنتاج يمرّر الترجمة (`LayoutPanel:42`،
+`TerminalScreen:941-946`، `FocusChartModal:291-304`، `MatrixChart:4978`، `typeLabels:66`)؛ `academy.ts` له `_en`؛ تعليمات `WeeklyReportPanel` داخلية واللغة تُرسل `lang`.
+(2) نص إنجليزي بـJSX/خصائص: 0 سوى «AUTO» (زر المحور، له وصف مترجم) و`placeholder="EURUSD"`. «pip»/«lot» بالقوالب مصطلح المنصّات — مقبول.
+**الدورة القادمة:** المراجعة (c) — a11y.
