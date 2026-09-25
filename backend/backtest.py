@@ -20,7 +20,6 @@ def _round(x: float, n: int) -> float:
     return round(x, n) + 0.0
 
 
-
 def typical_spread(symbol: str) -> tuple[float, float] | None:
     """سبريد تقديري لحساب تجزئة عادي: (عدد الـpip، حجم الـpip). None = ليس زوج فوركس/معدن (DXY مؤشر لا يُتداول).
 

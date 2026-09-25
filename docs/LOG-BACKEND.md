@@ -553,3 +553,16 @@
 **فُحص ولم يُغيَّر:** `db.trade_stats`/`add_trade` (لا `pnl`/`id` من العميل — `TradeCreate` لا يحملهما)؛ `backtest.py` (`_stats`، السبريد التقديري موسوم `costs_included`)؛ `indicators.py` (RSI/ATR Wilder، تقاطع كـ`ta.crossover`)؛ `screener.py`؛ `/api/market/quote` و`fetch_quote_book`؛ `/api/ai/ask` (اتجاه البطاقة من نصّ النموذج حين يخالف الخادم بلا مستويات — مقصود ومختبَر `test_no_buy_levels_under_a_sell_answer`)؛ `academy_data.py` (لا إحصاءات نجاح مخترَعة، التقدّم null)؛ تقريب الأسعار الثابت بباقي الملفات (لا غيره).
 
 **ما يحتاجه التطبيق:** لا شيء — `IndicatorForecastPanel.tsx:136` يقبل 0..12 أصلاً. قرارات أنس كما هي: launch9، QA24، launch77، backend-r6 (6)، backend-r33، backend-r35.
+
+## 2026-09-25 — التشغيل 42: خروج bb_bounce عند الوسط كان يُتخطّى
+
+**بداية التشغيل:** لا صفّ في COORDINATION منفّذه backend وحده (صفوف backend/أنس قرارات بشرية — لم تُمسّ). البنود 1–9 فحص سريع بالكود — ما تزال مغلقة (`XBR/USD`/`not_offered_by_provider` ‏`twelve_data.py:33,42`، سبريد من المزوّد وحده `twelve_data.py:336`، ‏409 `trade_already_closed` ‏`main.py:1414`، `NOCASE` ‏`db.py:22,27`). تدقيق حسابات بوكيل (backtest/indicators/screener/alert_worker/trade_stats).
+
+| # | الإيداع | ما تغيّر |
+|---|---|---|
+| 101 | `2e3b211` | **`bb_bounce`: الخروج عند الخط الأوسط لا يحجبه لمسٌ جديد للنطاق نفسه.** شراء مفتوح وشمعة بذيل يلمس السفلي وتُغلق فوق الوسط ⇒ كانت تُقرأ «شراء» (لا شيء والمركز شراء) فيُتخطّى الخروج: ربح +0.33% بقاعدة الاستراتيجية عُرض صفقةً مفتوحة بـ−0.97% و`trade_count` 0 (أو خروجاً متأخّراً بسعر آخر). الإشارة بجانب المركز نفسه تسقط الآن إلى فحص الخروج؛ الانعكاس عند النطاق المقابل كما هو. `test_bb_bounce_same_side_touch_does_not_block_the_mid_band_exit` (يفشل قبل الإصلاح). |
+| 102 | `ce2dce6` | **لا «−0.0» بنتائج الاختبار الخلفي.** بيع خرج بسعر دخوله ⇒ `pnl_pct: -0.0` ⇒ «−0.00%» خسارة لم تحدث. `_round` بدل `round` بكل `backtest.py`. |
+
+**فُحص ولم يُغيَّر:** `signal_hub.py` (مستويات ATR، الأصوات)، `openrouter_ai.py` (لا أسعار من النموذج)، `econ_calendar.py`/`news_feed.py`، `fetch_quote_book` (لا bid/ask مختلَق)، الأصوات/`ballot`، المصادقة (PBKDF2، انتهاء الجلسة)، `db._pnl_pct`/`close_trade`/`trade_stats`، `screener.py`، `alert_worker.py`. 761 اختباراً ناجحاً.
+
+**ما يحتاجه التطبيق:** لا شيء — شكل الردّ لم يتغيّر. قرارات أنس كما هي: launch9، QA24، launch77، backend-r6 (6)، backend-r33، backend-r35.
