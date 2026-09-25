@@ -9,6 +9,7 @@ import {
   type AccountCcy,
   instrumentSpec,
   conversionPair,
+  convStaleMinutes,
   reversedConversion,
   usdBridge,
   bridgedRate,
@@ -146,7 +147,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * يُخزَّن **السعر المحسوب** لا (الزوج + `invert` + سعره الخام) لأن المصدر صار ثلاثة لا واحداً:
    * الزوج المتوقَّع، أو معكوسه، أو **ساقا جسر الدولار** معاً — وللأخير لا «زوج واحد وسعره» أصلاً.
    */
-  const [convQuote, setConvQuote] = useState<{ key: string; rate: number } | null>(null);
+  const [convQuote, setConvQuote] = useState<{ key: string; rate: number; at: number } | null>(null);
   const [convLoading, setConvLoading] = useState(false);
   const [convFailed, setConvFailed] = useState(false);
   /** إدخال يدوي لسعر التحويل عند تعذّر جلبه — لا تتوقف الحاسبة بسبب انقطاع مزوّد الأسعار */
@@ -363,7 +364,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           if (price != null) {
             const r = quoteToAccountRate(c, price);
             if (r != null) {
-              setConvQuote({ key: conversionKey({ symbol: convSymbol, invert: convInvert })!, rate: r });
+              setConvQuote({ key: conversionKey({ symbol: convSymbol, invert: convInvert })!, rate: r, at: Date.now() });
               setConvLoading(false);
               return;
             }
@@ -384,7 +385,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           if (!mountedRef.current || g !== gen.current) return;
           const viaUsd = bridgedRate(bridge, p1, p2);
           if (viaUsd != null) {
-            setConvQuote({ key: conversionKey({ symbol: convSymbol, invert: convInvert })!, rate: viaUsd });
+            setConvQuote({ key: conversionKey({ symbol: convSymbol, invert: convInvert })!, rate: viaUsd, at: Date.now() });
             setConvLoading(false);
             return;
           }
@@ -568,6 +569,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    */
   const slTooClose = spec != null && Number.isFinite(slTyped) && slTyped > 0 && slTyped < 1;
   const fetchedConv = convQuote && convQuote.key === convKey ? convQuote : null;
+  // التجديد الفاشل يُبقي آخر سعر بصمت — بعد 5 د يُقال للمتداول (مؤقّت التجديد يعيد الرسم كل دقيقة فيتقدّم العدد)
+  const convStaleMin = fetchedConv ? convStaleMinutes(fetchedConv.at, Date.now()) : null;
   const manual = num(manualConv);
   // السعر المجلوب (زوجاً مباشراً كان أم معكوساً أم جسراً)، وإلا الإدخال اليدوي بترتيب الزوج المعروض
   const convRate = fetchedConv
@@ -1288,6 +1291,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       <Text style={[styles.hint, { textAlign: align }]}>{commissionNoteText}</Text>
 
       {conv && convLoading ? <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.sm }} /> : null}
+      {conv && convStaleMin != null ? (
+        <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
+          {t.riskCalcConvStale.replace('{pair}', conv.symbol).replace('{min}', String(convStaleMin))}
+        </Text>
+      ) : null}
       {conv && convFailed ? (
         <>
           <Text style={[styles.warn, { textAlign: align }]}>

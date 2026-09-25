@@ -5,6 +5,8 @@
 import { parseDecimal } from './parseDecimal';
 import assert from 'node:assert/strict';
 import {
+  convStaleMinutes,
+  CONV_STALE_AFTER_MS,
   liveEntryFillAllowed,
   parseRiskInput,
   toggleRiskUnit,
@@ -2214,3 +2216,21 @@ console.log('positionSize conversion refresh lots selftest OK');
   assert.equal(slPipsFromPrices(instrumentSpec('EURUSD')!, 1.085, 1.083), 20);
 }
 console.log('positionSize liveEntryFillAllowed selftest OK');
+
+// ---- convStaleMinutes: سعر تحويل لم يتجدّد يُوسَم بعمره ----
+{
+  const t0 = 1_700_000_000_000;
+  // حديث أو تجديد واحد فاشل ⇒ بلا تحذير
+  assert.equal(convStaleMinutes(t0, t0), null);
+  assert.equal(convStaleMinutes(t0, t0 + 60_000), null);
+  assert.equal(convStaleMinutes(t0, t0 + CONV_STALE_AFTER_MS - 1), null);
+  // خمس دقائق بالضبط ⇒ «5»؛ 5:59 ⇒ «5» لا «6»؛ ساعتان ⇒ 120
+  assert.equal(convStaleMinutes(t0, t0 + CONV_STALE_AFTER_MS), 5);
+  assert.equal(convStaleMinutes(t0, t0 + 5 * 60_000 + 59_000), 5);
+  assert.equal(convStaleMinutes(t0, t0 + 2 * 3_600_000), 120);
+  // ساعة الجهاز عادت للخلف أو وقت غير صالح ⇒ لا رقم سالب ولا مختلَق
+  assert.equal(convStaleMinutes(t0, t0 - 10 * 60_000), null);
+  assert.equal(convStaleMinutes(NaN, t0), null);
+  assert.equal(convStaleMinutes(t0, NaN), null);
+}
+console.log('positionSize convStaleMinutes selftest OK');

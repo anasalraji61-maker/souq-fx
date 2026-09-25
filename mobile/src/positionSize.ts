@@ -1249,3 +1249,18 @@ export function planJournalNote(input: {
 export function liveEntryFillAllowed(atTap: string, now: string): boolean {
   return atTap.trim() === now.trim();
 }
+
+/** سعر تحويل لم يتجدّد منذ هذه المدّة يُوسَم «قديماً» — التجديد كل 60 ث، فخمس دقائق = أربعة تجديدات فاشلة متتالية */
+export const CONV_STALE_AFTER_MS = 5 * 60_000;
+
+/**
+ * دقائق عمر سعر التحويل المجلوب إن صار قديماً، وإلا null. فشل التجديد الصامت يُبقي آخر سعر (إسقاطه يُعطّل الحاسبة
+ * بلا اتصال) — لكن بلا إشارة كان يبقى ساعاتٍ واللوت محسوب عليه. الدقائق مقرّبة للأسفل (لا تقول «6» بعد 5:10).
+ * `fetchedAt` غير صالح أو في المستقبل (ساعة الجهاز عادت للخلف) ⇒ null: لا تحذير برقم سالب أو مختلَق.
+ */
+export function convStaleMinutes(fetchedAt: number, now: number): number | null {
+  if (!Number.isFinite(fetchedAt) || !Number.isFinite(now)) return null;
+  const age = now - fetchedAt;
+  if (age < CONV_STALE_AFTER_MS) return null;
+  return Math.floor(age / 60_000);
+}
