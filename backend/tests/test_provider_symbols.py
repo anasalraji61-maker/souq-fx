@@ -179,3 +179,31 @@ def test_ws_price_time_is_the_provider_timestamp_not_arrival(monkeypatch):
 ])
 def test_ws_quoted_at_falls_back_to_arrival_when_unusable(raw, want_offset):
     assert td_ws._quoted_at({"timestamp": raw}, 1_790_000_000.0) == 1_790_000_000.0 + want_offset
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "/api/charts/EURUSD?timeframe=1h",
+        "/api/charts/XAUUSD?timeframe=1d",
+        "/api/indicators/snapshot/EURUSD?timeframe=M",
+        "/api/terminal?tf1=1h",
+        "/api/terminal?dxy_tf=bogus",
+    ],
+)
+def test_unknown_timeframe_is_422_not_silent_15m(monkeypatch, url):
+    """backend-r38: فريم غير معروف كان يُبدَّل بـ15m صامتاً ⇒ مؤشرات «الساعة» على شموع 15 دقيقة."""
+    called = []
+    monkeypatch.setattr(main, "build_series", lambda *a, **k: called.append(a))
+    r = TestClient(main.app).get(url)
+    assert r.status_code == 422
+    assert r.json()["detail"]["error"] == "unknown_timeframe"
+    assert called == []  # لا طلب للمزوّد
+
+
+def test_known_timeframes_still_accepted(monkeypatch):
+    monkeypatch.setattr(market, "_api_key", lambda: None)
+    c = TestClient(main.app)
+    for tf in main.TF_SECONDS:
+        assert c.get(f"/api/charts/EURUSD?timeframe={tf}").status_code == 200
+    assert c.get("/api/terminal").status_code == 200

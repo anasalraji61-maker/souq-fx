@@ -851,6 +851,15 @@ def symbols_search(
     return {"results": results}
 
 
+def _require_timeframe(*tfs: str) -> None:
+    """مسارات GET بلا نموذج جسم: فريم غير معروف (`1h`، `1d`، `M`) كان يمرّ إلى `build_series` فيُبدَّل
+    بـ`15m` صامتاً ⇒ RSI وتقاطعات «الساعة» محسوبة على شموع 15 دقيقة. 422 كنماذج الأجسام (`_check_timeframe`)."""
+    for tf in tfs:
+        if tf not in TF_SECONDS:
+            raise HTTPException(422, {"error": "unknown_timeframe", "timeframe": tf,
+                                      "allowed": list(TF_SECONDS.keys())})
+
+
 @app.get("/api/terminal")
 def terminal_layout(
     tf0: str = "15m",
@@ -859,6 +868,7 @@ def terminal_layout(
     dxy_tf: str = "15m",
 ):
     """DXY + 3 frames in one call (cache-friendly for shared Twelve Data quota)."""
+    _require_timeframe(tf0, tf1, tf2, dxy_tf)
     frames = ["EURUSD", "GBPUSD", "XAUUSD"]
     tfs = [tf0, tf1, tf2]
     return {
@@ -888,6 +898,7 @@ def watchlist():
 
 @app.get("/api/charts/{symbol}")
 def chart(symbol: str, timeframe: str = "15m", outputsize: int = 180):
+    _require_timeframe(timeframe)
     return build_series(symbol, timeframe, outputsize)
 
 
@@ -1193,6 +1204,7 @@ def indicators_library():
 
 @app.get("/api/indicators/snapshot/{symbol}")
 def indicator_snapshot(symbol: str, timeframe: str = "15m"):
+    _require_timeframe(timeframe)
     series = build_series(symbol.upper(), timeframe)
     if series.data_source.kind == "demo":
         # لا RSI ولا تقاطعات ولا «تغيّر %» على شموع مختلَقة (كانت تُحسب وتُعاد موسومة demo — رقم ينتظر
