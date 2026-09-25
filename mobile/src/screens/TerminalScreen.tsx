@@ -1481,7 +1481,7 @@ export function TerminalScreen() {
                     accessibilityLabel={`${t.termPrimaryTimeframeA11yPrefix}: ${range}`}
                     accessibilityState={{ selected: tf === range }}
                   >
-                    <Text style={styles.rangeText}>{range}</Text>
+                    <Text style={[styles.rangeText, tf === range && styles.rangeTextOn]}>{range}</Text>
                   </Pressable>
                 ))}
               </View>
@@ -1804,7 +1804,7 @@ export function TerminalScreen() {
                   accessibilityLabel={`${t.termTimeframeA11yPrefix}: ${range}`}
                   accessibilityState={{ selected: tf === range }}
                 >
-                  <Text style={styles.rangeText}>{range}</Text>
+                  <Text style={[styles.rangeText, tf === range && styles.rangeTextOn]}>{range}</Text>
                 </Pressable>
               ))}
               <View style={styles.rangeSpacer} />
@@ -2353,9 +2353,11 @@ const styles = StyleSheet.create({
     marginLeft: 0,
     marginRight: 4,
   },
+  // DESIGN-PRO §1: بلا أزرق سماوي (لون ثالث لميزة واحدة) ولا تيل — المفعَّل تعبئة محايدة + حدّ ونصّ أساسيان؛
+  // التأكيد الوحيد بهذا الشريط هو الإطار الزمني الأساسي النشط (`rangeTextOn`)
   shadowToggleOn: {
-    borderColor: 'rgba(56,189,248,0.55)',
-    backgroundColor: 'rgba(56,189,248,0.18)',
+    borderColor: colors.textMuted,
+    backgroundColor: colors.selectedFill,
   },
   shadowToggleText: {
     color: colors.textDim,
@@ -2363,10 +2365,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   shadowToggleTextOn: {
-    color: colors.accent,
+    color: colors.text,
   },
   shadowTfLabel: {
-    color: colors.accent,
+    color: colors.textMuted,
     fontSize: 8,
     fontWeight: '500',
     minWidth: 44,
@@ -2400,8 +2402,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgElevated,
   },
   rangeBtn: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5 },
-  rangeBtnOn: { backgroundColor: colors.accentSoft },
+  rangeBtnOn: { backgroundColor: colors.selectedFill },
   rangeText: { color: colors.textDim, fontSize: 9, fontWeight: '500' },
+  rangeTextOn: { color: colors.accent },
   rangeSpacer: { flex: 1 },
   fullscreenBtn: {
     paddingHorizontal: 8,
@@ -2452,8 +2455,8 @@ const styles = StyleSheet.create({
   phoneWatchModalBar: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
   phoneWatchModalBarLtr: { flexDirection: 'row' },
   phoneWatchModalTitle: { color: colors.text, fontWeight: '500' },
-  phoneWatchClose: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: radii.sm, backgroundColor: colors.accentSoft },
-  phoneWatchCloseText: { color: colors.accent, fontWeight: '500', fontSize: 12 },
+  phoneWatchClose: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: radii.sm, backgroundColor: colors.selectedFill },
+  phoneWatchCloseText: { color: colors.text, fontWeight: '500', fontSize: 12 },
   pill: {
     paddingHorizontal: 12,
     paddingVertical: 8,
