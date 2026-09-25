@@ -25,6 +25,7 @@ def seeded(monkeypatch):
     """ذاكرة محقونة وحديثة — فلا يلمس `fetch_calendar` الشبكة."""
     monkeypatch.setattr(cal, "_CACHE", [dict(e) for e in _EVENTS])
     monkeypatch.setattr(cal, "_CACHE_TS", time.time())
+    monkeypatch.setattr(cal, "_FAIL_TS", 0.0)
     return cal
 
 
@@ -84,6 +85,7 @@ def test_failed_source_returns_no_invented_events_and_says_unavailable(monkeypat
     monkeypatch.setattr(cal.httpx, "Client", _Boom)
     monkeypatch.setattr(cal, "_CACHE", [])
     monkeypatch.setattr(cal, "_CACHE_TS", 0.0)
+    monkeypatch.setattr(cal, "_FAIL_TS", 0.0)
     assert cal.fetch_calendar() == []
     st = cal.calendar_status()
     assert st["status"] == "unavailable" and st["as_of"]
@@ -101,6 +103,7 @@ def test_failed_source_is_not_hammered_on_every_request(monkeypatch):
     monkeypatch.setattr(cal.httpx, "Client", _Boom)
     monkeypatch.setattr(cal, "_CACHE", [])
     monkeypatch.setattr(cal, "_CACHE_TS", 0.0)
+    monkeypatch.setattr(cal, "_FAIL_TS", 0.0)
     cal.fetch_calendar()
     cal.fetch_calendar()
     assert calls["n"] == 1
@@ -113,3 +116,82 @@ def test_calendar_route_reports_status(seeded):
 
     body = TestClient(main.app).get("/api/calendar").json()
     assert body["status"] == "ok" and len(body["events"]) == 4
+
+
+# ------------------------- المصدر يفشل بعد جلب ناجح: الأسبوع الحقيقي لا يُمسح
+
+class _Boom:
+    calls = 0
+
+    def __init__(self, *a, **k):
+        type(self).calls += 1
+        raise RuntimeError("ForexFactory 429")
+
+
+def _expired_week(monkeypatch, age: float):
+    """أسبوع حقيقي جُلب قبل `age` ثانية (بعد انتهاء TTL) والمصدر يفشل الآن."""
+    _Boom.calls = 0
+    monkeypatch.setattr(cal.httpx, "Client", _Boom)
+    monkeypatch.setattr(cal, "_CACHE", [dict(e) for e in _EVENTS])
+    monkeypatch.setattr(cal, "_CACHE_TS", time.time() - age)
+    monkeypatch.setattr(cal, "_FAIL_TS", 0.0)
+
+
+def test_failed_refresh_keeps_the_real_week_with_its_fetch_time(monkeypatch):
+    """كان الفشل يكتب `_CACHE = []`: 429 عابر بعد 30 دقيقة ⇒ التقويم وشريط «خبر قوي قريب» فارغان."""
+    _expired_week(monkeypatch, cal.TTL + 60)
+    fetched_at = cal._CACHE_TS
+    events = cal.fetch_calendar(impact="high")
+    assert _Boom.calls == 1, "حاول المصدر فعلاً"
+    assert {e["title"] for e in events} == {"NFP", "ECB"}
+    st = cal.calendar_status()
+    assert st["status"] == "ok"
+    assert st["as_of"] == fetched_at, "وقت الجلب الحقيقي لا وقت المحاولة"
+    assert st["stale"] is True
+
+
+def test_failed_refresh_backs_off_then_retries(monkeypatch):
+    _expired_week(monkeypatch, cal.TTL + 60)
+    cal.fetch_calendar()
+    cal.fetch_calendar()
+    assert _Boom.calls == 1, "لا قصف للمصدر المعطّل بكل طلب"
+    monkeypatch.setattr(cal, "_FAIL_TS", time.time() - cal.FAILURE_TTL - 1)
+    cal.fetch_calendar()
+    assert _Boom.calls == 2, "يُعاد المحاولة بعد FAILURE_TTL"
+
+
+def test_week_older_than_stale_max_is_not_served(monkeypatch):
+    _expired_week(monkeypatch, cal.STALE_MAX + 60)
+    assert cal.fetch_calendar() == []
+    st = cal.calendar_status()
+    assert st["status"] == "unavailable" and st["stale"] is False
+
+
+def test_successful_refresh_clears_stale(monkeypatch):
+    _expired_week(monkeypatch, cal.TTL + 60)
+    cal.fetch_calendar()
+    assert cal.calendar_status()["stale"] is True
+    monkeypatch.setattr(cal, "_parse_ff_json", lambda text: [dict(_EVENTS[0])])
+
+    class _Resp:
+        status_code = 200
+        text = "[]"
+
+    class _Ok:
+        def __init__(self, *a, **k):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def get(self, *a, **k):
+            return _Resp()
+
+    monkeypatch.setattr(cal.httpx, "Client", _Ok)
+    monkeypatch.setattr(cal, "_FAIL_TS", time.time() - cal.FAILURE_TTL - 1)
+    assert [e["title"] for e in cal.fetch_calendar()] == ["NFP"]
+    st = cal.calendar_status()
+    assert st["stale"] is False and time.time() - st["as_of"] < 5

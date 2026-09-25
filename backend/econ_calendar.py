@@ -35,8 +35,14 @@ FF_JSON_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
 # وتوقّعها قديم؛ متداول يرى «خبر فائدة الليلة» يغلق مراكزه أو ينتظره وهو غير موجود. أُزيلت:
 # المصدر المتعذّر يُعاد «غير متاح» بقائمة فارغة، والتطبيق يقول ذلك.)
 
-# هل آخر جلب نجح؟ `ok` = أحداث ForexFactory، `unavailable` = المصدر متعذّر/فارغ.
-_STATUS = "unavailable"
+# لحظة آخر محاولة **فاشلة** (0 = لا فشل منذ آخر نجاح). `_CACHE_TS` صار وقت آخر جلب **ناجح** وحده:
+# كان الفشل يكتب `_CACHE = []` فوق أسبوع حقيقي جُلب قبل 30 دقيقة ⇒ 429 عابر من ForexFactory (يحدّ
+# الطلبات بشدّة) يُفرغ التقويم وشريط «خبر قوي قريب» ساعتها — والمتداول يفتح التطبيق فلا يرى قرار
+# الفائدة بعد 20 دقيقة. الأحداث المحفوظة حقيقية بأوقات مطلقة (`ts`) فتُخدَم حتى `STALE_MAX` بوقت جلبها
+# الحقيقي (`as_of`) و`stale: true`، ويُعاد المحاولة كل `FAILURE_TTL`.
+_FAIL_TS = 0.0
+# أقصى عمر لأسبوع محفوظ يُخدَم والمصدر متعذّر — بعده «غير متاح» (قد تنقصه أحداث أُضيفت أو نتائج صدرت).
+STALE_MAX = 6 * 3600
 
 
 def _impact(raw: str | None) -> str:
@@ -267,10 +273,12 @@ def fetch_calendar(
     currency: str | None = None,
     impact: str | None = None,
 ) -> list[dict]:
-    global _CACHE, _CACHE_TS, _STATUS
+    global _CACHE, _CACHE_TS, _FAIL_TS
+    now = time.time()
+    fresh = bool(_CACHE) and now - _CACHE_TS < TTL
     # فشلٌ يُعاد فحصه بعد دقيقتين لا نصف ساعة، ولا بكل طلب (كي لا يُقصف المصدر وهو معطّل)
-    ttl = TTL if _CACHE else FAILURE_TTL
-    if (not _CACHE and _CACHE_TS == 0.0) or time.time() - _CACHE_TS >= ttl:
+    backing_off = _FAIL_TS > 0 and now - _FAIL_TS < FAILURE_TTL
+    if not fresh and not backing_off:
         merged: list[dict] = []
         try:
             with httpx.Client(timeout=14.0, follow_redirects=True) as client:
@@ -283,10 +291,13 @@ def fetch_calendar(
                         merged = _parse_ff(r.text)
         except Exception:
             merged = []
-        # لا أحداث مخترَعة عند التعذّر: قائمة فارغة + `_STATUS` (يقرؤه المسار ويعيده للعميل)
-        _CACHE = merged
-        _STATUS = "ok" if merged else "unavailable"
-        _CACHE_TS = time.time()
+        if merged:
+            _CACHE, _CACHE_TS, _FAIL_TS = merged, now, 0.0
+        else:
+            # لا أحداث مخترَعة عند التعذّر، ولا مسح لأسبوع حقيقي محفوظ (يُخدَم حتى `STALE_MAX`)
+            _FAIL_TS = now
+    if _CACHE and now - _CACHE_TS > STALE_MAX:
+        _CACHE = []
 
     events = list(_CACHE)
     curs = _wanted(currency)
@@ -299,5 +310,8 @@ def fetch_calendar(
 
 
 def calendar_status() -> dict[str, Any]:
-    """حالة آخر جلب: `status` ok/unavailable و`as_of` (epoch) وقت الجلب — None قبل أي جلب."""
-    return {"status": "ok" if _CACHE else _STATUS, "as_of": _CACHE_TS or None}
+    """`status` ok/unavailable؛ `as_of` (epoch) = وقت جلب الأحداث المُعادة، أو وقت المحاولة الفاشلة حين لا
+    أحداث — None قبل أي جلب؛ `stale` = آخر محاولة فشلت والأحداث من جلب ناجح سابق (`as_of`)."""
+    if _CACHE:
+        return {"status": "ok", "as_of": _CACHE_TS, "stale": _FAIL_TS > _CACHE_TS}
+    return {"status": "unavailable", "as_of": _FAIL_TS or _CACHE_TS or None, "stale": False}

@@ -102,6 +102,7 @@ def test_the_last_event_of_a_crowded_week_survives_a_high_impact_filter(monkeypa
     parsed = cal._parse_ff(xml)
     monkeypatch.setattr(cal, "_CACHE", parsed)
     monkeypatch.setattr(cal, "_CACHE_TS", time.time())
+    monkeypatch.setattr(cal, "_FAIL_TS", 0.0)
     titles = [e["title"] for e in cal.fetch_calendar(impact="high")]
     assert "Non-Farm Employment Change" in titles
 
