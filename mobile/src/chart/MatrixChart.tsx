@@ -2489,9 +2489,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('vpt') ? ind(computeVpt(indBars)) : null),
     [indBars, indicators]
   );
+  // سنوياً كـTradingView: √(365/per)، per = 7 فوق اليومي (أسبوعي/شهري) و1 غيره — 252 ثابتاً كان يُظهر
+  // الأسبوعي ضعف قيمته ~2.2 واليومي أقلّ بـ17%.
+  const hvStepSec = timeframeStepSec(series.timeframe);
   const hv = useMemo(
-    () => (indicators.includes('hv') ? ind(computeHistoricalVolatility(closes)) : null),
-    [closes, indicators]
+    () =>
+      indicators.includes('hv')
+        ? ind(computeHistoricalVolatility(closes, 10, 365 / (hvStepSec > 86400 ? 7 : 1)))
+        : null,
+    [closes, indicators, hvStepSec]
   );
   const stochRsi = useMemo(
     () => (indicators.includes('stochRsi') ? ind(computeStochRsi(closes)) : null),

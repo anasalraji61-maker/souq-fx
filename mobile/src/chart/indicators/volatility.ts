@@ -346,6 +346,7 @@ export function computeDonchian(
 export function computeHistoricalVolatility(
   closes: number[],
   period = 10,
+  // الشارت يمرّر 365/per كـTradingView (per = 7 فوق اليومي)؛ 252 الافتراضي لمستدعٍ بلا فريم.
   annualization = 252
 ): (number | null)[] {
   const n = closes.length;
