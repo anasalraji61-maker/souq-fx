@@ -100,8 +100,12 @@ export function computeWilliamsR(candles: Candle[], period = 14): (number | null
  * المطلق لـTP عن SMA(TP)). TP (السعر النموذجي) = (أعلى+أدنى+إغلاق)/3. عند انحراف صفري (تسطّح
  * تام) تُرجع null كـTradingView (na) — 0 كان يُقرأ «حياد» على نافذة بلا حركة أصلاً.
  */
-export function computeCci(candles: Candle[], period = 20): (number | null)[] {
-  const tp = candles.map((c) => (c.high + c.low + c.close) / 3);
+export function computeCci(
+  candles: Candle[],
+  period = 20,
+  source: (c: Candle) => number = (c) => (c.high + c.low + c.close) / 3
+): (number | null)[] {
+  const tp = candles.map(source);
   const smaTp = sma(tp, period);
   const out: (number | null)[] = [];
   for (let i = 0; i < candles.length; i++) {
@@ -793,7 +797,7 @@ export function computeCog(candles: Candle[], period = 10): (number | null)[] {
  * الموجود مسبقاً بالملف رغم مشاركة اسم "Woodie" (ذاك عائلة Pivot Points، هذا مذبذب CCI مركّب —
  * لا علاقة حسابية بينهما). **تحقّق فعلي (Node.js، قبل الكتابة)**: تطابق مطلق (===) بين
  * `computeWoodieCci(candles).cci` وaCCI(candles,14) المُستدعاة مباشرة، وبين `.turbo` وCCI(candles,6)،
- * عبر 300 شمعة عشوائية بذرة ثابتة بلا استثناء واحد — هوية رياضية بديهية بما أن الدالة استدعاء مباشر
+ * عبر 300 شمعة عشوائية بذرة ثابتة بلا استثناء واحد (قبل تحويل المصدر للإغلاق) — هوية رياضية بديهية بما أن الدالة استدعاء مباشر
  * بلا أي منطق إضافي. صفر NaN/Infinity (موروث من `computeCci` المتحقَّق مسبقاً). يُرسَم بإعادة استخدام
  * كاملة لنمط هستوغرام COG/TRIX/DPO (شريط عمودي مطبَّع بأقصى قيمة مطلقة لـCCI البطيء، bull/bear حسب
  * الإشارة)، مع تمييز بصري إضافي (حدّ لوني) حين يكون Turbo أعلى/أدنى من البطيء — نفس أسلوب تمييز حالة
@@ -802,7 +806,10 @@ export function computeCog(candles: Candle[], period = 10): (number | null)[] {
 export function computeWoodieCci(
   candles: Candle[]
 ): { cci: (number | null)[]; turbo: (number | null)[] } {
-  return { cci: computeCci(candles, 14), turbo: computeCci(candles, 6) };
+  // مصدر Woodie الإغلاق لا TP: مؤشّر TradingView المدمج `source = close` ⇒ `ta.cci(close, 14/6)`. بـTP كان
+  // الخطّ يبعد 10+ نقاط عن TV فيعبر ±100 (مستوى وودي للدخول) على شمعة مختلفة.
+  const close = (c: Candle) => c.close;
+  return { cci: computeCci(candles, 14, close), turbo: computeCci(candles, 6, close) };
 }
 
 /**
