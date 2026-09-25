@@ -32,7 +32,7 @@ import {
   subscribeDrawingsSaveError,
   type DrawingsSaveErrorCode,
 } from './drawingStore';
-import { compareOverlay, rebaseCompare } from './compare';
+import { COMPARE_COLOR, compareBaseIndex, compareLegendParts, compareOverlay, rebaseCompare } from './compare';
 import { watermarkFontSize, watermarkSymbol } from './watermark';
 import { moveArmedAlert, refreshArmedAlertsSoon, useArmedAlerts } from './useArmedAlerts';
 import { tickPlausibleForSeries, withLiveExtremes, withLivePrice, type LiveExtremes } from './liveSeries';
@@ -83,6 +83,7 @@ import {
 import { STOCH_LINE_H, stochPaneGeom } from './stochPane';
 import {
   legendBandAt,
+  legendChipWidth,
   legendMultiAt,
   legendValueAt,
   planPriceLegendForWidth,
@@ -3254,6 +3255,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (compareOv ? rebaseCompare(source.plot, compareOv.closes, visLo) : null),
     [compareOv, source.plot, visLo]
   );
+  const compareBase = useMemo(() => (compareOv ? compareBaseIndex(compareOv.closes, visLo) : -1), [compareOv, visLo]);
   const range = useMemo(() => {
     let min = Infinity;
     let max = -Infinity;
@@ -3556,11 +3558,23 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (t) legendValueChars[id] = t.length;
   }
   const legendCharsKey = JSON.stringify(legendValueChars);
+  /** شارة المقارنة أولاً بالمفتاح: «GBPUSD 1.34512 +0.42%» — القيمة عند التقاطع أو آخر شمعة. */
+  const compareLegendText = (at: number): string | null => {
+    if (!compareSeries || !compareOv) return null;
+    const p = compareLegendParts(compareOv.closes, at, compareBase);
+    if (!p) return '—';
+    const price = formatPrice(p.close, compareSeries.symbol, compareSeries.last);
+    return p.pct != null ? `${price} ${formatPct(p.pct)}` : price;
+  };
+  const compareChipW = compareOv && compareSeries
+    ? legendChipWidth({ label: compareSeries.symbol, swatch: ['x'] }, compareLegendText(legendLastIdx)?.length ?? 0)
+    : 0;
   const priceLegend = useMemo(
-    () => planPriceLegendForWidth(indicators, chartPlotW - 12, legendValueChars),
+    () => planPriceLegendForWidth(indicators, chartPlotW - 12 - compareChipW, legendValueChars),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `legendCharsKey` يمثّل `legendValueChars`
-    [indicators, chartPlotW, legendCharsKey]
+    [indicators, chartPlotW, legendCharsKey, compareChipW]
   );
+  const showCompareChip = compareChipW > 0 && compareChipW <= chartPlotW - 12;
   const viewXPan =
     syncFollow && syncWindow?.xPanNorm != null
       ? syncWindow.xPanNorm * chartPlotW
@@ -6899,7 +6913,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           </View>
         ) : null}
 
-        {priceLegend.chips.length > 0 || priceLegend.more > 0 ? (
+        {priceLegend.chips.length > 0 || priceLegend.more > 0 || showCompareChip ? (
           <View
             pointerEvents="none"
             style={[
@@ -6911,6 +6925,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               },
             ]}
           >
+            {showCompareChip && compareSeries ? (
+              <View style={styles.priceLegendChip}>
+                <View style={[styles.priceLegendSwatch, { backgroundColor: COMPARE_COLOR }]} />
+                <Text style={styles.priceLegendText}>{compareSeries.symbol}</Text>
+                <Text style={[styles.priceLegendValue, { color: COMPARE_COLOR }]}>
+                  {compareLegendText(crossIndex ?? legendLastIdx)}
+                </Text>
+              </View>
+            ) : null}
             {priceLegend.chips.map((chip) => (
               <View key={chip.id} style={styles.priceLegendChip}>
                 {chip.swatch.map((expr, si) => (
@@ -7244,7 +7267,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   top: y1,
                   width: len,
                   height: 2,
-                  backgroundColor: colors.infoAccent,
+                  backgroundColor: COMPARE_COLOR,
                   opacity: 0.85,
                   transform: [{ rotate: `${angle}deg` }],
                   transformOrigin: 'left center',

@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/compare.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { compareOverlay, rebaseCompare } from './compare';
+import { compareBaseIndex, compareLegendParts, compareOverlay, rebaseCompare } from './compare';
 import type { Candle } from '../api';
 
 const bar = (time: number, close: number): Candle => ({ time, open: close, high: close, low: close, close });
@@ -54,5 +54,15 @@ r = rebaseCompare(primary, [2, null, null], 1);
 assert.equal(r[0], 1.1);
 r = rebaseCompare(primary, o.closes, 99);
 assert.equal(r[2], 1.12);
+
+// شارة المفتاح: الإغلاق الخام ونسبة التغيّر من الأساس
+assert.equal(compareBaseIndex([null, 2, 2.2], 0), 1);
+assert.equal(compareBaseIndex([2, null, null], 2), 0);
+assert.equal(compareBaseIndex([null, null], 0), -1);
+const lp = compareLegendParts([2, null, 2.2], 2, 0)!;
+assert.equal(lp.close, 2.2);
+assert.ok(Math.abs(lp.pct! - 10) < 1e-9);
+assert.equal(compareLegendParts([2, null, 2.2], 1, 0), null);
+assert.equal(compareLegendParts([null, 2], 1, -1)!.pct, null);
 
 console.log('compare selftest: OK');

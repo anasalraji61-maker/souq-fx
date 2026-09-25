@@ -3,6 +3,10 @@ import { candleTimeSec } from './dataSource';
 import { barTime } from './drawingAnchors';
 import type { SyntheticBar } from './types';
 
+/** لون خطّ المقارنة وشارته — برتقالي TradingView. كان `colors.infoAccent` وهو لون SMA 50 نفسه (من الطبقات
+ *  الافتراضية) ⇒ خطّان بنفسجيان لا يُعرف أيّهما GBPUSD. */
+export const COMPARE_COLOR = '#FF9800';
+
 export type CompareOverlay = {
   /** سعر المقارنة مُعاد القياس لمقياس الرمز الأساسي، شمعة بشمعة مع `primary`؛ null = لا شمعة مطابقة. */
   prices: (number | null)[];
@@ -45,18 +49,33 @@ export function rebaseCompare(
   closes: readonly (number | null)[],
   from: number
 ): (number | null)[] {
-  const start = Math.max(0, Math.min(Math.floor(from) || 0, closes.length - 1));
-  let base = -1;
-  for (let i = start; i < closes.length; i++) {
-    if (closes[i] != null) {
-      base = i;
-      break;
-    }
-  }
-  if (base < 0) base = closes.findIndex((v) => v != null);
+  const base = compareBaseIndex(closes, from);
   const pBase = base >= 0 ? primary[base]?.close ?? NaN : NaN;
   const cBase = base >= 0 ? closes[base]! : NaN;
   return base >= 0 && Number.isFinite(pBase) && pBase > 0
     ? closes.map((v) => (v == null ? null : pBase * (v / cBase)))
     : closes.map(() => null);
+}
+
+/** فهرس أساس المقارنة: أوّل إغلاق مطابق عند/بعد `from`، وإلا أوّل مطابق كلّياً؛ −1 = لا شيء. */
+export function compareBaseIndex(closes: readonly (number | null)[], from: number): number {
+  const start = Math.max(0, Math.min(Math.floor(from) || 0, closes.length - 1));
+  for (let i = start; i < closes.length; i++) if (closes[i] != null) return i;
+  return closes.findIndex((v) => v != null);
+}
+
+/**
+ * نصّ شارة المقارنة بالمفتاح كـTradingView: إغلاق الرمز **الخام** عند الشمعة (لا المُعاد قياسه على مقياس الأساسي،
+ * فذاك رقم لا معنى له) ونسبة تغيّره منذ الأساس (أوّل شمعة ظاهرة) — الخطّ الأزرق بلا اسم كان لا يُعرف رمزه إلا
+ * بالتقاطع. `null` = لا إغلاق مطابق عند الشمعة.
+ */
+export function compareLegendParts(
+  closes: readonly (number | null)[],
+  at: number,
+  base: number
+): { close: number; pct: number | null } | null {
+  const c = closes[at];
+  if (c == null || !Number.isFinite(c)) return null;
+  const b = base >= 0 ? closes[base] : null;
+  return { close: c, pct: b != null && b > 0 ? (c / b - 1) * 100 : null };
 }
