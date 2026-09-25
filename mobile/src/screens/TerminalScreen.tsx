@@ -2119,7 +2119,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   layoutSwitcherTagTop: {
-    color: colors.accent,
+    color: colors.textMuted,
     fontSize: 8,
     fontWeight: '500',
     lineHeight: 10,
@@ -2140,9 +2140,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.bgPanel,
   },
+  // DESIGN-PRO §1 (QA81 DP2): التأكيد بالشريط العلوي لرمز `SymbolPairMenu` وحده — المختار هنا تعبئة محايدة + حدّ ونصّ أساسيان
   timeSyncBtnOn: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft,
+    borderColor: colors.textMuted,
+    backgroundColor: colors.selectedFill,
   },
   timeSyncText: {
     color: colors.textMuted,
@@ -2150,7 +2151,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   timeSyncTextOn: {
-    color: colors.accent,
+    color: colors.text,
   },
   timeSyncHint: {
     color: colors.textDim,
@@ -2171,8 +2172,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   layoutSwitchBtnOn: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft,
+    borderColor: colors.textMuted,
+    backgroundColor: colors.selectedFill,
   },
   layoutSwitchMini: {
     width: 14,
@@ -2221,9 +2222,9 @@ const styles = StyleSheet.create({
     width: 4,
     height: 8,
   },
-  layoutSwitchCellOn: { backgroundColor: colors.accent },
+  layoutSwitchCellOn: { backgroundColor: colors.text },
   layoutSwitchNum: { ...numeric, color: colors.textMuted, fontSize: 9, fontWeight: '500' },
-  layoutSwitchNumOn: { color: colors.accent },
+  layoutSwitchNumOn: { color: colors.text },
   layoutSwitchSep: {
     width: 1,
     height: 18,
@@ -2255,9 +2256,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.bgPanel,
   },
-  kindChipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  kindChipOn: { borderColor: colors.textMuted, backgroundColor: colors.selectedFill },
   kindText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
-  kindTextOn: { color: colors.accent },
+  kindTextOn: { color: colors.text },
   workspace: { flex: 1, flexDirection: 'row' },
   // غلاف الحافّة لخفوت §5.6: صفّ كي تمتدّ الحافّة بطول مساحة العمل، و`zIndex` الحافّة نفسها كي تبقى تلميحاتها فوق الشارت
   railDimWrap: { flexDirection: 'row', zIndex: 10 },
@@ -2461,7 +2462,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.bgPanel,
   },
-  pillOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  // الرمز المختار هو التأكيد الوحيد بصفّ الرموز: نصّه تيل فوق تعبئة محايدة (لا حدّ تيل — §1)
+  pillOn: { borderColor: colors.textMuted, backgroundColor: colors.selectedFill },
   pillText: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
   pillTextOn: { color: colors.accent },
   pillRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
