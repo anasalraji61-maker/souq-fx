@@ -30,6 +30,12 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
   const align = rtl ? ('right' as const) : ('left' as const);
   const [layouts, setLayouts] = useState<TerminalLayout[]>([DEFAULT_LAYOUT]);
   const [name, setName] = useState(t.layoutDefaultName);
+  // اللوحة تبقى محمَّلة بالتبويب: تبديل اللغة كان يُبقي الاسم الافتراضي بلغته الأولى («تخطيطي» بواجهة
+  // إنجليزية) فيُحفظ بها. يتبع اللغة ما لم يكتب المتداول اسماً.
+  const nameEdited = useRef(false);
+  useEffect(() => {
+    if (!nameEdited.current) setName(t.layoutDefaultName);
+  }, [t.layoutDefaultName]);
   const [saveError, setSaveError] = useState<LayoutsSaveErrorCode | null>(null);
   /** تأكيد الحفظ — كان الحفظ صامتاً (نقرة صوتية فقط). */
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
@@ -140,6 +146,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
         style={[styles.input, { textAlign: align }]}
         value={name}
         onChangeText={(v) => {
+          nameEdited.current = true;
           setName(v);
           setSavedMsg(null);
         }}
