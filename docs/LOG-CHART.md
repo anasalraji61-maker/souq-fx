@@ -4423,3 +4423,33 @@ pineScale (جديد)، liveSeries. **لم يُختبر على جهاز**: شري
 2. Range: الصندوق ‎1.5 × متوسط المدى‎ — افتراضي TradingView غير مؤكَّد، لم أغيّر المقدار.
 3. Aroon: كسر التعادل مقابل `ta.highestbars` — يحتاج مرجع Pine.
 4. Line Break (3 خطوط) ومقياس النسبة المئوية نوعان ينقصان مقارنة بـTradingView — يحتاجان مفاتيح i18n (ليست بنطاقي).
+
+---
+
+# تشغيل 2026-09-25 (السادس والعشرون)
+
+## صفوف COORDINATION الموجّهة لي
+- لا صفّ جديد. QA1 (جهاز) لا يُختبر هنا؛ launch48 DeMarker قرار أنس؛ chart29 `Alert.alert` ملفاتها خارج نطاقي.
+
+## ما أُنجز (مرئي للمتداول)
+1. **Renko لا يتجمّد** `5453b82` — نفس ثغرة QA36 بـRange: تاريخ مسطّح (مزوّد متوقّف) ⇒ ATR بتنعيم Wilder ~1e-16
+   ⇒ أوّل تيك حيّ بـ20 pip = ملايين اللبنات. `renkoAtrBox` صارت بأرضية ‎0.005%‎ من السعر (تشمل Kagi وP&F لأنهما
+   يستعملانها)، واللبنات مسقوفة بـ`RENKO_MAX_BRICKS` = 5000 مع تخطٍّ للقفزة (صندوق صريح 1e-6 على قفزة 1→2 =
+   5000 لبنة متّصلة تنتهي عند آخر صندوق، لا مليون). selftest `renko` كان مكتوباً بلا إصلاح من تشغيل سابق — صار PASS.
+2. **Ease of Movement بمقياس TradingView** `45605cc` — المقسوم 10000 (حقل Divisor بـTradingView) بدل 1e8 (Arms):
+   رقم رأس اللوحة كان أكبر بعشرة آلاف مرّة. الشمعة الأولى null (`ta.change` = na) ⇒ الإحماء 14 لا 13. selftest `eomTv`.
+3. **RVI خطّان مع الإشارة** `caf90b3` — `computeRviSignal` = ‎swma(rvi)‎ كـTradingView، اللوحة بهندسة KST
+   (`macdPaneGeom` + `PaneLineLayer`) والرأس يطبع القيمتين. كانت أعمدة RVI وحدها فلا يُرى التقاطع. selftest `rviSignal`
+   (يطابق صيغة Pine الكاملة لـRVI والإشارة).
+4. **Volume Oscillator بـEMA** `748cb7e` — ‎ema(5)/ema(10)‎ كـTradingView المدمج (كان SMA). selftest `volumeOscTv`
+   يفشل على القديم.
+
+## التحقّق
+`scripts/qa-build-check.sh` أخضر (0) قبل كل commit. `src/chart/*.selftest.ts` كلها PASS (77/77).
+**لم يُختبر على جهاز**: لوحة RVI الجديدة (ألوان الخطّين، الرأس المضغوط حين لا تتّسع الإشارة).
+
+## يبدأ التشغيل القادم من هنا
+1. Mass Index (TradingView 10 بلا خطوط أم Dorsey 25) — قرار، بلا تغيير.
+2. Aroon: كسر التعادل مقابل `ta.highestbars` — يحتاج مرجع Pine.
+3. RSI/CCI: خطّ «RSI-based MA» بـTradingView — هل ظاهر افتراضياً؟ يحتاج تأكيداً قبل إضافته.
+4. EOM بفوليوم صفري حقيقي: TradingView يعطي na للنافذة، نحن صفر — تركته (فوليوم صفري متقطّع كان سيُفرغ اللوحة).
