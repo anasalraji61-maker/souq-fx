@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, Literal
 
 import indicators as ind
+from twelve_data import bar_end
 
 StrategyId = Literal["ma_cross", "rsi_reversal", "macd_cross", "bb_bounce"]
 
@@ -53,11 +54,15 @@ def typical_spread(symbol: str) -> tuple[float, float] | None:
     return None
 
 
-def closed_candles(candles: list[dict[str, Any]], bar_seconds: int, now: float) -> list[dict[str, Any]]:
+def closed_candles(
+    candles: list[dict[str, Any]], bar_seconds: int, now: float, symbol: str = ""
+) -> list[dict[str, Any]]:
     """الشموع **المغلقة** وحدها: المزوّد يرسل الشمعة الجارية آخراً، وإشارة عليها (تقاطع/انعكاس) كانت تُسجَّل
     صفقةً **مغلقة** بسعر لم يُحسم بعد — تدخل نسبة الفوز والعائد وقد تزول بإغلاق الشمعة. كمختبر TradingView
-    (الحساب عند إغلاق الشمعة افتراضياً). تُسقط الأخيرة إن لم تنتهِ مدّتها عند `now` (وقت جلب السلسلة)."""
-    if candles and int(candles[-1]["time"]) + bar_seconds > now:
+    (الحساب عند إغلاق الشمعة افتراضياً). تُسقط الأخيرة إن لم تنتهِ مدّتها عند `now` (وقت جلب السلسلة).
+    النهاية بـ`twelve_data.bar_end` (كالإشارات): شمعة W المفتوحة الاثنين تنتهي بإغلاق الجمعة 17:00 نيويورك،
+    وكانت فتحاً + 7 أيام ⇒ طوال العطلة يُسقَط الأسبوع **المكتمل** من الاختبار كأنه جارٍ (QA79)."""
+    if candles and bar_end(symbol, int(candles[-1]["time"]), bar_seconds) > now:
         return candles[:-1]
     return candles
 

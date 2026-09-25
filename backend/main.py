@@ -1161,7 +1161,7 @@ def backtest_run(body: BacktestRun):
         }
     all_candles = [c.model_dump() for c in series.candles]
     candles = backtest_engine.closed_candles(
-        all_candles, TF_SECONDS[series.timeframe], series.data_source.as_of or time.time()
+        all_candles, TF_SECONDS[series.timeframe], series.data_source.as_of or time.time(), body.symbol.upper()
     )
     # بلا تكلفة كانت استراتيجية تنقلب كل بضع شموع تبدو رابحة وهي خاسرة بعد السبريد عند وسيط حقيقي.
     spread = backtest_engine.typical_spread(body.symbol)

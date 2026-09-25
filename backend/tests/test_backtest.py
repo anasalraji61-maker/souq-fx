@@ -235,3 +235,18 @@ def test_flat_short_trade_is_zero_not_negative_zero():
     assert str(backtest._round(-0.0, 3)) == "0.0"
     assert str(backtest._round(-0.0004, 3)) == "0.0"
     assert backtest._round(-0.0006, 3) == -0.001
+
+
+def test_closed_candles_keeps_completed_week_over_the_weekend():
+    """QA79: شمعة W مؤرّخة الاثنين كانت «تنتهي» الاثنين التالي ⇒ السبت يُسقَط الأسبوع المكتمل كأنه جارٍ.
+    الآن النهاية إغلاق الجمعة 17:00 نيويورك (كالإشارات)؛ الكريبتو يتداول بالعطلة فيبقى أسبوعه جارياً."""
+    from datetime import datetime, timezone
+
+    week = 7 * 86400
+    monday = datetime(2026, 9, 14, tzinfo=timezone.utc).timestamp()
+    saturday = datetime(2026, 9, 19, 12, tzinfo=timezone.utc).timestamp()
+    thursday = datetime(2026, 9, 17, 12, tzinfo=timezone.utc).timestamp()
+    cs = [{"time": monday - week}, {"time": monday}]
+    assert backtest.closed_candles(cs, week, saturday, "EURUSD") == cs
+    assert backtest.closed_candles(cs, week, thursday, "EURUSD") == cs[:1]
+    assert backtest.closed_candles(cs, week, saturday, "BTCUSD") == cs[:1]
