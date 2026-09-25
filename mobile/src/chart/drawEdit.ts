@@ -89,6 +89,27 @@ export function clipSegmentToBars(
 }
 
 /**
+ * قطعة **الشعاع** المرسومة: كـ`clipSegmentToBars`، إلا حين يقع طرفاه كلاهما يسار النافذة والشعاع متّجه يميناً.
+ * هناك يقصّ القصُّ الطرفين لخانة 0 فتصير القطعة صفرية ويختفي الشعاع — بينما امتداده ما زال يعبر الشموع
+ * الظاهرة (خطّ ترند من قمّتين قبل 300 شمعة هو ما يريد المتداول رؤية أين يلتقي بالسعر الآن، كـTradingView).
+ * فتُؤخذ قطعة شمعة واحدة على الخطّ نفسه من الخانة 0، ويمدّها `rayReach` حتى حافّة اللوح. `extended` ⇒
+ * الطرفان المرسومان ليسا طرفي الرسم (لا مقبض عندهما).
+ */
+export function raySegment(
+  aIdx: number,
+  aY: number,
+  bIdx: number,
+  bY: number,
+  lastIdx: number
+): { ai: number; ay: number; bi: number; by: number; extended: boolean } {
+  if (bIdx > aIdx && bIdx < 0 && lastIdx >= 1) {
+    const yAt = (i: number) => aY + ((bY - aY) * (i - aIdx)) / (bIdx - aIdx);
+    return { ai: 0, ay: yAt(0), bi: 1, by: yAt(1), extended: true };
+  }
+  return { ...clipSegmentToBars(aIdx, aY, bIdx, bY, lastIdx), extended: false };
+}
+
+/**
  * كم ضعفاً من القطعة (الطرف الأوّل ⇐ الثاني) يمتدّ الشعاع حتى يخرج من اللوح `[0,w]×[0,h]` — كـTradingView
  * حيث الشعاع يبلغ حافّة الشارت. كان ثابتاً 1.6: شعاع قصير على خمس شموع يتوقّف بعد ثلاث أخرى، فلا يرى
  * المتداول أين يلتقي خطّ الترند الممتدّ بالسعر القادم — وهذا سبب رسم الشعاع لا الخطّ. ≥1 دائماً (القطعة

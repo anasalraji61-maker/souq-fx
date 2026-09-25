@@ -3,7 +3,7 @@
  * الغرض: إثبات أن اللمسة التي لا تُغيّر شيئاً لا تدفع لقطة تراجع، وأن التغيّر الحقيقي يدفعها.
  */
 import type { ChartPoint, Drawing } from './types';
-import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace, cloneShift, CLONE_SHIFT_PX } from './drawEdit';
+import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace, cloneShift, CLONE_SHIFT_PX, raySegment } from './drawEdit';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -112,6 +112,16 @@ ok('رأسي لأسفل ⇒ الحافّة السفلى', rayReach(100, 50, 100,
 ok('نسخة بالنصف العلوي ⇒ لأسفل', cloneShift('trend', false).px === CLONE_SHIFT_PX && cloneShift('trend', false).bars === 0);
 ok('نسخة بالنصف السفلي ⇒ لأعلى', cloneShift('hline', true).px === -CLONE_SHIFT_PX);
 ok('نسخة خطّ رأسي ⇒ 3 شموع', cloneShift('vline', true).bars === 3 && cloneShift('vline', true).px === 0);
+
+// الشعاع وطرفاه يسار النافذة: يبقى مرئياً على الخطّ نفسه لا قطعةً صفرية
+{
+  const r = raySegment(-20, 100, -10, 90, 50); // ميل −1px/شمعة
+  ok('شعاع خارج اليسار ممتدّ', r.extended && r.ai === 0 && r.bi === 1);
+  ok('شعاع خارج اليسار على الخطّ', Math.abs(r.ay - 80) < 1e-9 && Math.abs(r.by - 79) < 1e-9);
+  ok('شعاع متّجه يساراً يبقى مقصوصاً', !raySegment(-10, 90, -20, 100, 50).extended);
+  const inView = raySegment(-5, 100, 10, 90, 50);
+  ok('طرف ظاهر ⇒ القصّ العادي', !inView.extended && inView.ai === 0 && inView.bi === 10);
+}
 
 if (failures) {
   console.error(`drawEdit.selftest: ${failures} FAILED`);

@@ -100,6 +100,7 @@ import { DrawingsSaveQueue, drawingsKey, drawingsSignature } from './drawingsPer
 import {
   arrowNudge,
   clipSegmentToBars,
+  raySegment,
   dragChangesDrawing,
   drawingEnd,
   nudgePipPrice,
@@ -3719,7 +3720,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           );
         } else if (d.tool === 'trend' || d.tool === 'ray') {
           // نفس ما يُرسَم: الطرفان مقصوصان على النافذة (على الخطّ)، والشعاع يمتدّ حتى حافّة اللوح.
-          const seg = clipSegmentToBars(aLocal, ay, bLocal, by, lastDrawLocal);
+          const seg = (d.tool === 'ray' ? raySegment : clipSegmentToBars)(aLocal, ay, bLocal, by, lastDrawLocal);
           const sx1 = xOf(seg.ai);
           const sx2 = xOf(seg.bi);
           bodyDist = segmentDistance(
@@ -5025,9 +5026,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     })
     // الخطّ الأفقي وفيبو بعرض الشارت كلّه: موضع مرساتهما لا يحدّد ظهورهما. كان خطّ دعم
     // مرسوم عند قاع قبل 120 شمعة يختفي (ووسم سعره) بمجرّد العودة للحيّ، ويبقى قابلاً للتحديد.
+    // والشعاع المتّجه يميناً كذلك: امتداده يعبر الشموع الظاهرة ولو كان طرفاه يسارها (`raySegment`).
     .filter(
       ({ d, aLocal, bLocal }) =>
-        d.tool === 'hline' || d.tool === 'hray' || d.tool === 'fib' || aLocal >= -2 || bLocal >= -2
+        d.tool === 'hline' ||
+        d.tool === 'hray' ||
+        d.tool === 'fib' ||
+        (d.tool === 'ray' && bLocal > aLocal) ||
+        aLocal >= -2 ||
+        bLocal >= -2
     );
 
   /**
@@ -7567,7 +7574,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             );
           }
           if ((d.tool === 'trend' || d.tool === 'ray') && d.b) {
-            const seg = clipSegmentToBars(
+            const seg = (d.tool === 'ray' ? raySegment : clipSegmentToBars)(
               aLocal,
               yOf(d.a.price),
               bLocal,
@@ -7595,7 +7602,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     transformOrigin: 'left center',
                   }}
                 />
-                {sel ? (
+                {sel && !('extended' in seg && seg.extended) ? (
                   <>
                     <View style={[styles.grabHandle, { left: x1, top: y1, borderColor: d.color }]} />
                     <View style={[styles.grabHandle, { left: x2, top: y2, borderColor: d.color }]} />
