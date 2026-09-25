@@ -58,7 +58,7 @@ import {
 } from './axisDrag';
 import { barCloseCountdown } from './barCountdown';
 import { axisTagFontSize } from './axisTagFont';
-import { monoCharW, monoTextWidth } from './textWidth';
+import { monoCharW, monoTextWidth, propTextWidth } from './textWidth';
 import { planDenseOhlc } from './denseOhlcFit';
 import { BarCountdown } from './BarCountdown';
 import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime, stepCrossBar } from './crossAnchor';
@@ -469,8 +469,8 @@ const CROSS_SNAP_PX = 14;
 /** مدّة سطر «الرسم مقفول» بعد محاولة سحبه — تكفي لقراءته ولا تبقى فوق الشموع. */
 const LOCKED_HINT_MS = 1800;
 /** علامة القفل على الرسم نفسه (px) — صغيرة كي لا تغطّي شمعة. */
-const LOCK_BADGE_W = 16;
-const LOCK_BADGE_H = 15;
+const LOCK_BADGE_W = 18;
+const LOCK_BADGE_H = 17;
 /** أقصى شموع مستقبلية لتقاطع التابع بالرباعي — أبعد من ذلك (قائد يومي والتابع دقيقة) لا خطّ. */
 const CROSS_SYNC_MAX_AHEAD = 500;
 /** الهامش الأيمن الافتراضي من عرض اللوح (≈8 خانات من 80) — `restXPan`. */
@@ -8832,22 +8832,29 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {footprint
           ? footprint.map((fp, i) => {
               if (Math.abs(fp.imbalance) < 0.25) return null;
+              // «≈»: دلتا تقديرية من شكل الشمعة (`computeFootprint`) لا أحجام شراء/بيع حقيقية.
+              const text = `${fp.delta >= 0 ? '≈+' : '≈'}${Math.round(fp.delta / 100)}`;
+              // 11px (كان 8، QA84a): الوسم متمركز فوق شمعته ويُكتب فقط حين تتّسع له خانتها — بتكبير أبعد
+              // كانت أرقام 8px تتراكب فوق الشموع المتجاورة كتلةً لا تُقرأ.
+              const w = propTextWidth(text, 11);
+              const slot = chartPlotW / Math.max(1, source.slots);
+              if (w + 2 > slot) return null;
               return (
                 <Text
                   key={`fp${i}`}
+                  pointerEvents="none"
                   style={{
                     position: 'absolute',
-                    left: xOf(i) - 6,
-                    top: yOf(source.plot[i].high) - 12,
+                    left: xOf(i) - w / 2,
+                    top: yOf(source.plot[i].high) - 16,
                     color: fp.delta >= 0 ? colors.bull : colors.bear,
-                    fontSize: 8,
+                    fontSize: 11,
+                    lineHeight: 14,
                     ...numeric,
                     fontWeight: '600',
                   }}
                 >
-                  {/* «≈»: دلتا تقديرية من شكل الشمعة (`computeFootprint`) لا أحجام شراء/بيع حقيقية. */}
-                  {fp.delta >= 0 ? '≈+' : '≈'}
-                  {Math.round(fp.delta / 100)}
+                  {text}
                 </Text>
               );
             })
@@ -13120,7 +13127,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     opacity: 0.9,
   },
-  lockBadgeText: { fontSize: 8, lineHeight: 10 },
+  // 11px (كان 8، QA84a) — الشارة 18×17 لتتّسع.
+  lockBadgeText: { fontSize: 11, lineHeight: 13 },
   compactToolIcon: { color: colors.text, fontSize: 16, fontWeight: '500', lineHeight: 18 },
   // تلميح اسم الأداة: فاصل واحد (خلفية مرتفعة، بلا حدّ ولا ظلّ — §5.5)، 12px ثانوي.
   railHint: {
