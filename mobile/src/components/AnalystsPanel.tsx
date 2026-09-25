@@ -36,7 +36,6 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
   const align = rtl ? ('right' as const) : ('left' as const);
   const [loading, setLoading] = useState(false);
   const [direction, setDirection] = useState('neutral');
-  const [confidence, setConfidence] = useState(0);
   const [avg, setAvg] = useState(0);
   const [levels, setLevels] = useState<{ entry: number; sl: number; tp: number } | null>(null);
   const [rows, setRows] = useState<AnalystRow[]>([]);
@@ -58,7 +57,6 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
       const res = await api.analystsForecast(symbol, timeframe);
       if (!mountedRef.current) return;
       setDirection(res.direction);
-      setConfidence(res.confidence);
       setAvg(res.avg_score);
       setLevels(res.levels);
       setRows(res.analysts);
@@ -76,6 +74,13 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const split = { buy: 0, sell: 0, neutral: 0 };
+  for (const a of rows) {
+    if (a.direction === 'buy') split.buy += 1;
+    else if (a.direction === 'sell') split.sell += 1;
+    else split.neutral += 1;
+  }
 
   return (
     <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
@@ -111,15 +116,21 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
         <Text style={[styles.dir, { color: dirColor(direction), textAlign: align }]}>
           {dirLabel(direction, t)}
         </Text>
+        {/* «درجة الاتفاق n%» أُزيلت: معادلة ثابتة بالخادم (|avg|×0.75+0.35، `signal_hub.py`) تُقرأ
+            كاحتمال نجاح — كما أزالها `IndicatorForecastPanel`. عدّ الآراء بدلها: رقم لا يُختلَق. */}
         <Text style={[styles.meta, { textAlign: align }]}>
-          {t.confidenceLabel} {(confidence * 100).toFixed(0)}% · {t.avgLabel} {avg >= 0 ? '+' : ''}
+          {t.dirBuy} {split.buy} · {t.dirSell} {split.sell} · {t.dirNeutral} {split.neutral} · {t.avgLabel}{' '}
+          {avg >= 0 ? '+' : ''}
           {avg.toFixed(2)}
         </Text>
-        {levels ? (
+        {/* محايد ⇒ الخادم يعيد دخول = وقف = هدف: لا مستويات تُطبع لصفقة غير موجودة. */}
+        {levels && direction !== 'neutral' ? (
           <Text style={[styles.levels, { textAlign: align }]}>
             {t.entryLabel} {formatPrice(levels.entry, symbol)} · {t.slLabel} {formatPrice(levels.sl, symbol)}{' '}
             · {t.tpLabel} {formatPrice(levels.tp, symbol)}
           </Text>
+        ) : rows.length ? (
+          <Text style={[styles.levels, { textAlign: align }]}>{t.socialNoClearTrade}</Text>
         ) : null}
       </View>
 

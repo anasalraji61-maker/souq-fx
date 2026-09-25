@@ -53,7 +53,6 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
   const [selected, setSelected] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [direction, setDirection] = useState('neutral');
-  const [confidence, setConfidence] = useState(0);
   const [avg, setAvg] = useState(0);
   const [split, setSplit] = useState({ buy: 0, sell: 0, neutral: 0 });
   const [levels, setLevels] = useState<{ entry: number; sl: number; tp: number } | null>(null);
@@ -127,7 +126,6 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
       });
       if (!mountedRef.current) return;
       setDirection(res.direction);
-      setConfidence(res.confidence);
       setAvg(res.avg_score);
       setSplit(res.split);
       setLevels(res.levels);
@@ -216,7 +214,8 @@ export function SocialConsensusPanel({ symbol, timeframe = '15m', embedded }: Pr
           {dirLabel(direction, t)}
         </Text>
         <Text style={[styles.meta, { textAlign: align }]}>
-          {t.confidenceLabel} {(confidence * 100).toFixed(0)}% · {t.avgLabel} {avg >= 0 ? '+' : ''}
+          {/* «درجة الاتفاق n%» أُزيلت: معادلة ثابتة بالخادم تُقرأ كاحتمال نجاح؛ عدّ الآراء بالسطر التالي. */}
+          {t.avgLabel} {avg >= 0 ? '+' : ''}
           {avg.toFixed(2)} · {t.sourcesCountLabel} {selected.length}
         </Text>
         <Text style={[styles.meta, { textAlign: align }]}>

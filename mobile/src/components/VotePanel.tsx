@@ -5,6 +5,7 @@ import { api, type Vote } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
+import { formatPrice } from '../chart/math';
 import { analyzePlan, formatPips, formatRR, type PlanIssue, type TradePlan } from '../tradePlan';
 import { useBlockedUsers } from '../moderation';
 import { ModerationActions, ModerationToggle } from './ModerationActions';
@@ -419,15 +420,15 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
               <View style={[styles.levels, rtl && styles.levelsRtl]}>
                 <View style={styles.level}>
                   <Text style={styles.levelLabel}>{t.entryLabel}</Text>
-                  <Text style={styles.levelVal}>{v.entry}</Text>
+                  <Text style={styles.levelVal}>{formatPrice(v.entry, v.symbol)}</Text>
                 </View>
                 <View style={styles.level}>
                   <Text style={styles.levelLabel}>{t.slLabel}</Text>
-                  <Text style={[styles.levelVal, styles.levelSl]}>{v.sl}</Text>
+                  <Text style={[styles.levelVal, styles.levelSl]}>{formatPrice(v.sl, v.symbol)}</Text>
                 </View>
                 <View style={styles.level}>
                   <Text style={styles.levelLabel}>{t.tpLabel}</Text>
-                  <Text style={[styles.levelVal, styles.levelTp]}>{v.tp}</Text>
+                  <Text style={[styles.levelVal, styles.levelTp]}>{formatPrice(v.tp, v.symbol)}</Text>
                 </View>
               </View>
               {plan.ok ? (
