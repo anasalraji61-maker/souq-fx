@@ -444,8 +444,9 @@ function exactR(input: {
  * يلتصق بها. كانت تُشترط « · » أو نهاية النص بعد الرقم: «1R @ 1.083 moved to BE» أو «1R @ 1.083، NFP» ⇒ لا علامة ⇒
  * الـR من الوقف المشدود (+8R بدل +2R) ولا تُعاد العلامة بالحفظ التالي (الوقف القديم صار المشدود) — تضيع للأبد.
  * الآن ينتهي الرقم عند مسافة/فاصل/نقطة جملة (لا حرفٌ ولا رقمٌ ملتصق ولا «.رقم»)، ويبدأ بعد بداية النص أو فاصل.
+ * «,رقم»/«٫رقم» ملتصقة تُسقط العلامة: «1R @ 1,0950» كانت تُقرأ وقفاً **1** ⇒ 0.1R بدل 2R وتُطفئ فحص جهة الوقف.
  */
-const INITIAL_STOP_RE = /(?:^|[\s·,،;])1R @ (\d+(?:\.\d+)?)(?![0-9A-Za-z_\u0620-\u064A\u0660-\u0669]|\.\d)/;
+const INITIAL_STOP_RE = /(?:^|[\s·,،;])1R @ (\d+(?:\.\d+)?)(?![0-9A-Za-z_\u0620-\u064A\u0660-\u0669]|[.,٫]\d)/;
 
 /**
  * الوقف الأصلي (مسافة الـ1R) المحفوظ بملاحظة الصفقة، إن كان صالحاً لهذا الدخول والاتجاه (بالجهة الصحيحة وليس
@@ -457,14 +458,21 @@ export function initialStop(input: {
   entry: number;
   note?: string | null;
 }): number | null {
-  const m = typeof input.note === 'string' ? INITIAL_STOP_RE.exec(input.note.trim()) : null;
-  if (!m || !finitePos(input.entry)) return null;
-  const v = Number(m[1]);
-  if (!finitePos(v)) return null;
-  const risk = input.side === 'buy' ? input.entry - v : v - input.entry;
-  if (!(risk > 0)) return null;
+  if (typeof input.note !== 'string' || !finitePos(input.entry)) return null;
   const pip = journalPipSize(input.symbol);
-  return pip && risk < pip * (1 - 1e-6) ? null : v;
+  // آخر علامة **صالحة** لا الأولى: علامةٌ بطلت بتصحيح الدخول ثم شدٌّ جديد ⇒ «1R @ 1.095 · 1R @ 1.09» — كانت الأولى
+  // وحدها تُفحص ⇒ لا وقف أصلي ⇒ R من المشدود (5R بدل 1.25R) ونقل الوقف للتعادل يُرفض «بالجهة الخطأ»
+  let found: number | null = null;
+  const note = input.note.trim();
+  const re = new RegExp(INITIAL_STOP_RE.source, 'g');
+  for (let m = re.exec(note); m; m = re.exec(note)) {
+    const v = Number(m[1]);
+    if (!finitePos(v)) continue;
+    const risk = input.side === 'buy' ? input.entry - v : v - input.entry;
+    if (!(risk > 0) || (pip && risk < pip * (1 - 1e-6))) continue;
+    found = v;
+  }
+  return found;
 }
 
 /**

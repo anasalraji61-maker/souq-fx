@@ -2172,6 +2172,36 @@ console.log('tradePlan stackedCurrencyExposure selftest OK');
   assert.equal(realizedR({ symbol: 'EURUSD', side: 'sell', entry: 1.085, sl: 1.087, exit: 1.083, note: n1 }), 1);
   // بلا وقف حالي (مُسح بالتعديل) والعلامة باقية: R من الأصلي
   assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: null, exit: 1.087, note: n1 }), 1);
+
+  // علامة بطلت بتصحيح الدخول ثم شدٌّ جديد: آخر علامة صالحة لا الأولى (كانت: null ⇒ 6R بدل 1.5R ورفض التعادل)
+  {
+    // شراء 1.1000 وقف 1.0950، شُدّ ⇒ «1R @ 1.095»؛ صُحّح الدخول 1.0940 ووقف 1.0900؛ شُدّ إلى 1.0930
+    const n = noteWithInitialStop({
+      symbol: 'EURUSD',
+      note: '1R @ 1.095',
+      before: { side: 'buy', entry: 1.094, sl: 1.09, status: 'open' },
+      after: { side: 'buy', entry: 1.094, sl: 1.093 },
+    });
+    assert.equal(n, '1R @ 1.095 · 1R @ 1.09');
+    assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.094, note: n }), 1.09);
+    assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.094, sl: 1.093, exit: 1.1, note: n })!.toFixed(6), '1.500000');
+    // وقد صلحت علامة ⇒ لا تُلحق ثالثة بالشدّ التالي
+    assert.equal(
+      noteWithInitialStop({ symbol: 'EURUSD', note: n, before: { side: 'buy', entry: 1.094, sl: 1.093, status: 'open' }, after: { side: 'buy', entry: 1.094, sl: 1.094 } }),
+      n,
+    );
+    // اثنتان صالحتان ⇒ الأحدث (الأخيرة)؛ صالحة ثم باطلة ⇒ الصالحة
+    assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.1, note: '1R @ 1.095 · 1R @ 1.09' }), 1.09);
+    assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.1, note: '1R @ 1.09 · 1R @ 1.2' }), 1.09);
+    assert.equal(initialStop({ symbol: 'EURUSD', side: 'sell', entry: 1.1, note: '1R @ 1.2 · 1R @ 1.09 · x' }), 1.2);
+  }
+  // فاصلة عشرية ملتصقة: لا تُقرأ «1» (كانت: 0.1R بدل 2R وفحص جهة الوقف مُطفأ) — تُسقط العلامة ويبقى sl
+  for (const note of ['1R @ 1,0950', '1R @ 2,350.5', '1R @ 1٫0950', 'x · 1R @ 1,0950 · y']) {
+    assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.1, note }), null, note);
+  }
+  assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.1, sl: 1.095, exit: 1.11, note: '1R @ 1,0950' })!.toFixed(6), '2.000000');
+  // الفاصلة الفاصلة (بعدها مسافة/نص) تبقى نهاية الرقم
+  assert.equal(initialStop({ symbol: 'EURUSD', side: 'buy', entry: 1.1, note: '1R @ 1.095, NFP' }), 1.095);
 }
 console.log('tradePlan initial stop (1R mark) selftest OK');
 
