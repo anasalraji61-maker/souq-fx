@@ -165,6 +165,7 @@ export function PanSpeedSlider({ value, onChange }: Props) {
         hitSlop={6}
         accessibilityRole="button"
         accessibilityLabel={t.panHideDetailsA11y}
+        accessibilityState={{ expanded: true }}
         style={({ pressed }) => [
           styles.markBtn,
           pressed && {
