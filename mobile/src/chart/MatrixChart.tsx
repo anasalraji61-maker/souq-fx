@@ -5978,11 +5978,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // ووسم السعر 0.000، ونقرة أداة الخطّ الأفقي تحفظ رسماً بسعر null. لا شارت يُرسم: إشعار المزوّد إن كانت السلسلة
   // بلا بيانات حقيقية، وإلا لوح فارغ بالارتفاع نفسه (لا محور ولا سعر مخترع).
   if ((series.candles?.length ?? 0) === 0) {
+    const noCandlesTitle = tr.chartNoCandlesTitle
+      .replace('{symbol}', series.symbol)
+      .replace('{tf}', series.timeframe);
     return (
       <View style={[styles.root, dense && styles.rootDense, { height }]}>
         {seriesHasNoRealData(series.data_source) ? (
           <ProviderUnavailableNotice symbol={series.symbol} height={height} />
-        ) : null}
+        ) : (
+          // launch119: `candles: []` بلا وسم «غير متاح» كان لوحاً صامتاً — المتداول لا يعرف أهو تحميل أم عطل.
+          // المدمج (الرباعي/الإطارات) يعرض العنوان وحده؛ النصّ الشارح بالقراءة الصوتية دائماً.
+          <View
+            style={[styles.noCandlesBox, { height }]}
+            accessible
+            accessibilityRole="text"
+            accessibilityLabel={`${noCandlesTitle}. ${tr.chartNoCandlesBody}`}
+          >
+            <Text style={styles.noCandlesTitle}>{noCandlesTitle}</Text>
+            {!dense ? <Text style={styles.noCandlesBody}>{tr.chartNoCandlesBody}</Text> : null}
+          </View>
+        )}
       </View>
     );
   }
@@ -12522,6 +12537,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 const styles = StyleSheet.create({
   root: { gap: 6 },
   rootDense: { gap: 0 },
+  noCandlesBox: { minHeight: 120, alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
+  noCandlesTitle: { color: colors.text, fontSize: 13, fontWeight: '700', textAlign: 'center', lineHeight: 19 },
+  noCandlesBody: {
+    color: colors.textDim,
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginTop: spacing.xs,
+    maxWidth: 320,
+  },
   compactToolbar: {
     backgroundColor: 'rgba(18,26,43,0.96)',
     borderWidth: 1,
