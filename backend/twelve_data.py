@@ -57,7 +57,7 @@ def unavailable_reason(matrix_symbol: str) -> str | None:
 
 
 # رموز تتداول بعطلة الأسبوع — لا إغلاق أسبوعي لها. الباقي بـ`SYMBOL_MAP` (فوركس، معادن، نفط) يُغلق
-# الجمعة 17:00 نيويورك. رمز خارج الخريطة (من البحث) مجهول الجلسة ⇒ لا قصّ (السلوك القديم).
+# الجمعة 17:00 نيويورك، وكذلك أزواج ISO من البحث. غيرها خارج الخريطة (أسهم…) مجهول الجلسة ⇒ لا قصّ.
 WEEKEND_TRADED = frozenset({"BTCUSD", "ETHUSD"})
 _DAY = 86400
 
@@ -85,7 +85,10 @@ def bar_end(matrix_symbol: str, open_ts: float, step: int) -> float:
     لشمعة D/4H الجمعة بعد 21:00. العملات الرقمية تتداول بالعطلة فلا قصّ لها."""
     end = float(open_ts) + step
     sym = (matrix_symbol or "").upper()
-    if sym not in SYMBOL_MAP or sym in WEEKEND_TRADED:
+    # زوج ISO من البحث (USDMXN، EURSEK، XAUEUR) يُطلب زوجَ فوركس (`td_symbol`) ويُغلق الجمعة كالرئيسية:
+    # كان «مجهول الجلسة» فشمعة W تبقى «جارية» طوال العطلة ⇒ تنبيه تقاطع يُسلَّح السبت يُطلق على تقاطع
+    # الأسبوع الماضي، و`price_as_of` لإغلاق الجمعة يُرسَل حتى ~51 ساعة لاحقاً.
+    if (sym not in SYMBOL_MAP and not _is_iso_pair(sym)) or sym in WEEKEND_TRADED:
         return end
     opened = datetime.fromtimestamp(float(open_ts), tz=timezone.utc)
     friday = opened + timedelta(days=(4 - opened.weekday()) % 7)
@@ -169,12 +172,16 @@ _ISO_CURRENCIES = frozenset(
 )
 
 
+def _is_iso_pair(sym: str) -> bool:
+    return len(sym) == 6 and sym[:3] in _ISO_CURRENCIES and sym[3:] in _ISO_CURRENCIES and sym[:3] != sym[3:]
+
+
 def td_symbol(matrix_symbol: str) -> str:
     sym = matrix_symbol.upper()
     if sym in SYMBOL_MAP:
         return SYMBOL_MAP[sym]
     # زوج عملتين خارج الخريطة ⇒ صيغة المزوّد القانونية (كما يعيدها بحثه نفسه)
-    if len(sym) == 6 and sym[:3] in _ISO_CURRENCIES and sym[3:] in _ISO_CURRENCIES and sym[:3] != sym[3:]:
+    if _is_iso_pair(sym):
         return f"{sym[:3]}/{sym[3:]}"
     return sym
 

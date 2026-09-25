@@ -86,3 +86,11 @@ def test_weekend_price_as_of_is_friday_close_not_fetch_time():
         data_source=main.DataProvenance(kind="provider", as_of=fetched, channel="twelvedata"),
     )
     assert main._series_price_at(series) == FRI_CLOSE_SUMMER
+
+
+def test_search_added_iso_pairs_close_friday_like_the_majors():
+    """USDMXN/EURSEK/XAUEUR من البحث تُطلب أزواج فوركس (`td_symbol`) — كانت «مجهولة الجلسة» فلا قصّ."""
+    for sym in ("USDMXN", "EURSEK", "XAUEUR"):
+        assert market.bar_end(sym, MON, W) == FRI_CLOSE_SUMMER, sym
+        assert alert_worker.cross_predates_arming(_alert(sym), _weekly(MON)) is True, sym
+    assert market.bar_end("USDUSD", MON, W) == MON + W  # ليس زوجاً
