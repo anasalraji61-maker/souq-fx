@@ -2073,7 +2073,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // بالإعادة: «الجلسة السابقة» لشمعة الإعادة لا لليوم — كانت PDH/PDL والارتكاز كلّها مستويات اليوم
   // مرسومةً فوق شموع الأسبوع الماضي، أي أهدافاً من المستقبل يرتدّ عندها السعر «بدقّة» في التمرين.
   // شموع D1 من المخزن مستويات اليوم فتُترك، والأساس من شموع السلسلة حتى شمعة الإعادة (ناقصة ⇒ لا خطوط).
-  const replayLast = replayOn ? source.plot[source.plot.length - 1] : undefined;
+  // شمعة الإعادة بفهرسها بالسلسلة (`source.cut`) لا آخر مكشوفة بالنافذة: السحب للخلف كان يغيّر «الآن» — سعر الوسم
+  // والرأس والارتكاز ومحاكاة الإعادة تقفز إلى إغلاق حافّة النافذة.
+  const replayLast = replayOn ? (source.all[source.cut] as (typeof source.plot)[number] | undefined) : undefined;
   const replayCutSec = replayLast ? candleTimeSec(barTime(replayLast)) : null;
   // «الآن» بالإعادة = إغلاق **الشمعة الحقيقية** حتى شمعة الإعادة: بـHeikin/Renko/Kagi/P&F/Range/Line Break كان إغلاق
   // الشمعة المحوَّلة ((O+H+L+C)/4 بـHeikin) — سعراً لم يُتداول — فالوسم والخطّ المتقطّع ورأس الإطار ونسبته، وكل
@@ -5748,7 +5750,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // اليوم وحده — على D فأكبر الجلسة شمعة واحدة، فتبقى بعرض اللوح كما كانت. `null` ⇒ بعرض اللوح.
   let pivotStartX: number | null = null;
   // بالإعادة الجلسة الجارية جلسة شمعة الإعادة.
-  const lastAll = replayOn ? source.plot[source.plot.length - 1] : source.all[source.all.length - 1];
+  const lastAll = replayOn ? source.all[source.cut] : source.all[source.all.length - 1];
   // أزرار الإعادة عند الطرفين: ▶/+1 معطّلان عند الشمعة الحيّة (كانا يُضغطان بلا أثر)، و-1 عند أوّل التاريخ.
   const replayCutIdx = source.cut;
   const replayCanFwd = replayOn && replayCutIdx < source.all.length - 1;
