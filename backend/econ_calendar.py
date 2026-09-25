@@ -1,4 +1,4 @@
-"""Economic calendar — ForexFactory XML + static fallback."""
+"""Economic calendar — ForexFactory JSON/XML only; source down ⇒ empty list + status unavailable (no sample events)."""
 from __future__ import annotations
 
 import hashlib
