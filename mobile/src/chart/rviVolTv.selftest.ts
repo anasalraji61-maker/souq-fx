@@ -70,4 +70,8 @@ const flatAfter = [...rising.slice(0, 20), ...new Array(15).fill(rising[19])];
 const tail = computeRelativeVolatilityIndex(flatAfter);
 assert.ok(tail[tail.length - 1]! < 100, 'flat closes after a rise must pull RVI below 100');
 
+// سلسلة مسطّحة تماماً من البداية: الانحراف 0 بالضبط ⇒ محايد 50 (كان بقايا 2e-16 «هابطة» ⇒ 0)
+const flat = computeRelativeVolatilityIndex(new Array(60).fill(1.08523));
+assert.equal(flat[flat.length - 1], 50, 'flat series is neutral, not 0');
+
 console.log(`rviVolTv selftest PASS (${checked} bars vs Pine reference)`);

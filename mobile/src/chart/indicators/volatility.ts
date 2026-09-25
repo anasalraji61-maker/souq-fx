@@ -23,7 +23,10 @@ export function computeStdDev(closes: number[], period = 20): (number | null)[] 
     const slice = closes.slice(i - period + 1, i + 1);
     const mean = mid[i]!;
     const variance = slice.reduce((a, v) => a + (v - mean) ** 2, 0) / period;
-    out.push(Math.sqrt(variance));
+    // نافذة مسطّحة: المتوسط من المجموع الجاري يبتعد بآخر منزلة عن الإغلاق نفسه ⇒ 2e-16 بدل 0 (كـTV `isZero`
+    // بـ1e-10). كان RVI (تقلّب) يرى هذا «تقلّباً هابطاً» فيطبع 0 بدل المحايد، وStdDev يرسم ضجيجاً فوق الصفر.
+    const sd = Math.sqrt(variance);
+    out.push(sd <= Math.abs(mean) * 1e-12 ? 0 : sd);
   }
   return out;
 }
