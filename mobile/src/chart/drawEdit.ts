@@ -141,3 +141,23 @@ export function sameDrawingPlace(x: Drawing | null | undefined, y: Drawing | nul
   if (!x || !y) return false;
   return samePoint(x.a, y.a) && (x.b == null ? y.b == null : samePoint(x.b, y.b));
 }
+
+/**
+ * أسهم لوحة المفاتيح على رسم محدَّد (الويب، كـTradingView): ←/→ شمعة، ↑/↓ خطوة سعر (pip للأزواج
+ * والمعادن، وإلا بكسل واحد من المحور). Shift ⇒ ×10. غير الأسهم ⇒ null. الإزاحة تُطبَّق بـ`translateDrawing`
+ * فيبقى الشكل كما هو (ميل الترند، مسافة الوقف) ويُختم كل طرف من جديد.
+ */
+export function arrowNudge(key: string, shift: boolean): { bars: number; steps: number } | null {
+  const k = shift ? 10 : 1;
+  if (key === 'ArrowLeft') return { bars: -k, steps: 0 };
+  if (key === 'ArrowRight') return { bars: k, steps: 0 };
+  if (key === 'ArrowUp') return { bars: 0, steps: k };
+  if (key === 'ArrowDown') return { bars: 0, steps: -k };
+  return null;
+}
+
+/** سعر مُزاح بـ`steps` pip، مُقرَّب لمنازل الـpip +1 (منازل عرض الزوج) فلا يتراكم ضجيج الفاصلة العائمة. */
+export function nudgePipPrice(price: number, steps: number, pipSize: number): number {
+  const decimals = Math.max(0, Math.round(-Math.log10(pipSize)) + 1);
+  return Number((price + steps * pipSize).toFixed(decimals));
+}

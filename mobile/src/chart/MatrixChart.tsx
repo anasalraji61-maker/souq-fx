@@ -95,9 +95,11 @@ import {
 } from './paneGuides';
 import { DrawingsSaveQueue, drawingsKey, drawingsSignature } from './drawingsPersist';
 import {
+  arrowNudge,
   clipSegmentToBars,
   dragChangesDrawing,
   drawingEnd,
+  nudgePipPrice,
   rayReach,
   sameDrawingPlace,
   samePoint,
@@ -131,6 +133,7 @@ import {
 import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
 import { paneInlineFits } from './paneHeadFit';
 import { noteBox } from './noteLabel';
+import { chartPipSpec } from './pipSpec';
 import { planHiLoLabels } from './hiLoLabels';
 import { planDayBreaks } from './dayBreaks';
 import { projectBarTimeSec, tradingDayStartSec } from './marketHours';
@@ -1325,6 +1328,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // بتبديل الأداة لـ«تحديد» واصطياد طرفه ثم تأكيد حذف، أو بمسح كل الرسومات. لقطات
   // محدودة العدد (لا حالة مشتقّة) لأن `drawings` بأكملها صغيرة ويحفظها التأثير الموجود.
   const drawingsRef = useRef<Drawing[]>([]);
+  // لمعالج أسهم العرض: لا يحرّك العرض والأسهم تحرّك الرسم المحدَّد.
+  const selectedIdRef = useRef<string | null>(null);
+  selectedIdRef.current = selectedId;
   const drawHistory = useRef<Drawing[][]>([]);
   const [canUndo, setCanUndo] = useState(false);
   const [pending, setPending] = useState<ChartPoint | null>(null);
@@ -4055,7 +4061,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   ]);
 
   // لوحة المفاتيح للرسم على الويب (كما بـTradingView): Delete/Backspace تحذف الرسم المحدَّد، وEsc
-  // تلغي رسماً بدأ (النقطة الأولى) ثم التحديد ثم الأداة، وCtrl/⌘+Z تتراجع. للشارت الذي لُمس
+  // تلغي رسماً بدأ (النقطة الأولى) ثم التحديد ثم الأداة، وCtrl/⌘+Z تتراجع، والأسهم تُزيح المحدَّد
+  // (↑/↓ pip — وبلا pip بكسل من المحور —، ←/→ شمعة، Shift ×10): خطّ دعم على 1.08500 بالضبط لا
+  // يبلغه الإصبع ولا الفأرة على محور 300px، فكان المتداول يسحب ويفلت ويعيد. للشارت الذي لُمس
   // أخيراً وحده (`webKeyChart`)، ولا تسرق المفاتيح من خانة كتابة (Backspace بخانة الملاحظة).
   useEffect(() => {
     if (Platform.OS !== 'web' || !interactive) return;
@@ -4086,11 +4094,38 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         pushDrawHistory();
         setDrawings((list) => list.filter((x) => x.id !== selectedId));
         setSelectedId(null);
+        return;
       }
+      const nudge =
+        selectedId && !pending && !event.altKey && !event.ctrlKey && !event.metaKey
+          ? arrowNudge(key, event.shiftKey)
+          : null;
+      if (!nudge) return;
+      const d = drawingsRef.current.find((x) => x.id === selectedId);
+      if (!d) return;
+      event.preventDefault();
+      const pip = chartPipSpec(series.symbol)?.pipSize ?? null;
+      const pxScaled = toScale(priceAtY(0)) - toScale(priceAtY(1));
+      const next = translateDrawing(
+        d,
+        nudge.bars,
+        (price) =>
+          !nudge.steps
+            ? price
+            : pip
+              ? nudgePipPrice(price, nudge.steps, pip)
+              : fromScale(toScale(price) + nudge.steps * pxScaled),
+        (index) =>
+          stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe))
+      );
+      if (sameDrawingPlace(d, next)) return;
+      pushDrawHistory();
+      setDrawings((list) => list.map((x) => (x.id === next.id ? next : x)));
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [interactive, pending, selectedId, tool, undoDrawing, pushDrawHistory]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- toScale/fromScale تتبع logScale
+  }, [interactive, pending, selectedId, tool, undoDrawing, pushDrawHistory, series.symbol, series.timeframe, priceAtY, logScale]);
 
   const applyChartDrag = useCallback(
     (dx: number, dy: number) => {
@@ -4648,6 +4683,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (Platform.OS !== 'web' || !canPan) return;
     const onKey = (event: KeyboardEvent) => {
       if (webKeyChart !== keyToken.current) return;
+      // رسم محدَّد: الأسهم له (معالج الرسم أعلاه)، لا للعرض ولا للتقاطع.
+      if (selectedIdRef.current && event.key.startsWith('Arrow')) return;
       if (!crossPinned.current) {
         if (event.altKey || event.ctrlKey || event.metaKey || replayOn) return;
         const k = event.key;
