@@ -14,8 +14,7 @@
  * بسماكة 3px يبدأ عند `innerH` أي يخرج كلّه أسفل مساحة الرسم فوق اللوحة التالية.
  */
 
-/** ارتفاع الحافة المحجوزة أعلى/أسفل مساحة الرسم داخل اللوحة (نفس ثابت بقية اللوحات). */
-const PANE_PAD = 16;
+import { PANE_PAD, clamp, finite } from './centeredPane';
 
 /** سماكة خطّ %K و%D. رقمان لا عمود: المتداول يتابع تقاطعهما لا مساحتهما. */
 export const STOCH_LINE_H = 2;
@@ -29,11 +28,6 @@ export interface StochPaneGeom {
    */
   y: (v: number | null | undefined) => number | null;
 }
-
-const finite = (v: number | null | undefined): v is number =>
-  typeof v === 'number' && Number.isFinite(v);
-
-const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
 
 /**
  * يبني هندسة اللوحة من ارتفاعها ومدى المؤشّر.

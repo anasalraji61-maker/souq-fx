@@ -28,13 +28,14 @@
  * بكل المواضع — بلا NaN يتسرّب لأنماط React Native.
  */
 
-/** ارتفاع الحافة المحجوزة أعلى/أسفل مساحة الرسم داخل اللوحة (نفس ثابت `macdPane.ts`/`stochPane.ts`). */
+/** ارتفاع الحافة المحجوزة أعلى/أسفل مساحة الرسم داخل اللوحة — المصدر الوحيد (يستورده `macdPane.ts`/`stochPane.ts`). */
 export const PANE_PAD = 16;
 
-const finite = (v: number | null | undefined): v is number =>
+/** رقم منتهٍ (لا null/NaN/Infinity) — مشترك مع `macdPane.ts`/`stochPane.ts`. */
+export const finite = (v: number | null | undefined): v is number =>
   typeof v === 'number' && Number.isFinite(v);
 
-const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
+export const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
 
 /** ارتفاع مساحة الرسم داخل لوحة بارتفاع `paneH`. لا يقلّ عن صفر ولا يكون NaN. */
 export function centeredPaneInnerH(paneH: number): number {

@@ -17,8 +17,7 @@
  * وإلا طغت قيم وهمية على مدى المقياس فسحقت الرسم الحقيقي.
  */
 
-/** ارتفاع الحافة المحجوزة أعلى/أسفل مساحة الرسم داخل اللوحة (نفس ثابت بقية اللوحات). */
-const PANE_PAD = 16;
+import { PANE_PAD, clamp, finite } from './centeredPane';
 
 export interface MacdPaneGeom {
   /** ارتفاع مساحة الرسم داخل اللوحة. */
@@ -34,11 +33,6 @@ export interface MacdPaneGeom {
   /** ارتفاع عمود الهيستوغرام لقيمة (لا يتجاوز نصف مساحة الرسم). */
   barH: (v: number) => number;
 }
-
-const finite = (v: number | null | undefined): v is number =>
-  typeof v === 'number' && Number.isFinite(v);
-
-const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
 
 /**
  * يبني هندسة اللوحة من السلاسل الثلاث وارتفاع اللوحة.
