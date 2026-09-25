@@ -351,3 +351,24 @@ def test_scan_change_covers_exactly_the_last_change_window_candles(monkeypatch):
     out = screener_engine.run_scan_detailed("15m", ["bullish"], ["EURUSD"])
     assert out["scanned"] == 1
     assert out["results"][0]["change_pct"] == 10.0
+
+
+def test_scan_short_series_has_no_80_candle_change(monkeypatch):
+    """أقلّ من 81 شمعة ⇒ `change_pct` None لا تغيّر نافذة أقصر موسوماً «80 شمعة»، وفلتر الزخم لا يطابق عليه
+    (كان 40 شمعة من 1.0 إلى 1.1 ⇒ «+10% على 80 شمعة» ونتيجة «زخم صاعد»). فلتر RSI ما زال يعمل."""
+    n = 40
+    closes = [1.0 + 0.1 * i / (n - 1) for i in range(n)]
+    now = int(time.time())
+    candles = [
+        {"time": now - (n - i) * 900, "open": c, "high": c, "low": c, "close": c, "volume": 0}
+        for i, c in enumerate(closes)
+    ]
+    monkeypatch.setattr(
+        market, "fetch_time_series_with_meta",
+        lambda sym, tf, outputsize=180: (candles, {"kind": "provider", "as_of": time.time()}),
+    )
+    monkeypatch.setattr(screener_engine.ind, "snapshot", lambda raw, **k: {"rsi": 20.0, "last": closes[-1]})
+    out = screener_engine.run_scan_detailed("15m", ["bullish", "rsi_oversold"], ["EURUSD", "GBPUSD"])
+    assert out["scanned"] == 2
+    assert [h["filters_matched"] for h in out["results"]] == [["rsi_oversold"], ["rsi_oversold"]]
+    assert all(h["change_pct"] is None for h in out["results"])

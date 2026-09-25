@@ -129,9 +129,12 @@ def run_scan_detailed(
         rsi_v = float(snap["rsi"])
         # «آخر 80 شمعة» = من إغلاق ما **قبلها** (80 حركة، كـ`signal_hub` «آخر 10 شموع»): كان `raw[-80:]`
         # يقيس من إغلاق أولاها ⇒ 79 حركة تحت وصف 80.
+        # أقلّ من 81 شمعة (رمز جديد، فجوة بالمزوّد) ⇒ لا تغيّر «80 شمعة»: كانت النافذة الأقصر تُرسَل تحت
+        # الوصف نفسه، وإغلاق أول غير مقروء يصير 0.0% «ثابت». الآن None ⇒ فلترا الزخم لا يطابقان والتطبيق
+        # يعرض «—» (`ScreenerMini` يقبل غير الرقم).
         window = raw[-(CHANGE_WINDOW + 1):]
-        first_close = float(window[0]["close"]) if window else 0.0
-        chg = ((float(snap["last"]) - first_close) / first_close * 100) if first_close else 0.0
+        first_close = float(window[0]["close"]) if len(window) == CHANGE_WINDOW + 1 else 0.0
+        chg = ((float(snap["last"]) - first_close) / first_close * 100) if first_close > 0 else None
 
         for f in flt:
             if f == "rsi_oversold" and rsi_v <= rsi_low:
@@ -144,9 +147,9 @@ def run_scan_detailed(
                 matched.append(f)
             elif f == "macd_cross_up" and snap.get("macd_cross_up"):
                 matched.append(f)
-            elif f == "bullish" and chg > 0 and rsi_v < MOMENTUM_RSI_CAP:
+            elif f == "bullish" and chg is not None and chg > 0 and rsi_v < MOMENTUM_RSI_CAP:
                 matched.append(f)
-            elif f == "bearish" and chg < 0 and rsi_v > MOMENTUM_RSI_FLOOR:
+            elif f == "bearish" and chg is not None and chg < 0 and rsi_v > MOMENTUM_RSI_FLOOR:
                 matched.append(f)
 
         if matched:
@@ -155,7 +158,7 @@ def run_scan_detailed(
                     "symbol": sym.upper(),
                     "timeframe": timeframe,
                     "last": snap["last"],
-                    "change_pct": round(chg, 2),
+                    "change_pct": round(chg, 2) if chg is not None else None,
                     "rsi": round(rsi_v, 1),
                     "filters_matched": matched,
                     # عند حدّ المزوّد (429) تُخدَم سلسلة مخزَّنة حتى 15د — كانت النتيجة لا تقول ذلك فيُقرأ
@@ -168,7 +171,7 @@ def run_scan_detailed(
                 }
             )
 
-    hits.sort(key=lambda x: abs(x["change_pct"]), reverse=True)
+    hits.sort(key=lambda x: abs(x["change_pct"] or 0.0), reverse=True)
     return {
         "results": hits,
         "scanned": scanned,
