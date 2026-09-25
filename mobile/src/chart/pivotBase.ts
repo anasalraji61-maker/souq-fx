@@ -62,10 +62,30 @@ export function candlesThrough<T extends Pick<Candle, 'time'>>(candles: readonly
 
 /**
  * مدخل دوالّ الارتكاز بفترة 1: كل واحدة تقرأ `candles.slice(n - period - 1, n - 1)`، فالشمعة
- * الأولى هنا هي نافذتها كاملة والثانية حشوة (الشمعة «الجارية» التي تُستثنى).
+ * الأولى هنا هي نافذتها كاملة والثانية الجلسة «الجارية» التي تُستثنى — ولا يقرأ منها إلا Woodie
+ * افتتاحها (`currOpen`؛ غير معروف ⇒ إغلاق السابقة، وهو افتتاح الجارية بالفوركس ما لم تكن فجوة).
  */
-export function pivotInput(prev: Candle | null): Candle[] | null {
-  return prev ? [prev, prev] : null;
+export function pivotInput(prev: Candle | null, currOpen?: number | null): Candle[] | null {
+  if (!prev) return null;
+  const open = currOpen != null && Number.isFinite(currOpen) ? currOpen : prev.close;
+  return [prev, { ...prev, open }];
+}
+
+/**
+ * افتتاح الجلسة الجارية (جلسة آخر شمعة) من شموع داخل اليوم — Woodie يبني محوره عليه. null إن بدأت السلسلة
+ * بعد افتتاح الجلسة (أوّل شمعة معروضة ليست الافتتاح الحقيقي).
+ */
+export function currentSessionOpen(candles: readonly Candle[], symbol: string): number | null {
+  if (!Array.isArray(candles) || candles.length === 0) return null;
+  const sorted = candles.filter((c) => c && Number.isFinite(c.time)).sort((a, b) => a.time - b.time);
+  if (!sorted.length) return null;
+  const dayOf = (t: number) => tradingDayStartSec(symbol, candleTimeSec(t));
+  const lastDay = dayOf(sorted[sorted.length - 1].time);
+  let start = sorted.length - 1;
+  while (start > 0 && dayOf(sorted[start - 1].time) === lastDay) start--;
+  if (start === 0 && candleTimeSec(sorted[0].time) > lastDay) return null;
+  const o = sorted[start].open;
+  return Number.isFinite(o) ? o : null;
 }
 
 /**

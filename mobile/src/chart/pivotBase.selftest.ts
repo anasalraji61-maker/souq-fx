@@ -4,9 +4,9 @@
  */
 import assert from 'node:assert/strict';
 import type { Candle } from '../api';
-import { candlesThrough, pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
+import { candlesThrough, currentSessionOpen, pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
 import { tradingDayStartSec } from './marketHours';
-import { computePivotPoints } from './indicators/price-transform';
+import { computePivotPoints, computeWoodiePivots } from './indicators/price-transform';
 
 const H = 3600;
 const bar = (time: number, o: number, h: number, l: number, c: number): Candle => ({
@@ -124,6 +124,25 @@ assert.equal(pivotLabelRank('??'), 5);
   assert.equal(candlesThrough(ms, cut).length, through.length);
   // بلا قطع ⇒ المرجع نفسه.
   assert.equal(candlesThrough(hourly, null), hourly);
+}
+
+// Woodie: PP=(H+L+2×افتتاح الجلسة الجارية)/4 كـTradingView؛ الافتتاح مجهول ⇒ إغلاق السابقة.
+{
+  const prev = bar(0, 1.1, 1.2, 1.0, 1.15);
+  const w = computeWoodiePivots(pivotInput(prev, 1.17)!, 1)!;
+  assert.ok(Math.abs(w.pp - (1.2 + 1.0 + 2 * 1.17) / 4) < 1e-12);
+  assert.ok(Math.abs(w.s1 - (2 * w.pp - 1.2)) < 1e-12);
+  const w0 = computeWoodiePivots(pivotInput(prev)!, 1)!;
+  assert.ok(Math.abs(w0.pp - (1.2 + 1.0 + 2 * 1.15) / 4) < 1e-12);
+  // الكلاسيكي لا يتأثّر بالافتتاح.
+  assert.equal(computePivotPoints(pivotInput(prev, 1.17)!, 1)!.pp, computePivotPoints(pivotInput(prev)!, 1)!.pp);
+  // افتتاح الجلسة الجارية: أوّل شمعة من جلسة آخر شمعة؛ السلسلة تبدأ داخل الجلسة ⇒ null.
+  const s0 = tradingDayStartSec('EURUSD', Date.UTC(2026, 0, 14, 12) / 1000);
+  const hs: Candle[] = [];
+  for (let t = s0 - 3 * H; t < s0 + 5 * H; t += H) hs.push(bar(t, t >= s0 ? 1.3 + (t - s0) / H / 1000 : 1.2, 1.4, 1.1, 1.25));
+  assert.equal(currentSessionOpen(hs, 'EURUSD'), 1.3);
+  assert.equal(currentSessionOpen(hs.filter((c) => c.time > s0), 'EURUSD'), null);
+  assert.equal(currentSessionOpen(hs.filter((c) => c.time >= s0), 'EURUSD'), 1.3);
 }
 
 console.log('pivotBase.selftest: PASS');
