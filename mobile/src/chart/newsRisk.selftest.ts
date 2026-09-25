@@ -873,3 +873,24 @@ console.log('newsRisk bankHolidayToday selftest OK');
   assert.equal(holidayZoneOffsetH('SEK', U(0, 1)), null);
 }
 console.log('newsRisk holiday local day selftest OK');
+
+{
+  // لواحق وسطاء كانت `[]` (لا تحذير ولا «التقويم غير متاح»)
+  const { symbolCurrencies: sc } = require('./newsRisk') as typeof import('./newsRisk');
+  assert.deepEqual(sc('XAUUSDspot'), ['USD']);
+  assert.deepEqual(sc('GOLDspot'), ['USD']);
+  assert.deepEqual(sc('XAUUSD.spot'), ['USD']);
+  assert.deepEqual(sc('EURUSD.proecn'), ['EUR', 'USD']);
+  assert.deepEqual(sc('EURUSD.stdacc'), ['EUR', 'USD']);
+  assert.deepEqual(sc('GBPJPY-standard'), ['GBP', 'JPY']);
+  assert.deepEqual(sc('US30Roll'), ['USD']);
+  assert.deepEqual(sc('GER40Roll'), ['EUR']);
+  assert.deepEqual(sc('US30.rolling'), ['USD']);
+  // ما كان يعمل يبقى، وما ليس معروفاً يبقى []
+  assert.deepEqual(sc('EURUSD.pro'), ['EUR', 'USD']);
+  assert.deepEqual(sc('NAS100_USD.m'), ['USD']);
+  assert.deepEqual(sc('AAPL.US'), []);
+  assert.deepEqual(sc('AAPL.nasdaq'), []);
+  assert.deepEqual(sc('TSLAspot'), []);
+}
+console.log('newsRisk long/spot/roll suffix selftest OK');

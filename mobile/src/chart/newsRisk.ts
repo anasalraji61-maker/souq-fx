@@ -178,7 +178,7 @@ export function cryptoPairOf(symbol: string): string | null {
  * «لا أخبار» قبل الرواتب. الدفتر يمرّر الرمز كما كُتب، فهذه تصل فعلاً:
  * - **لاحقتان بفاصل** («NAS100.cash.m»، «NAS100_USD.m»، «EURUSD.m.x»): `suffixFree` تُسقط واحدة، وقاعدة OANDA تريد
  *   `_XXX` آخر الرمز. تُقشَّر لاحقةٌ بفاصل وتُعاد المحاولة.
- * - **كلمة نوع حساب ملاصقة** («EURUSDmini»، «XAUUSDpro»، «GBPJPYecn»): كـ«micro» و«Cash» الملاصقتين.
+ * - **كلمة نوع حساب ملاصقة** («EURUSDmini»، «XAUUSDpro»، «GBPJPYecn»، «GOLDspot»، «US30Roll»): كـ«micro» و«Cash» الملاصقتين.
  * - **بادئة** «#»/«.» («#US30»، «.US30»، «#NAS100.cash»): تُقشَّر وتُعاد المحاولة.
  * تُقبل النتيجة فقط إن لم تكن فارغة — التحذير الزائد لا يكلّف شيئاً، والغائب قد يكلّف.
  */
@@ -189,12 +189,14 @@ export function symbolCurrencies(symbol: string): string[] {
   // بادئة وسيط («#US30»، «.NAS100»، «#GOLD»): `suffixFree` كانت تعدّ «#US30» كلّها لاحقة فتُسقطها ⇒ `[]` قبل الرواتب
   const unprefixed = up.replace(/^[#.]+/, '');
   if (unprefixed !== up && unprefixed.length >= 2) return symbolCurrencies(unprefixed);
-  const peeled = up.replace(/[.\-_#+][A-Z0-9]{0,5}$/, '');
+  // لاحقة بفاصل أطول من 5 («EURUSD.proecn»، «EURUSD.stdacc»، «US30.rolling») كانت تبقى ⇒ `[]`؛ تُقشَّر حتى 10
+  const peeled = up.replace(/[.\-_#+][A-Z0-9]{0,10}$/, '');
   if (peeled !== up && peeled.length >= 2) {
     const p = symbolCurrencies(peeled);
     if (p.length) return p;
   }
-  const word = /^([A-Z0-9]{3,}?)[.\-_#+]?(MINI|PRO|ECN|RAW|STD|ZERO|PLUS|VIP)$/.exec(up);
+  // و«spot»/«Roll» الملاصقتان («XAUUSDspot»، «GOLDspot»، «US30Roll»، «GER40Roll») — كانت `[]` بلا تحذير
+  const word = /^([A-Z0-9]{3,}?)[.\-_#+]?(MINI|PRO|ECN|RAW|STD|ZERO|PLUS|VIP|SPOT|ROLL)$/.exec(up);
   return word ? currenciesOnce(word[1]) : [];
 }
 
