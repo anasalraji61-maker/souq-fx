@@ -559,16 +559,36 @@ const MONEY_SIGNS: Record<string, readonly string[]> = {
  * قاعدة واحدة لكل خانة مال بعملة الحساب (المخاطرة `parseRiskInput`، العمولة `parseCommission`).
  */
 function moneyTextFor(raw: string, ccy: string): string | null {
+  const mm = moneyMark(raw);
+  return mm && markFits(mm.mark, ccy) ? mm.text : null;
+}
+
+/** العلامة الوحيدة بأحد طرفَي المبلغ (بعد تحويل الأسماء العربية) ونصّ الرقم بلاها؛ `null` = بلا علامة أو أكثر من واحدة. */
+function moneyMark(raw: string): { mark: string; text: string } | null {
   const m = /^\s*(?:([$€£¥＄￥￡])|([A-Za-z]{3}))?\s*([^$€£¥＄￥￡A-Za-z]+?)\s*(?:([$€£¥＄￥￡])|([A-Za-z]{3}))?\s*$/.exec(
     moneyWordsToMarks(raw)
   );
   if (!m) return null;
   const markers = [m[1], m[2], m[4], m[5]].filter((x): x is string => x != null);
-  if (markers.length !== 1) return null;
-  const mk = markers[0];
+  return markers.length === 1 ? { mark: markers[0], text: m[3] } : null;
+}
+
+function markFits(mark: string, ccy: string): boolean {
   const acc = ccy.toUpperCase();
-  const fits = /^[A-Za-z]{3}$/.test(mk) ? mk.toUpperCase() === acc : (MONEY_SIGNS[mk] ?? []).includes(acc);
-  return fits ? m[3] : null;
+  return /^[A-Za-z]{3}$/.test(mark) ? mark.toUpperCase() === acc : (MONEY_SIGNS[mark] ?? []).includes(acc);
+}
+
+/**
+ * مبلغٌ مفهوم **بعملة غير عملة الخانة** («€40» أو «40 يورو» بحساب دولار، «$7» بعمولة حساب سنت) — مرفوض عمداً (40 يورو ليست
+ * 40 دولاراً)، لكن الرسالة العامة «رقم غير مفهوم» كانت تحيّر عن رقمٍ مفهوم تماماً (launch84). true ⇒ تقول اللوحة عملة الحساب.
+ * العلامة علامة عملة أو كود عملة ورقية معروف (أو USC) فقط: «abc 40» تبقى نصّاً غير مفهوم. مقبولٌ أو رقمٌ غير صالح ⇒ false.
+ */
+export function moneyInOtherCurrency(raw: string, ccy: string): boolean {
+  const mm = moneyMark(raw);
+  if (!mm || markFits(mm.mark, ccy)) return false;
+  if (/^[A-Za-z]{3}$/.test(mm.mark) && !FIAT.has(mm.mark.toUpperCase()) && mm.mark.toUpperCase() !== 'USC') return false;
+  const v = parseDecimal(mm.text, { amount: true });
+  return v != null && v > 0;
 }
 
 /**

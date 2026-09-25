@@ -47,6 +47,7 @@ import {
   stopPipsMismatch,
   parseSpreadPips,
   parseCommission,
+  moneyInOtherCurrency,
   commissionAcrossModes,
   commissionNoteExample,
   conversionKey,
@@ -462,6 +463,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** «1.500» بخانة النقاط وحدها مرفوضة: 1500 أم 1.5؟ — القراءتان بدل «مثل 1.0850» (`ambiguousSlPips`) */
   const slAmbig = ambiguousSlPips(slPips);
   const onlySlBad = badFields.every(([label, v, bad]) => label === t.riskCalcSlPips || v.trim() === '' || !bad);
+  /**
+   * «€40» بحساب دولار وحدها مرفوضة: المبلغ مفهوم والعملة ليست عملة الحساب (`moneyInOtherCurrency`) ⇒ «…: عملة الحساب USD» بدل
+   * «رقم غير مفهوم» (launch84). بالمفتاح القائم `riskCalcAccountCcy` — اسم الشريحة التي يغيّرها أو العملة التي يكتب بها.
+   */
+  const onlyRiskOtherCcy =
+    moneyInOtherCurrency(riskPct, moneyCcy) &&
+    badFields.every(([label, v, bad]) => label === t.riskCalcRiskPct || v.trim() === '' || !bad);
   const badNumberText = ambiguousPx
     ? t.priceAmbiguousThousandsHint
         .replace('{value}', ambiguousPx.value)
@@ -472,6 +480,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           .replace('{value}', () => slAmbig.value)
           .replace('{whole}', slAmbig.whole)
           .replace('{small}', slAmbig.small)
+      : onlyRiskOtherCcy
+      ? `${badFieldsText}: ${t.riskCalcAccountCcy} ${moneyCcy}`
       : misplacedArabicThousandsSign(balanceText, { amount: true }) ||
         misplacedArabicThousandsSignInRisk(riskPct, balanceNum, moneyCcy) ||
         misplacedArabicThousandsSign(slPips, { unit: 'pip' }) ||
@@ -509,7 +519,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const commissionErr =
     parseCommission(commission, moneyCcy) != null
       ? null
-      : misplacedArabicThousandsSign(commission, { amount: true })
+      : moneyInOtherCurrency(commission, moneyCcy)
+        ? // «€7» بحساب دولار: مبلغ مفهوم بعملة أخرى — تُقال عملة الحساب لا «رقم غير مفهوم» (كالمخاطرة، launch84)
+          `${t.riskCalcBadFieldValue
+            .replace('{field}', () => shortLabel(t.riskCalcCommission).split(/[,،]/)[0])
+            .replace('{value}', () => commission.trim())}: ${t.riskCalcAccountCcy} ${moneyCcy}`
+        : misplacedArabicThousandsSign(commission, { amount: true })
         ? t.arabicThousandsSignHint
         : t.invalidNumberHint;
   /**

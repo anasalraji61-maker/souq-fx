@@ -82,6 +82,7 @@ import {
   MAX_LEVERAGE,
   planJournalNote,
   parseCommission,
+  moneyInOtherCurrency,
   costsLotsAdvice,
   profitAfterCosts,
   rewardBelowRisk,
@@ -2540,3 +2541,27 @@ console.log('positionSize pip unit word selftest OK');
   assert.equal(parseRiskInput('€50', 10000, 'USD'), null);
 }
 console.log('positionSize commission currency mark selftest OK');
+
+// moneyInOtherCurrency (launch84): «€40» بحساب دولار مرفوضة **لسبب العملة** لا لأنها غير مفهومة
+{
+  assert.equal(parseRiskInput('€40', 10000, 'USD'), null);
+  assert.equal(moneyInOtherCurrency('€40', 'USD'), true);
+  assert.equal(moneyInOtherCurrency('40 يورو', 'USD'), true);
+  assert.equal(moneyInOtherCurrency('40 EUR', 'USD'), true);
+  assert.equal(moneyInOtherCurrency('$40', 'EUR'), true);
+  assert.equal(moneyInOtherCurrency('$7', 'USC'), true);
+  assert.equal(moneyInOtherCurrency('1000 سنت', 'USD'), true);
+  // عملة الخانة نفسها أو نسبة أو نصّ ليس عملة أو رقم غير صالح ⇒ false (لها رسائلها)
+  assert.equal(moneyInOtherCurrency('$40', 'USD'), false);
+  assert.equal(moneyInOtherCurrency('$40', 'CAD'), false);
+  assert.equal(moneyInOtherCurrency('1', 'USD'), false);
+  assert.equal(moneyInOtherCurrency('1%', 'USD'), false);
+  assert.equal(moneyInOtherCurrency('abc 40', 'USD'), false);
+  assert.equal(moneyInOtherCurrency('pip 40', 'USD'), false);
+  assert.equal(moneyInOtherCurrency('€', 'USD'), false);
+  assert.equal(moneyInOtherCurrency('€0', 'USD'), false);
+  assert.equal(moneyInOtherCurrency('€1.000', 'USD'), false); // مبهمة: رسالتها العامة
+  assert.equal(moneyInOtherCurrency('€40 USD', 'USD'), false); // علامتان
+  assert.equal(moneyInOtherCurrency('', 'USD'), false);
+}
+console.log('positionSize moneyInOtherCurrency selftest OK');
