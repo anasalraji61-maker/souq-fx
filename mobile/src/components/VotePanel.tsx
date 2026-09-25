@@ -226,6 +226,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
           },
         ]}
         onPress={() => setShowPublish((s) => !s)}
+        accessibilityState={{ expanded: showPublish }}
         accessibilityLabel={showPublish ? t.voteCloseFormA11y : t.votePublishNewA11y}
       >
         <Text style={styles.publishToggleText}>
