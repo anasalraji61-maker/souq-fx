@@ -86,7 +86,9 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
           lastHeardAt = Date.now();
         };
         ws.onmessage = (ev) => {
-          if (!alive) return;
+          // مقبس تُرك (نصف ميت بعد تبديل الشبكة) قد يُفرغ رسائله المحجوزة متأخّرة: أسعار قديمة تُختم بـ«الآن»
+          // وتغلب أسعار المقبس الجديد لحظةً — الرأس ووسم السعر يقفزان للخلف ثم يعودان.
+          if (!alive || wsRef.current !== ws) return;
           lastHeardAt = Date.now();
           try {
             const data = JSON.parse(String(ev.data)) as {
