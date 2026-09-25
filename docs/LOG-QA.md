@@ -593,3 +593,14 @@ tsc أخضر لأن `api.ts:617 :639` `avg_score: number`. ليس خطأ بنا�
 `7941d54` QA29، `ee2d153`/`27f5f8d` QA30) وchart-r35. تحقّقتُ بالكود ⇒ أُغلقت launch103، tools67 (المفتاح)، backend-r2 شقّ ui، QA5 ★، QA29 ★، QA30؛ صفوف chart-r35/backend-r3 الجديدة
 أُدرجت، و`DataOriginKind` باقٍ بصفّ chart-r35 (1). STATUS: الانهيار صار «أُصلح أثناء الدورة».
 **إلحاق 2:** `6119b24` (tools) كفّ عن تمرير `lastPrice`/`candles` ⇒ صفّ ui2 صار ui وحده (حذف الخاصيتين). البناء أخضر 0.
+
+## 2026-09-25 — الدورة 51
+**البناء:** أخضر 0 (بعد f55ff1b) — لا إصلاح لازم. **Selftests:** 89/89 ناجح (`npx tsx`؛ +1 `forecastText`).
+**التحقّق من الإغلاقات بالكود:** tools67 (`api.ts:744` `trades({limit,offset})`، `postJson` يرفق `status`)؛ chart-r35 (2) و`disclaimer_code` (`signal_hub.py:280 :302`)؛
+backend-r3 التوقّع + launch104 (1) (`IndicatorForecastPanel.tsx:104` `lang`، `chart/forecastText.ts`)؛ 422 التصويت (`VotePanel.tsx:146`)؛ ui3 → chart (`ec57a4a`) و→ launch؛ tools68 → launch؛
+backend-r2 (2)(3)(4)؛ backend-r4 شقّ الخادم (`db.py:1207 :1283` `mine`). ~10 صفوف أُغلقت.
+**تجربة:** وسّعتُ `DataOriginKind` بـ`'unavailable'` مؤقّتاً (`api.ts:84`) ⇒ tsc 0 أخطاء ⇒ أعدتُه (ليس خطأ بناء، ملك ui). الموانع زالت ⇒ الصفّ لـui وحده ★.
+**دمج الصفوف:** `DataOriginKind` ×4 ⇒ 1 (ui ★)؛ حظر الذات ×3 ⇒ 1 (ui ★: نوع الفكرة بلا `mine`، `VotePanel.tsx:26`)؛ «تحميل الأقدم» ⇒ tools ★ (`journalLoadOlder` بلا مستعمل).
+**المراجعة (a — تكرار/ميت/تصديرات):** قائمة QA1 الـ14 كلّها باقية (grep). كل تصدير بالملفات المتغيّرة (`forecastText`، `dataSource`، `newsRisk`، `liveSeries`، `signalDirection`) مستعمل.
+جديد: `IndicatorForecastPanel.tsx:29` نوع `Vote` محلّي ينسخ `api.ts:692-700` (QA51)؛ `NewsRiskBanner.tsx:66` `HOLIDAY_COPY` ينسخ `newsHolidayToday` (صفّ tools68 قائم).
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة تنتمي لـ`locales.ts`.
