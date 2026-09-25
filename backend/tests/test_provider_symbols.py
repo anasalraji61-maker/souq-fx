@@ -49,3 +49,14 @@ def test_watchlist_still_lists_dxy_as_unavailable():
     rows = TestClient(main.app).get("/api/watchlist").json()["symbols"]
     dxy = [r for r in rows if r["symbol"] == "DXY"]
     assert dxy and dxy[0]["td_symbol"] is None and dxy[0]["unavailable_reason"]
+
+
+@pytest.mark.parametrize("bad", ["NaN", "nan", "inf", "-inf", 0, "0", -1.2, "abc", None])
+def test_ws_price_rejects_non_finite_and_non_positive(bad):
+    """سعر NaN من الـWS كان يُخزَّن ويُبثّ بـ`/ws/ticks` كـ`NaN` حرفي = JSON غير صالح ⇒ التطبيق يفقد كل التيكات؛
+    والصفر/السالب يصل تنبيهات السعر كسعر حالي."""
+    assert td_ws._parse_price({"event": "price", "symbol": "EUR/USD", "price": bad}) is None
+
+
+def test_ws_price_keeps_a_real_price():
+    assert td_ws._parse_price({"event": "price", "symbol": "EUR/USD", "price": "1.1734"}) == ("EURUSD", 1.1734)

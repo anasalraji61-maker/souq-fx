@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 import os
 import time
 from typing import Any
@@ -51,9 +52,14 @@ def _parse_price(msg: dict[str, Any]) -> tuple[str, float] | None:
     if not sym or price is None:
         return None
     try:
-        return _matrix_from_td(str(sym)), float(price)
+        p = float(price)
     except (TypeError, ValueError):
         return None
+    # `float("NaN")`/`"inf"` تجتاز التحويل، و`send_json` يكتبها `NaN` حرفياً — JSON غير صالح يُسقط
+    # `JSON.parse` بالتطبيق فتتوقّف كل التيكات لا الرمز وحده. وسعر غير موجب ليس سعراً (والتنبيهات تقرؤه).
+    if not math.isfinite(p) or p <= 0:
+        return None
+    return _matrix_from_td(str(sym)), p
 
 
 async def run_forever() -> None:
