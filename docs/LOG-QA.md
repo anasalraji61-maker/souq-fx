@@ -801,3 +801,5 @@ launch126 ← backend `a58fed3` (`alert_worker.py:218`). طلب chart `mcEstimat
 `RISK_HIGH_PCT` 2 ↔ `riskCalcHighRisk` و«1–2%» بالنصوص الثلاثة؛ `ORDER_WARN_LOTS` 50 / `MAX_SMALL_LOTS` 200 ↔ «50–100 lot»؛ `typicalSpreadPipsExample` ↔ `stopInsideTypicalSpread`؛
 RSI 14/30/70 بالماسح، والتطبيق لا يرسل `symbols` (سقف `MAX_SCAN_SYMBOLS` 30 لا يُمسّ). **لا بند** — تعليق مطوّر قديم فقط `locales.ts:473` يذكر `MAX_SANE_LOTS` (100) والحدّ الفعلي 50.
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
+**إلحاق:** وصل backend 30 (`d568eb3` `opened_at` مقروء أو 422، `b2e3c23` الاختبار الخلفي يستثني الشمعة الجارية) أثناء الدفع. تحقّقتُ: التطبيق لا يرسل `opened_at`
+(`api.ts:784-797` `createTrade`) ⇒ الـ422 الجديد لا يمسّه. لا طلب تنسيق جديد بسجلّه. البناء على ccec4b7 أخضر 0.
