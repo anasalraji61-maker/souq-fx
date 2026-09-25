@@ -726,3 +726,11 @@ ui11 ← ui (`a0f67d1`، `AS_OF_COPY` grep صفر)؛ QA60 ← launch (`99e365e`�
 **الدورة القادمة:** المراجعة (c) — أزرار بلا `accessibilityLabel`.
 **إلحاق:** تعارض عند الدفع مع tools 78 / launch 118 / ui 16 / backend 20. تحقّقتُ: ui16a ← ui (`86a1992`، `ProviderUnavailableNotice.tsx:25-30`)؛ launch118 ← backend (`f88d36b`، `main.py:1892`) ⇒ أُغلقا (المجموع 5).
 البناء بعد الدمج أخضر 0، الـselftests 99/99. RELEASE-MOBILE 482 خطوة.
+
+## 2026-09-25 — الدورة 63
+**البناء:** أخضر 0 (بعد 9ee873b) — لا إصلاح لازم. **Selftests:** 99/99 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** tools79 ← launch (`cbd9554`، `originUnavailableProvider` grep صفر خارج التعليقات)؛ chart-r47 (a)(b)(c) ← tools (`308f430`، `TerminalScreen.tsx:1508-1509 :1664-1665`، مؤشّر `:1496-1504 :1650-1658`).
+**مفتوح بعد التحقّق:** chart-r47 ضُيّق لـtools: عرض `t.chartFirstLoad` (launch `90f2767`، grep `.tsx` صفر)؛ launch119 → chart (`chartNoCandles*` غير مقروء بـ`MatrixChart.tsx`)؛ backend-r19/ui16 → ui (`api.ts:98-99` `last`/`change_pct` ما زالا `number`).
+لا طلبات تنسيق جديدة بسجلات chart 47 / tools 79 / launch 119 / ui 17 / backend 21.
+**المراجعة (c — `accessibilityLabel`):** سكربت على `Pressable/Touchable*/Switch/TextInput` بـ`mobile/src`: 35 بلا label صريح — 27 زرّاً بابن `<Text>` ظاهر (يُقرأ تلقائياً)، 6 مراجع `useRef<TextInput>`، و`TradeJournalPanel.tsx:1995` له `journalNoteA11y` (إيجابي كاذب من `>` بتعليق). **لا بند جديد.**
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة بين الملفات.
