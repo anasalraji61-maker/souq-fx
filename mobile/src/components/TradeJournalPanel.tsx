@@ -42,6 +42,7 @@ import {
   netByInstrument,
   openRiskTotals,
   stackedCurrencyExposure,
+  draftStackedExposure,
   openTradesWithoutStop,
   knownLots,
   journalInstrumentKey,
@@ -739,6 +740,20 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   );
 
   /**
+   * قبل الحفظ: الصفقة التي تُكتب تُضيف رهاناً بالاتجاه نفسه على عملةٍ تحملها مفتوحة (`draftStackedExposure`) — سطر التراكم نفسه
+   * بالعدد **بعدها** و«(+1)» هي. «2 → 3» كان سيُقرأ مقلوباً بالعربية (سهمٌ بين أرقام بسطرٍ من اليمين). لا يظهر عند التعديل.
+   */
+  const draftStackedLines = useMemo(
+    () =>
+      editing
+        ? []
+        : draftStackedExposure(trades, { symbol, side }).map((x) =>
+            t.journalExposureStacked.replace('{ccy}', x.ccy).replace('{n}', `${x.after} (+1)`)
+          ),
+    [trades, symbol, side, editing, t]
+  );
+
+  /**
    * رموز الصفقات المفتوحة (كلها لا المفلترة، كسطر التراكم) لشريط «خبر قوي» فوق القائمة — الشريط كان لرمز النموذج وحده،
    * فمن يحمل EURUSD مفتوحة ولا يكتب صفقة لا يرى الرواتب الأمريكية بعد 20 دقيقة (`openPositionsNewsRisk`).
    */
@@ -1427,6 +1442,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         بجانب الشارت الذي يعرض الشريط نفسه أصلاً، فلا يُكرَّر تحذيران متطابقان بشاشة واحدة.
       */}
       {flow && !editing ? <NewsRiskBanner symbol={symbol.trim()} /> : null}
+      {draftStackedLines.map((line) => (
+        <Text key={line} style={[styles.planWarn, { textAlign: align }]} accessibilityLiveRegion="polite">
+          {line}
+        </Text>
+      ))}
       <TextInput
         style={[styles.input, { textAlign: align }]}
         value={entry}

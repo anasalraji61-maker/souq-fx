@@ -1737,3 +1737,26 @@ export function stackedCurrencyExposure(
     })
     .map(([ccy, v]) => ({ ccy, n: v.idx.length, dir: v.long > 0 ? ('long' as const) : ('short' as const) }));
 }
+
+/**
+ * **قبل الدخول**: هل تُضيف الصفقة التي تُكتب الآن رهاناً ثانياً (أو ثالثاً) بالاتجاه نفسه على عملةٍ تحملها صفقاتٌ مفتوحة؟ —
+ * لسطر `journalExposureStacked` تحت نموذج الدفتر بـ«{before} → {after}». سطر التراكم (`stackedCurrencyExposure`) يظهر فوق
+ * القائمة **بعد** الحفظ؛ من يحمل شراء EURUSD وGBPUSD ويكتب شراء AUDUSD يُقال له بعدها إنها ثلاث مرّات بيع الدولار — والسؤال
+ * كان قبلها.
+ *
+ * القاعدة نفسها بالضبط (`stackedCurrencyExposure` على المفتوحة + المسودّة): عملةٌ من عملتَي المسودّة تتراكم بعد إضافتها ⇒
+ * عنصر، و`before` = ما كان قبلها (≥1). تحوّطٌ (ساق معاكسة) لا يُذكر؛ المسودّة وحدها لا تراكم؛ رمزٌ بلا مواصفات ⇒ `[]`.
+ */
+export function draftStackedExposure(
+  trades: readonly { id?: string | number; symbol: string; side: string; status: string }[],
+  draft: { symbol: string; side: TradeSide }
+): { ccy: string; before: number; after: number; dir: 'long' | 'short' }[] {
+  const spec = journalSpec(draft.symbol?.trim().toUpperCase());
+  if (!spec) return [];
+  const open = trades.filter((tr) => tr.status === 'open');
+  const buy = draft.side !== 'sell';
+  const dirOf = (ccy: string): 'long' | 'short' => ((ccy === spec.base) === buy ? 'long' : 'short');
+  return stackedCurrencyExposure([...open, { symbol: draft.symbol, side: draft.side, status: 'open' }])
+    .filter((x) => (x.ccy === spec.base || x.ccy === spec.quote) && x.dir === dirOf(x.ccy))
+    .map((x) => ({ ccy: x.ccy, before: x.n - 1, after: x.n, dir: x.dir }));
+}

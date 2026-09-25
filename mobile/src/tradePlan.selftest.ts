@@ -72,6 +72,7 @@ import {
   QUICK_SYMBOLS,
   openCurrencyExposure,
   stackedCurrencyExposure,
+  draftStackedExposure,
   levelLooksLikePips,
   levelLooksLikePipsText,
 } from './tradePlan';
@@ -2678,3 +2679,37 @@ console.log('tradePlan calculator stop-price pips selftest OK');
   assert.match(levelLooksLikePipsText(en, 'TP', '50', hit.pips, hit.price.toFixed(4)), /50 pips is 1\.0900\. Tap to use 1\.0900$/);
 }
 console.log('tradePlan levelLooksLikePipsText selftest OK');
+
+// قبل الدخول: المسودّة تُضيف رهاناً بالاتجاه نفسه (draftStackedExposure)
+{
+  const o = (symbol: string, side: string, status = 'open') => ({ symbol, side, status });
+  const D = draftStackedExposure;
+  // شراء EURUSD + GBPUSD مفتوحتان، والمسودّة شراء AUDUSD ⇒ الدولار بيعاً 2 → 3
+  assert.deepEqual(D([o('EURUSD', 'buy'), o('GBPUSD', 'buy')], { symbol: 'AUDUSD', side: 'buy' }), [
+    { ccy: 'USD', before: 2, after: 3, dir: 'short' },
+  ]);
+  // ما كان: السطر فوق القائمة يُحسب من المفتوحة وحدها — قبل الحفظ لا يعرف المسودّة
+  assert.deepEqual(stackedCurrencyExposure([o('EURUSD', 'buy')]), []);
+  // صفقة واحدة مفتوحة + المسودّة بالاتجاه نفسه ⇒ 1 → 2 (الزوج نفسه ⇒ مرّة بعملة الأساس)
+  assert.deepEqual(D([o('EURUSD', 'buy')], { symbol: 'EURUSD', side: 'buy' }), [{ ccy: 'EUR', before: 1, after: 2, dir: 'long' }]);
+  // بيع USDJPY مع شراء EURUSD مفتوحة ⇒ الدولار بيعاً 1 → 2 (الأساس بيعاً)
+  assert.deepEqual(D([o('EURUSD', 'buy')], { symbol: 'USDJPY', side: 'sell' }), [{ ccy: 'USD', before: 1, after: 2, dir: 'short' }]);
+  // المسودّة تحوّط (شراء USDCHF مقابل شراء EURUSD) ⇒ لا سطر؛ ولا يُذكر تراكمٌ قائم لا تمسّه المسودّة
+  assert.deepEqual(D([o('EURUSD', 'buy')], { symbol: 'USDCHF', side: 'buy' }), []);
+  assert.deepEqual(D([o('EURJPY', 'buy'), o('GBPJPY', 'buy')], { symbol: 'AUDNZD', side: 'buy' }), []);
+  // مسودّة تكسر تراكماً قائماً لا تُذكر
+  assert.deepEqual(D([o('EURUSD', 'buy'), o('GBPUSD', 'buy')], { symbol: 'EURUSD', side: 'sell' }), []);
+  // المغلقة لا تُحسب؛ بلا مفتوحة لا شيء؛ رمز بلا مواصفات لا شيء
+  assert.deepEqual(D([o('EURUSD', 'buy', 'closed')], { symbol: 'GBPUSD', side: 'buy' }), []);
+  assert.deepEqual(D([], { symbol: 'EURUSD', side: 'buy' }), []);
+  assert.deepEqual(D([o('EURUSD', 'buy')], { symbol: 'NAS100', side: 'sell' }), []);
+  // عملتان تتراكمان بمجموعتين مختلفتين ⇒ كلتاهما
+  assert.deepEqual(D([o('EURUSD', 'buy'), o('EURJPY', 'buy'), o('GBPUSD', 'buy')], { symbol: 'EURCHF.m', side: 'buy' }), [
+    { ccy: 'EUR', before: 2, after: 3, dir: 'long' },
+  ]);
+  assert.deepEqual(D([o('EURJPY', 'buy'), o('GBPUSD', 'buy')], { symbol: 'EURUSD', side: 'buy' }), [
+    { ccy: 'EUR', before: 1, after: 2, dir: 'long' },
+    { ccy: 'USD', before: 1, after: 2, dir: 'short' },
+  ]);
+}
+console.log('tradePlan draftStackedExposure selftest OK');
