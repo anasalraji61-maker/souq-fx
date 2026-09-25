@@ -626,3 +626,13 @@ console.log('newsRisk broker spellings selftest OK');
   assert.deepEqual(symbolCurrencies('US30X'), []);
 }
 console.log('newsRisk glued letter selftest OK');
+
+{
+  // WTI باسم «CL-OIL»: «-OIL» ليست لاحقة وسيط
+  for (const n of ['CL-OIL', 'CL_OIL', 'CL.OIL', 'CLOIL', 'cl-oil', 'CL-OIL.m', '#CL-OIL']) {
+    assert.deepEqual(symbolCurrencies(n), ['USD'], n);
+  }
+  // «CL» وحده ليس اسماً معروفاً
+  assert.deepEqual(symbolCurrencies('CL'), []);
+}
+console.log('newsRisk CL-OIL selftest OK');

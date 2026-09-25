@@ -82,6 +82,11 @@ const SINGLE_CCY: Record<string, string> = {
   SPOTCRUDE: 'USD', SPOTBRENT: 'USD', VIX: 'USD',
   // وأسماء أخرى للناسداك/S&P/داو عند وسطاء المنطقة (Tickmill/FXTM/Admirals: «USTECH»، «NQ100»، «USA500»، «USA30») — كانت `[]`
   NQ100: 'USD', USTECH: 'USD', USTECH100: 'USD', USA100: 'USD', USA500: 'USD', USA30: 'USD', US2000USD: 'USD',
+  /**
+   * WTI باسم «CL-OIL» (وسطاء MT5 عدّة؛ `marketHours` يعرفه `CL[-_.]?OIL`): `suffixFree` تعدّ «-OIL» لاحقة فيبقى «CL»
+   * ⇒ `[]` — لا تحذير قبل الرواتب/EIA ولا سطر «التقويم غير متاح». يُطابَق بالحروف كلها («CLOIL»).
+   */
+  CLOIL: 'USD',
 };
 
 /**
