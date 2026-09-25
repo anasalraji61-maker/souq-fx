@@ -8,6 +8,7 @@ import {
   timeframeStepSec,
 } from './dataSource';
 import { candlesThrough, prevDayFromIntraday } from './pivotBase';
+import { forexWeekCloseSec } from './marketHours';
 
 export type LiveMergeOpts = {
   /** unix seconds of the tick (usually source.as_of) */
@@ -53,12 +54,20 @@ export function liveBarOpenSec(
   lastOpenTime: number,
   tickSec: number | null | undefined,
   stepSec: number,
-  nowSec = serverNowSec()
+  nowSec = serverNowSec(),
+  symbol?: string
 ): number | null {
   if (!isValidAsOf(tickSec, nowSec)) return null;
   if (!(stepSec > 0) || !Number.isFinite(stepSec)) return null;
   const open = candleTimeSec(lastOpenTime);
   if (!Number.isFinite(open)) return null;
+  // الأسبوعي مختوم الاثنين: تيك افتتاح الأحد (21:00/22:00 UTC) بعد 6 أيام و21 ساعة فيقع «داخل» خطوة الأسبوع
+  // الماضي ⇒ ذيل فجوة العطلة وإغلاق الأحد يُلصقان بشمعة أُغلقت الجمعة، حتى منتصف ليل الاثنين. بعد إغلاق
+  // أسبوع الشمعة ينتظر الشارت شمعة المزوّد الجديدة (كاليومي، حيث الأحد k=2 أصلاً).
+  if (symbol && stepSec > 86400) {
+    const weekClose = forexWeekCloseSec(symbol, open * 1000);
+    if (weekClose != null && tickSec >= weekClose) return null;
+  }
   const k = Math.floor((tickSec - open) / stepSec);
   if (k === 0) return open;
   if (k < 0 || k >= ROLL_MAX_BARS || stepSec > ROLL_MAX_STEP_SEC) return null;
@@ -89,7 +98,7 @@ export function withLivePrice(
   const last = series.candles[series.candles.length - 1]!;
   const step = timeframeStepSec(opts?.timeframe ?? series.timeframe);
   const tickAsOf = opts?.tickAsOf ?? tickSrc.as_of ?? null;
-  const barOpen = liveBarOpenSec(last.time, tickAsOf, step, opts?.nowSec);
+  const barOpen = liveBarOpenSec(last.time, tickAsOf, step, opts?.nowSec, series.symbol);
   if (barOpen == null) return series;
   if (barOpen !== candleTimeSec(last.time)) {
     // بوحدة أزمنة السلسلة نفسها (ms أو ث) كي يطابق مفتاح التتبّع شمعة المزوّد حين تصل.
@@ -231,7 +240,7 @@ export function livePriceForChart(
   const last = series.candles[series.candles.length - 1]!;
   const step = timeframeStepSec(opts?.timeframe ?? series.timeframe);
   const tickAsOf = opts?.tickAsOf ?? tick.source.as_of ?? null;
-  if (liveBarOpenSec(last.time, tickAsOf, step, opts?.nowSec) == null) return null;
+  if (liveBarOpenSec(last.time, tickAsOf, step, opts?.nowSec, series.symbol) == null) return null;
   return tick.price;
 }
 

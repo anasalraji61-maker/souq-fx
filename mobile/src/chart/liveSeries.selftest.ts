@@ -13,7 +13,7 @@ import {
   type LiveExtremes,
 } from './liveSeries';
 import type { ChartSeries } from '../api';
-import { replayPrevClose } from './liveSeries';
+import { liveBarOpenSec, replayPrevClose } from './liveSeries';
 
 const now = 1_760_000_000;
 const src = { kind: 'provider' as const, as_of: now, channel: 'twelvedata' };
@@ -177,6 +177,18 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   const d1 = { symbol: 'EURUSD', timeframe: '1d', candles: cs.slice(0, 5).map((c, i) => ({ ...c, time: i * 86400 })) } as unknown as ChartSeries;
   assert.equal(replayPrevClose(d1, 3 * 86400), 1.002, 'D1: previous bar close');
   assert.equal(replayPrevClose(h1, null), null);
+}
+
+// الأسبوعي مختوم الاثنين: تيك افتتاح الأحد لا يُدمج بشمعة الأسبوع الذي أُغلق الجمعة
+{
+  const mon = Date.UTC(2026, 8, 14) / 1000; // الاثنين 14 سبتمبر
+  const sunOpen = Date.UTC(2026, 8, 20, 21, 30) / 1000;
+  const wed = Date.UTC(2026, 8, 16, 12) / 1000;
+  const W = 7 * 86400;
+  assert.equal(liveBarOpenSec(mon, sunOpen, W, sunOpen + 1, 'EURUSD'), null, 'W: Sunday open not merged into last week');
+  assert.equal(liveBarOpenSec(mon, wed, W, wed + 1, 'EURUSD'), mon, 'W: midweek tick merges');
+  assert.equal(liveBarOpenSec(mon, sunOpen, W, sunOpen + 1, 'BTCUSD'), mon, 'W: crypto trades the weekend');
+  assert.equal(liveBarOpenSec(mon, sunOpen, W, sunOpen + 1), mon, 'no symbol: unchanged behaviour');
 }
 
 console.log('liveSeries selftest: OK');
