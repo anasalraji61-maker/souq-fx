@@ -1319,6 +1319,12 @@ def market_quote(symbol: str):
                 "unavailable_reason": series.data_source.unavailable_reason or "provider_unavailable",
             }
         last = series.last
+        # وقت السعر = إغلاق آخر شمعة (فتحها + 15د) إن سبق لحظة الجلب — لا لحظة الجلب وحدها: السبت
+        # كانت شمعة الجمعة 21:45 تُرسَل `as_of` = «الآن» (نفس عيب الاقتباس المصحَّح بـ9f5cccd).
+        fetched = series.data_source.as_of
+        candle_end = float(series.candles[-1].time + TF_SECONDS["15m"]) if series.candles else None
+        known = [t for t in (fetched, candle_end) if t is not None]
+        price_at = min(known) if known else None
         return {
             "symbol": symbol.upper(),
             "price": last,
@@ -1331,8 +1337,9 @@ def market_quote(symbol: str):
             # provider/cache = آخر إغلاق حقيقي؛ demo = سلسلة بذرية (المزوّد غير مهيّأ أو لا يعرف الرمز) —
             # سعر غير حقيقي لا يصلح لحساب رقمي (حاسبة حجم المركز تتجاهله وتطلب السعر يدوياً).
             "data_kind": series.data_source.kind,
-            # وقت آخر شمعة جُلبت (قد يصل 15د مع `cache`) — كان يغيب فيقرأ العميل السعر «الآن»
-            "as_of": series.data_source.as_of,
+            # وقت السعر (العميل يقرؤه كذلك — `quoteAsOfMs`)؛ `fetched_at` = لحظة جلب السلسلة (قد تسبق 15د مع `cache`)
+            "as_of": price_at,
+            "fetched_at": fetched,
         }
     book["source"] = "twelvedata"
     book["data_kind"] = "provider"

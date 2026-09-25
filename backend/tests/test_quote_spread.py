@@ -138,7 +138,39 @@ def test_candle_fallback_carries_the_candle_time(monkeypatch):
 
     monkeypatch.setattr(main, "build_series", build)
     body = TestClient(main.app).get("/api/market/quote/EURUSD").json()
-    assert body["data_kind"] == "cache" and body["as_of"] == 1234.0
+    # الشمعة فُتحت عند 1 وأُغلقت 901 — قبل لحظة الجلب 1234: السعر وقته 901
+    assert body["data_kind"] == "cache" and body["as_of"] == 901.0
+    assert body["fetched_at"] == 1234.0
+
+
+def _fallback_series(monkeypatch, candle_time: int, fetched: float):
+    monkeypatch.setattr(main.market, "fetch_quote_book", lambda s: None)
+
+    def build(sym, timeframe="15m", outputsize=180):
+        c = main.Candle(time=candle_time, open=1.1, high=1.1, low=1.1, close=1.1)
+        return main.ChartSeries(
+            symbol=sym, timeframe=timeframe, candles=[c], change_pct=0, last=1.1,
+            data_source=main.DataProvenance(kind="provider", as_of=fetched, channel="twelvedata"),
+        )
+
+    monkeypatch.setattr(main, "build_series", build)
+    return TestClient(main.app).get("/api/market/quote/GBPUSD").json()
+
+
+def test_weekend_candle_fallback_is_dated_friday_not_now(monkeypatch):
+    """السبت، /quote متعذّر: آخر شمعة 15د = الجمعة 21:45. كان `as_of` = لحظة الجلب ⇒ «سعر الآن»."""
+    now = time.time()
+    friday_bar = int(now) - 86_400
+    body = _fallback_series(monkeypatch, friday_bar, now)
+    assert body["as_of"] == friday_bar + 900
+    assert body["fetched_at"] == now
+
+
+def test_live_candle_fallback_is_dated_at_fetch(monkeypatch):
+    """شمعة جارية (لم تُغلق بعد): إغلاقها = آخر سعر لحظة الجلب."""
+    now = time.time()
+    body = _fallback_series(monkeypatch, int(now) - 120, now)
+    assert body["as_of"] == now
 
 
 # ─── `as_of` = وقت السعر لا لحظة الجلب ──────────────────────────────────────
