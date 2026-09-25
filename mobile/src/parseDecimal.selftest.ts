@@ -166,3 +166,24 @@ console.log('parseDecimal leading-zero group selftest OK');
   assert.equal(parseDecimal('1‏,000'), null); // المبهم يبقى مبهماً
 }
 console.log('parseDecimal bidi marks selftest OK');
+
+// «+» واحدة بالمقدّمة: رقمٌ موجب كما هو (كانت تُرفض)؛ إشارتان أو «+» بالوسط/الآخر مرفوضة
+{
+  assert.equal(parseDecimal('+1.0850'), 1.085);
+  assert.equal(parseDecimal('+25'), 25);
+  assert.equal(parseDecimal(' + 25 '), 25);
+  assert.equal(parseDecimal('＋١٫٥'), 1.5);
+  assert.equal(parseDecimal('+0.5', { signed: true }), 0.5);
+  assert.equal(parseDecimal('+1%', { percent: true }), 1);
+  assert.equal(parseDecimal('+10000', { amount: true }), 10000);
+  assert.equal(parseDecimal('+10,000', { amount: true }), null); // كـ«10,000» بلا إشارة
+  assert.equal(parseDecimal('+1.000', { amount: true }), null); // المبهم يبقى مبهماً
+  assert.equal(parseDecimal('+'), null);
+  assert.equal(parseDecimal('++5'), null);
+  assert.equal(parseDecimal('+-5', { signed: true }), null);
+  assert.equal(parseDecimal('-+5', { signed: true }), null);
+  assert.equal(parseDecimal('5+'), null);
+  assert.equal(parseDecimal('1+2'), null);
+  assert.equal(parseDecimal('-5'), null); // السالب بلا `signed` مرفوض كما كان
+}
+console.log('parseDecimal leading plus selftest OK');

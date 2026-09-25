@@ -78,7 +78,9 @@ export function parseDecimal(
     if (signs === 1 && /^[%٪％]|[%٪％]$/.test(s)) s = s.replace(/[%٪％]/, '');
   }
   let neg = false;
-  if (opts.signed && /^[-−－]/.test(s)) {
+  // «+» واحدة بالمقدّمة لا تغيّر رقماً موجباً: «+25» (نقاط من رسالة توصية) و«+1.0850» كانت «رقم غير مفهوم»
+  if (/^[+＋]/.test(s)) s = s.slice(1);
+  else if (opts.signed && /^[-−－]/.test(s)) {
     neg = true;
     s = s.slice(1);
   }
