@@ -158,6 +158,11 @@ export type Dict = {
   newsStale: string;
   newsEmpty: string;
   newsLoadError: string;
+  /** backend-r33 (`acace1d`): `/api/news` `status === 'unavailable'` — المصدر لم يُجب (لا اتصال المستخدم). يحلّ محلّ `newsLoadError`
+   * و`newsEmpty` حين تصل الاستجابة بلا عناوين وبهذه الحالة: «لا عناوين مؤثرة الآن» كذبٌ حين المصدر ميّت. بلا متغيّرات. */
+  newsSourceUnavailable: string;
+  /** backend-r33: `stale: true` — عناوين من جلب سابق والمحاولة الأخيرة فشلت. `{time}` = `formatLocalStamp(as_of)` مرة واحدة. */
+  newsStaleAsOf: string;
   /** سطر واحد تحت عنوان الأخبار حين خبرٌ فيها `impact_basis === 'headline_keywords'` (backend `9a05735`): شارة «قوي/متوسط/ضعيف»
    * مخمَّنة من كلمات العنوان لا تصنيفاً من المصدر كتأثير التقويم. */
   newsImpactFromHeadline: string;
@@ -1528,6 +1533,8 @@ const ar: Dict = {
   newsStale: 'تعذّر التحديث — الموعد من تقويم محفوظ',
   newsEmpty: 'لا عناوين مؤثرة الآن — ومواعيد البيانات القادمة (الفائدة، الوظائف، التضخم) تجدها في «تقويم».',
   newsLoadError: 'تعذّر تحميل الأخبار — تحقّق من الاتصال، ثم غادر هذا القسم وارجع إليه لإعادة المحاولة',
+  newsSourceUnavailable: 'مصدر الأخبار لا يستجيب الآن — العطل عنده لا في اتصالك. مواعيد البيانات المؤكَّدة (الفائدة، الوظائف، التضخم) تجدها في «تقويم».',
+  newsStaleAsOf: 'آخر تحديث للعناوين {time} — المصدر لا يستجيب الآن، فقد تفوتك أخبار أحدث',
   newsImpactFromHeadline: 'شارة التأثير تقدير من كلمات العنوان، لا تصنيف من مصدر الخبر — مواعيد البيانات المؤكَّدة في «تقويم».',
   newsImpactEstimatedA11y: 'تأثير {impact} — تقدير من كلمات العنوان',
   snapChangeOverBars: '{pct} خلال آخر {bars} شمعة',
@@ -2713,6 +2720,8 @@ const enUS: Dict = {
   newsStale: 'Not refreshed — time from saved calendar',
   newsEmpty: 'No market-moving headlines right now — upcoming releases (rates, jobs, inflation) are in Calendar.',
   newsLoadError: "Couldn't load news — check your connection, then leave this section and come back to retry",
+  newsSourceUnavailable: "The news source isn't responding right now — the problem is on its end, not your connection. Confirmed release times (rates, jobs, inflation) are in Calendar.",
+  newsStaleAsOf: "Headlines last updated {time} — the source isn't responding, so newer news may be missing",
   newsImpactFromHeadline: 'The impact badge is estimated from headline keywords, not rated by the source — confirmed release times are in Calendar.',
   newsImpactEstimatedA11y: '{impact} impact — estimated from headline keywords',
   snapChangeOverBars: '{pct} over the last {bars} candles',
@@ -3923,6 +3932,8 @@ const ku: Dict = {
   newsStale: 'نوێ نەکرایەوە — کات لە ڕۆژژمێری پاشەکەوتکراوە',
   newsEmpty: 'ئێستا هیچ سەردێڕێکی کاریگەر نییە — کاتی داتا داهاتووەکان (سوود، کار، هەڵاوسان) لە «ڕۆژژمێر» دەبینیت.',
   newsLoadError: 'نەکرا هەواڵەکان باربکرێن — پەیوەندییەکەت بپشکنە، پاشان ئەم بەشە جێبهێڵە و بگەڕێوە بۆی بۆ هەوڵدانەوە',
+  newsSourceUnavailable: 'سەرچاوەی هەواڵەکان ئێستا وەڵام ناداتەوە — کێشەکە لای ئەوە نەک لە پەیوەندییەکەت. کاتە دڵنیاکانی داتا (سوود، کار، هەڵاوسان) لە «ڕۆژژمێر»دان.',
+  newsStaleAsOf: 'دوایین نوێکردنەوەی سەردێڕەکان {time} — سەرچاوەکە وەڵام ناداتەوە، لەوانەیە هەواڵی نوێتر دیار نەبن',
   newsImpactFromHeadline: 'نیشانەی کاریگەری خەمڵاندنە لە وشەکانی سەردێڕ، نەک پۆلێنکردنی سەرچاوە — کاتە دڵنیاکانی داتا لە «ڕۆژژمێر»دان.',
   newsImpactEstimatedA11y: 'کاریگەریی {impact} — خەمڵاندن لە وشەکانی سەردێڕ',
   snapChangeOverBars: '{pct} لە دوایین {bars} مۆمدا',
