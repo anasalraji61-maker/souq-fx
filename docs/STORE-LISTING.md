@@ -67,7 +67,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 المتابعة والتنبيهات
 • قائمة متابعة شخصية لأزواج العملات والرموز التي تهمّك.
 • تنبيهات سعر وتنبيهات مؤشرات (RSI، المتوسطات، MACD) تصلك كإشعار.
-• تقويم اقتصادي وأخبار السوق في مكان واحد.
+• تقويم اقتصادي بمواعيد البيانات المؤثرة.
 
 أدوات المتداول
 • حاسبة حجم المركز: أدخل رصيدك والمخاطرة (نسبةً أو مبلغاً بعملة حسابك) ووقف الخسارة (بالـpip أو بسعرَي الدخول والوقف) لتعرف حجم اللوت — لحساب عادي أو حساب سنت أو micro — مع أهداف جاهزة بنسبة 1:1 حتى 1:3، وتقدير للهامش الذي يحجزه الوسيط حسب رافعتك، وخانتا سبريد وعمولة اختياريتان تُريانك مخاطرتك وربحك الصافي شاملَين التكاليف — وتنبّهك حين يكون وقفك أضيق من السبريد نفسه.
@@ -128,7 +128,7 @@ CHARTS
 WATCHLIST & ALERTS
 • A watchlist of the symbols you follow.
 • Price and indicator alerts (RSI, moving averages, MACD) as notifications.
-• Economic calendar and market news.
+• Economic calendar of key releases.
 
 TRADER TOOLS
 • Position size calculator: enter your balance, risk (percent or amount) and stop loss (in pips, or entry and stop prices) to get your lot size — standard, cent or micro accounts — with one-tap targets from 1:1 to 1:3, an estimate of the margin your broker holds at your leverage, and optional spread and commission so your risk and net profit include costs — and warns when your stop sits inside the spread.
@@ -218,3 +218,7 @@ The first release of MATRIX, in English, Arabic and Kurdish: multi-chart layouts
 > **2026-09-25 (launch 98)**: الارتكاز يذكر **Woodie** (`woodiePivots` بقائمة `INDICATORS`، `types.ts:370`) — صار بصيغة TradingView (افتتاح الجلسة الجارية،
 > `98e25a3` داخل اليوم و`2ff057f` على D/W، مختبَر). DeMark وCPR موجودان أيضاً ولم يُذكرا لضيق الحدّ. للإفساح: «pivot levels» ← «pivots»، «the current
 > candle's close» ← «the candle's close»، و«الشمعة الجارية» ← «الشمعة». العدّ بسكربت: **ar 3997 / en 3994** من 4000.
+> **2026-09-25 (launch 130)**: سطر «تقويم اقتصادي وأخبار السوق» / «Economic calendar and market news» كان وعداً بلا غطاء: مصدرا الأخبار
+> ميّتان (`news_feed.py` — ForexFactory XML ‏403، DailyFX ‏404؛ backend-r33 `acace1d`) فلوحة الأخبار فارغة دائماً، والقاعدة 4 أعلاه تمنع
+> ذكر ميزة بلا بيانات حقيقية. الآن «تقويم اقتصادي بمواعيد البيانات المؤثرة» / «Economic calendar of key releases» — التقويم يعمل (JSON). إن
+> رُخِّص مصدر أخبار يعمل (launch73، backend-r33 ← أنس) تُعاد «وأخبار السوق». العدّ بسكربت: **ar 3996 / en 3994** من 4000.
