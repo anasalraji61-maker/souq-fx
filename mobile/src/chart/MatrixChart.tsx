@@ -429,6 +429,9 @@ type Props = {
 const CROSS_SNAP_PX = 14;
 /** مدّة سطر «الرسم مقفول» بعد محاولة سحبه — تكفي لقراءته ولا تبقى فوق الشموع. */
 const LOCKED_HINT_MS = 1800;
+/** علامة القفل على الرسم نفسه (px) — صغيرة كي لا تغطّي شمعة. */
+const LOCK_BADGE_W = 16;
+const LOCK_BADGE_H = 15;
 /** أقصى شموع مستقبلية لتقاطع التابع بالرباعي — أبعد من ذلك (قائد يومي والتابع دقيقة) لا خطّ. */
 const CROSS_SYNC_MAX_AHEAD = 500;
 /** الهامش الأيمن الافتراضي من عرض اللوح (≈8 خانات من 80) — `restXPan`. */
@@ -8375,6 +8378,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           return null;
         })}
 
+        {/* علامة 🔒 صغيرة عند مرساة كل رسم مقفول (كـTradingView): كان القفل يُرى بالشريط فقط حين يُحدَّد الرسم،
+            فيحاول المتداول سحب خطّ لا يتحرّك ولا يعرف لماذا. مقصوصة لحدود اللوح (الأفقي مرساته قد تكون خارج النافذة). */}
+        {interactive
+          ? visibleDrawings.map(({ d, aLocal }) => {
+              if (!d.locked) return null;
+              const x = Math.max(2, Math.min(chartPlotW - LOCK_BADGE_W - 2, xOf(aLocal) + 4));
+              const y = Math.max(0, Math.min(chartPlotH - LOCK_BADGE_H, yOf(d.a.price) - LOCK_BADGE_H - 2));
+              if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+              return (
+                <View
+                  key={`lock-${d.id}`}
+                  pointerEvents="none"
+                  style={[styles.lockBadge, { left: x, top: y, borderColor: d.color }]}
+                >
+                  <Text style={styles.lockBadgeText}>🔒</Text>
+                </View>
+              );
+            })
+          : null}
+
         {/* محرّر نصّ الملاحظة المحدَّدة — تحتها مباشرةً. التراجع يعيد النصّ السابق كلّه (لقطة واحدة
             عند أوّل حرف لا لكل حرف). Backspace هنا لا يحذف الرسم (`webKeyChart` يتجاهل خانات الكتابة). */}
         {(() => {
@@ -12136,6 +12159,18 @@ const styles = StyleSheet.create({
     borderColor: colors.warn,
   },
   lockedHintText: { color: colors.warn, fontSize: 12, fontWeight: '700' },
+  lockBadge: {
+    position: 'absolute',
+    width: LOCK_BADGE_W,
+    height: LOCK_BADGE_H,
+    borderRadius: 4,
+    borderWidth: 1,
+    backgroundColor: colors.bgPanel,
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0.9,
+  },
+  lockBadgeText: { fontSize: 8, lineHeight: 10 },
   compactToolIcon: { color: colors.text, fontSize: 16, fontWeight: '800', lineHeight: 18 },
   compactToolLabel: { color: colors.textDim, fontSize: 8, fontWeight: '700', marginTop: 1 },
   compactToolTextOn: { color: colors.accent },
