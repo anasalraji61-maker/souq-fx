@@ -222,11 +222,16 @@ export function positionOutcomeText(
   if (outcome.state === 'missed') return `${entryWord} ✕`;
   if (outcome.state === 'pending') return `${entryWord} ⌛ ${distanceText(symbol, outcome.exit, levels.entry, lang, priceRef)}`;
   const up = outcome.r >= 0;
-  const sign = up ? '+' : '−';
+  // الإشارة من الرقم المطبوع (كـ`measureReadout`): خروج عند الدخول تماماً كان «+0.0 pip · +0R»، و−0.4 نقطة
+  // عشرية «−0.0 pip · −0R» — اتجاه لصفقة متعادلة. صفر مطبوع ⇒ بلا إشارة، لكلٍّ من المسافة وR على حدة.
+  const signed = (txt: string) => (/[1-9]/.test(txt) ? `${up ? '+' : '−'}${txt}` : txt);
   const spec = chartPipSpec(symbol);
   const pips = spec ? pipsBetween(spec, levels.entry, outcome.exit) : null;
-  const dist = pips != null ? `${sign}${pipsNumber(pips)} ${pipUnit(lang)}` : `${sign}${formatPriceDiff(outcome.exit - levels.entry, levels.entry, symbol, priceRef)}`;
-  const r = `${sign}${rrText(Math.abs(outcome.r))}R`;
+  const dist =
+    pips != null
+      ? `${signed(pipsNumber(pips))} ${pipUnit(lang)}`
+      : signed(formatPriceDiff(outcome.exit - levels.entry, levels.entry, symbol, priceRef));
+  const r = `${signed(rrText(Math.abs(outcome.r)))}R`;
   const head = outcome.state === 'target' ? 'TP ✓ ' : outcome.state === 'stop' ? 'SL ✕ ' : '';
   return `${head}${dist} · ${r}`;
 }

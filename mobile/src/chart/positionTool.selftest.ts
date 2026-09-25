@@ -178,4 +178,9 @@ assert.equal(positionEndIndex(100, 70), 130);
 assert.equal(positionEndIndex(5, 0), 10);
 assert.equal(positionEndIndex(NaN, 3), 3);
 
+// خروج عند الدخول (أو دون نصف عُشر نقطة): صفر مطبوع بلا إشارة — كان «+0.0 pip · +0R» و«−0.0 pip · −0R»
+assert.equal(positionOutcomeText(PL, { ...o, exit: PL.entry, r: 0 }, 'EURUSD'), '0.0 pip · 0R');
+assert.equal(positionOutcomeText(PL, { ...o, exit: PL.entry - 0.000004, r: -0.00016 }, 'EURUSD'), '0.0 pip · 0R');
+assert.equal(positionOutcomeText(PL, { ...o, exit: PL.entry - 0.00001, r: -0.0004 }, 'EURUSD'), '−0.1 pip · 0R');
+
 console.log('positionTool.selftest: PASS');
