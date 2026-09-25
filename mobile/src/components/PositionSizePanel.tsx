@@ -776,6 +776,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   useEffect(() => {
     setLivePxMsg(null);
   }, [symbol]);
+  // وكذلك دخولٌ كُتب باليد بعد التعبئة: «✓ الدخول من السعر الحالي 1.0850» كان يبقى تحت دخولٍ آخر كتبه المتداول
+  useEffect(() => {
+    const f = liveFillRef.current;
+    if (f && entryPx.trim() === f.text) return;
+    setLivePxMsg(null);
+  }, [entryPx]);
   // وأسعار الدخول/الوقف/الهدف كذلك: شريحة USDJPY تحت دخول EURUSD ‎1.0850 ووقفه ‎1.0830 كانت تُبقيهما فيُقرآن
   // 0.2 pip بحجم نقطة الين (لوت هائل)، وGBPUSD تحسب «20 pip» من سعرين لا يخصّانها وتسجّلهما بالدفتر. تُمسح
   // عند الانتقال من أداة **معروفة** إلى أخرى فقط — مرور الخانة برمز ناقص أثناء الكتابة («EURUS») لا يمسح شيئاً،
