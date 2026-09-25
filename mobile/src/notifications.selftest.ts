@@ -43,14 +43,21 @@ const stubs: Record<string, unknown> = {
   },
   '@react-native-async-storage/async-storage': { default: { getItem: () => Promise.resolve(null) } },
   './api': { api: {} },
-  './i18n/locales': { DICTS: { ar: { notifChannelName: 'x', notifChannelDesc: 'y' } } },
+  './i18n/locales': {
+    DICTS: {
+      ar: { notifChannelName: 'x', notifChannelDesc: 'y' },
+      'en-US': { notifChannelName: 'Price alerts', notifChannelDesc: 'y' },
+      'en-GB': { notifChannelName: 'Price alerts', notifChannelDesc: 'y' },
+      ku: { notifChannelName: 'k', notifChannelDesc: 'y' },
+    },
+  },
 };
 const M = Module as unknown as { _load: (req: string, ...rest: unknown[]) => unknown };
 const origLoad = M._load;
 M._load = (req: string, ...rest: unknown[]) => (req in stubs ? stubs[req] : origLoad(req, ...rest));
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { getNotificationPermissionState, ensureAlertNotifications } = require('./notifications') as typeof import('./notifications');
+const { getNotificationPermissionState, ensureAlertNotifications, notifLang } = require('./notifications') as typeof import('./notifications');
 
 (async () => {
   // الحالات الثلاث كما هي
@@ -93,6 +100,21 @@ const { getNotificationPermissionState, ensureAlertNotifications } = require('./
   assert.equal(await ensureAlertNotifications(), false);
 
   console.log('notifications permission never-rejects selftest OK');
+
+  // notifLang — المحفوظ إن كان مدعوماً، وإلا لغة الجهاز بقاعدة deviceLang (هاتف إنجليزي بلا اختيار كان يستقبل التنبيهات بالعربية)
+  assert.equal(notifLang(null, 'en-US'), 'en-US');
+  assert.equal(notifLang(undefined, 'en-AU'), 'en-US');
+  assert.equal(notifLang(null, 'en-GB'), 'en-GB');
+  assert.equal(notifLang(null, 'ckb-IQ'), 'ku');
+  assert.equal(notifLang(null, 'ku'), 'ku');
+  assert.equal(notifLang(null, 'ar-IQ'), 'ar');
+  assert.equal(notifLang(null, 'fr-FR'), 'ar');
+  assert.equal(notifLang(null, undefined), 'ar');
+  // الاختيار الصريح يغلب لغة الجهاز؛ قيمة تالفة لا تُرسل للخادم
+  assert.equal(notifLang('ar', 'en-US'), 'ar');
+  assert.equal(notifLang('en-GB', 'ar-IQ'), 'en-GB');
+  assert.equal(notifLang('xx', 'en-US'), 'en-US');
+  console.log('notifications notifLang selftest OK');
 })().catch((e) => {
   console.error(e);
   process.exit(1);

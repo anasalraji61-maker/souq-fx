@@ -9,12 +9,39 @@ import { DICTS, LangId } from './i18n/locales';
  * إشعار التنبيه من الخادم بلغة المتداول لا بنص إنجليزي خام. */
 const LANG_KEY = 'matrix.lang.v1';
 
-async function savedLang(): Promise<string | undefined> {
+/**
+ * لغة الإشعارات = لغة الواجهة المعروضة: المحفوظ إن كان لغةً ندعمها، وإلا **لغة الجهاز** بقاعدة `deviceLang`
+ * (`i18n/I18nContext.tsx`) نفسها — ckb/ku ⇒ ku، en-GB ⇒ en-GB، en* ⇒ en-US، غيرها ⇒ ar.
+ *
+ * لماذا: المفتاح لا يُكتب إلا باختيار صريح من زرّ اللغة، والواجهة قبله تتبع لغة الجهاز. فمتداولٌ على هاتف إنجليزي
+ * لم يفتح زرّ اللغة كان يرى التطبيق إنجليزياً، وقناة التنبيهات بإعدادات النظام «تنبيهات الأسعار والمؤشرات»، والتوكن
+ * يُسجَّل بلا لغة فيرسل الخادم (`_push_lang(None)` ⇒ ar) كل تنبيه سعر بالعربية.
+ */
+export function notifLang(saved: string | null | undefined, deviceTag: string | undefined): LangId {
+  if (saved && saved in DICTS) return saved as LangId;
+  const tag = (deviceTag ?? '').toLowerCase();
+  if (tag.startsWith('ckb') || tag.startsWith('ku')) return 'ku';
+  if (tag === 'en-gb' || tag.startsWith('en-gb-')) return 'en-GB';
+  if (tag.startsWith('en')) return 'en-US';
+  return 'ar';
+}
+
+function deviceTag(): string | undefined {
   try {
-    return (await AsyncStorage.getItem(LANG_KEY)) ?? undefined;
+    return Intl.DateTimeFormat().resolvedOptions().locale;
   } catch {
     return undefined;
   }
+}
+
+async function savedLang(): Promise<LangId> {
+  let saved: string | null = null;
+  try {
+    saved = await AsyncStorage.getItem(LANG_KEY);
+  } catch {
+    /* تخزين معطَّل: لغة الجهاز كما تفعل الواجهة */
+  }
+  return notifLang(saved, deviceTag());
 }
 
 /**
@@ -37,8 +64,7 @@ let channelPromise: Promise<void> | null = null;
 
 async function createAlertChannel(): Promise<void> {
   try {
-    const lang = (await savedLang()) as LangId | undefined;
-    const t = (lang && DICTS[lang]) || DICTS.ar;
+    const t = DICTS[await savedLang()] || DICTS.ar;
     await Notifications.setNotificationChannelAsync(ALERT_CHANNEL_ID, {
       name: t.notifChannelName,
       description: t.notifChannelDesc,
