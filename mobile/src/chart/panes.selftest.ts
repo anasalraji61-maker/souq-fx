@@ -16,7 +16,7 @@ import {
 
 // مصدر المعرّفات سليم: لا تكرار، ولكلٍّ اسم، وكل أولوية موجودة فعلاً بين اللوحات
 assert.equal(new Set(PANE_IDS).size, PANE_IDS.length);
-assert.equal(PANE_IDS.length, 109);
+assert.equal(PANE_IDS.length, 110);
 for (const id of PANE_IDS) assert.ok(PANE_LABELS[id], `missing label: ${id}`);
 for (const id of PANE_PRIORITY) assert.ok(PANE_IDS.includes(id), `unknown priority id: ${id}`);
 
@@ -106,7 +106,7 @@ for (const h of [0, -50]) {
 {
   const p = plan([...PANE_IDS], 700);
   assert.ok(p.paneH >= MIN_PANE_H);
-  assert.equal(p.shown.length + p.collapsed.length, 109);
+  assert.equal(p.shown.length + p.collapsed.length, 110);
   const total = p.mainH + p.shown.length * (p.paneH + p.gap) + (p.barH ? p.barH + p.gap : 0);
   assert.ok(total <= 700, `overflow: ${total}`);
 }

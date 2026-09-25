@@ -283,6 +283,7 @@ import {
   computePivotsHighLow,
   computePmo,
   computePpoLines,
+  computePriceOscTv,
   computePsar,
   computePvi,
   computePvo,
@@ -2823,6 +2824,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   );
   const apo = useMemo(
     () => (indicators.includes('apo') ? ind(computeApo(closes)) : null),
+    [closes, indicators]
+  );
+  const priceOsc = useMemo(
+    () => (indicators.includes('priceOsc') ? ind(computePriceOscTv(closes)) : null),
     [closes, indicators]
   );
   const vo = useMemo(
@@ -10591,6 +10596,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             <ZeroLineSeries vis={paneVis} values={bop} paneH={paneH} />
+          </View>
+        </View>
+      ) : null}
+
+      {priceOsc ? (
+        <View style={[styles.pane, { height: paneH }]}>
+          <PaneValueHead name="Price Osc" values={priceOsc} at={crossIndex} />
+          <View style={[styles.paneInner, paneShift]}>
+            {paneCrossLine}
+            <ZeroLineSeries vis={paneVis} values={priceOsc} paneH={paneH} />
           </View>
         </View>
       ) : null}

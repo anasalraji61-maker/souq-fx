@@ -491,6 +491,25 @@ export function computeQstick(candles: Candle[], period = 10): (number | null)[]
  * ema أحادية مباشرة على الإغلاق) تستقران كلتاهما على نفس القيمة الثابتة بدءاً من أول نقطة صالحة لكل
  * منهما → APO=ثابت−ثابت=0 بالضبط، يطابق "لا تباعد زخم بسعر ساكن تماماً" بالتعريف تماماً.
  */
+/**
+ * Price Oscillator — مؤشر TradingView المدمج بهذا الاسم (قصير 10، طويل 21، **SMA** افتراضياً):
+ * (sma10 − sma21) / sma21 × 100، خطّ واحد بلا إشارة. PPO أعلاه نسخة StockCharts (EMA 12/26 + إشارة 9)
+ * فمن ينقل قراءة «Price Oscillator» من TV لا يجدها فيه — رقمان مختلفان للزوج نفسه. `exponential` كخيار TV.
+ */
+export function computePriceOscTv(
+  closes: number[],
+  short = 10,
+  long = 21,
+  exponential = false
+): (number | null)[] {
+  const ma = exponential ? ema : sma;
+  const s = ma(closes, short);
+  const l = ma(closes, long);
+  return closes.map((_, i) =>
+    s[i] != null && l[i] != null && l[i] !== 0 ? ((s[i]! - l[i]!) / l[i]!) * 100 : null
+  );
+}
+
 export function computeApo(closes: number[], fast = 12, slow = 26): (number | null)[] {
   const emaFast = ema(closes, fast);
   const emaSlow = ema(closes, slow);

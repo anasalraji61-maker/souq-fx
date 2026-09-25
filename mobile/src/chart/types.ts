@@ -65,6 +65,7 @@ export type IndicatorId =
   | 'eom'
   | 'nvi'
   | 'ppo'
+  | 'priceOsc'
   | 'chaikinVol'
   | 'massIndex'
   | 'qstick'
@@ -325,6 +326,7 @@ export const INDICATORS: { id: IndicatorId; label: string; pane?: boolean }[] = 
   { id: 'eom', label: 'EOM', pane: true },
   { id: 'nvi', label: 'NVI', pane: true },
   { id: 'ppo', label: 'PPO', pane: true },
+  { id: 'priceOsc', label: 'Price Oscillator', pane: true },
   { id: 'chaikinVol', label: 'Chaikin Vol', pane: true },
   { id: 'massIndex', label: 'Mass Index', pane: true },
   { id: 'qstick', label: 'Qstick', pane: true },
