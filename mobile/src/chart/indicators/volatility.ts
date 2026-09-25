@@ -453,13 +453,16 @@ export function computeUlcerIndex(closes: number[], period = 14): (number | null
   const n = closes.length;
   const out: (number | null)[] = [];
   for (let i = 0; i < n; i++) {
-    if (i < period - 1) {
+    // كـTradingView: القمة المتحرّكة `ta.highest(close, period)` بلا قيمة قبل period شمعة، والمتوسط يحتاج
+    // period منها ⇒ أوّل قيمة عند 2×(period−1). كانت نافذة القمة تُقصّ عند بداية التاريخ فتظهر قيم مبكّرة
+    // مبنيّة على قمّة من شموع أقلّ.
+    if (i < 2 * (period - 1)) {
       out.push(null);
       continue;
     }
     let sumSq = 0;
     for (let j = i - period + 1; j <= i; j++) {
-      const windowStart = Math.max(0, j - period + 1);
+      const windowStart = j - period + 1;
       const maxClose = Math.max(...closes.slice(windowStart, j + 1));
       const pctDrawdown = maxClose === 0 ? 0 : ((closes[j] - maxClose) / maxClose) * 100;
       sumSq += pctDrawdown * pctDrawdown;
