@@ -2325,7 +2325,7 @@ const styles = StyleSheet.create({
   formError: {
     ...numeric,
     color: colors.bear,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     textAlign: 'right',
     marginTop: spacing.xs,

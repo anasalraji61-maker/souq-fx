@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4 },
   rowRtl: { flexDirection: 'row-reverse' },
-  label: { color: colors.textDim, fontSize: 10, fontWeight: '500' },
+  label: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
   chip: {
     borderRadius: radii.sm,
     borderWidth: 1,

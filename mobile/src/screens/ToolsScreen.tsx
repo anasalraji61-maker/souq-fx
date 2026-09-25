@@ -1019,7 +1019,7 @@ const styles = StyleSheet.create({
   /** نقطة صغيرة تقول «هذا الزوج مفتوح على شارتك» — الشريحة وحدها لا تفسّر ظهور زوج خارج المتابعة */
   chipOnChartMark: { color: colors.accent, fontSize: 11, fontWeight: '500' },
   filterHints: { gap: 4, marginTop: 4 },
-  filterHintText: { color: colors.textDim, fontSize: 10 },
+  filterHintText: { color: colors.textDim, fontSize: 11 },
   hitCard: {
     flex: 1,
     height: '100%',

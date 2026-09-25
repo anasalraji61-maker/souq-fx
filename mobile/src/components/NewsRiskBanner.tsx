@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bearSoft,
   },
   main: { ...numeric, color: colors.text, fontSize: 12, fontWeight: '500' },
-  hint: { ...numeric, color: colors.textMuted, fontSize: 10, marginTop: 0 },
+  hint: { ...numeric, color: colors.textMuted, fontSize: 11, marginTop: 0 },
   wrapUnavailable: { borderColor: colors.warn, backgroundColor: colors.warnSoft },
   unavailable: { color: colors.text, fontSize: 11, marginTop: 0 },
 });
