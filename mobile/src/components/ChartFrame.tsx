@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Platform, LayoutChangeEvent } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api, type ChartSeries, type LiveTick } from '../api';
@@ -18,9 +18,9 @@ import {
 } from '../chart/dataSource';
 import {
   headerChangePct,
-  liveChangePct,
   livePriceForChart,
   livePriceForHeader,
+  replayPrevClose,
   tickPlausibleForSeries,
 } from '../chart/liveSeries';
 import { useDailyRefs } from '../chart/dailyRefStore';
@@ -170,13 +170,18 @@ export function ChartFrame({
   // الآن `formatPct` المعتمدة، واللون من **الرقم المطبوع** نفسه: ما يُقرّب إلى صفر مكتوم.
   // والنسبة تتبع السعر الحيّ المطبوع بجانبها (`livePriceForHeader`) لا الجلب الأخير وحده.
   // بالإعادة الرأس يقرأ شمعة الإعادة: كان يطبع سعر اليوم ونسبته و«حيّ» والسبريد فوق شموع الأسبوع
-  // الماضي — الجواب مكشوف قبل أن يقرّر المتداول. النسبة من المرجع نفسه (أوّل شمعة بالسلسلة).
-  const [replayPrice, setReplayPrice] = useState<number | null>(null);
+  // الماضي — الجواب مكشوف قبل أن يقرّر المتداول. النسبة تغيّر يوم شمعة الإعادة (`replayPrevClose`).
+  const [replay, setReplay] = useState<{ price: number; time: number | null } | null>(null);
+  const replayPrice = replay?.price ?? null;
+  const onReplayPrice = useCallback(
+    (price: number | null, time?: number | null) => setReplay(price == null ? null : { price, time: time ?? null }),
+    []
+  );
   // خارج الإعادة: تغيّر اليوم من إغلاق الجلسة السابقة (`headerChangePct`) — الرقم نفسه بقائمة المتابعة.
   const dailyRefs = useDailyRefs([series.symbol]);
   const livePct =
     replayPrice != null
-      ? liveChangePct(series, replayPrice)
+      ? headerChangePct(series, replayPrice, replayPrevClose(series, replay?.time))
       : headerChangePct(series, livePriceForHeader(series, resolvedTick), dailyRefs[series.symbol.toUpperCase()]);
   const chgPct = Number.isFinite(livePct) ? livePct : null;
   // اللون من الرقم المطبوع (`pctDirection` = تقريب `formatPct`): `Math.round` يرفع النصف نحو +∞ فكان
@@ -465,7 +470,7 @@ export function ChartFrame({
           onSyncWindow={onSyncWindow}
           syncFollow={syncFollow}
           syncTimeOnly
-          onReplayPrice={setReplayPrice}
+          onReplayPrice={onReplayPrice}
         />
       </View>
     </Pressable>

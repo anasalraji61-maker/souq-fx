@@ -5,6 +5,7 @@ import {
   tickBelongsToCandle,
   timeframeStepSec,
 } from './dataSource';
+import { candlesThrough, prevDayFromIntraday } from './pivotBase';
 
 export type LiveMergeOpts = {
   /** unix seconds of the tick (usually source.as_of) */
@@ -140,6 +141,19 @@ export function headerChangePct(
     if (Math.abs(pct) <= 25) return pct;
   }
   return liveChangePct(series, price);
+}
+
+/**
+ * إغلاق الجلسة السابقة لشمعة الإعادة (`cutSec`) — كي يقرأ رأس الإطار بالإعادة «تغيّر ذلك اليوم» كما خارجها،
+ * لا التغيّر من أوّل شمعة محمّلة (4H ⇒ ~50 يوماً: «−1.80%» مكان «+0.12%»). داخل اليوم: الجلسة السابقة
+ * بحدّ 17:00 نيويورك من الشموع حتى الإعادة (ناقصة ⇒ null)؛ اليومي فأكبر: إغلاق الشمعة السابقة.
+ */
+export function replayPrevClose(series: ChartSeries, cutSec: number | null | undefined): number | null {
+  if (cutSec == null || !Number.isFinite(cutSec)) return null;
+  const upTo = candlesThrough(series.candles, cutSec);
+  if (timeframeStepSec(series.timeframe) < 86400) return prevDayFromIntraday(upTo, series.symbol)?.close ?? null;
+  const prev = upTo.length >= 2 ? upTo[upTo.length - 2]!.close : null;
+  return prev != null && Number.isFinite(prev) && prev > 0 ? prev : null;
 }
 
 export function livePriceForChart(

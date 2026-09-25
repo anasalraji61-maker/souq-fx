@@ -410,7 +410,7 @@ type Props = {
   /** تقاطع مشترك (القائد): يُنشر زمن شمعة التقاطع بالثواني، و`null` عند مسحه. */
   onCrossTime?: (timeSec: number | null) => void;
   /** إغلاق شمعة الإعادة (`null` خارج الإعادة) — لرأس الإطار كي لا يطبع سعر اليوم فوق شموع الماضي. */
-  onReplayPrice?: (price: number | null) => void;
+  onReplayPrice?: (price: number | null, timeSec?: number | null) => void;
 };
 
 /** جذب التقاطع لـO/H/L/C: أقرب من هذا (px) فقط — وإلا يبقى على المستوى الملموس. */
@@ -1817,8 +1817,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const onReplayPriceRef = useRef(onReplayPrice);
   onReplayPriceRef.current = onReplayPrice;
   useEffect(() => {
-    onReplayPriceRef.current?.(replayClose);
-  }, [replayClose]);
+    onReplayPriceRef.current?.(replayClose, replayCutSec);
+  }, [replayClose, replayCutSec]);
   useEffect(() => () => onReplayPriceRef.current?.(null), []);
   const pivotBars = useMemo(() => {
     if (!anyPivot) return null;

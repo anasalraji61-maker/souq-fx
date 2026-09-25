@@ -13,6 +13,7 @@ import {
   type LiveExtremes,
 } from './liveSeries';
 import type { ChartSeries } from '../api';
+import { replayPrevClose } from './liveSeries';
 
 const now = 1_760_000_000;
 const src = { kind: 'provider' as const, as_of: now, channel: 'twelvedata' };
@@ -122,6 +123,18 @@ assert.equal(withLivePrice(eur, 2650, src, { nowSec: now + 1 }), eur);
   };
   const pct = headerChangePct(up, 1.083, 1.084);
   assert.ok(pct < 0 && Math.abs(pct - ((1.083 - 1.084) / 1.084) * 100) < 1e-9, `daily −0.09%, got ${pct}`);
+}
+
+// الإعادة: إغلاق جلسة الأمس لشمعة الإعادة (17:00 نيويورك = 21:00 UTC صيفاً) لا أوّل شمعة محمّلة
+{
+  const t0 = Date.UTC(2026, 8, 21, 12) / 1000;
+  const cs = Array.from({ length: 36 }, (_, i) => ({ time: t0 + i * 3600, open: 1, high: 1.2, low: 0.9, close: 1 + i / 1000 }));
+  const h1 = { symbol: 'EURUSD', timeframe: '1h', candles: cs } as unknown as ChartSeries;
+  assert.equal(replayPrevClose(h1, t0 + 20 * 3600), null, 'prev session cut off at series start');
+  assert.equal(replayPrevClose(h1, t0 + 34 * 3600), 1.032, 'prev session close = Tue 20:00 bar');
+  const d1 = { symbol: 'EURUSD', timeframe: '1d', candles: cs.slice(0, 5).map((c, i) => ({ ...c, time: i * 86400 })) } as unknown as ChartSeries;
+  assert.equal(replayPrevClose(d1, 3 * 86400), 1.002, 'D1: previous bar close');
+  assert.equal(replayPrevClose(h1, null), null);
 }
 
 console.log('liveSeries selftest: OK');
