@@ -591,7 +591,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     parseSpreadPips(spread, spec) != null
       ? null
       : spreadWide != null
-        ? t.riskCalcSpreadTooWide.replace('{n}', String(spreadWide))
+        ? // `{example}` طُلب من launch (tools85): «مثل 1.5» على USDZAR كلفةٌ أصغر ×60 — بلا المفتاح لا يتغيّر شيء
+          t.riskCalcSpreadTooWide
+            .replace('{n}', String(spreadWide))
+            .replace('{example}', typicalSpreadPipsExample(spec) || typicalSpreadPipsExample(null))
         : misplacedArabicThousandsSign(spread, { unit: 'pip' })
           ? t.arabicThousandsSignHint
           : spreadPoints
