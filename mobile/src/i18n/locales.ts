@@ -266,6 +266,10 @@ export type Dict = {
   forecastAgreeLabel: string;
   forecastError: string;
   alertsTitle: string;
+  /**
+   * سطر تحت عنوان التنبيهات. الشرط ≥/≤ (`alert_worker._price_hit`) لا «عبور»، والفحص كل 60 ث (`run_alert_loop(60.0)`) —
+   * كان «إشعار عند التفعيل» يُقرأ «حين تضغط تفعيل»، وبالكردية «حين يصبح نشطاً».
+   */
   alertsSub: string;
   alertsPushTitle: string;
   /** اسم قناة إشعارات أندرويد كما يراه المتداول بإعدادات النظام */
@@ -1603,7 +1607,7 @@ const ar: Dict = {
   forecastAgreeLabel: 'مؤشرات متوافقة',
   forecastError: 'تعذّر حساب توقعات المؤشرات — تحقّق من الاتصال ثم اضغط «توقّع»',
   alertsTitle: 'تنبيهات السعر',
-  alertsSub: 'فوق / تحت · Twelve Data · إشعار عند التفعيل',
+  alertsSub: 'عند المستوى أو فوقه / أو تحته · أسعار Twelve Data تُفحص كل دقيقة تقريباً · إشعار حين يتحقّق الشرط',
   alertsPushTitle: 'MATRIX · تنبيه سعر',
   notifChannelName: 'تنبيهات الأسعار والمؤشرات',
   notifChannelDesc: 'إشعار حين يبلغ السعر مستوىً ضبطتَه أو يتحقّق شرط مؤشر اخترتَه (يُفحص كل دقيقة تقريباً)',
@@ -1615,7 +1619,7 @@ const ar: Dict = {
   alertsNotePlaceholder: 'ملاحظة (اختياري)',
   alertsNoteA11y: 'ملاحظة التنبيه (اختياري)',
   alertsAddError: 'تعذر إضافة التنبيه — تحقق من الاتصال وحاول مرة أخرى',
-  alertsFirstBadge: '🎉 أول تنبيه مضبوط — سنُعلمك فور وصول السعر',
+  alertsFirstBadge: '🎉 أول تنبيه مضبوط — سنُعلمك حين يبلغ السعر مستواك (الفحص كل دقيقة تقريباً)',
   alertsLoadError: 'تعذّر تحميل التنبيهات — تحقّق من الاتصال. تنبيهاتك المحفوظة لم تُحذف.',
   alertsEmpty:
     'لا تنبيهات بعد — اكتب سعراً بالأعلى (أو اضغط «استخدمه» للسعر الحالي) واختر فوق/تحت، وسيصلك إشعار حين يصل السعر إليه.',
@@ -2783,7 +2787,7 @@ const enUS: Dict = {
   forecastAgreeLabel: 'Indicators agreeing',
   forecastError: 'Couldn\'t compute indicator forecasts — check your connection, then tap “Forecast”',
   alertsTitle: 'Price alerts',
-  alertsSub: 'Above / Below · Twelve Data · Notification when triggered',
+  alertsSub: 'At or above / at or below a level · Twelve Data prices checked about once a minute · notified when it triggers',
   alertsPushTitle: 'MATRIX · Price alert',
   notifChannelName: 'Price & indicator alerts',
   notifChannelDesc: 'A notification when price reaches a level you set or an indicator condition you chose is met (checked about once a minute)',
@@ -2795,7 +2799,7 @@ const enUS: Dict = {
   alertsNotePlaceholder: 'Note (optional)',
   alertsNoteA11y: 'Alert note (optional)',
   alertsAddError: 'Could not add the alert — check your connection and try again',
-  alertsFirstBadge: "🎉 First alert set — we'll notify you when the price hits",
+  alertsFirstBadge: "🎉 First alert set — we'll notify you when the price reaches your level (checked about once a minute)",
   alertsLoadError: 'Couldn\'t load your alerts — check your connection. Your saved alerts haven\'t been deleted.',
   alertsEmpty:
     'No alerts yet — enter a price above (or tap “Use it” for the current price), pick above/below, and you\'ll be notified when price gets there.',
@@ -3988,7 +3992,7 @@ const ku: Dict = {
   forecastAgreeLabel: 'پێوەرە هاوڕاکان',
   forecastError: 'نەکرا پێشبینیەکانی پێوەرەکان بژمێردرێن — پەیوەندییەکەت بپشکنە و پاشان «پێشبینیکردن» دابگرە',
   alertsTitle: 'ئاگادارکردنەوەی نرخ',
-  alertsSub: 'سەرەوە / خوارەوە · Twelve Data · ئاگادارکردنەوە کاتێک چالاک دەبێت',
+  alertsSub: 'لە ئاستەکە یان سەرووی / یان خوارووی · نرخەکانی Twelve Data نزیکەی خولەکێک جارێک دەپشکنرێن · ئاگادارکردنەوە کاتێک مەرجەکە دێتەدی',
   alertsPushTitle: 'MATRIX · ئاگادارکردنەوەی نرخ',
   notifChannelName: 'ئاگادارکردنەوەی نرخ و پێوەر',
   notifChannelDesc: 'ئاگادارکردنەوە کاتێک نرخ دەگاتە ئەو ئاستەی خۆت دیاریت کردووە یان مەرجی پێوەرێک دێتەدی (نزیکەی هەر خولەکێک دەپشکنرێت)',
