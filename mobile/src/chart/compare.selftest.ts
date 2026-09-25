@@ -27,6 +27,15 @@ assert.equal(o.prices[1], 1.11);
 o = compareOverlay(primary, [bar(T0, 2), bar(T0 + 2 * step, 2.2)], step);
 assert.deepEqual(o.closes, [2, null, 2.2]);
 
+// لبنات Renko: زمن اصطناعي (T0 + 60ث لكل لبنة) والحقيقي `srcTime` ⇒ المطابقة بالحقيقي
+const bricks = [
+  { ...bar(T0, 1.1), srcTime: T0 + 5 * step },
+  { ...bar(T0 + 60, 1.11), srcTime: T0 + 5 * step },
+  { ...bar(T0 + 120, 1.12), srcTime: T0 + 8 * step },
+];
+o = compareOverlay(bricks, compare, step);
+assert.deepEqual(o.closes, [18, 18, 21]);
+
 // أزمنة بالميلي ثانية بطرف واحد
 o = compareOverlay(primary, compare.map((c) => ({ ...c, time: c.time * 1000 })), step);
 assert.deepEqual(o.closes, [13, 14, 15]);

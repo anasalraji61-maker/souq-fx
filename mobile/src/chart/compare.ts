@@ -1,5 +1,7 @@
 import type { Candle } from '../api';
 import { candleTimeSec } from './dataSource';
+import { barTime } from './drawingAnchors';
+import type { SyntheticBar } from './types';
 
 export type CompareOverlay = {
   /** سعر المقارنة مُعاد القياس لمقياس الرمز الأساسي، شمعة بشمعة مع `primary`؛ null = لا شمعة مطابقة. */
@@ -14,13 +16,16 @@ export type CompareOverlay = {
  * بالإعادة؛ وسلسلة مقارنة أقصر من النافذة تُرسم فوق يسارها لا فوق شموعها. لكل شمعة أساسية: آخر شمعة مقارنة
  * بزمن ≤ زمنها وضمن `stepSec` منه (فجوة أطول ⇒ null لا خطّ ممدود من بيانات قديمة). الأساس = أوّل زوج مطابق،
  * فيبدأ الخطّان من النقطة نفسها كما سبق.
+ *
+ * لبنات Renko/Kagi/P&F زمنها اصطناعي (أوّل شمعة + 60ث لكل لبنة): المطابقة بزمنها الحقيقي (`barTime` ⇐
+ * `srcTime`) — كان خطّ المقارنة وإغلاقها بقراءة التقاطع يُطابَقان بأسعار بداية التاريخ أو يُتركان فارغين.
  */
-export function compareOverlay(primary: readonly Candle[], compare: readonly Candle[], stepSec: number): CompareOverlay {
+export function compareOverlay(primary: readonly SyntheticBar[], compare: readonly Candle[], stepSec: number): CompareOverlay {
   const closes: (number | null)[] = new Array(primary.length).fill(null);
   const tol = stepSec > 0 ? stepSec : Infinity;
   let j = 0;
   for (let i = 0; i < primary.length; i++) {
-    const t = candleTimeSec(primary[i]!.time);
+    const t = candleTimeSec(barTime(primary[i]!));
     while (j + 1 < compare.length && candleTimeSec(compare[j + 1]!.time) <= t) j++;
     const c = compare[j];
     if (!c) continue;
