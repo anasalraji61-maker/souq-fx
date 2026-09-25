@@ -1269,9 +1269,21 @@ export function computeAroonUpDown(
  * بتشغيل Node.js فعلي، بالإضافة لبيانات عشوائية 300 نقطة بذرة ثابتة (صفر NaN/Infinity بكل الحالات).
  */
 export function computeZigZag(closes: number[], deviationPct = 5): (number | null)[] {
+  return computeZigZagLegs(closes, deviationPct).pivots;
+}
+
+/**
+ * كـ`computeZigZag` + الطرف الجاري غير المؤكَّد (`tail`) — الساق الأخيرة من آخر انعطاف إلى الطرف الذي لم ينعكس
+ * بعد، يرسمها TradingView («Extend to last bar») وكانت مفقودة هنا فيبدو الهيكل متوقّفاً قبل الحركة الجارية.
+ * `tail` = null قبل أول انعطاف مؤكَّد (لا اتجاه بعد).
+ */
+export function computeZigZagLegs(
+  closes: number[],
+  deviationPct = 5
+): { pivots: (number | null)[]; tail: { i: number; v: number } | null } {
   const n = closes.length;
   const result: (number | null)[] = new Array(n).fill(null);
-  if (n < 2) return result;
+  if (n < 2) return { pivots: result, tail: null };
 
   let direction: 0 | 1 | -1 = 0;
   let extremeIndex = 0;
@@ -1320,7 +1332,8 @@ export function computeZigZag(closes: number[], deviationPct = 5): (number | nul
       }
     }
   }
-  return result;
+  const tail = direction !== 0 && result[extremeIndex] == null ? { i: extremeIndex, v: extremePrice } : null;
+  return { pivots: result, tail };
 }
 
 /**

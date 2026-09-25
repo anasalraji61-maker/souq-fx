@@ -140,6 +140,7 @@ import {
   measureReadoutText,
 } from './measureReadout';
 import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
+import { zigzagWindowSegments } from './zigzagLegs';
 import { paneInlineFits } from './paneHeadFit';
 import { noteBox } from './noteLabel';
 import { playSoftClick } from '../audio/playSoftClick';
@@ -328,7 +329,7 @@ import {
   computeWoodieCci,
   computeWoodiePivots,
   computeYangZhangVolatility,
-  computeZigZag,
+  computeZigZagLegs,
   computeZlema,
   formatPrice,
   heikinAshi,
@@ -2769,7 +2770,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [indBars, indicators]
   );
   const zigzag = useMemo(
-    () => (indicators.includes('zigzag') ? indAhead(computeZigZag(aheadBars.map((c) => c.close))) : null),
+    () => {
+      if (!indicators.includes('zigzag')) return null;
+      // على السلسلة كلّها: الساق الداخلة من يسار النافذة والخارجة من يمينها + الساق الجارية غير المؤكَّدة.
+      const legs = computeZigZagLegs(aheadBars.map((c) => c.close));
+      return zigzagWindowSegments(legs.pivots, legs.tail, aheadBase.from, aheadBase.to - aheadBase.from);
+    },
     [aheadBars, aheadBase, indicators]
   );
   const adl = useMemo(
@@ -7312,16 +7318,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           )}
         {indicators.includes('zigzag') && zigzag
           ? (() => {
-              const pts: { i: number; v: number }[] = [];
-              zigzag.forEach((v, i) => {
-                if (v != null) pts.push({ i, v });
-              });
-              return pts.slice(1).map((p, idx) => {
-                const prev = pts[idx];
-                const x1 = xOf(prev.i);
-                const y1 = yOf(prev.v);
-                const x2 = xOf(p.i);
-                const y2 = yOf(p.v);
+              return zigzag.map((sg, idx) => {
+                const x1 = xOf(sg.x1);
+                const y1 = yOf(sg.y1);
+                const x2 = xOf(sg.x2);
+                const y2 = yOf(sg.y2);
                 const len = Math.hypot(x2 - x1, y2 - y1);
                 const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
                 return (
@@ -7334,7 +7335,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       width: len,
                       height: 1.5,
                       backgroundColor: '#D946EF',
-                      opacity: 0.9,
+                      // الساق الجارية لم تنعكس بعد ⇒ قد تمتدّ أو تُلغى، فتُخفَّف.
+                      opacity: sg.tentative ? 0.45 : 0.9,
                       transform: [{ rotate: `${angle}deg` }],
                       transformOrigin: 'left center',
                     }}
