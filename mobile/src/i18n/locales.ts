@@ -1015,6 +1015,9 @@ export type Dict = {
    * أو يُحذف مع « — » قبله حين لا سعر حالي. Above = `condition: 'above'`. */
   mcArmedAlertAboveA11y: string;
   mcArmedAlertBelowA11y: string;
+  /** سحب خطّ التنبيه فشل (`moveArmedAlert` ⇒ `false`: خادم أقدم بلا PATCH، تنبيه حُذف، انقطاع) — الخطّ يعود لمكانه بلا تفسير
+   * بدونه. {price} = السعر الأصلي بمنازل الشارت (`fmtPrice(al.price)`). يُمرَّر لـ`notify` كـ`mcSnapshotFailed`. */
+  mcAlertMoveFailed: string;
   /** وسم بين قوسين بعد اسم لوحة مشتقّة من شكل الشمعة لا من تدفّق أوامر حقيقي — «CVD (تقديري)». قصير: يُطبع برأس اللوحة. */
   mcEstimatedTag: string;
   /** شرح «≈»/«تقديري» بلوحات الحجم حين السلسلة بلا فوليوم (الفوركس، `seriesHasVolume` = false): الأعمدة من مدى كل شمعة نسبةً لسعرها (`estimatedVolume`) ⇒ OBV/MFI/VWAP/Klinger/CMF من التقدير نفسه ولا تطابق حجم التيك بمنصّة أخرى. */
@@ -2206,6 +2209,7 @@ const ar: Dict = {
   mcArrowHeadA11y: 'رأس سهم بنهاية خطّ الترند',
   mcArmedAlertAboveA11y: 'تنبيه مفعّل حين يصعد السعر إلى {price} — {dist}',
   mcArmedAlertBelowA11y: 'تنبيه مفعّل حين ينزل السعر إلى {price} — {dist}',
+  mcAlertMoveFailed: 'تعذّر نقل التنبيه — ما زال على {price}. تحقّق من الاتصال واسحبه مرة أخرى.',
   mcEstimatedTag: 'تقديري',
   mcVolEstimatedHint:
     'مزوّدنا لا يرسل حجم تداول لهذا الرمز (الفوركس بلا حجم مركزي) — هذه الأعمدة تقدير من مدى كل شمعة (من أعلاها إلى أدناها). مؤشرات الحجم (OBV وMFI وVWAP وKlinger…) محسوبة من التقدير نفسه، فلا تطابق أرقامها منصّة تعرض حجم التيك من وسيطها.',
@@ -3360,6 +3364,7 @@ const enUS: Dict = {
   mcArrowHeadA11y: 'Arrowhead at the end of the trend line',
   mcArmedAlertAboveA11y: 'Alert set for price rising to {price} — {dist}',
   mcArmedAlertBelowA11y: 'Alert set for price falling to {price} — {dist}',
+  mcAlertMoveFailed: "Couldn't move the alert — it's still at {price}. Check your connection and drag it again.",
   mcEstimatedTag: 'est.',
   mcVolEstimatedHint:
     'Our data provider sends no traded volume for this symbol (forex has no central volume) — these bars are estimated from each candle\'s high-to-low range. Volume indicators (OBV, MFI, VWAP, Klinger…) are built from the same estimate, so their values won\'t match a platform that shows your broker\'s tick volume.',
@@ -4539,6 +4544,7 @@ const ku: Dict = {
   mcArrowHeadA11y: 'سەری تیر لە کۆتایی هێڵی ترێند',
   mcArmedAlertAboveA11y: 'ئاگادارکردنەوە چالاکە کاتێک نرخ بەرز دەبێتەوە بۆ {price} — {dist}',
   mcArmedAlertBelowA11y: 'ئاگادارکردنەوە چالاکە کاتێک نرخ دادەبەزێت بۆ {price} — {dist}',
+  mcAlertMoveFailed: 'نەتوانرا ئاگادارکردنەوەکە بگوازرێتەوە — هێشتا لەسەر {price}یە. پەیوەندییەکە بپشکنە و دووبارە ڕایبکێشە.',
   mcEstimatedTag: 'خەمڵێنراو',
   mcVolEstimatedHint:
     'دابینکەرەکەمان قەبارەی بازرگانی بۆ ئەم هێمایە نانێرێت (فۆرێکس قەبارەی ناوەندیی نییە) — ئەم ستوونانە خەمڵاندنن لە مەودای هەر مۆمێک (لە بەرزترینەوە بۆ نزمترین). پێوەرەکانی قەبارە (OBV، MFI، VWAP، Klinger…) لە هەمان خەمڵاندن حیساب دەکرێن، بۆیە ژمارەکانیان لەگەڵ پلاتفۆرمێک کە قەبارەی تیکی بڕۆکەرەکەت پیشان دەدات یەک ناگرنەوە.',
