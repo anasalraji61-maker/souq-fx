@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 22، بعد 6a727de) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 23، بعد 03b01cf) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -41,10 +41,10 @@
 | tools | الخادم | **tools45**: `close_trade` `backend/db.py:1761` `UPDATE … WHERE id=?` بلا `AND status='open'` ⇒ جهازان يُغلقان الصفقة نفسها بالثانية نفسها ⇒ الثاني يستبدل خروجها المسجَّل. الواجهة تجلب القائمة قبل الإغلاق (`2e4e8b4`) لكن الجذر بالخادم | tools45 ★ |
 | launch | أنس (`AccountScreen` بلا مالك) | : لا طريق لإعادة الجولة الترحيبية (`matrix.onboarding.v1`) — من تخطّاها خطأً فاتته. سطر «أعد الجولة» بالحساب + `App.tsx`؟ | launch67 ★ |
 | QA | بلا مالك | **(d) QA19، منخفض**: `CalendarPanel.tsx:37-38` `ROW_SOON_MS = 3h`/`NOW_WINDOW_MS = 15m` أرقام منسوخة من `NEWS_HORIZON_MS`/`NEWS_GRACE_MS` (`chart/newsRisk.ts:224-225`) والتعليق يعد بأن «قريب» واحد بالشاشتين ⇒ `import` بدل النسخ كي لا ينحرفا. tools: الملف ليس بنطاقه، الثابتان مُصدَّران جاهزان | QA19 ★ |
-| chart | chart | **chart12**: المفتاحان `mcCloneDrawing`/`mcCloneDrawingA11y` أُضيفا (`3d12429`) — بقي ربط زرّ «نسخ الرسم» (تحقّقتُ: 0 مستعمل) | chart12 ★ |
 | QA | بلا مالك / الخادم | **(e) QA20**: «Confidence 83%» ما زالت تُعرض بـ`AnalystsPanel.tsx:115` و`SocialConsensusPanel.tsx:219` من المعادلة الثابتة `signal_hub.py:79-82` (\|avg\|×0.75+0.35) — `IndicatorForecastPanel` أزالها لهذا السبب بالضبط (:153 «تُقرأ كاحتمال نجاح»). ← إخفاء السطر أو عدد الأصوات بدلها | QA20 ★ |
-| QA | chart | **(a) QA21**: كود ميت يحرسه اختبار فقط — `priceLegend.ts` `planPriceLegend` :135 و`legendCapacity` :281 و`DIRECTIONAL_OVERLAYS` :109 (الشارت يستعمل `planPriceLegendForWidth` وحدها). شقّ `dailyChange.ts` `prevCloseFromDaily` **أُغلق** (`29c1d91`، tools). حذفٌ مع حالاتها أم إبقاء مقصود؟ | QA21 |
-| tools | chart (`chart/pipSpec.ts`) | **جديد tools48**: رموز الدفتر المحفوظة بأحرف كبيرة `USDJPYMICRO`/`USDJPY-CENT`/`GBPJPY_MICRO` ⇒ `chartPipSpec` = null (تحقّقتُ بـ`tsx`؛ `smallContractPair` يقرؤها USDJPY) ⇒ `formatPrice` يخمّن المنازل: دخول 150.123 يُعرض «150.12» بصفّ الصفقة وتأكيد الإغلاق. المقترح: قبل `return null` :27 `const small = smallContractPair(t); if (small) return instrumentSpec(small);` | tools48 |
+| launch | tools | **جديد launch72**: المفتاحان `riskCalcPipValueAtStop`/`riskCalcPipValueAtStopHint` (`233e090`) — بعد `ccbb1c4` قيمة pip لـUSDJPY تُحسب بسعر الوقف فلا تطابق رقم المنصّة الحيّ؛ اربطهما بالحاسبة (`PositionSizePanel.tsx` ~:1421) حين `riskRate !== convRate` (تحقّقتُ: 0 مستعمل) | launch72 |
 
-**أُسقط هذه الدورة (تحقّقتُ بالكود):** launch70 `riskCalcSlPipsAmbiguous` ← `PositionSizePanel.tsx:469` (`4133676`)؛ شقّ QA21 `prevCloseFromDaily` (`29c1d91`، 0 مطابقة).
-**تحقّق بلا تغيير:** `Alert.alert` 10 بـ5 ملفات؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `accNetLoadError` 0 مستعمل؛ `mcCloneDrawing*` 0 بـ`.tsx`. **مراجعة (b)**: لا نصّ ثابت جديد خارج `locales.ts` — كل العربي الثابت بملفات مسجّلة (Subscription/Commission/NetworkTree/TreeDiagram/Account:248/Messages/`timeframes.ts`) أو افتراضيات توافق يمرّر كل مستدعٍ ترجمته.
+**أُسقط هذه الدورة (تحقّقتُ بالكود):** chart12 ← زرّا «نسخ الرسم» `MatrixChart.tsx:5422 :11333` (`39e26a2`)؛ tools48 ← `chartPipSpec('USDJPYMICRO'|'USDJPY-CENT'|'GBPJPY_MICRO')` صار USDJPY/GBPJPY بـ`tsx` (`b962d58`)؛
+QA21 ← `planPriceLegend`/`legendCapacity` 0 مطابقة (`d8446d0`)؛ `DIRECTIONAL_OVERLAYS` باقٍ عمداً (استثناء لوني دلالي يحرسه الاختبار — LOG-CHART).
+**تحقّق بلا تغيير:** `Alert.alert` 10 بـ5 ملفات؛ «₴» ×2؛ `TimeframeBar`/Rails/Dock/SidePanel صفر `accessibilityState`؛ `accNetLoadError` 0؛ `a11yBusy` صفر بـAlerts/Account/NetworkTree.
+**مراجعة (c) a11y بسكربت على كل `.tsx`:** كل `Pressable`/`Touchable*`/`Switch`/`TextInput` له `accessibilityLabel` أو نصّ ابن — الاستثناء الوحيد خلفية `MatrixSidePanel.tsx:83` (مسجّلة QA3). الزرّان الجديدان (نسخ الرسم) موصوفان. الحالة المختارة: بلا تغيير (31).

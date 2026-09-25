@@ -267,3 +267,12 @@ chart12 شقّ launch (`3d12429`) ⇒ الصفّ صار chart ← chart للرب
 `TerminalScreen:941-946`، `FocusChartModal:291-304`، `MatrixChart:4978`، `typeLabels:66`)؛ `academy.ts` له `_en`؛ تعليمات `WeeklyReportPanel` داخلية واللغة تُرسل `lang`.
 (2) نص إنجليزي بـJSX/خصائص: 0 سوى «AUTO» (زر المحور، له وصف مترجم) و`placeholder="EURUSD"`. «pip»/«lot» بالقوالب مصطلح المنصّات — مقبول.
 **الدورة القادمة:** المراجعة (c) — a11y.
+
+## 2026-09-25 — الدورة 23
+**البناء:** أخضر 0 (بعد 233e090، وأُعيد بعد سحب 03b01cf) — لا إصلاح لازم. **Selftests:** 66/66 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — chart12 (`39e26a2`، `MatrixChart.tsx:5422 :11333`)، tools48 (`b962d58`، `chartPipSpec` بـ`tsx` يعيد USDJPY/GBPJPY)،
+QA21 (`d8446d0`؛ `DIRECTIONAL_OVERLAYS` باقٍ عمداً — استثناء لوني دلالي). **غير مُغلق:** 10 `Alert.alert` بـ5 ملفات، «₴» ×2، Rails/Dock/SidePanel/`TimeframeBar` صفر `accessibilityState`، `accNetLoadError` 0.
+**طلبات تنسيق جديدة (تحقّقتُ):** launch72 → tools `riskCalcPipValueAtStop`/`Hint` 0 مستعمل (`233e090`).
+**المراجعة (c — a11y)، بسكربت على كل `.tsx`:** كل `Pressable`/`Touchable*`/`Switch`/`TextInput` له `accessibilityLabel` أو `<Text>` ابن عدا `MatrixSidePanel.tsx:83`
+(مسجّلة QA3). لا جديد. `selected` المفقود: 31 كما هو؛ `a11yBusy` بـAlerts/Account/NetworkTree صفر (launch52).
+**الدورة القادمة:** المراجعة (d) — أرقام/حدود متناقضة بين الملفات.
