@@ -192,4 +192,16 @@ assert.equal(positionOutcomeText(PL, { ...o, exit: PL.entry, r: 0 }, 'EURUSD'), 
 assert.equal(positionOutcomeText(PL, { ...o, exit: PL.entry - 0.000004, r: -0.00016 }, 'EURUSD'), '0.0 pip · 0R');
 assert.equal(positionOutcomeText(PL, { ...o, exit: PL.entry - 0.00001, r: -0.0004 }, 'EURUSD'), '−0.1 pip · 0R');
 
+// بيع بوقف بعيد ونسبة كبيرة: الهدف لا ينزل تحت الصفر — R:R تُقصّ لأعلى ممكن.
+{
+  const neg = positionLevels('short', 1.0, 1.3, 5, 'EURUSD');
+  assert.ok(neg.target > 0, `target ${neg.target}`);
+  assert.equal(neg.rr, 3.33);
+  const xrp = positionLevels('short', 0.5, 0.9, 5, 'XRPUSD');
+  assert.ok(xrp.target > 0 && xrp.rr === 1.24, `${xrp.target} ${xrp.rr}`);
+  // الحالة العادية كما هي
+  assert.equal(positionLevels('short', 1.085, 1.088, 2, 'EURUSD').rr, 2);
+  assert.equal(positionLevels('long', 1.0, 0.7, 5, 'EURUSD').rr, 5);
+}
+
 console.log('positionTool.selftest: PASS');

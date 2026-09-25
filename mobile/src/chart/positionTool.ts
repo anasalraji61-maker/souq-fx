@@ -73,7 +73,13 @@ export function positionLevels(
   symbol: string
 ): PositionLevels {
   const stop = positionStop(side, entry, rawStop, symbol);
-  const r = clampRr(rr);
+  let r = clampRr(rr);
+  // بيع بوقف بعيد ونسبة كبيرة (عملة رقمية: وقف 30% × R:R 5) كان يرسم «TP -0.50000» — سعر لا يوجد، وبلا
+  // مسافة pip. النسبة تُقصّ لأعلى ما يُبقي الهدف فوق الصفر (منزلتان للأسفل)، فتقرأ R:R الممكنة فعلاً.
+  if (side === 'short' && entry > 0 && stop > entry) {
+    const maxR = Math.floor(((entry / (stop - entry)) * 100) - 1e-9) / 100;
+    if (maxR > 0 && r > maxR) r = maxR;
+  }
   const target = entry + (entry - stop) * r;
   return { side, entry, stop, target, rr: r };
 }
