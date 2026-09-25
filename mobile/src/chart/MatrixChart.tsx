@@ -3881,7 +3881,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           const { locationX, locationY } = evt.nativeEvent;
           const end = pointFromXY(locationX, locationY);
           if (tool === 'hline' || tool === 'hray' || tool === 'vline' || tool === 'note') {
-            onChartPress(locationX, locationY);
+            // من ref كباقي مسارات النقر: المستجيب لا يُبنى من جديد مع التمرير/التكبير/شمعة جديدة، فـ`onChartPress`
+            // المغلَق عليه يحمل نافذة لحظة اختيار الأداة ⇒ التقاطع وقراءة OHLC على شمعة مجاورة أو بعيدة.
+            chartPressRef.current(locationX, locationY);
             return;
           }
           // Read the anchor from a ref: the handler may still close over the pre-grant `pending`.
