@@ -1408,9 +1408,11 @@ def _vote_row(r, my_choice: str | None = None, viewer_id: int | None = None) -> 
     }
 
 
-def list_votes(user_id: int | None = None) -> list[dict]:
+def list_votes(user_id: int | None = None, limit: int = 200) -> list[dict]:
+    # بحدّ كمحادثة المجموعة (`group_messages` 200): كانت كل الأفكار منذ الإطلاق تُرسَل بكل فتح للشاشة
+    # (مسار عامّ) — حساب واحد ينشر بحلقة يجعل كل تحميل ميغابايتات ويبطئ القاعدة للجميع.
     with _conn() as c:
-        rows = c.execute("SELECT * FROM votes ORDER BY rowid DESC").fetchall()
+        rows = c.execute("SELECT * FROM votes ORDER BY rowid DESC LIMIT ?", (limit,)).fetchall()
         hidden = _hidden_ids(c, "vote", user_id)
         rows = [r for r in rows if r["id"] not in hidden]
         mine: dict[str, str] = {}

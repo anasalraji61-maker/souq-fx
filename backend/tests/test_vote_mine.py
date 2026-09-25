@@ -91,3 +91,10 @@ def test_ideas_and_chat_carry_a_utc_timestamp(client):
         c.execute("INSERT INTO votes(id,symbol,direction,agree,disagree,ts) VALUES('old','EURUSD','buy',0,0,'09:10')")
     old = [x for x in client.get("/api/votes").json()["votes"] if x["id"] == "old"][0]
     assert old["created_at"] is None and old["ts"] == "09:10"
+
+
+def test_idea_list_is_capped_to_the_newest(client):
+    """`SELECT * FROM votes` بلا حدّ: كل الأفكار منذ الإطلاق بكل تحميل للشاشة (مسار عامّ)."""
+    for i in range(5):
+        db.create_vote({**BODY, "id": f"v{i}", "agree": 0, "disagree": 0, "author": "a", "ts": "00:00"})
+    assert [v["id"] for v in db.list_votes(limit=3)] == ["v4", "v3", "v2"]
