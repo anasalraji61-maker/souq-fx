@@ -17,6 +17,7 @@ import { formatPrice, formatPriceDiff } from './indicators/utils';
 import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from './pipSpec';
 import { pipsNumber, pipUnit } from './measureReadout';
+import { propTextWidth } from './textWidth';
 
 export type PositionSide = 'long' | 'short';
 
@@ -268,9 +269,17 @@ export function positionOutcomeText(
   return `${head}${dist} · ${r}`;
 }
 
-/** تقدير متحفّظ لعرض محرف الوسم (`fontSize: 10`، وزن 800) وهوامشه (`paddingHorizontal: 4` + الحدّ). */
-export const POSITION_LABEL_CHAR_W = 6.2;
+/** خطّ وسوم الصندوق (DESIGN-PRO §2: 11px أصغر حجم) — `styles.positionLabel` يقرؤه. */
+export const POSITION_LABEL_FONT = 11;
+/** سطر الوسم: الحافّة العليا ⇒ الوسم فوقها بـ`POSITION_LABEL_LINE_H + 3`. */
+export const POSITION_LABEL_LINE_H = 14;
+/** هوامش الوسم (`paddingHorizontal: 4` + الحدّ). */
 export const POSITION_LABEL_PAD = 10;
+
+/** عرض الوسم بالقياس التناسبي المشترك (`textWidth.ts`) لا بعدد المحارف × ثابت. */
+export function positionLabelWidth(text: string): number {
+  return propTextWidth(text, POSITION_LABEL_FONT) + POSITION_LABEL_PAD;
+}
 
 /**
  * يسار وسم الصندوق: عند يسار الصندوق ما دام الوسم يتّسع حتى حافّة اللوح، وإلا يُزاح يساراً ليتّسع.
@@ -278,6 +287,6 @@ export const POSITION_LABEL_PAD = 10;
  * يُقصّ إلى «TP 1.090…» — تضيع النسبة، وهي سبب رسم الأداة أصلاً. لوح أضيق من الوسم ⇒ 2px (ويُقصّ).
  */
 export function positionLabelLeft(preferred: number, text: string, plotW: number): number {
-  const w = text.length * POSITION_LABEL_CHAR_W + POSITION_LABEL_PAD;
+  const w = positionLabelWidth(text);
   return Math.max(2, Math.min(preferred, plotW - w - 2));
 }

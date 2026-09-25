@@ -6,6 +6,7 @@ import {
   positionLabels,
   positionEndIndex,
   positionLabelLeft,
+  positionLabelWidth,
   positionLevels,
   positionOutcome,
   positionOutcomeText,
@@ -189,7 +190,9 @@ assert.equal(positionOutcomeText(SG, o, 'XAUUSD'), '+40.0 pip · +0.8R');
 const t30 = 'TP 1.09000 · 50.0 pip · R:R 2'; // 29 محرفاً ≈ 190px
 assert.equal(positionLabelLeft(40, t30, 400), 40);
 const shifted = positionLabelLeft(300, t30, 400);
-assert.ok(shifted < 300 && shifted + t30.length * 6.2 + 10 <= 398, `${shifted}`);
+assert.ok(shifted < 300 && shifted + positionLabelWidth(t30) <= 398, `${shifted}`);
+// 11px: الوسم أعرض من تقدير 10px القديم (29 × 6.2) ولا يتجاوز 29 محرفاً × 0.66em
+assert.ok(positionLabelWidth(t30) > 150 && positionLabelWidth(t30) < 29 * 0.66 * 11 + 10, `${positionLabelWidth(t30)}`);
 assert.equal(positionLabelLeft(300, t30, 120), 2); // لوح أضيق من الوسم
 
 // نهاية الصندوق يمين الدخول دائماً: سحبة لليسار تُعكس بالمسافة نفسها

@@ -133,6 +133,8 @@ import {
 import {
   isPositionTool,
   positionLabelLeft,
+  POSITION_LABEL_FONT,
+  POSITION_LABEL_LINE_H,
   positionLabels,
   positionLevels,
   positionEndIndex,
@@ -4361,7 +4363,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             // يُزاح يساراً عند حافّة اللوح بدل قصّ النسبة.
             left: positionLabelLeft(box.left, text, chartPlotW),
             // الحافّة العليا ⇒ الوسم فوقها، والسفلى ⇒ تحتها.
-            top: beyondEntry ? y - 16 : y + 2,
+            top: beyondEntry ? y - POSITION_LABEL_LINE_H - 3 : y + 2,
             maxWidth: Math.max(60, chartPlotW - positionLabelLeft(box.left, text, chartPlotW) - 2),
             color: tone,
             borderColor: tone,
@@ -4408,7 +4410,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               {
                 // بعد مقبض الدخول لا فوقه (إلا إن لم يتّسع حتى حافّة اللوح).
                 left: positionLabelLeft(box.left + 10, outcomeText, chartPlotW),
-                top: box.yEntry - 7,
+                top: box.yEntry - POSITION_LABEL_LINE_H / 2,
                 maxWidth: Math.max(60, chartPlotW - positionLabelLeft(box.left + 10, outcomeText, chartPlotW) - 2),
                 color: outcomeTone,
                 borderColor: outcomeTone,
@@ -13507,8 +13509,8 @@ const styles = StyleSheet.create({
   positionLabel: {
     ...numeric,
     position: 'absolute',
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: POSITION_LABEL_FONT,
+    lineHeight: POSITION_LABEL_LINE_H,
     fontWeight: '600',
     paddingHorizontal: 4,
     borderWidth: StyleSheet.hairlineWidth,
