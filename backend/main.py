@@ -1567,7 +1567,8 @@ def moderation_action(body: ModerationAction, x_moderation_token: str | None = H
 
 @app.get("/api/news")
 def news():
-    return {"news": news_feed.fetch_news()}
+    news = news_feed.fetch_news()
+    return {"news": news, **news_feed.news_status()}
 
 
 @app.get("/api/academy/schools")

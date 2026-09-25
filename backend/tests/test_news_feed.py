@@ -103,6 +103,7 @@ def feed(monkeypatch):
     """ذاكرة الوحدة عامّة — تُصفَّر لكل اختبار وإلا سرّب اختبارٌ نتيجته للتالي."""
     monkeypatch.setattr(nf, "_CACHE", [])
     monkeypatch.setattr(nf, "_CACHE_TS", 0.0)
+    monkeypatch.setattr(nf, "_FAIL_TS", 0.0)
     monkeypatch.setattr(nf.httpx, "Client", _FakeClient)
 
     def _serve(mapping: dict[str, str]):
@@ -208,3 +209,40 @@ def test_news_impact_says_it_is_a_headline_estimate(feed):
     feed({nf.FEEDS[0]: _rss(("Fed holds rates steady", "Tue, 23 Sep 2026 14:30:00 +0000"))})
     item = nf.fetch_news()[0]
     assert item["impact"] == "high" and item["impact_basis"] == "headline_keywords"
+
+
+def test_all_sources_down_is_reported_unavailable_not_no_news(feed):
+    """كان `{"news": []}` بلا حالة ⇒ التطبيق «لا توجد أخبار حالياً» والمصدر معطّل (403/404)."""
+    feed({})
+    import main  # الدالة مباشرةً: `TestClient` نفسه مبنيّ على `httpx.Client` المُستبدَل هنا
+    body = main.news()
+    assert body["news"] == [] and body["status"] == "unavailable" and body["as_of"] is not None
+
+
+def test_failed_refresh_keeps_real_headlines_marked_stale(feed, monkeypatch):
+    """كان انتهاء الصلاحية + مصدر معطّل ⇒ `_CACHE = []` يمسح عناوين حقيقية."""
+    feed({nf.FEEDS[1]: _rss(("Fed holds rates steady", "Tue, 23 Sep 2026 14:30:00 +0000"))})
+    clock = [1_000_000.0]
+    monkeypatch.setattr(nf.time, "time", lambda: clock[0])
+    assert len(nf.fetch_news()) == 1
+    assert nf.news_status() == {"status": "ok", "as_of": 1_000_000.0, "stale": False}
+    feed({})
+    clock[0] += nf.TTL + 1
+    items = nf.fetch_news()
+    assert [n["title"] for n in items] == ["Fed holds rates steady"]
+    assert nf.news_status() == {"status": "ok", "as_of": 1_000_000.0, "stale": True}
+    # ما بعد `STALE_MAX` لا يُخدَم
+    clock[0] = 1_000_000.0 + nf.STALE_MAX + 1
+    assert nf.fetch_news() == []
+    assert nf.news_status()["status"] == "unavailable"
+
+
+def test_failure_backs_off_instead_of_hitting_the_feeds_every_request(feed, monkeypatch):
+    feed({})
+    calls = []
+    orig = _FakeClient.get
+    monkeypatch.setattr(_FakeClient, "get", lambda self, url, headers=None: calls.append(url) or orig(self, url))
+    nf.fetch_news()
+    n = len(calls)
+    nf.fetch_news()
+    assert len(calls) == n

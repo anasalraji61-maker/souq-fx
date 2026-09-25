@@ -15,6 +15,11 @@ _CACHE_TS = 0.0
 TTL = 900
 # تعذّر كل المصادر: لا نخزّن «لا أخبار» 15 دقيقة — نعيد المحاولة بعد دقيقتين (كالتقويم).
 EMPTY_TTL = 120
+# فشل الجلب لا يمسح عناوين حقيقية محفوظة: كانت `_CACHE = []` عند أول انتهاء صلاحية مع مصدر معطّل ⇒
+# «لا توجد أخبار حالياً» (سوق هادئ) والحقيقة «المصدر معطّل». تُخدَم حتى `STALE_MAX` بوقت جلبها (`as_of`)
+# و`stale: true` — كالتقويم (`econ_calendar.calendar_status`).
+_FAIL_TS = 0.0
+STALE_MAX = 6 * 3600
 
 FEEDS = [
     "https://www.forexfactory.com/ffcal_week_this.xml",
@@ -111,10 +116,30 @@ def _parse_rss(xml_text: str, source: str) -> list[dict]:
 
 
 def fetch_news() -> list[dict]:
-    global _CACHE, _CACHE_TS
-    if time.time() - _CACHE_TS < (TTL if _CACHE else EMPTY_TTL) and _CACHE_TS:
-        return _CACHE
+    global _CACHE, _CACHE_TS, _FAIL_TS
+    now = time.time()
+    fresh = bool(_CACHE) and now - _CACHE_TS < TTL
+    backing_off = _FAIL_TS > 0 and now - _FAIL_TS < EMPTY_TTL
+    if not fresh and not backing_off:
+        merged = _fetch_feeds()
+        if merged:
+            _CACHE, _CACHE_TS, _FAIL_TS = merged, now, 0.0
+        else:
+            _FAIL_TS = now
+    if _CACHE and now - _CACHE_TS > STALE_MAX:
+        _CACHE = []
+    return list(_CACHE)
 
+
+def news_status() -> dict:
+    """`status` ok/unavailable — «unavailable» = المصادر لم تُجب، لا «لا أخبار»؛ `as_of` (epoch) = وقت جلب
+    العناوين المُعادة، أو وقت المحاولة الفاشلة حين لا عناوين؛ `stale` = آخر محاولة فشلت والعناوين من جلب سابق."""
+    if _CACHE:
+        return {"status": "ok", "as_of": _CACHE_TS, "stale": _FAIL_TS > _CACHE_TS}
+    return {"status": "unavailable", "as_of": _FAIL_TS or _CACHE_TS or None, "stale": False}
+
+
+def _fetch_feeds() -> list[dict]:
     merged: list[dict] = []
     for url in FEEDS:
         try:
@@ -135,6 +160,4 @@ def fetch_news() -> list[dict]:
     # وبعد الترتيب تبقى **النسخة الأحدث** لا التي صادف أن مصدرها أوّلاً.
     seen: set[str] = set()
     merged = [n for n in merged if not (n["id"] in seen or seen.add(n["id"]))]
-    _CACHE = merged[:20]
-    _CACHE_TS = time.time()
-    return _CACHE
+    return merged[:20]
