@@ -352,3 +352,12 @@ QA21 (`d8446d0`؛ `DIRECTIONAL_OVERLAYS` باقٍ عمداً — استثناء 
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
 **إلحاق الدورة 30 (وكيل فرعي متأخّر، تحقّقتُ):** `indicators.py:68` إشارة MACD من أصفار (backtest/screener)؛ `signal_hub.py:278 :288` تفاصيل `:.5f` عربية خام بالواجهة الإنجليزية؛
 منخفض `backtest.py:21` GOLD/USOIL بلا سبريد ⇒ صفّ واحد للخادم/أنس. سليم: pip/لوت/هامش/R/جلسات DST/Pivots/Fibo.
+
+## 2026-09-25 — الدورة 31
+**البناء:** أخضر 0 (بعد 6dd7a29) — لا إصلاح لازم. **Selftests:** 75/75 ناجح (`npx tsx`؛ +1 `vwapSession`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — QA30 «stop-out» (`2ae6d46`، صفر «stop-out» بـ`locales.ts`)؛ QA30 VWAP D1 (`a37247e`)؛ Screener (`c28204c` `runSeq`).
+**غير مُغلق:** 10 `Alert.alert` بـ5 ملفات، «₴» ×2، `FocusChartModal:56` `BASES` و:284-288 `series.change_pct`، `AiPanel`/`LectureClassroom` بلا `maxLength`، `BRENT/USD`، MACD أصفار `indicators.py:66`.
+**طلبات تنسيق جديدة:** لا شيء (launch82 ردّ فقط؛ chart21 وtools53 بلا طلب).
+**المراجعة (a — تكرار/ميت/تصديرات)، بسكربتين على كل `src`:** التصديرات الميتة = قائمة QA1 + النوع `WatchSymbol` (`watchlist.ts:26`، تافه)؛ `tools-panels/registry.ts` ميت بتعليق صريح.
+**جديد QA31 → chart (منخفض):** `ukDst` نسخة خاصة بـ`marketHours.ts:78` من `sessions.ts:33` المُصدَّرة. `FIAT`/`METALS` ×2 لغرضين مختلفين — غير ضارّة.
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة خارج `locales.ts`.
