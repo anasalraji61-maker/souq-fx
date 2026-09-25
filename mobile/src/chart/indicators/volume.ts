@@ -651,8 +651,8 @@ export function computeVzo(candles: (Candle & { volume?: number })[], period = 1
  * بداية السلسلة المعروضة، لا نافذة متدحرجة — نفس اصطلاح computeVwap نفسه بلا تغيير)، ثم تباين
  * تراكمي مرجَّح بالحجم حول تلك القيمة المرجعية بالضبط في كل خطوة: variance[i] =
  * Σ(vol×(typicalPrice−VWAP[i])²)/Σvol (نفس مبدأ ترجيح VWAP بالحجم نفسه، لا SMA بسيطة للتباين)، ثم
- * upper/lower = VWAP ± multiplier×√variance (multiplier=2 افتراضياً، بنفس القيمة القياسية المستخدَمة
- * أصلاً ببولنجر). نفس حارس الصفر المستخدَم بـcomputeVwap حرفياً (حجم تراكمي=0 ⇒ null) + حارس تباين
+ * upper/lower = VWAP ± multiplier×√variance (multiplier=1 افتراضياً كـ«Bands Multiplier #1» بـVWAP
+ * TradingView المدمج — النطاق الظاهر افتراضياً هناك؛ كان 2 كبولنجر فبدا النطاق ضعف ما يراه المتداول بـTV). نفس حارس الصفر المستخدَم بـcomputeVwap حرفياً (حجم تراكمي=0 ⇒ null) + حارس تباين
  * سالب صريح (Math.max(0, variance) قبل الجذر التربيعي، يحمي من فروق فاصلة عائمة سالبة طفيفة قرب
  * الصفر). يُرجِع نفس بنية `{mid, upper, lower}` المستخدَمة أصلاً بـcomputeKeltner/computeLinRegChannel
  * حرفياً — إعادة استخدام كاملة لنمط تكامل الأشرطة الموجود بلا نمط جديد. **تحقّق حسابي فعلي (Node.js،
@@ -664,7 +664,7 @@ export function computeVzo(candles: (Candle & { volume?: number })[], period = 1
  */
 export function computeVwapBands(
   candles: (Candle & { volume?: number })[],
-  multiplier = 2,
+  multiplier = 1,
   sessionOf?: (c: Candle) => number
 ): { mid: (number | null)[]; upper: (number | null)[]; lower: (number | null)[] } {
   const mid = computeVwap(candles, sessionOf);

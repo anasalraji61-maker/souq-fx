@@ -2653,7 +2653,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     [indBars, indicators, vwapSessionOf]
   );
   const vwapBands = useMemo(
-    () => (indicators.includes('vwapBands') ? ind(computeVwapBands(indBars, 2, vwapSessionOf)) : null),
+    () => (indicators.includes('vwapBands') ? ind(computeVwapBands(indBars, 1, vwapSessionOf)) : null),
     [indBars, indicators, vwapSessionOf]
   );
   const twap = useMemo(
