@@ -4,8 +4,8 @@ import { API_URL, type LiveTick } from '../api';
 import { parseWsDataSource } from '../chart/dataSource';
 
 /** إعادة اتصال تدريجية (exponential backoff) عند انقطاع WS — 1s..30s */
-const RECONNECT_BASE_MS = 1000;
-const RECONNECT_MAX_MS = 30000;
+export const RECONNECT_BASE_MS = 1000;
+export const RECONNECT_MAX_MS = 30000;
 
 /** لقطة البثّ الأخيرة أقدم من هذا ⇒ لا تُعرض فوراً عند تبديل الرمز (البثّ كل ثانية). */
 const SNAPSHOT_FRESH_MS = 5000;
