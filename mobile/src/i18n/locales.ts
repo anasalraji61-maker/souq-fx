@@ -407,6 +407,12 @@ export type Dict = {
   riskCalcStopPxLooksLikePips: string;
   /** «50» بخانة الهدف (الحاسبة/الدفتر) أو الوقف (الدفتر): نقاطٌ لا سعر، النقرة تكتب السعر — `{field}` `{value}` `{pips}` `{price}` */
   levelLooksLikePipsHint: string;
+  /**
+   * يُلحق بـ`levelLooksLikePipsHint` بالدفتر وقت الحفظ (tools80): ضغطة حفظ ثانية على القيم نفسها تُبقي الرقم سعراً كما كُتب
+   * (فضة بيعٌ من 110 بهدف «85» سعرٌ حقيقي). `{button}` = نصّ الزرّ الظاهر (`journalAddBtn`/`journalSaveEditBtn`)، `{value}` كما كُتب —
+   * يُدرجان بدالّة لا نصّ بديل (كـ`levelLooksLikePipsText`). يبدأ بفاصل لأنه يتبع الجملة السابقة مباشرة
+   */
+  levelLooksLikePipsSaveAgain: string;
   riskCalcPipValue: string;
   /** الأساس = عملة الحساب (USDJPY بحساب دولار…) ⇒ قيمة الـpip محسوبة بسعر الوقف لا الحيّ (`exitQuoteToAccount`) فتخالف المنصّة — {price} = الوقف */
   riskCalcPipValueAtStop: string;
@@ -1684,6 +1690,7 @@ const ar: Dict = {
   riskCalcSlLooksLikePrice: '⚠ «{value}» سعرٌ على الأرجح لا مسافة — اكتبه بخانة «سعر الوقف»، أو اكتب مسافة الوقف بالـpip (مثل 25)',
   riskCalcStopPxLooksLikePips: '⚠ «{value}» بخانة سعر الوقف عددُ pip على الأرجح لا سعر — اضغط لنقله إلى خانة الوقف بالـpip',
   levelLooksLikePipsHint: '⚠ {field} «{value}» عددُ pip على الأرجح لا سعر: {pips} pip تعني {price}. اضغط لكتابة {price}',
+  levelLooksLikePipsSaveAgain: '، أو اضغط «{button}» مرّة ثانية لإبقاء {value} سعراً كما كتبته',
   riskCalcPipValue: 'قيمة الـpip للوت',
   riskCalcPipValueAtStop: 'قيمة الـpip للوت عند وقفك {price}',
   riskCalcPipValueAtStopHint: 'منصّتك تعرضها بالسعر الحالي فقد تختلف قليلاً — لكن خسارتك إن ضُرب الوقف تُحوَّل إلى عملة حسابك بسعر الوقف، فحسبناها به',
@@ -2858,6 +2865,7 @@ const enUS: Dict = {
   riskCalcSlLooksLikePrice: '⚠ “{value}” looks like a price, not a distance — enter it under Stop price, or type the stop distance in pips (e.g. 25)',
   riskCalcStopPxLooksLikePips: '⚠ “{value}” in Stop price looks like pips, not a price — tap to move it to the pips box',
   levelLooksLikePipsHint: '⚠ {field} “{value}” looks like pips, not a price: {pips} pips is {price}. Tap to use {price}',
+  levelLooksLikePipsSaveAgain: ', or press “{button}” again to keep {value} as a price',
   riskCalcPipValue: 'Pip value per lot',
   riskCalcPipValueAtStop: 'Pip value per lot at your stop {price}',
   riskCalcPipValueAtStopHint: 'Your platform shows it at the current price, so it may differ a little — but if your stop is hit the loss converts to your account currency at the stop price, so we used that',
@@ -4058,6 +4066,7 @@ const ku: Dict = {
   riskCalcSlLooksLikePrice: '⚠ «{value}» زۆرجار نرخە نەک دووری — لە خانەی «نرخی وەستان» بینووسە، یان دووری وەستان بە pip بنووسە (بۆ نموونە 25)',
   riskCalcStopPxLooksLikePips: '⚠ «{value}» لە خانەی نرخی وەستان زۆرجار ژمارەی pipە نەک نرخ — دەست بنێ بۆ گواستنەوەی بۆ خانەی وەستان بە pip',
   levelLooksLikePipsHint: '⚠ {field} «{value}» زۆرجار ژمارەی pipە نەک نرخ: {pips} pip واتە {price}. دەست بنێ بۆ نووسینی {price}',
+  levelLooksLikePipsSaveAgain: '، یان جارێکی تر «{button}» دابگرە بۆ هێشتنەوەی {value} وەک نرخ',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
   riskCalcPipValueAtStop: 'بەهای pip بۆ هەر لۆتێک لە وەستانەکەت {price}',
   riskCalcPipValueAtStopHint: 'پلاتفۆرمەکەت بە نرخی ئێستا پیشانی دەدات بۆیە لەوانەیە کەمێک جیاواز بێت — بەڵام ئەگەر وەستانەکە لێدرا زیانەکە بە نرخی وەستان دەگۆڕدرێت بۆ دراوی هەژمارەکەت، بۆیە ئەومان بەکارهێنا',
