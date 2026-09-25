@@ -234,9 +234,12 @@ def indicator_forecast(
         window = closes[-20:]
         mid = sum(window) / 20
         var = sum((x - mid) ** 2 for x in window) / 20
-        std = math.sqrt(var) or 1e-9
+        std = math.sqrt(var)
         upper, lower = mid + 2 * std, mid - 2 * std
-        if last >= upper:
+        # نطاق بعرض صفر (20 إغلاقاً متطابقة) لا موقع فيه: كان `or 1e-9` يصنع حدّين حول السعر نفسه
+        if std == 0:
+            pass
+        elif last >= upper:
             add("bb", "bb", -0.55, "bb_upper")
         elif last <= lower:
             add("bb", "bb", 0.55, "bb_lower")
@@ -249,19 +252,21 @@ def indicator_forecast(
         recent = candles[-14:]
         hi = max(float(c["high"]) for c in recent)
         lo = min(float(c["low"]) for c in recent)
-        den = (hi - lo) or 1e-9
-        k = (last - lo) / den * 100
-        if k >= 80:
-            score = -0.6
-        elif k <= 20:
-            score = 0.6
-        else:
-            score = (50 - k) / 80
-        add("stoch", "stoch", score, "stoch_k", k=round(k))
+        # مدى صفري (14 شمعة بلا حركة) ⇒ لا %K: كان `or 1e-9` يعطي %K=0 ⇒ «تشبّع بيعي» وصوت شراء +0.6 من لا حركة
+        if hi > lo:
+            k = (last - lo) / (hi - lo) * 100
+            if k >= 80:
+                score = -0.6
+            elif k <= 20:
+                score = 0.6
+            else:
+                score = (50 - k) / 80
+            add("stoch", "stoch", score, "stoch_k", k=round(k))
 
     # Multi-bar trend
-    if len(closes) >= 10:
-        slope = (closes[-1] - closes[-10]) / (abs(closes[-10]) or 1)
+    # «آخر 10 شموع» = من إغلاق ما قبلها إلى الأخير (10 حركات) — كان `closes[-10]` أي 9 حركات فقط
+    if len(closes) >= 11:
+        slope = (closes[-1] - closes[-11]) / (abs(closes[-11]) or 1)
         add("trend", "trend", max(-1.0, min(1.0, slope * 40)), "trend_slope", pct=round(slope * 100, 2))
 
     if not votes:

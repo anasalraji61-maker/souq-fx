@@ -79,3 +79,25 @@ def test_disclaimer_has_a_code_for_the_app_to_translate():
     # chart-r35: الكردي لا نصّ له بالخادم ⇒ الرمز يكفي التطبيق
     assert signal_hub.indicator_forecast("EURUSD", _candles(1.08))["disclaimer_code"] == "indicator_consensus"
     assert signal_hub.indicator_forecast("EURUSD", [])["disclaimer_code"] == "not_enough_data"
+
+
+# ─── لا أصوات من لا حركة، ونافذة «10 شموع» صحيحة ─────────────────────────────
+
+def _flat(n: int, px: float = 1.1) -> list[dict]:
+    return [{"time": i, "open": px, "high": px, "low": px, "close": px} for i in range(n)]
+
+
+def test_flat_candles_cast_no_stochastic_or_band_vote():
+    """مدى صفري كان %K=0 ⇒ «تشبّع بيعي» وصوت شراء +0.6؛ ونطاق بولنجر بعرض 1e-9 حول السعر."""
+    out = signal_hub.indicator_forecast("EURUSD", _flat(60))
+    ids = {v["id"] for v in out["votes"]}
+    assert "stoch" not in ids and "bb" not in ids
+
+
+def test_trend_vote_spans_ten_candle_moves():
+    """«آخر 10 شموع» = من الإغلاق قبلها (1.0) إلى الأخير (1.2) = +20%. كان من `closes[-10]` (1.1) ⇒ 9.09%."""
+    closes = [1.0] * 50 + [1.1] * 9 + [1.2]
+    candles = [{"time": i, "open": c, "high": c, "low": c, "close": c} for i, c in enumerate(closes)]
+    out = signal_hub.indicator_forecast("EURUSD", candles, enabled=["trend"])
+    (v,) = out["votes"]
+    assert v["detail_values"]["pct"] == pytest.approx(20.0)
