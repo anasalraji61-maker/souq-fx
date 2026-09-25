@@ -355,7 +355,11 @@ export function ChartFrame({
         </View>
       ) : null}
 
-      <View style={styles.header}>
+      {/* الهاتف: إطار الشبكة 2×2 بعرض ~155pt ومحتوى ~135pt، وسطرا الرأس معاً (الرمز+المصدر ~125، السعر+حي+السبريد
+          +النسبة+⛶ ~210) كانا يُحشران بسطر واحد ⇒ `titleRow` ينكمش إلى الصفر فيختفي اسم الزوج، والنسبة وزرّ ملء
+          الشاشة يُقصّان خارج الإطار. على الهاتف يلتفّ الرأس (السعر تحت الرمز) ويلتفّ سطر السعر نفسه إن ضاق —
+          لا شيء يُقصّ. بوضع المستطيلات (عرض الشاشة) يتّسع السطر فلا التفاف، كما كان. */}
+      <View style={[styles.header, phone && styles.headerPhone]}>
         <View style={styles.titleRow}>
           <View style={[styles.dot, { backgroundColor: accent }]} />
           <Pressable
@@ -418,7 +422,9 @@ export function ChartFrame({
               {badge}
             </Text>
           ) : null}
-          {seriesLoading ? null : (
+          {/* «مزوّد» هي الحالة العادية ولا تضيف للهاتف إلا عرضاً (سطر السعر يقول «حي» أصلاً)؛ تجريبي/مخزّن/مجهول
+              تبقى ظاهرة — هي ما يجب ألّا يفوت المتداول. */}
+          {seriesLoading || (phone && candleSrc.kind === 'provider') ? null : (
             <Text
               style={[
                 styles.sourceTag,
@@ -441,7 +447,7 @@ export function ChartFrame({
         {noRealData || headerPrice == null ? (
           focusButton ? <View style={styles.priceRow}>{focusButton}</View> : null
         ) : (
-          <View style={[styles.priceRow, switching && styles.stale]}>
+          <View style={[styles.priceRow, phone && styles.priceRowPhone, switching && styles.stale]}>
             <Text
               style={styles.price}
               accessibilityLabel={
@@ -605,6 +611,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
+  headerPhone: {
+    paddingHorizontal: spacing.sm,
+    flexWrap: 'wrap',
+    rowGap: 2,
+    columnGap: spacing.sm,
+  },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -644,6 +656,7 @@ const styles = StyleSheet.create({
   },
   tf: { color: colors.textDim, fontSize: 11, marginLeft: spacing.xs },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 0 },
+  priceRowPhone: { flexWrap: 'wrap', flexShrink: 1, columnGap: 6, rowGap: 2 },
   price: { color: colors.text, fontWeight: '600', fontSize: 13 },
   liveTag: { color: colors.bull, fontSize: 9, fontWeight: '800' },
   liveTagMuted: { color: colors.textMuted, fontWeight: '700' },
