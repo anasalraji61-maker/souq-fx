@@ -43,7 +43,6 @@ export type Dict = {
   createAccount: string;
   logout: string;
   hello: string;
-  accountType: string;
   sponsorCode: string;
   underSponsor: string;
   left: string;
@@ -1321,7 +1320,7 @@ export type Dict = {
   /**
    * قارئ الشاشة لأي زرّ يعرض «...» أثناء الانتظار (10 مواضع: AccountScreen ×3، TradeJournalPanel ×2، AlertsPanel ×2،
    * PositionSizePanel ×2، NetworkTreePanel «…»): `accessibilityLabel={busy ? t.a11yBusy : <النصّ>}` مع `accessibilityState={{ busy }}`.
-   * وسم رقائق AccountScreen يُركَّب من مفاتيح موجودة: `${t.language}: ${l.label}`، `${t.accountType}: ${r.label}`، `${t.underSponsor}: ${t.left}`.
+   * وسم رقائق AccountScreen يُركَّب من مفاتيح موجودة: `${t.language}: ${l.label}`، `${t.underSponsor}: ${t.left}`.
    */
   a11yBusy: string;
   /**
@@ -1464,7 +1463,6 @@ const ar: Dict = {
   createAccount: 'إنشاء حساب',
   logout: 'تسجيل خروج',
   hello: 'مرحباً',
-  accountType: 'نوع الحساب',
   sponsorCode: 'رمز الدعوة (اختياري)',
   underSponsor: 'جهتك تحت صاحب الدعوة',
   left: 'يسار',
@@ -1475,7 +1473,7 @@ const ar: Dict = {
   agent: 'وكيل',
   company: 'شركة',
   loginError: 'تعذّر الدخول — تحقّق من الاسم أو الإيميل وكلمة المرور، ومن اتصالك بالإنترنت',
-  registerError: 'تعذّر التسجيل — الاسم من 3 إلى 32 حرفاً عادياً (بلا محارف مخفية قد تأتي مع النسخ واللصق)، وكلمة المرور 4 أحرف على الأقل، والاسم والإيميل غير مسجَّلَين من قبل، ورمز الدعوة صحيح إن كتبته. أو تحقّق من اتصالك',
+  registerError: 'تعذّر التسجيل — لم يصل الطلب إلى الخادم أو لم يكتمل. تحقّق من اتصالك بالإنترنت ثم حاول مرة أخرى',
   regErrReserved: 'هذا الاسم محجوز — اختر اسماً آخر',
   regErrInvisible: 'في الاسم محرف مخفي أو حرف بعرض كامل (يأتي غالباً مع النسخ واللصق) — اكتبه بنفسك من لوحة المفاتيح',
   regErrUsernameTaken: 'هذا الاسم مسجَّل من قبل — اختر اسماً آخر، أو ادخل إن كان حسابك',
@@ -2674,7 +2672,6 @@ const enUS: Dict = {
   createAccount: 'Create account',
   logout: 'Log out',
   hello: 'Welcome',
-  accountType: 'Account type',
   sponsorCode: 'Invite code (optional)',
   underSponsor: 'Your side under the inviter',
   left: 'Left',
@@ -2685,7 +2682,7 @@ const enUS: Dict = {
   agent: 'Agent',
   company: 'Company',
   loginError: 'Login failed — check your name or email, your password, and your connection',
-  registerError: 'Sign-up failed — username 3 to 32 plain characters (no hidden characters, which copy and paste can bring along), password at least 4, username and email not already registered, invite code correct if you entered one. Or check your connection',
+  registerError: "Sign-up didn't go through — the request didn't reach the server or didn't finish. Check your internet connection and try again",
   regErrReserved: 'That username is reserved — pick another one',
   regErrInvisible: 'The username contains a hidden or full-width character (copy and paste often brings these along) — type it in from the keyboard',
   regErrUsernameTaken: 'That username is already registered — pick another one, or log in if it’s yours',
@@ -3878,7 +3875,7 @@ const enGB: Dict = {
   email: 'Email',
   sponsorCode: 'Invite code (optional)',
   loginError: 'Sign-in failed — check your name or email, your password, and your connection',
-  registerError: 'Registration failed — username 3 to 32 plain characters (no hidden characters, which copy and paste can bring along), password at least 4, username and email not already registered, invite code correct if you entered one. Or check your connection',
+  registerError: "Registration didn't go through — the request didn't reach the server or didn't finish. Check your internet connection and try again",
   language: 'Language',
   // التهجئة البريطانية لما افترق. (نصّ الجولة `onboardStep3Body` لم يعد فيه «summarize» فلا يحتاج نسخة هنا.)
   wlCatalogTitle: 'Add from catalogue',
@@ -3911,7 +3908,6 @@ const ku: Dict = {
   createAccount: 'دروستکردنی هەژمار',
   logout: 'دەرچوون',
   hello: 'سڵاو',
-  accountType: 'جۆری هەژمار',
   sponsorCode: 'کۆدی بانگهێشت (ئیختیاری)',
   underSponsor: 'لایەنی تۆ لەژێر بانگهێشتکەر',
   left: 'چەپ',
@@ -3922,7 +3918,7 @@ const ku: Dict = {
   agent: 'بریکار',
   company: 'کۆمپانیا',
   loginError: 'چوونەژوورەوە سەرکەوتوو نەبوو — ناو یان ئیمەیڵ و وشەی نهێنی بپشکنە، هەروەها پەیوەندیت بە ئینتەرنێتەوە',
-  registerError: 'تۆمارکردن سەرکەوتوو نەبوو — ناو 3 تا 32 پیتی ئاسایی (بێ پیتی شاراوە کە لەوانەیە لەگەڵ کۆپی و پەیست بێت)، وشەی نهێنی لانیکەم 4 پیت، ناو و ئیمەیڵ پێشتر تۆمار نەکرابن، کۆدی بانگهێشت دروست بێت ئەگەر نووسیبێتت. یان پەیوەندیت بپشکنە',
+  registerError: 'تۆمارکردن سەرکەوتوو نەبوو — داواکارییەکە نەگەیشتە ڕاژەکار یان تەواو نەبوو. پەیوەندیت بە ئینتەرنێتەوە بپشکنە و دووبارە هەوڵ بدەرەوە',
   regErrReserved: 'ئەم ناوە پارێزراوە — ناوێکی تر هەڵبژێرە',
   regErrInvisible: 'ناوەکە پیتێکی شاراوە یان پانی تێدایە (زۆرجار لەگەڵ کۆپی و پەیست دێت) — خۆت بە کیبۆرد بینووسە',
   regErrUsernameTaken: 'ئەم ناوە پێشتر تۆمار کراوە — ناوێکی تر هەڵبژێرە، یان ئەگەر هی خۆتە بچۆ ژوورەوە',
