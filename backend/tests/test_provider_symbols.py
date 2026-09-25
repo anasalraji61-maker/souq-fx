@@ -45,6 +45,34 @@ def test_dxy_chart_is_labelled_demo_with_the_reason(monkeypatch):
     assert series.data_source.unavailable_reason == "not_offered_by_provider"
 
 
+@pytest.mark.parametrize("configured", [True, False])
+def test_dxy_chart_has_no_candles_and_no_price(monkeypatch, configured):
+    """backend-r19: كانت بذرة عشوائية حول 104.25 (رقم مكتوب باليد) تُرسَل شموعاً وسعراً ونسبة — الآن لا شيء."""
+    monkeypatch.setattr(market, "_api_key", lambda: "k" if configured else None)
+    body = TestClient(main.app).get("/api/charts/DXY?timeframe=1H").json()
+    assert body["candles"] == []
+    assert body["last"] is None and body["change_pct"] is None
+    assert body["data_source"]["unavailable_reason"] == "not_offered_by_provider"
+    assert body["data_source"]["channel"] is None  # لا «seed»
+
+
+def test_terminal_dxy_slot_is_empty_but_frames_are_untouched(monkeypatch):
+    monkeypatch.setattr(market, "_api_key", lambda: None)
+    body = TestClient(main.app).get("/api/terminal").json()
+    assert body["dxy"]["candles"] == [] and body["dxy"]["last"] is None
+    # الرموز المعروفة ما زالت ترسل سلسلتها (demo موسومة حين المزوّد غير مهيّأ — قرار سابق، لم يتغيّر)
+    assert all(f["candles"] and f["last"] is not None for f in body["frames"])
+
+
+def test_ai_ask_on_dxy_still_answers_without_levels(monkeypatch):
+    monkeypatch.setattr(market, "_api_key", lambda: "k")
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    res = TestClient(main.app).post("/api/ai/ask", json={"question": "DXY?", "symbol": "DXY"})
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["live_price"] is False and body["price_as_of"] is None
+
+
 def test_watchlist_still_lists_dxy_as_unavailable():
     rows = TestClient(main.app).get("/api/watchlist").json()["symbols"]
     dxy = [r for r in rows if r["symbol"] == "DXY"]

@@ -127,8 +127,9 @@ class ChartSeries(BaseModel):
     symbol: str
     timeframe: str
     candles: list[Candle]
-    change_pct: float
-    last: float
+    # None = لا سعر أصلاً (رمز لا يقدّمه المزوّد — DXY): لا شموع ولا إغلاق ولا نسبة، لا رقم مكتوب باليد
+    change_pct: float | None
+    last: float | None
     data_source: DataProvenance = Field(default_factory=DataProvenance)
 
 
@@ -529,7 +530,6 @@ def _seed_walk(
 
 
 SYMBOL_BASES = {
-    "DXY": 104.25,
     "EURUSD": 1.0854,
     "GBPUSD": 1.2732,
     "USDJPY": 157.42,
@@ -603,9 +603,21 @@ def build_series(symbol: str, timeframe: str = "15m", outputsize: int = 180) -> 
             pass  # fallback to demo seed below
 
     why = market.unavailable_reason(sym)
+    if why == "not_offered_by_provider":
+        # backend-r19: DXY لا يقدّمه المزوّد أبداً — كانت تُرسَل بذرة عشوائية حول 104.25 (رقم مكتوب باليد) يرسمها
+        # التطبيق شموعاً وسعراً ونسبة تحت وسم «غير متاح». الآن لا شموع ولا سعر؛ التطبيق يعرض إشعار المزوّد مكانها
+        # (`ProviderUnavailableNotice`، b1d1adb/da73ec6). `kind: demo` يبقى ليرفضها كل مسار حسابي كما قبل.
+        return ChartSeries(
+            symbol=sym,
+            timeframe=tf,
+            candles=[],
+            change_pct=None,
+            last=None,
+            data_source=DataProvenance(kind="demo", as_of=time.time(), channel=None, unavailable_reason=why),
+        )
     step = TF_SECONDS[tf]
     base = SYMBOL_BASES.get(sym, 1.0)
-    vol = 0.0008 if sym == "DXY" else 0.0015
+    vol = 0.0015
     candles = _seed_walk(sym, base, n=size, vol=vol, step_sec=step)
     first = candles[0].close
     last = candles[-1].close
@@ -1806,9 +1818,11 @@ def ai_ask(body: AiAsk):
     # `change_pct` = التغيّر على **كامل السلسلة** (180 شمعة: ~45 ساعة على 15m) لا «لحظي» — والنصّ يقول
     # ذلك. تغيّر صفريّ لا اتجاه له: كان `>= 0` يجعله «صاعداً» بسيناريو شراء كامل.
     bars = len(series.candles)
-    flat = series.change_pct == 0
-    bias = "صاعد" if series.change_pct > 0 else "هابط"
-    direction: str | None = None if flat else ("شراء" if series.change_pct > 0 else "بيع")
+    # None = رمز بلا سعر أصلاً (DXY) ⇒ `live` False أعلاه، ولا اتجاه
+    chg = series.change_pct if series.change_pct is not None else 0.0
+    flat = chg == 0
+    bias = "صاعد" if chg > 0 else "هابط"
+    direction: str | None = None if flat else ("شراء" if chg > 0 else "بيع")
     entry: float | None = None
     sl: float | None = None
     tp: float | None = None
