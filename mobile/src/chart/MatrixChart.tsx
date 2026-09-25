@@ -5207,6 +5207,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     visibleTimeSpan,
     dayCandles
   );
+  const prevShownTickTime = (k: number, fallback: Candle): number | undefined => {
+    for (let j = k - 1; j >= 0; j--) {
+      if (timeTickBoxes[j]?.hidden) continue;
+      return barTime(source.plot[timeTickIndexes[j]!] ?? fallback);
+    }
+    return undefined;
+  };
   // بلا تيك حيّ (السوق مغلق، أو قبل أوّل تيك): إغلاق **آخر شمعة بالسلسلة** لا آخر شمعة ظاهرة —
   // بعد الرجوع 50 شمعة كان الوسم والخطّ المتقطّع يقفزان لإغلاق قديم والرأس يقول غيره، وبـHeikin
   // يعرضان إغلاقاً متوسَّطاً لا السعر. بالإعادة وحدها: شمعة الإعادة هي «الآن».
@@ -8199,6 +8206,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           >
             {timeTickBoxes.map((box) => {
               if (box.hidden) return null;
+              // السابق **المطبوع** لا السابق بالفهرس: علامة يناير المخفيّة بالتراكب كانت «السابقة» لفبراير فلا
+              // تُطبع السنة — المحور «1 نوف · 1 ديس · 1 فبر» بلا إشارة لسنة جديدة.
               // تحت وسم زمن التقاطع: الوسم يغطّيها فلا يظهر منها إلا طرفٌ مبتور
               if (
                 crossTimeTagLeft != null &&
@@ -8228,7 +8237,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     chartPlotW < 280,
                     dayCandles,
                     timeAxisHours,
-                    box.i > 0 ? barTime(source.plot[timeTickIndexes[box.i - 1]!] ?? candle) : undefined
+                    prevShownTickTime(box.i, candle)
                   )}
                 </Text>
               );
