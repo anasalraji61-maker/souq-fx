@@ -145,7 +145,7 @@ def test_worker_fresh_or_untimed_quote_is_still_used(monkeypatch, age):
 
 @pytest.mark.parametrize("lang, cond, words", [
     ("en", "above", "▲ at or above 1.1"), ("en", "below", "▼ at or below 1.1"),
-    ("ar", "above", "▲ عند أو فوق 1.1"), ("ar", "below", "▼ عند أو تحت 1.1"),
+    ("ar", "above", "▲ عند 1.1 أو فوقه"), ("ar", "below", "▼ عند 1.1 أو تحته"),
 ])
 def test_price_push_states_the_condition_not_a_crossing(lang, cond, words):
     """الشرط ≥/≤: تنبيه يُسلَّح والسعر وراء مستواه يُطلق فوراً — «rose above/تجاوز» كانت تروي حركة لم تحدث."""

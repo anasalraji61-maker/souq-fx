@@ -214,7 +214,8 @@ def _compose(ev: dict, lang: str) -> tuple[str, str]:
         # يُسلَّح والسعر 1.1050 يُطلق بالدورة التالية — كان النصّ «rose above/تجاوز» يروي حركة لم تحدث.
         if lang == "en":
             return "MATRIX · Price alert", f"{sym} {'▲ at or above' if up else '▼ at or below'} {p}"
-        return "MATRIX · تنبيه سعر", f"{sym} {'▲ عند أو فوق' if up else '▼ عند أو تحت'} {p}"
+        # «عند 1.1000 أو فوقه» لا «عند أو فوق 1.1000» (حرفا جرّ على اسم واحد تركيب مترجَم — launch126).
+        return "MATRIX · تنبيه سعر", (f"{sym} ▲ عند {p} أو فوقه" if up else f"{sym} ▼ عند {p} أو تحته")
     name = _IND_NAMES[lang].get(ev["alert_type"], str(ev["alert_type"]).upper())
     cond = _COND_WORDS[lang].get(ev["condition"], ev["condition"])
     val = f" {_fmt_price(ev['value'])}" if ev.get("value") is not None and ev["alert_type"] == "rsi" else ""
