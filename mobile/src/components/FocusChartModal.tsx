@@ -154,6 +154,38 @@ export function FocusChartModal({
     };
   }, [visible, sym, tf, compareSym]);
 
+  // الجلب أعلاه مرّة لكل فتح/تبديل: على 15m بعد ربع ساعة يقع التيك خارج آخر شمعة فيقف الشارت
+  // والرأس يطبع السعر الحيّ. تحديث صامت كل 90 ث كالرباعي والطرفية: شموع حقيقية جديدة تستبدل
+  // القديمة بلا «جاري التحميل»، وفشل الجلب أو رجوع بيانات تجريبية يُبقي المعروض.
+  useEffect(() => {
+    if (!visible) return;
+    let alive = true;
+    const id = setInterval(() => {
+      api
+        .chart(sym, tf)
+        .then((s) => {
+          if (!alive || normalizeProvenance(s.data_source).kind === 'demo') return;
+          setSeries(s);
+          setSeriesSym(sym);
+        })
+        .catch(() => {});
+      if (compareSym) {
+        api
+          .chart(compareSym, tf)
+          .then((c) => {
+            if (!alive || normalizeProvenance(c.data_source).kind === 'demo') return;
+            setCompareSeries(c);
+            setCompareFailed(false);
+          })
+          .catch(() => {});
+      }
+    }, 90_000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [visible, sym, tf, compareSym]);
+
   const [quote, setQuote] = useState<{ bid?: number | null; ask?: number | null } | null>(null);
   useEffect(() => {
     if (!visible) return;
@@ -395,29 +427,43 @@ export function FocusChartModal({
             <NewsRiskBanner symbol={sym} />
             {!phone ? <SymbolSnapshot symbol={sym} timeframe={tf} /> : null}
 
-            {loading || !series ? (
+            {/* كان `loading ? spinner : MatrixChart` يفكّ الشارت بكل تبديل رمز/فريم فيضيع نوع الشموع
+                والمؤشرات واللوغاريتمي. الآن يبقى مركَّباً، باهتاً تحت مؤشّر التحميل حتى تصل الشموع الجديدة. */}
+            {!series ? (
               <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
             ) : (
-              <MatrixChart
-                series={series}
-                compareSeries={compareSeries}
-                height={Math.max(360, height * (phone ? 0.64 : 0.62))}
-                interactive
-                persistDrawings
-                compactUi={phone}
-                accent={sym === 'DXY' ? colors.dxy : colors.accent}
-                livePrice={livePriceForChart(series, liveTick, {
-                  tickAsOf: liveTick?.source.as_of ?? null,
-                  timeframe: series.timeframe,
-                  nowSec,
-                })}
-                liveTickSource={liveTick?.source ?? null}
-                onCreateAlert={alertFromDrawing}
-                initialTool={initialTool}
-                initialLens={initialLens}
-                initialKind={initialKind}
-                initialIndicators={initialIndicators}
-              />
+              <View accessibilityState={{ busy: loading }}>
+                <View pointerEvents={loading ? 'none' : 'auto'} style={loading ? styles.chartLoading : undefined}>
+                  <MatrixChart
+                    series={series}
+                    compareSeries={compareSeries}
+                    height={Math.max(360, height * (phone ? 0.64 : 0.62))}
+                    interactive
+                    persistDrawings
+                    compactUi={phone}
+                    accent={sym === 'DXY' ? colors.dxy : colors.accent}
+                    // شموع الرمز السابق ما زالت ظاهرة أثناء التحميل: لا يُرسم تيك الرمز الجديد فوقها
+                    livePrice={
+                      seriesSym === sym
+                        ? livePriceForChart(series, liveTick, {
+                            tickAsOf: liveTick?.source.as_of ?? null,
+                            timeframe: series.timeframe,
+                            nowSec,
+                          })
+                        : null
+                    }
+                    liveTickSource={seriesSym === sym ? liveTick?.source ?? null : null}
+                    onCreateAlert={alertFromDrawing}
+                    initialTool={initialTool}
+                    initialLens={initialLens}
+                    initialKind={initialKind}
+                    initialIndicators={initialIndicators}
+                  />
+                </View>
+                {loading ? (
+                  <ActivityIndicator color={colors.accent} style={styles.chartSpinner} />
+                ) : null}
+              </View>
             )}
 
             {armedMsg ? (
@@ -437,6 +483,8 @@ export function FocusChartModal({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
+  chartLoading: { opacity: 0.35 },
+  chartSpinner: { position: 'absolute', top: 40, alignSelf: 'center' },
   top: {
     flexDirection: 'row',
     alignItems: 'center',
