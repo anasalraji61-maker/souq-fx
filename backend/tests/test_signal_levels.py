@@ -163,6 +163,13 @@ def test_normal_prices_keep_five_decimals():
     assert signal_hub.level_round(157.4234567, 157.4) == 157.42346
 
 
+@pytest.mark.parametrize("ref", [0.6512, 0.1, 0.9999])
+def test_prices_between_a_tenth_and_one_get_the_five_decimals_the_app_shows(ref):
+    """AUDUSD/NZDUSD/USDCHF/EURGBP: كانت 6 منازل (0.651235) بينما `price_decimals` = 5 — دقّة دون تسعيرة المزوّد."""
+    assert signal_hub.level_round(0.6512345, ref) == 0.65123
+    assert signal_hub.price_decimals(ref) == 5
+
+
 def test_no_levels_when_the_target_would_be_a_negative_price():
     """سعر 0.05 وATR 0.06 ⇒ هدف البيع 0.05 − 2.2×0.06 = −0.082: سعر مستحيل."""
     levels, basis = signal_hub._trade_levels(0.05, "sell", _candles(40, 0.06, base=0.05))

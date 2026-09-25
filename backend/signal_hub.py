@@ -84,7 +84,9 @@ def level_round(x: float, ref: float) -> float:
     """مستوى سعري بمنازل تكفي لسعر المرجع `ref`: 5 منازل كما كانت، وأكثر تحت 0.1 (6 أرقام معنوية).
     كان `round(x, 5)` ⇒ SHIB ‏0.0000123: دخول ووقف وهدف كلها 0.00001 (الوقف 19% تحت السعر الحقيقي)."""
     mag = math.floor(math.log10(abs(ref))) if ref and math.isfinite(ref) else 0
-    return round(x, max(5, 5 - mag))
+    # بين 0.1 و1 (AUDUSD، NZDUSD، USDCHF، EURGBP) 5 منازل كـ`price_decimals`: كانت 6 ⇒ «0.651235» بمنزلة
+    # دون أصغر تسعيرة للمزوّد (0.00001) — دقّة مختلَقة، ومستوى لا يطابق ما يعرضه التطبيق بـ`price_decimals: 5`
+    return round(x, 5 - mag if mag < -1 else 5)
 
 
 def list_social_sources() -> list[dict[str, Any]]:
