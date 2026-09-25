@@ -32,13 +32,36 @@ DEFAULT_SYMBOLS = list(market.SYMBOL_MAP.keys())
 # تُحسب على السلسلة الموحَّدة كاملة (تقارب EMA/RSI أفضل، ونفس قيم تنبيهات المؤشر والشارت).
 CHANGE_WINDOW = 80
 
+# عتبات الفلاتر بمكان واحد: حلقة المطابقة ووصف `/api/screener/filters` يقرآنها معاً — الوصف كان
+# نصّاً يدوياً «RSI oversold (<30)» والفحص `<=` (أي 30 تطابق)، ونصفه عربي ونصفه إنجليزي.
+RSI_OVERSOLD = 30.0
+RSI_OVERBOUGHT = 70.0
+# «زخم صاعد» = تغيّر موجب على آخر `CHANGE_WINDOW` شمعة و RSI دون هذا الحدّ (لم يتشبّع بعد)، والهابط عكسه.
+MOMENTUM_RSI_CAP = 65.0
+MOMENTUM_RSI_FLOOR = 35.0
+
+
+def filter_rules(fast: int = 9, slow: int = 21) -> list[dict[str, Any]]:
+    """قاعدة كل فلتر بصيغة آلية مشتقّة من الثوابت نفسها التي يطابق بها الفحص — بلا نصّ بشري:
+    التطبيق له نصوصه المترجمة (`locales.ts`)، والخادم لا يرسل لغةً واحدة لكل المستخدمين."""
+    rules: dict[str, dict[str, Any]] = {
+        "rsi_oversold": {"indicator": "rsi", "period": 14, "op": "<=", "value": RSI_OVERSOLD},
+        "rsi_overbought": {"indicator": "rsi", "period": 14, "op": ">=", "value": RSI_OVERBOUGHT},
+        "ma_cross_up": {"indicator": "sma_cross", "fast": fast, "slow": slow, "direction": "up"},
+        "ma_cross_down": {"indicator": "sma_cross", "fast": fast, "slow": slow, "direction": "down"},
+        "macd_cross_up": {"indicator": "macd_cross", "fast": 12, "slow": 26, "signal": 9, "direction": "up"},
+        "bullish": {"change_bars": CHANGE_WINDOW, "change_op": ">", "rsi_op": "<", "rsi_value": MOMENTUM_RSI_CAP},
+        "bearish": {"change_bars": CHANGE_WINDOW, "change_op": "<", "rsi_op": ">", "rsi_value": MOMENTUM_RSI_FLOOR},
+    }
+    return [{"id": fid, "rule": rules[fid]} for fid in FILTER_IDS]
+
 
 def run_scan(
     timeframe: str = "15m",
     filters: list[str] | None = None,
     symbols: list[str] | None = None,
-    rsi_low: float = 30,
-    rsi_high: float = 70,
+    rsi_low: float = RSI_OVERSOLD,
+    rsi_high: float = RSI_OVERBOUGHT,
     fast: int = 9,
     slow: int = 21,
 ) -> list[dict[str, Any]]:
@@ -51,8 +74,8 @@ def run_scan_detailed(
     timeframe: str = "15m",
     filters: list[str] | None = None,
     symbols: list[str] | None = None,
-    rsi_low: float = 30,
-    rsi_high: float = 70,
+    rsi_low: float = RSI_OVERSOLD,
+    rsi_high: float = RSI_OVERBOUGHT,
     fast: int = 9,
     slow: int = 21,
 ) -> dict[str, Any]:
@@ -101,9 +124,9 @@ def run_scan_detailed(
                 matched.append(f)
             elif f == "macd_cross_up" and snap.get("macd_cross_up"):
                 matched.append(f)
-            elif f == "bullish" and chg > 0 and rsi_v < 65:
+            elif f == "bullish" and chg > 0 and rsi_v < MOMENTUM_RSI_CAP:
                 matched.append(f)
-            elif f == "bearish" and chg < 0 and rsi_v > 35:
+            elif f == "bearish" and chg < 0 and rsi_v > MOMENTUM_RSI_FLOOR:
                 matched.append(f)
 
         if matched:

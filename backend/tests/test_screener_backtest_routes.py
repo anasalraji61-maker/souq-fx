@@ -244,3 +244,24 @@ def test_backtest_says_whether_costs_are_included(client, monkeypatch, symbol, i
     assert stats, "fixture candles must produce trades"
     assert stats["costs_included"] is included
     assert (stats["spread_pips"] is not None) is included
+
+
+def test_filters_route_publishes_the_rule_the_scan_applies(client, monkeypatch):
+    """QA54 (d): الوصف كان «(<30)» والفحص `<=` — RSI = 30 بالضبط يطابق. الآن الوصف آلي من الثوابت
+    نفسها، ويُتحقَّق هنا بتشغيل الفحص على الحدّ نفسه."""
+    filters = {f["id"]: f for f in client.get("/api/screener/filters").json()["filters"]}
+    assert all("label" not in f for f in filters.values()), "لا نصّ بشري بلغة واحدة من الخادم"
+    over = filters["rsi_oversold"]["rule"]
+    assert over == {"indicator": "rsi", "period": 14, "op": "<=", "value": 30.0}
+    assert filters["rsi_overbought"]["rule"]["op"] == ">="
+    assert filters["ma_cross_up"]["rule"]["indicator"] == "sma_cross"  # snapshot يستعمل sma لا ema
+    assert filters["bullish"]["rule"]["change_bars"] == screener_engine.CHANGE_WINDOW
+
+    candles = [{"time": i, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0} for i in range(100)]
+    monkeypatch.setattr(screener_engine.market, "fetch_time_series", lambda *a, **k: candles)
+    monkeypatch.setattr(
+        screener_engine.ind, "snapshot",
+        lambda raw, **k: {"rsi": over["value"], "last": 1.0},
+    )
+    scan = screener_engine.run_scan_detailed("15m", ["rsi_oversold"], ["EURUSD"])
+    assert [h["filters_matched"] for h in scan["results"]] == [["rsi_oversold"]], scan

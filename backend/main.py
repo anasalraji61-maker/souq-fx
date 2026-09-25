@@ -1151,17 +1151,10 @@ def screener_run(body: ScreenerRun):
 
 @app.get("/api/screener/filters")
 def screener_filters():
-    return {
-        "filters": [
-            {"id": "rsi_oversold", "label": "RSI oversold (<30)"},
-            {"id": "rsi_overbought", "label": "RSI overbought (>70)"},
-            {"id": "ma_cross_up", "label": "تقاطع MA صعودي"},
-            {"id": "ma_cross_down", "label": "تقاطع MA هبوطي"},
-            {"id": "macd_cross_up", "label": "MACD cross up"},
-            {"id": "bullish", "label": "زخم صاعد"},
-            {"id": "bearish", "label": "زخم هابط"},
-        ]
-    }
+    # كانت تسميات يدوية «RSI oversold (<30)» والفحص `<=` (30 تطابق)، نصفها عربي ونصفها إنجليزي.
+    # الآن القاعدة الآلية من ثوابت الفحص نفسها (بفترتي `ScreenerRun` الافتراضيتين) — لا نصّ يَنحرف.
+    defaults = ScreenerRun()
+    return {"filters": screener_engine.filter_rules(fast=defaults.fast, slow=defaults.slow)}
 
 
 @app.post("/api/backtest")
