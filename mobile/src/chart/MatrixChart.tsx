@@ -661,7 +661,8 @@ function formatAxisTime(
   compact = false,
   dayCandles = false,
   withHours = spanSeconds <= 2 * 86400,
-  prevUnixTime?: number
+  prevUnixTime?: number,
+  stepSec = 0
 ): string {
   const milliseconds = unixTime > 1e12 ? unixTime : unixTime * 1000;
   const date = new Date(milliseconds);
@@ -684,7 +685,10 @@ function formatAxisTime(
   if (withHours && !dayCandles) {
     // علامة حدّ اليوم (00:00 بتوقيت العرض) تُطبع بتاريخها وحده كما بـTradingView: «00:00 ↵ 25 سبتمبر»
     // يزاحم علامات الساعة بسطر زائد، والتاريخ وحده يفصل الأيام بنظرة. شمعة الأحد 22:00 تبقى بساعتها.
-    if (p.hours === 0 && p.minutes === 0) return dayMonth;
+    // وأوّل شمعة باليوم ولو لم تبدأ عند 00:00: شموع 4H تُفتح 00/04/08… UTC ⇒ 03:00 و07:00… بتوقيت بغداد/الرياض
+    // (UTC+3)، فكانت علامة كل يوم «03:00 ↵ 22 سبتمبر» لا التاريخ. شمعة تبدأ قبل مرور خطوة من منتصف الليل هي
+    // الأولى بيومها حتماً؛ شمعة الأحد 22:00 ليست كذلك فتبقى بساعتها.
+    if (p.hours * 3600 + p.minutes * 60 < Math.max(60, stepSec)) return dayMonth;
     return `${hh}:${mm}\n${newYear && !compact ? `${p.day} ${mon} ${p.year}` : dayMonth}`;
   }
   if (spanSeconds <= 120 * 86400) {
@@ -9377,7 +9381,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     chartPlotW < 280,
                     dayCandles,
                     timeAxisHours,
-                    prevShownTickTime(box.i, candle)
+                    prevShownTickTime(box.i, candle),
+                    timeframeStepSec(series.timeframe)
                   )}
                 </Text>
               );
