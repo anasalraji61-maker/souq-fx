@@ -18,16 +18,24 @@ type Props = {
   height?: number;
   /** الإطار يعرض زرّ الرمز ▾ — نصّ `chartNotOfferedBody` يدلّ عليه، فبلا زرّ يُعرض العنوان وحده. */
   showSwitchHint?: boolean;
+  /**
+   * launch120: `data_source` للسلسلة — `unavailable_reason: provider_unavailable` (429/انقطاع، backend-r22) ⇒ «تعذّر الجلب الآن»
+   * لا «غير متاح من المزوّد» (كاذب لـEURUSD). غائب ⇒ النصّ القديم (DXY، `not_offered_by_provider`).
+   */
+  dataSource?: unknown;
 };
 
-export function ProviderUnavailableNotice({ symbol, height, showSwitchHint }: Props) {
+export function ProviderUnavailableNotice({ symbol, height, showSwitchHint, dataSource }: Props) {
   const { t } = useI18n();
-  const title = t.chartNotOfferedTitle.replace('{symbol}', symbol);
-  const label = showSwitchHint ? `${title}. ${t.chartNotOfferedBody}` : title;
+  const down = providerUnavailableReason(dataSource) === 'provider_unavailable';
+  const title = (down ? t.chartProviderDownTitle : t.chartNotOfferedTitle).replace('{symbol}', symbol);
+  // جسم «تعذّر الجلب» لا يذكر زرّ الرمز ▾ ⇒ يُعرض دائماً؛ جسم «غير متاح» يدلّ على الزرّ فيحتاجه.
+  const body = down ? t.chartProviderDownBody : showSwitchHint ? t.chartNotOfferedBody : null;
+  const label = body ? `${title}. ${body}` : title;
   return (
     <View style={[styles.box, height != null && { height }]} accessible accessibilityRole="text" accessibilityLabel={label}>
       <Text style={styles.title}>{title}</Text>
-      {showSwitchHint ? <Text style={styles.body}>{t.chartNotOfferedBody}</Text> : null}
+      {body ? <Text style={styles.body}>{body}</Text> : null}
     </View>
   );
 }

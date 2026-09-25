@@ -513,6 +513,7 @@ export function ChartFrame({
             symbol={series.symbol}
             height={fill ? undefined : chartH}
             showSwitchHint={!!onSymbolChange}
+            dataSource={series.data_source}
           />
         ) : (
           <MatrixChart

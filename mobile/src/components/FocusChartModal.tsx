@@ -449,7 +449,11 @@ export function FocusChartModal({
             {!series ? (
               <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
             ) : noReal ? (
-              <ProviderUnavailableNotice symbol={sym} height={Math.max(360, height * (phone ? 0.64 : 0.62))} />
+              <ProviderUnavailableNotice
+                symbol={sym}
+                height={Math.max(360, height * (phone ? 0.64 : 0.62))}
+                dataSource={headSeries?.data_source}
+              />
             ) : (
               <View accessibilityState={{ busy: loading }}>
                 <View pointerEvents={loading ? 'none' : 'auto'} style={loading ? styles.chartLoading : undefined}>
