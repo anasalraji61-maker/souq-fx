@@ -21,6 +21,7 @@ export function monoTextWidth(text: string, fontSize: number): number {
 // نسب em لخطّ النظام (Roboto / SF) بوزن 500–600، مقرَّبة للأعلى.
 const EM_SPACE = 0.28;
 const EM_NARROW = 0.3; // . , : ; ' | ! i l I ( ) [ ]
+const EM_HYPHEN = 0.4; // «-» علامة السالب بقيم اللوحات (Roboto/SF ‏0.3–0.36em)
 const EM_DIGIT = 0.58; // الأرقام `tabular-nums` كلّها بعرض واحد، و«1» منها
 const EM_UPPER = 0.66;
 const EM_WIDE = 0.86; // M W m w
@@ -33,6 +34,7 @@ const WIDE = new Set([...'MWmw']);
 /** عرض محرف واحد بخطّ تناسبي، بـem. */
 function propEm(ch: string): number {
   if (ch === ' ') return EM_SPACE;
+  if (ch === '-') return EM_HYPHEN;
   if (NARROW.has(ch)) return EM_NARROW;
   if (ch >= '0' && ch <= '9') return EM_DIGIT;
   if (WIDE.has(ch)) return EM_WIDE;

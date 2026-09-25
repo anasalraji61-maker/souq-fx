@@ -161,7 +161,7 @@ import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
 import { zigzagWindowSegments } from './zigzagLegs';
 import { nextZigzagDeviation, ZIGZAG_DEVIATION_PCT, zigzagLegendText } from './zigzagLegend';
 import { loadZigzagDeviation, saveZigzagDeviation, subscribeZigzagDeviation } from './zigzagPrefs';
-import { paneInlineFits } from './paneHeadFit';
+import { paneInlineFits, paneValueTooWide } from './paneHeadFit';
 import { noteBox, NOTE_FONT } from './noteLabel';
 import { isNotOfferedSymbol } from '../providerSymbols';
 import { playSoftClick } from '../audio/playSoftClick';
@@ -882,7 +882,7 @@ function PaneGuideLines({ paneId, innerH }: { paneId: string; innerH: number }) 
           {g.label ? (
             // الرقم داخل View لا مباشرةً: `pointerEvents` خاصية View، و`Text` عارٍ قد يبتلع
             // بداية سحب الشارت عند أقصى اليسار.
-            <View pointerEvents="none" style={[styles.paneGuideLabelBox, { top: Math.max(0, g.top - 5) }]}>
+            <View pointerEvents="none" style={[styles.paneGuideLabelBox, { top: Math.max(0, g.top - 6) }]}>
               <Text style={styles.paneGuideLabel}>{g.label}</Text>
             </View>
           ) : null}
@@ -972,7 +972,7 @@ const PANE_SIGNAL_MIN_H = 46;
 
 function PaneSignalValue({ text, color }: { text: string; color: string }) {
   return (
-    <Text style={[styles.paneHeadValue, text.length >= 7 && styles.paneHeadValueLong, { color }]}>
+    <Text style={[styles.paneHeadValue, paneValueTooWide(text) && styles.paneHeadValueLong, { color }]}>
       {text}
     </Text>
   );
@@ -1073,7 +1073,7 @@ function PaneValueHead({
         <Text
           style={[
             styles.paneHeadValue,
-            txt.length >= 7 && styles.paneHeadValueLong,
+            paneValueTooWide(txt) && styles.paneHeadValueLong,
             toneColor ? { color: toneColor } : null,
           ]}
         >
@@ -1166,7 +1166,7 @@ function PaneSpreadHead({
         <Text
           style={[
             styles.paneHeadValue,
-            txt.length >= 7 && styles.paneHeadValueLong,
+            paneValueTooWide(txt) && styles.paneHeadValueLong,
             trend === 'up' && { color: colors.bull },
             trend === 'down' && { color: colors.bear },
             tone === 'sign' && (paneShownValue(txt) ?? 0) > 0 && { color: colors.bull },
@@ -1316,7 +1316,7 @@ function TrendLineSeries({
         <React.Fragment key={g.v}>
           <View pointerEvents="none" style={[styles.paneGuideLine, { top: g.top }]} />
           {g.label ? (
-            <View pointerEvents="none" style={[styles.paneGuideLabelBox, { top: Math.max(0, g.top - 5) }]}>
+            <View pointerEvents="none" style={[styles.paneGuideLabelBox, { top: Math.max(0, g.top - 6) }]}>
               <Text style={styles.paneGuideLabel}>{g.label}</Text>
             </View>
           ) : null}
@@ -1390,7 +1390,7 @@ function ZeroLineSeries({
               {showLabels ? (
                 <View
                   pointerEvents="none"
-                  style={[styles.paneGuideLabelBox, { top: Math.max(0, g.y(lv) - 5) }]}
+                  style={[styles.paneGuideLabelBox, { top: Math.max(0, g.y(lv) - 6) }]}
                 >
                   <Text style={styles.paneGuideLabel}>{String(lv)}</Text>
                 </View>
@@ -11808,7 +11808,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       {gd.label ? (
                         <View
                           pointerEvents="none"
-                          style={[styles.paneGuideLabelBox, { top: Math.max(0, gd.top - 5) }]}
+                          style={[styles.paneGuideLabelBox, { top: Math.max(0, gd.top - 6) }]}
                         >
                           <Text style={styles.paneGuideLabel}>{gd.label}</Text>
                         </View>
@@ -13640,14 +13640,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
     overflow: 'hidden',
   },
-  paneLabel: {
-    width: 36,
-    color: colors.textDim,
-    fontSize: 9,
-    fontWeight: '500',
-    textAlign: 'center',
-    paddingTop: 6,
-  },
   // محاذاة العمود: **flex-start وليس flex-end**. كل اللوحات الـ108 تضع شريطها بـ`marginTop`
   // محسوباً من قيمة المؤشر، ومع `alignItems: 'flex-end'` يُلغي Yoga هذا الهامش تماماً:
   // الموضع = ارتفاع الحاوية − ارتفاع الشريط، فـ`marginTop` يدخل ويخرج من المعادلة
@@ -13658,8 +13650,6 @@ const styles = StyleSheet.create({
   // مع flex-start يصير الموضع = marginTop كما تقصده كل المعادلات (مداها 0..paneH−16).
   paneInner: { flex: 1, flexDirection: 'row', alignItems: 'flex-start' },
   // خطّ الصفر داخل لوحة ذات قيم موجبة/سالبة (MACD وأمثاله): مرجع التقاطع.
-  // رأس اللوحة: الاسم فوق قيمة الشمعة الأخيرة، بنفس عرض paneLabel (36px) فلا يتغيّر
-  // تخطيط أي لوحة أخرى ما زالت تستعمل paneLabel وحده.
   // عرض الرأس = عمود محور السعر (68 − حدّا اللوحة 2px): فصفّ الأعمدة بعرض لوح الشموع تماماً ويبدأ من
   // حافّته، فعمود اللوحة `i` تحت الشمعة `i`. كان 36px وحشوة 2px ⇒ الأعمدة أعرض بـ26px فانزاحت الأخيرة ~29px
   // يميناً (تحت المحور) على هاتف 360px: شمعة التقاطع وعمود RSI/MACD تحتها شمعتان مختلفتان. معتم وفوق
@@ -13686,10 +13676,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 1,
   },
-  // رقم طويل (مقياس دقيق كـMACD على زوج عملات): 7–9 محارف بـ10px ≈ 6px للمحرف ⇒ ≤ 54 من 62.
+  // رقم أعرض من الرأس بـ11px (`paneValueTooWide`، ≥10 محارف) — استثناء نادر بعمود ثابت العرض.
   paneHeadValueLong: { fontSize: 10 },
-  paneHeadRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 1 },
-  paneHeadInline: { ...numeric, color: colors.textMuted, fontSize: 9, lineHeight: 12, fontWeight: '600', marginHorizontal: 2.5 },
+  // الزوج بسطر واحد 11px (سطر 13) ⇒ حشوة 5 + اسم 13 + 1 + 13 = 32 ≤ `MIN_PANE_H` 34.
+  paneHeadRow: { flexDirection: 'row', justifyContent: 'center', gap: 4, marginTop: 1 },
+  paneHeadInline: { ...numeric, color: colors.textMuted, fontSize: 11, lineHeight: 13, fontWeight: '600' },
   // خطّ عتبة داخل لوحة محصورة المدى. الرقم عند أقصى اليسار — أبعد موضع عن اسم اللوحة
   // (اللوحة row-reverse فاسمها يميناً) وأقلّها حجباً للشموع الأخيرة التي يقرؤها المتداول.
   paneGuideLine: {
@@ -13701,8 +13692,8 @@ const styles = StyleSheet.create({
   },
   paneGuideLineMid: { opacity: 0.45 },
   paneGuideLabelBox: { position: 'absolute', left: 3 },
-  // 10px بسطر 10 ⇒ الإزاحة `top − 5` تبقى تُوسّط الرقم على خطّه.
-  paneGuideLabel: { ...numeric, color: colors.textDim, fontSize: 10, lineHeight: 10, fontWeight: '600' },
+  // 11px بسطر 12 ⇒ الإزاحة `top − 6` تُوسّط الرقم على خطّه.
+  paneGuideLabel: { ...numeric, color: colors.textDim, fontSize: 11, lineHeight: 12, fontWeight: '600' },
   // مفتاح ألوان طبقات السعر: صفّ شارات أعلى يسار لوحة السعر، فوق الشموع بلا اعتراضها.
   priceLegend: {
     position: 'absolute',
