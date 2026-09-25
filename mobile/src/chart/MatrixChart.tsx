@@ -5697,7 +5697,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               ? (() => {
                   // إغلاق رمز المقارنة عند شمعة التقاطع (كان `last` الحاليّ أيّاً كانت الشمعة)
                   const c = crossIndex != null ? compareOv?.closes[crossIndex] : null;
-                  return ` · ${compareSeries.symbol} ${c != null ? formatPrice(c, compareSeries.symbol) : '—'}`;
+                  return ` · ${compareSeries.symbol} ${c != null ? formatPrice(c, compareSeries.symbol, compareSeries.last) : '—'}`;
                 })()
               : ''}
           </Text>
