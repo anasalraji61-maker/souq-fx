@@ -2469,13 +2469,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         layer,
         tag: (shadowTags[layer] || defaultTags[layer] || `${layer + 1}`).toLowerCase(),
         timeframe: sec.timeframe,
+        // طبقة لرمز آخر لا تُرسم: بعد تبديل الرمز يبقى جلب الظلّ السابق (EURUSD) حتى يصل الجديد، فكانت
+        // شموعه تُطابَق بالزمن وتُرسم تحت شارت USDJPY ثوانيَ على شبكة بطيئة.
         candles:
-          (sec.candles?.length ?? 0) > 0
+          (sec.candles?.length ?? 0) > 0 && sec.symbol?.toUpperCase() === series.symbol?.toUpperCase()
             ? mapShadowCandles(source.plot, sec.candles, layer)
             : [],
       }))
       .filter((x) => x.candles.length > 0);
-  }, [shadowSeries, shadowTags, source.plot]);
+  }, [shadowSeries, shadowTags, source.plot, series.symbol]);
 
   // المؤشرات على التاريخ حتى آخر شمعة معروضة ثم تُقصّ للنافذة (`indicatorWindow.ts`): كانت على
   // المعروضة وحدها فيفرغ يسارها، ولا تظهر سحابة Ichimoku، وتتغيّر قيمة الشمعة نفسها بالسحب.
