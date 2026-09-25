@@ -428,6 +428,16 @@ const ALWAYS_OVER_ONE_PAIRS = new Set([
 ]);
 /** والعكس: لم تبلغ 1 قط (EURGBP أعلاه 0.98 عام 2008، NZDUSD 0.88) ⇒ «1.17» لـEURGBP هو GBP ⇒ EUR مقلوباً. */
 const ALWAYS_UNDER_ONE_PAIRS = new Set(['EURGBP', 'NZDUSD']);
+/**
+ * زوجا تحويل حسابَي AUD وCAD عَبَرا 1 تاريخياً (AUDUSD فوق 1 و USDCAD تحته بين 2007 و2013) فلا يدخلان المجموعتين أعلاه، لكن لكلٍّ
+ * حدّاً لم يُبلغ قط: AUDUSD أعلاه ~1.11 (2011)، USDCAD أدناه ~0.906 (2007). «1.515» لـAUDUSD (أي USD ⇒ AUD) أو «0.735» لـUSDCAD
+ * كانا يُقبلان ⇒ بحساب AUD على EURUSD وقف 20: **0.75 لوت بدل 0.33** (خسارة 227 AUD بمخاطرة 100)، وبحساب CAD 0.68 بدل 0.36.
+ * بين الحدّ و1 (AUDUSD 1.05، USDCAD 0.95) يبقى مقبولاً: سعرٌ حقيقي ممكن.
+ */
+const INVERTED_BEYOND: Record<string, { over?: number; under?: number }> = {
+  AUDUSD: { over: 1.2 },
+  USDCAD: { under: 0.85 },
+};
 
 /**
  * سعر تحويل **مكتوب باليد** مقلوب: «0.0067» لـUSDJPY بدل «149.5» (المتداول قرأ JPY→USD بمنصّةٍ أو محوّل عملات).
@@ -440,6 +450,8 @@ const ALWAYS_UNDER_ONE_PAIRS = new Set(['EURGBP', 'NZDUSD']);
 export function manualConvLooksInverted(pair: string | null | undefined, rate: number | null | undefined): number | null {
   if (typeof pair !== 'string' || pair.length !== 6) return null;
   if (typeof rate !== 'number' || !Number.isFinite(rate) || rate <= 0) return null;
+  const beyond = INVERTED_BEYOND[pair];
+  if (beyond) return (beyond.over != null && rate > beyond.over) || (beyond.under != null && rate < beyond.under) ? 1 / rate : null;
   if (rate > 1) return ALWAYS_UNDER_ONE_PAIRS.has(pair) ? 1 / rate : null;
   if (rate === 1) return null;
   if (ALWAYS_OVER_ONE_PAIRS.has(pair)) return 1 / rate;

@@ -2999,6 +2999,29 @@ console.log('positionSize slPipsCarryOver selftest OK');
   // فوق 1 لزوجٍ غير مصنّف ⇒ لا تخمين (EURUSD 1.08، AUDNZD 1.09)
   for (const [pair, r] of [['EURUSD', 1.08], ['AUDNZD', 1.09], ['USDJPY', 149.5]] as const) assert.equal(manualConvLooksInverted(pair, r), null, pair);
   {
+    // AUDUSD وUSDCAD عَبَرا 1 تاريخياً لكن لكلٍّ حدّ لم يُبلغ: AUDUSD «1.515» وUSDCAD «0.735» مقلوبان يقيناً
+    assert.ok(Math.abs(manualConvLooksInverted('AUDUSD', 1 / 0.66)! - 0.66) < 1e-12);
+    assert.ok(Math.abs(manualConvLooksInverted('USDCAD', 1 / 1.36)! - 1.36) < 1e-12);
+    // أسعار حقيقية ممكنة (بما فيها AUDUSD فوق 1 وUSDCAD تحته كـ2011) ⇒ لا تخمين
+    for (const [pair, r] of [['AUDUSD', 0.66], ['AUDUSD', 1.1], ['USDCAD', 1.36], ['USDCAD', 0.95]] as const)
+      assert.equal(manualConvLooksInverted(pair, r), null, `${pair} ${r}`);
+    // الحالة كاملة: حساب AUD على EURUSD، 10,000 × 1%، وقف 20 ⇒ بالسعر الصحيح 0.33 لوت لا 0.75
+    const eu = instrumentSpec('EURUSD')!;
+    const conv = conversionPair(eu.quote, 'AUD')!;
+    assert.equal(conv.symbol, 'AUDUSD');
+    const lotsAt = (rate: number) =>
+      positionSize({ balance: 10_000, riskPct: 1, slPips: 20, pipValuePerLot: pipValuePerLot(eu, quoteToAccountRate(conv, rate)!), contractSize: eu.contractSize })!.lots;
+    assert.equal(lotsAt(1 / 0.66), 0.75); // ما كان يُحسب بالمقلوب
+    assert.equal(lotsAt(manualConvLooksInverted('AUDUSD', 1 / 0.66)!), 0.33);
+    // حساب CAD على EURUSD: USDCAD «0.735» ⇒ 0.68، والصحيح 1.36 ⇒ 0.36
+    const convCad = conversionPair(eu.quote, 'CAD')!;
+    assert.equal(convCad.symbol, 'USDCAD');
+    const cadLots = (rate: number) =>
+      positionSize({ balance: 10_000, riskPct: 1, slPips: 20, pipValuePerLot: pipValuePerLot(eu, quoteToAccountRate(convCad, rate)!), contractSize: eu.contractSize })!.lots;
+    assert.equal(cadLots(manualConvLooksInverted('USDCAD', 1 / 1.36)!), 0.36);
+    console.log('positionSize AUDUSD/USDCAD inverted manual rate selftest OK');
+  }
+  {
     // الحالة كاملة: EURGBP بحساب دولار، 10,000 × 1%، وقف 20 pip ⇒ المقلوب يُرفض ويُقترح 1.27
     const eg = instrumentSpec('EURGBP')!;
     const cv = conversionPair(eg.quote, 'USD')!;
