@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { colors, radii, spacing, buttons } from '../theme';
+import { colors, radii, spacing, buttons, numeric } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { TreeDiagramSketch } from './TreeDiagramSketch';
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
   sideTag: { fontSize: 11, fontWeight: '500' },
   leftTag: { color: colors.dxy },
   rightTag: { color: colors.treeRightTint },
-  sideCount: { color: colors.textDim, fontSize: 11 },
+  sideCount: { ...numeric, color: colors.textDim, fontSize: 11 },
   sideGap: {
     width: 16,
     alignItems: 'center',
