@@ -176,7 +176,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  sym: { color: colors.accent, fontWeight: '500' },
+  /** DESIGN-PRO §1: نصّ أساسي لا تأكيد — ثمانية رموز بالتأكيد في منطقة واحدة تكسر ميزانيته. */
+  sym: { color: colors.text, fontWeight: '500' },
   /** غير قابل للضغط: لا خلفية مرتفعة ولا تأكيد ولا `warn` — نصّ هادئ فقط (launch142). */
   rowAmbiguous: {
     paddingVertical: spacing.sm,
