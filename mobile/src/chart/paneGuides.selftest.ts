@@ -92,8 +92,9 @@ const INNER = 60; // لوحة مريحة
   const chop = placeGuides('chop', 32).filter((x) => x.label != null);
   assert.equal(chop.length, 1); // 61.8 و38.2 على بعد ~7.6px ⇒ رقم واحد
   const rvix = placeGuides('rvix', 32);
-  assert.deepEqual(rvix.map((x) => [x.v, x.label]), [[50, '50']]);
-  assert.deepEqual(placeGuides('rvix', GUIDES_MID_MIN_INNER_H - 1), []);
+  // 80/20 كـTradingView مرقّمان، و50 خطّ بلا رقم (أقرب من 10px لكليهما)
+  assert.deepEqual(rvix.map((x) => [x.v, x.label]), [[80, '80'], [50, null], [20, '20']]);
+  assert.deepEqual(placeGuides('rvix', GUIDES_MID_MIN_INNER_H - 1).map((x) => x.v), [80, 20]);
 }
 
 // لوحة بلا عتبات معروفة (مقياس ديناميكي) لا تُرسم لها خطوط مخترَعة

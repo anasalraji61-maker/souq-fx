@@ -42,8 +42,19 @@ export const GUIDES_LABEL_MIN_INNER_H = 26;
 
 /** العتبات القياسية للوحات التي يستعملها المتداول الفردي فعلاً. */
 export const PANE_GUIDES: Readonly<Record<string, PaneGuideSpec>> = {
-  /** RVI (Dorsey) تقلّب: فوق 50 التقلّب صاعد، تحته هابط — خطّه يغيّر لونه عند 50. */
-  rvix: { min: 0, max: 100, levels: [{ v: 50, kind: 'mid' }] },
+  /**
+   * RVI (Dorsey) تقلّب: فوق 50 التقلّب صاعد، تحته هابط — خطّه يغيّر لونه عند 50. ‎80/20‎ نطاقا
+   * TradingView الافتراضيّان: قراءة فوق 80 (أو تحت 20) هي ما يُفلتر به الدخول، وكانت اللوحة بخطّ 50 وحده.
+   */
+  rvix: {
+    min: 0,
+    max: 100,
+    levels: [
+      { v: 80, kind: 'extreme' },
+      { v: 50, kind: 'mid' },
+      { v: 20, kind: 'extreme' },
+    ],
+  },
   rsi: {
     min: 0,
     max: 100,
