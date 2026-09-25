@@ -900,3 +900,12 @@ chart-r60 (ui) ← `57d2053` (`TimeframeBar.tsx:31` `scrollTo`). chart-r60 (laun
 **المراجعة (d — أرقام متناقضة):** `TICK_STALE_MS` 20 ث مشترك بالخطّافين؛ إغلاق 17:00 نيويورك تطبيق (`marketHours.ts`) = خادم (`twelve_data.bar_end`)؛ pip السبريد بالخادم (`backtest.py:37-43`) = `positionSize.ts:36-37`.
 **جديد QA79 → backend (منخفض):** `backtest.closed_candles` (`backtest.py:56`) بقي على `time + step > now` بعد أن نقل `16d352a` الإشارات إلى `bar_end` ⇒ بالعطلة تُسقط شمعة W المكتملة من الاختبار الخلفي.
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
+
+## 2026-09-25 — الدورة 80
+**البناء:** أخضر 0 (على 97eb1c4) — لا إصلاح لازم. **Selftests:** 102/102 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** QA79 ← backend `fa0cf42` (`backtest.py:57-68` `bar_end(symbol, …) > now`، `main.py` يمرّر الرمز). سجلات chart 62 / tools 93 / ui 43 / launch 139 / backend 44:
+بلا طلب تنسيق جديد (tools 93: تحذير سبريد بمنزلتين يحتاج مفتاحاً — مرشّح لم يُطلب). **لا صفّ مفتوح على وكيل؛ الباقي قرارات أنس.**
+**المراجعة (e — ما يُحرج أمام متداول):** Pivot/Fib/Camarilla/Woodie/DeMark/CPR من الجلسة السابقة (`pivotBase.ts`، `MatrixChart.tsx:2165-2173` `period=1`) بصيغ قياسية؛
+`FIB_EXTENSIONS` −0.272/−0.618 (127.2%/161.8%)؛ `positionSize` يقرّب اللوت للأسفل (`positionSize.ts:852`). **لا بند.**
+STATUS: بنود جهاز جديدة (خروج «25» بالدفتر، تقويم قديم خطوة 633).
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
