@@ -73,6 +73,7 @@ import {
   openCurrencyExposure,
   stackedCurrencyExposure,
   levelLooksLikePips,
+  levelLooksLikePipsText,
 } from './tradePlan';
 import { riskInQuoteCcy as cashRisk } from './positionSize';
 import { instrumentSpec, pipValuePerLot, planJournalNote, pnlInQuoteCcy, positionSize, slPipsFromPrices } from './positionSize';
@@ -2661,3 +2662,19 @@ console.log('tradePlan levelLooksLikePips selftest OK');
   assert.equal(ok.lots, 0.4);
 }
 console.log('tradePlan calculator stop-price pips selftest OK');
+
+// launch88: نصّ «نقاطٌ بخانة سعر» بجملة كاملة — {price} مرّتان، القيم حرفية ولو فيها «$»
+{
+  const en = '⚠ {field} “{value}” looks like pips, not a price: {pips} pips is {price}. Tap to use {price}';
+  assert.equal(
+    levelLooksLikePipsText(en, 'Take profit', ' 50 ', 50, '1.0900'),
+    '⚠ Take profit “50” looks like pips, not a price: 50 pips is 1.0900. Tap to use 1.0900'
+  );
+  assert.equal(levelLooksLikePipsText('{field}|{value}|{price}', 'SL', '$$25', 25, '1.0825'), 'SL|$$25|1.0825');
+  // القيم لا تُعاد قراءتها قالباً: خانةٌ فيها «{price}» تبقى كما هي
+  assert.equal(levelLooksLikePipsText('{value} → {price}', 'TP', '{price}', 1, '2'), '{price} → 2');
+  // الرقم نفسه الذي يكتبه الاقتراح: 50 pip فوق 1.0850 ⇒ 1.09
+  const hit = levelLooksLikePips({ symbol: 'EURUSD', side: 'buy', entry: 1.085, level: 50, kind: 'tp' })!;
+  assert.match(levelLooksLikePipsText(en, 'TP', '50', hit.pips, hit.price.toFixed(4)), /50 pips is 1\.0900\. Tap to use 1\.0900$/);
+}
+console.log('tradePlan levelLooksLikePipsText selftest OK');

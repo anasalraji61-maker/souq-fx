@@ -74,6 +74,7 @@ import {
 import { misplacedArabicThousandsSign, parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
+import { playSoftClick } from '../audio/playSoftClick';
 import {
   analyzePlan,
   formatPips,
@@ -86,6 +87,7 @@ import {
   targetAtRR,
   journalSymbol,
   levelLooksLikePips,
+  levelLooksLikePipsText,
   type TradeSide,
   QUICK_SYMBOLS,
 } from '../tradePlan';
@@ -486,10 +488,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           .replace('{whole}', slAmbig.whole)
           .replace('{small}', slAmbig.small)
       : slPipsLooksLikePrice(slPips) && onlySlBad
-      ? // «1.0820» بخانة النقاط سعرٌ لا مسافة (كانت 1.08 pip ⇒ لوت أكبر بعشرين مرّة) — تُسمّى خانة سعر الوقف التي يقصدها
-        `${t.riskCalcBadFieldValue
-          .replace('{field}', () => shortLabel(t.riskCalcSlPips))
-          .replace('{value}', () => slPips.trim())} → ${t.riskCalcStop}?`
+      ? // «1.0820» بخانة النقاط سعرٌ لا مسافة (كانت 1.08 pip ⇒ لوت أكبر بعشرين مرّة) — تُسمّى خانة سعر الوقف التي يقصدها (launch88)
+        t.riskCalcSlLooksLikePrice.replace('{value}', () => slPips.trim())
       : slPoints && onlySlBad
       ? t.riskCalcSlPointsHint.replace('{value}', () => slPoints.value).split('{pips}').join(slPoints.pips)
       : onlyRiskOtherCcy
@@ -947,15 +947,15 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const pipsInPx = ((): { msg: string; apply: () => void } | null => {
     if (!spec) return null;
     const e = priceNum(entryPx);
-    const fieldText = (label: string, v: string) =>
-      t.riskCalcBadFieldValue.replace('{field}', () => shortLabel(label)).replace('{value}', () => v.trim());
     const stopAt = (side: TradeSide) =>
       levelLooksLikePips({ symbol: spec.symbol, side, entry: e, level: priceNum(stopPx), kind: 'sl' });
     const asStop = stopAt('buy') ?? stopAt('sell');
     if (asStop) {
       return {
-        msg: `${fieldText(t.riskCalcStop, stopPx)} → ${shortLabel(t.riskCalcSlPips)} ${asStop.pips}?`,
+        // نصّ launch88: يقول ما الخطأ وأن السطر يُلمس — بدل «سعر الوقف «25» → وقف الخسارة 25?»
+        msg: t.riskCalcStopPxLooksLikePips.replace('{value}', () => stopPx.trim()),
         apply: () => {
+          playSoftClick();
           setStopPx('');
           onSlPipsChange(String(asStop.pips));
         },
@@ -965,7 +965,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     const asTarget = levelLooksLikePips({ symbol: spec.symbol, side: planSide, entry: e, level: priceNum(targetPx), kind: 'tp' });
     if (!asTarget) return null;
     const text = formatPrice(asTarget.price, spec.symbol);
-    return { msg: `${fieldText(t.riskCalcTarget, targetPx)} → ${asTarget.pips} pip = ${text}?`, apply: () => setTargetPx(text) };
+    return {
+      msg: levelLooksLikePipsText(t.levelLooksLikePipsHint, shortLabel(t.riskCalcTarget), targetPx, asTarget.pips, text),
+      apply: () => {
+        playSoftClick();
+        setTargetPx(text);
+      },
+    };
   })();
   const logBlocked = slMismatch != null || pipsInPx != null;
 

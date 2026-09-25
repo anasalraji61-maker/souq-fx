@@ -1169,6 +1169,21 @@ export function levelLooksLikePips(input: {
 }
 
 /**
+ * نصّ سطر «نقاطٌ بخانة سعر» (`levelLooksLikePipsHint`، launch88) للحاسبة والدفتر معاً: `{price}` يتكرّر (الشرح والنقرة) ⇒ كل
+ * المواضع؛ والقيم تُدرج بدالّة لا نصّ بديل (خانةٌ فيها «$$50» كانت ستُعرض «$50»). `{pips}` يُكتب كما قرأه `levelLooksLikePips`.
+ */
+export function levelLooksLikePipsText(
+  template: string,
+  field: string,
+  value: string,
+  pips: number,
+  price: string
+): string {
+  const vals: Record<string, string> = { field, value: value.trim(), pips: String(pips), price };
+  return template.replace(/\{(field|value|pips|price)\}/g, (_, k: string) => vals[k]);
+}
+
+/**
  * سعرا الوقف **للاتجاهين** من دخولٍ ومسافةٍ بالنقاط: تحت الدخول للشراء، فوقه للبيع (`stopAtPips`).
  *
  * لماذا: بالحاسبة يكتب المتداول وقفه بالنقاط («20») والدخول، ثم يضع الأمر بمنصّته — وهي تطلب **سعر**

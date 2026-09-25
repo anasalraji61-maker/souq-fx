@@ -38,6 +38,7 @@ import {
   quoteSymbol,
   levelSideIssue,
   levelLooksLikePips,
+  levelLooksLikePipsText,
   netByInstrument,
   openRiskTotals,
   stackedCurrencyExposure,
@@ -566,8 +567,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       if (!hit) continue;
       const label = (kind === 'sl' ? t.journalSlPlaceholder : t.journalTpPlaceholder).split(' (')[0].trim();
       const text = formatPrice(hit.price, journalSpec(sym)?.symbol ?? sym);
-      const field = t.riskCalcBadFieldValue.replace('{field}', () => label).replace('{value}', () => raw.trim());
-      return { kind, text, msg: `${field} → ${hit.pips} pip = ${text}?` };
+      return { kind, text, msg: levelLooksLikePipsText(t.levelLooksLikePipsHint, label, raw, hit.pips, text) };
     }
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
