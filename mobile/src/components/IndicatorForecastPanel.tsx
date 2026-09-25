@@ -237,9 +237,10 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           </Text>
           {levels && direction !== 'neutral' ? (
             <Text style={[styles.levels, { textAlign: align }]}>
-              {t.forecastTradeLabel}: {t.entryLabel} {formatPrice(levels.entry, symbol)} · {t.slLabel}{' '}
-              {formatPrice(levels.sl, symbol)}
-              {pipsTag(levels.entry, levels.sl)} · {t.tpLabel} {formatPrice(levels.tp, symbol)}
+              {/* منازل واحدة للثلاثة من الدخول (أداة بلا مواصفة كـUSOIL): كانت كلٌّ من حجمه ⇒ «99.850 · 100.45» */}
+              {t.forecastTradeLabel}: {t.entryLabel} {formatPrice(levels.entry, symbol, levels.entry)} · {t.slLabel}{' '}
+              {formatPrice(levels.sl, symbol, levels.entry)}
+              {pipsTag(levels.entry, levels.sl)} · {t.tpLabel} {formatPrice(levels.tp, symbol, levels.entry)}
               {pipsTag(levels.entry, levels.tp)}
               {rr != null ? ` · R:R ${formatRR(rr)}` : ''}
             </Text>
