@@ -145,7 +145,7 @@ import {
   type PositionSide,
 } from './positionTool';
 import { channelHandlePrice, channelLinePrices, channelWidthAt, fitChannelWidth } from './channel';
-import { anchorDrawings, barTime, drawSlotAt, stampAtIndex, type TimeBar } from './drawingAnchors';
+import { anchorDrawings, barTime, drawSlotAt, stampAtIndex, type TimeBar, type WeekendRule } from './drawingAnchors';
 import { lineNowText, lineValueAt, placeSelectionTags, selectionPrices } from './selectionTags';
 import { appendedAfter, offsetAtTime, reanchorAhead } from './holdView';
 import { priceSpan } from './priceSpan';
@@ -1646,8 +1646,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const sourceEndRef = useRef<number | undefined>(undefined);
   const sourceEndTime = () => sourceEndRef.current;
   // عطلة نهاية الأسبوع ليست زمن تداول (الفوركس/المعادن/المؤشرات) ⇒ رسم قبل أوّل شمعة محمَّلة يُعدّ بشموع تداول
-  // (`drawingAnchors.ts` `tradingStep`). الكريبتو 24/7 يبقى بالمتوسّط.
-  const weekendClosed = !isCryptoSymbol(series.symbol);
+  // (`drawingAnchors.ts` `tradingStep`) من افتتاح جلسة الرمز (الذهب 18:00، DXY 20:00). الكريبتو 24/7 يبقى بالمتوسّط.
+  const weekendClosed: WeekendRule = isCryptoSymbol(series.symbol) ? false : series.symbol || true;
 
   // `selectedInd` = ما اختاره المتداول فعلاً (تُبنى عليه أزرار المؤشرات).
   // `indicators` = ما يُرسم بالفعل: نفسها ناقصَ اللوحات المطويّة لضيق الارتفاع، فيكفي

@@ -71,7 +71,7 @@ export function timeAtIndex(
   index: number,
   stepSec: number,
   endTime?: number,
-  weekendClosed = false
+  weekendClosed: WeekendRule = false
 ): number | null {
   const n = bars.length;
   if (!n || !Number.isFinite(index)) return null;
@@ -83,7 +83,7 @@ export function timeAtIndex(
       return timeAtIndex(bars, index + k * wk.bars, stepSec, endTime)! - k * WEEK_SEC;
     }
     const ts = tradingStep(bars, weekendClosed);
-    if (ts != null) return forexTimeBeforeTrading(barTime(bars[0]), -index * ts);
+    if (ts != null) return forexTimeBeforeTrading(barTime(bars[0]), -index * ts, weekSymbol(weekendClosed));
     return barTime(bars[0]) + index * pastStep(bars, stepSec);
   }
   if (index >= n) return seriesEnd(bars, endTime) + (index - (n - 1)) * stepSec;
@@ -114,11 +114,21 @@ function pastStep(bars: readonly TimeBar[], stepSec: number): number {
  * 15–30 pip عمّا يقطعه على H1. هنا متوسّط ثواني التداول للخانة المحمَّلة، والعدّ للخلف يتخطّى العطل.
  * `null` ⇒ `pastStep` كما كان (لبنات اصطناعية، أو بلا إشارة).
  */
-function tradingStep(bars: readonly TimeBar[], weekendClosed: boolean): number | null {
+function tradingStep(bars: readonly TimeBar[], weekendClosed: WeekendRule): number | null {
   const n = bars.length;
   if (!weekendClosed || n < 2 || bars[0]!.srcTime != null) return null;
-  const step = forexTradingSecBetween(barTime(bars[0]!), barTime(bars[n - 1]!)) / (n - 1);
+  const step = forexTradingSecBetween(barTime(bars[0]!), barTime(bars[n - 1]!), weekSymbol(weekendClosed)) / (n - 1);
   return Number.isFinite(step) && step > 0 ? step : null;
+}
+
+/**
+ * عطلة نهاية الأسبوع للعدّ قبل أوّل شمعة: `false` بلا عطلة (الكريبتو)، `true` افتتاح العملات (الأحد 17:00
+ * نيويورك)، أو **الرمز** نفسه ⇒ افتتاح جلسته: الذهب/المؤشرات/WTI 18:00، DXY 20:00، برنت 23:00 لندن.
+ */
+export type WeekendRule = boolean | string;
+
+function weekSymbol(rule: WeekendRule): string {
+  return typeof rule === 'string' ? rule : '';
 }
 
 const WEEK_SEC = 7 * 86400;
@@ -161,7 +171,7 @@ export function indexAtTime(
   time: number,
   stepSec: number,
   endTime?: number,
-  weekendClosed = false
+  weekendClosed: WeekendRule = false
 ): number | null {
   const n = bars.length;
   if (!n || !Number.isFinite(time)) return null;
@@ -176,7 +186,7 @@ export function indexAtTime(
       return indexAtTime(bars, time + k * WEEK_SEC, stepSec, endTime)! - k * wk.bars;
     }
     const ts = tradingStep(bars, weekendClosed);
-    if (ts != null) return -Math.round(forexTradingSecBetween(time, first) / ts);
+    if (ts != null) return -Math.round(forexTradingSecBetween(time, first, weekSymbol(weekendClosed)) / ts);
     return Math.round((time - first) / pastStep(bars, stepSec));
   }
   // داخل الشمعة الحيّة (نقطة 10:45 من M15 وهي بدأت 10:00 على H1) ليس مستقبلاً: التقريب كان يرميها لخانة
@@ -219,7 +229,7 @@ export function stampAtIndex(
   index: number,
   stepSec: number,
   endTime?: number,
-  weekendClosed = false
+  weekendClosed: WeekendRule = false
 ): { time: number; ahead?: number; aheadStep?: number; sub?: number } | null {
   const n = bars.length;
   if (n && Number.isFinite(index) && index > n - 1) {
@@ -241,7 +251,7 @@ function anchorPoint(
   stepSec: number,
   synthetic: boolean,
   endTime?: number,
-  weekendClosed = false
+  weekendClosed: WeekendRule = false
 ): ChartPoint {
   if (p.time == null || !Number.isFinite(p.time)) {
     const stamp = stampAtIndex(bars, p.index, stepSec, endTime, weekendClosed);
@@ -294,7 +304,7 @@ export function anchorDrawings(
   stepSec: number,
   synthetic: boolean,
   endTime?: number,
-  weekendClosed = false
+  weekendClosed: WeekendRule = false
 ): Drawing[] {
   if (!bars.length || !drawings.length) return drawings;
   let changed = false;

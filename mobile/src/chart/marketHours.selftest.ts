@@ -3,7 +3,7 @@
  * Run: npx --yes tsx src/chart/marketHours.selftest.ts
  */
 import assert from 'node:assert/strict';
-import { isForexHolidaySession, isForexMarketOpen, projectBarTimeSec } from './marketHours';
+import { forexTimeBeforeTrading, forexTradingSecBetween, isForexHolidaySession, isForexMarketOpen, projectBarTimeSec } from './marketHours';
 
 const at = (y: number, mo: number, d: number, h: number, mi = 0) => new Date(Date.UTC(y, mo, d, h, mi));
 
@@ -138,3 +138,23 @@ for (const s of ['USA30', 'USA100', 'USA500', 'NQ100', 'US2000', '#NAS100', 'FX:
 }
 assert.equal(isForexMarketOpen('EURUSD', at(2026, 8, 24, 21, 30)), true);
 assert.equal(isForexMarketOpen('USDJPY', at(2026, 8, 27, 21, 30)), true);
+
+// عدّ زمن التداول عبر عطلة بافتتاح جلسة الرمز: الجمعة 2026-09-25 12:00Z → الاثنين 2026-09-28 12:00Z (صيفاً).
+// الجمعة 12:00→21:00Z = 9h؛ الأحد من الافتتاح حتى الاثنين 12:00Z: العملات 21:00Z ⇒ 15h، الذهب 22:00Z ⇒ 14h، DXY 00:00Z ⇒ 12h.
+{
+  const a = s(at(2026, 8, 25, 12));
+  const b = s(at(2026, 8, 28, 12));
+  assert.equal(forexTradingSecBetween(a, b), 24 * H);
+  assert.equal(forexTradingSecBetween(a, b, 'EURUSD'), 24 * H);
+  assert.equal(forexTradingSecBetween(a, b, 'XAUUSD'), 23 * H);
+  assert.equal(forexTradingSecBetween(a, b, 'DXY'), 21 * H);
+  assert.equal(forexTradingSecBetween(a, b, 'UKOIL'), 23 * H); // 23:00 لندن صيفاً = 22:00Z كالذهب
+  // ذهاب وإياب بالرمز نفسه
+  for (const sym of ['', 'XAUUSD', 'DXY', 'UKOIL']) {
+    assert.equal(forexTimeBeforeTrading(b, forexTradingSecBetween(a, b, sym), sym), a, sym);
+  }
+  // ساعة الأحد قبل افتتاح الذهب ليست تداولاً: 30 دقيقة تداول قبل الاثنين 22:30Z (الأحد) ⇒ 22:00Z، والتالية ⇒ الجمعة
+  assert.equal(forexTimeBeforeTrading(s(at(2026, 8, 27, 22, 30)), 1800, 'XAUUSD'), s(at(2026, 8, 27, 22)));
+  assert.equal(forexTimeBeforeTrading(s(at(2026, 8, 27, 22, 30)), 3600, 'XAUUSD'), s(at(2026, 8, 25, 20, 30)));
+}
+console.log('marketHours.selftest (session week open): PASS');
