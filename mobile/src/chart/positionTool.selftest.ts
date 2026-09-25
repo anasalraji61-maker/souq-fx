@@ -104,9 +104,18 @@ assert.equal(o.state, 'open');
 near(o.exit, 1.0855);
 assert.equal(positionOutcomeText(PL, o, 'EURUSD'), '+5.0 pip · +0.2R');
 // رسمٌ من فريم أصغر يُرسى بفهرس كسري (M15 على H1 ⇒ 0.25، النهاية 2.75): كانت كل الشموع تُتخطّى ⇒ null/«مفتوحة»
-o = positionOutcome(PL, bars, 0.25, 2.75, 3)!;
+o = positionOutcome(PL, bars, 0.25, 3, 3)!;
 assert.equal(o.state, 'target');
 assert.equal(o.exitIndex, 2);
+// النهاية داخل شمعة تلمس الهدف (2.75): اللمس قد يقع بعد نهاية الصندوق ⇒ لا حكم، لا «TP» مخترع
+assert.equal(positionOutcome(PL, bars, 0.25, 2.75, 3), null);
+// صفقة H1 على D1: الوقف ضُرب ببقيّة يوم الدخول (الشمعة الحاوية) ⇒ لا حكم — كانت تُتخطّى فيُقرأ «TP ✓ +2R»
+{
+  const d1 = [bar(1.0824, 1.0866, 1.085), bar(1.0845, 1.0912, 1.089), bar(1.084, 1.086, 1.085)];
+  assert.equal(positionOutcome(PL, d1, 0.4167, 1.25, 2), null);
+  // الطرف على بداية الشمعة (رسمٌ على هذا الفريم) ⇒ لمس شمعة الدخول قبل الدخول لا يُحسب كالسابق
+  assert.equal(positionOutcome(PL, d1, 0, 2, 2)!.state, 'target');
+}
 // صندوق داخل شمعة واحدة من هذا الفريم (M15 10:15→10:45 على H1) ⇒ لا حكم، لا «انتهى» بإغلاق H1
 assert.equal(positionOutcome(PL, bars, 1.25, 1.75, 3), null);
 assert.equal(positionOutcome(PL, bars, 1, 1.75, 3), null);

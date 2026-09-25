@@ -167,6 +167,7 @@ export function positionOutcome(
   const last = Math.min(lastIndex, bars.length - 1);
   // الرسوم مشتركة بين الفريمات وتُرسى بفهرس كسري (M15 10:15 على H1 ⇒ k+0.25): `bars[k.25]` غير معرَّف فكانت
   // كل الشموع تُتخطّى ⇒ «مفتوحة» بإغلاق آخر شمعة رغم ضرب الوقف قبل ساعات. الشمعة الحاوية = الجزء الصحيح.
+  const entryInside = entryIndex !== Math.floor(entryIndex);
   entryIndex = Math.floor(entryIndex);
   if (!(entryIndex >= 0) || entryIndex > last) return null;
   const risk = Math.abs(levels.entry - levels.stop);
@@ -179,24 +180,31 @@ export function positionOutcome(
   const long = levels.side === 'long';
   const rOf = (exit: number) => ((long ? exit - levels.entry : levels.entry - exit) / risk);
   const hitsStop = (b: Bar) => (long ? b.low <= levels.stop : b.high >= levels.stop);
+  const hitsTarget = (b: Bar) => (long ? b.high >= levels.target : b.low <= levels.target);
+  // طرفٌ داخل شمعة هذا الفريم (صفقة H1 معروضة على D1): الشمعة الحاوية تجمع ما قبل الدخول وما بعده، أو ما قبل
+  // نهاية الصندوق وما بعدها — لمسٌ فيها لا يُعرف أكان داخل الصندوق. كانت بقيّة يوم الدخول تُتخطّى (وقفٌ ضُرب بعد
+  // 4 ساعات لا يُرى) وشمعة النهاية تُفحص كلّها (هدفٌ بعد نهاية الصندوق بـ14 ساعة) ⇒ «TP +2R» لصفقة خاسرة على H1.
+  const endInside = boxEnd !== Infinity && boxEnd !== Math.floor(boxEnd) && Math.floor(boxEnd) <= last;
   // جهة الدخول من شمعة الرسم: تحت مداها ⇒ يُنفَّذ حين ينزل القاع إليه، فوقه ⇒ حين تبلغه القمّة. عبورٌ
   // لا احتواء، فالفجوة التي تقفز فوق الدخول (افتتاح الأسبوع) تنفّذه كما تنفّذ الوسيط الأمر المعلّق.
   const first = bars[entryIndex];
   const below = first != null && levels.entry < first.low;
   const above = first != null && levels.entry > first.high;
   let fill = below || above ? -1 : entryIndex;
+  if (entryInside && fill === entryIndex && first && (hitsStop(first) || hitsTarget(first))) return null;
   for (let i = entryIndex + 1; i <= to; i++) {
     const b = bars[i];
     if (!b) continue;
     if (fill < 0) {
       if (below ? b.low > levels.entry : b.high < levels.entry) continue;
+      if (endInside && i === to) return null;
       fill = i;
       if (hitsStop(b)) return { state: 'stop', exit: levels.stop, exitIndex: i, fillIndex: i, r: -1 };
       continue;
     }
+    if (endInside && i === to && (hitsStop(b) || hitsTarget(b))) return null;
     if (hitsStop(b)) return { state: 'stop', exit: levels.stop, exitIndex: i, fillIndex: fill, r: -1 };
-    const hitTarget = long ? b.high >= levels.target : b.low <= levels.target;
-    if (hitTarget) return { state: 'target', exit: levels.target, exitIndex: i, fillIndex: fill, r: levels.rr };
+    if (hitsTarget(b)) return { state: 'target', exit: levels.target, exitIndex: i, fillIndex: fill, r: levels.rr };
   }
   const exit = bars[to]?.close;
   if (exit == null || !Number.isFinite(exit)) return null;
