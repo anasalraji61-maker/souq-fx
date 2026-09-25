@@ -29,6 +29,8 @@ type Stats = {
   spread_pips?: number | null;
   /** false = لا تقدير سبريد للرمز (DXY، الرقمية) ⇒ النتيجة قبل التكاليف (backend-r3)؛ غائب = باك-إند أقدم */
   costs_included?: boolean;
+  /** صفقات خرجت عند الدخول — لا ربح ولا خسارة، خارج `win_rate` (backend-r5)؛ غائب = باك-إند أقدم */
+  breakeven_count?: number;
 };
 
 type Strategy = 'ma_cross' | 'rsi_reversal' | 'macd_cross' | 'bb_bounce';
@@ -237,6 +239,11 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
               <Text style={[styles.statLine, { textAlign: align }]}>
                 {t.backtestStatWinRate.replace('{pct}', String(stats.win_rate))}
               </Text>
+              {typeof stats.breakeven_count === 'number' && stats.breakeven_count > 0 ? (
+                <Text style={[styles.statLine, { textAlign: align }]}>
+                  {t.journalStatBreakeven.replace('{n}', String(stats.breakeven_count))}
+                </Text>
+              ) : null}
               <Text style={[styles.statLine, { textAlign: align }]}>
                 {t.backtestStatReturn.replace('{pct}', String(stats.total_return_pct))}
               </Text>
