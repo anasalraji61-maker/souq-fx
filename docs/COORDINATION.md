@@ -11,6 +11,7 @@
 | launch | backend/أنس | قوالب الردّ بلا ذكاء اصطناعي `main.py` تفرّع `en` فقط ⇒ الكردي يُجاب بالعربية (مقصود لغياب مراجعة كردية) | launch77 |
 | QA | أنس | الأكاديمية 44 محاضرة عربية فقط (`academy.ts` `name_ar`/`summary`، موسومة بالواجهة والمتجر): ترجمة أم إبقاء؟ | QA27 |
 | tools | أنس | «أمس» بقائمة المتابعة 00:00 UTC وPDH/PDL 17:00 نيويورك؛ `dailyChange.ts:34` يغذّي رأس الشارت ⇒ نسبة الرأس تناقض خطّ PDC | tools38 |
+| tools | launch | **tools85** (أ) مفتاح جديد `riskCalcStopInsideTypicalSpread` (ar/en/ku) بـ`{sl}` `{spread}` `{symbol}`، مقترح: «الوقف ({sl} pip) ليس أبعد من السبريد المعتاد لـ{symbol} (~{spread} pip) — قد يُضرب فور فتح الصفقة. اكتب سبريد وسيطك بخانته، أو وسّع الوقف وقلّل اللوت.» — الكود جاهز (`PositionSizePanel.tsx` يقرأه اختيارياً، `9f7be25`). (ب) `riskCalcSpreadTooWide`: بدّل «(مثل 1.5)» بـ`{example}` — الكود يملؤه بحسب الأداة (`2684fb8`؛ USDZAR 100، الذهب 3) | tools85 |
 | launch | chart/أنس | DeMarker 0..100 والمنصات 0..1 | launch48 |
 | launch | أنس | `MessagesScreen` غير مستوردة (وحدها تستعمل `mockPeers`؛ `api.ts` `from_user: 'أنت'` ثابت؛ و`accessibilityLabel="رسالة خاصة"` ثابت :142) — حذف أم ربط؟ | launch52 |
 | launch | أنس | ترخيص مصادر البيانات (ForexFactory/DailyFX/Twelve Data) قبل الرفع (`RELEASE-MOBILE.md` §0) | launch73 |
