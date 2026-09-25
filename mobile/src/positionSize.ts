@@ -414,6 +414,18 @@ export function parseSlPips(raw: string): number | null {
   return parseDecimal(raw, { amount: true });
 }
 
+/**
+ * نقاط وقف مرفوضة **لأنها مبهمة** (`parseSlPips`): «1.500» أو «1,500» — 1,500 pip أم 1.5؟ للرسالة `riskCalcSlPipsAmbiguous`
+ * التي تعرض القراءتين؛ الرسالة العامة «اكتبه بلا فواصل آلاف، مثل 1.0850» كانت تدعوه لكتابة ما كتبه. `value` كما كُتب
+ * (مقصوص)، `whole` بلا الفاصل، `small` كسراً بلا أصفار زائدة — أرقام لاتينية. `null` = مقبول أو مرفوض لسبب آخر.
+ */
+export function ambiguousSlPips(raw: string): { value: string; whole: string; small: string } | null {
+  const s = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009']/g, '').replace(/[٫．٬，]/g, (c) => (c === '٬' || c === '，' ? ',' : '.'));
+  const m = /^([1-9]\d{0,2})[.,](\d{3})$/.exec(s);
+  if (!m) return null;
+  return { value: raw.trim(), whole: m[1] + m[2], small: String(Number(`${m[1]}.${m[2]}`)) };
+}
+
 export const LOT_STEP = 0.01;
 
 export type SizeResult = {

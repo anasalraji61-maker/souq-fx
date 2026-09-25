@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import {
   convStaleMinutes,
   parseSlPips,
+  ambiguousSlPips,
   formatPipValue,
   instrumentSpec as specForSl,
   pipValuePerLot as pvForSl,
@@ -2255,6 +2256,17 @@ console.log('positionSize liveEntryFillAllowed selftest OK');
   const r = sizeForSl({ balance: 10_000, riskPct: 1, slPips: parseSlPips('1500')!, pipValuePerLot: pvForSl(gold, 1), contractSize: gold.contractSize })!;
   assert.equal(r.lots, 0);
   assert.equal(r.belowMinLot, true);
+}
+{
+  // القراءتان لرسالة riskCalcSlPipsAmbiguous
+  assert.deepEqual(ambiguousSlPips('1.500'), { value: '1.500', whole: '1500', small: '1.5' });
+  assert.deepEqual(ambiguousSlPips(' 1,500 '), { value: '1,500', whole: '1500', small: '1.5' });
+  assert.deepEqual(ambiguousSlPips('25.000'), { value: '25.000', whole: '25000', small: '25' });
+  assert.deepEqual(ambiguousSlPips('١٫٢٥٠'), { value: '١٫٢٥٠', whole: '1250', small: '1.25' });
+  // مقبولة أو مرفوضة لسبب آخر ⇒ null
+  for (const v of ['1500', '1.5', '0.500', '24.6', '', '1.2.3', '1.5000', 'abc']) assert.equal(ambiguousSlPips(v), null, v);
+  // كل ما تقول إنه مبهم ترفضه parseSlPips فعلاً
+  for (const v of ['1.500', '1,500', '25.000', '١٫٢٥٠']) assert.equal(parseSlPips(v), null, v);
 }
 console.log('positionSize parseSlPips selftest OK');
 

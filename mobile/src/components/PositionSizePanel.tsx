@@ -18,6 +18,7 @@ import {
   positionSize,
   slPipsFromPrices,
   parseSlPips,
+  ambiguousSlPips,
   formatPipValue,
   riskForLots,
   formatRiskPct,
@@ -456,12 +457,20 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     .map((v) => ambiguousThousandsPrice(v, spec?.symbol))
     .find((a) => a != null);
   const leverageAmbig = leverageAmbiguousThousands(leverage);
+  /** «1.500» بخانة النقاط وحدها مرفوضة: 1500 أم 1.5؟ — القراءتان بدل «مثل 1.0850» (`ambiguousSlPips`) */
+  const slAmbig = ambiguousSlPips(slPips);
+  const onlySlBad = badFields.every(([label, v, bad]) => label === t.riskCalcSlPips || v.trim() === '' || !bad);
   const badNumberText = ambiguousPx
     ? t.priceAmbiguousThousandsHint
         .replace('{value}', ambiguousPx.value)
         .replace('{whole}', ambiguousPx.whole)
         .replace('{small}', ambiguousPx.small)
-    : misplacedArabicThousandsSign(balanceText, { amount: true }) ||
+    : slAmbig && onlySlBad
+      ? t.riskCalcSlPipsAmbiguous
+          .replace('{value}', () => slAmbig.value)
+          .replace('{whole}', slAmbig.whole)
+          .replace('{small}', slAmbig.small)
+      : misplacedArabicThousandsSign(balanceText, { amount: true }) ||
         misplacedArabicThousandsSignInRisk(riskPct, balanceNum, moneyCcy) ||
         [slPips, manualConv, entryPx, stopPx, targetPx].some((v) => misplacedArabicThousandsSign(v))
       ? // «0٬5» بخانة المخاطرة: «٬» بجانب «٫» على اللوحة العربية — يُقال أيّهما يُكتب للكسر
