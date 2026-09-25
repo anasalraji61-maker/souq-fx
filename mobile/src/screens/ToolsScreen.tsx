@@ -1017,7 +1017,7 @@ const styles = StyleSheet.create({
   chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   chipTextOn: { color: colors.text },
   /** نقطة صغيرة تقول «هذا الزوج مفتوح على شارتك» — الشريحة وحدها لا تفسّر ظهور زوج خارج المتابعة */
-  chipOnChartMark: { color: colors.accent, fontSize: 11, fontWeight: '500' },
+  chipOnChartMark: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   filterHints: { gap: 4, marginTop: 4 },
   filterHintText: { color: colors.textDim, fontSize: 11 },
   hitCard: {
