@@ -82,3 +82,23 @@ def test_server_closing_cleanly_marks_disconnected_and_backs_off(monkeypatch):
         pass
     assert seen == [False]  # نام قبل إعادة الاتصال، والحالة «غير متصل»
     assert ws_mod.status()["connected"] is False
+
+
+def test_snapshot_survives_a_tick_arriving_from_the_ws_thread_mid_read(monkeypatch):
+    """`snapshot` يُقرأ من خيط (`asyncio.to_thread`) والحلقة تضيف رمزاً ⇒ كان RuntimeError يُسقط دورة الفحص."""
+    import time as _t
+
+    import twelve_data_ws as ws
+
+    latest = {"EURUSD": 1.1, "GBPUSD": 1.3}
+
+    class _Racy(dict):
+        def get(self, k, d=None):
+            latest.setdefault("XAUUSD", 2400.0)  # تيك جديد يصل أثناء المرور
+            return super().get(k, d)
+
+    now = _t.time()
+    monkeypatch.setattr(ws, "LATEST", latest)
+    monkeypatch.setattr(ws, "LATEST_AT", _Racy(EURUSD=now, GBPUSD=now))
+    assert ws.snapshot(max_age=60) == {"EURUSD": 1.1, "GBPUSD": 1.3}
+    assert ws.recent_snapshot()[0] == {"EURUSD": 1.1, "GBPUSD": 1.3}

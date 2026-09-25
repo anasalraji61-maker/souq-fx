@@ -139,7 +139,7 @@ def status() -> dict:
     return {
         "connected": _connected,
         "symbols_live": list(live.keys()),
-        "symbols_stale": [s for s in LATEST if s not in live],
+        "symbols_stale": [s for s in dict(LATEST) if s not in live],
         "last_error": _last_error,
         "has_key": bool(_ws_key()),
     }
@@ -150,7 +150,9 @@ def snapshot(max_age: float | None = None) -> dict[str, float]:
     if max_age is None:
         return dict(LATEST)
     cutoff = time.time() - max_age
-    return {s: p for s, p in LATEST.items() if LATEST_AT.get(s, 0.0) >= cutoff}
+    # نسخة أولاً: يُستدعى من خيوط (`asyncio.to_thread` — الـworker و`/api/alerts/check`) بينما حلقة الـWS
+    # تضيف رمزاً جديداً ⇒ «dictionary changed size during iteration» يُسقط دورة الفحص كلها.
+    return {s: p for s, p in dict(LATEST).items() if LATEST_AT.get(s, 0.0) >= cutoff}
 
 
 def recent_snapshot(window: float = 120.0) -> tuple[dict[str, float], float | None]:
@@ -159,8 +161,8 @@ def recent_snapshot(window: float = 120.0) -> tuple[dict[str, float], float | No
     `window` عن أحدث رمز يُستبعد كي لا يحمل وقت غيره."""
     if not LATEST_AT:
         return dict(LATEST), None
-    newest = max(LATEST_AT.values())
-    return {s: p for s, p in LATEST.items() if LATEST_AT.get(s, 0.0) >= newest - window}, newest
+    newest = max(dict(LATEST_AT).values())
+    return {s: p for s, p in dict(LATEST).items() if LATEST_AT.get(s, 0.0) >= newest - window}, newest
 
 
 def received_at(symbols: list[str] | dict[str, float]) -> dict[str, float | None]:
