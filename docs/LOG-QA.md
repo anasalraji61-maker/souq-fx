@@ -464,3 +464,5 @@ Kagi/P&F بلا حلقة لكل صندوق ولا حجم من الواجهة. **
 `dirColor`/`dirLabel` ×3، `QUICK_SYMBOLS` ×2، `RECONNECT_*` ×2 بلا تغيير. **جديد QA41 → tools (منخفض):** `notifLang` (`notifications.ts:21`، `5b2a25e`) نسخة
 حرفية من `deviceLang` (`I18nContext.tsx:23`) و`'matrix.lang.v1'` منسوخ ⇒ مصدر واحد كي لا تعود لغة الإشعار تخالف الواجهة.
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة.
+**إلحاق بعد الدفع:** وصلت `47dc67c` (`resolveLang`/`deviceLocaleTag` بـ`locales.ts`، يستعملها `I18nContext`) و`e03df4c`/`edc54a1` وتعديلات `drawingAnchors`/`positionSize` —
+البناء أخضر 0 وselftests الثلاثة المعدَّلة ناجحة. QA41 **نصف منجز**: `notifications.ts:20` `notifLang` ما زال نسخة، والمفتاح منسوخ ⇒ الصفّ باقٍ بصيغة محدّثة.
