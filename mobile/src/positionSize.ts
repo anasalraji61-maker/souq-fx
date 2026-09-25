@@ -394,10 +394,25 @@ export function pipsOnlyExitQuoteToAccount(
   entryPrice: number,
   liveRate: number | null
 ): number | null {
+  const exit = pipsOnlyExitPrice(spec, slPips, entryPrice, liveRate);
+  return exit == null ? null : exitQuoteToAccount(spec, convAccount, exit, liveRate, true);
+}
+
+/**
+ * سعر الخروج الذي تحسب به `pipsOnlyExitQuoteToAccount` (الدخول أو الحيّ − النقاط) — لسطر «قيمة الـpip عند {price}»:
+ * بالنقاط وحدها كان السطر يقول «قيمة الـpip» بلا سعر وهي محسوبة بسعرٍ أبعد (USDJPY 150، وقف 150 pip ⇒ 6.73 لا 6.67
+ * التي تعرضها المنصّة) فلا يطابق المتداول رقمه بلا تفسير. `null` بالشروط نفسها.
+ */
+export function pipsOnlyExitPrice(
+  spec: InstrumentSpec | null,
+  slPips: number,
+  entryPrice: number,
+  liveRate: number | null
+): number | null {
   if (!spec || !Number.isFinite(slPips) || slPips <= 0) return null;
   if (liveRate == null || !Number.isFinite(liveRate) || liveRate <= 0) return null;
   const from = Number.isFinite(entryPrice) && entryPrice > 0 ? entryPrice : 1 / liveRate;
-  return exitQuoteToAccount(spec, convAccount, from - slPips * spec.pipSize, liveRate, true);
+  return from - slPips * spec.pipSize;
 }
 
 /** قيمة الـpip للوت قياسي واحد، بعملة الحساب. */

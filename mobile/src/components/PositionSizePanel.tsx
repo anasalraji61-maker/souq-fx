@@ -36,6 +36,7 @@ import {
   marginBaseToAccount,
   exitQuoteToAccount,
   pipsOnlyExitQuoteToAccount,
+  pipsOnlyExitPrice,
   maxLotsForMargin,
   marginPrice,
   smallContractSpec,
@@ -635,7 +636,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     : pipsOnlyExitQuoteToAccount(spec, convAccount, slNum, priceNum(entryPx), convRate);
   const riskRate = stopRate ?? pipsOnlyRate ?? convRate;
   /** قيمة النقطة المعروضة محسوبة بسعر الوقف لا الحيّ ⇒ لا تطابق رقم المنصّة؛ السطر يسمّي السعر ويشرح (launch72) */
-  const pipAtStop = stopRate != null && stopRate !== convRate;
+  const pipAtStop = (stopRate ?? pipsOnlyRate) != null && (stopRate ?? pipsOnlyRate) !== convRate;
+  /** السعر الذي حُسبت به قيمة الـpip المعروضة: الوقف المكتوب، أو خروج النقاط وحدها (`pipsOnlyExitPrice`) */
+  const pipRatePx = stopRate != null ? priceNum(stopPx) : pipsOnlyExitPrice(spec, slNum, priceNum(entryPx), convRate);
   // السنت: عملة التسعير ⇒ USD ثم × 100 ⇒ USC، فيخرج كل مبلغ (pip، مخاطرة، هامش، ربح) بالسنت كرصيده
   const rate = cent ? centQuoteToAccount(riskRate) : riskRate;
   const pv = spec && rate != null ? pipValuePerLot(spec, rate) : null;
@@ -1507,8 +1510,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         {pv != null ? (
           <>
             <Text style={[styles.resultMeta, { textAlign: align }]}>
-              {pipAtStop && spec
-                ? t.riskCalcPipValueAtStop.replace('{price}', formatPrice(priceNum(stopPx), spec.symbol))
+              {pipAtStop && spec && pipRatePx != null && Number.isFinite(pipRatePx)
+                ? t.riskCalcPipValueAtStop.replace('{price}', formatPrice(pipRatePx, spec.symbol))
                 : t.riskCalcPipValue}
               : {formatPipValue(pv, moneyCcy)}
               {result && lots != null ? ` · ${lots.toFixed(2)} lot = ${formatPipValue(result.pipValue, moneyCcy)}` : ''}

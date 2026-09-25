@@ -37,6 +37,7 @@ import {
   profitAtTarget,
   exitQuoteToAccount,
   pipsOnlyExitQuoteToAccount,
+  pipsOnlyExitPrice,
   formatRiskPct,
   formatMoney,
   moneyDecimals,
@@ -2418,6 +2419,22 @@ console.log('positionSize per-lot micro pip value selftest OK');
   assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', 20000, NaN, live), null);
   assert.equal(pipsOnlyExitQuoteToAccount(null, 'USD', 150, NaN, live), null);
 }
+console.log('positionSize pipsOnlyExitQuoteToAccount selftest OK');
+
+// سعر الخروج الذي يسمّيه سطر «قيمة الـpip عند {price}» بالنقاط وحدها — نفس سعر `pipsOnlyExitQuoteToAccount`
+{
+  const uj = instrumentSpec('USDJPY')!;
+  const live = 1 / 150;
+  // كان السطر «قيمة الـpip: 6.73» بلا سعر، والمنصّة تعرض 6.67 بالحيّ 150
+  assert.equal(pipsOnlyExitPrice(uj, 150, NaN, live), 148.5);
+  assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', 150, NaN, live), 1 / pipsOnlyExitPrice(uj, 150, NaN, live)!);
+  assert.equal(pipsOnlyExitPrice(uj, 150, 140, live), 138.5);
+  assert.ok(Math.abs(pipsOnlyExitPrice(instrumentSpec('GBPUSD')!, 100, NaN, 1 / 1.25)! - 1.24) < 1e-12);
+  assert.equal(pipsOnlyExitPrice(uj, 0, NaN, live), null);
+  assert.equal(pipsOnlyExitPrice(uj, 150, NaN, null), null);
+  assert.equal(pipsOnlyExitPrice(null, 150, NaN, live), null);
+}
+console.log('positionSize pipsOnlyExitPrice selftest OK');
 console.log('positionSize pipsOnlyExitQuoteToAccount selftest OK');
 
 {
