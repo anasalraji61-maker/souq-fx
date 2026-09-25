@@ -457,6 +457,7 @@ export function WatchlistPanel({
                   ) : null}
                   <View style={[styles.left, rtl && styles.leftRtl]}>
                     <Text
+                      numberOfLines={1}
                       style={[styles.sym, on && styles.symOn, isDxy && styles.symDxy]}
                       {...(Platform.OS === 'web'
                         ? ({ translate: 'no', className: 'notranslate' } as object)
@@ -468,6 +469,7 @@ export function WatchlistPanel({
                   </View>
                   <View style={[styles.right, rtl && styles.rightRtl]}>
                     <Text
+                      numberOfLines={1}
                       style={[
                         styles.price,
                         on && styles.priceOn,
@@ -614,18 +616,19 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingHorizontal: 8,
   },
-  wrapCompact: { width: 148, paddingHorizontal: spacing.xs },
+  /** 160 لا 148: السعر 15px (DESIGN-PRO §2) يتّسع له العمود بدل تصغير الخطّ (§7). */
+  wrapCompact: { width: 160, paddingHorizontal: spacing.xs },
   wrapFull: { width: '100%', flex: 1, borderLeftWidth: 0 },
   title: {
     color: colors.textDim,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     marginBottom: spacing.xs,
     paddingHorizontal: spacing.xs,
   },
   saveError: {
     color: colors.bear,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     marginBottom: spacing.xs,
     paddingHorizontal: spacing.xs,
@@ -645,7 +648,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   toolBtnDisabled: { opacity: 0.4 },
-  toolBtnText: { color: colors.textMuted, fontSize: 10, fontWeight: '500' },
+  toolBtnText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   list: { gap: 4, paddingBottom: spacing.lg },
   emptyBox: { paddingVertical: spacing.lg, alignItems: 'center', gap: spacing.sm },
   empty: {
@@ -693,20 +696,20 @@ const styles = StyleSheet.create({
   rowMainRtl: { flexDirection: 'row-reverse' },
   left: { flex: 1, alignItems: 'flex-start', minWidth: 0 },
   leftRtl: { alignItems: 'flex-end' },
-  sym: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
+  sym: { color: colors.textMuted, fontWeight: '500', fontSize: 12 },
   symOn: { color: colors.text },
   symDxy: { color: colors.dxy },
-  demoTag: { color: colors.warn, fontSize: 8, fontWeight: '500', marginTop: 0 },
-  price: { ...numeric, color: colors.textMuted, fontSize: 10, fontWeight: '600', marginLeft: 4 },
+  demoTag: { color: colors.warn, fontSize: 11, fontWeight: '500', marginTop: 0 },
+  price: { ...numeric, color: colors.textMuted, fontSize: 15, fontWeight: '600', marginLeft: 4 },
   priceOn: { color: colors.text },
   priceDemo: { color: colors.textDim, fontWeight: '600' },
   priceUp: { color: colors.bull },
   priceDown: { color: colors.bear },
   right: { alignItems: 'flex-end' },
   rightRtl: { alignItems: 'flex-start' },
-  chg: { ...numeric, color: colors.textDim, fontSize: 9, fontWeight: '500', marginTop: 0 },
+  chg: { ...numeric, color: colors.textDim, fontSize: 11, fontWeight: '500', marginTop: 0 },
   /** الجرس محايد — لا أخضر/أحمر (المسافة كمّية لا ربح ولا خسارة) ولا تأكيد (شارة؛ DESIGN-PRO §1). */
-  armedTag: { color: colors.textMuted, fontSize: 8, fontWeight: '500', marginTop: 0 },
+  armedTag: { color: colors.textMuted, fontSize: 11, fontWeight: '500', marginTop: 0 },
   chgUp: { color: colors.bull },
   chgDown: { color: colors.bear },
   ops: {
@@ -727,7 +730,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   opDisabled: { opacity: 0.3 },
-  opText: { color: colors.textMuted, fontSize: 10, fontWeight: '500' },
+  opText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.55)',
