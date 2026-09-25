@@ -466,7 +466,10 @@ export const api = {
    * بعد بلاغات عدة حسابات. للمسجّل فقط (`login_required`). */
   report: (kind: ReportKind, target_id: string, reason: ReportReason) =>
     postJson<{ ok: boolean; new?: boolean; error?: string }>('/api/reports', { kind, target_id, reason }),
-  news: () => getJson<{ news: NewsItem[] }>('/api/news'),
+  /** backend-r33 (`acace1d`): `status` = هل أجاب المصدر (`unavailable` ⇒ `news: []` لأن المصدر معطّل، لا لأن السوق هادئ)؛
+   * `as_of` (ثوانٍ UTC) = وقت جلب العناوين؛ `stale` = آخر محاولة فشلت والعناوين من جلب سابق. اختيارية: خادم أقدم لا يرسلها. */
+  news: () =>
+    getJson<{ news: NewsItem[]; status?: 'ok' | 'unavailable'; as_of?: number | null; stale?: boolean }>('/api/news'),
   marketStatus: () =>
     getJson<{
       configured: boolean;

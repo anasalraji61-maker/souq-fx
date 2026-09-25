@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-nat
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle } from '../theme';
 import { api, type NewsItem } from '../api';
 import { useI18n } from '../i18n/I18nContext';
+import { formatLocalStamp } from '../localStamp';
 
 /**
  * لون شارة التأثير — **ثلاث درجات لا اثنتان**. كان السطر `impact === 'high' ? highImpact : warn`،
@@ -26,7 +27,7 @@ const IMPACT_FILL: Record<Exclude<NewsItem['impact'], 'unknown'>, string> = {
 };
 
 export function NewsPanel({ embedded }: { embedded?: boolean }) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   // تبدأ فارغة: كانت تبدأ بأخبار وهمية («قرار الفائدة الفيدرالي — اليوم 21:00»، «CPI غداً») تبقى
   // ظاهرة إن فشل الطلب تحت «بيانات محفوظة» — حدث مختلَق قد يبني عليه متداول قراره.
@@ -34,6 +35,10 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
   const [loaded, setLoaded] = useState(false);
   /** فشل الطلب (لا بيانات محفوظة تُعرض) — لا تُفعَّل قبل أول محاولة فعلية. */
   const [failed, setFailed] = useState(false);
+  /** backend-r33: الخادم أجاب والمصدر لم يُجب — ليس «لا أخبار» (سوق هادئ) ولا عطل اتصالك. */
+  const [sourceDown, setSourceDown] = useState(false);
+  /** `as_of` حين `stale: true` — العناوين المعروضة من جلب سابق؛ null ⇒ لا سطر. */
+  const [staleAsOf, setStaleAsOf] = useState<number | null>(null);
 
   useEffect(() => {
     // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (مثلاً تبديل قسم hub قبل اكتمال
@@ -44,6 +49,8 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
       .then((r) => {
         if (alive) {
           setNews(r.news);
+          setSourceDown(r.status === 'unavailable' && r.news.length === 0);
+          setStaleAsOf(r.stale && typeof r.as_of === 'number' && r.news.length > 0 ? r.as_of : null);
           setFailed(false);
           setLoaded(true);
         }
@@ -75,7 +82,15 @@ export function NewsPanel({ embedded }: { embedded?: boolean }) {
       )}
       {failed ? <Text style={[styles.staleNote, { textAlign: align }]}>{t.newsLoadError}</Text> : null}
       {!loaded ? <ActivityIndicator color={colors.accent} style={{ paddingVertical: spacing.lg }} /> : null}
-      {loaded && !failed && news.length === 0 ? (
+      {loaded && !failed && sourceDown ? (
+        <Text style={[styles.staleNote, { textAlign: align }]}>{t.newsSourceUnavailable}</Text>
+      ) : null}
+      {staleAsOf != null ? (
+        <Text style={[styles.staleNote, { textAlign: align }]}>
+          {t.newsStaleAsOf.replace('{time}', formatLocalStamp(staleAsOf, lang))}
+        </Text>
+      ) : null}
+      {loaded && !failed && !sourceDown && news.length === 0 ? (
         <Text style={styles.empty}>{t.newsEmpty}</Text>
       ) : null}
       {/* التأثير مخمَّن من كلمات العنوان (fed/cpi…) بألوان تأثير التقويم نفسها — يُقرأ تصنيفاً مؤكَّداً.
