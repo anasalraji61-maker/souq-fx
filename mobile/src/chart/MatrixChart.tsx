@@ -11797,7 +11797,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                   ? [
                       <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel={`ZigZag ${zigzagDev}% → ${nextZigzagDeviation(zigzagDev)}%`}
+                        accessibilityLabel={tr.mcZigzagDevA11y
+                          .replace('{pct}', String(zigzagDev))
+                          .replace('{next}', String(nextZigzagDeviation(zigzagDev)))}
                         key="zigzagDev"
                         style={({ pressed }) => [
                           styles.ind,
