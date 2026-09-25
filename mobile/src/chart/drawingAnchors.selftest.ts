@@ -233,4 +233,19 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   assert.equal(drawSlotAt(10, 0, 0, 0), 0);
 }
 
+// نقطة من فريم أصغر في فجوة العطلة (افتتاح الأحد 22:00) ⇒ شمعة الاثنين اليومية لا الجمعة
+{
+  const D = 86400;
+  const fri = Date.UTC(2026, 8, 18) / 1000;
+  const mon = Date.UTC(2026, 8, 21) / 1000;
+  const d1 = [fri - D, fri, mon].map((time) => ({ time }));
+  const sun22 = mon - 2 * H;
+  const out = anchorDrawings([line(0, 0, { a: { index: 0, price: 1.1, time: sun22 } })], d1, D, false);
+  assert.equal(out[0]!.a.index, 2, 'Sunday gap-open point sits on Monday D1 bar');
+  // داخل الجمعة يبقى كسراً داخلها
+  const fri12 = fri + 12 * H;
+  const in2 = anchorDrawings([line(0, 0, { a: { index: 0, price: 1.1, time: fri12 } })], d1, D, false);
+  assert.equal(in2[0]!.a.index, 1.5);
+}
+
 console.log('drawingAnchors.selftest: PASS');

@@ -208,13 +208,15 @@ function brickOffset(bars: readonly TimeBar[], base: number, p: ChartPoint): num
 
 /**
  * كسر النقطة داخل شمعتها: زمن من فريم أصغر يقع داخل شمعة الفريم الحالي (لا على بدايتها).
- * صفر على الفريم نفسه (الزمن = زمن الشمعة)، وصفر في فجوة عطلة (الزمن بعد نهاية الشمعة)
- * وخارج السلسلة — هناك تبقى القاعدة السابقة: آخر شمعة قبله.
+ * صفر على الفريم نفسه (الزمن = زمن الشمعة) وخارج السلسلة. في فجوة (الزمن بعد نهاية الشمعة وقبل تاليتها)
+ * ⇒ 1 = الشمعة **التالية**: نقطة H1 عند افتتاح الأحد 22:00 (فجوة الافتتاح) كانت على اليومي بشمعة الجمعة التي
+ * لا تحويها، بينما سعرها تداوُل جلسة الاثنين. آخر شمعة بلا تالية ⇒ صفر كما كان.
  */
 function withinBar(bars: readonly TimeBar[], i: number, time: number, stepSec: number): number {
   const bar = bars[i];
   if (!bar || !(stepSec > 0)) return 0;
   const frac = (time - bar.time) / stepSec;
+  if (frac >= 1 && i >= 0 && i + 1 < bars.length) return 1;
   return frac > 0 && frac < 1 ? frac : 0;
 }
 
