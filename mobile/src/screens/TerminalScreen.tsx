@@ -1830,8 +1830,6 @@ export function TerminalScreen() {
         onTab={setDockTab}
         symbol={symbol}
         timeframe={tf}
-        lastPrice={price}
-        candles={series?.candles}
         activeTool={tool}
         onTool={(nextTool) => {
           setTool(nextTool);
@@ -1850,8 +1848,6 @@ export function TerminalScreen() {
         onClose={() => setEdgePanel(null)}
         symbol={symbol}
         timeframe={tf}
-        lastPrice={price}
-        candles={series?.candles}
         activeIndicators={indicators}
         activeKind={kind}
         onPickDraw={(nextTool) => {
