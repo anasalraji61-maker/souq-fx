@@ -108,8 +108,17 @@ export function FocusChartModal({
     setPhonePickerOpen(false);
   }, [visible, symbol, initialTf]);
 
+  // chart-r66b: خطّ المقارنة ومفتاحه كانا يبقيان بشموع الفريم القديم طوال الطلب الجديد (15m→1H: إغلاق
+  // ربع ساعة بوسم ساعة). عند تغيّر الفريم أو رمز المقارنة يُمسح فوراً؛ تبديل الرمز الرئيسي وحده لا يمسّه.
+  const compareKeyRef = useRef('');
   useEffect(() => {
     if (!visible) return;
+    const compareKey = `${compareSym ?? ''}|${tf}`;
+    if (compareKeyRef.current !== compareKey) {
+      compareKeyRef.current = compareKey;
+      setCompareSeries(null);
+      setCompareFailed(false);
+    }
     let alive = true;
     (async () => {
       setLoading(true);
@@ -191,14 +200,19 @@ export function FocusChartModal({
     };
   }, [visible, sym, tf, compareSym]);
 
-  const [quote, setQuote] = useState<{ bid?: number | null; ask?: number | null } | null>(null);
+  // chart-r66b: العرض مربوط برمز العرض — XAUUSD → EURUSD كان يطبع «B 2650.30000» حتى يعود الطلب الجديد
+  const [quoteState, setQuote] = useState<{
+    forSymbol: string;
+    bid?: number | null;
+    ask?: number | null;
+  } | null>(null);
   useEffect(() => {
     if (!visible) return;
     let alive = true;
     api
       .marketQuote(sym)
       .then((q) => {
-        if (alive) setQuote(q);
+        if (alive) setQuote({ forSymbol: sym, bid: q.bid, ask: q.ask });
       })
       .catch(() => {
         if (alive) setQuote(null);
@@ -207,6 +221,7 @@ export function FocusChartModal({
       alive = false;
     };
   }, [visible, sym, series?.last]);
+  const quote = quoteState?.forSymbol === sym ? quoteState : null;
   const hasSpread = quote?.bid != null && quote?.ask != null && quote.ask > quote.bid;
 
   const pick = (next: string) => {
