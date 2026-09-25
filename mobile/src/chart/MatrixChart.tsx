@@ -5703,8 +5703,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     priceTickCap,
     Math.pow(10, -priceTickDecimals)
   );
-  // مقياس النسبة: الأساس إغلاق أول شمعة ظاهرة، والعلامات مستديرة بالنسبة (`percentScaleTicks`).
-  const percentBase = percentScale && !logScale ? source.plot[0]?.close ?? null : null;
+  // مقياس النسبة وخطّ Baseline: الأساس إغلاق أول شمعة **ظاهرة** (`visLo`) كـTradingView، والعلامات مستديرة بالنسبة
+  // (`percentScaleTicks`). `plot[0]` تقع خلف الحافة اليسرى بالهامش الأيمن (~8 شموع من 80) ⇒ «0.00%» وخطّ الأساس
+  // من إغلاق لا يُرى، وقد يقع خطّ Baseline خارج المدى التلقائي فيُقصّ بينما التلوين ينقسم عليه.
+  const firstVisibleClose = source.plot[Math.min(visLo, source.plot.length - 1)]?.close ?? source.plot[0]?.close;
+  const percentBase = percentScale && !logScale ? firstVisibleClose ?? null : null;
   const percentTicks =
     percentBase != null ? percentScaleTicks(priceTickLo, priceTickHi, percentBase, priceTickCap) : [];
   const priceTicks: { ratio: number; price: number; label?: string }[] = (
@@ -6689,7 +6692,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
             const segColor =
               kind === 'baseline'
-                ? c.close >= source.plot[0].close
+                ? c.close >= (firstVisibleClose ?? c.close)
                   ? candleBull
                   : candleBear
                 : accent;
@@ -6718,7 +6721,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             style={[
               styles.gridLine,
               {
-                top: yOf(source.plot[0].close),
+                top: yOf(firstVisibleClose ?? source.plot[0].close),
                 right: PRICE_AXIS_WIDTH,
                 borderTopColor: 'rgba(255,255,255,0.18)',
               },
