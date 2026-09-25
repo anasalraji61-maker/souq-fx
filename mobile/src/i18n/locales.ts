@@ -1220,7 +1220,8 @@ const ar: Dict = {
   screenerScanNone: 'تعذّر جلب أسعار أي رمز — غالباً حدّ طلبات مزوّد الأسعار؛ انتظر دقيقة وأعد الفحص',
   screenerScanPartial: 'فُحص {k} من {total} رمزاً فقط — تعذّرت قراءة: {list} (حدّ طلبات المزوّد غالباً). النتائج من المفحوصة فقط.',
   screenerNoMatchOf: 'فُحص {k} رمزاً على فريم {tf} ولا أحد يحقّق الشرط الآن — جرّب فلتراً آخر أو أعد الفحص لاحقاً',
-  screenerShowingOf: 'عرض أقوى {n} من {total} نتيجة (الأكبر حركةً أولاً)',
+  // «من 9 نتيجة» خطأ: المعدود بعد 3–10 جمع — العدد بعد النقطتين لا يُصرَّف معه اسم
+  screenerShowingOf: 'أقوى النتائج: {n} من {total} (الأكبر حركةً أولاً)',
   screenerChangeSpan: '(آخر 80 شمعة)',
   screenerTapToOpen: 'اضغط أي نتيجة لفتح شارتها على نفس الفريم',
   screenerOpenChartA11y: 'فتح الشارت',
@@ -1362,7 +1363,8 @@ const ar: Dict = {
   alertsActiveCount: 'نشطة',
   alertsTapToEdit: 'اضغط تنبيهاً لتعديله',
   alertsClearFiredBtn: 'مسح المُطلقة ({n})',
-  alertsClearFiredConfirm: 'حذف {n} تنبيه أُطلق؟ التنبيهات التي تراقب تبقى كما هي.',
+  // «حذف 3 تنبيه» خطأ (3–10 تُتبع بجمع) — العدد بين قوسين لا يُصرَّف معه المعدود
+  alertsClearFiredConfirm: 'حذف التنبيهات التي أُطلقت ({n})؟ التنبيهات التي تراقب تبقى كما هي.',
   alertsEditA11yPrefix: 'تعديل التنبيه',
   alertsStatusArmed: '● مُفعَّل — بانتظار السعر',
   alertsStatusTriggered: 'انطلق ✓',
@@ -1594,7 +1596,8 @@ const ar: Dict = {
   backtestStatDrawdown: 'أقصى هبوط: {pct}%',
   backtestStatAvgWinLoss: 'متوسط ربح/خسارة: {win}% / {loss}%',
   backtestNoTrades: 'لم تُولِّد الاستراتيجية أي صفقة بهذه الفترة — لا نسبة نجاح ولا عائد لعرضهما. جرّب فريماً آخر.',
-  backtestSmallSample: '⚠ عينة صغيرة ({n} صفقات) — نسبة النجاح هنا غير موثوقة؛ لا تبنِ قراراً على أقل من ~30 صفقة.',
+  // «(12 صفقات)» خطأ (11–99 تُتبع بمفرد) — «عدد الصفقات: n» يصحّ لكل عدد
+  backtestSmallSample: '⚠ عينة صغيرة (عدد الصفقات: {n}) — نسبة النجاح هنا غير موثوقة؛ لا تبنِ قراراً على أقل من ~30 صفقة.',
   backtestSpreadNote: 'النتائج بعد خصم سبريد تقديري {pips} pip لكل صفقة (يختلف حسب الوسيط).',
   backtestTitle: 'اختبار خلفي للاستراتيجية',
   backtestEquityTitle: 'منحنى رأس المال',
@@ -2651,7 +2654,8 @@ const enUS: Dict = {
   backtestStatDrawdown: 'Max drawdown: {pct}%',
   backtestStatAvgWinLoss: 'Avg win/loss: {win}% / {loss}%',
   backtestNoTrades: 'The strategy produced no trades in this period — no win rate or return to show. Try another timeframe.',
-  backtestSmallSample: '⚠ Small sample ({n} trades) — this win rate isn’t reliable; don’t decide on fewer than ~30 trades.',
+  // «(1 trades)» — لكل عدد
+  backtestSmallSample: '⚠ Small sample (trades: {n}) — this win rate isn’t reliable; don’t decide on fewer than ~30 trades.',
   backtestSpreadNote: 'Results are after an estimated {pips}-pip spread per trade (varies by broker).',
   backtestTitle: 'Strategy Backtest',
   backtestEquityTitle: 'Equity curve',
