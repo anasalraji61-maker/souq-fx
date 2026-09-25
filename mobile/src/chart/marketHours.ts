@@ -61,7 +61,51 @@ export function isForexMarketOpen(symbol: string, now: Date = new Date()): boole
   if (isForexHolidaySession(sec)) return false;
   // CME (معادن، مؤشرات أمريكا، WTI): كسر يومي 17:00–18:00 نيويورك (ومنه افتتاح الأحد 18:00) — كانت «مفتوح» بلا تسعير.
   if (LATE_OPEN_RE.test(sym.trim()) && inMetalsDailyBreak(sec)) return false;
+  if (inIceDailyBreak(sym.trim(), sec)) return false;
   return true;
+}
+
+/**
+ * عقود ICE (مرجع أسعار الوسطاء لهذين الرمزين): كانت «مفتوح» وقت كسرها اليومي بلا تسعير.
+ * - مؤشر الدولار (DX): 20:00–17:00 نيويورك ⇒ كسر 17:00–20:00 (ومنه افتتاح الأحد 20:00).
+ * - برنت (ICE Futures Europe): 01:00–23:00 لندن ⇒ كسر 23:00–01:00 (الاثنين–الخميس)؛ الأسبوع يفتح الأحد 23:00 لندن.
+ * إغلاق الجمعة يبقى 17:00 نيويورك كبقية الرموز. خارج `nextForexOpenSec` (منطقة المستقبل) — تبسيط.
+ */
+const DXY_RE = /^(DXY|USDX|USDINDEX)/i;
+const BRENT_RE = /^(UKOIL|UKBRENT|BRENT|XBR)/i;
+
+/** التوقيت الصيفي البريطاني: من آخر أحد بآذار 01:00 UTC حتى آخر أحد بتشرين الأول 01:00 UTC. */
+function ukDst(sec: number): boolean {
+  const year = new Date(sec * 1000).getUTCFullYear();
+  const lastSunday = (month: number) => {
+    const firstNext = Date.UTC(year, month + 1, 1) / 1000;
+    const dow = new Date(firstNext * 1000).getUTCDay();
+    return firstNext - (dow === 0 ? 7 : dow) * DAY_SEC;
+  };
+  return sec >= lastSunday(2) + 3600 && sec < lastSunday(9) + 3600;
+}
+
+/** 23:00 لندن بيوم `dayStartSec` (منتصف ليل UTC) بالثواني UTC: 22:00 صيفاً، 23:00 شتاءً. */
+function londonElevenPmUtcSec(dayStartSec: number): number {
+  const at = dayStartSec + 22 * 3600;
+  return at + (ukDst(at) ? 0 : 3600);
+}
+
+function inIceDailyBreak(sym: string, sec: number): boolean {
+  const dayStart = Math.floor(sec / DAY_SEC) * DAY_SEC;
+  // النافذة قد تعبر منتصف ليل UTC ⇒ يُفحص يوم UTC الحالي والسابق.
+  const inWindow = (startOf: (d: number) => number, len: number, skipSunday = false) =>
+    [dayStart, dayStart - DAY_SEC].some(
+      (d) =>
+        !(skipSunday && new Date(d * 1000).getUTCDay() === 0) && sec >= startOf(d) && sec < startOf(d) + len
+    );
+  if (DXY_RE.test(sym)) return inWindow(nyFivePmUtcSec, 3 * 3600);
+  if (BRENT_RE.test(sym)) {
+    // جلسة الاثنين تبدأ الأحد 23:00 لندن: قبلها مغلق، وليلة الأحد ليست كسراً.
+    if (new Date(dayStart * 1000).getUTCDay() === 0 && sec < londonElevenPmUtcSec(dayStart)) return true;
+    return inWindow(londonElevenPmUtcSec, 2 * 3600, true);
+  }
+  return false;
 }
 
 /** داخل ساعة كسر المعادن اليومي (17:00–18:00 نيويورك)؟ */
@@ -158,7 +202,7 @@ function inForexWeekend(sec: number): boolean {
 /**
  * جلسة CME Globex: افتتاح الأسبوع 18:00 نيويورك لا 17:00 كالعملات، وكسر يومي 17:00–18:00.
  * المعادن (ذهب/فضة/بلاتين/بلاديوم)، مؤشرات أمريكا (داو/ناسداك/S&P) ونفط WTI.
- * DAX وبرنت (ICE) بساعات أخرى — لا تُحسب هنا.
+ * DAX بساعات أخرى — لا تُحسب هنا؛ برنت ومؤشر الدولار (ICE): `inIceDailyBreak`.
  */
 const LATE_OPEN_RE =
   /^(XAU|XAG|XPT|XPD|GOLD|SILVER|US30|DJ30|DJI|WS30|NAS100|NAS1000|US100|USTEC|NDX|SPX|US500|SP500|USOIL|WTI|XTI|CL[-_.]?OIL)/i;

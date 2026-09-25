@@ -18,6 +18,28 @@ assert.equal(isForexMarketOpen('XAUUSD', at(2026, 0, 1, 21, 59)), false);
 assert.equal(isForexMarketOpen('XAUUSD', at(2026, 0, 1, 22, 0)), false); // الذهب: بعد العطلة 18:00 نيويورك
 assert.equal(isForexMarketOpen('XAUUSD', at(2026, 0, 1, 23, 0)), true);
 assert.equal(isForexMarketOpen('EURUSD', at(2026, 0, 1, 22, 0)), true);
+// ICE — مؤشر الدولار: كسر 17:00–20:00 نيويورك (صيفاً 21:00–00:00 UTC، شتاءً 22:00–01:00 UTC)
+assert.equal(isForexMarketOpen('DXY', at(2026, 6, 15, 20, 59)), true);
+assert.equal(isForexMarketOpen('DXY', at(2026, 6, 15, 21, 0)), false);
+assert.equal(isForexMarketOpen('DXY', at(2026, 6, 15, 23, 59)), false);
+assert.equal(isForexMarketOpen('DXY', at(2026, 6, 16, 0, 0)), true);
+assert.equal(isForexMarketOpen('USDX', at(2026, 0, 15, 0, 30)), false); // شتاءً يعبر منتصف ليل UTC
+assert.equal(isForexMarketOpen('DXY', at(2026, 0, 15, 1, 0)), true);
+assert.equal(isForexMarketOpen('DXY', at(2026, 6, 19, 23)), false); // الأحد: يفتح 20:00 نيويورك
+assert.equal(isForexMarketOpen('DXY', at(2026, 6, 20, 0, 0)), true);
+assert.equal(isForexMarketOpen('EURUSD', at(2026, 6, 15, 21, 30)), true); // العملات بلا كسر
+// ICE — برنت: كسر 23:00–01:00 لندن (صيفاً 22:00–00:00 UTC، شتاءً 23:00–01:00 UTC)
+assert.equal(isForexMarketOpen('UKOIL', at(2026, 6, 15, 21, 59)), true);
+assert.equal(isForexMarketOpen('UKOIL', at(2026, 6, 15, 22, 0)), false);
+assert.equal(isForexMarketOpen('UKOIL', at(2026, 6, 16, 0, 0)), true);
+assert.equal(isForexMarketOpen('UKOIL', at(2026, 0, 15, 22, 59)), true);
+assert.equal(isForexMarketOpen('UKOIL', at(2026, 0, 16, 0, 30)), false);
+assert.equal(isForexMarketOpen('UKOIL', at(2026, 0, 16, 1, 0)), true);
+assert.equal(isForexMarketOpen('UKOIL', at(2026, 6, 19, 21, 30)), false); // الأحد قبل 23:00 لندن
+assert.equal(isForexMarketOpen('UKOIL', at(2026, 6, 19, 22, 0)), true); // الأحد 23:00 لندن: الافتتاح لا كسر
+assert.equal(isForexMarketOpen('UKOIL', at(2026, 6, 19, 23, 30)), true);
+assert.equal(isForexMarketOpen('UKOIL', at(2026, 0, 18, 23, 30)), true); // شتاءً الأحد 23:30 لندن
+assert.equal(isForexMarketOpen('USOIL', at(2026, 6, 15, 22, 30)), true); // WTI (CME) كسرها 17:00–18:00 NY فقط
 // الكريبتو لا تُغلق
 assert.equal(isForexMarketOpen('BTCUSD', at(2025, 11, 25, 12)), true);
 // يوم عادي
