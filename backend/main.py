@@ -1303,6 +1303,10 @@ def market_quote(symbol: str):
     if hit and now - hit[0] < QUOTE_TTL:
         return {**hit[1], "data_kind": "cache"}
     book = market.fetch_quote_book(sym)
+    if book and book.get("price_only"):
+        # `/quote` متعذّر (429/خطأ) فجاء رقم `/price` بلا وقت: كان يُرسَل `as_of` = «الآن» ⇒ يوم السبت
+        # إغلاق الجمعة «حيّ» وحاسبة الحجم تعبّئه دخولاً. فرع الشموع أدناه يحمل وقت آخر شمعة الحقيقي.
+        book = None
     if not book:
         series = build_series(sym, "15m")
         if series.data_source.kind == "demo":

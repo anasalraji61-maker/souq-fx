@@ -202,3 +202,29 @@ def test_invalid_provider_time_is_ignored(routes, bad):
     book = market.fetch_quote_book("EURUSD")
     assert book["quoted_at"] is None
     assert book["market_open"] is None
+
+
+def test_untimed_price_fallback_is_not_sent_as_a_live_quote(routes, monkeypatch):
+    # `/quote` 429 ⇒ `/price` بلا وقت. كان يُعاد `as_of` = «الآن» — يوم السبت إغلاق الجمعة سعر «حيّ».
+    routes["/quote"] = _Resp({}, 429)
+    routes["/price"] = _Resp({"price": "1.1"})
+    friday_close = 1_758_920_400  # شمعة 15د فُتحت الجمعة 21:00 UTC
+
+    def build(sym, timeframe="15m", outputsize=180):
+        c = main.Candle(time=friday_close, open=1.1, high=1.1, low=1.1, close=1.1)
+        return main.ChartSeries(
+            symbol=sym, timeframe=timeframe, candles=[c], change_pct=0, last=1.1,
+            data_source=main.DataProvenance(kind="cache", as_of=time.time(), channel="twelvedata"),
+        )
+
+    monkeypatch.setattr(main, "build_series", build)
+    body = TestClient(main.app).get("/api/market/quote/EURUSD").json()
+    assert body["source"] == "ohlc_fallback" and body["data_kind"] == "cache"
+    assert body["as_of"] == friday_close + 900, "وقت الشمعة الحقيقي لا لحظة الطلب"
+    assert "price_only" not in body
+
+
+def test_untimed_price_fallback_still_serves_the_alert_worker(routes):
+    routes["/quote"] = _Resp({}, 429)
+    routes["/price"] = _Resp({"price": "1.1"})
+    assert market.fetch_quote("EURUSD") == pytest.approx(1.1)

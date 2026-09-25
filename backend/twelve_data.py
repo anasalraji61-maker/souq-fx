@@ -290,6 +290,14 @@ def fetch_quote(matrix_symbol: str) -> float | None:
     return book.get("price")
 
 
+def _price_only(matrix_symbol: str, p: float) -> dict:
+    """ردّ `/price` الاحتياطي: رقم بلا أي وقت (المزوّد لا يرسله) — قد يكون إغلاق الجمعة يوم السبت.
+    `price_only` يقول ذلك صراحةً: التنبيهات تقبله (سعر قديم لا يقطع مستوى)، ومسار الاقتباس لا يُرسله
+    للعميل بوقت «الآن»."""
+    return {"price": p, "bid": None, "ask": None, "spread_source": None, "symbol": matrix_symbol.upper(),
+            "price_only": True}
+
+
 def fetch_quote_book(matrix_symbol: str) -> dict | None:
     """Price + bid/ask when Twelve Data quote endpoint provides them."""
     key = _api_key()
@@ -308,7 +316,7 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
                     p = float(r2.json().get("price"))
                 except (TypeError, ValueError):
                     p = None
-            return {"price": p, "bid": None, "ask": None, "spread_source": None, "symbol": matrix_symbol.upper()} if p else None
+            return _price_only(matrix_symbol, p) if p else None
         if r.status_code >= 400:
             r2 = client.get(f"{API_BASE}/price", params={"symbol": td_sym, "apikey": key})
             if r2.status_code != 200:
@@ -317,7 +325,7 @@ def fetch_quote_book(matrix_symbol: str) -> dict | None:
                 p = float(r2.json()["price"])
             except (KeyError, TypeError, ValueError):
                 return None
-            return {"price": p, "bid": None, "ask": None, "spread_source": None, "symbol": matrix_symbol.upper()}
+            return _price_only(matrix_symbol, p)
         data = r.json()
     if data.get("status") == "error":
         return None
