@@ -33,7 +33,7 @@ import {
 } from './drawingStore';
 import { compareOverlay } from './compare';
 import { watermarkFontSize, watermarkSymbol } from './watermark';
-import { refreshArmedAlertsSoon, useArmedAlerts } from './useArmedAlerts';
+import { moveArmedAlert, refreshArmedAlertsSoon, useArmedAlerts } from './useArmedAlerts';
 import { tickPlausibleForSeries, withLiveExtremes, withLivePrice, type LiveExtremes } from './liveSeries';
 import { computeVolumeProfile, pocPrice, computeTpo } from './volumeProfile';
 import { evalPineLite, INDICATOR_LIBRARY, pineIsPriceScale } from './pineLite';
@@ -486,6 +486,11 @@ const COMPACT_TOOL_ICONS: Record<DrawTool, string> = {
 const PRICE_AXIS_WIDTH = 68;
 /** ارتفاع وسم سعر الخطّ/فيبو فوق خطّه (`top: -11` + خطّ 13) — أقرب من ذلك للحافّة العليا يُقلب تحته. */
 const LEVEL_LABEL_H = 13;
+/** مقبض سحب خطّ التنبيه: بعرض وسمه («🔔 ▲ 1.09250 · +23.4 pip») وارتفاع إصبع حول الخطّ. */
+const ALERT_HANDLE_W = 150;
+const ALERT_HANDLE_H = 28;
+/** أقلّ من هذا (بكسل) رأسياً ⇒ لمسة لا سحب — لا يُعدَّل التنبيه. */
+const ALERT_DRAG_SLOP = 4;
 /** أضيق شعاع أفقي يتّسع لوسمه («150.123 · +123.4 pip») داخله؛ أضيق ⇒ الوسم يُقلب يسار بدايته. */
 const HRAY_LABEL_ROOM = 150;
 /** ألوان الجلسات (مؤشّر «Sessions»): ثابتة المعنى داخله وحده — لا ربح/خسارة ولا تنبيه. */
@@ -758,6 +763,52 @@ const webAxisLockStyle =
  * فتتطابق العتبة مع موضعها على الرسم لا تقاربه. تختفي الخطوط الوسطى ثم الأرقام ثم الخطوط
  * كلّها كلّما قصُرت اللوحة (انظر `placeGuides`).
  */
+/**
+ * مقبض سحب خطّ التنبيه المُسلَّح (كـTradingView: اسحب التنبيه لسعر آخر بدل حذفه وإنشاء غيره). يُرسم **فوق**
+ * سطح إيماءات الشارت وإلا يبتلع اللمسة. المستجيب واحد طوال عمر المقبض والمستدعيات من مرجع يُحدَّث كل إطار —
+ * مستجيب جديد كل إطار يفقد حالة السحب الجارية.
+ */
+function AlertDragHandle({
+  top,
+  right,
+  onStart,
+  onDrag,
+  onDrop,
+}: {
+  top: number;
+  right: number;
+  onStart: () => void;
+  onDrag: (dy: number) => void;
+  onDrop: (dy: number) => void;
+}) {
+  const cb = useRef({ onStart, onDrag, onDrop });
+  cb.current = { onStart, onDrag, onDrop };
+  const pan = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderGrant: () => cb.current.onStart(),
+        onPanResponderMove: (_, g) => cb.current.onDrag(g.dy),
+        onPanResponderRelease: (_, g) => cb.current.onDrop(g.dy),
+        // سحب قُطع (مكالمة، إيماءة نظام) ⇒ إلغاء لا حفظ نصف سحب.
+        onPanResponderTerminate: () => cb.current.onDrop(0),
+      }),
+    []
+  );
+  return (
+    <View
+      style={[
+        // فوق سطح الإيماءات (`chartGestureSurface` zIndex 40).
+        { position: 'absolute', zIndex: 41, top: top - ALERT_HANDLE_H / 2, right, width: ALERT_HANDLE_W, height: ALERT_HANDLE_H },
+        Platform.OS === 'web' && ({ cursor: 'ns-resize', touchAction: 'none', userSelect: 'none' } as never),
+      ]}
+      {...pan.panHandlers}
+    />
+  );
+}
+
 function PaneGuideLines({ paneId, innerH }: { paneId: string; innerH: number }) {
   const guides = placeGuides(paneId, innerH);
   if (guides.length === 0) return null;
@@ -1926,6 +1977,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const seriesDemo = isSyntheticProvenance(series.data_source);
   // تنبيهات الرمز المُسلَّحة خطوطاً على الشارت (`armedAlerts.ts`) — لا على سلسلة تجريبية (سلّمها ليس السوق) ولا شارت درس.
   const armedAlerts = useArmedAlerts(interactive && !seriesDemo && !hideGrid ? series.symbol : null);
+  // سحب خطّ تنبيه: السعر المعاين أثناء السحب (الخطّ والوسم يتبعان الإصبع)، والحفظ عند الإفلات.
+  const [alertDrag, setAlertDrag] = useState<{ id: string; price: number } | null>(null);
+  const alertDragStartY = useRef(0);
   const createAlert = (price: number, origin?: 'drawing' | 'crosshair') => {
     if (!onCreateAlert) return;
     onCreateAlert(price, origin);
@@ -5625,6 +5679,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       : liveSeries.candles[liveSeries.candles.length - 1]?.close) ??
     series.last;
   const currentPriceY = yOf(currentPrice);
+  // سحب خطّ التنبيه: السعر من موضع الإصبع مقصوصاً للوح ومدوَّراً لمنازل الأداة (1.09250 لا 1.0925031…).
+  // الاتجاه يتبع موضعه من السعر الحيّ: خطّ سُحب من فوق السعر إلى تحته صار تنبيه نزول — كما يفهمه المتداول.
+  const alertDragPrice = (dy: number) =>
+    Number(fmtPrice(priceAtY(Math.max(0, Math.min(chartPlotH, alertDragStartY.current + dy)))));
+  const alertDirection = (price: number, fallback: 'above' | 'below'): 'above' | 'below' =>
+    Number.isFinite(currentPrice) ? (price >= currentPrice ? 'above' : 'below') : fallback;
+  const dropAlert = (al: { id: string; price: number; condition: 'above' | 'below' }, dy: number) => {
+    setAlertDrag(null);
+    if (Math.abs(dy) < ALERT_DRAG_SLOP) return;
+    const price = alertDragPrice(dy);
+    if (!(price > 0) || price === al.price) return;
+    void moveArmedAlert(al.id, price, alertDirection(price, al.condition));
+  };
   // الترند/الشعاع المحدَّد: سعره عند الشمعة الحيّة وبُعد السعر عنه («1.08520 · −6.2 pip») — يُلحق
   // بقراءته، فمنتظر الكسر يعرف كم بقي بلا جرّ التقاطع إلى الخطّ.
   // «الآن» بالإعادة خطوة الإعادة لا آخر شمعة بالسلسلة: وإلا يُقرأ الخطّ عند شمعة لم تُكشف بعد،
@@ -8011,16 +8078,19 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
         {/* التنبيهات المُسلَّحة لهذا الرمز: خطّ كهرماني متقطّع + وسم عند المحور «🔔 ▲ السعر · المسافة بالـpip». */}
         {armedAlerts.map((al) => {
-          const y = yOf(al.price);
+          const dragging = alertDrag?.id === al.id;
+          const price = dragging ? alertDrag.price : al.price;
+          const condition = dragging ? alertDirection(price, al.condition) : al.condition;
+          const y = yOf(price);
           if (!Number.isFinite(y) || y < 0 || y > chartPlotH) return null;
           const pips = Number.isFinite(currentPrice)
-            ? signedDistanceText(series.symbol, currentPrice, al.price, lang, priceDecimalsRef)
+            ? signedDistanceText(series.symbol, currentPrice, price, lang, priceDecimalsRef)
             : null;
           // قارئ الشاشة: الوسم رموز («🔔 ▲») — جملة كاملة على الخطّ نفسه، فتُقرأ ولو أُخفيت وسوم الأسعار.
-          const a11yTpl = al.condition === 'above' ? tr.mcArmedAlertAboveA11y : tr.mcArmedAlertBelowA11y;
+          const a11yTpl = condition === 'above' ? tr.mcArmedAlertAboveA11y : tr.mcArmedAlertBelowA11y;
           const a11y = (pips ? a11yTpl.replace('{dist}', pips) : a11yTpl.replace(/\s*—\s*\{dist\}/, '')).replace(
             '{price}',
-            fmtPrice(al.price)
+            fmtPrice(price)
           );
           return (
             <View
@@ -8032,10 +8102,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             >
               {!hidePriceLabels ? (
                 <Text
-                  style={[styles.levelPriceLabel, styles.alertLabel, y < LEVEL_LABEL_H && styles.levelLabelBelow, { right: plotRightInset + 2 }]}
+                  style={[
+                    styles.levelPriceLabel,
+                    styles.alertLabel,
+                    dragging && styles.levelPriceLabelSel,
+                    y < LEVEL_LABEL_H && styles.levelLabelBelow,
+                    { right: plotRightInset + 2 },
+                  ]}
                   numberOfLines={1}
                 >
-                  🔔 {al.condition === 'above' ? '▲' : '▼'} {fmtPrice(al.price)}
+                  🔔 {condition === 'above' ? '▲' : '▼'} {fmtPrice(price)}
                   {pips ? <Text style={styles.levelPipText}>{` · ${pips}`}</Text> : null}
                 </Text>
               ) : null}
@@ -8728,6 +8804,27 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {...(Platform.OS === 'web' ? webChartHandlers : chartPan.panHandlers)}
           />
         ) : null}
+
+        {/* مقابض سحب خطوط التنبيه — فوق سطح الإيماءات، بموضع وسم كل خطّ. */}
+        {canPan && tool === 'none' && !replayOn && !hidePriceLabels
+          ? armedAlerts.map((al) => {
+              const y = yOf(alertDrag?.id === al.id ? alertDrag.price : al.price);
+              if (!Number.isFinite(y) || y < 0 || y > chartPlotH) return null;
+              return (
+                <AlertDragHandle
+                  key={`alertDrag${al.id}`}
+                  top={y}
+                  right={plotRightInset}
+                  onStart={() => {
+                    alertDragStartY.current = yOf(al.price);
+                    setAlertDrag({ id: al.id, price: al.price });
+                  }}
+                  onDrag={(dy) => setAlertDrag({ id: al.id, price: alertDragPrice(dy) })}
+                  onDrop={(dy) => dropAlert(al, dy)}
+                />
+              );
+            })
+          : null}
 
         {!hidePriceLabels && !currentPriceOff ? (
           <View
