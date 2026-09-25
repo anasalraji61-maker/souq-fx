@@ -486,6 +486,11 @@ export type Dict = {
   riskCalcSpreadTooWide: string;
   /** «12 points» بخانة السبريد ⇒ «اكتب 1.2» (`slPipsInPoints` يصلح للخانة نفسها) — طلب tools63؛ `{value}` كما كُتب و`{pips}` ÷10 */
   riskCalcSpreadPointsHint: string;
+  /**
+   * تحذير لا رفض (طلب tools93): سبريد بمنزلتين عشريّتين على زوج سعره بمدى السبريد نفسه (ZARJPY ~8، USDMXN ~18، USDZAR ~18)
+   * قد يكون السعر منسوخاً — لكن سبريدات هذه الأزواج الحقيقية بهذا المدى أحياناً، فالحساب يبقى. `{n}` كما كُتب، `{symbol}` الرمز.
+   */
+  riskCalcSpreadMaybePrice: string;
   /** الوقف ليس أبعد من السبريد — يُضرب لحظة الفتح تقريباً (طلب وكيل الأدوات)؛ `{sl}` و`{spread}` بالنقاط كما تُعرض */
   riskCalcStopInsideSpread: string;
   /**
@@ -1840,6 +1845,7 @@ const ar: Dict = {
   riskCalcSpreadLotsWithin: 'لتبقى مخاطرتك {pct}% شاملة السبريد: {lots} lot',
   riskCalcSpreadTooWide: '«{n}» لا يبدو سبريداً بالـpip — هل كتبتَ سعراً أو points بدل الـpip؟ اكتب بالـpip الفرقَ بين Ask وBid كما تعرضه منصّتك الآن (مثل {example}).',
   riskCalcSpreadPointsHint: 'سبريد «{value}» بالنقاط (points) — كل 10 points = 1 pip، فاكتبه هنا {pips}',
+  riskCalcSpreadMaybePrice: 'هل «{n}» سعر {symbol} لا سبريده؟ سعر هذا الزوج قريب من هذا الرقم. إن كان السبريد بالـpip فعلاً فالحساب صحيح كما هو.',
   riskCalcStopInsideSpread:
     'الوقف ({sl} pip) ليس أبعد من السبريد ({spread} pip) — قد يُضرب فور فتح الصفقة. وسّع الوقف وقلّل اللوت، أو انتظر سبريداً أضيق.',
   riskCalcStopInsideTypicalSpread:
@@ -3045,6 +3051,7 @@ const enUS: Dict = {
   riskCalcSpreadLotsWithin: 'To keep your risk at {pct}% including spread: {lots} lot',
   riskCalcSpreadTooWide: '“{n}” doesn’t look like a spread in pips — did you type a price or points instead of pips? Enter the gap between Ask and Bid in pips, as your platform shows it now (e.g. {example}).',
   riskCalcSpreadPointsHint: 'A spread of “{value}” is in points — 10 points = 1 pip, so type {pips} here',
+  riskCalcSpreadMaybePrice: 'Is “{n}” the {symbol} price rather than its spread? This pair trades close to that number. If it really is the spread in pips, the calculation stands as it is.',
   riskCalcStopInsideSpread:
     'Your stop ({sl} pips) is no wider than the spread ({spread} pips) — it can be hit the moment the trade opens. Widen the stop and cut the lot, or wait for a tighter spread.',
   riskCalcStopInsideTypicalSpread:
@@ -4280,6 +4287,7 @@ const ku: Dict = {
   riskCalcSpreadLotsWithin: 'بۆ ئەوەی مەترسییەکەت لەگەڵ سپرێد لە {pct}% بمێنێتەوە: {lots} lot',
   riskCalcSpreadTooWide: '«{n}» لە سپرێد بە pip ناچێت — نرخ یان points ت نووسیوە لە جیاتی pip؟ جیاوازی نێوان Ask و Bid بە pip بنووسە، وەک ئێستا لە پلاتفۆرمەکەت دیارە (بۆ نموونە {example}).',
   riskCalcSpreadPointsHint: 'سپرێدی «{value}» بە خاڵە (points) — هەر 10 points = 1 pip، بۆیە لێرە {pips} بنووسە',
+  riskCalcSpreadMaybePrice: 'ئایا «{n}» نرخی {symbol}ـە نەک سپرێدەکەی؟ نرخی ئەم جووتە نزیکە لەم ژمارەیە. ئەگەر بەڕاستی سپرێدە بە pip، ژماردنەکە وەک خۆی ڕاستە.',
   riskCalcStopInsideSpread:
     'وەستان ({sl} pip) لە سپرێد ({spread} pip) دوورتر نییە — لەوانەیە هەر کە مامەڵەکە کرایەوە لێی بدرێت. وەستان فراوانتر بکە و لۆت کەم بکەرەوە، یان چاوەڕێی سپرێدی تەسکتر بکە.',
   riskCalcStopInsideTypicalSpread:

@@ -28,6 +28,7 @@
 | QA | chart | **QA84b (منخفض)** ثلاثة تقديرات لعرض الحرف بالخطّ نفسه 11px: `priceLegend.ts:148` `LEGEND_CHAR_W` 6.4، `MatrixChart.tsx:6336` 6.6، `MatrixChart.tsx:563` `HILO_CHAR_W` 6.8. المفتاح (أحرف كبيرة «RSI/MACD») بأصغرها ⇒ أوّل ما يُقصّ على هاتف 360pt. قيسوا مرّة وتشاركوا ثابتاً أو اشرحوا الفرق | QA84 |
 | tools | launch | مفتاح نصّ لتحذير (لا رفض) سبريد بمنزلتين عشريّتين على ZARJPY/USDMXN — مكرَّر بـ«ما يبدأ منه» منذ tools93 (آخره تشغيل 98) | tools93 |
 | ui | chart/tools | **ui50 (backend-r50c بقية)**: التنبيه من الشارت (`chart/alertFromChart.ts:48` `createAlert`، `useArmedAlerts.ts:89` `updateAlert`) لا يفحص الرمز ⇒ على DXY يصل 422 ويظهر خطأ عام. استعملوا `providerSymbols.ts` (`isNotOfferedSymbol` قبل الإرسال، `isSymbolUnavailableError(e, sym)` بالـcatch ⇒ `t.chartNotOfferedTitle`) كما بـ`AlertsPanel`/`IndicatorAlertsPanel` (`a7daed8`). و`TerminalScreen.tsx:111` `NOT_OFFERED_SYMBOLS` (tools) نسخة ثانية ⇒ استوردوها من `providerSymbols.ts` | ui50 |
+| launch | tools | **launch146** مفتاح `riskCalcSpreadMaybePrice` جاهز (ar/en/ku، `{n}` كما كُتب و`{symbol}`) لتحذير (لا رفض) سبريد بمنزلتين قريب من سعر الزوج على ZARJPY/USDZAR/USDMXN (طلبكم tools93) — الربط بحاسبة المخاطرة | launch146 |
 
 **تحقّق الدورة 84 (بالكود، على b1265a1):** البناء أخضر 0، selftests 105/105. أُغلقت: chart-r66 ← tools `f03b726` (`TerminalScreen.tsx:159-169` `fetchSeries` يعيد المخزَّن الحقيقي
 حين `isSyntheticProvenance` ⇒ كل المستدعين)، launch144 ← ui `578f60c` (`AccountScreen.tsx:146` `loginErrorText`). سجلات chart 66 / tools 98 / ui 49 / launch 144 / backend 49: بلا طلب جديد.
