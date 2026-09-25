@@ -868,6 +868,14 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     setNote('');
   };
 
+  // «التالي» بلوحة المفاتيح ينقل بين الخانات بترتيبها (رمز ⇒ دخول ⇒ خروج ⇒ حجم ⇒ وقف ⇒ هدف ⇒ ملاحظة) بدل إغلاقها
+  // ثم لمس الخانة التالية — تسجيل صفقة لحظة الدخول أسرع. لوحة `decimal-pad` بـiOS بلا زرّ إدخال أصلاً (لا ضرر)
+  const entryInRef = useRef<TextInput>(null);
+  const exitInRef = useRef<TextInput>(null);
+  const sizeInRef = useRef<TextInput>(null);
+  const slInRef = useRef<TextInput>(null);
+  const tpInRef = useRef<TextInput>(null);
+  const noteInRef = useRef<TextInput>(null);
   /**
    * رمز النموذج وجهته قبل فتح التعديل — تُعادان بعد الحفظ أو الإلغاء. كانا يبقيان من الصفقة المعدَّلة: تعديل بيع
    * GBPJPY قديم والشارت على EURUSD ⇒ الصفقة التالية تبدأ «GBPJPY بيع»، ودخول EURUSD بلا وقف يُحفظ تحتها بإشارة
@@ -1567,7 +1575,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         placeholderTextColor={colors.textDim}
         autoCapitalize="characters"
         autoCorrect={false}
-        returnKeyType="done"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => entryInRef.current?.focus()}
         underlineColorAndroid="transparent"
         clearButtonMode="while-editing"
         keyboardAppearance="dark"
@@ -1588,6 +1598,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         </Text>
       ))}
       <TextInput
+        ref={entryInRef}
         style={[styles.input, { textAlign: align }]}
         value={entry}
         onChangeText={setEntry}
@@ -1595,7 +1606,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         keyboardType="decimal-pad"
         maxLength={PRICE_MAX_LEN}
         placeholderTextColor={colors.textDim}
-        returnKeyType="done"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => exitInRef.current?.focus()}
         underlineColorAndroid="transparent"
         clearButtonMode="while-editing"
         keyboardAppearance="dark"
@@ -1623,6 +1636,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       </View>
       <View style={[styles.row, rtl && styles.rowRtl]}>
         <TextInput
+          ref={exitInRef}
           style={[styles.input, styles.inputHalf, { textAlign: align }]}
           value={exit}
           onChangeText={setExit}
@@ -1630,7 +1644,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           keyboardType="decimal-pad"
           maxLength={PRICE_MAX_LEN}
           placeholderTextColor={colors.textDim}
-          returnKeyType="done"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={() => sizeInRef.current?.focus()}
           underlineColorAndroid="transparent"
           clearButtonMode="while-editing"
           keyboardAppearance="dark"
@@ -1638,6 +1654,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           accessibilityLabel={t.journalExitA11y}
         />
         <TextInput
+          ref={sizeInRef}
           style={[styles.input, styles.inputHalf, { textAlign: align }]}
           value={size}
           onChangeText={(v) => {
@@ -1649,7 +1666,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           keyboardType="decimal-pad"
           maxLength={10} // «0.10 lots» منسوخة (`parseJournalSize`)
           placeholderTextColor={colors.textDim}
-          returnKeyType="done"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={() => slInRef.current?.focus()}
           underlineColorAndroid="transparent"
           clearButtonMode="while-editing"
           keyboardAppearance="dark"
@@ -1824,6 +1843,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       ) : null}
       <View style={[styles.row, rtl && styles.rowRtl]}>
         <TextInput
+          ref={slInRef}
           style={[styles.input, styles.inputHalf, { textAlign: align }]}
           value={sl}
           onChangeText={(v) => {
@@ -1834,7 +1854,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           keyboardType="decimal-pad"
           maxLength={PRICE_MAX_LEN}
           placeholderTextColor={colors.textDim}
-          returnKeyType="done"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={() => tpInRef.current?.focus()}
           underlineColorAndroid="transparent"
           keyboardAppearance="dark"
           selectionColor={colors.bear}
@@ -1842,6 +1864,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           accessibilityHint={t.journalSlPlaceholder}
         />
         <TextInput
+          ref={tpInRef}
           style={[styles.input, styles.inputHalf, { textAlign: align }]}
           value={tp}
           onChangeText={(v) => {
@@ -1852,7 +1875,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           keyboardType="decimal-pad"
           maxLength={PRICE_MAX_LEN}
           placeholderTextColor={colors.textDim}
-          returnKeyType="done"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={() => noteInRef.current?.focus()}
           underlineColorAndroid="transparent"
           keyboardAppearance="dark"
           selectionColor={colors.bull}
@@ -1958,6 +1983,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         <Text style={[styles.planWarn, { textAlign: align }]}>{t.journalMiniNoMoney}</Text>
       ) : null}
       <TextInput
+        ref={noteInRef}
         style={[styles.input, { textAlign: align }]}
         value={note}
         onChangeText={setNote}
