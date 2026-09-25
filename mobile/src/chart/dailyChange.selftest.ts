@@ -77,6 +77,34 @@ assert.equal(prevClose([fri, sun, mon], D('2026-09-22') + 3 * H), 1.12);
   // كسر CME اليومي أيام الأسبوع لا يغيّر الجلسة (الأربعاء 21:30Z)
   assert.equal(prevClose([wed, thu, fri, sun, mon, { time: D('2026-09-23'), close: 1.13 }], D('2026-09-23') + 21.5 * H, 'XAUUSD'), 1.12);
 }
+// افتتاح ICE المتأخر: مؤشر الدولار 20:00 نيويورك (00:00Z الإثنين صيفاً، 01:00Z شتاءً)، برنت 23:00 لندن (22:00Z/23:00Z)
+{
+  const monW = { time: D('2026-11-16'), close: 1.11 };
+  // DXY صيفاً: مغلق الأحد 21:00–24:00Z ⇒ حركة الجمعة (كان «0.00%»)
+  for (const h of [21.5, 23.9]) {
+    assert.equal(prevClose([wed, thu, fri], D('2026-09-20') + h * H, 'DXY'), 1.09, `DXY ${h}`);
+    assert.equal(prevClose([wed, thu, fri], D('2026-09-20') + h * H, 'USDX.m'), 1.09, `USDX ${h}`);
+  }
+  assert.equal(prevClose([wed, thu, fri], D('2026-09-21') + 0.5 * H, 'DXY'), 1.1);
+  // DXY شتاءً: فجر الإثنين 00:30Z ما زال مغلقاً ⇒ الجمعة؛ 01:30Z مفتوح ⇒ الجلسة الجديدة
+  assert.equal(prevClose([thuW, friW], D('2026-11-16') + 0.5 * H, 'DXY'), 1.09);
+  assert.equal(prevClose([thuW, friW], D('2026-11-16') + 1.5 * H, 'DXY'), 1.1);
+  assert.equal(sessionKeyAt(D('2026-11-16') + 0.5 * H, true, 'DXY'), sessionKeyAt(D('2026-11-13') + 12 * H, true));
+  // والفوركس فجر الإثنين نفسه: الإثنين كما كان
+  assert.equal(prevClose([thuW, friW], D('2026-11-16') + 0.5 * H, 'EURUSD'), 1.1);
+  // شمعة الإثنين ظهرت والسوق مفتوح: المرجع الجمعة كالعادة
+  assert.equal(prevClose([thuW, friW, monW], D('2026-11-16') + 12 * H, 'DXY'), 1.1);
+  // UKOIL صيفاً: مغلق حتى 22:00Z
+  assert.equal(prevClose([wed, thu, fri], D('2026-09-20') + 21.5 * H, 'UKOIL'), 1.09);
+  assert.equal(prevClose([wed, thu, fri], D('2026-09-20') + 22.5 * H, 'UKOIL'), 1.1);
+  // UKOIL شتاءً: حتى 23:00Z
+  assert.equal(prevClose([thuW, friW], D('2026-11-15') + 22.5 * H, 'BRENT'), 1.09);
+  assert.equal(prevClose([thuW, friW], D('2026-11-15') + 23.5 * H, 'BRENT'), 1.1);
+  // كسر ICE اليومي أيام الأسبوع لا يغيّر الجلسة (DXY الأربعاء 21:30Z، برنت الثلاثاء 22:30Z)
+  const tue = { time: D('2026-09-22'), close: 1.125 };
+  assert.equal(prevClose([wed, thu, fri, sun, mon, tue, { time: D('2026-09-23'), close: 1.13 }], D('2026-09-23') + 21.5 * H, 'DXY'), 1.125);
+  assert.equal(prevClose([fri, sun, mon, tue], D('2026-09-22') + 22.5 * H, 'UKOIL'), 1.12);
+}
 // أداة تتداول بالعطلة (شمعة سبت بالسلسلة): أيام UTC عادية — الأحد مقابل السبت
 const sat = { time: D('2026-09-19'), close: 64000 };
 assert.equal(

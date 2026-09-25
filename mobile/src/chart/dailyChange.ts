@@ -11,7 +11,7 @@
  * وأداة تتداول بالعطلة (شمعة سبت بالسلسلة — عملات رقمية) تبقى على أيام UTC العادية.
  */
 import type { Candle } from '../api';
-import { DAY_SEC, forexSundayOpenSec, isLateOpenSymbol } from './marketHours';
+import { DAY_SEC, forexSundayOpenSec, isForexMarketOpen, isLateOpenSymbol } from './marketHours';
 import { isFreshTick } from './dataSource';
 
 export type Direction = 'up' | 'down' | 'flat';
@@ -30,11 +30,21 @@ const weekdayOf = (day: number) => (((day + 4) % 7) + 7) % 7;
  * `isNow`: لحظة حالية لا شمعة — صباح الأحد قبل الافتتاح ما زال جلسة الجمعة.
  * `lateOpen`: رمز CME (ذهب/مؤشرات/نفط) يفتح بعد العملات بساعة.
  */
-function sessionOf(tSec: number, weekendMerge: boolean, isNow: boolean, lateOpen = false): number {
+function sessionOf(tSec: number, weekendMerge: boolean, isNow: boolean, lateOpen = false, symbol?: string | null): number {
   const day = Math.floor(tSec / DAY_SEC);
   if (!weekendMerge) return day;
   const wd = weekdayOf(day);
   if (wd === 6) return day - 1;
+  /**
+   * رموز ICE تفتح أسبوعها بعد العملات: مؤشر الدولار 20:00 نيويورك (00:00/01:00 UTC **الإثنين**)، وبرنت 23:00 لندن.
+   * بالحدّ 17:00 كانت ساعات السوق المغلق (DXY حتى 3، UKOIL ساعة) جلسةً جديدة مرجعها إغلاق الجمعة ⇒ «0.00%» بدل حركة
+   * الجمعة. `isForexMarketOpen` يعرف كسرها (`inIceDailyBreak`)؛ مغلقٌ مساء الأحد/فجر الإثنين ⇒ جلسة الجمعة.
+   */
+  if (isNow && symbol && (wd === 0 || (wd === 1 && tSec < day * DAY_SEC + 2 * 3600))) {
+    if (tSec >= forexSundayOpenSec((wd === 0 ? day : day - 1) * DAY_SEC) && !isForexMarketOpen(symbol, new Date(tSec * 1000))) {
+      return day - (wd === 0 ? 2 : 3);
+    }
+  }
   if (wd === 0) {
     // قبل افتتاح الأسبوع (17:00 نيويورك: 21:00 UTC صيفاً، 22:00 شتاءً) جلسة «اليوم» ما زالت
     // الجمعة. كان الحدّ 20:00 ثابتاً: ساعة أو ساعتان من سوق مغلق تعرض «0.00%» بدل حركة الجمعة.
@@ -56,7 +66,7 @@ export function weekendMergeOf(candles: readonly Pick<Candle, 'time'>[]): boolea
  * تغيّره (منتصف ليل UTC، افتتاح الأحد) يعني أن «إغلاق الأمس» المخزَّن صار إغلاق ما قبل الأمس.
  */
 export function sessionKeyAt(nowSec: number, weekendMerge: boolean, symbol?: string | null): number {
-  return sessionOf(nowSec, weekendMerge, true, isLateOpenSymbol(symbol));
+  return sessionOf(nowSec, weekendMerge, true, isLateOpenSymbol(symbol), symbol);
 }
 
 /**
