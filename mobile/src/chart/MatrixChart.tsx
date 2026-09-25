@@ -129,6 +129,7 @@ import {
   measureReadoutText,
 } from './measureReadout';
 import { inLeftLabelLane, LEFT_LABEL_LANE_W, thinByGap } from './levelLabels';
+import { noteBox } from './noteLabel';
 import { planHiLoLabels } from './hiLoLabels';
 import { planDayBreaks } from './dayBreaks';
 import { projectBarTimeSec, tradingDayStartSec } from './marketHours';
@@ -7366,16 +7367,27 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             );
           }
           if (d.tool === 'note' && aLocal >= 0 && aLocal <= lastDrawLocal) {
+            // قرب الشمعة الحيّة يُقلب لينتهي عند الإرساء بدل المرور تحت محور السعر (`noteBox`).
+            const noteText = d.text || tr.mcNoteDefault;
+            const box = noteBox(xOf(aLocal), noteText, chartPlotW);
             return (
               <Text
                 key={d.id}
+                numberOfLines={1}
                 style={[
                   styles.note,
-                  { left: xOf(aLocal), top: yOf(d.a.price), color: d.color },
+                  {
+                    left: box.left,
+                    maxWidth: box.width,
+                    top: yOf(d.a.price),
+                    color: d.color,
+                    textAlign: box.flipped ? 'right' : 'left',
+                  },
+                  box.flipped ? { width: box.width } : null,
                   sel ? [styles.noteSel, { borderColor: d.color }] : null,
                 ]}
               >
-                {d.text || tr.mcNoteDefault}
+                {noteText}
               </Text>
             );
           }
