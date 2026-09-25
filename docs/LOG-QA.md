@@ -164,3 +164,15 @@ XAUUSD الثلاثاء 20:00Z +H1 ⇒ 22:00Z و19:00Z +3 ⇒ 23:00Z (يتخطّ
 **المراجعة (c — a11y)، بسكربتين على كل `.tsx`:** (1) عناصر تفاعلية بلا `accessibilityLabel` ولا نصّ ابن: 1 فقط (`MatrixSidePanel.tsx:83`، مسجّل)؛ أزرار برمز وحده بلا وصف: 0.
 (2) أزرار نمطها `&& styles.*On/Active/Selected` بلا `accessibilityState`: **32** بـ14 ملفاً (صف QA13) — منها `AccountScreen` ×6 التي وُصفت خطأً بصفّ QA3 «بلا وصف» (لها نصّ ابن) ⇒ صُحّح الصف.
 **الدورة القادمة:** المراجعة (d) — أرقام/حدود متناقضة بين الملفات.
+
+## 2026-09-25 — الدورة 14
+**البناء:** أخضر 0 (بعد b5c8955) — لا إصلاح لازم. **Selftests:** 62/62 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — tools42 (`77cce19`: `sessionKeyAt(…, symbol)` بـ`dailyRefStore.ts:43 :75` و`dailyChange.ts:80`؛ selftest يمرّ)،
+`mcWeekdays` مربوط (`MatrixChart.tsx:5014`)، `journalSizeDottedFix` مربوط (`TradeJournalPanel.tsx:366`)، `IndicatorForecastPanel.tsx:217` `selected` (QA13 ⇒ 31).
+**غير مُغلق:** 10 `Alert.alert`، «₴» ×2، `TimeframeBar` صفر `accessibilityState`، `QUICK_SYMBOLS` ×3، `DomLitePanel` `void last`، `LIMIT 200`، `TradingCentral-like`.
+أُضيف `accNetLoadError` (launch63) لصفّ التصديرات الميتة.
+**المراجعة (d — أرقام/حدود متناقضة)، بمقارنة ثوابت `MAX_*`/`maxLength` بالتطبيق مع `Field(max_length…)` بالخادم، ثم `journalSymbol` بـ`tsx` على 8 لواحق وسيط:**
+متّسق — pip (`backtest.py` = `positionSize.ts`)، شموع 50..5000، رمز الدفتر ≤12 = الخادم 12، 200 صفقة، ملاحظة التصويت 500، الدردشة 1000.
+**جديد QA14 → tools:** ملاحظة الدفتر `TradeJournalPanel.tsx:1683` بلا `maxLength` والخادم يرفض >500 ⇒ 422 يُعرض «تحقق من الاتصال» (`JOURNAL_NOTE_MAX` جاهز).
+**جديد QA14 → الخادم:** ملاحظة التنبيه/تنبيه المؤشر `main.py:199 :399` بلا حدّ.
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
