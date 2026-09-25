@@ -85,7 +85,7 @@ MATRIX مساحة تحليل فني مصممة للمتداول الفردي: ش
 تنبيه مهم: MATRIX تطبيق تحليل وتعليم فقط. لا ينفّذ صفقات، ولا يرتبط بأي وسيط، ولا يقدّم نصيحة استثمارية. التداول بالعملات والأسواق المالية ينطوي على مخاطر عالية وقد يؤدي إلى خسارة رأس المال. البيانات المعروضة قد تكون متأخرة أو تجريبية حسب المصدر.
 
 **ما الجديد (الإصدار الأول)**
-الإصدار الأول من MATRIX: شارتات متعددة، مؤشرات وأدوات رسم، تنبيهات أسعار ومؤشرات، تقويم اقتصادي، وأكاديمية صوتية للتحليل الفني.
+الإصدار الأول من MATRIX بالعربية والإنجليزية والكردية: شارتات متعددة، مؤشرات وأدوات رسم، تنبيهات أسعار ومؤشرات، حاسبة حجم المركز ودفتر صفقات، تقويم اقتصادي، وأكاديمية صوتية للتحليل الفني.
 
 ---
 
@@ -146,7 +146,7 @@ Calm colors for long sessions, with tactile feedback only where you touch.
 Important: MATRIX is an analysis and education app only. It does not execute trades, does not connect to any broker, and does not provide investment advice. Trading currencies and financial markets involves a high level of risk and may result in the loss of capital. Market data shown may be delayed or demo data depending on the source.
 
 **What's New (first release)**
-The first release of MATRIX: multi-chart layouts, indicators and drawing tools, price and indicator alerts, an economic calendar, and an audio academy for technical analysis.
+The first release of MATRIX, in English, Arabic and Kurdish: multi-chart layouts, indicators and drawing tools, price and indicator alerts, a position size calculator and trade journal, an economic calendar, and an audio academy for technical analysis.
 
 > **en-GB**: النص نفسه صالح بتعديلين للتهجئة البريطانية: «Analyze» بالنص الترويجي ← «Analyse»، و«colors» بالسطر قبل
 > الأخير من الوصف ← «colours». لا تغيير في حدود الأحرف (نفس العدد).
@@ -197,3 +197,6 @@ The first release of MATRIX: multi-chart layouts, indicators and drawing tools, 
 
 > **2026-09-25 (launch 84، QA32)**: سطر أنواع الشارت العربي «منطقة» ⇒ «مساحة» كما التطبيق منذ `290e166` (الطول نفسه، 5 أحرف ⇒ العدّ 3983 بلا تغيير).
 > ونصوص «رينكو/كاجي/نقطة ورقم» صارت مفاتيح بالقاموس (`ctlKindRenko/Kagi/Pnf`) — تظهر بالتطبيق حين يربطها chart بـ`KIND_KEYS`.
+
+> **2026-09-25 (launch 85)**: «ما الجديد» يذكر اللغات الثلاث وحاسبة حجم المركز ودفتر الصفقات (أداتا المتداول الأساسيتان، كلتاهما بالوصف الكامل).
+> العدّ: **ar 187 / en 252** حرفاً — تحت حدّ Google Play لـ«ما الجديد» (500).
