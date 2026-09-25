@@ -231,8 +231,9 @@ def _parse_ff_json(text: str) -> list[dict[str, Any]]:
                         if time_tbd
                         else dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
                     )
-            except ValueError:
-                pass
+            except (ValueError, OverflowError):
+                # «0001-01-01T00:00+05:00» يفيض بـ`timestamp()`/+12س (OverflowError) — كان يُسقط الأسبوع كلّه
+                ts, time_tbd, when = None, False, "هذا الأسبوع"
         country = str(ev.get("country") or "").strip()
         fc_raw = str(ev.get("forecast") or "").strip()
         prev_raw = str(ev.get("previous") or "").strip()

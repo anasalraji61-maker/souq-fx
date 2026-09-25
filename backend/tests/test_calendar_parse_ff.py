@@ -252,3 +252,17 @@ def test_json_holiday_has_no_clock_time_whatever_the_feed_hour(date, want_when):
 def test_xml_event_branch_marks_unannounced_time(tm, want):
     out = cal._parse_ff(_events(_event("BOJ Policy Rate", country="JPY", tm=tm)))
     assert out[0]["time_tbd"] is want
+
+
+def test_one_out_of_range_date_does_not_drop_the_whole_week():
+    """`timestamp()` على سنة 1 بإزاحة موجبة = OverflowError (ليس ValueError) ⇒ كان الأسبوع كلّه يسقط."""
+    import json
+
+    rows = [
+        {"title": "Bad", "country": "USD", "date": "0001-01-01T00:00:00+05:00", "impact": "High"},
+        {"title": "NFP", "country": "USD", "date": "2026-10-02T08:30:00-04:00", "impact": "High"},
+    ]
+    out = cal._parse_ff_json(json.dumps(rows))
+    by = {e["title"]: e for e in out}
+    assert by["NFP"]["ts"] is not None
+    assert by["Bad"]["ts"] is None and by["Bad"].get("time_tbd") is not True

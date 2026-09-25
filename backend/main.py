@@ -256,8 +256,9 @@ class AuthLogin(BaseModel):
 
 
 class PushRegister(BaseModel):
-    token: str = Field(min_length=10)
-    platform: str = "unknown"
+    # بلا حدّ أعلى: رمز 2MB يُخزَّن ويُعاد إرساله لـExpo مع كل إشعار للمالك
+    token: str = Field(min_length=10, max_length=256)
+    platform: str = Field(default="unknown", max_length=20)
     # لغة واجهة الجهاز (ar/en-US/en-GB/ku) — اختيارية؛ العملاء الأقدم لا يرسلونها
     lang: str | None = Field(default=None, max_length=10)
 

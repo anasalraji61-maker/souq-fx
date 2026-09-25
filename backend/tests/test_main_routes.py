@@ -802,3 +802,8 @@ def test_alerts_on_a_symbol_the_provider_does_not_offer_are_refused(client, sym)
     r = client.post("/api/indicator-alerts", json={
         "symbol": sym, "alert_type": "rsi", "condition": "above", "value": 70})
     assert r.status_code == 422 and "symbol unavailable at provider" in r.text
+
+
+def test_push_token_has_an_upper_bound(client):
+    r = client.post("/api/push/register", json={"token": "ExponentPushToken[" + "x" * 2_000_000 + "]"})
+    assert r.status_code == 422
