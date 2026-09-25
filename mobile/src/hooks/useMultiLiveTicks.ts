@@ -15,7 +15,7 @@ import { RECONNECT_BASE_MS, RECONNECT_MAX_MS, STALE_CHECK_MS, TICK_STALE_MS } fr
  *   ولا يجدّد لحظته؛ `as_of` هو وقت استلامه هو لا أحدث رمز بالدفعة.
  * - كل رمز يحمل لحظة استلامه؛ غاب عن البثّ أكثر من `TICK_STALE_MS` ⇒ يُسقَط (يعود المستهلك لإغلاق
  *   آخر شمعة) ولو ظلّ البثّ يصل برموز أخرى.
- * - مقبس «مفتوح» صامت أكثر من `TICK_STALE_MS` يُترك ويُفتح غيره فوراً.
+ * - مقبس «مفتوح» صامت، أو عالق بالمصافحة، أكثر من `TICK_STALE_MS` يُترك ويُفتح غيره فوراً.
  * - العودة للواجهة تعيد الاتصال فوراً وتصفّر التضاعف.
  * - التعطيل يُنسي الأسعار: نافذة تُعاد بعد دقائق لا تعرض أسعار إغلاقها.
  */
@@ -35,7 +35,7 @@ export function useMultiLiveTicks(symbols: string[], enabled: boolean) {
     let ws: WebSocket | null = null;
     let attempt = 0;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-    /** آخر رسالة (أو لحظة الفتح) على المقبس الحالي — لكشف مقبس «مفتوح» صامت. */
+    /** آخر رسالة (أو لحظة المحاولة/الفتح) على المقبس الحالي — لكشف مقبس صامت أو عالق بالمصافحة. */
     let lastHeardAt = 0;
 
     const scheduleReconnect = () => {
@@ -47,6 +47,9 @@ export function useMultiLiveTicks(symbols: string[], enabled: boolean) {
 
     function connect() {
       if (!alive) return;
+      // يبدأ عدّاد الصمت من المحاولة لا من الفتح: مصافحة معلّقة (شبكة خلوية ضعيفة، بوّابة Wi-Fi) تبقى
+      // CONNECTING حتى مهلة TCP بالنظام بلا `onclose` ⇒ قائمة المتابعة بلا سعر حيّ ولا محاولة أخرى طوالها.
+      lastHeardAt = Date.now();
       try {
         const sock = new WebSocket(`${base}/ws/ticks`);
         ws = sock;
@@ -112,8 +115,10 @@ export function useMultiLiveTicks(symbols: string[], enabled: boolean) {
         }
         return next ?? prev;
       });
+      // مقبس «مفتوح» صامت، أو عالق بالمصافحة (CONNECTING)، أكثر من `TICK_STALE_MS` ⇒ يُترك ويُفتح غيره.
       const cur = ws;
-      if (!cur || cur.readyState !== WebSocket.OPEN || now - lastHeardAt <= TICK_STALE_MS) return;
+      const pending = cur && (cur.readyState === WebSocket.OPEN || cur.readyState === WebSocket.CONNECTING);
+      if (!cur || !pending || now - lastHeardAt <= TICK_STALE_MS) return;
       ws = null;
       try {
         cur.close();
