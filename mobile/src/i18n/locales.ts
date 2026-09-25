@@ -1195,6 +1195,10 @@ export type Dict = {
   // components/SymbolSearchBar.tsx + ScreenerMini.tsx + DomLitePanel.tsx + PairDrumWheel.tsx
   // (i18n طبقة أدوات شاشة الشارت، 2026-09-21)
   ssbPlaceholder: string;
+  /**
+   * البحث فشل (شبكة أو خطأ خادم — 503 «Twelve Data not configured» يصل هنا أيضاً، launch135): لا يُلقى على اتصال
+   * المستخدم وحده — السببان كلاهما، والعمل واحد (المحاولة بعد قليل). لا «اختر من القائمة»: بقائمة المتابعة القائمة تحت الحقل هي ما أُضيف أصلاً.
+   */
   ssbError: string;
   /** بحث نجح بلا نتيجة (`results` فارغة، `q` ≥ حرفين) — كان الشريط صامتاً فيُظنّ أنه لم يعمل. `{q}` نصّ البحث. */
   ssbNoMatch: string;
@@ -2423,7 +2427,7 @@ const ar: Dict = {
   mcMeasureBarTwo: 'شمعتان',
   // أدوات شاشة الشارت (i18n، 2026-09-21)
   ssbPlaceholder: 'بحث رمز... EUR, XAU, BTC',
-  ssbError: 'تعذر البحث — تحقق من الاتصال وحاول مرة أخرى',
+  ssbError: 'تعذّر البحث الآن — السبب اتصالك أو مزوّد البيانات. حاول بعد قليل',
   ssbNoMatch: 'لا رمز يطابق «{q}» لدى مزوّد البيانات — جرّب جزءاً أقصر مثل EUR أو XAU أو BTC',
   ssbPickA11yPrefix: 'اختيار الرمز: ',
   smnTitle: 'فحص سريع',
@@ -3611,7 +3615,7 @@ const enUS: Dict = {
   mcMeasureBarTwo: 'bars',
   // Chart-screen widget layer (i18n, 2026-09-21)
   ssbPlaceholder: 'Search symbol… EUR, XAU, BTC',
-  ssbError: 'Search failed — check your connection and try again',
+  ssbError: 'Search isn’t available right now — either your connection or our data provider. Try again shortly',
   ssbNoMatch: 'No symbol matches “{q}” at our data provider — try a shorter part like EUR, XAU or BTC',
   ssbPickA11yPrefix: 'Select symbol: ',
   smnTitle: 'Quick scan',
@@ -4829,7 +4833,7 @@ const ku: Dict = {
   mcMeasureBarTwo: 'مۆم',
   // ئامرازەکانی شاشەی چارت (i18n، 2026-09-21)
   ssbPlaceholder: 'گەڕان بۆ هێما... EUR, XAU, BTC',
-  ssbError: 'گەڕان سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
+  ssbError: 'گەڕان ئێستا کار ناکات — لە پەیوەندییەکەتەوەیە یان لە دابینکەری داتا. کەمێکی تر هەوڵبدەرەوە',
   ssbNoMatch: 'هیچ هێمایەک لەگەڵ «{q}» ناگونجێت لای دابینکەری داتا — بەشێکی کورتتر تاقی بکەرەوە وەک EUR یان XAU یان BTC',
   ssbPickA11yPrefix: 'دیاریکردنی هێما: ',
   smnTitle: 'پشکنینی خێرا',
