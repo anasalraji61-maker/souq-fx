@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import re
 from typing import Any
 
 import httpx
@@ -101,12 +102,28 @@ def interrupt_answer(
     return chat(system, user, max_tokens=600)
 
 
+# كلمات الاتجاه **كلماتٍ كاملة**. كانت مطابقة نصّ جزئي: «short-term pullback» بردّ صاعد ⇒ بيع، «for a long
+# while» بردّ هابط ⇒ شراء، و«بيع» داخل «طبيعي»/«الربيع» ⇒ بيع؛ و«bullish/bearish/صاعد/هابط» لم تكن تُعرف.
+# ردّ يذكر الجانبين (صاعد ثم «قد يؤدي إلى الهبوط») يبقى بلا اتجاه — أسلم من جانب خاطئ.
+_AR_PRE = r"(?<!\w)(?:[وف])?(?:[بلك])?(?:ال|لل)?"
+_AR_SUF = r"(?:ي|ية|يا|اً|ا|ً|ٍ|ٌ)?(?!\w)"
+_BUY_RE = re.compile(
+    _AR_PRE + r"(?:شراء|صعود|صاعد)" + _AR_SUF
+    + r"|\b(?:buy|buying|bullish|uptrend)\b|\blong\b(?![- ](?:term|while|time|run|way|period))",
+    re.IGNORECASE,
+)
+_SELL_RE = re.compile(
+    _AR_PRE + r"(?:بيع|هبوط|هابط)" + _AR_SUF
+    + r"|\b(?:sell|selling|shorting|bearish|downtrend)\b|\bshort\b(?![- ](?:term|while|time|run|period))",
+    re.IGNORECASE,
+)
+
+
 def parse_setup_hint(text: str) -> dict[str, Any]:
     """اتجاه الردّ إن كان جانباً واحداً بلا لبس، وإلا None. كان «buy» إن وُجدت كلمة شراء وإلا
     **«sell»** — ردّ بلا اتجاه (أو «انتظر») يصير توصية بيع؛ والمستويات 0.0 أرقام بشكل أسعار."""
-    low = text.lower()
-    buy = any(w in low for w in ("شراء", "صعود", "buy", "long"))
-    sell = any(w in low for w in ("بيع", "هبوط", "sell", "short"))
+    buy = bool(_BUY_RE.search(text or ""))
+    sell = bool(_SELL_RE.search(text or ""))
     return {
         "direction": "buy" if buy and not sell else "sell" if sell and not buy else None,
         "entry": None,

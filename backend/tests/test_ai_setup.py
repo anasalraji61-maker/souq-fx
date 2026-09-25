@@ -19,6 +19,15 @@ from tests.test_signal_levels import _provider_series
     ("سيناريو شراء عند الدعم", "buy"),
     ("Consider a short below 1.08", "sell"),
     ("شراء فوق 1.09 أو بيع تحت 1.08", None),
+    # كلمات كاملة لا نصّ جزئي: كانت الثلاثة الأولى «sell»/«buy»/«sell» — عكس الردّ أو من لا شيء
+    ("Bias: bullish, expect a short-term pullback first", "buy"),
+    ("In a downtrend for a long while; bias bearish", "sell"),
+    ("السوق طبيعي الآن، انتظر", None),
+    ("الاتجاه المحتمل: صاعد، وكسر الدعم قد يؤدي إلى الهبوط", None),
+    ("الاتجاه صاعد", "buy"),
+    ("اتجاه هبوطي واضح", "sell"),
+    ("فرصة للبيع تحت المقاومة", "sell"),
+    ("Shorting below 1.08", "sell"),
 ])
 def test_direction_only_when_unambiguous(text, want):
     out = openrouter_ai.parse_setup_hint(text)
