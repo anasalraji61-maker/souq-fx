@@ -357,6 +357,9 @@ export type Dict = {
   /** رافعة مفهومة لكن خارج مدى `parseLeverage` (كـ«1:5000») — بدل «رقم غير مفهوم… بلا فواصل آلاف» المضلِّل؛
    *  `{value}` كما كُتبت، `{max}` سقف `parseLeverage` (3000 اليوم) */
   riskCalcLeverageOutOfRange: string;
+  /** «1.000»/«1:1.000» بخانة الرافعة (`readLeverage` يرفضها منذ `7ee9d77`): 1:1000 بكتابة أوروبية أم 1:1؟ بدل «رقم غير مفهوم… مثل 1.0850».
+   *  `{value}` كما كُتبت، `{big}` قراءة الآلاف («1000»). للأدوات: فرع قبل `invalidNumberHint` حين تكون الرافعة وحدها المرفوضة */
+  riskCalcLeverageAmbiguous: string;
   riskCalcMargin: string;
   riskCalcMarginNote: string;
   riskCalcTarget: string;
@@ -1415,6 +1418,7 @@ const ar: Dict = {
   riskCalcPipValue: 'قيمة الـpip للوت',
   riskCalcLeverage: 'الرافعة المالية (100 تعني 1:100)',
   riskCalcLeverageOutOfRange: 'رافعة «{value}» خارج ما تحسبه الحاسبة (من 1:1 حتى 1:{max}) — اكتب رافعة حسابك كما تظهر بمنصّتك، مثل 500.',
+  riskCalcLeverageAmbiguous: 'رافعة «{value}» مبهمة — هل تقصد 1:{big}؟ اكتب {big} بلا نقطة، أو 1 إن كان حسابك بلا رافعة.',
   riskCalcMargin: 'الهامش المحجوز',
   riskCalcMarginNote:
     'الهامش مبلغ يحجزه الوسيط ما دامت الصفقة مفتوحة، وليس ما قد تخسره — خسارتك يحدّدها الوقف. والرافعة المتاحة تختلف حسب الوسيط والأداة.',
@@ -2470,6 +2474,7 @@ const enUS: Dict = {
   riskCalcPipValue: 'Pip value per lot',
   riskCalcLeverage: 'Leverage (100 means 1:100)',
   riskCalcLeverageOutOfRange: 'Leverage “{value}” is outside what the calculator handles (1:1 to 1:{max}) — enter your account’s leverage as your platform shows it, e.g. 500.',
+  riskCalcLeverageAmbiguous: 'Leverage “{value}” is ambiguous — did you mean 1:{big}? Type {big} without the dot, or 1 if your account has no leverage.',
   riskCalcMargin: 'Margin held',
   riskCalcMarginNote:
     'Margin is what your broker sets aside while the trade is open, not what you can lose — your stop decides that. Available leverage varies by broker and instrument.',
@@ -3550,6 +3555,7 @@ const ku: Dict = {
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
   riskCalcLeverage: 'لێڤەرێج (100 واتە 1:100)',
   riskCalcLeverageOutOfRange: 'لێڤەرێجی «{value}» لە دەرەوەی ئەوەیە کە حاسیبەکە حیسابی دەکات (لە 1:1 تا 1:{max}) — لێڤەرێجی هەژمارەکەت وەک لە پلاتفۆرمەکەتدا دەردەکەوێت بنووسە، وەک 500.',
+  riskCalcLeverageAmbiguous: 'لێڤەرێجی «{value}» ڕوون نییە — مەبەستت 1:{big}ە؟ {big} بەبێ خاڵ بنووسە، یان 1 ئەگەر هەژمارەکەت بێ لێڤەرێجە.',
   riskCalcMargin: 'مارجینی گیراو',
   riskCalcMarginNote:
     'مارجین ئەو بڕەیە کە بڕۆکەر تا مامەڵەکە کراوە بێت دەیگرێت، نەک ئەوەی لەوانەیە لەدەستی بدەیت — زیانەکەت ستۆپەکە دیاری دەکات. لێڤەرێجی بەردەست بەپێی بڕۆکەر و ئامراز جیاوازە.',
