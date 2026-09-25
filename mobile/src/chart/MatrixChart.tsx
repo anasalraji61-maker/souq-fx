@@ -397,6 +397,11 @@ type Props = {
   /** origin: 'crosshair' = زر 🔔 بسطر القراءة عند سعر الشمعة المحددة؛ غير ذلك = من أداة رسم. */
   onCreateAlert?: (price: number, origin?: 'drawing' | 'crosshair') => void;
   initialTool?: DrawTool;
+  /**
+   * الأداة الجارية كلما تغيّرت من داخل الشارت (إنهاء رسم ⇒ 'none'، شريط الأدوات المدمج، Esc…). شريط أدوات خارجي
+   * يمرّر `initialTool` وحده كان يُبقي «ترند» مضاءً بعد إنهاء الخطّ، ونقرها ثانيةً لا تغيّر القيمة فلا يحدث شيء.
+   */
+  onToolChange?: (tool: DrawTool) => void;
   initialLens?: LensMode;
   initialKind?: ChartKind;
   initialIndicators?: IndicatorId[];
@@ -1364,6 +1369,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   liveTickSource = null,
   onCreateAlert,
   initialTool,
+  onToolChange,
   initialLens,
   initialKind,
   initialIndicators,
@@ -2216,6 +2222,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   useEffect(() => {
     if (initialTool) setTool(initialTool);
   }, [initialTool, series.symbol]);
+
+  const onToolChangeRef = useRef(onToolChange);
+  onToolChangeRef.current = onToolChange;
+  useEffect(() => {
+    onToolChangeRef.current?.(tool);
+  }, [tool]);
 
   useEffect(() => {
     if (initialLens) setLens(initialLens);
