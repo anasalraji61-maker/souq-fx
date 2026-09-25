@@ -587,3 +587,14 @@
 - بنود المهمّة الأصلية (تحقّق بالكود): «₴» بتعليقين فقط؛ `Alert.alert` بـ`confirmDestructive.ts` وحده (الباقي تعليقات)؛ «درجة الاتفاق» بتعليقات فقط؛ الكردية 1080 مفتاحاً، صفر ناقص، المطابق `listSep` وحده، صفر «ة/ي/ك»؛ `useMultiLiveTicks` ⇐ `acceptTick`/`TICK_STALE_MS`؛ `accReplayTour` قائم.
 - DESIGN-PRO: فشل QA 82 الوحيد (DP2) بـ`TerminalScreen` (tools). ملفّاتي المتغيّرة منذ تشغيل 47 (`OnboardingOverlay`/`AppErrorBoundary` §5.5 بلا ظلّ، `MatrixEdgeRails`، `WatchlistPanel`) لا تُدخل فشلاً.
 - **لم يُتحقَّق بصرياً** (لا متصفّح على الجهاز) — tsc وحده.
+
+## 2026-09-26 — تشغيل 49
+صفّ ui بـCOORDINATION (دورة QA 83): **launch144**. بوابة البناء خضراء (tsc 0) قبل كل commit:
+
+| commit | ماذا | صفّ |
+|---|---|---|
+| 578f60c | `AccountScreen.submit`: رفض الدخول عبر `loginErrorText(t, e)` بدل `t.loginError` الجامع ⇒ 401 «الاسم أو الإيميل أو كلمة المرور غير صحيحة»، حقل فارغ ⇒ «اكتب الاسم»، شبكة/5xx ⇒ الجامع (`postJson` يحمل `status`/`detail`) | launch144 |
+| 33b4132 | `ScreenerMini`: رقاقات الفلتر السريع `textMuted` بالسكون (كانت كلها بالتأكيد ⇒ حتى 5 عناصر تأكيد بمنطقة واحدة، §1)؛ المختارة `selectedFill` + نصّ التأكيد (§4)؛ حدّ بلا خلفية (§5.5) | DP2 (ملفّ لم يشمله QA83) |
+
+- بنود المهمّة الأصلية (تحقّق بالكود): «₴» بتعليقين فقط؛ `Alert.alert` صفر استدعاء بملفّات نطاقي (`confirmDestructive`)؛ «درجة الاتفاق» بتعليقات فقط؛ إعادة الجولة `AccountScreen.tsx:208-220`؛ حالة الاختيار: كل زرّ بنمط `On/Active` بنطاقي يحمل `accessibilityState.selected` وتعبئة `selectedFill`.
+- **لم يُتحقَّق بصرياً** (لا متصفّح على الجهاز) — tsc وحده.
