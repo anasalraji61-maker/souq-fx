@@ -13,8 +13,6 @@ const MAX_HITS = 5;
 /** نتيجة من شموع أقدم من شمعتين بفريم الفحص ⇒ يُطبع وقتها (backend-r17): يوم السبت تقاطع/RSI من إغلاق
  * الجمعة كان يُقرأ «الآن». */
 const STALE_SEC = 2 * 15 * 60;
-/** محلي حتى يضيف launch مفتاحاً (COORDINATION ui11) — ثم يُقرأ من `t` وتُحذف. */
-const AS_OF_COPY: Record<string, string> = { ar: 'حتى {time}', en: 'as of {time}', ku: 'تا {time}' };
 
 export function ScreenerMini() {
   /**
@@ -210,7 +208,7 @@ export function ScreenerMini() {
               typeof h.price_as_of === 'number' &&
               Number.isFinite(h.price_as_of) &&
               Date.now() / 1000 - h.price_as_of > STALE_SEC
-                ? (AS_OF_COPY[lang] ?? AS_OF_COPY.en).replace('{time}', formatLocalStamp(h.price_as_of, lang))
+                ? t.screenerPriceAsOf.replace('{time}', formatLocalStamp(h.price_as_of, lang))
                 : null;
             return (
               <View key={h.symbol} style={styles.hit}>
