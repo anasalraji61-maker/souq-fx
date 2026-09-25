@@ -391,3 +391,13 @@ QA21 (`d8446d0`؛ `DIRECTIONAL_OVERLAYS` باقٍ عمداً — استثناء 
 **جديد QA34 → chart:** `resetChartView`/`axisTapped` (`MatrixChart.tsx:4459 :4513`) بلا `restXPan` بالـdeps ⇒ `canPan` قديم ⇒ AUTO بلا هامش يمين لشارت رُكّب تابعاً. منخفض جداً: تعليق
 `chandeKroll.selftest.ts:21` حسابه خاطئ (18≠17) ولا يفحص [17]؛ `price-transform.ts:412` «band». **أُسقط:** الدفتر `maxLength=10` مع «10.000 lots» (11) — المقصوص يُقرأ صحيحاً.
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
+
+## 2026-09-25 — الدورة 35
+**البناء:** أخضر 0 (بعد e93cc1c) — لا إصلاح لازم. **Selftests:** 80/80 ناجح (`npx tsx`؛ +`klingerTv` +`kagiPnfAtr`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — QA32 (`44d0096` `typeLabels.ts:34-36`)؛ QA34 (`ef40f4a` `restXPan` بـdeps :4459 :4514)؛ launch85 (`2bc7267`/`79057a9`،
+`PositionSizePanel.tsx:487 :489 :533`). **غير مُغلق:** 10 `Alert.alert` بـ5 ملفات، «₴» ×2، `FocusChartModal:56` `BASES`، `AiPanel`/`LectureClassroom` بلا `maxLength`، `BRENT/USD`.
+**طلبات تنسيق جديدة (تحقّقتُ):** launch86 → tools (منخفض): `PositionSizePanel.tsx:534` وسم العمولة الطويل ⇒ `t.planNoteCommission`. chart24 وtools بلا طلب.
+**المراجعة (e — ما يُحرج أمام متداول)، على commits منذ 5a1c967:** Klinger/Kagi/P&F/Range/نصّ الجولة سليمة مقابل TradingView.
+**جديد QA35 → chart (متوسّط):** `withVolume` (`types.ts:466`) يختلق حجم الفوركس بعامل دوري `(i*17)%40` مرتبط بالفهرس ⇒ مؤشرات الحجم كلها (OBV/Klinger/MFI/CMF…) من
+حجم مختلَق بدورة 40 شمعة وهمية، والقيم تتغيّر حين يُحمَّل تاريخ أقدم؛ ولا «≈» إلا بلوحة `VOL`.
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
