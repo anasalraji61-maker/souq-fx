@@ -23,6 +23,7 @@ import { anchorDemoSeries } from '../chart/demoAnchor';
 import { formatPrice } from '../chart/math';
 import { formatPct, pctDirection } from '../chart/dailyChange';
 import { isForexMarketOpen } from '../chart/marketHours';
+import { mockBase } from '../chart/mockBases';
 import { createSeriesCache, seriesCacheKey } from '../chart/seriesCache';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -45,14 +46,6 @@ const PHONE_CELL_CHROME = 2 * spacing.xs + 2 + 18 + spacing.xs;
 const quadSeriesCache = createSeriesCache<ChartSeries>();
 
 const DEFAULT: [string, string, string, string] = ['EURUSD', 'GBPUSD', 'XAUUSD', 'DXY'];
-const BASES: Record<string, number> = {
-  EURUSD: 1.0854,
-  GBPUSD: 1.2732,
-  XAUUSD: 2348.6,
-  DXY: 104.25,
-  USDJPY: 157.4,
-  BTCUSD: 67420,
-};
 
 export function QuadChartModal({
   visible,
@@ -159,7 +152,7 @@ export function QuadChartModal({
           // فشل التحديث وبالذاكرة شموع حقيقية حديثة ⇒ تبقى هي لا الوهمية.
           const cached = quadSeriesCache.get(key);
           if (cached) return cached;
-          const mock = mockSeries(sym, BASES[sym] ?? 1, tf, 80);
+          const mock = mockSeries(sym, mockBase(sym), tf, 80);
           const tp = ticksRef.current[sym]?.price;
           if (tp != null && Number.isFinite(tp) && tp > 0) return anchorDemoSeries(mock, tp);
           if (alive) pendingAnchor.current[i] = true;
