@@ -2772,7 +2772,16 @@ console.log('tradePlan draftStackedExposureText selftest OK');
   assert.equal(tp.journalSpec('EURUSDMINI')?.symbol, 'EURUSD');
   assert.equal(tp.journalPnl({ symbol: 'EURUSD.MINI', side: 'buy', entry: 1.1, exit: 1.102, lots: 1 }), null);
   assert.equal(tp.journalRisk({ symbol: 'EURUSD.MINI', entry: 1.1, sl: 1.098, lots: 1 }), null);
-  assert.equal(tp.draftRiskFigures({ symbol: 'EURUSD.MINI', side: 'buy', entry: 1.1, sl: 1.098, lots: 1 }), null);
+  // سطر المخاطرة بنقاط الزوج العادي بلا مبلغ (لا يختفي كلّه)
+  assert.deepEqual(tp.draftRiskFigures({ symbol: 'EURUSD.MINI', side: 'buy', entry: 1.1, sl: 1.098, lots: 1 }), { pips: 20, cash: null, cent: false, micro: false });
+  assert.deepEqual(tp.draftRiskFigures({ symbol: 'USDJPY-MINI', side: 'sell', entry: 150, sl: 150.25, lots: 0.5 }), { pips: 25, cash: null, cent: false, micro: false });
+  assert.deepEqual(tp.draftRiskFigures({ symbol: 'GOLD.MINI', side: 'buy', entry: 2650, sl: 2645, lots: 1 }), { pips: 50, cash: null, cent: false, micro: false });
+  // الشروط نفسها: وقف بالجهة الخطأ أو على الدخول، أو بلا حجم ⇒ لا سطر
+  assert.equal(tp.draftRiskFigures({ symbol: 'EURUSD.MINI', side: 'buy', entry: 1.1, sl: 1.102, lots: 1 }), null);
+  assert.equal(tp.draftRiskFigures({ symbol: 'EURUSD.MINI', side: 'buy', entry: 1.1, sl: 1.1, lots: 1 }), null);
+  assert.equal(tp.draftRiskFigures({ symbol: 'EURUSD.MINI', side: 'buy', entry: 1.1, sl: 1.098, lots: 0 }), null);
+  // والعادي بماله كما كان
+  assert.deepEqual(tp.draftRiskFigures({ symbol: 'EURUSD', side: 'buy', entry: 1.1, sl: 1.098, lots: 1 })?.cash, { amount: 200, ccy: 'USD' });
   assert.equal(tp.quoteSymbol('EURUSD.mini'), 'EURUSD');
   assert.equal(tp.quoteSymbol('GOLD_mini'), 'XAUUSD');
   assert.equal(tp.journalInstrumentKey('EURUSD.MINI'), 'EURUSDMINI');

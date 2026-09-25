@@ -17,7 +17,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { misplacedArabicThousandsSign } from '../parseDecimal';
 import { formatPrice } from '../chart/math';
 import { isRealQuote } from '../chart/dataSource';
-import { ambiguousThousandsPrice, parsePriceFor, sizeLooksLikeUnits } from '../positionSize';
+import { ambiguousThousandsPrice, miniAccountSymbol, parsePriceFor, sizeLooksLikeUnits } from '../positionSize';
 import {
   analyzePlan,
   entryAfterSideSwitch,
@@ -1865,6 +1865,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       {draftRisk?.usc && !(draft?.issue && draft.issue !== 'slTooClose') ? (
         // المخاطرة بالسنت الأمريكي لحساب السنت: السطر يقول ما USC كي لا تُقرأ دولاراتٍ بمئة ضعف
         <Text style={[styles.planWarn, { textAlign: align }]}>{t.journalCentMoneyNote}</Text>
+      ) : draftRisk && !draftRisk.money && miniAccountSymbol(symbol) && !(draft?.issue && draft.issue !== 'slTooClose') ? (
+        // «EURUSD.mini»: المخاطرة بالنقاط بلا مبلغ — السطر يقول لماذا (لوت mini يختلف بين الوسطاء) بدل مبلغٍ غائب بلا تفسير (tools63)
+        <Text style={[styles.planWarn, { textAlign: align }]}>{t.journalMiniNoMoney}</Text>
       ) : null}
       <TextInput
         style={[styles.input, { textAlign: align }]}

@@ -242,10 +242,14 @@ export function draftRiskFigures(input: {
   // micro («EURUSD.MICRO») كالسنت: نقاط بلا مال — وسطرها `journalMicroNoMoney` (نصّ `journalCentNoMoney` عن السنت)
   const micro = !std && isMicroJournalSymbol(sym);
   const small = std ? null : smallContractPair(sym);
-  const spec = std ?? (small ? instrumentSpec(small) : null);
+  // mini («EURUSD.MINI»): نقاط الزوج العادي **بلا مال** (لوت mini يختلف بين الوسطاء) — كان null فيختفي سطر المخاطرة كلّه
+  // مع أن نقاط الوقف معروفة؛ سطر `journalMiniNoMoney` بالدفتر يقول لماذا لا مبلغ
+  const mini = std || small ? null : miniAccountSymbol(sym);
+  const spec = std ?? (small ? instrumentSpec(small) : mini ? instrumentSpec(mini) : null);
   if (!spec) return null;
   // مالٌ من حجمٍ يبدو وحداتٍ («125,000,000 USD») أسوأ من لا شيء — سطر التحذير يقول ما الخطأ
   if (journalSizeLooksLikeUnits(lots, sym)) return null;
+  if (mini) return { pips: pipsBetween(spec, entry, sl), cash: null, cent: false, micro: false };
   const cash = journalRisk({ symbol: sym, entry, sl, lots });
   if (!cash) return null;
   return { pips: pipsBetween(spec, entry, sl), cash, cent, micro };
