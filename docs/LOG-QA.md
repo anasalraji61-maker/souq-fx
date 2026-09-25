@@ -950,3 +950,12 @@ ui45 ← `ed917cd`؛ backend-r47→launch ← `65aeaea`. قائم: chart-r65 →
 خارج القائمة: **QA84a → ui/tools** §2: 131 `fontSize` < 11 في 34 ملفّاً (124/32 بعد سحب 8a597d5؛ أُعيد البناء أخضر 0) (`TerminalScreen.tsx:2244` 7px، `WatchlistPanel.tsx:700` سعر 10px بدل 15).
 **المراجعة (d — أرقام متناقضة):** حدود Pydantic بـ`main.py` = `maxLength` ونصوص `regErr*Length`؛ حدّا القلب بموضع واحد. **QA84b → chart (منخفض):** عرض حرف 11px مقدَّر 6.4/6.6/6.8 بثلاثة مواضع.
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول؛ وإعادة قائمة DESIGN-PRO.
+
+## 2026-09-26 — الدورة 85
+**البناء:** أخضر 0 (على 9e5c8cf) — لا إصلاح لازم. **Selftests:** 108/108 ناجح (`npx tsx`، +`textWidth`، +`denseOhlcFit`، +`providerSymbols`).
+**التحقّق بالكود:** backend-r50a ← ui `5ff2713` (`AuthContext.tsx:94-101`)؛ backend-r50b ← launch `eb15f40` (`authErrors.ts:18`)؛ backend-r50c ← ui `a7daed8`؛ QA84b ← chart `961a6d2`
+(`textWidth.ts`، `MatrixChart.tsx:565`)؛ tools93 ← launch `9e5c8cf` ⇒ launch146 → tools. قائم: ui50 → chart/tools. جديد بالسحب: backend-r51 → أنس (مُتحقَّق: `db.ballot` بلا مقارنة `user_id`). QA84a: ui/tools = 0 باقٍ ⇒ البقية 19 بـ`MatrixChart.tsx` → chart
+(+ `denseOhlcFit` ينزل إلى 9px، §7).
+**قائمة قبول DESIGN-PRO (الخامس):** 0/12 فشل (diff منذ b1265a1، 53 ملفّاً: لا وزن ≥700، لا مسافة خارج 4، لا ظلّ، تأكيد جديد `youTag` فقط).
+**المراجعة (e — ما يُحرج أمام متداول):** pip مصدر واحد (`positionSize.ts:134`، معادن :36-37) = `backtest.py:48`؛ نصّ `riskCalcSpreadMaybePrice` تحذير لا رفض. **لا بند جديد.**
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات؛ وإعادة قائمة DESIGN-PRO.
