@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -19,14 +19,13 @@ import {
   type NotificationPermissionState,
 } from '../notifications';
 import { CommissionPlanPanel, isRoleId } from '../components/CommissionPlanPanel';
+import { registerErrorText } from '../i18n/authErrors';
 import { NetworkTreePanel } from '../components/NetworkTreePanel';
 import { SubscriptionPlansPanel } from '../components/SubscriptionPlansPanel';
 import { OnboardingOverlay } from '../components/OnboardingOverlay';
 import { markOnboardingSeen } from '../onboarding';
 import { api } from '../api';
 import { confirmDestructive } from '../chart/confirmDestructive';
-
-type RoleId = 'trader' | 'trainer' | 'broker' | 'agent' | 'company';
 
 type SideId = 'left' | 'right';
 
@@ -37,7 +36,6 @@ export function AccountScreen() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<RoleId>('trader');
   const [sponsorCode, setSponsorCode] = useState('');
   const [side, setSide] = useState<SideId>('left');
   const [busy, setBusy] = useState(false);
@@ -61,18 +59,6 @@ export function AccountScreen() {
     };
     directs?: { username: string; side: string; role: string }[];
   } | null>(null);
-
-  const roles = useMemo(
-    () =>
-      [
-        { id: 'trader' as const, label: t.trader },
-        { id: 'trainer' as const, label: t.trainer },
-        { id: 'broker' as const, label: t.broker },
-        { id: 'agent' as const, label: t.agent },
-        { id: 'company' as const, label: t.company },
-      ] as const,
-    [t]
-  );
 
   const align = rtl ? ('right' as const) : ('left' as const);
 
@@ -148,15 +134,16 @@ export function AccountScreen() {
         if (!username.trim() || !email.trim()) throw new Error('missing fields');
         await register(username.trim(), password, {
           email: email.trim(),
-          role,
+          // الخادم يقبل `trader` وحده بالتسجيل الذاتي (backend `06ea3ab`)؛ الأدوار الأخرى يمنحها الراعي بالشبكة.
+          role: 'trader',
           sponsor_code: sponsorCode.trim() || undefined,
           side: sponsorCode.trim() ? side : undefined,
         });
       }
       await registerPushToken();
       setPassword('');
-    } catch {
-      setErr(mode === 'login' ? t.loginError : t.registerError);
+    } catch (e) {
+      setErr(mode === 'login' ? t.loginError : registerErrorText(t, e));
     } finally {
       setBusy(false);
     }
@@ -464,29 +451,6 @@ export function AccountScreen() {
 
           {mode === 'register' ? (
             <>
-              <Text style={[styles.label, { textAlign: align }]}>{t.accountType}</Text>
-              <View style={[styles.roleRow, rtl && styles.roleRowRtl]}>
-                {roles.map((r) => (
-                  <Pressable
-                    accessibilityState={{ selected: role === r.id }}
-                    accessibilityRole="button"
-                    key={r.id}
-                    style={({ pressed }) => [
-                      styles.roleChip,
-                      role === r.id && styles.roleChipOn,
-                      pressed && {
-                        opacity: buttons.pressedOpacity,
-                        transform: [{ scale: buttons.pressedScale }],
-                      },
-                    ]}
-                    onPress={() => setRole(r.id)}
-                  >
-                    <Text style={[styles.roleText, role === r.id && styles.roleTextOn]}>
-                      {r.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
               <TextInput
                 style={[styles.input, { textAlign: align }]}
                 value={sponsorCode}
@@ -655,19 +619,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   dangerBtnText: { color: colors.bear, fontWeight: '500' },
-  roleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  roleRowRtl: { flexDirection: 'row-reverse' },
-  roleChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radii.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bgPanel,
-  },
-  roleChipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  roleText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
-  roleTextOn: { color: colors.accent },
   netBox: {
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
