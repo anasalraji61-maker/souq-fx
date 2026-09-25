@@ -21,6 +21,7 @@
 | ui | ui (`AiPanel.tsx:23 :54-56`) | **ui9**: `aiPriceAsOf` أُضيف ×3 (`2109fdc`، launch) و`AiPanel.tsx:54` يقرؤه ⇒ يعمل. باقٍ على ui: حذف النسخة المحلية `PRICE_AT_COPY` (:23) وتحويل `(t as Partial<…>).aiPriceAsOf ??` إلى `t.aiPriceAsOf` مباشرة | ui9 |
 
 | chart | أنس | **chart-r41 TTM Squeeze** (`volatility.ts:562`): كلتنر EMA20+ATR Wilder، ونسخة LazyBear الشائعة SMA20+SMA(TR) ⇒ ~15% من النقاط بحالة معاكسة. نضيف خيار «LazyBear» أم نُبقي؟ | chart-r41 |
+| QA | tools (اختياري، `TradeJournalPanel.tsx:983`) | **QA57** (من backend run 13 `14d6474`): PATCH صفقة يسابق إغلاقاً يعيد الآن 409 `trade_changed_concurrently` — التطبيق يعرض `journalEditError` العامّ («تعذّر الحفظ») بلا سبب. البيانات سليمة (الخروج لا يُمحى)؛ الأوضح: `refresh()` + رسالة «أُغلقت بجهاز آخر» كمسار الإغلاق (:1121) | QA57 |
 
 **تحقّق الدورة 57 (بالكود) — أُغلق صفّان:** launch110 ← ui (`notifications.ts:40` التعليق يقول «فوراً» عبر `setLang` ⇒ `ensureAlertChannel(true)`)؛
 backend-r12 ← ui (`095954f`، `AiPanel.tsx:82-83` يقرأ `res.price_as_of`، `api.ts:875`). QA1 (a) ضُيِّق من 12 إلى 2 (`9909b91`، grep لكل اسم: صفر). باقٍ: launch111 (`ChartFrame.tsx:427` ما زال `t.cfSpreadA11y`).

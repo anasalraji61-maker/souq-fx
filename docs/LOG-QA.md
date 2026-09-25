@@ -673,3 +673,5 @@ QA1 (a) من 12 إلى 2 (`9909b91`؛ grep لكل اسم صفر) — باقٍ `g
 **المراجعة (b — نصوص ثابتة):** grep للعربي خارج التعليقات و`locales.ts`/selftests، ولـ`label/placeholder/title="…"` و`>Text<` إنجليزي: لا جديد يُعرض.
 المعروف: `academy.ts` (QA27)، `MessagesScreen`/`mock.ts`/`api.ts:882` (launch52)، `PRICE_AT_COPY` (ui9). `CHART_KINDS` احتياط يُترجم بالمستدعي؛ «Log» و«EURUSD» مصطلحات. **لا بند جديد.**
 **الدورة القادمة:** المراجعة (c) — أزرار بلا `accessibilityLabel`.
+**إلحاق:** وصل أثناء الدفع backend run 13 (`14d6474`: PATCH الصفقة المسابق لإغلاق لا يمحو الخروج، 409 `trade_changed_concurrently`). تحقّقتُ: `TradeJournalPanel.tsx:983` يلتقط كل خطأ
+بـ`journalEditError` العامّ ⇒ صفّ اختياري QA57 → tools. البناء بعد الدمج أخضر 0.
