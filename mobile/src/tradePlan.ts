@@ -862,13 +862,15 @@ export function pySum(values: readonly number[]): number {
 /** إحصاءات الدفتر بشكل ردّ الخادم (`db.trade_stats`) — نسبة النجاح وصافي/متوسط النتائج بالنسبة. */
 export type JournalStats = {
   trade_count: number;
-  /** backend-r6 (5): بلا صفقة حاسمة (كلّها تعادل) الخادم يرسل 0 اليوم و`null` لاحقاً — اعرضه بـ`journalWinRateLine`. */
+  /** backend-r6 (5): بلا صفقة حاسمة (دفتر فارغ أو كلّه تعادل) `null` كالخادم — اعرضه بـ`journalWinRateLine`. */
   win_rate: number | null;
   total_pnl_pct: number;
-  avg_win: number;
-  avg_loss: number;
-  best: number;
-  worst: number;
+  /** `null` بلا رابحة/خاسرة (QA74، كالخادم منذ de91b88): «متوسّط الربح 0%» يُقرأ «ربحت صفقات بلا شيء». */
+  avg_win: number | null;
+  avg_loss: number | null;
+  /** `null` بدفتر فارغ فقط. */
+  best: number | null;
+  worst: number | null;
   /** backend-r1: التعادل عدّادٌ مستقلّ لا خسارة. خادمٌ أقدم لا يرسل الثلاثة ⇒ اختيارية بالقراءة من الخادم. */
   win_count: number;
   loss_count: number;
@@ -893,7 +895,7 @@ export function journalStats(
     .map((tr) => Number(tr.pnl));
   if (pnls.length === 0) {
     return {
-      trade_count: 0, win_rate: 0, total_pnl_pct: 0, avg_win: 0, avg_loss: 0, best: 0, worst: 0,
+      trade_count: 0, win_rate: null, total_pnl_pct: 0, avg_win: null, avg_loss: null, best: null, worst: null,
       win_count: 0, loss_count: 0, breakeven_count: 0,
     };
   }
@@ -903,11 +905,11 @@ export function journalStats(
   const r2 = (v: number) => roundHalfEven(v, 2);
   return {
     trade_count: pnls.length,
-    // كلّها تعادل ⇒ 0 كالخادم (لا نسبة فوز ذات معنى)، و`breakeven_count` يوضّح
-    win_rate: decided ? roundHalfEven((wins.length / decided) * 100, 1) : 0,
+    // كلّها تعادل ⇒ null كالخادم (لا نسبة فوز ذات معنى)، و`breakeven_count` يوضّح
+    win_rate: decided ? roundHalfEven((wins.length / decided) * 100, 1) : null,
     total_pnl_pct: r2(pySum(pnls)),
-    avg_win: wins.length ? r2(pySum(wins) / wins.length) : 0,
-    avg_loss: losses.length ? r2(pySum(losses) / losses.length) : 0,
+    avg_win: wins.length ? r2(pySum(wins) / wins.length) : null,
+    avg_loss: losses.length ? r2(pySum(losses) / losses.length) : null,
     best: r2(Math.max(...pnls)),
     worst: r2(Math.min(...pnls)),
     win_count: wins.length,
@@ -917,7 +919,7 @@ export function journalStats(
 }
 
 /**
- * سطر «نسبة نجاح: {pct}%» للدفتر. دفترٌ كل مغلقاته تعادل ⇒ لا صفقة حاسمة و`win_rate` 0 (الخادم ونحن) ⇒ «0%» تُقرأ
+ * سطر «نسبة نجاح: {pct}%» للدفتر. دفترٌ كل مغلقاته تعادل ⇒ لا صفقة حاسمة و`win_rate` null (خادمٌ أقدم: 0) ⇒ «0%» تُقرأ
  * «خسر كل صفقاته» (backend-r6 (5)). بلا حاسمة، أو `win_rate` غير رقم (null لاحقاً من الخادم) ⇒ «—» بلا علامة %.
  * خادمٌ أقدم بلا `win_count`/`loss_count` ⇒ النسبة كما أرسلها (لا نعرف إن كانت كلها تعادل).
  */
