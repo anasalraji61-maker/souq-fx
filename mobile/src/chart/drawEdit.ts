@@ -152,7 +152,8 @@ export function translateDrawing(
   const minIndex = Math.min(orig.a.index, orig.b?.index ?? orig.a.index);
   const di = Math.max(Math.round(dIndex), -Math.max(0, minIndex));
   const move = (p: ChartPoint): ChartPoint => {
-    if (di === 0) return { ...p, price: priceOf(p.price) };
+    // نقطة بلا ختم (رسم قديم) تُختم كالمعتاد كي تُرسى بين الفريمات.
+    if (di === 0 && p.time != null) return { ...p, price: priceOf(p.price) };
     const index = p.index + di;
     const price = priceOf(p.price);
     const s = stamp(index);
