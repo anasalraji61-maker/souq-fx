@@ -3175,6 +3175,33 @@ console.log('positionSize restoredSmallSymbol selftest OK');
   }
 }
 console.log('positionSize moneyRewardRisk selftest OK');
+
+// الربح الصافي بعد السبريد عند الهدف = ما يُسوّى فعلاً: شراء USDJPY بالـAsk (150 + 2 pip) وإغلاق عند 153 ⇒ فرق التسعير بالين
+// يُحوَّل بسعر الهدف (1/153). اللوحة كانت تحوّل السبريد بسعر الوقف (1/149) ⇒ تكلفة 1.88 بدل 1.83 (USDTRY سبريد 1000: 17.91 بدل 13.95)
+{
+  const uj = instrumentSpec('USDJPY')!;
+  const lots = 0.14;
+  const targetRate = targetQuoteToAccount(uj, 'USD', 153, 1 / 150)!;
+  const gross = profitAtTarget({ spec: uj, entry: 150, target: 153, lots, quoteToAccount: targetRate })!;
+  const n = profitAfterCosts({
+    grossProfit: gross,
+    lots,
+    spreadPips: 2,
+    pipValuePerLot: pipValuePerLot(uj, targetRate),
+    riskWithCosts: 100,
+  })!;
+  const settled = ((153 - 150.02) * lots * uj.contractSize) / 153;
+  assert.ok(Math.abs(n.net - settled) < 1e-9);
+  assert.equal(n.costs.toFixed(2), '1.83');
+  assert.equal(n.net.toFixed(2), '272.68');
+  const tr = instrumentSpec('USDTRY')!;
+  const trRate = targetQuoteToAccount(tr, 'USD', 43, 1 / 34)!;
+  const trGross = profitAtTarget({ spec: tr, entry: 34, target: 43, lots: 0.06, quoteToAccount: trRate })!;
+  const trNet = profitAfterCosts({ grossProfit: trGross, lots: 0.06, spreadPips: 1000, pipValuePerLot: pipValuePerLot(tr, trRate), riskWithCosts: 100 })!;
+  assert.ok(Math.abs(trNet.net - ((43 - 34.1) * 0.06 * tr.contractSize) / 43) < 1e-9);
+  assert.equal(trNet.costs.toFixed(2), '13.95');
+}
+console.log('positionSize profitAfterCosts-at-target selftest OK');
 {
   // سعرٌ بمنزلتين بخانة النقاط («SL 1.27» للإسترليني): كان 1.27 pip ⇒ 7.87 لوت بدل 0.40 لوقف 25 pip
   const gbp = instrumentSpec('GBPUSD')!;

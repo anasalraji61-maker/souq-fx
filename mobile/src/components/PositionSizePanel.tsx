@@ -1064,7 +1064,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
           grossProfit: potentialProfit,
           lots,
           spreadPips: costs.spreadPips,
-          pipValuePerLot: pv,
+          // السبريد على صفقةٍ تُغلق عند الهدف يُسوّى بسعر **الهدف** كالربح الإجمالي بجانبه (`pv` بسعر الوقف — صحيح لـ`spreadRisk`
+          // وحدها): USDJPY 150/149/153 بحساب دولار، سبريد 2، 0.14 لوت ⇒ 1.83 لا 1.88؛ USDTRY سبريد 1000 ⇒ 13.95 لا 17.91
+          pipValuePerLot: spec ? pipValuePerLot(spec, targetRate ?? rate!) : pv,
           commissionPerLot: costs.commissionPerLot,
           riskWithCosts: withSpread.risk,
         })
