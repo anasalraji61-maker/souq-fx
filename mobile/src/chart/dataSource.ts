@@ -57,7 +57,19 @@ export function provenanceLabel(
  */
 export function isRealQuote(q: { price?: unknown; source?: string | null; data_kind?: string | null }): boolean {
   if (typeof q.price !== 'number' || !Number.isFinite(q.price) || q.price <= 0) return false;
-  return q.data_kind != null ? q.data_kind !== 'demo' : q.source === 'twelvedata';
+  // `unavailable` (backend-r2) يأتي بـ`price: null` — ويُرفض كذلك لو حمل سعراً يوماً.
+  return q.data_kind != null ? q.data_kind !== 'demo' && q.data_kind !== 'unavailable' : q.source === 'twelvedata';
+}
+
+/**
+ * سبب «لا بيانات حقيقية لهذا الرمز أصلاً» من مصدر السلسلة الخام (`data_source.unavailable_reason`، backend-r1)
+ * — اليوم `not_offered_by_provider` لـDXY. `normalizeProvenance` يُسقط الحقل، فيُقرأ هنا من الكائن كما وصل.
+ * شارة «تجريبي» العامة توحي بعطل مؤقّت سيعود؛ هذا يقول إن الرسم مولَّد للعرض دائماً. غير ذلك ⇒ null.
+ */
+export function providerUnavailableReason(src: unknown): string | null {
+  if (!src || typeof src !== 'object') return null;
+  const r = (src as { unavailable_reason?: unknown }).unavailable_reason;
+  return typeof r === 'string' && r.trim() ? r.trim() : null;
 }
 
 /** عائلة القناة المعروفة — قنوات غير معروفة لا تندمج افتراضياً */

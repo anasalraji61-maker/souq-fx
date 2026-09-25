@@ -13,6 +13,7 @@ import { pipUnit } from '../chart/measureReadout';
 import {
   candleTimeSec,
   provenanceLabel,
+  providerUnavailableReason,
   tickStatusKind,
   normalizeProvenance,
 } from '../chart/dataSource';
@@ -200,12 +201,16 @@ export function ChartFrame({
         : tickKind === 'lastPrice'
           ? t.dsLastPriceWord
           : null;
-  const candleTag = provenanceLabel(candleSrc, {
-    provider: t.dsKindProvider,
-    demo: t.dsKindDemo,
-    cache: t.dsKindCache,
-    unknown: t.dsKindUnknown,
-  });
+  // DXY وأمثاله (backend-r1): المزوّد لا يقدّمه أصلاً ⇒ «غير متاح من مزوّد البيانات» لا «تجريبي» التي توحي بعطل مؤقّت.
+  const unavailableReason = providerUnavailableReason(series.data_source);
+  const candleTag = unavailableReason
+    ? t.originUnavailableProvider.replace('{symbol}', series.symbol)
+    : provenanceLabel(candleSrc, {
+        provider: t.dsKindProvider,
+        demo: t.dsKindDemo,
+        cache: t.dsKindCache,
+        unknown: t.dsKindUnknown,
+      });
   // يُعاد فحصه كل 30ث: عند إغلاق الجمعة (أو كسر الذهب اليومي) تتوقّف التيكات فلا يُعاد الرسم،
   // وكان الوسم يبقى بلا «مغلق» حتى يلمس المتداول شيئاً.
   const [marketClosed, setMarketClosed] = useState(() => !isForexMarketOpen(series.symbol));
@@ -356,7 +361,11 @@ export function ChartFrame({
               styles.sourceTag,
               candleSrc.kind === 'demo' && styles.sourceTagDemo,
               candleSrc.kind === 'unknown' && styles.sourceTagUnknown,
+              unavailableReason ? { flexShrink: 1 } : null,
             ]}
+            numberOfLines={unavailableReason ? 1 : undefined}
+            ellipsizeMode="tail"
+            accessibilityLabel={candleTag}
           >
             {candleTag}
           </Text>

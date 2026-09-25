@@ -7,6 +7,7 @@ import {
   canMergeLiveIntoCandles,
   isFreshTick,
   isRealQuote,
+  providerUnavailableReason,
   isValidAsOf,
   sourceFamily,
   tickBelongsToCandle,
@@ -156,6 +157,10 @@ check('quote demo rejected', !isRealQuote({ price: 0.999, source: 'ohlc_fallback
 check('legacy fallback rejected', !isRealQuote({ price: 0.999, source: 'ohlc_fallback' }));
 check('legacy twelvedata ok', isRealQuote({ price: 150.2, source: 'twelvedata' }));
 check('bad price rejected', !isRealQuote({ price: 0, data_kind: 'provider' }) && !isRealQuote({ price: NaN, data_kind: 'provider' }));
+
+check('quote unavailable rejected', !isRealQuote({ price: null, data_kind: 'unavailable' }) && !isRealQuote({ price: 1.2, data_kind: 'unavailable' }));
+check('unavailable reason read raw', providerUnavailableReason({ kind: 'demo', unavailable_reason: 'not_offered_by_provider' }) === 'not_offered_by_provider');
+check('no reason ⇒ null', providerUnavailableReason({ kind: 'demo' }) === null && providerUnavailableReason(null) === null && providerUnavailableReason({ unavailable_reason: ' ' }) === null);
 
 assert.equal(fails, 0);
 console.log(JSON.stringify({ ok: true, fails }));

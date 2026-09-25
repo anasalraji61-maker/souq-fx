@@ -18,7 +18,7 @@ import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
 import { TimeframeBar } from './TimeframeBar';
 import { mockSeries } from '../mock';
-import { candleTimeSec, normalizeProvenance } from '../chart/dataSource';
+import { candleTimeSec, normalizeProvenance, providerUnavailableReason } from '../chart/dataSource';
 import { anchorDemoSeries } from '../chart/demoAnchor';
 import { formatPrice } from '../chart/math';
 import { formatPct, pctDirection } from '../chart/dailyChange';
@@ -340,7 +340,16 @@ export function QuadChartModal({
                       {t.cfMarketClosedTag}
                     </Text>
                   ) : null}
-                  {series[i] && normalizeProvenance(series[i]!.data_source).kind === 'demo' ? (
+                  {series[i] && providerUnavailableReason(series[i]!.data_source) ? (
+                    // DXY: لا يقدّمه المزوّد أصلاً — الجملة كاملة لقارئ الشاشة، ومقصوصة بالخلية الضيّقة (أوّلها يكفي).
+                    <Text
+                      style={[styles.demoTag, { flexShrink: 1 }]}
+                      numberOfLines={1}
+                      accessibilityLabel={t.originUnavailableProvider.replace('{symbol}', sym)}
+                    >
+                      {t.originUnavailableProvider.replace('{symbol}', sym)}
+                    </Text>
+                  ) : series[i] && normalizeProvenance(series[i]!.data_source).kind === 'demo' ? (
                     <Text style={styles.demoTag}>{t.dsKindDemo}</Text>
                   ) : null}
                 </View>
