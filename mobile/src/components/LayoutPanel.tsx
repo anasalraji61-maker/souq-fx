@@ -263,10 +263,10 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
   },
-  title: { color: colors.text, fontWeight: '800', textAlign: 'right' },
+  title: { color: colors.text, fontWeight: '500', textAlign: 'right' },
   hint: { color: colors.textDim, fontSize: 11, lineHeight: 16 },
-  saved: { color: colors.bull, fontSize: 11, fontWeight: '800' },
-  currentTag: { color: colors.accent, fontWeight: '800', fontSize: 11 },
+  saved: { color: colors.bull, fontSize: 11, fontWeight: '500' },
+  currentTag: { color: colors.accent, fontWeight: '500', fontSize: 11 },
   input: {
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  btnText: { color: colors.onAccent, fontWeight: '800' },
+  btnText: { color: colors.onAccent, fontWeight: '500' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -300,13 +300,13 @@ const styles = StyleSheet.create({
   // هدف لمس ≥44 (كان «حذف» نصّاً ~17pt بلا hitSlop بجوار صفّ التطبيق — الضغطة الخاطئة تطبّق التخطيط).
   apply: { flex: 1, minHeight: 44, justifyContent: 'center' },
   delHit: { minHeight: 44, minWidth: 44, paddingHorizontal: spacing.sm, alignItems: 'center', justifyContent: 'center' },
-  rowName: { color: colors.text, fontWeight: '700', textAlign: 'right' },
+  rowName: { color: colors.text, fontWeight: '500', textAlign: 'right' },
   rowSub: { color: colors.textDim, fontSize: 10, textAlign: 'right' },
-  del: { color: colors.bear, fontWeight: '700' },
+  del: { color: colors.bear, fontWeight: '500' },
   saveError: {
     color: colors.bear,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     textAlign: 'right',
   },
 });

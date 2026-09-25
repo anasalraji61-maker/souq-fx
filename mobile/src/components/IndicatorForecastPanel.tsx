@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   headRtl: { flexDirection: 'row-reverse' },
-  title: { color: colors.text, fontWeight: '900', fontSize: 14 },
+  title: { color: colors.text, fontWeight: '500', fontSize: 14 },
   sub: { ...numeric, color: colors.textDim, fontSize: 11, marginTop: 2 },
   refresh: {
     flexShrink: 0,
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
   },
   refreshDisabled: { opacity: 0.4 },
-  refreshText: { color: colors.accent, fontWeight: '700', fontSize: 11 },
+  refreshText: { color: colors.accent, fontWeight: '500', fontSize: 11 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chipsRtl: { flexDirection: 'row-reverse' },
   // كانت ~28pt بفجوة 6 ⇒ تبديل الجار بالخطأ؛ 40pt + فجوة 8 (لا hitSlop: يتراكب بين الشرائح).
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgPanel,
   },
   chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   chipTextOn: { color: colors.accent },
   consensus: {
     backgroundColor: colors.bgPanel,
@@ -367,9 +367,9 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
     gap: 3,
   },
-  dir: { fontWeight: '900', fontSize: 18 },
+  dir: { fontWeight: '500', fontSize: 18 },
   meta: { ...numeric, color: colors.textMuted, fontSize: 11 },
-  levels: { ...numeric, color: colors.text, fontSize: 11, fontWeight: '700', marginTop: 2 },
+  levels: { ...numeric, color: colors.text, fontSize: 11, fontWeight: '600', marginTop: 2 },
   asOf: { color: colors.warn, fontSize: 10 },
   list: { maxHeight: 120 },
   row: {
@@ -382,8 +382,8 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.borderSoft,
   },
   rowRtl: { flexDirection: 'row-reverse' },
-  name: { color: colors.text, fontWeight: '800', fontSize: 12 },
+  name: { color: colors.text, fontWeight: '500', fontSize: 12 },
   summary: { color: colors.textDim, fontSize: 10, marginTop: 1 },
-  badge: { fontWeight: '900', fontSize: 12 },
+  badge: { fontWeight: '500', fontSize: 12 },
   note: { color: colors.textDim, fontSize: 9 },
 });

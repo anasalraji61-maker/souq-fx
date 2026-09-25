@@ -633,14 +633,14 @@ const styles = StyleSheet.create({
   switchTag: {
     color: colors.accent,
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: '500',
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: radii.sm,
     backgroundColor: colors.accentSoft,
     flexShrink: 0,
   },
-  symbolCaret: { color: colors.textDim, fontSize: 10, fontWeight: '800' },
+  symbolCaret: { color: colors.textDim, fontSize: 10, fontWeight: '500' },
   wheelLayer: {
     ...StyleSheet.absoluteFill, // RN 0.86 أزال absoluteFillObject وقت التشغيل (كان يُنشر undefined فتفقد الطبقة position:absolute)
     zIndex: 50,
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
   dot: { width: 7, height: 7, borderRadius: 4 },
   symbol: {
     color: colors.text,
-    fontWeight: '700',
+    fontWeight: '500',
     fontSize: 13,
     letterSpacing: 0.4,
     flexShrink: 1,
@@ -660,15 +660,15 @@ const styles = StyleSheet.create({
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 0 },
   priceRowPhone: { flexWrap: 'wrap', flexShrink: 1, columnGap: 6, rowGap: 2 },
   price: { ...numeric, color: colors.text, fontWeight: '600', fontSize: 13 },
-  liveTag: { color: colors.bull, fontSize: 9, fontWeight: '800' },
-  liveTagMuted: { color: colors.textMuted, fontWeight: '700' },
-  spreadTag: { ...numeric, color: colors.textDim, fontSize: 9, fontWeight: '700' },
+  liveTag: { color: colors.bull, fontSize: 9, fontWeight: '500' },
+  liveTagMuted: { color: colors.textMuted, fontWeight: '500' },
+  spreadTag: { ...numeric, color: colors.textDim, fontSize: 9, fontWeight: '600' },
   /** السبريد بالـpip هو الرقم الذي يُقرأ؛ أبرز قليلاً من السعرين بجانبه. */
-  spreadPips: { ...numeric, color: colors.text, fontWeight: '800' },
+  spreadPips: { ...numeric, color: colors.text, fontWeight: '600' },
   sourceTag: {
     color: colors.accent,
     fontSize: 9,
-    fontWeight: '700',
+    fontWeight: '500',
     marginInlineStart: 4,
     opacity: 0.9,
   },
@@ -677,11 +677,11 @@ const styles = StyleSheet.create({
   marketClosedTag: {
     color: colors.warn,
     fontSize: 9,
-    fontWeight: '700',
+    fontWeight: '500',
     marginInlineStart: 4,
     opacity: 0.9,
   },
-  chg: { ...numeric, fontSize: 12, fontWeight: '700' },
+  chg: { ...numeric, fontSize: 12, fontWeight: '600' },
   focusBtn: {
     width: 28,
     height: 28,
@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  focusBtnText: { color: colors.accent, fontSize: 13, fontWeight: '800' },
+  focusBtnText: { color: colors.accent, fontSize: 13, fontWeight: '500' },
   hint: {
     color: colors.textMuted,
     fontSize: 10,
@@ -709,7 +709,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     color: colors.accent,
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: '500',
     backgroundColor: colors.accentSoft,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.accentBorderGlow,

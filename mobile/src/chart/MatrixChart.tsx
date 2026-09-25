@@ -6555,7 +6555,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               // لا النسبة وحدها — متداول المؤشرات يقيس الشمعة بالنقاط السعرية.
               const pips = signedDistanceText(series.symbol, ref, crossReadCandle.close, lang, priceDecimalsRef);
               return (
-                <Text style={{ color: crossChange.color, fontWeight: '800' }}>
+                <Text style={{ color: crossChange.color, fontWeight: '600' }}>
                   {pips ? ` ${pips} (${crossChange.pctText})` : ` ${crossChange.pctText}`}
                 </Text>
               );
@@ -7057,7 +7057,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                       style={{
                         color: 'rgba(226,232,240,0.92)',
                         fontSize: 10,
-                        fontWeight: '800',
+                        fontWeight: '500',
                         fontFamily: 'monospace',
                         textTransform: 'lowercase',
                       }}
@@ -7087,7 +7087,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               borderColor: 'rgba(45,212,191,0.45)',
             }}
           >
-            <Text style={{ color: colors.accent, fontSize: 10, fontWeight: '800' }}>{tr.mcPrimaryLane}</Text>
+            <Text style={{ color: colors.accent, fontSize: 10, fontWeight: '500' }}>{tr.mcPrimaryLane}</Text>
           </View>
         ) : null}
 
@@ -8656,7 +8656,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     top: yOf(source.plot[i].high) - 12,
                     color: fp.delta >= 0 ? colors.bull : colors.bear,
                     fontSize: 8,
-                    fontWeight: '800',
+                    ...numeric,
+                    fontWeight: '600',
                   }}
                 >
                   {/* «≈»: دلتا تقديرية من شكل الشمعة (`computeFootprint`) لا أحجام شراء/بيع حقيقية. */}
@@ -12872,7 +12873,7 @@ const styles = StyleSheet.create({
   root: { gap: 6 },
   rootDense: { gap: 0 },
   noCandlesBox: { minHeight: 120, alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
-  noCandlesTitle: { color: colors.text, fontSize: 13, fontWeight: '700', textAlign: 'center', lineHeight: 19 },
+  noCandlesTitle: { color: colors.text, fontSize: 13, fontWeight: '500', textAlign: 'center', lineHeight: 19 },
   noCandlesBody: {
     color: colors.textDim,
     fontSize: 12,
@@ -12908,7 +12909,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.warn,
   },
-  lockedHintText: { color: colors.warn, fontSize: 12, fontWeight: '700' },
+  lockedHintText: { color: colors.warn, fontSize: 12, fontWeight: '500' },
   lockBadge: {
     position: 'absolute',
     width: LOCK_BADGE_W,
@@ -12921,8 +12922,8 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   lockBadgeText: { fontSize: 8, lineHeight: 10 },
-  compactToolIcon: { color: colors.text, fontSize: 16, fontWeight: '800', lineHeight: 18 },
-  compactToolLabel: { color: colors.textDim, fontSize: 8, fontWeight: '700', marginTop: 1 },
+  compactToolIcon: { color: colors.text, fontSize: 16, fontWeight: '500', lineHeight: 18 },
+  compactToolLabel: { color: colors.textDim, fontSize: 8, fontWeight: '500', marginTop: 1 },
   compactToolTextOn: { color: colors.accent },
   toolbar: { gap: 6 },
   row: { flexDirection: 'row-reverse', gap: 6, paddingVertical: 2 },
@@ -12935,7 +12936,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   chipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  chipText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   chipTextOn: { color: colors.accent },
   lens: {
     paddingHorizontal: 10,
@@ -12946,7 +12947,7 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
     minWidth: 78,
   },
-  lensTitle: { color: colors.text, fontWeight: '800', fontSize: 11, textAlign: 'right' },
+  lensTitle: { color: colors.text, fontWeight: '500', fontSize: 11, textAlign: 'right' },
   lensHint: { color: colors.textDim, fontSize: 9, textAlign: 'right', marginTop: 2 },
   readout: {
     flexDirection: 'row-reverse',
@@ -12959,7 +12960,7 @@ const styles = StyleSheet.create({
   drawingsSaveError: {
     color: colors.bear,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
     textAlign: 'right',
   },
   zoomRow: { flexDirection: 'row', gap: 4 },
@@ -12970,7 +12971,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     backgroundColor: colors.controlBg,
   },
-  crossAlertText: { ...numeric, fontWeight: '800', fontSize: 11, fontFamily: 'monospace' },
+  crossAlertText: { ...numeric, fontWeight: '600', fontSize: 11, fontFamily: 'monospace' },
   zoomBtn: {
     width: 28,
     height: 28,
@@ -12981,7 +12982,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  zoomText: { color: colors.text, fontWeight: '800', fontSize: 14 },
+  zoomText: { color: colors.text, fontWeight: '500', fontSize: 14 },
   replayOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   replayTextOn: { color: colors.accent },
   plot: {
@@ -13000,8 +13001,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   // تيل MATRIX (`colors.accent`) شبه شفّاف: يُقرأ بلقطة الشاشة ولا يُخلط بسعر أو شمعة.
-  watermarkSymbol: { color: 'rgba(45, 212, 191, 0.07)', fontWeight: '900', letterSpacing: 1 },
-  watermarkTf: { color: 'rgba(45, 212, 191, 0.08)', fontWeight: '800', marginTop: 2 },
+  watermarkSymbol: { color: 'rgba(45, 212, 191, 0.07)', fontWeight: '500', letterSpacing: 1 },
+  watermarkTf: { color: 'rgba(45, 212, 191, 0.08)', fontWeight: '500', marginTop: 2 },
   plotBare: {
     borderWidth: 0,
     borderRadius: 0,
@@ -13071,7 +13072,7 @@ const styles = StyleSheet.create({
     right: 3,
     color: colors.text,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '600',
     fontFamily: 'monospace',
     textAlign: 'right',
   },
@@ -13088,7 +13089,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 9,
     lineHeight: HILO_LABEL_H,
-    fontWeight: '700',
+    fontWeight: '600',
     fontFamily: 'monospace',
   },
   currentPriceLine: {
@@ -13115,7 +13116,7 @@ const styles = StyleSheet.create({
     color: '#041514',
     fontSize: 9,
     lineHeight: 14,
-    fontWeight: '900',
+    fontWeight: '600',
     fontFamily: 'monospace',
   },
   currentPriceCountdown: {
@@ -13124,7 +13125,7 @@ const styles = StyleSheet.create({
     opacity: 0.72,
     fontSize: 8,
     lineHeight: 11,
-    fontWeight: '700',
+    fontWeight: '600',
     fontFamily: 'monospace',
   },
   timeAxis: {
@@ -13145,7 +13146,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 10,
     lineHeight: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     textAlign: 'center',
   },
   timeAxisLabelCompact: {
@@ -13165,8 +13166,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  axisCornerText: { color: colors.accent, fontSize: 8, fontWeight: '900' },
-  axisCornerTextScript: { fontSize: 10, fontWeight: '800' },
+  axisCornerText: { color: colors.accent, fontSize: 8, fontWeight: '500' },
+  axisCornerTextScript: { fontSize: 10, fontWeight: '500' },
   axisCornerManual: { backgroundColor: colors.accent, borderColor: colors.accent },
   axisCornerTextManual: { color: '#041514' },
   toLatestBtn: {
@@ -13180,7 +13181,7 @@ const styles = StyleSheet.create({
     // §5.5: التعبئة وحدها تفصله عن الشموع — بلا حدّ لامع ولا ظلّ.
     backgroundColor: colors.accent,
   },
-  toLatestText: { color: '#0B1220', fontSize: 18, lineHeight: 20, fontWeight: '900', marginTop: -2 },
+  toLatestText: { color: '#0B1220', fontSize: 18, lineHeight: 20, fontWeight: '500', marginTop: -2 },
   dot: { position: 'absolute', width: 3, height: 3, borderRadius: 2 },
   hLine: {
     position: 'absolute',
@@ -13222,7 +13223,7 @@ const styles = StyleSheet.create({
     top: -11,
     fontSize: 10,
     lineHeight: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     paddingHorizontal: 3,
     borderRadius: radii.sm,
     backgroundColor: colors.bgGlass,
@@ -13246,7 +13247,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     fontSize: 10,
     lineHeight: 12,
-    fontWeight: '700',
+    fontWeight: '600',
     opacity: 0.9,
   },
   levelPipText: { fontWeight: '600', opacity: 0.8 },
@@ -13267,13 +13268,13 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 10,
     lineHeight: 13,
-    fontWeight: '700',
+    fontWeight: '600',
     paddingHorizontal: 3,
     borderRadius: radii.sm,
     backgroundColor: colors.bgGlass,
     overflow: 'hidden',
   },
-  note: { position: 'absolute', fontSize: 10, fontWeight: '800' },
+  note: { position: 'absolute', fontSize: 10, fontWeight: '500' },
   noteEdit: {
     position: 'absolute',
     height: 28,
@@ -13283,7 +13284,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     backgroundColor: 'rgba(6,10,14,0.92)',
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   // حالة التحديد كانت مطبَّقة على الخط الأفقي وحده، فالمتداول يختار خط ترند أو مستطيلاً
   // ثم يضغط «حذف» بلا أي دليل بصري على العنصر الذي سيُحذف.
@@ -13298,7 +13299,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     fontSize: 10,
     lineHeight: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     paddingHorizontal: 4,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radii.sm,
@@ -13328,7 +13329,7 @@ const styles = StyleSheet.create({
     ...numeric,
     color: colors.text,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   pending: {
     position: 'absolute',
@@ -13408,7 +13409,7 @@ const styles = StyleSheet.create({
     color: '#041514',
     fontSize: 9,
     lineHeight: 14,
-    fontWeight: '900',
+    fontWeight: '600',
     fontFamily: 'monospace',
   },
   crossPipsText: {
@@ -13417,7 +13418,7 @@ const styles = StyleSheet.create({
     opacity: 0.72,
     fontSize: 8,
     lineHeight: 11,
-    fontWeight: '700',
+    fontWeight: '600',
     fontFamily: 'monospace',
   },
   pane: {
@@ -13432,7 +13433,7 @@ const styles = StyleSheet.create({
     width: 36,
     color: colors.textDim,
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: '500',
     textAlign: 'center',
     paddingTop: 6,
   },
@@ -13462,12 +13463,12 @@ const styles = StyleSheet.create({
   },
   // سطر واحد (يُصغَّر حتى 75% ثم «…»): «Fractal Chaos Osc» كان يلتفّ لثلاثة أسطر فيدفع الرقم تحت قاع
   // لوحة بـ34px (`overflow: hidden`) — الاسم يُقرأ والرقم يختفي.
-  paneHeadName: { color: colors.textDim, fontSize: 9, fontWeight: '800', textAlign: 'center' },
-  paneHeadValue: { ...numeric, color: colors.textMuted, fontSize: 9, fontWeight: '700', textAlign: 'center', marginTop: 1 },
+  paneHeadName: { color: colors.textDim, fontSize: 9, fontWeight: '500', textAlign: 'center' },
+  paneHeadValue: { ...numeric, color: colors.textMuted, fontSize: 9, fontWeight: '600', textAlign: 'center', marginTop: 1 },
   // رقم طويل (مقياس دقيق كـMACD على زوج عملات) — 8 محارف لا تتّسع بـ36px عند حجم 9.
   paneHeadValueLong: { fontSize: 8 },
   paneHeadRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 1 },
-  paneHeadInline: { ...numeric, color: colors.textMuted, fontSize: 8, fontWeight: '700', marginHorizontal: 2.5 },
+  paneHeadInline: { ...numeric, color: colors.textMuted, fontSize: 8, fontWeight: '600', marginHorizontal: 2.5 },
   // خطّ عتبة داخل لوحة محصورة المدى. الرقم عند أقصى اليسار — أبعد موضع عن اسم اللوحة
   // (اللوحة row-reverse فاسمها يميناً) وأقلّها حجباً للشموع الأخيرة التي يقرؤها المتداول.
   paneGuideLine: {
@@ -13479,7 +13480,7 @@ const styles = StyleSheet.create({
   },
   paneGuideLineMid: { opacity: 0.45 },
   paneGuideLabelBox: { position: 'absolute', left: 3 },
-  paneGuideLabel: { ...numeric, color: colors.textDim, fontSize: 8, fontWeight: '700' },
+  paneGuideLabel: { ...numeric, color: colors.textDim, fontSize: 8, fontWeight: '600' },
   // مفتاح ألوان طبقات السعر: صفّ شارات أعلى يسار لوحة السعر، فوق الشموع بلا اعتراضها.
   priceLegend: {
     position: 'absolute',
@@ -13514,16 +13515,16 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 9,
     lineHeight: DENSE_OHLC_LINE_H,
-    fontWeight: '700',
+    fontWeight: '600',
     paddingHorizontal: 4,
     borderRadius: 3,
     overflow: 'hidden',
     backgroundColor: 'rgba(7,16,24,0.78)',
   },
   priceLegendSwatch: { width: 6, height: 6, borderRadius: 1, marginRight: 3 },
-  priceLegendText: { color: colors.text, fontSize: 9, fontWeight: '700' },
-  priceLegendValue: { ...numeric, color: colors.text, fontSize: 9, fontWeight: '700', marginLeft: 4 },
-  priceLegendMore: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
+  priceLegendText: { color: colors.text, fontSize: 9, fontWeight: '500' },
+  priceLegendValue: { ...numeric, color: colors.text, fontSize: 9, fontWeight: '600', marginLeft: 4 },
+  priceLegendMore: { color: colors.textDim, fontSize: 9, fontWeight: '500' },
   paneZeroLine: {
     position: 'absolute',
     left: 2,
@@ -13548,7 +13549,7 @@ const styles = StyleSheet.create({
     ...numeric,
     color: colors.accent,
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   collapsedNames: {
     flex: 1,
@@ -13574,7 +13575,7 @@ const styles = StyleSheet.create({
     ...numeric,
     color: colors.accent,
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   dock: {
     marginTop: 4,
@@ -13588,7 +13589,7 @@ const styles = StyleSheet.create({
   dockTitle: {
     color: colors.textMuted,
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '500',
     textAlign: 'right',
     letterSpacing: 0.6,
   },
@@ -13603,7 +13604,7 @@ const styles = StyleSheet.create({
   toolOn: { backgroundColor: colors.warn, borderColor: colors.warn },
   /** زرّ معطَّل (لا شيء للتراجع عنه) — باهت لا مخفيّ، فلا يقفز مكان الأزرار بالشريط. */
   toolDisabled: { opacity: 0.35 },
-  toolText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  toolText: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   toolTextOn: { color: '#111' },
   ind: {
     paddingHorizontal: 8,
@@ -13614,6 +13615,6 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSoft,
   },
   indOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  indText: { color: colors.textDim, fontSize: 10, fontWeight: '700' },
+  indText: { color: colors.textDim, fontSize: 10, fontWeight: '500' },
   indTextOn: { color: colors.accent },
 });
