@@ -203,6 +203,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   /** النموذج **الآن** — صفقةٌ بدأت كتابتها أثناء طلب الإضافة لا يمسحها `resetForm` حين يصل الردّ */
   const formKeyRef = useRef('');
   formKeyRef.current = [symbol, side, entry, exit, size, sl, tp, note].join('\u0001');
+  /** مفتاح النموذج الذي عُرض عليه «نقاطٌ بخانة سعر» عند الحفظ — ضغطة ثانية بلا تعديل تحفظ السعر كما كُتب. */
+  const pipsOverrideRef = useRef<string | null>(null);
   /** جلب «السعر الحالي» لخانة الدخول جارٍ */
   const [quoteBusy, setQuoteBusy] = useState(false);
   /** وضوح الحالة: يميّز "لا صفقات بعد" فعلياً عن فشل تحميل السجل */
@@ -966,7 +968,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     const savedNote = editing
       ? noteWithInitialStop({ symbol: sym, note: typedNote, before: editing, after: { side, entry: e, sl: s } })
       : typedNote;
-    if (pipsLevel) {
+    // ضغطة حفظ ثانية على القيم نفسها = «السعر كما كتبته»: الفضة هبطت ~30% بيوم (يناير 2026) فهدف بيعٍ من 110 عند «85»
+    // سعرٌ حقيقي لا 85 pip، ولا تمييز بالأرقام وحدها — المنع بلا مخرج كان يُجبر على كسرٍ وهمي أو السعر الخاطئ المقترح.
+    const pipsKey = pipsLevel ? `${pipsLevel.kind}\u0001${formKeyRef.current}` : null;
+    if (pipsLevel && pipsOverrideRef.current !== pipsKey) {
+      pipsOverrideRef.current = pipsKey;
       setFormError(pipsLevel.msg);
       return;
     }

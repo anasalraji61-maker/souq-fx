@@ -3202,3 +3202,12 @@ console.log('tradePlan formatSignedPct selftest OK');
   assert.equal(analyzePlan({ symbol: 'XAUUSD', side: 'buy', entry: 3500, sl: 3499.95, tp: 3510 }).issue, 'slTooClose');
 }
 console.log('tradePlan minStopPips selftest OK');
+{
+  // مبهمٌ بالبناء (سبب ضغطة الحفظ الثانية بالدفتر): هدف بيع فضة من 110 عند «85» سعرٌ حقيقي بعد هبوط يناير 2026، والقاعدة تقرأه 85 pip —
+  // و«30» على فضة 45 نقاطٌ فعلاً. القراءة لا تتغيّر؛ الدفتر يقبل السعر كما كُتب بضغطة ثانية على القيم نفسها.
+  assert.deepEqual(levelLooksLikePips({ symbol: 'XAGUSD', side: 'sell', entry: 110, level: 85, kind: 'tp' }), { pips: 85, price: 109.15 });
+  assert.notEqual(levelLooksLikePips({ symbol: 'XAGUSD', side: 'sell', entry: 45, level: 30, kind: 'tp' }), null);
+  // الكسر المكتوب سعرٌ دائماً
+  assert.equal(levelLooksLikePips({ symbol: 'XAGUSD', side: 'sell', entry: 110, level: 85.5, kind: 'tp' }), null);
+}
+console.log('tradePlan levelLooksLikePips metal ambiguity selftest OK');
