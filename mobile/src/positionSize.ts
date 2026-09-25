@@ -286,7 +286,7 @@ export function ambiguousThousandsPrice(
    * الرسالة العامة «اكتبه بلا فواصل آلاف، مثل 1.0850» فتُسدّ كل أسعار الين والفضة بثلاث منازل على لوحة الفاصلة العشرية
    * (التركية، الألمانية) بلا قول ماذا يكتب. رسالةٌ لا قراءة: السعر يبقى مرفوضاً، والقراءتان تُعرضان.
    */
-  const comma = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009']/g, '').replace(/，/g, ',');
+  const comma = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009'’]/g, '').replace(/[，،]/g, ',');
   if (symbol && /^[1-9]\d{0,2},\d{3}$/.test(comma) && parseDecimal(raw) == null) {
     return { value: raw.trim(), whole: comma.replace(',', ''), small: String(Number(comma.replace(',', '.'))) };
   }
@@ -294,7 +294,7 @@ export function ambiguousThousandsPrice(
   const spec = symbol ? instrumentSpec(symbol) ?? instrumentSpec(smallContractPair(symbol) ?? '') : null;
   if (!spec) {
     if (!symbol || !priceAlwaysOverThousand(symbol)) return null;
-    const s = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009٬']/g, '').replace(/[٫．]/g, '.');
+    const s = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009٬'’]/g, '').replace(/[٫．]/g, '.');
     if (!/^[1-9]\d{0,2}\.\d{3}$/.test(s)) return null;
     return { value: raw.trim(), whole: s.replace('.', ''), small: String(Number(s)) };
   }
@@ -310,7 +310,7 @@ export function ambiguousThousandsPrice(
    */
   const silverOverTen = spec.base === 'XAG' && SILVER_ABOVE_TEN_QUOTES.has(spec.quote);
   if (decimals >= 3 && !silverOverThousand && !silverOverTen) return null;
-  const s = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009٬']/g, '').replace(/[٫．]/g, '.');
+  const s = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009٬'’]/g, '').replace(/[٫．]/g, '.');
   if (!(silverOverTen && !silverOverThousand ? /^[1-9]\.\d{3}$/ : /^[1-9]\d{0,2}\.\d{3}$/).test(s)) return null;
   return { value: raw.trim(), whole: s.replace('.', ''), small: String(Number(s)) };
 }

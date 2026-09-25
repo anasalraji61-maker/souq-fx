@@ -221,3 +221,22 @@ console.log('parseDecimal leading plus selftest OK');
   assert.equal(misplacedArabicThousandsSign('0٬5 pips', { unit: 'pip' }), true);
 }
 console.log('parseDecimal unit word selftest OK');
+
+// «’» (فاصلة iOS الذكية) = «'» السويسرية، و«،» (الفاصلة العربية) = «,» بقواعدها — لا قراءة أوسع من نظيريهما
+{
+  const cases: [string, number | null][] = [
+    ['1’000', 1000], ['12’345’678', 12345678], ['1’234.50', 1234.5], ['١’٠٠٠', 1000],
+    ['1’5', null], ['0’500', null], ['1’23', null], ['1’2345', null],
+    ['1،5', 1.5], ['١،٥', 1.5], ['1،0850', 1.085], ['0،5', 0.5],
+    ['10،000', null], ['1،085', null], ['1،234.5', 1234.5], ['1.234،5', 1234.5], ['1،2،3', null],
+  ];
+  for (const [raw, want] of cases) assert.equal(parseDecimal(raw), want, raw);
+  // خانة المخاطرة: «0،5%» = نصف بالمئة؛ خانة الرصيد: «10’000» عشرة آلاف
+  assert.equal(parseDecimal('0،5%', { percent: true }), 0.5);
+  assert.equal(parseDecimal('10’000', { amount: true }), 10000);
+  assert.equal(parseDecimal('10،000', { amount: true }), null);
+  // مثل «'» و«,» تماماً
+  for (const [a, b] of [['1’000', "1'000"], ['1’5', "1'5"], ['1،5', '1,5'], ['10،000', '10,000'], ['1،234.5', '1,234.5']])
+    assert.equal(parseDecimal(a), parseDecimal(b), a);
+}
+console.log('parseDecimal smart apostrophe / Arabic comma selftest OK');

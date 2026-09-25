@@ -2841,3 +2841,13 @@ console.log('positionSize costsForRisk selftest OK');
   assert.equal(typedExitQuoteToAccount(null, 'USD', 148.5, 150, 150), null);
 }
 console.log('positionSize typedExitQuoteToAccount selftest OK');
+
+// «157،250» (فاصلة عربية) بخانة سعر الين: القراءتان كـ«157,250»، والسعر يبقى مرفوضاً
+{
+  assert.deepEqual(ambiguousThousandsPrice('157،250', 'USDJPY'), { value: '157،250', whole: '157250', small: '157.25' });
+  assert.deepEqual(ambiguousThousandsPrice('157،250', 'USDJPY')!.whole, ambiguousThousandsPrice('157,250', 'USDJPY')!.whole);
+  assert.equal(parsePriceFor('157،250', 'USDJPY'), null);
+  assert.equal(parsePriceFor('157،25', 'USDJPY'), 157.25);
+  assert.equal(parsePriceFor('2’650.50', 'XAUUSD'), 2650.5);
+}
+console.log('positionSize Arabic comma price hint selftest OK');
