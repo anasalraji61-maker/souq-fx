@@ -47,6 +47,25 @@ assert.equal(prevCloseFromDaily([thu, fri, sun, mon], D('2026-09-21') + 9 * H), 
 assert.equal(prevCloseFromDaily([thu, fri, mon]), 1.1);
 // الثلاثاء قبل ظهور شمعته (مزوّد متأخر): المرجع إغلاق الإثنين المكتمل
 assert.equal(prevCloseFromDaily([fri, sun, mon], D('2026-09-22') + 3 * H), 1.12);
+// افتتاح CME المتأخر (الأحد 18:00 نيويورك = 22:00Z صيفاً، 23:00Z شتاءً) حين يُمرَّر الرمز
+{
+  const sun2130 = D('2026-09-20') + 21.5 * H; // الفوركس فُتح 21:00Z، الذهب/US30/WTI لا
+  assert.equal(prevCloseFromDaily([wed, thu, fri], sun2130), 1.1); // بلا رمز: كما كان
+  assert.equal(prevCloseFromDaily([wed, thu, fri], sun2130, 'EURUSD'), 1.1);
+  for (const s of ['XAUUSD', 'xagusd', 'US30', 'NAS100', 'USOIL', 'GOLD']) {
+    assert.equal(prevCloseFromDaily([wed, thu, fri], sun2130, s), 1.09, s); // حركة الجمعة لا «0.00%»
+    assert.equal(sessionKeyAt(sun2130, true, s), sessionKeyAt(D('2026-09-19') + 12 * H, true), s);
+  }
+  // بعد الافتتاح 22:00Z: جلسة الإثنين كالفوركس
+  assert.equal(prevCloseFromDaily([wed, thu, fri], D('2026-09-20') + 22.5 * H, 'XAUUSD'), 1.1);
+  assert.equal(sessionKeyAt(D('2026-09-20') + 22.5 * H, true, 'XAUUSD'), sessionKeyAt(D('2026-09-20') + 22.5 * H, true));
+  // شتاءً: 22:30Z مغلق للذهب (يفتح 23:00Z)، مفتوح للفوركس
+  assert.equal(prevCloseFromDaily([thuW, friW], D('2026-11-15') + 22.5 * H, 'XAUUSD'), 1.09);
+  assert.equal(prevCloseFromDaily([thuW, friW], D('2026-11-15') + 22.5 * H, 'EURUSD'), 1.1);
+  assert.equal(prevCloseFromDaily([thuW, friW], D('2026-11-15') + 23.5 * H, 'XAUUSD'), 1.1);
+  // كسر CME اليومي أيام الأسبوع لا يغيّر الجلسة (الأربعاء 21:30Z)
+  assert.equal(prevCloseFromDaily([wed, thu, fri, sun, mon, { time: D('2026-09-23'), close: 1.13 }], D('2026-09-23') + 21.5 * H, 'XAUUSD'), 1.12);
+}
 // أداة تتداول بالعطلة (شمعة سبت بالسلسلة): أيام UTC عادية — الأحد مقابل السبت
 const sat = { time: D('2026-09-19'), close: 64000 };
 assert.equal(
