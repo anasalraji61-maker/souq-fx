@@ -821,6 +821,10 @@ export type Dict = {
   ctlKindArea: string;
   ctlKindBaseline: string;
   ctlKindRange: string;
+  ctlKindRenko: string;
+  ctlKindKagi: string;
+  /** Point & Figure — الشريحة كانت «P&F» اللاتينية وقارئ الشاشة يقرؤها «P and F». */
+  ctlKindPnf: string;
   ctlToolNone: string;
   ctlToolSelect: string;
   ctlToolTrend: string;
@@ -1894,6 +1898,9 @@ const ar: Dict = {
   ctlKindArea: 'مساحة',
   ctlKindBaseline: 'خط أساس',
   ctlKindRange: 'نطاق',
+  ctlKindRenko: 'رينكو',
+  ctlKindKagi: 'كاجي',
+  ctlKindPnf: 'نقطة ورقم',
   ctlToolNone: 'مؤشر',
   ctlToolSelect: 'تحديد',
   ctlToolTrend: 'ترند',
@@ -2971,6 +2978,9 @@ const enUS: Dict = {
   ctlKindArea: 'Area',
   ctlKindBaseline: 'Baseline',
   ctlKindRange: 'Range',
+  ctlKindRenko: 'Renko',
+  ctlKindKagi: 'Kagi',
+  ctlKindPnf: 'Point & Figure',
   ctlToolNone: 'Cursor',
   ctlToolSelect: 'Select',
   ctlToolTrend: 'Trend',
@@ -4073,6 +4083,9 @@ const ku: Dict = {
   ctlKindArea: 'ڕووبەر',
   ctlKindBaseline: 'هێڵی بنەڕەت',
   ctlKindRange: 'مەودا',
+  ctlKindRenko: 'ڕێنکۆ',
+  ctlKindKagi: 'کاگی',
+  ctlKindPnf: 'خاڵ و ژمارە',
   ctlToolNone: 'نیشانکەر',
   ctlToolSelect: 'هەڵبژاردن',
   ctlToolTrend: 'ترێند',
