@@ -1275,6 +1275,16 @@ def economic_calendar(currency: str | None = None, impact: str | None = None):
     return {"events": events, **econ_calendar.calendar_status()}
 
 
+def _series_price_at(series: ChartSeries) -> float | None:
+    """وقت إغلاق السلسلة `last` = إغلاق آخر شمعة (فتحها + طول الفريم) إن سبق لحظة الجلب — لا لحظة الجلب
+    وحدها: السبت كانت شمعة الجمعة 21:45 تُرسَل «الآن» (نفس عيب الاقتباس المصحَّح بـ9f5cccd)."""
+    fetched = series.data_source.as_of
+    step = TF_SECONDS.get(series.timeframe)
+    candle_end = float(series.candles[-1].time + step) if series.candles and step else None
+    known = [t for t in (fetched, candle_end) if t is not None]
+    return min(known) if known else None
+
+
 # كاش الاقتباس: الدفتر وحاسبة المخاطرة وقائمة المتابعة تطلب الرمز نفسه مرّات بالدقيقة، وكل طلب
 # كان يصرف من حدّ المزوّد المشترك (~8/دقيقة بالخطة المجانية) ⇒ 429 ثم أسعار احتياطية للجميع.
 # المُخزَّن يُعاد `data_kind: cache` مع `as_of` = وقت جلبه الحقيقي، لا «الآن».
@@ -1323,12 +1333,8 @@ def market_quote(symbol: str):
                 "unavailable_reason": series.data_source.unavailable_reason or "provider_unavailable",
             }
         last = series.last
-        # وقت السعر = إغلاق آخر شمعة (فتحها + 15د) إن سبق لحظة الجلب — لا لحظة الجلب وحدها: السبت
-        # كانت شمعة الجمعة 21:45 تُرسَل `as_of` = «الآن» (نفس عيب الاقتباس المصحَّح بـ9f5cccd).
         fetched = series.data_source.as_of
-        candle_end = float(series.candles[-1].time + TF_SECONDS["15m"]) if series.candles else None
-        known = [t for t in (fetched, candle_end) if t is not None]
-        price_at = min(known) if known else None
+        price_at = _series_price_at(series)
         return {
             "symbol": symbol.upper(),
             "price": last,
@@ -1790,9 +1796,18 @@ def ai_ask(body: AiAsk):
             sl = round(entry - sgn * atr_v, 5)
             tp = round(entry + sgn * 2 * atr_v, 5)
 
+    # وقت `last` ومصدره: كان السياق `last=` وحده ⇒ النموذج يقول «السعر الحالي» عن سلسلة مخزَّنة (حتى 15د
+    # عند حدّ المزوّد) أو عن إغلاق الجمعة يوم السبت، والدخول بالسيناريو بلا وقت بالردّ.
+    price_at = _series_price_at(series) if live else None
     if live:
+        at = (
+            datetime.fromtimestamp(price_at, timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+            if price_at is not None else "unknown"
+        )
         context = (
-            f"last={series.last}, change_pct_over_last_{bars}_candles={series.change_pct:+.2f}%, "
+            f"last={series.last} (last candle close at {at}, source={series.data_source.kind}; "
+            f"not a live tick — if it is not recent, say so and do not call it the current price), "
+            f"change_pct_over_last_{bars}_candles={series.change_pct:+.2f}%, "
             f"tf={series.timeframe}" + ("" if flat else f", bias={bias}")
         )
     else:
@@ -1807,7 +1822,7 @@ def ai_ask(body: AiAsk):
                 setup.update(entry=entry, sl=sl, tp=tp)
             if not live:
                 setup["direction"] = None
-            return {"answer": answer, "symbol": sym, "setup": setup, "live_price": live}
+            return {"answer": answer, "symbol": sym, "setup": setup, "live_price": live, "price_as_of": price_at}
         except Exception:
             pass
 
@@ -1883,6 +1898,8 @@ def ai_ask(body: AiAsk):
             "win_probability": None,
         },
         "live_price": live,
+        # وقت سعر الدخول (إغلاق آخر شمعة، ثوانٍ UTC) — null بلا سعر حقيقي
+        "price_as_of": price_at,
     }
 
 

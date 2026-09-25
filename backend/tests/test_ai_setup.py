@@ -90,3 +90,36 @@ def test_local_answer_names_the_candle_window_not_an_instant_trend(monkeypatch, 
     assert word in body["answer"]
     assert "اللحظي" not in body["answer"] and "short-term" not in body["answer"]
     assert body["setup"]["direction"] == "buy" and body["setup"]["entry"] is not None
+
+
+# ─── وقت السعر بالسياق والردّ ─────────────────────────────────────────────────
+
+def test_ai_context_and_reply_carry_the_price_time_and_source(monkeypatch):
+    # كان السياق `last=1.1` وحده ⇒ سلسلة مخزَّنة أو إغلاق الجمعة يُقال عنه «السعر الحالي».
+    seen: dict = {}
+    monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: True)
+    monkeypatch.setattr(
+        main.openrouter_ai, "trading_answer",
+        lambda q, sym, context, lang="ar": seen.setdefault("ctx", context) and "انتظر",
+    )
+    body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()
+    series = main.build_series("EURUSD")
+    assert body["price_as_of"] == main._series_price_at(series)
+    assert "last candle close at" in seen["ctx"] and "source=provider" in seen["ctx"]
+
+
+def test_template_reply_carries_the_price_time(monkeypatch):
+    monkeypatch.setattr(main, "build_series", _provider_series(0.0030))
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    body = TestClient(main.app).post("/api/ai/ask", json={"question": "رأيك؟"}).json()
+    assert body["price_as_of"] == main._series_price_at(main.build_series("EURUSD"))
+
+
+def test_series_price_at_is_the_candle_close_not_the_fetch_time():
+    c = main.Candle(time=1_000_000_000, open=1, high=1, low=1, close=1)
+    s = main.ChartSeries(
+        symbol="EURUSD", timeframe="1H", candles=[c], change_pct=0, last=1,
+        data_source=main.DataProvenance(kind="cache", as_of=2_000_000_000.0, channel="twelvedata"),
+    )
+    assert main._series_price_at(s) == 1_000_000_000 + 3600
