@@ -26,15 +26,8 @@ function indicatorOpts(t: Dict) {
   ];
 }
 
-type Vote = {
-  id: string;
-  name: string;
-  direction: string;
-  score: number;
-  detail: string;
-  detail_code?: string;
-  detail_values?: Record<string, number>;
-};
+// مشتقّ من ردّ `api.indicatorForecast` (QA51) كي لا يتباعد عن حقول الخادم.
+type Vote = Awaited<ReturnType<typeof api.indicatorForecast>>['votes'][number];
 
 export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: Props) {
   const { t, rtl, lang } = useI18n();
