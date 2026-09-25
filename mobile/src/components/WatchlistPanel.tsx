@@ -89,6 +89,21 @@ export function WatchlistPanel({
   const [symbols, setSymbols] = useState<string[] | null>(null);
   const [saveError, setSaveError] = useState<WatchlistSaveErrorCode | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  /** DESIGN-PRO §5.2: ترتيب/حذف الصفّ مخفيّان وقت السكون — يظهران بالمرور (ويب) أو بالضغط
+   * الطويل (لمس)؛ ولقارئ الشاشة إجراءات الصفّ (`accessibilityActions`) بلا حاجة لإظهارهما. */
+  const [hoverSym, setHoverSym] = useState<string | null>(null);
+  const [revealSym, setRevealSym] = useState<string | null>(null);
+  const askRemove = (sym: string) =>
+    confirmDestructive({
+      title: t.wlRemoveConfirmTitle,
+      body: sym,
+      cancelText: t.cancel,
+      confirmText: t.wlRemoveConfirmBtn,
+      onConfirm: () => {
+        setRevealSym(null);
+        void removeWatchSymbol(sym);
+      },
+    });
   const [loadError, setLoadError] = useState(false);
   // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (مغادرة شاشة الشارت
   // قبل اكتمال تحميل قائمة المتابعة) — نفس مبدأ ChartFrame/SymbolSnapshot المؤسَّس بالكود.
@@ -398,8 +413,11 @@ export function WatchlistPanel({
                 ? `🔔${armedLevels.length > 1 ? armedLevels.length : ''}${armedDist != null ? ` ${armedDist} ${pipUnit(lang)}` : ''}`
                 : null;
             return (
-              <View
+              <Pressable
                 key={sym}
+                accessible={false}
+                onHoverIn={() => setHoverSym(sym)}
+                onHoverOut={() => setHoverSym((h) => (h === sym ? null : h))}
                 style={[styles.rowWrap, on && styles.rowWrapOn, isDxy && styles.rowDxy]}
               >
                 <Pressable
@@ -412,7 +430,22 @@ export function WatchlistPanel({
                       transform: [{ scale: buttons.pressedScale }],
                     },
                   ]}
-                  onPress={() => onPick(sym)}
+                  onPress={() => {
+                    setRevealSym(null);
+                    onPick(sym);
+                  }}
+                  onLongPress={() => setRevealSym((r) => (r === sym ? null : sym))}
+                  accessibilityActions={[
+                    ...(index > 0 ? [{ name: 'moveUp', label: t.wlMoveUpA11y }] : []),
+                    ...(index < list.length - 1 ? [{ name: 'moveDown', label: t.wlMoveDownA11y }] : []),
+                    { name: 'remove', label: t.wlRemoveA11y },
+                  ]}
+                  onAccessibilityAction={(e) => {
+                    const a = e.nativeEvent.actionName;
+                    if (a === 'moveUp') void moveWatchSymbol(sym, -1);
+                    else if (a === 'moveDown') void moveWatchSymbol(sym, 1);
+                    else if (a === 'remove') askRemove(sym);
+                  }}
                   accessibilityLabel={`${sym}${price != null ? ` ${formatPrice(price, sym)}` : ''}${pctText ? ` ${pctText}` : ''}${isDemoPrice ? t.wlDemoPriceA11ySuffix : ''}${
                     armedText ? ` · ${t.alertsStatusArmed}${armedLevels!.length > 1 ? ` ${armedLevels!.length}` : ''}${armedDist != null ? ` ${armedDist} ${pipUnit(lang)}` : ''}` : ''
                   }`}
@@ -460,65 +493,62 @@ export function WatchlistPanel({
                     {armedText ? <Text style={styles.armedTag}>{armedText}</Text> : null}
                   </View>
                 </Pressable>
-                <View style={[styles.ops, rtl && styles.opsRtl]}>
-                  <Pressable
-                    accessibilityRole="button"
-                    style={({ pressed }) => [
-                      styles.opBtn,
-                      index === 0 && styles.opDisabled,
-                      pressed && {
-                        opacity: buttons.pressedOpacity,
-                        transform: [{ scale: buttons.pressedScale }],
-                      },
-                    ]}
-                    disabled={index === 0}
-                    accessibilityState={{ disabled: index === 0 }}
-                    onPress={() => void moveWatchSymbol(sym, -1)}
-                    accessibilityLabel={t.wlMoveUpA11y}
-                  >
-                    <Text style={styles.opText}>↑</Text>
-                  </Pressable>
-                  <Pressable
-                    accessibilityRole="button"
-                    style={({ pressed }) => [
-                      styles.opBtn,
-                      index >= list.length - 1 && styles.opDisabled,
-                      pressed && {
-                        opacity: buttons.pressedOpacity,
-                        transform: [{ scale: buttons.pressedScale }],
-                      },
-                    ]}
-                    disabled={index >= list.length - 1}
-                    accessibilityState={{ disabled: index >= list.length - 1 }}
-                    onPress={() => void moveWatchSymbol(sym, 1)}
-                    accessibilityLabel={t.wlMoveDownA11y}
-                  >
-                    <Text style={styles.opText}>↓</Text>
-                  </Pressable>
-                  <Pressable
-                    accessibilityRole="button"
-                    style={({ pressed }) => [
-                      styles.opBtn,
-                      pressed && {
-                        opacity: buttons.pressedOpacity,
-                        transform: [{ scale: buttons.pressedScale }],
-                      },
-                    ]}
-                    onPress={() =>
-                      confirmDestructive({
-                        title: t.wlRemoveConfirmTitle,
-                        body: sym,
-                        cancelText: t.cancel,
-                        confirmText: t.wlRemoveConfirmBtn,
-                        onConfirm: () => void removeWatchSymbol(sym),
-                      })
-                    }
-                    accessibilityLabel={t.wlRemoveA11y}
-                  >
-                    <Text style={[styles.opText, styles.opRemove]}>{t.deleteWord}</Text>
-                  </Pressable>
-                </View>
-              </View>
+                {hoverSym === sym || revealSym === sym ? (
+                  <View style={[styles.ops, rtl ? styles.opsRtl : null]}>
+                    <Pressable
+                      accessibilityRole="button"
+                      style={({ pressed }) => [
+                        styles.opBtn,
+                        index === 0 && styles.opDisabled,
+                        pressed && {
+                          opacity: buttons.pressedOpacity,
+                          transform: [{ scale: buttons.pressedScale }],
+                        },
+                      ]}
+                      disabled={index === 0}
+                      accessibilityState={{ disabled: index === 0 }}
+                      hitSlop={spacing.xs}
+                      onPress={() => void moveWatchSymbol(sym, -1)}
+                      accessibilityLabel={t.wlMoveUpA11y}
+                    >
+                      <Text style={styles.opText}>↑</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      style={({ pressed }) => [
+                        styles.opBtn,
+                        index >= list.length - 1 && styles.opDisabled,
+                        pressed && {
+                          opacity: buttons.pressedOpacity,
+                          transform: [{ scale: buttons.pressedScale }],
+                        },
+                      ]}
+                      disabled={index >= list.length - 1}
+                      accessibilityState={{ disabled: index >= list.length - 1 }}
+                      hitSlop={spacing.xs}
+                      onPress={() => void moveWatchSymbol(sym, 1)}
+                      accessibilityLabel={t.wlMoveDownA11y}
+                    >
+                      <Text style={styles.opText}>↓</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      style={({ pressed }) => [
+                        styles.opBtn,
+                        pressed && {
+                          opacity: buttons.pressedOpacity,
+                          transform: [{ scale: buttons.pressedScale }],
+                        },
+                      ]}
+                      hitSlop={spacing.xs}
+                      onPress={() => askRemove(sym)}
+                      accessibilityLabel={t.wlRemoveA11y}
+                    >
+                      <Text style={styles.opText}>✕</Text>
+                    </Pressable>
+                  </View>
+                ) : null}
+              </Pressable>
             );
           })
         )}
@@ -682,23 +712,24 @@ const styles = StyleSheet.create({
   chgUp: { color: colors.bull },
   chgDown: { color: colors.bear },
   ops: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
     flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: colors.borderSoft,
-    paddingVertical: 2,
+    alignItems: 'center',
     paddingHorizontal: spacing.xs,
-    gap: 2,
-    justifyContent: 'flex-start',
+    gap: spacing.xs,
+    backgroundColor: colors.bgElevated,
   },
-  opsRtl: { flexDirection: 'row-reverse' },
+  opsRtl: { right: undefined, left: 0, flexDirection: 'row-reverse' },
   opBtn: {
-    paddingVertical: 2,
-    paddingHorizontal: 6,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
     borderRadius: 6,
   },
   opDisabled: { opacity: 0.3 },
   opText: { color: colors.textMuted, fontSize: 10, fontWeight: '800' },
-  opRemove: { color: colors.bear },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.55)',
