@@ -2180,3 +2180,22 @@ console.log('positionSize quoteSpreadPips selftest OK');
   assert.deepEqual(savedRiskMoney({ riskPct: 'USD 50', account: 'XXX', balance: '1000' }), { ccy: 'USD', balance: 1000 });
 }
 console.log('positionSize savedRiskMoney selftest OK');
+
+// تجديد سعر التحويل وحده يغيّر اللوت — لذا «سُجِّلت» بالحاسبة تُمسح حين يتغيّر اللوت (مؤثّر `setLogMsg` يراقب `lots`)
+{
+  const jpy = instrumentSpec('USDJPY')!;
+  const at = (usdjpy: number) =>
+    positionSize({
+      balance: 10_000,
+      riskPct: 1,
+      slPips: 20,
+      pipValuePerLot: pipValuePerLot(jpy, quoteToAccountRate(conversionPair('JPY', 'USD'), usdjpy)!),
+      contractSize: jpy.contractSize,
+    })!.lots;
+  assert.equal(conversionPair('JPY', 'USD')!.invert, true);
+  assert.equal(at(150), 0.75);
+  assert.equal(at(149.99), 0.74);
+  // تجديدٌ لا يعبر خطوة اللوت لا يغيّره (فلا يُعاد الزرّ ولا تُتاح نقرة مكرّرة)
+  assert.equal(at(150.5), 0.75);
+}
+console.log('positionSize conversion refresh lots selftest OK');
