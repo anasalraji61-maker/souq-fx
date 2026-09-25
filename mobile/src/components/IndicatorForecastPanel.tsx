@@ -6,6 +6,7 @@ import { formatPrice } from '../chart/math';
 import { formatRR } from '../tradePlan';
 import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from '../chart/pipSpec';
+import { pipsNumber, pipUnit } from '../chart/measureReadout';
 import { useI18n } from '../i18n/I18nContext';
 import type { Dict } from '../i18n/locales';
 
@@ -58,7 +59,7 @@ function dirLabel(d: string, t: Dict) {
 }
 
 export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: Props) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const opts = indicatorOpts(t);
   const [enabled, setEnabled] = useState(opts.map((x) => x.id));
@@ -158,7 +159,8 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
   const levelSpec = levels ? chartPipSpec(symbol) : null;
   const pipsTag = (a: number, b: number) => {
     const p = levelSpec ? pipsBetween(levelSpec, a, b) : null;
-    return p != null ? ` (${p.toFixed(1)} pip)` : '';
+    // «pips» بالإنجليزية كسطر السبريد والقياس بالشارت (كانت «12.0 pip» ثابتة)، وبلا عُشر من 1000.
+    return p != null ? ` (${pipsNumber(p)} ${pipUnit(lang)})` : '';
   };
   const rr =
     levels && direction !== 'neutral' && Math.abs(levels.entry - levels.sl) > 0
