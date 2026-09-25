@@ -162,7 +162,7 @@ import { zigzagWindowSegments } from './zigzagLegs';
 import { nextZigzagDeviation, ZIGZAG_DEVIATION_PCT, zigzagLegendText } from './zigzagLegend';
 import { loadZigzagDeviation, saveZigzagDeviation, subscribeZigzagDeviation } from './zigzagPrefs';
 import { paneInlineFits } from './paneHeadFit';
-import { noteBox } from './noteLabel';
+import { noteBox, NOTE_FONT } from './noteLabel';
 import { isNotOfferedSymbol } from '../providerSymbols';
 import { playSoftClick } from '../audio/playSoftClick';
 import { chartPipSpec } from './pipSpec';
@@ -13484,7 +13484,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgGlass,
     overflow: 'hidden',
   },
-  note: { position: 'absolute', fontSize: 10, fontWeight: '500' },
+  note: { position: 'absolute', fontSize: NOTE_FONT, fontWeight: '500' },
   noteEdit: {
     position: 'absolute',
     height: 28,

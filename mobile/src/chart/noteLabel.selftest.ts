@@ -1,5 +1,6 @@
 /** فحص ذاتي لـ`noteLabel.ts` — يُشغَّل بـNode بلا شجرة مكوّنات. */
-import { noteBox, noteTextWidth, NOTE_CHAR_W, NOTE_PAD_W } from './noteLabel';
+import { noteBox, noteTextWidth, NOTE_FONT, NOTE_PAD_W } from './noteLabel';
+import { propTextWidth } from './textWidth';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -10,9 +11,11 @@ function ok(name: string, cond: boolean) {
 }
 
 const W = 292; // هاتف 360px − محور 68
-const txt = 'Breakout retest'; // 15 حرفاً ⇒ 101px
-ok('العرض التقريبي', noteTextWidth(txt) === 15 * NOTE_CHAR_W + NOTE_PAD_W);
-ok('العربية بعدد الحروف لا البايتات', noteTextWidth('دعم') === 3 * NOTE_CHAR_W + NOTE_PAD_W);
+const txt = 'Breakout retest'; // 15 حرفاً ⇒ ~96px بـ11px
+ok('11px', NOTE_FONT === 11);
+ok('العرض بالقياس التناسبي', noteTextWidth(txt) === propTextWidth(txt, NOTE_FONT) + NOTE_PAD_W);
+ok('العربية بعدد الحروف لا البايتات', noteTextWidth('دعم') === propTextWidth('دعم', NOTE_FONT) + NOTE_PAD_W && noteTextWidth('دعم') < 40);
+ok('الكبيرة أعرض من الصغيرة', noteTextWidth('MMMM') > noteTextWidth('iiii'));
 
 // وسط اللوح ⇒ يميناً كما كان، بعرضه كاملاً.
 const mid = noteBox(100, txt, W);

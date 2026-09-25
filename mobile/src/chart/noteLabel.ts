@@ -6,9 +6,10 @@
  * بأيّ جهة يأخذ الجهة الأوسع ويُختصر بسطر واحد (`numberOfLines={1}` عند المستدعي).
  * نقطة الإرساء نفسها لا تتحرّك — هي هدف اللمس والسحب.
  */
+import { propTextWidth } from './textWidth';
 
-/** عرض تقريبي لحرف بخطّ الملاحظة (10px عريض) — يكفي للقرار، لا لرسم دقيق. */
-export const NOTE_CHAR_W = 6.2;
+/** خطّ الملاحظة (DESIGN-PRO §2: 11px أصغر حجم) — `styles.note` يقرؤه. */
+export const NOTE_FONT = 11;
 /** حشوة الإطار عند التحديد (3 + 3) + حدّان. */
 export const NOTE_PAD_W = 8;
 /** هامش عن حافّتي اللوح. */
@@ -17,7 +18,8 @@ const EDGE = 2;
 export type NoteBox = { left: number; width: number; flipped: boolean };
 
 export function noteTextWidth(text: string): number {
-  return Array.from(text).length * NOTE_CHAR_W + NOTE_PAD_W;
+  // بالقياس التناسبي المشترك (`textWidth.ts`) لا عدد المحارف × ثابت: «MMM» أعرض من «iii» بكثير.
+  return propTextWidth(text, NOTE_FONT) + NOTE_PAD_W;
 }
 
 /**
