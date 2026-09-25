@@ -280,11 +280,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingHorizontal: spacing.md,
     justifyContent: 'center',
-    shadowColor: buttons.shadowColor,
-    shadowOpacity: buttons.shadowOpacity,
-    shadowRadius: buttons.shadowRadius,
-    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
-    elevation: buttons.elevation,
   },
   sendText: { color: colors.onAccent, fontWeight: '500', fontSize: 12 },
 });

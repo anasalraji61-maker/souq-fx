@@ -411,11 +411,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     paddingVertical: 16,
     alignItems: 'center',
-    shadowColor: buttons.shadowColor,
-    shadowOpacity: buttons.shadowOpacity,
-    shadowRadius: buttons.shadowRadius,
-    shadowOffset: { width: 0, height: buttons.shadowOffsetY },
-    elevation: buttons.elevation,
   },
   closeText: { color: colors.onAccent, fontWeight: '500', fontSize: 15 },
 });
