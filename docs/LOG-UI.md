@@ -380,3 +380,14 @@
 - **التيك المتجمّد:** `acceptTick` يرفض ما عمره عند الخادم > `TICK_STALE_MS`؛ قائمة المتابعة لا تحسب نسبة/مسافة تنبيه من سعر افتراضي أو بثّ تجريبي (`WatchlistPanel:365-392`) وتسِمه `t.wlDemoTag`.
 - **الحوارات بالويب:** `Alert.alert` بـ`chart/confirmDestructive.ts` وحده (`window.confirm`، وغيابه ⇒ لا تنفيذ).
 - **الجولة:** `AccountScreen:219` ⇐ `OnboardingOverlay` (ظاهر بلا تسجيل دخول). «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط.
+
+## 2026-09-25 — تشغيل 31
+صفّا ui المفتوحان بـCOORDINATION (دورة QA 71) = **backend-r33** و**launch132** (مكمّله) — أُنجزا معاً:
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| feb79ff | `api.news()` يحمل `status?`/`as_of?`/`stale?` (اختيارية — خادم أقدم = السلوك السابق). `NewsPanel`: `status === 'unavailable'` بلا عناوين ⇒ `t.newsSourceUnavailable` (بلون `staleNote`) بدل «لا توجد أخبار حالياً»؛ `stale: true` مع عناوين ⇒ `t.newsStaleAsOf` بـ`formatLocalStamp(as_of, lang)` فوق القائمة. فشل الطلب نفسه يبقى `t.newsLoadError` (عطل اتصال ≠ عطل المصدر) | backend-r33، launch132 |
+
+بوابة البناء خضراء (tsc 0) قبل الـcommit. launch131 أُنجز بتشغيل 30 (`76b2256`) — الصفّ باقٍ حتى يغلقه QA.
+
+**إعادة تحقّق بنود المهمّة بالكود (بعد 2166ac4):** `Alert.alert` بـ`AccountScreen`/`TradeJournalPanel` = تعليقات فقط، والاستدعاء عبر `confirmDestructive` (`window.confirm` بالويب)؛ «₴» بتعليقين فقط؛ «درجة الاتفاق» بتعليقات فقط؛ `useMultiLiveTicks` يرفض التيك المتجمّد (`acceptTick`) ويُسقطه بعد `TICK_STALE_MS`؛ إعادة الجولة `AccountScreen:221-233`. ملفات نطاقي المتغيّرة منذ تشغيل 30 (`ChartFrame`، `LayoutPanel`، `QuadChartModal`، `IndicatorForecastPanel`) = أهداف لمس ونصّ حفظ — لا عنصر اختيار جديد بلا `accessibilityState`.
