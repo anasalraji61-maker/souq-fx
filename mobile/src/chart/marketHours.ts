@@ -120,6 +120,17 @@ function iceBreakEndSec(sym: string, sec: number): number | null {
   return null;
 }
 
+/**
+ * بداية كسر ICE (DXY/برنت) الذي تُغلق الشمعة داخله أو عند نهايته، أو null. الشمعة لا تُتداول بعده، فإغلاقها
+ * الفعلي بدايته — عدّاد 4H لـDXY الساعة 20:30 UTC صيفاً كان يعدّ 3:30:00 والسوق يُغلق بعد نصف ساعة.
+ */
+export function iceBreakStartForCloseSec(symbol: string, closeSec: number): number | null {
+  const sym = symbol.toUpperCase().trim();
+  const end = iceBreakEndSec(sym, closeSec - 1);
+  if (end == null) return null;
+  return end - (DXY_RE.test(sym) ? 3 : 2) * 3600;
+}
+
 /** داخل ساعة كسر المعادن اليومي (17:00–18:00 نيويورك)؟ */
 function inMetalsDailyBreak(sec: number): boolean {
   const dayStart = Math.floor(sec / DAY_SEC) * DAY_SEC;

@@ -1,4 +1,4 @@
-import { forexNextCloseSec, isForexMarketOpen } from './marketHours';
+import { forexNextCloseSec, iceBreakStartForCloseSec, isForexMarketOpen } from './marketHours';
 
 /**
  * العدّ التنازلي لإغلاق الشمعة الجارية — يُكتب تحت سعر وسم السعر الحيّ.
@@ -13,7 +13,7 @@ import { forexNextCloseSec, isForexMarketOpen } from './marketHours';
  *
  * `symbol` اختياري: معه لا عدّاد والسوق مغلق، والإغلاق لا يتجاوز إغلاق الجمعة — يومية
  * الجمعة (مختومة 00:00 UTC) و4H الساعة 20:00 كانتا تعدّان ساعات بعد إغلاق السوق. وكذلك عشيّة
- * عطلتَي 25/12 و1/1 (`forexNextCloseSec`).
+ * عطلتَي 25/12 و1/1 (`forexNextCloseSec`)، وكسر ICE اليومي لـDXY وبرنت (`iceBreakStartForCloseSec`).
  */
 export function barCloseCountdown(
   lastBarTime: number,
@@ -29,6 +29,9 @@ export function barCloseCountdown(
     if (!isForexMarketOpen(symbol, new Date(nowMs))) return null;
     const weekClose = forexNextCloseSec(symbol, nowMs);
     if (weekClose != null && weekClose < closeSec) closeSec = weekClose;
+    // DXY/برنت: شمعة تنتهي داخل الكسر اليومي تُغلق فعلياً ببدايته.
+    const breakStart = iceBreakStartForCloseSec(symbol, closeSec);
+    if (breakStart != null && breakStart < closeSec) closeSec = breakStart;
   }
   const remaining = closeSec - nowMs / 1000;
   if (!(remaining > 0) || remaining > stepSec + 1) return null;

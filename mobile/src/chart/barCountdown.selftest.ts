@@ -53,4 +53,16 @@ assert.equal(barCloseCountdown(xmasEve, 86400, Date.UTC(2026, 11, 24, 12), 'EURU
 // اليوم السابق عادي
 assert.equal(barCloseCountdown(xmasEve - 86400, 86400, Date.UTC(2026, 11, 23, 12), 'EURUSD'), '12:00:00');
 
+// كسر ICE اليومي: DXY صيفاً يُغلق 21:00 UTC (حتى 00:00) ⇒ 4H الساعة 20:00 تُغلق فعلياً 21:00 — كان «3:30:00»
+const jul15 = Date.UTC(2026, 6, 15) / 1000;
+assert.equal(barCloseCountdown(jul15 + 20 * 3600, 14400, Date.UTC(2026, 6, 15, 20, 30), 'DXY'), '30:00');
+// شتاءً 22:00 UTC
+const jan14 = Date.UTC(2026, 0, 14) / 1000;
+assert.equal(barCloseCountdown(jan14 + 20 * 3600, 14400, Date.UTC(2026, 0, 14, 21, 30), 'DXY'), '30:00');
+// برنت صيفاً: الكسر 22:00–00:00 UTC
+assert.equal(barCloseCountdown(jul15 + 20 * 3600, 14400, Date.UTC(2026, 6, 15, 21, 30), 'UKOIL'), '30:00');
+// شمعة تنتهي قبل الكسر لا تتأثّر، واليورو بلا كسر ICE
+assert.equal(barCloseCountdown(jul15 + 16 * 3600, 14400, Date.UTC(2026, 6, 15, 18), 'DXY'), '2:00:00');
+assert.equal(barCloseCountdown(jul15 + 20 * 3600, 14400, Date.UTC(2026, 6, 15, 20, 30), 'EURUSD'), '3:30:00');
+
 console.log('barCountdown.selftest: PASS');
