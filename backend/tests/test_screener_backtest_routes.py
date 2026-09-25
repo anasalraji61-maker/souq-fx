@@ -307,3 +307,26 @@ def test_scan_hit_says_it_was_served_from_a_stale_cache(monkeypatch):
     monkeypatch.setattr(screener_engine.ind, "snapshot", lambda raw, **k: {"rsi": 20.0, "last": 1.0})
     hit = screener_engine.run_scan_detailed("15m", ["rsi_oversold"], ["EURUSD"])["results"][0]
     assert hit["data_kind"] == "cache" and hit["as_of"] == as_of
+
+
+def test_scan_hit_carries_the_last_candle_close_not_the_fetch_time(monkeypatch):
+    """السبت: السلسلة تُجلب طازجة (تجتاز فحص القِدم) وآخر شمعة إغلاق الجمعة. `as_of` وحده = وقت الجلب
+    ⇒ تقاطع الجمعة يُقرأ «الآن». `price_as_of` = إغلاق آخر شمعة كالتوقّع والمساعد."""
+    now = time.time()
+    friday_open = now - 36 * 3600
+    candles = [{"time": friday_open - (99 - i) * 900, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0}
+               for i in range(100)]
+    monkeypatch.setattr(
+        screener_engine.market, "fetch_time_series_with_meta",
+        lambda *a, **k: (candles, {"kind": "provider", "as_of": now}),
+    )
+    monkeypatch.setattr(screener_engine.ind, "snapshot", lambda raw, **k: {"rsi": 20.0, "last": 1.0})
+    hit = screener_engine.run_scan_detailed("15m", ["rsi_oversold"], ["EURUSD"])["results"][0]
+    assert hit["as_of"] == now
+    assert hit["price_as_of"] == pytest.approx(friday_open + 900)
+
+
+def test_scan_price_as_of_never_later_than_the_fetch():
+    # شمعة جارية (لم تُغلق) ⇒ نهايتها بعد الجلب ⇒ السعر «حتى لحظة الجلب»
+    assert screener_engine._price_as_of([{"time": 1000}], "1H", 1500.0) == 1500.0
+    assert screener_engine._price_as_of([], "1H", None) is None
