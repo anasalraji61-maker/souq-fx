@@ -408,13 +408,7 @@ export type Dict = {
   /** «50» بخانة الهدف (الحاسبة/الدفتر) أو الوقف (الدفتر): نقاطٌ لا سعر، النقرة تكتب السعر — `{field}` `{value}` `{pips}` `{price}` */
   levelLooksLikePipsHint: string;
   /**
-   * يُلحق بـ`levelLooksLikePipsHint` بالدفتر وقت الحفظ (tools80): ضغطة حفظ ثانية على القيم نفسها تُبقي الرقم سعراً كما كُتب
-   * (فضة بيعٌ من 110 بهدف «85» سعرٌ حقيقي). `{button}` = نصّ الزرّ الظاهر (`journalAddBtn`/`journalSaveEditBtn`)، `{value}` كما كُتب —
-   * يُدرجان بدالّة لا نصّ بديل (كـ`levelLooksLikePipsText`). يبدأ بفاصل لأنه يتبع الجملة السابقة مباشرة
-   */
-  levelLooksLikePipsSaveAgain: string;
-  /**
-   * launch123: سطر الخطأ تحت زرّ الحفظ بالدفتر حين يُمنع الحفظ الأول. كان `levelLooksLikePipsHint` + `levelLooksLikePipsSaveAgain`
+   * launch123: سطر الخطأ تحت زرّ الحفظ بالدفتر حين يُمنع الحفظ الأول. كان `levelLooksLikePipsHint` + لاحقة «اضغط مرّة ثانية» (tools80، حُذفت)
    * ⇒ الجملة نفسها مرّتين (السطر القابل للنقر فوق، ونسخة نصّية تحت الزرّ) والنسخة السفلى تقول «اضغط لكتابة {price}» ولا تفعل شيئاً.
    * هذا مستقلّ ولا يَعِد بنقرة: يقول إن الحفظ لم يتمّ، ويحيل للسطر أعلاه، ويشرح الضغطة الثانية. `{field}` الاسم القصير، `{value}` كما كُتب،
    * `{button}` نصّ الزرّ — بدالّة لا نصّ بديل
@@ -1704,7 +1698,6 @@ const ar: Dict = {
   riskCalcSlLooksLikePrice: '⚠ «{value}» سعرٌ على الأرجح لا مسافة — اكتبه بخانة «سعر الوقف»، أو اكتب مسافة الوقف بالـpip (مثل 25)',
   riskCalcStopPxLooksLikePips: '⚠ «{value}» بخانة سعر الوقف عددُ pip على الأرجح لا سعر — اضغط لنقله إلى خانة الوقف بالـpip',
   levelLooksLikePipsHint: '⚠ {field} «{value}» عددُ pip على الأرجح لا سعر: {pips} pip تعني {price}. اضغط لكتابة {price}',
-  levelLooksLikePipsSaveAgain: '، أو اضغط «{button}» مرّة ثانية لإبقاء {value} سعراً كما كتبته',
   levelLooksLikePipsSaveBlocked: 'لم تُحفظ الصفقة: {field} «{value}» يبدو عدد pip لا سعراً — التصحيح في السطر أعلاه. لإبقاء {value} سعراً كما كتبته اضغط «{button}» مرّة ثانية.',
   riskCalcPipValue: 'قيمة الـpip للوت',
   riskCalcPipValueAtStop: 'قيمة الـpip للوت عند وقفك {price}',
@@ -2882,7 +2875,6 @@ const enUS: Dict = {
   riskCalcSlLooksLikePrice: '⚠ “{value}” looks like a price, not a distance — enter it under Stop price, or type the stop distance in pips (e.g. 25)',
   riskCalcStopPxLooksLikePips: '⚠ “{value}” in Stop price looks like pips, not a price — tap to move it to the pips box',
   levelLooksLikePipsHint: '⚠ {field} “{value}” looks like pips, not a price: {pips} pips is {price}. Tap to use {price}',
-  levelLooksLikePipsSaveAgain: ', or press “{button}” again to keep {value} as a price',
   levelLooksLikePipsSaveBlocked: 'Not saved: {field} “{value}” looks like pips, not a price — the fix is in the line above. To keep {value} as a price, press “{button}” again.',
   riskCalcPipValue: 'Pip value per lot',
   riskCalcPipValueAtStop: 'Pip value per lot at your stop {price}',
@@ -4086,7 +4078,6 @@ const ku: Dict = {
   riskCalcSlLooksLikePrice: '⚠ «{value}» زۆرجار نرخە نەک دووری — لە خانەی «نرخی وەستان» بینووسە، یان دووری وەستان بە pip بنووسە (بۆ نموونە 25)',
   riskCalcStopPxLooksLikePips: '⚠ «{value}» لە خانەی نرخی وەستان زۆرجار ژمارەی pipە نەک نرخ — دەست بنێ بۆ گواستنەوەی بۆ خانەی وەستان بە pip',
   levelLooksLikePipsHint: '⚠ {field} «{value}» زۆرجار ژمارەی pipە نەک نرخ: {pips} pip واتە {price}. دەست بنێ بۆ نووسینی {price}',
-  levelLooksLikePipsSaveAgain: '، یان جارێکی تر «{button}» دابگرە بۆ هێشتنەوەی {value} وەک نرخ',
   levelLooksLikePipsSaveBlocked: 'مامەڵەکە پاشەکەوت نەکرا: {field} «{value}» وەک ژمارەی pip دەردەکەوێت نەک نرخ — ڕاستکردنەوەکە لە دێڕی سەرەوەیە. بۆ هێشتنەوەی {value} وەک نرخ، جارێکی تر «{button}» دابگرە.',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
   riskCalcPipValueAtStop: 'بەهای pip بۆ هەر لۆتێک لە وەستانەکەت {price}',
