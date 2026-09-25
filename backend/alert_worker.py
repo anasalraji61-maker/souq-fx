@@ -126,6 +126,25 @@ def series_fresh_enough(as_of: float | None, timeframe: str, now: float | None =
     return (time.time() if now is None else now) - float(as_of) <= limit
 
 
+def cross_predates_arming(a: dict, candles: list[dict]) -> bool:
+    """تقاطع MA/MACD على آخر شمعة **انتهت قبل تسليح التنبيه** = حدث قديم لا يُطلق.
+
+    تقاطع شمعة الجمعة اليومية كان يُطلق تنبيه «تقاطع صاعد · D» أُنشئ السبت فوراً (والسوق مغلق) كأنه
+    حدث للتوّ — `series_fresh_enough` يقيس عمر الجلب لا عمر الشمعة. الشمعة الجارية وقت التسليح تبقى
+    مؤهّلة (تقاطع يتكوّن بعد الظهر على شمعة D فُتحت صباحاً حدثٌ بعد التسليح). RSI شرط مستوى لا حدث
+    (كتنبيه السعر ≥/≤) فلا يخصّه. بلا `ts` مقروء أو فريم مجهول ⇒ السلوك القديم."""
+    if a.get("alert_type") not in ("ma_cross", "macd_cross") or not candles:
+        return False
+    armed = _armed_at(a.get("ts"))
+    step = _BAR_SECONDS.get(str(a.get("timeframe")))
+    if armed is None or not step:
+        return False
+    try:
+        return int(candles[-1]["time"]) + step <= armed
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
 def _indicator_series(a: dict, cache: dict | None = None) -> list[dict] | None:
     """سلسلة `CHART_BARS` شمعة (نفس طول الشارت و/api/indicator-alerts/check — نفس الكاش ونفس القيم) لرمز/فريم التنبيه — **طلب واحد لكل (رمز، فريم) بالدورة** عبر `cache`.
     كانت كل تنبيهات المؤشر تجلب سلسلتها منفردة (5 تنبيهات RSI/تقاطع على EURUSD 1h = 5 طلبات للمزوّد
@@ -164,6 +183,8 @@ def _check_indicator(a: dict, cache: dict | None = None) -> bool:
             a.get("symbol"),
             a.get("alert_type"),
         )
+        return False
+    if cross_predates_arming(a, raw):
         return False
     snap = ind_engine.snapshot(raw, int(a.get("fast_period") or 9), int(a.get("slow_period") or 21))
     at = a["alert_type"]
