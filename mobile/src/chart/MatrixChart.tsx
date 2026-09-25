@@ -59,6 +59,7 @@ import {
 import { barCloseCountdown } from './barCountdown';
 import { axisTagFontSize } from './axisTagFont';
 import { monoCharW, monoTextWidth } from './textWidth';
+import { planDenseOhlc } from './denseOhlcFit';
 import { BarCountdown } from './BarCountdown';
 import { crossPriceAt, indexAtOrBeforeTime, indexOfBarTime, stepCrossBar } from './crossAnchor';
 import { indicatorBase, indicatorRangeBase, trimIndicator, trimIndicatorRange } from './indicatorWindow';
@@ -5836,14 +5837,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // OHLC والتغيّر والمدى كانت تُقرأ أرقاماً لشمعة «الإثنين 01:00» غير الموجودة. هناك يكفي وسما المحورين.
   const crossReadCandle = crossAhead > 0 ? null : crossCandle;
   const denseOhlc = dense ? crossReadCandle : null;
-  // «O 1.08520  H 1.08545  L 1.08501  C 1.08532» ≈ 40 حرفاً × ~5.4px (9pt عريض) ≈ 216px؛ والتغيّر
-  // «  +0.32%» ≈ 45px آخر ⇒ من 270px؛ ومع «  ↕ 4.4 pip» ≈ 60px آخر ⇒ المدى من 360px — فلا يُقصّ شيء
-  // بنقاط حذف. خلية رباعي بسطرين (أضيق من 240px): التغيّر بالسطر الثاني متى اتّسع (150px).
-  const denseOhlcWide = chartPlotW >= 240;
-  const denseOhlcPct =
-    denseOhlc && crossChange && chartPlotW >= (denseOhlcWide ? 270 : 150) ? crossChange : null;
-  const denseOhlcRange =
-    denseOhlc && chartPlotW >= 360 ? candleRangePipsText(series.symbol, denseOhlc.high, denseOhlc.low, lang, priceDecimalsRef) : null;
+  // الحجم والسطور بقياس النصوص نفسها (`planDenseOhlc`): سطر واحد 11px متى اتّسع (ثم التغيّر ثم المدى)،
+  // وإلا سطران بأكبر حجم ≤11 يتّسع (خلية الرباعية) — فلا يُقصّ شيء بنقاط حذف ولا يُفرض 9px على لوح عريض.
+  const denseOhlcRangeText = denseOhlc
+    ? candleRangePipsText(series.symbol, denseOhlc.high, denseOhlc.low, lang, priceDecimalsRef)
+    : null;
+  const denseOhlcPlan = denseOhlc
+    ? planDenseOhlc(
+        `O ${fmtPrice(denseOhlc.open)}  H ${fmtPrice(denseOhlc.high)}`,
+        `L ${fmtPrice(denseOhlc.low)}  C ${fmtPrice(denseOhlc.close)}`,
+        crossChange?.pctText ?? null,
+        denseOhlcRangeText,
+        chartPlotW
+      )
+    : null;
+  const denseOhlcWide = denseOhlcPlan?.wide ?? true;
+  const denseOhlcPct = denseOhlcPlan?.showPct && crossChange ? crossChange : null;
+  const denseOhlcRange = denseOhlcPlan?.showRange ? denseOhlcRangeText : null;
+  const denseOhlcFont = denseOhlcPlan
+    ? { fontSize: denseOhlcPlan.fontSize, lineHeight: denseOhlcPlan.lineH }
+    : null;
   // السعر المحفوظ لا الإغلاق: الخطّ يبقى على المستوى الذي لُمس عبر التكبير والإزاحة.
   const crossPrice = crossCandle ? cross?.price ?? null : null;
   const crossY = crossPrice != null ? yOf(crossPrice) : 0;
@@ -7249,13 +7262,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {/* الوضع المدمج (إطارات الشاشة الرئيسية المملوءة، وخلايا الرباعي بالهاتف) يُخفي سطر القراءة
             أسفل الشارت، فكان وضع التقاطع يعطي سعر المحور وزمنه فقط — بلا فتح/أعلى/أدنى/إغلاق.
             كـTradingView بالهاتف: OHLC أعلى يسار اللوح ما دام التقاطع قائماً، بأرقام ثابتة العرض فلا
-            يرتجّ السطر أثناء السحب، والإغلاق بلون الشمعة. لوح أضيق من 240px (خلية رباعي) ⇒ سطران. */}
+            يرتجّ السطر أثناء السحب، والإغلاق بلون الشمعة. لا يتّسع سطراً واحداً (خلية رباعي) ⇒ سطران. */}
         {denseOhlc ? (
           <View
             pointerEvents="none"
             style={[styles.denseOhlc, { top: shadowStack ? 24 : 4 }]}
           >
-            <Text style={styles.denseOhlcText} numberOfLines={1}>
+            <Text style={[styles.denseOhlcText, denseOhlcFont]} numberOfLines={1}>
               {`O ${fmtPrice(denseOhlc.open)}  H ${fmtPrice(denseOhlc.high)}`}
               {denseOhlcWide ? '  ' : null}
               {denseOhlcWide ? (
@@ -7272,7 +7285,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               ) : null}
             </Text>
             {!denseOhlcWide ? (
-              <Text style={styles.denseOhlcText} numberOfLines={1}>
+              <Text style={[styles.denseOhlcText, denseOhlcFont]} numberOfLines={1}>
                 {`L ${fmtPrice(denseOhlc.low)}  C `}
                 <Text style={{ color: denseOhlc.close >= denseOhlc.open ? colors.bull : colors.bear }}>
                   {fmtPrice(denseOhlc.close)}
@@ -7293,7 +7306,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               {
                 top:
                   (shadowStack ? 24 : 4) +
-                  (denseOhlc ? (denseOhlcWide ? DENSE_OHLC_LINE_H : DENSE_OHLC_LINE_H * 2) + 6 : 0),
+                  (denseOhlcPlan ? (denseOhlcWide ? denseOhlcPlan.lineH : denseOhlcPlan.lineH * 2) + 6 : 0),
               },
             ]}
           >
