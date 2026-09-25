@@ -1310,13 +1310,15 @@ export type Dict = {
   chartNotOfferedBody: string;
   /**
    * launch119: `MatrixChart` بسلسلة `candles: []` ليست «غير متاح» (`da73ec6`) يرسم لوحاً فارغاً صامتاً — هذا نصّه (للـchart).
-   * `{symbol}` و`{tf}` كلٌّ مرة واحدة. لا يَعِد بسبب محدَّد: قد يكون المزوّد لم يُرجع شيئاً أو الرمز جديداً.
+   * `{symbol}` و`{tf}` كلٌّ مرة واحدة؛ `{tf}` = `t.tfLabels[tf]` للنصّ و`t.tfLabelsA11y[tf]` للـlabel، لا المعرّف الخام
+   * (`'15m'`/`'D'` ⇒ «على فريم D» بالعربية؛ launch120). لا يَعِد بسبب محدَّد: قد يكون المزوّد لم يُرجع شيئاً أو الرمز جديداً.
    */
   chartNoCandlesTitle: string;
   chartNoCandlesBody: string;
   /**
    * launch119 (chart-r47 c، tools): أوّل جلب لـ(رمز، فريم) بلا سلسلة سابقة بالذاكرة — مكان الشارت بدل شموع البذرة حول 1.0854.
-   * `mcSwitching*` يبقى للتبديل **مع** بيانات سابقة معروضة (نصّه القارئ يقول ذلك). `{symbol}` و`{tf}` كلٌّ مرة واحدة.
+   * `mcSwitching*` يبقى للتبديل **مع** بيانات سابقة معروضة (نصّه القارئ يقول ذلك). `{symbol}` و`{tf}` كلٌّ مرة واحدة؛
+   * `{tf}` = `t.tfLabels[tf]` للنصّ الظاهر و`t.tfLabelsA11y[tf]` للـlabel (launch120).
    */
   chartFirstLoad: string;
   /**
@@ -2504,9 +2506,9 @@ const ar: Dict = {
   dsKindUnavailable: 'غير متاح',
   chartNotOfferedTitle: '{symbol} غير متاح من مزوّد البيانات',
   chartNotOfferedBody: 'لا نرسم له شموعاً ولا سعراً كي لا تقرأ أرقاماً مولَّدة. اضغط اسم الرمز ▾ فوق الشارت لتختار زوجاً آخر.',
-  chartNoCandlesTitle: 'لا شموع لـ{symbol} على {tf} الآن',
+  chartNoCandlesTitle: 'لا شموع لـ{symbol} على فريم {tf} الآن',
   chartNoCandlesBody: 'لم يُرجع مزوّد البيانات شموعاً لهذا الفريم. جرّب فريماً آخر، أو ارجع بعد قليل.',
-  chartFirstLoad: 'جارٍ تحميل شموع {symbol} على {tf}…',
+  chartFirstLoad: 'جارٍ تحميل شموع {symbol} على فريم {tf}…',
   chartProviderDownTitle: 'تعذّر جلب شموع {symbol} من مزوّد البيانات الآن',
   chartProviderDownBody: 'المشكلة في الاتصال بمزوّد البيانات، وغالباً مؤقّتة. لا نرسم شموعاً تقديرية في الأثناء كي لا تقرأ أسعاراً غير حقيقية. جرّب مرة أخرى بعد دقائق.',
 };
@@ -3680,9 +3682,9 @@ const enUS: Dict = {
   dsKindUnavailable: 'Unavailable',
   chartNotOfferedTitle: '{symbol} isn’t offered by our data provider',
   chartNotOfferedBody: 'We draw no candles or price for it, so you never read made-up numbers. Tap the symbol name ▾ above the chart to pick another pair.',
-  chartNoCandlesTitle: 'No candles for {symbol} on {tf} right now',
+  chartNoCandlesTitle: 'No candles for {symbol} on the {tf} timeframe right now',
   chartNoCandlesBody: 'The data provider returned no candles for this timeframe. Try another timeframe, or check back in a moment.',
-  chartFirstLoad: 'Loading {symbol} candles on {tf}…',
+  chartFirstLoad: 'Loading {symbol} candles on the {tf} timeframe…',
   chartProviderDownTitle: 'Can’t get {symbol} candles from the data provider right now',
   chartProviderDownBody: 'The connection to our data provider failed — usually a temporary problem. We don’t draw estimated candles meanwhile, so you never read prices that aren’t real. Try again in a few minutes.',
 };
@@ -4888,9 +4890,9 @@ const ku: Dict = {
   dsKindUnavailable: 'بەردەست نییە',
   chartNotOfferedTitle: '{symbol} لەلایەن دابینکەری داتاوە پێشکەش ناکرێت',
   chartNotOfferedBody: 'هیچ مۆم و نرخێکی بۆ ناکێشین تا ژمارەی دروستکراو نەخوێنیتەوە. ناوی هێماکە ▾ لە سەرووی نەخشەکە دابگرە بۆ هەڵبژاردنی جووتێکی تر.',
-  chartNoCandlesTitle: 'ئێستا هیچ مۆمێک بۆ {symbol} لەسەر {tf} نییە',
+  chartNoCandlesTitle: 'ئێستا هیچ مۆمێک بۆ {symbol} لەسەر کاتی چوارچێوەی {tf} نییە',
   chartNoCandlesBody: 'دابینکەری داتا هیچ مۆمێکی بۆ ئەم کاتی چوارچێوەیە نەگەڕاندەوە. کاتی چوارچێوەیەکی تر تاقی بکەرەوە، یان کەمێکی تر بگەڕێوە.',
-  chartFirstLoad: 'مۆمەکانی {symbol} لەسەر {tf} بار دەکرێن…',
+  chartFirstLoad: 'مۆمەکانی {symbol} لەسەر کاتی چوارچێوەی {tf} بار دەکرێن…',
   chartProviderDownTitle: 'ئێستا ناتوانرێت مۆمەکانی {symbol} لە دابینکەری داتا وەربگیرێن',
   chartProviderDownBody: 'پەیوەندی لەگەڵ دابینکەری داتا سەرکەوتوو نەبوو — زۆرجار کاتییە. لەم ماوەیەدا هیچ مۆمێکی خەمڵێنراو ناکێشین تا نرخی ناڕاستەقینە نەخوێنیتەوە. دوای چەند خولەکێک دووبارە هەوڵ بدەرەوە.',
 };
