@@ -34,6 +34,7 @@ import {
   pnlInQuoteCcy,
   profitAtTarget,
   exitQuoteToAccount,
+  pipsOnlyExitQuoteToAccount,
   formatRiskPct,
   formatMoney,
   moneyDecimals,
@@ -2347,3 +2348,41 @@ console.log('positionSize exitQuoteToAccount selftest OK');
   assert.equal(formatPipValue(pipValuePerLot(smallContractSpec('USDCADmicro')!.spec, 1 / 1.36), 'USD'), '0.074 USD');
 }
 console.log('positionSize per-lot micro pip value selftest OK');
+
+// بلا سعر وقف (النقاط وحدها): أسوأ خروج تحت الدخول/الحيّ ⇒ الخسارة عند الوقف ≤ المخاطرة لأي اتجاه
+{
+  const uj = instrumentSpec('USDJPY')!;
+  const live = 1 / 150;
+  // لا دخول مكتوب: من الحيّ 150 − 150 pip = 148.50
+  assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', 150, NaN, live), 1 / 148.5);
+  // دخول مكتوب 140 (أمر معلّق) ⇒ 138.50
+  assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', 150, 140, live), 1 / 138.5);
+  // رصيد 1,000,000 ومخاطرة 1% (لوت كبير كي لا يخفي التقريب الفرق)
+  const size = (rate: number) =>
+    positionSize({ balance: 1_000_000, riskPct: 1, slPips: 150, pipValuePerLot: pipValuePerLot(uj, rate), contractSize: uj.contractSize })!;
+  const r = size(pipsOnlyExitQuoteToAccount(uj, 'USD', 150, NaN, live)!);
+  const buyLoss = (r.lots * uj.contractSize * 1.5) / 148.5; // شراء يخرج عند 148.50
+  const sellLoss = (r.lots * uj.contractSize * 1.5) / 151.5; // بيع يخرج عند 151.50
+  assert.ok(buyLoss <= 10_000 + 1e-6, `buy ${buyLoss}`);
+  assert.ok(sellLoss <= 10_000 + 1e-6, `sell ${sellLoss}`);
+  // بالحيّ القديم: الشراء يتجاوز المخاطرة (10.00 لوت ⇒ 10,101 USD)
+  const old = size(live);
+  assert.equal(old.lots, 10);
+  assert.ok((old.lots * uj.contractSize * 1.5) / 148.5 > 10_100);
+  assert.equal(r.lots, 9.9);
+  // الأساس ليس عملة الحساب ⇒ null (يبقى الحيّ)
+  assert.equal(pipsOnlyExitQuoteToAccount(instrumentSpec('EURUSD')!, 'USD', 50, NaN, 1), null);
+  assert.equal(pipsOnlyExitQuoteToAccount(instrumentSpec('EURJPY')!, 'USD', 50, NaN, 1 / 150), null);
+  // GBPUSD بحساب إسترليني: 1.2500 − 100 pip = 1.2400
+  const gr = pipsOnlyExitQuoteToAccount(instrumentSpec('GBPUSD')!, 'GBP', 100, NaN, 1 / 1.25)!;
+  assert.ok(Math.abs(gr - 1 / 1.24) < 1e-12);
+  // نقاط غير صالحة / بلا سعر حيّ ⇒ null
+  assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', 0, NaN, live), null);
+  assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', NaN, NaN, live), null);
+  assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', 150, NaN, null), null);
+  // وقف يبعد > 20% (خطأ كتابة «5000» pip = 50 ين) ⇒ null لا لوت منفوخ؛ وخروج ≤ 0 ⇒ null
+  assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', 5000, NaN, live), null);
+  assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', 20000, NaN, live), null);
+  assert.equal(pipsOnlyExitQuoteToAccount(null, 'USD', 150, NaN, live), null);
+}
+console.log('positionSize pipsOnlyExitQuoteToAccount selftest OK');

@@ -35,6 +35,7 @@ import {
   requiredMargin,
   marginBaseToAccount,
   exitQuoteToAccount,
+  pipsOnlyExitQuoteToAccount,
   maxLotsForMargin,
   marginPrice,
   smallContractSpec,
@@ -593,7 +594,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     : quoteToAccountRate(conv, Number.isFinite(manual) && manual > 0 ? manual : null);
   // الأساس = عملة الحساب ⇒ الخسارة تُحوَّل بسعر الوقف لا الحيّ (أمرٌ معلّق بعيد كان يتجاوز المخاطرة) — `exitQuoteToAccount`
   const stopRate = exitQuoteToAccount(spec, convAccount, priceNum(stopPx), convRate);
-  const riskRate = stopRate ?? convRate;
+  // بلا سعر وقف (النقاط وحدها): الاتجاه مجهول ⇒ أسوأ خروج (تحت الدخول/الحيّ) كي لا تتجاوز الخسارة المخاطرة — `pipsOnlyExitQuoteToAccount`
+  const pipsOnlyRate = Number.isFinite(priceNum(stopPx))
+    ? null
+    : pipsOnlyExitQuoteToAccount(spec, convAccount, slNum, priceNum(entryPx), convRate);
+  const riskRate = stopRate ?? pipsOnlyRate ?? convRate;
   /** قيمة النقطة المعروضة محسوبة بسعر الوقف لا الحيّ ⇒ لا تطابق رقم المنصّة؛ السطر يسمّي السعر ويشرح (launch72) */
   const pipAtStop = stopRate != null && stopRate !== convRate;
   // السنت: عملة التسعير ⇒ USD ثم × 100 ⇒ USC، فيخرج كل مبلغ (pip، مخاطرة، هامش، ربح) بالسنت كرصيده

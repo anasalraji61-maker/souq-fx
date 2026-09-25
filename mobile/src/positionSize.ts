@@ -357,6 +357,28 @@ export function exitQuoteToAccount(
   return ratio >= 0.8 && ratio <= 1.25 ? r : null;
 }
 
+/**
+ * مثل `exitQuoteToAccount` لكن **بلا سعر وقف مكتوب** (النقاط وحدها): الاتجاه مجهول فسعر الخروج مجهول، فيُفترض
+ * الأسوأ — الخروج **تحت** السعر (الدخول المكتوب، وإلا الحيّ = 1 ÷ `liveRate`) بمسافة الوقف. أدنى سعر = أعلى 1 ÷ السعر
+ * = أغلى نقطة بعملة الحساب ⇒ الخسارة عند الوقف لا تتجاوز المخاطرة المختارة **أيّاً كان الاتجاه**: الشراء يخرج هناك
+ * تماماً، والبيع يخرج فوق فيخسر أقل بقليل. كان الحيّ يُستعمل: USDJPY عند 150 ووقف 150 pip شراءً ⇒ خسارة 101.01 USD
+ * لمخاطرة 100 (1.01%).
+ *
+ * `null` حين `exitQuoteToAccount` يرفض (الأساس ليس عملة الحساب، خروج ≤ 0، أو يبعد > 20% عن الحيّ) أو نقاط غير صالحة.
+ */
+export function pipsOnlyExitQuoteToAccount(
+  spec: InstrumentSpec | null,
+  convAccount: string,
+  slPips: number,
+  entryPrice: number,
+  liveRate: number | null
+): number | null {
+  if (!spec || !Number.isFinite(slPips) || slPips <= 0) return null;
+  if (liveRate == null || !Number.isFinite(liveRate) || liveRate <= 0) return null;
+  const from = Number.isFinite(entryPrice) && entryPrice > 0 ? entryPrice : 1 / liveRate;
+  return exitQuoteToAccount(spec, convAccount, from - slPips * spec.pipSize, liveRate);
+}
+
 /** قيمة الـpip للوت قياسي واحد، بعملة الحساب. */
 export function pipValuePerLot(spec: InstrumentSpec, quoteToAccount: number): number {
   return spec.contractSize * spec.pipSize * quoteToAccount;
