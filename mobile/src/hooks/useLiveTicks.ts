@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { API_URL, type LiveTick } from '../api';
 import { parseWsDataSource } from '../chart/dataSource';
+import { acceptTick } from './tickAge';
 
 /** إعادة اتصال تدريجية (exponential backoff) عند انقطاع WS — 1s..30s */
 export const RECONNECT_BASE_MS = 1000;
@@ -18,13 +19,20 @@ const SNAPSHOT_FRESH_MS = 5000;
 export const TICK_STALE_MS = 20000;
 export const STALE_CHECK_MS = 5000;
 
-type Snapshot = { at: number; ticks: Record<string, number>; source: LiveTick['source'] };
+type Snapshot = {
+  at: number;
+  ticks: Record<string, number>;
+  ticks_at?: Record<string, number | null>;
+  ts?: number;
+  source: LiveTick['source'];
+};
 
-function tickFromSnapshot(snap: Snapshot | null, sym: string): LiveTick | null {
-  const p = snap?.ticks[sym];
+/** `at` لحظة استلام الرمز بساعة الجهاز: لقطة عمرها 3ث لرمز عمره 15ث عند الخادم ⇒ عمره 18ث لا 3. */
+function tickFromSnapshot(snap: Snapshot | null, sym: string): { tick: LiveTick; at: number } | null {
+  if (!snap) return null;
   // `typeof === 'number'` يمرّر الصفر والسالب (تيك مزوّد معطوب): الرأس كان يطبع «0.00000» سعراً حيّاً.
-  if (typeof p !== 'number' || !Number.isFinite(p) || p <= 0) return null;
-  return { price: p, source: snap!.source };
+  // ورمز متجمّد يعيد الخادم بثّه حتى دقيقتين (`ticks_at` أقدم من `TICK_STALE_MS`) ⇒ لا تيك.
+  return acceptTick(snap, sym, snap.ticks[sym], snap.source, snap.at, TICK_STALE_MS);
 }
 
 /** Live tick for one symbol with provenance.
@@ -56,7 +64,7 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
     const snap = snapRef.current;
     if (!snap || Date.now() - snap.at > SNAPSHOT_FRESH_MS) return;
     const t = tickFromSnapshot(snap, sym);
-    if (t) setState({ sym, tick: t, at: snap.at });
+    if (t) setState({ sym, tick: t.tick, at: t.at });
   }, [sym, enabled]);
 
   useEffect(() => {
@@ -93,16 +101,23 @@ export function useLiveTicks(symbol: string, enabled: boolean): LiveTick | null 
           try {
             const data = JSON.parse(String(ev.data)) as {
               ticks?: Record<string, number>;
+              ticks_at?: Record<string, number | null>;
               source?: string;
               data_source?: { kind?: string; as_of?: number; channel?: string };
               ts?: number;
             };
             if (!data.ticks || typeof data.ticks !== 'object') return;
-            const snap: Snapshot = { at: Date.now(), ticks: data.ticks, source: parseWsDataSource(data) };
+            const snap: Snapshot = {
+              at: Date.now(),
+              ticks: data.ticks,
+              ticks_at: data.ticks_at,
+              ts: data.ts,
+              source: parseWsDataSource(data),
+            };
             snapRef.current = snap;
             const cur = symRef.current;
             const t = tickFromSnapshot(snap, cur);
-            if (t) setState({ sym: cur, tick: t, at: snap.at });
+            if (t) setState({ sym: cur, tick: t.tick, at: t.at });
           } catch {
             /* ignore */
           }

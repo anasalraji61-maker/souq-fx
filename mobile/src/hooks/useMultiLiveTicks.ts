@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { API_URL, type LiveTick } from '../api';
 import { parseWsDataSource } from '../chart/dataSource';
+import { acceptTick } from './tickAge';
 import { RECONNECT_BASE_MS, RECONNECT_MAX_MS, STALE_CHECK_MS, TICK_STALE_MS } from './useLiveTicks';
 
 /**
@@ -10,7 +11,9 @@ import { RECONNECT_BASE_MS, RECONNECT_MAX_MS, STALE_CHECK_MS, TICK_STALE_MS } fr
  * قواعد `useLiveTicks` نفسها لكل رمز — كانت هذه النسخة بلا أيٍّ منها، فقائمة المتابعة والرباعي
  * يعرضان سعراً متجمّداً كأنه حيّ:
  * - سعر ≤0 أو غير منتهٍ (تيك مزوّد معطوب) يُرفض ولا يستبدل آخر سعر صالح.
- * - كل رمز يحمل لحظة وصوله؛ غاب عن البثّ أكثر من `TICK_STALE_MS` ⇒ يُسقَط (يعود المستهلك لإغلاق
+ * - رمز أقدم عند الخادم من `TICK_STALE_MS` (`ticks_at`، الخادم يعيد بثّ المتجمّد حتى دقيقتين) يُرفض
+ *   ولا يجدّد لحظته؛ `as_of` هو وقت استلامه هو لا أحدث رمز بالدفعة.
+ * - كل رمز يحمل لحظة استلامه؛ غاب عن البثّ أكثر من `TICK_STALE_MS` ⇒ يُسقَط (يعود المستهلك لإغلاق
  *   آخر شمعة) ولو ظلّ البثّ يصل برموز أخرى.
  * - مقبس «مفتوح» صامت أكثر من `TICK_STALE_MS` يُترك ويُفتح غيره فوراً.
  * - العودة للواجهة تعيد الاتصال فوراً وتصفّر التضاعف.
@@ -58,6 +61,7 @@ export function useMultiLiveTicks(symbols: string[], enabled: boolean) {
           try {
             const data = JSON.parse(String(ev.data)) as {
               ticks?: Record<string, number>;
+              ticks_at?: Record<string, number | null>;
               source?: string;
               data_source?: { kind?: string; as_of?: number; channel?: string };
               ts?: number;
@@ -68,11 +72,12 @@ export function useMultiLiveTicks(symbols: string[], enabled: boolean) {
             setTicks((prev) => {
               let next: Record<string, LiveTick> | null = null;
               for (const [sym, price] of Object.entries(data.ticks!)) {
-                if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) continue;
+                const ok = acceptTick(data, sym, price, source, now, TICK_STALE_MS);
+                if (!ok) continue;
                 const key = sym.toUpperCase();
                 next = next ?? { ...prev };
-                next[key] = { price, source };
-                atRef.current[key] = now;
+                next[key] = ok.tick;
+                atRef.current[key] = ok.at;
               }
               return next ?? prev;
             });
