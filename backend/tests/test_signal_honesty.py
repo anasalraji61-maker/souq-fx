@@ -70,8 +70,37 @@ def test_analysts_route_refuses_unknown_timeframe_and_bad_symbol(client):
     assert client.get("/api/signals/analysts/EU").status_code == 422
 
 
-def test_indicator_forecast_carries_no_formula_confidence(client):
+def test_indicator_forecast_carries_no_formula_confidence(client, monkeypatch):
     """«الثقة» بالتوقّع كانت معادلة ثابتة تُقرأ كاحتمال نجاح — والمؤشّرات نفسها حقيقية تبقى."""
+    from tests.test_signal_bodies import _provider
+    _provider(monkeypatch)
     out = client.post("/api/signals/indicators/forecast", json={"symbol": "EURUSD"}).json()
     assert "confidence" not in out
     assert out["votes"], "أصوات المؤشّرات الحقيقية باقية"
+
+
+# ─── شموع demo (المزوّد متعذّر): لا نتيجة تُحسب عليها ────────────────────────
+
+@pytest.fixture()
+def no_provider(monkeypatch):
+    monkeypatch.setattr(main.market, "configured", lambda: False)
+    main._QUOTE_CACHE.clear()
+
+
+def test_quote_without_provider_has_no_price(client, no_provider):
+    """كان إغلاق السلسلة البذرية يُعاد «price» موسوماً demo."""
+    out = client.get("/api/market/quote/EURUSD").json()
+    assert out["price"] is None and out["data_kind"] == "unavailable"
+    assert out["unavailable_reason"]
+
+
+def test_backtest_on_demo_candles_returns_no_stats(client, no_provider):
+    out = client.post("/api/backtest", json={"symbol": "EURUSD", "timeframe": "1H"}).json()
+    assert out["data_kind"] == "demo"
+    assert out["trades"] == [] and out["stats"] == {} and out["equity_curve"] == []
+
+
+def test_forecast_on_demo_candles_has_no_votes_or_direction(client, no_provider):
+    out = client.post("/api/signals/indicators/forecast", json={"symbol": "EURUSD"}).json()
+    assert out["data_kind"] == "demo"
+    assert out["votes"] == [] and out["direction"] is None and out["levels"] is None

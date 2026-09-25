@@ -79,8 +79,20 @@ def test_an_empty_indicator_list_no_longer_means_all_six(client):
     assert client.post(FORECAST, json={"indicators": []}).status_code == 422
 
 
-def test_omitting_indicators_still_means_all_six(client):
+def _provider(monkeypatch):
+    """سلسلة مزوّد حقيقية الشكل: بلا مزوّد لا تُحسب أصوات أصلاً (شموع demo)."""
+    def build(sym, timeframe="15m", outputsize=180):
+        cs = [main.Candle(time=1_700_000_000 + i * 60, open=1.1 + i * 1e-4, high=1.1 + i * 1e-4 + 5e-4,
+                          low=1.1 + i * 1e-4 - 5e-4, close=1.1 + i * 1e-4 + 1e-4, volume=0) for i in range(80)]
+        return main.ChartSeries(symbol=sym.upper(), timeframe=timeframe, candles=cs, change_pct=0.1,
+                                last=cs[-1].close,
+                                data_source=main.DataProvenance(kind="provider", as_of=1.0, channel="twelvedata"))
+    monkeypatch.setattr(main, "build_series", build)
+
+
+def test_omitting_indicators_still_means_all_six(client, monkeypatch):
     """السلوك القائم كما هو: الحقل غير المرسَل ≠ قائمة فارغة."""
+    _provider(monkeypatch)
     res = client.post(FORECAST, json={"symbol": "EURUSD"})
     assert res.status_code == 200, res.text
     assert len(res.json()["votes"]) >= 1

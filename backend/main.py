@@ -1262,6 +1262,14 @@ def screener_filters():
 @app.post("/api/backtest")
 def backtest_run(body: BacktestRun):
     series = build_series(body.symbol.upper(), body.timeframe)
+    if series.data_source.kind == "demo":
+        # لا يُشغَّل على مسار عشوائي بذري: نسبة ربح/عائد عليه أرقام مخترَعة بشكل أداء استراتيجية.
+        # الوسم `demo` باقٍ لأن العميل يعرض عليه «لا بيانات حيّة».
+        return {
+            "strategy": body.strategy, "trades": [], "stats": {}, "equity_curve": [],
+            "symbol": body.symbol.upper(), "timeframe": body.timeframe, "data_kind": "demo",
+            "unavailable_reason": series.data_source.unavailable_reason or "provider_unavailable",
+        }
     candles = [c.model_dump() for c in series.candles]
     # بلا تكلفة كانت استراتيجية تنقلب كل بضع شموع تبدو رابحة وهي خاسرة بعد السبريد عند وسيط حقيقي.
     spread = backtest_engine.typical_spread(body.symbol)
@@ -1334,14 +1342,19 @@ def analysts_forecast(symbol: str, timeframe: str = "15m"):
 @app.post("/api/signals/indicators/forecast")
 def indicators_forecast(body: IndicatorForecastBody):
     series = build_series(body.symbol.upper(), body.timeframe)
+    if series.data_source.kind == "demo":
+        # لا أصوات ولا اتجاه على شموع مختلَقة (كانت تُحسب وتُعاد موسومة demo). الوسم باقٍ للعميل.
+        return {
+            "symbol": body.symbol.upper(), "mode": "indicators", "direction": None,
+            "avg_score": None, "votes": [], "levels": None,
+            "levels_basis": {"unavailable": "no_live_price"},
+            "data_kind": "demo", "timeframe": series.timeframe,
+            "unavailable_reason": series.data_source.unavailable_reason or "provider_unavailable",
+        }
     candles = [c.model_dump() for c in series.candles]
     out = signal_hub.indicator_forecast(body.symbol, candles, enabled=body.indicators)
-    out["data_kind"] = series.data_source.kind  # demo = اتجاه ومستويات من شموع مختلَقة
+    out["data_kind"] = series.data_source.kind
     out["timeframe"] = series.timeframe
-    if series.data_source.kind == "demo":
-        # الأصوات تبقى (موسومة demo) لكن لا دخول/وقف/هدف على شموع مختلَقة
-        out["levels"] = None
-        out["levels_basis"] = {**(out.get("levels_basis") or {}), "unavailable": "no_live_price"}
     return out
 
 
@@ -1384,6 +1397,19 @@ def market_quote(symbol: str):
     book = market.fetch_quote_book(sym)
     if not book:
         series = build_series(sym, "15m")
+        if series.data_source.kind == "demo":
+            # السلسلة البذرية ليست سعراً: كان إغلاقها يُعاد كـ«price» موسوماً demo — رقم مخترَع ينتظر
+            # عميلاً ينسى فحص الوسم (سعر إغلاق «بسعر السوق» بالدفتر، سعر تحويل الحاسبة).
+            return {
+                "symbol": sym,
+                "price": None,
+                "bid": None,
+                "ask": None,
+                "spread_source": None,
+                "source": "unavailable",
+                "data_kind": "unavailable",
+                "unavailable_reason": series.data_source.unavailable_reason or "provider_unavailable",
+            }
         last = series.last
         return {
             "symbol": symbol.upper(),
