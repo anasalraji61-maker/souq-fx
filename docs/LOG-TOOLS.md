@@ -4475,3 +4475,40 @@ EURUSD 0.92 وHUFJPY 0.4 لا يُعلَّمان. المقلوب لا يُستع
 ### ما يبدأ منه التشغيل القادم
 1. استبدال `OLDER_ERROR_COPY` بمفتاح `journalLoadOlderError` حين يصل.
 2. جهاز: دفتر بأكثر من 200 صفقة ⇒ «تحميل الأقدم» يضيف الأقدم، ثم إضافة صفقة ⇒ الأقدم يبقى؛ سطرا الصافي/R يعودان حين يكتمل التحميل.
+
+## 2026-09-25 (سبعون) — التشغيل: مفتاح «تحميل الأقدم»، تيكات مجهولة المصدر (ui4)، تصدير ميت
+
+### التنسيق
+- **tools69 → launch (`journalLoadOlderError`)**: وصل المفتاح ⇒ **أُنجز** `2781d6f` — `OLDER_ERROR_COPY` المحلّي حُذف. QA: أغلق صفّ tools69.
+- **ui4 → tools (`TerminalScreen` و`unknown`)**: **أُنجز** `6c1aa59` (+ `dfe21f4`). QA: أغلق الصفّ.
+- **backend-r1 / tools67 «تحميل الأقدم» (صفّ ★)**: **أُنجز من التشغيل 69** `94f71e6` — الصفّ قديم: `TradeJournalPanel.tsx` يطلب
+  `api.trades(pages[i])` و`api.trades(journalOlderPage(…))`، والزرّ `t.journalLoadOlder`. `api.trades()` الباقي (:1115) فحصُ «أُغلقت بجهاز آخر»
+  قبل الإغلاق — صفحة أولى تكفي (`closedElsewhere`: الغياب ليس «مغلقة»، و409 يغطّي الباقي). QA: أغلق الصفّ.
+- **QA1 (a) `openCurrencyExposure`**: **أُنجز** `b0c2d87` (حُذف). QA: أزله من القائمة.
+- **tools38 (00:00 UTC مقابل 17:00 نيويورك)**: قرار أنس، بلا تغيير.
+
+### 1. خطأ «تحميل الأقدم» من مفتاح launch — `2781d6f`
+نصّ فقط.
+
+### 2. تيك مجهول المصدر ليس سعراً حيّاً (ui4) — `6c1aa59`
+`parseWsDataSource` يعطي `unknown` لرسالة بلا `data_source` ولا `source` معروف (خادمٌ أقدم) — قد تكون البثّ العشوائي نفسه. قائمة المتابعة
+وشريط الهاتف كانا يلوّنانه ويحسبان نسبة اليوم ومسافة التنبيه منه. `isVerifiedTickKind` (`dailyChange.ts`): `provider`/`cache` فقط.
+- قائمة المتابعة: `demoTickSymbols` = كل تيك غير مؤكَّد ⇒ موسوم «تجريبي» بلا لون/نسبة/مسافة. شريط الهاتف: نسبة من المؤكَّد فقط.
+- رأس الشاشة: التيك غير المؤكَّد يُقبل فقط حين السلسلة نفسها غير مؤكَّدة (كان: غير تجريبي أو سلسلة تجريبية).
+- `freshTickRefPrice` (مرجع «فوق/تحت» للتنبيه من الشارت) يرفض `unknown`/`unavailable` ⇒ يسقط لمرجع السلسلة/الاقتباس.
+- **اختبارات**: `isVerifiedTickKind` (provider/cache صح؛ demo/unknown/unavailable/فارغ/null/حالة أحرف خطأ)، و`freshTickRefPrice` لـunknown/unavailable/«Provider».
+
+### 3. حذف `openCurrencyExposure` — `b0c2d87`
+بلا مستعمل منذ استبدله `stackedCurrencyExposure`/`draftStackedExposure` (سطرا التراكم بالدفتر). حُذف واختباراته.
+
+### 4. أسعار الدفتر الحيّة و«غير متاح» — `dfe21f4`
+- `ToolsScreen` `livePrices` (نتيجة الصفقات المفتوحة ومسافة التنبيه بالدفتر) كان يستثني `demo` وحده ⇒ الآن `isVerifiedTickKind`.
+- `TerminalScreen`: سلسلة `unavailable` لا تُخزَّن بذاكرة الجلسة ولا تُحسب لها نسبة يوم بالرأس (`isSyntheticProvenance` بدل `!== 'demo'`).
+
+### التحقّق
+`bash scripts/qa-build-check.sh` **GREEN (0)** قبل كل التزام؛ selftests `positionSize`، `parseDecimal`، `tradePlan`، `notifications`، `moderation`،
+`chart/newsRisk`، `chart/dailyChange` تمرّ. **لم يُشغَّل التطبيق.**
+
+### ما يبدأ منه التشغيل القادم
+1. جهاز: خادم بلا `data_source` بالبثّ ⇒ قائمة المتابعة «تجريبي» بلا ألوان؛ خادم حاليّ ⇒ ألوان ونِسب كما كانت.
+2. جهاز: دفتر >200 صفقة، اقطع الشبكة ثم «تحميل الأقدم» ⇒ نصّ `journalLoadOlderError` باللغات الثلاث.
