@@ -8052,7 +8052,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
         {poc != null ? (
           <View style={[styles.hLine, { top: yOf(poc), borderColor: colors.warn, opacity: 0.75 }]}>
-            <Text style={[styles.fibLabel, { right: plotRightInset + 2 }]}>POC</Text>
+            {/* ملفّ الحجم بلا شارة بالمفتاح: «≈» هنا حين الحجم تقديري (فوليوم الفوركس `null`). TPO يعدّ الزمن
+                لا الحجم، والـfootprint موسوم «≈» بأرقامه. */}
+            <Text style={[styles.fibLabel, { right: plotRightInset + 2 }]}>{volName('POC')}</Text>
           </View>
         ) : null}
 
