@@ -361,3 +361,14 @@ QA21 (`d8446d0`؛ `DIRECTIONAL_OVERLAYS` باقٍ عمداً — استثناء 
 **المراجعة (a — تكرار/ميت/تصديرات)، بسكربتين على كل `src`:** التصديرات الميتة = قائمة QA1 + النوع `WatchSymbol` (`watchlist.ts:26`، تافه)؛ `tools-panels/registry.ts` ميت بتعليق صريح.
 **جديد QA31 → chart (منخفض):** `ukDst` نسخة خاصة بـ`marketHours.ts:78` من `sessions.ts:33` المُصدَّرة. `FIAT`/`METALS` ×2 لغرضين مختلفين — غير ضارّة.
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة خارج `locales.ts`.
+
+## 2026-09-25 — الدورة 32
+**البناء:** أخضر 0 (بعد 699d06d) — لا إصلاح لازم. **Selftests:** 76/76 ناجح (`npx tsx`؛ +1 `renko`).
+**التحقّق من الإغلاقات بالكود:** لا commit منذ 6dd7a29 يلمس صفّاً مفتوحاً. **غير مُغلق:** 10 `Alert.alert` بـ5 ملفات (الـ11 بـgrep تعليق `TradeJournalPanel:939`)،
+«₴» ×2، `FocusChartModal:56` `BASES` و:284-288 `series.change_pct`، `AiPanel`/`LectureClassroom` بلا `maxLength`، `BRENT/USD`، `ukDst` `marketHours.ts:78`.
+**طلبات تنسيق جديدة:** لا شيء (chart22 وlaunch83 ردّ/ملاحظات فقط؛ tools لم يكتب سجلاً لـ`d31ce62`…`699d06d`). ملاحظة launch83 `MatrixSidePanel.tsx:162` بلا `selected` مشمولة بصفّ QA3.
+**المراجعة (b — نصوص ثابتة)، بسكربتين (حرفيات عربية بكل `.tsx` + label/placeholder/a11y حرفية):** لا جديد خارج QA2. `CHART_KINDS` احتياط قديم يستبدله `localizedChartKinds`.
+قوائم العملات العربية/الكردية بـ`positionSize.ts` (`fdf405b`) للقراءة فقط.
+**جديد QA32 → chart + launch (منخفض):** `renko`/`kagi`/`pnf` بلا مفتاح بـ`KIND_KEYS` (`typeLabels.ts:24-33`) ⇒ لاتينية بالعربي/الكردي و«P&F» لقارئ الشاشة، والمتجر :51 يقول
+«رينكو، كاجي، نقطة ورقم»؛ ومعه المتجر :51 «منطقة» والتطبيق «مساحة» (`290e166`).
+**الدورة القادمة:** المراجعة (c) — a11y.
