@@ -32,6 +32,7 @@ import {
 } from '../chart/alertFromChart';
 import { marketStatusLabel } from '../chart/marketHours';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
+import { ProviderUnavailableNotice, seriesHasNoRealData } from './ProviderUnavailableNotice';
 import { mockSeries } from '../mock';
 import { SymbolSearchBar } from './SymbolSearchBar';
 import { AlertsPanel } from './AlertsPanel';
@@ -260,6 +261,8 @@ export function FocusChartModal({
    * - اللون من الرقم المطبوع: «+0.00%» كانت خضراء ⇒ صفرها مكتوم.
    */
   const headSeries = series && seriesSym === sym ? series : null;
+  // backend-r19: رمز بلا بيانات حقيقية أصلاً (DXY) ⇒ لا سعر ولا نسبة بالرأس ولا شموع بذرة مكان الشارت.
+  const noReal = headSeries != null && seriesHasNoRealData(headSeries.data_source);
   const headPx = headSeries ? livePriceForHeader(headSeries, liveTick) : null;
   const headPctRaw = headSeries ? headerChangePct(headSeries, headPx, dailyRefs[sym.toUpperCase()]) : NaN;
   const headPct = Number.isFinite(headPctRaw) ? headPctRaw : null;
@@ -330,7 +333,7 @@ export function FocusChartModal({
                 : t.focusDesktopSub}
             </Text>
           </Pressable>
-          {headSeries ? (
+          {headSeries && !noReal ? (
             <View style={styles.quote}>
               <Text style={styles.price}>{formatPrice(headPx ?? headSeries.last, sym)}</Text>
               <Text
@@ -443,6 +446,8 @@ export function FocusChartModal({
                 والمؤشرات واللوغاريتمي. الآن يبقى مركَّباً، باهتاً تحت مؤشّر التحميل حتى تصل الشموع الجديدة. */}
             {!series ? (
               <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
+            ) : noReal ? (
+              <ProviderUnavailableNotice symbol={sym} height={Math.max(360, height * (phone ? 0.64 : 0.62))} />
             ) : (
               <View accessibilityState={{ busy: loading }}>
                 <View pointerEvents={loading ? 'none' : 'auto'} style={loading ? styles.chartLoading : undefined}>

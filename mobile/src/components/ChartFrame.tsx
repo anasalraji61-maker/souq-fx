@@ -13,7 +13,6 @@ import { pipUnit } from '../chart/measureReadout';
 import {
   candleTimeSec,
   provenanceLabel,
-  providerUnavailableReason,
   tickStatusKind,
   normalizeProvenance,
 } from '../chart/dataSource';
@@ -26,6 +25,7 @@ import {
 } from '../chart/liveSeries';
 import { useDailyRefs } from '../chart/dailyRefStore';
 import { useTickFreshnessClock } from '../hooks/useTickFreshnessClock';
+import { ProviderUnavailableNotice, seriesHasNoRealData } from './ProviderUnavailableNotice';
 import { isForexMarketOpen } from '../chart/marketHours';
 
 import { FRAME_CHART_H, FRAME_CHART_H_PHONE } from './FrameSizedGrid';
@@ -211,10 +211,12 @@ export function ChartFrame({
         : tickKind === 'lastPrice'
           ? t.dsLastPriceWord
           : null;
-  // DXY وأمثاله (backend-r1): المزوّد لا يقدّمه أصلاً ⇒ «غير متاح من مزوّد البيانات» لا «تجريبي» التي توحي بعطل مؤقّت.
-  const unavailableReason = providerUnavailableReason(series.data_source);
-  const candleTag = unavailableReason
-    ? t.originUnavailableProvider.replace('{symbol}', series.symbol)
+  // DXY وأمثاله (backend-r1): المزوّد لا يقدّمه أصلاً ⇒ «غير متاح» لا «تجريبي» التي توحي بعطل مؤقّت.
+  // backend-r19: لا بيانات حقيقية أصلاً ⇒ لا شموع ولا سعر ولا نسبة ولا سبريد — الجملة مكان الشارت، والوسم
+  // بالرأس «غير متاح» القصير (الطويلة كانت تقول «الرسم مولَّد للعرض» فوق شموع البذرة).
+  const noRealData = seriesHasNoRealData(series.data_source);
+  const candleTag = noRealData
+    ? t.dsKindUnavailable
     : provenanceLabel(candleSrc, {
         provider: t.dsKindProvider,
         demo: t.dsKindDemo,
@@ -381,10 +383,7 @@ export function ChartFrame({
               styles.sourceTag,
               candleSrc.kind === 'demo' && styles.sourceTagDemo,
               candleSrc.kind === 'unknown' && styles.sourceTagUnknown,
-              unavailableReason ? { flexShrink: 1 } : null,
             ]}
-            numberOfLines={unavailableReason ? 1 : undefined}
-            ellipsizeMode="tail"
             accessibilityLabel={candleTag}
           >
             {candleTag}
@@ -395,85 +394,87 @@ export function ChartFrame({
             </Text>
           ) : null}
         </View>
-        <View style={[styles.priceRow, switching && styles.stale]}>
-          <Text
-            style={styles.price}
-            accessibilityLabel={
-              replayPrice != null
-                ? `${formatPrice(headerPrice, series.symbol, series.last)} — ${t.cfReplayPriceA11y}`
-                : undefined
-            }
-          >
-            {formatPrice(headerPrice, series.symbol, series.last)}
-          </Text>
-          {replayPrice != null ? (
-            <Text style={[styles.liveTag, styles.liveTagMuted]} accessibilityLabel={t.mcReplayModeA11y}>
-              ⏪
-            </Text>
-          ) : null}
-          {tickTag ? (
+        {noRealData ? null : (
+          <View style={[styles.priceRow, switching && styles.stale]}>
             <Text
-              style={[
-                styles.liveTag,
-                tickKind !== 'live' && styles.liveTagMuted,
-                tickKind === 'demo' && styles.sourceTagDemo,
-              ]}
+              style={styles.price}
+              accessibilityLabel={
+                replayPrice != null
+                  ? `${formatPrice(headerPrice, series.symbol, series.last)} — ${t.cfReplayPriceA11y}`
+                  : undefined
+              }
             >
-              {tickTag}
+              {formatPrice(headerPrice, series.symbol, series.last)}
             </Text>
-          ) : null}
-          {/* الهاتف: إطار بعرض 48% (~135pt) ورأس بسطر واحد لا يلتفّ — «B 1.08540 · A 1.08550 · 0.9 pips»
-              (~165pt) كان أعرض من الإطار كلّه فيقصّ النسبة وزرّ ملء الشاشة ويُسحق اسم الزوج. السبريد بالـpip وحده. */}
-          {hasSpread && !((quoteStale || phone) && spreadPips == null) ? (
+            {replayPrice != null ? (
+              <Text style={[styles.liveTag, styles.liveTagMuted]} accessibilityLabel={t.mcReplayModeA11y}>
+                ⏪
+              </Text>
+            ) : null}
+            {tickTag ? (
+              <Text
+                style={[
+                  styles.liveTag,
+                  tickKind !== 'live' && styles.liveTagMuted,
+                  tickKind === 'demo' && styles.sourceTagDemo,
+                ]}
+              >
+                {tickTag}
+              </Text>
+            ) : null}
+            {/* الهاتف: إطار بعرض 48% (~135pt) ورأس بسطر واحد لا يلتفّ — «B 1.08540 · A 1.08550 · 0.9 pips»
+                (~165pt) كان أعرض من الإطار كلّه فيقصّ النسبة وزرّ ملء الشاشة ويُسحق اسم الزوج. السبريد بالـpip وحده. */}
+            {hasSpread && !((quoteStale || phone) && spreadPips == null) ? (
+              <Text
+                style={styles.spreadTag}
+                // launch111: وسم ثابت كان يحلّ محلّ النصّ ⇒ VoiceOver «سبريد البيع والشراء» بلا رقم. يُقرأ ما يظهر فقط.
+                accessibilityLabel={[
+                  quoteStale || phone
+                    ? null
+                    : t.cfSpreadBidAskA11y
+                        .replace('{bid}', formatPrice(liveQuote!.bid!, series.symbol, series.last))
+                        .replace('{ask}', formatPrice(liveQuote!.ask!, series.symbol, series.last)),
+                  spreadPips != null ? t.cfSpreadPipsA11y.replace('{pips}', spreadPips.toFixed(1)) : null,
+                ]
+                  .filter(Boolean)
+                  .join(rtl ? '، ' : ', ')}
+              >
+                {quoteStale || phone
+                  ? ''
+                  : `B ${formatPrice(liveQuote!.bid!, series.symbol, series.last)} · A ${formatPrice(liveQuote!.ask!, series.symbol, series.last)}`}
+                {spreadPips != null ? (
+                  <Text style={styles.spreadPips}>{`${quoteStale || phone ? '' : ' · '}${spreadPips.toFixed(1)} ${pipUnit(lang)}`}</Text>
+                ) : null}
+              </Text>
+            ) : null}
             <Text
-              style={styles.spreadTag}
-              // launch111: وسم ثابت كان يحلّ محلّ النصّ ⇒ VoiceOver «سبريد البيع والشراء» بلا رقم. يُقرأ ما يظهر فقط.
-              accessibilityLabel={[
-                quoteStale || phone
-                  ? null
-                  : t.cfSpreadBidAskA11y
-                      .replace('{bid}', formatPrice(liveQuote!.bid!, series.symbol, series.last))
-                      .replace('{ask}', formatPrice(liveQuote!.ask!, series.symbol, series.last)),
-                spreadPips != null ? t.cfSpreadPipsA11y.replace('{pips}', spreadPips.toFixed(1)) : null,
-              ]
-                .filter(Boolean)
-                .join(rtl ? '، ' : ', ')}
+              style={[styles.chg, { color: chgColor }]}
+              // منذ 8aeaf13 يصل VoiceOver لهذا النصّ منفرداً: «+0.12%» بلا سياق و«—» علامة ترقيم (launch109).
+              accessibilityLabel={
+                chgPct == null ? t.cfDayChangeNoneA11y : t.cfDayChangeA11y.replace('{pct}', formatPct(chgPct))
+              }
             >
-              {quoteStale || phone
-                ? ''
-                : `B ${formatPrice(liveQuote!.bid!, series.symbol, series.last)} · A ${formatPrice(liveQuote!.ask!, series.symbol, series.last)}`}
-              {spreadPips != null ? (
-                <Text style={styles.spreadPips}>{`${quoteStale || phone ? '' : ' · '}${spreadPips.toFixed(1)} ${pipUnit(lang)}`}</Text>
-              ) : null}
+              {chgPct == null ? '—' : formatPct(chgPct)}
             </Text>
-          ) : null}
-          <Text
-            style={[styles.chg, { color: chgColor }]}
-            // منذ 8aeaf13 يصل VoiceOver لهذا النصّ منفرداً: «+0.12%» بلا سياق و«—» علامة ترقيم (launch109).
-            accessibilityLabel={
-              chgPct == null ? t.cfDayChangeNoneA11y : t.cfDayChangeA11y.replace('{pct}', formatPct(chgPct))
-            }
-          >
-            {chgPct == null ? '—' : formatPct(chgPct)}
-          </Text>
-          {onFocus ? (
-            <Pressable
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.focusBtn,
-                pressed && {
-                  opacity: buttons.pressedOpacity,
-                  transform: [{ scale: buttons.pressedScale }],
-                },
-              ]}
-              onPress={onFocus}
-              accessibilityLabel={t.termOpenFullscreenA11y}
-              hitSlop={8}
-            >
-              <Text style={styles.focusBtnText}>⛶</Text>
-            </Pressable>
-          ) : null}
-        </View>
+            {onFocus ? (
+              <Pressable
+                accessibilityRole="button"
+                style={({ pressed }) => [
+                  styles.focusBtn,
+                  pressed && {
+                    opacity: buttons.pressedOpacity,
+                    transform: [{ scale: buttons.pressedScale }],
+                  },
+                ]}
+                onPress={onFocus}
+                accessibilityLabel={t.termOpenFullscreenA11y}
+                hitSlop={8}
+              >
+                <Text style={styles.focusBtnText}>⛶</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        )}
       </View>
 
       {wheelOpen && onSymbolChange ? (
@@ -503,25 +504,29 @@ export function ChartFrame({
         {navigate && !fill ? (
           <Text style={[styles.hint, !rtl && styles.hintLtr]}>{subtitle}</Text>
         ) : null}
-        <MatrixChart
-          series={series}
-          height={chartH}
-          interactive={interactive}
-          panControls={navigate}
-          persistDrawings={interactive}
-          accent={accent}
-          livePrice={mergePrice}
-          liveTickSource={resolvedTick?.source ?? null}
-          dense={fill}
-          panSpeed={panSpeed}
-          initialLens="clean"
-          initialIndicators={NO_INDICATORS}
-          syncWindow={syncWindow}
-          onSyncWindow={onSyncWindow}
-          syncFollow={syncFollow}
-          syncTimeOnly
-          onReplayPrice={onReplayPrice}
-        />
+        {noRealData ? (
+          <ProviderUnavailableNotice symbol={series.symbol} height={fill ? undefined : chartH} />
+        ) : (
+          <MatrixChart
+            series={series}
+            height={chartH}
+            interactive={interactive}
+            panControls={navigate}
+            persistDrawings={interactive}
+            accent={accent}
+            livePrice={mergePrice}
+            liveTickSource={resolvedTick?.source ?? null}
+            dense={fill}
+            panSpeed={panSpeed}
+            initialLens="clean"
+            initialIndicators={NO_INDICATORS}
+            syncWindow={syncWindow}
+            onSyncWindow={onSyncWindow}
+            syncFollow={syncFollow}
+            syncTimeOnly
+            onReplayPrice={onReplayPrice}
+          />
+        )}
       </View>
     </Pressable>
   );

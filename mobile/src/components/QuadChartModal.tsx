@@ -18,7 +18,7 @@ import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
 import { TimeframeBar } from './TimeframeBar';
 import { mockSeries } from '../mock';
-import { candleTimeSec, isSyntheticProvenance, normalizeProvenance, providerUnavailableReason } from '../chart/dataSource';
+import { candleTimeSec, isSyntheticProvenance, normalizeProvenance } from '../chart/dataSource';
 import { anchorDemoSeries } from '../chart/demoAnchor';
 import { formatPrice } from '../chart/math';
 import { formatPct, pctDirection } from '../chart/dailyChange';
@@ -26,6 +26,7 @@ import { isForexMarketOpen } from '../chart/marketHours';
 import { mockBase } from '../chart/mockBases';
 import { createSeriesCache, seriesCacheKey } from '../chart/seriesCache';
 import { useI18n } from '../i18n/I18nContext';
+import { ProviderUnavailableNotice, seriesHasNoRealData } from './ProviderUnavailableNotice';
 
 type Props = {
   visible: boolean;
@@ -310,6 +311,8 @@ export function QuadChartModal({
             const pct = s && Number.isFinite(livePct) ? livePct : null;
             const pctDir = pctDirection(pct);
             const pctColor = pctDir === 'up' ? colors.bull : pctDir === 'down' ? colors.bear : colors.textDim;
+            // backend-r19: رمز بلا بيانات حقيقية أصلاً (DXY) ⇒ لا سعر ولا نسبة ولا شموع بذرة.
+            const noReal = s != null && seriesHasNoRealData(s.data_source);
             return (
               <Pressable
                 key={`${i}:${sym}`}
@@ -338,10 +341,10 @@ export function QuadChartModal({
                       {isLeader ? t.cfSyncLeaderBadge : t.cfSyncFollowBadge}
                     </Text>
                   ) : null}
-                  {s && Number.isFinite(px) ? (
+                  {s && !noReal && Number.isFinite(px) ? (
                     <Text style={styles.cellPrice}>{formatPrice(px, sym, s?.last)}</Text>
                   ) : null}
-                  {s ? (
+                  {s && !noReal ? (
                     <Text
                       style={[styles.cellPct, { color: pctColor }]}
                       accessibilityLabel={
@@ -356,22 +359,16 @@ export function QuadChartModal({
                       {t.cfMarketClosedTag}
                     </Text>
                   ) : null}
-                  {series[i] &&
-                  (providerUnavailableReason(series[i]!.data_source) ||
-                    normalizeProvenance(series[i]!.data_source).kind === 'unavailable') ? (
-                    // DXY: لا يقدّمه المزوّد أصلاً — الجملة كاملة لقارئ الشاشة، ومقصوصة بالخلية الضيّقة (أوّلها يكفي).
-                    <Text
-                      style={[styles.demoTag, { flexShrink: 1 }]}
-                      numberOfLines={1}
-                      accessibilityLabel={t.originUnavailableProvider.replace('{symbol}', sym)}
-                    >
-                      {t.originUnavailableProvider.replace('{symbol}', sym)}
-                    </Text>
+                  {noReal ? (
+                    // DXY: لا يقدّمه المزوّد أصلاً — الجملة مكان الشارت (backend-r19)، والوسم القصير هنا.
+                    <Text style={styles.demoTag}>{t.dsKindUnavailable}</Text>
                   ) : series[i] && normalizeProvenance(series[i]!.data_source).kind === 'demo' ? (
                     <Text style={styles.demoTag}>{t.dsKindDemo}</Text>
                   ) : null}
                 </View>
-                {series[i] ? (
+                {noReal ? (
+                  <ProviderUnavailableNotice symbol={sym} height={cellH} />
+                ) : series[i] ? (
                   <MatrixChart
                     series={series[i]!}
                     height={cellH}
