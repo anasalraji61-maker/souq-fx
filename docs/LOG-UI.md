@@ -428,7 +428,7 @@
 
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
-| 190ab2f | `DomLitePanel`: `quoteSpreadPips(..., chartPipSpec)` ⇒ «USDJPYc» 1.5 و«XAUUSDm» 3 (تحقّقتُ بـtsx؛ BTCUSD `null` ⇒ `formatPriceDiff` كالسابق)؛ الوحدة `pipUnit(lang)` بدل «pip» الثابتة؛ `formatPrice(bid/ask, symbol, quote.bid)` بمرجع واحد (نفط 99.950 / 100.050)؛ فحص الدفتر `quoteBookValid` كرأس الطرفية (`TerminalScreen.tsx:1725`) | chart-r56 (3) |
+| 1136739 | `DomLitePanel`: `quoteSpreadPips(..., chartPipSpec)` ⇒ «USDJPYc» 1.5 و«XAUUSDm» 3 (تحقّقتُ بـtsx؛ BTCUSD `null` ⇒ `formatPriceDiff` كالسابق)؛ الوحدة `pipUnit(lang)` بدل «pip» الثابتة؛ `formatPrice(bid/ask, symbol, quote.bid)` بمرجع واحد (نفط 99.950 / 100.050)؛ فحص الدفتر `quoteBookValid` كرأس الطرفية (`TerminalScreen.tsx:1725`) | chart-r56 (3) |
 
 بوابة البناء خضراء (tsc 0) قبل الـcommit.
 
@@ -438,6 +438,6 @@
 
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
-| c0d198e | `levels_basis.unavailable` بسبب لا نعرفه (`atr_exceeds_price`) تحت «شراء/بيع»: `IndicatorForecastPanel` كان يطبع «لا اتجاه غالب»، و`AnalystsPanel`/`SocialConsensusPanel` «الآراء متضاربة أو محايدة» — الآن لا سطر (نصّ المحايد للمحايد فقط). اللوح يستعمل `levelsUnavailableText` المشترك بدل سلسلة الشروط المنسوخة. النصّ الخاص يحتاج مفتاحاً بـ`i18n` (نطاق launch) ⇒ صفّ ui35 → launch؛ الربط سطر `case` واحد بعده | backend-r37 |
+| 3b45502 | `levels_basis.unavailable` بسبب لا نعرفه (`atr_exceeds_price`) تحت «شراء/بيع»: `IndicatorForecastPanel` كان يطبع «لا اتجاه غالب»، و`AnalystsPanel`/`SocialConsensusPanel` «الآراء متضاربة أو محايدة» — الآن لا سطر (نصّ المحايد للمحايد فقط). اللوح يستعمل `levelsUnavailableText` المشترك بدل سلسلة الشروط المنسوخة. النصّ الخاص يحتاج مفتاحاً بـ`i18n` (نطاق launch) ⇒ صفّ ui35 → launch؛ الربط سطر `case` واحد بعده | backend-r37 |
 
 بوابة البناء خضراء (tsc 0) قبل الـcommit.
