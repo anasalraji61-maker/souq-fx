@@ -2938,3 +2938,24 @@ console.log('tradePlan journal paging selftest OK');
   assert.equal(journalWinRateLine('WR {pct}', { win_rate: null }), 'WR —');
 }
 console.log('tradePlan journal win rate selftest OK');
+
+// المعدن فوق الدخول: الضعف لا النصف — أهداف ذهب/فضة حقيقية بعد صعود 2023–2025 كانت تُقرأ نقاطاً ويُمنع حفظها
+{
+  const L = levelLooksLikePips;
+  assert.equal(L({ symbol: 'XAUUSD', side: 'buy', entry: 2650, level: 4000, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'XAUUSD', side: 'buy', entry: 1900, level: 3000, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'GOLD', side: 'buy', entry: 2650, level: 5300, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'XAGUSD', side: 'buy', entry: 30, level: 50, kind: 'tp' }), null);
+  assert.equal(L({ symbol: 'XAGUSD.m', side: 'buy', entry: 30, level: 60, kind: 'tp' }), null);
+  // وقف بيع فوق الدخول بالقاعدة نفسها
+  assert.equal(L({ symbol: 'XAUUSD', side: 'sell', entry: 2650, level: 4200, kind: 'sl' }), null);
+  // فوق الضعف تبقى نقاطاً: «500» على فضة 30 ⇒ 5.00 فوق؛ «6000» على ذهب 2650 ⇒ 600$ فوق
+  assert.deepEqual(L({ symbol: 'XAGUSD', side: 'buy', entry: 30, level: 500, kind: 'tp' }), { pips: 500, price: 35 });
+  assert.deepEqual(L({ symbol: 'XAUUSD', side: 'buy', entry: 2650, level: 6000, kind: 'tp' }), { pips: 6000, price: 3250 });
+  // تحت الدخول بلا تغيير: وقف «300» لشراء ذهب ⇒ 2620
+  assert.deepEqual(L({ symbol: 'XAUUSD', side: 'buy', entry: 2650, level: 300, kind: 'sl' }), { pips: 300, price: 2620 });
+  // الفوركس بلا تغيير: النصف
+  assert.deepEqual(L({ symbol: 'USDJPY', side: 'buy', entry: 157, level: 250, kind: 'tp' }), { pips: 250, price: 159.5 });
+  assert.deepEqual(L({ symbol: 'EURUSD', side: 'buy', entry: 1.085, level: 50, kind: 'tp' }), { pips: 50, price: 1.09 });
+}
+console.log('tradePlan levelLooksLikePips metal above entry selftest OK');
