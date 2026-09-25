@@ -3,36 +3,18 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
-import { DICTS, LangId } from './i18n/locales';
+import { DICTS, LangId, resolveLang, deviceLocaleTag } from './i18n/locales';
 
 /** مفتاح لغة الواجهة المحفوظ (نفس `KEY` بـ`i18n/I18nContext.tsx`) — يُرسل مع توكن الـPush ليصل
  * إشعار التنبيه من الخادم بلغة المتداول لا بنص إنجليزي خام. */
 const LANG_KEY = 'matrix.lang.v1';
 
 /**
- * لغة الإشعارات = لغة الواجهة المعروضة: المحفوظ إن كان لغةً ندعمها، وإلا **لغة الجهاز** بقاعدة `deviceLang`
- * (`i18n/I18nContext.tsx`) نفسها — ckb/ku ⇒ ku، en-GB ⇒ en-GB، en* ⇒ en-US، غيرها ⇒ ar.
- *
- * لماذا: المفتاح لا يُكتب إلا باختيار صريح من زرّ اللغة، والواجهة قبله تتبع لغة الجهاز. فمتداولٌ على هاتف إنجليزي
- * لم يفتح زرّ اللغة كان يرى التطبيق إنجليزياً، وقناة التنبيهات بإعدادات النظام «تنبيهات الأسعار والمؤشرات»، والتوكن
- * يُسجَّل بلا لغة فيرسل الخادم (`_push_lang(None)` ⇒ ar) كل تنبيه سعر بالعربية.
+ * لغة الإشعارات = لغة الواجهة المعروضة: القاعدة نفسها `resolveLang` (`i18n/locales.ts`) لا نسخة منها —
+ * المحفوظ إن كان مدعوماً وإلا لغة الجهاز. هاتف إنجليزي لم يفتح زرّ اللغة كان يستقبل التنبيهات بالعربية
+ * (`_push_lang(None)` ⇒ ar) والواجهة إنجليزية؛ نسختان من القاعدة تعيدان هذا التناقض عند أول تعديل لإحداهما.
  */
-export function notifLang(saved: string | null | undefined, deviceTag: string | undefined): LangId {
-  if (saved && saved in DICTS) return saved as LangId;
-  const tag = (deviceTag ?? '').toLowerCase();
-  if (tag.startsWith('ckb') || tag.startsWith('ku')) return 'ku';
-  if (tag === 'en-gb' || tag.startsWith('en-gb-')) return 'en-GB';
-  if (tag.startsWith('en')) return 'en-US';
-  return 'ar';
-}
-
-function deviceTag(): string | undefined {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().locale;
-  } catch {
-    return undefined;
-  }
-}
+export const notifLang: (saved: string | null | undefined, deviceTag: string | undefined) => LangId = resolveLang;
 
 async function savedLang(): Promise<LangId> {
   let saved: string | null = null;
@@ -41,7 +23,7 @@ async function savedLang(): Promise<LangId> {
   } catch {
     /* تخزين معطَّل: لغة الجهاز كما تفعل الواجهة */
   }
-  return notifLang(saved, deviceTag());
+  return notifLang(saved, deviceLocaleTag());
 }
 
 /**

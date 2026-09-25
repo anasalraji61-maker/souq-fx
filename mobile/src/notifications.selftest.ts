@@ -7,6 +7,8 @@
  */
 import assert from 'node:assert/strict';
 import Module from 'node:module';
+// القاعدة الحقيقية لا بديل: `notifLang` يجب أن يكون `resolveLang` نفسه (QA41)، فالبديل يُخفي أي انحراف.
+import { resolveLang, deviceLocaleTag } from './i18n/locales';
 
 type Perm = { status: string } | Error;
 const state: { get: Perm; req: Perm; os: string; channels: number; requests: number } = {
@@ -50,6 +52,8 @@ const stubs: Record<string, unknown> = {
       'en-GB': { notifChannelName: 'Price alerts', notifChannelDesc: 'y' },
       ku: { notifChannelName: 'k', notifChannelDesc: 'y' },
     },
+    resolveLang,
+    deviceLocaleTag,
   },
 };
 const M = Module as unknown as { _load: (req: string, ...rest: unknown[]) => unknown };
@@ -114,6 +118,8 @@ const { getNotificationPermissionState, ensureAlertNotifications, notifLang } = 
   assert.equal(notifLang('ar', 'en-US'), 'ar');
   assert.equal(notifLang('en-GB', 'ar-IQ'), 'en-GB');
   assert.equal(notifLang('xx', 'en-US'), 'en-US');
+  // QA41: لا نسخة ثانية من القاعدة — الدالّة نفسها التي تقرأ بها الواجهة (`I18nContext`) لغتها
+  assert.equal(notifLang, resolveLang);
   console.log('notifications notifLang selftest OK');
 })().catch((e) => {
   console.error(e);
