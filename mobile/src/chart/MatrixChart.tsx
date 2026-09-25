@@ -6540,6 +6540,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             {localizedChartKinds(tr).flatMap((k) => [
               <Pressable
                 accessibilityRole="button"
+                accessibilityLabel={k.label}
                 accessibilityState={{ selected: kind === k.id }}
                 key={k.id}
                 style={({ pressed }) => [
@@ -12651,6 +12652,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             </Pressable>
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel={tr.mcClearWord}
               style={({ pressed }) => [
                 styles.tool,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -12680,6 +12682,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               return [
                 <Pressable
                   accessibilityRole="button"
+                  accessibilityLabel={ind.label}
                   accessibilityState={{ selected: on }}
                   key={ind.id}
                   style={({ pressed }) => [
@@ -12719,6 +12722,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel={tr.mcNoPineLine}
               accessibilityState={{ selected: !pineOn }}
               style={({ pressed }) => [
                 styles.ind,
@@ -12735,6 +12739,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               return (
                 <Pressable
                   accessibilityRole="button"
+                  accessibilityLabel={p.name}
                   accessibilityState={{ selected: on }}
                   key={p.id}
                   style={({ pressed }) => [
@@ -12758,6 +12763,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             })}
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel={tr.mcExportPng}
               style={({ pressed }) => [
                 styles.tool,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -12768,6 +12774,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             </Pressable>
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel={tr.mcSaveTemplate}
               style={({ pressed }) => [
                 styles.tool,
                 pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -12780,6 +12787,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               <>
                 <Pressable
                   accessibilityRole="button"
+                  accessibilityLabel={tr.deleteWord}
                   style={({ pressed }) => [
                     styles.tool,
                     pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -12876,6 +12884,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     return (
                       <Pressable
                         accessibilityRole="button"
+                        accessibilityLabel={tr.mcAlertLine}
                         style={({ pressed }) => [
                           styles.tool,
                           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -12892,6 +12901,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     return (
                       <Pressable
                         accessibilityRole="button"
+                        accessibilityLabel={tr.mcAlertZone}
                         style={({ pressed }) => [
                           styles.tool,
                           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
@@ -12928,6 +12938,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     return (
                       <Pressable
                         accessibilityRole="button"
+                        accessibilityLabel={tr.mcAlertAtLineLevel}
                         style={({ pressed }) => [
                           styles.tool,
                           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
