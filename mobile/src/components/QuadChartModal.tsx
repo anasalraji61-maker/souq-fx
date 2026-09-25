@@ -21,7 +21,7 @@ import { mockSeries } from '../mock';
 import { candleTimeSec, normalizeProvenance } from '../chart/dataSource';
 import { anchorDemoSeries } from '../chart/demoAnchor';
 import { formatPrice } from '../chart/math';
-import { formatPct } from '../chart/dailyChange';
+import { formatPct, pctDirection } from '../chart/dailyChange';
 import { isForexMarketOpen } from '../chart/marketHours';
 import { createSeriesCache, seriesCacheKey } from '../chart/seriesCache';
 import { useI18n } from '../i18n/I18nContext';
@@ -307,8 +307,8 @@ export function QuadChartModal({
                 })
               : null;
             const pct = s && Number.isFinite(livePct) ? livePct : null;
-            const pctR = pct == null ? 0 : Math.round(pct * 100) / 100;
-            const pctColor = pctR > 0 ? colors.bull : pctR < 0 ? colors.bear : colors.textDim;
+            const pctDir = pctDirection(pct);
+            const pctColor = pctDir === 'up' ? colors.bull : pctDir === 'down' ? colors.bear : colors.textDim;
             return (
               <Pressable
                 key={`${i}:${sym}`}

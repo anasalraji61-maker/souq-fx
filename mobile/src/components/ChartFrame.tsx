@@ -6,7 +6,7 @@ import { TimeframeBar } from './TimeframeBar';
 import type { Timeframe } from '../timeframes';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { formatPrice } from '../chart/math';
-import { formatPct } from '../chart/dailyChange';
+import { formatPct, pctDirection } from '../chart/dailyChange';
 import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from '../chart/pipSpec';
 import {
@@ -178,8 +178,10 @@ export function ChartFrame({
       ? liveChangePct(series, replayPrice)
       : headerChangePct(series, livePriceForHeader(series, resolvedTick), dailyRefs[series.symbol.toUpperCase()]);
   const chgPct = Number.isFinite(livePct) ? livePct : null;
-  const chgRounded = chgPct == null ? 0 : Math.round(chgPct * 100) / 100;
-  const chgColor = chgRounded > 0 ? colors.bull : chgRounded < 0 ? colors.bear : colors.textDim;
+  // اللون من الرقم المطبوع (`pctDirection` = تقريب `formatPct`): `Math.round` يرفع النصف نحو +∞ فكان
+  // ‎−0.005%‎ يُطبع «−0.01%» بالرمادي.
+  const chgDir = pctDirection(chgPct);
+  const chgColor = chgDir === 'up' ? colors.bull : chgDir === 'down' ? colors.bear : colors.textDim;
   const headerPrice = replayPrice ?? resolvedTick?.price ?? series.last;
   const tickKind = replayPrice == null && resolvedTick
     ? tickStatusKind(resolvedTick.source, resolvedTick.source.as_of, nowSec)

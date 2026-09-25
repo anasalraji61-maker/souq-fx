@@ -129,7 +129,7 @@ import { planHiLoLabels } from './hiLoLabels';
 import { planDayBreaks } from './dayBreaks';
 import { projectBarTimeSec, tradingDayStartSec } from './marketHours';
 import { planSessionRuns, type SessionId } from './sessions';
-import { formatPct, prevSessionFromDaily, validSessionBar } from './dailyChange';
+import { formatPct, pctDirection, prevSessionFromDaily, validSessionBar } from './dailyChange';
 import { useDailyPrevBar } from './dailyRefStore';
 import { candlesThrough, pivotInput, pivotLabelRank, pivotSessionStartIndex, prevDayFromIntraday } from './pivotBase';
 import { candleTimeSec, normalizeProvenance, timeframeStepSec } from './dataSource';
@@ -5219,13 +5219,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               ? (() => {
                   // جسم الشمعة بالنسبة: شمعة دوجي كانت تُكتب «+0.00%» (الشرط `>=`)، وجسمٌ صاعد
                   // دون 0.005% يُكتب «+0.00%» **بالأخضر**. الآن `formatPct` كرأس الإطار، واللون
-                  // من الرقم المطبوع نفسه فلا يخالف ما يُقرأ.
+                  // من الرقم المطبوع نفسه (`pctDirection`) فلا يخالف ما يُقرأ.
                   const bodyPct = ((crossCandle.close - crossCandle.open) / crossCandle.open) * 100;
-                  const r = Math.round(bodyPct * 100) / 100;
+                  const dir = pctDirection(bodyPct);
                   return (
                     <Text
                       style={{
-                        color: r > 0 ? colors.bull : r < 0 ? colors.bear : colors.textDim,
+                        color: dir === 'up' ? colors.bull : dir === 'down' ? colors.bear : colors.textDim,
                         fontWeight: '800',
                       }}
                     >
