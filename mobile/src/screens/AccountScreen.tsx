@@ -21,10 +21,23 @@ import {
 import { CommissionPlanPanel } from '../components/CommissionPlanPanel';
 import { NetworkTreePanel } from '../components/NetworkTreePanel';
 import { SubscriptionPlansPanel } from '../components/SubscriptionPlansPanel';
+import { OnboardingOverlay } from '../components/OnboardingOverlay';
+import { markOnboardingSeen } from '../onboarding';
 import { api } from '../api';
 import { confirmDestructive } from '../chart/confirmDestructive';
 
 type RoleId = 'trader' | 'trainer' | 'broker' | 'agent' | 'company';
+
+/**
+ * «أعد الجولة الترحيبية». الجولة تُعرض مرّة بالعمر (`matrix.onboarding.v1`) ولم يكن لها طريق عودة:
+ * من ضغط «تخطي» خطأً فاتته للأبد. النصّ محلّي مؤقتاً حتى يُضاف مفتاحه لـ`locales.ts` (ملف وكيل
+ * الإطلاق — طلب بـCOORDINATION)؛ الكردي بانتظار مراجعته.
+ */
+const REPLAY_TOUR_COPY: Record<string, { label: string; a11y: string }> = {
+  ar: { label: '↺ أعد الجولة الترحيبية', a11y: 'أعد عرض الجولة الترحيبية' },
+  en: { label: '↺ Replay welcome tour', a11y: 'Show the welcome tour again' },
+  ku: { label: '↺ دووبارە بینینی گەشتی ناساندن', a11y: 'گەشتی ناساندن دووبارە پیشان بدەوە' },
+};
 type SideId = 'left' | 'right';
 
 export function AccountScreen() {
@@ -43,6 +56,7 @@ export function AccountScreen() {
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [notifState, setNotifState] = useState<NotificationPermissionState>('undetermined');
   const [notifBusy, setNotifBusy] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
   const [net, setNet] = useState<{
     referral_code: string;
     role: string;
@@ -212,6 +226,30 @@ export function AccountScreen() {
         </View>
       </View>
 
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={(REPLAY_TOUR_COPY[lang] ?? REPLAY_TOUR_COPY.en!).a11y}
+        style={({ pressed }) => [
+          styles.langChip,
+          styles.tourBtn,
+          rtl && styles.tourBtnRtl,
+          pressed && {
+            opacity: buttons.pressedOpacity,
+            transform: [{ scale: buttons.pressedScale }],
+          },
+        ]}
+        onPress={() => setTourOpen(true)}
+      >
+        <Text style={styles.langText}>{(REPLAY_TOUR_COPY[lang] ?? REPLAY_TOUR_COPY.en!).label}</Text>
+      </Pressable>
+      <OnboardingOverlay
+        visible={tourOpen}
+        onDone={() => {
+          setTourOpen(false);
+          void markOnboardingSeen();
+        }}
+      />
+
       <SubscriptionPlansPanel />
       <CommissionPlanPanel />
       <NetworkTreePanel
@@ -245,9 +283,7 @@ export function AccountScreen() {
               </View>
             </View>
           ) : netError ? (
-            <Text style={[styles.err, { textAlign: align }]}>
-              تعذر تحميل بيانات الشبكة/الإحالة — حاول لاحقاً
-            </Text>
+            <Text style={[styles.err, { textAlign: align }]}>{t.accNetLoadError}</Text>
           ) : null}
 
           <View style={styles.netBox}>
@@ -273,7 +309,7 @@ export function AccountScreen() {
                 ]}
                 onPress={() => void enableNotifications()}
                 disabled={notifBusy}
-                accessibilityState={{ disabled: notifBusy }}
+                accessibilityState={{ disabled: notifBusy, busy: notifBusy }}
               >
                 <Text style={styles.notifBtnText}>
                   {notifBusy
@@ -312,7 +348,7 @@ export function AccountScreen() {
             ]}
             onPress={confirmDeleteAccount}
             disabled={deleteBusy}
-            accessibilityState={{ disabled: deleteBusy }}
+            accessibilityState={{ disabled: deleteBusy, busy: deleteBusy }}
           >
             <Text style={styles.dangerBtnText}>{deleteBusy ? '...' : t.deleteAccount}</Text>
           </Pressable>
@@ -363,6 +399,7 @@ export function AccountScreen() {
               value={username}
               onChangeText={setUsername}
               placeholder={t.namePlaceholder}
+              maxLength={32}
               placeholderTextColor={colors.textDim}
               autoCapitalize="none"
               returnKeyType="done"
@@ -426,7 +463,7 @@ export function AccountScreen() {
               ]}
               onPress={submit}
               disabled={busy}
-              accessibilityState={{ disabled: busy }}
+              accessibilityState={{ disabled: busy, busy }}
             >
               <Text style={styles.btnText}>
                 {busy ? '...' : mode === 'login' ? t.enter : t.createAccount}
@@ -549,6 +586,8 @@ const styles = StyleSheet.create({
   langChipOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   langText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   langTextOn: { color: colors.accent },
+  tourBtn: { alignSelf: 'flex-start' },
+  tourBtnRtl: { alignSelf: 'flex-end' },
   card: {
     backgroundColor: colors.bgElevated,
     borderRadius: radii.md,
