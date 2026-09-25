@@ -33,6 +33,7 @@ import {
 } from './drawingStore';
 import { compareOverlay } from './compare';
 import { watermarkFontSize, watermarkSymbol } from './watermark';
+import { refreshArmedAlertsSoon, useArmedAlerts } from './useArmedAlerts';
 import { tickPlausibleForSeries, withLiveExtremes, withLivePrice, type LiveExtremes } from './liveSeries';
 import { computeVolumeProfile, pocPrice, computeTpo } from './volumeProfile';
 import { evalPineLite, INDICATOR_LIBRARY, pineIsPriceScale } from './pineLite';
@@ -1923,6 +1924,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // حقيقية بعيدة عن أسعارها، فتُحسب من شموعها هي.
   const anyPivot = indicators.some((id) => PIVOT_IDS.has(id));
   const seriesDemo = isSyntheticProvenance(series.data_source);
+  // تنبيهات الرمز المُسلَّحة خطوطاً على الشارت (`armedAlerts.ts`) — لا على سلسلة تجريبية (سلّمها ليس السوق) ولا شارت درس.
+  const armedAlerts = useArmedAlerts(interactive && !seriesDemo && !hideGrid ? series.symbol : null);
+  const createAlert = (price: number, origin?: 'drawing' | 'crosshair') => {
+    if (!onCreateAlert) return;
+    onCreateAlert(price, origin);
+    refreshArmedAlertsSoon();
+  };
   const dailyPrevBar = useDailyPrevBar(anyPivot && !seriesDemo ? series.symbol : null);
   const dailyCurrOpen = useDailyCurrOpen(
     indicators.includes('woodiePivots') && !seriesDemo ? series.symbol : null
@@ -6102,7 +6110,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               { borderColor: accent },
               pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
             ]}
-            onPress={() => onCreateAlert(crossPrice, 'crosshair')}
+            onPress={() => createAlert(crossPrice, 'crosshair')}
           >
             <Text style={[styles.crossAlertText, { color: accent }]}>🔔 {fmtPrice(crossPrice)}</Text>
           </Pressable>
@@ -7996,6 +8004,28 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                         : null;
                     return pips ? <Text style={styles.levelPipText}>{` · ${pips}`}</Text> : null;
                   })()}
+                </Text>
+              ) : null}
+            </View>
+          );
+        })}
+
+        {/* التنبيهات المُسلَّحة لهذا الرمز: خطّ كهرماني متقطّع + وسم عند المحور «🔔 ▲ السعر · المسافة بالـpip». */}
+        {armedAlerts.map((al) => {
+          const y = yOf(al.price);
+          if (!Number.isFinite(y) || y < 0 || y > chartPlotH) return null;
+          const pips = Number.isFinite(currentPrice)
+            ? signedDistanceText(series.symbol, currentPrice, al.price, lang, priceDecimalsRef)
+            : null;
+          return (
+            <View key={`alert${al.id}`} pointerEvents="none" style={[styles.hLine, styles.alertLine, { top: y }]}>
+              {!hidePriceLabels ? (
+                <Text
+                  style={[styles.levelPriceLabel, styles.alertLabel, y < LEVEL_LABEL_H && styles.levelLabelBelow, { right: plotRightInset + 2 }]}
+                  numberOfLines={1}
+                >
+                  🔔 {al.condition === 'above' ? '▲' : '▼'} {fmtPrice(al.price)}
+                  {pips ? <Text style={styles.levelPipText}>{` · ${pips}`}</Text> : null}
                 </Text>
               ) : null}
             </View>
@@ -12140,7 +12170,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           styles.toolOn,
                           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                         ]}
-                        onPress={() => onCreateAlert(d.a.price)}
+                        onPress={() => createAlert(d.a.price)}
                       >
                         <Text style={styles.toolTextOn}>{tr.mcAlertLine}</Text>
                       </Pressable>
@@ -12158,8 +12188,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                         ]}
                         onPress={() => {
-                          onCreateAlert(Math.max(aPrice, bPrice));
-                          onCreateAlert(Math.min(aPrice, bPrice));
+                          createAlert(Math.max(aPrice, bPrice));
+                          createAlert(Math.min(aPrice, bPrice));
                         }}
                       >
                         <Text style={styles.toolTextOn}>{tr.mcAlertZone}</Text>
@@ -12196,7 +12226,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                           styles.toolOn,
                           pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
                         ]}
-                        onPress={() => onCreateAlert(currentPrice)}
+                        onPress={() => createAlert(currentPrice)}
                       >
                         <Text style={styles.toolTextOn}>{tr.mcAlertAtLineLevel}</Text>
                       </Pressable>
@@ -12587,6 +12617,8 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   levelPipText: { fontWeight: '600', opacity: 0.8 },
+  alertLine: { borderColor: colors.warn, opacity: 0.85 },
+  alertLabel: { left: undefined, color: colors.warn },
   // وسم مستوى فيبو: **يسار اللوح** لا يمينه. اليمين هو محور السعر ووسماه (الحيّ
   // والتقاطع) يُرسمان فوق كل شيء، ووسمٌ صار يحمل سعراً أعرض من أن يشاركهما الحافة.
   // وخلفية خفيفة لأن النصّ يقع الآن فوق الشموع لا فوق حافة فارغة.
