@@ -949,6 +949,8 @@ export type Dict = {
   gridSquaresA11y: string;
   /** مقبض النقاط التسع بزاوية كل فريم (`FrameSizedGrid` `handleBar`) — كان بلا تسمية (DESIGN-PRO §4). */
   gridHandleA11y: string;
+  /** قيمة المقبض القابل للضبط (`accessibilityValue.text`): بلا `text` يحوّل iOS ‏min/max/now نسبةً («33 percent»، والأخير «133 percent»). `{n}` `{total}` */
+  gridHandlePosA11y: string;
   gridRectanglesWord: string;
   gridRectanglesA11y: string;
   quadCloseA11y: string;
@@ -2254,7 +2256,8 @@ const ar: Dict = {
   gridFramesWord: 'الفريمات',
   gridSquaresWord: 'المربعات',
   gridSquaresA11y: 'عرض الفريمات كمربعات',
-  gridHandleA11y: 'مقبض الفريم — اسحبه إلى فريم آخر لتبديل مكانيهما',
+  gridHandleA11y: 'مقبض ترتيب الفريم — يبدّل مكانه مع فريم آخر',
+  gridHandlePosA11y: 'الفريم {n} من {total}',
   gridRectanglesWord: 'المستطيلات',
   gridRectanglesA11y: 'عرض الفريمات كمستطيلات',
   quadCloseA11y: 'إغلاق عرض 2×2',
@@ -3463,7 +3466,8 @@ const enUS: Dict = {
   gridFramesWord: 'Frames',
   gridSquaresWord: 'Squares',
   gridSquaresA11y: 'View frames as squares',
-  gridHandleA11y: 'Frame handle — drag onto another frame to swap them',
+  gridHandleA11y: 'Frame order handle — swaps this frame with another',
+  gridHandlePosA11y: 'Frame {n} of {total}',
   gridRectanglesWord: 'Rectangles',
   gridRectanglesA11y: 'View frames as rectangles',
   quadCloseA11y: 'Close 2×2 view',
@@ -4705,7 +4709,8 @@ const ku: Dict = {
   gridFramesWord: 'چوارچێوەکان',
   gridSquaresWord: 'چوارگۆشەکان',
   gridSquaresA11y: 'پیشاندانی چوارچێوەکان وەک چوارگۆشە',
-  gridHandleA11y: 'دەستگری چوارچێوە — بیکێشە سەر چوارچێوەیەکی تر بۆ گۆڕینەوەی شوێنیان',
+  gridHandleA11y: 'دەستگری ڕیزبەندی چوارچێوە — شوێنی لەگەڵ چوارچێوەیەکی تر دەگۆڕێتەوە',
+  gridHandlePosA11y: 'چوارچێوەی {n} لە {total}',
   gridRectanglesWord: 'لاکێشراوەکان',
   gridRectanglesA11y: 'پیشاندانی چوارچێوەکان وەک لاکێشراو',
   quadCloseA11y: 'داخستنی دیمەنی 2×2',
