@@ -32,7 +32,17 @@ const weekdayOf = (day: number) => (((day + 4) % 7) + 7) % 7;
  */
 function sessionOf(tSec: number, weekendMerge: boolean, isNow: boolean, lateOpen = false, symbol?: string | null): number {
   let s = weekSessionOf(tSec, weekendMerge, isNow, lateOpen, symbol);
-  if (!isNow || !weekendMerge) return s;
+  if (!weekendMerge) return s;
+  /**
+   * **ما بعد إعادة الافتتاح يوم العطلة** (17:00 نيويورك 25 ديسمبر/1 يناير) جزءٌ من جلسة يوم التداول التالي — كمساء الأحد من
+   * الإثنين. مزوّدٌ بأيام UTC يُخرج شمعة 25 ديسمبر قصيرة (22:00–24:00 UTC): كانت جلسةً وحدها فصار مرجع 26 ديسمبر إغلاقها
+   * هي لا إغلاق 24 — نسبة اليوم تُسقط فجوة الافتتاح وأوّل ساعتين. شمعة العطلة (`!isNow`) أو «الآن» والسوق مفتوح ⇒ اليوم
+   * التالي (والسبت ⇒ الإثنين). «الآن» والسوق مغلق يبقى للحلقة أدناه.
+   */
+  if (isHolidayDay(s) && (!isNow || isForexMarketOpen('EURUSD', new Date(tSec * 1000)))) {
+    return weekdayOf(s + 1) === 6 ? s + 3 : s + 1;
+  }
+  if (!isNow) return s;
   /**
    * 25 ديسمبر و1 يناير بلا شمعة يومية (`isForexHolidaySession`): جلسة العطلة كانت «جديدة» مرجعها آخر شمعة — أي السعر
    * نفسه ⇒ «0.00%» طوال اليوم بدل حركة آخر يوم تداول، كعطلة نهاية الأسبوع. ما دام السوق مغلقاً (EURUSD مسباراً للتقويم

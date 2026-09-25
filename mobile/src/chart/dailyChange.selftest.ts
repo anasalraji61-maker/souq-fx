@@ -268,6 +268,21 @@ console.log('dailyChange freshTickRefPrice selftest OK');
   assert.equal(prevClose(ny29, D('2029-01-01') + 22 * H + 60, 'EURUSD'), 1.22);
   // شمعة عطلة رقيقة من المزوّد (25 موجودة): المرجع إغلاق 24 كما كان
   assert.equal(prevClose([...xmas25, c('2025-12-25', 1.181)], D('2025-12-25') + 12 * H, 'EURUSD'), 1.18);
+  // شمعة 25 القصيرة (22:00–24:00Z بعد إعادة الافتتاح) جزءٌ من جلسة 26 كالأحد من الإثنين: يوم 26 مرجعه إغلاق 24 لا شمعة الساعتين
+  const short25 = [...xmas25, c('2025-12-25', 1.181)];
+  for (const sym of ['EURUSD', 'XAUUSD', null]) {
+    assert.equal(prevClose(short25, D('2025-12-26') + 10 * H, sym), 1.18, `26 after short 25 ${sym}`);
+    assert.equal(prevClose([...short25, c('2025-12-26', 1.185)], D('2025-12-26') + 10 * H, sym), 1.18, `26 with own candle ${sym}`);
+  }
+  // مساء 25 نفسه بعد الافتتاح: المرجع إغلاق 24 (كما كان)، والمفتاح جلسة 26 فلا تتبدّل الجلسة عند منتصف الليل
+  assert.equal(prevClose(short25, D('2025-12-25') + 23 * H, 'EURUSD'), 1.18);
+  assert.equal(sessionKeyAt(D('2025-12-25') + 23 * H, true, 'EURUSD'), D('2025-12-26') / 86400);
+  assert.equal(sessionKeyAt(D('2025-12-26') + 1 * H, true, 'EURUSD'), D('2025-12-26') / 86400);
+  // 1 يناير كذلك (2026-01-01 خميس): يوم 2 مرجعه إغلاق 31
+  const short1 = [...ny26, c('2026-01-01', 1.176)];
+  assert.equal(prevClose(short1, D('2026-01-02') + 10 * H, 'GBPUSD'), 1.175);
+  // يوم 26 التالي: مرجعه إغلاق 26 نفسه (شمعة 25 القصيرة لا تصير «الأمس»)
+  assert.equal(prevClose([...short25, c('2025-12-26', 1.185)], D('2025-12-29') + 10 * H, 'EURUSD'), 1.185);
   // كريبتو (شمعة سبت بالسلسلة ⇒ بلا دمج): يوم 25 يوم تداول عادي
   const btc = [c('2025-12-20', 90000), c('2025-12-23', 91000), c('2025-12-24', 92000)];
   assert.equal(prevClose(btc, D('2025-12-25') + 12 * H, 'BTCUSD'), 92000);
