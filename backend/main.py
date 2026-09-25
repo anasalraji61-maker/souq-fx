@@ -198,7 +198,8 @@ class AlertCreate(BaseModel):
     symbol: str = Field(min_length=3, max_length=12)
     condition: Literal["above", "below"]
     price: float = Field(gt=0)
-    note: str = ""
+    # كملاحظة الدفتر/التصويت: بلا حدّ كان نصّ غير محدود يُخزَّن ويُرسل بالإشعار
+    note: str = Field(default="", max_length=500)
 
 
 class AuthRegister(BaseModel):
@@ -392,7 +393,7 @@ class IndicatorAlertCreate(BaseModel):
     value: float | None = None
     fast_period: int = 9
     slow_period: int = 21
-    note: str = ""
+    note: str = Field(default="", max_length=500)
 
     @model_validator(mode="after")
     def _consistent(self) -> "IndicatorAlertCreate":
