@@ -364,7 +364,8 @@ export function ChartFrame({
           لا شيء يُقصّ. بوضع المستطيلات (عرض الشاشة) يتّسع السطر فلا التفاف، كما كان. */}
       <View style={[styles.header, phone && styles.headerPhone]}>
         <View style={styles.titleRow}>
-          <View style={[styles.dot, { backgroundColor: accent }]} />
+          {/* DESIGN-PRO §1 — نقطة زخرفية محايدة: كانت `accent` بكل إطار ⇒ أربع نقاط تأكيد بالشبكة وقت السكون. */}
+          <View style={styles.dot} />
           <Pressable
             accessibilityRole={onSymbolChange ? 'button' : 'text'}
             style={({ pressed }) => [
@@ -634,14 +635,15 @@ const styles = StyleSheet.create({
   // بيانات الفريم/الرمز السابق أثناء انتظار الجديد: باهتة لا مخفيّة — الإطار لا يقفز،
   // والمتداول يرى أنها ليست أرقام ما ضغط عليه بعد.
   stale: { opacity: 0.38 },
+  // DESIGN-PRO §1/§2 — وسوم الرأس 11px ولا تأكيد على شارة: «جارٍ التبديل» حالة عابرة تخفت (والبيانات نفسها باهتة `stale`).
   switchTag: {
-    color: colors.accent,
-    fontSize: 9,
+    color: colors.textMuted,
+    fontSize: 11,
     fontWeight: '500',
     paddingHorizontal: 4,
     paddingVertical: 0,
     borderRadius: radii.sm,
-    backgroundColor: colors.accentSoft,
+    backgroundColor: colors.selectedFill,
     flexShrink: 0,
   },
   symbolCaret: { color: colors.textDim, fontSize: 10, fontWeight: '500' },
@@ -652,7 +654,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(8, 14, 22, 0.35)',
   },
-  dot: { width: 7, height: 7, borderRadius: 4 },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.textDim },
   symbol: {
     color: colors.text,
     fontWeight: '500',
@@ -665,14 +667,15 @@ const styles = StyleSheet.create({
   priceRowPhone: { flexWrap: 'wrap', flexShrink: 1, columnGap: 4, rowGap: 4 },
   price: { ...numeric, color: colors.text, fontWeight: '600', fontSize: 13 },
   // DESIGN-PRO §1/§5.3: الأخضر للاتجاه وحده، و«مباشر» حالة طبيعية تخفت؛ ما تدهور (سعر أخير/تجريبي) أعلى صوتاً.
-  liveTag: { color: colors.textDim, fontSize: 9, fontWeight: '500' },
+  liveTag: { color: colors.textDim, fontSize: 11, fontWeight: '500' },
   liveTagMuted: { color: colors.textMuted, fontWeight: '500' },
-  spreadTag: { ...numeric, color: colors.textDim, fontSize: 9, fontWeight: '600' },
+  spreadTag: { ...numeric, color: colors.textDim, fontSize: 11, fontWeight: '600' },
   /** السبريد بالـpip هو الرقم الذي يُقرأ؛ أبرز قليلاً من السعرين بجانبه. */
   spreadPips: { ...numeric, color: colors.text, fontWeight: '600' },
+  // مصدر البيانات الطبيعي (مزوّد) يخفت؛ تجريبي `warn` ومجهول `textMuted` فقط (§5.3). كان تأكيداً على شارة.
   sourceTag: {
-    color: colors.accent,
-    fontSize: 9,
+    color: colors.textDim,
+    fontSize: 11,
     fontWeight: '500',
     marginInlineStart: 4,
     opacity: 0.9,
@@ -681,7 +684,7 @@ const styles = StyleSheet.create({
   sourceTagUnknown: { color: colors.textMuted },
   marketClosedTag: {
     color: colors.warn,
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '500',
     marginInlineStart: 4,
     opacity: 0.9,
@@ -693,11 +696,11 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.bgPanel,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  focusBtnText: { color: colors.accent, fontSize: 13, fontWeight: '500' },
+  // §5.5 فاصل واحد (حدّ، بلا خلفية)؛ §1 أيقونة ثانوية لا تأكيد — كانت تأكيداً بكل إطار من أربعة بالشبكة.
+  focusBtnText: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
   hint: {
     color: colors.textMuted,
     fontSize: 10,
@@ -712,21 +715,15 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
     borderRadius: 4,
     overflow: 'hidden',
-    color: colors.accent,
-    fontSize: 9,
+    // §1/§5.5 — شارة محايدة بفاصل واحد (خلفية): كانت تأكيداً بحدّ وخلفية، والقائد أخضر (الأخضر للاتجاه وحده).
+    color: colors.textMuted,
+    fontSize: 11,
     fontWeight: '500',
-    backgroundColor: colors.accentSoft,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.accentBorderGlow,
+    backgroundColor: colors.selectedFill,
   },
-  syncBadgeLeader: {
-    color: colors.leaderGreen,
-    borderColor: 'rgba(74,222,128,0.5)',
-    backgroundColor: 'rgba(74,222,128,0.12)',
-  },
+  syncBadgeLeader: { color: colors.text },
   syncBadgePartial: {
     color: colors.warn,
-    borderColor: 'rgba(245,158,11,0.45)',
     backgroundColor: colors.warnSoft,
   },
   chartPad: {
