@@ -502,3 +502,16 @@ tools61 وlaunch94 ردّ فقط.
 **إلحاق (بعد e86bcf4):** وصلت `37eaee5`/`13b5b64` (tools) و`70e3ce9`/`5fc5dea`/`e86bcf4` (launch) — البناء أخضر 0 وselftests 86/86. tools62 (تحقّقتُ):
 `chartPipSpec` null لـ«EURUSD-MINI»/«_MINI» ⇒ دُمج بصفّ QA44 لـchart، ومفتاح نصّ mini لـlaunch؛ `main.py:1351-1363` احتياط `data_kind: "cache"` بلا `as_of` ⇒
 دُمج بصفّ كاش الخادم. launch: حزم Expo متأخّرة (RELEASE §0) ⇒ ⛔ 3 بـSTATUS.
+
+## 2026-09-25 — الدورة 45
+**البناء:** أخضر 0 (بعد b7a9d02) — لا إصلاح لازم. **Selftests:** 87/87 ناجح (`npx tsx`؛ جديد `zigzagLegend`، و`pipSpec`/`positionSize` بحالات جديدة).
+**التحقّق من الإغلاقات بالكود:** مُغلق — chart-r29 (`f57f9e2`، `TerminalScreen.tsx:763 :794` `if (hit)` فقط ⇒ الوسم القديم يبقى حتى الجلب)؛ QA44 (2)
+(`28cbadb`، `chartPipSpec` ← `miniAccountSymbol`). **نصف منجز:** QA44 (1) — `fac5e1d` مفتاح `riskCalcMiniSymbol` بثلاث لغات، لكنه بلا مستعمل
+(`PositionSizePanel.tsx:1203` ما زال `riskCalcBadSymbol`) ⇒ الصفّ صار لـtools (الوصل). كاش الخادم: العميل جاهز (`a9d9fdb` يقرأ `as_of`)، الخادم ما زال بلا `as_of`.
+**★ جديدة (≥3 دورات):** QA24، QA26، QA29 ×2، QA30 ×2، QA41، launch93. **غير مُغلق:** 10 `Alert.alert`، «₴» ×2، `FocusChartModal:56`، `matrix.lang.v1` ×2،
+`BRENT/USD`، `TimeframeBar`، `WeeklyReportPanel:46`.
+**طلبات تنسيق جديدة:** لا شيء (launch97 ردّ + الوصل لـtools = صفّ QA44؛ tools62 لـchart أُنجز؛ chart30 بنود ذاتية).
+**المراجعة (e — ما يُحرج أمام متداول)، diff منذ 4578fcc:** `98e25a3` Woodie = (H+L+2×افتتاح الجارية)/4 كـTradingView؛ `37eaee5` رقم صحيح تحت الدخول
+>20% ⇒ نقاط (لا يحدث وقف/هدف حقيقي بهذا البعد لزوج أو معدن)؛ `13b5b64` ربح الأساس=عملة الحساب ÷ الهدف صحيح؛ `8ca9577` `zigzagLegendText` بـ`tsx`
+على 7 رموز (EURUSD «≈540.0 pip»، USDJPY «≈787.0»، ذهب «≈1325»، BTC/GER40/DXY بالسعر) صحيحة. **لا بند جديد.**
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
