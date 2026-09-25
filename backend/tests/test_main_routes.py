@@ -792,3 +792,13 @@ def test_worker_indicator_series_drops_stale_cache(monkeypatch):
     monkeypatch.setattr(alert_worker.market, "fetch_time_series_with_meta",
                         lambda s, tf, outputsize=180: (candles, {"kind": "provider", "as_of": time.time()}))
     assert alert_worker._indicator_series({"symbol": "EURUSD", "timeframe": "5m"}) == candles
+
+
+@pytest.mark.parametrize("sym", ["DXY", "dxy"])
+def test_alerts_on_a_symbol_the_provider_does_not_offer_are_refused(client, sym):
+    """DXY: كان يُحفظ «يراقب» إلى الأبد ولا يُطلق — لا سعر له عند المزوّد."""
+    r = client.post("/api/alerts", json={"symbol": sym, "condition": "above", "price": 100})
+    assert r.status_code == 422 and "symbol unavailable at provider" in r.text
+    r = client.post("/api/indicator-alerts", json={
+        "symbol": sym, "alert_type": "rsi", "condition": "above", "value": 70})
+    assert r.status_code == 422 and "symbol unavailable at provider" in r.text

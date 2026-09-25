@@ -213,6 +213,13 @@ class DmSend(BaseModel):
     from_user: str = "أنت"
 
 
+def _alertable_symbol(v: str) -> str:
+    """DXY لا يقدّمه المزوّد: تنبيه عليه يُحفظ «يراقب» ولا يُطلق أبداً (الـworker يسجّل «لا سعر» كل دقيقة)."""
+    if market.unavailable_reason(v):
+        raise ValueError("symbol unavailable at provider")
+    return v
+
+
 class AlertCreate(BaseModel):
     symbol: str = Field(min_length=3, max_length=12)
     condition: Literal["above", "below"]
@@ -220,6 +227,8 @@ class AlertCreate(BaseModel):
     price: float = Field(gt=0, allow_inf_nan=False)
     # كملاحظة الدفتر/التصويت: بلا حدّ كان نصّ غير محدود يُخزَّن ويُرسل بالإشعار
     note: str = Field(default="", max_length=500)
+
+    _sym = field_validator("symbol")(_alertable_symbol)
 
 
 def _alert_level(price: float) -> float:
@@ -425,6 +434,8 @@ class IndicatorAlertCreate(BaseModel):
     fast_period: int = 9
     slow_period: int = 21
     note: str = Field(default="", max_length=500)
+
+    _sym = field_validator("symbol")(_alertable_symbol)
 
     @model_validator(mode="after")
     def _consistent(self) -> "IndicatorAlertCreate":
