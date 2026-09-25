@@ -17,6 +17,7 @@ import {
   pipValuePerLot,
   positionSize,
   slPipsFromPrices,
+  parseSlPips,
   riskForLots,
   formatRiskPct,
   parseRiskInput,
@@ -403,9 +404,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /**
    * خانات **الأسعار** (دخول/وقف/هدف) بأداة الحاسبة: «3.450» بخانة ذهب مبهمة (3450 بكتابة أوروبية) فتُرفض —
    * كانت تُقرأ 3.45: دخول 3.450 ووقف 3.350 = «1 pip» ⇒ **10 لوت** بدل 0.01، وهامشٌ أصغر بألف مرّة. راجع
-   * `parsePriceFor` (الدفتر يقرأ به منذ `53f1e03`). النقاط والرصيد والسبريد تبقى على `num`.
+   * `parsePriceFor` (الدفتر يقرأ به منذ `53f1e03`). السبريد والتحويل يبقيان على `num`.
    */
   const priceNum = (s: string) => parsePriceFor(s, spec?.symbol) ?? NaN;
+  /** نقاط الوقف: «1.500» مبهمة (1,500) فتُرفض — كانت تُقرأ 1.5 pip ⇒ لوت أكبر بألف مرّة. راجع `parseSlPips`. */
+  const slNum = parseSlPips(slPips) ?? NaN;
   /** الرصيد مبلغ: «10.000» أوروبية = عشرة آلاف فتُرفض كـ«10,000» بدل حساب لوت من 10 — راجع parseDecimal.ts */
   const balanceNum = parseDecimal(balanceText, { amount: true }) ?? NaN;
   /**
@@ -415,7 +418,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const badOtherThanLeverage =
     (balanceText.trim() !== '' && parseDecimal(balanceText, { amount: true }) == null) ||
     (riskPct.trim() !== '' && parseRiskInput(riskPct, balanceNum, moneyCcy) == null) ||
-    [slPips, manualConv].some((v) => v.trim() !== '' && parseDecimal(v) == null) ||
+    (slPips.trim() !== '' && parseSlPips(slPips) == null) ||
+    (manualConv.trim() !== '' && parseDecimal(manualConv) == null) ||
     [entryPx, stopPx, targetPx].some((v) => v.trim() !== '' && Number.isNaN(priceNum(v)));
   const badNumber = badOtherThanLeverage || (leverage.trim() !== '' && parseLeverage(leverage) == null);
   /**
@@ -428,7 +432,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     [t.riskCalcBalance, balanceText, parseDecimal(balanceText, { amount: true }) == null],
     [t.riskCalcRiskPct, riskPct, parseRiskInput(riskPct, balanceNum, moneyCcy) == null],
     [t.riskCalcLeverage, leverage, parseLeverage(leverage) == null],
-    [t.riskCalcSlPips, slPips, parseDecimal(slPips) == null],
+    [t.riskCalcSlPips, slPips, parseSlPips(slPips) == null],
     [t.riskCalcEntry, entryPx, Number.isNaN(priceNum(entryPx))],
     [t.riskCalcStop, stopPx, Number.isNaN(priceNum(stopPx))],
     [t.riskCalcTarget, targetPx, Number.isNaN(priceNum(targetPx))],
@@ -545,7 +549,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * لكنه يقول أيّ رقم يحكم أيّ سطر. والشرط على الراية نفسها (`!slFromPrices.current`) يمنع ومضة
    * إطارٍ واحد أثناء كتابة سعر الوقف: `derivedSl` يتغيّر بالإطار الذي لم يكتب فيه الـeffect الخانة بعد.
    */
-  const slTyped = num(slPips);
+  const slTyped = slNum;
   /** غير متماثل: نقاط أضيق من السعرين بأي فرق = لوت أكبر من وقفه المحفوظ — راجع `stopPipsMismatch` */
   const slMm = slFromPrices.current ? null : stopPipsMismatch(slTyped, derivedSl);
   const slMismatch = slMm ? { typed: slPips.trim(), derived: slMm.derived, narrower: slMm.narrower } : null;
@@ -584,7 +588,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       ? positionSize({
           balance: balanceNum,
           riskPct: riskNum,
-          slPips: num(slPips),
+          slPips: slNum,
           pipValuePerLot: pv,
           contractSize: spec.contractSize,
         })
@@ -667,7 +671,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * ظنّاً أنه الأقرب لنسبته. راجع `riskForLots`.
    */
   const actualRiskOf = (l: number) =>
-    pv != null ? riskForLots({ lots: l, slPips: num(slPips), pipValuePerLot: pv, balance: balanceNum }) : null;
+    pv != null ? riskForLots({ lots: l, slPips: slNum, pipValuePerLot: pv, balance: balanceNum }) : null;
   const actualNow = lots != null ? actualRiskOf(lots) : null;
   const minLotRisk = result?.belowMinLot ? actualRiskOf(LOT_STEP) : null;
   /** تسجيل الخطة بالدفتر جارٍ / نتيجته — نقرة واحدة بدل إعادة كتابة الأرقام الأربعة بلوحة الدفتر */
@@ -716,7 +720,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    */
   const typedSpreadPips = parseSpreadPips(spread);
   /** وقفٌ ليس أبعد من السبريد المكتوب: يُضرب لحظة الفتح — راجع `stopInsideSpread` */
-  const slInsideSpread = stopInsideSpread(num(slPips), typedSpreadPips);
+  const slInsideSpread = stopInsideSpread(slNum, typedSpreadPips);
   // الدخول ما زال Ask/Bid اللقطة الحيّة (نصّ التعبئة حرفياً وللأداة نفسها): السبريد داخل مسافة الوقف والهدف أصلاً،
   // فلا يُضاف إلا ما يزيد به سبريد الوسيط المكتوب على سبريد اللقطة — راجع `spreadBeyondLiveEntry`
   const liveFill = liveFillRef.current;
@@ -731,7 +735,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     lots != null && pv != null && spreadPips != null && commissionPerLot != null && spec
       ? spreadRisk({
           lots,
-          slPips: num(slPips),
+          slPips: slNum,
           spreadPips,
           pipValuePerLot: pv,
           balance: balanceNum,
@@ -1404,7 +1408,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         ) : null}
         {slInsideSpread ? (
           <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
-            {t.riskCalcStopInsideSpread.replace('{sl}', String(num(slPips))).replace('{spread}', String(typedSpreadPips))}
+            {t.riskCalcStopInsideSpread.replace('{sl}', String(slNum)).replace('{spread}', String(typedSpreadPips))}
           </Text>
         ) : null}
         {/* المخاطرة شاملة السبريد (والعمولة إن كُتبت)، وتحتها جملة اللوت الذي يحفظ النسبة المكتوبة حين يكون أصغر */}

@@ -6,6 +6,10 @@ import { parseDecimal } from './parseDecimal';
 import assert from 'node:assert/strict';
 import {
   convStaleMinutes,
+  parseSlPips,
+  instrumentSpec as specForSl,
+  pipValuePerLot as pvForSl,
+  positionSize as sizeForSl,
   CONV_STALE_AFTER_MS,
   liveEntryFillAllowed,
   parseRiskInput,
@@ -2233,4 +2237,22 @@ console.log('positionSize liveEntryFillAllowed selftest OK');
   assert.equal(convStaleMinutes(NaN, t0), null);
   assert.equal(convStaleMinutes(t0, NaN), null);
 }
-console.log('positionSize convStaleMinutes selftest OK');
+{
+  // نقاط الوقف «1.500» مبهمة (1,500 أوروبية) ⇒ تُرفض كـ«1,500»؛ كانت 1.5 ⇒ ذهب 6.66 لوت بدل 0.06
+  assert.equal(parseSlPips('1.500'), null);
+  assert.equal(parseSlPips('1,500'), null);
+  assert.equal(parseSlPips('25.000'), null);
+  assert.equal(parseSlPips('1500'), 1500);
+  assert.equal(parseSlPips('1.5'), 1.5);
+  assert.equal(parseSlPips('24.6'), 24.6);
+  assert.equal(parseSlPips('0.500'), 0.5);
+  assert.equal(parseSlPips('٢٠'), 20);
+  assert.equal(parseSlPips(''), null);
+  assert.equal(parseSlPips('1.2.3'), null);
+  // الحجم من 1500 pip ذهب: 100$ ÷ (1500 × 10$) = 0.0066 ⇒ تحت أدنى لوت، لا 6.66
+  const gold = specForSl('XAUUSD')!;
+  const r = sizeForSl({ balance: 10_000, riskPct: 1, slPips: parseSlPips('1500')!, pipValuePerLot: pvForSl(gold, 1), contractSize: gold.contractSize })!;
+  assert.equal(r.lots, 0);
+  assert.equal(r.belowMinLot, true);
+}
+console.log('positionSize parseSlPips selftest OK');

@@ -404,6 +404,16 @@ export function priceAtPipOffset(spec: InstrumentSpec, price: number, offsetPips
   return Number(raw.toFixed(decimals));
 }
 
+/**
+ * خانة **وقف الخسارة بالنقاط**: مسافة موجبة بقاعدة المبالغ (`parseDecimal` `amount`) — «1.500» مبهمة (1,500 بكتابة
+ * أوروبية) فتُرفض كـ«1,500» بجانبها. كانت تُقرأ 1.5 pip: ذهبٌ بوقف 1,500 pip (150$) بحساب 10,000 و1% = **6.66 لوت**
+ * بدل 0.06، بلا أي تحذير (تحت حدّ 50 لوت). مسافة الوقف لا تحمل ثلاث منازل أصلاً (`slPipsFromPrices` لعُشر pip)،
+ * و«0.500» تبقى 0.5 (الصفر بالمقدّمة ليس مبهماً). `null` = فارغ أو غير مفهوم أو مبهم.
+ */
+export function parseSlPips(raw: string): number | null {
+  return parseDecimal(raw, { amount: true });
+}
+
 export const LOT_STEP = 0.01;
 
 export type SizeResult = {
