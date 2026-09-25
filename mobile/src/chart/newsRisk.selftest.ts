@@ -970,3 +970,23 @@ console.log('newsRisk long/spot/roll suffix selftest OK');
   assert.equal(nextHighImpact([boj, nfp], ['USD', 'JPY'], Date.UTC(2026, 8, 25, 11))?.event.id, 'n');
 }
 console.log('newsRisk unannounced time selftest OK');
+
+{
+  // المعدن باسمه + عملة التسعير، ومؤشرٌ بفاصل أو بعملة ملاصقة — كانت كلها `[]` (ذهب/داو قبل الرواتب بلا تحذير)
+  const { symbolCurrencies: sc } = require('./newsRisk') as typeof import('./newsRisk');
+  assert.deepEqual(sc('GOLDUSD'), ['USD']);
+  assert.deepEqual(sc('GOLDEUR'), ['USD', 'EUR']);
+  assert.deepEqual(sc('SILVERUSD'), ['USD']);
+  assert.deepEqual(sc('GOLDUSD.m'), ['USD']);
+  assert.deepEqual(sc('US-30'), ['USD']);
+  assert.deepEqual(sc('US_30'), ['USD']);
+  assert.deepEqual(sc('GER_40'), ['EUR']);
+  assert.deepEqual(sc('US500USD'), ['USD']);
+  assert.deepEqual(sc('GER40EUR'), ['EUR']);
+  assert.deepEqual(sc('JP225USD'), ['JPY', 'USD']);
+  // ليست عملة/مؤشراً معروفاً ⇒ تبقى [] (لا تخمين)
+  assert.deepEqual(sc('GOLDXYZ'), []);
+  assert.deepEqual(sc('AB-12'), []);
+  assert.deepEqual(sc('ZZ99USD'), []);
+}
+console.log('newsRisk metal-name and index spelling selftest OK');

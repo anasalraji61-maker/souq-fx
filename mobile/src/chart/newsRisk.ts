@@ -197,6 +197,19 @@ export function symbolCurrencies(symbol: string): string[] {
     const p = symbolCurrencies(peeled);
     if (p.length) return p;
   }
+  // «GOLDUSD»/«SILVEREUR» (اسم المعدن + عملة التسعير) = XAUUSD/XAGEUR — كانت `[]`: ذهبٌ قبل الرواتب بلا تحذير
+  const metal = /^(GOLD|SILVER)([A-Z]{3})$/.exec(up);
+  if (metal && FIAT.has(metal[2])) return symbolCurrencies((metal[1] === 'GOLD' ? 'XAU' : 'XAG') + metal[2]);
+  // مؤشرٌ بفاصل بين الاسم والرقم («US-30»، «US_30»، «GER_40») — التقشير أعلاه يُسقط الرقم نفسه فيبقى «US» ⇒ `[]`
+  const split = /^([A-Z]{2,})[-_ ]([0-9]{2,4})$/.exec(up);
+  if (split) return currenciesOnce(split[1] + split[2]);
+  // مؤشرٌ بعملة تسعيره ملاصقة («US500USD»، «GER40EUR») — كـOANDA «US30_USD» بلا الشرطة: الأداة ثم عملة التسعير
+  const quoted = /^([A-Z]{2,}[0-9]{2,4})([A-Z]{3})$/.exec(up);
+  if (quoted) {
+    const q = quoted[2] === 'CNH' ? 'CNY' : quoted[2];
+    const own = FIAT.has(q) ? currenciesOnce(quoted[1]) : [];
+    if (own.length) return own.includes(q) ? own : [...own, q];
+  }
   // و«spot»/«Roll» الملاصقتان («XAUUSDspot»، «GOLDspot»، «US30Roll»، «GER40Roll») — كانت `[]` بلا تحذير
   const word = /^([A-Z0-9]{3,}?)[.\-_#+]?(MINI|PRO|ECN|RAW|STD|ZERO|PLUS|VIP|SPOT|ROLL)$/.exec(up);
   return word ? currenciesOnce(word[1]) : [];
