@@ -25,6 +25,7 @@ import {
   liveFillStillValid,
   closedElsewhere,
   journalOlderPage,
+  journalWinRateLine,
   JOURNAL_PAGE,
   journalRefreshPages,
   mergeJournalPage,
@@ -1419,7 +1420,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
             {t.journalStatClosed.replace('{n}', String(shownStats.trade_count))}
           </Text>
           <Text style={[styles.stat, { textAlign: align }]}>
-            {t.journalStatWinRate.replace('{pct}', String(shownStats.win_rate))}
+            {journalWinRateLine(t.journalStatWinRate, shownStats)}
           </Text>
           {/* «+1.5%» والمال −1,058 USD: النسبة تجمع حركة السعر بلا حجم (`db.trade_stats`) — فتُسمّى بما هي
               («مجموع حركة السعر (بلا حجم الصفقة)») لا «إجمالي PnL» الذي يُقرأ ربح الحساب، وتُخفى حين يناقضها

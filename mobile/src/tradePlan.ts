@@ -814,7 +814,8 @@ export function pySum(values: readonly number[]): number {
 /** إحصاءات الدفتر بشكل ردّ الخادم (`db.trade_stats`) — نسبة النجاح وصافي/متوسط النتائج بالنسبة. */
 export type JournalStats = {
   trade_count: number;
-  win_rate: number;
+  /** backend-r6 (5): بلا صفقة حاسمة (كلّها تعادل) الخادم يرسل 0 اليوم و`null` لاحقاً — اعرضه بـ`journalWinRateLine`. */
+  win_rate: number | null;
   total_pnl_pct: number;
   avg_win: number;
   avg_loss: number;
@@ -865,6 +866,25 @@ export function journalStats(
     loss_count: losses.length,
     breakeven_count: pnls.length - decided,
   };
+}
+
+/**
+ * سطر «نسبة نجاح: {pct}%» للدفتر. دفترٌ كل مغلقاته تعادل ⇒ لا صفقة حاسمة و`win_rate` 0 (الخادم ونحن) ⇒ «0%» تُقرأ
+ * «خسر كل صفقاته» (backend-r6 (5)). بلا حاسمة، أو `win_rate` غير رقم (null لاحقاً من الخادم) ⇒ «—» بلا علامة %.
+ * خادمٌ أقدم بلا `win_count`/`loss_count` ⇒ النسبة كما أرسلها (لا نعرف إن كانت كلها تعادل).
+ */
+export function journalWinRateLine(
+  template: string,
+  stats: { win_rate?: number | null; win_count?: number | null; loss_count?: number | null }
+): string {
+  const rate = stats.win_rate;
+  const w = stats.win_count;
+  const l = stats.loss_count;
+  const undecided = typeof w === 'number' && typeof l === 'number' && w + l === 0;
+  if (typeof rate !== 'number' || !Number.isFinite(rate) || undecided) {
+    return template.includes('{pct}%') ? template.replace('{pct}%', '—') : template.replace('{pct}', '—');
+  }
+  return template.replace('{pct}', String(rate));
 }
 
 /**

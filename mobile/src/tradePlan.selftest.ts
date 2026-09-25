@@ -36,6 +36,7 @@ import {
   pnlPctContradictsCash,
   stopTooClose,
   journalStats,
+  journalWinRateLine,
   roundHalfEven,
   floatingResult,
   formatPips,
@@ -2913,3 +2914,27 @@ console.log('tradePlan crypto suffix quote selftest OK');
   );
 }
 console.log('tradePlan journal paging selftest OK');
+
+// ---- journalWinRateLine: دفترٌ كل مغلقاته تعادل لا يقول «نسبة نجاح: 0%» (backend-r6 (5)) ----
+{
+  const ar = 'نسبة نجاح: {pct}%';
+  const allBe = journalStats([0, 0, -0].map((pnl) => ({ status: 'closed', pnl })));
+  assert.equal(allBe.trade_count, 3);
+  assert.equal(allBe.breakeven_count, 3);
+  assert.equal(journalWinRateLine(ar, allBe), 'نسبة نجاح: —');
+  assert.equal(journalWinRateLine('Win rate: {pct}%', allBe), 'Win rate: —');
+  // خادم يرسل null لاحقاً
+  assert.equal(journalWinRateLine(ar, { win_rate: null, win_count: 0, loss_count: 0 }), 'نسبة نجاح: —');
+  assert.equal(journalWinRateLine(ar, { win_rate: null }), 'نسبة نجاح: —');
+  // خسارة حقيقية وحيدة: 0% صادقة
+  const lost = journalStats([{ status: 'closed', pnl: -1.2 }, { status: 'closed', pnl: 0 }]);
+  assert.equal(journalWinRateLine(ar, lost), 'نسبة نجاح: 0%');
+  const mixed = journalStats([1, -1, 2, 0].map((pnl) => ({ status: 'closed', pnl })));
+  assert.equal(journalWinRateLine(ar, mixed), 'نسبة نجاح: 66.7%');
+  // خادمٌ أقدم بلا العدّادين: النسبة كما هي
+  assert.equal(journalWinRateLine(ar, { win_rate: 0 }), 'نسبة نجاح: 0%');
+  assert.equal(journalWinRateLine(ar, { win_rate: 55.5 }), 'نسبة نجاح: 55.5%');
+  // قالب بلا % ملاصقة
+  assert.equal(journalWinRateLine('WR {pct}', { win_rate: null }), 'WR —');
+}
+console.log('tradePlan journal win rate selftest OK');
