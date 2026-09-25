@@ -4065,7 +4065,7 @@ const ku: Dict = {
   dsMarketClosed: 'بازاڕ داخراوە',
   // chart/MatrixChart.tsx (i18n الشارت, 2026-09-20)
   mcMonths: [
-    'ژانویە',
+    'کانوونی دووەم',
     'شوبات',
     'ئازار',
     'نیسان',
