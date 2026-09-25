@@ -117,6 +117,8 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
                 كان يغلق الجولة بلا أن يرى «تحليل وتعليم فقط، لا نصيحة مالية» إطلاقاً — وهو موضع
                 التطبيق المعلَن بالمتجر (`app.json` وdocs/STORE-LISTING.md). سطران صغيران لا يزاحمان. */}
             <Text style={[styles.riskNote, { textAlign: align }]}>{t.onboardRiskNote}</Text>
+            {/* بالبطاقة الأخيرة «تخطي» و«ابدأ» يفعلان الشيء نفسه — زرّان لخيار واحد، ولا طريق ظاهر للخلف
+                على iOS غير نقاط بستّ بكسلات. هناك يصير الزرّ الصغير «السابق». */}
             <View style={[styles.actions, rtl && styles.actionsRtl]}>
               <Pressable
                 accessibilityRole="button"
@@ -127,10 +129,10 @@ export function OnboardingOverlay({ visible, onDone }: Props) {
                     transform: [{ scale: buttons.pressedScale }],
                   },
                 ]}
-                onPress={finish}
-                accessibilityLabel={t.onboardSkip}
+                onPress={last ? back : finish}
+                accessibilityLabel={last ? t.onboardBack : t.onboardSkip}
               >
-                <Text style={styles.skipText}>{t.onboardSkip}</Text>
+                <Text style={styles.skipText}>{last ? t.onboardBack : t.onboardSkip}</Text>
               </Pressable>
               <Pressable
                 accessibilityRole="button"

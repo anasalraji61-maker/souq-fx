@@ -79,6 +79,8 @@ export type Dict = {
   onboardRiskNote: string;
   onboardStepCounterA11y: string;
   onboardSkip: string;
+  /** بالبطاقة الأخيرة مكان «تخطي» (لا شيء بعدها يُتخطّى): يرجع خطوة. */
+  onboardBack: string;
   onboardNext: string;
   onboardStart: string;
   // ToolsScreen + الثمانية لوحات hub (أخبار/اجتماعي/دردشة/تصويت/AI/محللون/توقعات/تنبيهات) — 2026-09-17
@@ -1178,6 +1180,7 @@ const ar: Dict = {
     'MATRIX أداة تحليل وتعليم، لا تنفّذ صفقات ولا تقدّم نصيحة مالية. التداول بالرافعة ينطوي على مخاطرة عالية بخسارة المال.',
   onboardStepCounterA11y: 'الخطوة {n} من {total}',
   onboardSkip: 'تخطي',
+  onboardBack: 'السابق',
   onboardNext: 'التالي',
   onboardStart: 'ابدأ',
   dirBuy: 'شراء',
@@ -2248,6 +2251,7 @@ const enUS: Dict = {
     'MATRIX is an analysis and learning tool. It does not place trades or give financial advice. Leveraged trading carries a high risk of losing money.',
   onboardStepCounterA11y: 'Step {n} of {total}',
   onboardSkip: 'Skip',
+  onboardBack: 'Back',
   onboardNext: 'Next',
   onboardStart: 'Start',
   dirBuy: 'Buy',
@@ -3341,6 +3345,7 @@ const ku: Dict = {
     'MATRIX ئامرازێکی شیکردنەوە و فێربوونە، مامەڵە ناکات و ئامۆژگاری دارایی نادات. بازرگانی بە لیڤەرێج مەترسیی بەرزی لەدەستدانی پارەی تێدایە.',
   onboardStepCounterA11y: 'هەنگاوی {n} لە {total}',
   onboardSkip: 'تێپەڕاندن',
+  onboardBack: 'پێشوو',
   onboardNext: 'دواتر',
   onboardStart: 'دەستپێبکە',
   dirBuy: 'کڕین',
