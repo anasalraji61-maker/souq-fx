@@ -8184,19 +8184,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         {volProfile
           ? (() => {
               const maxV = Math.max(...volProfile.map((r) => r.volume), 1);
-              return volProfile.map((row, i) => (
-                <View
-                  key={`vp${i}`}
-                  style={{
-                    position: 'absolute',
-                    right: plotRightInset,
-                    top: yOf(row.price),
-                    width: (row.volume / maxV) * Math.max(24, chartPlotW * 0.16),
-                    height: 2,
-                    backgroundColor: 'rgba(56,189,248,0.45)',
-                  }}
-                />
-              ));
+              // كل عمود يملأ خانته السعرية (فجوة 1px) كـTradingView — كانت خطوطاً بسُمك 2px تفصلها فراغات
+              // واسعة على الهاتف، فلا يُقرأ شكل التوزيع ولا أين يتكدّس الحجم. عمود 2px على الأقل.
+              const step = volProfile.length > 1 ? volProfile[1].price - volProfile[0].price : 0;
+              return volProfile.map((row, i) => {
+                const yTop = yOf(row.price + step / 2);
+                const h = Math.max(2, Math.abs(yOf(row.price - step / 2) - yTop) - 1);
+                return (
+                  <View
+                    key={`vp${i}`}
+                    style={{
+                      position: 'absolute',
+                      right: plotRightInset,
+                      top: step > 0 ? Math.min(yTop, yOf(row.price - step / 2)) + 0.5 : yOf(row.price),
+                      width: (row.volume / maxV) * Math.max(24, chartPlotW * 0.16),
+                      height: step > 0 ? h : 2,
+                      backgroundColor: 'rgba(56,189,248,0.3)',
+                    }}
+                  />
+                );
+              });
             })()
           : null}
 
