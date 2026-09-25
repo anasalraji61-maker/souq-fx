@@ -5,7 +5,13 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
 import { instrumentSpec } from '../positionSize';
-import { NEWS_GRACE_MS, NEWS_HORIZON_MS, UNANNOUNCED_SPAN_MS, newsTimeUnannounced } from '../chart/newsRisk';
+import {
+  NEWS_GRACE_MS,
+  NEWS_HORIZON_MS,
+  UNANNOUNCED_SPAN_MS,
+  newsCurrencyMatches,
+  newsTimeUnannounced,
+} from '../chart/newsRisk';
 
 type Ev = {
   id: string;
@@ -260,9 +266,12 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
   /** فلتر «الزوج» محفوظ لكن الرمز الحالي ليس زوجاً معروفاً → يُعامل كـ«الكل» بدل قائمة فارغة غامضة */
   const pairActive = currency === PAIR && pairCcys.length > 0;
 
+  // `newsCurrencyMatches` نفسها التي يحذّر بها الشريط: حدث `ALL` (G20) يمسّ كل زوج — كان `includes` يُخفيه
+  // بفلتر «الزوج» بينما الشريط فوقه يحذّر منه للزوج نفسه (launch128).
+  const pairSet = useMemo(() => new Set(pairCcys), [pairCcys]);
   const visible = events.filter(
     (e) =>
-      (!pairActive || pairCcys.includes(e.currency)) &&
+      (!pairActive || newsCurrencyMatches(e.currency, pairSet)) &&
       (impact !== 'medplus' || e.impact === 'high' || e.impact === 'medium')
   );
 
@@ -375,7 +384,7 @@ export function CalendarPanel({ compact = false, flow = false, symbol, onPickCur
                 {/* الأهمية كلمة ملوّنة لا نقطة لون فقط — نقطة حمراء/برتقالية وحدها لا تُقرأ لمن لديه عمى
                     ألوان ولا لقارئ الشاشة */}
                 <Text style={[styles.meta, { textAlign: align }]}>
-                  {e.currency}
+                  {e.currency.trim().toUpperCase() === 'ALL' ? t.newsAllCurrencies : e.currency}
                   {impactWord(e.impact) ? (
                     <Text style={{ color: IMPACT_COLOR[e.impact] ?? colors.textDim, fontWeight: '700' }}>
                       {` · ${impactWord(e.impact)}`}

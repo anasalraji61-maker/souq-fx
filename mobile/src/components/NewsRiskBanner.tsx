@@ -232,7 +232,11 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
   // الموعد قبل العنوان: السطر يُقصّ من آخره، و«+2» لأخبار الدقيقة نفسها (الرواتب + البطالة + الأجور) — راجع `newsBannerText`
   const more = cache ? sameMinuteHighImpact(cache.events, currencies, event) : 0;
   // «USD/EUR» حين يكون بين الـ+N خبرٌ قويّ لعملة الساق الأخرى — راجع `sameMinuteCurrencyLabel`
-  const ccyLabel = cache ? sameMinuteCurrencyLabel(cache.events, currencies, event) : event.currency;
+  // حدث `ALL` (G20) يُطبع «كل العملات» لا «ALL» حرفياً، ولو داخل «USD/ALL» (launch128)
+  const ccyLabel = (cache ? sameMinuteCurrencyLabel(cache.events, currencies, event) : event.currency)
+    .split('/')
+    .map((c) => (c.trim().toUpperCase() === 'ALL' ? t.newsAllCurrencies : c))
+    .join('/');
   const text = newsBannerText({ head: t.newsRiskHigh, currency: ccyLabel, when, title: event.title, more });
   // التحذير من تقويمٍ محفوظ بعد فشل التحديث: يُعرض (الوقت مطلق فيبقى صادقاً) مع قول ذلك
   const stale = cache != null && (!cache.ok || cacheServerStale);
