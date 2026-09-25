@@ -15,8 +15,8 @@ const SNAPSHOT_FRESH_MS = 5000;
  * «حيّاً» بالرأس ووسم السعر (والتنبيهات تُقارن به) طوال محاولات إعادة الاتصال حتى 30s لكل
  * محاولة، وبلا حدّ إن بقي الخادم متوقّفاً. بعد الإسقاط يعود الشارت لإغلاق آخر شمعة.
  */
-const TICK_STALE_MS = 20000;
-const STALE_CHECK_MS = 5000;
+export const TICK_STALE_MS = 20000;
+export const STALE_CHECK_MS = 5000;
 
 type Snapshot = { at: number; ticks: Record<string, number>; source: LiveTick['source'] };
 
