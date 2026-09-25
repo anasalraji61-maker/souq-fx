@@ -67,6 +67,39 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title=APP_NAME, version="0.1.0", lifespan=lifespan)
+
+_LONE_SURROGATE_ESC = re.compile(rb"\\u[dD][89a-fA-F][0-9a-fA-F]{2}")
+
+
+def _has_lone_surrogate(v) -> bool:
+    if isinstance(v, str):
+        return any("\ud800" <= ch <= "\udfff" for ch in v)
+    if isinstance(v, dict):
+        return any(_has_lone_surrogate(k) or _has_lone_surrogate(x) for k, x in v.items())
+    if isinstance(v, list):
+        return any(_has_lone_surrogate(x) for x in v)
+    return False
+
+
+@app.middleware("http")
+async def _reject_lone_surrogates(request: Request, call_next):
+    """`"\\ud800"` بمفرده JSON صالح ومحلّل بايثون يقبله، لكن SQLite وترميز الردّ لا يرمّزانه UTF-8 ⇒ 500 على
+    رسائل المجموعة والأفكار والبلاغات والتسجيل ووضع العضو، و400/401 يحمل خطأ الترميز الخام بالدخول. 422
+    هنا لكل المسارات (زوج صحيح كـ`\\ud83d\\ude00` يصير حرفاً واحداً فلا يُرفض). يُضاف قبل CORS ⇒ الردّ برؤوسه."""
+    if request.method in ("POST", "PUT", "PATCH"):
+        body = await request.body()
+        if _LONE_SURROGATE_ESC.search(body):
+            try:
+                parsed = json.loads(body)
+            except ValueError:
+                parsed = None
+            if _has_lone_surrogate(parsed):
+                return JSONResponse(status_code=422, content={"detail": [{
+                    "type": "string_unicode", "loc": ["body"], "msg": "Text contains an invalid character",
+                    "input": None}]})
+    return await call_next(request)
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
