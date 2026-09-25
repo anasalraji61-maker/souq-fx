@@ -139,6 +139,9 @@ export type StampAt = (index: number) => { time: number; ahead?: number; aheadSt
  * - لا خانة قبل أوّل السلسلة: الإزاحة يساراً تتوقّف حين يبلغ أقدم الطرفين الخانة 0.
  * - كل نقطة تُختم من جديد (`stamp`): الزمن القديم لو بقي لأعاد الإرساء بين الفريمات الرسمَ لمكانه
  *   الأوّل عند أوّل تبديل فريم.
+ * - إلا تحريكاً **رأسياً بحتاً** (0 شمعة): الختم يبقى كما هو والسعر وحده يتغيّر. على Renko/Range/Kagi/P&F
+ *   نقطةٌ رُسمت على الشموع تقع على آخر لبنة قبل زمنها، فإعادة ختمها كانت تستبدل زمن شمعتها الحقيقي بزمن
+ *   تلك اللبنة الأقدم: ▲ واحدة ثم العودة للشموع ⇒ طرفا الترند قفزا لشموع سابقة (وحُفظ ذلك).
  */
 export function translateDrawing(
   orig: Drawing,
@@ -149,6 +152,7 @@ export function translateDrawing(
   const minIndex = Math.min(orig.a.index, orig.b?.index ?? orig.a.index);
   const di = Math.max(Math.round(dIndex), -Math.max(0, minIndex));
   const move = (p: ChartPoint): ChartPoint => {
+    if (di === 0) return { ...p, price: priceOf(p.price) };
     const index = p.index + di;
     const price = priceOf(p.price);
     const s = stamp(index);

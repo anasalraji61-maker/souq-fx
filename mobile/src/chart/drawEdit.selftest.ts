@@ -89,6 +89,14 @@ moved = translateDrawing(trend, -10, (p) => p, stamp);
 ok('translate: stops at index 0', moved.a.index === 0 && moved.b!.index === 3);
 moved = translateDrawing(trend, 6, (p) => p, stamp);
 ok('translate: into the future gets ahead', moved.b!.index === 11 && moved.b!.ahead === 2);
+// رأسي بحت (▲▼ أو سحب بلا إزاحة شمعة): الختم الأصلي يبقى — على Renko كان يُستبدل بزمن اللبنة الأقدم
+const renkoTrend: Drawing = { ...trend, a: { index: 2, price: 1.08, time: 7200, sub: 0.25 }, b: { index: 5, price: 1.09, time: 9000, ahead: 1, aheadStep: 3600 } };
+moved = translateDrawing(renkoTrend, 0, up, stamp);
+ok('translate: vertical keeps a stamp', moved.a.time === 7200 && moved.a.sub === 0.25 && moved.a.index === 2);
+ok('translate: vertical keeps b stamp', moved.b!.time === 9000 && moved.b!.ahead === 1 && moved.b!.aheadStep === 3600);
+ok('translate: vertical moves price', moved.a.price === 1.081 && moved.b!.price === 1.091);
+moved = translateDrawing(renkoTrend, 0.4, up, stamp);
+ok('translate: sub-bar drag rounds to vertical', moved.a.time === 7200 && moved.b!.time === 9000);
 const hl: Drawing = { id: 'h', tool: 'hline', a: { index: 4, price: 1.1 }, color: '#fff' };
 moved = translateDrawing(hl, 1, (p) => p, stamp);
 ok('translate: single point has no b key', !('b' in moved) && moved.a.index === 5);
