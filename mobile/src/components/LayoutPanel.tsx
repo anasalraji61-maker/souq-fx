@@ -41,8 +41,9 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
     if (!nameEdited.current) setName(t.layoutDefaultName);
   }, [t.layoutDefaultName]);
   const [saveError, setSaveError] = useState<LayoutsSaveErrorCode | null>(null);
-  /** تأكيد الحفظ — كان الحفظ صامتاً (نقرة صوتية فقط). */
-  const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  /** تأكيد الحفظ — كان الحفظ صامتاً (نقرة صوتية فقط). التخطيط لا النصّ: يُبنى عند العرض فيتبع تبديل اللغة
+   *  (كان يُحفظ نصّاً فيبقى «تم الحفظ · 15m» بالإنجليزية بعد التحويل للعربية). */
+  const [savedLayout, setSavedLayout] = useState<TerminalLayout | null>(null);
   /** ما حذفه المتداول بهذه اللوحة — تحميلٌ قُرئ قبل الحذف لا يُعيده للقائمة. */
   const deletedRef = useRef(new Set<string>());
   /** حفظ جارٍ — نقرتان سريعتان كانتا تحفظان نسختين بالاسم نفسه (القائمة لم تتحدّث بعد فلا «existing»). */
@@ -139,7 +140,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
       layout,
       ...prev.filter((x) => x.id !== layout.id && x.id !== 'default'),
     ]);
-    setSavedMsg(`${t.layoutSavedMsg} ${layout.name} — ${describe(layout)}`);
+    setSavedLayout(layout);
   };
 
   const removeLayout = async (l: TerminalLayout) => {
@@ -165,7 +166,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
         onChangeText={(v) => {
           nameEdited.current = true;
           setName(v);
-          setSavedMsg(null);
+          setSavedLayout(null);
         }}
         placeholder={t.layoutNamePlaceholder}
         placeholderTextColor={colors.textDim}
@@ -192,9 +193,9 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
       >
         <Text style={styles.btnText}>{t.layoutSaveBtn}</Text>
       </Pressable>
-      {savedMsg && !saveError ? (
+      {savedLayout && !saveError ? (
         <Text style={[styles.saved, { textAlign: align }]} accessibilityLiveRegion="polite">
-          {savedMsg}
+          {`${t.layoutSavedMsg} ${savedLayout.name} — ${describe(savedLayout)}`}
         </Text>
       ) : null}
       {layouts.map((l) => (
