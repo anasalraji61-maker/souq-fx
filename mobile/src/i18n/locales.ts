@@ -15,6 +15,9 @@ export type SubPlansCopy = {
   fullName: string;
   academyAddOn: string;
   fullAddOn: string;
+  /** ميزات تعدّها الباقة — **ما يصل إليه المستخدم فعلاً فقط**: «الأخبار» صارت «التقويم الاقتصادي» (مصدرا الأخبار ميّتان، backend-r33)،
+   * و«الرسائل الخاصة» حُذفت (`MessagesScreen` غير مستوردة، launch52)، و«المحللون» حُذفوا (`AnalystsPanel` «غير متاح» — لا مصدر مرخَّص).
+   * أعِدها حين تعود الميزة. الأكاديمية بالإنجليزية/الكردية تقول إن الدروس بالعربية (QA27). */
   coreFeatures: string[];
   academyFeatures: string[];
   fullFeatures: string[];
@@ -2461,7 +2464,7 @@ const ar: Dict = {
       'كل أنواع الشموع والشارت',
       'كل الإطارات: المربّع والمستطيل والظلّ',
       'الدردشة الجماعية والتصويت',
-      'الأخبار وقائمة المتابعة وأدوات الرسم',
+      'التقويم الاقتصادي وقائمة المتابعة وأدوات الرسم',
       'المؤشرات والأطر الزمنية',
     ],
     academyFeatures: [
@@ -2471,9 +2474,8 @@ const ar: Dict = {
     ],
     fullFeatures: [
       'كل ما في باقة الأكاديمية',
-      'الرسائل الخاصة',
       'مساعد AI والتنبيهات والفاحص والاختبار الرجعي',
-      'التوقعات والمحللون وبقية الأدوات',
+      'توقّعات المؤشرات وبقية الأدوات',
     ],
     note: '10$ شهرياً للشارت والمجتمع، و5$ إضافية لمن يريد الدورات، ثم 5$ أخرى لكل ما تبقّى من أدوات.',
   },
@@ -3649,19 +3651,18 @@ const enUS: Dict = {
       'Every candle and chart type',
       'Every frame: square, rectangle and shadow',
       'Group chat and polls',
-      'News, watchlist and drawing tools',
+      'Economic calendar, watchlist and drawing tools',
       'Indicators and timeframes',
     ],
     academyFeatures: [
       'Everything in Core',
-      'The full academy: schools, levels and lectures',
+      'The full academy: schools, levels and lectures (taught in Arabic)',
       'Interactive classroom — interrupt the teacher with a question',
     ],
     fullFeatures: [
       'Everything in Academy',
-      'Private messages',
       'AI assistant, alerts, screener and backtesting',
-      'Forecasts, analysts and the other tools',
+      'Indicator forecasts and the other tools',
     ],
     note: 'Core is $10 a month for charts and community. Add $5 for the academy, and $5 more for everything else.',
   },
@@ -4868,19 +4869,18 @@ const ku: Dict = {
       'هەموو جۆرەکانی مۆم و چارت',
       'هەموو چوارچێوەکان: چوارگۆشە، لاکێشە و سێبەر',
       'گفتوگۆی گرووپ و دەنگدان',
-      'هەواڵ، لیستی چاودێری و ئامرازەکانی هێڵکاری',
+      'ڕۆژژمێری ئابووری، لیستی چاودێری و ئامرازەکانی هێڵکاری',
       'نیشاندەرەکان و چوارچێوە کاتییەکان',
     ],
     academyFeatures: [
       'هەموو ئەوەی لە پلانی بنەڕەتیدایە',
-      'ئەکادیمیای تەواو: قوتابخانە، ئاست و وانە',
+      'ئەکادیمیای تەواو: قوتابخانە، ئاست و وانە (وانەکان بە عەرەبین)',
       'پۆلی کارلێکەر — لە ناوەڕاستی وانەدا پرسیار لە مامۆستا بکە',
     ],
     fullFeatures: [
       'هەموو ئەوەی لە پلانی ئەکادیمیادایە',
-      'نامەی تایبەت',
       'یاریدەدەری AI، ئاگادارکردنەوە، پشکنەر و تاقیکردنەوەی پێشوو',
-      'پێشبینی، شیکەرەوەکان و ئامرازەکانی تر',
+      'پێشبینی نیشاندەرەکان و ئامرازەکانی تر',
     ],
     note: 'پلانی بنەڕەتی مانگانە 10$ ـە بۆ چارت و کۆمەڵگە. 5$ زیاد بکە بۆ خولەکان، و 5$ی تر بۆ هەموو ئامرازەکانی تر.',
   },
