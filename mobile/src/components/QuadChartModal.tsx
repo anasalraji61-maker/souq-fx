@@ -7,6 +7,7 @@ import {
   Pressable,
   useWindowDimensions,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons } from '../theme';
@@ -36,6 +37,7 @@ type Props = {
 // بالشارت فيعيد رسمه مرّة ثانية ويمسح أي مؤشّر أضافه المتداول.
 const NO_INDICATORS: never[] = [];
 const NO_SYMBOLS: string[] = [];
+const isWeb = Platform.OS === 'web';
 
 /** حشو الخلية وحدّها ورأسها (الرمز والسعر) فوق الشارت — راجع `phoneCellH`. */
 const PHONE_CELL_CHROME = 2 * spacing.xs + 2 + 18 + spacing.xs;
@@ -290,14 +292,17 @@ export function QuadChartModal({
             return (
               <Pressable
                 key={`${i}:${sym}`}
-                // iOS: الخلية `accessible` تخفي ما بداخلها (أزرار تحريك شارت القائد) — زرّ فقط حين تُنقَر لتقود.
-                accessible={following}
-                accessibilityRole={following ? 'button' : undefined}
-                accessibilityLabel={
-                  syncTime && !isLeader ? `${t.cfSyncActivateA11yPrefix}${sym}` : undefined
-                }
+                // iOS/Android: الخلية `accessible` تخفي كل ما بداخلها — والمزامنة مفعّلة افتراضياً ⇒ الخلايا التابعة
+                // الثلاث كانت عنصراً واحداً «تفعيل مزامنة GBPUSD» لا يُبلغ منه السعر ولا النسبة ولا «مغلق»/«تجريبي»،
+                // والمقارنة سبب فتح الرباعي. كإطار ChartFrame: لا تُجمَّع على الجوال، والقيادة إجراء مخصّص على الرمز.
+                // الويب: الحاوية لا تخفي أبناءها ⇒ تبقى زرّاً للوحة المفاتيح.
+                accessible={isWeb && following}
+                accessibilityRole={isWeb && following ? 'button' : undefined}
+                accessibilityLabel={isWeb && following ? `${t.cfSyncActivateA11yPrefix}${sym}` : undefined}
                 disabled={!syncTime || isLeader}
-                accessibilityState={{ disabled: !syncTime || isLeader, selected: syncTime && isLeader }}
+                accessibilityState={
+                  isWeb ? { disabled: !syncTime || isLeader, selected: syncTime && isLeader } : undefined
+                }
                 onPress={() => setLeader(i)}
                 style={[
                   styles.cell,
@@ -309,7 +314,17 @@ export function QuadChartModal({
                 {/* شموع تجريبية (سلسلة demo قديمة من الخادم؛ فشل الطلب صار إشعاراً، launch121) كانت تُرسم هنا بلا أي
                     وسم فتُقرأ كسوق حقيقي — بعكس ChartFrame/الشارت الرئيسي اللذين يوسمانها «تجريبي». */}
                 <View style={[styles.cellHead, rtl && styles.cellHeadRtl]}>
-                  <Text style={[styles.sym, { textAlign: align }]}>{sym}</Text>
+                  <Text
+                    style={[styles.sym, { textAlign: align }]}
+                    accessibilityActions={
+                      !isWeb && following ? [{ name: 'syncActivate', label: `${t.cfSyncActivateA11yPrefix}${sym}` }] : undefined
+                    }
+                    onAccessibilityAction={(e) => {
+                      if (e.nativeEvent.actionName === 'syncActivate') setLeader(i);
+                    }}
+                  >
+                    {sym}
+                  </Text>
                   {syncTime ? (
                     <Text style={[styles.syncBadge, isLeader && styles.syncBadgeLeader]}>
                       {isLeader ? t.cfSyncLeaderBadge : t.cfSyncFollowBadge}
