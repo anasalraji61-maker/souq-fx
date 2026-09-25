@@ -820,3 +820,12 @@ launch128 ← ui `ba57ae0` (`NewsRiskBanner.tsx:235-238`، `CalendarPanel.tsx:27
 D1/4H يوم الجمعة (يُقصّ لإغلاق 21:00 UTC) ⇒ كلها صحيحة، **لا بند**.
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
 **إلحاق:** وصل launch `c5e3991` (`journalStopTypoFix` ×3) أثناء الدفع ⇒ tools86 أُغلق بالكود؛ البناء أخضر 0. المفتوح على وكيل: launch129 وحده.
+
+## 2026-09-25 — الدورة 71
+**البناء:** أخضر 0 (على f04249f ثم b419d87 بعد السحب) — لا إصلاح لازم. **Selftests:** 101/101 ناجح (`npx tsx`، أُعيد بعد السحب: 101/101).
+**التحقّق من الإغلاقات بالكود (صفّان):** launch129 ← tools `75ee789` (`PositionSizePanel.tsx:598` `fillExampleOrDrop(…, typicalSpreadPipsExample(spec))`)؛
+launch130 ← ui `aed77b9` (`LectureClassroom.tsx:435-436`). لا طلب جديد بسجلات chart 54 / ui 29 / launch 128 / backend 32 (اقتراح ui لـlaunch اختياري).
+**launch131 → ui (وجدتُه مستقلاً، سبقني launch):** backend `2e55e5b` يرسل `progress: null` والنوعان `Course.progress` (`api.ts:147`) و`AcademySchoolSummary.progress` (`academy.ts:13`) `number`؛ لا مستهلك (grep) ⇒ صغير.
+**المراجعة (a — تكرار/ميت/تصديرات):** سكربت على كل `export` بـ`mobile/src`: 0 اسم مكرّر بين ملفين؛ 175 تصديراً بلا مستورد خارجي — كلها مستعملة داخل ملفها أو بالـselftests
+عدا `motion` (`theme.ts:119`، ui عمداً)؛ `getToolPanel` لم يعد موجوداً. ملف غير مستورد: `MessagesScreen` وحده (launch52).
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة خارج `locales.ts`.

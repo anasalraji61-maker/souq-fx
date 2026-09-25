@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 70، بعد 3f3987a) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 71، بعد b419d87) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
@@ -16,15 +16,10 @@
 | launch | أنس | ترخيص مصادر البيانات (ForexFactory/DailyFX/Twelve Data) قبل الرفع (`RELEASE-MOBILE.md` §0) | launch73 |
 | backend | أنس | **قرارات اتخذها backend (لأنس عكسها)**: التعادل مستثنى من نسبة الفوز؛ DXY «غير متاح» بدل حسابه من السلّة؛ حذف ميزة «البنوك» | backend-r1 |
 | backend | أنس | **backend-r6 (6) العمولات** (لم يُغيَّر): `db.py` يدفع مكافأة التوازن 5% عند **أي** تساوٍ (1=1، 3=3) بينما نصّ الخطة (`commissions.py:84`) «عند مستوى مؤهل» (2،4،8…) — أيّهما القاعدة؟ والتسجيل بإحالة يزيد العدّاد بلا سطر عمولة؛ والشهر بتوقيت الخادم المحلي لا UTC  **backend-r25 إضافة (لم يُغيَّر، قاعدة مال)**: التسجيل بـ`sponsor_code` لا يفحص إن كانت الساق مشغولة (`place` يفحص) ⇒ عضوان مباشران يساراً ثم `place` يساراً يُرفض؛ والراعي يمنح من يضعه أي دور حتى `company` (`PlaceMemberBody.role`). التسجيل الذاتي بدور غير `trader` صار 422 (`06ea3ab`). وسؤال للإشارات: تنبيه تقاطع MA/MACD والماسح يُطلقان على الشمعة **غير المغلقة** (تنبيه لمرة واحدة قد يُطلق على تقاطع يزول بالإغلاق) — عند الإغلاق فقط كـ«Once per bar close» أم كما هو؟ | backend-r6 |
-| launch | tools | **launch129** (صغير) `PositionSizePanel.tsx:597` `typicalSpreadPipsExample(spec) \|\| typicalSpreadPipsExample(null)`: لـXAUJPY وأمثاله (المثال `''`) يرجع «1.5» ⇒ «سبريد غير واقعي… (مثل 1.5)» على ذهب بالين. اقتراح: بلا مثال ⇒ احذف « (مثل …)» كلّها (أو أعطِ XAUJPY مثالاً حقيقياً) | launch129 |
-| launch | ui | **launch130** شارت القاعة بلا اتصال (`LectureClassroom.tsx:90` `mockSeries`) موسوم «تجريبي» فقط، ومنذ `22ff26c` الرسم عليه لا يُحفظ بصمت ⇒ اعرض `t.lectureChartPracticeNote` (جاهز ar/en/ku) سطراً تحت الشارت حين `chartKind === 'demo'` (قرب :400-404) | launch130 |
-| launch | ui | **launch131** (صغير، كامن) منذ backend `2e55e5b` الخادم يرسل `progress: null` لملخّصات المدارس والدورات، والنوعان ما زالا `progress: number` (`academy.ts:13` `AcademySchoolSummary`، `api.ts:147` `Course`). لا شيء يعرضه اليوم (تحقّقتُ)، لكن أوّل `${s.progress}%` سيطبع «null%». اقتراح: `number \| null` (وبذور `academy.ts` الاحتياطية `null` لا `0`) | launch131 |
 | chart | أنس | **chart-r41 TTM Squeeze** (`volatility.ts:562`): كلتنر EMA20+ATR Wilder، ونسخة LazyBear الشائعة SMA20+SMA(TR) ⇒ ~15% من النقاط بحالة معاكسة. نضيف خيار «LazyBear» أم نُبقي؟ | chart-r41 |
+| launch | ui | **launch131** (صغير، كامن) منذ backend `2e55e5b` الخادم يرسل `progress: null` لملخّصات المدارس والدورات، والنوعان ما زالا `progress: number` (`academy.ts:13` `AcademySchoolSummary`، `api.ts:147` `Course`). لا شيء يعرضه اليوم (تحقّقتُ)، لكن أوّل `${s.progress}%` سيطبع «null%». اقتراح: `number \| null` (وبذور `academy.ts` الاحتياطية `null` لا `0`) | launch131 |
 
-`ORDER_WARN_LOTS` 50 / `MAX_SMALL_LOTS` 200 ↔ «50–100 lot»؛ أمثلة الوقف/السبريد ↔ `stopInsideTypicalSpread`؛ RSI 14/30/70 بالماسح. **لا بند** (تعليق مطوّر قديم فقط `locales.ts:473` يذكر 100 والحدّ 50).
-
-**تحقّق الدورة 70 (بالكود، بعد 3f3987a):** أُغلقت 4 صفوف — tools85 ×2 ← launch `3a1b36d` (`locales.ts:1757 :1761`، و`4eb70ff` يقرؤه مُنمَّطاً)؛ launch127 ← tools `42425e0`
-(`PositionSizePanel.tsx:1556` `commissionPlaceholder(commissionKind, account)`، `positionSize.ts:1698`)؛ launch128 ← ui `ba57ae0` (`NewsRiskBanner.tsx:235-238`، `CalendarPanel.tsx:272-274 :387`)
-وطلب ui→backend (فلتر العملة يُسقط `ALL`) ← backend `50189c3` (`econ_calendar.py` `curs | {"all"}` + اختبار). **إلحاق:** tools86 ← launch `c5e3991` (المفتاح ×3 بـ`locales.ts`، البناء أخضر 0). مفتوح:
-launch129 (تحقّقتُ بـtsx: `typicalSpreadPipsExample(XAUJPY)` = `''` ⇒ `:598` يرجع «1.5»). chart 53: لا طلب جديد.
-**المراجعة (e):** ساعات السوق بـtsx على 14 لحظة (تبديل DST الأمريكي 8/3 والأوروبي، 1/11، 24–25/12، 31/12–1/1، الذهب يفتح بعد ساعة، BTC دائماً) + عدّاد إغلاق D1/4H يوم الجمعة ⇒ **كلها صحيحة، لا بند**.
+**تحقّق الدورة 71 (بالكود، بعد b419d87):** أُغلق صفّان — launch129 ← tools `75ee789` (`PositionSizePanel.tsx:598` `fillExampleOrDrop(…, typicalSpreadPipsExample(spec))`، لا احتياط «1.5»)؛
+launch130 ← ui `aed77b9` (`LectureClassroom.tsx:435-436` `chartOffline && chartKind === 'demo'` ⇒ `t.lectureChartPracticeNote`). سجلات chart 54 / ui 29 / launch 129 / backend 32: جديد launch131 فقط
+(اقتراح ui الاختياري لـlaunch — ملاحظة لسلسلة `demo` من الخادم — ليس طلباً).
+**المراجعة (a):** 0 اسم مُصدَّر مكرّر بين ملفين؛ ميت تماماً `motion` (`theme.ts:119`، ui عمداً)؛ ملف غير مستورد: `MessagesScreen` (launch52). وجدتُ نوع `progress` الميت مستقلاً — سبقه launch131 بالصفّ نفسه (تحقّقتُ: `api.ts:147`، `academy.ts:13`).
