@@ -158,8 +158,14 @@ const cachedSeries = (sym: string, tf: Timeframe): ChartSeries | null =>
   terminalSeriesCache.get(seriesCacheKey(sym, tf));
 async function fetchSeries(sym: string, tf: Timeframe): Promise<ChartSeries> {
   const s = await api.chart(sym, tf);
-  if (!isSyntheticProvenance(s.data_source)) terminalSeriesCache.put(seriesCacheKey(sym, tf), s);
-  return s;
+  const key = seriesCacheKey(sym, tf);
+  if (!isSyntheticProvenance(s.data_source)) {
+    terminalSeriesCache.put(key, s);
+    return s;
+  }
+  // chart-r66: انقطاع قصير للمزوّد ⇒ الخادم يردّ بشموع تجريبية بأسعار أخرى؛ الحقيقية المخزّنة لنفس (الرمز، الفريم) تبقى
+  // (كالرباعي والتركيز). كل المستدعين (الاستطلاع، الشارت الرئيسي، تبديل رمز/فريم) يمرّون من هنا.
+  return terminalSeriesCache.get(key) ?? s;
 }
 
 export function TerminalScreen() {
