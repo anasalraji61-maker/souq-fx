@@ -4171,10 +4171,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       // فسلسلة أقصر من النافذة (Renko، أو أقدم التاريخ) كانت تتحرّك أسرع من الإصبع بنسبتهما.
       const barWidth = chartPlotW / Math.max(2, panStartBars.current || windowCountRef.current);
       const requestedBars = Math.round(sdx / Math.max(2, barWidth));
-      const maxOffset = Math.max(
-        0,
-        source.all.length - Math.min(2, windowCountRef.current)
-      );
+      // الحدّ نفسه الذي يرسمه `source` (آخر 10) وزرّا ‹ ›: كان `طول − 2` ⇒ سحب قويّ لأقدم التاريخ يترك
+      // الإزاحة 8 شموع أبعد من المرسوم، فالسحبة التالية/› تمرّ بمنطقة ميتة لا يتحرّك فيها الشارت.
+      const maxOffset = Math.max(0, source.all.length - 10);
       const nextOffset = Math.max(
         0,
         Math.min(maxOffset, panStartOffset.current + requestedBars)
