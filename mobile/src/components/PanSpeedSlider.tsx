@@ -83,6 +83,8 @@ export function CruiseSpeedMark({
   );
 }
 
+const A11Y_STEP = 5;
+
 /**
  * مربع صغير بعلامة الكروز — بالضغط يظهر الشريط والنسبة، وبالضغط ثانية يختصر
  */
@@ -155,11 +157,7 @@ export function PanSpeedSlider({ value, onChange }: Props) {
   }
 
   return (
-    <View
-      style={styles.wrap}
-      accessibilityRole="adjustable"
-      accessibilityLabel={`${t.panChartSpeedPrefix} ${pct}`}
-    >
+    <View style={styles.wrap}>
       <Pressable
         onPress={toggle}
         hitSlop={6}
@@ -176,7 +174,22 @@ export function PanSpeedSlider({ value, onChange }: Props) {
       >
         <CruiseSpeedMark size={15} active />
       </Pressable>
-      <View style={styles.trackHit} onLayout={onLayout} {...responder.panHandlers}>
+      {/* «adjustable» على المسار نفسه لا الغلاف (الذي يحوي زرّاً): بلا increment/decrement كان قارئ الشاشة
+          يعلن «قابل للضبط» والتمرير لا يغيّر شيئاً — السحب وحده يضبط. خطوة 5 من 1..100. */}
+      <View
+        style={styles.trackHit}
+        onLayout={onLayout}
+        {...responder.panHandlers}
+        accessible
+        accessibilityRole="adjustable"
+        accessibilityLabel={t.panChartSpeedPrefix}
+        accessibilityValue={{ min: 1, max: 100, now: pct }}
+        accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+        onAccessibilityAction={(e) => {
+          if (e.nativeEvent.actionName === 'increment') onChange(clampPanSpeed(pct + A11Y_STEP));
+          else if (e.nativeEvent.actionName === 'decrement') onChange(clampPanSpeed(pct - A11Y_STEP));
+        }}
+      >
         <View style={styles.track}>
           <View style={[styles.fill, { width: fill }]} />
           <View
@@ -192,7 +205,14 @@ export function PanSpeedSlider({ value, onChange }: Props) {
           />
         </View>
       </View>
-      <Text style={[styles.percent, { textAlign: align }]}>{pct}</Text>
+      {/* القيمة يعلنها المسار (`accessibilityValue`) — لا تُقرأ مرّتين. */}
+      <Text
+        style={[styles.percent, { textAlign: align }]}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        {pct}
+      </Text>
     </View>
   );
 }
