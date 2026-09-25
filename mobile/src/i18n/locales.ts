@@ -1218,6 +1218,13 @@ export type Dict = {
   ssbError: string;
   /** بحث نجح بلا نتيجة (`results` فارغة، `q` ≥ حرفين) — كان الشريط صامتاً فيُظنّ أنه لم يعمل. `{q}` نصّ البحث. */
   ssbNoMatch: string;
+  /**
+   * صفّ من `ambiguous` (backend-r46، `/api/symbols/search`): الرمز نفسه مدرج بعدّة بورصات، والتطبيق يرسم `symbol` وحده
+   * فيختار المزوّد الإدراج — «AAPL · BMV» كان يرسم ناسداك بالدولار، و«SHEL · PSX» شركة أخرى. يُعرض غير قابل للضغط تحت الاسم.
+   */
+  ssbAmbiguousTag: string;
+  /** `results` فارغة و`ambiguous` ممتلئة: بدل `ssbNoMatch` («لا رمز» كاذبة — الرمز موجود لكن لا نرسمه بعد). `{q}` نصّ البحث. */
+  ssbOnlyAmbiguous: string;
   ssbPickA11yPrefix: string;
   smnTitle: string;
   smnFilterMomentum: string;
@@ -2459,6 +2466,8 @@ const ar: Dict = {
   ssbPlaceholder: 'بحث رمز... EUR, XAU, BTC',
   ssbError: 'تعذّر البحث الآن — السبب اتصالك أو مزوّد البيانات. حاول بعد قليل',
   ssbNoMatch: 'لا رمز يطابق «{q}» لدى مزوّد البيانات — جرّب جزءاً أقصر مثل EUR أو XAU أو BTC',
+  ssbAmbiguousTag: 'مُدرج بعدّة بورصات — غير مدعوم بعد',
+  ssbOnlyAmbiguous: '«{q}» مُدرج بأكثر من بورصة، والتطبيق لا يحدّد بعدُ أيّها يرسم — لذا لا يمكن فتحه حالياً',
   ssbPickA11yPrefix: 'اختيار الرمز: ',
   smnTitle: 'فحص سريع',
   smnFilterMomentum: 'زخم+',
@@ -3657,6 +3666,8 @@ const enUS: Dict = {
   ssbPlaceholder: 'Search symbol… EUR, XAU, BTC',
   ssbError: 'Search isn’t available right now — either your connection or our data provider. Try again shortly',
   ssbNoMatch: 'No symbol matches “{q}” at our data provider — try a shorter part like EUR, XAU or BTC',
+  ssbAmbiguousTag: 'Listed on several exchanges — not supported yet',
+  ssbOnlyAmbiguous: '“{q}” is listed on more than one exchange, and the app can’t yet tell which one to chart — so it can’t be opened for now',
   ssbPickA11yPrefix: 'Select symbol: ',
   smnTitle: 'Quick scan',
   smnFilterMomentum: 'Mom+',
@@ -4888,6 +4899,8 @@ const ku: Dict = {
   ssbPlaceholder: 'گەڕان بۆ هێما... EUR, XAU, BTC',
   ssbError: 'گەڕان ئێستا کار ناکات — لە پەیوەندییەکەتەوەیە یان لە دابینکەری داتا. کەمێکی تر هەوڵبدەرەوە',
   ssbNoMatch: 'هیچ هێمایەک لەگەڵ «{q}» ناگونجێت لای دابینکەری داتا — بەشێکی کورتتر تاقی بکەرەوە وەک EUR یان XAU یان BTC',
+  ssbAmbiguousTag: 'لە چەند بۆرسەیەکدا تۆمارکراوە — هێشتا پشتگیری ناکرێت',
+  ssbOnlyAmbiguous: '«{q}» لە زیاتر لە بۆرسەیەکدا تۆمارکراوە، و ئەپەکە هێشتا ناتوانێت دیاری بکات کامیان پیشان بدات — بۆیە ئێستا ناکرێتەوە',
   ssbPickA11yPrefix: 'دیاریکردنی هێما: ',
   smnTitle: 'پشکنینی خێرا',
   smnFilterMomentum: 'پاڵنە+',
