@@ -1946,17 +1946,13 @@ async def ticks(ws: WebSocket):
                     },
                 }
             else:
+                # لا أسعار بلا مزوّد. كان هنا بثّ كل ثانية لـ«أسعار» = قاعدة مكتوبة باليد ± 0.04%
+                # عشوائياً (موسومة demo، لكن كل عميل مُلزَم أن يتذكّر رفضها). الآن لا تيكات والسبب معلن.
                 payload = {
                     "ts": time.time(),
-                    "source": "fallback",
-                    "data_source": {"kind": "demo", "as_of": time.time(), "channel": "ws_seed"},
-                    "ticks": {
-                        sym: round(
-                            base * (1 + random.uniform(-0.0004, 0.0004)),
-                            5 if base < 50 else 2,
-                        )
-                        for sym, base in SYMBOL_BASES.items()
-                    },
+                    "source": "unavailable",
+                    "data_source": {"kind": "unavailable", "as_of": None, "channel": None},
+                    "ticks": {},
                 }
             await ws.send_json(payload)
             await asyncio.sleep(1.0)
