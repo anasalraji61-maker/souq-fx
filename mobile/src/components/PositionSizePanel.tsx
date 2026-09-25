@@ -772,12 +772,23 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
     const e = priceNum(entryPx);
     const sPx = priceNum(stopPx);
     if (!spec || planSide == null || derivedSl == null || derivedSl < 1) return [];
+    // الأساس = عملة الحساب ⇒ «1:2» بالمال كما يقرؤها سطر R:R (`moneyRewardRisk`): الخسارة بسعر تحويل الوقف والربح بـ1 ÷ الهدف.
+    // هدفٌ يبعد > 20% عن الحيّ يُحوَّل هناك بسعر الوقف (`targetQuoteToAccount` = null) ⇒ المسافة وحدها كما كانت
+    const moneyStop = riskRate != null && spec.base === convAccount ? riskRate : null;
     return QUICK_RR.flatMap((rr) => {
-      const tp = targetAtRR({ symbol: spec.symbol, side: planSide, entry: e, sl: sPx, rr });
+      const plain = targetAtRR({ symbol: spec.symbol, side: planSide, entry: e, sl: sPx, rr });
+      const money =
+        moneyStop != null
+          ? targetAtRR({ symbol: spec.symbol, side: planSide, entry: e, sl: sPx, rr, stopQuoteToAccount: moneyStop })
+          : null;
+      const tp =
+        money != null && (typedExit != null || targetQuoteToAccount(spec, convAccount, money, convRate) != null)
+          ? money
+          : plain;
       return tp != null ? [{ rr, tp, text: formatPrice(tp, spec.symbol) }] : [];
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spec, planSide, derivedSl, entryPx, stopPx]);
+  }, [spec, planSide, derivedSl, entryPx, stopPx, riskRate, convAccount, convRate, typedExit?.rate]);
   /**
    * نقاطٌ مكتوبة ودخولٌ بلا سعر وقف: شريحتا «▲ شراء / ▼ بيع» بسعر الوقف لكلّ اتجاه (`stopsForPips`) —
    * المنصّة تطلب سعر الوقف لا النقاط، والاتجاه لا يُعرف هنا إلا من السعر. النقرة تكتب خانة سعر الوقف،

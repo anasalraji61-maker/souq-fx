@@ -1201,6 +1201,12 @@ export const QUICK_SYMBOLS: readonly string[] = ['EURUSD', 'GBPUSD', 'USDJPY', '
  * أسعار بمنزلة الـpipette تقع على سعرٍ دقيق أصلاً فلا يتحرّك شيء.) ضجيج الفاصلة العائمة يُنظَّف
  * قبل ذلك كي لا يدفع `ceil` سعراً دقيقاً منزلةً كاملة.
  *
+ * **بالمال حين الأساس = عملة الحساب** (`stopQuoteToAccount` = سعر تحويل الخسارة عند الوقف، عادةً 1 ÷ الوقف): الربح
+ * يُحوَّل بسعر الهدف 1 ÷ الهدف فالمسافة وحدها لا تعطي النسبة — USDJPY بحساب دولار، شراء 150.00 وقف 149.00 ⇒ «1:2» كانت
+ * 152.00 = مالاً 184.21 ÷ 93.96 = **1:1.96** والسطر تحتها يقولها. الشرط: (الهدف − الدخول) ÷ الهدف = rr × الخسارة لكل وحدة
+ * ⇒ شراء `entry ÷ (1 − k)`، بيع `entry ÷ (1 + k)`، `k = rr × |entry − sl| × stopQuoteToAccount`. k ≥ 1 بشراء = لا هدف يبلغها.
+ * التقريب بعيداً عن الدخول يُبقيها ≥ المطلوبة هنا أيضاً (الربح المحوَّل يزيد مع البعد بالاتجاهين).
+ *
  * رمزٌ بلا مواصفات (مؤشر/عملة رقمية): السعر بعشر خانات معنوية بلا قصّ لمنزلة.
  * `null` لمدخل غير صالح، أو وقف بالجهة الخطأ للاتجاه، أو هدف ناتج ≤ 0 (بيع بعيد على سعر صغير).
  */
@@ -1210,13 +1216,17 @@ export function targetAtRR(input: {
   entry: number;
   sl: number;
   rr: number;
+  stopQuoteToAccount?: number | null;
 }): number | null {
   const { side, entry, sl, rr } = input;
   if (!finitePos(entry) || !finitePos(sl) || !finitePos(rr)) return null;
   const buy = side === 'buy';
   const risk = buy ? entry - sl : sl - entry;
   if (!(risk > 0)) return null;
-  const raw = buy ? entry + rr * risk : entry - rr * risk;
+  const stopRate = input.stopQuoteToAccount;
+  const k = stopRate != null && finitePos(stopRate) ? rr * risk * stopRate : null;
+  if (k != null && buy && !(k < 1)) return null;
+  const raw = k != null ? (buy ? entry / (1 - k) : entry / (1 + k)) : buy ? entry + rr * risk : entry - rr * risk;
   if (!(raw > 0)) return null;
   // سنت/micro («EURUSDC») بمنازل زوجه العادي — كانت شرائح 1:1…1:3 بالدفتر تُكتب بعشر خانات معنوية
   const spec = journalSpec(input.symbol);

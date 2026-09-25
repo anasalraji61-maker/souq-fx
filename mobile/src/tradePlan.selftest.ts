@@ -82,7 +82,15 @@ import {
   levelLooksLikePipsText,
 } from './tradePlan';
 import { riskInQuoteCcy as cashRisk } from './positionSize';
-import { instrumentSpec, pipValuePerLot, planJournalNote, pnlInQuoteCcy, positionSize, slPipsFromPrices } from './positionSize';
+import {
+  instrumentSpec,
+  moneyRewardRisk,
+  pipValuePerLot,
+  planJournalNote,
+  pnlInQuoteCcy,
+  positionSize,
+  slPipsFromPrices,
+} from './positionSize';
 
 // شراء EURUSD صحيح: وقف 25 pip، هدف 50 pip ⇒ 1:2
 const a = analyzePlan({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0825, tp: 1.09 });
@@ -455,6 +463,56 @@ console.log('tradePlan close-confirm R selftest OK');
     }
   }
   assert.ok(n > 10000);
+
+  // بالمال حين الأساس = عملة الحساب: USDJPY بحساب دولار، شراء 150.00 وقف 149.00 — «1:2» بالمسافة 152.00 = 1:1.96 مالاً
+  {
+    const plain = targetAtRR({ symbol: 'USDJPY', side: 'buy', entry: 150, sl: 149, rr: 2 })!;
+    assert.equal(plain, 152);
+    const pr = analyzePlan({ symbol: 'USDJPY', side: 'buy', entry: 150, sl: 149, tp: plain });
+    assert.ok(moneyRewardRisk(pr.rr, 1 / 149, 1 / plain)! < 1.97, 'old chip was 1:1.96 in money');
+    const tp = targetAtRR({ symbol: 'USDJPY', side: 'buy', entry: 150, sl: 149, rr: 2, stopQuoteToAccount: 1 / 149 })!;
+    // (T − 150) ÷ T = 2 ÷ 149 ⇒ T = 150 × 149 ÷ 147 = 152.0408… ⇒ 152.041 (بعيداً عن الدخول)
+    assert.equal(tp, 152.041);
+    const lots = 1;
+    const loss = (150 - 149) * 100000 * lots * (1 / 149);
+    const profit = (tp - 150) * 100000 * lots * (1 / tp);
+    assert.ok(profit / loss >= 2 - 1e-12 && profit / loss < 2.001, `money ${profit / loss}`);
+    // بيع: (150 − T) ÷ T = 2 × 1 ÷ 151 ⇒ T = 150 × 151 ÷ 153 = 148.0392… ⇒ 148.039
+    const sell = targetAtRR({ symbol: 'USDJPY', side: 'sell', entry: 150, sl: 151, rr: 2, stopQuoteToAccount: 1 / 151 })!;
+    assert.equal(sell, 148.039);
+    // شراءٌ لا يبلغه أي هدف: الخسارة لكل وحدة ≥ الوحدة كلها ÷ rr
+    assert.equal(targetAtRR({ symbol: 'USDJPY', side: 'buy', entry: 150, sl: 10, rr: 2, stopQuoteToAccount: 1 / 10 }), null);
+    // سعر تحويل غير صالح ⇒ المسافة كما كانت
+    assert.equal(targetAtRR({ symbol: 'USDJPY', side: 'buy', entry: 150, sl: 149, rr: 2, stopQuoteToAccount: NaN }), 152);
+    // الخاصية: R:R بالمال كما يحسبه سطر اللوحة ≥ المختارة ويُطبع بها
+    let m = 0;
+    const baseAcct: Array<[string, number, number]> = [
+      ['USDJPY', 157.403, 0.01],
+      ['USDCHF', 0.8812, 0.0001],
+      ['USDCAD', 1.3714, 0.0001],
+      ['EURUSD', 1.0852, 0.0001],
+      ['GBPJPY', 198.437, 0.01],
+    ];
+    for (const [symbol, entry, pip] of baseAcct) {
+      for (let tenths = 10; tenths <= 1500; tenths += 13) {
+        const slPips = tenths / 10;
+        for (const side of ['buy', 'sell'] as const) {
+          const sl = Number((side === 'buy' ? entry - slPips * pip : entry + slPips * pip).toFixed(6));
+          for (const rr of QUICK_RR) {
+            const t = targetAtRR({ symbol, side, entry, sl, rr, stopQuoteToAccount: 1 / sl });
+            assert.ok(t != null, `${symbol} ${side} ${slPips} ${rr}`);
+            const p2 = analyzePlan({ symbol, side, entry, sl, tp: t! });
+            assert.equal(p2.ok, true);
+            const money = moneyRewardRisk(p2.rr, 1 / sl, 1 / t!)!;
+            assert.ok(money >= rr - 1e-9, `${symbol} ${side} sl=${slPips} rr=${rr} money ${money}`);
+            assert.equal(formatRR(money), formatRR(rr), `${symbol} ${side} sl=${slPips} rr=${rr} label`);
+            m++;
+          }
+        }
+      }
+    }
+    assert.ok(m > 3000);
+  }
 }
 
 // رمز الدفتر: تطبيع الفواصل والحالة، وطول الخادم 3–12
