@@ -1178,6 +1178,24 @@ export type Dict = {
    * وسم رقائق AccountScreen يُركَّب من مفاتيح موجودة: `${t.language}: ${l.label}`، `${t.accountType}: ${r.label}`، `${t.underSponsor}: ${t.left}`.
    */
   a11yBusy: string;
+  /**
+   * عقود الخادم الجديدة (backend-r1، COORDINATION). لا شيء منها موصول بعد:
+   * `calendarUnavailable` — `/api/calendar` `status: "unavailable"` مع `events: []` (بدل `calendarEmpty` الذي يلوم الفلتر)؛
+   * `originUnavailableProvider` — `unavailable_reason: "not_offered_by_provider"` (DXY) بدل شارة «تجريبي» العامة؛
+   * `sigLevels*` — `levels: null` مع `levels_basis.unavailable` = `no_live_price` | `not_enough_candles` | `neutral`؛
+   * `journalStatBreakeven` — `stats.breakeven_count` (التعادل ليس خسارة ولا يدخل نسبة النجاح)؛
+   * `journalShownOfTotal`/`journalLoadOlder` — `/api/trades` `total`/`limit`/`offset` بدل `journalCappedNote`؛
+   * `journalSizeUnknown` — `size: null` (لم يُكتب حجم).
+   */
+  calendarUnavailable: string;
+  originUnavailableProvider: string;
+  sigLevelsUnavailableNoPrice: string;
+  sigLevelsUnavailableFewCandles: string;
+  sigLevelsUnavailableNeutral: string;
+  journalStatBreakeven: string;
+  journalShownOfTotal: string;
+  journalLoadOlder: string;
+  journalSizeUnknown: string;
 };
 
 export const LANGS: { id: LangId; label: string; rtl: boolean }[] = [
@@ -2293,6 +2311,15 @@ const ar: Dict = {
   accReplayTour: '↺ أعد الجولة الترحيبية',
   accReplayTourA11y: 'أعد عرض الجولة الترحيبية من أولها',
   a11yBusy: 'جارٍ التنفيذ، انتظر لحظة',
+  calendarUnavailable: 'التقويم غير متاح الآن — مصدر الأحداث لم يستجب، وهذا لا يعني أنه لا أخبار اليوم. يعيد المحاولة وحده كل 5 دقائق',
+  originUnavailableProvider: '{symbol} غير متاح من مزوّد البيانات — الرسم مولَّد للعرض، لا أسعار حقيقية',
+  sigLevelsUnavailableNoPrice: 'لا مستويات دخول ووقف وهدف — لا سعر حيّ الآن',
+  sigLevelsUnavailableFewCandles: 'لا مستويات دخول ووقف وهدف — الشموع قليلة لحساب المدى (ATR)',
+  sigLevelsUnavailableNeutral: 'لا مستويات دخول ووقف وهدف — الاتجاه محايد',
+  journalStatBreakeven: 'تعادل: {n} (لا يدخل نسبة النجاح)',
+  journalShownOfTotal: 'معروضة {shown} من {total} صفقة — الإحصاءات على الكل',
+  journalLoadOlder: 'تحميل الأقدم',
+  journalSizeUnknown: 'الحجم غير مسجَّل',
 };
 
 const enUS: Dict = {
@@ -3401,6 +3428,15 @@ const enUS: Dict = {
   accReplayTour: '↺ Replay welcome tour',
   accReplayTourA11y: 'Show the welcome tour again from the start',
   a11yBusy: 'Working, please wait',
+  calendarUnavailable: "Calendar unavailable right now — the events source didn't respond. That doesn't mean there's no news today. Retries on its own every 5 minutes",
+  originUnavailableProvider: '{symbol} is not offered by the data provider — the chart is generated for display, not real prices',
+  sigLevelsUnavailableNoPrice: 'No entry, stop or target — no live price right now',
+  sigLevelsUnavailableFewCandles: 'No entry, stop or target — not enough candles to measure the range (ATR)',
+  sigLevelsUnavailableNeutral: 'No entry, stop or target — direction is neutral',
+  journalStatBreakeven: 'Breakeven: {n} (not counted in win rate)',
+  journalShownOfTotal: 'Showing {shown} of {total} trades — stats cover all of them',
+  journalLoadOlder: 'Load older',
+  journalSizeUnknown: 'Size not recorded',
 };
 
 const enGB: Dict = {
@@ -4535,6 +4571,15 @@ const ku: Dict = {
   accReplayTour: '↺ گەشتی ناساندن دووبارە ببینەوە',
   accReplayTourA11y: 'گەشتی ناساندن لە سەرەتاوە دووبارە پیشان بدەوە',
   a11yBusy: 'خەریکە، تکایە کەمێک چاوەڕێ بکە',
+  calendarUnavailable: 'ڕۆژژمێر ئێستا بەردەست نییە — سەرچاوەی ڕووداوەکان وەڵامی نەدایەوە، ئەمەش مانای ئەوە نییە کە ئەمڕۆ هیچ هەواڵێک نییە. خۆی هەر 5 خولەک جارێک هەوڵ دەداتەوە',
+  originUnavailableProvider: '{symbol} لەلایەن دابینکەری داتاوە پێشکەش ناکرێت — نەخشەکە بۆ پیشاندان دروستکراوە، نرخی ڕاستەقینە نییە',
+  sigLevelsUnavailableNoPrice: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — ئێستا نرخی ڕاستەوخۆ نییە',
+  sigLevelsUnavailableFewCandles: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — مۆمەکان کەمن بۆ پێوانی مەودا (ATR)',
+  sigLevelsUnavailableNeutral: 'هیچ ئاستێکی چوونەژوورەوە و وەستان و ئامانج نییە — ئاڕاستە بێلایەنە',
+  journalStatBreakeven: 'بێ قازانج و زیان: {n} (لە ڕێژەی سەرکەوتندا ناژمێردرێت)',
+  journalShownOfTotal: '{shown} لە {total} مامەڵە پیشان دراوە — ئامارەکان هەموویان دەگرنەوە',
+  journalLoadOlder: 'بارکردنی کۆنترەکان',
+  journalSizeUnknown: 'قەبارە تۆمار نەکراوە',
 };
 
 export const DICTS: Record<LangId, Dict> = {
