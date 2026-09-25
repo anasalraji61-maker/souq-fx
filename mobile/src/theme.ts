@@ -95,7 +95,13 @@ export const colors = {
    * منفصلين لنفس الاستخدام بالضبط (`syncBadge` بـChartFrame، مقبض السحب بـFrameSizedGrid)؛
    * وُحِّد هنا بلا أي تغيير بصري. */
   accentBorderGlow: 'rgba(45,212,191,0.45)',
+  /** DESIGN-PRO §4 — تعبئة الاختيار المحايدة (صفّ/زرّ مختار): الاختيار لا يُقال باللون وحده،
+   * فتقترن هذه التعبئة بعلامة `selectedMarkerWidth` بلون التأكيد لا بحدّ ونصّ ملوّنين. */
+  selectedFill: 'rgba(255,255,255,0.06)',
 };
+
+/** عرض العلامة الداخلية للعنصر المختار (DESIGN-PRO §4: «2px inset marker»). */
+export const selectedMarkerWidth = 2;
 
 export const spacing = {
   xs: 4,

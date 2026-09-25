@@ -8,7 +8,7 @@ import {
   Platform,
   Modal,
 } from 'react-native';
-import { colors, radii, spacing, buttons, numeric } from '../theme';
+import { colors, radii, spacing, buttons, numeric, selectedMarkerWidth } from '../theme';
 import { api, type PriceAlert } from '../api';
 import { formatPrice } from '../chart/math';
 import { confirmDestructive } from '../chart/confirmDestructive';
@@ -418,6 +418,10 @@ export function WatchlistPanel({
                   }`}
                   accessibilityState={{ selected: on }}
                 >
+                  {/* DESIGN-PRO §4: الاختيار تعبئة محايدة + علامة 2px على حافة الرمز — لا لون وحده. */}
+                  {on ? (
+                    <View style={[styles.selMarker, rtl ? styles.selMarkerRtl : null]} />
+                  ) : null}
                   <View style={[styles.left, rtl && styles.leftRtl]}>
                     <Text
                       style={[styles.sym, on && styles.symOn, isDxy && styles.symDxy]}
@@ -637,10 +641,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgPanel,
     overflow: 'hidden',
   },
-  rowWrapOn: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft,
+  rowWrapOn: { backgroundColor: colors.selectedFill },
+  selMarker: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: selectedMarkerWidth,
+    backgroundColor: colors.accent,
   },
+  selMarkerRtl: { left: undefined, right: 0 },
   rowDxy: {
     borderColor: colors.heroBorder,
     backgroundColor: colors.heroBg,
@@ -656,7 +666,7 @@ const styles = StyleSheet.create({
   left: { flex: 1, alignItems: 'flex-start', minWidth: 0 },
   leftRtl: { alignItems: 'flex-end' },
   sym: { color: colors.textMuted, fontWeight: '800', fontSize: 11 },
-  symOn: { color: colors.accent },
+  symOn: { color: colors.text },
   symDxy: { color: colors.dxy },
   demoTag: { color: colors.warn, fontSize: 8, fontWeight: '700', marginTop: 1 },
   price: { ...numeric, color: colors.textMuted, fontSize: 10, fontWeight: '700', marginLeft: 6 },
