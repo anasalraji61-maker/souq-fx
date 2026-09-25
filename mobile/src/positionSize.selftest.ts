@@ -3401,3 +3401,17 @@ console.log('positionSize commissionPlaceholder selftest OK');
   assert.equal(commissionAcrossModes('6', { kind: 'std', account: 'EUR' }, { kind: commissionKindOf(restoredSmallSymbol('EURUSD', { smallSuffix: 'c', smallActive: false }))!, account: 'EUR' }), '6');
 }
 console.log('positionSize commissionKindOf restore selftest OK');
+
+// ── ذهب/فضة حساب mini: «2.650» مبهمة كالعادي والسنت/micro (كانت 2.65 ⇒ +100,277% بالدفتر) ──
+{
+  for (const sym of ['XAUUSD.MINI', 'GOLD_MINI', 'GOLD.mini', 'XAUUSDMINI', 'XAGJPY.MINI']) {
+    assert.equal(parsePriceFor('2.650', sym), null, sym);
+    assert.equal(ambiguousThousandsPrice('2.650', sym)?.whole, '2650', sym);
+  }
+  // ما ليس مبهماً يبقى، وأزواج mini العادية لا تتغيّر
+  assert.equal(parsePriceFor('2650.5', 'GOLD.mini'), 2650.5);
+  assert.equal(parsePriceFor('1.085', 'EURUSD.mini'), 1.085);
+  assert.equal(parsePriceFor('157.250', 'USDJPY.mini'), 157.25);
+  assert.equal(parsePriceFor('31.450', 'XAGUSD.mini'), 31.45);
+}
+console.log('positionSize mini metal ambiguous price selftest OK');

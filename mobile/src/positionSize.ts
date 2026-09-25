@@ -297,8 +297,13 @@ export function ambiguousThousandsPrice(
   if (symbol && /^[1-9]\d{0,2},\d{3}$/.test(comma) && parseDecimal(raw) == null) {
     return { value: raw.trim(), whole: comma.replace(',', ''), small: String(Number(comma.replace(',', '.'))) };
   }
-  // ذهب حساب سنت/micro («XAUUSDC»، «GOLDMICRO») بسعر الذهب نفسه: «3.450» بخانته كانت تُقرأ 3.45 بالدفتر
-  const spec = symbol ? instrumentSpec(symbol) ?? instrumentSpec(smallContractPair(symbol) ?? '') : null;
+  // ذهب حساب سنت/micro/mini («XAUUSDC»، «GOLDMICRO»، «GOLD.mini») بسعر الذهب نفسه: «3.450» بخانته كانت تُقرأ 3.45 بالدفتر —
+  // mini كان ناقصاً (`instrumentSpec` يرفضه عمداً) ⇒ دخول «2.650» وخروج 2660 يُحفظ «+26,573.5 pip · +100,277%»
+  const spec = symbol
+    ? instrumentSpec(symbol) ??
+      instrumentSpec(smallContractPair(symbol) ?? '') ??
+      instrumentSpec(miniAccountSymbol(symbol) ?? '')
+    : null;
   if (!spec) {
     if (!symbol || !priceAlwaysOverThousand(symbol)) return null;
     const s = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009٬'’]/g, '').replace(/[٫．]/g, '.');
