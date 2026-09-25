@@ -1603,13 +1603,15 @@ export function TerminalScreen() {
                   shadowSeries={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
                     if (!shadowEnabled[i] || shadowSlots[i] === tf) return [];
                     const sec = shadowSeries[i];
-                    if (!sec || (sec.candles?.length ?? 0) < 1) return [];
+                    // ظلّ الرمز السابق حتى يصل الجلب الجديد (EURUSD 1.17 فوق USDJPY 157) — لا يُرسم
+                    if (!sec || sec.symbol !== series.symbol || (sec.candles?.length ?? 0) < 1) return [];
                     return [sec];
                   })}
                   shadowTags={SHADOW_SLOT_TAGS.flatMap((tag, i) => {
                     if (!shadowEnabled[i] || shadowSlots[i] === tf) return [];
                     const sec = shadowSeries[i];
-                    if (!sec || (sec.candles?.length ?? 0) < 1) return [];
+                    // ظلّ الرمز السابق حتى يصل الجلب الجديد (EURUSD 1.17 فوق USDJPY 157) — لا يُرسم
+                    if (!sec || sec.symbol !== series.symbol || (sec.candles?.length ?? 0) < 1) return [];
                     return [tag];
                   })}
                   height={desktopChartHeight}
