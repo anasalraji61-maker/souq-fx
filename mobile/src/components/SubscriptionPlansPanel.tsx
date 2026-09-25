@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import { colors, radii, spacing } from '../theme';
 import { useI18n } from '../i18n/I18nContext';
-import type { LangId } from '../i18n/locales';
 
 type Plan = {
   name: string;
@@ -13,131 +12,12 @@ type Plan = {
   features: string[];
 };
 
-type Copy = {
-  title: string;
-  subtitle: string;
-  perMonth: string;
-  coreBadge: string;
-  academyBadge: string;
-  fullBadge: string;
-  coreName: string;
-  academyName: string;
-  fullName: string;
-  academyAddOn: string;
-  fullAddOn: string;
-  coreFeatures: string[];
-  academyFeatures: string[];
-  fullFeatures: string[];
-  note: string;
-};
-
-const EN_COPY: Copy = {
-  title: 'MATRIX plans',
-  subtitle: 'Start with charts and community, then add academy and the rest when you need them',
-  perMonth: '/ month',
-  coreBadge: 'Start',
-  academyBadge: '+ Academy',
-  fullBadge: 'All features',
-  coreName: 'Core',
-  academyName: 'Academy',
-  fullName: 'Full',
-  academyAddOn: '+$5 for courses',
-  fullAddOn: '+$5 for remaining features',
-  coreFeatures: [
-    'All candles and chart types',
-    'All frames: square, rectangle, and shadow',
-    'Group chat and votes',
-    'News, watchlist, and drawing tools',
-    'Indicators and timeframes',
-  ],
-  academyFeatures: [
-    'Everything in Core',
-    'Full academy: schools, levels, and lectures',
-    'Interactive classroom with interrupt questions',
-  ],
-  fullFeatures: [
-    'Everything in Academy',
-    'Private messages',
-    'AI assistant, alerts, screener, and backtest',
-    'Forecasts, analysts, and remaining tools',
-  ],
-  note: 'Core $10 covers charts and community. Add $5 for academy, then $5 more for every remaining feature.',
-};
-
-const COPY: Record<LangId, Copy> = {
-  ar: {
-    title: 'باقات MATRIX',
-    subtitle: 'ابدأ بالشارتات والمجتمع، ثم أضف الأكاديمية وبقية الميزات عند الحاجة',
-    perMonth: '/ شهر',
-    coreBadge: 'البداية',
-    academyBadge: '+ الأكاديمية',
-    fullBadge: 'كل الميزات',
-    coreName: 'أساسي',
-    academyName: 'أكاديمية',
-    fullName: 'كامل',
-    academyAddOn: '+5$ للدورات',
-    fullAddOn: '+5$ لبقية الميزات',
-    coreFeatures: [
-      'جميع الشموع وأنواع الجارت',
-      'جميع الفريمات: مربع ومستطيل والظل',
-      'المراسلات الجماعية والتصويتات',
-      'الأخبار وقائمة المتابعة وأدوات الرسم',
-      'المؤشرات والأطر الزمنية',
-    ],
-    academyFeatures: [
-      'كل ما في الباقة الأساسية',
-      'الأكاديمية كاملة: مدارس ومستويات ومحاضرات',
-      'قاعة تفاعلية مع مقاطعة المدرس بسؤال',
-    ],
-    fullFeatures: [
-      'كل ما في باقة الأكاديمية',
-      'الرسائل الخاصة',
-      'مساعد AI والتنبيهات والفحص والـ Backtest',
-      'التوقعات والمحللون وبقية الأدوات',
-    ],
-    note: '10$ للشموع والفريمات والمجتمع. يُضاف 5$ لمن أراد الدورات، ثم 5$ أخرى لجميع بقية الميزات.',
-  },
-  'en-US': EN_COPY,
-  'en-GB': EN_COPY,
-  ku: {
-    title: 'پلانی MATRIX',
-    subtitle: 'بە چارت و کۆمەڵگە دەست پێ بکە، پاشان ئەکادیمیا و باقی تایبەتمەندییەکان زیاد بکە',
-    perMonth: '/ مانگ',
-    coreBadge: 'دەستپێک',
-    academyBadge: '+ ئەکادیمیا',
-    fullBadge: 'هەموو تایبەتمەندییەکان',
-    coreName: 'بنەڕەت',
-    academyName: 'ئەکادیمیا',
-    fullName: 'تەواو',
-    academyAddOn: '+5$ بۆ خولەکان',
-    fullAddOn: '+5$ بۆ باقی تایبەتمەندییەکان',
-    coreFeatures: [
-      'هەموو مۆم و جۆرەکانی چارت',
-      'هەموو فریمەکان: چوارگۆشە، لاکێشە، و سێبەر',
-      'گفتوگۆی گروپ و دەنگدان',
-      'هەواڵ، لیستی چاودێری، و ئامرازی وێنەکێشان',
-      'نیشاندەر و کاتەکان',
-    ],
-    academyFeatures: [
-      'هەموو شتی بنەڕەت',
-      'ئەکادیمیای تەواو: قوتابخانە، ئاست، و وانە',
-      'پۆلی کارلێکەر بە پرسیاری ناوەڕاست',
-    ],
-    fullFeatures: [
-      'هەموو شتی ئەکادیمیا',
-      'نامەی تایبەت',
-      'یاریدەدەری AI، ئاگاداری، سکریینەر، و باکتێست',
-      'پێشبینی، شیکەرەوە، و باقی ئامرازەکان',
-    ],
-    note: '10$ بۆ چارت و کۆمەڵگە. 5$ زیاد دەکرێت بۆ خولەکان، پاشان 5$ی تر بۆ هەموو باقی تایبەتمەندییەکان.',
-  },
-};
-
 export function SubscriptionPlansPanel() {
   const { width } = useWindowDimensions();
-  const { lang, rtl } = useI18n();
+  const { t, rtl } = useI18n();
   const stacked = width < 980;
-  const copy = COPY[lang];
+  // النصوص من القاموس المركزي (`t.subPlans`) بدل قاموس `COPY` الداخلي السابق
+  const copy = t.subPlans;
   const align = rtl ? ('right' as const) : ('left' as const);
   const plans: Plan[] = [
     {

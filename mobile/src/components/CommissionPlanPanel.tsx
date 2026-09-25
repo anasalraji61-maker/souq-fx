@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
+import { useI18n } from '../i18n/I18nContext';
+import type { Dict } from '../i18n/locales';
 
 type Plan = {
   title: string;
@@ -30,20 +32,43 @@ type Report = {
   }[];
 };
 
-const FALLBACK_COMMISSION = [
-  { type: 'جلب مباشر', rate_pct: 10, condition: 'عند إدخال عضو جديد', points_per_member: 10 },
-  { type: 'مكافأة توازن', rate_pct: 5, condition: 'يمين = يسار', points_per_member: 5 },
-  { type: 'فعّالة متوازن', rate_pct: 15, condition: '10% + 5%', points_per_member: 15 },
-  { type: 'فعّالة غير متوازن', rate_pct: 10, condition: 'يمين ≠ يسار', points_per_member: 10 },
-];
+/** جدول عمولات تقريبي حين يتعذّر الخادم — نصوصه من القاموس لتتبع لغة الواجهة */
+function fallbackCommission(t: Dict) {
+  return [
+    { type: t.cppTypeDirect, rate_pct: 10, condition: t.cppCondNewMember, points_per_member: 10 },
+    { type: t.cppTypeBalance, rate_pct: 5, condition: t.cppCondBalanced, points_per_member: 5 },
+    { type: t.cppTypeActiveBalanced, rate_pct: 15, condition: '10% + 5%', points_per_member: 15 },
+    {
+      type: t.cppTypeActiveUnbalanced,
+      rate_pct: 10,
+      condition: t.cppCondUnbalanced,
+      points_per_member: 10,
+    },
+  ];
+}
+
+/** جدول مستويات تقريبي حين يتعذّر الخادم — أسماء الأدوار من القاموس */
+function fallbackLevels(t: Dict) {
+  return [
+    { role: t.trader, levels: [2, 4, 8, 16] },
+    {
+      role: [t.trainer, t.broker, t.agent, t.company].join('/'),
+      levels: [2, 4, 8, 16, 32, 64, 128, 256],
+    },
+  ];
+}
 
 /** خانة التقرير — جداول العمولات والأرباح الشهرية */
 export function CommissionPlanPanel() {
+  const { t, rtl } = useI18n();
+  /** محاذاة النص حسب اتجاه اللغة — كما بقية اللوحات */
+  const al = { textAlign: rtl ? ('right' as const) : ('left' as const) };
+  const rowDir = !rtl && styles.rowLtr;
   const [plan, setPlan] = useState<Plan | null>(null);
   const [report, setReport] = useState<Report | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  /** وضوح الحالة: يعلم المستخدم أن الجداول المعروضة تقريبية (FALLBACK_COMMISSION) لا حيّة، بدل صمت كامل */
+  /** وضوح الحالة: يعلم المستخدم أن الجداول المعروضة تقريبية (fallbackCommission) لا حيّة، بدل صمت كامل */
   const [error, setError] = useState(false);
 
   // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (طي/فتح قبل اكتمال
@@ -86,7 +111,7 @@ export function CommissionPlanPanel() {
     : plan?.commission_table?.map((r) => ({
         ...r,
         points_per_member: r.rate_pct,
-      })) ?? FALLBACK_COMMISSION;
+      })) ?? fallbackCommission(t);
 
   return (
     <View style={[styles.wrap, !open && styles.wrapCollapsed]}>
@@ -94,25 +119,26 @@ export function CommissionPlanPanel() {
         accessibilityRole="button"
         style={({ pressed }) => [
           styles.head,
+          rowDir,
           pressed && {
             opacity: buttons.pressedOpacity,
             transform: [{ scale: buttons.pressedScale }],
           },
         ]}
         onPress={() => setOpen((v) => !v)}
-        accessibilityLabel={open ? 'طي تقرير العمولات' : 'فتح تقرير العمولات'}
+        accessibilityLabel={open ? t.cppCloseA11y : t.cppOpenA11y}
+        accessibilityState={{ expanded: open }}
       >
         <Text style={styles.chev}>{open ? '▾' : '▸'}</Text>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>تقرير العمولات</Text>
-          <Text style={styles.sub}>
-            {open ? 'جداول العمولات · الأرباح الشهرية' : 'اضغط السهم لفتح التقرير'}
-          </Text>
+          <Text style={[styles.title, al]}>{t.cppTitle}</Text>
+          <Text style={[styles.sub, al]}>{open ? t.cppSubOpen : t.cppSubClosed}</Text>
         </View>
         {open ? (
           <Pressable
             accessibilityRole="button"
             onPress={() => void load()}
+            accessibilityState={{ busy: loading }}
             hitSlop={8}
             style={({ pressed }) =>
               pressed && {
@@ -121,7 +147,7 @@ export function CommissionPlanPanel() {
               }
             }
           >
-            <Text style={styles.refresh}>تحديث</Text>
+            <Text style={styles.refresh}>{t.refreshBtn}</Text>
           </Pressable>
         ) : null}
       </Pressable>
@@ -130,24 +156,22 @@ export function CommissionPlanPanel() {
         <View style={styles.body}>
           {loading ? <ActivityIndicator color={colors.accent} /> : null}
           {!loading && error ? (
-            <Text style={styles.errorNote}>
-              تعذر تحميل بيانات العمولات الحيّة — القيم المعروضة تقريبية
-            </Text>
+            <Text style={[styles.errorNote, al]}>{t.cppLiveError}</Text>
           ) : null}
 
-          <Text style={styles.section}>جدول العمولات</Text>
+          <Text style={[styles.section, al]}>{t.cppTableCommissions}</Text>
           <View style={styles.table}>
-            <View style={[styles.tr, styles.trHead]}>
-              <Text style={[styles.th, styles.colType]}>النوع</Text>
+            <View style={[styles.tr, rowDir, styles.trHead]}>
+              <Text style={[styles.th, styles.colType, al]}>{t.cppColType}</Text>
               <Text style={[styles.th, styles.colRate]}>%</Text>
-              <Text style={[styles.th, styles.colCond]}>الشرط</Text>
-              <Text style={[styles.th, styles.colPts]}>نقاط</Text>
+              <Text style={[styles.th, styles.colCond, al]}>{t.cppColCondition}</Text>
+              <Text style={[styles.th, styles.colPts]}>{t.cppColPoints}</Text>
             </View>
             {commissionRows.map((row) => (
-              <View key={row.type} style={styles.tr}>
-                <Text style={[styles.td, styles.colType]}>{row.type}</Text>
+              <View key={row.type} style={[styles.tr, rowDir]}>
+                <Text style={[styles.td, styles.colType, al]}>{row.type}</Text>
                 <Text style={[styles.td, styles.colRate, styles.accent]}>{row.rate_pct}%</Text>
-                <Text style={[styles.td, styles.colCond]} numberOfLines={2}>
+                <Text style={[styles.td, styles.colCond, al]} numberOfLines={2}>
                   {row.condition}
                 </Text>
                 <Text style={[styles.td, styles.colPts]}>
@@ -157,54 +181,51 @@ export function CommissionPlanPanel() {
             ))}
           </View>
 
-          <Text style={styles.section}>جدول المستويات</Text>
+          <Text style={[styles.section, al]}>{t.cppTableLevels}</Text>
           <View style={styles.table}>
-            <View style={[styles.tr, styles.trHead]}>
-              <Text style={[styles.th, styles.colRole]}>الدور</Text>
-              <Text style={[styles.th, styles.colLevels]}>المستويات</Text>
+            <View style={[styles.tr, rowDir, styles.trHead]}>
+              <Text style={[styles.th, styles.colRole, al]}>{t.cppColRole}</Text>
+              <Text style={[styles.th, styles.colLevels, al]}>{t.cppColLevels}</Text>
             </View>
             {(report?.levels_table ??
               plan?.roles.map((r) => ({ role: r.label, levels: r.levels })) ??
-              [
-                { role: 'متداول', levels: [2, 4, 8, 16] },
-                { role: 'مدرب/بروكر/وكيل/شركة', levels: [2, 4, 8, 16, 32, 64, 128, 256] },
-              ]
+              fallbackLevels(t)
             ).map((row) => (
-              <View key={row.role} style={styles.tr}>
-                <Text style={[styles.td, styles.colRole]}>{row.role}</Text>
-                <Text style={[styles.td, styles.colLevels, styles.accent]}>
+              <View key={row.role} style={[styles.tr, rowDir]}>
+                <Text style={[styles.td, styles.colRole, al]}>{row.role}</Text>
+                <Text style={[styles.td, styles.colLevels, styles.accent, al]}>
                   {row.levels.join(' · ')}
                 </Text>
               </View>
             ))}
           </View>
 
-          <Text style={styles.section}>الأرباح الشهرية</Text>
+          <Text style={[styles.section, al]}>{t.cppTableMonthly}</Text>
           <View style={styles.table}>
-            <View style={[styles.tr, styles.trHead]}>
-              <Text style={[styles.th, styles.colMonth]}>الشهر</Text>
-              <Text style={[styles.th, styles.colM]}>جلب</Text>
-              <Text style={[styles.th, styles.colM]}>توازن</Text>
-              <Text style={[styles.th, styles.colM]}>الإجمالي</Text>
+            <View style={[styles.tr, rowDir, styles.trHead]}>
+              <Text style={[styles.th, styles.colMonth, al]}>{t.cppColMonth}</Text>
+              <Text style={[styles.th, styles.colM]}>{t.cppColDirect}</Text>
+              <Text style={[styles.th, styles.colM]}>{t.cppColBalance}</Text>
+              <Text style={[styles.th, styles.colM]}>{t.cppColTotal}</Text>
             </View>
             {(report?.monthly?.length ? report.monthly : null)?.map((row) => (
-              <View key={row.month} style={styles.tr}>
-                <Text style={[styles.td, styles.colMonth]}>{row.month}</Text>
+              <View key={row.month} style={[styles.tr, rowDir]}>
+                <Text style={[styles.td, styles.colMonth, al]}>{row.month}</Text>
                 <Text style={[styles.td, styles.colM]}>{row.direct_points}</Text>
                 <Text style={[styles.td, styles.colM]}>{row.balance_points}</Text>
                 <Text style={[styles.td, styles.colM, styles.accent]}>{row.total_points}</Text>
               </View>
             )) ?? (
-              <View style={styles.tr}>
-                <Text style={[styles.td, styles.emptyHint]}>
-                  لا أرباح مسجّلة بعد — أدخل أعضاء من الشجرة لتظهر هنا
-                </Text>
+              <View style={[styles.tr, rowDir]}>
+                <Text style={[styles.td, styles.emptyHint, al]}>{t.cppNoEarnings}</Text>
               </View>
             )}
           </View>
 
           {report?.unit ? (
-            <Text style={styles.note}>أساس الحساب: {report.unit} نقطة لكل عضو × نسبة العمولة</Text>
+            <Text style={[styles.note, al]}>
+              {t.cppBasisNote.replace('{unit}', String(report.unit))}
+            </Text>
           ) : null}
         </View>
       ) : null}
@@ -229,6 +250,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     minHeight: 52,
   },
+  /** اتجاه الصفوف للغات LTR — الأصل `row-reverse` للعربية والكردية */
+  rowLtr: { flexDirection: 'row' },
   chev: {
     color: colors.accent,
     fontSize: 18,

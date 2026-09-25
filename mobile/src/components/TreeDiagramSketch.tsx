@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, radii, spacing } from '../theme';
+import { useI18n } from '../i18n/I18nContext';
 
 type Props = {
   youLabel?: string;
@@ -50,17 +51,18 @@ function SplitLevel({
   perSide: number;
   boxSize: number;
 }) {
+  const { t } = useI18n();
   return (
     <View style={styles.levelBand}>
       <Text style={[styles.levelTag, { color: tint }]}>{label}</Text>
       <View style={styles.splitRow}>
         <View style={styles.sidePane}>
-          <Text style={styles.leftLbl}>يسار</Text>
+          <Text style={styles.leftLbl}>{t.left}</Text>
           <NumBoxes count={perSide} tint={tint} size={boxSize} />
         </View>
         <View style={[styles.midLine, { backgroundColor: tint }]} />
         <View style={styles.sidePane}>
-          <Text style={styles.rightLbl}>يمين</Text>
+          <Text style={styles.rightLbl}>{t.right}</Text>
           <NumBoxes count={perSide} tint={tint} size={boxSize} />
         </View>
       </View>
@@ -70,15 +72,19 @@ function SplitLevel({
 }
 
 /** مخطط: يسار | يمين — الترقيم يبدأ من 1 في كل جهة */
-export function TreeDiagramSketch({ youLabel = 'أنت' }: Props) {
+export function TreeDiagramSketch({ youLabel }: Props) {
+  const { t, rtl } = useI18n();
+  /** عنوان المستوى: «مستوى {gen} · كل جهة 1–{n}» */
+  const levelLabel = (gen: number, n: number) =>
+    t.tdsLevel.replace('{gen}', String(gen)).replace('{n}', String(n));
   return (
     <View style={styles.wrap}>
-      <Text style={styles.caption}>كيف تنمو الشجرة · يسار ويمين منفصلان</Text>
+      <Text style={[styles.caption, { textAlign: rtl ? 'right' : 'left' }]}>{t.tdsCaption}</Text>
 
-      <SplitLevel label="مستوى 4 · كل جهة 1–8" tint={colors.treeLevel4Tint} perSide={8} boxSize={36} />
-      <SplitLevel label="مستوى 3 · كل جهة 1–4" tint={colors.infoAccent} perSide={4} boxSize={44} />
-      <SplitLevel label="مستوى 2 · كل جهة 1–2" tint={colors.accent} perSide={2} boxSize={56} />
-      <SplitLevel label="مستوى 1 · كل جهة مربع 1" tint={colors.dxy} perSide={1} boxSize={72} />
+      <SplitLevel label={levelLabel(4, 8)} tint={colors.treeLevel4Tint} perSide={8} boxSize={36} />
+      <SplitLevel label={levelLabel(3, 4)} tint={colors.infoAccent} perSide={4} boxSize={44} />
+      <SplitLevel label={levelLabel(2, 2)} tint={colors.accent} perSide={2} boxSize={56} />
+      <SplitLevel label={t.tdsLevelOne} tint={colors.dxy} perSide={1} boxSize={72} />
 
       <View style={styles.mainFork}>
         <View style={styles.forkArm} />
@@ -86,13 +92,11 @@ export function TreeDiagramSketch({ youLabel = 'أنت' }: Props) {
       </View>
 
       <View style={styles.you}>
-        <Text style={styles.youTag}>الجذر · أسفل</Text>
-        <Text style={styles.youName}>{youLabel}</Text>
+        <Text style={styles.youTag}>{t.tdsRootBottom}</Text>
+        <Text style={styles.youName}>{youLabel || t.ntpYou}</Text>
       </View>
 
-      <Text style={styles.hint}>
-        الأرقام تبدأ من 1 في كل جهة — يسار منفصل عن يمين · اكتب الاسم داخل المربع فقط
-      </Text>
+      <Text style={styles.hint}>{t.tdsFootnote}</Text>
     </View>
   );
 }

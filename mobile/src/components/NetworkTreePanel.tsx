@@ -12,6 +12,7 @@ import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { TreeDiagramSketch } from './TreeDiagramSketch';
+import { useI18n } from '../i18n/I18nContext';
 
 export type TreeNode = {
   user_id: number;
@@ -96,6 +97,7 @@ function SlotBox({
   busy: boolean;
   onPlace: (slot: SlotInfo, name: string) => Promise<void>;
 }) {
+  const { t } = useI18n();
   const [draft, setDraft] = useState('');
   const [localBusy, setLocalBusy] = useState(false);
 
@@ -137,7 +139,7 @@ function SlotBox({
         style={styles.slotInput}
         value={draft}
         onChangeText={setDraft}
-        placeholder="اكتب الاسم"
+        placeholder={t.ntpNamePlaceholder}
         placeholderTextColor={colors.textDim}
         autoCapitalize="none"
         editable={!busy && !localBusy}
@@ -147,7 +149,7 @@ function SlotBox({
         clearButtonMode="while-editing"
         keyboardAppearance="dark"
         selectionColor={colors.accent}
-        accessibilityLabel="اسم العضو الجديد بالمربع"
+        accessibilityLabel={t.ntpNameA11y}
       />
       <Pressable
         accessibilityRole="button"
@@ -161,8 +163,11 @@ function SlotBox({
         ]}
         onPress={() => void submit()}
         disabled={draft.trim().length < 3 || localBusy || busy}
-        accessibilityState={{ disabled: draft.trim().length < 3 || localBusy || busy }}
-        accessibilityLabel="تأكيد وضع العضو بالمربع"
+        accessibilityState={{
+          disabled: draft.trim().length < 3 || localBusy || busy,
+          busy: localBusy,
+        }}
+        accessibilityLabel={t.ntpConfirmA11y}
         hitSlop={{ top: 4, bottom: 8, left: 8, right: 8 }}
       >
         <Text style={styles.slotGoText}>{localBusy ? '…' : '✓'}</Text>
@@ -195,6 +200,7 @@ function LevelRow({
   busy: boolean;
   onPlace: (slot: SlotInfo, name: string) => Promise<void>;
 }) {
+  const { t } = useI18n();
   const tint = LEVEL_TINT[gen - 1];
   const perSide = LEVEL_SIZE[gen - 1] / 2;
   const leftSlots = slots.filter((s) => s.leg === 'left');
@@ -205,12 +211,12 @@ function LevelRow({
   return (
     <View style={styles.levelBlock}>
       <Text style={[styles.levelTitle, { color: tint }]}>
-        مستوى {gen} · كل جهة 1–{perSide}
-        {gen > 1 ? ' · فروع جديدة' : ''}
+        {t.ntpLevelTitle.replace('{gen}', String(gen)).replace('{n}', String(perSide))}
+        {gen > 1 ? t.ntpNewBranches : ''}
       </Text>
       <View style={styles.sidesRow}>
         <View style={[styles.sideCol, styles.sideLeft]}>
-          <Text style={[styles.sideTag, styles.leftTag]}>يسار</Text>
+          <Text style={[styles.sideTag, styles.leftTag]}>{t.left}</Text>
           <View style={styles.slotGrid}>
             {leftSlots.map((s) => (
               <SlotBox
@@ -232,7 +238,7 @@ function LevelRow({
         </View>
 
         <View style={[styles.sideCol, styles.sideRight]}>
-          <Text style={[styles.sideTag, styles.rightTag]}>يمين</Text>
+          <Text style={[styles.sideTag, styles.rightTag]}>{t.right}</Text>
           <View style={styles.slotGrid}>
             {rightSlots.map((s) => (
               <SlotBox
@@ -254,10 +260,13 @@ function LevelRow({
 }
 
 export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
+  const { t, rtl } = useI18n();
+  const align = rtl ? ('right' as const) : ('left' as const);
   const [tree, setTree] = useState<TreeNode | null>(null);
   const [loading, setLoading] = useState(false);
   const [placing, setPlacing] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
+  /** نوع الخطأ لا نصّه — النص يُترجم عند العرض فيتبع تبديل اللغة */
+  const [err, setErr] = useState<'load' | 'place' | null>(null);
   const [open, setOpen] = useState(true);
 
   // حارس "alive" مبني على ref يمنع تحديث الحالة بعد إلغاء تركيب اللوحة (طي/فتح لوحة الشبكة
@@ -282,7 +291,7 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
     } catch {
       if (mountedRef.current) {
         setTree(null);
-        setErr('تعذر تحميل الشجرة');
+        setErr('load');
       }
     } finally {
       if (mountedRef.current) setLoading(false);
@@ -314,7 +323,7 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
       playSoftClick();
       onChanged?.();
     } catch {
-      setErr('تعذر الوضع — الاسم مستخدم أو المربع مشغول أو بيانات ناقصة');
+      setErr('place');
     } finally {
       setPlacing(false);
     }
@@ -326,29 +335,28 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
         accessibilityRole="button"
         style={({ pressed }) => [
           styles.headBar,
+          !rtl && styles.headBarLtr,
           pressed && {
             opacity: buttons.pressedOpacity,
             transform: [{ scale: buttons.pressedScale }],
           },
         ]}
         onPress={() => setOpen((v) => !v)}
-        accessibilityLabel={open ? 'طي شجرة الشبكة' : 'فتح شجرة الشبكة'}
+        accessibilityLabel={open ? t.ntpCloseA11y : t.ntpOpenA11y}
+        accessibilityState={{ expanded: open }}
       >
         <Text style={styles.chev}>{open ? '▾' : '▸'}</Text>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>شجرة الشبكة</Text>
-          <Text style={styles.sub}>
-            {open
-              ? enabled
-                ? 'يسار | يمين · الترقيم من 1 في كل جهة'
-                : 'معاينة · سجّل الدخول للتفعيل الحي'
-              : 'اضغط السهم لفتح صورة الشجرة'}
+          <Text style={[styles.title, { textAlign: align }]}>{t.ntpTitle}</Text>
+          <Text style={[styles.sub, { textAlign: align }]}>
+            {open ? (enabled ? t.ntpSubLive : t.ntpSubPreview) : t.ntpSubClosed}
           </Text>
         </View>
         {open && enabled ? (
           <Pressable
             accessibilityRole="button"
             onPress={() => void load()}
+            accessibilityState={{ busy: loading }}
             hitSlop={8}
             style={({ pressed }) =>
               pressed && {
@@ -357,7 +365,7 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
               }
             }
           >
-            <Text style={styles.refresh}>تحديث</Text>
+            <Text style={styles.refresh}>{t.refreshBtn}</Text>
           </Pressable>
         ) : null}
       </Pressable>
@@ -366,17 +374,19 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
         <View style={styles.body}>
           {!enabled ? (
             <>
-              <TreeDiagramSketch youLabel={previewName || 'أنت'} />
-              <Text style={styles.guestHint}>
-                سجّل الدخول ثم اكتب اسم العضو داخل المربع المرقّم فقط.
-              </Text>
+              <TreeDiagramSketch youLabel={previewName || t.ntpYou} />
+              <Text style={[styles.guestHint, { textAlign: align }]}>{t.ntpGuestHint}</Text>
             </>
           ) : (
             <>
               {loading ? (
                 <ActivityIndicator color={colors.accent} style={{ marginVertical: spacing.md }} />
               ) : null}
-              {err ? <Text style={styles.err}>{err}</Text> : null}
+              {err ? (
+                <Text style={[styles.err, { textAlign: align }]}>
+                  {err === 'load' ? t.ntpLoadError : t.ntpPlaceError}
+                </Text>
+              ) : null}
 
               {tree ? (
                 <ScrollView
@@ -387,21 +397,21 @@ export function NetworkTreePanel({ enabled, onChanged, previewName }: Props) {
                 >
                   <View style={styles.treeCanvas}>
                     <LevelRow gen={4} slots={byGen[4]} busy={placing} onPlace={placeInSlot} />
-                    <LevelConnector tint={LEVEL_TINT[3]} label="↓ فروع المستوى 4" />
+                    <LevelConnector tint={LEVEL_TINT[3]} label={t.ntpLevelBranches.replace('{gen}', '4')} />
                     <LevelRow gen={3} slots={byGen[3]} busy={placing} onPlace={placeInSlot} />
-                    <LevelConnector tint={LEVEL_TINT[2]} label="↓ فروع المستوى 3" />
+                    <LevelConnector tint={LEVEL_TINT[2]} label={t.ntpLevelBranches.replace('{gen}', '3')} />
                     <LevelRow gen={2} slots={byGen[2]} busy={placing} onPlace={placeInSlot} />
-                    <LevelConnector tint={LEVEL_TINT[1]} label="↓ فروع المستوى 2" />
+                    <LevelConnector tint={LEVEL_TINT[1]} label={t.ntpLevelBranches.replace('{gen}', '2')} />
                     <LevelRow gen={1} slots={byGen[1]} busy={placing} onPlace={placeInSlot} />
 
                     <View style={styles.trunk}>
                       <View style={styles.trunkH} />
                       <View style={styles.trunkV} />
-                      <Text style={styles.trunkHint}>خط الجذر ↓</Text>
+                      <Text style={styles.trunkHint}>{t.ntpTrunkHint}</Text>
                     </View>
 
                     <View style={styles.youBox}>
-                      <Text style={styles.youTag}>أنت · الجذر</Text>
+                      <Text style={styles.youTag}>{t.ntpYouRoot}</Text>
                       <Text style={styles.youName}>{tree.username}</Text>
                     </View>
                   </View>
@@ -432,6 +442,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     minHeight: 52,
   },
+  headBarLtr: { flexDirection: 'row' },
   chev: { color: colors.accent, fontSize: 18, fontWeight: '900', width: 22, textAlign: 'center' },
   title: { color: colors.text, fontWeight: '900', fontSize: 13, textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 9, textAlign: 'right', marginTop: 1 },
