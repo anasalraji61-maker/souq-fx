@@ -128,10 +128,10 @@ export const numeric = {
   fontVariant: ['tabular-nums'] as ['tabular-nums'],
 };
 
-/** مدد حركة قصيرة للأفعال المهمة فقط */
+/** DESIGN-PRO §6: حركة واحدة مسموحة بالواجهة — وميض خلفية خانة السعر عند تغيّرها (up/down
+ * بشفافية 12% يخفت). لا حركة غيرها: لا لوحات منزلقة ولا أشرطة تتلاشى. */
 export const motion = {
-  snap: 160,
-  panel: 220,
+  flash: 180,
 };
 
 /**
