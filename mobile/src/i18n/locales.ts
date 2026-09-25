@@ -55,6 +55,8 @@ export type Dict = {
   loginError: string;
   /** جلسة منتهية (`create_session` 30 يوماً من الدخول، لا من آخر استعمال) — للدعوة بعد 401 من `/api/auth/me` (backend-r52 ← ui). */
   sessionExpired: string;
+  /** نسخة `sessionExpired` بالاسم الذي يقرؤه `AccountScreen.tsx` (QA87a) — تُحذف حين يقرأ ui `t.sessionExpired`. */
+  authSessionExpired: string;
   registerError: string;
   /** سبب رفض التسجيل من `detail` الخادم — يختارها `registerErrorText` (i18n/authErrors.ts)؛ `{login}`/`{trader}` تُملأ هناك. */
   regErrReserved: string;
@@ -1486,6 +1488,7 @@ const ar: Dict = {
   company: 'شركة',
   loginError: 'تعذّر الدخول — لم يصل الطلب إلى الخادم أو لم يكتمل. تحقّق من اتصالك بالإنترنت ثم حاول مرة أخرى',
   sessionExpired: 'انتهت جلستك — تدوم 30 يوماً من تسجيل الدخول. سجّل الدخول مجدداً لترى تنبيهاتك ودفترك المحفوظة بحسابك',
+  authSessionExpired: 'انتهت جلستك — تدوم 30 يوماً من تسجيل الدخول. سجّل الدخول مجدداً لترى تنبيهاتك ودفترك المحفوظة بحسابك',
   registerError: 'تعذّر التسجيل — لم يصل الطلب إلى الخادم أو لم يكتمل. تحقّق من اتصالك بالإنترنت ثم حاول مرة أخرى',
   regErrReserved: 'هذا الاسم محجوز — اختر اسماً آخر',
   regErrInvisible: 'في الاسم محرف مخفي أو حرف بعرض كامل (يأتي غالباً مع النسخ واللصق) — اكتبه بنفسك من لوحة المفاتيح',
@@ -2697,6 +2700,7 @@ const enUS: Dict = {
   company: 'Company',
   loginError: "Login didn't go through — the request didn't reach the server or didn't finish. Check your internet connection and try again",
   sessionExpired: 'Your session has ended — sessions last 30 days from login. Log in again to see the alerts and journal saved to your account',
+  authSessionExpired: 'Your session has ended — sessions last 30 days from login. Log in again to see the alerts and journal saved to your account',
   registerError: "Sign-up didn't go through — the request didn't reach the server or didn't finish. Check your internet connection and try again",
   regErrReserved: 'That username is reserved — pick another one',
   regErrInvisible: 'The username contains a hidden or full-width character (copy and paste often brings these along) — type it in from the keyboard',
@@ -3892,6 +3896,7 @@ const enGB: Dict = {
   sponsorCode: 'Invite code (optional)',
   loginError: "Sign-in didn't go through — the request didn't reach the server or didn't finish. Check your internet connection and try again",
   sessionExpired: 'Your session has ended — sessions last 30 days from signing in. Sign in again to see the alerts and journal saved to your account',
+  authSessionExpired: 'Your session has ended — sessions last 30 days from signing in. Sign in again to see the alerts and journal saved to your account',
   registerError: "Registration didn't go through — the request didn't reach the server or didn't finish. Check your internet connection and try again",
   language: 'Language',
   // التهجئة البريطانية لما افترق. (نصّ الجولة `onboardStep3Body` لم يعد فيه «summarize» فلا يحتاج نسخة هنا.)
@@ -3936,6 +3941,7 @@ const ku: Dict = {
   company: 'کۆمپانیا',
   loginError: 'چوونەژوورەوە سەرکەوتوو نەبوو — داواکارییەکە نەگەیشتە ڕاژەکار یان تەواو نەبوو. پەیوەندیت بە ئینتەرنێتەوە بپشکنە و دووبارە هەوڵ بدەرەوە',
   sessionExpired: 'دانیشتنەکەت کۆتایی هات — 30 ڕۆژ لە چوونەژوورەوە دەمێنێتەوە. دووبارە بچۆ ژوورەوە بۆ بینینی ئاگادارکردنەوە و دەفتەری مامەڵەی پاشەکەوتکراو لە هەژمارەکەت',
+  authSessionExpired: 'دانیشتنەکەت کۆتایی هات — 30 ڕۆژ لە چوونەژوورەوە دەمێنێتەوە. دووبارە بچۆ ژوورەوە بۆ بینینی ئاگادارکردنەوە و دەفتەری مامەڵەی پاشەکەوتکراو لە هەژمارەکەت',
   registerError: 'تۆمارکردن سەرکەوتوو نەبوو — داواکارییەکە نەگەیشتە ڕاژەکار یان تەواو نەبوو. پەیوەندیت بە ئینتەرنێتەوە بپشکنە و دووبارە هەوڵ بدەرەوە',
   regErrReserved: 'ئەم ناوە پارێزراوە — ناوێکی تر هەڵبژێرە',
   regErrInvisible: 'ناوەکە پیتێکی شاراوە یان پانی تێدایە (زۆرجار لەگەڵ کۆپی و پەیست دێت) — خۆت بە کیبۆرد بینووسە',
