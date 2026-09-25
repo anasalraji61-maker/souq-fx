@@ -22,6 +22,8 @@ export function rangeBars(candles: Candle[], boxSize?: number): Candle[] {
   let close = candles[0].close;
   let vol = candles[0].volume ?? 0;
   let t = candles[0].time;
+  /** شموع أصلية دخلت الشمعة الجارية منذ آخر إغلاق — غير صفر ⇒ شمعة تتكوّن. */
+  let pending = 1;
 
   for (let i = 1; i < candles.length; i++) {
     const c = candles[i];
@@ -29,6 +31,7 @@ export function rangeBars(candles: Candle[], boxSize?: number): Candle[] {
     low = Math.min(low, c.low);
     close = c.close;
     vol += c.volume ?? 0;
+    pending += 1;
     if (high - low >= box) {
       out.push({ time: t, open, high, low, close, volume: vol });
       open = close;
@@ -36,8 +39,12 @@ export function rangeBars(candles: Candle[], boxSize?: number): Candle[] {
       low = close;
       vol = 0;
       t = c.time;
+      pending = 0;
     }
   }
+  // الشمعة التي تتكوّن (لم تبلغ الصندوق بعد) كـTradingView: كانت تُرمى فيقف الشارت عند آخر شمعة مغلقة
+  // بينما وسم السعر الحيّ يطبع سعراً أبعد، والتقاطع وصندوق الشراء/البيع لا يريان الحركة الجارية.
+  if (out.length && pending > 0) out.push({ time: t, open, high, low, close, volume: vol });
 
   return out.length ? out : candles;
 }
