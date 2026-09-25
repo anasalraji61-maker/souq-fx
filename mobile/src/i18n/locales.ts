@@ -537,6 +537,9 @@ export type Dict = {
   journalCloseFieldConfirmTitle: string;
   journalCloseMarketConfirmBtn: string;
   journalCloseMarketNoQuote: string;
+  /** «إغلاق بالسعر الحالي» على صفقة أُغلقت بجهاز آخر: القائمة تتحدّث بلا كتابة خروج (`closedElsewhere`) — هذا يشرح السبب. */
+  journalClosedElsewhereTitle: string;
+  journalClosedElsewhereBody: string;
   backtestSub: string;
   backtestSymbolA11y: string;
   backtestStrategyA11yPrefix: string;
@@ -1582,6 +1585,8 @@ const ar: Dict = {
   journalCloseFieldConfirmTitle: 'إغلاق بسعر خانة الخروج؟',
   journalCloseMarketConfirmBtn: 'إغلاق',
   journalCloseMarketNoQuote: 'لا سعر حي لهذا الرمز الآن — اكتب سعر الخروج بخانة «خروج» ثم «إغلاق بسعر خانة الخروج»',
+  journalClosedElsewhereTitle: 'الصفقة مغلقة من قبل',
+  journalClosedElsewhereBody: 'أُغلقت هذه الصفقة من جهاز آخر، فلم نسجّل خروجاً ثانياً فوقها. القائمة محدَّثة الآن بسعر خروجها ونتيجتها المسجَّلين.',
   backtestSub: 'MA · RSI · MACD · BB · منحنى رأس المال',
   backtestSymbolA11y: 'رمز الأداة للاختبار الخلفي',
   backtestStrategyA11yPrefix: 'استراتيجية',
@@ -2640,6 +2645,8 @@ const enUS: Dict = {
   journalCloseFieldConfirmTitle: 'Close at exit field price?',
   journalCloseMarketConfirmBtn: 'Close',
   journalCloseMarketNoQuote: 'No live price for this symbol right now — type the exit in the “Exit” field, then use “Close at exit field price”',
+  journalClosedElsewhereTitle: 'Already closed',
+  journalClosedElsewhereBody: 'This trade was closed on another device, so no second exit was recorded over it. The list now shows its recorded exit price and result.',
   backtestSub: 'MA · RSI · MACD · BB · Equity curve',
   backtestSymbolA11y: 'Instrument symbol for the backtest',
   backtestStrategyA11yPrefix: 'Strategy',
@@ -3725,6 +3732,8 @@ const ku: Dict = {
   journalCloseFieldConfirmTitle: 'داخستن بە نرخی خانەی دەرچوون؟',
   journalCloseMarketConfirmBtn: 'داخستن',
   journalCloseMarketNoQuote: 'ئێستا نرخی ڕاستەوخۆ بۆ ئەم هێمایە نییە — نرخی دەرچوون لە خانەی «دەرچوون» بنووسە و پاشان «داخستن بە نرخی خانەی دەرچوون»',
+  journalClosedElsewhereTitle: 'مامەڵەکە پێشتر داخراوە',
+  journalClosedElsewhereBody: 'ئەم مامەڵەیە لە ئامێرێکی ترەوە داخراوە، بۆیە دەرچوونی دووەممان لەسەری تۆمار نەکرد. لیستەکە ئێستا نرخی دەرچوون و ئەنجامە تۆمارکراوەکەی پیشان دەدات.',
   backtestSub: 'MA · RSI · MACD · BB · کەوانەی سەرمایە',
   backtestSymbolA11y: 'هێمای ئامراز بۆ تاقیکردنەوەی دواوە',
   backtestStrategyA11yPrefix: 'ستراتیژی',
