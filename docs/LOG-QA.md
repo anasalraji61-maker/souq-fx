@@ -515,3 +515,15 @@ tools61 وlaunch94 ردّ فقط.
 >20% ⇒ نقاط (لا يحدث وقف/هدف حقيقي بهذا البعد لزوج أو معدن)؛ `13b5b64` ربح الأساس=عملة الحساب ÷ الهدف صحيح؛ `8ca9577` `zigzagLegendText` بـ`tsx`
 على 7 رموز (EURUSD «≈540.0 pip»، USDJPY «≈787.0»، ذهب «≈1325»، BTC/GER40/DXY بالسعر) صحيحة. **لا بند جديد.**
 **الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
+
+## 2026-09-25 — الدورة 46
+**البناء:** أخضر 0 (بعد 25f2dc0) — لا إصلاح لازم. **Selftests:** 87/87 ناجح (`npx tsx`؛ `pivotBase`/`positionSize`/`tradePlan` بحالات جديدة).
+**التحقّق من الإغلاقات بالكود:** مُغلق — QA44 (`c23a162`، `PositionSizePanel.tsx:1211` `riskCalcMiniSymbol` حين `!spec && miniAccountSymbol`؛ الدفتر عمداً بلا وصل).
+**غير مُغلق (grep):** 10 `Alert.alert` (الـ11 الظاهرة إحداها تعليق `TradeJournalPanel:1031`)، «₴» ×2، `FocusChartModal:56` `BASES`، `matrix.lang.v1` ×2،
+`BRENT/USD`، `TimeframeBar`، `WeeklyReportPanel:46`.
+**طلبات تنسيق جديدة (تحقّقتُ):** tools63 منخفضة ⇒ صفّ واحد: `formatPrice` سقف 10 منازل (`tsx`: 1.23e-9 ⇒ «0.0000000012») لـchart؛ مفتاحا نصّ (mini بالدفتر،
+سبريد بالنقاط) لـlaunch. launch98 ردّ فقط. chart: «خارج نطاق ملفاتي» = صفوف قائمة.
+**المراجعة (a — تكرار/ميت/تصديرات)، diff منذ b7a9d02 (10 ملفات):** التصديرات الست الجديدة (`useDailyCurrOpen`، `currentSessionOpenAfter`، `costsForRisk`،
+`computedPriceText`، `openQuotesRefreshDue`، `OPEN_QUOTES_REFRESH_AFTER_MS`) كلّها مستوردة. مسح أسماء المستوى الأعلى المكرّرة: لا جديد (`pineEma` ×4 مراجع
+اختبار مستقلّة، مقبول). **لا بند جديد.**
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة.
