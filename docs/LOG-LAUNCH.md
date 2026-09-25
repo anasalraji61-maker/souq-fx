@@ -3865,3 +3865,29 @@ commit**. **لم يُشغَّل التطبيق.**
 - صفوفي القائمة: launch9/77 (backend/أنس)، launch48 (chart/أنس)، launch52/73 (أنس) — بلا تغيير.
 
 **يحتاج جهازاً**: الخطوات 322–584؛ الجديدة 573 (رأس الطرفية بشبكة بطيئة)، 575 (مسودّة الدفتر)، 579 (صندوق H1 على D1)، و582 (الافتراضي بعد إعادة الفتح) أهمّها.
+
+## 2026-09-25 — التشغيلة 134
+
+أوّلاً `COORDINATION.md`: صفّ **ui35 ← launch** (نصّ backend-r37). `bash scripts/qa-build-check.sh` أخضر (0 أخطاء) قبل كل commit. **لم يُشغَّل التطبيق.**
+الكردي بالنصوص الجديدة بحاجة مراجعة ناطق.
+
+1. **ui35 — أُنجز** (`3a1b533`، ar/en/ku): مفتاح `sigLevelsUnavailableAtrWide` بجوار `sigLevelsUnavailableFewCandles` — «لا مستويات دخول ووقف وهدف —
+   المدى (ATR) أوسع من السعر نفسه» / «No entry, stop or target — the range (ATR) is wider than the price itself». «المدى (ATR)» كصياغة FewCandles
+   (لا «التذبذب»). تحقّقتُ من السبب بالكود: `signal_hub._trade_levels` يرسل `atr_exceeds_price` حين الوقف أو الهدف ≤ 0. **الربط باقٍ على ui**:
+   `signalDirection.ts:levelsUnavailableText` → `case 'atr_exceeds_price': return t.sigLevelsUnavailableAtrWide;` (ملف ui، لم ألمسه). QA يحوّل الصفّ إلى ui للربط أو يزيله إن رُبط.
+2. **RELEASE 585–596** (`e716728`): اثنا عشر commit بلا خطوة جهاز، قرأتُ كل diff — chart `548b921` (تقاطع المستقبل)، `9eabf23` (سحب الإعادة)، `3279f42`
+   (RVI 50 بسوق ساكن)، `923d537` (VWAP Bands ±1σ)، `f7c57a7` (Chandelier خطّ تتبّعي)، `71f373e` (نسبة الذهب/DXY يوم العطلة)؛ ui `1136739` (سبريد DOM)،
+   `3b45502` (لا «لا اتجاه غالب» تحت «بيع»)؛ tools `205501b` (null بالإحصاء المحلّي)؛ backend `d43e9dd`، `b86493d`، `d5249e5`. 596 ينبّه المختبِر ألّا يسجّل
+   غياب سطر السبب عطلاً قبل ربط ui.
+3. **الجرد** (`a5ad18a`): صفّ DOM lite — اللوحة نفسها صارت على مواصفة الشارت (أُزيلت جملة «ما زالت»)؛ صفّ المؤشرات — VWAP Bands ±1σ، Chandelier خطّ
+   وقف بسقّاطة، StdDev صفر على نافذة مسطّحة.
+4. **ROADMAP** (`d6ff582`): وسمتُ وصفَي «±2×الانحراف» لـVWAP Bands و«الشريط» لـChandelier (سجلّ 2026-09-14) بأنهما استُبدلا، كي لا يُقرأ الوصف القديم حالاً.
+
+**فحوص بلا أثر**: مستهلكو `best`/`worst` بعد `205501b` (`TradeJournalPanel.tsx:1557`، `WeeklyReportPanel.tsx:129`) محروسون بعدد الصفقات ⇒ لا «null» بالنصّ.
+لا مفاتيح ترجمة لأسماء المؤشرات (Chandelier Exit لاتيني بـ`types.ts`). `app.json`/`eas.json` بلا تغيير لازم.
+
+### ردّ على COORDINATION
+- **ui35 ← launch: أُنجز** بـ`3a1b533` (المفتاح موجود بالثلاث). يبقى الربط على ui (انظر 1).
+- صفوفي القائمة: launch9/77 (backend/أنس)، launch48 (chart/أنس)، launch52/73 (أنس) — بلا تغيير.
+
+**يحتاج جهازاً**: الخطوات 322–596؛ الجديدة 585 (تقاطع المستقبل)، 586 (سحب الإعادة)، 589 (Chandelier مقابل TradingView) و591 (سبريد DOM) أهمّها.
