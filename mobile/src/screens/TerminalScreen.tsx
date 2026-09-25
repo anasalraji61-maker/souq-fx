@@ -961,7 +961,9 @@ export function TerminalScreen() {
    */
   const heroNoRealData = series != null && seriesHasNoRealData(series.data_source);
   // chart-r47: الدوّار وحده لا يقول ماذا يُحمَّل — النصّ ظاهر وهو نفسه الـlabel.
-  const firstLoadText = t.chartFirstLoad.replace('{symbol}', symbol).replace('{tf}', tf);
+  // launch120: `{tf}` باسمه المترجَم («15 د»/«يومي») لا المعرّف الخام «D»، والـlabel بصيغته المنطوقة («15 دقيقة»).
+  const firstLoadText = t.chartFirstLoad.replace('{symbol}', symbol).replace('{tf}', t.tfLabels[tf]);
+  const firstLoadA11y = t.chartFirstLoad.replace('{symbol}', symbol).replace('{tf}', t.tfLabelsA11y[tf]);
   const heroTick = liveTicks[symbol] ?? null;
   const heroNowMs = useTickFreshnessClock(heroTick?.source.as_of ?? null);
   const heroNowSec = heroNowMs / 1000;
@@ -1386,7 +1388,7 @@ export function TerminalScreen() {
                     onLongPress={() => openFocus(symbol, tf)}
                   />
                   <Text style={styles.desktopMarket}>
-                    {t.termShadowFrameA11y} · {t.termPrimaryWord} {tf}
+                    {t.termShadowFrameA11y} · {t.termPrimaryWord} {t.tfLabels[tf]}
                   </Text>
                 </View>
               </View>
@@ -1507,13 +1509,18 @@ export function TerminalScreen() {
             ) : null}
             <View style={styles.desktopChart}>
               {heroNoRealData ? (
-                <ProviderUnavailableNotice symbol={symbol} height={desktopChartHeight} showSwitchHint />
+                <ProviderUnavailableNotice
+                  symbol={symbol}
+                  height={desktopChartHeight}
+                  showSwitchHint
+                  dataSource={series?.data_source}
+                />
               ) : !series ? (
                 <View
                   style={[styles.heroLoading, { height: desktopChartHeight }]}
                   accessible
                   accessibilityRole="progressbar"
-                  accessibilityLabel={firstLoadText}
+                  accessibilityLabel={firstLoadA11y}
                   accessibilityState={{ busy: true }}
                 >
                   <ActivityIndicator color={colors.accent} />
@@ -1565,9 +1572,9 @@ export function TerminalScreen() {
             <View style={styles.rangeBar}>
               <Text style={styles.shadowFooterNote}>
                 {[
-                  `${t.termPrimaryWord} ${tf}`,
+                  `${t.termPrimaryWord} ${t.tfLabels[tf]}`,
                   ...SHADOW_SLOT_TAGS.flatMap((tag, i) =>
-                    shadowEnabled[i] ? [`${tag} ${shadowSlots[i]}`] : []
+                    shadowEnabled[i] ? [`${tag} ${t.tfLabels[shadowSlots[i]]}`] : []
                   ),
                 ].join(' · ')}
               </Text>
@@ -1606,7 +1613,7 @@ export function TerminalScreen() {
                     onLongPress={() => openFocus(symbol, tf)}
                   />
                   <Text style={styles.desktopMarket}>
-                    {t.termFxMarketWord} · {tf}
+                    {t.termFxMarketWord} · {t.tfLabels[tf]}
                   </Text>
                 </View>
               </View>
@@ -1665,13 +1672,18 @@ export function TerminalScreen() {
             ) : null}
             <View style={styles.desktopChart}>
               {heroNoRealData ? (
-                <ProviderUnavailableNotice symbol={symbol} height={desktopChartHeight} showSwitchHint />
+                <ProviderUnavailableNotice
+                  symbol={symbol}
+                  height={desktopChartHeight}
+                  showSwitchHint
+                  dataSource={series?.data_source}
+                />
               ) : !series ? (
                 <View
                   style={[styles.heroLoading, { height: desktopChartHeight }]}
                   accessible
                   accessibilityRole="progressbar"
-                  accessibilityLabel={firstLoadText}
+                  accessibilityLabel={firstLoadA11y}
                   accessibilityState={{ busy: true }}
                 >
                   <ActivityIndicator color={colors.accent} />
