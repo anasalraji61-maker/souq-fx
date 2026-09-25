@@ -56,12 +56,80 @@ def test_dxy_chart_has_no_candles_and_no_price(monkeypatch, configured):
     assert body["data_source"]["channel"] is None  # لا «seed»
 
 
-def test_terminal_dxy_slot_is_empty_but_frames_are_untouched(monkeypatch):
+def test_terminal_without_provider_sends_no_candles_for_any_slot(monkeypatch):
+    """backend-r22: الخانات الثلاث كانت بذرة عشوائية حول أسعار 2024 المكتوبة باليد حين المزوّد غير مهيّأ."""
     monkeypatch.setattr(market, "_api_key", lambda: None)
     body = TestClient(main.app).get("/api/terminal").json()
     assert body["dxy"]["candles"] == [] and body["dxy"]["last"] is None
-    # الرموز المعروفة ما زالت ترسل سلسلتها (demo موسومة حين المزوّد غير مهيّأ — قرار سابق، لم يتغيّر)
-    assert all(f["candles"] and f["last"] is not None for f in body["frames"])
+    assert body["dxy"]["data_source"]["unavailable_reason"] == "not_offered_by_provider"
+    for f in body["frames"]:
+        assert f["candles"] == [] and f["last"] is None and f["change_pct"] is None
+        assert f["data_source"]["unavailable_reason"] == "provider_unavailable"
+
+
+def _provider_fails(monkeypatch, how):
+    monkeypatch.setattr(market, "_api_key", lambda: "k")
+    if how == "raises":
+        def boom(*a, **kw):
+            raise RuntimeError("429 Too Many Requests")
+        monkeypatch.setattr(market, "fetch_time_series_with_meta", boom)
+    else:  # "empty"
+        monkeypatch.setattr(market, "fetch_time_series_with_meta", lambda *a, **kw: ([], {}))
+
+
+@pytest.mark.parametrize("how", ["raises", "empty", "not_configured"])
+@pytest.mark.parametrize("symbol", ["EURUSD", "XAUUSD", "USDJPY", "NOSUCH"])
+def test_known_or_unknown_symbol_gets_no_seed_when_provider_fails(monkeypatch, how, symbol):
+    """backend-r22: كانت بذرة حول `SYMBOL_BASES` (EURUSD 1.0854، الذهب 2348.6…؛ المجهول حول 1.0) تُرسَل
+    شموعاً وإغلاقاً ونسبة عند كل 429 بلا كاش أو انقطاع أو بلا مفتاح — الشارت يرسمها."""
+    if how == "not_configured":
+        monkeypatch.setattr(market, "_api_key", lambda: None)
+    else:
+        _provider_fails(monkeypatch, how)
+    body = TestClient(main.app).get(f"/api/charts/{symbol}?timeframe=1H").json()
+    assert body["candles"] == []
+    assert body["last"] is None and body["change_pct"] is None
+    assert body["data_source"]["kind"] == "demo"  # كل مسار حسابي يرفضها كما قبل
+    assert body["data_source"]["unavailable_reason"] == "provider_unavailable"
+    assert body["data_source"]["channel"] is None
+    assert body["timeframe"] == "1H"
+
+
+def test_no_hand_typed_base_prices_remain():
+    assert not hasattr(main, "SYMBOL_BASES") and not hasattr(main, "_seed_walk")
+
+
+def test_real_provider_series_is_untouched(monkeypatch):
+    raw = [{"time": 60 * i, "open": 1.1, "high": 1.2, "low": 1.0, "close": 1.1 + i / 100} for i in range(3)]
+    monkeypatch.setattr(market, "_api_key", lambda: "k")
+    monkeypatch.setattr(market, "fetch_time_series_with_meta",
+                        lambda *a, **kw: (raw, {"kind": "provider", "as_of": 123.0}))
+    s = main.build_series("EURUSD", "15m")
+    assert s.last == 1.12 and len(s.candles) == 3 and s.data_source.kind == "provider"
+    assert s.data_source.unavailable_reason is None
+
+
+@pytest.mark.parametrize("how", ["raises", "not_configured"])
+def test_routes_still_refuse_when_provider_fails(monkeypatch, how):
+    """المسارات الحسابية تفحص `kind == demo` — السلسلة الفارغة لا تُسقطها بـ500."""
+    if how == "not_configured":
+        monkeypatch.setattr(market, "_api_key", lambda: None)
+    else:
+        _provider_fails(monkeypatch, how)
+    monkeypatch.setattr(market, "fetch_quote_book", lambda *a, **kw: None)
+    monkeypatch.setattr(main.openrouter_ai, "configured", lambda: False)
+    c = TestClient(main.app)
+    q = c.get("/api/market/quote/EURUSD")
+    assert q.status_code == 200 and q.json()["price"] is None
+    assert q.json()["unavailable_reason"] == "provider_unavailable"
+    bt = c.post("/api/backtest", json={"symbol": "EURUSD", "timeframe": "1H", "strategy": "ma_cross"})
+    assert bt.status_code == 200 and bt.json()["trades"] == [] and bt.json()["data_kind"] == "demo"
+    snap = c.get("/api/indicators/snapshot/EURUSD")
+    assert snap.status_code == 200 and "rsi" not in snap.json()
+    fc = c.post("/api/signals/indicators/forecast", json={"symbol": "EURUSD", "timeframe": "1H"})
+    assert fc.status_code == 200 and fc.json()["levels"] is None
+    ai = c.post("/api/ai/ask", json={"question": "buy?", "symbol": "EURUSD"})
+    assert ai.status_code == 200 and ai.json()["live_price"] is False
 
 
 def test_ai_ask_on_dxy_still_answers_without_levels(monkeypatch):

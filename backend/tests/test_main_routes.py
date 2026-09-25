@@ -745,13 +745,6 @@ def test_the_symbol_in_the_path_is_matched_case_insensitively(client):
     assert client.delete("/api/watchlist/custom/eurusd", headers=_DEV1).json()["removed"] == 1
 
 
-def test_demo_series_has_no_invented_volume():
-    """السلسلة البذرية كانت تحمل حجماً عشوائياً 800–5000+ لكل شمعة (الفوركس لا حجم له عند المزوّد)."""
-    import main as m
-    candles = m._seed_walk("EURUSD", 1.1, n=50)
-    assert candles and all(c.volume is None for c in candles)
-
-
 def test_worker_indicator_series_drops_stale_cache(monkeypatch):
     candles = [{"time": 1, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0}]
     monkeypatch.setattr(alert_worker.market, "fetch_time_series_with_meta",

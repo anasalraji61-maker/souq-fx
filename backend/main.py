@@ -8,7 +8,6 @@ from __future__ import annotations
 import asyncio
 import math
 import os
-import random
 import re
 import secrets
 import time
@@ -499,59 +498,6 @@ def _new_id(prefix: str) -> str:
     return f"{prefix}{int(time.time())}{secrets.token_hex(4)}"
 
 
-def _seed_walk(
-    symbol: str, base: float, n: int = 80, vol: float = 0.0012, step_sec: int = 900
-) -> list[Candle]:
-    rng = random.Random((hash(symbol) + step_sec) % 10_000)
-    t0 = int(time.time()) - n * step_sec
-    price = base
-    out: list[Candle] = []
-    vol_scale = math.sqrt(step_sec / 900)
-    for i in range(n):
-        drift = math.sin(i / 9) * vol * base * 0.35 * vol_scale
-        shock = rng.uniform(-vol, vol) * base * vol_scale
-        o = price
-        c = max(0.0001, o + drift + shock)
-        h = max(o, c) * (1 + abs(rng.uniform(0, vol * 0.6 * vol_scale)))
-        l = min(o, c) * (1 - abs(rng.uniform(0, vol * 0.6 * vol_scale)))
-        out.append(
-            Candle(
-                time=t0 + i * step_sec,
-                open=round(o, 5 if base < 50 else 2),
-                high=round(h, 5 if base < 50 else 2),
-                low=round(l, 5 if base < 50 else 2),
-                close=round(c, 5 if base < 50 else 2),
-                # لا حجم: كان رقماً عشوائياً (800–5000+ لكل شمعة) — نشاط مخترَع لأي لوحة حجم لا تفحص الوسم.
-                volume=None,
-            )
-        )
-        price = c
-    return out
-
-
-SYMBOL_BASES = {
-    "EURUSD": 1.0854,
-    "GBPUSD": 1.2732,
-    "USDJPY": 157.42,
-    "AUDUSD": 0.6621,
-    "USDCAD": 1.3642,
-    "NZDUSD": 0.6014,
-    "USDCHF": 0.8842,
-    "EURJPY": 162.15,
-    "GBPJPY": 200.4,
-    "EURGBP": 0.852,
-    "AUDJPY": 104.2,
-    "EURAUD": 1.64,
-    "EURCHF": 0.96,
-    "CADJPY": 115.3,
-    "XAUUSD": 2348.6,
-    "XAGUSD": 28.45,
-    "USOIL": 78.35,
-    "UKOIL": 82.1,
-    "BTCUSD": 67420.0,
-    "ETHUSD": 3450.0,
-}
-
 TF_SECONDS = {
     "1m": 60,
     "5m": 300,
@@ -600,37 +546,21 @@ def build_series(symbol: str, timeframe: str = "15m", outputsize: int = 180) -> 
                     ),
                 )
         except Exception:
-            pass  # fallback to demo seed below
+            pass  # لا بيانات ⇒ سلسلة فارغة موسومة أدناه
 
-    why = market.unavailable_reason(sym)
-    if why == "not_offered_by_provider":
-        # backend-r19: DXY لا يقدّمه المزوّد أبداً — كانت تُرسَل بذرة عشوائية حول 104.25 (رقم مكتوب باليد) يرسمها
-        # التطبيق شموعاً وسعراً ونسبة تحت وسم «غير متاح». الآن لا شموع ولا سعر؛ التطبيق يعرض إشعار المزوّد مكانها
-        # (`ProviderUnavailableNotice`، b1d1adb/da73ec6). `kind: demo` يبقى ليرفضها كل مسار حسابي كما قبل.
-        return ChartSeries(
-            symbol=sym,
-            timeframe=tf,
-            candles=[],
-            change_pct=None,
-            last=None,
-            data_source=DataProvenance(kind="demo", as_of=time.time(), channel=None, unavailable_reason=why),
-        )
-    step = TF_SECONDS[tf]
-    base = SYMBOL_BASES.get(sym, 1.0)
-    vol = 0.0015
-    candles = _seed_walk(sym, base, n=size, vol=vol, step_sec=step)
-    first = candles[0].close
-    last = candles[-1].close
-    change = ((last - first) / first) * 100
+    # backend-r22: لا شموع ولا سعر حين لا بيانات من المزوّد — لأي رمز. كانت بذرة عشوائية حول أسعار مكتوبة باليد
+    # من 2024 (`SYMBOL_BASES`: EURUSD 1.0854، الذهب 2348.6…؛ ورمز مجهول حول 1.0) تُرسَل شموعاً وإغلاقاً ونسبة
+    # موسومة demo عند كل 429 بلا كاش أو انقطاع أو بلا مفتاح — والشارت يرسمها. DXY (`27fa8ba`) كان الحالة الأولى.
+    # `kind: demo` يبقى فيرفضها كل مسار حسابي كما قبل (تنبيهات، اقتباس، ماسح، اختبار خلفي، توقّع، مساعد).
+    # السبب: `not_offered_by_provider` (DXY) أو `provider_unavailable` (المزوّد متعذّر أو غير مهيّأ أو لا يعرف الرمز).
+    why = market.unavailable_reason(sym) or "provider_unavailable"
     return ChartSeries(
         symbol=sym,
         timeframe=tf,
-        candles=candles,
-        change_pct=round(change, 2),
-        last=last,
-        data_source=DataProvenance(
-            kind="demo", as_of=time.time(), channel="seed", unavailable_reason=why
-        ),
+        candles=[],
+        change_pct=None,
+        last=None,
+        data_source=DataProvenance(kind="demo", as_of=time.time(), channel=None, unavailable_reason=why),
     )
 
 
