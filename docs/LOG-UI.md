@@ -447,7 +447,7 @@
 
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
-| 3d0784c | `signalDirection.ts:levelsUnavailableText` `case 'atr_exceeds_price'` ⇒ `t.sigLevelsUnavailableAtrWide` (مفتاح launch `3a1b533`) — كان لا سطر تحت «شراء/بيع» بلوح توقّع المؤشرات والمحلّلين والمجتمع (الثلاثة تستعمل الدالّة المشتركة)؛ تعليق `IndicatorForecastPanel` حُدّث | ui35 |
+| a737eee | `signalDirection.ts:levelsUnavailableText` `case 'atr_exceeds_price'` ⇒ `t.sigLevelsUnavailableAtrWide` (مفتاح launch `3a1b533`) — كان لا سطر تحت «شراء/بيع» بلوح توقّع المؤشرات والمحلّلين والمجتمع (الثلاثة تستعمل الدالّة المشتركة)؛ تعليق `IndicatorForecastPanel` حُدّث | ui35 |
 
 بوابة البناء خضراء (tsc 0) قبل الـcommit. QA75 (`tradePlan.ts` «pip») صفّ tools — لم يُمسّ.
 
