@@ -1,6 +1,7 @@
 import type { Candle } from '../api';
 import type { SyntheticBar } from './types';
 import { computeAtr } from './indicators/volatility';
+import { MIN_BOX_FRACTION } from './range';
 
 function atrBox(candles: Candle[]): number {
   if (candles.length < 2) return 1e-8;
@@ -29,8 +30,6 @@ export function renkoAtrBox(candles: Candle[], period = 14): number {
   return Math.max(atr != null && Number.isFinite(atr) && atr > 0 ? atr : atrBox(candles), floor);
 }
 
-/** أرضية الصندوق التلقائي نسبةً من السعر (0.005% ≈ نصف pip على EUR/USD) — كـ`range.ts`. */
-const MIN_BOX_FRACTION = 5e-5;
 /** سقف اللبنات — الأقدم يسقط (الشارت لا يعرض أكثر من بضع مئات). */
 export const RENKO_MAX_BRICKS = 5000;
 
