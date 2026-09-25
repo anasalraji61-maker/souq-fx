@@ -576,3 +576,19 @@ backend `f54ba4e`…`46ce46f` — السبريد، 409، `size` null، MACD، AT
 ⇒ انهيار QA49 لم يعد قابلاً للحدوث من الخادم الحالي (`analysts: []`) فدُمج بصفّ backend-r2 مع `setDirection(null)` ⇒ «محايد» مضلّل. أُغلقت QA5 (بنوك/منافس)، QA20، QA14، وشقّ tools من backend-r1
 عدا «تحميل الأقدم». صفّ `CalendarPanel` دُمج بـlaunch102. ⛔ 2 صار: مصدر مرخَّص أم إخفاء اللوحتين.
 **إلحاق 2:** `449c12f` (chart) أغلق شقّ launch102 بالشارت (`newsRisk.ts:515`) ⇒ الصفّ صار ui وحده (`CalendarPanel`). `67ebd17` (tools: سطر DXY بالطرفية). البناء بعد الدمج أخضر 0.
+
+## 2026-09-25 — الدورة 50
+**البناء:** أخضر 0 (بعد 923010f) — لا إصلاح لازم. **Selftests:** 88/88 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** أُغلق — ui1 (`AccountScreen.tsx:221`)، chart-r34 (`MatrixChart.tsx:5813 :8670`)، chart3 ★ (`FocusChartModal.tsx:182` 90ث، :435 الشارت مركَّب)،
+QA1 ★ `dirColor`/`dirLabel` (`signalDirection.ts`) و`VotePanel` `planSummaryText`، QA11 ★ (`DomLitePanel.tsx:67`)، launch102 (`CalendarPanel.tsx:311`)، شقّ الإشارات من backend-r1.
+**باقٍ (تحقّقتُ):** `DataOriginKind` بلا `'unavailable'` (`api.ts:84`)؛ `TerminalScreen.tsx:1833 :1853` يمرّر `lastPrice` (ui2 → tools)؛ «تحميل الأقدم» (tools67 → ui).
+**طلبات تنسيق جديدة (تحقّقتُ):** launch103 → ui — **🔴 انهيار**: `AnalystsPanel.tsx:114`/`SocialConsensusPanel.tsx:211` `avg.toFixed(2)` والخادم `signal_hub.py:95` `avg_score: None`؛
+tsc أخضر لأن `api.ts:617 :639` `avg_score: number`. ليس خطأ بناء وإصلاحه يغيّر العرض (بديل الاتجاه/المتوسط) ⇒ لم أمسّه، الصفّ أولاً بالجدول. tools67: مفتاح `riskCalcConvInverted` جاهز
+(`9bd862f`) ⇒ الصفّ صار لـtools؛ و`{pair}` ×2 بـ`CONV_INVERTED_COPY.ar` مع `.replace` واحد (:1502) مؤكّد. ui2 صفّا tools/backend.
+**المراجعة (e — ما يُحرج أمام متداول)، diff منذ 449c12f (24 ملفاً):** الأسوأ الانهيار أعلاه، ثم «{pair}» الحرفي بالعربية، ثم «محايد» بلا بيانات (بصفّ backend-r2). لا نصّ «مضمون/بلا مخاطرة»؛
+«نسبة نجاح» بالدفتر/الاختبار الخلفي مع تحذير العيّنة الصغيرة. `.confidence` لا يُعرض بأي لوحة (النوع باقٍ فقط). **لا بند جديد منفصل.**
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
+**إلحاق (تعارض دمج مع 0d6c443):** وصلت أثناء الدورة `99f43e9` (ui: launch103 — `status === 'unavailable'` ⇒ «لا مصدر مرخَّص»، `formatScore`، `avg_score: number | null`، «احسب» معطَّل
+بلا مصادر؛ `confidence` أُزيل من `api.ts`)، `0d6c443` (tools: `riskCalcConvInverted` بـ`.split('{pair}').join`، النسخة المحلية حُذفت)، backend-r3 (`c06e5c9` QA5 `lang`/`detail_code`/منازل الرمز،
+`7941d54` QA29، `ee2d153`/`27f5f8d` QA30) وchart-r35. تحقّقتُ بالكود ⇒ أُغلقت launch103، tools67 (المفتاح)، backend-r2 شقّ ui، QA5 ★، QA29 ★، QA30؛ صفوف chart-r35/backend-r3 الجديدة
+أُدرجت، و`DataOriginKind` باقٍ بصفّ chart-r35 (1). STATUS: الانهيار صار «أُصلح أثناء الدورة».
