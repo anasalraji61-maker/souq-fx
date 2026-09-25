@@ -716,6 +716,26 @@ console.log('tradePlan averageR selftest OK');
   // بلا دخول صالح لا تُعرف الجهة
   assert.deepEqual(exitShortcuts({ side: 'buy', entry: null, sl: 1.08, tp: 1.09 }), []);
   assert.deepEqual(exitShortcuts({ side: 'buy', entry: NaN, sl: 1.08 }), []);
+  // وقفٌ نُقل (للصفقة «1R @ …» صالحة ⇒ trailed): على الدخول ⇒ «= BE» وحدها؛ في الربح ⇒ BE ثم SL ثم TP
+  assert.deepEqual(exitShortcuts({ side: 'buy', entry: 1.085, sl: 1.085, tp: 1.09, trailed: true }), [
+    { kind: 'be', price: 1.085 },
+    { kind: 'tp', price: 1.09 },
+  ]);
+  const trBuy = exitShortcuts({ side: 'buy', entry: 1.085, sl: 1.087, tp: 1.09, trailed: true });
+  assert.deepEqual(trBuy, [{ kind: 'be', price: 1.085 }, { kind: 'sl', price: 1.087 }, { kind: 'tp', price: 1.09 }]);
+  // الخروج على الوقف الرابح = +1R بالوقف الأصلي 1.083 (لا «−»، ولا مسافة الوقف الحالي)
+  assert.equal(realizedR({ side: 'buy', entry: 1.085, sl: 1.087, exit: trBuy[1].price, note: '1R @ 1.083' }), 1);
+  const trSell = exitShortcuts({ side: 'sell', entry: 150, sl: 149.8, tp: 149.5, trailed: true });
+  assert.deepEqual(trSell.map((x) => x.kind), ['be', 'sl', 'tp']);
+  // وقفٌ «رابح» تجاوز الهدف ⇒ لا شريحة وقف (مستوى متناقض)، التعادل والهدف يبقيان
+  assert.deepEqual(exitShortcuts({ side: 'buy', entry: 1.085, sl: 1.095, tp: 1.09, trailed: true }).map((x) => x.kind), ['be', 'tp']);
+  // وقفٌ صحيح الجهة: trailed لا يغيّر شيئاً
+  assert.deepEqual(
+    exitShortcuts({ side: 'buy', entry: 1.085, sl: 1.0825, tp: 1.09, trailed: true }).map((x) => x.kind),
+    ['sl', 'be', 'tp']
+  );
+  // بلا علامة وقف أصلي: الوقف على الدخول يبقى بلا شريحة (الحفظ يرفضه)
+  assert.deepEqual(exitShortcuts({ side: 'buy', entry: 1.085, sl: 1.087, tp: 1.09 }), [{ kind: 'tp', price: 1.09 }]);
   assert.deepEqual(exitShortcuts({ side: 'buy', entry: 1.085, sl: 0, tp: -1 }), []);
   assert.deepEqual(exitShortcuts({ side: 'buy', entry: 1.085, sl: NaN, tp: Infinity }), []);
 }

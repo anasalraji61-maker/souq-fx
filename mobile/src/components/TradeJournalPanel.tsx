@@ -535,12 +535,24 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   /** شرائح «الخروج = الوقف/الهدف» تحت خانة الخروج — راجع `exitShortcuts` */
   const exitChips = useMemo(
     () =>
-      exitShortcuts({ side, entry: pnum(entry), sl: pnum(sl), tp: pnum(tp) }).map((x) => ({
+      exitShortcuts({
+        side,
+        entry: pnum(entry),
+        sl: pnum(sl),
+        tp: pnum(tp),
+        // وقفٌ نُقل للتعادل/الربح: الملاحظة كما ستُحفظ (بعلامة «1R @ …» إن شُدّ الوقف بهذا التعديل)
+        trailed: (() => {
+          const e = pnum(entry);
+          return e != null && trailedStopAllowed({ symbol: symbol.trim(), side, entry: e, note: noteToSave(e, pnum(sl)) });
+        })(),
+      }).map((x) => ({
         ...x,
         text: x.kind === 'sl' ? sl.trim() : x.kind === 'be' ? entry.trim() : tp.trim(),
+        // وقفٌ في الربح لونه ربح لا خسارة
+        gain: x.kind === 'sl' && levelSideIssue({ side, entry: pnum(entry) ?? 0, sl: x.price }) != null,
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [symbol, side, entry, sl, tp]
+    [symbol, side, entry, sl, tp, note, editing]
   );
 
   /**
@@ -1564,7 +1576,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
                     : t.journalExitAtTpA11y
                 ).replace('{price}', x.text)}
               >
-                <Text style={[styles.qChipText, on ? styles.chipTextOn : { color: x.kind === 'sl' ? colors.bear : x.kind === 'be' ? colors.textDim : colors.bull }]}>
+                <Text style={[styles.qChipText, on ? styles.chipTextOn : { color: x.kind === 'sl' ? (x.gain ? colors.bull : colors.bear) : x.kind === 'be' ? colors.textDim : colors.bull }]}>
                   {`= ${label}`}
                 </Text>
               </Pressable>

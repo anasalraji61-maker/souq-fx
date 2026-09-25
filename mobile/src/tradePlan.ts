@@ -597,15 +597,27 @@ export function exitShortcuts(input: {
   entry: number | null;
   sl?: number | null;
   tp?: number | null;
+  /**
+   * وقفٌ نُقل إلى الدخول أو خلفه مقبول (`trailedStopAllowed` — للصفقة وقفٌ أصلي معروف بالملاحظة). كانت
+   * «= SL»/«= BE» تختفي تماماً بعد نقل الوقف للتعادل أو حجز الربح — وهي الحالة التي وُجدت «= BE» لأجلها،
+   * فيُكتب الخروج باليد وتنزلق منزلة. الترتيب يبقى من الأسوأ للأفضل: التعادل، ثم الوقف الرابح، ثم الهدف.
+   */
+  trailed?: boolean;
 }): { kind: 'sl' | 'be' | 'tp'; price: number }[] {
   const { side, entry, sl, tp } = input;
   if (!finitePos(entry)) return [];
   const out: { kind: 'sl' | 'be' | 'tp'; price: number }[] = [];
+  const tpOk = finitePos(tp) && levelSideIssue({ side, entry, tp }) == null;
   if (finitePos(sl) && levelSideIssue({ side, entry, sl }) == null) {
     out.push({ kind: 'sl', price: sl });
     out.push({ kind: 'be', price: entry });
+  } else if (input.trailed && finitePos(sl)) {
+    // الوقف على الدخول تماماً ⇒ «= BE» وحدها (الوقف هو التعادل)؛ في الربح ⇒ التعادل ثم الوقف — ما لم يتجاوز الهدف
+    const beyondTp = tpOk && (side === 'buy' ? sl >= tp : sl <= tp);
+    out.push({ kind: 'be', price: entry });
+    if (sl !== entry && !beyondTp) out.push({ kind: 'sl', price: sl });
   }
-  if (finitePos(tp) && levelSideIssue({ side, entry, tp }) == null) out.push({ kind: 'tp', price: tp });
+  if (tpOk) out.push({ kind: 'tp', price: tp });
   return out;
 }
 
