@@ -660,7 +660,8 @@ const styles = StyleSheet.create({
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 0 },
   priceRowPhone: { flexWrap: 'wrap', flexShrink: 1, columnGap: 6, rowGap: 2 },
   price: { ...numeric, color: colors.text, fontWeight: '600', fontSize: 13 },
-  liveTag: { color: colors.bull, fontSize: 9, fontWeight: '500' },
+  // DESIGN-PRO §1/§5.3: الأخضر للاتجاه وحده، و«مباشر» حالة طبيعية تخفت؛ ما تدهور (سعر أخير/تجريبي) أعلى صوتاً.
+  liveTag: { color: colors.textDim, fontSize: 9, fontWeight: '500' },
   liveTagMuted: { color: colors.textMuted, fontWeight: '500' },
   spreadTag: { ...numeric, color: colors.textDim, fontSize: 9, fontWeight: '600' },
   /** السبريد بالـpip هو الرقم الذي يُقرأ؛ أبرز قليلاً من السعرين بجانبه. */
