@@ -361,7 +361,7 @@ export function FocusChartModal({
           {!phone ? (
             <ScrollView
               style={styles.watch}
-              contentContainerStyle={{ gap: 6, padding: spacing.sm }}
+              contentContainerStyle={{ gap: 4, padding: spacing.sm }}
               keyboardShouldPersistTaps="handled"
             >
               <Text style={[styles.watchTitle, { textAlign: align }]}>{t.focusWatchlistTitle}</Text>
@@ -407,7 +407,7 @@ export function FocusChartModal({
               <>
                 <SymbolSearchBar onPick={pick} />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={{ flexDirection: rtl ? 'row-reverse' : 'row', gap: 6 }}>
+                  <View style={{ flexDirection: rtl ? 'row-reverse' : 'row', gap: 4 }}>
                     {watchlist.map((w) => (
                       <Pressable
                         accessibilityState={{ selected: sym === w.symbol }}
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   topRtl: { flexDirection: 'row-reverse' },
-  topPhone: { paddingVertical: 7, gap: spacing.sm },
+  topPhone: { paddingVertical: 8, gap: spacing.sm },
   closeButton: {
     width: 32,
     height: 32,
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
   sub: { color: colors.textDim, fontSize: 11 },
   price: { ...numeric, color: colors.text, fontWeight: '600', fontSize: 14 },
   quote: { alignItems: 'flex-start' },
-  change: { ...numeric, fontWeight: '500', fontSize: 10, marginTop: 2 },
+  change: { ...numeric, fontWeight: '500', fontSize: 10, marginTop: 4 },
   body: { flex: 1, flexDirection: 'row' },
   bodyRtl: { flexDirection: 'row-reverse' },
   bodyPhone: { flexDirection: 'column' },
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginBottom: spacing.xs,
   },
-  watchHint: { color: colors.textDim, fontSize: 9, marginBottom: 6 },
+  watchHint: { color: colors.textDim, fontSize: 9, marginBottom: 4 },
   watchItem: {
     padding: spacing.sm,
     borderRadius: radii.sm,
@@ -569,14 +569,14 @@ const styles = StyleSheet.create({
   watchCompare: { borderColor: COMPARE_COLOR },
   watchSym: { color: colors.text, fontWeight: '500' },
   watchLabel: { color: colors.textMuted, fontSize: 11 },
-  compareTag: { color: COMPARE_COLOR, fontSize: 9, marginTop: 2 },
+  compareTag: { color: COMPARE_COLOR, fontSize: 9, marginTop: 4 },
   compareNote: { color: COMPARE_COLOR, fontSize: 11 },
   compareNoteWarn: { color: colors.warn, fontWeight: '500' },
   armed: { color: colors.bull, fontSize: 12, fontWeight: '500' },
   main: { flex: 1 },
   pill: {
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: radii.pill,
     backgroundColor: colors.bgPanel,
     borderWidth: 1,

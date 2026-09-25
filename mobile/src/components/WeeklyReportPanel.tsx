@@ -249,7 +249,7 @@ export function WeeklyReportPanel({ grid = false }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 10 },
+  wrap: { gap: 8 },
   title: { color: colors.text, fontWeight: '500', fontSize: 18, textAlign: 'right' },
   sub: { color: colors.textDim, textAlign: 'right', fontSize: 12, marginBottom: spacing.xs },
   tile: {
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     paddingLeft: frameEmbed.padLeft,
     paddingRight: frameEmbed.padRight,
     paddingBottom: frameEmbed.padBottom,
-    gap: 6,
+    gap: 4,
     justifyContent: 'center',
     overflow: 'hidden',
   },

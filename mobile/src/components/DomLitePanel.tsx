@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   warn: { color: colors.warn, fontSize: 12, fontWeight: '500', paddingVertical: spacing.sm },
   row: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.xs },
   rowRtl: { flexDirection: 'row-reverse' },
-  cell: { flex: 1, alignItems: 'center', gap: 2 },
+  cell: { flex: 1, alignItems: 'center', gap: 4 },
   label: { color: colors.textMuted, fontSize: 10, fontWeight: '500' },
   value: { ...numeric, fontSize: 16, fontWeight: '600' },
   bid: { color: colors.bear },

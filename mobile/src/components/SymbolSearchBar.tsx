@@ -93,7 +93,7 @@ export function SymbolSearchBar({ onPick, placeholder }: Props) {
         selectionColor={colors.accent}
         accessibilityLabel={ph}
       />
-      {loading ? <ActivityIndicator color={colors.accent} style={{ marginTop: 6 }} /> : null}
+      {loading ? <ActivityIndicator color={colors.accent} style={{ marginTop: 4 }} /> : null}
       {!loading && error ? <Text style={[styles.error, { textAlign: align }]}>{t.ssbError}</Text> : null}
       {!loading && !error && results.length === 0 && searchedQ !== '' && searchedQ === q.trim() ? (
         <Text style={[styles.noMatch, { textAlign: align }]} accessibilityLiveRegion="polite">
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     color: colors.text,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: spacing.sm,
     fontSize: 13,
   },

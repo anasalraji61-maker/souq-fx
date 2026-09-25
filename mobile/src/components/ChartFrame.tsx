@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
   headerPhone: {
     paddingHorizontal: spacing.sm,
     flexWrap: 'wrap',
-    rowGap: 2,
+    rowGap: 4,
     columnGap: spacing.sm,
   },
   titleRow: {
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
   },
   tf: { color: colors.textDim, fontSize: 11, marginLeft: spacing.xs },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 0 },
-  priceRowPhone: { flexWrap: 'wrap', flexShrink: 1, columnGap: 6, rowGap: 2 },
+  priceRowPhone: { flexWrap: 'wrap', flexShrink: 1, columnGap: 4, rowGap: 4 },
   price: { ...numeric, color: colors.text, fontWeight: '600', fontSize: 13 },
   // DESIGN-PRO §1/§5.3: الأخضر للاتجاه وحده، و«مباشر» حالة طبيعية تخفت؛ ما تدهور (سعر أخير/تجريبي) أعلى صوتاً.
   liveTag: { color: colors.textDim, fontSize: 9, fontWeight: '500' },

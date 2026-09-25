@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgElevated,
     borderRightWidth: 1,
     borderRightColor: colors.border,
-    paddingTop: 6,
+    paddingTop: 8,
     alignItems: 'center',
   },
   rightRail: {
@@ -257,10 +257,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgElevated,
     borderLeftWidth: 1,
     borderLeftColor: colors.border,
-    paddingTop: 6,
+    paddingTop: 8,
     alignItems: 'center',
   },
-  scroll: { alignItems: 'center', gap: 2, paddingBottom: spacing.md },
+  scroll: { alignItems: 'center', gap: 4, paddingBottom: spacing.md },
   railTitle: {
     color: colors.textMuted,
     fontSize: 9,
@@ -308,6 +308,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 1,
     backgroundColor: colors.border,
-    marginVertical: 5,
+    marginVertical: 4,
   },
 });

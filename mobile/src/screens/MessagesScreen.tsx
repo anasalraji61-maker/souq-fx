@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'right',
     paddingHorizontal: spacing.lg,
-    paddingTop: 6,
+    paddingTop: 8,
   },
   empty: {
     color: colors.textDim,
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   },
   avatarText: { color: colors.accent, fontWeight: '500', fontSize: 18 },
   peerTitle: { color: colors.text, fontWeight: '500', fontSize: 15, textAlign: 'right' },
-  preview: { color: colors.textMuted, fontSize: 12, marginTop: 3, textAlign: 'right' },
+  preview: { color: colors.textMuted, fontSize: 12, marginTop: 4, textAlign: 'right' },
   time: { color: colors.textDim, fontSize: 11 },
   chatHeader: {
     flexDirection: 'row-reverse',
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     color: colors.text,
     paddingHorizontal: spacing.md,
-    paddingVertical: 10,
+    paddingVertical: 12,
     textAlign: 'right',
   },
   send: {

@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.borderSoft,
     paddingTop: spacing.xs,
   },
-  row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
+  row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4 },
   rowRtl: { flexDirection: 'row-reverse' },
   label: { color: colors.textDim, fontSize: 10, fontWeight: '500' },
   chip: {

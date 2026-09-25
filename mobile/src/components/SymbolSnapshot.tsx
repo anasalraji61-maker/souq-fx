@@ -95,7 +95,7 @@ export function SymbolSnapshot({ symbol, timeframe = '15m' }: Props) {
 const styles = StyleSheet.create({
   // كان `row-reverse` ثابتاً — أي أن الشرائح تُقرأ معكوسة بالإنجليزية (وأمريكا/أوروبا سوقان
   // مستهدفان)؛ بقية ألواح التطبيق تقلب الاتجاه بشرط `rtl` لا دائماً.
-  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   wrapRtl: { flexDirection: 'row-reverse' },
   chip: {
     ...numeric,

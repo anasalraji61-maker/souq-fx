@@ -386,7 +386,7 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
       {loaded && !notice && visible.length === 0 ? (
         <Text style={styles.empty}>{t.voteEmpty}</Text>
       ) : null}
-      <ScrollView contentContainerStyle={{ gap: 10 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ gap: 8 }} keyboardShouldPersistTaps="handled">
         {visible.map((v) => {
           /** بلا أصوات لا نسبة: «موافقة 0%» كانت تُقرأ رفضاً إجماعياً لا «لم يصوّت أحد بعد» */
           const total = v.agree + v.disagree;
@@ -576,10 +576,10 @@ const styles = StyleSheet.create({
   headEnd: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   blockedLine: { ...numeric, color: colors.textDim, fontSize: 10, fontWeight: '500', marginTop: spacing.xs },
   symbol: { color: colors.text, fontWeight: '500', fontSize: 14 },
-  badge: { borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 2 },
+  badge: { borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 4 },
   badgeText: { color: colors.white, fontWeight: '500', fontSize: 11 },
-  meta: { color: colors.textMuted, fontSize: 11, marginTop: 6 },
-  levels: { flexDirection: 'row', gap: spacing.sm, marginTop: 6 },
+  meta: { color: colors.textMuted, fontSize: 11, marginTop: 4 },
+  levels: { flexDirection: 'row', gap: spacing.sm, marginTop: 4 },
   levelsRtl: { flexDirection: 'row-reverse' },
   level: {
     flex: 1,
@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   levelLabel: { color: colors.textDim, fontSize: 9, fontWeight: '500' },
-  levelVal: { ...numeric, color: colors.text, fontSize: 12, fontWeight: '600', marginTop: 1 },
+  levelVal: { ...numeric, color: colors.text, fontSize: 12, fontWeight: '600', marginTop: 0 },
   levelSl: { color: colors.bear },
   levelTp: { color: colors.bull },
   planBox: {
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
   },
   planText: { color: colors.accent, fontSize: 11, fontWeight: '500' },
-  planWarn: { color: colors.warn, fontSize: 10, fontWeight: '500', marginTop: 2 },
+  planWarn: { color: colors.warn, fontSize: 10, fontWeight: '500', marginTop: 4 },
   note: { color: colors.text, fontSize: 12, marginTop: spacing.xs, lineHeight: 18 },
   barBg: {
     height: 6,
@@ -624,21 +624,21 @@ const styles = StyleSheet.create({
   no: { backgroundColor: colors.bearSoft, borderWidth: 1, borderColor: colors.bear },
   btnDisabled: { opacity: 0.4 },
   btnText: { color: colors.text, fontWeight: '500', fontSize: 12 },
-  author: { color: colors.dxy, fontSize: 10, fontWeight: '500', marginTop: 2 },
+  author: { color: colors.dxy, fontSize: 10, fontWeight: '500', marginTop: 4 },
   publishToggle: {
     alignSelf: 'flex-end',
-    marginTop: 6,
+    marginTop: 4,
     borderRadius: radii.sm,
     borderWidth: 1,
     borderColor: colors.accent,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
   },
   publishToggleText: { color: colors.accent, fontWeight: '500', fontSize: 11 },
   form: {
     marginTop: spacing.sm,
     marginBottom: spacing.sm,
-    gap: 6,
+    gap: 4,
     backgroundColor: colors.bgPanel,
     borderRadius: radii.sm,
     borderWidth: 1,
@@ -651,11 +651,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     color: colors.text,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: spacing.sm,
     fontSize: 13,
   },
-  row: { flexDirection: 'row', gap: 6 },
+  row: { flexDirection: 'row', gap: 4 },
   rowRtl: { flexDirection: 'row-reverse' },
   dirBtn: {
     flex: 1,
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 9,
+    paddingVertical: 8,
     shadowColor: buttons.shadowColor,
     shadowOpacity: buttons.shadowOpacity,
     shadowRadius: buttons.shadowRadius,

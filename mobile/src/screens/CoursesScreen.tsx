@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     color: colors.warn,
     fontSize: 10,
     fontWeight: '500',
-    marginTop: 6,
+    marginTop: 4,
   },
   list: { padding: spacing.md, gap: spacing.md, paddingBottom: 40 },
   noteBox: {
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   noteTitle: { color: colors.warn, fontWeight: '500' },
-  noteText: { color: colors.text, marginTop: 6, lineHeight: 20, fontSize: 13 },
+  noteText: { color: colors.text, marginTop: 4, lineHeight: 20, fontSize: 13 },
   card: {
     backgroundColor: colors.bgElevated,
     borderRadius: radii.md,
@@ -348,8 +348,8 @@ const styles = StyleSheet.create({
   },
   meta: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 10,
+    gap: 8,
+    marginTop: 8,
     alignItems: 'center',
     flexWrap: 'wrap',
   },
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     backgroundColor: 'rgba(56,189,248,0.12)',
     paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 6,
   },
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'flex-end' },
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   fallbackNote: {
     color: colors.warn,
     fontSize: 12,
-    marginTop: -6,
+    marginTop: -4,
     marginBottom: spacing.md,
   },
   levelBox: {
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     backgroundColor: colors.accent,
     borderRadius: radii.md,
-    paddingVertical: 14,
+    paddingVertical: 16,
     alignItems: 'center',
     shadowColor: buttons.shadowColor,
     shadowOpacity: buttons.shadowOpacity,

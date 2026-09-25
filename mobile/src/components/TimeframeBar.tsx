@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    paddingVertical: 2,
+    paddingVertical: 4,
   },
   chip: {
     paddingHorizontal: spacing.sm,
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   chipCompact: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     paddingVertical: spacing.xs,
     minWidth: 30,
   },

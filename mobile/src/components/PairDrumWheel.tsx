@@ -183,8 +183,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.controlBg,
     overflow: 'hidden',
     paddingVertical: spacing.xs,
-    paddingHorizontal: 5,
-    gap: 2,
+    paddingHorizontal: 4,
+    gap: 4,
   },
   side: {
     height: ITEM_H,
