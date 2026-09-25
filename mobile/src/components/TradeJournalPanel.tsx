@@ -529,9 +529,9 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
   /**
    * خيار «تصحيح لا تحريك» يظهر حين يُلحق هذا التعديل علامة «1R @ …» (أو حين اختير): 1.0380 مكتوبة خطأً ثم تصحيحها إلى
    * 1.0830 كانت تُحفظ «1R @ 1.038» فيُقاس الربح بمسافةٍ لم يخاطر بها المتداول (+0.1R بدل +2R). النصّ من launch
-   * (`journalStopTypoFix`)؛ يُقرأ اختيارياً — بلا المفتاح لا خيار ولا نصّ مخترَع.
+   * (`journalStopTypoFix`، ar/en/ku).
    */
-  const stopTypoFixText = (t as unknown as Record<string, string | undefined>).journalStopTypoFix;
+  const stopTypoFixText = t.journalStopTypoFix;
   const stopTypoFixShown = (() => {
     if (!stopTypoFixText || editing?.status !== 'open') return false;
     if (stopTypoFix) return true;
