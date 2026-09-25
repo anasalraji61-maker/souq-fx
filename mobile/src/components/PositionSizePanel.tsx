@@ -10,6 +10,7 @@ import {
   instrumentSpec,
   conversionPair,
   convStaleMinutes,
+  miniAccountSymbol,
   costsForRisk,
   quoteAsOfMs,
   reversedConversion,
@@ -261,6 +262,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    */
   const small = useMemo(() => (stdSpec ? null : smallContractSpec(symbol)), [stdSpec, symbol]);
   const spec = stdSpec ?? small?.spec ?? null;
+  /** «EURUSD.mini» ⇒ «EURUSD»: رمز حساب mini (مرفوض عمداً) يُشرح بدل «رمز غير مدعوم» — راجع `miniAccountSymbol` */
+  const miniPair = spec ? null : miniAccountSymbol(symbol);
   const cent = small?.kind === 'cent';
   /** عملة كل مبلغ باللوحة: USC لحساب السنت (سعر التحويل لحساب دولار × 100)، وإلا عملة الحساب */
   const moneyCcy: string = cent ? 'USC' : account;
@@ -1202,7 +1205,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       </View>
       {input(symbol, setSymbol, 'EURUSD', t.riskCalcSymbol, false)}
       {!spec && symbol.trim().length > 0 ? (
-        <Text style={[styles.warn, { textAlign: align }]}>{t.riskCalcBadSymbol}</Text>
+        <Text style={[styles.warn, { textAlign: align }]}>
+          {/* رمز حساب mini مرفوضٌ عمداً لا خطأ مطبعي — السبب والزوج العادي بدل «رمز غير مدعوم» (QA44) */}
+          {miniPair
+            ? t.riskCalcMiniSymbol.replace('{symbol}', symbol.trim()).replace('{pair}', miniPair)
+            : t.riskCalcBadSymbol}
+        </Text>
       ) : null}
       {small ? (
         <Text style={[styles.hint, styles.hintOn, { textAlign: align }]} accessibilityLiveRegion="polite">
