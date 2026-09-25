@@ -299,7 +299,9 @@ export function niceTimeTickIndexes(
   const buckets: ((t: number) => number)[] = [];
   const step = Number.isFinite(stepSec) && stepSec > 0 ? stepSec : 0;
   for (const s of TIME_STEPS) {
-    if (s <= step) continue;
+    // فاصل ليس مضاعفاً للخطوة يقع حدّه داخل شمعة: 4H بفاصل 6س ⇒ علامات 00:00/08:00/12:00/20:00 (تباعد 8/4/8/4
+    // ساعات) حين يُقرَّب الشارت. مضاعفاتها وحدها (4H ⇒ 12س ثم اليوم؛ 2H ⇒ 12س) كـTradingView.
+    if (s <= step || (step > 0 && s % step !== 0)) continue;
     // الأسبوع يبدأ الاثنين (1970-01-01 خميس ⇒ +3 أيام)
     const off = s === 604800 ? 3 * 86400 : 0;
     buckets.push((t) => Math.floor((t + off) / s));

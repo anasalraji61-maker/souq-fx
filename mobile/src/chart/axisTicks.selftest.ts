@@ -348,3 +348,14 @@ console.log('axisTicks.selftest: PASS');
   assert.ok(tight.filter((x) => !x.hidden).length >= 2, JSON.stringify(tight));
   console.log('layoutAxisLabels descending PASS');
 }
+
+{
+  // 4H: لا فاصل 6س (حدوده داخل الشموع) ⇒ علامات 00:00/12:00 لا 00:00/08:00/12:00/20:00
+  const H = 3600;
+  const t0 = Date.UTC(2026, 8, 22) / 1000;
+  const h4 = Array.from({ length: 12 }, (_, k) => t0 + k * 4 * H);
+  const idx = niceTimeTickIndexes(h4, 4 * H, 8)!;
+  const hours = idx.map((i) => new Date(h4[i]! * 1000).getUTCHours());
+  assert.ok(hours.every((h) => h === 0 || h === 12), JSON.stringify(hours));
+  console.log('niceTimeTickIndexes 4H multiples PASS');
+}
