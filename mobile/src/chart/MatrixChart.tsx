@@ -1206,6 +1206,9 @@ function TrendLineSeries({
  */
 const MASS_INDEX_LEVELS = [27, 26.5] as const;
 
+/** Net Volume قيمة لكل شمعة حول الصفر (±فوليومها) ⇒ خطّ الصفر يفصل ضغط الشراء عن البيع. */
+const NET_VOLUME_LEVELS = [0] as const;
+
 /** CCI: ‎±100‎ حدّا «النطاق العادي» اللذان يُقرأ المؤشّر بتجاوزهما (خطّا TradingView الافتراضيّان). */
 const CCI_LEVELS = [100, -100] as const;
 
@@ -8801,7 +8804,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           <PaneValueHead name={volName('Net Vol')} values={netVolume} at={crossIndex} tone="trend" />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
-            <TrendLineSeries values={netVolume} paneH={paneH} />
+            <TrendLineSeries values={netVolume} paneH={paneH} levels={NET_VOLUME_LEVELS} />
           </View>
         </View>
       ) : null}
