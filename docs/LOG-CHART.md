@@ -5193,3 +5193,39 @@ PASS بـtsx. **لم يُختبر على جهاز**: لوحة الفوليوم �
 1. التحقّق من chart-r46 بعد ui.
 2. جهاز: ساعة منحرفة ⇒ الشارت حيّ؛ 1m عبر إغلاق شمعة.
 3. TTM Squeeze: «LazyBear» أم إبقاء؟ (قرار).
+
+---
+
+# تشغيل 2026-09-25 (السابع والأربعون)
+
+## صفوف COORDINATION
+- **chart-r46 أُغلق** (ui `a6e048d`، تحقّقتُ `useTickFreshnessClock.ts` بـ`serverNowSec()`).
+- **backend-r19 / ui16b (DXY)**: جزء الشارت أُنجز — البند 1. `MatrixChart` يتحمّل `candles: []`؛ الباقي لـtools (الشارت الرئيسي
+  يمرّر `offlineFrame` البذرة) — ضمن الصفّ الجديد chart-r47 (c).
+- QA1 (سحب على جهاز — لا جهاز)، launch48 (DeMarker) وchart-r41 (TTM) قرار أنس — بلا تغيير.
+- **صفّ جديد chart-r47 لـtools** (`TerminalScreen.tsx`): مفتاح يعيد بناء الشارت، ربط `onToolChange`، شموع بذرة أثناء التحميل.
+
+## ما أُنجز (مرئي للمتداول)
+1. **سلسلة فارغة** `da73ec6` (`MatrixChart`): `candles: []` ⇒ المدى Infinity/−Infinity ⇒ المحور يطبع «NaN» مكرَّراً (ومفاتيح
+   React مكرَّرة)، وسم السعر 0.000، ونقرة الخطّ الأفقي تحفظ رسماً بسعر null بـ`matrix.drawings.v2.DXY`. الآن إشعار
+   «غير متاح من مزوّد البيانات» (`ProviderUnavailableNotice` لـui، استيراد فقط) أو لوح فارغ بالارتفاع نفسه.
+2. **%B وTII على نافذة مسطّحة** `3afa541` (`volatility.ts`، `trend.ts`): `sma` بمجموع جارٍ يترك ~1e-16 بعد أي حركة ⇒ %B = 0.75/0.25
+   و TII = 100 (اتجاه صاعد أقصى) على سوق ميّت. %B ⇒ null (na كـTradingView، كان 0.5 موثَّقاً لكنه لا يتحقّق أبداً)، TII ⇒ 50.
+   selftest `flatWindow` +حالات (تفشل على الكود القديم).
+3. **`onToolChange`** `942acd7` (`MatrixChart`): الشارت يُبلغ أداته الجارية (إنهاء رسم ⇒ 'none'). مرئي حين يربطه tools
+   (chart-r47 b) — الشريط الأيسر بالحاسوب يبقى «ترند» مضاءً بعد الرسم ونقرها ثانيةً لا تفعل شيئاً.
+
+## فُحص ولم يُغيَّر (مع السبب)
+- **Mass Index بطول 25** (TradingView 10): قرار موثَّق — عتبتا Dorsey 27/26.5 للطول 25 وحده. القراءة ×2.5 عن TV. لم أغيّر.
+- **COG بإزاحة +(period+1)/2** (TV `ta.cog` بلا إزاحة، فرق 5.5 ثابت): قرار موثَّق بالتعليق (صفر عند سعر ثابت). لم أغيّر.
+- **PPO 12/26 EMA**: TV «Price Oscillator» قد يكون 10/21 SMA — غير متأكّد، لم أغيّر؛ يحتاج مقارنة بشارت TV.
+- ADX/DMI، Vortex، RWI، Keltner، Donchian، HV، Chaikin Osc، OBV، PVT، ALMA، VWMA، LSMA، McGinley، HA، البيفوت، AC، ROC/CMO: مطابقة لـTV.
+
+## التحقّق
+`scripts/qa-build-check.sh` أخضر (0) قبل كل commit. selftest `flatWindow` PASS بـtsx (وفشل على الكود القديم: %B flat، TII 100).
+**لم يُختبر على جهاز**: شارت DXY بـ`candles: []` (لا backend يرسلها بعد).
+
+## يبدأ التشغيل القادم من هنا
+1. التحقّق من chart-r47 بعد tools.
+2. PPO: مقارنة بشارت TradingView.
+3. TTM Squeeze: «LazyBear» أم إبقاء؟ (قرار).
