@@ -2463,7 +2463,7 @@ const enUS: Dict = {
   riskCalcSlPips: 'Stop loss (pips)',
   riskCalcFromPrice: 'Or from price: entry and stop as you see them on the chart',
   riskCalcSlMismatch:
-    '⚠ The pips you typed ({pips}) do not match your entry and stop prices ({derived} pip) — lot size and risk use the pips, R:R uses the prices',
+    '⚠ The pips you typed ({pips}) do not match your entry and stop prices ({derived} pips) — lot size and risk use the pips, R:R uses the prices',
   riskCalcEntry: 'Entry price',
   riskCalcStop: 'Stop price',
   riskCalcStopChip: '{side}: stop {price}',
@@ -2496,7 +2496,7 @@ const enUS: Dict = {
   riskCalcMarginMaxLots: 'Largest size your balance can cover in margin: {lots} lot — a ceiling that leaves no free margin for any swing',
   riskCalcLogBlockedMismatch:
     'A plan with two different stops can\'t be logged — type {derived} in the pips box, or move your stop price to match your pips',
-  riskCalcSlMismatchNarrower: '⚠ Your pips ({pips}) are tighter than the distance between your prices ({derived} pip) — the lot size is larger than your risk allows if the stop stays at its price',
+  riskCalcSlMismatchNarrower: '⚠ Your pips ({pips}) are tighter than the distance between your prices ({derived} pips) — the lot size is larger than your risk allows if the stop stays at its price',
   riskCalcSpread: 'Spread (pips, optional)',
   riskCalcSpreadPipsHint: 'Enter pips, not points: MT4/MT5 usually show spread in points, and 10 points = 1 pip — so 12 on your platform is 1.2 here.',
   riskCalcSpreadNote: 'Spread usually adds to your stop distance: a 20-pip stop with a 1.5 spread loses about 21.5 when hit. Check the current spread on your platform — it widens around news and the weekly open.',
@@ -2575,7 +2575,7 @@ const enUS: Dict = {
   journalMoneyUsc: '{usc} USC (≈ {usd} USD)',
   journalStatBestWorst: 'Best/Worst: {best}% / {worst}%',
   journalStatsPending: 'No closed trades yet — win rate and PnL appear once you close your first trade.',
-  journalStatNetPips: 'Net: {pips} pip',
+  journalStatNetPips: 'Net: {pips} pips',
   journalStatNetPipsBySymbol: 'Net per instrument: {parts}',
   journalStatAvgR: 'Average result: {r} per trade ({n} with a stop)',
   journalSideA11yPrefix: 'Trade direction',
