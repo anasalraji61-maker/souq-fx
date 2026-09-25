@@ -846,7 +846,17 @@ export function TerminalScreen() {
     if (timeframe) setTf(timeframe);
   };
 
-  const price = liveTicks[symbol]?.price ?? series?.last ?? 0;
+  /**
+   * تيك البثّ التجريبي (المزوّد متوقّف فيبثّ الـWebSocket أسعاراً عشوائية) فوق سلسلة حقيقية/مخزَّنة كان يُعرض سعراً
+   * برأس الشاشة العريضة ويُمرَّر `lastPrice` — ونسبة اليوم تُحسب منه مقابل إغلاق أمس الحقيقي. شريط الهاتف ومرجع
+   * التنبيه يستثنيانه أصلاً. يُقبل فقط حين السلسلة نفسها تجريبية (الإطار موسوم «تجريبي» فالحركة متّسقة معه).
+   */
+  const headTick = (() => {
+    const tk = liveTicks[symbol];
+    if (!tk) return null;
+    return tk.source.kind !== 'demo' || normalizeProvenance(series?.data_source).kind === 'demo' ? tk : null;
+  })();
+  const price = headTick?.price ?? series?.last ?? 0;
 
   /** تأكيد «مُسلَّح» بعد إنشاء تنبيه من الشارت — يختفي بعد 4 ثوانٍ. */
   const [armedMsg, setArmedMsg] = useState<string | null>(null);
@@ -1549,7 +1559,7 @@ export function TerminalScreen() {
                   // الآن تغيّر اليوم من السعر المطبوع نفسه (`headerChangePct`).
                   const pct =
                     series && series.data_source?.kind !== 'demo'
-                      ? headerChangePct(series, liveTicks[symbol]?.price ?? null, headDailyRefs[symbol.toUpperCase()])
+                      ? headerChangePct(series, headTick?.price ?? null, headDailyRefs[symbol.toUpperCase()])
                       : null;
                   const dir = pctDirection(pct);
                   return (
