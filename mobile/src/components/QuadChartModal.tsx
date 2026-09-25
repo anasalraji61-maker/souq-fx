@@ -71,7 +71,13 @@ export function QuadChartModal({
     gridH > 0
       ? Math.max(96, (gridH - 5 * spacing.sm) / 4 - PHONE_CELL_CHROME)
       : height * 0.18;
-  const cellH = phone ? phoneCellH : height * 0.32;
+  // هاتف بالعرض (844×390) يتجاوز حدّ العرض فيأخذ شبكة 2×2 اللوحيّ: خليتان بارتفاع 32% وحدّ أدنى 200pt
+  // + الرأس وشريط الفريمات ≈ 530pt على 390pt ⇒ الصفّ الثاني (XAUUSD وDXY) تحت الشاشة بلا تمرير. الشاشة
+  // القصيرة تقسم الشبكة المقيسة على صفّين بلا سطر القراءة كالهاتف.
+  const short = !phone && height < 600;
+  const shortCellH =
+    gridH > 0 ? Math.max(80, (gridH - 3 * spacing.sm) / 2 - PHONE_CELL_CHROME) : height * 0.22;
+  const cellH = phone ? phoneCellH : short ? shortCellH : height * 0.32;
   const [series, setSeries] = useState<(ChartSeries | null)[]>([null, null, null, null]);
   const ticks = useMultiLiveTicks(symbols, visible);
   // نسبة رأس الخلية = تغيّر اليوم (كقائمة المتابعة) لا «منذ أول شمعة محمّلة» — تختلف بين الخلايا بالفريم.
@@ -315,6 +321,7 @@ export function QuadChartModal({
                 style={[
                   styles.cell,
                   phone && styles.cellPhone,
+                  short && styles.cellShort,
                   syncTime && isLeader && styles.cellLeader,
                 ]}
               >
@@ -366,7 +373,7 @@ export function QuadChartModal({
                     accent={sym === 'DXY' ? colors.dxy : colors.accent}
                     initialLens="clean"
                     initialIndicators={NO_INDICATORS}
-                    dense={phone}
+                    dense={phone || short}
                     panControls={!syncTime || isLeader}
                     syncWindow={following ? syncWindow : null}
                     onSyncWindow={syncTime && isLeader ? setSyncWindow : undefined}
@@ -422,6 +429,7 @@ const styles = StyleSheet.create({
     minHeight: 200,
   },
   cellPhone: { width: '100%', minHeight: 0 },
+  cellShort: { minHeight: 0 },
   cellHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
   cellHeadRtl: { flexDirection: 'row-reverse' },
   sym: { color: colors.accent, fontWeight: '800' },
