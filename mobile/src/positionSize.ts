@@ -485,6 +485,31 @@ export function pipsOnlyExitPrice(
   return from - slPips * spec.pipSize;
 }
 
+/**
+ * سعر التحويل **بلا سعر حيّ** حين العملة الأساس = عملة الحساب (USDJPY/USDCHF/USDCAD بحساب دولار، GBPUSD بحساب إسترليني):
+ * الخسارة عند الوقف = النقاط بعملة التسعير ÷ سعر الوقف نفسه، فسعر التحويل **هو** 1 ÷ الوقف المكتوب ولا يحتاج شيئاً من المزوّد.
+ * كانت الحاسبة حين يفشل جلب USDJPY (شبكة، مزوّد متوقّف) تقف عند «تعذّر سعر التحويل — اكتبه» مع أن الوقف 148.50 مكتوب
+ * بالخانة، فيكتب المتداول 150 (أو يخطئه) ليحصل على رقم كان معروفاً.
+ *
+ * الوقف المكتوب أولاً؛ وإلا (النقاط وحدها) الدخول المكتوب − النقاط، كـ`pipsOnlyExitPrice` (الخروج الأسوأ تحت الدخول ⇒
+ * أغلى pip ⇒ لا تتجاوز الخسارة المخاطرة أيّاً كان الاتجاه). بلا حيّ لا حارس «> 20% عن الحيّ»، ولا حاجة له هنا: الرقم هو
+ * الخسارة الحقيقية عند السعر المكتوب نفسه — «1500» بدل «150» يعطي وقفاً ألوف النقاط فيظهر الخطأ بخانة النقاط.
+ * `null` = أساسٌ ليس عملة الحساب (التحويل مجهول فعلاً)، أو لا وقف ولا دخول صالح.
+ */
+export function typedExitQuoteToAccount(
+  spec: InstrumentSpec | null,
+  convAccount: string,
+  stopPrice: number,
+  entryPrice: number,
+  slPips: number
+): { rate: number; price: number; fromStop: boolean } | null {
+  if (!spec || spec.base !== convAccount) return null;
+  if (Number.isFinite(stopPrice) && stopPrice > 0) return { rate: 1 / stopPrice, price: stopPrice, fromStop: true };
+  if (!Number.isFinite(entryPrice) || entryPrice <= 0 || !Number.isFinite(slPips) || slPips <= 0) return null;
+  const exit = entryPrice - slPips * spec.pipSize;
+  return exit > 0 ? { rate: 1 / exit, price: exit, fromStop: false } : null;
+}
+
 /** قيمة الـpip للوت قياسي واحد، بعملة الحساب. */
 export function pipValuePerLot(spec: InstrumentSpec, quoteToAccount: number): number {
   return spec.contractSize * spec.pipSize * quoteToAccount;

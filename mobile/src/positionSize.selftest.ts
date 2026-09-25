@@ -38,6 +38,7 @@ import {
   pnlInQuoteCcy,
   profitAtTarget,
   exitQuoteToAccount,
+  typedExitQuoteToAccount,
   pipsOnlyExitQuoteToAccount,
   pipsOnlyExitPrice,
   formatRiskPct,
@@ -2808,3 +2809,35 @@ console.log('positionSize quoteAsOfMs selftest OK');
   assert.equal(spreadRisk({ ...base, ...costsForRisk(parseSpreadPips(''), parseCommission('')) }), null);
 }
 console.log('positionSize costsForRisk selftest OK');
+
+// تعذّر جلب التحويل والأساس = عملة الحساب: 1 ÷ الوقف المكتوب — الخسارة عند الوقف = المخاطرة بلا سعر من المزوّد
+{
+  const uj = instrumentSpec('USDJPY')!;
+  // وقف مكتوب 148.50 (دخول 150، 150 pip) ⇒ 1/148.5، ويطابق ما يعطيه الحيّ نفسه
+  const t1 = typedExitQuoteToAccount(uj, 'USD', 148.5, 150, 150)!;
+  assert.deepEqual(t1, { rate: 1 / 148.5, price: 148.5, fromStop: true });
+  assert.equal(t1.rate, exitQuoteToAccount(uj, 'USD', 148.5, 1 / 150, true));
+  const res = positionSize({ balance: 10000, riskPct: 1, slPips: 150, pipValuePerLot: pipValuePerLot(uj, t1.rate), contractSize: uj.contractSize })!;
+  assert.ok((res.lots * uj.contractSize * 1.5) / 148.5 <= 100 + 1e-9);
+  assert.equal(res.lots, 0.09); // 1 lot × 150 pip عند 148.50 = 1,010 USD
+  // النقاط وحدها + دخول مكتوب ⇒ الخروج الأسوأ تحت الدخول (كـpipsOnlyExitPrice)
+  const t2 = typedExitQuoteToAccount(uj, 'USD', NaN, 150, 150)!;
+  assert.equal(t2.fromStop, false);
+  assert.ok(Math.abs(t2.price - 148.5) < 1e-9);
+  // بيعٌ وقفه فوق (151.50): الخسارة الحقيقية 1.5 ين/وحدة ÷ 151.5 أقل من المحسوبة بـ148.5 ⇒ لا تجاوز
+  const r2 = positionSize({ balance: 10000, riskPct: 1, slPips: 150, pipValuePerLot: pipValuePerLot(uj, t2.rate), contractSize: uj.contractSize })!;
+  assert.ok((r2.lots * uj.contractSize * 1.5) / 151.5 <= 100 + 1e-9);
+  // حساب إسترليني GBPUSD، وقف 1.2650 ⇒ 1/1.265؛ USDCHF بحساب دولار
+  assert.equal(typedExitQuoteToAccount(instrumentSpec('GBPUSD')!, 'GBP', 1.265, 1.27, 50)!.rate, 1 / 1.265);
+  assert.equal(typedExitQuoteToAccount(instrumentSpec('USDCHF')!, 'USD', 0.88, NaN, NaN)!.rate, 1 / 0.88);
+  // الأساس ليس عملة الحساب ⇒ null (التحويل مجهول فعلاً): EURJPY بحساب دولار، USDJPY بحساب يورو، الذهب
+  assert.equal(typedExitQuoteToAccount(instrumentSpec('EURJPY')!, 'USD', 160, 161, 100), null);
+  assert.equal(typedExitQuoteToAccount(uj, 'EUR', 148.5, 150, 150), null);
+  assert.equal(typedExitQuoteToAccount(instrumentSpec('XAUUSD')!, 'USD', 2600, 2650, 500), null);
+  // بلا وقف ولا دخول صالح، أو خروج ≤ 0، أو بلا أداة ⇒ null
+  assert.equal(typedExitQuoteToAccount(uj, 'USD', NaN, NaN, 150), null);
+  assert.equal(typedExitQuoteToAccount(uj, 'USD', NaN, 150, NaN), null);
+  assert.equal(typedExitQuoteToAccount(uj, 'USD', 0, 150, 20000), null);
+  assert.equal(typedExitQuoteToAccount(null, 'USD', 148.5, 150, 150), null);
+}
+console.log('positionSize typedExitQuoteToAccount selftest OK');

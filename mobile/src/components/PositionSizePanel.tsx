@@ -17,6 +17,7 @@ import {
   usdBridge,
   bridgedRate,
   quoteToAccountRate,
+  typedExitQuoteToAccount,
   pipValuePerLot,
   positionSize,
   slPipsFromPrices,
@@ -664,11 +665,22 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const pipsOnlyRate = Number.isFinite(priceNum(stopPx))
     ? null
     : pipsOnlyExitQuoteToAccount(spec, convAccount, slNum, priceNum(entryPx), convRate);
-  const riskRate = stopRate ?? pipsOnlyRate ?? convRate;
+  // تعذّر التحويل والأساس = عملة الحساب ⇒ 1 ÷ الوقف المكتوب (أو الدخول − النقاط) لا يحتاج المزوّد — `typedExitQuoteToAccount`
+  const typedExit =
+    convRate == null ? typedExitQuoteToAccount(spec, convAccount, priceNum(stopPx), priceNum(entryPx), slNum) : null;
+  const riskRate = stopRate ?? pipsOnlyRate ?? convRate ?? typedExit?.rate ?? null;
+  /** الخروج بسعر الوقف المكتوب — حيّاً كان التحويل أم لا (نصّ «عند وقفك» مقابل «عند خروج النقاط») */
+  const exitAtStop = stopRate != null || typedExit?.fromStop === true;
   /** قيمة النقطة المعروضة محسوبة بسعر الوقف لا الحيّ ⇒ لا تطابق رقم المنصّة؛ السطر يسمّي السعر ويشرح (launch72) */
-  const pipAtStop = (stopRate ?? pipsOnlyRate) != null && (stopRate ?? pipsOnlyRate) !== convRate;
+  const pipAtStop =
+    typedExit != null || ((stopRate ?? pipsOnlyRate) != null && (stopRate ?? pipsOnlyRate) !== convRate);
   /** السعر الذي حُسبت به قيمة الـpip المعروضة: الوقف المكتوب، أو خروج النقاط وحدها (`pipsOnlyExitPrice`) */
-  const pipRatePx = stopRate != null ? priceNum(stopPx) : pipsOnlyExitPrice(spec, slNum, priceNum(entryPx), convRate);
+  const pipRatePx =
+    typedExit != null
+      ? typedExit.price
+      : stopRate != null
+        ? priceNum(stopPx)
+        : pipsOnlyExitPrice(spec, slNum, priceNum(entryPx), convRate);
   // السنت: عملة التسعير ⇒ USD ثم × 100 ⇒ USC، فيخرج كل مبلغ (pip، مخاطرة، هامش، ربح) بالسنت كرصيده
   const rate = cent ? centQuoteToAccount(riskRate) : riskRate;
   const pv = spec && rate != null ? pipValuePerLot(spec, rate) : null;
@@ -947,7 +959,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         })
       : null;
   /** الربح المحتمل من المسافة الخام للهدف لا من نقاطه المقرَّبة للعرض — راجع `profitAtTarget` */
-  const targetUsdRate = targetQuoteToAccount(spec, convAccount, priceNum(targetPx), convRate);
+  // بلا حيّ (`typedExit`): الربح بسعر الهدف نفسه، 1 ÷ الهدف — لا يُقرأ بسعر الوقف
+  const targetUsdRate =
+    typedExit != null
+      ? typedExitQuoteToAccount(spec, convAccount, priceNum(targetPx), NaN, NaN)?.rate ?? null
+      : targetQuoteToAccount(spec, convAccount, priceNum(targetPx), convRate);
   /** الأساس = عملة الحساب ⇒ الربح يُحوَّل بسعر الهدف كما الخسارة بسعر الوقف */
   const targetRate = targetUsdRate != null && cent ? centQuoteToAccount(targetUsdRate) : targetUsdRate;
   const potentialProfit =
@@ -1455,9 +1471,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       ) : null}
       {conv && convFailed ? (
         <>
-          <Text style={[styles.warn, { textAlign: align }]}>
-            {t.riskCalcConvFailed} {conv.symbol}
-          </Text>
+          {/* اللوت ظاهر من الوقف المكتوب (`typedExit`) ⇒ «اكتبه ليظهر حجم اللوت» كان يناقض الرقم تحته؛ الخانة تبقى للهامش */}
+          {typedExit == null ? (
+            <Text style={[styles.warn, { textAlign: align }]}>
+              {t.riskCalcConvFailed} {conv.symbol}
+            </Text>
+          ) : null}
           {input(manualConv, setManualConv, conv.symbol, `${t.riskCalcConvManual} ${conv.symbol}`)}
         </>
       ) : null}
@@ -1557,7 +1576,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           <>
             <Text style={[styles.resultMeta, { textAlign: align }]}>
               {pipAtStop && spec && pipRatePx != null && Number.isFinite(pipRatePx)
-                ? stopRate != null
+                ? exitAtStop
                   ? t.riskCalcPipValueAtStop.replace('{price}', formatPrice(pipRatePx, spec.symbol))
                   : // بالنقاط وحدها الخروج مفترَضٌ تحت السعر (`pipsOnlyExitPrice`) لا «وقفك»: بائعٌ وقفه فوق السعر كان يُقال له «عند وقفك 148.50»
                     t.riskCalcPipValueAtPipsExit
@@ -1569,7 +1588,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
             </Text>
             {pipAtStop ? (
               <Text style={[styles.hint, { textAlign: align }]}>
-                {stopRate != null ? t.riskCalcPipValueAtStopHint : t.riskCalcPipValueAtPipsExitHint}
+                {exitAtStop ? t.riskCalcPipValueAtStopHint : t.riskCalcPipValueAtPipsExitHint}
               </Text>
             ) : null}
           </>
