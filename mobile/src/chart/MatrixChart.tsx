@@ -897,6 +897,7 @@ function PaneSpreadHead({
   lower,
   at = null,
   tone = 'trend',
+  lineColors,
 }: {
   name: string;
   upper: readonly (number | null)[];
@@ -912,11 +913,32 @@ function PaneSpreadHead({
    *   يخفي انقلاب الكفّة ويُظهر «يضيق/يتّسع» مكانه.
    */
   tone?: 'trend' | 'sign';
+  /**
+   * لونا الخطّين (الأعلى ثم الأدنى) ⇒ القيمتان نفسهما سطرين بلونيهما بدل الفارق — كـTradingView:
+   * «+DI 25.1 / −DI 20.8» لا «4.3» الذي لا تطبعه أيّ منصّة، ومنه لا يُعرف أقويّ الاتجاه (ADX يُقرأ مع
+   * مستوى DI لا فارقه). يُمرَّر فقط حين تتّسع اللوحة لثلاثة أسطر (`PANE_SIGNAL_MIN_H`)، وإلا الفارق.
+   */
+  lineColors?: readonly [string, string];
 }) {
   const spread = useMemo(() => paneSpreadSeries(upper, lower), [upper, lower]);
+  // مقياس واحد للسلسلتين ⇒ الرقمان بالخانات واللاحقة ذاتها.
+  const both = useMemo(() => [...upper, ...lower], [upper, lower]);
   const v = paneValueAt(spread, at);
   const txt = formatPaneValueScaled(spread, v);
   const trend = tone === 'trend' ? paneValueTrend(spread, at) : null;
+  if (lineColors) {
+    const u = formatPaneValueScaled(both, paneValueAt(upper, at));
+    const l = formatPaneValueScaled(both, paneValueAt(lower, at));
+    if (u && l) {
+      return (
+        <View style={styles.paneHead}>
+          <Text style={styles.paneHeadName}>{name}</Text>
+          <PaneSignalValue text={u} color={lineColors[0]} />
+          <PaneSignalValue text={l} color={lineColors[1]} />
+        </View>
+      );
+    }
+  }
   return (
     <View style={styles.paneHead}>
       <Text style={styles.paneHeadName}>{name}</Text>
@@ -10106,7 +10128,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {vortex ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneSpreadHead name="Vortex" upper={vortex.plus} lower={vortex.minus} at={crossIndex} tone="sign" />
+          <PaneSpreadHead
+            name="Vortex"
+            upper={vortex.plus}
+            lower={vortex.minus}
+            at={crossIndex}
+            tone="sign"
+            lineColors={paneSignalFits ? [colors.bull, colors.bear] : undefined}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -10142,6 +10171,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             lower={dmi.minusDI}
             at={crossIndex}
             tone="sign"
+            lineColors={paneSignalFits ? [colors.bull, colors.bear] : undefined}
           />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
@@ -10172,7 +10202,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {rwi ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneSpreadHead name="RWI" upper={rwi.rwiHigh} lower={rwi.rwiLow} at={crossIndex} tone="sign" />
+          <PaneSpreadHead
+            name="RWI"
+            upper={rwi.rwiHigh}
+            lower={rwi.rwiLow}
+            at={crossIndex}
+            tone="sign"
+            lineColors={paneSignalFits ? [colors.bull, colors.bear] : undefined}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -10202,7 +10239,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {aroonUpDown ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneSpreadHead name="Aroon Up/Down" upper={aroonUpDown.up} lower={aroonUpDown.down} at={crossIndex} tone="sign" />
+          <PaneSpreadHead
+            name="Aroon Up/Down"
+            upper={aroonUpDown.up}
+            lower={aroonUpDown.down}
+            at={crossIndex}
+            tone="sign"
+            lineColors={paneSignalFits ? [colors.bull, colors.bear] : undefined}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
@@ -10225,7 +10269,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
 
       {klinger ? (
         <View style={[styles.pane, { height: paneH }]}>
-          <PaneSpreadHead name="Klinger" upper={klinger.kvo} lower={klinger.signal} at={crossIndex} tone="sign" />
+          <PaneSpreadHead
+            name="Klinger"
+            upper={klinger.kvo}
+            lower={klinger.signal}
+            at={crossIndex}
+            tone="sign"
+            lineColors={paneSignalFits ? [colors.accent, colors.infoAccent] : undefined}
+          />
           <View style={[styles.paneInner, paneShift]}>
             {paneCrossLine}
             {(() => {
