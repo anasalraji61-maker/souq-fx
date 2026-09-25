@@ -2892,7 +2892,28 @@ console.log('positionSize slPipsCarryOver selftest OK');
   for (const [pair, r] of [['EURUSD', 0.92], ['USDCHF', 0.88], ['AUDUSD', 0.65], ['HUFJPY', 0.4], ['ZARJPY', 0.5]] as const) {
     assert.equal(manualConvLooksInverted(pair, r), null, pair);
   }
+  // تقاطعات فوق 1 دائماً بتسعير دولار/كندي/أسترالي… : «0.7874» لـGBPUSD كان يُقبل (EURGBP بحساب دولار ⇒ 0.63 لوت بدل 0.39)
+  assert.ok(Math.abs(manualConvLooksInverted('GBPUSD', 0.7874)! - 1 / 0.7874) < 1e-12);
+  for (const p of ['GBPCHF', 'GBPCAD', 'GBPAUD', 'GBPNZD', 'EURAUD', 'EURNZD', 'EURCAD']) assert.ok(manualConvLooksInverted(p, 0.5) != null, p);
+  for (const [pair, r] of [['GBPUSD', 1.27], ['GBPCHF', 1.12], ['EURCAD', 1.48], ['EURGBP', 0.85], ['NZDUSD', 0.6]] as const) {
+    assert.equal(manualConvLooksInverted(pair, r), null, pair);
+  }
+  // وتحت 1 دائماً: «1.17» لـEURGBP (GBP ⇒ EUR) و«1.67» لـNZDUSD
+  assert.ok(Math.abs(manualConvLooksInverted('EURGBP', 1.17)! - 1 / 1.17) < 1e-12);
+  assert.ok(manualConvLooksInverted('NZDUSD', 1.67) != null);
+  // فوق 1 لزوجٍ غير مصنّف ⇒ لا تخمين (EURUSD 1.08، AUDNZD 1.09)
+  for (const [pair, r] of [['EURUSD', 1.08], ['AUDNZD', 1.09], ['USDJPY', 149.5]] as const) assert.equal(manualConvLooksInverted(pair, r), null, pair);
+  {
+    // الحالة كاملة: EURGBP بحساب دولار، 10,000 × 1%، وقف 20 pip ⇒ المقلوب يُرفض ويُقترح 1.27
+    const eg = instrumentSpec('EURGBP')!;
+    const cv = conversionPair(eg.quote, 'USD')!;
+    assert.equal(cv.symbol, 'GBPUSD');
+    assert.ok(manualConvLooksInverted(cv.symbol, 0.7874) != null);
+    const right = sizeForSl({ balance: 10_000, riskPct: 1, slPips: 20, pipValuePerLot: pvForSl(eg, quoteToAccountRate(cv, 1.27)!), contractSize: eg.contractSize })!;
+    assert.equal(right.lots, 0.39);
+  }
   for (const bad of [null, undefined, 0, -1, NaN, 1]) assert.equal(manualConvLooksInverted('USDJPY', bad), null);
+  assert.equal(manualConvLooksInverted('GBPUSD', 1), null);
   assert.equal(manualConvLooksInverted(null, 0.0067), null);
   assert.equal(manualConvLooksInverted('USDJP', 0.0067), null);
   // لماذا يهمّ: حساب ين على EURUSD بوقف 20 pip ومخاطرة 10,000 JPY — المقلوب يعطي لوتاً أكبر ×22,350

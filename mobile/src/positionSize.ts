@@ -395,17 +395,31 @@ export function conversionKey(conv: { symbol: string; invert: boolean } | null):
  */
 const ALWAYS_OVER_ONE_QUOTES = new Set(['JPY', 'SEK', 'NOK', 'DKK', 'ZAR', 'MXN', 'TRY', 'HUF', 'CZK', 'CNH', 'HKD', 'PLN']);
 const MAJOR_BASES = new Set(['EUR', 'GBP', 'AUD', 'NZD', 'USD', 'CAD', 'CHF']);
+/**
+ * أزواج رئيسية/تقاطعات لم تنزل تحت 1 تاريخياً (أدناها: GBPUSD ~1.03 عام 1985 و2022، GBPCHF ~1.1 يوم SNB 2015، EURCAD ~1.2،
+ * EURAUD ~1.2، والبقية أبعد). `ALWAYS_OVER_ONE_QUOTES` لا تشملها (تسعيرها USD/CAD/AUD…) — فـ«0.7874» لـGBPUSD (أي USD ⇒ GBP)
+ * كان يُقبل: EURGBP بحساب دولار ⇒ قيمة الـpip أصغر بـ38% ⇒ **0.63 لوت بدل 0.39**، خسارة 160 USD عند الوقف بمخاطرة 100.
+ */
+const ALWAYS_OVER_ONE_PAIRS = new Set([
+  'GBPUSD', 'GBPCHF', 'GBPCAD', 'GBPAUD', 'GBPNZD', 'GBPSGD', 'EURAUD', 'EURNZD', 'EURCAD', 'EURSGD',
+]);
+/** والعكس: لم تبلغ 1 قط (EURGBP أعلاه 0.98 عام 2008، NZDUSD 0.88) ⇒ «1.17» لـEURGBP هو GBP ⇒ EUR مقلوباً. */
+const ALWAYS_UNDER_ONE_PAIRS = new Set(['EURGBP', 'NZDUSD']);
 
 /**
  * سعر تحويل **مكتوب باليد** مقلوب: «0.0067» لـUSDJPY بدل «149.5» (المتداول قرأ JPY→USD بمنصّةٍ أو محوّل عملات).
  * بحساب ين على EURUSD الزوج USDJPY غير معكوس ⇒ قيمة الـpip أصغر ×22,000 ⇒ **لوتٌ ضخم** يُعرض رقماً أنيقاً؛
  * وبحساب دولار على EURJPY لوتٌ أصغر ×22,000. يُفحص فقط حيث الجواب قاطع (زوجٌ أساسه رئيسية وتسعيره من
- * `ALWAYS_OVER_ONE_QUOTES` وسعرٌ < 1) — EURUSD 1.08 مقابل 0.92 كلاهما معقول فلا تخمين هناك.
+ * `ALWAYS_OVER_ONE_QUOTES` وسعرٌ < 1، أو زوجٌ من `ALWAYS_OVER_ONE_PAIRS`/`ALWAYS_UNDER_ONE_PAIRS` بالجهة الأخرى من 1) —
+ * EURUSD 1.08 مقابل 0.92 كلاهما معقول فلا تخمين هناك.
  * يعيد السعر الصحيح المرجَّح (1 ÷ المكتوب) أو null.
  */
 export function manualConvLooksInverted(pair: string | null | undefined, rate: number | null | undefined): number | null {
   if (typeof pair !== 'string' || pair.length !== 6) return null;
-  if (typeof rate !== 'number' || !Number.isFinite(rate) || rate <= 0 || rate >= 1) return null;
+  if (typeof rate !== 'number' || !Number.isFinite(rate) || rate <= 0) return null;
+  if (rate > 1) return ALWAYS_UNDER_ONE_PAIRS.has(pair) ? 1 / rate : null;
+  if (rate === 1) return null;
+  if (ALWAYS_OVER_ONE_PAIRS.has(pair)) return 1 / rate;
   if (!MAJOR_BASES.has(pair.slice(0, 3)) || !ALWAYS_OVER_ONE_QUOTES.has(pair.slice(3))) return null;
   return 1 / rate;
 }
