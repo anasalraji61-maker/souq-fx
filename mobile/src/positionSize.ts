@@ -1683,6 +1683,26 @@ export function commissionAcrossModes(raw: string, from: CommissionMode, to: Com
 }
 
 /**
+ * عمولة Raw/ECN المعتادة (فتح + إغلاق) **للوت العادي بعملة الحساب** — مكافئ ~7 USD مقرّباً لرقمٍ يكتبه الوسيط بجدوله.
+ * لماذا: مثال الخانة كان «7» لكل الحسابات؛ بحساب ين = 7 ين/لوت (الحقيقي ~1000) ⇒ من يتبع المثال يُدخل تكاليف أصغر ×100
+ * فيبدو اللوت «الشامل للتكاليف» والصافي أفضل مما هما (launch127). عملة مجهولة ⇒ `null` (لا مثال أصدق من رقم بمنزلة خاطئة).
+ */
+const TYPICAL_COMMISSION_PER_STD_LOT: Record<string, number> = {
+  USD: 7, USC: 7, EUR: 6, GBP: 5, CHF: 6, AUD: 10, NZD: 12, CAD: 10, JPY: 1000,
+};
+
+/**
+ * نصّ مثال (placeholder) خانة العمولة بوضعها وعملة الحساب: عادي «7»/«1000»، micro ÷ 100 («0.07»/«10»)، السنت بالـUSC «7».
+ * `kind` null (رمز مجهول وسط الكتابة) = عادي. عملة بلا مثال ⇒ `''`.
+ */
+export function commissionPlaceholder(kind: CommissionMode['kind'] | null, account: string): string {
+  const ccy = kind === 'cent' ? 'USC' : account;
+  const std = TYPICAL_COMMISSION_PER_STD_LOT[ccy];
+  if (std == null) return '';
+  return String(Number((kind === 'micro' ? std / 100 : std).toFixed(6)));
+}
+
+/**
  * أرقام ملاحظة العمولة بوضع micro/السنت (`riskCalcCommissionNoteMicro` `{std}`/`{micro}`، `riskCalcCommissionNoteCent` `{usc}`).
  * من خانة العمولة حين فيها مبلغ موجب مفهوم — فيرى المتداول ما تعنيه «0.05» التي كتبها (= 5 للوت العادي) — وإلا المثال 7 / 0.07.
  * `std` = null (عقد عادي أو رمز مجهول) ⇒ `null`: الملاحظة العادية.
@@ -1700,7 +1720,8 @@ export function commissionNoteExample(
     const usc = fmt(typed ?? 7);
     return { std: usc, micro: fmt((typed ?? 7) / 100), usc };
   }
-  const micro = typed ?? 0.07;
+  // المثال بعملة الحساب (حساب ين micro: «1000 = 10» لا «7 = 0.07» — launch127)؛ عملة مجهولة أو بلا `ccy` ⇒ 7 كما كان
+  const micro = typed ?? (TYPICAL_COMMISSION_PER_STD_LOT[ccy ?? ''] ?? 7) / 100;
   return { std: fmt(micro * 100), micro: fmt(micro), usc: fmt(micro * 100) };
 }
 

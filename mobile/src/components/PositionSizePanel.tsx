@@ -67,6 +67,7 @@ import {
   slPipsLooksLikePrice,
   commissionAcrossModes,
   commissionNoteExample,
+  commissionPlaceholder,
   conversionKey,
   SYMBOL_INPUT_MAX_LEN,
   type CommissionMode,
@@ -1553,7 +1554,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD', active = true }: P
       <Text style={[styles.label, { textAlign: align }]}>
         {t.riskCalcCommission} ({moneyCcy})
       </Text>
-      {input(commission, setCommission, commissionKind === 'micro' ? '0.07' : '7', t.riskCalcCommission)}
+      {input(commission, setCommission, commissionPlaceholder(commissionKind, account), t.riskCalcCommission)}
       {commissionErr ? (
         <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
           {commissionErr}

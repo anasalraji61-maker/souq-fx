@@ -76,6 +76,7 @@ import {
   smallContractSuffix,
   commissionAcrossModes,
   commissionNoteExample,
+  commissionPlaceholder,
   conversionKey,
   SYMBOL_INPUT_MAX_LEN,
   withSmallSuffix,
@@ -3253,3 +3254,42 @@ console.log('positionSize maxSpreadPipsFor selftest OK');
   }
 }
 console.log('positionSize stopInsideTypicalSpread selftest OK');
+
+// commissionPlaceholder — مثال خانة العمولة بعملة الحساب (launch127)
+{
+  // القديم «7» ثابتاً: بحساب ين = 7 ين/لوت (~0.05$) ⇒ تكاليف أصغر ×100
+  assert.equal(commissionPlaceholder('std', 'JPY'), '1000');
+  assert.equal(commissionPlaceholder('micro', 'JPY'), '10');
+  assert.equal(commissionPlaceholder('std', 'USD'), '7');
+  assert.equal(commissionPlaceholder('micro', 'USD'), '0.07');
+  assert.equal(commissionPlaceholder(null, 'USD'), '7');
+  // السنت بالـUSC دائماً (7 USC/لوت سنت = 7 USD/لوت عادي)
+  assert.equal(commissionPlaceholder('cent', 'USD'), '7');
+  assert.equal(commissionPlaceholder('std', 'XYZ'), '');
+  const usdPerLot = 7;
+  // تقريب مكافئ الدولار لكل عملة حساب: قيمة المثال بالدولار بين 4 و10 (سعر تقريبي لكل عملة بالدولار)
+  const usdPer: Record<string, number> = { USD: 1, EUR: 1.1, GBP: 1.3, CHF: 1.15, AUD: 0.66, NZD: 0.6, CAD: 0.73, JPY: 0.0068 };
+  for (const acc of ACCOUNT_CCYS) {
+    const ph = commissionPlaceholder('std', acc);
+    assert.notEqual(ph, '', acc);
+    const v = parseCommission(ph, acc)!;
+    assert.ok(v > 0, acc);
+    const usd = v * usdPer[acc];
+    assert.ok(usd > usdPerLot * 0.6 && usd < usdPerLot * 1.4, `${acc} ${ph} ≈ ${usd}$`);
+    // micro = العادي ÷ 100 بقاعدة التحويل نفسها
+    assert.equal(
+      commissionPlaceholder('micro', acc),
+      commissionAcrossModes(ph, { kind: 'std', account: acc }, { kind: 'micro', account: acc }),
+      acc,
+    );
+    // ملاحظة micro بلا خانة تذكر المثال نفسه
+    assert.deepEqual(commissionNoteExample('', 'micro', acc), {
+      std: ph,
+      micro: commissionPlaceholder('micro', acc),
+      usc: ph,
+    }, acc);
+  }
+  // بلا عملة ⇒ 7 كما كان
+  assert.deepEqual(commissionNoteExample('', 'micro'), { std: '7', micro: '0.07', usc: '7' });
+}
+console.log('positionSize commissionPlaceholder selftest OK');
