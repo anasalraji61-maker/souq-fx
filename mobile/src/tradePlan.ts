@@ -7,7 +7,7 @@
  * - R:R = المكسب المحتمل ÷ المخاطرة.
  * - وقف أقرب من 1 pip للدخول (أضيق من أي سبريد تجزئة) خطأ كتابة شبه مؤكد: كان يُعرض «0 pip · R:R 1:5000».
  */
-import { knownSingleName } from './chart/newsRisk';
+import { cryptoPairOf, knownSingleName } from './chart/newsRisk';
 import { normalizeDigits, parseDecimal, stripUnitWord } from './parseDecimal';
 import {
   centAccountSymbol,
@@ -1305,7 +1305,8 @@ export function journalSymbol(raw: string): string | null {
   // «EURUSD-cent»/«EURUSD_micro» تبقى بلاحقتها: حذف الفاصل كان يُخرج «EURUSDCENT» فتضيع النقاط وسعر السوق
   const small = smallContractPair(up) ?? miniAccountSymbol(up);
   if (small && pair && pair[1] + pair[2] === small && pair[3].length <= 6) return small + pair[3];
-  const known = knownSingleName(up);
+  // «BTCUSD#» كـ«GOLD#»: الزوج الرقمي بلاحقة وسيطه بفاصل يُحفظ كما كُتب — كانت «#» تُرفض فرسالة «دخول غير صالح» عامة
+  const known = knownSingleName(up) ?? cryptoPairOf(up);
   const suffixed = known ? /^(.*?)([.\-_#+][A-Z0-9]{0,5})$/.exec(up.replace(/[\s/]/g, '')) : null;
   if (known && suffixed && suffixed[1].replace(/[-_]/g, '') === known && (known + suffixed[2]).length <= 12)
     return known + suffixed[2];
@@ -1351,7 +1352,8 @@ function instrumentSymbol(raw: string): string | null {
   // mini منفصلة عن الزوج العادي كالسنت/micro: مالها مجهول فلا يُخلط بصافي «EURUSD»
   const mini = miniAccountSymbol(raw);
   if (mini) return `${mini}MINI`;
-  return instrumentSpec(raw)?.symbol ?? knownSingleName(raw) ?? journalSymbol(raw);
+  // «BTCUSDm»/«BTCUSD.m» ⇒ BTCUSD كـ«XAUUSDm» ⇒ XAUUSD: المزوّد يعرف الاسم القانوني وحده
+  return instrumentSpec(raw)?.symbol ?? knownSingleName(raw) ?? cryptoPairOf(raw) ?? journalSymbol(raw);
 }
 
 /**

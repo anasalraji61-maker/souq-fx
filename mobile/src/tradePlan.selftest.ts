@@ -2878,3 +2878,23 @@ console.log('tradePlan openQuotesRefreshDue selftest OK');
   }
 }
 console.log('tradePlan computedPriceText selftest OK');
+
+// الرقمية بلاحقة وسيط: سعر السوق بالاسم القانوني (المزوّد يعرف BTCUSD وحده) و«#» تُقبل كـ«GOLD#»
+{
+  const tp = require('./tradePlan') as typeof import('./tradePlan');
+  for (const s of ['BTCUSDm', 'BTCUSD.m', 'BTCUSD#', 'btcusd', 'BTC/USD']) assert.equal(tp.quoteSymbol(s), 'BTCUSD', s);
+  assert.equal(tp.quoteSymbol('ETHUSD.m'), 'ETHUSD');
+  assert.equal(tp.quoteSymbol('BTCUSDT'), 'BTCUSDT');
+  assert.equal(tp.quoteSymbol('BTCUSDC'), 'BTCUSDC');
+  assert.equal(tp.journalInstrumentKey('BTCUSDm'), tp.journalInstrumentKey('BTCUSD'));
+  // يُحفظ كما كُتب
+  assert.equal(tp.journalSymbol('BTCUSD#'), 'BTCUSD#');
+  assert.equal(tp.journalSymbol('btcusd.m'), 'BTCUSD.M');
+  assert.equal(tp.journalSymbol('BTCUSDm'), 'BTCUSDM');
+  assert.equal(tp.journalSymbol('BTC-USD'), 'BTCUSD');
+  // الفوركس والسلع كما كانت
+  assert.equal(tp.quoteSymbol('XAUUSDm'), 'XAUUSD');
+  assert.equal(tp.quoteSymbol('EURUSD.m'), 'EURUSD');
+  assert.equal(tp.quoteSymbol('AAPL.US'), 'AAPL.US');
+}
+console.log('tradePlan crypto suffix quote selftest OK');

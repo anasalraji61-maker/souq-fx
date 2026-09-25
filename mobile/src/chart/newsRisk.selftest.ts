@@ -769,3 +769,20 @@ console.log('newsRisk open positions selftest OK');
   assert.equal(openPositionsNewsRisk(['EURUSD', 'EURGBP'], [nfp, ev('GDP', 'GBP', 20)], now, 'GBPUSD'), null);
 }
 console.log('newsRisk open positions shownSymbol selftest OK');
+
+// cryptoPairOf — الزوج الرقمي بلا لاحقة الوسيط (سعر السوق ومفتاح الأداة بالدفتر)
+{
+  const { cryptoPairOf } = require('./newsRisk') as typeof import('./newsRisk');
+  for (const s of ['BTCUSD', 'BTCUSDm', 'BTCUSD.m', 'btc/usd', 'BTCUSD#', 'BTC_USD.m', ' BTCUSD.cash '])
+    assert.equal(cryptoPairOf(s), 'BTCUSD', s);
+  assert.equal(cryptoPairOf('ETHUSD.m'), 'ETHUSD');
+  assert.equal(cryptoPairOf('XRPUSDM'), 'XRPUSD');
+  // عملات مستقرّة: USDC/USDT ليست لاحقة
+  assert.equal(cryptoPairOf('BTCUSDT'), 'BTCUSDT');
+  assert.equal(cryptoPairOf('BTCUSDC'), 'BTCUSDC');
+  assert.equal(cryptoPairOf('BTCUSDT.m'), 'BTCUSDT');
+  // ليست رقمية
+  for (const s of ['EURUSD', 'EURUSDm', 'XAUUSD', 'US30', 'AAPL.US', '', 'BTC'])
+    assert.equal(cryptoPairOf(s), null, s);
+}
+console.log('newsRisk cryptoPairOf selftest OK');

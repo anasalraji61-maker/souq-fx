@@ -161,6 +161,19 @@ export function isCryptoSymbol(symbol: string): boolean {
 }
 
 /**
+ * الزوج الرقميّ القانوني بلا لاحقة الوسيط («BTCUSDm»، «BTCUSD.m»، «ETH/USD»، «BTCUSD#» ⇒ BTCUSD، ETHUSD) — لسعر السوق ومفتاح
+ * الأداة بالدفتر: المزوّد يعرف «BTCUSD» وحده، فكانت «BTCUSDm» (تسمية Exness) بلا نتيجة عائمة و«أغلق بسعر السوق» يفشل دائماً.
+ * القاعدة نفسها التي تقرّر `isCryptoSymbol` (إلا بديل «الحروف وحدها»: لا يُخترع زوجٌ من رمزٍ فيه أرقام).
+ * «BTCUSDC»/«BTCUSDT» عملات مستقرّة تبقى كما هي (لا تُقرأ C لاحقة سنت). `null` = ليس زوجاً رقمياً معروفاً.
+ */
+export function cryptoPairOf(symbol: string): string | null {
+  const bare = suffixFree(symbol).replace(/[\s/_-]/g, '');
+  const glued = /^[A-Z0-9]{3,}[MC]$/.test(bare) ? bare.slice(0, -1) : null;
+  const m = CRYPTO.exec(bare) ?? (glued != null ? CRYPTO.exec(glued) : null);
+  return m ? m[1] + m[2] : null;
+}
+
+/**
  * كتابات الوسيط التي تبقى بعد القواعد أدناه بلا عملة — فلا تحذير، وسطر «التقويم غير متاح» لا يظهر أيضاً، فيُقرأ الصمت
  * «لا أخبار» قبل الرواتب. الدفتر يمرّر الرمز كما كُتب، فهذه تصل فعلاً:
  * - **لاحقتان بفاصل** («NAS100.cash.m»، «NAS100_USD.m»، «EURUSD.m.x»): `suffixFree` تُسقط واحدة، وقاعدة OANDA تريد
