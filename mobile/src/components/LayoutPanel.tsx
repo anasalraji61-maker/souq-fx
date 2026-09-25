@@ -147,6 +147,8 @@ export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply 
     deletedRef.current.add(l.id);
     await deleteLayout(l.id);
     setLayouts((prev) => prev.filter((x) => x.id !== l.id));
+    // «حُفظ Scalp» كان يبقى تحت اللوحة بعد حذف Scalp نفسه — تأكيد لشيء لم يعد موجوداً.
+    setSavedLayout((s) => (s?.id === l.id ? null : s));
     // وإلا عاد التخطيط المحذوف من الخادم عند فتح اللوحة التالي
     api.deleteLayout(l.id).catch(() => {
       /* بلا خادم: الحذف المحلي تمّ */
