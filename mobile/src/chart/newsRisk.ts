@@ -19,6 +19,8 @@ export type NewsEvent = {
   impact: string;
   ts?: number | null;
   sample?: boolean;
+  /** الخادم يعلّم حدثاً بلا ساعة معلنة («طوال اليوم»/«Tentative») — راجع `newsTimeUnannounced` */
+  time_tbd?: boolean;
 };
 
 /**
@@ -315,6 +317,7 @@ export function nextHighImpact(
     if (e.sample) continue;
     if (String(e.impact).toLowerCase() !== 'high') continue;
     if (typeof e.ts !== 'number' || !Number.isFinite(e.ts)) continue;
+    if (newsTimeUnannounced(e)) continue;
     if (!want.has(String(e.currency).toUpperCase())) continue;
     const delta = e.ts * 1000 - nowMs;
     if (delta < -graceMs || delta > horizonMs) continue;
@@ -323,6 +326,55 @@ export function nextHighImpact(
     if (dist < bestDist || (best && dist === bestDist && delta > best.deltaMs)) best = { event: e, deltaMs: delta };
   }
   return best;
+}
+
+/**
+ * حدثٌ **بلا ساعة معلنة**: ForexFactory يؤرّخ «طوال اليوم» و«Tentative» (قرار بنك اليابان عادةً) بمنتصف ليل نيويورك
+ * والخادم يحوّله `ts` عادياً — فكان الشريط يعدّ تنازلياً لساعةٍ لم يعلنها أحد: «بعد 2س» والقرار بعد ساعة، و«بعد 55د» بعد
+ * صدوره فعلاً، ثم لا شيء. `time_tbd` من الخادم إن أرسله، وإلا `ts` = 00:00:00 بتوقيت نيويورك بالضبط (لا خبرٌ قويّ
+ * موقوت عندها عملياً؛ وإن وُجد فقول «اليوم، بلا ساعة» أحذر من السكوت).
+ */
+export function newsTimeUnannounced(e: NewsEvent): boolean {
+  if (e.time_tbd === true) return true;
+  if (typeof e.ts !== 'number' || !Number.isFinite(e.ts) || e.ts % 60 !== 0) return false;
+  const ms = e.ts * 1000;
+  const d = new Date(ms);
+  const day = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  // منتصف ليل نيويورك = 04:00/05:00 UTC من التاريخ نفسه
+  return ms === day - (holidayZoneOffsetH('USD', day) as number) * 3_600_000;
+}
+
+/** قبل بداية يوم الحدث بلا ساعة يظهر بقدر أفق الأخبار الموقوتة، ويبقى حتى نهاية يومه بنيويورك. */
+export const UNANNOUNCED_SPAN_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * أخبار قوية **بلا ساعة معلنة** لعملات الزوج اليوم (`newsTimeUnannounced`): من `ts − أفق الأخبار` حتى نهاية يومها بنيويورك.
+ * للشريط حين لا خبر موقوت — «خبر قوي · JPY · اليوم، الساعة غير معلنة · BOJ Policy Rate» بدل عدٍّ كاذب أو صمت. العملات
+ * بترتيب الزوج بلا تكرار، والعناوين بلا تكرار. `null` = لا شيء.
+ */
+export function unannouncedHighImpactToday(
+  events: readonly NewsEvent[],
+  currencies: readonly string[],
+  nowMs: number,
+  horizonMs: number = NEWS_HORIZON_MS
+): { currencies: string[]; titles: string[] } | null {
+  if (!currencies.length) return null;
+  const want = new Set(currencies);
+  const hitCcys = new Set<string>();
+  const titles: string[] = [];
+  for (const e of events) {
+    if (e.sample || String(e.impact).toLowerCase() !== 'high') continue;
+    if (typeof e.ts !== 'number' || !Number.isFinite(e.ts) || !newsTimeUnannounced(e)) continue;
+    const c = String(e.currency).toUpperCase();
+    if (!want.has(c)) continue;
+    const start = e.ts * 1000;
+    if (nowMs < start - horizonMs || nowMs >= start + UNANNOUNCED_SPAN_MS) continue;
+    hitCcys.add(c);
+    const title = String(e.title ?? '').trim();
+    if (title && !titles.includes(title)) titles.push(title);
+  }
+  if (!hitCcys.size) return null;
+  return { currencies: currencies.filter((c) => hitCcys.has(c)), titles };
 }
 
 /** مدّة «يوم العطلة» من بدايته: ForexFactory يضع العطلة «طوال اليوم» عند منتصف ليل يومها. */

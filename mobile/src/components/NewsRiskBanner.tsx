@@ -18,8 +18,19 @@ import {
   sameMinuteCurrencyLabel,
   sameMinuteHighImpact,
   symbolCurrencies,
+  unannouncedHighImpactToday,
   type CalendarCache,
 } from '../chart/newsRisk';
+
+/**
+ * موعد خبرٍ قويّ **بلا ساعة معلنة** (`unannouncedHighImpactToday`) مكان «بعد 2س» بالسطر. نسخة محلية حتى يضيف launch
+ * `newsTimeTbd` (ar/en/ku) — تُقرأ من القاموس إن وُجدت. الكردي بحاجة مراجعة.
+ */
+const TIME_TBD_COPY: Record<string, string> = {
+  ar: 'اليوم، الساعة غير معلنة',
+  en: 'today, time not announced',
+  ku: 'ئەمڕۆ، کاتەکەی ڕانەگەیەندراوە',
+};
 
 /**
  * سطر تحذير «خبر قوي قريب» فوق الشارت: أقرب حدث عالي التأثير لعملتي الزوج خلال 3 ساعات
@@ -94,7 +105,7 @@ type Props =
     };
 
 export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props) {
-  const { t, rtl } = useI18n();
+  const { t, rtl, lang } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [now, setNow] = useState(() => Date.now());
   const [, setVersion] = useState(0);
@@ -146,6 +157,40 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
     const id = setTimeout(() => setNow(Date.now()), newsTickDelayMs(hitDelta));
     return () => clearTimeout(id);
   }, [now, hitDelta]);
+  // خبرٌ قويّ اليوم **بلا ساعة معلنة** (قرار بنك اليابان «Tentative»): كان يُعدّ لمنتصف ليل نيويورك كأنه موعد — الآن سطرٌ
+  // أحمر كالخبر الموقوت بلا عدّ. للرمز المعروض فقط (الصفقات المفتوحة تبقى على الموقوت)، وحين لا خبر موقوت يشغل الشريط
+  const tbd = !hit && !openSymbols && cache ? unannouncedHighImpactToday(cache.events, currencies, now) : null;
+  if (tbd) {
+    const when = (t as { newsTimeTbd?: string }).newsTimeTbd ?? TIME_TBD_COPY[lang] ?? TIME_TBD_COPY.en;
+    const text = newsBannerText({
+      head: t.newsRiskHigh,
+      currency: tbd.currencies.join('/'),
+      when,
+      title: tbd.titles[0] ?? '',
+      more: Math.max(0, tbd.titles.length - 1),
+    });
+    const stale = cache != null && !cache.ok;
+    return (
+      <View
+        style={styles.wrap}
+        accessible
+        accessibilityRole="alert"
+        accessibilityLabel={`${text}. ${t.newsRiskHint}${stale ? `. ${t.newsStale}` : ''}`}
+      >
+        <Text style={[styles.main, { textAlign: align }]} numberOfLines={1}>
+          {text}
+        </Text>
+        <Text style={[styles.hint, { textAlign: align }]} numberOfLines={1}>
+          {t.newsRiskHint}
+        </Text>
+        {stale ? (
+          <Text style={[styles.hint, { textAlign: align }]} numberOfLines={1}>
+            {t.newsStale}
+          </Text>
+        ) : null}
+      </View>
+    );
+  }
   // عطلة بنوك اليوم لعملتَي الرمز — حين لا خبر قوي فقط (الخبر أخطر ويشغل الشريط). لا للصفقات المفتوحة ولا للرقمية (سوقٌ بلا عطلة)
   const holiday =
     !hit && !openSymbols && holidayCache && !isCryptoSymbol(symbol) ? bankHolidayToday(holidayCache.events, currencies, now) : null;

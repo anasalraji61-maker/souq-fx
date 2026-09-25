@@ -894,3 +894,44 @@ console.log('newsRisk holiday local day selftest OK');
   assert.deepEqual(sc('TSLAspot'), []);
 }
 console.log('newsRisk long/spot/roll suffix selftest OK');
+
+// أخبار بلا ساعة معلنة (Tentative/طوال اليوم): ForexFactory يضعها عند منتصف ليل نيويورك — لا عدّ تنازلي كاذب
+{
+  const { newsTimeUnannounced, unannouncedHighImpactToday, UNANNOUNCED_SPAN_MS, NEWS_HORIZON_MS } =
+    require('./newsRisk') as typeof import('./newsRisk');
+  // 2026-09-25 00:00 نيويورك (EDT) = 04:00 UTC؛ 2026-12-10 00:00 (EST) = 05:00 UTC
+  const edt = Date.UTC(2026, 8, 25, 4) / 1000;
+  const est = Date.UTC(2026, 11, 10, 5) / 1000;
+  const boj: NewsEvent = { id: 'b', title: 'BOJ Policy Rate', currency: 'JPY', impact: 'High', ts: edt };
+  assert.equal(newsTimeUnannounced(boj), true);
+  assert.equal(newsTimeUnannounced({ ...boj, ts: est }), true);
+  // الساعة الصيفية/الشتوية الأخرى ليست منتصف ليل نيويورك (05:00 UTC صيفاً = 01:00 نيويورك)
+  assert.equal(newsTimeUnannounced({ ...boj, ts: edt + 3600 }), false);
+  assert.equal(newsTimeUnannounced({ ...boj, ts: est - 3600 }), false);
+  assert.equal(newsTimeUnannounced({ ...boj, ts: edt + 30 }), false);
+  assert.equal(newsTimeUnannounced({ ...boj, ts: Date.UTC(2026, 8, 25, 12, 30) / 1000 }), false);
+  assert.equal(newsTimeUnannounced({ ...boj, ts: Date.UTC(2026, 8, 25, 12, 30) / 1000, time_tbd: true }), true);
+  assert.equal(newsTimeUnannounced({ ...boj, ts: null }), false);
+  // كان: 02:00 UTC «بعد 2س»، 03:05 (بعد القرار) «بعد 55د» — الآن لا عدّ
+  for (const h of [2, 3.08, 4.1]) assert.equal(nextHighImpact([boj], ['USD', 'JPY'], Date.UTC(2026, 8, 25, 0) + h * 3_600_000), null);
+  // بل سطر «اليوم، الساعة غير معلنة» من ts − الأفق حتى نهاية يوم نيويورك
+  const t0 = edt * 1000;
+  assert.deepEqual(unannouncedHighImpactToday([boj], ['USD', 'JPY'], t0 - 2 * 3_600_000), { currencies: ['JPY'], titles: ['BOJ Policy Rate'] });
+  assert.ok(unannouncedHighImpactToday([boj], ['USD', 'JPY'], t0 - NEWS_HORIZON_MS));
+  assert.equal(unannouncedHighImpactToday([boj], ['USD', 'JPY'], t0 - NEWS_HORIZON_MS - 1), null);
+  assert.ok(unannouncedHighImpactToday([boj], ['JPY'], t0 + UNANNOUNCED_SPAN_MS - 1));
+  assert.equal(unannouncedHighImpactToday([boj], ['JPY'], t0 + UNANNOUNCED_SPAN_MS), null);
+  // عملة أخرى، أثر منخفض، أمثلة، حدث موقوت ⇒ لا شيء
+  assert.equal(unannouncedHighImpactToday([boj], ['EUR', 'USD'], t0), null);
+  assert.equal(unannouncedHighImpactToday([{ ...boj, impact: 'Low' }], ['JPY'], t0), null);
+  assert.equal(unannouncedHighImpactToday([{ ...boj, sample: true }], ['JPY'], t0), null);
+  assert.equal(unannouncedHighImpactToday([{ ...boj, ts: edt + 9 * 3600 }], ['JPY'], t0 + 3600), null);
+  assert.equal(unannouncedHighImpactToday([boj], [], t0), null);
+  // عملتان بترتيب الزوج، عنوان مكرّر مرّة واحدة
+  const two = [boj, { ...boj, id: 'b2' }, { id: 'u', title: 'Bank Stress Test', currency: 'USD', impact: 'high', ts: edt }];
+  assert.deepEqual(unannouncedHighImpactToday(two, ['USD', 'JPY'], t0), { currencies: ['USD', 'JPY'], titles: ['BOJ Policy Rate', 'Bank Stress Test'] });
+  // الخبر الموقوت لا يتأثّر: رواتب 12:30 UTC بجانب حدث بلا ساعة
+  const nfp: NewsEvent = { id: 'n', title: 'NFP', currency: 'USD', impact: 'High', ts: Date.UTC(2026, 8, 25, 12, 30) / 1000 };
+  assert.equal(nextHighImpact([boj, nfp], ['USD', 'JPY'], Date.UTC(2026, 8, 25, 11))?.event.id, 'n');
+}
+console.log('newsRisk unannounced time selftest OK');
