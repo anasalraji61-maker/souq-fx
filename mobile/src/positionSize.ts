@@ -1437,8 +1437,20 @@ export function maxSpreadPipsFor(spec: InstrumentSpec | null | undefined): numbe
  */
 export function parseSpreadPips(raw: string, spec?: InstrumentSpec | null): number | null {
   if (raw.trim() === '') return 0;
+  if (ambiguousSpreadPips(raw, spec)) return null;
   const v = parseDecimal(raw, { unit: 'pip' });
   return v != null && v >= 0 && v <= maxSpreadPipsFor(spec) ? v : null;
+}
+
+/**
+ * سبريد «1.500» **مبهم حين تصلح القراءتان** (1.5 و1,500 كلاهما ≤ `maxSpreadPipsFor`) — أي على TRY/ZAR/MXN بحدّ 3000 وحدها:
+ * «1.500» بالكتابة التركية/الأوروبية = 1,500 pip، سبريد USDTRY حقيقي عند التبييت. كانت تُقرأ 1.5 ⇒ كلفة السبريد أصغر ألف
+ * مرّة، و«المخاطرة شاملة التكاليف» 0.95% بدل 1.43% ولا نصيحة بلوت أصغر — بينما «1,500» مرفوضة بجانبها و«1.500» بخانة الوقف
+ * مرفوضة (`ambiguousSlPips`). على الرئيسية (حدّ 500) 1,500 خارج الحدّ ⇒ «1.500» = 1.5 بلا لبس كما كانت.
+ */
+export function ambiguousSpreadPips(raw: string, spec?: InstrumentSpec | null): { value: string; whole: string; small: string } | null {
+  const a = ambiguousSlPips(raw);
+  return a && Number(a.whole) <= maxSpreadPipsFor(spec) ? a : null;
 }
 
 /**

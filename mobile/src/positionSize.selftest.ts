@@ -72,6 +72,7 @@ import {
   MAX_SANE_LOTS,
   MAX_SMALL_LOTS,
   parseSpreadPips,
+  ambiguousSpreadPips,
   spreadRisk,
   parsePriceFor,
   smallContractSpec,
@@ -948,6 +949,30 @@ console.log('positionSize sizeLooksLikeUnits selftest OK');
   assert.equal(parseSpreadPips('0'), 0);
   assert.equal(parseSpreadPips(String(MAX_SPREAD_PIPS)), MAX_SPREAD_PIPS);
   for (const bad of ['-1', '501', '10851', 'abc', '1.2.3']) assert.equal(parseSpreadPips(bad), null, bad);
+  // «1.500» على USDTRY (حدّ 3000): 1.5 أم 1,500؟ كلاهما سبريد ممكن ⇒ مرفوض كـ«1,500» — كانت 1.5 ⇒ الكلفة أصغر ألف مرّة
+  {
+    const tr = instrumentSpec('USDTRY')!;
+    assert.equal(parseSpreadPips('1.500', tr), null);
+    assert.equal(parseSpreadPips('1,500', tr), null);
+    assert.equal(parseSpreadPips('١٫٥٠٠', tr), null);
+    assert.equal(parseSpreadPips('2.500 pips', tr), null);
+    assert.deepEqual(ambiguousSpreadPips('1.500', tr), { value: '1.500', whole: '1500', small: '1.5' });
+    assert.equal(spreadTooWide('1.500', tr), null);
+    // 3,500 فوق الحدّ ⇒ 3.5 وحدها ممكنة
+    assert.equal(parseSpreadPips('3.500', tr), 3.5);
+    assert.equal(ambiguousSpreadPips('3.500', tr), null);
+    assert.equal(parseSpreadPips('1500', tr), 1500);
+    assert.equal(parseSpreadPips('1.5', tr), 1.5);
+    assert.equal(parseSpreadPips('15.50', tr), 15.5);
+    assert.equal(parseSpreadPips('0.500', tr), 0.5);
+    // الرئيسية (حدّ 500): «1.500» = 1.5 بلا لبس كما كانت
+    const eu = instrumentSpec('EURUSD')!;
+    assert.equal(parseSpreadPips('1.500', eu), 1.5);
+    assert.equal(ambiguousSpreadPips('1.500', eu), null);
+    assert.equal(parseSpreadPips('1.500'), 1.5);
+    // الذهب بالليرة (معدن) حدّه العام
+    assert.equal(parseSpreadPips('1.500', instrumentSpec('XAUTRY')), 1.5);
+  }
 
   const pv = pipValuePerLot(eu, 1); // 10 USD
   const base = { pipValuePerLot: pv, balance: 10_000, riskPct: 1, contractSize: eu.contractSize };
