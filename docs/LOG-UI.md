@@ -265,7 +265,7 @@
 
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
-| 9c838de | `DomLitePanel`: سبريد رمز بلا مواصفة pip = `formatPriceDiff(ask - bid, bid, symbol)` ⇒ منازل السعر (BTCUSD «12.50» لا «12.500» بجانب «67420.50») | chart-r48 (أُغلق) |
-| b6cde12 | `QuadChartModal`: فشل الطلب بلا ذاكرة ⇒ `serverUnreachableSeries` (شموع فارغة، `last`/`change_pct` null، `unavailable_reason: server_unreachable`) ⇒ الإشعار بدل `mockSeries` حول أسعار 2024؛ حُذف منطق إرساء البذرة على التيك (`pendingAnchor`) — لم يعد له مدخل. `ProviderUnavailableNotice` يفرّع `server_unreachable` ⇒ `chartServerUnreachableTitle/Body` (الجسم دائماً). الدالّة و`SERVER_UNREACHABLE` مُصدَّرتان لـtools (`offlineFrame`) | launch121 (جزء ui؛ باقٍ tools) |
+| 02d60f4 | `DomLitePanel`: سبريد رمز بلا مواصفة pip = `formatPriceDiff(ask - bid, bid, symbol)` ⇒ منازل السعر (BTCUSD «12.50» لا «12.500» بجانب «67420.50») | chart-r48 (أُغلق) |
+| 5753fba | `QuadChartModal`: فشل الطلب بلا ذاكرة ⇒ `serverUnreachableSeries` (شموع فارغة، `last`/`change_pct` null، `unavailable_reason: server_unreachable`) ⇒ الإشعار بدل `mockSeries` حول أسعار 2024؛ حُذف منطق إرساء البذرة على التيك (`pendingAnchor`) — لم يعد له مدخل. `ProviderUnavailableNotice` يفرّع `server_unreachable` ⇒ `chartServerUnreachableTitle/Body` (الجسم دائماً). الدالّة و`SERVER_UNREACHABLE` مُصدَّرتان لـtools (`offlineFrame`) | launch121 (جزء ui؛ tools أنجز جزأه `11db392` بالتوازي) |
 
 **إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط (`MatrixEdgeRails:149`، `ToolsScreen:88`)؛ `Alert.alert` داخل `chart/confirmDestructive.ts` فقط (حذف الحساب `AccountScreen:166` عبره)؛ «درجة الاتفاق» أُزيلت (تعليقان `AnalystsPanel:129`، `SocialConsensusPanel:234`)؛ الجولة قابلة للإعادة (`AccountScreen:235` ⇐ `OnboardingOverlay`)؛ التيك المتجمّد يُرفض (`useMultiLiveTicks` `acceptTick` + `TICK_STALE_MS`). الكردية: grep تفرّعات `lang === 'en'/'ku'` و`_ar` بملفاتي ⇒ `CoursesScreen:31` وحده (`name_en` لغير العربية، صحيح).
