@@ -20,8 +20,12 @@ type LeftProps = {
 type RightProps = {
   activePanel: EdgePanelId;
   onOpenPanel: (panel: EdgePanelId) => void;
+  /** @deprecated لا تُستعمل — مختار الإطارات بيته الشريط العلوي وحده (DESIGN-PRO §5.1)؛
+   * باقية حتى يكفّ `TerminalScreen` عن تمريرها (tools). */
   layoutCount?: FrameLayoutCount;
+  /** @deprecated انظر `layoutCount`. */
   layoutShape?: FrameLayoutShape;
+  /** @deprecated انظر `layoutCount`. */
   onLayoutPick?: (count: FrameLayoutCount, shape: FrameLayoutShape) => void;
 };
 
@@ -130,13 +134,7 @@ export function LeftDrawRail({ activeLens, activeTool, onLens, onTool, onQuad }:
   );
 }
 
-export function RightPanelRail({
-  activePanel,
-  onOpenPanel,
-  layoutCount,
-  layoutShape = 'square',
-  onLayoutPick,
-}: RightProps) {
+export function RightPanelRail({ activePanel, onOpenPanel }: RightProps) {
   const { t } = useI18n();
   const RIGHT_ICONS: { id: Exclude<EdgePanelId, null>; mark: string; tip: string }[] = [
     { id: 'alerts', mark: '⚡', tip: t.railTipAlert },
@@ -150,129 +148,9 @@ export function RightPanelRail({
     { id: 'journal', mark: '▤', tip: t.toolsTabJournal },
     { id: 'backtest', mark: '↺', tip: t.backtestWord },
   ];
-  const squareOn = (count: FrameLayoutCount) =>
-    layoutCount === count && layoutShape === 'square';
-  const rectOn = (count: FrameLayoutCount) =>
-    layoutCount === count && layoutShape === 'rect';
 
   return (
     <View style={styles.rightRail}>
-      {layoutCount && onLayoutPick ? (
-        <>
-          <View style={styles.railTag}>
-            <Text style={styles.railTagTop}>{t.railFrameWord}</Text>
-            <Text style={styles.railTagBottom}>{t.railSquareWord}</Text>
-          </View>
-          <View style={styles.layoutGroup}>
-            {([1, 2, 3, 4] as FrameLayoutCount[]).map((count) => {
-              const on = squareOn(count);
-              return (
-                <Pressable
-                  accessibilityState={{ selected: on }}
-                  accessibilityRole="button"
-                  key={`sq-${count}`}
-                  accessibilityLabel={`${count} ${t.railFrameWord} ${t.railSquareWord}`}
-                  style={({ pressed }) => [
-                    styles.layoutBtn,
-                    on && styles.layoutBtnOn,
-                    pressed && {
-                      opacity: buttons.pressedOpacity,
-                      transform: [{ scale: buttons.pressedScale }],
-                    },
-                  ]}
-                  onPress={() => onLayoutPick(count, 'square')}
-                >
-                  <Text style={[styles.layoutNum, on && styles.layoutNumOn]}>{count}</Text>
-                  <View style={styles.layoutMini}>
-                    {Array.from({ length: count }).map((_, index) => (
-                      <View
-                        key={index}
-                        style={[styles.layoutCell, on && styles.layoutCellOn]}
-                      />
-                    ))}
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-          <View style={styles.railSep} />
-          <View style={styles.railTag}>
-            <Text style={styles.railTagTop}>{t.railFrameWord}</Text>
-            <Text style={styles.railTagBottom}>{t.railRectangleWord}</Text>
-          </View>
-          <View style={styles.layoutGroup}>
-            {([2, 3, 4] as FrameLayoutCount[]).map((count) => {
-              const on = rectOn(count);
-              return (
-                <Pressable
-                  accessibilityState={{ selected: on }}
-                  accessibilityRole="button"
-                  key={`rect-${count}`}
-                  accessibilityLabel={`${count} ${t.railFrameWord} ${t.railRectangleWord}`}
-                  style={({ pressed }) => [
-                    styles.layoutBtn,
-                    on && styles.layoutBtnOn,
-                    pressed && {
-                      opacity: buttons.pressedOpacity,
-                      transform: [{ scale: buttons.pressedScale }],
-                    },
-                  ]}
-                  onPress={() => onLayoutPick(count, 'rect')}
-                >
-                  <Text style={[styles.layoutNum, on && styles.layoutNumOn]}>{count}</Text>
-                  <View
-                    style={[
-                      styles.layoutMini,
-                      count === 2 && styles.layoutMiniRow,
-                      count === 3 && styles.layoutMiniRow3,
-                      count === 4 && styles.layoutMiniRow4,
-                    ]}
-                  >
-                    {Array.from({ length: count }).map((_, index) => (
-                      <View
-                        key={index}
-                        style={[
-                          styles.layoutCellRect,
-                          count === 2 && styles.layoutCellRect2,
-                          count === 3 && styles.layoutCellRect3,
-                          count === 4 && styles.layoutCellRect4,
-                          on && styles.layoutCellOn,
-                        ]}
-                      />
-                    ))}
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-          <View style={styles.railSep} />
-          <Pressable
-            accessibilityState={{ selected: layoutShape === 'shadow' }}
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.railTag,
-              layoutShape === 'shadow' && styles.layoutBtnOn,
-              pressed && {
-                opacity: buttons.pressedOpacity,
-                transform: [{ scale: buttons.pressedScale }],
-              },
-            ]}
-            onPress={() => onLayoutPick(1, 'shadow')}
-            accessibilityLabel={`${t.railFrameWord} ${t.railShadowWord}`}
-          >
-            <Text style={styles.railTagTop}>{t.railFrameWord}</Text>
-            <Text
-              style={[
-                styles.railTagBottom,
-                layoutShape === 'shadow' && styles.layoutNumOn,
-              ]}
-            >
-              {t.railShadowWord}
-            </Text>
-          </Pressable>
-          <View style={styles.railSep} />
-        </>
-      ) : null}
       <Text style={styles.railTitle}>{t.railPanelsSectionTitle}</Text>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {RIGHT_ICONS.map((x) => {
@@ -340,32 +218,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.xs,
   },
-  railTag: {
-    width: 44,
-    height: 34,
-    borderRadius: 7,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    backgroundColor: colors.bgPanel,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 5,
-    paddingHorizontal: 3,
-  },
-  railTagTop: {
-    color: colors.accent,
-    fontSize: 8,
-    fontWeight: '900',
-    lineHeight: 10,
-    textAlign: 'center',
-  },
-  railTagBottom: {
-    color: colors.textMuted,
-    fontSize: 8,
-    fontWeight: '800',
-    lineHeight: 10,
-    textAlign: 'center',
-  },
   railBtn: {
     width: 44,
     minHeight: 40,
@@ -383,72 +235,6 @@ const styles = StyleSheet.create({
   railMarkOn: { color: colors.accent },
   railTip: { color: colors.textDim, fontSize: 8, fontWeight: '700' },
   railTipOn: { color: colors.accent },
-  layoutGroup: { gap: spacing.xs, alignItems: 'center', marginBottom: 2 },
-  layoutBtn: {
-    width: 42,
-    height: 34,
-    borderRadius: 7,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    backgroundColor: colors.bgPanel,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 3,
-  },
-  layoutBtnOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  layoutNum: { color: colors.textDim, fontSize: 9, fontWeight: '900' },
-  layoutNumOn: { color: colors.accent },
-  layoutMini: {
-    width: 17,
-    height: 16,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 1,
-    alignContent: 'center',
-  },
-  layoutMiniRow: {
-    flexWrap: 'nowrap',
-    width: 18,
-    height: 10,
-  },
-  layoutMiniRow3: {
-    flexWrap: 'nowrap',
-    width: 20,
-    height: 10,
-  },
-  layoutMiniRow4: {
-    flexWrap: 'nowrap',
-    width: 22,
-    height: 10,
-  },
-  layoutCell: {
-    width: 7,
-    height: 6,
-    borderRadius: 1,
-    backgroundColor: colors.textDim,
-    opacity: 0.65,
-  },
-  layoutCellRect: {
-    width: 7,
-    height: 5,
-    borderRadius: 1,
-    backgroundColor: colors.textDim,
-    opacity: 0.65,
-  },
-  layoutCellRect2: {
-    width: 8,
-    height: 9,
-  },
-  layoutCellRect3: {
-    width: 5,
-    height: 9,
-  },
-  layoutCellRect4: {
-    width: 4,
-    height: 9,
-  },
-  layoutCellOn: { backgroundColor: colors.accent, opacity: 1 },
   railSep: {
     width: 28,
     height: 1,
