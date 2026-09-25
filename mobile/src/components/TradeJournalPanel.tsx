@@ -2179,8 +2179,28 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
       {loading ? <ActivityIndicator color={colors.accent} /> : null}
       {!loading && trades.length === 0 ? (
         <Text style={[styles.empty, { textAlign: align }]}>
-          {listError ? t.journalLoadError : t.journalEmpty}
+          {listError ? t.journalLoadErrorRetry : t.journalEmpty}
         </Text>
+      ) : null}
+      {!loading && listError ? (
+        // launch140: فشل التحميل الأول كان يقول «غادر الدفتر وارجع» — `refresh()` يُستدعى عند التركيب فقط
+        <Pressable
+          accessibilityRole="button"
+          style={({ pressed }) => [
+            styles.chip,
+            { alignSelf: rtl ? 'flex-end' : 'flex-start' },
+            pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+          ]}
+          onPress={() => {
+            playSoftClick();
+            setLoading(true);
+            void refresh();
+          }}
+          accessibilityLabel={t.journalRetryBtn}
+          hitSlop={8}
+        >
+          <Text style={styles.chipText}>{t.journalRetryBtn}</Text>
+        </Pressable>
       ) : null}
       {cappedNote ? (
         // الخادم يُرجع صفحة (أحدث 200، `db.list_trades`) — الأقدم، ولو مفتوحة، لا تصل حتى «تحميل الأقدم»
