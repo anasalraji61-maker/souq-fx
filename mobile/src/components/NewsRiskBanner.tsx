@@ -23,17 +23,6 @@ import {
 } from '../chart/newsRisk';
 
 /**
- * موعد خبرٍ قويّ بلا ساعة معلنة يومُه **غداً** بتقويم المستخدم (`unannouncedHighImpactToday().tomorrow`، launch113) مكان
- * `t.newsTimeTbd` «اليوم، …». نسخة محلية حتى يضيف launch `newsTimeTbdTomorrow` (ar/en/ku) — تُقرأ من القاموس إن وُجدت.
- * الكردي بحاجة مراجعة.
- */
-const TIME_TBD_TOMORROW_COPY: Record<string, string> = {
-  ar: 'غداً، الساعة غير معلنة',
-  en: 'tomorrow, time not announced',
-  ku: 'سبەینێ، کاتەکەی ڕانەگەیەندراوە',
-};
-
-/**
  * سطر تحذير «خبر قوي قريب» فوق الشارت: أقرب حدث عالي التأثير لعملتي الزوج خلال 3 ساعات
  * (أو جارٍ الآن). لا يظهر شيء إن لم يوجد حدث؛ وفشل التقويم بلا بيانات محفوظة يُقال صراحةً (`newsUnavailable`)
  * بدل أن يبدو كـ«لا خبر» — راجع `calendarUnavailable`.
@@ -106,7 +95,7 @@ type Props =
     };
 
 export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props) {
-  const { t, rtl, lang } = useI18n();
+  const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [now, setNow] = useState(() => Date.now());
   const [, setVersion] = useState(0);
@@ -162,9 +151,8 @@ export function NewsRiskBanner({ symbol = '', openSymbols, shownSymbol }: Props)
   // أحمر كالخبر الموقوت بلا عدّ. للرمز المعروض فقط (الصفقات المفتوحة تبقى على الموقوت)، وحين لا خبر موقوت يشغل الشريط
   const tbd = !hit && !openSymbols && cache ? unannouncedHighImpactToday(cache.events, currencies, now) : null;
   if (tbd) {
-    const when = tbd.tomorrow
-      ? (t as { newsTimeTbdTomorrow?: string }).newsTimeTbdTomorrow ?? TIME_TBD_TOMORROW_COPY[lang] ?? TIME_TBD_TOMORROW_COPY.en
-      : t.newsTimeTbd;
+    // يومُه غداً بتقويم الجهاز (21:00–24:00 نيويورك بالأمريكتين) ⇒ «غداً» لا «اليوم» — `unannouncedHighImpactToday().tomorrow`
+    const when = tbd.tomorrow ? t.newsTimeTbdTomorrow : t.newsTimeTbd;
     const text = newsBannerText({
       head: t.newsRiskHigh,
       currency: tbd.currencies.join('/'),
