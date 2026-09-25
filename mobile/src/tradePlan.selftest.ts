@@ -66,6 +66,7 @@ import {
   journalRisk,
   formatJournalMoney,
   planSummaryText,
+  priceDistanceText,
   QUICK_SYMBOLS,
   openCurrencyExposure,
   stackedCurrencyExposure,
@@ -1881,6 +1882,18 @@ console.log('tradePlan knownLots localized plan note selftest OK');
   // بلا مواصفات pip: فرق السعر منظَّفاً لخمس منازل
   const us30 = analyzePlan({ symbol: 'US30', side: 'sell', entry: 39000, sl: 39100, tp: 38800 });
   assert.equal(planSummaryText(us30, w), 'Risk 100 · Reward 200 · R:R 1:2.0');
+  // SHIB: المسافة دون 0.00001 كانت «Risk 0 · Reward 0» — الآن أربعة أرقام معنوية بلا صيغة أُسّية
+  const shib = analyzePlan({ symbol: 'SHIBUSD', side: 'buy', entry: 0.00001234, sl: 0.000012, tp: 0.00001302 });
+  assert.equal(planSummaryText(shib, w), 'Risk 0.00000034 · Reward 0.00000068 · R:R 1:2.0');
+  assert.equal(priceDistanceText(0.00000123456), '0.000001235');
+  assert.equal(priceDistanceText(1e-9), '0.000000001');
+  // من 0.001 فما فوق: خمس منازل كما كان
+  assert.equal(priceDistanceText(0.0012345678), '0.00123');
+  assert.equal(priceDistanceText(25.123456), '25.12346');
+  assert.equal(priceDistanceText(0.1 + 0.2), '0.3');
+  assert.equal(priceDistanceText(100), '100');
+  assert.equal(priceDistanceText(0.00005), '0.00005');
+  assert.equal(priceDistanceText(0), '0');
 }
 console.log('tradePlan planSummaryText selftest OK');
 

@@ -236,6 +236,18 @@ export type TradePlan = {
 const finitePos = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n > 0;
 
 /**
+ * فرق سعرٍ بلا pip معروف لسطر الخطة: خمس منازل كما كان، و**أربعة أرقام معنوية** دون 0.001 — SHIB 0.00001234 بوقف
+ * 0.00001200 (مسافة 0.00000034) كانت «المخاطرة 0 · الربح المحتمل 0» فتبدو الخطة بلا وقف. بلا صيغة أُسّية («3.4e-7»).
+ */
+export function priceDistanceText(d: number): string {
+  if (!Number.isFinite(d)) return '';
+  const a = Math.abs(d);
+  const decimals = a >= 1e-3 || a === 0 ? 5 : Math.min(20, Math.ceil(-Math.log10(a)) + 3);
+  const fixed = d.toFixed(decimals);
+  return fixed.includes('.') ? fixed.replace(/\.?0+$/, '') : fixed;
+}
+
+/**
  * سطر الخطة: «المخاطرة 25 pip (125.00 USD) · الربح المحتمل 50 pip (250.00 USD) · R:R 1:2» — بفرق السعر حين لا يُعرف الـpip
  * (منظَّفاً لخمس منازل). كان منسوخاً بالدفتر ولوحة الأفكار (`VotePanel`) — نسختان تتباعدان. `riskMoney`/`gainMoney` نصّ
  * المال جاهزاً (أو null ⇒ بلا قوسين).
@@ -248,7 +260,7 @@ export function planSummaryText(
 ): string {
   const dist = (pips: number | null, d: number) => {
     const p = formatPips(pips);
-    return p != null ? `${p} pip` : String(Math.round(d * 1e5) / 1e5);
+    return p != null ? `${p} pip` : priceDistanceText(d);
   };
   const paren = (m: string | null | undefined) => (m ? ` (${m})` : '');
   return `${words.risk} ${dist(plan.riskPips, plan.riskDist)}${paren(riskMoney)} · ${words.reward} ${dist(plan.rewardPips, plan.rewardDist)}${paren(gainMoney)} · R:R ${formatRR(plan.rr)}`;
