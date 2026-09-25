@@ -621,8 +621,8 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 7,
     padding: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.accentBorderGlow,
+    // DESIGN-PRO §1/§5.5: مقبض كل فريم بالسكون محايد — كان حدّاً بالتأكيد + حدّاً داخلياً بالتأكيد + 9 نقاط
+    // بالتأكيد على **كل** فريم (4 فريمات ⇒ 4 عناصر تأكيد بمنطقة واحدة). خلفية وحدها تكفي فوق الشارت.
     backgroundColor: 'rgba(8, 17, 30, 0.55)',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cursor: 'grab' as any,
@@ -630,11 +630,8 @@ const styles = StyleSheet.create({
   handleInset: {
     flex: 1,
     borderRadius: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(45, 212, 191, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(8, 17, 30, 0.22)',
   },
   dotsGrid: {
     width: 14,
@@ -649,7 +646,7 @@ const styles = StyleSheet.create({
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.textDim,
   },
   inner: {
     position: 'relative',
