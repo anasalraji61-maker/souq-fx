@@ -250,3 +250,11 @@ def test_closed_candles_keeps_completed_week_over_the_weekend():
     assert backtest.closed_candles(cs, week, saturday, "EURUSD") == cs
     assert backtest.closed_candles(cs, week, thursday, "EURUSD") == cs[:1]
     assert backtest.closed_candles(cs, week, saturday, "BTCUSD") == cs[:1]
+
+
+def test_a_fast_period_longer_than_the_series_is_not_enough_candles_not_zero_trades():
+    """سريع 178 على 179 شمعة لا يعطي قيمتين للتقاطع: كان «0 صفقات، تراجع 0%» كأن الاستراتيجية
+    لا تُشير؛ والفترتان مقلوبتين (10/178) كانتا «شموع غير كافية» بصدق."""
+    out = backtest.run_backtest(_candles(179), "ma_cross", fast=178, slow=10)
+    assert out.get("error") == "not enough candles"
+    assert backtest.run_backtest(_candles(179), "ma_cross", fast=10, slow=178).get("error") == "not enough candles"

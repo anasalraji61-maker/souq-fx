@@ -141,7 +141,8 @@ def run_backtest(
     spread: float = 0.0,
 ) -> dict[str, Any]:
     """`spread`: تكلفة السبريد بوحدات السعر، تُخصم مرة لكل صفقة (دخول+خروج بسعري bid/ask)."""
-    if len(candles) < max(slow, 30) + 5:
+    # الأطول من الفترتين: سريع 178 على 179 شمعة كان يعطي «0 صفقات» (لا تقاطع ممكن) لا «شموع غير كافية»
+    if len(candles) < max(slow, fast, 30) + 5:
         return {"error": "not enough candles", "trades": [], "stats": {}}
 
     closes = [float(c["close"]) for c in candles]
