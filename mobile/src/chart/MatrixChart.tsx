@@ -78,8 +78,11 @@ import {
   legendMultiAt,
   legendValueAt,
   planPriceLegendForWidth,
+  PRICE_OVERLAY_ORDER,
+  PRICE_OVERLAYS,
   resolveColorExpr,
 } from './priceLegend';
+import { placeOverlayTags, tagTextColor, type OverlayTagInput } from './overlayTags';
 import {
   formatPaneValue,
   paneBoundedDecimals,
@@ -5248,7 +5251,48 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         currentTagHidden ? [] : [{ top: currentTagTop, h: currentTagH }]
       )
     : [];
+  // قيم طبقات السعر على المحور بلون خطوطها (`overlayTags.ts`) عند آخر شمعة بالنافذة — حيث يلتقي الخطّ
+  // بالمحور. أقلّ أهمية من كل وسم آخر: السعر الحيّ والتقاطع والرسم المحدَّد محجوزة، والطبقات بترتيب
+  // أولوية المفتاح (`PRICE_OVERLAY_ORDER`). خلية رباعي ضيّقة ⇒ الجداول فارغة ⇒ لا وسوم.
+  const overlayTags = (() => {
+    if (hidePriceLabels) return [];
+    const at = legendLastIdx;
+    const items: OverlayTagInput[] = [];
+    for (const id of PRICE_OVERLAY_ORDER) {
+      if (!(indicators as readonly string[]).includes(id)) continue;
+      const spec = PRICE_OVERLAYS[id]!;
+      const multi = legendMulti[id];
+      if (multi) {
+        const vs = legendMultiAt(multi.lines, at);
+        vs?.forEach((v, k) => items.push({ key: `${id}-${k}`, price: v, color: multi.colors[k]! }));
+        continue;
+      }
+      const color = resolveColorExpr(spec.swatch[0]!, legendTokens);
+      const band = legendBands[id];
+      if (band) {
+        const hl = legendBandAt(band.upper, band.lower, at);
+        if (hl) {
+          items.push({ key: `${id}-u`, price: hl[0], color });
+          items.push({ key: `${id}-l`, price: hl[1], color });
+        }
+        continue;
+      }
+      const v = legendValueAt(legendLines[id], at);
+      if (v == null) continue;
+      items.push({
+        key: id,
+        price: v,
+        color: id === 'supertrend' && supertrend ? (supertrend.up[at] ? colors.bull : colors.bear) : color,
+      });
+    }
+    return placeOverlayTags(items, yOf, chartPlotH, PRICE_TAG_H, [
+      ...(currentTagHidden ? [] : [{ top: currentTagTop, h: currentTagH }]),
+      ...(crossTagTop != null ? [{ top: crossTagTop, h: crossTagH }] : []),
+      ...selectionTags.map((t) => ({ top: t.top, h: PRICE_TAG_H })),
+    ]);
+  })();
   const priceTickUnderTag = (start: number) =>
+    overlayTags.some((t) => boxesTouch(start, PRICE_LABEL_H, t.top, PRICE_TAG_H, TAG_CLEAR_GAP)) ||
     (!currentTagHidden &&
       boxesTouch(start, PRICE_LABEL_H, currentTagTop, currentTagH, TAG_CLEAR_GAP)) ||
     (crossTagTop != null &&
@@ -7992,6 +8036,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ) : null}
           </View>
           ) : null}
+          {overlayTags.map((t) => (
+            <View
+              key={`ov-${t.key}`}
+              pointerEvents="none"
+              style={[styles.selectionPriceTag, styles.overlayPriceTag, { top: t.top, backgroundColor: t.color }]}
+            >
+              <Text style={[styles.crossTagText, { color: tagTextColor(t.color) }]}>{fmtPrice(t.price)}</Text>
+            </View>
+          ))}
           {selectionTags.map((t) =>
             t.tone === 'now' ? (
               // سعر الترند عند الشمعة الحيّة: مفرَّغ بلون الخطّ — مستوى يتحرّك مع كل شمعة، لا طرف مرسوم.
@@ -11784,6 +11837,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
     zIndex: 1,
   },
+  // تحت وسوم السعر الحيّ/التقاطع/الرسم المحدَّد (`zIndex` 1–2) إن تلامست يوماً رغم الحجز.
+  overlayPriceTag: { zIndex: 0, opacity: 0.92 },
   selectionNowTag: {
     backgroundColor: '#071018',
     borderWidth: 1,
