@@ -215,8 +215,12 @@ export function QuadChartModal({
           >
             <Text style={styles.close}>{t.closeWord}</Text>
           </Pressable>
-          <Text style={[styles.title, { textAlign: align }]}>
-            {t.quadTitlePrefix} · {tf}
+          {/* اسم الفريم المحلي كشريط الفريمات («15 د» لا «15m» بالعربية؛ القارئ «15 دقيقة» لا «15 متر»). */}
+          <Text
+            style={[styles.title, { textAlign: align }]}
+            accessibilityLabel={`${t.quadTitlePrefix} · ${t.tfLabelsA11y[tf]}`}
+          >
+            {t.quadTitlePrefix} · {t.tfLabels[tf]}
           </Text>
           <Pressable
             accessibilityRole="switch"

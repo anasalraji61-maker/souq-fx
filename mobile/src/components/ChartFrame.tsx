@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, Platform, LayoutChangeEvent } from '
 import { colors, radii, spacing, buttons } from '../theme';
 import { api, type ChartSeries, type LiveTick } from '../api';
 import { TimeframeBar } from './TimeframeBar';
-import type { Timeframe } from '../timeframes';
+import { isTimeframe, type Timeframe } from '../timeframes';
 import { MatrixChart, type SyncTimeWindow } from '../chart/MatrixChart';
 import { formatPrice } from '../chart/math';
 import { formatPct, pctDirection } from '../chart/dailyChange';
@@ -391,11 +391,12 @@ export function ChartFrame({
           {!showTimeframes ? (
             <Text
               style={styles.tf}
+              accessibilityLabel={isTimeframe(series.timeframe) ? t.tfLabelsA11y[series.timeframe] : undefined}
               {...(Platform.OS === 'web'
                 ? ({ translate: 'no', className: 'notranslate' } as object)
                 : {})}
             >
-              {series.timeframe}
+              {isTimeframe(series.timeframe) ? t.tfLabels[series.timeframe] : series.timeframe}
             </Text>
           ) : null}
           {switching ? (

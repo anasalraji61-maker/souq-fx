@@ -15,6 +15,7 @@ import { api } from '../api';
 import { playSoftClick } from '../audio/playSoftClick';
 import { useI18n } from '../i18n/I18nContext';
 import { confirmDestructive } from '../chart/confirmDestructive';
+import { isTimeframe } from '../timeframes';
 
 /** حدّ الخادم (`LayoutSave.name` max_length=64) — اسم أطول كان يُحفظ محلياً «✓ حُفظ» ويُرفض بالخادم بصمت. */
 const LAYOUT_NAME_MAX = 64;
@@ -44,9 +45,16 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
   /** حفظ جارٍ — نقرتان سريعتان كانتا تحفظان نسختين بالاسم نفسه (القائمة لم تتحدّث بعد فلا «existing»). */
   const savingRef = useRef(false);
 
-  /** «EURUSD 15m · GBPUSD 1H · XAUUSD 4H» — كان السطر يعرض الأزواج فقط، والفريم نصف التخطيط. */
-  const describe = (l: TerminalLayout) =>
-    l.frameSymbols.map((sym, i) => `${sym} ${l.frameTfs[i] ?? ''}`.trim()).join(' · ');
+  /** «EURUSD 15m · GBPUSD 1H · XAUUSD 4H» — كان السطر يعرض الأزواج فقط، والفريم نصف التخطيط. اسم الفريم
+   *  المحلي («15 د» بالعربية كشريط الفريمات)، و`a11y` الكلمات الكاملة للقارئ («15 دقيقة» لا «15m» = «15 متر»). */
+  const describe = (l: TerminalLayout, a11y = false) =>
+    l.frameSymbols
+      .map((sym, i) => {
+        const tf = l.frameTfs[i] ?? '';
+        const tfText = isTimeframe(tf) ? (a11y ? t.tfLabelsA11y[tf] : t.tfLabels[tf]) : tf;
+        return `${sym} ${tfText}`.trim();
+      })
+      .join(' · ');
   /** الاسم المعروض: الافتراضي مخزَّن باسم عربي ثابت («افتراضي») فيُترجم عند العرض. */
   const displayName = (l: TerminalLayout) => (l.id === 'default' ? t.layoutBuiltinName : l.name);
   /** يطابق ما على الشاشة الرئيسية الآن؟ (يُعلَّم «الحالي» كي يعرف المتداول ما المطبَّق) */
@@ -196,7 +204,7 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
               onApply(l);
             }}
             accessibilityState={{ selected: isCurrent(l) }}
-            accessibilityLabel={`${t.layoutApplyA11yPrefix}: ${displayName(l)} — ${describe(l)}`}
+            accessibilityLabel={`${t.layoutApplyA11yPrefix}: ${displayName(l)} — ${describe(l, true)}`}
           >
             <Text style={[styles.rowName, { textAlign: align }]}>
               {displayName(l)}

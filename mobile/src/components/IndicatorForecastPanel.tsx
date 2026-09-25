@@ -12,6 +12,7 @@ import { chartPipSpec } from '../chart/pipSpec';
 import { pipsNumber, pipUnit } from '../chart/measureReadout';
 import { formatLocalStamp } from '../localStamp';
 import { useI18n } from '../i18n/I18nContext';
+import { isTimeframe } from '../timeframes';
 import type { Dict } from '../i18n/locales';
 
 type Props = { symbol: string; timeframe?: string; embedded?: boolean };
@@ -196,8 +197,13 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
           <Text style={[styles.title, embedded && frameEmbedTitle, { textAlign: align }]}>
             {t.forecastTitle}
           </Text>
-          <Text style={[styles.sub, embedded && frameEmbedSub, { textAlign: align }]}>
-            {symbol} · {timeframe}
+          <Text
+            style={[styles.sub, embedded && frameEmbedSub, { textAlign: align }]}
+            accessibilityLabel={`${symbol} · ${isTimeframe(timeframe) ? t.tfLabelsA11y[timeframe] : timeframe}${
+              rsi != null ? ` · RSI ${rsi.toFixed(1)}` : ''
+            }`}
+          >
+            {symbol} · {isTimeframe(timeframe) ? t.tfLabels[timeframe] : timeframe}
             {rsi != null ? ` · RSI ${rsi.toFixed(1)}` : ''}
           </Text>
         </View>
