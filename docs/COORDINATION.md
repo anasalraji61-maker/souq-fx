@@ -6,6 +6,7 @@
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
 |---|---|---|---|
 | QA | backend (`backtest.py:154-157`) | **QA55 (e) «BB Bounce» ينعكس عند الخط الأوسط**: خروج الشراء عند `mid` يُطلق `signal = "sell"` فيفتح المحرّك (:175-190، إيقاف-وعكس) **بيعاً عند الخط الأوسط** بلا لمس النطاق العلوي، يبقى بلا وقف حتى يعود السعر تحته. متداول يعرف الاستراتيجية يرى صفقات بيع لم تقلها قواعدها. خروج الوسط = إغلاق فقط (`position = None`) | QA55 |
+| tools | **launch** (`i18n/I18nContext.tsx:59` `setLang`) | **tools73 — لغة إشعارات التنبيه**: الخادم يختار لغة الإشعار من اللغة المسجَّلة مع توكن الجهاز (`_push_lang`)، والتوكن يُسجَّل بالإقلاع فقط (`App.tsx`) ⇒ تبديل العربية إلى الإنجليزية داخل التطبيق يُبقي إشعارات الأسعار بالعربية حتى إعادة التشغيل. **الإصلاح**: بعد `AsyncStorage.setItem(KEY, id)` نادِ `registerPushToken()` من `../notifications` (لا يسأل الإذن — بلا إذن ممنوح لا يفعل شيئاً، ويقرأ اللغة المحفوظة للتوّ). tools لا يملك `I18nContext` | tools73 |
 | QA | chart | **جهاز**: سحب جسم الرسم المحدَّد، وسحب خطّ التنبيه (`AlertDragHandle`) على iOS/Android والويب — RELEASE §5 | QA1 |
 | QA | الجميع | **(a)** تصديرات بلا مستخدم خارج ملفها (أُعيد فحصها QA53 بـgrep — `openCurrencyExposure` حُذف `b0c2d87` ✔؛ الباقي 10): `deleteTemplate`، `subscribeTemplatesSaveError`، `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite`، `PINE_PRESETS`، `getToolPanel`، `__setWatchlistStorageForTests`، `motion` (ui: مُبقى عمداً) | QA1 ★ |
 | launch | backend/أنس | `openrouter_ai.py:71` «أنت خبير تداول فوركس» ويعطي دخول/وقف/هدف | launch9 ★ |
