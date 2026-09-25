@@ -118,6 +118,8 @@ class DataProvenance(BaseModel):
     kind: Literal["provider", "demo", "cache", "unknown"] = "unknown"
     as_of: float | None = None
     channel: str | None = None
+    # لماذا ليست بيانات مزوّد (مثلاً `not_offered_by_provider` لـDXY) — None حين لا سبب معروف.
+    unavailable_reason: str | None = None
 
 
 class ChartSeries(BaseModel):
@@ -700,6 +702,7 @@ def build_series(symbol: str, timeframe: str = "15m", outputsize: int = 180) -> 
         except Exception:
             pass  # fallback to demo seed below
 
+    why = market.unavailable_reason(sym)
     step = TF_SECONDS[tf]
     base = SYMBOL_BASES.get(sym, 1.0)
     vol = 0.0008 if sym == "DXY" else 0.0015
@@ -713,7 +716,9 @@ def build_series(symbol: str, timeframe: str = "15m", outputsize: int = 180) -> 
         candles=candles,
         change_pct=round(change, 2),
         last=last,
-        data_source=DataProvenance(kind="demo", as_of=time.time(), channel="seed"),
+        data_source=DataProvenance(
+            kind="demo", as_of=time.time(), channel="seed", unavailable_reason=why
+        ),
     )
 
 
@@ -1004,6 +1009,10 @@ def watchlist():
         "symbols": [
             {"symbol": sym, "td_symbol": market.td_symbol(sym)}
             for sym in market.SYMBOL_MAP
+        ]
+        + [
+            {"symbol": sym, "td_symbol": None, "unavailable_reason": why}
+            for sym, why in market.UNAVAILABLE_AT_PROVIDER.items()
         ],
         "market": market.status(),
     }
@@ -1363,6 +1372,19 @@ def economic_calendar(currency: str | None = None, impact: str | None = None):
 
 @app.get("/api/market/quote/{symbol}")
 def market_quote(symbol: str):
+    why = market.unavailable_reason(symbol)
+    if why:
+        # لا سعر مختلَق لرمز لا يقدّمه المزوّد (DXY): كان يُعاد إغلاق السلسلة البذرية كـ«price».
+        return {
+            "symbol": symbol.upper(),
+            "price": None,
+            "bid": None,
+            "ask": None,
+            "spread_source": None,
+            "source": "unavailable",
+            "data_kind": "unavailable",
+            "unavailable_reason": why,
+        }
     book = market.fetch_quote_book(symbol.upper())
     if not book:
         series = build_series(symbol.upper(), "15m")

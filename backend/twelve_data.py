@@ -28,11 +28,32 @@ SYMBOL_MAP: dict[str, str] = {
     "XAUUSD": "XAU/USD",
     "XAGUSD": "XAG/USD",
     "USOIL": "WTI/USD",
-    "UKOIL": "BRENT/USD",
+    # برنت عند Twelve Data اسمه `XBR/USD` (قائمة /commodities). `BRENT/USD` لا يوجد ⇒ كان كل طلب
+    # يفشل فيُعرض برنت بسلسلة تجريبية دائماً.
+    "UKOIL": "XBR/USD",
     "BTCUSD": "BTC/USD",
     "ETHUSD": "ETH/USD",
-    "DXY": "DX-Y.NYB",
 }
+
+# رموز يعرضها التطبيق لكن **لا يقدّمها المزوّد**. DXY كان مُسنداً لـ`DX-Y.NYB` (رمز Yahoo) ولا
+# مؤشر دولار بقائمة Twelve Data (/indices) ⇒ كل طلب يفشل ويُستهلك من الحدّ المشترك ثم تُعرض
+# سلسلة مختلَقة. الآن لا طلب أصلاً، والسبب يُعاد صراحةً للعميل.
+UNAVAILABLE_AT_PROVIDER: dict[str, str] = {
+    "DXY": "not_offered_by_provider",
+}
+
+
+class SymbolUnavailable(RuntimeError):
+    """الرمز غير متاح عند المزوّد — `reason` يُعاد للعميل كما هو."""
+
+    def __init__(self, symbol: str, reason: str):
+        super().__init__(f"{symbol} unavailable at provider: {reason}")
+        self.symbol = symbol
+        self.reason = reason
+
+
+def unavailable_reason(matrix_symbol: str) -> str | None:
+    return UNAVAILABLE_AT_PROVIDER.get((matrix_symbol or "").upper())
 
 TF_MAP: dict[str, str] = {
     "1m": "1min",
@@ -173,6 +194,9 @@ def fetch_time_series_with_meta(
         raise RuntimeError("TWELVE_DATA_API_KEY missing")
 
     sym = matrix_symbol.upper()
+    why = unavailable_reason(sym)
+    if why:
+        raise SymbolUnavailable(sym, why)
     tf = timeframe if timeframe in TF_MAP else "15m"
     cache_key = f"{sym}|{tf}|{outputsize}"
     ttl = CACHE_TTL.get(tf, 90)
@@ -267,7 +291,7 @@ def fetch_quote(matrix_symbol: str) -> float | None:
 def fetch_quote_book(matrix_symbol: str) -> dict | None:
     """Price + bid/ask when Twelve Data quote endpoint provides them."""
     key = _api_key()
-    if not key:
+    if not key or unavailable_reason(matrix_symbol):
         return None
     td_sym = td_symbol(matrix_symbol.upper())
     with httpx.Client(timeout=15.0) as client:

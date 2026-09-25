@@ -22,7 +22,8 @@ _connected = False
 _last_error: str | None = None
 
 # Max symbols on Grow trial WS credits — keep light for robot
-DEFAULT_WS_SYMBOLS = ["EUR/USD", "GBP/USD", "XAU/USD", "DX-Y.NYB", "USD/JPY"]
+# (كان `DX-Y.NYB` هنا — رمز Yahoo لا يعرفه Twelve Data ⇒ خانة بثّ مهدورة بلا سعر أبداً.)
+DEFAULT_WS_SYMBOLS = ["EUR/USD", "GBP/USD", "XAU/USD", "USD/JPY"]
 
 
 def _ws_key() -> str:
