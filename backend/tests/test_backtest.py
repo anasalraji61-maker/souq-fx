@@ -62,10 +62,13 @@ def test_breakeven_backtest_trade_is_not_a_loss():
     assert stats["avg_loss_pct"] == -1.0
 
 
-def test_all_breakeven_or_no_trades_have_zero_win_rate():
-    assert backtest._stats([_t(0.0)])[0]["win_rate"] == 0
+def test_all_breakeven_or_no_trades_have_no_win_rate():
+    """backend-r7: بلا صفقة حاسمة لا نسبة فوز — 0 تُقرأ «خسرت كل صفقاتها»."""
+    st = backtest._stats([_t(0.0), _t(0.0)])[0]
+    assert st["win_rate"] is None
+    assert st["breakeven_count"] == 2
     assert backtest._stats([])[0] == {
-        "trade_count": 0, "win_rate": 0, "breakeven_count": 0, "total_return_pct": 0.0,
+        "trade_count": 0, "win_rate": None, "breakeven_count": 0, "total_return_pct": 0.0,
         "final_equity": 100.0, "avg_win_pct": 0, "avg_loss_pct": 0, "max_drawdown_pct": 0.0,
     }
 

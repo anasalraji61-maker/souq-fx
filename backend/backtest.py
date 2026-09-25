@@ -52,7 +52,9 @@ def _stats(trades: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str,
     - `total_return_pct` = العائد **المركّب** (`final_equity − 100`). كان مجموع نسب الصفقات، واللوحة تعرضه
       بجانب `final_equity`: +50% ثم −50% ⇒ «العائد 0%» بجانب «رأس المال 75» — رقمان متناقضان.
     - **التعادل ليس خسارة** (كدفتر الصفقات، `db.trade_stats`): `win_rate` = رابحة ÷ (رابحة + خاسرة)،
-      والتعادل يُعدّ وحده `breakeven_count` ويبقى ضمن `trade_count`، ولا يدخل `avg_loss_pct`."""
+      والتعادل يُعدّ وحده `breakeven_count` ويبقى ضمن `trade_count`، ولا يدخل `avg_loss_pct`.
+    - **بلا صفقة حاسمة `win_rate` = None** (لا صفقات، أو كلّها تعادل): 0 كانت تُعرض «نسبة نجاح 0%» = «خسرت
+      الاستراتيجية كل صفقاتها» (backend-r7، كالدفتر `2d0fb58`). `BacktestPanel` يعرض «—»."""
     wins = [t["pnl_pct"] for t in trades if t["pnl_pct"] > 0]
     losses = [t["pnl_pct"] for t in trades if t["pnl_pct"] < 0]
     decided = len(wins) + len(losses)
@@ -70,7 +72,7 @@ def _stats(trades: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str,
 
     stats = {
         "trade_count": len(trades),
-        "win_rate": round(len(wins) / decided * 100, 1) if decided else 0,
+        "win_rate": round(len(wins) / decided * 100, 1) if decided else None,
         "breakeven_count": len(trades) - decided,
         "total_return_pct": round(equity - 100.0, 2),
         "final_equity": round(equity, 2),
