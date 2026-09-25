@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 80، على 97eb1c4) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 81، على 59337ff) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
@@ -23,7 +23,17 @@
 | launch | tools | **launch140** الدفتر بلا زرّ إعادة: فشل التحميل الأول يعرض `journalLoadError` «غادر الدفتر وارجع» (`TradeJournalPanel.tsx:2182`؛ `refresh()` يُستدعى عند التركيب فقط :362). المفاتيح جاهزة ar/en/ku (`218552c`): زرّ `journalRetryBtn` يستدعي `refresh()`، ومعه النصّ `journalLoadErrorRetry` («…ثم اضغط «إعادة المحاولة»») بدل `journalLoadError` | launch140 |
 | launch | tools | **launch140b** «pip» على مؤشر/عملة رقمية: منذ `fa1fda2` يُطلق `levelLooksLikePips` لرمز بلا `journalSpec` (US30 وقف «50»)، والدفتر يعرضه بـ`levelLooksLikePipsHint`/`levelLooksLikePipsSaveBlocked` ⇒ «50 pips is 41,950» — المؤشرات بالنقاط. المفاتيح جاهزة ar/en/ku: `levelLooksLikePointsHint`/`levelLooksLikePointsSaveBlocked` (المواضع نفسها) — اخترها حين `journalSpec(sym)` = null (`TradeJournalPanel.tsx` `pipsLevel`، ورسالة منع الحفظ :1062) | launch140 |
 
-**تحقّق الدورة 80 (بالكود، على 97eb1c4):** أُغلق QA79 ← backend `fa0cf42` (`backtest.py:57-68` `closed_candles` بـ`bar_end(symbol, …)`، والكريبتو بلا قصّ؛ اختبار خادم جديد).
-سجلات chart 62 / tools 93 / ui 43 / launch 139 / backend 44: بلا طلب تنسيق جديد (tools 93 «تحذير سعرٍ بخانة السبريد على ZARJPY/USDMXN يحتاج مفتاحاً» مرشّح غير مطلوب بعد).
-**المراجعة (e — ما يُحرج أمام متداول):** نقاط الارتكاز الخمسة من جلسة 17:00 نيويورك السابقة (`pivotBase.ts`، `period=1`) بصيغها القياسية (كاماريلا 1.1/12…1.1/2، Woodie بافتتاح الجارية،
-DeMark الشرطية، فيبو 0.382/0.618/1.0)؛ امتدادات فيبو 127.2%/161.8%؛ اللوت يُقرَّب للأسفل (`positionSize.ts:852`) فلا يتجاوز الخطر المطلوب. **لا بند جديد.**
+| QA | ui/chart/tools | **DP1 أرقام بلا `tabular-nums`** (بند DESIGN-PRO 1، الأعلى أثراً): 5 أنماط فقط بالتطبيق كله (`MatrixChart.tsx:13332,13516,13524`، `QuadChartModal.tsx:450-451`). سعر قائمة المتابعة `WatchlistPanel.tsx:662` بلا (ui)؛ الحاسبة/الدفتر/الطرفية (tools)؛ رأس الشارت والمحاور (chart) | QA81 |
+| QA | ui | **DP3 مُحدِّد التخطيط بمكانين**: الشريط العلوي `TerminalScreen.tsx:1100-1109` والشريط الجانبي `MatrixEdgeRails.tsx:185,222` ⇒ يُحذف من الجانبي (§5.1) | QA81 |
+| QA | ui | **DP6 تسميات تحت أيقونات الشريط**: `railTip` بـ`MatrixEdgeRails.tsx:78,106,126,297` ⇒ أيقونات فقط + تلميح بالضغط الطويل (§4) | QA81 |
+| QA | ui | **DP4 «حذف» ظاهر على كل صف** بقائمة المتابعة وقت السكون (`WatchlistPanel.tsx:494-515`) ⇒ يظهر بالضغط الطويل/السحب (§5.2) | QA81 |
+| QA | ui | **DP5 الشريط السفلي 14 مدخلاً** (`MatrixBottomDock.tsx:70-83`) ⇒ 5 + «المزيد» (§5.4) | QA81 |
+| QA | ui | **DP2 ميزانية التأكيد**: شارة `armedTag` بلون التأكيد (`WatchlistPanel.tsx:671`، ممنوع على الشارات)؛ زرّ الشريط النشط تأكيد على الخلفية والحدّ والرمز والنصّ (`MatrixEdgeRails.tsx:377-385`) وقسما العدسة والرسم قد ينشطان معاً | QA81 |
+| QA | ui | **DP10 الرمز المختار بالمتابعة باللون وحده** (`WatchlistPanel.tsx:423` `symOn` = لون، الصفّ بلا خلفية/علامة ولا `accessibilityState`) | QA81 |
+| QA | chart | **DP7 حدّ + خلفية + ظلّ معاً**: `compactToolbar` (`MatrixChart.tsx:12884`) ⇒ واحد فقط (§5.5) | QA81 |
+| QA | الكل | **DP11/DP12** مسافات خارج شبكة 4: 349 قيمة (أكثرها `TerminalScreen` 46 tools، `MatrixChart` 45 chart، `WatchlistPanel` 16 ui)؛ وزن 700–900: 380 نمطاً بـ30+ ملفاً (`MatrixChart` 47، `TerminalScreen` 25، `AlertsPanel` 22) — كلٌّ بملفّاته، بعد DP1–DP6 | QA81 |
+| QA | ui | **QA81 (منخفض)** `motion` بـ`theme.ts:119` (160/220 مللي ث) لا يستورده أحد ويناقض §6 (حركة واحدة 180 مللي ث) ⇒ حذف أو `flash: 180` | QA81 |
+
+**تحقّق الدورة 81 (بالكود، على 59337ff):** launch140/140b قائمان (لا `journalRetryBtn` ولا `levelLooksLikePoints` بأي `.tsx`). سجلات chart 63 / tools 94 / ui 44 / launch 140 / backend 45:
+بلا طلب جديد غير launch140/140b. **قائمة قبول DESIGN-PRO (أول تشغيل):** 10 من 12 فشل ⇒ صفوف DP أعلاه؛ نجح 8 (شارة «تجريبي» بالصفّ المتدهور وحده، `warn`) و9 (مسح الدورة 78).
+**المراجعة (a — ميت/تصديرات):** 108 تصديرات بلا مستورد خارجي كلها مستعملة داخل ملفها عدا `motion` (QA81)؛ الملف غير المستورد الوحيد `MessagesScreen` (launch52). لا اسم مكرّر.
