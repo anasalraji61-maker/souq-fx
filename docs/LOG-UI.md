@@ -464,8 +464,8 @@
 
 | commit | ماذا | صفّ COORDINATION |
 |---|---|---|
-| 25212d8 | `VotePanel` `planSummary` يمرّر `unit: pipUnit(lang)` ⇒ «Risk 25 pips · Reward 50 pips» بالإنجليزية كالدفتر (`TradeJournalPanel:572`)؛ العربية/الكردية «pip» كما هي | QA75 (ui) |
-| ec24807 | `SymbolSearchBar`: حالة `searchedQ` (النصّ الذي عادت له النتائج فعلاً) ⇒ سطر `t.ssbNoMatch` (`{q}`) يظهر فقط حين يكتمل بحث النصّ الحالي فارغاً بلا خطأ ولا تحميل — لا أثناء مهلة 350ms ولا بنتيجة نصّ سابق. لون هادئ (`textDim`) لا أحمر الخطأ، و`accessibilityLiveRegion="polite"` لقارئ الشاشة | launch135 |
+| b9e28c9 | `VotePanel` `planSummary` يمرّر `unit: pipUnit(lang)` ⇒ «Risk 25 pips · Reward 50 pips» بالإنجليزية كالدفتر (`TradeJournalPanel:572`)؛ العربية/الكردية «pip» كما هي | QA75 (ui) |
+| 5906252 | `SymbolSearchBar`: حالة `searchedQ` (النصّ الذي عادت له النتائج فعلاً) ⇒ سطر `t.ssbNoMatch` (`{q}`) يظهر فقط حين يكتمل بحث النصّ الحالي فارغاً بلا خطأ ولا تحميل — لا أثناء مهلة 350ms ولا بنتيجة نصّ سابق. لون هادئ (`textDim`) لا أحمر الخطأ، و`accessibilityLiveRegion="polite"` لقارئ الشاشة | launch135 |
 
 بوابة البناء خضراء (tsc 0) قبل كل commit. **باقٍ من launch135 (ملاحظة ثانوية، نطاق launch):** 503 «Twelve Data not configured» يُعرض `ssbError` «تحقق من الاتصال» — يحتاج مفتاحاً جديداً (مثلاً `ssbUnavailable`) ثم أفرّق بـ`SymbolSearchBar` حسب الحالة.
 
