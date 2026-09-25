@@ -35,8 +35,8 @@ export function formatPrice(n: number, symbol?: string, ref?: number | null) {
 /**
  * منازل أداة بلا مواصفة من حجم سعرها. تحت 0.01 تُضمن أربعة أرقام معنوية على الأقل: بخمس منازل ثابتة كان
  * SHIBUSD (0.00001234) يُطبع «0.00001» بكل المحور والتقاطع والرأس — كل علامات المحور الرقم نفسه، ولا حركة
- * تُقرأ. PEPE (0.0000089) كان «0.00001» والتقاطع يلتصق بصفر. سقف 10 منازل (`toFixed` يقبل حتى 100، لكن
- * أبعد من ذلك ضجيج). `m` موجب أو صفر/غير منتهٍ ⇒ 5 كالسابق.
+ * تُقرأ. PEPE (0.0000089) كان «0.00001» والتقاطع يلتصق بصفر. سقف 20 منزلة (`toFixed` يقبل حتى 100): سقف 10
+ * كان يطبع 1.23e-9 «0.0000000012» — رقمان معنويان فقط (tools63). `m` موجب أو صفر/غير منتهٍ ⇒ 5 كالسابق.
  */
 export function magnitudeDecimals(m: number): number {
   const a = Math.abs(m);
@@ -44,7 +44,7 @@ export function magnitudeDecimals(m: number): number {
   if (a >= 10) return 3;
   if (!(a > 0) || !Number.isFinite(a) || a >= 0.01) return 5;
   // 1e-12 يمتصّ خطأ log10 عند القوى العشرية (log10(0.001) قد يخرج −2.9999…).
-  return Math.min(10, Math.max(5, Math.floor(-Math.log10(a) + 1e-12) + 4));
+  return Math.min(20, Math.max(5, Math.floor(-Math.log10(a) + 1e-12) + 4));
 }
 
 /**

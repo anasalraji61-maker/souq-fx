@@ -19,7 +19,10 @@ assert.equal(magnitudeDecimals(0.005), 6);
 assert.equal(magnitudeDecimals(0.001), 7);
 assert.equal(magnitudeDecimals(0.00001234), 8);
 assert.equal(magnitudeDecimals(0.0000089), 9);
-assert.equal(magnitudeDecimals(1e-15), 10);
+assert.equal(magnitudeDecimals(1e-15), 19);
+assert.equal(magnitudeDecimals(1.23e-9), 12);
+assert.equal(formatPrice(1.23e-9), '0.000000001230');
+assert.equal(magnitudeDecimals(1e-30), 20);
 
 // SHIBUSD: المحور والتقاطع يميّزان علامتين متجاورتين
 assert.equal(formatPrice(0.00001234, 'SHIBUSD'), '0.00001234');
