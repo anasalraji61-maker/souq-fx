@@ -117,19 +117,8 @@ const MKT_QUOTE_MAX_AGE_MS = 120_000;
 
 /** حاسبة حجم المركز: رصيد × نسبة مخاطرة ÷ (وقف بالنقاط × قيمة النقطة) — مع قيمة نقطة صحيحة لأزواج
  * الين والتقاطعات والذهب عبر سعر تحويل حيّ لعملة الحساب. الرياضيات كلها بـ`positionSize.ts`. */
-/**
- * سعر تحويل يدوي مقلوب (`manualConvLooksInverted`). نصٌّ محلّي مؤقّتاً حتى مفتاح `riskCalcConvInverted` بـ`locales.ts`
- * (طلب لـlaunch بـCOORDINATION) — الكردي بحاجة مراجعة.
- */
-const CONV_INVERTED_COPY: Record<string, string> = {
-  ar: '«{typed}» لا يصلح سعراً لـ{pair} — يبدو مقلوباً (1 ÷ السعر). على الأرجح {pair} = {likely}؛ اكتبه كما تراه بمنصّتك.',
-  'en-US': '"{typed}" can\'t be the {pair} rate — it looks inverted (1 ÷ the price). You likely meant {likely}; type it as your platform shows it.',
-  'en-GB': '"{typed}" can\'t be the {pair} rate — it looks inverted (1 ÷ the price). You likely meant {likely}; type it as your platform shows it.',
-  ku: '«{typed}» ناتوانێت نرخی {pair} بێت — پێدەچێت پێچەوانە بێت (1 ÷ نرخ). لەوانەیە مەبەستت {likely} بێت؛ وەک لە پلاتفۆرمەکەتدا دەیبینیت بینووسە.',
-};
-
 export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
-  const { t, rtl, lang } = useI18n();
+  const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   // رمز الشارت الحالي قد لا يكون زوجاً قابلاً للحساب (DXY مثلاً) — نبدأ بـEURUSD حينها
   const [symbol, setSymbol] = useState(() => (instrumentSpec(defaultSymbol) ? defaultSymbol : 'EURUSD'));
@@ -1498,10 +1487,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           {input(manualConv, setManualConv, conv.symbol, `${t.riskCalcConvManual} ${conv.symbol}`)}
           {manualInverted != null ? (
             <Text style={[styles.warn, { textAlign: align }]} accessibilityLiveRegion="polite">
-              {(CONV_INVERTED_COPY[lang] ?? CONV_INVERTED_COPY['en-US'])
-                .replace('{pair}', conv.symbol)
-                .replace('{typed}', manualConv.trim())
-                .replace('{likely}', formatPrice(manualInverted, conv.symbol))}
+              {/* `split/join` لا `.replace`: النسخة المحلية القديمة كان فيها {pair} مرّتين فظهر الثاني حرفياً */}
+              {t.riskCalcConvInverted
+                .split('{pair}').join(conv.symbol)
+                .split('{typed}').join(manualConv.trim())
+                .split('{likely}').join(formatPrice(manualInverted, conv.symbol))}
             </Text>
           ) : null}
         </>
