@@ -101,7 +101,7 @@ Charts & Technical Analysis
 Clean charts, indicators, price alerts, economic calendar and a trading academy
 
 **Promotional text (App Store)**
-Analyze forex and markets on fast, clean charts — and learn technical analysis step by step in the audio academy. Built for individual traders, in English and Arabic.
+Analyze forex and markets on fast, clean charts, and learn technical analysis step by step in the Arabic audio academy. For individual traders, in English and Arabic.
 
 **Keywords (App Store)**
 forex,charts,technical analysis,indicators,candlestick,alerts,economic calendar,gold,fx,rsi,macd
@@ -138,7 +138,7 @@ TRADER TOOLS
 • Share a chart image in one tap.
 
 ACADEMY
-• Audio lessons in graded levels, starting from the basics.
+• Audio lessons in Arabic, in graded levels from the basics.
 • Ask the teacher mid-lesson and get an instant explanation.
 
 Calm colors for long sessions, with tactile feedback only where you touch.
@@ -174,3 +174,9 @@ The first release of MATRIX: multi-chart layouts, indicators and drawing tools, 
 > **2026-09-25 (launch 73)**: سطر الرسم يذكر القناة الموازية (`DRAW_TOOLS` `channel`، `fitChannelWidth` مختبَر) وزرّ «نسخة» للرسم المحدَّد (`39e26a2`)
 > — كلاهما بلا تجربة على جهاز. لإفساح الإنجليزي اختُصرت أربع عبارات (قائمة المتابعة، التقويم، المساعد، الأكاديمية) بلا حذف ميزة.
 > العدّ بسكربت: **ar 3846 / en 3996** من 4000.
+
+> **2026-09-25 (launch 77)**: محتوى الأكاديمية (44 محاضرة بعناوينها وسردها الصوتي، `backend/academy_data.py`) **عربي فقط** — تحقّقتُ: لا حقل
+> إنجليزي/كردي، و`CoursesScreen.tsx:269` يطبع `lec.title` كما هو. الوصف الإنجليزي كان يعد بـ«Audio lessons» بلا لغة فيجد المستخدم الإنجليزي دروساً
+> عربية. الآن «Audio lessons in Arabic» والنص الترويجي «the Arabic audio academy» (اختُصر «Built for» ⇒ «For» ليبقى ≤170). شرح المدرّس أثناء
+> الدرس يُطلب بلغة الواجهة (`lang` بـ`LectureClassroom.tsx:304`) فلم أوسمه. إن تُرجم المحتوى (QA27 ← أنس) تُحذف «in Arabic».
+> العدّ بسكربت: **en 3997** من 4000، الترويجي **166** من 170.
