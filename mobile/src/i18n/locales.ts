@@ -1000,6 +1000,8 @@ export type Dict = {
   mcAutoA11y: string;
   /** AUTO ممتلئ حين مقياس السعر يدوي (مطّ المحور أو سحب رأسي) — يشرح لماذا قد تختفي شمعة جديدة. */
   mcAutoManualA11y: string;
+  /** مفتاح (switch) «رأس السهم» على خطّ الترند المحدَّد (chart-r37، `4e53e39`): الحالة (مفعّل/لا) يقرؤها قارئ الشاشة من `accessibilityState` — فالنصّ اسمٌ لا فعل. */
+  mcArrowHeadA11y: string;
   /** وسم بين قوسين بعد اسم لوحة مشتقّة من شكل الشمعة لا من تدفّق أوامر حقيقي — «CVD (تقديري)». قصير: يُطبع برأس اللوحة. */
   mcEstimatedTag: string;
   /** شرح «≈»/«تقديري» بلوحات الحجم حين السلسلة بلا فوليوم (الفوركس، `seriesHasVolume` = false): الأعمدة من مدى كل شمعة نسبةً لسعرها (`estimatedVolume`) ⇒ OBV/MFI/VWAP/Klinger/CMF من التقدير نفسه ولا تطابق حجم التيك بمنصّة أخرى. */
@@ -2187,6 +2189,7 @@ const ar: Dict = {
   mcHintSelected: 'اسحب الرسم لتحريكه · اسحب مقبضاً لتعديل طرف · يُحفظ تلقائياً',
   mcAutoA11y: 'تلقائي: ملاءمة الأسعار والعودة لآخر شمعة',
   mcAutoManualA11y: 'مقياس السعر يدوي — قد تخرج الشموع الجديدة عن العرض. اضغط لإعادته تلقائياً والعودة لآخر شمعة',
+  mcArrowHeadA11y: 'رأس سهم بنهاية خطّ الترند',
   mcEstimatedTag: 'تقديري',
   mcVolEstimatedHint:
     'مزوّدنا لا يرسل حجم تداول لهذا الرمز (الفوركس بلا حجم مركزي) — هذه الأعمدة تقدير من مدى كل شمعة (من أعلاها إلى أدناها). مؤشرات الحجم (OBV وMFI وVWAP وKlinger…) محسوبة من التقدير نفسه، فلا تطابق أرقامها منصّة تعرض حجم التيك من وسيطها.',
@@ -3336,6 +3339,7 @@ const enUS: Dict = {
   mcHintSelected: 'Drag the drawing to move it · drag a handle to adjust one end · saved automatically',
   mcAutoA11y: 'Auto: fit prices and return to the latest candle',
   mcAutoManualA11y: 'Price scale is manual — new candles may leave the view. Tap to restore auto and return to the latest candle',
+  mcArrowHeadA11y: 'Arrowhead at the end of the trend line',
   mcEstimatedTag: 'est.',
   mcVolEstimatedHint:
     'Our data provider sends no traded volume for this symbol (forex has no central volume) — these bars are estimated from each candle\'s high-to-low range. Volume indicators (OBV, MFI, VWAP, Klinger…) are built from the same estimate, so their values won\'t match a platform that shows your broker\'s tick volume.',
@@ -4510,6 +4514,7 @@ const ku: Dict = {
   mcHintSelected: 'کێشراوەکە ڕایبکێشە بۆ جوولاندنی · دەسکێک ڕایبکێشە بۆ گۆڕینی لایەکی · خۆکار پاشەکەوت دەبێت',
   mcAutoA11y: 'خۆکار: گونجاندنی نرخەکان و گەڕانەوە بۆ دوایین مۆم',
   mcAutoManualA11y: 'پێوەری نرخ دەستییە — لەوانەیە مۆمە نوێیەکان لە دیمەن دەربچن. دابگرە بۆ گەڕاندنەوەی خۆکار و گەڕانەوە بۆ دوایین مۆم',
+  mcArrowHeadA11y: 'سەری تیر لە کۆتایی هێڵی ترێند',
   mcEstimatedTag: 'خەمڵێنراو',
   mcVolEstimatedHint:
     'دابینکەرەکەمان قەبارەی بازرگانی بۆ ئەم هێمایە نانێرێت (فۆرێکس قەبارەی ناوەندیی نییە) — ئەم ستوونانە خەمڵاندنن لە مەودای هەر مۆمێک (لە بەرزترینەوە بۆ نزمترین). پێوەرەکانی قەبارە (OBV، MFI، VWAP، Klinger…) لە هەمان خەمڵاندن حیساب دەکرێن، بۆیە ژمارەکانیان لەگەڵ پلاتفۆرمێک کە قەبارەی تیکی بڕۆکەرەکەت پیشان دەدات یەک ناگرنەوە.',
