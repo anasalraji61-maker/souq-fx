@@ -342,7 +342,7 @@ export function QuadChartModal({
                   ) : null}
                   {series[i] &&
                   (providerUnavailableReason(series[i]!.data_source) ||
-                    (normalizeProvenance(series[i]!.data_source).kind as string) === 'unavailable') ? (
+                    normalizeProvenance(series[i]!.data_source).kind === 'unavailable') ? (
                     // DXY: لا يقدّمه المزوّد أصلاً — الجملة كاملة لقارئ الشاشة، ومقصوصة بالخلية الضيّقة (أوّلها يكفي).
                     <Text
                       style={[styles.demoTag, { flexShrink: 1 }]}
