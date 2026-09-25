@@ -573,6 +573,11 @@ export function typedExitQuoteToAccount(
 export function slPipsCarryOver(prev: InstrumentSpec, next: InstrumentSpec): boolean {
   const kind = (x: InstrumentSpec) => (METALS[x.base] ? x.base : 'FX');
   if (kind(prev) !== kind(next)) return false;
+  // تقاطعات الين الناشئة (ZARJPY ~8.6، TRYJPY ~3.7، SEKJPY ~14): pip 0.01 على سعرٍ صغير = ~0.1% من السعر لا ~0.007% كـUSDJPY —
+  // «10» وقفٌ عادي على ZARJPY كان يبقى على EURUSD (نسخ «JPY ⇄ JPY» ثم «رئيسيّ ⇄ رئيسيّ») ⇒ **1.00 لوت** بدل ~0.33 لوقف 30 pip
+  // معتاد. تبقى مع الأداة نفسها فقط (لاحقة الوسيط)، كـUSDZAR ⇄ EURZAR أدناه
+  const emJpy = (x: InstrumentSpec) => x.quote === 'JPY' && x.base !== 'SGD' && EM_OVER_ONE_VS_JPY.has(x.base);
+  if (kind(next) === 'FX' && (emJpy(prev) || emJpy(next))) return prev.base === next.base && prev.quote === next.quote;
   if (prev.quote === next.quote) return true;
   // فوركس ⇄ فوركس ما دام الصنفان **رئيسيَّين** (pip قيمته 6–13$ للوت): «20» من EURUSD على USDTRY وقف 0.0020 ليرة — داخل
   // السبريد، وقيمة الـpip 0.24$ ⇒ **20.5 لوت** بحساب 10,000 و1% (تحت حدّ 50 لوت، والسبريد يُمسح بالتبديل نفسه فلا تحذير).

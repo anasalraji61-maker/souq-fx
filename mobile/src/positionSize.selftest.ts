@@ -2938,6 +2938,15 @@ console.log('positionSize Arabic comma price hint selftest OK');
   assert.equal(slPipsCarryOver(S('XAUUSD'), S('EURUSD')), false);
   assert.equal(slPipsCarryOver(S('XAUUSD'), S('XAGUSD')), false);
   assert.equal(slPipsCarryOver(S('USDJPY'), S('SILVER')), false);
+  // تقاطعات الين الناشئة ⇄ غيرها: كانت true ⇒ «10» ZARJPY تبقى على EURUSD (1.00 لوت بدل ~0.33)
+  assert.equal(slPipsCarryOver(S('ZARJPY'), S('EURUSD')), false);
+  assert.equal(slPipsCarryOver(S('EURUSD'), S('ZARJPY')), false);
+  assert.equal(slPipsCarryOver(S('ZARJPY'), S('USDJPY')), false);
+  assert.equal(slPipsCarryOver(S('USDJPY'), S('TRYJPY')), false);
+  assert.equal(slPipsCarryOver(S('TRYJPY'), S('SEKJPY')), false);
+  assert.equal(slPipsCarryOver(S('ZARJPY'), S('ZARJPY.m')), true);
+  assert.equal(slPipsCarryOver(S('SGDJPY'), S('USDJPY')), true); // ~115: ينٌ عادي
+  assert.equal(slPipsCarryOver(S('EURJPY'), S('USDJPY')), true);
   // الذهب بالين/الليرة/…: pip 0.1 ين ⇒ «150» وقف 15 ين لا 15$ — كان يبقى فيخرج اللوت ×160 (10.00 بدل 0.06)
   assert.equal(slPipsCarryOver(S('XAUUSD'), S('XAUJPY')), false);
   assert.equal(slPipsCarryOver(S('XAUJPY'), S('XAUUSD')), false);
