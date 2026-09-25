@@ -8,6 +8,8 @@
 """
 from __future__ import annotations
 
+import math
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -442,6 +444,26 @@ def test_only_breakevens_give_no_win_rate_not_zero_percent_losses(client):
     stats = client.get("/api/trades", headers=_DEV1).json()["stats"]
     assert stats["breakeven_count"] == 1 and stats["loss_count"] == 0
     assert stats["win_rate"] is None, "0 تُعرض «نسبة نجاح 0%» = خسر كل صفقاته (backend-r6 (5))"
+
+
+def test_trades_that_net_to_zero_total_zero_not_minus_zero(client):
+    """بيعان خاسران 11 و22 نقطة + شراء رابح 33 نقطة = صافٍ صفر؛ المجموع العائم −5.5e-17 كان يُقرَّب `-0.0`
+    فيعرض التطبيق «صافي −0.00%» — خسارة لم تحدث (نفس عيب الاختبار الخلفي `ce2dce6`)."""
+    _open_trade(client, side="sell", exit=1.1011)
+    _open_trade(client, side="sell", exit=1.1022)
+    _open_trade(client, side="buy", exit=1.1033)
+    r = client.get("/api/trades", headers=_DEV1)
+    assert '"total_pnl_pct":-0.0' not in r.text.replace(" ", "")
+    stats = r.json()["stats"]
+    assert stats["total_pnl_pct"] == 0.0 and math.copysign(1, stats["total_pnl_pct"]) == 1
+
+
+def test_a_sub_rounding_best_or_worst_is_not_minus_zero(client):
+    _open_trade(client, side="sell", exit=1.10001)  # −0.0009%: خسارة حقيقية لكنها تُقرَّب صفراً
+    stats = client.get("/api/trades", headers=_DEV1).json()["stats"]
+    assert stats["loss_count"] == 1
+    for k in ("best", "worst", "total_pnl_pct"):
+        assert math.copysign(1, stats[k]) == 1, k
 
 
 def _bulk_insert(n_open: int, n_won: int, key: str) -> None:

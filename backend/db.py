@@ -2036,12 +2036,14 @@ def trade_stats(user_id: int | None = None, owner_key: str | None = None) -> dic
         "trade_count": len(pnls),
         # كلّها تعادل ⇒ لا نسبة فوز ذات معنى: None كالدفتر الفارغ، و`breakeven_count` يوضّح
         "win_rate": round(len(wins) / decided * 100, 1) if decided else None,
-        "total_pnl_pct": round(sum(pnls), 2),
+        # `+ 0.0` كـ`backtest._round`: ما يُقرَّب صفراً إشارته ضجيج فاصلة عائمة — بيعان خاسران 11 و22 نقطة وشراء
+        # رابح 33 نقطة على اليورو مجموعها −5.5e-17 ⇒ `-0.0` ⇒ «صافي −0.00%» خسارة لم تحدث. وأفضل/أسوأ كذلك.
+        "total_pnl_pct": round(sum(pnls), 2) + 0.0,
         # بلا رابحة لا متوسّط ربح (None لا 0): «متوسّط الربح 0%» يُقرأ «ربحت صفقات بلا شيء» — كـ`backtest._stats`
         "avg_win": round(sum(wins) / len(wins), 2) if wins else None,
         "avg_loss": round(sum(losses) / len(losses), 2) if losses else None,
-        "best": round(max(pnls), 2),
-        "worst": round(min(pnls), 2),
+        "best": round(max(pnls), 2) + 0.0,
+        "worst": round(min(pnls), 2) + 0.0,
         "win_count": len(wins),
         "loss_count": len(losses),
         "breakeven_count": len(pnls) - decided,
