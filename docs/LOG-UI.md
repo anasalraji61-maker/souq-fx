@@ -422,3 +422,14 @@
 - **الحوارات بالويب:** `Alert.alert` بـ`chart/confirmDestructive.ts` وحده؛ `confirmDestructive`/`notify` بثمانية ملفات منها `AccountScreen` (حذف الحساب).
 - **السعر المتجمّد:** `acceptTick` (`hooks/tickAge.ts`) يرفض ما عمره عند الخادم > `TICK_STALE_MS`؛ `WatchlistPanel` يسِم السعر الاحتياطي/التجريبي (`wlDemoTag`، `wlDemoPriceA11ySuffix`) ولا يحسب منه نسبة ولا مسافة.
 - **الجولة:** زرّ `accReplayTour` (`AccountScreen:219-239`) خارج أي فرع دخول ⇐ `OnboardingOverlay`.
+
+## 2026-09-25 — تشغيل 35
+صفّ ui المفتوح بـCOORDINATION (دورة QA 74) = **chart-r56 (3) — لوح العمق** — أُنجز:
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| 190ab2f | `DomLitePanel`: `quoteSpreadPips(..., chartPipSpec)` ⇒ «USDJPYc» 1.5 و«XAUUSDm» 3 (تحقّقتُ بـtsx؛ BTCUSD `null` ⇒ `formatPriceDiff` كالسابق)؛ الوحدة `pipUnit(lang)` بدل «pip» الثابتة؛ `formatPrice(bid/ask, symbol, quote.bid)` بمرجع واحد (نفط 99.950 / 100.050)؛ فحص الدفتر `quoteBookValid` كرأس الطرفية (`TerminalScreen.tsx:1725`) | chart-r56 (3) |
+
+بوابة البناء خضراء (tsc 0) قبل الـcommit.
+
+**إعادة تحقّق بنود المهمّة بالكود (بعد 2628416):** «₴» بتعليقين فقط (`ToolsScreen:88`، `MatrixEdgeRails:149`)؛ «درجة الاتفاق» بتعليقات فقط؛ `Alert.alert` بـ`chart/confirmDestructive.ts` وحده (`window.confirm`/`window.alert` بالويب، غيابه ⇒ لا تنفيذ)؛ `useMultiLiveTicks` يرفض المتجمّد (`acceptTick`، `TICK_STALE_MS`)؛ إعادة الجولة `AccountScreen:221-233`؛ `Math.random` خارج chart = `api.ts:45` (UUID). حالة الاختيار والكردية: لم يتغيّر ملف بنطاقي منذ مسح AST بتشغيل 34.
