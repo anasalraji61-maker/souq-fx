@@ -254,67 +254,65 @@ export function TerminalScreen() {
 
   useEffect(() => {
     (async () => {
+      // كل مفتاح وحده: كانت القراءات بـ`try` واحد، فقيمةٌ تالفة واحدة (JSON مقطوع لترتيب الإطارات) تُسقط كل ما بعدها
+      // — إطار الدولار، رمز البطل، خانات الظلّ، سرعة السحب — بصمت عند كل إقلاع
+      const get = async (key: string): Promise<string | null> => {
+        try {
+          return await AsyncStorage.getItem(key);
+        } catch {
+          return null;
+        }
+      };
+      const json = (raw: string | null): unknown => {
+        if (!raw) return null;
+        try {
+          return JSON.parse(raw) as unknown;
+        } catch {
+          return null;
+        }
+      };
       try {
-        const raw = await AsyncStorage.getItem(PREFS_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw) as string[];
-          if (Array.isArray(parsed) && parsed.length === 3 && parsed.every(isTimeframe)) {
-            setFrameTfs(parsed);
-          }
+        const parsedTfs = json(await get(PREFS_KEY));
+        if (Array.isArray(parsedTfs) && parsedTfs.length === 3 && parsedTfs.every(isTimeframe)) {
+          setFrameTfs(parsedTfs as Timeframe[]);
         }
-        const symRaw = await AsyncStorage.getItem(SYMBOLS_KEY);
-        if (symRaw) {
-          const syms = JSON.parse(symRaw) as string[];
-          if (Array.isArray(syms) && syms.length === 3) {
-            setFrameSymbols([syms[0], syms[1], syms[2]]);
-          }
+        const syms = json(await get(SYMBOLS_KEY));
+        // رموز نصّية غير فارغة فقط: `[null, …]` كان يُمرَّر إلى `api.chart` كما هو
+        if (Array.isArray(syms) && syms.length === 3 && syms.every((x) => typeof x === 'string' && x.trim() !== '')) {
+          setFrameSymbols([syms[0], syms[1], syms[2]]);
         }
-        const layoutRaw = await AsyncStorage.getItem(LAYOUT_COUNT_KEY);
-        const parsedLayout = Number(layoutRaw);
+        const parsedLayout = Number(await get(LAYOUT_COUNT_KEY));
         if ([1, 2, 3, 4].includes(parsedLayout)) {
           setLayoutCount(parsedLayout as FrameLayoutCount);
         }
-        const shapeRaw = await AsyncStorage.getItem(LAYOUT_SHAPE_KEY);
+        const shapeRaw = await get(LAYOUT_SHAPE_KEY);
         if (shapeRaw === 'square' || shapeRaw === 'rect' || shapeRaw === 'shadow') {
           setLayoutShape(shapeRaw);
           if (shapeRaw === 'shadow') setLayoutCount(1);
         }
-        const syncRaw = await AsyncStorage.getItem(TIME_SYNC_KEY);
+        const syncRaw = await get(TIME_SYNC_KEY);
         if (syncRaw === '1' || syncRaw === 'true') {
           setTimeSyncEnabled(true);
         }
-        const orderRaw = await AsyncStorage.getItem('matrix.home.frames.order.v1');
-        if (orderRaw) {
-          const parsed = JSON.parse(orderRaw) as unknown;
-          if (Array.isArray(parsed) && parsed.every((x) => typeof x === 'string')) {
-            setFrameOrder(parsed as string[]);
-          }
+        const order = json(await get('matrix.home.frames.order.v1'));
+        if (Array.isArray(order) && order.every((x) => typeof x === 'string')) {
+          setFrameOrder(order as string[]);
         }
-        const dxyTfRaw = await AsyncStorage.getItem(DXY_TF_KEY);
+        const dxyTfRaw = await get(DXY_TF_KEY);
         if (dxyTfRaw && isTimeframe(dxyTfRaw)) {
           setDxyTf(dxyTfRaw);
         }
-        const heroRaw = await AsyncStorage.getItem(DXY_SYMBOL_KEY);
-        if (heroRaw && typeof heroRaw === 'string') {
+        const heroRaw = await get(DXY_SYMBOL_KEY);
+        if (heroRaw && heroRaw.trim()) {
           setHeroSymbol(heroRaw.toUpperCase());
         }
-        const shadowRaw = await AsyncStorage.getItem(SHADOW_SECONDARY_KEY);
-        if (shadowRaw) {
-          const parsed = JSON.parse(shadowRaw) as string[];
-          if (Array.isArray(parsed) && parsed.length >= 3 && parsed.every(isTimeframe)) {
-            setShadowSlots([parsed[0], parsed[1], parsed[2]]);
-          }
+        const shadow = json(await get(SHADOW_SECONDARY_KEY));
+        if (Array.isArray(shadow) && shadow.length >= 3 && shadow.every(isTimeframe)) {
+          setShadowSlots([shadow[0], shadow[1], shadow[2]]);
         }
-        const enabledRaw = await AsyncStorage.getItem(SHADOW_ENABLED_KEY);
-        if (enabledRaw) {
-          const parsed = JSON.parse(enabledRaw) as unknown[];
-          if (
-            Array.isArray(parsed) &&
-            parsed.length >= 3 &&
-            parsed.every((x) => typeof x === 'boolean')
-          ) {
-            setShadowEnabled([Boolean(parsed[0]), Boolean(parsed[1]), Boolean(parsed[2])]);
-          }
+        const enabled = json(await get(SHADOW_ENABLED_KEY));
+        if (Array.isArray(enabled) && enabled.length >= 3 && enabled.every((x) => typeof x === 'boolean')) {
+          setShadowEnabled([Boolean(enabled[0]), Boolean(enabled[1]), Boolean(enabled[2])]);
         }
         const speed = await loadPanSpeed();
         setPanSpeed(clampPanSpeed(speed));
