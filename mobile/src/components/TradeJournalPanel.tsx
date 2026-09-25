@@ -171,19 +171,8 @@ type QuoteSnap = { price: number; bid?: number | null; ask?: number | null };
 /** خطأ `postJson` لردّ 409 (`trade_already_closed`، backend-r1): الصفقة أُغلقت بجهاز آخر بين الفحص والإغلاق. */
 const isAlreadyClosedError = (e: unknown) => e instanceof Error && /\bHTTP 409\b/.test(e.message);
 
-/**
- * فشل «تحميل الأقدم» — نصٌّ محلّي مؤقّتاً حتى مفتاح `journalLoadOlderError` (طلب لـlaunch بـCOORDINATION، tools69)؛
- * `journalLoadError` يقول «غادر الدفتر وارجع» وهنا الزرّ نفسه يعيد المحاولة والقائمة المعروضة سليمة. الكردي بحاجة مراجعة.
- */
-const OLDER_ERROR_COPY: Record<string, string> = {
-  ar: 'تعذّر تحميل الصفقات الأقدم — تحقّق من الاتصال واضغط «تحميل الأقدم» مجدداً',
-  'en-US': 'Could not load older trades — check your connection and tap “Load older” again',
-  'en-GB': 'Could not load older trades — check your connection and tap “Load older” again',
-  ku: 'بارکردنی مامەڵە کۆنترەکان سەرکەوتوو نەبوو — پەیوەندییەکەت بپشکنە و دووبارە «بارکردنی کۆنترەکان» دابگرە',
-};
-
 export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props = {}) {
-  const { t, rtl, lang } = useI18n();
+  const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -2040,7 +2029,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         </Pressable>
       ) : null}
       {olderError ? (
-        <Text style={[styles.formError, { textAlign: align }]}>{OLDER_ERROR_COPY[lang] ?? OLDER_ERROR_COPY['en-US']}</Text>
+        <Text style={[styles.formError, { textAlign: align }]}>{t.journalLoadOlderError}</Text>
       ) : null}
       {/**
         * الصفقات المفتوحة أولاً. الباك-إند يُرجع الأحدث فالأقدم (`db.list_trades`: ORDER BY opened_at
