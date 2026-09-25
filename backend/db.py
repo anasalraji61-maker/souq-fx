@@ -2010,7 +2010,10 @@ def add_trade(data: dict, user_id: int | None = None, owner_key: str | None = No
         # الحساب بـ_pnl_pct لا بنسخة ثالثة منه: النسخ المكرّرة كانت ترمي ZeroDivisionError على entry=0.
         row["pnl"] = _pnl_pct(row["side"], row["entry"], row["exit"])
         row["status"] = "closed"
-        row["closed_at"] = row["closed_at"] or time.strftime("%Y-%m-%d %H:%M")
+        # «الآن» وقت إغلاق فقط إن سُجّلت الصفقة الآن (بلا `opened_at`). صفقة أغسطس تُسجَّل اليوم كانت
+        # تُحفظ مغلقة اليوم (ومفتوحة بعد إغلاقها إن كان الفتح +4د) ⇒ null «غير معروف» لا تاريخ مخترَع.
+        if not row["closed_at"] and not data.get("opened_at"):
+            row["closed_at"] = time.strftime("%Y-%m-%d %H:%M")
     with _conn() as c:
         c.execute(
             """INSERT INTO trades

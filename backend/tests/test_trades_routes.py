@@ -754,3 +754,33 @@ def test_old_rows_with_pnl_multiplied_by_size_are_recomputed_on_startup(client):
     rows = {t["id"]: t for t in client.get("/api/trades", headers=_DEV1).json()["trades"]}
     assert rows[big["id"]]["pnl"] == pytest.approx(1.0)
     assert rows[small["id"]]["pnl"] == pytest.approx(-1.0)
+
+
+# ─── وقت الإغلاق لا يُخترع لصفقة تُسجَّل بعد حدوثها (run 54) ─────────────────────
+
+
+def test_backdated_closed_trade_has_unknown_close_time(client):
+    t = _open_trade(client, exit=1.105, opened_at="2026-08-01T10:00:00")
+    assert t["status"] == "closed" and t["opened_at"] == "2026-08-01 10:00"
+    assert t["closed_at"] is None, "كان «الآن» — تاريخ إغلاق لم يحدث"
+
+
+def test_backdated_closed_trade_keeps_supplied_close_time(client):
+    t = _open_trade(client, exit=1.105, opened_at="2026-08-01T10:00:00", closed_at="2026-08-02T15:30:00")
+    assert t["closed_at"] == "2026-08-02 15:30"
+
+
+def test_trade_logged_now_with_exit_still_closes_now(client):
+    t = _open_trade(client, exit=1.105)
+    assert t["closed_at"] and t["closed_at"] >= t["opened_at"]
+
+
+@pytest.mark.parametrize("over", [
+    {"exit": 1.105, "opened_at": "2026-08-02T10:00:00", "closed_at": "2026-08-01T10:00:00"},  # قبل الفتح
+    {"opened_at": "2026-08-01T10:00:00", "closed_at": "2026-08-02T10:00:00"},  # بلا سعر خروج
+    {"exit": 1.105, "closed_at": "2026-08-02T10:00:00"},  # الفتح يصير «الآن» ⇒ بعد الإغلاق
+    {"exit": 1.105, "opened_at": "2026-08-01T10:00:00", "closed_at": "2999-01-01T00:00:00"},
+])
+def test_inconsistent_close_time_is_422(client, over):
+    r = client.post("/api/trades", json={**_TRADE, **over}, headers=_DEV1)
+    assert r.status_code == 422, r.text

@@ -559,7 +559,10 @@ class TradeCreate(BaseModel):
 
     _sym = field_validator("symbol", mode="before")(_strip_trade_symbol)
 
-    @field_validator("opened_at")
+    # وقت الإغلاق لصفقة تُسجَّل بعد حدوثها. غائب مع `opened_at` مكتوب ⇒ null «غير معروف» (كان يُخترع «الآن»)
+    closed_at: str | None = Field(default=None, max_length=40)
+
+    @field_validator("opened_at", "closed_at")
     @classmethod
     def _opened_at_as_journal_time(cls, v: str | None) -> str | None:
         """بصيغة الخادم نفسها (`YYYY-MM-DD HH:MM` بتوقيته، كـ`db.add_trade` حين يغيب). كان نصّاً حرّاً يُحفظ
@@ -570,18 +573,29 @@ class TradeCreate(BaseModel):
         try:
             dt = datetime.fromisoformat(v.strip())
         except ValueError:
-            raise ValueError("opened_at must be an ISO date/time") from None
+            raise ValueError("must be an ISO date/time") from None
         # «0999-01-01» كان يُحفظ «999-01-01 00:00» (`%Y` بلا أصفار) فيُرتَّب نصّياً أحدث صفقة بالدفتر؛
         # وسنة 1 بإزاحة موجبة تفيض بـ`astimezone` (OverflowError ⇒ 500)
         if dt.year < 1970:
-            raise ValueError("opened_at is before 1970")
+            raise ValueError("is before 1970")
         if dt.tzinfo is not None:
             dt = dt.astimezone()  # لتوقيت الخادم كبقية أوقات الدفتر
         # وقت فتح بالمستقبل ⇒ 422: كان يُقبل فتُحفظ صفقة مغلقة `closed_at` (الآن) قبل `opened_at`، وتتصدّر
         # الدفتر (`ORDER BY opened_at DESC`) فوق كل صفقة حقيقية حتى يحين ذلك التاريخ. سماح 5 دقائق لفرق ساعة الجهاز.
         if dt.replace(tzinfo=None) > datetime.now() + timedelta(minutes=5):
-            raise ValueError("opened_at is in the future")
+            raise ValueError("is in the future")
         return dt.strftime("%Y-%m-%d %H:%M")
+
+    @model_validator(mode="after")
+    def _closed_after_opened(self):
+        if self.closed_at is not None:
+            if self.exit is None:
+                raise ValueError("closed_at needs exit")
+            if self.opened_at is None:
+                raise ValueError("closed_at needs opened_at")  # الفتح يصير «الآن» ⇒ بعد إغلاق ماضٍ
+            if self.closed_at < self.opened_at:
+                raise ValueError("closed_at is before opened_at")
+        return self
 
 
 class TradeClose(BaseModel):
