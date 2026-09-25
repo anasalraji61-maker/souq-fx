@@ -421,13 +421,15 @@ export function ChartFrame({
               {tickTag}
             </Text>
           ) : null}
-          {hasSpread && !(quoteStale && spreadPips == null) ? (
+          {/* الهاتف: إطار بعرض 48% (~135pt) ورأس بسطر واحد لا يلتفّ — «B 1.08540 · A 1.08550 · 0.9 pips»
+              (~165pt) كان أعرض من الإطار كلّه فيقصّ النسبة وزرّ ملء الشاشة ويُسحق اسم الزوج. السبريد بالـpip وحده. */}
+          {hasSpread && !((quoteStale || phone) && spreadPips == null) ? (
             <Text style={styles.spreadTag} accessibilityLabel={t.cfSpreadA11y}>
-              {quoteStale
+              {quoteStale || phone
                 ? ''
                 : `B ${formatPrice(liveQuote!.bid!, series.symbol, series.last)} · A ${formatPrice(liveQuote!.ask!, series.symbol, series.last)}`}
               {spreadPips != null ? (
-                <Text style={styles.spreadPips}>{`${quoteStale ? '' : ' · '}${spreadPips.toFixed(1)} ${pipUnit(lang)}`}</Text>
+                <Text style={styles.spreadPips}>{`${quoteStale || phone ? '' : ' · '}${spreadPips.toFixed(1)} ${pipUnit(lang)}`}</Text>
               ) : null}
             </Text>
           ) : null}
