@@ -557,7 +557,7 @@ const HILO_LABEL_H = 14;
 /** سطر OHLC التقاطع أعلى اللوح بالوضع المدمج (`denseOhlc`). */
 const DENSE_OHLC_LINE_H = 12;
 /** سطر عدّاد إغلاق الشمعة تحت سعر الوسم الحيّ. */
-const COUNTDOWN_LINE_H = 11;
+const COUNTDOWN_LINE_H = 13;
 
 /** آخر شارت نُقر على الويب — أسهم لوحة المفاتيح وEsc له وحده لا لكل شارت بالصفحة. */
 let webKeyChart: object | null = null;
@@ -9510,7 +9510,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             </Text>
             {crossPipsText ? (
               <Text
-                style={styles.crossPipsText}
+                style={[styles.crossPipsText, { fontSize: axisTagFontSize(crossPipsText, AXIS_TAG_TEXT_W, 10) }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.75}
@@ -9520,7 +9520,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             ) : null}
             {crossPctText ? (
               <Text
-                style={styles.crossPipsText}
+                style={[styles.crossPipsText, { fontSize: axisTagFontSize(crossPctText, AXIS_TAG_TEXT_W, 10) }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.75}
@@ -13242,8 +13242,8 @@ const styles = StyleSheet.create({
     ...numeric,
     color: '#041514',
     opacity: 0.72,
-    fontSize: 8,
-    lineHeight: 11,
+    fontSize: 10,
+    lineHeight: COUNTDOWN_LINE_H,
     fontWeight: '600',
     fontFamily: 'monospace',
   },
@@ -13537,8 +13537,8 @@ const styles = StyleSheet.create({
     ...numeric,
     color: '#041514',
     opacity: 0.72,
-    fontSize: 8,
-    lineHeight: 11,
+    fontSize: 10,
+    lineHeight: COUNTDOWN_LINE_H,
     fontWeight: '600',
     fontFamily: 'monospace',
   },
