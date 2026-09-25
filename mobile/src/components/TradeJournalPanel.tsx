@@ -2273,15 +2273,15 @@ const styles = StyleSheet.create({
   wrap: { gap: spacing.sm },
   title: { color: colors.text, fontWeight: '500', fontSize: 16, textAlign: 'right' },
   sub: { color: colors.textDim, fontSize: 11, textAlign: 'right' },
+  // DESIGN-PRO §5.5 فاصل واحد (حدّ بلا تعبئة مرتفعة) و§2 الوزن 600 للأسعار وحدها — الإحصاءات 500
   stats: {
-    backgroundColor: colors.bgElevated,
     borderRadius: radii.sm,
     borderWidth: 1,
     borderColor: colors.border,
     padding: 12,
     gap: 4,
   },
-  stat: { ...numeric, color: colors.text, textAlign: 'right', fontWeight: '600', fontSize: 12 },
+  stat: { ...numeric, color: colors.text, textAlign: 'right', fontWeight: '500', fontSize: 12 },
   row: { flexDirection: 'row', gap: spacing.sm },
   rowRtl: { flexDirection: 'row-reverse' },
   chip: {
