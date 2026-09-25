@@ -157,12 +157,30 @@ def run_backtest(
                 signal = "buy"
             elif hi is not None and highs[i] >= hi and price < hi:
                 signal = "sell"
+            # الخروج عند الخط الأوسط **إغلاق فقط** (QA55 (e)): كان يُطلق الإشارة المعاكسة فيفتح المحرّك
+            # (إيقاف-وعكس) بيعاً عند الوسط بلا لمس النطاق العلوي — صفقات لا تقولها قواعد الاستراتيجية.
             elif m is not None and position == "long" and price >= m:
-                signal = "sell"
+                signal = "flat"
             elif m is not None and position == "short" and price <= m:
-                signal = "buy"
+                signal = "flat"
 
-        if signal == "buy" and position != "long":
+        if signal == "flat" and position != "flat":
+            if position == "long":
+                pnl = (price - entry_price) / entry_price * 100
+            else:
+                pnl = (entry_price - price) / entry_price * 100
+            trades.append(
+                {
+                    "side": position,
+                    "entry": entry_price,
+                    "exit": price,
+                    "pnl_pct": round(pnl, 3),
+                    "entry_time": entry_time,
+                    "exit_time": times[i],
+                }
+            )
+            position = "flat"
+        elif signal == "buy" and position != "long":
             if position == "short":
                 pnl = (entry_price - price) / entry_price * 100
                 trades.append(

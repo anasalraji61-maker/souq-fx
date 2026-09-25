@@ -98,3 +98,22 @@ def test_run_backtest_keeps_the_open_position_out_of_the_stats():
     assert res["stats"]["trade_count"] == len(closed)
     assert res["stats"]["open_pnl_pct"] == open_trades[0]["pnl_pct"]
     assert len(res["equity_curve"]) == len(closed) + 1
+
+
+def test_bb_bounce_mid_band_exit_only_closes_the_trade():
+    """QA55 (e): the mid-band exit used to fire the opposite signal, so the stop-and-reverse engine
+    opened a short at the middle band without the upper band ever being touched."""
+    c = _candles(300)
+    closes = [x["close"] for x in c]
+    res = backtest.run_backtest(c, "bb_bounce")
+    assert res["trades"]
+    by_time = {x["time"]: i for i, x in enumerate(c)}
+    for t in res["trades"]:
+        i = by_time[t["entry_time"]]
+        w = closes[i - 19 : i + 1]
+        mean = sum(w) / 20
+        std = (sum((v - mean) ** 2 for v in w) / 20) ** 0.5
+        if t["side"] == "short":
+            assert c[i]["high"] >= mean + 2 * std, t
+        else:
+            assert c[i]["low"] <= mean - 2 * std, t
