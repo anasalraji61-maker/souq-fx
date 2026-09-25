@@ -97,13 +97,16 @@ def interrupt_answer(
 
 
 def parse_setup_hint(text: str) -> dict[str, Any]:
-    """Light extraction for API shape compatibility."""
-    direction = "buy" if any(w in text for w in ("شراء", "صعود", "buy", "long")) else "sell"
+    """اتجاه الردّ إن كان جانباً واحداً بلا لبس، وإلا None. كان «buy» إن وُجدت كلمة شراء وإلا
+    **«sell»** — ردّ بلا اتجاه (أو «انتظر») يصير توصية بيع؛ والمستويات 0.0 أرقام بشكل أسعار."""
+    low = text.lower()
+    buy = any(w in low for w in ("شراء", "صعود", "buy", "long"))
+    sell = any(w in low for w in ("بيع", "هبوط", "sell", "short"))
     return {
-        "direction": direction,
-        "entry": 0.0,
-        "sl": 0.0,
-        "tp": 0.0,
+        "direction": "buy" if buy and not sell else "sell" if sell and not buy else None,
+        "entry": None,
+        "sl": None,
+        "tp": None,
         # كان 58 ثابتاً — نسبة نجاح مختلَقة؛ لا مصدر لها.
         "win_probability": None,
     }

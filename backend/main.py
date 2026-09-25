@@ -1872,10 +1872,10 @@ def ai_ask(body: AiAsk):
         try:
             answer = openrouter_ai.trading_answer(q, sym, context, lang)
             setup = openrouter_ai.parse_setup_hint(answer)
-            setup["entry"] = entry
-            setup["sl"] = sl
-            setup["tp"] = tp
-            setup["win_probability"] = None
+            # المستويات مبنيّة على اتجاه الخادم (إشارة التغيّر)؛ تُرفق فقط إن طابقه اتجاه الردّ —
+            # كانت تُرفق دائماً فيظهر «بيع» بوقف تحت الدخول (مستويات شراء).
+            if live and setup["direction"] == ("buy" if direction == "شراء" else "sell"):
+                setup.update(entry=entry, sl=sl, tp=tp)
             if not live:
                 setup["direction"] = None
             return {"answer": answer, "symbol": sym, "setup": setup, "live_price": live}
