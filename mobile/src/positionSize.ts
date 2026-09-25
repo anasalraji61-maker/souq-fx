@@ -331,6 +331,32 @@ export function quoteToAccountRate(conv: { invert: boolean } | null, pairPrice: 
   return conv.invert ? 1 / pairPrice : pairPrice;
 }
 
+/**
+ * سعر التحويل **عند سعر الخروج** حين العملة الأساس = عملة حساب التحويل (USDJPY/USDCHF/USDCAD بحساب دولار، GBPUSD
+ * بحساب إسترليني، EURGBP بحساب يورو): الخسارة تُدفع بعملة التسعير وتُحوَّل عند إغلاق المركز بسعره هو ⇒ 1 ÷ سعر الخروج.
+ *
+ * كانت الحاسبة تحوّل بالسعر **الحيّ**: أمرٌ معلّق USDJPY دخول 140 ووقف 138.50 والسوق 150 ⇒ «0.10 لوت = 100.00 USD»
+ * بينما الخسارة الحقيقية 15,000 JPY ÷ 138.50 = 108.30 USD (1.08% لا 1%) — تجاوزٌ للمخاطرة المختارة. (الهامش أُصلح
+ * للسبب نفسه: `marginBaseToAccount`.) بالسعر نفسه يُحسب الربح عند الهدف.
+ *
+ * `liveRate` = سعر التحويل الحيّ لهذا الزوج (1 ÷ الحيّ). حارس خطأ الكتابة: سعر خروج يبعد عن الحيّ أكثر من 20% («1500»
+ * بدل «150.0») كان سيقسم قيمة النقطة على 10 فيضرب اللوت ×10 ⇒ `null` ويبقى الحيّ. `null` كذلك لأداةٍ عملتها الأساس
+ * ليست عملة الحساب (سعر التحويل عند الخروج مجهول — الحيّ أفضل تقدير) أو لمدخل غير صالح.
+ */
+export function exitQuoteToAccount(
+  spec: InstrumentSpec | null,
+  convAccount: string,
+  exitPrice: number,
+  liveRate: number | null
+): number | null {
+  if (!spec || spec.base !== convAccount) return null;
+  if (!Number.isFinite(exitPrice) || exitPrice <= 0) return null;
+  if (liveRate == null || !Number.isFinite(liveRate) || liveRate <= 0) return null;
+  const r = 1 / exitPrice;
+  const ratio = r / liveRate;
+  return ratio >= 0.8 && ratio <= 1.25 ? r : null;
+}
+
 /** قيمة الـpip للوت قياسي واحد، بعملة الحساب. */
 export function pipValuePerLot(spec: InstrumentSpec, quoteToAccount: number): number {
   return spec.contractSize * spec.pipSize * quoteToAccount;

@@ -33,6 +33,7 @@ import {
   riskInQuoteCcy,
   pnlInQuoteCcy,
   profitAtTarget,
+  exitQuoteToAccount,
   formatRiskPct,
   formatMoney,
   moneyDecimals,
@@ -2289,3 +2290,50 @@ console.log('positionSize parseSlPips selftest OK');
   assert.equal(formatPipValue(NaN, 'USD'), '—');
 }
 console.log('positionSize formatPipValue selftest OK');
+
+// سعر التحويل عند الخروج حين الأساس = عملة الحساب: الخسارة الحقيقية عند الوقف لا تتجاوز المخاطرة المختارة
+{
+  const uj = instrumentSpec('USDJPY')!;
+  const live = 1 / 150; // USDJPY بحساب دولار: التحويل 1 ÷ الحيّ
+  // أمر معلّق: دخول 140، وقف 138.50 (150 pip)، السوق 150
+  const r = exitQuoteToAccount(uj, 'USD', 138.5, live)!;
+  assert.equal(r, 1 / 138.5);
+  const res = positionSize({ balance: 10000, riskPct: 1, slPips: 150, pipValuePerLot: pipValuePerLot(uj, r), contractSize: uj.contractSize })!;
+  const realLossUsd = (res.lots * uj.contractSize * (140 - 138.5)) / 138.5;
+  assert.ok(realLossUsd <= 100 + 1e-9, `loss ${realLossUsd}`);
+  assert.equal(res.lots, 0.09); // بالحيّ كان 0.10 = 108.30 USD
+  // بالسعر الحيّ القديم: 0.10 لوت يخسر 108.30 عند الوقف — هذا ما أُصلح
+  const old = positionSize({ balance: 10000, riskPct: 1, slPips: 150, pipValuePerLot: pipValuePerLot(uj, live), contractSize: uj.contractSize })!;
+  assert.equal(old.lots, 0.1);
+  assert.ok((old.lots * uj.contractSize * 1.5) / 138.5 > 108);
+  // أمر سوق: وقف 148.50 والسوق 150
+  assert.equal(exitQuoteToAccount(uj, 'USD', 148.5, live), 1 / 148.5);
+  // حساب إسترليني GBPUSD: دخول 1.20، وقف 1.19، السوق 1.30 ⇒ 1.30/1.19 = 1.092 ضمن الحارس
+  const gu = instrumentSpec('GBPUSD')!;
+  const gr = exitQuoteToAccount(gu, 'GBP', 1.19, 1 / 1.3)!;
+  const g = positionSize({ balance: 10000, riskPct: 1, slPips: 100, pipValuePerLot: pipValuePerLot(gu, gr), contractSize: gu.contractSize })!;
+  assert.ok((g.lots * gu.contractSize * 0.01) / 1.19 <= 100 + 1e-9);
+  // تقاطع EURGBP بحساب يورو
+  assert.equal(exitQuoteToAccount(instrumentSpec('EURGBP')!, 'EUR', 0.84, 1 / 0.85), 1 / 0.84);
+  // الأساس ليس عملة الحساب ⇒ null (الحيّ): EURUSD بحساب دولار، EURJPY بحساب دولار، الذهب
+  assert.equal(exitQuoteToAccount(instrumentSpec('EURUSD')!, 'USD', 1.08, 1), null);
+  assert.equal(exitQuoteToAccount(instrumentSpec('EURJPY')!, 'USD', 160, 1 / 150), null);
+  assert.equal(exitQuoteToAccount(instrumentSpec('XAUUSD')!, 'USD', 2400, 1), null);
+  // حارس خطأ الكتابة: «1500» بدل «150.0» (قيمة نقطة ÷ 10 ⇒ لوت ×10) ⇒ null ويبقى الحيّ
+  assert.equal(exitQuoteToAccount(uj, 'USD', 1500, live), null);
+  assert.equal(exitQuoteToAccount(uj, 'USD', 15, live), null);
+  // حدود الحارس (نسبة 0.8..1.25 من الحيّ): 121 و187 مقبولان، 119 و188 لا
+  assert.equal(exitQuoteToAccount(uj, 'USD', 187, live), 1 / 187);
+  assert.equal(exitQuoteToAccount(uj, 'USD', 188, live), null);
+  assert.equal(exitQuoteToAccount(uj, 'USD', 121, live), 1 / 121);
+  assert.equal(exitQuoteToAccount(uj, 'USD', 119, live), null);
+  // مدخل غير صالح / بلا سعر حيّ
+  assert.equal(exitQuoteToAccount(uj, 'USD', NaN, live), null);
+  assert.equal(exitQuoteToAccount(uj, 'USD', 0, live), null);
+  assert.equal(exitQuoteToAccount(uj, 'USD', 138.5, null), null);
+  assert.equal(exitQuoteToAccount(null, 'USD', 138.5, live), null);
+  // الربح عند الهدف بسعر الهدف: شراء 140 → 143، 0.09 لوت = 27,000 JPY ÷ 143
+  const p = profitAtTarget({ spec: uj, entry: 140, target: 143, lots: 0.09, quoteToAccount: exitQuoteToAccount(uj, 'USD', 143, live)! })!;
+  assert.ok(Math.abs(p - 27000 / 143) < 1e-9);
+}
+console.log('positionSize exitQuoteToAccount selftest OK');

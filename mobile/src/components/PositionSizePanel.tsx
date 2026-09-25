@@ -34,6 +34,7 @@ import {
   MAX_LEVERAGE,
   requiredMargin,
   marginBaseToAccount,
+  exitQuoteToAccount,
   maxLotsForMargin,
   marginPrice,
   smallContractSpec,
@@ -590,8 +591,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   const convRate = fetchedConv
     ? fetchedConv.rate
     : quoteToAccountRate(conv, Number.isFinite(manual) && manual > 0 ? manual : null);
+  // الأساس = عملة الحساب ⇒ الخسارة تُحوَّل بسعر الوقف لا الحيّ (أمرٌ معلّق بعيد كان يتجاوز المخاطرة) — `exitQuoteToAccount`
+  const riskRate = exitQuoteToAccount(spec, convAccount, priceNum(stopPx), convRate) ?? convRate;
   // السنت: عملة التسعير ⇒ USD ثم × 100 ⇒ USC، فيخرج كل مبلغ (pip، مخاطرة، هامش، ربح) بالسنت كرصيده
-  const rate = cent ? centQuoteToAccount(convRate) : convRate;
+  const rate = cent ? centQuoteToAccount(riskRate) : riskRate;
   const pv = spec && rate != null ? pipValuePerLot(spec, rate) : null;
   const result =
     spec && pv != null && !slTooClose
@@ -861,9 +864,12 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         })
       : null;
   /** الربح المحتمل من المسافة الخام للهدف لا من نقاطه المقرَّبة للعرض — راجع `profitAtTarget` */
+  const targetUsdRate = exitQuoteToAccount(spec, convAccount, priceNum(targetPx), convRate);
+  /** الأساس = عملة الحساب ⇒ الربح يُحوَّل بسعر الهدف كما الخسارة بسعر الوقف */
+  const targetRate = targetUsdRate != null && cent ? centQuoteToAccount(targetUsdRate) : targetUsdRate;
   const potentialProfit =
     plan?.ok && spec && rate != null && lots != null
-      ? profitAtTarget({ spec, entry: priceNum(entryPx), target: priceNum(targetPx), lots, quoteToAccount: rate })
+      ? profitAtTarget({ spec, entry: priceNum(entryPx), target: priceNum(targetPx), lots, quoteToAccount: targetRate ?? rate })
       : null;
   /**
    * الربح وR:R بعد السبريد والعمولة — الإجمالي فوقه يعد بـ1:2 والصفقة بتكاليفها 1:1.7، وسكالبينغ 5/5
