@@ -781,3 +781,13 @@ QA1 جزء ui ← `845546a` (`modules/tools-panels/` غير موجود) — ال
 (`MatrixChart.tsx:9303`) ⇒ صفّ **QA67 → chart**. الباقي احتياطيّ خلف القاموس (`typeLabels.ts`، `dataSource`/`marketHours`/`measureReadout`، `layoutBuiltinName`)
 أو مفاتيح نصّ الخادم (`CommissionPlanPanel`) أو موجّهات AI بـ`lang` (`WeeklyReportPanel`). `placeholder="EURUSD"` رمز لا نصّ.
 **الدورة القادمة:** المراجعة (c) — عناصر تفاعلية بلا `accessibilityLabel`.
+
+## 2026-09-25 — الدورة 68
+**البناء:** أخضر 0 (على 14b59dd ثم 094079a بعد السحب) — لا إصلاح لازم. **Selftests:** 101/101 ناجح (`npx tsx`؛ +1 منذ 67).
+**التحقّق من الإغلاقات بالكود (5 صفوف):** QA1 (a) ← tools `9640d80` (`TerminalScreen.tsx:763` `serverUnreachableSeries`)؛ launch125 ← tools `c277ee2`
+(`PositionSizePanel.tsx:1416` `typicalSlPipsExample(spec)`)؛ backend-r27 ← ui `6d8a467` (`CalendarPanel.tsx:416`)؛ QA67 ← chart `094079a` (`MatrixChart.tsx:9404` `tr.mcAutoShort`)؛
+launch126 ← backend `a58fed3` (`alert_worker.py:218`). طلب chart `mcEstimatedTag` منجز (`locales.ts:2322`). **لا صفّ مفتوح على وكيل** — الباقي 12 صفّاً: قرارات أنس + جهاز.
+**المراجعة (c — `accessibilityLabel`):** سكربت على `Pressable/Touchable*/Switch/TextInput` بـ`mobile/src`: 36 بلا label صريح — 27 بابن `<Text>`، 6 `useRef<TextInput>`،
+خلفية `MatrixSidePanel.tsx:79` (`accessible={false}`)، `TradeJournalPanel.tsx:2013` (label `:2028`)، `MessagesScreen` (launch52). **لا بند جديد.**
+أضفتُ لـSTATUS ⛔16 سؤال backend-r6 (تقاطعات على الشمعة غير المغلقة) — كان بـCOORDINATION وحده.
+**الدورة القادمة:** المراجعة (d) — أرقام متناقضة (مرشّح: `MAX_SPREAD_PIPS = 500` واحد لكل الأدوات، ذكره tools 85).
