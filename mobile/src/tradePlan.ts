@@ -500,6 +500,21 @@ export function noteWithInitialStop(input: {
 /** حدّ طول الملاحظة بالخادم (`backend/main.py` `note: max_length=500`). */
 export const JOURNAL_NOTE_MAX = 500;
 
+/** يظهر عدّاد الأحرف الباقية حين يبقى هذا العدد أو أقلّ (`noteCharsLeft`). */
+export const NOTE_COUNTER_FROM = 100;
+
+/**
+ * الأحرف الباقية بخانة ملاحظة لسطر `noteCharsLeft` تحتها، أو `null` = لا سطر (الملاحظة بعيدة عن حدّها).
+ *
+ * لماذا: الخانة بـ`maxLength={JOURNAL_NOTE_MAX}` (الخادم يرفض >500 بـ422 فيقول الدفتر «تحقق من الاتصال» — محاولةٌ لا
+ * تنجح أبداً)، و`maxLength` وحده يوقف الكتابة/اللصق **بصمت** — المتداول يظنّ لوحة المفاتيح علقت. الطول بوحدات UTF-16
+ * (ما يعدّه `maxLength`)، وهي ≥ ما يعدّه الخادم (نقاط يونيكود) فلا يمرّ من الخانة ما يرفضه.
+ */
+export function noteCharsLeft(note: string | null | undefined, max: number = JOURNAL_NOTE_MAX): number | null {
+  const left = Math.max(0, max - (note || '').length);
+  return left <= NOTE_COUNTER_FROM ? left : null;
+}
+
 /**
  * وقفٌ **على الدخول أو خلفه** مقبول (لا «الوقف بالجهة الخطأ») حين للصفقة وقفٌ أصلي معروف بالملاحظة — تعادلٌ أو ربحٌ
  * محجوز لصفقة مفتوحة، لا خطأ كتابة. `note` هي الملاحظة **بعد** `noteWithInitialStop`.
@@ -1169,7 +1184,9 @@ export function knownLots(size: number | null | undefined, note?: string | null)
 export function noteWithTypedSize(size: number | null | undefined, note: string): string {
   if (size !== 1 || knownLots(1, note) === 1) return note;
   const n = note.trim();
-  return n ? `1.00 lot · ${n}` : '1.00 lot';
+  const out = n ? `1.00 lot · ${n}` : '1.00 lot';
+  // كـ`noteWithInitialStop`: ملاحظة 495 حرفاً + العلامة (11) تتجاوز حدّ الخادم فيُرفض الحفظ كلّه (422) — حجمٌ مجهول أهون
+  return out.length > JOURNAL_NOTE_MAX ? note : out;
 }
 
 /**

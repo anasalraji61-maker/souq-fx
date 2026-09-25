@@ -1420,6 +1420,10 @@ console.log('tradePlan netLineIsWhole selftest OK');
   assert.equal(noteWithTypedSize(null, ''), '');
   assert.equal(noteWithTypedSize(undefined, 'y'), 'y');
   assert.equal(noteWithTypedSize(10, ''), '');
+  // حدّ الخادم 500: علامة «1.00 lot · » (11) فوق ملاحظة 495 كانت تُرفض 422 ⇒ الملاحظة كما هي؛ 489 + 11 = 500 تُعلَّم
+  assert.equal(noteWithTypedSize(1, 'a'.repeat(495)), 'a'.repeat(495));
+  assert.equal(noteWithTypedSize(1, 'a'.repeat(489)), `1.00 lot · ${'a'.repeat(489)}`);
+  assert.equal(noteWithTypedSize(1, 'a'.repeat(489)).length, 500);
   // الأثر: EURUSD 1.0850 ⇒ 1.0875 بلوت واحد مكتوب ⇒ معروف و+250 USD بالصافي (كان null)
   const tr = { symbol: 'EURUSD', side: 'buy', entry: 1.085, exit: 1.0875, size: 1, status: 'closed' };
   assert.equal(netByInstrument([{ ...tr, note: '' }])[0]!.cash, null);
@@ -2242,3 +2246,21 @@ console.log('tradePlan floating/exit preview R from initial stop selftest OK');
   assert.deepEqual(journalSizeDottedThousands('1.000', 'XAGUSD'), { units: 1000, lots: 0.2 });
 }
 console.log('tradePlan journal dotted-thousands size selftest OK');
+
+// ---- عدّاد ملاحظة الدفتر: `maxLength` 500 لا يوقف الكتابة بصمت ----
+{
+  const { noteCharsLeft, JOURNAL_NOTE_MAX: MAX, NOTE_COUNTER_FROM } = require('./tradePlan') as typeof import('./tradePlan');
+  assert.equal(MAX, 500);
+  assert.equal(noteCharsLeft(''), null);
+  assert.equal(noteCharsLeft(null), null);
+  assert.equal(noteCharsLeft('a'.repeat(399)), null);
+  assert.equal(noteCharsLeft('a'.repeat(400)), NOTE_COUNTER_FROM);
+  assert.equal(noteCharsLeft('a'.repeat(499)), 1);
+  assert.equal(noteCharsLeft('a'.repeat(500)), 0);
+  // أطول من الحدّ (ملاحظة قديمة/لصق قبل الحدّ): صفر لا سالب
+  assert.equal(noteCharsLeft('a'.repeat(520)), 0);
+  // UTF-16 كـ`maxLength`: «📈» وحدتان
+  assert.equal(noteCharsLeft('📈'.repeat(200)), 100);
+  assert.equal(noteCharsLeft('abc', 50), 47);
+}
+console.log('tradePlan note chars-left selftest OK');
