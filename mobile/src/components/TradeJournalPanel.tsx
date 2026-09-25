@@ -135,16 +135,6 @@ type Trade = {
   opened_at: string;
 };
 
-/**
- * سبب غياب «المخاطرة (مفتوحة)» حين بين المفتوحة صفقةٌ بحجم مجهول أو أداةٌ بلا عقد معروف (`openTradesUnknownRisk`). نسخة محلية حتى
- * يضيف launch `journalOpenRiskUnknown` (ar/en/ku) — تُقرأ من القاموس إن وُجدت. الكردي بحاجة مراجعة.
- */
-const OPEN_RISK_UNKNOWN_COPY: Record<string, string> = {
-  ar: 'صفقات مفتوحة بحجم أو عقد غير معروف: {n} — لا يُحسب مالُ مخاطرتها، فلا يُجمع خطر المفتوحة',
-  en: 'Open trades with an unknown size or contract: {n} — their risk in money can’t be computed, so open risk is not totalled',
-  ku: 'مامەڵە کراوەکانی قەبارە یان گرێبەستی نەناسراو: {n} — مەترسییەکەیان بە پارە ناژمێردرێت، بۆیە مەترسیی کراوەکان کۆ ناکرێتەوە',
-};
-
 /** «+2R» بصفّ الصفقة — المصدر نفسه لـ«متوسط R» (`realizedR`: الوقف الأصلي «1R @ …» ثم `sl`)؛ '' بلا R. */
 const rowR = (tr: Trade): string =>
   formatR(
@@ -817,12 +807,10 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
       // حجمٌ مجهول أو أداةٌ بلا عقد (BTCUSD، US30) — كان السطر يختفي بلا سبب فيبدو أن لا مخاطرة مفتوحة
       const unknown = openTradesUnknownRisk(visibleTrades);
       if (unknown === 0) return null;
-      const copy =
-        (t as { journalOpenRiskUnknown?: string }).journalOpenRiskUnknown ?? OPEN_RISK_UNKNOWN_COPY[lang] ?? OPEN_RISK_UNKNOWN_COPY.en;
-      return copy.replace('{n}', String(unknown));
+      return t.journalOpenRiskUnknown.replace('{n}', String(unknown));
     }
     return `${t.planRiskWord} ${t.journalOpenSuffix}: ${o.totals.map((c) => formatJournalMoney(c, t.journalMoneyUsc)).join(' · ')}`;
-  }, [visibleTrades, t, lang]);
+  }, [visibleTrades, t]);
 
   /**
    * «صفقات مفتوحة تراهن على USD بالاتجاه نفسه: 3 — خبرٌ واحد يضربها معاً» (`stackedCurrencyExposure`): EURUSD وGBPUSD
