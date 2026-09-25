@@ -120,15 +120,22 @@ _CANDLE_WORDS = (
     r"(?:upper|lower|wicks?|shadows?|tails?|candles?|candlesticks?|bodies|body|bars?|legs?|rally|rallies|"
     r"decline|declines|sell-?off|consolidation|range|streak|history)\b"
 )
+# سيولة/ضغط/حركة ماضية لا توصية: «swept sell-side liquidity … look for longs» و«the recent sell-off looks
+# exhausted» و«Selling pressure is fading» كانت «sell» ⇒ بطاقة بيع تحت ردّ صاعد؛ «Buy-side liquidity was
+# taken, expect a move lower» كانت «buy»؛ و«بعد الهبوط الأخير نتوقع ارتداداً» كانت «sell». و«longs/shorts»
+# (مراكز) لم تكن تُعرف.
+_NOT_A_CALL = r"(?![- ]?(?:side|off)\b)(?! (?:pressure|interest|climax|exhaustion|volume|flows?|programs?)\b)"
+_AR_PAST = r"(?!\s+(?:ال)?أخير)"
 _BUY_RE = re.compile(
-    _AR_PRE + r"(?:شراء|صعود|صاعد)" + _AR_SUF
-    + r"|\b(?:buy|buying|bullish|uptrend)\b"
+    r"(?<!بعد )" + _AR_PRE + r"(?:شراء|صعود|صاعد)" + _AR_SUF + _AR_PAST
+    + r"|\b(?:buy|buying|bullish|uptrend|longs)\b" + _NOT_A_CALL
     + r"|(?<!\bas )(?<!\bso )\blong\b(?! as\b)(?![- ](?:term|while|time|run|way|period|" + _CANDLE_WORDS + r"))",
     re.IGNORECASE,
 )
 _SELL_RE = re.compile(
-    _AR_PRE + r"(?:بيع|هبوط|هابط)" + _AR_SUF
-    + r"|\b(?:sell|selling|shorting|bearish|downtrend)\b|" + _SHORT_IDIOM_PRE
+    r"(?<!بعد )" + _AR_PRE + r"(?:بيع|هبوط|هابط)" + _AR_SUF + _AR_PAST
+    + r"|\b(?:sell|selling|shorting|bearish|downtrend)\b" + _NOT_A_CALL
+    + r"|\bshorts\b(?! (?:are |were )?covering)|" + _SHORT_IDIOM_PRE
     + r"\bshort\b(?![- ](?:term|while|time|run|period|lived|squeeze|covering|sellers?|of\b|" + _CANDLE_WORDS + r"))",
     re.IGNORECASE,
 )

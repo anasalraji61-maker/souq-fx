@@ -62,6 +62,14 @@ from tests.test_signal_levels import _provider_series
     ("Short-sellers are covering, price is rising strongly.", None),
     ("Buy on a close above 1.0900 with a stop under the prior swing low.", "buy"),
     ("I favor a long position toward 1.0950.", "buy"),
+    # سيولة/ضغط/حركة ماضية لا توصية (كانت sell×4، buy): بطاقة بعكس الردّ
+    ("Price swept sell-side liquidity and is now reversing higher; look for longs above the sweep low.", "buy"),
+    ("The recent sell-off looks exhausted.", None),
+    ("Selling pressure is fading and a bounce is likely.", None),
+    ("بعد الهبوط الأخير نتوقع ارتداداً", None),
+    ("Buy-side liquidity was taken, expect a move lower.", None),
+    ("Look for shorts below 1.08", "sell"),
+    ("Place a sell stop under 1.08", "sell"),
     # النفي بجملة أخرى لا يُسقط الاتجاه
     ("This is not financial advice. Bias bullish.", "buy"),
     ("ليست نصيحة مالية. سيناريو شراء عند الدعم", "buy"),
