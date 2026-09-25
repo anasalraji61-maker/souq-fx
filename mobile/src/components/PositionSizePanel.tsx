@@ -339,7 +339,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** السعر المحفوظ يخصّ الزوج **واتجاهه** — راجع `conversionKey` */
   const convKey = conversionKey(conv);
   /** جسر الدولار: بديل الزوج المباشر حين لا يعرفه المزوّد (`usdBridge` بـpositionSize.ts). */
-  const bridge = useMemo(() => (spec ? usdBridge(spec.quote, convAccount) : null), [spec, convAccount]);
+  // على العملة لا على كائن `spec`: لاحقة الوسيط («EURJPY» ← «EURJPY.m») تنشئ `spec` جديداً للأداة نفسها، فكان جسرٌ
+  // جديد يعيد تأثير التحويل غير صامت ⇒ اللوت يفرغ أثناء إعادة الجلب ويُمسح سعر التحويل المكتوب يدوياً
+  const specQuote = spec?.quote ?? null;
+  const bridge = useMemo(() => (specQuote ? usdBridge(specQuote, convAccount) : null), [specQuote, convAccount]);
 
   /**
    * **تحديث سعر التحويل كل 60 ث** ما دام مجلوباً تلقائياً: كان يُجلب مرّة عند اختيار الأداة ثم يبقى — واللوحة
