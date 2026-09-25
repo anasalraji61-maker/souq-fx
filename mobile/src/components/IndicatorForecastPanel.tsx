@@ -370,7 +370,8 @@ const styles = StyleSheet.create({
   dir: { fontWeight: '500', fontSize: 18 },
   meta: { ...numeric, color: colors.textMuted, fontSize: 11 },
   levels: { ...numeric, color: colors.text, fontSize: 11, fontWeight: '600', marginTop: 4 },
-  asOf: { color: colors.warn, fontSize: 10 },
+  // DESIGN-PRO §2 — 11px؛ وقت البيانات رقم متغيّر ⇒ `numeric`.
+  asOf: { ...numeric, color: colors.warn, fontSize: 11 },
   list: { maxHeight: 120 },
   row: {
     flexDirection: 'row',
@@ -383,7 +384,7 @@ const styles = StyleSheet.create({
   },
   rowRtl: { flexDirection: 'row-reverse' },
   name: { color: colors.text, fontWeight: '500', fontSize: 12 },
-  summary: { color: colors.textDim, fontSize: 10, marginTop: 0 },
+  summary: { color: colors.textDim, fontSize: 11, marginTop: 0 },
   badge: { fontWeight: '500', fontSize: 12 },
-  note: { color: colors.textDim, fontSize: 9 },
+  note: { color: colors.textDim, fontSize: 11 },
 });

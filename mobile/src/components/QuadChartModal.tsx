@@ -451,12 +451,13 @@ const styles = StyleSheet.create({
   sym: { color: colors.text, fontWeight: '500' },
   cellPrice: { ...numeric, color: colors.text, fontSize: 12, fontWeight: '600' },
   cellPct: { ...numeric, fontSize: 11, fontWeight: '600' },
-  demoTag: { color: colors.warn, fontSize: 10, fontWeight: '500' },
-  closedTag: { color: colors.warn, fontSize: 9, fontWeight: '500', opacity: 0.9 },
+  // DESIGN-PRO §2 — وسوم الخلية 11px (كانت 9–10، أصغر من علامات المحور بالخلية نفسها).
+  demoTag: { color: colors.warn, fontSize: 11, fontWeight: '500' },
+  closedTag: { color: colors.warn, fontSize: 11, fontWeight: '500', opacity: 0.9 },
   // القيادة والتبعية موسومتان بالرأس وبحدّ الخلية: المزامنة لا تعمل بصمت.
   syncBadge: {
     color: colors.textDim,
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '500',
     paddingHorizontal: 4,
     paddingVertical: 0,
@@ -479,7 +480,7 @@ const styles = StyleSheet.create({
   syncToggleTextOn: { color: colors.text },
   syncHint: {
     color: colors.textMuted,
-    fontSize: 10,
+    fontSize: 11,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
   },
