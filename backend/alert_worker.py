@@ -26,11 +26,23 @@ async def run_alert_loop(interval: float = 60.0) -> None:
         await asyncio.sleep(interval)
 
 
+_QUOTE_MAX_AGE = 180
+
+
 def _price(symbol: str) -> float | None:
+    """آخر سعر للتنبيه: الاقتباس إن لم يكن أقدم من 3 دقائق بوقته المعلن، وإلا تيك الـWS الحديث.
+
+    هذا المسار يُستدعى حين سلسلة 1m **قديمة** (429/انقطاع) — وكان يقبل `/quote` دون `quoted_at`:
+    اقتباس بوقت قبل ساعة (السعر 1.1050 ثم هبط لـ1.0950 وسلّح المتداول «فوق 1.1000») يُطلق التنبيه
+    فوراً على سعر لم يعد قائماً. `/price` الاحتياطي بلا وقت أصلاً (`price_only`) يبقى مقبولاً كما كان."""
     try:
-        q = market.fetch_quote(symbol)
-        if q is not None:
+        book = market.fetch_quote_book(symbol)
+        q = book.get("price") if book else None
+        at = book.get("quoted_at") if book else None
+        if q is not None and (at is None or time.time() - float(at) <= _QUOTE_MAX_AGE):
             return float(q)
+        if q is not None:
+            log.info("quote for %s is %.0fs old — not used for alerts", symbol, time.time() - float(at))
     except Exception:
         log.warning("price quote fetch failed for %s", symbol, exc_info=True)
     # سعر الـWS فقط إن وصل خلال 3 دقائق (نفس حدّ حداثة شموع 1m) — سعر مجمَّد من انقطاع قديم كان يُطلق

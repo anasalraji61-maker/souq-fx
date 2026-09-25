@@ -113,3 +113,31 @@ def test_worker_does_not_fire_an_alert_edited_during_its_fetch(client, monkeypat
     row = [a for a in db.list_alerts(all_users=True) if a["id"] == aid][0]
     assert row["triggered"] is False and row["price"] == 1.3000
     assert pushed == []
+
+
+# ------------------------- اقتباس قديم بوقته لا يُطلق تنبيهاً
+
+def _book(price: float, age: float | None):
+    import time as _time
+
+    return {"price": price, "quoted_at": None if age is None else _time.time() - age}
+
+
+def test_worker_quote_older_than_three_minutes_is_not_the_price(monkeypatch):
+    """1m قديمة ⇒ `_price`: اقتباس بوقت قبل ساعة كان يُعاد سعراً حالياً فيُطلق «فوق» سُلِّح بعد الهبوط."""
+    monkeypatch.setattr(alert_worker.market, "fetch_quote_book", lambda s: _book(1.1050, 3600))
+    monkeypatch.setattr(alert_worker.td_ws, "snapshot", lambda max_age=180: {})
+    assert alert_worker._price("EURUSD") is None
+
+
+def test_worker_old_quote_falls_back_to_a_recent_ws_tick(monkeypatch):
+    monkeypatch.setattr(alert_worker.market, "fetch_quote_book", lambda s: _book(1.1050, 3600))
+    monkeypatch.setattr(alert_worker.td_ws, "snapshot", lambda max_age=180: {"EURUSD": 1.0950})
+    assert alert_worker._price("EURUSD") == pytest.approx(1.0950)
+
+
+@pytest.mark.parametrize("age", [5, None])
+def test_worker_fresh_or_untimed_quote_is_still_used(monkeypatch, age):
+    monkeypatch.setattr(alert_worker.market, "fetch_quote_book", lambda s: _book(1.1050, age))
+    monkeypatch.setattr(alert_worker.td_ws, "snapshot", lambda max_age=180: {})
+    assert alert_worker._price("EURUSD") == pytest.approx(1.1050)
