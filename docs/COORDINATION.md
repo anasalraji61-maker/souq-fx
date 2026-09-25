@@ -1,14 +1,12 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 53، بعد 3d42eef) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 54، بعد 3e69fe9) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات QA بلا إصلاح). **ui** (LOG-UI) = المالك الافتراضي لكل `mobile/src` خارج chart/tools/i18n
 (و`TerminalScreen` ملك tools). **backend** (LOG-BACKEND) = `backend/**`. «أنس» = قرار بشري.
 
 | من يطلب | من ينفّذ | ماذا بالضبط | منذ متى |
 |---|---|---|---|
-| launch | **chart** (`MatrixChart.tsx:5708` `dropAlert`) | **launch107 — سحب خطّ التنبيه يفشل بصمت**: `void moveArmedAlert(…)` يتجاهل `false` (خادم أقدم بلا PATCH، تنبيه محذوف، انقطاع) ⇒ الخطّ يقفز لمكانه القديم بلا كلمة. **المفتاح جاهز**: `t.mcAlertMoveFailed` (`{price}` = `fmtPrice(al.price)` الأصلي) ⇒ `.then(ok => { if (!ok) notify(…) })` كـ`mcSnapshotFailed` | launch107 |
-| launch | **chart** (`MatrixChart.tsx:8156` خطّ التنبيه `adjustable`) | **launch108 — تلميح التمرير**: بعد `76a0834` يسمع قارئ الشاشة «قابل للتعديل» فقط — لا يعرف أنّ التمرير **ينقل التنبيه على الخادم** ولا حجم الخطوة ولا متى يُحفظ. **المفتاح جاهز**: `accessibilityHint={tr.mcArmedAlertAdjustHint}`. (اختياري: `{price}` يُقرأ مرّتين — بالوسم و`accessibilityValue`) | launch108 |
-| ui | **backend** (`backtest`) | **backend-r7**: العميل جاهز (ui تشغيل 5): `BacktestPanel` `win_rate: number \| null` ويعرض «—» عبر `journalWinRateLine` (null، أو كل الصفقات تعادل بـ`breakeven_count`) ⇒ أرسل `null` للباك-تست بلا صفقة حاسمة (كالدفتر `2d0fb58`). **✔ backend تشغيل 8 `e4fe10d`**: `backtest._stats` يرسل `win_rate: null` (لا صفقات أو كلّها تعادل) — للتحقّق والإغلاق | backend-r7 |
-| backend | **chart** (`MatrixChart.tsx:837`) | **backend-r6 (1)** — ضُيِّق بعد التحقّق: بعد `149c711` (فوليوم الفوركس `null`) كل لوحات الحجم تُحسب من التقدير، ومعظمها يُوسم «≈» (`volName`، :2459) وCVD «تقديري». **الباقي**: ملفّ الحجم (`volumeProfile`/TPO) والـfootprint غير مدرجة بـ`VOLUME_PRICE_OVERLAYS` ⇒ تُرسم من فوليوم مركَّب بلا «≈». أضفها للمجموعة أو أخفِها حين `volEstimated` | backend-r6 |
+| launch | **chart** (`MatrixChart.tsx:8156` خطّ التنبيه `adjustable`) | **launch108 — تلميح التمرير**: بعد `76a0834` يسمع قارئ الشاشة «قابل للتعديل» فقط — لا يعرف أنّ التمرير **ينقل التنبيه على الخادم** ولا حجم الخطوة ولا متى يُحفظ. **المفتاح جاهز**: `accessibilityHint={tr.mcArmedAlertAdjustHint}` (تحقّق QA54: غير موصول، grep بـ`.tsx` صفر). (اختياري: `{price}` يُقرأ مرّتين — بالوسم و`accessibilityValue`) | launch108 |
+| QA | backend (`main.py:1154`) | **QA54 (d)** `/api/screener/filters` يقول «RSI oversold (<30)»/«(>70)» والفحص `screener.py:94 :96` `<=`/`>=` (والتطبيق «30 أو أقل»)، والتسميات نصف عربية نصف إنجليزية. لا عميل يستدعيه (grep صفر) ⇒ صحّح «≤30/≥70» أو احذف المسار | QA54 |
 | QA | chart | **جهاز**: سحب جسم الرسم المحدَّد، وسحب خطّ التنبيه (`AlertDragHandle`) على iOS/Android والويب — RELEASE §5 | QA1 |
 | QA | الجميع | **(a)** تصديرات بلا مستخدم خارج ملفها (أُعيد فحصها QA53 بـgrep — `openCurrencyExposure` حُذف `b0c2d87` ✔؛ الباقي 10): `deleteTemplate`، `subscribeTemplatesSaveError`، `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite`، `PINE_PRESETS`، `getToolPanel`، `__setWatchlistStorageForTests`، `motion` (ui: مُبقى عمداً) | QA1 ★ |
 | launch | backend/أنس | `openrouter_ai.py:71` «أنت خبير تداول فوركس» ويعطي دخول/وقف/هدف | launch9 ★ |
@@ -22,10 +20,10 @@
 | backend | أنس | **قرارات اتخذها backend (لأنس عكسها)**: التعادل مستثنى من نسبة الفوز؛ DXY «غير متاح» بدل حسابه من السلّة؛ حذف ميزة «البنوك» | backend-r1 |
 | backend | أنس | **backend-r6 (6) العمولات** (لم يُغيَّر): `db.py` يدفع مكافأة التوازن 5% عند **أي** تساوٍ (1=1، 3=3) بينما نصّ الخطة (`commissions.py:84`) «عند مستوى مؤهل» (2،4،8…) — أيّهما القاعدة؟ والتسجيل بإحالة يزيد العدّاد بلا سطر عمولة؛ والشهر بتوقيت الخادم المحلي لا UTC | backend-r6 |
 
-**تحقّق الدورة 53 (بالكود) — أُغلق 11 صفّاً:**
-QA52 التحويلات (`37bb393` — grep `as ProvenanceKind|as DataOriginKind` صفر)؛ QA52 `dsKindLabels` (`cb5f753`، `TerminalScreen.tsx:943`)؛ ui4 (`6c1aa59`، `isVerifiedTickKind` :914)؛
-chart-r37 (`d41af90`، `MatrixChart.tsx:3731`)؛ launch106 ← chart (`MatrixChart.tsx:8105`)؛ launch106 ← tools (`cbf5266`، `positionSize.ts:1699` `market_open`)؛ launch106 ← ui
-و backend-r6 (2)(3) (`9c3a532` `SymbolSnapshot.tsx:77`، `8ca1226` `NewsPanel.tsx:83 :97`)؛ backend-r6 (4) (`95093aa`، `ticks_at` بـ`useLiveTicks`/`useMultiLiveTicks`/`tickAge.ts`)؛
-backend-r6 (5) الطرفان (`fcffc1f` `TradeJournalPanel.tsx:1423`، `6544dd7`، الخادم `2d0fb58`).
-**المراجعة (c) أزرار بلا اسم مقروء:** مسح آلي لكل `Pressable`/`Touchable*`/`Switch`/`TextInput` بـ`mobile/src`: 29 بلا `accessibilityLabel`، وكلّها (عدا إنذار كاذب
-بـ`TradeJournalPanel.tsx:1947` له `placeholder`) زرّ بنصّ مرئي مترجم يقرؤه قارئ الشاشة. لا `<Text onPress>`. `accessibilityLabel` ثابت غير مترجم: `MessagesScreen.tsx:142` وحده (ميّتة، launch52). **لا صفّ جديد.**
+**تحقّق الدورة 54 (بالكود) — أُغلق 3 صفوف:** launch107 ← chart (`40b15f9`، `MatrixChart.tsx:5715` `if (!ok) notify(… mcAlertMoveFailed …)`)؛
+backend-r7 (`e4fe10d`، `backtest.py:75` `win_rate … if decided else None` + `tests/test_backtest.py:65`)؛ backend-r6 (1) (`e9df083`، `MatrixChart.tsx:8091` `volName('POC')`؛
+TPO يُحسب من عدد الشموع لا الحجم، الـfootprint موسوم «≈» — قبلتُ تعليل chart بعدم إضافتها لـ`VOLUME_PRICE_OVERLAYS`).
+**المراجعة (d) أرقام متناقضة:** متّسقة — حدود الخانات مقابل `main.py` (ملاحظة 500، اسم تخطيط 64، رمز 12، دردشة 1000، سؤال 2000، اسم 3–32، كلمة مرور 4 = نصّ `registerError`)؛
+`JOURNAL_PAGE_MAX` = `TRADES_PAGE_MAX` = 500؛ حجم pip (`positionSize.ts:36 :127` = `backtest.py:31-37`)؛ `MAX_SANE_LOTS`/`MAX_SMALL_LOTS` = نصّ «50–100»/«200»؛
+عيّنة الاختبار الخلفي 30 = النصّ؛ `CHANGE_WINDOW` 80 = «آخر 80 شمعة»؛ `SOON_MS` 24س = «خلال 24 ساعة»؛ عتبة RSI 1–99 ضمن 0–100 الخادم؛ جلسات `sessions.ts` و17:00 نيويورك موحّدة.
+المتناقض الوحيد QA54 أعلاه (مسار بلا مستعمل). `TICK_STALE_MS` 20ث مقابل `LIVE_MAX_AGE` 180ث مقصود (عرض حيّ مقابل نافذة التنبيهات) — ليس بنداً.

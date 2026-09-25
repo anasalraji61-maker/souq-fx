@@ -629,3 +629,12 @@ QA1 (a): `openCurrencyExposure` حُذف ⇒ 10 باقية (grep لكل اسم: 
 **المراجعة (c — بلا `accessibilityLabel`):** سكربت يقرأ وسم الفتح لكل `Pressable`/`Touchable*`/`Switch`/`TextInput`: 29 بلا وسم، كلّها بنصّ مرئي مترجم (زرّ `pipsInPx`
 نصّه يقول «اضغط لنقله»)؛ إنذار كاذب واحد (`>` داخل تعليق، `TradeJournalPanel.tsx:1947` له `placeholder`). لا `<Text onPress>`. وسم ثابت: `MessagesScreen.tsx:142` (launch52). **لا بند جديد.**
 **الدورة القادمة:** المراجعة (d) — أرقام متناقضة بين الملفات.
+
+## 2026-09-25 — الدورة 54
+**البناء:** أخضر 0 (بعد 3e69fe9) — لا إصلاح لازم. **Selftests:** 92/92 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود (3 صفوف):** launch107 ← chart (`40b15f9`، `MatrixChart.tsx:5715`)؛ backend-r7 (`e4fe10d`، `backtest.py:75` + `tests/test_backtest.py:65`)؛
+backend-r6 (1) (`e9df083`، `MatrixChart.tsx:8091` `volName('POC')`؛ TPO من عدد الشموع، footprint موسوم «≈» — قبلتُ تعليل chart). لا طلبات تنسيق جديدة بسجلات chart/tools/launch/ui/backend.
+**المراجعة (d — أرقام متناقضة):** حدود خانات التطبيق مقابل Pydantic `main.py` (ملاحظة 500، تخطيط 64، رمز 12، دردشة 1000، سؤال 2000، اسم 3–32، كلمة مرور 4 = `registerError`)؛
+صفحة الدفتر 500 = 500؛ pip الحاسبة = `backtest.py`؛ حدود اللوت 100/200 = النصّ؛ عيّنة 30، `CHANGE_WINDOW` 80، `SOON_MS` 24س، RSI 1–99، الجلسات و17:00 نيويورك — كلّها متّسقة.
+جديد QA54 → backend: `/api/screener/filters` «(<30)»/«(>70)» مقابل `<=`/`>=` بالفحص، تسميات مختلطة اللغة، بلا مستدعٍ. `TICK_STALE_MS` 20ث ≠ `LIVE_MAX_AGE` 180ث مقصود.
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول حقيقي.
