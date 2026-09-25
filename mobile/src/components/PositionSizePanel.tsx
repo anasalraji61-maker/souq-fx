@@ -773,10 +773,6 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   useEffect(() => {
     setLivePxMsg(null);
   }, [symbol]);
-  // سبريد EURUSD (0.8) على GBPJPY أو الذهب رقمٌ لا يخصّها — يُمسح مع الأداة
-  useEffect(() => {
-    setSpread('');
-  }, [spec?.symbol]);
   // وأسعار الدخول/الوقف/الهدف كذلك: شريحة USDJPY تحت دخول EURUSD ‎1.0850 ووقفه ‎1.0830 كانت تُبقيهما فيُقرآن
   // 0.2 pip بحجم نقطة الين (لوت هائل)، وGBPUSD تحسب «20 pip» من سعرين لا يخصّانها وتسجّلهما بالدفتر. تُمسح
   // عند الانتقال من أداة **معروفة** إلى أخرى فقط — مرور الخانة برمز ناقص أثناء الكتابة («EURUS») لا يمسح شيئاً،
@@ -789,6 +785,9 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     const prev = lastSpecSymRef.current;
     lastSpecSymRef.current = now;
     if (prev == null || prev === now) return;
+    // والسبريد: سبريد EURUSD (0.8) على GBPJPY أو الذهب رقمٌ لا يخصّها. هنا لا بمؤثّر مستقلّ — ذاك كان يمسحه
+    // حين تمرّ الخانة برمز ناقص («EURUS» ثم «EURUSD») فيختفي سطر التكاليف والأسعار باقية.
+    setSpread('');
     setEntryPx('');
     setStopPx('');
     setTargetPx('');
