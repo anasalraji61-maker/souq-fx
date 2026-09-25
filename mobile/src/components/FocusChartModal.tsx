@@ -19,6 +19,7 @@ import { WATCHLIST } from '../chart/watchlist';
 import { loadWatchlistItems } from '../chart/watchlistStore';
 import { formatPrice } from '../chart/math';
 import { notify } from '../chart/confirmDestructive';
+import { COMPARE_COLOR } from '../chart/compare';
 import { headerChangePct, livePriceForChart, livePriceForHeader } from '../chart/liveSeries';
 import { useDailyRefs } from '../chart/dailyRefStore';
 import { formatPct, pctDirection } from '../chart/dailyChange';
@@ -422,7 +423,7 @@ export function FocusChartModal({
                         ]}
                         onPress={() => pick(w.symbol)}
                         onLongPress={() => toggleCompare(w.symbol)}
-                        accessibilityLabel={`${t.focusPickSymbolA11yPrefix}: ${w.symbol}`}
+                        accessibilityLabel={`${t.focusPickSymbolA11yPrefix}: ${w.symbol}${compareSym === w.symbol ? t.focusInComparisonSuffix : ''}`}
                       >
                         <Text style={[styles.pillText, sym === w.symbol && styles.pillTextOn]}>
                           {w.symbol}
@@ -563,11 +564,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgPanel,
   },
   watchOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  watchCompare: { borderColor: colors.infoAccent },
+  // لون خطّ المقارنة نفسه على الرسم (`COMPARE_COLOR`) — `infoAccent` هو لون SMA 50 فكان
+  // يوحي بالخطّ الخطأ.
+  watchCompare: { borderColor: COMPARE_COLOR },
   watchSym: { color: colors.text, fontWeight: '800' },
   watchLabel: { color: colors.textMuted, fontSize: 11 },
-  compareTag: { color: colors.infoAccent, fontSize: 9, marginTop: 2 },
-  compareNote: { color: colors.infoAccent, fontSize: 11 },
+  compareTag: { color: COMPARE_COLOR, fontSize: 9, marginTop: 2 },
+  compareNote: { color: COMPARE_COLOR, fontSize: 11 },
   compareNoteWarn: { color: colors.warn, fontWeight: '700' },
   armed: { color: colors.bull, fontSize: 12, fontWeight: '800' },
   main: { flex: 1 },
