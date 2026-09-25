@@ -18,7 +18,7 @@ import {
   getNotificationPermissionState,
   type NotificationPermissionState,
 } from '../notifications';
-import { CommissionPlanPanel } from '../components/CommissionPlanPanel';
+import { CommissionPlanPanel, isRoleId } from '../components/CommissionPlanPanel';
 import { NetworkTreePanel } from '../components/NetworkTreePanel';
 import { SubscriptionPlansPanel } from '../components/SubscriptionPlansPanel';
 import { OnboardingOverlay } from '../components/OnboardingOverlay';
@@ -259,7 +259,8 @@ export function AccountScreen() {
           {net ? (
             <View style={styles.netBox}>
               <Text style={[styles.netLine, { textAlign: align }]}>
-                {net.rates?.role_label ?? net.role} · {net.referral_code}
+                {/* `role_label` عربي ثابت من الخادم (`ROLE_LABELS_AR`) ⇒ الاسم من القاموس بمعرّف الدور. */}
+                {isRoleId(net.role) ? t[net.role] : (net.rates?.role_label ?? net.role)} · {net.referral_code}
               </Text>
               <View style={[styles.legs, rtl && styles.legsRtl]}>
                 <View style={styles.leg}>

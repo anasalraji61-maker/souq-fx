@@ -32,6 +32,46 @@ type Report = {
   }[];
 };
 
+/**
+ * الخادم (`commissions.py`/`db.commission_report`) يرسل أسماء الأنواع والشروط والأدوار **نصّاً عربياً ثابتاً**
+ * بلا `lang` ⇒ الجدول كان عربياً بالكردية والإنجليزية. الأرقام تبقى من الخادم، والنصّ المعروف يُترجَم هنا
+ * بمفاتيح `fallbackCommission` نفسها؛ نصّ لا نعرفه (خادم أحدث) يُعرض كما وصل بدل إخفائه.
+ */
+const SERVER_TYPE_KEYS: Record<string, keyof Dict> = {
+  'جلب مباشر': 'cppTypeDirect',
+  'مكافأة توازن': 'cppTypeBalance',
+  'فعّالة متوازن': 'cppTypeActiveBalanced',
+  'فعّالة غير متوازن': 'cppTypeActiveUnbalanced',
+};
+const SERVER_COND_KEYS: Record<string, keyof Dict> = {
+  'عند إدخال عضو جديد': 'cppCondNewMember',
+  'يمين = يسار': 'cppCondBalanced',
+  'يمين ≠ يسار': 'cppCondUnbalanced',
+};
+/** `ROLE_LABELS_AR` بالخادم ⇒ معرّف الدور، ومنه اسمه بالقاموس (`t.trader`…). */
+const SERVER_ROLE_IDS: Record<string, RoleId> = {
+  'متداول': 'trader',
+  'مدرب': 'trainer',
+  'بروكر': 'broker',
+  'وكيل': 'agent',
+  'شركة': 'company',
+};
+export type RoleId = 'trader' | 'trainer' | 'broker' | 'agent' | 'company';
+export function isRoleId(v: string | null | undefined): v is RoleId {
+  return v === 'trader' || v === 'trainer' || v === 'broker' || v === 'agent' || v === 'company';
+}
+
+function localized(t: Dict, map: Record<string, keyof Dict>, server: string): string {
+  const k = map[server.trim()];
+  const v = k ? t[k] : undefined;
+  return typeof v === 'string' ? v : server;
+}
+
+function localizedRole(t: Dict, server: string): string {
+  const id = SERVER_ROLE_IDS[server.trim()];
+  return id ? t[id] : server;
+}
+
 /** جدول عمولات تقريبي حين يتعذّر الخادم — نصوصه من القاموس لتتبع لغة الواجهة */
 function fallbackCommission(t: Dict) {
   return [
@@ -169,10 +209,10 @@ export function CommissionPlanPanel() {
             </View>
             {commissionRows.map((row) => (
               <View key={row.type} style={[styles.tr, rowDir]}>
-                <Text style={[styles.td, styles.colType, al]}>{row.type}</Text>
+                <Text style={[styles.td, styles.colType, al]}>{localized(t, SERVER_TYPE_KEYS, row.type)}</Text>
                 <Text style={[styles.td, styles.colRate, styles.accent]}>{row.rate_pct}%</Text>
                 <Text style={[styles.td, styles.colCond, al]} numberOfLines={2}>
-                  {row.condition}
+                  {localized(t, SERVER_COND_KEYS, row.condition)}
                 </Text>
                 <Text style={[styles.td, styles.colPts]}>
                   {row.points_per_member ?? row.rate_pct}
@@ -187,8 +227,11 @@ export function CommissionPlanPanel() {
               <Text style={[styles.th, styles.colRole, al]}>{t.cppColRole}</Text>
               <Text style={[styles.th, styles.colLevels, al]}>{t.cppColLevels}</Text>
             </View>
-            {(report?.levels_table ??
-              plan?.roles.map((r) => ({ role: r.label, levels: r.levels })) ??
+            {(report?.levels_table.map((r) => ({ role: localizedRole(t, r.role), levels: r.levels })) ??
+              plan?.roles.map((r) => ({
+                role: isRoleId(r.id) ? t[r.id] : localizedRole(t, r.label),
+                levels: r.levels,
+              })) ??
               fallbackLevels(t)
             ).map((row) => (
               <View key={row.role} style={[styles.tr, rowDir]}>
