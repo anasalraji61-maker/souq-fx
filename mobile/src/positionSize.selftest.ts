@@ -2997,6 +2997,13 @@ console.log('positionSize slPipsCarryOver selftest OK');
   // وتحت 1 دائماً: «1.17» لـEURGBP (GBP ⇒ EUR) و«1.67» لـNZDUSD
   assert.ok(Math.abs(manualConvLooksInverted('EURGBP', 1.17)! - 1 / 1.17) < 1e-12);
   assert.ok(manualConvLooksInverted('NZDUSD', 1.67) != null);
+  // أزواج تحويل NZD/AUD/CAD ⇒ CHF/CAD: المقلوب مرفوض، والسعر الحقيقي (وأعلى ما بلغه) مقبول
+  for (const [pair, r] of [['NZDCHF', 1 / 0.48], ['AUDCHF', 1 / 0.52], ['CADCHF', 1 / 0.58], ['NZDCAD', 1 / 0.81]] as const) {
+    assert.ok(Math.abs(manualConvLooksInverted(pair, r)! - 1 / r) < 1e-12, pair);
+  }
+  for (const [pair, r] of [['NZDCHF', 0.48], ['NZDCHF', 0.98], ['AUDCHF', 0.52], ['AUDCHF', 1.1], ['CADCHF', 0.58], ['CADCHF', 1.25], ['NZDCAD', 0.81], ['NZDCAD', 0.96]] as const) {
+    assert.equal(manualConvLooksInverted(pair, r), null, `${pair} ${r}`);
+  }
   // فوق 1 لزوجٍ غير مصنّف ⇒ لا تخمين (EURUSD 1.08، AUDNZD 1.09)
   for (const [pair, r] of [['EURUSD', 1.08], ['AUDNZD', 1.09], ['USDJPY', 149.5]] as const) assert.equal(manualConvLooksInverted(pair, r), null, pair);
   {

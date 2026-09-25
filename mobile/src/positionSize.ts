@@ -437,6 +437,13 @@ const ALWAYS_UNDER_ONE_PAIRS = new Set(['EURGBP', 'NZDUSD']);
 const INVERTED_BEYOND: Record<string, { over?: number; under?: number }> = {
   AUDUSD: { over: 1.2 },
   USDCAD: { under: 0.85 },
+  // أزواج تحويل حسابات NZD/AUD/CAD على أزواجٍ تسعيرها CHF/CAD (كلّها `invert: true` ⇒ المقلوب يضخّم اللوت). أعلاها منذ 2000:
+  // NZDCHF ~0.98 وNZDCAD ~0.96 (2007/2014)، AUDCHF ~1.1 (2007)، CADCHF ~1.25 (2007). «2.08» لـNZDCHF (CHF ⇒ NZD مقلوباً)
+  // كان يُقبل ⇒ USDCHF بحساب NZD وقف 20: **1.04 لوت بدل 0.24** (خسارة 433 NZD بمخاطرة 100). AUDCAD/EURCHF/USDCHF عَبَرت 1 ⇒ لا حدّ.
+  NZDCHF: { over: 1.2 },
+  NZDCAD: { over: 1.2 },
+  AUDCHF: { over: 1.3 },
+  CADCHF: { over: 1.5 },
 };
 
 /**
