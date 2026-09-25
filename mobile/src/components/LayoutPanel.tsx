@@ -23,10 +23,13 @@ const LAYOUT_NAME_MAX = 64;
 type Props = {
   frameTfs: [string, string, string] | string[];
   frameSymbols: [string, string, string];
+  /** chart-r49: الخانة الرابعة الجارية — تُحفظ مع التخطيط وتدخل «الحالي». */
+  dxySymbol?: string;
+  dxyTf?: string;
   onApply: (layout: TerminalLayout) => void;
 };
 
-export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
+export function LayoutPanel({ frameTfs, frameSymbols, dxySymbol, dxyTf, onApply }: Props) {
   const { t, rtl } = useI18n();
   const align = rtl ? ('right' as const) : ('left' as const);
   const [layouts, setLayouts] = useState<TerminalLayout[]>([DEFAULT_LAYOUT]);
@@ -47,20 +50,24 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
 
   /** «EURUSD 15m · GBPUSD 1H · XAUUSD 4H» — كان السطر يعرض الأزواج فقط، والفريم نصف التخطيط. اسم الفريم
    *  المحلي («15 د» بالعربية كشريط الفريمات)، و`a11y` الكلمات الكاملة للقارئ («15 دقيقة» لا «15m» = «15 متر»). */
-  const describe = (l: TerminalLayout, a11y = false) =>
-    l.frameSymbols
-      .map((sym, i) => {
-        const tf = l.frameTfs[i] ?? '';
-        const tfText = isTimeframe(tf) ? (a11y ? t.tfLabelsA11y[tf] : t.tfLabels[tf]) : tf;
-        return `${sym} ${tfText}`.trim();
-      })
-      .join(' · ');
+  const describe = (l: TerminalLayout, a11y = false) => {
+    const cell = (sym: string, tf: string) => {
+      const tfText = isTimeframe(tf) ? (a11y ? t.tfLabelsA11y[tf] : t.tfLabels[tf]) : tf;
+      return `${sym} ${tfText}`.trim();
+    };
+    const cells = l.frameSymbols.map((sym, i) => cell(sym, l.frameTfs[i] ?? ''));
+    // الرابعة فقط إن حُفظت فعلاً — القديمة تحمل `dxyTf` ثابتاً بلا رمز.
+    if (l.dxySymbol) cells.push(cell(l.dxySymbol, l.dxyTf));
+    return cells.join(' · ');
+  };
   /** الاسم المعروض: الافتراضي مخزَّن باسم عربي ثابت («افتراضي») فيُترجم عند العرض. */
   const displayName = (l: TerminalLayout) => (l.id === 'default' ? t.layoutBuiltinName : l.name);
   /** يطابق ما على الشاشة الرئيسية الآن؟ (يُعلَّم «الحالي» كي يعرف المتداول ما المطبَّق) */
   const isCurrent = (l: TerminalLayout) =>
     l.frameSymbols.every((sym, i) => sym === frameSymbols[i]) &&
-    l.frameTfs.every((x, i) => x === frameTfs[i]);
+    l.frameTfs.every((x, i) => x === frameTfs[i]) &&
+    // تخطيط حفظ الرابعة: «الحالي» فقط إن طابقت (كان XAUUSD 4H بالرابعة يُعلَّم «الحالي» لتخطيط EURUSD 15m).
+    (!l.dxySymbol || !dxySymbol || (l.dxySymbol === dxySymbol && (!dxyTf || l.dxyTf === dxyTf)));
 
   useEffect(() => {
     // حارس "alive" يمنع تحديث الحالة بعد إلغاء تركيب اللوحة قبل اكتمال الطلب — نفس نمط
@@ -112,7 +119,9 @@ export function LayoutPanel({ frameTfs, frameSymbols, onApply }: Props) {
     const layout: TerminalLayout = {
       id: existing?.id ?? `l${Date.now()}`,
       name: layoutName,
-      dxyTf: '15m',
+      // chart-r49: الرابعة الجارية (كانت '15m' ثابتاً ولا رمز ⇒ لا تُستعاد). بلا props = سلوك القديم.
+      dxyTf: dxySymbol && dxyTf ? dxyTf : '15m',
+      ...(dxySymbol ? { dxySymbol } : {}),
       frameSymbols,
       frameTfs: [frameTfs[0], frameTfs[1], frameTfs[2]],
       frameSizes: ['small', 'medium', 'large'],

@@ -5,6 +5,9 @@ export type TerminalLayout = {
   id: string;
   name: string;
   dxyTf: string;
+  /** chart-r49: رمز الخانة الرابعة (البطل). غائب بالتخطيطات القديمة — وحينها `dxyTf` ثابت '15m' لا اختيار المتداول،
+   *  فلا تُستعاد الرابعة منها ولا تدخل «الحالي». */
+  dxySymbol?: string;
   frameSymbols: [string, string, string];
   frameTfs: [string, string, string];
   frameSizes: ['small' | 'medium' | 'large', 'small' | 'medium' | 'large', 'small' | 'medium' | 'large'];
@@ -105,6 +108,7 @@ export function parseServerLayout(payload: unknown): TerminalLayout | null {
     id: p.id,
     name: p.name,
     dxyTf: typeof p.dxyTf === 'string' ? p.dxyTf : '15m',
+    ...(typeof p.dxySymbol === 'string' && p.dxySymbol.trim() ? { dxySymbol: p.dxySymbol.trim() } : {}),
     frameSymbols: p.frameSymbols,
     frameTfs: p.frameTfs,
     frameSizes: sizes,
