@@ -33,3 +33,17 @@ assert.ok(big[big.length - 1].close < big[big.length - 1].open, 'reversal past A
 // مبلغ صريح ما زال يعمل.
 assert.equal(kagi([...rising, bar(40, last - 0.0025)], 0.005).at(-1)!.close, last);
 console.log('kagiPnfAtr selftest PASS');
+
+// P&F على شبكة مضاعفات الصندوق: الإغلاق الأول 1.10037 وصندوق 0.001 ⇒ أوّل صندوق يبدأ 1.100 لا 1.10037.
+const offGrid = Array.from({ length: 20 }, (_, i) => bar(i, 1.10037 + i * 0.0005));
+const grid = pointFigure(offGrid, 0.001);
+for (const b of grid) {
+  const k = b.open / 0.001;
+  assert.ok(Math.abs(k - Math.round(k)) < 1e-6, `pnf off grid ${b.open}`);
+}
+assert.ok(Math.abs(grid[0].open - 1.1) < 1e-9, `pnf first box ${grid[0].open}`);
+// 300 صندوق صاعد: آخر إغلاق بالضبط على الشبكة (لا انجراف من جمع متكرّر).
+const long = Array.from({ length: 301 }, (_, i) => bar(i, 1 + i * 0.001));
+const lp = pointFigure(long, 0.001).at(-1)!.close;
+assert.ok(Math.abs(lp - 1.3) < 1e-12, `pnf drift ${lp}`);
+console.log('pnf grid selftest PASS');

@@ -11,62 +11,58 @@ export function pointFigure(candles: Candle[], boxSize?: number, reversal = 3): 
   if (candles.length < 3) return candles;
   const box = boxSize ?? renkoAtrBox(candles);
   const out: SyntheticBar[] = [];
-  let colOpen = candles[0].close;
+  // شبكة صناديق ثابتة (مضاعفات الصندوق) كـTradingView: العمود يبدأ من أقرب مستوى تحت الإغلاق الأول لا من
+  // الإغلاق نفسه ⇒ حدود الأعمدة أرقام مستديرة تطابق ما يقرؤه المتداول هناك. والعدّ بفهرس صحيح لا بجمع
+  // ‎+box‎ متكرّر ⇒ لا انجراف عشري بعد مئات الصناديق.
+  let level = Math.floor(candles[0].close / box + 1e-9);
   let direction: 1 | -1 | 0 = 0;
   let t = candles[0].time;
   let src = candles[0].time;
 
-  const pushBrick = (dir: 1 | -1, from: number) => {
-    const close = from + dir * box;
+  const pushBrick = (dir: 1 | -1) => {
+    const open = level * box;
+    level += dir;
+    const close = level * box;
     out.push({
       time: t,
-      open: from,
-      high: Math.max(from, close),
-      low: Math.min(from, close),
+      open,
+      high: Math.max(open, close),
+      low: Math.min(open, close),
       close,
       volume: 1,
       srcTime: src,
     });
     t += 60;
-    return close;
   };
+  // عدد الصناديق التي يغطّيها الإغلاق فوق/تحت المستوى الحالي (هامش 1e-9 يمتصّ خطأ القسمة العشرية).
+  const upBoxes = (px: number) => Math.floor(px / box + 1e-9) - level;
+  const downBoxes = (px: number) => level - Math.ceil(px / box - 1e-9);
 
   for (const c of candles) {
     src = c.time;
+    const px = c.close;
     if (direction === 0) {
-      if (c.close >= colOpen + box) {
+      if (upBoxes(px) >= 1) {
         direction = 1;
-        while (c.close >= colOpen + box) {
-          colOpen = pushBrick(1, colOpen);
-        }
-      } else if (c.close <= colOpen - box) {
+        for (let n = upBoxes(px); n > 0; n--) pushBrick(1);
+      } else if (downBoxes(px) >= 1) {
         direction = -1;
-        while (c.close <= colOpen - box) {
-          colOpen = pushBrick(-1, colOpen);
-        }
+        for (let n = downBoxes(px); n > 0; n--) pushBrick(-1);
       }
       continue;
     }
 
     if (direction === 1) {
-      while (c.close >= colOpen + box) {
-        colOpen = pushBrick(1, colOpen);
-      }
-      if (c.close <= colOpen - reversal * box) {
+      for (let n = upBoxes(px); n > 0; n--) pushBrick(1);
+      if (downBoxes(px) >= reversal) {
         direction = -1;
-        while (c.close <= colOpen - box) {
-          colOpen = pushBrick(-1, colOpen);
-        }
+        for (let n = downBoxes(px); n > 0; n--) pushBrick(-1);
       }
     } else {
-      while (c.close <= colOpen - box) {
-        colOpen = pushBrick(-1, colOpen);
-      }
-      if (c.close >= colOpen + reversal * box) {
+      for (let n = downBoxes(px); n > 0; n--) pushBrick(-1);
+      if (upBoxes(px) >= reversal) {
         direction = 1;
-        while (c.close >= colOpen + box) {
-          colOpen = pushBrick(1, colOpen);
-        }
+        for (let n = upBoxes(px); n > 0; n--) pushBrick(1);
       }
     }
   }
