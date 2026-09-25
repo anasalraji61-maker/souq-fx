@@ -350,6 +350,11 @@ export type Dict = {
   invalidNumberHint: string;
   /** سعر «3.450» مرفوض لأنه مبهم لأداة منازلها أقلّ من ثلاث (`parsePriceFor`) — {value} كما كُتب، {whole} بلا النقطة (3450)، {small} كسراً (3.45) */
   priceAmbiguousThousandsHint: string;
+  /**
+   * نقاط وقف «1.500» مرفوضة لأنها مبهمة (`parseSlPips`، `ffa6b92`) — الرسالة العامة «اكتبه بلا فواصل آلاف، مثل 1.0850» تدعوه لكتابة ما كتبه.
+   * {value} كما كُتب، {whole} بلا النقطة (1500)، {small} كسراً (1.5). لـtools حين `slPips` وحدها المرفوضة
+   */
+  riskCalcSlPipsAmbiguous: string;
   /** رقم فيه «٬» (فاصل الآلاف العربي) بغير موضع آلاف — «0٬5» يُرفض (`parseDecimal`، `49db13b`)؛ الحرفان متشابهان على لوحة المفاتيح العربية فيُقال أيّهما يُكتب للكسر */
   arabicThousandsSignHint: string;
   /** اسم الخانة المرفوضة وما كُتب فيها، يسبق `invalidNumberHint`/`arabicThousandsSignHint` («الهدف «3.5.0»: …» — `d28991b`)؛ {field} الاسم القصير، {value} كما كُتب. علامتا الاقتباس بحسب اللغة: «» للعربية والكردية، “” للإنجليزية */
@@ -1433,6 +1438,7 @@ const ar: Dict = {
   riskCalcFillHint: 'أدخل الرصيد ونسبة المخاطرة ووقف الخسارة',
   invalidNumberHint: 'رقم غير مفهوم — اكتبه بلا فواصل آلاف، مثل 10000 أو 1.0850',
   priceAmbiguousThousandsHint: 'السعر «{value}» مبهم — هل النقطة فاصل آلاف أم فاصلة عشرية؟ اكتب {whole} أو {small}',
+  riskCalcSlPipsAmbiguous: 'وقف «{value}» pip مبهم — هل النقطة فاصل آلاف أم فاصلة عشرية؟ اكتب {whole} أو {small}',
   arabicThousandsSignHint: '«٬» فاصلة الآلاف لا الفاصلة العشرية — للكسر اكتب «٫» أو نقطة، مثل 0٫5',
   riskCalcBadFieldValue: '{field} «{value}»',
   riskCalcPipValue: 'قيمة الـpip للوت',
@@ -2498,6 +2504,7 @@ const enUS: Dict = {
   riskCalcFillHint: 'Enter balance, risk % and stop loss',
   invalidNumberHint: 'Number not recognized — type it without thousands separators, e.g. 10000 or 1.0850',
   priceAmbiguousThousandsHint: 'Price “{value}” is ambiguous — is the dot a thousands separator or a decimal point? Type {whole} or {small}',
+  riskCalcSlPipsAmbiguous: 'A stop of “{value}” pips is ambiguous — is the dot a thousands separator or a decimal point? Type {whole} or {small}',
   arabicThousandsSignHint: '“٬” is the Arabic thousands sign, not the decimal comma — for a fraction type “٫” or a dot, e.g. 0.5',
   riskCalcBadFieldValue: '{field} “{value}”',
   riskCalcPipValue: 'Pip value per lot',
@@ -3588,6 +3595,7 @@ const ku: Dict = {
   riskCalcFillHint: 'باڵانس، ڕێژەی مەترسی و وەستانی زیان بنووسە',
   invalidNumberHint: 'ژمارەکە ناناسرێتەوە — بەبێ جیاکەرەوەی هەزاران بنووسە، وەک 10000 یان 1.0850',
   priceAmbiguousThousandsHint: 'نرخی «{value}» ڕوون نییە — خاڵەکە جیاکەرەوەی هەزارانە یان خاڵی دەیی؟ {whole} یان {small} بنووسە',
+  riskCalcSlPipsAmbiguous: 'وەستانی «{value}» pip ڕوون نییە — خاڵەکە جیاکەرەوەی هەزارانە یان خاڵی دەیی؟ {whole} یان {small} بنووسە',
   arabicThousandsSignHint: '«٬» جیاکەرەوەی هەزارانە نەک فاریزەی دەیی — بۆ کەرت «٫» یان خاڵ بنووسە، وەک 0٫5',
   riskCalcBadFieldValue: '{field} «{value}»',
   riskCalcPipValue: 'بەهای pip بۆ هەر لۆتێک',
