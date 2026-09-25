@@ -52,6 +52,23 @@ function groupsBetweenDigitsOk(s: string): boolean {
 }
 
 /**
+ * كلمة **الوحدة** بآخر الخانة: «25 pips» (من رسالة توصية «SL 25 pips»)، «0.10 lot» (من تأكيد الصفقة «Buy 0.10 lots EURUSD»)
+ * كانت «رقم غير مفهوم» بخانة لا تحتمل وحدة غيرها. **كلمة الخانة نفسها فقط**: «pip/pips/بيب/پیپ» لخانات النقاط، «lot/lots/لوت/لۆت»
+ * لخانة الحجم. «points»/«pts»/«نقطة»/«نقاط» تبقى مرفوضة عمداً: «النقطة» بمنصّة MT4/MT5 (وترجمتها العربية «نقاط») = **عُشر pip**
+ * ⇒ «250 points» = 25 pip، وقراءتها 250 pip = لوت أصغر بعشر مرّات. وحدةٌ واحدة بالآخر فقط؛ «pips» وحدها = فارغة.
+ */
+const UNIT_WORDS: Record<'pip' | 'lot', RegExp> = {
+  pip: /^(.+?)\s*(?:pips?|بيبس|بيبات|بيب|پیپ)\.?$/i,
+  lot: /^(.+?)\s*(?:lots?|لوتات|لوت|لۆت)\.?$/i,
+};
+
+export function stripUnitWord(raw: string, unit: 'pip' | 'lot'): string {
+  const m = UNIT_WORDS[unit].exec(raw.trim());
+  return m ? m[1] : raw;
+}
+
+/**
+ * @param opts.unit كلمة وحدة الخانة مقبولة بآخرها (`stripUnitWord`) — «25 pips»، «0.1 lot».
  * @param opts.signed اسمح بإشارة سالبة (قيم مؤشرات مثل MACD) — الأسعار والأرصدة موجبة دائماً.
  * @param opts.amount خانة **مبلغ** (رصيد الحساب): النقطة الوحيدة متبوعة بثلاثة أرقام بالضبط تُرفض كالفاصلة
  *   المبهمة تماماً. الأسعار تحتاج «1.085» عشريةً فتبقى القاعدة العامة كما هي، لكن رصيداً بثلاث منازل لا
@@ -64,8 +81,9 @@ function groupsBetweenDigitsOk(s: string): boolean {
  */
 export function parseDecimal(
   raw: string,
-  opts: { signed?: boolean; amount?: boolean; percent?: boolean } = {}
+  opts: { signed?: boolean; amount?: boolean; percent?: boolean; unit?: 'pip' | 'lot' } = {}
 ): number | null {
+  if (opts.unit) raw = stripUnitWord(raw.replace(/[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/g, ''), opts.unit);
   // علامات الاتجاه الخفية (LRM/RLM/ALM وعزل bidi) تأتي مع النسخ من محادثة/منصّة عربية: «‏1.0850» كانت «رقم غير مفهوم» بلا سبب يُرى
   const digits = normalizeDigits(raw.replace(/[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/g, '')).trim();
   if (!groupsBetweenDigitsOk(digits)) return null;
@@ -122,7 +140,7 @@ export function parseDecimal(
  */
 export function misplacedArabicThousandsSign(
   raw: string,
-  opts: { signed?: boolean; amount?: boolean; percent?: boolean } = {}
+  opts: { signed?: boolean; amount?: boolean; percent?: boolean; unit?: 'pip' | 'lot' } = {}
 ): boolean {
   if (!raw.includes('٬') || parseDecimal(raw, opts) != null) return false;
   return parseDecimal(raw.replace(/٬/g, '٫'), opts) != null;

@@ -474,7 +474,8 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           .replace('{small}', slAmbig.small)
       : misplacedArabicThousandsSign(balanceText, { amount: true }) ||
         misplacedArabicThousandsSignInRisk(riskPct, balanceNum, moneyCcy) ||
-        [slPips, manualConv, entryPx, stopPx, targetPx].some((v) => misplacedArabicThousandsSign(v))
+        misplacedArabicThousandsSign(slPips, { unit: 'pip' }) ||
+        [manualConv, entryPx, stopPx, targetPx].some((v) => misplacedArabicThousandsSign(v))
       ? // «0٬5» بخانة المخاطرة: «٬» بجانب «٫» على اللوحة العربية — يُقال أيّهما يُكتب للكسر
         `${badFieldsText}: ${t.arabicThousandsSignHint}`
       : !badOtherThanLeverage && leverageAmbig
@@ -494,7 +495,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       ? null
       : spreadWide != null
         ? t.riskCalcSpreadTooWide.replace('{n}', String(spreadWide))
-        : misplacedArabicThousandsSign(spread)
+        : misplacedArabicThousandsSign(spread, { unit: 'pip' })
           ? t.arabicThousandsSignHint
           : t.invalidNumberHint;
   /** خطأ خانة العمولة تحتها — للسبب نفسه: اللوت يُحسب بدونها فلا يصل `badNumber` إليها */

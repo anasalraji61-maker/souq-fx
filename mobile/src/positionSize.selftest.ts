@@ -2482,3 +2482,22 @@ console.log('positionSize silver MXN/ZAR thousands selftest OK');
   assert.deepEqual(riskOverBalance('20000 دولار', 10000, 'USD'), { risk: 20000, balance: 10000 });
 }
 console.log('positionSize arabic money words risk selftest OK');
+
+// «25 pips» منسوخة من توصية بخانة الوقف/السبريد — تُقرأ؛ «250 points» (عُشر pip بـMT) تبقى مرفوضة
+{
+  assert.equal(parseSlPips('25 pips'), 25);
+  assert.equal(parseSlPips('٢٥ بيب'), 25);
+  assert.equal(parseSlPips('250 points'), null);
+  assert.equal(parseSlPips('1.500 pips'), null); // مبهمة كـ«1.500»
+  assert.deepEqual(ambiguousSlPips('1.500 pips'), { value: '1.500 pips', whole: '1500', small: '1.5' });
+  assert.equal(parseSpreadPips('1.2 pips'), 1.2);
+  assert.equal(parseSpreadPips('0,8 pip'), 0.8);
+  assert.equal(parseSpreadPips('12 points'), null);
+  assert.equal(spreadTooWide('10851 pips'), 10851);
+  assert.equal(spreadTooWide('1.2 pips'), null);
+  // الحجم من الوقف المكتوب بوحدته = الحجم من الرقم وحده
+  const spec = instrumentSpec('EURUSD')!;
+  const a = positionSize({ balance: 10000, riskPct: 1, slPips: parseSlPips('25 pips')!, pipValuePerLot: pipValuePerLot(spec, 1), contractSize: spec.contractSize });
+  assert.equal(a?.lots, 0.4);
+}
+console.log('positionSize pip unit word selftest OK');

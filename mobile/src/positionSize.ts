@@ -10,7 +10,7 @@
  * تنبيه: مواصفات العقود تختلف بين الوسطاء (خصوصاً المعادن) — النتيجة تقدير تعليمي.
  */
 
-import { normalizeDigits, parseDecimal } from './parseDecimal';
+import { normalizeDigits, parseDecimal, stripUnitWord } from './parseDecimal';
 
 /**
  * عملات الحساب الشائعة لدى وسطاء التجزئة: العملات الثماني الرئيسية كاملةً.
@@ -480,7 +480,7 @@ export function priceAtPipOffset(spec: InstrumentSpec, price: number, offsetPips
  * و«0.500» تبقى 0.5 (الصفر بالمقدّمة ليس مبهماً). `null` = فارغ أو غير مفهوم أو مبهم.
  */
 export function parseSlPips(raw: string): number | null {
-  return parseDecimal(raw, { amount: true });
+  return parseDecimal(raw, { amount: true, unit: 'pip' });
 }
 
 /**
@@ -489,7 +489,7 @@ export function parseSlPips(raw: string): number | null {
  * (مقصوص)، `whole` بلا الفاصل، `small` كسراً بلا أصفار زائدة — أرقام لاتينية. `null` = مقبول أو مرفوض لسبب آخر.
  */
 export function ambiguousSlPips(raw: string): { value: string; whole: string; small: string } | null {
-  const s = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009']/g, '').replace(/[٫．٬，]/g, (c) => (c === '٬' || c === '，' ? ',' : '.'));
+  const s = normalizeDigits(stripUnitWord(raw, 'pip')).replace(/[\s\u00a0\u202f\u2009']/g, '').replace(/[٫．٬，]/g, (c) => (c === '٬' || c === '，' ? ',' : '.'));
   const m = /^([1-9]\d{0,2})[.,](\d{3})$/.exec(s);
   if (!m) return null;
   return { value: raw.trim(), whole: m[1] + m[2], small: String(Number(`${m[1]}.${m[2]}`)) };
@@ -1038,7 +1038,7 @@ export const MAX_SPREAD_PIPS = 500;
  */
 export function parseSpreadPips(raw: string): number | null {
   if (raw.trim() === '') return 0;
-  const v = parseDecimal(raw);
+  const v = parseDecimal(raw, { unit: 'pip' });
   return v != null && v >= 0 && v <= MAX_SPREAD_PIPS ? v : null;
 }
 
@@ -1049,7 +1049,7 @@ export function parseSpreadPips(raw: string): number | null {
  */
 export function spreadTooWide(raw: string): number | null {
   if (raw.trim() === '') return null;
-  const v = parseDecimal(raw);
+  const v = parseDecimal(raw, { unit: 'pip' });
   return v != null && v > MAX_SPREAD_PIPS ? v : null;
 }
 

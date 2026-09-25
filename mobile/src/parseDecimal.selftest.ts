@@ -187,3 +187,37 @@ console.log('parseDecimal bidi marks selftest OK');
   assert.equal(parseDecimal('-5'), null); // السالب بلا `signed` مرفوض كما كان
 }
 console.log('parseDecimal leading plus selftest OK');
+
+// كلمة وحدة الخانة بالآخر («25 pips»، «0.10 lot») — وحدها؛ «points»/«نقاط» (عُشر pip بمنصّة MT) مرفوضة عمداً
+{
+  assert.equal(parseDecimal('25 pips', { unit: 'pip' }), 25);
+  assert.equal(parseDecimal('25pips', { unit: 'pip' }), 25);
+  assert.equal(parseDecimal('25 PIP', { unit: 'pip' }), 25);
+  assert.equal(parseDecimal('12.5 pips.', { unit: 'pip' }), 12.5);
+  assert.equal(parseDecimal('٢٥ بيب', { unit: 'pip' }), 25);
+  assert.equal(parseDecimal('٢٥بيبس', { unit: 'pip' }), 25);
+  assert.equal(parseDecimal('25 پیپ', { unit: 'pip' }), 25);
+  assert.equal(parseDecimal('‏25 pips‏', { unit: 'pip' }), 25);
+  assert.equal(parseDecimal('0.10 lots', { unit: 'lot' }), 0.1);
+  assert.equal(parseDecimal('0,5 lot', { unit: 'lot' }), 0.5);
+  assert.equal(parseDecimal('١٫٥ لوت', { unit: 'lot' }), 1.5);
+  assert.equal(parseDecimal('0.2 لۆت', { unit: 'lot' }), 0.2);
+  // الوحدة الأخرى، أو بلا الخيار، أو كلمة MT «النقطة» ⇒ مرفوضة كما كانت
+  assert.equal(parseDecimal('25 pips'), null);
+  assert.equal(parseDecimal('0.1 lot', { unit: 'pip' }), null);
+  assert.equal(parseDecimal('25 pips', { unit: 'lot' }), null);
+  assert.equal(parseDecimal('250 points', { unit: 'pip' }), null);
+  assert.equal(parseDecimal('250 pts', { unit: 'pip' }), null);
+  assert.equal(parseDecimal('250 نقطة', { unit: 'pip' }), null);
+  assert.equal(parseDecimal('250 نقاط', { unit: 'pip' }), null);
+  assert.equal(parseDecimal('25p', { unit: 'pip' }), null);
+  // الوحدة وحدها أو مكرّرة أو بالمقدّمة، والمبهم يبقى مبهماً
+  assert.equal(parseDecimal('pips', { unit: 'pip' }), null);
+  assert.equal(parseDecimal('25 pips pips', { unit: 'pip' }), null);
+  assert.equal(parseDecimal('pips 25', { unit: 'pip' }), null);
+  assert.equal(parseDecimal('SL 25 pips', { unit: 'pip' }), null);
+  assert.equal(parseDecimal('1.500 pips', { unit: 'pip', amount: true }), null);
+  assert.equal(parseDecimal('1,085 lot', { unit: 'lot' }), null);
+  assert.equal(misplacedArabicThousandsSign('0٬5 pips', { unit: 'pip' }), true);
+}
+console.log('parseDecimal unit word selftest OK');
