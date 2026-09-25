@@ -2598,6 +2598,12 @@ console.log('tradePlan R floor without pip selftest OK');
   assert.equal(plainStopText(1.23e-7), '0.000000123');
   assert.equal(plainStopText(0.0000012), '0.0000012');
   assert.equal(plainStopText(1.083), '1.083');
+  // تعديل صفقة بالدفتر يملأ الخانات بـplainStopText: كل سعرٍ يُقرأ ثانيةً كما سُجِّل (String(1.2e-9) = «1.2e-9» كان يُرفض)
+  for (const v of [1.2e-9, 8e-7, 1.23456e-8, 0.00001234, 1.0845, 157.253, 65000.5]) {
+    assert.equal(parseDecimal(plainStopText(v)), v, String(v));
+    assert.ok(plainStopText(v).length <= 20, `${v} fits PRICE_MAX_LEN (TradeJournalPanel) — Android cuts filled text`);
+  }
+  assert.equal(parseDecimal(String(1.2e-9)), null); // الخطأ الذي يمنعه
   assert.equal(plainStopText(60000), '60000');
   const open = { side: 'buy', entry: 0.0000009, sl: 0.0000008, status: 'open' };
   const n = noteWithInitialStop({ symbol: 'PEPEUSD', note: '', before: open, after: { side: 'buy', entry: 0.0000009, sl: 0.00000089 } });

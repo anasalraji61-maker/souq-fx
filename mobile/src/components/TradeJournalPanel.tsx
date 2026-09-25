@@ -82,8 +82,15 @@ import {
   initialStop,
   planStop,
   QUICK_SYMBOLS,
+  plainStopText,
 } from '../tradePlan';
 import { NewsRiskBanner } from './NewsRiskBanner';
+
+/**
+ * حدّ خانات السعر (دخول/خروج/وقف/هدف). كان 12: أندرويد يقصّ بـ`maxLength` حتى النصّ الذي يملؤه التطبيق — تعديل صفقة PEPE
+ * بدخول 0.0000000123456 (15 حرفاً، `plainStopText`) كان يُملأ «0.0000000123» فيُحفظ سعرٌ آخر بصمت. 20 تكفي كل سعر مسجَّل.
+ */
+const PRICE_MAX_LEN = 20;
 
 /**
  * سقف عدد الأدوات التي يُجلب لها سعر السوق للنتيجة العائمة. `/api/market/quote` **لا يُخزَّن**
@@ -786,16 +793,17 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
     setSymbol(tr.symbol);
     setSide(tr.side === 'sell' ? 'sell' : 'buy');
     liveFillRef.current = null;
-    // String لا formatPrice: لا تقريب يغيّر السعر المسجَّل بمجرد فتح التعديل
-    setEntry(String(tr.entry));
-    setExit(tr.exit != null ? String(tr.exit) : '');
+    // String لا formatPrice: لا تقريب يغيّر السعر المسجَّل بمجرد فتح التعديل — وبلا صيغة أُسّية (`plainStopText`):
+    // `String(1.2e-9)` = «1.2e-9» لا يقرؤه `parseDecimal` ⇒ صفقة PEPE/BABYDOGE لا يُحفظ تعديلها أبداً («دخول غير صالح»)
+    setEntry(plainStopText(tr.entry));
+    setExit(tr.exit != null ? plainStopText(tr.exit) : '');
     // 1 هو افتراضُ الباك-إند لصفقة سُجِّلت بلا حجم — لا يُملأ بالخانة كأنه رقم كتبه المتداول
     // (إلا 1.00 مسجَّلة من الحاسبة — ملاحظتها تشهد بها، راجع `knownLots`)
     const kl = knownLots(tr.size, tr.note);
     setSize(kl != null ? String(kl) : '');
     setSizeFor(tr.symbol);
-    setSl(tr.sl != null ? String(tr.sl) : '');
-    setTp(tr.tp != null ? String(tr.tp) : '');
+    setSl(tr.sl != null ? plainStopText(tr.sl) : '');
+    setTp(tr.tp != null ? plainStopText(tr.tp) : '');
     setNote(tr.note || '');
     setFormError(null);
     playSoftClick();
@@ -1457,7 +1465,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         onChangeText={setEntry}
         placeholder={t.journalEntryPlaceholder}
         keyboardType="decimal-pad"
-        maxLength={12}
+        maxLength={PRICE_MAX_LEN}
         placeholderTextColor={colors.textDim}
         returnKeyType="done"
         underlineColorAndroid="transparent"
@@ -1492,7 +1500,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           onChangeText={setExit}
           placeholder={t.journalExitPlaceholder}
           keyboardType="decimal-pad"
-          maxLength={12}
+          maxLength={PRICE_MAX_LEN}
           placeholderTextColor={colors.textDim}
           returnKeyType="done"
           underlineColorAndroid="transparent"
@@ -1696,7 +1704,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           }}
           placeholder={t.journalSlPlaceholder}
           keyboardType="decimal-pad"
-          maxLength={12}
+          maxLength={PRICE_MAX_LEN}
           placeholderTextColor={colors.textDim}
           returnKeyType="done"
           underlineColorAndroid="transparent"
@@ -1714,7 +1722,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           }}
           placeholder={t.journalTpPlaceholder}
           keyboardType="decimal-pad"
-          maxLength={12}
+          maxLength={PRICE_MAX_LEN}
           placeholderTextColor={colors.textDim}
           returnKeyType="done"
           underlineColorAndroid="transparent"
