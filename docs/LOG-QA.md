@@ -527,3 +527,14 @@ tools61 وlaunch94 ردّ فقط.
 `computedPriceText`، `openQuotesRefreshDue`، `OPEN_QUOTES_REFRESH_AFTER_MS`) كلّها مستوردة. مسح أسماء المستوى الأعلى المكرّرة: لا جديد (`pineEma` ×4 مراجع
 اختبار مستقلّة، مقبول). **لا بند جديد.**
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة.
+
+## 2026-09-25 — الدورة 47
+**البناء:** أخضر 0 (بعد 316c94e) — لا إصلاح لازم. **Selftests:** 88/88 ناجح (`npx tsx`؛ جديد `lineBreak`، و`axisTicks`/`newsRisk`/`tradePlan`/`zigzagLegend` بحالات جديدة).
+**التحقّق من الإغلاقات بالكود:** لا صفّ أُغلق. tools63: مفاتيح launch (`c7ee34c`) موجودة بثلاث لغات لكن `journalMiniNoMoney`/`riskCalcSpreadPointsHint` بلا مستعمل
+(grep) ⇒ الصفّ صار وصلاً لـtools + `formatPrice` لـchart (ما زال سقف 10). **غير مُغلق:** 10 `Alert.alert`، «₴» ×2، `FocusChartModal:56`، `matrix.lang.v1` ×2،
+`BRENT/USD`، `TimeframeBar`، `WeeklyReportPanel:46`.
+**طلبات تنسيق جديدة (تحقّقتُ):** launch99 → chart: وصل `mcZigzagDevA11y` (`MatrixChart.tsx` ما زال `` `ZigZag ${zigzagDev}% → …` ``) ⇒ دُمج بصفّ tools63.
+launch99 (a): `openCurrencyExposure` (`tradePlan.ts:1707`) بلا مستعمل خارج ملفه ⇒ أُضيف لصفّ التصديرات الميتة. tools64/chart32 بنود ذاتية.
+**المراجعة (b — نصوص ثابتة)، diff منذ 25f2dc0 (18 ملفاً):** `mcPercentScaleA11y` (`MatrixChart.tsx:6109`) و`ctlKindLineBreak` (`typeLabels.ts:37`) موصولان.
+«Log»/«%»/`label: 'Line Break'` (`types.ts:269`، يُترجم عبر `typeLabels`) مقبولة. الوحيد: اسم a11y لشريحة ZigZag حرفي — المفتاح جاهز (أعلاه). **لا بند إضافي.**
+**الدورة القادمة:** المراجعة (c) — a11y.
