@@ -4412,7 +4412,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         spread: pinchSpread(x1, x2),
         count: windowCountRef.current,
         offset: offsetRef.current,
-        focus: ((x1 + x2) / 2 - plotLeft) / Math.max(1, chartPlotW),
+        // الشموع مُزاحة بـ`xPan` (السحب بين شمعتين/منطقة المستقبل) ⇒ تُطرح كي تكون البؤرة الشمعة تحت الإصبعين
+        // لا خانة بجوارها.
+        focus: ((x1 + x2) / 2 - plotLeft - xPanRef.current) / Math.max(1, chartPlotW),
       };
     },
     [chartPlotW]
