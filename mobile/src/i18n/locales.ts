@@ -1215,7 +1215,8 @@ export type Dict = {
    * `backtestBeforeCosts` — `stats.costs_included === false` (DXY، الرقمية): النتيجة قبل السبريد والعمولة (بدل الصمت).
    * `forecastDetail` — `votes[].detail_code` ⇒ قالب، والقيم من `detail_values` بالأسماء نفسها (`{rsi}`، `{fast}`، `{slow}`، `{macd}`،
    *   `{signal}`، `{pos}`، `{k}`، `{pct}`)؛ القائمة = `signal_hub._DETAIL_TEXT`. رمز غير معروف ⇒ اعرض `detail` الخادم كما هو.
-   * `forecastVoteNames` — مفاتيح `_VOTE_NAMES` (الخادم لا يرسل مفتاح الاسم بعد؛ يُطابَق بـ`votes[].key`).
+   * `forecastVoteNames` — مفاتيح `_VOTE_NAMES`. الخادم يرسل `votes[].id` لا مفتاح الاسم: `id` = المفتاح نفسه، إلا `ma` فهو
+   *   `ma_cross` حين `detail_code` يبدأ بـ`ma_cross_` وإلا `ma_trend`.
    * `forecastDisclaimer*` — `disclaimer_code`: `indicator_consensus` | `not_enough_data` (chart-r35).
    * `dsKindUnavailable` — `DataOriginKind` `'unavailable'` (ui3/chart-r35) للوسم القصير؛ الجملة الطويلة لـDXY تبقى `originUnavailableProvider`.
    */
