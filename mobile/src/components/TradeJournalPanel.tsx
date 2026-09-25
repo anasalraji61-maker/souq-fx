@@ -22,6 +22,7 @@ import {
   entryAfterSideSwitch,
   liveEntryOrphaned,
   liveFillStillValid,
+  closedElsewhere,
   executionPrice,
   exitShortcuts,
   exitPreview,
@@ -908,6 +909,13 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         void (async () => {
           setBusy(true);
           try {
+            // أُغلقت بجهاز آخر بعد تحميل القائمة: لا يُكتب خروجٌ فوق خروجها — القائمة المحدَّثة تُظهرها مغلقة بسعرها
+            const fresh = await api.trades().then((r) => r.trades as Trade[], () => null);
+            if (!mountedRef.current) return;
+            if (closedElsewhere(fresh, tr.id)) {
+              await refresh();
+              return;
+            }
             await api.closeTrade(tr.id, exitPx);
             if (!mountedRef.current) return;
             playSoftClick();

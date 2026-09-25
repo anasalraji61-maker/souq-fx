@@ -15,6 +15,7 @@ import {
   liveEntryQuote,
   liveEntryOrphaned,
   liveFillStillValid,
+  closedElsewhere,
   liveStopChip,
   exitShortcuts,
   exitPreview,
@@ -2294,3 +2295,17 @@ console.log('tradePlan note chars-left selftest OK');
   assert.equal(liveFillStillValid(editTap, { ...editTap, editId: 8 }), false);
 }
 console.log('tradePlan liveFillStillValid selftest OK');
+
+// closedElsewhere — لا خروجٌ جديد فوق صفقة أُغلقت بجهاز آخر؛ ولا منعٌ لصفقة خارج آخر 200 أو حين يتعذّر الجلب
+{
+  const list = [
+    { id: 'a', status: 'open' },
+    { id: 'b', status: 'closed' },
+  ];
+  assert.equal(closedElsewhere(list, 'a'), false);
+  assert.equal(closedElsewhere(list, 'b'), true);
+  assert.equal(closedElsewhere(list, 'old-open-beyond-200'), false);
+  assert.equal(closedElsewhere(null, 'b'), false);
+  assert.equal(closedElsewhere([], 'a'), false);
+}
+console.log('tradePlan closedElsewhere selftest OK');
