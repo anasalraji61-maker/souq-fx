@@ -1303,6 +1303,8 @@ def backtest_run(body: BacktestRun):
     )
     if isinstance(result.get("stats"), dict) and result["stats"]:
         result["stats"]["spread_pips"] = spread[0] if spread else None
+        # لا تقدير سبريد لهذا الرمز (DXY، كريبتو، مجهول) ⇒ النتيجة قبل التكاليف، ويُقال ذلك صراحةً
+        result["stats"]["costs_included"] = bool(spread)
     result["symbol"] = body.symbol.upper()
     result["timeframe"] = body.timeframe
     # demo = مسار عشوائي بذري (المزوّد متعذّر): نسبة ربح/عائد عليه ليست أداء استراتيجية — العميل يرفضها.

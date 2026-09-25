@@ -10,6 +10,8 @@ StrategyId = Literal["ma_cross", "rsi_reversal", "macd_cross", "bb_bounce"]
 _MAJORS = {"EUR", "GBP", "AUD", "NZD", "USD", "CAD", "CHF", "JPY"}
 _TIGHTEST = {"EURUSD", "USDJPY"}
 _MAJOR_USD = {"GBPUSD", "AUDUSD", "NZDUSD", "USDCAD", "USDCHF"}
+_ALIASES = {"GOLD": "XAUUSD", "SILVER": "XAGUSD"}
+_OIL = {"USOIL", "UKOIL", "WTI", "BRENT", "XTIUSD", "XBRUSD", "WTIUSD"}
 
 
 def typical_spread(symbol: str) -> tuple[float, float] | None:
@@ -19,6 +21,10 @@ def typical_spread(symbol: str) -> tuple[float, float] | None:
     فتبدو رابحة على 15m وهي خاسرة فعلياً بعد السبريد.
     """
     s = "".join(ch for ch in symbol.upper() if ch.isalpha())
+    # أسماء الوسطاء للمعادن والنفط (كانت None ⇒ الاختبار الخلفي بلا أي تكلفة على الذهب والنفط).
+    s = _ALIASES.get(s, s)
+    if s in _OIL:
+        return (4.0, 0.01)  # ~4 سنت للبرميل بحساب تجزئة عادي
     if len(s) != 6:
         return None
     base, quote = s[:3], s[3:]

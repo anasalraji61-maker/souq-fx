@@ -31,3 +31,11 @@ def test_spread_reduces_every_trade():
         assert b["pnl_pct"] < a["pnl_pct"]
         assert abs((a["pnl_pct"] - b["pnl_pct"]) - 0.0001 / a["entry"] * 100) < 2e-3
     assert cost["stats"]["total_return_pct"] < free["stats"]["total_return_pct"]
+
+
+def test_broker_aliases_and_oil_get_a_spread_estimate():
+    # كانت None ⇒ الاختبار الخلفي على الذهب/النفط بلا أي تكلفة (QA30)
+    assert backtest.typical_spread("GOLD") == backtest.typical_spread("XAUUSD")
+    assert backtest.typical_spread("silver") == backtest.typical_spread("XAGUSD")
+    for s in ("USOIL", "UKOIL", "XTIUSD", "XBR/USD"):
+        assert backtest.typical_spread(s) == (4.0, 0.01), s
