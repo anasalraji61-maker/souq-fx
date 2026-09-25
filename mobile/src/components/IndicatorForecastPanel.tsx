@@ -275,8 +275,8 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
             <Text style={[styles.levels, { textAlign: align }]}>{t.forecastNoSignal}</Text>
           ) : levelsWhy ? (
             // «لا اتجاه غالب» تحت «شراء» كانت تناقض نفسها حين غابت المستويات لسبب آخر (لا سعر حيّ، شموع أقلّ
-            // من ATR14) — السبب كما قاله الخادم، و«لا اتجاه غالب» للمحايد فقط. سبب لا نعرفه (backend-r37
-            // `atr_exceeds_price` قبل نصّه) ⇒ لا سطر، لا «لا اتجاه غالب» تحت «بيع».
+            // من ATR14) — السبب كما قاله الخادم، و«لا اتجاه غالب» للمحايد فقط. سبب لا نعرفه ⇒ لا سطر، لا «لا اتجاه
+            // غالب» تحت «بيع».
             <Text style={[styles.levels, { textAlign: align }]}>{levelsWhy}</Text>
           ) : null}
         </View>

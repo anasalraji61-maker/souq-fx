@@ -41,6 +41,8 @@ export function levelsUnavailableText(basis: LevelsBasis, t: Dict): string | nul
       return t.sigLevelsUnavailableNoPrice;
     case 'not_enough_candles':
       return t.sigLevelsUnavailableFewCandles;
+    case 'atr_exceeds_price':
+      return t.sigLevelsUnavailableAtrWide;
     case 'neutral':
       return t.sigLevelsUnavailableNeutral;
     default:
