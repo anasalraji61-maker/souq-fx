@@ -330,6 +330,13 @@ console.log('newsRisk calendar cache selftest OK');
   assert.deepEqual(calendarFetchEvents({ events: [nfp] }), [nfp]);
   assert.deepEqual(calendarFetchEvents({ events: [] }), []);
   assert.deepEqual(calendarAfterFetch(saved, calendarFetchEvents({ events: [] }), t0).ok, true);
+  // الخادم يصرّح بالفشل: status "unavailable" مع مصفوفة فارغة ⇒ فشل يُبقي المحفوظ وتحذيره بسطر «محفوظ»
+  assert.equal(calendarFetchEvents({ events: [], status: 'unavailable' }), null);
+  const down = calendarAfterFetch(saved, calendarFetchEvents({ events: [], status: 'unavailable' }), t0);
+  assert.equal(down.ok, false);
+  assert.equal(nextHighImpact(down.events, symbolCurrencies('EURUSD'), t0)?.event.id, 'nfp');
+  assert.deepEqual(calendarFetchEvents({ events: [nfp], status: 'ok' }), [nfp]);
+  assert.deepEqual(calendarFetchEvents({ events: [], status: 'ok' }), []);
   // خليط (لا يُرسله الخادم اليوم): الحقيقي يُؤخذ والأمثلة تُسقط
   assert.deepEqual(calendarFetchEvents({ events: [sample, nfp] }), [nfp]);
   // رجوع الخادم إلى XML الأسبوعي: أحداث حقيقية كلها بلا ts ⇒ فشل، فيبقى تحذير الرواتب المحفوظ بسطر «محفوظ»

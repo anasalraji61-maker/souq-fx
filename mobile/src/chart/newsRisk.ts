@@ -508,6 +508,11 @@ export function calendarAfterFetch(
  * (أسبوع بلا خبر قوي بعد الفلتر حقيقةٌ لا عطل).
  */
 export function calendarFetchEvents(raw: unknown): NewsEvent[] | null {
+  /**
+   * الخادم صار يقول الفشل صراحةً: `{ events: [], status: "unavailable" }` بدل أحداث المثال. المصفوفة
+   * الفارغة وحدها كانت تُقرأ «أسبوع بلا خبر قوي» فيُمحى التقويم المحفوظ ويختفي التحذير — `status` يسبق كل شيء.
+   */
+  if (raw && typeof raw === 'object' && (raw as { status?: unknown }).status === 'unavailable') return null;
   const events = raw && typeof raw === 'object' ? (raw as { events?: unknown }).events : undefined;
   if (!Array.isArray(events)) return null;
   const list = events as NewsEvent[];
