@@ -7247,34 +7247,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             })()
           : null}
 
-        {/* compare symbol overlay */}
+        {/* compare symbol overlay — قطع `planLineSegments` كالطبقات: مركز الخطّ على القيمة (كان `top: y1` ⇒ 1px تحتها)،
+            ونقطة مطابقة وحيدة بين فجوتين تبقى مرئية (كانت تسقط). */}
         {comparePrices &&
-          comparePrices.map((p, i) => {
-            const prev = i > 0 ? comparePrices[i - 1] : null;
-            if (p == null || prev == null) return null;
-            const x1 = xOf(i - 1);
-            const y1 = yOf(prev);
-            const x2 = xOf(i);
-            const y2 = yOf(p);
-            const len = Math.hypot(x2 - x1, y2 - y1);
-            const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
-            return (
-              <View
-                key={`cmp${i}`}
-                style={{
-                  position: 'absolute',
-                  left: x1,
-                  top: y1,
-                  width: len,
-                  height: 2,
-                  backgroundColor: COMPARE_COLOR,
-                  opacity: 0.85,
-                  transform: [{ rotate: `${angle}deg` }],
-                  transformOrigin: 'left center',
-                }}
-              />
-            );
-          })}
+          planLineSegments(comparePrices, xOf, yOf).map((sg) => (
+            <View
+              key={`cmp${sg.at}`}
+              style={{
+                position: 'absolute',
+                left: sg.left,
+                top: sg.top - 1,
+                width: sg.len,
+                height: 2,
+                backgroundColor: COMPARE_COLOR,
+                opacity: 0.85,
+                transform: [{ rotate: `${sg.deg}deg` }],
+                transformOrigin: 'left center',
+              }}
+            />
+          ))}
 
         {/* طبقات السعر: الثلاثة الشائعة (SMA20/SMA50/EMA21) قطعاً متّصلة، والباقي نقاطاً */}
         {indicators.includes('sma20') &&
