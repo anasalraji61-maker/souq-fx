@@ -775,6 +775,11 @@ export type Dict = {
   lectureQuestionA11y: string;
   lectureAskBtn: string;
   lectureAskA11y: string;
+  /**
+   * launch124: محتوى `LectureClassroom` حين يفشل جلب المحاضرة. كان «محاضرة تجريبية» (20 د) يسرد جملة ICT/SMC عامّة أيّاً كانت المحاضرة
+   * المطلوبة — المتعلّم يظنّه الدرس. الآن المقطعان يقولان ما حدث وما يفعله؛ مفاتيح الـoutline بأسمائها القديمة (Definition/Application)
+   * تحمل «ماذا حدث/ماذا تفعل».
+   */
   lectureFallbackTitle: string;
   lectureFallbackOutlineDefinition: string;
   lectureFallbackOutlineApplication: string;
@@ -1996,7 +2001,7 @@ const ar: Dict = {
   lectureClose: 'إغلاق',
   lectureCloseA11y: 'إغلاق المحاضرة',
   lectureLevelWord: 'مستوى',
-  lectureLoadFailedNote: 'تعذر تحميل هذه المحاضرة — يُعرض محتوى تجريبي عام بدلاً منها',
+  lectureLoadFailedNote: 'لم تصل المحاضرة من الخادم — ما يلي ليس درساً. تحقّق من اتصالك ثم افتحها من جديد.',
   lectureFullScreenTag: 'شاشة كاملة',
   lectureVoicePausedForQ: 'متوقف للسؤال',
   lecturePreparingVoice: 'يجهّز الصوت…',
@@ -2026,16 +2031,16 @@ const ar: Dict = {
   lectureQuestionA11y: 'سؤال أثناء إيقاف الشرح',
   lectureAskBtn: 'اسأل',
   lectureAskA11y: 'إرسال السؤال',
-  lectureFallbackTitle: 'محاضرة تجريبية',
-  lectureFallbackOutlineDefinition: 'تعريف',
-  lectureFallbackOutlineApplication: 'تطبيق',
+  lectureFallbackTitle: 'تعذّر تحميل المحاضرة',
+  lectureFallbackOutlineDefinition: 'ماذا حدث',
+  lectureFallbackOutlineApplication: 'ماذا تفعل',
   lectureFallbackTeacher: 'الشرح الصوتي',
-  lectureFallbackSeg1Title: 'افتتاح',
+  lectureFallbackSeg1Title: 'ماذا حدث',
   lectureFallbackSeg1Narration:
-    'أهلاً بك. الشاشة فقط مع شرح صوتي. يمكنك إيقاف الشرح في أي لحظة لتسأل.',
-  lectureFallbackSeg2Title: 'الفكرة الأساسية',
+    'لم نتمكّن من تحميل هذه المحاضرة الآن، والأرجح أن الاتصال بالإنترنت أو بخادم MATRIX انقطع.',
+  lectureFallbackSeg2Title: 'ماذا تفعل',
   lectureFallbackSeg2Narration:
-    'BOS و CHOCH جزء من هيكل السوق داخل Order Blocks و Fair Value Gaps في ICT/SMC.',
+    'تحقّق من اتصالك، ثم أغلق هذه الشاشة وافتح المحاضرة من جديد.',
   termShadowSizeSmall: 'صغير',
   termShadowSizeMedium: 'وسط',
   termShadowSizeBig: 'كبير',
@@ -3174,7 +3179,7 @@ const enUS: Dict = {
   lectureClose: 'Close',
   lectureCloseA11y: 'Close the lecture',
   lectureLevelWord: 'level',
-  lectureLoadFailedNote: "Couldn't load this lecture — showing generic sample content instead",
+  lectureLoadFailedNote: "The lecture didn't arrive from the server — what follows is not a lesson. Check your connection, then open it again.",
   lectureFullScreenTag: 'Full screen',
   lectureVoicePausedForQ: 'Paused for a question',
   lecturePreparingVoice: 'Preparing the audio…',
@@ -3205,16 +3210,16 @@ const enUS: Dict = {
   lectureQuestionA11y: 'Question while the narration is paused',
   lectureAskBtn: 'Ask',
   lectureAskA11y: 'Send the question',
-  lectureFallbackTitle: 'Demo Lecture',
-  lectureFallbackOutlineDefinition: 'Definition',
-  lectureFallbackOutlineApplication: 'Application',
+  lectureFallbackTitle: "Couldn't load this lecture",
+  lectureFallbackOutlineDefinition: 'What happened',
+  lectureFallbackOutlineApplication: 'What to do',
   lectureFallbackTeacher: 'Voice narration',
-  lectureFallbackSeg1Title: 'Opening',
+  lectureFallbackSeg1Title: 'What happened',
   lectureFallbackSeg1Narration:
-    'Welcome. This is screen-only content with voice narration. You can pause the narration at any time to ask a question.',
-  lectureFallbackSeg2Title: 'Core idea',
+    "We couldn't load this lecture right now. Most likely the connection to the internet or to the MATRIX server dropped.",
+  lectureFallbackSeg2Title: 'What to do',
   lectureFallbackSeg2Narration:
-    'BOS and CHOCH are part of market structure within Order Blocks and Fair Value Gaps in ICT/SMC.',
+    'Check your connection, then close this screen and open the lecture again.',
   termShadowSizeSmall: 'Small',
   termShadowSizeMedium: 'Medium',
   termShadowSizeBig: 'Large',
@@ -4382,7 +4387,7 @@ const ku: Dict = {
   lectureClose: 'داخستن',
   lectureCloseA11y: 'داخستنی وانەکە',
   lectureLevelWord: 'ئاست',
-  lectureLoadFailedNote: 'نەکرا ئەم وانەیە باربکرێت — لە جیاتی ئەوە ناوەڕۆکی نموونەیی گشتی پیشان دەدرێت',
+  lectureLoadFailedNote: 'وانەکە لە ڕاژەوە نەگەیشت — ئەوەی خوارەوە وانە نییە. پەیوەندییەکەت بپشکنە، پاشان دووبارە بیکەرەوە.',
   lectureFullScreenTag: 'شاشەی تەواو',
   lectureVoicePausedForQ: 'ڕاوەستاوە بۆ پرسیارێک',
   lecturePreparingVoice: 'دەنگ ئامادە دەکرێت…',
@@ -4413,16 +4418,16 @@ const ku: Dict = {
   lectureQuestionA11y: 'پرسیار لە کاتی ڕاگرتنی ڕوونکردنەوەکە',
   lectureAskBtn: 'بپرسە',
   lectureAskA11y: 'ناردنی پرسیارەکە',
-  lectureFallbackTitle: 'وانەی نموونەیی',
-  lectureFallbackOutlineDefinition: 'پێناسە',
-  lectureFallbackOutlineApplication: 'بەکارهێنان',
+  lectureFallbackTitle: 'نەکرا وانەکە باربکرێت',
+  lectureFallbackOutlineDefinition: 'چی ڕوویدا',
+  lectureFallbackOutlineApplication: 'چی بکەیت',
   lectureFallbackTeacher: 'ڕوونکردنەوەی دەنگی',
-  lectureFallbackSeg1Title: 'کردنەوە',
+  lectureFallbackSeg1Title: 'چی ڕوویدا',
   lectureFallbackSeg1Narration:
-    'بەخێربێیت. ئەمە تەنها ناوەڕۆکی شاشەیە لەگەڵ ڕوونکردنەوەی دەنگی. دەتوانیت لە هەر کاتێکدا ڕوونکردنەوەکە ڕابگریت بۆ پرسیارکردن.',
-  lectureFallbackSeg2Title: 'بیرۆکەی سەرەکی',
+    'ئێستا نەمانتوانی ئەم وانەیە باربکەین؛ بە ئەگەری زۆر پەیوەندی بە ئینتەرنێت یان بە ڕاژەی MATRIX پچڕاوە.',
+  lectureFallbackSeg2Title: 'چی بکەیت',
   lectureFallbackSeg2Narration:
-    'BOS و CHOCH بەشێکن لە پێکهاتەی بازاڕ لەناو Order Blocks و Fair Value Gaps لە ICT/SMC.',
+    'پەیوەندییەکەت بپشکنە، پاشان ئەم شاشەیە دابخە و وانەکە دووبارە بکەرەوە.',
   termShadowSizeSmall: 'بچووک',
   termShadowSizeMedium: 'ناوەند',
   termShadowSizeBig: 'گەورە',
