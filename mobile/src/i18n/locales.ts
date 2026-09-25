@@ -713,6 +713,11 @@ export type Dict = {
   calendarTitle: string;
   calendarCurrencyA11yPrefix: string;
   calendarAllWord: string;
+  /**
+   * عملة حدث ForexFactory `ALL` (اجتماعات G20 ونحوها) حيث تُعرض العملة: شريط خطر الأخبار (`newsBannerText`، منذ `b5c0fe8`
+   * يطابق كل الأزواج) وشارة العملة بصفّ التقويم. غير `calendarAllWord` («الكل» زرّ فلتر لا وصف حدث).
+   */
+  newsAllCurrencies: string;
   calendarImpactA11yPrefix: string;
   calendarAllShort: string;
   calImpactMedPlus: string;
@@ -1974,6 +1979,7 @@ const ar: Dict = {
   calendarTitle: 'تقويم اقتصادي · حي',
   calendarCurrencyA11yPrefix: 'تصفية حسب العملة',
   calendarAllWord: 'الكل',
+  newsAllCurrencies: 'كل العملات',
   calendarImpactA11yPrefix: 'تصفية حسب الأهمية',
   calendarAllShort: 'كل',
   calImpactMedPlus: 'متوسط+',
@@ -3155,6 +3161,7 @@ const enUS: Dict = {
   calendarTitle: 'Economic calendar · Live',
   calendarCurrencyA11yPrefix: 'Filter by currency',
   calendarAllWord: 'All',
+  newsAllCurrencies: 'All currencies',
   calendarImpactA11yPrefix: 'Filter by impact',
   calendarAllShort: 'All',
   calImpactMedPlus: 'Medium+',
@@ -4368,6 +4375,7 @@ const ku: Dict = {
   calendarTitle: 'ڕۆژژمێری ئابووری · ڕاستەوخۆ',
   calendarCurrencyA11yPrefix: 'پاڵاوتن بەپێی دراو',
   calendarAllWord: 'هەمووی',
+  newsAllCurrencies: 'هەموو دراوەکان',
   calendarImpactA11yPrefix: 'پاڵاوتن بەپێی کاریگەری',
   calendarAllShort: 'هەموو',
   calImpactMedPlus: 'مامناوەند+',
