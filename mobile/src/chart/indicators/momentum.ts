@@ -849,7 +849,9 @@ export function computeConnorsRsi(
     let below = 0;
     for (let w = i - rocPeriod; w <= i - 1; w++) {
       const v = roc[w];
-      if (v != null && v < cur) below++;
+      // `ta.percentrank` بـTradingView يعدّ ما هو ≤ الحالي: بفوركس هادئ كثير من ROC = 0 بالضبط، و`<` كان يُسقطها
+      // فينزل CRSI حتى ~13 نقطة ويعبر 10/90 بغير توقيت المنصّة.
+      if (v != null && v <= cur) below++;
     }
     percentRank[i] = (below / rocPeriod) * 100;
   }
