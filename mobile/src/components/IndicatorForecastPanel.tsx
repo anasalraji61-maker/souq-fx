@@ -11,6 +11,7 @@ import { pipsBetween } from '../positionSize';
 import { chartPipSpec } from '../chart/pipSpec';
 import { pipsNumber, pipUnit } from '../chart/measureReadout';
 import { formatLocalStamp } from '../localStamp';
+import { serverNowSec } from '../chart/dataSource';
 import { useI18n } from '../i18n/I18nContext';
 import { isTimeframe } from '../timeframes';
 import type { Dict } from '../i18n/locales';
@@ -149,6 +150,17 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
     void run();
   }, [run]);
 
+  // «السعر حتى HH:MM» يظهر لحظة تقادم السعر لا بإعادة رسم عارضة: بلا مؤقّت كان ردّ طازج يبقى بلا تنبيه
+  // والدخول/الوقف/الهدف معروضة نصف ساعة ما دامت اللوحة مفتوحة. بساعة الخادم (`priceAsOf` طابعه).
+  const [, setStaleBeat] = useState(0);
+  useEffect(() => {
+    if (priceAsOf == null) return;
+    const remainMs = (priceAsOf + PRICE_STALE_SEC - serverNowSec()) * 1000;
+    if (remainMs < 0) return;
+    const id = setTimeout(() => setStaleBeat((n) => n + 1), remainMs + 1000);
+    return () => clearTimeout(id);
+  }, [priceAsOf]);
+
   // «ثقة 83%» كانت معادلة ثابتة (|المعدل|×0.75+0.35) تُقرأ كاحتمال نجاح — نعرض بدلها عدد المؤشرات
   // المتوافقة مع الاتجاه (قابل للتحقق من القائمة تحتها)، ونسبة الربح:المخاطرة للمستويات المقترحة.
   const agreeing = votes.filter((v) => v.direction === direction).length;
@@ -168,7 +180,7 @@ export function IndicatorForecastPanel({ symbol, timeframe = '15m', embedded }: 
       ? Math.abs(levels.tp - levels.entry) / Math.abs(levels.entry - levels.sl)
       : null;
   const staleAt =
-    priceAsOf != null && Date.now() / 1000 - priceAsOf > PRICE_STALE_SEC
+    priceAsOf != null && serverNowSec() - priceAsOf > PRICE_STALE_SEC
       ? t.forecastPriceAsOf.replace('{time}', formatLocalStamp(priceAsOf, lang))
       : null;
 
@@ -323,10 +335,13 @@ const styles = StyleSheet.create({
   },
   refreshDisabled: { opacity: 0.4 },
   refreshText: { color: colors.accent, fontWeight: '700', fontSize: 11 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chipsRtl: { flexDirection: 'row-reverse' },
+  // كانت ~28pt بفجوة 6 ⇒ تبديل الجار بالخطأ؛ 40pt + فجوة 8 (لا hitSlop: يتراكب بين الشرائح).
   chip: {
-    paddingHorizontal: 10,
+    minHeight: 40,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: radii.sm,
     borderWidth: 1,
