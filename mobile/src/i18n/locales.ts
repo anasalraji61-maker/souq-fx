@@ -471,6 +471,8 @@ export type Dict = {
   journalSizeA11y: string;
   journalSizeUnitsFix: string;
   journalSizeUnitsNoFix: string;
+  /** «10.000» مبهم (`journalSizeDottedThousands`): `{n}` كما كُتب، `{units}` الوحدات بفواصل، `{lots}` اللوت المقترح، `{whole}` قراءة اللوت («10»). */
+  journalSizeDottedFix: string;
   /** حجمٌ كُتب لرمز سنت/micro ثم تبدّل الرمز إلى عادي: `{n}` الحجم، `{prev}` الرمز السابق، `{symbol}` الحالي، `{std}` = `smallLotsStdEquiv(n)`؛ النقر يحوّله. */
   journalSizeFromSmallFix: string;
   journalExitA11y: string;
@@ -1522,6 +1524,7 @@ const ar: Dict = {
   journalSizeA11y: 'حجم الصفقة باللوت (اختياري)',
   journalSizeUnitsFix: '⚠ {n} تبدو عدد وحدات لا لوتات — اضغط لتحويلها إلى {lots} lot',
   journalSizeUnitsNoFix: '⚠ {n} lot حجم غير واقعي — يبدو عدد وحدات منسوخاً من منصّتك؛ اكتب الحجم باللوت (مثل 0.10)',
+  journalSizeDottedFix: '⚠ {n}: هل تقصد {units} وحدة أم {whole} lot؟ اضغط لتحويلها إلى {lots} lot، أو اكتب {whole} إن كانت لوتات',
   journalSizeFromSmallFix: '⚠ «{n}» كُتبت لـ{prev} — على {symbol} تعني {n} لوت عادي، أي مئة ضعف. اضغط لتحويلها إلى {std} lot',
   journalExitA11y: 'سعر الخروج (اختياري)',
   journalExitAtSlA11y: 'الخروج عند وقف الخسارة {price}',
@@ -2576,6 +2579,7 @@ const enUS: Dict = {
   journalSizeA11y: 'Trade size in lots (optional)',
   journalSizeUnitsFix: '⚠ {n} looks like units, not lots — tap to convert to {lots} lot',
   journalSizeUnitsNoFix: '⚠ {n} lots is not a realistic size — it looks like a unit count copied from your platform; type the size in lots (e.g. 0.10)',
+  journalSizeDottedFix: '⚠ {n}: {units} units or {whole} lots? Tap to convert to {lots} lot, or type {whole} if you meant lots',
   journalSizeFromSmallFix: '⚠ "{n}" was typed for {prev} — on {symbol} it means {n} standard lots, 100 times the size. Tap to convert it to {std} lot',
   journalExitA11y: 'Exit price (optional)',
   journalExitAtSlA11y: 'Exit at stop loss {price}',
@@ -3657,6 +3661,7 @@ const ku: Dict = {
   journalSizeA11y: 'قەبارەی مامەڵە بە لۆت (ئیختیاری)',
   journalSizeUnitsFix: '⚠ {n} وەک ژمارەی یەکە دەردەکەوێت نەک لۆت — دەست بنێ بۆ گۆڕینی بۆ {lots} lot',
   journalSizeUnitsNoFix: '⚠ {n} lot قەبارەیەکی نائاساییە — وادیارە ژمارەی یەکەکانە لە پلاتفۆرمەکەتەوە کۆپی کراوە؛ قەبارە بە لۆت بنووسە (وەک 0.10)',
+  journalSizeDottedFix: '⚠ {n}: مەبەستت {units} یەکەیە یان {whole} lot؟ دەست بنێ بۆ گۆڕینی بۆ {lots} lot، یان {whole} بنووسە ئەگەر لۆتە',
   journalSizeFromSmallFix: '⚠ «{n}» بۆ {prev} نووسرا — لەسەر {symbol} واتە {n} لۆتی ئاسایی، سەد هێندە. دەست بنێ بۆ گۆڕینی بۆ {std} lot',
   journalExitA11y: 'نرخی دەرچوون (ئیختیاری)',
   journalExitAtSlA11y: 'دەرچوون لەسەر وەستانی زیان {price}',
