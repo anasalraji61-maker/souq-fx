@@ -70,6 +70,7 @@ import {
   journalNoteRoom,
   noteWithInitialStop,
   noteCharsLeft,
+  JOURNAL_NOTE_MAX,
   trailedStopAllowed,
   initialStop,
   planStop,
@@ -1752,7 +1753,11 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           style={[noteLeft === 0 ? styles.planWarn : styles.planLine, { textAlign: align }]}
           accessibilityLiveRegion="polite"
         >
-          {t.noteCharsLeft.replace('{n}', String(noteLeft)).replace('{max}', String(noteRoom))}
+          {/* «0 من 489» بلا سبب ظاهر يُربك — حين تُحجز أحرف لعلامتَي الحفظ يقول السطر كم ولماذا */}
+          {(noteRoom < JOURNAL_NOTE_MAX ? t.noteCharsLeftReserved : t.noteCharsLeft)
+            .replace('{n}', String(noteLeft))
+            .replace('{max}', String(noteRoom))
+            .replace('{reserved}', String(JOURNAL_NOTE_MAX - noteRoom))}
         </Text>
       ) : null}
       {noteStop != null ? (
