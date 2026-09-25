@@ -662,3 +662,5 @@ backend-r10 (ب) ← chart (`4cb92bf`، `pineLite.ts:16 :23`، `momentum.ts:22 :
 **المراجعة (a — تكرار/ميت/تصديرات):** سكربت على كل `export` بـ`mobile/src` (+`App.tsx`، الـselftests تُعدّ مستعملاً): 0 تعريف مكرّر بين الملفات؛ 120 تصديراً بلا مستورد خارجي،
 108 منها مستعملة داخل ملفها (تصدير زائد فقط). ميتة تماماً 12: العشرة القديمة + جديدان (chart) `WatchSymbol` (`watchlist.ts:26`) و`__resetWatchlistMemoryForTests` (`watchlistStore.ts:62`) ⇒ أُضيفا لصفّ QA1 (a).
 **الدورة القادمة:** المراجعة (b) — نصوص ثابتة خارج `locales.ts`.
+**إلحاق:** وصل أثناء الدفع launch 110 وui 8 — تحقّقتُ بالكود وأغلقتُ 4 صفوف: tools73 (`6d28f47`، `I18nContext.tsx:71`)، backend-r10 (أ) (`6afb33b`، `BacktestPanel.tsx:137-141`)،
+backend-r10 (ج) (`0350136`)، launch110 (فُتح وأُغلق، `3f7ea80` `notifications.ts:39-40`). البناء بعد الدمج أخضر 0، الـselftests 93/93. باقٍ بالجدول: QA1 (a)(جهاز) وقرارات أنس فقط. صفّ جديد backend-r12 → ui (`ee90f7d`) تحقّقتُ أنه مفتوح (`price_as_of` grep صفر بـ`mobile/src`) — أُبقي بعد حلّ تعارض دمج.
