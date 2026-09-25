@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
 import { useI18n } from '../i18n/I18nContext';
-import { formatPct } from '../chart/dailyChange';
+import { formatPct, pctDirection } from '../chart/dailyChange';
 
 /** فريم الفحص السريع — موضعٌ واحد بدل تكراره بالنداء وبنصّ «لا تطابق». */
 const TF = '15m';
@@ -188,16 +188,11 @@ export function ScreenerMini() {
             const pct =
               typeof h.change_pct === 'number' && Number.isFinite(h.change_pct) ? h.change_pct : null;
             /**
-             * الاتجاه مشتقٌّ من **الرقم المطبوع** لا من الخام. `formatPct` تقرّب لمنزلتين ثم تكتب
-             * «0.00%» بلا إشارة لكل ما يقرّب إلى صفر، فاشتقاق اللون من حاصل التقريب **نفسه** يجعل
-             * اللون والكلمة متطابقين بالبناء لا بالمصادفة — وهي قاعدة هذا التطبيق (شارة الأخبار
-             * عولجت بها). والعتبة الناتجة 0.005 بالضبط، أي **قاعدة «ثابت» بـ`dailyChange` نفسها**،
-             * عدا القيمة الواحدة ‎−0.005‎ التي تطبعها `formatPct` «0.00%»: بغير هذا الاشتقاق كانت
-             * ستُكتب صفراً **بالأحمر**.
+             * الاتجاه من **الرقم المطبوع** لا من الخام: `pctDirection` تقرّب كـ`formatPct` حرفاً بحرف
+             * (`round2` نفسها)، فاللون والكلمة متطابقان بالبناء. كان تقريبٌ محلي بـ`Math.round` يعطي
+             * ‎−0.005 → 0 (رمادي) بينما `formatPct` تقرّب بعيداً عن الصفر فتطبع «−0.01%» — tools75b.
              */
-            const pctRounded = pct == null ? null : Math.round(pct * 100) / 100;
-            const pctDir =
-              pctRounded == null || pctRounded === 0 ? 'flat' : pctRounded > 0 ? 'up' : 'down';
+            const pctDir = pctDirection(pct);
             return (
               <View key={h.symbol} style={styles.hit}>
                 <Text style={styles.sym}>
