@@ -1420,7 +1420,11 @@ def trades_update(
     for k in ("symbol", "side", "entry", "size", "note"):
         if k in fields and fields[k] is None:
             fields.pop(k)  # حقول إلزامية بالجدول — null لها يُتجاهل بدل كسر الصف
-    row = db.update_trade(trade_id, fields, uid, owner_key=key)
+    try:
+        row = db.update_trade(trade_id, fields, uid, owner_key=key)
+    except db.TradeUpdateConflict:
+        # لا نكتب فوق خروج لم نقرأه؛ العميل يعيد التحميل ويرى الصفّ كما هو
+        raise HTTPException(409, {"error": "trade_changed_concurrently"})
     if not row:
         raise HTTPException(404, "trade not found")
     return {"ok": True, "trade": row, "stats": db.trade_stats(uid, owner_key=key)}

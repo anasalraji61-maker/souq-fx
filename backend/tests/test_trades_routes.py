@@ -312,6 +312,64 @@ def test_the_close_update_itself_requires_an_open_trade(client, monkeypatch):
     assert row["exit"] == pytest.approx(1.2), "خروج الجهاز الأول باقٍ"
 
 
+def _race_on_update(monkeypatch, trade_id, times=1):
+    """جهاز آخر يُغلق الصفقة (خروج 1.2001) بعد قراءة PATCH وقبل كتابته — `times` مرّات."""
+    real_conn = db._conn
+    left = {"n": times}
+
+    class _Proxy:
+        def __init__(self, inner):
+            self._i = inner
+
+        def __enter__(self):
+            self._i.__enter__()
+            return self
+
+        def __exit__(self, *a):
+            return self._i.__exit__(*a)
+
+        def execute(self, sql, args=()):
+            if sql.lstrip().startswith("UPDATE trades SET symbol") and left["n"] > 0:
+                left["n"] -= 1
+                other = real_conn()
+                with other:
+                    other.execute(
+                        # كل سباق يغيّر الخروج (تصحيح من الجهاز الآخر) فلا تطابق لقطةٌ قديمة
+                        "UPDATE trades SET exit=COALESCE(exit, 1.2) + 0.0001, pnl=9.09, "
+                        "status='closed', closed_at='x' WHERE id=?",
+                        (trade_id,),
+                    )
+                other.close()
+            return self._i.execute(sql, args)
+
+    monkeypatch.setattr(db, "_conn", lambda: _Proxy(real_conn()))
+    return real_conn
+
+
+def test_a_patch_racing_a_close_does_not_erase_the_exit(client, monkeypatch):
+    """PATCH (ملاحظة/وقف) يقرأ الصفّ مفتوحاً، جهاز آخر يُغلقه، ثم كان PATCH يكتب الصفّ المقروء كلّه
+    فيعود exit=NULL وstatus='open' — الخروج المسجَّل يُمحى. الآن يُعاد التعديل على الصفّ الجديد."""
+    trade = _open_trade(client, sl=None, tp=None)
+    real_conn = _race_on_update(monkeypatch, trade["id"])
+    r = client.patch(f"/api/trades/{trade['id']}", json={"note": "بعد الخبر"}, headers=_DEV1)
+    monkeypatch.setattr(db, "_conn", real_conn)
+    assert r.status_code == 200, r.text
+    row = client.get("/api/trades", headers=_DEV1).json()["trades"][0]
+    assert row["status"] == "closed" and row["exit"] == pytest.approx(1.2001), "الخروج باقٍ"
+    assert row["note"] == "بعد الخبر", "والتعديل طُبِّق على الصفّ الجديد"
+
+
+def test_a_patch_that_keeps_losing_the_race_is_409_not_a_blind_write(client, monkeypatch):
+    trade = _open_trade(client, sl=None, tp=None)
+    real_conn = _race_on_update(monkeypatch, trade["id"], times=99)
+    r = client.patch(f"/api/trades/{trade['id']}", json={"note": "x"}, headers=_DEV1)
+    monkeypatch.setattr(db, "_conn", real_conn)
+    assert r.status_code == 409
+    assert r.json()["detail"]["error"] == "trade_changed_concurrently"
+    row = client.get("/api/trades", headers=_DEV1).json()["trades"][0]
+    assert row["status"] == "closed" and row["exit"] is not None
+
+
 def test_a_closed_trade_can_still_be_corrected_on_purpose_via_patch(client):
     trade = _open_trade(client, exit=1.1100)
     r = client.patch(f"/api/trades/{trade['id']}", json={"exit": 1.1050}, headers=_DEV1)

@@ -1865,6 +1865,25 @@ def update_trade(
     النتيجة (`pnl`) والحالة تُعاد حسابهما من الدخول/الخروج/الاتجاه بعد التعديل: خطأ كتابة بسعر الدخول
     كان يُفسد نسبة النجاح وصافي النقاط للأبد (الحلّ الوحيد كان الحذف وإعادة الكتابة)."""
     owner_sql, owner_args = _trade_owner_clause(user_id, owner_key)
+    # قراءة-تعديل-كتابة للصفّ كلّه: إغلاقٌ من جهاز آخر بين القراءة والكتابة كانت الكتابة تمحوه
+    # (تعيد exit/status القديمين من الصفّ المقروء) — نفس ضرر إغلاق الصفقة مرّتين. الكتابة الآن
+    # مشروطة بأن الخروج والحالة لم يتغيّرا منذ القراءة؛ وإلا تُعاد القراءة ويُطبَّق التعديل على الجديد.
+    for _ in range(_UPDATE_TRADE_ATTEMPTS):
+        row = _try_update_trade(trade_id, fields, owner_sql, owner_args)
+        if row is not _STALE:
+            return row
+    raise TradeUpdateConflict(trade_id)
+
+
+_UPDATE_TRADE_ATTEMPTS = 3
+_STALE = object()
+
+
+class TradeUpdateConflict(Exception):
+    """الصفقة تتغيّر (إغلاق/خروج) باستمرار بين القراءة والكتابة — لا نكتب فوق ما لم نقرأه."""
+
+
+def _try_update_trade(trade_id: str, fields: dict, owner_sql: str, owner_args: tuple):
     with _conn() as c:
         r = c.execute(
             f"SELECT * FROM trades WHERE id=? AND {owner_sql}", (trade_id, *owner_args)
@@ -1873,6 +1892,7 @@ def update_trade(
             return None
         row = dict(r)
         row.pop("owner_key", None)
+        seen_exit, seen_status = row.get("exit"), row.get("status")
         if "symbol" in fields:
             row["symbol"] = str(fields["symbol"]).strip().upper()
         if "side" in fields and fields["side"] in ("buy", "sell"):
@@ -1896,9 +1916,9 @@ def update_trade(
                 row["closed_at"] = row.get("closed_at") or time.strftime("%Y-%m-%d %H:%M")
         if row.get("exit") is not None:
             row["pnl"] = _pnl_pct(row["side"], float(row["entry"]), float(row["exit"]))
-        c.execute(
+        cur = c.execute(
             f"""UPDATE trades SET symbol=?, side=?, entry=?, exit=?, size=?, pnl=?, note=?, sl=?, tp=?,
-                closed_at=?, status=? WHERE id=? AND {owner_sql}""",
+                closed_at=?, status=? WHERE id=? AND exit IS ? AND status IS ? AND {owner_sql}""",
             (
                 row["symbol"],
                 row["side"],
@@ -1912,9 +1932,13 @@ def update_trade(
                 row["closed_at"],
                 row["status"],
                 trade_id,
+                seen_exit,
+                seen_status,
                 *owner_args,
             ),
         )
+        if cur.rowcount != 1:
+            return _STALE
         return row
 
 
