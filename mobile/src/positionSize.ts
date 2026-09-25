@@ -554,6 +554,24 @@ const MONEY_SIGNS: Record<string, readonly string[]> = {
 };
 
 /**
+ * نصّ المبلغ بلا علامته حين كُتب بعلامة/كود/اسم **عملة `ccy` وحدها** («$50»، «50 USD»، «٥٠ دولار»، «7 USC») — علامة واحدة
+ * بأحد الطرفين؛ `null` = بلا علامة، أو علامتان، أو عملة أخرى («€40» بحساب دولار: 40 يورو ليست 40 دولاراً). لا يقرأ الرقم.
+ * قاعدة واحدة لكل خانة مال بعملة الحساب (المخاطرة `parseRiskInput`، العمولة `parseCommission`).
+ */
+function moneyTextFor(raw: string, ccy: string): string | null {
+  const m = /^\s*(?:([$€£¥＄￥￡])|([A-Za-z]{3}))?\s*([^$€£¥＄￥￡A-Za-z]+?)\s*(?:([$€£¥＄￥￡])|([A-Za-z]{3}))?\s*$/.exec(
+    moneyWordsToMarks(raw)
+  );
+  if (!m) return null;
+  const markers = [m[1], m[2], m[4], m[5]].filter((x): x is string => x != null);
+  if (markers.length !== 1) return null;
+  const mk = markers[0];
+  const acc = ccy.toUpperCase();
+  const fits = /^[A-Za-z]{3}$/.test(mk) ? mk.toUpperCase() === acc : (MONEY_SIGNS[mk] ?? []).includes(acc);
+  return fits ? m[3] : null;
+}
+
+/**
  * خانة المخاطرة: **نسبة** («1»، «0.5%») كما كانت، أو **مبلغ** بعملة الحساب حين يُكتب برمزها أو كودها
  * («$50»، «50$»، «50 USD»، «eur 40») — فتُحسب النسبة منه: 50 من رصيد 10,000 = 0.5%.
  *
@@ -573,17 +591,9 @@ export function parseRiskInput(
 ): { pct: number | null; amount: number | null } | null {
   const pct = parseDecimal(raw, { percent: true });
   if (pct != null) return { pct, amount: null };
-  const m = /^\s*(?:([$€£¥＄￥￡])|([A-Za-z]{3}))?\s*([^$€£¥＄￥￡A-Za-z]+?)\s*(?:([$€£¥＄￥￡])|([A-Za-z]{3}))?\s*$/.exec(
-    moneyWordsToMarks(raw)
-  );
-  if (!m) return null;
-  const markers = [m[1], m[2], m[4], m[5]].filter((x): x is string => x != null);
-  if (markers.length !== 1) return null;
-  const mk = markers[0];
-  const acc = account.toUpperCase();
-  const fits = /^[A-Za-z]{3}$/.test(mk) ? mk.toUpperCase() === acc : (MONEY_SIGNS[mk] ?? []).includes(acc);
-  if (!fits) return null;
-  const amount = parseDecimal(m[3], { amount: true });
+  const text = moneyTextFor(raw, account);
+  if (text == null) return null;
+  const amount = parseDecimal(text, { amount: true });
   if (amount == null || !(amount > 0)) return null;
   const ok = Number.isFinite(balance) && balance > 0;
   return { pct: ok ? (amount / balance) * 100 : null, amount };
@@ -1238,15 +1248,26 @@ export function lowRewardWarning(
 /**
  * خانة العمولة (لكل لوت، فتحاً وإغلاقاً، بعملة الحساب): فارغة = 0 (حسابات Standard بلا عمولة)، وإلا
  * مبلغ ≥ 0 بقاعدة الرصيد (`amount`: «7.000» مبهمة تُرفض بدل أن تُقرأ 7). `null` = غير مفهوم أو سالب.
+ *
+ * `ccy` = عملة الخانة (عملة الحساب، أو USC لحساب السنت): «$7»، «7 USD»، «7 دولار» — كما يكتبها الوسيط بجدول عمولاته
+ * («$7 per lot») — تُقبل **لعملة الخانة وحدها** بقاعدة خانة المخاطرة (`moneyTextFor`). كانت «رقم غير مفهوم» بينما
+ * «$50» بخانة المخاطرة فوقها مقبولة. «€7» بحساب دولار و«$7» بحساب سنت (سبعة دولارات = 700 سنت؟) تبقى مرفوضة.
  */
-export function parseCommission(raw: string): number | null {
+export function parseCommission(raw: string, ccy?: string): number | null {
   if (raw.trim() === '') return 0;
-  const v = parseDecimal(raw, { amount: true });
+  let v = parseDecimal(raw, { amount: true });
+  if (v == null && ccy) {
+    const text = moneyTextFor(raw, ccy);
+    if (text != null) v = parseDecimal(text, { amount: true });
+  }
   return v != null && v >= 0 ? v : null;
 }
 
+
 /** وضع الحساب الذي تُقرأ به خانة العمولة: `std` (عقد عادي)، `cent` (لوت سنت بالـUSC)، `micro` (لوت micro بعملة الحساب). */
 export type CommissionMode = { kind: 'std' | 'cent' | 'micro'; account: string };
+/** عملة خانة العمولة بوضعها: السنت بالـUSC، والعادي/micro بعملة الحساب. */
+const commissionCcy = (m: CommissionMode) => (m.kind === 'cent' ? 'USC' : m.account);
 
 /**
  * نصّ خانة العمولة بعد تبدّل وضع الحساب («EURUSD» ⇄ «EURUSDc» ⇄ «EURUSDmicro») — العمولة «لكل لوت» واللوت تغيّر.
@@ -1258,12 +1279,13 @@ export type CommissionMode = { kind: 'std' | 'cent' | 'micro'; account: string }
  */
 export function commissionAcrossModes(raw: string, from: CommissionMode, to: CommissionMode): string {
   if (from.kind === to.kind && from.account === to.account) return raw;
-  const v = parseCommission(raw);
+  const v = parseCommission(raw, commissionCcy(from));
   if (raw.trim() === '' || v == null) return raw;
   const base = (m: CommissionMode) => (m.kind === 'cent' ? 'USD' : m.account);
   if (base(from) !== base(to)) return '';
   const perStdLot = (m: CommissionMode) => (m.kind === 'micro' ? 100 : 1);
-  if (v === 0 || perStdLot(from) === perStdLot(to)) return raw;
+  // «$7» بعلامة: العلامة تخصّ الوضع القديم («$7» بوضع السنت مرفوضة) ⇒ الرقم وحده
+  if (v === 0 || perStdLot(from) === perStdLot(to)) return parseCommission(raw) != null ? raw : String(v);
   return String(Number(((v * perStdLot(from)) / perStdLot(to)).toFixed(6)));
 }
 
@@ -1275,9 +1297,10 @@ export function commissionAcrossModes(raw: string, from: CommissionMode, to: Com
 export function commissionNoteExample(
   raw: string,
   kind: CommissionMode['kind'] | null,
+  ccy?: string,
 ): { std: string; micro: string; usc: string } | null {
   if (kind !== 'micro' && kind !== 'cent') return null;
-  const v = parseCommission(raw);
+  const v = parseCommission(raw, ccy);
   const typed = v != null && v > 0 ? v : null;
   const fmt = (x: number) => String(Number(x.toFixed(6)));
   if (kind === 'cent') {

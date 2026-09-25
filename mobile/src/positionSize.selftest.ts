@@ -2501,3 +2501,42 @@ console.log('positionSize arabic money words risk selftest OK');
   assert.equal(a?.lots, 0.4);
 }
 console.log('positionSize pip unit word selftest OK');
+
+// العمولة بعلامة عملة الخانة («$7 per lot» من جدول الوسيط) — تُقبل لعملة الخانة وحدها، والنتيجة = الرقم وحده
+{
+  assert.equal(parseCommission('$7', 'USD'), 7);
+  assert.equal(parseCommission('7 USD', 'USD'), 7);
+  assert.equal(parseCommission('7$', 'CAD'), 7);
+  assert.equal(parseCommission('٧ دولار', 'USD'), 7);
+  assert.equal(parseCommission('€6', 'EUR'), 6);
+  assert.equal(parseCommission('7 USC', 'USC'), 7);
+  assert.equal(parseCommission('7 سنت', 'USC'), 7);
+  // عملة أخرى أو علامتان أو بلا عملة الخانة ⇒ مرفوضة كما كانت
+  assert.equal(parseCommission('€7', 'USD'), null);
+  assert.equal(parseCommission('$7', 'USC'), null); // سبعة دولارات بحساب سنت = 700؟ لا تخمين
+  assert.equal(parseCommission('$7 USD', 'USD'), null);
+  assert.equal(parseCommission('$7'), null);
+  assert.equal(parseCommission('$-7', 'USD'), null);
+  assert.equal(parseCommission('$7.000', 'USD'), null); // مبهمة كـ«7.000»
+  assert.equal(parseCommission('7', 'USD'), 7);
+  assert.equal(parseCommission('', 'USD'), 0);
+  // المخاطرة شاملة التكاليف من «$7» = من «7»
+  const base = { lots: 0.4, slPips: 25, spreadPips: 1, pipValuePerLot: 10, balance: 10000, riskPct: 1, contractSize: 100000 };
+  assert.deepEqual(
+    spreadRisk({ ...base, commissionPerLot: parseCommission('$7', 'USD')! }),
+    spreadRisk({ ...base, commissionPerLot: parseCommission('7', 'USD')! })
+  );
+  // تبدّل الوضع: العلامة تسقط، والرقم يتحوّل كالعادي
+  const std = { kind: 'std', account: 'USD' } as const;
+  assert.equal(commissionAcrossModes('$7', std, { kind: 'micro', account: 'USD' }), '0.07');
+  assert.equal(commissionAcrossModes('$7', std, { kind: 'cent', account: 'USD' }), '7');
+  assert.equal(commissionAcrossModes('7', std, { kind: 'cent', account: 'USD' }), '7');
+  assert.equal(commissionAcrossModes('7 USC', { kind: 'cent', account: 'USD' }, std), '7');
+  assert.equal(commissionAcrossModes('$7', std, { kind: 'std', account: 'EUR' }), '');
+  assert.equal(commissionAcrossModes('€7', std, { kind: 'micro', account: 'USD' }), '€7'); // مرفوضة أصلاً: كما هي
+  assert.deepEqual(commissionNoteExample('$5', 'micro', 'USD'), commissionNoteExample('5', 'micro', 'USD'));
+  // المخاطرة بالمال بعد إعادة البناء: كما كانت
+  assert.deepEqual(parseRiskInput('$50', 10000, 'USD'), { pct: 0.5, amount: 50 });
+  assert.equal(parseRiskInput('€50', 10000, 'USD'), null);
+}
+console.log('positionSize commission currency mark selftest OK');

@@ -500,14 +500,14 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           : t.invalidNumberHint;
   /** خطأ خانة العمولة تحتها — للسبب نفسه: اللوت يُحسب بدونها فلا يصل `badNumber` إليها */
   /** الملاحظة بلوت الوضع: micro ⇒ «{std} للعادي = {micro} للوت micro» بأرقام الخانة، السنت ⇒ «بالـUSC، الرقم نفسه». */
-  const commissionEx = commissionNoteExample(commission, commissionKind);
+  const commissionEx = commissionNoteExample(commission, commissionKind, moneyCcy);
   const commissionNoteText = !commissionEx
     ? t.riskCalcCommissionNote
     : commissionKind === 'micro'
       ? t.riskCalcCommissionNoteMicro.replace('{std}', commissionEx.std).replace('{micro}', commissionEx.micro)
       : t.riskCalcCommissionNoteCent.split('{usc}').join(commissionEx.usc);
   const commissionErr =
-    parseCommission(commission) != null
+    parseCommission(commission, moneyCcy) != null
       ? null
       : misplacedArabicThousandsSign(commission, { amount: true })
         ? t.arabicThousandsSignHint
@@ -752,7 +752,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       ? spreadBeyondLiveEntry({ spreadPips: typedSpreadPips, spec, entry: priceNum(entryPx), stop: priceNum(stopPx), q: liveQ })
       : typedSpreadPips;
   /** بعملة الحساب لكل لوت — تُضاف × اللوت داخل `spreadRisk`؛ سطرٌ واحد «شاملة التكاليف» حين تكون موجبة */
-  const commissionPerLot = parseCommission(commission);
+  const commissionPerLot = parseCommission(commission, moneyCcy);
   const withSpread =
     lots != null && pv != null && spreadPips != null && commissionPerLot != null && spec
       ? spreadRisk({
@@ -940,7 +940,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           ccy: moneyCcy,
           rr: formatRR(plan.rr),
           spreadPips: parseSpreadPips(spread),
-          commissionPerLot: parseCommission(commission),
+          commissionPerLot: parseCommission(commission, moneyCcy),
           netRR: netAfterCosts ? formatRR(netAfterCosts.rr) : null,
         }),
       });
