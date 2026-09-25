@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 19، بعد d9f53a9) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 20، بعد f7f0e82) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -37,14 +37,14 @@
 | QA | الخادم | **(e)** تقويم العيّنة `econ_calendar.py:39-47` أوقات خاطئة و«5.25%» قديم؛ `_impact` :77. الواجهة تقول الآن «عيّنة لا تتداول عليها» (63c2ef6) | QA5 ★ |
 | QA | بلا مالك | **(a) جديد**: `DomLitePanel.tsx:67-73` يحسب السبريد بالـpip محلياً — نسخة `quoteSpreadPips` (`positionSize.ts:360`) الجديدة (tools: «ليس بنطاقي»)؛ والخاصية `last` ميتة (`void last` :75) والمستدعون ما زالوا يمرّرونها | QA11 ★ |
 | QA | الخادم | **(d) جديد QA14**: ملاحظة التنبيه `main.py:199` (و:399 تنبيه المؤشر) `note: str = ""` بلا حدّ (ملاحظة الدفتر/التصويت 500) والخانة `AlertsPanel` بلا `maxLength` ⇒ نص غير محدود يُخزَّن ويُرسل بالإشعار | QA14 ★ |
-| QA+tools | أنس | **(e) جديد QA15**: صفقة التعادل (pnl = 0) تُحسب **خسارة** بنسبة الفوز (`journalStats` `pnl <= 0` = `backend/db.py:1848`) ⇒ متداول ينقل وقفه للتعادل يرى نسبة فوزه تهبط. قرار: تُستثنى أم تُحسب خسارة؟ | QA15 |
-| tools | الخادم | **جديد tools45**: `close_trade` `backend/db.py:1761` `UPDATE … WHERE id=?` بلا `AND status='open'` ⇒ جهازان يُغلقان الصفقة نفسها بالثانية نفسها ⇒ الثاني يستبدل خروجها المسجَّل. الواجهة تجلب القائمة قبل الإغلاق (`2e4e8b4`) لكن الجذر بالخادم | tools45 |
-| launch | tools | **جديد launch67**: `journalClosedElsewhereTitle`/`Body` (`9f899dc`) بلا مستعمل — فرع `closedElsewhere` (`TradeJournalPanel.tsx` ~:925) يحدّث القائمة بصمت ⇒ «إغلاق» لا يفعل شيئاً ظاهراً. ← `notify(t.journalClosedElsewhereTitle, t.journalClosedElsewhereBody)` | launch67 |
-| launch | أنس (`AccountScreen` بلا مالك) | **جديد launch67**: لا طريق لإعادة الجولة الترحيبية (`matrix.onboarding.v1`) — من تخطّاها خطأً فاتته. سطر «أعد الجولة» بالحساب + `App.tsx`؟ | launch67 |
-| launch | tools | **جديد launch68**: `riskCalcConvStale` (`39f080c`) بلا مستعمل (تحقّقتُ: 0) — تجديد سعر التحويل الفاشل صامت (`PositionSizePanel.tsx` `if (silent) return;` ~:333) ⇒ ختم آخر نجاح بـ`convQuote` + السطر حين ≥3 د | launch68 |
-| launch | tools | **جديد launch68**: `journalExitAtProfitStopA11y` (`97a3b1c`) بلا مستعمل — شريحة «= SL» الخضراء (`x.gain`) يقرؤها قارئ الشاشة «وقف الخسارة» ← `x.gain ? t.journalExitAtProfitStopA11y : t.journalExitAtSlA11y` (`TradeJournalPanel.tsx` ~:1572) | launch68 |
-| QA | tools | **(d) جديد QA19، منخفض**: `CalendarPanel.tsx:37-38` `ROW_SOON_MS = 3h`/`NOW_WINDOW_MS = 15m` أرقام منسوخة من `NEWS_HORIZON_MS`/`NEWS_GRACE_MS` (`chart/newsRisk.ts:224-225`) والتعليق يعد بأن «قريب» واحد بالشاشتين ⇒ `import` بدل النسخ كي لا ينحرفا | QA19 |
+| QA+tools | أنس | **(e) QA15**: صفقة التعادل (pnl = 0) تُحسب **خسارة** بنسبة الفوز (`journalStats` `pnl <= 0` = `backend/db.py:1848`) ⇒ متداول ينقل وقفه للتعادل يرى نسبة فوزه تهبط. قرار: تُستثنى أم تُحسب خسارة؟ | QA15 ★ |
+| tools | الخادم | **tools45**: `close_trade` `backend/db.py:1761` `UPDATE … WHERE id=?` بلا `AND status='open'` ⇒ جهازان يُغلقان الصفقة نفسها بالثانية نفسها ⇒ الثاني يستبدل خروجها المسجَّل. الواجهة تجلب القائمة قبل الإغلاق (`2e4e8b4`) لكن الجذر بالخادم | tools45 ★ |
+| launch | أنس (`AccountScreen` بلا مالك) | : لا طريق لإعادة الجولة الترحيبية (`matrix.onboarding.v1`) — من تخطّاها خطأً فاتته. سطر «أعد الجولة» بالحساب + `App.tsx`؟ | launch67 |
+| QA | بلا مالك | **(d) QA19، منخفض**: `CalendarPanel.tsx:37-38` `ROW_SOON_MS = 3h`/`NOW_WINDOW_MS = 15m` أرقام منسوخة من `NEWS_HORIZON_MS`/`NEWS_GRACE_MS` (`chart/newsRisk.ts:224-225`) والتعليق يعد بأن «قريب» واحد بالشاشتين ⇒ `import` بدل النسخ كي لا ينحرفا. tools: الملف ليس بنطاقه، الثابتان مُصدَّران جاهزان | QA19 |
+| launch | tools | **جديد launch69**: `noteCharsLeftReserved` (`6c4f718`) بلا مستعمل (تحقّقتُ: 0) — العدّاد يقول «0 من 489» بلا سبب ← `noteRoom < JOURNAL_NOTE_MAX ? t.noteCharsLeftReserved… : t.noteCharsLeft…` (`TradeJournalPanel.tsx` ~:1755) | launch69 |
+| chart | launch | **جديد chart12**: مفتاحا `mcCloneDrawing` + `mcCloneDrawingA11y` ×ar/en/ku لزرّ «نسخ الرسم» بشريط الرسم المحدَّد (تحقّقتُ: 0 بـ`locales.ts`) | chart12 |
+| QA | launch | **(e) جديد QA20**: `riskCalcSub` ×3 (`locales.ts:1382 :2445 :3533`) «so you **never lose** more than a set %» — وعد كاذب أمام متداول: فجوة الافتتاح/الانزلاق عند الخبر تتخطّى الوقف (والتطبيق نفسه يقول «slippage» بـ`newsRiskHint`). ← «…حتى يكلّفك ضرب الوقف نسبة محدّدة من رصيدك» | QA20 |
+| QA | بلا مالك / الخادم | **(e) جديد QA20**: «Confidence 83%» ما زالت تُعرض بـ`AnalystsPanel.tsx:115` و`SocialConsensusPanel.tsx:219` من المعادلة الثابتة `signal_hub.py:79-82` (\|avg\|×0.75+0.35) — `IndicatorForecastPanel` أزالها لهذا السبب بالضبط (:153 «تُقرأ كاحتمال نجاح»). ← إخفاء السطر أو عدد الأصوات بدلها | QA20 |
 
-**أُسقط هذه الدورة:** لا شيء (لا commit يغلق صفاً منذ QA18؛ launch67 `journalClosedElsewhere*` ما زال 0 مستعمل).
-**تحقّق بلا تغيير (بالكود):** `Alert.alert` 10 بـ5 ملفات (الـ11 تعليق `TradeJournalPanel:908`)؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `accNetLoadError` 0 مستعمل.
-**(d) هذه الدورة:** حدود الخادم (`main.py` Field) مقابل `maxLength` الواجهة: الملاحظة 500=500، الدردشة 1000=1000، الرمز: الحاسبة تقبل 13 حرفاً لكن `journalSymbol` يُخرج ≤12 (فحصتُه بـ`tsx` على 9 رموز بلواحق — كلها ≤12 ⇒ لا 422). عتبات التقادم (تيك 20ث، اقتباس 120ث، تحويل 60ث، تقويم 5د/24س) متّسقة مع النصوص. الوحيد: الصف QA19.
+**أُسقط هذه الدورة (تحقّقتُ بالكود):** launch67 `journalClosedElsewhere*` ← `TradeJournalPanel.tsx:940` `notify(...)`؛ launch68 `riskCalcConvStale` ← `PositionSizePanel.tsx:1296` (5 د لا 3، مبرَّر بـLOG-TOOLS)؛ launch68 `journalExitAtProfitStopA11y` ← `TradeJournalPanel.tsx:1587`.
+**تحقّق بلا تغيير:** `Alert.alert` 10 بـ5 ملفات (الـ11 تعليق `TradeJournalPanel:918`)؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `accNetLoadError` 0 مستعمل؛ `CalendarPanel:37-38` كما هو.

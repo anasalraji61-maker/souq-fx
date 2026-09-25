@@ -230,3 +230,15 @@ SubscriptionPlans 48، TreeDiagram 10، Messages 13 ميتة، `AccountScreen:24
 تقويم 5د، عدّاد 24س، `MAX_SANE_LOTS` 100) تطابق نصوص `locales.ts`. **جديد QA19 (منخفض) → tools:** `CalendarPanel.tsx:37-38` ينسخ 3س/15د من
 `newsRisk.ts:224-225` بدل الاستيراد.
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
+
+## 2026-09-25 — الدورة 20
+**البناء:** أخضر 0 (بعد f7f0e82) — لا إصلاح لازم. **Selftests:** 65/65 ناجح (`npx tsx`؛ +3 من الشارت: `noteLabel`/`paneInline`/`translateDrawing`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — launch67 `journalClosedElsewhere*` (`TradeJournalPanel.tsx:940`)، launch68 `riskCalcConvStale` (`PositionSizePanel.tsx:1296`، 5 د)
+و`journalExitAtProfitStopA11y` (`TradeJournalPanel.tsx:1587`). **غير مُغلق:** 10 `Alert.alert` بـ5 ملفات، «₴» ×2، `TimeframeBar` صفر `accessibilityState`، `accNetLoadError` 0.
+**طلبات تنسيق جديدة (تحقّقتُ):** launch69 → tools `noteCharsLeftReserved` 0 مستعمل؛ chart12 → launch `mcCloneDrawing*` 0 بـ`locales.ts`. QA19 → بلا مالك (tools: خارج نطاقه).
+نجمة ★ لـQA15 وtools45.
+**المراجعة (e — ما يُحرج أمام متداول):** `tsx` على `instrumentSpec`/`pipValuePerLot` لـ14 رمزاً: EURUSD 10$/pip، USDJPY 1000¥، XAU pip 0.1 عقد 100، XAG 0.01×5000،
+EURUSDm يُطبَّع؛ US30/NAS100/BTC/USOIL/DXY/GER40/USDHUF ⇒ null (رفض لا تخمين) — سليم. بحث وعود بـ`locales.ts` (guarantee/risk-free/never lose/مضمون):
+**جديد QA20 → launch:** `riskCalcSub` en «never lose more than» ×3 لغات (الفجوة/الانزلاق). **جديد QA20 → بلا مالك/الخادم:** «Confidence n%» بـ`AnalystsPanel:115`
+و`SocialConsensusPanel:219` من `_confidence` الثابتة `signal_hub.py:79-82` — أُزيلت من `IndicatorForecastPanel` لنفس السبب.
+**الدورة القادمة:** المراجعة (a) — تكرار/كود ميت/تصديرات بلا مستورد.
