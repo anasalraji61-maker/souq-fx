@@ -1,6 +1,6 @@
 /** Range bars: الشمعة التي تتكوّن تُعرض (كانت تُرمى). */
 import type { Candle } from '../api';
-import { rangeBars } from './range';
+import { RANGE_MAX_BARS, rangeBars } from './range';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -52,6 +52,19 @@ ok('الأزمنة متزايدة', big.every((b, i) => i === 0 || b.time > big[
 // هابطة: فتح→أعلى→أدنى→إغلاق — الشمعة تُغلق عند أدنى طرفها.
 const down = rangeBars([c(1, 3, 3, 2.9, 2.95), c(2, 2.95, 2.95, 0.5, 0.5)], 1);
 ok('هابطة: تُغلق عند الأدنى', down[0]!.close === down[0]!.low && Math.abs(down[0]!.high - down[0]!.low - 1) < 1e-9);
+
+// QA36: تاريخ مسطّح (أعلى = أدنى) ثم +1% على BTC — كان 100001 شمعة (تجمّد). الأرضية نسبية والناتج مسقوف.
+const flatBtc = Array.from({ length: 50 }, (_, i) => c(i, 60000, 60000, 60000, 60000));
+const t0 = Date.now();
+const spike = rangeBars([...flatBtc, c(50, 60000, 60600, 60000, 60600)]);
+ok('مسطّح ثم قفزة: عدد محدود', spike.length > 1 && spike.length <= RANGE_MAX_BARS && Date.now() - t0 < 500);
+ok('مسطّح ثم قفزة: آخر إغلاق = السعر', spike[spike.length - 1]!.close === 60600 || Math.abs(spike[spike.length - 1]!.close - 60600) < 1e-6);
+// صندوق صغير جداً صريح: القفزة تُسقف وآخر شمعة ما زالت عند السعر الحقيقي (لا قصّ صامت بالحارس).
+const tiny = rangeBars([c(1, 1, 1, 1, 1), c(2, 1, 2, 1, 2)], 1e-6);
+ok('صندوق صغير: مسقوف', tiny.length === RANGE_MAX_BARS);
+ok('صندوق صغير: يصل للسعر', Math.abs(tiny[tiny.length - 1]!.close - 2) < 1e-6);
+ok('صندوق صغير: كل شمعة بطول الصندوق', tiny.every((b) => Math.abs(b.high - b.low - 1e-6) < 1e-9));
+ok('صندوق صغير: متّصلة', tiny.every((b, i) => i === 0 || Math.abs(b.open - tiny[i - 1]!.close) < 1e-12));
 
 if (failures) {
   console.error(`range.selftest: ${failures} FAIL`);
