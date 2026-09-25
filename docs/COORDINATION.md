@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 23، بعد 03b01cf) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 24، بعد c320213) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -42,9 +42,8 @@
 | launch | أنس (`AccountScreen` بلا مالك) | : لا طريق لإعادة الجولة الترحيبية (`matrix.onboarding.v1`) — من تخطّاها خطأً فاتته. سطر «أعد الجولة» بالحساب + `App.tsx`؟ | launch67 ★ |
 | QA | بلا مالك | **(d) QA19، منخفض**: `CalendarPanel.tsx:37-38` `ROW_SOON_MS = 3h`/`NOW_WINDOW_MS = 15m` أرقام منسوخة من `NEWS_HORIZON_MS`/`NEWS_GRACE_MS` (`chart/newsRisk.ts:224-225`) والتعليق يعد بأن «قريب» واحد بالشاشتين ⇒ `import` بدل النسخ كي لا ينحرفا. tools: الملف ليس بنطاقه، الثابتان مُصدَّران جاهزان | QA19 ★ |
 | QA | بلا مالك / الخادم | **(e) QA20**: «Confidence 83%» ما زالت تُعرض بـ`AnalystsPanel.tsx:115` و`SocialConsensusPanel.tsx:219` من المعادلة الثابتة `signal_hub.py:79-82` (\|avg\|×0.75+0.35) — `IndicatorForecastPanel` أزالها لهذا السبب بالضبط (:153 «تُقرأ كاحتمال نجاح»). ← إخفاء السطر أو عدد الأصوات بدلها | QA20 ★ |
-| launch | tools | **جديد launch72**: المفتاحان `riskCalcPipValueAtStop`/`riskCalcPipValueAtStopHint` (`233e090`) — بعد `ccbb1c4` قيمة pip لـUSDJPY تُحسب بسعر الوقف فلا تطابق رقم المنصّة الحيّ؛ اربطهما بالحاسبة (`PositionSizePanel.tsx` ~:1421) حين `riskRate !== convRate` (تحقّقتُ: 0 مستعمل) | launch72 |
+| QA | بلا مالك (`AccountScreen`) + الخادم | **(d) جديد QA24**: التسجيل `main.py:203-205` يرفض اسماً <3 أو >32 حرفاً وكلمة مرور <4 بـ422، والشاشة `AccountScreen.tsx` بلا `maxLength` ولا تلميح بالحدود ⇒ المتداول يرى «تحقّق من الإيميل ورمز الدعوة والاتصال» (`registerError`) — سبب خاطئ. وحدّ 4 أحرف لكلمة المرور ضعيف لحساب مالي (أنس) | QA24 |
 
-**أُسقط هذه الدورة (تحقّقتُ بالكود):** chart12 ← زرّا «نسخ الرسم» `MatrixChart.tsx:5422 :11333` (`39e26a2`)؛ tools48 ← `chartPipSpec('USDJPYMICRO'|'USDJPY-CENT'|'GBPJPY_MICRO')` صار USDJPY/GBPJPY بـ`tsx` (`b962d58`)؛
-QA21 ← `planPriceLegend`/`legendCapacity` 0 مطابقة (`d8446d0`)؛ `DIRECTIONAL_OVERLAYS` باقٍ عمداً (استثناء لوني دلالي يحرسه الاختبار — LOG-CHART).
-**تحقّق بلا تغيير:** `Alert.alert` 10 بـ5 ملفات؛ «₴» ×2؛ `TimeframeBar`/Rails/Dock/SidePanel صفر `accessibilityState`؛ `accNetLoadError` 0؛ `a11yBusy` صفر بـAlerts/Account/NetworkTree.
-**مراجعة (c) a11y بسكربت على كل `.tsx`:** كل `Pressable`/`Touchable*`/`Switch`/`TextInput` له `accessibilityLabel` أو نصّ ابن — الاستثناء الوحيد خلفية `MatrixSidePanel.tsx:83` (مسجّلة QA3). الزرّان الجديدان (نسخ الرسم) موصوفان. الحالة المختارة: بلا تغيير (31).
+**أُسقط هذه الدورة (تحقّقتُ بالكود):** launch72 ← `riskCalcPipValueAtStop`/`Hint` مربوطان `PositionSizePanel.tsx:1431 :1437` (`d33f9ab`)؛ ملاحظة chart «`fitChannelWidth` باللوغاريتمي» أُصلحت (`55bb0f3`، selftest).
+**تحقّق بلا تغيير:** `Alert.alert` 10 بـ5 ملفات؛ «₴» ×2؛ `TimeframeBar`/Rails/Dock/SidePanel صفر `accessibilityState`؛ `accNetLoadError` 0؛ ملاحظة التنبيه `main.py:199 :399` بلا حدّ (QA14).
+**مراجعة (d) حدود بين الملفات:** كل `maxLength` بالتطبيق يطابق الخادم (رموز 12، ملاحظة الدفتر/التصويت 500، الدردشة 1000) عدا التسجيل (QA24 أعلاه). `VoteCreate.symbol` 20 مقابل 12 بغيره — غير ضارّ.

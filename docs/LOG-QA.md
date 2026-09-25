@@ -276,3 +276,13 @@ QA21 (`d8446d0`؛ `DIRECTIONAL_OVERLAYS` باقٍ عمداً — استثناء 
 **المراجعة (c — a11y)، بسكربت على كل `.tsx`:** كل `Pressable`/`Touchable*`/`Switch`/`TextInput` له `accessibilityLabel` أو `<Text>` ابن عدا `MatrixSidePanel.tsx:83`
 (مسجّلة QA3). لا جديد. `selected` المفقود: 31 كما هو؛ `a11yBusy` بـAlerts/Account/NetworkTree صفر (launch52).
 **الدورة القادمة:** المراجعة (d) — أرقام/حدود متناقضة بين الملفات.
+
+## 2026-09-25 — الدورة 24
+**البناء:** أخضر 0 (بعد c320213) — لا إصلاح لازم. **Selftests:** 66/66 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — launch72 `riskCalcPipValueAtStop`/`Hint` (`PositionSizePanel.tsx:1431 :1437`، `d33f9ab`)؛ ملاحظة chart
+«`fitChannelWidth` باللوغاريتمي» (`55bb0f3`). **غير مُغلق:** 10 `Alert.alert` بـ5 ملفات، «₴» ×2، Rails/Dock/SidePanel/`TimeframeBar` صفر `accessibilityState`، `accNetLoadError` 0.
+**طلبات تنسيق جديدة:** لا شيء من السجلات الثلاثة.
+**المراجعة (d — حدود متناقضة):** قارنتُ كل `maxLength` بالتطبيق بحقول Pydantic بـ`main.py`: الرموز 12، الملاحظة 500 (`JOURNAL_NOTE_MAX` = :447)، الدردشة 1000 = :135 — متطابقة.
+**جديد QA24 → بلا مالك (`AccountScreen`) + أنس:** `AuthRegister` :203-205 (اسم 3–32، كلمة مرور ≥4) بلا `maxLength`/تلميح بالشاشة ⇒ 422 يظهر كـ`registerError`
+«تحقّق من الإيميل ورمز الدعوة والاتصال»؛ وحدّ 4 أحرف ضعيف (⛔ 16). `VoteCreate.symbol` 20 مقابل 12 بغيره — غير ضارّ. `MAX_SEARCH_QUERY` 64 لا يستعمله التطبيق.
+**الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
