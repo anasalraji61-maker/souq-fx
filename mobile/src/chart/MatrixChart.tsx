@@ -418,6 +418,8 @@ type Props = {
 
 /** جذب التقاطع لـO/H/L/C: أقرب من هذا (px) فقط — وإلا يبقى على المستوى الملموس. */
 const CROSS_SNAP_PX = 14;
+/** أقصى شموع مستقبلية لتقاطع التابع بالرباعي — أبعد من ذلك (قائد يومي والتابع دقيقة) لا خطّ. */
+const CROSS_SYNC_MAX_AHEAD = 500;
 /** الهامش الأيمن الافتراضي من عرض اللوح (≈8 خانات من 80) — `restXPan`. */
 const RIGHT_MARGIN_FRAC = 0.1;
 
@@ -1478,6 +1480,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     windowLen: 80,
     all: [] as unknown[],
   });
+  // زمن آخر شمعة مصدر: على Renko/Range آخر لبنة قد تسبقه بساعات — نهاية السلسلة لإرساء الرسومات
+  // (`drawingAnchors.ts` `endTime`)، وإلا وقع طرف المستقبل المرسوم على Renko بالماضي على الشموع.
+  const sourceEndRef = useRef<number | undefined>(undefined);
+  const sourceEndTime = () => sourceEndRef.current;
 
   // `selectedInd` = ما اختاره المتداول فعلاً (تُبنى عليه أزرار المؤشرات).
   // `indicators` = ما يُرسم بالفعل: نفسها ناقصَ اللوحات المطويّة لضيق الارتفاع، فيكفي
@@ -1668,7 +1674,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   // Renko/Kagi/P&F: `cross.time` زمن اللبنة المختلَق — يُنشر زمن شمعتها المصدر (`barTime`)،
   // وإلا وقف تقاطع التوابع عند بداية سلاسلها.
   const crossBar = cross ? source.plot.find((b) => b.time === cross.time) : undefined;
-  const crossTimeSec = cross ? candleTimeSec(crossBar ? barTime(crossBar) : cross.time) : null;
+  // تقاطع بالمنطقة المستقبلية (`ahead` بعد آخر شمعة): يُنشر زمنه المستقبلي من آخر شمعة مصدر + `ahead` خطوة.
+  // كان يُنشر زمن آخر شمعة وحده ⇒ خطّ التابعين على شمعتهم الحيّة والقائد بعدها بعشر شموع.
+  const lastCandleTime = liveSeries.candles[liveSeries.candles.length - 1]?.time;
+  const crossFutureSec =
+    cross?.ahead && crossBar && crossBar === source.all[source.all.length - 1] && lastCandleTime != null
+      ? Math.max(candleTimeSec(barTime(crossBar)), candleTimeSec(lastCandleTime)) +
+        cross.ahead * timeframeStepSec(series.timeframe)
+      : null;
+  const crossTimeSec = cross
+    ? crossFutureSec ?? candleTimeSec(crossBar ? barTime(crossBar) : cross.time)
+    : null;
   const crossTimeRef = useRef<number | null>(null);
   crossTimeRef.current = cross?.time ?? null;
   const publishesCross = onCrossTime != null;
@@ -1701,10 +1717,28 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       candleTimeSec,
       endSec
     );
-    const time = i != null ? source.plot[i]!.time : null;
+    let time = i != null ? source.plot[i]!.time : null;
+    // زمن القائد بعد آخر شمعة هنا (تقاطعه بالمنطقة المستقبلية) ⇒ الخطّ بعد آخر شمعة بعدد خطوات فريم هذا
+    // الشارت (ساعة +3 على الساعة = +12 على 15د)، كما يرسم المتداول تقاطعه هناك بنفسه.
+    let ahead = 0;
+    const step = timeframeStepSec(series.timeframe);
+    // قبل `i`: زمن = آخر شمعة + خطوة بالضبط (قائد +1 على الفريم نفسه) يقع بحدّ `indexAtOrBeforeTime` على الحيّة.
+    if (syncCrossTime != null && atSeriesEnd && lastCandle && step > 0) {
+      const k = Math.floor((syncCrossTime - candleTimeSec(lastCandle.time)) / step);
+      if (k >= 1 && k <= CROSS_SYNC_MAX_AHEAD) {
+        time = source.plot[source.plot.length - 1]!.time;
+        ahead = k;
+      }
+    }
     crossFromSync.current = true;
     setCross((prev) =>
-      time == null ? null : prev && prev.time === time && prev.price == null ? prev : { time, price: null }
+      time == null
+        ? null
+        : prev && prev.time === time && prev.price == null && (prev.ahead ?? 0) === ahead
+          ? prev
+          : ahead
+            ? { time, price: null, ahead }
+            : { time, price: null }
     );
   }, [syncCrossTime, source.plot, source.all, kind, liveSeries.candles, series.timeframe]);
 
@@ -1718,10 +1752,11 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       loadedDrawings,
       source.all as { time: number }[],
       timeframeStepSec(series.timeframe),
-      synthetic
+      synthetic,
+      liveSeries.candles[liveSeries.candles.length - 1]?.time
     );
     if (next !== loadedDrawings) setDrawings(next);
-  }, [drawings, loadedDrawings, source.all, kind, series.timeframe]);
+  }, [drawings, loadedDrawings, source.all, kind, series.timeframe, liveSeries.candles]);
 
   const publishSyncWindow = useCallback(() => {
     if (syncFollow) return;
@@ -2111,7 +2146,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         d,
         sourceRef.current.all as { time: number }[],
         timeframeStepSec(series.timeframe),
-        synthetic
+        synthetic,
+        sourceEndTime()
       );
     };
     loadDrawings(series.symbol, series.timeframe).then((d) => {
@@ -2125,6 +2161,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     // السابقة فيُفرَغ.
     const unsubscribe = subscribeDrawings(series.symbol, drawingsOwner, (d) => {
       if (!alive || loadedDrawingsKey.current !== k) return;
+      // تعديل هنا ينتظر الحفظ المؤجَّل (400ms) أقدمُ من كتابة الشارت الآخر: كان يُكتب بعدها فوقها ⇒ التخزين
+      // يعود لقائمة هذا الشارت القديمة بينما الشاشتان تعرضان الأحدث، ويضيع تعديل الآخر عند الفتح التالي.
+      saveQueue.cancel();
       savedDrawingsSig.current = drawingsSignature(d);
       drawHistory.current = [];
       setCanUndo(false);
@@ -2193,7 +2232,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         prev,
         sourceRef.current.all as { time: number }[],
         timeframeStepSec(series.timeframe),
-        synthetic
+        synthetic,
+        sourceEndTime()
       )
     );
     setSelectedId(null);
@@ -3155,6 +3195,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   ]);
 
   sourceRef.current = source;
+  sourceEndRef.current = liveSeries.candles[liveSeries.candles.length - 1]?.time;
 
   const chartPlotW = Math.max(80, chartW - PRICE_AXIS_WIDTH);
   const chartPlotH = Math.max(100, mainH - timeAxisH);
@@ -3487,7 +3528,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
         return pip ? nudgePipPrice(price, Math.round((moved - price) / pip), pip) : moved;
       },
       (index) =>
-        stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe))
+        stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe), sourceEndTime())
     );
     pushDrawHistory();
     setDrawings((list) => [...list, next]);
@@ -3511,7 +3552,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       (price) =>
         !steps ? price : pip ? nudgePipPrice(price, steps, pip) : fromScale(toScale(price) + steps * pxScaled),
       (index) =>
-        stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe))
+        stampAtIndex(sourceRef.current.all as { time: number }[], index, timeframeStepSec(series.timeframe), sourceEndTime())
     );
     if (sameDrawingPlace(d, next)) return 'same';
     if (record) pushDrawHistory();
@@ -3564,7 +3605,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const stamp = stampAtIndex(
         sourceRef.current.all as { time: number }[],
         index,
-        timeframeStepSec(series.timeframe)
+        timeframeStepSec(series.timeframe),
+        sourceEndTime()
       );
       return stamp == null ? { index, price } : { index, price, ...stamp };
     },
@@ -3580,7 +3622,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       const stamp = stampAtIndex(
         sourceRef.current.all as { time: number }[],
         index,
-        timeframeStepSec(series.timeframe)
+        timeframeStepSec(series.timeframe),
+        sourceEndTime()
       );
       return stamp == null ? { index, price: b.price } : { index, price: b.price, ...stamp };
     },
@@ -4187,15 +4230,26 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
           const { locationX, locationY } = evt.nativeEvent;
           // إزاحة السعر بمقياس المحور الجاري (خطّي/لوغاريتمي) لا بفرق سعري ثابت.
           const dScaled = toScale(priceAtY(locationY)) - toScale(priceAtY(from.y));
+          // لقطة بداية السحب بفهارس السلسلة يومها: إغلاق شمعة حيّة يُسقط أقدم شمعة فتزحف الفهارس خانة
+          // ⇒ الرسم كان يقفز شمعة تحت الإصبع ويُحفظ هناك. تُرسى بزمنها على السلسلة الحالية أولاً.
+          const km = kindRef.current;
+          const [fromNow] = anchorDrawings(
+            [from.d],
+            sourceRef.current.all as { time: number }[],
+            timeframeStepSec(series.timeframe),
+            km === 'renko' || km === 'kagi' || km === 'pnf' || km === 'range',
+            sourceEndTime()
+          );
           const next = translateDrawing(
-            from.d,
+            fromNow!,
             drawIndex(locationX) - drawIndex(from.x),
             (price) => fromScale(toScale(price) + dScaled),
             (index) =>
               stampAtIndex(
                 sourceRef.current.all as { time: number }[],
                 index,
-                timeframeStepSec(series.timeframe)
+                timeframeStepSec(series.timeframe),
+                sourceEndTime()
               )
           );
           if (sameDrawingPlace(selBodyLast.current, next)) return;

@@ -169,6 +169,28 @@ const line = (ai: number, bi: number, extra: Partial<Drawing> = {}): Drawing => 
   assert.equal(back.a.index, 24);
 }
 
+// آخر لبنة ليست آخر شمعة (`endTime`): آخر لبنة Renko من الشمعة 20 والشموع حتى 29 بلا لبنة جديدة
+{
+  const candles = bars(0, 30);
+  const bricks = [5, 12, 20].map((h, i) => ({ time: 100 * H + i * 60, srcTime: h * H }));
+  const end = 29 * H;
+  // طرف مستقبل على Renko بعد آخر لبنة بـ3 ⇒ على الشموع بعد آخر شمعة بـ3 (كان 20 + 3 = 23، بالماضي)
+  const st = stampAtIndex(bricks, 2 + 3, H, end)!;
+  assert.equal(st.time, end);
+  assert.equal(st.ahead, 3);
+  const fut = line(0, 5, { b: { index: 5, price: 1, ...st } });
+  assert.equal(anchorDrawings([fut], candles, H, false, end)[0].b!.index, 29 + 3);
+  // والعودة لـRenko: الطرف نفسه بعد آخر لبنة بـ3 لا بـ3 + 9 شموع
+  assert.equal(anchorDrawings([{ ...fut, b: { ...fut.b!, index: 0 } }], bricks, H, true, end)[0].b!.index, 2 + 3);
+  // شمعة بعد آخر لبنة (25) ⇒ على Renko اللبنة السارية (الأخيرة)، لا المنطقة المستقبلية
+  assert.equal(indexAtTime(bricks, 25 * H, H, end), 2);
+  assert.equal(indexAtTime(bricks, 25 * H, H), 2 + 5);
+  // بعد آخر شمعة ⇒ المستقبل يُعدّ من آخر شمعة
+  assert.equal(indexAtTime(bricks, 31 * H, H, end), 2 + 2);
+  // شموع عادية: endTime = آخر شمعة ⇒ بلا تغيير
+  assert.deepEqual(stampAtIndex(candles, 32, H, end), stampAtIndex(candles, 32, H));
+}
+
 // drawSlotAt: بلا إزاحة يقصّ لآخر شمعة؛ مع سحب الشارت يساراً يبلغ خانات المستقبل الظاهرة فقط
 {
   assert.equal(drawSlotAt(50, 0, 100, 10), 5);

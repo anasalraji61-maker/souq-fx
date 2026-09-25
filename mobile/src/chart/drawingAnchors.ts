@@ -26,6 +26,12 @@
  * شموعاً بعدها، وفهرسها = خانة ذلك الزمن + `ahead` — ثابتة بالشموع المتداولة مهما جاءت عطلة.
  * نقاط المستقبل القديمة (زمن تقويمي بلا `ahead`) تُقرأ كما كانت.
  *
+ * **آخر لبنة ليست آخر شمعة** (`endTime`): على Renko/Range/Kagi/P&F آخر لبنة اكتملت قد تكون قبل ساعات
+ * والشموع بعدها لم تصنع لبنة. كان طرف المستقبل على Renko يُختم بزمن آخر لبنة + `ahead` ⇒ على الشموع
+ * يقع **بالماضي** (بعد اللبنة بـ`ahead` شمعة)؛ ونقطة رُسمت على شمعة بعد آخر لبنة تُفتح على Renko
+ * بالمنطقة المستقبلية بعدد الشموع لا على اللبنة السارية. الآن `endTime` = زمن آخر شمعة مصدر: اللبنة
+ * الأخيرة سارية حتى هو (كتقاطع الرباعي)، والمستقبل يُعدّ بعده.
+ *
  * **الرسومات مشتركة بين فريمات الرمز** (`drawingStore.ts`): خطّ رُسم على الساعة يُفتح على
  * اليومي والعكس. فالنقطة داخل شمعة الفريم الأكبر تأخذ **كسراً** من عرضها بحسب زمنها
  * (ساعة 18:00 على اليومي = الخانة + 0.75)، فخطّ ترند بين قمّتين بنفس اليوم لا ينهار عمودياً
@@ -59,11 +65,16 @@ function runStart(bars: readonly TimeBar[], i: number): number {
  * يُقصّ لبدايتها، فسحب خطّ رُسم على الساعة 18:00 على اليومي — ولو رأسياً فقط — يُعيد ختم طرفه
  * عند 00:00، فيقفز الخطّ على اليومي بعد الإفلات ويعود للساعة على شمعة أخرى.
  */
-export function timeAtIndex(bars: readonly TimeBar[], index: number, stepSec: number): number | null {
+export function timeAtIndex(
+  bars: readonly TimeBar[],
+  index: number,
+  stepSec: number,
+  endTime?: number
+): number | null {
   const n = bars.length;
   if (!n || !Number.isFinite(index)) return null;
   if (index < 0) return barTime(bars[0]) + index * stepSec;
-  if (index >= n) return barTime(bars[n - 1]) + (index - (n - 1)) * stepSec;
+  if (index >= n) return seriesEnd(bars, endTime) + (index - (n - 1)) * stepSec;
   const i = Math.floor(index);
   const bar = bars[i]!;
   const frac = index - i;
@@ -71,17 +82,28 @@ export function timeAtIndex(bars: readonly TimeBar[], index: number, stepSec: nu
   return barTime(bar);
 }
 
+/** نهاية السلسلة بالزمن الحقيقي: آخر شمعة مصدر (`endTime`) إن كانت بعد آخر لبنة، وإلا زمن آخر خانة. */
+function seriesEnd(bars: readonly TimeBar[], endTime?: number): number {
+  const last = barTime(bars[bars.length - 1]!);
+  return endTime != null && Number.isFinite(endTime) && endTime > last ? endTime : last;
+}
+
 /**
  * خانة الزمن `time`: التطابق التامّ، وإلا آخر شمعة قبله (فجوة عطلة أو فريم لا يتطابق)،
  * وخارج السلسلة بخطوة الفريم — فالرسم قبل أوّل شمعة يبقى بفهرس سالب (خارج الشاشة) لا
  * مُلصقاً على الحافة. بحث ثنائي: السلسلة متزايدة الزمن بالأنواع التي يُعاد فهرستها.
  */
-export function indexAtTime(bars: readonly TimeBar[], time: number, stepSec: number): number | null {
+export function indexAtTime(
+  bars: readonly TimeBar[],
+  time: number,
+  stepSec: number,
+  endTime?: number
+): number | null {
   const n = bars.length;
   if (!n || !Number.isFinite(time)) return null;
   const step = stepSec > 0 ? stepSec : 1;
   const first = barTime(bars[0]);
-  const last = barTime(bars[n - 1]);
+  const last = seriesEnd(bars, endTime);
   if (time < first) return Math.round((time - first) / step);
   if (time > last) return n - 1 + Math.round((time - last) / step);
   let lo = 0;
@@ -119,13 +141,14 @@ export function drawSlotAt(x: number, pan: number, w: number, len: number): numb
 export function stampAtIndex(
   bars: readonly TimeBar[],
   index: number,
-  stepSec: number
+  stepSec: number,
+  endTime?: number
 ): { time: number; ahead?: number; aheadStep?: number; sub?: number } | null {
   const n = bars.length;
   if (n && Number.isFinite(index) && index > n - 1) {
-    return { time: barTime(bars[n - 1]), ahead: index - (n - 1), aheadStep: stepSec };
+    return { time: seriesEnd(bars, endTime), ahead: index - (n - 1), aheadStep: stepSec };
   }
-  const time = timeAtIndex(bars, index, stepSec);
+  const time = timeAtIndex(bars, index, stepSec, endTime);
   if (time == null) return null;
   if (index >= 0 && bars[Math.floor(index)]?.srcTime != null) {
     const i = Math.floor(index);
@@ -139,13 +162,14 @@ function anchorPoint(
   p: ChartPoint,
   bars: readonly TimeBar[],
   stepSec: number,
-  synthetic: boolean
+  synthetic: boolean,
+  endTime?: number
 ): ChartPoint {
   if (p.time == null || !Number.isFinite(p.time)) {
-    const stamp = stampAtIndex(bars, p.index, stepSec);
+    const stamp = stampAtIndex(bars, p.index, stepSec, endTime);
     return stamp == null ? p : { ...p, ...stamp };
   }
-  const base = indexAtTime(bars, p.time, stepSec);
+  const base = indexAtTime(bars, p.time, stepSec, endTime);
   const ahead = p.ahead != null && Number.isFinite(p.ahead) ? p.ahead : 0;
   const aheadStep =
     p.aheadStep != null && Number.isFinite(p.aheadStep) && p.aheadStep > 0 ? p.aheadStep : stepSec;
@@ -188,13 +212,14 @@ export function anchorDrawings(
   drawings: Drawing[],
   bars: readonly TimeBar[],
   stepSec: number,
-  synthetic: boolean
+  synthetic: boolean,
+  endTime?: number
 ): Drawing[] {
   if (!bars.length || !drawings.length) return drawings;
   let changed = false;
   const out = drawings.map((d) => {
-    const a = anchorPoint(d.a, bars, stepSec, synthetic);
-    const b = d.b ? anchorPoint(d.b, bars, stepSec, synthetic) : d.b;
+    const a = anchorPoint(d.a, bars, stepSec, synthetic, endTime);
+    const b = d.b ? anchorPoint(d.b, bars, stepSec, synthetic, endTime) : d.b;
     if (a === d.a && b === d.b) return d;
     changed = true;
     return b === undefined ? { ...d, a } : { ...d, a, b };
