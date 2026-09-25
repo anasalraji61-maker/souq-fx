@@ -2328,6 +2328,22 @@ console.log('positionSize formatPipValue selftest OK');
   assert.equal(exitQuoteToAccount(uj, 'USD', 188, live), null);
   assert.equal(exitQuoteToAccount(uj, 'USD', 121, live), 1 / 121);
   assert.equal(exitQuoteToAccount(uj, 'USD', 119, live), null);
+  // forLoss (الوقف): خارج النطاق ⇒ الأغلى من الاثنين لا null. رصيد 1,000,000 و1%، دخول 150:
+  // وقف 119 الحقيقي كان يُحسب بالحيّ ⇒ 0.48 لوت = خسارة 12,504 USD (+25%) وأكبر من وقف 121 الأقرب (0.41)
+  assert.equal(exitQuoteToAccount(uj, 'USD', 119, live, true), 1 / 119);
+  assert.equal(exitQuoteToAccount(uj, 'USD', 15, live, true), 1 / 15); // «15» بدل «150» ⇒ لوت أصغر لا أكبر
+  assert.equal(exitQuoteToAccount(uj, 'USD', 1500, live, true), live); // «1500» ⇒ الحيّ كما كان
+  assert.equal(exitQuoteToAccount(uj, 'USD', 188, live, true), live);
+  assert.equal(exitQuoteToAccount(uj, 'USD', 138.5, live, true), 1 / 138.5); // داخل النطاق: لا فرق
+  assert.equal(exitQuoteToAccount(uj, 'USD', NaN, live, true), null);
+  assert.equal(exitQuoteToAccount(instrumentSpec('EURUSD')!, 'USD', 0.5, 1, true), null);
+  for (const stop of [125, 121, 119, 110, 100]) {
+    const sl = (150 - stop) * 100;
+    const q = exitQuoteToAccount(uj, 'USD', stop, live, true)!;
+    const z = positionSize({ balance: 1_000_000, riskPct: 1, slPips: sl, pipValuePerLot: pipValuePerLot(uj, q), contractSize: uj.contractSize })!;
+    const loss = (z.lots * uj.contractSize * (150 - stop)) / stop;
+    assert.ok(loss <= 10_000 + 1e-6, `stop ${stop}: loss ${loss}`);
+  }
   // مدخل غير صالح / بلا سعر حيّ
   assert.equal(exitQuoteToAccount(uj, 'USD', NaN, live), null);
   assert.equal(exitQuoteToAccount(uj, 'USD', 0, live), null);
@@ -2380,8 +2396,8 @@ console.log('positionSize per-lot micro pip value selftest OK');
   assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', 0, NaN, live), null);
   assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', NaN, NaN, live), null);
   assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', 150, NaN, null), null);
-  // وقف يبعد > 20% (خطأ كتابة «5000» pip = 50 ين) ⇒ null لا لوت منفوخ؛ وخروج ≤ 0 ⇒ null
-  assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', 5000, NaN, live), null);
+  // وقف يبعد > 20% (5000 pip = 50 ين ⇒ خروج 100): سعر الخروج الأغلى (لوت أصغر، كان null ⇒ الحيّ ⇒ خسارة +50%)؛ خروج ≤ 0 ⇒ null
+  assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', 5000, NaN, live), 1 / 100);
   assert.equal(pipsOnlyExitQuoteToAccount(uj, 'USD', 20000, NaN, live), null);
   assert.equal(pipsOnlyExitQuoteToAccount(null, 'USD', 150, NaN, live), null);
 }

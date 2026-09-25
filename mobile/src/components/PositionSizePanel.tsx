@@ -593,7 +593,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
     ? fetchedConv.rate
     : quoteToAccountRate(conv, Number.isFinite(manual) && manual > 0 ? manual : null);
   // الأساس = عملة الحساب ⇒ الخسارة تُحوَّل بسعر الوقف لا الحيّ (أمرٌ معلّق بعيد كان يتجاوز المخاطرة) — `exitQuoteToAccount`
-  const stopRate = exitQuoteToAccount(spec, convAccount, priceNum(stopPx), convRate);
+  const stopRate = exitQuoteToAccount(spec, convAccount, priceNum(stopPx), convRate, true);
   // بلا سعر وقف (النقاط وحدها): الاتجاه مجهول ⇒ أسوأ خروج (تحت الدخول/الحيّ) كي لا تتجاوز الخسارة المخاطرة — `pipsOnlyExitQuoteToAccount`
   const pipsOnlyRate = Number.isFinite(priceNum(stopPx))
     ? null

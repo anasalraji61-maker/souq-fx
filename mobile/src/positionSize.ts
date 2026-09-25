@@ -342,19 +342,26 @@ export function quoteToAccountRate(conv: { invert: boolean } | null, pairPrice: 
  * `liveRate` = سعر التحويل الحيّ لهذا الزوج (1 ÷ الحيّ). حارس خطأ الكتابة: سعر خروج يبعد عن الحيّ أكثر من 20% («1500»
  * بدل «150.0») كان سيقسم قيمة النقطة على 10 فيضرب اللوت ×10 ⇒ `null` ويبقى الحيّ. `null` كذلك لأداةٍ عملتها الأساس
  * ليست عملة الحساب (سعر التحويل عند الخروج مجهول — الحيّ أفضل تقدير) أو لمدخل غير صالح.
+ *
+ * `forLoss` (الوقف): خارج النطاق **الأغلى** من الاثنين لا `null` — الحارس كان يصيب الوقف البعيد الحقيقي أيضاً (USDTRY/
+ * USDZAR، متداول مراكز): USDJPY حيّ 150 ووقف 119 ⇒ الحيّ ⇒ «9,920 USD» والخسارة الحقيقية عند 119 = **12,504** (+25%) واللوت
+ * أكبر من وقف 121 الأقرب. الأغلى: وقفٌ بعيد تحت (أو «15» بدل «150») ⇒ سعر الوقف ⇒ لوت أصغر؛ «1500» بدل «150» ⇒ الحيّ
+ * كما كان. للربح عند الهدف يبقى `null` (الأغلى هناك يضخّم الربح).
  */
 export function exitQuoteToAccount(
   spec: InstrumentSpec | null,
   convAccount: string,
   exitPrice: number,
-  liveRate: number | null
+  liveRate: number | null,
+  forLoss = false
 ): number | null {
   if (!spec || spec.base !== convAccount) return null;
   if (!Number.isFinite(exitPrice) || exitPrice <= 0) return null;
   if (liveRate == null || !Number.isFinite(liveRate) || liveRate <= 0) return null;
   const r = 1 / exitPrice;
   const ratio = r / liveRate;
-  return ratio >= 0.8 && ratio <= 1.25 ? r : null;
+  if (ratio >= 0.8 && ratio <= 1.25) return r;
+  return forLoss ? Math.max(r, liveRate) : null;
 }
 
 /**
@@ -364,7 +371,8 @@ export function exitQuoteToAccount(
  * تماماً، والبيع يخرج فوق فيخسر أقل بقليل. كان الحيّ يُستعمل: USDJPY عند 150 ووقف 150 pip شراءً ⇒ خسارة 101.01 USD
  * لمخاطرة 100 (1.01%).
  *
- * `null` حين `exitQuoteToAccount` يرفض (الأساس ليس عملة الحساب، خروج ≤ 0، أو يبعد > 20% عن الحيّ) أو نقاط غير صالحة.
+ * `null` حين `exitQuoteToAccount` يرفض (الأساس ليس عملة الحساب، خروج ≤ 0) أو نقاط غير صالحة؛ خروج يبعد > 20% عن
+ * الحيّ ⇒ الأغلى من الاثنين (`forLoss`).
  */
 export function pipsOnlyExitQuoteToAccount(
   spec: InstrumentSpec | null,
@@ -376,7 +384,7 @@ export function pipsOnlyExitQuoteToAccount(
   if (!spec || !Number.isFinite(slPips) || slPips <= 0) return null;
   if (liveRate == null || !Number.isFinite(liveRate) || liveRate <= 0) return null;
   const from = Number.isFinite(entryPrice) && entryPrice > 0 ? entryPrice : 1 / liveRate;
-  return exitQuoteToAccount(spec, convAccount, from - slPips * spec.pipSize, liveRate);
+  return exitQuoteToAccount(spec, convAccount, from - slPips * spec.pipSize, liveRate, true);
 }
 
 /** قيمة الـpip للوت قياسي واحد، بعملة الحساب. */
