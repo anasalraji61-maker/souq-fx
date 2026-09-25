@@ -866,3 +866,11 @@ chart-r56 (3): Alerts/Watchlist ← ui `7023c51` (`AlertsPanel.tsx:297`، `Watch
 **جديد QA74 → tools (منخفض):** backend `de91b88` جعل `avg_win`/`avg_loss`/`best`/`worst` `null` بلا صفقة خلفها؛ `tradePlan.ts` `journalStats` («بمعادلة الخادم نفسها») يعيد `0`
 و`win_rate: 0` (الخادم `null`)، والنوع `JournalStats` `number`. لا أثر مرئي: المستهلكون يحرسون بـ`trade_count > 0` (`TradeJournalPanel.tsx:1486`، `WeeklyReportPanel.tsx:117`)، و`avg_*` لا يُعرض.
 **الدورة القادمة:** المراجعة (e) — ما يُحرج أمام متداول.
+
+## 2026-09-25 — الدورة 75
+**البناء:** أخضر 0 (على 2628416، ثم 205501b بعد السحب) — لا إصلاح لازم. **Selftests:** 101/101 ناجح (`npx tsx`، أُعيد على 205501b).
+**التحقّق بالكود:** أوّل تحقّق وجد chart-r56 (3) وQA74 قائمين (ui 34 عدّ DomLite منجزاً ولم يُمسّ)، ثم وصل أثناء الدفع: ui `1136739` (`DomLitePanel.tsx:71` `chartPipSpec`، `:74` `pipUnit`)
+وtools `205501b` (`JournalStats` `number | null`، selftest ناجح) ⇒ أُغلقا. backend-r37 ← ui `3b45502` (السبب المجهول بلا سطر مناقض)؛ النصّ صفّ ui35 → launch (سحبٌ ثانٍ أثناء الدفع).
+**المراجعة (e — ما يُحرج أمام متداول):** جلسات طوكيو/لندن/نيويورك مع الصيفي (`chart/sessions.ts:29-37`)، مواصفات XAU 0.1/100 وXAG 0.01/5000 والين 0.01، ولا «ربح مضمون» بـ`locales.ts` — سليمة.
+**جديد QA75 → tools (منخفض):** `planSummaryText` (`tradePlan.ts:300`) يكتب «pip» ثابتة ⇒ «Risk 25 pip» بالإنجليزية بالدفتر ولوحة الأفكار، وبقية التطبيق «pips» (`pipUnit`).
+**الدورة القادمة:** المراجعة (a) — تكرار/ميت/تصديرات.
