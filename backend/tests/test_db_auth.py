@@ -302,3 +302,39 @@ def test_place_member_blank_password_returns_the_generated_one(_db):
     out = db.place_under_sponsor(sid, "erin", "", "right")
     assert out["temp_password"]
     assert db.login_user("erin", out["temp_password"])
+
+
+# ─── أسماء محجوزة ومحارف لا تُرى (backend-r47) ─────────────────────────────
+
+@pytest.mark.parametrize("name", ["deleted_user_2", "Deleted_User_2", "DELETED_USER_x", "أنت"])
+def test_reserved_names_cannot_be_registered(_db, name):
+    with pytest.raises(ValueError, match="reserved"):
+        db.register_user(name, "hunter2", email="r@example.com")
+
+
+@pytest.mark.parametrize("name", ["alice​", "al‍ice", "ａｌｉｃｅ", "ali ce", "ali\tce", "‮ecila"])
+def test_invisible_or_look_alike_characters_are_rejected(_db, name):
+    with pytest.raises(ValueError, match="invisible"):
+        db.register_user(name, "hunter2", email="r@example.com")
+
+
+@pytest.mark.parametrize("name", ["ali ahmed", "علي_الفوركس", "Trader-7"])
+def test_ordinary_names_still_register(_db, name):
+    assert db.register_user(name, "hunter2", email="ok@example.com")["username"] == name
+
+
+def test_a_squatted_placeholder_no_longer_blocks_account_deletion(_db):
+    """اسم «deleted_user_N» مسجَّل قبل الحجز كان يجعل حذف الحساب N يفشل (UNIQUE) فتبقى بياناته وجلسته."""
+    victim = _register()
+    with sqlite3.connect(_db) as c:  # قبل الحجز: إدراج مباشر
+        c.execute(
+            "INSERT INTO users(username,password_hash,created_at) VALUES(?,?,0)",
+            (f"Deleted_User_{victim['user_id']}", "x$y"),
+        )
+    db.delete_user_account(victim["user_id"])
+    assert db.user_from_token(victim["token"]) is None
+    with sqlite3.connect(_db) as c:
+        name, email = c.execute(
+            "SELECT username, email FROM users WHERE id=?", (victim["user_id"],)
+        ).fetchone()
+    assert name.startswith(f"deleted_user_{victim['user_id']}_") and email is None

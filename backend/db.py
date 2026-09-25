@@ -4,9 +4,11 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import re
 import secrets
 import sqlite3
 import time
+import unicodedata
 from datetime import datetime, timezone
 from typing import Any
 
@@ -33,6 +35,24 @@ def _username_taken(c: sqlite3.Connection, username: str) -> bool:
     return c.execute(
         "SELECT 1 FROM users WHERE username=? COLLATE NOCASE", (username,)
     ).fetchone() is not None
+
+
+# اسم الحساب المحذوف (`delete_user_account`) ومؤلّف الرسائل القديمة المجهول (`_LEGACY_CHAT_USER`):
+# كان كلاهما قابلاً للتسجيل ⇒ من يسجّل «deleted_user_7» مسبقاً (المعرّفات تسلسلية) يجعل حذف الحساب 7
+# يفشل بتصادم الاسم فيبقى بريده ودفتره وجلسته (شرط أبل 5.1.1(v))؛ ومن يسجّل «أنت» تُعرض رسائله بلا اسم.
+_RESERVED_USERNAME = re.compile(r"^deleted_user_", re.IGNORECASE)
+_RESERVED_USERNAMES = frozenset({"أنت"})
+
+
+def _check_username(username: str) -> None:
+    """ValueError لاسم محجوز أو يحمل محارف لا تُرى/تُطبَّع: «alice\u200b» (عرض صفري) و«ａｌｉｃｅ» (عرض
+    كامل) كانا يُقبلان بجانب «alice» ويُعرضان مثله — انتحال لا يمنعه فهرس `NOCASE` (backend-r47)."""
+    if _RESERVED_USERNAME.match(username) or username in _RESERVED_USERNAMES:
+        raise ValueError("username reserved")
+    if unicodedata.normalize("NFKC", username) != username or any(
+        unicodedata.category(ch)[0] in "CZ" and ch != " " for ch in username
+    ):
+        raise ValueError("username has invisible or look-alike characters")
 
 
 def init_db() -> None:
@@ -437,6 +457,7 @@ def register_user(
     email_norm = (email or "").strip().lower()
     if len(username) < 3 or len(password) < 4:
         raise ValueError("username/password too short")
+    _check_username(username)
     if not email_norm or not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email_norm):
         raise ValueError("invalid email")
     role = (role or "trader").strip().lower()
@@ -661,6 +682,7 @@ def place_under_sponsor(
     pwd = (password or "").strip()
     if len(username) < 3:
         raise ValueError("username too short")
+    _check_username(username)
     if not pwd:
         # فارغ = «ولّد لي كلمة مرور» — تُعاد بـ`temp_password` أدناه
         pwd = secrets.token_urlsafe(8)
@@ -1003,6 +1025,11 @@ def delete_user_account(user_id: int) -> None:
     placeholder = f"deleted_user_{user_id}"
     dead_hash = f"{secrets.token_hex(8)}${secrets.token_hex(32)}"
     with _conn() as c:
+        if c.execute(
+            "SELECT 1 FROM users WHERE username=? COLLATE NOCASE AND id<>?", (placeholder, user_id)
+        ).fetchone():
+            # اسم سُجِّل قبل حجز البادئة (`_check_username`): لا يمنع الحذف — لاحقة عشوائية بدل 500
+            placeholder = f"{placeholder}_{secrets.token_hex(4)}"
         old = c.execute("SELECT username FROM users WHERE id=?", (user_id,)).fetchone()
         if old and old["username"]:
             # أفكار الصفقات تحفظ اسم الناشر نصاً (votes.author) — بلا هذا يبقى اسم الحساب المحذوف
