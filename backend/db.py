@@ -749,7 +749,10 @@ def place_under_sponsor(
     username = _clean_username(username)
     side_norm = (side or "").strip().lower()
     role = (role or "trader").strip().lower()
-    pwd = (password or "").strip()
+    # كما كُتبت: كانت تُقصّ ⇒ «  abcd  » تُحفظ «abcd» والدخول (لا يقصّ) بما كتبه الراعي 401 بلا `temp_password`
+    pwd = password or ""
+    if not pwd.strip():
+        pwd = ""
     if len(username) < 3:
         raise ValueError("username too short")
     _check_username(username)
@@ -1321,12 +1324,14 @@ def moderate(kind: str, target_id: str, action: str) -> bool:
     if table is None:
         return False
     with _conn() as c:
+        removed = 0
         if action == "remove":
-            c.execute(f"DELETE FROM {table} WHERE id=?", (target_id,))
+            removed = c.execute(f"DELETE FROM {table} WHERE id=?", (target_id,)).rowcount
             if kind == "vote":
                 c.execute("DELETE FROM vote_ballots WHERE vote_id=?", (target_id,))
         cur = c.execute("DELETE FROM content_reports WHERE kind=? AND target_id=?", (kind, target_id))
-        return cur.rowcount > 0 or action == "remove"
+        # كان «remove» يعيد true دائماً ⇒ معرّف مكتوب خطأً «حُذف» والعنصر المُبلَّغ باقٍ
+        return removed > 0 or cur.rowcount > 0
 
 
 def _hidden_ids(c: sqlite3.Connection, kind: str, viewer_id: int | None) -> set[str]:
