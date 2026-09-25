@@ -12,6 +12,28 @@ from typing import Any
 from core.db_conn import DB_PATH, _conn
 
 
+def _migrate_username_nocase(c: sqlite3.Connection) -> None:
+    """«Ali» و«ali» كانا حسابين (`UNIQUE` حسّاس لحالة الأحرف) ⇒ انتحال اسم متداول معروف بحرف
+    كبير، والحظر المحلي بالتطبيق يطبّع الاسم فيُخفي البريء مع المنتحل. فهرس فريد `NOCASE` يمنع
+    ذلك بالقاعدة نفسها. قاعدة قائمة فيها تصادم فعلاً لا يُنشأ عليها الفهرس (لا دمج حسابات آلياً)
+    ويبقى الفحص بـ`_username_taken` عند التسجيل مانعاً لكل تصادم جديد."""
+    dup = c.execute(
+        "SELECT 1 FROM users GROUP BY username COLLATE NOCASE HAVING COUNT(*) > 1 LIMIT 1"
+    ).fetchone()
+    if dup:
+        return
+    c.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_nocase ON users(username COLLATE NOCASE)"
+    )
+
+
+def _username_taken(c: sqlite3.Connection, username: str) -> bool:
+    # NOCASE يطوي ASCII فقط — والعربية بلا حالة أحرف أصلاً
+    return c.execute(
+        "SELECT 1 FROM users WHERE username=? COLLATE NOCASE", (username,)
+    ).fetchone() is not None
+
+
 def init_db() -> None:
     with _conn() as c:
         c.executescript(
@@ -146,6 +168,7 @@ def init_db() -> None:
         _migrate_network(c)
         _migrate_commission_ledger(c)
         _migrate_user_email(c)
+        _migrate_username_nocase(c)
         _migrate_push_lang(c)
         _migrate_group_user(c)
         _migrate_content_reports(c)
@@ -405,6 +428,8 @@ def register_user(
         ).fetchone()
         if taken:
             raise ValueError("email taken")
+        if _username_taken(c, username):
+            raise ValueError("username or email taken")
         try:
             c.execute(
                 "INSERT INTO users(username,password_hash,created_at,email) VALUES(?,?,?,?)",
@@ -626,6 +651,8 @@ def place_under_sponsor(
         ).fetchone()
         if taken:
             raise ValueError("side already occupied")
+        if _username_taken(c, username):
+            raise ValueError("username taken")
 
         try:
             c.execute(
@@ -852,6 +879,13 @@ def login_user(username_or_email: str, password: str) -> dict[str, Any]:
                 "SELECT id, username, email, password_hash FROM users WHERE username=?",
                 (ident,),
             ).fetchone()
+            if not row:
+                # «ali» يدخل حساب «Ali». إن وُجد تصادم قديم (قبل الفهرس) لا يُخمَّن أيّهما
+                rows = c.execute(
+                    "SELECT id, username, email, password_hash FROM users WHERE username=? COLLATE NOCASE",
+                    (ident,),
+                ).fetchall()
+                row = rows[0] if len(rows) == 1 else None
     if not row:
         raise ValueError("invalid credentials")
     ok, needs_rehash = _verify_password(password, str(row["password_hash"]))

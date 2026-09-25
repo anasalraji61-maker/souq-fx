@@ -234,3 +234,49 @@ def test_two_users_with_the_same_password_get_different_hashes(_db):
     _register("trader1", "samepass", "a@example.com")
     _register("trader2", "samepass", "b@example.com")
     assert _stored_hash(_db, "trader1") != _stored_hash(_db, "trader2")
+
+
+# ─── «Ali» و«ali» حساب واحد ────────────────────────────────────────────────
+
+def test_a_username_differing_only_in_case_is_taken(_db):
+    _register("Ali", email="a@example.com")
+    with pytest.raises(ValueError, match="taken"):
+        _register("ali", email="b@example.com")
+    with pytest.raises(ValueError, match="taken"):
+        _register("ALI", email="c@example.com")
+
+
+def test_the_database_itself_refuses_a_case_twin(_db):
+    """الفهرس لا فحص التطبيق وحده: أي مسار إدراج مستقبلي يصطدم به."""
+    import sqlite3
+
+    _register("Ali", email="a@example.com")
+    with db._conn() as c, pytest.raises(sqlite3.IntegrityError):
+        c.execute("INSERT INTO users(username,password_hash,created_at) VALUES('aLi','x',0)")
+
+
+def test_login_is_case_insensitive_on_the_username(_db):
+    _register("Ali", password="hunter2", email="a@example.com")
+    session = db.login_user("ali", "hunter2")
+    assert session["username"] == "Ali"
+
+
+def test_an_existing_case_collision_does_not_break_startup_or_guess_on_login(tmp_path, monkeypatch):
+    """قاعدة قديمة فيها «Ali» و«ali» فعلاً: الترحيل لا يسقط، والدخول بصيغة ثالثة لا يختار أحدهما."""
+    import sqlite3
+
+    path = tmp_path / "legacy.db"
+    monkeypatch.setattr(db_conn, "DB_PATH", path)
+    monkeypatch.setattr(db, "_PBKDF2_ITERATIONS", _FAST_ITERATIONS)
+    with sqlite3.connect(path) as c:
+        c.execute("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, "
+                  "password_hash TEXT NOT NULL, created_at REAL NOT NULL)")
+        pw = db._encode_password("hunter2")
+        c.execute("INSERT INTO users(username,password_hash,created_at) VALUES('Ali',?,0)", (pw,))
+        c.execute("INSERT INTO users(username,password_hash,created_at) VALUES('ali',?,0)", (pw,))
+    db.init_db()  # لا يسقط
+    assert db.login_user("Ali", "hunter2")["username"] == "Ali", "المطابقة الحرفية أولاً"
+    with pytest.raises(ValueError):
+        db.login_user("ALI", "hunter2")
+    with pytest.raises(ValueError, match="taken"):
+        _register("aLI", email="z@example.com")
