@@ -328,6 +328,7 @@ export function FocusChartModal({
                   demo: t.dsKindDemo,
                   cache: t.dsKindCache,
                   unknown: t.dsKindUnknown,
+                  unavailable: t.dsKindUnavailable,
                 })}`}
                 {` · ${marketStatusLabel(sym, { open: t.dsMarketOpen, closed: t.dsMarketClosed })}`}
                 {hasSpread ? ` · B ${formatPrice(quote!.bid!, sym)}/A ${formatPrice(quote!.ask!, sym)}` : ''}

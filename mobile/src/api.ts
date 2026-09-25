@@ -80,8 +80,8 @@ export type Candle = {
   volume?: number;
 };
 
-/** مزود | تجريبي | مخزن | غير معروف — لا تفترض مزوداً عند غياب الحقل */
-export type DataOriginKind = 'provider' | 'demo' | 'cache' | 'unknown';
+/** مزود | تجريبي | مخزن | غير متاح من المزوّد (backend-r2: لا سعر، لا بديل) | غير معروف — لا تفترض مزوداً عند غياب الحقل */
+export type DataOriginKind = 'provider' | 'demo' | 'cache' | 'unavailable' | 'unknown';
 
 export type DataProvenance = {
   kind: DataOriginKind;
