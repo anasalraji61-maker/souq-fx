@@ -367,11 +367,10 @@ export function computePvo(
 
 /**
  * Volume Oscillator (VO، فترتان قصيرة/طويلة شائعتان short=5/long=10 — أبسط من PVO أعلاه [12/26 EMA]
- * لأنه يستخدم SMA بدل EMA وفترتين أقصر، وهو التعريف الأكثر شيوعاً لـ"Volume Oscillator" تحديداً بعكس
- * PVO الذي يحاكي PPO حرفياً) — VO[i] = (SMA_short(فوليوم)[i] − SMA_long(فوليوم)[i]) /
- * SMA_long(فوليوم)[i] × 100 (صفر عند SMA_long صفرية بدل قسمة على صفر). فوليوم مفقود يُعوَّض بنفس صيغة
+ * بفترتين أقصر، EMA كـTradingView) — VO[i] = (EMA_short(فوليوم)[i] − EMA_long(فوليوم)[i]) /
+ * EMA_long(فوليوم)[i] × 100 (صفر عند EMA_long صفرية بدل قسمة على صفر). فوليوم مفقود يُعوَّض بنفس صيغة
  * orderflow.ts للاتساق مع بقية مؤشرات الفوليوم أعلاه. **تحقّق يدوي**: فوليوم ثابت تماماً بكل الشموع →
- * SMA_short وSMA_long (متوسط بسيط مباشر لقيم متطابقة) تستقران كلتاهما على نفس القيمة الثابتة بدءاً من
+ * EMA_short وEMA_long (مبذورتان بمتوسط بسيط لقيم متطابقة) تستقران كلتاهما على نفس القيمة الثابتة بدءاً من
  * أول نقطة صالحة لكل منهما → VO=(V−V)/V×100=0 بالضبط، يطابق "لا تباعد بنشاط الفوليوم بفوليوم ثابت"
  * بالتعريف تماماً (نفس منطق تحقّق PVO أعلاه).
  */
@@ -380,14 +379,16 @@ export function computeVolumeOscillator(
   shortPeriod = 5,
   longPeriod = 10
 ): (number | null)[] {
+  // TradingView المدمج: ‎100 × (ema(volume, 5) − ema(volume, 10)) / ema(volume, 10)‎. كان SMA ⇒ قراءة
+  // تتأخّر عن TradingView وتعبر الصفر على شموع أخرى للزوج نفسه.
   const vol = candles.map((c) => c.volume ?? estimatedVolume(c));
-  const smaShort = sma(vol, shortPeriod);
-  const smaLong = sma(vol, longPeriod);
+  const emaShort = ema(vol, shortPeriod);
+  const emaLong = ema(vol, longPeriod);
   return vol.map((_, i) =>
-    smaShort[i] != null && smaLong[i] != null
-      ? smaLong[i] === 0
+    emaShort[i] != null && emaLong[i] != null
+      ? emaLong[i] === 0
         ? 0
-        : ((smaShort[i]! - smaLong[i]!) / smaLong[i]!) * 100
+        : ((emaShort[i]! - emaLong[i]!) / emaLong[i]!) * 100
       : null
   );
 }
