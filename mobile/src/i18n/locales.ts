@@ -947,6 +947,8 @@ export type Dict = {
   gridFramesWord: string;
   gridSquaresWord: string;
   gridSquaresA11y: string;
+  /** مقبض النقاط التسع بزاوية كل فريم (`FrameSizedGrid` `handleBar`) — كان بلا تسمية (DESIGN-PRO §4). */
+  gridHandleA11y: string;
   gridRectanglesWord: string;
   gridRectanglesA11y: string;
   quadCloseA11y: string;
@@ -2195,9 +2197,9 @@ const ar: Dict = {
   termSpreadWord: 'سبريد',
   termBidLabel: 'البيع',
   termAskLabel: 'الشراء',
-  termSquareFramesHintSuffix: 'فريمات مربعة · امسك كل مربع لتبديل مكانه · المؤشرات اختيارية',
+  termSquareFramesHintSuffix: 'فريمات مربعة · اسحب النقاط بزاوية أي مربع لتبديل مكانه · المؤشرات اختيارية',
   termHintMoveText:
-    'التوقعات · التنبيهات · الأخبار · المجتمع → أدوات · امسك الشريط واسحب لتبديل أماكن الفريمات',
+    'التوقعات · التنبيهات · الأخبار · المجتمع → أدوات · اسحب النقاط بزاوية الفريم لتبديل مكانه مع فريم آخر',
   termCloseWatchlistA11y: 'إغلاق قائمة المتابعة',
   wlTitle: 'قائمة متابعة',
   wlAddBtn: 'إضافة',
@@ -2252,6 +2254,7 @@ const ar: Dict = {
   gridFramesWord: 'الفريمات',
   gridSquaresWord: 'المربعات',
   gridSquaresA11y: 'عرض الفريمات كمربعات',
+  gridHandleA11y: 'مقبض الفريم — اسحبه إلى فريم آخر لتبديل مكانيهما',
   gridRectanglesWord: 'المستطيلات',
   gridRectanglesA11y: 'عرض الفريمات كمستطيلات',
   quadCloseA11y: 'إغلاق عرض 2×2',
@@ -3403,9 +3406,9 @@ const enUS: Dict = {
   termSpreadWord: 'Spread',
   termBidLabel: 'Bid',
   termAskLabel: 'Ask',
-  termSquareFramesHintSuffix: 'square frames · long-press any box to reorder it · indicators optional',
+  termSquareFramesHintSuffix: 'square frames · drag the dots in a frame’s corner to swap it with another · indicators optional',
   termHintMoveText:
-    'Forecasts · Alerts · News · Community → Tools · long-press the bar and drag to reorder frames',
+    'Forecasts · Alerts · News · Community → Tools · drag the dots in a frame’s corner to swap it with another',
   termCloseWatchlistA11y: 'Close watchlist',
   wlTitle: 'Watchlist',
   wlAddBtn: 'Add',
@@ -3460,6 +3463,7 @@ const enUS: Dict = {
   gridFramesWord: 'Frames',
   gridSquaresWord: 'Squares',
   gridSquaresA11y: 'View frames as squares',
+  gridHandleA11y: 'Frame handle — drag onto another frame to swap them',
   gridRectanglesWord: 'Rectangles',
   gridRectanglesA11y: 'View frames as rectangles',
   quadCloseA11y: 'Close 2×2 view',
@@ -4644,9 +4648,9 @@ const ku: Dict = {
   termSpreadWord: 'سپرێد',
   termBidLabel: 'فرۆشتن',
   termAskLabel: 'کڕین',
-  termSquareFramesHintSuffix: 'چوارچێوەی چوارگۆشە · پەنجە بگرە لەسەر هەر بۆکسێک بۆ گۆڕینی شوێنی · ئاماژەکان ئارەزوومەندانەن',
+  termSquareFramesHintSuffix: 'چوارچێوەی چوارگۆشە · خاڵەکانی گۆشەی هەر بۆکسێک ڕابکێشە بۆ گۆڕینی شوێنی · ئاماژەکان ئارەزوومەندانەن',
   termHintMoveText:
-    'پێشبینیەکان · ئاگاداریەکان · هەواڵەکان · کۆمەڵگا → ئامرازەکان · پەنجە بگرە لەسەر شریتەکە و ڕایکێشە بۆ گۆڕینی شوێنی چوارچێوەکان',
+    'پێشبینیەکان · ئاگاداریەکان · هەواڵەکان · کۆمەڵگا → ئامرازەکان · خاڵەکانی گۆشەی چوارچێوەکە ڕابکێشە بۆ گۆڕینەوەی شوێنی لەگەڵ چوارچێوەیەکی تر',
   termCloseWatchlistA11y: 'داخستنی لیستی چاودێری',
   wlTitle: 'لیستی چاودێری',
   wlAddBtn: 'زیادکردن',
@@ -4701,6 +4705,7 @@ const ku: Dict = {
   gridFramesWord: 'چوارچێوەکان',
   gridSquaresWord: 'چوارگۆشەکان',
   gridSquaresA11y: 'پیشاندانی چوارچێوەکان وەک چوارگۆشە',
+  gridHandleA11y: 'دەستگری چوارچێوە — بیکێشە سەر چوارچێوەیەکی تر بۆ گۆڕینەوەی شوێنیان',
   gridRectanglesWord: 'لاکێشراوەکان',
   gridRectanglesA11y: 'پیشاندانی چوارچێوەکان وەک لاکێشراو',
   quadCloseA11y: 'داخستنی دیمەنی 2×2',
