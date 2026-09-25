@@ -847,7 +847,7 @@ export function computeAlligator(
  * شمعتين دائماً null (لا نافذة كاملة كافية حولهما). **تحقّق يدوي**: قمة واحدة وسط تسلسل صاعد-هابط
  * متماثل (V مقلوبة) → قمة كسورية واحدة بالضبط عند نقطة الذروة، صفر قيعان؛ تسلسل صاعد بحت بالكامل
  * (كل شمعة أعلى من سابقتها) → صفر قمم/قيعان كسورية (لا شمعة أعلى فعلياً من الشمعتين اللاحقتين لها)؛
- * سلسلة مسطّحة تماماً → صفر (المقارنة صارمة `>`/`<` لا `>=`/`<=`، فالتعادل لا يُحتسَب كسوراً) — تحقَّق
+ * سلسلة مسطّحة تماماً → صفر (اليمين صارم `>`/`<`؛ اليسار يقبل تعادلاً ملاصقاً كـTradingView — أدناه) — تحقَّق
  * الأربعة حسابياً بسكربت Node.js فعلي (300 شمعة عشوائية بذرة ثابتة أيضاً: صفر NaN/Infinity، كل قيمة
  * غير null تطابق high/low الفعلي لنفس الشمعة تماماً).
  */
@@ -857,22 +857,33 @@ export function computeFractals(
   const n = candles.length;
   const top: (number | null)[] = new Array(n).fill(null);
   const bottom: (number | null)[] = new Array(n).fill(null);
+  // يمين صارم (شمعتان بعدها أدنى قمّةً)، ويسار كـTradingView المدمج: حتى 4 شموع ملاصقة **مساوية أو أدنى** ثم
+  // شمعتان أدنى صراحةً. بالصارم من الجهتين كانت قمّتان متساويتان حتى الـpipette (شائعة على M1/M5) بلا فراكتل
+  // إطلاقاً — الأولى تسقط بمساوية بعدها، والثانية بمساوية قبلها — ومعها مستوى Fractal Chaos Bands/Oscillator.
+  const leftOk = (i: number, beats: (j: number) => boolean, ties: (j: number) => boolean) => {
+    for (let k = 0; k <= 4; k++) {
+      if (i - k - 2 < 0) return false;
+      let ok = true;
+      for (let t = 1; t <= k && ok; t++) ok = ties(i - t);
+      if (!ok) return false; // مساواة مكسورة ⇒ لا يفيد تمديدها
+      if (beats(i - k - 1) && beats(i - k - 2)) return true;
+    }
+    return false;
+  };
   for (let i = 2; i < n - 2; i++) {
     const h = candles[i].high;
     if (
-      h > candles[i - 2].high &&
-      h > candles[i - 1].high &&
       h > candles[i + 1].high &&
-      h > candles[i + 2].high
+      h > candles[i + 2].high &&
+      leftOk(i, (j) => h > candles[j].high, (j) => candles[j].high <= h)
     ) {
       top[i] = h;
     }
     const l = candles[i].low;
     if (
-      l < candles[i - 2].low &&
-      l < candles[i - 1].low &&
       l < candles[i + 1].low &&
-      l < candles[i + 2].low
+      l < candles[i + 2].low &&
+      leftOk(i, (j) => l < candles[j].low, (j) => candles[j].low >= l)
     ) {
       bottom[i] = l;
     }
