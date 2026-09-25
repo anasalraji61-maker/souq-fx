@@ -556,7 +556,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * مدّة بلوح الأفكار وبالدفتر (`planSlTooClose`)، والحاسبة — وهي الموضع الذي يتحوّل فيه الرقم
    * إلى مال — كانت وحدها تقبله وتحسب عليه.
    *
-   * يُعامَل كـ`riskImpossible` بالضبط: تحذيرٌ ظاهر عند خانته، وبلا حجم مركز — لا رقم من مدخل
+   * يُعامَل كنسبة فوق 100% (`riskOverBalance`) بالضبط: تحذيرٌ ظاهر عند خانته، وبلا حجم مركز — لا رقم من مدخل
    * مستحيل. والخانة واحدة سواء كُتبت النقاط يدوياً أو اشتُقّت من السعرين، فالفحص واحد يغطّيهما.
    * القيمة مقرَّبة لعُشر pip أصلاً (`slPipsFromPrices`) فلا حاجة لهامش عائم.
    */
@@ -994,8 +994,11 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * `null` — وكان الصندوق يقول حينها «أدخل الرصيد ونسبة المخاطرة ووقف الخسارة» والثلاثة مكتوبة
    * أمام المتداول، فيظنّ العطل بخانة أخرى ويقلّب فيها. التحذير ظاهر عند خانة النسبة نفسها، فلا
    * يُضاف سطر يناقضه.
+   *
+   * **لكن بلا رصيد لا تحذير «أكبر من الرصيد»** (`riskOverBalance` يحتاج رصيداً) — فكان «150» وخانة
+   * الرصيد فارغة يُظهر «أكثر من 2% عالية» وحدها وصندوقاً فارغاً تماماً. الإخفاء إذن حين يظهر ذلك
+   * التحذير فقط؛ وإلا يبقى «أدخل الرصيد…» وهو صحيح حرفياً (الرصيد ناقص)، ومع الرصيد يحلّ التحذير محلّه.
    */
-  const riskImpossible = Number.isFinite(riskNum) && riskNum > 100;
   const riskOver = riskOverBalance(riskPct, balanceNum, moneyCcy);
 
   const chip = (label: string, on: boolean, onPress: () => void, a11y: string, disabled = false) => (
@@ -1321,7 +1324,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
           </>
         ) : badNumber ? (
           <Text style={[styles.warn, { textAlign: align }]}>{badNumberText}</Text>
-        ) : riskImpossible || slTooClose ? null : (
+        ) : riskOver || slTooClose ? null : (
           <Text style={[styles.resultMeta, { textAlign: align }]}>{t.riskCalcFillHint}</Text>
         )}
         {/* خانةٌ مرفوضة **واللوت محسوب** (من خانات أخرى): الرسالة كانت تظهر بلا نتيجة فقط، فرافعة «1:5000» تُسقط

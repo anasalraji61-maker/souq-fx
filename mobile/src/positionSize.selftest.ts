@@ -1718,6 +1718,17 @@ console.log('positionSize leverageOutOfRange selftest OK');
   // ضمن الرصيد، غير مفهومة، عملة أخرى، بلا رصيد
   for (const [r, b] of [['1', 10_000], ['50', 10_000], ['abc', 10_000], ['', 10_000], ['€600', 500], ['200', NaN], ['200', 0], ['$600', NaN]] as const)
     assert.equal(riskOverBalance(r, b, 'USD'), null, `${r} @ ${b}`);
+  // الحاسبة تُخفي «أدخل الرصيد…» حين `riskOverBalance` غير null فقط: نسبة >100% **بلا رصيد** كانت تُخفيه
+  // أيضاً فيبقى الصندوق فارغاً. الثابت: لكل نسبة >100% يظهر تحذير الرصيد ⇔ الرصيد صالح (ولا لوت بالحالتين)
+  for (const r of ['150', '100.5', '٢٠٠', '1000%'])
+    for (const b of [NaN, 0, -5, 1_000, 25]) {
+      assert.equal(riskOverBalance(r, b, 'USD') != null, Number.isFinite(b) && b > 0, `${r} @ ${b}`);
+      assert.equal(
+        positionSize({ balance: b, riskPct: parseRiskInput(r, b, 'USD')!.pct!, slPips: 10, pipValuePerLot: 10, contractSize: 100_000 }),
+        null,
+        `${r} @ ${b}`
+      );
+    }
 }
 console.log('positionSize riskOverBalance selftest OK');
 
