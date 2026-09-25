@@ -947,6 +947,8 @@ export function TerminalScreen() {
    * و`series` null = الجلب لم يصل بعد (chart-r47 c): مؤشّر تحميل لا شموع بذرة، ولا وسم مصدر لها.
    */
   const heroNoRealData = series != null && seriesHasNoRealData(series.data_source);
+  // chart-r47: الدوّار وحده لا يقول ماذا يُحمَّل — النصّ ظاهر وهو نفسه الـlabel.
+  const firstLoadText = t.chartFirstLoad.replace('{symbol}', symbol).replace('{tf}', tf);
   const heroTick = liveTicks[symbol] ?? null;
   const heroNowMs = useTickFreshnessClock(heroTick?.source.as_of ?? null);
   const heroNowSec = heroNowMs / 1000;
@@ -1497,10 +1499,14 @@ export function TerminalScreen() {
                 <View
                   style={[styles.heroLoading, { height: desktopChartHeight }]}
                   accessible
-                  accessibilityLabel={t.a11yBusy}
+                  accessibilityRole="progressbar"
+                  accessibilityLabel={firstLoadText}
                   accessibilityState={{ busy: true }}
                 >
                   <ActivityIndicator color={colors.accent} />
+                  <Text style={styles.heroLoadingText} numberOfLines={2}>
+                    {firstLoadText}
+                  </Text>
                 </View>
               ) : (
                 <MatrixChart
@@ -1651,10 +1657,14 @@ export function TerminalScreen() {
                 <View
                   style={[styles.heroLoading, { height: desktopChartHeight }]}
                   accessible
-                  accessibilityLabel={t.a11yBusy}
+                  accessibilityRole="progressbar"
+                  accessibilityLabel={firstLoadText}
                   accessibilityState={{ busy: true }}
                 >
                   <ActivityIndicator color={colors.accent} />
+                  <Text style={styles.heroLoadingText} numberOfLines={2}>
+                    {firstLoadText}
+                  </Text>
                 </View>
               ) : (
                 <MatrixChart
@@ -2188,7 +2198,8 @@ const styles = StyleSheet.create({
   statusDotOnline: { backgroundColor: colors.bull },
   statusText: { color: colors.textDim, fontSize: 9, fontWeight: '700' },
   desktopChart: { flex: 1, paddingHorizontal: 7, paddingTop: 6 },
-  heroLoading: { alignItems: 'center', justifyContent: 'center' },
+  heroLoading: { alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  heroLoadingText: { color: colors.textMuted, fontSize: 13, textAlign: 'center', paddingHorizontal: spacing.md },
   chartArmed: {
     color: colors.bull,
     fontSize: 11,
