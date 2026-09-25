@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   View,
@@ -17,16 +17,13 @@ import { useDailyRefs } from '../chart/dailyRefStore';
 import { useMultiLiveTicks } from '../hooks/useMultiLiveTicks';
 import { type Timeframe } from '../timeframes';
 import { TimeframeBar } from './TimeframeBar';
-import { mockSeries } from '../mock';
 import { candleTimeSec, isSyntheticProvenance, normalizeProvenance } from '../chart/dataSource';
-import { anchorDemoSeries } from '../chart/demoAnchor';
 import { formatPrice } from '../chart/math';
 import { formatPct, pctDirection } from '../chart/dailyChange';
 import { isForexMarketOpen } from '../chart/marketHours';
-import { mockBase } from '../chart/mockBases';
 import { createSeriesCache, seriesCacheKey } from '../chart/seriesCache';
 import { useI18n } from '../i18n/I18nContext';
-import { ProviderUnavailableNotice, seriesHasNoRealData } from './ProviderUnavailableNotice';
+import { ProviderUnavailableNotice, serverUnreachableSeries, seriesHasNoRealData } from './ProviderUnavailableNotice';
 
 type Props = {
   visible: boolean;
@@ -85,12 +82,6 @@ export function QuadChartModal({
   const ticks = useMultiLiveTicks(symbols, visible);
   // نسبة رأس الخلية = تغيّر اليوم (كقائمة المتابعة) لا «منذ أول شمعة محمّلة» — تختلف بين الخلايا بالفريم.
   const dailyRefs = useDailyRefs(visible ? symbols : NO_SYMBOLS);
-  // فشل الجلب ⇒ شموع تجريبية من أساس ثابت قديم (EURUSD 1.0854) بجانب تيك حيّ حقيقي بالرأس:
-  // السعر المطبوع بعيد عن كل الشموع، ودمجه بآخر شمعة يرسم شمعة عملاقة تسطّح الباقي. الآن تُرسى
-  // السلسلة التجريبية على التيك: فوراً إن وصل، وإلا عند أوّل تيك للخلية (مرّة واحدة).
-  const ticksRef = useRef(ticks);
-  ticksRef.current = ticks;
-  const pendingAnchor = useRef<boolean[]>([false, false, false, false]);
   // الفريم كان ثابتاً من الشاشة الأمّ: مقارنة الأزواج الأربعة على فريم آخر تعني إغلاق الرباعي،
   // وتغيير فريم الإطار الأول، ثم فتحه من جديد. الآن شريط فريمات داخله يبدّل الأربعة معاً.
   // الاختيار يخصّ هذه الجلسة وحدها: يُنسى عند الإغلاق (وعند تغيّر فريم الأمّ) فلا يُفتح
@@ -148,7 +139,6 @@ export function QuadChartModal({
     // الثلاثة الجاهزة، والانتظار مجموع أزمنتها. الآن متوازٍ، وكل خلية تُملأ لحظة وصول شموعها.
     // الرجوع لفريم فُتح قبل قليل: شموعه المحفوظة فوراً بدل مؤشّر التحميل، والجلب يستبدلها.
     setSeries(symbols.map((sym) => quadSeriesCache.get(seriesCacheKey(sym, tf))));
-    pendingAnchor.current = [false, false, false, false];
     symbols.forEach((sym, i) => {
       const key = seriesCacheKey(sym, tf);
       api
@@ -161,11 +151,8 @@ export function QuadChartModal({
           // فشل التحديث وبالذاكرة شموع حقيقية حديثة ⇒ تبقى هي لا الوهمية.
           const cached = quadSeriesCache.get(key);
           if (cached) return cached;
-          const mock = mockSeries(sym, mockBase(sym), tf, 80);
-          const tp = ticksRef.current[sym]?.price;
-          if (tp != null && Number.isFinite(tp) && tp > 0) return anchorDemoSeries(mock, tp);
-          if (alive) pendingAnchor.current[i] = true;
-          return mock;
+          // launch121: لا شموع وهمية حول أسعار 2024 — سلسلة فارغة ⇒ إشعار «لا اتصال بخادم MATRIX».
+          return serverUnreachableSeries(sym, tf);
         })
         .then((s) => {
           if (!alive) return;
@@ -194,7 +181,6 @@ export function QuadChartModal({
           .then((s) => {
             if (!alive || isSyntheticProvenance(s.data_source)) return;
             quadSeriesCache.put(seriesCacheKey(sym, tf), s);
-            pendingAnchor.current[i] = false;
             setSeries((prev) => {
               const next = [...prev];
               next[i] = s;
@@ -210,23 +196,6 @@ export function QuadChartModal({
       clearInterval(id);
     };
   }, [visible, symbols, tf]);
-
-  useEffect(() => {
-    if (!pendingAnchor.current.some(Boolean)) return;
-    symbols.forEach((sym, i) => {
-      const tp = ticks[sym]?.price;
-      if (!pendingAnchor.current[i] || !series[i]) return;
-      if (tp == null || !Number.isFinite(tp) || tp <= 0) return;
-      pendingAnchor.current[i] = false;
-      setSeries((prev) => {
-        const cur = prev[i];
-        if (!cur) return prev;
-        const next = [...prev];
-        next[i] = anchorDemoSeries(cur, tp);
-        return next;
-      });
-    });
-  }, [ticks, series, symbols]);
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -332,7 +301,7 @@ export function QuadChartModal({
                   syncTime && isLeader && styles.cellLeader,
                 ]}
               >
-                {/* شموع تجريبية (فشل الطلب → mockSeries، أو سلسلة demo من الخادم) كانت تُرسم هنا بلا أي
+                {/* شموع تجريبية (سلسلة demo قديمة من الخادم؛ فشل الطلب صار إشعاراً، launch121) كانت تُرسم هنا بلا أي
                     وسم فتُقرأ كسوق حقيقي — بعكس ChartFrame/الشارت الرئيسي اللذين يوسمانها «تجريبي». */}
                 <View style={[styles.cellHead, rtl && styles.cellHeadRtl]}>
                   <Text style={[styles.sym, { textAlign: align }]}>{sym}</Text>
