@@ -64,6 +64,12 @@ export type Dict = {
   regErrUsernameLength: string;
   regErrPasswordLength: string;
   regErrRoleNotOpen: string;
+  /** الاسم أو الإيميل فارغ بالتسجيل — `AccountScreen` يرمي `Error('missing fields')` قبل أي طلب (`registerErrorText`). */
+  regErrMissingFields: string;
+  /** رفض الدخول 401 `invalid credentials` (`db.login_user`): الاسم/الإيميل غير موجود أو كلمة المرور خطأ — لا نفرّق عمداً. `loginErrorText`. */
+  loginErrCredentials: string;
+  /** الدخول بحقل الاسم/الإيميل فارغ (`Error('missing identity')` أو 400 `email or username required`). `loginErrorText`. */
+  loginErrMissing: string;
   language: string;
   deleteAccount: string;
   deleteAccountConfirmTitle: string;
@@ -1482,7 +1488,10 @@ const ar: Dict = {
   regErrSponsorNotFound: 'رمز الدعوة غير موجود — تأكّد منه مع من دعاك، أو اترك الخانة فارغة',
   regErrUsernameLength: 'الاسم من 3 إلى 32 حرفاً',
   regErrPasswordLength: 'كلمة المرور 4 أحرف على الأقل',
-  regErrRoleNotOpen: 'الحساب الجديد يُسجَّل «{trader}» فقط — الأدوار الأخرى يمنحها راعيك من شبكته. اختر «{trader}» ثم أعد المحاولة',
+  regErrRoleNotOpen: 'الحساب الجديد يُسجَّل «{trader}» فقط — الأدوار الأخرى يمنحها راعيك من شبكته بعد التسجيل',
+  regErrMissingFields: 'اكتب اسم المستخدم والإيميل — كلاهما مطلوب لإنشاء الحساب',
+  loginErrCredentials: 'الاسم أو الإيميل أو كلمة المرور غير صحيحة — تحقّق منها وأعد المحاولة',
+  loginErrMissing: 'اكتب اسم المستخدم أو الإيميل الذي سجّلت به',
   language: 'اللغة',
   deleteAccount: 'حذف الحساب',
   deleteAccountConfirmTitle: 'حذف الحساب نهائياً؟',
@@ -2691,7 +2700,10 @@ const enUS: Dict = {
   regErrSponsorNotFound: 'Invite code not found — check it with whoever invited you, or leave the field empty',
   regErrUsernameLength: 'Username must be 3 to 32 characters',
   regErrPasswordLength: 'Password must be at least 4 characters',
-  regErrRoleNotOpen: 'New accounts are created as “{trader}” only — other roles are given by your sponsor from their network. Choose “{trader}” and try again',
+  regErrRoleNotOpen: 'New accounts are created as “{trader}” only — other roles are given by your sponsor from their network after you sign up',
+  regErrMissingFields: 'Enter a username and an email — both are needed to create an account',
+  loginErrCredentials: "That name, email or password isn't right — check them and try again",
+  loginErrMissing: 'Enter the username or email you signed up with',
   language: 'Language',
   deleteAccount: 'Delete account',
   deleteAccountConfirmTitle: 'Delete account permanently?',
@@ -3927,7 +3939,10 @@ const ku: Dict = {
   regErrSponsorNotFound: 'کۆدی بانگهێشت نەدۆزرایەوە — لەگەڵ ئەو کەسەی بانگهێشتی کردوویت بیپشکنە، یان خانەکە بەتاڵ بهێڵەوە',
   regErrUsernameLength: 'ناو دەبێت 3 تا 32 پیت بێت',
   regErrPasswordLength: 'وشەی نهێنی دەبێت لانیکەم 4 پیت بێت',
-  regErrRoleNotOpen: 'هەژماری نوێ تەنها وەک «{trader}» تۆمار دەکرێت — ڕۆڵەکانی تر سپۆنسەرەکەت لە تۆڕەکەیەوە پێت دەدات. «{trader}» هەڵبژێرە و دووبارە هەوڵ بدەرەوە',
+  regErrRoleNotOpen: 'هەژماری نوێ تەنها وەک «{trader}» تۆمار دەکرێت — ڕۆڵەکانی تر سپۆنسەرەکەت دوای تۆمارکردن لە تۆڕەکەیەوە پێت دەدات',
+  regErrMissingFields: 'ناوی بەکارهێنەر و ئیمەیڵ بنووسە — هەردووکیان بۆ دروستکردنی هەژمار پێویستن',
+  loginErrCredentials: 'ناو یان ئیمەیڵ یان وشەی نهێنی هەڵەیە — بیانپشکنە و دووبارە هەوڵ بدەرەوە',
+  loginErrMissing: 'ئەو ناوی بەکارهێنەر یان ئیمەیڵە بنووسە کە پێی تۆمار بوویت',
   language: 'زمان',
   deleteAccount: 'سڕینەوەی هەژمار',
   deleteAccountConfirmTitle: 'هەژمار بە تەواوی بسڕدرێتەوە؟',

@@ -9,6 +9,8 @@ import type { Dict } from './locales';
 export function registerErrorText(t: Dict, err: unknown): string {
   const e = (err ?? {}) as { status?: unknown; detail?: unknown };
   const fill = (s: string) => s.replace(/\{login\}/g, t.login).replace(/\{trader\}/g, t.trader);
+  // `AccountScreen.submit` يرمي هذا قبل الطلب حين الاسم أو الإيميل فارغ — ليس انقطاعاً.
+  if (err instanceof Error && err.message === 'missing fields') return t.regErrMissingFields;
   if (e.status === 400 && typeof e.detail === 'string') {
     const byDetail: Record<string, string> = {
       'username reserved': t.regErrReserved,
@@ -31,4 +33,17 @@ export function registerErrorText(t: Dict, err: unknown): string {
     if (field === 'role') return fill(t.regErrRoleNotOpen);
   }
   return t.registerError;
+}
+
+/**
+ * نصّ رفض الدخول: 401 `invalid credentials` (`db.login_user`) ⇒ بيانات خاطئة؛ حقل فارغ (`Error('missing identity')` من
+ * `AccountScreen.submit` أو 400 `email or username required`) ⇒ اكتب الاسم؛ غير ذلك (شبكة، 5xx) ⇒ `loginError` الجامع.
+ * كان كل رفض يقول «تحقّق من البيانات ومن اتصالك» فمن أخطأ كلمة المرور لا يعرف إن كان الخطأ منه أو من الشبكة.
+ */
+export function loginErrorText(t: Dict, err: unknown): string {
+  if (err instanceof Error && err.message === 'missing identity') return t.loginErrMissing;
+  const e = (err ?? {}) as { status?: unknown; detail?: unknown };
+  if (e.status === 401) return t.loginErrCredentials;
+  if (e.status === 400 && e.detail === 'email or username required') return t.loginErrMissing;
+  return t.loginError;
 }

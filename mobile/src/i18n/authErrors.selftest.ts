@@ -2,7 +2,7 @@
  * Self-test for registerErrorText (pure).
  * Run: npx --yes tsx src/i18n/authErrors.selftest.ts
  */
-import { registerErrorText } from './authErrors';
+import { loginErrorText, registerErrorText } from './authErrors';
 import { DICTS } from './locales';
 
 let fails = 0;
@@ -27,6 +27,12 @@ for (const lang of ['ar', 'en-US', 'en-GB', 'ku'] as const) {
   check(`${lang} role 422 fills {trader}`, role.includes(t.trader) && !role.includes('{trader}'));
   check(`${lang} username 422`, registerErrorText(t, err(422, [{ loc: ['body', 'username'] }])) === t.regErrUsernameLength);
   check(`${lang} password 422`, registerErrorText(t, err(422, [{ loc: ['body', 'password'] }])) === t.regErrPasswordLength);
+  check(`${lang} missing fields (client) → not generic`, registerErrorText(t, new Error('missing fields')) === t.regErrMissingFields);
+  check(`${lang} login 401 → credentials`, loginErrorText(t, err(401, 'invalid credentials')) === t.loginErrCredentials);
+  check(`${lang} login missing (client)`, loginErrorText(t, new Error('missing identity')) === t.loginErrMissing);
+  check(`${lang} login 400 missing`, loginErrorText(t, err(400, 'email or username required')) === t.loginErrMissing);
+  check(`${lang} login network → generic`, loginErrorText(t, new Error('Network request failed')) === t.loginError);
+  check(`${lang} login 500 → generic`, loginErrorText(t, err(500, undefined)) === t.loginError);
   check(`${lang} unknown 400 → generic`, registerErrorText(t, err(400, 'side required when sponsor is set')) === t.registerError);
   check(`${lang} network → generic`, registerErrorText(t, new Error('timeout')) === t.registerError);
   check(`${lang} null → generic`, registerErrorText(t, null) === t.registerError);
