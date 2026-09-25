@@ -292,6 +292,7 @@ export type Dict = {
   alertsStatusArmed: string;
   alertsStatusTriggered: string;
   riskCalcTitle: string;
+  /** QA20: لا «never lose more» — الفجوة/الانزلاق عند الخبر تتخطّى الوقف (`newsRiskHint`)؛ الوعد هو كلفة ضرب الوقف فقط */
   riskCalcSub: string;
   riskCalcSymbol: string;
   riskCalcBadSymbol: string;
@@ -1382,7 +1383,7 @@ const ar: Dict = {
   alertsStatusArmed: '● مُفعَّل — بانتظار السعر',
   alertsStatusTriggered: 'انطلق ✓',
   riskCalcTitle: 'حاسبة حجم المركز',
-  riskCalcSub: 'كم لوت تفتح حتى لا تخسر أكثر من نسبة محددة من رصيدك',
+  riskCalcSub: 'كم لوت تفتح حتى يكلّفك ضرب الوقف نسبة محدّدة من رصيدك',
   riskCalcSymbol: 'الأداة',
   riskCalcBadSymbol:
     'رمز غير مدعوم — الحاسبة تحسب أزواج الفوركس والذهب والفضة، مثل EURUSD أو XAUUSD أو GOLD أو EURUSD.m، ورموز حساب السنت مثل EURUSDc',
@@ -2447,7 +2448,7 @@ const enUS: Dict = {
   alertsStatusArmed: '● Armed — waiting for price',
   alertsStatusTriggered: 'Triggered ✓',
   riskCalcTitle: 'Position size calculator',
-  riskCalcSub: 'How many lots to open so you never lose more than a set % of your balance',
+  riskCalcSub: 'How many lots to open so that hitting your stop costs a set % of your balance',
   riskCalcSymbol: 'Instrument',
   riskCalcBadSymbol:
     'Unsupported symbol — the calculator sizes forex pairs, gold and silver, e.g. EURUSD, XAUUSD, GOLD or EURUSD.m, and cent-account symbols such as EURUSDc',
@@ -3537,7 +3538,7 @@ const ku: Dict = {
   alertsStatusArmed: '● چالاکە — چاوەڕێی نرخ',
   alertsStatusTriggered: 'دەرچوو ✓',
   riskCalcTitle: 'ژمێرەری قەبارەی پۆزیشن',
-  riskCalcSub: 'چەند لۆت بکەیتەوە بۆ ئەوەی زیاتر لە ڕێژەیەکی دیاریکراوی باڵانسەکەت لەدەست نەدەیت',
+  riskCalcSub: 'چەند لۆت بکەیتەوە بۆ ئەوەی لێدانی وەستان ڕێژەیەکی دیاریکراو لە باڵانسەکەت بخایەنێت',
   riskCalcSymbol: 'ئامراز',
   riskCalcBadSymbol:
     'هێمای پشتگیری نەکراو — ژمێرەرەکە جووتەکانی فۆرێکس و زێڕ و زیو دەژمێرێت، وەک EURUSD یان XAUUSD یان GOLD یان EURUSD.m، و هێماکانی هەژماری سەنت وەک EURUSDc',
