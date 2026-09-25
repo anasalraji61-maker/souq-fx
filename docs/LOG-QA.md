@@ -724,3 +724,5 @@ ui11 ← ui (`a0f67d1`، `AS_OF_COPY` grep صفر)؛ QA60 ← launch (`99e365e`�
 **المراجعة (b — نصوص ثابتة):** سكربت على كل `.ts/.tsx` بـ`src` (عربي بسلاسل خارج التعليقات، و`>Text<` إنجليزي، و`label/placeholder/title="…"`): 126 إصابة، كلّها
 معروفة (`academy.ts` QA27، `MessagesScreen`/`mock.ts`/`api.ts:893` launch52) أو غير معروضة (مفاتيح مطابقة نصّ الخادم بـ`CommissionPlanPanel`، regex الحاسبة، أوامر AI بـ`WeeklyReportPanel`، احتياطات تُستبدل بالمستدعي). **لا بند جديد.**
 **الدورة القادمة:** المراجعة (c) — أزرار بلا `accessibilityLabel`.
+**إلحاق:** تعارض عند الدفع مع tools 78 / launch 118 / ui 16 / backend 20. تحقّقتُ: ui16a ← ui (`86a1992`، `ProviderUnavailableNotice.tsx:25-30`)؛ launch118 ← backend (`f88d36b`، `main.py:1892`) ⇒ أُغلقا (المجموع 5).
+البناء بعد الدمج أخضر 0، الـselftests 99/99. RELEASE-MOBILE 482 خطوة.
