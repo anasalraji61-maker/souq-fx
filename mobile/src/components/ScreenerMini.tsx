@@ -32,7 +32,7 @@ export function ScreenerMini() {
     [t]
   );
   const [hits, setHits] = useState<
-    { symbol: string; rsi: number; change_pct: number; filters_matched: string[] }[]
+    { symbol: string; rsi: number; change_pct: number; filters_matched: string[]; data_kind?: string | null }[]
   >([]);
   const [loading, setLoading] = useState(false);
   /** وضوح الحالة: يميّز "لا نتائج مطابقة للفلتر" عن "فشل الاتصال بالفحص" بدل صمت كامل. */
@@ -200,7 +200,11 @@ export function ScreenerMini() {
               pctRounded == null || pctRounded === 0 ? 'flat' : pctRounded > 0 ? 'up' : 'down';
             return (
               <View key={h.symbol} style={styles.hit}>
-                <Text style={styles.sym}>{h.symbol}</Text>
+                <Text style={styles.sym}>
+                  {h.symbol}
+                  {/* backend-r10 (ج): عند حدّ المزوّد قد تكون السلسلة مخزَّنة حتى 15د — RSI/التقاطع ليسا «الآن». */}
+                  {h.data_kind === 'cache' ? <Text style={styles.cacheTag}> · {t.dsKindCache}</Text> : null}
+                </Text>
                 <Text style={styles.meta}>
                   RSI {h.rsi} ·{' '}
                   <Text
@@ -263,6 +267,7 @@ const styles = StyleSheet.create({
   },
   sym: { color: colors.text, fontWeight: '800', fontSize: 12 },
   meta: { color: colors.textDim, fontSize: 10 },
+  cacheTag: { color: colors.warn, fontWeight: '700', fontSize: 10 },
   /** لون النسبة يأتي من الاتجاه وحده — بلا اتجاه تبقى بلون `meta` المكتوم. */
   metaPct: { fontWeight: '800' },
   metaPctUp: { color: colors.bull },

@@ -518,6 +518,9 @@ export const api = {
         change_pct: number;
         rsi: number;
         filters_matched: string[];
+        /** `cache` = سلسلة مخزَّنة (حدّ المزوّد، حتى 15د) لا جلب الآن — backend-r10 (ج)؛ غائب = خادم أقدم */
+        data_kind?: string | null;
+        as_of?: string | number | null;
       }[];
       count: number;
       /** عدد الرموز التي قُرئت شموعها فعلاً / التي تعذّرت (حدّ المزوّد غالباً) — خادم أقدم لا يرسلها. */
