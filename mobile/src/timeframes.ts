@@ -15,8 +15,6 @@ export const TF_SECONDS: Record<Timeframe, number> = {
 
 export const DEFAULT_FRAME_TIMEFRAMES: Timeframe[] = ['15m', '1H', '4H'];
 
-export const FRAME_SYMBOLS = ['EURUSD', 'GBPUSD', 'XAUUSD'] as const;
-
 export function isTimeframe(value: string): value is Timeframe {
   return (TIMEFRAMES as readonly string[]).includes(value);
 }
