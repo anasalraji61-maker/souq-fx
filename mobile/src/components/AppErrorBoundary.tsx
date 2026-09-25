@@ -102,9 +102,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     gap: 12,
   },
-  brand: { color: colors.accent, fontSize: 13, fontWeight: '800', letterSpacing: 3 },
-  title: { color: colors.text, fontSize: 18, fontWeight: '800', textAlign: 'center' },
-  body: { color: colors.textMuted, fontSize: 14, lineHeight: 21, textAlign: 'center' },
+  // `docs/DESIGN-PRO.md`: تأكيد واحد بالشاشة (الزرّ — طريق الخروج الوحيد) فالعلامة بلون ثانوي؛ أوزان 400/500 لا 800؛
+  // المقاسات من السلّم 11/13/15/18 والمسافات على شبكة 4.
+  brand: { color: colors.textMuted, fontSize: 13, fontWeight: '500', letterSpacing: 3 },
+  title: { color: colors.text, fontSize: 18, fontWeight: '500', textAlign: 'center' },
+  body: { color: colors.textMuted, fontSize: 13, lineHeight: 20, textAlign: 'center' },
   detail: { color: colors.textDim, fontSize: 11, lineHeight: 16, textAlign: 'center' },
   // الزر الوحيد بهذه الشاشة هو طريق الخروج منها: حبّة تيل ممتلئة بظل خفيف وضغطة تصغير، كزرّ
   // «التالي» بالجولة الترحيبية — لا لوح مسطّح بزوايا 10 يبدو معطّلاً بشاشة خطأ أصلاً.
@@ -114,13 +116,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.accent,
     borderRadius: radii.pill,
-    paddingHorizontal: 26,
-    paddingVertical: 13,
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
     shadowColor: buttons.shadowColor,
     shadowOpacity: buttons.shadowOpacity,
     shadowRadius: buttons.shadowRadius,
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  btnText: { color: colors.onAccent, fontSize: 15, fontWeight: '800' },
+  btnText: { color: colors.onAccent, fontSize: 15, fontWeight: '500' },
 });

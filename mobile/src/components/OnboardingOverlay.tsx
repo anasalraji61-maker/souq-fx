@@ -172,22 +172,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     gap: spacing.sm,
-    shadowColor: buttons.shadowColor,
-    shadowOpacity: buttons.shadowOpacity,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: buttons.elevation,
+    // `docs/DESIGN-PRO.md` §5.5: فاصل واحد — الحدّ والخلفية يكفيان فوق الستارة الداكنة، والظلّ الثالث حُذف.
   },
   // بلا `gap`: التباعد صار من حشو هدف اللمس نفسه (5+5 = عشر بكسلات بين نقطتين).
   dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.xs },
   dotsRtl: { flexDirection: 'row-reverse' },
-  dotHit: { paddingHorizontal: 5, paddingVertical: 12, justifyContent: 'center', alignItems: 'center' },
+  dotHit: { paddingHorizontal: spacing.xs, paddingVertical: 12, justifyContent: 'center', alignItems: 'center' },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.border },
-  dotOn: { backgroundColor: colors.accent, width: 18 },
+  // النقطة الحالية بلون النصّ لا التيل: تأكيد واحد بالبطاقة (زرّ «التالي»، DESIGN-PRO §1)، والعرض 18 يميّزها بغير اللون.
+  dotOn: { backgroundColor: colors.text, width: 18 },
   dotDone: { width: 6, opacity: 0.55 },
   scroll: { flexGrow: 0, flexShrink: 1 },
   scrollContent: { gap: spacing.sm },
-  title: { color: colors.text, fontWeight: '900', fontSize: 17 },
+  title: { color: colors.text, fontWeight: '500', fontSize: 18 },
   body: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
   riskNote: {
     color: colors.textDim,
@@ -205,8 +202,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   actionsRtl: { flexDirection: 'row-reverse' },
-  skipBtn: { paddingHorizontal: 10, paddingVertical: 10 },
-  skipText: { color: colors.textDim, fontWeight: '700', fontSize: 13 },
+  skipBtn: { minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  skipText: { color: colors.textDim, fontWeight: '500', fontSize: 13 },
   nextBtn: {
     flex: 1,
     backgroundColor: colors.accent,
@@ -219,5 +216,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: buttons.shadowOffsetY },
     elevation: buttons.elevation,
   },
-  nextText: { color: colors.onAccent, fontWeight: '900', fontSize: 14 },
+  nextText: { color: colors.onAccent, fontWeight: '500', fontSize: 15 },
 });
