@@ -10,6 +10,7 @@ import {
   instrumentSpec,
   conversionPair,
   convStaleMinutes,
+  costsForRisk,
   quoteAsOfMs,
   reversedConversion,
   usdBridge,
@@ -809,17 +810,19 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
       : typedSpreadPips;
   /** بعملة الحساب لكل لوت — تُضاف × اللوت داخل `spreadRisk`؛ سطرٌ واحد «شاملة التكاليف» حين تكون موجبة */
   const commissionPerLot = parseCommission(commission, moneyCcy);
+  // خانةٌ مرفوضة = صفر هنا (رسالتها تحتها) ولا تُسقط الأخرى من السطر — راجع `costsForRisk`
+  const costs = costsForRisk(spreadPips, commissionPerLot);
   const withSpread =
-    lots != null && pv != null && spreadPips != null && commissionPerLot != null && spec
+    lots != null && pv != null && spec
       ? spreadRisk({
           lots,
           slPips: slNum,
-          spreadPips,
+          spreadPips: costs.spreadPips,
           pipValuePerLot: pv,
           balance: balanceNum,
           riskPct: riskNum,
           contractSize: spec.contractSize,
-          commissionPerLot,
+          commissionPerLot: costs.commissionPerLot,
         })
       : null;
   /**
@@ -941,13 +944,13 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
    * بعمولة 7 نصف ما يبدو. null = لا سبريد ولا عمولة (السطر الإجمالي يكفي). راجع `profitAfterCosts`.
    */
   const netAfterCosts =
-    potentialProfit != null && withSpread && lots != null && pv != null && spreadPips != null
+    potentialProfit != null && withSpread && lots != null && pv != null
       ? profitAfterCosts({
           grossProfit: potentialProfit,
           lots,
-          spreadPips,
+          spreadPips: costs.spreadPips,
           pipValuePerLot: pv,
-          commissionPerLot: commissionPerLot ?? 0,
+          commissionPerLot: costs.commissionPerLot,
           riskWithCosts: withSpread.risk,
         })
       : null;

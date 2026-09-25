@@ -6,6 +6,7 @@ import { parseDecimal } from './parseDecimal';
 import assert from 'node:assert/strict';
 import {
   convStaleMinutes,
+  costsForRisk,
   quoteAsOfMs,
   parseSlPips,
   ambiguousSlPips,
@@ -2766,3 +2767,26 @@ console.log('positionSize targetQuoteToAccount selftest OK');
   assert.equal(quoteAsOfMs(12345, now), now);
 }
 console.log('positionSize quoteAsOfMs selftest OK');
+
+// ---- costsForRisk: خانة تكلفة مرفوضة لا تُسقط الأخرى من «المخاطرة شاملة التكاليف» ----
+{
+  const eur = instrumentSpec('EURUSD')!;
+  const pv = pipValuePerLot(eur, 1);
+  const base = { lots: 2, slPips: 5, pipValuePerLot: pv, balance: 10_000, riskPct: 1, contractSize: eur.contractSize };
+  // سبريد «1.2 pts» مرفوض (null) + عمولة 7 ⇒ 100 + 2×7 = 114 (كان السطر يختفي كلياً)
+  assert.equal(parseSpreadPips('1.2 pts'), null);
+  const c1 = costsForRisk(parseSpreadPips('1.2 pts'), parseCommission('7'));
+  assert.deepEqual(c1, { spreadPips: 0, commissionPerLot: 7 });
+  const r1 = spreadRisk({ ...base, ...c1 })!;
+  assert.ok(Math.abs(r1.risk - 114) < 1e-9 && Math.abs(r1.pct - 1.14) < 1e-9);
+  assert.equal(r1.lotsWithin, 1.75);
+  // عمولة مرفوضة + سبريد 1.5 ⇒ (5+1.5)×10×2 = 130
+  const c2 = costsForRisk(parseSpreadPips('1.5'), null);
+  const r2 = spreadRisk({ ...base, ...c2 })!;
+  assert.ok(Math.abs(r2.risk - 130) < 1e-9);
+  assert.equal(r2.lotsWithin, 1.53);
+  // كلاهما مرفوض/فارغ ⇒ لا سطر
+  assert.equal(spreadRisk({ ...base, ...costsForRisk(null, null) }), null);
+  assert.equal(spreadRisk({ ...base, ...costsForRisk(parseSpreadPips(''), parseCommission('')) }), null);
+}
+console.log('positionSize costsForRisk selftest OK');

@@ -1247,6 +1247,18 @@ export function stopInsideSpread(slPips: number, spreadPips: number | null): boo
 }
 
 /**
+ * مدخلا سطر «المخاطرة شاملة التكاليف»: خانةٌ غير مفهومة تُحسب صفراً ولا تُسقط الأخرى. كان السطر يشترط الاثنين
+ * صالحين ⇒ سبريد «1.2 pts» مرفوض يُخفي عمولة 7 صحيحة (EURUSD وقف 5 نقاط، 2 لوت: 114 USD = 1.14% تصير «100 USD»
+ * بلا أي كلفة) وبالعكس. الخانة المرفوضة تعرض رسالتها تحتها، فالمتداول يعرف أنها لم تُحسب.
+ */
+export function costsForRisk(
+  spreadPips: number | null,
+  commissionPerLot: number | null
+): { spreadPips: number; commissionPerLot: number } {
+  return { spreadPips: spreadPips ?? 0, commissionPerLot: commissionPerLot ?? 0 };
+}
+
+/**
  * **المخاطرة شاملة السبريد.** الشراء يُفتح على Ask ويُغلق وقفه على Bid (والبيع عكسه)، فوقفٌ 20 نقطة
  * بسبريد 1.5 يخسر قرابة 21.5 نقطة حين يُضرب — والحاسبة كانت تحسب اللوت والمخاطرة على الـ20 وحدها،
  * فـ«1%» المكتوبة تصير 1.08% فعلاً، وأكثر بكثير على وقف ضيّق (وقف 5 بسبريد 2 = 1.4%).
