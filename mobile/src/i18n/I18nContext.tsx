@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { I18nManager, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DICTS, Dict, LangId, LANGS, isRtl, resolveLang, deviceLocaleTag, LANG_STORAGE_KEY } from './locales';
+import { ensureAlertChannel, registerPushToken } from '../notifications';
 
 type I18nCtx = {
   lang: LangId;
@@ -63,6 +64,12 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* فشل الحفظ: اللغة تسري بهذه الجلسة ويُعاد الافتراضي بالفتح التالي — أهون من استثناء */
     }
+    // الخادم يختار لغة إشعار التنبيه من اللغة المسجَّلة مع توكن الجهاز، والتوكن كان يُسجَّل بالإقلاع
+    // فقط ⇒ من بدّل العربية إلى الإنجليزية ظلّت تنبيهات أسعاره عربية حتى يعيد تشغيل التطبيق. نعيد
+    // التسجيل الآن (بلا سؤال إذن — بلا إذن ممنوح لا يفعل شيئاً، ويقرأ اللغة المحفوظة للتوّ)، ونحدّث
+    // اسم قناة أندرويد بإعدادات النظام باللغة الجديدة. بلا انتظار: تبديل اللغة لا ينتظر الشبكة.
+    void ensureAlertChannel(true);
+    void registerPushToken();
   }, []);
 
   const value = useMemo(
