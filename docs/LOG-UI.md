@@ -269,3 +269,13 @@
 | 5753fba | `QuadChartModal`: فشل الطلب بلا ذاكرة ⇒ `serverUnreachableSeries` (شموع فارغة، `last`/`change_pct` null، `unavailable_reason: server_unreachable`) ⇒ الإشعار بدل `mockSeries` حول أسعار 2024؛ حُذف منطق إرساء البذرة على التيك (`pendingAnchor`) — لم يعد له مدخل. `ProviderUnavailableNotice` يفرّع `server_unreachable` ⇒ `chartServerUnreachableTitle/Body` (الجسم دائماً). الدالّة و`SERVER_UNREACHABLE` مُصدَّرتان لـtools (`offlineFrame`) | launch121 (جزء ui؛ tools أنجز جزأه `11db392` بالتوازي) |
 
 **إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط (`MatrixEdgeRails:149`، `ToolsScreen:88`)؛ `Alert.alert` داخل `chart/confirmDestructive.ts` فقط (حذف الحساب `AccountScreen:166` عبره)؛ «درجة الاتفاق» أُزيلت (تعليقان `AnalystsPanel:129`، `SocialConsensusPanel:234`)؛ الجولة قابلة للإعادة (`AccountScreen:235` ⇐ `OnboardingOverlay`)؛ التيك المتجمّد يُرفض (`useMultiLiveTicks` `acceptTick` + `TICK_STALE_MS`). الكردية: grep تفرّعات `lang === 'en'/'ku'` و`_ar` بملفاتي ⇒ `CoursesScreen:31` وحده (`name_en` لغير العربية، صحيح).
+
+## 2026-09-25 — تشغيل 21
+بوابة البناء خضراء قبل كل commit (tsc 0 أخطاء). صفّا ui بـCOORDINATION: launch122 (جزء ui)، tools81 (حالة تحميل `ChartFrame`).
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| 4e2ff8b | `FocusChartModal`: فشل الطلب ⇒ `serverUnreachableSeries(sym, tf)` ⇒ إشعار «لا اتصال بخادم MATRIX» بدل `mockSeries` حول أسعار 2024؛ التحديث الصامت كل 90 ث يستبدله حين يعود الاتصال. حُذف استيرادا `mockSeries`/`mockBase` | launch122 (جزء ui) |
+| dab0b50 | `ProviderUnavailableNotice`: `loadingSeries()` + `SERIES_LOADING`/`isSeriesLoading` — سبب `loading` ⇒ دوّار + `chartFirstLoad` (`{tf}` = `tfLabels`، الـlabel `tfLabelsA11y`، دور `progressbar` و`busy`). `ChartFrame` يمرّر `timeframe` ويُخفي وسم المصدر أثناء التحميل (كان سيقول «غير متاح») | tools81 (جزء ui؛ tools يبدّل `bootFrame`) |
+
+**إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط (`MatrixEdgeRails:149`، `ToolsScreen:88`)؛ `Alert.alert` بـ`AccountScreen:166` و`TradeJournalPanel:1129` تعليقان فقط — الاستدعاءات عبر `confirmDestructive`؛ «درجة الاتفاق» أُزيلت (`AnalystsPanel:129`، `SocialConsensusPanel:234`)؛ الجولة قابلة للإعادة وحالة الاختيار والتيك المتجمّد كما بتشغيل 20.
