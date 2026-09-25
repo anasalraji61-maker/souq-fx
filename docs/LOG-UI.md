@@ -302,3 +302,12 @@
 ملاحظة: `COMPARE_COLOR` `#FF9800` قريب من `warn` `#F59E0B` — سطر «تعذّرت المقارنة» يتميّز بالخط العريض ونصّه، لا بلونه وحده.
 
 **إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط (`MatrixEdgeRails:149`، `ToolsScreen:88`)؛ `Alert.alert` داخل `chart/confirmDestructive.ts` فقط (حذف الحساب `AccountScreen:166` عبره)؛ «درجة الاتفاق» أُزيلت (`AnalystsPanel:129`، `SocialConsensusPanel:234`)؛ الجولة قابلة للإعادة (`AccountScreen:235` ⇐ `OnboardingOverlay`)؛ التيك المتجمّد يُرفض (`useMultiLiveTicks` `acceptTick`/`TICK_STALE_MS`). الكردية: كل سلسلة عربية غير تعليقية بملفات tsx خاصّتي = استمرار تعليقات متعدّدة الأسطر، و`CommissionPlanPanel:41-57` (مفاتيح مطابقة لنصّ الخادم ⇒ i18n)، و`MessagesScreen` (launch52، أنس). مسح Pressable/Touchable بنمط `&& styles.*On/Active/Sel/Current`: 41 تعلن الحالة، 0 بلا `accessibilityState`.
+
+## 2026-09-25 — تشغيل 24
+بوابة البناء خضراء قبل كل commit (tsc 0 أخطاء). صفوف ui بـCOORDINATION عند البدء: chart-r50، launch124، QA1 (a) جزء ui — **كلها أُنجزت بتشغيل 23** (`962aced`، `db4c51f`، `845546a`؛ QA67 أغلقها)؛ الباقي backend-r27 (سطر الوقت).
+
+| commit | ماذا | صفّ COORDINATION |
+|---|---|---|
+| 6d8a467 | `CalendarPanel`: حين `stale` يعرض `t.calStaleAsOf` بـ`{time}` = `as_of` (ثوانٍ UTC رقماً، أو نصّ تاريخ من خادم أقدم — `asOfSeconds`) بتوقيت الجهاز بصيغة `fmtLocal` نفسها لأحداث التقويم («اليوم 14:05»)؛ `as_of` غائب/غير مقروء ⇒ `newsStale` كما كان | backend-r27 (أُغلق من جهتي) |
+
+**إعادة تحقّق بنود المهمّة بالكود:** «₴» بتعليقين فقط (`MatrixEdgeRails:149`، `ToolsScreen:88`)؛ `Alert.alert` داخل `chart/confirmDestructive.ts` فقط (حذف الحساب `AccountScreen:166` عبره)؛ «درجة الاتفاق» أُزيلت (`AnalystsPanel:129`، `SocialConsensusPanel:234`)؛ الجولة قابلة للإعادة (`AccountScreen` زرّ `accReplayTour` ⇐ `OnboardingOverlay`)؛ التيك المتجمّد يُرفض (`useMultiLiveTicks:75` `acceptTick`/`TICK_STALE_MS`)، وسعر القاعدة بقائمة المتابعة موسوم «تجريبي» نصّاً وللقارئ (`WatchlistPanel:414 :428`). مسح AST (Pressable/Touchable/*Button بنمط شرطي active/selected/On/Sel/Current **بالعنصر أو أبنائه**): 45، الوحيد بلا `accessibilityState` = خلفية `MatrixSidePanel:79` (`accessible={false}`، إيجابي كاذب). الكردية: العربي غير التعليقي بـ`CommissionPlanPanel`/`NetworkTreePanel`/`SubscriptionPlansPanel` = مفاتيح مطابقة لنصّ الخادم (`:41-57`) فقط؛ الخطط كلّها من `t.subPlans`.
