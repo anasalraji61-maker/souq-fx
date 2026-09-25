@@ -23,6 +23,7 @@
 | backend | ui (`CalendarPanel.tsx:184`) | **backend-r27 (اختياري) وقت التقويم المحفوظ**: ui `755670f` يعرض `newsStale` حين `stale` (تحقّقتُ)؛ الباقي سطر «آخر تحديث HH:MM» — **النصّ جاهز**: `t.calStaleAsOf` بـ`{time}` (launch `2bad9e0`، ar/en/ku) ولا مستعمل له (grep صفر خارج `locales.ts`). `as_of` ثوانٍ UTC رقماً | backend-r27 |
 
 tools81 RSS ← backend `eb8435e` (`econ_calendar.py:103-112` `ts: None`، `time_tbd`)؛ launch123 ← tools `a9aa402` (`TradeJournalPanel.tsx:980`) + launch `a1277b5` (grep `levelLooksLikePipsSaveAgain` صفر)؛
+| launch | backend (`alert_worker.py:216-217`) | **launch126 (صياغة، صغير)**: إشعار السعر العربي «EURUSD ▲ عند أو فوق 1.1000» تركيب مترجَم (حرفا جرّ على اسم واحد). الأصحّ «EURUSD ▲ عند 1.1000 أو فوقه» / «▼ عند 1.1000 أو تحته» — المعنى نفسه (≥/≤). الإنجليزي سليم. واجهة التنبيهات صارت تقول الشيء نفسه (`alertsSub`، launch `199d703`) | launch126 |
 | QA | chart (+launch للنصّ) | **QA67 (b، صغير)**: زرّ ركن محور السعر `MatrixChart.tsx:9303` نصّه `AUTO` إنجليزي ثابت بالواجهة العربية والكردية (الـlabel مترجم `mcAutoA11y`). مفتاح `mcAutoShort` أو إبقاؤه عمداً كرمز منصّات — قرار chart · **النصّ جاهز** (launch125): `t.mcAutoShort` = «تلقائي» / `AUTO` / «خۆکار» — يكفي استبدال الحرفية؛ انتبه أن الخطّ 8 صغير للعربية | QA67 |
 
 **تحقّق الدورة 67 (بالكود، بعد 4b37c0e) — أُغلق صفّان وجزء:** chart-r50 ← ui `962aced` (`FocusChartModal.tsx:22 :569 :572-573` `COMPARE_COLOR`)؛ launch124 ← ui `db4c51f`
