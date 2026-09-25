@@ -199,6 +199,17 @@ export function evalPineLite(formula: string, candles: Candle[]): (number | null
   return resolveAtom(f, candles);
 }
 
+/**
+ * هل ناتج المعادلة سعر (يُرسم على محور السعر)؟ المتوسطات وبولنجر والقمم/القيعان ومصادر السعر نعم؛
+ * RSI/Stoch/MACD/ATR/mom/change والتقاطع (0/1) والفرق/المجموع لا — كان RSI 14 يُدفع لمدى السعر فيمطّه
+ * من 1.08 إلى 70 وتنسحق الشموع خطّاً بالقاع.
+ */
+export function pineIsPriceScale(formula: string): boolean {
+  const f = formula.trim().toLowerCase().replace(/\s/g, '');
+  if (!f || /^cross(over|under)\(/.test(f) || splitBinary(f, '-') || splitBinary(f, '+')) return false;
+  return /^(sma|ema|bbmid|bbupper|bblower|highest|lowest)\(|^(close|high|low|open|hl2|hlc3|ohlc4)$/.test(f);
+}
+
 function splitBinary(s: string, op: string): [string, string] | null {
   let depth = 0;
   for (let i = 0; i < s.length; i++) {

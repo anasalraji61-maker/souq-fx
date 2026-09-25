@@ -34,7 +34,7 @@ import {
 import { compareOverlay } from './compare';
 import { tickPlausibleForSeries, withLiveExtremes, withLivePrice, type LiveExtremes } from './liveSeries';
 import { computeVolumeProfile, pocPrice, computeTpo } from './volumeProfile';
-import { evalPineLite, INDICATOR_LIBRARY } from './pineLite';
+import { evalPineLite, INDICATOR_LIBRARY, pineIsPriceScale } from './pineLite';
 import { renko, measureStats } from './renko';
 import { kagi } from './kagi';
 import { pointFigure } from './pointFigure';
@@ -1996,10 +1996,6 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     () => (indicators.includes('cvd') ? computeCvd(source.plot) : null),
     [source.plot, indicators]
   );
-  const pineLine = useMemo(
-    () => (pineOn && pineFormula.trim() ? evalPineLite(pineFormula, source.plot) : []),
-    [pineOn, pineFormula, source.plot]
-  );
 
   useEffect(() => {
     if (initialTool) setTool(initialTool);
@@ -2270,6 +2266,12 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const closes = useMemo(() => indBars.map((c) => c.close), [indBars]);
   const ind = <R,>(r: R): R => trimIndicator(r, indBars.length, indBase.cut);
   const overlays = useMemo(() => ind(computeOverlays(closes)), [closes]);
+  // Pine-lite على التاريخ كباقي المؤشرات — كان على النافذة وحدها: EMA 50 فارغة لأوّل 49 شمعة وتتغيّر بالسحب.
+  const pineLine = useMemo(
+    () => (pineOn && pineFormula.trim() ? ind(evalPineLite(pineFormula, indBars)) : []),
+    [pineOn, pineFormula, indBars]
+  );
+  const pineOnPrice = useMemo(() => pineIsPriceScale(pineFormula), [pineFormula]);
   const rsi = useMemo(
     () => (indicators.includes('rsi') ? ind(computeRsi(closes)) : null),
     [closes, indicators]
@@ -3048,7 +3050,8 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (tpo?.poc != null) push(tpo.poc);
     if (tpo?.vah != null) push(tpo.vah);
     if (tpo?.val != null) push(tpo.val);
-    pineLine.forEach(push);
+    // مذبذب (RSI/MACD/ATR…) بمقياسه الخاص أسفل اللوح لا بمدى السعر
+    if (pineOnPrice) pineLine.forEach(push);
     const viewScale =
       syncFollow && syncWindow?.priceScale != null ? syncWindow.priceScale : priceScale;
     const viewPan =
@@ -3071,6 +3074,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     shadowLayers,
     poc,
     pineLine,
+    pineOnPrice,
     logScale,
     tpo,
     vwap,
@@ -3344,6 +3348,16 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
   const yOf = (price: number) =>
     ((priceFrame.max - toScale(price)) / priceFrame.span) * chartPlotH;
 
+  // شريط Pine غير السعري: أدنى 22% من اللوح بمدى قيمه المرئية — لا يمسّ محور السعر.
+  const pineStripY = (() => {
+    let lo = Infinity;
+    let hi = -Infinity;
+    if (!pineOnPrice) for (const v of pineLine) if (v != null && Number.isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+    const h = chartPlotH * 0.22;
+    const bottom = chartPlotH - 4;
+    const span = hi > lo ? hi - lo : 1;
+    return (v: number) => bottom - ((v - (hi > lo ? lo : v - 0.5)) / span) * h;
+  })();
   const hasShadows = !!shadowStack;
   const primaryColW = colW;
   // الجسم متمركز تحت الفتيل (`left: colW/2 − 0.5`) — كان يبدأ من 0 بعرض colW − 1 فينحرف نصف بكسل.
@@ -7452,13 +7466,14 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
             />
           ))}
 
-        {/* Pine-lite overlay */}
+        {/* Pine-lite overlay — ناتج غير سعري بمقياسه الخاص بشريط أسفل اللوح (كـ«No scale» بـTradingView) */}
         {pineLine.map((v, i) => {
           if (i === 0 || v == null || pineLine[i - 1] == null) return null;
+          const yP = pineOnPrice ? yOf : pineStripY;
           const x1 = xOf(i - 1);
-          const y1 = yOf(pineLine[i - 1]!);
+          const y1 = yP(pineLine[i - 1]!);
           const x2 = xOf(i);
-          const y2 = yOf(v);
+          const y2 = yP(v);
           const len = Math.hypot(x2 - x1, y2 - y1);
           const angle = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
           return (
