@@ -2780,3 +2780,29 @@ console.log('tradePlan draftStackedExposureText selftest OK');
   assert.ok(Math.abs(tp.journalPnl({ symbol: 'EURUSD.MICRO', side: 'buy', entry: 1.1, exit: 1.102, lots: 1 })!.amount - 2) < 1e-9);
 }
 console.log('tradePlan mini journal selftest OK');
+
+// mini: دخول «السعر الحالي» لزوجٍ آخر يُمسح، وشرائح اللوت لا تخلط mini بالعادي
+{
+  const tp = require('./tradePlan') as typeof import('./tradePlan');
+  const filled = { symbol: 'EURUSD', text: '1.08515' };
+  for (const s of ['GBPUSD.MINI', 'GBPUSDMINI', 'GBPUSD', 'GBPUSD.MICRO']) {
+    assert.equal(tp.liveEntryOrphaned({ entryText: '1.08515', symbol: s, filled }), true, s);
+  }
+  // الزوج نفسه بحساب mini ⇒ السعر نفسه صالح
+  assert.equal(tp.liveEntryOrphaned({ entryText: '1.08515', symbol: 'EURUSD.MINI', filled }), false);
+  assert.equal(tp.liveEntryOrphaned({ entryText: '1.08515', symbol: 'EURUSDmini', filled }), false);
+  const trades = [
+    { symbol: 'EURUSD.MINI', size: 4 },
+    { symbol: 'EURUSD', size: 0.4 },
+    { symbol: 'GBPUSDMINI', size: 2 },
+    { symbol: 'EURUSDC', size: 7 },
+  ];
+  assert.deepEqual(tp.recentLotSizes(trades, 3, 'EURUSD'), [0.4]);
+  assert.deepEqual(tp.recentLotSizes(trades, 3, 'EURUSD.MINI'), [4, 2]);
+  assert.deepEqual(tp.recentLotSizes(trades, 3, 'EURUSDC'), [7]);
+  assert.deepEqual(tp.recentLotSizes(trades, 5), [4, 0.4, 2, 7]);
+  assert.equal(tp.isMiniJournalSymbol('EURUSD.MINI'), true);
+  assert.equal(tp.isMiniJournalSymbol('EURUSD'), false);
+  assert.equal(tp.isMiniJournalSymbol('EURUSD.MICRO'), false);
+}
+console.log('tradePlan mini orphan/lot chips selftest OK');

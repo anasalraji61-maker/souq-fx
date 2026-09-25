@@ -73,6 +73,12 @@ export function isMicroJournalSymbol(symbol: string | null | undefined): boolean
   return !!up && !instrumentSpec(up) && microAccountSymbol(up) != null;
 }
 
+/** رمز **حساب mini** بالدفتر («EURUSD.MINI»، «EURUSDMINI»)؟ نقاطٌ بلا مال، ولوتها لا يُخلط بلوت العادي (`recentLotSizes`). */
+export function isMiniJournalSymbol(symbol: string | null | undefined): boolean {
+  const up = (symbol || '').trim().toUpperCase();
+  return !!up && !instrumentSpec(up) && miniAccountSymbol(up) != null;
+}
+
 /**
  * حجمٌ بخانة الدفتر يبدو **وحداتٍ لا لوتات** (`sizeLooksLikeUnits`) — وبرمز حساب سنت أيضاً.
  *
@@ -995,7 +1001,9 @@ export function liveEntryOrphaned(input: {
   if (!filled || entryText.trim() !== filled.text) return false;
   // أداة **معروفة** فقط: `journalSymbol` يقبل «GBPUS» رمزاً حرّاً أثناء الكتابة
   // حساب سنت/micro («GBPUSDC») بسعر زوجه العادي كـ`quoteSymbol`: كان `null` فلا يُمسح دخول EURUSD تحت صفقة GBPUSDC
-  const now = smallContractPair(symbol) ?? instrumentSpec(symbol)?.symbol ?? knownSingleName(symbol);
+  // و mini («GBPUSD.MINI») كذلك — `quoteSymbol` يطلب زوجها العادي، فدخول EURUSD كان يبقى تحت صفقة GBPUSD.MINI
+  const now =
+    smallContractPair(symbol) ?? miniAccountSymbol(symbol) ?? instrumentSpec(symbol)?.symbol ?? knownSingleName(symbol);
   return now != null && now !== filled.symbol;
 }
 
@@ -1458,14 +1466,17 @@ export function recentLotSizes(
   /**
    * `forSymbol`: الشرائح من صفقات **العقد نفسه** فقط (`journalContractKind`). لوت السنت/micro أصغر بمئة مرّة: آخر صفقة
    * «EURUSDC» بـ4.00 كانت تُقترح «4.00» لصفقة «EURUSD» — مركزٌ بمئة ضعف بنقرة (مخاطرة 25 pip = 1,000 USD لا 10).
+   * و**mini** («EURUSD.MINI») منفصلة عن العادي بالاتجاهين: لوتها 10,000 وحدة لدى أكثر الوسطاء، فـ«4.00» منها = 0.40 عادي.
    * غائب = كل الصفقات كما كان.
    */
   const want = forSymbol == null ? null : journalContractKind(forSymbol);
+  const wantMini = forSymbol == null ? null : isMiniJournalSymbol(forSymbol);
   const cap = want === 'small' ? MAX_SMALL_LOTS : MAX_SANE_LOTS;
   const out: number[] = [];
   for (const tr of trades) {
     if (out.length >= max) break;
     if (want != null && journalContractKind(tr.symbol) !== want) continue;
+    if (wantMini != null && isMiniJournalSymbol(tr.symbol) !== wantMini) continue;
     const lots = knownLots(tr.size, tr.note);
     if (lots == null || lots > cap) continue;
     const steps = Math.round(lots / LOT_STEP);
