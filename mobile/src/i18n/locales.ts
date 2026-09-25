@@ -1749,7 +1749,7 @@ const ar: Dict = {
   riskCalcStopInsideSpread:
     'الوقف ({sl} pip) ليس أبعد من السبريد ({spread} pip) — قد يُضرب فور فتح الصفقة. وسّع الوقف وقلّل اللوت، أو انتظر سبريداً أضيق.',
   riskCalcCommission: 'عمولة اختيارية لكل لوت، فتحاً وإغلاقاً',
-  riskCalcCommissionNote: 'حسابات Raw/ECN تأخذ عمولة عند الفتح وعند الإغلاق. اكتب مجموع الطرفين للوت الواحد بعملة حسابك (مثل 7)، واتركها فارغة إن كان حسابك بلا عمولة.',
+  riskCalcCommissionNote: 'حسابات Raw/ECN تأخذ عمولة عند الفتح وعند الإغلاق. اكتب مجموع الطرفين للوت الواحد بعملة حسابك (مثل 7 بحساب دولار؛ بحساب ين نحو 1000)، واتركها فارغة إن كان حسابك بلا عمولة.',
   riskCalcCommissionNoteMicro:
     'العمولة هنا لكل لوت micro (0.01 لوت عادي): {std} للوت العادي = {micro} للوت micro. إن كتبتها لحساب عادي حوّلناها لك — راجعها بعقد حسابك.',
   riskCalcCommissionNoteCent:
@@ -2928,7 +2928,7 @@ const enUS: Dict = {
   riskCalcStopInsideSpread:
     'Your stop ({sl} pips) is no wider than the spread ({spread} pips) — it can be hit the moment the trade opens. Widen the stop and cut the lot, or wait for a tighter spread.',
   riskCalcCommission: 'Optional commission per lot, open + close',
-  riskCalcCommissionNote: 'Raw/ECN accounts charge commission when you open and again when you close. Enter both sides for one lot in your account currency (e.g. 7), or leave it empty if your account has no commission.',
+  riskCalcCommissionNote: 'Raw/ECN accounts charge commission when you open and again when you close. Enter both sides for one lot in your account currency (e.g. 7 on a USD account; around 1000 on a JPY account), or leave it empty if your account has no commission.',
   riskCalcCommissionNoteMicro:
     'Commission here is per micro lot (0.01 standard lot): {std} per standard lot = {micro} per micro lot. If you typed it for a standard account we converted it — check it against your account terms.',
   riskCalcCommissionNoteCent:
@@ -4133,7 +4133,7 @@ const ku: Dict = {
   riskCalcStopInsideSpread:
     'وەستان ({sl} pip) لە سپرێد ({spread} pip) دوورتر نییە — لەوانەیە هەر کە مامەڵەکە کرایەوە لێی بدرێت. وەستان فراوانتر بکە و لۆت کەم بکەرەوە، یان چاوەڕێی سپرێدی تەسکتر بکە.',
   riskCalcCommission: 'کۆمیسیۆنی ئیختیاری بۆ هەر lot، کردنەوە و داخستن',
-  riskCalcCommissionNote: 'هەژمارەکانی Raw/ECN لە کاتی کردنەوە و داخستندا کۆمیسیۆن وەردەگرن. کۆی هەردوو لا بۆ یەک lot بە دراوی هەژمارەکەت بنووسە (وەک 7)، یان بەتاڵی بهێڵەوە ئەگەر هەژمارەکەت بێ کۆمیسیۆنە.',
+  riskCalcCommissionNote: 'هەژمارەکانی Raw/ECN لە کاتی کردنەوە و داخستندا کۆمیسیۆن وەردەگرن. کۆی هەردوو لا بۆ یەک lot بە دراوی هەژمارەکەت بنووسە (وەک 7 لە هەژماری دۆلار؛ لە هەژماری یەن نزیکەی 1000)، یان بەتاڵی بهێڵەوە ئەگەر هەژمارەکەت بێ کۆمیسیۆنە.',
   riskCalcCommissionNoteMicro:
     'کۆمیسیۆن لێرە بۆ هەر لۆتێکی مایکرۆیە (0.01 لۆتی ئاسایی): {std} بۆ لۆتی ئاسایی = {micro} بۆ لۆتی مایکرۆ. ئەگەر بۆ هەژماری ئاسایی نووسیبێتت گۆڕیمان — لەگەڵ مەرجەکانی هەژمارەکەت بەراوردی بکە.',
   riskCalcCommissionNoteCent:
