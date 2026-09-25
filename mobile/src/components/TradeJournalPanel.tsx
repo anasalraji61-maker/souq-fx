@@ -67,8 +67,8 @@ import {
   editExitValue,
   netLineIsWhole,
   noteWithTypedSize,
+  journalNoteRoom,
   noteWithInitialStop,
-  JOURNAL_NOTE_MAX,
   noteCharsLeft,
   trailedStopAllowed,
   initialStop,
@@ -400,7 +400,17 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
    * بهذه الصفقة» — الدفتر كان يعرف الأرقام الثلاثة ويسكت عنه. لا يظهر بلا حجم أو بوقف بالجهة الخطأ.
    */
   /** الأحرف الباقية تحت خانة الملاحظة قرب حدّ الخادم (`noteCharsLeft`) — `null` = لا سطر. */
-  const noteLeft = noteCharsLeft(note);
+  // الحدّ ناقص علامتَي الحفظ («1.00 lot»، «1R @ …») كي لا تسقطا بصمت من ملاحظة ممتلئة (`journalNoteRoom`)
+  const noteRoom = (() => {
+    const e = pnum(entry);
+    return journalNoteRoom({
+      symbol: symbol.trim(),
+      note,
+      size: num(size),
+      edit: editing && e != null ? { before: editing, after: { side, entry: e, sl: pnum(sl) } } : null,
+    });
+  })();
+  const noteLeft = noteCharsLeft(note, noteRoom);
   /** الملاحظة كما ستُحفظ: بعلامة «1R @ …» تُلحق حين يُشدّ وقف صفقة مفتوحة بهذا التعديل (`noteWithInitialStop`). */
   const noteToSave = (e: number | null, s: number | null): string =>
     editing && e != null ? noteWithInitialStop({ symbol: symbol.trim(), note, before: editing, after: { side, entry: e, sl: s } }) : note;
@@ -1726,7 +1736,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
         value={note}
         onChangeText={setNote}
         // الخادم يرفض >500 (422) فيقول «تحقق من الاتصال» — الحدّ بالخانة، والعدّاد تحتها يقول لماذا توقّفت الكتابة
-        maxLength={JOURNAL_NOTE_MAX}
+        // لا أقصر من النصّ الموجود: حجمٌ 1 بعد ملاحظة ممتلئة لا يقصّ ما كُتب (Android يطبّق الحدّ على القيمة) — العدّاد أحمر عند 0
+        maxLength={Math.max(noteRoom, note.length)}
         placeholder={t.journalNotePlaceholder}
         placeholderTextColor={colors.textDim}
         returnKeyType="done"
@@ -1741,7 +1752,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks }: Props 
           style={[noteLeft === 0 ? styles.planWarn : styles.planLine, { textAlign: align }]}
           accessibilityLiveRegion="polite"
         >
-          {t.noteCharsLeft.replace('{n}', String(noteLeft)).replace('{max}', String(JOURNAL_NOTE_MAX))}
+          {t.noteCharsLeft.replace('{n}', String(noteLeft)).replace('{max}', String(noteRoom))}
         </Text>
       ) : null}
       {noteStop != null ? (

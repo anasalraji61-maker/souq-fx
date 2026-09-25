@@ -2329,3 +2329,42 @@ console.log('tradePlan liveFillStillValid selftest OK');
   assert.equal(closedElsewhere([], 'a'), false);
 }
 console.log('tradePlan closedElsewhere selftest OK');
+
+// ---- journalNoteRoom: خانة الملاحظة تترك مكاناً لعلامتَي الحفظ فلا تسقطان بصمت ----
+{
+  const { journalNoteRoom, noteWithTypedSize, noteWithInitialStop, knownLots, realizedR, JOURNAL_NOTE_MAX: MAX } =
+    require('./tradePlan') as typeof import('./tradePlan');
+  const open = { side: 'buy', entry: 1.085, sl: 1.083, status: 'open' };
+  const tighter = { side: 'buy' as const, entry: 1.085, sl: 1.0845 };
+  // بلا علامة ⇒ الحدّ كاملاً
+  assert.equal(journalNoteRoom({ symbol: 'EURUSD', note: 'x', size: 0.5 }), MAX);
+  assert.equal(journalNoteRoom({ symbol: 'EURUSD', note: '', size: null }), MAX);
+  // حجم 1 مكتوب: «1.00 lot · » = 11 ⇒ 489؛ وملاحظة 489 تُحفظ بالعلامة فيبقى الحجم معروفاً (كانت 495 تُسقطها)
+  const room1 = journalNoteRoom({ symbol: 'EURUSD', note: 'a'.repeat(300), size: 1 });
+  assert.equal(room1, 489);
+  const at1 = noteWithTypedSize(1, 'a'.repeat(room1));
+  assert.equal(at1.length, MAX);
+  assert.equal(knownLots(1, at1), 1);
+  // ملاحظة فارغة بحجم 1: «1.00 lot» (8) بلا فاصل
+  assert.equal(journalNoteRoom({ symbol: 'EURUSD', note: '', size: 1 }), MAX - 8);
+  // علامة الحاسبة موجودة أصلاً ⇒ لا حجز
+  assert.equal(journalNoteRoom({ symbol: 'EURUSD', note: '1.00 lot · risk 100.00 USD', size: 1 }), MAX);
+  // شدّ وقف صفقة مفتوحة: « · 1R @ 1.083» = 13 ⇒ 487، والـR يبقى +2 لا +8 عند الحدّ
+  const roomS = journalNoteRoom({ symbol: 'EURUSD', note: 'b'.repeat(50), size: 0.5, edit: { before: open, after: tighter } });
+  assert.equal(roomS, MAX - ' · 1R @ 1.083'.length);
+  const atS = noteWithInitialStop({ symbol: 'EURUSD', note: 'b'.repeat(roomS), before: open, after: tighter });
+  assert.equal(atS.length, MAX);
+  assert.equal(realizedR({ symbol: 'EURUSD', side: 'buy', entry: 1.085, sl: 1.0845, exit: 1.089, note: atS }), 2);
+  // العلامتان معاً (حجم 1 + وقف مشدود): 11 + 13
+  const roomB = journalNoteRoom({ symbol: 'EURUSD', note: 'c', size: 1, edit: { before: open, after: tighter } });
+  assert.equal(roomB, MAX - 11 - 13);
+  const both = noteWithInitialStop({ symbol: 'EURUSD', note: noteWithTypedSize(1, 'c'.repeat(roomB)), before: open, after: tighter });
+  assert.equal(both.length, MAX);
+  assert.equal(knownLots(1, both), 1);
+  // وقفٌ أوسع أو صفقة مغلقة ⇒ لا علامة وقف ⇒ لا حجز
+  assert.equal(journalNoteRoom({ symbol: 'EURUSD', note: 'x', size: 2, edit: { before: open, after: { ...tighter, sl: 1.082 } } }), MAX);
+  assert.equal(journalNoteRoom({ symbol: 'EURUSD', note: 'x', size: 2, edit: { before: { ...open, status: 'closed' }, after: tighter } }), MAX);
+  // الحدّ الافتراضي للدالّتين لم يتغيّر: 495 بحجم 1 ما زالت تُترك كما هي (لا 422)
+  assert.equal(noteWithTypedSize(1, 'a'.repeat(495)), 'a'.repeat(495));
+}
+console.log('tradePlan journalNoteRoom selftest OK');

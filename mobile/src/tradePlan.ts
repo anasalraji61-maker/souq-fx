@@ -478,6 +478,8 @@ export function noteWithInitialStop(input: {
   note: string;
   before: { side: string; entry: number; sl?: number | null; status: string };
   after: { side: TradeSide; entry: number; sl: number | null };
+  /** حدّ الطول — `Infinity` لقياس العلامة وحدها (`journalNoteRoom`) */
+  max?: number;
 }): string {
   const { note, before, after } = input;
   if (before.status !== 'open' || before.side !== after.side) return note;
@@ -494,7 +496,7 @@ export function noteWithInitialStop(input: {
   const mark = `1R @ ${old}`;
   const out = n ? `${n} · ${mark}` : mark;
   // ملاحظةٌ تتجاوز حدّ الخادم (`note` ≤ 500) تُفشل الحفظ كلّه — الـR بالوقف الحالي أهون من تعديلٍ لا يُحفظ
-  return out.length > JOURNAL_NOTE_MAX ? note : out;
+  return out.length > (input.max ?? JOURNAL_NOTE_MAX) ? note : out;
 }
 
 /** حدّ طول الملاحظة بالخادم (`backend/main.py` `note: max_length=500`). */
@@ -1222,12 +1224,37 @@ export function knownLots(size: number | null | undefined, note?: string | null)
  * لماذا: الخادم يحفظ 1 لصفقة بلا حجم، فالحجم 1 المكتوب باليد كان «مجهولاً»: EURUSD 1.0850 ⇒ 1.0875 بلوت واحد تُعرض
  * بلا «1 lot» ولا «+250.00 USD»، ويسقط صافي EURUSD بالمال كلّه، ولا تُقترح 1.00 شريحةً، وتفتح بالتعديل بخانة حجم فارغة.
  */
-export function noteWithTypedSize(size: number | null | undefined, note: string): string {
+export function noteWithTypedSize(size: number | null | undefined, note: string, max: number = JOURNAL_NOTE_MAX): string {
   if (size !== 1 || knownLots(1, note) === 1) return note;
   const n = note.trim();
   const out = n ? `1.00 lot · ${n}` : '1.00 lot';
   // كـ`noteWithInitialStop`: ملاحظة 495 حرفاً + العلامة (11) تتجاوز حدّ الخادم فيُرفض الحفظ كلّه (422) — حجمٌ مجهول أهون
-  return out.length > JOURNAL_NOTE_MAX ? note : out;
+  return out.length > max ? note : out;
+}
+
+/**
+ * الأحرف المتاحة للمتداول بخانة الملاحظة: حدّ الخادم ناقص ما ستُلحقه علامتا الحفظ («1.00 lot · » لحجمٍ 1 مكتوب،
+ * « · 1R @ …» لوقفٍ مفتوح يُشدّ) بالملاحظة والخطة الحاليتين. لـ`maxLength` الخانة ولعدّاد `noteCharsLeft`.
+ *
+ * لماذا: العلامتان تسقطان بصمت إن لم تتّسعا (كي لا يُرفض الحفظ كلّه) — ملاحظة 495 حرفاً بحجم 1 تُحفظ بحجمٍ «مجهول»
+ * (بلا مال ولا صافٍ للأداة)، وبوقفٍ مشدود يُحسب الـR بالوقف الجديد (+8R بدل +2R بمتوسط R). الخانة كانت تقبل 500 كاملة
+ * والعدّاد يقول «0 باقٍ» بعد فوات الأوان. تُقاس العلامة بلا حدّ ثم يُطرح طولها. الحدّ لا يقلّ عن 0.
+ */
+export function journalNoteRoom(input: {
+  symbol: string;
+  note: string;
+  size: number | null | undefined;
+  edit?: {
+    before: { side: string; entry: number; sl?: number | null; status: string };
+    after: { side: TradeSide; entry: number; sl: number | null };
+  } | null;
+}): number {
+  const { note } = input;
+  const typed = noteWithTypedSize(input.size, note, Infinity);
+  const full = input.edit
+    ? noteWithInitialStop({ symbol: input.symbol, note: typed, before: input.edit.before, after: input.edit.after, max: Infinity })
+    : typed;
+  return Math.max(0, JOURNAL_NOTE_MAX - (full.length - note.length));
 }
 
 /**
