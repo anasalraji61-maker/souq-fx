@@ -386,8 +386,9 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
       ) : null}
       <ScrollView contentContainerStyle={{ gap: 10 }} keyboardShouldPersistTaps="handled">
         {visible.map((v) => {
-          const total = v.agree + v.disagree || 1;
-          const pct = Math.round((v.agree / total) * 100);
+          /** بلا أصوات لا نسبة: «موافقة 0%» كانت تُقرأ رفضاً إجماعياً لا «لم يصوّت أحد بعد» */
+          const total = v.agree + v.disagree;
+          const pct = total > 0 ? Math.round((v.agree / total) * 100) : null;
           const buy = v.direction === 'buy';
           const plan = analyzePlan({ symbol: v.symbol, side: v.direction, entry: v.entry, sl: v.sl, tp: v.tp });
           return (
@@ -447,11 +448,14 @@ export function VotePanel({ embedded }: { embedded?: boolean }) {
                 </Text>
               ) : null}
               <Text style={[styles.note, { textAlign: align }]}>{v.note}</Text>
-              <View style={styles.barBg}>
-                <View style={[styles.barFill, { width: `${pct}%` }]} />
-              </View>
+              {pct != null ? (
+                <View style={styles.barBg}>
+                  <View style={[styles.barFill, { width: `${pct}%` }]} />
+                </View>
+              ) : null}
               <Text style={[styles.pct, { textAlign: align }]}>
-                {t.voteApprovalLabel} {pct}% · {v.agree} {t.voteAgreeWord} / {v.disagree} {t.voteDisagreeWord}
+                {pct != null ? `${t.voteApprovalLabel} ${pct}% · ` : ''}
+                {v.agree} {t.voteAgreeWord} / {v.disagree} {t.voteDisagreeWord}
               </Text>
               <View style={[styles.actions, rtl && styles.actionsRtl]}>
                 <Pressable
