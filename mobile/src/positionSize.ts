@@ -239,13 +239,37 @@ export function parsePriceFor(raw: string, symbol: string | null | undefined): n
 /** عملات تسعيرٍ الدولارُ فيها ≥ 3.5 وحداتٍ — الفضة بها فوق العشرة دائماً (`ambiguousThousandsPrice`). */
 const SILVER_ABOVE_TEN_QUOTES = new Set(['SEK', 'NOK', 'DKK', 'PLN', 'ZAR', 'MXN', 'HKD', 'CNH', 'ILS', 'SAR', 'AED']);
 
+/**
+ * مؤشرات وعملات رقمية سعرها **فوق الألف دائماً** — بأسماء وسطاء التجزئة (كجدول `SINGLE_CCY` بـ`chart/newsRisk.ts`، لا استيراد:
+ * `newsRisk` يستورد هذا الملف). لا أداة لها بـ`instrumentSpec` فكان `ambiguousThousandsPrice` يعود `null` مبكراً: دخول داكس «18.500»
+ * (= 18,500 بالكتابة الأوروبية/التركية) يُقرأ 18.5، وإغلاقه بسعر السوق 18,520 ⇒ «+100,008%» يُحفظ بالدفتر ويُفسد نسبة الفوز وأفضل
+ * صفقة ومجموع النسب — الخطأ الذي أُصلح للذهب. خارج القائمة عمداً: ما قد يكون دون الألف أو بثلاث منازل فعلاً (النفط 78.456، DXY،
+ * VIX، العوائد، AEX ≈900، والعملات الرقمية الصغيرة — SOL 150.250 سعرٌ حقيقي).
+ */
+const BIG_INDEX =
+  /^(US30|DJ30|DJI|WS30|USA30|NAS100|US100|USTEC|NDX|NQ100|USTECH|USTECH100|USA100|SPX500|US500|SPX|SP500|USA500|US2000|GER40|DE40|GER30|DE30|DAX40|DAX|FRA40|FR40|F40|CAC40|EU50|STOXX50|STOXX50E|EUSTX50|ESTX50|ESP35|SPA35|ES35|SPAIN35|IBEX35|IT40|ITA40|UK100|FTSE100|FTSE|SWI20|SMI20|SUI20|CH20|SWISS20|JP225|JPN225|NIKKEI|N225|NI225|NIK225|AUS200|ASX200|AU200|HK50|HK33|HKG33|HSI|CN50|CHN50|CHINA50|CHI50|CHINAA50|CAN60|CA60|SA40|SWE30)$/;
+const BIG_CRYPTO = /^(BTC|XBT|ETH)(USDT|USDC|USD|EUR|GBP|JPY|AUD|CAD|CHF)$/;
+
+/** الرمز مؤشرٌ أو عملة رقمية سعرها فوق الألف دائماً («GER40.cash»، «US30Cash»، «#NAS100»، «DE30_EUR»، «BTCUSDm»، «ETH/USD»). */
+export function priceAlwaysOverThousand(symbol: string): boolean {
+  const u = symbol.trim().toUpperCase().replace(/^[#.]+/, '');
+  const bare = u.replace(/[.\-_#+][A-Z0-9]{0,5}$/, '').replace(/(.)CASH$/, '$1').replace(/[\s/]/g, '');
+  if (BIG_INDEX.test(bare) || BIG_INDEX.test(bare.replace(/M$/, ''))) return true;
+  return BIG_CRYPTO.test(bare) || BIG_CRYPTO.test(bare.replace(/M$/, ''));
+}
+
 export function ambiguousThousandsPrice(
   raw: string,
   symbol: string | null | undefined,
 ): { value: string; whole: string; small: string } | null {
   // ذهب حساب سنت/micro («XAUUSDC»، «GOLDMICRO») بسعر الذهب نفسه: «3.450» بخانته كانت تُقرأ 3.45 بالدفتر
   const spec = symbol ? instrumentSpec(symbol) ?? instrumentSpec(smallContractPair(symbol) ?? '') : null;
-  if (!spec) return null;
+  if (!spec) {
+    if (!symbol || !priceAlwaysOverThousand(symbol)) return null;
+    const s = normalizeDigits(raw).replace(/[\s\u00a0\u202f\u2009٬']/g, '').replace(/[٫．]/g, '.');
+    if (!/^[1-9]\d{0,2}\.\d{3}$/.test(s)) return null;
+    return { value: raw.trim(), whole: s.replace('.', ''), small: String(Number(s)) };
+  }
   const decimals = Math.round(-Math.log10(spec.pipSize)) + 1;
   // الفضة بالين (≈4,500–6,000) والليرة (≈1,300+) بثلاث منازل **وفوق الألف**: «5.123» = 5,123 ين لا 5.123 — كانت
   // تُقرأ 5.123 ⇒ وقف 10 pip بدل 10,000 ⇒ 30 لوتاً بدل 0.03 وخسارة ≈100,000$ بحساب 10,000 «يخاطر بـ100»

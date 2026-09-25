@@ -1596,7 +1596,33 @@ console.log('positionSize spreadBeyondLiveEntry selftest OK');
   assert.equal(parsePriceFor('1.085', 'EURUSD'), 1.085);
   assert.equal(parsePriceFor('1.08500', 'EURUSD'), 1.085);
   // رمز غير معروف/فارغ ⇒ parseDecimal كما هو؛ نصّ غير مفهوم ⇒ null
-  assert.equal(parsePriceFor('3.450', 'US30'), 3.45);
+  assert.equal(parsePriceFor('3.450', 'AAPL'), 3.45);
+  // مؤشرات/BTC/ETH سعرها فوق الألف دائماً: «18.500» = 18,500 مبهمة لا 18.5 (كانت تُحفظ بالدفتر فتُخرج «+100,008%»)
+  assert.equal(parsePriceFor('18.500', 'GER40'), null);
+  assert.equal(parsePriceFor('39.850', 'US30'), null);
+  assert.equal(parsePriceFor('38.500', 'JP225.cash'), null);
+  assert.equal(parsePriceFor('20.150', 'US100Cash'), null);
+  assert.equal(parsePriceFor('18.500', '#GER40'), null);
+  assert.equal(parsePriceFor('17.800', 'DE30_EUR'), null);
+  assert.equal(parsePriceFor('42.100', 'US30m'), null);
+  assert.equal(parsePriceFor('65.000', 'BTCUSD'), null);
+  assert.equal(parsePriceFor('65.000', 'BTCUSDT'), null);
+  assert.equal(parsePriceFor('3.450', 'ETH/USD'), null);
+  assert.equal(parsePriceFor('٦٥٫٠٠٠', 'BTCUSD.m'), null);
+  assert.deepEqual(ambiguousThousandsPrice('18.500', 'GER40'), { value: '18.500', whole: '18500', small: '18.5' });
+  // ما ليس مبهماً للمؤشر يبقى
+  assert.equal(parsePriceFor('18500', 'GER40'), 18500);
+  assert.equal(parsePriceFor('18.500,5', 'GER40'), 18500.5);
+  assert.equal(parsePriceFor('18,500.5', 'GER40'), 18500.5);
+  assert.equal(parsePriceFor('18500.25', 'GER40'), 18500.25);
+  assert.equal(parsePriceFor('65000.125', 'BTCUSD'), 65000.125);
+  // سعرٌ حقيقي بثلاث منازل خارج القائمة: النفط، SOL، DXY، VIX، ETH/BTC
+  assert.equal(parsePriceFor('78.456', 'USOIL'), 78.456);
+  assert.equal(parsePriceFor('150.250', 'SOLUSD'), 150.25);
+  assert.equal(parsePriceFor('104.250', 'DXY'), 104.25);
+  assert.equal(parsePriceFor('15.250', 'VIX'), 15.25);
+  assert.equal(parsePriceFor('0.035', 'ETHBTC'), 0.035);
+  assert.equal(parsePriceFor('3.450', 'US30M1'), 3.45); // اسمٌ مجهول لا يُخمَّن
   assert.equal(parsePriceFor('3.450', null), 3.45);
   assert.equal(parsePriceFor('abc', 'XAUUSD'), null);
   assert.equal(parsePriceFor('3,450', 'XAUUSD'), null); // الفاصلة المبهمة مرفوضة أصلاً
@@ -1613,7 +1639,7 @@ console.log('positionSize parsePriceFor selftest OK');
   // ليس مبهماً ⇒ null (مقبول أو مرفوض لسبب آخر)
   for (const [raw, sym] of [
     ['3450', 'XAUUSD'], ['3.45', 'XAUUSD'], ['0.450', 'XAUUSD'], ['3.450,50', 'XAUUSD'], ['3,450', 'XAUUSD'],
-    ['abc', 'XAUUSD'], ['', 'XAUUSD'], ['157.250', 'USDJPY'], ['1.085', 'EURUSD'], ['3.450', 'US30'], ['3.450', ''],
+    ['abc', 'XAUUSD'], ['', 'XAUUSD'], ['157.250', 'USDJPY'], ['1.085', 'EURUSD'], ['3.450', 'AAPL'], ['3.450', ''],
   ] as const) {
     assert.equal(ambiguousThousandsPrice(raw, sym), null, `${raw} ${sym}`);
   }
