@@ -217,8 +217,9 @@ export function symbolCurrencies(symbol: string): string[] {
     const own = FIAT.has(q) ? currenciesOnce(quoted[1]) : [];
     if (own.length) return own.includes(q) ? own : [...own, q];
   }
-  // و«spot»/«Roll»/«fx» الملاصقة («XAUUSDspot»، «GOLDspot»، «US30Roll»، «EURUSDfx») — كانت `[]` بلا تحذير
-  const word = /^([A-Z0-9]{3,}?)[.\-_#+]?(MINI|PRO|ECN|RAW|STD|ZERO|PLUS|VIP|SPOT|ROLL|FX)$/.exec(up);
+  // و«spot»/«Roll»/«fx» الملاصقة («XAUUSDspot»، «GOLDspot»، «US30Roll»، «EURUSDfx») — كانت `[]` بلا تحذير.
+  // و«sb» (حساب المراهنة على الفروق، «EURUSDsb») — «EURUSD.sb» كانت تُحذَّر والملاصقة لا
+  const word = /^([A-Z0-9]{3,}?)[.\-_#+]?(MINI|PRO|ECN|RAW|STD|ZERO|PLUS|VIP|SPOT|ROLL|FX|SB)$/.exec(up);
   if (word) return currenciesOnce(word[1]);
   // المعدن وحده بلا عملة («XAU»، «XAG» — `marketHours` يعرفهما) = الذهب/الفضة بالدولار. مطابقة تامّة لا بالجدول: `suffixFree`
   // تُبقي «XAU» من «XAU_EUR» فكان اليورو يسقط

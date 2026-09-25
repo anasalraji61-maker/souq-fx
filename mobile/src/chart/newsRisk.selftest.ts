@@ -1037,3 +1037,11 @@ console.log('newsRisk oil/gold aliases and fx suffix selftest OK');
   assert.equal(bankHolidayToday([hol], symbolCurrencies('GER40'), july4), null);
 }
 console.log('newsRisk newsCurrencies selftest OK');
+
+// «sb» ملاصقة (حساب مراهنة على الفروق): كانت `[]` ⇒ لا تحذير قبل الرواتب، و«EURUSD.sb» تُحذَّر
+assert.deepEqual(symbolCurrencies('EURUSDsb'), ['EUR', 'USD']);
+assert.deepEqual(symbolCurrencies('EURUSD.sb'), ['EUR', 'USD']);
+assert.deepEqual(symbolCurrencies('XAUUSDsb'), ['USD']);
+assert.deepEqual(symbolCurrencies('GBPJPYsb'), ['GBP', 'JPY']);
+assert.deepEqual(symbolCurrencies('AAPL'), []);
+console.log('newsRisk glued sb suffix selftest OK');
