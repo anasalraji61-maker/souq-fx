@@ -10,7 +10,8 @@ export type AcademySchoolSummary = {
   levels_count: number;
   lectures_count: number;
   classroom: { teacher: string; screen_theme: string; video_pipeline: string };
-  progress: number;
+  /** الخادم يرسل `null` (لا تقدّم محسوب للملخّص) — لا تطبعه كنسبة دون فحص. */
+  progress: number | null;
 };
 
 export type ScriptSegment = {
@@ -67,7 +68,7 @@ export const mockAcademySchools: AcademySchoolSummary[] = [
       screen_theme: 'basics_intro',
       video_pipeline: 'ElevenLabs TTS + screen',
     },
-    progress: 0,
+    progress: null,
   },
   {
     id: 'classic',
@@ -85,7 +86,7 @@ export const mockAcademySchools: AcademySchoolSummary[] = [
       screen_theme: 'classic_charts',
       video_pipeline: 'ElevenLabs TTS + screen',
     },
-    progress: 0,
+    progress: null,
   },
   {
     id: 'wyckoff',
@@ -103,7 +104,7 @@ export const mockAcademySchools: AcademySchoolSummary[] = [
       screen_theme: 'wyckoff_schematic',
       video_pipeline: 'ElevenLabs TTS + screen',
     },
-    progress: 0,
+    progress: null,
   },
   {
     id: 'ict-smc',
@@ -123,7 +124,7 @@ export const mockAcademySchools: AcademySchoolSummary[] = [
       screen_theme: 'smc_liquidity',
       video_pipeline: 'ElevenLabs TTS + screen',
     },
-    progress: 0,
+    progress: null,
   },
   {
     id: 'gann',
@@ -141,7 +142,7 @@ export const mockAcademySchools: AcademySchoolSummary[] = [
       screen_theme: 'gann_grid',
       video_pipeline: 'ElevenLabs TTS + screen',
     },
-    progress: 0,
+    progress: null,
   },
   {
     id: 'elliott',
@@ -159,7 +160,7 @@ export const mockAcademySchools: AcademySchoolSummary[] = [
       screen_theme: 'elliott_count',
       video_pipeline: 'ElevenLabs TTS + screen',
     },
-    progress: 0,
+    progress: null,
   },
   {
     id: 'sk',
@@ -177,6 +178,6 @@ export const mockAcademySchools: AcademySchoolSummary[] = [
       screen_theme: 'sk_zones',
       video_pipeline: 'ElevenLabs TTS + screen',
     },
-    progress: 0,
+    progress: null,
   },
 ];

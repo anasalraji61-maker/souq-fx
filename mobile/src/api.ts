@@ -144,7 +144,8 @@ export type Course = {
   level: string;
   lessons: number;
   ai_tutor: boolean;
-  progress: number;
+  /** الخادم يرسل `null` — لا تطبعه كنسبة دون فحص. */
+  progress: number | null;
   desc: string;
 };
 
