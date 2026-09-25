@@ -242,3 +242,14 @@ EURUSDm يُطبَّع؛ US30/NAS100/BTC/USOIL/DXY/GER40/USDHUF ⇒ null (رفض
 **جديد QA20 → launch:** `riskCalcSub` en «never lose more than» ×3 لغات (الفجوة/الانزلاق). **جديد QA20 → بلا مالك/الخادم:** «Confidence n%» بـ`AnalystsPanel:115`
 و`SocialConsensusPanel:219` من `_confidence` الثابتة `signal_hub.py:79-82` — أُزيلت من `IndicatorForecastPanel` لنفس السبب.
 **الدورة القادمة:** المراجعة (a) — تكرار/كود ميت/تصديرات بلا مستورد.
+
+## 2026-09-25 — الدورة 21
+**البناء:** أخضر 0 (بعد d678aa0) — لا إصلاح لازم. **Selftests:** 65/65 ناجح (`npx tsx`).
+**التحقّق من الإغلاقات بالكود:** مُغلق — launch69 `noteCharsLeftReserved` (`7381a9e`، 1 مستعمل)، QA20 `riskCalcSub` (`90d61a5`، 0 «never lose» بـ`locales.ts`)،
+chart12 شقّ launch (`3d12429`) ⇒ الصفّ صار chart ← chart للربط (0 مستعمل). **غير مُغلق:** 10 `Alert.alert` بـ5 ملفات، «₴» ×2، `TimeframeBar` صفر `accessibilityState`، `accNetLoadError` 0.
+**طلبات تنسيق جديدة (تحقّقتُ):** launch70 → tools `riskCalcSlPipsAmbiguous` 0 مستعمل (`54ff3fa`). نجمة ★ لـlaunch67 (أنس).
+**المراجعة (a — تكرار/ميت/تصديرات)، بسكربتين على كل `src`:** (1) تصديرات لا يذكرها ملف آخر: 168 (أغلبها أنواع/ثوابت تُستعمل داخل ملفها — ليست ميتة)؛
+المطابقة مرّة واحدة بملفها = ميتة فعلاً: 20، منها القائمة المعروفة (QA1) و**جديد QA21 → chart:** `priceLegend.ts` `planPriceLegend`/`legendCapacity`/`DIRECTIONAL_OVERLAYS`
+و`dailyChange.ts` `prevCloseFromDaily` — مستعملة بالـselftest وحده. (2) أسماء `const`/`function` معرَّفة بأكثر من ملف: `TF_SECONDS` بـ`mock.ts:16` نسخة `timeframes.ts:17`
+(أُلحقت بصفّ QA1)؛ `RECONNECT_*`/`dirColor`/`QUICK_SYMBOLS` مسجّلة؛ `FIAT`/`METALS` (`positionSize` مقابل `newsRisk`) بغرضين مختلفين — ليست تكراراً.
+**الدورة القادمة:** المراجعة (b) — نصوص ثابتة خارج `locales.ts`.

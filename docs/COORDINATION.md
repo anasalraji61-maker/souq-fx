@@ -1,5 +1,5 @@
 # COORDINATION — طلبات مفتوحة بين الوكلاء
-يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 20، بعد f7f0e82) · كل بند تحقّق منه في الكود لا في السجل وحده.
+يملكه: وكيل QA · آخر تحقق من الكود: 2026-09-25 (دورة QA 21، بعد d678aa0) · كل بند تحقّق منه في الكود لا في السجل وحده.
 "منذ" = أول ظهور (تشغيل n للطالب). ★ = عالق (≥3 دورات للمنفّذ). «الخادم» = `backend/` بلا وكيل مالك ⇒ قرار أنس.
 `TerminalScreen.tsx` صار للأدوات (LOG-TOOLS run 38). «بلا مالك» = ملفات لم يلمسها أي وكيل أو صرّح مالكها المفترض أنها خارج نطاقه (LOG-CHART «خارج نطاق ملفاتي»، LOG-TOOLS «إن أُسندا لي») ⇒ أنس يحدّد المالك.
 
@@ -25,7 +25,7 @@
 | QA+tools | بلا مالك | **(a)** `QUICK_SYMBOLS` ما زال منسوخاً في `BacktestPanel.tsx:54` و`IndicatorAlertsPanel.tsx:61` ← `import { QUICK_SYMBOLS } from '../tradePlan'` (الثابت جاهز db44382) | QA6 ★ |
 | QA | بلا مالك | **(a)** `RECONNECT_BASE_MS`/`MAX_MS` ×2 (`useLiveTicks.ts:7` و`useMultiLiveTicks.ts:6`) — chart: التوحيد لمالك `useMultiLiveTicks` | QA6 ★ |
 | tools | أنس | تغيّر اليوم بقائمة المتابعة يتدحرج 00:00 UTC، وPDH/PDL بالشارت 17:00 نيويورك ⇒ «أمس» مختلف بين الشاشتين 21:00–24:00 UTC — توحيد؟ | tools38 |
-| QA | الجميع | **(a)** تصديرات بلا مستخدم خارج ملفها: `deleteTemplate`، `subscribeTemplatesSaveError`، `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite`، `PINE_PRESETS`، `getToolPanel`، `__setWatchlistStorageForTests`/`__reset…` (ولا اختبار)، `motion`، `FRAME_SYMBOLS`، mock.ts ×3؛ مفتاح `accNetLoadError` بلا مستعمل (launch63) | QA1 ★ |
+| QA | الجميع | **(a)** تصديرات بلا مستخدم خارج ملفها: `deleteTemplate`، `subscribeTemplatesSaveError`، `getDrawingsSaveError`، `getLayoutsSaveError`، `ensureSeriesProvenance`، `computeDomLite`، `PINE_PRESETS`، `getToolPanel`، `__setWatchlistStorageForTests`/`__reset…` (ولا اختبار)، `motion`، `FRAME_SYMBOLS`، mock.ts ×3 (+ `TF_SECONDS` منسوخ بـ`mock.ts:16` من `timeframes.ts:17`)؛ مفتاح `accNetLoadError` بلا مستعمل (launch63) | QA1 ★ |
 | launch | chart | DeMarker 0..100 والمنصات 0..1 (قرار ⇒ أنس) | launch48 |
 | tools+launch+QA | الخادم | **spread مُختلَق** = السعر × 0.00008 (`twelve_data.py:316`) موسوم `provider`، يناقض `backtest.py:26-37`؛ يُزيح أسعار الدفتر (`tradePlan.ts:669 :741`) | tools13 ★ |
 | tools | الخادم | الحجم يُخزَّن 1 حين لا يُرسل (`backend/db.py:1704`) | 09-22 ★ |
@@ -39,12 +39,12 @@
 | QA | الخادم | **(d) جديد QA14**: ملاحظة التنبيه `main.py:199` (و:399 تنبيه المؤشر) `note: str = ""` بلا حدّ (ملاحظة الدفتر/التصويت 500) والخانة `AlertsPanel` بلا `maxLength` ⇒ نص غير محدود يُخزَّن ويُرسل بالإشعار | QA14 ★ |
 | QA+tools | أنس | **(e) QA15**: صفقة التعادل (pnl = 0) تُحسب **خسارة** بنسبة الفوز (`journalStats` `pnl <= 0` = `backend/db.py:1848`) ⇒ متداول ينقل وقفه للتعادل يرى نسبة فوزه تهبط. قرار: تُستثنى أم تُحسب خسارة؟ | QA15 ★ |
 | tools | الخادم | **tools45**: `close_trade` `backend/db.py:1761` `UPDATE … WHERE id=?` بلا `AND status='open'` ⇒ جهازان يُغلقان الصفقة نفسها بالثانية نفسها ⇒ الثاني يستبدل خروجها المسجَّل. الواجهة تجلب القائمة قبل الإغلاق (`2e4e8b4`) لكن الجذر بالخادم | tools45 ★ |
-| launch | أنس (`AccountScreen` بلا مالك) | : لا طريق لإعادة الجولة الترحيبية (`matrix.onboarding.v1`) — من تخطّاها خطأً فاتته. سطر «أعد الجولة» بالحساب + `App.tsx`؟ | launch67 |
+| launch | أنس (`AccountScreen` بلا مالك) | : لا طريق لإعادة الجولة الترحيبية (`matrix.onboarding.v1`) — من تخطّاها خطأً فاتته. سطر «أعد الجولة» بالحساب + `App.tsx`؟ | launch67 ★ |
 | QA | بلا مالك | **(d) QA19، منخفض**: `CalendarPanel.tsx:37-38` `ROW_SOON_MS = 3h`/`NOW_WINDOW_MS = 15m` أرقام منسوخة من `NEWS_HORIZON_MS`/`NEWS_GRACE_MS` (`chart/newsRisk.ts:224-225`) والتعليق يعد بأن «قريب» واحد بالشاشتين ⇒ `import` بدل النسخ كي لا ينحرفا. tools: الملف ليس بنطاقه، الثابتان مُصدَّران جاهزان | QA19 |
-| launch | tools | **جديد launch69**: `noteCharsLeftReserved` (`6c4f718`) بلا مستعمل (تحقّقتُ: 0) — العدّاد يقول «0 من 489» بلا سبب ← `noteRoom < JOURNAL_NOTE_MAX ? t.noteCharsLeftReserved… : t.noteCharsLeft…` (`TradeJournalPanel.tsx` ~:1755) | launch69 |
-| chart | launch | **جديد chart12**: مفتاحا `mcCloneDrawing` + `mcCloneDrawingA11y` ×ar/en/ku لزرّ «نسخ الرسم» بشريط الرسم المحدَّد (تحقّقتُ: 0 بـ`locales.ts`) | chart12 |
-| QA | launch | **(e) جديد QA20**: `riskCalcSub` ×3 (`locales.ts:1382 :2445 :3533`) «so you **never lose** more than a set %» — وعد كاذب أمام متداول: فجوة الافتتاح/الانزلاق عند الخبر تتخطّى الوقف (والتطبيق نفسه يقول «slippage» بـ`newsRiskHint`). ← «…حتى يكلّفك ضرب الوقف نسبة محدّدة من رصيدك» | QA20 |
+| chart | chart | **chart12**: المفتاحان `mcCloneDrawing`/`mcCloneDrawingA11y` أُضيفا (`3d12429`) — بقي ربط زرّ «نسخ الرسم» (تحقّقتُ: 0 مستعمل) | chart12 |
 | QA | بلا مالك / الخادم | **(e) جديد QA20**: «Confidence 83%» ما زالت تُعرض بـ`AnalystsPanel.tsx:115` و`SocialConsensusPanel.tsx:219` من المعادلة الثابتة `signal_hub.py:79-82` (\|avg\|×0.75+0.35) — `IndicatorForecastPanel` أزالها لهذا السبب بالضبط (:153 «تُقرأ كاحتمال نجاح»). ← إخفاء السطر أو عدد الأصوات بدلها | QA20 |
+| launch | tools | **جديد (`54ff3fa`)**: `riskCalcSlPipsAmbiguous` ×3 بلا مستعمل (تحقّقتُ: 0) — «1.500» بخانة الوقف تُرفض (`ffa6b92`) لكن الرسالة العامة لا تسمّي القراءتين ← `{value}`/`{whole}`/`{small}` تحت الخانة | launch70 |
+| QA | chart | **(a) جديد QA21**: كود ميت يحرسه اختبار فقط — `priceLegend.ts` `planPriceLegend` :135 و`legendCapacity` :281 و`DIRECTIONAL_OVERLAYS` :109 (الشارت يستعمل `planPriceLegendForWidth` وحدها :80)؛ `dailyChange.ts:93` `prevCloseFromDaily` (المستعمل `prevSessionFromDaily`). حذفٌ مع حالاتها أم إبقاء مقصود؟ | QA21 |
 
-**أُسقط هذه الدورة (تحقّقتُ بالكود):** launch67 `journalClosedElsewhere*` ← `TradeJournalPanel.tsx:940` `notify(...)`؛ launch68 `riskCalcConvStale` ← `PositionSizePanel.tsx:1296` (5 د لا 3، مبرَّر بـLOG-TOOLS)؛ launch68 `journalExitAtProfitStopA11y` ← `TradeJournalPanel.tsx:1587`.
-**تحقّق بلا تغيير:** `Alert.alert` 10 بـ5 ملفات (الـ11 تعليق `TradeJournalPanel:918`)؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `accNetLoadError` 0 مستعمل؛ `CalendarPanel:37-38` كما هو.
+**أُسقط هذه الدورة (تحقّقتُ بالكود):** launch69 `noteCharsLeftReserved` ← `TradeJournalPanel.tsx` (`7381a9e`، 1 مستعمل)؛ QA20 `riskCalcSub` ← «يكلّفك ضرب الوقف» ×3 (`90d61a5`، 0 «never lose»)؛ chart12 شقّ launch (المفاتيح موجودة).
+**تحقّق بلا تغيير:** `Alert.alert` 10 بـ5 ملفات؛ «₴» ×2؛ `TimeframeBar` صفر `accessibilityState`؛ `accNetLoadError` 0 مستعمل؛ قائمة التصديرات الميتة كما هي.
