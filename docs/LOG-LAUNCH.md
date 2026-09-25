@@ -2970,3 +2970,28 @@ ar/ku «5% ≈540.0 pip»، en «pips»، GER40 «≈925.00» بلا وحدة �
 **خارج نطاقي ويستحقّ عملاً**: القائم (التشغيلة 83) + `matrix_advice` (93) + `npx expo install --fix` (96) + `as_of` مع السعر المخزَّن + **إرسال الأعطال** (Sentry أو ما يشبهه —
 قرار أنس، يمسّ سياسة الخصوصية) + بريد الدعم بصفحة المتجر.
 **يحتاج جهازاً**: الخطوات 322–371؛ أهمّها 364 (مقياس «%») و371 (شاشة الخطأ بنسخة تطوير).
+
+## 2026-09-25 — التشغيلة 101
+
+أوّلاً `COORDINATION.md` (دورة QA 47): **لا صفّ منفَّذه launch**. راجعتُ diff منذ التشغيلة 100 (tools 65، chart 33) بحثاً عن نصوص. `bash scripts/qa-build-check.sh`
+**أخضر بصفر أخطاء قبل كل commit**. **لم يُشغَّل التطبيق.**
+
+1. **`priceAmbiguousThousandsHint`** (`6fee41e`، ar/en/ku): tools (`25dc815`) صار يعرض الرسالة للفاصلة قبل ثلاثة أرقام («157,250» USDJPY) — والنصّ يقول «هل **النقطة**
+   فاصل آلاف…؟» تحت رقم بلا نقطة. صار «هل الفاصل للآلاف أم للكسر العشري؟» كنصّ `riskCalcSlPipsAmbiguous`. تعليق النوع يذكر الحالتين.
+2. **`RELEASE-MOBILE.md` خطوات 372–378** (`26c15db`): شريحة عدد Line Break، تزامن الشرائح بين الشارتات، سطر النسبة بوسم التقاطع، سطر mini بالدفتر، كريبتو بلاحقة
+   الوسيط (يحتاج خادماً)، سقوط علامة «1.00 lot»، رسالة الفاصلة. كلها تحقّقتُ منها بالـdiff.
+3. **`mcLineBreakCountA11y`** (`0faf734`، ar/en/ku): شريحة عدد Line Break (`9b1c2ba`) اسمها لقارئ الشاشة `` `${label} ${n} → ${next}` `` ⇒ «سهم لليمين» (عيب ZigZag
+   نفسه). المفتاح جاهز؛ **صفّ جديد بـCOORDINATION لـchart** للوصل.
+4. **`FEATURE-INVENTORY.md`** (`eb1acbc`): صفّ المحرّك (عدد Line Break + التزامن، سطر % بالتقاطع) وصفّ الدفتر (mini، كريبتو بلاحقة، «1.00 lot»، الفاصلة).
+
+**فحص بلا تغيير**: مفاتيح `journalMiniNoMoney` صار موصولاً (`a54e6e9`، `TradeJournalPanel`) — **الجزء الخاصّ به بصفّ tools63 أُنجز**؛ `riskCalcSpreadPointsHint`
+و`mcZigzagDevA11y` ما زالا بلا وصل (grep). `README.md`/`app.json`/`eas.json`/`STORE-LISTING.md`/`OnboardingOverlay.tsx`/`AppErrorBoundary.tsx` بلا تغيير.
+
+### ردّ على COORDINATION
+- **tools63**: `journalMiniNoMoney` موصول ⇒ باقٍ `riskCalcSpreadPointsHint` (tools) و`mcZigzagDevA11y` (chart).
+- **جديد launch101 ← chart**: وصل `mcLineBreakCountA11y` (البند 3).
+- launch67 (إعادة الجولة) وlaunch73 (ترخيص البيانات) ← أنس، قائمان. صفوفي الأخرى (`a11yBusy`، «₴»، `matrix_advice`) بملفات **ui** (بحسب قاعدة المالكين الجديدة:
+  كل ملف بـ`mobile/src` خارج chart/tools/i18n ⇒ ui)، بلا تغيير.
+
+**خارج نطاقي ويستحقّ عملاً**: القائم (التشغيلة 83) + `matrix_advice` (ui، 93) + `npx expo install --fix` (أنس) + `as_of` (backend) + إرسال الأعطال (أنس).
+**يحتاج جهازاً**: الخطوات 322–378؛ أهمّها 364/374 (مقياس «%» ووسم التقاطع ثلاثي الأسطر على 360px) و376 (BTCUSDm مع خادم حيّ).
