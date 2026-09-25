@@ -63,6 +63,7 @@ import { indicatorBase, indicatorRangeBase, trimIndicator, trimIndicatorRange } 
 import {
   axisTickCount,
   axisTickRatios,
+  dedupeTickLabels,
   nicePriceTicks,
   niceLogPriceTicks,
   percentScaleTicks,
@@ -5857,10 +5858,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       ? percentTicks.map((t) => ({ ratio: (priceFrame.max - toScale(t.price)) / priceFrame.span, price: t.price, label: t.label }))
       : nicePrices.length
       ? nicePrices.map((price) => ({ ratio: (priceFrame.max - toScale(price)) / priceFrame.span, price }))
-      : axisTickRatios(priceTickCap).map((ratio) => ({
-          ratio,
-          price: fromScale(priceFrame.max - ratio * priceFrame.span),
-        }))
+      : dedupeTickLabels(
+          axisTickRatios(priceTickCap).map((ratio) => ({
+            ratio,
+            price: fromScale(priceFrame.max - ratio * priceFrame.span),
+          })),
+          (t) => fmtPrice(t.price)
+        )
   )
     // مع الظلال: علامات السعر بجوار الحارة الأساسية وحدها — ما تحتها حارات بمدى آخر.
     .filter((t) => Number.isFinite(t.ratio) && (!shadowStack || t.ratio * chartPlotH <= shadowStack.primaryLane.height));

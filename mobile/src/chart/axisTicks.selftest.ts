@@ -15,6 +15,7 @@ import {
   niceLogPriceTicks,
   percentScaleTicks,
   formatScalePercent,
+  dedupeTickLabels,
 } from './axisTicks';
 
 const TIME_GAP = 6;
@@ -358,4 +359,18 @@ console.log('axisTicks.selftest: PASS');
   const hours = idx.map((i) => new Date(h4[i]! * 1000).getUTCHours());
   assert.ok(hours.every((h) => h === 0 || h === 12), JSON.stringify(hours));
   console.log('niceTimeTickIndexes 4H multiples PASS');
+}
+
+{
+  // أقصى مطّ: سبع علامات بين 1.0852027 و1.0852073 تُطبع بخمس منازل ⇒ نصّان لا سبعة.
+  const lo = 1.0852027;
+  const hi = 1.0852073;
+  assert.deepEqual(nicePriceTicks(lo, hi, 7, 0.00001), []);
+  const ticks = axisTickRatios(7).map((r) => ({ r, p: hi - r * (hi - lo) }));
+  const kept = dedupeTickLabels(ticks, (t) => t.p.toFixed(5));
+  assert.deepEqual(kept.map((t) => t.p.toFixed(5)), ['1.08521', '1.08520']);
+  assert.deepEqual(kept.map((t) => t.r), [ticks[1]!.r, ticks[4]!.r]);
+  assert.deepEqual(dedupeTickLabels([], String), []);
+  assert.deepEqual(dedupeTickLabels([1, 2, 3], String), [1, 2, 3]);
+  console.log('dedupeTickLabels PASS');
 }

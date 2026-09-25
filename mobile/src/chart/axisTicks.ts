@@ -56,6 +56,23 @@ export function axisTickRatios(count: number): number[] {
 }
 
 /**
+ * علامة واحدة لكل نصّ: من كل تتابع علامات يطبع النصّ نفسه تبقى الوسطى. احتياط النِّسَب المتساوية
+ * (مدى أضيق من أصغر منزلة، بأقصى مطّ للمحور) كان يطبع «1.08521» ثلاث مرّات و«1.08520» أربعاً.
+ */
+export function dedupeTickLabels<T>(ticks: readonly T[], label: (t: T) => string): T[] {
+  const out: T[] = [];
+  let i = 0;
+  while (i < ticks.length) {
+    let j = i;
+    const text = label(ticks[i]!);
+    while (j + 1 < ticks.length && label(ticks[j + 1]!) === text) j++;
+    out.push(ticks[Math.floor((i + j) / 2)]!);
+    i = j + 1;
+  }
+  return out;
+}
+
+/**
  * أسعار علامات المحور بخطوات مستديرة (1/2/5 × 10^k) كما بـTradingView، لا نِسَب متساوية.
  * النِّسَب الثابتة (0، ⅙، ⅓…) تقع على أسعار كيفيّة (1.08437) تتبدّل مع كل تيك يمدّ المدى، فلا
  * يقرأ المتداول مسافة 10 pip من المحور ولا يطابق خطّ الشبكة سعراً. الخطوة أصغر مستديرة
