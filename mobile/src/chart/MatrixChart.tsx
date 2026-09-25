@@ -4814,10 +4814,17 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
       );
       const appliedBars = nextOffset - panStartOffset.current;
       // عند طرفَي التاريخ تتوقّف `offset` فيأخذ `xPan` الحركة كلّها — بلا حدّ كانت الشموع تخرج كلّها من اللوح.
+      // بالإعادة الخانات المرسومة = المكشوف عند الإزاحة الجديدة، لا النافذة (الباقي مستقبل فارغ).
+      const slotsNow = Math.max(1, panStartBars.current || windowCountRef.current);
+      const drawnNow = replayOnRef.current
+        ? replayWindow(source.all.length, windowCountRef.current, nextOffset, sourceRef.current.cut).revealed
+        : slotsNow;
       const nextXPan = clampXPan(
         panStartX.current + sdx - appliedBars * barWidth,
-        Math.max(1, panStartBars.current || windowCountRef.current),
-        chartPlotW
+        slotsNow,
+        chartPlotW,
+        undefined,
+        drawnNow
       );
       const nextPricePan =
         panStartPrice.current +

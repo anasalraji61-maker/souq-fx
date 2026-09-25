@@ -7,9 +7,20 @@
  */
 export const PAN_KEEP_EDGE_FRAC = 0.2;
 
-export function clampXPan(xPan: number, n: number, plotW: number, edge = PAN_KEEP_EDGE_FRAC): number {
+/**
+ * `drawn`: الخانات المرسومة فعلاً من اليسار (افتراضياً `n`). بالإعادة اللوح `n` خانة والمكشوف أوّلها فقط —
+ * الحدّ من آخر **خانة** كان يسمح بسحب شمعة الإعادة (وحدها عند حدّ القطع) خارج اللوح يساراً: لوح فارغ.
+ */
+export function clampXPan(
+  xPan: number,
+  n: number,
+  plotW: number,
+  edge = PAN_KEEP_EDGE_FRAC,
+  drawn = n
+): number {
   if (!Number.isFinite(xPan) || !(plotW > 0) || !(n > 0)) return Number.isFinite(xPan) ? xPan : 0;
-  const min = edge * plotW - ((n - 0.5) / n) * plotW;
+  const last = Math.min(n, Math.max(1, Math.floor(drawn) || n)) - 1;
+  const min = edge * plotW - ((last + 0.5) / n) * plotW;
   const max = (1 - edge) * plotW - (0.5 / n) * plotW;
   return Math.min(max, Math.max(min, xPan));
 }

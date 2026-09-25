@@ -21,4 +21,11 @@ assert.ok(Math.abs(((11 + 0.5) / 12) * W + clampXPan(-1000, 12, W) - 0.2 * W) < 
 assert.equal(clampXPan(NaN, n, W), 0);
 assert.equal(clampXPan(-50, 0, W), -50);
 assert.equal(clampXPan(-50, n, 0), -50);
+// الإعادة: 80 خانة والمكشوف شمعة واحدة (عند حدّ القطع) ⇒ تبقى عند 20% لا تخرج يساراً
+const replayLeft = clampXPan(-1000, n, W, undefined, 1);
+assert.ok(Math.abs(xOf(0, replayLeft) - 0.2 * W) < 1e-9, 'شمعة الإعادة عند 20%');
+// 30 مكشوفة: آخرها المرجع؛ والأوّل (السحب يميناً) كما هو
+assert.ok(Math.abs(xOf(29, clampXPan(-1000, n, W, undefined, 30)) - 0.2 * W) < 1e-9);
+assert.equal(clampXPan(400, n, W, undefined, 30), clampXPan(400, n, W));
+assert.equal(clampXPan(-1000, n, W, undefined, 0), clampXPan(-1000, n, W));
 console.log('panClamp selftest: PASS');
