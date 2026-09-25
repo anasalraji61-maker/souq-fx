@@ -285,6 +285,10 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
   /** الأداة **الآن** — لسعرٍ حيّ يصل بعد تبديلها (راجع `fillEntryFromLive`) */
   const liveSymRef = useRef<string | null>(null);
   liveSymRef.current = spec?.symbol ?? null;
+  /** الوقف **عند وصول** السعر لا عند النقرة: وقفٌ كُتب أثناء الطلب كان يُهمَل فيُعبّأ الوسطي بدل Ask/Bid (ومؤثّر الوقف
+   *  أدناه جرى قبل التعبئة فلا يعود) ⇒ وقفٌ أضيق بنصف السبريد ولوتٌ أكبر — ~10% على ذهبٍ بوقف 15 pip */
+  const stopPxRef = useRef('');
+  stopPxRef.current = stopPx;
   const conv = useMemo(() => (spec ? conversionPair(spec.quote, convAccount) : null), [spec, convAccount]);
   const convSymbol = conv?.symbol ?? null;
   const convInvert = conv?.invert ?? false;
@@ -944,7 +948,7 @@ export function PositionSizePanel({ defaultSymbol = 'EURUSD' }: Props) {
         setLivePxMsg({ ok: false, text: t.riskCalcNoLiveQuote });
         return;
       }
-      const px = liveEntryForStop(q, priceNum(stopPx));
+      const px = liveEntryForStop(q, priceNum(stopPxRef.current));
       if (px == null) {
         setLivePxMsg({ ok: false, text: t.riskCalcNoLiveQuote });
         return;

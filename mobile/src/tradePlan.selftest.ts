@@ -1193,6 +1193,15 @@ console.log('tradePlan executionPrice / side switch selftest OK');
   assert.equal(e, 2350.65);
   assert.equal(slPipsFromPrices(instrumentSpec('XAUUSD')!, e, 2345.5), 51.5);
   assert.equal(slPipsFromPrices(instrumentSpec('XAUUSD')!, g.price, 2345.5), 50);
+  // وقفٌ كُتب **أثناء** طلب السعر (الحاسبة تقرأ الوقف عند وصول الرد، `stopPxRef`): بقراءته عند النقرة (فارغ ⇒ NaN)
+  // يُعبّأ الوسطي ⇒ وقف 16.5 pip من Ask يُحسب 15 ⇒ 10,000 USD بـ1% = 0.66 lot بدل 0.60 (+10%)
+  const gs = 2349.0; // 15 pip ذهب تحت الوسطي (pip = 0.1)
+  const xau = instrumentSpec('XAUUSD')!;
+  const sizeFrom = (entry: number) =>
+    positionSize({ balance: 10000, riskPct: 1, slPips: slPipsFromPrices(xau, entry, gs)!, pipValuePerLot: pipValuePerLot(xau, 1), contractSize: xau.contractSize })!.lots;
+  assert.equal(liveEntryForStop(g, NaN), 2350.5);
+  assert.equal(sizeFrom(liveEntryForStop(g, NaN)!), 0.66);
+  assert.equal(sizeFrom(liveEntryForStop(g, gs)!), 0.6);
   // اتّساق مع مسار الدفتر: الجهة المستنتجة = executionPrice بالجهة نفسها
   assert.equal(liveEntryForStop(q, 1.083), executionPrice(q, 'buy'));
   assert.equal(liveEntryForStop(q, 1.087), executionPrice(q, 'sell'));
