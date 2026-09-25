@@ -597,6 +597,8 @@ export type Dict = {
   journalOpenSuffix: string;
   /** بدل سطر «المخاطرة (مفتوحة)» الغائب (`openRiskTotals` = null) حين السبب صفقة مفتوحة بلا وقف فقط — `{n}` عددها. العدد بعد النقطتين فلا صيغ جمع */
   journalOpenRiskNoStop: string;
+  /** tools77a: بدل «المخاطرة (مفتوحة)» حين بين المفتوحة صفقة بحجم مجهول أو أداة بلا عقد معروف (BTCUSD، US30) — `{n}` عددها. العدد بعد النقطتين فلا صيغ جمع */
+  journalOpenRiskUnknown: string;
   /** سطر تحذير بالدفتر من `stackedCurrencyExposure` (صفقتان مفتوحتان أو أكثر بالاتجاه نفسه، بلا ساق معاكسة) — `{ccy}` العملة و`{n}` عدد الصفقات (مرّة واحدة لكلٍّ). العدد بعد النقطتين فلا صيغ جمع */
   journalExposureStacked: string;
   /** قبل الحفظ (`draftStackedExposure`): الصفقة المكتوبة لم تُفتح بعد، فـ«صفقات مفتوحة…: 3 (+1)» يعدّها مفتوحة — `{ccy}` و`{after}` العدد بعدها و`{before}` المفتوحة الآن. الأعداد بعد اسم لا قبله فلا صيغ جمع */
@@ -1813,6 +1815,7 @@ const ar: Dict = {
     'لا صفقات مسجّلة بعد — سجّل كل صفقة (حتى على حساب تجريبي) لتعرف مع الوقت ما ينجح معك وما لا ينجح. اكتبها بالنموذج أعلاه («↓ السعر الحالي» يملأ الدخول لحظة فتحها)، أو احسبها في «المخاطرة» ثم اضغط «سجّل هذه الخطة بالدفتر».',
   journalOpenSuffix: '(مفتوحة)',
   journalOpenRiskNoStop: 'صفقات مفتوحة بلا وقف: {n} — خسارتها بلا حدّ، فلا يُجمع خطر المفتوحة',
+  journalOpenRiskUnknown: 'صفقات مفتوحة بحجم أو عقد غير معروف: {n} — مخاطرتها بالمال لا تُحسب، فلا يُجمع خطر المفتوحة',
   journalExposureStacked: 'صفقات مفتوحة تراهن على {ccy} بالاتجاه نفسه: {n} — خبرٌ واحد يضربها معاً، فمخاطرتها تتجمّع لا تتوزّع',
   journalExposureStackedDraft: 'بهذه الصفقة يصير عدد صفقاتك التي تراهن على {ccy} بالاتجاه نفسه {after} (المفتوحة الآن: {before}) — خبرٌ واحد يضربها معاً، فمخاطرتها تتجمّع لا تتوزّع',
   journalClosedWord: 'مغلقة',
@@ -2980,6 +2983,7 @@ const enUS: Dict = {
     'No trades logged yet — log every trade (even on a demo account) to learn over time what works for you and what doesn\'t. Fill in the form above (“↓ Current price” fills the entry as you open it), or size it under “Risk” and tap “Log this plan to the journal”.',
   journalOpenSuffix: '(open)',
   journalOpenRiskNoStop: 'Open trades without a stop: {n} — their loss has no limit, so open risk is not totalled',
+  journalOpenRiskUnknown: 'Open trades with an unknown size or contract: {n} — their risk in money can’t be computed, so open risk is not totalled',
   journalExposureStacked: 'Open trades betting the same way on {ccy}: {n} — one news release hits them all at once, so their risk stacks up instead of spreading out',
   journalExposureStackedDraft: 'With this trade, {after} of your trades bet the same way on {ccy} ({before} already open) — one news release hits them all at once, so the risk stacks up instead of spreading out',
   journalClosedWord: 'Closed',
@@ -4178,6 +4182,7 @@ const ku: Dict = {
     'هێشتا هیچ مامەڵەیەک تۆمار نەکراوە — هەموو مامەڵەیەک تۆمار بکە (تەنانەت لەسەر هەژماری تاقیکردنەوە) بۆ ئەوەی بە تێپەڕبوونی کات بزانیت چی بۆت سەرکەوتووە و چی نا. لە فۆرمەکەی سەرەوە بینووسە («↓ نرخی ئێستا» چوونەژوورەوە لە کاتی کردنەوەدا پڕ دەکاتەوە)، یان لە «مەترسی» حیسابی بکە و «ئەم پلانە لە دەفتەر تۆمار بکە» دابگرە.',
   journalOpenSuffix: '(کراوەیە)',
   journalOpenRiskNoStop: 'مامەڵە کراوەکانی بێ وەستان: {n} — زیانیان سنووری نییە، بۆیە مەترسیی کراوەکان کۆ ناکرێتەوە',
+  journalOpenRiskUnknown: 'مامەڵە کراوەکانی قەبارە یان گرێبەستی نەناسراو: {n} — مەترسییەکەیان بە پارە ناژمێردرێت، بۆیە مەترسیی کراوەکان کۆ ناکرێتەوە',
   journalExposureStacked: 'مامەڵە کراوەکانی هەمان ئاراستە لەسەر {ccy}: {n} — یەک هەواڵ هەموویان پێکەوە دەپێکێت، بۆیە مەترسییان کەڵەکە دەبێت نەک دابەش',
   journalExposureStackedDraft: 'بەم مامەڵەیە ژمارەی مامەڵەکانت کە بە هەمان ئاراستە لەسەر {ccy} دەوەستن دەبێتە {after} (ئێستا کراوە: {before}) — یەک هەواڵ هەموویان پێکەوە دەپێکێت، بۆیە مەترسییان کەڵەکە دەبێت نەک دابەش',
   journalClosedWord: 'داخراو',
