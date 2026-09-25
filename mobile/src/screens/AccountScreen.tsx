@@ -19,7 +19,7 @@ import {
   type NotificationPermissionState,
 } from '../notifications';
 import { CommissionPlanPanel, isRoleId } from '../components/CommissionPlanPanel';
-import { registerErrorText } from '../i18n/authErrors';
+import { loginErrorText, registerErrorText } from '../i18n/authErrors';
 import { NetworkTreePanel } from '../components/NetworkTreePanel';
 import { SubscriptionPlansPanel } from '../components/SubscriptionPlansPanel';
 import { OnboardingOverlay } from '../components/OnboardingOverlay';
@@ -143,7 +143,7 @@ export function AccountScreen() {
       await registerPushToken();
       setPassword('');
     } catch (e) {
-      setErr(mode === 'login' ? t.loginError : registerErrorText(t, e));
+      setErr(mode === 'login' ? loginErrorText(t, e) : registerErrorText(t, e));
     } finally {
       setBusy(false);
     }
