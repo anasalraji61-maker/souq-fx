@@ -505,3 +505,15 @@
 **فُحص ولم يُغيَّر:** `backtest.py` (السبريد، أقصى هبوط داخل الصفقة، إسقاط الشمعة الجارية)، `indicators.py` (RSI Wilder، EMA ببذرة SMA، إشارة MACD من قيم حقيقية، بولنجر بانحراف المجتمع كـTV)، الماسح، تنبيهات السعر، `db.trade_stats`، التقويم.
 
 **ما يحتاجه التطبيق:** ui — نصّ لـ`atr_exceeds_price` (backend-r37). قرارات أنس كما هي: launch9، QA24، launch77، backend-r6 (6)، backend-r33، backend-r35.
+
+## 2026-09-25 — التشغيل 38: فريم غير معروف بمسارات GET كان يُبدَّل بـ15m صامتاً
+
+**بداية التشغيل:** لا صفّ في COORDINATION منفّذه backend وحده (صفوف backend/أنس قرارات بشرية — لم تُمسّ). البنود 1–9 فحص سريع بالكود — ما تزال مغلقة (`XBR/USD`/`not_offered_by_provider` ‏`twelve_data.py:33,42`، سبريد بلا اختلاق `:336`، ‏409 `trade_already_closed`، `NOCASE` ‏`db.py:27`). 750 اختباراً ناجحاً.
+
+| # | الإيداع | ما تغيّر |
+|---|---|---|
+| 97 | `b5b688f` | **`/api/charts`، `/api/indicators/snapshot`، `/api/terminal`: فريم غير معروف ⇒ 422 `unknown_timeframe`** (مع `allowed`). كان `build_series` يُبدّله بـ`15m` صامتاً ⇒ `?timeframe=1h` (أو `1d`، `M`) يُعيد RSI وتقاطعات محسوبة على شموع 15 دقيقة، والعلامة الوحيدة `timeframe: "15m"` بالردّ. نماذج الأجسام (الاختبار الخلفي، الماسح، التوقّع، التنبيهات) كانت ترفضه أصلاً بـ`_check_timeframe`. اختبارات `test_provider_symbols.py` (5 روابط خاطئة ⇒ 422 بلا طلب للمزوّد؛ كل فريم معروف 200) |
+
+**فُحص ولم يُغيَّر:** `econ_calendar.py` (لا أحداث مختلَقة، `ts` None بلا منطقة زمنية، الساعة غير المعلنة)، `alert_worker.py` (حداثة السعر/السلسلة، تقاطع قبل التسليح)، `backtest.py`، `indicators.py` (تعريف التقاطع كـ`ta.crossover`)، `twelve_data_ws.py`، و`main.py`/`db.py` بوكيل تدقيق (لا أرقام مخترعة ولا أخطاء P&L/نسبة فوز).
+
+**ما يحتاجه التطبيق:** لا شيء — `api.ts` يرسل فريمات `TIMEFRAMES` وحدها (مطابقة لـ`TF_SECONDS`). قرارات أنس كما هي: launch9، QA24، launch77، backend-r6 (6)، backend-r33، backend-r35.
