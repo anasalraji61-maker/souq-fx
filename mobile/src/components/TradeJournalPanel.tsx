@@ -1463,6 +1463,8 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
             >
               <Text style={styles.closeLink}>{t.journalEditBtn}</Text>
             </Pressable>
+            {/* DESIGN-PRO §5.2: الحذف يختفي حتى النيّة — يظهر فقط للصفّ المفتوح بـ«تعديل» (والتأكيد باقٍ). */}
+            {editing?.id === tr.id ? (
             <Pressable
               accessibilityRole="button"
               style={({ pressed }) => [
@@ -1480,6 +1482,7 @@ export function TradeJournalPanel({ defaultSymbol, flow = false, ticks, chartBan
             >
               <Text style={styles.delLink}>{t.deleteWord}</Text>
             </Pressable>
+            ) : null}
           </View>
         </View>
       ))}
@@ -2340,7 +2343,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
   },
-  delLink: { color: colors.bear, fontSize: 11, fontWeight: '500' },
+  // الأحمر للاتجاه وحده (§1) — الحذف محايد ويحميه ظهوره بعد «تعديل» ثم التأكيد.
+  delLink: { color: colors.textMuted, fontSize: 11, fontWeight: '500' },
   editBanner: {
     borderRadius: radii.sm,
     borderWidth: 1,
