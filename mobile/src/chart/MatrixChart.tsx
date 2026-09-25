@@ -6713,8 +6713,13 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               // بلا مواصفة pip (US30، BTC، DXY، النفط) ⇒ الفرق بمنازل السعر «+125.00 (+0.30%)» كـTradingView
               // لا النسبة وحدها — متداول المؤشرات يقيس الشمعة بالنقاط السعرية.
               const pips = signedDistanceText(series.symbol, ref, crossReadCandle.close, lang, priceDecimalsRef);
+              // اللون من إشارة الرقم الأوّل المطبوع: «+1.0 pips (0.00%)» على الذهب كان رمادياً لأن النسبة تُقرَّب لصفر
+              // تحت 0.005% — حركة pip واضحة تبدو «بلا تغيّر». بلا pip ⇒ لون النسبة كما كان.
+              const lead = pips?.charAt(0);
+              const changeColor =
+                lead === '+' ? colors.bull : lead === '\u2212' || lead === '-' ? colors.bear : crossChange.color;
               return (
-                <Text style={{ color: crossChange.color, fontWeight: '600' }}>
+                <Text style={{ color: changeColor, fontWeight: '600' }}>
                   {pips ? ` ${pips} (${crossChange.pctText})` : ` ${crossChange.pctText}`}
                 </Text>
               );
