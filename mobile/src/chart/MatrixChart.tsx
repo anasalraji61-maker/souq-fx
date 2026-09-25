@@ -8153,6 +8153,7 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               pointerEvents="none"
               accessible
               accessibilityLabel={a11y}
+              accessibilityHint={tr.mcArmedAlertAdjustHint}
               accessibilityRole="adjustable"
               accessibilityValue={{ text: fmtPrice(price) }}
               accessibilityActions={ALERT_NUDGE_ACTIONS}
