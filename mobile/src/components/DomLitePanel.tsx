@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors, radii, spacing } from '../theme';
 import { formatPrice } from '../chart/math';
+import { formatPriceDiff } from '../chart/indicators/utils';
 import { isRealQuote } from '../chart/dataSource';
 import { quoteSpreadPips } from '../positionSize';
 import { api } from '../api';
@@ -65,7 +66,9 @@ export function DomLitePanel({ symbol = 'EURUSD' }: Props) {
   if (hasBook) {
     // الحساب نفسه برأس الطرفية (`quoteSpreadPips`) — كان منسوخاً هنا فيتباعد التقريب بين اللوحين.
     const pips = quoteSpreadPips(symbol, quote!.bid, quote!.ask);
-    spreadText = pips != null ? `${pips.toFixed(1)} pip` : formatPrice(quote!.ask! - quote!.bid!, symbol);
+    // chart-r48: بلا مواصفة pip ⇒ منازل **السعر** لا حجم السبريد (BTCUSD كان «12.500» بجانب «67420.50»).
+    spreadText =
+      pips != null ? `${pips.toFixed(1)} pip` : formatPriceDiff(quote!.ask! - quote!.bid!, quote!.bid!, symbol);
   }
 
   return (
