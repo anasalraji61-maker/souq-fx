@@ -22,6 +22,8 @@ import type { AcademyLecture, ScriptSegment } from '../academy';
 import { parseStoredIndex, resumeSegmentIndex } from '../academyResume';
 import { MatrixChart } from '../chart/MatrixChart';
 import { academyChartFor } from '../chart/academyChart';
+import { mockBase } from '../chart/mockBases';
+import { normalizeProvenance } from '../chart/dataSource';
 import { mockSeries } from '../mock';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/I18nContext';
@@ -75,6 +77,7 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
   }, []);
 
   const chartMeta = academyChartFor(schoolId);
+  const chartKind = chartSeries ? normalizeProvenance(chartSeries.data_source).kind : null;
 
   useEffect(() => {
     let alive = true;
@@ -83,7 +86,8 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
         const s = await api.chart(chartMeta.symbol, chartMeta.tf);
         if (alive) setChartSeries(s);
       } catch {
-        if (alive) setChartSeries(mockSeries(chartMeta.symbol, 1.08, chartMeta.tf, 80));
+        // `mockBase` لا 1.08 ثابتة: مدرستا غان وSK تعرضان XAUUSD — كان الذهب يُرسم حول 1.08 بلا اتصال.
+        if (alive) setChartSeries(mockSeries(chartMeta.symbol, mockBase(chartMeta.symbol), chartMeta.tf, 80));
       }
     })();
     return () => {
@@ -389,6 +393,11 @@ export function LectureClassroom({ schoolId, lectureId, onClose }: Props) {
           <View style={[styles.chartHead, rtl && styles.chartHeadRtl]}>
             <Text style={styles.chartLabel}>
               {t.lectureChartLabel} · {chartMeta.symbol} · {chartMeta.tf}
+              {/* شموع تجريبية (بلا اتصال أو بذرة الخادم) كانت تُعرض بلا وسم فتُقرأ كسوق حقيقي — كوسم الرباعي. */}
+              {chartKind === 'demo' ? <Text style={styles.chartDemoTag}>{` · ${t.dsKindDemo}`}</Text> : null}
+              {chartKind === 'unavailable' ? (
+                <Text style={styles.chartDemoTag}>{` · ${t.dsKindUnavailable}`}</Text>
+              ) : null}
             </Text>
             <Pressable
               accessibilityRole="button"
@@ -602,6 +611,7 @@ const styles = StyleSheet.create({
   chartHeadRtl: { flexDirection: 'row-reverse' },
   chartLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   chartHide: { color: colors.accent, fontSize: 11, fontWeight: '700' },
+  chartDemoTag: { color: colors.warn, fontWeight: '800' },
   showChart: {
     color: colors.accent,
     marginBottom: spacing.sm,
