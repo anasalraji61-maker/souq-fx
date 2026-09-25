@@ -1089,3 +1089,21 @@ console.log('newsRisk ALL-currency selftest OK');
   assert.deepEqual(openPositionsNewsRisk(['EURUSD', 'GBPUSD'], [g20t, gbp], t0, 'EURUSD')!.symbols, ['EURUSD', 'GBPUSD']);
 }
 console.log('newsRisk ALL off the timed path selftest OK');
+
+// الخلاصة الحيّة تؤرّخ العطلة 19:00 نيويورك **مساء اليوم السابق** (backend `a3a9cdb`: عطلة اليابان الاثنين 21/9 ⇒ `T19:00:00-04:00`
+// يوم 20/9 = 23:00 UTC). `ts + 12س` يقع بيوم العطلة ⇒ تبدأ منتصف ليل بلدها لا قبله بيوم. قفلٌ للصيغة الجديدة (لا تغيير بالكود).
+{
+  const { bankHolidayToday, holidayDayStartMs } = require('./newsRisk') as typeof import('./newsRisk');
+  const jp: NewsEvent = { id: 'h', title: 'Bank Holiday', currency: 'JPY', impact: 'holiday', ts: Date.UTC(2026, 8, 20, 23) / 1000, time_tbd: true };
+  assert.equal(holidayDayStartMs('JPY', jp.ts as number), Date.UTC(2026, 8, 20, 15)); // منتصف ليل طوكيو 21/9
+  const at = (iso: string) => bankHolidayToday([jp], ['USD', 'JPY'], Date.parse(iso));
+  assert.equal(at('2026-09-20T14:59:00Z'), null); // الأحد بطوكيو — لا عطلة بعد
+  assert.deepEqual(at('2026-09-20T15:00:00Z')!.currencies, ['JPY']);
+  assert.deepEqual(at('2026-09-21T14:59:00Z')!.currencies, ['JPY']);
+  assert.equal(at('2026-09-22T00:00:00Z'), null); // الثلاثاء بطوكيو
+  // عيد الشكر (الخميس 26/11، نيويورك شتاءً): 19:00 نيويورك الأربعاء = 00:00 UTC الخميس ⇒ منتصف ليل نيويورك الخميس
+  assert.equal(holidayDayStartMs('USD', Date.UTC(2026, 10, 26, 0) / 1000), Date.UTC(2026, 10, 26, 5));
+  // يوم أستراليا (الاثنين 26/1، سيدني صيفاً +11): 19:00 نيويورك الأحد = 00:00 UTC الاثنين ⇒ 13:00 UTC الأحد
+  assert.equal(holidayDayStartMs('AUD', Date.UTC(2026, 0, 26, 0) / 1000), Date.UTC(2026, 0, 25, 13));
+}
+console.log('newsRisk holiday live-feed 19:00 NY selftest OK');
