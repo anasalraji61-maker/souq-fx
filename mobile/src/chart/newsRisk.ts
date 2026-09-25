@@ -285,6 +285,26 @@ export function sameMinuteHighImpact(events: readonly NewsEvent[], currencies: r
 }
 
 /**
+ * عملات الشريط: عملة حدثه، ثم عملات الأحداث القوية الأخرى **بالدقيقة نفسها** لعملات الزوج («USD/EUR»). كان السطر
+ * «⚠ قوي · USD · بعد 30د · Non-Farm Employment Change +1» وقد يكون الـ+1 خطاب لاغارد (EUR) — فيُقرأ خبراً أمريكياً ثانياً،
+ * ويغيب أن ساقَي EURUSD تتحرّكان معاً. نفس مرشّحات `sameMinuteHighImpact`، فالعدد والعملات من المجموعة نفسها.
+ */
+export function sameMinuteCurrencyLabel(events: readonly NewsEvent[], currencies: readonly string[], event: NewsEvent): string {
+  const own = String(event.currency).toUpperCase();
+  const out = [own];
+  if (typeof event.ts !== 'number' || !Number.isFinite(event.ts)) return own;
+  const want = new Set(currencies);
+  for (const e of events) {
+    if (e === event || e.id === event.id || e.sample) continue;
+    if (String(e.impact).toLowerCase() !== 'high') continue;
+    if (typeof e.ts !== 'number' || !Number.isFinite(e.ts) || Math.abs(e.ts - event.ts) >= 60) continue;
+    const c = String(e.currency).toUpperCase();
+    if (want.has(c) && !out.includes(c)) out.push(c);
+  }
+  return out.join('/');
+}
+
+/**
  * سطر الشريط الأول: **الموعد قبل العنوان**. السطر سطرٌ واحد (`numberOfLines={1}`)، وكان «⚠ خبر قوي · USD · Non-Farm
  * Employment Change · بعد 1س 12د» يُقصّ بنقاط عند العنوان الطويل — فيضيع الموعد، وهو ما يقرّر به المتداول الدخول. الآن
  * يُقصّ العنوان إن ضاق السطر. `more` = `sameMinuteHighImpact` («+2»؛ صفر لا يُكتب).

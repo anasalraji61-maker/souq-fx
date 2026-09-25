@@ -12,6 +12,7 @@ import {
   NEWS_GRACE_MS,
   nextHighImpact,
   sameMinuteHighImpact,
+  sameMinuteCurrencyLabel,
   newsBannerText,
   symbolCurrencies,
   knownSingleName,
@@ -521,6 +522,18 @@ console.log('newsRisk micro/cent suffix selftest OK');
   // الحدث المعروض نفسه من nextHighImpact، والعدّ لا يشمله
   const hit = nextHighImpact(events, cur, t0 * 1000 - 12 * 60_000)!;
   assert.equal(sameMinuteHighImpact(events, cur, hit.event), 2);
+
+  // العملات بالشريط: الـ+2 أمريكيان ⇒ «USD» وحدها؛ CAD بالدقيقة نفسها ⇒ «USD/CAD» لـUSDCAD لا لـEURUSD
+  assert.equal(sameMinuteCurrencyLabel(events, cur, nfp), 'USD');
+  assert.equal(sameMinuteCurrencyLabel(events, symbolCurrencies('USDCAD'), nfp), 'USD/CAD');
+  // الرواتب + خطاب لاغارد بالدقيقة نفسها لـEURUSD ⇒ «USD/EUR» بعملة الحدث أولاً، والـ+1 لم يعد يُقرأ خبراً أمريكياً
+  const lag = ev('ECB President Lagarde Speaks', 'EUR', t0 + 20);
+  assert.equal(sameMinuteHighImpact([nfp, lag], cur, nfp), 1);
+  assert.equal(sameMinuteCurrencyLabel([nfp, lag], cur, nfp), 'USD/EUR');
+  assert.equal(sameMinuteCurrencyLabel([nfp, lag], cur, lag), 'EUR/USD');
+  // أمثلة/متوسط/بلا وقت/ليست من عملات الزوج لا تُضاف
+  assert.equal(sameMinuteCurrencyLabel(events, symbolCurrencies('EURGBP'), events[4]), 'EUR');
+  assert.equal(sameMinuteCurrencyLabel(events, cur, ev('x', 'usd', null)), 'USD');
 
   const line = newsBannerText({ head: 'High-impact news', currency: 'USD', when: 'in 12m', title: nfp.title, more: 2 });
   assert.equal(line, '⚠ High-impact news · USD · in 12m · Non-Farm Employment Change +2');

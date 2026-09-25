@@ -11,6 +11,7 @@ import {
   newsBannerText,
   newsTickDelayMs,
   nextHighImpact,
+  sameMinuteCurrencyLabel,
   sameMinuteHighImpact,
   symbolCurrencies,
   type CalendarCache,
@@ -125,7 +126,9 @@ export function NewsRiskBanner({ symbol }: Props) {
         .join(' ')}`;
   // الموعد قبل العنوان: السطر يُقصّ من آخره، و«+2» لأخبار الدقيقة نفسها (الرواتب + البطالة + الأجور) — راجع `newsBannerText`
   const more = cache ? sameMinuteHighImpact(cache.events, currencies, event) : 0;
-  const text = newsBannerText({ head: t.newsRiskHigh, currency: event.currency, when, title: event.title, more });
+  // «USD/EUR» حين يكون بين الـ+N خبرٌ قويّ لعملة الساق الأخرى — راجع `sameMinuteCurrencyLabel`
+  const ccyLabel = cache ? sameMinuteCurrencyLabel(cache.events, currencies, event) : event.currency;
+  const text = newsBannerText({ head: t.newsRiskHigh, currency: ccyLabel, when, title: event.title, more });
   // التحذير من تقويمٍ محفوظ بعد فشل التحديث: يُعرض (الوقت مطلق فيبقى صادقاً) مع قول ذلك
   const stale = cache != null && !cache.ok;
 
