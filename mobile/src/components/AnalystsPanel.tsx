@@ -86,6 +86,10 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
     else if (a.direction === 'sell') split.sell += 1;
     else split.neutral += 1;
   }
+  // chart-r70: مرجع منازل واحد للوحة كلها — بدونه رمز بلا منازل معروفة (النفط) يطبع كل رقم بمنازل حجمه
+  // («99.950 | 100.45»). الدخول إن وُجد، وإلا أول هدف.
+  const priceRef =
+    levels?.entry ?? rows.find((a) => typeof a.target === 'number' && Number.isFinite(a.target))?.target ?? null;
 
   return (
     <View style={[styles.wrap, embedded && styles.wrapInFrame]}>
@@ -135,8 +139,8 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
           {/* محايد ⇒ الخادم يعيد دخول = وقف = هدف: لا مستويات تُطبع لصفقة غير موجودة. */}
           {levels && direction !== 'neutral' ? (
             <Text style={[styles.levels, { textAlign: align }]}>
-              {t.entryLabel} {formatPrice(levels.entry, symbol)} · {t.slLabel} {formatPrice(levels.sl, symbol)}{' '}
-              · {t.tpLabel} {formatPrice(levels.tp, symbol)}
+              {t.entryLabel} {formatPrice(levels.entry, symbol, priceRef)} · {t.slLabel} {formatPrice(levels.sl, symbol, priceRef)}{' '}
+              · {t.tpLabel} {formatPrice(levels.tp, symbol, priceRef)}
             </Text>
           ) : direction === 'neutral' || levelsWhy ? (
             <Text style={[styles.levels, { textAlign: align }]}>{levelsWhy ?? t.socialNoClearTrade}</Text>
@@ -158,7 +162,7 @@ export function AnalystsPanel({ symbol, timeframe = '15m', embedded }: Props) {
               {/* backend-r1: `target` null حين لا مستويات — لا «هدف null» ولا رقم مصطنع */}
               {typeof a.target === 'number' && Number.isFinite(a.target) ? (
                 <Text style={styles.target}>
-                  {t.tpLabel} {formatPrice(a.target, symbol)}
+                  {t.tpLabel} {formatPrice(a.target, symbol, priceRef)}
                 </Text>
               ) : null}
               <Text style={styles.horizon}>{a.horizon}</Text>

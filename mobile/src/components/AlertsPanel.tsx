@@ -409,11 +409,11 @@ export function AlertsPanel({
          */
         const describe = (trig: (typeof res.triggered)[number]) => {
           const word = trig.condition === 'above' ? t.aboveWord : t.belowWord;
-          const cur =
-            typeof trig.current === 'number' && Number.isFinite(trig.current)
-              ? ` (${formatPrice(trig.current, trig.symbol)})`
-              : '';
-          return `${trig.symbol} ${word} ${formatPrice(trig.price, trig.symbol)}${cur}`;
+          const hasCur = typeof trig.current === 'number' && Number.isFinite(trig.current);
+          // chart-r70: المستوى والسعر الجاري بمنازل واحدة (مرجعها السعر الجاري) — لا «99.950 (100.45)».
+          const ref = hasCur ? trig.current : trig.price;
+          const cur = hasCur ? ` (${formatPrice(trig.current as number, trig.symbol, ref)})` : '';
+          return `${trig.symbol} ${word} ${formatPrice(trig.price, trig.symbol, ref)}${cur}`;
         };
         if (mountedRef.current) setFlash(res.triggered.map(describe).join(' · '));
         for (const trig of res.triggered) {
