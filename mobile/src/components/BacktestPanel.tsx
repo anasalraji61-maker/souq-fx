@@ -15,11 +15,12 @@ import { TimeframeBar } from './TimeframeBar';
 import { type Timeframe } from '../timeframes';
 import { useI18n } from '../i18n/I18nContext';
 import { formatPrice } from '../chart/math';
-import { QUICK_SYMBOLS } from '../tradePlan';
+import { QUICK_SYMBOLS, journalWinRateLine } from '../tradePlan';
 
 type Stats = {
   trade_count: number;
-  win_rate: number;
+  /** null = لا صفقة حاسمة (كلّها تعادل) — backend-r7؛ خادم أقدم يرسل 0 فيُكشف بـ`breakeven_count`. */
+  win_rate: number | null;
   total_return_pct: number;
   final_equity: number;
   avg_win_pct?: number;
@@ -237,7 +238,13 @@ export function BacktestPanel({ defaultSymbol = 'EURUSD', defaultTimeframe = '15
           {stats.trade_count > 0 ? (
             <>
               <Text style={[styles.statLine, { textAlign: align }]}>
-                {t.backtestStatWinRate.replace('{pct}', String(stats.win_rate))}
+                {/* tools71: كل الصفقات خرجت عند الدخول ⇒ «—» لا «0%» (تُقرأ «خسر كل صفقاته»). الدالة تفحص مجموع
+                    الحاسمة فقط، فتُمرَّر كلّها بخانة win_count. */}
+                {journalWinRateLine(t.backtestStatWinRate, {
+                  win_rate: stats.win_rate,
+                  win_count: stats.trade_count - (stats.breakeven_count ?? 0),
+                  loss_count: 0,
+                })}
               </Text>
               {typeof stats.breakeven_count === 'number' && stats.breakeven_count > 0 ? (
                 <Text style={[styles.statLine, { textAlign: align }]}>
