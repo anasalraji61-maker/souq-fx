@@ -1670,20 +1670,38 @@ def _pnl_pct(side: str, entry: float, exit_price: float) -> float | None:
     return (entry - exit_price) / entry * 100
 
 
+# صفحة الدفتر الافتراضية وسقفها. القائمة وحدها تُرقَّم — الإحصاءات تُحسب على **كل** الصفقات.
+TRADES_PAGE = 200
+TRADES_PAGE_MAX = 500
+
+
 def list_trades(
-    user_id: int | None = None, days: int = 30, owner_key: str | None = None
+    user_id: int | None = None,
+    owner_key: str | None = None,
+    limit: int = TRADES_PAGE,
+    offset: int = 0,
 ) -> list[dict]:
     """Journal visible to the caller — same ownership rule as alerts (`_owner_clause`): an
-    anonymous device used to see (and close/delete) every anonymous trader's journal."""
+    anonymous device used to see (and close/delete) every anonymous trader's journal.
+    صفحة واحدة (الأحدث أولاً)؛ `count_trades` يعطي الإجمالي ليعرف العميل أن هناك المزيد."""
     sql, args = _owner_clause(user_id, owner_key)
+    limit = max(1, min(int(limit), TRADES_PAGE_MAX))
+    offset = max(0, int(offset))
     with _conn() as c:
         rows = c.execute(
-            f"SELECT * FROM trades WHERE {sql} ORDER BY opened_at DESC LIMIT 200", args
+            f"SELECT * FROM trades WHERE {sql} ORDER BY opened_at DESC, id DESC LIMIT ? OFFSET ?",
+            (*args, limit, offset),
         ).fetchall()
     out = [dict(r) for r in rows]
     for r in out:
         r.pop("owner_key", None)  # معرّف التثبيت سرّ الجهاز — لا يُعاد بالاستجابة
     return out
+
+
+def count_trades(user_id: int | None = None, owner_key: str | None = None) -> int:
+    sql, args = _owner_clause(user_id, owner_key)
+    with _conn() as c:
+        return int(c.execute(f"SELECT COUNT(*) FROM trades WHERE {sql}", args).fetchone()[0])
 
 
 def _trade_owner_clause(user_id: int | None, owner_key: str | None = None) -> tuple[str, tuple]:
@@ -1854,29 +1872,52 @@ def delete_trade(trade_id: str, user_id: int | None = None, owner_key: str | Non
     return cur.rowcount > 0
 
 
+# |نتيجة| أقلّ من هذا = تعادل (خروج عند الدخول بالضبط، بعد تقريب الفاصلة العائمة).
+BREAKEVEN_EPS = 1e-9
+
+
 def trade_stats(user_id: int | None = None, owner_key: str | None = None) -> dict:
-    trades = [t for t in list_trades(user_id, owner_key=owner_key) if t.get("status") == "closed" and t.get("pnl") is not None]
-    if not trades:
-        return {
-            "trade_count": 0,
-            "win_rate": 0,
-            "total_pnl_pct": 0,
-            "avg_win": 0,
-            "avg_loss": 0,
-            "best": 0,
-            "worst": 0,
-        }
-    wins = [t for t in trades if float(t["pnl"]) > 0]
-    losses = [t for t in trades if float(t["pnl"]) <= 0]
-    pnls = [float(t["pnl"]) for t in trades]
+    """إحصاءات **كل** الصفقات المغلقة ذات النتيجة — لا صفحة القائمة. كانت تُحسب من أحدث 200 صفقة
+    (مفتوحة+مغلقة) فتختفي القديمة من نسبة الفوز بلا إشارة.
+
+    **التعادل ليس خسارة**: `pnl <= 0` كان يعدّ صفقة أُغلقت على الدخول خسارةً، فمتداول ينقل وقفه
+    للتعادل يرى نسبة فوزه تهبط. الآن `win_rate` = رابحة ÷ (رابحة + خاسرة)، والتعادل يُعدّ وحده
+    (`breakeven_count`) ويبقى ضمن `trade_count`."""
+    sql, args = _owner_clause(user_id, owner_key)
+    with _conn() as c:
+        rows = c.execute(
+            f"SELECT pnl FROM trades WHERE {sql} AND status='closed' AND pnl IS NOT NULL", args
+        ).fetchall()
+    pnls = [float(r[0]) for r in rows]
+    empty = {
+        "trade_count": 0,
+        "win_rate": 0,
+        "total_pnl_pct": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "best": 0,
+        "worst": 0,
+        "win_count": 0,
+        "loss_count": 0,
+        "breakeven_count": 0,
+    }
+    if not pnls:
+        return empty
+    wins = [p for p in pnls if p > BREAKEVEN_EPS]
+    losses = [p for p in pnls if p < -BREAKEVEN_EPS]
+    decided = len(wins) + len(losses)
     return {
-        "trade_count": len(trades),
-        "win_rate": round(len(wins) / len(trades) * 100, 1),
+        "trade_count": len(pnls),
+        # كلّها تعادل ⇒ لا نسبة فوز ذات معنى: 0 كما في الدفتر الفارغ، و`breakeven_count` يوضّح
+        "win_rate": round(len(wins) / decided * 100, 1) if decided else 0,
         "total_pnl_pct": round(sum(pnls), 2),
-        "avg_win": round(sum(float(t["pnl"]) for t in wins) / len(wins), 2) if wins else 0,
-        "avg_loss": round(sum(float(t["pnl"]) for t in losses) / len(losses), 2) if losses else 0,
+        "avg_win": round(sum(wins) / len(wins), 2) if wins else 0,
+        "avg_loss": round(sum(losses) / len(losses), 2) if losses else 0,
         "best": round(max(pnls), 2),
         "worst": round(min(pnls), 2),
+        "win_count": len(wins),
+        "loss_count": len(losses),
+        "breakeven_count": len(pnls) - decided,
     }
 
 

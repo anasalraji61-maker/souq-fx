@@ -230,6 +230,9 @@ def test_an_empty_journal_has_zeroed_statistics_not_an_error(client):
         "avg_loss": 0,
         "best": 0,
         "worst": 0,
+        "win_count": 0,
+        "loss_count": 0,
+        "breakeven_count": 0,
     }
 
 
@@ -336,3 +339,61 @@ def test_a_sizeless_trade_can_be_given_a_size_later(client):
     trade = client.post("/api/trades", json=body, headers=_DEV1).json()["trade"]
     r = client.patch(f"/api/trades/{trade['id']}", json={"size": 0.2}, headers=_DEV1)
     assert r.json()["trade"]["size"] == pytest.approx(0.2)
+
+
+# ─── الإحصاءات على كل الصفقات، والتعادل ليس خسارة ───────────────────────────
+
+def test_a_breakeven_trade_is_not_a_loss(client):
+    """متداول نقل وقفه للدخول: الصفقة أُغلقت على الدخول بالضبط."""
+    _open_trade(client, exit=1.1100)
+    _open_trade(client, exit=1.0900)
+    _open_trade(client, exit=1.1000)  # تعادل
+    stats = client.get("/api/trades", headers=_DEV1).json()["stats"]
+    assert stats["trade_count"] == 3
+    assert (stats["win_count"], stats["loss_count"], stats["breakeven_count"]) == (1, 1, 1)
+    assert stats["win_rate"] == 50.0, "كانت 33.3 — التعادل محسوب خسارة"
+    assert stats["avg_loss"] < 0, "متوسط الخسارة لا يخفّفه صفر التعادل"
+
+
+def test_only_breakevens_give_no_win_rate_not_zero_percent_losses(client):
+    _open_trade(client, exit=1.1000)
+    stats = client.get("/api/trades", headers=_DEV1).json()["stats"]
+    assert stats["breakeven_count"] == 1 and stats["win_rate"] == 0 and stats["loss_count"] == 0
+
+
+def _bulk_insert(n_open: int, n_won: int, key: str) -> None:
+    rows = []
+    for i in range(n_won):
+        rows.append((f"w{i}", key, 1.1, 1.11, 0.909, f"2020-01-01 00:{i // 60:02d}", "closed"))
+    for i in range(n_open):
+        rows.append((f"o{i}", key, 1.1, None, None, f"2026-01-01 00:{i // 60:02d}", "open"))
+    with db._conn() as c:
+        c.executemany(
+            "INSERT INTO trades(id,user_id,owner_key,symbol,side,entry,exit,size,pnl,note,opened_at,status) "
+            "VALUES(?,NULL,?,'EURUSD','buy',?,?,NULL,?,'',?,?)",
+            rows,
+        )
+
+
+def test_statistics_cover_every_closed_trade_not_the_latest_200(client):
+    """250 صفقة رابحة قديمة ثم 200 مفتوحة أحدث: كانت الإحصاءات تُحسب من أحدث 200 = صفر مغلقة."""
+    _bulk_insert(n_open=200, n_won=250, key=_DEV1["X-Install-Id"])
+    body = client.get("/api/trades", headers=_DEV1).json()
+    assert body["stats"]["trade_count"] == 250
+    assert body["stats"]["win_rate"] == 100.0
+    assert body["total"] == 450
+    assert len(body["trades"]) == 200
+
+
+def test_older_trades_are_reachable_by_paging(client):
+    _bulk_insert(n_open=10, n_won=5, key=_DEV1["X-Install-Id"])
+    first = client.get("/api/trades?limit=10", headers=_DEV1).json()
+    rest = client.get("/api/trades?limit=10&offset=10", headers=_DEV1).json()
+    ids = [t["id"] for t in first["trades"]] + [t["id"] for t in rest["trades"]]
+    assert len(ids) == 15 and len(set(ids)) == 15
+    assert first["total"] == rest["total"] == 15
+
+
+@pytest.mark.parametrize("q", ["limit=0", "limit=501", "offset=-1"])
+def test_page_bounds_are_enforced(client, q):
+    assert client.get(f"/api/trades?{q}", headers=_DEV1).status_code == 422

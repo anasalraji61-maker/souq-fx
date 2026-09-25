@@ -1426,9 +1426,21 @@ def market_quote(symbol: str):
 
 
 @app.get("/api/trades")
-def trades_list(user: dict | None = Depends(_auth_user), key: str | None = Depends(_install_key)):
+def trades_list(
+    limit: int = Query(default=db.TRADES_PAGE, ge=1, le=db.TRADES_PAGE_MAX),
+    offset: int = Query(default=0, ge=0),
+    user: dict | None = Depends(_auth_user),
+    key: str | None = Depends(_install_key),
+):
+    """صفحة من الدفتر (الأحدث أولاً) + `total` لكل الصفقات؛ `stats` على كل المغلقة لا الصفحة."""
     uid = user["user_id"] if user else None
-    return {"trades": db.list_trades(uid, owner_key=key), "stats": db.trade_stats(uid, owner_key=key)}
+    return {
+        "trades": db.list_trades(uid, owner_key=key, limit=limit, offset=offset),
+        "total": db.count_trades(uid, owner_key=key),
+        "limit": limit,
+        "offset": offset,
+        "stats": db.trade_stats(uid, owner_key=key),
+    }
 
 
 @app.post("/api/trades")
