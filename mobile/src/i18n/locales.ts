@@ -723,6 +723,8 @@ export type Dict = {
   indAlertsRearmedMsg: string;
   indAlertsRearmFailed: string;
   indAlertsWatchingTag: string;
+  /** عنوان `CalendarPanel` — بلا «· حي»: كان يُطبع ثابتاً فوق «التقويم غير متاح الآن…» وفوق أحداث من جلب قديم (`calStaleAsOf`)،
+   * والتقويم يُجلب كل 5 دقائق (`RELOAD_MS`) لا بثّاً. حالة الحداثة تقولها الأسطر تحته. */
   calendarTitle: string;
   calendarCurrencyA11yPrefix: string;
   calendarAllWord: string;
@@ -1998,7 +2000,7 @@ const ar: Dict = {
   indAlertsRearmedMsg: '✓ يراقب من جديد: {desc} — إن كان الشرط ما زال متحققاً يُطلق بالفحص التالي',
   indAlertsRearmFailed: 'تعذّرت إعادة التفعيل — تحقّق من الاتصال وحاول مرة أخرى',
   indAlertsWatchingTag: 'يراقب',
-  calendarTitle: 'تقويم اقتصادي · حي',
+  calendarTitle: 'التقويم الاقتصادي',
   calendarCurrencyA11yPrefix: 'تصفية حسب العملة',
   calendarAllWord: 'الكل',
   newsAllCurrencies: 'كل العملات',
@@ -3183,7 +3185,7 @@ const enUS: Dict = {
   indAlertsRearmedMsg: '✓ Watching again: {desc} — if the condition still holds it fires on the next check',
   indAlertsRearmFailed: 'Couldn’t re-arm the alert — check your connection and try again',
   indAlertsWatchingTag: 'watching',
-  calendarTitle: 'Economic calendar · Live',
+  calendarTitle: 'Economic calendar',
   calendarCurrencyA11yPrefix: 'Filter by currency',
   calendarAllWord: 'All',
   newsAllCurrencies: 'All currencies',
@@ -4400,7 +4402,7 @@ const ku: Dict = {
   indAlertsRearmedMsg: '✓ دووبارە چاودێری دەکات: {desc} — ئەگەر مەرجەکە هێشتا هەبێت لە پشکنینی داهاتوودا کارا دەبێت',
   indAlertsRearmFailed: 'نەکرا دووبارە چالاک بکرێتەوە — پەیوەندییەکەت بپشکنە و دووبارە هەوڵبدەرەوە',
   indAlertsWatchingTag: 'چاودێری دەکات',
-  calendarTitle: 'ڕۆژژمێری ئابووری · ڕاستەوخۆ',
+  calendarTitle: 'ڕۆژژمێری ئابووری',
   calendarCurrencyA11yPrefix: 'پاڵاوتن بەپێی دراو',
   calendarAllWord: 'هەمووی',
   newsAllCurrencies: 'هەموو دراوەکان',
