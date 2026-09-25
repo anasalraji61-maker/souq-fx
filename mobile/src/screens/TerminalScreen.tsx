@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radii, buttons, numeric } from '../theme';
 import { api, type ChartSeries } from '../api';
 import { MOCK_BASES } from '../chart/mockBases';
+import { isNotOfferedSymbol } from '../providerSymbols';
 import { ChartFrame } from '../components/ChartFrame';
 import {
   ProviderUnavailableNotice,
@@ -107,9 +108,6 @@ const DEFAULT_SHADOW_SLOTS: ShadowSlots = ['5m', '30m', '1H'];
 const DEFAULT_SHADOW_ENABLED: ShadowEnabled = [true, true, true];
 
 
-/** رموز لا يقدّمها المزوّد أبداً (backend-r19، `27fa8ba`) — الخادم يرسل لها `candles: []` بـ`not_offered_by_provider`. */
-const NOT_OFFERED_SYMBOLS = new Set(['DXY']);
-
 /**
  * إطار **قبل** أول ردّ (الحالة الابتدائية فقط). tools81: كان بذرة `mockSeries` «تجريبي» حول أسعار 2024 حتى يصل الردّ —
  * وبلا شبكة حتى مهلة الطلب. الآن `loadingSeries` (ui `ce58542`) ⇒ `ChartFrame` يعرض دوّاراً و«جارٍ التحميل». رمز لا يقدّمه
@@ -117,7 +115,7 @@ const NOT_OFFERED_SYMBOLS = new Set(['DXY']);
  */
 function bootFrame(symbol: string, tf: Timeframe): ChartSeries {
   const loading = loadingSeries(symbol, tf);
-  if (!NOT_OFFERED_SYMBOLS.has(symbol.trim().toUpperCase())) return loading;
+  if (!isNotOfferedSymbol(symbol)) return loading;
   return {
     ...loading,
     data_source: { ...loading.data_source, unavailable_reason: 'not_offered_by_provider' } as ChartSeries['data_source'],
@@ -131,7 +129,7 @@ function bootFrame(symbol: string, tf: Timeframe): ChartSeries {
  * `not_offered_by_provider`: الخادم نفسه لا يملك له شمعة، فعودة الاتصال لا تغيّر شيئاً.
  */
 function offlineFrame(symbol: string, tf: Timeframe): ChartSeries {
-  const notOffered = NOT_OFFERED_SYMBOLS.has(symbol.trim().toUpperCase());
+  const notOffered = isNotOfferedSymbol(symbol);
   return {
     symbol,
     timeframe: tf,
