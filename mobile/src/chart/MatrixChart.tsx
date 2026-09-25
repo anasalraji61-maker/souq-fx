@@ -118,6 +118,7 @@ import {
   samePoint,
   translateDrawing,
   cloneShift,
+  withDrawingArrow,
   withDrawingLock,
 } from './drawEdit';
 import {
@@ -521,6 +522,10 @@ const WEB_TOOL_HOTKEYS: Partial<Record<string, DrawTool>> = {
 };
 
 type DrawingHit = { id: string; dist: number } | null;
+
+/** جناحا رأس السهم على خطّ الترند (`Drawing.arrow`): طول كل جناح بالبكسل وزاويته عن الخطّ. */
+const ARROW_HEAD_LEN = 12;
+const ARROW_HEAD_SPREAD = [-28, 28] as const;
 
 /** نصف قطر مقبض الطرف بالبكسل — التقاطاً للتحديد وسحباً للتحريك (قيمة واحدة للاثنين). */
 const DRAW_HANDLE_R = 18;
@@ -3638,6 +3643,15 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     setDrawings((list) => list.map((x) => (x.id === next.id ? next : x)));
     setLockedHint(false);
   };
+  // رأس سهم على خطّ الترند المحدَّد (طرفه الثاني): «السعر ذاهب إلى هنا» بلا أداة مستقلّة — قابل للتراجع ويُحفظ مع الرسم.
+  const toggleSelectedArrow = () => {
+    const d = selectedId ? drawingsRef.current.find((x) => x.id === selectedId) : null;
+    if (!d || d.tool !== 'trend') return;
+    pushDrawHistory();
+    const next = withDrawingArrow(d, !d.arrow);
+    drawingsRef.current = drawingsRef.current.map((x) => (x.id === next.id ? next : x));
+    setDrawings((list) => list.map((x) => (x.id === next.id ? next : x)));
+  };
   // «الرسم مقفول — فكّ القفل لتحريكه» فوق اللوح لحظةَ محاولة سحبه، ثم يختفي.
   const [lockedHint, setLockedHint] = useState(false);
   const lockedHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -3650,6 +3664,10 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
     if (lockedHintTimer.current) clearTimeout(lockedHintTimer.current);
   }, []);
   const selectedLocked = !!(selectedId && drawings.find((x) => x.id === selectedId)?.locked);
+  const selectedTrend = selectedId ? drawings.find((x) => x.id === selectedId && x.tool === 'trend') : undefined;
+  const selectedArrow = !!selectedTrend?.arrow;
+  // لا مفتاح ترجمة للسهم بعد (طُلب من launch): اسم أداة الترند + الرمز يكفي قارئ الشاشة.
+  const arrowA11y = `${tr.ctlToolTrend} ➚`;
 
   /**
    * إزاحة الرسم المحدَّد `bars` شمعة و`steps` خطوة سعر (pip للأزواج والمعادن، وإلا بكسل رأسي واحد) — لأسهم
@@ -5809,6 +5827,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
               >
                 <Text style={styles.compactToolIcon}>❐</Text>
                 <Text style={styles.compactToolLabel}>{tr.mcCloneDrawing}</Text>
+              </Pressable>
+            ) : null}
+            {selectedTrend ? (
+              <Pressable
+                accessibilityRole="switch"
+                accessibilityLabel={arrowA11y}
+                accessibilityState={{ checked: selectedArrow }}
+                style={({ pressed }) => [
+                  styles.compactTool,
+                  selectedArrow && styles.compactToolOn,
+                  pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                ]}
+                onPress={toggleSelectedArrow}
+              >
+                <Text style={[styles.compactToolIcon, selectedArrow && styles.compactToolTextOn]}>➚</Text>
               </Pressable>
             ) : null}
             {selectedId ? (
@@ -8189,6 +8222,25 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                     transformOrigin: 'left center',
                   }}
                 />
+                {/* رأس السهم عند الطرف الثاني (وجهة الحركة المتوقّعة) — فقط إن ظهر الطرف بالنافذة لا حين قُصّ. */}
+                {d.tool === 'trend' && d.arrow && seg.bi === bLocal && len >= 6
+                  ? ARROW_HEAD_SPREAD.map((spread) => (
+                      <View
+                        key={spread}
+                        style={{
+                          position: 'absolute',
+                          left: x2,
+                          top: y2,
+                          width: Math.min(ARROW_HEAD_LEN, len * 0.6),
+                          height: sel ? 3.5 : 2,
+                          borderRadius: 1,
+                          backgroundColor: d.color,
+                          transform: [{ rotate: `${angle + 180 + spread}deg` }],
+                          transformOrigin: 'left center',
+                        }}
+                      />
+                    ))
+                  : null}
                 {sel && !('extended' in seg && seg.extended) ? (
                   <>
                     <View style={[styles.grabHandle, { left: x1, top: y1, borderColor: d.color }]} />
@@ -12014,6 +12066,21 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 >
                   <Text style={styles.toolText}>❐ {tr.mcCloneDrawing}</Text>
                 </Pressable>
+                {selectedTrend ? (
+                  <Pressable
+                    accessibilityRole="switch"
+                    accessibilityLabel={arrowA11y}
+                    accessibilityState={{ checked: selectedArrow }}
+                    style={({ pressed }) => [
+                      styles.tool,
+                      selectedArrow && styles.toolOn,
+                      pressed && { opacity: buttons.pressedOpacity, transform: [{ scale: buttons.pressedScale }] },
+                    ]}
+                    onPress={toggleSelectedArrow}
+                  >
+                    <Text style={selectedArrow ? styles.toolTextOn : styles.toolText}>➚</Text>
+                  </Pressable>
+                ) : null}
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={selectedLocked ? tr.mcUnlockDrawing : tr.mcLockDrawingA11y}

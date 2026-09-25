@@ -252,6 +252,8 @@ export type Drawing = {
   width?: number;
   /** مقفول (كقفل TradingView): لا يُسحب جسمه ولا مقابضه ولا يُزاح بالأسهم — لمسة عابرة بالهاتف لا تحرّك مستوى مدروساً. */
   locked?: boolean;
+  /** خطّ `trend` برأس سهم عند طرفه الثاني (`b`) — اتجاه الحركة المتوقّعة. غيابه ⇒ خطّ عادي. */
+  arrow?: boolean;
 };
 
 export type LensMode = 'clean' | 'structure' | 'momentum' | 'liquidity';

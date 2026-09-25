@@ -3,7 +3,7 @@
  * الغرض: إثبات أن اللمسة التي لا تُغيّر شيئاً لا تدفع لقطة تراجع، وأن التغيّر الحقيقي يدفعها.
  */
 import type { ChartPoint, Drawing } from './types';
-import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace, cloneShift, CLONE_SHIFT_PX, raySegment, withDrawingLock } from './drawEdit';
+import { samePoint, drawingEnd, dragChangesDrawing, clipSegmentToBars, rayReach, translateDrawing, sameDrawingPlace, cloneShift, CLONE_SHIFT_PX, raySegment, withDrawingArrow, withDrawingLock } from './drawEdit';
 
 let failures = 0;
 function ok(name: string, cond: boolean) {
@@ -139,6 +139,17 @@ ok('نسخة خطّ رأسي ⇒ 3 شموع', cloneShift('vline', true).bars ===
   const un = withDrawingLock(lk, false);
   ok('فكّ ⇒ بلا المفتاح', !('locked' in un) && JSON.stringify(un) === JSON.stringify(d));
   ok('الإزاحة تُبقي القفل', translateDrawing(lk, 2, (p) => p, () => null).locked === true);
+}
+
+// رأس السهم: للترند وحده، والإزالة تحذف المفتاح، والإزاحة تُبقيه
+{
+  const d = line(pt(5, 1.1), pt(9, 1.2));
+  const ar = withDrawingArrow(d, true);
+  ok('سهم ⇒ arrow', ar.arrow === true && d.arrow === undefined);
+  const off = withDrawingArrow(ar, false);
+  ok('إزالة ⇒ بلا المفتاح', !('arrow' in off) && JSON.stringify(off) === JSON.stringify(d));
+  ok('الإزاحة تُبقي السهم', translateDrawing(ar, 2, (p) => p, () => null).arrow === true);
+  ok('غير الترند لا يحمل سهماً', !('arrow' in withDrawingArrow({ ...d, tool: 'hline' }, true)));
 }
 
 if (failures) {

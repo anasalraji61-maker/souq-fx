@@ -192,6 +192,13 @@ export function withDrawingLock(d: Drawing, locked: boolean): Drawing {
   return rest;
 }
 
+/** رأس السهم على خطّ الترند فقط؛ الإزالة تحذف المفتاح (الرسومات المحفوظة القديمة تبقى كما هي حرفياً). */
+export function withDrawingArrow(d: Drawing, arrow: boolean): Drawing {
+  if (arrow && d.tool === 'trend') return { ...d, arrow: true };
+  const { arrow: _drop, ...rest } = d;
+  return rest;
+}
+
 /** إزاحة النسخة عن أصلها بالبكسل: تكفي ليُرى أنّ رسماً ثانياً ظهر، ولا تبعده عن منطقته. */
 export const CLONE_SHIFT_PX = 24;
 
