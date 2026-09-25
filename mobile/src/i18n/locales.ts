@@ -447,6 +447,10 @@ export type Dict = {
   calDayShort: string;
   newsRiskHigh: string;
   newsRiskHint: string;
+  /** سطر شريط «خبر قوي» فوق صفقات الدفتر المفتوحة (`openPositionsNewsRisk`): `{symbols}` = الرموز التي يمسّها الخبر مفصولة بـ`listSep`. لا «حجم الصفقة» — الصفقة مفتوحة؛ الخطر الفعلي انزلاق الوقف. */
+  newsRiskOpenHint: string;
+  /** فاصل قائمة قصيرة داخل جملة: «, » بالإنجليزية، «، » بالعربية والكردية. */
+  listSep: string;
   /** شريط الخبر حين فشل التقويم ولا نسخة محفوظة — غياب التحذير هنا ليس «لا خطر» (طلب وكيل الأدوات) */
   newsUnavailable: string;
   calToday: string;
@@ -1545,6 +1549,8 @@ const ar: Dict = {
   calDayShort: ' يوم',
   newsRiskHigh: 'خبر قوي',
   newsRiskHint: 'تقلّب حاد وانزلاق محتمل — راجع وقف الخسارة وحجم الصفقة',
+  newsRiskOpenHint: 'يمسّ صفقاتك المفتوحة على {symbols}: تقلّب حاد، وقد يُنفَّذ وقف الخسارة بسعر أسوأ من المكتوب',
+  listSep: '، ',
   newsUnavailable: 'تعذّر تحميل تقويم الأخبار — لا نعرف إن كان خبر قوي قريباً؛ تحقّق قبل الدخول',
   calToday: 'اليوم',
   calTomorrow: 'غداً',
@@ -2629,6 +2635,8 @@ const enUS: Dict = {
   calDayShort: 'd',
   newsRiskHigh: 'High-impact news',
   newsRiskHint: 'Expect sharp moves and slippage — check your stop and position size',
+  newsRiskOpenHint: 'Affects your open {symbols} trades: expect sharp moves, and a stop may fill worse than its price',
+  listSep: ', ',
   newsUnavailable: 'Couldn’t load the news calendar — we can’t tell if a big release is close; check before you enter',
   calToday: 'Today',
   calTomorrow: 'Tomorrow',
@@ -3740,6 +3748,8 @@ const ku: Dict = {
   calDayShort: ' ڕۆژ',
   newsRiskHigh: 'هەواڵی بەهێز',
   newsRiskHint: 'جووڵەی توند و خلیسکان چاوەڕوانکراوە — وەستان و قەبارەی مامەڵە بپشکنە',
+  newsRiskOpenHint: 'کار دەکاتە سەر مامەڵە کراوەکانت لە {symbols}: جووڵەی توند، و لەوانەیە وەستان بە نرخێکی خراپتر لە نووسراوەکە جێبەجێ بێت',
+  listSep: '، ',
   newsUnavailable: 'نەکرا ڕۆژژمێری هەواڵ باربکرێت — نازانین هەواڵێکی بەهێز نزیکە یان نا؛ پێش چوونەژوورەوە بپشکنە',
   calToday: 'ئەمڕۆ',
   calTomorrow: 'سبەینێ',
