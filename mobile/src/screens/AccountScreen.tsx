@@ -7,7 +7,6 @@ import {
   Pressable,
   ActivityIndicator,
   ScrollView,
-  Alert,
   Linking,
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
@@ -23,6 +22,7 @@ import { CommissionPlanPanel } from '../components/CommissionPlanPanel';
 import { NetworkTreePanel } from '../components/NetworkTreePanel';
 import { SubscriptionPlansPanel } from '../components/SubscriptionPlansPanel';
 import { api } from '../api';
+import { confirmDestructive } from '../chart/confirmDestructive';
 
 type RoleId = 'trader' | 'trainer' | 'broker' | 'agent' | 'company';
 type SideId = 'left' | 'right';
@@ -159,20 +159,20 @@ export function AccountScreen() {
   };
 
   const confirmDeleteAccount = useCallback(() => {
-    Alert.alert(t.deleteAccountConfirmTitle, t.deleteAccountConfirmBody, [
-      { text: t.cancel, style: 'cancel' },
-      {
-        text: t.deleteAccountConfirmBtn,
-        style: 'destructive',
-        onPress: () => {
-          setDeleteBusy(true);
-          setErr(null);
-          deleteAccount()
-            .catch(() => setErr(t.deleteAccountError))
-            .finally(() => setDeleteBusy(false));
-        },
+    // `confirmDestructive` لا `Alert.alert`: الأخيرة دالّة فارغة على الويب ⇒ «حذف الحساب» لم يكن يفعل شيئاً هناك.
+    confirmDestructive({
+      title: t.deleteAccountConfirmTitle,
+      body: t.deleteAccountConfirmBody,
+      cancelText: t.cancel,
+      confirmText: t.deleteAccountConfirmBtn,
+      onConfirm: () => {
+        setDeleteBusy(true);
+        setErr(null);
+        deleteAccount()
+          .catch(() => setErr(t.deleteAccountError))
+          .finally(() => setDeleteBusy(false));
       },
-    ]);
+    });
   }, [t, deleteAccount]);
 
   if (loading) {

@@ -7,7 +7,6 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
-  Alert,
   Linking,
 } from 'react-native';
 import { colors, radii, spacing, frameEmbed, frameEmbedHead, frameEmbedHeadTail, frameEmbedTitleBlock, frameEmbedTitle, frameEmbedSub, buttons } from '../theme';
@@ -25,6 +24,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { parseDecimal } from '../parseDecimal';
 import { isRealQuote } from '../chart/dataSource';
 import { formatPrice } from '../chart/math';
+import { confirmDestructive, notify } from '../chart/confirmDestructive';
 import { instrumentSpec, pipsBetween, priceAtPipOffset } from '../positionSize';
 import { formatPips } from '../tradePlan';
 
@@ -616,7 +616,7 @@ export function AlertsPanel({
       if (editingId === id) cancelEdit();
       await refresh();
     } catch {
-      Alert.alert(t.alertsDeleteFailedTitle, t.alertsDeleteFailedBody);
+      notify(t.alertsDeleteFailedTitle, t.alertsDeleteFailedBody);
     }
   };
 
@@ -651,7 +651,7 @@ export function AlertsPanel({
     } finally {
       if (mountedRef.current) setBusy(false);
     }
-    if (failed && mountedRef.current) Alert.alert(t.alertsDeleteFailedTitle, t.alertsDeleteFailedBody);
+    if (failed && mountedRef.current) notify(t.alertsDeleteFailedTitle, t.alertsDeleteFailedBody);
   };
 
   /**
@@ -712,14 +712,13 @@ export function AlertsPanel({
                 },
               ]}
               onPress={() =>
-                Alert.alert(
-                  t.alertsDeleteConfirmTitle,
-                  t.alertsClearFiredConfirm.replace('{n}', String(firedCount)),
-                  [
-                    { text: t.cancel, style: 'cancel' },
-                    { text: t.deleteWord, style: 'destructive', onPress: () => void clearFired() },
-                  ]
-                )
+                confirmDestructive({
+                  title: t.alertsDeleteConfirmTitle,
+                  body: t.alertsClearFiredConfirm.replace('{n}', String(firedCount)),
+                  cancelText: t.cancel,
+                  confirmText: t.deleteWord,
+                  onConfirm: () => void clearFired(),
+                })
               }
               accessibilityLabel={t.alertsClearFiredBtn.replace('{n}', String(firedCount))}
               hitSlop={8}
@@ -789,14 +788,13 @@ export function AlertsPanel({
                     },
                   ]}
                   onPress={() =>
-                    Alert.alert(
-                      t.alertsDeleteConfirmTitle,
-                      `${a.symbol} ${condMark(a.condition)} ${fmtPrice(a.price, a.symbol)}`,
-                      [
-                        { text: t.cancel, style: 'cancel' },
-                        { text: t.deleteWord, style: 'destructive', onPress: () => remove(a.id) },
-                      ]
-                    )
+                    confirmDestructive({
+                      title: t.alertsDeleteConfirmTitle,
+                      body: `${a.symbol} ${condMark(a.condition)} ${fmtPrice(a.price, a.symbol)}`,
+                      cancelText: t.cancel,
+                      confirmText: t.deleteWord,
+                      onConfirm: () => void remove(a.id),
+                    })
                   }
                   accessibilityLabel={`${t.alertsDeleteA11yPrefix}: ${a.symbol} ${condMark(a.condition)} ${fmtPrice(
                     a.price,

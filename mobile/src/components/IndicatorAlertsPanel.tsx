@@ -7,11 +7,11 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
-  Alert,
   Linking,
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api } from '../api';
+import { confirmDestructive, notify } from '../chart/confirmDestructive';
 import {
   ensureAlertNotifications,
   getNotificationPermissionState,
@@ -434,24 +434,17 @@ export function IndicatorAlertsPanel({
                       },
                     ]}
                     onPress={() =>
-                      Alert.alert(
-                        t.indAlertsDeleteConfirmTitle,
-                        describeIndAlert(a, t),
-                        [
-                          { text: t.cancel, style: 'cancel' },
-                          {
-                            text: t.deleteWord,
-                            style: 'destructive',
-                            onPress: () =>
-                              api
-                                .deleteIndicatorAlert(a.id)
-                                .then(refresh)
-                                .catch(() =>
-                                  Alert.alert(t.indAlertsDeleteFailedTitle, t.indAlertsDeleteFailedBody)
-                                ),
-                          },
-                        ]
-                      )
+                      confirmDestructive({
+                        title: t.indAlertsDeleteConfirmTitle,
+                        body: describeIndAlert(a, t),
+                        cancelText: t.cancel,
+                        confirmText: t.deleteWord,
+                        onConfirm: () =>
+                          api
+                            .deleteIndicatorAlert(a.id)
+                            .then(refresh)
+                            .catch(() => notify(t.indAlertsDeleteFailedTitle, t.indAlertsDeleteFailedBody)),
+                      })
                     }
                     accessibilityLabel={`${t.indAlertsDeleteA11yPrefix}: ${describeIndAlert(a, t)}`}
                     hitSlop={8}

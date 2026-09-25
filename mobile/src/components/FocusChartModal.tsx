@@ -8,7 +8,6 @@ import {
   ScrollView,
   useWindowDimensions,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, buttons } from '../theme';
@@ -19,6 +18,7 @@ import { type Timeframe } from '../timeframes';
 import { WATCHLIST } from '../chart/watchlist';
 import { loadWatchlistItems } from '../chart/watchlistStore';
 import { formatPrice } from '../chart/math';
+import { notify } from '../chart/confirmDestructive';
 import { livePriceForChart } from '../chart/liveSeries';
 import { provenanceLabel, tickStatusLabel, normalizeProvenance } from '../chart/dataSource';
 import {
@@ -226,7 +226,7 @@ export function FocusChartModal({
       armedTimerRef.current = setTimeout(() => setArmedMsg(null), 4000);
       setAlertsRefreshKey((k) => k + 1);
     } catch {
-      Alert.alert(t.focusAlertCreateFailedTitle, t.focusAlertCreateFailedBody);
+      notify(t.focusAlertCreateFailedTitle, t.focusAlertCreateFailedBody);
     }
   };
 

@@ -7,11 +7,11 @@ import {
   ScrollView,
   Platform,
   Modal,
-  Alert,
 } from 'react-native';
 import { colors, radii, spacing, buttons } from '../theme';
 import { api, type PriceAlert } from '../api';
 import { formatPrice } from '../chart/math';
+import { confirmDestructive } from '../chart/confirmDestructive';
 import { instrumentSpec, pipsBetween } from '../positionSize';
 import { formatPips } from '../tradePlan';
 import { playSoftClick } from '../audio/playSoftClick';
@@ -304,18 +304,13 @@ export function WatchlistPanel({
             },
           ]}
           onPress={() =>
-            Alert.alert(
-              t.wlResetConfirmTitle,
-              t.wlResetConfirmBody,
-              [
-                { text: t.cancel, style: 'cancel' },
-                {
-                  text: t.wlResetConfirmBtn,
-                  style: 'destructive',
-                  onPress: () => void resetWatchlistToDefault(),
-                },
-              ]
-            )
+            confirmDestructive({
+              title: t.wlResetConfirmTitle,
+              body: t.wlResetConfirmBody,
+              cancelText: t.cancel,
+              confirmText: t.wlResetConfirmBtn,
+              onConfirm: () => void resetWatchlistToDefault(),
+            })
           }
           accessibilityLabel={t.wlResetA11y}
         >
@@ -504,14 +499,13 @@ export function WatchlistPanel({
                       },
                     ]}
                     onPress={() =>
-                      Alert.alert(t.wlRemoveConfirmTitle, sym, [
-                        { text: t.cancel, style: 'cancel' },
-                        {
-                          text: t.wlRemoveConfirmBtn,
-                          style: 'destructive',
-                          onPress: () => void removeWatchSymbol(sym),
-                        },
-                      ])
+                      confirmDestructive({
+                        title: t.wlRemoveConfirmTitle,
+                        body: sym,
+                        cancelText: t.cancel,
+                        confirmText: t.wlRemoveConfirmBtn,
+                        onConfirm: () => void removeWatchSymbol(sym),
+                      })
                     }
                     accessibilityLabel={t.wlRemoveA11y}
                   >
