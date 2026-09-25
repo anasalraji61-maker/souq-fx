@@ -5888,7 +5888,9 @@ export const MatrixChart = forwardRef<ChartPanHandle, Props>(function MatrixChar
                 ? [
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel={`${k.label} ${lineBreakCount} → ${nextLineBreakCount(lineBreakCount)}`}
+                      accessibilityLabel={tr.mcLineBreakCountA11y
+                        .replace('{count}', String(lineBreakCount))
+                        .replace('{next}', String(nextLineBreakCount(lineBreakCount)))}
                       key="lineBreakCount"
                       style={({ pressed }) => [
                         styles.chip,
